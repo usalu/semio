@@ -6,6 +6,7 @@ import { join, resolve } from "node:path";
 export default defineConfig({
   root: resolve(import.meta.dir, "../.."),
   test: {
+    root: resolve(import.meta.dir, "../.."),
     name: "@semio-tech/s-gis-services-native",
     environment: "node",
     include: ["🧪️tests/🧷️untrusted-content/🟦️.ts"],

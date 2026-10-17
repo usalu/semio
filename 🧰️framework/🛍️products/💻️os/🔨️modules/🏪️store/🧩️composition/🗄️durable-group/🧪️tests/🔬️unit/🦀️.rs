@@ -393,7 +393,6 @@ fn durable_journal_close_preserves_original_capacities_and_exact_receipts() {
         assert_eq!(state.lock().unwrap().close_count, 1);
         let (_, born, freed) = semio_framework_trace_memory_testing::observe_backing(|| drop(owner));
         assert_eq!((born, freed), (0, 0));
-        println!("[DEBUG] durable journal case={} original-string-pointers={original:?} physical={physical} actual-release={released} zero/one-below/depth-refusal=0 new-birth=0 terminalDrop=0", row["id"]);
     }
 }
 

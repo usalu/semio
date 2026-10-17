@@ -575,9 +575,9 @@ impl DiffAlgebra<TiffSnapshot> for TiffDiff {
 //#endregion 🔖️Diff
 
 //#region 🔖️DemoCases
-#[cfg(test)]
+/// 🧪️ Representative diffs used by the conformance laws and the diff codec tests.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn demo_diff_cases() -> Vec<TiffDiff> {
+pub fn demo_diff_cases() -> Vec<TiffDiff> {
     let nan = || TiffValues::Double(vec![TiffWord64 { lo: 17, hi: 0x7ff80000 }]);
     let entries = TiffTagsDiff { removed: vec![256], modified: vec![TiffTagModified { tag: 257, values: nan() }], added: vec![TiffTagAdded { tag: 50000, values: nan() }] };
     vec![
@@ -588,7 +588,5 @@ pub(crate) fn demo_diff_cases() -> Vec<TiffDiff> {
 //#endregion 🔖️DemoCases
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️handcrafted-diff-codec/🦀️.rs"]
-mod handcrafted_diff_codec_tests;
+
 //#endregion 🧪️Tests

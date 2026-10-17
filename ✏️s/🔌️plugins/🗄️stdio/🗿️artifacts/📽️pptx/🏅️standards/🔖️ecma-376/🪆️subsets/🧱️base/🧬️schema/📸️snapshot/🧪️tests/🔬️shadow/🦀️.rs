@@ -1,3 +1,4 @@
+use semio_framework_test_fixtures::fixture_text;
 use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::*;
 
 #[semio_framework_async_macros::async_test]
@@ -7,22 +8,22 @@ async fn logical_snapshot_and_facets_have_no_shadow_state() {
         assert!(!json.contains(forbidden), "snapshot contains forbidden shadow field {forbidden}");
     }
     for facet in [
-        include_str!("../../🟦️.ts"),
-        include_str!("../../🔗️.graphql"),
-        include_str!("../../🔣️.json"),
-        include_str!("../../🛰️.proto"),
-        include_str!("../../../🟦️.ts"),
-        include_str!("../../../🔗️.graphql"),
-        include_str!("../../../🔣️.json"),
-        include_str!("../../../🛰️.proto"),
-        include_str!("../../../🔺️diff/🟦️.ts"),
-        include_str!("../../../🔺️diff/🔗️.graphql"),
-        include_str!("../../../🔺️diff/🔣️.json"),
-        include_str!("../../../🔺️diff/🛰️.proto"),
-        include_str!("../../../🧬️mutations/🟦️.ts"),
-        include_str!("../../../🧬️mutations/🔗️.graphql"),
-        include_str!("../../../🧬️mutations/🔣️.json"),
-        include_str!("../../../🧬️mutations/🛰️.proto"),
+        fixture_text!("../../🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🟦️.ts").to_owned(),
+        fixture_text!("../../🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🔗️.graphql").to_owned(),
+        fixture_text!("../../🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🔣️.json").to_owned(),
+        fixture_text!("../../🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🛰️.proto").to_owned(),
+        fixture_text!("../../🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🟦️.ts").to_owned(),
+        fixture_text!("../../🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🔗️.graphql").to_owned(),
+        fixture_text!("../../🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🔣️.json").to_owned(),
+        fixture_text!("../../🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🛰️.proto").to_owned(),
+        fixture_text!("../../🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🔺️diff/🟦️.ts").to_owned(),
+        fixture_text!("../../🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🔺️diff/🔗️.graphql").to_owned(),
+        fixture_text!("../../🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🔺️diff/🔣️.json").to_owned(),
+        fixture_text!("../../🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🔺️diff/🛰️.proto").to_owned(),
+        fixture_text!("../../🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🟦️.ts").to_owned(),
+        fixture_text!("../../🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🔗️.graphql").to_owned(),
+        fixture_text!("../../🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🔣️.json").to_owned(),
+        fixture_text!("../../🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🛰️.proto").to_owned(),
     ] {
         for forbidden in ["PptxPhysical", "sourceBytes", "source_bytes", "nativeArchive", "native_archive", "semanticBlake3", "semantic_blake3", "archiveBytes", "archive_bytes", "rawXml", "raw_xml"] {
             assert!(!facet.contains(forbidden), "facet contains forbidden shadow concept {forbidden}");

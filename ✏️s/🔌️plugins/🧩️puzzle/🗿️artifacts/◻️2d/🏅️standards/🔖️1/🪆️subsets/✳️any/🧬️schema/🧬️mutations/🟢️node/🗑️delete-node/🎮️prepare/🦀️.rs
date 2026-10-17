@@ -1,7 +1,7 @@
 //! 🗑️ Borrowed deletion streams first-node and cascade ordinals without owning source records.
 
-use super::DeleteNode;
-use crate::{Puzzle2dSnapshot, standards::v1::subsets::any::schema::snapshot::lookup::{Puzzle2dLookupCursor, Puzzle2dLookupScope, Puzzle2dLookupStep}};
+use crate::standards::v1::subsets::any::schema::mutations::delete_node::DeleteNode;
+use crate::{Puzzle2dSnapshot, standards::v1::subsets::any::schema::lookup::{Puzzle2dLookupCursor, Puzzle2dLookupScope, Puzzle2dLookupStep}};
 use semio_framework_value::{ValueError, ValueRefusalKind, retained_clone::{RetainedCloneBinding, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneRef, RetainedCloneStep, paged::PagedUtf8BoundedOrdCursor, ordered_map::{BoundedOrdCursor, BoundedOrdGrant, BoundedOrdStep}}};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -97,12 +97,20 @@ impl Puzzle2dDeleteNodePreparationCursor {
     pub fn terminal_is_empty(&self) -> bool { self.closing && self.lookup.terminal_is_empty() && self.comparison.terminal_is_empty() && self.source.is_none() && self.mutation.is_none() }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;
+
 
 #[path = "↩️inverse/🦀️.rs"]
 pub mod inverse;
 
 #[path = "📸️candidate/🦀️.rs"]
 pub mod candidate;
+
+impl crate::standards::v1::subsets::any::schema::preparation::native_preparation_child::Puzzle2dNativePreparation for Puzzle2dDeleteNodePreparationCursor {
+    fn begin_close(&mut self){Puzzle2dDeleteNodePreparationCursor::begin_close(self);}
+    fn close_granted(&mut self,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<semio_framework_value::retained_clone::RetainedCloneStep,semio_framework_value::ValueError>{Puzzle2dDeleteNodePreparationCursor::close_step(self,grant)}
+    fn terminal_is_empty(&self)->bool{Puzzle2dDeleteNodePreparationCursor::terminal_is_empty(self)}
+    fn next_close_copy_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{Puzzle2dDeleteNodePreparationCursor::next_close_copy_byte_demand(self)}
+    fn next_close_capacity_byte_demand(&self,body:usize)->Result<usize,semio_framework_value::ValueError>{Puzzle2dDeleteNodePreparationCursor::next_close_capacity_byte_demand(self,body)}
+    fn next_close_release_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{Puzzle2dDeleteNodePreparationCursor::next_close_release_byte_demand(self)}
+    fn next_close_depth_demand(&self)->Result<usize,semio_framework_value::ValueError>{Puzzle2dDeleteNodePreparationCursor::next_close_depth_demand(self)}
+}

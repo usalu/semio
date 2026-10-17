@@ -28,7 +28,7 @@ pub fn subset<A: crate::SequenceApplication>() -> SubsetDeclaration<A> {
         schema: SchemaDeclaration { descriptor: schema::sequence_artifact_schema_descriptor(), inferences: inference_descriptors(), inference_services: Vec::new() },
         io: io::io(),
         viewer: viewer_surface::<viewer::SequenceViewer, A>(viewer::create_sequence_viewer()),
-        editor: editor_surface::<editor::SequencePlayApp, A>(editor::create_sequence_app()),
+        editor: editor_surface::<editor::app::SequencePlayApp, A>(editor::app::create_sequence_app()),
         examples: examples(),
     }
 }

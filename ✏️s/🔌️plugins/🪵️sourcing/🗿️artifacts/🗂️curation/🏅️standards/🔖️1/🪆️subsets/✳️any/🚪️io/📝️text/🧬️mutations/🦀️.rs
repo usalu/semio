@@ -87,14 +87,11 @@ mod tests;
 pub const TEXT_OPCODES: &[(&str, &str)] =
     &[("CreateCuratedItem", create_curated_item::TEXT_OPCODE), ("DeleteCuratedItem", delete_curated_item::TEXT_OPCODE), ("ChangeCuratedItemCount", change_curated_item_count::TEXT_OPCODE)];
 
-#[path = "🗑️delete-curated-item/🦀️.rs"]
-pub mod delete_curated_item;
+pub use semio_s_artifact_sourcing_curation_examples::standards::v1::subsets::any::io::text::mutations::delete_curated_item;
 
-#[path = "🌱create-curated-item/🦀️.rs"]
-pub mod create_curated_item;
+pub use semio_s_artifact_sourcing_curation_examples::standards::v1::subsets::any::io::text::mutations::create_curated_item;
 
-#[path = "🔢change-curated-item/🦀️.rs"]
-pub mod change_curated_item_count;
+pub use semio_s_artifact_sourcing_curation_examples::standards::v1::subsets::any::io::text::mutations::change_curated_item_count;
 
 /// 📜️ Describes the artifact mutation dialect.
 pub const MUTATION_GRAMMAR_SEMIO: &str = include_str!("📖️mutations.grammar.semio");
@@ -106,7 +103,7 @@ mod mutations_codec {
 use super::*;
 use crate::standards::v1::subsets::any::schema::operations::*;
 use crate::schema::mutations::SourcingMutation;
-use crate::CurationSnapshot;
+
 
 /// 📥️ Decodes this facet's internally-tagged (`{"mutation": "createCuratedItem", …}`, camelCase
 /// payload fields) JSON projection — exactly the shape the committed

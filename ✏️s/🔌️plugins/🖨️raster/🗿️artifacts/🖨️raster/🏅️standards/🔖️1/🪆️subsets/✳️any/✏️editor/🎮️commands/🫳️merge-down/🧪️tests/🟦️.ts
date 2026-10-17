@@ -14,11 +14,11 @@ for(const row of fixture.cases)test(row.name,async()=>{
   expect(plan.parentId).toBe(row.parentId);expect(plan.index).toBe(row.index);
   expect(plan.layers.map(layer=>layer.id)).toEqual(["lower","upper"]);
   const result=composite(plan.layers as RasterStackLayer[]);
-  expect(result.origin).toEqual(fixture.expected.origin);expect([...result.image.pixels]).toEqual("expectedPixels" in row?row.expectedPixels:fixture.expected.pixels);
+  expect([...result.origin]).toEqual(fixture.expected.origin);expect([...result.image.pixels]).toEqual(row.expectedPixels??fixture.expected.pixels);
   const base=images.blue!,top=images.red!;
-  const upper=Uint8Array.from(top.pixels);if("oracleAlpha" in row)upper[3]=row.oracleAlpha;
+  const upper=Uint8Array.from(top.pixels);if(row.oracleAlpha!==undefined)upper[3]=row.oracleAlpha;
   const oracle=await sharp(base.pixels,{raw:{width:2,height:1,channels:4}}).composite([{input:Buffer.from(upper),raw:{width:1,height:1,channels:4},left:0,top:0,blend:"over"}]).raw().toBuffer();
-  expect([...oracle]).toEqual("expectedPixels" in row?row.expectedPixels:fixture.expected.pixels);
+  expect([...oracle]).toEqual(row.expectedPixels??fixture.expected.pixels);
 });
 for(const invalid of fixture.invalid)test(invalid.name+" refuses merge",()=>{
   const layers=structuredClone(fixture.cases[0]!.layers);

@@ -1,7 +1,16 @@
+use crate::{GisMapSnapshot, MapFeature};
+#[allow(unused_imports)]
+use crate::{standards::v1::subsets::any::map_composition::gis_map_snapshot_with_derived_children, standards::v1::subsets::any::map_composition::GisMapDrawingChild, standards::v1::subsets::any::map_composition::GisMapImageChild, standards::v1::subsets::any::map_composition::GisMapValueChild};
+#[allow(unused_imports)]
+use ::semio_framework_schema::ArtifactSchema;
+#[allow(unused_imports)]
+use semio_framework_value::ToValue;
+#[allow(unused_imports)]
+use semio_framework_value::{DslValue, Number};
 use crate::standards::v1::subsets::any::io::text::snapshot::gis2d_document_json_to_svg;
 use crate::standards::v1::subsets::any::io::text::snapshot::value_to_dsl;
 use crate::standards::v1::subsets::any::io::text::snapshot::default_document;
-use super::*;
+use crate::standards::v1::subsets::any::schema::*;
 use serde_json::Value;
 
 /// 🌉️ Once-guarded stdio registration so `render_drawing_to_svg`'s `io_dispatch` call can

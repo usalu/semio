@@ -28,6 +28,10 @@ type stdioSemioV1DrawingSnapshotGuardSizeBounds = { readonly minItems?: number; 
 
 export const stdioSemioV1DrawingSnapshotGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : stdioSemioV1DrawingSnapshotGuardReject(at, "value is not an object");
+export const stdioSemioV1DrawingSnapshotGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) stdioSemioV1DrawingSnapshotGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const stdioSemioV1DrawingSnapshotGuardArray = (value: unknown, at: string, bounds: stdioSemioV1DrawingSnapshotGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return stdioSemioV1DrawingSnapshotGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) stdioSemioV1DrawingSnapshotGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -69,5 +73,21 @@ export function parsePathSegment(value:unknown,at="$"):PathSegment{const r=stdio
 export function parseDrawNode(value:unknown,at="$"):DrawNode{type Task={value:unknown;at:string;out:DrawNode[];exit?:object};const result:DrawNode[]=[],pending:Task[]=[{value,at,out:result}],active=new Set<object>();while(pending.length){const t=pending.pop()!;if(t.exit){active.delete(t.exit);continue;}const r=stdioSemioV1DrawingSnapshotGuardObject(t.value,t.at);if(active.has(r))throw new stdioSemioV1DrawingSnapshotGuardRefusal(t.at,"cyclic drawing tree");const kind=stdioSemioV1DrawingSnapshotGuardString(r.kind,t.at+".kind");exactFields(r,t.at,Object.hasOwn(nodeFields,kind)?nodeFields[kind]!:[]);switch(kind){case"path":t.out.push({kind,segments:stdioSemioV1DrawingSnapshotGuardArray(r.segments,t.at+".segments").map((v,i)=>parsePathSegment(v,t.at+".segments["+i+"]")),style:r.style===undefined?undefined:stdioSemioV1DrawingSnapshotGuardString(r.style,t.at+".style")});break;case"text":t.out.push({kind,value:stdioSemioV1DrawingSnapshotGuardString(r.value,t.at+".value"),at:parseSemioPoint2(r.at,t.at+".at"),style:r.style===undefined?undefined:stdioSemioV1DrawingSnapshotGuardString(r.style,t.at+".style")});break;case"group":{const children:DrawNode[]=[],source=r.children===undefined?[]:stdioSemioV1DrawingSnapshotGuardArray(r.children,t.at+".children");t.out.push({kind,transform:parseSemioTransform(r.transform,t.at+".transform"),children});active.add(r);pending.push({value:null,at:t.at,out:t.out,exit:r});for(let i=source.length-1;i>=0;i--)pending.push({value:source[i],at:t.at+".children["+i+"]",out:children});break;}case"image":if(!(r.bytes instanceof Uint8Array))throw new stdioSemioV1DrawingSnapshotGuardRefusal(t.at+".bytes","owned octets required");t.out.push({kind,at:parseSemioPoint2(r.at,t.at+".at"),width:parseBinary64(r.width),height:parseBinary64(r.height),mime:stdioSemioV1DrawingSnapshotGuardString(r.mime,t.at+".mime"),bytes:r.bytes.slice()});break;default:throw new stdioSemioV1DrawingSnapshotGuardRefusal(t.at,"unknown drawing node");}}return result[0]!;}
 export function parseDrawStyle(value:unknown,at="$"):DrawStyle{const r=stdioSemioV1DrawingSnapshotGuardObject(value,at);exactFields(r,at,["name","fill","stroke","strokeWidth","opacity"]);return{name:stdioSemioV1DrawingSnapshotGuardString(r.name,at+".name"),fill:r.fill===undefined?undefined:parseSemioRgba(r.fill),stroke:r.stroke===undefined?undefined:parseSemioRgba(r.stroke),strokeWidth:r.strokeWidth===undefined?undefined:parseBinary64(r.strokeWidth),opacity:r.opacity===undefined?undefined:parseBinary32(r.opacity)};}
 export function parseDrawCanvas(value:unknown,at="$"):DrawCanvas{const r=stdioSemioV1DrawingSnapshotGuardObject(value,at);exactFields(r,at,["width","height","background"]);return{width:parseBinary64(r.width),height:parseBinary64(r.height),background:r.background===undefined?undefined:parseSemioRgba(r.background)};}
-export function parseDrawLayer(value:unknown,at="$"):DrawLayer{const r=stdioSemioV1DrawingSnapshotGuardObject(value,at);exactFields(r,at,["id","name","visible","root"]);return{id:stdioSemioV1DrawingSnapshotGuardString(r.id,at+".id"),name:stdioSemioV1DrawingSnapshotGuardString(r.name,at+".name"),visible:stdioSemioV1DrawingSnapshotGuardBoolean(r.visible,at+".visible"),root:parseDrawNode(r.root,at+".root")};}
-export function parseSemioDrawingSnapshot(value:unknown,at="$"):SemioDrawingSnapshot{const r=stdioSemioV1DrawingSnapshotGuardObject(value,at);exactFields(r,at,["schema","canvas","styles","layers"]);return{schema:stdioSemioV1DrawingSnapshotGuardString(r.schema,at+".schema"),canvas:parseDrawCanvas(r.canvas,at+".canvas"),styles:(r.styles===undefined?[]:stdioSemioV1DrawingSnapshotGuardArray(r.styles,at+".styles")).map((v,i)=>parseDrawStyle(v,at+".styles["+i+"]")),layers:(r.layers===undefined?[]:stdioSemioV1DrawingSnapshotGuardArray(r.layers,at+".layers")).map((v,i)=>parseDrawLayer(v,at+".layers["+i+"]"))};}
+export function parseDrawLayer(value: unknown, at = "$"): DrawLayer {
+  const row = stdioSemioV1DrawingSnapshotGuardClosed(stdioSemioV1DrawingSnapshotGuardObject(value, at), at, ["id", "name", "visible", "root"]);
+  return {
+    id: stdioSemioV1DrawingSnapshotGuardString(row["id"], `${at}.id`),
+    name: stdioSemioV1DrawingSnapshotGuardString(row["name"], `${at}.name`),
+    visible: stdioSemioV1DrawingSnapshotGuardBoolean(row["visible"], `${at}.visible`),
+    root: parseDrawNode(row["root"], `${at}.root`),
+  };
+}
+export function parseSemioDrawingSnapshot(value: unknown, at = "$"): SemioDrawingSnapshot {
+  const row = stdioSemioV1DrawingSnapshotGuardClosed(stdioSemioV1DrawingSnapshotGuardObject(value, at), at, ["schema", "canvas", "styles", "layers"]);
+  return {
+    schema: stdioSemioV1DrawingSnapshotGuardString(row["schema"], `${at}.schema`),
+    canvas: parseDrawCanvas(row["canvas"], `${at}.canvas`),
+    styles: row["styles"] === undefined ? [] : stdioSemioV1DrawingSnapshotGuardArray(row["styles"], `${at}.styles`).map((item, index) => parseDrawStyle(item, `${at}.styles[${index}]`)),
+    layers: row["layers"] === undefined ? [] : stdioSemioV1DrawingSnapshotGuardArray(row["layers"], `${at}.layers`).map((item, index) => parseDrawLayer(item, `${at}.layers[${index}]`)),
+  };
+}

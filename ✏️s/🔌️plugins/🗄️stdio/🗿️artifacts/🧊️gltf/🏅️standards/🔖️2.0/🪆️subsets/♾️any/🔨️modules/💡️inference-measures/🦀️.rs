@@ -47,17 +47,17 @@ fn measure<T>(value: T, unit: GltfUnit, method: GltfComputationMethod, sample_co
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn unavailable<T>(unit: GltfUnit, availability: GltfAvailability, diagnostic_ids: Vec<String>, sample_count: usize, topology: Option<Topology>) -> GltfMeasure<T> {
+pub fn unavailable<T>(unit: GltfUnit, availability: GltfAvailability, diagnostic_ids: Vec<String>, sample_count: usize, topology: Option<Topology>) -> GltfMeasure<T> {
     let validity = if availability == GltfAvailability::InvalidInput { GltfValidity::Invalid } else { GltfValidity::Indeterminate };
     GltfMeasure { value: None, unit, availability, validity, diagnostic_ids, quality: quality(GltfComputationMethod::Exact, sample_count, topology), provenance: provenance() }
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn exact<T>(value: T, unit: GltfUnit, sample_count: usize, topology: Option<Topology>) -> GltfMeasure<T> {
+pub fn exact<T>(value: T, unit: GltfUnit, sample_count: usize, topology: Option<Topology>) -> GltfMeasure<T> {
     measure(value, unit, GltfComputationMethod::Exact, sample_count, topology)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn estimate<T>(value: T, unit: GltfUnit, sample_count: usize, topology: Option<Topology>) -> GltfMeasure<T> {
+pub fn estimate<T>(value: T, unit: GltfUnit, sample_count: usize, topology: Option<Topology>) -> GltfMeasure<T> {
     measure(value, unit, GltfComputationMethod::DeterministicEstimate, sample_count, topology)
 }
 //#endregion 💡️Measures

@@ -52,6 +52,7 @@ semio-framework-pack-record-preflight = { path = "../../🌱️value/🫳️pref
 semio-framework-pack-record-retained = { path = "../../🌱️value/🛬️decode/📦️packages/🦀️rust" }
 semio-framework-pack-record-schema = { path = "../../🌱️value/🧬️schema/📦️packages/🦀️rust" }
 semio-framework-replication-codec = { path = "../../../📡️replication/⚙️codec/📦️packages/🦀️rust" }
+semio-framework-replication-interaction = { path = "../../../📡️replication/📡️wire/🕹️interaction/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../🌱️value/📦️packages/🦀️rust" }
 
 [dev-dependencies]

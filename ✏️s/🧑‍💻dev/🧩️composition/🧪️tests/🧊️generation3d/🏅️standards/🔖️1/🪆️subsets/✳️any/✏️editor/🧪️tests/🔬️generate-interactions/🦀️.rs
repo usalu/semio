@@ -9,9 +9,10 @@
 
 use super::*;
 use crate::editor_domain::editor_laws::serial_execution;
+use semio_framework_test_fixtures::repo_text;
 
 //#region 🎛️Fixture
-const GENERATE_INTERACTIONS_FIXTURE_JSON: &str = include_str!("../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🎛️generate-mode-interactions.json");
+fn generate_interactions_fixture_json() -> &'static str { repo_text!("✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🎛️generate-mode-interactions.json") }
 
 #[derive(serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -87,7 +88,7 @@ fn declared_action_ids(definition: &semio_framework_plugin::AppDefinition) -> st
 }
 
 fn generate_interactions_fixture() -> GenerateInteractionsFixture {
-    let fixture: GenerateInteractionsFixture = serde_json::from_str(GENERATE_INTERACTIONS_FIXTURE_JSON).expect("generate-mode interactions fixture");
+    let fixture: GenerateInteractionsFixture = serde_json::from_str(generate_interactions_fixture_json()).expect("generate-mode interactions fixture");
     assert_eq!(fixture.format, "semio.generation3d.generate-mode-interactions");
     assert_eq!(fixture.version, 1);
     fixture

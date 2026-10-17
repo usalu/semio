@@ -1,0 +1,45 @@
+{
+  "version": 1,
+  "maximum": 65536,
+  "bounds": [
+    {
+      "entries": 0,
+      "accepted": true
+    },
+    {
+      "entries": 65536,
+      "accepted": true
+    },
+    {
+      "entries": 65537,
+      "accepted": false
+    }
+  ],
+  "faults": [
+    {
+      "name": "read-error",
+      "read": "error",
+      "close": "error"
+    },
+    {
+      "name": "read-undefined",
+      "read": "undefined",
+      "close": "error"
+    },
+    {
+      "name": "close-error",
+      "read": "none",
+      "close": "error"
+    },
+    {
+      "name": "close-undefined",
+      "read": "none",
+      "close": "undefined"
+    },
+    {
+      "name": "cancel",
+      "read": "cancel",
+      "close": "none"
+    }
+  ]
+}

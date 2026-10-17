@@ -4,7 +4,6 @@
 //! alone.
 
 use crate::diff::BitmapDiff;
-use crate::mutations::BitmapMutation;
 use crate::schema::snapshot::BitmapSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -20,17 +19,23 @@ pub struct ResizeInput {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn resize_input(width: u32, height: u32) -> BitmapMutation {
-    BitmapMutation::ResizeInput(ResizeInput { width, height })
+pub fn resize_input<Op>(width: u32, height: u32) -> Op
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::resize_input::ResizeInput>,
+{
+    Op::from(ResizeInput { width, height })
 }
 
-impl MutationKind<BitmapSnapshot, BitmapMutation> for ResizeInput {
+impl<Op> MutationKind<BitmapSnapshot, Op> for ResizeInput
+where
+    Op: protocol::Mutation<BitmapSnapshot, Diff = BitmapDiff> + From<ResizeInput> + From<crate::standards::v1::subsets::any::schema::mutations::set_input_pixels::SetInputPixels>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "resize", entity: "input", kind: "resize-input", record: "ResizedInput" };
 
     fn diff(&self, base: &BitmapSnapshot) -> protocol::MutationOutcome<BitmapDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &BitmapSnapshot) -> Result<Vec<BitmapMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &BitmapSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

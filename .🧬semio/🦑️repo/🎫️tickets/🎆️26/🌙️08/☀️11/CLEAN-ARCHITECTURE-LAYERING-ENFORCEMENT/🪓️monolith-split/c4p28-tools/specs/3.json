@@ -1,0 +1,134 @@
+{
+ "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️retained/🎬️action/🦀️.rs",
+ "original": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/🗑️generated/c4p28-orig/3.rs",
+ "stage": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/🗑️generated/c4p28-stage",
+ "descendants": [],
+ "chunks": [
+  {
+   "name": "window_command_work",
+   "folder": "🪟️window-command-work",
+   "doc": "🪟️ Window command work: the one-action-per-window route through the shared action prologue, spending one bounded turn on the scene, one per owed mesh fallback and one on the dispatch.",
+   "segments": [
+    {
+     "lines": [
+      99,
+      273
+     ]
+    }
+   ],
+   "replace": [
+    [
+     "    pub(super) app_instance_id: u32,",
+     "    pub app_instance_id: u32,"
+    ],
+    [
+     "    pub(super) parent_document_id: String,",
+     "    pub parent_document_id: String,"
+    ],
+    [
+     "    pub(super) owner: ArtifactInstanceOperationOwnerHandle,",
+     "    pub owner: ArtifactInstanceOperationOwnerHandle,"
+    ],
+    [
+     "    pub(super) fn new(tool_id: &'static str) -> Self {",
+     "    pub fn new(tool_id: &'static str) -> Self {"
+    ],
+    [
+     "    fn with_tool_run(mut self,",
+     "    pub fn with_tool_run(mut self,"
+    ],
+    [
+     "    pub(super) fn bound(mut self, instance: &Puzzle3dInstanceBinding) -> Self {",
+     "    pub fn bound(mut self, instance: &Puzzle3dInstanceBinding) -> Self {"
+    ]
+   ]
+  },
+  {
+   "name": "transform_work",
+   "folder": "🔄️transform-work",
+   "doc": "🔄️ Transform work: the staged selection transform (gumball, target volume relocation, Relocate drop, inspector nudge) that reads the gesture, scans a drop page by page and commits one transform tool transaction.",
+   "segments": [
+    {
+     "lines": [
+      275,
+      464
+     ]
+    }
+   ],
+   "replace": [
+    [
+     "    pub(super) fn new(tool_id: &'static str, authoring_seed: String) -> Self {",
+     "    pub fn new(tool_id: &'static str, authoring_seed: String) -> Self {"
+    ]
+   ]
+  },
+  {
+   "name": "brush_object_work",
+   "folder": "🖌️brush-object-work",
+   "doc": "🖌️ Brush object work: the staged placement of one brush-previewed object, its kind, representation and vortices, the attractions it joins and the published object and attraction.",
+   "segments": [
+    {
+     "lines": [
+      466,
+      747
+     ]
+    }
+   ]
+  },
+  {
+   "name": "focus_selection_work",
+   "folder": "🎯️focus-selection-work",
+   "doc": "🎯️ Focus selection work: the staged focus that sums and measures the selected objects page by page before it publishes the result.",
+   "segments": [
+    {
+     "lines": [
+      749,
+      919
+     ]
+    }
+   ]
+  },
+  {
+   "name": "accept_suggestion_work",
+   "folder": "💡️accept-suggestion-work",
+   "doc": "💡️ Accept suggestion work: the staged acceptance of one suggestion, its target, candidate, vortices and existing attractions, then the published object, attraction and result.",
+   "segments": [
+    {
+     "lines": [
+      921,
+      1204
+     ]
+    }
+   ],
+   "replace": [
+    [
+     "    pub(super) fn bound(mut self, instance: &Puzzle3dInstanceBinding) -> Self {",
+     "    pub fn bound(mut self, instance: &Puzzle3dInstanceBinding) -> Self {"
+    ]
+   ]
+  },
+  {
+   "name": "precompute_command_work",
+   "folder": "🧠️precompute-command-work",
+   "doc": "🧠️ Precompute command work: the staged precompute commands that decode and page the scene, its catalogs and the mesh positions and indices into the engine session before they publish.",
+   "segments": [
+    {
+     "lines": [
+      1206,
+      1493
+     ]
+    }
+   ],
+   "replace": [
+    [
+     "    pub(super) fn bound(mut self, instance: &Puzzle3dInstanceBinding) -> Self {",
+     "    pub fn bound(mut self, instance: &Puzzle3dInstanceBinding) -> Self {"
+    ],
+    [
+     "    pub(super) fn new(tool_id: &'static str) -> Self {",
+     "    pub fn new(tool_id: &'static str) -> Self {"
+    ]
+   ]
+  }
+ ]
+}

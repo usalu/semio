@@ -1,7 +1,21 @@
 //! 🧪️ Editor laws — the manifest shape, the action roster, the typed command channel, and the
 //! per-pane dispatch every command owes its own window.
 
-use super::*;
+use crate::editor::grid2d::modes::edit;
+use crate::editor::grid2d::modes::edit::tools::fill as fill_tool;
+use crate::{editor::grid2d::modes::edit::windows::grid, editor::grid2d::modes::edit::windows::preview};
+use crate::{editor::grid2d::window, editor::grid2d::window::Grid2dWindowConfig};
+use crate::{Grid2dMutation, Grid2dSnapshot, WFC_GRID2D_DIALECT, WFC_GRID2D_DOCUMENT_SCHEMA};
+use semio_framework_plugin::AppOperationContext;
+use semio_framework_plugin::ArtifactEditor;
+use semio_framework_plugin::ArtifactToolPublicationLane;
+use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::ConfigView;
+use semio_framework_plugin::Editor;
+use semio_framework_plugin::InteractiveJobClassification;
+use semio_framework_plugin::NoConfig;
+use semio_framework_plugin::ViewModel;
+use crate::editor::grid2d::*;
 
 #[test]
 fn the_editor_builds_a_definition_for_the_editor_role() {
@@ -330,4 +344,4 @@ fn the_editor_declares_the_artifact_kind_it_edits() {
     assert_eq!(create_grid2d_editor().artifact_kinds, vec![crate::artifact_kind()]);
 }
 
-semio_framework_plugin::history_edit_acceptance_law!("wfc", super::Grid2dEditor, || semio_framework_plugin::App { definition: super::create_grid2d_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️1/🪆️subsets/✳️any");
+semio_framework_plugin::history_edit_acceptance_law!("wfc", crate::editor::grid2d::Grid2dEditor, || semio_framework_plugin::App { definition: crate::editor::grid2d::create_grid2d_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️1/🪆️subsets/✳️any");

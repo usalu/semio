@@ -21,7 +21,7 @@ pub fn drain<T:RetireOwned+Clone+PartialEq+std::fmt::Debug>(value:T,source_bytes
   }
   let(step,allocation)=observe(||owner.step(funding).unwrap());let receipt=step.progress();assert!(receipt.fits(funding));assert!(!allocation.overflowed);assert_eq!((allocation.requested_bytes,allocation.released_bytes),(receipt.retained_capacity_bytes,receipt.released_bytes));born+=allocation.requested_bytes;released+=allocation.released_bytes;
  }
- assert!(owner.terminal_is_empty());assert_eq!(released,source_bytes+born);let(_,allocation)=observe(||drop(owner));assert_eq!((allocation.requested_bytes,allocation.released_bytes),(0,0));eprintln!("[DEBUG] Retained command metadata original={source_bytes} born={born} release={released} terminalDrop=0");
+ assert!(owner.terminal_is_empty());assert_eq!(released,source_bytes+born);let(_,allocation)=observe(||drop(owner));assert_eq!((allocation.requested_bytes,allocation.released_bytes),(0,0));
 }
 #[test]
 fn retained_command_metadata_preserves_original_history_and_physical_authority(){

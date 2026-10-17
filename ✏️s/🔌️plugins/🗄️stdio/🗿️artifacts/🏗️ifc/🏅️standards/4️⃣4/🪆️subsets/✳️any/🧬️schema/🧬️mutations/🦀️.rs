@@ -94,7 +94,7 @@ pub const KINDS: &[&str] = &["set-file-description", "set-file-name", "set-file-
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`, returning a typed error outcome without changing the
 /// snapshot when an entity or argument target is missing or out of range.
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 pub fn apply_ifc_mutation(snapshot: &mut IfcSnapshot, mutation: &IfcMutation) -> protocol::MutationOutcome<IfcDiff> {
     let outcome = <IfcMutation as Mutation<IfcSnapshot>>::diff(mutation, snapshot);
     match protocol::apply_diff(outcome.diff(), snapshot) {

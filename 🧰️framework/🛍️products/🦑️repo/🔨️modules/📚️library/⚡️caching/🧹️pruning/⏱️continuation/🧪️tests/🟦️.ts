@@ -14,7 +14,6 @@ import {phaseCompilerAdmissionControlV1} from "../../../../../../../../🔨️mo
 test("Cooperative scanners retain every existing portable pruning and physical byte law",async()=>{
  const output=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!output)throw Error("Original ticket artifact directory required");
  const control=phaseCompilerAdmissionControlV1(new AbortController().signal,30000,()=>undefined,()=>new Promise(done=>setImmediate(done)));await testCachePrune(output,control);
- console.log("[DEBUG] Existing portable cache planner and Python physical byte oracle passed through cooperative maintenance");
 },30000);
 
 test("Large cache walks preserve awaited original cancellation and deadlines",async()=>{
@@ -29,7 +28,6 @@ test("Large cache walks preserve awaited original cancellation and deadlines",as
   expect(units).toHaveLength(fixture.expected.units);expect(units[0]!.bytes).toBe(oracle);expect(published).toBeGreaterThan(0);expect(yielded).toBe(published);expect(completed).toBe(1);
   completed=0;interrupt="deadline";await expect(pruning.scanDirectoryUnits(area,control,new Set(),()=>completed++)).rejects.toThrow("Original compiler admission deadline exhausted");expect(completed).toBe(fixture.expected.cancelledScanUnits);deadline=30000;
   interrupt="signal";await expect(pruning.scanDirectoryUnits(area,control,new Set(),()=>completed++)).rejects.toBe(original);expect(completed).toBe(fixture.expected.cancelledScanUnits);
-  console.log("[DEBUG] Cooperative cache scan files="+fixture.files+" bytes="+oracle+" originalSignal=preserved originalDeadline=preserved progress=awaited");
  }finally{rmSync(root,{recursive:true,force:true});}
 });
 
@@ -44,6 +42,5 @@ test("Large cache deletion stops at the caller continuation and resumes from phy
   interrupt=false;const resumed:ResourceLeaseControl={...control,signal:new AbortController().signal};mkdirSync(join(root,"outside"));writeFileSync(join(root,"outside/kept.bin"),fixture.contents);symlinkSync(join(root,"outside"),join(consumer,"foreign"),"junction");await pruning.deleteUnit(area,unit,resumed);expect(fg.sync("**/*",{cwd:area,onlyFiles:true})).toEqual([]);expect(readFileSync(join(root,"outside/kept.bin"),"utf8")).toBe(fixture.contents);
   await expect(pruning.deleteUnit(area,{...unit,path:"../outside.bin"},resumed)).rejects.toThrow("Cache unit must remain inside its area");expect(readFileSync(join(root,"outside.bin"),"utf8")).toBe(fixture.contents);
   symlinkSync(join(root,"outside"),join(area,"foreign"),"junction");await expect(pruning.deleteUnit(area,{...unit,path:"foreign/kept.bin",kind:"cargo-target-file"},resumed)).rejects.toThrow("Cache unit parent must remain a physical directory");expect(readFileSync(join(root,"outside/kept.bin"),"utf8")).toBe(fixture.contents);
-  console.log("[DEBUG] Cooperative cache deletion partialFiles="+retained.length+" resumed=terminal escapedDeletion="+fixture.expected.escapedDeletion);
  }finally{rmSync(root,{recursive:true,force:true});}
 });

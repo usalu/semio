@@ -6,8 +6,8 @@ import type { TestSource } from "../🧰️worker-law-fakes/🟦️.ts";
 
 type ArtifactState = import("../../🔨️modules/🏪️store/👷️worker/🟦️.ts").ArtifactState;
 type BackboneWorkerResponse = import("../../🟦️.ts").BackboneWorkerResponse;
-type ServerFrame = import("../../../../🔨️modules/📡️replication/🟦️.ts").ServerFrame;
-type WireFrontierSummary = import("../../../../🔨️modules/📡️replication/🟦️.ts").WireFrontierSummary;
+type ServerFrame = import("@semio-tech/framework-replication").ServerFrame;
+type WireFrontierSummary = import("@semio-tech/framework-replication").WireFrontierSummary;
 type Vitest = NonNullable<ImportMeta["vitest"]>;
 
 export async function registerArtifactBootstrapRestoreTests(vitest: Vitest, dependencies: BackboneWorkerTestDependencies, source: TestSource): Promise<void> {

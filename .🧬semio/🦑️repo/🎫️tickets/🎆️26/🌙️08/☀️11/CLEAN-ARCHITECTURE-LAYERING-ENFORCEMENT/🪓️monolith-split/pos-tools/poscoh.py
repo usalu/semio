@@ -161,7 +161,7 @@ def main():
     for r in res:
         lines.append(f"{r['code']} [{r['pkg']}] {r['file']}:{r['line']}: {r['msg']} | impl{r['header']}")
     txt = "\n".join(lines) + "\n"
-    log_write(f"{GEN}/pos-{spec['name']}-coherence.txt", txt)
+    log_write(f"{GEN}/{PREFIX}-{spec['name']}-coherence.txt", txt)
     print(txt[:6000])
 
 

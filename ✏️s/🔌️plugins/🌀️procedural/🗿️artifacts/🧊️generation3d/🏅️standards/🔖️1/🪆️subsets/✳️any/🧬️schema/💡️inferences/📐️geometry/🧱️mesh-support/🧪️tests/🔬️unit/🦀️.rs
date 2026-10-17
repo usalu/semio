@@ -1,3 +1,4 @@
+use semio_framework_3d::mesh::{MeshModelingOps};
 use semio_s_artifact_procedural_3d_io_text::snapshot::catalogue::catalogue;
 use super::harness::{self as h, oracle};
 use super::*;

@@ -18,7 +18,7 @@ export default defineConfig({
   cacheDir:policy.cacheRoot,
   root: testRoot,
   resolve: {
-    alias: [{ find: "@semio-tech/framework-os", replacement: resolve(repoRoot, "./🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🟦️.ts") }],
+    alias: [{ find: /^@semio-tech\/framework-os$/u, replacement: resolve(repoRoot, "./🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🟦️.ts") }],
   },
   test: {
     root: testRoot,

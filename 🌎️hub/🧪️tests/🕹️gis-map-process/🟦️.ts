@@ -22,8 +22,8 @@ import { withRepositoryPublishedCargoExecutableV1 } from "../../../🧰️framew
 import { buildRepositoryCargoArtifacts } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts";
 import { DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1, type ArtifactFrontier } from "@semio-tech/framework/directory/schema";
 import { artifactFrontierIsGenesisForV1, artifactFrontierIsEditedForV1 } from "@semio-tech/framework/directory/schema";
-import type { TestBrowserHostRootsV1 } from "../../../✏️s/🧑‍💻dev/🧩️catalog/🌐️browser-host/🟦️.ts";
-import { withTestBrowserHostV1 } from "../../../✏️s/🧑‍💻dev/🧩️catalog/🌐️browser-host/🏗️staging/🟦️.ts";
+import type { TestBrowserHostRootsV1 } from "@semio-tech/s-dev-catalog-ts/browser-host";
+import { withTestBrowserHostV1 } from "@semio-tech/s-dev-catalog-ts/browser-host/staging";
 import { runRepositoryExactCargoLaws, configuredRepositoryCargoPreparationPolicyV1 } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { exactCargoStageEnvironments } from "../../🏗️build/🛂staging-environment/🟦️.ts";
@@ -31,7 +31,9 @@ import { issueLocalCredential } from "../../🚀️local-bootstrap/🔐️creden
 import { type LocalProfile } from "../../🚀️local-bootstrap/🛂authentication/🟦️.ts";
 import { finishLocalHub, freeLoopbackPort, type LocalHubRun, type LocalHubHostV1, withLocalHubHostTaskV1, withCapturedLocalHubHostV1, startLocalHub, waitForReadiness } from "../../🚀️local-bootstrap/🏃️execution/🟦️.ts";
 import { type TrustedBootstrapMaterializationV1, type TrustedBootstrapPublishedV1, trustedBootstrapWriteNew } from "../../🏗️bootstrap/🧾️provenance/🗃️bootstrap-bundle/🟦️.ts";
-import { trustedBootstrapCurrent, trustedBootstrapReadCurrentBundle, trustedBootstrapVerifyPublication, validateAndPublishTrustedStdioGisCandidate, withMaterializedTrustedCatalogBundleV1 } from "../../🏗️bootstrap/🧾️provenance/🚚️bootstrap-publication/🟦️.ts";
+import { validateAndPublishTrustedStdioGisCandidate } from "../../🏗️bootstrap/🧾️provenance/🚚️bootstrap-publication/🟦️.ts";
+import { trustedBootstrapReadCurrentBundle, withMaterializedTrustedCatalogBundleV1 } from "../../🏗️bootstrap/🧾️provenance/🚚️bootstrap-publication/🧱️materialized-bundle/🟦️.ts";
+import { trustedBootstrapCurrent, trustedBootstrapVerifyPublication } from "../../🏗️bootstrap/🧾️provenance/🚚️bootstrap-publication/🔄️rotation-and-current-pointer/🟦️.ts";
 import { TRUSTED_BOOTSTRAP_LINKED_PACKAGES, trustedBootstrapSelectPackages } from "../../🏗️bootstrap/🧾️provenance/🧭️bootstrap-selection/🟦️.ts";
 import { checkInProcessHeadV1, commitCheckInProcessEdit, createCheckInProcessGenesis } from "../🪪️check-in-process/🟦️.ts";
 import { liveDirectoryEventPageUser } from "../📣️directory-live-support/🟦️.ts";

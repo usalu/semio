@@ -41,13 +41,13 @@ import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync 
 import { type AddressInfo, connect, createServer, type Socket } from "node:net";
 import { join, resolve } from "node:path";
 import type { Browser, BrowserContext, Page } from "playwright";
-import { acceptanceCheckResult, publishAcceptanceCheckResult, withAcceptanceRecord } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/🟦️.ts";
-import { hubProbeCall, hubProbeCreateArtifact, hubProbeCreateSpace, hubProbeCreationCatalog, hubProbeSignIn } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧪️testkit/📡️client-probe/🟦️.ts";
+import { acceptanceCheckResult, publishAcceptanceCheckResult, withAcceptanceRecord } from "@semio-tech/repo-test/acceptance/orchestration";
+import { hubProbeCall, hubProbeCreateArtifact, hubProbeCreateSpace, hubProbeCreationCatalog, hubProbeSignIn } from "@semio-tech/framework-os/modules/directory/testkit/client-probe";
 
-import { requireMcpBinary, spawnRawMcp } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🟦️.ts";
-import { ensureParityPlaywrightBrowsersPath } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/⚖️parity/🏃️execution/🟦️.ts";
+import { requireMcpBinary, spawnRawMcp } from "@semio-tech/framework-os-mcp";
+import { ensureParityPlaywrightBrowsersPath } from "@semio-tech/framework-os-dev/parity/execution";
 import { PLAYWRIGHT_MODULE_SPECIFIER } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/📋️plan/🟦️.ts";
-import { devServePortV1, ensureDevServe } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🚀️local-hub/🏃️execution/🟦️.ts";
+import { devServePortV1, ensureDevServe } from "@semio-tech/framework-os-dev/local-hub/execution";
 
 //#region 🔖️Contract
 /** 🧭️ The journeys this harness runs, each one acceptance check. */

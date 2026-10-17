@@ -1,0 +1,5 @@
+# Generic Retention-Only Model Independent Review
+
+Prospective contract only, no Source/Native acceptance. Same rooted private capture proof and shared one-shot terminal reservation, held original inode descriptor, absent exclusive capsule, durable intent, no-replace rename, exact postmove facts/source absence/roster and durable receipt/barriers are sound capability boundaries. Unknown moved entry is retained/fails, never unlinked/rolled back. Windows new purpose refuses before effect.
+
+Returned absent DATA is not durable future absence, ready result, Core token or detached authorization. Domain must freshly recheck under same real current owner/gates before stage. Explicit alias/reader repair authority belongs domain, not Generic primitive. Required laws include late foreign source, source recreated aftermove, receipt/sync/close uncertainty, directory parent link transitions and external hardlinks (one retained inode, no whole-file free claim). Existing32/path256/intent4096 remain unchanged. No implementation/protected observation performed.

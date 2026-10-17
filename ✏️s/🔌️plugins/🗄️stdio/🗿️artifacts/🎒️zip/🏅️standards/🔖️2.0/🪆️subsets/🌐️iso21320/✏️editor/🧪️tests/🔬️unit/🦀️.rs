@@ -1,5 +1,9 @@
+use crate::editor::zip::iso21320::modes::edit::windows::main;
+use crate::{ZipMutation, ZipSnapshot};
+use semio_framework_plugin::ArtifactEditor;
+use semio_framework_plugin::Editor;
 use crate::apply_mutation;
-use super::*;
+use crate::editor::zip::iso21320::*;
 
 #[semio_framework_async_macros::async_test]
 async fn create_zip_iso21320_editor_builds_a_definition_for_the_editor_role() {
@@ -26,7 +30,7 @@ async fn editor_mounts_the_bounded_zip_preparation_route() {
     assert!(ZipIso21320Editor::native_edit_preparation_route("stdio-zip-iso21320-snapshot-edit").is_some());
 }
 
-semio_framework_plugin::history_edit_acceptance_law!("stdio", super::ZipIso21320Editor, || semio_framework_plugin::App { definition: super::create_zip_iso21320_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️2.0/🪆️subsets/🌐️iso21320");
+semio_framework_plugin::history_edit_acceptance_law!("stdio", crate::editor::zip::iso21320::ZipIso21320Editor, || semio_framework_plugin::App { definition: crate::editor::zip::iso21320::create_zip_iso21320_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️2.0/🪆️subsets/🌐️iso21320");
 
 #[semio_framework_async_macros::async_test]
 async fn details_edits_resolve_to_the_kind_of_the_addressed_member() {

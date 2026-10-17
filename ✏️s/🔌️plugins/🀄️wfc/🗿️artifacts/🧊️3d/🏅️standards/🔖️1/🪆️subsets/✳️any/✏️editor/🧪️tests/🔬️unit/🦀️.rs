@@ -1,9 +1,18 @@
 //! 🧪️ Editor surface laws: the manifest is canonical, every command dispatches to the mutation it
 //! names, camera and armed-tile verbs never touch the document, and both windows render.
 
-use super::*;
+use crate::{editor::wfc3d::config::Wfc3dConfig, editor::wfc3d::config::Wfc3dConfigMutation};
+use crate::editor::wfc3d::modes::edit;
+use crate::{editor::wfc3d::modes::edit::windows::graph, editor::wfc3d::modes::edit::windows::preview};
+use crate::editor::wfc3d::transient::Wfc3dTransient;
+use crate::{mutations::delete_slot, mutations::disconnect_slots, mutations::move_slot, mutations::pin_slot, mutations::resize_slot};
+use crate::{Wfc3dMutation, Wfc3dSnapshot, WFC3D_DIALECT, WFC3D_DOCUMENT_SCHEMA};
+use semio_framework_plugin::Emit;
+use semio_framework_plugin::Fault;
+use crate::editor::wfc3d::*;
 use crate::mutations::drag_slots;
 use semio_framework_plugin::ArtifactEditor;
+use semio_framework_test_fixtures::fixture_text;
 
 fn document() -> Wfc3dSnapshot {
     crate::examples::two_room_corridor::snapshot()
@@ -276,7 +285,7 @@ fn every_declared_action_bridges_through_command_from_action() {
 #[test]
 fn node_graph_rows_follow_the_shared_contract() {
     let document = crate::examples::two_room_corridor::snapshot();
-    let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../🧰️framework/🔨️modules/🛠️tool-machine/🧪️tests/🧫️fixtures/🧫️node-graph-edit-rows/🔣️.json"))).expect("the node-graph row fixture is JSON");
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../../../../../../../🧰️framework/🔨️modules/🛠️tool-machine/🧪️tests/🧫️fixtures/🧫️node-graph-edit-rows/🔣️.json")).expect("the node-graph row fixture is JSON");
     for case in fixture["accepted"].as_array().expect("accepted rows") {
         let result = graph_edit_mutations(&document, &serde_json::json!([case["row"].clone()]).to_string());
         match case["row"]["operation"].as_str() {
@@ -373,4 +382,4 @@ fn the_editor_declares_the_artifact_kind_it_edits() {
     assert_eq!(create_wfc3d_editor().artifact_kinds, vec![crate::artifact_kind()]);
 }
 
-semio_framework_plugin::history_edit_acceptance_law!("wfc", super::Wfc3dEditor, || semio_framework_plugin::App { definition: super::create_wfc3d_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️1/🪆️subsets/✳️any");
+semio_framework_plugin::history_edit_acceptance_law!("wfc", crate::editor::wfc3d::Wfc3dEditor, || semio_framework_plugin::App { definition: crate::editor::wfc3d::create_wfc3d_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️1/🪆️subsets/✳️any");

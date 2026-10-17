@@ -1,0 +1,35 @@
+{
+ "parent": "semio-s-artifact-draw-drawing-editor",
+ "name": "semio-s-artifact-draw-drawing-editor-tests",
+ "dir": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🥣️companion",
+ "files": [
+  "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️archive-load/🦀️.rs",
+  "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/⌨️command-laws/🦀️.rs",
+  "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/✉️envelope-laws/🦀️.rs",
+  "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/✋️gesture-laws/🦀️.rs",
+  "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🎛️selection-laws/🦀️.rs",
+  "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/👆️pointer-laws/🦀️.rs",
+  "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🔷️node-laws/🦀️.rs",
+  "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🖼️canvas-laws/🦀️.rs",
+  "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs",
+  "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🧰️utility-laws/🦀️.rs",
+  "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🪟️window-laws/🦀️.rs",
+  "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📋️clipboard/🧪️tests/🪟️runtime/🦀️.rs"
+ ],
+ "testkit": [
+  "semio-s-artifact-draw-drawing-model",
+  "semio-s-artifact-draw-drawing-diff",
+  "semio-s-artifact-draw-drawing-geometry",
+  "semio-s-artifact-draw-drawing-mutations",
+  "semio-s-artifact-draw-drawing-transform",
+  "semio-s-artifact-draw-drawing-style",
+  "semio-s-artifact-draw-drawing-structure",
+  "semio-s-artifact-draw-drawing-metadata",
+  "semio-s-artifact-draw-drawing-scene",
+  "semio-s-artifact-draw-drawing-editor-interaction",
+  "semio-s-artifact-draw-drawing-editor"
+ ],
+ "emoji": "🥣️",
+ "summary": "the shared unit context of the drawing editor (commands, envelopes, gestures, selection, pointer, nodes, canvas, utilities, windows, clipboard runtime) and the archive-load law.",
+ "description": "Companion test crate of semio-s-artifact-draw-drawing-editor: the shared unit context of the drawing editor (commands, envelopes, gestures, selection, pointer, nodes, canvas, utilities, windows, clipboard runtime) and the archive-load law"
+}

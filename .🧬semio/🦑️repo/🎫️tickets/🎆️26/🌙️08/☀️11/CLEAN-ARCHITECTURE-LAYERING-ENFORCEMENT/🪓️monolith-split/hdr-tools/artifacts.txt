@@ -1,0 +1,16 @@
+✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996
+✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d
+✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d
+✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d
+✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏋️en1991
+✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805
+✏️s/🔌️plugins/📕️norm/🗿️artifacts/📇️iso16757
+✏️s/🔌️plugins/📕️norm/🗿️artifacts/🔩️en1993
+✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧱️din4108
+✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995
+✏️s/🔌️plugins/📕️norm/🗿️artifacts/🫨️en1998
+✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling
+✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d
+✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d
+✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d
+✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d

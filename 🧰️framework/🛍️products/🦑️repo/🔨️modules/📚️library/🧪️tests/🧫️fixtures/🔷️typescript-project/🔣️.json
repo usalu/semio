@@ -1,0 +1,139 @@
+{
+  "schema": "semio.repo.library.typescript-project/v1",
+  "excludes": [
+    "**/node_modules/**",
+    "js/temp",
+    "temp",
+    "**/dist/**",
+    "**/📤️dist/**",
+    "**/🗑️generated/**",
+    ".🧬semio/🦑️repo/🎫️tickets/**"
+  ],
+  "sources": [
+    "🧰️framework/🔨️modules/🅰️a/🟦️.ts",
+    "🧰️framework/🔨️modules/🅰️a/🧪️tests/🟦️.ts",
+    "🧰️framework/🔨️modules/🅰️a/📦️packages/🟦️typescript/node_modules/dep/🟦️.ts",
+    "🧰️framework/🔨️modules/🅰️a/📤️dist/🟦️.ts",
+    "🧰️framework/🔨️modules/🅱️b/🟦️.tsx",
+    "🧰️framework/🔨️modules/🅱️b/🗑️generated/out.ts",
+    "✏️s/🔌️plugins/🅲️c/🟦️.ts",
+    "✏️s/🔌️plugins/🅲️c/🟦️.d.ts",
+    "temp/scratch.ts",
+    "js/temp/legacy.ts",
+    ".🧬semio/🦑️repo/🎫️tickets/ticket/scratch.ts",
+    "🌎️hub/🟦️.ts",
+    "🌎️hub-extra/🟦️.ts",
+    "✏️s/🔌️plugins/🅳️d/🟦️.d.ts"
+  ],
+  "changed": [
+    "🧰️framework/🔨️modules/🅰️a/🟦️.ts",
+    "🌎️hub/🟦️.ts",
+    "temp/scratch.ts"
+  ],
+  "cases": [
+    {
+      "name": "whole workspace keeps every non-excluded source, sorted by code point, and shadows a .d.ts next to its .ts",
+      "scopes": [],
+      "changedOnly": false,
+      "roots": [
+        "✏️s/🔌️plugins/🅲️c/🟦️.ts",
+        "✏️s/🔌️plugins/🅳️d/🟦️.d.ts",
+        "🌎️hub-extra/🟦️.ts",
+        "🌎️hub/🟦️.ts",
+        "🧰️framework/🔨️modules/🅰️a/🟦️.ts",
+        "🧰️framework/🔨️modules/🅰️a/🧪️tests/🟦️.ts",
+        "🧰️framework/🔨️modules/🅱️b/🟦️.tsx"
+      ]
+    },
+    {
+      "name": "a scope keeps a folder prefix at a segment boundary",
+      "scopes": [
+        "🌎️hub"
+      ],
+      "changedOnly": false,
+      "roots": [
+        "🌎️hub/🟦️.ts"
+      ]
+    },
+    {
+      "name": "two scopes union",
+      "scopes": [
+        "✏️s",
+        "🧰️framework/🔨️modules/🅱️b"
+      ],
+      "changedOnly": false,
+      "roots": [
+        "✏️s/🔌️plugins/🅲️c/🟦️.ts",
+        "✏️s/🔌️plugins/🅳️d/🟦️.d.ts",
+        "🧰️framework/🔨️modules/🅱️b/🟦️.tsx"
+      ]
+    },
+    {
+      "name": "a scope can name one file",
+      "scopes": [
+        "✏️s/🔌️plugins/🅲️c/🟦️.ts"
+      ],
+      "changedOnly": false,
+      "roots": [
+        "✏️s/🔌️plugins/🅲️c/🟦️.ts"
+      ]
+    },
+    {
+      "name": "changed-only keeps changed sources and still drops excluded ones",
+      "scopes": [],
+      "changedOnly": true,
+      "roots": [
+        "🌎️hub/🟦️.ts",
+        "🧰️framework/🔨️modules/🅰️a/🟦️.ts"
+      ]
+    },
+    {
+      "name": "changed-only and a scope intersect",
+      "scopes": [
+        "🧰️framework"
+      ],
+      "changedOnly": true,
+      "roots": [
+        "🧰️framework/🔨️modules/🅰️a/🟦️.ts"
+      ]
+    },
+    {
+      "name": "a scope outside every source selects nothing",
+      "scopes": [
+        "nowhere"
+      ],
+      "changedOnly": false,
+      "roots": []
+    },
+    {
+      "name": "a listed root file keeps only live, non-excluded roots in the list",
+      "scopes": [],
+      "changedOnly": false,
+      "listed": [
+        "🌎️hub/🟦️.ts",
+        "gone/🟦️.ts",
+        "temp/scratch.ts",
+        "🧰️framework/🔨️modules/🅱️b/🟦️.tsx"
+      ],
+      "roots": [
+        "🌎️hub/🟦️.ts",
+        "🧰️framework/🔨️modules/🅱️b/🟦️.tsx"
+      ]
+    }
+  ],
+  "toRoot": "../../..",
+  "ambientPaths": {
+    "lines-and-columns": "node_modules/lines-and-columns/build/index.d.ts"
+  },
+  "tscLog": "🧰️framework/🔨️modules/🅰️a/🟦️.ts(3,7): error TS2322: Type 'string' is not assignable to type 'number'.\n  Type 'string' is not assignable to type 'number'.\n🧰️framework/🔨️modules/🅰️a/🟦️.ts(9,1): error TS2304: Cannot find name 'missing'.\n🌎️hub/🟦️.ts(1,20): error TS2307: Cannot find module 'ghost' or its corresponding type declarations.\nerror TS6053: File 'gone.ts' not found.\n  The file is in the program because:\n    Root file specified for compilation\n",
+  "summary": {
+    "total": 4,
+    "files": 2,
+    "byCode": {
+      "TS2304": 1,
+      "TS2307": 1,
+      "TS2322": 1,
+      "TS6053": 1
+    }
+  }
+}

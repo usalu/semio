@@ -1,0 +1,28 @@
+# Selected Rust Descriptor Lifetime and Bounded Observation Design
+
+Root read-only Source follow-up to rust-unit-selected-planning-observation-current.md. No Native/compiler/Cargo metadata/cache/service/network effect or test was executed. An initial rg included a nonexisting library/process/Nx directory and returned2 with remaining results; subsequent exact existing-owner reads support only the Source statements here.
+
+## Actual Retained Lifetime Frontier
+
+The descriptor producer publishes immutable descriptor.json inside store.captureDirectory/units/<digest> and adds that Native path to produced.inputs. prepareSelectedRustBuildGraphV1 currently opens withRepositoryCompilerStoreV1 separately in its selected-row loop, consumes produced descriptors/project DATA, exits each compiler-store callback, and finally rereads all collected inputs through selectedRustSourceFactsV1. The actual compiler-store factory sets its private owner.live=false as the callback settles and closes the image in finally. withSelectedRustBuildGraphV1 holds the actual unit-code reader around preparation and its backend callback, but does not itself retain this compiler-store reader. The main build Script pins the prepared graph and runs Nx inside that outer callback. Thus immutable descriptor DATA/path/digest outlive this actual compiler-store callback; final selected-facts reads and later Nx descriptor reads lack that original retained compiler-store reader in the inspected chain. This is a concrete Source custody gap, not a claim that a current Native operation was run or that an unmount was observed. Another concurrent reader keeping a mount present would not supply this Original's missing custody.
+
+The next coherent cut must retain the genuine compiler-store reader and toolchain control through preparation, immutable graph pinning and completed actual backend descendants. The selected mode must come from the existing Original and agree across selected tasks. Reuse one actual retained store for this selected invocation and its actual callback; do not add a loose store/path input, structural registrar, new root clock, descriptor adoption, legacy bare-helper fallback or globally held EX. Preserve separate per-unit writers and the existing shared image reader/concurrency design. Update the actual caller contract and retained neutral/AST laws before qualification. No new public helper may remain unconsumed. Nx HIGH receives this next scope after current Python freeze and independent audit.
+
+## Bounded Observed Source Cut
+
+The existing genuine exact Source batch is the correct initial physical reader: issued narrowed phase, no-follow descriptor/ancestor checks, fixed file/aggregate/work/chunk bounds, exact EOF, accepted canonical work/drain and private batch ownership. It intentionally returns digest/extent DATA, not a recorder. A defining observation method may call that actual batch reader and privately record its actual observed digest/extent; it must not accept caller-asserted file facts, arbitrary observation arrays as authority or registrar hooks. Expected semantic descriptor triples remain untrusted DATA copied before awaits and compared against actual reads.
+
+Both the initial selected-facts pass and its actual replay must use fresh real bounded batches under the incoming actual phase. A cached digest from the same batch cannot prove currentness during replay. Preserve the private observation recorder and complete outer capture propagation; replacing observation recording with a plain record silently loses graph invalidation. The current generic file replay uses stamp hints and unbounded reads, so simply passing a signal or replacing the initial read is incomplete. Complete actual graph replay migration requires its authentic narrower phase, including cache-hit, post-inference and pre-publication checks. Synchronous semantic-analysis replay and broader parser/cache/file hosting remain separately identified unless migrated too; no blanket bounded-observation claim is authorized by one raw-file correction.
+
+Do not treat Native descriptors as ordinary unchecked Source paths: the compiler-store lifetime cut above must land with this work. No extra Native grants or physical executions are introduced. Expected failing genuine Originals remain isolated children, with terminal DATA observed by a healthy parent. Old unit selected-facts tests that catch a failed Original in-place must migrate when their actual required-phase signature changes; they are not suitable as fabricated positive orchestration.
+
+## Observed Source Identity
+
+| Source | Bytes | SHA-256 |
+| --- | ---: | --- |
+| `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🦀️rust/🟦️.ts` | 15649 | `56583a9c7353a1d060e407992c7b568557b7228a1047a25b425b3078ae346828` |
+| `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/📥️descriptor/🎯️selection/🟦️.ts` | 12488 | `a968779c33250e1bd2ccfa68dafc41f8c5196b2d1e412380fe1ba2517bbe73d7` |
+| `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🟦️.ts` | 13109 | `f1b7f111a123576ff68849fe7c95330869313752e8405116e130699b4f860a7e` |
+| `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts` | 24965 | `263bdbb9f209bfb00b8939101111d7c674659d50ea9efb28e977916c3ee7e3c3` |
+| `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.mjs` | 48402 | `059bac4c7bbb082a11ccb36d038b4d188f4147dcebbbe72251ca4b613f01dec8` |
+| `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🧮️digest/📥️read/🟨️.mjs` | 14703 | `f1ee05c507e58ecf7e08ab2f60cbbb44825938d49c42a4b65b08e7def3c8ed19` |

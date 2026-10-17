@@ -1,6 +1,6 @@
 //! 🏷️ Direct text codec for `set-info-title`.
 
-use crate::standards::v1_7::subsets::ua::schema::mutations::SetInfoTitle;
+use crate::standards::v1_7::subsets::ua::schema::mutations::set_info_title::SetInfoTitle;
 
 //#region 🔖️Identity
 pub const OPCODE: &str = "set-info-title";
@@ -20,7 +20,5 @@ pub fn parse(text: &str) -> Result<SetInfoTitle, String> {
 //#endregion 🔖️Codec
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

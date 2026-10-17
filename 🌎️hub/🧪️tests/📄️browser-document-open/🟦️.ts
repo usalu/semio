@@ -3,9 +3,9 @@
  */
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { decodeClientFrame, encodeServerFrame } from "../../../🧰️framework/🔨️modules/📡️replication/🟦️.ts";
-import { decodeBackboneWorkerResponse, encodeBackboneWorkerRequest } from "../../../🧰️framework/🛍️products/💻️os/🟦️.ts";
-import { DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🔏️document-open/🟦️.ts";
+import { decodeClientFrame, encodeServerFrame } from "@semio-tech/framework-replication";
+import { decodeBackboneWorkerResponse, encodeBackboneWorkerRequest } from "@semio-tech/framework-os";
+import { DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES } from "@semio-tech/framework-os/modules/directory/schema/document-open";
 import { runCmd, orchestratorBudgetOpts, viteConfigLoader } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { hubSchemaExport } from "../../📦️packages/🟦️typescript/🟦️.ts";

@@ -1,6 +1,6 @@
 //! 🔭️ `lod-scale-json` command.
 
-use crate::editor::puzzle2d::Puzzle2dActionCtx;
+use crate::editor::puzzle2d::interaction::Puzzle2dActionCtx;
 use semio_framework::kernel::UiDirtyScope;
 
 /// 📶️ Warms the board's LOD scale table (the chrome reads it through

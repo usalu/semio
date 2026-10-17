@@ -49,16 +49,12 @@ impl pack::snapshot::ArtifactDsl for PresentationSnapshot {
 //#endregion 🔖️HandcraftedArtifactDsl
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests
 
 
 #[allow(unused_imports)]
 mod snapshot_codec {
 use super::*;
-use crate::standards::v1::subsets::any::schema::*;
 use crate::{AnimationChild, PresentationChild, PRESENTATION_DOCUMENT_SCHEMA};
 use schema::ArtifactSchema;
 

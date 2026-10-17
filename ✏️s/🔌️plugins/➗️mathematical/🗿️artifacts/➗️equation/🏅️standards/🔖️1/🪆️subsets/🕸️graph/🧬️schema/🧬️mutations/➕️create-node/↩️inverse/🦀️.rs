@@ -2,15 +2,18 @@
 //! a no-op and there's nothing to undo).
 
 use crate::standards::v1::subsets::graph::schema::mutations::delete_node;
-use crate::{EquationMutation, EquationSnapshot};
+use crate::EquationSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &super::CreateNode, base: &EquationSnapshot) -> Result<Vec<EquationMutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op>(payload: &super::CreateNode, base: &EquationSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError>
+where
+    Op: From<crate::standards::v1::subsets::graph::schema::mutations::delete_node::DeleteNode>,
+{
     Ok((|| {
     if base.graph.nodes.iter().any(|node| node.id == payload.id) {
         return Vec::new();
     }
-    vec![EquationMutation::DeleteNode(delete_node::DeleteNode { id: payload.id.clone() })]
+    vec![Op::from(delete_node::DeleteNode { id: payload.id.clone() })]
 
     })())
 }

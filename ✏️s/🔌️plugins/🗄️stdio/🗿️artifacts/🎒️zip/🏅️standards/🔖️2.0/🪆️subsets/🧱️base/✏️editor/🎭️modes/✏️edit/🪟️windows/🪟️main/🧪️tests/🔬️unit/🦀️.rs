@@ -1,4 +1,6 @@
-use super::*;
+use crate::ZipSnapshot;
+use semio_framework_plugin::TreeWindows;
+use crate::editor::zip::base::modes::edit::windows::main::*;
 
 #[test]
 fn archive_window_requires_complete_draft_arguments() {

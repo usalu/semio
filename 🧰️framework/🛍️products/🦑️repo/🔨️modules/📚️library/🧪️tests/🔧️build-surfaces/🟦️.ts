@@ -1,3 +1,4 @@
+import "../../🏗️build/🧭️selection/🧪️tests/🟦️.ts";
 import { expect, test } from "bun:test";
 import Ajv from "ajv";
 import ts from "typescript";
@@ -6,6 +7,9 @@ import {createRequire} from "node:module";
 import { parseBuildInvocationV1 } from "../../🏗️build/🧭️invocation/🟦️.ts";
 import { validateBuildTaskArgumentsV1 } from "../../🏗️build/🧭️selection/🟦️.ts";
 import { readFileSync } from "node:fs";
+import {Database} from "bun:sqlite";
+import {readBuildDependencyInvocationV1} from "../../🏗️build/🧭️invocation/🟦️.ts";
+import {javascriptDependencyProducerArgumentsV1} from "../../⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts";
 import { dirname, join, resolve, posix, win32 } from "node:path";
 import { spawnSync } from "node:child_process";
 import { literalCommandTokensV1 } from "../../🏗️build/📤️arguments/🟨️.mjs";
@@ -52,7 +56,6 @@ test("package wrappers route to the repository root with independent argv and pa
   const visit=(node:ts.Node):void=>{if(ts.isCallExpression(node)&&node.expression.getText(source)==="runCmd"&&node.arguments[1]?.getText(source).includes('"repo"'))calls.push(node);ts.forEachChild(node,visit);};visit(source);
   expect(calls.length).toBeGreaterThan(0);
   for(const call of calls){const options=call.arguments[2];expect(options&&ts.isObjectLiteralExpression(options)).toBe(true);const cwd=(options as ts.ObjectLiteralExpression).properties.find(property=>ts.isPropertyAssignment(property)&&property.name.getText(source)==="cwd") as ts.PropertyAssignment;expect(cwd.initializer.getText(source)).toBe("this.repoRoot");}
-  console.log(`[DEBUG] Repository-root package routing checked ${wrappers} wrappers with independent string-argv and TypeScript AST oracles`);
 });
 
 test("portable developer entry points agree with the independent schema oracle", () => {
@@ -120,7 +123,7 @@ test("editor task arguments cross the neutral argument boundary", () => {
       if (["run", "run-many", "affected", "exec", "watch"].includes(args[0]!)) expect(() => validateBuildTaskArgumentsV1(args), String(row.name)).not.toThrow();
     }
   }
-});
+}, { timeout: 120_000 });
 
 test("native orchestration and rebuild declarations use neutral build commands", () => {
   const manifest = JSON.parse(read("package.json"));
@@ -155,4 +158,17 @@ test("Bazel configuration files have explicit repository filename authority", ()
     expect(taxonomy.fixedFilenameContracts[row.id], row.path).toMatchObject({ pathPattern: row.path, authority: "Bazel", scope: { kind: "repository-root" } });
     expect(read(row.path).length).toBeGreaterThan(0);
   }
+});
+
+
+test("CI dependency synchronization preserves root scope through the neutral owner", () => {
+  expect(new Ajv({strict:true}).compile(schema)(fixture)).toBe(true);
+  const row=fixture.ciDependencies,source=read(row.path),yaml=createRequire(import.meta.url)("yaml"),parsed=Bun.YAML.parse(source) as {jobs:Record<string,{steps:{name?:string;run?:string;uses?:string}[]}>};
+  expect(parsed).toEqual(yaml.parse(source));
+  const accepts=(command:string):boolean=>{try{const argv=literalCommandTokensV1(command);expect(argv).toEqual(parseArgsStringToArgv(command));if(argv[0]!=="bun"||argv[1]!=="repo")return false;const selected=readBuildDependencyInvocationV1(argv.slice(2));return selected.mode==="sync"&&selected.selection.kind==="scope"&&selected.selection.owner===".";}catch{return false;}};
+  const db=new Database(":memory:");
+  try{db.exec("CREATE TABLE commands (argv TEXT NOT NULL)");for(const vector of row.cases){const argv=parseArgsStringToArgv(vector.command);db.exec("DELETE FROM commands");db.query("INSERT INTO commands VALUES (?)").run(JSON.stringify(argv));const actual=db.query("SELECT CASE WHEN json_array_length(argv)=6 AND json_extract(argv,'$[0]')='bun' AND json_extract(argv,'$[1]')='repo' AND json_extract(argv,'$[2]')='dependencies' AND json_extract(argv,'$[3]')='sync' AND json_extract(argv,'$[4]')='--scope' AND json_extract(argv,'$[5]')='.' THEN 1 ELSE 0 END AS accepted FROM commands").get() as {accepted:number};expect(accepts(vector.command),vector.name).toBe(vector.accepted);expect(Boolean(actual.accepted),vector.name).toBe(vector.accepted);}
+    for(const job of row.jobs){const steps=parsed.jobs[job]!.steps,install=steps.filter(step=>step.name==="Install");expect(install).toHaveLength(1);expect(install[0]!.run).toBe(row.command);expect(accepts(install[0]!.run!)).toBe(true);expect(steps.findIndex(step=>step.uses?.startsWith("oven-sh/setup-bun@"))).toBeLessThan(steps.indexOf(install[0]!));for(const step of steps)if(step.run)expect(step.run).not.toMatch(/\bbun\s+(?:run\s+)?install\b|\bbun\s+nx\b/u);}
+    for(const cache of ["/workspace/cache/bun-cache","C:\\workspace\\cache\\bun-cache"]){const args=javascriptDependencyProducerArgumentsV1("sync",cache);expect(args.slice(0,3)).toEqual(["install","--frozen-lockfile","--ignore-scripts"]);expect(args.slice(-2)).toEqual(["--cache-dir",cache]);}
+  }finally{db.close();}
 });

@@ -1,0 +1,180 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "Entry": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 1,
+      "items": {
+        "enum": [
+          "tooling-closures-current.json",
+          "--source",
+          "--strict"
+        ]
+      }
+    },
+    "FreshEnvironment": {
+      "const": [
+        "SEMIO_SCRIPT_PROCESS_INVOCATION",
+        "SEMIO_SCRIPT_CAPABILITIES",
+        "SEMIO_BUILD_TOOL"
+      ]
+    },
+    "Policy": {
+      "const": {
+        "owner": "sdk:active-metadata",
+        "maximumElapsedMilliseconds": 60000,
+        "input": "tooling-closures-current.json",
+        "output": "active-sdk-current-provenance.json"
+      }
+    },
+    "Case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "argv",
+        "override",
+        "accepted"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "argv": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 2
+        },
+        "override": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "Cases": {
+      "const": [
+        {
+          "id": "tooling-closures-current.json",
+          "argv": [
+            "tooling-closures-current.json"
+          ],
+          "override": null,
+          "accepted": true
+        },
+        {
+          "id": "--source",
+          "argv": [
+            "--source"
+          ],
+          "override": null,
+          "accepted": true
+        },
+        {
+          "id": "--strict",
+          "argv": [
+            "--strict"
+          ],
+          "override": null,
+          "accepted": true
+        },
+        {
+          "id": "tooling-closures-seven-final-capture.json",
+          "argv": [
+            "tooling-closures-seven-final-capture.json"
+          ],
+          "override": null,
+          "accepted": false
+        },
+        {
+          "id": "tooling-closures-phase-current.json",
+          "argv": [
+            "tooling-closures-phase-current.json"
+          ],
+          "override": null,
+          "accepted": false
+        },
+        {
+          "id": "../tooling-closures-current.json",
+          "argv": [
+            "../tooling-closures-current.json"
+          ],
+          "override": null,
+          "accepted": false
+        },
+        {
+          "id": "tooling-closures-current.json/foreign",
+          "argv": [
+            "tooling-closures-current.json/foreign"
+          ],
+          "override": null,
+          "accepted": false
+        },
+        {
+          "id": "TOOLING-CLOSURES-CURRENT.JSON",
+          "argv": [
+            "TOOLING-CLOSURES-CURRENT.JSON"
+          ],
+          "override": null,
+          "accepted": false
+        },
+        {
+          "id": "arity-8",
+          "argv": [],
+          "override": null,
+          "accepted": false
+        },
+        {
+          "id": "arity-9",
+          "argv": [
+            "tooling-closures-current.json",
+            "foreign"
+          ],
+          "override": null,
+          "accepted": false
+        },
+        {
+          "id": "arity-10",
+          "argv": [
+            "--source",
+            "foreign"
+          ],
+          "override": null,
+          "accepted": false
+        },
+        {
+          "id": "SEMIO_SCRIPT_PROCESS_INVOCATION",
+          "argv": [
+            "tooling-closures-current.json"
+          ],
+          "override": "SEMIO_SCRIPT_PROCESS_INVOCATION",
+          "accepted": false
+        },
+        {
+          "id": "SEMIO_SCRIPT_CAPABILITIES",
+          "argv": [
+            "tooling-closures-current.json"
+          ],
+          "override": "SEMIO_SCRIPT_CAPABILITIES",
+          "accepted": false
+        },
+        {
+          "id": "SEMIO_BUILD_TOOL",
+          "argv": [
+            "tooling-closures-current.json"
+          ],
+          "override": "SEMIO_BUILD_TOOL",
+          "accepted": false
+        }
+      ]
+    }
+  }
+}

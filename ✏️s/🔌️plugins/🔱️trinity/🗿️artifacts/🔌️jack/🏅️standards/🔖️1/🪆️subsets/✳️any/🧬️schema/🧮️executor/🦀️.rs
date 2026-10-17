@@ -1,10 +1,13 @@
 //! 🧮️ Trinity jack query executor.
 #![allow(dead_code)]
 
-use crate::{Edge, EntityRef, Graph, Node, PropertyValue};
+use crate::standards::v1::subsets::any::schema::graph::{Edge, EntityRef, GraphEffect, Node};
+use crate::standards::v1::subsets::any::schema::memory::Graph;
+use crate::standards::v1::subsets::any::schema::snapshot::JackSnapshot;
+use semio_framework_graph_manifest::PropertyValue;
 use std::collections::{BTreeMap, BTreeSet};
 
-use crate::ast::{Clause, Expr, Pattern, Query, QueryResult, ReturnItem};
+use crate::standards::v1::subsets::any::schema::ast::{Clause, Expr, JackQueryGraphSnapshot, Pattern, Query, QueryResult, ReturnItem};
 
 /// 🎯️ Variable binding in a match row.
 #[derive(Clone, Debug, Default)]
@@ -13,22 +16,8 @@ pub struct Binding {
     pub edges: BTreeMap<String, String>,
 }
 
-/// 🧮️ One effect a query applies to its working graph. A run publishes its effects as graph leaves of the document's
-/// composed `content` child through its authored effect-preparation behavior, never as parent-lane leaves (design §20.15).
-#[derive(Clone, Debug, PartialEq, semio_framework_value::RetireOwned)]
-pub enum GraphEffect {
-    CreateNode(Node),
-    DeleteNode(String),
-    CreateEdge(Edge),
-    DeleteEdge(String),
-    RenameNode { id: String, name: String },
-    MoveNode { id: String, x: f64, y: f64 },
-    SetProperty { entity: EntityRef, key: String, value: PropertyValue },
-    RemoveProperty { entity: EntityRef, key: String },
-}
-
 #[path = "🪜️execution/🦀️.rs"]
-mod execution;
+pub mod execution;
 pub use execution::{QueryExecution, QueryExecutionPreparation, QueryPreparationStep, QUERY_RESULT_MAXIMUM_OWNED_BYTES};
 use execution::{emit_create_operations_from_graph, emit_set_operation_from_graph};
 
@@ -58,9 +47,6 @@ use execution::{emit_create_operations_from_graph, emit_set_operation_from_graph
 
 // #endregion 🔖️Executor
 // #region 🔖️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 // #endregion 🔖️Tests
 
 
@@ -71,7 +57,7 @@ pub fn execute(graph: &Graph, query: &Query) -> Result<(QueryResult, Vec<GraphEf
     let mut return_items: Option<Vec<ReturnItem>> = None;
     let mut effects = Vec::new();
     let apply = |view: &mut Graph, batch: Vec<GraphEffect>, effects: &mut Vec<GraphEffect>| -> Result<(), String> {
-        crate::apply_graph_effects(view, &batch).map_err(|e| e.to_string())?;
+        crate::standards::v1::subsets::any::schema::operations::apply_graph_effects(view, &batch).map_err(|e| e.to_string())?;
         effects.extend(batch);
         Ok(())
     };
@@ -147,8 +133,8 @@ pub(crate) fn match_pattern(graph: &Graph, pattern: &Pattern, base: &Binding) ->
                 if edge_pat.kind.as_ref().is_some_and(|k| *k != edge.kind) {
                     continue;
                 }
-                let src = crate::port_node_id(&edge.source);
-                let tgt = crate::port_node_id(&edge.target);
+                let src = crate::standards::v1::subsets::any::schema::graph::port_node_id(&edge.source);
+                let tgt = crate::standards::v1::subsets::any::schema::graph::port_node_id(&edge.target);
                 if src != Some(node_id.as_str()) {
                     continue;
                 }
@@ -267,4 +253,5 @@ pub(crate) fn build_return(graph: &Graph, bindings: &[Binding], items: &[ReturnI
     QueryResult::table(columns, rows)
 }
 
-#[cfg(test)]pub(crate)use execution::{node_owned_bytes as fixture_node_owned_bytes,edge_owned_bytes as fixture_edge_owned_bytes};
+#[cfg(any(test, feature = "testkit"))]
+pub use execution::{node_owned_bytes as fixture_node_owned_bytes, edge_owned_bytes as fixture_edge_owned_bytes};

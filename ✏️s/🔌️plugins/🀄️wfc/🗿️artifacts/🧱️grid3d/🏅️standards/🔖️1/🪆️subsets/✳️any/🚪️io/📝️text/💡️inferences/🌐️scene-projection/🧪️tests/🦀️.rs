@@ -1,8 +1,10 @@
 //! 🌐️ Neutral scene projection compared through the independent serde JSON implementation.
-use super::*;
+use crate::schema::snapshot::Grid3dSnapshot;
+use crate::standards::v1::subsets::any::io::text::inferences::scene_projection::*;
+use semio_framework_test_fixtures::fixture_text;
 #[test]
 fn nonuniform_scene_values_agree_with_independent_json_fixture() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🧱️nonuniform/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../🚪️io/📝️text/💡️inferences/🌐️scene-projection/🧪️tests/🧫️fixtures/🧱️nonuniform/🔣️.json")).unwrap();
     let mut snapshot = Grid3dSnapshot::default();
     snapshot.width = fixture["dimensions"][0].as_u64().unwrap() as u32;
     snapshot.height = fixture["dimensions"][1].as_u64().unwrap() as u32;

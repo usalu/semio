@@ -1,0 +1,11 @@
+import Ajv from "ajv";
+import assert from "node:assert/strict";
+declare const value: any;
+const validate = new Ajv().compile({ type: "object" });
+assert(validate(value) === true);
+const a = structuredClone(value);
+a.x = 1;
+const ok: boolean = validate(value);
+assert(ok);
+const b = structuredClone(value);
+b.x = 2;

@@ -11,12 +11,10 @@ fn oracle(data:&[u8])->RasterImage{let mut decoder=png::Decoder::new(std::io::Cu
 #[test]
 fn png_decode_shared_all_depths_filters_interlace_and_huffman_under_grants(){
  let rows=rows();for row in rows.as_array().unwrap(){let expected:Vec<u8>=serde_json::from_value(row["expected"]["pixels"].clone()).unwrap();let reference=oracle(&input(&row["input"]).data);assert_eq!(reference.pixels,expected,"{} independent PNG oracle",row["name"]);for items in [1,7,4096]{let mut job=job(input(&row["input"]));finish(&mut job,items).unwrap();assert_eq!(job.result().unwrap().pixels,expected);let image=output(&mut job);assert_eq!((image.width,image.height),(reference.width,reference.height));drain(job);drain(image);}}
- eprintln!("[DEBUG] Native PNG all shared depth/filter/interlace/Huffman fixtures matched independent decoder through real grants");
 }
 #[test]
 fn png_decode_malformed_originals_refuse_private_output(){
  let rows:serde_json::Value=serde_json::from_str(crate::text("📷️png/📥️decode/🧪️tests/🧫️fixtures/⚠️invalid/🔣️.json")).unwrap();for row in rows.as_array().unwrap(){match PngDecodeJob::new(input(&row["input"])){Ok(mut job)=>{assert!(finish(&mut job,7).is_err(),"{}",row["name"]);assert!(job.result().is_err());drain(job);},Err((_,original))=>{drain(original);}}}
- eprintln!("[DEBUG] Native malformed PNG sources retained their real source and private child owners");
 }
 #[test]
 fn png_decode_original_funding_and_cancellation_match_actual_allocator(){
@@ -27,10 +25,8 @@ fn png_decode_original_funding_and_cancellation_match_actual_allocator(){
  assert_eq!(decoder.result().unwrap().pixels,reference.pixels);let funded=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:size_of::<RasterImage>(),maximum_depth:1,..Default::default()};assert!(observed(||decoder.take_result(RetainedCloneGrant{maximum_copy_bytes:funded.maximum_copy_bytes-1,..funded}).unwrap()).0.is_none());let image=decoder.take_result(funded).unwrap().unwrap().0;let(a,r)=drain(decoder);let(a2,r2)=drain(image);assert_eq!(original_capacity+born+a+a2,r+r2);
  for stop in fixture["interruptions"].as_array().unwrap().iter().map(|value|value.as_u64().unwrap()as usize){let source=input(&row["input"]);let original=source.data.capacity();let mut decoder=job(source);let pointer=decoder.source().as_ptr();let mut born=0;for _ in 0..stop{if decoder.progress().done{break;}let funded=grant(&decoder);let(_,physical)=observed(||decoder.advance(funded).unwrap());born+=physical.0;}assert_eq!(observed(||decoder.cancel()).1,(0,0));assert_eq!(decoder.source().as_ptr(),pointer);assert_eq!(decoder.result().unwrap_err(),PngDecodeError::Cancelled);let(a,r)=drain(decoder);assert_eq!(original+born+a,r);}
  let mut source=input(&row["input"]);source.max_pixels=0;let pointer=source.data.as_ptr();let original=source.data.capacity();let(result,physical)=observed(||PngDecodeJob::new(source));assert_eq!(physical,(0,0));let(_,source)=match result{Err(value)=>value,Ok(_)=>panic!("invalid PNG admitted")};assert_eq!(source.data.as_ptr(),pointer);let(a,r)=drain(source);assert_eq!(original+a,r);
- eprintln!("[DEBUG] Native PNG original6axis cases at{turns}turns,6cancellations,constructor preservation and exact source/born/closure allocator conservation");
 }
 #[test]
 fn png_decode_truncated_fixture_prefixes_never_publish(){
  let rows=rows();let mut prefixes=0;for row in rows.as_array().unwrap(){let source=input(&row["input"]);for length in 0..source.data.len(){let mut truncated=source.clone();truncated.data=source.data[..length].to_vec();match PngDecodeJob::new(truncated){Ok(mut job)=>{assert!(finish(&mut job,4096).is_err(),"{} prefix{length}",row["name"]);drain(job);},Err((_,original))=>{drain(original);}}prefixes+=1;}}
- eprintln!("[DEBUG] Native PNG all{prefixes}truncated originals refused publication and closed exact owners");
 }

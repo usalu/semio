@@ -166,9 +166,14 @@ fn every_interrupted_grant_closes_into_exact_retirement() {
 
 #[test]
 fn mounted_region_has_no_batch_decoder_edge() {
-    let source = include_str!("../../🦀️.rs");
+    let source = runtime_fixture_text("../../../🚪️io/💾️binary/📸️snapshot/🦀️.rs");
     let region = source.split_once("//#region 🔖️MountedTypedSnapshotOwner").expect("mounted region start").1.split_once("//#endregion 🔖️MountedTypedSnapshotOwner").expect("mounted region end").0;
     for edge in [concat!("decode_", "document"), concat!("decode_", "pack"), concat!("__dsl_", "from_record"), concat!("read_str", "_lp")] {
         assert_eq!(region.matches(edge).count(), 0, "mounted snapshot owner must not reach {edge}");
     }
+}
+
+fn runtime_fixture_text(relative: &str) -> &'static str {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative);
+    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display())).into_boxed_str())
 }

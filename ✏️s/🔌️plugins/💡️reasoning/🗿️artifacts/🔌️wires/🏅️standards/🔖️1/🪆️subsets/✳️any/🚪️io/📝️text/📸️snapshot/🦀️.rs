@@ -11,14 +11,11 @@ impl pack::snapshot::ArtifactDsl for WiresSnapshot{
 }
 pub fn parse_dsl(text:&str)->Result<WiresSnapshot,semio_framework_diagnostic::TextError>{<WiresSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text)}
 pub fn print_dsl(snapshot:&WiresSnapshot)->String{pack::snapshot::ArtifactDsl::print_dsl(snapshot)}
-#[cfg(test)]
-#[path="🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 
 #[allow(unused_imports)]
 mod snapshot_codec {
 use super::*;
-use crate::standards::v1::subsets::any::schema::*;
 use semio_framework_pack_json::Value;
 use semio_framework_value::DslValue;
 use framework_schema::ArtifactSchema;

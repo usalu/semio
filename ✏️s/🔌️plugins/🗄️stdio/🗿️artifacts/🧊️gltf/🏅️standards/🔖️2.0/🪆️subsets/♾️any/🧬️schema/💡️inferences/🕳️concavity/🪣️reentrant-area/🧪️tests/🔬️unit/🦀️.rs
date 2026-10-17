@@ -1,4 +1,4 @@
-use super::*;
+use crate::standards::v2_0::subsets::any::schema::inferences::concavity::reentrant_area::*;
 
 #[semio_framework_async_macros::async_test]
 async fn descriptor_is_versioned_and_cacheable() {

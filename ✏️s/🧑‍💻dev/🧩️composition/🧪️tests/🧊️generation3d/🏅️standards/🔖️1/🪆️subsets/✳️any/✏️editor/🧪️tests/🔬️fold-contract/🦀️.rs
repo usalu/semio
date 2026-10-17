@@ -1,4 +1,5 @@
 use super::*;
+use semio_framework_test_fixtures::repo_text;
 use semio_s_artifact_procedural_3d_editor_config::SetSnapshot;
 use semio_s_artifact_procedural_3d_mutations::generation3d_host_snapshot_operations;
 use crate::SnapshotRead;
@@ -76,7 +77,7 @@ fn folded_rows_against_declaration(items: &[(usize, usize)]) -> (usize, usize) {
 /// `ArtifactStoreOneItemFootprint { work_items: … }` struct literal.
 #[test]
 fn both_durable_lanes_derive_their_footprint_from_the_mutation() {
-    let source = include_str!("../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs");
+    let source = repo_text!("✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs");
     assert_eq!(source.matches("Ok(store::os_store::one_item::ArtifactStoreOneItemFootprint::for_leaf(mutation, retained_bytes))").count(), 2, "both the artifact and the config preflight derive their footprint from the mutation");
     assert!(!source.contains("ArtifactStoreOneItemFootprint { work_items"), "a durable lane regained a hand-written work-items literal");
 }
@@ -108,29 +109,6 @@ fn every_bundled_example_records_every_declared_default_of_its_operators() {
     let _serial = crate::editor_domain::editor_laws::serial_execution::lock();
     let unrecorded = unrecorded_example_defaults();
     assert!(unrecorded.is_empty(), "every operator of a bundled example records its declared defaults: {unrecorded:?}");
-}
-
-/// 🐛️ [DEBUG] Temporary: prints every bundled example with its operators' declared defaults recorded, for the one-time
-/// normalization of the example assets (ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING). Deleted once the assets hold it.
-#[test]
-fn debug_print_normalized_examples() {
-    use semio_framework_artifact_flow_flow::neural::ColdRetire;
-    use semio_framework_artifact_flow_flow::{default_neuron_params_from_info, Widget};
-    use semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_MESH_WORKBENCH;
-    let _serial = crate::editor_domain::editor_laws::serial_execution::lock();
-    let infos = semio_framework_os_flow::flow_neuron_kind_info_map();
-    for example_id in BUNDLED_EXAMPLES.iter().copied().chain([PROCEDURAL_EXAMPLE_MESH_WORKBENCH]) {
-        let mut read = SnapshotRead::new(example_snapshot(example_id).expect("bundled example snapshot"));
-        for widget in read.host_snapshot.widgets.iter_mut() {
-            if let Widget::Neuron { neuron_kind, params, .. } = widget {
-                let declared = default_neuron_params_from_info(infos.get(neuron_kind));
-                let recorded = declared.iter().filter(|(key, _)| params.get(key).is_none()).fold(params.clone(), |recorded, (key, value)| recorded.insert(key.clone(), value.clone()));
-                std::mem::replace(params, recorded).retire_cold();
-                declared.retire_cold();
-            }
-        }
-        eprintln!("[DEBUG] BEGIN {example_id}\n{}\n[DEBUG] END {example_id}", pack::snapshot::ArtifactDsl::print_dsl(&*read));
-    }
 }
 
 /// 🎬️ Boots ONE app, publishes `setActiveExample` through the real retained path (the host's bounded

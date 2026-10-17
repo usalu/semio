@@ -10,7 +10,7 @@ test("original dynamic value clone preserves independent arbitrary variants",()=
   for(const row of law.cases){
     const original=structuredClone(row.value);
     const actual=JSON.parse(JSON.stringify(row.value));
-    const independent=applyPatch({},[{op:"add",path:"/value",value:row.value}],true,false).newDocument.value;
+    const independent=applyPatch<{value?:unknown}>({},[{op:"add",path:"/value",value:row.value}],true,false).newDocument.value;
     expect(actual).toEqual(independent);
     expect(row.value).toEqual(original);
   }
@@ -32,9 +32,8 @@ test("original UTF-8 bytes and numeric payload bits agree with independent nativ
     let original:unknown={kind:"text",value:"ä日🌱"};
     for(let i=0;i<depth;i++)original={kind:"array",value:[original]};
     const actual=JSON.parse(JSON.stringify(original));
-    expect(actual).toEqual(applyPatch({},[{op:"add",path:"/root",value:original}],true,false).newDocument.root);
+    expect(actual).toEqual(applyPatch<{root?:unknown}>({},[{op:"add",path:"/root",value:original}],true,false).newDocument.root);
   }
-  console.log("[DEBUG] Original dynamic tree, duplicate keys, UTF-8 and numeric bits agree with independent JSON Patch");
 });
 
 test("original dynamic examples do not own a whole-trial schema",()=>{expect(existsSync(resolve(owner,"🧬️schema/🔣️.json"))).toBe(false);});

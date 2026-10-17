@@ -18,7 +18,6 @@ fn neutral_blob_identity_agrees_with_independent_serde_including_full_u64() {
             assert_eq!(BlobRef::from_value(blob.to_value()).unwrap(),blob);
         }
     }
-    eprintln!("[DEBUG] Exact blob fields, full u64, Unicode and refusal corpus agree with independent Serde");
 }
 
 #[test]
@@ -45,5 +44,4 @@ fn canonical_blob_owner_retains_original_strings_until_funded_retirement() {
     }
     assert!(owner.terminal_is_empty());
     assert!(released>0);
-    eprintln!("[DEBUG] Original blob identity pointers survive denied work and retire through funded canonical owner");
 }

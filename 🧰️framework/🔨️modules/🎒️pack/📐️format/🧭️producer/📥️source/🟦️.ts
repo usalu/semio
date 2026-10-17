@@ -1,5 +1,5 @@
 /** 📥️ Unmounted Source borrowed machine metadata stays independent of context prose. */
-import {PackError,type ValueRefusalKind,type PagedRefusalMetadata,type PagedAllocationMetadata} from "../../../⚠️error/🟦️.ts";
+import {PackError,type ValueRefusalKind,type PagedRefusalMetadata,type PagedAllocationMetadata} from "@semio-tech/framework-pack-error-ts";
 
 export type SourceCause=Readonly<{type:"value";kind:ValueRefusalKind;reason:string}>|Readonly<{type:"paged";error:PagedRefusalMetadata}>|Readonly<{type:"allocation";error:PagedAllocationMetadata}>;
 export type SourceFault=Readonly<{kind:ValueRefusalKind;reason:string;allocatedBytes:number|null}>;

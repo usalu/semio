@@ -1,10 +1,14 @@
 //! ↩️ Inverse for `DragSelection3d` — the absolute setters restoring every BASE pose field the transform changes (exact,
 //! never a negated parameter that would accumulate float error). Nothing moved ⇒ `Vec::new()`.
-use crate::standards::v1::subsets::any::schema::mutations::{move_part_2d, move_part_3d, move_target_volume, puzzle5d_selection, Puzzle5dMutation, PUZZLE5D_FLAT_TO_WORLD};
+use crate::standards::v1::subsets::any::schema::mutations::{move_part_2d, move_part_3d, move_target_volume, PUZZLE5D_FLAT_TO_WORLD};
+use crate::standards::v1::subsets::any::schema::diff::{puzzle5d_selection};
 use crate::Puzzle5dSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &super::DragSelection3d, base: &Puzzle5dSnapshot) -> Result<Vec<Puzzle5dMutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op>(payload: &super::DragSelection3d, base: &Puzzle5dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError>
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::move_part_2d::MovePart2d> + From<crate::standards::v1::subsets::any::schema::mutations::move_part_3d::MovePart3d> + From<crate::standards::v1::subsets::any::schema::mutations::move_target_volume::MoveTargetVolume>,
+{
     let Ok(selection) = puzzle5d_selection(base, &payload.targets, true) else { return Ok(Vec::new()) };
     if !payload.offset.iter().all(|value| value.is_finite()) {
         return Ok(Vec::new());

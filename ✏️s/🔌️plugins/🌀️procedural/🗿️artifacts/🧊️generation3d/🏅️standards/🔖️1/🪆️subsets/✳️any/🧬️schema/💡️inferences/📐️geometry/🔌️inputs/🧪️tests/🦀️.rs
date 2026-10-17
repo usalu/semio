@@ -28,5 +28,5 @@ fn original_widget_inputs_constructor_quotes_utf8_pages_and_moves_actual_values_
  let mut owner=ControlledRetirement::new((construction,output)).ok().unwrap();
  for _ in 0..10000{if owner.terminal_is_empty(){break}let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||caller.turn(stock,|cx|{if cx.should_yield(){return Ok(None)}let step=owner.step(cx.retained_grant())?;cx.consume_retained(step.progress())?;cx.consume_fuel(1);Ok(Some(step))}));let step=step.unwrap().unwrap();assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));born+=heap.requested_bytes;released+=heap.released_bytes;}
  assert!(owner.terminal_is_empty());assert_eq!(input_heap.requested_bytes+born,released);let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(owner));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
- println!("[DEBUG] Original WidgetInputs labels=2 EN+DE=true valuesPayloadCopy=0 original={} born={born} released={released}",input_heap.requested_bytes);caller.retire(stock);
+ caller.retire(stock);
 }

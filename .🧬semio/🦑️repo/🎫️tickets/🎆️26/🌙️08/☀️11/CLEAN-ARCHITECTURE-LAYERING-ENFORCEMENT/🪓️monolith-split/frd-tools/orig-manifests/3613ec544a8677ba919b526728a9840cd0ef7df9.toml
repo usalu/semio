@@ -1,0 +1,61 @@
+[package]
+workspace = "../.."
+name = "semio-s-artifact-stdio-svg"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Stdio svg artifact"
+
+[package.metadata.semio]
+role = "artifact"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-s-artifact-stdio-svg-snapshot = { path = "../../🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-svg-handcrafted-diff-codec-tests = { path = "../../🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/🔺️diff/🧪️tests/🔬️handcrafted-diff-codec/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-svg-schema = { path = "../../🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-svg-mutations = { path = "../../🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-svg-tests = { path = "../../🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🧪️tests/🔬️unit/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-svg-mutations-2 = { path = "../../🏅️standards/🔖️1.1/🪆️subsets/🔬️tiny/🧬️schema/🧬️mutations/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-svg-mut-family = { path = "../../🏅️standards/🔖️1.1/🪆️subsets/🔬️tiny/🧬️schema/🧬️mutations/➕insert-tiny-element/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-svg-schema-2 = { path = "../../🏅️standards/🔖️1.1/🪆️subsets/🔬️tiny/🧬️schema/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-svg-schema-3 = { path = "../../🏅️standards/🔖️1.1/🪆️subsets/🔰️basic/🧬️schema/📦️packages/🦀️rust" }
+semio-framework-artifact-reference = { workspace = true }
+semio-framework-dsl-record = { path = "../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
+semio-framework-async = { path = "../../../../../../../🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust" }
+semio-framework-pack-json = { path = "../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-framework-diagnostic = { path = "../../../../../../../🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
+semio-framework-dsl = { path = "../../../../../../../🧰️framework/🔨️modules/🗣️dsl/📦️packages/🦀️rust" }
+semio-framework-ui-locale = { path = "../../../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
+semio-framework-schema-composition = { path = "../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧩️composition/📦️packages/🦀️rust" }
+semio-framework-schema-state = { path = "../../../../../../../🧰️framework/🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust" }
+semio-framework-schema-registry = { path = "../../../../../../../🧰️framework/🔨️modules/🧬️schema/📇️registry/📦️packages/🦀️rust" }
+semio-framework-2d = { path = "../../../../../../../🧰️framework/🔨️modules/◻️2d/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
+pack = { workspace = true }
+semio-framework = { workspace = true }
+semio-framework-hash = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-plugin = { workspace = true }
+semio-framework-action-bus = { path = "../../../../../../../🧰️framework/🔨️modules/🎯️action-bus/📦️packages/🦀️rust" }
+semio-framework-job = { workspace = true }
+semio-framework-schema = { workspace = true }
+semio-framework-value-derive = { workspace = true }
+semio-s-artifact-stdio-contract = { workspace = true }
+semio-s-artifact-stdio-xml = { workspace = true }
+
+[dev-dependencies]
+semio-s-artifact-stdio-contract = { workspace = true, features = ["testing"] }
+semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
+serde_json = { workspace = true }
+semio-framework-async-macros = { workspace = true }
+semio-s-artifact-stdio-svg-test-oracle = { path = "../../🔮️oracles/📦️packages/🦀️rust" }
+
+[package.metadata.semio.composition]
+manifest = "../../🧩️composition/🔣️.json"

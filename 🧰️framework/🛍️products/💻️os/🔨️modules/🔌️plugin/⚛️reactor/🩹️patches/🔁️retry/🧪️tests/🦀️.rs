@@ -3,8 +3,7 @@ use crate::{PatchTracker, has_work};
 use semio_framework_ui_contract as ui_contract;
 use semio_framework_value::{RetainedCloneGrant, RetainedCloneProgress};
 #[doc(hidden)]
-#[path="../../../../🧪️testing/🎟️caller/🦀️.rs"]
-pub mod original_caller;
+pub use semio_framework_plugin_testing_caller as original_caller;
 use original_caller::OriginalFixtureCaller;
 
 #[cfg_attr(test,test)]
@@ -41,5 +40,4 @@ pub fn pending_mounted_render_survives_denied_original_retry_without_heap_or_los
     for _ in 0..OriginalFixtureCaller::maximum_turns(){if patches.close_instance_complete(key).unwrap(){break}patches.close_step(&mut cx).unwrap();}
     assert!(patches.close_instance_complete(key).unwrap());patches.release_close_instance(key).unwrap();
     let fuel=cx.fuel_remaining();drop(cx);caller.retire(fuel).unwrap();
-    eprintln!("[DEBUG] pendingSurfaceOriginalIdentity=true deniedRetryHeap0=true sameRecipient=true fundedRetry1=true schedulingStopsAfterDelivery=true paidClose=true");
 }

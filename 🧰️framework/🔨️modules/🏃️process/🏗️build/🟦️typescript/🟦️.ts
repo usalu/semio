@@ -31,7 +31,7 @@ export async function typecheckProject(options: TypeScriptCheckOptions): Promise
   const environment = options.execution?.env ?? process.env, mode = options.mode, project = resolve(options.cwd, options.project);
   const require = createRequire(join(options.cwd, "package.json")), compiler = require.resolve("typescript/bin/tsc"), version = require("typescript/package.json").version;
   const args = readTypeScriptCheckArgumentsV1(options.args??[]);
-  await withCompilerState({ root: options.stateRoot, owner: options.owner, compiler: `typescript:${version}`, configuration: JSON.stringify([relative(options.workspace, project), args]), mode, control,storage,storageControl,files: ["state.tsbuildinfo"], environment, requestedParallelism: 1 }, async (directory, compilerEnvironment,actualControl) => {
+  await withCompilerState({ root: options.stateRoot, owner: options.owner, compiler: `typescript:${version}`, configuration: JSON.stringify([relative(options.workspace, project), args]), mode, control,storage,storageControl,files: ["state.tsbuildinfo"], environment, capacity:{kind:"exact",parallelism:1} }, async (directory, compilerEnvironment,actualControl) => {
     await advanceScriptInvocation(options.invocation, "typecheck", "running");
     await runOwnedCommand(process.execPath, [compiler, "--noEmit", "-p", project, ...args, "--incremental", "true", "--tsBuildInfoFile", join(directory, "state.tsbuildinfo")], options.cwd, options.owner, compilerAdmissionBudgetV1(actualControl), { ...options.execution, env: typeScriptCheckEnvironmentV1(mode, compilerEnvironment), signal:actualControl.signal });
   });

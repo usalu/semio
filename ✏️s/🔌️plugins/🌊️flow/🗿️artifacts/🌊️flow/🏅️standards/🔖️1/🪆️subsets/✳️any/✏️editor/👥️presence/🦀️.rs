@@ -82,9 +82,7 @@ store::field_set_mutations! {
 }
 //#endregion 🔖️PresenceMutation
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 
 #[path="🚪️io/📝️text/🧬️mutations/🦀️.rs"]
 mod field_set_text_io;

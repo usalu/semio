@@ -11,13 +11,63 @@ import { parseHubProgramIdV1 } from "@semio-tech/framework/plugin-module/hub-sou
 import { type WasmCanvasSession } from "@semio-tech/framework/canvas/react-renderer";
 import { createContext } from "react";
 import { installPageRuntimeAssets } from "@semio-tech/framework/canvas/runtime-assets";
+import { openNodeGraphSessionV1, type NodeGraphSessionV1 } from "../🕸️NodeGraph/📦️packages/🦀️rust/🟦️.ts";
+import type { FlowBrowserRuntimeV1, FlowWasmSession } from "./🌊️flow-session/🟦️.ts";
+export type { FlowTask, FlowTaskEvent, FlowWasmSession } from "./🌊️flow-session/🟦️.ts";
 // #endregion 🔌️Adapters
 
 //#region 🔖️wasm-session-loader
 
 
+//#region 🪝️WasmBindingsPort
+/** 🗺️ The shared surface wasm module as the renderer uses it: its initializer and the session classes it constructs. */
+export type SurfaceBindingsV1 = Readonly<{
+  default(): Promise<unknown>;
+  RasterSession: new () => RasterWasmSession;
+  MapSession: new () => MapWasmSession;
+  TerrainSession: new () => TerrainWasmSession;
+}>;
+
+/** 🌊️ The flow wasm module and its browser runtime factory. */
+export type FlowBindingsV1 = Readonly<{
+  core: Readonly<{ default(): Promise<unknown> }>;
+  browser: Readonly<{ createFlowBrowserRuntime(options: Readonly<{ source: unknown; bindings?: unknown }>): Promise<FlowBrowserRuntimeV1> }>;
+}>;
+
+/** ✏️ The editor wasm module as the renderer uses it. */
+export type EditorBindingsV1 = Readonly<{
+  default(): Promise<unknown>;
+  EditorSession: new () => EditorWasmSession;
+}>;
+
+/** 🪝️ The wasm engine packages of the page, loaded on demand by the composition root that owns them: the renderer names no wasm package, it asks the installed port. */
+export type WasmBindingsV1 = Readonly<{
+  surface(): Promise<SurfaceBindingsV1>;
+  flow(): Promise<FlowBindingsV1>;
+  editor(): Promise<EditorBindingsV1>;
+  nodeGraph(): Promise<unknown>;
+}>;
+
+const installedWasmBindings: WasmBindingsV1[] = [];
+
+/** 🪝️ Installs the wasm bindings the loaders use and returns the function that retires exactly this installation; every shell of a page installs the page's bindings and the latest installation answers until it retires. */
+export function registerWasmBindingsV1(bindings: WasmBindingsV1): () => void {
+  installedWasmBindings.push(bindings);
+  return () => {
+    const index = installedWasmBindings.lastIndexOf(bindings);
+    if (index >= 0) installedWasmBindings.splice(index, 1);
+  };
+}
+
+function requireWasmBindingsV1(): WasmBindingsV1 {
+  const bindings = installedWasmBindings.at(-1);
+  if (bindings === undefined) throw new Error("wasm-bindings-absent: the composition root installed no wasm bindings");
+  return bindings;
+}
+//#endregion 🪝️WasmBindingsPort
+
 //#region 🗺️SharedSurfaceSessionLoader
-type SurfaceSessionModule = typeof import("@semio-tech/framework-surface-rs");
+type SurfaceSessionModule = SurfaceBindingsV1;
 
 /** 📦️ Deduplicates in-flight module initialization and retires only the exact failed attempt. */
 export function createWasmModuleLoader<T>(load: () => Promise<T>): () => Promise<T> {
@@ -32,7 +82,7 @@ export function createWasmModuleLoader<T>(load: () => Promise<T>): () => Promise
 }
 
 const loadSurfaceSessionModule = createWasmModuleLoader<SurfaceSessionModule>(async () => {
-  const module = await import("@semio-tech/framework-surface-rs");
+  const module = await requireWasmBindingsV1().surface();
   await module.default();
   await installPageRuntimeAssets(module);
   return module;
@@ -46,22 +96,17 @@ async function createSurfaceSession<T>(construct: (module: SurfaceSessionModule)
 
 
 //#region GraphSession
-export {openNodeGraphSessionV1 as createGraphSession}from"../🕸️NodeGraph/📦️packages/🦀️rust/🟦️.ts";
+export async function createGraphSession(): Promise<NodeGraphSessionV1> {
+  return openNodeGraphSessionV1(() => requireWasmBindingsV1().nodeGraph());
+}
 //#endregion GraphSession
 
 //#region FlowSession
-export type { FlowTask, FlowTaskEvent } from "@semio-tech/flow-core/🌐️flow-browser.js";
-export type FlowWasmSession = import("@semio-tech/flow-core/🌐️flow-browser.js").FlowSession;
-type FlowBrowserRuntime = import("@semio-tech/flow-core/🌐️flow-browser.js").FlowBrowserRuntime;
-
-let flowSessionPromise: Promise<FlowBrowserRuntime> | null = null;
+let flowSessionPromise: Promise<FlowBrowserRuntimeV1> | null = null;
 
 export async function createFlowSession(): Promise<FlowWasmSession> {
   if (!flowSessionPromise) {
-    flowSessionPromise = Promise.all([
-      import("@semio-tech/flow-core"),
-      import("@semio-tech/flow-core/🌐️flow-browser.js"),
-    ]).then(async ([core, browser]) => {
+    flowSessionPromise = requireWasmBindingsV1().flow().then(async ({ core, browser }) => {
       const exports = await core.default();
       await installPageRuntimeAssets(core);
       // 🖼️ `core` (not `exports`) carries the wasm-bindgen wrappers, the only ones that can take an
@@ -114,9 +159,9 @@ export type EditorWasmSession = WasmCanvasSession & {
   setCaretVisible(visible: boolean): void;
 };
 
-type EditorSessionModule = typeof import("@semio-tech/framework-editor-rs");
+type EditorSessionModule = EditorBindingsV1;
 const loadEditorSessionModule = createWasmModuleLoader<EditorSessionModule>(async () => {
-  const module = await import("@semio-tech/framework-editor-rs");
+  const module = await requireWasmBindingsV1().editor();
   await module.default();
   await installPageRuntimeAssets(module);
   return module;

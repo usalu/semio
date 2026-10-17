@@ -2,7 +2,6 @@
 //! `x,y,width,height` frame (the play app's `set-frame` gesture).
 
 use crate::diff::PresentationDiff;
-use crate::mutations::PresentationMutation;
 use crate::{FigureTileFrame, PresentationSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 
@@ -20,14 +19,17 @@ pub struct ResizeSourceFrame {
     pub new_frame: FigureTileFrame,
 }
 
-impl MutationKind<PresentationSnapshot, PresentationMutation> for ResizeSourceFrame {
+impl<Op> MutationKind<PresentationSnapshot, Op> for ResizeSourceFrame
+where
+    Op: protocol::Mutation<PresentationSnapshot, Diff = PresentationDiff> + From<ResizeSourceFrame>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "resize", entity: "source-frame", kind: "resize-source-frame", record: "ResizedSourceFrame" };
 
     fn diff(&self, base: &PresentationSnapshot) -> protocol::MutationOutcome<PresentationDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &PresentationSnapshot) -> Result<Vec<PresentationMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &PresentationSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

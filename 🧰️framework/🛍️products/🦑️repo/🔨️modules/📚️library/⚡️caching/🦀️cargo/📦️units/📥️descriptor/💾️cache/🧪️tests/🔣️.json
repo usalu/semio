@@ -1,0 +1,280 @@
+{
+ "cases": [
+  {
+   "name": "empty",
+   "cached": [],
+   "bytes": "exact",
+   "nodes": 3,
+   "kind": "admitted"
+  },
+  {
+   "name": "warm",
+   "cached": [
+    0,
+    1,
+    2
+   ],
+   "bytes": "exact",
+   "nodes": 3,
+   "kind": "admitted"
+  },
+  {
+   "name": "partial",
+   "cached": [
+    0
+   ],
+   "bytes": "exact",
+   "nodes": 3,
+   "kind": "admitted"
+  },
+  {
+   "name": "byte-pressure",
+   "cached": [],
+   "bytes": "below",
+   "nodes": 3,
+   "kind": "pressure"
+  },
+  {
+   "name": "node-pressure",
+   "cached": [],
+   "bytes": "exact",
+   "nodes": 2,
+   "kind": "pressure"
+  }
+ ],
+ "refusals": [
+  "copied-state",
+  "proxy",
+  "accessor",
+  "sparse",
+  "duplicate",
+  "wrong-bytes",
+  "foreign-mode"
+ ],
+ "ioCases": [
+  {
+   "name": "cold",
+   "warm": false,
+   "pressure": false,
+   "callbacks": 1,
+   "seed": "none",
+   "kind": "admitted"
+  },
+  {
+   "name": "warm",
+   "warm": true,
+   "pressure": false,
+   "callbacks": 1,
+   "seed": "none",
+   "kind": "admitted"
+  },
+  {
+   "name": "pressure",
+   "warm": false,
+   "pressure": true,
+   "callbacks": 0,
+   "seed": "none",
+   "kind": "pressure"
+  },
+  {
+   "name": "uncatalogued",
+   "warm": false,
+   "pressure": false,
+   "callbacks": 1,
+   "seed": "nodes",
+   "kind": "admitted"
+  },
+  {
+   "name": "unknown-entry",
+   "warm": false,
+   "pressure": false,
+   "callbacks": 0,
+   "seed": "unknown",
+   "kind": "recovery"
+  }
+ ],
+ "namespace": {
+  "borrowHeld": true,
+  "released": true,
+  "upgradeRefused": true
+ },
+ "handoff": {
+  "prepared": true,
+  "childRead": true,
+  "writerBlocked": true
+ },
+ "recoveryCases": [
+  {
+   "name": "capacity",
+   "staged": false,
+   "nodes": 3
+  },
+  {
+   "name": "staged-files",
+   "staged": true,
+   "nodes": 3
+  }
+ ],
+ "failures": [
+  "body-error",
+  "body-undefined",
+  "cancel-recovery",
+  "cancel-before-reserve"
+ ],
+ "concurrent": [
+  {
+   "name": "same",
+   "kinds": [
+    "admitted",
+    "admitted"
+   ]
+  },
+  {
+   "name": "different",
+   "kinds": [
+    "admitted",
+    "pressure"
+   ]
+  }
+ ],
+ "capacity": {
+  "nodes": 65536,
+  "bytesPerNode": 1
+ },
+ "readerProtection": {
+  "blocked": true,
+  "drained": true,
+  "recovered": true
+ },
+ "joiningReader": {
+  "entered": true,
+  "maintenanceCompleted": true
+ },
+ "leaseFailures": [
+  {
+   "name": "set-body-error",
+   "operation": "set",
+   "stage": "body",
+   "primary": "error",
+   "secondary": "error",
+   "releases": [
+    "b",
+    "a"
+   ],
+   "laterSecondary": "error"
+  },
+  {
+   "name": "set-body-undefined",
+   "operation": "set",
+   "stage": "body",
+   "primary": "undefined",
+   "secondary": "error",
+   "releases": [
+    "b",
+    "a"
+   ],
+   "laterSecondary": "error"
+  },
+  {
+   "name": "set-success-release-error",
+   "operation": "set",
+   "stage": "success",
+   "primary": "none",
+   "secondary": "error",
+   "releases": [
+    "b",
+    "a"
+   ],
+   "laterSecondary": "error"
+  },
+  {
+   "name": "set-success-release-undefined",
+   "operation": "set",
+   "stage": "success",
+   "primary": "none",
+   "secondary": "undefined",
+   "releases": [
+    "b",
+    "a"
+   ],
+   "laterSecondary": "error"
+  },
+  {
+   "name": "set-acquisition-error",
+   "operation": "set",
+   "stage": "acquisition",
+   "primary": "error",
+   "secondary": "error",
+   "releases": [
+    "a"
+   ],
+   "laterSecondary": "none"
+  },
+  {
+   "name": "catalog-body-error",
+   "operation": "catalog",
+   "stage": "body",
+   "primary": "error",
+   "secondary": "error",
+   "releases": [
+    "catalog"
+   ],
+   "laterSecondary": "none"
+  },
+  {
+   "name": "catalog-body-undefined",
+   "operation": "catalog",
+   "stage": "body",
+   "primary": "undefined",
+   "secondary": "undefined",
+   "releases": [
+    "catalog"
+   ],
+   "laterSecondary": "none"
+  },
+  {
+   "name": "recovery-body-error",
+   "operation": "recovery",
+   "stage": "body",
+   "primary": "error",
+   "secondary": "error",
+   "releases": [
+    "catalog"
+   ],
+   "laterSecondary": "none"
+  },
+  {
+   "name": "transaction-body-error",
+   "operation": "transaction",
+   "stage": "body",
+   "primary": "error",
+   "secondary": "error",
+   "releases": [
+    "rollback"
+   ],
+   "laterSecondary": "none"
+  },
+  {
+   "name": "transaction-body-undefined",
+   "operation": "transaction",
+   "stage": "body",
+   "primary": "undefined",
+   "secondary": "error",
+   "releases": [
+    "rollback"
+   ],
+   "laterSecondary": "none"
+  },
+  {
+   "name": "transaction-success-release-undefined",
+   "operation": "transaction",
+   "stage": "success",
+   "primary": "none",
+   "secondary": "undefined",
+   "releases": [
+    "database"
+   ],
+   "laterSecondary": "none"
+  }
+ ]
+}

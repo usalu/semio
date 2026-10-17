@@ -151,7 +151,7 @@ impl ToolJobFactory for SemioPresentationEditorExampleFactory {
     fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> {
         Ok(ArtifactRetainedCommandJob::new(payload))
     }
-    fn create_job_from_wire_pages_with_payload(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload, input: semio_framework_plugin::action_bus::RetainedToolWireInput, checkpoint: Option<semio_framework_plugin::action_bus::RetainedToolWireInput>) -> Result<Self::Job, (ToolJobFactoryError, semio_framework_plugin::action_bus::RetainedToolWireInput, Option<semio_framework_plugin::action_bus::RetainedToolWireInput>)> {
+    fn create_job_from_wire_pages_with_payload(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload, input: semio_framework_action_bus::RetainedToolWireInput, checkpoint: Option<semio_framework_action_bus::RetainedToolWireInput>) -> Result<Self::Job, (ToolJobFactoryError, semio_framework_action_bus::RetainedToolWireInput, Option<semio_framework_action_bus::RetainedToolWireInput>)> {
         if input.declared_bytes() > SEMIO_PRESENTATION_DOCUMENT_SCHEMA_EXAMPLE_BYTES || checkpoint.is_some() {
             return Err((ToolJobFactoryError::new("stdio example command rejects oversized wire"), input, checkpoint));
         }
@@ -165,8 +165,7 @@ impl ArtifactOwnedToolJobFactory for SemioPresentationEditorExampleFactory {
     const DOCUMENT_SCHEMA: &'static str = SEMIO_PRESENTATION_DOCUMENT_SCHEMA;
     const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[SEMIO_PRESENTATION_DOCUMENT_SCHEMA_EXAMPLE_CONTRACT];
 }
-#[path = "🧭️edit-rules/🦀️.rs"]
-pub mod edit_rules;
+pub use semio_s_artifact_stdio_semio_presentation_examples::editor::edit_rules;
 
 //#region 🔖️Editor
 #[derive(Default, Clone, Copy)]

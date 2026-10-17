@@ -108,6 +108,4 @@ impl protocol::DiffAlgebra<DagSnapshot> for DagDiff {
 //#endregion 🔖️Apply
 
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

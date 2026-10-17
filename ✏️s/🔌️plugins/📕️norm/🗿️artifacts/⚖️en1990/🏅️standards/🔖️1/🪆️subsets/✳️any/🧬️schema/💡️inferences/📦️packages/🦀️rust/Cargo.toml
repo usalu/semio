@@ -28,6 +28,7 @@ semio-s-plugin-norm-compliance = { workspace = true }
 [dev-dependencies]
 semio-framework-async-macros = { workspace = true }
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-framework-test-fixtures = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-s-artifact-norm-en1990-examples = { workspace = true }
 semio-s-artifact-norm-en1990-io = { workspace = true }
 semio-s-artifact-norm-en1990-schema = { workspace = true }

@@ -1,7 +1,6 @@
 //! 📷 Shooting mutation payload — `ReplaceShotCamera`. Overwrites the *saved* camera `shot_id` references with a new pose — a no-op (empty diff) when that shot has no saved camera. The free/live viewport camera is session-only runtime state and never reaches this mutation.
 
 use crate::diff::ShootingDiff;
-use crate::mutations::ShootingMutation;
 use crate::{ShootingCamera, ShootingSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 
@@ -16,12 +15,15 @@ pub struct ReplaceShotCamera {
     pub new_camera: ShootingCamera,
 }
 
-impl MutationKind<ShootingSnapshot, ShootingMutation> for ReplaceShotCamera {
+impl<Op> MutationKind<ShootingSnapshot, Op> for ReplaceShotCamera
+where
+    Op: protocol::Mutation<ShootingSnapshot, Diff = ShootingDiff> + From<ReplaceShotCamera>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "replace", entity: "shot-camera", kind: "replace-shot-camera", record: "ReplacedShotCamera" };
     fn diff(&self, base: &ShootingSnapshot) -> protocol::MutationOutcome<ShootingDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &ShootingSnapshot) -> Result<Vec<ShootingMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &ShootingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

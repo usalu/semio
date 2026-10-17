@@ -1,5 +1,5 @@
-use crate::editor::bim::gestures::tests::fixture::{room, Rig};
-use crate::editor::bim::gestures::session::Shape;
+use crate::editor::bim::fixture::{room, Rig};
+use crate::editor::bim::marks::Shape;
 use crate::standards::v1::subsets::any::schema::{snapshot::Axis, mutations::ModelMutation};
 
 fn ends(rig: &Rig, wall: &str) -> ([f64; 2], [f64; 2]) {

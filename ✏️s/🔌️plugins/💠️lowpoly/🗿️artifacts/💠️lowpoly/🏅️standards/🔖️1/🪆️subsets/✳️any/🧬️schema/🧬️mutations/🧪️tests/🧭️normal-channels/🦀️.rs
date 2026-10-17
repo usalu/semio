@@ -3,13 +3,14 @@
 //! implementation), the central applier writes them before it recomputes the vertex normals, and the position-and-channel undo
 //! restores the base.
 
+use semio_framework_test_fixtures::fixture_path;
 use semio_s_artifact_lowpoly_lowpoly_model_diff::{lowpoly_selection_motion_diff, lowpoly_selection_normal_channels, LowpolySelectionMotion};
 use crate::LowpolyMutation;
 use semio_s_artifact_lowpoly_lowpoly_model::{managed_mesh::LowpolyMeshAttribute, managed_mesh::LowpolyMeshAttributeDomain, managed_mesh::LowpolyMeshAttributeSemantic, managed_mesh::LowpolyMeshState, snapshot::LowpolySnapshot};
 use semio_framework_3d::mesh::{Vec3, VertexId};
 use semio_framework_value::DslValue;
 
-static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌀️rotate-selection/📐️lifts/📸️snapshot/⬅️before/🔣️.json")).expect("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌀️rotate-selection/📐️lifts/📸️snapshot/⬅️before/🔣️.json").leak());
+static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| std::fs::read_to_string(fixture_path!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌀️rotate-selection/📐️lifts/📸️snapshot/⬅️before/🔣️.json")).expect("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌀️rotate-selection/📐️lifts/📸️snapshot/⬅️before/🔣️.json").leak());
 const SELECTED: [u32; 3] = [0, 1, 2];
 
 fn authored_channel(state: &LowpolyMeshState) -> LowpolyMeshAttribute {

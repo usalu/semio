@@ -2,7 +2,6 @@
 //! frame within the shared source (the play app's `patch-tile-crops` gesture).
 
 use crate::diff::PresentationDiff;
-use crate::mutations::PresentationMutation;
 use crate::{FigureTileFrame, PresentationSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 
@@ -21,14 +20,17 @@ pub struct ResizeTileCrop {
     pub new_crop: FigureTileFrame,
 }
 
-impl MutationKind<PresentationSnapshot, PresentationMutation> for ResizeTileCrop {
+impl<Op> MutationKind<PresentationSnapshot, Op> for ResizeTileCrop
+where
+    Op: protocol::Mutation<PresentationSnapshot, Diff = PresentationDiff> + From<ResizeTileCrop>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "resize", entity: "tile-crop", kind: "resize-tile-crop", record: "ResizedTileCrop" };
 
     fn diff(&self, base: &PresentationSnapshot) -> protocol::MutationOutcome<PresentationDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &PresentationSnapshot) -> Result<Vec<PresentationMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &PresentationSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

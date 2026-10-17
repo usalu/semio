@@ -88,5 +88,4 @@ for(const row of corpus.closures)test(row.name,async()=>{
  const root=resolve("virtual-source-role"),read=async(path:string)=>{const local=relative(root,path).replaceAll("\\","/");return Object.hasOwn(row.files,local)?new TextEncoder().encode(row.files[local]!):null;},inputs=await readRustSourceClosureV1([row.entry],root,row.cfg,read);
  expect(inputs.map(({path,kind})=>({path,kind}))).toEqual(row.expected);
  if(row.name==="inactive inner file Source")expect(inputs[0]!.activeLines).toBe(0);
- console.log("[DEBUG] Exact authored Rust Source membership "+row.name);
 });

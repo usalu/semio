@@ -19,5 +19,4 @@ test("ordered map cold close retains whole backing independently of logical text
   }
   expect(readFileSync(new URL("../../../🦀️.rs", import.meta.url), "utf8").includes("pub fn next_cold_byte_demand")).toBe(true);
   expect(readFileSync(new URL("../../🦀️.rs", import.meta.url), "utf8").includes("pub fn next_close_byte_demand")).toBe(true);
-  console.log("[DEBUG] ordered-map whole physical extents use Node Buffer + JSON Patch oracle within unchanged65536 admission");
 });

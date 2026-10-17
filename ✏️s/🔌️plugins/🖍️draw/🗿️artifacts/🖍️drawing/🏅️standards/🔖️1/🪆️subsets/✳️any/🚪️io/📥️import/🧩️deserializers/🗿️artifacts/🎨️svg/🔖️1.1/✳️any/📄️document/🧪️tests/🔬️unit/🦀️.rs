@@ -6,7 +6,6 @@ fn svg_documents_preserve_owned_hierarchy_and_paint() {
         let load=||->Result<semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot,String>{let mut job=super::SvgImportJob::new(case["source"].as_str().unwrap(),"import")?;while !job.step(1)?.done{}job.take()};
         if case["after"].is_null(){assert!(load().is_err(),"{}",case["name"]);continue;}
         assert_eq!(load().unwrap(),serde_json::from_value::<semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot>(case["after"].clone()).unwrap(),"{}",case["name"]);
-        println!("[DEBUG] decoded SVG native document {} preserves neutral hierarchy, geometry and paint",case["name"]);
     }
 }
 #[test]

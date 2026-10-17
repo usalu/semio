@@ -40,36 +40,6 @@ pub mod standards {
                             pub use component::*;
                         }
                         #[path = "."]
-                        pub mod add_load {
-                            #[path = "../../➕️add-load/🦀️.rs"]
-                            mod component;
-                            #[path = "../../➕️add-load/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "../../➕️add-load/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod remove_load {
-                            #[path = "../../➖️remove-load/🦀️.rs"]
-                            mod component;
-                            #[path = "../../➖️remove-load/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "../../➖️remove-load/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod change_load_case_self_weight {
-                            #[path = "../../⚖️change-load-case-self-weight/🦀️.rs"]
-                            mod component;
-                            #[path = "../../⚖️change-load-case-self-weight/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "../../⚖️change-load-case-self-weight/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                        }
-                        #[path = "."]
                         pub mod create_combination {
                             #[path = "../../🔗️create-combination/🦀️.rs"]
                             mod component;
@@ -90,16 +60,6 @@ pub mod standards {
                             pub use component::*;
                         }
                         #[path = "."]
-                        pub mod replace_load {
-                            #[path = "../../🔁️replace-load/🦀️.rs"]
-                            mod component;
-                            #[path = "../../🔁️replace-load/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "../../🔁️replace-load/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                        }
-                        #[path = "."]
                         pub mod change_load_case_name {
                             #[path = "../../🏷️change-load-case-name/🦀️.rs"]
                             mod component;
@@ -109,16 +69,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                         }
-                        #[path = "."]
-                        pub mod replace_combination {
-                            #[path = "../../🔁️replace-combination/🦀️.rs"]
-                            mod component;
-                            #[path = "../../🔁️replace-combination/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "../../🔁️replace-combination/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                        }
+                        pub use semio_s_artifact_fem_2d_load_2::standards::v1::subsets::any::schema::mutations::{add_load, remove_load, change_load_case_self_weight, replace_load, replace_combination};
                     }
                 }
             }

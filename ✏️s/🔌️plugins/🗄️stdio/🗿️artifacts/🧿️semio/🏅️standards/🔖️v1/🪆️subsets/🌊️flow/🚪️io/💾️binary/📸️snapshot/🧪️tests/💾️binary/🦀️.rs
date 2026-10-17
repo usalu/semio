@@ -332,7 +332,6 @@ fn semio_flow_retained_snapshot_rejects_retired_requests_and_closes_exact_bytes(
         assert!(decoder.take_ready(&cx).is_none());
         assert_eq!(close_with_grants(&mut decoder, &grants), retained_backing);
     }
-    eprintln!("[DEBUG] Flow lifecycle: five exact request admission states, two original input pages, actual allocator-matched backing retired under three variable item grants after Ready cancellation; no member publication");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -506,5 +505,4 @@ async fn semio_member_factory_request_owned_open_admits_only_retained_flow() {
         }
         assert!(close_open(&mut lifecycle_open, &[1, 7, 4096]) >= retained);
     }
-    eprintln!("[DEBUG] public request-owned Semio member open: Flow handoffs1; one genuine persisted-history Replay denial; non-Flow arms17 x decode+cancel; six real lifecycle authority fences; publications0; every retained operation terminal-empty");
 }

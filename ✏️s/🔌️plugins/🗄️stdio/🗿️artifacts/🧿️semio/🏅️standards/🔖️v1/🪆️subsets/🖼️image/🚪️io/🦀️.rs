@@ -118,8 +118,7 @@ pub mod binary;
 #[path = "📝️text/🦀️.rs"]
 pub mod text;
 
-#[path = "🪶️sqlite/🦀️.rs"]
-pub mod sqlite;
+
 
 pub mod derived_construction {
     use crate::schema::diff::SemioImageDiff;

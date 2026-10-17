@@ -1,5 +1,6 @@
-use crate::builder::PluginBuilder;
-use super::*;
+use semio_framework_plugin_builder::PluginBuilder;
+use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_framework_plugin_reactor_app::PluginApp;
 
 #[semio_framework_async_macros::async_test]
 async fn schema_document_authority_follows_portable_owner_corpus() {
@@ -9,7 +10,7 @@ async fn schema_document_authority_follows_portable_owner_corpus() {
         let plugin_id = input["pluginId"].as_str().expect("plugin identity");
         let owner = input["ownerPluginId"].as_str().expect("document owner");
         let scope: &'static str = Box::leak(input["scope"].as_str().expect("scope").to_owned().into_boxed_str());
-        let mut builder = PluginBuilder::<_, crate::plugin_app::NoPluginApp>::new(plugin_id).label("Schema Authority Fixture").version("0.1.0").package_id(format!("semio:{plugin_id}"));
+        let mut builder = PluginBuilder::<_, semio_framework_plugin_reactor_app::NoPluginApp>::new(plugin_id).label("Schema Authority Fixture").version("0.1.0").package_id(format!("semio:{plugin_id}"));
         for dependency in input["dependencies"].as_array().expect("dependencies") {
             builder = builder.depends_on(dependency.as_str().expect("dependency identity"), semio_framework::tree_pin!());
         }

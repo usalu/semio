@@ -71,5 +71,4 @@ test("PDF stream roles persist normalized identities and exact unsigned sample w
   sql.query("UPDATE pdf_stream_role_sample SET ordinal=9 WHERE ordinal=1").run();
   await expect(pdf17SnapshotFromSqliteDatabase(await importSqliteDatabase(sql.serialize()))).rejects.toThrow();
   sql.close();
-  console.log("[DEBUG] PDF native SQLite independently confirmed normalized stream identity and sample word persistence");
 });

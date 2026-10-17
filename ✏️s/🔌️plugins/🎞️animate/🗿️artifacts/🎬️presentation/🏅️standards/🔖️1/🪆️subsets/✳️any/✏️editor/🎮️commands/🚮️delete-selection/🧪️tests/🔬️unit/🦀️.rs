@@ -1,6 +1,21 @@
-use super::*;
+#[allow(unused_imports)]
+use crate::{editor::animate::config::PresentationConfig, editor::animate::config::PresentationConfigMutation};
+#[allow(unused_imports)]
+use crate::{editor::animate::support::valid_tile_ids, editor::animate::support::PresentationDispatchCtx};
+#[allow(unused_imports)]
+use crate::mutations::delete_tiles::DeleteTiles;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::mutations::PresentationMutation;
+#[allow(unused_imports)]
+use crate::PresentationSnapshot;
+#[allow(unused_imports)]
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+#[allow(unused_imports)]
+use semio_framework_value_derive::{FromValue, ToValue};
+use crate::editor::animate::commands::delete_selection::*;
 use crate::editor::animate::unit_tests::context::{dispatch, presentation_app_with_registry};
-use crate::editor::animate::{commands::add_tile, PresentationCommand, PRESENTATION_INTERACTION_DOMAIN, PRESENTATION_INTERACTION_GRANULARITY};
+use crate::editor::animate::{commands::add_tile, PresentationCommand};
+use crate::editor::animate::support::{PRESENTATION_INTERACTION_DOMAIN, PRESENTATION_INTERACTION_GRANULARITY};
 use semio_framework_plugin::artifact_app_laws::meta;
 use semio_framework_plugin::{PluginApp, CLEAR_SELECTION_ACTION_ID, INTERACTION_SELECT_ACTION_ID};
 

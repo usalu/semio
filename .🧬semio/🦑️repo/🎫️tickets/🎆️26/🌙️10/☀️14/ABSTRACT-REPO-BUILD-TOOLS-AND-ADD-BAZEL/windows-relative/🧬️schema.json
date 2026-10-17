@@ -1,0 +1,52 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "platform",
+    "sourceOnly",
+    "layouts"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "platform": {
+      "const": "win32-x64"
+    },
+    "sourceOnly": {
+      "const": true
+    },
+    "layouts": {
+      "const": {
+        "OBJECT_ATTRIBUTES": {
+          "bytes": 48,
+          "offsets": {
+            "Length": 0,
+            "RootDirectory": 8,
+            "ObjectName": 16,
+            "Attributes": 24,
+            "SecurityDescriptor": 32,
+            "SecurityQualityOfService": 40
+          }
+        },
+        "UNICODE_STRING": {
+          "bytes": 16,
+          "offsets": {
+            "Length": 0,
+            "MaximumLength": 2,
+            "Buffer": 8
+          }
+        },
+        "IO_STATUS_BLOCK": {
+          "bytes": 16,
+          "offsets": {
+            "StatusOrPointer": 0,
+            "Information": 8
+          }
+        }
+      }
+    }
+  }
+}

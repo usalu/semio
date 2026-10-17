@@ -1,0 +1,1 @@
+{"extends": "../../../../../../../../../../\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/tsconfig.json", "compilerOptions": {"noEmit": true, "incremental": false, "tsBuildInfoFile": null}, "include": [], "files": ["loan-orig.ts"]}

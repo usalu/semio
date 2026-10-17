@@ -2,6 +2,7 @@
 import {PathFlattenJob,type FlatContour} from "@semio-tech/framework/2d/path/flatten";
 import {StrokeOutlineJob,type StrokeGeometryStyle} from "@semio-tech/framework/2d/path/stroke";
 import {UnitRetirement,type WorkRetirement} from "@semio-tech/framework/2d/retire";
+import type {PathSegment} from "@semio-tech/framework/2d";
 import type {PathGeometrySegment} from "../../../🟦️.ts";
 import type {DocumentSceneNode} from "../../../🎬️scene/📋️prepare/🟦️.ts";
 type Point=readonly [number,number];
@@ -14,7 +15,7 @@ const invalid=(message:string):never=>{throw new RangeError(message);};
 const map=(p:Point,m:readonly number[]):Point=>[m[0]!*p[0]+m[2]!*p[1]+m[4]!,m[1]!*p[0]+m[3]!*p[1]+m[5]!];
 function retireContours(contours:(FlatContour|Point[])[]):boolean{const contour=contours.at(-1);if(!contour)return true;const points=Array.isArray(contour)?contour:contour.points;if(points.length)points.pop();else contours.pop();return false;}
 function distance(p:Point,a:Point,b:Point):number{const dx=b[0]-a[0],dy=b[1]-a[1],length=Math.hypot(dx,dy),t=length?Math.max(0,Math.min(length,((p[0]-a[0])*dx+(p[1]-a[1])*dy)/length)):0;return Math.hypot(p[0]-a[0]-(length?dx*t/length:0),p[1]-a[1]-(length?dy*t/length:0));}
-function own(segment:PathGeometrySegment):PathGeometrySegment{switch(segment.kind){case "close":return{kind:"close"};case "move":case "line":return{kind:segment.kind,to:[...segment.to]};case "quad":return{...segment,ctrl:[...segment.ctrl],to:[...segment.to]};case "cubic":return{...segment,ctrl1:[...segment.ctrl1],ctrl2:[...segment.ctrl2],to:[...segment.to]};case "arc":return{...segment,to:[...segment.to]};}}
+function own(segment:PathSegment):PathGeometrySegment{switch(segment.kind){case "close":return{kind:"close"};case "move":case "line":return{kind:segment.kind,to:[...segment.to]};case "quad":return{...segment,ctrl:[...segment.ctrl],to:[...segment.to]};case "cubic":return{...segment,ctrl1:[...segment.ctrl1],ctrl2:[...segment.ctrl2],to:[...segment.to]};case "arc":return{...segment,to:[...segment.to]};}}
 /** 🧱️ A completed scalar result carries no borrowed path or paint buffers. */
 export class PaintedPathHitJob{
  /** 🎬️ Copies bounded query attributes from the actual resolved leaf while borrowing its source separately. */
@@ -44,7 +45,7 @@ export class PaintedPathHitJob{
    case 6:this.style=null;this.query={...this.query,stroke:null};break;case 7:this.failure=null;break;
   }if(complete)this.cleanup++;return this.cleanup===8;
  }
- private step(source:(index:number)=>PathGeometrySegment|undefined):void{
+ private step(source:(index:number)=>PathSegment|undefined):void{
   switch(this.phase){
    case "admitting":{const segment=source(this.next);if(segment){if(this.next>=65536)invalid("Painted query exceeds segment limit");this.segments.push(own(segment));this.next++;}else{this.flatten=new PathFlattenJob({segments:this.segments,transform:this.query.transform,tolerance:this.query.flatness});this.phase="flattening";}break;}
    case "flattening":if(this.flatten!.advance(1).done){const moved=this.flatten!.intoRetirement();this.flattenRetirement=moved.job;this.flat=moved.output!;this.flatten=null;this.phase="flattenCleanup";}break;
@@ -57,7 +58,7 @@ export class PaintedPathHitJob{
    case "cleanup":if(this.retireOne())this.phase="complete";break;case "complete":break;
   }
  }
- advance(grant:number,source:(index:number)=>PathGeometrySegment|undefined):PaintedPathProgress{
+ advance(grant:number,source:(index:number)=>PathSegment|undefined):PaintedPathProgress{
   if(!Number.isSafeInteger(grant)||grant<1)invalid("Invalid painted query work grant");if(this.cancelled)throw new DOMException("Painted query cancelled","AbortError");if(this.failure)throw this.failure;
   try{for(let at=0;at<grant&&this.phase!=="complete";at++){this.step(source);this.work++;}}catch(error){this.failure=error;throw error;}return{phase:this.phase,work:this.work,done:this.phase==="complete"};
  }

@@ -15,7 +15,8 @@ const CASES: [&str; 9] = ["columns-profiles", "beams-profiles", "frame-tilt-join
 mod subject {
     use super::CASES;
     use semio_repo_test_host::{parse_json, Context, Outcome};
-    use semio_s_artifact_bim_model::standards::v1::subsets::any::io::text::snapshot::{decode_model_snapshot_json, encode_inference_projection_json};
+    use semio_s_artifact_bim_model::standards::v1::subsets::any::io::text::snapshot::decode_model_snapshot_json;
+    use semio_s_artifact_bim_model::standards::v1::subsets::any::io::text::projection::encode_inference_projection_json;
 
     /// 🧊️ `{case: {element id: {volume, min, max}}}` for every planar element of every case the scenario names.
     pub fn solids_rest(ctx: &Context) -> Result<Outcome, String> {

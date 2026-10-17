@@ -1,10 +1,10 @@
 import assert from "node:assert/strict";
-import { testMeshEdgeAuthority } from "../../../../../../../../../../../🔨️modules/🏗️fem/⚙️engine/🕸️mesh/🧪️tests/🕸️edge-authority/🟦️.ts";
-import { testFemAssemblyMergeRefusalOracle } from "../../../../../../../../../../../🔨️modules/🏗️fem/⚙️engine/🧮️analyses/🧪️tests/🔀️merge-refusal/🟦️.ts";
-import { testFemAssemblyStepGrantOracle } from "../../../../../../../../../../../🔨️modules/🏗️fem/⚙️engine/🧮️analyses/🧪️tests/⛽️step-grant/🟦️.ts";
-import { testFemPagedCsrOracle } from "../../../../../../../../../../../🔨️modules/🏗️fem/⚙️engine/🔢️sparse/🧪️tests/📚️paged-csr/🟦️.ts";
-import { testFemPcgPublicationGrantOracle } from "../../../../../../../../../../../🔨️modules/🏗️fem/⚙️engine/🔢️sparse/🧪️tests/⛽️publication-grant/🟦️.ts";
-import { testFemScalarOwnerOracle } from "../../../../../../../../../../../🔨️modules/🏗️fem/⚙️engine/🔢️sparse/🧪️tests/🔢️scalar-owners/🟦️.ts";
+import { testMeshEdgeAuthority } from "@semio-tech/s-fem-engine-ts/mesh/testing/edge-authority";
+import { testFemAssemblyMergeRefusalOracle } from "@semio-tech/s-fem-engine-ts/analyses/testing/merge-refusal";
+import { testFemAssemblyStepGrantOracle } from "@semio-tech/s-fem-engine-ts/analyses/testing/step-grant";
+import { testFemPagedCsrOracle } from "@semio-tech/s-fem-engine-ts/sparse/testing/paged-csr";
+import { testFemPcgPublicationGrantOracle } from "@semio-tech/s-fem-engine-ts/sparse/testing/publication-grant";
+import { testFemScalarOwnerOracle } from "@semio-tech/s-fem-engine-ts/sparse/testing/scalar-owners";
 import Ajv from "ajv";
 import { applyPatch, type Operation } from "fast-json-patch";
 import commandLimits from "../🧫️fixtures/🚧️retained-command-limits/🔣️.json" with { type: "json" };
@@ -12,10 +12,10 @@ import commandLimits from "../🧫️fixtures/🚧️retained-command-limits/�
 import documentAdmission from "../../../🧪️tests/🧫️fixtures/🧬️document-admission/🔣️.json" with { type: "json" };
 import fem3dDocumentSchema from "../../../🧬️schema/🔣️.json" with { type: "json" };
 import { parseFem3dArtifact } from "../../../🧬️schema/🟦️.ts";
-import mountedClose from "../../../../../../../../../🧪️tests/🧫️fixtures/🧹️mounted-close/🔣️.json" with { type: "json" };
+import { mountedCloseFixture as mountedClose } from "@semio-tech/fem-js/testing/fixtures/mounted-close";
 
-import closeGrants from "../../../../../../../../../🧪️tests/🧫️fixtures/💳️visual-close-grants/🔣️.json" with { type: "json" };
-import childOutcomes from "../../../../../../../../../🧪️tests/🧫️fixtures/🧒️child-outcomes/🔣️.json" with { type: "json" };
+import { visualCloseGrantsFixture as closeGrants } from "@semio-tech/fem-js/testing/fixtures/visual-close-grants";
+import { childOutcomesFixture as childOutcomes } from "@semio-tech/fem-js/testing/fixtures/child-outcomes";
 
 
 import { testFem3dModelWindowConfigContract } from "../../🎭️modes/✏️edit/🪟️windows/🧱️model/🎚️config/🧬️schema/🧪️tests/🪪️document-contract/🟦️.ts";

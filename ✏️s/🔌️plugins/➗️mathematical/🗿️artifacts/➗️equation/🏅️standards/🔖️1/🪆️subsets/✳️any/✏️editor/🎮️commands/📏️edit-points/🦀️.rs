@@ -18,7 +18,4 @@ pub fn handle(payload: &EditPoints, doc: &ArtifactView<'_, EquationSnapshot>, _c
 }
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

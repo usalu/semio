@@ -1,0 +1,24 @@
+{
+ "name": "imperative",
+ "crates": [
+  "semio-imperative-mutation-bridge",
+  "semio-s-artifact-imperative-procedure",
+  "semio-s-artifact-imperative-procedure-editor",
+  "semio-s-artifact-imperative-procedure-inferences",
+  "semio-s-artifact-imperative-procedure-schema",
+  "semio-s-artifact-imperative-procedure-snapshot",
+  "semio-s-artifact-imperative-procedure-viewer",
+  "semio-s-artifact-imperative-procedure-viewer-2",
+  "semio-s-plugin-imperative-control",
+  "semio-s-plugin-imperative-control-component",
+  "semio-s-plugin-imperative-effect",
+  "semio-s-plugin-imperative-effect-component",
+  "semio-s-plugin-imperative-logic",
+  "semio-s-plugin-imperative-logic-component",
+  "semio-s-plugin-imperative-math",
+  "semio-s-plugin-imperative-math-component",
+  "semio-s-plugin-imperative-text",
+  "semio-s-plugin-imperative-text-component"
+ ],
+ "note": "ORACLE-HARVEST-PLUGINS: ✏️s/🔌️plugins/📜️imperative"
+}

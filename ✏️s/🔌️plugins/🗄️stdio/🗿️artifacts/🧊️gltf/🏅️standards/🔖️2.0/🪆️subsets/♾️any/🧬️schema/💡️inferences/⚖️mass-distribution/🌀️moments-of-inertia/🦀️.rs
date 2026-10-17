@@ -1,9 +1,9 @@
 //! 💡️ moments-of-inertia atomic glTF inference leaf.
-use super::super::super::modules::{
+use crate::standards::v2_0::subsets::any::schema::modules::{
     inference_measures::{estimate, unavailable},
     measurement_contracts::*,
 };
-use super::super::{geometry_core::GltfGeometryContext, GltfEntityIndicators, GltfInferenceLeaf, GltfInferenceLeafDescriptor, GLTF_GEOMETRY_READS};
+use crate::standards::v2_0::subsets::any::schema::inferences::geometry_core::GltfGeometryContext;
 
 pub struct GltfMomentsOfInertiaInference;
 
@@ -18,12 +18,12 @@ pub fn descriptor() -> GltfInferenceLeafDescriptor {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn raw(context: &GltfGeometryContext<'_>) -> GltfVec3 {
+pub fn raw(context: &GltfGeometryContext<'_>) -> GltfVec3 {
     let eigenvalues = context.principal_frame.eigenvalues;
     GltfVec3::new([eigenvalues[1] + eigenvalues[2], eigenvalues[0] + eigenvalues[2], eigenvalues[0] + eigenvalues[1]])
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<GltfVec3> {
+pub fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<GltfVec3> {
     estimate(raw(context), GltfUnit::SquareMetre, context.sample_count, Some(context.topology))
 }
 
@@ -33,10 +33,24 @@ pub fn unavailable_measure(ids: &[String]) -> GltfMeasure<GltfVec3> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn encode_result(indicators: &GltfEntityIndicators) -> semio_framework_value::DslValue {
-    semio_framework_value::ToValue::to_value(&indicators.mass.moments_of_inertia)
+pub fn encode_result(measure: &GltfMeasure<GltfVec3>) -> semio_framework_value::DslValue {
+    semio_framework_value::ToValue::to_value(measure)
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+//#region 🧾️InferenceDescriptor
+/// 🧾️ Registry descriptor of this inference leaf; its companion documents are embedded from this leaf's own folder.
+pub fn inference_descriptor() -> semio_framework_schema_registry::ArtifactInferenceDescriptor {
+    semio_framework_schema_registry::ArtifactInferenceDescriptor {
+        id: "s.stdio.gltf.inference.moments-of-inertia.v1",
+        inference: semio_framework_schema_registry::FacetLeaves {
+            rust: include_str!("🦀️.rs"),
+            typescript: include_str!("🟦️.ts"),
+            graphql: include_str!("🔗️.graphql"),
+            json_schema: include_str!("🔣️.json"),
+            proto: include_str!("🛰️.proto"),
+        },
+    }
+}
+//#endregion 🧾️InferenceDescriptor
+
+

@@ -1,0 +1,259 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "complete",
+      "held": true,
+      "live": true,
+      "reader": true,
+      "workspace": true,
+      "partition": true,
+      "invocation": true,
+      "retained": true,
+      "accepting": true,
+      "capacity": true,
+      "accepted": true
+    },
+    {
+      "id": "missing-held",
+      "held": false,
+      "live": true,
+      "reader": true,
+      "workspace": true,
+      "partition": true,
+      "invocation": true,
+      "retained": true,
+      "accepting": true,
+      "capacity": true,
+      "accepted": false
+    },
+    {
+      "id": "missing-live",
+      "held": true,
+      "live": false,
+      "reader": true,
+      "workspace": true,
+      "partition": true,
+      "invocation": true,
+      "retained": true,
+      "accepting": true,
+      "capacity": true,
+      "accepted": false
+    },
+    {
+      "id": "missing-reader",
+      "held": true,
+      "live": true,
+      "reader": false,
+      "workspace": true,
+      "partition": true,
+      "invocation": true,
+      "retained": true,
+      "accepting": true,
+      "capacity": true,
+      "accepted": false
+    },
+    {
+      "id": "missing-workspace",
+      "held": true,
+      "live": true,
+      "reader": true,
+      "workspace": false,
+      "partition": true,
+      "invocation": true,
+      "retained": true,
+      "accepting": true,
+      "capacity": true,
+      "accepted": false
+    },
+    {
+      "id": "missing-partition",
+      "held": true,
+      "live": true,
+      "reader": true,
+      "workspace": true,
+      "partition": false,
+      "invocation": true,
+      "retained": true,
+      "accepting": true,
+      "capacity": true,
+      "accepted": false
+    },
+    {
+      "id": "missing-invocation",
+      "held": true,
+      "live": true,
+      "reader": true,
+      "workspace": true,
+      "partition": true,
+      "invocation": false,
+      "retained": true,
+      "accepting": true,
+      "capacity": true,
+      "accepted": false
+    },
+    {
+      "id": "missing-retained",
+      "held": true,
+      "live": true,
+      "reader": true,
+      "workspace": true,
+      "partition": true,
+      "invocation": true,
+      "retained": false,
+      "accepting": true,
+      "capacity": true,
+      "accepted": false
+    },
+    {
+      "id": "missing-accepting",
+      "held": true,
+      "live": true,
+      "reader": true,
+      "workspace": true,
+      "partition": true,
+      "invocation": true,
+      "retained": true,
+      "accepting": false,
+      "capacity": true,
+      "accepted": false
+    },
+    {
+      "id": "missing-capacity",
+      "held": true,
+      "live": true,
+      "reader": true,
+      "workspace": true,
+      "partition": true,
+      "invocation": true,
+      "retained": true,
+      "accepting": true,
+      "capacity": false,
+      "accepted": false
+    }
+  ],
+  "lifetimes": [
+    "drain",
+    "error",
+    "undefined",
+    "cancel",
+    "missing",
+    "copied",
+    "retired"
+  ],
+  "batches": [
+    {
+      "kind": "ordinary",
+      "live": true,
+      "inventory": false
+    },
+    {
+      "kind": "ordinary",
+      "live": false,
+      "inventory": false
+    },
+    {
+      "kind": "managed",
+      "live": true,
+      "inventory": true
+    },
+    {
+      "kind": "managed",
+      "live": false,
+      "inventory": false
+    },
+    {
+      "kind": "copied",
+      "live": true,
+      "inventory": false
+    },
+    {
+      "kind": "copied",
+      "live": false,
+      "inventory": false
+    }
+  ],
+  "epochs": [
+    {
+      "changed": "none",
+      "afterAwait": false,
+      "accepted": true
+    },
+    {
+      "changed": "none",
+      "afterAwait": true,
+      "accepted": true
+    },
+    {
+      "changed": "source",
+      "afterAwait": false,
+      "accepted": false
+    },
+    {
+      "changed": "source",
+      "afterAwait": true,
+      "accepted": false
+    },
+    {
+      "changed": "schema",
+      "afterAwait": false,
+      "accepted": false
+    },
+    {
+      "changed": "schema",
+      "afterAwait": true,
+      "accepted": false
+    }
+  ],
+  "coldImports": [
+    {
+      "module": "🏗️build/🕸️graph/🟦️.ts",
+      "method": "loadBuildGraphV1"
+    },
+    {
+      "module": "🏗️build/📥️caller/🟦️.ts",
+      "method": "withBuildOrchestrationTaskEnvironmentV1"
+    },
+    {
+      "module": "🟨️.mjs",
+      "method": "readPrivateNxBuildGraphV1"
+    }
+  ],
+  "revisionReaders": [
+    {
+      "module": "⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts",
+      "sourceMaximumBytes": 8388608,
+      "schemaMaximumBytes": 65536
+    },
+    {
+      "module": "🏗️build/📥️inputs/💾️storage/🟨️.mjs",
+      "sourceMaximumBytes": 8388608,
+      "schemaMaximumBytes": 65536
+    },
+    {
+      "module": "🏗️build/📥️inputs/🧮️digest/📥️read/🟨️.mjs",
+      "sourceMaximumBytes": 8388608,
+      "schemaMaximumBytes": 65536
+    },
+    {
+      "module": "🏗️build/👁️observation/🟨️.mjs",
+      "sourceMaximumBytes": 8388608,
+      "schemaMaximumBytes": 65536
+    },
+    {
+      "module": "🏗️build/🕸️graph/🟦️.ts",
+      "sourceMaximumBytes": 8388608,
+      "schemaMaximumBytes": 65536
+    },
+    {
+      "module": "🏗️build/👁️observation/📥️reuse/🟨️.mjs",
+      "sourceMaximumBytes": 8388608,
+      "schemaMaximumBytes": 65536
+    },
+    {
+      "module": "🏗️build/📥️inputs/📋️data/📥️load/🟨️.mjs",
+      "sourceMaximumBytes": 8388608,
+      "schemaMaximumBytes": 65536
+    }
+  ]
+}

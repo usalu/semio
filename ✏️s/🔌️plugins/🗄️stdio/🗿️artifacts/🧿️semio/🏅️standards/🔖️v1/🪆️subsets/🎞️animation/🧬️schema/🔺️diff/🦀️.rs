@@ -12,7 +12,7 @@
 //! `engine::triples` module per the ticket's explicit instruction — not re-derived here.
 
 use crate::schema::snapshot::{AnimChannel, AnimInterpolation, AnimKeyframe, AnimTarget, AnimTimeline, AnimValue, SemioAnimationSnapshot};
-#[cfg(test)] use crate::schema::snapshot::AnimTargetProperty;
+#[cfg(any(test, feature = "testkit"))] use crate::schema::snapshot::AnimTargetProperty;
 use semio_s_artifact_stdio_semio_base::schema::triples::IndexAdded;
 use semio_s_artifact_stdio_semio_base::schema::triples::IndexModified;
 use semio_s_artifact_stdio_semio_base::schema::triples::IndexedTripleDiff;
@@ -84,7 +84,7 @@ fn apply_indexed<T: Clone, D>(diff: &IndexedTripleDiff<D, T>, base: &[T], apply_
 /// (Insert+Remove-before, Insert+Insert-same-index, Insert+SetField-into-added) are proven in this
 /// module's tests against the innermost `keyframes` level.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn absorb_indexed<T: Clone, D: Clone>(mine: &mut IndexedTripleDiff<D, T>, other: IndexedTripleDiff<D, T>, mut absorb_diff: impl FnMut(&mut D, D), apply_diff_to_item: impl Fn(&D, &T) -> T) {
+pub fn absorb_indexed<T: Clone, D: Clone>(mine: &mut IndexedTripleDiff<D, T>, other: IndexedTripleDiff<D, T>, mut absorb_diff: impl FnMut(&mut D, D), apply_diff_to_item: impl Fn(&D, &T) -> T) {
     let removed1_sorted = {
         let mut v = mine.removed.clone();
         v.sort_unstable();
@@ -447,17 +447,17 @@ impl DiffAlgebra<SemioAnimationSnapshot> for SemioAnimationDiff {
 /// conformance-law tests can reuse them via `demo_diff_cases()` below — same promotion pattern
 /// every prior semio wave's report documents (a private item of a child `mod tests` isn't visible
 /// to a sibling module).
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn kf(t: f64, value: AnimValue) -> AnimKeyframe {
     AnimKeyframe { t, value }
 }
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn channel(node: &str, property: AnimTargetProperty, interpolation: AnimInterpolation, keyframes: Vec<AnimKeyframe>) -> AnimChannel {
     AnimChannel { target: AnimTarget { node: node.into(), property }, interpolation, keyframes }
 }
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn timeline(name: Option<&str>, channels: Vec<AnimChannel>) -> AnimTimeline {
     AnimTimeline { name: name.map(String::from), channels }
@@ -466,7 +466,7 @@ pub(crate) fn timeline(name: Option<&str>, channels: Vec<AnimChannel>) -> AnimTi
 /// 🌱 Representative `SemioAnimationDiff` cases built declaratively (empty, a removed and an added timeline row) — single source of truth
 /// for the composer's `diff_grammar_conformance_law`/`protocol_walk_law`, reused by this module's own `diff_codec_text_binary_roundtrip_law`
 /// test below.
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_diff_cases() -> Vec<SemioAnimationDiff> {
     let added = timeline(Some("added"), vec![channel("m", AnimTargetProperty::Custom { name: "x".into() }, AnimInterpolation::Step, vec![kf(0.0, AnimValue::Scalar { value: 1.0 })])]);

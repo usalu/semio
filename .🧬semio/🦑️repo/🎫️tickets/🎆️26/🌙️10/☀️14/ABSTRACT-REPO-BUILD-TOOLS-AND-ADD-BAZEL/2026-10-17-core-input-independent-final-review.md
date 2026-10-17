@@ -1,0 +1,9 @@
+# Core Fresh Input Final Independent Review
+
+Seven repaired final inputs match stable nofollow FD/name seven-field metadata, bytes and SHA256. Receipt: `🗑️generated/artifact-input-seven-independent-hold.json`. Generic FS creation five-input checkpoint was reviewed separately.
+
+The material initial-stage completeness gap is fixed: initial verification derives exact direct-name rosters for every newly created directory, checks no unknown/missing entries and repeats full seven-field directory facts after file readback. Staging completion is minted only after this strict fresh census. A distinct public fixed fresh-input read invokes the same strict rule; callers cannot select a false flag. Existing postinstaller input-only read explicitly checks expected immutable files/anchors while allowing installer descendants and must not be used as preinstaller fresh-census authority.
+
+Actual scope/token/policy checks, synchronous full-ancestor reservation before scheduling, privately retained mapping with fresh journalEX/rawCAS each stage/read, shared verification/physical work65536 and bounded roots/files/bytes/directories/path/chunks remain. Completion registry keeps detached manifest facts rather than original base64 payload; no fake Store/callback/installer or whole-row settlement is introduced. Partial writes/sync/close/refusal retain truthful state and no completion.
+
+Bazel reports final input7 laws287 assertions/27 actual Root0 worker terminals, artifact19 laws1123 assertions/104 distinct terminal observations and eight-root strict0; lateunknown semantic RED preceded the repair. Tests were not rerun here. No material blocker remains in bounded Source review. Actual funded staging and installed layout/producer effects remain separate qualification. No Native/protected reads performed.

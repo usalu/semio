@@ -30,7 +30,6 @@ test("actual repository exact Cargo prepares and acquires every selected bounded
     });
     expect(events).toEqual(packages);expect(receipts.map(receipt=>receipt.package)).toEqual(packages);expect(receipts.reduce((sum,row)=>sum+row.assertions,0)).toBe(4);
     for(const receipt of receipts){expect(receipt.executable.startsWith(store.root+"/")).toBe(true);expect(receipt.artifactDir.startsWith(store.root+"/")).toBe(true);expect(receipt.sha256).toBe(Buffer.from(await crypto.subtle.digest("SHA-256",readFileSync(receipt.executable))).toString("hex"));}
-    console.log("[DEBUG] Actual Repository exact facade prepares two separate manifests before bounded fetch/metadata/compiler and retains four native law receipts "+JSON.stringify({mode,packages,root:store.root}));
    }finally{rmSync(root,{recursive:true,force:true});}
   });
  });

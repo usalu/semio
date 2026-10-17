@@ -29,6 +29,7 @@ semio-framework-artifact-workflow-workflow-schema = { path = "../../../📦️pa
 [dev-dependencies]
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 semio-framework-async-macros = { workspace = true }
+semio-framework-test-fixtures = { path = "../../../../../../../../../../🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 serde_json = { workspace = true }
 semio-framework-pack = { path = "../../../../../../../../../../🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 semio-framework-artifact-reference = { workspace = true }

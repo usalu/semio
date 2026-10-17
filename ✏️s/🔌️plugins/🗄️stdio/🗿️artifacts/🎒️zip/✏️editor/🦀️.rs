@@ -29,7 +29,7 @@ pub fn entry_node_id(name: &str) -> String {
     format!("{ENTRY_NODE_PREFIX}{}", semio_framework_hash::hash_bytes(name.as_bytes()))
 }
 
-fn fault(code: &'static str, message: &str) -> Fault {
+pub fn fault(code: &'static str, message: &str) -> Fault {
     Fault::new(FaultOrigin::App, FaultCode::new(code), message)
 }
 
@@ -111,7 +111,7 @@ fn ui_error() -> PluginAssemblyError {
     PluginAssemblyError::new("stdio.zip.edit-controls", "archive edit controls exceed the UI admission bounds")
 }
 
-fn draft(surface_id: &str, node_id: &str, value: &str, locale: Locale, publication_revision: ui::UiPublicationRevision) -> UiAssemblyResult<BuiltNode> {
+pub fn draft(surface_id: &str, node_id: &str, value: &str, locale: Locale, publication_revision: ui::UiPublicationRevision) -> UiAssemblyResult<BuiltNode> {
     let mut arguments = UiMapBuilder::try_new().ok_or_else(ui_error)?;
     for (key, value) in [("nodeId", node_id.to_string()), ("revision", text_revision(value))] {
         arguments.try_insert(key.into(), UiValue::Text(UiText::try_from_str(&value).ok_or_else(ui_error)?)).map_err(|_| ui_error())?;

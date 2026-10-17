@@ -1,0 +1,5 @@
+# Tools41394 Independent Selected Retirement Proof
+
+Bound saved request/result/log and explicit observed-terminal receipt with nofollow descriptors, stable descriptor/name seven-field metadata, bytes and SHA-256. Log streamed under2MiB and all three receipt-listed hashes/bytes match. Receipt: `🗑️generated/tools41394-independent-success-hold.json`. Root's tool observation reports session41394/PID67192 natural exit0; no original wrapper terminal exists and elapsed remains unknown.
+
+Request/result input hash matches0aaaf7a0114b98e0a07f974ca7c2a3b0c0a6b08cf94721a4eae5e2c8fd2a53d2. Closed acquiredtrue result retires selected db49 generation only, retains40objects, allocationRetiredfalse, same committed8588886016-byte allocation5bb63 and raw journal e1d658a6df301abf19f1f2f848ee24cd615b37c857c7265e1ba175256da0cceb. No whole-image free capacity, current SDK readiness, new Tools publication or public build acceptance follows. Fresh canonical census/publisher remain separate and currently catalog-blocked. No Native/protected observation performed.

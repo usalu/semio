@@ -3,7 +3,6 @@
 //! `create`/`delete`, never `connect`/`disconnect` (see the snapshot facet's module doc comment for
 //! the full ruling).
 
-use crate::schema::mutations::SemioGraphMutation;
 use crate::schema::snapshot::{GraphEdgeId, GraphNodeId, SemioGraphSnapshot};
 
 //#region 🔖️Payload
@@ -25,13 +24,16 @@ pub struct CreateEdge {
     pub at: Option<usize>,
 }
 
-impl protocol::MutationKind<SemioGraphSnapshot, SemioGraphMutation> for CreateEdge {
+impl<Op> protocol::MutationKind<SemioGraphSnapshot, Op> for CreateEdge
+where
+    Op: protocol::Mutation<SemioGraphSnapshot, Diff = crate::schema::diff::SemioGraphDiff> + From<CreateEdge> + From<crate::schema::mutations::delete_edge::DeleteEdge>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "edge", kind: "create-edge", record: "CreatedEdge" };
 
-    fn diff(&self, base: &SemioGraphSnapshot) -> protocol::MutationOutcome<<SemioGraphMutation as protocol::Mutation<SemioGraphSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioGraphSnapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<SemioGraphSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &SemioGraphSnapshot) -> Result<Vec<SemioGraphMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &SemioGraphSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

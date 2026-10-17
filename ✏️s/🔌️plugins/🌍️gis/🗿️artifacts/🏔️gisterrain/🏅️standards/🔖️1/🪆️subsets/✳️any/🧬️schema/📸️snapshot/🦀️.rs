@@ -24,7 +24,7 @@ pub struct GisTerrainSnapshot {
     /// 🔌️ `map:in`'s insertion point — last-imported `2d.map` descriptor JSON.
     #[state(artifact)]
     #[value(default, skip_serializing_if = "Option::is_none")]
-    pub imported_map: Option<crate::schema::ImportedMap>,
+    pub imported_map: Option<crate::schema::imported_map::ImportedMap>,
     /// 🪆️ Exact independently owned mesh handle, preserved by parent scalar edits.
     #[state(artifact)]
     #[child(kind = "s.stdio.semio")]
@@ -84,7 +84,6 @@ impl Default for GisTerrainSnapshot {
 //#endregion 🌉️IdentityBridge
 
 #[path="🧮️row-admission/🦀️.rs"]
-pub(crate) mod row_admission;
-#[path="🧮️value-admission/🦀️.rs"]
-pub(crate) mod value_admission;
+pub mod row_admission;
+pub use semio_s_artifact_gis_gisterrain_terrain_descriptor::standards::v1::subsets::any::schema::snapshot::value_admission;
 

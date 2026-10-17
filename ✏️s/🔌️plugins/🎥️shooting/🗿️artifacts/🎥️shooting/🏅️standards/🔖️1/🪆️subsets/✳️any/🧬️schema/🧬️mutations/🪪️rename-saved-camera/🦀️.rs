@@ -1,7 +1,6 @@
 //! 🪪 Shooting mutation payload — `RenameSavedCamera`. Changes a saved camera's identity `label` field.
 
 use crate::diff::ShootingDiff;
-use crate::mutations::ShootingMutation;
 use crate::ShootingSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 
@@ -16,12 +15,15 @@ pub struct RenameSavedCamera {
     pub new_label: String,
 }
 
-impl MutationKind<ShootingSnapshot, ShootingMutation> for RenameSavedCamera {
+impl<Op> MutationKind<ShootingSnapshot, Op> for RenameSavedCamera
+where
+    Op: protocol::Mutation<ShootingSnapshot, Diff = ShootingDiff> + From<RenameSavedCamera>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "rename", entity: "saved-camera", kind: "rename-saved-camera", record: "RenamedSavedCamera" };
     fn diff(&self, base: &ShootingSnapshot) -> protocol::MutationOutcome<ShootingDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &ShootingSnapshot) -> Result<Vec<ShootingMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &ShootingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

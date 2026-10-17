@@ -1,9 +1,20 @@
 //! 🧪️ The editor surface — identity, the two-window manifest, and one dispatch per command.
 
+use crate::editor::wfc2d::config::Wfc2dConfigMutation;
+use crate::editor::wfc2d::modes::edit;
+use crate::{editor::wfc2d::transient::Wfc2dTransient, editor::wfc2d::transient::Wfc2dTransientMutation};
+use crate::{mutations::delete_slot, mutations::disconnect_slots};
+use crate::{Wfc2dMutation, Wfc2dSnapshot, WFC_2D_DOCUMENT_SCHEMA};
+use semio_framework_plugin::Effect;
+use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::ConfigView;
+use semio_framework_plugin::Emit;
+use semio_framework_plugin::Fault;
+use semio_framework_plugin::InteractiveJobClassification;
 use crate::editor::wfc2d::{create_wfc2d_editor, Wfc2dEditor, Wfc2dEditorCommand};
 // 🔒️ The retained factory is private to the editor module, so the glob `pub use component::*`
 // re-export does not carry it — the roster law below reaches it through its defining module.
-use crate::editor::wfc2d::component::Wfc2dRetainedCommandJobFactory;
+use crate::editor::wfc2d::Wfc2dRetainedCommandJobFactory;
 use crate::editor::wfc2d::config::Wfc2dConfig;
 use crate::editor::wfc2d::modes::edit::windows::{graph, preview};
 use semio_framework_plugin::ArtifactEditor;

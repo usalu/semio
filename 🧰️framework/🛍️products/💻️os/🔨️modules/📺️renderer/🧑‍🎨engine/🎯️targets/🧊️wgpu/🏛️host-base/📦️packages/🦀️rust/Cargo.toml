@@ -21,6 +21,9 @@ workspace = true
 [lib]
 path = "../../🦀️.rs"
 
+[features]
+testkit = []
+
 [dependencies]
 semio-framework-job-worker-authority = { path = "../../../../../../../../../../🔨️modules/🧵️job/👷️worker/🎟️authority/📦️packages/🦀️rust" }
 semio-framework-os-kernel = { path = "../../../../../../../../📦️packages/🦀️rust", features = ["sync"], package = "semio-framework-os-kernel" }
@@ -47,3 +50,4 @@ web-sys = { version = "0.3.98", features = ["Window", "Document", "HtmlCanvasEle
 
 [dev-dependencies]
 semio-framework-job = { workspace = true, features = ["testkit"] }
+semio-framework-test-fixtures = { path = "../../../../../../../../../../🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }

@@ -1,6 +1,5 @@
 //! 🌫️ Authoritative PDF mutation payload, diff, inverse, and tests for `remove-image`.
 
-use super::PdfMutation;
 use crate::standards::v1_7::subsets::base::schema::diff::{self, PdfDiff};
 use crate::standards::v1_7::subsets::base::schema::snapshot::*;
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
@@ -14,7 +13,10 @@ pub struct RemoveImage {
     pub id: String,
 }
 
-impl MutationKind<PdfSnapshot, PdfMutation> for RemoveImage {
+impl<Op> MutationKind<PdfSnapshot, Op> for RemoveImage
+where
+    Op: protocol::Mutation<PdfSnapshot, Diff = PdfDiff> + From<RemoveImage> + From<crate::standards::v1_7::subsets::base::schema::mutations::set_image::SetImage>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "remove", entity: "image", kind: "remove-image", record: "Remove" };
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
@@ -22,10 +24,10 @@ impl MutationKind<PdfSnapshot, PdfMutation> for RemoveImage {
         MutationOutcome::new(diff::diff_remove_image(base, &self.id))
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
         let _ = base;
-        base.images.iter().position(|item| item.id == self.id).map(|index| PdfMutation::SetImage(super::set_image::SetImage { image: base.images[index].clone(), index: Some(index) })).into_iter().collect()
+        base.images.iter().position(|item| item.id == self.id).map(|index| Op::from(crate::standards::v1_7::subsets::base::schema::mutations::set_image::SetImage { image: base.images[index].clone(), index: Some(index) })).into_iter().collect()
     
     })())
 }
@@ -42,8 +44,6 @@ impl MutationKind<PdfSnapshot, PdfMutation> for RemoveImage {
 //#endregion 🔖️Mutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
 

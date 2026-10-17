@@ -8,7 +8,7 @@
     "oracles": [
       "Chromium's native <textarea> editing, driven with real key events by Playwright (the `sequences`, monospace font; `paste`/`compose` via insertText)",
       "🧰️framework/🔨️modules/✍️editor/🦀️.rs — EditorHost (Rust law, both schedules)",
-      "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/✏️TextEditor/🟦️.tsx — reconcileTextEditorEchoV1 (the `echoes`)"
+      "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/✏️TextEditor/🖍️buffer-and-edit-helpers/🟦️.tsx — reconcileTextEditorEchoV1 (the `echoes`)"
     ]
   },
   "hostLifecycle": {

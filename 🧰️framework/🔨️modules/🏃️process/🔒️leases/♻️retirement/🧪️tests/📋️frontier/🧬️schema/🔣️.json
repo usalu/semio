@@ -1,0 +1,55 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "cases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "cancel",
+          "blockers",
+          "turns",
+          "retiredPerTurn"
+        ],
+        "properties": {
+          "name": {
+            "enum": [
+              "idle-after-unfinished-prefix",
+              "cancel-during-unfinished-prefix"
+            ]
+          },
+          "cancel": {
+            "type": "boolean"
+          },
+          "blockers": {
+            "const": 8192
+          },
+          "turns": {
+            "enum": [
+              1,
+              2
+            ]
+          },
+          "retiredPerTurn": {
+            "enum": [
+              0,
+              1
+            ]
+          }
+        }
+      }
+    }
+  }
+}

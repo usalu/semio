@@ -1,0 +1,11 @@
+{
+ "name": "c4p22",
+ "crates": [
+  "semio-s-artifact-stdio-obj-diff",
+  "semio-s-artifact-stdio-gltf-test-oracle",
+  "semio-s-artifact-stdio-gltf-model",
+  "semio-s-artifact-stdio-gltf-inferences",
+  "semio-s-artifact-stdio-ply-inferences"
+ ],
+ "note": "CENSUS4-PKG-22: stdio obj/gltf/ply diff, oracle, wire and geometry-kernel split family (absolute classification against the pre-edit working tree)"
+}

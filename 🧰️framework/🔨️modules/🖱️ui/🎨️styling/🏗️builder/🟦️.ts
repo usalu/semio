@@ -1,16 +1,11 @@
-import { runBudgetedTestCommand } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts";
+import{withStylingPythonWheelV1}from"./🐍️python/🟦️.ts";
+import{scriptCompilerAdmissionControlV1}from"../../../🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
+import{captureOwnedCommandV1}from"../../../🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { testLevelBudgetMs, resolveTestLevel } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
-import { readdirSync } from "node:fs";
-import { delimiter, join, resolve } from "node:path";
+import { resolve } from "node:path";
 
 import { BundleScript } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
-const stylingOwnerRoot = resolve(import.meta.dir, "..");
-const pythonWheelPath = (root: string): string => {
-  const output = join(root, "dist/build"), wheels = readdirSync(output).filter(name => name.endsWith(".whl"));
-  if (wheels.length !== 1) throw new Error(`Expected one styling wheel, got ${wheels.length}`);
-  return join(output, wheels[0]!);
-};
 /** 🎨️ Confirms that the shared styling generator dependency completed. */
 export class StylingPythonGenerateScript extends BundleScript {
   run(): void {
@@ -24,7 +19,10 @@ export class StylingPythonTestScript extends BundleScript {
     resolveTestLevel(segments);
     const sourceAssertion = "from importlib import import_module; styling = import_module('🔤️tokens.🐍️'); assert styling.BOARD_LIGHT; assert styling.STYLING_TOKENS['primary']; print('styling Python source import resolved')";
     const packageAssertion = "from importlib import import_module; styling = import_module('🎨️styling.🐍️'); assert styling.BOARD_LIGHT; assert styling.STYLING_TOKENS['primary']; print('styling Python wheel import resolved')";
-    await runBudgetedTestCommand("uv", ["run", "--locked", "--no-sync", "python", "-c", sourceAssertion], { cwd: this.root, budgetMs: testLevelBudgetMs(), env: { ...process.env, PYTHONPATH: [stylingOwnerRoot, process.env.PYTHONPATH ?? ""].filter(Boolean).join(delimiter) } });
-    await runBudgetedTestCommand("uv", ["run", "--locked", "--no-sync", "python", "-c", `import sys; sys.path.insert(0, sys.argv[1]); ${packageAssertion}`, pythonWheelPath(this.root)], { cwd: this.root , budgetMs: testLevelBudgetMs()});
+    const control=scriptCompilerAdmissionControlV1(this.invocation,"styling:python-test",testLevelBudgetMs());
+    await withStylingPythonWheelV1(this.invocation,control,async view=>{
+      await captureOwnedCommandV1(view.python,["-I","-B","-c",`import sys; sys.path.insert(0, sys.argv[1]); ${sourceAssertion}`,resolve(view.project,"../..")],view.project,{control:view.control,env:view.environment,output:{maximumBytes:65536,maximumLines:128}});
+      await captureOwnedCommandV1(view.python,["-I","-B","-c",`import sys; sys.path.insert(0, sys.argv[1]); ${packageAssertion}`,view.wheel],view.project,{control:view.control,env:view.environment,output:{maximumBytes:65536,maximumLines:128}});
+    });
   }
 }

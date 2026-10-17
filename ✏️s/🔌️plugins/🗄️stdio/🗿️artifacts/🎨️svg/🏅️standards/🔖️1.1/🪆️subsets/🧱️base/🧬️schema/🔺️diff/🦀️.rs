@@ -13,7 +13,7 @@ use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
 use semio_s_artifact_stdio_xml::schema::snapshot::{XmlDoctype};
-#[cfg(test)] use semio_s_artifact_stdio_xml::schema::snapshot::{XmlQuote};
+#[cfg(any(test, feature = "testkit"))] use semio_s_artifact_stdio_xml::schema::snapshot::{XmlQuote};
 
 //#region 🔖️Diff
 /// 🔺️ Diff for `stdio.svg`. No `snapshot: Option<SvgSnapshot>` full-replace slot -- every mutation leaf
@@ -655,9 +655,9 @@ fn absorb_children_diff(d1: SvgChildrenDiff, d2: &SvgChildrenDiff) -> SvgChildre
 /// `SvgNodeDiff` tree, attribute add/remove/modify, nested child add/remove/modify) — the single source of truth reused by
 /// `diff_codec_text_binary_roundtrip_law` below AND by `⚙️engine/🦀️.rs`'s `diff_grammar_conformance_law`/`protocol_walk_law`
 /// conformance tests.
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn demo_diff_cases() -> Vec<SvgDiff> {
+pub fn demo_diff_cases() -> Vec<SvgDiff> {
     use crate::schema::snapshot::SvgAttributeValue;
     let element = SvgElementDiff {
         name: Some("svg2".into()),
@@ -687,9 +687,7 @@ pub(crate) fn demo_diff_cases() -> Vec<SvgDiff> {
 //#endregion 🔖️DemoCases
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️handcrafted-diff-codec/🦀️.rs"]
-mod handcrafted_diff_codec_tests;
+
 //#endregion 🧪️Tests
 //#endregion 🔖️HandcraftedDiffCodec
 

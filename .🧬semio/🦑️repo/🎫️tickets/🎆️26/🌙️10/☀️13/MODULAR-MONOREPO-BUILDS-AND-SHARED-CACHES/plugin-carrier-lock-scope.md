@@ -1,0 +1,3 @@
+# Actual Carrier Test Package Lock Metadata
+
+Handcrafted current workspace local0.1.0 package entry only.8 exact dev dependency names, no production/facade edge. Before 0f08d30bcefaf4612080e8c7cd7bfc78d5601a79a1a3015c9c2593deeccd8c92; after 6316c18ec7e4770894ca0c7f7c11dbb44a4c672c3062cbedca828bed03b5fc38. Registry tuples unchanged cec33bada3d45ab1e279cd48fa43e2b814aadaad6ee076be0fe7b39cbb8fee23. Direct firstparty blockers ["semio-framework-plugin-testing-laws","semio-framework-plugin-window-transient"]. No Cargo resolution claimed. Other174 consumed locks and24 archival snapshots untouched by this cut. Two prior actual Framework whole-file observations refresh only known own metadata fingerprint; their prior pin/missing facts remain unchanged.

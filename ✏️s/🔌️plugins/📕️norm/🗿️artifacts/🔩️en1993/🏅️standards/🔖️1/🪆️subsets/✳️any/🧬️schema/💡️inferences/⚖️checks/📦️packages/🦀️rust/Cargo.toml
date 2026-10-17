@@ -25,6 +25,7 @@ semio-s-plugin-norm-compliance = { workspace = true }
 
 [dev-dependencies]
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-framework-test-fixtures = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-s-plugin-norm-app-surface = { workspace = true }
 semio-s-plugin-norm-compliance = { workspace = true, features = ["compliance-testing"] }
 serde_json = { workspace = true }

@@ -5,7 +5,7 @@
  */
 import { kernelDensity1d, silvermanBandwidth, thresholdSturges, vizKernel, type VizKernel } from "../🧮transform/🟦️.ts";
 import { niceDomain, ticks } from "../📐scale/🟦️.ts";
-import type { VizPoint } from "../../📸️snapshot/📊️chart/🟦️.ts";
+import type { VizPoint } from "@semio-tech/print/schema/snapshot/chart";
 
 //#region 🔖️Delaunay
 /** 🔺️ A triangulation: triples of point indices, plus the hull in counter-clockwise order. */

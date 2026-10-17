@@ -1,12 +1,13 @@
 //#region 🧬️DependencyContributionMutationRoster
 //! 🧬️ Transparent builder contribution mutation roster.
-use super::{DependencyTestDiff, DependencyTestSnapshot};
+use crate::builder_test_hosts::builder_unit_1::dependency_fixture::{DependencyTestDiff, DependencyTestSnapshot};
 use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 
+#[doc(hidden)]
 #[path = "➕️add-value/🦀️.rs"]
-mod add_value;
-pub use add_value::AddValue;
+pub mod add_value;
+pub use crate::builder_test_hosts::builder_unit_1::dependency_fixture::mutations::add_value::AddValue;
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::Mutations, semio_framework_dsl_record_derive::DslEnum)]
 #[serde(tag = "operation", rename_all = "camelCase", deny_unknown_fields)]

@@ -1,7 +1,7 @@
 use super::*;
 use crate::standards::v1::subsets::any::io::export::svg::testkit::{house, read, svg, tags};
 use crate::standards::v1::subsets::any::io::export::svg::style::STYLE_CLASSES;
-use crate::standards::v1::subsets::any::schema::inferences::view_linework::compute_view_linework;
+use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_view_linework;
 use crate::standards::v1::subsets::any::io::export::svg::sheet::is_drawn;
 
 #[test]

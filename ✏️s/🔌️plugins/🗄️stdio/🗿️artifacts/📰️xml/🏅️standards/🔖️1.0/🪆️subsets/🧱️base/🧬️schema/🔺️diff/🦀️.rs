@@ -20,7 +20,7 @@
 //! for `📰️xml`'s own crate-visibility scope).
 
 use crate::schema::snapshot::{validate_xml_document_boundaries, XmlAttr, XmlDeclaration, XmlDoctype, XmlNode};
-#[cfg(test)] use crate::schema::snapshot::{XmlQuote};
+#[cfg(any(test, feature = "testkit"))] use crate::schema::snapshot::{XmlQuote};
 use crate::XmlSnapshot;
 use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
@@ -782,9 +782,9 @@ fn absorb_children_rows(d1: XmlChildrenDiff, d2: &XmlChildrenDiff) -> XmlChildre
 /// `XmlNodeDiff` tree, attribute add/remove/modify, nested child add/remove/modify) — the single source of truth reused by
 /// `diff_codec_text_binary_roundtrip_law` below AND by `⚙️engine/🦀️.rs`'s `diff_grammar_conformance_law`/`protocol_walk_law`
 /// conformance tests.
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn demo_diff_cases() -> Vec<XmlDiff> {
+pub fn demo_diff_cases() -> Vec<XmlDiff> {
     let element = XmlElementDiff {
         name: Some("root2".into()),
         attributes: Some(XmlAttributesDiff {
@@ -814,7 +814,5 @@ pub(crate) fn demo_diff_cases() -> Vec<XmlDiff> {
 //#endregion 🔖️DemoCases
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️handcrafted-diff-codec/🦀️.rs"]
-mod handcrafted_diff_codec_tests;
+
 //#endregion 🧪️Tests

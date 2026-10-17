@@ -1,8 +1,9 @@
 use super::*;
+use semio_framework_test_fixtures::fixture_text;
 
 //#region 🧪️Assembly
 fn fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap()
+    serde_json::from_str(fixture_text!("../../📃️document/🎟️assembly/🧪️tests/🧫️fixtures/🔣️.json")).unwrap()
 }
 fn open() -> UiDocumentAssembly {
     let data = fixture();

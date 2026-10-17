@@ -7,26 +7,27 @@
 //! restore data — it is the undo half of `flatten`, and its OWN inverse captures the node it
 //! overwrites, because `flatten` restores only a node that was the flattening of `original`.
 
+use semio_framework_test_fixtures::fixture_text;
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
 use crate::schema::diff::SemioDrawingDiff;
 use crate::schema::mutations::SemioDrawingMutation;
 use crate::schema::snapshot::{DrawNode, SemioDrawingSnapshot};
 use protocol::Mutation;
 
-const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎈unflatten-node/🎈️restores/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎈unflatten-node/🎈️restores/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎈unflatten-node/🎈️restores/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎈unflatten-node/🎈️restores/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎈unflatten-node/🎈️restores/🎯️outcome/🔣️.json");
+static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎈unflatten-node/🎈️restores/📸️snapshot/⬅️before/🔣️.json"));
+static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎈unflatten-node/🎈️restores/📸️snapshot/➡️after/🔣️.json"));
+static MUTATION: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎈unflatten-node/🎈️restores/🦠️mutation/🔣️.json"));
+static DIFF: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎈unflatten-node/🎈️restores/🔺️diff/🔣️.json"));
+static OUTCOME: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎈unflatten-node/🎈️restores/🎯️outcome/🔣️.json"));
 
 fn before() -> SemioDrawingSnapshot {
-    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("unflatten before snapshot decodes")
+    semio_framework_pack_json::from_json_str((*BEFORE), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("unflatten before snapshot decodes")
 }
 fn expected_after() -> SemioDrawingSnapshot {
-    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("unflatten after snapshot decodes")
+    semio_framework_pack_json::from_json_str((*AFTER), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("unflatten after snapshot decodes")
 }
 fn mutation() -> SemioDrawingMutation {
-    semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("unflatten mutation decodes")
+    semio_framework_pack_json::from_json_str((*MUTATION), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("unflatten mutation decodes")
 }
 
 /// ▶️ The flat group regains its nested structure, exactly as captured.
@@ -82,21 +83,21 @@ async fn the_undo_restores_a_node_that_was_not_the_flattening() {
 /// 🔣️ Snapshots and the payload are canonical — the payload embeds a whole `DrawNode`, so the recursive `kind`-tagged encoding appears inside the mutation itself.
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
-    for (label, text) in [("before", BEFORE), ("after", AFTER)] {
+    for (label, text) in [("before", (*BEFORE)), ("after", (*AFTER))] {
         let decoded: SemioDrawingSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
         let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "unflatten/restores-the-captured-hierarchy-over-the-flat-group: committed {label} JSON is not canonical");
     }
     let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&(mutation()))).expect("unflatten mutation encodes");
-    let original: serde_json::Value = serde_json::from_str(MUTATION).expect("unflatten mutation reparses");
+    let original: serde_json::Value = serde_json::from_str((*MUTATION)).expect("unflatten mutation reparses");
     assert_eq!(reencoded, original, "unflatten/restores-the-captured-hierarchy-over-the-flat-group: committed mutation JSON is not canonical");
 }
 
 /// 🎯️ Declared `applied`: the path resolves and the node genuinely differs from the captured original, so neither target-missing nor no-op may fire
 #[semio_framework_async_macros::async_test]
 async fn declared_outcome_holds_as_committed() {
-    let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
+    let outcome: serde_json::Value = serde_json::from_str((*OUTCOME)).expect("outcome decodes");
     assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("applied"), "unflatten/restores-the-captured-hierarchy-over-the-flat-group: this case is declared applied");
     let produced = mutation().diff(&before());
     assert!(produced.messages().is_empty(), "restoring a hierarchy that genuinely differs from the current node must raise no diagnostics");
@@ -108,7 +109,7 @@ async fn produces_committed_diff() {
     let base = before();
     let outcome = <SemioDrawingMutation as Mutation<SemioDrawingSnapshot>>::diff(&mutation(), &base);
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
-    let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
+    let committed: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff decodes");
     assert_eq!(produced, committed, "unflatten/restores-the-captured-hierarchy-over-the-flat-group: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
 
@@ -116,7 +117,7 @@ async fn produces_committed_diff() {
 /// this subset ever writes — stays absent from it.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical_and_narrowly_scoped() {
-    let decoded: SemioDrawingDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed unflatten diff decodes");
+    let decoded: SemioDrawingDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed unflatten diff decodes");
     assert!(decoded.canvas.is_none(), "no drawing mutation writes the canvas slot");
     let layers = decoded.layers.as_ref().expect("the layers triple must be present");
     assert!(layers.removed.is_empty() && layers.added.is_empty(), "a node-level edit modifies its layer, never removes or re-adds it");
@@ -131,14 +132,14 @@ async fn committed_diff_is_canonical_and_narrowly_scoped() {
     assert!(children.removed.is_empty() && children.added.is_empty(), "the node keeps its position — only its contents are rewritten");
     assert!(decoded.styles.is_none(), "the style table must stay untouched");
     let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("diff re-encodes");
-    let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
+    let original: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff reparses");
     assert_eq!(reencoded, original, "unflatten/restores-the-captured-hierarchy-over-the-flat-group: committed diff JSON is not canonical");
 }
 
 /// 🩹 Applying the committed diff to `before` yields `after`.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: SemioDrawingDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed unflatten diff decodes");
+    let decoded: SemioDrawingDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed unflatten diff decodes");
     let produced = protocol::apply_diff(&decoded, &before()).expect("committed unflatten diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "unflatten/restores-the-captured-hierarchy-over-the-flat-group: committed diff did not carry before to after");
 }

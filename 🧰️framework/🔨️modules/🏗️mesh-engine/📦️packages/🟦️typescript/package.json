@@ -1,0 +1,10 @@
+{
+  "name": "@semio-tech/framework-mesh-engine-ts",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./polygon": "./🥽️polygon/🟦️.ts",
+    "./schema/polygon": "./🧬️schema/🥽️polygon/🟦️.ts",
+    "./testing/fixtures": "./🧪️testing/🧫️fixtures/🟦️.ts"
+  }
+}

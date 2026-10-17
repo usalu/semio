@@ -5,7 +5,7 @@ pub mod add_element {
     use crate::editor::architect::catalog::default_element;
     use crate::editor::architect::config::{ArchitectConfig, ArchitectConfigMutation};
     use crate::standards::v1::subsets::any::schema::mutations::ProgramMutation;
-    use crate::standards::v1::subsets::any::schema::registers::{RegisterKey, RegisterRow};
+    use crate::standards::v1::subsets::any::schema::registers::catalog::{RegisterKey, RegisterRow};
     use crate::standards::v1::subsets::any::schema::mutations as leaves;
     use crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot;
     

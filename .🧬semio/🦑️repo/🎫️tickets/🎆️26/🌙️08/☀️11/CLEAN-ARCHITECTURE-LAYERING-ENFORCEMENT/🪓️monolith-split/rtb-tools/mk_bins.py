@@ -123,7 +123,7 @@ def plan_flat(suffix, dirs, apply=False, extra_lines=()):
         if local and not glob:
             old_locals.add(local)
     old_aliases = re.findall(r"(?m)^(?:#\[[^\n]*\]\n)?extern crate [^;]*;", imports_txt)
-    new_imports = merge_import_blocks(old_entries + lines + list(extra_lines), simplify=False)
+    new_imports = merge_import_blocks(old_entries + lines + list(extra_lines), simplify=True)
     alias_lines = list(dict.fromkeys(old_aliases + aliases))
     return dict(folder=folder, root=root, old=old, doc=doc, aliases=alias_lines, imports=new_imports, old_mounts=old_mounts, mounts=mounts, texts=texts, unresolved=unresolved, idents=set(), hosts=hosts)
 
@@ -162,6 +162,65 @@ def run(suffix, dirs, extra_lines=()):
     return p
 
 
+def host_use_lines(host_file):
+    """The top-level `use` items of a test-host file (globs included) as use lines, `crate::` heads mapped to the owning crates."""
+    out = []
+    for cfg, vis, p_, local, glob in uses(read(host_file), top_only=True):
+        if not p_ or p_[0] in ("super", "self"):
+            continue
+        try:
+            q = X.map_root_path(list(p_)) if p_[0] == "crate" else list(p_)
+        except KeyError:
+            continue
+        if q is None:
+            continue
+        head = "::".join(q)
+        if glob:
+            line = f"use {head}::*;"
+        else:
+            piece = q[-1] if q[-1] == local else f"{q[-1]} as {local}"
+            line = f"use {'::'.join(q[:-1])}::{piece};" if len(q) > 1 else f"use {piece};"
+        out.append((cfg + "\n" if cfg else "") + line)
+    return out
+
+
+LAWS_PLAN = {
+    "ui-engine-tests": [
+        ENG_T("🧩️wgpu-engine-surfaces"),
+        ENG_T("🔬️wgpu-board2d-engine"),
+        EL + "/🗣️Interpreter/🧵️worker-cell/🧪️tests/🦀️.rs",
+        EL + "/🗣️Interpreter/🧪️tests/🔬️wgpu-introspection/🦀️.rs",
+    ],
+}
+HOST_FILES = {
+    "shell-tests-chrome-1": R + "/📥️mounts/🧵️wp3-frame-core/🧪️test-hosts/🧷️interpreter-command-wiring/🦀️.rs",
+    "ui-engine-tests": R + "/📥️mounts/🧵️wp3-frame-core/🧪️test-hosts/🔎️interpreter-introspection/🦀️.rs",
+}
+
+
+def run_laws(suffix, tests, extra_lines=()):
+    p = plan_flat(suffix, tests, extra_lines=extra_lines)
+    body = [a for a in p["aliases"] if a not in p["old"]] + [l for l in p["imports"]]
+    mounts = []
+    for cfg, rel_, name in p["mounts"]:
+        mounts.append((cfg.rstrip("\n") + "\n" if cfg.strip() else "") + f'#[path = "{rel_}"]\nmod {name};')
+    inner = "\n".join(body) + "\n\n" + "\n".join(mounts)
+    own = lib_name(suffix)
+    inner = "\n".join(("    " + l if l.strip() else l) for l in inner.split("\n"))
+    laws = '#[cfg(test)]\n#[path = "."]\nmod laws {\n' + inner + "\n}\n"
+    root = p["old"].rstrip("\n") + "\n\n" + laws
+    texts = {f: re.sub(re.escape(own) + r"::", "crate::", t) for f, t in p["texts"].items()}
+    print(suffix, "laws +", len(p["mounts"]), "tests, root lines", len(root.split("\n")), "unresolved:", p["unresolved"])
+    if APPLY:
+        for f, t in texts.items():
+            edit(f, t)
+        edit(p["root"], root)
+        mp = p["folder"] + "/📦️packages/🦀️rust/Cargo.toml"
+        added = manifest.add_deps(mp, used_idents(root) | set().union(*[used_idents(t) for t in texts.values()]))
+        print("   deps added:", added)
+    return p
+
+
 if __name__ == "__main__":
     for suffix, dirs in SHELL_PLAN.items():
         if ONLY and suffix not in ONLY:
@@ -175,3 +234,9 @@ if __name__ == "__main__":
         if ONLY and suffix not in ONLY:
             continue
         run(suffix, dirs, extra)
+    if not ONLY or "shell-tests-chrome-1" in ONLY:
+        run("shell-tests-chrome-1", [EL + "/🗣️Interpreter/🧪️tests/🔬️wgpu-ui-command-wiring/🦀️.rs"], host_use_lines(HOST_FILES["shell-tests-chrome-1"]))
+    for suffix, tests in LAWS_PLAN.items():
+        if ONLY and suffix not in ONLY:
+            continue
+        run_laws(suffix, tests, host_use_lines(HOST_FILES[suffix]))

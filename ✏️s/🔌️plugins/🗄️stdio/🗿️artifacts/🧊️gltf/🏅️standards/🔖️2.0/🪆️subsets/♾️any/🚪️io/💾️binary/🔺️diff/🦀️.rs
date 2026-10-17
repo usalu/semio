@@ -1,6 +1,7 @@
 //! binary rep for stdio.gltf 🔺️diff
 
 use crate::standards::v2_0::subsets::any::schema::diff::*;
+use crate::standards::v2_0::subsets::any::schema::diff_aggregate::*;
 #[cfg(test)]
 use crate::standards::v2_0::subsets::any::schema::snapshot::GltfDocument;
 use framework_schema::ArtifactSchema;
@@ -8,9 +9,7 @@ use protocol::os_spr::command::DiffAlgebra;
 use protocol::MutationDiff;
 use crate::standards::v2_0::subsets::any::io::binary::diff::wire::{gltf_bin_err, read_bin_accessor, read_bin_accessor_diff, read_bin_animation, read_bin_animation_diff, read_bin_asset_diff, read_bin_blob, read_bin_buffer, read_bin_buffer_diff, read_bin_buffer_view, read_bin_buffer_view_diff, read_bin_camera, read_bin_collection_blob, read_bin_image, read_bin_image_diff, read_bin_json, read_bin_material, read_bin_material_diff, read_bin_mesh, read_bin_mesh_diff, read_bin_node, read_bin_node_diff, read_bin_option, read_bin_sampler, read_bin_scene, read_bin_scene_diff, read_bin_skin, read_bin_skin_diff, read_bin_source_form, read_bin_strings_delta, read_bin_texture, read_bin_texture_diff, read_bin_tri, write_bin_accessor, write_bin_accessor_diff, write_bin_animation, write_bin_animation_diff, write_bin_asset_diff, write_bin_blob, write_bin_buffer, write_bin_buffer_diff, write_bin_buffer_view, write_bin_buffer_view_diff, write_bin_camera, write_bin_collection_blob, write_bin_image, write_bin_image_diff, write_bin_json, write_bin_material, write_bin_material_diff, write_bin_mesh, write_bin_mesh_diff, write_bin_node, write_bin_node_diff, write_bin_option, write_bin_sampler, write_bin_scene, write_bin_scene_diff, write_bin_skin, write_bin_skin_diff, write_bin_source_form, write_bin_strings_delta, write_bin_texture, write_bin_texture_diff, write_bin_tri};
 
-#[macro_use]
-#[path = "🧵️wire/🦀️.rs"]
-pub mod wire;
+pub use semio_s_artifact_stdio_gltf_model_wire::standards::v2_0::subsets::any::io::binary::diff::wire;
 
 pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio");
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");

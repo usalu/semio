@@ -32,6 +32,10 @@ type stdioSemioV1ImageInferenceGuardSizeBounds = { readonly minItems?: number; r
 
 export const stdioSemioV1ImageInferenceGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : stdioSemioV1ImageInferenceGuardReject(at, "value is not an object");
+export const stdioSemioV1ImageInferenceGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) stdioSemioV1ImageInferenceGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const stdioSemioV1ImageInferenceGuardArray = (value: unknown, at: string, bounds: stdioSemioV1ImageInferenceGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return stdioSemioV1ImageInferenceGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) stdioSemioV1ImageInferenceGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -62,14 +66,14 @@ export const stdioSemioV1ImageInferenceGuardConstant = <T extends string | numbe
 //#endregion 🚪️Parsers
 
 export function parseSemioImageInference(value: unknown, at = "$"): SemioImageInference {
-  const row = stdioSemioV1ImageInferenceGuardObject(value, at);
+  const row = stdioSemioV1ImageInferenceGuardClosed(stdioSemioV1ImageInferenceGuardObject(value, at), at, ["dimensions"]);
   return {
     dimensions: parseSemioImageDimensions(row["dimensions"], `${at}.dimensions`),
   };
 }
 
 export function parseSemioImageDimensions(value: unknown, at = "$"): SemioImageDimensions {
-  const row = stdioSemioV1ImageInferenceGuardObject(value, at);
+  const row = stdioSemioV1ImageInferenceGuardClosed(stdioSemioV1ImageInferenceGuardObject(value, at), at, ["width", "height", "bitDepth", "hasAlpha", "pixelCount", "frameCount"]);
   return {
     width: stdioSemioV1ImageInferenceGuardInteger(row["width"], `${at}.width`, {"minimum": 0}),
     height: stdioSemioV1ImageInferenceGuardInteger(row["height"], `${at}.height`, {"minimum": 0}),

@@ -7,7 +7,15 @@ import { OBJLoader } from "three/examples/jsm/loaders/OBJLoader.js";
 import Ajv from "ajv/dist/2020.js";
 import {parsePolygonMesh as publicParser,componentVertexIds as publicSelection} from "@semio-tech/framework/mesh/polygon";
 import { inspectMeshComponent, analyzePolygonMesh, componentVertexIds, knifeCutMesh, loopCutMesh, parsePolygonMesh, transformMeshComponents, type PolygonMesh } from "../../🟦️.ts";
-import { meshKnifeCutFixtureUrl, meshKnifeCutSchemaUrl, fixture3dMeshModelingFixtureUrl, meshLoopCutSchemaUrl } from "../../../../🧊️3d/🧪️tests/🧫️fixtures/🟦️.ts";
+import { meshKnifeCutFixtureUrl, meshKnifeCutSchemaUrl, fixture3dMeshModelingFixtureUrl, meshLoopCutSchemaUrl } from "@semio-tech/framework-3d-js/testing/fixtures";
+
+/** 📐️ Admits an authored fixture vector as the three components the Three.js oracle calls take. */
+function vector3(values: readonly number[]): [number, number, number] {
+  const [x, y, z] = values;
+  if (values.length !== 3 || x === undefined || y === undefined || z === undefined) throw new Error("A fixture vector needs exactly three components");
+  return [x, y, z];
+}
+
 
 
 test("polygon Source retains strict indexed-value checking",()=>{const path=fileURLToPath(new URL("../../🟦️.ts",import.meta.url)),program=ts.createProgram([path],{noEmit:true,strict:true,noUncheckedIndexedAccess:true,skipLibCheck:true,types:[],target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ESNext}),diagnostics=ts.getPreEmitDiagnostics(program);expect(diagnostics.map(value=>ts.flattenDiagnosticMessageText(value.messageText,"\n"))).toEqual([]);},30000);
@@ -47,8 +55,8 @@ test("owned polygon attribute declaration and independent inverse-transpose orac
   const validate = new Ajv().compile(schema);
   expect(validate(attributes.mesh)).toBe(true);
   const normal = new Vector3(...attributes.mesh.attributes.normal.values[0]);
-  const inverseTranspose = new Matrix4().makeScale(...attributes.normalTransform.scale).invert().transpose();
-  normal.set(...attributes.mesh.attributes.normal.values[0]).transformDirection(inverseTranspose);
+  const inverseTranspose = new Matrix4().makeScale(...vector3(attributes.normalTransform.scale)).invert().transpose();
+  normal.set(...vector3(attributes.mesh.attributes.normal.values[0])).transformDirection(inverseTranspose);
   attributes.expected.normalAfterScale.forEach((value: number, axis: number) => expect(normal.toArray()[axis]).toBeCloseTo(value, 6));
   expect(attributes.mesh.attributes.uv.values[0]).not.toEqual(attributes.mesh.attributes.uv.values[3]);
   const nonNumeric = structuredClone(attributes.mesh);
@@ -101,7 +109,7 @@ for (const fixture of outputBudget.cases) test(`retained output surface and Thre
 });
 test("retained mirror seam fixture matches independent Three.js reflection", () => {
   const fixture = outputBudget.mirroring;
-  const source = new BoxGeometry(1,1,1).translate(...fixture.translation);
+  const source = new BoxGeometry(1,1,1).translate(...vector3(fixture.translation));
   const positions = source.getAttribute("position"), indices = source.index!;
   const reflection = new Matrix4().makeScale(-1,1,1);
   const vertices = new Set<string>(); let triangles = 0, area = 0, volume = 0;
@@ -125,7 +133,7 @@ for (const fixture of knives.cases) test(`knife cut and Three.js surface oracle:
   expect(validateKnife(fixture.cut)).toBe(true);
   const result = knifeCutMesh(input, fixture.cut);
   expect(input).toEqual(fixture.mesh);
-  expect(result.vertices.slice(0, input.vertices.length)).toEqual(input.vertices.map(point => point.map(Math.fround)));
+  expect(result.vertices.slice(0, input.vertices.length).map(point => [...point])).toEqual(input.vertices.map(point => point.map(Math.fround)));
   const report = analyzePolygonMesh(result);
   for (const key of ["vertices", "faces", "boundaryEdges"] as const) if (fixture.expected[key] !== undefined) expect(report[key]).toBe(fixture.expected[key]);
   if (fixture.expected.minimumFaces) expect(report.faces).toBeGreaterThanOrEqual(fixture.expected.minimumFaces);
@@ -188,8 +196,8 @@ for (const fixture of componentTransforms.cases) test(`component transform and T
   expect(actual.faces).toEqual(input.faces);
   const pivot = transform.pivot === "selection" ? ids.reduce((sum, id) => sum.add(new Vector3(...input.vertices[id])), new Vector3()).divideScalar(ids.length) : new Vector3(...transform.pivot);
   expect(pivot.toArray()).toEqual(fixture.pivot);
-  const matrix = transform.operation === "translate" ? new Matrix4().makeTranslation(...transform.vector)
-    : new Matrix4().makeTranslation(...pivot.toArray()).multiply(transform.operation === "rotate" ? new Matrix4().makeRotationAxis(new Vector3(...transform.vector).normalize(), transform.angle) : new Matrix4().makeScale(...transform.vector)).multiply(new Matrix4().makeTranslation(...pivot.clone().negate().toArray()));
+  const matrix = transform.operation === "translate" ? new Matrix4().makeTranslation(...vector3(transform.vector))
+    : new Matrix4().makeTranslation(...pivot.toArray()).multiply(transform.operation === "rotate" ? new Matrix4().makeRotationAxis(new Vector3(...vector3(transform.vector)).normalize(), transform.angle) : new Matrix4().makeScale(...vector3(transform.vector))).multiply(new Matrix4().makeTranslation(...pivot.clone().negate().toArray()));
   for (let id = 0; id < input.vertices.length; id++) {
     const oracle = new Vector3(...input.vertices[id]);
     if (ids.includes(id)) oracle.applyMatrix4(matrix);
@@ -374,11 +382,14 @@ const inspections = JSON.parse(readFileSync(new URL("../🧫️fixtures/🔎️i
 const validateInspection = new Ajv().compile(JSON.parse(readFileSync(new URL("../../🧬️schema/🔎️inspection/🔣️.json", import.meta.url), "utf8")));
 for (const fixture of inspections.cases) test(`mesh inspection and Three.js oracle: ${fixture.query.kind}`, () => {
   expect(validateInspection(fixture.query)).toBe(true);
-  const input = structuredClone(inspections.mesh), result = inspectMeshComponent(input, fixture.query);
+  const input = structuredClone(inspections.mesh), result = inspectMeshComponent(input, fixture.query), inspected: Record<string, unknown> = { ...result };
   expect(input).toEqual(inspections.mesh);
   for (const [key, expected] of Object.entries(fixture.expected)) {
-    if (Array.isArray(expected)) expected.forEach((value, axis) => expect((result[key] as number[])[axis]).toBeCloseTo(value, 6));
-    else expect(result[key]).toBe(expected);
+    const actual = inspected[key];
+    if (Array.isArray(expected)) {
+      if (!Array.isArray(actual)) throw new Error(`mesh inspection ${key} is not an array`);
+      expected.forEach((value, axis) => expect(actual[axis]).toBeCloseTo(value, 6));
+    } else expect(actual).toBe(expected);
   }
   const points = input.vertices.map((point: number[]) => new Vector3(...point as [number, number, number]));
   if (fixture.query.kind === "vertex") expect(result.point).toEqual(points[fixture.query.index].toArray());
@@ -502,4 +513,4 @@ test("retained source preparation neutral translated bounds match Three.js",()=>
 
 test("closed faceted BRep neutral fixture matches Three.js surface area and signed volume",()=>{const c=outputBudget.toBrep,points=c.closedMesh.vertices.map((point:number[])=>new Vector3(...point));let area=0,volume=0;for(const face of c.closedMesh.faces){const [a,b,d]=face.map((id:number)=>points[id]);area+=new Triangle(a,b,d).getArea();volume+=a.dot(new Vector3().crossVectors(b,d))/6;}expect(c.closedMesh.faces.length).toBe(c.closedTriangles);expect(area).toBeCloseTo(c.closedArea,12);expect(volume).toBeCloseTo(c.closedVolume,12);expect(c.closedKind).toBe("solid");});
 
-test("public SDK owns the canonical polygon parser and selection implementation",()=>{expect(publicParser).toBe(parsePolygonMesh);expect(publicSelection).toBe(componentVertexIds);const mesh=publicParser(JSON.stringify(attributes.mesh));expect(mesh).toEqual(attributes.mesh);expect(publicSelection(mesh,"face",[0])).toEqual([...new Set(attributes.mesh.faces[0])].sort((a:any,b:any)=>a-b));console.log("[DEBUG] Polygon public SDK",{vertices:mesh.vertices.length,faces:mesh.faces.length,selection:publicSelection(mesh,"face",[0])});});
+test("public SDK owns the canonical polygon parser and selection implementation",()=>{expect(publicParser).toBe(parsePolygonMesh);expect(publicSelection).toBe(componentVertexIds);const mesh=publicParser(JSON.stringify(attributes.mesh));expect(mesh).toEqual(attributes.mesh);expect(publicSelection(mesh,"face",[0])).toEqual([...new Set(mesh.faces[0])].sort((a,b)=>a-b));});

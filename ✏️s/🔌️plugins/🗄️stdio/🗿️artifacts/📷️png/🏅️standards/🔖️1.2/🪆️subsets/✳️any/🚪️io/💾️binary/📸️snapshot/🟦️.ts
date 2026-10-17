@@ -3,7 +3,7 @@ import {NativeDecodeControl} from "@semio-tech/framework/value/decode";
 import {defaultPngSnapshot,validatePngImage,pngSamplesPerPixel,type PngSnapshot,type PngColorType,type PngSrgbIntent} from "../../../🧬️schema/📸️snapshot/🟦️.ts";
 import {parsePngNative,crc} from "../../🪶️sqlite/📸️snapshot/🧩️chunks/🟦️.ts";
 import {encodeScanlines,type PngScanline} from "../../🪶️sqlite/📸️snapshot/🌈️scanline/🟦️.ts";
-import {adler} from "../../../../../../../../🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🚪️io/💾️binary/📸️snapshot/🗜️compression/🟦️.ts";
+import {adler} from "@semio-tech/stdio-deflate/standards/rfc1950/subsets/any/io/binary/snapshot/compression";
 export type PngSnapshotPack=Uint8Array;
 const passes=[[0,0,8,8],[4,0,8,8],[0,4,4,8],[2,0,4,4],[0,2,2,4],[1,0,2,2],[0,1,1,2]];
 const typeNumbers={grayscale:0,rgb:2,palette:3,grayscaleAlpha:4,rgba:6} as const;

@@ -52,7 +52,6 @@ test("blank wide images complete in linear work at the exact grant limit",()=>{
 });
 test("owned byte buffers preserve neutral contours under all grants and cancellation",()=>{
  for(const row of fixtures){const expected=complete(row.input,4096);for(const grant of [1,7,4096]){const mask=Uint8Array.from(row.input.mask),before=mask.slice(),job=new BitmapTraceJob({...row.input,mask});expect(()=>job.result()).toThrow(/incomplete/);while(!job.advance(grant).done){}const published=job.result();expect(published).toEqual(expected);job.cancel();expect(published).toEqual(expected);expect(mask).toEqual(before);}}
- console.log("[DEBUG] Owned trace byte buffers preserve neutral contours and published ownership under every grant");
 });
 test("every phase cancels without publishing private paths or mutating input",()=>{
  const input=fixtures[13]!.input,before=structuredClone(input),seen=new Set<string>();
@@ -79,8 +78,7 @@ test("trace retirement transfers masks and drains every actual phase under exact
   const expected=13+Object.values(inventory).reduce((n:number,v:any)=>n+v.length,0);
   const published=row.phase==="complete"?job.result():null,publishedBefore=published?JSON.parse(JSON.stringify(published)):null;const returned=job.intoRetirement();expect(returned.mask).toBe(mask);expect(()=>job.intoRetirement()).toThrow(/transferred/i);job.cancel();expect(()=>job.advance(1)).toThrow(/cancel/i);expect(()=>job.result()).toThrow(/cancel/i);for(const invalidGrant of [0,-1,.5,NaN,Infinity,Number.MAX_SAFE_INTEGER+1])expect(()=>returned.job.advance(invalidGrant)).toThrow(/grant/i);
   let work=0;for(let at=0;at<=expected;at++){const p=returned.job.advance(grant);expect(retirementValid(p)).toBe(true);expect(p.work-work).toBeGreaterThan(0);expect(p.work-work).toBeLessThanOrEqual(grant);work=p.work;if(p.done)break;}
-  if(grant===1)console.log("[DEBUG] Trace retirement "+row.phase+" work="+work);expect(work).toBe(expected);expect(returned.job.terminalIsEmpty()).toBe(true);expect(returned.job.advance(1)).toEqual({phase:"complete",work,done:true});expect([...mask]).toEqual(source.input.mask);if(published)expect(published).toEqual(publishedBefore);
+  if(grant===1){}expect(work).toBe(expected);expect(returned.job.terminalIsEmpty()).toBe(true);expect(returned.job.advance(1)).toEqual({phase:"complete",work,done:true});expect([...mask]).toEqual(source.input.mask);if(published)expect(published).toEqual(publishedBefore);
   expect(state.input.mask).toHaveLength(0);for(const key of ["edges","raw","base","candidate","flat","ring","ranges","output"])expect(state[key]).toHaveLength(0);for(const key of ["outgoing","kept","changes","positions"])expect(state[key].size).toBe(0);expect(state.split).toBe(null);
  }
- console.log("[DEBUG] Actual trace phases transfer genuine masks and drain JSON-counted geometry under grants 1, 7 and 4096");
 });

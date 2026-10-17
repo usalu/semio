@@ -1,4 +1,16 @@
-use super::*;
+#[allow(unused_imports)]
+use crate::SvgSnapshot;
+#[allow(unused_imports)]
+use framework_schema::ArtifactSchema;
+#[allow(unused_imports)]
+use protocol::command::DiffAlgebra;
+#[allow(unused_imports)]
+use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_xml::schema::snapshot::XmlDoctype;
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_xml::schema::snapshot::XmlQuote;
+use crate::standards::v1_1::subsets::base::schema::diff::*;
 use protocol::{DiffBinary,DiffCodec,DiffText};
 
 /// 🧪️ `DiffCodec` round-trip laws over the hand-rolled `SvgDiff` grammar — exercises the

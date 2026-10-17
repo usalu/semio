@@ -11,4 +11,4 @@ test("Forms JSON and response exports follow the neutral transport corpus",()=>{
  expect(oracle.compile({const:fixture.forms.value})(JSON.parse(formsValueJson(parseFormsJsonValue(fixture.forms.value))))).toBe(true);
  testFormsResponseExport();
 });
-afterAll(()=>console.log("[DEBUG] Owned transport corpus completed: @semio-tech/forms-js"));
+afterAll(()=>{});

@@ -15,6 +15,9 @@ workspace = true
 [lib]
 path = "../../🦀️.rs"
 
+[features]
+testkit = []
+
 [dependencies]
 semio-framework-job-publication = { path = "../../../../../../../../../🧰️framework/🔨️modules/🧵️job/📬️outcome/📤️publication/📦️packages/🦀️rust" }
 semio-framework-dsl-record = { workspace = true }
@@ -41,3 +44,5 @@ semio-s-artifact-draw-drawing-metadata = { workspace = true }
 semio-s-artifact-draw-drawing-style = { workspace = true }
 semio-s-artifact-draw-drawing-transform = { workspace = true }
 serde_json = { workspace = true }
+semio-s-artifact-draw-drawing-host-arena = { workspace = true, features = ["testkit"] }
+semio-s-artifact-draw-drawing-host-digest = { workspace = true, features = ["testkit"] }

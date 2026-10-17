@@ -1,6 +1,5 @@
 //! 🏗️ `create-edge` — brings a new id-keyed edge into existence between two vertices (referential integrity across `start_vertex`/`end_vertex` is the subset validator's job, not this diff constructor's), carrying its own curve. A duplicate `id` already present in `base` is a no-op.
 
-use crate::schema::mutations::SemioBrepMutation;
 use crate::schema::snapshot::{BrepCurve, SemioBrepSnapshot};
 
 //#region 🔖️Payload
@@ -17,13 +16,16 @@ pub struct CreateEdge {
     pub at: Option<usize>,
 }
 
-impl protocol::MutationKind<SemioBrepSnapshot, SemioBrepMutation> for CreateEdge {
+impl<Op> protocol::MutationKind<SemioBrepSnapshot, Op> for CreateEdge
+where
+    Op: protocol::Mutation<SemioBrepSnapshot, Diff = crate::schema::diff::SemioBrepDiff> + From<CreateEdge> + From<crate::schema::mutations::delete_edge::DeleteEdge>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "edge", kind: "create-edge", record: "CreatedEdge" };
 
-    fn diff(&self, base: &SemioBrepSnapshot) -> protocol::MutationOutcome<<SemioBrepMutation as protocol::Mutation<SemioBrepSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioBrepSnapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<SemioBrepSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &SemioBrepSnapshot) -> Result<Vec<SemioBrepMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &SemioBrepSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

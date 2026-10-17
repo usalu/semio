@@ -1,0 +1,13 @@
+import sys, json
+a = json.load(open(sys.argv[1])); b = json.load(open(sys.argv[2]))
+fa, fb = set(a["fails"]), set(b["fails"])
+pa, pb = set(a["passes"]), set(b["passes"])
+print("before: pass", len(pa), "fail", len(fa), "| after: pass", len(pb), "fail", len(fb))
+new_fail = sorted(fb - fa); fixed = sorted(fa - fb)
+lost_pass = sorted(pa - pb - fb)
+print("newly failing:", len(new_fail))
+for n in new_fail[:80]: print("  NEWFAIL", n[:230])
+print("no longer failing:", len(fixed))
+for n in fixed[:40]: print("  FIXED", n[:200])
+print("passed before, absent after (not failing):", len(lost_pass))
+for n in lost_pass[:40]: print("  GONE", n[:200])

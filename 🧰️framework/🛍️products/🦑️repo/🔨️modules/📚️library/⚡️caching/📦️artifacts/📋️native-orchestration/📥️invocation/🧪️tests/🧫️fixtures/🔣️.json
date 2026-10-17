@@ -693,6 +693,12 @@
       "effect": "expired",
       "accepted": false,
       "maximumMilliseconds": 30
+    },
+    {
+      "name": "retired actual callback phase",
+      "effect": "retired",
+      "accepted": false,
+      "maximumMilliseconds": 500
     }
   ]
 }

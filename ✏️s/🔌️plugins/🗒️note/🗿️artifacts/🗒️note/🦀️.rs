@@ -1,20 +1,13 @@
 //! 📝️ Note artifact — the document entity this plugin's app edits: an infinite-canvas block tree
 //! (text/image/table/math/ink/group blocks).
-use semio_framework_plugin::PluginBuilder;
 
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_schema as framework_schema;
 
-use {semio_framework_plugin::ArtifactKindSpec,semio_framework_artifact_reference::Dialect,semio_framework_plugin::MediaClass,semio_framework_plugin::MediaForm,semio_framework_plugin::MediaType,semio_framework_plugin::OsMediaCapability,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
-use semio_framework_value_derive::{FromValue, ToValue};
-use semio_s_artifact_stdio_semio_text_model::schema::snapshot::SemioTextMark;
-use semio_s_artifact_stdio_semio_text_model::schema::snapshot::SemioTextMarkKind;
-use semio_s_artifact_stdio_semio_text_model::schema::snapshot::SemioTextRun;
-use semio_s_artifact_stdio_semio_text_model::schema::snapshot::SemioTextSnapshot;
-use semio_s_artifact_stdio_semio_text_model::schema::snapshot::STDIO_SEMIOTEXT_DOCUMENT_SCHEMA;
-use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue};
+
 #[cfg(test)]
 use std::collections::BTreeMap;
 
@@ -98,346 +91,11 @@ where
 }
 //#endregion 🔖️Register
 
-//#region 🔖️ArtifactKind
-/// 🗂️ This artifact's `ArtifactKindSpec` — stitched into the app manifest by
-/// `crate::editor::note::create_note_app`'s `🔖️Manifest` region. `id` IS `NOTE_DIALECT
-/// .artifact_kind`: the spec, the dialect every surface id is built from and the activation event
-/// name ONE identity, exactly as `semio_s_artifact_gis_gismap::artifact_kind()` already does. The
-/// former `"2d.note"` spelling was the only place this artifact answered to a second name, and a
-/// hub refuses to open a document kind whose declared spec id differs from its app's dialect
-/// (`validate_descriptor_open_target`, 🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🦀️.rs).
-pub fn artifact_kind() -> ArtifactKindSpec {
-    ArtifactKindSpec {
-        id: NOTE_DIALECT.artifact_kind.into(),
-        label: semio_framework_ui_locale::LocalizedLabel::native("Note", "Notiz"),
-        source_format: "note.document".into(),
-        component_kind: "note".into(),
-        dimension: "2d".into(),
-        media_capability: OsMediaCapability::MeshOnly,
-        media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Document },
-        schema: "note.document".into(),
-        export_formats: vec![],
-        import_formats: vec![],
-        export_stdio_kinds: standards::v1::subsets::any::io::export_stdio_kinds().iter().map(|kind| (*kind).to_owned()).collect(),
-        import_stdio_kinds: standards::v1::subsets::any::io::import_stdio_kinds().iter().map(|kind| (*kind).to_owned()).collect(),
-    }
-}
-//#endregion 🔖️ArtifactKind
+pub use semio_s_artifact_note_note_v1::{artifact_kind};
 
-//#region 🔖️Dialect
-/// 👁️✏️ C1's canonical surface id grammar (`<artifact_kind>@<standard>/<subset>#<role>`) — lives at
-/// the ARTIFACT level, not under `editor`/`viewer`, so a viewer file can read it without ever
-/// importing through the sibling `editor` module. `artifact_kind` matches this file's own
-/// `definition()` `"s.note.schema.artifact"` capability row's descriptor (`"s.note.note"`, the same
-/// schema id `NoteSnapshot`'s `#[artifact_schema(id = "s.note.note")]` already keys off);
-/// `standard`/`subset` match this file's own `🏅️standards/🔖️1/🪆️subsets/✳️any` location — i.e. the
-/// canonical surface ids are `s.note.note@1/*#editor` / `s.note.note@1/*#viewer`.
-pub const NOTE_DIALECT: Dialect = Dialect { artifact_kind: "s.note.note", standard: StandardId("1"), subset: SubsetId::ANY };
-//#endregion 🔖️Dialect
+pub use semio_s_artifact_note_note_v1::{NOTE_DIALECT};
 
-//#region 🔖️Domain
-pub const NOTE_DOCUMENT_SCHEMA: &str = "note.document";
-
-/// 🎥️ Camera pose — persisted by the exact composite-window configuration owner, never in
-/// `NoteSnapshot` or app-wide configuration, so two open canvases retain independent poses.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
-#[canonical_json(owner = semio_framework_pack_json)]
-#[serde(rename_all = "camelCase")]
-#[value(rename_all = "camelCase")]
-pub struct NoteCamera {
-    #[serde(default)]
-    #[value(default)]
-    pub x: f64,
-    #[serde(default)]
-    #[value(default)]
-    pub y: f64,
-    #[serde(default = "default_zoom")]
-    #[value(default = "default_zoom")]
-    pub zoom: f64,
-}
-
-impl Default for NoteCamera {
-    fn default() -> Self {
-        Self { x: 0.0, y: 0.0, zoom: 1.0 }
-    }
-}
-
-pub fn default_zoom() -> f64 {
-    1.0
-}
-
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
-#[canonical_json(owner = semio_framework_pack_json)]
-#[value(tag = "kind", rename_all = "camelCase")]
-pub enum NoteBlockNode {
-    #[value(rename = "text", rename_all = "camelCase")]
-    Text {
-        id: String,
-        name: String,
-        x: f64,
-        y: f64,
-        width: f64,
-        height: f64,
-        #[value(default)]
-        rotation: f64,
-        #[value(default = "default_true")]
-        visible: bool,
-        #[value(default)]
-        locked: bool,
-        /// ✏️ Composed content — ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` (`note→C:text`):
-        /// replaces the former inline `paragraphs: Vec<NoteTextParagraph>` (which duplicated stdio's
-        /// `s.stdio.semio.text` run/mark shape) with a content-addressed handle onto that composed
-        /// subset. See this file's `🔖️TextBridge`/`🔖️TextChildren` regions for the
-        /// converter and durable child-record accessor.
-        content: NoteTextChild,
-        font_size: f64,
-        font_weight: String,
-        align: String,
-    },
-    #[value(rename = "image", rename_all = "camelCase")]
-    Image {
-        id: String,
-        name: String,
-        x: f64,
-        y: f64,
-        width: f64,
-        height: f64,
-        #[value(default)]
-        rotation: f64,
-        #[value(default = "default_true")]
-        visible: bool,
-        #[value(default)]
-        locked: bool,
-        image_key: String,
-    },
-    #[value(rename = "table", rename_all = "camelCase")]
-    Table {
-        id: String,
-        name: String,
-        x: f64,
-        y: f64,
-        width: f64,
-        height: f64,
-        #[value(default)]
-        rotation: f64,
-        #[value(default = "default_true")]
-        visible: bool,
-        #[value(default)]
-        locked: bool,
-        columns: Vec<String>,
-        rows: Vec<Vec<NoteTableCell>>,
-    },
-    #[value(rename = "math", rename_all = "camelCase")]
-    Math {
-        id: String,
-        name: String,
-        x: f64,
-        y: f64,
-        width: f64,
-        height: f64,
-        #[value(default)]
-        rotation: f64,
-        #[value(default = "default_true")]
-        visible: bool,
-        #[value(default)]
-        locked: bool,
-        #[dsl(lang = "tex")]
-        tex: String,
-        display_mode: bool,
-    },
-    #[value(rename = "stroke", rename_all = "camelCase")]
-    #[dsl(key = "stroke")]
-    Ink {
-        id: String,
-        name: String,
-        x: f64,
-        y: f64,
-        width: f64,
-        height: f64,
-        #[value(default)]
-        rotation: f64,
-        #[value(default = "default_true")]
-        visible: bool,
-        #[value(default)]
-        locked: bool,
-        points: Vec<[f64; 2]>,
-        stroke_width: f64,
-        color: [f64; 4],
-    },
-    #[value(rename = "group", rename_all = "camelCase")]
-    Group {
-        id: String,
-        name: String,
-        x: f64,
-        y: f64,
-        width: f64,
-        height: f64,
-        #[value(default)]
-        rotation: f64,
-        #[value(default = "default_true")]
-        visible: bool,
-        #[value(default)]
-        locked: bool,
-        #[dsl(statements, block)]
-        children: Vec<NoteBlockNode>,
-    },
-}
-
-//#region 🔖️ComposedTypes
-/// 🕸️ Snapshot-owned text child record. The handle preserves composition identity while the bounded
-/// paragraph records are durable authority that survives reopen and worker migration.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
-#[canonical_json(owner = semio_framework_pack_json)]
-#[value(rename_all = "camelCase")]
-pub struct NoteTextChild {
-    pub handle: store::os_store::artifact_child::ArtifactChild<SemioTextSnapshot>,
-    #[value(default)]
-    pub paragraphs: Vec<NoteTextParagraph>,
-}
-//#endregion 🔖️ComposedTypes
-
-//#region 🔖️TextBridge
-/// 🌉 REAL bidirectional converter between one `NoteBlockNode::Text`'s paragraph/run working
-/// representation and the composed child's own `SemioTextSnapshot` (a flat run list — no paragraph
-/// grouping). Paragraph boundaries are honestly lossy in one edge case, documented here rather than
-/// silently dropped: a boundary is represented as a marks-free, language-free run whose `content` is
-/// exactly `"\n"`; this collapses "zero paragraphs" and "one paragraph containing zero runs" onto the
-/// same single empty paragraph on the way back (both are legitimate "no text yet" states,
-/// indistinguishable once flattened — [`paragraphs_from_text_snapshot`] always emits a trailing
-/// paragraph for whatever ran since the last separator, even an empty one). `NoteTextRun.underline`
-/// has no equivalent mark in stdio's closed
-/// bold/italic/code/link vocabulary and is dropped on the way in — real, honestly-lossy, not fabricated.
-pub fn text_snapshot_from_paragraphs(paragraphs: &[NoteTextParagraph]) -> SemioTextSnapshot {
-    let mut runs = Vec::new();
-    for (index, paragraph) in paragraphs.iter().enumerate() {
-        if index > 0 {
-            runs.push(SemioTextRun { language: String::new(), content: "\n".into(), marks: Vec::new() });
-        }
-        for run in &paragraph.runs {
-            let mut marks = Vec::new();
-            if run.bold == Some(true) {
-                marks.push(SemioTextMark { kind: SemioTextMarkKind::Bold, href: String::new() });
-            }
-            if run.italic == Some(true) {
-                marks.push(SemioTextMark { kind: SemioTextMarkKind::Italic, href: String::new() });
-            }
-            if let Some(href) = &run.link {
-                marks.push(SemioTextMark { kind: SemioTextMarkKind::Link, href: href.clone() });
-            }
-            runs.push(SemioTextRun { language: String::new(), content: run.text.clone(), marks });
-        }
-    }
-    SemioTextSnapshot { schema: STDIO_SEMIOTEXT_DOCUMENT_SCHEMA.into(), runs }
-}
-
-/// 🌉 Inverse of [`text_snapshot_from_paragraphs`] — splits the flat run list back into paragraphs on
-/// every marks-free/language-free `"\n"` separator run. See that function's doc comment for the one
-/// honestly-lossy edge case (empty paragraph list vs. one paragraph with zero runs).
-pub fn paragraphs_from_text_snapshot(snapshot: &SemioTextSnapshot) -> Vec<NoteTextParagraph> {
-    let mut paragraphs = Vec::new();
-    let mut current = Vec::new();
-    for run in &snapshot.runs {
-        if run.content == "\n" && run.marks.is_empty() && run.language.is_empty() {
-            paragraphs.push(NoteTextParagraph { runs: std::mem::take(&mut current) });
-            continue;
-        }
-        let bold = run.marks.iter().any(|mark| mark.kind == SemioTextMarkKind::Bold).then_some(true);
-        let italic = run.marks.iter().any(|mark| mark.kind == SemioTextMarkKind::Italic).then_some(true);
-        let link = run.marks.iter().find(|mark| mark.kind == SemioTextMarkKind::Link).map(|mark| mark.href.clone());
-        current.push(NoteTextRun { text: run.content.clone(), bold, italic, underline: None, link });
-    }
-    paragraphs.push(NoteTextParagraph { runs: current });
-    paragraphs
-}
-
-/// 🕸️ Deterministic content-addressed CHILD handle for one text block's composed content — same
-/// `(child_id, target)` for identical `(block_id, paragraphs)`, a different pair once either changes;
-/// mirrors writer's `document_child_handle`/cad's `cad_model_child_handle`, keyed by `block_id` (not
-/// content alone) so two distinct blocks never collide on the same child slot.
-pub fn note_text_child_handle(block_id: &str, paragraphs: &[NoteTextParagraph]) -> NoteTextChild {
-    let content_json = serde_json::to_string(paragraphs).unwrap_or_default();
-    let child_id = store::content_id("note-text", format!("{block_id}\u{1f}{content_json}").as_bytes());
-    let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "text".into() };
-    let target = semio_framework_artifact_reference::ArtifactRef { artifact_id: format!("{block_id}-text"), dialect };
-    NoteTextChild { handle: store::os_store::artifact_child::ArtifactChild::new(child_id, target), paragraphs: paragraphs.to_vec() }
-}
-//#endregion 🔖️TextBridge
-
-//#region 🔖️TextChildren
-/// 🔎 Reads the durable paragraphs owned by the text-child record.
-pub fn note_block_text(handle: &NoteTextChild) -> Vec<NoteTextParagraph> {
-    handle.paragraphs.clone()
-}
-
-/// 🏗️ Mints a new content-addressed handle and stores its paragraphs in the same snapshot-owned
-/// record used by mutation-diff, fixture, and converter builders.
-pub fn note_text_child_record(block_id: &str, paragraphs: &[NoteTextParagraph]) -> NoteTextChild {
-    note_text_child_handle(block_id, paragraphs)
-}
-//#endregion 🔖️TextChildren
-
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
-#[canonical_json(owner = semio_framework_pack_json)]
-#[serde(rename_all = "camelCase")]
-#[value(rename_all = "camelCase")]
-#[dsl(keyword = "r")]
-pub struct NoteTextRun {
-    #[dsl(positional)]
-    pub text: String,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[value(default, skip_serializing_if = "Option::is_none")]
-    pub bold: Option<bool>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[value(default, skip_serializing_if = "Option::is_none")]
-    pub italic: Option<bool>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[value(default, skip_serializing_if = "Option::is_none")]
-    pub underline: Option<bool>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[value(default, skip_serializing_if = "Option::is_none")]
-    pub link: Option<String>,
-}
-
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
-#[canonical_json(owner = semio_framework_pack_json)]
-#[serde(rename_all = "camelCase")]
-#[value(rename_all = "camelCase")]
-#[dsl(keyword = "p")]
-pub struct NoteTextParagraph {
-    pub runs: Vec<NoteTextRun>,
-}
-
-pub fn default_true() -> bool {
-    true
-}
-
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
-#[canonical_json(owner = semio_framework_pack_json)]
-pub struct NoteTableCell {
-    #[dsl(positional)]
-    pub content: String,
-}
-
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
-#[canonical_json(owner = semio_framework_pack_json)]
-#[serde(rename_all = "camelCase")]
-#[value(rename_all = "camelCase")]
-pub struct NoteImageAsset {
-    pub mime: String,
-    pub data: String,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[value(default, skip_serializing_if = "Option::is_none")]
-    pub width: Option<f64>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[value(default, skip_serializing_if = "Option::is_none")]
-    pub height: Option<f64>,
-}
-
-pub use crate::schema::diff::NoteDiff;
-pub use crate::schema::mutations::NoteMutation;
-pub use crate::schema::snapshot::NoteSnapshot;
-
-//#endregion 🔖️Domain
+pub use semio_s_artifact_note_note_schema::{NOTE_DOCUMENT_SCHEMA, NoteBlockNode, NoteCamera, NoteDiff, NoteImageAsset, NoteMutation, NoteSnapshot, NoteTableCell, NoteTextChild, NoteTextParagraph, NoteTextRun, default_true, default_zoom, note_block_text, note_text_child_handle, note_text_child_record, paragraphs_from_text_snapshot, text_snapshot_from_paragraphs};
 
 //#region 🧪️Tests
 #[cfg(test)]
@@ -445,90 +103,7 @@ pub use crate::schema::snapshot::NoteSnapshot;
 mod tests;
 //#endregion 🧪️Tests
 
-//#region 🖋️InkCanvasWire
-/// 🖋️ The framework ink-canvas surface's document schema (`InkCanvasHost`'s `InkDocument`, the wgpu
-/// `InkDocumentJson`) — the host drops any other schema as "No scene".
-pub const INK_CANVAS_DOCUMENT_SCHEMA: &str = "ink.document";
-
-/// 🖼️ Projects persisted Note fields and the local camera onto the framework `ink.document` wire: the
-/// schema tag is the surface's own, and every text block's composed `content` record is flattened to
-/// the surface's bare `paragraphs` (ticket 26/09/17/NOTE-PLUGIN-END-TO-END — the note schema tag and the
-/// nested child record left the canvas empty).
-pub fn note_canvas_document_json(document: &NoteSnapshot, camera: &NoteCamera) -> String {
-    let mut value = semio_framework_value::ToValue::to_value(document);
-    if let semio_framework_value::DslValue::Object(entries) = &mut value {
-        for (key, field) in entries.iter_mut() {
-            match key.as_str() {
-                "schema" => *field = semio_framework_value::DslValue::String(INK_CANVAS_DOCUMENT_SCHEMA.into()),
-                "blocks" => ink_wire_blocks_from_note(field),
-                _ => {}
-            }
-        }
-        entries.push(("camera".into(), semio_framework_value::ToValue::to_value(camera)));
-    }
-    semio_framework_pack_json::to_string(&semio_framework_pack_json::from_dsl_value(&value))
-}
-
-fn entry<'a>(entries: &'a [(String, semio_framework_value::DslValue)], key: &str) -> Option<&'a semio_framework_value::DslValue> {
-    entries.iter().find(|(name, _)| name == key).map(|(_, value)| value)
-}
-
-fn is_kind(entries: &[(String, semio_framework_value::DslValue)], kind: &str) -> bool {
-    matches!(entry(entries, "kind"), Some(semio_framework_value::DslValue::String(value)) if value == kind)
-}
-
-fn ink_wire_blocks_from_note(blocks: &mut semio_framework_value::DslValue) {
-    let semio_framework_value::DslValue::Array(items) = blocks else { return };
-    for item in items {
-        let semio_framework_value::DslValue::Object(entries) = item else { continue };
-        if let Some(semio_framework_value::DslValue::String(id)) = entry(entries, "id").cloned() {
-            entries.push(("interactionId".into(), semio_framework_value::DslValue::String(format!("note-play-block:{id}"))));
-        }
-        if is_kind(entries, "text") {
-            if let Some(index) = entries.iter().position(|(name, _)| name == "content") {
-                let (_, content) = entries.remove(index);
-                let paragraphs = match content {
-                    semio_framework_value::DslValue::Object(record) => record.into_iter().find(|(name, _)| name == "paragraphs").map(|(_, value)| value),
-                    _ => None,
-                };
-                entries.push(("paragraphs".into(), paragraphs.unwrap_or(semio_framework_value::DslValue::Array(Vec::new()))));
-            }
-        } else if is_kind(entries, "group") {
-            if let Some((_, children)) = entries.iter_mut().find(|(name, _)| name == "children") {
-                ink_wire_blocks_from_note(children);
-            }
-        }
-    }
-}
-
-/// 🖋️ Inverse of [`note_canvas_document_json`] for one ink-canvas block: a text block's bare
-/// `paragraphs` become the composed [`NoteTextChild`] record (content-addressed by block id, so an
-/// unchanged block keeps its handle); group children recurse.
-pub fn note_block_value_from_ink_wire(block: &mut semio_framework_value::DslValue) -> Result<(), String> {
-    let semio_framework_value::DslValue::Object(entries) = block else { return Err("ink block is not a record".into()) };
-    if let Some(index) = entries.iter().position(|(name, _)| name == "interactionId") {
-        entries.remove(index);
-    }
-    if is_kind(entries, "text") && entry(entries, "content").is_none() {
-        let id = match entry(entries, "id") {
-            Some(semio_framework_value::DslValue::String(id)) => id.clone(),
-            _ => return Err("ink text block has no id".into()),
-        };
-        let paragraphs = match entries.iter().position(|(name, _)| name == "paragraphs") {
-            Some(index) => <Vec<NoteTextParagraph> as semio_framework_value::FromValue>::from_value(entries.remove(index).1).map_err(|error| error.to_string())?,
-            None => Vec::new(),
-        };
-        entries.push(("content".into(), semio_framework_value::ToValue::to_value(&note_text_child_record(&id, &paragraphs))));
-    } else if is_kind(entries, "group") {
-        if let Some((_, semio_framework_value::DslValue::Array(children))) = entries.iter_mut().find(|(name, _)| name == "children") {
-            for child in children {
-                note_block_value_from_ink_wire(child)?;
-            }
-        }
-    }
-    Ok(())
-}
-//#endregion 🖋️InkCanvasWire
+pub use semio_s_artifact_note_note_diff::{INK_CANVAS_DOCUMENT_SCHEMA, entry, ink_wire_blocks_from_note, is_kind, note_block_value_from_ink_wire, note_canvas_document_json};
 
 #[path = "."]
 pub mod standards {
@@ -540,123 +115,33 @@ pub mod standards {
             pub mod any {
                 #[path = "."]
                 pub mod schema {
-                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs"]
-                    mod component;
-                    pub use component::*;
-                    #[path = "."]
-                    pub mod snapshot {
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                    #[path = "."]
-                    pub mod inferences {
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                        #[path = "."]
-                        pub mod outline {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧾outline/🦀️.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                    }
-                    #[path = "."]
-                    pub mod diff {
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                    #[path = "."]
-                    pub mod mutations {
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
+                    pub use semio_s_artifact_note_note_schema::standards::v1::subsets::any::schema::*;
+
+                    pub use semio_s_artifact_note_note_mutations::standards::v1::subsets::any::schema::snapshot;
+                    pub use semio_s_artifact_note_note_schema::standards::v1::subsets::any::schema::inferences;
+                    pub use semio_s_artifact_note_note_diff::standards::v1::subsets::any::schema::diff;
+                    pub use semio_s_artifact_note_note_mutations::standards::v1::subsets::any::schema::mutations;
                 }
                 #[path = "."]
                 pub mod io {
-                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs"]
-                    mod component;
-                    pub use component::*;
+                    pub use semio_s_artifact_note_note_v1::standards::v1::subsets::any::io::*;
+pub mod sqlite {
+    pub use semio_s_artifact_note_note_insert_table_row::standards::v1::subsets::any::io::sqlite::*;
+    pub use semio_s_artifact_note_note_mutations::standards::v1::subsets::any::io::sqlite::snapshot;
+}
+
                     #[path = "."]
                     pub mod import {
                         #[path = "."]
                         pub mod deserializers {
                             #[path = "."]
                             pub mod artifacts {
-                                #[path = "."]
-                                pub mod svg {
-                                    #[path = "."]
-                                    pub mod v1_1 {
-                                        #[path = "."]
-                                        pub mod any {
-                                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
-                                #[path = "."]
-                                pub mod pdf {
-                                    #[path = "."]
-                                    pub mod v1_4 {
-                                        #[path = "."]
-                                        pub mod base {
-                                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📖️pdf/🔖️1.4/🧱️base/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
-                                #[path = "."]
-                                pub mod png {
-                                    #[path = "."]
-                                    pub mod v1_2 {
-                                        #[path = "."]
-                                        pub mod any {
-                                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📷️png/🔖️1.2/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
-                                #[path = "."]
-                                pub mod json {
-                                    #[path = "."]
-                                    pub mod v_rfc8259 {
-                                        #[path = "."]
-                                        pub mod any {
-                                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
-                                #[path = "."]
-                                pub mod dwg {
-                                    #[path = "."]
-                                    pub mod v_ac1018 {
-                                        #[path = "."]
-                                        pub mod any {
-                                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🖊️dwg/🔖️ac1018/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
-                                #[path = "."]
-                                pub mod dxf {
-                                    #[path = "."]
-                                    pub mod v_r12 {
-                                        #[path = "."]
-                                        pub mod any {
-                                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📐️dxf/🔖️r12/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
+                                pub use semio_s_artifact_note_note_mutations::standards::v1::subsets::any::io::import::deserializers::artifacts::svg;
+                                pub use semio_s_artifact_note_note_mut_family_4::standards::v1::subsets::any::io::import::deserializers::artifacts::pdf;
+                                pub use semio_s_artifact_note_note_mut_family_4::standards::v1::subsets::any::io::import::deserializers::artifacts::png;
+                                pub use semio_s_artifact_note_note_insert_table_row::standards::v1::subsets::any::io::import::deserializers::artifacts::json;
+                                pub use semio_s_artifact_note_note_v1::standards::v1::subsets::any::io::import::deserializers::artifacts::dwg;
+                                pub use semio_s_artifact_note_note_mut_family_4::standards::v1::subsets::any::io::import::deserializers::artifacts::dxf;
                             }
                         }
                     }
@@ -666,94 +151,19 @@ pub mod standards {
                         pub mod serializers {
                             #[path = "."]
                             pub mod artifacts {
-                                #[path = "."]
-                                pub mod svg {
-                                    #[path = "."]
-                                    pub mod v1_1 {
-                                        #[path = "."]
-                                        pub mod any {
-                                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
-                                #[path = "."]
-                                pub mod pdf {
-                                    #[path = "."]
-                                    pub mod v1_4 {
-                                        #[path = "."]
-                                        pub mod base {
-                                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📖️pdf/🔖️1.4/🧱️base/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
-                                #[path = "."]
-                                pub mod png {
-                                    #[path = "."]
-                                    pub mod v1_2 {
-                                        #[path = "."]
-                                        pub mod any {
-                                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📷️png/🔖️1.2/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
-                                #[path = "."]
-                                pub mod json {
-                                    #[path = "."]
-                                    pub mod v_rfc8259 {
-                                        #[path = "."]
-                                        pub mod any {
-                                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
-                                #[path = "."]
-                                pub mod dwg {
-                                    #[path = "."]
-                                    pub mod v_ac1018 {
-                                        #[path = "."]
-                                        pub mod any {
-                                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🖊️dwg/🔖️ac1018/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
-                                #[path = "."]
-                                pub mod dxf {
-                                    #[path = "."]
-                                    pub mod v_r12 {
-                                        #[path = "."]
-                                        pub mod any {
-                                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📐️dxf/🔖️r12/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
+                                pub use semio_s_artifact_note_note_v1::standards::v1::subsets::any::io::export::serializers::artifacts::svg;
+                                pub use semio_s_artifact_note_note_v1::standards::v1::subsets::any::io::export::serializers::artifacts::pdf;
+                                pub use semio_s_artifact_note_note_v1::standards::v1::subsets::any::io::export::serializers::artifacts::png;
+                                pub use semio_s_artifact_note_note_insert_table_row::standards::v1::subsets::any::io::export::serializers::artifacts::json;
+                                pub use semio_s_artifact_note_note_v1::standards::v1::subsets::any::io::export::serializers::artifacts::dwg;
+                                pub use semio_s_artifact_note_note_diff::standards::v1::subsets::any::io::export::serializers::artifacts::dxf;
                             }
                         }
                     }
                 }
-                #[path = "."]
-                pub mod examples {
-                    #[path = "."]
-                    pub mod demo {
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                }
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🦀️.rs"]
-                mod component;
-                pub use component::*;
+                pub use semio_s_artifact_note_note_insert_table_row::standards::v1::subsets::any::examples;
+                pub use semio_s_artifact_note_note_v1::standards::v1::subsets::any::*;
+
             }
             #[path = "."]
             pub mod ink {
@@ -763,55 +173,31 @@ pub mod standards {
                     pub mod mutations {
                         #[path = "."]
                         pub mod change_pencil_width {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🖋️ink/🧬️schema/🧬️mutations/✏️change-pencil-width/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🖋️ink/🧬️schema/🧬️mutations/✏️change-pencil-width/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🖋️ink/🧬️schema/🧬️mutations/✏️change-pencil-width/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🖋️ink/🧬️schema/🧬️mutations/✏️change-pencil-width/🧪️tests/✏️thickens-pencil/🦀️.rs"]
-                            mod tests_thickens_pencil;
+                            pub use semio_s_artifact_note_note_mut_family::standards::v1::subsets::ink::schema::mutations::change_pencil_width::*;
+                            pub use semio_s_artifact_note_note_mut_family::standards::v1::subsets::ink::schema::mutations::change_pencil_width::diff;
+                            pub use semio_s_artifact_note_note_mut_family::standards::v1::subsets::ink::schema::mutations::change_pencil_width::inverse;
+
                         }
                         #[path = "."]
                         pub mod change_eraser_radius {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🖋️ink/🧬️schema/🧬️mutations/🧽️change-eraser-radius/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🖋️ink/🧬️schema/🧬️mutations/🧽️change-eraser-radius/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🖋️ink/🧬️schema/🧬️mutations/🧽️change-eraser-radius/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🖋️ink/🧬️schema/🧬️mutations/🧽️change-eraser-radius/🧪️tests/🧽️enlarges/🦀️.rs"]
-                            mod tests_enlarges_eraser;
+                            pub use semio_s_artifact_note_note_mut_family::standards::v1::subsets::ink::schema::mutations::change_eraser_radius::*;
+                            pub use semio_s_artifact_note_note_mut_family::standards::v1::subsets::ink::schema::mutations::change_eraser_radius::diff;
+                            pub use semio_s_artifact_note_note_mut_family::standards::v1::subsets::ink::schema::mutations::change_eraser_radius::inverse;
+
                         }
                         #[path = "."]
                         pub mod change_block_ink_width {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🖋️ink/🧬️schema/🧬️mutations/🖊️change-block-ink-width/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🖋️ink/🧬️schema/🧬️mutations/🖊️change-block-ink-width/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🖋️ink/🧬️schema/🧬️mutations/🖊️change-block-ink-width/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🖋️ink/🧬️schema/🧬️mutations/🖊️change-block-ink-width/🧪️tests/🖊️thickens/🦀️.rs"]
-                            mod tests_thickens_the_sketch_stroke;
+                            pub use semio_s_artifact_note_note_mut_family::standards::v1::subsets::ink::schema::mutations::change_block_ink_width::*;
+                            pub use semio_s_artifact_note_note_mut_family::standards::v1::subsets::ink::schema::mutations::change_block_ink_width::diff;
+                            pub use semio_s_artifact_note_note_mut_family::standards::v1::subsets::ink::schema::mutations::change_block_ink_width::inverse;
+
                         }
                         #[path = "."]
                         pub mod edit_block_ink_stroke {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🖋️ink/🧬️schema/🧬️mutations/🎨️edit-block-ink-stroke/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🖋️ink/🧬️schema/🧬️mutations/🎨️edit-block-ink-stroke/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🖋️ink/🧬️schema/🧬️mutations/🎨️edit-block-ink-stroke/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🖋️ink/🧬️schema/🧬️mutations/🎨️edit-block-ink-stroke/🧪️tests/🎨️redraws/🦀️.rs"]
-                            mod tests_redraws_the_sketch_polyline;
+                            pub use semio_s_artifact_note_note_mut_family::standards::v1::subsets::ink::schema::mutations::edit_block_ink_stroke::*;
+                            pub use semio_s_artifact_note_note_mut_family::standards::v1::subsets::ink::schema::mutations::edit_block_ink_stroke::diff;
+                            pub use semio_s_artifact_note_note_mut_family::standards::v1::subsets::ink::schema::mutations::edit_block_ink_stroke::inverse;
+
                         }
                     }
                 }
@@ -824,16 +210,10 @@ pub mod standards {
                     pub mod mutations {
                         #[path = "."]
                         pub mod edit_block_text {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/📝️text/🧬️schema/🧬️mutations/📝️edit-block-text/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/📝️text/🧬️schema/🧬️mutations/📝️edit-block-text/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/📝️text/🧬️schema/🧬️mutations/📝️edit-block-text/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/📝️text/🧬️schema/🧬️mutations/📝️edit-block-text/🧪️tests/📝️replaces/🦀️.rs"]
-                            mod tests_replaces_the_intro_paragraphs;
+                            pub use semio_s_artifact_note_note_mut_family::standards::v1::subsets::text::schema::mutations::edit_block_text::*;
+                            pub use semio_s_artifact_note_note_mut_family::standards::v1::subsets::text::schema::mutations::edit_block_text::diff;
+                            pub use semio_s_artifact_note_note_mut_family::standards::v1::subsets::text::schema::mutations::edit_block_text::inverse;
+
                         }
                     }
                 }
@@ -846,16 +226,10 @@ pub mod standards {
                     pub mod mutations {
                         #[path = "."]
                         pub mod edit_block_math {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧮️math/🧬️schema/🧬️mutations/🧮️edit-block-math/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧮️math/🧬️schema/🧬️mutations/🧮️edit-block-math/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧮️math/🧬️schema/🧬️mutations/🧮️edit-block-math/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧮️math/🧬️schema/🧬️mutations/🧮️edit-block-math/🧪️tests/📐️replaces/🦀️.rs"]
-                            mod tests_replaces_the_tex_with_pythagoras;
+                            pub use semio_s_artifact_note_note_mut_family::standards::v1::subsets::math::schema::mutations::edit_block_math::*;
+                            pub use semio_s_artifact_note_note_mut_family::standards::v1::subsets::math::schema::mutations::edit_block_math::diff;
+                            pub use semio_s_artifact_note_note_mut_family::standards::v1::subsets::math::schema::mutations::edit_block_math::inverse;
+
                         }
                     }
                 }
@@ -868,55 +242,31 @@ pub mod standards {
                     pub mod mutations {
                         #[path = "."]
                         pub mod insert_table_row {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/📊️table/🧬️schema/🧬️mutations/⬇️insert-table-row/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/📊️table/🧬️schema/🧬️mutations/⬇️insert-table-row/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/📊️table/🧬️schema/🧬️mutations/⬇️insert-table-row/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/📊️table/🧬️schema/🧬️mutations/⬇️insert-table-row/🧪️tests/⬇️appends/🦀️.rs"]
-                            mod tests_appends_a_blank_third_row;
+                            pub use semio_s_artifact_note_note_insert_table_row::standards::v1::subsets::table::schema::mutations::insert_table_row::*;
+                            pub use semio_s_artifact_note_note_insert_table_row::standards::v1::subsets::table::schema::mutations::insert_table_row::diff;
+                            pub use semio_s_artifact_note_note_insert_table_row::standards::v1::subsets::table::schema::mutations::insert_table_row::inverse;
+
                         }
                         #[path = "."]
                         pub mod remove_table_row {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/📊️table/🧬️schema/🧬️mutations/⬆️remove-table-row/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/📊️table/🧬️schema/🧬️mutations/⬆️remove-table-row/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/📊️table/🧬️schema/🧬️mutations/⬆️remove-table-row/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/📊️table/🧬️schema/🧬️mutations/⬆️remove-table-row/🧪️tests/⬆️drops/🦀️.rs"]
-                            mod tests_drops_the_trailing_blank_row;
+                            pub use semio_s_artifact_note_note_insert_table_row::standards::v1::subsets::table::schema::mutations::remove_table_row::*;
+                            pub use semio_s_artifact_note_note_insert_table_row::standards::v1::subsets::table::schema::mutations::remove_table_row::diff;
+                            pub use semio_s_artifact_note_note_insert_table_row::standards::v1::subsets::table::schema::mutations::remove_table_row::inverse;
+
                         }
                         #[path = "."]
                         pub mod insert_table_column {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/📊️table/🧬️schema/🧬️mutations/➡️insert-table-column/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/📊️table/🧬️schema/🧬️mutations/➡️insert-table-column/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/📊️table/🧬️schema/🧬️mutations/➡️insert-table-column/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/📊️table/🧬️schema/🧬️mutations/➡️insert-table-column/🧪️tests/➡️appends/🦀️.rs"]
-                            mod tests_appends_the_lettered_column_c;
+                            pub use semio_s_artifact_note_note_insert_table_row::standards::v1::subsets::table::schema::mutations::insert_table_column::*;
+                            pub use semio_s_artifact_note_note_insert_table_row::standards::v1::subsets::table::schema::mutations::insert_table_column::diff;
+                            pub use semio_s_artifact_note_note_insert_table_row::standards::v1::subsets::table::schema::mutations::insert_table_column::inverse;
+
                         }
                         #[path = "."]
                         pub mod remove_table_column {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/📊️table/🧬️schema/🧬️mutations/⬅️remove-table-column/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/📊️table/🧬️schema/🧬️mutations/⬅️remove-table-column/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/📊️table/🧬️schema/🧬️mutations/⬅️remove-table-column/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/📊️table/🧬️schema/🧬️mutations/⬅️remove-table-column/🧪️tests/⬅️drops/🦀️.rs"]
-                            mod tests_drops_the_trailing_column_b;
+                            pub use semio_s_artifact_note_note_insert_table_row::standards::v1::subsets::table::schema::mutations::remove_table_column::*;
+                            pub use semio_s_artifact_note_note_insert_table_row::standards::v1::subsets::table::schema::mutations::remove_table_column::diff;
+                            pub use semio_s_artifact_note_note_insert_table_row::standards::v1::subsets::table::schema::mutations::remove_table_column::inverse;
+
                         }
                     }
                 }
@@ -929,42 +279,24 @@ pub mod standards {
                     pub mod mutations {
                         #[path = "."]
                         pub mod create_asset {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🖼️asset/🧬️schema/🧬️mutations/🆕️create-asset/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🖼️asset/🧬️schema/🧬️mutations/🆕️create-asset/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🖼️asset/🧬️schema/🧬️mutations/🆕️create-asset/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🖼️asset/🧬️schema/🧬️mutations/🆕️create-asset/🧪️tests/➕️adds/🦀️.rs"]
-                            mod tests_adds_a_second_image_asset;
+                            pub use semio_s_artifact_note_note_mut_family_2::standards::v1::subsets::asset::schema::mutations::create_asset::*;
+                            pub use semio_s_artifact_note_note_mut_family_2::standards::v1::subsets::asset::schema::mutations::create_asset::diff;
+                            pub use semio_s_artifact_note_note_mut_family_2::standards::v1::subsets::asset::schema::mutations::create_asset::inverse;
+
                         }
                         #[path = "."]
                         pub mod replace_asset_payload {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🖼️asset/🧬️schema/🧬️mutations/🔁️replace-asset-payload/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🖼️asset/🧬️schema/🧬️mutations/🔁️replace-asset-payload/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🖼️asset/🧬️schema/🧬️mutations/🔁️replace-asset-payload/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🖼️asset/🧬️schema/🧬️mutations/🔁️replace-asset-payload/🧪️tests/🔁️swaps/🦀️.rs"]
-                            mod tests_swaps_logo_payload_for_svg;
+                            pub use semio_s_artifact_note_note_mut_family_2::standards::v1::subsets::asset::schema::mutations::replace_asset_payload::*;
+                            pub use semio_s_artifact_note_note_mut_family_2::standards::v1::subsets::asset::schema::mutations::replace_asset_payload::diff;
+                            pub use semio_s_artifact_note_note_mut_family_2::standards::v1::subsets::asset::schema::mutations::replace_asset_payload::inverse;
+
                         }
                         #[path = "."]
                         pub mod delete_asset {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🖼️asset/🧬️schema/🧬️mutations/🗑️delete-asset/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🖼️asset/🧬️schema/🧬️mutations/🗑️delete-asset/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🖼️asset/🧬️schema/🧬️mutations/🗑️delete-asset/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🖼️asset/🧬️schema/🧬️mutations/🗑️delete-asset/🧪️tests/🗑️removes/🦀️.rs"]
-                            mod tests_removes_the_logo_asset;
+                            pub use semio_s_artifact_note_note_mut_family_2::standards::v1::subsets::asset::schema::mutations::delete_asset::*;
+                            pub use semio_s_artifact_note_note_mut_family_2::standards::v1::subsets::asset::schema::mutations::delete_asset::diff;
+                            pub use semio_s_artifact_note_note_mut_family_2::standards::v1::subsets::asset::schema::mutations::delete_asset::inverse;
+
                         }
                     }
                 }
@@ -977,178 +309,106 @@ pub mod standards {
                     pub mod mutations {
                         #[path = "."]
                         pub mod create_block {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️block/🧬️schema/🧬️mutations/➕️create-block/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️block/🧬️schema/🧬️mutations/➕️create-block/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️block/🧬️schema/🧬️mutations/➕️create-block/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️block/🧬️schema/🧬️mutations/➕️create-block/🧪️tests/📷️inserts/🦀️.rs"]
-                            mod tests_inserts_a_photo_block_at_root_index_2;
+                            pub use semio_s_artifact_note_note_mut_family_2::standards::v1::subsets::block::schema::mutations::create_block::*;
+                            pub use semio_s_artifact_note_note_mut_family_2::standards::v1::subsets::block::schema::mutations::create_block::diff;
+                            pub use semio_s_artifact_note_note_mut_family_2::standards::v1::subsets::block::schema::mutations::create_block::inverse;
+
                         }
                         #[path = "."]
                         pub mod delete_block {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️block/🧬️schema/🧬️mutations/❌️delete-block/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️block/🧬️schema/🧬️mutations/❌️delete-block/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️block/🧬️schema/🧬️mutations/❌️delete-block/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️block/🧬️schema/🧬️mutations/❌️delete-block/🧪️tests/➖️removes-the-math-block/🦀️.rs"]
-                            mod tests_removes_the_math_block;
+                            pub use semio_s_artifact_note_note_mut_family_2::standards::v1::subsets::block::schema::mutations::delete_block::*;
+                            pub use semio_s_artifact_note_note_mut_family_2::standards::v1::subsets::block::schema::mutations::delete_block::diff;
+                            pub use semio_s_artifact_note_note_mut_family_2::standards::v1::subsets::block::schema::mutations::delete_block::inverse;
+
                         }
                         #[path = "."]
                         pub mod delete_blocks {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️block/🧬️schema/🧬️mutations/🧹️delete-blocks/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️block/🧬️schema/🧬️mutations/🧹️delete-blocks/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️block/🧬️schema/🧬️mutations/🧹️delete-blocks/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️block/🧬️schema/🧬️mutations/🧹️delete-blocks/🧪️tests/🗑️removes/🦀️.rs"]
-                            mod tests_removes_the_ink_and_image_blocks;
+                            pub use semio_s_artifact_note_note_delete_blocks::standards::v1::subsets::block::schema::mutations::delete_blocks::*;
+                            pub use semio_s_artifact_note_note_delete_blocks::standards::v1::subsets::block::schema::mutations::delete_blocks::diff;
+                            pub use semio_s_artifact_note_note_delete_blocks::standards::v1::subsets::block::schema::mutations::delete_blocks::inverse;
+
                         }
                         #[path = "."]
                         pub mod duplicate_block {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️block/🧬️schema/🧬️mutations/📋️duplicate-block/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️block/🧬️schema/🧬️mutations/📋️duplicate-block/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️block/🧬️schema/🧬️mutations/📋️duplicate-block/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️block/🧬️schema/🧬️mutations/📋️duplicate-block/🧪️tests/📋️copies/🦀️.rs"]
-                            mod tests_copies_the_math_block_right_after_its_source;
+                            pub use semio_s_artifact_note_note_delete_blocks::standards::v1::subsets::block::schema::mutations::duplicate_block::*;
+                            pub use semio_s_artifact_note_note_delete_blocks::standards::v1::subsets::block::schema::mutations::duplicate_block::diff;
+                            pub use semio_s_artifact_note_note_delete_blocks::standards::v1::subsets::block::schema::mutations::duplicate_block::inverse;
+
                         }
                         #[path = "."]
                         pub mod duplicate_blocks {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️block/🧬️schema/🧬️mutations/👥️duplicate-blocks/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️block/🧬️schema/🧬️mutations/👥️duplicate-blocks/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️block/🧬️schema/🧬️mutations/👥️duplicate-blocks/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️block/🧬️schema/🧬️mutations/👥️duplicate-blocks/🧪️tests/👥️copies/🦀️.rs"]
-                            mod tests_copies_ink_and_table_with_shifting_indices;
+                            pub use semio_s_artifact_note_note_delete_blocks::standards::v1::subsets::block::schema::mutations::duplicate_blocks::*;
+                            pub use semio_s_artifact_note_note_delete_blocks::standards::v1::subsets::block::schema::mutations::duplicate_blocks::diff;
+                            pub use semio_s_artifact_note_note_delete_blocks::standards::v1::subsets::block::schema::mutations::duplicate_blocks::inverse;
+
                         }
                         #[path = "."]
                         pub mod move_block_to_container {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️block/🧬️schema/🧬️mutations/🚚️move-block-to-container/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️block/🧬️schema/🧬️mutations/🚚️move-block-to-container/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️block/🧬️schema/🧬️mutations/🚚️move-block-to-container/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️block/🧬️schema/🧬️mutations/🚚️move-block-to-container/🧪️tests/📥️reparents/🦀️.rs"]
-                            mod tests_reparents_ink_into_the_callout_group;
+                            pub use semio_s_artifact_note_note_mut_family_2::standards::v1::subsets::block::schema::mutations::move_block_to_container::*;
+                            pub use semio_s_artifact_note_note_mut_family_2::standards::v1::subsets::block::schema::mutations::move_block_to_container::diff;
+                            pub use semio_s_artifact_note_note_mut_family_2::standards::v1::subsets::block::schema::mutations::move_block_to_container::inverse;
+
                         }
                         #[path = "."]
                         pub mod drag_blocks {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️block/🧬️schema/🧬️mutations/🤏️drag-blocks/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️block/🧬️schema/🧬️mutations/🤏️drag-blocks/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️block/🧬️schema/🧬️mutations/🤏️drag-blocks/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️block/🧬️schema/🧬️mutations/🤏️drag-blocks/🧪️tests/🤏️nudges/🦀️.rs"]
-                            mod tests_nudges_ink_and_the_whole_group_subtree;
+                            pub use semio_s_artifact_note_note_mut_family_2::standards::v1::subsets::block::schema::mutations::drag_blocks::*;
+                            pub use semio_s_artifact_note_note_mut_family_2::standards::v1::subsets::block::schema::mutations::drag_blocks::diff;
+                            pub use semio_s_artifact_note_note_mut_family_2::standards::v1::subsets::block::schema::mutations::drag_blocks::inverse;
+
                         }
                         #[path = "."]
                         pub mod rename_block {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️block/🧬️schema/🧬️mutations/🔖️rename-block/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️block/🧬️schema/🧬️mutations/🔖️rename-block/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️block/🧬️schema/🧬️mutations/🔖️rename-block/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️block/🧬️schema/🧬️mutations/🔖️rename-block/🧪️tests/🏷️renames/🦀️.rs"]
-                            mod tests_renames_the_table_block;
+                            pub use semio_s_artifact_note_note_mut_family_2::standards::v1::subsets::block::schema::mutations::rename_block::*;
+                            pub use semio_s_artifact_note_note_mut_family_2::standards::v1::subsets::block::schema::mutations::rename_block::diff;
+                            pub use semio_s_artifact_note_note_mut_family_2::standards::v1::subsets::block::schema::mutations::rename_block::inverse;
+
                         }
                         #[path = "."]
                         pub mod change_block_visible {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️block/🧬️schema/🧬️mutations/👀️change-block-visible/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️block/🧬️schema/🧬️mutations/👀️change-block-visible/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️block/🧬️schema/🧬️mutations/👀️change-block-visible/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️block/🧬️schema/🧬️mutations/👀️change-block-visible/🧪️tests/🙈️hides/🦀️.rs"]
-                            mod tests_hides_the_image_block;
+                            pub use semio_s_artifact_note_note_mut_family_2::standards::v1::subsets::block::schema::mutations::change_block_visible::*;
+                            pub use semio_s_artifact_note_note_mut_family_2::standards::v1::subsets::block::schema::mutations::change_block_visible::diff;
+                            pub use semio_s_artifact_note_note_mut_family_2::standards::v1::subsets::block::schema::mutations::change_block_visible::inverse;
+
                         }
                         #[path = "."]
                         pub mod change_block_locked {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️block/🧬️schema/🧬️mutations/🔒️change-block-locked/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️block/🧬️schema/🧬️mutations/🔒️change-block-locked/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️block/🧬️schema/🧬️mutations/🔒️change-block-locked/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️block/🧬️schema/🧬️mutations/🔒️change-block-locked/🧪️tests/🔒️locks/🦀️.rs"]
-                            mod tests_locks_the_callout_group;
+                            pub use semio_s_artifact_note_note_mut_family::standards::v1::subsets::block::schema::mutations::change_block_locked::*;
+                            pub use semio_s_artifact_note_note_mut_family::standards::v1::subsets::block::schema::mutations::change_block_locked::diff;
+                            pub use semio_s_artifact_note_note_mut_family::standards::v1::subsets::block::schema::mutations::change_block_locked::inverse;
+
                         }
                         #[path = "."]
                         pub mod move_block {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️block/🧬️schema/🧬️mutations/📍️move-block/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️block/🧬️schema/🧬️mutations/📍️move-block/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️block/🧬️schema/🧬️mutations/📍️move-block/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️block/🧬️schema/🧬️mutations/📍️move-block/🧪️tests/📍️repositions/🦀️.rs"]
-                            mod tests_repositions_the_math_block;
+                            pub use semio_s_artifact_note_note_mut_family_3::standards::v1::subsets::block::schema::mutations::move_block::*;
+                            pub use semio_s_artifact_note_note_mut_family_3::standards::v1::subsets::block::schema::mutations::move_block::diff;
+                            pub use semio_s_artifact_note_note_mut_family_3::standards::v1::subsets::block::schema::mutations::move_block::inverse;
+
                         }
                         #[path = "."]
                         pub mod resize_block {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️block/🧬️schema/🧬️mutations/↔️resize-block/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️block/🧬️schema/🧬️mutations/↔️resize-block/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️block/🧬️schema/🧬️mutations/↔️resize-block/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️block/🧬️schema/🧬️mutations/↔️resize-block/🧪️tests/📐️enlarges/🦀️.rs"]
-                            mod tests_enlarges_the_image_block;
+                            pub use semio_s_artifact_note_note_mut_family_3::standards::v1::subsets::block::schema::mutations::resize_block::*;
+                            pub use semio_s_artifact_note_note_mut_family_3::standards::v1::subsets::block::schema::mutations::resize_block::diff;
+                            pub use semio_s_artifact_note_note_mut_family_3::standards::v1::subsets::block::schema::mutations::resize_block::inverse;
+
                         }
                         #[path = "."]
                         pub mod change_block_font_size {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️block/🧬️schema/🧬️mutations/🔤️change-block-font-size/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️block/🧬️schema/🧬️mutations/🔤️change-block-font-size/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️block/🧬️schema/🧬️mutations/🔤️change-block-font-size/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️block/🧬️schema/🧬️mutations/🔤️change-block-font-size/🧪️tests/🔤️enlarges/🦀️.rs"]
-                            mod tests_enlarges_the_intro_font;
+                            pub use semio_s_artifact_note_note_mut_family_3::standards::v1::subsets::block::schema::mutations::change_block_font_size::*;
+                            pub use semio_s_artifact_note_note_mut_family_3::standards::v1::subsets::block::schema::mutations::change_block_font_size::diff;
+                            pub use semio_s_artifact_note_note_mut_family_3::standards::v1::subsets::block::schema::mutations::change_block_font_size::inverse;
+
                         }
                     }
                 }
             
-#[path = "🏅️standards/🔖️1/🪆️subsets/🧱️block/🚪️io/🦀️.rs"]
-pub mod io;
+pub mod io {
+    pub use semio_s_artifact_note_note_insert_table_row::standards::v1::subsets::block::io::*;
+    pub use semio_s_artifact_note_note_schema::standards::v1::subsets::block::io::binary;
+    pub mod text {
+        pub use semio_s_artifact_note_note_mut_family::standards::v1::subsets::block::io::text::*;
+        pub use semio_s_artifact_note_note_diff::standards::v1::subsets::block::io::text::mutations;
+    }
+}
 }
             #[path = "."]
             pub mod canvas {
@@ -1158,81 +418,45 @@ pub mod io;
                     pub mod mutations {
                         #[path = "."]
                         pub mod change_grid_visible {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🎨️canvas/🧬️schema/🧬️mutations/👁️change-grid-visible/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🎨️canvas/🧬️schema/🧬️mutations/👁️change-grid-visible/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🎨️canvas/🧬️schema/🧬️mutations/👁️change-grid-visible/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🎨️canvas/🧬️schema/🧬️mutations/👁️change-grid-visible/🧪️tests/🙈️hides/🦀️.rs"]
-                            mod tests_hides_the_grid;
+                            pub use semio_s_artifact_note_note_mut_family_3::standards::v1::subsets::canvas::schema::mutations::change_grid_visible::*;
+                            pub use semio_s_artifact_note_note_mut_family_3::standards::v1::subsets::canvas::schema::mutations::change_grid_visible::diff;
+                            pub use semio_s_artifact_note_note_mut_family_3::standards::v1::subsets::canvas::schema::mutations::change_grid_visible::inverse;
+
                         }
                         #[path = "."]
                         pub mod change_grid_spacing {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🎨️canvas/🧬️schema/🧬️mutations/📏️change-grid-spacing/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🎨️canvas/🧬️schema/🧬️mutations/📏️change-grid-spacing/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🎨️canvas/🧬️schema/🧬️mutations/📏️change-grid-spacing/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🎨️canvas/🧬️schema/🧬️mutations/📏️change-grid-spacing/🧪️tests/📏️widens/🦀️.rs"]
-                            mod tests_widens_grid_spacing;
+                            pub use semio_s_artifact_note_note_mut_family_3::standards::v1::subsets::canvas::schema::mutations::change_grid_spacing::*;
+                            pub use semio_s_artifact_note_note_mut_family_3::standards::v1::subsets::canvas::schema::mutations::change_grid_spacing::diff;
+                            pub use semio_s_artifact_note_note_mut_family_3::standards::v1::subsets::canvas::schema::mutations::change_grid_spacing::inverse;
+
                         }
                         #[path = "."]
                         pub mod change_grid_subdivisions {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🎨️canvas/🧬️schema/🧬️mutations/🔢️change-grid-subdivisions/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🎨️canvas/🧬️schema/🧬️mutations/🔢️change-grid-subdivisions/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🎨️canvas/🧬️schema/🧬️mutations/🔢️change-grid-subdivisions/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🎨️canvas/🧬️schema/🧬️mutations/🔢️change-grid-subdivisions/🧪️tests/🔢️doubles/🦀️.rs"]
-                            mod tests_doubles_grid_subdivisions;
+                            pub use semio_s_artifact_note_note_mut_family_3::standards::v1::subsets::canvas::schema::mutations::change_grid_subdivisions::*;
+                            pub use semio_s_artifact_note_note_mut_family_3::standards::v1::subsets::canvas::schema::mutations::change_grid_subdivisions::diff;
+                            pub use semio_s_artifact_note_note_mut_family_3::standards::v1::subsets::canvas::schema::mutations::change_grid_subdivisions::inverse;
+
                         }
                         #[path = "."]
                         pub mod change_grid_opacity {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🎨️canvas/🧬️schema/🧬️mutations/🌫️change-grid-opacity/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🎨️canvas/🧬️schema/🧬️mutations/🌫️change-grid-opacity/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🎨️canvas/🧬️schema/🧬️mutations/🌫️change-grid-opacity/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🎨️canvas/🧬️schema/🧬️mutations/🌫️change-grid-opacity/🧪️tests/🌫️raises/🦀️.rs"]
-                            mod tests_raises_grid_opacity;
+                            pub use semio_s_artifact_note_note_mut_family_3::standards::v1::subsets::canvas::schema::mutations::change_grid_opacity::*;
+                            pub use semio_s_artifact_note_note_mut_family_3::standards::v1::subsets::canvas::schema::mutations::change_grid_opacity::diff;
+                            pub use semio_s_artifact_note_note_mut_family_3::standards::v1::subsets::canvas::schema::mutations::change_grid_opacity::inverse;
+
                         }
                         #[path = "."]
                         pub mod change_snap_enabled {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🎨️canvas/🧬️schema/🧬️mutations/🧲️change-snap-enabled/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🎨️canvas/🧬️schema/🧬️mutations/🧲️change-snap-enabled/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🎨️canvas/🧬️schema/🧬️mutations/🧲️change-snap-enabled/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🎨️canvas/🧬️schema/🧬️mutations/🧲️change-snap-enabled/🧪️tests/🧲️enables-snap/🦀️.rs"]
-                            mod tests_enables_snap;
+                            pub use semio_s_artifact_note_note_mut_family_3::standards::v1::subsets::canvas::schema::mutations::change_snap_enabled::*;
+                            pub use semio_s_artifact_note_note_mut_family_3::standards::v1::subsets::canvas::schema::mutations::change_snap_enabled::diff;
+                            pub use semio_s_artifact_note_note_mut_family_3::standards::v1::subsets::canvas::schema::mutations::change_snap_enabled::inverse;
+
                         }
                         #[path = "."]
                         pub mod change_snap_grid_spacing {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🎨️canvas/🧬️schema/🧬️mutations/📐️change-snap-grid-spacing/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🎨️canvas/🧬️schema/🧬️mutations/📐️change-snap-grid-spacing/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🎨️canvas/🧬️schema/🧬️mutations/📐️change-snap-grid-spacing/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🎨️canvas/🧬️schema/🧬️mutations/📐️change-snap-grid-spacing/🧪️tests/📐️halves/🦀️.rs"]
-                            mod tests_halves_snap_grid_spacing;
+                            pub use semio_s_artifact_note_note_mut_family_3::standards::v1::subsets::canvas::schema::mutations::change_snap_grid_spacing::*;
+                            pub use semio_s_artifact_note_note_mut_family_3::standards::v1::subsets::canvas::schema::mutations::change_snap_grid_spacing::diff;
+                            pub use semio_s_artifact_note_note_mut_family_3::standards::v1::subsets::canvas::schema::mutations::change_snap_grid_spacing::inverse;
+
                         }
                     }
                 }
@@ -1245,24 +469,17 @@ pub mod io;
                     pub mod mutations {
                         #[path = "."]
                         pub mod rename_note {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/📜️document/🧬️schema/🧬️mutations/🏷️rename-note/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/📜️document/🧬️schema/🧬️mutations/🏷️rename-note/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/📜️document/🧬️schema/🧬️mutations/🏷️rename-note/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/📜️document/🧬️schema/🧬️mutations/🏷️rename-note/🧪️tests/🏷️retitles/🦀️.rs"]
-                            mod tests_retitles_the_document;
+                            pub use semio_s_artifact_note_note_delete_blocks::standards::v1::subsets::document::schema::mutations::rename_note::*;
+                            pub use semio_s_artifact_note_note_delete_blocks::standards::v1::subsets::document::schema::mutations::rename_note::diff;
+                            pub use semio_s_artifact_note_note_delete_blocks::standards::v1::subsets::document::schema::mutations::rename_note::inverse;
+
                         }
                     }
                 }
             }
         }
-        #[path = "🏅️standards/🔖️1/🦀️.rs"]
-        mod component;
-        pub use component::*;
+        pub use semio_s_artifact_note_note_v1::standards::v1::*;
+
     }
 }
 
@@ -1272,23 +489,11 @@ pub mod op {
     pub use crate::standards::v1::subsets::any::schema::mutations::NoteMutation;
 }
 
-
-pub mod diff {
-    pub use crate::standards::v1::subsets::any::schema::diff::*;
-    pub mod schema {
-        pub use crate::standards::v1::subsets::any::schema::diff::*;
-    }
-
-}
+pub use semio_s_artifact_note_note_diff::diff;
 pub mod mutations {
     pub use crate::standards::v1::subsets::any::schema::mutations::*;
 }
-pub mod snapshot {
-    pub mod schema {
-        pub use crate::standards::v1::subsets::any::schema::snapshot::*;
-    }
-
-}
+pub use semio_s_artifact_note_note_mutations::snapshot;
 pub mod examples {
     pub use super::standards::v1::subsets::any::examples::*;
 }
@@ -1299,156 +504,111 @@ pub mod examples {
 pub mod editor {
     #[path = "."]
     pub mod note {
-        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs"]
-        mod component;
-        pub use component::*;
-        #[path = "."]
-        pub mod config {
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
+        pub use semio_s_artifact_note_note_v1::editor::note::*;
+pub use semio_s_artifact_note_note_diff::editor::note::demo_session;
 
-        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️retained/🦀️.rs"]
-        pub mod retained;
+        pub use semio_s_artifact_note_note_diff::editor::note::config;
+
+        pub use semio_s_artifact_note_note_diff::editor::note::support;
+
+        pub use semio_s_artifact_note_note_kinds_catalog::editor::note::dispatch_ctx;
+
+        pub use semio_s_artifact_note_note_v1::editor::note::command_enum;
+
+        pub use semio_s_artifact_note_note_v1::editor::note::retained;
 
         #[path = "."]
         pub mod window {
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🪟️window/🦀️.rs"]
-            mod component;
-            pub use component::*;
+            pub use semio_s_artifact_note_note_kinds_catalog::editor::note::window::*;
 
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🪟️window/🧬️schema/🦀️.rs"]
-            pub mod schema;
+            pub use semio_s_artifact_note_note_kinds_catalog::editor::note::window::schema;
         }
 
-        #[path = "."]
         pub mod presence {
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🦀️.rs"]
-            mod component;
-            pub use component::*;
-
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema/🦀️.rs"]
-            pub mod schema;
+    pub use semio_s_artifact_note_note_diff::editor::note::presence::*;
+    pub mod io {
+        pub use semio_s_artifact_note_note_mut_family::editor::note::presence::io::*;
+        pub mod binary {
+            pub use semio_s_artifact_note_note_insert_table_row::editor::note::presence::io::binary::*;
+            pub use semio_s_artifact_note_note_diff::editor::note::presence::io::binary::mutations;
         }
+        pub mod text {
+            pub use semio_s_artifact_note_note_insert_table_row::editor::note::presence::io::text::*;
+            pub use semio_s_artifact_note_note_diff::editor::note::presence::io::text::mutations;
+        }
+    }
+}
 
-        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗣️terminology/🦀️.rs"]
-        pub mod terminology;
+        pub use semio_s_artifact_note_note_diff::editor::note::terminology;
 
         #[path = "."]
         pub mod commands {
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/➕️add-block/🦀️.rs"]
-            pub mod add_block;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗑️delete-block/🦀️.rs"]
-            pub mod delete_block;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🚫️delete-selection/🦀️.rs"]
-            pub mod delete_selection;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📋️duplicate-block/🦀️.rs"]
-            pub mod duplicate_block;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🪞️duplicate-selection/🦀️.rs"]
-            pub mod duplicate_selection;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/💬️engagement-input/🦀️.rs"]
-            pub mod engagement_input;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📤️engagement-submit/🦀️.rs"]
-            pub mod engagement_submit;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖊️ink-apply-events/🦀️.rs"]
-            pub mod ink_apply_events;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🚚️move-block/🦀️.rs"]
-            pub mod move_block;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧭️navigator-engagement-input/🦀️.rs"]
-            pub mod navigator_engagement_input;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🕹️nudge-selection/🦀️.rs"]
-            pub mod nudge_selection;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/⬇️nudge-selection-down/🦀️.rs"]
-            pub mod nudge_selection_down;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/⏬️nudge-selection-down-fast/🦀️.rs"]
-            pub mod nudge_selection_down_fast;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/⬅️nudge-selection-left/🦀️.rs"]
-            pub mod nudge_selection_left;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/⏪️nudge-selection-left-fast/🦀️.rs"]
-            pub mod nudge_selection_left_fast;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/➡️nudge-selection-right/🦀️.rs"]
-            pub mod nudge_selection_right;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/⏩️nudge-selection-right-fast/🦀️.rs"]
-            pub mod nudge_selection_right_fast;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/⬆️nudge-selection-up/🦀️.rs"]
-            pub mod nudge_selection_up;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/⏫️nudge-selection-up-fast/🦀️.rs"]
-            pub mod nudge_selection_up_fast;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🩹️patch-blocks/🦀️.rs"]
-            pub mod patch_blocks;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/💾️save-download/🦀️.rs"]
-            pub mod save_download;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗃️set-active-example/🦀️.rs"]
-            pub mod set_active_example;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎥️set-camera/🦀️.rs"]
-            pub mod set_camera;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔭️set-camera-zoom/🦀️.rs"]
-            pub mod set_camera_zoom;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧽️set-eraser-radius/🦀️.rs"]
-            pub mod set_eraser_radius;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📄️load-document-json/🦀️.rs"]
-            pub mod load_document_json;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔲️set-grid-opacity/🦀️.rs"]
-            pub mod set_grid_opacity;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📏️set-grid-spacing/🦀️.rs"]
-            pub mod set_grid_spacing;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔢️set-grid-subdivisions/🦀️.rs"]
-            pub mod set_grid_subdivisions;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/👁️set-grid-visible/🦀️.rs"]
-            pub mod set_grid_visible;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/✏️set-pencil-width/🦀️.rs"]
-            pub mod set_pencil_width;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧲️set-snap-enabled/🦀️.rs"]
-            pub mod set_snap_enabled;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📐️set-snap-grid-spacing/🦀️.rs"]
-            pub mod set_snap_grid_spacing;
+            pub use semio_s_artifact_note_note_kinds_catalog::editor::note::commands::add_block;
+            pub use semio_s_artifact_note_note_kinds_catalog::editor::note::commands::delete_block;
+            pub use semio_s_artifact_note_note_tests_hides_the_grid::editor::note::commands::delete_selection;
+            pub use semio_s_artifact_note_note_tests_hides_the_grid::editor::note::commands::duplicate_block;
+            pub use semio_s_artifact_note_note_tests_hides_the_grid::editor::note::commands::duplicate_selection;
+            pub use semio_s_artifact_note_note_tests_hides_the_grid::editor::note::commands::engagement_input;
+            pub use semio_s_artifact_note_note_tests_hides_the_grid::editor::note::commands::engagement_submit;
+            pub use semio_s_artifact_note_note_tests_hides_the_grid::editor::note::commands::ink_apply_events;
+            pub use semio_s_artifact_note_note_tests_hides_the_grid::editor::note::commands::move_block;
+            pub use semio_s_artifact_note_note_tests_hides_the_grid::editor::note::commands::navigator_engagement_input;
+            pub use semio_s_artifact_note_note_nudge_selection::editor::note::commands::nudge_selection;
+            pub use semio_s_artifact_note_note_nudge_selection::editor::note::commands::nudge_selection_down;
+            pub use semio_s_artifact_note_note_nudge_selection::editor::note::commands::nudge_selection_down_fast;
+            pub use semio_s_artifact_note_note_nudge_selection::editor::note::commands::nudge_selection_left;
+            pub use semio_s_artifact_note_note_nudge_selection::editor::note::commands::nudge_selection_left_fast;
+            pub use semio_s_artifact_note_note_nudge_selection::editor::note::commands::nudge_selection_right;
+            pub use semio_s_artifact_note_note_nudge_selection::editor::note::commands::nudge_selection_right_fast;
+            pub use semio_s_artifact_note_note_nudge_selection::editor::note::commands::nudge_selection_up;
+            pub use semio_s_artifact_note_note_nudge_selection::editor::note::commands::nudge_selection_up_fast;
+            pub use semio_s_artifact_note_note_tests_hides_the_grid::editor::note::commands::patch_blocks;
+            pub use semio_s_artifact_note_note_tests_hides_the_grid::editor::note::commands::save_download;
+            pub use semio_s_artifact_note_note_tests_hides_the_grid::editor::note::commands::set_active_example;
+            pub use semio_s_artifact_note_note_tests_hides_the_grid::editor::note::commands::set_camera;
+            pub use semio_s_artifact_note_note_tests_hides_the_grid::editor::note::commands::set_camera_zoom;
+            pub use semio_s_artifact_note_note_tests_hides_the_grid::editor::note::commands::set_eraser_radius;
+            pub use semio_s_artifact_note_note_tests_hides_the_grid::editor::note::commands::load_document_json;
+            pub use semio_s_artifact_note_note_tests_hides_the_grid::editor::note::commands::set_grid_opacity;
+            pub use semio_s_artifact_note_note_tests_hides_the_grid::editor::note::commands::set_grid_spacing;
+            pub use semio_s_artifact_note_note_tests_hides_the_grid::editor::note::commands::set_grid_subdivisions;
+            pub use semio_s_artifact_note_note_tests_hides_the_grid::editor::note::commands::set_grid_visible;
+            pub use semio_s_artifact_note_note_tests_hides_the_grid::editor::note::commands::set_pencil_width;
+            pub use semio_s_artifact_note_note_mut_family_4::editor::note::commands::set_snap_enabled;
+            pub use semio_s_artifact_note_note_v1::editor::note::commands::set_snap_grid_spacing;
         }
 
         #[path = "."]
         pub mod modes {
             #[path = "."]
             pub mod edit {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🦀️.rs"]
-                mod component;
-                pub use component::*;
+                pub use semio_s_artifact_note_note_delete_blocks::editor::note::modes::edit::*;
 
                 #[path = "."]
                 pub mod windows {
                     #[path = "."]
                     pub mod composite {
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🖼️composite/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
+                        pub use semio_s_artifact_note_note_delete_blocks::editor::note::modes::edit::windows::composite::*;
 
                         #[path = "."]
                         pub mod options {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🖼️composite/☑️options/🎥️camera/🦀️.rs"]
-                            pub mod camera;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🖼️composite/☑️options/🧹️eraser-point/🦀️.rs"]
-                            pub mod eraser_point;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🖼️composite/☑️options/🧽️eraser-stroke/🦀️.rs"]
-                            pub mod eraser_stroke;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🖼️composite/☑️options/🔲️grid/🦀️.rs"]
-                            pub mod grid;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🖼️composite/☑️options/✏️pencil/🦀️.rs"]
-                            pub mod pencil;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🖼️composite/☑️options/🧲️snap/🦀️.rs"]
-                            pub mod snap;
+                            pub use semio_s_artifact_note_note_delete_blocks::editor::note::modes::edit::windows::composite::options::camera;
+                            pub use semio_s_artifact_note_note_delete_blocks::editor::note::modes::edit::windows::composite::options::eraser_point;
+                            pub use semio_s_artifact_note_note_delete_blocks::editor::note::modes::edit::windows::composite::options::eraser_stroke;
+                            pub use semio_s_artifact_note_note_delete_blocks::editor::note::modes::edit::windows::composite::options::grid;
+                            pub use semio_s_artifact_note_note_delete_blocks::editor::note::modes::edit::windows::composite::options::pencil;
+                            pub use semio_s_artifact_note_note_delete_blocks::editor::note::modes::edit::windows::composite::options::snap;
                         }
                     }
 
                     #[path = "."]
                     pub mod navigator {
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧭️navigator/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
+                        pub use semio_s_artifact_note_note_delete_blocks::editor::note::modes::edit::windows::navigator::*;
 
                         #[path = "."]
                         pub mod options {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧭️navigator/☑️options/🔲️grid-visible/🦀️.rs"]
-                            pub mod grid_visible;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧭️navigator/☑️options/🔍️zoom/🦀️.rs"]
-                            pub mod zoom;
+                            pub use semio_s_artifact_note_note_delete_blocks::editor::note::modes::edit::windows::navigator::options::grid_visible;
+                            pub use semio_s_artifact_note_note_delete_blocks::editor::note::modes::edit::windows::navigator::options::zoom;
                         }
                     }
                 }
@@ -1457,12 +617,9 @@ pub mod editor {
 
         #[path = "."]
         pub mod panels {
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🛍️catalogue/🦀️.rs"]
-            pub mod catalogue;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🗿️artifact/🦀️.rs"]
-            pub mod document;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🦀️.rs"]
-            pub mod inspection;
+            pub use semio_s_artifact_note_note_delete_blocks::editor::note::panels::catalogue;
+            pub use semio_s_artifact_note_note_delete_blocks::editor::note::panels::document;
+            pub use semio_s_artifact_note_note_delete_blocks::editor::note::panels::inspection;
         }
     }
 }
@@ -1476,54 +633,34 @@ pub mod editor {
 pub mod viewer {
     #[path = "."]
     pub mod note {
-        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs"]
-        mod component;
-        pub use component::*;
-        #[path = "."]
-        pub mod presence {
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/👥️presence/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
-        #[path = "."]
-        pub mod config {
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎚️config/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
+        pub use semio_s_artifact_note_note_v1::viewer::note::*;
+
+        pub use semio_s_artifact_note_note_diff::viewer::note::presence;
+        pub use semio_s_artifact_note_note_diff::viewer::note::config;
 
         #[path = "."]
         pub mod modes {
             #[path = "."]
             pub mod view {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🦀️.rs"]
-                mod component;
-                pub use component::*;
+                pub use semio_s_artifact_note_note_mut_family::viewer::note::modes::view::*;
 
-                #[path = "."]
-                pub mod windows {
-                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🖼️composite/🦀️.rs"]
-                    pub mod composite;
-                }
+                pub use semio_s_artifact_note_note_diff::viewer::note::modes::view::windows;
             }
         }
     }
 }
 
-//#region 🧬️ChildRestoreProjection
-/// 🧬️ The loaded-parent child projection, read off the snapshot's own derived composition fields — the ONE
-/// definition the editor and the viewer both declare. The `ArtifactEditor`/`ArtifactViewer` trait default
-/// refuses it (`… did not declare a loaded-parent child projection`), and since PX1 the live envelope load
-/// asks for it before the decoded document may replace the store, so an undeclared app fails every live load.
-pub fn note_child_restore_projection(snapshot: &NoteSnapshot) -> Result<semio_framework_composition_admission::ChildRestoreProjection<'_>, semio_framework_plugin::Fault> {
-    semio_framework_composition_admission::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("note.child-projection"), error.to_string()))
-}
-//#endregion 🧬️ChildRestoreProjection
+pub use semio_s_artifact_note_note_v1::{note_child_restore_projection};
 
 #[cfg(all(test,not(target_arch="wasm32")))]
 #[path="🧪️tests/⚡️quick/🦀️.rs"]
 mod quick;
 
-#[path = "."]
-pub mod host {
-#[path = "🔨️modules/🏠️host/🧰️owned/🦀️.rs"]
-pub mod owned;
-}
+pub use semio_s_artifact_note_note_mutations::host;
+
+#[cfg(test)]
+#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/📸️snapshot/🧪️tests/🔬️unit/🦀️.rs"]
+mod hoisted_tests_0;
+#[cfg(test)]
+#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/📸️snapshot/🧪️tests/🔬️unit/🦀️.rs"]
+mod hoisted_tests_1;

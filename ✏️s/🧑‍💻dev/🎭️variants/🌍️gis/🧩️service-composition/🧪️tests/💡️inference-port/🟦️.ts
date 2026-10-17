@@ -1,15 +1,15 @@
 /** 💡️ The host-owned GIS Map inference port driven through a fake authenticated transport, and the retained inference job across a refused successor opening. */
-import { idleGisMapInferencePortStatusV1 } from "../../../../../../🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🧬️schema/🟦️.ts";
-import { gisMapDocumentServiceWireDeclarationV1 } from "../../../../../../🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🔌️client/🚪️io/🟦️.ts";
+import { idleGisMapInferencePortStatusV1 } from "@semio-tech/gis-gismap-js/inference/schema";
+import { gisMapDocumentServiceWireDeclarationV1 } from "@semio-tech/gis-gismap-js/inference/client/io";
 import { semioSchemaAjvV1 } from "@semio-tech/schema-ts/oracles/validator";
-import { workerLawFakesV1, WORKER_LAW_CAPABILITY } from "../../../../../../../🧰️framework/🛍️products/💻️os/🧪️tests/🧰️worker-law-fakes/🟦️.ts";
-import type { TestSource } from "../../../../../../../🧰️framework/🛍️products/💻️os/🧪️tests/🧰️worker-law-fakes/🟦️.ts";
+import { workerLawFakesV1, WORKER_LAW_CAPABILITY, WORKER_LAW_ACTOR_IDENTITY_GRANT } from "@semio-tech/framework-os/testing/worker-law-fakes";
+import type { TestSource } from "@semio-tech/framework-os/testing/worker-law-fakes";
 import type { ServiceCompositionTestDependenciesV1, InferenceOperationV1 } from "../🧰️dependencies/🟦️.ts";
 
-type BackboneWorkerResponse = import("../../../../../../../🧰️framework/🛍️products/💻️os/🟦️.ts").BackboneWorkerResponse;
+type BackboneWorkerResponse = import("@semio-tech/framework-os").BackboneWorkerResponse;
 type DocumentExecutionTargetLeaseFieldsV1 = import("@semio-tech/framework/directory/schema").DocumentExecutionTargetLeaseFieldsV1;
-type GisMapInferencePortStatusV1 = import("../../../../../../🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🧬️schema/🟦️.ts").GisMapInferencePortStatusV1;
-type GisMapInferencePreviewV1 = import("../../../../../../🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🧬️schema/🟦️.ts").GisMapInferencePreviewV1;
+type GisMapInferencePortStatusV1 = import("@semio-tech/gis-gismap-js/inference/schema").GisMapInferencePortStatusV1;
+type GisMapInferencePreviewV1 = import("@semio-tech/gis-gismap-js/inference/schema").GisMapInferencePreviewV1;
 type Vitest = NonNullable<ImportMeta["vitest"]>;
 
 export async function registerGisInferencePortTests(vitest: Vitest, dependencies: ServiceCompositionTestDependenciesV1, source: TestSource): Promise<void> {
@@ -174,7 +174,7 @@ export async function registerGisInferencePortTests(vitest: Vitest, dependencies
       // at all, so this harness exercises the inference port's own four calls and nothing else.
       const originalIssue = testSeams.documentSocketGrantTestIssue;
       testSeams.documentSocketGrantTestIssue = null;
-      openArtifact({ documentId: DOCUMENT, schema: "gis.map", bindings: [{ kind: "hub", dataClass: "persistedShared", baseUrl: "http://hub.test", spaceId: SPACE }], actor: "caller" });
+      openArtifact({ documentId: DOCUMENT, schema: "gis.map", bindings: [{ kind: "hub", dataClass: "persistedShared", baseUrl: "http://hub.test", spaceId: SPACE }], actor: "caller", actorIdentityGrant: WORKER_LAW_ACTOR_IDENTITY_GRANT });
       const state = artifactState(DOCUMENT, SPACE)!;
       if (options.lease !== "none") state.executionTargetLease = new DocumentExecutionTargetLease(documentExecutionTargetLeaseMintToken, leaseFields(options.lease === "editor"), "http://hub.test", new Uint8Array(1), encodePackValue({ manifest: { topicContributions: [{ topic: "semio.os.document-http-port/v1", payload: gisMapDocumentServiceWireDeclarationV1() }] } }));
       return {
@@ -230,7 +230,7 @@ export async function registerGisInferencePortTests(vitest: Vitest, dependencies
       const { default: equal } = await import("fast-deep-equal");
       const wire = JSON.parse(readFileSync(new URL("../../../../../../🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🧪️tests/🧫️fixtures/💡️gis-map-inference-port-v1/🔣️.json", import.meta.url), "utf8")).wire;
       const schema = JSON.parse(readFileSync(new URL("../../../🌎️hub/💡️inference/🧬️schema/🔣️.json", source.url), "utf8"));
-      const production = await import("../../../../../../🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🧬️schema/🟦️.ts");
+      const production = await import("@semio-tech/gis-gismap-js/inference/schema");
       for (const [name, definition, parse] of [
         ["receipt", "InferenceJobReceiptV1", production.parseGisMapInferenceJobReceiptV1],
         ["page", "InferenceEventPageV1", production.parseGisMapInferenceEventPageV1],
@@ -581,7 +581,7 @@ export async function registerGisInferencePortTests(vitest: Vitest, dependencies
         await hubSessionFetch("/_semio/hub/auth/sessions/me", { method: "GET" }, { timeoutMs: 1000, accept: testSeams.acceptBrowserSessionAuthority });
         const absentBeforeReopen = artifactState(DOCUMENT, SPACE) === undefined;
         const successorClientInstanceId = "12345678-1234-4123-8123-123456789abd";
-        openArtifact({ documentId: DOCUMENT, schema: "gis.map", bindings: [{ kind: "hub", dataClass: "persistedShared", baseUrl: "http://hub.test", spaceId: SPACE }], actor: "caller", clientInstanceId: successorClientInstanceId });
+        openArtifact({ documentId: DOCUMENT, schema: "gis.map", bindings: [{ kind: "hub", dataClass: "persistedShared", baseUrl: "http://hub.test", spaceId: SPACE }], actor: "caller", clientInstanceId: successorClientInstanceId, actorIdentityGrant: WORKER_LAW_ACTOR_IDENTITY_GRANT });
         const successor = artifactState(DOCUMENT, SPACE)!;
         successor.executionTargetLease = new DocumentExecutionTargetLease(documentExecutionTargetLeaseMintToken, leaseFields(true), "http://hub.test", new Uint8Array(1), encodePackValue({ manifest: { topicContributions: [{ topic: "semio.os.document-http-port/v1", payload: gisMapDocumentServiceWireDeclarationV1() }] } }));
         const operationEpoch = fixture.retainedClosing.operationEpoch + 11;
@@ -937,7 +937,7 @@ export async function registerGisInferencePortTests(vitest: Vitest, dependencies
     });
 
     it("keeps explicit English and German text for every phase, code and control with no default language", async () => {
-      const { GIS_MAP_INFERENCE_PORT_CODE_TEXT_V1, GIS_MAP_INFERENCE_PORT_CONTROL_TEXT_V1, GIS_MAP_INFERENCE_PORT_TEXT_V1, gisMapInferencePortRoleV1 } = await import("../../../../../../🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🧬️schema/🟦️.ts");
+      const { GIS_MAP_INFERENCE_PORT_CODE_TEXT_V1, GIS_MAP_INFERENCE_PORT_CONTROL_TEXT_V1, GIS_MAP_INFERENCE_PORT_TEXT_V1, gisMapInferencePortRoleV1 } = await import("@semio-tech/gis-gismap-js/inference/schema");
       const phases: readonly GisMapInferencePortStatusV1["phase"][] = ["idle", "submitting", "running", "offered", "approving", "indeterminate", "applied", "cancelled", "stale", "failed"];
       for (const phase of phases) {
         const row = GIS_MAP_INFERENCE_PORT_TEXT_V1[phase];

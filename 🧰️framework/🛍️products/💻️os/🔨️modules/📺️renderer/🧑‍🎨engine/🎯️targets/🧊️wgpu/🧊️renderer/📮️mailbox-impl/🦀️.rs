@@ -163,7 +163,7 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
         semio_framework_os_renderer_wgpu_engine_registry::engine_surface_registry::begin_engine_surface_close_token(token)
     }
 
-    pub fn close_engine_surface_step(&self, token: semio_framework_os_renderer_wgpu_engine_registry::engine_surface_registry::EngineSurfaceToken, operation: semio_framework_trace::OperationId, sequence: &mut u64) -> bool {
+    pub fn close_engine_surface_step(&self, token: semio_framework_os_renderer_wgpu_engine_registry::engine_surface_registry::EngineSurfaceToken, operation: semio_framework_trace::OperationId, sequence: &mut u64, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> bool {
         let Ok(mut runtime) = self.try_lock() else {
             return false;
         };
@@ -175,13 +175,15 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
             Some(deadline) => deadline,
             None => return false,
         };
+        let mut retained_progress = semio_framework_value::retained_clone::RetainedCloneProgress::default();
         let mut context = semio_framework_job::StepContext::new(
             operation,
             semio_framework_trace::Generation(token.generation),
-            semio_framework_job::StepBudget::new(1, deadline),
+            semio_framework_job::StepBudget::new(1, deadline, grant),
             semio_framework_job::root_cancel_token(),
             semio_framework_job::default_now_us,
             sequence,
+            &mut retained_progress,
         );
         semio_framework_os_renderer_wgpu_engine_registry::engine_surface_registry::close_engine_surface_step(token, &mut context, &mut interaction.input)
     }

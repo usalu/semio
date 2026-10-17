@@ -2,7 +2,7 @@
 use crate::standards::v1::subsets::any::schema::diff::{Puzzle2dDiff, Puzzle2dTargetRegionPatch, Puzzle2dTargetRegionsDelta};
 use protocol::list_delta::RowPatch;
 use crate::Puzzle2dSnapshot;
-use crate::standards::v1::subsets::any::schema::puzzle2d_finite;
+use crate::standards::v1::subsets::any::schema::records::puzzle2d_finite;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::ResizeTargetRegion, base: &Puzzle2dSnapshot) -> protocol::MutationOutcome<Puzzle2dDiff> {

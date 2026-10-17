@@ -1,5 +1,8 @@
-use super::super::{kind_of, kind_holding, ENTITIES};
-use super::*;
+use crate::editor::bim::entities::{kind_of, kind_holding, ENTITIES};
+use super::{available_usages, available_zones, create_area_scheme, create_zone, write_scheme_zones};
+use crate::editor::bim::entities::FieldRow;
+use crate::standards::v1::subsets::any::schema::snapshot::{AreaMeasure, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::mutations::ModelMutation;
 use crate::editor::bim::terminology::BimLabels;
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 

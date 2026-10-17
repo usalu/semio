@@ -136,8 +136,5 @@ fn topological_sort(nodes: &[String], edges: &[(String, String)]) -> FormsTopolo
 }
 //#endregion 🔖️Compute
 
-#[cfg(test)]
-//#region 🧪️Tests
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

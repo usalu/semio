@@ -1,4 +1,4 @@
-use crate::text::snapshot::*;
+use crate::snapshot::*;
 use semio_s_plugin_norm_compliance::AnnexChoice;
 use semio_s_artifact_norm_en1995_model::MemberRole;
 

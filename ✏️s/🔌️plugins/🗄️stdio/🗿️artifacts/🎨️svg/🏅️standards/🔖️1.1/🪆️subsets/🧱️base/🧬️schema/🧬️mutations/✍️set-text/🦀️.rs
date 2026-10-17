@@ -12,7 +12,10 @@ pub struct SetTextPayload {
     pub text: String,
 }
 
-impl protocol::MutationKind<SvgSnapshot, super::SvgMutation> for SetTextPayload {
+impl<Op> protocol::MutationKind<SvgSnapshot, Op> for SetTextPayload
+where
+    Op: protocol::Mutation<SvgSnapshot, Diff = SvgDiff> + From<SetTextPayload>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "text", kind: "set-text", record: "SetText" };
 
     fn diff(&self, _base: &SvgSnapshot) -> protocol::MutationOutcome<SvgDiff> {
@@ -20,10 +23,10 @@ impl protocol::MutationKind<SvgSnapshot, super::SvgMutation> for SetTextPayload 
         protocol::MutationOutcome::new(diff_at_path(path, SvgNodeDiff::Text { text: Some(text.clone()) }))
     }
 
-    fn inverse(&self, base: &SvgSnapshot) -> Result<Vec<super::SvgMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &SvgSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         let Self { path, .. } = self;
         Ok(match node_at(&base.doc, path) {
-            Ok(SvgNode::Text { text }) => vec![super::SvgMutation::SetText(Self { path: path.clone(), text: text.clone() })],
+            Ok(SvgNode::Text { text }) => vec![Op::from(Self { path: path.clone(), text: text.clone() })],
             _ => Vec::new(),
         })
     }
@@ -36,6 +39,4 @@ impl protocol::MutationKind<SvgSnapshot, super::SvgMutation> for SetTextPayload 
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

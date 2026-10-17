@@ -6,17 +6,48 @@
 //! label live, after a text reload and after a pack reload, because the projection only reads persisted facts (the edit's
 //! locale-neutral `verb` and its operations; an edit's description is never a label, design §20.6).
 
-use super::*;
-use crate::test_app_mutation_fixture::{SetCount, SetLabel, TestConfig, TestConfigMutation, TestMutation, TestSnapshot};
+#[cfg(any(test, feature = "artifact-app-testing"))]
+use semio_framework_plugin_decl_emission::ActionMeta;
+use semio_framework::kernel::ActorId;
+#[cfg(any(test, feature = "artifact-app-testing"))]
+use semio_framework_plugin_app_builder::App;
+#[cfg(test)]
+use semio_framework_plugin_decl_app::ArtifactApp;
+#[cfg(test)]
+use semio_framework_plugin_decl_emission::ArtifactMutationOutcome;
+use pack::snapshot::ArtifactPack;
+use store::{ArtifactStore, ArtifactStoreInitializationAuthority, ConfigStore, MemberFactory, Mutation, SpaceMember};
+#[cfg(test)]
+use semio_framework_plugin_decl_views::{ArtifactView, ConfigView, DraftView, InteractionView};
+use semio_framework_ui_runtime::ComponentTree;
+use std::future::Future;
+use semio_framework_ui_locale::{Locale, Terminology};
+#[cfg(any(test, feature = "artifact-app-testing"))]
+use semio_framework_plugin_decl_views::NoTransientMutation;
+#[cfg(test)]
+use semio_framework_plugin_interaction::UiAssemblyResult;
+#[cfg(test)]
+use semio_framework_plugin_window_config::WindowConfigOwner;
+#[cfg(test)]
+use semio_framework_plugin_window_transient::window_transient::WindowTransientOwner;
+use semio_framework_ui_contract::*;
+use semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::document::mutations::set_count::SetCount;
+use semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::document::mutations::set_label::SetLabel;
+use semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::config::TestConfig;
+use semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::config::mutations::TestConfigMutation;
+use semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::document::mutations::TestMutation;
+use semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::document::TestSnapshot;
 use serde_json::Value;
 
 const HISTORY_LABEL_RELOAD_FIXTURE_JSON: &str = include_str!("../🧫️fixtures/🧫️history-label-reload/🔣️.json");
 
-fn fixture() -> Value {
+#[doc(hidden)]
+pub fn fixture() -> Value {
     serde_json::from_str(HISTORY_LABEL_RELOAD_FIXTURE_JSON).expect("history-label-reload fixture parses")
 }
 
-fn text(value: &Value) -> &str {
+#[doc(hidden)]
+pub fn text(value: &Value) -> &str {
     value.as_str().unwrap_or_else(|| panic!("fixture text expected, got {value}"))
 }
 
@@ -42,7 +73,8 @@ impl ::protocol::OpBinary for LabelReloadCommand {
 }
 
 /// 🧪️ The fixture case's command.
-fn command(case: &Value) -> LabelReloadCommand {
+#[doc(hidden)]
+pub fn command(case: &Value) -> LabelReloadCommand {
     let value = &case["command"]["value"];
     let number = || value.as_i64().expect("integer command value") as i32;
     match text(&case["command"]["kind"]) {
@@ -56,7 +88,8 @@ fn command(case: &Value) -> LabelReloadCommand {
 }
 
 /// ✍️ The operations a fixture command authors.
-fn authored(command: &LabelReloadCommand) -> Vec<TestMutation> {
+#[doc(hidden)]
+pub fn authored(command: &LabelReloadCommand) -> Vec<TestMutation> {
     match command {
         LabelReloadCommand::Rename { value } | LabelReloadCommand::Retitle { value } => vec![set_label(value)],
         LabelReloadCommand::Reset { value } => vec![set_count(*value), set_label("reset")],
@@ -65,11 +98,13 @@ fn authored(command: &LabelReloadCommand) -> Vec<TestMutation> {
     }
 }
 
-fn set_label(value: &str) -> TestMutation {
+#[doc(hidden)]
+pub fn set_label(value: &str) -> TestMutation {
     SetLabel { value: value.to_string() }.into()
 }
 
-fn set_count(value: i32) -> TestMutation {
+#[doc(hidden)]
+pub fn set_count(value: i32) -> TestMutation {
     SetCount { value }.into()
 }
 
@@ -139,23 +174,23 @@ impl ArtifactApp for LabelReloadApp {
     }
 
     fn build_presence_store_disposer() -> Option<Box<dyn ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
-        Some(mutation_fixture::no_state::presence_store_disposer())
+        Some(semio_framework_plugin_decl_views::presence_retirement::no_presence_store_disposer())
     }
 
     fn build_transient_store_disposer() -> Option<Box<dyn ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
-        Some(mutation_fixture::no_state::transient_store_disposer())
+        Some(semio_framework_plugin_decl_views::transient_retirement::no_transient_store_disposer())
     }
 
     fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(mutation_fixture::no_state::presence_peer_retirement_factory())
+        Some(semio_framework_plugin_decl_views::presence_retirement::no_presence_peer_retirement_factory())
     }
 
     fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(mutation_fixture::no_state::presence_local_root_retirement_factory())
+        Some(semio_framework_plugin_decl_views::presence_retirement::no_presence_local_root_retirement_factory())
     }
 
     fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> {
-        Some(mutation_fixture::no_state::transient_local_root_retirement_factory())
+        Some(semio_framework_plugin_decl_views::transient_retirement::no_transient_local_root_retirement_factory())
     }
 }
 //#endregion 🧸️LabelReloadApp
@@ -164,7 +199,8 @@ impl ArtifactApp for LabelReloadApp {
 type LabelReloadInstance = VcsArtifactApp<LabelReloadApp>;
 
 /// 🛂️ The fixture app's manifest, declaring every registry verb of the fixture with its English and German label.
-async fn manifest(fixture: &Value) -> App {
+#[doc(hidden)]
+pub async fn manifest(fixture: &Value) -> App {
     let mut builder = App::builder(LabelReloadApp::APP_ID, LocalizedLabel::native("History Label Reload", "Verlaufsbeschriftung neu laden"))
         .await
         .document(["state"])
@@ -187,8 +223,9 @@ async fn edit_rows(app: &mut LabelReloadInstance) -> Vec<(String, String, String
 }
 
 /// 🆕️ A fresh registered instance of the fixture app, opened by `actor`.
-async fn open(fixture: &Value, actor: &str) -> LabelReloadInstance {
-    let mut app = artifact_app_laws::new_registered_app::<LabelReloadApp, _>(manifest(fixture), protocol::ActorId(actor.into()), crate::app_testing::artifact_app_laws::fixture_mounted_policy(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await;
+#[doc(hidden)]
+pub async fn open(fixture: &Value, actor: &str) -> LabelReloadInstance {
+    let mut app = artifact_app_laws::new_registered_app::<LabelReloadApp, _>(manifest(fixture), protocol::ActorId(actor.into()), semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity()).await;
     assert_eq!(app.stores.store.local_actor_id(), &protocol::ActorId(actor.into()));
     app
 }
@@ -199,7 +236,7 @@ async fn open(fixture: &Value, actor: &str) -> LabelReloadInstance {
 /// and the reloaded edits keep their verbs, declared by this app or not.
 #[semio_framework_async_macros::async_test]
 async fn history_labels_survive_a_text_and_a_pack_reload_in_every_locale() {
-    let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original caller policy admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+    let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original caller policy admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
     let fixture = fixture();
     let cases = fixture["cases"].as_array().expect("cases");
     let mut live = open(&fixture, "author").await;
@@ -207,20 +244,20 @@ async fn history_labels_survive_a_text_and_a_pack_reload_in_every_locale() {
         let (id, verb) = (text(&case["id"]), text(&case["verb"]));
         let artifact_mutations = authored(&command(case));
         let meta = ActionMeta { view_state: Some(ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)), ..artifact_app_laws::meta("author") };
-        live.dispatch_emit(verb, Emit::<TestMutation, TestConfigMutation, NoDraftMutation>::mutations(artifact_mutations), &meta, &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.unwrap_or_else(|fault| panic!("{id}: {fault:?}"));
+        live.dispatch_emit(verb, Emit::<TestMutation, TestConfigMutation, NoDraftMutation>::mutations(artifact_mutations), &meta, &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.unwrap_or_else(|fault| panic!("{id}: {fault:?}"));
     }
     let expected: Vec<(String, String, String)> = cases.iter().map(|case| (text(&case["verb"]).to_string(), text(&case["expected"]["en"]).to_string(), text(&case["expected"]["de"]).to_string())).collect();
     let verbs: Vec<Option<String>> = cases.iter().map(|case| Some(text(&case["verb"]).to_string())).collect();
     let mut reloaded = open(&fixture, "author").await;
-    artifact_app_laws::load_document_text(&mut reloaded, &live.document_text().await.expect("document text"), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect("text reload");
+    artifact_app_laws::load_document_text(&mut reloaded, &live.document_text().await.expect("document text"), &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("text reload");
     let mut repacked = open(&fixture, "reader").await;
-    artifact_app_laws::load_document(&mut repacked, &live.document_pack().await.expect("document pack"), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect("pack reload");
+    artifact_app_laws::load_document(&mut repacked, &live.document_pack().await.expect("document pack"), &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("pack reload");
     for (who, app) in [("live", &mut live), ("text reload", &mut reloaded), ("pack reload", &mut repacked)] {
         assert_eq!(edit_rows(app).await, expected, "{who}: every row keeps its verb and its English and German label");
         assert_eq!(app.stores.store.envelope().vcs.edits.iter().map(|edit| edit.verb.clone()).collect::<Vec<_>>(), verbs, "{who}: every edit carries the verb that authored it");
     }
     for app in [&mut live, &mut reloaded, &mut repacked] {
-        artifact_app_laws::close_registered_fixture_app(app, crate::app_testing::artifact_app_laws::fixture_mounted_policy(),cx).expect("original fixture terminal close");
+        artifact_app_laws::close_registered_fixture_app(app, semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(),cx).expect("original fixture terminal close");
     }
     }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original caller paid terminal retirement");result
 }

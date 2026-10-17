@@ -1,5 +1,7 @@
 //! 🧪️ Real source-owned miniature document for aggregate and registry integration laws.
 
+use semio_framework_test_fixtures::fixture_path;
+
 //#region 🧬️Document
 #[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 pub struct MiniDoc {
@@ -37,7 +39,7 @@ pub use mutations::*;
 #[test]
 fn mini_diff_rename_matches_neutral_names() {
     use protocol::DiffAlgebra;
-    let fixture: serde_json::Value = serde_json::from_str(std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../🧪️testing/🧬️mutation-laws/🔣️.json")).expect("fixture").as_str()).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(std::fs::read_to_string(fixture_path!("../../../../../🧪️testing/🧬️mutation-laws/🔣️.json")).expect("fixture").as_str()).unwrap();
     for row in fixture["rename"].as_array().unwrap() {
         let base: MiniDoc = serde_json::from_value(serde_json::json!({"name": row["base"].as_str().unwrap()})).unwrap();
         let other: MiniDoc = serde_json::from_value(serde_json::json!({"name": row["other"].as_str().unwrap()})).unwrap();
@@ -47,5 +49,4 @@ fn mini_diff_rename_matches_neutral_names() {
         assert_eq!(diff.is_empty(), base == other);
         assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&diff)).unwrap(), serde_json::to_value(&diff).unwrap());
     }
-    println!("[DEBUG] canonical miniature fixture rename/inverse/empty uses original neutral names and independent serde wire");
 }

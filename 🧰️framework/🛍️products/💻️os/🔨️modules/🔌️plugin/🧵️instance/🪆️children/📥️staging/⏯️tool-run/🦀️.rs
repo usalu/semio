@@ -2,27 +2,31 @@
 //!
 //! ⏯️ The mounted instance's tool-run turns (ledger driving, tick folding and finalize publication) and the
 //! [`ToolRunExtension`] that registers them with the instance through [`InstanceExtension`].
-use super::*;
-use crate::tool_jobs::tool_run::*;
-use semio_framework_tool_run::{
-    tool_run_pointer_value, ToolRunAction, ToolRunEffect, ToolRunEvent, ToolRunId, ToolRunIdentity, ToolRunLane, ToolRunMachine, ToolRunRebasePolicy, ToolRunReconfigurePolicy,
-    ToolRunRejection, ToolRunSettingsReads, ToolRunState, ToolRunStepArg, ToolRunStepKind, ToolRunStepRing, ToolRunTick, ToolRunTraceStore, TOOL_RUN_ARG_GENERATION, TOOL_RUN_ARG_RUN_ID, TOOL_RUN_ARG_TOOL_ID, TOOL_RUN_ARG_WINDOW_ID, TOOL_RUN_REASON_CONFLICT, TOOL_RUN_REASON_REBASING, TOOL_RUN_TICK_BYTES_MAX,
-};
-use std::sync::Arc;
-use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,admit_retained_clone_close}};
-use crate::artifact_instance::InstanceExtension;
-use crate::artifact_instance::VcsArtifactApp;
-use crate::app_emission::ActionMeta;
-use crate::child_view::MemberKeyRef;
-use crate::tool_run_contract::ToolRunJobRequest;
-use semio_framework::{ActionKind, ViewModel};
-use store::{os_store::store_schema::HistoryLane, MemberFactory, SpaceMember};
-use semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority;
+use semio_framework_plugin_tool_run::ToolRunMemberFold;
+use semio_framework_plugin_tool_run::ToolRunMemberGeneration;
+use semio_framework_plugin_tool_run::ToolRunMemberRun;
+use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use pack::snapshot::ArtifactPack;
+use semio_framework_plugin_decl_emission::Emit;
+use semio_framework::FaultFrom;
+use store::Mutation;
+use protocol::OpText;
+use semio_framework_plugin_reactor_app::PluginApp;
+use crate::children_components::ChildComposition;
+use semio_framework_plugin_child::ChildContentRetirement;
+use semio_framework_plugin_decl_views::child_view::ChildContentView;
+use semio_framework::{Fault, FaultCode, FaultOrigin};
+use std::future::Future;
+use semio_framework_ui_contract::*;
+use semio_framework_plugin_tool_run::*;
+use semio_framework_plugin_decl_views::child_view::MemberKeyRef;
+use semio_framework_os_kernel::{MemberFactory, SpaceMember};
 
 impl<M: SpaceMember + MemberFactory + 'static> ChildComposition<M> {
     /// 🧩️ The member a run declaring `ToolRunDefinition::member` edits: the one live owned child composed under `slot`, with
     /// the member store generation the run rests on. No such child, or several, refuse the start by name.
-    pub(crate) fn tool_run_member_target(&self, slot: &str) -> Result<ToolRunMemberRun, Fault> {
+    pub fn tool_run_member_target(&self, slot: &str) -> Result<ToolRunMemberRun, Fault> {
         let mut candidates = self.children.keyed_entries().filter(|(key, _)| key.owner.is_empty() && key.slot == slot).map(|(_, entry)| entry);
         let (Some(entry), None) = (candidates.next(), candidates.next()) else {
             return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("toolRun.member-unavailable"), format!("a member tool run needs exactly one live owned child in slot '{slot}'")));
@@ -45,7 +49,7 @@ impl<M: SpaceMember + MemberFactory + 'static> ChildComposition<M> {
 
     /// 🔁️ [`Self::refresh_tool_run_member`] on a member taken out of its entry: `(fold pending, conflicts, rebased)`, or
     /// `None` when the overlay already shows every op.
-    pub(crate) fn refresh_member_overlay(&mut self, member: &mut ToolRunMemberRun, deadline: u64) -> Result<Option<(bool, u32, bool)>, Fault> {
+    pub fn refresh_member_overlay(&mut self, member: &mut ToolRunMemberRun, deadline: u64) -> Result<Option<(bool, u32, bool)>, Fault> {
         let stale = std::mem::take(&mut member.stale);
         self.retire_tool_run_views(stale, &mut member.stale)?;
         if !member.rebase && member.shown == member.ops.len() {
@@ -74,7 +78,7 @@ impl<M: SpaceMember + MemberFactory + 'static> ChildComposition<M> {
 
     /// 🧹️ Retires a member run's composed reads in order through the child-content retirements, one admitted generation
     /// each; a refused admission hands the view it could not retire and every later one back to `unretired`.
-    pub(crate) fn retire_tool_run_views(&mut self, views: Vec<ChildContentView>, unretired: &mut Vec<ChildContentView>) -> Result<(), Fault> {
+    pub fn retire_tool_run_views(&mut self, views: Vec<ChildContentView>, unretired: &mut Vec<ChildContentView>) -> Result<(), Fault> {
         let mut views = views.into_iter();
         while let Some(view) = views.next() {
             match self.admit_child_content_publication() {

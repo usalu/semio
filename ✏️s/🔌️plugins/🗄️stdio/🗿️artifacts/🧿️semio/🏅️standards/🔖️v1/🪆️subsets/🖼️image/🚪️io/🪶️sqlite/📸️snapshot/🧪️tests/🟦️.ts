@@ -30,7 +30,6 @@ test("Semio image complete and intermediate RGBA8 owners have independently edit
    }
   }finally{physical.close();}
  }
- console.log("[DEBUG] Semio image independently queried and edited ordered channel samples across all four complete and intermediate owners");
 
 });
 
@@ -39,5 +38,5 @@ import{independentSqliteExtent as completeIndependentExtent}from "@semio-tech/fr
 test("Semio Image Native matched full and metadata empty independently preserve all complete cells",async()=>{
  for(const item of completeSemanticContract.cases){const source=structuredClone(item.sourceSnapshot)as unknown as SemioImageSnapshot;;const database=await semioImageSnapshotToSqliteDatabase(source),bytes=await exportSqliteDatabase(database);expect(completeIndependentExtent(bytes)).toEqual({rows:item.rows,valueBytes:item.valueBytes,schemaBytes:completeSemanticContract.schemaBytes,tableWidths:completeSemanticContract.tableWidths});const limits={maxRows:item.rows,maxValueBytes:item.valueBytes,maxSchemaBytes:completeSemanticContract.schemaBytes,maxTables:4,maxColumns:7};expect(await semioImageSnapshotToSqliteDatabase(source,limits)).toEqual(database);expect(await semioImageSnapshotFromSqliteDatabase(await importSqliteDatabase(bytes),limits)).toEqual(source);
  for(const short of[{...limits,maxRows:item.rows-1},{...limits,maxValueBytes:item.valueBytes-1},{...limits,maxSchemaBytes:limits.maxSchemaBytes-1},{...limits,maxTables:3},{...limits,maxColumns:6}]){await expect(semioImageSnapshotToSqliteDatabase(source,short)).rejects.toThrow();await expect(semioImageSnapshotFromSqliteDatabase(database,short)).rejects.toThrow();}
- }console.log("[DEBUG] Semio Image independently measured Native matched full and empty roles through all5 copied limits");
+ }
 });

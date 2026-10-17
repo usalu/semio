@@ -15,20 +15,20 @@ use semio_framework_value_derive::{FromValue, ToValue};
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutations(snapshot = Grid2dSnapshot, diff = Grid2dDiff, schema = "wfcgrid2d")]
 pub enum Grid2dMutation {
-    ChangeSeed(super::change_seed::ChangeSeed),
-    ResizeGrid(super::resize_grid::ResizeGrid),
-    ChangeCellSize(super::change_cell_size::ChangeCellSize),
-    ChangePeriodicity(super::change_periodicity::ChangePeriodicity),
-    CreateTile(super::create_tile::CreateTile),
-    DeleteTile(super::delete_tile::DeleteTile),
-    ChangeTileWeight(super::change_tile_weight::ChangeTileWeight),
-    ChangeTileMedia(super::change_tile_media::ChangeTileMedia),
-    CreateRule(super::create_rule::CreateRule),
-    DeleteRule(super::delete_rule::DeleteRule),
-    PinCell(super::pin_cell::PinCell),
-    UnpinCell(super::unpin_cell::UnpinCell),
-    MaskCell(super::mask_cell::MaskCell),
-    UnmaskCell(super::unmask_cell::UnmaskCell),
+    ChangeSeed(crate::standards::v1::subsets::any::schema::mutations::change_seed::ChangeSeed),
+    ResizeGrid(crate::standards::v1::subsets::any::schema::mutations::resize_grid::ResizeGrid),
+    ChangeCellSize(crate::standards::v1::subsets::any::schema::mutations::change_cell_size::ChangeCellSize),
+    ChangePeriodicity(crate::standards::v1::subsets::any::schema::mutations::change_periodicity::ChangePeriodicity),
+    CreateTile(crate::standards::v1::subsets::any::schema::mutations::create_tile::CreateTile),
+    DeleteTile(crate::standards::v1::subsets::any::schema::mutations::delete_tile::DeleteTile),
+    ChangeTileWeight(crate::standards::v1::subsets::any::schema::mutations::change_tile_weight::ChangeTileWeight),
+    ChangeTileMedia(crate::standards::v1::subsets::any::schema::mutations::change_tile_media::ChangeTileMedia),
+    CreateRule(crate::standards::v1::subsets::any::schema::mutations::create_rule::CreateRule),
+    DeleteRule(crate::standards::v1::subsets::any::schema::mutations::delete_rule::DeleteRule),
+    PinCell(crate::standards::v1::subsets::any::schema::mutations::pin_cell::PinCell),
+    UnpinCell(crate::standards::v1::subsets::any::schema::mutations::unpin_cell::UnpinCell),
+    MaskCell(crate::standards::v1::subsets::any::schema::mutations::mask_cell::MaskCell),
+    UnmaskCell(crate::standards::v1::subsets::any::schema::mutations::unmask_cell::UnmaskCell),
 }
 
 //#region 🏷️Kinds
@@ -77,20 +77,7 @@ pub fn ordered_cell_index<T>(cells: &[T], x: u32, y: u32, key: impl Fn(&T) -> (u
 //#endregion 🔖️CanonicalPosition
 
 //#region 🔖️Builders
-pub use super::change_cell_size::change_cell_size;
-pub use super::change_periodicity::change_periodicity;
-pub use super::change_seed::change_seed;
-pub use super::change_tile_media::change_tile_media;
-pub use super::change_tile_weight::change_tile_weight;
-pub use super::create_rule::create_rule;
-pub use super::create_tile::create_tile;
-pub use super::delete_rule::delete_rule;
-pub use super::delete_tile::delete_tile;
-pub use super::mask_cell::mask_cell;
-pub use super::pin_cell::pin_cell;
-pub use super::resize_grid::resize_grid;
-pub use super::unmask_cell::unmask_cell;
-pub use super::unpin_cell::unpin_cell;
+pub use crate::standards::v1::subsets::any::schema::mutations::change_tile_media::change_tile_media;
 //#endregion 🔖️Builders
 
 pub type Grid2dEnvelope = store::os_store::store_schema::ArtifactEnvelope<Grid2dSnapshot, Grid2dMutation>;
@@ -113,3 +100,70 @@ pub fn inverse_grid2d_mutation(projection: &Grid2dSnapshot, mutation: &Grid2dMut
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🔖️ConcreteBuilders
+/// 🏗️ Builder of the `change_cell_size` leaf for this aggregate; the leaf builder stays generic over its aggregate.
+pub fn change_cell_size(cell_width: f64, cell_height: f64) -> Grid2dMutation {
+    crate::standards::v1::subsets::any::schema::mutations::change_cell_size::change_cell_size::<Grid2dMutation>(cell_width, cell_height)
+}
+
+/// 🏗️ Builder of the `change_periodicity` leaf for this aggregate; the leaf builder stays generic over its aggregate.
+pub fn change_periodicity(periodic_x: bool, periodic_y: bool) -> Grid2dMutation {
+    crate::standards::v1::subsets::any::schema::mutations::change_periodicity::change_periodicity::<Grid2dMutation>(periodic_x, periodic_y)
+}
+
+/// 🏗️ Builder of the `change_seed` leaf for this aggregate; the leaf builder stays generic over its aggregate.
+pub fn change_seed(seed: u64) -> Grid2dMutation {
+    crate::standards::v1::subsets::any::schema::mutations::change_seed::change_seed::<Grid2dMutation>(seed)
+}
+
+/// 🏗️ Builder of the `change_tile_weight` leaf for this aggregate; the leaf builder stays generic over its aggregate.
+pub fn change_tile_weight(id: String, weight: f64) -> Grid2dMutation {
+    crate::standards::v1::subsets::any::schema::mutations::change_tile_weight::change_tile_weight::<Grid2dMutation>(id, weight)
+}
+
+/// 🏗️ Builder of the `create_rule` leaf for this aggregate; the leaf builder stays generic over its aggregate.
+pub fn create_rule(rule: WfcAdjacencyRule2d) -> Grid2dMutation {
+    crate::standards::v1::subsets::any::schema::mutations::create_rule::create_rule::<Grid2dMutation>(rule)
+}
+
+/// 🏗️ Builder of the `create_tile` leaf for this aggregate; the leaf builder stays generic over its aggregate.
+pub fn create_tile(tile: WfcTile2d) -> Grid2dMutation {
+    crate::standards::v1::subsets::any::schema::mutations::create_tile::create_tile::<Grid2dMutation>(tile)
+}
+
+/// 🏗️ Builder of the `delete_rule` leaf for this aggregate; the leaf builder stays generic over its aggregate.
+pub fn delete_rule(id: String) -> Grid2dMutation {
+    crate::standards::v1::subsets::any::schema::mutations::delete_rule::delete_rule::<Grid2dMutation>(id)
+}
+
+/// 🏗️ Builder of the `delete_tile` leaf for this aggregate; the leaf builder stays generic over its aggregate.
+pub fn delete_tile(id: String) -> Grid2dMutation {
+    crate::standards::v1::subsets::any::schema::mutations::delete_tile::delete_tile::<Grid2dMutation>(id)
+}
+
+/// 🏗️ Builder of the `mask_cell` leaf for this aggregate; the leaf builder stays generic over its aggregate.
+pub fn mask_cell(x: u32, y: u32) -> Grid2dMutation {
+    crate::standards::v1::subsets::any::schema::mutations::mask_cell::mask_cell::<Grid2dMutation>(x, y)
+}
+
+/// 🏗️ Builder of the `pin_cell` leaf for this aggregate; the leaf builder stays generic over its aggregate.
+pub fn pin_cell(x: u32, y: u32, tile_id: String) -> Grid2dMutation {
+    crate::standards::v1::subsets::any::schema::mutations::pin_cell::pin_cell::<Grid2dMutation>(x, y, tile_id)
+}
+
+/// 🏗️ Builder of the `resize_grid` leaf for this aggregate; the leaf builder stays generic over its aggregate.
+pub fn resize_grid(width: u32, height: u32) -> Grid2dMutation {
+    crate::standards::v1::subsets::any::schema::mutations::resize_grid::resize_grid::<Grid2dMutation>(width, height)
+}
+
+/// 🏗️ Builder of the `unmask_cell` leaf for this aggregate; the leaf builder stays generic over its aggregate.
+pub fn unmask_cell(x: u32, y: u32) -> Grid2dMutation {
+    crate::standards::v1::subsets::any::schema::mutations::unmask_cell::unmask_cell::<Grid2dMutation>(x, y)
+}
+
+/// 🏗️ Builder of the `unpin_cell` leaf for this aggregate; the leaf builder stays generic over its aggregate.
+pub fn unpin_cell(x: u32, y: u32) -> Grid2dMutation {
+    crate::standards::v1::subsets::any::schema::mutations::unpin_cell::unpin_cell::<Grid2dMutation>(x, y)
+}
+//#endregion 🔖️ConcreteBuilders

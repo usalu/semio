@@ -1,8 +1,8 @@
 //! 📝️ replace-page-text text payload owner.
 
 use crate::standards::v1_4::subsets::base::schema::mutations::PdfMutation;
-use crate::standards::v1_4::subsets::base::io::text::mutations::{hex, unhex};
-use crate::standards::v1_4::subsets::base::schema::mutations::ReplacePageText;
+use crate::standards::v1_4::subsets::base::io::text::mutations::wire::{hex, unhex};
+use crate::standards::v1_4::subsets::base::schema::mutations::replace_page_text::ReplacePageText;
 
 //#region 🔖️Codec
 pub const OPCODE: &str = "replace-page-text";

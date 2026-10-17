@@ -1,4 +1,11 @@
-use super::*;
+use semio_framework_plugin::WindowMeasure;
+#[allow(unused_imports)]
+use crate::editor::shooting::terminology::ShootingLabels;
+#[allow(unused_imports)]
+use crate::ShootingSnapshot;
+#[allow(unused_imports)]
+use semio_framework_plugin::MeasureSelectItem;
+use crate::editor::shooting::modes::edit::windows::icon::options::shot::*;
 use crate::editor::shooting::terminology::shooting_play_labels;
 
 #[semio_framework_async_macros::async_test]

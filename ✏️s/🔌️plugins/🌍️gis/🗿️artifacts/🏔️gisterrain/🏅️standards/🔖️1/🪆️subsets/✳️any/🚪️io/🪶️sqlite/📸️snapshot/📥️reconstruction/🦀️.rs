@@ -112,7 +112,7 @@ fn snapshot(database: &SqliteDatabase, owner: &mut Owner<'_, '_>) -> Result<GisT
  rows.finish(owner)?; owner.native.checkpoint()?; Ok(GisTerrainSnapshot { exaggeration, imported_map, mesh })
 }
 
-pub(super) fn reconstruct(database: &SqliteDatabase, control: &mut SqliteSnapshotControl<'_>) -> Result<GisTerrainSnapshot, ValueError> {
+pub fn reconstruct(database: &SqliteDatabase, control: &mut SqliteSnapshotControl<'_>) -> Result<GisTerrainSnapshot, ValueError> {
  store::sqlite_snapshot::validate_sqlite_database_schema_controlled(database, <GisTerrainSnapshot as store::os_store::serialization::ArtifactSqliteSnapshotHost>::SQLITE_SCHEMA, SqliteSnapshotPhase::ReconstructSnapshot, control)?;
  control.check_database(database, SqliteSnapshotPhase::ReconstructSnapshot)?;
  let maximum = control.reconstruction_remaining_bytes()?; let mut semantic = 0usize;

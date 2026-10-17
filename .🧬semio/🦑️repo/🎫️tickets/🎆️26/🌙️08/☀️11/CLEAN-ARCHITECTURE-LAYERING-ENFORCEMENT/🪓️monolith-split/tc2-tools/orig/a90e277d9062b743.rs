@@ -1,0 +1,93 @@
+//! 🔤 `change-frame-wrap-mode` — sets a `Frame::Text`'s `wrap_mode`. A no-op on non-text frames.
+
+
+use semio_s_artifact_layout_layout_diff::{LayoutPagesDelta, PageFramesDelta, PagePatch};
+use crate::standards::v1::subsets::any::schema::diff::LayoutPagesModification;
+use semio_s_artifact_layout_layout_model::Frame;
+use semio_s_artifact_layout_layout_diff::{FramePatch, LayoutDiff};
+use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
+use protocol::{MutationKind, SemanticDescriptor};
+use semio_framework_value_derive::{FromValue, ToValue};
+
+//#region 🔤ChangeFrameWrapMode
+#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[mutation_leaf(contract = ::protocol)]
+#[value(rename_all = "camelCase")]
+pub struct ChangeFrameWrapMode {
+    pub page_id: String,
+    pub frame_id: String,
+    pub new_wrap_mode: String,
+}
+
+impl<Op> MutationKind<LayoutSnapshot, Op> for ChangeFrameWrapMode where Op: protocol::Mutation<LayoutSnapshot, Diff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::change_frame_wrap_mode::ChangeFrameWrapMode> {
+    const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "frame-wrap-mode", kind: "change-frame-wrap-mode", record: "ChangedFrameWrapMode" };
+    fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
+        diff_change_frame_wrap_mode(self, base)
+    }
+    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    Ok({
+        inverse_change_frame_wrap_mode(self, base)?
+    
+    })
+}
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change frame \"{}\" wrap mode", self.frame_id), &format!("Umbruchmodus von Rahmen \"{}\" ändern", self.frame_id))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.page_id.clone(), self.frame_id.clone()]
+    }
+}
+//#endregion 🔤ChangeFrameWrapMode
+
+//#region 🔤ChangeFrameWrapMode
+pub fn diff_change_frame_wrap_mode(payload: &ChangeFrameWrapMode, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
+    let Some(page) = base.pages.iter().find(|page| page.id == payload.page_id) else {
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Page \"{}\" does not exist.", payload.page_id), [payload.page_id.clone()]);
+    };
+    let Some(frame) = page.frames.iter().find(|frame| frame.id() == payload.frame_id) else {
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Frame \"{}\" does not exist on page \"{}\".", payload.frame_id, payload.page_id), [payload.frame_id.clone()]);
+    };
+    if let Frame::Text { wrap_mode, .. } = frame {
+        if *wrap_mode == payload.new_wrap_mode {
+            return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Frame \"{}\" already has wrap mode \"{}\".", payload.frame_id, payload.new_wrap_mode));
+        }
+    }
+    protocol::MutationOutcome::new(LayoutDiff {
+        pages: Some(LayoutPagesDelta {
+            modified: vec![LayoutPagesModification {
+                id: payload.page_id.clone(),
+                patch: PagePatch { frames: PageFramesDelta::modification(payload.frame_id.clone(), FramePatch { wrap_mode: Some(payload.new_wrap_mode.clone()), ..Default::default() }), ..Default::default() },
+            }],
+            ..Default::default()
+        }),
+        ..Default::default()
+    })
+}
+//#endregion 🔤ChangeFrameWrapMode
+
+//#region 🔤ChangeFrameWrapMode
+pub fn inverse_change_frame_wrap_mode<Op: From<crate::change_frame_wrap_mode::ChangeFrameWrapMode>>(payload: &ChangeFrameWrapMode, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    Ok((|| {
+    let Some(page) = base.pages.iter().find(|page| page.id == payload.page_id) else {
+        return Vec::new();
+    };
+    let Some(frame) = page.frames.iter().find(|frame| frame.id() == payload.frame_id) else {
+        return Vec::new();
+    };
+    let Frame::Text { wrap_mode, .. } = frame else {
+        return Vec::new();
+    };
+    vec![Op::from(ChangeFrameWrapMode { page_id: payload.page_id.clone(), frame_id: payload.frame_id.clone(), new_wrap_mode: wrap_mode.clone() })]
+
+    })())
+}
+//#endregion 🔤ChangeFrameWrapMode
+
+//#region 🪢️TaxonomyMounts
+#[cfg(test)]
+#[path = "🧪️tests/🔤️switches/🦀️.rs"]
+mod tests_switches_the_text_frame_to_column_wrap;
+//#endregion 🪢️TaxonomyMounts

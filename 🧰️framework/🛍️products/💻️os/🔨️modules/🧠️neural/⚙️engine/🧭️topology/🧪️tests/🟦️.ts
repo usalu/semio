@@ -11,5 +11,4 @@ expect(testingSchemaExists(new URL("../🧬️schema/🔣️.json",import.meta.u
   const order=[...row.nodes].sort((left,right)=>(levels.get(left)??0)-(levels.get(right)??0)||(left<right?-1:left>right?1:0));expect(order).toEqual(row.order);
   for(const [from,to] of row.edges)expect(order.indexOf(from)).toBeLessThan(order.indexOf(to));
  }
- console.log("[DEBUG] Original retained topology schemaAuthority=absent Graphlib=3 sourceConservation=unqualified");
 });

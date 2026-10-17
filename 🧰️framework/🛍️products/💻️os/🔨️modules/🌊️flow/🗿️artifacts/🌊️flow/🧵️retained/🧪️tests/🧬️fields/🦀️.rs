@@ -37,6 +37,5 @@ fn flow_all_widget_fields_close_under_independent_work_birth_release_and_depth()
             let (step,a,r)=observe(||owner.step(grant).unwrap());let progress=step.progress();assert_eq!((progress.retained_capacity_bytes,progress.released_bytes),(a,r));assert!(progress.copied_items<=1&&progress.copied_bytes<=copy);allocated+=a;released+=r;copied+=progress.copied_bytes;assert!(progress.copied_items!=0,"exact Flow field grant blocked on turn {turn}");
         }
         assert!(owner.terminal_is_empty());assert_eq!(copied,expected);assert_eq!(released,original+allocated);
-        eprintln!("[DEBUG] Actual Flow fields copy={copy} work={copied} original={original} births={allocated} physical={released}");
     }
 }

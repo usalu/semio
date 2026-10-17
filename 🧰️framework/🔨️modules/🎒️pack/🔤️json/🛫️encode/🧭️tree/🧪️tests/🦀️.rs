@@ -100,7 +100,6 @@ fn canonical_native_paged_tree_arbitrary_depth_and_cancellation_conserve_actual_
             assert!(source.terminal_is_empty());
             let(_,heap)=observe_heap_allocations_on_this_thread(||drop(source));
             assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
-            println!("[DEBUG] native canonical tree depth={depth} pause={pause:?} turns={turns}; exact Serde prefix, original projection aliases, 4096 copy/capacity, separate physical release, terminal drop zero heap");
         }
     }
 }
@@ -152,7 +151,6 @@ fn canonical_native_derived_mutation_fields_match_serde_and_original_projection_
      let(step,heap)=observe_heap_allocations_on_this_thread(||source.close_step(grant).unwrap());assert!(step.progress().fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));assert!(turn<99999||source.terminal_is_empty());
     }
     assert!(source.terminal_is_empty());let(_,heap)=observe_heap_allocations_on_this_thread(||drop(source));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
-    println!("[DEBUG] derived native mutation visible={visible:?} repeat={repeat} pause={pause:?} turns={turns}; actual original payload field projection, independent Serde bytes, 4096 perturn and exact source/alias closure");
    }
   }
  }
@@ -182,7 +180,6 @@ fn canonical_native_scalar_initializes_only_real_prefix_and_preserves_immutable_
   }
   assert_eq!(inspections,1);assert_eq!(actual,oracle);drop(cursor);
   for turn in 0..10000{if source.terminal_is_empty(){break;}let(step,heap)=observe_heap_allocations_on_this_thread(||source.close_step(policy).unwrap());assert!(step.progress().fits(policy));assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));assert!(turn<9999||source.terminal_is_empty());}assert!(source.terminal_is_empty());drop(source);
-  println!("[DEBUG] original canonical scalar prefix={} initialized once; independent Serde, denied original copy, exact System births/releases and fixed plain grant",oracle.len());
  }
 }
 
@@ -220,7 +217,6 @@ fn canonical_native_leaf_impls_match_independent_serde_json_output() {
         assert!(source.close_step(grant).unwrap().progress().fits(grant));
     }
     assert!(source.terminal_is_empty());
-    println!("[DEBUG] canonical leaf impls u16/u32/u128/i8/i16/i128/isize/f32/unit/Number/DslValue equal serde_json: {oracle}");
 }
 
 fn canonical_bytes<T:ArtifactCanonicalJsonTree+semio_framework_value::retirement::RetireOwned>(root:T)->Vec<u8>{
@@ -259,7 +255,6 @@ fn canonical_native_ordered_and_hashed_maps_match_independent_serde_json_output(
     assert_eq!(actual,oracle);
     assert_eq!(serde_json::from_str::<serde_json::Value>(&actual).unwrap(),serde_json::to_value(&hashed).unwrap());
     assert_eq!(String::from_utf8(canonical_bytes(std::collections::BTreeMap::<String,f64>::new())).unwrap(),"{}");
-    println!("[DEBUG] canonical BTreeMap/HashMap objects equal serde_json (sorted keys): {actual}");
 }
 
 #[test]
@@ -279,7 +274,6 @@ fn canonical_native_ordered_roots_match_serde_json_and_their_to_value_wire() {
     assert_eq!(String::from_utf8(canonical_bytes(set)).unwrap(),expected);
     assert_eq!(String::from_utf8(canonical_bytes(OrderedMap::<f64>::new())).unwrap(),"{}");
     assert_eq!(String::from_utf8(canonical_bytes(OrderedSet::new())).unwrap(),"[]");
-    println!("[DEBUG] canonical OrderedMap/OrderedSet equal serde_json and ToValue wire: {expected}");
 }
 
 #[test]
@@ -297,7 +291,6 @@ fn canonical_native_decimal_u64_text_matches_serde_json_string_output() {
     assert_eq!(ArtifactCanonicalDecimalU64::from_value(wire).unwrap(), ArtifactCanonicalDecimalU64(u64::MAX));
     assert!(ArtifactCanonicalDecimalU64::from_value(semio_framework_value::DslValue::String("007".into())).is_err());
     assert!(ArtifactCanonicalDecimalU64::from_value(semio_framework_value::DslValue::String("18446744073709551616".into())).is_err());
-    println!("[DEBUG] canonical decimal u64 text equals serde_json string output");
 }
 
 fn is_zero_byte(value:&u8)->bool{*value==0}
@@ -374,7 +367,6 @@ fn canonical_native_field_roles_match_serde_json_and_to_value_wire() {
         use semio_framework_value::ToValue;
         assert_eq!(serde_json::Value::from(&roles.to_value()),serde_json::from_str::<serde_json::Value>(expected).unwrap());
         assert_eq!(String::from_utf8(canonical_bytes(roles)).unwrap(),expected);
-        println!("[DEBUG] derived field roles equal serde_json and ToValue wire: {expected}");
     }
 }
 
@@ -397,7 +389,6 @@ fn canonical_native_variant_field_roles_match_serde_json() {
         let marker=DerivedMarker::Mark{prolog_position:position,payload,pad_byte};
         let oracle=serde_json::to_string(&marker).unwrap();
         assert_eq!(String::from_utf8(canonical_bytes(marker)).unwrap(),oracle);
-        println!("[DEBUG] derived variant field roles equal serde_json: {oracle}");
     }
     assert_eq!(String::from_utf8(canonical_bytes(DerivedMarker::Bare)).unwrap(),serde_json::to_string(&DerivedMarker::Bare).unwrap());
 }
@@ -457,7 +448,6 @@ fn canonical_native_hex_words_match_the_managed_mesh_word_wire_and_serde_json() 
             expected.push_str(&format!(",\"scale\":{}}}",scale.map_or("null".into(),|value|format!("\"{}\"",word_text(&value)))));
             assert_eq!(serde_json::to_string(&words).unwrap(),expected);
             assert_eq!(String::from_utf8(canonical_bytes(words)).unwrap(),expected);
-            println!("[DEBUG] derived hex words equal serde_json and the managed mesh word wire: {expected}");
         }
     }
 }
@@ -523,7 +513,6 @@ fn canonical_native_tree_role_matches_the_custom_value_serializer_and_serde_json
         let child=roles.canonical_tree_child(0).unwrap();
         assert_eq!(child as*const dyn ArtifactCanonicalJsonTree as*const (),&roles.inner as*const TreeInner as*const ());
         assert_eq!(String::from_utf8(canonical_bytes(roles)).unwrap(),oracle);
-        println!("[DEBUG] derived tree role equals serde_json and the custom serializer wire: {oracle}");
     }
 }
 
@@ -593,7 +582,6 @@ fn canonical_native_flatten_splices_at_field_position_like_serde_json_and_to_val
         let first_header=root.canonical_tree_child(1).unwrap();
         assert_eq!(first_header as*const dyn ArtifactCanonicalJsonTree as*const (),&root.nested.header.id as*const String as*const ());
         assert_eq!(String::from_utf8(canonical_bytes(root)).unwrap(),expected);
-        println!("[DEBUG] derived flatten equals serde_json, ToValue member order and member count: {expected}");
     }
 }
 
@@ -666,7 +654,6 @@ fn canonical_native_externally_tagged_named_variants_match_serde_json_and_to_val
         assert_eq!(serde_json::to_string(&shape).unwrap(),expected);
         assert_eq!(serde_json::Value::from(&shape.to_value()),serde_json::from_str::<serde_json::Value>(expected).unwrap());
         assert_eq!(String::from_utf8(canonical_bytes(shape)).unwrap(),expected);
-        println!("[DEBUG] derived externally tagged variant equals serde_json and ToValue: {expected}");
     }
 }
 
@@ -676,7 +663,6 @@ fn canonical_native_externally_tagged_variants_support_every_field_role_and_gene
         let rich=ExternalRich::Placed{serial_number,header:FlatHeader{id:"h".into(),note:note.map(Into::into)},weight:f32::from_bits(0x3fc0_0000),payload:vec![0,255],scratch:9};
         let oracle=serde_json::to_string(&rich).unwrap();
         assert_eq!(String::from_utf8(canonical_bytes(rich)).unwrap(),oracle);
-        println!("[DEBUG] derived externally tagged rich variant equals serde_json: {oracle}");
     }
     for rich in [ExternalRich::Hollow{},ExternalRich::Bare] {
         let oracle=serde_json::to_string(&rich).unwrap();
@@ -776,10 +762,9 @@ fn bulk_canonical_walk_is_byte_identical_to_the_one_event_walk_and_to_serde() {
   for window in [FLAT_MINIMUM_BYTES,33,64,255,256,4096,1<<16] {
    let(bulk,bulk_turns)=encode_with_window(bulk_document(scale),window);
    assert_eq!(bulk,legacy,"scale {scale} window {window}: bulk bytes equal the one-event walk");
-   if window==4096 {println!("[DEBUG] bulk canonical walk scale={scale} window=4096 bytes={} bulkTurns={bulk_turns} oneEventTurns={legacy_turns}",bulk.len());}
+   if window==4096 {}
    if window==4096&&scale>=1000 {assert!(bulk_turns*40<legacy_turns,"scale {scale}: {bulk_turns} bulk turns vs {legacy_turns} one-event turns");}
   }
-  println!("[DEBUG] bulk canonical walk scale={scale} bytes={} oneEventTurns={legacy_turns}",legacy.len());
  }
 }
 
@@ -825,7 +810,7 @@ fn original_canonical_tree_constructor_moves_header_without_payload_copy(){
         cursor.begin_close();for _ in 0..10000{if cursor.terminal_is_empty(){break;}let(demand,heap)=observe_heap_allocations_on_this_thread(||cursor.next_demand().unwrap());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:body,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};let(step,heap)=observe_heap_allocations_on_this_thread(||cursor.close_step(grant).unwrap());let receipt=step.progress();assert!(receipt.fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(receipt.retained_capacity_bytes,receipt.released_bytes));born+=heap.requested_bytes;released+=heap.released_bytes;assert!(receipt.copied_items!=0,"original pending header close stalled at literal body={body} demand={demand:?} receipt={receipt:?}");}
         assert!(cursor.terminal_is_empty());let(_,heap)=observe_heap_allocations_on_this_thread(||drop(cursor));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(source.borrow().get()as*const NativeValue as*const(),original);
         for _ in 0..10000{if source.terminal_is_empty(){break;}let copy=source.next_close_copy_byte_demand().unwrap();let grant=admitted(RetirementDemand{copy_bytes:copy,capacity_bytes:source.next_close_capacity_byte_demand(copy).unwrap(),release_bytes:source.next_close_release_byte_demand().unwrap(),depth:source.next_close_depth_demand().unwrap()});let(step,heap)=observe_heap_allocations_on_this_thread(||source.close_step(grant).unwrap());let receipt=step.progress();assert_eq!((heap.requested_bytes,heap.released_bytes),(receipt.retained_capacity_bytes,receipt.released_bytes));born+=heap.requested_bytes;released+=heap.released_bytes;}
-        assert!(source.terminal_is_empty());let(_,heap)=observe_heap_allocations_on_this_thread(||drop(source));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(born,released);println!("[DEBUG] Original CQT constructor copy0/capacity0/release0 sourcePointer=true pendingCancelBody={body} physicalBorn={born} physicalReleased={released} terminalDrop0=true");
+        assert!(source.terminal_is_empty());let(_,heap)=observe_heap_allocations_on_this_thread(||drop(source));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(born,released);
     }
 }
 
@@ -860,7 +845,6 @@ fn original_canonical_tree_nested_headers_preserve_body_minima_and_complete_cust
             let(_,heap)=observe_heap_allocations_on_this_thread(||drop(cursor));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
             for _ in 0..100000{if source.terminal_is_empty(){break;}let copy=source.next_close_copy_byte_demand().unwrap();let grant=admitted(RetirementDemand{copy_bytes:copy,capacity_bytes:source.next_close_capacity_byte_demand(copy).unwrap(),release_bytes:source.next_close_release_byte_demand().unwrap(),depth:source.next_close_depth_demand().unwrap()});let(step,heap)=observe_heap_allocations_on_this_thread(||source.close_step(grant).unwrap());let receipt=step.progress();assert!(receipt.fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(receipt.retained_capacity_bytes,receipt.released_bytes));born+=heap.requested_bytes;released+=heap.released_bytes;assert!(receipt.copied_items!=0);}
             assert!(source.terminal_is_empty());let(_,heap)=observe_heap_allocations_on_this_thread(||drop(source));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(born,released);
-            println!("[DEBUG] Original nested CQT depth={depth} stop={stop:?} cancelBody={body} normalBody64 headerCopy0 sourcePointer=true physicalBorn={born} physicalReleased={released} terminalDrop0=true");
         }}
     }
 }

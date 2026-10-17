@@ -1,6 +1,5 @@
 //! 🔤 Note mutation — `ChangeBlockFontSize`: sets a text block's font size.
 
-use crate::schema::mutations::NoteMutation;
 use crate::{NoteDiff, NoteSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -20,17 +19,23 @@ pub struct ChangeBlockFontSize {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_block_font_size(id: String, new_font_size: f64) -> NoteMutation {
-    NoteMutation::ChangeBlockFontSize(ChangeBlockFontSize { id, new_font_size })
+pub fn change_block_font_size<Op>(id: String, new_font_size: f64) -> Op
+where
+    Op: From<crate::standards::v1::subsets::block::schema::mutations::change_block_font_size::ChangeBlockFontSize>,
+{
+    Op::from(ChangeBlockFontSize { id, new_font_size })
 }
 
-impl MutationKind<NoteSnapshot, NoteMutation> for ChangeBlockFontSize {
+impl<Op> MutationKind<NoteSnapshot, Op> for ChangeBlockFontSize
+where
+    Op: protocol::Mutation<NoteSnapshot, Diff = NoteDiff> + From<ChangeBlockFontSize>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "block-font-size", kind: "change-block-font-size", record: "ChangedBlockFontSize" };
 
     fn diff(&self, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &NoteSnapshot) -> Result<Vec<NoteMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &NoteSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

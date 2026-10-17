@@ -1,7 +1,6 @@
 //! 🌊 GLTF roughness indicators.
 
-#[path = "🎯️deviation-from-ideal/🦀️.rs"]
-pub mod deviation_from_ideal;
+pub use semio_s_artifact_stdio_gltf_inferences_flatness::standards::v2_0::subsets::any::schema::inferences::roughness::deviation_from_ideal;
 #[path = "🧽️deviation-from-smoothed/🦀️.rs"]
 pub mod deviation_from_smoothed_geometry;
 #[path = "🪨️irregularity/🦀️.rs"]
@@ -11,9 +10,9 @@ pub mod normal_variation;
 #[path = "🌊️surface-waviness/🦀️.rs"]
 pub mod surface_waviness;
 
-use super::super::modules::measurement_contracts::*;
-use super::super::modules::vector_operations::{cross, dot, norm, normalize, sub};
-use super::geometry_core::{roughness_samples, statistics, GltfGeometryContext};
+use crate::standards::v2_0::subsets::any::schema::modules::measurement_contracts::*;
+use crate::standards::v2_0::subsets::any::schema::modules::vector_operations::{cross, dot, norm, normalize, sub};
+use crate::standards::v2_0::subsets::any::schema::inferences::geometry_core::{roughness_samples, statistics, GltfGeometryContext};
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
@@ -27,14 +26,14 @@ pub struct GltfRoughnessIndicators {
 
 pub struct GltfRoughnessInference;
 
-pub(crate) struct GltfRoughnessRaw {
-    pub(crate) deviations: Vec<f64>,
-    pub(crate) normal_angles: Vec<f64>,
-    pub(crate) irregularity: Option<f64>,
+pub struct GltfRoughnessRaw {
+    pub deviations: Vec<f64>,
+    pub normal_angles: Vec<f64>,
+    pub irregularity: Option<f64>,
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn raw(context: &GltfGeometryContext<'_>) -> GltfRoughnessRaw {
+pub fn raw(context: &GltfGeometryContext<'_>) -> GltfRoughnessRaw {
     let deviations = roughness_samples(&context.points, &context.faces);
     let distribution = statistics(&deviations, &context.policy.histogram_edges);
     let irregularity = match (distribution.mean, distribution.standard_deviation) {

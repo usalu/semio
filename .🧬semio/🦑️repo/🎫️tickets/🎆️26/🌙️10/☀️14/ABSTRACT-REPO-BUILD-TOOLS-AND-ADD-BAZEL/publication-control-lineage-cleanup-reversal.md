@@ -1,0 +1,7 @@
+# Cleanup Reversal Inputs and Current Binding Scope
+
+`🗑️generated/control-cost-cleanup-reversal-map.json` supplies the exact six small text mappings. Read the current corrected runner in memory, traverse mappings in reverse, and replace each corrected string with its measured string exactly once. The result must hash to the measured runner SHA from controlled59987. No complete Source file is copied. Original correction proof and measured/corrected bindings are retained unchanged.
+
+Low identified later drift in the two prose reports and shared ticket TypeScript helper. These shared files are rebound below as current review inputs rather than treating old20/11row manifests as wholly current. The current three corrected ticket inputs still match their recorded hashes. Historical measured12Source facts and raw receipt/capture remain the basis for actual59987; prose/helper drift does not establish a new timing or SDK qualification. The shared strict selector is checked only for the owned control-cost file selection and its complete DOM library branch; unrelated Root strict selectors are preserved.
+
+`🗑️generated/control-cost-review-current-held.json` binds the current three ticket inputs, current two reports, current shared helper, this note and exact reversal mappings. This is a current review binding, distinct from historical measuredSource/evidence. The measured raw receipts and terminal/count claims are not replaced.

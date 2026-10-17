@@ -13,7 +13,7 @@ test("original tool snapshot alias batches use genuine admitted retirement and p
   let retired=0;while((db.query("SELECT COUNT(*) AS count FROM owners WHERE phase='original'").get() as {count:number}).count){db.query("UPDATE owners SET phase='retired' WHERE ordinal=(SELECT MAX(ordinal) FROM owners WHERE phase='original')").run();retired++;}
   expect(retired).toBe(remaining);
  }
- db.close();console.log("[DEBUG] SQLite exact original alias conservation at0/1/65/257 with paused/cancelled admission and no dropped refusal owner");
+ db.close();
  const path=new URL("../🦀️.rs",import.meta.url);expect(existsSync(path)).toBe(true);
  const native=readFileSync(path,"utf8");expect(native).toContain("pub struct OriginalAliasBatch");expect(native).toContain("RetainedCloneGrant");expect(native).toContain("RetirementDemand");expect(native).toContain("admit(&mut self.pending");expect(native).not.toContain("maximum_bytes");expect(native).not.toContain("retire_cold");
 });
@@ -23,5 +23,4 @@ test("single original snapshot alias enters inline custody without reconstructio
  const db=new Database(":memory:");db.exec("CREATE TABLE alias(id INTEGER PRIMARY KEY, phase TEXT)");db.query("INSERT INTO alias VALUES(7,'original')").run();
  for(const phase of ["original","pending","terminal"]){db.query("UPDATE alias SET phase=? WHERE id=7").run(phase);expect(db.query("SELECT id FROM alias").get()).toEqual({id:7});}db.close();
  const native=readFileSync(new URL("../🦀️.rs",import.meta.url),"utf8");expect(native.includes("admit_alias_original")).toBe(true);expect(native.includes("pending:ManuallyDrop::new(original.take())")).toBe(true);
- console.log("[DEBUG] SQLite single immutable original root retained through admission with no synthetic Vec backing");
 });

@@ -44,7 +44,7 @@ export async function recoverBuildGraphImageHeadroomV1(options:NativeFixedPlatfo
    const remove=async(rows:readonly LeafV1[])=>{checkResourceLeaseControl(control);await image.recheck();for(const row of rows)unchanged(image,row);for(const row of rows){unlinkSync(row.path);retiredBytes+=row.allocated;retiredFiles++;}await control.publish({resource:"repository:graph-headroom-retirement",mode:"exclusive",elapsedMs:0});await control.yieldContinuation();};
    for(const row of snapshots.sort((a,b)=>a.modified<b.modified?-1:a.modified>b.modified?1:Buffer.compare(Buffer.from(a.path),Buffer.from(b.path)))){if(available(image)>=request.minimumAvailableBytes)break;await remove([row]);}
    if(available(image)<request.minimumAvailableBytes&&publication.length)await remove(publication);
-   const availableBytes=available(image);if(availableBytes<request.minimumAvailableBytes)throw Error("Authenticated graph cache cannot fund required physical headroom: "+JSON.stringify({availableBytes,minimumAvailableBytes:request.minimumAvailableBytes,retiredBytes,retiredFiles}));console.log("[DEBUG] Actual exclusive graph image recovered authenticated snapshot/publication headroom "+JSON.stringify({availableBytes,retiredBytes,retiredFiles}));return availableBytes;
+   const availableBytes=available(image);if(availableBytes<request.minimumAvailableBytes)throw Error("Authenticated graph cache cannot fund required physical headroom: "+JSON.stringify({availableBytes,minimumAvailableBytes:request.minimumAvailableBytes,retiredBytes,retiredFiles}));return availableBytes;
   });
   return Object.freeze({acquired:result.acquired,availableBytes:result.acquired?result.value:available(image),retiredBytes,retiredFiles});
  }finally{await image.close();}

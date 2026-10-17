@@ -27,8 +27,7 @@ mod tests;
 
 
 
-#[path = "📦️pack/🦀️.rs"]
-pub(crate) mod owned_pack;
+pub use semio_s_artifact_gis_gisterrain_inferences::standards::v1::subsets::any::io::binary::snapshot::owned_pack;
 
 #[allow(unused_imports)]
 mod native_snapshot_codec {
@@ -43,23 +42,23 @@ use semio_s_artifact_stdio_semio_base::io::text::codec::split_top_level;
 use semio_s_artifact_stdio_semio_base::io::text::codec::strip_brackets;
 use semio_s_artifact_stdio_semio_mesh::schema::snapshot::SemioMeshSnapshot;
 use crate::standards::v1::subsets::any::io::text::snapshot::*;
-pub(crate) fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
+pub fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
     store::pack_rt::write_varint_u64(out, bytes.len() as u64);
     out.extend_from_slice(bytes);
 }
-pub(crate) fn write_str_lp(out: &mut Vec<u8>, s: &str) {
+pub fn write_str_lp(out: &mut Vec<u8>, s: &str) {
     write_bytes_lp(out, s.as_bytes());
 }
-pub(crate) fn write_ref(out: &mut Vec<u8>, r: &semio_framework_artifact_reference::ArtifactRef) {
+pub fn write_ref(out: &mut Vec<u8>, r: &semio_framework_artifact_reference::ArtifactRef) {
 use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactReferenceText as _};
 
     write_str_lp(out, &r.to_uri());
 }
-pub(crate) fn write_child<S>(out: &mut Vec<u8>, c: &store::os_store::artifact_child::ArtifactChild<S>) {
+pub fn write_child<S>(out: &mut Vec<u8>, c: &store::os_store::artifact_child::ArtifactChild<S>) {
     write_str_lp(out, &c.child_id);
     write_ref(out, &c.target);
 }
-pub(crate) fn write_child_opt<S>(out: &mut Vec<u8>, c: &Option<store::os_store::artifact_child::ArtifactChild<S>>) {
+pub fn write_child_opt<S>(out: &mut Vec<u8>, c: &Option<store::os_store::artifact_child::ArtifactChild<S>>) {
     match c {
         Some(c) => {
             out.push(1);
@@ -83,28 +82,28 @@ use semio_s_artifact_stdio_semio_base::io::text::codec::split_top_level;
 use semio_s_artifact_stdio_semio_base::io::text::codec::strip_brackets;
 use semio_s_artifact_stdio_semio_mesh::schema::snapshot::SemioMeshSnapshot;
 
-pub(crate) fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
+pub fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
     let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
     Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
 }
 
-pub(crate) fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
+pub fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
     String::from_utf8(read_bytes_lp(reader)?).map_err(|e| e.to_string())
 }
 
-pub(crate) fn read_ref(reader: &mut store::ByteReader<'_>) -> Result<semio_framework_artifact_reference::ArtifactRef, String> {
+pub fn read_ref(reader: &mut store::ByteReader<'_>) -> Result<semio_framework_artifact_reference::ArtifactRef, String> {
 use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactReferenceText as _};
 
     semio_framework_artifact_reference::ArtifactRef::parse_uri(&read_str_lp(reader)?)
 }
 
-pub(crate) fn read_child<S>(reader: &mut store::ByteReader<'_>) -> Result<store::os_store::artifact_child::ArtifactChild<S>, String> {
+pub fn read_child<S>(reader: &mut store::ByteReader<'_>) -> Result<store::os_store::artifact_child::ArtifactChild<S>, String> {
     let child_id = read_str_lp(reader)?;
     let target = read_ref(reader)?;
     Ok(store::os_store::artifact_child::ArtifactChild::new(child_id, target))
 }
 
-pub(crate) fn read_child_opt<S>(reader: &mut store::ByteReader<'_>) -> Result<Option<store::os_store::artifact_child::ArtifactChild<S>>, String> {
+pub fn read_child_opt<S>(reader: &mut store::ByteReader<'_>) -> Result<Option<store::os_store::artifact_child::ArtifactChild<S>>, String> {
     let presence = reader.read_u8().map_err(|e| e.to_string())?;
     if presence == 0 {
         Ok(None)

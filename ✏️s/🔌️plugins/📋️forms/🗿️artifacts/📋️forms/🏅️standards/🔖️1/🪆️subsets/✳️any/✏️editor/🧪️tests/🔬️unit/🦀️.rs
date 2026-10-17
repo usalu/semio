@@ -1,5 +1,46 @@
-pub(crate) mod context {
-    use super::super::*;
+use crate::{editor::forms::commands::add_question, editor::forms::commands::add_question_option, editor::forms::commands::add_step, editor::forms::commands::add_vector_field, editor::forms::commands::drop_question_kind, editor::forms::commands::export_snapshot, editor::forms::commands::move_question, editor::forms::commands::move_step, editor::forms::commands::next_step, editor::forms::commands::patch_question_options, editor::forms::commands::patch_questions, editor::forms::commands::patch_step, editor::forms::commands::patch_vector_field, editor::forms::commands::previous_step, editor::forms::commands::remove_question, editor::forms::commands::remove_question_option, editor::forms::commands::remove_step, editor::forms::commands::remove_vector_field, editor::forms::commands::reset_try, editor::forms::commands::set_active_example, editor::forms::commands::set_contributions, editor::forms::commands::set_spec_json, editor::forms::commands::set_try_value, editor::forms::commands::set_try_value_step, editor::forms::commands::set_try_values, editor::forms::commands::submit, editor::forms::commands::update_form};
+use crate::{editor::forms::config::FormsConfig, editor::forms::config::FormsConfigMutation};
+use crate::{editor::forms::modes::blueprint, editor::forms::modes::fill, editor::forms::modes::responses};
+use crate::{editor::forms::commands::export_responses, editor::forms::commands::discard_response};
+use crate::editor::forms::modes::blueprint::windows::builder;
+use crate::editor::forms::terminology::forms_play_labels;
+use crate::{editor::forms::support, editor::forms::support::FORMS_INTERACTION_FIELDS, editor::forms::support::FORMS_INTERACTION_GRANULARITY_SECTION};
+use crate::{FormQuestion, FormsSnapshot, FORMS_DOCUMENT_SCHEMA};
+use semio_framework_pack_json::object;
+use semio_framework_plugin::ArtifactEditor;
+use semio_framework_plugin::ArtifactToolPublicationLane;
+use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::ConfigView;
+use semio_framework_plugin::EditorApp;
+use semio_framework_plugin::HierarchyProvider;
+use semio_framework_test_fixtures::fixture_text;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::MediaClass;
+use semio_framework_plugin::MediaForm;
+use semio_framework_plugin::MediaPayload;
+use semio_framework_plugin::MediaType;
+pub mod context {
+    use crate::editor::forms::*;
+use crate::{editor::forms::commands::add_question, editor::forms::commands::add_question_option, editor::forms::commands::add_step, editor::forms::commands::add_vector_field, editor::forms::commands::drop_question_kind, editor::forms::commands::export_snapshot, editor::forms::commands::move_question, editor::forms::commands::move_step, editor::forms::commands::next_step, editor::forms::commands::patch_question_options, editor::forms::commands::patch_questions, editor::forms::commands::patch_step, editor::forms::commands::patch_vector_field, editor::forms::commands::previous_step, editor::forms::commands::remove_question, editor::forms::commands::remove_question_option, editor::forms::commands::remove_step, editor::forms::commands::remove_vector_field, editor::forms::commands::reset_try, editor::forms::commands::set_active_example, editor::forms::commands::set_contributions, editor::forms::commands::set_spec_json, editor::forms::commands::set_try_value, editor::forms::commands::set_try_value_step, editor::forms::commands::set_try_values, editor::forms::commands::submit, editor::forms::commands::update_form};
+use crate::{editor::forms::config::FormsConfig, editor::forms::config::FormsConfigMutation};
+use crate::{editor::forms::modes::blueprint, editor::forms::modes::fill, editor::forms::modes::responses};
+use crate::{editor::forms::commands::export_responses, editor::forms::commands::discard_response};
+use crate::editor::forms::modes::blueprint::windows::builder;
+use crate::editor::forms::terminology::forms_play_labels;
+use crate::{editor::forms::support, editor::forms::support::FORMS_INTERACTION_FIELDS, editor::forms::support::FORMS_INTERACTION_GRANULARITY_SECTION};
+use crate::{FormQuestion, FormsSnapshot, FORMS_DOCUMENT_SCHEMA};
+use semio_framework_pack_json::object;
+use semio_framework_plugin::ArtifactEditor;
+use semio_framework_plugin::ArtifactToolPublicationLane;
+use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::ConfigView;
+use semio_framework_plugin::EditorApp;
+use semio_framework_plugin::HierarchyProvider;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::MediaClass;
+use semio_framework_plugin::MediaForm;
+use semio_framework_plugin::MediaPayload;
+use semio_framework_plugin::MediaType;
     use semio_framework_plugin::artifact_app_laws::{meta, new_app_with_registry_and_members};
     use semio_framework_plugin::{App, EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
     
@@ -99,7 +140,7 @@ pub(crate) mod context {
         let view = if body_key == FORMS_PLAY_BODY_TRY {
             ViewModel {
                 window_id: Some("forms-try-test".into()),
-                window_instances: vec![semio_framework_plugin::ViewWindowInstance { id: "forms-try-test".into(), window_kind_id: try_window::FORMS_PLAY_WINDOW_TRY.into() }],
+                window_instances: vec![semio_framework_plugin::ViewWindowInstance { id: "forms-try-test".into(), window_kind_id: support::FORMS_PLAY_WINDOW_TRY.into() }],
                 ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
             }
         } else {
@@ -137,7 +178,9 @@ pub(crate) mod context {
     }
 }
 
-use super::*;
+use crate::editor::forms::*;
+use crate::editor::forms::contributions::{catalogue_kinds, render_extension_question};
+use semio_framework_pack_json::Object;
 use crate::editor::forms::unit_tests::context::{building_component_contributions, building_component_question, dispatch, forms_app, forms_app_with_registry};
 use crate::forms_steps;
 
@@ -287,7 +330,7 @@ async fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
 }
 
 /// 🧾️ One representative value per row, in declaration (= binary ordinal) order.
-pub(super) fn every_command() -> Vec<FormsCommand> {
+pub(crate) fn every_command() -> Vec<FormsCommand> {
     vec![
         FormsCommand::SetTryValue(set_try_value::SetTryValue { key: "q1".into(), value_json: Some("\"Ada\"".into()), ..Default::default() }),
         FormsCommand::SetTryValues(set_try_values::SetTryValues { values_json: r#"{"name":"Ada"}"#.into(), ..Default::default() }),
@@ -326,7 +369,7 @@ pub(super) fn every_command() -> Vec<FormsCommand> {
 #[semio_framework_async_macros::async_test]
 async fn the_manifest_stitches_every_taxonomy_node() {
     let json = semio_framework_pack_json::to_json_string(&create_forms_app());
-    for id in [builder::FORMS_PLAY_WINDOW_BLUEPRINT, try_window::FORMS_PLAY_WINDOW_TRY, responses::results::WINDOW] {
+    for id in [builder::FORMS_PLAY_WINDOW_BLUEPRINT, support::FORMS_PLAY_WINDOW_TRY, responses::results::WINDOW] {
         assert!(json.contains(id), "window kind {id} missing from the manifest: {json}");
     }
     assert!(json.contains(blueprint::FORMS_PLAY_MODE_BLUEPRINT), "mode missing from the manifest");
@@ -341,7 +384,7 @@ async fn app_has_authoring_preview_and_response_windows() {
     let definition = create_forms_app();
     assert_eq!(definition.window_kinds.len(), 3);
     assert_eq!(definition.window_kinds[0].id, builder::FORMS_PLAY_WINDOW_BLUEPRINT);
-    assert_eq!(definition.window_kinds[1].id, try_window::FORMS_PLAY_WINDOW_TRY);
+    assert_eq!(definition.window_kinds[1].id, support::FORMS_PLAY_WINDOW_TRY);
     assert_eq!(definition.window_kinds[2].id, responses::results::WINDOW);
     assert_eq!(definition.modes[0].id, blueprint::FORMS_PLAY_MODE_BLUEPRINT);
     assert_eq!(definition.modes[1].id, fill::MODE);
@@ -414,7 +457,7 @@ async fn initial_document_starts_with_a_blank_editable_form() {
     let app = forms_app().await;
     let spec = app.snapshot().expect("projection");
     assert_eq!(spec.definition.steps.len(), 1);
-    let expected: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🔬️contract/🌱️blank/🔣️.json")).unwrap();
+    let expected: serde_json::Value = serde_json::from_str(fixture_text!("../../../🧪️tests/🧫️fixtures/🔬️contract/🌱️blank/🔣️.json")).unwrap();
     assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&spec.definition)).unwrap(), expected);
     assert!(crate::schema::flatten_questions(&spec).is_empty());
     assert!(spec.responses.is_empty());
@@ -567,7 +610,7 @@ async fn forms_io_declares_dictionary_out_port() {
 /// 🌐️ Contributed field labels resolve from the same explicit axes as built-in fields.
 #[semio_framework_async_macros::async_test]
 async fn contributed_question_labels_follow_selected_axes() {
-    let vectors: serde_json::Value = serde_json::from_str(include_str!("../../❓️questions/🧩️extensions/🧪️tests/🧫️fixtures/🔣️contribution.json")).unwrap();
+    let vectors: serde_json::Value = serde_json::from_str(fixture_text!("../../❓️questions/🧩️extensions/🧪️tests/🧫️fixtures/🔣️contribution.json")).unwrap();
     let payload = semio_framework_pack_json::from_json_str(&vectors["payload"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let contributions = vec![ProgramContributionEntry { plugin_id: "playbook-module-procedural".into(), topic_contribution: Some(semio_framework_plugin::TopicContribution::new("forms.questionKind", payload)) }];
     for case in vectors["cases"].as_array().unwrap() {

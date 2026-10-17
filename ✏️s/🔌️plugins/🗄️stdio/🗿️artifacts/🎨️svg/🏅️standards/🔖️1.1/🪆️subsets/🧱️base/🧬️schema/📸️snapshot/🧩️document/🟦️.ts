@@ -1,4 +1,4 @@
-import { parseXmlDeclaration, parseXmlDoctype, type XmlDeclaration, type XmlDoctype } from '../../../../../../../../📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🟦️.ts';
+import { parseXmlDeclaration, parseXmlDoctype, type XmlDeclaration, type XmlDoctype } from '@semio-tech/stdio-xml/standards/1.0/subsets/base/schema/snapshot';
 /** 🌳️ Owned decoded SVG attribute vocabulary. */
 export interface ViewBox { minX:number; minY:number; width:number; height:number }
 export type TransformOp = {op:'matrix';a:number;b:number;c:number;d:number;e:number;f:number}|{op:'translate'|'scale';x:number;y?:number}|{op:'rotate';angle:number;center?:[number,number]}|{op:'skewX'|'skewY';angle:number};

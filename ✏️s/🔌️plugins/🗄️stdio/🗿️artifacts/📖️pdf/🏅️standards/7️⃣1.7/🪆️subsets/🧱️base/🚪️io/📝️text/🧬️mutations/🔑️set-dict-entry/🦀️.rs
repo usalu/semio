@@ -3,7 +3,7 @@
 pub const OPCODE: &str = "set-dict-entry";
 pub const TEXT_OPCODE: &str = OPCODE;
 
-use crate::standards::v1_7::subsets::base::schema::mutations::SetDictEntry;
+use crate::standards::v1_7::subsets::base::schema::mutations::set_dict_entry::SetDictEntry;
 
 /// 🖨️ Prints this direct payload through its schema-derived JSON representation.
 pub fn print(payload: &SetDictEntry) -> Result<String, String> {

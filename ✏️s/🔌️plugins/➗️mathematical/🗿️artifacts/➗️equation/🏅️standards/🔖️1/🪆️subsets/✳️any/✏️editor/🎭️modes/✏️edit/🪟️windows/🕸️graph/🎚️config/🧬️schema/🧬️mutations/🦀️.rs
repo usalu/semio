@@ -1,6 +1,6 @@
 //! 🧬️ Equation configuration mutations with explicit source descriptors.
 
-use super::{EquationCamera, EquationGraphWindowConfig, EquationGraphWindowConfigDiff};
+use crate::editor::equation::modes::edit::windows::graph::config::{EquationCamera, EquationGraphWindowConfig, EquationGraphWindowConfigDiff};
 #[path = "🎥️set-camera/🦀️.rs"]
 mod set_camera;
 pub use set_camera::SetCamera;

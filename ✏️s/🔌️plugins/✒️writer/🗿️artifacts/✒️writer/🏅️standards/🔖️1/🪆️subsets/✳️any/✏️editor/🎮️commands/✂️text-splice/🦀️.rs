@@ -35,7 +35,4 @@ pub fn handle(payload: &TextSplice, _doc: &ArtifactView<'_, WriterSnapshot>, _cf
 }
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

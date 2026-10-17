@@ -85,22 +85,22 @@ pub fn members(snapshot: &ModelSnapshot, rule: &Rule) -> Vec<Member> {
     let mut rows: Vec<Member> = Vec::new();
     match rule.kind {
         RuleKind::MaxRiser | RuleKind::MinTread | RuleKind::MinStairWidth => {
-            rows.extend(snapshot.stairs.iter().filter(|(id, row)| scope.covers(snapshot, id, Some(&row.storey))).map(|(id, row)| Member { id: id.clone(), storey: Some(row.storey.clone()) }));
+            rows.extend(snapshot.stairs.iter().filter(|(id, row)| crate::standards::v1::subsets::any::schema::snapshot::scope_covers(&scope, snapshot, id, Some(&row.storey))).map(|(id, row)| Member { id: id.clone(), storey: Some(row.storey.clone()) }));
         }
         RuleKind::MaxRampSlope => {
-            rows.extend(snapshot.ramps.iter().filter(|(id, row)| scope.covers(snapshot, id, Some(&row.storey))).map(|(id, row)| Member { id: id.clone(), storey: Some(row.storey.clone()) }));
+            rows.extend(snapshot.ramps.iter().filter(|(id, row)| crate::standards::v1::subsets::any::schema::snapshot::scope_covers(&scope, snapshot, id, Some(&row.storey))).map(|(id, row)| Member { id: id.clone(), storey: Some(row.storey.clone()) }));
         }
         RuleKind::MinDoorWidth => {
             rows.extend(snapshot.openings.iter().filter(|(_, row)| matches!(row.kind, OpeningKind::Door { .. })).filter_map(|(id, _)| {
                 let storey = crate::standards::v1::subsets::any::schema::snapshot::storey_of(snapshot, id)?;
-                scope.covers(snapshot, id, Some(storey)).then(|| Member { id: id.clone(), storey: Some(storey.clone()) })
+                crate::standards::v1::subsets::any::schema::snapshot::scope_covers(&scope, snapshot, id, Some(storey)).then(|| Member { id: id.clone(), storey: Some(storey.clone()) })
             }));
         }
         RuleKind::MinClearHeight | RuleKind::MinCorridorWidth => {
-            rows.extend(snapshot.spaces.iter().filter(|(id, row)| filtered(&row.usage) && scope.covers(snapshot, id, Some(&row.storey))).map(|(id, row)| Member { id: id.clone(), storey: Some(row.storey.clone()) }));
+            rows.extend(snapshot.spaces.iter().filter(|(id, row)| filtered(&row.usage) && crate::standards::v1::subsets::any::schema::snapshot::scope_covers(&scope, snapshot, id, Some(&row.storey))).map(|(id, row)| Member { id: id.clone(), storey: Some(row.storey.clone()) }));
         }
         RuleKind::MaxCompartmentArea => {
-            rows.extend(snapshot.zones.iter().filter(|(id, row)| filtered(&row.category) && scope.covers(snapshot, id, None)).map(|(id, _)| Member { id: id.clone(), storey: None }));
+            rows.extend(snapshot.zones.iter().filter(|(id, row)| filtered(&row.category) && crate::standards::v1::subsets::any::schema::snapshot::scope_covers(&scope, snapshot, id, None)).map(|(id, _)| Member { id: id.clone(), storey: None }));
         }
     }
     rows
@@ -153,7 +153,8 @@ pub fn dependency(snapshot: &ModelSnapshot, id: &str) -> DslValue {
 //#endregion 🔖️Dependency
 
 //#region 🔖️Tables
-fn number(value: f64) -> DslValue {
+/// 🔢️ A JSON number node of a measured value.
+pub fn json_number(value: f64) -> DslValue {
     DslValue::float(value)
 }
 
@@ -163,8 +164,8 @@ pub fn table_json(results: &BTreeMap<String, RuleResult>) -> String {
         let violations = result.violations.iter().map(|finding| {
             DslValue::object([
                 ("element".to_string(), DslValue::String(finding.element.clone())),
-                ("measured".to_string(), number(finding.measured)),
-                ("limit".to_string(), number(finding.limit)),
+                ("measured".to_string(), json_number(finding.measured)),
+                ("limit".to_string(), json_number(finding.limit)),
                 ("storey".to_string(), DslValue::String(finding.storey.clone())),
             ])
         });
@@ -173,38 +174,6 @@ pub fn table_json(results: &BTreeMap<String, RuleResult>) -> String {
     semio_framework_pack_json::to_json_string(&DslValue::object(rules))
 }
 
-/// 📏️ The measures the rules read, `{ stairs, frames, ramps, zones, rooms }`: the committed input of the rules oracle, written by the blessing test from the inferred runs, door frames, ramp runs, zone totals and rooms
-/// (the outlines of the rooms are what the oracle measures with shapely).
-pub fn measures_json(snapshot: &ModelSnapshot, inferred: &crate::standards::v1::subsets::any::schema::inferences::ModelInference) -> String {
-    let by_id = |rows: Vec<(String, DslValue)>| DslValue::object(rows);
-    let stairs = by_id(
-        inferred
-            .stair_runs
-            .iter()
-            .map(|(id, run)| (id.clone(), DslValue::object([("riser_height".to_string(), number(run.riser_height)), ("tread".to_string(), number(run.tread)), ("width".to_string(), number(run.width)), ("riser_count".to_string(), DslValue::int(i64::from(run.riser_count))), ("tread_count".to_string(), DslValue::int(i64::from(run.tread_count)))])))
-            .collect(),
-    );
-    let frames = by_id(snapshot.openings.iter().filter(|(_, opening)| matches!(opening.kind, OpeningKind::Door { .. })).filter_map(|(id, _)| inferred.opening_frames.get(id).map(|frame| (id.clone(), number(frame.width)))).collect());
-    let ramps = by_id(inferred.ramp_runs.iter().map(|(id, run)| (id.clone(), DslValue::object([("slope".to_string(), number(run.slope)), ("length".to_string(), number(run.length))]))).collect());
-    let zones = by_id(inferred.zone_totals.iter().map(|(id, zone)| (id.clone(), DslValue::object([("net_area".to_string(), number(zone.net_area)), ("resolved".to_string(), DslValue::int(i64::from(zone.resolved)))]))).collect());
-    let loop_value = |vertices: &[crate::standards::v1::subsets::any::schema::snapshot::Vertex]| DslValue::Array(vertices.iter().map(|vertex| semio_framework_value::ToValue::to_value(vertex)).collect());
-    let rooms = by_id(
-        inferred
-            .spaces
-            .iter()
-            .map(|(id, room)| {
-                let row = DslValue::object([
-                    ("status".to_string(), DslValue::String(format!("{:?}", room.status))),
-                    ("clear_height".to_string(), number(room.clear_height)),
-                    ("outline".to_string(), loop_value(&room.outline)),
-                    ("holes".to_string(), DslValue::Array(room.holes.iter().map(|hole| loop_value(hole)).collect())),
-                ]);
-                (id.clone(), row)
-            })
-            .collect(),
-    );
-    semio_framework_pack_json::to_json_string(&DslValue::object([("stairs".to_string(), stairs), ("frames".to_string(), frames), ("ramps".to_string(), ramps), ("zones".to_string(), zones), ("rooms".to_string(), rooms)]))
-}
 //#endregion 🔖️Tables
 
 #[cfg(test)]

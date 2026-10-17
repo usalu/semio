@@ -1,9 +1,9 @@
 //! 🌱️ Generation3d retained store initialization: the snapshot copy cursor and the store initialization authority that replays a document envelope into its store.
-use semio_framework_job_publication::{RetainedJobPublication,JobPublicationKind};
 #![allow(clippy::result_large_err)]
+#![allow(unused_imports)]
+use semio_framework_job_publication::{RetainedJobPublication,JobPublicationKind};
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
-#![allow(unused_imports)]
 use semio_s_artifact_procedural_3d_mut_generations::change_generation_value::ChangeGenerationValue;
 use semio_s_artifact_procedural_3d_mut_document::change_schema::ChangeSchema;
 use semio_s_artifact_procedural_3d_mut_synapses::connect_synapse::ConnectSynapse;

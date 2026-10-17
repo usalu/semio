@@ -1,0 +1,9 @@
+# Dependency Probe Saved Parent Admission Review
+
+Source-only conclusion: the current fixed funded probe does not require a newly captured global seven-asset census. A previously schema-valid census such as65462 is bounded parent expectation DATA, not current lease, journal, payload, funding or producer authority. Its age is not an admission field. Unrelated Tools EX custody does not itself invalidate the Dependencies seed or create authority to bypass fresh Dependencies acquisition.
+
+`dependencyPlanDiagnosticCensusParentV1` validates the closed seven-row census, selects only the exact declared mounted Dependencies row and derives receipt SHA, folder/root dev+ino+mode, backing dev+ino+size+allocatedBytes and declaration. Other asset observations are not forwarded into the probe. `runDependencyProducerProbeDiagnosticV1` hashes that saved input, constructs the closed probe request and invokes the real fixed owner; no saved allocation row, Source plan or installer result is reused.
+
+The actual owner then freshly acquires the genuine Dependencies parent using those exact expectations, reads current journal and requires the sole whole committed Dependencies artifact, captures the actual private Core token, acquires the real global binding EX, captures complete current Source ALL/input leaves and repeatedly rechecks actual funding/kernel/receipt/custody. Stale parent identities must therefore refuse at actual admission rather than being adopted. An unchanged parent identity still does not waive any fresh current Source or child staging observation.
+
+No Source requirement was found making seed65462 unsafe solely because a complete new global census cannot acquire the unrelated Tools parent. This is not evidence the current Dependencies parent will admit or that the probe will succeed; only its actual fixed-owner acquisition can decide. No Native call, protected observation, cap change or freshness bypass was performed.

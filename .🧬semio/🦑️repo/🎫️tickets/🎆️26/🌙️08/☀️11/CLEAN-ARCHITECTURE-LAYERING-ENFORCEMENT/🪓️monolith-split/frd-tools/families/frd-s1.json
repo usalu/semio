@@ -1,0 +1,21 @@
+{
+ "name": "frd-s1",
+ "crates": [
+  "semio-framework-test-fixtures",
+  "semio-s-artifact-stdio-dxf-inferences",
+  "semio-s-artifact-stdio-gif",
+  "semio-s-artifact-stdio-gif-editor",
+  "semio-s-artifact-stdio-gltf-inferences-topology",
+  "semio-s-artifact-stdio-jpg-schema-2",
+  "semio-s-artifact-stdio-md",
+  "semio-s-artifact-stdio-semio-image-editor",
+  "semio-s-artifact-stdio-semio-sqlite-laws-5",
+  "semio-s-artifact-stdio-semio-text-mutations",
+  "semio-s-artifact-stdio-semio-video-mutations",
+  "semio-s-artifact-stdio-tiff",
+  "semio-s-artifact-stdio-tsv",
+  "semio-s-artifact-stdio-wav-mutations",
+  "semio-s-artifact-stdio-zip-schema"
+ ],
+ "note": "FRD sample, no baseline"
+}

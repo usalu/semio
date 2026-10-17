@@ -1,6 +1,6 @@
 import {withPlaygroundSessionV1} from "../../../🔌️plugin/📇️registry/🎮️playground/🧭️session/👓️reading/🟦️.ts";
 import {runtimeCatalogBuildInventoryV1} from "../../../🔌️plugin/📇️registry/📖️catalog-view/🟦️.ts";
-import{withInfiniteFontArtifactV1}from"../../../♾️infinite/🔤️fonts/👓️reading/🟦️.ts";
+import{withInfiniteFontArtifactV1}from"@semio-tech/framework-os/modules/infinite/fonts/reading";
 import{scriptCompilerAdmissionControlV1}from"../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import {checkScriptInvocation,createRequestedIssuedResourceControlV1,type ScriptInvocation} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { resolveTestLevel, atTestLevel } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
@@ -14,7 +14,7 @@ import { artifactFiles } from "../../../🔌️plugin/🌐️browser-bundle/📦
 import { newestComponentSourceMtime, stagedModuleMtime, readStagedSourceContentHash, writeStagedSourceContentHash, writeStagedSourceFreshness } from "../../../🔌️plugin/🏗️build/🔍️freshness/🟦️.ts";
 import { ACTIVATION_RECEIPT_FILE, PLAYGROUND_SESSION_OUTPUT_ROOT_ENV, activationSourceFreshnessDirectory, developmentRuntimeRoot, healthyPreparedComponents, nextActivationReceipt, playgroundSessionOutputPath, builtPluginModulesRootIn, preparedComponentReportLines, preparedComponentVerdict, publishActivationReceipt, readActivationReceipt, stagedModuleReportLines, stagedModuleVerdict, type StagedModuleFacts, type StagedModuleVerdict } from "../🟦️.ts";
 
-import { FONT_ASSET, validateFontAsset } from "../../../../../../🔨️modules/🖼️canvas/🔤️fonts/🟦️.ts";
+import { FONT_ASSET, validateFontAsset } from "@semio-tech/framework-canvas-ts/fonts";
 
 import { constants as fsConstants, createReadStream, createWriteStream, copyFileSync, cpSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, rmdirSync, statSync, unlinkSync, watch, writeFileSync } from "node:fs";
 

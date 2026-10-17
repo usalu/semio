@@ -28,11 +28,14 @@ pub fn plan(p: &GltfDeleteImagePayload, base: &GltfSnapshot) -> Result<GltfDiff,
     Ok(diff)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn inverse(p: &GltfDeleteImagePayload, base: &GltfSnapshot) -> Vec<super::GltfMutation> {
+pub fn inverse<Op>(p: &GltfDeleteImagePayload, base: &GltfSnapshot) -> Vec<Op>
+where
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::remove_used_extension::RemoveUsedExtensionMutation>,
+{
     if validate(p, base).is_err() {
         return Vec::new();
     }
-    let mut rows = vec![super::create_image::mutation(super::create_image::GltfCreateImagePayload { position: p.index, image: Some(Box::new(base.document.images[p.index].clone())) })];
+    let mut rows = vec![crate::standards::v2_0::subsets::any::schema::mutations::create_image::mutation(crate::standards::v2_0::subsets::any::schema::mutations::create_image::GltfCreateImagePayload { position: p.index, image: Some(Box::new(base.document.images[p.index].clone())) })];
 
     rows.reverse();
     rows
@@ -48,11 +51,17 @@ pub enum DeleteImageMutation {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn mutation(payload: GltfDeleteImagePayload) -> super::GltfMutation {
-    super::GltfMutation::DeleteImage(DeleteImageMutation::Apply(payload))
+pub fn mutation<Op>(payload: GltfDeleteImagePayload) -> Op
+where
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::delete_image::DeleteImageMutation>,
+{
+    Op::from(DeleteImageMutation::Apply(payload))
 }
 
-impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for DeleteImageMutation {
+impl<Op> protocol::MutationKind<GltfSnapshot, Op> for DeleteImageMutation
+where
+    Op: protocol::Mutation<GltfSnapshot, Diff = GltfDiff> + From<DeleteImageMutation>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "image", kind: "delete-image", record: "DeletedImage" };
 
     fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<GltfDiff> {
@@ -64,7 +73,7 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for DeleteImageMu
         }
     }
 
-    fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<super::GltfMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         match self {
             Self::Apply(payload) => Ok(inverse(payload, base)),
         }
@@ -81,10 +90,6 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for DeleteImageMu
 //#endregion 🧬️DirectMutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🖼️removes-the-6557fc/🦀️.rs"]
-mod case_removes_the_6557fc;
-#[cfg(test)]
-#[path = "🧪️tests/🔬️middle-row/🦀️.rs"]
-mod case_middle_row;
+
+
 //#endregion 🧪️Tests

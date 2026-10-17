@@ -29,6 +29,10 @@ type stdioPptxEcma376BaseInferenceGuardSizeBounds = { readonly minItems?: number
 
 export const stdioPptxEcma376BaseInferenceGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : stdioPptxEcma376BaseInferenceGuardReject(at, "value is not an object");
+export const stdioPptxEcma376BaseInferenceGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) stdioPptxEcma376BaseInferenceGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const stdioPptxEcma376BaseInferenceGuardArray = (value: unknown, at: string, bounds: stdioPptxEcma376BaseInferenceGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return stdioPptxEcma376BaseInferenceGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) stdioPptxEcma376BaseInferenceGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -59,14 +63,14 @@ export const stdioPptxEcma376BaseInferenceGuardConstant = <T extends string | nu
 //#endregion 🚪️Parsers
 
 export function parsePptxInference(value: unknown, at = "$"): PptxInference {
-  const row = stdioPptxEcma376BaseInferenceGuardObject(value, at);
+  const row = stdioPptxEcma376BaseInferenceGuardClosed(stdioPptxEcma376BaseInferenceGuardObject(value, at), at, ["outline"]);
   return {
     outline: parsePptxOutline(row["outline"], `${at}.outline`),
   };
 }
 
 export function parsePptxOutline(value: unknown, at = "$"): PptxOutline {
-  const row = stdioPptxEcma376BaseInferenceGuardObject(value, at);
+  const row = stdioPptxEcma376BaseInferenceGuardClosed(stdioPptxEcma376BaseInferenceGuardObject(value, at), at, ["slideCount", "shapeCount", "wordCount"]);
   return {
     slideCount: stdioPptxEcma376BaseInferenceGuardInteger(row["slideCount"], `${at}.slideCount`),
     shapeCount: stdioPptxEcma376BaseInferenceGuardInteger(row["shapeCount"], `${at}.shapeCount`),

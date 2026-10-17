@@ -10,6 +10,6 @@ use semio_framework_value_derive::{FromValue, ToValue};
 #[dsl(keyword = "nudge-selection-right-fast")]
 pub struct NudgeSelectionRightFast {}
 
-pub fn handle(_payload: &NudgeSelectionRightFast, doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, semio_framework_plugin::NoConfig>, ctx: &mut crate::editor::note::NoteDispatchCtx) -> Result<Emit<NoteMutation, semio_framework_plugin::NoConfigMutation>, Fault> {
+pub fn handle(_payload: &NudgeSelectionRightFast, doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, semio_framework_plugin::NoConfig>, ctx: &mut crate::editor::note::dispatch_ctx::NoteDispatchCtx) -> Result<Emit<NoteMutation, semio_framework_plugin::NoConfigMutation>, Fault> {
     nudge(doc, ctx, "nudgeSelectionRightFast", NUDGE_STEP_FAST, 0.0)
 }

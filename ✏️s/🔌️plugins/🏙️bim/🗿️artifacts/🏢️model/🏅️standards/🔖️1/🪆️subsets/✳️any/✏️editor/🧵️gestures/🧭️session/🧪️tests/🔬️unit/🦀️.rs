@@ -1,5 +1,5 @@
 use super::*;
-use crate::editor::bim::gestures::tests::fixture::{model, room};
+use crate::editor::bim::fixture::{model, room};
 
 #[semio_framework_async_macros::async_test]
 async fn the_held_modifiers_map_to_the_framework_merge_modes() {

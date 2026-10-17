@@ -18,6 +18,5 @@ export function runBmpSourceHexFixtureChecks(): number {
       checks++;
     }
   }
-  console.log(`[DEBUG] BMP source-hex fixture: ${fixture.cases.length} cases, independent native hexadecimal bytes checked`);
   return checks;
 }

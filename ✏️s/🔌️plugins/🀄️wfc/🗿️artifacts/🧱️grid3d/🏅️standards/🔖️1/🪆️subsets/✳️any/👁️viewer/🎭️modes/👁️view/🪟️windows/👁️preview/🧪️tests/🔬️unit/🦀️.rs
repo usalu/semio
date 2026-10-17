@@ -1,6 +1,6 @@
 //! 🔬️ The viewer's preview renders the solved grid over the same pure projection the editor uses.
 
-use super::*;
+use crate::viewer::grid3d::modes::view::windows::preview::*;
 
 #[test]
 fn every_example_renders_a_non_empty_solved_scene() {

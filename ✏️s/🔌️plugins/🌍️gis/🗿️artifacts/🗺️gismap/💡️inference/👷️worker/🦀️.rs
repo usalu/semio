@@ -152,7 +152,7 @@ pub fn gis_map_service_contribution_v1() -> InstalledServiceContributionV1 {
     InstalledServiceContributionV1 { owner: "gis", service_id: GIS_MAP_INFERENCE_SERVICE_ID, create: |scope,verified| Box::new(NativeGisMapServiceV1 { driver: GisMapInferenceDriverV1::new(scope,verified), request_id: mint_directory_command_request_id(), reconcile_required:false, recovery_turns:0, next_recovery_at_ms:0, recovery_in_flight:false, exhausted:false }) }
 }
 
-struct NativeGisMapServiceV1 {
+pub struct NativeGisMapServiceV1 {
     driver: GisMapInferenceDriverV1,
     request_id: String,
     reconcile_required: bool,

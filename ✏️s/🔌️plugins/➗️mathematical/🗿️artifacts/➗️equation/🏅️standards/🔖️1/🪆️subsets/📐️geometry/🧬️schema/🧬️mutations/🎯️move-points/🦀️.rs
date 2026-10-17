@@ -2,7 +2,7 @@
 //! addressed point moves by from its BASE position, so editing the drag in history replays it on any base.
 
 use crate::standards::v1::subsets::geometry::schema::mutations::set_point_positions::equation_point_targets;
-use crate::{EquationMutation, EquationSnapshot};
+use crate::EquationSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Payload
@@ -16,13 +16,16 @@ pub struct MovePoints {
     pub dy: f64,
 }
 
-impl protocol::MutationKind<EquationSnapshot, EquationMutation> for MovePoints {
+impl<Op> protocol::MutationKind<EquationSnapshot, Op> for MovePoints
+where
+    Op: protocol::Mutation<EquationSnapshot, Diff = crate::EquationDiff> + From<MovePoints> + From<crate::standards::v1::subsets::geometry::schema::mutations::set_point_positions::SetPointPositions>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "move", entity: "points", kind: "move-points", record: "MovedPoints" };
 
-    fn diff(&self, base: &EquationSnapshot) -> protocol::MutationOutcome<<EquationMutation as protocol::Mutation<EquationSnapshot>>::Diff> {
+    fn diff(&self, base: &EquationSnapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<EquationSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &EquationSnapshot) -> Result<Vec<EquationMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EquationSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         Ok(super::inverse::inverse(self, base))
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {

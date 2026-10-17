@@ -1,0 +1,215 @@
+{
+  "version": 1,
+  "fixtures": [
+    {
+      "fixtureName": "pf-q157nV",
+      "createdSha256": "456ce7ac8b8c0868002d747d0aa90a6e7aa960f718908c788c89ce066b301f10",
+      "recovery": "closed",
+      "known": {
+        "version": 1,
+        "backingIdentity": "[16777232,390532838,134217728,16777297]",
+        "allocation": {
+          "id": "5024e08c20c0eefcfc42bdebcd7c0e45",
+          "owner": "fixture:protected-parent:pf-q157nV",
+          "kind": "compiler-state",
+          "bytes": 34668544,
+          "phase": "committed",
+          "child": {
+            "directory": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️14/ABSTRACT-REPO-BUILD-TOOLS-AND-ADD-BAZEL/🗑️generated/pf-q157nV/p/m/c",
+            "filesystemBytes": 33554432,
+            "maximumPhysicalBytes": 34603008,
+            "policySha256": "41a1fdc581b00accf0c29e1ef9c7579fa5b6045110c76d6cbfdea87716cd6503",
+            "version": 1,
+            "allocation": "5024e08c20c0eefcfc42bdebcd7c0e45",
+            "parentIdentity": "[16777232,390532838,134217728,16777297]"
+          }
+        }
+      }
+    },
+    {
+      "fixtureName": "pf-dH731i",
+      "createdSha256": "d7dbbba0fc02044d4fa4ee54fb24458ef827f2d5bd00b55789c03d6db86359b8",
+      "recovery": "exact",
+      "known": {
+        "version": 1,
+        "backingIdentity": "[16777232,404124526,134217728,16777297]",
+        "allocation": {
+          "id": "0ab77f6f5074da6d983ae950891b6151",
+          "owner": "fixture:protected-parent:pf-dH731i",
+          "kind": "compiler-state",
+          "bytes": 34668544,
+          "phase": "committed",
+          "child": {
+            "directory": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️14/ABSTRACT-REPO-BUILD-TOOLS-AND-ADD-BAZEL/🗑️generated/pf-dH731i/p/m/c",
+            "filesystemBytes": 33554432,
+            "maximumPhysicalBytes": 34603008,
+            "policySha256": "0269cf0174aa8c49d8f63be5f35fe46b781fbee63064183d9fae0ec4c38881ee",
+            "version": 1,
+            "allocation": "0ab77f6f5074da6d983ae950891b6151",
+            "parentIdentity": "[16777232,404124526,134217728,16777297]"
+          }
+        }
+      }
+    }
+  ],
+  "cases": [
+    {
+      "effect": "ordinary",
+      "accepted": true
+    },
+    {
+      "effect": "name",
+      "accepted": false
+    },
+    {
+      "effect": "createdSha256",
+      "accepted": false
+    },
+    {
+      "effect": "version",
+      "accepted": false
+    },
+    {
+      "effect": "backingIdentity",
+      "accepted": false
+    },
+    {
+      "effect": "allocation.id",
+      "accepted": false
+    },
+    {
+      "effect": "allocation.owner",
+      "accepted": false
+    },
+    {
+      "effect": "allocation.kind",
+      "accepted": false
+    },
+    {
+      "effect": "allocation.phase",
+      "accepted": false
+    },
+    {
+      "effect": "allocation.bytes",
+      "accepted": false
+    },
+    {
+      "effect": "allocation.namespace",
+      "accepted": false
+    },
+    {
+      "effect": "allocation.child.directory",
+      "accepted": false
+    },
+    {
+      "effect": "allocation.child.filesystemBytes",
+      "accepted": false
+    },
+    {
+      "effect": "allocation.child.maximumPhysicalBytes",
+      "accepted": false
+    },
+    {
+      "effect": "allocation.child.policySha256",
+      "accepted": false
+    },
+    {
+      "effect": "allocation.child.version",
+      "accepted": false
+    },
+    {
+      "effect": "allocation.child.allocation",
+      "accepted": false
+    },
+    {
+      "effect": "allocation.child.parentIdentity",
+      "accepted": false
+    },
+    {
+      "effect": "policy.capacityBytes",
+      "accepted": false
+    },
+    {
+      "effect": "policy.maximumWorkspaceBytes",
+      "accepted": false
+    },
+    {
+      "effect": "policy.maximumArtifactBytes",
+      "accepted": false
+    },
+    {
+      "effect": "protocol.metadataBytes",
+      "accepted": false
+    },
+    {
+      "effect": "protocol.version",
+      "accepted": false
+    },
+    {
+      "effect": "protocol.parentFilesystemBytes",
+      "accepted": false
+    },
+    {
+      "effect": "protocol.parentMaximumPhysicalBytes",
+      "accepted": false
+    },
+    {
+      "effect": "protocol.childFilesystemBytes",
+      "accepted": false
+    },
+    {
+      "effect": "protocol.childMaximumPhysicalBytes",
+      "accepted": false
+    },
+    {
+      "effect": "protocol.maximumWorkspaceBytes",
+      "accepted": false
+    },
+    {
+      "effect": "protocol.maximumArtifactBytes",
+      "accepted": false
+    },
+    {
+      "effect": "protocol.maximumOutputBytes",
+      "accepted": false
+    },
+    {
+      "effect": "protocol.maximumOutputLines",
+      "accepted": false
+    }
+  ],
+  "protocol": {
+    "version": 1,
+    "parentFilesystemBytes": 134217728,
+    "parentMaximumPhysicalBytes": 135266304,
+    "childFilesystemBytes": 33554432,
+    "childMaximumPhysicalBytes": 34603008,
+    "metadataBytes": 65536,
+    "maximumWorkspaceBytes": 67108864,
+    "maximumArtifactBytes": 1048576,
+    "maximumOutputBytes": 65536,
+    "maximumOutputLines": 256
+  },
+  "selections": [
+    {
+      "fixtureName": "pf-q157nV",
+      "settled": false,
+      "accepted": false
+    },
+    {
+      "fixtureName": "pf-dH731i",
+      "settled": false,
+      "accepted": true
+    },
+    {
+      "fixtureName": "pf-dH731i",
+      "settled": true,
+      "accepted": false
+    },
+    {
+      "fixtureName": "pf-other1",
+      "settled": false,
+      "accepted": false
+    }
+  ]
+}

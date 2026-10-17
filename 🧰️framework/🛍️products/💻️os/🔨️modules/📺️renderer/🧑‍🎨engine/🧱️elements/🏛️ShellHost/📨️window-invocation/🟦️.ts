@@ -14,8 +14,9 @@ import {
   type CommandInvocation
 } from "@semio-tech/framework";
 // #endregion 🔌️Adapters
-import { type ActiveSession, type ExtraWindowInstance } from "../../🐚️Shell/🟦️.tsx";
-import { sessionWindowInstances } from "../../🛠️ShellHelpers/🟦️.tsx";
+import { type ActiveSession } from "../../🐚️Shell/📦️program-sessions/🟦️.ts";
+import { type ExtraWindowInstance } from "../../🐚️Shell/🗃️state-shapes/🟦️.ts";
+import { sessionWindowInstances } from "../../🛠️ShellHelpers/🔄️ui-refresh/🟦️.ts";
 import { parseHubProgramIdV1 } from "@semio-tech/framework/plugin-module/hub-source/resolution";
 
 //#region FrameworkOsShell

@@ -2,7 +2,8 @@
 //! point, else default slot) plus the offset, one map entry per moved node.
 use crate::standards::v1::subsets::any::schema::diff::RewritingDiff;
 use crate::standards::v1::subsets::any::schema::rule_graph_position;
-use crate::{LayoutPoint, RewritingSnapshot};
+use crate::standards::v1::subsets::any::schema::model::LayoutPoint;
+use crate::standards::v1::subsets::any::schema::snapshot::RewritingSnapshot;
 use replication::MapDelta;
 
 //#region 🔖️Diff

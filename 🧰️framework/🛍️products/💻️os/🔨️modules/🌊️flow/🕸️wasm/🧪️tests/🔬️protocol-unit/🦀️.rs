@@ -1,6 +1,6 @@
 
 use super::*;
-use semio_framework::abi::AbiOperation;
+use semio_framework_abi::AbiOperation;
 
 const FLOW_ABI_LEDGER: &str = include_str!("../🧫️fixtures/📒️ledger/📊️.tsv");
 const FLOW_ABI_LIMITS: &str = include_str!("../🧫️fixtures/📐️limits.tsv");
@@ -165,7 +165,6 @@ fn original_flow_bridge_preserves_normal_failed_receipt_before_reply() {
     assert!(matches!(bridge.poll(budget()).unwrap(), AbiPortPoll::Message(AbiMessage::Reply(_))));
     assert!(row["nextPollCleared"].as_bool().unwrap());
     assert_eq!(bridge.retained_progress, Default::default());
-    eprintln!("[DEBUG] original Bridge failed normal child receipt preserved through terminal then cleared; projection boundary only");
 }
 
 /// 🧬️ Complete original refusals keep their kind, prose allocation and receipt through both Flow boundaries.
@@ -223,7 +222,6 @@ fn original_flow_failure_retains_and_closes_complete_value_cause() {
             }
         }
     }
-    eprintln!("[DEBUG] original Flow cause kinds8 ownedAndBorrowed=true directAndVcs=true copy1/3/64 sameProse=true exactSystem=true terminalDrop0");
 }
 
 #[test]

@@ -18,24 +18,25 @@
 
 use crate::mutations::{inverse_form_mutation, FormMutation};
 use crate::{replace_forms_steps, FormsDiff, FormsSnapshot};
-use crate::central_apply::{apply_form_edit_mutation};
+use crate::mutations::apply::{apply_form_edit_mutation};
+use semio_framework_test_fixtures::fixture_text;
 
-const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌱create-step/🧪️rejects/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌱create-step/🧪️rejects/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌱create-step/🧪️rejects/🦠️mutation/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌱create-step/🧪️rejects/🎯️outcome/🔣️.json");
+static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌱create-step/🧪️rejects/📸️snapshot/⬅️before/🔣️.json"));
+static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌱create-step/🧪️rejects/📸️snapshot/➡️after/🔣️.json"));
+static MUTATION: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌱create-step/🧪️rejects/🦠️mutation/🔣️.json"));
+static OUTCOME: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌱create-step/🧪️rejects/🎯️outcome/🔣️.json"));
 
 fn mutation() -> FormMutation {
-    semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation decodes")
+    semio_framework_pack_json::from_json_str((*MUTATION), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation decodes")
 }
 fn expected_after() -> FormsSnapshot {
-    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after snapshot decodes")
+    semio_framework_pack_json::from_json_str((*AFTER), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after snapshot decodes")
 }
 
 /// 🌱 The committed `⬅️before`, with its composed children resolved to a scene holding exactly the
 /// step the committed payload tries to create.
 fn before() -> FormsSnapshot {
-    let mut snapshot: FormsSnapshot = semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes");
+    let mut snapshot: FormsSnapshot = semio_framework_pack_json::from_json_str((*BEFORE), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes");
     let FormMutation::CreateStep(payload) = mutation() else {
         panic!("rejects-a-duplicate-step-id's committed mutation must be a create-step");
     };
@@ -84,21 +85,21 @@ async fn inverse_has_nothing_to_undo() {
 /// `null`; `FormStep::description` does carry the skip, so the committed step omits it entirely.
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
-    for (label, text) in [("before", BEFORE), ("after", AFTER)] {
+    for (label, text) in [("before", (*BEFORE)), ("after", (*AFTER))] {
         let decoded: FormsSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
         let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "create-step/rejects-a-duplicate-step-id: committed {label} JSON is not canonical");
     }
     let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&mutation())).expect("mutation encodes");
-    let original: serde_json::Value = serde_json::from_str(MUTATION).expect("mutation reparses");
+    let original: serde_json::Value = serde_json::from_str((*MUTATION)).expect("mutation reparses");
     assert_eq!(reencoded, original, "create-step/rejects-a-duplicate-step-id: committed mutation JSON is not canonical");
 }
 
 /// 🎯️ The declared rejection — status, code and path — is exactly what the diff builder emits.
 #[semio_framework_async_macros::async_test]
 async fn declared_outcome_holds() {
-    let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
+    let outcome: serde_json::Value = serde_json::from_str((*OUTCOME)).expect("outcome decodes");
     assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("rejected"), "create-step/rejects-a-duplicate-step-id declares a rejected outcome");
     let produced = <FormMutation as protocol::Mutation<FormsSnapshot>>::diff(&mutation(), &before());
     let message = produced.messages().first().expect("a rejected outcome carries a diagnostic");

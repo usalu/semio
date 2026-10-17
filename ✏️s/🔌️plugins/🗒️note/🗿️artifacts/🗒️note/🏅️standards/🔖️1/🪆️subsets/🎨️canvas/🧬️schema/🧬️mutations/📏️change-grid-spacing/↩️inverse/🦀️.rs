@@ -1,12 +1,14 @@
 //! ↩️ Inverse for `ChangeGridSpacing`.
 use super::ChangeGridSpacing;
-use crate::schema::mutations::NoteMutation;
 use crate::NoteSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(_payload: &ChangeGridSpacing, base: &NoteSnapshot) -> Result<Vec<NoteMutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op>(_payload: &ChangeGridSpacing, base: &NoteSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError>
+where
+    Op: From<crate::standards::v1::subsets::canvas::schema::mutations::change_grid_spacing::ChangeGridSpacing>,
+{
     Ok((|| {
-    vec![NoteMutation::ChangeGridSpacing(ChangeGridSpacing { new_spacing: base.grid_spacing })]
+    vec![Op::from(ChangeGridSpacing { new_spacing: base.grid_spacing })]
 
     })())
 }

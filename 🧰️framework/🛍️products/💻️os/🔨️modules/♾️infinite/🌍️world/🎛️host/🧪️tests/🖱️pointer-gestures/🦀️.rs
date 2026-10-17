@@ -3,6 +3,7 @@
 use semio_framework_os_infinite_world_model::{WORLD_INTERACTION_ID_BYTE_CAPACITY, WORLD_INTERACTION_OBJECT_CAPACITY, WORLD_INTERACTION_TOPOLOGY_BYTE_CAPACITY, world_mesh_ownership_grant, WorldCatalogueDropPreviewRecord, WorldInteractionObjectKind, WorldInteractionStep};
 use semio_framework_os_infinite_world_components::World3dRelocateSession;
 use semio_framework_os_infinite_world_cursors::{render_pick_viewport, resolved_domain_id, selection_method_wire_str, WorldMarqueeGesture, WorldMarqueePublishJob, WorldMarqueeResult, WorldMarqueeResultPages, WorldRayPickCursor, WorldRayPickPurpose};
+use semio_framework_test_fixtures::fixture_text;
 #[cfg(any(test, feature = "testkit"))]
 use semio_framework_os_infinite_world_scene::TerrainMeshOracleData;
 use semio_framework_os_infinite_world_bridge::{world3d_scene_instance_interactions_are_bounded, World3dDynamicRetirement, World3dSceneInstanceEntry};
@@ -13,16 +14,12 @@ use semio_framework_value::{RetainedCloneGrant, RetainedCloneProgress};
 use semio_framework::SelectionMethod;
 
 /// 📖️ Reads one test input at run time (relative to the package manifest) so it does not count as an embedded compile input.
-fn read_static(path_from_manifest: &str) -> &'static str {
-    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(path_from_manifest);
-    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("test input {}: {error}", path.display())).into_boxed_str())
-}
 
 /// 📖️ Reads several test inputs at run time and joins them into the one text the unsplit sources formed.
 fn read_joined(paths: &[&str]) -> &'static str {
     let mut joined = String::new();
     for path in paths {
-        joined.push_str(read_static(path));
+        joined.push_str(fixture_text!(path));
     }
     Box::leak(joined.into_boxed_str())
 }
@@ -125,13 +122,13 @@ fn allocate_oracle_mesh(token:Mesh3dWriteToken) {
 }
 
 fn world_original_fixture_grant()->semio_framework_value::RetainedCloneGrant{
-    let law:serde_json::Value=serde_json::from_str(read_static("../../../🧪️tests/🔬️unit/🧫️retained-attributes.json")).unwrap();let axes=&law["grant"];
+    let law:serde_json::Value=serde_json::from_str(fixture_text!("../../../🧪️tests/🔬️unit/🧫️retained-attributes.json")).unwrap();let axes=&law["grant"];
     semio_framework_value::RetainedCloneGrant{maximum_items:axes["items"].as_u64().unwrap()as usize,maximum_copy_bytes:axes["copyBytes"].as_u64().unwrap()as usize,maximum_capacity_bytes:axes["capacityBytes"].as_u64().unwrap()as usize,maximum_release_bytes:axes["releaseBytes"].as_u64().unwrap()as usize,maximum_depth:axes["depth"].as_u64().unwrap()as usize}
 }
 
 #[allow(non_snake_case)]
 fn POINTER_GESTURES() -> &'static str {
-    read_static("../../../../../📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🧪️tests/🧫️fixtures/🖱️pointer-gestures.json")
+    fixture_text!("../../../../../📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🧪️tests/🧫️fixtures/🖱️pointer-gestures.json")
 }
 
 fn fixture() -> serde_json::Value {

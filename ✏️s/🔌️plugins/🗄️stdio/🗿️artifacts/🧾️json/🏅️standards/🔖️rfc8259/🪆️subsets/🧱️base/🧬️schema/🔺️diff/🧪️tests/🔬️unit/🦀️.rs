@@ -1,4 +1,6 @@
-use super::*;
+use crate::schema::snapshot::JsonMember;
+use crate::JsonSnapshot;
+use crate::standards::v_rfc8259::subsets::base::schema::diff::*;
 use crate::STDIO_JSON_DOCUMENT_SCHEMA;
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9

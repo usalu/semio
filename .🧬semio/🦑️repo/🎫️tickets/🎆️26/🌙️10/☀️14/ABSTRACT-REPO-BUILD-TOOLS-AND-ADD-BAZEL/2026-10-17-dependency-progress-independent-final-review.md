@@ -1,0 +1,9 @@
+# Dependencies Progress Repair Independent Review
+
+All nine final manifest inputs match current stable nofollow FD/name seven-field metadata, bytes and SHA256. Receipt: `🗑️generated/dependency-progress-nine-independent-hold.json`. This is a sequential point-time Source hold, not a runtime speed claim or future freeze.
+
+The CurrentBindings private full-map check is now awaited at each prior callsite. It retains insertion-order observations, work debits, full retained equality comparisons and the same before/after complete binding hashes. Every64 scanned rows it publishes bounded work progress and yields with genuine context checks around each await. It does not remove the quadratic observations identified in the earlier audit or cache their physical results as future authority. The private map remains inaccessible to caller callbacks.
+
+ADMIN distinguishes a live issued/refining/signal/held-global-gate checkpoint from full protected read.check. Only ALL Source ownership advance uses the cheap checkpoint, schema-validates actual operation/completedOperations DATA and publishes it before continuation. Protected IO and context checks retain full read.check; token/Core recheck remains unchanged. This removes repeated protected root observation from Source-only progress without granting writes or weakening final current Source/binding/row proof.
+
+Interfaces reports exact Source42224 natural0,16 tests/301 assertions and strict42909 natural0 across five roots, including cancel/drift/publish-refusal and independent SQLite exact observation/debit/new progress counts. Tests were not rerun here. No material blocker found in these bounded hunks. The CJS synchronous terminal ownership fence remains separately relevant; this change does not claim it acquired new yielding semantics. Genuine physical plan and inactive retirement implementation remain unqualified. No Native or protected reads performed.

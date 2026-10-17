@@ -17,9 +17,6 @@ pub mod create_layer {
     pub mod inverse;
     #[path = "🧬️schema/🧬️mutations/➕️create-layer/🦠️mutation/🦀️.rs"]
     pub mod mutation;
-    #[cfg(test)]
-    #[path = "🧬️schema/🧬️mutations/➕️create-layer/🧪️tests/➕️appends/🦀️.rs"]
-    mod tests_appends_shape_b_at_the_root;
 }
 #[path = "."]
 pub mod delete_layer {
@@ -29,9 +26,6 @@ pub mod delete_layer {
     pub mod inverse;
     #[path = "🧬️schema/🧬️mutations/🗑️delete-layer/🦠️mutation/🦀️.rs"]
     pub mod mutation;
-    #[cfg(test)]
-    #[path = "🧬️schema/🧬️mutations/🗑️delete-layer/🧪️tests/🚫️removes/🦀️.rs"]
-    mod tests_removes_group_a_with_its_child;
 }
 #[path = "."]
 pub mod duplicate_layer {
@@ -41,9 +35,6 @@ pub mod duplicate_layer {
     pub mod inverse;
     #[path = "🧬️schema/🧬️mutations/📋️duplicate-layer/🦠️mutation/🦀️.rs"]
     pub mod mutation;
-    #[cfg(test)]
-    #[path = "🧬️schema/🧬️mutations/📋️duplicate-layer/🧪️tests/🚫️rejects/🦀️.rs"]
-    mod tests_rejects_a_missing_source_layer;
 }
 #[path = "."]
 pub mod import_image_asset {
@@ -63,8 +54,5 @@ pub mod reorder_layer {
     pub mod inverse;
     #[path = "🧬️schema/🧬️mutations/🔃reorder-layer/🦠️mutation/🦀️.rs"]
     pub mod mutation;
-    #[cfg(test)]
-    #[path = "🧬️schema/🧬️mutations/🔃reorder-layer/🧪️tests/⬆️moves/🦀️.rs"]
-    mod tests_moves_shape_a_above_shape_b;
 }
 //#endregion 🪢️TaxonomyMounts

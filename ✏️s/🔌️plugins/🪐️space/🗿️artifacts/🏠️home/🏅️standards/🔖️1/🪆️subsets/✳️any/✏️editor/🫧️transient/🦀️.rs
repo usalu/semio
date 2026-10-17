@@ -494,9 +494,7 @@ pub mod mutations;
 pub use mutations::*;
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
 
 #[path = "🚪️io/🦀️.rs"]

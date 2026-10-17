@@ -43,4 +43,4 @@ export function assertCdnDeploySurface(distRoot: string): void {
   assert.ok(existsSync(join(distRoot, "🧶️bundles")), `${distRoot}: missing 🧶️bundles/`);
 }
 
-test("the actual S site producers retain all catalog variants",async()=>{await testPlaygroundSiteDistDefaults();await testPluginSiteNxTargets(process.env.SEMIO_WORKSPACE_ROOT??process.cwd());console.log("[DEBUG] S catalog CDN site producers checked");});
+test("the actual S site producers retain all catalog variants",async()=>{await testPlaygroundSiteDistDefaults();await testPluginSiteNxTargets(process.env.SEMIO_WORKSPACE_ROOT??process.cwd());});

@@ -51,7 +51,7 @@ impl Publication {
     }
 
     /// 📈️ The applied input progress a checkpoint publication certifies; `None` for a commit.
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testkit"))]
     pub fn applied_progress(&self) -> Option<u64> {
         match self.kind {
             Kind::Checkpoint(applied_progress) => Some(applied_progress),
@@ -60,7 +60,7 @@ impl Publication {
     }
 
     /// 🤝️ The sealed commit output payload, readable only after the whole commit was delivered.
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testkit"))]
     pub fn commit_output(&self) -> Option<&semio_framework_job::RetainedJobPayload> {
         if self.delivered && matches!(self.kind, Kind::Commit) { self.output.published() } else { None }
     }
@@ -178,6 +178,4 @@ impl Publication {
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

@@ -1,10 +1,24 @@
 //! 🎽️ Staged `reserved-jobs` members of the `instance-render` use cases, as methods of the borrowed bundle (WP7 of the instance family).
 //!
 //! 🏷️ The inputs of the reserved action and media jobs.
-use super::*;
+use semio_framework_plugin_decl_emission::{ActionMeta, Emit};
+use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use pack::snapshot::ArtifactPack;
+use semio_framework_plugin_decl_app::tool_contract::{ArtifactReservedToolInput, ArtifactReservedToolJob, ArtifactReservedToolJobRequest, ArtifactToolCompletion};
+use semio_framework_plugin_decl_views::child_view::ChildContentView;
+use semio_framework_value::DslValue;
+use semio_framework::{Fault, FaultCode, FaultFrom, FaultOrigin, Media};
+use std::future::Future;
+use semio_framework_plugin_instance_extension::InstanceExtension;
+use store::{MemberFactory, Mutation, SpaceMember};
+use protocol::OpText;
+use semio_framework_plugin_reactor_app::PluginApp;
+use crate::render_bundle::RenderCtx;
+use semio_framework_ui_contract::*;
 
 impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceExtension> RenderCtx<'ctx, A, M, X> {
-    pub(super) async fn build_artifact_reserved_action_job(&mut self, action: &str, args: Option<&DslValue>, raw_wire: Vec<u8>, meta: &ActionMeta) -> Result<Option<(ArtifactReservedToolJob, ArtifactToolCompletion<A>)>, Fault> {
+    pub async fn build_artifact_reserved_action_job(&mut self, action: &str, args: Option<&DslValue>, raw_wire: Vec<u8>, meta: &ActionMeta) -> Result<Option<(ArtifactReservedToolJob, ArtifactToolCompletion<A>)>, Fault> {
         self.refresh_cache().await?;
         let (snapshot, config, history) = self.history.command_cache_inputs();
         let parent_document_id = self.stores.store.envelope().id.clone();
@@ -33,7 +47,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
         Ok(A::build_reserved_tool_job(request)?.map(|job| (job, completion)))
     }
 
-    pub(super) async fn build_artifact_reserved_media_job(&mut self, port: &str, media: Media, meta: &ActionMeta) -> Result<(ArtifactReservedToolJob, ArtifactToolCompletion<A>), Fault> {
+    pub async fn build_artifact_reserved_media_job(&mut self, port: &str, media: Media, meta: &ActionMeta) -> Result<(ArtifactReservedToolJob, ArtifactToolCompletion<A>), Fault> {
         let action = "import-media";
         self.refresh_cache().await?;
         let (snapshot, config, history) = self.history.command_cache_inputs();

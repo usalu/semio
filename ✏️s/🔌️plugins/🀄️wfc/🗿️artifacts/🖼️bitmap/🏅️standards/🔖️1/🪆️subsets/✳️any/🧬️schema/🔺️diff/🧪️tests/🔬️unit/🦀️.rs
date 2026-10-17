@@ -1,6 +1,7 @@
 //! 🧪️ `BitmapDiff` — the input patch, the positional palette delta, the pin rows, `absorb` coalescing and `inverse`.
 
-use super::*;
+use crate::{schema::snapshot::pin_key, schema::snapshot::BitmapOutputSpec, schema::snapshot::BitmapPinnedPixel, schema::snapshot::BitmapSnapshot};
+use crate::standards::v1::subsets::any::schema::diff::*;
 use crate::schema::snapshot::{BitmapColor, BitmapInput};
 use protocol::DiffAlgebra;
 

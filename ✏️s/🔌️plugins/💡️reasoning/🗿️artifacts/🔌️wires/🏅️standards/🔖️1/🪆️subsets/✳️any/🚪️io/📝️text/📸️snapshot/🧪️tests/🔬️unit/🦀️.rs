@@ -1,4 +1,5 @@
-use super::*;
+use crate::WiresSnapshot;
+use crate::standards::v1::subsets::any::io::text::snapshot::*;
 use crate::empty_wires_snapshot;
 
 #[semio_framework_async_macros::async_test]

@@ -6,25 +6,26 @@
 //! `from: 0, to: 2` over a three-run sequence lands the run last rather than second-to-last — the
 //! whole point of this case.
 
+use semio_framework_test_fixtures::fixture_text;
 use semio_s_artifact_stdio_semio_text_model::schema::diff::SemioTextDiff;
 use semio_s_artifact_stdio_semio_text_mutations::schema::mutations::SemioTextMutation;
 use semio_s_artifact_stdio_semio_text_model::schema::snapshot::SemioTextSnapshot;
 use protocol::Mutation;
 
-const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔀reorder-runs/🧭️moves/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔀reorder-runs/🧭️moves/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔀reorder-runs/🧭️moves/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔀reorder-runs/🧭️moves/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔀reorder-runs/🧭️moves/🎯️outcome/🔣️.json");
+static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔀reorder-runs/🧭️moves/📸️snapshot/⬅️before/🔣️.json"));
+static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔀reorder-runs/🧭️moves/📸️snapshot/➡️after/🔣️.json"));
+static MUTATION: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔀reorder-runs/🧭️moves/🦠️mutation/🔣️.json"));
+static DIFF: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔀reorder-runs/🧭️moves/🔺️diff/🔣️.json"));
+static OUTCOME: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔀reorder-runs/🧭️moves/🎯️outcome/🔣️.json"));
 
 fn before() -> SemioTextSnapshot {
-    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("reorder-runs before snapshot decodes")
+    semio_framework_pack_json::from_json_str((*BEFORE), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("reorder-runs before snapshot decodes")
 }
 fn expected_after() -> SemioTextSnapshot {
-    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("reorder-runs after snapshot decodes")
+    semio_framework_pack_json::from_json_str((*AFTER), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("reorder-runs after snapshot decodes")
 }
 fn reorder_runs() -> SemioTextMutation {
-    semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("reorder-runs mutation decodes")
+    semio_framework_pack_json::from_json_str((*MUTATION), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("reorder-runs mutation decodes")
 }
 
 /// ▶️ `one` leaves the head and lands at the tail; `two`/`three` each shift one position down.
@@ -57,21 +58,21 @@ async fn the_undo_reorder_moves_the_run_back_to_the_head() {
 /// 🔣️ Snapshots and the `{"ReorderRuns":{"from":0,"to":2}}` payload are canonical fixed points.
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
-    for (label, text) in [("before", BEFORE), ("after", AFTER)] {
+    for (label, text) in [("before", (*BEFORE)), ("after", (*AFTER))] {
         let decoded: SemioTextSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
         let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "reorder-runs/moves-the-first-run-to-the-end: committed {label} JSON is not canonical");
     }
     let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&(reorder_runs()))).expect("reorder-runs mutation encodes");
-    let original: serde_json::Value = serde_json::from_str(MUTATION).expect("reorder-runs mutation reparses");
+    let original: serde_json::Value = serde_json::from_str((*MUTATION)).expect("reorder-runs mutation reparses");
     assert_eq!(reencoded, original, "reorder-runs/moves-the-first-run-to-the-end: committed mutation JSON is not canonical");
 }
 
 /// 🎯️ Declared `applied`: `from` (0) differs from `to` (2), so `mutation.no-op` must not fire.
 #[semio_framework_async_macros::async_test]
 async fn declared_outcome_holds_without_a_no_op_warning() {
-    let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
+    let outcome: serde_json::Value = serde_json::from_str((*OUTCOME)).expect("outcome decodes");
     assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("applied"), "reorder-runs/moves-the-first-run-to-the-end: this case is declared applied");
     let produced = reorder_runs().diff(&before());
     assert!(produced.messages().is_empty(), "a genuine move must not raise mutation.no-op");
@@ -84,24 +85,24 @@ async fn produces_committed_diff() {
     let base = before();
     let outcome = <SemioTextMutation as Mutation<SemioTextSnapshot>>::diff(&reorder_runs(), &base);
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
-    let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
+    let committed: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff decodes");
     assert_eq!(produced, committed, "reorder-runs/moves-the-first-run-to-the-end: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
 
 /// 🔣️ The committed diff is canonical and is a strict permutation of the base sequence.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
-    let decoded: SemioTextDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed reorder-runs diff decodes");
+    let decoded: SemioTextDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed reorder-runs diff decodes");
     let _list = decoded.runs.as_ref().expect("an applied reorder-runs diff carries a runs list");
     let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("diff re-encodes");
-    let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
+    let original: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff reparses");
     assert_eq!(reencoded, original, "reorder-runs/moves-the-first-run-to-the-end: committed diff JSON is not canonical");
 }
 
 /// 🩹 Applying the committed diff to `before` yields `after`.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: SemioTextDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed reorder-runs diff decodes");
+    let decoded: SemioTextDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed reorder-runs diff decodes");
     let produced = protocol::apply_diff(&decoded, &before()).expect("committed reorder-runs diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "reorder-runs/moves-the-first-run-to-the-end: committed diff did not carry before to after");
 }

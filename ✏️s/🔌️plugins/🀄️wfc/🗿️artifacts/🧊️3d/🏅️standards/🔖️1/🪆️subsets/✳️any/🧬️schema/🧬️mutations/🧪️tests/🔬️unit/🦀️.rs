@@ -1,10 +1,12 @@
 //! 🧪️ The mutation aggregate's own laws: the kind roster is honest against the enum, every verb is
 //! approved, and EVERY kind's `inverse()` restores its pre-mutation document exactly.
 
-use super::*;
+use protocol::Mutation;
+use crate::standards::v1::subsets::any::schema::mutations::*;
 use crate::diff::Wfc3dDiff;
 use crate::schema::snapshot::{Color, GraphRule, Slot3d, SlotEdge, Tile, TileMedia3d, Wfc3dSnapshot};
 use protocol::SemanticMutation;
+use semio_framework_test_fixtures::fixture_path;
 use vcs::apply_mutation;
 
 //#region 🧸️Fixtures
@@ -165,7 +167,7 @@ fn a_duplicate_id_is_fatal() {
 #[test]
 #[ignore]
 fn regenerate_committed_fixture_quintets() {
-    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🧬️mutations");
+    let root = fixture_path!("../../../../🧪️tests/🧫️fixtures/🧬️mutations");
     for (mutation_dir, case, base, mutation) in fixture_cases() {
         let directory = root.join(mutation_dir).join(case);
         std::fs::create_dir_all(directory.join("📸️snapshot/⬅️before")).expect("before dir");

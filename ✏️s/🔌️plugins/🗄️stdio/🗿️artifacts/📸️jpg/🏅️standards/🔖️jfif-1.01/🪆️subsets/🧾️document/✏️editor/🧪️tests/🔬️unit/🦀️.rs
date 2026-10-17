@@ -1,4 +1,12 @@
-use super::*;
+use crate::standards::v_jfif_1_01::subsets::document::schema::mutations::JpgMutation;
+use crate::standards::v_jfif_1_01::subsets::document::schema::snapshot::JpgSnapshot;
+use crate::JPG_ANY_DIALECT;
+use semio_framework_plugin::ArtifactEditor;
+use semio_framework_plugin::Editor;
+use semio_framework_plugin::EditorApp;
+use semio_framework_test_fixtures::fixture_text;
+use semio_s_artifact_stdio_contract::editing;
+use crate::editor::jpg_any::*;
 
 /// 🧬️ Registers the document schema jpg's declaration contributes — the contract every snapshot edit validates against;
 /// a fixture editor runs without the plugin assembly that publishes it.
@@ -38,7 +46,7 @@ fn large_raster_density_edit_uses_compact_owned_event() {
     let restored = inverse.into_iter().fold(next, |current, mutation| protocol::apply_diff(<JpgMutation as protocol::Mutation<JpgSnapshot>>::diff(&mutation, &current).diff(), &current).expect("density inverse applies"));
     assert_eq!(restored, snapshot);
 
-    let native_base = crate::schema::demo_jpg_snapshot();
+    let native_base = crate::schema::snapshot::demo_jpg_snapshot();
     let native_emit = <JpgAnyEditor as editing::SnapshotEditingEditor>::snapshot_edit_emit(&event, &native_base).expect("native density edit emits");
     let native_edited = protocol::apply_diff(<JpgMutation as protocol::Mutation<JpgSnapshot>>::diff(&native_emit.artifact_mutations[0], &native_base).diff(), &native_base).expect("native density mutation applies");
     let base_bytes = crate::standards::v_jfif_1_01::subsets::document::io::encode_jpg(&native_base, &crate::standards::v_jfif_1_01::subsets::document::io::JpgEncodeOptions::default()).expect("base JPEG encodes");
@@ -51,7 +59,7 @@ fn large_raster_density_edit_uses_compact_owned_event() {
 #[test]
 fn payload_detail_edits_publish_the_exact_requested_value() {
     register_document_schema();
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../📇️registry/🧬️contract/✏️editing/🩹️patch/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../../../../📇️registry/🧬️contract/✏️editing/🩹️patch/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let mut snapshot = JpgSnapshot::default();
     snapshot.image.pixels = vec![7, 9];
     let base: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&semio_framework_value::ToValue::to_value(&snapshot))).unwrap();
@@ -74,7 +82,7 @@ fn payload_detail_edits_publish_the_exact_requested_value() {
     }
 }
 
-semio_framework_plugin::history_edit_acceptance_law!("stdio", super::JpgAnyEditor, || semio_framework_plugin::App { definition: super::create_jpg_any_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document");
+semio_framework_plugin::history_edit_acceptance_law!("stdio", crate::editor::jpg_any::JpgAnyEditor, || semio_framework_plugin::App { definition: crate::editor::jpg_any::create_jpg_any_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document");
 
 #[semio_framework_async_macros::async_test]
 async fn natural_file_route_uses_plugin_media_and_isolates_fresh_owner_history() {

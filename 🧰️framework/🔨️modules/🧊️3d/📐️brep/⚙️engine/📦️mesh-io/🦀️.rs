@@ -25,6 +25,7 @@
 //! wave 1 (W1-A): the parent's own `engine::contract` module now owns it same-crate.
 
 use semio_framework_3d_brep_construction::euler::{add_shell, add_solid};
+use semio_framework_3d_brep_kernel_contract::BrepError;
 use semio_framework_3d_brep_representation::contract::MeshTransfer;
 use semio_framework_value::{ValueError,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep},retirement::controlled::ControlledRetirement};
 use semio_framework_mesh_engine::HistoryFoldIndex;
@@ -51,7 +52,7 @@ pub struct TriangleMesh {
 }
 /// 📦 Bounded private triangle import and exact owned-entity retirement in the mesh-I/O owner.
 pub struct MeshImportCursor {
-    pub(super) active: bool,
+    active: bool,
     positions: Vec<f32>,
     positions64: Vec<Pnt3>,
     normals64: Vec<Vec3>,
@@ -128,7 +129,11 @@ impl MeshImportCursor {
     pub fn cancel(&mut self) { self.cancelled=true; }
     /// 🧹️ Reports cancellation only after every owned body entity has been retired.
     pub fn retirement_complete(&self)->bool {self.retired && self.cancelled}
-    pub(super) fn cleanup_complete(&self)->bool {self.retired}
+    pub fn cleanup_complete(&self)->bool {self.retired}
+    /// 🔒️ True while a session has registered this import as an open pending mutation.
+    pub fn is_active(&self)->bool {self.active}
+    /// 🔒️ Records that a session registered or released this import as an open pending mutation.
+    pub fn set_active(&mut self,active:bool) {self.active=active;}
     fn points(&self)->Result<[Pnt3;3],KernelError> {
         let mut points=[Pnt3::new(0.0,0.0,0.0);3];
         for (point,index) in points.iter_mut().zip(&self.indices[self.cursor..self.cursor+3]) {
@@ -289,6 +294,42 @@ pub fn mesh_from_mesh_data(data: &MeshData) -> TriangleMesh {
         }
     }
     TriangleMesh { positions, normals, indices: data.indices.clone() }
+}
+
+/// 📦 Converts a tessellation [`MeshTransfer`] into `semio-framework-mesh-engine`'s `MeshData`.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn mesh_data_from_mesh_transfer(transfer: &MeshTransfer) -> Result<semio_framework_mesh_engine::MeshData, BrepError> {
+    if transfer.position.len()%3!=0 || transfer.normal.len()!=transfer.position.len() || transfer.index.len()%3!=0 || transfer.edges.len()%6!=0 || transfer.points.len()%3!=0 || transfer.position.iter().chain(&transfer.normal).chain(&transfer.edges).chain(&transfer.points).any(|value|!value.is_finite()) || transfer.index.iter().any(|index|*index as usize>=transfer.position.len()/3) {return Err(BrepError::InvalidInput("analytic preview buffers are invalid".into()));}
+    fn picks(groups:impl Iterator<Item=(u32,u32,String)>,length:usize,stride:usize)->Result<(Vec<u32>,Vec<String>),BrepError> {
+        let mut next=0usize;let mut ids=Vec::new();let mut labels=Vec::new();
+        for(start,count,label)in groups {
+            let(start,count)=(start as usize,count as usize);
+            let end=start.checked_add(count).ok_or_else(||BrepError::InvalidInput("analytic component range overflow".into()))?;
+            if start!=next || count==0 || start%stride!=0 || count%stride!=0 || end>length || label.is_empty() || label.chars().take(129).count()>128 {return Err(BrepError::InvalidInput("analytic component ranges must have complete aligned coverage and full labels".into()));}
+            ids.extend(std::iter::repeat_n(labels.len() as u32,count/stride));labels.push(label);next=end;
+        }
+        if next!=0 && next!=length {return Err(BrepError::InvalidInput("analytic component ranges have incomplete coverage".into()));}
+        Ok((ids,labels))
+    }
+    let(face_ids,faces)=picks(transfer.face_groups.iter().map(|group|(group.start,group.count,group.entity_id.clone())),transfer.index.len(),3)?;
+    let(edge_ids,edges)=picks(transfer.edge_groups.iter().map(|group|(group.start,group.count,group.entity_id.clone())),transfer.edges.len()/6,1)?;
+    let(vertex_ids,vertices)=picks(transfer.vertex_groups.iter().map(|group|(group.start,group.count,group.entity_id.clone())),transfer.points.len()/3,1)?;
+    let mut data = mesh_to_mesh_data(&triangle_mesh_from_transfer(transfer));
+    data.edge_positions = transfer.edges.clone();
+    data.face_ids=face_ids;data.edge_ids=edge_ids;
+    let mut references=Vec::new();
+    if !faces.is_empty() {references.push(("face".into(),faces));}
+    if !edges.is_empty() {references.push(("edge".into(),edges));}
+    if !vertices.is_empty() {
+        data.vertex_ids=vec![u32::MAX;data.positions.len()/3];
+        data.positions.extend_from_slice(&transfer.points);
+        data.normals.resize(data.positions.len(),0.0);
+        data.vertex_ids.extend(vertex_ids);
+        references.push(("vertex".into(),vertices));
+    }
+    data.component_references=semio_framework_mesh_component_references::ComponentReferenceTable::from_entries(references);
+    data.validate_component_references().map_err(BrepError::InvalidInput)?;
+    Ok(data)
 }
 
 // #endregion 🔖️Convert
@@ -487,6 +528,10 @@ fn parse_f64_token(s: &str) -> Result<f64, KernelError> {
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
+
+#[cfg(test)]
+#[path = "🧪️tests/🖼️preview/🦀️.rs"]
+mod preview_tests;
 
 impl TriangleMesh {
     #[cfg(test)]

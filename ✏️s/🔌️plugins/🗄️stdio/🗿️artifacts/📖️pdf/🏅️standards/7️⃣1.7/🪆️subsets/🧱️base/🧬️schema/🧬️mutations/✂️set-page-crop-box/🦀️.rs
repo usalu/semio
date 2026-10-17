@@ -1,6 +1,5 @@
 //! ✂️ Authoritative PDF mutation payload, diff, inverse, and tests for `set-page-crop-box`.
 
-use super::PdfMutation;
 use crate::standards::v1_7::subsets::base::schema::diff::{self, PdfDiff};
 use crate::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot;
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
@@ -15,16 +14,19 @@ pub struct SetPageCropBox {
     pub crop_box: Option<[f64; 4]>,
 }
 
-impl MutationKind<PdfSnapshot, PdfMutation> for SetPageCropBox {
+impl<Op> MutationKind<PdfSnapshot, Op> for SetPageCropBox
+where
+    Op: protocol::Mutation<PdfSnapshot, Diff = PdfDiff> + From<SetPageCropBox>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "page-crop-box", kind: "set-page-crop-box", record: "Set" };
 
     fn diff(&self, _base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
         MutationOutcome::new(diff::diff_set_page_crop_box(self.index, self.crop_box))
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
-        base.pages.get(self.index).map(|page| PdfMutation::SetPageCropBox(SetPageCropBox { index: self.index, crop_box: page.crop_box })).into_iter().collect()
+        base.pages.get(self.index).map(|page| Op::from(SetPageCropBox { index: self.index, crop_box: page.crop_box })).into_iter().collect()
     
     })())
 }
@@ -41,8 +43,6 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetPageCropBox {
 //#endregion 🔖️Mutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
 

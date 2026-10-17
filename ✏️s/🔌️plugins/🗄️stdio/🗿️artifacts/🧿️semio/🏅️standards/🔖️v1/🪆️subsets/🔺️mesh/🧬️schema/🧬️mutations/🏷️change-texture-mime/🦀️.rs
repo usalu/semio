@@ -1,6 +1,5 @@
 //! 🏷️ `change-texture-mime` — sets a texture's mime type. Decomposed from the old bundled `SetTextureBytes{mime,bytes}`: `mime`/`bytes` are two independent top-level fields on `SemioTexture` (derivation-rules.md rule 2: `change-<field>` per remaining scalar, `replace-<payload>` per large structured field).
 
-use crate::schema::mutations::SemioMeshMutation;
 use crate::schema::snapshot::SemioMeshSnapshot;
 
 //#region 🔖️Payload
@@ -12,13 +11,16 @@ pub struct ChangeTextureMime {
     pub new_mime: String,
 }
 
-impl protocol::MutationKind<SemioMeshSnapshot, SemioMeshMutation> for ChangeTextureMime {
+impl<Op> protocol::MutationKind<SemioMeshSnapshot, Op> for ChangeTextureMime
+where
+    Op: protocol::Mutation<SemioMeshSnapshot, Diff = crate::schema::diff::SemioMeshDiff> + From<ChangeTextureMime>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "texture-mime", kind: "change-texture-mime", record: "ChangedTextureMime" };
 
-    fn diff(&self, base: &SemioMeshSnapshot) -> protocol::MutationOutcome<<SemioMeshMutation as protocol::Mutation<SemioMeshSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioMeshSnapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<SemioMeshSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &SemioMeshSnapshot) -> Result<Vec<SemioMeshMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &SemioMeshSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

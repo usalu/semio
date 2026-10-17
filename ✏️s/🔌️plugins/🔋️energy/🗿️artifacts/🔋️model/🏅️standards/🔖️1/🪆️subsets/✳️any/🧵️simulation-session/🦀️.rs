@@ -27,7 +27,7 @@ use crate::sim_wire::{EnergyJobStage, EnergyQualityTier};
 #[cfg(test)]
 use crate::snapshot::EnergyModelSnapshot;
 #[cfg(test)]
-use semio_framework_job::{Generation, InteractiveJobCloseStep, JobOutcomeBorrow, OperationId, RetainedCloneGrant, RetainedCloneProgress, StepBudget, StepContext};
+use semio_framework_job::{Generation, InteractiveJob, InteractiveJobCloseStep, JobOutcomeBorrow, OperationId, RetainedCloneGrant, RetainedCloneProgress, StepBudget, StepContext};
 #[cfg(test)]
 use semio_framework_value::RetirementDemand;
 use semio_framework_ui_locale::LocalizedLabel;

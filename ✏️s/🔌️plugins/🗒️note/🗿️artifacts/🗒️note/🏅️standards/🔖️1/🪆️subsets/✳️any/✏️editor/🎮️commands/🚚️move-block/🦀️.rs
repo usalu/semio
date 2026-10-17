@@ -18,7 +18,7 @@ pub struct MoveBlock {
 
 /// 🚚 Reparents `block_id` into `target_row_id`'s container at the drop-appropriate index —
 /// dispatches `move-block-to-container` (hierarchy move), never a whole-`blocks` vec swap.
-pub fn handle(payload: &MoveBlock, doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, semio_framework_plugin::NoConfig>, _ctx: &mut crate::editor::note::NoteDispatchCtx) -> Result<Emit<NoteMutation, semio_framework_plugin::NoConfigMutation>, Fault> {
+pub fn handle(payload: &MoveBlock, doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, semio_framework_plugin::NoConfig>, _ctx: &mut crate::editor::note::dispatch_ctx::NoteDispatchCtx) -> Result<Emit<NoteMutation, semio_framework_plugin::NoConfigMutation>, Fault> {
     let document = doc.snapshot;
     if find_block(&document.blocks, &payload.block_id).is_none() {
         return Err(Fault::new(FaultOrigin::App, FaultCode::new("mutation.target-missing"), format!("the note has no block {}", payload.block_id)));

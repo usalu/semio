@@ -1,0 +1,1129 @@
+//! 📏️ Norm core: shared quantities, clause identity, compliance results, and national annex selection.
+
+#![allow(async_fn_in_trait)]
+
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_os_kernel as vcs;
+extern crate semio_framework_schema as schema;
+extern crate semio_framework_value_derive as value_derive;
+
+use protocol::Mutation;
+use semio_framework_dispatch_macros::dyn_enum;
+use std::fmt;
+use store::TextError;
+
+// #region 🔖️Quantity
+/// 📐️ Physical quantity kind for SI-normalized norm computations.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(any(test, feature = "compliance-testing"), derive(serde::Serialize, serde::Deserialize))]
+pub enum QuantityKind {
+    Dimensionless,
+    Length,
+    Area,
+    Volume,
+    Mass,
+    Time,
+    Temperature,
+    Force,
+    Pressure,
+    Stress,
+    Moment,
+    Energy,
+    Power,
+    ThermalConductivity,
+    ThermalResistance,
+    HeatTransferCoefficient,
+    AirPermeability,
+    VentilationRate,
+    Acceleration,
+}
+
+/// 📊️ A scalar value tagged with its physical quantity kind (SI units).
+#[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(any(test, feature = "compliance-testing"), derive(serde::Serialize, serde::Deserialize))]
+pub struct Quantity {
+    pub kind: QuantityKind,
+    pub value: f64,
+}
+
+impl Quantity {
+    pub fn new(kind: QuantityKind, value: f64) -> Self {
+        Self { kind, value }
+    }
+
+    pub fn length_m(value: f64) -> Self {
+        Self::new(QuantityKind::Length, value)
+    }
+
+    pub fn area_m2(value: f64) -> Self {
+        Self::new(QuantityKind::Area, value)
+    }
+
+    pub fn force_kn(value: f64) -> Self {
+        Self::new(QuantityKind::Force, value * 1_000.0)
+    }
+
+    pub fn stress_mpa(value: f64) -> Self {
+        Self::new(QuantityKind::Stress, value * 1_000_000.0)
+    }
+
+    pub fn thermal_resistance_m2k_w(value: f64) -> Self {
+        Self::new(QuantityKind::ThermalResistance, value)
+    }
+
+    pub fn u_value_w_m2k(value: f64) -> Self {
+        Self::new(QuantityKind::HeatTransferCoefficient, value)
+    }
+
+    pub fn acceleration_m_s2(value: f64) -> Self {
+        Self::new(QuantityKind::Acceleration, value)
+    }
+}
+// #endregion 🔖️Quantity
+
+// #region 🔖️Clause
+/// 📑️ Stable clause identifier within a norm family (e.g. `EN 1992-1-1` §6.1).
+#[derive(Clone, Debug, PartialEq, Eq, Hash, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(any(test, feature = "compliance-testing"), derive(serde::Serialize, serde::Deserialize))]
+pub struct ClauseId {
+    pub family: String,
+    pub part: String,
+    pub section: String,
+}
+
+impl ClauseId {
+    pub fn new(family: impl Into<String>, part: impl Into<String>, section: impl Into<String>) -> Self {
+        Self { family: family.into(), part: part.into(), section: section.into() }
+    }
+}
+
+impl fmt::Display for ClauseId {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{} {} §{}", self.family, self.part, self.section)
+    }
+}
+// #endregion 🔖️Clause
+
+// #region 🔖️LocalizedText
+/// 🌐️ Locale-tagged text — the ONE canonical shape shared by every norm artifact (kills the
+/// `LocalizedText` duplication formerly hand-maintained separately in `vdi3805` and `iso16757`,
+/// see UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM's `📓️design-full-plan.md` §4 norm line). Structurally
+/// isomorphic to stdio's `✳️text` subset's `SemioTextRun{language,content,..}` (that subset's own
+/// doc comment: "Absorbs the duplicated `LocalizedText` types that currently exist twice inside
+/// the norm plugin") — kept as a local plain value type here rather than a composed
+/// `store::os_store::artifact_child::ArtifactChild<SemioTextSnapshot>` because it is nested by the DOZENS as an ordinary
+/// leaf field inside `Names`/`Subject`/`CatalogueProduct` etc., not a top-level content slot; a
+/// composed child handle is for a single large content slot with its own working-scene cache
+/// (`📓️migration-recipe.md` §1/§3), not a value type reused pervasively as a struct field.
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[cfg_attr(any(test, feature = "compliance-testing"), derive(serde::Serialize, serde::Deserialize))]
+pub struct LocalizedText {
+    pub locale: String,
+    pub text: String,
+}
+
+impl LocalizedText {
+    pub fn new(locale: impl Into<String>, text: impl Into<String>) -> Self {
+        Self { locale: locale.into(), text: text.into() }
+    }
+}
+// #endregion 🔖️LocalizedText
+
+// #region 🔖️Check
+/// ✅️ Outcome of a single norm compliance check.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(any(test, feature = "compliance-testing"), derive(serde::Serialize, serde::Deserialize))]
+pub enum CheckStatus {
+    Pass,
+    Warning,
+    Fail,
+    NotApplicable,
+}
+
+/// 🌐️ Mandatory bilingual copy for norm report text (en + de; no default language).
+#[derive(Clone, Debug, PartialEq, Eq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(any(test, feature = "compliance-testing"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "compliance-testing"), serde(rename_all = "camelCase"))]
+pub struct LocalizedCopy {
+    pub en: String,
+    pub de: String,
+}
+
+impl LocalizedCopy {
+    pub fn new(en: impl Into<String>, de: impl Into<String>) -> Self {
+        Self { en: en.into(), de: de.into() }
+    }
+
+    /// 🗣️ Exact locale match against the framework [`semio_framework_ui_locale::Locale`] axis.
+    pub fn resolve(&self, locale: &semio_framework_ui_locale::Locale) -> &str {
+        match locale {
+            semio_framework_ui_locale::Locale::En => &self.en,
+            semio_framework_ui_locale::Locale::De => &self.de,
+        }
+    }
+}
+
+/// 🎯 Stable pointer to the subject entity a check concerns.
+#[derive(Clone, Debug, PartialEq, Eq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(any(test, feature = "compliance-testing"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "compliance-testing"), serde(rename_all = "camelCase"))]
+pub struct SubjectRef {
+    pub entity_id: String,
+    pub path: String,
+    pub label: LocalizedCopy,
+}
+
+impl SubjectRef {
+    pub fn new(entity_id: impl Into<String>, path: impl Into<String>, label: LocalizedCopy) -> Self {
+        Self { entity_id: entity_id.into(), path: path.into(), label }
+    }
+
+    pub fn whole(label: LocalizedCopy) -> Self {
+        Self::new("", "", label)
+    }
+}
+
+/// 📐️ How a remedy's required value relates to the subject field.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_dsl_record_derive::DslScalar, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(any(test, feature = "compliance-testing"), derive(serde::Serialize, serde::Deserialize))]
+pub enum RemedyBound {
+    AtLeast,
+    AtMost,
+    Exactly,
+    OneOf,
+}
+
+/// 🩹️ Concrete remediation that makes a failing (or warning) check comply.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(any(test, feature = "compliance-testing"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "compliance-testing"), serde(rename_all = "camelCase"))]
+pub struct Remedy {
+    pub target: SubjectRef,
+    pub current: Quantity,
+    pub required: Quantity,
+    pub bound: RemedyBound,
+    pub options: Vec<String>,
+    pub action: LocalizedCopy,
+    pub applicable: bool,
+}
+
+impl Remedy {
+    pub fn at_least(target: SubjectRef, current: Quantity, required: Quantity, action: LocalizedCopy) -> Self {
+        Self { target, current, required, bound: RemedyBound::AtLeast, options: Vec::new(), action, applicable: true }
+    }
+
+    pub fn at_most(target: SubjectRef, current: Quantity, required: Quantity, action: LocalizedCopy) -> Self {
+        Self { target, current, required, bound: RemedyBound::AtMost, options: Vec::new(), action, applicable: true }
+    }
+
+    pub fn exactly(target: SubjectRef, current: Quantity, required: Quantity, action: LocalizedCopy) -> Self {
+        Self { target, current, required, bound: RemedyBound::Exactly, options: Vec::new(), action, applicable: true }
+    }
+
+    pub fn one_of(target: SubjectRef, options: Vec<String>, action: LocalizedCopy) -> Self {
+        Self {
+            target,
+            current: Quantity::new(QuantityKind::Dimensionless, 0.0),
+            required: Quantity::new(QuantityKind::Dimensionless, 0.0),
+            bound: RemedyBound::OneOf,
+            options,
+            action,
+            applicable: true,
+        }
+    }
+}
+
+/// 📋️ One computed check with clause traceability, subject binding, and remediation.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(any(test, feature = "compliance-testing"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "compliance-testing"), serde(rename_all = "camelCase"))]
+pub struct CheckResult {
+    pub id: String,
+    pub part: String,
+    pub clause: ClauseId,
+    pub subject: SubjectRef,
+    pub status: CheckStatus,
+    pub title: LocalizedCopy,
+    pub explanation: LocalizedCopy,
+    pub computed: Quantity,
+    pub limit: Quantity,
+    pub utilization: f64,
+    pub annex: AnnexChoice,
+    pub remedies: Vec<Remedy>,
+}
+
+/// 🧱️ Builder for [`CheckResult`] — the only construction path for family evaluate().
+pub struct CheckBuilder {
+    id: String,
+    part: String,
+    clause: ClauseId,
+    subject: SubjectRef,
+    title: LocalizedCopy,
+    explanation: LocalizedCopy,
+    computed: Quantity,
+    limit: Quantity,
+    utilization: f64,
+    status: Option<CheckStatus>,
+    warn_above: Option<f64>,
+    annex: AnnexChoice,
+    remedies: Vec<Remedy>,
+    not_applicable: bool,
+}
+
+impl CheckResult {
+    pub fn assess(
+        id: impl Into<String>,
+        part: impl Into<String>,
+        clause: ClauseId,
+        subject: SubjectRef,
+        title: LocalizedCopy,
+    ) -> CheckBuilder {
+        CheckBuilder {
+            id: id.into(),
+            part: part.into(),
+            clause,
+            subject,
+            title,
+            explanation: LocalizedCopy::new("", ""),
+            computed: Quantity::new(QuantityKind::Dimensionless, 0.0),
+            limit: Quantity::new(QuantityKind::Dimensionless, 0.0),
+            utilization: 0.0,
+            status: None,
+            warn_above: None,
+            annex: AnnexChoice::En,
+            remedies: Vec::new(),
+            not_applicable: false,
+        }
+    }
+}
+
+impl CheckBuilder {
+    pub fn utilization(mut self, computed: Quantity, limit: Quantity) -> Self {
+        self.computed = computed;
+        self.limit = limit;
+        self.utilization = if limit.value.abs() < f64::EPSILON {
+            0.0
+        } else {
+            computed.value / limit.value
+        };
+        self.status = Some(if self.utilization <= 1.0 { CheckStatus::Pass } else { CheckStatus::Fail });
+        self
+    }
+
+    pub fn minimum(mut self, computed: Quantity, minimum: Quantity) -> Self {
+        self.computed = computed;
+        self.limit = minimum;
+        let passes = computed.value >= minimum.value;
+        self.utilization = if passes {
+            minimum.value / computed.value.max(minimum.value)
+        } else {
+            computed.value / minimum.value.max(f64::EPSILON)
+        };
+        self.status = Some(if passes { CheckStatus::Pass } else { CheckStatus::Fail });
+        self
+    }
+
+    pub fn status(mut self, status: CheckStatus) -> Self {
+        self.status = Some(status);
+        self
+    }
+
+    pub fn warn_above(mut self, threshold: f64) -> Self {
+        self.warn_above = Some(threshold);
+        self
+    }
+
+    pub fn annex(mut self, annex: AnnexChoice) -> Self {
+        self.annex = annex;
+        self
+    }
+
+    pub fn explanation(mut self, explanation: LocalizedCopy) -> Self {
+        self.explanation = explanation;
+        self
+    }
+
+    pub fn remedy(mut self, remedy: Remedy) -> Self {
+        self.remedies.push(remedy);
+        self
+    }
+
+    pub fn not_applicable(mut self, reason: LocalizedCopy) -> Self {
+        self.not_applicable = true;
+        self.status = Some(CheckStatus::NotApplicable);
+        self.explanation = reason;
+        self.utilization = 0.0;
+        self
+    }
+
+    pub fn build(self) -> CheckResult {
+        let mut status = self.status.unwrap_or(CheckStatus::Pass);
+        if self.not_applicable {
+            status = CheckStatus::NotApplicable;
+        } else if let (Some(threshold), CheckStatus::Pass) = (self.warn_above, status) {
+            if self.utilization > threshold {
+                status = CheckStatus::Warning;
+            }
+        }
+        debug_assert!(status != CheckStatus::Fail || !self.remedies.is_empty(), "Fail checks must carry at least one remedy: id={}", self.id);
+        CheckResult {
+            id: self.id,
+            part: self.part,
+            clause: self.clause,
+            subject: self.subject,
+            status,
+            title: self.title,
+            explanation: self.explanation,
+            computed: self.computed,
+            limit: self.limit,
+            utilization: self.utilization,
+            annex: self.annex,
+            remedies: self.remedies,
+        }
+    }
+}
+
+/// 📊️ Per-part rollup of check statuses.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(any(test, feature = "compliance-testing"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "compliance-testing"), serde(rename_all = "camelCase"))]
+pub struct PartVerdict {
+    pub part: String,
+    pub pass: u32,
+    pub warning: u32,
+    pub fail: u32,
+    pub not_applicable: u32,
+    pub worst_utilization: f64,
+    pub complies: bool,
+}
+
+/// 📊️ Aggregate rollup for a full compliance report.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(any(test, feature = "compliance-testing"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "compliance-testing"), serde(rename_all = "camelCase"))]
+pub struct CheckReportSummary {
+    pub total: u32,
+    pub pass: u32,
+    pub warning: u32,
+    pub fail: u32,
+    pub not_applicable: u32,
+    pub worst_utilization: f64,
+    pub complies: bool,
+    pub parts: Vec<PartVerdict>,
+}
+
+impl Default for CheckReportSummary {
+    fn default() -> Self {
+        Self {
+            total: 0,
+            pass: 0,
+            warning: 0,
+            fail: 0,
+            not_applicable: 0,
+            worst_utilization: 0.0,
+            complies: true,
+            parts: Vec::new(),
+        }
+    }
+}
+
+/// 📑️ Aggregated compliance report for a norm computation run.
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(any(test, feature = "compliance-testing"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "compliance-testing"), serde(rename_all = "camelCase"))]
+pub struct CheckReport {
+    pub summary: CheckReportSummary,
+    pub checks: Vec<CheckResult>,
+}
+
+impl CheckReport {
+    pub fn push(&mut self, check: CheckResult) {
+        Self::accumulate(&mut self.summary, &check);
+        self.checks.push(check);
+    }
+
+    pub fn extend(&mut self, checks: impl IntoIterator<Item = CheckResult>) {
+        for check in checks {
+            self.push(check);
+        }
+    }
+
+    pub fn complies(&self) -> bool {
+        self.summary.complies
+    }
+
+    pub fn worst_utilization(&self) -> f64 {
+        self.summary.worst_utilization
+    }
+
+    pub fn failing(&self) -> impl Iterator<Item = &CheckResult> {
+        self.checks.iter().filter(|c| c.status == CheckStatus::Fail)
+    }
+
+    pub fn by_part(&self) -> Vec<(&str, Vec<&CheckResult>)> {
+        let mut groups: Vec<(&str, Vec<&CheckResult>)> = Vec::new();
+        for check in &self.checks {
+            if let Some((_, bucket)) = groups.iter_mut().find(|(part, _)| *part == check.part.as_str()) {
+                bucket.push(check);
+            } else {
+                groups.push((check.part.as_str(), vec![check]));
+            }
+        }
+        groups
+    }
+
+    fn accumulate(summary: &mut CheckReportSummary, check: &CheckResult) {
+        summary.total += 1;
+        match check.status {
+            CheckStatus::Pass => summary.pass += 1,
+            CheckStatus::Warning => summary.warning += 1,
+            CheckStatus::Fail => {
+                summary.fail += 1;
+                summary.complies = false;
+            }
+            CheckStatus::NotApplicable => summary.not_applicable += 1,
+        }
+        if check.status != CheckStatus::NotApplicable {
+            summary.worst_utilization = summary.worst_utilization.max(check.utilization);
+        }
+        let part = if let Some(existing) = summary.parts.iter_mut().find(|p| p.part == check.part) {
+            existing
+        } else {
+            summary.parts.push(PartVerdict {
+                part: check.part.clone(),
+                pass: 0,
+                warning: 0,
+                fail: 0,
+                not_applicable: 0,
+                worst_utilization: 0.0,
+                complies: true,
+            });
+            summary.parts.last_mut().expect("just pushed")
+        };
+        match check.status {
+            CheckStatus::Pass => part.pass += 1,
+            CheckStatus::Warning => part.warning += 1,
+            CheckStatus::Fail => {
+                part.fail += 1;
+                part.complies = false;
+            }
+            CheckStatus::NotApplicable => part.not_applicable += 1,
+        }
+        if check.status != CheckStatus::NotApplicable {
+            part.worst_utilization = part.worst_utilization.max(check.utilization);
+        }
+    }
+}
+// #endregion 🔖️Check
+
+// #region 🔖️Annex
+/// 🇪️🇺️ National annex selection for Eurocode / DIN EN families.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, semio_framework_dsl_record_derive::DslScalar, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[cfg_attr(any(test, feature = "compliance-testing"), derive(serde::Serialize, serde::Deserialize))]
+pub enum AnnexChoice {
+    #[dsl(key = "en")]
+    En,
+    #[dsl(key = "de")]
+    De,
+}
+
+impl AnnexChoice {
+    pub fn label(self) -> &'static str {
+        match self {
+            Self::En => "EN",
+            Self::De => "DE-NA",
+        }
+    }
+}
+
+/// 🗺️ Trait for national annex parameter overrides.
+/// 🔀️ O1 de-dyn: closed set (`NaDe`/`NaEn`) — closes as `NationalAnnexes` via `dyn_enum_close!` in
+/// `en1990`'s schema module, where the two impls live (`🎫️tickets/…/📓️terra-dedyn-fleet-norm-report.md`).
+#[dyn_enum]
+pub trait NationalAnnex {
+    fn choice(&self) -> AnnexChoice;
+    fn gamma_g(&self) -> f64;
+    fn gamma_q(&self) -> f64;
+    fn gamma_m(&self, _material: &str) -> f64 {
+        1.0
+    }
+    fn gamma_r(&self) -> f64 {
+        1.0
+    }
+    fn xi(&self, _category: &str) -> f64 {
+        1.0
+    }
+    fn psi_0(&self, category: &str) -> f64;
+    fn psi_1(&self, category: &str) -> f64;
+    fn psi_2(&self, category: &str) -> f64;
+}
+// #endregion 🔖️Annex
+
+// #region 🔖️Tables
+/// 📊️ One-dimensional table entry for norm lookups.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct TableEntry1D {
+    pub x: f64,
+    pub y: f64,
+}
+
+/// 🔍️ Linear interpolation in a sorted 1D table.
+pub fn table_lookup_linear(table: &[TableEntry1D], x: f64) -> f64 {
+    if table.is_empty() {
+        return 0.0;
+    }
+    if x <= table[0].x {
+        return table[0].y;
+    }
+    if x >= table[table.len() - 1].x {
+        return table[table.len() - 1].y;
+    }
+    for w in table.windows(2) {
+        if x >= w[0].x && x <= w[1].x {
+            let t = (x - w[0].x) / (w[1].x - w[0].x);
+            return w[0].y + t * (w[1].y - w[0].y);
+        }
+    }
+    table[table.len() - 1].y
+}
+
+/// 🔍️ Bilinear interpolation on a regular grid.
+pub fn table_lookup_bilinear(x: f64, y: f64, x_vals: &[f64], y_vals: &[f64], z: &[f64]) -> f64 {
+    let nx = x_vals.len();
+    let ny = y_vals.len();
+    if nx == 0 || ny == 0 || z.len() < nx * ny {
+        return 0.0;
+    }
+    let xi = x_vals.iter().position(|&v| x <= v).unwrap_or(nx - 1).max(1);
+    let yi = y_vals.iter().position(|&v| y <= v).unwrap_or(ny - 1).max(1);
+    let x0 = x_vals[xi - 1];
+    let x1 = x_vals[xi.min(nx - 1)];
+    let y0 = y_vals[yi - 1];
+    let y1 = y_vals[yi.min(ny - 1)];
+    let tx = if (x1 - x0).abs() < f64::EPSILON { 0.0 } else { ((x - x0) / (x1 - x0)).clamp(0.0, 1.0) };
+    let ty = if (y1 - y0).abs() < f64::EPSILON { 0.0 } else { ((y - y0) / (y1 - y0)).clamp(0.0, 1.0) };
+    let z00 = z[(yi - 1) * nx + (xi - 1)];
+    let z10 = z[(yi - 1) * nx + xi.min(nx - 1)];
+    let z01 = z[yi.min(ny - 1) * nx + (xi - 1)];
+    let z11 = z[yi.min(ny - 1) * nx + xi.min(nx - 1)];
+    let z0 = z00 + tx * (z10 - z00);
+    let z1 = z01 + tx * (z11 - z01);
+    z0 + ty * (z1 - z0)
+}
+// #endregion 🔖️Tables
+
+// #region 🔖️DesignSituation
+/// 🏗️ Design situation per EN 1990 Table A1.1.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_dsl_record_derive::DslScalar, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[cfg_attr(any(test, feature = "compliance-testing"), derive(serde::Serialize, serde::Deserialize))]
+pub enum DesignSituation {
+    #[dsl(key = "persistent")]
+    Persistent,
+    #[dsl(key = "transient")]
+    Transient,
+    #[dsl(key = "accidental")]
+    Accidental,
+    #[dsl(key = "seismic")]
+    Seismic,
+}
+
+/// 📋️ Consequence class per EN 1990.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(any(test, feature = "compliance-testing"), derive(serde::Serialize, serde::Deserialize))]
+pub enum ConsequenceClass {
+    Cc1,
+    Cc2,
+    Cc3,
+}
+
+impl ConsequenceClass {
+    pub fn as_u8(self) -> u8 {
+        match self {
+            Self::Cc1 => 1,
+            Self::Cc2 => 2,
+            Self::Cc3 => 3,
+        }
+    }
+}
+
+/// 📊️ Variable action category per EN 1991-1-1 Table 6.1.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_dsl_record_derive::DslScalar, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(any(test, feature = "compliance-testing"), derive(serde::Serialize, serde::Deserialize))]
+pub enum ImposedCategory {
+    #[dsl(key = "a")]
+    A,
+    #[dsl(key = "b")]
+    B,
+    #[dsl(key = "c")]
+    C,
+    #[dsl(key = "d")]
+    D,
+    #[dsl(key = "e")]
+    E,
+    #[dsl(key = "f")]
+    F,
+    #[dsl(key = "g")]
+    G,
+    #[dsl(key = "h")]
+    H,
+}
+
+impl ImposedCategory {
+    pub fn q_k_kn_m2(self) -> f64 {
+        match self {
+            Self::A => 2.0,
+            Self::B => 2.5,
+            Self::C => 3.0,
+            Self::D => 4.0,
+            Self::E => 5.0,
+            Self::F => 3.0,
+            Self::G => 5.0,
+            Self::H => 20.0,
+        }
+    }
+
+    pub fn label(self) -> &'static str {
+        match self {
+            Self::A => "residential",
+            Self::B => "office",
+            Self::C => "congregation",
+            Self::D => "retail",
+            Self::E => "storage",
+            Self::F => "traffic_light",
+            Self::G => "traffic_heavy",
+            Self::H => "roof",
+        }
+    }
+}
+// #endregion 🔖️DesignSituation
+
+// #region 🔖️Shared
+/// ⚖️ Limit state per EN 1990.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(any(test, feature = "compliance-testing"), derive(serde::Serialize, serde::Deserialize))]
+pub enum LimitState {
+    Uls,
+    Sls,
+    Als,
+    Fls,
+}
+
+/// ⏱️ Load duration class for timber and similar materials.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(any(test, feature = "compliance-testing"), derive(serde::Serialize, serde::Deserialize))]
+pub enum LoadDuration {
+    Permanent,
+    Long,
+    Medium,
+    Short,
+    Instantaneous,
+}
+
+/// 🌡️ Reference climate zone for thermal norms (Germany).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_dsl_record_derive::DslScalar, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[cfg_attr(any(test, feature = "compliance-testing"), derive(serde::Serialize, serde::Deserialize))]
+pub enum ClimateZoneDe {
+    #[dsl(key = "zone1")]
+    Zone1,
+    #[dsl(key = "zone2")]
+    Zone2,
+    #[dsl(key = "zone3")]
+    Zone3,
+    #[dsl(key = "zone4")]
+    Zone4,
+}
+
+impl ClimateZoneDe {
+    pub fn design_external_temperature_c(self) -> f64 {
+        match self {
+            Self::Zone1 => -16.0,
+            Self::Zone2 => -14.0,
+            Self::Zone3 => -12.0,
+            Self::Zone4 => -10.0,
+        }
+    }
+
+    pub fn summer_design_temperature_c(self) -> f64 {
+        match self {
+            Self::Zone1 => 26.0,
+            Self::Zone2 => 28.0,
+            Self::Zone3 => 30.0,
+            Self::Zone4 => 32.0,
+        }
+    }
+
+    pub fn heating_degree_days(self) -> f64 {
+        match self {
+            Self::Zone1 => 3800.0,
+            Self::Zone2 => 3200.0,
+            Self::Zone3 => 2600.0,
+            Self::Zone4 => 2000.0,
+        }
+    }
+}
+
+/// 🏠️ Occupancy type for indoor environment norms.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_dsl_record_derive::DslScalar, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(any(test, feature = "compliance-testing"), derive(serde::Serialize, serde::Deserialize))]
+pub enum OccupancyType {
+    #[dsl(key = "residential")]
+    Residential,
+    #[dsl(key = "office")]
+    Office,
+    #[dsl(key = "classroom")]
+    Classroom,
+    #[dsl(key = "retail")]
+    Retail,
+    #[dsl(key = "meeting")]
+    Meeting,
+    #[dsl(key = "kitchen")]
+    Kitchen,
+    #[dsl(key = "corridor")]
+    Corridor,
+}
+// #endregion 🔖️Shared
+
+// #region 🔖️Error
+/// ⚠️ Norm computation error.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum NormError {
+    IncompleteInput { field: String },
+    OutOfScope { clause: ClauseId },
+    InvalidValue { field: String, reason: String },
+}
+
+impl fmt::Display for NormError {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::IncompleteInput { field } => write!(formatter, "incomplete input: {field}"),
+            Self::OutOfScope { clause } => write!(formatter, "out of scope: {clause}"),
+            Self::InvalidValue { field, reason } => write!(formatter, "invalid {field}: {reason}"),
+        }
+    }
+}
+
+impl std::error::Error for NormError {}
+// #endregion 🔖️Error
+
+// #region 🔖️Family
+/// 🏷️ Stable identifier for each norm family crate exposed as a ArtifactApp.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(any(test, feature = "compliance-testing"), derive(serde::Serialize, serde::Deserialize))]
+pub enum NormFamilyId {
+    Din4108,
+    DinEn16798,
+    DinV18599,
+    En1990,
+    En1991,
+    En1992,
+    En1993,
+    En1994,
+    En1995,
+    En1996,
+    En1997,
+    En1998,
+    En1999,
+    Iso16757,
+    Vdi3805,
+}
+
+impl NormFamilyId {
+    pub fn label(self) -> &'static str {
+        match self {
+            Self::Din4108 => "DIN 4108",
+            Self::DinEn16798 => "DIN EN 16798",
+            Self::DinV18599 => "DIN V 18599",
+            Self::En1990 => "EN 1990",
+            Self::En1991 => "EN 1991",
+            Self::En1992 => "EN 1992",
+            Self::En1993 => "EN 1993",
+            Self::En1994 => "EN 1994",
+            Self::En1995 => "EN 1995",
+            Self::En1996 => "EN 1996",
+            Self::En1997 => "EN 1997",
+            Self::En1998 => "EN 1998",
+            Self::En1999 => "EN 1999",
+            Self::Iso16757 => "ISO 16757",
+            Self::Vdi3805 => "VDI 3805",
+        }
+    }
+}
+
+/// 🧩️ Headless norm family contract: typed document, undoable operations, and compliance evaluation.
+pub trait NormFamily: Send + Sync + 'static {
+    type Document: Clone + Default + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + Send;
+    type Mutation: Mutation<Self::Document> + Clone + PartialEq + Send;
+
+    fn family_id() -> NormFamilyId;
+    fn evaluate(document: &Self::Document) -> CheckReport;
+}
+
+/// 🧾 Snapshot revision fingerprint used as the paint-path report cache key.
+pub fn document_revision_key<D: semio_framework_value::ToValue>(document: &D) -> u64 {
+    use std::collections::hash_map::DefaultHasher;
+    use std::hash::{Hash, Hasher};
+    let json = semio_framework_pack_json::to_json_string(&semio_framework_value::ToValue::to_value(document));
+    let mut hasher = DefaultHasher::new();
+    json.hash(&mut hasher);
+    hasher.finish()
+}
+
+fn report_cache() -> &'static std::sync::Mutex<std::collections::HashMap<(NormFamilyId, u64), CheckReport>> {
+    static CACHE: std::sync::OnceLock<std::sync::Mutex<std::collections::HashMap<(NormFamilyId, u64), CheckReport>>> = std::sync::OnceLock::new();
+    CACHE.get_or_init(|| std::sync::Mutex::new(std::collections::HashMap::new()))
+}
+
+/// 📥 Reads a previously evaluated report for `(family, revision)` without running `evaluate`.
+pub fn cached_report_for<F: NormFamily>(document: &F::Document) -> Option<CheckReport> {
+    let key = (F::family_id(), document_revision_key(document));
+    report_cache().lock().ok().and_then(|guard| guard.get(&key).cloned())
+}
+
+/// 📤 Stores an evaluated report keyed by `(family, revision)` for paint-path reuse.
+pub fn store_cached_report_for<F: NormFamily>(document: &F::Document, report: CheckReport) {
+    let key = (F::family_id(), document_revision_key(document));
+    if let Ok(mut guard) = report_cache().lock() {
+        if guard.len() > 64 {
+            guard.clear();
+        }
+        guard.insert(key, report);
+    }
+}
+
+/// 🗑️ Drops a cached report so the next evaluate job recomputes it.
+pub fn invalidate_cached_report_for<F: NormFamily>(document: &F::Document) {
+    let key = (F::family_id(), document_revision_key(document));
+    if let Ok(mut guard) = report_cache().lock() {
+        guard.remove(&key);
+    }
+}
+
+/// 🧠️ Retained headless session: document inputs plus the last computed compliance report.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(any(test, feature = "compliance-testing"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "compliance-testing"), serde(bound(serialize = "F::Document: serde::Serialize", deserialize = "F::Document: serde::de::DeserializeOwned")))]
+#[value(bound = "F::Document: semio_framework_value::ToValue, F::Document: semio_framework_value::FromValue")]
+pub struct NormHost<F: NormFamily> {
+    pub document: F::Document,
+    pub report: CheckReport,
+}
+
+impl<F: NormFamily> Default for NormHost<F> {
+    fn default() -> Self {
+        Self::from_artifact(F::Document::default())
+    }
+}
+
+impl<F: NormFamily> NormHost<F> {
+    /// 🖼️ Paint-path constructor: never runs `F::evaluate`. Serves the revision-keyed cache or an empty report.
+    pub fn from_artifact(document: F::Document) -> Self {
+        let report = cached_report_for::<F>(&document).unwrap_or_default();
+        Self { document, report }
+    }
+
+    pub fn document(&self) -> &F::Document {
+        &self.document
+    }
+
+    pub fn report(&self) -> &CheckReport {
+        &self.report
+    }
+
+    pub fn apply(&mut self, mutation: &F::Mutation) -> protocol::MutationApplyResult<()> {
+        let (document, _) = vcs::apply_mutation(&self.document, mutation)?;
+        invalidate_cached_report_for::<F>(&self.document);
+        self.document = document;
+        self.report = CheckReport::default();
+        Ok(())
+    }
+
+    pub fn replace_document(&mut self, document: F::Document) {
+        invalidate_cached_report_for::<F>(&self.document);
+        self.document = document;
+        self.report = CheckReport::default();
+    }
+
+    /// 🧮️ Runs `F::evaluate` off the paint path and stores the revision-keyed cache entry.
+    pub fn evaluate(&mut self) {
+        self.report = F::evaluate(&self.document);
+        store_cached_report_for::<F>(&self.document, self.report.clone());
+    }
+}
+// #endregion 🔖️Family
+
+/// 🪪️ Independent Serde oracle for composed child identities; local materialization never enters JSON.
+#[cfg(any(test, feature = "compliance-testing"))]
+#[path = "🧪️tests/🔬️child-identity-oracle/🦀️.rs"]
+pub mod child_identity_oracle;
+
+// #region 🔖️OpText
+/// ✂️ Escapes `\`, `"`, `\n` for embedding arbitrary (possibly multi-line) text inside a single quoted
+/// op-text field. Mirrors vcs's own private `escape_text_field`/`unescape_text_field` convention
+/// exactly (same three escapes, same order) so escaping behaves identically repo-wide, even though vcs
+/// does not expose those helpers for reuse.
+pub fn escape_op_text_field(value: &str) -> String {
+    let mut out = String::with_capacity(value.len());
+    for ch in value.chars() {
+        match ch {
+            '\\' => out.push_str("\\\\"),
+            '"' => out.push_str("\\\""),
+            '\n' => out.push_str("\\n"),
+            _ => out.push(ch),
+        }
+    }
+    out
+}
+
+/// ✂️ Inverts [`escape_op_text_field`] for artifact snapshot commands.
+pub fn unescape_op_text_field(value: &str) -> String {
+    let mut out = String::with_capacity(value.len());
+    let mut chars = value.chars();
+    while let Some(ch) = chars.next() {
+        if ch == '\\' {
+            match chars.next() {
+                Some('n') => out.push('\n'),
+                Some('"') => out.push('"'),
+                Some('\\') => out.push('\\'),
+                Some(other) => {
+                    out.push('\\');
+                    out.push(other);
+                }
+                None => out.push('\\'),
+            }
+        } else {
+            out.push(ch);
+        }
+    }
+    out
+}
+
+//#region 🔖️SnapshotDslPackCodec
+/// 🧬️ P6: `dsl::DslRecord`/`dsl::DslArtifact` emit the inherent `__dsl_spec`/`__dsl_to_record`/
+/// `__dsl_from_record` trio only — never `pack::snapshot::ArtifactDsl`/`pack::snapshot::ArtifactPack` themselves (a
+/// permanent framework decision, see `🗣️dsl/✨️derive/🦀️.rs`'s "P6" header comment and every
+/// other P6-migrated document kind, e.g. `🪐️space`, `🔁️workflow`, `📖️playbook`). Every one of norm's
+/// fifteen family snapshots therefore needs the identical envelope-wrap/unwrap glue around that
+/// trio; W5a (ticket 26/08/11/SEMIO-ARTIFACT-…) found it hand-duplicated verbatim in fifteen
+/// `📸️snapshot/🦀️.rs` files' `HandcraftedArtifactCodecs` regions and consolidated it here —
+/// this trait plus the four functions below are norm's single copy. Each snapshot type now needs
+/// only a five-line `NormArtifactRecord` impl (its two identifying strings, delegating straight to
+/// its own derive-generated `__dsl_*` trio) plus two one-line-bodied `ArtifactDsl`/`ArtifactPack`
+/// impls that call through here — Rust has no blanket `impl<T> Trait for T` escape for a foreign
+/// trait for a foreign-per-crate reason (orphan rule) here, so the per-type impl shells stay, but
+/// every byte of actual encode/decode logic now lives exactly once.
+pub trait NormArtifactRecord: Sized {
+    /// 🏷️ File extension this family's DSL text uses (`ArtifactDsl::EXTENSION`).
+    const EXTENSION: &'static str;
+    /// 🆔️ Semio envelope id (`"norm.<family>"`) both the text and pack wire wrap themselves in.
+    const ENVELOPE_ID: &'static str;
+    fn dsl_spec() -> semio_framework_dsl_record::RecordSpec;
+    fn dsl_to_record(&self) -> semio_framework_dsl_record::RecordValue;
+    fn dsl_from_record(record: &semio_framework_dsl_record::RecordValue) -> Result<Self, TextError>;
+}
+
+/// 📖️ Shared `ArtifactDsl::parse_dsl` body: strip the optional semio-format text preamble, parse the
+/// remaining body against `T`'s record spec, then lower the parsed record back into `T`.
+pub fn norm_parse_dsl<T: NormArtifactRecord>(text: &str) -> Result<T, TextError> {
+    let body = match store::semio_format::split_text_preamble(text) {
+        Ok((_, rest)) => rest,
+        Err(_) => text,
+    };
+    let record = semio_framework_dsl_record::parse(body, &T::dsl_spec(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits::default(), mode: semio_framework_dsl_record::SourceMode::Document })?;
+    T::dsl_from_record(&record)
+}
+
+/// 🖨️ Shared `ArtifactDsl::print_dsl` body: print `T`'s record, then wrap it in its semio envelope.
+pub fn norm_print_dsl<T: NormArtifactRecord>(value: &T) -> String {
+    let body = semio_framework_dsl_record::print(&value.dsl_to_record(), &T::dsl_spec(), semio_framework_dsl_record::JoinMode::Document);
+    let envelope = store::semio_format::SemioEnvelope::from_envelope_id(T::ENVELOPE_ID, store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
+    store::semio_format::wrap_text(&envelope, &body)
+}
+
+/// 📦️ Shared `ArtifactPack::encode_pack_with` body: pack-encode `T`'s record, then envelope-wrap it.
+pub fn norm_encode_pack<T: NormArtifactRecord>(value: &T, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+    let inner = store::pack_rt::encode_document(&T::dsl_spec(), &value.dsl_to_record(), options)?;
+    let envelope = store::semio_format::SemioEnvelope::from_envelope_id(T::ENVELOPE_ID, store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::from(e.into_value_error()))?;
+    Ok(store::semio_format::wrap_binary(&envelope, &inner))
+}
+
+/// 📦️ Shared `ArtifactPack::decode_pack_with` body: unwrap the envelope (checking it matches `T`'s
+/// own), pack-decode the inner record, then lower it back into `T`.
+pub fn norm_decode_pack<T: NormArtifactRecord>(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<T, store::PackError> {
+    let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::from(e.into_value_error()))?;
+    if !envelope.matches_identity(T::ENVELOPE_ID, store::semio_format::Component::Pack, 1) {
+        return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("pack envelope mismatch: expected {}.pack v1, got {}", T::ENVELOPE_ID, envelope.binary_token()))));
+    }
+    let (record, _report) = store::pack_rt::decode_document(&inner, &T::dsl_spec(), options)?;
+    T::dsl_from_record(&record).map_err(store::os_store::serialization::text_error_to_pack_error)
+}
+/// 🧩️ Implements `pack::snapshot::ArtifactDsl` + `pack::snapshot::ArtifactPack` for a norm family's snapshot type,
+/// entirely by delegating to the four shared functions above. `$extension`/`$envelope_id` are the
+/// two literals every one of the fifteen hand-written impls previously hardcoded independently.
+#[macro_export]
+macro_rules! impl_norm_artifact_record {
+    ($Snapshot:ty, extension = $extension:literal, envelope_id = $envelope_id:literal $(, sqlite = $sqlite:path)?) => {
+        $crate::impl_norm_artifact_record!(@text $Snapshot, extension=$extension, envelope_id=$envelope_id);
+        $crate::impl_norm_artifact_record!(@binary $Snapshot, extension=$extension, envelope_id=$envelope_id $(,sqlite=$sqlite)?);
+    };
+    (@text $Snapshot:ty, extension=$extension:literal, envelope_id=$envelope_id:literal) => {
+        impl $crate::NormArtifactRecord for $Snapshot {
+            const EXTENSION: &'static str = $extension;
+            const ENVELOPE_ID: &'static str = $envelope_id;
+            fn dsl_spec() -> semio_framework_dsl_record::RecordSpec {
+                Self::__dsl_spec()
+            }
+            fn dsl_to_record(&self) -> semio_framework_dsl_record::RecordValue {
+                self.__dsl_to_record()
+            }
+            fn dsl_from_record(record: &semio_framework_dsl_record::RecordValue) -> Result<Self, store::TextError> {
+                Self::__dsl_from_record(record)
+            }
+        }
+        impl pack::snapshot::ArtifactDsl for $Snapshot {
+            const EXTENSION: &'static str = $extension;
+            fn envelope_id() -> &'static str {
+                $envelope_id
+            }
+            fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+                $crate::norm_parse_dsl(text)
+            }
+            fn print_dsl(&self) -> String {
+                $crate::norm_print_dsl(self)
+            }
+        }
+    };
+    (@binary $Snapshot:ty, extension=$extension:literal, envelope_id=$envelope_id:literal $(,sqlite=$sqlite:path)?) => {
+        impl pack::snapshot::ArtifactPack for $Snapshot {
+            fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+                $crate::norm_encode_pack(self, options)
+            }
+            fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+                $crate::norm_decode_pack(bytes, options)
+            }
+            fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> {
+                Some(<Self as $crate::NormArtifactRecord>::dsl_spec())
+            }
+            
+        }
+impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for $Snapshot {
+fn sqlite_snapshot_codec() -> Option<store::os_store::serialization::ArtifactSqliteSnapshotCodec> {
+                $crate::impl_norm_artifact_record!(@sqlite $( $sqlite )?)
+            }
+}
+    };
+    (@sqlite) => { None };
+    (@sqlite $sqlite:path) => { Some($sqlite()) };
+}
+//#endregion 🔖️SnapshotDslPackCodec
+
+// #endregion 🔖️OpText
+
+#[cfg(test)]
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;

@@ -36,5 +36,4 @@ fn original_source_constructor_captures_all_limits_without_reads_or_heap_birth()
         }
         assert_eq!(reads.get(),0);assert!(serde_json::from_str::<serde_json::Value>(text).is_ok());
     }
-    eprintln!("[DEBUG] JSON policy5 constructor preserves all four original limits and source pointer with zero octet reads, heap birth or release; independent Serde source validity agrees");
 }

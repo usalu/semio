@@ -38,6 +38,4 @@ pub(crate) fn demo_mutation_cases() -> Vec<JsonMutation> {
     ]
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

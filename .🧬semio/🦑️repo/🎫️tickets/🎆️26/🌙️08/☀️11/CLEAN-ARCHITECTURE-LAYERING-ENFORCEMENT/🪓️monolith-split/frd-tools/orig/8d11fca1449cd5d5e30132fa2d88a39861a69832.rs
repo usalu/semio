@@ -1,0 +1,498 @@
+use crate::schema::mutations::set_archive_comment;
+use crate::{ZipMutation, ZipSnapshot};
+use semio_framework_plugin::BuiltNode;
+use semio_framework_plugin::TreeWindows;
+use semio_framework_plugin::UiAssemblyResult;
+use semio_framework_plugin::Fault;
+use semio_framework_ui_locale::Locale;
+use crate::editor::editing::{fault, draft};
+use crate::editor::editing::*;
+use protocol::command::DiffAlgebra;
+use protocol::{Mutation, MutationDiff};
+use semio_framework_plugin::ArtifactEditor;
+
+fn fixture() -> serde_json::Value {
+    serde_json::from_str(runtime_fixture_text("../../🧪️tests/🧫️fixtures/🔣️.json")).unwrap()
+}
+
+#[test]
+fn archive_cursor_checkpoint_matches_the_neutral_wire_and_resumes() {
+    let row = fixture();
+    let snapshot: ZipSnapshot = semio_framework_pack_json::from_json_str(&row["snapshot"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let name = row["rename"]["name"].as_str().unwrap();
+    let value = row["rename"]["value"].as_str().unwrap();
+    let node = entry_node_id(name);
+    let revision = text_revision(name);
+    let mut cursor = retained::ArchiveTextCursor::default();
+    let resume_after = row["retainedResolution"]["resumeAfterEntries"].as_u64().unwrap() as usize;
+    for _ in 0..resume_after {
+        assert!(cursor.advance(&snapshot, &node, value, &revision).unwrap().is_none());
+    }
+    let mut bytes = [0; retained::CHECKPOINT_BYTES];
+    assert_eq!(cursor.checkpoint(&mut bytes).unwrap(), row["retainedResolution"]["checkpointBytes"].as_u64().unwrap() as usize);
+    assert_eq!(&bytes[..4], row["retainedResolution"]["checkpointMagic"].as_str().unwrap().as_bytes());
+    assert_eq!(bytes[4], row["retainedResolution"]["checkpointVersion"].as_u64().unwrap() as u8);
+    assert_eq!(bytes[5], 9);
+    assert_eq!(u64::from_le_bytes(bytes[8..16].try_into().unwrap()), resume_after as u64);
+    assert_eq!(u64::from_le_bytes(bytes[24..32].try_into().unwrap()), snapshot.entries.len() as u64);
+    assert_eq!(&bytes[32..], text_revision(&format!("{node}\0{revision}\0{value}")).as_bytes());
+    assert!(cursor.advance(&snapshot, &node, "changed while scanning", &revision).is_err());
+    let mut unchanged = [0; retained::CHECKPOINT_BYTES];
+    cursor.checkpoint(&mut unchanged).unwrap();
+    assert_eq!(unchanged, bytes);
+    let mut resumed = retained::ArchiveTextCursor::default();
+    resumed.restore(&bytes).unwrap();
+    assert_eq!(resumed.scanned_entries(), resume_after);
+    for _ in resume_after..snapshot.entries.len() {
+        assert!(resumed.advance(&snapshot, &node, value, &revision).unwrap().is_none());
+    }
+    assert_eq!(resumed.advance(&snapshot, &node, value, &revision).unwrap().unwrap().artifact_mutations, edit_node(&snapshot, &node, value, &revision).unwrap().artifact_mutations);
+    resumed.restore(&bytes).unwrap();
+    assert!(resumed.advance(&snapshot, &node, "different.txt", &revision).is_err());
+    for (index, value) in [(0, 0), (4, 2), (5, 255), (6, 1), (8, 255), (16, 255), (32, 255)] {
+        let mut invalid = bytes;
+        invalid[index] = value;
+        assert!(retained::ArchiveTextCursor::default().restore(&invalid).is_err());
+    }
+    assert!(retained::ArchiveTextCursor::default().restore(&bytes[1..]).is_err());
+}
+
+#[test]
+fn archive_target_resolution_yields_without_copying_entry_payloads() {
+    let row = fixture();
+    let mut snapshot: ZipSnapshot = semio_framework_pack_json::from_json_str(&row["snapshot"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    snapshot.entries[0].data.resize(row["retainedResolution"]["preservedPayloadBytes"].as_u64().unwrap() as usize, 42);
+    let owner = snapshot.entries[0].data.as_ptr();
+    let mut cursor = retained::ArchiveTextCursor::default();
+    let name = row["rename"]["name"].as_str().unwrap();
+    let value = row["rename"]["value"].as_str().unwrap();
+    let node = entry_node_id(name);
+    let revision = text_revision(name);
+    for index in 0..snapshot.entries.len() {
+        assert!(cursor.advance(&snapshot, &node, value, &revision).unwrap().is_none());
+        assert_eq!(cursor.scanned_entries() - index, row["retainedResolution"]["maximumEntriesPerStep"].as_u64().unwrap() as usize);
+        assert_eq!(snapshot.entries[0].data.as_ptr(), owner);
+    }
+    let emit = cursor.advance(&snapshot, &node, value, &revision).unwrap().unwrap();
+    assert_eq!(emit.artifact_mutations, edit_node(&snapshot, &node, value, &revision).unwrap().artifact_mutations);
+}
+
+#[test]
+fn archive_diffs_preserve_explicit_member_order_and_exact_inverse() {
+    let row = fixture();
+    let snapshot: ZipSnapshot = semio_framework_pack_json::from_json_str(&row["snapshot"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let mut reversed = snapshot.clone();
+    reversed.entries.reverse();
+    let diff = crate::schema::diff::ZipDiff { entries: Some(crate::schema::diff::ZipEntriesDiff { order: Some(reversed.entries.iter().map(|entry| entry.name.clone()).collect()), ..Default::default() }), ..Default::default() };
+    assert_eq!(protocol::apply_diff(&diff, &snapshot).unwrap(), reversed);
+    assert_eq!(protocol::apply_diff(&diff.inverse(&snapshot), &reversed).unwrap(), snapshot);
+    let rename = crate::schema::diff::diff_rename_entry(&reversed.entries[0].name, "renamed.txt");
+    let expected = protocol::apply_diff(&rename, &reversed).unwrap();
+    let mut combined = diff;
+    combined.absorb(rename);
+    assert_eq!(protocol::apply_diff(&combined, &snapshot).unwrap(), expected);
+    for order in row["entryOrdering"]["invalidOrders"].as_array().unwrap() {
+        let value = serde_json::json!({"entries": {"order": order}});
+        let diff: crate::schema::diff::ZipDiff = semio_framework_pack_json::from_json_str(&value.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+        assert!(protocol::apply_diff(&diff, &snapshot).is_err());
+    }
+}
+
+#[test]
+fn archive_save_preserves_member_order_with_the_independent_zip_reader() {
+    let row = fixture();
+    let mut snapshot: ZipSnapshot = semio_framework_pack_json::from_json_str(&row["snapshot"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    snapshot.entries.reverse();
+    let bytes = crate::standards::v2_0::subsets::base::io::encode_zip(&snapshot).unwrap();
+    let mut oracle = zip::ZipArchive::new(std::io::Cursor::new(&bytes)).unwrap();
+    let names: Vec<String> = (0..oracle.len()).map(|index| oracle.by_index(index).unwrap().name().to_string()).collect();
+    assert_eq!(names, snapshot.entries.iter().map(|entry| entry.name.clone()).collect::<Vec<_>>());
+    assert_eq!(crate::standards::v2_0::subsets::base::io::decode_zip(&bytes).unwrap(), snapshot);
+}
+
+#[test]
+fn removing_each_archive_member_undoes_to_its_exact_original_position() {
+    let row = fixture();
+    let snapshot: ZipSnapshot = semio_framework_pack_json::from_json_str(&row["snapshot"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    for entry in &snapshot.entries {
+        let mutation = ZipMutation::RemoveEntry(crate::schema::mutations::remove_entry::RemoveEntry { name: entry.name.clone() });
+        let next = protocol::apply_diff(mutation.diff(&snapshot).diff(), &snapshot).unwrap();
+        let inverse = mutation.inverse(&snapshot).expect("valid retained mutation inverse fixture");
+        assert_eq!(inverse.len(), 1);
+        assert_eq!(protocol::apply_diff(inverse[0].diff(&next).diff(), &next).unwrap(), snapshot);
+    }
+}
+
+#[test]
+fn archive_insertions_use_the_neutral_following_member_anchor() {
+    use protocol::{OpBinary, OpText};
+    let row = fixture();
+    let snapshot: ZipSnapshot = semio_framework_pack_json::from_json_str(&row["snapshot"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let entry: crate::schema::snapshot::ZipEntry = semio_framework_pack_json::from_json_str(&row["insertion"]["entry"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let mutation = ZipMutation::AddEntry(crate::schema::mutations::add_entry::AddEntry { entry, before: Some(row["insertion"]["before"].as_str().unwrap().into()) });
+    assert_eq!(ZipMutation::decode_op(&mutation.encode_op().unwrap()).unwrap(), mutation);
+    assert_eq!(ZipMutation::parse_op(&mutation.print_op()).unwrap(), mutation);
+    let next = protocol::apply_diff(mutation.diff(&snapshot).diff(), &snapshot).unwrap();
+    let mut expected = row["snapshot"].clone();
+    expected["entries"].as_array_mut().unwrap().insert(row["insertion"]["index"].as_u64().unwrap() as usize, row["insertion"]["entry"].clone());
+    let actual: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&next)).unwrap();
+    assert_eq!(actual, expected);
+}
+
+#[test]
+fn archive_snapshot_and_diff_refuse_the_neutral_invalid_bytes() {
+    let row = fixture();
+    for byte in row["invalidPayloadBytes"].as_array().unwrap() {
+        let snapshot = serde_json::json!({ "schema": "stdio.zip", "entries": [{ "name": "invalid.bin", "data": [byte] }] });
+        let diff = serde_json::json!({ "entries": { "modified": [{ "name": "invalid.bin", "diff": { "data": [byte] } }] } });
+        assert!(semio_framework_pack_json::from_json_str::<ZipSnapshot>(&snapshot.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).is_err());
+        assert!(semio_framework_pack_json::from_json_str::<crate::schema::diff::ZipDiff>(&diff.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).is_err());
+    }
+}
+
+#[test]
+fn archive_parser_supplies_the_neutral_empty_defaults() {
+    let row = fixture();
+    let snapshot: ZipSnapshot = semio_framework_pack_json::from_json_str(&row["omittedDefaults"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let actual: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&snapshot)).unwrap();
+    assert_eq!(actual, row["defaultSnapshot"]);
+}
+
+#[test]
+fn archive_text_byte_limits_match_the_neutral_unicode_boundaries() {
+    let snapshot = ZipSnapshot::default();
+    for row in fixture()["textByteBoundaries"].as_array().unwrap() {
+        let value = row["text"].as_str().unwrap().repeat(row["repeat"].as_u64().unwrap() as usize);
+        assert_eq!(edit_node(&snapshot, COMMENT_NODE_ID, &value, &text_revision(&snapshot.comment)).is_ok(), row["valid"].as_bool().unwrap());
+        let arguments = semio_framework_value::DslValue::object([("nodeId".into(), semio_framework_value::DslValue::String(COMMENT_NODE_ID.into())), ("value".into(), semio_framework_value::DslValue::String(value)), ("revision".into(), semio_framework_value::DslValue::String(text_revision(&snapshot.comment)))]);
+        assert_eq!(edit_arguments(Some(&arguments)).is_ok(), row["valid"].as_bool().unwrap());
+    }
+}
+
+#[test]
+fn cp437_comment_edit_promotes_saves_reopens_and_undoes_exactly() {
+    let source = ZipSnapshot { comment: "é".into(), comment_utf8: false, ..Default::default() };
+    let emit = edit_node(&source, COMMENT_NODE_ID, "edited 🎒", &text_revision(&source.comment)).unwrap();
+    let mutation = emit.artifact_mutations.into_iter().next().expect("comment mutation");
+    assert_eq!(mutation, ZipMutation::SetArchiveComment(set_archive_comment::SetArchiveComment { comment: "edited 🎒".into(), comment_utf8: true }));
+    let next = protocol::apply_diff(mutation.diff(&source).diff(), &source).unwrap();
+    let encoded = crate::standards::v2_0::subsets::base::io::encode_zip(&next).unwrap();
+    let oracle = zip::ZipArchive::new(std::io::Cursor::new(&encoded)).unwrap();
+    assert_eq!(oracle.comment(), "edited 🎒".as_bytes());
+    let reopened = crate::standards::v2_0::subsets::base::io::decode_zip(&encoded).unwrap();
+    assert_eq!(reopened, next);
+
+    let inverse = mutation.inverse(&source).expect("valid retained mutation inverse fixture").into_iter().next().expect("comment inverse");
+    let restored = protocol::apply_diff(inverse.diff(&reopened).diff(), &reopened).unwrap();
+    let restored_bytes = crate::standards::v2_0::subsets::base::io::encode_zip(&restored).unwrap();
+    let restored_oracle = zip::ZipArchive::new(std::io::Cursor::new(&restored_bytes)).unwrap();
+    assert_eq!(restored_oracle.comment(), &[0x82]);
+    assert_eq!(crate::standards::v2_0::subsets::base::io::decode_zip(&restored_bytes).unwrap(), source);
+}
+
+#[test]
+fn archive_edit_arguments_are_required_in_both_dialects() {
+    let rows = fixture();
+    for row in rows["rejectedArguments"].as_array().unwrap() {
+        let args: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(&row.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+        assert!(crate::editor::zip::base::ZipAnyEditor::command_from_action("set-node", Some((args).clone()), None).is_err(), "{row}");
+        assert!(crate::editor::zip::iso21320::ZipIso21320Editor::command_from_action("set-node", Some((args).clone()), None).is_err(), "{row}");
+    }
+}
+
+#[test]
+fn archive_rename_survives_reordering_and_matches_independent_json_oracle() {
+    let row = fixture();
+    let mut input = row["snapshot"].clone();
+    let original_name = row["rename"]["name"].as_str().unwrap();
+    let replacement = row["rename"]["value"].as_str().unwrap();
+    let node = entry_node_id(original_name);
+    input["entries"].as_array_mut().unwrap().reverse();
+    let snapshot: ZipSnapshot = semio_framework_pack_json::from_json_str(&input.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let emit = edit_node(&snapshot, &node, replacement, &text_revision(original_name)).unwrap();
+    assert_eq!(emit.artifact_mutations.len(), 1);
+    let mutation = &emit.artifact_mutations[0];
+    let next = protocol::apply_diff(mutation.diff(&snapshot).diff(), &snapshot).unwrap();
+    let mut expected = input.clone();
+    let entry = expected["entries"].as_array_mut().unwrap().iter_mut().find(|entry| entry["name"] == original_name).unwrap();
+    entry["name"] = replacement.into();
+    let actual: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&semio_framework_value::ToValue::to_value(&next))).unwrap();
+    assert_eq!(actual, expected);
+    let inverse = mutation.inverse(&snapshot).expect("valid retained mutation inverse fixture");
+    assert_eq!(inverse.len(), 1);
+    assert_eq!(protocol::apply_diff(inverse[0].diff(&next).diff(), &next).unwrap(), snapshot);
+    assert!(edit_node(&next, &node, "stale.txt", &text_revision(original_name)).is_err());
+}
+
+#[test]
+fn archive_edits_refuse_ambiguous_stale_and_colliding_names() {
+    let row = fixture();
+    let snapshot: ZipSnapshot = semio_framework_pack_json::from_json_str(&row["snapshot"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    for target in row["rejectedTargets"].as_array().unwrap() {
+        assert!(edit_node(&snapshot, target.as_str().unwrap(), "changed", "stale").is_err());
+    }
+    let node = entry_node_id(&snapshot.entries[0].name);
+    assert!(edit_node(&snapshot, &node, &snapshot.entries[1].name, &text_revision(&snapshot.entries[0].name)).is_err());
+    assert!(edit_node(&snapshot, &node, "", &text_revision(&snapshot.entries[0].name)).is_err());
+    assert!(edit_node(&snapshot, &node, &"ä".repeat(MAXIMUM_TEXT_BYTES / 2 + 1), &text_revision(&snapshot.entries[0].name)).is_err());
+    assert!(edit_node(&snapshot, &node, &snapshot.entries[0].name, &text_revision(&snapshot.entries[0].name)).unwrap().artifact_mutations.is_empty());
+    let mut duplicate = snapshot.clone();
+    duplicate.entries.push(snapshot.entries[0].clone());
+    assert!(edit_node(&duplicate, &node, "unique.txt", &text_revision(&snapshot.entries[0].name)).is_err());
+    let comment = edit_node(&snapshot, COMMENT_NODE_ID, row["emptyComment"].as_str().unwrap(), &text_revision(&snapshot.comment)).unwrap();
+    let next = protocol::apply_diff(comment.artifact_mutations[0].diff(&snapshot).diff(), &snapshot).unwrap();
+    assert!(next.comment.is_empty());
+    assert!(edit_node(&next, COMMENT_NODE_ID, "stale comment", &text_revision(&snapshot.comment)).is_err());
+    assert_eq!(next.entries, snapshot.entries);
+}
+
+#[test]
+fn archive_primary_window_materializes_only_the_requested_slice() {
+    use semio_framework_plugin::{TreeWindowRequest, ViewModel};
+    let snapshot = ZipSnapshot { entries: (0..300).map(|index| crate::schema::snapshot::ZipEntry { name: format!("file-{index}.txt"), data: vec![], ..Default::default() }).collect(), ..Default::default() };
+    let mounts = [
+        (
+            crate::editor::zip::base::modes::edit::windows::main::BODY_KEY,
+            crate::editor::zip::base::modes::edit::windows::main::render
+                as fn(&ZipSnapshot, &TreeWindows<'_>, Locale, semio_framework_plugin::UiPublicationRevision) -> UiAssemblyResult<BuiltNode>,
+        ),
+        (crate::editor::zip::iso21320::modes::edit::windows::main::BODY_KEY, crate::editor::zip::iso21320::modes::edit::windows::main::render),
+    ];
+    for (body_key, render) in mounts {
+        let view = ViewModel {
+            tree_windows: vec![TreeWindowRequest { body_key: body_key.into(), node_key: "archive-fields".into(), open: Some(true), offset: 100, rows: 4 }],
+            tree_viewport_rows: Some(4),
+            ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
+        };
+        let node = render(&snapshot, &TreeWindows::for_body(&view, body_key), Locale::En, semio_framework_plugin::UiPublicationRevision(23)).unwrap();
+        let projection = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).unwrap();
+        assert!(projection.contains("\"total\":301"));
+        assert!(projection.contains("file-99.txt"));
+        assert!(projection.contains("file-102.txt"));
+        assert!(!projection.contains("file-98.txt"));
+        assert!(!projection.contains("file-103.txt"));
+    }
+}
+
+async fn retained_archive_law<E: ArtifactEditor<Snapshot = ZipSnapshot, Mutation = ZipMutation>>(definition: semio_framework_plugin::AppDefinition) {
+    use semio_framework_plugin::{artifact_app_laws, EditorApp, PluginApp};
+    let row = fixture();
+    let original: ZipSnapshot = semio_framework_pack_json::from_json_str(&row["snapshot"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let mut app = semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::new_registered_app::<EditorApp<E>, _>(async { semio_framework_plugin::App { definition, examples: Vec::new() } }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
+    let semio_framework_plugin::Effect::LoadDocument { pack, spr } = semio_s_artifact_stdio_contract::load_example_effect(&original, crate::STDIO_ZIP_DOCUMENT_SCHEMA) else { panic!("archive fixture produces a document load") };
+    semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::load_document(&mut app, &store::os_store::serialization::ArtifactPackFiles { pack, spr, ops: String::new() }, &mut identity).await).unwrap();
+    let name = row["rename"]["name"].as_str().unwrap();
+    let value = row["rename"]["value"].as_str().unwrap();
+    let arguments = semio_framework_value::DslValue::object([("nodeId".into(), semio_framework_value::DslValue::String(entry_node_id(name))), ("value".into(), semio_framework_value::DslValue::String(value.into())), ("revision".into(), semio_framework_value::DslValue::String(text_revision(name)))]);
+    let meta = artifact_app_laws::meta("local");
+    semio_framework_plugin::with_authoring_identity!(|identity| app.handle_action("set-node", Some(&arguments), &meta, &mut identity).await).unwrap();
+    semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_registered_typed_operation(&mut app, meta.instance_id, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await).unwrap();
+    let mut expected = original.clone();
+    expected.entries[0].name = value.into();
+    assert_eq!(app.snapshot().unwrap(), expected);
+    semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_history_verb(&mut app, "undo", meta.instance_id, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
+    assert_eq!(app.snapshot().unwrap(), original);
+    semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_history_verb(&mut app, "redo", meta.instance_id, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
+    assert_eq!(app.snapshot().unwrap(), expected);
+    let saved = <ZipSnapshot as pack::snapshot::ArtifactPack>::encode_pack(&expected);
+    assert_eq!(<ZipSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&saved).unwrap(), expected);
+    artifact_app_laws::close_registered_fixture_app(&mut app, semio_s_artifact_stdio_contract::testing::mounted_policy());
+}
+
+/// ⚖️ LAW (agent lane, ticket 26/09/23 G12 session 14c): an agent's archive rename without a `revision` is admitted against the
+/// addressed entry's own token — the same edit as with the token its draft binding carries, a stale token still refused —
+/// while the shell lane keeps refusing the omission.
+async fn agent_archive_rename_law<E: ArtifactEditor<Snapshot = ZipSnapshot, Mutation = ZipMutation>>(definition: semio_framework_plugin::AppDefinition) {
+    let mut original_caller=semio_framework_plugin::artifact_app_laws::OriginalFixtureCaller::admit().expect("closed original coupled fixture caller");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+    use semio_framework_plugin::{artifact_app_laws, EditorApp, PluginApp};
+    let view = semio_framework_plugin::ViewModel {
+        window_instances: definition.window_kinds.iter().enumerate().map(|(index, window)| semio_framework_plugin::ViewWindowInstance { id: format!("agent-preview-{index}"), window_kind_id: window.id.clone() }).collect(),
+        ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
+    };
+    let row = fixture();
+    let original: ZipSnapshot = semio_framework_pack_json::from_json_str(&row["snapshot"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let registered = definition.clone();
+    let mut app = semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::new_registered_app::<EditorApp<E>, _>(async { semio_framework_plugin::App { definition: registered, examples: Vec::new() } }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
+    let semio_framework_plugin::Effect::LoadDocument { pack, spr } = semio_s_artifact_stdio_contract::load_example_effect(&original, crate::STDIO_ZIP_DOCUMENT_SCHEMA) else { panic!("archive fixture produces a document load") };
+    semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::load_document(&mut app, &store::os_store::serialization::ArtifactPackFiles { pack, spr, ops: String::new() }, &mut identity,cx).await).unwrap();
+    let name = row["rename"]["name"].as_str().unwrap();
+    let value = row["rename"]["value"].as_str().unwrap();
+    let address = |revision: Option<String>| {
+        semio_framework_value::DslValue::object(
+            [("nodeId".to_string(), semio_framework_value::DslValue::String(entry_node_id(name))), ("value".to_string(), semio_framework_value::DslValue::String(value.into()))].into_iter().chain(revision.map(|revision| ("revision".to_string(), semio_framework_value::DslValue::String(revision)))),
+        )
+    };
+    assert_eq!(agent_target_revision(&original, &address(None)).unwrap(), Some(text_revision(name)), "the fill is the token the draft binding carries");
+    let omitted = semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::agent_preview(&mut app, &definition, "set-node", &address(None), &view, &mut identity,cx).await).expect("the agent lane admits an omitted revision");
+    let bound = semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::agent_preview(&mut app, &definition, "set-node", &address(Some(text_revision(name))), &view, &mut identity,cx).await).expect("the draft binding's revision");
+    assert!(omitted > 0 && omitted == bound, "omitted {omitted} vs bound {bound} document ops");
+    assert!(semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::agent_preview(&mut app, &definition, "set-node", &address(Some(text_revision("stale"))), &view, &mut identity,cx).await).is_err(), "a stale token is refused on the agent lane too");
+    assert!(semio_framework_plugin::with_authoring_identity!(|identity| app.handle_action("set-node", Some(&address(None)), &artifact_app_laws::meta("local"), &mut identity).await).is_err(), "the shell lane still requires the draft binding's revision");
+    artifact_app_laws::close_registered_fixture_app(&mut app, semio_s_artifact_stdio_contract::testing::mounted_policy(),cx);
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original coupled fixture caller closes");result
+}
+
+#[semio_framework_async_macros::async_test]
+async fn base_archive_agent_rename_is_admitted_against_the_entry_token() {
+    agent_archive_rename_law::<crate::editor::zip::base::ZipAnyEditor>(crate::editor::zip::base::create_zip_any_editor()).await;
+}
+
+#[semio_framework_async_macros::async_test]
+async fn iso_archive_agent_rename_is_admitted_against_the_entry_token() {
+    agent_archive_rename_law::<crate::editor::zip::iso21320::ZipIso21320Editor>(crate::editor::zip::iso21320::create_zip_iso21320_editor()).await;
+}
+
+#[semio_framework_async_macros::async_test]
+async fn base_archive_draft_uses_the_registered_retained_factory() {
+    retained_archive_law::<crate::editor::zip::base::ZipAnyEditor>(crate::editor::zip::base::create_zip_any_editor()).await;
+}
+
+#[semio_framework_async_macros::async_test]
+async fn iso_archive_draft_uses_the_registered_retained_factory() {
+    retained_archive_law::<crate::editor::zip::iso21320::ZipIso21320Editor>(crate::editor::zip::iso21320::create_zip_iso21320_editor()).await;
+}
+
+#[test]
+fn archive_registered_factory_resumes_the_exact_cursor_and_refuses_another_revision() {
+    use protocol::OpBinary;
+    use semio_framework_job::{Generation, InteractiveJob, JobOutcomeBorrow, Operation, OperationId, RevisionId, StepBudget, StepContext};
+    use semio_framework_action_bus::{ActionBus, ToolOperationSpec, ToolWirePage, TOOL_WIRE_PAGE_BYTES};
+    use semio_framework_plugin::app::{AppOperationContext, ArtifactOwnedToolJobContext, ArtifactOwnedToolJobSnapshots, ArtifactToolCompletion, ChildContentView, InteractionHoverState};
+    use semio_framework_plugin::retained_command::{ArtifactOwnedContextHandle, ArtifactRetainedCommandInputs, ArtifactRetainedCommandPayload};
+    use semio_framework_plugin::{EditorApp, HistoryView};
+    use semio_s_artifact_stdio_contract::editing::{BoundedNativeEditToolJobFactory, BoundedNativeEditingEditor};
+    use std::sync::Arc;
+    type Editor = crate::editor::zip::base::ZipAnyEditor;
+    type App = EditorApp<Editor>;
+    let row = fixture();
+    let snapshot: Arc<ZipSnapshot> = Arc::new(semio_framework_pack_json::from_json_str(&row["snapshot"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap());
+    let arguments = semio_framework_value::DslValue::object([
+        ("nodeId".into(), semio_framework_value::DslValue::String(entry_node_id(row["rename"]["name"].as_str().unwrap()))),
+        ("value".into(), semio_framework_value::DslValue::String(row["rename"]["value"].as_str().unwrap().into())),
+        ("revision".into(), semio_framework_value::DslValue::String(text_revision(row["rename"]["name"].as_str().unwrap()))),
+    ]);
+    let bus = ActionBus::new();
+    bus.register(BoundedNativeEditToolJobFactory::<Editor>::new("zip-replay")).unwrap();
+    let operation = Operation::new(OperationId(41), RevisionId(2), Generation(3), 5);
+    let wire = Editor::command_from_action("set-node", Some((arguments).clone()), None).unwrap().encode_op().unwrap();
+    let input = |bytes: &[u8]| {
+        let (admission, mut input) = bus.begin_exact_wire("zip-replay", "set-node", Editor::NATIVE_PAYLOAD_SCHEMA, bytes.len()).unwrap();
+        for page in bytes.chunks(TOOL_WIRE_PAGE_BYTES) {
+            input.admit_page(ToolWirePage::try_copy_from(page).unwrap()).map_err(|(fault, _)| fault).unwrap();
+        }
+        input.seal().unwrap();
+        (admission, input)
+    };
+    let payload = |completion, revision| {
+        ArtifactRetainedCommandPayload::<App>::new(
+            ArtifactRetainedCommandInputs {
+                command: Editor::command_from_action("set-node", Some((arguments).clone()), None).unwrap(),
+                snapshot: snapshot.clone(),
+                config: Arc::new(Default::default()),
+                history: Arc::new(HistoryView::empty()),
+                interaction_state: Arc::new(Default::default()),
+                interaction_hover: Arc::new(InteractionHoverState::new()),
+                context: Some(ArtifactOwnedContextHandle::admit(ArtifactOwnedToolJobContext::new(
+                    7,
+                    None,
+                    revision,
+                    0,
+                    0,
+                    ArtifactOwnedToolJobSnapshots { children: Arc::new(ChildContentView::EMPTY), draft: Arc::new(Default::default()), transient: Arc::new(Default::default()), window_config: None, window_transient: None },
+                ), semio_s_artifact_stdio_contract::testing::unbounded_grant()).0),
+                operation: AppOperationContext { app_instance_id: 7, parent_document_id: "zip-replay".into(), operation_id: 41, generation: 3, canonical_base_revision: revision, authoring_seed: "authoring-seed-test".into(), retained: semio_s_artifact_stdio_contract::testing::unbounded_grant() },
+                completion,
+            },
+            Editor::command_id,
+            Editor::NATIVE_MAXIMUM_RAW_BYTES,
+            Editor::NATIVE_MAXIMUM_WORK_ITEMS,
+            Editor::native_edit_work("set-node"),
+        )
+    };
+    let completion = ArtifactToolCompletion::<App>::test_new();
+    let consumer = completion.clone();
+    let spec = ToolOperationSpec::new("zip-replay", "set-node", Editor::NATIVE_PAYLOAD_SCHEMA, payload(completion, [5; 32]), operation);
+    let (admission, original_input) = input(&wire);
+    let mut original = bus.dispatch_wire_retained_with_spec(&admission, original_input, None, spec).unwrap_or_else(|_| panic!("initial ZIP dispatch"));
+    let mut sequence = 0;
+    let mut saved = None;
+    for _ in 0..64 {
+        let mut step_progress = semio_framework_value::retained_clone::RetainedCloneProgress::default(); let mut cx = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, semio_s_artifact_stdio_contract::testing::unbounded_grant()), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut step_progress);
+        match original.job.step(&mut cx).expect("ZIP resolver step") {
+            Some(JobOutcomeBorrow::PreviewReady { .. }) | Some(JobOutcomeBorrow::Yield { .. }) | None => {}
+            Some(JobOutcomeBorrow::CheckpointReady { state, .. }) => {
+                let bytes = state.single_page().unwrap();
+                if bytes.get(5) == Some(&1) && bytes.get(56) == Some(&1) {
+                    saved = Some(bytes.to_vec());
+                }
+                if saved.is_some() {
+                    break;
+                }
+            }
+            Some(other) => panic!("ZIP resolver must yield a checkpoint before completion: {other:?}"),
+        }
+    }
+    let saved = saved.expect("checkpoint after exactly one member");
+    original.job.begin_close();
+    for _ in 0..64 {
+        if original.job.terminal_is_empty() {
+            break;
+        }
+        let _ = original.job.close_step(semio_s_artifact_stdio_contract::editing::ample_close_grant());
+    }
+    assert!(original.job.terminal_is_empty());
+    assert!(consumer.test_take_emit().unwrap().is_none());
+    for (revision, should_complete) in [([5; 32], true), ([6; 32], false)] {
+        let completion = ArtifactToolCompletion::<App>::test_new();
+        let consumer = completion.clone();
+        let spec = ToolOperationSpec::new("zip-replay", "set-node", Editor::NATIVE_PAYLOAD_SCHEMA, payload(completion, revision), operation);
+        let (admission, wire) = input(&wire);
+        let (_, checkpoint) = input(&saved);
+        let mut resumed = bus.dispatch_wire_retained_with_spec(&admission, wire, Some(checkpoint), spec).unwrap_or_else(|_| panic!("ZIP factory declares checkpoint resume"));
+        let mut completed = false;
+        let mut faulted = false;
+        for _ in 0..96 {
+            let mut step_progress = semio_framework_value::retained_clone::RetainedCloneProgress::default(); let mut cx = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, semio_s_artifact_stdio_contract::testing::unbounded_grant()), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut step_progress);
+            match resumed.job.step(&mut cx).expect("ZIP resumed step") {
+                Some(JobOutcomeBorrow::PreviewReady { .. }) | Some(JobOutcomeBorrow::Yield { .. }) | None => {}
+                Some(JobOutcomeBorrow::CheckpointReady { state, .. }) => {
+                    let bytes = state.single_page().unwrap();
+                    if bytes.get(5) == Some(&1) {
+                        assert_ne!(bytes.get(56), Some(&1), "resumed work must not rescan the first member");
+                    }
+                }
+                Some(JobOutcomeBorrow::Complete { .. }) => {
+                    completed = true;
+                    break;
+                }
+                Some(JobOutcomeBorrow::Fault { .. }) => {
+                    faulted = true;
+                    break;
+                }
+                Some(JobOutcomeBorrow::Cancelled { .. }) => panic!("uncancelled ZIP resume"),
+            }
+        }
+        assert_eq!(completed, should_complete);
+        assert_eq!(faulted, !should_complete);
+        if should_complete {
+            let (emit, _) = consumer.test_take_emit().unwrap().unwrap();
+            let expected = edit_node(&snapshot, &entry_node_id(row["rename"]["name"].as_str().unwrap()), row["rename"]["value"].as_str().unwrap(), &text_revision(row["rename"]["name"].as_str().unwrap())).unwrap();
+            assert_eq!(emit.unwrap().artifact_mutations, expected.artifact_mutations);
+        }
+        resumed.job.begin_close();
+        for _ in 0..64 {
+            if resumed.job.terminal_is_empty() {
+                break;
+            }
+            let _ = resumed.job.close_step(semio_s_artifact_stdio_contract::editing::ample_close_grant());
+        }
+        assert!(resumed.job.terminal_is_empty());
+    }
+    assert!(crate::editor::zip::iso21320::ZipIso21320Editor::NATIVE_CHECKPOINT_RESUME);
+}
+
+fn runtime_fixture_text(relative: &str) -> &'static str {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative);
+    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display())).into_boxed_str())
+}

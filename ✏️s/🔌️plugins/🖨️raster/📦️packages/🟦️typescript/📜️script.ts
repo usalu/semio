@@ -33,7 +33,7 @@ class TestScript extends BundleScript {
     const cases = segments[0] === "renderer-contract" ? rendererCases : [...CASES, ...rendererCases];
     const operation = new AbortController(), retire = () => operation.abort();
     process.once("SIGINT", retire); process.once("SIGTERM", retire);
-    try { await runOwnedCommand(process.execPath, ["test", ...cases.map(path => resolve(this.repoRoot, path))], this.repoRoot, "raster-owning-tests", 300000, { signal: operation.signal, onProgress: line => console.log(`[DEBUG] ${line}`) }); }
+    try { await runOwnedCommand(process.execPath, ["test", ...cases.map(path => resolve(this.repoRoot, path))], this.repoRoot, "raster-owning-tests", 300000, { signal: operation.signal, onProgress: line => {} }); }
     finally { process.off("SIGINT", retire); process.off("SIGTERM", retire); }
   }
 }

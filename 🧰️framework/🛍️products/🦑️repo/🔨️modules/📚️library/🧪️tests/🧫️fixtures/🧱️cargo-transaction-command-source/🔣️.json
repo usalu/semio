@@ -4,8 +4,10 @@
     {
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts",
       "declarations": [
-        "runOwnedCommand",
-        "startNativeProgress"
+        "RepositoryCommandOptionsV1",
+        "RepositoryCommandPolicyV1",
+        "readRepositoryCommandPolicyV1",
+        "runRepositoryCommand"
       ],
       "contextChain": [
         "repo-process-owned-execution"
@@ -24,20 +26,9 @@
     {
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts",
       "declarations": [
-        "CARGO_BINARY_SOURCES_SCHEMA_V1",
-        "CARGO_BUILD_OWNER_PID_ENV",
-        "CargoBinarySourcesV1",
-        "buildCargoArtifacts",
-        "cargoBinarySourcesFreshnessV1",
-        "cargoBuildOwnerAliveV1",
-        "cargoDepInfoSourcesV1",
-        "installExecutable",
-        "packageNativeRelease",
-        "parseCargoBinarySourcesV1",
-        "signExecutableForDistribution",
-        "workspaceCargoVersion",
-        "CargoArtifactBuildOptionsV1",
-        "captureCargoArtifacts"
+        "buildRepositoryCargoArtifacts",
+        "repositoryCargoArtifactBuildPolicyV1",
+        "workspaceCargoVersion"
       ],
       "contextChain": [
         "repo-cache-artifact-native-build"
@@ -47,8 +38,7 @@
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/🟦️.ts",
       "declarations": [
         "CargoRelayScript",
-        "NativeScript",
-        "pluginComponentRustcArgs"
+        "NativeScript"
       ],
       "contextChain": [
         "repo-cache-artifact-native-orchestration"
@@ -121,7 +111,7 @@
   "contexts": [
     {
       "directoryName": "🎛️owned-execution",
-      "parentKindId": "repo-process",
+      "parentKindId": "process",
       "kindId": "repo-process-owned-execution"
     },
     {
@@ -236,12 +226,6 @@
       ]
     },
     {
-      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust/📜️script.ts",
-      "owners": [
-        "⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts"
-      ]
-    },
-    {
       "path": "🧰️framework/🛍️products/💻️os/🧪️testing/⚖️scale/📦️packages/🦀️rust/📜️script.ts",
       "owners": [
         "⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts"
@@ -266,29 +250,11 @@
       ]
     },
     {
-      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/📜️script.ts",
-      "owners": [
-        "🏃️process/🎛️owned-execution/🟦️.ts"
-      ]
-    },
-    {
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts",
       "owners": [
         "🏃️process/🎛️owned-execution/🟦️.ts",
         "⚡️caching/📦️artifacts/🎛️native-input/🟦️.ts",
         "⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts"
-      ]
-    },
-    {
-      "path": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🐍️python/📜️script.ts",
-      "owners": [
-        "🏃️process/🎛️owned-execution/🟦️.ts"
-      ]
-    },
-    {
-      "path": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🔷️dotnet/📜️script.ts",
-      "owners": [
-        "🏃️process/🎛️owned-execution/🟦️.ts"
       ]
     },
     {
@@ -311,15 +277,8 @@
       ]
     },
     {
-      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/📦️publication/🟦️.ts",
-      "owners": [
-        "⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts"
-      ]
-    },
-    {
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/⚡️cache-contracts/🟦️.ts",
       "owners": [
-        "🏃️process/🎛️owned-execution/🟦️.ts",
         "⚡️caching/📦️artifacts/🎛️native-input/🟦️.ts",
         "⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts"
       ]

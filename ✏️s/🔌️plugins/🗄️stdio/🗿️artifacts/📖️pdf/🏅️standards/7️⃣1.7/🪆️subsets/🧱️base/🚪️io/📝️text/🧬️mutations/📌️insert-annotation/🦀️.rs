@@ -3,7 +3,7 @@
 pub const OPCODE: &str = "insert-annotation";
 pub const TEXT_OPCODE: &str = OPCODE;
 
-use crate::standards::v1_7::subsets::base::schema::mutations::InsertAnnotation;
+use crate::standards::v1_7::subsets::base::schema::mutations::insert_annotation::InsertAnnotation;
 
 /// 🖨️ Prints this direct payload through its schema-derived JSON representation.
 pub fn print(payload: &InsertAnnotation) -> Result<String, String> {

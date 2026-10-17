@@ -1,7 +1,7 @@
 //! 🧪️ Proximity auto-connect laws: the radius gate, the spatial bound, and the one-edit drop.
 
-use super::{puzzle2d_proximity_connect, puzzle2d_proximity_pairs};
-use crate::editor::puzzle2d::unit_tests::context::*;
+use crate::editor::puzzle2d::commands::proximity_connect::{puzzle2d_proximity_connect, puzzle2d_proximity_pairs};
+use crate::editor::puzzle2d::testkit::*;
 use {crate::editor::puzzle2d::snapshot::board_snapshot_edges, crate::editor::puzzle2d::snapshot::PUZZLE2D_PROXIMITY_GESTURE_MAX};
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
 use semio_framework_pack_json::{json, Value};

@@ -22,7 +22,6 @@ mod runtime_close_budget_tests {
                     "tool-run" => assert_eq!(output.tool_run_receipt, Some((grant, receipt))),
                     _ => assert_eq!(output.preparation_receipt, Some((semio_framework_job::OperationId(77), grant, receipt))),
                 }
-                eprintln!("[DEBUG] actual typed continuation owner={owner} originalGrant={grant:?} receipt={receipt:?} stopped={stopped} pureHeap={heap:?}");
             }
         }
     }
@@ -31,7 +30,8 @@ mod runtime_close_budget_tests {
         (AtomicU8::new(0), AtomicU64::new(0))
     }
 
-    fn zero_progress() -> Option<semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep> {
+    #[doc(hidden)]
+pub fn zero_progress() -> Option<semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep> {
         Some(semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(RetainedCloneProgress::default()))
     }
 
@@ -175,7 +175,7 @@ mod runtime_close_budget_tests {
     fn live_maintenance_caller_funds_exact_retained_physical_extent_without_more_work() {
         let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/📏️live-physical-demand/🔣️.json")).unwrap();
         let original = RetainedCloneGrant { maximum_items: fixture["maximumItems"].as_u64().unwrap() as usize, maximum_copy_bytes: fixture["ordinaryGrantBytes"].as_u64().unwrap() as usize, maximum_capacity_bytes: fixture["maximumCapacityBytes"].as_u64().unwrap() as usize, maximum_release_bytes: fixture["maximumReleaseBytes"].as_u64().unwrap() as usize, maximum_depth: fixture["maximumDepth"].as_u64().unwrap() as usize };
-        let policy = crate::MountedOwnerPolicyV1 { preparation: original, maintenance: original, close: original }.validate().unwrap().maintenance;
+        let policy = semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1 { preparation: original, maintenance: original, close: original }.validate().unwrap().maintenance;
         assert_eq!(fixture["ordinaryGrantBytes"].as_u64().unwrap() as usize, policy.maximum_copy_bytes);
         assert_eq!(fixture["maximumCapacityBytes"].as_u64().unwrap() as usize, policy.maximum_capacity_bytes);
         assert_eq!(fixture["maximumReleaseBytes"].as_u64().unwrap() as usize, policy.maximum_release_bytes);
@@ -208,7 +208,6 @@ mod runtime_close_budget_tests {
             assert!(owner.is_none());
             assert_eq!((heap.requested_bytes, heap.released_bytes), (0, extent));
             assert!(matches!(result, Ok(semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Complete(progress)) if progress.released_bytes == extent && progress.copied_bytes == 0 && progress.fits(grant)));
-            eprintln!("[DEBUG] actual runtime lifecycle originalExtent={extent} copyGrant={} capacityGrant={} releaseGrant={} called={called} heap={:?} terminalDrop=0", grant.maximum_copy_bytes, grant.maximum_capacity_bytes, grant.maximum_release_bytes, heap);
         }
         let extent = fixture["refusedAllocationBytes"].as_u64().unwrap() as usize;
         let mut owner = Some(Vec::<u8>::with_capacity(extent));
@@ -230,7 +229,6 @@ mod runtime_close_budget_tests {
         }));
         assert!(matches!(result, Ok(semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Complete(progress)) if progress.released_bytes == extent));
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, extent));
-        eprintln!("[DEBUG] actual runtime lifecycle one-below release originalPointer retained0heap; independently admitted exact release={extent} physical={}", heap.released_bytes);
     }
 
     #[test]
@@ -245,6 +243,5 @@ mod runtime_close_budget_tests {
             assert_eq!(runtime_live_cleanup_nonterminal_status(false, progress, &live), RuntimeMaintenanceStatus::Ready);
             assert_eq!(live.load(Ordering::SeqCst), 0);
         }
-        eprintln!("[DEBUG] actual runtime all4 receipt currencies independently reset structural close/live stall credit");
     }
 }

@@ -1,8 +1,10 @@
 //! 🗑️ `delete-selection` command.
+use crate::editor::puzzle5d::entities::puzzle5d_grip_full_id;
 
-use crate::editor::puzzle5d::{puzzle5d_grip_full_id, Puzzle5dActionCtx};
+use crate::editor::puzzle5d::interaction::Puzzle5dActionCtx;
 use crate::standards::v1::subsets::any::schema::mutations::{delete_part, disconnect_grips, remove_part_grip, Puzzle5dMutation};
-use crate::{Puzzle5dFastener, Puzzle5dSnapshot};
+use crate::{Puzzle5dSnapshot};
+use crate::standards::v1::subsets::any::schema::document_records::{Puzzle5dFastener};
 
 /// 🗑️ The concrete kinds one delete gesture consists of, in base order: the selected fasteners no cascade severs
 /// (`disconnect-grips`), the selected grips of surviving parts (`remove-part-grip`, which severs its own fasteners),

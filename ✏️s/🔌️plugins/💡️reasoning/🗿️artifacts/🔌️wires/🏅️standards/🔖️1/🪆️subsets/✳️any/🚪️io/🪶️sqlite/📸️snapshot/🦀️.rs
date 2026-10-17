@@ -60,6 +60,3 @@ fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotCont
  }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;

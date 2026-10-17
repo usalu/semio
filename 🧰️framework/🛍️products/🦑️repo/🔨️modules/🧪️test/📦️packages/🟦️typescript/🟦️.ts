@@ -56,16 +56,11 @@ export {
 export type {
   SurfaceTarget,
 } from "../../🪆️subset-policy/🟦️.ts";
-export {
-  clearSchemaContractCache, declaredSchemaFormatIds, declaresSchemaExport, declaresSchemaExportParser, forbiddenSchemaPlacements,
-  GRAPHQL_EXPORT_KEYWORDS, isDeclaredDialectDefinition, isFixtureOwnedPath, isJsonSchemaDefinition, matchesTaxonomyPathPattern, moduleExportSchema,
-  mutationLeafSchemaId, normativeSchemaFormat, parseSchemaUri, readSchemaCatalog, resolveSchemaExport, restrictedExportFormats,
-  SCHEMA_DIAGNOSTIC_CODE_TABLE, SCHEMA_DIAGNOSTIC_CODES, SCHEMA_DIAGNOSTIC_EMITTERS, SCHEMA_EXPORT_FORMATS_KEYWORD, schemaContractDiagnostics,
-  schemaDiagnosticCodesEmittedBy, schemaExportCompletenessDiagnostics, schemaExportFile, schemaExportResolution, schemaFixtureIsolationDiagnostics,
-  schemaFormatKey, schemaJsonDialect, schemaMeasurementDisagreementDiagnostics, schemaModuleDirectoriesOnDisk, schemaModuleDirName,
-  schemaOwnerEligibilityDiagnostics, schemaPlacementDiagnostics, schemaResolutionDiagnostics, schemaScopeEligibility, schemaScopeFile,
-  schemaScopeOwnerLevels, schemaTreeFiles, scopeNormativeDocuments, submodulePaths,
-} from "../../📐️schema-contracts/🟦️.ts";
+export { clearSchemaContractCache, forbiddenSchemaPlacements, isFixtureOwnedPath, matchesTaxonomyPathPattern, normativeSchemaFormat, parseSchemaUri, readSchemaCatalog, resolveSchemaExport, SCHEMA_DIAGNOSTIC_CODE_TABLE, SCHEMA_DIAGNOSTIC_CODES, SCHEMA_DIAGNOSTIC_EMITTERS, schemaDiagnosticCodesEmittedBy, schemaExportFile, schemaExportResolution, schemaFormatKey, schemaJsonDialect, schemaModuleDirName, schemaScopeFile, schemaScopeOwnerLevels, submodulePaths } from "../../📐️schema-contracts/🟦️.ts";
+export { isDeclaredDialectDefinition, isJsonSchemaDefinition, schemaScopeEligibility, schemaTreeFiles } from "../../📐️schema-contracts/🏗️scope-eligibility-and-tree/🟦️.ts";
+export { schemaFixtureIsolationDiagnostics, schemaMeasurementDisagreementDiagnostics, schemaModuleDirectoriesOnDisk, schemaOwnerEligibilityDiagnostics, schemaPlacementDiagnostics } from "../../📐️schema-contracts/🩺️placement-diagnostics/🟦️.ts";
+export { declaredSchemaFormatIds, declaresSchemaExport, declaresSchemaExportParser, GRAPHQL_EXPORT_KEYWORDS, moduleExportSchema, mutationLeafSchemaId, restrictedExportFormats, SCHEMA_EXPORT_FORMATS_KEYWORD, schemaExportCompletenessDiagnostics, scopeNormativeDocuments } from "../../📐️schema-contracts/📤️export-completeness/🟦️.ts";
+export { schemaContractDiagnostics, schemaResolutionDiagnostics } from "../../📐️schema-contracts/🔗️reference-diagnostics/🟦️.ts";
 export type {
   ResolvedSchemaExport, SchemaCatalog, SchemaCatalogExport, SchemaCatalogScope, SchemaDiagnostic, SchemaDiagnosticCode,
   SchemaDiagnosticCodeEmittedBy, SchemaDiagnosticEmitter, SchemaExportResolution, SchemaHarnessDiagnosticCode, SchemaScopeEligibility,

@@ -8,7 +8,8 @@
     "engagementInput",
     "cameraPosition",
     "cameraTarget",
-    "cameraFov"
+    "cameraFov",
+    "activeUtilityId"
   ],
   "properties": {
     "engagementInput": {
@@ -35,6 +36,10 @@
     },
     "cameraFov": {
       "type": "number",
+      "x-semio-state": "presence"
+    },
+    "activeUtilityId": {
+      "type": "string",
       "x-semio-state": "presence"
     }
   }

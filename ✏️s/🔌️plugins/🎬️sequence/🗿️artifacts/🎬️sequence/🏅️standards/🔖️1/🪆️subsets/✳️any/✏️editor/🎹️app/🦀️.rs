@@ -1,6 +1,39 @@
 //! 🎹️ Sequence play app: the proof catalogs, the `ArtifactEditor` impl and the manifest stitch.
 
-use super::*;
+use crate::editor::sequence::panels::catalogue as catalogue_panel;
+use crate::editor::sequence::panels::document as document_panel;
+use crate::editor::sequence::panels::inspection as inspection_panel;
+use semio_framework_plugin::{ActionArgDef, ActionArgOption, ActionDefinition, ActionKind, AppActionRegistry, AppDefinition, AppIo, ArtifactEditor, ArtifactView, ConfigView, ContextMenuItemSpec, ContextMenuRequest, DomainTopology, DraftView, DslValue, Editor, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractionTopology, Media, MediaError, MediaPayload, MergeMode, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, TopologyNode};
+use std::collections::BTreeMap;
+use semio_framework_artifact_reference::Dialect;
+use semio_framework_2d::compute::EngineHandles;
+use semio_framework_plugin::app::InteractionView;
+use semio_framework_ui_locale::{Label, LocalizedLabel};
+use crate::{SEQUENCE_DOCUMENT_SCHEMA, SequenceSnapshot, SequenceStep, SequenceWorkingScene, StepParams};
+use crate::mutations::SequenceMutation;
+use crate::editor::sequence::modes::edit::windows::script::transient::SequenceScriptWindowTransient;
+use crate::editor::sequence::commands::step::{add_step, add_step_dropped, add_step_to_slot, delete_selection, move_step, remove_step, set_step_collapsed, set_step_params};
+use crate::editor::sequence::modes::edit::windows::{compiled, main, script};
+use crate::editor::sequence::commands::connection::{connect_steps, disconnect_steps};
+use crate::editor::sequence::modes::edit;
+use crate::editor::sequence::edit_rules;
+use semio_framework_pack_json::json;
+use crate::editor::sequence::commands::node_graph::{node_graph_edit, set_viewport};
+use crate::editor::sequence::commands::layout::{reorganize, set_orientation};
+use crate::editor::sequence::commands::playback::{run_command, stop_command};
+use crate::editor::sequence::terminology::sequence_play_labels;
+use crate::editor::sequence::commands::example::set_active_example;
+use crate::editor::sequence::panels::document::SEQUENCE_PLAY_BODY_ARTIFACT;
+use crate::editor::sequence::panels::catalogue::SEQUENCE_PLAY_BODY_CATALOGUE;
+use crate::editor::sequence::modes::edit::windows::compiled::SEQUENCE_PLAY_BODY_COMPILED;
+use crate::editor::sequence::panels::inspection::SEQUENCE_PLAY_BODY_INSPECTOR;
+use crate::editor::sequence::modes::edit::windows::main::SEQUENCE_PLAY_BODY_MAIN;
+use crate::editor::sequence::modes::edit::windows::script::SEQUENCE_PLAY_BODY_SCRIPT;
+use crate::editor::sequence::import::{SEQUENCE_IMPORT_TOOL_ID, SequenceImportJob};
+use crate::editor::sequence::base::{SEQUENCE_INTERACTION_GRANULARITY, SEQUENCE_INTERACTION_STEPS, sequence_child_leaves_emit, sequence_fault, sequence_fault_notices, sequence_host_snapshot_from_children, sequence_io, sequence_working_scene_from_children};
+use crate::editor::sequence::persistent::{SEQUENCE_PERSISTENT_MAXIMUM_UNITS, SEQUENCE_PERSISTENT_TOOL_IDS, SequencePersistentJobFactory, SequencePersistentWork};
+use crate::editor::sequence::retained::{SEQUENCE_RETAINED_ARTIFACT_TOOL_IDS, SEQUENCE_RETAINED_CONFIG_TOOL_IDS, SEQUENCE_RETAINED_EXAMPLE_MAXIMUM_UNITS, SEQUENCE_RETAINED_EXAMPLE_TOOL_IDS, SEQUENCE_RETAINED_MAXIMUM_UNITS, SEQUENCE_RETAINED_RAW_BYTES, SEQUENCE_STORE_MAXIMUM_SCENE_ITEMS, SequenceCommand, SequenceRetainedArtifactJobFactory, SequenceRetainedArtifactWork, SequenceRetainedConfigJobFactory, SequenceRetainedConfigWork, SequenceRetainedExampleJobFactory, SequenceRetainedExampleWork, sequence_retained_artifact_command_admitted, sequence_retained_config_command_admitted, sequence_retained_example_command_admitted};
+use crate::editor::sequence::host::max_serial_in_snapshot;
 
 //#region 🔖️SequencePlayApp
 /// 🧪️ Stateless app shell; exact window owners hold graph preferences and run output.
@@ -422,7 +455,7 @@ impl ArtifactEditor for SequencePlayApp {
 /// itself. Factored out of `ArtifactApp::context_menu` (which carries no `InteractionView` — ticket
 /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) so a test can exercise the selection-dependent
 /// rows directly with a real `selected` slice, matching `space`'s own precedent.
-pub(super) fn sequence_context_menu_items(registry: &AppActionRegistry, view_state: &semio_framework_plugin::ViewModel, surface: Option<&semio_framework_plugin::ContextMenuSurfaceTarget>, selected: &[String]) -> Vec<ContextMenuItemSpec> {
+pub fn sequence_context_menu_items(registry: &AppActionRegistry, view_state: &semio_framework_plugin::ViewModel, surface: Option<&semio_framework_plugin::ContextMenuSurfaceTarget>, selected: &[String]) -> Vec<ContextMenuItemSpec> {
     use semio_framework_plugin::{node_graph_delete_selection_spec, selection_domains_from_surface, Menu, NodeGraphDeleteDispatch};
     let is_de = view_state.locale == semio_framework_ui_locale::Locale::De;
 

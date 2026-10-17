@@ -1,3 +1,5 @@
+use semio_framework_test_fixtures::repo_text;
+
 /// 🕹️ Command surface: window transient isolation, preview sharing, command round trips, declared actions and chords, and the document io surface.
 
 #[semio_framework_async_macros::async_test]
@@ -107,7 +109,7 @@ async fn generation_preview_is_one_evaluation_shared_by_two_generation_windows()
         if rendered[0] != rendered[1] {
             return Err("generation windows did not consume the same preview evaluation".into());
         }
-        if include_str!("../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🔣️.json").contains("generationPreviewText") {
+        if repo_text!("✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🔣️.json").contains("generationPreviewText") {
             return Err("config schema still owns computed preview output".into());
         }
         Ok(())
@@ -183,12 +185,6 @@ fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
     }
 }
 
-/// 🚚️ The `nodeGraphEdit` payload one released node drag travels as — the node-graph gesture record of design §13.3
-/// (the press, the moved node and its ONE relative offset) both hosts write (`🕸️NodeGraph/🟦️.tsx`, wgpu `EngineCanvas`).
-pub(crate) fn node_move_operations_json(node_id: &str, dx: f64, dy: f64) -> String {
-    serde_json::json!([{ "operation": "move", "gestureId": format!("node-drag:{node_id}"), "nodeIds": [node_id], "dx": dx, "dy": dy }]).to_string()
-}
-
 /// 🧾️ One representative value per row, in declaration (= binary ordinal) order.
 pub(super) fn every_command() -> Vec<Generation3dCommand> {
     vec![
@@ -241,18 +237,11 @@ pub(super) fn every_command() -> Vec<Generation3dCommand> {
 /// 🧫️ The language-agnostic law both implementations drive — see the fixture's own `note`, and the
 /// TypeScript twin at `🚪️io/🧪️tests/🗿️artifact-surface/🟦️.ts`.
 fn document_io_fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🚪️io/🗿️artifact-surface.json")).expect("the artifact-surface fixture is valid json")
+    serde_json::from_str(repo_text!("✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🚪️io/🗿️artifact-surface.json")).expect("the artifact-surface fixture is valid json")
 }
 
 fn fixture_rows(value: &serde_json::Value, key: &str) -> Vec<serde_json::Value> {
     value[key].as_array().unwrap_or_else(|| panic!("fixture has a `{key}` array")).clone()
-}
-
-/// 📇️ Every action this app declares: each window kind's own roster plus the app-level roster
-/// (`AppDefinition::actions`), which `semio_framework::window_kind_actions` offers to every window
-/// that does not claim the id itself. The builder no longer clones app actions into window kinds.
-fn declared_actions(definition: &semio_framework_plugin::AppDefinition) -> impl Iterator<Item = &semio_framework_plugin::ActionDefinition> {
-    definition.window_kinds.iter().flat_map(|window| window.actions.iter()).chain(definition.actions.iter())
 }
 
 /// 📇️ One declared action of this app by id.
@@ -314,7 +303,7 @@ fn the_editor_declares_every_io_action_and_chord_the_fixture_names() {
 #[test]
 fn the_editor_binds_every_keyboard_verb_the_fixture_names() {
     let _serial = crate::editor_domain::editor_laws::serial_execution::lock();
-    let fixture: serde_json::Value = serde_json::from_str(KEYBOARD_REACHABILITY_FIXTURE_JSON).expect("keyboard fixture");
+    let fixture: serde_json::Value = serde_json::from_str(keyboard_reachability_fixture_json()).expect("keyboard fixture");
     let definition = create_generation3d_app();
     let rows = fixture["bindings"].as_array().expect("bindings");
     // 🧾️ Exactness, expressed against the APP-AUTHORED chords only: `build_definition` also mints a
@@ -393,7 +382,7 @@ fn mode_window_kind_ids(definition: &semio_framework_plugin::AppDefinition, mode
 #[test]
 fn every_window_scoped_chord_names_its_owning_window_kind_and_the_modes_that_mount_it() {
     let _serial = crate::editor_domain::editor_laws::serial_execution::lock();
-    let fixture: serde_json::Value = serde_json::from_str(KEYBOARD_REACHABILITY_FIXTURE_JSON).expect("keyboard fixture");
+    let fixture: serde_json::Value = serde_json::from_str(keyboard_reachability_fixture_json()).expect("keyboard fixture");
     let definition = create_generation3d_app();
     let mode_ids: Vec<String> = definition.modes.iter().map(|mode| mode.id.clone()).collect();
     let mut scoped = 0;

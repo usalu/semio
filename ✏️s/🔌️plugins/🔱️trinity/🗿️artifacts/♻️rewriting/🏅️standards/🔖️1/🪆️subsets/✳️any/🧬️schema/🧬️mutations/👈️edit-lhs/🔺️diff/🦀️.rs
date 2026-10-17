@@ -1,6 +1,6 @@
 //! 🔺️ Sparse diff builder for `EditLhs` — names only the pattern and where-clause fields the new left-hand side changes.
 use crate::standards::v1::subsets::any::schema::diff::{LhsPatch, PatternPatch, RewritingDiff};
-use crate::RewritingSnapshot;
+use crate::standards::v1::subsets::any::schema::snapshot::RewritingSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::EditLhs, base: &RewritingSnapshot) -> protocol::MutationOutcome<RewritingDiff> {

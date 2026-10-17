@@ -14,7 +14,6 @@ test("authored semantic target Source stays in the real Nx map while compiler ou
   for(const row of corpus.cases){const path=join(root,row.path);if(path.length>256)throw Error("Portable Source fixture path exceeds capacity");mkdirSync(dirname(path),{recursive:true});writeFileSync(path,"export const source=1;\n");expect(reference.ignores(row.path),row.path).toBe(row.ignored);}
   const context=new native.WorkspaceContext(root,join(root,".nx"));context.glob(["**/*"]);await new Promise<void>(resolve=>setImmediate(resolve));const inventory=context.getWorkspaceFiles({domain:corpus.owner}),present=new Set([...Object.values(inventory.projectFileMap).flatMap((rows:any)=>rows.map((row:{file:string})=>row.file)),...inventory.globalFiles.map((row:{file:string})=>row.file)]);
   for(const row of corpus.cases){expect(present.has(row.path),row.path).toBe(!row.ignored);if(!row.ignored){expect(inventory.projectFileMap.domain.some((file:{file:string})=>file.file===row.path)).toBe(true);}}
-  console.log("[DEBUG] Git ignore and actual Nx inventory agree on "+corpus.cases.length+" semantic Source/generated output cases; static edge Source ownership retained");
  }finally{rmSync(root,{recursive:true,force:true});}
 });
 

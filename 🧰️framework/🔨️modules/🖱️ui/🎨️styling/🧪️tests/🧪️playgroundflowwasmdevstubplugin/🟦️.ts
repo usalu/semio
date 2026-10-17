@@ -3,22 +3,22 @@ import { createServer } from "node:http";
 import { existsSync, mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { meshAssetTransportUrl, resolveMeshAsset } from "../../../../🖼️assets/🥽️mesh/🟦️.ts";
+import { meshAssetTransportUrl, resolveMeshAsset } from "@semio-tech/assets/mesh";
 import { testCacheDirectoryV1 } from "../../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🧪️vitest/🟦️.ts";
 
 const temporaryRoot = testCacheDirectoryV1(process.env, "asset-transport");
 mkdirSync(temporaryRoot, { recursive: true });
 const tmpdir = (): string => temporaryRoot;
 
-import type { AssetDeliveryDeclarationV1 } from "../../../../🖼️assets/🔍️resolver/🧭️dispatch/🟦️.ts";
-import type { TileProxyAssetSpecV1 } from "../../../../🖼️assets/🗺️tile-proxy/🟦️.ts";
+import type { AssetDeliveryDeclarationV1 } from "@semio-tech/assets/resolver/dispatch";
+import type { TileProxyAssetSpecV1 } from "@semio-tech/assets/tile-proxy";
 import type { MeshCollectionAssetSpecV1 } from "../../🏗️builder/🌐️vite/🟦️.ts";
 import * as ModuleUnderTest from "../../🏗️builder/🌐️vite/🟦️.ts";
-import * as MeshCatalog from "../../../../🖼️assets/🥽️mesh/📇️catalog/🟦️.ts";
-import * as AssetDispatch from "../../../../🖼️assets/🔍️resolver/🧭️dispatch/🟦️.ts";
+import * as MeshCatalog from "@semio-tech/assets/mesh/catalog";
+import * as AssetDispatch from "@semio-tech/assets/resolver/dispatch";
 type TestSource = { readonly directory: string; readonly url: string };
 
-export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../../../🖼️assets/🥽️mesh/📇️catalog/🟦️.ts"), "MESH_DELIVERY_CATALOG"> & Pick<typeof import("../../../../🖼️assets/🔍️resolver/🧭️dispatch/🟦️.ts"), "createAssetBuildPluginsV1" | "createAssetHttpServerV1" | "resolveAssetDeliveryModeV1"> & Pick<typeof import("../../🏗️builder/🌐️vite/🟦️.ts"), "TILE_PROXY_ASSET_PROVIDER_V1" | "MESH_COLLECTION_ASSET_PROVIDER_V1" | "STATIC_DIRECTORY_ASSET_PROVIDER_V1" | "PLAYGROUND_PLAY_BOOT_APPEARANCE_SCRIPT" | "PLAYGROUND_PLAY_BOOT_VIEWPORT_SCRIPT" | "PLAYGROUND_PLAY_BOOT_INLINE_STYLE" | "PLAYGROUND_PLAY_BOOT_REVEAL_SCRIPT" | "PLAYGROUND_PLAY_BOOT_THEME_SCRIPT" | "PLAYGROUND_WASM_STUB_PREFIX" | "SEMIO_ASSET_ROOT" | "SEMIO_FAVICON_HEAD_HTML" | "contentTypeForStaticDirAsset" | "createWorkspaceViteResolveConfig" | "findWorkspacePackages" | "isPlaygroundOptimizedDepUrl" | "meshCollectionVitePlugin" | "playgroundFlowWasmDevStubPlugin" | "playgroundOptimizedDepUrlPrefix" | "playgroundPlayBootHtmlPlugin" | "playgroundSceneHostOptimizeDeps" | "playgroundSceneHostResolveAliases" | "playgroundWasmStubKey" | "resolveSemioAssetRoot" | "rewriteSpaFallbackToEmojiEntry" | "semioFaviconSources" | "semioFaviconSvgMarkup" | "semioFaviconVitePlugin" | "semioHostHtmlString" | "semioHostHtmlVitePlugin" | "staticDirVitePlugin" | "statusSurfaceHtml" | "tileProxyVitePlugin">, source: TestSource): Promise<void> {
+export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("@semio-tech/assets/mesh/catalog"), "MESH_DELIVERY_CATALOG"> & Pick<typeof import("@semio-tech/assets/resolver/dispatch"), "createAssetBuildPluginsV1" | "createAssetHttpServerV1" | "resolveAssetDeliveryModeV1"> & Pick<typeof import("../../🏗️builder/🌐️vite/🟦️.ts"), "TILE_PROXY_ASSET_PROVIDER_V1" | "MESH_COLLECTION_ASSET_PROVIDER_V1" | "STATIC_DIRECTORY_ASSET_PROVIDER_V1" | "PLAYGROUND_PLAY_BOOT_APPEARANCE_SCRIPT" | "PLAYGROUND_PLAY_BOOT_VIEWPORT_SCRIPT" | "PLAYGROUND_PLAY_BOOT_INLINE_STYLE" | "PLAYGROUND_PLAY_BOOT_REVEAL_SCRIPT" | "PLAYGROUND_PLAY_BOOT_THEME_SCRIPT" | "PLAYGROUND_WASM_STUB_PREFIX" | "SEMIO_ASSET_ROOT" | "SEMIO_FAVICON_HEAD_HTML" | "contentTypeForStaticDirAsset" | "createWorkspaceViteResolveConfig" | "findWorkspacePackages" | "isPlaygroundOptimizedDepUrl" | "meshCollectionVitePlugin" | "playgroundFlowWasmDevStubPlugin" | "playgroundOptimizedDepUrlPrefix" | "playgroundPlayBootHtmlPlugin" | "playgroundSceneHostOptimizeDeps" | "playgroundSceneHostResolveAliases" | "playgroundWasmStubKey" | "resolveSemioAssetRoot" | "rewriteSpaFallbackToEmojiEntry" | "semioFaviconSources" | "semioFaviconSvgMarkup" | "semioFaviconVitePlugin" | "semioHostHtmlString" | "semioHostHtmlVitePlugin" | "staticDirVitePlugin" | "statusSurfaceHtml" | "tileProxyVitePlugin">, source: TestSource): Promise<void> {
   const { MESH_DELIVERY_CATALOG, TILE_PROXY_ASSET_PROVIDER_V1, MESH_COLLECTION_ASSET_PROVIDER_V1, STATIC_DIRECTORY_ASSET_PROVIDER_V1, PLAYGROUND_PLAY_BOOT_APPEARANCE_SCRIPT, PLAYGROUND_PLAY_BOOT_VIEWPORT_SCRIPT, PLAYGROUND_PLAY_BOOT_INLINE_STYLE, PLAYGROUND_PLAY_BOOT_REVEAL_SCRIPT, PLAYGROUND_PLAY_BOOT_THEME_SCRIPT, PLAYGROUND_WASM_STUB_PREFIX, SEMIO_ASSET_ROOT, SEMIO_FAVICON_HEAD_HTML, contentTypeForStaticDirAsset, createWorkspaceViteResolveConfig, findWorkspacePackages, isPlaygroundOptimizedDepUrl, playgroundOptimizedDepUrlPrefix, meshCollectionVitePlugin, createAssetBuildPluginsV1, playgroundFlowWasmDevStubPlugin, playgroundPlayBootHtmlPlugin, playgroundSceneHostOptimizeDeps, playgroundSceneHostResolveAliases, playgroundWasmStubKey, resolveAssetDeliveryModeV1, resolveSemioAssetRoot, rewriteSpaFallbackToEmojiEntry, semioFaviconSources, semioFaviconSvgMarkup, semioFaviconVitePlugin, semioHostHtmlString, semioHostHtmlVitePlugin, createAssetHttpServerV1, staticDirVitePlugin, statusSurfaceHtml, tileProxyVitePlugin } = dependencies;
 
   const ASSET_PROVIDERS_V1 = [TILE_PROXY_ASSET_PROVIDER_V1, MESH_COLLECTION_ASSET_PROVIDER_V1, STATIC_DIRECTORY_ASSET_PROVIDER_V1];

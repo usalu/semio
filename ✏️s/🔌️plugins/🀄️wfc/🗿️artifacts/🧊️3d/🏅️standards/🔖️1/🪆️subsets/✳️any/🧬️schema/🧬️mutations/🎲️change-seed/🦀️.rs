@@ -2,7 +2,6 @@
 //! authored ONLY here — never ambient — so the solve inference's `DepHash` caching stays sound.
 
 use crate::diff::Wfc3dDiff;
-use crate::mutations::Wfc3dMutation;
 use crate::schema::snapshot::Wfc3dSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -15,17 +14,23 @@ pub struct ChangeSeed {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_seed(seed: u64) -> Wfc3dMutation {
-    Wfc3dMutation::ChangeSeed(ChangeSeed { seed })
+pub fn change_seed<Op>(seed: u64) -> Op
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::change_seed::ChangeSeed>,
+{
+    Op::from(ChangeSeed { seed })
 }
 
-impl MutationKind<Wfc3dSnapshot, Wfc3dMutation> for ChangeSeed {
+impl<Op> MutationKind<Wfc3dSnapshot, Op> for ChangeSeed
+where
+    Op: protocol::Mutation<Wfc3dSnapshot, Diff = Wfc3dDiff> + From<ChangeSeed>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "seed", kind: "change-seed", record: "ChangedSeed" };
 
     fn diff(&self, base: &Wfc3dSnapshot) -> protocol::MutationOutcome<Wfc3dDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Wfc3dSnapshot) -> Result<Vec<Wfc3dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Wfc3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

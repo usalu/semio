@@ -29,7 +29,6 @@ fn original_scalar_field_retirement_keeps_every_native_owner_and_physical_receip
         }
         assert!(owner.terminal_is_empty());assert_eq!(births,releases);
         assert_eq!(observe(||drop(owner)).1,(0,0));
-        eprintln!("[DEBUG] original scalar field case={} same original pointers independentSerde=true every physical receipt exact terminalDrop0 birth={births} release={releases}",row["name"]);
     }
 }
 
@@ -52,7 +51,6 @@ fn original_projection_record_retirement_uses_exact_scalar_owner_receipts() {
             let (step,physical)=observe(||owner.step(grant).unwrap());let receipt=step.progress();assert!(receipt.fits(grant));assert_eq!(physical,(receipt.retained_capacity_bytes,receipt.released_bytes));births+=physical.0;releases+=physical.1;
         }
         assert!(owner.terminal_is_empty());assert_eq!(births,releases);assert_eq!(observe(||drop(owner)).1,(0,0));
-        eprintln!("[DEBUG] original projection Copy record independentSerde=true handoff0 denied0 every actual receipt exact terminalDrop0 births={births} released={releases}");
     }
 }
 

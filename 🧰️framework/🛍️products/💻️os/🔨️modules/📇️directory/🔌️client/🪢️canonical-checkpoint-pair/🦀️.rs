@@ -5,7 +5,8 @@
 //! (`🏪️store/👷️worker/🟦️.ts`): the answer is bounded before it is decoded, its digests are verified, and it is
 //! admitted only as the checkpoint the hub authorized for this open.
 
-use super::super::schema::{CanonicalCheckpointPairV1, DocumentOpenCheckpointV1, DocumentScope, RebootstrapRequired};
+use super::super::schema::{DocumentOpenCheckpointV1, DocumentScope, RebootstrapRequired};
+use super::super::CanonicalCheckpointPairV1;
 use super::super::io::binary::checkpoint_pair::{admit_checkpoint_selection_v1, decode_canonical_checkpoint_pair_v1, CANONICAL_CHECKPOINT_PAIR_MAX_WIRE_BYTES, CANONICAL_CHECKPOINT_PAIR_MEDIA_TYPE_V1};
 use super::{encode_url_component, execution_target_refusal, DirectoryClient, DirectoryClientError, DirectoryTransport};
 use semio_framework_async::OperationContext;

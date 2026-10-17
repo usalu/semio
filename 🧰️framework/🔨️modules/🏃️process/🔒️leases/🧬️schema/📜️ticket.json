@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "schema://framework.process/ResourceQueueTicketV1",
+  "$id": "schema://framework.process/ResourceLeaseAuthorityV1",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -60,6 +60,211 @@
         },
         "sharedCohort": {
           "type": "boolean"
+        }
+      }
+    },
+    "RetirementPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "admissionResource",
+        "maximumDatabaseBytes",
+        "maximumCandidatesPerTurn",
+        "maximumDirectoryEntries",
+        "applicationId",
+        "tableSql"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "admissionResource": {
+          "const": "resource-directory-admission:v1"
+        },
+        "maximumDatabaseBytes": {
+          "const": 16384
+        },
+        "maximumCandidatesPerTurn": {
+          "const": 8192
+        },
+        "maximumDirectoryEntries": {
+          "const": 65536
+        },
+        "applicationId": {
+          "const": 1397574739
+        },
+        "tableSql": {
+          "const": "CREATE TABLE semio_resource_lease (id INTEGER PRIMARY KEY CHECK (id = 1), version INTEGER NOT NULL CHECK (version = 1), resource TEXT NOT NULL)"
+        }
+      }
+    },
+    "ClaimCustodyPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "claimDirectory",
+        "resourcePrefix",
+        "maximumDatabaseBytes"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "claimDirectory": {
+          "const": "claims"
+        },
+        "resourcePrefix": {
+          "const": "queued-original:"
+        },
+        "maximumDatabaseBytes": {
+          "const": 16384
+        }
+      }
+    },
+    "ClaimRetentionPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "resource",
+        "maximumDatabaseBytes",
+        "maximumClaimsPerTurn"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "resource": {
+          "const": "resource-retirement-catalog:v2"
+        },
+        "maximumDatabaseBytes": {
+          "const": 16384
+        },
+        "maximumClaimsPerTurn": {
+          "const": 256
+        }
+      }
+    },
+    "WriterProofCorpus": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "cases"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 12,
+          "maxItems": 12,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "variant",
+              "accepted"
+            ],
+            "properties": {
+              "variant": {
+                "enum": [
+                  "exact",
+                  "copied-token",
+                  "copied-lease",
+                  "shared-promoted",
+                  "wrong-resource",
+                  "wrong-path",
+                  "wrong-directory",
+                  "foreign-control",
+                  "public-demoted",
+                  "released",
+                  "queued",
+                  "expired"
+                ]
+              },
+              "accepted": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      }
+    },
+    "WriterIssuanceCorpus": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "maximumDatabaseBytes",
+        "cases"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "maximumDatabaseBytes": {
+          "const": 16384
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 5,
+          "maxItems": 5,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "mode",
+              "mutate",
+              "publicMode",
+              "accepted",
+              "reader",
+              "requestModes"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 32
+              },
+              "mode": {
+                "enum": [
+                  "shared",
+                  "exclusive"
+                ]
+              },
+              "mutate": {
+                "type": "boolean"
+              },
+              "publicMode": {
+                "enum": [
+                  "shared",
+                  "exclusive"
+                ]
+              },
+              "accepted": {
+                "type": "boolean"
+              },
+              "reader": {
+                "type": "boolean"
+              },
+              "requestModes": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 4,
+                "items": {
+                  "enum": [
+                    "shared",
+                    "exclusive"
+                  ]
+                }
+              }
+            }
+          }
         }
       }
     }

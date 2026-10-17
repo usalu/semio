@@ -11,8 +11,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 /// 🧾️ Direct-owner text opcodes in aggregate declaration order.
 pub const TEXT_OPCODE_REGISTRY: &[(&str, &str)] = &[("ChangeSchema", change_schema::TEXT_OPCODE)];
 
-#[path = "✒️change-schema/🦀️.rs"]
-pub mod change_schema;
+pub use semio_s_artifact_demonstrator_playground_schema::standards::v1::subsets::any::io::text::mutations::change_schema;
 
 /// 📜️ Describes the artifact mutation dialect.
 pub const MUTATION_GRAMMAR_SEMIO: &str = include_str!("📖️mutations.grammar.semio");

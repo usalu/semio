@@ -1,4 +1,4 @@
-import { JsonMemberPolicy } from "../🧩️members/🟦️.ts";
+import { JsonMemberPolicy } from "@semio-tech/framework-pack-json-ts/members";
 
 /** 🌳️ Lossless JSON syntax: number spelling and decoded string code units remain owned data. */
 export type JsonSyntaxNode =

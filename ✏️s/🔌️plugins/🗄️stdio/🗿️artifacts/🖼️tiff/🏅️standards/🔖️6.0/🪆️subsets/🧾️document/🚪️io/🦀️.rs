@@ -1,48 +1,5 @@
 //! 🚪️ IO stdio.tiff (6.0/✳️any) — registration now flows through 🎹️composer::register
 //! (called once from 🔌️plugin/🔧️setup via ⚙️engine::register), not per-leaf register().
-//#region 🎹️DerivedComposition
-pub mod derived_composition {
-    use crate::standards::v6_0::subsets::document::io::TiffAnalyzer;
-    use crate::TiffSnapshot;
-    use {semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposeSource,semio_framework_plugin::io::Composition,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
-
-    const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.tiff", standard: StandardId("6.0"), subset: SubsetId("*") };
-    const DEP_BINARY: Dialect = Dialect { artifact_kind: "s.stdio.binary", standard: StandardId("raw"), subset: SubsetId("*") };
-
-    pub struct TiffComposerComposition;
-
-    impl ArtifactComposition for TiffComposerComposition {
-        type Snapshot = TiffSnapshot;
-        const WRITES: Dialect = DIALECT;
-
-        fn reads() -> &'static [Dialect] {
-            &[DIALECT, DEP_BINARY]
-        }
-
-        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
-            // 🌱 Every listed read dialect's payload is raw text/bytes that this artifact's own
-            // analyzer already round-trips through `store::Document{Dsl,Pack}` -- including bytes
-            // claiming a dependency's dialect, since (for a single-standard DAG-adjacent dependency
-            // like binary) that payload IS the same byte/text shape `analyze` already accepts.
-            let native: Vec<AnalyzeSource<'_>> = sources
-                .iter()
-                .filter(|s| s.dialect == DIALECT || s.dialect == DEP_BINARY)
-                .map(|s| match &s.payload {
-                    AnalyzeSource::Text(t) => AnalyzeSource::Text(t),
-                    AnalyzeSource::Binary(b) => AnalyzeSource::Binary(b),
-                })
-                .collect();
-            if native.is_empty() {
-                return Err(ComposeError { message: "TiffComposerComposition: no source in a known read dialect".into(), diagnostics: Vec::new() });
-            }
-            let analysis = TiffAnalyzer::analyze(&native);
-            let snapshot = analysis.parts.snapshot.ok_or_else(|| ComposeError { message: "TiffComposerComposition: analysis produced no snapshot".into(), diagnostics: analysis.diagnostics.clone() })?;
-            Ok(Composition { snapshot, confidence: analysis.confidence, diagnostics: analysis.diagnostics })
-        }
-    }
-}
-pub use derived_composition::*;
-//#endregion 🎹️DerivedComposition
 
 // 🐜️ `⚙️engine/` dissolved (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES): the
 // real TIFF codec — full IFD-chain walk (II/MM), generic typed tag/value decode for every TIFF
@@ -84,7 +41,7 @@ pub use derived_composition::*;
 // zero real callers) were deleted outright. `blank_tiff_snapshot`/`demo_tiff_snapshot` moved to
 // `../🧬️schema`.
 use crate::schema::snapshot::{
-    TiffBinary32, TiffWord64, TiffFieldType, TiffIfd, TiffSnapshot, TiffSampleBlock, TiffTag, TiffValues, TAG_BITS_PER_SAMPLE, TAG_IMAGE_LENGTH, TAG_IMAGE_WIDTH, TAG_PHOTOMETRIC, TAG_SAMPLES_PER_PIXEL,
+    NativeFieldType, TiffBinary32, TiffWord64, TiffFieldType, TiffIfd, TiffSnapshot, TiffSampleBlock, TiffTag, TiffValues, TAG_BITS_PER_SAMPLE, TAG_IMAGE_LENGTH, TAG_IMAGE_WIDTH, TAG_PHOTOMETRIC, TAG_SAMPLES_PER_PIXEL,
 };
 use crate::STDIO_TIFF_DOCUMENT_SCHEMA;
 
@@ -114,16 +71,6 @@ pub const TAG_TILE_WIDTH:u16=322;
 pub const TAG_TILE_LENGTH:u16=323;
 pub const TAG_TILE_OFFSETS:u16=324;
 pub const TAG_TILE_BYTE_COUNTS:u16=325;
-pub trait NativeFieldType {
- fn from_u16(code:u16)->Result<Self,String> where Self:Sized;
- fn to_u16(self)->u16;
- fn element_size(self)->usize;
-}
-impl NativeFieldType for TiffFieldType {
- fn from_u16(code:u16)->Result<Self,String>{Ok(match code{1=>Self::Byte,2=>Self::Ascii,3=>Self::Short,4=>Self::Long,5=>Self::Rational,6=>Self::SByte,7=>Self::Undefined,8=>Self::SShort,9=>Self::SLong,10=>Self::SRational,11=>Self::Float,12=>Self::Double,_=>return Err("tiff: unknown native field type".into())})}
- fn to_u16(self)->u16{match self{Self::Byte=>1,Self::Ascii=>2,Self::Short=>3,Self::Long=>4,Self::Rational=>5,Self::SByte=>6,Self::Undefined=>7,Self::SShort=>8,Self::SLong=>9,Self::SRational=>10,Self::Float=>11,Self::Double=>12}}
- fn element_size(self)->usize{match self{Self::Byte|Self::Ascii|Self::SByte|Self::Undefined=>1,Self::Short|Self::SShort=>2,Self::Long|Self::SLong|Self::Float=>4,Self::Rational|Self::SRational|Self::Double=>8}}
-}
 fn native_value_count(values:&TiffValues)->Result<u32,String>{let count=match values{TiffValues::Ascii(texts)=>texts.iter().try_fold(0usize,|sum,text|sum.checked_add(text.len())?.checked_add(1)).ok_or("tiff: ASCII native count overflow")?,TiffValues::Byte(v)|TiffValues::Undefined(v)=>v.len(),TiffValues::Short(v)=>v.len(),TiffValues::Long(v)=>v.len(),TiffValues::Rational(v)=>v.len(),TiffValues::SByte(v)=>v.len(),TiffValues::SShort(v)=>v.len(),TiffValues::SLong(v)=>v.len(),TiffValues::SRational(v)=>v.len(),TiffValues::Float(v)=>v.len(),TiffValues::Double(v)=>v.len()};u32::try_from(count).map_err(|_|"tiff: native value count exceeds classic TIFF width".into())}
 fn read_ascii(bytes:&[u8])->Result<Vec<String>,String>{if bytes.is_empty(){return Ok(Vec::new())}if bytes.last()!=Some(&0)||!bytes.is_ascii(){return Err("tiff: native ASCII metadata is invalid or unterminated".into())}bytes[..bytes.len()-1].split(|byte|*byte==0).map(|text|String::from_utf8(text.to_vec()).map_err(|error|error.to_string())).collect()}
 
@@ -632,21 +579,6 @@ mod owned_samples;
 mod tests;
 //#endregion Tests
 
-//#region 🚪️DerivedIoRegistry
-pub mod io_registry {
-    use crate::standards::v6_0::subsets::baseline::io::TiffBaselineComposer;
-    use crate::standards::v6_0::subsets::document::io::TiffComposer as TiffRawAnyComposer;
-    use semio_framework_plugin::{composer_entry_of, io::ComposerEntry};
-    use std::sync::OnceLock;
-
-    static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
-
-    // 🚫️async: E1 pure table accessor consumed by OnceLock::get_or_init's sync closure — see R9
-    pub fn entries() -> &'static [ComposerEntry] {
-        ENTRIES.get_or_init(|| vec![composer_entry_of::<TiffRawAnyComposer>(), composer_entry_of::<TiffBaselineComposer>()]).as_slice()
-    }
-}
-//#endregion 🚪️DerivedIoRegistry
 
 #[path = "🛬️decoding/🦀️.rs"]
 pub mod controlled_decoding;
@@ -654,165 +586,12 @@ pub mod controlled_decoding;
 #[path = "🛫️encoding/🦀️.rs"]
 pub mod controlled_encoding;
 
-#[path="🗂️ordering/🦀️.rs"] mod controlled_ordering;
+pub use semio_s_artifact_stdio_tiff_snapshot::standards::v6_0::subsets::document::io::controlled_ordering;
 
-#[path = "💾️binary/🦀️.rs"]
-pub mod binary;
 
-#[path = "📝️text/🦀️.rs"]
-pub mod text;
 
-#[path = "🪶️sqlite/🦀️.rs"]
-pub mod sqlite;
-
-pub mod derived_construction {
-    use crate::{TiffDiff, TiffMutation, TiffSnapshot};
-    use semio_framework_plugin::ArtifactBuilder;
-
-    //#region 🔖️Builder
-    /// 🏗️ Builds a `stdio.tiff` snapshot.
-    #[derive(Clone, Debug, Default)]
-    pub struct TiffBuilderConstruction {
-        snapshot: TiffSnapshot,
-        diagnostics: Vec<semio_framework_diagnostic::Diagnostic>,
-    }
-
-    impl ArtifactBuilder for TiffBuilderConstruction {
-        type Snapshot = TiffSnapshot;
-        type Mutation = TiffMutation;
-        type Diff = TiffDiff;
-        fn empty() -> Self {
-            Self { snapshot: TiffSnapshot::default(), diagnostics: Vec::new() }
-        }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
-            Self { snapshot, diagnostics: Vec::new() }
-        }
-        fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-            Ok(Self::from_snapshot(<TiffSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text)?))
-        }
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::from_snapshot(<TiffSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes)?))
-        }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let diff = crate::apply_mutation(&mut self.snapshot, &mutation);
-            (self, diff)
-        }
-        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
-            self.snapshot = protocol::apply_diff(&diff, &self.snapshot)?;
-            Ok(self)
-        }
-        fn build(self) -> Result<Self::Snapshot, Vec<semio_framework_diagnostic::Diagnostic>> {
-            if self.diagnostics.is_empty() {
-                Ok(self.snapshot)
-            } else {
-                Err(self.diagnostics)
-            }
-        }
-    }
-    //#endregion 🔖️Builder
-}
-pub use derived_construction::*;
-
-pub mod derived_analysis {
-    use crate::TiffSnapshot;
-    use {semio_framework_plugin::io::Analysis,semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
-
-    //#region 🔖️Parts
-    /// 🧩 Analyzed `stdio.tiff` parts.
-    #[derive(Clone, Debug, Default)]
-    pub struct TiffParts {
-        pub snapshot: Option<TiffSnapshot>,
-    }
-    //#endregion 🔖️Parts
-
-    //#region 🔖️Analyzer
-    /// 🧐️ Analyzes `stdio.tiff` (6.0/✳️any) sources.
-    pub struct TiffAnalyzerAnalysis;
-
-    impl ArtifactAnalysis for TiffAnalyzerAnalysis {
-        type Parts = TiffParts;
-        const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.tiff", standard: StandardId("6.0"), subset: SubsetId("*") };
-
-        fn sniff(source: &AnalyzeSource<'_>) -> semio_framework_plugin::io::Confidence {
-            const SIG_LE: [u8; 4] = [0x49, 0x49, 0x2A, 0x00]; // "II*\0" little-endian
-            const SIG_BE: [u8; 4] = [0x4D, 0x4D, 0x00, 0x2A]; // "MM\0*" big-endian
-            match source {
-                AnalyzeSource::Binary(bytes) => {
-                    if bytes.len() >= 4 && (bytes[0..4] == SIG_LE || bytes[0..4] == SIG_BE) {
-                        semio_framework_plugin::io::Confidence::High
-                    } else {
-                        semio_framework_plugin::io::Confidence::Low
-                    }
-                }
-                AnalyzeSource::Text(text) => {
-                    // 🔍 stdio.tiff's text envelope is a hex dump of the raw bytes after the
-                    // `semio ...` preamble line — decode the first 4 bytes to sniff the real signature.
-                    let body = match store::semio_format::split_text_preamble(text) {
-                        Ok((_, rest)) => rest,
-                        Err(_) => text,
-                    };
-                    let hex: String = body.chars().filter(|c| !c.is_whitespace()).take(8).collect();
-                    if hex.len() < 8 {
-                        return semio_framework_plugin::io::Confidence::Low;
-                    }
-                    let mut decoded = [0u8; 4];
-                    for (i, byte) in decoded.iter_mut().enumerate() {
-                        match u8::from_str_radix(&hex[i * 2..i * 2 + 2], 16) {
-                            Ok(b) => *byte = b,
-                            Err(_) => return semio_framework_plugin::io::Confidence::Low,
-                        }
-                    }
-                    if decoded == SIG_LE || decoded == SIG_BE {
-                        semio_framework_plugin::io::Confidence::High
-                    } else {
-                        semio_framework_plugin::io::Confidence::Low
-                    }
-                }
-            }
-        }
-
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
-            let mut parts = TiffParts::default();
-            let mut diagnostics = Vec::new();
-            let mut confidence = semio_framework_plugin::io::Confidence::High;
-            for source in sources {
-                match source {
-                    AnalyzeSource::Text(text) => match <TiffSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text) {
-                        Ok(snapshot) => parts.snapshot = Some(snapshot),
-                        Err(err) => {
-                            confidence = semio_framework_plugin::io::Confidence::Low;
-                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
-                        }
-                    },
-                    AnalyzeSource::Binary(bytes) => match <TiffSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes) {
-                        Ok(snapshot) => parts.snapshot = Some(snapshot),
-                        Err(err) => {
-                            confidence = semio_framework_plugin::io::Confidence::Low;
-                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.binary", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
-                        }
-                    },
-                }
-            }
-            Analysis { parts, dialect: Self::DIALECT, confidence, diagnostics }
-        }
-    }
-    //#endregion 🔖️Analyzer
-}
-pub use derived_analysis::*;
-
-semio_framework_plugin::derive_artifact_facets!(
-    pub spec TiffBuilderFacets {
-        construction: TiffBuilderConstruction,
-        analysis: TiffAnalyzerAnalysis,
-        composition: TiffComposerComposition,
-    }
-    builder: TiffBuilder,
-    analyzer: TiffAnalyzer,
-    composer: TiffComposer,
-);
 
 #[path="💾️binary/📸️snapshot/📠️fax/🦀️.rs"]
-mod fax;
+pub mod fax;
 
-#[path="💾️binary/📸️snapshot/👁️observations/🦀️.rs"]
-pub mod native_observations;
+pub use semio_s_artifact_stdio_tiff_snapshot::standards::v6_0::subsets::document::io::native_observations;

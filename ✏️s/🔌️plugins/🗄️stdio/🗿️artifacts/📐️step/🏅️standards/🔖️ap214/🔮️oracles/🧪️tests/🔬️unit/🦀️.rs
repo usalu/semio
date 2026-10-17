@@ -1,5 +1,6 @@
 
 use super::{ladder, part21};
+use semio_framework_test_fixtures::fixture_path;
 use semio_repo_test_host::Json;
 
 /// 🎛️ Every committed history intent is read and applied independently through ruststep.
@@ -8,7 +9,7 @@ fn committed_history_intents_match_independent_part21_reader_and_class_edits() {
     use crate::standards::v_ap214::subsets::{cc1,cc2,cc3,cc4,cc5,cc6};
     type Apply = fn(&[u8], &Json) -> Result<Vec<u8>, String>;
     let classes: [(&str,usize,Apply);6]=[("1️⃣cc1",4,cc1::oracle_apply_mutation),("2️⃣cc2",5,cc2::oracle_apply_mutation),("3️⃣cc3",5,cc3::oracle_apply_mutation),("4️⃣cc4",5,cc4::oracle_apply_mutation),("5️⃣cc5",5,cc5::oracle_apply_mutation),("6️⃣cc6",4,cc6::oracle_apply_mutation)];
-    let root=std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../🏅️standards/🔖️ap214/🪆️subsets");
+    let root=fixture_path!("../../../🏅️standards/🔖️ap214/🪆️subsets");
     let seed=part21::read(&fixture()).unwrap();
     for (class,count,apply) in classes {
         let path=root.join(class).join("🧪️tests/🧫️fixtures/🎛️history-inputs");
@@ -19,7 +20,7 @@ fn committed_history_intents_match_independent_part21_reader_and_class_edits() {
             let mut input=seed.clone();part21::load_snapshot(&mut input,before).unwrap();
             let bytes=part21::write(&input);let independently_read=part21::read(&bytes).unwrap();assert_eq!(&part21::snapshot_of(&independently_read).unwrap(),before);
             let output=apply(&bytes,oracle).unwrap();let independent_after=part21::read(&output).unwrap();assert_eq!(&part21::snapshot_of(&independent_after).unwrap(),after,"{class} {}",oracle.str("kind"));
-            assert_ne!(before,after);println!("[DEBUG] STEP {class} {} literal before/after verified by independent ruststep",oracle.str("kind"));
+            assert_ne!(before,after);
         }
     }
 }

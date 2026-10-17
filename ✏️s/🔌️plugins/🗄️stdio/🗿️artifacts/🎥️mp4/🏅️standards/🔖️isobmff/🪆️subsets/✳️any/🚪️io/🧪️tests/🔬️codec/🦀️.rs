@@ -3,10 +3,11 @@ use crate::standards::isobmff::subsets::any::io::{normalized_chunk_sample_counts
 use crate::apply_mutation;
 use crate::standards::isobmff::subsets::any::io::Mp4AnalyzerAnalysis;
 use crate::standards::isobmff::subsets::any::io::*;
+use semio_framework_test_fixtures::fixture_path;
 
 #[test]
 fn incremental_mux_matches_the_real_fixture_under_small_grants() {
-    let source = &std::fs::read(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🧪️tests/🧫️fixtures/🎬️.mp4")).expect("the committed fixture is readable")[..];
+    let source = &std::fs::read(fixture_path!("../../../🧪️tests/🧫️fixtures/🎬️.mp4")).expect("the committed fixture is readable")[..];
     let snapshot = decode_mp4(source).expect("real MP4 fixture decodes");
     let mut cursor = Mp4EncodeCursor::new(&snapshot);
     let mut output = Vec::new();
@@ -119,7 +120,7 @@ async fn exact_bauen_mit_bestand_fixture_round_trips_byte_for_byte() {
     use protocol::{DiffBinary,DiffCodec,DiffText, Mutation, OpBinary, OpText};
     use semio_framework_plugin::{io::AnalyzeSource, ArtifactAnalysis, ArtifactComposition, io::ComposeSource};
 
-    let bytes = std::fs::read(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🧪️tests/🧫️fixtures/🎬️.mp4")).expect("the committed fixture is readable");
+    let bytes = std::fs::read(fixture_path!("../../../🧪️tests/🧫️fixtures/🎬️.mp4")).expect("the committed fixture is readable");
     let snapshot = decode_mp4(&bytes).expect("decode exact MP4 fixture");
     assert_eq!(encode_mp4(&snapshot), bytes);
 

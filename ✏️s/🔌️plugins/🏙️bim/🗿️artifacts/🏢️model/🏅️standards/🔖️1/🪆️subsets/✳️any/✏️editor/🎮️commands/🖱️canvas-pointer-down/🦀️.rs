@@ -3,18 +3,45 @@
 //! gesture jobs), so this command then does nothing.
 
 use crate::editor::bim::entities::kind_holding;
-use crate::editor::bim::gestures::canvas_pointer;
 use crate::editor::bim::gestures::session::ToolEvent;
 use crate::editor::bim::interaction::BIM_ELEMENT_DOMAIN;
 use crate::editor::bim::kit::select_effect;
 use crate::editor::bim::modes::edit::windows::plan;
 use crate::editor::bim::utilities::DEFAULT_UTILITY;
-use crate::editor::bim::BimDispatchCtx;
+use crate::editor::bim::dispatch_context::BimDispatchCtx;
 use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 
 /// 🎯️ The pick radius around a press, in canvas pixels.
 const PICK_TOLERANCE_PIXELS: f64 = 6.0;
+
+/// 🖱️ Declares the payload of a canvas pointer command: the pixel position, the canvas size, the modifiers and any extra fields, with `raw()` for the gesture entry.
+macro_rules! canvas_pointer {
+    ($(#[$meta:meta])* $name:ident, $keyword:literal $(, $extra:ident : $ty:ty)*) => {
+        $(#[$meta])*
+        #[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+        #[value(default)]
+        #[dsl(keyword = $keyword)]
+        pub struct $name {
+            pub x: f64,
+            pub y: f64,
+            pub width: f64,
+            pub height: f64,
+            pub shift: bool,
+            pub ctrl: bool,
+            pub meta: bool,
+            $(pub $extra: $ty,)*
+        }
+
+        impl $name {
+            pub fn raw(&self) -> $crate::editor::bim::gestures::Raw {
+                $crate::editor::bim::gestures::Raw { x: self.x, y: self.y, width: self.width, height: self.height, modifiers: $crate::editor::bim::gestures::session::Modifiers { shift: self.shift, ctrl: self.ctrl, meta: self.meta }, ground: None }
+            }
+        }
+    };
+}
+
+pub(crate) use canvas_pointer;
 
 canvas_pointer! {
     /// 🖱️ The press position in canvas pixels with the canvas size and the held modifiers.

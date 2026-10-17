@@ -1,4 +1,4 @@
-import { hostContinuations } from "../../⏳️async/🪃️continuation/🟦️.ts";
+import { hostContinuations } from "@semio-tech/framework-async/continuation";
 import { ValueError } from "../⚠️refusal/🟦️.ts";
 /** 🛬️ Cumulative ownership admission spanning native parsing and typed construction. */
 export interface NativeDecodeProgress { readonly completed:number;readonly total:number;readonly ownedBytes:number }

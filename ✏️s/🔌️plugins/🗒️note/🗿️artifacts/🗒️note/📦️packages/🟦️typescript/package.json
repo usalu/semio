@@ -6,6 +6,9 @@
   "description": "@semio-tech/note-note-js authored owner test infrastructure.",
   "type": "module",
   "private": true,
+  "exports": {
+    "./standards/1/subsets/any/schema/testing/document": "./🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️testing/🪪️document/🟦️.ts"
+  },
   "scripts": {
     "test": "bun --cwd \"../../../../../../..\" repo run @semio-tech/note-note-js:test"
   },
@@ -18,7 +21,8 @@
     "@semio-tech/cad-js-module-spatial-shape": "workspace:*",
     "@semio-tech/cad-js-module-aec-building": "workspace:*",
     "@semio-tech/cad-js-module-aec-building-energy": "workspace:*",
-    "@semio-tech/cad-js-module-aec-building-structure": "workspace:*"
+    "@semio-tech/cad-js-module-aec-building-structure": "workspace:*",
+    "@semio-tech/framework-os": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.9.3"

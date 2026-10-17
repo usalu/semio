@@ -3,7 +3,7 @@
 //! restructuring (`.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️fanout-brief.md`
 //! Phase 2). Behavior unchanged from the wave-2 pass — pure directory/module restructuring.
 
-use crate::standards::v1::subsets::any::schema::{diff::ProgramDiff, mutations::ProgramMutation, snapshot::ProgramSnapshot};
+use crate::standards::v1::subsets::any::schema::{diff::ProgramDiff, snapshot::ProgramSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 
 /// ✏️ Sets `program.project.code`.
@@ -16,12 +16,15 @@ use protocol::{MutationKind, SemanticDescriptor};
 pub struct RenameProject {
     pub new_code: String,
 }
-impl MutationKind<ProgramSnapshot, ProgramMutation> for RenameProject {
+impl<Op> MutationKind<ProgramSnapshot, Op> for RenameProject
+where
+    Op: protocol::Mutation<ProgramSnapshot, Diff = ProgramDiff> + From<RenameProject>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "rename", entity: "project", kind: "rename-project", record: "RenamedProject" };
     fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &ProgramSnapshot) -> Result<Vec<ProgramMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &ProgramSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

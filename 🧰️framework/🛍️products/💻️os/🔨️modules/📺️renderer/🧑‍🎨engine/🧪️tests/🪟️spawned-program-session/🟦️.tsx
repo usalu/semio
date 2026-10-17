@@ -42,7 +42,17 @@ import {
   SPAWN_PROGRAM_REFUSAL_LABELS_V1,
   type SpawnedLayoutNodeV1,
 } from "../../🧱️elements/🏛️ShellHost/🪟️spawned-program/🟦️.ts";
-import { applyUiRefreshResponseToCache, buildUiRefreshRequest, EMPTY_APP_LABELS_OVERLAY, frameworkLayoutDeclaredInstances, historyPatchShouldApplyV1, resolveFrameworkLayoutSeed, type UiRefreshCache } from "../../🧱️elements/🛠️ShellHelpers/🟦️.tsx";
+import {
+  applyUiRefreshResponseToCache,
+  buildUiRefreshRequest,
+  type UiRefreshCache
+} from "../../🧱️elements/🛠️ShellHelpers/🔄️ui-refresh/🟦️.ts";
+import { EMPTY_APP_LABELS_OVERLAY } from "../../🧱️elements/🛠️ShellHelpers/🏷️labels/🟦️.tsx";
+import {
+  frameworkLayoutDeclaredInstances,
+  resolveFrameworkLayoutSeed
+} from "../../🧱️elements/🛠️ShellHelpers/🛣️route-and-chrome/🟦️.tsx";
+import { historyPatchShouldApplyV1 } from "../../🧱️elements/🛠️ShellHelpers/🔩️plumbing/🟦️.ts";
 import declaredInstancesFixture from "../../🧱️elements/🏛️ShellHost/🧪️tests/🧫️fixtures/🪟️declared-instances.json";
 import contributionsReceiverFixture from "../../🧱️elements/🏛️ShellHost/🧪️tests/🧫️fixtures/🧩️contributions-receiver.json";
 import { resolveAppSurfaceSessionFactory, type AppSurfaceSessionFactory } from "../../🧱️elements/🪪️WasmSessionLoader/🟦️.tsx";
@@ -89,6 +99,12 @@ describe("🪟️ spawned window identity", () => {
     expect(guestWindowIdV1(null, ["draw-1"])).toBe(undefined);
   });
 
+  const presentEntries = (entries: Readonly<Record<string, string | null | undefined>>): Record<string, string | null> => {
+    const present: Record<string, string | null> = {};
+    for (const [key, value] of Object.entries(entries)) if (value !== undefined) present[key] = value;
+    return present;
+  };
+
   it("scopes the per-window active-utility map to ONE program", () => {
     const shellWide = { "s-home-main": "select", "draw-1::draw-main": "pencil", "note-2::note-main": "bold" };
     expect(guestActiveUtilityByWindowIdV1(shellWide, "draw-1", ["draw-1", "note-2"])).toEqual({ "draw-main": "pencil" });
@@ -98,7 +114,7 @@ describe("🪟️ spawned window identity", () => {
   it.each(["en", "de"] as const)("scoped utility projections preserve explicit clears and exclude foreign windows (%s)", (locale) => {
     const validate = new Ajv({ strict: true }).compile(viewContextSchema);
     for (const row of initialUtilityCases.cases) {
-      const source = row.activeUtilityByWindowId;
+      const source = presentEntries(row.activeUtilityByWindowId);
       const scoped = programKeyedEntriesV1("draw-1", source);
       const shellWide = { ...source, ...scoped, "note-2::note-main": "bold" };
       const actual = guestActiveUtilityByWindowIdV1(shellWide, "draw-1", ["draw-1", "note-2"]);
@@ -111,7 +127,6 @@ describe("🪟️ spawned window identity", () => {
     }
     expect(validate({ locale, terminology: "native", activeUtilityByWindowId: { canvas: "" } })).toBe(false);
     expect(() => parseResolvedPluginViewState({ locale, terminology: "native", activeUtilityByWindowId: { canvas: "" } })).toThrow();
-    console.log(`[DEBUG] React ${locale} scoped utility projection and independent Ajv preserve twelve neutral maps, including explicit clears, and refuse empty identifiers`);
   });
 });
 

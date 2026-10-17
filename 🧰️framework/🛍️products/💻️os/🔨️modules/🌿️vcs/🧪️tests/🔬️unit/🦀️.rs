@@ -1,6 +1,7 @@
 use crate::io::binary::entity_identity::{content_addressed_entity_id,edit_scoped_id,mint_alternative_id,mint_change_id,mint_edit_id,mint_mutation_id};
 use crate::io::binary::checkpoint_identity::{content_addressed_checkpoint_id,content_addressed_checkpoint_id_with_pending_change};
 use super::*;
+use semio_framework_test_fixtures::fixture_text;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️ContentAddressedCheckpointAndMergeBase
@@ -257,7 +258,7 @@ async fn content_addressed_entity_and_mint_helpers_are_deterministic() {
 /// ↔️ Paged traversal follows the portable deque oracle across front/back crossings and exhaustion.
 #[test]
 fn paged_history_stack_traversal_follows_the_portable_deque_vectors() {
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📸️paged-history-stack/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(fixture_text!("../../🧪️tests/🧫️fixtures/📸️paged-history-stack/🔣️.json")).unwrap();
     for vector in corpus["vectors"].as_array().unwrap() {
         let mut stack: HistoryPageStack<String> = (0..vector["pushes"].as_u64().unwrap()).map(|i| i.to_string()).collect();
         if let Some(index) = vector["removeLogical"].as_u64() { stack.remove(index as usize); }
@@ -281,4 +282,3 @@ fn paged_history_stack_traversal_follows_the_portable_deque_vectors() {
         assert_eq!(stack.len(), vector["forward"].as_array().unwrap().len());
     }
 }
-

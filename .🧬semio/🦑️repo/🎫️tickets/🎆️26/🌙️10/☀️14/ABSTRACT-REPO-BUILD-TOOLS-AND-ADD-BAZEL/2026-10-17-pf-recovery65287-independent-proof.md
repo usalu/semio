@@ -1,0 +1,9 @@
+# Private Fixture Recovery65287 Independent Proof
+
+Root reports actual65287 terminal0. Independently nofollowFD-held three own Generated saved files, regular/bounded with stable pre/post named/descriptor sevenfield metadata. Log/settledreceipt JSON exactly equal; created687B SHAd7dbbba0fc02044d4fa4ee54fb24458ef827f2d5bd00b55789c03d6db86359b8 and originalallocation0ab77f6f5074da6d983ae950891b6151/fullchildpath match exact new knownfixture. Payload65536B SHA62973580cb0d8f44b830898e019c50399ddc804352fbade1f66ee187e9617871 agrees independently with originally authored byte91 buffer. Current journal693B SHAfe641426cb107003c92366a1a1bcf4593bda03a9cb732444a82553bacbb649be is current observation, not historical raw-equality assertion. Receipt childAbsent/parentAbsent/allOwnedClosed alltrue.
+
+Exactly one reviewer lstat on own known Generated/pf-dH731i/p returnedENOENT. No Native/protected payload/cache/mount/globalwalk. Full hashes/content proof in Generated/pf-recovery65287-independent-hold.json. This establishes exact coordinator private recovery, not fresh entire producer run or declared domain bridge. Nonce4 Sourcehold and recovery4 Sourcehold bound the runtime; Root reports final recoverystrict68181actual0.
+
+.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️14/ABSTRACT-REPO-BUILD-TOOLS-AND-ADD-BAZEL/🗑️generated/coordination-17/parent-recovery-compact-nonce.log 1095B SHA256 0372bc4a8a2ea559ca612d8685f484a402ecf7ba3eba1061e49c439d46af7f95
+.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️14/ABSTRACT-REPO-BUILD-TOOLS-AND-ADD-BAZEL/🗑️generated/pf-dH731i/created.json 687B SHA256 d7dbbba0fc02044d4fa4ee54fb24458ef827f2d5bd00b55789c03d6db86359b8
+.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️14/ABSTRACT-REPO-BUILD-TOOLS-AND-ADD-BAZEL/🗑️generated/pf-dH731i/recovery-settled.json 871B SHA256 95f687c1de89613ed0204d4b5f673437e485e1ac75da346242ffeb2af4d4cbd6

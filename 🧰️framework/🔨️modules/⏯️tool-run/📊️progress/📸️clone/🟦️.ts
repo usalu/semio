@@ -1,5 +1,6 @@
 /** 📊️ Clones original schema-bounded progress leaves without publishing a partial result. */
-import {TOOL_RUN_COUNTERS_MAX,TOOL_RUN_STEP_RING_CAPACITY,TOOL_RUN_STEP_ARGS_MAX,type ToolRunProgress,type ToolRunCounter,type ToolRunStep,type ToolRunStepArg} from "../../🟦️.ts";
+import { TOOL_RUN_COUNTERS_MAX, TOOL_RUN_STEP_RING_CAPACITY, TOOL_RUN_STEP_ARGS_MAX } from "../../🟦️.ts";
+import { type ToolRunProgress, type ToolRunCounter, type ToolRunStep, type ToolRunStepArg } from "../🟦️.ts";
 export class ToolRunProgressClone {
  private counters:ToolRunCounter[]=[];
  private steps:ToolRunStep[]=[];

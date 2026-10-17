@@ -19,6 +19,7 @@ path = "🦀️.rs"
 semio-framework-ui-contract.workspace = true
 semio-framework-job.workspace = true
 semio-framework.workspace = true
+semio-framework-action-bus = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🎯️action-bus/📦️packages/🦀️rust" }
 imperative_engine = { path = "../../../../../../../../../../../🔨️modules/📜️imperative/📦️packages/🦀️rust", package = "semio-s-imperative" }
 imperative_extension_sdk = { path = "../../../../../../../../../../../🔨️modules/📜️imperative/🧩️extension_sdk/📦️packages/🦀️rust", package = "semio-s-imperative-extension-sdk" }
 neural_engine = { path = "../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📦️packages/🦀️rust", package = "semio-framework-os-kernel-neural-engine" }
@@ -62,4 +63,5 @@ serde_json.workspace = true
 semio-framework-async-macros = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
 semio-framework-os-kernel = { path = "../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["protocol-laws", "mutation-testing"] }
 semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
+semio-framework-test-fixtures = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-framework-ui-scene = { package = "semio-framework-ui-scene", path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust" }

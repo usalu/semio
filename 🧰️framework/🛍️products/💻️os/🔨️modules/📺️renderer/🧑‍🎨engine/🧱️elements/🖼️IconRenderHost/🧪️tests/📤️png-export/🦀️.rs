@@ -1,4 +1,4 @@
-use super::*;
+use super::{IconPngExport, PIXELS_PER_STEP};
 
 pub fn contract() -> serde_json::Value {
     serde_json::from_str(include_str!("../🧫️fixtures/📤️png-export/🔣️.json")).unwrap()

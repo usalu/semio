@@ -55,10 +55,10 @@ fn painted_board_with_input(window_id: &str, bounds: Rect, camera: &Value) -> (S
     shell.dock.dock_tabs = ShellDock::default();
     let scene = semio_framework_ui_scene_plane::Board2dScene::base("{}".into(), camera.to_string(), true);
     let surface = semio_framework_ui_scene_surface::encode(ui_contract::SurfaceKind::Board2d, &scene).expect("bounded Board2d scene encodes");
-    let records = vec![shell_input_tests::tree_pointer_record(1, window_id, ui_contract::Component::Surface(surface), &[], None)];
+    let records = vec![tree_pointer_record(1, window_id, ui_contract::Component::Surface(surface), &[], None)];
     let document = shell.windows.publish_surface_records(window_id, records).expect("board document publishes");
     shell.dock.dock_window_plan = vec![(window_id.to_string(), bounds)];
-    let input = shell_input_tests::paint_component_pointer_documents(&mut shell, &[(window_id, "s.test.board", &document, bounds)]);
+    let input = paint_component_pointer_documents(&mut shell, &[(window_id, "s.test.board", &document, bounds)]);
     SessionCtx::of(&mut shell).sync_engine_surface_states();
     assert_eq!(shell.surfaces.board2d_states.len(), 1, "the painted board registered its surface");
     (shell, input)
@@ -120,12 +120,12 @@ fn a_pointer_the_renderer_routes_over_a_painted_board_is_the_presence_pointer_it
     let mut claimed = 0;
     for case in fixture()["publish"].as_array().expect("publish cases").iter().filter(|case| case["pointer"].is_array()).map(under_own_window) {
         let (shell, input) = painted_board_with_input(case["windowId"].as_str().expect("window id"), rect(&case["bounds"]), &case["camera"]);
-        let mut interaction = shell_input_tests::pointer_interaction(shell, input);
+        let mut interaction = pointer_interaction(shell, input);
         let (x, y) = (case["pointer"][0].as_f64().expect("x") as f32, case["pointer"][1].as_f64().expect("y") as f32);
         if interaction.shell.input.scene_pointer_target_at(x, y, &interaction.input, &interaction.theme).is_some() {
             claimed += 1;
         }
-        semio_framework_async::block_on(interaction.handle_pointer_move(shell_input_tests::mouse_pointer(1), x, y, false, 0, PointerModifiers::default()));
+        semio_framework_async::block_on(interaction.handle_pointer_move(mouse_pointer(1), x, y, false, 0, PointerModifiers::default()));
         let (views, _) = interaction.shell.directory.board_presence_views(&interaction.shell.surfaces);
         assert_eq!(views.iter().map(window_view_json).map(|view| numeric(&view)).collect::<Vec<_>>(), vec![numeric(&case["expected"])], "{}", case["id"]);
     }

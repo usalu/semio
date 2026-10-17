@@ -1,7 +1,6 @@
 //! ⚡️ Puzzle3d artifact — OpText/OpBinary codecs + grammar for `Puzzle3dMutation`.
 
 use crate::Puzzle3dMutation;
-#[cfg(test)] 
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).

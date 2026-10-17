@@ -5,6 +5,6 @@ pub const ARTIFACT: &str = include_str!("../../../../🦀️.rs");
 /// 🦀️ The snapshot facet's Rust leaf.
 pub const SNAPSHOT: &str = include_str!("../../../../📸️snapshot/🦀️.rs");
 /// 🦀️ The diff facet's Rust leaf.
-pub const DIFF: &str = include_str!("../../../../🔺️diff/🦀️.rs");
+pub const DIFF: &str = concat!(include_str!("../../../../🔺️diff/🦀️.rs"), include_str!("../../../../🔺️diff/🧮️collection-algebra/🦀️.rs"), include_str!("../../../../🔺️diff/📐️structural-element-diffs/🦀️.rs"), include_str!("../../../../🔺️diff/🎨️resource-element-diffs/🦀️.rs"), include_str!("../../../../🔺️diff/🧊️gltf-diff-aggregate/🦀️.rs"));
 /// 🦀️ The mutations facet's Rust leaf.
 pub const MUTATIONS: &str = include_str!("../../../../🧬️mutations/🦀️.rs");

@@ -1,3 +1,11 @@
-//! 🍎️ Companion test crate tests-01 of the plugin SDK partition (hosts: none).
+//! 🍎️ Companion test crate tests-01 of the plugin SDK partition: hosts the test roots `retained_command_test_hosts`, `runtime_instances_test_hosts`, `time_travel_turns_test_hosts`.
 //!
-//! 🧭️ WP1 left this companion empty on purpose: every WP1 test that cannot stay in its crate names `cfg(test)` fixtures of the facade (`test_app_mutation_fixture`, `publication_fixture`, `tool_jobs::test_*`) or items of layers above its crate, which a dev-dependency cannot reach; those tests run as hub test hosts of the facade (`🪝️mounts/🌱️wp1-foundation/🧪️test-hosts` and the `app_*_tests` mounts of hub 1) until the facade fixtures are public API (WP7 re-homes them here).
+//! 🧭️ The test sources stay where they are and are mounted here with `#[path]`; every name they use from the former facade root is spelled with the crate that owns it.
+
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as pack;
+
+#[path = "../../🪝️mounts/👥️wp3-owners/🧪️test-hosts/🧵️retained-command/🦀️.rs"]
+pub mod retained_command_test_hosts;
+

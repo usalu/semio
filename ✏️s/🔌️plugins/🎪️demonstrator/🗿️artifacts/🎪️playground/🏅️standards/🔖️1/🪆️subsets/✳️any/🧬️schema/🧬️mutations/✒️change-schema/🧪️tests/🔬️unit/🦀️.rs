@@ -1,5 +1,6 @@
+use crate::{standards::v1::subsets::any::schema::mutations::PlaygroundMutation, standards::v1::subsets::any::schema::snapshot::PlaygroundSnapshot};
 use crate::standards::v1::subsets::any::io::text::mutations::change_schema::{apply_playground_mutation_json,undo_playground_mutation_json};
-use super::*;
+use crate::standards::v1::subsets::any::schema::mutations::change_schema::*;
 use protocol::{Mutation, SemanticMutation};
 
 fn mutation(schema: &str) -> PlaygroundMutation {
@@ -8,9 +9,9 @@ fn mutation(schema: &str) -> PlaygroundMutation {
 
 #[test]
 fn committed_json_bridge_round_trips() {
-    let before = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✒️change-schema/📅️retags/📸️snapshot/⬅️before/🔣️.json");
-    let operation = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✒️change-schema/📅️retags/🦠️mutation/🔣️.json");
-    let after = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✒️change-schema/📅️retags/📸️snapshot/➡️after/🔣️.json");
+    let before = runtime_fixture_text("../../../../🧪️tests/🧫️fixtures/🧬️mutations/✒️change-schema/📅️retags/📸️snapshot/⬅️before/🔣️.json");
+    let operation = runtime_fixture_text("../../../../🧪️tests/🧫️fixtures/🧬️mutations/✒️change-schema/📅️retags/🦠️mutation/🔣️.json");
+    let after = runtime_fixture_text("../../../../🧪️tests/🧫️fixtures/🧬️mutations/✒️change-schema/📅️retags/📸️snapshot/➡️after/🔣️.json");
     let applied: serde_json::Value = serde_json::from_str(&apply_playground_mutation_json(before, operation).expect("apply committed mutation")).expect("decode bridge answer");
     let expected: serde_json::Value = serde_json::from_str(after).expect("decode committed after snapshot");
     assert_eq!(applied["snapshot"], expected);
@@ -55,9 +56,14 @@ async fn inverse_and_absorb_laws_hold() {
 fn kinds_match_the_language_neutral_catalog() {
     let descriptors = PlaygroundMutation::kinds();
     assert_eq!(KINDS.len(), descriptors.len());
-    let manifest = include_str!("../../../../../🔮️oracles/🔣️.json");
+    let manifest = runtime_fixture_text("../../../../🔮️oracles/🔣️.json");
     for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
         assert_eq!(*kind, descriptor.kind);
         assert!(manifest.contains(&format!("\"{kind}\"")));
     }
+}
+
+fn runtime_fixture_text(relative: &str) -> &'static str {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative);
+    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display())).into_boxed_str())
 }

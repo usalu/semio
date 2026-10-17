@@ -1,7 +1,7 @@
 //! 🏷️ `change-node-label` — sets a node's display label (`id` stays the stable identity field, so
 //! this is `change`, not `rename`).
 
-use crate::{EquationMutation, EquationSnapshot};
+use crate::EquationSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Payload
@@ -14,13 +14,16 @@ pub struct ChangeNodeLabel {
     pub new_label: String,
 }
 
-impl protocol::MutationKind<EquationSnapshot, EquationMutation> for ChangeNodeLabel {
+impl<Op> protocol::MutationKind<EquationSnapshot, Op> for ChangeNodeLabel
+where
+    Op: protocol::Mutation<EquationSnapshot, Diff = crate::EquationDiff> + From<ChangeNodeLabel>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "node", kind: "change-node-label", record: "ChangedNodeLabel" };
 
-    fn diff(&self, base: &EquationSnapshot) -> protocol::MutationOutcome<<EquationMutation as protocol::Mutation<EquationSnapshot>>::Diff> {
+    fn diff(&self, base: &EquationSnapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<EquationSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &EquationSnapshot) -> Result<Vec<EquationMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EquationSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

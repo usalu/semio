@@ -1,4 +1,28 @@
-use super::*;
+use crate::editor::flow::edit_rules::ContentEdit;
+use crate::editor::flow::base::FLOW_GRAPH_OPERATION_RAW_BYTES;
+use semio_framework_test_fixtures::fixture_text;
+use semio_s_artifact_stdio_semio_flow::schema::mutations::SemioFlowMutation;
+#[allow(unused_imports)]
+use crate::editor::flow::modes::edit::tools::drag::flow_drag_tool_emit;
+#[allow(unused_imports)]
+use crate::editor::flow::commands::patch_flow_widgets::widget_field_leaf;
+#[allow(unused_imports)]
+use semio_framework_tool_machine::{node_graph_edit_rows, NodeDragRecord, NodeGraphEditRow, NodePortSide};
+#[allow(unused_imports)]
+use crate::editor::flow::modes::edit::windows::main::config::FlowMainWindowConfig;
+#[allow(unused_imports)]
+use semio_framework_plugin::NoConfig;
+#[allow(unused_imports)]
+use semio_framework_plugin::NoConfigMutation;
+#[allow(unused_imports)]
+use crate::editor::flow::host::{apply_canvas_options, flow_content_leaves_emit, seed_host_catalogue, sync_host_selection_domains};
+#[allow(unused_imports)]
+use crate::{FlowMutation, FlowSnapshot};
+#[allow(unused_imports)]
+use flow::{neural::ColdRetire, FlowEvalSession};
+#[allow(unused_imports)]
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use crate::editor::flow::commands::node_graph_edit::*;
 use crate::editor::flow::unit_tests::context::{dispatch, flow_app_closing, flow_app_with_registry, render, select_graph, FlowApp};
 use crate::editor::flow::FlowCommand;
 use semio_framework_plugin::artifact_app_laws::{meta, settle_registered_typed_operation};
@@ -160,12 +184,12 @@ async fn renderer_operation_rows_decode_through_one_closed_vocabulary() {
 #[semio_framework_async_macros::async_test]
 async fn operation_parser_refuses_beyond_the_retained_route_row_and_wire_authorities() {
     let too_many = semio_framework_value::DslValue::from(serde_json::json!({
-        "operations": (0..=crate::editor::flow::FLOW_STORE_MAX_MUTATION_ITEMS).map(|_| serde_json::json!({ "operation": "deleteSelection" })).collect::<Vec<_>>()
+        "operations": (0..=crate::editor::flow::base::FLOW_STORE_MAX_MUTATION_ITEMS).map(|_| serde_json::json!({ "operation": "deleteSelection" })).collect::<Vec<_>>()
     }));
     assert!(operations_from_action(&too_many).is_err(), "the parser must refuse before walking row 257");
 
     let oversized = semio_framework_value::DslValue::from(serde_json::json!({
-        "operations": [{ "operation": "move", "gestureId": "node-drag:3", "nodeIds": ["x".repeat(crate::editor::flow::FLOW_GRAPH_OPERATION_RAW_BYTES)], "dx": 1.0, "dy": 2.0 }]
+        "operations": [{ "operation": "move", "gestureId": "node-drag:3", "nodeIds": ["x".repeat(crate::editor::flow::base::FLOW_GRAPH_OPERATION_RAW_BYTES)], "dx": 1.0, "dy": 2.0 }]
     }));
     assert!(operations_from_action(&oversized).is_err(), "the parser must share the retained route's 16 KiB wire authority");
 }
@@ -325,11 +349,10 @@ async fn a_release_that_wires_and_drags_is_labelled_by_the_drag() {
     let rows = member_rows(&mut app).await;
     assert_eq!(rows.len(), 1, "one release is one row: {rows:?}");
     assert!(rows[0].op_lines.first().is_some_and(|line| line.starts_with("insert-edge")), "{:?}", rows[0].op_lines);
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧫️fixtures/🧫️composed-child-history/🔣️.json")).expect("independent composed history JSON oracle");
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧫️fixtures/🧫️composed-child-history/🔣️.json")).expect("independent composed history JSON oracle");
     let expected = &fixture["cases"].as_array().expect("history cases").iter().find(|case| case["id"] == "declared-child-intent-follows-structural-support").expect("mixed gesture contract")["expected"]["groups"][0]["label"];
     assert_eq!(rows[0].label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En), expected["en"].as_str().expect("English intent label"));
     assert_eq!(rows[0].label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::De), expected["de"].as_str().expect("German intent label"));
-    eprintln!("[DEBUG] Flow mixed child transaction labels both locales by its declared drag intent");
 }
 
 /// ⚖️ LAW (design §12): time travel on a composed child's mutation runs on that member store — editing the drag's `dx`
@@ -389,7 +412,7 @@ async fn finalizing_a_member_edit_as_a_new_alternative_branches_the_member_and_k
 #[semio_framework_async_macros::async_test]
 async fn a_member_finalize_reaches_the_other_replica_on_the_member_lane() {
     use store::os_store::backbone::MemoryBackbone;
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/👁️replica-head/🔣️.json")).expect("neutral replica head witness");
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../🎮️commands/✏️node-graph-edit/🧪️tests/🧫️fixtures/👁️replica-head/🔣️.json")).expect("neutral replica head witness");
     let actors = fixture["actors"].as_array().expect("actors");
     let mut instance_a = crate::editor::flow::unit_tests::context::flow_app_with_actor(semio_framework_os_kernel::ActorId(actors[0].as_str().unwrap().into())).await;
     let mut instance_b = crate::editor::flow::unit_tests::context::flow_app_with_actor(semio_framework_os_kernel::ActorId(actors[1].as_str().unwrap().into())).await;
@@ -436,7 +459,6 @@ async fn a_member_finalize_reaches_the_other_replica_on_the_member_lane() {
         _ => None,
     }).collect();
     assert_eq!(serde_json::to_value(&transitions).unwrap(), fixture["authoredTransitions"]);
-    eprintln!("[DEBUG] Flow member replica shared journal={} transitions; author branch and peer trunk remain independent", transitions.len());
     assert_eq!(content_snapshot(&instance_a).await.nodes.len(), content_snapshot(&instance_b).await.nodes.len());
     instance_a.detach_backbone().await.expect("a releases its backbone");
     instance_b.detach_backbone().await.expect("b releases its backbone");
@@ -547,13 +569,13 @@ async fn patching_a_widget_value_is_one_absolute_node_param_leaf() {
 //#endregion 🔖️ComposedChildHistory
 
 //#region 🔖️IntentRows
-const NODE_GRAPH_EDIT_ROWS_JSON: &str = include_str!("../../../../../../../../../../../../../../🧰️framework/🔨️modules/🛠️tool-machine/🧪️tests/🧫️fixtures/🧫️node-graph-edit-rows/🔣️.json");
+static NODE_GRAPH_EDIT_ROWS_JSON: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../../../../../../../../🧰️framework/🔨️modules/🛠️tool-machine/🧪️tests/🧫️fixtures/🧫️node-graph-edit-rows/🔣️.json"));
 
 /// ⚖️ LAW (design §13.3): the flow guest decodes every row of the shared node-graph edit vocabulary the fixture accepts
 /// and refuses every row it refuses — among them the whole-fixture `setHostSnapshot` and the ambient `deleteSelection`.
 #[semio_framework_async_macros::async_test]
 async fn the_guest_reads_exactly_the_shared_node_graph_edit_rows() {
-    let fixture: serde_json::Value = serde_json::from_str(NODE_GRAPH_EDIT_ROWS_JSON).expect("node-graph edit rows fixture");
+    let fixture: serde_json::Value = serde_json::from_str((*NODE_GRAPH_EDIT_ROWS_JSON)).expect("node-graph edit rows fixture");
     for case in fixture["accepted"].as_array().expect("accepted rows") {
         let args = semio_framework_value::DslValue::from(serde_json::json!({ "operations": [case["row"].clone()] }));
         assert_eq!(operations_from_action(&args).map(|rows| rows.len()).ok(), Some(1), "{} decodes", case["id"]);

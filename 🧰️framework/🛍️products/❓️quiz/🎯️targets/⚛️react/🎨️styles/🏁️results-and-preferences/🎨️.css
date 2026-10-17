@@ -1,0 +1,151 @@
+/* 🏁 The parts of a result, the preferences, the ways to appear, the segmented choice, the leaderboard row and the notices. */
+
+/* 🏁️ The parts of a result. The score with how everyone scored stands beside the badges the run earned where both
+   fit; a task's tables stand beside its figures from 84rem, so a wide screen shows the answer and the crowd at once. */
+.quiz-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--spacing-double) calc(4 * var(--spacing-double));
+}
+
+.quiz-summary > :first-child {
+  flex: 0 1 20rem;
+}
+
+.quiz-summary > :nth-child(2) {
+  flex: 1 1 24rem;
+}
+
+.quiz-result {
+  display: flex;
+  min-inline-size: 0;
+  flex-direction: column;
+  gap: var(--spacing-double);
+}
+
+.quiz-result > * {
+  min-inline-size: 0;
+}
+
+@container quiz-card (min-width: 84rem) {
+  .quiz-result[data-crowd] {
+    display: grid;
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+    align-items: start;
+    column-gap: calc(2 * var(--spacing-double));
+  }
+}
+
+/* 🎛️ The preferences: the name of each above its control in a narrow card; from 28rem the names stand in a column of
+   their own on the left and every control starts on the same line right of it. A narrow card's choices are as wide as
+   the card, so every option is a target of its full share. */
+.quiz-settings {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--spacing-double);
+}
+
+.quiz-setting {
+  display: flex;
+  min-inline-size: 0;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--spacing-single);
+}
+
+.quiz-setting > [role="group"] {
+  inline-size: 100%;
+}
+
+@container quiz-card (min-width: 28rem) {
+  .quiz-settings {
+    grid-template-columns: max-content minmax(0, 1fr);
+    column-gap: var(--spacing-double);
+  }
+
+  .quiz-setting {
+    display: grid;
+    grid-column: 1 / -1;
+    grid-template-columns: subgrid;
+    align-items: center;
+  }
+
+  .quiz-setting > :not(.quiz-setting-name),
+  .quiz-settings > :not(.quiz-setting) {
+    grid-column: 2;
+  }
+
+  .quiz-setting > [role="group"] {
+    inline-size: fit-content;
+  }
+}
+
+/* 🪪️ The ways to appear: below each other in a narrow card, side by side as three columns from 44rem. */
+.quiz-kinds {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--spacing-single) calc(2 * var(--spacing-double));
+}
+
+@container quiz-card (min-width: 44rem) {
+  .quiz-kinds {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    align-items: start;
+  }
+}
+
+/* 🎚️ A segmented choice that does not fit one line wraps, and every line fills the width of the choice. */
+.quiz-segment {
+  flex: 1 1 auto;
+}
+
+/* 🏆️ The learner's own leaderboard row: a bar and a tint of the active colour, besides bold text and "(you)". */
+.quiz-me {
+  box-shadow: inset 3px 0 0 var(--active-base);
+  background: color-mix(in srgb, var(--active-base) 14%, transparent);
+}
+
+/* ⚠️ Errors and notices: a warning bar besides the words. */
+.quiz-alert {
+  border-inline-start: 4px solid var(--color-warning);
+  background: color-mix(in srgb, var(--color-warning) 12%, transparent);
+}
+
+.quiz-note {
+  border-color: var(--color-secondary);
+}
+
+.quiz-progress {
+  width: 12em;
+  max-width: 100%;
+  accent-color: var(--active-base);
+}
+
+.quiz-radio,
+.quiz-check {
+  width: 1.25em;
+  height: 1.25em;
+  accent-color: var(--active-base);
+}
+
+.quiz-input {
+  min-height: max(1.5rem, calc(7 * var(--ui-spacing)));
+  padding: 0 var(--spacing-double);
+  border: var(--stroke-hairline) solid var(--border-normal-color);
+  background: var(--base);
+  color: var(--foreground);
+  font: inherit;
+}
+
+.quiz-input:focus-visible,
+.quiz-app select:focus-visible {
+  outline: var(--stroke-default) solid var(--active-base);
+  outline-offset: 1px;
+}
+
+.quiz-backdrop {
+  background: color-mix(in srgb, var(--base) 60%, transparent);
+  -webkit-backdrop-filter: blur(0.5rem) saturate(1.45);
+  backdrop-filter: blur(0.5rem) saturate(1.45);
+}

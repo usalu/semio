@@ -2,8 +2,7 @@
 //!
 //! The child [`gis_policy`] owns the level-of-detail bands, tile pyramid and vector-tile cartography every GIS map renders by.
 
-#[path = "🌍️gis-policy/🦀️.rs"]
-pub mod gis_policy;
+pub use semio_s_artifact_gis_gismap_tile_coordinates::tile_coordinates::gis_policy;
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct MapTileBounds { pub west: f64, pub south: f64, pub east: f64, pub north: f64 }

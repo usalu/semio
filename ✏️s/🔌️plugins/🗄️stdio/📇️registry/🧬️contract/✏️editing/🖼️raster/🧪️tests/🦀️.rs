@@ -44,7 +44,6 @@ fn raster_region_fixtures_match_independent_patch_and_inverse() {
         if row["id"] == "unchanged" {
             assert!(changes.is_empty());
         }
-        eprintln!("[DEBUG] raster {}: {} bounded spans; independent patch and inverse agree", row["id"], plan.patch_count());
     }
 }
 
@@ -88,5 +87,4 @@ fn raster_region_plan_owns_checked_geometry_after_caller_edits() {
     json_patch::patch(&mut oracle, &serde_json::from_value::<json_patch::Patch>(json!(changes)).unwrap()).unwrap();
     assert_eq!(json!(actual), row["expected"]);
     assert_eq!(oracle, row["expected"]);
-    eprintln!("[DEBUG] raster plan ownership: checked geometry remains independent of the caller's later input");
 }

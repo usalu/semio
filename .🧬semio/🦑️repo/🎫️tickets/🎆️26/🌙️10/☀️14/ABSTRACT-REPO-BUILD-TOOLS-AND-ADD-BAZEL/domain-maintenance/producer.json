@@ -1,0 +1,98 @@
+{
+  "version": 1,
+  "scope": "historical-selector-data-only",
+  "fixture": "gf-Fk58e1",
+  "log": "final-graph-whole-current.log",
+  "bytes": 58544,
+  "sha256": "8de1b88e24197a7074868dfd5b4ebca7192273a9ac01f3baa3eb7756c172b296",
+  "rows": [
+    {
+      "line": 423,
+      "facts": {
+        "image": "/Users/ueli/Documents/semio/.cache/b/p/m/gf-Fk58e1/.cache/b/l/fixed.dmg",
+        "root": "/Users/ueli/Documents/semio/.cache/b/p/m/gf-Fk58e1/.cache/b/l/m",
+        "fileBytes": 66060288,
+        "allocatedBytes": 66060288,
+        "maximumPhysicalBytes": 66060288,
+        "filesystemBytes": 66019328,
+        "device": 16777299
+      }
+    },
+    {
+      "line": 424,
+      "facts": {
+        "image": "/Users/ueli/Documents/semio/.cache/b/p/m/gf-Fk58e1/.cache/b/g/fixed.dmg",
+        "root": "/Users/ueli/Documents/semio/.cache/b/p/m/gf-Fk58e1/.cache/b/g/m",
+        "fileBytes": 4293918720,
+        "allocatedBytes": 4293918720,
+        "maximumPhysicalBytes": 4293918720,
+        "filesystemBytes": 3949944832,
+        "device": 16777302
+      }
+    },
+    {
+      "line": 427,
+      "facts": {
+        "image": "/Users/ueli/Documents/semio/.cache/b/p/m/gf-Fk58e1/.cache/b/g/m/nx/cache/fixed.dmg",
+        "root": "/Users/ueli/Documents/semio/.cache/b/p/m/gf-Fk58e1/.cache/b/g/m/nx/cache/m",
+        "fileBytes": 938475520,
+        "allocatedBytes": 938475520,
+        "maximumPhysicalBytes": 938475520,
+        "filesystemBytes": 938434560,
+        "device": 16777304
+      }
+    },
+    {
+      "line": 428,
+      "facts": {
+        "image": "/Users/ueli/Documents/semio/.cache/b/p/m/gf-Fk58e1/.cache/b/g/m/nx/cache/m/nx/graphs/aaaaaaaaaaaaaaaaaaaa/9867393c1e97e8b376d4/native/fixed.dmg",
+        "root": "/Users/ueli/Documents/semio/.cache/b/p/m/gf-Fk58e1/.cache/b/g/m/nx/cache/m/nx/graphs/aaaaaaaaaaaaaaaaaaaa/9867393c1e97e8b376d4/native/m",
+        "fileBytes": 66060288,
+        "allocatedBytes": 66060288,
+        "maximumPhysicalBytes": 66060288,
+        "filesystemBytes": 66019328,
+        "device": 16777306
+      }
+    },
+    {
+      "line": 435,
+      "facts": {
+        "image": "/Users/ueli/Documents/semio/.cache/b/p/m/gf-Fk58e1/.cache/b/g/m/nx/cache/m/nx/graphs/aaaaaaaaaaaaaaaaaaaa/312b3d659b3b52d00344/native/fixed.dmg",
+        "root": "/Users/ueli/Documents/semio/.cache/b/p/m/gf-Fk58e1/.cache/b/g/m/nx/cache/m/nx/graphs/aaaaaaaaaaaaaaaaaaaa/312b3d659b3b52d00344/native/m",
+        "fileBytes": 66060288,
+        "allocatedBytes": 66060288,
+        "maximumPhysicalBytes": 66060288,
+        "filesystemBytes": 66019328,
+        "device": 16777308
+      }
+    },
+    {
+      "line": 446,
+      "facts": {
+        "image": "/Users/ueli/Documents/semio/.cache/b/p/m/gf-Fk58e1/.cache/b/g/m/nx/cache/m/nx/graphs/aaaaaaaaaaaaaaaaaaaa/877228aca35c81c230c9/native/fixed.dmg",
+        "root": "/Users/ueli/Documents/semio/.cache/b/p/m/gf-Fk58e1/.cache/b/g/m/nx/cache/m/nx/graphs/aaaaaaaaaaaaaaaaaaaa/877228aca35c81c230c9/native/m",
+        "fileBytes": 66060288,
+        "allocatedBytes": 66060288,
+        "maximumPhysicalBytes": 66060288,
+        "filesystemBytes": 66019328,
+        "device": 16777310
+      }
+    },
+    {
+      "line": 479,
+      "facts": {
+        "image": "/Users/ueli/Documents/semio/.cache/b/p/m/gf-Fk58e1/.cache/b/g/m/nx/cache/m/nx/graphs/aaaaaaaaaaaaaaaaaaaa/a114fd0ac24a9075e6be/native/fixed.dmg",
+        "root": "/Users/ueli/Documents/semio/.cache/b/p/m/gf-Fk58e1/.cache/b/g/m/nx/cache/m/nx/graphs/aaaaaaaaaaaaaaaaaaaa/a114fd0ac24a9075e6be/native/m",
+        "fileBytes": 66060288,
+        "allocatedBytes": 66060288,
+        "maximumPhysicalBytes": 66060288,
+        "filesystemBytes": 66019328,
+        "device": 16777306
+      }
+    }
+  ],
+  "historicalBackingInode": null,
+  "historicalFixtureDirectoryInode": null,
+  "originalChildRequest": null,
+  "currentAuthority": "unissued-current-physical-proof-required"
+}

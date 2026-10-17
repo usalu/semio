@@ -1,9 +1,12 @@
 //! ↩️ Inverse for `MoveSlot` — moves the slot back to its BASE position (missing id ⇒ empty).
 
-use crate::mutations::{move_slot, Wfc3dMutation};
+use crate::standards::v1::subsets::any::schema::mutations::move_slot::move_slot;
 use crate::schema::snapshot::Wfc3dSnapshot;
 
-pub fn inverse(payload: &super::MoveSlot, base: &Wfc3dSnapshot) -> Result<Vec<Wfc3dMutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op>(payload: &super::MoveSlot, base: &Wfc3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError>
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::move_slot::MoveSlot>,
+{
     Ok((|| {
     let Some(slot) = base.slots.iter().find(|slot| slot.id == payload.id) else {
         return Vec::new();

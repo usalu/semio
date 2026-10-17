@@ -1,15 +1,12 @@
 //! 🧭 GLTF orientation indicators.
 
-#[path = "📊️face-normal-distribution/🦀️.rs"]
-pub mod face_normal_distribution;
-#[path = "➡️main-axis-direction/🦀️.rs"]
-pub mod main_axis_direction;
-#[path = "🧲️orientation-consistency/🦀️.rs"]
-pub mod orientation_consistency;
+pub use semio_s_artifact_stdio_gltf_inferences_centroid::standards::v2_0::subsets::any::schema::inferences::orientation::face_normal_distribution;
+pub use semio_s_artifact_stdio_gltf_inferences_aspect_ratios::standards::v2_0::subsets::any::schema::inferences::orientation::main_axis_direction;
+pub use semio_s_artifact_stdio_gltf_inferences_aspect_ratios::standards::v2_0::subsets::any::schema::inferences::orientation::orientation_consistency;
 
-use super::super::modules::measurement_contracts::*;
-use super::super::modules::mesh_topology::Topology;
-use super::geometry_core::{GltfGeometryContext, GltfPairGeometry};
+use crate::standards::v2_0::subsets::any::schema::modules::measurement_contracts::*;
+use crate::standards::v2_0::subsets::any::schema::modules::mesh_topology::Topology;
+use crate::standards::v2_0::subsets::any::schema::inferences::geometry_core::{GltfGeometryContext, GltfPairGeometry};
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
@@ -23,12 +20,12 @@ pub struct GltfOrientationInference;
 
 impl GltfOrientationInference {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub(crate) fn infer_pair(pair: &GltfPairGeometry) -> GltfMeasure<f64> {
+    pub fn infer_pair(pair: &GltfPairGeometry) -> GltfMeasure<f64> {
         orientation_consistency::infer_pair(pair)
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub(crate) fn infer_assembly(indicators: &mut GltfOrientationIndicators, part_count: usize, sample_count: usize, topology: Topology) {
+    pub fn infer_assembly(indicators: &mut GltfOrientationIndicators, part_count: usize, sample_count: usize, topology: Topology) {
         if part_count > 1 {
             indicators.orientation_consistency = orientation_consistency::unavailable_for_assembly(sample_count, topology);
         }

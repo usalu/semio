@@ -148,9 +148,19 @@ impl protocol::InferenceSpec<ModelSnapshot> for ModelInference {
 //#region 🔖️Descriptor
 /// 💡️ The inference descriptor stitched into the artifact declaration: its facet leaves in every language.
 pub fn bim_model_inference_descriptor() -> semio_framework_schema_registry::ArtifactInferenceDescriptor {
+    ::semio_framework_schema_registry::register_schema_leaf_documents(&[
+        ::semio_framework_schema_registry::SchemaLeafDocument { scope: "s.bim.model.inference", export: "inference", format: ::semio_framework_schema_registry::SchemaFormat::Typescript, path: "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🟦️.ts" },
+        ::semio_framework_schema_registry::SchemaLeafDocument { scope: "s.bim.model.inference", export: "inference", format: ::semio_framework_schema_registry::SchemaFormat::Graphql, path: "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🔗️.graphql" },
+        ::semio_framework_schema_registry::SchemaLeafDocument { scope: "s.bim.model.inference", export: "inference", format: ::semio_framework_schema_registry::SchemaFormat::JsonSchema, path: "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🔣️.json" },
+        ::semio_framework_schema_registry::SchemaLeafDocument { scope: "s.bim.model.inference", export: "inference", format: ::semio_framework_schema_registry::SchemaFormat::Protobuf, path: "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🛰️.proto" },
+    ]);
+    #[cfg(target_arch = "wasm32")]
+    semio_framework_schema_registry::install_default_schema_leaf_reader(semio_framework_plugin::reactor::package_asset, "");
+    #[cfg(not(target_arch = "wasm32"))]
+    semio_framework_schema_registry::install_default_schema_leaf_reader(semio_framework_plugin::reactor::package_asset, env!("CARGO_MANIFEST_DIR"));
     semio_framework_schema_registry::ArtifactInferenceDescriptor {
         id: "s.bim.model.inference",
-        inference: semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
+        inference: semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: "", graphql: "", json_schema: "", proto: "" },
     }
 }
 //#endregion 🔖️Descriptor
@@ -159,203 +169,3 @@ pub fn bim_model_inference_descriptor() -> semio_framework_schema_registry::Arti
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 
-//#region 🧩️Modules
-#[path = "."]
-pub mod storey_levels {
-    #[path = "🏢️storey-levels/🦀️.rs"]
-    mod component;
-    pub use component::*;
-}
-#[path = "."]
-pub mod model_graph {
-    #[path = "🕸️model-graph/🦀️.rs"]
-    mod component;
-    pub use component::*;
-}
-#[path = "."]
-pub mod wall_layout {
-    #[path = "🧱️wall-layout/🦀️.rs"]
-    mod component;
-    pub use component::*;
-}
-#[path = "."]
-pub mod curtain_layout {
-    #[path = "🪞️curtain-layout/🦀️.rs"]
-    mod component;
-    pub use component::*;
-}
-#[path = "."]
-pub mod opening_frames {
-    #[path = "🪟️opening-frames/🦀️.rs"]
-    mod component;
-    pub use component::*;
-}
-#[path = "."]
-pub mod stair_runs {
-    #[path = "🪜️stair-runs/🦀️.rs"]
-    mod component;
-    pub use component::*;
-}
-#[path = "."]
-pub mod ramp_runs {
-    #[path = "🛝️ramp-runs/🦀️.rs"]
-    mod component;
-    pub use component::*;
-}
-#[path = "."]
-pub mod spaces {
-    #[path = "🏠️spaces/🦀️.rs"]
-    mod component;
-    pub use component::*;
-}
-#[path = "."]
-pub mod quantities {
-    #[path = "🧮️quantities/🦀️.rs"]
-    mod component;
-    pub use component::*;
-}
-#[path = "."]
-pub mod option_scope {
-    #[path = "🧭️option-scope/🦀️.rs"]
-    mod component;
-    pub use component::*;
-}
-#[path = "."]
-pub mod phase_visibility {
-    #[path = "🎭️phase-visibility/🦀️.rs"]
-    mod component;
-    pub use component::*;
-}
-#[path = "."]
-pub mod finishes {
-    #[path = "🎨️finishes/🦀️.rs"]
-    mod component;
-    pub use component::*;
-}
-#[path = "."]
-pub mod zones {
-    #[path = "🏘️zones/🦀️.rs"]
-    mod component;
-    pub use component::*;
-}
-#[path = "."]
-pub mod effective_properties {
-    #[path = "🏷️effective-properties/🦀️.rs"]
-    mod component;
-    pub use component::*;
-}
-#[path = "."]
-pub mod schedules {
-    #[path = "📋️schedules/🦀️.rs"]
-    mod component;
-    pub use component::*;
-}
-#[path = "."]
-pub mod families {
-    #[path = "🧬️families/🦀️.rs"]
-    mod component;
-    pub use component::*;
-}
-#[path = "."]
-pub mod components {
-    #[path = "🪑️components/🦀️.rs"]
-    mod component;
-    pub use component::*;
-}
-#[path = "."]
-pub mod mep {
-    #[path = "🌀️mep/🦀️.rs"]
-    mod component;
-    pub use component::*;
-}
-#[path = "."]
-pub mod bodies {
-    #[path = "📦️bodies/🦀️.rs"]
-    mod component;
-    pub use component::*;
-}
-#[path = "."]
-pub mod plan_linework {
-    #[path = "🗺️plan-linework/🦀️.rs"]
-    mod component;
-    pub use component::*;
-}
-#[path = "."]
-pub mod view_linework {
-    #[path = "🖼️view-linework/🦀️.rs"]
-    mod component;
-    pub use component::*;
-}
-#[path = "."]
-pub mod sheet_layout {
-    #[path = "📄️sheet-layout/🦀️.rs"]
-    mod component;
-    pub use component::*;
-}
-#[path = "."]
-pub mod analytical_members {
-    #[path = "🦴️analytical-members/🦀️.rs"]
-    mod component;
-    pub use component::*;
-}
-#[path = "."]
-pub mod energy_envelope {
-    #[path = "🌡️energy-envelope/🦀️.rs"]
-    mod component;
-    pub use component::*;
-}
-#[path = "."]
-pub mod clash_sets {
-    #[path = "🧨️clash-sets/🦀️.rs"]
-    mod component;
-    pub use component::*;
-}
-#[path = "."]
-pub mod rule_results {
-    #[path = "⚖️rule-results/🦀️.rs"]
-    mod component;
-    pub use component::*;
-}
-#[path = "."]
-pub mod annotation_layout {
-    #[path = "🪧️annotation-layout/🦀️.rs"]
-    mod component;
-    pub use component::*;
-}
-#[path = "."]
-pub mod diagnostics {
-    #[path = "⚠️diagnostics/🦀️.rs"]
-    mod component;
-    pub use component::*;
-}
-#[path = "."]
-pub mod element_solids {
-    #[path = "🧊️element-solids/🦀️.rs"]
-    mod component;
-    pub use component::*;
-    #[path = "."]
-    pub mod walls {
-        #[path = "🧊️element-solids/🧱️walls/🦀️.rs"]
-        mod component;
-        pub use component::*;
-    }
-    #[path = "."]
-    pub mod curtain_walls {
-        #[path = "🧊️element-solids/🪟️curtain-walls/🦀️.rs"]
-        mod component;
-        pub use component::*;
-    }
-    #[path = "."]
-    pub mod fillers {
-        #[path = "🧊️element-solids/🚪️fillers/🦀️.rs"]
-        mod component;
-        pub use component::*;
-    }
-    #[path = "."]
-    pub mod wall_sweeps {
-        #[path = "🧊️element-solids/🧷️wall-sweeps/🦀️.rs"]
-        mod component;
-        pub use component::*;
-    }
-}
-//#endregion 🧩️Modules

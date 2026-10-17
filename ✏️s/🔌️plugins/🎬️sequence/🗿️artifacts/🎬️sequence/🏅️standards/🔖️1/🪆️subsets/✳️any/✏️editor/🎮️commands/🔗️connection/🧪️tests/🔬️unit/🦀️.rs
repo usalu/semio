@@ -1,8 +1,8 @@
-use crate::editor::sequence::unit_tests::context::{dispatch, live_host_snapshot, new_app};
-use crate::editor::sequence::SequenceCommand;
+use crate::editor_unit_tests::context::{dispatch, live_host_snapshot, new_app};
+use crate::editor::sequence::retained::SequenceCommand;
 
-use super::connect_steps::ConnectSteps;
-use super::disconnect_steps::DisconnectSteps;
+use crate::editor::sequence::commands::connection::connect_steps::ConnectSteps;
+use crate::editor::sequence::commands::connection::disconnect_steps::DisconnectSteps;
 
 #[semio_framework_async_macros::async_test]
 async fn disconnect_then_reconnect_round_trips_the_edge() {

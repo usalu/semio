@@ -1,5 +1,13 @@
+use crate::stock_of;
+use semio_framework_plugin::app::TableWindowKit;
+#[allow(unused_imports)]
+use crate::CurationSnapshot;
+#[allow(unused_imports)]
+use semio_framework_plugin::app::{TableView, WindowKit};
+#[allow(unused_imports)]
+use semio_framework_plugin::{BuiltNode, UiAssemblyResult, WindowKindDefinition};
 
-use super::*;
+use crate::viewer::sourcing::modes::view::windows::pool::*;
 
 #[semio_framework_async_macros::async_test]
 async fn definition_uses_the_framework_table_window_kit() {

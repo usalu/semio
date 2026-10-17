@@ -35,21 +35,19 @@ import { programHistoryKeyV1, programHistoryProjectionV1 } from "../🪟️spawn
 import { IDENTITY_CONFIG_SCHEMA, foldIdentityEvent } from "@semio-tech/framework/backbone/config-lane";
 import { decodeLocalCatalogArchiveV1, decodeLocalCatalogPayloadV1 } from "../🗂️local-catalog/🟦️.ts";
 import { LOCAL_CATALOG_CONFIG_SCHEMA, type LocalCatalog } from "@semio-tech/framework/config/mutations";
-import { type ActiveSession, type LoadedProgramState, type PluginSupervisorState } from "../../🐚️Shell/🟦️.tsx";
+import { type ActiveSession, type LoadedProgramState, type PluginSupervisorState } from "../../🐚️Shell/📦️program-sessions/🟦️.ts";
+import { documentTransferNoticeTextV1, documentLoadCancelledV1 } from "../../🛠️ShellHelpers/🧾️transfer-checkin-tutorial/🟦️.ts";
 import {
-  documentTransferNoticeTextV1,
-  documentLoadCancelledV1,
   applyBrowserActorUiPatchesV1,
   browserActorPanelKeysV1,
   commandRejectionNoticeV1,
-  EMPTY_SHELL_HISTORY_PROJECTION_V1,
   appFaultNoticeV1,
   historyLaneNoticeV1,
   historyRefusalCodeV1,
-  historyRefusalNoticeV1,
-  resolveManifestLabel,
-  shellLabel
-} from "../../🛠️ShellHelpers/🟦️.tsx";
+  historyRefusalNoticeV1
+} from "../../🛠️ShellHelpers/🛣️route-and-chrome/🟦️.tsx";
+import { EMPTY_SHELL_HISTORY_PROJECTION_V1 } from "../../🛠️ShellHelpers/🔩️plumbing/🟦️.ts";
+import { resolveManifestLabel, shellLabel } from "../../🛠️ShellHelpers/🏷️labels/🟦️.tsx";
 // #endregion 🔌️Adapters
 import { isPluginInstanceRetiredV1 } from "../../🔌️PluginRuntime/🟦️.tsx";
 import { BrowserActorActionMailboxV1 } from "@semio-tech/framework/browser-bundle/action-handoff/requests";

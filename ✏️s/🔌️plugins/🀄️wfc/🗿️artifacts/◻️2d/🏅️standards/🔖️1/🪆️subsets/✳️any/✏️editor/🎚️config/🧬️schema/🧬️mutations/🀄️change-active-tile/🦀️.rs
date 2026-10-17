@@ -1,6 +1,6 @@
 //! 🀄️ Change Active Tile in the WFC 2D config facet — which tile a pin gesture in THIS pane assigns.
 
-use super::{Wfc2dConfig, Wfc2dConfigDiff, Wfc2dConfigMutation};
+use crate::editor::wfc2d::config::mutations::{Wfc2dConfig, Wfc2dConfigDiff};
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
@@ -13,7 +13,10 @@ pub struct ChangeActiveTile {
     pub tile_id: String,
 }
 
-impl protocol::MutationKind<Wfc2dConfig, Wfc2dConfigMutation> for ChangeActiveTile {
+impl<Op> protocol::MutationKind<Wfc2dConfig, Op> for ChangeActiveTile
+where
+    Op: protocol::Mutation<Wfc2dConfig, Diff = Wfc2dConfigDiff> + From<ChangeActiveTile>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "active-tile", kind: "change-active-tile", record: "ChangeActiveTile" };
     fn diff(&self, base: &Wfc2dConfig) -> protocol::MutationOutcome<Wfc2dConfigDiff> {
         if base.active_tile_id == self.tile_id {
@@ -21,9 +24,9 @@ impl protocol::MutationKind<Wfc2dConfig, Wfc2dConfigMutation> for ChangeActiveTi
         }
         protocol::MutationOutcome::new(Wfc2dConfigDiff { active_tile_id: Some(self.tile_id.clone()), ..Default::default() })
     }
-    fn inverse(&self, base: &Wfc2dConfig) -> Result<Vec<Wfc2dConfigMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Wfc2dConfig) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
-        vec![Wfc2dConfigMutation::ChangeActiveTile(ChangeActiveTile { tile_id: base.active_tile_id.clone() })]
+        vec![Op::from(ChangeActiveTile { tile_id: base.active_tile_id.clone() })]
     
     })())
 }

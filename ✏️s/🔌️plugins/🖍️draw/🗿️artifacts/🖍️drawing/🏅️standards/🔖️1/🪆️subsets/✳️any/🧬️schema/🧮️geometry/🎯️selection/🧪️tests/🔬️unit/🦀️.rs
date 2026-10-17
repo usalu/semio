@@ -1,8 +1,9 @@
 //! 🧪️ Shared lasso point and full-enclosure cases.
 use super::*;
+use semio_framework_test_fixtures::fixture_text;
 #[test]
 fn lasso_polygon_shared_cases() {
-    let cases: serde_json::Value=serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/🧮️geometry/🎯️selection/🔣️.json")).unwrap();
+    let cases: serde_json::Value=serde_json::from_str(fixture_text!("../../../../🧪️tests/🧫️fixtures/🧮️geometry/🎯️selection/🔣️.json")).unwrap();
     for case in cases.as_array().unwrap() {
         let polygon: Vec<[f64;2]>=serde_json::from_value(case["polygon"].clone()).unwrap();
         for query in case["points"].as_array().unwrap() { assert_eq!(polygon_contains_point(&polygon,serde_json::from_value(query["point"].clone()).unwrap()),query["inside"].as_bool().unwrap()); }

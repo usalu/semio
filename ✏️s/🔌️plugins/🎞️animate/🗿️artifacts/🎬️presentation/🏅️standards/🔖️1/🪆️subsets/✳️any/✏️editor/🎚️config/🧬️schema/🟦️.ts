@@ -23,6 +23,10 @@ type animatePresentationConfigGuardSizeBounds = { readonly minItems?: number; re
 
 export const animatePresentationConfigGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : animatePresentationConfigGuardReject(at, "value is not an object");
+export const animatePresentationConfigGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) animatePresentationConfigGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const animatePresentationConfigGuardArray = (value: unknown, at: string, bounds: animatePresentationConfigGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return animatePresentationConfigGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) animatePresentationConfigGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -53,7 +57,7 @@ export const animatePresentationConfigGuardConstant = <T extends string | number
 //#endregion 🚪️Parsers
 
 export function parsePresentationConfig(value: unknown, at = "$"): PresentationConfig {
-  const row = animatePresentationConfigGuardObject(value, at);
+  const row = animatePresentationConfigGuardClosed(animatePresentationConfigGuardObject(value, at), at, ["engagementInput"]);
   return {
     engagementInput: animatePresentationConfigGuardString(row["engagementInput"], `${at}.engagementInput`),
   };

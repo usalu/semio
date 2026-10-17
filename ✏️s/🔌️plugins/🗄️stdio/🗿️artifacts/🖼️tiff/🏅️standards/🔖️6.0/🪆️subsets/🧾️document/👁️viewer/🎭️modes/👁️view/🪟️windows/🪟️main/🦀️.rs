@@ -24,7 +24,7 @@ pub fn render(snapshot: &TiffSnapshot, locale: Locale) -> semio_framework_plugin
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn image_view(snapshot: &TiffSnapshot) -> semio_framework_plugin::UiAssemblyResult<ImageView> {
+pub fn image_view(snapshot: &TiffSnapshot) -> semio_framework_plugin::UiAssemblyResult<ImageView> {
     let page = encode_tiff_page_png(snapshot, 0).map_err(|message| semio_framework_plugin::PluginAssemblyError::new("stdio.tiff.preview", message))?;
     Ok(ImageView { width: page.width, height: page.height, mime: "image/png".into(), base64: semio_s_artifact_stdio_contract::base64_standard(&page.bytes) })
 }

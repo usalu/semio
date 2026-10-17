@@ -28,11 +28,14 @@ pub fn plan(p: &GltfDeleteTexturePayload, base: &GltfSnapshot) -> Result<GltfDif
     Ok(diff)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn inverse(p: &GltfDeleteTexturePayload, base: &GltfSnapshot) -> Vec<super::GltfMutation> {
+pub fn inverse<Op>(p: &GltfDeleteTexturePayload, base: &GltfSnapshot) -> Vec<Op>
+where
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::remove_used_extension::RemoveUsedExtensionMutation>,
+{
     if validate(p, base).is_err() {
         return Vec::new();
     }
-    let mut rows = vec![super::create_texture::mutation(super::create_texture::GltfCreateTexturePayload { position: p.index, texture: Some(Box::new(base.document.textures[p.index].clone())) })];
+    let mut rows = vec![crate::standards::v2_0::subsets::any::schema::mutations::create_texture::mutation(crate::standards::v2_0::subsets::any::schema::mutations::create_texture::GltfCreateTexturePayload { position: p.index, texture: Some(Box::new(base.document.textures[p.index].clone())) })];
 
     rows.reverse();
     rows
@@ -48,11 +51,17 @@ pub enum DeleteTextureMutation {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn mutation(payload: GltfDeleteTexturePayload) -> super::GltfMutation {
-    super::GltfMutation::DeleteTexture(DeleteTextureMutation::Apply(payload))
+pub fn mutation<Op>(payload: GltfDeleteTexturePayload) -> Op
+where
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::delete_texture::DeleteTextureMutation>,
+{
+    Op::from(DeleteTextureMutation::Apply(payload))
 }
 
-impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for DeleteTextureMutation {
+impl<Op> protocol::MutationKind<GltfSnapshot, Op> for DeleteTextureMutation
+where
+    Op: protocol::Mutation<GltfSnapshot, Diff = GltfDiff> + From<DeleteTextureMutation>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "texture", kind: "delete-texture", record: "DeletedTexture" };
 
     fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<GltfDiff> {
@@ -64,7 +73,7 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for DeleteTexture
         }
     }
 
-    fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<super::GltfMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         match self {
             Self::Apply(payload) => Ok(inverse(payload, base)),
         }
@@ -81,10 +90,6 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for DeleteTexture
 //#endregion 🧬️DirectMutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️t049/🦀️.rs"]
-mod case_t049;
-#[cfg(test)]
-#[path = "🧪️tests/🔬️middle-row/🦀️.rs"]
-mod case_middle_row;
+
+
 //#endregion 🧪️Tests

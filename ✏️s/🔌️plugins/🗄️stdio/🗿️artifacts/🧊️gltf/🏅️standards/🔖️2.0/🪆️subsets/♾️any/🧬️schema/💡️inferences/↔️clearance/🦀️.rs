@@ -1,17 +1,13 @@
 //! ↔️ GLTF clearance indicators.
 
-#[path = "📊️clearance-distribution/🦀️.rs"]
-pub mod clearance_distribution;
-#[path = "🚧️interference-volume/🦀️.rs"]
-pub mod interference_volume;
-#[path = "📏️minimum-distance-to-neighbors/🦀️.rs"]
-pub mod minimum_distance_to_neighbors;
-#[path = "🫂️overlap-volume/🦀️.rs"]
-pub mod overlap_volume;
+pub use semio_s_artifact_stdio_gltf_inferences_volume::standards::v2_0::subsets::any::schema::inferences::clearance::clearance_distribution;
+pub use semio_s_artifact_stdio_gltf_inferences_volume::standards::v2_0::subsets::any::schema::inferences::clearance::interference_volume;
+pub use semio_s_artifact_stdio_gltf_inferences_volume::standards::v2_0::subsets::any::schema::inferences::clearance::minimum_distance_to_neighbors;
+pub use semio_s_artifact_stdio_gltf_inferences_volume::standards::v2_0::subsets::any::schema::inferences::clearance::overlap_volume;
 
-use super::super::modules::measurement_contracts::*;
-use super::super::modules::mesh_topology::Topology;
-use super::geometry_core::{GltfGeometryContext, GltfPairGeometry};
+use crate::standards::v2_0::subsets::any::schema::modules::measurement_contracts::*;
+use crate::standards::v2_0::subsets::any::schema::modules::mesh_topology::Topology;
+use crate::standards::v2_0::subsets::any::schema::inferences::geometry_core::{GltfGeometryContext, GltfPairGeometry};
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
@@ -26,12 +22,12 @@ pub struct GltfClearanceInference;
 
 impl GltfClearanceInference {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub(crate) fn infer_pair(pair: &GltfPairGeometry, policy: &GltfAnalysisPolicy) -> (GltfMeasure<f64>, GltfMeasure<GltfStatistics>, GltfMeasure<f64>, GltfMeasure<f64>) {
+    pub fn infer_pair(pair: &GltfPairGeometry, policy: &GltfAnalysisPolicy) -> (GltfMeasure<f64>, GltfMeasure<GltfStatistics>, GltfMeasure<f64>, GltfMeasure<f64>) {
         (minimum_distance_to_neighbors::infer_pair(pair), clearance_distribution::infer_pair(pair, policy), interference_volume::infer_pair(pair), overlap_volume::infer_pair(pair))
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub(crate) fn infer_assembly(indicators: &mut GltfClearanceIndicators, distances: &[f64], (overlap_volume, overlap_complete): (f64, bool), pair_count: usize, policy: &GltfAnalysisPolicy, sample_count: usize, topology: Topology) {
+    pub fn infer_assembly(indicators: &mut GltfClearanceIndicators, distances: &[f64], (overlap_volume, overlap_complete): (f64, bool), pair_count: usize, policy: &GltfAnalysisPolicy, sample_count: usize, topology: Topology) {
         if let Some(measure) = minimum_distance_to_neighbors::from_assembly(distances, sample_count, topology) {
             indicators.minimum_distance_to_neighbors = measure;
         }

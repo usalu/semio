@@ -1,5 +1,7 @@
+use crate::schema::snapshot::DeflateLevelHint;
+use crate::DeflateSnapshot;
 use crate::apply_mutation;
-use super::*;
+use crate::standards::v_rfc1950::subsets::any::schema::diff::*;
 use crate::schema::mutations::{set_compression_params, set_payload, set_preset_dictionary, DeflateMutation};
 use crate::standards::v_rfc1950::subsets::any::io::{decode_deflate_snapshot, encode_deflate_snapshot};
 use crate::STDIO_DEFLATE_DOCUMENT_SCHEMA;

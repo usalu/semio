@@ -1,4 +1,29 @@
-use super::*;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_ID;
+#[allow(unused_imports)]
+use crate::editor::flow::terminology::FlowPlayLabels;
+#[allow(unused_imports)]
+use semio_framework_ui_contract::Label;
+#[allow(unused_imports)]
+use semio_framework_plugin::BuiltNode;
+#[allow(unused_imports)]
+use semio_framework_ui_locale::LocalizedLabel;
+#[allow(unused_imports)]
+use semio_framework_plugin::PanelGroup;
+#[allow(unused_imports)]
+use semio_framework_plugin::PanelTabDefinition;
+#[allow(unused_imports)]
+use semio_framework_plugin::PanelTabKind;
+#[allow(unused_imports)]
+use semio_framework_plugin::PanelTreeBuilder;
+#[allow(unused_imports)]
+use semio_framework_plugin::PluginAssemblyError;
+#[allow(unused_imports)]
+use semio_framework_plugin::TreeWindows;
+#[allow(unused_imports)]
+use semio_framework_plugin::UiAssemblyResult;
+#[allow(unused_imports)]
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_LABEL;
+use crate::editor::flow::panels::inspection::*;
 use crate::editor::flow::unit_tests::context::{flow_app, render as render_body};
 use crate::editor::flow::FLOW_PLAY_BODY_INSPECTOR as BODY_INSPECTOR;
 

@@ -2,9 +2,10 @@
 //! package asset reader installs the guest assets lazily, only once the host delivered all of them. One process, one test: the port installs once.
 
 use semio_framework_canvas_assets::{compiler_fonts, emoji_font, guest_asset_declarations, icon_pack, label_font, register_guest_asset_reader, RuntimeAsset};
+use semio_framework_test_fixtures::fixture_path;
 use std::collections::HashMap;
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::sync::Mutex;
 
 const FIXTURE: &str = include_str!("../🧫️fixtures/🔣️.json");
@@ -20,7 +21,7 @@ fn delivered(name: &str) -> Option<&'static [u8]> {
 }
 
 fn repository_root() -> PathBuf {
-    Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../..")
+    fixture_path!("../../../../../..")
 }
 
 fn read_asset(asset: RuntimeAsset) -> &'static [u8] {

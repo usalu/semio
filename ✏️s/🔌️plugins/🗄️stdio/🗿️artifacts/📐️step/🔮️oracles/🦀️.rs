@@ -1,5 +1,7 @@
 //! 🔮️ Independent artifact-owned oracle provider with only its own standards.
 
+use semio_framework_test_fixtures::fixture_path;
+
 #[path = "."]
 pub mod standards {
     #[path = "."]
@@ -61,7 +63,7 @@ pub mod standards {
 /// 📂️ Reads one committed artifact file at test runtime, by its path relative to this crate's manifest directory.
 #[cfg(test)]
 pub(crate) fn committed(relative: &str) -> Vec<u8> {
-    std::fs::read(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative)).unwrap_or_else(|error| panic!("{relative}: {error}"))
+    std::fs::read(fixture_path!(relative)).unwrap_or_else(|error| panic!("{relative}: {error}"))
 }
 
 /// 📜️ Reads one committed UTF-8 artifact file at test runtime, by its path relative to this crate's manifest directory.

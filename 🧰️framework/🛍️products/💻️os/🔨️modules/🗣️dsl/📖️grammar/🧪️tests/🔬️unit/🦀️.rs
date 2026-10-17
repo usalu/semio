@@ -1,3 +1,5 @@
+use semio_framework_test_fixtures::fixture_path;
+
 #[path = "../../../../../../../🔨️modules/📁️filesystem/🔎️discovery/🦀️.rs"]
 mod directory_discovery;
 use semio_framework_dsl::{LexOptions,lex};
@@ -7,7 +9,7 @@ use super::*;
 /// 🌾️ Compiles every General-owned grammar; extension facets own their conformance laws.
 #[semio_framework_async_macros::async_test]
 async fn every_shipped_grammar_semio_parses_and_compiles() {
-        let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../..");
+        let root = fixture_path!("../../../../..");
     let grammar_root = root.join("🧰️framework");
     let mut reported = usize::MAX;
     let discovery = directory_discovery::discover(
@@ -15,7 +17,7 @@ async fn every_shipped_grammar_semio_parses_and_compiles() {
         |directory| std::fs::canonicalize(directory),
         |directory| std::fs::read_dir(directory)?.map(|entry| entry.map(|entry| { let path = entry.path(); directory_discovery::DiscoveryEntry { directory: path.is_dir(), value: path } })).collect(),
         |path| path.file_name().and_then(|name| name.to_str()).is_some_and(|name| name.ends_with(".grammar.semio")),
-        |count, directory| { if count != reported && count % 256 == 0 { println!("[DEBUG] grammar discovery: {count} physical directories, {}", directory.display()); reported = count; } true },
+        |count, directory| { if count != reported && count % 256 == 0 {  reported = count; } true },
     ).expect("grammar source discovery");
     assert!(!discovery.cancelled, "grammar source discovery cancelled");
     let files = discovery.files;

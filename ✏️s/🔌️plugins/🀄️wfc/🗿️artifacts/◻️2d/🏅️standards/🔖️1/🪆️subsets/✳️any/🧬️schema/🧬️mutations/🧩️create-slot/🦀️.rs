@@ -2,7 +2,6 @@
 //! ascending-id position, never at the end, so `delete-slot`'s inverse restores the same index.
 
 use crate::diff::Wfc2dDiff;
-use crate::mutations::Wfc2dMutation;
 use crate::schema::snapshot::Wfc2dSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -18,17 +17,23 @@ pub struct CreateSlot {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn create_slot(slot: Wfc2dSlot) -> Wfc2dMutation {
-    Wfc2dMutation::CreateSlot(CreateSlot { slot })
+pub fn create_slot<Op>(slot: Wfc2dSlot) -> Op
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::create_slot::CreateSlot>,
+{
+    Op::from(CreateSlot { slot })
 }
 
-impl MutationKind<Wfc2dSnapshot, Wfc2dMutation> for CreateSlot {
+impl<Op> MutationKind<Wfc2dSnapshot, Op> for CreateSlot
+where
+    Op: protocol::Mutation<Wfc2dSnapshot, Diff = Wfc2dDiff> + From<CreateSlot> + From<crate::standards::v1::subsets::any::schema::mutations::delete_slot::DeleteSlot>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "slot", kind: "create-slot", record: "CreatedSlot" };
 
     fn diff(&self, base: &Wfc2dSnapshot) -> protocol::MutationOutcome<Wfc2dDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Wfc2dSnapshot) -> Result<Vec<Wfc2dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Wfc2dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

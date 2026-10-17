@@ -1,9 +1,7 @@
 //! ⚖️ `set-kind-weight` command.
+use crate::editor::puzzle5d::catalog::{puzzle5d_ensure_catalog_kind_weights, puzzle5d_kind_ids, puzzle5d_normalize_kind_weight_group};
 
-use crate::editor::puzzle5d::puzzle5d_ensure_catalog_kind_weights;
-use crate::editor::puzzle5d::puzzle5d_kind_ids;
-use crate::editor::puzzle5d::puzzle5d_normalize_kind_weight_group;
-use crate::editor::puzzle5d::Puzzle5dActionCtx;
+use crate::editor::puzzle5d::interaction::Puzzle5dActionCtx;
 use semio_framework_pack_json::Value;
 
 /// ⚖️ `setPartKindWeight`/`setGripKindWeight` share one arm: both re-normalize their whole group

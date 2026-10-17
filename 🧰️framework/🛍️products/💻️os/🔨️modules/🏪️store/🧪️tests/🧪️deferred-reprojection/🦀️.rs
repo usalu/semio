@@ -610,7 +610,6 @@ async fn operation_capped_reprojection_preserves_structural_deadlines_and_exact_
     assert_eq!(deadline.state.as_ref().unwrap().n, Some(1));
     replay.retire_unscheduled().expect("the capped replay retires from its own quoted demands");
     deadline.retire_unscheduled().expect("the deadline replay retires from its own quoted demands");
-    println!("[DEBUG] Replay operation authority12/cap1 retains structural deadline checks and zero-cap unchanged projection");
 }
 
 impl semio_framework_pack_json::ArtifactCanonicalJsonTree for CountedOp {

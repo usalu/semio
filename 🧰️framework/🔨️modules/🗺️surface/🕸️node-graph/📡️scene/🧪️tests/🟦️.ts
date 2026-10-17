@@ -5,13 +5,15 @@ import contract from "../🧬️schema/🔣️.json";
 import corpus from "./🧫️fixtures/🔣️.json";
 import wire from "./🧫️fixtures/📦️body/🔣️.json";
 import { uiViewport2dSchema as viewport } from "../../../../🖱️ui/🧪️tests/🧫️fixtures/🟦️.ts";
-import {readIntrinsicBody} from "../../../../🎒️pack/🌱️value/🧪️tests/🫳️preflight/🔮️pack/🟦️.ts";
+import {readIntrinsicBody,type ClosedValue} from "@semio-tech/framework-pack-record-ts/testing/preflight/pack";
 
 const ajv = new Ajv({strict: true, allErrors: true}).addSchema(viewport).addSchema(contract);
-function physical(value:unknown):unknown{
+type Wire=string|boolean|number|null|undefined|readonly Wire[]|{readonly[id:string]:Wire};
+function physical(value:Wire):ClosedValue{
+  if(value===undefined)throw Error("Absent wire value");
   if(typeof value==="number"){const bytes=new Uint8Array(8);new DataView(bytes.buffer).setFloat64(0,value,false);return{bits:Buffer.from(bytes).toString("hex")};}
   if(Array.isArray(value))return value.map(physical);
-  if(value!==null&&typeof value==="object")return Object.fromEntries(Object.entries(value).map(([key,value])=>[key,physical(value)]));
+  if(value!==null&&typeof value==="object")return Object.fromEntries(Object.entries(value).filter(([,member])=>member!==undefined).map(([key,member])=>[key,physical(member)]));
   return value;
 }
 

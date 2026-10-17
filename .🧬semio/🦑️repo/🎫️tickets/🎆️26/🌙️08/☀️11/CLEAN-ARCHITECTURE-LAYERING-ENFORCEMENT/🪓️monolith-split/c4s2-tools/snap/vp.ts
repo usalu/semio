@@ -1,0 +1,1446 @@
+import {VITE_RUNTIME_CHANNELS_ENV_V1,readViteRuntimeChannelsV1} from "../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/📥️environment/🏃️runtime/🟦️.ts";
+import { scriptCompilerAdmissionControlV1 } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
+import {receiveScriptProcessInvocation} from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {checkResourceLeaseControl} from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
+/** 🔌️ The dev server's own Vite plugins — backbone document IO, the content-addressed blob
+ * endpoint, the plugin hot-swap SSE stream and the production test boundary — kept in a module of
+ * their own so `⚙️vite.config.ts` can mount them without pulling `📜️script.ts`'s task router (and
+ * through it the repository library's discovery walk) into Vite's config bundle. `bun:sqlite` stays a
+ * lazy dynamic import: Vite loads this module's exports under Node before the dev server's Bun
+ * runtime exists. */
+import { spawn } from "node:child_process";
+import { createHash, randomBytes } from "node:crypto";
+import { existsSync, mkdirSync, readFileSync, readdirSync, realpathSync, rmSync, statSync, watch, writeFileSync } from "node:fs";
+import { dirname, isAbsolute, join, relative, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+import { BACKBONE_ENDPOINT_PATH, BLOB_ENDPOINT_PATH, DEV_STREAM_ROUTES, DOCUMENT_ARCHIVE_MAXIMUM_BYTES, STREAM_MUX_ANNOUNCEMENT, STREAM_MUX_PATH, backboneKindFromUri, decodeDocumentArchiveBytes } from "@semio-tech/framework-os";
+import { AGENT_BRIDGE_OFFER_ENDPOINT, AGENT_BRIDGE_RENDEZVOUS_SCHEMA_VERSION, agentBridgeOfferAnswerV1, parseAgentBridgeOfferRecordV2, parseAgentBridgeOfferScopeV1, selectAgentBridgeOfferV1, type AgentBridgeOfferRecordV2, type AgentBridgeOfferScopeV1 } from "../../📺️renderer/🧑‍🎨engine/🧱️elements/🔗️AgentBridge/🛰️offer/🟦️.ts";
+import type { PluginSourceEvent } from "@semio-tech/framework";
+import { MODULE_BRIDGE_FILE } from "../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
+import { resolveBootSourceContentHashes, SOURCE_FRESHNESS_COMPONENT_CONCURRENCY, mapBoundedV1, stagedModuleMtime, writeStagedSourceFreshness } from "../../🔌️plugin/🏗️build/🔍️freshness/🟦️.ts";
+import { ACTIVATION_RECEIPT_FILE, activationSourceFreshnessDirectory, activationSourceFreshnessKey, developmentRuntimeRoot, nextActivationReceipt, observeActivationReceipts, publishActivationReceipt, readActivationReceipt, stagedModuleReportLines, stagedModuleVerdict, type ActivationReceipt, type StagedModuleFacts } from "../♻️activation/🟦️.ts";
+import { blake3Hex } from "@semio-tech/framework/hash";
+import { STREAM_MUX_BOUNDS_V1, StreamMuxServerV1, type StreamMuxJobV1, type StreamMuxJsonV1 } from "@semio-tech/framework/io/stream-mux";
+import {readDevLocalHubProxyV1,requestDevLocalHubProxyV1,devLocalHubSessionPolicyV1} from "../🚀️local-hub/🎫️session/📋️data/🟦️.ts";
+import {parseLocalSessionV1} from "@semio-tech/framework-os/modules/directory/local-session/broker/schema";
+import { protectOwnerOnly } from "../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🔐️owner-only/🟦️.ts";
+import { agentClientLauncher, readDeclaredTools } from "../../../../🦑️repo/🔨️modules/📚️library/🤖️agent-clients/🟦️.ts";
+
+import { LOCAL_HUB_SESSION_ENDPOINT_V1, localHubSessionAnswerV1 } from "@semio-tech/framework/directory/local-session";
+import { AGENT_CREDENTIAL_INSTALL_ENDPOINT_V1, AGENT_CREDENTIAL_INSTALL_RECEIPT_SCHEMA_V1, AGENT_CREDENTIAL_INSTALL_SCHEMA_V1, AGENT_CREDENTIAL_SCHEMA_V1, agentCredentialInstallFileNameV1, isAgentDelegationTokenV1 } from "@semio-tech/framework/directory/delegations";
+/** 📥️ Filename owned by plugin store installation; inlined so the vite-plugin graph does not pull materialization. */
+const EXTENSION_INSTALL_META = "📥️install.json";
+
+/** 🗂️ Repository root derived from this module's own location — the config bundler must not
+ * reach `getWorkspaceRoot` (and the discovery walk behind it) just to place two dev databases. */
+export const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../../../../../..");
+
+export type DescriptorRouteGuardSpec = {
+  readonly route: string;
+  readonly root: string;
+  readonly directoryNames: ReadonlySet<string>;
+};
+
+export type DescriptorRouteDecision = { readonly kind: "pass" } | { readonly kind: "missing"; readonly moduleDirectory: string };
+
+/** 🛂️ Resolves only canonical declared module descriptor requests, without decoding arbitrary filesystem paths. */
+export function descriptorRouteDecision(url: string | undefined, specs: readonly DescriptorRouteGuardSpec[]): DescriptorRouteDecision {
+  if (!url) return { kind: "pass" };
+  let pathname: string;
+  try {
+    pathname = decodeURIComponent(new URL(url, "http://127.0.0.1").pathname);
+  } catch {
+    return { kind: "pass" };
+  }
+  for (const spec of specs) {
+    const route = spec.route.endsWith("/") ? spec.route : `${spec.route}/`;
+    if (!pathname.startsWith(route)) continue;
+    const parts = pathname.slice(route.length).split("/");
+    if (parts.length !== 2 || parts[1] !== "🔣️.json") return { kind: "pass" };
+    const moduleDirectory = parts[0] ?? "";
+    if (!spec.directoryNames.has(moduleDirectory) || !existsSync(join(spec.root, moduleDirectory, "🔣️.json"))) return { kind: "missing", moduleDirectory };
+    return { kind: "pass" };
+  }
+  return { kind: "pass" };
+}
+
+/** 🚫️ Prevents a missing plugin descriptor from falling through to Vite's HTML SPA response. */
+export function semioDescriptorRouteGuardVitePlugin(specs: readonly DescriptorRouteGuardSpec[]) {
+  return {
+    name: "semio-descriptor-route-guard",
+    enforce: "pre" as const,
+    configureServer(server: { middlewares: { use: (handler: (req: BackboneServerRequest, res: BackboneServerResponse, next: () => void) => void) => void } }) {
+      server.middlewares.use((req, res, next) => {
+        const decision = descriptorRouteDecision(req.url, specs);
+        if (decision.kind === "pass") return next();
+        res.statusCode = 404;
+        res.setHeader("content-type", "application/json");
+        res.end(`${JSON.stringify({ error: "descriptor-not-found", moduleDirectory: decision.moduleDirectory })}\n`);
+      });
+    },
+  };
+}
+
+/** 👷️ Lets a service worker served from the module graph (the plugin module store's, `🌎️hub-source/👷️service-worker`)
+ * control the whole shell: every script a browser fetches AS a service worker (`Service-Worker: script`) is allowed scope
+ * `/`. A deployment answers its service worker script with the same header. */
+export function semioServiceWorkerScopeVitePlugin() {
+  return {
+    name: "semio-service-worker-scope",
+    enforce: "pre" as const,
+    configureServer(server: { middlewares: { use: (handler: (req: { headers?: Record<string, string | string[] | undefined> }, res: { setHeader: (name: string, value: string) => void }, next: () => void) => void) => void } }) {
+      server.middlewares.use((req, res, next) => {
+        if (req.headers?.["service-worker"] === "script") res.setHeader("Service-Worker-Allowed", "/");
+        next();
+      });
+    },
+  };
+}
+
+//#region BackboneVitePlugin
+/** 🗃️ The Bun builtin, ASSEMBLED at runtime. A bundler asked to ANALYSE this module refuses the
+ * specifier outright ("Cannot bundle built-in module"), which failed whole jsdom test files whose
+ * graph reaches here; `@vite-ignore` beside a constant was not enough, because a `const` holding a
+ * string literal is exactly what the analyser constant-folds back into a static specifier. Joining
+ * the two halves leaves nothing to fold, and the module's real type is restored in a TYPE position,
+ * which the bundler never sees. Resolution is left to the runtime that actually has it. */
+const BUN_SQLITE_MODULE = ["bun", "sqlite"].join(":");
+
+/** Lazily imports `bun:sqlite` — a static top-level import breaks Vite's config bundler, which loads this module's exports under Node before the dev server (and its Bun runtime) exists. */
+let backboneDatabaseCtor: typeof import("bun:sqlite").Database | undefined;
+async function backboneDatabaseCtorLazy(): Promise<typeof import("bun:sqlite").Database> {
+  if (backboneDatabaseCtor) return backboneDatabaseCtor;
+  const { Database } = (await import(/* @vite-ignore */ BUN_SQLITE_MODULE)) as typeof import("bun:sqlite");
+  backboneDatabaseCtor = Database;
+  return Database;
+}
+type BackboneSqliteHandle = InstanceType<typeof import("bun:sqlite").Database>;
+
+export const CANONICAL_BOOTSTRAP_FOLDER_MIRROR_PATH = `${BACKBONE_ENDPOINT_PATH}/canonical-bootstrap`;
+export const CANONICAL_BOOTSTRAP_FOLDER_MIRROR_MAX_BYTES = DOCUMENT_ARCHIVE_MAXIMUM_BYTES;
+const CANONICAL_BOOTSTRAP_FOLDER_MIRROR_MAX_BODY_BYTES = CANONICAL_BOOTSTRAP_FOLDER_MIRROR_MAX_BYTES + 10;
+const SHA256_HEX = /^[0-9a-f]{64}$/u;
+
+export type CanonicalBootstrapFolderMirrorFrontierV1 = {
+  readonly documentId: string;
+  readonly headEditOrdinal: number;
+  readonly headEditId: string;
+  readonly lastCommitSeq: number;
+  readonly chainSha256: string;
+};
+
+export type CanonicalBootstrapFolderMirrorReserveV1 = {
+  readonly schema: "semio.backbone.canonical-bootstrap-folder-mirror-reserve/v1";
+  readonly artifactSchema: string;
+  readonly descriptorDigestV1: string;
+  readonly aggregateSha256: string;
+  readonly baselineFrontier: CanonicalBootstrapFolderMirrorFrontierV1;
+};
+
+export type CanonicalBootstrapFolderMirrorOwnerV1 = {
+  readonly schema: "semio.backbone.canonical-bootstrap-folder-mirror-owner/v1";
+  readonly epoch: number;
+  readonly capability: string;
+};
+
+type CanonicalBootstrapFolderMirrorControlV1 = { readonly epoch: number; readonly capability: string };
+
+function canonicalBootstrapMirrorError(code: "invalid" | "conflict" | "too-large"): Error {
+  return Object.assign(new Error(`canonical bootstrap folder mirror ${code}`), { code });
+}
+
+function canonicalBootstrapFolderMirrorDbPath(uri: string): string {
+  const folder = uri.slice("folder://".length);
+  if (backboneKindFromUri(uri) !== "folder" || !isAbsolute(folder)) throw canonicalBootstrapMirrorError("invalid");
+  return join(folder, ".semio", "documents.db");
+}
+
+function validateCanonicalBootstrapDocumentId(documentId: string): void {
+  if (documentId.length === 0 || new TextEncoder().encode(documentId).byteLength > 512 || documentId.includes("\0")) throw canonicalBootstrapMirrorError("invalid");
+}
+
+function validateCanonicalBootstrapFrontier(frontier: CanonicalBootstrapFolderMirrorFrontierV1, documentId: string): void {
+  const chainIsCanonical = SHA256_HEX.test(frontier?.chainSha256 ?? "");
+  const chainIsZero = chainIsCanonical && frontier.chainSha256 === "0".repeat(64);
+  const genesis =
+    frontier?.documentId === documentId &&
+    frontier.headEditOrdinal === 0 &&
+    frontier.headEditId === "" &&
+    frontier.lastCommitSeq === 0 &&
+    chainIsZero;
+  const edited =
+    frontier?.documentId === documentId &&
+    Number.isSafeInteger(frontier.headEditOrdinal) &&
+    frontier.headEditOrdinal > 0 &&
+    Number.isSafeInteger(frontier.lastCommitSeq) &&
+    frontier.lastCommitSeq > 0 &&
+    typeof frontier.headEditId === "string" &&
+    frontier.headEditId.length > 0 &&
+    new TextEncoder().encode(frontier.headEditId).byteLength <= 512 &&
+    !/\p{Cc}/u.test(frontier.headEditId) &&
+    chainIsCanonical &&
+    !chainIsZero;
+  if (!genesis && !edited) throw canonicalBootstrapMirrorError("invalid");
+}
+
+function validateCanonicalBootstrapReserve(request: CanonicalBootstrapFolderMirrorReserveV1, documentId: string): void {
+  if (
+    request?.schema !== "semio.backbone.canonical-bootstrap-folder-mirror-reserve/v1" ||
+    typeof request.artifactSchema !== "string" ||
+    request.artifactSchema.length === 0 ||
+    !SHA256_HEX.test(request.descriptorDigestV1) ||
+    !SHA256_HEX.test(request.aggregateSha256)
+  )
+    throw canonicalBootstrapMirrorError("invalid");
+  validateCanonicalBootstrapFrontier(request.baselineFrontier, documentId);
+}
+
+function validateCanonicalBootstrapControl(control: CanonicalBootstrapFolderMirrorControlV1): void {
+  if (!Number.isSafeInteger(control?.epoch) || control.epoch < 1 || typeof control.capability !== "string" || !SHA256_HEX.test(control.capability)) throw canonicalBootstrapMirrorError("invalid");
+}
+
+async function canonicalBootstrapFolderMirrorDb(uri: string): Promise<BackboneSqliteHandle> {
+  const dbPath = canonicalBootstrapFolderMirrorDbPath(uri);
+  mkdirSync(dirname(dbPath), { recursive: true });
+  return backboneDbHandleFor(dbPath);
+}
+
+/** 🪪️ Mints and persists the sole current folder-mirror epoch; reserving a successor makes every prior stage and published pair non-current in the same transaction. */
+export async function reserveCanonicalBootstrapFolderMirror(uri: string, documentId: string, request: CanonicalBootstrapFolderMirrorReserveV1): Promise<CanonicalBootstrapFolderMirrorOwnerV1> {
+  validateCanonicalBootstrapDocumentId(documentId);
+  validateCanonicalBootstrapReserve(request, documentId);
+  const db = await canonicalBootstrapFolderMirrorDb(uri);
+  const capability = randomBytes(32).toString("hex");
+  const reserve = db.transaction(() => {
+    const prior = db.query("SELECT epoch FROM canonical_bootstrap_owner WHERE document_id = ?1").get(documentId) as { epoch?: number } | null;
+    const epoch = Number(prior?.epoch ?? 0) + 1;
+    if (!Number.isSafeInteger(epoch)) throw canonicalBootstrapMirrorError("conflict");
+    db.run("DELETE FROM canonical_bootstrap_archive_stage WHERE document_id = ?1", [documentId]);
+    db.run(
+      "INSERT INTO canonical_bootstrap_owner (document_id, epoch, capability, state, artifact_schema, descriptor_digest_v1, aggregate_sha256, baseline_frontier_json, updated_at) VALUES (?1, ?2, ?3, 'reserved', ?4, ?5, ?6, ?7, ?8) ON CONFLICT(document_id) DO UPDATE SET epoch = excluded.epoch, capability = excluded.capability, state = excluded.state, artifact_schema = excluded.artifact_schema, descriptor_digest_v1 = excluded.descriptor_digest_v1, aggregate_sha256 = excluded.aggregate_sha256, baseline_frontier_json = excluded.baseline_frontier_json, updated_at = excluded.updated_at",
+      [documentId, epoch, capability, request.artifactSchema, request.descriptorDigestV1, request.aggregateSha256, JSON.stringify(request.baselineFrontier), Date.now()],
+    );
+    return epoch;
+  });
+  return { schema: "semio.backbone.canonical-bootstrap-folder-mirror-owner/v1", epoch: reserve(), capability };
+}
+
+/** 🧱️ Stages one bounded, exactly framed canonical recursive archive without changing folder-visible state. */
+export async function stageCanonicalBootstrapFolderMirror(uri: string, documentId: string, control: CanonicalBootstrapFolderMirrorControlV1, payload: Uint8Array): Promise<void> {
+  validateCanonicalBootstrapDocumentId(documentId);
+  validateCanonicalBootstrapControl(control);
+  if (payload.byteLength > CANONICAL_BOOTSTRAP_FOLDER_MIRROR_MAX_BODY_BYTES) throw canonicalBootstrapMirrorError("too-large");
+  let pack: Uint8Array, spr: Uint8Array;
+  try {
+    const archive = decodeDocumentArchiveBytes(payload);
+    pack = Uint8Array.from(archive.parent_pack);
+    spr = Uint8Array.from(archive.parent_spr);
+  } catch {
+    throw canonicalBootstrapMirrorError("invalid");
+  }
+  if (pack.byteLength + spr.byteLength > CANONICAL_BOOTSTRAP_FOLDER_MIRROR_MAX_BYTES) throw canonicalBootstrapMirrorError("too-large");
+  const aggregate = createHash("sha256").update(pack).update(spr).digest("hex");
+  const db = await canonicalBootstrapFolderMirrorDb(uri);
+  const stage = db.transaction(() => {
+    const owner = db.query("SELECT aggregate_sha256 AS aggregateSha256 FROM canonical_bootstrap_owner WHERE document_id = ?1 AND epoch = ?2 AND capability = ?3 AND state = 'reserved'").get(documentId, control.epoch, control.capability) as { aggregateSha256?: string } | null;
+    if (owner?.aggregateSha256 !== aggregate) throw canonicalBootstrapMirrorError("conflict");
+    db.run("INSERT INTO canonical_bootstrap_archive_stage (document_id, epoch, archive, aggregate_sha256) VALUES (?1, ?2, ?3, ?4) ON CONFLICT(document_id, epoch) DO UPDATE SET archive = excluded.archive, aggregate_sha256 = excluded.aggregate_sha256", [documentId, control.epoch, payload, aggregate]);
+  });
+  stage();
+}
+
+/** 📣️ Makes a staged pair current only while the exact server-minted epoch remains reserved. */
+export async function publishCanonicalBootstrapFolderMirror(uri: string, documentId: string, control: CanonicalBootstrapFolderMirrorControlV1): Promise<void> {
+  validateCanonicalBootstrapDocumentId(documentId);
+  validateCanonicalBootstrapControl(control);
+  const db = await canonicalBootstrapFolderMirrorDb(uri);
+  const publish = db.transaction(() => {
+    const stage = db
+      .query("SELECT 1 AS present FROM canonical_bootstrap_owner owner JOIN canonical_bootstrap_archive_stage stage ON stage.document_id = owner.document_id AND stage.epoch = owner.epoch WHERE owner.document_id = ?1 AND owner.epoch = ?2 AND owner.capability = ?3 AND owner.state = 'reserved' AND stage.aggregate_sha256 = owner.aggregate_sha256")
+      .get(documentId, control.epoch, control.capability) as { present?: number } | null;
+    if (stage?.present !== 1) throw canonicalBootstrapMirrorError("conflict");
+    const changed = db.run("UPDATE canonical_bootstrap_owner SET state = 'published', updated_at = ?4 WHERE document_id = ?1 AND epoch = ?2 AND capability = ?3 AND state = 'reserved'", [documentId, control.epoch, control.capability, Date.now()]);
+    if (changed.changes !== 1) throw canonicalBootstrapMirrorError("conflict");
+  });
+  publish();
+}
+
+/** 🧹️ Retires only the exact current epoch; a stale owner cannot hide or alter its successor. */
+export async function retireCanonicalBootstrapFolderMirror(uri: string, documentId: string, control: CanonicalBootstrapFolderMirrorControlV1): Promise<void> {
+  validateCanonicalBootstrapDocumentId(documentId);
+  validateCanonicalBootstrapControl(control);
+  const db = await canonicalBootstrapFolderMirrorDb(uri);
+  const retire = db.transaction(() => {
+    const changed = db.run("UPDATE canonical_bootstrap_owner SET state = 'retired', updated_at = ?4 WHERE document_id = ?1 AND epoch = ?2 AND capability = ?3 AND state IN ('reserved', 'published')", [documentId, control.epoch, control.capability, Date.now()]);
+    if (changed.changes !== 1) throw canonicalBootstrapMirrorError("conflict");
+    db.run("DELETE FROM canonical_bootstrap_archive_stage WHERE document_id = ?1 AND epoch = ?2", [documentId, control.epoch]);
+  });
+  retire();
+}
+
+/** 🗄️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (T-P8): per-path `bun:sqlite` handle cache.
+ * `readBackbonePayload`/`writeBackbonePayload` used to `new Database(dbPath)` — and re-run the
+ * (idempotent but non-free) `CREATE TABLE IF NOT EXISTS` — on EVERY single read/write request, so a
+ * hot dev-editing loop against one folder-backed document reopened the same file every keystroke's
+ * autosave. Lifetime: opened once, then held open for the lifetime of THIS dev-server process — never
+ * explicitly closed or evicted. A dev session only ever touches a handful of distinct folder URIs (the
+ * open studio, plus maybe one or two app documents), so the cache's total size is bounded by session
+ * variety, not by request volume; there is no observed need for a size/idle eviction policy for that few
+ * long-lived, cheap-to-hold connections. If that assumption ever stops holding (e.g. a scripted session
+ * that iterates many distinct folders), add one then — not speculatively here. */
+const backboneDbHandles = new Map<string, BackboneSqliteHandle>();
+
+export async function backboneDbHandleFor(dbPath: string): Promise<BackboneSqliteHandle> {
+  const existing = backboneDbHandles.get(dbPath);
+  if (existing) return existing;
+  const Database = await backboneDatabaseCtorLazy();
+  const db = new Database(dbPath);
+  db.run("CREATE TABLE IF NOT EXISTS document_archive (id TEXT PRIMARY KEY, schema TEXT, archive BLOB NOT NULL, updated_at INTEGER NOT NULL)");
+  db.run("CREATE TABLE IF NOT EXISTS canonical_bootstrap_owner (document_id TEXT PRIMARY KEY, epoch INTEGER NOT NULL, capability TEXT NOT NULL, state TEXT NOT NULL CHECK (state IN ('reserved', 'published', 'retired', 'generic')), artifact_schema TEXT NOT NULL, descriptor_digest_v1 TEXT NOT NULL, aggregate_sha256 TEXT NOT NULL, baseline_frontier_json TEXT NOT NULL, updated_at INTEGER NOT NULL)");
+  db.run("CREATE TABLE IF NOT EXISTS canonical_bootstrap_archive_stage (document_id TEXT NOT NULL, epoch INTEGER NOT NULL, archive BLOB NOT NULL, aggregate_sha256 TEXT NOT NULL, PRIMARY KEY (document_id, epoch))");
+  backboneDbHandles.set(dbPath, db);
+  return db;
+}
+
+/** 🗂️ Same `.semio/documents.db` convention as `vcs::FolderSqliteStorage` so a folder-bound studio opened by the browser dev path and a
+ * native (wgpu) reader agree on the same file. `documentId` defaults to the studio's own
+ * single-document convention (mirrors os-core's `SPACE_FOLDER_DOCUMENT_ID`) when the caller doesn't
+ * pass one — app documents (per `OsDocumentRef`) always pass their own id explicitly. */
+const SPACE_FOLDER_DOCUMENT_ID = "studio";
+
+export async function readBackbonePayload(uri: string, documentId: string | null): Promise<Uint8Array | null> {
+  const kind = backboneKindFromUri(uri);
+  if (kind === "file") {
+    const path = uri.slice("file://".length);
+    if (!existsSync(path)) return null;
+    return new Uint8Array(readFileSync(path));
+  }
+  if (kind === "folder") {
+    const folder = uri.slice("folder://".length);
+    const dbPath = join(folder, ".semio", "documents.db");
+    if (!existsSync(dbPath)) return null;
+    const db = await backboneDbHandleFor(dbPath);
+    const canonical = db
+      .query("SELECT owner.state, owner.aggregate_sha256 AS expectedAggregate, stage.aggregate_sha256 AS stagedAggregate, stage.archive FROM canonical_bootstrap_owner owner LEFT JOIN canonical_bootstrap_archive_stage stage ON stage.document_id = owner.document_id AND stage.epoch = owner.epoch WHERE owner.document_id = ?1")
+      .get(documentId ?? SPACE_FOLDER_DOCUMENT_ID) as { state?: string; expectedAggregate?: string; stagedAggregate?: string; archive?: Uint8Array } | null;
+    if (canonical && canonical.state !== "generic") {
+      if (canonical.state !== "published" || !canonical.archive) return null;
+      const bytes = canonical.archive instanceof Uint8Array ? canonical.archive : new Uint8Array(canonical.archive as ArrayBuffer);
+      const archive = decodeDocumentArchiveBytes(bytes);
+      const pack = Uint8Array.from(archive.parent_pack), spr = Uint8Array.from(archive.parent_spr);
+      if (canonical.stagedAggregate !== canonical.expectedAggregate || createHash("sha256").update(pack).update(spr).digest("hex") !== canonical.expectedAggregate) return null;
+      return bytes;
+    }
+    const row = db.query("SELECT archive FROM document_archive WHERE id = ?1").get(documentId ?? SPACE_FOLDER_DOCUMENT_ID) as { archive?: Uint8Array } | null;
+    if (!row?.archive) return null;
+    const bytes = row.archive instanceof Uint8Array ? row.archive : new Uint8Array(row.archive as ArrayBuffer);
+    decodeDocumentArchiveBytes(bytes);
+    return bytes;
+  }
+  return null;
+}
+
+export async function writeBackbonePayload(uri: string, documentId: string | null, schema: string | null, payload: Uint8Array): Promise<void> {
+  const kind = backboneKindFromUri(uri);
+  decodeDocumentArchiveBytes(payload);
+  if (kind === "file") {
+    const path = uri.slice("file://".length);
+    mkdirSync(dirname(path), { recursive: true });
+    writeFileSync(path, payload);
+    return;
+  }
+  if (kind === "folder") {
+    const folder = uri.slice("folder://".length);
+    const dbPath = join(folder, ".semio", "documents.db");
+    mkdirSync(dirname(dbPath), { recursive: true });
+    const db = await backboneDbHandleFor(dbPath);
+    const id = documentId ?? SPACE_FOLDER_DOCUMENT_ID;
+    const write = db.transaction(() => {
+      const canonical = db.query("SELECT state FROM canonical_bootstrap_owner WHERE document_id = ?1").get(id) as { state?: string } | null;
+      if (canonical?.state === "reserved" || canonical?.state === "published") throw canonicalBootstrapMirrorError("conflict");
+      if (canonical?.state === "retired") {
+        db.run("DELETE FROM canonical_bootstrap_archive_stage WHERE document_id = ?1", [id]);
+        db.run("UPDATE canonical_bootstrap_owner SET state = 'generic', updated_at = ?2 WHERE document_id = ?1 AND state = 'retired'", [id, Date.now()]);
+      }
+      db.run("INSERT INTO document_archive (id, schema, archive, updated_at) VALUES (?1, ?2, ?3, ?4) ON CONFLICT(id) DO UPDATE SET schema = excluded.schema, archive = excluded.archive, updated_at = excluded.updated_at", [id, schema ?? "", payload, Date.now()]);
+    });
+    write();
+    return;
+  }
+  throw new Error(`unsupported backbone uri: ${uri}`);
+}
+
+/** 👁️ One debounced `node:fs.watch` of a `folder://` backbone's `.semio` directory, calling `changed` once per burst — the live
+ * source of the `backbone.folder` stream route (one per watched uri while its route instance lives). Mirrors `store_sync`'s
+ * native `notify` watcher (200 ms debounce) so the dev-browser and native paths agree on cadence. */
+const FOLDER_WATCH_DEBOUNCE_MS = 200;
+
+function watchFolderChanges(uri: string, changed: () => void): () => void {
+  const folder = join(uri.slice("folder://".length), ".semio");
+  mkdirSync(folder, { recursive: true });
+  let debounceTimer: ReturnType<typeof setTimeout> | undefined;
+  const handle = watch(folder, { persistent: false }, () => {
+    if (debounceTimer) clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(changed, FOLDER_WATCH_DEBOUNCE_MS);
+  });
+  return () => {
+    if (debounceTimer) clearTimeout(debounceTimer);
+    handle.close();
+  };
+}
+
+//#region 🔀️StreamMuxServer
+/** 🌐️ The part of a dev server's HTTP server the stream channel needs. */
+type DevUpgradeServer = {
+  on(event: "upgrade", listener: (req: { readonly url?: string; readonly headers: Record<string, string | string[] | undefined> }, socket: { destroy(): void }, head: unknown) => void): unknown;
+  once(event: "close", listener: () => void): unknown;
+};
+
+/** 🔌️ The runtime's own WebSocket (Bun ships `ws` built in) as far as the stream channel uses it. */
+type RuntimeWebSocket = {
+  readonly bufferedAmount?: number;
+  send(frame: string): void;
+  close(code: number, reason: string): void;
+  on(event: "message", listener: (data: unknown, isBinary: boolean) => void): unknown;
+  on(event: "close" | "error", listener: () => void): unknown;
+};
+type RuntimeWebSocketServer = { handleUpgrade(req: unknown, socket: unknown, head: unknown, accepted: (socket: RuntimeWebSocket) => void): void };
+type RuntimeWebSocketModule = { readonly WebSocketServer: new (options: { readonly noServer: true; readonly maxPayload: number; readonly handleProtocols: (protocols: Set<string>) => string | false }) => RuntimeWebSocketServer };
+
+const RUNTIME_WEBSOCKET_MODULE = "ws";
+const devStreamMuxServers = new WeakMap<object, StreamMuxServerV1>();
+
+/** 🔀️ The ONE stream channel (`semio.io.stream-mux/v1` at `STREAM_MUX_PATH`) of a dev server, created on first use per
+ * HTTP server: it accepts same-origin WebSocket upgrades (subprotocol `semio.stream-mux.v1`) through the runtime's own `ws` —
+ * Bun's `node:http` upgrade socket does not transmit raw writes (measured, ticket 26/09/23 F2) — and every dev plugin that
+ * serves a long-lived stream registers its route here instead of holding an HTTP/1.1 response open. Without an HTTP server
+ * (a middleware-only harness) it answers a private server nothing can connect to. */
+export function devStreamMuxServer(httpServer: DevUpgradeServer | null | undefined): StreamMuxServerV1 {
+  if (httpServer === null || httpServer === undefined) return new StreamMuxServerV1();
+  const known = devStreamMuxServers.get(httpServer);
+  if (known !== undefined) return known;
+  const mux = new StreamMuxServerV1();
+  devStreamMuxServers.set(httpServer, mux);
+  const acceptor = (import(RUNTIME_WEBSOCKET_MODULE) as Promise<RuntimeWebSocketModule>).then(
+    ({ WebSocketServer }) =>
+      new WebSocketServer({
+        noServer: true,
+        maxPayload: STREAM_MUX_BOUNDS_V1.maxFrameBytes,
+        handleProtocols: (protocols) => (protocols.has(STREAM_MUX_BOUNDS_V1.subprotocol) ? STREAM_MUX_BOUNDS_V1.subprotocol : false),
+      }),
+    (error: unknown) => {
+      console.error("[stream-mux] the runtime WebSocket server is unavailable", error);
+      return null;
+    },
+  );
+  httpServer.on("upgrade", (req, socket, head) => {
+    let path: string;
+    try {
+      path = new URL(req.url ?? "", "http://127.0.0.1").pathname;
+    } catch {
+      return;
+    }
+    if (path !== STREAM_MUX_PATH) return;
+    const origin = req.headers.origin;
+    const host = req.headers.host;
+    if (Array.isArray(origin) || Array.isArray(host) || (origin !== undefined && origin !== `http://${host}` && origin !== `https://${host}`)) {
+      socket.destroy();
+      return;
+    }
+    void acceptor.then((acceptorServer) => {
+      if (acceptorServer === null) return socket.destroy();
+      acceptorServer.handleUpgrade(req, socket, head, (webSocket) => {
+        const connection = mux.connect({ send: (frame) => webSocket.send(frame), bufferedAmount: () => webSocket.bufferedAmount ?? 0, close: (code, reason) => webSocket.close(code, reason) });
+        webSocket.on("message", (data, isBinary) => {
+          if (isBinary) webSocket.close(1003, "stream-mux: text frames only");
+          else connection.receive(String(data));
+        });
+        webSocket.on("close", () => connection.closed());
+        webSocket.on("error", () => connection.closed());
+      });
+    });
+  });
+  httpServer.once("close", () => mux.close());
+  return mux;
+}
+//#endregion 🔀️StreamMuxServer
+
+type BackboneServerRequest = { method?: string; url?: string; headers?: Record<string, string | string[] | undefined>; on: (event: string, handler: (chunk?: unknown) => void) => void; off: (event: string, handler: (chunk?: unknown) => void) => void };
+type BackboneServerResponse = { statusCode: number; setHeader: (name: string, value: string) => void; write: (chunk: string) => void; end: (body?: string | Uint8Array) => void };
+
+function canonicalBootstrapMirrorControlFromHeaders(headers: BackboneServerRequest["headers"]): CanonicalBootstrapFolderMirrorControlV1 {
+  const epochSource = headers?.["x-semio-canonical-bootstrap-epoch"];
+  const authorization = headers?.authorization;
+  if (Array.isArray(epochSource) || Array.isArray(authorization) || !/^[1-9][0-9]*$/u.test(epochSource ?? "") || !authorization?.startsWith("SemioFolderBootstrap ")) throw canonicalBootstrapMirrorError("invalid");
+  const epoch = Number(epochSource);
+  const control = { epoch, capability: authorization.slice("SemioFolderBootstrap ".length) };
+  validateCanonicalBootstrapControl(control);
+  return control;
+}
+
+function canonicalBootstrapMirrorContentType(headers: BackboneServerRequest["headers"]): string | null {
+  const source = headers?.["content-type"];
+  return typeof source === "string" ? source.trim().toLowerCase() : null;
+}
+
+function canonicalBootstrapMirrorStatus(error: unknown): number {
+  const code = typeof error === "object" && error !== null && "code" in error ? (error as { code?: unknown }).code : undefined;
+  return code === "conflict" ? 409 : code === "too-large" ? 413 : 400;
+}
+
+function collectBackboneRequestBody(req: BackboneServerRequest, limit: number, complete: (body: Uint8Array | null) => void): void {
+  const chunks: Buffer[] = [];
+  let length = 0;
+  let exceeded = false;
+  req.on("data", (chunk) => {
+    if (exceeded) return;
+    const bytes = Buffer.isBuffer(chunk) ? chunk : Buffer.from(String(chunk));
+    length += bytes.byteLength;
+    if (length > limit) {
+      exceeded = true;
+      chunks.length = 0;
+      return;
+    }
+    chunks.push(bytes);
+  });
+  req.on("end", () => complete(exceeded ? null : new Uint8Array(Buffer.concat(chunks))));
+}
+
+/** 🧹️ Eliminates in-source test branches before production asset URL collection. */
+export function semioProductionTestBoundaryVitePlugin(): { name: string; enforce: "pre"; apply: "build"; transform(source: string, id: string): Promise<{ code: string; map: string } | null> } {
+  return {
+    name: "semio-production-test-boundary",
+    enforce: "pre",
+    apply: "build",
+    async transform(source, id) {
+      if (!source.includes("import.meta.vitest") || !/\.[cm]?[jt]sx?(?:[?#].*)?$/u.test(id)) return null;
+      const { transformWithEsbuild } = await import("vite");
+      const result = await transformWithEsbuild(source, id, { define: { "import.meta.vitest": "undefined" }, minifySyntax: true, target: "esnext", charset: "utf8", jsx: "preserve", sourcemap: true });
+      return { code: result.code, map: JSON.stringify(result.map) };
+    },
+  };
+}
+
+/** 💾️ Vite middleware for browser file/folder backbone IO: `GET|PUT ${BACKBONE_ENDPOINT_PATH}?uri=&documentId=&schema=`
+ * for read/write — a document nothing has written yet reads as `204 No Content`, the ordinary first-boot answer, never a
+ * `404` in the console of a fresh data root (ticket 26/09/23 U5) — plus the `backbone.folder` stream route (key = the `folder://`
+ * uri) on the dev stream channel for external-edit notices; `🏪️store/👷️worker/🟦️.ts`'s folder transport falls back to its slow
+ * sanity poll while no stream is open. While serving it announces the channel to the page (`STREAM_MUX_ANNOUNCEMENT`), so a
+ * page dials it exactly where it exists. */
+export function semioBackboneVitePlugin() {
+  return {
+    name: "semio-backbone",
+    config(_config: unknown, env: { readonly command: string }) {
+      return env.command === "serve" ? { define: { [`import.meta.env.${STREAM_MUX_ANNOUNCEMENT}`]: JSON.stringify(STREAM_MUX_PATH) } } : undefined;
+    },
+    configureServer(server: { middlewares: { use: (handler: (req: BackboneServerRequest, res: BackboneServerResponse, next: () => void) => void) => void }; httpServer?: DevUpgradeServer | null }) {
+      devStreamMuxServer(server.httpServer).route(DEV_STREAM_ROUTES.backboneFolder, {
+        admit: (uri) => backboneKindFromUri(uri) === "folder",
+        coalesce: () => "changed",
+        source: (uri, emit) => watchFolderChanges(uri, () => emit("changed")),
+      });
+      server.middlewares.use((req, res, next) => {
+        if (!req.url?.startsWith(BACKBONE_ENDPOINT_PATH)) return next();
+        const requestUrl = new URL(req.url, "http://127.0.0.1");
+        const uri = requestUrl.searchParams.get("uri");
+        if (!uri) {
+          res.statusCode = 400;
+          res.end("missing uri");
+          return;
+        }
+        const documentId = requestUrl.searchParams.get("documentId");
+        const schema = requestUrl.searchParams.get("schema");
+        if (requestUrl.pathname.startsWith(`${CANONICAL_BOOTSTRAP_FOLDER_MIRROR_PATH}/`)) {
+          const action = requestUrl.pathname.slice(CANONICAL_BOOTSTRAP_FOLDER_MIRROR_PATH.length + 1);
+          if (documentId === null || backboneKindFromUri(uri) !== "folder" || requestUrl.searchParams.size !== 2 || !["reserve", "stage", "publish", "retire"].includes(action)) {
+            res.statusCode = 400;
+            res.end("invalid canonical bootstrap folder mirror request");
+            return;
+          }
+          if ((action === "stage" && req.method !== "PUT") || (action !== "stage" && req.method !== "POST")) {
+            res.statusCode = 405;
+            res.end("method not allowed");
+            return;
+          }
+          const expectedContentType = action === "reserve" ? "application/json" : action === "stage" ? "application/octet-stream" : null;
+          if (canonicalBootstrapMirrorContentType(req.headers) !== expectedContentType) {
+            res.statusCode = 415;
+            res.end("unsupported media type");
+            return;
+          }
+          const limit = action === "reserve" ? 8_192 : action === "stage" ? CANONICAL_BOOTSTRAP_FOLDER_MIRROR_MAX_BODY_BYTES : 0;
+          collectBackboneRequestBody(req, limit, (body) => {
+            void (async () => {
+              if (body === null) throw canonicalBootstrapMirrorError("too-large");
+              if (action === "reserve") {
+                const source = new TextDecoder("utf-8", { fatal: true }).decode(body);
+                const parsed = JSON.parse(source) as CanonicalBootstrapFolderMirrorReserveV1;
+                if (JSON.stringify(parsed) !== source) throw canonicalBootstrapMirrorError("invalid");
+                const owner = await reserveCanonicalBootstrapFolderMirror(uri, documentId, parsed);
+                res.statusCode = 201;
+                res.setHeader("content-type", "application/json");
+                res.setHeader("cache-control", "no-store");
+                res.end(`${JSON.stringify(owner)}\n`);
+                return;
+              }
+              const control = canonicalBootstrapMirrorControlFromHeaders(req.headers);
+              if (action === "stage") await stageCanonicalBootstrapFolderMirror(uri, documentId, control, body);
+              else if (action === "publish") await publishCanonicalBootstrapFolderMirror(uri, documentId, control);
+              else await retireCanonicalBootstrapFolderMirror(uri, documentId, control);
+              res.statusCode = 204;
+              res.end();
+            })().catch((error) => {
+              res.statusCode = canonicalBootstrapMirrorStatus(error);
+              res.setHeader("content-type", "application/json");
+              res.end(`${JSON.stringify({ error: error instanceof Error ? error.message : "canonical bootstrap folder mirror invalid" })}\n`);
+            });
+          });
+          return;
+        }
+        if (req.method === "GET") {
+          readBackbonePayload(uri, documentId)
+            .then((payload) => {
+              if (payload == null) {
+                res.statusCode = 204;
+                res.setHeader("cache-control", "no-store");
+                res.end();
+                return;
+              }
+              res.statusCode = 200;
+              res.setHeader("content-type", "application/octet-stream");
+              res.end(Buffer.from(payload));
+            })
+            .catch((error) => {
+              res.statusCode = 500;
+              res.end(String(error));
+            });
+          return;
+        }
+        if (req.method === "PUT") {
+          collectBackboneRequestBody(req, CANONICAL_BOOTSTRAP_FOLDER_MIRROR_MAX_BODY_BYTES, (body) => {
+            if (body === null) {
+              res.statusCode = 413;
+              res.end("payload too large");
+              return;
+            }
+            writeBackbonePayload(uri, documentId, schema, body)
+              .then(() => {
+                res.statusCode = 200;
+                res.setHeader("content-type", "application/octet-stream");
+                res.end(new Uint8Array());
+              })
+              .catch((error) => {
+                res.statusCode = 500;
+                res.end(String(error));
+              });
+          });
+          return;
+        }
+        res.statusCode = 405;
+        res.end("method not allowed");
+      });
+    },
+  };
+}
+//#endregion BackboneVitePlugin
+
+//#region 🔌️PluginActivationVitePlugin
+/** 🧩️ One watched component; `installDirectory` overrides `<installRoot>/<directoryName>` when a host serves extensions from several activation lanes. */
+export type ActivationComponentSpec = Readonly<{ pluginId: string; directoryName: string; role: "plugin" | "extension"; sourceRoot: string; installDirectory?: string; cratePath?: string }>;
+
+/** 🔎️ Re-runs the staged-module freshness rule against the receipt the dev server just observed and
+ * resolves to one `[stale]` line per component whose served bytes are behind — the live half of the serve-start
+ * pass in `📜️script.ts`. A restage that lands while the server runs therefore retires its own warning
+ * without a restart, and one that never lands keeps saying so. Asynchronous and bounded (the server keeps answering
+ * while it walks); `signal` cancels a pass a newer receipt superseded. */
+export async function reportActivationFreshness(receipt: ActivationReceipt, options: { readonly moduleRoot: string; readonly installRoot: string; readonly freshnessRoot?: string; readonly components: readonly ActivationComponentSpec[]; readonly signal?: AbortSignal }): Promise<readonly string[]> {
+  const activatedRows = new Map(receipt.plugins.map((row) => [row.pluginId, row]));
+  const facts = await mapBoundedV1(options.components, SOURCE_FRESHNESS_COMPONENT_CONCURRENCY, async (component): Promise<StagedModuleFacts> => {
+    const moduleDirectory = join(options.moduleRoot, component.directoryName);
+    const receiptRow = activatedRows.get(component.pluginId);
+    const installedMeta = join(component.installDirectory ?? join(options.installRoot, component.directoryName), EXTENSION_INSTALL_META);
+    let installedPackageHash: string | undefined;
+    if (existsSync(installedMeta)) {
+      try { installedPackageHash = JSON.parse(readFileSync(installedMeta, "utf8")).packageHash as string; } catch { installedPackageHash = undefined; }
+    }
+    const hashes = await resolveBootSourceContentHashes({
+      sourceRoot: component.sourceRoot,
+      moduleDirectory: options.freshnessRoot ? join(options.freshnessRoot, activationSourceFreshnessKey(component.pluginId)) : moduleDirectory,
+      receiptSourceContentSha256: (receiptRow as { sourceContentSha256?: string } | undefined)?.sourceContentSha256,
+      signal: options.signal,
+    });
+    return {
+      pluginId: component.pluginId,
+      role: component.role,
+      activationTracked: true,
+      stagedAtMs: stagedModuleMtime(moduleDirectory),
+      newestSourcePath: hashes.newestSourcePath ? relative(REPO_ROOT, hashes.newestSourcePath).split(/[\\/]/).join("/") : undefined,
+      sourceContentSha256: hashes.sourceContentSha256,
+      stagedSourceContentSha256: hashes.stagedSourceContentSha256,
+      receiptArtifactSha256: receiptRow?.artifactSha256,
+      installedPackageHash,
+    }
+  }, options.signal);
+  return stagedModuleReportLines(facts.map(stagedModuleVerdict), `bun repo run @semio-tech/framework-os-dev:activate-${receipt.variant}-react-${receipt.profile}`);
+}
+
+
+/** 📡️ Announces explicit Nx activation completion and releases every server-owned subscription. */
+export function semioActivationVitePlugin(options: { readonly receiptDirectory: string; readonly moduleRoot: string; readonly installRoot: string; readonly freshnessRoot?: string; readonly components: readonly ActivationComponentSpec[] }) {
+  let dispose = (): void => {};
+  let staleness: readonly string[] = [];
+  return {
+    name: "semio-activation",
+    enforce: "pre" as const,
+    /** 📣️ The staged-module verdict belongs in the DEVELOPER's console, not only in the server log
+     * they are not reading: a guest module staged behind its own source serves a wire contract the host
+     * TypeScript in the same page no longer speaks, and the symptom (`actor-ui-patch.pairing`, a window
+     * booting a fallback graph) never names its cause. */
+    transformIndexHtml: {
+      order: "post" as const,
+      handler() {
+        if (staleness.length === 0) return [];
+        const message = `semio dev · ${staleness.length} staged plugin module(s) are behind their source — the host in this page may speak a newer wire contract than the guest it is talking to:\n${staleness.join("\n")}`;
+        return [{ tag: "script", attrs: { type: "module" }, children: `console.warn(${JSON.stringify(message)});` }];
+      },
+    },
+    configureServer(server: {
+      middlewares: { use: (handler: (req: BackboneServerRequest, res: BackboneServerResponse, next: () => void) => void) => void };
+      httpServer?: (DevUpgradeServer & { listening: boolean; once: (event: "close" | "listening", listener: () => void) => unknown }) | null;
+      ws?: { send: (message: { type: "full-reload" }) => void };
+    }) {
+      dispose();
+      const mux = devStreamMuxServer(server.httpServer);
+      let previous: ActivationReceipt | undefined;
+      const send = (event: PluginSourceEvent): void => mux.publish(DEV_STREAM_ROUTES.pluginModules, "", event as unknown as StreamMuxJsonV1);
+      let freshness: AbortController | null = null;
+      const observer = observeActivationReceipts(options.receiptDirectory, (receipt) => {
+        const apply = (): void => {
+          freshness?.abort();
+          const pass = (freshness = new AbortController());
+          void reportActivationFreshness(receipt, { ...options, freshnessRoot: join(dirname(options.receiptDirectory), "🔖️"), signal: pass.signal }).then((lines) => {
+            if (pass.signal.aborted) return;
+            staleness = lines;
+            for (const line of lines) console.warn(line);
+          }, (error: unknown) => {
+            if (!pass.signal.aborted) console.warn(`[stale] freshness check unavailable: ${String(error)}`);
+          });
+          if (previous) {
+            if (previous.plugins.map((row) => row.pluginId).join() !== receipt.plugins.map((row) => row.pluginId).join()) server.ws?.send({ type: "full-reload" });
+            const prior = new Map(previous.plugins.map((row) => [row.pluginId, row.artifactSha256]));
+            for (const row of receipt.plugins) if (prior.get(row.pluginId) !== row.artifactSha256) send({ kind: "built", pluginId: row.pluginId, rebuiltAt: row.rebuiltAt });
+          }
+          previous = receipt;
+        };
+        // Serve-start owns the boot freshness pass. Skip the duplicate sync walk on first listen.
+        if (!server.httpServer?.listening) {
+          previous = receipt;
+          return;
+        }
+        if (previous === undefined) {
+          previous = receipt;
+          return;
+        }
+        apply();
+      }, (error) => console.error("Activation receipt failed:", error));
+      const unrouteWatch = mux.route(DEV_STREAM_ROUTES.pluginModules, {
+        admit: (key) => key === "",
+        snapshot: () => ({ kind: "snapshot", plugins: observer.snapshot().plugins.map(({ pluginId, rebuiltAt }) => ({ pluginId, rebuiltAt })) }),
+        coalesce: (event) => String((event as { readonly pluginId?: StreamMuxJsonV1 }).pluginId ?? "snapshot"),
+      });
+      dispose = (): void => {
+        freshness?.abort();
+        observer.close();
+        unrouteWatch();
+      };
+      server.httpServer?.once("close", dispose);
+
+      const jobs = new Map<string, { readonly controller: AbortController; readonly promise: Promise<void>; readonly listeners: Set<(line: string) => void>; owners: number }>();
+      const profile: "prototype" | "release" = /(?:^|\/)release(?:\/|$)/.test(options.moduleRoot.replaceAll("\\", "/")) ? "release" : "prototype";
+
+      const publishOne = async (pluginId: string): Promise<void> => {
+        const component = options.components.find((row) => row.pluginId === pluginId);
+        if (!component) throw new Error(`Unknown plugin ${pluginId}`);
+        const moduleDirectory = join(options.moduleRoot, component.directoryName);
+        if (!existsSync(join(moduleDirectory, MODULE_BRIDGE_FILE))) throw new Error(`Module still missing after materialize: ${pluginId}`);
+        const sourceContentSha256 = await writeStagedSourceFreshness(activationSourceFreshnessDirectory(dirname(options.receiptDirectory), pluginId), component.sourceRoot);
+        const previous = existsSync(join(options.receiptDirectory, ACTIVATION_RECEIPT_FILE)) ? readActivationReceipt(options.receiptDirectory) : undefined;
+        const artifactSha256 = createHash("sha256").update(readFileSync(join(moduleDirectory, MODULE_BRIDGE_FILE))).digest("hex");
+        const completed = [
+          ...(previous?.plugins.filter((row) => row.pluginId !== pluginId) ?? []).map((row) => ({ pluginId: row.pluginId, artifactSha256: row.artifactSha256, sourceContentSha256: (row as { sourceContentSha256?: string }).sourceContentSha256 })),
+          { pluginId, artifactSha256, sourceContentSha256 },
+        ];
+        const variant = previous?.variant ?? process.env.SEMIO_PLUGIN ?? "s";
+        const receiptProfile = previous?.profile ?? profile;
+        const receipt = nextActivationReceipt(variant, receiptProfile, completed, previous);
+        publishActivationReceipt(options.receiptDirectory, receipt);
+      };
+
+      const leaseMaterialization = (pluginId: string, line?: (text: string) => void): { readonly done: Promise<void>; release(): void } => {
+        let job = jobs.get(pluginId);
+        if (job === undefined) {
+          const component = options.components.find((row) => row.pluginId === pluginId);
+          if (!component) return { done: Promise.reject(new Error(`Unknown plugin ${pluginId}`)), release: () => undefined };
+          const controller = new AbortController();
+          const listeners = new Set<(text: string) => void>();
+          const promise = (async () => {
+            console.log(`[lazy-activate] build ${pluginId} through the build driver`);
+            const { buildComponentClosureV1 } = await import("../../🔌️plugin/🏗️build/🧩️driver-stages/🟦️.ts");
+            await receiveScriptProcessInvocation(process.env,async original=>{
+              const {repositoryCargoNetworkV1}=await import("../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🟦️.ts");
+              const parent=scriptCompilerAdmissionControlV1(original,"vite:lazy-activate:"+pluginId,0,controller.signal);
+              const control={...parent,publish:async(progress:Parameters<typeof parent.publish>[0])=>{await parent.publish(progress);for(const listener of listeners)listener(`Waiting for compiler capacity (${progress.elapsedMs}ms)`);}};
+              await buildComponentClosureV1(REPO_ROOT,new Set([component.pluginId]),{facet:"browser",invocation:original,control,network:repositoryCargoNetworkV1(original,REPO_ROOT),log:text=>{const trimmed=text.trim();if(trimmed)for(const listener of listeners)listener(trimmed.slice(0,STREAM_MUX_BOUNDS_V1.maxDetailLength));}});
+              checkResourceLeaseControl(control);
+              await publishOne(pluginId);
+              checkResourceLeaseControl(control);
+              const rebuiltAt=readActivationReceipt(options.receiptDirectory).plugins.find((row)=>row.pluginId===pluginId)?.rebuiltAt??Date.now();
+              send({kind:"built",pluginId,rebuiltAt});
+            }).catch((error:unknown)=>{throw controller.signal.aborted?new Error(`cancelled ${pluginId}`):error;});
+          })().finally(() => { jobs.delete(pluginId); });
+          job = { controller, promise, listeners, owners: 0 };
+          jobs.set(pluginId, job);
+        }
+        const held = job;
+        held.owners += 1;
+        if (line !== undefined) held.listeners.add(line);
+        let released = false;
+        return {
+          done: held.promise,
+          release: () => {
+            if (released) return;
+            released = true;
+            held.owners -= 1;
+            if (line !== undefined) held.listeners.delete(line);
+            if (held.owners === 0 && jobs.get(pluginId) === held) held.controller.abort(new Error(`released ${pluginId}`));
+          },
+        };
+      };
+
+      const unrouteActivation = mux.route(DEV_STREAM_ROUTES.pluginActivation, {
+        admit: (pluginId) => options.components.some((row) => row.pluginId === pluginId),
+        run: (pluginId: string, job: StreamMuxJobV1) =>
+          new Promise<void>((resolvePromise, reject) => {
+            const component = options.components.find((row) => row.pluginId === pluginId)!;
+            if (existsSync(join(options.moduleRoot, component.directoryName, MODULE_BRIDGE_FILE))) return resolvePromise();
+            let lines = 0;
+            const lease = leaseMaterialization(pluginId, (text) => job.progress((lines += 1), null, text));
+            job.signal.addEventListener("abort", () => {
+              lease.release();
+              reject(job.signal.reason);
+            }, { once: true });
+            lease.done.then(
+              () => {
+                lease.release();
+                resolvePromise();
+              },
+              (error: unknown) => {
+                lease.release();
+                reject(error);
+              },
+            );
+          }),
+      });
+
+      const prefetch = (): void => {
+        const pending = options.components.filter((row) => !existsSync(join(options.moduleRoot, row.directoryName, MODULE_BRIDGE_FILE)));
+        void (async () => {
+          for (const row of [...pending].sort((a, b) => (a.pluginId < b.pluginId ? -1 : 1))) {
+            if (existsSync(join(options.moduleRoot, row.directoryName, MODULE_BRIDGE_FILE))) continue;
+            const lease = leaseMaterialization(row.pluginId);
+            try { await lease.done; }
+            catch (error) { console.warn(`[lazy-activate] prefetch ${row.pluginId}: ${String(error)}`); }
+            finally { lease.release(); }
+          }
+        })();
+      };
+      server.httpServer?.once("listening", prefetch);
+      const priorDispose = dispose;
+      dispose = (): void => {
+        unrouteActivation();
+        for (const job of jobs.values()) job.controller.abort(new Error("dev server closing"));
+        jobs.clear();
+        priorDispose();
+      };
+    },
+    closeBundle(): void { dispose(); },
+  };
+}
+//#endregion 🔌️PluginActivationVitePlugin
+
+//#region BlobVitePlugin
+let blobDatabaseSingleton: InstanceType<typeof import("bun:sqlite").Database> | undefined;
+
+/** 🗄️ Lazily opens the dev-session-wide content-addressed blob store at `<repoRoot>/.🧬semio/🔗space/blobs.db` —
+ * unlike backbone documents, blobs aren't scoped to a per-uri folder (there's no folder in the
+ * `write-blob`/`read-blob` WIT signature), so this is one shared table for the whole dev server. */
+async function blobDatabase(): Promise<InstanceType<typeof import("bun:sqlite").Database>> {
+  if (!blobDatabaseSingleton) {
+    const Database = await backboneDatabaseCtorLazy();
+    const dbPath = join(REPO_ROOT, ".🧬semio", "🔗space", "blobs.db");
+    mkdirSync(dirname(dbPath), { recursive: true });
+    blobDatabaseSingleton = new Database(dbPath);
+    blobDatabaseSingleton.run("CREATE TABLE IF NOT EXISTS blob (hash TEXT PRIMARY KEY, media_type TEXT NOT NULL, size INTEGER NOT NULL, bytes BLOB NOT NULL)");
+  }
+  return blobDatabaseSingleton;
+}
+
+type BlobServerRequest = { method?: string; url?: string; on: (event: string, handler: (chunk?: unknown) => void) => void };
+type BlobServerResponse = { statusCode: number; setHeader: (name: string, value: string) => void; end: (body?: string | Buffer) => void };
+
+/** 📦️ Vite middleware for the dev-only content-addressed blob store: `PUT ${BLOB_ENDPOINT_PATH}?mediaType=`
+ * (raw bytes body, BLAKE3-hashed above, returns `{"hash":...}`, idempotent via `INSERT OR IGNORE`) and
+ * `GET ${BLOB_ENDPOINT_PATH}/:hash` (raw bytes response, 404 if absent). The browser host-shim's
+ * `writeBlob`/`readBlob` (see `hostShimSource`) and `🟦️backbone-🟦️worker.ts`'s IndexedDB cache both talk to
+ * this. Mirrors `vcs::FolderSqliteStorage`'s `blobs(hash, media_type, size, bytes)` table/shape. */
+export function semioBlobVitePlugin() {
+  return {
+    name: "semio-blob",
+    configureServer(server: { middlewares: { use: (handler: (req: BlobServerRequest, res: BlobServerResponse, next: () => void) => void) => void } }) {
+      server.middlewares.use((req, res, next) => {
+        if (!req.url?.startsWith(BLOB_ENDPOINT_PATH)) return next();
+        const requestUrl = new URL(req.url, "http://127.0.0.1");
+        if (req.method === "PUT") {
+          const chunks: Buffer[] = [];
+          req.on("data", (chunk) => {
+            chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk as ArrayBuffer));
+          });
+          req.on("end", () => {
+            void (async () => {
+              const bytes = Buffer.concat(chunks);
+              const mediaType = requestUrl.searchParams.get("mediaType") ?? "application/octet-stream";
+              const hash = blake3Hex(new Uint8Array(bytes.buffer, bytes.byteOffset, bytes.byteLength));
+              const db = await blobDatabase();
+              db.run("INSERT OR IGNORE INTO blob (hash, media_type, size, bytes) VALUES (?1, ?2, ?3, ?4)", [hash, mediaType, bytes.length, bytes]);
+              res.statusCode = 200;
+              res.setHeader("content-type", "application/json");
+              res.end(JSON.stringify({ hash }));
+            })().catch((error) => {
+              res.statusCode = 500;
+              res.end(String(error));
+            });
+          });
+          return;
+        }
+        if (req.method === "GET") {
+          const hash = requestUrl.pathname.slice(`${BLOB_ENDPOINT_PATH}/`.length);
+          if (!hash) {
+            res.statusCode = 400;
+            res.end("missing hash");
+            return;
+          }
+          void (async () => {
+            const db = await blobDatabase();
+            const row = db.query("SELECT media_type, bytes FROM blob WHERE hash = ?1").get(hash) as { media_type?: string; bytes?: Uint8Array } | null;
+            if (!row) {
+              res.statusCode = 404;
+              res.end("");
+              return;
+            }
+            res.statusCode = 200;
+            res.setHeader("content-type", row.media_type ?? "application/octet-stream");
+            res.end(Buffer.from(row.bytes ?? new Uint8Array()));
+          })().catch((error) => {
+            res.statusCode = 500;
+            res.end(String(error));
+          });
+          return;
+        }
+        res.statusCode = 405;
+        res.end("method not allowed");
+      });
+    },
+  };
+}
+//#endregion BlobVitePlugin
+
+//#region 🔖️SourceFreshnessVitePlugins
+/** 🚫️ Repository directory names no dev server may ever watch: version control metadata, the Nx
+ * workspace store, the package store, the shared build/cache root, compiled output and generated
+ * sources. Tools rewrite millions of files inside them while a dev session is open, and every such write
+ * would otherwise be delivered into the dev server's event loop.
+ *
+ * `🤖️generated` and `.vscode` stay listed for the reason Vite's own `server.watch.ignored` once carried:
+ * those files are config dependencies, so reacting to a registry or editor-settings rewrite restarts the
+ * server in a loop.
+ * @see https://github.com/paulmillr/chokidar/blob/3.6.0/lib/fsevents-handler.js */
+export const UNWATCHED_REPOSITORY_SEGMENTS: readonly string[] = [".git", ".nx", ".vscode", ".🧬semio", "node_modules", "dist", "target", "🤖️generated", "🗑️generated"];
+
+/** 👁️ The repository's top-level source directories — every place a dev server's module graph can
+ * legitimately import from, with the unwatchable stores above removed. Read from disk rather than
+ * hardcoded so a new top-level product directory is watched without touching this module. */
+export function repositorySourceWatchRoots(repoRoot: string): readonly string[] {
+  const excluded = new Set(UNWATCHED_REPOSITORY_SEGMENTS);
+  return readdirSync(repoRoot, { withFileTypes: true }).filter((entry) => entry.isDirectory() && !excluded.has(entry.name)).map((entry) => join(repoRoot, entry.name)).sort();
+}
+
+/** 🧹️ Matches any relative path that crosses an unwatched store, on both `/` and `\` separators.
+ * One precompiled test per filesystem event is the whole per-event budget this watcher may spend. */
+export function unwatchedRepositoryPathMatcher(): RegExp {
+  const alternatives = UNWATCHED_REPOSITORY_SEGMENTS.map((segment) => segment.replaceAll(".", "\\.")).join("|");
+  return new RegExp(`(?:^|[\\\\/])(?:${alternatives})(?:[\\\\/]|$)`, "u");
+}
+
+/** 🛰️ Drives Vite's file-change pipeline from `node:fs` recursive watches over the repository's
+ * source roots, so `⚙️vite.config.ts` can hand Vite `server.watch: null` and run no chokidar watcher of
+ * its own.
+ *
+ * Vite watches its `root` plus — through `ensureWatchedFile` — every module-graph file outside it, which
+ * in this repository is roughly a thousand individual paths spread across several top-level directories.
+ * On macOS chokidar answers that by consolidating sibling FSEvents streams upward until ONE stream covers
+ * the whole repository, then runs every watched path's prefix filter against every event that stream
+ * delivers. A concurrent `cargo` build writing into the shared cache therefore costs the dev server
+ * `events × watched paths` string comparisons — measured at 6 291 events per 2 s against 1 316 watched
+ * paths, which blocks the event loop for ~2 s at a time, allocates ~600 MB per burst and, once resident
+ * memory reaches the runtime's ceiling, wedges the server permanently. `server.watch.ignored` cannot undo
+ * this: chokidar consults it only after those prefix filters have already run.
+ *
+ * Watching the source roots directly keeps the kernel from ever reporting cache, package-store or
+ * generated-output writes, and reduces the per-event cost to one regular-expression test. Events are
+ * replayed on Vite's own (no-op) watcher emitter, so module invalidation, HMR boundary computation and
+ * config-dependency restarts behave exactly as they did with chokidar.
+ *
+ * 🛰️ macOS reports every write to an existing file — in place and atomic (temp + rename) alike — as `eventType: "rename"`,
+ * while Vite invalidates a transformed module only from its `change` handler (`moduleGraph.onFileChange`). A file the module
+ * graph already holds (tracked by the freshness registry) is therefore replayed as `change` ONLY: Vite's `add` handler runs
+ * `handleHMRUpdate("create")`, which collects the file's modules too, so `add` + `change` sent every edit to the page as TWO
+ * hot updates (measured, ticket 26/09/23 F2). A file the graph does not hold is replayed as `add` + `change` (a new inode
+ * appeared; nothing imports it yet, so the `change` finds no module). Emitting only `add` served the pre-edit transform for
+ * the life of the server, and `SEMIO_VITE_HMR=0` (`hmr: false`) removes the HMR pass that would otherwise have hidden it
+ * (`📓️2026-09-13-wave-B53-nakagin-export-full-run.md` §4.2). The watched roots are the repository's REAL paths: Vite keys
+ * its module graph by resolved (symlink-free) ids, so a repository reached through a symlink (`/tmp` → `/private/tmp`, a
+ * devcontainer mount) otherwise named files no module matched and no edit ever reached the page (measured, same ticket). */
+const REACT_REFRESH_RUNTIME = "/@react-refresh";
+
+/** ⚛️ Preamble copied from `@vitejs/plugin-react` — semio-host-html replaces the whole document in
+ * `transformIndexHtml` `order: "pre"`, so the react plugin's own preamble injection must be reinforced in
+ * `order: "post"` or `@react-three/fiber` (and every other JSX dep) throws "can't detect preamble". */
+function semioReactRefreshPreambleScript(base: string): string {
+  const root = base.endsWith("/") ? base.slice(0, -1) : base;
+  return `import { injectIntoGlobalHook } from "${root}${REACT_REFRESH_RUNTIME}";
+injectIntoGlobalHook(window);
+window.$RefreshReg$ = () => {};
+window.$RefreshSig$ = () => (type) => type;`;
+}
+
+/** ⚛️ Aligns Vite 7 / Rolldown OXC JSX refresh with `server.hmr` — `SEMIO_VITE_HMR=0` must not emit
+ * `$RefreshReg$` wrappers without the HTML preamble, and HMR-on serves must always ship that preamble even
+ * after {@link semioHostHtmlVitePlugin} rebuilds `index.html`. */
+export function semioPlaygroundReactRefreshCoherenceVitePlugin() {
+  return {
+    name: "semio-playground-react-refresh-coherence",
+    enforce: "post" as const,
+    config(userConfig: { readonly server?: { readonly hmr?: unknown } }, { command }: { readonly command: string }) {
+      if (command !== "serve" || userConfig.server?.hmr !== false) return;
+      return {
+        esbuild: { jsxDev: false },
+        oxc: { jsx: { refresh: false } },
+        optimizeDeps: { esbuildOptions: { jsxDev: false } },
+      };
+    },
+    transformIndexHtml: {
+      order: "post" as const,
+      handler(html: string, ctx: { readonly server?: { readonly config: { readonly base?: string; readonly server: { readonly hmr?: unknown } } } }) {
+        if (ctx.server?.config.server.hmr === false) return;
+        if (html.includes("injectIntoGlobalHook")) return;
+        const base = ctx.server?.config.base ?? "/";
+        return [{ tag: "script", attrs: { type: "module" }, children: semioReactRefreshPreambleScript(base) }];
+      },
+    },
+  };
+}
+
+/** 🧾️ The `{mtimeMs, size}` pair a transformed module's file carried when the dev server last read
+ * it. Two facts rather than one: a same-second rewrite of a different length moves `size` while `mtimeMs`
+ * can still round to the same millisecond on some filesystems. */
+export type SourceStamp = { readonly mtimeMs: number; readonly size: number };
+
+/** 🔍️ Remembers what every transformed module's file looked like on disk when its transform was
+ * produced, and answers which of them have moved since.
+ *
+ * ONLY files the dev server has actually transformed are tracked, so "moved" is exactly "the cached
+ * transform is out of date": a file the server never read has no cached transform to be stale. The
+ * per-directory index makes the answer to "did anything in THIS directory change" cost one stat per
+ * tracked sibling, which is what turns a filesystem event naming an editor's temporary file into the
+ * invalidation of the module that temporary file was renamed onto. */
+export function createSourceFreshnessRegistry() {
+  const stamps = new Map<string, SourceStamp>();
+  const siblings = new Map<string, Set<string>>();
+  const readStamp = (file: string): SourceStamp | null => {
+    try {
+      const status = statSync(file);
+      return { mtimeMs: status.mtimeMs, size: status.size };
+    } catch {
+      return null;
+    }
+  };
+  const moved = (file: string): boolean => {
+    const previous = stamps.get(file);
+    if (previous === undefined) return false;
+    const current = readStamp(file);
+    if (current === null) return false;
+    if (current.mtimeMs === previous.mtimeMs && current.size === previous.size) return false;
+    stamps.set(file, current);
+    return true;
+  };
+  return {
+    record(file: string): void {
+      const stamp = readStamp(file);
+      if (stamp === null) return;
+      const directory = dirname(file);
+      const tracked = siblings.get(directory) ?? new Set<string>();
+      tracked.add(file);
+      siblings.set(directory, tracked);
+      stamps.set(file, stamp);
+    },
+    trackedCount: (): number => stamps.size,
+    tracks: (file: string): boolean => stamps.has(file),
+    movedFile: (file: string): boolean => moved(file),
+    movedInDirectory: (directory: string): readonly string[] => [...(siblings.get(directory) ?? [])].filter(moved),
+    movedEverywhere: (): readonly string[] => [...stamps.keys()].filter(moved),
+  };
+}
+
+export type SourceFreshnessRegistry = ReturnType<typeof createSourceFreshnessRegistry>;
+
+type FreshnessServer = {
+  readonly watcher: { emit(event: string, path: string): boolean };
+  readonly httpServer: { once(event: "close", listener: () => void): void } | null;
+  readonly environments?: Record<string, { readonly moduleGraph: { onFileChange(file: string): void } }>;
+  readonly middlewares?: { use(handler: (request: { url?: string; headers: Record<string, string | string[] | undefined> }, response: unknown, next: () => void) => void): void };
+  readonly config?: { readonly root: string; readonly server: { readonly hmr?: unknown } };
+};
+
+/** ♻️ Retires every cached transform of one file, synchronously for the request in flight and then
+ * through Vite's own file-change pipeline for everything downstream of it (plugin `watchChange`, HMR
+ * boundaries, config-dependency restarts). `onFileChange` walks importers, so an importer that inlined
+ * the edited module's output is retired with it. */
+function retireStaleModule(server: FreshnessServer, file: string): void {
+  for (const environment of Object.values(server.environments ?? {})) environment.moduleGraph.onFileChange(file);
+  server.watcher.emit("change", file);
+}
+
+export function semioSourceWatchVitePlugin(options: { readonly repoRoot: string; readonly freshness?: Pick<SourceFreshnessRegistry, "movedInDirectory" | "tracks"> }) {
+  return {
+    name: "semio-source-watch",
+    apply: "serve" as const,
+    configureServer(server: FreshnessServer) {
+      const unwatched = unwatchedRepositoryPathMatcher();
+      const freshness = options.freshness;
+      const handles = repositorySourceWatchRoots(realpathSync(options.repoRoot)).map((root) => watch(root, { recursive: true, persistent: false }, (eventType, name) => {
+        if (name === null || unwatched.test(name)) return;
+        const path = join(root, name);
+        const directory = dirname(path);
+        if (eventType !== "rename") {
+          server.watcher.emit("change", path);
+          for (const moved of freshness?.movedInDirectory(directory) ?? []) if (moved !== path) server.watcher.emit("change", moved);
+          return;
+        }
+        const entry = statSync(path, { throwIfNoEntry: false });
+        if (!entry) {
+          server.watcher.emit("unlink", path);
+          for (const moved of freshness?.movedInDirectory(directory) ?? []) server.watcher.emit("change", moved);
+          return;
+        }
+        if (entry.isDirectory()) {
+          server.watcher.emit("addDir", path);
+          for (const moved of freshness?.movedInDirectory(path) ?? []) server.watcher.emit("change", moved);
+          return;
+        }
+        if (freshness?.tracks(path) !== true) server.watcher.emit("add", path);
+        server.watcher.emit("change", path);
+        for (const moved of freshness?.movedInDirectory(directory) ?? []) if (moved !== path) server.watcher.emit("change", moved);
+      }));
+      server.httpServer?.once("close", () => {
+        for (const handle of handles) handle.close();
+      });
+    },
+  };
+}
+
+/** 🗺️ The absolute file a dev-server request would be transformed from, or `null` for a request no
+ * module graph entry can back (virtual ids, client runtime, the index document). `/@fs/` carries the
+ * absolute path the module graph is keyed by; everything else is relative to Vite's `root`. */
+export function requestedTransformFile(url: string, root: string): string | null {
+  const pathname = url.split("?",1)[0]??"";
+  if (pathname === "" || pathname === "/" || pathname.endsWith("/")) return null;
+  let decoded: string;
+  try {
+    decoded = decodeURIComponent(pathname);
+  } catch {
+    return null;
+  }
+  if (decoded.startsWith("/@fs/")) return decoded.slice("/@fs".length);
+  if (decoded.startsWith("/@") || decoded.startsWith("/\0") || decoded.includes("\0")) return null;
+  return join(root, decoded);
+}
+
+/** 🛡️ Proves, at request time, that every transform this dev server is about to serve was produced
+ * from the bytes currently on disk — the guarantee the filesystem watcher alone cannot give.
+ *
+ * macOS reports a recursive `fs.watch` event by the path whose directory entry changed, and an atomic
+ * save (write a temporary file, `rename` it onto the target) changes the entry of the TEMPORARY file. The
+ * edited module's own path is then never named by any event — measured 0 times in 5 at every module depth,
+ * for `sed -i ''`, for a rename-into-place and for every editor that saves atomically, which is all of
+ * them. `SEMIO_VITE_HMR=0` removes the HMR pass that would otherwise have papered over it, so the dev
+ * server keeps serving the pre-edit transform until the process is recycled: a developer moves a slider
+ * and the preview runs yesterday's module.
+ *
+ * {@link semioSourceWatchVitePlugin} now answers such an event by re-stating its whole directory, which
+ * repairs the common case at edit time. This plugin is the guarantee underneath it, and it does not
+ * depend on any event arriving at all: every module request re-stats the one file behind it, and every
+ * document request re-stats the whole transformed set, so the very next request after any edit — by any
+ * tool, through any write style, with the watcher armed or not — serves the current file.
+ *
+ * @see 🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧹️config/🟦️.ts */
+export function semioTransformFreshnessVitePlugin(options: { readonly freshness: SourceFreshnessRegistry }) {
+  let documentSweep = { verified: 0, retired: 0 };
+  return {
+    name: "semio-transform-freshness",
+    apply: "serve" as const,
+    enforce: "pre" as const,
+    transform(_code: string, id: string) {
+      const file = id.split("?",1)[0]??"";
+      if (isAbsolute(file)) options.freshness.record(file);
+      return null;
+    },
+    configureServer(server: FreshnessServer) {
+      const configured = server.config?.root ?? "";
+      const root = configured === "" ? "" : realpathSync(configured);
+      server.middlewares?.use((request, _response, next) => {
+        const url = request.url ?? "";
+        const accept = request.headers.accept;
+        if (typeof accept === "string" && accept.includes("text/html")) {
+          const stale = options.freshness.movedEverywhere();
+          for (const file of stale) retireStaleModule(server, file);
+          documentSweep = { verified: options.freshness.trackedCount(), retired: stale.length };
+          next();
+          return;
+        }
+        const file = requestedTransformFile(url, root);
+        if (file !== null && options.freshness.movedFile(file)) retireStaleModule(server, file);
+        next();
+      });
+    },
+    transformIndexHtml: {
+      order: "post" as const,
+      handler(_html: string, context: { server?: { config: { server: { hmr: unknown } } } }) {
+        const hmr = context.server?.config.server.hmr === false ? "off" : "on";
+        const banner = `semio dev · transform freshness: stat-guard (every module request + whole graph per document) · hmr ${hmr} · ${documentSweep.verified} modules verified, ${documentSweep.retired} stale transforms retired · serve pid ${process.pid} · document ${new Date().toISOString()}`;
+        return [{ tag: "script", attrs: { type: "module" }, children: `console.info(${JSON.stringify(banner)});` }];
+      },
+    },
+  };
+}
+
+/** 🛰️ The dev server's complete "never serve a stale module" contract: the source watcher that
+ * pushes edits into Vite's module graph, and the request-time stat guard that verifies what the watcher
+ * delivered. They share one {@link createSourceFreshnessRegistry}, so the watcher can resolve a
+ * temporary-file event into the module it was renamed onto. Mount both or neither. */
+export function semioSourceFreshnessVitePlugins(options: { readonly repoRoot: string }) {
+  const freshness = createSourceFreshnessRegistry();
+  return [semioTransformFreshnessVitePlugin({ freshness }), semioSourceWatchVitePlugin({ repoRoot: options.repoRoot, freshness })];
+}
+//#endregion 🔖️SourceFreshnessVitePlugins
+
+//#region 🛰️AgentBridgeRendezvous
+/** 🏷️ The carrier that points this dev session and one `semio-os-mcp` gateway at a rendezvous
+ * of their own instead of the per-user default — the exact twin of the gateway's own
+ * `🛰️rendezvous::RENDEZVOUS_DIR_ENV`. It is a directory path, never a credential (the admission proof
+ * stays in the owner-only offer file the supervisor reads), and it is spelled with the `S_` prefix
+ * the gateway's process-entry seal admits. Without it, `liveAgentBridgeOfferFor` hands a shell
+ * whichever local gateway published last, so two local agents running at once cross-wire (a hub gateway's offer
+ * only ever reaches its own human's shell). */
+export const AGENT_BRIDGE_RENDEZVOUS_DIR_ENV = "S_AGENT_BRIDGE_DIR";
+
+function agentBridgeRendezvousDir(): string {
+  const pinned = process.env[AGENT_BRIDGE_RENDEZVOUS_DIR_ENV];
+  if (pinned) return pinned;
+  const home = process.env.HOME ?? process.env.USERPROFILE ?? ".";
+  return join(home, ".semio", "agent", "bridge");
+}
+
+/** 📨️ The live gateway offer a shell of `scope` may dial (`selectAgentBridgeOfferV1`: a hub gateway's offer only
+ * for its human's shell open on its hub and space, a local gateway's offer for any shell). `null` means no MCP gateway is
+ * offering this shell a bridge, which is an ordinary state (nobody launched one), never an error. */
+export function liveAgentBridgeOfferFor(scope: AgentBridgeOfferScopeV1, root: string = agentBridgeRendezvousDir()): AgentBridgeOfferRecordV2 | null {
+  const directory = join(root, "offers");
+  if (!existsSync(directory)) return null;
+  const live = readdirSync(directory)
+    .filter((name) => name.endsWith(".json"))
+    .flatMap((name) => {
+      try {
+        const offer = parseAgentBridgeOfferRecordV2(JSON.parse(readFileSync(join(directory, name), "utf8")));
+        if (offer === null) return [];
+        process.kill(offer.pid, 0);
+        return [offer];
+      } catch {
+        return [];
+      }
+    });
+  return selectAgentBridgeOfferV1(live, scope);
+}
+
+type RendezvousServerRequest = { url?: string; method?: string };
+type RendezvousServerResponse = { statusCode: number; setHeader: (name: string, value: string) => void; end: (body?: string) => void };
+
+/** 🛰️ Publishes THIS dev session as a live os session the stdio MCP gateway can discover, and
+ * serves the browser shell the one offer its request's scope may dial ({@link liveAgentBridgeOfferFor}) on
+ * {@link AGENT_BRIDGE_OFFER_ENDPOINT} — always `200`, the offer or the typed "not offered". The admission proof never travels through an environment
+ * variable or a build-time define: the dev server reads the owner-only offer file and hands it over
+ * loopback, on request, exactly like the local supervisor it is.
+ *
+ * Both halves are removed when the dev server closes, so a gateway that starts later never believes a
+ * dead session. */
+export function semioAgentBridgeRendezvousVitePlugin(options: { readonly shellKind: "react" | "wgpu-web"; readonly rendezvousRoot?: string; readonly sessionId?: string }) {
+  const root = options.rendezvousRoot ?? agentBridgeRendezvousDir();
+  const sessionsDir = join(root, "sessions");
+  const recordPath = join(sessionsDir, `${process.pid}.json`);
+  const removeRecord = (): void => {
+    try {
+      if (existsSync(recordPath)) rmSync(recordPath, { force: true });
+    } catch {
+      // best effort — a stale record is swept by the gateway's own liveness probe
+    }
+  };
+  return {
+    name: "semio-agent-bridge-rendezvous",
+    apply: "serve" as const,
+    configureServer(server: { middlewares: { use: (handler: (req: RendezvousServerRequest, res: RendezvousServerResponse, next: () => void) => void) => void }; httpServer?: { once: (event: string, handler: () => void) => void } | null }) {
+      mkdirSync(sessionsDir, { recursive: true });
+      writeFileSync(
+        recordPath,
+        JSON.stringify({ schemaVersion: AGENT_BRIDGE_RENDEZVOUS_SCHEMA_VERSION, sessionId: options.sessionId ?? `dev-${process.pid}`, pid: process.pid, shellKind: options.shellKind, startedAtMs: Date.now() }, null, 2),
+        { mode: 0o600 },
+      );
+      process.once("exit", removeRecord);
+      server.httpServer?.once("close", removeRecord);
+      server.middlewares.use((req, res, next) => {
+        if (!req.url?.startsWith(AGENT_BRIDGE_OFFER_ENDPOINT)) return next();
+        const offer = liveAgentBridgeOfferFor(parseAgentBridgeOfferScopeV1(req.url), root);
+        res.statusCode = 200;
+        res.setHeader("content-type", "application/json");
+        res.setHeader("cache-control", "no-store");
+        res.end(JSON.stringify(agentBridgeOfferAnswerV1(offer)));
+      });
+    },
+    closeBundle: removeRecord,
+  };
+}
+//#endregion 🛰️AgentBridgeRendezvous
+
+//#region 🔌️AgentCredentialInstall
+/** 🗝️ Where this development host installs agent credentials for MCP clients. A directory path,
+ * never a credential, spelled with the `S_` prefix the gateway's process-entry seal admits; unset, the
+ * per-user default `~/.semio/agent/credentials` beside the bridge rendezvous. */
+export const AGENT_CREDENTIALS_DIR_ENV = "S_AGENT_CREDENTIALS_DIR";
+
+function agentCredentialsDir(): string {
+  const pinned = process.env[AGENT_CREDENTIALS_DIR_ENV];
+  if (pinned) return pinned;
+  const home = process.env.HOME ?? process.env.USERPROFILE ?? ".";
+  return join(home, ".semio", "agent", "credentials");
+}
+
+type CredentialInstallRequest = { url?: string; method?: string; headers: Record<string, string | string[] | undefined>; on(event: "data", handler: (chunk: Buffer) => void): void; on(event: "end" | "error", handler: () => void): void };
+
+/** 🔐️ The credential file bytes `semio-os-mcp --credential-file` decodes, checked key for key
+ * before anything reaches the disk. */
+function agentCredentialFileIsWellFormed(contents: string): boolean {
+  try {
+    const value = JSON.parse(contents) as Record<string, unknown>;
+    return (
+      Object.keys(value).sort().join(",") === "audience,hubOrigin,schema,spaceId,token" &&
+      value.schema === AGENT_CREDENTIAL_SCHEMA_V1 &&
+      typeof value.hubOrigin === "string" &&
+      typeof value.spaceId === "string" &&
+      (value.audience === "read" || value.audience === "edit") &&
+      typeof value.token === "string" &&
+      isAgentDelegationTokenV1(value.token)
+    );
+  } catch {
+    return false;
+  }
+}
+
+/** 🔌️ Turns an agent delegation into a working MCP client on a development host: the delegation
+ * pane posts the one-time credential here, this server writes it owner-only (`0600` in a `0700`
+ * directory) under the delegation's own file name, and answers with its absolute path and the launcher
+ * that starts `semio-os-mcp` from this checkout (the `semio` server declared in the root `📋️project.json`, `bun <repo>/📜️script.ts dev mcp stdio os`, which
+ * stages the binary itself). `DELETE <endpoint>/<delegationId>` removes it once the delegation is
+ * withdrawn. Only same-origin requests are served, so no other site can plant or remove a credential.
+ * Contract: `📇️directory/🧬️schema` `AgentCredentialInstallRequestV1` / `AgentCredentialInstallReceiptV1`. */
+export function semioAgentCredentialInstallVitePlugin(options: { readonly repoRoot: string; readonly credentialsRoot?: string }) {
+  const root = options.credentialsRoot ?? agentCredentialsDir();
+  const launcherOf = (): { readonly command: string; readonly args: readonly string[] } => agentClientLauncher(readDeclaredTools(options.repoRoot), options.repoRoot, "semio", process.execPath);
+  return {
+    name: "semio-agent-credential-install",
+    apply: "serve" as const,
+    configureServer(server: { middlewares: { use: (handler: (req: CredentialInstallRequest, res: RendezvousServerResponse, next: () => void) => void) => void } }) {
+      server.middlewares.use((req, res, next) => {
+        const path = req.url?.split("?")[0] ?? "";
+        if (path !== AGENT_CREDENTIAL_INSTALL_ENDPOINT_V1 && !path.startsWith(`${AGENT_CREDENTIAL_INSTALL_ENDPOINT_V1}/`)) return next();
+        const answer = (status: number, body?: unknown): void => {
+          res.statusCode = status;
+          res.setHeader("cache-control", "no-store");
+          if (body === undefined) return res.end();
+          res.setHeader("content-type", "application/json");
+          res.end(JSON.stringify(body));
+        };
+        const site = req.headers["sec-fetch-site"];
+        const origin = req.headers.origin;
+        const host = req.headers.host;
+        if (site !== "same-origin" && !(typeof origin === "string" && typeof host === "string" && (origin === `http://${host}` || origin === `https://${host}`))) return answer(403, { error: "same-origin requests only" });
+        if (req.method === "DELETE" && path.length > AGENT_CREDENTIAL_INSTALL_ENDPOINT_V1.length + 1) {
+          try {
+            rmSync(join(root, agentCredentialInstallFileNameV1(decodeURIComponent(path.slice(AGENT_CREDENTIAL_INSTALL_ENDPOINT_V1.length + 1)))), { force: true });
+            return answer(204);
+          } catch {
+            return answer(400, { error: "invalid delegation id" });
+          }
+        }
+        if (req.method !== "POST" || path !== AGENT_CREDENTIAL_INSTALL_ENDPOINT_V1) return answer(405, { error: "POST a credential or DELETE /<delegationId>" });
+        const chunks: Buffer[] = [];
+        let bytes = 0;
+        let overflow = false;
+        req.on("data", (chunk) => {
+          bytes += chunk.length;
+          if (bytes > 32 * 1024) overflow = true;
+          else chunks.push(chunk);
+        });
+        req.on("error", () => answer(400, { error: "unreadable request" }));
+        req.on("end", () => {
+          if (overflow) return answer(413, { error: "credential install request too large" });
+          try {
+            const request = JSON.parse(Buffer.concat(chunks).toString("utf8")) as Record<string, unknown>;
+            if (Object.keys(request).sort().join(",") !== "contents,delegationId,schema" || request.schema !== AGENT_CREDENTIAL_INSTALL_SCHEMA_V1 || typeof request.delegationId !== "string" || typeof request.contents !== "string" || !agentCredentialFileIsWellFormed(request.contents)) {
+              return answer(400, { error: "not an AgentCredentialInstallRequestV1" });
+            }
+            const launcher = launcherOf();
+            const file = join(root, agentCredentialInstallFileNameV1(request.delegationId));
+            mkdirSync(root, { recursive: true, mode: 0o700 });
+            protectOwnerOnly(root, "directory");
+            writeFileSync(file, request.contents, { mode: 0o600 });
+            protectOwnerOnly(file, "file");
+            return answer(201, { schema: AGENT_CREDENTIAL_INSTALL_RECEIPT_SCHEMA_V1, credentialPath: file, launcher });
+          } catch {
+            return answer(400, { error: "not an AgentCredentialInstallRequestV1" });
+          }
+        });
+      });
+    },
+  };
+}
+//#endregion 🔌️AgentCredentialInstall
+
+/** 🎫️ Serves the shell a FRESH development session from the local hub owner's broker on every request, for the
+ * profile this serve signs in as — so a shell whose 15-minute local session lapsed, or a second user's serve, claims one
+ * with no manual sign-in. Always `200` with a `LocalHubSessionAnswerV1`: the typed "not offered" when the serve joined a
+ * hub without a broker (the shell's own sign-in stays available).
+ * @see ../🚀️local-hub/🏃️execution/🟦️.ts */
+export function semioLocalHubSessionVitePlugin() {
+  const wire=process.env[VITE_RUNTIME_CHANNELS_ENV_V1],channels=readViteRuntimeChannelsV1(wire?JSON.parse(wire):[]),channel=channels.find(row=>row.name===devLocalHubSessionPolicyV1().runtimeChannelName),proxy=channel?readDevLocalHubProxyV1({version:1,endpoint:channel.endpoint,secret:channel.secret}):undefined;
+  return {name:"semio-local-hub-session",configureServer(server:{middlewares:{use:(handler:(req:{readonly url?:string;readonly method?:string},res:{statusCode:number;setHeader:(key:string,value:string)=>void;end:(body?:string)=>void},next:()=>void)=>void)=>void}}){
+    server.middlewares.use((req,res,next)=>{if(req.method!=="GET"||req.url?.split("?")[0]!==LOCAL_HUB_SESSION_ENDPOINT_V1)return next();const signal=AbortSignal.timeout(devLocalHubSessionPolicyV1().maximumRequestMilliseconds),work=proxy?requestDevLocalHubProxyV1(proxy,signal):Promise.resolve(null);void work.then(value=>{const session=value===null?null:parseLocalSessionV1(value);res.setHeader("cache-control","no-store");res.statusCode=200;res.setHeader("content-type","application/json");res.end(JSON.stringify(localHubSessionAnswerV1(session===null?null:{token:session.token,userId:session.userId})));}).catch(()=>{res.statusCode=503;res.end();});});
+  }};
+}

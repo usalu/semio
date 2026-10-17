@@ -3,8 +3,7 @@ import { readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import Ajv from "ajv";
 import ts from "typescript";
-import { linkedSessionEngines } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/⚙️engine/🧭️selection/🟦️.ts";
-import { declaredBrowserSessionEnginesV1 } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/⚙️engine/🧭️selection/🟨️.mjs";
+import { declaredBrowserSessionEnginesV1, linkedSessionEngines } from "@semio-tech/framework-os-dev/engine/selection";
 
 /** 🧩️ Binds actual Puzzle-owned runtime factory imports, engine producer and package declaration. */
 export function testPuzzleBrowserContributionV1(workspace: string): void {

@@ -2,7 +2,6 @@
 //! mutation per GESTURE, never per pointer tick — mid-drag frames ride the window transient.
 
 use crate::diff::Wfc2dDiff;
-use crate::mutations::Wfc2dMutation;
 use crate::schema::snapshot::Wfc2dSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -19,17 +18,23 @@ pub struct MoveSlot {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn move_slot(id: String, x: f64, y: f64) -> Wfc2dMutation {
-    Wfc2dMutation::MoveSlot(MoveSlot { id, x, y })
+pub fn move_slot<Op>(id: String, x: f64, y: f64) -> Op
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::move_slot::MoveSlot>,
+{
+    Op::from(MoveSlot { id, x, y })
 }
 
-impl MutationKind<Wfc2dSnapshot, Wfc2dMutation> for MoveSlot {
+impl<Op> MutationKind<Wfc2dSnapshot, Op> for MoveSlot
+where
+    Op: protocol::Mutation<Wfc2dSnapshot, Diff = Wfc2dDiff> + From<MoveSlot>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "move", entity: "slot", kind: "move-slot", record: "MovedSlot" };
 
     fn diff(&self, base: &Wfc2dSnapshot) -> protocol::MutationOutcome<Wfc2dDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Wfc2dSnapshot) -> Result<Vec<Wfc2dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Wfc2dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

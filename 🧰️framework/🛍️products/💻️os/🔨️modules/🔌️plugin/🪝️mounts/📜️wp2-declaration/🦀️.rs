@@ -4,14 +4,10 @@
 // Carving a crate removes its unit here and puts `extern crate <crate> as <old module name>;` in its place (PLAN-PLUGIN-CRATES.md, section 12.5).
 
 //#region 📄️DeclarationFixtureMutationMount
-#[cfg(test)]
-#[path = "../../🧪️tests/🌲️fixture-projection/🦀️.rs"]
-mod fixture_projection_retirement_tests;
+
 //#endregion 📄️DeclarationFixtureMutationMount
 //#region 🏛️OwnershipFacet
-#[cfg(test)]
-#[path = "../../🧪️tests/📤️segmented-download/🦀️.rs"]
-mod segmented_download_contract;
+
 //#endregion 🏛️OwnershipFacet
 //#region 📜️DeclarationFacet
 pub(crate) extern crate semio_framework_plugin_app_builder as app_builder;
@@ -34,8 +30,6 @@ pub(crate) use semio_framework_plugin_decl_views::history_view;
 pub(crate) mod media_contract {
     pub use semio_framework_plugin_decl_views::media_contract::*;
     pub use semio_framework_plugin_decl_app::media_contract::{ArtifactMediaExportJobRequest, ArtifactMediaExportRequestRetirement};
-    #[cfg(any(test, feature = "media-turn-testing"))]
-    pub(crate) use super::media_publication_tests_host::{original_completion_result_receiving_and_physical_close, original_handle_receiving_and_physical_close, original_download_receiving_chunk_and_physical_close};
 }
 pub(crate) use semio_framework_plugin_decl_surface::natural_file_import;
 pub(crate) use semio_framework_plugin_decl_views::presence_retirement;
@@ -78,41 +72,19 @@ pub mod declarations {
     pub use semio_framework_plugin_decl_registry::declarations::*;
     pub(crate) use semio_framework_plugin_extension::{commit_artifact_declarations, preflight_artifact_declarations};
     pub use semio_framework_plugin_instance_app::{editor_surface, viewer_surface, EditorSurfaceApp, ViewerSurfaceApp};
-    #[cfg(test)]
-    pub(crate) use super::declarations_fixture_tests::{fixture};
 }
 //#endregion 🧵️InstanceFacet
 //#region 🏛️OwnershipFacet
-#[cfg(test)]
-#[path = "../../🧪️tests/📄️natural-file-lifecycle/🦀️.rs"]
-mod natural_file_lifecycle_tests;
+
 //#endregion 🏛️OwnershipFacet
 //#region 🧪️WP2TestHosts
-#[cfg(test)]
-#[path = "🧪️hosts/🔬️declarations-fixture/🦀️.rs"]
-mod declarations_fixture_tests;
-#[cfg(test)]
-#[path = "🧪️hosts/🏗️app-builder/🦀️.rs"]
-mod app_builder_tests_host;
-#[cfg(test)]
-#[path = "🧪️hosts/🪪️codec-binding/🦀️.rs"]
-mod original_codec_binding_laws;
-#[cfg(test)]
-#[path = "🧪️hosts/🎯️app-commands/🦀️.rs"]
-mod app_commands_tests_host;
-#[cfg(test)]
-#[path = "🧪️hosts/🎞️owned-media-error/🦀️.rs"]
-mod owned_media_error_tests_host;
-#[cfg(test)]
-#[path = "🧪️hosts/📤️export-credit/🦀️.rs"]
-mod media_export_credit_tests_host;
-#[cfg(any(test, feature = "media-turn-testing"))]
-#[path = "🧪️hosts/📬️media-publication/🦀️.rs"]
-mod media_publication_tests_host;
-#[cfg(test)]
-#[path = "🧪️hosts/🎟️child-receipt/🦀️.rs"]
-mod receipt_tests_host;
-#[cfg(test)]
-#[path = "🧪️hosts/📡️contributed-mutation-wire/🦀️.rs"]
-mod contributed_mutation_wire_tests_host;
+
+
+
+
+
+
+
+
+
 //#endregion 🧪️WP2TestHosts

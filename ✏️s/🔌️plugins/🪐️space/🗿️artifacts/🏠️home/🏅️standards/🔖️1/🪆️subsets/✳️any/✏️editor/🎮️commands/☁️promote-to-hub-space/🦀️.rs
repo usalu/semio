@@ -20,6 +20,3 @@ pub fn handle(payload: &PromoteToHubSpace, _doc: &ArtifactView<'_, SHomeSnapshot
     Ok(Emit::effect(Effect::ReplayShellCommand { action_id: "os.directory.create-space".into(), args }))
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;

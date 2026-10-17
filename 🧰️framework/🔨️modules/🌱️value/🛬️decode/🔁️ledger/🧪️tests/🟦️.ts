@@ -9,7 +9,6 @@ test("original decode ledger moves only through an opaque consuming receipt whil
  expect(Buffer.byteLength(law.text)).toBe(law.textBytes);
  const db=new Database(":memory:");
  try{db.exec("CREATE TABLE original(ledger TEXT, recipient TEXT, owned INTEGER); INSERT INTO original VALUES ('original','original',"+law.textBytes+")");for(const _ of law.hops){db.query("UPDATE original SET owned=owned+?").run(0);expect(db.query("SELECT ledger,recipient FROM original").get()).toEqual({ledger:"original",recipient:"original"});}expect(db.query("SELECT owned FROM original").get()).toEqual({owned:law.textBytes});for(const _ of law.foreign)expect(db.query("SELECT ledger FROM original WHERE ledger='foreign'").get()).toBeNull();}finally{db.close()}
- console.log("[DEBUG] Ajv/SQLite/Buffer original consuming-lineage controls agree across five supplier-rebound/move hops; fresh owner is distinct");
  const root=readFileSync(new URL("../../🦀️.rs",import.meta.url),"utf8");
  const start=root.indexOf("pub struct NativeDecodeContinuation");const receipt=root.slice(start,root.indexOf("}",start));
  expect(receipt.includes("ledger:u64")).toBe(true);

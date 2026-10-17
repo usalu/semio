@@ -1,11 +1,17 @@
-use super::*;
+use crate::standards::v1_4::subsets::a::schema::mutations::PdfA1Mutation;
+use semio_framework_test_fixtures::fixture_text;
+#[allow(unused_imports)]
+use crate::standards::v1_4::subsets::base::schema::diff::{PdfDiff, PdfPageDiff, PdfPageModified, PdfPagesDiff};
+#[allow(unused_imports)]
+use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
+use crate::standards::v1_4::subsets::a::schema::mutations::clear_page_text::*;
 use crate::standards::v1_4::subsets::base::schema::snapshot::{PageDoc, PdfSnapshot};
 use protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law;
 use protocol::Mutation;
 
 #[test]
 fn language_neutral_forward_and_concrete_inverse() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧹️clear-page-text/🔄️round-trips-the-concrete-inverse/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../../4️⃣1.4/🪆️subsets/🗄️a/🧪️tests/🧫️fixtures/🧬️mutations/🧹️clear-page-text/🔄️round-trips-the-concrete-inverse/🔣️.json")).unwrap();
     fn assert_json_shape(actual: &serde_json::Value, expected: &serde_json::Value) {
         match (actual, expected) {
             (serde_json::Value::Object(actual), serde_json::Value::Object(expected)) => {
@@ -48,7 +54,7 @@ fn language_neutral_forward_and_concrete_inverse() {
 
 #[test]
 fn missing_page_refuses_without_inverse_or_state_change() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧹️clear-page-text/🔄️round-trips-the-concrete-inverse/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../../4️⃣1.4/🪆️subsets/🗄️a/🧪️tests/🧫️fixtures/🧬️mutations/🧹️clear-page-text/🔄️round-trips-the-concrete-inverse/🔣️.json")).unwrap();
     let mutation: PdfA1Mutation = semio_framework_value::FromValue::from_value((fixture["mutation"].clone()).into()).unwrap();
     let base = PdfSnapshot { pages: Vec::new(), ..Default::default() };
     let mut state = base.clone();

@@ -3,7 +3,7 @@
 pub const OPCODE: &str = "set-language";
 pub const TEXT_OPCODE: &str = OPCODE;
 
-use crate::standards::v1_7::subsets::base::schema::mutations::SetLanguage;
+use crate::standards::v1_7::subsets::base::schema::mutations::set_language::SetLanguage;
 
 /// 🖨️ Prints this direct payload through its schema-derived JSON representation.
 pub fn print(payload: &SetLanguage) -> Result<String, String> {

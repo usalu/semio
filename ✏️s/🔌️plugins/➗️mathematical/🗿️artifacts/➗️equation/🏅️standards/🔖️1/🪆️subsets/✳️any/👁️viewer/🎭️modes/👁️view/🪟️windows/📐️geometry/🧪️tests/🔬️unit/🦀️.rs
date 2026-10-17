@@ -1,4 +1,5 @@
-use super::*;
+use crate::EquationSnapshot;
+use crate::viewer::equation::modes::view::windows::geometry::*;
 
 #[semio_framework_async_macros::async_test]
 async fn definition_declares_the_table_kind() {

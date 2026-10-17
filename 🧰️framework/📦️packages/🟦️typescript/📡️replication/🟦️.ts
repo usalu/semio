@@ -1,4 +1,4 @@
 /** 📡️ SDK entry `@semio-tech/framework/replication`: explicit public surface of the framework module that plugins build on. */
-export { historyTransitionId } from "../../../🔨️modules/📡️replication/🟦️.ts";
+export { historyTransitionId } from "@semio-tech/framework-replication";
 export { DOCUMENT_BACKBONE_RETENTION_LIMITS, LOCAL_INTERACTION_CAPTURE_MAX_BYTES, PRESENCE_PEER_WIRE_LIMITS_V1, canvasPeerViewportRect, canvasPointToScreen, decodeLocalInteractionCaptureJson, decodePresenceHistoryEdit, decodePresenceInteraction, decodePresenceToolRun, encodePresenceHistoryEdit, encodePresenceInteraction, encodePresenceToolRun, localInteractionIdentityEquals, orbitPointToScreen, peerOverlayLabels, peerOverlayPath, peersForWindow, presenceColorCss, presenceTypingExcerpt } from "../../../🔨️modules/📡️replication/📦️packages/🟦️typescript/🟦️.ts";
 export type { ArtifactPresenceHistoryEdit, ArtifactPresenceInteraction, ArtifactPresencePeer, ArtifactPresenceToolRun, ArtifactPresenceTyping, ArtifactPresenceWindowView, LocalInteractionCapture, LocalInteractionState, MutationEnvelope, PresencePeerInput } from "../../../🔨️modules/📡️replication/📦️packages/🟦️typescript/🟦️.ts";

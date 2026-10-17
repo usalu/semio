@@ -1,5 +1,146 @@
+use crate::{editor::shooting::commands::camera, editor::shooting::commands::document, editor::shooting::commands::scene};
+use crate::{ShootingSnapshot, SHOOTING_DOCUMENT_SCHEMA};
+use semio_framework_plugin::ArtifactToolPublicationLane;
+use semio_framework_plugin::DslValue;
+use semio_framework_plugin::Fault;
+use semio_framework_plugin::HierarchyProvider;
+use semio_framework_plugin::MediaClass;
+use semio_framework_plugin::MediaForm;
+use semio_framework_plugin::MediaPayload;
+use semio_framework_plugin::WindowMeasure;
+use crate::{editor::shooting::commands::asset::add_asset, editor::shooting::commands::asset::import_asset, editor::shooting::commands::asset::import_asset_request, editor::shooting::commands::asset::patch_assets, editor::shooting::commands::asset::set_active_asset};
+use crate::{editor::shooting::commands::camera::load_saved_camera, editor::shooting::commands::camera::save_camera, editor::shooting::commands::camera::set_camera, editor::shooting::commands::camera::set_shot_camera};
+use crate::{editor::shooting::commands::export::export_active_shot, editor::shooting::commands::export::export_all_shots};
+use crate::{editor::shooting::commands::document::import_snapshot_json, editor::shooting::commands::document::reset_snapshot, editor::shooting::commands::document::save_download, editor::shooting::commands::document::set_active_example};
+use crate::{editor::shooting::commands::gumball::rotate_selection, editor::shooting::commands::gumball::scale_selection, editor::shooting::commands::gumball::translate_selection};
+use crate::{editor::shooting::commands::scene::set_ambient_intensity, editor::shooting::commands::scene::set_material_roughness, editor::shooting::commands::scene::set_shadow_enabled, editor::shooting::commands::scene::set_sun_azimuth, editor::shooting::commands::scene::set_sun_elevation, editor::shooting::commands::scene::set_sun_intensity, editor::shooting::commands::scene::toggle_sun};
+use crate::{editor::shooting::commands::selection::set_center_model, editor::shooting::commands::selection::set_shot_selection, editor::shooting::commands::selection::world_pointer_down, editor::shooting::commands::selection::world_pointer_move};
+use crate::{editor::shooting::commands::shot::add_shot, editor::shooting::commands::shot::patch_shots, editor::shooting::commands::shot::set_active_shot, editor::shooting::commands::shot::set_active_shot_format, editor::shooting::commands::shot::set_active_shot_label, editor::shooting::commands::shot::set_active_shot_shape};
+use semio_framework_test_fixtures::fixture_text;
+#[allow(unused_imports)]
+use crate::{editor::shooting::commands::asset, editor::shooting::commands::export, editor::shooting::commands::gumball, editor::shooting::commands::selection, editor::shooting::commands::shot};
+#[allow(unused_imports)]
+use crate::{editor::shooting::config::ShootingConfig, editor::shooting::config::ShootingConfigMutation};
+#[allow(unused_imports)]
+use crate::editor::shooting::modes::edit;
+#[allow(unused_imports)]
+use crate::editor::shooting::modes::edit::windows::icon as icon_window;
+#[allow(unused_imports)]
+use crate::editor::shooting::modes::edit::windows::scene as scene_window;
+#[allow(unused_imports)]
+use crate::{editor::shooting::panels::catalogue as catalogue_panel, editor::shooting::panels::document as document_panel, editor::shooting::panels::inspection as inspection_panel};
+#[allow(unused_imports)]
+use crate::{editor::shooting::presence::ShootingPresence, editor::shooting::presence::ShootingPresenceMutation};
+#[allow(unused_imports)]
+use crate::editor::shooting::terminology::shooting_play_labels;
+#[allow(unused_imports)]
+use crate::editor::shooting::ui_helpers_and_io::*;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::mutations::ShootingMutation;
+#[allow(unused_imports)]
+use semio_framework::{ToolExecutionContract, ToolFactoryKey, ToolJobFactoryError};
+#[allow(unused_imports)]
+use semio_framework_plugin::app::InteractionView;
+#[allow(unused_imports)]
+use semio_framework_plugin::{retained_command::ArtifactRetainedCommandJob, retained_command::ArtifactRetainedCommandPayload, retained_command::BoundedArtifactCommandWork};
+#[allow(unused_imports)]
+use semio_framework_plugin::ActionArgDef;
+#[allow(unused_imports)]
+use semio_framework_plugin::ActionArgOption;
+#[allow(unused_imports)]
+use semio_framework_plugin::ActionDefinition;
+#[allow(unused_imports)]
+use semio_framework_plugin::ActionKind;
+#[allow(unused_imports)]
+use semio_framework_plugin::AppIo;
+#[allow(unused_imports)]
+use semio_framework_plugin::AppOperationContext;
+#[allow(unused_imports)]
+use semio_framework_plugin::ArtifactEditor;
+#[allow(unused_imports)]
+use semio_framework_plugin::ArtifactOwnedToolJobRequest;
+#[allow(unused_imports)]
+use semio_framework_plugin::ArtifactToolFactoryRegistry;
+#[allow(unused_imports)]
+use semio_framework_plugin::ArtifactToolPublicationContract;
+#[allow(unused_imports)]
+use semio_framework_plugin::ArtifactView;
+#[allow(unused_imports)]
+use semio_framework_plugin::ConfigView;
+#[allow(unused_imports)]
+use semio_framework_artifact_reference::Dialect;
+#[allow(unused_imports)]
+use semio_framework_plugin::DraftView;
+#[allow(unused_imports)]
+use semio_framework_plugin::Editor;
+#[allow(unused_imports)]
+use semio_framework_plugin::Emit;
+#[allow(unused_imports)]
+use semio_framework_plugin::FaultCode;
+#[allow(unused_imports)]
+use semio_framework_plugin::FaultOrigin;
+#[allow(unused_imports)]
+use semio_framework_plugin::GranularityDefinition;
+#[allow(unused_imports)]
+use semio_framework_plugin::HoverSpec;
+#[allow(unused_imports)]
+use semio_framework_plugin::InteractionDefinition;
+#[allow(unused_imports)]
+use semio_framework_plugin::InteractionRef;
+#[allow(unused_imports)]
+use semio_framework_plugin::InteractiveJobClassification;
+#[allow(unused_imports)]
+use semio_framework_ui_locale::Label;
+#[allow(unused_imports)]
+use semio_framework_ui_locale::LocalizedLabel;
+#[allow(unused_imports)]
+use semio_framework_plugin::Media;
+#[allow(unused_imports)]
+use semio_framework_plugin::MediaError;
+#[allow(unused_imports)]
+use semio_framework_plugin::MediaType;
+#[allow(unused_imports)]
+use semio_framework_plugin::MergeMode;
+#[allow(unused_imports)]
+use semio_framework_plugin::NoDraft;
+#[allow(unused_imports)]
+use semio_framework_plugin::NoDraftMutation;
+#[allow(unused_imports)]
+use semio_framework_plugin::OsMediaCapability;
+#[allow(unused_imports)]
+use semio_framework_plugin::SelectionMethod;
+#[allow(unused_imports)]
+use semio_framework_plugin::SelectionMode;
+#[allow(unused_imports)]
+use semio_framework_plugin::SelectionSpec;
+#[allow(unused_imports)]
+use semio_framework_plugin::UtilityDefinition;
+#[allow(unused_imports)]
+use semio_framework_plugin::WindowEngagement;
+#[allow(unused_imports)]
+use std::collections::HashMap;
+#[allow(unused_imports)]
+use semio_framework_2d::compute::EngineHandles;
 pub(crate) mod context {
-    use super::super::*;
+    use crate::editor::shooting::*;
+use crate::{editor::shooting::commands::camera, editor::shooting::commands::document, editor::shooting::commands::scene};
+use crate::{ShootingSnapshot, SHOOTING_DOCUMENT_SCHEMA};
+use semio_framework_plugin::ArtifactToolPublicationLane;
+use semio_framework_plugin::DslValue;
+use semio_framework_plugin::Fault;
+use semio_framework_plugin::HierarchyProvider;
+use semio_framework_plugin::MediaClass;
+use semio_framework_plugin::MediaForm;
+use semio_framework_plugin::MediaPayload;
+use semio_framework_plugin::WindowMeasure;
+use crate::{editor::shooting::commands::asset::add_asset, editor::shooting::commands::asset::import_asset, editor::shooting::commands::asset::import_asset_request, editor::shooting::commands::asset::patch_assets, editor::shooting::commands::asset::set_active_asset};
+use crate::{editor::shooting::commands::camera::load_saved_camera, editor::shooting::commands::camera::save_camera, editor::shooting::commands::camera::set_camera, editor::shooting::commands::camera::set_shot_camera};
+use crate::{editor::shooting::commands::export::export_active_shot, editor::shooting::commands::export::export_all_shots};
+use crate::{editor::shooting::commands::document::import_snapshot_json, editor::shooting::commands::document::reset_snapshot, editor::shooting::commands::document::save_download, editor::shooting::commands::document::set_active_example};
+use crate::{editor::shooting::commands::gumball::rotate_selection, editor::shooting::commands::gumball::scale_selection, editor::shooting::commands::gumball::translate_selection};
+use crate::{editor::shooting::commands::scene::set_ambient_intensity, editor::shooting::commands::scene::set_material_roughness, editor::shooting::commands::scene::set_shadow_enabled, editor::shooting::commands::scene::set_sun_azimuth, editor::shooting::commands::scene::set_sun_elevation, editor::shooting::commands::scene::set_sun_intensity, editor::shooting::commands::scene::toggle_sun};
+use crate::{editor::shooting::commands::selection::set_center_model, editor::shooting::commands::selection::set_shot_selection, editor::shooting::commands::selection::world_pointer_down, editor::shooting::commands::selection::world_pointer_move};
+use crate::{editor::shooting::commands::shot::add_shot, editor::shooting::commands::shot::patch_shots, editor::shooting::commands::shot::set_active_shot, editor::shooting::commands::shot::set_active_shot_format, editor::shooting::commands::shot::set_active_shot_label, editor::shooting::commands::shot::set_active_shot_shape};
     use semio_framework_plugin::app::EditorApp;
     use semio_framework_plugin::artifact_app_laws::{self, meta, new_app_with_registry};
     use semio_framework_plugin::app::TypedOperationResultLane;
@@ -181,7 +322,8 @@ pub(crate) mod context {
     }
 }
 
-use super::*;
+use crate::editor::shooting::*;
+use crate::editor::shooting::ui_helpers_and_io::*;
 use context::{dispatch, shooting_app, shooting_app_with_registry, ShootingApp};
 use semio_framework_plugin::app::EditorApp;
 use semio_framework_plugin::artifact_app_laws;
@@ -236,7 +378,7 @@ impl ShootingRetainedCatalogOracle for SerdeJsonShootingRetainedCatalogOracle {
 
 #[semio_framework_async_macros::async_test]
 async fn retained_command_catalog_matches_the_serde_json_oracle() {
-    let oracle = SerdeJsonShootingRetainedCatalogOracle.summarize(include_str!("../🧫️fixtures/🧫️retained-command-limits/🔣️.json"));
+    let oracle = SerdeJsonShootingRetainedCatalogOracle.summarize(fixture_text!("../../🧪️tests/🧫️fixtures/🧫️retained-command-limits/🔣️.json"));
     let mut command_ids = every_command().iter().map(|command| command.command_id().to_string()).collect::<std::collections::BTreeSet<_>>();
     command_ids.insert("setActiveUtility".to_string());
     let bounded_ids = SHOOTING_BOUNDED_TOOL_IDS.iter().map(|id| (*id).to_string()).collect::<std::collections::BTreeSet<_>>();
@@ -262,7 +404,7 @@ async fn retained_command_catalog_matches_the_serde_json_oracle() {
 
 #[semio_framework_async_macros::async_test]
 async fn retained_publication_oracle_rejects_hostile_tool_and_lane_fixtures() {
-    let fixture = include_str!("../🧫️fixtures/🧫️retained-command-limits/🔣️.json");
+    let fixture = fixture_text!("../../🧪️tests/🧫️fixtures/🧫️retained-command-limits/🔣️.json");
     let expected = ["importSnapshotJson", "setActiveExample", "resetSnapshot", "worldPointerDown", "worldPointerMove", "saveDownload", "importAssetRequest", "exportActiveShot", "exportAllShots"].iter().map(|id| (*id).to_string()).collect::<std::collections::BTreeSet<_>>();
     assert_eq!(SerdeJsonShootingRetainedCatalogOracle.summarize(fixture).host_only_ids, expected);
     let wrong_lane = fixture.replacen("\"HostOnly\"", "\"Artifact\"", 1);
@@ -295,7 +437,7 @@ async fn every_command_round_trips_through_text_and_binary() {
 }
 
 /// 🧾️ One representative value per row, in declaration (= binary ordinal) order.
-pub(super) fn every_command() -> Vec<ShootingCommand> {
+pub(crate) fn every_command() -> Vec<ShootingCommand> {
     vec![
         ShootingCommand::ImportSnapshotJson(import_snapshot_json::ImportSnapshotJson { json: "{\"schema\":\"shooting.shooting\"}".into() }),
         ShootingCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "base-icon".into() }),
@@ -539,7 +681,7 @@ async fn two_instances_converge_disjoint_edits_via_backbone() {
         ShootingCommand::TranslateSelection(translate_selection::TranslateSelection { asset_ids: vec!["base".into()], dx: 5.0, dy: 6.0, dz: 7.0 }),
         |app| {
             let snapshot = app.snapshot().expect("snapshot");
-            (crate::standards::v1::subsets::any::schema::active_shot(&snapshot).unwrap().label.clone(), snapshot.assets[0].origin)
+            (crate::active_shot(&snapshot).unwrap().label.clone(), snapshot.assets[0].origin)
         },semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()
     )
     .await;
@@ -550,7 +692,7 @@ async fn ingest_operations_is_idempotent_for_shooting() {
     artifact_app_laws::assert_registered_ingest_idempotent::<EditorApp<ShootingPlayApp>, String, _, _>(
         || async { context::shooting_app_manifest_for_tests() },
         ShootingCommand::SetActiveShotLabel(set_active_shot_label::SetActiveShotLabel { value: "Hero".into() }),
-        |app| crate::standards::v1::subsets::any::schema::active_shot(&app.snapshot().expect("snapshot")).unwrap().label.clone(),semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()
+        |app| crate::active_shot(&app.snapshot().expect("snapshot")).unwrap().label.clone(),semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()
     )
     .await;
 }

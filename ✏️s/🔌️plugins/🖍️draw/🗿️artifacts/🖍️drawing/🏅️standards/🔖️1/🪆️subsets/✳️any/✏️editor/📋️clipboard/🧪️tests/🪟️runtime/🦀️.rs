@@ -1,5 +1,6 @@
 //! 🪟️ Registered clipboard verbs publish mapped selection and one reversible history edit.
 use super::*;
+use semio_framework_test_fixtures::fixture_text;
 async fn reserved_clipboard(app:&mut DrawingApp,verb:&str,args:Option<semio_framework_value::DslValue>,meta:&semio_framework_plugin::ActionMeta)->(semio_framework_plugin::InvocationResult,artifact_laws::TypedOperationFixtureReceipt){
  let admitted=app.handle_action(verb,args.as_ref(),meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.unwrap();
  let result=semio_framework_plugin::app::settle_framework_reserved_admission(app,admitted).await.unwrap();
@@ -8,7 +9,7 @@ async fn reserved_clipboard(app:&mut DrawingApp,verb:&str,args:Option<semio_fram
 #[semio_framework_async_macros::async_test]
 async fn registered_clipboard_copy_paste_cut_preserve_atomic_inverse_and_live_selection(){
  use semio_framework_value::ToValue;
- let fixtures:Vec<serde_json::Value>=serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🎬️scene/📋️prepare/🔣️.json")).unwrap();
+ let fixtures:Vec<serde_json::Value>=serde_json::from_str(fixture_text!("../../../../../🧪️tests/🧫️fixtures/🎬️scene/📋️prepare/🔣️.json")).unwrap();
  let authored=fixtures.iter().find(|row|row["name"]=="rectangle").unwrap()["document"].clone();let before:DrawingSnapshot=serde_json::from_value(authored).unwrap();let original_id=semio_s_artifact_draw_drawing_model::layer_base(&before.layers[0]).id.to_string_owner();
  let(mut app,meta)=inline_selection_app().await;load_drawing_fixture(&mut app,&before);
  let targets=serde_json::to_string(&vec![serde_json::json!({"granularity":DRAWING_INTERACTION_GRANULARITY,"id":original_id})]).unwrap();
@@ -22,5 +23,5 @@ async fn registered_clipboard_copy_paste_cut_preserve_atomic_inverse_and_live_se
  artifact_laws::settle_history_verb(&mut *app,"redo",meta.instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;assert_eq!(app.snapshot().unwrap(),pasted);
  let targets=serde_json::to_string(&vec![serde_json::json!({"granularity":DRAWING_INTERACTION_GRANULARITY,"id":selected[0]})]).unwrap();let selection=app.handle_action(semio_framework::INTERACTION_SELECT_ACTION_ID,Some(&semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({"domainId":DRAWING_INTERACTION_DOMAIN,"targets":targets,"merge":"replace","method":"pick"}))),&meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.unwrap();semio_framework_plugin::app::settle_framework_reserved_admission(&mut *app,selection).await.unwrap();artifact_laws::settle_registered_typed_operation(&mut *app,meta.instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.unwrap();
  let edits=app.history_snapshot().await.unwrap().edit_count;reserved_clipboard(&mut app,"cut",None,&meta).await;assert_eq!(app.snapshot().unwrap(),before);assert!(selected_strokes(&app).await.is_empty());assert_eq!(app.history_snapshot().await.unwrap().edit_count,edits+1);artifact_laws::settle_history_verb(&mut *app,"undo",meta.instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;assert_eq!(app.snapshot().unwrap(),pasted);
- artifact_laws::close_registered_fixture_app(&mut *app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);assert!(app.close_terminal_is_empty());eprintln!("[DEBUG] Native registered copy preserves history, paste/cut publish mapped selection and one inverse history entry, undo keeps live IDs and actual app owners close");
+ artifact_laws::close_registered_fixture_app(&mut *app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);assert!(app.close_terminal_is_empty());
 }

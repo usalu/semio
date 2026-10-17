@@ -65,42 +65,12 @@ import {
   worldReferenceAppearance
 } from "./🖼️reference/🟦️.tsx";
 import { applyWorldVolumeTransform, worldVolumesContainAabb } from "./🧊️volume/🟦️.tsx";
-import {
-  computeWorldProjectionPose,
-  createWorldProjectionTemplates,
-  decodeWorldProjectionTemplateId,
-  encodeWorldProjectionTemplateId,
-  frameWorldProjectionPose,
-  orbitCameraViewGumballPlane,
-  orbitViewToWorldProjectionSpec,
-  resolveOrbitGizmoViewFromDirection,
-  resolveProjectionGizmoSpec,
-  WORLD_CURVILINEAR_CAPTURE_TARGET_OPTIONS,
-  WORLD_CURVILINEAR_FRAGMENT_SHADER,
-  WORLD_PROJECTION_COMMAND,
-  WORLD_PROJECTION_KINDS,
-  worldCurvilinearUnproject,
-  worldObliqueShearMatrix,
-  worldProjectionDefaults,
-  worldProjectionFamily,
-  worldProjectionGoalMatrix,
-  worldProjectionGumballPlane,
-  worldProjectionKindSwitchSpec,
-  worldProjectionModeOptions,
-  worldProjectionMorphMatrix,
-  worldProjectionOrbitConstraints,
-  worldProjectionPerspectiveFov,
-  worldProjectionSnapZoom,
-  worldProjectionSpecIconId,
-  worldProjectionSpecLabel,
-  worldProjectionSpecToOrbitView,
-  worldProjectionSwitchTreeItems,
-  worldProjectionTemplateApplySpec,
-  worldProjectionTemplateSelectionId,
-  worldProjectionTransitionPose,
-  worldSceneContentBounds,
-  worldSceneContentBoundsKey
-} from "./📐️projection/🟦️.tsx";
+import { resolveOrbitGizmoViewFromDirection, WORLD_PROJECTION_KINDS, worldProjectionModeOptions, worldProjectionSwitchTreeItems, worldProjectionTemplateApplySpec, worldProjectionTemplateSelectionId } from "./📐️projection/🟦️.tsx";
+import { computeWorldProjectionPose, frameWorldProjectionPose, orbitCameraViewGumballPlane, WORLD_PROJECTION_COMMAND, worldProjectionDefaults, worldProjectionFamily, worldProjectionGumballPlane, worldProjectionOrbitConstraints, worldProjectionPerspectiveFov, worldProjectionSnapZoom, worldSceneContentBounds, worldSceneContentBoundsKey } from "./📐️projection/🧮️projection-pose/🟦️.ts";
+import { worldObliqueShearMatrix, worldProjectionGoalMatrix, worldProjectionMorphMatrix, worldProjectionTransitionPose } from "./📐️projection/🔄️projection-matrices/🟦️.ts";
+import { orbitViewToWorldProjectionSpec, resolveProjectionGizmoSpec, worldProjectionKindSwitchSpec, worldProjectionSpecToOrbitView } from "./📐️projection/🧭️projection-gizmo-specs/🟦️.ts";
+import { WORLD_CURVILINEAR_CAPTURE_TARGET_OPTIONS, WORLD_CURVILINEAR_FRAGMENT_SHADER, worldCurvilinearUnproject } from "./📐️projection/🎬️projection-rig/🟦️.tsx";
+import { createWorldProjectionTemplates, decodeWorldProjectionTemplateId, encodeWorldProjectionTemplateId, worldProjectionSpecIconId, worldProjectionSpecLabel } from "./📐️projection/🏷️projection-templates/🟦️.ts";
 import {
   dispatchProjectionGizmoHit,
   projectionGizmoHeadFillColor,
@@ -296,65 +266,12 @@ export {
   worldVolumesContainAabb
 } from "./🧊️volume/🟦️.tsx";
 
-export {
-  applyWorldProjectionToCameraState,
-  computeWorldProjectionPose,
-  createWorldProjectionTemplates,
-  type CreateWorldProjectionTemplatesConfig,
-  decodeWorldProjectionTemplateId,
-  encodeWorldProjectionTemplateId,
-  frameWorldProjectionPose,
-  orbitCameraViewGumballPlane,
-  orbitViewToWorldProjectionSpec,
-  projectionGizmoFaceToOrthographicView,
-  resolveOrbitGizmoViewFromDirection,
-  resolveProjectionGizmoHitFromDirection,
-  resolveProjectionGizmoSpec,
-  WORLD_CURVILINEAR_CAPTURE_TARGET_OPTIONS,
-  WORLD_CURVILINEAR_FRAGMENT_SHADER,
-  WORLD_PROJECTION_COMMAND,
-  WORLD_PROJECTION_KINDS,
-  worldCurvilinearUnproject,
-  worldObliqueShearMatrix,
-  WorldOrbitProjectionSwitch,
-  type WorldOrbitProjectionSwitchProps,
-  WorldProjectionApplier,
-  worldProjectionCardinalLook,
-  worldProjectionCornerLook,
-  worldProjectionDefaults,
-  worldProjectionFamily,
-  worldProjectionGoalMatrix,
-  worldProjectionGumballPlane,
-  WorldProjectionKindSwitch,
-  type WorldProjectionKindSwitchProps,
-  worldProjectionKindSwitchSpec,
-  worldProjectionModeFov,
-  worldProjectionModeKind,
-  worldProjectionModeLabel,
-  type WorldProjectionModeOption,
-  worldProjectionModeOptions,
-  worldProjectionMorphMatrix,
-  worldProjectionOrbitConstraints,
-  worldProjectionOrientationLabel,
-  worldProjectionOrientationLook,
-  worldProjectionOrientationsEqual,
-  worldProjectionOrthoZoom,
-  worldProjectionPerspectiveFov,
-  WorldProjectionRig,
-  worldProjectionSnapZoom,
-  worldProjectionSpecIconId,
-  worldProjectionSpecLabel,
-  worldProjectionSpecToOrbitView,
-  worldProjectionSwitchTreeItems,
-  worldProjectionTemplateApplySpec,
-  type WorldProjectionTemplateDescriptor,
-  worldProjectionTemplateSelectionId,
-  worldProjectionTransitionPose,
-  worldProjectionViewHalfExtent,
-  worldSceneContentBounds,
-  type WorldSceneContentBounds,
-  worldSceneContentBoundsKey
-} from "./📐️projection/🟦️.tsx";
+export { resolveOrbitGizmoViewFromDirection, WORLD_PROJECTION_KINDS, WorldOrbitProjectionSwitch, type WorldOrbitProjectionSwitchProps, WorldProjectionKindSwitch, type WorldProjectionKindSwitchProps, type WorldProjectionModeOption, worldProjectionModeOptions, worldProjectionSwitchTreeItems, worldProjectionTemplateApplySpec, worldProjectionTemplateSelectionId } from "./📐️projection/🟦️.tsx";
+export { applyWorldProjectionToCameraState, computeWorldProjectionPose, frameWorldProjectionPose, orbitCameraViewGumballPlane, WORLD_PROJECTION_COMMAND, worldProjectionCardinalLook, worldProjectionCornerLook, worldProjectionDefaults, worldProjectionFamily, worldProjectionGumballPlane, worldProjectionModeFov, worldProjectionModeKind, worldProjectionOrbitConstraints, worldProjectionOrientationLook, worldProjectionOrientationsEqual, worldProjectionOrthoZoom, worldProjectionPerspectiveFov, worldProjectionSnapZoom, worldProjectionViewHalfExtent, worldSceneContentBounds, type WorldSceneContentBounds, worldSceneContentBoundsKey } from "./📐️projection/🧮️projection-pose/🟦️.ts";
+export { worldObliqueShearMatrix, worldProjectionGoalMatrix, worldProjectionMorphMatrix, worldProjectionTransitionPose } from "./📐️projection/🔄️projection-matrices/🟦️.ts";
+export { orbitViewToWorldProjectionSpec, projectionGizmoFaceToOrthographicView, resolveProjectionGizmoHitFromDirection, resolveProjectionGizmoSpec, worldProjectionKindSwitchSpec, worldProjectionSpecToOrbitView } from "./📐️projection/🧭️projection-gizmo-specs/🟦️.ts";
+export { WORLD_CURVILINEAR_CAPTURE_TARGET_OPTIONS, WORLD_CURVILINEAR_FRAGMENT_SHADER, worldCurvilinearUnproject, WorldProjectionApplier, WorldProjectionRig } from "./📐️projection/🎬️projection-rig/🟦️.tsx";
+export { createWorldProjectionTemplates, type CreateWorldProjectionTemplatesConfig, decodeWorldProjectionTemplateId, encodeWorldProjectionTemplateId, worldProjectionModeLabel, worldProjectionOrientationLabel, worldProjectionSpecIconId, worldProjectionSpecLabel, type WorldProjectionTemplateDescriptor } from "./📐️projection/🏷️projection-templates/🟦️.ts";
 
 export {
   WorldOrbitViewControls,

@@ -7,7 +7,8 @@
 
 use super::opening::{cut_outline, fitted_offset, nearest_host, HostHit};
 use super::plane::{axis_ends, axis_length, axis_of, axis_point_at, bounds, bulge_through, dist, flatten, from_point2, point2, same, P};
-use super::session::{length_label, Mark, Pointer, Preview, Step, Style, Tool, ToolContext, ToolEvent, PICK_PIXELS};
+use super::session::{length_label, Pointer, Step, Tool, ToolContext, ToolEvent, PICK_PIXELS};
+use crate::editor::bim::marks::{Mark, Preview, Style};
 use crate::editor::bim::entities::kind_holding;
 use crate::editor::bim::modes::edit::windows::plan;
 use crate::standards::v1::subsets::any::schema::mutations::placement::{placement_issue, width_of};

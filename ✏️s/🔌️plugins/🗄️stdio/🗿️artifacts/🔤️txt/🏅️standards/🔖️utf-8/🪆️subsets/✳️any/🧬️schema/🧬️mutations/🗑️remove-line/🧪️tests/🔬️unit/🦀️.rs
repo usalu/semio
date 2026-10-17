@@ -4,6 +4,7 @@ use crate::standards::v_utf_8::subsets::any::schema::mutations::{InsertLineMutat
 use crate::standards::v_utf_8::subsets::any::schema::mutations::remove_line::*;
 use crate::schema::snapshot::LineEnding;
 use protocol::{Mutation, MutationKind, MutationLeaf, OpBinary, OpText};
+use semio_framework_test_fixtures::fixture_text;
 
 fn snapshot(lines: &[&str], trailing_newline: bool, line_ending: LineEnding) -> TxtSnapshot {
     TxtSnapshot { lines: lines.iter().map(|line| (*line).to_string()).collect(), trailing_newline, line_ending, ..Default::default() }
@@ -11,7 +12,7 @@ fn snapshot(lines: &[&str], trailing_newline: bool, line_ending: LineEnding) -> 
 
 #[test]
 fn canonical_leaf_metadata_matches_descriptor_and_provenance() {
-    let expected: serde_json::Value = serde_json::from_str(include_str!("../../🔣️.json")).expect("valid canonical remove-line descriptor");
+    let expected: serde_json::Value = serde_json::from_str(fixture_text!("../../../../🧬️mutations/🗑️remove-line/🔣️.json")).expect("valid canonical remove-line descriptor");
     assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&(<RemoveLineMutation as MutationLeaf>::DESCRIPTOR))).expect("serializable descriptor"), expected);
     let provenance = <RemoveLineMutation as MutationLeaf>::PROVENANCE;
     assert_eq!(provenance.mutation_root, "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/🧬️mutations");

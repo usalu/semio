@@ -1,8 +1,42 @@
-use super::*;
+use crate::standards::v1_7::subsets::base::modules::fonts::FontCodec;
+use crate::standards::v1_7::subsets::base::modules::lexer::dict_get;
+use crate::standards::v1_7::subsets::base::io::foreign_artifacts;
+use crate::standards::v1_7::subsets::base::io::error::PdfEngineError;
+use crate::standards::v1_7::subsets::base::modules::lower::LowerOptions;
+use crate::standards::v1_7::subsets::base::modules::writer::WriteOptions;
+use crate::standards::v1_7::subsets::base::schema::graph_source::GraphSource;
+use crate::standards::v1_7::subsets::base::io::import::{decode_pdf, decode_pdf_with_password};
+use semio_framework_test_fixtures::{fixture_bytes, fixture_path, fixture_text};
+use std::collections::HashMap;
+#[allow(unused_imports)]
+use crate::standards::v1_7::subsets::base::modules::content::{content_references, ContentReferences};
+#[allow(unused_imports)]
+use crate::standards::v1_7::subsets::base::modules::fonts::standard_font;
+#[allow(unused_imports)]
+use crate::standards::v1_7::subsets::base::io::error::PResult;
+#[allow(unused_imports)]
+use crate::standards::v1_7::subsets::base::modules::lift::{lift_document_with, Category};
+#[allow(unused_imports)]
+use crate::standards::v1_7::subsets::base::modules::lower::{lower_acro_form_standalone, lower_catalog_standalone, lower_document, lower_document_headless, lower_info, lower_page_standalone, LoweredDocument};
+#[allow(unused_imports)]
+use crate::standards::v1_7::subsets::base::modules::writer::{serialize_document, DocumentTrailer, PdfWriter};
+#[allow(unused_imports)]
+use crate::standards::v1_7::subsets::base::schema::graph_source::ObjectSource;
+#[allow(unused_imports)]
+use crate::standards::v1_7::subsets::base::schema::snapshot::*;
+#[allow(unused_imports)]
+use crate::standards::v1_7::subsets::base::io::import::sniff_pdf;
+#[allow(unused_imports)]
+use std::borrow::Cow;
+#[allow(unused_imports)]
+use std::collections::{BTreeMap, HashSet};
+#[allow(unused_imports)]
+use crate::standards::v1_7::subsets::base::io::export::graft::*;
+use crate::standards::v1_7::subsets::base::io::export::*;
 use crate::standards::v1_7::subsets::base::modules::fonts::truetype::synthesize_truetype;
 
-static THESIS: std::sync::LazyLock<&'static [u8]> = std::sync::LazyLock::new(|| Box::leak(std::fs::read(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🖼️assets/🎓️bachelor-thesis/🎓️bachelor-thesis.pdf")).expect("the committed fixture is readable").into_boxed_slice()));
-const REPORT_STRIP: &[u8] = include_bytes!("../../../../🧪️tests/🧫️fixtures/📊️report-strip/📊️report-strip.pdf");
+static THESIS: std::sync::LazyLock<&'static [u8]> = std::sync::LazyLock::new(|| Box::leak(std::fs::read(fixture_path!("../../../../🖼️assets/🎓️bachelor-thesis/🎓️bachelor-thesis.pdf")).expect("the committed fixture is readable").into_boxed_slice()));
+static REPORT_STRIP: std::sync::LazyLock<&[u8]> = std::sync::LazyLock::new(|| fixture_bytes!("../../../../🧪️tests/🧫️fixtures/📊️report-strip/📊️report-strip.pdf"));
 
 fn typed_lanes(snapshot: &PdfSnapshot) -> PdfSnapshot {
     PdfSnapshot { objects: Vec::new(), trailer: Vec::new(), ..snapshot.clone() }
@@ -366,7 +400,7 @@ fn document_stream_matches_the_whole_document_write() {
 
 #[test]
 fn report_strip_fixture_reads_and_rewrites_stably() {
-    let decoded = decode_pdf(REPORT_STRIP).unwrap();
+    let decoded = decode_pdf((*REPORT_STRIP)).unwrap();
     assert_eq!(decoded.pages.len(), 3);
     assert!(crate::standards::v1_7::subsets::base::io::import::page_text(&decoded, 0).unwrap().contains("Report strip page one"), "{}", crate::standards::v1_7::subsets::base::io::import::page_text(&decoded, 0).unwrap());
     assert_eq!(decoded.pages[1].crop_box, Some([10.0, 10.0, 585.0, 832.0]));
@@ -417,7 +451,7 @@ fn logical_character_codes_bind_complete_native_fragments_and_preserve_word_prec
     use crate::standards::v1_7::subsets::base::modules::content::{parse_content, print_content};
     use crate::standards::v1_7::subsets::base::modules::fonts::FontCodec;
     use std::collections::HashMap;
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🔢️logical-character-codes/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../../🚪️io/🧪️tests/🧫️fixtures/🔢️logical-character-codes/🔣️.json")).unwrap();
     for case in fixture["cases"].as_array().unwrap() {
         let width=case["width"].as_u64().unwrap()as usize;
         let expected:Vec<u32>=case["codes"].as_array().unwrap().iter().map(|code|u32::try_from(code.as_u64().unwrap()).unwrap()).collect();
@@ -435,7 +469,6 @@ fn logical_character_codes_bind_complete_native_fragments_and_preserve_word_prec
         let native=print_content(&operations,&fonts).unwrap();
         assert_eq!(parse_content(&native,&fonts,&mut crate::standards::v1_7::subsets::base::io::foreign_artifacts::NativePdfArtifactResources::default()).unwrap(),operations);
         assert_eq!(semio_s_artifact_stdio_pdf_test_oracle::standards::v1_7::subsets::base::reference_content_codes(&native,width).unwrap(),vec![expected]);
-        println!("[DEBUG] PDF logical character case={} native grouping width={} exact words and complete fragment admission",case["id"],width);
     }
 }
 
@@ -443,7 +476,7 @@ fn logical_character_codes_bind_complete_native_fragments_and_preserve_word_prec
 fn retained_text_dates_admit_owned_values_and_keep_indirect_identity() {
     use crate::standards::v1_7::subsets::base::modules::lexer::{Lexer, object_bytes};
     use semio_framework_value::FromValue;
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🪪️retained-text/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../../🚪️io/🧪️tests/🧫️fixtures/🪪️retained-text/🔣️.json")).unwrap();
     for case in fixture["cases"].as_array().unwrap() {
         let native=case["native"].as_str().unwrap();
         let value=Lexer::new(native.as_bytes()).parse_object().unwrap();
@@ -464,36 +497,5 @@ fn retained_text_dates_admit_owned_values_and_keep_indirect_identity() {
         assert_eq!(oracle,title);
         let mut emitted=object_bytes(&objects[1].value);emitted.extend_from_slice(b" Tj");
         assert_eq!(semio_s_artifact_stdio_pdf_test_oracle::standards::v1_7::subsets::base::reference_text_operand(&emitted).unwrap(),oracle);
-        println!("[DEBUG] PDF retained text case={} exact logical text/date, indirect identity and independent native text admission",case["id"]);
     }
-}
-
-/// 📖️ Proves PDF 1.7 logical carriers, independent content oracles and exact protocol custody.
-#[test]
-fn owned_fixture_publication_reports_canonical_logical_carriers() {
-    use store::{pack::snapshot::ArtifactDsl, pack::snapshot::ArtifactPack};
-    logical_character_codes_bind_complete_native_fragments_and_preserve_word_precision();
-    retained_text_dates_admit_owned_values_and_keep_indirect_identity();
-    let snapshot = text_document(&[(300.0, 400.0, "Native PDF 1.7 receipt")]);
-    let text = snapshot.print_dsl();
-    let binary = snapshot.encode_pack_with(&Default::default()).unwrap();
-    assert_eq!(PdfSnapshot::parse_dsl(&text).unwrap(), snapshot);
-    assert_eq!(PdfSnapshot::decode_pack_with(&binary, &Default::default()).unwrap(), snapshot);
-    let factories = crate::native_codecs();
-    let selected = factories.iter().filter(|factory| factory.id == "stdio.native.pdf17.v1").collect::<Vec<_>>();
-    assert_eq!(selected.len(), 1);
-    let factory = selected[0];
-    let codec = (factory.codec)();
-    let kind = (factory.kind)();
-    let compiled = include_bytes!("../../../💾️binary/📸️snapshot/📡️.protocol.semio");
-    let current = std::fs::read(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/💾️binary/📸️snapshot/📡️.protocol.semio")).unwrap();
-    assert_eq!(current.as_slice(), compiled, "the live native receipt requires the current compiled protocol");
-    let digest = semio_framework_hash::Sha256::digest(compiled);
-    assert_ne!(codec.pack_schema_hash, [0; 32]);
-    assert_eq!(kind.id, crate::standards::v1_7::subsets::base::schema::PDF_ARTIFACT_SCHEMA_ID);
-    assert_eq!(codec.schema, crate::standards::v1_7::subsets::base::schema::snapshot::STDIO_PDF17_DOCUMENT_SCHEMA);
-    assert_eq!(codec.extension, "pdf");
-    let hex = |bytes: &[u8]| bytes.iter().map(|byte| format!("{byte:02x}")).collect::<String>();
-    let receipt = serde_json::json!({"schemaVersion":1,"artifactKind":kind.id,"artifactSchema":codec.schema,"factoryId":factory.id,"extension":codec.extension,"packSchemaHash":hex(&codec.pack_schema_hash),"protocolSourceSha256":hex(&digest)});
-    eprintln!("[DEBUG] native-codec-publication={receipt}");
 }

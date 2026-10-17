@@ -1,10 +1,14 @@
 //! ↩️ Inverse for `SetRuleLayoutPoints` — ONE `set-rule-layout-points` putting every key the payload changes back: its BASE point
 //! when the map held one, cleared otherwise; nothing when the payload changes nothing.
-use crate::standards::v1::subsets::any::schema::mutations::{set_rule_layout_points,RewriteRuleMutation,RuleLayoutPlacement};
-use crate::{LayoutPoint, RewritingSnapshot};
+use crate::standards::v1::subsets::any::schema::mutations::set_rule_layout_points::{set_rule_layout_points, RuleLayoutPlacement};
+use crate::standards::v1::subsets::any::schema::model::LayoutPoint;
+use crate::standards::v1::subsets::any::schema::snapshot::RewritingSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &super::SetRuleLayoutPoints, base: &RewritingSnapshot) -> Result<Vec<RewriteRuleMutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op>(payload: &super::SetRuleLayoutPoints, base: &RewritingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError>
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::set_rule_layout_points::SetRuleLayoutPoints>,
+{
     if !payload.holds_invariants() {
         return Ok(Vec::new());
     }

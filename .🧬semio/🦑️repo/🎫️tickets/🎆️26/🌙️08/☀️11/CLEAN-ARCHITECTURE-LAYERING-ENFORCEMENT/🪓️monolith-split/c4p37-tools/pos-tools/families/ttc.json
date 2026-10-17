@@ -1,0 +1,19 @@
+{
+ "name": "ttc",
+ "crates": [
+  "semio-framework-tool-run",
+  "semio-framework-tool-machine",
+  "semio-framework-machine",
+  "semio-framework-tool-run-tests",
+  "semio-framework-tool-machine-tests"
+ ],
+ "base": {
+  "rev": "1bae6115bc5",
+  "crates": [
+   "semio-framework-tool-run",
+   "semio-framework-tool-machine",
+   "semio-framework-machine"
+  ]
+ },
+ "note": "TOOL-TEST-COMPANIONS"
+}

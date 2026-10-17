@@ -1,0 +1,9 @@
+{
+ "name": "lwr",
+ "crates": [
+  "semio-s-artifact-lowpoly-lowpoly-engine",
+  "semio-s-artifact-procedural-3d-mesh-edit",
+  "semio-s-artifact-layout-layout-engine-json"
+ ],
+ "note": "LIB-WIRING-RATCHET: three slimmed lib roots (absolute classification against the pre-edit working tree)"
+}

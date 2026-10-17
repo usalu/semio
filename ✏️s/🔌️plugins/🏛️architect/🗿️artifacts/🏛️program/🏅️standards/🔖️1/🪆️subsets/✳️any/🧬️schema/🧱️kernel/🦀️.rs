@@ -3,6 +3,9 @@
 
 //! 🧱️ Shared kernel types for architect program entities — ids, headers, quantities, traces, and diagnostics.
 
+use graph::{orient_endpoints, Undirected};
+use protocol::list_delta::RowPatch;
+use protocol::Identified;
 use std::cmp::Ordering;
 use std::fmt;
 // #region 🔖️EntityId
@@ -386,9 +389,7 @@ impl fmt::Display for PluginError {
 impl std::error::Error for PluginError {}
 //#endregion ⚠️ Errors
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 
 #[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
@@ -400,3 +401,98 @@ pub struct TraceLinkPatch {
     pub kind: Option<TraceKind>,
     pub label: Option<String>,
 }
+
+//#region 🔖️DocumentHelpers
+/// 📐️ Canonical undirected endpoint order for an adjacency pair — dissolved out of the former
+/// `⚙️engine/↔️adjacency` topic (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES): a
+/// pure document helper with no `&mut` and no app coupling, so it lives in the shared kernel beside
+/// [`EntityId`], where the mutation leaves and the snapshot read it without reaching the schema root.
+pub fn normalize_pair(a: &EntityId, b: &EntityId) -> (EntityId, EntityId) {
+    let (left, right) = orient_endpoints::<&str, Undirected>(&a.0, &b.0);
+    (EntityId(left.to_string()), EntityId(right.to_string()))
+}
+//#endregion 🔖️DocumentHelpers
+
+// #region 🔖️PatchHelpers
+/// 🩹️ Per-field patch algebra of one register row: `commit_row` writes a patched value and `capture_row` reads the current value so the
+/// patch that undoes a patch can be built (an absent `Option` field captures nothing — a patch field `Option<T>` cannot express a clear,
+/// so a clear travels as a row replacement, never as a patch).
+pub trait PatchRow<T: Clone> {
+    fn commit_row(&mut self, patch: &Option<T>);
+    fn capture_row(&self) -> Option<T>;
+}
+
+impl<T: Clone> PatchRow<T> for T {
+    fn commit_row(&mut self, patch: &Option<T>) {
+        if let Some(value) = patch {
+            *self = value.clone();
+        }
+    }
+
+    fn capture_row(&self) -> Option<T> {
+        Some(self.clone())
+    }
+}
+
+impl<T: Clone> PatchRow<T> for Option<T> {
+    fn commit_row(&mut self, patch: &Option<T>) {
+        if let Some(value) = patch {
+            *self = Some(value.clone());
+        }
+    }
+
+    fn capture_row(&self) -> Option<T> {
+        self.clone()
+    }
+}
+
+#[macro_export]
+macro_rules! impl_identified_header {
+    ($ty:ty) => {
+        impl Identified<EntityId> for $ty {
+            fn id(&self) -> &EntityId {
+                &self.header.id
+            }
+        }
+    };
+}
+
+/// 🧬️ Implements the framework's [`RowPatch`] for one register row: every listed field is an absolute setter, `inverse` captures the
+/// current value of exactly the fields the patch carries, and `absorb` lets the later patch's fields win.
+#[macro_export]
+macro_rules! impl_patchable {
+    ($entity:ty, $patch:ty, { $( [ $($path:ident).+ ] => $f:ident ),+ $(,)? }) => {
+        impl RowPatch<$entity> for $patch {
+            fn commit_into(&self, row: &mut $entity, _capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
+                $( PatchRow::commit_row(&mut row$(.$path)+, &self.$f); )+
+                Ok(())
+            }
+
+            fn absorb(&mut self, later: Self) {
+                $( if later.$f.is_some() { self.$f = later.$f; } )+
+            }
+
+            fn inverse(&self, row: &$entity) -> Self {
+                Self { $( $f: if self.$f.is_some() { PatchRow::capture_row(&row$(.$path)+) } else { None } ),+, ..Self::default() }
+            }
+
+            fn is_empty(&self) -> bool {
+                true $( && self.$f.is_none() )+
+            }
+        }
+    };
+}
+pub use impl_identified_header;
+pub use impl_patchable;
+// #endregion
+
+impl_patchable!(
+    TraceLink,
+    TraceLinkPatch,
+    {
+        [from_id] => from_id,
+        [to_id] => to_id,
+        [kind] => kind,
+        [label] => label,
+    }
+);

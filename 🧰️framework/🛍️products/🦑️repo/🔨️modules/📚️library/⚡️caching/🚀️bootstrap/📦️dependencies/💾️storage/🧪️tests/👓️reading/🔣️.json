@@ -46,5 +46,691 @@
     "packageLimit": 4096,
     "fileLimit": 8388608,
     "aggregateLimit": 67108864
-  }
+  },
+  "readContexts": [
+    {
+      "name": "current readonly receipt",
+      "effect": "ordinary",
+      "accepted": true
+    },
+    {
+      "name": "released verification scope",
+      "effect": "released",
+      "accepted": false
+    },
+    {
+      "name": "foreign Original control",
+      "effect": "foreign-control",
+      "accepted": false
+    },
+    {
+      "name": "cancelled actual control",
+      "effect": "cancelled",
+      "accepted": false
+    },
+    {
+      "name": "receipt changed during await",
+      "effect": "changed-receipt",
+      "accepted": false
+    },
+    {
+      "name": "invented ordinary store",
+      "effect": "fake-store",
+      "accepted": false
+    }
+  ],
+  "currentBindings": [
+    {
+      "name": "missing",
+      "mode": "missing",
+      "accepted": true,
+      "active": false
+    },
+    {
+      "name": "inactive",
+      "mode": "inactive",
+      "accepted": true,
+      "active": false
+    },
+    {
+      "name": "active-root",
+      "mode": "active-root",
+      "accepted": true,
+      "active": true
+    },
+    {
+      "name": "active-later",
+      "mode": "active-later",
+      "accepted": true,
+      "active": true
+    },
+    {
+      "name": "active-member",
+      "mode": "active-member",
+      "accepted": true,
+      "active": true
+    },
+    {
+      "name": "mixed",
+      "mode": "mixed",
+      "accepted": false,
+      "active": false
+    },
+    {
+      "name": "unqualified",
+      "mode": "unqualified",
+      "accepted": false,
+      "active": false
+    },
+    {
+      "name": "receipt-foreign",
+      "mode": "receipt-foreign",
+      "accepted": false,
+      "active": false
+    },
+    {
+      "name": "changed-link",
+      "mode": "changed-link",
+      "accepted": false,
+      "active": false
+    }
+  ],
+  "selectedPlans": [
+    {
+      "mode": "valid",
+      "accepted": true
+    },
+    {
+      "mode": "selected",
+      "accepted": true
+    },
+    {
+      "mode": "extra",
+      "accepted": false
+    },
+    {
+      "mode": "purpose",
+      "accepted": false
+    },
+    {
+      "mode": "prefix",
+      "accepted": false
+    },
+    {
+      "mode": "read-parent",
+      "accepted": false
+    }
+  ],
+  "selectedOwners": [
+    {
+      "mode": "inactive",
+      "accepted": true,
+      "active": false
+    },
+    {
+      "mode": "active-later",
+      "accepted": true,
+      "active": true
+    },
+    {
+      "mode": "absent-journal",
+      "accepted": false,
+      "active": false
+    },
+    {
+      "mode": "wrong-row",
+      "accepted": false,
+      "active": false
+    },
+    {
+      "mode": "descendant",
+      "accepted": false,
+      "active": false
+    },
+    {
+      "mode": "busy",
+      "accepted": false,
+      "active": false
+    },
+    {
+      "mode": "ownership-change",
+      "accepted": false,
+      "active": false
+    },
+    {
+      "mode": "unknown-role",
+      "accepted": false,
+      "active": false
+    },
+    {
+      "mode": "foreign",
+      "accepted": false,
+      "active": false
+    },
+    {
+      "mode": "undefined",
+      "accepted": false,
+      "active": false
+    },
+    {
+      "mode": "frozen",
+      "accepted": false,
+      "active": false
+    }
+  ],
+  "currentBindingProgress": [
+    {"mode":"progress","scopes":40,"accepted":true},
+    {"mode":"cancel","scopes":40,"accepted":false},
+    {"mode":"drift","scopes":40,"accepted":false},
+    {"mode":"publish-refusal","scopes":40,"accepted":false}
+  ],
+  "selectedRetirementCommands": [
+    {
+      "mode": "observe",
+      "accepted": true
+    },
+    {
+      "mode": "retire",
+      "accepted": true
+    },
+    {
+      "mode": "empty-observe",
+      "accepted": true
+    },
+    {
+      "mode": "empty-retire",
+      "accepted": true
+    },
+    {
+      "mode": "extra",
+      "accepted": false
+    },
+    {
+      "mode": "callback",
+      "accepted": false
+    },
+    {
+      "mode": "proxy",
+      "accepted": false
+    },
+    {
+      "mode": "accessor",
+      "accepted": false
+    },
+    {
+      "mode": "selection-extra",
+      "accepted": false
+    },
+    {
+      "mode": "selection-proxy",
+      "accepted": false
+    },
+    {
+      "mode": "selection-accessor",
+      "accepted": false
+    },
+    {
+      "mode": "prefix",
+      "accepted": false
+    },
+    {
+      "mode": "identity",
+      "accepted": false
+    },
+    {
+      "mode": "active-purpose",
+      "accepted": false
+    },
+    {
+      "mode": "read-parent",
+      "accepted": false
+    },
+    {
+      "mode": "wrong-owner",
+      "accepted": false
+    },
+    {
+      "mode": "whole-retire",
+      "accepted": false
+    },
+    {
+      "mode": "missing-expected",
+      "accepted": false
+    },
+    {
+      "mode": "unexpected-expected",
+      "accepted": false
+    },
+    {
+      "mode": "snapshot-extra",
+      "accepted": false
+    },
+    {
+      "mode": "snapshot-identity",
+      "accepted": false
+    },
+    {
+      "mode": "snapshot-bytes",
+      "accepted": false
+    },
+    {
+      "mode": "wrong-current",
+      "accepted": false
+    }
+  ],
+  "selectedRetirementRoles": [
+    {
+      "parts": [
+        "bindings.json"
+      ],
+      "kind": "file",
+      "members": 0,
+      "accepted": true
+    },
+    {
+      "parts": [
+        "package.json"
+      ],
+      "kind": "file",
+      "members": 1,
+      "accepted": true
+    },
+    {
+      "parts": [
+        "retained.json"
+      ],
+      "kind": "file",
+      "members": 1,
+      "accepted": false
+    },
+    {
+      "parts": [
+        "State"
+      ],
+      "kind": "directory",
+      "members": 1,
+      "accepted": false
+    },
+    {
+      "parts": [
+        "node_modules"
+      ],
+      "kind": "directory",
+      "members": 1,
+      "accepted": true
+    },
+    {
+      "parts": [
+        "node_modules"
+      ],
+      "kind": "link",
+      "members": 1,
+      "accepted": false
+    },
+    {
+      "parts": [
+        "node_modules",
+        "x",
+        "state"
+      ],
+      "kind": "file",
+      "members": 1,
+      "accepted": true
+    },
+    {
+      "parts": [
+        "node_modules",
+        "x"
+      ],
+      "kind": "link",
+      "members": 1,
+      "accepted": true
+    },
+    {
+      "parts": [
+        "node_modules",
+        "socket"
+      ],
+      "kind": "other",
+      "members": 1,
+      "accepted": false
+    },
+    {
+      "parts": [
+        "w"
+      ],
+      "kind": "directory",
+      "members": 1,
+      "accepted": true
+    },
+    {
+      "parts": [
+        "w",
+        "0"
+      ],
+      "kind": "directory",
+      "members": 1,
+      "accepted": true
+    },
+    {
+      "parts": [
+        "w",
+        "0",
+        "package.json"
+      ],
+      "kind": "file",
+      "members": 1,
+      "accepted": true
+    },
+    {
+      "parts": [
+        "w",
+        "0",
+        "node_modules",
+        "x"
+      ],
+      "kind": "link",
+      "members": 1,
+      "accepted": true
+    },
+    {
+      "parts": [
+        "w",
+        "1"
+      ],
+      "kind": "directory",
+      "members": 1,
+      "accepted": false
+    },
+    {
+      "parts": [
+        "w",
+        "00"
+      ],
+      "kind": "directory",
+      "members": 1,
+      "accepted": false
+    },
+    {
+      "parts": [
+        "w",
+        "0",
+        "State"
+      ],
+      "kind": "directory",
+      "members": 1,
+      "accepted": false
+    },
+    {
+      "parts": [
+        "w"
+      ],
+      "kind": "directory",
+      "members": 0,
+      "accepted": false
+    },
+    {
+      "parts": [
+        "patches"
+      ],
+      "kind": "directory",
+      "members": 1,
+      "accepted": true
+    },
+    {
+      "parts": [
+        "patches",
+        "0.patch"
+      ],
+      "kind": "file",
+      "members": 1,
+      "accepted": true
+    },
+    {
+      "parts": [
+        "patches",
+        "01.patch"
+      ],
+      "kind": "file",
+      "members": 1,
+      "accepted": false
+    },
+    {
+      "parts": [
+        "patches",
+        "0.patch"
+      ],
+      "kind": "directory",
+      "members": 1,
+      "accepted": false
+    },
+    {
+      "parts": [
+        "patches",
+        "x"
+      ],
+      "kind": "file",
+      "members": 1,
+      "accepted": false
+    },
+    {
+      "parts": [
+        "node_modules",
+        ".."
+      ],
+      "kind": "directory",
+      "members": 1,
+      "accepted": false
+    },
+    {
+      "parts": [
+        "node_modules",
+        "a/b"
+      ],
+      "kind": "file",
+      "members": 1,
+      "accepted": false
+    },
+    {
+      "parts": [
+        "node_modules",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p"
+      ],
+      "kind": "file",
+      "members": 1,
+      "accepted": true
+    },
+    {
+      "parts": [
+        "node_modules",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p",
+        "p"
+      ],
+      "kind": "file",
+      "members": 1,
+      "accepted": false
+    }
+  ],
+  "selectedRetirementLaunches":[{"mode":"plan","fault":"none","accepted":true},{"mode":"plan","fault":"input","accepted":false},{"mode":"plan","fault":"owner","accepted":false},{"mode":"plan","fault":"busy","accepted":false},{"mode":"plan","fault":"active","accepted":false},{"mode":"observe","fault":"none","accepted":true},{"mode":"observe","fault":"input","accepted":false},{"mode":"observe","fault":"owner","accepted":false},{"mode":"observe","fault":"busy","accepted":false},{"mode":"observe","fault":"operation","accepted":false},{"mode":"retire","fault":"none","accepted":true},{"mode":"retire","fault":"input","accepted":false},{"mode":"retire","fault":"owner","accepted":false},{"mode":"retire","fault":"busy","accepted":false},{"mode":"retire","fault":"operation","accepted":false}],
+  "selectedRetirementAdmission": [{"effect":"inactive","accepted":true},{"effect":"empty","accepted":true},{"effect":"active","accepted":false},{"effect":"missing-current","accepted":false},{"effect":"empty-current","accepted":false},{"effect":"wrong-current","accepted":false},{"effect":"wrong-prefix","accepted":false},{"effect":"wrong-root","accepted":false},{"effect":"wrong-receipt","accepted":false},{"effect":"nonempty-empty","accepted":false},{"effect":"retained","accepted":false},{"effect":"wrong-payload","accepted":false},{"effect":"wrong-expected","accepted":false}],
+  "selectedRetirementEffect": [
+    {"effect":"valid","accepted":true},
+    {"effect":"empty","accepted":true},
+    {"effect":"hardlink-outside","accepted":true},
+    {"effect":"unknown-roster","accepted":false},
+    {"effect":"file-drift","accepted":false},
+    {"effect":"cancel","accepted":false},
+    {"effect":"frozen-primary","accepted":false},
+    {"effect":"undefined-primary","accepted":false},
+    {"effect":"registry-full","accepted":false},
+    {"effect":"deep","accepted":true},
+    {"effect":"after-receipt","accepted":false},
+    {"effect":"sync-error","accepted":false},
+    {"effect":"cross-directory-hardlinks","accepted":true}
+  ],
+  "selectedRetirementPayload": {
+    "members": 1,
+    "files": [
+      {"path":"package.json","text":"{}\n"},
+      {"path":"bun.lock","text":"locked\n"},
+      {"path":"bunfig.toml","text":"[install]\n"},
+      {"path":"bindings.json","text":"readonly DATA; not a readiness receipt\n"},
+      {"path":"patches/0.patch","text":"patch\n"},
+      {"path":"node_modules/pkg/a.txt","text":"shared bytes\n"},
+      {"path":"w/0/package.json","text":"{}\n"}
+    ],
+    "hardlinks": [{"path":"node_modules/pkg/b.txt","target":"node_modules/pkg/a.txt"}],
+    "links": [{"path":"node_modules/pkg/ref","target":"../missing"},{"path":"w/0/node_modules/source","target":"../../../../outside"}],
+    "cases": [
+      {"effect":"valid","accepted":true},
+      {"effect":"unknown-role","accepted":false},
+      {"effect":"cancelled","accepted":false},
+      {"effect":"cancel-at-progress","accepted":false},
+      {"effect":"file-drift","accepted":false},
+      {"effect":"directory-drift","accepted":false},
+      {"effect":"copied-control","accepted":false},
+      {"effect":"foreign-control","accepted":false},
+      {"effect":"released-context","accepted":false}
+    ]
+  },
+  "completionReceipts":[{"mode":"valid","accepted":true},{"mode":"many","accepted":true},{"mode":"existing-file","accepted":false},{"mode":"existing-link","accepted":false},{"mode":"bad-generation","accepted":false},{"mode":"noncanonical","accepted":false},{"mode":"cancel","accepted":false},{"mode":"frozen","accepted":false},{"mode":"undefined","accepted":false},{"mode":"foreign-name","accepted":false}],
+ "producerCompletions": [{"mode":"valid","accepted":true,"bindings":4},{"mode":"binding-unknown-after-effect","accepted":false,"bindings":0},{"mode":"reversed-plans","accepted":true,"bindings":4},{"mode":"installer-second","accepted":false,"bindings":0},{"mode":"qualification-second","accepted":false,"bindings":0},{"mode":"ready-second","accepted":false,"bindings":0},{"mode":"binding-after-one","accepted":false,"bindings":1},{"mode":"undefined-after-one","accepted":false,"bindings":1},{"mode":"funding-final","accepted":false,"bindings":4},{"mode":"cancel-ready","accepted":false,"bindings":0},{"mode":"foreign-input","accepted":false,"bindings":0},{"mode":"workspace-file-edge","accepted":false,"bindings":0},{"mode":"preserving-valid","accepted":true,"bindings":4},{"mode":"preserving-after-one","accepted":false,"bindings":1},{"mode":"preserving-ready-second","accepted":false,"bindings":0},{"mode":"preserving-unknown-after-effect","accepted":false,"bindings":0},{"mode":"preserving-capsule-drift","accepted":false,"bindings":1},{"mode":"preserving-payload-metadata-drift","accepted":false,"bindings":1},{"mode":"preserving-unready","accepted":true,"bindings":4},{"mode":"preserving-unready-ready","accepted":false,"bindings":0},{"mode":"preserving-unready-reference","accepted":false,"bindings":0},{"mode":"preserving-unready-stage-fail","accepted":false,"bindings":0},{"mode":"preserving-unready-retain-after-one","accepted":false,"bindings":0}],
+ "completionEntries":[{"args":["--producer-sync-source"],"accepted":true},{"args":["--producer-sync-strict"],"accepted":true},{"args":["--producer-sync","native-assets-protected-1.json"],"accepted":true},{"args":[],"accepted":false},{"args":["--producer-sync"],"accepted":false},{"args":["--producer-sync-source","extra"],"accepted":false},{"args":["--producer-sync","native-assets-protected-0.json"],"accepted":false},{"args":["--producer-sync","../native-assets-protected-1.json"],"accepted":false},{"args":["--producer-sync","native-assets-protected-1.json","extra"],"accepted":false},{"args":["--producer-probe","native-assets-protected-1.json"],"accepted":false},{"args":["--producer-sync-preserving","native-assets-protected-1.json"],"accepted":true},{"args":["--producer-sync-preserving-source"],"accepted":true},{"args":["--producer-sync-preserving-strict"],"accepted":true},{"args":["--producer-sync-preserving"],"accepted":false},{"args":["--producer-rebuild-unready","native-assets-protected-1.json"],"accepted":true},{"args":["--producer-rebuild-unready-source"],"accepted":true},{"args":["--producer-rebuild-unready-strict"],"accepted":true},{"args":["--producer-rebuild-unready"],"accepted":false},{"args":["--producer-rebuild-unready","../foreign.json"],"accepted":false},{"args":["--producer-rebuild-unready-source","native-assets-protected-1.json"],"accepted":false}],
+ "preservationSource":[{"mode":"missing","accepted":true},{"mode":"link","accepted":true},{"mode":"file","accepted":true},{"mode":"directory","accepted":true},{"mode":"cross-device","accepted":false},{"mode":"ancestor-drift","accepted":false},{"mode":"leaf-drift","accepted":false},{"mode":"cancel","accepted":false},{"mode":"proxy","accepted":false},{"mode":"unowned-ancestor-roster","accepted":true},{"mode":"ancestor-device","accepted":false},{"mode":"ancestor-inode","accepted":false},{"mode":"ancestor-type","accepted":false}],
+ "preservationIntents":[{"mode":"valid","accepted":true},{"mode":"windows","accepted":true},{"mode":"kind","accepted":false},{"mode":"purpose","accepted":false},{"mode":"tuple","accepted":false},{"mode":"hash","accepted":false},{"mode":"path","accepted":false},{"mode":"extra","accepted":false},{"mode":"getter","accepted":false},{"mode":"proxy","accepted":false}],
+"preservationBindings":[{"mode":"directory","accepted":true,"changed":true},{"mode":"file","accepted":true,"changed":true},{"mode":"missing","accepted":true,"changed":true},{"mode":"link","accepted":true,"changed":true},{"mode":"ancestor-drift","accepted":false,"changed":false},{"mode":"leaf-drift","accepted":false,"changed":false},{"mode":"target-file","accepted":false,"changed":false},{"mode":"cancel","accepted":false,"changed":false},{"mode":"unknown-after-effect","accepted":false,"changed":true},{"mode":"same-link","accepted":true,"changed":false},{"mode":"unowned-ancestor-roster","accepted":true,"changed":true},{"mode":"parent-roster","accepted":false,"changed":false}],
+"unreadyRelations":[{"mode":"canonical-other-root","accepted":true},{"mode":"canonical-other-member","accepted":true},{"mode":"missing","accepted":true},{"mode":"ordinary-directory","accepted":true},{"mode":"ordinary-file","accepted":true},{"mode":"selected-root","accepted":false},{"mode":"selected-member","accepted":false},{"mode":"foreign","accepted":false},{"mode":"relative","accepted":false},{"mode":"dot-segment","accepted":false},{"mode":"unknown-subpath","accepted":false},{"mode":"selected-duplicate","accepted":false},{"mode":"source-duplicate","accepted":false},{"mode":"bad-source-hash","accepted":false},{"mode":"proxy","accepted":false},{"mode":"windows","accepted":true}],
+"unreadyRoots":[{"mode":"absent","accepted":true},{"mode":"unready","accepted":true},{"mode":"ready-file","accepted":false},{"mode":"ready-directory","accepted":false},{"mode":"ready-link","accepted":false},{"mode":"root-file","accepted":false},{"mode":"root-link","accepted":false},{"mode":"unknown-sibling","accepted":true},{"mode":"parent-drift","accepted":false},{"mode":"ready-race","accepted":false},{"mode":"cancel","accepted":false},{"mode":"undefined","accepted":false}],
+"unreadyIntents":[{"mode":"valid","accepted":true},{"mode":"windows","accepted":true},{"mode":"purpose","accepted":false},{"mode":"directory","accepted":false},{"mode":"scope","accepted":false},{"mode":"hash","accepted":false},{"mode":"ready","accepted":false},{"mode":"reference","accepted":false},{"mode":"proxy","accepted":false},{"mode":"getter","accepted":false}],
+"unreadyRetentions":[{"mode":"one","accepted":true,"completedRetentions":1,"transitionMayBeUnresolved":false},{"mode":"two","accepted":true,"completedRetentions":2,"transitionMayBeUnresolved":false},{"mode":"absent","accepted":true,"completedRetentions":0,"transitionMayBeUnresolved":false},{"mode":"opaque-sibling","accepted":true,"completedRetentions":1,"transitionMayBeUnresolved":false},{"mode":"ready-second","accepted":false,"completedRetentions":0,"transitionMayBeUnresolved":false},{"mode":"cancel-before","accepted":false,"completedRetentions":0,"transitionMayBeUnresolved":false},{"mode":"cancel-after-one","accepted":false,"completedRetentions":1,"transitionMayBeUnresolved":false},{"mode":"undefined-after-one","accepted":false,"completedRetentions":1,"transitionMayBeUnresolved":false},{"mode":"frozen-after-one","accepted":false,"completedRetentions":1,"transitionMayBeUnresolved":false},{"mode":"unknown-after-move","accepted":false,"completedRetentions":0,"transitionMayBeUnresolved":true},{"mode":"close-after-move","accepted":false,"completedRetentions":0,"transitionMayBeUnresolved":true},{"mode":"foreign-after-one","accepted":false,"completedRetentions":1,"transitionMayBeUnresolved":false}]
+,
+ "sourceOwnerCases":[{"name":"shared-framework-owner-root","scopes":[{"manifest":"package.json","packages":["framework/lib"]},{"manifest":"hub/package.json","packages":["framework/lib","hub/app"]}],"requested":["hub"],"accepted":true,"owners":[[".","."],["framework/lib","."],["hub","hub"],["hub/app","hub"]],"memberships":5,"groups":[["."],["hub"]],"required":[".","hub"]},{"name":"deepest-owner","scopes":[{"manifest":"package.json","packages":["s/pkg"]},{"manifest":"s/package.json","packages":["s/pkg"]},{"manifest":"hub/package.json","packages":["s/pkg"]}],"requested":["hub"],"accepted":true,"owners":[[".","."],["hub","hub"],["s","s"],["s/pkg","s"]],"memberships":6,"groups":[["."],["hub"],["s"]],"required":["hub","s"]},{"name":"ancestor-missing-membership","scopes":[{"manifest":"package.json","packages":["s/pkg"]},{"manifest":"s/package.json","packages":[]}],"requested":["."],"accepted":false},{"name":"component-boundary","scopes":[{"manifest":"package.json","packages":["scope-two/pkg"]},{"manifest":"scope/package.json","packages":[]}],"requested":["."],"accepted":true,"owners":[[".","."],["scope","scope"],["scope-two/pkg","."]],"memberships":3,"groups":[["."],["scope"]],"required":["."]},{"name":"scope-root-special","scopes":[{"manifest":"package.json","packages":["s"]},{"manifest":"s/package.json","packages":[]}],"requested":["."],"accepted":true,"owners":[[".","."],["s","s"]],"memberships":3,"groups":[["."],["s"]],"required":[".","s"]},{"name":"cyclic-owner-group","scopes":[{"manifest":"package.json","packages":["s/a"]},{"manifest":"s/package.json","packages":["s/a","framework/lib"]},{"manifest":"hub/package.json","packages":["framework/lib"]}],"requested":["hub"],"accepted":false},{"name":"cycle-complete-membership","scopes":[{"manifest":"package.json","packages":["s/a","framework/lib"]},{"manifest":"s/package.json","packages":["s/a","framework/lib"]},{"manifest":"hub/package.json","packages":["framework/lib"]}],"requested":["hub"],"accepted":true,"owners":[[".","."],["framework/lib","."],["hub","hub"],["s","s"],["s/a","s"]],"memberships":8,"groups":[[".","s"],["hub"]],"required":[".","hub","s"]},{"name":"reordered-input","scopes":[{"manifest":"hub/package.json","packages":["hub/app","framework/lib"]},{"manifest":"package.json","packages":["framework/lib"]}],"requested":["hub"],"accepted":true,"owners":[[".","."],["framework/lib","."],["hub","hub"],["hub/app","hub"]],"memberships":5,"groups":[["."],["hub"]],"required":[".","hub"]},{"name":"duplicate-scope","scopes":[{"manifest":"package.json","packages":[]},{"manifest":"package.json","packages":[]}],"requested":["."],"accepted":false},{"name":"duplicate-local-member","scopes":[{"manifest":"package.json","packages":["p","p"]}],"requested":["."],"accepted":false},{"name":"escape","scopes":[{"manifest":"package.json","packages":["../foreign"]}],"requested":["."],"accepted":false},{"name":"noncanonical","scopes":[{"manifest":"package.json","packages":["p/./q"]}],"requested":["."],"accepted":false},{"name":"missing-root-scope","scopes":[{"manifest":"s/package.json","packages":["s/p"]}],"requested":["s"],"accepted":false},{"name":"undeclared-request","scopes":[{"manifest":"package.json","packages":[]}],"requested":["foreign"],"accepted":false},{"name":"empty-request","scopes":[{"manifest":"package.json","packages":[]}],"requested":[],"accepted":false},{"name":"unicode-byte-order","scopes":[{"manifest":"package.json","packages":["ä/p","z/p"]},{"manifest":"ä/package.json","packages":["ä/p"]},{"manifest":"z/package.json","packages":["z/p"]}],"requested":["."],"accepted":true,"owners":[[".","."],["z","z"],["z/p","z"],["ä","ä"],["ä/p","ä"]],"memberships":7,"groups":[["."],["z"],["ä"]],"required":[".","z","ä"]}]
+,
+ "sourceOwnerIdentityCases":[{"name":"unrelated-source-change","changedScopes":["c"],"stable":[".","b"],"changed":["c"]},{"name":"referenced-owner-change","changedScopes":["."],"stable":["c"],"changed":[".","b"]},{"name":"borrower-only-change","changedScopes":["b"],"stable":[".","c"],"changed":["b"]},{"name":"cycle-member-change","changedScopes":["s"],"stable":["c"],"changed":[".","s","b"]},{"name":"permuted-order","changedScopes":[],"stable":[".","b","c"],"changed":[]},{"name":"new-unrelated-component","changedScopes":["d"],"stable":[".","b","c"],"changed":["d"]}]
+,
+ "sourceOwnerProjectionCases":[{"mode":"shared","accepted":true},{"mode":"reordered","accepted":true},{"mode":"unrelated-change","accepted":true},{"mode":"missing-owner","accepted":false}]
 }

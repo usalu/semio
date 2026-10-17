@@ -33,6 +33,10 @@ type blockBlock2dInferenceGuardSizeBounds = { readonly minItems?: number; readon
 
 export const blockBlock2dInferenceGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : blockBlock2dInferenceGuardReject(at, "value is not an object");
+export const blockBlock2dInferenceGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) blockBlock2dInferenceGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const blockBlock2dInferenceGuardArray = (value: unknown, at: string, bounds: blockBlock2dInferenceGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return blockBlock2dInferenceGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) blockBlock2dInferenceGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -63,19 +67,25 @@ export const blockBlock2dInferenceGuardConstant = <T extends string | number | b
 //#endregion 🚪️Parsers
 
 export function parseBlock2dInference(value: unknown, at = "$"): Block2dInference {
-  const row = blockBlock2dInferenceGuardObject(value, at);
+  const row = blockBlock2dInferenceGuardClosed(blockBlock2dInferenceGuardObject(value, at), at, ["bounds"]);
   return {
     bounds: parseBlock2dBounds(row["bounds"], `${at}.bounds`),
   };
 }
 
 export function parseBoundingBox2d(value: unknown, at = "$"): BoundingBox2d {
-  const row = blockBlock2dInferenceGuardObject(value, at);
+  const row = blockBlock2dInferenceGuardClosed(blockBlock2dInferenceGuardObject(value, at), at, ["min", "max"]);
   return {
-    min: blockBlock2dInferenceGuardArray(row["min"], `${at}.min`, {"minItems": 2, "maxItems": 2}).map((item, index) => blockBlock2dInferenceGuardNumber(item, `${at}.min[${index}]`)) as [number, number],
-    max: blockBlock2dInferenceGuardArray(row["max"], `${at}.max`, {"minItems": 2, "maxItems": 2}).map((item, index) => blockBlock2dInferenceGuardNumber(item, `${at}.max[${index}]`)) as [number, number],
+    min: ((items0) => [blockBlock2dInferenceGuardNumber(items0[0], `${at}.min[0]`), blockBlock2dInferenceGuardNumber(items0[1], `${at}.min[1]`)])(blockBlock2dInferenceGuardArray(row["min"], `${at}.min`, {"minItems": 2, "maxItems": 2})),
+    max: ((items0) => [blockBlock2dInferenceGuardNumber(items0[0], `${at}.max[0]`), blockBlock2dInferenceGuardNumber(items0[1], `${at}.max[1]`)])(blockBlock2dInferenceGuardArray(row["max"], `${at}.max`, {"minItems": 2, "maxItems": 2})),
   };
 }
 
 /** 📦️ Admit actual optional bounds and unsigned derived vertex count. */
-export function parseBlock2dBounds(value:unknown,at="$"):Block2dBounds{const row=blockBlock2dInferenceGuardObject(value,at);return{boundingBox:row.boundingBox===null?null:parseBoundingBox2d(row.boundingBox,at+".boundingBox"),vertexCount:blockBlock2dInferenceGuardInteger(row.vertexCount,at+".vertexCount",{minimum:0})}}
+export function parseBlock2dBounds(value: unknown, at = "$"): Block2dBounds {
+  const row = blockBlock2dInferenceGuardClosed(blockBlock2dInferenceGuardObject(value, at), at, ["boundingBox", "vertexCount"]);
+  return {
+    boundingBox: (row["boundingBox"] === null ? null : parseBoundingBox2d(row["boundingBox"], `${at}.boundingBox`)),
+    vertexCount: blockBlock2dInferenceGuardInteger(row["vertexCount"], `${at}.vertexCount`, {"minimum": 0}),
+  };
+}

@@ -65,6 +65,8 @@ async fn run_describe_on_missing_file_returns_failure_exit_code() {
 }
 
 mod long {
+    use semio_framework_test_fixtures::fixture_path;
+
     use super::*;
 
     /// 📦️ The shipped component of every hub composition and extension crate (`📦️packages/🦀️rust/dist/components/*.wasm`).
@@ -80,7 +82,7 @@ mod long {
         if let Some(paths) = std::env::var_os("SEMIO_OWNED_DIFFERENTIAL_FIXTURES") {
             return std::env::split_paths(&paths).collect();
         }
-        let repository = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../../../..");
+        let repository = fixture_path!("../../../../../../../..");
         let mut shipped = shipped_components(&repository).into_iter().filter_map(|path| fs::metadata(&path).ok().map(|metadata| (metadata.len(), path))).collect::<Vec<_>>();
         shipped.sort();
         shipped.into_iter().take(2).map(|(_, path)| path).collect()

@@ -28,7 +28,7 @@ import { CleanScript, GcScript } from "./🧹️retention/📋️orchestration/�
 import { SchemaScript } from "./🧬️schema/📋️orchestration/🟦️.ts";
 import { MatrixScript, ProbeScript } from "./📊️coverage/📋️orchestration/🟦️.ts";
 import { MetricsScript, ReportScript } from "./📊️reporting/📋️orchestration/🟦️.ts";
-import { AcceptanceScript } from "./🎯️acceptance/📋️orchestration/🟦️.ts";
+import { AcceptanceScript } from "./🎯️acceptance/📋️orchestration/🚦️goal-gate/🟦️.ts";
 
 /** 🧭️ Explicit full-fleet DSL conformance; never part of focused kernel test routing. */
 class DslScript extends Script {

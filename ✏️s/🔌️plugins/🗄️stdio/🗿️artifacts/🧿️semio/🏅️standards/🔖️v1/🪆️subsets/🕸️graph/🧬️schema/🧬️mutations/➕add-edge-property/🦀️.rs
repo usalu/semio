@@ -1,7 +1,6 @@
 //! ➕ `add-edge-property` — attaches one keyed property entry to an edge at a FINAL-state index within that edge's
 //! `properties` (the edge twin of `add-node-property`, reusing `🔢️value`'s `SemioValueEntry`).
 
-use crate::schema::mutations::SemioGraphMutation;
 use crate::schema::snapshot::{GraphEdgeId, SemioGraphSnapshot};
 use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValueEntry;
 
@@ -16,13 +15,16 @@ pub struct AddEdgeProperty {
     pub property: SemioValueEntry,
 }
 
-impl protocol::MutationKind<SemioGraphSnapshot, SemioGraphMutation> for AddEdgeProperty {
+impl<Op> protocol::MutationKind<SemioGraphSnapshot, Op> for AddEdgeProperty
+where
+    Op: protocol::Mutation<SemioGraphSnapshot, Diff = crate::schema::diff::SemioGraphDiff> + From<AddEdgeProperty> + From<crate::schema::mutations::remove_edge_property::RemoveEdgeProperty>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "edge-property", kind: "add-edge-property", record: "AddedEdgeProperty" };
 
-    fn diff(&self, base: &SemioGraphSnapshot) -> protocol::MutationOutcome<<SemioGraphMutation as protocol::Mutation<SemioGraphSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioGraphSnapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<SemioGraphSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &SemioGraphSnapshot) -> Result<Vec<SemioGraphMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &SemioGraphSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         Ok(super::inverse::inverse(self, base))
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {

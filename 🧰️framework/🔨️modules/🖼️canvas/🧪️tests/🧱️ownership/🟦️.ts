@@ -4,16 +4,19 @@ import {resolve} from "node:path";
 import {parse} from "@iarna/toml";
 import Ajv from "ajv";
 import JSON5 from "json5";
+/** 🗂️ Reads one TOML document as a table of unknown cells, so a test must narrow before it reads a nested cell. */
+const tomlTable=(text:string):Readonly<Record<string,unknown>>=>Object.fromEntries(Object.entries(Bun.TOML.parse(text)));
+
 import schema from "../../🧬️schema/🎬️draw-list/🔣️.json";
 import themeSchema from "../../🧬️schema/🎨️theme-color-fields/🔣️.json";
 import {validateJsonSchemaSubset} from "@semio-tech/schema-validator-ts";
-import {readModuleTreeSource} from "../../../📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
-import {readCatalogSources,renderCatalogArtifacts} from "../../../🖼️assets/🔣️icons/🏗️builder/📽️projection/🟦️.ts";
+import {readModuleTreeSource} from "@semio-tech/framework-compiler-ts/syntax/module-tree";
+import {readCatalogSources,renderCatalogArtifacts} from "@semio-tech/assets/icons/builder/projection";
 import {RUNTIME_ASSET_CHANNELS,RUNTIME_ASSET_FILES,installRuntimeAssets,runtimeAssetDeliveries} from "../../🔌️runtime-assets/🟦️.ts";
 
 const owner=resolve(import.meta.dir,"../.."),root=resolve(owner,"../../.."),old=resolve(root,"🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas");
 test("canvas definitions have a General owner independent of Infinite",()=>{
- const source=readFileSync(resolve(owner,"📦️packages/🦀️rust/Cargo.toml"),"utf8"),primary=Bun.TOML.parse(source),oracle=parse(source);
+ const source=readFileSync(resolve(owner,"📦️packages/🦀️rust/Cargo.toml"),"utf8"),primary=tomlTable(source),oracle=parse(source);
  expect(primary).toEqual(oracle);expect((primary.package as {name:string}).name).toBe("semio-framework-canvas");
  expect(source.includes("semio-framework-os-")).toBe(false);expect(source.includes("artifact-infinite-dag")).toBe(false);
  expect(existsSync(resolve(owner,"🦀️.rs"))).toBe(true);expect(existsSync(resolve(old,"🦀️.rs"))).toBe(false);
@@ -64,7 +67,7 @@ test("the facade re-exports its producer crates explicitly and embeds no asset",
 });
 
 test("the producer crates form a downward graph that never depends on the facade",()=>{
- const dependencies=(crate:string)=>Object.keys(Bun.TOML.parse(readFileSync(resolve(owner,crate,"📦️packages/🦀️rust/Cargo.toml"),"utf8")).dependencies as object);
+ const dependencies=(crate:string)=>Object.keys(tomlTable(readFileSync(resolve(owner,crate,"📦️packages/🦀️rust/Cargo.toml"),"utf8")).dependencies as Record<string,unknown>);
  const names:Record<string,string>={"🔌️runtime-assets":"semio-framework-canvas-assets","🎬️scene":"semio-framework-canvas-scene","📷️camera":"semio-framework-canvas-camera","🪪️icon-codec":"semio-framework-canvas-icons"};
  for(const crate of crates)expect(dependencies(crate)).not.toContain("semio-framework-canvas");
  expect(dependencies("🔌️runtime-assets").filter(name=>name.startsWith("semio-framework-canvas"))).toEqual([]);

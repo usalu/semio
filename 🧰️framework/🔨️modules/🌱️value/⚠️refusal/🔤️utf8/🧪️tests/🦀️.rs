@@ -36,5 +36,4 @@ fn standard_utf8_refusals_preserve_owned_kind_display_and_decoder_oracle() {
         assert_eq!(owned, expected, "{}", row["id"]);
         assert_eq!(reference, expected, "{}", row["id"]);
     }
-    println!("[DEBUG] standard UTF8 projections:8 corpus vectors,borrowed/owned displays preserved,encoding_rs validity/text/kind oracle agrees");
 }

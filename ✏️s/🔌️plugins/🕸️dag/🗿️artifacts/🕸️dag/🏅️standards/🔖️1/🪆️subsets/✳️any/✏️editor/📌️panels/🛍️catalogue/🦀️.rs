@@ -49,7 +49,4 @@ pub fn render(labels: &DagPlayLabels, windows: &TreeWindows<'_>) -> semio_framew
 //#endregion 🔖️Render
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

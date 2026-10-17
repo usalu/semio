@@ -24,6 +24,4 @@ impl Serializer<WriterSnapshot> for WriterIntoTxt {
 }
 //#endregion 🔖️Serializer
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

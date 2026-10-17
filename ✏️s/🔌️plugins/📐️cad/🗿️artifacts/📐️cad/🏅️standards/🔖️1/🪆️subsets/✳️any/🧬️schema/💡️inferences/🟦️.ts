@@ -22,26 +22,20 @@ export interface CadInference {
 
 // #region 🔌️Adapters
 import { kernelGeometry, type Vec3 } from "@semio-tech/framework/3d";
-import { type ModelEntityKind, type ObjectRef, type TypologyRef } from "../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️.ts";
-import { defaultModelDefinitionId } from "../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/📥️definition-catalog/🟦️.ts";
-import { applyTransformation } from "../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🔁️transformation-apply/🟦️.ts";
-import { loadTransformation } from "../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🔄️transformation-spec/🟦️.ts";
-import { type ModelEntityRef, type AttributeTable } from "../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🗺️paths/🟦️.ts";
-import { Model } from "../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🧊️model/🟦️.ts";
-import { actionAvailableInModelDefinition } from "../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🧭️definition-ownership/🟦️.ts";
-import { type Expr, type ExprBinop, type ExprField, type ExprVar, evalExpr, type ExprEnv } from "../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🧮️expressions/🟦️.ts";
-import { buildTypologyToEntityKindMapForModelDefinition } from "../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🧾️primitive-document/🟦️.ts";
-import { type SelectionTarget } from "../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🪪️selection/🟦️.ts";
-import { applyModelDiff, EMPTY_MODEL_DIFF, type SpatialKernel, type ModelDiff } from "../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️.ts";
-import {
-  type ActionRegistry,
-  runRegisteredAction,
-  type ActionResult,
-  isSelectionConstructActionId,
-  type ConstructQueryContext,
-  type ConstructQueryResult,
-  type ConstructQueryRow,
-} from "../../✏️editor/⚙️engine/🎬️actions/🟦️.ts";
+import { type ModelEntityKind, type ObjectRef, type TypologyRef } from "@semio-tech/s-spatial-kernel-ts/geometry";
+import { defaultModelDefinitionId } from "@semio-tech/s-spatial-kernel-ts/geometry/definition-catalog";
+import { applyTransformation } from "@semio-tech/s-spatial-kernel-ts/geometry/transformation-apply";
+import { loadTransformation } from "@semio-tech/s-spatial-kernel-ts/geometry/transformation-spec";
+import { type ModelEntityRef, type AttributeTable } from "@semio-tech/s-spatial-kernel-ts/geometry/paths";
+import { Model } from "@semio-tech/s-spatial-kernel-ts/geometry/model";
+import { actionAvailableInModelDefinition } from "@semio-tech/s-spatial-kernel-ts/geometry/definition-ownership";
+import { type Expr, type ExprBinop, type ExprField, type ExprVar, evalExpr, type ExprEnv } from "@semio-tech/s-spatial-kernel-ts/geometry/expressions";
+import { buildTypologyToEntityKindMapForModelDefinition } from "@semio-tech/s-spatial-kernel-ts/geometry/primitive-document";
+import { type SelectionTarget } from "@semio-tech/s-spatial-kernel-ts/geometry/selection";
+import { applyModelDiff, EMPTY_MODEL_DIFF, type SpatialKernel, type ModelDiff } from "@semio-tech/s-spatial-kernel-ts/spatial";
+import { type ActionRegistry, type ActionResult } from "../../✏️editor/⚙️engine/🎬️actions/🧬️action-contract/🟦️.ts";
+import { runRegisteredAction, type ConstructQueryContext, type ConstructQueryResult, type ConstructQueryRow } from "../../✏️editor/⚙️engine/🎬️actions/🏃️action-execution/🟦️.ts";
+import { isSelectionConstructActionId } from "../../✏️editor/⚙️engine/🎬️actions/🧲️selection-targets/🟦️.ts";
 
 type SolidRef = kernelGeometry.SolidRef;
 type FaceRef = kernelGeometry.FaceRef;
@@ -702,6 +696,10 @@ type cadCadInferenceGuardSizeBounds = { readonly minItems?: number; readonly max
 
 export const cadCadInferenceGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : cadCadInferenceGuardReject(at, "value is not an object");
+export const cadCadInferenceGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) cadCadInferenceGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const cadCadInferenceGuardArray = (value: unknown, at: string, bounds: cadCadInferenceGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return cadCadInferenceGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) cadCadInferenceGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -738,9 +736,9 @@ const parseCadBoundsCorner = (value: unknown, at: string): [number, number, numb
 };
 
 export function parseCadBounds(value: unknown, at = "$"): CadBounds {
-  const row = cadCadInferenceGuardObject(value, at);
+  const row = cadCadInferenceGuardClosed(cadCadInferenceGuardObject(value, at), at, ["min", "max"]);
   return {
-    min: parseCadBoundsCorner(row["min"], `${at}.min`),
-    max: parseCadBoundsCorner(row["max"], `${at}.max`),
+    min: ((items0) => [cadCadInferenceGuardNumber(items0[0], `${at}.min[0]`), cadCadInferenceGuardNumber(items0[1], `${at}.min[1]`), cadCadInferenceGuardNumber(items0[2], `${at}.min[2]`)])(cadCadInferenceGuardArray(row["min"], `${at}.min`, {"minItems": 3, "maxItems": 3})),
+    max: ((items0) => [cadCadInferenceGuardNumber(items0[0], `${at}.max[0]`), cadCadInferenceGuardNumber(items0[1], `${at}.max[1]`), cadCadInferenceGuardNumber(items0[2], `${at}.max[2]`)])(cadCadInferenceGuardArray(row["max"], `${at}.max`, {"minItems": 3, "maxItems": 3})),
   };
 }

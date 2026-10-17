@@ -1,0 +1,21 @@
+{
+ "name": "c4p19g",
+ "crates": [
+  "semio-s-artifact-norm-en1998-inferences",
+  "semio-s-artifact-norm-en1998-editor",
+  "semio-s-artifact-norm-en1998-viewer",
+  "semio-s-artifact-norm-en1998-examples",
+  "semio-s-artifact-norm-en1998"
+ ],
+ "note": "CENSUS4-PKG-19 semio-s-artifact-norm-en1998-inferences plus direct dependents",
+ "base": {
+  "rev": "b84bf526c7b",
+  "crates": [
+   "semio-s-artifact-norm-en1998-inferences",
+   "semio-s-artifact-norm-en1998-editor",
+   "semio-s-artifact-norm-en1998-viewer",
+   "semio-s-artifact-norm-en1998-examples",
+   "semio-s-artifact-norm-en1998"
+  ]
+ }
+}

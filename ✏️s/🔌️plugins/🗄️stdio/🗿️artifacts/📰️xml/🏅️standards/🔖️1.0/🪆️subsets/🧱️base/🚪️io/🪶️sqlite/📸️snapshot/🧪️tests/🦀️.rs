@@ -1,15 +1,25 @@
+use crate::{standards::v1_0::subsets::base::schema::snapshot::XmlAttr, standards::v1_0::subsets::base::schema::snapshot::XmlDeclaration, standards::v1_0::subsets::base::schema::snapshot::XmlDocument, standards::v1_0::subsets::base::schema::snapshot::XmlDoctype, standards::v1_0::subsets::base::schema::snapshot::XmlDtdDeclaration, standards::v1_0::subsets::base::schema::snapshot::XmlExternalId, standards::v1_0::subsets::base::schema::snapshot::XmlNode, standards::v1_0::subsets::base::schema::snapshot::XmlQuote, standards::v1_0::subsets::base::schema::snapshot::XmlSnapshot};
+use semio_framework_os_kernel::{sqlite_snapshot::SqliteDatabase, sqlite_snapshot::SqliteSnapshotControl, sqlite_snapshot::SqliteSnapshotPhase, sqlite_snapshot::SqliteValue};
+use crate::{standards::v1_0::subsets::base::schema::snapshot::ownership::XmlDocumentView, standards::v1_0::subsets::base::schema::snapshot::ownership::XmlDocumentOwner};
+use semio_framework_os_kernel::{sqlite_snapshot::ValueError, sqlite_snapshot::ValueRefusalKind};
+use semio_framework_test_fixtures::fixture_text;
+#[allow(unused_imports)]
+use semio_framework_os_kernel::sqlite_snapshot::SqliteRow;
+#[allow(unused_imports)]
+use crate::{standards::v1_0::subsets::base::schema::snapshot::ownership::retire_nodes, standards::v1_0::subsets::base::schema::snapshot::ownership::XmlNodeList};
+use crate::standards::v1_0::subsets::base::io::sqlite::snapshot::{restored};
 use ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot as _;
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v1_0::subsets::base::io::sqlite::snapshot as sqlite;
 use crate::standards::v1_0::subsets::base::io::sqlite::snapshot::*;
 use semio_framework_os_kernel::{sqlite_snapshot::*, os_store::serialization::ArtifactSqliteSnapshotHost};
 
-fn fixture() -> XmlSnapshot { let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap(); XmlSnapshot::import_utf8(fixture["xmlText"].as_str().unwrap().as_bytes()).unwrap() }
+fn fixture() -> XmlSnapshot { let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json")).unwrap(); XmlSnapshot::import_utf8(fixture["xmlText"].as_str().unwrap().as_bytes()).unwrap() }
 fn project(snapshot: &XmlSnapshot) -> SqliteDatabase { snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true,SqliteDatabaseLimits::default())).unwrap() }
 
 #[test]
 fn sqlite_snapshot_xml_multiple_document_graph_retains_every_owned_root(){
- let plan:serde_json::Value=serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/📸️snapshot/🕸️documents/🔣️.json")).unwrap();let snapshot=fixture();let documents:Vec<_>=plan["keys"].as_array().unwrap().iter().map(|key|(key.as_str().unwrap(),&snapshot.doc)).collect();let limits=SqliteDatabaseLimits::default();
+ let plan:serde_json::Value=serde_json::from_str(fixture_text!("../../🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/📸️snapshot/🕸️documents/🔣️.json")).unwrap();let snapshot=fixture();let documents:Vec<_>=plan["keys"].as_array().unwrap().iter().map(|key|(key.as_str().unwrap(),&snapshot.doc)).collect();let limits=SqliteDatabaseLimits::default();
  let database=sqlite::project_xml_documents(&documents,XmlSnapshot::SQLITE_SCHEMA,sqlite::XML_SQLITE_TABLES,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap();
  let snapshots=sqlite::reconstruct_xml_documents(&database,XmlSnapshot::SQLITE_SCHEMA,sqlite::XML_SQLITE_TABLES,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap();assert_eq!(snapshots.len(),documents.len());for(restored,(key,doc))in snapshots.into_iter().zip(&documents){assert_eq!(&restored.schema,key);assert_eq!(&restored.doc,*doc);restored.retire_sqlite_snapshot();}
  let mut reused=database;let root=reused.table("xml_document").unwrap().rows[0].values[2].clone();reused.table_mut("xml_document").unwrap().rows[1].values[2]=root;assert!(sqlite::reconstruct_xml_documents(&reused,XmlSnapshot::SQLITE_SCHEMA,sqlite::XML_SQLITE_TABLES,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).is_err());
@@ -17,14 +27,14 @@ fn sqlite_snapshot_xml_multiple_document_graph_retains_every_owned_root(){
 
 #[test]
 fn sqlite_snapshot_xml_multiple_empty_documents_have_known_cancellable_workload(){
- let plan:serde_json::Value=serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/📸️snapshot/🕸️documents/🔣️.json")).unwrap();let count=plan["documents"].as_u64().unwrap() as usize;let at=plan["cancelAt"].as_u64().unwrap() as usize;let doc=XmlDocument::default();let keys:Vec<_>=(0..count).map(|ordinal|ordinal.to_string()).collect();let documents:Vec<_>=keys.iter().map(|key|(key.as_str(),&doc)).collect();let limits=SqliteDatabaseLimits::default();let database=sqlite::project_xml_documents(&documents,XmlSnapshot::SQLITE_SCHEMA,sqlite::XML_SQLITE_TABLES,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap();
+ let plan:serde_json::Value=serde_json::from_str(fixture_text!("../../🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/📸️snapshot/🕸️documents/🔣️.json")).unwrap();let count=plan["documents"].as_u64().unwrap() as usize;let at=plan["cancelAt"].as_u64().unwrap() as usize;let doc=XmlDocument::default();let keys:Vec<_>=(0..count).map(|ordinal|ordinal.to_string()).collect();let documents:Vec<_>=keys.iter().map(|key|(key.as_str(),&doc)).collect();let limits=SqliteDatabaseLimits::default();let database=sqlite::project_xml_documents(&documents,XmlSnapshot::SQLITE_SCHEMA,sqlite::XML_SQLITE_TABLES,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap();
  for phase in [SqliteSnapshotPhase::ProjectSnapshot,SqliteSnapshotPhase::ReconstructSnapshot]{let mut reached=false;let mut callback=|event:SqliteSnapshotProgress|{if event.phase==phase&&event.total==count&&event.completed==at{reached=true;false}else{true}};let failed=if phase==SqliteSnapshotPhase::ProjectSnapshot{sqlite::project_xml_documents(&documents,XmlSnapshot::SQLITE_SCHEMA,sqlite::XML_SQLITE_TABLES,&mut SqliteSnapshotControl::new(&mut callback,limits)).is_err()}else{sqlite::reconstruct_xml_documents(&database,XmlSnapshot::SQLITE_SCHEMA,sqlite::XML_SQLITE_TABLES,&mut SqliteSnapshotControl::new(&mut callback,limits)).is_err()};assert!(failed);assert!(reached);}
 }
 
 #[test]
 fn sqlite_snapshot_xml_multiple_document_late_cancel_retires_completed_deep_roots(){
  std::thread::Builder::new().stack_size(256*1024).spawn(||{
-  let plan:serde_json::Value=serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/📸️snapshot/🕸️documents/🔣️.json")).unwrap();let depth=plan["depth"].as_u64().unwrap() as usize;let bytes=plan["lateTextBytes"].as_u64().unwrap() as usize;let mut node=XmlNode::Text{text:"leaf".into()};for _ in 0..depth{node=XmlNode::Element{name:"node".into(),attrs:Vec::new(),children:vec![node]};}let first=crate::schema::snapshot::ownership::XmlDocumentOwner(Some(XmlDocument{root:Some(node),..XmlDocument::default()}));let second=XmlDocument::default();let text="z".repeat(bytes);let documents=[("first",first.0.as_ref().unwrap()),(text.as_str(),&second)];let limits=SqliteDatabaseLimits::default();let database=sqlite::project_xml_documents(&documents,XmlSnapshot::SQLITE_SCHEMA,sqlite::XML_SQLITE_TABLES,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap();let mut reached=false;
+  let plan:serde_json::Value=serde_json::from_str(fixture_text!("../../🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/📸️snapshot/🕸️documents/🔣️.json")).unwrap();let depth=plan["depth"].as_u64().unwrap() as usize;let bytes=plan["lateTextBytes"].as_u64().unwrap() as usize;let mut node=XmlNode::Text{text:"leaf".into()};for _ in 0..depth{node=XmlNode::Element{name:"node".into(),attrs:Vec::new(),children:vec![node]};}let first=crate::schema::snapshot::ownership::XmlDocumentOwner(Some(XmlDocument{root:Some(node),..XmlDocument::default()}));let second=XmlDocument::default();let text="z".repeat(bytes);let documents=[("first",first.0.as_ref().unwrap()),(text.as_str(),&second)];let limits=SqliteDatabaseLimits::default();let database=sqlite::project_xml_documents(&documents,XmlSnapshot::SQLITE_SCHEMA,sqlite::XML_SQLITE_TABLES,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap();let mut reached=false;
   let restored=sqlite::reconstruct_xml_documents(&database,XmlSnapshot::SQLITE_SCHEMA,sqlite::XML_SQLITE_TABLES,&mut SqliteSnapshotControl::new(&mut |event|{if event.phase==SqliteSnapshotPhase::ReconstructSnapshot&&event.total==bytes&&event.completed>=65536&&event.completed<event.total{reached=true;false}else{true}},limits));assert!(restored.is_err());assert!(reached);
   let restored=sqlite::reconstruct_xml_documents(&database,XmlSnapshot::SQLITE_SCHEMA,sqlite::XML_SQLITE_TABLES,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap();assert_eq!(restored.len(),2);for snapshot in restored{snapshot.retire_sqlite_snapshot();}
  }).unwrap().join().unwrap();
@@ -32,7 +42,7 @@ fn sqlite_snapshot_xml_multiple_document_late_cancel_retires_completed_deep_root
 
 #[test]
 fn sqlite_snapshot_xml_cancels_inside_each_owned_long_text_copy() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/📸️snapshot/🫳️ownership/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/📸️snapshot/🫳️ownership/🔣️.json")).unwrap();
     let text = fixture["unit"].as_str().unwrap().repeat(fixture["repeats"].as_u64().unwrap() as usize);
     let total = fixture["utf8Bytes"].as_u64().unwrap() as usize; assert_eq!(text.len(), total);
     let stop = fixture["cancelAfter"].as_u64().unwrap() as usize; let mut failures = Vec::new();
@@ -66,7 +76,7 @@ fn restore(database: &SqliteDatabase) -> Result<XmlSnapshot, semio_framework_val
 
 #[test]
 fn sqlite_snapshot_xml_whole_native_controls_owned_long_fields() {
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/📸️snapshot/🫳️ownership/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(fixture_text!("../../🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/📸️snapshot/🫳️ownership/🔣️.json")).unwrap();
     let mut snapshot = fixture(); snapshot.schema = "owned schema 世界".into();
     let XmlNode::Element { attrs, .. } = snapshot.doc.root.as_mut().unwrap() else { unreachable!() };
     attrs.push(XmlAttr { name: "long".into(), value: corpus["unit"].as_str().unwrap().repeat(corpus["repeats"].as_u64().unwrap() as usize) });
@@ -100,7 +110,7 @@ fn retire_fixture_document(mut document: XmlDocument) {
 
 #[test]
 fn sqlite_snapshot_xml_whole_native_deep_partial_lifecycle() {
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/📸️snapshot/🫳️ownership/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(fixture_text!("../../🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/📸️snapshot/🫳️ownership/🔣️.json")).unwrap();
     let depth = corpus["depth"].as_u64().unwrap() as usize; let total = corpus["utf8Bytes"].as_u64().unwrap() as usize;
     let long = corpus["unit"].as_str().unwrap().repeat(corpus["repeats"].as_u64().unwrap() as usize);
     let mut root = XmlNode::Text { text: "leaf".into() }; for _ in 0..depth { root = XmlNode::Element { name: "n".into(), attrs: Vec::new(), children: vec![root] }; }
@@ -122,7 +132,7 @@ fn sqlite_snapshot_xml_whole_native_deep_partial_lifecycle() {
 
 #[test]
 fn sqlite_snapshot_xml_long_schema_cancellation_retires_deep_partial_document() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/📸️snapshot/🫳️ownership/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/📸️snapshot/🫳️ownership/🔣️.json")).unwrap();
     let text = fixture["unit"].as_str().unwrap().repeat(fixture["repeats"].as_u64().unwrap() as usize);
     let mut root = XmlNode::Text { text: "leaf".into() };
     for _ in 0..fixture["depth"].as_u64().unwrap() { root = XmlNode::Element { name: "n".into(), attrs: Vec::new(), children: vec![root] }; }
@@ -143,7 +153,7 @@ async fn sqlite_snapshot_xml_exact_declared_valid_owned_io(){use {semio_framewor
 
 #[test]
 fn sqlite_snapshot_xml_schema_admitted_intermediate_boundaries_preserve_owned_fields() {
-    let source = include_str!("../../../../🧪️tests/🧫️fixtures/📸️snapshot/🫳️ownership/📸️logical/🔣️.json");
+    let source = fixture_text!("../../🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/📸️snapshot/🫳️ownership/📸️logical/🔣️.json");
     let value: pack::value::DslValue = serde_json::from_str(source).unwrap();
     let snapshot = <XmlSnapshot as pack::value::FromValue>::from_value(value).unwrap();
     let mut failures = Vec::new();
@@ -170,7 +180,7 @@ fn sqlite_snapshot_xml_named_valid_refuses_missing_document_element() {
 async fn sqlite_snapshot_xml_actual_declaration_preserves_logical_state_and_rejects_named_valid() {
     use {semio_framework_artifact_reference::ArtifactDialect,semio_framework_os_kernel::io::io_mechanism::io_export_sqlite_snapshot,semio_framework_os_kernel::io::io_mechanism::io_import_sqlite_snapshot};
     semio_framework_plugin::PluginBuilder::<_, semio_framework_plugin::app::NoPluginApp>::new("stdio").label("XML logical state").version("0.0.1").package_id("semio:stdio").artifact(crate::declaration(crate::definition().unwrap()).unwrap()).try_build().unwrap();
-    let source = include_str!("../../../../🧪️tests/🧫️fixtures/📸️snapshot/🫳️ownership/📸️logical/🔣️.json");
+    let source = fixture_text!("../../🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/📸️snapshot/🫳️ownership/📸️logical/🔣️.json");
     let snapshot = <XmlSnapshot as pack::value::FromValue>::from_value(serde_json::from_str(source).unwrap()).unwrap();
     let dialect = ArtifactDialect { artifact_kind: "s.stdio.xml".into(), standard: "1.0".into(), subset: "*".into() }; let valid = ArtifactDialect { subset: "valid".into(), ..dialect.clone() };
     for encoding in [SnapshotEncoding::Binary, SnapshotEncoding::Text] {
@@ -273,7 +283,7 @@ fn sqlite_snapshot_xml_erased_native_encoding_admission_and_large_field_limits()
 
 #[test]
 fn sqlite_snapshot_xml_full_width_position_is_queryable_and_exact(){
- let plan:serde_json::Value=serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/📸️snapshot/🧭️position/🔣️.json")).unwrap();
+ let plan:serde_json::Value=serde_json::from_str(fixture_text!("../../🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/📸️snapshot/🧭️position/🔣️.json")).unwrap();
  for position in plan["positions"].as_array().unwrap(){let text=position.as_str().unwrap();let snapshot=XmlSnapshot{schema:"literal".into(),doc:XmlDocument{doctype:Some(XmlDoctype{prolog_position:text.parse().unwrap(),name:"root".into(),..Default::default()}),..Default::default()}};
  let database=project(&snapshot);let row=database.table("xml_doctype").unwrap().rows.first().unwrap();assert_eq!(row.text(2).unwrap(),text);let restored=XmlSnapshot::from_sqlite_database(&database,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap();assert_eq!(restored,snapshot);
  for encoding in [SnapshotEncoding::Binary,SnapshotEncoding::Text]{let payload=semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| snapshot.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default()), native_owner)).unwrap();assert_eq!(semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| XmlSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default()), native_owner)).unwrap(),snapshot);}
@@ -288,11 +298,11 @@ fn sqlite_snapshot_xml_borrowed_node_component_has_exact_owned_root(){
 }
 
 #[test]
-fn sqlite_snapshot_xml_native_component_cursor_preserves_exact_stream_and_owner_counts(){let plan:serde_json::Value=serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/📸️snapshot/🧩️native-component/🔣️.json")).unwrap();for case in plan["cases"].as_array().unwrap(){let doc=XmlDocument{root:case["nodeText"].as_str().map(|text|XmlNode::Text{text:text.into()}),..XmlDocument::default()};for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let body:Vec<u8>=if encoding==SnapshotEncoding::Binary{case["binary"].as_array().unwrap().iter().map(|byte|byte.as_u64().unwrap()as u8).collect()}else{case["text"].as_str().unwrap().as_bytes().to_vec()};let limits=SqliteDatabaseLimits::default();let(mut count,mut rows)=(3,7);let mut encode_callback=|_|true;let mut native=semio_framework_value::NativeEncodeControl::new(limits.max_value_bytes,&mut encode_callback);let mut output=native.allocate_vec::<u8>(3+body.len()+4).unwrap();output.extend_from_slice(b"pre");native.begin_stage(body.len()).unwrap();emit_xml_native_document(crate::schema::snapshot::ownership::XmlDocumentView::from(&doc),XmlNativeEmission{control:&mut native,output:Some(&mut output),count:&mut count,rows:&mut rows,limits,encoding}).unwrap();assert_eq!(&output[3..],body);assert_eq!(count,3+body.len());assert_eq!(rows,7+case["rows"].as_u64().unwrap()as usize);output.extend_from_slice(b"tail");let(mut position,mut read_rows)=(3,7);let mut decode_callback=|_|true;let mut native=semio_framework_value::NativeDecodeControl::new(limits.max_value_bytes,&mut decode_callback);native.begin_stage(output.len()).unwrap();native.advance(3).unwrap();let restored=read_xml_native_document(XmlNativeInput{bytes:&output,position:&mut position,rows:&mut read_rows,limits,binary:encoding==SnapshotEncoding::Binary,control:&mut native}).unwrap();assert_eq!(restored,doc);assert_eq!(position,3+body.len());assert_eq!(read_rows,rows);assert_eq!(&output[position..],b"tail");}}}
+fn sqlite_snapshot_xml_native_component_cursor_preserves_exact_stream_and_owner_counts(){let plan:serde_json::Value=serde_json::from_str(fixture_text!("../../🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/📸️snapshot/🧩️native-component/🔣️.json")).unwrap();for case in plan["cases"].as_array().unwrap(){let doc=XmlDocument{root:case["nodeText"].as_str().map(|text|XmlNode::Text{text:text.into()}),..XmlDocument::default()};for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let body:Vec<u8>=if encoding==SnapshotEncoding::Binary{case["binary"].as_array().unwrap().iter().map(|byte|byte.as_u64().unwrap()as u8).collect()}else{case["text"].as_str().unwrap().as_bytes().to_vec()};let limits=SqliteDatabaseLimits::default();let(mut count,mut rows)=(3,7);let mut encode_callback=|_|true;let mut native=semio_framework_value::NativeEncodeControl::new(limits.max_value_bytes,&mut encode_callback);let mut output=native.allocate_vec::<u8>(3+body.len()+4).unwrap();output.extend_from_slice(b"pre");native.begin_stage(body.len()).unwrap();emit_xml_native_document(crate::schema::snapshot::ownership::XmlDocumentView::from(&doc),XmlNativeEmission{control:&mut native,output:Some(&mut output),count:&mut count,rows:&mut rows,limits,encoding}).unwrap();assert_eq!(&output[3..],body);assert_eq!(count,3+body.len());assert_eq!(rows,7+case["rows"].as_u64().unwrap()as usize);output.extend_from_slice(b"tail");let(mut position,mut read_rows)=(3,7);let mut decode_callback=|_|true;let mut native=semio_framework_value::NativeDecodeControl::new(limits.max_value_bytes,&mut decode_callback);native.begin_stage(output.len()).unwrap();native.advance(3).unwrap();let restored=read_xml_native_document(XmlNativeInput{bytes:&output,position:&mut position,rows:&mut read_rows,limits,binary:encoding==SnapshotEncoding::Binary,control:&mut native}).unwrap();assert_eq!(restored,doc);assert_eq!(position,3+body.len());assert_eq!(read_rows,rows);assert_eq!(&output[position..],b"tail");}}}
 
 #[test]
 fn sqlite_snapshot_xml_native_component_interior_cancellation_keeps_cumulative_cursor(){
- let plan:serde_json::Value=serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/📸️snapshot/🧩️native-component/🔣️.json")).unwrap();let bounded=&plan["control"];let cancel_after=bounded["cancelAfter"].as_u64().unwrap()as usize;let text=bounded["unit"].as_str().unwrap().repeat(bounded["repeats"].as_u64().unwrap()as usize);assert_eq!(text.len(),bounded["utf8Bytes"].as_u64().unwrap()as usize);let doc=XmlDocument{root:Some(XmlNode::Text{text}),..XmlDocument::default()};let limits=SqliteDatabaseLimits::default();
+ let plan:serde_json::Value=serde_json::from_str(fixture_text!("../../🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/📸️snapshot/🧩️native-component/🔣️.json")).unwrap();let bounded=&plan["control"];let cancel_after=bounded["cancelAfter"].as_u64().unwrap()as usize;let text=bounded["unit"].as_str().unwrap().repeat(bounded["repeats"].as_u64().unwrap()as usize);assert_eq!(text.len(),bounded["utf8Bytes"].as_u64().unwrap()as usize);let doc=XmlDocument{root:Some(XmlNode::Text{text}),..XmlDocument::default()};let limits=SqliteDatabaseLimits::default();
  for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{
   let(mut count,mut rows)=(0,0);let mut accepted=|_|true;let mut native=semio_framework_value::NativeEncodeControl::new(limits.max_value_bytes,&mut accepted);
   emit_xml_native_document(crate::schema::snapshot::ownership::XmlDocumentView::from(&doc),XmlNativeEmission{control:&mut native,output:None,count:&mut count,rows:&mut rows,limits,encoding}).unwrap();assert_eq!(rows,3);
@@ -308,7 +318,7 @@ fn sqlite_snapshot_xml_native_component_interior_cancellation_keeps_cumulative_c
 
 #[test]
 fn sqlite_snapshot_xml_native_component_deep_completed_owner_retires_after_late_error(){
- let plan:serde_json::Value=serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/📸️snapshot/🧩️native-component/🔣️.json")).unwrap();let depth=plan["control"]["deepNodes"].as_u64().unwrap()as usize;let stack=plan["control"]["smallStackBytes"].as_u64().unwrap()as usize;
+ let plan:serde_json::Value=serde_json::from_str(fixture_text!("../../🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/📸️snapshot/🧩️native-component/🔣️.json")).unwrap();let depth=plan["control"]["deepNodes"].as_u64().unwrap()as usize;let stack=plan["control"]["smallStackBytes"].as_u64().unwrap()as usize;
  std::thread::Builder::new().stack_size(stack).spawn(move||{
   let mut node=XmlNode::Text{text:"leaf".into()};for _ in 0..depth{node=XmlNode::Element{name:"node".into(),attrs:Vec::new(),children:vec![node]};}let owner=crate::schema::snapshot::ownership::XmlDocumentOwner(Some(XmlDocument{root:Some(node),..XmlDocument::default()}));let doc=owner.0.as_ref().unwrap();let limits=SqliteDatabaseLimits::default();
   for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{
@@ -321,5 +331,5 @@ fn sqlite_snapshot_xml_native_component_deep_completed_owner_retires_after_late_
 
 #[test]
 fn sqlite_snapshot_xml_actual_node_native_cursor_excludes_document_fields(){
- let plan:serde_json::Value=serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/📸️snapshot/🌱️native-node/🔣️.json")).unwrap();let limits=SqliteDatabaseLimits::default();for case in plan["cases"].as_array().unwrap(){let node=XmlNode::Text{text:case["text"].as_str().unwrap().into()};for encoding in[SnapshotEncoding::Text,SnapshotEncoding::Binary]{let expected=if encoding==SnapshotEncoding::Binary{case["wireBinary"].as_array().unwrap().iter().map(|value|value.as_u64().unwrap()as u8).collect::<Vec<u8>>()}else{case["wireText"].as_str().unwrap().as_bytes().to_vec()};let(mut count,mut rows)=(0,0);let mut accepted=|_|true;let mut native=semio_framework_value::NativeEncodeControl::new(limits.max_value_bytes,&mut accepted);let mut bytes=native.allocate_vec::<u8>(expected.len()+4).unwrap();native.begin_stage(expected.len()).unwrap();emit_xml_native_node(&node,XmlNativeEmission{control:&mut native,output:Some(&mut bytes),count:&mut count,rows:&mut rows,limits,encoding}).unwrap();assert_eq!(bytes,expected);assert_eq!(count,expected.len());assert_eq!(rows,2);bytes.extend_from_slice(b"tail");let(mut position,mut read_rows)=(0,0);let mut accepted=|_|true;let mut native=semio_framework_value::NativeDecodeControl::new(limits.max_value_bytes,&mut accepted);native.begin_stage(bytes.len()).unwrap();let restored=read_xml_native_node(XmlNativeInput{bytes:&bytes,position:&mut position,rows:&mut read_rows,limits,binary:encoding==SnapshotEncoding::Binary,control:&mut native}).unwrap();assert_eq!(restored,node);assert_eq!(position,expected.len());assert_eq!(read_rows,2);assert_eq!(&bytes[position..],b"tail");}}
+ let plan:serde_json::Value=serde_json::from_str(fixture_text!("../../🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/📸️snapshot/🌱️native-node/🔣️.json")).unwrap();let limits=SqliteDatabaseLimits::default();for case in plan["cases"].as_array().unwrap(){let node=XmlNode::Text{text:case["text"].as_str().unwrap().into()};for encoding in[SnapshotEncoding::Text,SnapshotEncoding::Binary]{let expected=if encoding==SnapshotEncoding::Binary{case["wireBinary"].as_array().unwrap().iter().map(|value|value.as_u64().unwrap()as u8).collect::<Vec<u8>>()}else{case["wireText"].as_str().unwrap().as_bytes().to_vec()};let(mut count,mut rows)=(0,0);let mut accepted=|_|true;let mut native=semio_framework_value::NativeEncodeControl::new(limits.max_value_bytes,&mut accepted);let mut bytes=native.allocate_vec::<u8>(expected.len()+4).unwrap();native.begin_stage(expected.len()).unwrap();emit_xml_native_node(&node,XmlNativeEmission{control:&mut native,output:Some(&mut bytes),count:&mut count,rows:&mut rows,limits,encoding}).unwrap();assert_eq!(bytes,expected);assert_eq!(count,expected.len());assert_eq!(rows,2);bytes.extend_from_slice(b"tail");let(mut position,mut read_rows)=(0,0);let mut accepted=|_|true;let mut native=semio_framework_value::NativeDecodeControl::new(limits.max_value_bytes,&mut accepted);native.begin_stage(bytes.len()).unwrap();let restored=read_xml_native_node(XmlNativeInput{bytes:&bytes,position:&mut position,rows:&mut read_rows,limits,binary:encoding==SnapshotEncoding::Binary,control:&mut native}).unwrap();assert_eq!(restored,node);assert_eq!(position,expected.len());assert_eq!(read_rows,2);assert_eq!(&bytes[position..],b"tail");}}
 }

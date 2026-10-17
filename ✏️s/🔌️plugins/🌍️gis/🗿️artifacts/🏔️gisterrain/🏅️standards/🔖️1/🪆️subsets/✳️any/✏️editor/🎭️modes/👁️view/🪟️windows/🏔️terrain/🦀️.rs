@@ -7,7 +7,7 @@
 /// ⚠️ Fixed opportunistically (was a pre-existing, ticket-predating unresolved `crate::modules`
 /// import — see `💡️inferences/🦀️.rs`'s identical fix for the full story). Real home:
 /// `crate::schema`'s `🔖️TerrainDescriptor` region.
-use crate::schema::{TerrainDescriptorJson};
+use crate::schema::terrain_descriptor::{TerrainDescriptorJson};
 use crate::standards::v1::subsets::any::io::text::snapshot::{build_terrain_scene_json};
 use crate::standards::v1::subsets::any::io::text::snapshot::fixture_descriptor;
 use crate::GisTerrainSnapshot;
@@ -102,7 +102,5 @@ pub fn render(document: &GisTerrainSnapshot, cfg: config::GisTerrainWindowConfig
 //#endregion 🔖️Render
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

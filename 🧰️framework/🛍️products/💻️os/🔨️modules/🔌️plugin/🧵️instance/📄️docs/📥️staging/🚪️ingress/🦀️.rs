@@ -1,19 +1,40 @@
 //! 🪙️ Staged slice of the `ingress` band of the mounted artifact instance: its `instance-docs` members (WP6 step S0 of the instance family).
 //!
 //! 🚪️ Ingress of the mounted artifact instance: framework-reserved job driving, constructors, store-constructor units, envelope ingress and decode, document archive genesis and merge, child members and packs.
-use super::*;
-use crate::tool_jobs::time_travel;
-use super::children_instance_root::{genesis_member_schema};
+use semio_framework_plugin_ownership::bounded_ownership::{ARTIFACT_LIVE_OUTPUT_SLOTS, PluginLifecycleStep, plugin_demand_grant};
+use semio_framework_plugin_document_media::{ActiveArtifactEnvelopeDecode, ActiveArtifactEnvelopeDecodeState, ActiveArtifactEnvelopeIngress, ActiveArtifactStoreReplacement, ActiveArtifactStoreReplacementState, ActiveDocumentArchiveLoad, ArtifactEnvelopeDecodeOperationHandle, ArtifactEnvelopeDecodeOperationPoll, ArtifactStoreReplacementAdmissionTarget, ArtifactStoreReplacementRefusal, PendingDocumentArchiveMember};
+#[cfg(any(test, feature = "artifact-app-testing"))]
+use std::sync::Arc;
+use semio_framework_plugin_decl_app::{ArtifactApp, DOCUMENT_LOAD_FAILED_CODE, DOCUMENT_LOAD_TOO_LARGE_CODE, DOCUMENT_LOAD_TOO_MANY_MEMBERS_CODE, document_load_fault};
+use semio_framework_artifact_reference::{ArtifactDialect, ArtifactRef};
+use store::os_store::store_schema::ArtifactEnvelope;
+use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use pack::snapshot::ArtifactPack;
+use semio_framework_plugin_instance_children::children_components::ChildComposition;
+use semio_framework_plugin_child::{ChildContentRetirement, OwnedDocumentMemberIngress};
+use semio_framework_plugin_decl_emission::Emit;
+use crate::docs_components::EnvelopeJobs;
+use semio_framework::{Fault, FaultCode, FaultFrom, FaultOrigin};
+use std::future::Future;
+use semio_framework_plugin_instance_stores::stores_components::{InstanceStores, LocalInteraction};
+use store::{MemberFactory, Mutation, SpaceMember};
+use protocol::OpText;
+use semio_framework_plugin_reactor_app::PluginApp;
+use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
+use semio_framework_value::{RetirementDemand, ValueError};
+use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
+use semio_framework_ui_contract::*;
+use semio_framework_plugin_instance_children::children_instance_root::genesis_member_schema;
 
 impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> EnvelopeJobs<A, M> {
     /// ♻️ One bounded unit of the fixed document/config/interaction/transient returned-read rotation: each
     /// pump either drains the disposer it owns or probes its Store for the next returned lease.
-    pub(crate) fn snapshot_read_returns_demands(&self, stores: &InstanceStores<A>, interaction: &LocalInteraction<A>,body:usize)->Result<RetirementDemand,ValueError>{
+    pub fn snapshot_read_returns_demands(&self, stores: &InstanceStores<A>, interaction: &LocalInteraction<A>,body:usize)->Result<RetirementDemand,ValueError>{
         let stage=self.next_snapshot_read_return_stage(stores, interaction).unwrap_or(interaction.snapshot_read_return_stage);
         let parent_copy=size_of::<usize>();let child=match stage{0=>self.document_snapshot_read_returns.retirement_demands(body.saturating_sub(parent_copy),||stores.store.returned_snapshot_read_retirement_demand())?,1=>interaction.config_snapshot_read_returns.retirement_demands(body.saturating_sub(parent_copy),||stores.config_store.returned_snapshot_read_retirement_demand())?,2=>interaction.interaction_snapshot_read_returns.retirement_demands(body.saturating_sub(parent_copy),||stores.interaction_store.returned_snapshot_read_retirement_demand())?,_=>match stores.transient_local_root_retirement_factory.as_deref(){Some(factory)=>stores.transient_store.maintenance_returned_reads_demands_root(factory,body.saturating_sub(parent_copy))?,None=>Default::default()}};ChildContentRetirement::parent_snapshot_demand(child,parent_copy)
     }
 
-    pub(crate) fn advance_snapshot_read_returns_one(&mut self, stores: &mut InstanceStores<A>, interaction: &mut LocalInteraction<A>,grant:RetainedCloneGrant)->Result<RetainedCloneStep,Fault>{
+    pub fn advance_snapshot_read_returns_one(&mut self, stores: &mut InstanceStores<A>, interaction: &mut LocalInteraction<A>,grant:RetainedCloneGrant)->Result<RetainedCloneStep,Fault>{
         let empty=RetainedCloneProgress::default();let demand=self.snapshot_read_returns_demands(stores, interaction, grant.maximum_copy_bytes).map_err(|error|plugin_sdk_fault(error.into_message()))?;if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(RetainedCloneStep::Progress(empty))}
         let stage = self.next_snapshot_read_return_stage(stores, interaction).unwrap_or(interaction.snapshot_read_return_stage);
         let next_demand=match stage{0=>stores.store.returned_snapshot_read_retirement_demand(),1=>stores.config_store.returned_snapshot_read_retirement_demand(),2=>stores.interaction_store.returned_snapshot_read_retirement_demand(),_=>Ok(Default::default())}.map_err(|error|plugin_sdk_fault(error.into_message()))?;
@@ -32,17 +53,17 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> EnvelopeJobs<A, M
     /// base its current item reads, whatever the batch size.
     ///
     /// A disposer that waits on outside ownership cannot be hurried here; the publication must not stall on it.
-    pub(crate) fn reclaim_document_snapshot_read_returns(&self, stores: &InstanceStores<A>)->Result<bool,Fault>{
+    pub fn reclaim_document_snapshot_read_returns(&self, stores: &InstanceStores<A>)->Result<bool,Fault>{
         Ok(self.document_snapshot_read_returns.terminal_is_empty() && stores.store.returned_snapshot_read_count() == 0)
     }
 
     /// 🪹️ No capture-store disposer or queued document read still awaits acknowledgement.
-    pub(crate) fn snapshot_read_returns_terminal_is_empty(&self, stores: &InstanceStores<A>, interaction: &LocalInteraction<A>) -> bool {
+    pub fn snapshot_read_returns_terminal_is_empty(&self, stores: &InstanceStores<A>, interaction: &LocalInteraction<A>) -> bool {
         self.next_snapshot_read_return_stage(stores, interaction).is_none()
     }
 
     /// 🧭️ The first rotation stage at or after the cursor whose pump or store still holds a returned read.
-    pub(crate) fn next_snapshot_read_return_stage(&self, stores: &InstanceStores<A>, interaction: &LocalInteraction<A>) -> Option<u8> {
+    pub fn next_snapshot_read_return_stage(&self, stores: &InstanceStores<A>, interaction: &LocalInteraction<A>) -> Option<u8> {
         (0..4u8).map(|offset| (interaction.snapshot_read_return_stage + offset) % 4).find(|stage| match stage {
             0 => !self.document_snapshot_read_returns.terminal_is_empty() || stores.store.returned_snapshot_read_count() != 0,
             1 => !interaction.config_snapshot_read_returns.terminal_is_empty() || stores.config_store.returned_snapshot_read_count() != 0,
@@ -178,7 +199,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> EnvelopeJobs<A, M
     /// store replacement it will hand to does not exist yet, and reading that absent job here
     /// turned every in-progress decode into a terminal `Fault` for all eight plugin loops
     /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-    pub fn advance_artifact_envelope_load(&mut self, stores: &mut InstanceStores<A>, child_composition: &mut ChildComposition<M>, handle: ArtifactEnvelopeDecodeOperationHandle,cx:&mut semio_framework_job::StepContext<'_>) -> Result<ArtifactEnvelopeDecodeOperationPoll, crate::PluginLifecycleFailure> {
+    pub fn advance_artifact_envelope_load(&mut self, stores: &mut InstanceStores<A>, child_composition: &mut ChildComposition<M>, handle: ArtifactEnvelopeDecodeOperationHandle,cx:&mut semio_framework_job::StepContext<'_>) -> Result<ArtifactEnvelopeDecodeOperationPoll, semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
         if let Some(active) = self.store_replacement_jobs.get(handle.operation.0) {
             if active.operation != handle.operation || active.generation != handle.generation {
                 return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.replacement-stale-handle"), "store replacement handle is stale").into());
@@ -243,7 +264,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> EnvelopeJobs<A, M
     /// 📥️ Admits one exact envelope decode against a caller-supplied field owner. The domain
     /// route builds that owner from its declared catalog; the framework's own decode-ladder laws
     /// supply a bare one so the ladder is provable without a domain field catalog.
-    pub(crate) fn admit_artifact_envelope_decode_owner(
+    pub fn admit_artifact_envelope_decode_owner(
         &mut self,
         operation: semio_framework_job::OperationId,
         generation: semio_framework_job::Generation,
@@ -274,7 +295,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> EnvelopeJobs<A, M
     }
 
     /// 🎟️ Advances the original ready worker ladder once under the caller's unchanged grant.
-    pub(crate) fn advance_ready_envelope_decode_worker_owners(&mut self, handle: ArtifactEnvelopeDecodeOperationHandle, grant: RetainedCloneGrant,cx:&mut semio_framework_job::StepContext<'_>) -> Result<PluginLifecycleStep, crate::PluginLifecycleFailure> {
+    pub fn advance_ready_envelope_decode_worker_owners(&mut self, handle: ArtifactEnvelopeDecodeOperationHandle, grant: RetainedCloneGrant,cx:&mut semio_framework_job::StepContext<'_>) -> Result<PluginLifecycleStep, semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
         let Some(active)=self.envelope_decode_jobs.get_mut(handle.operation.0)else{return Ok(PluginLifecycleStep::Complete(Default::default()));};
         if active.operation!=handle.operation||active.generation!=handle.generation{return Err(plugin_sdk_fault("ready envelope worker advancement lost its original handle").into());}
         if active.decode_worker_owners_are_terminal(){return Ok(PluginLifecycleStep::Complete(Default::default()));}
@@ -325,7 +346,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> EnvelopeJobs<A, M
 
     /// 🏗️ Atomically transfers one decoded envelope into the app-owned retained store
     /// initializer. Capacity or factory rejection leaves the completed record in its exact slot.
-    pub fn try_begin_artifact_store_replacement(&mut self, stores: &mut InstanceStores<A>, child_composition: &mut ChildComposition<M>, handle: ArtifactEnvelopeDecodeOperationHandle,cx:&mut semio_framework_job::StepContext<'_>) -> Result<bool, crate::PluginLifecycleFailure> {
+    pub fn try_begin_artifact_store_replacement(&mut self, stores: &mut InstanceStores<A>, child_composition: &mut ChildComposition<M>, handle: ArtifactEnvelopeDecodeOperationHandle,cx:&mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
         if semio_framework_job::Generation(stores.store.generation_now()) != handle.generation {
             self.cancel_artifact_envelope_decode(handle)?;
             return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.replacement-stale-admission"), "store replacement generation changed before initializer admission").into());
@@ -501,7 +522,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> EnvelopeJobs<A, M
     /// 🌱️ Mints every derivable composed child onto a live envelope replacement's member roster —
     /// the JSON ingress path ships only the parent envelope, so `ArtifactApp::genesis_child_pack`
     /// must supply the same members `seed_genesis_children` opened at boot.
-    pub(crate) fn complete_store_replacement_genesis(&mut self, stores: &mut InstanceStores<A>, operation_id: u64) -> Result<(), Fault> {
+    pub fn complete_store_replacement_genesis(&mut self, stores: &mut InstanceStores<A>, operation_id: u64) -> Result<(), Fault> {
         let active = self.store_replacement_jobs.get(operation_id).ok_or_else(|| plugin_sdk_fault("live store replacement genesis lost its exact replacement authority"))?;
         let handle = ArtifactEnvelopeDecodeOperationHandle { operation: active.operation, generation: active.generation };
         let candidate = active.retained_store.as_ref().ok_or_else(|| plugin_sdk_fault("live store replacement genesis has no hydrated candidate parent"))?;

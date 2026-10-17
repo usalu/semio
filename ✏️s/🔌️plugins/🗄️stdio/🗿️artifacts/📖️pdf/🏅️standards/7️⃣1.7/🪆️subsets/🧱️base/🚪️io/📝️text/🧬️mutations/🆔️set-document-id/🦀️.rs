@@ -3,7 +3,7 @@
 pub const OPCODE: &str = "set-document-id";
 pub const TEXT_OPCODE: &str = OPCODE;
 
-use crate::standards::v1_7::subsets::base::schema::mutations::SetDocumentId;
+use crate::standards::v1_7::subsets::base::schema::mutations::set_document_id::SetDocumentId;
 
 /// 🖨️ Prints this direct payload through its schema-derived JSON representation.
 pub fn print(payload: &SetDocumentId) -> Result<String, String> {

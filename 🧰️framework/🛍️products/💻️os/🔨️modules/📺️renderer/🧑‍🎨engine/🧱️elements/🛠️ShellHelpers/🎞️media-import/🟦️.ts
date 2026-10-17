@@ -7,7 +7,8 @@ import { type AppDefinition } from "@semio-tech/framework";
 import { hopTrace } from "@semio-tech/framework/trace";
 import { type ContinuationCancel, type ContinuationScheduler, hostContinuations } from "@semio-tech/framework/async/continuation";
 import { importChunkArguments, importPayloadChunks } from "@semio-tech/framework";
-import { type EffectDispatchOne, requestFileOpen } from "../🔩️plumbing/🟦️.ts";
+import { requestFileOpen } from "../🔩️plumbing/📥️downloads-and-file-requests/🟦️.ts";
+import { type EffectDispatchOne } from "../🔩️plumbing/🚀️effect-dispatch/🟦️.ts";
 
 //#region ShellHelpers
 /** 📤️ D3 fan-out: one {@link EffectDispatchOne} call per opened file, and — since wave B59 — one call per

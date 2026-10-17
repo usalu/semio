@@ -13,7 +13,6 @@ test("PDF measurement uses the same canonical bytes across metadata and compress
       const bytes = Buffer.concat([Buffer.from(`%PDF-1.7\n/CreationDate (${metadata})\nstream\n`), encode(Buffer.from(cases.body)), Buffer.from("\nendstream\n")]);
       expect(printPdfMeasurementHashV1(bytes)).toBe(expected);
     }
-    console.log("[DEBUG] PDF measurement canonical-hash comparisons=6 noble-sha256=agreed");
 });
 
 test("actual gallery measurement reports agree with an independent validator", () => {

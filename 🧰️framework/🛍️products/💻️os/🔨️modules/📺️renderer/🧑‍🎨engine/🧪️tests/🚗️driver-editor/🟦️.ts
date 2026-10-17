@@ -6,7 +6,7 @@ import { isShellLocale } from "@semio-tech/framework";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { driverDisplayLabel } from "../../🧱️elements/🛠️ShellHelpers/🟦️.tsx";
+import { driverDisplayLabel } from "../../🧱️elements/🛠️ShellHelpers/🎛️command-registry/🟦️.tsx";
 import { readModuleTreeSource } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
 
 const engineRoot = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
@@ -61,7 +61,7 @@ describe("🚗️ driver editor contract", () => {
 
   test("React publishes the same axes, ids and canonical lifecycle", () => {
     const driver = readFileSync(join(frameworkRoot, "🔨️modules", "🖱️ui", "🧱️elements", "🚗️UiDriver", "🟦️.tsx"), "utf8");
-    const panel = readFileSync(join(engineRoot, "🧱️elements", "📌️ChromePanels", "🟦️.tsx"), "utf8");
+    const panel = readModuleTreeSource(join(engineRoot, "🧱️elements", "📌️ChromePanels", "🟦️.tsx"));
     const host = readModuleTreeSource(join(engineRoot, "🧱️elements", "🏛️ShellHost", "🟦️.tsx"));
     for (const axis of fixture.axes as Array<{ key: string; options: string[] }>) {
       expect(panel).toContain(`driverAxisSelectRow("${axis.key}"`);

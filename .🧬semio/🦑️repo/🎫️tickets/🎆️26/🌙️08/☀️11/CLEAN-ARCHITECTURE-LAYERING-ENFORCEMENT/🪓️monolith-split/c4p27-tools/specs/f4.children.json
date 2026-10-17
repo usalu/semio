@@ -1,0 +1,9 @@
+[
+ {"dir":"🆔️panel-ids","doc":"/** 🆔️ Chrome panel ids: the stable ids of the display, settings, chat and task manager panels and of their tabs. */","lines":[[72,91]]},
+ {"dir":"🖥️display-panel","doc":"/** 🖥️ Display chrome panel: the host api, the windows and layout trees, the window kind icons and the Display panel tabs. */","lines":[[61,70],[93,284]]},
+ {"dir":"⚙️settings-general","doc":"/** ⚙️ Settings chrome panel, General tab: the settings host api, the merge policy options and the general settings tree. */","lines":[[288,617]]},
+ {"dir":"🎨️settings-theme","doc":"/** 🎨️ Settings chrome panel, Theme tab: the colour, spacing, geometry and number input rows, the contrast badge, the appearance groups and the theme settings tree. */","lines":[[618,961]]},
+ {"dir":"⌨️settings-keybindings","doc":"/** ⌨️ Settings chrome panel, Keybindings tab: the keybinding capture step and the keybindings settings tree. */","lines":[[962,1035]]},
+ {"dir":"📱️settings-defaults-and-conflicts","doc":"/** 📱️ Settings chrome panel, Default apps and Conflicts tabs: the default app row codec and tree, and the conflict resolution tree. */","lines":[[1037,1170]]},
+ {"dir":"🏪️marketplace-panel","doc":"/** 🏪️ Marketplace chrome panel: the plugin and extension entries, the marketplace host api, the status labels, the marketplace tree and the Marketplace panel tab. */","lines":[[1335,1511],[1551,1564]]}
+]

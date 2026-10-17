@@ -1,13 +1,14 @@
 //! 🔘️ 🔘️ Forms play app commands command — `add-question-option`.
 
 use crate::editor::forms::config::{FormsConfig, FormsConfigMutation};
-use crate::schema::{create_form_id, update_block_operations};
+use crate::mutations::update_block_operations;
+use crate::schema::create_form_id;
 use crate::{op::FormMutation, FormQuestionOption, FormsSnapshot};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Shell
-fn add_question_option(spec: &FormsSnapshot, question_id: &str, label: &str) -> Option<Vec<FormMutation>> {
+pub fn add_question_option(spec: &FormsSnapshot, question_id: &str, label: &str) -> Option<Vec<FormMutation>> {
     let value = create_form_id("opt");
     update_block_operations(spec, question_id, |question| {
         let mut options = question.options.take().unwrap_or_default();
@@ -32,7 +33,5 @@ pub fn handle(payload: &AddQuestionOption, doc: &ArtifactView<'_, FormsSnapshot>
 }
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

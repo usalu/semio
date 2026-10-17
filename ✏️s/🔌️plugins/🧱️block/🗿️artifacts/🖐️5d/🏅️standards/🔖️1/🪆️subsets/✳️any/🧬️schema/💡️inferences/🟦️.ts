@@ -33,6 +33,10 @@ type blockBlock5dInferenceGuardSizeBounds = { readonly minItems?: number; readon
 
 export const blockBlock5dInferenceGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : blockBlock5dInferenceGuardReject(at, "value is not an object");
+export const blockBlock5dInferenceGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) blockBlock5dInferenceGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const blockBlock5dInferenceGuardArray = (value: unknown, at: string, bounds: blockBlock5dInferenceGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return blockBlock5dInferenceGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) blockBlock5dInferenceGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -63,19 +67,25 @@ export const blockBlock5dInferenceGuardConstant = <T extends string | number | b
 //#endregion 🚪️Parsers
 
 export function parseBlock5dInference(value: unknown, at = "$"): Block5dInference {
-  const row = blockBlock5dInferenceGuardObject(value, at);
+  const row = blockBlock5dInferenceGuardClosed(blockBlock5dInferenceGuardObject(value, at), at, ["bounds"]);
   return {
     bounds: parseBlock5dBounds(row["bounds"], `${at}.bounds`),
   };
 }
 
 export function parseBoundingBox3d(value: unknown, at = "$"): BoundingBox3d {
-  const row = blockBlock5dInferenceGuardObject(value, at);
+  const row = blockBlock5dInferenceGuardClosed(blockBlock5dInferenceGuardObject(value, at), at, ["min", "max"]);
   return {
-    min: blockBlock5dInferenceGuardArray(row["min"], `${at}.min`, {"minItems": 3, "maxItems": 3}).map((item, index) => blockBlock5dInferenceGuardNumber(item, `${at}.min[${index}]`)) as [number, number, number],
-    max: blockBlock5dInferenceGuardArray(row["max"], `${at}.max`, {"minItems": 3, "maxItems": 3}).map((item, index) => blockBlock5dInferenceGuardNumber(item, `${at}.max[${index}]`)) as [number, number, number],
+    min: ((items0) => [blockBlock5dInferenceGuardNumber(items0[0], `${at}.min[0]`), blockBlock5dInferenceGuardNumber(items0[1], `${at}.min[1]`), blockBlock5dInferenceGuardNumber(items0[2], `${at}.min[2]`)])(blockBlock5dInferenceGuardArray(row["min"], `${at}.min`, {"minItems": 3, "maxItems": 3})),
+    max: ((items0) => [blockBlock5dInferenceGuardNumber(items0[0], `${at}.max[0]`), blockBlock5dInferenceGuardNumber(items0[1], `${at}.max[1]`), blockBlock5dInferenceGuardNumber(items0[2], `${at}.max[2]`)])(blockBlock5dInferenceGuardArray(row["max"], `${at}.max`, {"minItems": 3, "maxItems": 3})),
   };
 }
 
 /** 📦️ Admit the actual derived optional bounds and unsigned vertex count. */
-export function parseBlock5dBounds(value:unknown,at='$'):Block5dBounds{const row=blockBlock5dInferenceGuardObject(value,at);return{boundingBox:row.boundingBox===null?null:parseBoundingBox3d(row.boundingBox,at+'.boundingBox'),vertexCount:blockBlock5dInferenceGuardInteger(row.vertexCount,at+'.vertexCount',{minimum:0})}}
+export function parseBlock5dBounds(value: unknown, at = "$"): Block5dBounds {
+  const row = blockBlock5dInferenceGuardClosed(blockBlock5dInferenceGuardObject(value, at), at, ["boundingBox", "vertexCount"]);
+  return {
+    boundingBox: (row["boundingBox"] === null ? null : parseBoundingBox3d(row["boundingBox"], `${at}.boundingBox`)),
+    vertexCount: blockBlock5dInferenceGuardInteger(row["vertexCount"], `${at}.vertexCount`, {"minimum": 0}),
+  };
+}

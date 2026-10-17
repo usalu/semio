@@ -1,16 +1,16 @@
 use super::*;
 use super::super::super::DefaultApp;
+use semio_framework_test_fixtures::fixture_path;
 
 #[test]
 fn semantic_reference_targets_preserve_independent_identity_components(){
- let fixture:serde_json::Value=serde_json::from_str(std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🧫️fixtures/🧭️semantic-reference-targets/🔣️.json")).expect("fixture").as_str()).unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(std::fs::read_to_string(fixture_path!("../../../🧫️fixtures/🧭️semantic-reference-targets/🔣️.json")).expect("fixture").as_str()).unwrap();
  for case in fixture["cases"].as_array().unwrap(){
   let value=&case["dialect"];let text=|key:&str|value[key].as_str().unwrap().to_owned();let dialect=ArtifactDialect{artifact_kind:text("artifactKind"),standard:text("standard"),subset:text("subset")};
   let role=match case["role"].as_str().unwrap(){"viewer"=>AppRole::Viewer,"editor"=>AppRole::Editor,_=>unreachable!()};
   let set=SetDefaultApp{dialect:dialect.clone(),role,app:AppRef{plugin_id:"fixture".into(),app_id:"fixture".into()}};let clear=ClearDefaultApp{dialect,role};
   let actual=MutationKind::<OpeningPreferences,OpeningConfigMutation>::target(&set);let removed=MutationKind::<OpeningPreferences,OpeningConfigMutation>::target(&clear);
   let oracle=serde_json::json!([value["artifactKind"],value["standard"],value["subset"],case["role"]]);assert_eq!(serde_json::to_value(&actual).unwrap(),oracle);assert_eq!(oracle,case["expected"]);assert_eq!(actual,removed);
-  eprintln!("[DEBUG] Default app mutation targets retain four owned identity components");
  }
 }
 

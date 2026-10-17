@@ -2,12 +2,30 @@
 //!
 //! 🪜️ The retained-field rung of one hosted app's close ladder: every owned field the app retains
 //! beyond its stores is released through exact per-axis quotes and an unchanged caller grant.
-use super::*;
+use semio_framework_plugin_ownership::bounded_ownership::{ARTIFACT_LIVE_OUTPUT_SLOTS, ArtifactFixedRegistry, PluginLifecycleStep};
+use semio_framework_plugin_instance_stores::stores_components::{ActionIngress, InstanceStores, PeerRoster};
+use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use pack::snapshot::ArtifactPack;
+use semio_framework_plugin_decl_views::child_view::CHILD_CONTENT_SLOTS;
+use semio_framework_plugin_child::ChildMemberRetirement;
+use semio_framework_plugin_decl_emission::Emit;
+use semio_framework::{Fault, FaultFrom};
+use std::future::Future;
+use semio_framework_plugin_instance_extension::InstanceExtension;
+use store::{MemberFactory, Mutation, SpaceMember};
+use protocol::OpText;
+use semio_framework_plugin_instance_jobs::jobs_components::{PendingReserved, ToolOperations};
+use semio_framework_plugin_reactor_app::PluginApp;
+use crate::VcsArtifactApp;
+use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
+use semio_framework_ui_contract::*;
 use semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure;
-use semio_framework_value::{RetirementDemand, ValueError, retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}};
-use super::docs_maintenance_ladder::{idle, removed};
-use super::jobs_close_ladder::{handoff, handoff_demand};
-use super::ladders_close_ladder::{CloseRung, ClosingOwner, child_grant};
+use semio_framework_value::{RetirementDemand, ValueError};
+use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
+use semio_framework_plugin_instance_docs::docs_maintenance_ladder::{idle, removed};
+use semio_framework_plugin_instance_jobs::jobs_close_ladder::{handoff, handoff_demand};
+use semio_framework_plugin_instance_ladders::ladders_close_ladder::{CloseRung, ClosingOwner, child_grant};
 
 /// 📏️ Quotes the registry owner at `cursor`, or one hand-off when it only awaits removal.
 fn registry_demands<T: ClosingOwner>(registry: &ArtifactFixedRegistry<T>, cursor: usize, body: usize) -> Result<RetirementDemand, ValueError> {

@@ -1,6 +1,5 @@
 //! 🏷️ Authoritative PDF/UA mutation for setting the document title conformance axis.
 
-use super::PdfUaMutation;
 use crate::standards::v1_7::subsets::base::schema::diff::{PdfDiff, PdfInfoDiff, PdfSet};
 use crate::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot;
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
@@ -14,7 +13,10 @@ pub struct SetInfoTitle {
     pub title: String,
 }
 
-impl MutationKind<PdfSnapshot, PdfUaMutation> for SetInfoTitle {
+impl<Op> MutationKind<PdfSnapshot, Op> for SetInfoTitle
+where
+    Op: protocol::Mutation<PdfSnapshot, Diff = PdfDiff> + From<SetInfoTitle>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "info-title", kind: "set-info-title", record: "Set" };
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
@@ -23,9 +25,9 @@ impl MutationKind<PdfSnapshot, PdfUaMutation> for SetInfoTitle {
         MutationOutcome::new(PdfDiff { info: change, ..Default::default() })
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfUaMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
-        vec![PdfUaMutation::SetInfoTitle(SetInfoTitle { title: base.info.title.clone().unwrap_or_default() })]
+        vec![Op::from(SetInfoTitle { title: base.info.title.clone().unwrap_or_default() })]
     
     })())
 }
@@ -41,9 +43,7 @@ impl MutationKind<PdfSnapshot, PdfUaMutation> for SetInfoTitle {
 //#endregion 🔖️Mutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
 
 //#region 🔖️Facets

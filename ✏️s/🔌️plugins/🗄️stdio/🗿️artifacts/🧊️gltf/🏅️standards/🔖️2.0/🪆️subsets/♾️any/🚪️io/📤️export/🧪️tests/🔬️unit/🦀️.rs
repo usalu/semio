@@ -1,4 +1,12 @@
-use super::*;
+use crate::standards::v2_0::subsets::any::schema::snapshot_root::GltfSnapshot;
+use crate::{standards::v2_0::subsets::any::schema::snapshot::GltfAccessor, standards::v2_0::subsets::any::schema::snapshot::GltfAccessorType, standards::v2_0::subsets::any::schema::snapshot::GltfBuffer, standards::v2_0::subsets::any::schema::snapshot::GltfBufferView, standards::v2_0::subsets::any::schema::snapshot::GltfComponentType, standards::v2_0::subsets::any::schema::snapshot::GltfDocument, standards::v2_0::subsets::any::schema::snapshot::GltfJson, standards::v2_0::subsets::any::schema::snapshot::GltfMesh, standards::v2_0::subsets::any::schema::snapshot::GltfPrimitive, standards::v2_0::subsets::any::schema::snapshot::GltfSourceForm, standards::v2_0::subsets::any::schema::snapshot::GltfSparseAccessor, standards::v2_0::subsets::any::schema::snapshot::GltfSparseIndices, standards::v2_0::subsets::any::schema::snapshot::GltfSparseValues};
+use crate::standards::v2_0::subsets::any::schema::snapshot_root::STDIO_GLTF_DOCUMENT_SCHEMA;
+use crate::{standards::v2_0::subsets::any::io::b64_decode, standards::v2_0::subsets::any::io::decode_accessor, standards::v2_0::subsets::any::io::decode_data_uri, standards::v2_0::subsets::any::io::normalize_components};
+use crate::{standards::v2_0::subsets::any::io::import::decode_glb, standards::v2_0::subsets::any::io::import::parse_gltf_document};
+use crate::{standards::v2_0::subsets::any::io::b64_encode, standards::v2_0::subsets::any::io::encode_data_uri};
+#[allow(unused_imports)]
+use crate::{standards::v2_0::subsets::any::io::CHUNK_TYPE_BIN, standards::v2_0::subsets::any::io::CHUNK_TYPE_JSON, standards::v2_0::subsets::any::io::GLB_MAGIC, standards::v2_0::subsets::any::io::GLB_VERSION, standards::v2_0::subsets::any::io::validate_document};
+use crate::standards::v2_0::subsets::any::io::export::*;
 
 #[semio_framework_async_macros::async_test]
 async fn empty_snapshot_matches_schema() {

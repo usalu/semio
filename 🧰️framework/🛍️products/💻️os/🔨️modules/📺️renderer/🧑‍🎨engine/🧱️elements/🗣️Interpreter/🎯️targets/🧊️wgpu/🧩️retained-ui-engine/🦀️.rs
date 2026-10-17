@@ -913,6 +913,9 @@ impl Default for RetainedInputReceipts {
 
 pub static RETAINED_INPUT_RECEIPTS: WorkerCell<RetainedInputReceipts> = WorkerCell::new(Default::default);
 
+#[cfg(any(test, feature = "testkit"))]
+pub struct RetainedInputReceiptReservation(#[doc(hidden)] pub Option<ui_wgpu::wgpu::ActionQueueReceipt>);
+#[cfg(not(any(test, feature = "testkit")))]
 struct RetainedInputReceiptReservation(Option<ui_wgpu::wgpu::ActionQueueReceipt>);
 
 impl Drop for RetainedInputReceiptReservation {

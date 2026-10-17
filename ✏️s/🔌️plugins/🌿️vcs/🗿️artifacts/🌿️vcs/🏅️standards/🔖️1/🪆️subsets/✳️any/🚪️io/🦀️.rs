@@ -16,8 +16,6 @@
 
 //#region 🔖️IoDeclaration
 pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
-    use crate::standards::v1::subsets::any::io::export::serializers::artifacts as export;
-    use crate::standards::v1::subsets::any::io::import::deserializers::artifacts as import;
     use crate::{VcsDemoMutation, VcsSnapshot, VCS_DIALECT, VCS_DOCUMENT_SCHEMA};
     use semio_framework_os_kernel::io::io_mechanism::{deserializer_entry, serializer_entry, IoEntry};
     use semio_framework_plugin::app::declarations::{IoDeclaration, LanguagePair, NativeCodecs};
@@ -28,16 +26,16 @@ pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
         ENTRIES
             .get_or_init(|| {
                 vec![
-                    serializer_entry::<VcsSnapshot, export::json::v_rfc8259::any::VcsIntoJson>(VCS_DIALECT),
-                    deserializer_entry::<VcsSnapshot, import::json::v_rfc8259::any::JsonIntoVcs>(VCS_DIALECT),
-                    serializer_entry::<VcsSnapshot, export::csv::v_rfc4180::any::VcsIntoCsv>(VCS_DIALECT),
-                    deserializer_entry::<VcsSnapshot, import::csv::v_rfc4180::any::CsvIntoVcs>(VCS_DIALECT),
-                    serializer_entry::<VcsSnapshot, export::xlsx::v_ecma_376::any::VcsIntoXlsx>(VCS_DIALECT),
-                    deserializer_entry::<VcsSnapshot, import::xlsx::v_ecma_376::any::XlsxIntoVcs>(VCS_DIALECT),
-                    serializer_entry::<VcsSnapshot, export::zip::v2_0::any::VcsIntoZip>(VCS_DIALECT),
-                    deserializer_entry::<VcsSnapshot, import::zip::v2_0::any::ZipIntoVcs>(VCS_DIALECT),
-                    serializer_entry::<VcsSnapshot, export::txt::v_utf_8::any::VcsIntoTxt>(VCS_DIALECT),
-                    deserializer_entry::<VcsSnapshot, import::txt::v_utf_8::any::TxtIntoVcs>(VCS_DIALECT),
+                    serializer_entry::<VcsSnapshot, crate::standards::v1::subsets::any::io::export::serializers::artifacts::json::v_rfc8259::any::VcsIntoJson>(VCS_DIALECT),
+                    deserializer_entry::<VcsSnapshot, crate::standards::v1::subsets::any::io::import::deserializers::artifacts::json::v_rfc8259::any::JsonIntoVcs>(VCS_DIALECT),
+                    serializer_entry::<VcsSnapshot, crate::standards::v1::subsets::any::io::export::serializers::artifacts::csv::v_rfc4180::any::VcsIntoCsv>(VCS_DIALECT),
+                    deserializer_entry::<VcsSnapshot, crate::standards::v1::subsets::any::io::import::deserializers::artifacts::csv::v_rfc4180::any::CsvIntoVcs>(VCS_DIALECT),
+                    serializer_entry::<VcsSnapshot, crate::standards::v1::subsets::any::io::export::serializers::artifacts::xlsx::v_ecma_376::any::VcsIntoXlsx>(VCS_DIALECT),
+                    deserializer_entry::<VcsSnapshot, crate::standards::v1::subsets::any::io::import::deserializers::artifacts::xlsx::v_ecma_376::any::XlsxIntoVcs>(VCS_DIALECT),
+                    serializer_entry::<VcsSnapshot, crate::standards::v1::subsets::any::io::export::serializers::artifacts::zip::v2_0::any::VcsIntoZip>(VCS_DIALECT),
+                    deserializer_entry::<VcsSnapshot, crate::standards::v1::subsets::any::io::import::deserializers::artifacts::zip::v2_0::any::ZipIntoVcs>(VCS_DIALECT),
+                    serializer_entry::<VcsSnapshot, crate::standards::v1::subsets::any::io::export::serializers::artifacts::txt::v_utf_8::any::VcsIntoTxt>(VCS_DIALECT),
+                    deserializer_entry::<VcsSnapshot, crate::standards::v1::subsets::any::io::import::deserializers::artifacts::txt::v_utf_8::any::TxtIntoVcs>(VCS_DIALECT),
                 ]
             })
             .as_slice()
@@ -88,11 +86,8 @@ pub fn vcs_from_record(header: &[String], values: &[String]) -> Result<crate::Vc
 mod tests;
 //#endregion 🧪️Tests
 
-#[path = "💾️binary/🦀️.rs"]
-pub mod binary;
 
-#[path = "📝️text/🦀️.rs"]
-pub mod text;
 
-#[path = "🪶️sqlite/🦀️.rs"]
-pub mod sqlite;
+
+
+

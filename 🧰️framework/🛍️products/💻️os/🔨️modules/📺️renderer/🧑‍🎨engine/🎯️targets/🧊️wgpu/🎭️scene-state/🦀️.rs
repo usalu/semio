@@ -15,6 +15,8 @@ use crate::element_contracts::WorkerCell;
 use crate::element_contracts::{AdmittedSurfaceCloseOwner, AdmittedSurfaceEntry, AdmittedSurfaceFault, AdmittedSurfaceMap, AdmittedSurfaceRejected, AdmittedSurfaceToken, SCENE_SURFACE_CAPACITY, SCENE_SURFACE_ID_BYTE_CAPACITY};
 #[cfg(not(target_arch = "wasm32"))]
 use semio_framework_os_renderer_wgpu_native_platform::{native_host_temporal_formatter, NativeHostTemporalFormatter};
+#[cfg(not(target_arch = "wasm32"))]
+use semio_framework_os_renderer_wgpu_thread_isolation::{ISOLATED, isolated_cell};
 use crate::element_contracts::FrameworkWidgetContext;
 use crate::element_contracts::RasterUploadRefusal;
 use semio_framework::interaction::gesture::GestureRecognizer;
@@ -43,28 +45,22 @@ use ui_wgpu::wgpu::SurfaceKind;
 use ui_wgpu::wgpu::UiComponentSceneNode;
 
 //#region SceneRuntime
-/// 🧵️ Native scene state shared by the shared-pool workers; under `cfg(test)` each test thread owns its own
-/// (`element_contracts::test_worker_cell`), so no law meets another law's scenes.
+/// 🧵️ Native scene state shared by the shared-pool workers; under `cfg(test)`, or in a target that enables the `isolated` feature of
+/// `semio_framework_os_renderer_wgpu_thread_isolation`, each test thread owns its own, so no law meets another law's scenes.
 #[cfg(not(target_arch = "wasm32"))]
-pub struct SceneCell<T>(#[cfg(not(test))] OnceLock<Mutex<RefCell<T>>>, #[cfg(test)] std::marker::PhantomData<fn() -> T>);
+pub struct SceneCell<T>(OnceLock<Mutex<RefCell<T>>>);
 
 #[cfg(not(target_arch = "wasm32"))]
 impl<T> SceneCell<T> {
     const fn new() -> Self {
-        #[cfg(not(test))]
-        return Self(OnceLock::new());
-        #[cfg(test)]
-        return Self(std::marker::PhantomData);
+        Self(OnceLock::new())
     }
 }
 
 #[cfg(not(target_arch = "wasm32"))]
 impl<T: Default + 'static> SceneCell<T> {
     pub fn with<R>(&self, f: impl FnOnce(&RefCell<T>) -> R) -> R {
-        #[cfg(not(test))]
-        let state = self.0.get_or_init(|| Mutex::new(RefCell::new(T::default())));
-        #[cfg(test)]
-        let state = crate::element_contracts::test_worker_cell::<RefCell<T>>(std::ptr::from_ref(self).addr(), || RefCell::new(T::default()));
+        let state = if cfg!(test) || ISOLATED { isolated_cell::<RefCell<T>>(std::ptr::from_ref(self).addr(), || RefCell::new(T::default())) } else { self.0.get_or_init(|| Mutex::new(RefCell::new(T::default()))) };
         let guard = state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         f(&guard)
     }
@@ -109,23 +105,23 @@ pub enum SceneListTransferSource {
 
 #[derive(Clone, Debug)]
 pub struct SceneListTransferSession {
-    pointer_id: ui_render::PointerId,
-    authority_generation: u64,
-    source_window_id: String,
-    source_host_id: String,
-    source_document_generation: u64,
-    driver_drag: UiDriverDrag,
-    source: SceneListTransferSource,
-    source_rect: Rect,
-    start_x: f32,
-    start_y: f32,
-    promoted: bool,
+    pub pointer_id: ui_render::PointerId,
+    pub authority_generation: u64,
+    pub source_window_id: String,
+    pub source_host_id: String,
+    pub source_document_generation: u64,
+    pub driver_drag: UiDriverDrag,
+    pub source: SceneListTransferSource,
+    pub source_rect: Rect,
+    pub start_x: f32,
+    pub start_y: f32,
+    pub promoted: bool,
 }
 
 #[derive(Debug)]
 struct SceneListTransferAuthority {
-    next_generation: u64,
-    active: Option<SceneListTransferSession>,
+    pub next_generation: u64,
+    pub active: Option<SceneListTransferSession>,
 }
 
 impl Default for SceneListTransferAuthority {

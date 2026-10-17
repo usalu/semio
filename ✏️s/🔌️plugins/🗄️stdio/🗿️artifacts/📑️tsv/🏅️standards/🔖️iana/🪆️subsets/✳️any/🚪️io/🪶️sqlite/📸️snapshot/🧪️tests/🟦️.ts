@@ -9,7 +9,7 @@ import subsetValidationPolicy from "../🫴️receiving/🛂️validation/🧪�
 test("TSV original receiving subset validation has a closed independent directional policy",()=>{
  const{cases}=subsetValidationPolicy;expect(subsetValidationPolicy.directions).toEqual(["decoding","encoding"]);
  const database=new Database(":memory:");try{for(const direction of subsetValidationPolicy.directions){for(const row of cases){const actual=database.query("SELECT CASE WHEN ? <> 'accepted' THEN 'canceled' WHEN ? = '*' THEN 'clean' ELSE 'unsupportedOwner' END AS kind").get(row.port,row.subset);expect(actual).toEqual({kind:row.kind});expect(direction==="decoding"||direction==="encoding").toBe(true);}}}finally{database.close();}
- expect(subsetValidationPolicy.grant).toEqual({maximumItems:0,maximumCopyBytes:0,maximumCapacityBytes:0,maximumReleaseBytes:0,maximumDepth:0});console.log("[DEBUG] TSV closed neutral eight-case receiving validation agrees with independent SQLite wildcard/refusal/cancellation policy; Native custody is checked separately");
+ expect(subsetValidationPolicy.grant).toEqual({maximumItems:0,maximumCopyBytes:0,maximumCapacityBytes:0,maximumReleaseBytes:0,maximumDepth:0});
 });
 import { expect, test } from "bun:test";
 import fixture from "./🧫️fixtures/🔣️.json";
@@ -188,7 +188,6 @@ test("TSV complete logical owner preserves empty row and document metadata in in
    if(index===logicalOwnerFixture.edit.snapshotIndex){independent.run(logicalOwnerFixture.edit.query);expect(await tsvSnapshotFromSqliteDatabase(await importSqliteDatabase(new Uint8Array(independent.serialize())))).toEqual({...snapshot,lineEnding:"lf",trailingNewline:false});}
   }finally{independent.close();}
  }
- console.log("[DEBUG] TSV complete logical owners preserved schema, empty rows, literal fields and independent newline metadata through physical SQLite");
 });
 
 import {readClosedRecordPack,type ClosedValue} from "@semio-tech/framework/pack/value/testing/preflight/pack";
@@ -210,7 +209,6 @@ test("TSV canonical producer assets retain complete owner fields and remain sepa
  const demo=readTSVLogicalAsset(readLogicalAsset(new URL("🎒️.pack.semio",assets)));
  expect(demo.schema).toBe("stdio.tsv");
  expect(demo.records).toEqual(rows);
- console.log("[DEBUG] TSV independent DEFLATE, CRC32C and external table reader retained real canonical producer assets");
 });
 
 import completeSemantic from "./🧫️fixtures/🛂️semantic/🔣️.json";
@@ -240,14 +238,12 @@ test("TSV closed original receiving contract agrees with independent SQLite cons
  const source={schema:"literal-λ🙂",records:[[],[text,"tail"],[]],trailingNewline:true,lineEnding:"crlf" as const};
  for(const edit of receivingPolicy.lateMutations){const independent=Database.deserialize(await exportSqliteDatabase(await tsvSnapshotToSqliteDatabase(source)));try{independent.exec("PRAGMA ignore_check_constraints=ON");independent.query("UPDATE tsv_field SET "+edit.column+"=? WHERE id=2").run(edit.value);expect((independent.query("SELECT length(CAST(value AS BLOB)) AS bytes FROM tsv_field WHERE id=1").get()as{bytes:number}).bytes).toBe(receivingPolicy.stringBytes);await expect(tsvSnapshotFromSqliteDatabase(await importSqliteDatabase(new Uint8Array(independent.serialize())))).rejects.toMatchObject({kind:edit.kind});}finally{independent.close();}}
  for(const edit of receivingPolicy.documentMutations){const independent=Database.deserialize(await exportSqliteDatabase(await tsvSnapshotToSqliteDatabase(source)));try{independent.exec("PRAGMA ignore_check_constraints=ON");independent.query("UPDATE tsv_document SET "+edit.column+"=?").run(edit.value);await expect(tsvSnapshotFromSqliteDatabase(await importSqliteDatabase(new Uint8Array(independent.serialize())))).rejects.toMatchObject({kind:edit.kind});}finally{independent.close();}}
- console.log("[DEBUG] TSV receiving neutral contract validated by exact Buffer UTF8 and SQLite row extents, malformed token boundaries, changed literal constraints and late domain edits; no Native execution credit");
 });
 
 test("TSV original typed receiving and bounded quote Rust syntax parses",async()=>{
  await RustSyntaxParser.init();const parser=new RustSyntaxParser();parser.setLanguage(await RustSyntaxParser.Language.load(join(dirname(Bun.resolveSync("tree-sitter-wasms/package.json",import.meta.dir)),"out/tree-sitter-rust.wasm")));
  try{for(const relative of ["../🛂️admission/🦀️.rs","./🦀️.rs","../🫴️receiving/🦀️.rs","../🫴️receiving/🧪️tests/🦀️.rs",frameworkSourcePath("🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🫴️receiving/🦀️.rs")]){const tree=parser.parse(readLogicalAsset(new URL(relative,import.meta.url),"utf8"));const errors:unknown[]=[];const inspect=(node:RustSyntaxParser.SyntaxNode)=>{if(node.type==="ERROR"||node.isMissing())errors.push({type:node.type,start:node.startPosition,end:node.endPosition,text:node.text});for(const child of node.children)inspect(child);};if(tree)inspect(tree.rootNode);expect(tree?.rootNode.hasError(),relative+"\n"+JSON.stringify(errors)).toBe(false);tree?.delete();}}finally{parser.delete();}
  expect(controlFixture.typedDestination.quoteCancelCheckpoint).toBe(3);
- console.log("[DEBUG] original TSV typed receiving and borrowed quote and paid relational receiving syntax5; no compiler or Native physical credit");
 });
 
 /** 🎟️ Verifies separately authored original body and retirement currencies independently. */
@@ -261,12 +257,11 @@ test("original tabular native caller grants agree with independent schema and SQ
   expect(database.query("SELECT COUNT(*) AS axes FROM authority").get()).toEqual({axes:15});
  }finally{database.close();}
  expect(law.maximumCloseTurns).toBe(65536);expect(law.nativeMaximumBytes).toBe(16777216);expect(law.custody).toBe("originalNativeRecipient");
- console.log("[DEBUG] Original tabular native caller15 independent SQL currencies/Ajv agree; body65536 and separately funded close4096, deniedClose0, originalNative16MiB, bounded65536turns");
 });
 
 /** ▶️ Preserves one original observer through canceled body and independently funded closing. */
 test("original tabular observer continuation preserves caller state before funded closing",async()=>{
  const{readFileSync}=await import("node:fs");const law=JSON.parse(readFileSync(new URL("🧫️fixtures/🛬️native-control/🎟️original.json",import.meta.url),"utf8"));
  const witness=law.observerContinuation;const db=new Database(":memory:");try{db.exec("CREATE TABLE observer(id INTEGER PRIMARY KEY,state TEXT NOT NULL,copy_extent INTEGER NOT NULL,stop_after INTEGER NOT NULL,owner_held INTEGER NOT NULL,body_canceled INTEGER NOT NULL)");db.query("INSERT INTO observer VALUES(1,?,?,?,1,1)").run(witness.state,witness.copyExtentBytes,witness.cancelAfterBytes);expect(db.query("SELECT id,owner_held,body_canceled,copy_extent-stop_after AS retained_tail FROM observer").get()).toEqual({id:1,owner_held:1,body_canceled:1,retained_tail:74466});db.exec("UPDATE observer SET body_canceled=0 WHERE id=1 AND owner_held=1");expect(db.query("SELECT id,state,owner_held,body_canceled FROM observer").get()).toEqual({id:1,state:witness.state,owner_held:1,body_canceled:0});}finally{db.close();}
- const caller=readFileSync(new URL("./🦀️.rs",import.meta.url),"utf8");expect(caller.includes("original_continuation(&mut native)")).toBe(true);expect(witness.canceledCloseKind).toBe("Canceled");expect(witness.resumedSameObserver).toBe(true);console.log("[DEBUG] Original tabular observer closed policy/Ajv and independent SQLite retain same caller state and74466-byte tail before explicit funded-close continuation; Native behavior separate");
+ const caller=readFileSync(new URL("./🦀️.rs",import.meta.url),"utf8");expect(caller.includes("original_continuation(&mut native)")).toBe(true);expect(witness.canceledCloseKind).toBe("Canceled");expect(witness.resumedSameObserver).toBe(true);
 });

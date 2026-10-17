@@ -22,7 +22,42 @@
           "directory-claim",
           "root-parent-sync",
           "root-claim"
-        ]
+        ],
+        "retirement": {
+          "owner": "existing-private-removed-creator",
+          "scope": "same-closed-complete-claim",
+          "identity": "original-final-inode-and-bytes",
+          "order": [
+            "physical-removal",
+            "claim-unlink",
+            "parent-sync",
+            "original-guard-release"
+          ],
+          "unknown": "retain-refuse"
+        },
+        "successfulRetirement": {
+          "owner": "existing-private-recovered-kernel-maintenance",
+          "request": "same-private-captured-request-and-closed-immutable-data",
+          "records": "complete-original-three-stage-claim",
+          "order": [
+            "reader-drain",
+            "kernel-ex",
+            "complete-descriptor-census",
+            "mapping-recheck",
+            "detach",
+            "inactive-observation",
+            "physical-removal",
+            "entry-parent-sync",
+            "claim-unlink",
+            "claim-parent-sync",
+            "kernel-close",
+            "original-reader-close",
+            "namespace-remove-sync",
+            "journal-retiring-retired-sync"
+          ],
+          "unknown": "retain-charge",
+          "residualMetadataBytes": 0
+        }
       }
     },
     "Identity": {
@@ -99,6 +134,35 @@
               "$ref": "#/definitions/Identity"
             }
           ]
+        }
+      }
+    },
+    "SuccessfulRecoveryCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "mutation",
+        "valid"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "mutation": {
+          "enum": [
+            "none",
+            "partial",
+            "request",
+            "parent",
+            "directory",
+            "unknown-field",
+            "incomplete"
+          ]
+        },
+        "valid": {
+          "type": "boolean"
         }
       }
     }

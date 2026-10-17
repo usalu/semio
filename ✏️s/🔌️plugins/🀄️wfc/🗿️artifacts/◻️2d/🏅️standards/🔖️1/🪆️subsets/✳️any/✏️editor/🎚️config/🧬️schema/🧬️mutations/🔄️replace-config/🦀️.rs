@@ -1,6 +1,6 @@
 //! 🔄️ Replace Config in the WFC 2D config facet.
 
-use super::{ChangeActiveTile, ChangeCamera, Wfc2dConfig, Wfc2dConfigDiff, Wfc2dConfigMutation};
+use crate::editor::wfc2d::config::mutations::{ChangeActiveTile, ChangeCamera, Wfc2dConfig, Wfc2dConfigDiff};
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
@@ -14,7 +14,10 @@ pub struct ReplaceConfig {
     pub config: Wfc2dConfig,
 }
 
-impl protocol::MutationKind<Wfc2dConfig, Wfc2dConfigMutation> for ReplaceConfig {
+impl<Op> protocol::MutationKind<Wfc2dConfig, Op> for ReplaceConfig
+where
+    Op: protocol::Mutation<Wfc2dConfig, Diff = Wfc2dConfigDiff> + From<ReplaceConfig> + From<crate::editor::wfc2d::config::mutations::change_active_tile::ChangeActiveTile> + From<crate::editor::wfc2d::config::mutations::change_camera::ChangeCamera>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "config", kind: "replace-config", record: "ReplaceConfig" };
     fn diff(&self, base: &Wfc2dConfig) -> protocol::MutationOutcome<Wfc2dConfigDiff> {
         let config = &self.config;
@@ -25,11 +28,11 @@ impl protocol::MutationKind<Wfc2dConfig, Wfc2dConfigMutation> for ReplaceConfig 
             active_tile_id: (base.active_tile_id != config.active_tile_id).then(|| config.active_tile_id.clone()),
         })
     }
-    fn inverse(&self, base: &Wfc2dConfig) -> Result<Vec<Wfc2dConfigMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Wfc2dConfig) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
         vec![
-            Wfc2dConfigMutation::ChangeActiveTile(ChangeActiveTile { tile_id: base.active_tile_id.clone() }),
-            Wfc2dConfigMutation::ChangeCamera(ChangeCamera { x: base.camera_x, y: base.camera_y, zoom: base.camera_zoom }),
+            Op::from(ChangeActiveTile { tile_id: base.active_tile_id.clone() }),
+            Op::from(ChangeCamera { x: base.camera_x, y: base.camera_y, zoom: base.camera_zoom }),
         ]
     
     })())

@@ -1,8 +1,10 @@
 use crate::standards::v1::subsets::any::io::export::serializers::artifacts::{dwg::v_ac1018::any as dwg_out, dxf::v_r12::any as dxf_out, pdf::v1_4::any as pdf_out, png::v1_2::any as png_out, svg::v1_1::any as svg_out, txt::v_utf_8::any as txt_out};
 use crate::standards::v1::subsets::any::io::import::deserializers::artifacts::{dwg::v_ac1018::any as dwg_in, dxf::v_r12::any as dxf_in, txt::v_utf_8::any as txt_in};
 use crate::standards::v1::subsets::any::io::text::snapshot::value_to_dsl;
-use crate::{gis_map_snapshot_with_derived_children, GisMapSnapshot, MapFeature};
+use crate::{GisMapSnapshot, MapFeature};
+use crate::standards::v1::subsets::any::map_composition::{gis_map_snapshot_with_derived_children};
 use geo::{Area, Coord, LineString, Polygon};
+use semio_framework_test_fixtures::fixture_text;
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn feature(id: &str, data: serde_json::Value) -> MapFeature {
@@ -88,11 +90,12 @@ mod geojson_io {
     use crate::standards::v1::subsets::any::io::export::serializers::artifacts::json::v_rfc8259::geojson as geojson_out;
     use crate::standards::v1::subsets::any::io::import::deserializers::artifacts::json::v_rfc8259::geojson as geojson_in;
     use crate::standards::v1::subsets::any::io::text::snapshot::dsl_to_value;
-    use crate::{gis_map_snapshot_with_derived_children, GisMapSnapshot, MapFeature};
+    use crate::{GisMapSnapshot, MapFeature};
+use crate::standards::v1::subsets::any::map_composition::{gis_map_snapshot_with_derived_children};
     use serde_json::Value;
     use std::str::FromStr;
 
-    const VECTORS: &str = include_str!("../../../🧪️tests/🧫️fixtures/🌍️geojson-io/🔣️.json");
+    static VECTORS: std::sync::LazyLock<&str> = std::sync::LazyLock::new(|| super::fixture_text!("../../../../../../🧪️tests/🧫️fixtures/🌍️geojson-io/🔣️.json"));
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn features(value: &Value) -> Vec<MapFeature> {
@@ -111,7 +114,7 @@ mod geojson_io {
 
     #[test]
     fn language_neutral_vectors_export_and_import_exactly() {
-        let vectors: Value = serde_json::from_str(VECTORS).expect("vectors are JSON");
+        let vectors: Value = serde_json::from_str((*VECTORS)).expect("vectors are JSON");
         for case in vectors["export"].as_array().expect("export cases") {
             let written: Value = serde_json::from_slice(&geojson_out::serialize_bytes(&map_of(&case["map"])).expect("export")).expect("exported JSON");
             assert_eq!(written, case["geojson"], "{}", case["id"]);
@@ -182,7 +185,7 @@ mod geojson_io {
 #[test]
 fn gis_diff_native_round_trip_matches_owned_json_oracle() {
     use protocol::{DiffBinary,DiffText};
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🚪️diff-native-ownership/🔣️.json")).expect("authored fixture");
+    let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../../../../🧪️tests/🧫️fixtures/🚪️diff-native-ownership/🔣️.json")).expect("authored fixture");
     let diff:crate::GisMapDiff=semio_framework_pack_json::from_json_str(&fixture["diff"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).expect("owned diff");
     let text=diff.print_diff();
     let oracle:serde_json::Value=serde_json::from_str(&text).expect("independent JSON parser");
@@ -190,5 +193,4 @@ fn gis_diff_native_round_trip_matches_owned_json_oracle() {
     assert_eq!(crate::GisMapDiff::parse_diff(&text).expect("text diff"),diff);
     let binary=diff.encode_diff().expect("binary diff");
     assert_eq!(crate::GisMapDiff::decode_diff(&binary).expect("binary diff"),diff);
-    eprintln!("[DEBUG] GIS owned edit matches the authored JSON oracle and native text/binary round trips");
 }

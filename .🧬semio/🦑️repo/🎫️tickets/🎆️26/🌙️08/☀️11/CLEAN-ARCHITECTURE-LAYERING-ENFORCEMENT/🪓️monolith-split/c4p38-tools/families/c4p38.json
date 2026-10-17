@@ -1,0 +1,13 @@
+{
+ "name": "c4p38",
+ "crates": [
+  "semio-hub-artifact-authority",
+  "semio-hub-local-bootstrap",
+  "semio-hub-space-app",
+  "semio-hub-route-testkit",
+  "semio-hub-hostile-input-laws",
+  "semio-hub-session-route-laws",
+  "semio-hub-open-plan-laws"
+ ],
+ "note": "CENSUS4-PKG-38: hub chunk-cas, local-bootstrap, space-app, route testkit and three bin-unit law roots (absolute classification of the live working tree; pre/post compared by posdiff38.py)"
+}

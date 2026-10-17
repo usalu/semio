@@ -3,8 +3,7 @@
 #[allow(unused_imports)]
 mod mutations_codec {
 use super::*;
-use crate::editor::shooting::presence::component::mutations::*;
-use crate::editor::shooting::presence::component::*;
+use crate::editor::shooting::presence::*;
 
 impl protocol::OpBinary for ShootingPresenceMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {

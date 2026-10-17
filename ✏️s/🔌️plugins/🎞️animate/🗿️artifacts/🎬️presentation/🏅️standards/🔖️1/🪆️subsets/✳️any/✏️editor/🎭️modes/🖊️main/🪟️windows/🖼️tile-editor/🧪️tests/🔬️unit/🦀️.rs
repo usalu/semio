@@ -1,4 +1,17 @@
-use super::*;
+use semio_framework_plugin::SurfaceKind;
+use semio_framework_ui_scene::Canvas2dScene;
+#[allow(unused_imports)]
+use crate::{FigureTileFrame, PresentationSnapshot};
+#[allow(unused_imports)]
+use semio_framework_ui_locale::LocalizedLabel;
+#[allow(unused_imports)]
+use semio_framework_plugin::WindowKindDefinition;
+#[allow(unused_imports)]
+use semio_framework_plugin::WindowOptions;
+#[allow(unused_imports)]
+use semio_framework_ui_contract::BuiltNode;
+use crate::editor::animate::modes::main::windows::tile_editor::{deck_to_canvas_layers};
+use crate::editor::animate::modes::main::windows::tile_editor::*;
 use crate::editor::animate::unit_tests::context::{presentation_app, render as render_body};
 use crate::editor::animate::PresentationCommand;
 use semio_framework_pack_json::Value;

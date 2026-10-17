@@ -7,6 +7,7 @@
 //! a mode whose second window has no engine surface.
 
 use super::*;
+use semio_framework_test_fixtures::fixture_text;
 use {semio_framework::AppDefinition,semio_framework::AppRole,semio_framework_artifact_reference::ArtifactDialect,semio_framework::ModeDefinition,semio_framework::Modes,semio_framework::WindowKindDefinition,semio_framework::WindowKinds};
 use serde_json::Value;
 use semio_framework_ui_locale::LocalizedLabel;
@@ -159,7 +160,7 @@ fn fixture_app(app: &FixtureApp) -> AppDefinition {
 }
 
 fn fixture() -> LayoutFixture {
-    serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🪟️app-mode-layouts/🔣️.json")).expect("the shared mode-layout fixture parses")
+    serde_json::from_str(fixture_text!("../../../../../🧪️tests/🧫️fixtures/🪟️app-mode-layouts/🔣️.json")).expect("the shared mode-layout fixture parses")
 }
 
 fn axis_name(node: &DockNode) -> &'static str {
@@ -283,7 +284,7 @@ fn every_painted_body_is_its_solved_frame_minus_the_tab_cap() {
 /// every declared window instance names a declared window kind.
 #[test]
 fn the_shared_fixture_declares_a_closed_layout_for_every_case() {
-    let raw: Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🪟️app-mode-layouts/🔣️.json")).expect("fixture parses as json");
+    let raw: Value = serde_json::from_str(fixture_text!("../../../../../🧪️tests/🧫️fixtures/🪟️app-mode-layouts/🔣️.json")).expect("fixture parses as json");
     assert!(raw.get("provenance").is_some(), "the fixture names where each authored layout comes from");
     let fixture = fixture();
     let canvas = fixture.canvas;

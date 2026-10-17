@@ -2,8 +2,9 @@ import {scriptCompilerAdmissionControlV1} from "../../../🧰️framework/🔨�
 import {join} from "node:path";
 import {BundleScript} from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {withRepositoryDevelopmentStateV1} from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/💾️development/🟦️.ts";
-import {DEV_LOCAL_HUB_DEFAULT_URL,parseHubPort} from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🚀️local-hub/🏃️execution/🟦️.ts";
-import {withMaterializedTrustedCatalogBundleV1,validateAndPublishTrustedStdioGisCandidate} from "../../🏗️bootstrap/🧾️provenance/🚚️bootstrap-publication/🟦️.ts";
+import {DEV_LOCAL_HUB_DEFAULT_URL,parseHubPort} from "@semio-tech/framework-os-dev/local-hub/execution";
+import { validateAndPublishTrustedStdioGisCandidate } from "../../🏗️bootstrap/🧾️provenance/🚚️bootstrap-publication/🟦️.ts";
+import { withMaterializedTrustedCatalogBundleV1 } from "../../🏗️bootstrap/🧾️provenance/🚚️bootstrap-publication/🧱️materialized-bundle/🟦️.ts";
 import {trustedBootstrapSelectPackages} from "../../🏗️bootstrap/🧾️provenance/🧭️bootstrap-selection/🟦️.ts";
 import {LOCAL_ADMIN_CAPABILITY_FILE,withLocalSessionBrokerV1} from "../🔐️credential-issuance/🟦️.ts";
 import {withPublishedDevelopmentLocalHubHostV1,stopLocalHubV1,waitForLocalHubExitV1,LOCAL_HUB_ADMINISTRATOR_PROFILE,LOCAL_HUB_ADMINISTRATOR_SUBJECT,LOCAL_HUB_DEVELOPMENT_CATALOG_PACKAGES,LOCAL_HUB_DEVELOPMENT_PROFILES,startLocalHub,TRUSTED_CATALOG_READINESS_STALL_BOUND_MS,waitForReadiness} from "../🏃️execution/🟦️.ts";

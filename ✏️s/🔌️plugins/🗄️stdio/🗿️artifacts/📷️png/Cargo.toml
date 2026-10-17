@@ -4,6 +4,9 @@ cargo-features = [ "trim-paths" ]
 resolver = "2"
 members = [
   "🏅️standards/🔖️1.2/🪆️subsets/✳️any/✏️editor/🧬️publication/📦️packages/🦀️rust",
+  "🏅️standards/🔖️1.2/🪆️subsets/✳️any/🚪️io/🎹️facets/📦️packages/🦀️rust",
+  "🏅️standards/🔖️1.2/🪆️subsets/✳️any/🚪️io/💾️binary/🧬️mutations/📦️packages/🦀️rust",
+  "🏅️standards/🔖️1.2/🪆️subsets/✳️any/🚪️io/📦️packages/🦀️rust",
   "🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧪️tests/🔬️unit/📦️packages/🦀️rust",
   "🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust",
   "🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️packages/🦀️rust",

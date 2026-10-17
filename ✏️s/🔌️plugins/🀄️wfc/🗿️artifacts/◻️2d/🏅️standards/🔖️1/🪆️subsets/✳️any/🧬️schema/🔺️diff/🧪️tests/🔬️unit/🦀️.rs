@@ -1,6 +1,7 @@
 //! 🧪️ `Wfc2dDiff` — apply, absorb and inverse laws over the id-keyed tile rows.
 
-use super::*;
+use crate::{schema::snapshot::Wfc2dSnapshot, schema::snapshot::Wfc2dTile};
+use crate::standards::v1::subsets::any::schema::diff::*;
 use protocol::{DiffAlgebra, MutationDiff};
 
 fn tile(id: &str, weight: f64) -> Wfc2dTile {

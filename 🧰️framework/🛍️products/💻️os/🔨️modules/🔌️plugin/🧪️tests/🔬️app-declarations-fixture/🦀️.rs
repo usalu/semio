@@ -1,16 +1,29 @@
-use semio_framework_ui_contract_validation::{validate_snapshot};
-#[cfg(test)] use crate::surface_contract::SnapshotBuilder;
-#[cfg(test)] use crate::artifact_io::ArtifactBuilder;
-#[cfg(test)] use crate::window_surface::built_text_to_component_tree;
-#[cfg(test)] use crate::app_emission::ArtifactMutationOutcome;
-pub(crate) mod fixture {
+#[cfg(test)]
+use semio_framework_plugin_decl_surface::SnapshotBuilder;
+#[cfg(test)]
+use semio_framework_plugin_abi::ArtifactBuilder;
+#[cfg(test)]
+use semio_framework_plugin_window_transient::built_text_to_component_tree;
+#[cfg(test)]
+use semio_framework_plugin_decl_emission::ArtifactMutationOutcome;
+#[doc(hidden)]
+pub mod fixture {
     // 🎯️ Explicit named imports, never an `app` glob: that would re-import `app`'s OWN `ArtifactDeclaration` (old, debt D1)
     // bare, colliding with `declarations::ArtifactDeclaration` (new) brought in by `use super::*` below (E0659).
-    use crate::__semio_dispatch_PluginApp;
-    use crate::component::declaration_fixture_mutations::{std1_any as std1_any_mutations, std1_strict as std1_strict_mutations, std2_any as std2_any_mutations};
+    use semio_framework_plugin_reactor_app::__semio_dispatch_PluginApp;
+    use crate::declaration_fixture_mutations::{std1_any as std1_any_mutations, std1_strict as std1_strict_mutations, std2_any as std2_any_mutations};
     use semio_framework_2d::compute::EngineHandles;
-    use crate::app::{AppDefinition, ArtifactDialect, ArtifactEditor, ArtifactView, ArtifactViewer, ComponentTree, ConfigView, Dialect, DraftView, Editor, Emit, InteractionView, artifact_app_laws, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, Plugin, StandardId, SubsetId, UiAssemblyResult, ViewEmit, Viewer, };
-    use crate::app::PluginBuilder;
+    use semio_framework::AppDefinition;
+use semio_framework_artifact_reference::{ArtifactDialect, Dialect, StandardId, SubsetId};
+use semio_framework_plugin_decl_surface::{ArtifactEditor, ArtifactViewer, Editor, Viewer};
+use semio_framework_plugin_decl_views::{ArtifactView, ConfigView, DraftView, InteractionView, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation};
+use semio_framework_ui_runtime::ComponentTree;
+use semio_framework_plugin_decl_emission::Emit;
+use semio_framework_plugin_testing_laws::artifact_app_laws;
+use semio_framework_plugin_plugin_program::Plugin;
+use semio_framework_plugin_interaction::UiAssemblyResult;
+use semio_framework_plugin_decl_emission::surface_contract::ViewEmit;
+    use semio_framework_plugin_builder::PluginBuilder;
     use semio_framework::{Fault, IconName, ViewModel};
     use semio_framework_artifact_reference::ArtifactKindId;
     use semio_framework_ui_contract::SurfaceKind;
@@ -21,9 +34,9 @@ pub(crate) mod fixture {
     use store::{Mutation, MutationDiff};
     use super::*;
     use serde::{Deserialize, Serialize};
-    use std1_any_mutations::Std1AnyMutation;
-    use std1_strict_mutations::Std1StrictMutation;
-    use std2_any_mutations::Std2AnyMutation;
+    use crate::declaration_fixture_mutations::std1_any::Std1AnyMutation;
+    use crate::declaration_fixture_mutations::std1_strict::Std1StrictMutation;
+    use crate::declaration_fixture_mutations::std2_any::Std2AnyMutation;
 
     /// 🫴️ Runs one route under explicit funded native, SQLite and cancellation authorities.
     async fn run_route_controlled(route: &semio_framework::io_schema::IoRoute, payload: semio_framework::io_schema::IoPayload, limits: semio_framework::sqlite_snapshot::SqliteDatabaseLimits, progress: &mut dyn FnMut(semio_framework::sqlite_snapshot::SqliteSnapshotProgress) -> bool) -> semio_framework::io_schema::IoResult<semio_framework::io_schema::IoPayload> {
@@ -45,7 +58,8 @@ pub(crate) mod fixture {
     }
 
     //#region 🔖️Dialects
-    pub(crate) const STD1_ANY_DIALECT: Dialect = Dialect { artifact_kind: "s.testkit.w1c-fixture", standard: StandardId("1"), subset: SubsetId::ANY };
+    #[doc(hidden)]
+pub const STD1_ANY_DIALECT: Dialect = Dialect { artifact_kind: "s.testkit.w1c-fixture", standard: StandardId("1"), subset: SubsetId::ANY };
     const STD1_STRICT_DIALECT: Dialect = Dialect { artifact_kind: "s.testkit.w1c-fixture", standard: StandardId("1"), subset: SubsetId("strict") };
     const STD2_ANY_DIALECT: Dialect = Dialect { artifact_kind: "s.testkit.w1c-fixture", standard: StandardId("2"), subset: SubsetId::ANY };
     //#endregion 🔖️Dialects
@@ -226,8 +240,9 @@ fn from_sqlite_database(database: &store::sqlite_snapshot::SqliteDatabase, contr
     fixture_channel!(Std1StrictSnapshot, Std1StrictDiff, Std1StrictMutation, std1_strict_mutations, Std1StrictCommand, STD1_STRICT_DIALECT, "semio.testkit.w1c-fixture.std1-strict/v1");
     fixture_channel!(Std2AnySnapshot, Std2AnyDiff, Std2AnyMutation, std2_any_mutations, Std2AnyCommand, STD2_ANY_DIALECT, "semio.testkit.w1c-fixture.std2-any/v1");
 
-    #[derive(Default)]
-    pub(crate) struct Std1AnyEditor;
+    #[doc(hidden)]
+#[derive(Default)]
+    pub struct Std1AnyEditor;
     impl ArtifactEditor for Std1AnyEditor {
         const DIALECT: Dialect = STD1_ANY_DIALECT;
         const DOCUMENT_SCHEMA: &'static str = "semio.testkit.w1c-fixture.std1-any/v1";
@@ -239,12 +254,12 @@ fn from_sqlite_database(database: &store::sqlite_snapshot::SqliteDatabase, contr
         type DraftMutation = NoDraftMutation;
         type Presence = NoPresence;
         type PresenceMutation = NoPresenceMutation;
-        type Transient = crate::app_views::NoTransient;
-        type TransientMutation = crate::app_views::NoTransientMutation;
+        type Transient = semio_framework_plugin_decl_views::NoTransient;
+        type TransientMutation = semio_framework_plugin_decl_views::NoTransientMutation;
         type Command = Std1AnyCommand;
         fn initial_snapshot() -> Std1AnySnapshot { Std1AnySnapshot::default() }
         fn handle(_command: &Std1AnyCommand, doc: &ArtifactView<'_, Std1AnySnapshot>, _cfg: &ConfigView<'_, NoConfig>, _interaction: &InteractionView<'_>, _view_state: Option<&ViewModel>, _draft: &DraftView<'_, NoDraft>, _engines: &EngineHandles) -> ArtifactMutationOutcome<Std1AnyMutation> {
-            Ok(Emit { artifact_mutations: vec![Std1AnyMutation::SetValue(std1_any_mutations::SetValue { value: doc.snapshot.value })], ..Default::default() })
+            Ok(Emit { artifact_mutations: vec![Std1AnyMutation::SetValue(crate::declaration_fixture_mutations::std1_any::set_value::SetValue { value: doc.snapshot.value })], ..Default::default() })
         }
         fn render(_body_key: &str, doc: &ArtifactView<'_, Std1AnySnapshot>, _cfg: &ConfigView<'_, NoConfig>, _view_state: &ViewModel) -> UiAssemblyResult<ComponentTree> {
             built_text_to_component_tree(semio_framework_ui_locale::Label::data(format!("value={}", doc.snapshot.value)))
@@ -262,8 +277,8 @@ fn from_sqlite_database(database: &store::sqlite_snapshot::SqliteDatabase, contr
         type ConfigMutation = NoConfigMutation;
         type Presence = NoPresence;
         type PresenceMutation = NoPresenceMutation;
-        type Transient = crate::app_views::NoTransient;
-        type TransientMutation = crate::app_views::NoTransientMutation;
+        type Transient = semio_framework_plugin_decl_views::NoTransient;
+        type TransientMutation = semio_framework_plugin_decl_views::NoTransientMutation;
         type Command = Std1AnyCommand;
         fn initial_snapshot() -> Std1AnySnapshot { Std1AnySnapshot::default() }
         fn handle(_command: &Std1AnyCommand, _doc: &ArtifactView<'_, Std1AnySnapshot>, _cfg: &ConfigView<'_, NoConfig>, _interaction: &InteractionView<'_>, _view_state: Option<&ViewModel>, _engines: &EngineHandles) -> Result<ViewEmit<NoConfigMutation>, Fault> {
@@ -287,12 +302,12 @@ fn from_sqlite_database(database: &store::sqlite_snapshot::SqliteDatabase, contr
         type DraftMutation = NoDraftMutation;
         type Presence = NoPresence;
         type PresenceMutation = NoPresenceMutation;
-        type Transient = crate::app_views::NoTransient;
-        type TransientMutation = crate::app_views::NoTransientMutation;
+        type Transient = semio_framework_plugin_decl_views::NoTransient;
+        type TransientMutation = semio_framework_plugin_decl_views::NoTransientMutation;
         type Command = Std1StrictCommand;
         fn initial_snapshot() -> Std1StrictSnapshot { Std1StrictSnapshot::default() }
         fn handle(_command: &Std1StrictCommand, doc: &ArtifactView<'_, Std1StrictSnapshot>, _cfg: &ConfigView<'_, NoConfig>, _interaction: &InteractionView<'_>, _view_state: Option<&ViewModel>, _draft: &DraftView<'_, NoDraft>, _engines: &EngineHandles) -> ArtifactMutationOutcome<Std1StrictMutation> {
-            Ok(Emit { artifact_mutations: vec![Std1StrictMutation::SetValue(std1_strict_mutations::SetValue { value: doc.snapshot.value })], ..Default::default() })
+            Ok(Emit { artifact_mutations: vec![Std1StrictMutation::SetValue(crate::declaration_fixture_mutations::std1_strict::set_value::SetValue { value: doc.snapshot.value })], ..Default::default() })
         }
         fn render(_body_key: &str, doc: &ArtifactView<'_, Std1StrictSnapshot>, _cfg: &ConfigView<'_, NoConfig>, _view_state: &ViewModel) -> UiAssemblyResult<ComponentTree> {
             built_text_to_component_tree(semio_framework_ui_locale::Label::data(format!("value={}", doc.snapshot.value)))
@@ -310,8 +325,8 @@ fn from_sqlite_database(database: &store::sqlite_snapshot::SqliteDatabase, contr
         type ConfigMutation = NoConfigMutation;
         type Presence = NoPresence;
         type PresenceMutation = NoPresenceMutation;
-        type Transient = crate::app_views::NoTransient;
-        type TransientMutation = crate::app_views::NoTransientMutation;
+        type Transient = semio_framework_plugin_decl_views::NoTransient;
+        type TransientMutation = semio_framework_plugin_decl_views::NoTransientMutation;
         type Command = Std1StrictCommand;
         fn initial_snapshot() -> Std1StrictSnapshot { Std1StrictSnapshot::default() }
         fn handle(_command: &Std1StrictCommand, _doc: &ArtifactView<'_, Std1StrictSnapshot>, _cfg: &ConfigView<'_, NoConfig>, _interaction: &InteractionView<'_>, _view_state: Option<&ViewModel>, _engines: &EngineHandles) -> Result<ViewEmit<NoConfigMutation>, Fault> {
@@ -335,12 +350,12 @@ fn from_sqlite_database(database: &store::sqlite_snapshot::SqliteDatabase, contr
         type DraftMutation = NoDraftMutation;
         type Presence = NoPresence;
         type PresenceMutation = NoPresenceMutation;
-        type Transient = crate::app_views::NoTransient;
-        type TransientMutation = crate::app_views::NoTransientMutation;
+        type Transient = semio_framework_plugin_decl_views::NoTransient;
+        type TransientMutation = semio_framework_plugin_decl_views::NoTransientMutation;
         type Command = Std2AnyCommand;
         fn initial_snapshot() -> Std2AnySnapshot { Std2AnySnapshot::default() }
         fn handle(_command: &Std2AnyCommand, doc: &ArtifactView<'_, Std2AnySnapshot>, _cfg: &ConfigView<'_, NoConfig>, _interaction: &InteractionView<'_>, _view_state: Option<&ViewModel>, _draft: &DraftView<'_, NoDraft>, _engines: &EngineHandles) -> ArtifactMutationOutcome<Std2AnyMutation> {
-            Ok(Emit { artifact_mutations: vec![Std2AnyMutation::SetValue(std2_any_mutations::SetValue { value: doc.snapshot.value })], ..Default::default() })
+            Ok(Emit { artifact_mutations: vec![Std2AnyMutation::SetValue(crate::declaration_fixture_mutations::std2_any::set_value::SetValue { value: doc.snapshot.value })], ..Default::default() })
         }
         fn render(_body_key: &str, doc: &ArtifactView<'_, Std2AnySnapshot>, _cfg: &ConfigView<'_, NoConfig>, _view_state: &ViewModel) -> UiAssemblyResult<ComponentTree> {
             built_text_to_component_tree(semio_framework_ui_locale::Label::data(format!("value={}", doc.snapshot.value)))
@@ -358,8 +373,8 @@ fn from_sqlite_database(database: &store::sqlite_snapshot::SqliteDatabase, contr
         type ConfigMutation = NoConfigMutation;
         type Presence = NoPresence;
         type PresenceMutation = NoPresenceMutation;
-        type Transient = crate::app_views::NoTransient;
-        type TransientMutation = crate::app_views::NoTransientMutation;
+        type Transient = semio_framework_plugin_decl_views::NoTransient;
+        type TransientMutation = semio_framework_plugin_decl_views::NoTransientMutation;
         type Command = Std2AnyCommand;
         fn initial_snapshot() -> Std2AnySnapshot { Std2AnySnapshot::default() }
         fn handle(_command: &Std2AnyCommand, _doc: &ArtifactView<'_, Std2AnySnapshot>, _cfg: &ConfigView<'_, NoConfig>, _interaction: &InteractionView<'_>, _view_state: Option<&ViewModel>, _engines: &EngineHandles) -> Result<ViewEmit<NoConfigMutation>, Fault> {
@@ -418,7 +433,8 @@ fn from_sqlite_database(database: &store::sqlite_snapshot::SqliteDatabase, contr
     //#endregion 🔖️ProfileHop
 
     //#region 🔖️Builders
-    fn schema_descriptor(id: &'static str) -> ::semio_framework_schema_registry::ArtifactSchemaDescriptor {
+    #[doc(hidden)]
+pub fn schema_descriptor(id: &'static str) -> ::semio_framework_schema_registry::ArtifactSchemaDescriptor {
         let leaves = ::semio_framework_schema_registry::FacetLeaves { rust: "", typescript: "", graphql: "", json_schema: "{}", proto: "" };
         ::semio_framework_schema_registry::ArtifactSchemaDescriptor { id, artifact: leaves.clone(), snapshot: leaves.clone(), diff: leaves.clone(), mutations: leaves }
     }
@@ -459,7 +475,31 @@ fn from_sqlite_database(database: &store::sqlite_snapshot::SqliteDatabase, contr
     /// 🔒️ Closes the fixture app set under the `dyn_enum_close!` vocabulary without importing it into the fixture itself.
     mod closed_apps {
         use super::*;
-        use crate::plugin_app_close_prelude::*;
+        use semio_framework_plugin_abi::{ArtifactAnalysis, ArtifactAnalyzer, ArtifactChildren, ArtifactComposer, ArtifactComposition, ArtifactDecomposer, ArtifactDeserializer, ArtifactSerializer, Confidence, DerivedArtifactSpec, sqlite_wire};
+use semio_framework_plugin_decl_views::tool_contract::ArtifactInstanceOperationOwner;
+use semio_framework_plugin_decl_app::tool_contract::{ArtifactOwnedToolJobFactory, ArtifactReservedJob};
+use store::ArtifactStoreInitializationAuthority;
+use semio_framework_plugin_decl_emission::{AsyncTaskRun, AsyncTaskSource, ToolCommandCatalog, surface_contract};
+use semio_framework_plugin_decl_views::child_view::ChildContentRetainers;
+use semio_framework::mesh_io::IoError;
+use semio_framework_os_kernel::io::{IoPayload, SubsetValidator, SubsetValidatorEntry, register_subset_validator};
+use protocol::LOCAL_ACTOR_ID;
+use semio_framework_plugin_window_kits::{LabelAxes, WindowKit};
+use semio_framework_plugin_decl_app::{NaturalFileDecodeCursor, invalid};
+use semio_framework_plugin_decl_views::{NoTransient, NoTransientMutation};
+use semio_framework_value::retained_clone::RetainedCloneProgress;
+use semio_framework_value::{RetirementDemand, ValueError};
+use semio_framework_plugin_decl_views::tool_run_contract::ToolRunRetargetableJob;
+use serde_json::Value;
+use semio_framework_plugin_window_config::{WindowConfigOwner, WindowConfigReplaceMutation};
+use semio_framework_plugin_window_transient::window_transient::WindowTransientOwner;
+use semio_framework_plugin_decl_registry::plugin_program;
+use semio_framework_plugin_plugin_program::plugin_runtime;
+use semio_framework_os_kernel as protocol;
+use semio_framework_os_kernel as store;
+use semio_framework_ui_contract::*;
+use semio_framework::*;
+use semio_framework::kernel::*;
         semio_framework_dispatch_macros::dyn_enum_close! {
             /// 🗃️ Closed fixture app set for every declared editor and viewer surface.
             pub(crate) enum FixtureApps: PluginApp {
@@ -472,12 +512,13 @@ fn from_sqlite_database(database: &store::sqlite_snapshot::SqliteDatabase, contr
             }
         }
     }
-    pub(crate) use closed_apps::FixtureApps;
+    pub use closed_apps::FixtureApps;
 
     /// 🌳️ The fixture's whole tree: TWO standards, THREE subsets total — `standard "1"` owns
     /// `any` (base) and `strict` (conformance profile of `any`, wired via `std1_strict_entries`);
     /// `standard "2"` owns one independent `any` subset, proving the walk covers >1 standard.
-    pub(crate) fn build_declaration() -> ArtifactDeclaration<FixtureApps> {
+    #[doc(hidden)]
+pub fn build_declaration() -> ArtifactDeclaration<FixtureApps> {
         ArtifactDeclaration {
             kind: ArtifactKindId::parse("s.testkit.w1c-fixture").expect("canonical fixture kind"),
             localization: &[],
@@ -524,7 +565,7 @@ fn from_sqlite_database(database: &store::sqlite_snapshot::SqliteDatabase, contr
     //#region 🔖️Tests
     #[semio_framework_async_macros::async_test]
     async fn ids_are_derived_from_the_dialect() {
-        artifact_app_laws::assert_subset_declaration_ids_are_derived(&build_declaration()).await;
+        semio_framework_plugin_testing_laws::artifact_app_laws::assert_subset_declaration_ids_are_derived(&build_declaration()).await;
     }
 
     #[test]
@@ -538,7 +579,7 @@ fn from_sqlite_database(database: &store::sqlite_snapshot::SqliteDatabase, contr
 
     #[semio_framework_async_macros::async_test]
     async fn declaring_registers_schema_io_and_surfaces() {
-        artifact_app_laws::assert_declaration_tree_registers_all("testkit", build_declaration()).await;
+        semio_framework_plugin_testing_laws::artifact_app_laws::assert_declaration_tree_registers_all("testkit", build_declaration()).await;
     }
 
     #[test]
@@ -568,11 +609,11 @@ fn from_sqlite_database(database: &store::sqlite_snapshot::SqliteDatabase, contr
     /// every owned schema; a schema nobody owns is refused.
     #[semio_framework_async_macros::async_test]
     async fn codec_calls_construct_no_app() {
-        fn refuse_construction(_definition: &AppDefinition, _actor: protocol::ActorId, _policy: crate::MountedOwnerPolicyV1, _identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> FixtureApps {
+        fn refuse_construction(_definition: &AppDefinition, _actor: protocol::ActorId, _policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, _identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> FixtureApps {
             panic!("a codec call constructed an app")
         }
         let projected = project_artifact_declarations(&[build_declaration()]);
-        let mut plugin = crate::plugin_program::Plugin::<FixtureApps>::new("testkit", "Testkit", "1.0.0");
+        let mut plugin = semio_framework_plugin_plugin_program::Plugin::<FixtureApps>::new("testkit", "Testkit", "1.0.0");
         for (app, mut factory) in projected.app_defs {
             assert_eq!(factory.document_schema, app.definition.io.artifact_schema, "{}", app.definition.id);
             factory.create = refuse_construction;
@@ -584,23 +625,23 @@ fn from_sqlite_database(database: &store::sqlite_snapshot::SqliteDatabase, contr
         for schema in schemas {
             let expected: Vec<&str> = owners.iter().filter(|(_, owned)| *owned == schema).map(|(id, _)| id.as_str()).collect();
             assert_eq!(expected.len(), 2, "{schema}: its editor and its viewer");
-            let candidates: Vec<&str> = crate::plugin_runtime::artifact_codec_candidates(&plugin, schema).map(|definition| definition.id.as_str()).collect();
+            let candidates: Vec<&str> = semio_framework_plugin_runtime_ops::ops_document::artifact_codec_candidates(&plugin, schema).map(|definition| definition.id.as_str()).collect();
             assert_eq!(candidates, expected, "{schema}");
-            let owner = crate::plugin_runtime::artifact_codec_owner(&plugin, schema).expect("one owner");
+            let owner = semio_framework_plugin_runtime_ops::ops_document::artifact_codec_owner(&plugin, schema).expect("one owner");
             assert_eq!(owner.role, AppRole::Editor, "{schema}: the editor is the creation authority");
         }
-        assert!(crate::plugin_runtime::artifact_codec_owner(&plugin, "semio.testkit.nobody/v1").is_err(), "no owner is refused");
-        let runtime = crate::plugin_runtime::PluginRuntime::new({ let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
-        crate::plugin_runtime::install_plugin_bundle(&runtime, plugin);
+        assert!(semio_framework_plugin_runtime_ops::ops_document::artifact_codec_owner(&plugin, "semio.testkit.nobody/v1").is_err(), "no owner is refused");
+        let runtime = semio_framework_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime::new({ let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
+        semio_framework_plugin_runtime_instances::inst_descriptor::install_plugin_bundle(&runtime, plugin);
         for schema in schemas {
-            let hash = crate::plugin_runtime::plugin_artifact_pack_schema_hash(&runtime, schema).await;
+            let hash = semio_framework_plugin_runtime_ops::ops_document::plugin_artifact_pack_schema_hash(&runtime, schema).await;
             assert!(hash.as_ref().is_ok_and(|hash| *hash != [0; 32]) || format!("{hash:?}").contains("no structural record specification"), "{schema}: {hash:?}");
             let document_id = format!("artifact-{}", "1".repeat(32));
-            let pair = crate::plugin_runtime::plugin_artifact_genesis(&runtime, schema, &document_id).await.expect("genesis without an app");
-            let mirror = crate::plugin_runtime::plugin_artifact_print_mirror(&runtime, schema, &pair.pack, &pair.spr).await.expect("print mirror without an app");
+            let pair = semio_framework_plugin_runtime_ops::ops_document::plugin_artifact_genesis(&runtime, schema, &document_id).await.expect("genesis without an app");
+            let mirror = semio_framework_plugin_runtime_ops::ops_document::plugin_artifact_print_mirror(&runtime, schema, &pair.pack, &pair.spr).await.expect("print mirror without an app");
             assert!(!pair.pack.is_empty() && !mirror.dsl.is_empty(), "{schema}");
         }
-        assert!(crate::plugin_runtime::plugin_artifact_pack_schema_hash(&runtime, "semio.testkit.nobody/v1").await.is_err(), "no owner is refused");
+        assert!(semio_framework_plugin_runtime_ops::ops_document::plugin_artifact_pack_schema_hash(&runtime, "semio.testkit.nobody/v1").await.is_err(), "no owner is refused");
     }
 
     /// 🎯️ Force a preflight failure by construction: standard "2"'s subset gets standard
@@ -616,7 +657,7 @@ fn from_sqlite_database(database: &store::sqlite_snapshot::SqliteDatabase, contr
         let mut conflicting = schema_descriptor("s.testkit.w1c-fixture@1/*");
         conflicting.artifact.rust = "// a different, conflicting facet body";
         invalid.standards[1].subsets[0].schema.descriptor = conflicting;
-        artifact_app_laws::assert_declaration_registration_is_atomic("testkit", invalid).await;
+        semio_framework_plugin_testing_laws::artifact_app_laws::assert_declaration_registration_is_atomic("testkit", invalid).await;
     }
 
     #[semio_framework_async_macros::async_test]
@@ -624,7 +665,7 @@ fn from_sqlite_database(database: &store::sqlite_snapshot::SqliteDatabase, contr
         type Construction = SnapshotBuilder<Std1AnySnapshot, Std1AnyMutation>;
         let bytes = Std1AnySnapshot { value: 1 }.encode_pack();
         let opened = Construction::from_binary(&bytes).expect("open");
-        let (mutated, outcome) = opened.mutate(Std1AnyMutation::SetValue(std1_any_mutations::SetValue { value: 42 }));
+        let (mutated, outcome) = opened.mutate(Std1AnyMutation::SetValue(crate::declaration_fixture_mutations::std1_any::set_value::SetValue { value: 42 }));
         assert!(outcome.messages().is_empty(), "a fresh mutate must not fail");
         let saved = mutated.build().expect("save");
         assert_eq!(saved.value, 42);
@@ -842,32 +883,32 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// authoring-trait default of `None` would silently take the framework default back out.
     #[semio_framework_async_macros::async_test]
     async fn the_framework_owns_every_bounded_close_lane_an_app_declares_nothing_for() {
-        type Edit = crate::surface_contract::EditorApp<Std1AnyEditor>;
-        type View = crate::surface_contract::ViewerApp<Std1AnyViewer>;
+        type Edit = semio_framework_plugin_decl_surface::EditorApp<Std1AnyEditor>;
+        type View = semio_framework_plugin_decl_surface::ViewerApp<Std1AnyViewer>;
         let lanes = [
-            ("editor document-store", <Edit as crate::app_contract::ArtifactApp>::build_document_store_disposer().is_some()),
-            ("editor config-store", <Edit as crate::app_contract::ArtifactApp>::build_config_store_disposer().is_some()),
-            ("editor draft-store", <Edit as crate::app_contract::ArtifactApp>::build_draft_store_disposer().is_some()),
-            ("editor presence-store", <Edit as crate::app_contract::ArtifactApp>::build_presence_store_disposer().is_some()),
-            ("editor transient-store", <Edit as crate::app_contract::ArtifactApp>::build_transient_store_disposer().is_some()),
-            ("viewer document-store", <View as crate::app_contract::ArtifactApp>::build_document_store_disposer().is_some()),
-            ("viewer config-store", <View as crate::app_contract::ArtifactApp>::build_config_store_disposer().is_some()),
-            ("viewer draft-store", <View as crate::app_contract::ArtifactApp>::build_draft_store_disposer().is_some()),
-            ("viewer presence-store", <View as crate::app_contract::ArtifactApp>::build_presence_store_disposer().is_some()),
-            ("viewer transient-store", <View as crate::app_contract::ArtifactApp>::build_transient_store_disposer().is_some()),
+            ("editor document-store", <Edit as semio_framework_plugin_decl_app::ArtifactApp>::build_document_store_disposer().is_some()),
+            ("editor config-store", <Edit as semio_framework_plugin_decl_app::ArtifactApp>::build_config_store_disposer().is_some()),
+            ("editor draft-store", <Edit as semio_framework_plugin_decl_app::ArtifactApp>::build_draft_store_disposer().is_some()),
+            ("editor presence-store", <Edit as semio_framework_plugin_decl_app::ArtifactApp>::build_presence_store_disposer().is_some()),
+            ("editor transient-store", <Edit as semio_framework_plugin_decl_app::ArtifactApp>::build_transient_store_disposer().is_some()),
+            ("viewer document-store", <View as semio_framework_plugin_decl_app::ArtifactApp>::build_document_store_disposer().is_some()),
+            ("viewer config-store", <View as semio_framework_plugin_decl_app::ArtifactApp>::build_config_store_disposer().is_some()),
+            ("viewer draft-store", <View as semio_framework_plugin_decl_app::ArtifactApp>::build_draft_store_disposer().is_some()),
+            ("viewer presence-store", <View as semio_framework_plugin_decl_app::ArtifactApp>::build_presence_store_disposer().is_some()),
+            ("viewer transient-store", <View as semio_framework_plugin_decl_app::ArtifactApp>::build_transient_store_disposer().is_some()),
         ];
         let missing: Vec<&str> = lanes.iter().filter(|(_, present)| !present).map(|(lane, _)| *lane).collect();
         assert!(missing.is_empty(), "an app that declares no store ownership must still close: {} of {} lanes are fail-closed: {missing:?}", missing.len(), lanes.len());
         assert!(
-            <Edit as crate::app_contract::ArtifactApp>::build_presence_peer_retirement_factory().is_some() && <View as crate::app_contract::ArtifactApp>::build_presence_peer_retirement_factory().is_some(),
+            <Edit as semio_framework_plugin_decl_app::ArtifactApp>::build_presence_peer_retirement_factory().is_some() && <View as semio_framework_plugin_decl_app::ArtifactApp>::build_presence_peer_retirement_factory().is_some(),
             "the peer half of the presence lane is framework-owned too"
         );
     }
     #[semio_framework_async_macros::async_test]
     async fn vcs_app_retained_composition_query_funds_exact_large_identifier() {
-    let mut original_caller=crate::app_testing::artifact_app_laws::OriginalFixtureCaller::admit().expect("original caller policy admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
-        use crate::plugin_app::PluginApp;
-        use crate::artifact_instance::VcsArtifactApp;
+    let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original caller policy admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+        use semio_framework_plugin_reactor_app::PluginApp;
+        use semio_framework_plugin_instance_app::VcsArtifactApp;
         let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧩️composition/🌳️graph/📏️demand/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
         let items = fixture["maximumItems"].as_u64().unwrap() as usize;
         let extent = fixture["identifierBytes"].as_u64().unwrap() as usize;
@@ -875,10 +916,10 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         let identifier = char::from(fixture["identifierByte"].as_u64().unwrap() as u8).to_string().repeat(extent);
         let parent = char::from(fixture["parentByte"].as_u64().unwrap() as u8).to_string().repeat(extent);
         let slot = char::from(fixture["slotByte"].as_u64().unwrap() as u8).to_string().repeat(extent);
-        let mut app = VcsArtifactApp::<EditorApp<Std1AnyEditor>>::new(EditorApp::default(), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), crate::app_testing::artifact_app_laws::fixture_mounted_policy(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await;
-        crate::app_testing::artifact_app_laws::settle_store_constructor(&mut app, crate::app_testing::artifact_app_laws::fixture_mounted_policy());
+        let mut app = VcsArtifactApp::<EditorApp<Std1AnyEditor>>::new(EditorApp::default(), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity()).await;
+        semio_framework_plugin_testing_laws::artifact_app_laws::settle_store_constructor(&mut app, semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy());
         assert_eq!(app.close_retirement_demands(4096).unwrap(), app.stores.constructor_close_demands(&app.constructor, 4096).unwrap());
-        crate::app_testing::artifact_app_laws::settle_store_constructor_close(&mut app, crate::app_testing::artifact_app_laws::fixture_mounted_policy());
+        semio_framework_plugin_testing_laws::artifact_app_laws::settle_store_constructor_close(&mut app, semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy());
         app.child_composition.composition.graph_mut().await.insert_owns(&parent, &slot, &identifier).await.unwrap();
         app.close.close_owned_stage = fixture["finalOwnedStage"].as_u64().unwrap() as u8;
         assert!(app.history.command_log.is_empty() && app.history.history_dirty_sequences.is_empty() && app.child_composition.pending_child_pins.is_empty());
@@ -912,9 +953,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         }
         assert!(app.child_composition.composition.terminal_is_empty());
         assert_eq!(app_demand, semio_framework_value::RetirementDemand { depth: graph_demand.depth + 1, ..graph_demand }, "final application phase must forward the exact retained composition allocation one owner level deeper");
-        println!("[DEBUG] Vcs composition query={app_demand:?} exact={graph_demand:?}; denied0/4096/8193 retain owner; whole8194 releases actual8194 with zero allocation");
         app.close.close_owned_stage = 0;
-        artifact_app_laws::close_registered_fixture_app(&mut app, crate::app_testing::artifact_app_laws::fixture_mounted_policy(),cx).expect("original fixture terminal close");
+        semio_framework_plugin_testing_laws::artifact_app_laws::close_registered_fixture_app(&mut app, semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(),cx).expect("original fixture terminal close");
     
     }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original caller paid terminal retirement");result
 }

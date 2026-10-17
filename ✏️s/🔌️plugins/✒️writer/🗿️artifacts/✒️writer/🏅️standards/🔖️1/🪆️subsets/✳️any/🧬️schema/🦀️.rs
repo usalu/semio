@@ -2,7 +2,7 @@
 
 use crate::{document_child_handle_with_text, WriterDocumentChild, WriterSnapshot, WRITER_DOCUMENT_SCHEMA};
 use framework_schema::ArtifactSchema;
-use semio_s_artifact_trinity_jack::lexer::{lex_spanned, SpannedToken, Token};
+use semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::lexer::{lex_spanned, SpannedToken, Token};
 use serde::{Deserialize, Serialize};
 //#region 🔖️Artifact
 /// 🧬️ Full writer artifact across the artifact, presence and config lanes.
@@ -65,29 +65,51 @@ impl WriterArtifact {
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.writer.writer` — twenty handcrafted schema leaves.
 pub fn writer_artifact_schema_descriptor() -> semio_framework_schema_registry::ArtifactSchemaDescriptor {
+    ::semio_framework_schema_registry::register_schema_leaf_documents(&[
+        ::semio_framework_schema_registry::SchemaLeafDocument { scope: "s.writer.writer", export: "artifact", format: ::semio_framework_schema_registry::SchemaFormat::Rust, path: "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs" },
+        ::semio_framework_schema_registry::SchemaLeafDocument { scope: "s.writer.writer", export: "artifact", format: ::semio_framework_schema_registry::SchemaFormat::Typescript, path: "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts" },
+        ::semio_framework_schema_registry::SchemaLeafDocument { scope: "s.writer.writer", export: "artifact", format: ::semio_framework_schema_registry::SchemaFormat::Graphql, path: "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔗️.graphql" },
+        ::semio_framework_schema_registry::SchemaLeafDocument { scope: "s.writer.writer", export: "artifact", format: ::semio_framework_schema_registry::SchemaFormat::Protobuf, path: "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🛰️.proto" },
+        ::semio_framework_schema_registry::SchemaLeafDocument { scope: "s.writer.writer", export: "snapshot", format: ::semio_framework_schema_registry::SchemaFormat::Rust, path: "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs" },
+        ::semio_framework_schema_registry::SchemaLeafDocument { scope: "s.writer.writer", export: "snapshot", format: ::semio_framework_schema_registry::SchemaFormat::Typescript, path: "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🟦️.ts" },
+        ::semio_framework_schema_registry::SchemaLeafDocument { scope: "s.writer.writer", export: "snapshot", format: ::semio_framework_schema_registry::SchemaFormat::Graphql, path: "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔗️.graphql" },
+        ::semio_framework_schema_registry::SchemaLeafDocument { scope: "s.writer.writer", export: "snapshot", format: ::semio_framework_schema_registry::SchemaFormat::Protobuf, path: "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🛰️.proto" },
+        ::semio_framework_schema_registry::SchemaLeafDocument { scope: "s.writer.writer", export: "diff", format: ::semio_framework_schema_registry::SchemaFormat::Rust, path: "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs" },
+        ::semio_framework_schema_registry::SchemaLeafDocument { scope: "s.writer.writer", export: "diff", format: ::semio_framework_schema_registry::SchemaFormat::Typescript, path: "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts" },
+        ::semio_framework_schema_registry::SchemaLeafDocument { scope: "s.writer.writer", export: "diff", format: ::semio_framework_schema_registry::SchemaFormat::Graphql, path: "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🔗️.graphql" },
+        ::semio_framework_schema_registry::SchemaLeafDocument { scope: "s.writer.writer", export: "diff", format: ::semio_framework_schema_registry::SchemaFormat::Protobuf, path: "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🛰️.proto" },
+        ::semio_framework_schema_registry::SchemaLeafDocument { scope: "s.writer.writer", export: "mutations", format: ::semio_framework_schema_registry::SchemaFormat::Rust, path: "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs" },
+        ::semio_framework_schema_registry::SchemaLeafDocument { scope: "s.writer.writer", export: "mutations", format: ::semio_framework_schema_registry::SchemaFormat::Typescript, path: "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟦️.ts" },
+        ::semio_framework_schema_registry::SchemaLeafDocument { scope: "s.writer.writer", export: "mutations", format: ::semio_framework_schema_registry::SchemaFormat::Graphql, path: "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕸️.graphql" },
+        ::semio_framework_schema_registry::SchemaLeafDocument { scope: "s.writer.writer", export: "mutations", format: ::semio_framework_schema_registry::SchemaFormat::Protobuf, path: "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛰️.proto" },
+    ]);
+    #[cfg(target_arch = "wasm32")]
+    semio_framework_schema_registry::install_default_schema_leaf_reader(semio_framework_plugin::reactor::package_asset, "");
+    #[cfg(not(target_arch = "wasm32"))]
+    semio_framework_schema_registry::install_default_schema_leaf_reader(semio_framework_plugin::reactor::package_asset, env!("CARGO_MANIFEST_DIR"));
     semio_framework_schema_registry::ArtifactSchemaDescriptor {
         id: "s.writer.writer",
-        artifact: semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
+        artifact: semio_framework_schema_registry::FacetLeaves { rust: "", typescript: "", graphql: "", json_schema: include_str!("🔣️.json"), proto: "" },
         snapshot: semio_framework_schema_registry::FacetLeaves {
-            rust: include_str!("📸️snapshot/🦀️.rs"),
-            typescript: include_str!("📸️snapshot/🟦️.ts"),
-            graphql: include_str!("📸️snapshot/🔗️.graphql"),
+            rust: "",
+            typescript: "",
+            graphql: "",
             json_schema: include_str!("📸️snapshot/🔣️.json"),
-            proto: include_str!("📸️snapshot/🛰️.proto"),
+            proto: "",
         },
         diff: semio_framework_schema_registry::FacetLeaves {
-            rust: include_str!("🔺️diff/🦀️.rs"),
-            typescript: include_str!("🔺️diff/🟦️.ts"),
-            graphql: include_str!("🔺️diff/🔗️.graphql"),
+            rust: "",
+            typescript: "",
+            graphql: "",
             json_schema: include_str!("🔺️diff/🔣️.json"),
-            proto: include_str!("🔺️diff/🛰️.proto"),
+            proto: "",
         },
         mutations: semio_framework_schema_registry::FacetLeaves {
-            rust: include_str!("🧬️mutations/🦀️.rs"),
-            typescript: include_str!("🧬️mutations/🟦️.ts"),
-            graphql: include_str!("🧬️mutations/🕸️.graphql"),
+            rust: "",
+            typescript: "",
+            graphql: "",
             json_schema: include_str!("🧬️mutations/🔣️.json"),
-            proto: include_str!("🧬️mutations/🛰️.proto"),
+            proto: "",
         },
     }
 }
@@ -122,7 +144,7 @@ pub struct GrammarToken {
 /// 🎨️ Classifies `text` through the language registry (`idiom` / `LanguageSpec` hooks).
 pub fn tokenize_language(text: &str, language_id: &str) -> Vec<GrammarToken> {
     if language_id == "jack" {
-        return semio_s_artifact_trinity_jack::core::semantic_tokens(text).into_iter().map(|t| GrammarToken { class: t.class, start: t.start, end: t.end }).collect();
+        return semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::language_service::semantic_tokens(text).into_iter().map(|t| GrammarToken { class: t.class, start: t.start, end: t.end }).collect();
     }
     if language_id == "wire" {
         let limits = semio_framework_diagnostic::Limits::default();
@@ -162,7 +184,7 @@ pub fn tokenize_language(text: &str, language_id: &str) -> Vec<GrammarToken> {
 /// 🪞️ Canonical jack format when possible, else a whitespace-only normalization for other languages.
 pub fn format_writer_text(text: &str, language_id: &str) -> String {
     if language_id == "jack" {
-        if let Ok(formatted) = semio_s_artifact_trinity_jack::core::format(text) {
+        if let Ok(formatted) = semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::language_service::format(text) {
             return formatted;
         }
     }
@@ -206,13 +228,13 @@ pub fn jack_ast_tree_icon(kind: &str) -> Option<&'static str> {
 
 /// 🌉️ Adapts trinity::core's shared [`trinity::core::SpannedNode`] tree into writer's own [`JackAstNode`]
 /// (adds the stable tree-item `id` the outline panel needs; `kind`/`label`/spans pass through unchanged).
-fn jack_ast_from_spanned(node: &semio_s_artifact_trinity_jack::core::SpannedNode) -> JackAstNode {
+fn jack_ast_from_spanned(node: &semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::language_service::SpannedNode) -> JackAstNode {
     JackAstNode { id: format!("jack-ast-{}-{}-{}", node.kind, node.start, node.end), kind: node.kind.clone(), label: node.label.clone(), start: node.start, end: node.end, children: node.children.iter().map(jack_ast_from_spanned).collect() }
 }
 
 /// 🌳️ Parse jack source into a span-tracked AST for hierarchy panels, via the shared `trinity::core` parser.
 pub fn parse_jack_ast(text: &str) -> JackAstNode {
-    jack_ast_from_spanned(&semio_s_artifact_trinity_jack::core::parse_spanned(text))
+    jack_ast_from_spanned(&semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::language_service::parse_spanned(text))
 }
 
 /// 🎯️ Deepest AST node containing a byte offset.
@@ -631,7 +653,153 @@ pub fn apply_jack_rename(text: &str, occurrences: &[(usize, usize)], new_name: &
 //#endregion 🔖️JackEditor
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
+
+//#region 🧩️ArtifactItems
+pub mod artifact_items {
+use semio_framework_artifact_reference::{Dialect, StandardId, SubsetId};
+
+//#region 🔖️Constants
+pub const WRITER_DOCUMENT_SCHEMA: &str = "writer.document";
+
+/// 🪪️ Ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §1's canonical surface
+/// coordinate for this artifact — lives at the ARTIFACT level (not under `editor`/`viewer`) so a
+/// viewer file can read it without ever importing through the sibling `editor` module.
+/// `artifact_kind = "s.writer.writer"` matches `definition()`'s own `"s.writer.schema.artifact"`
+/// capability row (`descriptor(b"s.writer.writer")`/`claim(schema, "s.writer.writer")` below, not
+/// guessed); `standard`/`subset` match this file's own `🏅️standards/🔖️1/🪆️subsets/✳️any` location
+/// — i.e. the canonical surface id is `s.writer.writer@1/*#editor` / `s.writer.writer@1/*#viewer`.
+pub const WRITER_DIALECT: Dialect = Dialect { artifact_kind: "s.writer.writer", standard: StandardId("1"), subset: SubsetId::ANY };
+//#endregion 🔖️Constants
+}
+//#endregion 🧩️ArtifactItems
+
+//#region 🧩️ArtifactItems2
+pub mod artifact_items_2 {
+pub fn default_uri() -> String {
+    "writer://empty".into()
+}
+}
+//#endregion 🧩️ArtifactItems2
+
+//#region 🧩️ArtifactItems3
+pub mod artifact_items_3 {
+use semio_s_artifact_stdio_semio_document::schema::snapshot::{DocBlock, SemioDocumentSnapshot, STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA};
+
+//#region 🔖️DocumentBridge
+/// 🕸️ Owned CHILD handle type for the composed `s.stdio.semio`/`document` document — writer's
+/// authored text now lives in this composed child's block tree rather than inline on
+/// `WriterSnapshot` (ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM, `writer→C:document`).
+pub type WriterDocumentChild = store::os_store::artifact_child::ArtifactChild<SemioDocumentSnapshot>;
+
+/// 🌉 REAL bidirectional converter between writer's plain-text/language-id working representation
+/// and the composed child's own `SemioDocumentSnapshot` block tree (the "ModelBridge" pattern from
+/// `📓️wave3-reports/cad-report.md`) — writer's whole authored body becomes one `DocBlock::Code`
+/// leaf (`language` = `language_id`, `text` = the raw buffer), which round-trips losslessly: `Code`
+/// carries no run/formatting structure to lose, exactly matching what `text: String` used to carry
+/// verbatim. `"plaintext"`/empty language ids map to `None` (no fenced-language hint).
+pub fn document_snapshot_from_text(text: &str, language_id: &str) -> SemioDocumentSnapshot {
+    let language = (!language_id.is_empty() && language_id != "plaintext").then(|| language_id.to_string());
+    SemioDocumentSnapshot { schema: STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA.into(), styles: Vec::new(), images: Vec::new(), blocks: vec![DocBlock::Code { language, text: text.to_string() }] }
+}
+
+/// 🌉 Inverse of [`document_snapshot_from_text`] — concatenates every `Code` block's body (the
+/// common, lossless case is exactly one); any non-`Code` block is honestly skipped rather than
+/// fabricating prose from block content this plugin never authored.
+pub fn text_from_document_snapshot(snapshot: &SemioDocumentSnapshot) -> String {
+    snapshot
+        .blocks
+        .iter()
+        .filter_map(|block| match block {
+            DocBlock::Code { text, .. } => Some(text.clone()),
+            _ => None,
+        })
+        .collect::<Vec<_>>()
+        .join("\n")
+}
+
+/// 🕸️ Deterministic content-addressed CHILD handle for the document — same `(child_id, target)`
+/// for identical `(text, language_id)`, a different pair once the content actually changes; the
+/// handle alone is the change signal the parent's diff/mutation machinery reads without ever
+/// comparing embedded content, mirroring lowpoly's `mesh_child_handle`/cad's `cad_model_child_handle`.
+pub fn document_child_handle(_id: &str, text: &str, language_id: &str) -> WriterDocumentChild {
+    let snapshot = document_snapshot_from_text(text, language_id);
+    let content_json = semio_framework_pack_json::to_json_string(&snapshot);
+    let child_id = store::content_id("document", content_json.as_bytes());
+    let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "document".into() };
+    let target = semio_framework_artifact_reference::ArtifactRef { artifact_id: child_id.clone(), dialect };
+    store::os_store::artifact_child::ArtifactChild::new(child_id, target)
+}
+//#endregion 🔖️DocumentBridge
+}
+//#endregion 🧩️ArtifactItems3
+
+//#region 🧩️ArtifactItems4
+pub mod artifact_items_4 {
+use crate::{WriterDocumentChild, document_child_handle, document_snapshot_from_text};
+use semio_s_artifact_stdio_semio_document::schema::snapshot::SemioDocumentSnapshot;
+use std::sync::Arc;
+pub use crate::standards::v1::subsets::any::schema::snapshot::WriterSnapshot;
+
+//#region 🔖️WorkingScene
+/// 🌱 Ephemeral, artifact-instance working representation of the composed document child's live
+/// text. The owner is the `WriterDocumentChild` embedded by one snapshot, so independent apps and
+/// stale handles cannot observe or replace one another's text. Persistence and DSL codecs skip
+/// the text; constructors and mutations materialize their immutable local owner directly.
+pub struct WriterWorkingScene {
+    pub text: String,
+    pub language_id: String,
+}
+
+/// 📝 Materializes text on this exact artifact-child owner without publishing process state.
+pub fn attach_writer_document_text(handle: &mut WriterDocumentChild, text: &str) {
+    handle.set_local_text(Arc::<str>::from(text));
+}
+
+/// 🔎 Reads this child owner's live text, or empty text when the child is unresolved.
+pub fn writer_text_for_handle(handle: &WriterDocumentChild) -> String {
+    handle.local_text().unwrap_or_default().to_string()
+}
+
+/// 🔎 Reads the current document's authored body — the single read call site every
+/// render/inference/export path in this plugin uses. The body lives in the PERSISTED
+/// `WriterSnapshot::text` payload (see that field's doc comment), not in the composed child handle,
+/// so it survives `ArtifactPack`/`ArtifactDsl` and therefore the host's member-less archive door.
+pub fn writer_text(snapshot: &WriterSnapshot) -> String {
+    snapshot.text.clone()
+}
+
+/// 🧵️ Retains the immutable child-text owner for bounded worker jobs without cloning its bytes.
+/// The persisted `text` body and the composed `document` handle's local owner are minted together
+/// ([`writer_snapshot_with_text`], [`attach_writer_document_text`]), so a body that still agrees with
+/// its handle shares that handle's owner; only a body whose handle carries no or other text gets one
+/// fresh owner.
+pub fn writer_text_owner(snapshot: &WriterSnapshot) -> Arc<str> {
+    snapshot.document.local_text_owner().filter(|owner| **owner == *snapshot.text).unwrap_or_else(|| Arc::<str>::from(snapshot.text.as_str()))
+}
+
+/// 🏗️ Mints a content-addressed handle carrying its artifact-instance text owner.
+pub fn document_child_handle_with_text(id: &str, text: &str, language_id: &str) -> WriterDocumentChild {
+    document_child_handle(id, text, language_id).with_local_text(Arc::<str>::from(text))
+}
+
+/// 🏗️ Builds a full `WriterSnapshot` from literal text — the standard fixture/import constructor
+/// replacing the old 5-field `WriterSnapshot { ..., text }` struct literal now that `document` is a
+/// composed child handle, not a plain field.
+pub fn writer_snapshot_with_text(schema: &str, id: &str, language_id: &str, uri: &str, text: &str) -> WriterSnapshot {
+    WriterSnapshot { schema: schema.into(), id: id.into(), language_id: language_id.into(), uri: uri.into(), text: text.into(), document: document_child_handle_with_text(id, text, language_id) }
+}
+
+/// 🌱️ `ArtifactEditor`/`ArtifactViewer::genesis_child_pack` for the composed `document` child — the
+/// block tree [`document_snapshot_from_text`] derives from the handle's own text owner. The react
+/// shell's `loadDocumentPair` sends `members: []`, so a whole-document load (`setActiveExample` →
+/// `Effect::LoadDocument`) derives the slot here; without it the archive closure completes
+/// `Incomplete` and the load is refused (`document-archive-replacement.closure-rejected`).
+pub fn genesis_writer_child_pack(snapshot: &WriterSnapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
+    use pack::snapshot::ArtifactPack;
+    (slot == "document" && child_id == snapshot.document.child_id).then(|| <SemioDocumentSnapshot as ArtifactPack>::encode_pack(&document_snapshot_from_text(&snapshot.text, &snapshot.language_id)))
+}
+//#endregion 🔖️WorkingScene
+}
+//#endregion 🧩️ArtifactItems4

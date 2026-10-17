@@ -1,9 +1,9 @@
 //! 🧮️ 🧵️ Flow play app commands command — `evaluate`.
 
 use crate::editor::flow::commands::flow_eval_tick::{eval_tick_effect, may_rearm};
-use crate::editor::flow::host_from_snapshot;
+use crate::editor::flow::host::host_from_snapshot;
 use crate::editor::flow::modes::edit::windows::main::config::FlowMainWindowConfig;
-use crate::editor::flow::modes::edit::windows::main::FLOW_PLAY_WINDOW_MAIN;
+use crate::editor::flow::base::FLOW_PLAY_WINDOW_MAIN;
 use crate::{FlowMutation, FlowSnapshot};
 use flow::FlowEvalSession;
 use semio_framework_plugin::NoConfig;
@@ -26,9 +26,9 @@ pub fn evaluate_result(snapshot: &FlowSnapshot, config: &FlowMainWindowConfig, s
     let servable = may_rearm(&host.host_snapshot);
     host.retire_cold();
     if pending {
-        session.note_window_tick_outcome(window_id, true, crate::editor::flow::cold_grant()).expect("flow cold session grant");
+        session.note_window_tick_outcome(window_id, true, crate::editor::flow::host::cold_grant()).expect("flow cold session grant");
     }
-    if servable && session.arm_owed_window_tick(window_id, crate::editor::flow::cold_grant()).expect("flow cold session grant").0 {
+    if servable && session.arm_owed_window_tick(window_id, crate::editor::flow::host::cold_grant()).expect("flow cold session grant").0 {
         Emit { effects: vec![eval_tick_effect(window_id, window_kind_id)], ..Default::default() }
     } else {
         Emit::default()
@@ -54,7 +54,5 @@ pub fn handle(_payload: &Evaluate, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &C
 }
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

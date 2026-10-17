@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-import{runStdioOwnedCommandV1}from"./📥️execution/🟦️.ts";
+import{runStdioOwnedCommandV1}from"../../📥️execution/🟦️.ts";
 import{requireIssuedResourceControlInvocationV1,withRequestedIssuedResourceControlV1,type ScriptInvocation}from"../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import type{ResourceLeaseControl}from"../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import{buildRepositoryCargoArtifacts}from"../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts";
@@ -19,7 +19,7 @@ import { closeSync, existsSync, fsyncSync, lstatSync, mkdirSync, mkdtempSync, op
 import { tmpdir } from "node:os";
 import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { isDeepStrictEqual } from "node:util";
-import { decodePackValue, encodePackValue } from "../../../../../🧰️framework/🛍️products/💻️os/🟦️.ts";
+import { decodePackValue, encodePackValue } from "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🟦️.ts";
 import { devToolingEnv, resolveWorkspaceBin, runCmd, runRepositoryExactCargoLaws, configuredRepositoryCargoPreparationPolicyV1 } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { runRepositoryCargoTests, runRepositoryTestCommand } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -27,7 +27,7 @@ import { runScriptMain } from "../../../../../🧰️framework/🔨️modules/�
 import {scriptCompilerAdmissionControlV1,compilerAdmissionBudgetV1} from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import {checkResourceLeaseControl} from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import { cargoTargetDirectory, cargoBuildDirectory } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
-import { builtPluginModulesRootIn } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🟦️.ts";
+import { builtPluginModulesRootIn } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/♻️activation/🟦️.ts";
 import { COMPONENT_RECEIPT_FILE, SHIPPED_COMPONENT_MAX_BYTES, SHIPPED_COMPONENT_PROFILE, componentDeliverableV1, componentReceiptFindingsV1, readComponentReceiptV1 } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏷️component-receipt/🟦️.ts";
 import { runRepositoryCommand } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts";
 import { projectNativeCodecReceiptPublicationV1, selectNativeCodecPublicationFactoryV1, type NativeCodecPublicationReceiptV1 } from "../../📇️publication/♻️native-receipt/🟦️.ts";
@@ -1163,9 +1163,8 @@ class NativeCodecProjectionScript extends BundleScript {
       process.on("SIGTERM", interrupt);
       try {
         const receipts: NativeCodecPublicationReceiptV1[] = [];
-        console.log(`[DEBUG] native-codec-projection proving current ${artifact} compiled carrier and live codec`);
         const ownerScript=resolve(this.repoRoot,dirname(authored.definition_path),"📦️packages/🦀️rust/📜️script.ts");
-        await runRepositoryCommand(this.invocation,process.execPath,["repo", "exec", `--projects=@semio-tech/stdio-${artifact}-rs`, "--exclude-dependencies", "--", process.execPath, ownerScript, "test", "long", "--lib", "owned_fixture_publication_reports_canonical_logical_carriers", "--", "--nocapture"],this.repoRoot,"native-codec-publication",{version:1,maximumElapsedMilliseconds:buildBudgetMs(),output:null},{env: { ...process.env, NEXTEST_SUCCESS_OUTPUT: "immediate" },onLine: line => { const prefix = "[DEBUG] native-codec-publication="; const index = line.indexOf(prefix); if (index >= 0) receipts.push(JSON.parse(line.slice(index + prefix.length))); }});
+        await runRepositoryCommand(this.invocation,process.execPath,["repo", "exec", `--projects=@semio-tech/stdio-${artifact}-rs`, "--exclude-dependencies", "--", process.execPath, ownerScript, "test", "long", "--lib", "owned_fixture_publication_reports_canonical_logical_carriers", "--", "--nocapture"],this.repoRoot,"native-codec-publication",{version:1,maximumElapsedMilliseconds:buildBudgetMs(),output:null},{env: { ...process.env, NEXTEST_SUCCESS_OUTPUT: "immediate" },onLine: line => { const prefix = "native-codec-publication="; const index = line.indexOf(prefix); if (index >= 0) receipts.push(JSON.parse(line.slice(index + prefix.length))); }});
         if (control.signal.aborted || receipts.length !== 1) throw new Error("native-codec-projection requires one successful current native receipt");
         const receipt = receipts[0];if(!receipt)throw Error("Actual native codec receipt required");
         if (receipt.factoryId !== authored.factory_id) throw new Error("native-codec-projection native factory disagrees with its owner");
@@ -1178,7 +1177,6 @@ class NativeCodecProjectionScript extends BundleScript {
         const documents = [projected.factories, projected.definition, projected.catalog];
         if (control.signal.aborted || readFileSync(protocolPath, "utf8") !== protocol || paths.some((path, index) => readFileSync(path, "utf8") !== originals[index])) throw new Error("native-codec-projection source changed before publication");
         for (const [index,path] of paths.entries()) writeFileSync(path, `${JSON.stringify(documents[index], null, 2)}\n`);
-        console.log(`[DEBUG] native-codec-projection published ${receipt.factoryId} pack=${receipt.packSchemaHash} protocol=${receipt.protocolSourceSha256}`);
       } finally {
         process.off("SIGINT", interrupt);
         process.off("SIGTERM", interrupt);
@@ -1196,7 +1194,6 @@ class SnapshotSqliteTestScript extends BundleScript {
     if (segments[0] === "census") {
       if (segments[1] === "check") {
         await runRepositoryTestCommand(process.execPath, ["x", "tsc", join(this.repoRoot, "✏️s/🔌️plugins/🗄️stdio/🧪️tests/🚢️shipped-fleet/🪶️sqlite/🟦️.ts"), "--noEmit", "--allowImportingTsExtensions", "--module", "ESNext", "--moduleResolution", "Bundler", "--resolveJsonModule", "--allowSyntheticDefaultImports", "--strict", "--skipLibCheck", "--target", "ES2022"], { cwd: this.repoRoot });
-        console.log("[DEBUG] primary Stdio Snapshot payload Source suite strict TypeScript check completed");
         return;
       }
       if (segments[1] === "source") {
@@ -1225,7 +1222,6 @@ class SnapshotSqliteTestScript extends BundleScript {
       const law = JSON.parse(readFileSync(join(directory, "🔣️.json"), "utf8"));
       
       assert.deepEqual(law, { format: 1, schemaVersion: 1, minimumDomainTables: 1, integrity: [{ integrity_check: "ok" }], foreignKeys: [], nativeEncodings: ["binary", "text"] });
-      console.log("[DEBUG] Stdio catalog expected physical SQLite integrity and encoding examples validated");
       if (segments[0] === "catalog-contract") return;
       await runRepositoryCargoTests(["semio-hub-stdio"], this.repoRoot, this.invocation, ["--test", "editor_catalog", "sqlite_snapshot_", "--no-fail-fast"]);
       return;

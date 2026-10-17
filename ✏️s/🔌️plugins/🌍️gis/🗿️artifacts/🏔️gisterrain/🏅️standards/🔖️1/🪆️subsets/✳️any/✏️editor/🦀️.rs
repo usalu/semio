@@ -158,20 +158,20 @@ pub struct Gis3dPlayApp;
 /// ⛰️ The vertical-exaggeration range the Actions rail stages: flattened terrain through a five-fold
 /// relief. `GIS3D_EXAGGERATION_STAGED_DEFAULT` is deliberately NOT the document's own default, so a
 /// one-click dispatch from the rail produces a real edit instead of a zero-operation re-apply.
-const GIS3D_EXAGGERATION_MINIMUM: f64 = 0.5;
-const GIS3D_EXAGGERATION_MAXIMUM: f64 = 5.0;
-const GIS3D_EXAGGERATION_STAGED_DEFAULT: f64 = 2.5;
+pub const GIS3D_EXAGGERATION_MINIMUM: f64 = 0.5;
+pub const GIS3D_EXAGGERATION_MAXIMUM: f64 = 5.0;
+pub const GIS3D_EXAGGERATION_STAGED_DEFAULT: f64 = 2.5;
 
-const GIS3D_RETAINED_TOOL_IDS: &[&str] = &["setExaggeration", "setCamera", "setActiveExample"];
+pub const GIS3D_RETAINED_TOOL_IDS: &[&str] = &["setExaggeration", "setCamera", "setActiveExample"];
 const GIS3D_RETAINED_PAYLOAD_SCHEMA: &str = "gis.terrain.tool-command.v1";
-const GIS3D_RETAINED_RAW_BYTES: usize = 8_192;
-const GIS3D_RETAINED_WORK_ITEMS: usize = 1;
+pub const GIS3D_RETAINED_RAW_BYTES: usize = 8_192;
+pub const GIS3D_RETAINED_WORK_ITEMS: usize = 1;
 
 fn gis3d_retained_contract() -> ToolExecutionContract {
     ToolExecutionContract::bounded_first_step(GIS3D_RETAINED_RAW_BYTES, 32, 32, 16_384, 7_500)
 }
 
-fn gis3d_retained_extent(command: &Gis3dCommand, _snapshot: &GisTerrainSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
+pub fn gis3d_retained_extent(command: &Gis3dCommand, _snapshot: &GisTerrainSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
     let bytes = match command {
         Gis3dCommand::SetExaggeration(payload) if payload.exaggeration.is_finite() => 0,
         Gis3dCommand::SetCamera(payload) if serde_json::from_str::<Value>(&payload.camera_json).is_ok_and(|camera| camera.is_object()) => payload.camera_json.len(),
@@ -202,7 +202,7 @@ fn gis3d_retained_reduce(
     command.dispatch(&ArtifactView::with_operation(snapshot, history, operation.clone()), &ConfigView { snapshot: config, window: context.and_then(|context| context.window_config.as_ref()) })
 }
 
-struct Gis3dCommandJobFactory {
+pub struct Gis3dCommandJobFactory {
     keys: Vec<ToolFactoryKey>,
 }
 
@@ -240,9 +240,9 @@ impl ToolJobFactory for Gis3dCommandJobFactory {
         &mut self,
         _operation: semio_framework_job::Operation,
         payload: Self::Payload,
-        input: semio_framework::action_bus::RetainedToolWireInput,
-        checkpoint: Option<semio_framework::action_bus::RetainedToolWireInput>,
-    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework::action_bus::RetainedToolWireInput, Option<semio_framework::action_bus::RetainedToolWireInput>)> {
+        input: semio_framework_action_bus::RetainedToolWireInput,
+        checkpoint: Option<semio_framework_action_bus::RetainedToolWireInput>,
+    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework_action_bus::RetainedToolWireInput, Option<semio_framework_action_bus::RetainedToolWireInput>)> {
         if input.declared_bytes() > GIS3D_RETAINED_RAW_BYTES || checkpoint.is_some() {
             return Err((ToolJobFactoryError::new("GIS terrain bounded command rejects oversized wire or checkpoint owner"), input, checkpoint));
         }
@@ -553,7 +553,7 @@ impl ArtifactEditor for Gis3dPlayApp {
                     return Err(MediaError::Payload(port.to_string(), "map:in requires intrinsic map values".into()));
                 };
                 if schema!="2d.map" || media.media_type!=(MediaType { class:MediaClass::TwoD, form:MediaForm::Vector }) { return Err(MediaError::Payload(port.to_string(),"map media identity differs".into())); }
-                let imported_map=crate::schema::ImportedMap::from_media_value(value).map_err(|error|MediaError::Payload(port.to_string(),error))?;
+                let imported_map=crate::schema::imported_map::ImportedMap::from_media_value(value).map_err(|error|MediaError::Payload(port.to_string(),error))?;
                 use crate::mutations::change_imported_features::ChangeImportedFeatures;
                 Ok(Emit::mutations(vec![GisTerrainMutation::ChangeImportedFeatures(ChangeImportedFeatures { new_imported_map: Some(imported_map) })]))
             }
@@ -705,5 +705,5 @@ pub fn create_gis3d_app() -> semio_framework_plugin::AppDefinition {
 //#region 🧪️UnitTests
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
-pub(crate) mod unit_tests;
+pub mod unit_tests;
 //#endregion 🧪️UnitTests

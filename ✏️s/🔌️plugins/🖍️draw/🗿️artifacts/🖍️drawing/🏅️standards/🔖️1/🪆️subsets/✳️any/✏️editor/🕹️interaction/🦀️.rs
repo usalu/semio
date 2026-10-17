@@ -99,9 +99,6 @@ pub fn drawing_point_topology(snapshot:&DrawingSnapshot)->DomainTopology {
     DomainTopology {ordered}
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 
 pub const DRAWING_PLAY_CONTROLLER_ID: &str = "drawing-play";
 
@@ -178,9 +175,6 @@ pub fn drawing_reset_document_effect(scene: &DrawingSnapshot) -> semio_framework
 pub mod config;
 #[path = "../📚️examples/🎬️demo-session/🦀️.rs"]
 pub mod demo_session;
-#[cfg(test)]
-#[path = "../📚️examples/🎬️demo-session/🧪️tests/🧩️example/🦀️.rs"]
-mod example;
 #[path = "../🧵️geometry/🦀️.rs"]
 pub mod geometry_session;
 #[path = "."]

@@ -124,7 +124,7 @@ pub struct Grid2dInferenceJob {
 }
 
 impl Grid2dInferenceJob {
-    pub(crate) fn new(mut operation: semio_framework_job::Operation, request: Grid2dInferenceRequest) -> Result<Self, String> {
+    pub fn new(mut operation: semio_framework_job::Operation, request: Grid2dInferenceRequest) -> Result<Self, String> {
         let snapshot = request.resolve_snapshot()?;
         let cells = (snapshot.width as usize).saturating_mul(snapshot.height as usize);
         if snapshot.width == 0
@@ -812,9 +812,19 @@ impl semio_framework::ToolJobFactory for Grid2dInferenceJobFactory {
 
 /// 💡️ Descriptor for the `s.wfc.grid2d.solve` inference — five handcrafted facet leaves.
 pub fn grid2d_artifact_inference_descriptor() -> ::semio_framework_schema_registry::ArtifactInferenceDescriptor {
+    ::semio_framework_schema_registry::register_schema_leaf_documents(&[
+        ::semio_framework_schema_registry::SchemaLeafDocument { scope: "s.wfc.grid2d.solve", export: "inference", format: ::semio_framework_schema_registry::SchemaFormat::Rust, path: "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs" },
+        ::semio_framework_schema_registry::SchemaLeafDocument { scope: "s.wfc.grid2d.solve", export: "inference", format: ::semio_framework_schema_registry::SchemaFormat::Typescript, path: "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🟦️.ts" },
+        ::semio_framework_schema_registry::SchemaLeafDocument { scope: "s.wfc.grid2d.solve", export: "inference", format: ::semio_framework_schema_registry::SchemaFormat::Graphql, path: "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🔗️.graphql" },
+        ::semio_framework_schema_registry::SchemaLeafDocument { scope: "s.wfc.grid2d.solve", export: "inference", format: ::semio_framework_schema_registry::SchemaFormat::Protobuf, path: "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🛰️.proto" },
+    ]);
+    #[cfg(target_arch = "wasm32")]
+    semio_framework_schema_registry::install_default_schema_leaf_reader(semio_framework_plugin::reactor::package_asset, "");
+    #[cfg(not(target_arch = "wasm32"))]
+    semio_framework_schema_registry::install_default_schema_leaf_reader(semio_framework_plugin::reactor::package_asset, env!("CARGO_MANIFEST_DIR"));
     ::semio_framework_schema_registry::ArtifactInferenceDescriptor {
         id: "s.wfc.grid2d.solve",
-        inference: ::semio_framework_schema_registry::FacetLeaves { rust: include_str!("../../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs"), typescript: include_str!("../../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🟦️.ts"), graphql: include_str!("../../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🔗️.graphql"), json_schema: include_str!("../../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🔣️.json"), proto: include_str!("../../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🛰️.proto") },
+        inference: ::semio_framework_schema_registry::FacetLeaves { rust: "", typescript: "", graphql: "", json_schema: include_str!("../../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🔣️.json"), proto: "" },
     }
 }
 
@@ -934,9 +944,7 @@ impl store::InferredField<Grid2dSnapshot> for Grid2dEntropy {
         shannon_entropy_over_tiles(snapshot)
     }
 }
-#[cfg(test)]
-#[path="🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 
 /// 🧭️ Stable host roster identity for the ActionBus-owned cold solve route.
 pub const fn grid2d_inference_metadata() -> semio_framework_plugin::ArtifactInferenceServiceMetadata {

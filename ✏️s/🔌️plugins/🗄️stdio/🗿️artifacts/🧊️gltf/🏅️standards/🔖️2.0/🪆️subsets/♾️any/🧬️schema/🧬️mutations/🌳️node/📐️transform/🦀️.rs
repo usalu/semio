@@ -47,7 +47,10 @@ pub fn plan(p: &GltfTransformNodePayload, base: &GltfSnapshot) -> Result<GltfDif
     Ok(GltfDiff { nodes: patch(p.node, GltfNodeDiff { matrix: (node.matrix != matrix).then_some(matrix), translation: (node.translation != translation).then_some(translation), rotation: (node.rotation != rotation).then_some(rotation), scale: (node.scale != scale).then_some(scale), ..Default::default() }), ..Default::default() })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn inverse(p: &GltfTransformNodePayload, base: &GltfSnapshot) -> Vec<super::GltfMutation> {
+pub fn inverse<Op>(p: &GltfTransformNodePayload, base: &GltfSnapshot) -> Vec<Op>
+where
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::remove_used_extension::RemoveUsedExtensionMutation>,
+{
     if validate(p, base).is_err() {
         return Vec::new();
     }
@@ -76,11 +79,17 @@ pub enum ChangeNodeTransformMutation {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn mutation(payload: GltfTransformNodePayload) -> super::GltfMutation {
-    super::GltfMutation::ChangeNodeTransform(ChangeNodeTransformMutation::Apply(payload))
+pub fn mutation<Op>(payload: GltfTransformNodePayload) -> Op
+where
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::change_node_transform::ChangeNodeTransformMutation>,
+{
+    Op::from(ChangeNodeTransformMutation::Apply(payload))
 }
 
-impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ChangeNodeTransformMutation {
+impl<Op> protocol::MutationKind<GltfSnapshot, Op> for ChangeNodeTransformMutation
+where
+    Op: protocol::Mutation<GltfSnapshot, Diff = GltfDiff> + From<ChangeNodeTransformMutation>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "node-transform", kind: "change-node-transform", record: "ChangedNodeTransform" };
 
     fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<GltfDiff> {
@@ -92,7 +101,7 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ChangeNodeTra
         }
     }
 
-    fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<super::GltfMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         match self {
             Self::Apply(payload) => Ok(inverse(payload, base)),
         }
@@ -109,7 +118,5 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ChangeNodeTra
 //#endregion 🧬️DirectMutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔀️replaces-a-f09fa4/🦀️.rs"]
-mod case_replaces_a_f09fa4;
+
 //#endregion 🧪️Tests

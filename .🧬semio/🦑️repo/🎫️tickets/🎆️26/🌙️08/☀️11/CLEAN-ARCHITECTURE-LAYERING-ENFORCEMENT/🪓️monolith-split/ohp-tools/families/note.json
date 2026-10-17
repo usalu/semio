@@ -1,0 +1,24 @@
+{
+ "name": "note",
+ "crates": [
+  "note-oracle-codec",
+  "semio-note-mutation-bridge",
+  "semio-s-artifact-note-note",
+  "semio-s-artifact-note-note-delete-blocks",
+  "semio-s-artifact-note-note-diff",
+  "semio-s-artifact-note-note-insert-table-row",
+  "semio-s-artifact-note-note-kinds-catalog",
+  "semio-s-artifact-note-note-mut-family",
+  "semio-s-artifact-note-note-mut-family-2",
+  "semio-s-artifact-note-note-mut-family-3",
+  "semio-s-artifact-note-note-mut-family-4",
+  "semio-s-artifact-note-note-mutations",
+  "semio-s-artifact-note-note-nudge-selection",
+  "semio-s-artifact-note-note-schema",
+  "semio-s-artifact-note-note-test-oracle",
+  "semio-s-artifact-note-note-tests-hides-the-grid",
+  "semio-s-artifact-note-note-unit-tests",
+  "semio-s-artifact-note-note-v1"
+ ],
+ "note": "ORACLE-HARVEST-PLUGINS: ✏️s/🔌️plugins/🗒️note, ✏️s/🧑‍💻dev/🗒️note"
+}

@@ -9,7 +9,8 @@ import { type BrowserActorUiMountedV1 } from "@semio-tech/framework/backbone";
 import { dockSeedActiveWindowIdV1, modeLayoutStacksV1, type WindowScopeLayoutNodeV1 } from "../⌨️window-scope/🟦️.ts";
 import { type IconName, type UiTranslationKey, uiDataLabel, type WindowLayoutNode } from "@semio-tech/ui-react";
 import { UiDocumentStore } from "../../📃️UiDocumentStore/🟦️.tsx";
-import { HISTORY_REFUSAL_LABEL_KEYS, historyRefusalCodeV1, shellLabel } from "../../🛠️ShellHelpers/🟦️.tsx";
+import { HISTORY_REFUSAL_LABEL_KEYS, historyRefusalCodeV1 } from "../../🛠️ShellHelpers/🛣️route-and-chrome/🟦️.tsx";
+import { shellLabel } from "../../🛠️ShellHelpers/🏷️labels/🟦️.tsx";
 import { type WindowFault, type WindowFaultClass } from "../🩺️fault/🟦️.ts";
 
 

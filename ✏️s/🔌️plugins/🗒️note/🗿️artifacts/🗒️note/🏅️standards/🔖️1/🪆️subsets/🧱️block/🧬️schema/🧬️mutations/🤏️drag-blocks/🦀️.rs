@@ -1,6 +1,6 @@
 //! 🤏 Note mutation — `DragBlocks`: offsets several blocks by the same relative amount (multi-select drag/nudge).
 
-use crate::schema::mutations::{note_label_number, NoteMutation};
+use crate::schema::note_label_number;
 use crate::{NoteDiff, NoteSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -21,17 +21,23 @@ pub struct DragBlocks {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn drag_blocks(ids: Vec<String>, dx: f64, dy: f64) -> NoteMutation {
-    NoteMutation::DragBlocks(DragBlocks { ids, dx, dy })
+pub fn drag_blocks<Op>(ids: Vec<String>, dx: f64, dy: f64) -> Op
+where
+    Op: From<crate::standards::v1::subsets::block::schema::mutations::drag_blocks::DragBlocks>,
+{
+    Op::from(DragBlocks { ids, dx, dy })
 }
 
-impl MutationKind<NoteSnapshot, NoteMutation> for DragBlocks {
+impl<Op> MutationKind<NoteSnapshot, Op> for DragBlocks
+where
+    Op: protocol::Mutation<NoteSnapshot, Diff = NoteDiff> + From<DragBlocks>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "drag", entity: "blocks", kind: "drag-blocks", record: "DraggedBlocks" };
 
     fn diff(&self, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &NoteSnapshot) -> Result<Vec<NoteMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &NoteSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

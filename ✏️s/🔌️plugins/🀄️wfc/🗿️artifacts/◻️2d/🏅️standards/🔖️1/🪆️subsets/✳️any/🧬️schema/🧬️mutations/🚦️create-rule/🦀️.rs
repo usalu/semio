@@ -2,7 +2,6 @@
 //! across one relation class. A deny always beats an allow of the same pair at compile time.
 
 use crate::diff::Wfc2dDiff;
-use crate::mutations::Wfc2dMutation;
 use crate::schema::snapshot::Wfc2dSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -18,17 +17,23 @@ pub struct CreateRule {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn create_rule(rule: Wfc2dRule) -> Wfc2dMutation {
-    Wfc2dMutation::CreateRule(CreateRule { rule })
+pub fn create_rule<Op>(rule: Wfc2dRule) -> Op
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::create_rule::CreateRule>,
+{
+    Op::from(CreateRule { rule })
 }
 
-impl MutationKind<Wfc2dSnapshot, Wfc2dMutation> for CreateRule {
+impl<Op> MutationKind<Wfc2dSnapshot, Op> for CreateRule
+where
+    Op: protocol::Mutation<Wfc2dSnapshot, Diff = Wfc2dDiff> + From<CreateRule> + From<crate::standards::v1::subsets::any::schema::mutations::delete_rule::DeleteRule>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "rule", kind: "create-rule", record: "CreatedRule" };
 
     fn diff(&self, base: &Wfc2dSnapshot) -> protocol::MutationOutcome<Wfc2dDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Wfc2dSnapshot) -> Result<Vec<Wfc2dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Wfc2dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

@@ -297,9 +297,9 @@ impl Default for SemioDrawingSnapshot {
 /// at least once (incl. nested `Group.children` recursion) plus every `Option<T>` field non-`None`.
 /// Single source of truth for `📚️examples/🖍️sketch/🖼️assets/🗣️.dsl.semio`/`🎒️.pack.semio`
 /// and for the conformance-law tests in `🎹️composer/🦀️.rs`.
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn demo_drawing_snapshot() -> SemioDrawingSnapshot {
+pub fn demo_drawing_snapshot() -> SemioDrawingSnapshot {
     SemioDrawingSnapshot {
         schema: STDIO_SEMIODRAWING_DOCUMENT_SCHEMA.into(),
         canvas: DrawCanvas { width: 100.0, height: 50.0, background: Some(SemioRgba { r: 1.0, g: 1.0, b: 1.0, a: 1.0 }) },
@@ -333,9 +333,7 @@ pub(crate) fn demo_drawing_snapshot() -> SemioDrawingSnapshot {
 //#endregion 🔖️Demo
 
 //#region 🔖️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🔖️Tests
 
 //#region 🔁️Re-exports
@@ -348,8 +346,7 @@ pub use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
 
 
 
-#[path="🧩️component/🦀️.rs"]
-pub mod native_binding;
+
 
 
                                                                                                                                                                                                                                                                                                                                                                                                                                       

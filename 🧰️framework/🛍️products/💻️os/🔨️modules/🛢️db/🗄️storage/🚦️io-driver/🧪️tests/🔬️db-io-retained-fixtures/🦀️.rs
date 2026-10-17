@@ -1,4 +1,5 @@
 use super::*;
+use semio_framework_test_fixtures::fixture_text;
 
 use db_io_core::{DB_IO_BACKEND_CONTROLS, DB_IO_LEDGER_OWNER, DB_IO_LOST_OWNERS, DB_IO_LOST_OWNER_OVERFLOW, DB_IO_LOST_OWNER_OVERFLOW_SLOTS, DB_IO_LOST_OWNER_QUARANTINE, DB_IO_LOST_OWNER_SLOTS, DB_IO_OPERATION_BYTES, DB_IO_OPERATION_ITEMS, DB_IO_OPERATION_PAGES, DB_IO_PAGE_BYTES, DB_IO_RETIREMENT_PRESSURE_FAULT, DB_IO_TASK_SLOTS, DB_IO_TOTAL_PAGES, DbIoArtifactId, DbIoAsyncDriverFuture, DbIoBackendControl, DbIoCredit, DbIoDriverReservation, DbIoExecutionStep, DbIoExecutorMode, DbIoFault, DbIoFaultCause, DbIoFaultKind, DbIoLeaseResult, DbIoLedgerOwner, DbIoLostOwner, DbIoPageArenaState, DbIoPagePhase, DbIoPageWriter, DbIoPages, DbIoResult, DbIoResultHandback, DbIoResultLease, DbIoTask, DbIoTaskExecutor, DbIoTaskPhase, DbIoText, LeaseStorage as _, PayloadStorage as _, db_io_backend_owner_reserve, db_io_backend_parts, db_io_ledger_census, db_io_operation_reserve, db_io_operation_return, db_io_page_arena, db_io_park_lost_owner, db_io_preflight_page_checkout, db_io_slot_matches, db_io_try_park_lost_owner};
 use db_io_registry::{DB_IO_PLATFORM_BUFFERS, DB_IO_RETRY_DELAY_MS, DB_IO_RETRY_LIMIT, DB_IO_RETRY_MAINTENANCE_CURSOR, DbIoBackendKind, DbIoBackendRollbackReservation, DbIoPlatformBuffer, DbIoRejectedBackendSlot, db_io_backend_close_step, db_io_backend_registry, db_io_close_platform, db_io_literal_fault, db_io_lost_owner_close_opportunity, db_io_lost_owner_close_step, db_io_page_maintenance_step, db_io_platform_maintenance_step, db_io_prepare_platform, db_io_rejected_backend_maintenance_step, db_io_rejected_backends, db_io_task_fault, db_io_write_observed_bytes, register_db_io_backend};
@@ -207,7 +208,7 @@ fn fault_category_oracle(error: &DbError) -> FaultCategoryOracle {
 
 fn fault_fixture_error_for_task(task: &DbIoTask) -> DbError {
     let DbIoTask::PayloadGet { hash, .. } = task else { return DbError::Internal("fault taxonomy fixture received the wrong task".to_string()) };
-    let fixture: PageLifecycleFixture = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🧬️page-lifecycle/🔣️.json")).unwrap();
+    let fixture: PageLifecycleFixture = serde_json::from_str(fixture_text!("../../../🧪️tests/🧫️fixtures/🧬️page-lifecycle/🔣️.json")).unwrap();
     fixture.fault_categories.get(usize::from(hash.0[0])).copied().map(fault_fixture_error).unwrap_or_else(|| DbError::Internal("fault taxonomy fixture discriminator is out of range".to_string()))
 }
 
@@ -503,7 +504,7 @@ fn db_io_artifact_rejection_is_an_internal_executor_boundary_violation() {
 async fn db_io_async_native_fault_preserves_exact_category_scalars_and_retires() {
     let _owner = fixture_owner();
     let before = ledger_witness();
-    let fixture: PageLifecycleFixture = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🧬️page-lifecycle/🔣️.json")).unwrap();
+    let fixture: PageLifecycleFixture = serde_json::from_str(fixture_text!("../../../🧪️tests/🧫️fixtures/🧬️page-lifecycle/🔣️.json")).unwrap();
     let pool = db_io_test_pool();
     let control = register_db_io_backend(DbIoBackendKind::Postgres, Box::new(AsyncFaultTaxonomyLawExecutor { terminal: false }), pool.clone()).unwrap();
 
@@ -945,7 +946,7 @@ async fn db_io_real_queued_callback_rejects_a_reused_task_slot_aba() {
 #[semio_framework_async_macros::async_test]
 async fn db_io_saturated_task_retry_wakes_parked_caller_without_unrelated_ingress() {
     let _owner = fixture_owner();
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🧮️memory-backing/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../🧪️tests/🧫️fixtures/🧮️memory-backing/🔣️.json")).unwrap();
     assert_eq!(u64::from(DB_IO_RETRY_LIMIT), fixture["retry"]["maximumAttempts"].as_u64().unwrap());
     assert_eq!(DB_IO_RETRY_DELAY_MS, fixture["retry"]["timerDelayMs"].as_u64().unwrap());
     let before = ledger_witness();
@@ -1145,7 +1146,7 @@ async fn db_io_all_five_backend_controls_require_explicit_terminal_close_witness
 async fn db_io_lost_result_lease_retains_every_page_and_final_handback() {
     let _owner = fixture_owner();
     let before = ledger_witness();
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🔐️writer/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../🔐️writer/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let pool = db_io_test_pool();
     let counter = Arc::new(std::sync::atomic::AtomicUsize::new(0));
     let control = register_db_io_backend(DbIoBackendKind::Memory, Box::new(BlockingOutputLifecycleLawExecutor { terminal: false, success_steps: counter.clone(), cancel_steps: counter.clone(), abandon_steps: counter }), pool.clone()).unwrap();
@@ -1240,7 +1241,7 @@ async fn db_io_lost_backend_retains_exact_owner_under_rejected_registry_pressure
     let _owner = fixture_owner();
     while db_io_lost_owner_close_step().unwrap() {}
     let before = ledger_witness();
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🔐️writer/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../🔐️writer/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let row = &fixture["backendPressure"];
     assert_eq!(DB_IO_BACKEND_CONTROLS, row["capacity"].as_u64().unwrap() as usize);
     let pressure = DB_IO_RETIREMENT_PRESSURE_FAULT.swap(false, std::sync::atomic::Ordering::AcqRel);
@@ -1402,7 +1403,7 @@ async fn db_io_panic_backend_fault_and_shutdown_close_reach_exact_prior_witness(
 #[semio_framework_async_macros::async_test]
 async fn db_io_registered_backend_use_blocks_pool_shutdown_until_terminal_close() {
     let _owner = fixture_owner();
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🔐️backend-pool-use/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../🧪️tests/🧫️fixtures/🔐️backend-pool-use/🔣️.json")).unwrap();
     assert_eq!(fixture["version"], 1);
     assert_eq!(fixture["cases"].as_array().unwrap().len(), 9);
     let pool = Arc::new(WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1)));
@@ -1419,7 +1420,7 @@ async fn db_io_backend_registration_saturation_returns_exact_executor_before_poo
         return;
     }
     let _owner = fixture_owner();
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🔐️backend-pool-use/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../🧪️tests/🧫️fixtures/🔐️backend-pool-use/🔣️.json")).unwrap();
     let row = fixture["cases"].as_array().unwrap().iter().find(|row| row["name"] == "all-retirement-tiers-full-return-exact-executor").unwrap();
     let pool = Arc::new(WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1)));
     let lost_owner_sentinels = LostOwnerPressureLawSlots::reserve();

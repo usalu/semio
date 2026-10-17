@@ -1,6 +1,5 @@
 //! 🧾️ Authoritative PDF mutation payload, diff, inverse, and tests for `set-metadata`.
 
-use super::PdfMutation;
 use crate::standards::v1_7::subsets::base::schema::diff::{self, PdfDiff};
 use crate::standards::v1_7::subsets::base::schema::snapshot::*;
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
@@ -14,7 +13,10 @@ pub struct SetMetadata {
     pub xmp: Option<String>,
 }
 
-impl MutationKind<PdfSnapshot, PdfMutation> for SetMetadata {
+impl<Op> MutationKind<PdfSnapshot, Op> for SetMetadata
+where
+    Op: protocol::Mutation<PdfSnapshot, Diff = PdfDiff> + From<SetMetadata>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "metadata", kind: "set-metadata", record: "Set" };
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
@@ -22,10 +24,10 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetMetadata {
         MutationOutcome::new(diff::diff_set_metadata(base, self.xmp.clone()))
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
         let _ = base;
-        vec![PdfMutation::SetMetadata(SetMetadata { xmp: base.metadata.clone() })]
+        vec![Op::from(SetMetadata { xmp: base.metadata.clone() })]
     
     })())
 }
@@ -42,8 +44,6 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetMetadata {
 //#endregion 🔖️Mutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
 

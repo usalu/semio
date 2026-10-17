@@ -1,8 +1,23 @@
 //! 🏄️ Staged `group-history` members of the `instance-dispatch` use cases, as methods of the borrowed bundle (WP7 of the instance family).
 //!
 //! 🤝️ Group history actions over the composed children.
-use super::*;
-use super::docs_plugin_app_impl::history_changed_event;
+use semio_framework::{ActionKind, Fault, FaultCode, FaultFrom, FaultOrigin};
+use semio_framework_plugin_decl_emission::{ActionMeta, Emit};
+use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_framework_artifact_reference::{ArtifactDialect, ArtifactRef};
+use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use pack::snapshot::ArtifactPack;
+use store::os_store::composition_coordinator::CompositionCoordinator;
+use crate::dispatch_bundle::DispatchCtx;
+use std::future::Future;
+use semio_framework_plugin_instance_extension::InstanceExtension;
+use semio_framework::kernel::{InvocationResult, UiDirtyScope};
+use store::{MemberFactory, Mutation, SpaceMember};
+use protocol::OpText;
+use semio_framework_plugin_reactor_app::PluginApp;
+use semio_framework_plugin_instance_jobs::jobs_components::ToolOperations;
+use semio_framework_ui_contract::*;
+use semio_framework_plugin_instance_docs::docs_plugin_app_impl::history_changed_event;
 
 impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceExtension> DispatchCtx<'ctx, A, M, X> {
     /// ↩️ Task 4: group-aware undo/redo. Routes through
@@ -35,7 +50,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
     /// 🧾️ Append-only, same as the plain path: undo/redo are pure cursor motion, never
     /// logged with an `edit_id` — `child_edit_ids` records every CHILD member this group call
     /// actually touched.
-    pub(super) async fn dispatch_group_history_action(&mut self, action: &str, group_id: &str, meta: &ActionMeta, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<InvocationResult, Fault> {
+    pub async fn dispatch_group_history_action(&mut self, action: &str, group_id: &str, meta: &ActionMeta, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<InvocationResult, Fault> {
         self.child_composition.admit_child_content_publication_span(self.child_composition.children.len())?;
         let parent_id = self.stores.store.envelope().id.clone();
         let parent_dialect: ArtifactDialect = A::DIALECT.into();

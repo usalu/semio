@@ -1,5 +1,8 @@
-use super::*;
-use crate::editor::writer::unit_tests::context::{app_with_jack, new_app, render as render_body};
+use semio_framework_plugin::UiText;
+use semio_framework_plugin::{FRAMEWORK_PANEL_TAB_ARTIFACT_ID, TreeWindows};
+use crate::WriterSnapshot;
+use crate::editor::writer::panels::document::{WRITER_PLAY_BODY_ARTIFACT, definition, jack_ast_to_tree_item, render};
+use crate::editor_unit_tests::context::{app_with_jack, new_app, render as render_body};
 
 #[semio_framework_async_macros::async_test]
 async fn renders_document_tree_for_jack() {
@@ -119,7 +122,7 @@ fn window_law_view(requests: Vec<TreeWindowRequest>) -> ViewModel {
 #[semio_framework_async_macros::async_test]
 async fn an_oversized_ast_level_stamps_the_full_total_and_materialises_at_most_its_slice() {
     let root = oversized_ast(OVERSIZED);
-    let node = super::jack_ast_to_tree_item(&root, &TreeWindows::unhosted()).expect("the AST row builds");
+    let node = crate::editor::writer::panels::document::jack_ast_to_tree_item(&root, &TreeWindows::unhosted()).expect("the AST row builds");
     let matched = window_law_node(&node, "match");
     assert_eq!(window_law_extent(matched), (OVERSIZED as u32, 0));
     assert!(matched.children.len() < OVERSIZED, "only the first-paint slice is materialised: {}", matched.children.len());
@@ -130,7 +133,7 @@ async fn an_oversized_ast_level_stamps_the_full_total_and_materialises_at_most_i
 async fn a_closed_ast_level_stamps_its_total_and_builds_no_children() {
     let root = oversized_ast(OVERSIZED);
     let view = window_law_view(vec![window_law_request(&ast_window_path("match"), Some(false), 0, 32)]);
-    let node = super::jack_ast_to_tree_item(&root, &TreeWindows::for_body(&view, WRITER_PLAY_BODY_ARTIFACT)).expect("the AST row builds");
+    let node = crate::editor::writer::panels::document::jack_ast_to_tree_item(&root, &TreeWindows::for_body(&view, WRITER_PLAY_BODY_ARTIFACT)).expect("the AST row builds");
     let matched = window_law_node(&node, "match");
     assert_eq!(window_law_extent(matched), (OVERSIZED as u32, 0));
     assert_eq!(matched.children.len(), 0);
@@ -140,7 +143,7 @@ async fn a_closed_ast_level_stamps_its_total_and_builds_no_children() {
 async fn a_window_request_materialises_exactly_its_slice_keyed_by_the_raw_ast_id() {
     let root = oversized_ast(OVERSIZED);
     let view = window_law_view(vec![window_law_request(&ast_window_path("match"), Some(true), 30, 4)]);
-    let node = super::jack_ast_to_tree_item(&root, &TreeWindows::for_body(&view, WRITER_PLAY_BODY_ARTIFACT)).expect("the AST row builds");
+    let node = crate::editor::writer::panels::document::jack_ast_to_tree_item(&root, &TreeWindows::for_body(&view, WRITER_PLAY_BODY_ARTIFACT)).expect("the AST row builds");
     let matched = window_law_node(&node, "match");
     assert_eq!(window_law_extent(matched), (OVERSIZED as u32, 30));
     assert_eq!(window_law_keys(matched), (30..34).map(|index| format!("leaf-{index:03}")).collect::<Vec<_>>());

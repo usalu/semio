@@ -6,474 +6,25 @@
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
-#[path = "🌉️apply/🦀️.rs"]
-pub mod central_apply;
 
 #[cfg(test)]
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🧩️example/🦀️.rs"]
 mod art_forms_demo_tests;
 extern crate semio_framework_schema as framework_schema;
-use semio_framework_artifact_playbook_playbook as playbook;
 
-use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
-use semio_s_artifact_stdio_semio_table_model::schema::snapshot::SemioTableCellKind;
-use semio_s_artifact_stdio_semio_table_model::schema::snapshot::SemioTableColumn;
-use semio_s_artifact_stdio_semio_table_model::schema::snapshot::SemioTableRow;
-use semio_s_artifact_stdio_semio_table_model::schema::snapshot::SemioTableSnapshot;
-use semio_s_artifact_stdio_semio_table_model::schema::snapshot::STDIO_SEMIOTABLE_DOCUMENT_SCHEMA;
-use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValue;
-use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValueEntry;
-use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValueSnapshot;
-use semio_s_artifact_stdio_semio_value_model::schema::snapshot::STDIO_SEMIOVALUE_DOCUMENT_SCHEMA;
+pub use semio_s_artifact_forms_forms_snapshot::{FORMS_DIALECT, FORMS_DOCUMENT_SCHEMA, FORM_BUILTIN_KINDS, FormExpr, FormQuestion, FormQuestionOption, FormStep, FormValidationError, FormVectorField};
 
-//#region 🔖️Types
-pub use crate::playbook::{
-    PlaybookBlock as FormQuestion, PlaybookBlockOption as FormQuestionOption, PlaybookExpr as FormExpr, PlaybookStep as FormStep, PlaybookValidationError as FormValidationError, PlaybookVectorField as FormVectorField,
-    PLAYBOOK_BUILTIN_KINDS as FORM_BUILTIN_KINDS,
-};
-
-pub const FORMS_DOCUMENT_SCHEMA: &str = "forms.form";
-/// 🪪️ This artifact's canonical `(artifact_kind, standard, subset)` coordinate (contract §1) — lives
-/// at the ARTIFACT level, not under `editor`/`viewer`, specifically so a viewer file can read it
-/// without ever importing through the sibling editor module. `artifact_kind` matches
-/// `#[artifact_schema(id = "s.forms.forms")]` on `FormsArtifact` (`🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️component.rs`);
-/// `standard`/`subset` match this file's own `🏅️standards/🔖️1/🪆️subsets/✳️any` location.
-pub const FORMS_DIALECT: semio_framework_plugin::app::Dialect = semio_framework_plugin::app::Dialect { artifact_kind: "s.forms.forms", standard: semio_framework_plugin::app::StandardId("1"), subset: semio_framework_plugin::app::SubsetId::ANY };
+//#region 🔖️SchemaExports
 pub use crate::schema::diff::FormsDiff;
 pub use crate::schema::mutations::FormMutation;
 pub use crate::schema::snapshot::FormsSnapshot;
-//#endregion 🔖️Types
+//#endregion 🔖️SchemaExports
 
-//#region 🔖️Composition
-/// 🧩️ Owns the form's complete step and question structure; results are a derived table projection.
-//#region 🔖️ChildTypes
-pub type FormsStructureChild = store::os_store::artifact_child::ArtifactChild<SemioValueSnapshot>;
-pub type FormsResultsChild = store::os_store::artifact_child::ArtifactChild<SemioTableSnapshot>;
-//#endregion 🔖️ChildTypes
+pub use semio_s_artifact_forms_forms_snapshot::{FormsResultsChild, FormsStructureChild, as_playbook_spec, block_from_semio_value, dsl_from_semio_value, expr_from_semio_value, forms_children_from_steps, forms_genesis_child_pack, forms_results_child, forms_results_from_responses, forms_scene_id, forms_snapshot_with_state, forms_steps, forms_steps_from_structure, forms_structure_from_steps, replace_forms_steps, semio_bool, semio_f64, semio_str, semio_value_from_block, semio_value_from_dsl, semio_value_from_expr, semio_value_from_step, semio_value_map_get, step_from_semio_value};
 
-//#region 🔖️Converters
-/// 🌉 `semio_framework_value::DslValue` (used by `default`/`params`) <-> `SemioValue` — real, bidirectional, bytes included. `Ref` is never
-/// produced by `semio_value_from_dsl` (DslValue has no graph-reference primitive), so `dsl_from_semio_value` degrades it to
-/// `Null` — a documented gap only reachable if a foreign composer ever wrote a `Ref` value into this plugin's own
-/// `structure` child, never by this plugin's own round trip.
-fn semio_value_from_dsl(value: &semio_framework_value::DslValue) -> SemioValue {
-    match value {
-        semio_framework_value::DslValue::Null => SemioValue::Null,
-        semio_framework_value::DslValue::Bool(v) => SemioValue::Bool { value: *v },
-        semio_framework_value::DslValue::Number(n) => match n {
-            semio_framework_value::Number::UInt(v) => SemioValue::Int { lexeme: v.to_string() },
-            semio_framework_value::Number::Int(v) => SemioValue::Int { lexeme: v.to_string() },
-            semio_framework_value::Number::Float(v) if v.fract() == 0.0 && v.abs() < 1e15 => SemioValue::Int { lexeme: format!("{}", *v as i64) },
-            semio_framework_value::Number::Float(v) => SemioValue::Float { lexeme: format!("{v}") },
-        },
-        semio_framework_value::DslValue::String(s) => SemioValue::Str { value: s.clone() },
-        semio_framework_value::DslValue::Bytes(bytes) => SemioValue::Bytes { value: bytes.clone() },
-        semio_framework_value::DslValue::Array(items) => SemioValue::List { items: items.iter().map(semio_value_from_dsl).collect() },
-        semio_framework_value::DslValue::Object(entries) => SemioValue::Map { entries: entries.iter().map(|(k, v)| SemioValueEntry { key: k.clone(), value: semio_value_from_dsl(v) }).collect() },
-    }
-}
-fn dsl_from_semio_value(value: &SemioValue) -> semio_framework_value::DslValue {
-    match value {
-        SemioValue::Null => semio_framework_value::DslValue::Null,
-        SemioValue::Bool { value } => semio_framework_value::DslValue::Bool(*value),
-        SemioValue::Int { lexeme } => semio_framework_value::DslValue::int(lexeme.parse().unwrap_or(0)),
-        SemioValue::Float { lexeme } => semio_framework_value::DslValue::float(lexeme.parse().unwrap_or(0.0)),
-        SemioValue::Str { value } => semio_framework_value::DslValue::String(value.clone()),
-        SemioValue::List { items } => semio_framework_value::DslValue::Array(items.iter().map(dsl_from_semio_value).collect()),
-        SemioValue::Map { entries } => semio_framework_value::DslValue::Object(entries.iter().map(|entry| (entry.key.clone(), dsl_from_semio_value(&entry.value))).collect()),
-        SemioValue::Bytes { value } => semio_framework_value::DslValue::Bytes(value.clone()),
-        SemioValue::Ref { .. } => semio_framework_value::DslValue::Null,
-    }
-}
+pub use semio_s_artifact_forms_forms_forms::{artifact_kind};
 
-fn semio_value_map_get<'v>(value: &'v SemioValue, key: &str) -> Option<&'v SemioValue> {
-    match value {
-        SemioValue::Map { entries } => entries.iter().find(|entry| entry.key == key).map(|entry| &entry.value),
-        _ => None,
-    }
-}
-fn semio_str(value: Option<&SemioValue>) -> Option<String> {
-    match value {
-        Some(SemioValue::Str { value }) => Some(value.clone()),
-        _ => None,
-    }
-}
-fn semio_bool(value: Option<&SemioValue>) -> Option<bool> {
-    match value {
-        Some(SemioValue::Bool { value }) => Some(*value),
-        _ => None,
-    }
-}
-fn semio_f64(value: Option<&SemioValue>) -> Option<f64> {
-    match value {
-        Some(SemioValue::Float { lexeme }) | Some(SemioValue::Int { lexeme }) => lexeme.parse().ok(),
-        _ => None,
-    }
-}
-
-/// 🌉 `PlaybookExpr` (the block `condition` recursive boolean tree) <-> `SemioValue` — real,
-/// bidirectional; each variant becomes a tagged `Map{kind, ...}`.
-fn semio_value_from_expr(expr: &FormExpr) -> SemioValue {
-    match expr {
-        FormExpr::Const { value } => SemioValue::Map { entries: vec![SemioValueEntry { key: "kind".into(), value: SemioValue::Str { value: "const".into() } }, SemioValueEntry { key: "value".into(), value: semio_value_from_dsl(value) }] },
-        FormExpr::Var { name } => SemioValue::Map { entries: vec![SemioValueEntry { key: "kind".into(), value: SemioValue::Str { value: "var".into() } }, SemioValueEntry { key: "name".into(), value: SemioValue::Str { value: name.clone() } }] },
-        FormExpr::Eq { left, right } => SemioValue::Map {
-            entries: vec![
-                SemioValueEntry { key: "kind".into(), value: SemioValue::Str { value: "eq".into() } },
-                SemioValueEntry { key: "left".into(), value: semio_value_from_expr(left) },
-                SemioValueEntry { key: "right".into(), value: semio_value_from_expr(right) },
-            ],
-        },
-        FormExpr::And { items } => SemioValue::Map {
-            entries: vec![SemioValueEntry { key: "kind".into(), value: SemioValue::Str { value: "and".into() } }, SemioValueEntry { key: "items".into(), value: SemioValue::List { items: items.iter().map(semio_value_from_expr).collect() } }],
-        },
-        FormExpr::Or { items } => SemioValue::Map {
-            entries: vec![SemioValueEntry { key: "kind".into(), value: SemioValue::Str { value: "or".into() } }, SemioValueEntry { key: "items".into(), value: SemioValue::List { items: items.iter().map(semio_value_from_expr).collect() } }],
-        },
-        FormExpr::Truthy { expr } => SemioValue::Map { entries: vec![SemioValueEntry { key: "kind".into(), value: SemioValue::Str { value: "truthy".into() } }, SemioValueEntry { key: "expr".into(), value: semio_value_from_expr(expr) }] },
-    }
-}
-fn expr_from_semio_value(value: &SemioValue) -> Option<FormExpr> {
-    let kind = semio_str(semio_value_map_get(value, "kind"))?;
-    match kind.as_str() {
-        "const" => Some(FormExpr::Const { value: semio_value_map_get(value, "value").map_or(semio_framework_value::DslValue::Null, dsl_from_semio_value) }),
-        "var" => Some(FormExpr::Var { name: semio_str(semio_value_map_get(value, "name")).unwrap_or_default() }),
-        "eq" => {
-            let left = expr_from_semio_value(semio_value_map_get(value, "left")?)?;
-            let right = expr_from_semio_value(semio_value_map_get(value, "right")?)?;
-            Some(FormExpr::Eq { left: Box::new(left), right: Box::new(right) })
-        }
-        "and" => {
-            let items = match semio_value_map_get(value, "items") {
-                Some(SemioValue::List { items }) => items.iter().filter_map(expr_from_semio_value).collect(),
-                _ => Vec::new(),
-            };
-            Some(FormExpr::And { items })
-        }
-        "or" => {
-            let items = match semio_value_map_get(value, "items") {
-                Some(SemioValue::List { items }) => items.iter().filter_map(expr_from_semio_value).collect(),
-                _ => Vec::new(),
-            };
-            Some(FormExpr::Or { items })
-        }
-        "truthy" => Some(FormExpr::Truthy { expr: Box::new(expr_from_semio_value(semio_value_map_get(value, "expr")?)?) }),
-        _ => None,
-    }
-}
-
-/// 🌉 One `FormQuestion` (block) <-> a tagged `SemioValue::Map` — every field real, none stubbed.
-fn semio_value_from_block(block: &FormQuestion) -> SemioValue {
-    let mut entries = vec![
-        SemioValueEntry { key: "id".into(), value: SemioValue::Str { value: block.id.clone() } },
-        SemioValueEntry { key: "label".into(), value: SemioValue::Str { value: block.label.clone() } },
-        SemioValueEntry { key: "kind".into(), value: SemioValue::Str { value: block.kind.clone() } },
-    ];
-    if let Some(v) = &block.description {
-        entries.push(SemioValueEntry { key: "description".into(), value: SemioValue::Str { value: v.clone() } });
-    }
-    if let Some(v) = block.required {
-        entries.push(SemioValueEntry { key: "required".into(), value: SemioValue::Bool { value: v } });
-    }
-    if let Some(v) = &block.placeholder {
-        entries.push(SemioValueEntry { key: "placeholder".into(), value: SemioValue::Str { value: v.clone() } });
-    }
-    if let Some(v) = &block.default {
-        entries.push(SemioValueEntry { key: "default".into(), value: semio_value_from_dsl(v) });
-    }
-    if let Some(v) = block.min {
-        entries.push(SemioValueEntry { key: "min".into(), value: SemioValue::Float { lexeme: format!("{v}") } });
-    }
-    if let Some(v) = block.max {
-        entries.push(SemioValueEntry { key: "max".into(), value: SemioValue::Float { lexeme: format!("{v}") } });
-    }
-    if let Some(v) = block.step {
-        entries.push(SemioValueEntry { key: "step".into(), value: SemioValue::Float { lexeme: format!("{v}") } });
-    }
-    if let Some(v) = &block.unit {
-        entries.push(SemioValueEntry { key: "unit".into(), value: SemioValue::Str { value: v.clone() } });
-    }
-    if let Some(v) = &block.text {
-        entries.push(SemioValueEntry { key: "text".into(), value: SemioValue::Str { value: v.clone() } });
-    }
-    if let Some(options) = &block.options {
-        entries.push(SemioValueEntry {
-            key: "options".into(),
-            value: SemioValue::List {
-                items: options
-                    .iter()
-                    .map(|option| SemioValue::Map {
-                        entries: vec![SemioValueEntry { key: "value".into(), value: SemioValue::Str { value: option.value.clone() } }, SemioValueEntry { key: "label".into(), value: SemioValue::Str { value: option.label.clone() } }],
-                    })
-                    .collect(),
-            },
-        });
-    }
-    if let Some(fields) = &block.fields {
-        entries.push(SemioValueEntry {
-            key: "fields".into(),
-            value: SemioValue::List {
-                items: fields
-                    .iter()
-                    .map(|field| {
-                        let mut field_entries = vec![SemioValueEntry { key: "key".into(), value: SemioValue::Str { value: field.key.clone() } }];
-                        if let Some(label) = &field.label {
-                            field_entries.push(SemioValueEntry { key: "label".into(), value: SemioValue::Str { value: label.clone() } });
-                        }
-                        if let Some(value) = field.value {
-                            field_entries.push(SemioValueEntry { key: "value".into(), value: SemioValue::Float { lexeme: format!("{value}") } });
-                        }
-                        SemioValue::Map { entries: field_entries }
-                    })
-                    .collect(),
-            },
-        });
-    }
-    if let Some(v) = &block.schema {
-        entries.push(SemioValueEntry { key: "schema".into(), value: SemioValue::Str { value: v.clone() } });
-    }
-    if let Some(v) = &block.src {
-        entries.push(SemioValueEntry { key: "src".into(), value: SemioValue::Str { value: v.clone() } });
-    }
-    if let Some(v) = &block.accept {
-        entries.push(SemioValueEntry { key: "accept".into(), value: SemioValue::Str { value: v.clone() } });
-    }
-    if let Some(v) = &block.example_id {
-        entries.push(SemioValueEntry { key: "exampleId".into(), value: SemioValue::Str { value: v.clone() } });
-    }
-    if let Some(v) = &block.params {
-        entries.push(SemioValueEntry { key: "params".into(), value: semio_value_from_dsl(v) });
-    }
-    if let Some(v) = &block.condition {
-        entries.push(SemioValueEntry { key: "condition".into(), value: semio_value_from_expr(v) });
-    }
-    SemioValue::Map { entries }
-}
-fn block_from_semio_value(value: &SemioValue) -> FormQuestion {
-    FormQuestion {
-        id: semio_str(semio_value_map_get(value, "id")).unwrap_or_default(),
-        label: semio_str(semio_value_map_get(value, "label")).unwrap_or_default(),
-        kind: semio_str(semio_value_map_get(value, "kind")).unwrap_or_default(),
-        description: semio_str(semio_value_map_get(value, "description")),
-        required: semio_bool(semio_value_map_get(value, "required")),
-        placeholder: semio_str(semio_value_map_get(value, "placeholder")),
-        default: semio_value_map_get(value, "default").map(dsl_from_semio_value),
-        min: semio_f64(semio_value_map_get(value, "min")),
-        max: semio_f64(semio_value_map_get(value, "max")),
-        step: semio_f64(semio_value_map_get(value, "step")),
-        unit: semio_str(semio_value_map_get(value, "unit")),
-        text: semio_str(semio_value_map_get(value, "text")),
-        options: match semio_value_map_get(value, "options") {
-            Some(SemioValue::List { items }) => {
-                Some(items.iter().map(|item| FormQuestionOption { value: semio_str(semio_value_map_get(item, "value")).unwrap_or_default(), label: semio_str(semio_value_map_get(item, "label")).unwrap_or_default() }).collect())
-            }
-            _ => None,
-        },
-        fields: match semio_value_map_get(value, "fields") {
-            Some(SemioValue::List { items }) => Some(
-                items.iter().map(|item| FormVectorField { key: semio_str(semio_value_map_get(item, "key")).unwrap_or_default(), label: semio_str(semio_value_map_get(item, "label")), value: semio_f64(semio_value_map_get(item, "value")) }).collect(),
-            ),
-            _ => None,
-        },
-        schema: semio_str(semio_value_map_get(value, "schema")),
-        src: semio_str(semio_value_map_get(value, "src")),
-        accept: semio_str(semio_value_map_get(value, "accept")),
-        example_id: semio_str(semio_value_map_get(value, "exampleId")),
-        params: semio_value_map_get(value, "params").map(dsl_from_semio_value),
-        condition: semio_value_map_get(value, "condition").and_then(expr_from_semio_value),
-    }
-}
-
-/// 🌉 One `FormStep` <-> a tagged `SemioValue::Map` (id/title/description/blocks).
-fn semio_value_from_step(step: &FormStep) -> SemioValue {
-    let mut entries = vec![SemioValueEntry { key: "id".into(), value: SemioValue::Str { value: step.id.clone() } }, SemioValueEntry { key: "title".into(), value: SemioValue::Str { value: step.title.clone() } }];
-    if let Some(v) = &step.description {
-        entries.push(SemioValueEntry { key: "description".into(), value: SemioValue::Str { value: v.clone() } });
-    }
-    entries.push(SemioValueEntry { key: "blocks".into(), value: SemioValue::List { items: step.blocks.iter().map(semio_value_from_block).collect() } });
-    SemioValue::Map { entries }
-}
-fn step_from_semio_value(value: &SemioValue) -> FormStep {
-    FormStep {
-        id: semio_str(semio_value_map_get(value, "id")).unwrap_or_default(),
-        title: semio_str(semio_value_map_get(value, "title")).unwrap_or_default(),
-        description: semio_str(semio_value_map_get(value, "description")),
-        blocks: match semio_value_map_get(value, "blocks") {
-            Some(SemioValue::List { items }) => items.iter().map(block_from_semio_value).collect(),
-            _ => Vec::new(),
-        },
-    }
-}
-
-/// 🌉 Projects the authoritative definition into its structured value child.
-pub fn forms_structure_from_steps(steps: &[FormStep]) -> SemioValueSnapshot {
-    SemioValueSnapshot {
-        schema: STDIO_SEMIOVALUE_DOCUMENT_SCHEMA.into(),
-        root: SemioValue::Map { entries: vec![SemioValueEntry { key: "steps".into(), value: SemioValue::List { items: steps.iter().map(semio_value_from_step).collect() } }] },
-        nodes: Vec::new(),
-    }
-}
-pub fn forms_steps_from_structure(structure: &SemioValueSnapshot) -> Vec<FormStep> {
-    match semio_value_map_get(&structure.root, "steps") {
-        Some(SemioValue::List { items }) => items.iter().map(step_from_semio_value).collect(),
-        _ => Vec::new(),
-    }
-}
-
-/// 📊️ A normalized response table preserves each answer's original field label and typed JSON value.
-pub fn forms_results_from_responses(responses: &[schema::response::FormsResponse]) -> SemioTableSnapshot {
-    let rows = responses.iter().flat_map(|response| response.answers.iter().map(move |answer| SemioTableRow {
-        cells: standards::v1::subsets::any::io::text::snapshot::response::export::response_row(response, answer).into_iter().map(|value| SemioValue::Str { value }).collect(),
-    })).collect();
-    SemioTableSnapshot { schema: STDIO_SEMIOTABLE_DOCUMENT_SCHEMA.into(), columns: standards::v1::subsets::any::io::text::snapshot::response::export::RESPONSE_COLUMNS.into_iter().map(|name| SemioTableColumn { name: name.into(), kind: SemioTableCellKind::Str }).collect(), rows }
-}
-
-/// 🪆️ Response content has its own projection identity independent of definition edits.
-pub fn forms_results_child(responses: &[schema::response::FormsResponse]) -> FormsResultsChild {
-    use std::hash::{Hash, Hasher};
-    let mut digest = std::collections::hash_map::DefaultHasher::new();
-    semio_framework_pack_json::to_json_string(&responses.to_vec()).hash(&mut digest);
-    let id = format!("forms-table-{:016x}", digest.finish());
-    store::os_store::artifact_child::ArtifactChild::new(id.clone(), semio_framework_artifact_reference::ArtifactRef { artifact_id: id, dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "table".into() } })
-}
-//#endregion 🔖️Converters
-
-//#region 🔖️DurableDefinition
-fn forms_scene_id(steps: &[FormStep]) -> String {
-    let content_json = semio_framework_pack_json::to_json_string(&steps.to_vec());
-    store::content_id("forms-scene", content_json.as_bytes())
-}
-
-/// 📝️ Replaces the durable definition while retaining its owned projection handles.
-pub fn replace_forms_steps(snapshot: &mut FormsSnapshot, steps: Vec<FormStep>) {
-    snapshot.definition.steps = steps;
-}
-
-/// 🪆️ Derives projection handles without using process-local document caches.
-pub fn forms_children_from_steps(steps: &[FormStep]) -> (FormsStructureChild, FormsResultsChild) {
-    let scene_id = forms_scene_id(steps);
-    let target_for = |subset: &str| semio_framework_artifact_reference::ArtifactRef {
-        artifact_id: format!("forms-{subset}-{}", scene_id.strip_prefix("forms-scene-").unwrap_or(&scene_id)),
-        dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: subset.into() },
-    };
-    let structure = target_for("value");
-    (store::os_store::artifact_child::ArtifactChild::new(structure.artifact_id.clone(), structure), forms_results_child(&[]))
-}
-
-/// 🔎️ Reads the authoritative durable definition.
-pub fn forms_steps(snapshot: &FormsSnapshot) -> Vec<FormStep> { snapshot.definition.steps.clone() }
-
-/// 🔎️ Reads the authoritative definition on a full artifact.
-pub fn forms_artifact_steps(artifact: &schema::FormsArtifact) -> Vec<FormStep> { artifact.definition.steps.clone() }
-
-/// 🏗️ Creates a form with a durable definition and no responses.
-pub fn forms_snapshot_with_state(schema: String, id: String, version: String, title: Option<String>, steps: &[FormStep]) -> FormsSnapshot {
-    let (structure, results) = forms_children_from_steps(steps);
-    FormsSnapshot { schema, id, version, title, definition: schema::definition::FormsDefinition { steps: steps.to_vec() }, responses: Vec::new(), structure, results }
-}
-
-/// 🌱️ Materializes the exact derived child requested by the framework's archive loader.
-pub fn forms_genesis_child_pack(snapshot: &FormsSnapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
-    use pack::snapshot::ArtifactPack;
-    if slot == "structure" && child_id == snapshot.structure.child_id { return Some(forms_structure_from_steps(&snapshot.definition.steps).encode_pack()); }
-    if slot == "results" && child_id == snapshot.results.child_id { return Some(forms_results_from_responses(&snapshot.responses).encode_pack()); }
-    None
-}
-//#endregion 🔖️DurableDefinition
-//#endregion 🔖️Composition
-
-//#region 🔖️ArtifactKind
-/// 🗂️ This artifact's `ArtifactKindSpec` — stitched into the app manifest by
-/// `crate::editor::forms::create_forms_app`'s `🔖️Manifest` region.
-pub fn artifact_kind() -> ArtifactKindSpec {
-    ArtifactKindSpec {
-        id: "form.dictionary".into(),
-        label: semio_framework_ui_locale::LocalizedLabel::native("Form Dictionary", "Formularwörterbuch"),
-        source_format: "form.dictionary".into(),
-        component_kind: "forms".into(),
-        dimension: "data".into(),
-        media_capability: OsMediaCapability::MeshOnly,
-        media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
-        schema: FORMS_DOCUMENT_SCHEMA.into(),
-        export_formats: vec![],
-        import_formats: vec![],
-        export_stdio_kinds: vec![],
-        import_stdio_kinds: vec![],
-    }
-}
-//#endregion 🔖️ArtifactKind
-
-//#region 🔖️Declaration
-/// 🔖️ This artifact's OLD-channel definition (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE M1)
-/// — kept per debt D1 (`📌️important.md`): not deleted repo-wide until W6. Ticket
-/// 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM's `artifact()` below is the sole LIVE
-/// registration channel (`.declare_artifact(...)`, plugin root); `definition()` has zero callers
-/// left this pass (harmless — it still carries the real en/de localized names the new
-/// `ArtifactDeclaration.localization` field does not yet populate, see that field's own doc and
-/// `## openQuestions`). The old side-effecting `pilot_languages()`/`declaration()` pair (which
-/// wired this artifact's hand-authored grammars into `dsl::register_languages` via the now-deleted
-/// `.artifact(...)`/`.languages(...)` chain) is deleted outright, not kept: `NativeCodecs`'s
-/// `LanguagePair` fields stay `{ text: None, binary: None }` (`🚪️io/🦀️.rs`), the same
-/// documented deferral every other subset on this ticket carries — the underlying grammar/protocol
-/// `.semio` assets themselves are untouched and still compiled into their own facet files.
-pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
-    use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
-    type CapabilityRow<'a> = (&'a str, &'a str, &'a str, &'a [(&'a str, &'a str)], Option<(&'a str, &'a str)>);
-    let rows: &[CapabilityRow<'_>] = &[
-        ("s.forms.forms.standard.v1", "standard", "1", &[], None),
-        ("s.forms.forms.standard.v1.profile.any", "profile", "any", &[], None),
-        ("s.forms.forms.schema.artifact", "schema", "s.forms.forms", &[("schema", "s.forms.forms")], None),
-        ("s.forms.forms.inference.artifact", "inference", "s.forms.forms.inference", &[("schema", "s.forms.forms.inference")], None),
-        ("s.forms.forms.composer.json", "composer", "s.stdio.json@rfc8259/*", &[("dialect", "s.stdio.json@rfc8259/*")], None),
-        ("s.forms.forms.grammar.document", "grammar", "forms.forms", &[("grammar", "forms.forms")], None),
-        ("s.forms.forms.grammar.op", "grammar", "forms.forms.op", &[("grammar", "forms.forms.op")], None),
-        ("s.forms.forms.grammar.diff", "grammar", "forms.forms.diff", &[("grammar", "forms.forms.diff")], None),
-        ("s.forms.forms.grammar.pack", "grammar", "forms.pack", &[("grammar", "forms.pack")], None),
-        ("s.forms.forms.grammar.spr", "grammar", "forms.spr", &[("grammar", "forms.spr")], None),
-        ("s.forms.forms.codec.document.v1", "codec", "forms.form:forms", &[("codec", "forms.form"), ("codec-extension", "10:forms.form:forms")], None),
-        ("s.forms.forms.localization.en", "localization", "Forms", &[], Some(("en", "Forms"))),
-        ("s.forms.forms.localization.de", "localization", "Formulare", &[], Some(("de", "Formulare"))),
-    ];
-    let mut definition = ArtifactDefinition::new(ArtifactIdentity::parse("s.forms.forms")?);
-    for (identity, kind, descriptor, claims, localization) in rows {
-        let mut capability = ArtifactCapability::new(ArtifactIdentity::parse(*identity)?, ArtifactCapabilityKind::parse(*kind)?).descriptor(descriptor.as_bytes())?;
-        for (namespace, value) in *claims {
-            capability = capability.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::parse(*namespace)?, *value)?)?;
-        }
-        if let Some((locale, text)) = localization {
-            capability = capability.localization(ArtifactLocalization::new(ArtifactLocale::parse(*locale)?, *text)?)?;
-        }
-        definition = definition.capability(capability)?;
-    }
-    Ok(definition)
-}
-
-/// 🌳️ This artifact's declaration tree root (design.md §1/§2) — ONE standard (`1`), ONE subset
-/// (`any`). Sole registration channel (plugin root `.declare_artifact(artifact())`); the old
-/// `.artifact(declaration())`/`.editor::<>()`/`.viewer::<>()` triad is deleted, not kept alongside
-/// it (a second parallel registration channel is the compatibility layer CLAUDE.md forbids).
-pub fn artifact<A: FormsApplication>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<A> {
-    use semio_framework_plugin::app::declarations::ArtifactDeclaration;
-    use {semio_framework_artifact_reference::ArtifactKindId};
-
-    ArtifactDeclaration { kind: ArtifactKindId::parse("s.forms.forms").expect("canonical forms kind"), localization: &[], standards: vec![standards::v1::standard()] }
-}
-
-/// 📋️ Application variants required to assemble the Forms artifact.
-pub trait FormsApplication:
-    semio_framework_plugin::PluginApp
-    + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::EditorApp<editor::forms::FormsPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>>
-    + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::ViewerApp<viewer::forms::FormsViewer>, semio_s_artifact_stdio_semio::SemioMembers>>
-{
-}
-
-impl<A> FormsApplication for A where
-    A: semio_framework_plugin::PluginApp
-        + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::EditorApp<editor::forms::FormsPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>>
-        + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::ViewerApp<viewer::forms::FormsViewer>, semio_s_artifact_stdio_semio::SemioMembers>>
-{
-}
-//#endregion 🔖️Declaration
+pub use semio_s_artifact_forms_forms_forms::{FormsApplication, artifact, definition};
 
 //#region 🧪️Tests
 #[cfg(test)]
@@ -485,225 +36,117 @@ mod tests;
 pub mod standards {
     #[path = "."]
     pub mod v1 {
-        #[path = "🏅️standards/🔖️1/🦀️.rs"]
-        mod component;
-        pub use component::*;
+        pub use semio_s_artifact_forms_forms_forms::standards::v1::*;
+
         #[path = "."]
         pub mod subsets {
             #[path = "."]
             pub mod any {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🦀️.rs"]
-                mod component;
-                pub use component::*;
+                pub use semio_s_artifact_forms_forms_forms::standards::v1::subsets::any::*;
+
                 #[path = "."]
                 pub mod schema {
-                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs"]
-                    mod component;
-                    pub use component::*;
-                    #[path = "."]
-                    pub mod snapshot {
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                    #[path = "."]
-                    pub mod inferences {
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                        #[path = "."]
-                        pub mod topology {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧭topology/🦀️.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                    }
-                    #[path = "."]
-                    pub mod diff {
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
+                    pub use semio_s_artifact_forms_forms_schema::standards::v1::subsets::any::schema::*;
+
+                    pub use semio_s_artifact_forms_forms_snapshot::standards::v1::subsets::any::schema::snapshot;
+                    pub use semio_s_artifact_forms_forms_inferences::standards::v1::subsets::any::schema::inferences;
+                    pub use semio_s_artifact_forms_forms_diff::standards::v1::subsets::any::schema::diff;
                     #[path = "."]
                     pub mod mutations {
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
+                        pub use semio_s_artifact_forms_forms_mutations::standards::v1::subsets::any::schema::mutations::*;
+
+                        pub use semio_s_artifact_forms_forms_tests_2::standards::v1::subsets::any::schema::mutations::apply;
                         #[path = "."]
                         pub mod move_block_to_step {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦move-block-to-step/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦move-block-to-step/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦move-block-to-step/🦠️mutation/🦀️.rs"]
-                            pub mod mutation;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦move-block-to-step/🧪️tests/🧪️no/🦀️.rs"]
-                            mod tests_no_ops_when_the_block_stays_at_its_index_in_its_own_step;
+                            pub use semio_s_artifact_forms_forms_diff::standards::v1::subsets::any::schema::mutations::move_block_to_step::diff;
+                            pub use semio_s_artifact_forms_forms_diff::standards::v1::subsets::any::schema::mutations::move_block_to_step::inverse;
+                            pub use semio_s_artifact_forms_forms_diff::standards::v1::subsets::any::schema::mutations::move_block_to_step::mutation;
+
                         }
                         #[path = "."]
                         pub mod reorder_step {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀reorder-step/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀reorder-step/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀reorder-step/🦠️mutation/🦀️.rs"]
-                            pub mod mutation;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀reorder-step/🧪️tests/🧪️no/🦀️.rs"]
-                            mod tests_no_ops_when_the_step_already_sits_at_that_index;
+                            pub use semio_s_artifact_forms_forms_diff::standards::v1::subsets::any::schema::mutations::reorder_step::diff;
+                            pub use semio_s_artifact_forms_forms_diff::standards::v1::subsets::any::schema::mutations::reorder_step::inverse;
+                            pub use semio_s_artifact_forms_forms_diff::standards::v1::subsets::any::schema::mutations::reorder_step::mutation;
+
                         }
                         #[path = "."]
                         pub mod create_block {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕create-block/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕create-block/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕create-block/🦠️mutation/🦀️.rs"]
-                            pub mod mutation;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕create-block/🧪️tests/🧪️rejects/🦀️.rs"]
-                            mod tests_rejects_a_block_for_a_step_that_does_not_exist;
+                            pub use semio_s_artifact_forms_forms_inferences::standards::v1::subsets::any::schema::mutations::create_block::diff;
+                            pub use semio_s_artifact_forms_forms_inferences::standards::v1::subsets::any::schema::mutations::create_block::inverse;
+                            pub use semio_s_artifact_forms_forms_inferences::standards::v1::subsets::any::schema::mutations::create_block::mutation;
+
                         }
                         #[path = "."]
                         pub mod create_step {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-step/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-step/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-step/🦠️mutation/🦀️.rs"]
-                            pub mod mutation;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-step/🧪️tests/🧪️rejects/🦀️.rs"]
-                            mod tests_rejects_a_duplicate_step_id;
+                            pub use semio_s_artifact_forms_forms_inferences::standards::v1::subsets::any::schema::mutations::create_step::diff;
+                            pub use semio_s_artifact_forms_forms_inferences::standards::v1::subsets::any::schema::mutations::create_step::inverse;
+                            pub use semio_s_artifact_forms_forms_inferences::standards::v1::subsets::any::schema::mutations::create_step::mutation;
+
                         }
                         #[path = "."]
                         pub mod delete_block {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖delete-block/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖delete-block/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖delete-block/🦠️mutation/🦀️.rs"]
-                            pub mod mutation;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖delete-block/🧪️tests/🧪️rejects/🦀️.rs"]
-                            mod tests_rejects_deleting_a_block_missing_from_an_existing_step;
+                            pub use semio_s_artifact_forms_forms_inferences::standards::v1::subsets::any::schema::mutations::delete_block::diff;
+                            pub use semio_s_artifact_forms_forms_inferences::standards::v1::subsets::any::schema::mutations::delete_block::inverse;
+                            pub use semio_s_artifact_forms_forms_inferences::standards::v1::subsets::any::schema::mutations::delete_block::mutation;
+
                         }
                         #[path = "."]
                         pub mod delete_step {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-step/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-step/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-step/🦠️mutation/🦀️.rs"]
-                            pub mod mutation;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-step/🧪️tests/🧪️rejects/🦀️.rs"]
-                            mod tests_rejects_deleting_a_step_the_scene_does_not_hold;
+                            pub use semio_s_artifact_forms_forms_inferences::standards::v1::subsets::any::schema::mutations::delete_step::diff;
+                            pub use semio_s_artifact_forms_forms_inferences::standards::v1::subsets::any::schema::mutations::delete_step::inverse;
+                            pub use semio_s_artifact_forms_forms_inferences::standards::v1::subsets::any::schema::mutations::delete_step::mutation;
+
                         }
                         #[path = "."]
                         pub mod change_form_title {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️change-form-title/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️change-form-title/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️change-form-title/🦠️mutation/🦀️.rs"]
-                            pub mod mutation;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️change-form-title/🧪️tests/🧪️titles/🦀️.rs"]
-                            mod tests_titles_an_untitled_survey;
+                            pub use semio_s_artifact_forms_forms_diff::standards::v1::subsets::any::schema::mutations::change_form_title::diff;
+                            pub use semio_s_artifact_forms_forms_diff::standards::v1::subsets::any::schema::mutations::change_form_title::inverse;
+                            pub use semio_s_artifact_forms_forms_diff::standards::v1::subsets::any::schema::mutations::change_form_title::mutation;
+
                         }
                         #[path = "."]
                         pub mod replace_block {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁replace-block/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁replace-block/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁replace-block/🦠️mutation/🦀️.rs"]
-                            pub mod mutation;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁replace-block/🧪️tests/🧪️no/🦀️.rs"]
-                            mod tests_no_ops_when_the_replacement_block_is_identical;
+                            pub use semio_s_artifact_forms_forms_inferences::standards::v1::subsets::any::schema::mutations::replace_block::diff;
+                            pub use semio_s_artifact_forms_forms_inferences::standards::v1::subsets::any::schema::mutations::replace_block::inverse;
+                            pub use semio_s_artifact_forms_forms_inferences::standards::v1::subsets::any::schema::mutations::replace_block::mutation;
+
                         }
                         #[path = "."]
                         pub mod change_block_field {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛️change-block-field/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛️change-block-field/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛️change-block-field/🦠️mutation/🦀️.rs"]
-                            pub mod mutation;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛️change-block-field/🧪️tests/🧪️rejects/🦀️.rs"]
-                            mod tests_rejects_a_field_of_a_question_the_scene_does_not_hold;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛️change-block-field/🧪️tests/🧪️refuses/🦀️.rs"]
-                            mod tests_refuses_a_minimum_above_the_maximum;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛️change-block-field/🧪️tests/🧪️no/🦀️.rs"]
-                            mod tests_no_ops_when_the_field_already_holds_the_value;
+                            pub use semio_s_artifact_forms_forms_diff::standards::v1::subsets::any::schema::mutations::change_block_field::diff;
+                            pub use semio_s_artifact_forms_forms_diff::standards::v1::subsets::any::schema::mutations::change_block_field::inverse;
+                            pub use semio_s_artifact_forms_forms_diff::standards::v1::subsets::any::schema::mutations::change_block_field::mutation;
+
                         }
                         #[path = "."]
                         pub mod change_step_description {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝change-step-description/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝change-step-description/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝change-step-description/🦠️mutation/🦀️.rs"]
-                            pub mod mutation;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝change-step-description/🧪️tests/🧪️no/🦀️.rs"]
-                            mod tests_no_ops_when_clearing_an_already_absent_description;
+                            pub use semio_s_artifact_forms_forms_inferences::standards::v1::subsets::any::schema::mutations::change_step_description::diff;
+                            pub use semio_s_artifact_forms_forms_inferences::standards::v1::subsets::any::schema::mutations::change_step_description::inverse;
+                            pub use semio_s_artifact_forms_forms_inferences::standards::v1::subsets::any::schema::mutations::change_step_description::mutation;
+
                         }
                         #[path = "."]
                         pub mod rename_step {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️rename-step/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️rename-step/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️rename-step/🦠️mutation/🦀️.rs"]
-                            pub mod mutation;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️rename-step/🧪️tests/🧪️no/🦀️.rs"]
-                            mod tests_no_ops_when_the_step_already_carries_that_title;
+                            pub use semio_s_artifact_forms_forms_inferences::standards::v1::subsets::any::schema::mutations::rename_step::diff;
+                            pub use semio_s_artifact_forms_forms_inferences::standards::v1::subsets::any::schema::mutations::rename_step::inverse;
+                            pub use semio_s_artifact_forms_forms_inferences::standards::v1::subsets::any::schema::mutations::rename_step::mutation;
+
                         }
                     }
                 }
                 #[path = "."]
                 pub mod io {
-                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs"]
-                    mod component;
-                    pub use component::*;
+                    pub use semio_s_artifact_forms_forms_tests_3::standards::v1::subsets::any::io::*;
+
                     #[path = "."]
                     pub mod import {
                         #[path = "."]
                         pub mod deserializers {
                             #[path = "."]
                             pub mod artifacts {
-                                #[path = "."]
-                                pub mod zip {
-                                    #[path = "."]
-                                    pub mod v2_0 {
-                                        #[path = "."]
-                                        pub mod any {
-                                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🎒️zip/🔖️2.0/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
-                                #[path = "."]
-                                pub mod json {
-                                    #[path = "."]
-                                    pub mod v_rfc8259 {
-                                        #[path = "."]
-                                        pub mod any {
-                                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
+                                pub use semio_s_artifact_forms_forms_diff::standards::v1::subsets::any::io::import::deserializers::artifacts::zip;
+                                pub use semio_s_artifact_forms_forms_diff::standards::v1::subsets::any::io::import::deserializers::artifacts::json;
                             }
                         }
                     }
@@ -713,54 +156,10 @@ pub mod standards {
                         pub mod serializers {
                             #[path = "."]
                             pub mod artifacts {
-                                #[path = "."]
-                                pub mod zip {
-                                    #[path = "."]
-                                    pub mod v2_0 {
-                                        #[path = "."]
-                                        pub mod any {
-                                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎒️zip/🔖️2.0/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
-                                #[path = "."]
-                                pub mod csv {
-                                    #[path = "."]
-                                    pub mod v_rfc4180 {
-                                        #[path = "."]
-                                        pub mod any {
-                                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📊️csv/🔖️rfc4180/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
-                                #[path = "."]
-                                pub mod xlsx {
-                                    #[path = "."]
-                                    pub mod v_ecma_376 {
-                                        #[path = "."]
-                                        pub mod any {
-                                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📕️xlsx/🔖️ecma-376/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
-                                #[path = "."]
-                                pub mod json {
-                                    #[path = "."]
-                                    pub mod v_rfc8259 {
-                                        #[path = "."]
-                                        pub mod any {
-                                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
+                                pub use semio_s_artifact_forms_forms_diff::standards::v1::subsets::any::io::export::serializers::artifacts::zip;
+                                pub use semio_s_artifact_forms_forms_diff::standards::v1::subsets::any::io::export::serializers::artifacts::csv;
+                                pub use semio_s_artifact_forms_forms_diff::standards::v1::subsets::any::io::export::serializers::artifacts::xlsx;
+                                pub use semio_s_artifact_forms_forms_diff::standards::v1::subsets::any::io::export::serializers::artifacts::json;
                             }
                         }
                     }
@@ -775,157 +174,82 @@ pub mod schema {
     pub use super::standards::v1::subsets::any::schema::*;
 }
 
-pub mod op {
-    pub use crate::standards::v1::subsets::any::schema::mutations::{inverse_form_mutation, FormMutation};
+pub use semio_s_artifact_forms_forms_mutations::op;
 
-}
-
-
-pub mod diff {
-    pub use crate::standards::v1::subsets::any::schema::diff::*;
-    pub mod schema {
-        pub use crate::standards::v1::subsets::any::schema::diff::*;
-    }
-
-}
+pub use semio_s_artifact_forms_forms_diff::diff;
 pub mod mutations {
     pub use crate::standards::v1::subsets::any::schema::mutations::*;
 }
-pub mod snapshot {
-    pub mod schema {
-        pub use crate::standards::v1::subsets::any::schema::snapshot::*;
-    }
+pub use semio_s_artifact_forms_forms_diff::snapshot;
 
-}
-
-#[path = "."]
-pub mod examples {
-    #[path = "."]
-    pub mod demo {
-        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️.rs"]
-        mod component;
-        pub use component::*;
-    }
-}
+pub use semio_s_artifact_forms_forms_definition::examples;
 
 #[path = "."]
 pub mod editor {
     #[path = "."]
     pub mod forms {
-        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs"]
-        mod component;
-        pub use component::*;
-        #[path = "."]
-        pub mod presence {
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
+        pub use semio_s_artifact_forms_forms_forms::editor::forms::*;
+pub use semio_s_artifact_forms_forms_definition::editor::forms::demo_session;
+
+        pub use semio_s_artifact_forms_forms_definition::editor::forms::presence;
 
         #[path = "."]
         pub mod config {
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️.rs"]
-            mod component;
-            pub use component::*;
+            pub use semio_s_artifact_forms_forms_config::editor::forms::config::*;
+pub mod io {
+    pub use semio_s_artifact_forms_forms_definition::editor::forms::config::io::*;
+    pub mod binary {
+        pub use semio_s_artifact_forms_forms_tests::editor::forms::config::io::binary::*;
+        pub use semio_s_artifact_forms_forms_config::editor::forms::config::io::binary::mutations;
+    }
+    pub mod text {
+        pub use semio_s_artifact_forms_forms_tests::editor::forms::config::io::text::*;
+        pub use semio_s_artifact_forms_forms_config::editor::forms::config::io::text::mutations;
+    }
+}
 
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🦀️.rs"]
-            pub mod schema;
+            pub use semio_s_artifact_forms_forms_tests::editor::forms::config::schema;
         }
 
-        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗣️terminology/🦀️.rs"]
-        pub mod terminology;
+        pub use semio_s_artifact_forms_forms_tests::editor::forms::terminology;
 
-        #[path = "."]
-        pub mod commands {
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/❓️add-question/🦀️.rs"]
-            pub mod add_question;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔘️add-question-option/🦀️.rs"]
-            pub mod add_question_option;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📃️add-step/🦀️.rs"]
-            pub mod add_step;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📐️add-vector-field/🦀️.rs"]
-            pub mod add_vector_field;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🫳️drop-question-kind/🦀️.rs"]
-            pub mod drop_question_kind;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📤️export-snapshot/🦀️.rs"]
-            pub mod export_snapshot;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📤️export-responses/🦀️.rs"]
-            pub mod export_responses;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/↩️discard-response/🦀️.rs"]
-            pub mod discard_response;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🚚️move-question/🦀️.rs"]
-            pub mod move_question;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/↔️move-step/🦀️.rs"]
-            pub mod move_step;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/▶️next-step/🦀️.rs"]
-            pub mod next_step;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎛️patch-question-options/🦀️.rs"]
-            pub mod patch_question_options;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🩹️patch-questions/🦀️.rs"]
-            pub mod patch_questions;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/✏️patch-step/🦀️.rs"]
-            pub mod patch_step;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🩺️patch-vector-field/🦀️.rs"]
-            pub mod patch_vector_field;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/◀️previous-step/🦀️.rs"]
-            pub mod previous_step;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗑️remove-question/🦀️.rs"]
-            pub mod remove_question;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/⭕️remove-question-option/🦀️.rs"]
-            pub mod remove_question_option;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/➖️remove-step/🦀️.rs"]
-            pub mod remove_step;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🚫️remove-vector-field/🦀️.rs"]
-            pub mod remove_vector_field;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/↩️reset-try/🦀️.rs"]
-            pub mod reset_try;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📥️set-active-example/🦀️.rs"]
-            pub mod set_active_example;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧩️set-contributions/🦀️.rs"]
-            pub mod set_contributions;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔣️set-spec-json/🦀️.rs"]
-            pub mod set_spec_json;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎯️set-try-value/🦀️.rs"]
-            pub mod set_try_value;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📍️set-try-value-step/🦀️.rs"]
-            pub mod set_try_value_step;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗃️set-try-values/🦀️.rs"]
-            pub mod set_try_values;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/✅️submit/🦀️.rs"]
-            pub mod submit;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/♻️update-form/🦀️.rs"]
-            pub mod update_form;
-        }
+        pub use semio_s_artifact_forms_forms_tests::editor::forms::support;
+
+        pub use semio_s_artifact_forms_forms_schema::editor::forms::contributions;
+
+        pub use semio_s_artifact_forms_forms_commands::editor::forms::commands;
 
         #[path = "."]
         pub mod modes {
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/📨️responses/🦀️.rs"]
-            pub mod responses;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✍️fill/🦀️.rs"]
-            pub mod fill;
+            pub use semio_s_artifact_forms_forms_schema::editor::forms::modes::responses;
+            pub use semio_s_artifact_forms_forms_tests::editor::forms::modes::fill;
             #[path = "."]
             pub mod blueprint {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/📝️blueprint/🦀️.rs"]
-                mod component;
-                pub use component::*;
+                pub use semio_s_artifact_forms_forms_tests_2::editor::forms::modes::blueprint::*;
 
                 #[path = "."]
                 pub mod windows {
-                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/📝️blueprint/🪟️windows/🧱️builder/🦀️.rs"]
-                    pub mod builder;
-                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/📝️blueprint/🪟️windows/▶️try/🦀️.rs"]
-                    pub mod try_wizard;
+                    pub use semio_s_artifact_forms_forms_tests_2::editor::forms::modes::blueprint::windows::builder;
+                    pub mod try_wizard {
+    pub use semio_s_artifact_forms_forms_tests_2::editor::forms::modes::blueprint::windows::try_wizard::*;
+    pub mod config {
+        pub use semio_s_artifact_forms_forms_tests_2::editor::forms::modes::blueprint::windows::try_wizard::config::*;
+        pub use semio_s_artifact_forms_forms_tests::editor::forms::modes::blueprint::windows::try_wizard::config::schema;
+    }
+    pub mod transient {
+        pub use semio_s_artifact_forms_forms_tests_2::editor::forms::modes::blueprint::windows::try_wizard::transient::*;
+        pub use semio_s_artifact_forms_forms_tests::editor::forms::modes::blueprint::windows::try_wizard::transient::schema;
+    }
+}
                 }
             }
         }
 
         #[path = "."]
         pub mod panels {
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🛍️catalogue/🦀️.rs"]
-            pub mod catalogue;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🗿️artifact/🦀️.rs"]
-            pub mod document;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🦀️.rs"]
-            pub mod inspection;
+            pub use semio_s_artifact_forms_forms_tests_2::editor::forms::panels::catalogue;
+            pub use semio_s_artifact_forms_forms_tests_2::editor::forms::panels::document;
+            pub use semio_s_artifact_forms_forms_tests_3::editor::forms::panels::inspection;
         }
     }
 }
@@ -934,50 +258,30 @@ pub mod editor {
 pub mod viewer {
     #[path = "."]
     pub mod forms {
-        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs"]
-        mod component;
-        pub use component::*;
-        #[path = "."]
-        pub mod presence {
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/👥️presence/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
-        #[path = "."]
-        pub mod config {
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎚️config/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
+        pub use semio_s_artifact_forms_forms_tests_2::viewer::forms::*;
+
+        pub use semio_s_artifact_forms_forms_tests::viewer::forms::presence;
+        pub use semio_s_artifact_forms_forms_tests::viewer::forms::config;
 
         #[path = "."]
         pub mod modes {
             #[path = "."]
             pub mod view {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🦀️.rs"]
-                mod component;
-                pub use component::*;
+                pub use semio_s_artifact_forms_forms_tests_2::viewer::forms::modes::view::*;
 
-                #[path = "."]
-                pub mod windows {
-                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/▶️try/🦀️.rs"]
-                    pub mod try_wizard;
-                }
+                pub use semio_s_artifact_forms_forms_tests_2::viewer::forms::modes::view::windows;
             }
         }
     }
 }
 
-//#region 🧬️ChildRestoreProjection
-/// 🧬️ The loaded-parent child projection, read off the snapshot's own derived composition fields — the ONE
-/// definition the editor and the viewer both declare. The `ArtifactEditor`/`ArtifactViewer` trait default
-/// refuses it (`… did not declare a loaded-parent child projection`), and since PX1 the live envelope load
-/// asks for it before the decoded document may replace the store, so an undeclared app fails every live load.
-pub fn forms_child_restore_projection(snapshot: &FormsSnapshot) -> Result<semio_framework_composition_admission::ChildRestoreProjection<'_>, semio_framework_plugin::Fault> {
-    semio_framework_composition_admission::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("forms.child-projection"), error.to_string()))
-}
-//#endregion 🧬️ChildRestoreProjection
+pub use semio_s_artifact_forms_forms_tests_2::{forms_child_restore_projection};
 
-#[path = "."]
-pub mod host {
-#[path = "🔨️modules/🏠️host/🧰️owned/🦀️.rs"]
-pub mod owned;
-}
+pub use semio_s_artifact_forms_forms_tests_3::host;
+
+#[cfg(test)]
+#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/📸️snapshot/🧪️tests/🔬️unit/🦀️.rs"]
+mod hoisted_tests_0;
+#[cfg(test)]
+#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs"]
+mod hoisted_snapshot_1;

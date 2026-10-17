@@ -5,7 +5,8 @@
 use crate::standards::v1_7::subsets::base::modules::encryption::open_standard_security;
 use crate::standards::v1_7::subsets::base::modules::fonts::FontCodec;
 use crate::standards::v1_7::subsets::base::modules::lexer::dict_get;
-use crate::standards::v1_7::subsets::base::io::{foreign_artifacts, PResult, PdfEngineError};
+use crate::standards::v1_7::subsets::base::io::foreign_artifacts;
+use crate::standards::v1_7::subsets::base::io::error::{PResult, PdfEngineError};
 use crate::standards::v1_7::subsets::base::modules::lift::lift_document_with;
 use crate::standards::v1_7::subsets::base::modules::xref::{build_xref, startxref_offset, Resolver, WRITER_TRAILER_KEYS};
 use crate::standards::v1_7::subsets::base::schema::graph_source::GraphSource;

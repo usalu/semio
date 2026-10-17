@@ -28,6 +28,7 @@
   },
   "bundleKind": "library",
   "devDependencies": {
+    "@semio-tech/compiler-syntax-rust-ts": "workspace:*",
     "@semio-tech/process": "workspace:*"
   }
 }

@@ -1,12 +1,13 @@
-use crate::io::text::snapshot::*;
-use crate::RasterOwnedMap;
-use crate::{RasterImageAsset, RasterLayerMask, RasterLayerNode, RasterTransform, RASTER_DOCUMENT_SCHEMA};
+use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
+use semio_s_artifact_raster_raster_model::io::text::snapshot::*;
+use semio_s_artifact_raster_raster_model::RasterOwnedMap;
+use semio_s_artifact_raster_raster_model::{RasterImageAsset, RasterLayerMask, RasterLayerNode, RasterTransform, RASTER_DOCUMENT_SCHEMA};
 
 /// 📄️ Handcrafted document exercising every layer kind/field, shared with the `pack`/`op`
 /// taxonomy nodes' own copies (each node keeps its own private copy, per §7 test isolation).
 fn representative_raster_document() -> RasterSnapshot {
     let mut assets = RasterOwnedMap::new();
-    assets.insert("asset-1".into(), crate::image_asset_child_handle("asset-1", &RasterImageAsset { mime: "image/png".into(), data: b"abc".to_vec() })).expect("bounded fixture operation succeeds");
+    assets.insert("asset-1".into(), semio_s_artifact_raster_raster_model::image_asset_child_handle("asset-1", &RasterImageAsset { mime: "image/png".into(), data: b"abc".to_vec() })).expect("bounded fixture operation succeeds");
     let mut params = RasterOwnedMap::new();
     params.insert("brightness".into(), semio_framework_value::DslValue::float(0.06)).expect("bounded fixture operation succeeds");
     params.insert("label".into(), semio_framework_value::DslValue::String("Warm \"Curve\"".to_string())).expect("bounded fixture operation succeeds");
@@ -72,22 +73,22 @@ fn representative_raster_document() -> RasterSnapshot {
 
 #[semio_framework_async_macros::async_test]
 async fn semio_example_dsl_round_trips() {
-    let fixture = crate::testing::raster_image_test_snapshot();
+    let fixture = semio_s_artifact_raster_raster_io::testing::raster_image_test_snapshot();
     // 🧊️ Cold twin: a raster document owns fixed-capacity maps whose `Drop` fails closed, so the
     // helper's own decoded value is handed back to the artifact's retirement seam.
-    store::os_store::test_support::assert_dsl_round_trip_cold(&fixture, crate::snapshot::retire_raster_snapshot);
+    store::os_store::test_support::assert_dsl_round_trip_cold(&fixture, semio_s_artifact_raster_raster_model::snapshot::retire_raster_snapshot);
     let printed = print_dsl(&fixture);
     let reparsed = parse_dsl(&printed).expect("parse printed semio fixture");
     assert_eq!(reparsed.id, fixture.id);
     // 🧹️ Both documents own a populated asset pool and a populated `params` map, so they reach the
     // artifact's retirement seam rather than `RasterOwnedMap`'s fail-closed `Drop`.
-    crate::snapshot::retire_raster_snapshot(reparsed);
-    crate::snapshot::retire_raster_snapshot(fixture);
+    semio_s_artifact_raster_raster_model::snapshot::retire_raster_snapshot(reparsed);
+    semio_s_artifact_raster_raster_model::snapshot::retire_raster_snapshot(fixture);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn raster_dsl_round_trips_representative_document() {
     let document = representative_raster_document();
-    store::os_store::test_support::assert_dsl_round_trip_cold(&document, crate::snapshot::retire_raster_snapshot);
-    crate::snapshot::retire_raster_snapshot(document);
+    store::os_store::test_support::assert_dsl_round_trip_cold(&document, semio_s_artifact_raster_raster_model::snapshot::retire_raster_snapshot);
+    semio_s_artifact_raster_raster_model::snapshot::retire_raster_snapshot(document);
 }

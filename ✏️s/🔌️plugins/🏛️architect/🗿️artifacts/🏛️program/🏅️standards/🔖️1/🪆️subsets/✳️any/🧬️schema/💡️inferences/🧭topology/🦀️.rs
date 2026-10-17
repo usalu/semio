@@ -161,8 +161,5 @@ fn topo_order(ids: &[String], parent_of: &HashMap<String, Option<String>>) -> Ve
 }
 //#endregion 🔖️Derivation
 
-#[cfg(test)]
-//#region 🧪️Tests
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

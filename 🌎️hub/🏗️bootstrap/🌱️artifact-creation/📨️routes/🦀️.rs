@@ -15,7 +15,7 @@ use directory::os_directory::schema::space_artifact_creation::{SPACE_ARTIFACT_CR
 use semio_hub_ledgers::socket_grants::{SocketBindingGuardV1, SocketBindingKeyV1};
 use semio_hub_directory_contract::model::SocketSessionBindingStatus;
 use semio_framework_trace::record::{TraceOutcome, TraceRecord};
-use directory::os_directory::io::text::access_policy::directory_access_permits;
+use directory::os_directory::access_policy::directory_access_permits;
 use semio_hub_session_routes::directory_commands::resolve_bearer_user;
 use semio_hub_ledgers::guard::session_access_roles;
 use semio_hub_directory::{AuthSessionDirectory, SpaceDirectory};

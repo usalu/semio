@@ -1,4 +1,7 @@
-use super::*;
+use crate::GisTerrainSnapshot;
+#[allow(unused_imports)]
+use semio_framework_value_derive::{FromValue, ToValue};
+use crate::standards::v1::subsets::any::schema::inferences::bounds::*;
 
 #[semio_framework_async_macros::async_test]
 async fn empty_overlay_has_no_bounds() {
@@ -16,7 +19,7 @@ async fn malformed_overlay_json_contributes_no_positions() {
 async fn two_positions_produce_their_enclosing_box() {
     let snapshot = GisTerrainSnapshot {
         exaggeration: 1.0,
-        imported_map: Some(crate::schema::ImportedMap::from_json(&serde_json::json!({ "positions": [
+        imported_map: Some(crate::schema::imported_map::ImportedMap::from_json(&serde_json::json!({ "positions": [
                 { "id": "a", "lon": 5.0, "lat": 50.0 },
                 { "id": "b", "lon": 6.0, "lat": 51.0 },
             ] })

@@ -27,7 +27,7 @@ import type {ScriptInvocation} from "../../../../../../../🔨️modules/🏃️
 import {withRepositoryCompilerStoreV1,type RepositoryCompilerStoreV1} from "../../../⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🟦️.ts";
 import {repositoryCargoNetworkV1,withRepositoryCargoInputsV1,withRepositoryCargoResolutionV1} from "../📥️dependencies/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
-import authored from "./🔣️policy.json" with {type:"json"};
+const authored=schema.definitions.Configuration.const;
 
 /** 🧾️ One admitted ad-hoc Cargo command: its explicit store, build configuration, core share and closed subcommand class. */
 export type RepositoryCargoLaunchV1=Readonly<{version:1;store:"shared"|"isolated";configuration:BuildMode;parallelism:number;kind:"compile"|"resolve"|"lock";cargo:readonly string[]}>;
@@ -129,7 +129,7 @@ export async function launchRepositoryCargoV1<T>(invocation:ScriptInvocation,pha
    mark("writer","ready");mark("profile","begin");
    const lease=await acquireCargoBuildLeaseV1({directory:leaseDirectory,buildDirectory:selected.build,targetDirectory:selected.target,args:compilerArgs,signal:control.signal,control});mark("profile","ready");let profileFailed=false,profileFailure:unknown;
    try{
-    mark("capacity","begin");return await withCompilerCapacityConsumptionV1({directory:leaseDirectory,control,environment:env,requestedParallelism:request.parallelism},async(capacity,cpuControl)=>{mark("capacity","ready");mark("scheduler","begin");
+    mark("capacity","begin");return await withCompilerCapacityConsumptionV1({directory:leaseDirectory,control,environment:env,request:{kind:"exact",parallelism:request.parallelism}},async(capacity,cpuControl)=>{mark("capacity","ready");mark("scheduler","begin");
      const scheduler=(await buildSchedulerV1({cwd:workspace,targetDirectory:store.environment.CARGO_TARGET_DIR!,buildDirectory:store.buildDirectory,environment:store.environment,control:cpuControl,storage:store.storage,sourceBoundary:store.sourceBoundary})).get("semio-build-scheduler")!,tokens=capacity.parallelism;mark("scheduler","ready");
      const history=await readUnitHistoryV1(unitHistoryPathV1(join(store.root,"components"))),jobserverDirectory=join(store.environment.TMPDIR!,policy.jobserverDirectoryPrefix+randomBytes(6).toString("hex")),jobserver=await createJobserverV1({version:1,tokens,style:defaultJobserverStyleV1()},jobserverDirectory);let jobserverFailed=false,jobserverFailure:unknown;
      try{

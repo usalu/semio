@@ -1,0 +1,71 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/📓️print/🎮️commands/🧪️print-pipeline-verification/🧪️tests/🖨️pipeline/🟦️.ts",
+ "importers": "auto",
+ "childrenImportParent": true,
+ "children": [
+  {
+   "dir": "⚡️quick-pipeline-verification",
+   "doc": "/** ⚡️ The quick print pipeline verification: the schema module reader, the toolchain manifest and the pure transformations of the print pipeline. */",
+   "lines": [
+    [
+     62,
+     176
+    ]
+   ]
+  },
+  {
+   "dir": "🧾️api-freshness-and-titles",
+   "doc": "/** 🧾️ The print API verification: freshness of the copied metadata, the printed owner rows, the title contracts and the title rendering. */",
+   "lines": [
+    [
+     178,
+     362
+    ]
+   ]
+  },
+  {
+   "dir": "🖼️gallery-carrier-and-kind-paint",
+   "doc": "/** 🖼️ The print gallery verification: the gallery carrier and the paint of every kind in the compiled PDF fixtures. */",
+   "lines": [
+    [
+     364,
+     569
+    ]
+   ]
+  },
+  {
+   "dir": "🎯️api-scope-cases",
+   "doc": "/** 🎯️ The print API scope cases: the owner-scoped key rows checked against the printed tables. */",
+   "lines": [
+    [
+     571,
+     695
+    ]
+   ]
+  },
+  {
+   "dir": "📄️macro-and-pdf-verification",
+   "doc": "/** 📄️ The print macro staging and PDF verification: the staged macros, the glyph policy, every template PDF and the long pipeline level. */",
+   "lines": [
+    [
+     697,
+     741
+    ],
+    [
+     754,
+     827
+    ]
+   ]
+  },
+  {
+   "dir": "🛡️command-and-publication-verification",
+   "doc": "/** 🛡️ The print command and publication verification: the visualization build, the font staging, the command boundaries, the document catalog, the bundle contract and the API publication. */",
+   "lines": [
+    [
+     830,
+     1010
+    ]
+   ]
+  }
+ ]
+}

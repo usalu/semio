@@ -1,4 +1,23 @@
-use super::*;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
+#[allow(unused_imports)]
+use crate::editor::animate::terminology::AnimatePresentationLabels;
+#[allow(unused_imports)]
+use crate::{editor::animate::support::animate_presentation_action, editor::animate::support::ui_capacity_error, editor::animate::support::ui_children, editor::animate::support::ui_label, editor::animate::support::ui_map, editor::animate::support::ui_node, editor::animate::support::ui_text};
+#[allow(unused_imports)]
+use crate::PresentationSnapshot;
+#[allow(unused_imports)]
+use semio_framework_ui_locale::LocalizedLabel;
+#[allow(unused_imports)]
+use semio_framework_plugin::PanelGroup;
+#[allow(unused_imports)]
+use semio_framework_plugin::PanelTabDefinition;
+#[allow(unused_imports)]
+use semio_framework_plugin::PanelTabKind;
+#[allow(unused_imports)]
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL;
+#[allow(unused_imports)]
+use semio_framework_ui_contract::{button, column, field, input, section, text, BuiltNode, HasBase, InputKind, Trigger, UiValue};
+use crate::editor::animate::panels::catalogue::*;
 use crate::editor::animate::unit_tests::context::{presentation_app, render as render_body};
 
 #[semio_framework_async_macros::async_test]

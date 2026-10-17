@@ -238,6 +238,6 @@ fn the_text_table_is_the_table_the_oracle_wrote() {
     let actual = crate::standards::v1::subsets::any::io::text::inferences::components::table_json(&inference);
     let problems = crate::standards::v1::subsets::any::schema::inferences::storey_levels::table_problems(TABLE, &actual);
     assert!(problems.is_empty(), "{problems:#?}");
-    let projected = crate::standards::v1::subsets::any::io::text::snapshot::encode_inference_projection_json(&room(), "components").expect("the components projection exists");
+    let projected = crate::standards::v1::subsets::any::io::text::projection::encode_inference_projection_json(&room(), "components").expect("the components projection exists");
     assert_eq!(projected, actual);
 }

@@ -210,7 +210,7 @@ fn install_click_board(board_id: &str) -> (f32, f32) {
 /// the engine's own queued events took the frame pump's coalesced flush.
 fn published_board_actions(board_id: &str, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Vec<(String, Vec<String>)> {
     while publish_board_event_step(board_id, "controller", input) == Ok(true) {}
-    crate::collect_fixture_actions(input)
+    semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(input)
         .iter()
         .map(|action| {
             let rows = (action.action == "applyBoardEvents")
@@ -397,7 +397,7 @@ fn the_frame_pump_drops_the_transient_rows_a_press_queues() {
     board2d_pointer_down_into(board_id, inner, x, y, 0, false, false, &mut input).expect("the press is admitted");
     assert_eq!(with_board_host(board_id, |host| host.focus.hovered_id.clone()).flatten().as_deref(), Some("node-a"), "the press hovers its node");
     assert_eq!(publish_board_event_step(board_id, "controller", &mut input), Ok(false), "the press's hover row is not a board batch");
-    assert!(crate::collect_fixture_actions(&mut input).is_empty(), "nothing was dispatched");
+    assert!(semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input).is_empty(), "nothing was dispatched");
     assert_eq!(with_board_host(board_id, |host| host.outbox.peek_owned_event().is_none()), Some(true), "the engine's queue was drained");
     assert_eq!(ENGINE_SURFACES.with(|cell| cell.borrow().get(board_id).map(|entry| entry.board_pending_events.is_empty())), Some(true), "and the buffer holds no transient row");
     board2d_pointer_up_into(board_id, "controller", inner, x, y, false, false, false, &mut input).expect("the release is admitted");

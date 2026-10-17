@@ -55,7 +55,5 @@ pub fn decode_payload(value: &[u8]) -> Result<ChangeSchema, String> {
 }
 
 //#region 🧪️RoundTrip
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️RoundTrip

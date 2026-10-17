@@ -1,7 +1,7 @@
 //! 📍️ `set-node-positions` — absolute canvas positions of a set of graph nodes in ONE row: the exact undo of a
 //! `move-nodes` drag (every moved node back at its base position) and of itself.
 
-use crate::{EquationMutation, EquationSnapshot};
+use crate::EquationSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Payload
@@ -48,13 +48,16 @@ pub fn equation_targets_invariant(targets: &[String]) -> Result<(), &'static str
     Ok(())
 }
 
-impl protocol::MutationKind<EquationSnapshot, EquationMutation> for SetNodePositions {
+impl<Op> protocol::MutationKind<EquationSnapshot, Op> for SetNodePositions
+where
+    Op: protocol::Mutation<EquationSnapshot, Diff = crate::EquationDiff> + From<SetNodePositions>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "node-positions", kind: "set-node-positions", record: "SetNodePositions" };
 
-    fn diff(&self, base: &EquationSnapshot) -> protocol::MutationOutcome<<EquationMutation as protocol::Mutation<EquationSnapshot>>::Diff> {
+    fn diff(&self, base: &EquationSnapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<EquationSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &EquationSnapshot) -> Result<Vec<EquationMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EquationSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     
@@ -69,6 +72,4 @@ impl protocol::MutationKind<EquationSnapshot, EquationMutation> for SetNodePosit
 }
 //#endregion 🔖️Payload
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

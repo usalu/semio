@@ -1,0 +1,31 @@
+{
+ "parent": "semio-s-artifact-layout-layout-editor-commands",
+ "name": "semio-s-artifact-layout-layout-editor-commands-tests",
+ "dir": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧪️tests/🥣️companion",
+ "files": [
+  "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🧪️tests/🔬️unit/🦀️.rs",
+  "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/👁️preview/🧪️tests/🔬️unit/🦀️.rs",
+  "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📐️blueprint/🎚️config/🧪️tests/🔬️window/🦀️.rs",
+  "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📐️blueprint/🧪️tests/🔬️unit/🦀️.rs",
+  "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📐️blueprint/🪛️utilities/🔄️transform/🧪️tests/🔬️unit/🦀️.rs",
+  "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/👇️canvas-pointer-down/🧪️tests/🔬️unit/🦀️.rs",
+  "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📄️patch-document/🧪️tests/🔬️unit/🦀️.rs",
+  "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📥️canvas-drop/🧪️tests/🔬️unit/🦀️.rs",
+  "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖼️add-frame/🧪️tests/🔬️unit/🦀️.rs",
+  "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗑️delete-selection/🧪️tests/🔬️unit/🦀️.rs",
+  "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧭️gumball/🧪️tests/🔬️unit/🦀️.rs",
+  "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🖼️canvas/🧪️tests/🔬️unit/🦀️.rs"
+ ],
+ "testkit": [
+  "semio-s-artifact-layout-layout-model",
+  "semio-s-artifact-layout-layout-diff",
+  "semio-s-artifact-layout-layout-mutations",
+  "semio-s-artifact-layout-layout-mutations-frames",
+  "semio-s-artifact-layout-layout-mutations-content",
+  "semio-s-artifact-layout-layout-editor-commands",
+  "semio-s-artifact-layout-layout-editor"
+ ],
+ "emoji": "🥣️",
+ "summary": "the unit laws of the layout editor commands, modes, windows and canvas.",
+ "description": "Companion test crate of semio-s-artifact-layout-layout-editor-commands: the unit laws of the layout editor commands, modes, windows and canvas"
+}

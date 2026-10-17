@@ -45,7 +45,5 @@ pub fn sequence_play_labels(view_state: &semio_framework_plugin::ViewModel) -> &
 //#endregion 🔖️Resolvers
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

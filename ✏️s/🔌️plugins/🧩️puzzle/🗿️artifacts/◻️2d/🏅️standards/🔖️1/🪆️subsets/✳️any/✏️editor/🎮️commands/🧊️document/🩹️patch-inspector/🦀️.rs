@@ -1,6 +1,7 @@
 //! 🕸️ `patch-inspector` command.
 
-use crate::editor::puzzle2d::{Puzzle2dActionCtx, Puzzle2dSelectionRecord};
+use crate::editor::puzzle2d::modes::edit::windows::overview::utilities::select::Puzzle2dSelectionRecord;
+use crate::editor::puzzle2d::interaction::Puzzle2dActionCtx;
 use semio_framework_pack_json::Value;
 
 /// 🩹️ Writes one inspector field over the addressed entities. A position `delta` (`x`/`y` stepped by the

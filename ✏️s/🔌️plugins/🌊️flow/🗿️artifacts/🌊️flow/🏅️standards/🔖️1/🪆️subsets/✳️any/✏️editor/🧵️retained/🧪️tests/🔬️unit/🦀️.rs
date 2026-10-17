@@ -1,14 +1,19 @@
-use super::*;
+use semio_framework_test_fixtures::fixture_text;
+
+#[allow(unused_imports)]
+use semio_framework_value::{retained_clone::RetainedCloneProgress, retained_clone::RetainedCloneStep, retirement::controlled::ControlledRetirement, ValueError};
+use crate::editor::flow::retained::{Retirement};
+use crate::editor::flow::retained::*;
 use semio_framework_job::InteractiveJobCloseStep as Step;
 use semio_framework_plugin::retained_command::ArtifactCommandWork;
 use semio_framework_value::RetainedCloneGrant;
 
-fn quoted_grant(work: &super::super::FlowDirectStoreWork, body: usize) -> RetainedCloneGrant {
+fn quoted_grant(work: &crate::editor::flow::FlowDirectStoreWork, body: usize) -> RetainedCloneGrant {
     let copy = work.next_close_copy_byte_demand().expect("quoted copy demand").max(body);
     RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: copy, maximum_capacity_bytes: work.next_close_capacity_byte_demand(copy).expect("quoted capacity demand"), maximum_release_bytes: work.next_close_release_byte_demand().expect("quoted release demand"), maximum_depth: work.next_close_depth_demand().expect("quoted depth demand").max(1) }
 }
 
-fn drain(work: &mut super::super::FlowDirectStoreWork, body: usize) {
+fn drain(work: &mut crate::editor::flow::FlowDirectStoreWork, body: usize) {
     for turn in 0..100_000 {
         if work.terminal_is_empty() {
             return;
@@ -29,7 +34,7 @@ fn drain(work: &mut super::super::FlowDirectStoreWork, body: usize) {
 #[test]
 fn direct_preview_close_finishes_with_quoted_grants() {
     for (value, body) in [("tiny".to_owned(), 4096), ("🌊".repeat(4096), 4096), ("🌊".repeat(4096), 1)] {
-        let mut work = super::super::FlowDirectStoreWork::new("setPreviewOff");
+        let mut work = crate::editor::flow::FlowDirectStoreWork::new("setPreviewOff");
         work.preview_off = Some(vec![value]);
         work.begin_close();
         drain(&mut work, body);
@@ -39,7 +44,7 @@ fn direct_preview_close_finishes_with_quoted_grants() {
 
 #[test]
 fn restore_never_drops_live_retained_owners() {
-    let mut work = super::super::FlowDirectStoreWork::new("setPreviewOff");
+    let mut work = crate::editor::flow::FlowDirectStoreWork::new("setPreviewOff");
     work.preview_off = Some(vec!["owned".into()]);
     assert!(work.restore(&[0; 34]).is_err());
     assert_eq!(work.preview_off.as_ref().unwrap(), &["owned"]);
@@ -50,7 +55,7 @@ fn restore_never_drops_live_retained_owners() {
 
 #[test]
 fn retirement_obeys_language_neutral_grants_and_reaches_terminal_empty() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🧫️grant-frontier/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../🧪️tests/🧫️fixtures/🧫️grant-frontier/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap() {
         let text = row["unit"].as_str().unwrap().repeat(row["repetitions"].as_u64().unwrap() as usize);
         let body = row["grantBytes"].as_u64().unwrap() as usize;

@@ -1,4 +1,5 @@
-pub(crate) fn test_mounted_private_child_frame<A:ArtifactApp,M:SpaceMember+MemberFactory+'static>(app:&mut VcsArtifactApp<A,M>){
+#[doc(hidden)]
+pub fn test_mounted_private_child_frame<A:ArtifactApp,M:SpaceMember+MemberFactory+'static>(app:&mut VcsArtifactApp<A,M>){
     let law:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     let frame=MountedPrivateChildGroup::<M>::frame_birth_bytes();assert!(frame<=262_144);
     let backing=app.child_composition.private_child_groups.empty_backing_byte_demand().unwrap();assert!(backing>0&&backing<=262_144);
@@ -28,7 +29,7 @@ pub(crate) fn test_mounted_private_child_frame<A:ArtifactApp,M:SpaceMember+Membe
             assert!(step.progress().fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));
             if step.progress().released_bytes>0{assert_eq!(step.progress().released_bytes,frame);}
         }
-        assert!(app.child_composition.private_child_groups.get(operation).is_none());caller.retire(source);println!("[DEBUG] Mounted private frame={} originalStablePointer/fundedbirth; bothinlineissuers terminal beforewholeframefree; zero/onebelow retain",frame);
+        assert!(app.child_composition.private_child_groups.get(operation).is_none());caller.retire(source);
     }
     assert!(app.child_composition.private_child_groups.is_empty());assert_eq!(app.child_composition.private_child_group_close_demands(64).unwrap().release_bytes,backing);
     let source:RetainedCloneGrant=serde_json::from_value(law["caller"]["source"].clone()).unwrap();let mut caller=semio_framework_job::OriginalJobFixtureCaller::admit(semio_framework_job::OperationId(7390),semio_framework_job::Generation(1),source,||Some(1),1_000_000,1);

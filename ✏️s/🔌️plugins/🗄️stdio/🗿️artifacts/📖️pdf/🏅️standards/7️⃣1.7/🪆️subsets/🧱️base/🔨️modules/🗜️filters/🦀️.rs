@@ -5,7 +5,7 @@
 //! inverse and yields the bytes and `/Filter`/`/DecodeParms` entries to write.
 
 use crate::standards::v1_7::subsets::base::modules::lexer::{dict_get, is_ws, hex_val};
-use crate::standards::v1_7::subsets::base::io::{malformed, PResult, PdfEngineError};
+use crate::standards::v1_7::subsets::base::io::error::{malformed, PResult, PdfEngineError};
 use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfCcittParameters, PdfDictEntry, PdfObject, PdfPredictor, PdfStreamFilter};
 
 //#region 🔖️Ascii
@@ -609,7 +609,5 @@ pub fn encode_stream(data: &[u8], filters: &[PdfStreamFilter]) -> (Vec<u8>, Vec<
 //#endregion 🔖️Pipeline
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

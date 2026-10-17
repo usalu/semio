@@ -409,6 +409,3 @@ pub fn layout_transform_tool_preview(document: &LayoutSnapshot, state: &LayoutTr
 }
 //#endregion 🛠️TransformTool
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;

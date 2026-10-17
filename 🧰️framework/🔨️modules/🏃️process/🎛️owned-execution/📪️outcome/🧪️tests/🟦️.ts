@@ -23,10 +23,9 @@ test("actual owned command failures retain canonical terminal outcomes against i
       expect(admits(expected)).toBe(true); expect(expected).toEqual({ version: 1, status: row.status, signal: row.signal });
       observations.push({ id: row.id, outcome, failed, failure, expected, lines });
     }
-    console.log("[DEBUG] " + JSON.stringify(observations));
     const reader = Reflect.get(owned, "readOwnedCommandOutcome");
     expect(typeof reader, "Canonical first-party outcome reader required").toBe("function");
-    for (const row of corpus.cases) { if (row.accepted) expect(reader(row.value)).toBe(row.value); else expect(() => reader(row.value)).toThrow(); }
+    for (const row of corpus.cases) { if (row.accepted) expect(Object.is(reader(row.value), row.value)).toBe(true); else expect(() => reader(row.value)).toThrow(); }
     for (const row of observations) {
       expect(row.lines).toContain("[DEBUG] original " + row.id); expect(row.lines).toContain("[DEBUG] original stderr " + row.id);
       expect(row.failed).toBe(row.id !== "complete");

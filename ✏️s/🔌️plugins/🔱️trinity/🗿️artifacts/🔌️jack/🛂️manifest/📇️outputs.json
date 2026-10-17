@@ -15,7 +15,8 @@
     {
       "id": "nakagin",
       "rust": "🏢️nakagin/🦀️.rs",
-      "typescript": "🏢️nakagin/🟦️.ts"
+      "typescript": "🏢️nakagin/🟦️.ts",
+      "rustOwner": "semio_s_artifact_trinity_jack_model::standards::v1::subsets::any::schema::graph_manifest::nakagin"
     }
   ]
 }

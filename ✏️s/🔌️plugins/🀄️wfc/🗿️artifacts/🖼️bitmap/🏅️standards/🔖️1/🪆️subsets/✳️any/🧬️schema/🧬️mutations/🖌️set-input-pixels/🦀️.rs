@@ -4,7 +4,6 @@
 //! raster's `patch-layer` keep.
 
 use crate::diff::BitmapDiff;
-use crate::mutations::BitmapMutation;
 use crate::schema::snapshot::BitmapSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -24,17 +23,23 @@ pub struct SetInputPixels {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn set_input_pixels(x: u32, y: u32, width: u32, height: u32, pixels: Vec<u8>) -> BitmapMutation {
-    BitmapMutation::SetInputPixels(SetInputPixels { x, y, width, height, pixels })
+pub fn set_input_pixels<Op>(x: u32, y: u32, width: u32, height: u32, pixels: Vec<u8>) -> Op
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::set_input_pixels::SetInputPixels>,
+{
+    Op::from(SetInputPixels { x, y, width, height, pixels })
 }
 
-impl MutationKind<BitmapSnapshot, BitmapMutation> for SetInputPixels {
+impl<Op> MutationKind<BitmapSnapshot, Op> for SetInputPixels
+where
+    Op: protocol::Mutation<BitmapSnapshot, Diff = BitmapDiff> + From<SetInputPixels>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "input-pixels", kind: "set-input-pixels", record: "SetInputPixels" };
 
     fn diff(&self, base: &BitmapSnapshot) -> protocol::MutationOutcome<BitmapDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &BitmapSnapshot) -> Result<Vec<BitmapMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &BitmapSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

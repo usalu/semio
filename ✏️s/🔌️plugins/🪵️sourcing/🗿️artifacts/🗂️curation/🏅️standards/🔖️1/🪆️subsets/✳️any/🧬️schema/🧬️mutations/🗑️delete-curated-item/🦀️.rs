@@ -1,6 +1,5 @@
 //! 🗑️ Direct `delete-curated-item` mutation owner: removes an id-keyed curated selection.
 use crate::diff::CurationDiff;
-use crate::mutations::SourcingMutation;
 use crate::CurationSnapshot;
 
 //#region 🔖️Mutation
@@ -16,17 +15,23 @@ pub struct DeleteCuratedItem {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn delete_curated_item(object_id: String) -> SourcingMutation {
-    SourcingMutation::DeleteCuratedItem(DeleteCuratedItem { object_id })
+pub fn delete_curated_item<Op>(object_id: String) -> Op
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::delete_curated_item::DeleteCuratedItem>,
+{
+    Op::from(DeleteCuratedItem { object_id })
 }
 
-impl protocol::MutationKind<CurationSnapshot, SourcingMutation> for DeleteCuratedItem {
+impl<Op> protocol::MutationKind<CurationSnapshot, Op> for DeleteCuratedItem
+where
+    Op: protocol::Mutation<CurationSnapshot, Diff = CurationDiff> + From<DeleteCuratedItem> + From<crate::standards::v1::subsets::any::schema::mutations::create_curated_item::CreateCuratedItem>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "curated-item", kind: "delete-curated-item", record: "DeletedCuratedItem" };
 
     fn diff(&self, base: &CurationSnapshot) -> protocol::MutationOutcome<CurationDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &CurationSnapshot) -> Result<Vec<SourcingMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &CurationSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

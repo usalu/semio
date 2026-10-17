@@ -1,7 +1,7 @@
 //! 💡️ `open-handle-suggestions` command.
 
 use crate::editor::puzzle2d::config::Puzzle2dSuggestionMenu;
-use {crate::editor::puzzle2d::snapshot::puzzle2d_window_and_measures_scope, crate::editor::puzzle2d::Puzzle2dActionCtx};
+use {crate::editor::puzzle2d::snapshot::puzzle2d_window_and_measures_scope, crate::editor::puzzle2d::interaction::Puzzle2dActionCtx};
 use semio_framework_pack_json::Value;
 
 /// 💡️ One-shot placement popup over an open handle: enters the board host's brush slot — which

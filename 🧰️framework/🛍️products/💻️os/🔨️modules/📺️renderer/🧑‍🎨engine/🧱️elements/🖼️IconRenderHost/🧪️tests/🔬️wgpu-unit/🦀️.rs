@@ -3,7 +3,8 @@
 //! re-rasterise on a post-boot scale change"). The glyph atlas already re-rasterises lazily per
 //! glyph; this is the icon half, paid across frames instead of in one resize step.
 
-use super::*;
+use semio_framework_canvas::icon_pack;
+use super::{ATLAS_COLS, ICON_ATLAS_TEXTURE_SIZE, ICON_RASTER_STEP_BUDGET, ICON_SIZE, IconAtlasRebuild, IconAtlasRebuildStep, build_icon_atlas_scaled, icon_atlas_source_count};
 use semio_framework_canvas::{install_runtime_assets, RuntimeAsset, RuntimeAssets, RuntimeAssetsInstallError};
 use std::sync::OnceLock;
 

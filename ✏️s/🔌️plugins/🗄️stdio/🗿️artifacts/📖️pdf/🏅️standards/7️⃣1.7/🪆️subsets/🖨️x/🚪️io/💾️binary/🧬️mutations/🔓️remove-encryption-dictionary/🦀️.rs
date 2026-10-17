@@ -1,6 +1,6 @@
 //! 🔓️ Direct binary codec for `remove-encryption-dictionary`.
 
-use crate::standards::v1_7::subsets::x::schema::mutations::RemoveEncryptionDictionary;
+use crate::standards::v1_7::subsets::x::schema::mutations::remove_encryption_dictionary::RemoveEncryptionDictionary;
 
 //#region 🔖️Identity
 pub const TAG: u8 = 1;
@@ -21,7 +21,5 @@ pub fn decode(bytes: &[u8]) -> Result<RemoveEncryptionDictionary, String> {
 //#endregion 🔖️Codec
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

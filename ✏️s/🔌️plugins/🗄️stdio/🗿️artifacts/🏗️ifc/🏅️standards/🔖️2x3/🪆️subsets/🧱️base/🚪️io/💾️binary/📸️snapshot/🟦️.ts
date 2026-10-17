@@ -49,5 +49,5 @@ export const stdioIfc2x3BaseSnapshotBinaryGuardConstant = <T extends string | nu
 //#endregion 🚪️Parsers
 
 export function parseIfc2x3SnapshotBinary(value: unknown, at = "$"): Ifc2x3SnapshotBinary {
-  return stdioIfc2x3BaseSnapshotBinaryGuardObject(value, `${at}`);
+  return value instanceof Uint8Array ? value : stdioIfc2x3BaseSnapshotBinaryGuardReject(at, "value is not a byte array");
 }

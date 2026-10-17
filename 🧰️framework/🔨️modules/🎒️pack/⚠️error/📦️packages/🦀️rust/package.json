@@ -10,5 +10,8 @@
   },
   "devDependencies": {
     "@semio-tech/process": "workspace:*"
+  },
+  "dependencies": {
+    "@semio-tech/framework-diagnostic-ts": "workspace:*"
   }
 }

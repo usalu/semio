@@ -2,6 +2,8 @@
 //!
 //! 🧭️ The tests read the chart through its public API and read every fixture and schema document at run time from the print product directory, so no document is compiled into the test closure.
 #![cfg(test)]
+use semio_framework_test_fixtures::fixture_path;
+
 extern crate semio_framework_os_kernel as protocol;
 
 use std::{collections::HashMap, path::{Path, PathBuf}, sync::{Mutex, OnceLock}};
@@ -10,7 +12,7 @@ pub use semio_framework_print::*;
 
 pub fn product_directory() -> &'static Path {
     static DIRECTORY: OnceLock<PathBuf> = OnceLock::new();
-    DIRECTORY.get_or_init(|| Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../.."))
+    DIRECTORY.get_or_init(|| fixture_path!("../../../.."))
 }
 
 fn leaked(relative: &str) -> &'static [u8] {

@@ -13,7 +13,8 @@
     "editorInputs",
     "fixedBuildFiles",
     "packageRouting",
-    "editorAnswers"
+    "editorAnswers",
+    "ciDependencies"
   ],
   "properties": {
     "packageRouting": {
@@ -264,6 +265,56 @@
           "repoBuildProjects": {
             "type": "string",
             "minLength": 1
+          }
+        }
+      }
+    },
+    "ciDependencies": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "jobs",
+        "command",
+        "cases"
+      ],
+      "properties": {
+        "path": {
+          "const": ".github/workflows/architecture-quiz.yml"
+        },
+        "jobs": {
+          "const": [
+            "site",
+            "proctor"
+          ]
+        },
+        "command": {
+          "const": "bun repo dependencies sync --scope ."
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 8,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "command",
+              "accepted"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "command": {
+                "type": "string",
+                "minLength": 1
+              },
+              "accepted": {
+                "type": "boolean"
+              }
+            }
           }
         }
       }

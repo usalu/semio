@@ -35,11 +35,14 @@ pub fn plan(p: &GltfBindMorphTargetAttributePayload, base: &GltfSnapshot) -> Res
     Ok(GltfDiff { meshes: primitive_patch(p.mesh, p.primitive, GltfPrimitiveDiff { targets: Some(rows), ..Default::default() }), ..Default::default() })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn inverse(p: &GltfBindMorphTargetAttributePayload, base: &GltfSnapshot) -> Vec<super::GltfMutation> {
+pub fn inverse<Op>(p: &GltfBindMorphTargetAttributePayload, base: &GltfSnapshot) -> Vec<Op>
+where
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::remove_used_extension::RemoveUsedExtensionMutation>,
+{
     if validate(p, base).is_err() {
         return Vec::new();
     }
-    vec![super::unbind_morph_target_attribute::mutation(super::unbind_morph_target_attribute::GltfUnbindMorphTargetAttributePayload { mesh: p.mesh, primitive: p.primitive, target: p.target, semantic: p.semantic.clone() })]
+    vec![crate::standards::v2_0::subsets::any::schema::mutations::unbind_morph_target_attribute::mutation(crate::standards::v2_0::subsets::any::schema::mutations::unbind_morph_target_attribute::GltfUnbindMorphTargetAttributePayload { mesh: p.mesh, primitive: p.primitive, target: p.target, semantic: p.semantic.clone() })]
 }
 
 //#region 🧬️DirectMutation
@@ -52,11 +55,17 @@ pub enum BindMorphTargetAttributeMutation {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn mutation(payload: GltfBindMorphTargetAttributePayload) -> super::GltfMutation {
-    super::GltfMutation::BindMorphTargetAttribute(BindMorphTargetAttributeMutation::Apply(payload))
+pub fn mutation<Op>(payload: GltfBindMorphTargetAttributePayload) -> Op
+where
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::bind_morph_target_attribute::BindMorphTargetAttributeMutation>,
+{
+    Op::from(BindMorphTargetAttributeMutation::Apply(payload))
 }
 
-impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for BindMorphTargetAttributeMutation {
+impl<Op> protocol::MutationKind<GltfSnapshot, Op> for BindMorphTargetAttributeMutation
+where
+    Op: protocol::Mutation<GltfSnapshot, Diff = GltfDiff> + From<BindMorphTargetAttributeMutation>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "bind", entity: "morph-target-attribute", kind: "bind-morph-target-attribute", record: "BoundMorphTargetAttribute" };
 
     fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<GltfDiff> {
@@ -68,7 +77,7 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for BindMorphTarg
         }
     }
 
-    fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<super::GltfMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         match self {
             Self::Apply(payload) => Ok(inverse(payload, base)),
         }
@@ -85,7 +94,5 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for BindMorphTarg
 //#endregion 🧬️DirectMutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔗️binds-position-98e14f/🦀️.rs"]
-mod case_binds_position_98e14f;
+
 //#endregion 🧪️Tests

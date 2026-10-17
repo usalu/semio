@@ -37,3 +37,4 @@ serde_json.workspace = true
 semio-framework-trace.workspace = true
 semio-framework-3d-brep-sweep.workspace = true
 semio-framework-3d-testing-support = { path = "../../../../../🧪️tests/🧰️support/📦️packages/🦀️rust" }
+semio-framework-test-fixtures = { path = "../../../../../../🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }

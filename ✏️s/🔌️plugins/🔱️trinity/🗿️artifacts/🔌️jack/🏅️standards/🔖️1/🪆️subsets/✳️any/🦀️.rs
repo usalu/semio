@@ -9,7 +9,7 @@
 //! added to `🚪️io/🦀️.rs`. This packet (`fleet-trinity-recipe`) was scoped to EXCLUDE every
 //! path containing `🚪️io/` — a live peer packet (`io-async-signatures`) is mid-sweep rewriting that
 //! exact file this minute. `io_declaration()` below is the same `IoDeclaration` shape, built here
-//! instead: `native` is real (reuses `crate::pilot_languages()`'s already-real
+//! instead: `native` is real (reuses `crate::standards::v1::subsets::any::registration::pilot_languages()`'s already-real
 //! grammar/protocol pairs, unchanged, and a real `store::bare_artifact_codec::<JackSnapshot,
 //! TrinityGraphMutation>(...)`), but `entries: &[]` — the foreign-format hops (svg/csv/md/png/json
 //! import+export) stay UNREGISTERED on the new `io_mechanism` channel. Converting them requires
@@ -26,7 +26,8 @@ use crate::editor::jack as editor;
 use crate::standards::v1::subsets::any::schema;
 use crate::standards::v1::subsets::any::schema::mutations::TrinityGraphMutation;
 use crate::viewer::jack as viewer;
-use crate::{JackSnapshot, TRINITY_GRAPH_SCHEMA, TRINITY_JACK_DIALECT};
+use crate::standards::v1::subsets::any::schema::snapshot::JackSnapshot;
+use crate::standards::v1::subsets::any::schema::graph::{TRINITY_GRAPH_SCHEMA, TRINITY_JACK_DIALECT};
 use semio_framework_plugin::app::declarations::{editor_surface, viewer_surface, IoDeclaration, LanguagePair, NativeCodecs, SchemaDeclaration, SubsetDeclaration};
 use semio_framework_plugin::ExampleSource;
 use std::sync::OnceLock;
@@ -39,8 +40,8 @@ fn inference_descriptors() -> &'static [::semio_framework_schema_registry::Artif
 /// 🚪️ See this file's own module doc for why this is not `io::io()`. `pilot_languages()` indices
 /// are fixed by that function's own literal `vec![document, op, diff, pack, spr]` order — the same
 /// role→slot mapping `🗒️note`'s `io()` uses for its own five-language array.
-fn io_declaration<C:crate::JackComposition>() -> IoDeclaration {
-    let langs = crate::pilot_languages();
+pub fn io_declaration<C:crate::standards::v1::subsets::any::schema::composition::JackComposition>() -> IoDeclaration {
+    let langs = crate::standards::v1::subsets::any::registration::pilot_languages();
     IoDeclaration {
         native: NativeCodecs {
             snapshot: LanguagePair { text: Some(&langs[0]), binary: Some(&langs[3]) },
@@ -54,7 +55,7 @@ fn io_declaration<C:crate::JackComposition>() -> IoDeclaration {
 }
 
 /// 🌳️ `standard "1" / subset "any"`'s complete declaration — the only subset this artifact has.
-pub fn subset<PA: crate::ArtifactApps<C>,C:crate::JackComposition>() -> SubsetDeclaration<PA> {
+pub fn subset<PA: crate::standards::v1::subsets::any::registration::ArtifactApps<C>,C:crate::standards::v1::subsets::any::schema::composition::JackComposition>() -> SubsetDeclaration<PA> {
     SubsetDeclaration {
         dialect: TRINITY_JACK_DIALECT,
         schema: SchemaDeclaration { descriptor: schema::jack_artifact_schema_descriptor(), inferences: inference_descriptors(), inference_services: Vec::new() },

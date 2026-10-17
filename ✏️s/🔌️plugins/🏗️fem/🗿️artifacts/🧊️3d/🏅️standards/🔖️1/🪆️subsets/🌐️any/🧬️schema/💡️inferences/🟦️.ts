@@ -34,6 +34,10 @@ type femFem3dInferenceGuardSizeBounds = { readonly minItems?: number; readonly m
 
 export const femFem3dInferenceGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : femFem3dInferenceGuardReject(at, "value is not an object");
+export const femFem3dInferenceGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) femFem3dInferenceGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const femFem3dInferenceGuardArray = (value: unknown, at: string, bounds: femFem3dInferenceGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return femFem3dInferenceGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) femFem3dInferenceGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -64,22 +68,22 @@ export const femFem3dInferenceGuardConstant = <T extends string | number | boole
 //#endregion 🚪️Parsers
 
 export function parseFem3dInference(value: unknown, at = "$"): Fem3dInference {
-  const row = femFem3dInferenceGuardObject(value, at);
+  const row = femFem3dInferenceGuardClosed(femFem3dInferenceGuardObject(value, at), at, ["bounds"]);
   return {
     bounds: parseFem3dBounds(row["bounds"], `${at}.bounds`),
   };
 }
 
 export function parseFem3dBoundingBox(value: unknown, at = "$"): Fem3dBoundingBox {
-  const row = femFem3dInferenceGuardObject(value, at);
+  const row = femFem3dInferenceGuardClosed(femFem3dInferenceGuardObject(value, at), at, ["min", "max"]);
   return {
-    min: femFem3dInferenceGuardArray(row["min"], `${at}.min`, {"minItems": 3, "maxItems": 3}).map((item, index) => femFem3dInferenceGuardNumber(item, `${at}.min[${index}]`)),
-    max: femFem3dInferenceGuardArray(row["max"], `${at}.max`, {"minItems": 3, "maxItems": 3}).map((item, index) => femFem3dInferenceGuardNumber(item, `${at}.max[${index}]`)),
+    min: ((items0) => [femFem3dInferenceGuardNumber(items0[0], `${at}.min[0]`), femFem3dInferenceGuardNumber(items0[1], `${at}.min[1]`), femFem3dInferenceGuardNumber(items0[2], `${at}.min[2]`)])(femFem3dInferenceGuardArray(row["min"], `${at}.min`, {"minItems": 3, "maxItems": 3})),
+    max: ((items0) => [femFem3dInferenceGuardNumber(items0[0], `${at}.max[0]`), femFem3dInferenceGuardNumber(items0[1], `${at}.max[1]`), femFem3dInferenceGuardNumber(items0[2], `${at}.max[2]`)])(femFem3dInferenceGuardArray(row["max"], `${at}.max`, {"minItems": 3, "maxItems": 3})),
   };
 }
 
 export function parseFem3dBounds(value: unknown, at = "$"): Fem3dBounds {
-  const row = femFem3dInferenceGuardObject(value, at);
+  const row = femFem3dInferenceGuardClosed(femFem3dInferenceGuardObject(value, at), at, ["boundingBox", "nodeCount", "elementCount"]);
   return {
     boundingBox: parseFem3dBoundingBox(row["boundingBox"], `${at}.boundingBox`),
     nodeCount: femFem3dInferenceGuardInteger(row["nodeCount"], `${at}.nodeCount`, {"minimum": 0}),

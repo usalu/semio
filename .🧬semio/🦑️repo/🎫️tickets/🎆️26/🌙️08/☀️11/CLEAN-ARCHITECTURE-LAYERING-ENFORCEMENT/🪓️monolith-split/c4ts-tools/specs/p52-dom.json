@@ -1,0 +1,12 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🎤️presentation/🧪️tests/🖱️interaction-dom/🟦️.tsx",
+ "describeLine": 14,
+ "kit": {"dir": "🧱️interaction-dom-kit", "doc": "/** 🧱️ Shared fixtures and pointer helpers of the interaction DOM suites: the test PDF port, the positioned and two-slide decks, click, drag, rect mocking and the PDF canvas wait. */", "lines": [[17,181]]},
+ "shared": [[15,15],[183,187],[189,193]],
+ "children": [
+  {"dir": "🌊️flow-disposition-interaction", "doc": "/** 🌊️ The presentation react deck, interaction DOM of intro flow dispositions: pixel-offset drag, auto-animate morph pairing, flow resize and flow enlarge. */", "lines": [[304,564]]},
+  {"dir": "🎯️canvas-disposition-interaction", "doc": "/** 🎯️ The presentation react deck, interaction DOM of canvas dispositions: dragging, drag previews, resizing, chrome alignment and enlarging on the arrangement canvas. */", "lines": [[566,895]]},
+  {"dir": "♻️enlarge-and-reset-interaction", "doc": "/** ♻️ The presentation react deck, interaction DOM of leaving enlarge and resetting: the corner control, the icon hit target, kept enlarge, navigation and the reset controls. */", "lines": [[897,1089]]},
+  {"dir": "📄️pdf-and-figure-interaction", "doc": "/** 📄️ The presentation react deck, interaction DOM of PDF and figure dispositions: cover scale, enlarged sizing, page navigation and cropped figure enlarge. */", "lines": [[1091,1442]]}
+ ]
+}

@@ -1,12 +1,12 @@
 /** 🚨️ Document actor recovery in the worker: in-flight batches return to the outbox, catch-up gates input and a refusing child reopens. */
 import type { BackboneWorkerTestDependencies } from "../../🔨️modules/🏪️store/👷️worker/🟦️.ts";
-import { workerLawFakesV1 } from "../🧰️worker-law-fakes/🟦️.ts";
+import { workerLawFakesV1, WORKER_LAW_ACTOR_IDENTITY_GRANT } from "../🧰️worker-law-fakes/🟦️.ts";
 import type { TestSource } from "../🧰️worker-law-fakes/🟦️.ts";
 
 type ArtifactActorConfig = import("../../🟦️.ts").ArtifactActorConfig;
 type ArtifactState = import("../../🔨️modules/🏪️store/👷️worker/🟦️.ts").ArtifactState;
 type BackboneWorkerResponse = import("../../🟦️.ts").BackboneWorkerResponse;
-type MutationEnvelope = import("../../../../🔨️modules/📡️replication/🟦️.ts").MutationEnvelope;
+type MutationEnvelope = import("@semio-tech/framework-replication").MutationEnvelope;
 type Vitest = NonNullable<ImportMeta["vitest"]>;
 
 export async function registerDocumentActorRecoveryWorkerTests(vitest: Vitest, dependencies: BackboneWorkerTestDependencies, source: TestSource): Promise<void> {
@@ -17,7 +17,7 @@ export async function registerDocumentActorRecoveryWorkerTests(vitest: Vitest, d
     beforeEach(resetWorkerLaw);
     it("returns in-flight batches to the outbox front in batch order, never twice, retires the child as actor-lost and reconnects at once; past the bound it posts the typed exhausted fault", () => {
       const requestRecovery = dependencies.requestDocumentActorRecoveryV1;
-      const config: ArtifactActorConfig = { documentId: "d", schema: "demo/v1", bindings: [{ kind: "hub", dataClass: "persistedShared", baseUrl: "http://hub.test", spaceId: "space-1" }], actor: "local" };
+      const config: ArtifactActorConfig = { documentId: "d", schema: "demo/v1", bindings: [{ kind: "hub", dataClass: "persistedShared", baseUrl: "http://hub.test", spaceId: "space-1" }], actor: "local", actorIdentityGrant: WORKER_LAW_ACTOR_IDENTITY_GRANT };
       const state: ArtifactState = { ...newArtifactState(config, documentRuntimeKeyForConfig(config), { postMessage() {}, close() {} } as unknown as BroadcastChannel, "client-1"), actor: "local" };
       const envelope = (id: string) => ({ id }) as unknown as MutationEnvelope;
       const mount = () => {
@@ -70,7 +70,7 @@ export async function registerDocumentActorRecoveryWorkerTests(vitest: Vitest, d
       const decoded = decodeServerFrame(serverFrame).frame;
       const exactBatch = extractServerCommandsDocumentBackboneBatchExact(serverFrame);
       if (typeof decoded === "string" || !("Commands" in decoded) || exactBatch === null) throw new Error("expected exact server Commands frame");
-      const config: ArtifactActorConfig = { documentId: "d", schema: "demo/v1", bindings: [{ kind: "hub", dataClass: "persistedShared", baseUrl: "http://hub.test", spaceId: "space-1" }], actor: "local" };
+      const config: ArtifactActorConfig = { documentId: "d", schema: "demo/v1", bindings: [{ kind: "hub", dataClass: "persistedShared", baseUrl: "http://hub.test", spaceId: "space-1" }], actor: "local", actorIdentityGrant: WORKER_LAW_ACTOR_IDENTITY_GRANT };
       const state: ArtifactState = { ...newArtifactState(config, documentRuntimeKeyForConfig(config), { postMessage() {}, close() {} } as unknown as BroadcastChannel, "client-1"), actor: "local" };
       const confirmed = { document_id: "d", head_edit_ordinal: 4, head_edit_id: "edit-4", last_commit_seq: 4, chain_hash: new Array(32).fill(4) };
       state.frontier = confirmed;

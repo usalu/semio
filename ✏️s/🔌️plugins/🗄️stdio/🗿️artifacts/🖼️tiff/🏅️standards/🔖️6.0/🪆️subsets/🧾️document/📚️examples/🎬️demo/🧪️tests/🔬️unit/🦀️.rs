@@ -1,4 +1,4 @@
-use super::*;
+use crate::standards::v6_0::subsets::document::examples::demo::*;
 #[semio_framework_async_macros::async_test]
 async fn demo_source_nonempty() {
     assert!(!PRIMARY_TEXT.is_empty());
@@ -9,7 +9,6 @@ async fn demo_source_nonempty() {
     let demo=crate::schema::demo_tiff_snapshot();assert_eq!(literal,demo);
     let packed=include_bytes!("../../🖼️assets/🎒️.pack.semio");assert_eq!(pack::snapshot::ArtifactPack::encode_pack(&demo),packed,"shipped TIFF Pack must represent the authored demo owner");
     assert_eq!(<crate::TiffSnapshot as pack::snapshot::ArtifactPack>::decode_pack(packed).expect("current authored TIFF Pack fixture"),demo);
-    eprintln!("[DEBUG] TIFF current literal demo matches complete genuine native owner ifds={}", literal.ifds.len());
 }
 
 /// 🧪️ Ticket 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING's

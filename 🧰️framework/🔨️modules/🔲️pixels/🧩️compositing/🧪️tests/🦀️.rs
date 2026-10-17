@@ -91,6 +91,5 @@ fn compositor_actual_owner_retirement_neutral_interruptions(){
         assert!(retired.owner.original().is_none());assert!(work>0);let p=retired.advance(1).unwrap();assert_eq!(p.work,work);assert!(p.done);assert_eq!(p.phase,"complete");
         for(image,bytes)in shared.images.values().zip(&before){assert_eq!(&image.pixels,bytes);assert_eq!(Arc::strong_count(image),1);}
         if let Some(actual)=output.map(|v|v.pixels).or(published){let expected=if source["expected"].is_array(){bytes(&source["expected"])}else{source["runs"].as_array().unwrap().iter().flat_map(|r|bytes(&r["pixel"]).repeat(r["count"].as_u64().unwrap() as usize)).collect()};assert_eq!(actual,expected);}
-        eprintln!("[DEBUG] Actual native compositor retirement {}: grant={grant} work={work} terminal_empty=true commands={commands} buffers={buffers}",row["name"]);
     }}
 }

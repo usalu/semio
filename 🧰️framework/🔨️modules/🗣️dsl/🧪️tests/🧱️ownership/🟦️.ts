@@ -6,8 +6,8 @@ import JSON5Codec from "json5";
 import { parse as parseJsonDocument, type ParseError } from "jsonc-parser";
 import TOML from "@iarna/toml";
 import { createToken, Lexer } from "chevrotain";
-import { diagnosticFaultFixtureUrl } from "../../../⚠️diagnostic/🧪️tests/🧫️fixtures/🟦️.ts";
-import { readModuleTreeSource } from "../../../📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
+import { diagnosticFaultFixtureUrl } from "@semio-tech/framework-diagnostic-ts/testing/fixtures";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 
 const JSON5: Readonly<{parse(text: string): unknown}> = JSON5Codec;
 

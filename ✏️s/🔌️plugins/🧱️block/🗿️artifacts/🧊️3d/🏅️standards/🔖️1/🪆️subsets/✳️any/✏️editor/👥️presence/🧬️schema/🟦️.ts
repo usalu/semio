@@ -24,6 +24,10 @@ type block3dPresenceGuardSizeBounds = { readonly minItems?: number; readonly max
 
 export const block3dPresenceGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : block3dPresenceGuardReject(at, "value is not an object");
+export const block3dPresenceGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) block3dPresenceGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const block3dPresenceGuardArray = (value: unknown, at: string, bounds: block3dPresenceGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return block3dPresenceGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) block3dPresenceGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -54,7 +58,7 @@ export const block3dPresenceGuardConstant = <T extends string | number | boolean
 //#endregion 🚪️Parsers
 
 export function parseBlock3dPresence(value: unknown, at = "$"): Block3dPresence {
-  const row = block3dPresenceGuardObject(value, at);
+  const row = block3dPresenceGuardClosed(block3dPresenceGuardObject(value, at), at, ["selectedIds", "hoveredVortexFullId"]);
   return {
     selectedIds: block3dPresenceGuardArray(row["selectedIds"], `${at}.selectedIds`).map((item, index) => block3dPresenceGuardString(item, `${at}.selectedIds[${index}]`)),
     hoveredVortexFullId: row["hoveredVortexFullId"] === undefined ? undefined : block3dPresenceGuardString(row["hoveredVortexFullId"], `${at}.hoveredVortexFullId`),

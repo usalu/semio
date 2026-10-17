@@ -1,3 +1,4 @@
+use semio_framework_test_fixtures::fixture_path;
 use semio_s_artifact_norm_iso16757_inferences::*;
 use semio_s_plugin_norm_compliance::{CheckStatus, QuantityKind};
 use semio_s_artifact_norm_iso16757_model::part_2::{BoundingBox, SpaceKind};
@@ -106,7 +107,7 @@ async fn emitted_subject_and_remedy_paths_parse_and_resolve() {
 }
 
 fn family_any_dir() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️1/🪆️subsets/✳️any")
+    fixture_path!("../../🏅️standards/🔖️1/🪆️subsets/✳️any")
 }
 
 fn family_oracle_script() -> PathBuf {

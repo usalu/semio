@@ -34,7 +34,6 @@ fn neutral_link_codec_matches_independent_serde_and_all_pin_branches() {
             }
         }
     }
-    eprintln!("[DEBUG] Three exact durable link branches and six refusals agree with independent typed Serde");
 }
 
 #[test]
@@ -65,5 +64,4 @@ fn full_native_link_codec_preserves_schema_branch_control_and_u64() {
         let mut deny=|_|false;
         assert!(<ArtifactLink as DslField>::to_value_controlled(&link,&mut NativeEncodeControl::new(65536,&mut deny)).is_err());
     }
-    eprintln!("[DEBUG] Complete native link owner preserves record schema, exact u64, cancellation and unknown-field refusal");
 }

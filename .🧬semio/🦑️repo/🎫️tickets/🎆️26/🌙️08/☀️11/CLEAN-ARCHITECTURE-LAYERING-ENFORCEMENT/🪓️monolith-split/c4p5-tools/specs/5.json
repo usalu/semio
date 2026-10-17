@@ -1,0 +1,118 @@
+{
+ "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+ "original": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/🗑️generated/c4p5-orig/5.rs",
+ "stage": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/🗑️generated/c4p5-stage",
+ "descendants": [
+  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🦀️.rs",
+  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🦀️.rs"
+ ],
+ "chunks": [
+  {
+   "name": "retained_commands",
+   "folder": "🧰️retained-commands",
+   "doc": "🧰️ Retained commands: the tool id catalog, the retained command job factory with its publication contracts and the bounded first-step proofs.",
+   "segments": [
+    {
+     "lines": [
+      133,
+      327
+     ],
+     "before": [
+      "//#region 🧵️RetainedCommands"
+     ],
+     "after": [
+      "//#endregion 🧵️RetainedCommands"
+     ]
+    },
+    {
+     "lines": [
+      666,
+      706
+     ],
+     "before": [
+      "//#region 📜️ToolProofs"
+     ],
+     "after": [
+      "//#endregion 📜️ToolProofs"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "store_preparation",
+   "folder": "📬️store-preparation",
+   "doc": "📬️ Store preparation: the one-item publication preparation of the Config lane and of the Artifact lane.",
+   "segments": [
+    {
+     "lines": [
+      331,
+      662
+     ],
+     "before": [
+      "//#region 📬️StorePreparation"
+     ],
+     "after": [
+      "//#endregion 📬️StorePreparation"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "clipboard_job",
+   "folder": "✂️clipboard-job",
+   "doc": "✂️ Clipboard job: the one-step reserved copy, cut and paste job and the cut operations.",
+   "segments": [
+    {
+     "lines": [
+      709,
+      851
+     ]
+    },
+    {
+     "lines": [
+      1916,
+      1925
+     ]
+    }
+   ]
+  },
+  {
+   "name": "play_app",
+   "folder": "🧩️play-app",
+   "doc": "🧩️ Play app: `Puzzle3dPlayApp`, the `ArtifactEditor` the framework mounts, and its context menu, render and window measure bodies.",
+   "segments": [
+    {
+     "lines": [
+      853,
+      1364
+     ]
+    },
+    {
+     "lines": [
+      1832,
+      1911
+     ]
+    }
+   ]
+  },
+  {
+   "name": "manifest",
+   "folder": "📋️manifest",
+   "doc": "📋️ Manifest: the typed media I/O, the interaction definition, the shipped object kinds and `create_puzzle3d_app`.",
+   "segments": [
+    {
+     "lines": [
+      1369,
+      1827
+     ],
+     "before": [
+      "//#region 🔖️Manifest"
+     ],
+     "after": [
+      "//#endregion 🔖️Manifest"
+     ]
+    }
+   ]
+  }
+ ]
+}

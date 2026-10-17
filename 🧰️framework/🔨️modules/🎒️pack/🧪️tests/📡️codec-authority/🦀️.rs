@@ -56,7 +56,6 @@ fn actual_retained_deflate_syntax_lifecycle_and_requested_ceiling_are_distinct()
  }
  let ceiling=match DeflateRetainedCursor::try_new(1,1,0){Ok(mut cursor)=>{close_authority_cursor(&mut cursor);panic!("declared retained ceiling accepted")},Err(error)=>error};
  assert_eq!(Some(ceiling.kind()),Some(ValueRefusalKind::OwnershipLimit));
- eprintln!("[DEBUG] Pack retained actual syntax/lifecycle/ceiling producers remained distinct");
 }
 
 #[test]
@@ -70,7 +69,6 @@ fn public_pack_primitives_and_replication_share_the_defining_error_identity(){
         let container:crate::PackRefusal=error;let replica:semio_framework_replication_codec::PackRefusal=container;let canonical:CanonicalRefusal=replica;let converted=canonical.into_value_error();
         let oracle=serde_json::json!({"kind":row["convertedKind"],"message":row["display"]});assert_eq!(serde_json::json!({"kind":converted.kind.as_str(),"message":converted.message}),oracle);
     }
-    eprintln!("[DEBUG] public Pack primitive/container/Replication errors retain one defining native type");
 }
 
 #[test]
@@ -88,5 +86,4 @@ fn public_pack_typed_causes_preserve_owned_messages_and_fault_identity(){
         let source=std::error::Error::source(&wrapper).unwrap().downcast_ref::<ValueError>().unwrap();assert!(std::ptr::eq(source,refusal));assert_eq!(wrapper.fault_origin(),FaultOrigin::Module);assert_eq!(wrapper.fault_code().0,identity["fault"]["code"].as_str().unwrap());assert_eq!(wrapper.fault_severity(),Severity::Error);
         let converted=wrapper.into_value_error();assert_eq!(converted.kind,expected_kind);assert_eq!(converted.message.as_ptr(),allocation);assert_eq!(converted.message,row["display"].as_str().unwrap().strip_prefix("schema error: ").unwrap());
     }
-    eprintln!("[DEBUG] public typed Pack cause eight vectors preserve allocation/path/kind/source and module.pack Fault; conversion retains raw owned cause");
 }

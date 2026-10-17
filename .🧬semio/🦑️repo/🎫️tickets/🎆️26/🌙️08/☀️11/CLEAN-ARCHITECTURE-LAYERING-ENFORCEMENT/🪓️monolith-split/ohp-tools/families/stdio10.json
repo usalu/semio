@@ -1,0 +1,1 @@
+{"name": "stdio10", "crates": ["semio-s-artifact-stdio-binary", "semio-s-artifact-stdio-binary-io-registry", "semio-s-artifact-stdio-binary-mutations", "semio-s-artifact-stdio-binary-schema", "semio-s-artifact-stdio-binary-snapshot", "semio-s-artifact-stdio-binary-test-oracle"], "note": "stdio 💾️binary"}

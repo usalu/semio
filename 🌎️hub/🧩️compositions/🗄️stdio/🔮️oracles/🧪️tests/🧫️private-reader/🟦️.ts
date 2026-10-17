@@ -8,7 +8,7 @@ import fixture from "../🧫️fixtures/🧫️private-reader/🔣️.json";
 
 import composition from "../🧫️fixtures/🧩️composition/🔣️.json";
 import { assertPrivateReaderInput, assertPrivateReaderBindings } from "./🧩️preservation/🟦️.ts";
-import { inspectRustCompileReferences } from "../../../../../../🧰️framework/🔨️modules/📚️compiler/📖️syntax/🦀️rust/🟦️.ts";
+import { inspectRustCompileReferences } from "@semio-tech/compiler-syntax-rust-ts";
 import { validateJsonSchemaSubset } from "@semio-tech/schema-validator-ts";
 
 const root = resolve(import.meta.dir, "../../../../../..");

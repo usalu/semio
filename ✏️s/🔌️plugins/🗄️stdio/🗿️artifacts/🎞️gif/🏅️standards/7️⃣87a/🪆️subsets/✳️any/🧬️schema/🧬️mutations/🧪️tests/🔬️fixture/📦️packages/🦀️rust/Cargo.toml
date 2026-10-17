@@ -49,3 +49,5 @@ semio-framework-async-macros = { workspace = true }
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
 semio-s-artifact-stdio-contract = { workspace = true, features = ["testing"] }
+semio-s-artifact-stdio-gif-mutations = { path = "../../../../📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-stdio-gif-mutations-2 = { path = "../../../../../../../../../9️⃣89a/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/📦️packages/🦀️rust", features = ["testkit"] }

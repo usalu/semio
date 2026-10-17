@@ -18,7 +18,8 @@
     "@semio-tech/cad-js-module-spatial-shape": "workspace:*",
     "@semio-tech/cad-js-module-aec-building": "workspace:*",
     "@semio-tech/cad-js-module-aec-building-energy": "workspace:*",
-    "@semio-tech/cad-js-module-aec-building-structure": "workspace:*"
+    "@semio-tech/cad-js-module-aec-building-structure": "workspace:*",
+    "@semio-tech/framework-os": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.9.3"

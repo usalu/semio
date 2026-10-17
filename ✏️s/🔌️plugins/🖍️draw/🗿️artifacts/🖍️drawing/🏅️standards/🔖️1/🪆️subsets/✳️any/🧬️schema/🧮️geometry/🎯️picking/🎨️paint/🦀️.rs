@@ -87,6 +87,3 @@ impl PaintedPathRetirement{
  pub fn terminal_is_empty(&self)->bool{self.job.is_none()}
  pub fn advance(&mut self,grant:usize)->Result<WorkRetirementProgress,&'static str>{let mut counter=std::mem::take(&mut self.counter);let result=counter.advance(grant,||{if self.job.as_mut().unwrap().retire_one(){self.job=None;true}else{false}});self.counter=counter;result}
 }
-#[cfg(test)]
-#[path="🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;

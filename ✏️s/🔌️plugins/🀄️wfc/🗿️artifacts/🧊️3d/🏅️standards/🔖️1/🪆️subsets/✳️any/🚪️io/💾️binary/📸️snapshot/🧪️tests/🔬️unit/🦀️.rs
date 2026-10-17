@@ -1,7 +1,8 @@
 //! 🧪️ The binary facet: pack round-trips, and a displaced document is released in BOUNDED steps
 //! rather than dropped whole.
 
-use crate::standards::v1::subsets::any::io::binary::snapshot::*;
+use crate::schema::snapshot::Wfc3dSnapshot;
+use crate::standards::v1::subsets::any::io::binary::snapshot::{decode, decode_into, encode};
 
 #[test]
 fn every_example_round_trips_through_the_pack_codec() {

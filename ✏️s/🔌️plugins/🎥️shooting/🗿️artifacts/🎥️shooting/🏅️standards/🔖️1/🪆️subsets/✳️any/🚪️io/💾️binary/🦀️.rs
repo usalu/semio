@@ -1,13 +1,9 @@
 //! 🚪️ Artifact representation module ownership.
 
-#[path = "📸️snapshot/🦀️.rs"]
-pub mod snapshot;
+pub use semio_s_artifact_shooting_shooting_inferences::standards::v1::subsets::any::io::binary::snapshot;
 
-#[path = "🧬️mutations/🦀️.rs"]
-pub mod mutations;
+pub use semio_s_artifact_shooting_shooting_mutations::standards::v1::subsets::any::io::binary::mutations;
 
-#[path = "🔺️diff/🦀️.rs"]
-pub mod diff;
 
-#[path = "💡️inferences/🦀️.rs"]
-pub mod inferences;
+
+

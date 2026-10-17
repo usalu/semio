@@ -81,11 +81,16 @@ test("original orientation incidence preserves every independently patched edge 
 });
 
 
+/** 📐️ Face owner rows of the committed law are `[face, flag]` pairs; the fixture type is a union of row shapes. */
+function ownerPairs(value:unknown):readonly(readonly[number,boolean])[]{
+  if(!Array.isArray(value))throw Error("Face owners must be an array");
+  return value.map(row=>{if(!Array.isArray(row)||row.length!==2||typeof row[0]!=="number"||typeof row[1]!=="boolean")throw Error("Face owner must be [face, flag]");return [row[0],row[1]] as const;});
+}
 test("original orientation adjacency retains independently patched reciprocal face neighbors in source encounter order",()=>{
   const validate=new Ajv({strict:true}).compile(schema),policy=law.orientationAdjacency;expect(validate(law)).toBe(true);expect(validate({...law,orientationAdjacency:{...policy,neighborCopyBytes:0}})).toBe(false);
   for(const name of policy.sources){const source=law[name as "snapshotPreparation"|"snapshotClosedPreparation"],incidence=law.orientationIncidence.outputs[name as keyof typeof law.orientationIncidence.outputs],rows=new Map(incidence.owners.map(([key,owners])=>[JSON.stringify(key),owners])),output={adjacency:source.faces.map(()=>[] as [number,boolean][])};
-    for(const key of incidence.keys){const owners=rows.get(JSON.stringify(key))!;if(owners.length!==2)continue;const[[a,af],[b,bf]]=owners;applyPatch(output,[{op:"add",path:`/adjacency/${a}/-`,value:[b,af===bf]},{op:"add",path:`/adjacency/${b}/-`,value:[a,af===bf]}]);}
-    expect(output.adjacency).toEqual(policy.outputs[name as keyof typeof policy.outputs]);expect(new BigUint64Array(2).byteLength).toBe(policy.neighborCopyBytes);for(const[face,neighbors]of output.adjacency.entries()){for(const[neighbor,flip]of neighbors){expect(output.adjacency[neighbor].some(([source,relative])=>source===face&&relative===flip)).toBe(true);}}
+    for(const key of incidence.keys){const owners=ownerPairs(rows.get(JSON.stringify(key)));if(owners.length!==2)continue;const[[a,af],[b,bf]]=[owners[0]!,owners[1]!];applyPatch(output,[{op:"add",path:`/adjacency/${a}/-`,value:[b,af===bf]},{op:"add",path:`/adjacency/${b}/-`,value:[a,af===bf]}]);}
+    const expectedAt93x38 = policy.outputs[name as keyof typeof policy.outputs]; expect<typeof expectedAt93x38>(output.adjacency).toEqual(expectedAt93x38);expect(new BigUint64Array(2).byteLength).toBe(policy.neighborCopyBytes);for(const[face,neighbors]of output.adjacency.entries()){for(const[neighbor,flip]of neighbors){expect(output.adjacency[neighbor].some(([source,relative])=>source===face&&relative===flip)).toBe(true);}}
   }
 });
 

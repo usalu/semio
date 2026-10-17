@@ -1,0 +1,526 @@
+use crate::XmlSnapshot;
+use crate::standards::v1_0::subsets::base::schema::*;
+use crate::schema::diff::{XmlChildAdded, XmlNodeDiff};
+use crate::schema::mutations::{
+    InsertElementMutation, InsertElementPayload, RemoveElementMutation, RemoveElementPayload, SetAttributeMutation, SetAttributePayload, SetDeclarationMutation, SetDeclarationPayload, SetDoctypeMutation, SetDoctypePayload, SetTextMutation,
+    SetTextPayload, XmlNodePath,
+};
+use crate::schema::snapshot::{XmlAttr, XmlDeclaration, XmlDoctype, XmlDocument, XmlNode, XmlQuote};
+use crate::standards::v1_0::subsets::base::io::text::snapshot::{xml_document_from_text, xml_document_to_text, xml_document_to_text_checked};
+use crate::{XmlDiff, XmlMutation, STDIO_XML_DOCUMENT_SCHEMA};
+use protocol::command::DiffAlgebra;
+use protocol::{Mutation, MutationDiff};
+use semio_framework_plugin::ArtifactBuilder;
+
+#[semio_framework_async_macros::async_test]
+async fn schema_facets_reject_raw_doctype_and_source_shadow_state() {
+    let facets = [
+        include_str!("../../📸️snapshot/🦀️.rs"),
+        include_str!("../../📸️snapshot/🟦️.ts"),
+        include_str!("../../📸️snapshot/🔣️.json"),
+        include_str!("../../../🚪️io/📝️text/📸️snapshot/🔗️.graphql"),
+        include_str!("../../../🚪️io/📝️text/📸️snapshot/🛰️.proto"),
+        include_str!("../../../🚪️io/📝️text/🔺️diff/📖️.grammar.semio"),
+        include_str!("../../../🚪️io/💾️binary/🔺️diff/📡️.protocol.semio"),
+        include_str!("../../../🚪️io/📝️text/🧬️mutations/📖️.grammar.semio"),
+        include_str!("../../../🚪️io/💾️binary/🧬️mutations/📡️.protocol.semio"),
+    ];
+    for facet in facets {
+        for forbidden in [concat!("pub doctype: Option<", "String>"), concat!("raw ", "doctype"), concat!("source-", "field"), concat!("source-", "tok"), concat!("artifact-", "source"), concat!("semantic-", "blake3")] {
+            assert!(!facet.to_ascii_lowercase().contains(&forbidden.to_ascii_lowercase()), "forbidden XML shadow-state facet: {forbidden}");
+        }
+    }
+}
+
+#[semio_framework_async_macros::async_test]
+async fn empty_snapshot_matches_schema() {
+    let snapshot = empty_xml_snapshot();
+    assert_eq!(snapshot.schema, STDIO_XML_DOCUMENT_SCHEMA);
+}
+
+#[semio_framework_async_macros::async_test]
+async fn codec_round_trip() {
+    let snap = empty_xml_snapshot();
+    let text = pack::snapshot::ArtifactDsl::print_dsl(&snap);
+    let parsed = <XmlSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(&text).expect("parse");
+    assert_eq!(parsed.schema, snap.schema);
+    let bytes = pack::snapshot::ArtifactPack::encode_pack(&snap);
+    let decoded = <XmlSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&bytes).expect("decode");
+    assert_eq!(decoded, snap);
+}
+
+#[semio_framework_async_macros::async_test]
+async fn snapshot_codecs_preserve_intermediate_boundaries_and_builder_refuses_invalid_wire() {
+    let mut invalid = sample_snapshot();
+    invalid.doc.doctype = Some(XmlDoctype { prolog_position: invalid.doc.prolog.len() as u64 + 1, name: "root".into(), external_id: None, declarations: Vec::new() });
+
+    let text = crate::standards::v1_0::subsets::base::io::text::snapshot::encode_snapshot(&invalid);
+    assert_eq!(crate::standards::v1_0::subsets::base::io::text::snapshot::decode_snapshot(&text).unwrap(), invalid);
+
+    let mut binary = Vec::new();
+    crate::standards::v1_0::subsets::base::io::binary::snapshot::encode_snapshot_binary(&invalid, &mut binary);
+    assert_eq!(crate::standards::v1_0::subsets::base::io::binary::snapshot::decode_snapshot_binary(&mut store::ByteReader::new(&binary)).unwrap(), invalid);
+    assert!(crate::standards::v1_0::subsets::base::io::XmlBuilderConstruction::from_snapshot(invalid).build().is_err(), "builder ingress must reject an out-of-range doctype position");
+
+    let mut invalid_epilog = sample_snapshot();
+    invalid_epilog.doc.epilog = vec![XmlNode::Element { name: "outside".into(), attrs: Vec::new(), children: Vec::new() }];
+    let text = crate::standards::v1_0::subsets::base::io::text::snapshot::encode_snapshot(&invalid_epilog);
+    assert_eq!(crate::standards::v1_0::subsets::base::io::text::snapshot::decode_snapshot(&text).unwrap(), invalid_epilog);
+    assert!(crate::standards::v1_0::subsets::base::io::XmlBuilderConstruction::from_snapshot(invalid_epilog).build().is_err(), "builder ingress must reject a non-miscellaneous epilog node");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn snapshot_codecs_preserve_declarations_and_xml_wire_ingress_refuses_unpublishable_declarations() {
+    let fixture: serde_json::Value = serde_json::from_str(runtime_fixture_text("../../../../../🧪️tests/🧫️fixtures/🧭️document-boundaries/🔣️.json")).expect("neutral XML document-boundary fixture");
+    for case in fixture["invalidAuthored"].as_array().expect("invalid authored cases").iter().skip(2) {
+        let mut invalid = sample_snapshot();
+        invalid.doc.root = Some(XmlNode::Element { name: "root".into(), attrs: Vec::new(), children: vec![XmlNode::Text { text: case["rootText"].as_str().expect("root text").into() }] });
+        invalid.doc.declaration =
+            Some(XmlDeclaration { version: "1.0".into(), encoding: Some(case["encoding"].as_str().expect("encoding").into()), standalone: None, quote: if case["quote"] == "single" { XmlQuote::Single } else { XmlQuote::Double } });
+        let expected = case["error"].as_str().expect("error");
+
+        let text = crate::standards::v1_0::subsets::base::io::text::snapshot::encode_snapshot(&invalid);
+        assert_eq!(crate::standards::v1_0::subsets::base::io::text::snapshot::decode_snapshot(&text).unwrap(), invalid, "{}", case["id"]);
+        let mut binary = Vec::new();
+        crate::standards::v1_0::subsets::base::io::binary::snapshot::encode_snapshot_binary(&invalid, &mut binary);
+        assert_eq!(crate::standards::v1_0::subsets::base::io::binary::snapshot::decode_snapshot_binary(&mut store::ByteReader::new(&binary)).unwrap(), invalid, "{}", case["id"]);
+        assert!(crate::standards::v1_0::subsets::base::io::XmlBuilderConstruction::from_snapshot(invalid.clone()).build().is_err(), "{} builder ingress", case["id"]);
+        assert_eq!(XmlArtifact::from_snapshot(invalid.clone()).expect_err("raw artifact conversion"), expected, "{}", case["id"]);
+        let mut artifact = XmlArtifact::default();
+        let before = artifact.clone();
+        assert_eq!(artifact.set_snapshot(invalid.clone()).expect_err("raw artifact replacement"), expected, "{}", case["id"]);
+        assert_eq!(artifact, before, "{} replacement must be atomic", case["id"]);
+        let diff = XmlDiff { declaration: Some(invalid.doc.declaration.clone()), root: Some(XmlNodeDiff::Replace { node: invalid.doc.root.clone() }), ..Default::default() };
+        assert!(protocol::apply_diff(&diff, &sample_snapshot()).is_err(), "{} diff ingress", case["id"]);
+        assert_eq!(xml_document_to_text_checked(&invalid.doc).expect_err("writer boundary"), expected, "{}", case["id"]);
+    }
+
+    let valid = XmlArtifact::from_snapshot(sample_snapshot()).expect("valid raw artifact conversion");
+    assert!(xml_document_to_text_checked(&valid.to_snapshot().doc).expect("validated artifact renders").contains("hello"));
+}
+
+/// 🗣️ XML 1.0 §2.8 admits `'` and `"` interchangeably in the declaration's pseudo-attributes, so
+/// which one a document uses is its own state and has to survive a parse/write cycle byte for byte
+/// — the divergence `🎨️svg`'s `exact_native_analyzer_text_and_pack_roundtrip` caught against a real
+/// third-party file, whose declaration is single-quoted. Double stays the default spelling, so a
+/// declaration nobody quoted explicitly still writes `"`.
+#[semio_framework_async_macros::async_test]
+async fn declaration_quote_style_survives_a_parse_write_cycle() {
+    for (source, expected) in [("<?xml version='1.0' encoding='UTF-8'?>\n<root/>", XmlQuote::Single), ("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<root/>", XmlQuote::Double)] {
+        let doc = xml_document_from_text(source).expect("declaration parses");
+        assert_eq!(doc.declaration.as_ref().expect("declaration present").quote, expected, "the delimiter `version` used is the declaration's own");
+        assert_eq!(xml_document_to_text(&doc), source, "the declaration is written back with the delimiter it came in with");
+    }
+
+    // 🫥 The default spelling writes no `quote` key at all, which is what keeps every wire value
+    // that predates this slot byte-identical.
+    let double = XmlDeclaration { version: "1.0".into(), encoding: None, standalone: None, ..Default::default() };
+    assert_eq!(double.quote, XmlQuote::Double);
+    assert!(double.quote.is_double());
+}
+
+//#region 🔖️Fixtures
+// 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+fn sample_snapshot() -> XmlSnapshot {
+    XmlSnapshot {
+        schema: STDIO_XML_DOCUMENT_SCHEMA.into(),
+        doc: XmlDocument {
+            declaration: Some(XmlDeclaration { version: "1.0".into(), encoding: None, standalone: None, ..Default::default() }),
+            doctype: None,
+            prolog: vec![XmlNode::Comment { text: "before".into() }],
+            epilog: vec![XmlNode::ProcessingInstruction { target: "after".into(), data: "a".into() }],
+            root: Some(XmlNode::Element {
+                name: "root".into(),
+                attrs: vec![XmlAttr { name: "a".into(), value: "1".into() }],
+                children: vec![XmlNode::Text { text: "hello".into() }, XmlNode::Element { name: "child".into(), attrs: Vec::new(), children: Vec::new() }],
+            }),
+        },
+    }
+}
+
+/// 🌱 `sweep_a`/`sweep_b`: differ in EVERY mutable field. `declaration`/`doctype` both go
+/// `Some(x) -> None` (tri-state `Some(None)`). `root`'s attrs (name-keyed, so a single triple
+/// can show all three flavors at once) exercise removed+modified+added simultaneously. The
+/// naive positional `between_children` (recipe-specified: pairwise `0..min`, base-tail
+/// removed, other-tail added) can only ever show ONE of {removed-tail, added-tail} per
+/// instance -- so `removed` is exercised at the top-level children triple and `added` at the
+/// nested triple inside the modified child, while that same modified child's OWN diff
+/// (name+attributes+children all `Some`) is the "modified-in-every-field" collection entry.
+// 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+fn sweep_a() -> XmlSnapshot {
+    XmlSnapshot {
+        schema: STDIO_XML_DOCUMENT_SCHEMA.into(),
+        doc: XmlDocument {
+            declaration: Some(XmlDeclaration { version: "1.0".into(), encoding: Some("UTF-8".into()), standalone: Some(true), ..Default::default() }),
+            doctype: Some("<!DOCTYPE html>".into()),
+            prolog: vec![XmlNode::ProcessingInstruction { target: "before".into(), data: "b".into() }],
+            epilog: vec![XmlNode::Comment { text: "after".into() }],
+            root: Some(XmlNode::Element {
+                name: "root".into(),
+                attrs: vec![XmlAttr { name: "keep".into(), value: "k".into() }, XmlAttr { name: "toRemove".into(), value: "r".into() }, XmlAttr { name: "toModify".into(), value: "old".into() }],
+                children: vec![
+                    XmlNode::Element { name: "modifyMe".into(), attrs: vec![XmlAttr { name: "x".into(), value: "1".into() }], children: vec![XmlNode::Element { name: "inner".into(), attrs: Vec::new(), children: Vec::new() }] },
+                    XmlNode::Text { text: "stay".into() },
+                    XmlNode::Element { name: "toDrop".into(), attrs: Vec::new(), children: Vec::new() },
+                ],
+            }),
+        },
+    }
+}
+
+// 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+fn sweep_b() -> XmlSnapshot {
+    XmlSnapshot {
+        schema: STDIO_XML_DOCUMENT_SCHEMA.into(),
+        doc: XmlDocument {
+            declaration: None,
+            doctype: None,
+            prolog: Vec::new(),
+            epilog: Vec::new(),
+            root: Some(XmlNode::Element {
+                name: "rootRenamed".into(),
+                attrs: vec![XmlAttr { name: "keep".into(), value: "k".into() }, XmlAttr { name: "toModify".into(), value: "new".into() }, XmlAttr { name: "added".into(), value: "a".into() }],
+                children: vec![
+                    XmlNode::Element {
+                        name: "modifiedNow".into(),
+                        attrs: vec![XmlAttr { name: "x".into(), value: "2".into() }, XmlAttr { name: "y".into(), value: "3".into() }],
+                        children: vec![XmlNode::Element { name: "inner".into(), attrs: Vec::new(), children: Vec::new() }, XmlNode::Element { name: "innerNew".into(), attrs: Vec::new(), children: Vec::new() }],
+                    },
+                    XmlNode::Text { text: "stay".into() },
+                ],
+            }),
+        },
+    }
+}
+//#endregion 🔖️Fixtures
+
+//#region 🔖️MutationDiffLaw
+// 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+fn sample_mutations() -> Vec<XmlMutation> {
+    vec![
+        XmlMutation::SetDeclaration(SetDeclarationPayload { declaration: Some(XmlDeclaration { version: "1.1".into(), encoding: Some("UTF-8".into()), standalone: Some(false), ..Default::default() }) }),
+        XmlMutation::SetDeclaration(SetDeclarationPayload { declaration: None }),
+        XmlMutation::SetDoctype(SetDoctypePayload { doctype: Some("<!DOCTYPE foo>".into()) }),
+        XmlMutation::InsertElement(InsertElementPayload { path: XmlNodePath::root(), index: 2, node: XmlNode::Text { text: "new".into() } }),
+        XmlMutation::RemoveElement(RemoveElementPayload { path: XmlNodePath::root(), index: 1 }),
+        XmlMutation::SetAttribute(SetAttributePayload { path: XmlNodePath::root(), name: "a".into(), value: Some("2".into()), index: None }),
+        XmlMutation::SetAttribute(SetAttributePayload { path: XmlNodePath::root(), name: "b".into(), value: Some("new".into()), index: None }),
+        XmlMutation::SetAttribute(SetAttributePayload { path: XmlNodePath::root(), name: "a".into(), value: None, index: None }),
+        XmlMutation::SetText(SetTextPayload { path: XmlNodePath(vec![0]), text: "world".into() }),
+    ]
+}
+
+#[semio_framework_async_macros::async_test]
+async fn mutation_diff_law() {
+    for mutation in sample_mutations() {
+        let base = sample_snapshot();
+        let diff_direct = Mutation::diff(&mutation, &base);
+        let applied_via_diff = protocol::apply_diff(diff_direct.diff(), &base).unwrap();
+
+        let mut via_apply = base.clone();
+        let diff_from_apply = crate::apply_mutation(&mut via_apply, &mutation);
+
+        assert_eq!(applied_via_diff, via_apply, "mutation_diff_law: apply mismatch for {mutation:?}");
+        assert_eq!(diff_direct, diff_from_apply, "mutation_diff_law: diff mismatch for {mutation:?}");
+    }
+}
+//#endregion 🔖️MutationDiffLaw
+
+//#region 🔖️InverseLaw
+#[semio_framework_async_macros::async_test]
+async fn inverse_law() {
+    for mutation in sample_mutations() {
+        let base = sample_snapshot();
+
+        // Mutation-level round-trip.
+        let mut round_tripped = base.clone();
+        crate::apply_mutation(&mut round_tripped, &mutation);
+        for inverse_mutation in <XmlMutation as Mutation<XmlSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture") {
+            crate::apply_mutation(&mut round_tripped, &inverse_mutation);
+        }
+        assert_eq!(round_tripped, base, "inverse_law (mutation-level).await failed for {mutation:?}");
+
+        // Diff-level round-trip.
+        let diff = Mutation::diff(&mutation, &base);
+        let next = protocol::apply_diff(diff.diff(), &base).unwrap();
+        let inverse_diff = DiffAlgebra::inverse(diff.diff(), &base);
+        let restored = protocol::apply_diff(&inverse_diff, &next).unwrap();
+        assert_eq!(restored, base, "inverse_law (diff-level).await failed for {mutation:?}");
+    }
+}
+//#endregion 🔖️InverseLaw
+
+//#region 🔖️AbsorbLaw
+// 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+fn two_child_root(a_name: &str, b_name: &str) -> XmlSnapshot {
+    XmlSnapshot {
+        schema: STDIO_XML_DOCUMENT_SCHEMA.into(),
+        doc: XmlDocument {
+            declaration: None,
+            doctype: None,
+            prolog: Vec::new(),
+            epilog: Vec::new(),
+            root: Some(XmlNode::Element {
+                name: "root".into(),
+                attrs: Vec::new(),
+                children: vec![XmlNode::Element { name: a_name.into(), attrs: Vec::new(), children: Vec::new() }, XmlNode::Element { name: b_name.into(), attrs: Vec::new(), children: Vec::new() }],
+            }),
+        },
+    }
+}
+
+// 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+fn assert_absorb_matches_sequential(base: &XmlSnapshot, d1: &XmlDiff, d2: &XmlDiff) -> XmlDiff {
+    let sequential = protocol::apply_diff(d2, &protocol::apply_diff(d1, base).unwrap()).unwrap();
+    let mut absorbed = d1.clone();
+    MutationDiff::absorb(&mut absorbed, d2.clone());
+    assert_eq!(protocol::apply_diff(&absorbed, base).unwrap(), sequential, "absorb_law: apply(absorb(d1,d2), base) != sequential");
+    absorbed
+}
+
+// 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+fn root_children_diff(diff: &XmlDiff) -> &crate::schema::diff::XmlChildrenDiff {
+    match diff.root.as_ref().expect("root diff present") {
+        XmlNodeDiff::Element(e) => e.children.as_ref().expect("children diff present"),
+        other => panic!("expected element diff, got {other:?}"),
+    }
+}
+
+#[semio_framework_async_macros::async_test]
+async fn absorb_law() {
+    // Canonical: Insert(2)+Remove(0) -> {removed:[0], added:[(1,f)]}.
+    {
+        let base = two_child_root("a", "b");
+        let d1 = Mutation::diff(&XmlMutation::InsertElement(InsertElementPayload { path: XmlNodePath::root(), index: 2, node: XmlNode::Element { name: "f".into(), attrs: Vec::new(), children: Vec::new() } }), &base);
+        let mid = protocol::apply_diff(d1.diff(), &base).unwrap();
+        let d2 = Mutation::diff(&XmlMutation::RemoveElement(RemoveElementPayload { path: XmlNodePath::root(), index: 0 }), &mid);
+        let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
+        let triple = root_children_diff(&absorbed);
+        assert_eq!(triple.removed, vec![0]);
+        assert_eq!(triple.added.len(), 1);
+        assert_eq!(triple.added[0].index, 1);
+        let XmlNode::Element { name, .. } = &triple.added[0].item else { panic!("expected element") };
+        assert_eq!(name, "f");
+    }
+
+    // Canonical: Insert(2,f)+Insert(2,g) -> both survive.
+    {
+        let base = two_child_root("a", "b");
+        let d1 = Mutation::diff(&XmlMutation::InsertElement(InsertElementPayload { path: XmlNodePath::root(), index: 2, node: XmlNode::Element { name: "f".into(), attrs: Vec::new(), children: Vec::new() } }), &base);
+        let mid = protocol::apply_diff(d1.diff(), &base).unwrap();
+        let d2 = Mutation::diff(&XmlMutation::InsertElement(InsertElementPayload { path: XmlNodePath::root(), index: 2, node: XmlNode::Element { name: "g".into(), attrs: Vec::new(), children: Vec::new() } }), &mid);
+        let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
+        let triple = root_children_diff(&absorbed);
+        assert_eq!(triple.added.len(), 2, "both inserts must survive absorb, not LWW-clobber");
+        let names: Vec<&str> = triple
+            .added
+            .iter()
+            .map(|a| match &a.item {
+                XmlNode::Element { name, .. } => name.as_str(),
+                _ => "",
+            })
+            .collect();
+        assert!(names.contains(&"f"));
+        assert!(names.contains(&"g"));
+    }
+
+    // Canonical: Insert(1,f)+SetField(1,v) -> patch into the added payload.
+    {
+        let base = two_child_root("a", "b");
+        let d1 = Mutation::diff(&XmlMutation::InsertElement(InsertElementPayload { path: XmlNodePath::root(), index: 1, node: XmlNode::Element { name: "f".into(), attrs: Vec::new(), children: Vec::new() } }), &base);
+        let mid = protocol::apply_diff(d1.diff(), &base).unwrap();
+        let d2 = Mutation::diff(&XmlMutation::SetAttribute(SetAttributePayload { path: XmlNodePath(vec![1]), name: "k".into(), value: Some("v".into()), index: None }), &mid);
+        let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
+        let triple = root_children_diff(&absorbed);
+        assert!(triple.modified.is_empty(), "patch-into-added must not surface as a separate modified entry");
+        assert_eq!(triple.added.len(), 1);
+        let XmlNode::Element { attrs, .. } = &triple.added[0].item else { panic!("expected element") };
+        assert!(attrs.iter().any(|a| a.name == "k" && a.value == "v"));
+    }
+
+    // Canonical: Modify+Remove -> the modify is annihilated by the later remove.
+    {
+        let base = two_child_root("a", "b");
+        let d1 = Mutation::diff(&XmlMutation::SetAttribute(SetAttributePayload { path: XmlNodePath(vec![1]), name: "k".into(), value: Some("v".into()), index: None }), &base);
+        let mid = protocol::apply_diff(d1.diff(), &base).unwrap();
+        let d2 = Mutation::diff(&XmlMutation::RemoveElement(RemoveElementPayload { path: XmlNodePath::root(), index: 1 }), &mid);
+        let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
+        let triple = root_children_diff(&absorbed);
+        assert!(triple.modified.is_empty(), "modify of a since-removed item must not survive absorb");
+        assert_eq!(triple.removed, vec![1]);
+    }
+
+    // Associativity over a triple.
+    {
+        let base = two_child_root("a", "b");
+        let d1 = Mutation::diff(&XmlMutation::InsertElement(InsertElementPayload { path: XmlNodePath::root(), index: 2, node: XmlNode::Element { name: "f".into(), attrs: Vec::new(), children: Vec::new() } }), &base);
+        let mid1 = protocol::apply_diff(d1.diff(), &base).unwrap();
+        let d2 = Mutation::diff(&XmlMutation::InsertElement(InsertElementPayload { path: XmlNodePath::root(), index: 2, node: XmlNode::Element { name: "g".into(), attrs: Vec::new(), children: Vec::new() } }), &mid1);
+        let mid2 = protocol::apply_diff(d2.diff(), &mid1).unwrap();
+        let d3 = Mutation::diff(&XmlMutation::RemoveElement(RemoveElementPayload { path: XmlNodePath::root(), index: 0 }), &mid2);
+        let sequential = protocol::apply_diff(d3.diff(), &mid2).unwrap();
+
+        let mut left = d1.diff().clone();
+        MutationDiff::absorb(&mut left, d2.diff().clone());
+        MutationDiff::absorb(&mut left, d3.diff().clone());
+
+        let mut d2_then_d3 = d2.diff().clone();
+        MutationDiff::absorb(&mut d2_then_d3, d3.diff().clone());
+        let mut right = d1.diff().clone();
+        MutationDiff::absorb(&mut right, d2_then_d3);
+
+        assert_eq!(protocol::apply_diff(&left, &base).unwrap(), sequential, "absorb associativity (left) failed");
+        assert_eq!(protocol::apply_diff(&right, &base).unwrap(), sequential, "absorb associativity (right) failed");
+    }
+}
+//#endregion 🔖️BetweenRoundtripLaw
+
+//#region 🔖️CodecRetentionLaw
+#[semio_framework_async_macros::async_test]
+async fn codec_retention_law() {
+    let fixture_text = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🏷️.xml");
+    let doc = crate::standards::v1_0::subsets::base::io::text::snapshot::xml_document_from_text(fixture_text).expect("fixture parses");
+    // Documented normal form: leading/trailing whitespace around the document is trimmed (the
+    // codec re-emits no trailing newline); the fixture has neither internal whitespace nor
+    // empty elements, so the byte content otherwise round-trips exactly.
+    let re_encoded = crate::standards::v1_0::subsets::base::io::text::snapshot::xml_document_to_text(&doc);
+    assert_eq!(re_encoded, fixture_text.trim());
+
+    let snap = XmlSnapshot { schema: STDIO_XML_DOCUMENT_SCHEMA.into(), doc };
+    let bytes = pack::snapshot::ArtifactPack::encode_pack(&snap);
+    let decoded = <XmlSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&bytes).expect("decode");
+    assert_eq!(decoded, snap);
+}
+//#endregion 🔖️FieldSweep
+
+//#region 🔖️ConformanceLaws
+/// 🧪️ P2-FG1: per-artifact conformance laws (`📖️grammar-recipe.md` §4's checklist item) --
+/// grammar/protocol parseability, `Recognizer` against real fixtures AND real `print_op`/
+/// `print_diff` output, `walk_protocol` against real `encode_pack`/`encode_op`/`encode_diff`
+/// bytes, and the fixture-honesty round-trip. Lives beside the rest of this artifact's schema
+/// tests (moved out of `⚙️engine`, ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) --
+/// these tests are this artifact's OWN early-warning, plus direct coverage of the
+/// mutations/diff facets that harness does not auto-discover at all.
+mod conformance_laws {
+    use super::*;
+    use crate::schema::{diff, mutations, snapshot};
+    use protocol::{DiffBinary,DiffCodec,DiffText, OpBinary, OpText};
+
+    /// ✅️ "committed files parse": all 6 handcrafted `.grammar.semio`/`.protocol.semio` files
+    /// parse under the real dialect -- independent of, and cheaper than, the two `recognize`/
+    /// `walk_protocol` laws below (a parse failure here fails fast with a clearer message).
+    #[semio_framework_async_macros::async_test]
+    async fn committed_facet_files_parse() {
+        for (label, text) in [("snapshot grammar", crate::standards::v1_0::subsets::base::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO), ("mutations grammar", crate::standards::v1_0::subsets::base::io::text::mutations::COMPONENT_GRAMMAR_SEMIO), ("diff grammar", crate::standards::v1_0::subsets::base::io::text::diff::COMPONENT_GRAMMAR_SEMIO)] {
+            let grammar = semio_framework_dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
+            assert_eq!(grammar.dialect, semio_framework_dsl::SemioDialect::Grammar, "{label}: expected grammar dialect");
+        }
+        for (label, text) in [("snapshot protocol", crate::standards::v1_0::subsets::base::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO), ("mutations protocol", crate::standards::v1_0::subsets::base::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO), ("diff protocol", crate::standards::v1_0::subsets::base::io::binary::diff::COMPONENT_PROTOCOL_SEMIO)] {
+            semio_framework_dsl::parse_protocol(text).unwrap_or_else(|e| panic!("{label}: parse_protocol failed: {e:?}"));
+        }
+    }
+
+    /// ✅️ `grammar_conformance_law`: the snapshot grammar recognizes real `print_dsl` output for
+    /// the demo document -- same preamble-stripped body reconstruction
+    /// `m5_handcrafted_grammar_conformance`'s own `dsl_body_from_host_snapshot` uses, so this is a
+    /// direct proof this artifact will pass that harness once graduated, not merely an analogue.
+    #[semio_framework_async_macros::async_test]
+    async fn grammar_conformance_law() {
+        let grammar = semio_framework_dsl::parse_grammar(crate::standards::v1_0::subsets::base::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO).expect("parse snapshot grammar");
+        let recognizer = semio_framework_dsl::Recognizer::compile(&grammar, &semio_framework_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_framework_os_kernel::os_dsl::grammar::product_macros()).expect("selected grammar fragments");
+        let text = pack::snapshot::ArtifactDsl::print_dsl(&demo_xml_snapshot());
+        let (envelope, body) = store::semio_format::split_text_preamble(&text).expect("split preamble");
+        let reconstructed = format!("{}\n{body}", envelope.envelope_id());
+        assert!(recognizer.recognize(&reconstructed).expect("recognize"), "grammar did not recognize demo dsl body:\n{reconstructed}");
+    }
+
+    /// ✅️ `ops_grammar_conformance_law`: the mutations grammar recognizes real `print_op` output
+    /// for every `XmlMutation` variant (`mutations::demo_mutation_cases()`).
+    #[semio_framework_async_macros::async_test]
+    async fn ops_grammar_conformance_law() {
+        let grammar = semio_framework_dsl::parse_grammar(crate::standards::v1_0::subsets::base::io::text::mutations::COMPONENT_GRAMMAR_SEMIO).expect("parse mutations grammar");
+        let recognizer = semio_framework_dsl::Recognizer::compile(&grammar, &semio_framework_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_framework_os_kernel::os_dsl::grammar::product_macros()).expect("selected grammar fragments");
+        for mutation in mutations::demo_mutation_cases() {
+            let printed = mutation.print_op();
+            assert!(recognizer.recognize(&printed).unwrap_or(false), "mutations grammar did not recognize {printed:?} (from {mutation:?})");
+        }
+    }
+
+    /// ✅️ `diff_grammar_conformance_law`: the diff grammar recognizes real `print_diff` output
+    /// for every representative `XmlDiff` (`diff::demo_diff_cases()`), incl. the empty-line
+    /// (all-`None`) diff and the `Replace` kind-change fallback.
+    #[semio_framework_async_macros::async_test]
+    async fn diff_grammar_conformance_law() {
+        let grammar = semio_framework_dsl::parse_grammar(crate::standards::v1_0::subsets::base::io::text::diff::COMPONENT_GRAMMAR_SEMIO).expect("parse diff grammar");
+        let recognizer = semio_framework_dsl::Recognizer::compile(&grammar, &semio_framework_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_framework_os_kernel::os_dsl::grammar::product_macros()).expect("selected grammar fragments");
+        for d in diff::demo_diff_cases() {
+            let printed = d.print_diff();
+            assert!(recognizer.recognize(&printed).unwrap_or(false), "diff grammar did not recognize {printed:?} (from {d:?})");
+        }
+    }
+
+    /// ✅️ `protocol_walk_law`: `walk_protocol` against REAL bytes for all three facets --
+    /// snapshot pack (`encode_pack`, envelope-unwrapped first, matching how
+    /// `m5_handcrafted_protocol_conformance` itself feeds `walk_protocol`), every demo
+    /// mutation's `encode_op`, and every demo diff's `encode_diff` -- asserting `consumed ==
+    /// bytes.len()`.
+    #[semio_framework_async_macros::async_test]
+    async fn protocol_walk_law() {
+        let pack_spec = semio_framework_dsl::parse_protocol(crate::standards::v1_0::subsets::base::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
+        let packed = pack::snapshot::ArtifactPack::encode_pack(&demo_xml_snapshot());
+        let (_, inner) = store::semio_format::unwrap_binary(&packed).expect("unwrap semio envelope");
+        let trace = semio_framework_dsl::walk_protocol(&pack_spec, &inner).unwrap_or_else(|e| panic!("walk_protocol(pack) failed @{}: {}", e.offset, e.message));
+        assert_eq!(trace.consumed, inner.len(), "pack walk did not consume every byte");
+
+        let op_spec = semio_framework_dsl::parse_protocol(crate::standards::v1_0::subsets::base::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO).expect("parse mutations protocol");
+        for mutation in mutations::demo_mutation_cases() {
+            let bytes = mutation.encode_op().unwrap_or_else(|e| panic!("encode_op failed for {mutation:?}: {e:?}"));
+            let trace = semio_framework_dsl::walk_protocol(&op_spec, &bytes).unwrap_or_else(|e| panic!("walk_protocol(op) failed for {mutation:?} @{}: {}", e.offset, e.message));
+            assert_eq!(trace.consumed, bytes.len(), "op walk did not consume every byte for {mutation:?}");
+        }
+
+        let diff_spec = semio_framework_dsl::parse_protocol(crate::standards::v1_0::subsets::base::io::binary::diff::COMPONENT_PROTOCOL_SEMIO).expect("parse diff protocol");
+        for d in diff::demo_diff_cases() {
+            let bytes = d.encode_diff().unwrap_or_else(|e| panic!("encode_diff failed for {d:?}: {e:?}"));
+            let trace = semio_framework_dsl::walk_protocol(&diff_spec, &bytes).unwrap_or_else(|e| panic!("walk_protocol(diff) failed for {d:?} @{}: {}", e.offset, e.message));
+            assert_eq!(trace.consumed, bytes.len(), "diff walk did not consume every byte for {d:?}");
+        }
+    }
+
+    /// ✅️ `fixture_honesty_law`: the shipped `.dsl.semio`/`.pack.semio` fixtures are GENUINE
+    /// `print_dsl`/`encode_pack` output of `demo_xml_snapshot()` -- `parse_dsl(fixture) ==
+    /// demo()`, `print_dsl(demo()) == fixture` (byte-for-byte), and the pack twin -- so the
+    /// fixtures can never silently drift back to a fake again.
+    #[semio_framework_async_macros::async_test]
+    async fn fixture_honesty_law() {
+        const FIXTURE_DSL: &str = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio");
+        const FIXTURE_PACK: &[u8] = include_bytes!("../../../📚️examples/🎬️demo/🖼️assets/🎒️.pack.semio");
+
+        let demo = demo_xml_snapshot();
+
+        let parsed = <XmlSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(FIXTURE_DSL).expect("parse shipped .dsl.semio fixture");
+        assert_eq!(parsed, demo, "shipped .dsl.semio fixture does not parse back to demo_xml_snapshot()");
+        assert_eq!(pack::snapshot::ArtifactDsl::print_dsl(&demo), FIXTURE_DSL, "print_dsl(demo_xml_snapshot()) drifted from the shipped .dsl.semio fixture");
+
+        let decoded = <XmlSnapshot as pack::snapshot::ArtifactPack>::decode_pack(FIXTURE_PACK).expect("decode shipped .pack.semio fixture");
+        assert_eq!(decoded, demo, "shipped .pack.semio fixture does not decode back to demo_xml_snapshot()");
+        assert_eq!(pack::snapshot::ArtifactPack::encode_pack(&demo), FIXTURE_PACK, "encode_pack(demo_xml_snapshot()) drifted from the shipped .pack.semio fixture");
+    }
+
+
+}
+//#endregion 🔖️ConformanceLaws
+
+/// ⚖️ `mutation_inverse_sum_law`: for every leaf the inverse diffs sum to the negative forward diff.
+#[semio_framework_async_macros::async_test]
+async fn mutation_inverse_sum_law_holds_for_every_leaf() {
+    let base = sample_snapshot();
+    for mutation in sample_mutations() {
+        protocol::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
+    }
+}
+
+fn runtime_fixture_text(relative: &str) -> &'static str {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative);
+    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display())).into_boxed_str())
+}

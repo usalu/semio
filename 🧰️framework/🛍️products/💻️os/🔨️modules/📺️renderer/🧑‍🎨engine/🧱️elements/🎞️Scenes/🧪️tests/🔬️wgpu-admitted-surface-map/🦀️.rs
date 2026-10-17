@@ -11,7 +11,6 @@ fn mutable_ordered_lookup_preserves_sparse_slot_reuse_without_heap_work(){
  assert_eq!(heap.requested_bytes,fixture["lookupHeapBytes"].as_u64().unwrap()as usize);assert_eq!(heap.released_bytes,0);
  for(index,row)in fixture["expected"].as_array().unwrap().iter().enumerate(){assert_eq!(surfaces.id_at(index),row[0].as_str());assert_eq!(surfaces.get_mut_at(index).copied(),row[1].as_u64());}
  surfaces.begin_close();while surfaces.close_step().is_some(){}assert!(surfaces.terminal_is_empty());
- eprintln!("[DEBUG] Ordered mutable surface lookup sparseReuse=true requestedBytes={} releasedBytes={} terminal=true",heap.requested_bytes,heap.released_bytes);
 }
 
 #[test]

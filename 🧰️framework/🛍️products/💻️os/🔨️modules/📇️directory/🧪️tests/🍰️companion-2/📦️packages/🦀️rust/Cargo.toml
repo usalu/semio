@@ -24,6 +24,8 @@ path = "../../🦀️.rs"
 
 [dependencies]
 semio-framework-os-directory = { path = "../../../../📦️packages/🦀️rust" }
+semio-framework-os-directory-browser-actor = { path = "../../../../🧬️schema/🌐️browser-actor/📦️packages/🦀️rust" }
+semio-framework-os-directory-check-in = { path = "../../../../🧬️schema/📌️document-check-in-v1/📦️packages/🦀️rust" }
 semio-framework-async-macros = { path = "../../../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
 semio-framework-pack-json = { path = "../../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-value-derive = { path = "../../../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust" }

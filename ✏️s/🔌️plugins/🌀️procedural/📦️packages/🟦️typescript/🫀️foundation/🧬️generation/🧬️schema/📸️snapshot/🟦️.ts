@@ -1,0 +1,2 @@
+/** 📸️ Public entry `@semio-tech/procedural-js/foundation/generation/schema/snapshot`: the explicit surface that importers outside the module use. */
+export type { CameraJson, FlowChannelRef, FlowHostSnapshot, FlowNeuron, FlowNodeGui, FlowPreviewGui, FlowTree, FlowUi, FormGeneration, GenerationPlayState, GenerationValue, NeuralDictionary, NeuralValue, NodeChrome, ProceduralSnapshot, SynapseSpec, Widget, WidgetLayout } from "../../../../../../🫀️foundation/🧬️generation/🧬️schema/📸️snapshot/🟦️.ts";

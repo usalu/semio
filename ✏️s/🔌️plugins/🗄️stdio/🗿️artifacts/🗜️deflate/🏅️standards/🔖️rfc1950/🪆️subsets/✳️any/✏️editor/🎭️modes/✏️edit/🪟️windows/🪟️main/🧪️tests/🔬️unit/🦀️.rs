@@ -1,4 +1,7 @@
-use super::*;
+use crate::schema::snapshot::DeflateLevelHint;
+use crate::DeflateSnapshot;
+use semio_framework_ui_locale::Locale;
+use crate::editor::deflate::modes::edit::windows::main::*;
 
 #[semio_framework_async_macros::async_test]
 async fn definition_declares_an_editable_text_window() {

@@ -1,13 +1,13 @@
 /** 🔁️ GIS browser document peers refetch the same exact pair after a scoped rebootstrap. */
-import { workerLawFakesV1, bytesFromHex, fixtureRequiredFrontier } from "../../../../../../../🧰️framework/🛍️products/💻️os/🧪️tests/🧰️worker-law-fakes/🟦️.ts";
-import type { TestSource } from "../../../../../../../🧰️framework/🛍️products/💻️os/🧪️tests/🧰️worker-law-fakes/🟦️.ts";
+import { workerLawFakesV1, bytesFromHex, fixtureRequiredFrontier } from "@semio-tech/framework-os/testing/worker-law-fakes";
+import type { TestSource } from "@semio-tech/framework-os/testing/worker-law-fakes";
 import type { ServiceCompositionTestDependenciesV1 } from "../🧰️dependencies/🟦️.ts";
 
-type BackboneWorkerResponse = import("../../../../../../../🧰️framework/🛍️products/💻️os/🟦️.ts").BackboneWorkerResponse;
+type BackboneWorkerResponse = import("@semio-tech/framework-os").BackboneWorkerResponse;
 type DocumentScope = import("@semio-tech/framework/directory/schema").DocumentScope;
-type PersistenceBinding = import("../../../../../../../🧰️framework/🛍️products/💻️os/🟦️.ts").PersistenceBinding;
+type PersistenceBinding = import("@semio-tech/framework-os").PersistenceBinding;
 type UiNodeRecord = import("@semio-tech/framework/manifest").UiNodeRecord;
-type WireFrontierSummary = import("../../../../../../../🧰️framework/🔨️modules/📡️replication/🟦️.ts").WireFrontierSummary;
+type WireFrontierSummary = import("@semio-tech/framework-replication").WireFrontierSummary;
 type Vitest = NonNullable<ImportMeta["vitest"]>;
 
 export async function registerGisPeerRebootstrapTests(vitest: Vitest, dependencies: ServiceCompositionTestDependenciesV1, source: TestSource): Promise<void> {
@@ -41,6 +41,41 @@ export async function registerGisPeerRebootstrapTests(vitest: Vitest, dependenci
       
       
       
+      const { default: Ajv } = await import("ajv");
+      const ref = (name: string) => ({ $ref: `${schema.$id}#/$defs/${name}` });
+      const strings = { type: "array", items: { type: "string" } };
+      const admit = new Ajv({ strict: false }).addSchema(schema).compile<GisMapPeerRebootstrapFixtureV1>({
+        type: "object",
+        required: ["schema", "scope", "clients", "published", "order", "sourceHostiles", "nonclaims"],
+        properties: {
+          schema: { const: "semio.os.gis-map-peer-rebootstrap/v1" },
+          scope: ref("GisMapPeerRebootstrapScope"),
+          clients: { type: "array", items: { type: "object", required: ["clientInstanceId"], properties: { clientInstanceId: { type: "string" } } } },
+          published: {
+            type: "object",
+            required: ["checkpointId", "descriptorDigestV1", "aggregateSha256", "frontier", "scene"],
+            properties: {
+              checkpointId: ref("GisMapPeerRebootstrapHash"),
+              descriptorDigestV1: ref("GisMapPeerRebootstrapHash"),
+              aggregateSha256: ref("GisMapPeerRebootstrapHash"),
+              frontier: ref("GisMapPeerRebootstrapFrontier"),
+              scene: {
+                type: "object",
+                required: ["revision", "nodeKind", "region"],
+                properties: {
+                  revision: { type: "integer" },
+                  nodeKind: { const: "tiled-map" },
+                  region: { type: "object", required: ["id", "kind"], properties: { id: { type: "string" }, kind: { const: "inference-bounds" } } },
+                },
+              },
+            },
+          },
+          order: strings,
+          sourceHostiles: strings,
+          nonclaims: strings,
+        },
+      });
+      if (!admit(parsed)) throw new Error("peer rebootstrap fixture violates its schema");
       const corpus = parsed;
       const fixture = await artifactBootstrapFixture();
       const welcome = decodeFixtureFrame(fixture.wire.inlineWelcomeHex);

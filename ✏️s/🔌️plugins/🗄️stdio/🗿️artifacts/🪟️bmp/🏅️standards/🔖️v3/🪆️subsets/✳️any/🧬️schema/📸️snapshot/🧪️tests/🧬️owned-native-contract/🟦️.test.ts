@@ -33,7 +33,6 @@ test("native BMP image replacement and inverse retain the exact ten-bit 513 comp
    const reference=Buffer.from(bytes),offset=reference.readUInt32LE(10),word=reference.readUInt32LE(offset);
    expect((word&1072693248)>>>20).toBe(513);expect((word&1047552)>>>10).toBe(777);expect(word>>>31).toBe(1);
   }
-  console.log(`[DEBUG] BMP typed image replacement neutral=${row.name} nativeWordsExact=true inverseExact=true`);
  }
 });
 

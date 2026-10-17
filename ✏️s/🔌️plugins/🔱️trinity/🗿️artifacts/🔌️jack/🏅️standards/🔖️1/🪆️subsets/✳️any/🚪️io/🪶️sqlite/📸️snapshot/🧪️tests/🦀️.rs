@@ -1,12 +1,16 @@
 //! 🔌️ Authentic Jack parent Native baselines, before semantic provider opt-in.
+use store::sqlite_snapshot::{SnapshotEncoding, SqliteSnapshotControl, SqliteSnapshotPhase};
 use semio_framework_test_original_snapshot_owners as original_owners;
 use ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot as _;
 use pack::snapshot::ArtifactSqliteSnapshot as _;
-use crate::*;
+use crate::standards::v1::subsets::any::schema::graph::Camera;
+use crate::standards::v1::subsets::any::schema::manifest::{EdgeKindDef, Manifest, NodeKindDef, PortKindDef};
+use crate::standards::v1::subsets::any::schema::snapshot::JackSnapshot;
+use semio_framework_graph_manifest::{PortDirection, PropertyDef, PropertyKind};
 use semio_framework_value::{FromValue, ToValue, ValueType};
 use store::{pack::snapshot::ArtifactDsl, pack::snapshot::ArtifactPack};
 fn laws() -> serde_json::Value {
-    serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap()
+    serde_json::from_str(runtime_fixture_text("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json")).unwrap()
 }
 fn words() -> Vec<u64> {
     laws()["binary64Bits"].as_array().unwrap().iter().map(|v| u64::from_str_radix(v.as_str().unwrap(), 16).unwrap()).collect()
@@ -81,7 +85,7 @@ impl std::ops::Deref for Owned {
 impl Drop for Owned {
     fn drop(&mut self) {
         if let Some(v) = self.0.take() {
-            crate::retire_owned_to_terminal(v).expect("Jack fixture retirement");
+            crate::standards::v1::subsets::any::schema::content::retire_owned_to_terminal(v).expect("Jack fixture retirement");
         }
     }
 }
@@ -186,13 +190,13 @@ fn sqlite_snapshot_jack_public_json_snapshot_api_preserves_the_same_literal_owne
 #[test]
 fn sqlite_snapshot_jack_independent_sqlite_understands_all_authored_entities_and_words() {
     let script = r#"import{Database}from'bun:sqlite';const d=new Database(':memory:',{safeIntegers:true});d.exec(process.argv[1]);const l=JSON.parse(process.argv[2]);const rows=d.query('SELECT name FROM sqlite_schema WHERE type=\'table\'').all();if(rows.length!==13)throw Error('table count');for(const{name}of rows)if(d.query('PRAGMA table_info('+name+')').all().length!==l.tableWidths[name])throw Error(name);d.exec("INSERT INTO jack_document VALUES(1,'trinity.graph','name',NULL,'','query');INSERT INTO jack_content_child VALUES(1,1,'','independent target','s.fixture.graph','v1','graph')");for(const hex of l.binary64Bits){const word=BigInt('0x'+hex),data=new DataView(new ArrayBuffer(8));data.setBigUint64(0,word);const f=data.getFloat64(0),kind=Number.isNaN(f)?'nan':f===Infinity?'positiveInfinity':f===-Infinity?'negativeInfinity':'finite',cells=[1n,1n,...Array(3).fill(Number.isNaN(f)?null:f),...Array.from({length:3},()=>[BigInt.asIntN(64,word),kind]).flat()];d.query('INSERT OR REPLACE INTO jack_camera VALUES('+Array(11).fill('?').join(',')+')').run(...cells);const row=d.query('SELECT x_ieee754_bits,x_numeric_class FROM jack_camera').get();if(BigInt.asUintN(64,row.x_ieee754_bits).toString(16).padStart(16,'0')!==hex||row.x_numeric_class!==kind)throw Error('exact word')}if(d.query('PRAGMA foreign_key_check').all().length)throw Error('foreign keys');d.close();"#;
-    let out = std::process::Command::new("bun").args(["-e", script, include_str!("../🗄️.sql"), &laws().to_string()]).output().unwrap();
+    let out = std::process::Command::new("bun").args(["-e", script, runtime_fixture_text("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"), &laws().to_string()]).output().unwrap();
     assert!(out.status.success(), "{}", String::from_utf8_lossy(&out.stderr));
 }
 #[test]
 fn sqlite_snapshot_jack_actual_erased_both_formats_keep_queryable_parent() {
     use store::sqlite_snapshot::*;
-    let codec = store::bare_artifact_codec::<JackSnapshot, crate::TrinityGraphMutation>(crate::TRINITY_GRAPH_SCHEMA).snapshot_sqlite.expect("Jack absent parent capability");
+    let codec = store::bare_artifact_codec::<JackSnapshot, crate::standards::v1::subsets::any::schema::mutations::TrinityGraphMutation>(crate::standards::v1::subsets::any::schema::graph::TRINITY_GRAPH_SCHEMA).snapshot_sqlite.expect("Jack absent parent capability");
     let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.trinity.jack".into(), standard: "1".into(), subset: "*".into() };
     let expected = Owned::new(full(0, 0));
     for encoding in [SnapshotEncoding::Binary, SnapshotEncoding::Text] {
@@ -200,10 +204,10 @@ fn sqlite_snapshot_jack_actual_erased_both_formats_keep_queryable_parent() {
             SnapshotEncoding::Binary => store::io_schema::IoPayload::Binary(expected.encode_pack_with(&store::PackEncodeOptions::default()).unwrap()),
             SnapshotEncoding::Text => store::io_schema::IoPayload::Text(expected.print_dsl()),
         };
-        let db = original_owners::with_decoding(|native_owner|(codec.export)(crate::TRINITY_GRAPH_SCHEMA, &dialect, &native, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default()), native_owner)).unwrap().value;
+        let db = original_owners::with_decoding(|native_owner|(codec.export)(crate::standards::v1::subsets::any::schema::graph::TRINITY_GRAPH_SCHEMA, &dialect, &native, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default()), native_owner)).unwrap().value;
         assert_eq!(db.tables.len(), 13);
         assert_eq!(db.table("jack_document").unwrap().single_row().unwrap().text(2).unwrap(), expected.name);
-        let native = original_owners::with_encoding(|native_owner|(codec.import)(crate::TRINITY_GRAPH_SCHEMA, &dialect, &mut Some(db), encoding, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default()), native_owner)).unwrap().value;
+        let native = original_owners::with_encoding(|native_owner|(codec.import)(crate::standards::v1::subsets::any::schema::graph::TRINITY_GRAPH_SCHEMA, &dialect, &mut Some(db), encoding, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default()), native_owner)).unwrap().value;
         let actual = Owned::new(match native {
             store::io_schema::IoPayload::Text(v) => JackSnapshot::parse_dsl(&v).unwrap(),
             store::io_schema::IoPayload::Binary(v) => JackSnapshot::decode_pack(&v).unwrap(),
@@ -303,19 +307,18 @@ fn sqlite_snapshot_jack_exact_row_admission_and_all_four_real_interior_copy_phas
 }
 
 mod populated_public_owner {
-use crate::standards::v1::subsets::any::io::sqlite::snapshot::tests::*;use semio_framework_plugin::__semio_dispatch_PluginApp;use semio_framework_plugin::plugin_app_close_prelude::*;use store::sqlite_snapshot::{SnapshotEncoding,SqliteDatabaseLimits};
+use crate::hoisted_snapshot_10::*;use semio_framework_plugin::__semio_dispatch_PluginApp;use semio_framework_plugin::plugin_app_close_prelude::*;use store::sqlite_snapshot::{SnapshotEncoding,SqliteDatabaseLimits};
 semio_framework_dispatch_macros::dyn_enum_close! {
 /// 🗃️ Actual owner editor/viewer app wrappers for public I/O registration.
 pub(crate) enum PublicApps: PluginApp {Editor(VcsArtifactApp<EditorApp<crate::editor::jack::TrinityJackPlayApp<crate::test_support::FixtureComposition>>,store::NoMembers>),Viewer(VcsArtifactApp<ViewerApp<crate::viewer::jack::TrinityJackViewer<crate::test_support::FixtureComposition>>,store::NoMembers>),}
 }
 
-fn register(){semio_framework_plugin::PluginBuilder::<_, PublicApps>::new("trinity").label("Populated public SQLite").version("0.0.1").package_id("semio:trinity").declare_artifact(crate::artifact::<PublicApps,crate::test_support::FixtureComposition>()).try_build().unwrap();}
+fn register(){semio_framework_plugin::PluginBuilder::<_, PublicApps>::new("trinity").label("Populated public SQLite").version("0.0.1").package_id("semio:trinity").declare_artifact(crate::standards::v1::subsets::any::registration::artifact::<PublicApps,crate::test_support::FixtureComposition>()).try_build().unwrap();}
 #[semio_framework_async_macros::async_test]
 async fn sqlite_snapshot_jack_populated_actual_app_public_both_forms(){
 use {semio_framework_artifact_reference::ArtifactDialect,store::io::io_mechanism::io_export_sqlite_snapshot,store::io::io_mechanism::io_import_sqlite_snapshot,store::io::io_mechanism::io_route};use store::io_schema::{IoFidelity,SQLITE_SNAPSHOT};
 register();let dialect=ArtifactDialect{artifact_kind:"s.trinity.jack".into(),standard:"1".into(),subset:"*".into()};let sqlite=ArtifactDialect::from(SQLITE_SNAPSHOT);for route in[io_route(&dialect,&sqlite,1).await.unwrap().value,io_route(&sqlite,&dialect,1).await.unwrap().value]{assert_eq!(route.hops.len(),1);assert_eq!(route.fidelity,IoFidelity::Exact);}
 for word in words(){let expected=Owned::new(full(word,1));for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let bytes=async{let original_file_dialect=&dialect;let original_file_input=&*expected;let original_file_encoding=encoding;let original_file_limits=SqliteDatabaseLimits::default();let original_file_progress:&mut dyn FnMut(store::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |_|true;store::io::testing::with_snapshot_file_decoding(store::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|io_export_sqlite_snapshot(original_file_dialect,original_file_input,original_file_encoding,sqlite_control,native_owner).await).await}.await.unwrap().value;let actual=Owned::new(async{let original_file_dialect=&dialect;let original_file_input=&bytes;let original_file_limits=SqliteDatabaseLimits::default();let original_file_progress:&mut dyn FnMut(store::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |_|true;store::io::testing::with_snapshot_file_encoding(store::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|io_import_sqlite_snapshot::<JackSnapshot>(original_file_dialect,original_file_input,sqlite_control,native_owner).await).await}.await.unwrap().value);assert_full(&actual,&expected,word);assert_eq!((&*actual).encode_pack(),(&*expected).encode_pack());assert_eq!((&*actual).print_dsl(),(&*expected).print_dsl());}}
-eprintln!("[DEBUG] jack actual app public both forms preserve complete owner and words");
 }
 #[semio_framework_async_macros::async_test]
 async fn sqlite_snapshot_jack_populated_public_independent_edit_retirement(){
@@ -324,6 +327,10 @@ register();let dialect=ArtifactDialect{artifact_kind:"s.trinity.jack".into(),sta
 for word in words(){let expected=Owned::new(full(word,1));for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let bytes=async{let original_file_dialect=&dialect;let original_file_input=&*expected;let original_file_encoding=encoding;let original_file_limits=SqliteDatabaseLimits::default();let original_file_progress:&mut dyn FnMut(store::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |_|true;store::io::testing::with_snapshot_file_decoding(store::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|io_export_sqlite_snapshot(original_file_dialect,original_file_input,original_file_encoding,sqlite_control,native_owner).await).await}.await.unwrap().value;
 let script=r#"import{Database}from'bun:sqlite';const d=Database.deserialize(await Bun.stdin.bytes(),{safeIntegers:true});if(d.query('PRAGMA integrity_check').get().integrity_check!=='ok'||d.query('PRAGMA foreign_key_check').all().length)throw Error('integrity');if(d.query('SELECT COUNT(*) AS n FROM sqlite_schema WHERE type=\'table\'').get().n!==14n)throw Error('table census');const m=d.query('SELECT * FROM semio_snapshot').get();if(JSON.stringify(Object.keys(m))!==JSON.stringify(['id','artifact_kind','standard','subset','schema_version','native_encoding'])||m.id!==1n||m.schema_version!==1n)throw Error('completePublicMetadata');if(m.artifact_kind!=='s.trinity.jack'||m.standard!=='1'||m.subset!=='*'||m.native_encoding!==process.argv[1])throw Error('metadata');d.query('UPDATE jack_document SET query=? WHERE id=1').run('independent 日本\u0000');await Bun.write(Bun.stdout,d.serialize());d.close();"#;
 let mut child=Command::new("bun").args(["--eval",script,encoding.as_str(),&(laws()).to_string()]).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();child.stdin.take().unwrap().write_all(&bytes).unwrap();let out=child.wait_with_output().unwrap();assert!(out.status.success(),"{}",String::from_utf8_lossy(&out.stderr));let actual=Owned::new(async{let original_file_dialect=&dialect;let original_file_input=&out.stdout;let original_file_limits=SqliteDatabaseLimits::default();let original_file_progress:&mut dyn FnMut(store::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |_|true;store::io::testing::with_snapshot_file_encoding(store::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|io_import_sqlite_snapshot::<JackSnapshot>(original_file_dialect,original_file_input,sqlite_control,native_owner).await).await}.await.unwrap().value);let mut literal=full(word,1);literal.query="independent 日本\0".into();let literal=Owned::new(literal);assert_full(&actual,&literal,word);assert_eq!((&*actual).encode_pack(),(&*literal).encode_pack());assert_eq!((&*actual).print_dsl(),(&*literal).print_dsl());}}
-eprintln!("[DEBUG] jack independent public SQL edit complete owner and retirement");
 }
+}
+
+fn runtime_fixture_text(relative: &str) -> &'static str {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative);
+    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display())).into_boxed_str())
 }

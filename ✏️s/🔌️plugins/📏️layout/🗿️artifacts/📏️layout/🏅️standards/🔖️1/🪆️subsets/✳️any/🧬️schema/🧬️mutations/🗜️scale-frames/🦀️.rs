@@ -16,8 +16,8 @@ use semio_framework_value_derive::{FromValue, ToValue};
 /// 🗜️ `scale-frames` payload — the page, the frames it scales (literal ids), the pivot and the positive factor per axis.
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 pub struct ScaleFrames {
@@ -89,23 +89,3 @@ pub fn inverse_scale_frames<Op: From<crate::move_frame::MoveFrame> + From<crate:
 }
 //#endregion ↩️Inverse
 
-//#region 🪢️TaxonomyMounts
-#[cfg(test)]
-#[path = "🧪️tests/🗜️doubles/🦀️.rs"]
-mod tests_doubles_both_frames_about_their_centroid;
-#[cfg(test)]
-#[path = "🧪️tests/⏸️keeps-unit-factors/🦀️.rs"]
-mod tests_keeps_unit_factors;
-#[cfg(test)]
-#[path = "🧪️tests/🫓️refuses/🦀️.rs"]
-mod tests_refuses_a_zero_factor;
-#[cfg(test)]
-#[path = "🧪️tests/🚫️rejects/🦀️.rs"]
-mod tests_rejects_missing_frames;
-#[cfg(test)]
-#[path = "🧪️tests/⚠️skips/🦀️.rs"]
-mod tests_skips_a_locked_and_a_missing_frame;
-#[cfg(test)]
-#[path = "🧪️tests/↔️stretches/🦀️.rs"]
-mod tests_stretches_the_rect_sideways;
-//#endregion 🪢️TaxonomyMounts

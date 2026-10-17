@@ -18,9 +18,14 @@
     ".": {
       "types": "./dist/🟦️.d.ts",
       "import": "./dist/🟦️.js"
-    }
+    },
+    "./1/subsets/any/schema/mutations/create-widget/diff": "./🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱️create-widget/🔺️diff/🟦️.ts",
+    "./standards/1/subsets/any/schema/mutations/move-nodes/diff": "./🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚚️move-nodes/🔺️diff/🟦️.ts",
+    "./standards/1/subsets/any/schema/snapshot": "./🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🟦️.ts"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@semio-tech/procedural-js": "workspace:*"
+  },
   "license": "LGPL-3.0-or-later",
   "bundleKind": "library"
 }

@@ -1,4 +1,4 @@
-import type {Binary64} from "@semio-tech/framework/value/ieee754";
+import {binary64, type Binary64} from "@semio-tech/framework/value/ieee754";
 /** 🔺 s.wfc.grid3d diff — a field-sparse delta: scalars are optional absolute values, cell sizes are sparse axis patches, every list carries removed keys,
  * added rows (landing at their canonical position) and per-row field patches. */
 
@@ -42,7 +42,7 @@ function applyRows<T, Q>(base: readonly T[], rows: Grid3dRows<T, Q>, key: (row: 
   }
   for (const move of rows.moved) slots[move.to] = base[move.from];
   const survivors = base.filter((_, index) => !taken.has(index));
-  const items = slots.map((slot) => slot ?? survivors.shift()!);
+  const items: T[] = slots.map((slot) => slot ?? survivors.shift()!);
   if (new Set(items.map(key)).size !== items.length) throw new RangeError("two rows of the after list carry the same key");
   for (const entry of rows.modified) {
     const at = items.findIndex((item) => key(item) === entry.id);
@@ -103,7 +103,7 @@ export interface Grid3dDiff {
 
 function applyAxis(sizes: readonly Binary64[], patch: Grid3dAxisPatch | null): Binary64[] {
   if (patch === null) return [...sizes];
-  const out = patch.length === null ? [...sizes] : Array.from({ length: patch.length }, (_, index) => sizes[index] ?? (0 as Binary64));
+  const out = patch.length === null ? [...sizes] : Array.from({ length: patch.length }, (_, index) => sizes[index] ?? binary64(0));
   for (const row of patch.sizes) {
     if (row.index >= out.length) throw new RangeError(`cell size ${row.index} is past the axis`);
     out[row.index] = row.size;

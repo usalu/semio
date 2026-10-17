@@ -1,0 +1,79 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/📓️print/🔨️modules/📊️visualization-gallery/🟦️.ts",
+ "importers": "auto",
+ "childrenImportParent": true,
+ "children": [
+  {
+   "dir": "🏭️artifact-generation",
+   "doc": "/** 🏭️ The generated visualization artifacts: the catalogue stylesheet and labels, the gallery documents, the generated file set and `generateVizArtifacts`. */",
+   "lines": [
+    [
+     53,
+     212
+    ]
+   ]
+  },
+  {
+   "dir": "🧾️api-reference",
+   "doc": "/** 🧾️ The machine-readable twin of the public visualization API: the documented key lines, the Keys regions of the LaTeX packages and `vizApiReference`. */",
+   "lines": [
+    [
+     216,
+     321
+    ],
+    [
+     340,
+     538
+    ]
+   ]
+  },
+  {
+   "dir": "🔑️implemented-keys",
+   "doc": "/** 🔑️ The implemented keys of the LaTeX visualization packages: the scanned l3keys declarations, the key paths a helper reaches and the keys each family implements. */",
+   "lines": [
+    [
+     569,
+     878
+    ]
+   ]
+  },
+  {
+   "dir": "🗂️api-commands",
+   "doc": "/** 🗂️ The public visualization API commands with their documented examples, and the assertion that every command is covered. */",
+   "lines": [
+    [
+     881,
+     1021
+    ]
+   ]
+  },
+  {
+   "dir": "📋️printed-key-tables",
+   "doc": "/** 📋️ The printed key tables of the visualization API: the cells, sections, owner rows and key rows of the LaTeX tables. */",
+   "lines": [
+    [
+     322,
+     338
+    ],
+    [
+     1023,
+     1148
+    ]
+   ]
+  },
+  {
+   "dir": "🩺️coverage-verification",
+   "doc": "/** 🩺️ The coverage of the visualization catalogue: the registered families, the printed key findings, the coverage report and the verification of the whole catalogue. */",
+   "lines": [
+    [
+     542,
+     566
+    ],
+    [
+     1150,
+     1322
+    ]
+   ]
+  }
+ ]
+}

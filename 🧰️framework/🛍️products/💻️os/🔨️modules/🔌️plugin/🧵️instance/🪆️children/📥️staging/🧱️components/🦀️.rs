@@ -1,5 +1,20 @@
 //! 🛖️ The instance components of `instance-children`: ChildComposition (WP6, plan section 7.3).
-use super::*;
+use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_framework_plugin_ownership::bounded_ownership::ArtifactFixedRegistry;
+use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use pack::snapshot::ArtifactPack;
+use semio_framework_plugin_child::{ChildContentRetirement, ChildMemberRegistry, ChildMemberRetirement};
+use semio_framework_plugin_decl_views::child_view::ChildContentView;
+use store::os_store::composition_coordinator::CompositionCoordinator;
+use semio_framework_plugin_decl_emission::Emit;
+use semio_framework::FaultFrom;
+use std::future::Future;
+use std::mem::ManuallyDrop;
+use store::{MemberFactory, Mutation, SpaceMember};
+use semio_framework_plugin_publication_mounted::owner::MountedPrivateChildGroup;
+use protocol::OpText;
+use semio_framework_plugin_reactor_app::PluginApp;
+use semio_framework_ui_contract::*;
 
 /// 🏕️ Child composition: the live owned children, their private groups, content roots and retirement registries.
 pub struct ChildComposition<M: SpaceMember + MemberFactory> {

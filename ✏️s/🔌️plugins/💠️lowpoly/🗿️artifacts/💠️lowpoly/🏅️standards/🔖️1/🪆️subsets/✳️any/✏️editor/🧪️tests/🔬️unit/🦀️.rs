@@ -1,3 +1,7 @@
+use semio_framework_3d::mesh::{MeshModelingOps};
+
+/// 🎟️ Unbounded retained grant: the pre-migration step budget carried no retained limit.
+const UNBOUNDED_STEP_GRANT: semio_framework_job::RetainedCloneGrant = semio_framework_job::RetainedCloneGrant { maximum_items: usize::MAX, maximum_copy_bytes: usize::MAX, maximum_capacity_bytes: usize::MAX, maximum_release_bytes: usize::MAX, maximum_depth: usize::MAX };
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
 #[path = "../🧰️support/🦀️.rs"]
@@ -148,7 +152,7 @@ async fn retained_progress_replay_freshness_and_close_are_exact() {
                 hover: &hover,
                 context: Some(&context),
                 operation: &operation
-            }, &mut semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(256, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut 0))
+            }, &mut semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(256, u64::MAX, UNBOUNDED_STEP_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut 0, &mut semio_framework_job::RetainedCloneProgress::default()))
             .expect("progress"),
         ArtifactCommandWorkStep::Progress { .. }
     ));
@@ -169,7 +173,7 @@ async fn retained_progress_replay_freshness_and_close_are_exact() {
                 hover: &hover,
                 context: Some(&context),
                 operation: &operation
-            }, &mut semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(256, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut 0))
+            }, &mut semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(256, u64::MAX, UNBOUNDED_STEP_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut 0, &mut semio_framework_job::RetainedCloneProgress::default()))
             .expect("replay"),
         ArtifactCommandWorkStep::Replay { .. }
     ));
@@ -184,14 +188,14 @@ async fn retained_progress_replay_freshness_and_close_are_exact() {
                 hover: &hover,
                 context: Some(&context),
                 operation: &operation
-            }, &mut semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(256, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut 0))
+            }, &mut semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(256, u64::MAX, UNBOUNDED_STEP_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut 0, &mut semio_framework_job::RetainedCloneProgress::default()))
             .expect("complete"),
         ArtifactCommandWorkStep::Complete(_)
     ));
     let drifted = AppOperationContext { generation: operation.generation + 1, ..operation.clone() };
     let mut rejected = LowpolyRetainedCommandWork::new("toggleShowEdges", LowpolyCommandDisposition::Config, operation.operation_id, operation.generation, operation.canonical_base_revision, context_identity);
     assert!(rejected
-        .step(&semio_framework_plugin::retained_command::ArtifactCommandInputs { snapshot_owner: None, command: &command, snapshot: &snapshot, config: &config, history: &history, interaction: &interaction, hover: &hover, context: Some(&context), operation: &drifted }, &mut semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(256, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut 0))
+        .step(&semio_framework_plugin::retained_command::ArtifactCommandInputs { snapshot_owner: None, command: &command, snapshot: &snapshot, config: &config, history: &history, interaction: &interaction, hover: &hover, context: Some(&context), operation: &drifted }, &mut semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(256, u64::MAX, UNBOUNDED_STEP_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut 0, &mut semio_framework_job::RetainedCloneProgress::default()))
         .is_err());
     let drifted_context = retained_context(LowpolyTransient::default(), 20);
     assert!(rejected
@@ -204,7 +208,7 @@ async fn retained_progress_replay_freshness_and_close_are_exact() {
             hover: &hover,
             context: Some(&drifted_context),
             operation: &operation
-        }, &mut semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(256, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut 0))
+        }, &mut semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(256, u64::MAX, UNBOUNDED_STEP_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut 0, &mut semio_framework_job::RetainedCloneProgress::default()))
         .is_err());
     assert!(matches!(
         rejected
@@ -217,7 +221,7 @@ async fn retained_progress_replay_freshness_and_close_are_exact() {
                 hover: &hover,
                 context: Some(&context),
                 operation: &operation
-            }, &mut semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(256, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut 0))
+            }, &mut semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(256, u64::MAX, UNBOUNDED_STEP_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut 0, &mut semio_framework_job::RetainedCloneProgress::default()))
             .expect("exact retry"),
         ArtifactCommandWorkStep::Progress { .. }
     ));
@@ -278,7 +282,7 @@ async fn retained_migrated_turns_stay_below_eight_milliseconds() {
                     hover: &hover,
                     context: Some(&context),
                     operation: &operation,
-                }, &mut semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(256, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut 0));
+                }, &mut semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(256, u64::MAX, UNBOUNDED_STEP_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut 0, &mut semio_framework_job::RetainedCloneProgress::default()));
                 slowest = slowest.max(started.elapsed());
                 match step {
                     Ok(ArtifactCommandWorkStep::Complete(_) | ArtifactCommandWorkStep::CompleteWithEphemeral { .. }) => break,

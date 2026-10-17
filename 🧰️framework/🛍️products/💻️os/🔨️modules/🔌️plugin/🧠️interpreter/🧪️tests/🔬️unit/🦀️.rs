@@ -1,9 +1,10 @@
 use super::*;
+use semio_framework_test_fixtures::fixture_text;
 
 /// 🔌️ Actual job selectors preserve the authored six-port core types checked by an independent engine.
 #[test]
 fn original_owned_job_export_selectors_match_authored_contract_and_wasmtime() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🔌️exports/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../🧪️tests/🔌️exports/🔣️.json")).unwrap();
     let bytes = [0, 97, 115, 109, 1, 0, 0, 0, 1, 7, 1, 96, 2, 127, 127, 1, 126, 3, 2, 1, 0, 7, 7, 1, 3, 106, 111, 98, 0, 0, 10, 6, 1, 4, 0, 66, 0, 11];
     let engine = wasmtime::Engine::default();
     let module = wasmtime::Module::new(&engine, bytes).unwrap();
@@ -22,10 +23,9 @@ fn original_owned_job_export_selectors_match_authored_contract_and_wasmtime() {
         assert_eq!(kind.parameters, [ValueType::I32, ValueType::I32]);
         assert_eq!(kind.results, [ValueType::I64]);
     }
-    println!("[DEBUG] Original owned six job selectors match authored i32/i32->i64 and Wasmtime oracle");
 }
 
-const MEMORY_COPY_RANGES_JSON: &str = include_str!("../🧫️fixtures/🔣️.json");
+static MEMORY_COPY_RANGES_JSON: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../🧪️tests/🧫️fixtures/🔣️.json"));
 
 #[derive(serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -219,7 +219,7 @@ fn memory_access_and_growth_are_bounded() {
 
 #[test]
 fn memory_copy_ranges_match_the_language_neutral_fixture_and_wasmtime() {
-    let fixture: MemoryCopyFixture = serde_json::from_str(MEMORY_COPY_RANGES_JSON).expect("memory.copy fixture must match its language-neutral schema");
+    let fixture: MemoryCopyFixture = serde_json::from_str((*MEMORY_COPY_RANGES_JSON)).expect("memory.copy fixture must match its language-neutral schema");
     assert_eq!(fixture.version, 1);
     let bytes = memory_copy_module();
     let module = Arc::new(CoreModule::parse(&bytes).expect("parse memory.copy module"));

@@ -3,7 +3,7 @@
  * 🧱️ Child module of {@link ../🟦️.tsx | World3dHost}, which re-exports every public name below so import specifiers stay unchanged.
  */
 
-import { leftoverWorldGumballPoseV1 } from "../../🛠️ShellHelpers/🟦️.tsx";
+import { leftoverWorldGumballPoseV1 } from "../../🛠️ShellHelpers/🔩️plumbing/🎮️leftover-views/🟦️.ts";
 import { parseJsonArray } from "../../🗣️Interpreter/🌉️scene-host-contract/🟦️.ts";
 import {
   type World3dMarkerInteractionFields,

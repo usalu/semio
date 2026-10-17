@@ -1,6 +1,5 @@
 //! 📖️ Authoritative PDF mutation payload, diff, inverse, and tests for `set-page-layout`.
 
-use super::PdfMutation;
 use crate::standards::v1_7::subsets::base::schema::diff::{self, PdfDiff};
 use crate::standards::v1_7::subsets::base::schema::snapshot::*;
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
@@ -14,7 +13,10 @@ pub struct SetPageLayout {
     pub layout: Option<PdfPageLayout>,
 }
 
-impl MutationKind<PdfSnapshot, PdfMutation> for SetPageLayout {
+impl<Op> MutationKind<PdfSnapshot, Op> for SetPageLayout
+where
+    Op: protocol::Mutation<PdfSnapshot, Diff = PdfDiff> + From<SetPageLayout>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "page-layout", kind: "set-page-layout", record: "Set" };
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
@@ -22,10 +24,10 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetPageLayout {
         MutationOutcome::new(diff::diff_set_page_layout(base, self.layout.clone()))
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
         let _ = base;
-        vec![PdfMutation::SetPageLayout(SetPageLayout { layout: base.page_layout.clone() })]
+        vec![Op::from(SetPageLayout { layout: base.page_layout.clone() })]
     
     })())
 }
@@ -42,8 +44,6 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetPageLayout {
 //#endregion 🔖️Mutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
 

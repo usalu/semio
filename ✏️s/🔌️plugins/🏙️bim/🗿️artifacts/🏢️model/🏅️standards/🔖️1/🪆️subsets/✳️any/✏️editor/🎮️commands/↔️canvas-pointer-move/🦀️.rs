@@ -2,8 +2,9 @@
 //! until the gesture commits, and the marks it shows travel in the window transient, never in the document.
 
 use crate::editor::bim::gestures::session::ToolEvent;
-use crate::editor::bim::gestures::{canvas_pointer, run};
-use crate::editor::bim::BimDispatchCtx;
+use crate::editor::bim::commands::canvas_pointer_down::canvas_pointer;
+use crate::editor::bim::gestures::run;
+use crate::editor::bim::dispatch_context::BimDispatchCtx;
 use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 

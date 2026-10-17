@@ -8,18 +8,21 @@
 //! same corpus is judged by the third-party validators of `test schema mutation-payloads` (npm `jsonschema`) and by the
 //! TypeScript twins beside this file (`./🟦️.ts`, Ajv).
 
-use super::*;
+use crate::standards::v2_0::subsets::any::schema::mutations::*;
+use semio_framework_test_fixtures::{fixture_path, fixture_text};
+use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::diff::GltfDiff;
+use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfSnapshot;
 use protocol::SemanticMutation;
 use serde_json::Value;
 use std::path::{Path, PathBuf};
 use std::sync::OnceLock;
 
-const SNAPSHOT_SCHEMA: &str = include_str!("../../../📸️snapshot/🔣️.json");
-const DIFF_SCHEMA: &str = include_str!("../../../🔺️diff/🔣️.json");
-const AGGREGATE_SCHEMA: &str = include_str!("../../🔣️.json");
+static SNAPSHOT_SCHEMA: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../📸️snapshot/🔣️.json"));
+static DIFF_SCHEMA: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../🔺️diff/🔣️.json"));
+static AGGREGATE_SCHEMA: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🔣️.json"));
 
 fn subset() -> PathBuf {
-    Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../..")
+    fixture_path!("../../../../../..")
 }
 
 fn corpus() -> PathBuf {
@@ -69,7 +72,7 @@ fn same(left: &Value, right: &Value) -> bool {
 
 fn schema_documents() -> Vec<&'static str> {
     let mut documents = std::collections::BTreeMap::<String, &'static str>::new();
-    for source in [SNAPSHOT_SCHEMA, DIFF_SCHEMA].into_iter().chain(<GltfMutation as protocol::Mutation<GltfSnapshot>>::INPUT_SCHEMA_DOCUMENTS.iter().flat_map(|documents| documents.iter().copied())) {
+    for source in [(*SNAPSHOT_SCHEMA), (*DIFF_SCHEMA)].into_iter().chain(<GltfMutation as protocol::Mutation<GltfSnapshot>>::INPUT_SCHEMA_DOCUMENTS.iter().flat_map(|documents| documents.iter().copied())) {
         let document = json(source);
         let id = document["$id"].as_str().expect("every declared schema document has an identity").to_owned();
         if let Some(previous) = documents.insert(id.clone(), source) { assert_eq!(json(previous), document, "conflicting declared schema identity {id}"); }
@@ -92,7 +95,7 @@ fn aggregate_validator() -> &'static framework_schema::OwnedJsonSchemaValidator 
     static AGGREGATE: OnceLock<framework_schema::OwnedJsonSchemaValidator> = OnceLock::new();
     AGGREGATE.get_or_init(|| {
         let documents = schema_documents().into_iter().chain(<GltfMutation as protocol::Mutation<GltfSnapshot>>::INPUT_SCHEMAS.iter().copied()).collect::<Vec<_>>();
-        framework_schema::OwnedJsonSchemaValidator::compile_with_documents(AGGREGATE_SCHEMA, &documents).unwrap_or_else(|error| panic!("aggregate schema compiles: {error:?}"))
+        framework_schema::OwnedJsonSchemaValidator::compile_with_documents((*AGGREGATE_SCHEMA), &documents).unwrap_or_else(|error| panic!("aggregate schema compiles: {error:?}"))
     })
 }
 
@@ -112,7 +115,7 @@ fn case_name(case: &Path) -> String {
 
 /// 🧫️ Asserts one committed case, `<entity>/<verb>/<case>` under the corpus, against every corpus law; called by exactly one
 /// canonical implementation case per committed fixture bundle.
-pub(crate) fn assert_case(name: &str) {
+pub fn assert_case(name: &str) {
     let case = corpus().join(name);
     assert!(case.join("🦠️mutation/🔣️.json").is_file(), "{name}: no committed case");
     let text = read(&case.join("🦠️mutation/🔣️.json"));
@@ -143,7 +146,7 @@ fn assert_committed_outcome(name: &str, case: &Path, mutation: &GltfMutation) ->
     let mut snapshots = Vec::new();
     for side in ["⬅️before", "➡️after"] {
         let text = read(&case.join("📸️snapshot").join(side).join("🔣️.json"));
-        assert_valid(SNAPSHOT_SCHEMA, &text, &format!("{name} {side}"));
+        assert_valid((*SNAPSHOT_SCHEMA), &text, &format!("{name} {side}"));
         let snapshot: GltfSnapshot = semio_framework_pack_json::from_json_str(&text, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_else(|error| panic!("{name} {side}: {error}"));
         assert!(same(&wire(&snapshot), &json(&text)), "{name} {side}: decode→encode is not a fixed point");
         snapshots.push(snapshot);
@@ -155,7 +158,7 @@ fn assert_committed_outcome(name: &str, case: &Path, mutation: &GltfMutation) ->
         Some("applied") => {
             assert!(outcome.messages().is_empty(), "{name}: {:?}", outcome.messages());
             let committed = read(&case.join("🔺️diff/🔣️.json"));
-            assert_valid(DIFF_SCHEMA, &committed, &format!("{name} diff"));
+            assert_valid((*DIFF_SCHEMA), &committed, &format!("{name} diff"));
             assert!(same(&wire(outcome.diff()), &json(&committed)), "{name}: the produced diff differs from the committed one:\n{}", semio_framework_pack_json::to_json_string(outcome.diff()));
             let decoded: GltfDiff = semio_framework_pack_json::from_json_str(&committed, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
             assert_eq!(protocol::apply_diff(&decoded, &before).expect("committed diff applies"), after, "{name}: the committed diff does not carry before to after");
@@ -234,7 +237,7 @@ fn every_committed_case_is_mounted_by_its_leaf_implementation_case() {
 fn every_leaf_schema_declares_its_inputs_to_the_framework_reader() {
     let documents = schema_documents().into_iter().map(|text| semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("shared document parses"))).collect::<Vec<_>>();
     let resolve = |id: &str| documents.iter().find(|document| document.get("$id").and_then(semio_framework_value::DslValue::as_str) == Some(id)).cloned();
-    assert_eq!(<GltfMutation as protocol::Mutation<GltfSnapshot>>::INPUT_SCHEMAS.len(), json(AGGREGATE_SCHEMA)["oneOf"].as_array().unwrap().len());
+    assert_eq!(<GltfMutation as protocol::Mutation<GltfSnapshot>>::INPUT_SCHEMAS.len(), json((*AGGREGATE_SCHEMA))["oneOf"].as_array().unwrap().len());
     for schema in <GltfMutation as protocol::Mutation<GltfSnapshot>>::INPUT_SCHEMAS {
         let title = json(schema)["title"].as_str().unwrap_or_default().to_string();
         let inputs = semio_framework::mutation_input_defs(schema, &resolve).unwrap_or_else(|error| panic!("{title}: {error:?}"));

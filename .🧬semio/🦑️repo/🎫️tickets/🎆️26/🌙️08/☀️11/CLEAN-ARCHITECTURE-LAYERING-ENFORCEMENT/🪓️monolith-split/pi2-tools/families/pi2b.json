@@ -1,0 +1,37 @@
+{
+ "name": "pi2b",
+ "crates": [
+  "semio-framework-plugin",
+  "semio-framework-plugin-tool-run",
+  "semio-framework-plugin-time-travel",
+  "semio-framework-plugin-instance-stores",
+  "semio-framework-plugin-instance-history",
+  "semio-framework-plugin-instance-children",
+  "semio-framework-plugin-instance-jobs",
+  "semio-framework-plugin-instance-docs",
+  "semio-framework-plugin-instance-extension",
+  "semio-framework-plugin-instance-render",
+  "semio-framework-plugin-instance-dispatch",
+  "semio-framework-plugin-instance-typed-ops",
+  "semio-framework-plugin-time-travel-turns",
+  "semio-framework-plugin-tool-run-turns",
+  "semio-framework-plugin-instance-commands",
+  "semio-framework-plugin-instance-ladders",
+  "semio-framework-plugin-instance-app",
+  "semio-framework-plugin-testing-caller",
+  "semio-framework-plugin-builder",
+  "semio-framework-plugin-testing-laws",
+  "semio-framework-plugin-testing-acceptance",
+  "semio-framework-plugin-reactor-app",
+  "semio-framework-plugin-testing-fixtures",
+  "semio-framework-plugin-testing-fixtures-publication"
+ ],
+ "base": {
+  "rev": "HEAD",
+  "crates": [
+   "semio-framework-plugin",
+   "semio-framework-plugin-reactor-app"
+  ]
+ },
+ "note": "PLUGIN-INTEGRATION-2 G11 to G17 and the operation-progress move against the pre-pi2 facade at HEAD (18:19)"
+}

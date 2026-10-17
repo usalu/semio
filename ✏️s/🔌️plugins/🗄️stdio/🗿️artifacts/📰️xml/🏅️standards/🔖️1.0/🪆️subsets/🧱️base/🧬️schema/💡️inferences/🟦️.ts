@@ -29,6 +29,10 @@ type stdioXml10BaseInferenceGuardSizeBounds = { readonly minItems?: number; read
 
 export const stdioXml10BaseInferenceGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : stdioXml10BaseInferenceGuardReject(at, "value is not an object");
+export const stdioXml10BaseInferenceGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) stdioXml10BaseInferenceGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const stdioXml10BaseInferenceGuardArray = (value: unknown, at: string, bounds: stdioXml10BaseInferenceGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return stdioXml10BaseInferenceGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) stdioXml10BaseInferenceGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -59,14 +63,14 @@ export const stdioXml10BaseInferenceGuardConstant = <T extends string | number |
 //#endregion 🚪️Parsers
 
 export function parseXmlInference(value: unknown, at = "$"): XmlInference {
-  const row = stdioXml10BaseInferenceGuardObject(value, at);
+  const row = stdioXml10BaseInferenceGuardClosed(stdioXml10BaseInferenceGuardObject(value, at), at, ["outline"]);
   return {
     outline: parseXmlOutline(row["outline"], `${at}.outline`),
   };
 }
 
 export function parseXmlOutline(value: unknown, at = "$"): XmlOutline {
-  const row = stdioXml10BaseInferenceGuardObject(value, at);
+  const row = stdioXml10BaseInferenceGuardClosed(stdioXml10BaseInferenceGuardObject(value, at), at, ["elementCount", "maxDepth", "hasDoctype"]);
   return {
     elementCount: stdioXml10BaseInferenceGuardInteger(row["elementCount"], `${at}.elementCount`),
     maxDepth: stdioXml10BaseInferenceGuardInteger(row["maxDepth"], `${at}.maxDepth`),

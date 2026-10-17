@@ -1,0 +1,17 @@
+{
+ "name": "c4p18g3",
+ "crates": [
+  "semio-s-artifact-procedural-3d-envelope",
+  "semio-s-artifact-procedural-3d-editor",
+  "semio-s-artifact-procedural-generation3d"
+ ],
+ "base": {
+  "rev": "b84bf526c7b",
+  "crates": [
+   "semio-s-artifact-procedural-3d-envelope",
+   "semio-s-artifact-procedural-3d-editor",
+   "semio-s-artifact-procedural-generation3d"
+  ]
+ },
+ "note": "CENSUS4-PKG-18 split family c4p18g3"
+}

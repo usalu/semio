@@ -59,7 +59,9 @@ import {
 } from "@semio-tech/framework/directory/sign-in";
 import { localHubSessionAnswerV1, parseLocalHubSessionAnswerV1, type LocalHubSessionV1 } from "@semio-tech/framework/directory/local-session";
 import { HubSignInPane, hubSignInFormOfferedV1, hubSignInSubmittableV1 } from "../../🟦️.tsx";
-import { createHubConnectionFetchPortV1, useHubConnection, type HubConnectionPortV1 } from "../../../🔗️HubConnection/🟦️.tsx";
+import { useHubConnection } from "../../../🔗️HubConnection/🟦️.tsx";
+import { type HubConnectionPortV1 } from "../../../🔗️HubConnection/🔌️connection-contract/🟦️.ts";
+import { createHubConnectionFetchPortV1 } from "../../../🔗️HubConnection/🛰️fetch-port/🟦️.ts";
 // #endregion 🔌️Adapters
 
 afterEach(cleanup);

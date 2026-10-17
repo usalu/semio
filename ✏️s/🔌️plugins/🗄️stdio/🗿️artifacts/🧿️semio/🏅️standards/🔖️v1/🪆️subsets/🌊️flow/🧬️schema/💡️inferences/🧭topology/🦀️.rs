@@ -84,8 +84,5 @@ pub fn compute_semio_flow_topology(snapshot: &SemioFlowSnapshot) -> SemioFlowTop
 }
 //#endregion 🔖️Topology
 
-#[cfg(test)]
-//#region 🧪️Tests
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

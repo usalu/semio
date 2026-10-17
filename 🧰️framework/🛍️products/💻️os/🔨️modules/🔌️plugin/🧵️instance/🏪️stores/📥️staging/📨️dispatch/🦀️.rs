@@ -1,31 +1,44 @@
 //! ⛓️ Staged slice of the `dispatch` band of the mounted artifact instance: its `instance-stores` members (WP6 step S0 of the instance family).
 //!
 //! 📨️ Dispatch of the mounted artifact instance: test snapshot helpers, command log, history view, patch and refresh, preview, `dispatch_emit` and transaction groups.
-use super::*;
-use crate::tool_jobs::time_travel;
+use semio_framework_plugin_decl_emission::{ActionMeta, Emit};
+use semio_framework::kernel::{ActorId, AppEvent, ArtifactDiff, ArtifactHandle, ArtifactVersion, Effect, HybridLogicalTimestamp, InverseMutation, InvocationId, InvocationResult, KernelMutation, MutationId, SchemaId, UiDirtyScope, UndoGroup, UndoPolicy};
+use semio_framework_plugin_command::{AlternativeFact, HistoryRowReads, history_alternative_views};
+use semio_framework_plugin_decl_views::history_view::{AlternativeView, CommandLogEntry, CommandView};
+use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use pack::snapshot::ArtifactPack;
+use store::{ArtifactStore, MemberFactory, Mutation, SpaceMember};
+use semio_framework_value::DslValue;
+use semio_framework::{Fault, FaultFrom};
+use std::future::Future;
+use crate::stores_components::{InstanceStores, LocalInteraction};
+use protocol::OpText;
+use semio_framework_plugin_reactor_app::PluginApp;
+use semio_framework_ui_contract::*;
 
 impl<A: ArtifactApp> InstanceStores<A> {
     #[cfg(test)]
-    pub(crate) async fn test_snapshot(&self) -> A::Snapshot {
+    pub async fn test_snapshot(&self) -> A::Snapshot {
         self.store.snapshot().expect("materialize snapshot")
     }
 
     /// 🧪️ The document store itself — needed to assert on checkpoint metadata
     /// (`composition_pins`), which no snapshot-level accessor exposes.
     #[cfg(test)]
-    pub(crate) async fn test_store(&self) -> &ArtifactStore<A::Snapshot, A::Mutation> {
+    pub async fn test_store(&self) -> &ArtifactStore<A::Snapshot, A::Mutation> {
         &self.store
     }
 
     /// ⚔️ Test-only mutable store access for conflict lifecycle fixtures.
     #[cfg(test)]
-    pub(crate) async fn test_store_mut(&mut self) -> &mut ArtifactStore<A::Snapshot, A::Mutation> {
+    pub async fn test_store_mut(&mut self) -> &mut ArtifactStore<A::Snapshot, A::Mutation> {
         &mut self.store
     }
 
     /// 🧪️ The config-store twin of `test_snapshot`.
     #[cfg(test)]
-    pub(crate) async fn test_config(&self) -> A::Config {
+    pub async fn test_config(&self) -> A::Config {
         self.config_store.snapshot().expect("materialize config snapshot")
     }
 
@@ -36,7 +49,7 @@ impl<A: ArtifactApp> InstanceStores<A> {
     /// afterwards through the very same `result_from_last_edit` the unmigrated route uses, instead of
     /// every law reaching into the store by hand.
     #[cfg(test)]
-    pub(crate) async fn test_result_from_last_edit(&self, verb: &str, meta: &ActionMeta, tail_offset: (usize, usize)) -> InvocationResult {
+    pub async fn test_result_from_last_edit(&self, verb: &str, meta: &ActionMeta, tail_offset: (usize, usize)) -> InvocationResult {
         self.result_from_last_edit(verb, meta, Vec::new(), Vec::new(), UiDirtyScope::default(), tail_offset).await
     }
 
@@ -44,14 +57,14 @@ impl<A: ArtifactApp> InstanceStores<A> {
     /// `dispatch_emit`'s own `tail_offset`, so a settling fixture can report only the operations ONE
     /// dispatch added to a coalesced edit.
     #[cfg(test)]
-    pub(crate) fn test_edit_tail_lengths(&self) -> (usize, usize) {
+    pub fn test_edit_tail_lengths(&self) -> (usize, usize) {
         self.store.edit_mutations().map_or((0, 0), |(forwards, inverse, _)| (forwards.len(), inverse.len()))
     }
 
     /// 🧪️ The store's last edit id, or `None` on a store that has never committed one —
     /// `dispatch_emit`'s `amended_same_edit` identity test, for a settling fixture.
     #[cfg(test)]
-    pub(crate) fn test_last_edit_id(&self) -> Option<String> {
+    pub fn test_last_edit_id(&self) -> Option<String> {
         self.store.envelope().vcs.edits.last().map(|edit| edit.id.clone())
     }
 
@@ -78,7 +91,7 @@ impl<A: ArtifactApp> InstanceStores<A> {
     /// names (its own mutation rows, checked against the applied stack; an edit it held unapplied stays unapplied, no change
     /// named it), else a search from the stack's tail (a row new to the view whose edit the change did not name, e.g. a
     /// backfilled one). An edit neither knows is not applied.
-    pub(crate) fn history_row_position(&self, entry: &CommandLogEntry, reads: &HistoryRowReads<'_, A::Mutation>, previous: Option<&CommandView>) -> Option<usize> {
+    pub fn history_row_position(&self, entry: &CommandLogEntry, reads: &HistoryRowReads<'_, A::Mutation>, previous: Option<&CommandView>) -> Option<usize> {
         let edit_id = entry.edit_id.as_deref()?;
         if let Some(position) = reads.positions.get(edit_id) {
             return *position;
@@ -99,7 +112,7 @@ impl<A: ArtifactApp> InstanceStores<A> {
 
     /// 🌿️ The alternatives the history body lists ([`history_alternative_views`]) over the log's branch and supersede
     /// transitions.
-    pub(crate) fn history_alternatives(&self) -> Vec<AlternativeView> {
+    pub fn history_alternatives(&self) -> Vec<AlternativeView> {
         let envelope = self.store.envelope();
         let transitions: Vec<(&store::os_spr::MutationEnvelope, store::os_spr::HistoryTransition)> =
             envelope.transitions.iter().filter_map(|transition| store::os_spr::history_transition_from_envelope(transition).ok().flatten().map(|decoded| (transition, decoded))).collect();
@@ -115,7 +128,7 @@ impl<A: ArtifactApp> InstanceStores<A> {
         history_alternative_views(envelope.vcs.alternatives.iter().map(|alternative| (alternative.id.as_str(), alternative.name.as_str())), Some(line.as_str()), &facts)
     }
 
-    pub(crate) async fn current_open_conflicts(&self) -> Vec<protocol::Conflict> {
+    pub async fn current_open_conflicts(&self) -> Vec<protocol::Conflict> {
         self.store.open_conflicts().cloned().collect()
     }
 
@@ -155,7 +168,7 @@ impl<A: ArtifactApp> InstanceStores<A> {
     /// `framework/core`'s kernel cut-over note) — no bridging left to do, just direct
     /// field moves. `ArtifactDiff.schema`/`.payload` are `SchemaId`/`Vec<u8>` now (was
     /// `schema_id`/`Value`), so the payload is JSON-encoded to bytes at construction.
-    pub(crate) async fn result_from_last_edit(&self, verb: &str, meta: &ActionMeta, effects: Vec<Effect>, events: Vec<AppEvent>, ui_scope: UiDirtyScope, tail_offset: (usize, usize)) -> InvocationResult {
+    pub async fn result_from_last_edit(&self, verb: &str, meta: &ActionMeta, effects: Vec<Effect>, events: Vec<AppEvent>, ui_scope: UiDirtyScope, tail_offset: (usize, usize)) -> InvocationResult {
         let schema = A::DOCUMENT_SCHEMA.to_string();
         let invocation_id = InvocationId(format!("{verb}:{}:{}", meta.instance_id, self.store.generation()));
         let document = ArtifactHandle(meta.instance_id as u128);
@@ -211,7 +224,7 @@ impl<A: ArtifactApp> InstanceStores<A> {
 
     /// 🚧️ The typed refusal of a batched artifact publication while a tool transaction it does not carry is open on the
     /// document store (the store refuses its admission too, untyped).
-    pub(crate) fn open_transaction_admission_fault(&self, transaction: Option<&protocol::TransactionRef>) -> Option<Fault> {
+    pub fn open_transaction_admission_fault(&self, transaction: Option<&protocol::TransactionRef>) -> Option<Fault> {
         let open = self.store.open_transaction()?;
         transaction.is_none_or(|transaction| transaction.id != open.transaction.id).then(|| vcs::VcsError::TransactionOpen { transaction_id: open.transaction.id.clone() }.into_fault())
     }
@@ -221,7 +234,7 @@ impl<A: ArtifactApp> LocalInteraction<A> {
     /// 🧪️ The persisted-plus-leftover selection half the panels and every app read —
     /// what a folded interaction verb must have moved.
     #[cfg(test)]
-    pub(crate) fn test_interaction_selection_snapshot(&self, stores: &InstanceStores<A>) -> protocol::InteractionState {
+    pub fn test_interaction_selection_snapshot(&self, stores: &InstanceStores<A>) -> protocol::InteractionState {
         self.interaction_selection_snapshot(stores)
     }
 }

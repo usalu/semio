@@ -39,9 +39,9 @@ async function openRepositoryLeasePartitionV1(workspace:string,control:ResourceL
  prepareRepositoryCacheParentsV1(workspace,control);
  const budget=repositoryCacheBudgetV1(workspace),partition=budget.partitions.leases,open=()=>openNativePlatformStorageV1({directory:partition.directory,leaseDirectory:budget.controlDirectory,filesystemBytes:partition.filesystemBytes,maximumPhysicalBytes:partition.capacityBytes,control,maximumLeaseDatabaseBytes:16384});let image=await open();
  try{const directory=repositoryLeaseDirectoryV1(workspace);await image.recheck();requireNativeStoragePathV1(image.root,directory);await image.withExclusiveMaintenance({version:1,wait:false},async(_port,custody)=>{
-  if(custody.kind!=="kernel-ex")throw Error("Actual exclusive lease image maintenance required");const resource="native-fixed-image:"+partition.directory;requireResourceLeaseWriterProofV1(custody.proof,{directory:budget.controlDirectory,resource,path:resourceLeasePathV1(budget.controlDirectory,resource)},custody.control);await image.recheck();const ordinary=await retireResourceLeasesV1(directory,custody.control,0),claims=await retireResourceQueueClaimsV1(directory,custody.control,0);await image.recheck();console.log("[DEBUG] Actual exclusive lease image retired authenticated idle databases "+JSON.stringify({ordinary,claims}));
- });image=await open();await image.recheck();return image;
- }catch(error){try{await image.close();}catch{}throw error;}
+  if(custody.kind!=="kernel-ex")throw Error("Actual exclusive lease image maintenance required");const resource="native-fixed-image:"+partition.directory;requireResourceLeaseWriterProofV1(custody.proof,{directory:budget.controlDirectory,resource,path:resourceLeasePathV1(budget.controlDirectory,resource)},custody.control);await image.recheck();const ordinary=await retireResourceLeasesV1(directory,custody.control,0),claims=await retireResourceQueueClaimsV1(directory,custody.control,0);await image.recheck();
+ });await image.close();image=await open();await image.recheck();return image;
+ }catch(error){try{await image.close();}catch(closing){if(!Object.is(error,closing))throw new AggregateError([error,closing],"Lease image opening and actual close failed");}throw error;}
 }
 
 /** 🎟️ Opens the authored finite backing under original caller custody; unsupported enforcement remains a refusal. */

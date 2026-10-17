@@ -275,7 +275,6 @@ use std::collections::VecDeque;
         let allocation: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/📄️checkpoint/allocation.json")).unwrap();
         if let JobStepOutcome::CheckpointReady { checkpoint } = &publication.outcome { assert_eq!(checkpoint.state.capacity(), allocation["declaredCapacityBytes"].as_u64().unwrap() as usize); }
         close_original_publication(publication);
-        println!("[DEBUG] actor checkpoint projection preserves original state040506/progress73 over job/page/paid-descriptor-ack turns without another job call");
         close_original_bridge_and_script(&mut bridge, &mut job);
     }
 

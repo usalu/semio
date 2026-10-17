@@ -59,7 +59,6 @@ fn original_ordered_typed_owner_preserves_mixed_physical_receipt() {
             total=total.checked_add(progress).unwrap();actual_birth+=born;physical_release+=freed;
         }
         let(_,allocation)=crate::observe_retirement_allocations(||drop(owner));assert_eq!(allocation,(0,0));assert_eq!(mixed_turns,1);assert_eq!(physical_release,source_bytes+actual_birth);
-        eprintln!("[DEBUG] original Ordered mixed copy={maximum_copy_bytes} source={source_bytes} admitted={actual_birth} physical={physical_release} reported={} turns={turns} mixedTurns={mixed_turns} terminalDropFree=0 mismatch={mismatch:?}",total.released_bytes);
         assert_eq!(mismatch,None,"original Ordered typed owner must preserve simultaneous copy, capacity birth and release");assert_eq!(total.released_bytes,physical_release);
     }
 }
@@ -79,7 +78,6 @@ fn original_controlled_retirement_exposes_simultaneous_physical_demands() {
         let(step,(born,freed))=crate::observe_retirement_allocations(||owner.step(grant).unwrap());let progress=step.progress();assert_eq!(born,progress.retained_capacity_bytes);assert_eq!(freed,progress.released_bytes);assert!(progress.fits(grant));total=total.checked_add(progress).unwrap();physical+=freed;
     }
     let(_,allocation)=crate::observe_retirement_allocations(||drop(owner));assert_eq!(allocation,(0,0));assert_eq!(physical,source_capacity+total.retained_capacity_bytes);
-    eprintln!("[DEBUG] original Controlled simultaneous demand={mixed_demand:?} expectedCopy=1 expectedCapacity=96 expectedRelease=32 expectedDepth=2 physical={physical} terminalDropFree=0");
     assert_eq!(mixed_demand,Some((expected["copyBytes"].as_u64().unwrap()as usize,replacement_capacity,source_capacity,expected["depth"].as_u64().unwrap()as usize)),"independent physical release demand must remain visible while logical work is pending");
 }
 
@@ -98,7 +96,6 @@ fn original_ordered_deque_declares_physical_handoff_demand() {
             let(step,(born,freed))=crate::observe_retirement_allocations(||owner.step(grant).unwrap());let progress=step.progress();assert!(progress.fits(grant));assert_eq!(born,progress.retained_capacity_bytes);assert_eq!(freed,progress.released_bytes);total=total.checked_add(progress).unwrap();physical+=freed;
         }
         let(_,heap)=crate::observe_retirement_allocations(||drop(owner));assert_eq!(heap,(0,0));assert_eq!(physical,source_bytes+total.retained_capacity_bytes);
-        eprintln!("[DEBUG] original Controlled deque copy={copy} missingReleaseDemands={missing} source={source_bytes} admitted={} physical={physical} turns={turns} terminalDropFree=0",total.retained_capacity_bytes);
         assert_eq!(missing,row["expectedMissingReleaseDemands"].as_u64().unwrap()as usize,"original deque must explicitly declare zero physical release for its admitted child handoff");
     }
 }
@@ -122,7 +119,6 @@ fn ordered_partial_mutations_compose_typed_retirement_at_every_neutral_cancel_fr
             assert_eq!(total.released_bytes,owned+total.retained_capacity_bytes);
         }
     }}}
-    eprintln!("[DEBUG] actual partial ordered updates preserve all inputs, mutation births, payload backing and scaffold conservation at every neutral cancellation frontier");
 }
 
 #[test]
@@ -146,7 +142,7 @@ fn ordered_mutations_admit_exact_births_and_preserve_obsolete_roots_until_close(
             let removed=cursor.take_removed();let result=cursor.take_result().unwrap();let displaced=std::mem::replace(&mut map,result);retire(displaced,Grant {maximum_items:1,maximum_bytes:maximum_copy_bytes});close(&mut cursor,Grant {maximum_items:1,maximum_bytes:maximum_copy_bytes});
             let removed=removed.and_then(super::release_cold);let expected=if operation["kind"]=="set"{oracle.insert(key.to_owned(),operation["value"].as_i64().unwrap())}else{oracle.remove(key)};assert_eq!(removed,expected);assert!(map.iter().map(|(key,value)|(key,*value)).eq(oracle.iter().map(|(key,value)|(key,*value))));check_tree(&map.root);
         }
-        retire(map,Grant {maximum_items:1,maximum_bytes:maximum_copy_bytes});eprintln!("[DEBUG] exact ordered mutation {} copy{} turns{} birth{} preserved rotation and successor ownership until granted close",row["id"].as_str().unwrap(),maximum_copy_bytes,turns,total_birth);
+        retire(map,Grant {maximum_items:1,maximum_bytes:maximum_copy_bytes});
     }}
 }
 
@@ -169,7 +165,6 @@ fn ordered_retirement_composes_real_generic_owner_under_independent_category_gra
             let(step,(birth,free))=crate::observe_retirement_allocations(||owner.step(grant).unwrap());let progress=step.progress();assert!(progress.fits(grant));assert_eq!(birth,progress.retained_capacity_bytes);assert_eq!(free,progress.released_bytes);total=total.checked_add(progress).unwrap();physical_free+=free;assert!(matches!(step,RetainedCloneStep::Progress(_)|RetainedCloneStep::Complete(_)));
         }
         assert_eq!(physical_free,source_birth+payload_bytes+total.retained_capacity_bytes);assert_eq!(total.released_bytes,physical_free);
-        eprintln!("[DEBUG] actual ordered generic field {} copy{} turns{} source{} scaffold{} released{} independently admitted birth/release",row["id"].as_str().unwrap(),maximum_copy_bytes,turns,source_birth+payload_bytes,total.retained_capacity_bytes,physical_free);
     }}
 }
 
@@ -185,7 +180,6 @@ fn ordered_shared_input_preserves_unique_pointer_and_refuses_foreign_alias_custo
     for grant in [RetainedCloneGrant::default(),RetainedCloneGrant::one_release_turn(extent-1,1)] {let(step,allocation)=crate::observe_retirement_allocations(||owner.release_step(grant).unwrap());assert!(step.value.is_none());assert_eq!(step.progress,crate::retained_clone::RetainedCloneProgress::default());assert_eq!(allocation,(0,0));assert_eq!(owner.as_ptr(),pointer);}
     let(step,allocation)=crate::observe_retirement_allocations(||owner.release_step(RetainedCloneGrant::one_release_turn(extent,1)).unwrap());assert!(step.value.is_none());assert_eq!(allocation,(0,0));assert_eq!(step.progress.released_bytes,0);assert!(owner.terminal_is_empty());
     let(step,allocation)=crate::observe_retirement_allocations(||alias.release_step(RetainedCloneGrant::one_release_turn(extent,1)).unwrap());let payload=step.value.expect("exact final input payload");assert_eq!(allocation,(0,extent));assert_eq!(step.progress.released_bytes,extent);assert!(alias.terminal_is_empty());assert_eq!(payload,"雪😀");
-    eprintln!("[DEBUG] first-party shared input preserved admitted pointer, refused foreign strong/Weak custody without allocation, and final header released only under its exact independent grant");
 }
 
 #[test]
@@ -208,7 +202,6 @@ fn ordered_retirement_physical_receipts_match_actual_allocator_and_whole_grants(
                 observations.push((demand,birth,free,reported));if complete{break;}
             }
             assert!(complete&&cursor.terminal_is_empty());assert_eq!(transferred.len(),1);drop(cursor);
-            eprintln!("[DEBUG] actual ordered retirement {} byte grant{} {} closed observations: {:?}",row["id"].as_str().unwrap(),maximum_bytes,observations.len(),observations.iter().filter(|(_,_,free,reported)|free!=reported).collect::<Vec<_>>());
             for(demand,birth,free,reported)in observations {assert_eq!(birth,0);assert_eq!(free,reported,"exact physical release receipt; next demand {demand}");assert!(free<=demand,"whole physical release fits its separate caller grant");}
         }
     }

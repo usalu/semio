@@ -12,9 +12,7 @@ use crate::standards::v1::subsets::any::schema::mutations::{change_catalog_gener
 #[cfg(test)] use crate::SHomeSnapshot;
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
 
 //#region 🔖️Kinds
@@ -30,7 +28,5 @@ pub const KINDS: &[&str] = &["change-catalog-generation"];
 //#endregion 🌉️TestBridge
 
 //#region 🧪️KindsConformance
-#[cfg(test)]
-#[path = "🧪️tests/🔬️kinds-conformance/🦀️.rs"]
-mod kinds_conformance;
+
 //#endregion 🧪️KindsConformance

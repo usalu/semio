@@ -1,4 +1,11 @@
-use super::*;
+use crate::editor::puzzle5d::config::{Puzzle5dCamera2d, Puzzle5dCamera3d, Puzzle5dSelectableKinds};
+use semio_framework_plugin::WorldSunConfig;
+#[allow(unused_imports)]
+use crate::editor::puzzle5d::config::Puzzle5dRuntime;
+#[allow(unused_imports)]
+use crate::editor::puzzle5d::entities::{PUZZLE5D_BOARD_WINDOW_KIND_ID, PUZZLE5D_WORLD_WINDOW_KIND_ID};
+use crate::editor::puzzle5d::window::{puzzle5d_window_transient_preflight};
+use crate::editor::puzzle5d::window::*;
 
     fn retire_to_terminal_empty<T: semio_framework_value::retirement::RetireOwned + 'static>(owner: T) {
         let mut retirement = semio_framework_value::retirement::controlled::ControlledRetirement::new(owner).unwrap_or_else(|(error, _)| panic!("window retirement admission refused: {error:?}"));
@@ -36,7 +43,7 @@ use super::*;
         let spr = semio_framework_pack_json::to_json_string(&shared);
         let oracle: serde_json::Value = serde_json::from_str(&spr).expect("serde_json oracle accepts the neutral config");
         assert_eq!(oracle.as_object().map(serde_json::Map::len), Some(6));
-        assert_eq!(oracle["fillCount"], serde_json::json!(crate::editor::puzzle5d::PUZZLE5D_DEFAULT_FILL_COUNT), "the fill count is document-instance configuration the fill run reads");
+        assert_eq!(oracle["fillCount"], serde_json::json!(crate::editor::puzzle5d::entities::PUZZLE5D_DEFAULT_FILL_COUNT), "the fill count is document-instance configuration the fill run reads");
         let pack = pack::snapshot::ArtifactPack::encode_pack(&shared);
         for forbidden in ["camera2d", "camera3d", "engagementInput", "brushCandidateIndex", "suggestionMenu", "sun"] {
             assert!(!spr.contains(forbidden));
@@ -47,7 +54,7 @@ use super::*;
     #[test]
     fn transient_string_retirement_reaches_terminal_empty_with_tiny_grants() {
         let transient = Puzzle5dWindowTransient {
-            suggestion_menu: Some(super::Puzzle5dSuggestionMenu { x: 3.0, y: 5.0, window_id: "five-dimensional-window".repeat(256), vortex_full_id: "grip-owner".repeat(256), submenu: true }),
+            suggestion_menu: Some(crate::editor::puzzle5d::window::Puzzle5dSuggestionMenu { x: 3.0, y: 5.0, window_id: "five-dimensional-window".repeat(256), vortex_full_id: "grip-owner".repeat(256), submenu: true }),
             engagement_input: "five-dimensional-input".repeat(512),
             brush_candidate_index: 3,
         };
@@ -119,8 +126,8 @@ use super::*;
             lod_depth_variable: true,
             lod_manual: 640.0,
             selectable_kinds: Puzzle5dSelectableKinds { parts: false, grips: true, fasteners: true },
-            grip_show: crate::editor::puzzle5d::PUZZLE5D_GRIP_SHOW_ALWAYS.into(),
-            grip_direction: crate::editor::puzzle5d::PUZZLE5D_GRIP_DIRECTION_INWARDS.into(),
+            grip_show: crate::editor::puzzle5d::entities::PUZZLE5D_GRIP_SHOW_ALWAYS.into(),
+            grip_direction: crate::editor::puzzle5d::entities::PUZZLE5D_GRIP_DIRECTION_INWARDS.into(),
             transform_move: false,
             transform_rotate: true,
             voxel_dims: [7, 2, 64],

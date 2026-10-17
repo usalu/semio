@@ -738,7 +738,7 @@ pub fn brep_invoke_json(&self, method: &str, args_json: &str) -> String {
 }
 
 /// ⚓️ Retains the producing family while retiring a separately admitted job authority.
-struct SessionPort {authority:SessionCapture,anchor:SessionCapture,retaining:RetainedOwnerGate<Option<SessionRetention>>,retain_receipt:RetainedCloneProgress,cancel_receipt:RetainedCloneProgress}
+struct SessionPort {pub(super) authority:SessionCapture,anchor:SessionCapture,retaining:RetainedOwnerGate<Option<SessionRetention>>,retain_receipt:RetainedCloneProgress,cancel_receipt:RetainedCloneProgress}
 impl SessionPort {fn retained_demand(&self,copy:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{let owner=self.retaining.try_lock().map_err(|_|ownership_busy())?;owner.as_ref().map_or(Ok(Default::default()),|owner|owner.demand(self.authority.session.as_ref().ok_or_else(ownership_busy)?,copy))}}
 impl Drop for SessionPort {fn drop(&mut self) {if !std::thread::panicking() {assert!(self.retaining.get_mut().is_none()&&self.authority.terminal_is_empty() && self.anchor.terminal_is_empty(),"geometry port requires terminal-empty retirement");}}}
 impl semio_framework_os_flow::geometry::GeometryPort for SessionPort {

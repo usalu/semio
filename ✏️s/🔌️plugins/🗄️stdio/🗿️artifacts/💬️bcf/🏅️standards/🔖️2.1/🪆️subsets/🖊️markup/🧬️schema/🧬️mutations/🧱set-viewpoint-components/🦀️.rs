@@ -8,9 +8,9 @@ use super::*;
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 pub struct SetViewpointComponents {
-    pub(crate) topic_guid: String,
-    pub(crate) guid: String,
-    pub(crate) components: Option<BcfComponents>,
+    pub topic_guid: String,
+    pub guid: String,
+    pub components: Option<BcfComponents>,
 }
 
 impl protocol::MutationKind<BcfSnapshot, BcfMutation> for SetViewpointComponents {

@@ -1,0 +1,29 @@
+{
+ "name": "c4p19b",
+ "crates": [
+  "semio-s-artifact-norm-en1994-diff",
+  "semio-s-artifact-norm-en1994-io",
+  "semio-s-artifact-norm-en1994-schema",
+  "semio-s-artifact-norm-en1994-mut-beams",
+  "semio-s-artifact-norm-en1994-mut-project",
+  "semio-s-artifact-norm-en1994-mut-columns-slabs",
+  "semio-s-artifact-norm-en1994-mut-studs",
+  "semio-s-artifact-norm-en1994-mutations",
+  "semio-s-artifact-norm-en1994"
+ ],
+ "note": "CENSUS4-PKG-19 semio-s-artifact-norm-en1994-diff plus direct dependents",
+ "base": {
+  "rev": "b84bf526c7b",
+  "crates": [
+   "semio-s-artifact-norm-en1994-diff",
+   "semio-s-artifact-norm-en1994-io",
+   "semio-s-artifact-norm-en1994-schema",
+   "semio-s-artifact-norm-en1994-mut-beams",
+   "semio-s-artifact-norm-en1994-mut-project",
+   "semio-s-artifact-norm-en1994-mut-columns-slabs",
+   "semio-s-artifact-norm-en1994-mut-studs",
+   "semio-s-artifact-norm-en1994-mutations",
+   "semio-s-artifact-norm-en1994"
+  ]
+ }
+}

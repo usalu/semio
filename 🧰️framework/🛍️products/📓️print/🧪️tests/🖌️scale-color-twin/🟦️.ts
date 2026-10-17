@@ -19,9 +19,12 @@ const DECIMALS = 6;
 const IDENTITY = (t: number) => t;
 
 /** 🔢️ Rounds the twin's numbers onto the emission grid the LaTeX probe writes on. */
-function grid(values: readonly number[]): number[] {
+function grid(values: readonly unknown[]): number[] {
   const factor = 10 ** DECIMALS;
-  return values.map((value) => Math.round(value * factor) / factor + 0);
+  return values.map((value) => {
+    if (typeof value !== "number") throw new Error(`a scale mapped to ${String(value)}, not to a number`);
+    return Math.round(value * factor) / factor + 0;
+  });
 }
 
 /** 🔮️ The oracle of `scale-color`, reused so both subjects meet the same reference numbers. */

@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { describe, expect, it } from "vitest";
-import { menagerieVitePlugin, MENAGERIE_MODULE } from "../../🎯️targets/⚛️react/🏗️builder/🌐️vite/🟦️.ts";
+import { menagerieVitePlugin, MENAGERIE_MODULE } from "@semio-tech/pets-react/builder/vite";
 import { parse } from "@babel/parser";
 
 async function documentOf(path?: string): Promise<string> {

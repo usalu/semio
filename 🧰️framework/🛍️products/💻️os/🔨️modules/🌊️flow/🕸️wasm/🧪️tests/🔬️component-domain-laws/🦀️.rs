@@ -8,11 +8,11 @@ fn bridge_budget() -> AbiWorkBudget {
 }
 
 fn bridge_request(operation: u16, request: u64, generation: u32, bytes: Vec<u8>) -> AbiMessage {
-    AbiMessage::Request(semio_framework::abi::AbiRequest {
-        operation: semio_framework::abi::AbiOperation::try_new(operation).unwrap(),
-        request_id: semio_framework::abi::AbiRequestId(request),
+    AbiMessage::Request(semio_framework_abi::AbiRequest {
+        operation: semio_framework_abi::AbiOperation::try_new(operation).unwrap(),
+        request_id: semio_framework_abi::AbiRequestId(request),
         generation,
-        bytes: semio_framework::abi::AbiBytes::try_new(bytes).unwrap(),
+        bytes: semio_framework_abi::AbiBytes::try_new(bytes).unwrap(),
     })
 }
 
@@ -25,9 +25,9 @@ fn bridge_poll(bridge: &mut FlowBridge<FlowDomainAdapter>) -> AbiMessage {
     panic!("production Flow VCS bridge did not progress")
 }
 
-fn acknowledge_bridge_event(bridge: &mut FlowBridge<FlowDomainAdapter>, event: &semio_framework::abi::AbiEvent) {
+fn acknowledge_bridge_event(bridge: &mut FlowBridge<FlowDomainAdapter>, event: &semio_framework_abi::AbiEvent) {
     bridge
-        .try_send(AbiMessage::Reply(semio_framework::abi::AbiReply { request_id: event.request_id, generation: event.generation, status: semio_framework::abi::AbiStatus::OK, bytes: semio_framework::abi::AbiBytes::default() }), bridge_budget())
+        .try_send(AbiMessage::Reply(semio_framework_abi::AbiReply { request_id: event.request_id, generation: event.generation, status: semio_framework_abi::AbiStatus::OK, bytes: semio_framework_abi::AbiBytes::default() }), bridge_budget())
         .unwrap();
 }
 
@@ -68,7 +68,7 @@ fn compiled_session_close_retires_the_real_vcs_and_host_before_terminal_empty() 
     bridge.try_send(bridge_request(protocol::FLOW_OPERATION_OPEN, 1, 1, Vec::new()), bridge_budget()).unwrap();
     let AbiMessage::Reply(reply) = bridge_poll(&mut bridge) else { panic!("session reply") };
     let session = FlowPayloadReader::new(reply.bytes.as_slice()).handle().unwrap();
-    bridge.try_send(AbiMessage::Control(semio_framework::abi::AbiControl::Close { handle: session }), bridge_budget()).unwrap();
+    bridge.try_send(AbiMessage::Control(semio_framework_abi::AbiControl::Close { handle: session }), bridge_budget()).unwrap();
     assert_eq!(bridge.terminal_is_empty(), fixture.get("browser").unwrap().get("terminalBeforeClose").unwrap().as_bool().unwrap());
     close_bridge(&mut bridge);
     assert_eq!(bridge.terminal_is_empty(), fixture.get("browser").unwrap().get("terminalAfterClose").unwrap().as_bool().unwrap());
@@ -84,7 +84,7 @@ fn compiled_session_close_receipt_preserves_a_real_sibling_until_global_close() 
         let AbiMessage::Reply(reply) = bridge_poll(&mut bridge) else { panic!("real session reply") };
         sessions.push(FlowPayloadReader::new(reply.bytes.as_slice()).handle().unwrap());
     }
-    bridge.try_send(AbiMessage::Control(semio_framework::abi::AbiControl::Close { handle: sessions[0] }), bridge_budget()).unwrap();
+    bridge.try_send(AbiMessage::Control(semio_framework_abi::AbiControl::Close { handle: sessions[0] }), bridge_budget()).unwrap();
     let AbiMessage::Event(receipt) = bridge_poll(&mut bridge) else { panic!("real session close receipt") };
     assert_eq!(u64::from(receipt.event.get()), fixture["receipt"]["event"].as_u64().unwrap());
     assert_eq!(receipt.request_id.0 ^ (u64::from(receipt.sequence) << 32), 1);
@@ -100,7 +100,7 @@ fn compiled_session_close_receipt_preserves_a_real_sibling_until_global_close() 
             AbiMessage::Event(event) => acknowledge_bridge_event(&mut bridge, &event),
             AbiMessage::Reply(reply) => {
                 assert_eq!(reply.request_id.0, 3);
-                assert_eq!(reply.status, semio_framework::abi::AbiStatus::OK);
+                assert_eq!(reply.status, semio_framework_abi::AbiStatus::OK);
                 let independent: Value = serde_json::from_slice(reply.bytes.as_slice()).unwrap();
                 let own = semio_framework_pack_json::parse(std::str::from_utf8(reply.bytes.as_slice()).unwrap(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
                 assert_eq!(semio_framework_pack_json::to_string(&own), independent.to_string());
@@ -182,7 +182,7 @@ fn surface_status_payload(surface: u32, generation: u32, status: &str) -> Vec<u8
 fn run(domain: &mut FlowDomainAdapter, operation: u16, payload: Vec<u8>) -> Result<Vec<u8>, FlowFailure> {
     let mut arguments = FlowArguments::preflight(operation, payload)?;
     let mut action = flow_action(operation, &arguments).ok_or_else(|| abi_failure(AbiErrorCode::UnknownOperation))?;
-    action.bind_admission(FlowFeatureAdmission{session:semio_framework::abi::AbiHandle::try_new(1,1).unwrap(),request_generation:1})?;
+    action.bind_admission(FlowFeatureAdmission{session:semio_framework_abi::AbiHandle::try_new(1,1).unwrap(),request_generation:1})?;
     let budget=if matches!(operation,2514|2515|2518|2519|2525|2528|2520|2522|2523){let fixture:Value=serde_json::from_str(include_str!("../🧫️fixtures/🧵️dag-retained/🔣️.json")).unwrap();dag_budget(&fixture,1)}else{AbiWorkBudget::credits(1)};
     let result=loop {
         match action.advance(domain, &arguments, budget) {
@@ -299,7 +299,7 @@ fn flow_poll_one(bridge: &mut FlowBridge<FlowDomainAdapter>, budget: AbiWorkBudg
 
 /// 🧵️ Drives ONE request to its reply, acknowledging every event and page the bridge raises, and
 /// answers how many `Progress` events crossed, the reply's status, and the bytes it answered.
-fn flow_drain_request(bridge: &mut FlowBridge<FlowDomainAdapter>, budget: AbiWorkBudget, request_id: u64) -> (usize, semio_framework::abi::AbiStatus, Vec<u8>) {
+fn flow_drain_request(bridge: &mut FlowBridge<FlowDomainAdapter>, budget: AbiWorkBudget, request_id: u64) -> (usize, semio_framework_abi::AbiStatus, Vec<u8>) {
     let mut progress = 0usize;
     let mut operation = None;
     let mut answered = Vec::new();
@@ -317,7 +317,7 @@ fn flow_drain_request(bridge: &mut FlowBridge<FlowDomainAdapter>, budget: AbiWor
             AbiMessage::Page(page) => {
                 let operation = operation.expect("admitted Flow operation");
                 answered.extend_from_slice(page.bytes.as_slice());
-                bridge.try_send(AbiMessage::Control(semio_framework::abi::AbiControl::Acknowledge { handle: operation, index: page.index }), budget).unwrap();
+                bridge.try_send(AbiMessage::Control(semio_framework_abi::AbiControl::Acknowledge { handle: operation, index: page.index }), budget).unwrap();
             }
             AbiMessage::Reply(reply) if reply.request_id.0 == request_id => {
                 answered.extend_from_slice(reply.bytes.as_slice());
@@ -329,7 +329,7 @@ fn flow_drain_request(bridge: &mut FlowBridge<FlowDomainAdapter>, budget: AbiWor
 }
 
 /// 🚪️ Opens one real session on a fresh bridge.
-fn flow_open_session(bridge: &mut FlowBridge<FlowDomainAdapter>, budget: AbiWorkBudget) -> semio_framework::abi::AbiHandle {
+fn flow_open_session(bridge: &mut FlowBridge<FlowDomainAdapter>, budget: AbiWorkBudget) -> semio_framework_abi::AbiHandle {
     bridge.try_send(bridge_request(protocol::FLOW_OPERATION_OPEN, 1, 1, Vec::new()), budget).unwrap();
     let AbiMessage::Reply(opened) = flow_poll_one(bridge, budget) else { panic!("Flow session reply") };
     let mut reader = FlowPayloadReader::new(opened.bytes.as_slice());
@@ -339,7 +339,7 @@ fn flow_open_session(bridge: &mut FlowBridge<FlowDomainAdapter>, budget: AbiWork
 }
 
 /// ✍️ A request payload: the session handle the bridge routes by, then the operation's own text.
-fn flow_session_text(session: semio_framework::abi::AbiHandle, text: &str) -> Vec<u8> {
+fn flow_session_text(session: semio_framework_abi::AbiHandle, text: &str) -> Vec<u8> {
     let mut writer = FlowPayloadWriter::default();
     writer.handle(session);
     writer.bytes(text.as_bytes()).unwrap();
@@ -395,7 +395,7 @@ fn one_poll_spends_its_whole_byte_credit_instead_of_one_byte() {
 /// 🛍️ Drives one `setCatalogueJson` payload through a fresh session and answers what the guest then
 /// holds, read back through its own `catalogueJson`. Fresh bridge per call, because the point of the
 /// law is what a SECOND session inherits from the process the first one registered into.
-fn catalogue_round_trip(payload: &str) -> (semio_framework::abi::AbiStatus, String) {
+fn catalogue_round_trip(payload: &str) -> (semio_framework_abi::AbiStatus, String) {
     let budget = bridge_budget();
     let mut bridge = FlowBridge::new(FlowDomainAdapter::default);
     let session = flow_open_session(&mut bridge, budget);
@@ -421,9 +421,9 @@ fn a_shared_payload_crosses_once_and_a_second_session_names_it() {
     let sections = r#"[{"id":"shared-payload-law","title":"Shared Payload Law","items":[{"kind":"neuron","neuronKind":"brep.box","name":"Box","abbreviation":"Box","icon":"cube","summary":"a measured catalogue entry"}]}]"#;
     let digest = "24.abc.def";
     let (carried_status, carried) = catalogue_round_trip(&format!("@{digest}\n{sections}"));
-    assert_eq!(carried_status, semio_framework::abi::AbiStatus::OK);
+    assert_eq!(carried_status, semio_framework_abi::AbiStatus::OK);
     let (named_status, named) = catalogue_round_trip(&format!("@{digest}"));
-    assert_eq!(named_status, semio_framework::abi::AbiStatus::OK);
+    assert_eq!(named_status, semio_framework_abi::AbiStatus::OK);
     assert!(carried.contains("Shared Payload Law"), "the carried body must reach the guest catalogue: {carried}");
     assert_eq!(named, carried, "a named payload must install exactly what the carried one did");
     println!("shared flow payload: carried {} B, named {} B for the same catalogue", sections.len() + digest.len() + 2, digest.len() + 1);
@@ -435,7 +435,7 @@ fn a_shared_payload_crosses_once_and_a_second_session_names_it() {
 fn a_shared_payload_reference_the_guest_lost_fails_closed() {
     retire_flow_shared_payloads();
     let (status, answered) = catalogue_round_trip("@a-digest-this-process-never-registered");
-    assert_ne!(status, semio_framework::abi::AbiStatus::OK, "an unheld shared payload reference must not answer OK");
+    assert_ne!(status, semio_framework_abi::AbiStatus::OK, "an unheld shared payload reference must not answer OK");
     assert!(!answered.contains("Shared Payload Law"), "a failed reference must install nothing: {answered}");
 }
 
@@ -499,7 +499,7 @@ fn spending_the_credit_does_not_change_the_operation_result() {
 #[test]
 fn cancellation_prevents_the_bound_domain_action() {
     let domain = Rc::new(RefCell::new(FlowDomainAdapter::default()));
-    let session = semio_framework::abi::AbiHandle::try_new(1, 1).unwrap();
+    let session = semio_framework_abi::AbiHandle::try_new(1, 1).unwrap();
     domain.borrow_mut().bind_session(session);
     let mut writer = FlowPayloadWriter::default();
     writer.u32(1);
@@ -547,12 +547,12 @@ fn production_bridge_installs_vcs_authority_page_ack_retry_and_incremental_close
                 let operation = operation.expect("admitted Flow VCS operation");
                 assert_eq!(page.handle, operation);
                 assert!(!page.bytes.is_empty());
-                assert!(bridge.try_send(AbiMessage::Control(semio_framework::abi::AbiControl::Acknowledge { handle: operation, index: page.index + 1 }), bridge_budget()).is_err());
-                bridge.try_send(AbiMessage::Control(semio_framework::abi::AbiControl::Acknowledge { handle: operation, index: page.index }), bridge_budget()).unwrap();
+                assert!(bridge.try_send(AbiMessage::Control(semio_framework_abi::AbiControl::Acknowledge { handle: operation, index: page.index + 1 }), bridge_budget()).is_err());
+                bridge.try_send(AbiMessage::Control(semio_framework_abi::AbiControl::Acknowledge { handle: operation, index: page.index }), bridge_budget()).unwrap();
                 page_seen = true;
             }
             AbiMessage::Reply(reply) if reply.request_id.0 == 2 => {
-                assert_eq!(reply.status, semio_framework::abi::AbiStatus::OK);
+                assert_eq!(reply.status, semio_framework_abi::AbiStatus::OK);
                 assert!(reply.bytes.is_empty());
                 break;
             }
@@ -574,7 +574,7 @@ fn production_bridge_installs_vcs_authority_page_ack_retry_and_incremental_close
         match bridge_poll(&mut bridge) {
             AbiMessage::Event(event) => acknowledge_bridge_event(&mut bridge, &event),
             AbiMessage::Reply(reply) if reply.request_id.0 == 3 => {
-                assert_ne!(reply.status, semio_framework::abi::AbiStatus::OK);
+                assert_ne!(reply.status, semio_framework_abi::AbiStatus::OK);
                 break;
             }
             _ => {}
@@ -593,18 +593,18 @@ fn production_bridge_installs_vcs_authority_page_ack_retry_and_incremental_close
     let AbiMessage::Event(progress) = bridge_poll(&mut bridge) else { panic!("cancel progress") };
     assert_eq!(progress.event.get(), protocol::FLOW_EVENT_PROGRESS);
     acknowledge_bridge_event(&mut bridge, &progress);
-    bridge.try_send(AbiMessage::Control(semio_framework::abi::AbiControl::Cancel { request_id: semio_framework::abi::AbiRequestId(4), generation: 1 }), bridge_budget()).unwrap();
+    bridge.try_send(AbiMessage::Control(semio_framework_abi::AbiControl::Cancel { request_id: semio_framework_abi::AbiRequestId(4), generation: 1 }), bridge_budget()).unwrap();
     loop {
         match bridge_poll(&mut bridge) {
             AbiMessage::Event(event) => acknowledge_bridge_event(&mut bridge, &event),
             AbiMessage::Reply(reply) if reply.request_id.0 == 4 => {
-                assert_ne!(reply.status, semio_framework::abi::AbiStatus::OK);
+                assert_ne!(reply.status, semio_framework_abi::AbiStatus::OK);
                 break;
             }
             _ => {}
         }
     }
-    bridge.try_send(AbiMessage::Control(semio_framework::abi::AbiControl::Close { handle: session }), bridge_budget()).unwrap();
+    bridge.try_send(AbiMessage::Control(semio_framework_abi::AbiControl::Close { handle: session }), bridge_budget()).unwrap();
     assert!(!bridge.terminal_is_empty());
     close_bridge(&mut bridge);
     assert!(bridge.terminal_is_empty());
@@ -776,7 +776,7 @@ fn a_retained_document_retires_in_turns_that_do_not_count_its_bytes() {
 /// the turn anchored on — the ladder printed rung by rung.
 fn close_ladder_census(document_json: &str) -> Vec<(String, usize)> {
     let mut domain = FlowDomainAdapter::default();
-    domain.bind_session(semio_framework::abi::AbiHandle::try_new(1, 1).unwrap());
+    domain.bind_session(semio_framework_abi::AbiHandle::try_new(1, 1).unwrap());
     run(&mut domain, 2_610, text_payload(document_json)).unwrap();
     domain.begin_close();
     let mut census: Vec<(String, usize)> = Vec::new();
@@ -824,7 +824,6 @@ fn original_flow_boundary_preserves_independent_retained_wallet(){
   assert_eq!([actual.retained.maximum_items,actual.retained.maximum_copy_bytes,actual.retained.maximum_capacity_bytes,actual.retained.maximum_release_bytes,actual.retained.maximum_depth],reference.as_slice());
  }
  assert_eq!(AbiWorkBudget::credits(4096).retained,semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:0,maximum_copy_bytes:0,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:0});
- println!("[DEBUG] original Flow ABI/VCS independent ownership wallets=7 transport-only allowance mints zero ownership");
 }
 
 fn dag_budget(fixture:&Value,byte_credit:usize)->AbiWorkBudget{let mut budget=AbiWorkBudget::credits(byte_credit);budget.retained=serde_json::from_value(fixture["retainedGrant"].clone()).unwrap();budget}
@@ -834,20 +833,19 @@ fn original_dag_poll_spends_each_independent_retained_grant_once(){
     let fixture:Value=serde_json::from_str(include_str!("../🧫️fixtures/🧵️dag-retained/🔣️.json")).unwrap();let mut polls=0;
     for credit in fixture["workGrants"].as_array().unwrap().iter().filter_map(Value::as_u64).filter(|credit|*credit!=0){for operation in fixture["pollOperations"].as_array().unwrap().iter().filter_map(Value::as_u64){let operation=operation as u16;
         let domain=Rc::new(RefCell::new(FlowDomainAdapter::default()));domain.borrow_mut().host.set_selection_domains(&semio_framework_os_infinite::board::schema::dag_input::DagSelectionDomains{nodes:vec!["slider".into()],edges:vec![],handles:vec![]});
-        let input=operation==2525;let expected=if input{fixture["replacement"].clone()}else{let domain=domain.borrow();match operation{2518=>serde_json::to_value(domain.host.selected_widget_ids()).unwrap(),2519=>serde_json::to_value(domain.host.dag.selected_edge_ids()).unwrap(),2520=>serde_json::to_value(domain.host.dag.selection_domains()).unwrap(),2522=>serde_json::to_value(domain.host.dag.hover_facts()).unwrap(),2523=>serde_json::to_value(domain.host.dag.selected_channels()).unwrap(),_=>unreachable!()}};let payload=if input{text_payload(&serde_json::to_string(&expected).unwrap())}else{Vec::new()};let arguments=FlowArguments::preflight(operation,payload).unwrap();let observer=Rc::new(FlowOperationObserver::new());observer.bound.set(true);let admission=FlowFeatureAdmission{session:semio_framework::abi::AbiHandle::try_new(1,1).unwrap(),request_generation:1};let mut action=flow_action(operation,&arguments).unwrap();action.bind_admission(admission).unwrap();action.bind_observer(observer.clone());let mut feature=FlowProgramFeature{domain:domain.clone(),arguments,action,observer,admission,operation,dag_read_lease:None,terminal_failure:None};let budget=dag_budget(&fixture,credit as usize);let mut complete=false;
+        let input=operation==2525;let expected=if input{fixture["replacement"].clone()}else{let domain=domain.borrow();match operation{2518=>serde_json::to_value(domain.host.selected_widget_ids()).unwrap(),2519=>serde_json::to_value(domain.host.dag.selected_edge_ids()).unwrap(),2520=>serde_json::to_value(domain.host.dag.selection_domains()).unwrap(),2522=>serde_json::to_value(domain.host.dag.hover_facts()).unwrap(),2523=>serde_json::to_value(domain.host.dag.selected_channels()).unwrap(),_=>unreachable!()}};let payload=if input{text_payload(&serde_json::to_string(&expected).unwrap())}else{Vec::new()};let arguments=FlowArguments::preflight(operation,payload).unwrap();let observer=Rc::new(FlowOperationObserver::new());observer.bound.set(true);let admission=FlowFeatureAdmission{session:semio_framework_abi::AbiHandle::try_new(1,1).unwrap(),request_generation:1};let mut action=flow_action(operation,&arguments).unwrap();action.bind_admission(admission).unwrap();action.bind_observer(observer.clone());let mut feature=FlowProgramFeature{domain:domain.clone(),arguments,action,observer,admission,operation,dag_read_lease:None,terminal_failure:None};let budget=dag_budget(&fixture,credit as usize);let mut complete=false;
         for _ in 0..fixture["maximumTurns"].as_u64().unwrap(){
             let before=feature.action.retained_receipt().unwrap();let step=feature.step(budget);let after=feature.action.retained_receipt().unwrap();assert!(after.copied_items-before.copied_items<=budget.retained.maximum_items);assert!(after.copied_bytes-before.copied_bytes<=budget.retained.maximum_copy_bytes);assert!(after.retained_capacity_bytes-before.retained_capacity_bytes<=budget.retained.maximum_capacity_bytes);assert!(after.released_bytes-before.released_bytes<=budget.retained.maximum_release_bytes);polls+=1;
             match step{FlowFeatureStep::Complete(bytes)=>{if input{assert!(bytes.is_empty());assert_eq!(serde_json::to_value(domain.borrow().host.dag.selection_domains()).unwrap(),expected)}else{assert_eq!(serde_json::from_slice::<Value>(&bytes).unwrap(),expected)}complete=true;break},FlowFeatureStep::Failed(failure)=>panic!("original retained poll {failure:?}"),_=>{}}
         }
         assert!(complete);let mut closed=false;for _ in 0..fixture["maximumTurns"].as_u64().unwrap(){if matches!(feature.close_step(dag_budget(&fixture,1)).unwrap(),RetainedCloneStep::Complete(_)){closed=true;break}}assert!(closed);drop(feature);close_domain(&mut domain.borrow_mut());
     }}
-    println!("[DEBUG] original production DAG poll independentRetainedCurrencies=true byteCredits=1,4096 grantSettledOnce=true independentSerde=true controlledClose=true polls={polls}");
 }
 
 #[test]
 fn admitted_dag_output_pins_the_original_source_and_control_releases_every_lease(){
     let fixture:Value=serde_json::from_str(include_str!("../🧫️fixtures/🧵️dag-retained/🔣️.json")).unwrap();
-    let session=semio_framework::abi::AbiHandle::try_new(1,1).unwrap();
+    let session=semio_framework_abi::AbiHandle::try_new(1,1).unwrap();
     for operation in fixture["outputOperations"].as_array().unwrap(){
         for refusal in fixture["terminalRefusals"].as_array().unwrap(){
             let domain=Rc::new(RefCell::new(FlowDomainAdapter::default()));
@@ -881,19 +879,17 @@ fn admitted_dag_output_pins_the_original_source_and_control_releases_every_lease
             drop(output);drop(mutation);close_domain(&mut domain.borrow_mut());
         }
     }
-    println!("[DEBUG] production Flow DAG original source lease: outputFamilies=5 terminalFrontiers=4 competingMutationPinned=true zeroFuelPreserved=true independentSerde=true");
 }
 
 #[test]
 fn admitted_dag_original_outputs_match_independent_serde_under_pinned_single_unit_grants(){
-    let fixture:Value=serde_json::from_str(include_str!("../🧫️fixtures/🧵️dag-retained/🔣️.json")).unwrap();let session=semio_framework::abi::AbiHandle::try_new(1,1).unwrap();let mut grants=0;
+    let fixture:Value=serde_json::from_str(include_str!("../🧫️fixtures/🧵️dag-retained/🔣️.json")).unwrap();let session=semio_framework_abi::AbiHandle::try_new(1,1).unwrap();let mut grants=0;
     for operation in fixture["outputOperations"].as_array().unwrap(){let operation=operation.as_u64().unwrap()as u16;let domain=Rc::new(RefCell::new(FlowDomainAdapter::default()));domain.borrow_mut().host.set_selection_domains(&semio_framework_os_infinite::board::schema::dag_input::DagSelectionDomains{nodes:vec!["slider".into()],edges:vec![],handles:vec![]});
         let expected={let domain=domain.borrow();match operation{2518=>serde_json::to_vec(&domain.host.selected_widget_ids()).unwrap(),2519=>serde_json::to_vec(&domain.host.dag.selected_edge_ids()).unwrap(),2520=>serde_json::to_vec(&domain.host.dag.selection_domains()).unwrap(),2522=>serde_json::to_vec(&domain.host.dag.hover_facts()).unwrap(),2523=>serde_json::to_vec(&domain.host.dag.selected_channels()).unwrap(),_=>unreachable!()}};
         let mut feature=FlowDomainAdapter::start_feature(Rc::clone(&domain),FlowFeatureAdmission{session,request_generation:1},operation,Vec::new()).unwrap();let mut completed=false;
         for _ in 0..fixture["maximumTurns"].as_u64().unwrap(){assert!(matches!(feature.step(dag_budget(&fixture,0)),FlowFeatureStep::Yield));grants+=1;match feature.step(dag_budget(&fixture,1)){FlowFeatureStep::Complete(bytes)=>{assert_eq!(serde_json::from_slice::<Value>(&bytes).unwrap(),serde_json::from_slice::<Value>(&expected).unwrap());completed=true;break},FlowFeatureStep::Failed(failure)=>panic!("original DAG output {failure:?}"),_=>{}}}
         assert!(completed);assert!(domain.borrow().dag_read_lease.upgrade().is_none_or(|lease|!lease.active.get()));let mut closed=false;for _ in 0..fixture["maximumTurns"].as_u64().unwrap(){if matches!(feature.close_step(dag_budget(&fixture,1)).unwrap(),RetainedCloneStep::Complete(_)){closed=true;break}}assert!(closed);drop(feature);close_domain(&mut domain.borrow_mut());
     }
-    println!("[DEBUG] production Flow DAG original output independentSerde=true outputFamilies=5 singleUnitGrants={grants} zeroFuelPreserved=true leasesReleased=true");
 }
 
 /// 🪜️ One original domain close turn spends one incoming full wallet and preserves its actual receipt.
@@ -902,7 +898,7 @@ fn flow_original_domain_close_spends_one_wallet_and_reports_actual_effects(){
  use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
  semio_framework_artifact_flow_flow::flow_extension_registry_generation();
  for copy in [1,3,64]{
-  let (mut domain,source)=observe(||{let mut domain=FlowDomainAdapter::default();domain.bind_session(semio_framework::abi::AbiHandle::try_new(1,1).unwrap());domain.frame_payload=String::with_capacity(4096);domain.frame_payload.push_str("original-frame");domain});
+  let (mut domain,source)=observe(||{let mut domain=FlowDomainAdapter::default();domain.bind_session(semio_framework_abi::AbiHandle::try_new(1,1).unwrap());domain.frame_payload=String::with_capacity(4096);domain.frame_payload.push_str("original-frame");domain});
   let original=domain.frame_payload.as_ptr();let source_bytes=source.requested_bytes-source.released_bytes;
   let(_,heap)=observe(||domain.begin_close());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(domain.frame_retirement.as_ref().unwrap().original().unwrap().as_ptr(),original);
   let(mut born,mut released,mut turns)=(0,0,0);
@@ -912,6 +908,6 @@ fn flow_original_domain_close_spends_one_wallet_and_reports_actual_effects(){
    let(step,heap)=observe(||domain.close_step(AbiWorkBudget{retained:semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:0,..budget.retained},..budget}).unwrap());assert_eq!(step.progress(),Default::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
    let(step,heap)=observe(||domain.close_step(budget).unwrap());assert!(step.progress().fits(budget.retained));assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));born+=heap.requested_bytes;released+=heap.released_bytes;
   }
-  assert_eq!(released,source_bytes+born);let(_,heap)=observe(||drop(domain));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));eprintln!("[DEBUG] original domain fixedcopy={copy} source={source_bytes} born={born} released={released} turns={turns} oneWallet=true terminalDrop0");
+  assert_eq!(released,source_bytes+born);let(_,heap)=observe(||drop(domain));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
  }
 }

@@ -1,0 +1,106 @@
+{
+ "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️tests/🔬️wgpu-shell-input/🦀️.rs",
+ "original": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/c4p39-tools/orig/5.rs",
+ "stage": "/Users/ueli/.cache/c4p39/stage",
+ "chunks": [
+  {
+   "name": "🏷️scene-labels-dock-tabs-and-select-wheel",
+   "folder": "🏷️scene-labels-dock-tabs-and-select-wheel",
+   "doc": "🏷️ Scene labels, dock tabs and select wheel: locale chrome labels, one tab stop per dock stack and the immediate select owning the wheel.",
+   "ranges": [
+    [
+     4,
+     136
+    ]
+   ]
+  },
+  {
+   "name": "🌍️retained-world-capture",
+   "folder": "🌍️retained-world-capture",
+   "doc": "🌍️ Retained world capture: the topmost retained world owning press and release, capture preservation, rebasing and fixed capture grants.",
+   "ranges": [
+    [
+     138,
+     418
+    ]
+   ]
+  },
+  {
+   "name": "⌨️retained-pane-focus-and-keyboard",
+   "folder": "⌨️retained-pane-focus-and-keyboard",
+   "doc": "⌨️ Retained pane focus and keyboard: concrete window pane actions, keyboard focus routing and successors, pane owner activation and the select and typeahead key mapper.",
+   "ranges": [
+    [
+     420,
+     713
+    ]
+   ]
+  },
+  {
+   "name": "🪟️window-publication-journals",
+   "folder": "🪟️window-publication-journals",
+   "doc": "🪟️ Window publication journals: published tree and canvas documents, scripted window body fixtures, transfer journal refusals and the standalone multi-app variants.",
+   "ranges": [
+    [
+     715,
+     953
+    ]
+   ]
+  },
+  {
+   "name": "🧭️dock-order-key-events-and-drag",
+   "folder": "🧭️dock-order-key-events-and-drag",
+   "doc": "🧭️ Dock order, key events and drag: the silhouette cap gap, dock window order, key action events, the content focus tracker, dock drags and body presses.",
+   "ranges": [
+    [
+     955,
+     1245
+    ]
+   ]
+  },
+  {
+   "name": "🖥️display-and-table-transfer",
+   "folder": "🖥️display-and-table-transfer",
+   "doc": "🖥️ Display and table transfer: published tree handle routing, the display transfer host fixture and laws and table surface transfers through the shell host.",
+   "ranges": [
+    [
+     1247,
+     1739
+    ]
+   ]
+  },
+  {
+   "name": "🎯️canvas-pointer-wheel-and-catalogue-drag",
+   "folder": "🎯️canvas-pointer-wheel-and-catalogue-drag",
+   "doc": "🎯️ Canvas pointer, wheel and catalogue drag: published canvas capture, the renderer canvas pointer sequence, secondary drag, retargeting, wheel bursts, catalogue drops and double click.",
+   "ranges": [
+    [
+     1741,
+     2065
+    ]
+   ]
+  },
+  {
+   "name": "🔎️quick-search-palette-keyboard",
+   "folder": "🔎️quick-search-palette-keyboard",
+   "doc": "🔎️ Quick search palette keyboard: the palette chord, overlay fields not counting as typing and escape closing the palette.",
+   "ranges": [
+    [
+     2067,
+     2135
+    ]
+   ]
+  },
+  {
+   "name": "📷️canvas-camera-ownership",
+   "folder": "📷️canvas-camera-ownership",
+   "doc": "📷️ Canvas camera ownership: closed and reopened windows, sibling components, sequential close, mounted identity, retired deadlines and remount retirement of the pending camera.",
+   "ranges": [
+    [
+     2137,
+     2498
+    ]
+   ]
+  }
+ ]
+}

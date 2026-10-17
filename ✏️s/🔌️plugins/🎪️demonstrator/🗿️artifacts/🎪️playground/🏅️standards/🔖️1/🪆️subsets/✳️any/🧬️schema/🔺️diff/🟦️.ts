@@ -23,6 +23,10 @@ type demonstratorPlaygroundDiffGuardSizeBounds = { readonly minItems?: number; r
 
 export const demonstratorPlaygroundDiffGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : demonstratorPlaygroundDiffGuardReject(at, "value is not an object");
+export const demonstratorPlaygroundDiffGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) demonstratorPlaygroundDiffGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const demonstratorPlaygroundDiffGuardArray = (value: unknown, at: string, bounds: demonstratorPlaygroundDiffGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return demonstratorPlaygroundDiffGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) demonstratorPlaygroundDiffGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -53,8 +57,7 @@ export const demonstratorPlaygroundDiffGuardConstant = <T extends string | numbe
 //#endregion 🚪️Parsers
 
 export function parsePlaygroundDiff(value: unknown, at = "$"): PlaygroundDiff {
-  const row = demonstratorPlaygroundDiffGuardObject(value, at);
-  for (const key of Reflect.ownKeys(row)) if (key !== "schema") demonstratorPlaygroundDiffGuardReject(at, "unexpected field");
+  const row = demonstratorPlaygroundDiffGuardClosed(demonstratorPlaygroundDiffGuardObject(value, at), at, ["schema"]);
   return {
     schema: row["schema"] === undefined ? undefined : demonstratorPlaygroundDiffGuardString(row["schema"], `${at}.schema`),
   };

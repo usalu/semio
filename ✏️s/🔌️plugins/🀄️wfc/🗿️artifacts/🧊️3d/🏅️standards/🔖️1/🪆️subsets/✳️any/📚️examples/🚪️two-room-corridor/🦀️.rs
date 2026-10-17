@@ -49,7 +49,5 @@ pub fn snapshot() -> Wfc3dSnapshot {
 }
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🧩️example/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

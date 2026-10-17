@@ -7,10 +7,10 @@ use super::*;
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetCell {
-    pub(crate) address: cell_address::XlsxCellAddress,
-    pub(crate) value: XlsxCellValue,
+    pub address: cell_address::XlsxCellAddress,
+    pub value: XlsxCellValue,
     #[value(default, skip_serializing_if = "Option::is_none")]
-    pub(crate) node: Option<XmlNode>,
+    pub node: Option<XmlNode>,
 }
 
 impl protocol::MutationKind<XlsxSnapshot, XlsxMutation> for SetCell {

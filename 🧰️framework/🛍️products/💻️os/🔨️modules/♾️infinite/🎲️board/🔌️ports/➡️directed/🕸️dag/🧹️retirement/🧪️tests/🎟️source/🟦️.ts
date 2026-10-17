@@ -15,5 +15,4 @@ export function testDagSourceCustodyContract(): void {
   const original=stable(source);
   const answer=applyPatch(structuredClone(source),[],true,false).newDocument;
   assert.equal(stable(answer),original);
-  console.log(`[DEBUG] original DAG source examples dagFields=${law.dagFields.length} engineFields=${law.engineFields.length} JSONPatch=true UTF8=true`);
 }

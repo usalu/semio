@@ -1,7 +1,17 @@
 //! 🪠️ Staged slice of the `render` band of the mounted artifact instance: its `instance-stores` members (WP6 step S0 of the instance family).
 //!
 //! 🖼️ Render side of the mounted artifact instance: composition graph, interaction state, render, media jobs and media export.
-use super::*;
+use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use pack::snapshot::ArtifactPack;
+use semio_framework_plugin_decl_emission::Emit;
+use semio_framework::FaultFrom;
+use std::future::Future;
+use crate::stores_components::{InstanceStores, LocalInteraction};
+use store::{MemberFactory, Mutation, SpaceMember};
+use protocol::OpText;
+use semio_framework_plugin_reactor_app::PluginApp;
+use semio_framework_ui_contract::*;
 
 impl<A: ArtifactApp> LocalInteraction<A> {
     /// 🕹️ Combines the persisted-local `interaction_store` snapshot with the ephemeral
@@ -22,11 +32,11 @@ impl<A: ArtifactApp> LocalInteraction<A> {
     /// `framework.panel.inspection` (ticket 26/09/02/PUZZLE-3D-END-TO-END, wave B6: 25 full refreshes
     /// over 73 s kept the pre-pick body hash while the same turn's leftover `InteractionView` carried
     /// the picked id).
-    pub(crate) fn interaction_selection_snapshot(&self, stores: &InstanceStores<A>) -> protocol::InteractionState {
+    pub fn interaction_selection_snapshot(&self, stores: &InstanceStores<A>) -> protocol::InteractionState {
         let mut state = match stores.interaction_store.snapshot() {
             Ok(state) => state,
             Err(error) => {
-                crate::plugin_runtime::debug_runtime_line(format_args!("[TRACE] interaction-store snapshot unavailable, selection read as empty: {error}"));
+                semio_framework_plugin_reactor_app::debug_runtime_line(format_args!("[TRACE] interaction-store snapshot unavailable, selection read as empty: {error}"));
                 protocol::InteractionState::default()
             }
         };

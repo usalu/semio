@@ -1,10 +1,12 @@
 //! ↩️ Inverse for `ChangeCuratedItemCount` — restores the OLD count read from `base` (the
 //! pre-state), never inverted structurally from the diff; missing target ⇒ no-op.
-use crate::mutations::SourcingMutation;
 use crate::CurationSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &super::ChangeCuratedItemCount, base: &CurationSnapshot) -> Result<Vec<SourcingMutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op>(payload: &super::ChangeCuratedItemCount, base: &CurationSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError>
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::change_curated_item_count::ChangeCuratedItemCount>,
+{
     Ok((|| {
     match base.curated.iter().find(|item| item.object_id == payload.object_id) {
         Some(item) => vec![crate::mutations::change_curated_item_count::change_curated_item_count(payload.object_id.clone(), item.count)],

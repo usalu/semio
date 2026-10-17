@@ -22,6 +22,6 @@ impl<T: ArtifactSqliteSnapshotHost + ?Sized> ArtifactSqliteSnapshotOperations fo
     where
         Self: Sized + ArtifactDsl + ArtifactPack + semio_framework_value::retirement::RetireOwned + Sync,
     {
-        ArtifactSqliteSnapshotCodec { schema: std::borrow::Cow::Borrowed(Self::SQLITE_SCHEMA), snapshot_type: Some(std::any::TypeId::of::<Self>()), export: export_snapshot_impl::<Self>, import: import_snapshot_impl::<Self>,export_file:Some(crate::io_mechanism::export_snapshot_file_read::<Self>),import_file:Some(crate::io_mechanism::import_snapshot_file_into::<Self>) }
+        ArtifactSqliteSnapshotCodec { schema: std::borrow::Cow::Borrowed(Self::sqlite_schema()), snapshot_type: Some(std::any::TypeId::of::<Self>()), export: export_snapshot_impl::<Self>, import: import_snapshot_impl::<Self>,export_file:Some(crate::io_mechanism::export_snapshot_file_read::<Self>),import_file:Some(crate::io_mechanism::import_snapshot_file_into::<Self>) }
     }
 }

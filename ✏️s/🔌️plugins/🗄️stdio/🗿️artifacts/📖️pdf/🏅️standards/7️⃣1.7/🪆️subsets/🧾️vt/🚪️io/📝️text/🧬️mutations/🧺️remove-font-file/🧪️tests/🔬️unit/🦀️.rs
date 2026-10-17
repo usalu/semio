@@ -1,4 +1,5 @@
-use super::*;
+use crate::standards::v1_7::subsets::vt::schema::mutations::remove_font_file::RemoveFontFile;
+use crate::standards::v1_7::subsets::vt::io::text::mutations::remove_font_file::*;
 
 #[test]
 fn owned_payload_round_trips() {

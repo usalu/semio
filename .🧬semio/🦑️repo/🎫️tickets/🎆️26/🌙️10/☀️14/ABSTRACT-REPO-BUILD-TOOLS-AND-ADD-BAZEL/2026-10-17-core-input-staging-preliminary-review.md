@@ -1,0 +1,9 @@
+# Core Fresh Input Staging Preliminary Review
+
+The initial staging checkpoint had a material completeness gap: final/read verification compared directory dev/ino/mode anchors and expected file facts/hashes without exact direct-name rosters. An unknown entry appearing before a later generic create's baseline roster could remain permitted by that create's own exact delta and survive anchor-only final checks. This finding was sent to Bazel and Root before any final seven-file hold. No Native/protected operation occurred.
+
+Bazel confirmed the gap and withdrew the hold. Proposed contained repair: exact expected direct names on all newly created directories during initial readback, terminal seven-field directory CAS and late unknown file/directory negatives; completion minted only after that complete fresh census. A distinct fixed fresh-input readonly recheck will require the same exact rosters immediately before a future installer. Existing post-installer input-only read must be labeled expected-file evidence because legitimate installed descendants change directories. No caller boolean or generic privileged callback should select a weaker freshness rule.
+
+Other reviewed boundaries: synchronous all-ancestor reservation before scheduling, retained real mapping scope with freshly reacquired journal EX/raw CAS each command/read, genuine shared finite verification/physical work65536, roots/files/bytes/depth/path/create resource bounds, no rollback or successful result on ambiguous writes/close/durability. Detached completion omits raw input payload after staging. Generic filesystem creation remains a separate pending Source qualification and cannot itself mint Core/admin authority.
+
+No final Source acceptance, funded probe or producer mutation is approved by this preliminary report.

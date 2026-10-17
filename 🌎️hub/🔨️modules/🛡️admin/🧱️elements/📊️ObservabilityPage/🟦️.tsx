@@ -7,7 +7,7 @@
 // #region 🔌️Adapters
 import * as React from "react";
 import { Button, Table, uiDataLabel, type TableColumn } from "@semio-tech/ui-react";
-import type { HubDbIoKindV1, HubObservabilityV1, HubRouteLatencyV1, HubTraceEventRowV1, TrustedCatalogPackageProgressV1 } from "../../../../📊️observability/🟦️.ts";
+import type { HubDbIoKindV1, HubObservabilityV1, HubRouteLatencyV1, HubTraceEventRowV1, TrustedCatalogPackageProgressV1 } from "os-hub-ts/observability";
 import { useAdminT, type AdminI18nKey } from "../📚️I18n/🟦️.tsx";
 import { useAdminSession } from "../🔑️AdminSession/🟦️.tsx";
 // #endregion 🔌️Adapters

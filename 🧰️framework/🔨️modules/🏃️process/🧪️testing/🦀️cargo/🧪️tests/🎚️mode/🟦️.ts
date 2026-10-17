@@ -16,5 +16,4 @@ test("original Cargo policy preserves compiler mode independently of Nextest ass
  for(const mode of fixture.refusedModes){const policy={...fixture.policies[0],mode};expect(validate(policy)).toBe(false);expect(()=>readCargoTestPolicyV1({SEMIO_CARGO_TEST_POLICY:JSON.stringify(policy)})).toThrow()}
  for(const args of [["--release"],["-r"],["-Pquick"],["--profile","dev"],["--cargo-profile=release"]])expect(()=>cargoTestPlanV1({manifestPath:fixture.policies[0].manifestPath,packages:[],cwd:"/owner",extraArgs:args},fixture.policies[0] as never,"/owner/metadata.json")).toThrow("profile");
  for(const [args,flag]of [[ ["test","--help"],"--profile"],[["check","--help"],"--profile"],[["nextest","list","--help"],"--cargo-profile"],[["llvm-cov","test","--help"],"--profile"],[["nextest","archive","--help"],"--cargo-profile"],[["llvm-cov","report","--help"],"--profile"]]as const){const help=spawnSync("cargo",[...args],{encoding:"utf8",timeout:5000});expect(help.status).toBe(0);expect(help.stdout+help.stderr).toContain(flag)}
- console.log("[DEBUG] originalCargoMode=true assertionProfileSeparate=true leaseMatches=true AjvNodeCLI=true overridesRefused=true");
 });

@@ -30,6 +30,10 @@ type reasoningWiresInferenceGuardSizeBounds = { readonly minItems?: number; read
 
 export const reasoningWiresInferenceGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : reasoningWiresInferenceGuardReject(at, "value is not an object");
+export const reasoningWiresInferenceGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) reasoningWiresInferenceGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const reasoningWiresInferenceGuardArray = (value: unknown, at: string, bounds: reasoningWiresInferenceGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return reasoningWiresInferenceGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) reasoningWiresInferenceGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -60,14 +64,14 @@ export const reasoningWiresInferenceGuardConstant = <T extends string | number |
 //#endregion 🚪️Parsers
 
 export function parseWiresInference(value: unknown, at = "$"): WiresInference {
-  const row = reasoningWiresInferenceGuardObject(value, at);
+  const row = reasoningWiresInferenceGuardClosed(reasoningWiresInferenceGuardObject(value, at), at, ["topology"]);
   return {
     topology: parseWiresTopology(row["topology"], `${at}.topology`),
   };
 }
 
 export function parseWiresTopology(value: unknown, at = "$"): WiresTopology {
-  const row = reasoningWiresInferenceGuardObject(value, at);
+  const row = reasoningWiresInferenceGuardClosed(reasoningWiresInferenceGuardObject(value, at), at, ["nodeCount", "edgeCount", "componentCount", "cycleFree"]);
   return {
     nodeCount: reasoningWiresInferenceGuardInteger(row["nodeCount"], `${at}.nodeCount`, {"minimum": 0}),
     edgeCount: reasoningWiresInferenceGuardInteger(row["edgeCount"], `${at}.edgeCount`, {"minimum": 0}),

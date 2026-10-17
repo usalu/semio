@@ -3,7 +3,8 @@
  * over ordered categorical stages.
  * @see ../../../🖋️latex/semio-viz-flow.sty
  */
-import { curveBumpX, vizPathRecorder, type VizPathCommand, type VizPathContext } from "../✒️mark/🟦️.ts";
+import { vizPathRecorder, type VizPathCommand, type VizPathContext } from "../✒️mark/🟦️.ts";
+import { curveBumpX } from "../✒️mark/🏔️curves-monotone-natural-and-bump/🟦️.ts";
 
 //#region 🔖️Model
 /** 🌊 One Sankey node after layout. */

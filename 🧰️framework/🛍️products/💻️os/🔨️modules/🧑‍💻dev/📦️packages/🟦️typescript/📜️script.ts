@@ -104,17 +104,17 @@ const router = new ScriptRouter(import.meta.dir)
   })
   .register("generate", class extends BundleScript {
     async run(segments: string[]): Promise<void> {
-      if (segments[0] === "scale-fixture") return new (await import("../../../../🧪️testing/⚖️scale/📤️publication/🟦️.ts")).ScaleFixtureGenerateScript(this.root, this.repoRoot, this.invocation).run(segments.slice(1));
+      if (segments[0] === "scale-fixture") return new (await import("../../../../📦️packages/🟦️typescript/🧪️testing/⚖️scale/📤️publication/🟦️.ts")).ScaleFixtureGenerateScript(this.root, this.repoRoot, this.invocation).run(segments.slice(1));
       throw new Error(`unknown generate subcommand: ${segments[0]} (expected scale-fixture)`);
     }
   })
   .register("scale-fixture", class extends BundleScript {
     async run(segments: string[]): Promise<void> {
-      if (segments[0] === "check") return new (await import("../../../../🧪️testing/⚖️scale/📤️publication/🟦️.ts")).ScaleFixtureCheckScript(this.root, this.repoRoot, this.invocation).run();
+      if (segments[0] === "check") return new (await import("../../../../📦️packages/🟦️typescript/🧪️testing/⚖️scale/📤️publication/🟦️.ts")).ScaleFixtureCheckScript(this.root, this.repoRoot, this.invocation).run();
       throw new Error(`unknown scale-fixture subcommand: ${segments[0]} (expected check)`);
     }
   })
-  .registerLazy("preview-generated", async () => (await import("../../../../🧪️testing/⚖️scale/📤️publication/🟦️.ts")).ScaleFixturePreviewGeneratedScript)
+  .registerLazy("preview-generated", async () => (await import("../../../../📦️packages/🟦️typescript/🧪️testing/⚖️scale/📤️publication/🟦️.ts")).ScaleFixturePreviewGeneratedScript)
   .register("distribution", class extends BundleScript {
     async run(segments: string[]): Promise<void> {
       const { DistributionBundleScript } = await import("../../🚚️distribution/🏃️execution/🟦️.ts");

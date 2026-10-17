@@ -71,7 +71,7 @@ import {
   type QuizState,
 } from "@semio-tech/quiz-react";
 import palette from "../../../../🔨️modules/🖱️ui/🎨️styling/🎨️palette/🎨️.css?raw";
-import stylesheet from "../../🎯️targets/⚛️react/🎨️.css?raw";
+import { quizStylesheet as stylesheet } from "@semio-tech/quiz-react/stylesheet";
 import vectors from "../🧫️fixtures/💭️crowd-client/🔣️.json";
 
 extend([a11y]);

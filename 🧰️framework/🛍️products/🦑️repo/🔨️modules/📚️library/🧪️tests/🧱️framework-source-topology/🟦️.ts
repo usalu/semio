@@ -7,6 +7,7 @@ import ts from "typescript";
 import { inventorySchemaScopes, semanticDirectoryKindId } from "../../🔍️discovery/🟦️.ts";
 
 type Fixture = Readonly<{
+  version: number;
   moves: readonly Readonly<{ source: string; owner: string; kind: string; anchor: string }>[];
   extractions: readonly Readonly<{ packageEntry: string; owner: string; maximumPackageLines: number; anchor: string }>[];
   nativeCrates: readonly Readonly<{ manifest: string; library: string; implementation: string; formerRoot: string }>[];
@@ -184,7 +185,7 @@ test("Hub WGPU command vectors retain source laws without corpus schema authorit
   const routes = new Map<string, string>();
   const visit = (node: ts.Node): void => { if (ts.isCallExpression(node) && ts.isPropertyAccessExpression(node.expression) && node.expression.name.text === "register" && node.arguments.length === 2 && ts.isStringLiteral(node.arguments[0]!) && ts.isIdentifier(node.arguments[1]!)) routes.set(node.arguments[0]!.text, node.arguments[1]!.text); ts.forEachChild(node, visit); };
   visit(parsed);
-  expect(new Set(vectors.commands.map(row => row.generalCommand)).size).toBe(vectors.commands.length);
+  expect(new Set(vectors.commands.map((row: { generalCommand: string }) => row.generalCommand)).size).toBe(vectors.commands.length);
   expect(vectors.commands).toHaveLength(5);
   for (const row of vectors.commands) {
     expect(routes.get(row.command)).toBe(row.className);

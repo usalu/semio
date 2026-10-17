@@ -71,7 +71,7 @@ async fn the_subject_reproduces_the_third_party_oracle_tables() {
 
 #[semio_framework_async_macros::async_test]
 async fn the_wall_solids_projection_lists_the_straight_walls_with_their_layout_extent() {
-    use crate::standards::v1::subsets::any::io::text::snapshot::encode_inference_projection_json;
+    use crate::standards::v1::subsets::any::io::text::projection::encode_inference_projection_json;
     let model = house();
     let inferred = ModelInference::infer(&model).expect("infers");
     let solids: serde_json::Value = serde_json::from_str(&encode_inference_projection_json(&model, "wall-solids").expect("known table")).expect("JSON table");

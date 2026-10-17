@@ -1,3 +1,4 @@
+use crate::schema::mutations::SemioGraphMutation;
 use crate::io::binary::mutations::*;
 use crate::io::text::mutations::demo_mutation_cases;
 use protocol::OpBinary;

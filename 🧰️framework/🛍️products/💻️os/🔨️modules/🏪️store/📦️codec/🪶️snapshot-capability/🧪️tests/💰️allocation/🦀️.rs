@@ -8,7 +8,7 @@ use std::cell::Cell;
 #[derive(semio_framework_dsl_record_derive::DslRecord,semio_framework_value::RetireOwned)]
 struct AllocationRecord { literal: String }
 
-fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap() }
+fn fixture() -> serde_json::Value { crate::fixture_json(file!(), "🧫️fixtures/🔣️.json") }
 fn literal() -> String { let case = fixture(); case["literal"]["unit"].as_str().unwrap().repeat(case["literal"]["repeat"].as_u64().unwrap() as usize) }
 fn limits() -> SqliteDatabaseLimits { SqliteDatabaseLimits { max_allocation_bytes: fixture()["maximumAllocationBytes"].as_u64().unwrap() as usize, ..SqliteDatabaseLimits::default() } }
 
@@ -110,7 +110,7 @@ let mut snapshot_decoding_progress=|_|snapshot_original_live.get();let mut snaps
 let mut snapshot_encoding_progress=|_|snapshot_original_live.get();let mut snapshot_encoding_recipient=semio_framework_value::native_encoding::NativeEncodeRetirementRecipient::new();let mut snapshot_encoding_native=semio_framework_value::NativeEncodeControl::new(snapshot_native_maximum,&mut snapshot_encoding_progress);snapshot_encoding_native.install_retirement_recipient(&mut snapshot_encoding_recipient).unwrap();let mut snapshot_encoding_owner=crate::os_store::NativeSnapshotEncodeOwner::new(&mut snapshot_encoding_native,snapshot_caller_grant);
 
     let source = AllocationRecord { literal: literal() };
-    let neutral:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../🔨️modules/🌱️value/⚠️refusal/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+    let neutral:serde_json::Value=crate::fixture_json(file!(), "../../../../../../../../🔨️modules/🌱️value/⚠️refusal/🧪️tests/🧫️fixtures/🔣️.json");
     let kinds=[ValueRefusalKind::InvalidValue,ValueRefusalKind::Canceled,ValueRefusalKind::OwnershipLimit,ValueRefusalKind::AllocationFailed,ValueRefusalKind::WorkLimit,ValueRefusalKind::DepthLimit,ValueRefusalKind::UnsupportedOwner,ValueRefusalKind::InvariantViolated,ValueRefusalKind::InvalidValue];
     let cases:Vec<_>=neutral["cases"].as_array().unwrap().iter().filter(|case|case["operation"]=="construct").collect();
     assert_eq!(cases.len(),kinds.len());

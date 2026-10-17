@@ -11,21 +11,10 @@
 //! `crate::interpreter::...` are unchanged because the children are re-exported below. The shared contracts
 //! (`WorkerCell`, `FrameworkWidgetContext`, `ScenePointerTarget`, `RasterUploadRefusal`) live in `crate::element_contracts`.
 
-#[cfg(test)]
-use crate::element_contracts::WorkerCell;
-#[cfg(test)]
-use semio_framework_ui_declaration::ui::UiNode;
-
 use semio_framework_os_renderer_wgpu_ui_engine::render_plan_validator;
 pub use render_plan_validator::{validate_component_scene, RenderPlanLimits, RENDER_PLAN_LIMITS};
-#[cfg(test)]
-pub use render_plan_validator::{validate_ui_node, validate_window_body_surface};
 
 use semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine;
-#[cfg(test)]
-pub(crate) use retained_ui_engine::retained_root_is_tree;
-#[cfg(test)]
-use retained_ui_engine::UI_ENGINE;
 pub use retained_ui_engine::{
     active_retained_drag_sessions, cancel_scene_pointer, canvas_catalogue_drag_over,
     canvas_catalogue_drop, captured_scene_pointer, claim_scene_pointer_at,
@@ -105,11 +94,6 @@ use semio_framework_os_renderer_wgpu_ui_engine_dump::mesh_and_board2d_stats;
 use semio_framework_os_renderer_wgpu_ui_engine_dump::chrome_ledger;
 #[cfg(not(target_arch = "wasm32"))]
 pub(crate) use chrome_ledger::native_accessibility_windows;
-#[cfg(test)]
-pub(crate) use chrome_ledger::{
-    accessibility_visible_window_ids, candidate_tree_item_selected_for_test,
-    published_accessibility_nodes_for_test, published_accessibility_target_for_test,
-};
 pub use chrome_ledger::{
     acknowledge_presented_input, begin_accessibility_visible_documents,
     discard_presented_input_candidate, note_accessibility_visible_document,
@@ -124,26 +108,3 @@ pub(crate) use chrome_ledger::{
     visible_retained_accessibility_target, SHELL_CHROME_ACCESSIBILITY_WINDOW_ID,
 };
 
-#[cfg(test)]
-/// 🔎️ The whole Interpreter module as the one text the unsplit file held, minus the shared contracts: this file and every child, for the source-text laws.
-pub(crate) const INTERPRETER_SOURCE: &str = concat!(
-    include_str!("🦀️.rs"),
-    include_str!("🧮️render-plan-validator/🦀️.rs"),
-    include_str!("🧩️retained-ui-engine/🦀️.rs"),
-    include_str!("🧩️retained-ui-engine/🎬️scene-intents-and-clipboard/🦀️.rs"),
-    include_str!("../../../../🎯️targets/🧊️wgpu/🤝️contracts/📥️lifted/🧩️retained-ui-engine/🦀️.rs"),
-    include_str!("../../../../🎯️targets/🧊️wgpu/🤝️contracts/📥️lifted/🖼️ui-image-loading/🦀️.rs"),
-    include_str!("../../../../🎯️targets/🧊️wgpu/🎭️scene-state/📥️lifted/🎯️chrome-ledger/🦀️.rs"),
-    include_str!("✍️text-and-table-focus/🦀️.rs"),
-    include_str!("🖋️ink-and-vfs-focus/🦀️.rs"),
-    include_str!("🖱️scene-interaction/🦀️.rs"),
-    include_str!("📄️retained-document-consumer/🦀️.rs"),
-    include_str!("🖼️ui-image-loading/🦀️.rs"),
-    include_str!("🔬️introspection/🦀️.rs"),
-    include_str!("🧱️mesh-and-board2d-stats/🦀️.rs"),
-    include_str!("🎯️chrome-ledger/🦀️.rs"),
-);
-
-#[cfg(test)]
-#[path = "../../🧵️worker-cell/🧪️tests/🦀️.rs"]
-mod worker_cell_tests;

@@ -4,7 +4,9 @@ import { basename, dirname, join, relative } from "node:path";
 import { stagePrintSources, printCompilerName } from "../📥️source-staging/🟦️.ts";
 import{withCompiledPrintProbeV1,type CompiledPrintProbeV1}from"../🖨️tectonic-template-compilation/🟦️.ts";
 import type{PrintProbeResourceV1}from"../🖨️tectonic-template-compilation/📋️intent/🟦️.ts";
-import{withPrintStorageTaskV1,type PrintExecutionV1}from"../../📦️artifacts/🎛️operation/🟦️.ts";
+import{withPrintExecutionV1,withPrintStorageTaskV1,type PrintExecutionV1}from"../../📦️artifacts/🎛️operation/🟦️.ts";
+import type{ScriptInvocation}from"../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import type{ResourceLeaseControl}from"@semio-tech/process/leases";
 
 
 //#region 🧪️ProbeProtocol
@@ -154,6 +156,10 @@ export interface CompiledVizProbeV1{readonly records:readonly ProbeRecord[];read
 export function withCompiledVizProbeDocumentV1<T>(spec:VizProbeDocumentSpec,options:VizProbeOptions,body:(compiled:CompiledVizProbeV1)=>Promise<T>):Promise<T>{const source=renderVizProbeDocument(spec),execution=Object.freeze({...options.execution}),selection=Object.freeze({caseName:options.caseName??spec.case,scenario:Object.hasOwn(options,"scenario")?options.scenario:spec.scenario}),resources=options.resources;return withCompiledPrintProbeV1(execution,{version:1,kind:"probe",name:"probe.tex",source,...(resources?{resources}:{})},async probe=>{const text=new TextDecoder("utf-8",{fatal:true}).decode(await probe.read("probe.probe.jsonl",1048576)),records=selectProbeRecords(parseProbeJsonLines(text),{execution,...selection});return body(Object.freeze({records:Object.freeze(records),probe}));});}
 /** 🧪️ Returns finite validated records as DATA, with no escaped compiler path or memoized pending work. */
 export function compileVizProbeDocument(spec:VizProbeDocumentSpec,options:VizProbeOptions):Promise<ProbeRecord[]>{return withCompiledVizProbeDocumentV1(spec,options,async compiled=>[...compiled.records]);}
+/** 🧭️ The part of a test adapter context that owns a probe run: the workspace, the original invocation and its phase control. */
+export type VizProbeContextV1=Readonly<{repoRoot:string;invocation:ScriptInvocation;phaseControl:ResourceLeaseControl}>;
+/** 🧪️ Compiles one probe document inside a fresh probe execution of the adapter context that already owns the invocation and its phase control. */
+export function compileVizProbeDocumentInContext(context:VizProbeContextV1,spec:VizProbeDocumentSpec,options:Omit<VizProbeOptions,"execution">={}):Promise<ProbeRecord[]>{return withPrintExecutionV1({workspace:context.repoRoot,invocation:context.invocation,phaseControl:context.phaseControl,kind:"probe"},execution=>compileVizProbeDocument(spec,{...options,execution}));}
 /** 📚️ Compiles an explicit workspace Source probe and retains all consumers through its callback. */
 export function withCompiledVizProbeV1<T>(texPath:string,options:VizProbeOptions,body:(compiled:CompiledVizProbeV1)=>Promise<T>):Promise<T>{const path=texPath,execution=Object.freeze({...options.execution}),selection=Object.freeze({caseName:options.caseName,scenario:options.scenario}),sources=Object.freeze([...(options.sources??[])]);return withPrintStorageTaskV1(execution.operation,execution.phaseControl,async(operation,context)=>{const sourceRoot=relative(context.workspace,dirname(path)).replaceAll("\\","/"),name=basename(path);return withCompiledPrintProbeV1({operation,phaseControl:context.phaseControl},{version:1,kind:"document",namespace:"probe",id:"source-probe",sourceRoot,texPath:name,sources:[name,...sources],dark:false},async probe=>{const stream=basename(printCompilerName(name),".tex")+".probe.jsonl",records=selectProbeRecords(parseProbeJsonLines(new TextDecoder("utf-8",{fatal:true}).decode(await probe.read(stream,1048576))),{execution,...selection});return body(Object.freeze({records:Object.freeze(records),probe}));});});}
 /** 🧪️ Projects a consumed Source compilation into finite record DATA. */

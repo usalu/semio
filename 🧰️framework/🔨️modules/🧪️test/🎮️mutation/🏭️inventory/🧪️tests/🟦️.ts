@@ -11,7 +11,6 @@ test("mutation inventory projections agree with independent SQLite and the runti
  const ajv=new Ajv({strict:true});
  const validateWire=ajv.compile({$schema:"https://json-schema.org/draft/2020-12/schema",$defs:wireSchema.$defs,$ref:"#/$defs/RuntimeMutationInventory"});
  for(const row of fixture.cases){expect(sqliteInventory(row)).toEqual(row.expected);expect(validateWire(row.expected)).toBe(true);}
- console.log("[DEBUG] Eight inventory projections agree with independent SQLite");
 });
 test("resource policy requires finite positive work, owned bytes and time",()=>{
  const validate=new Ajv({strict:true}).compile(policySchema),valid={version:1,maximumUnits:2000000,maximumOwnedBytes:4194304,budgetMs:60000};

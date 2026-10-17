@@ -3,7 +3,7 @@ import {Database} from "bun:sqlite";
 import {readFileSync,existsSync} from "node:fs";
 
 import {join} from "node:path";
-import {parseSqliteDatabaseSchema,exportSqliteDatabase,importSqliteDatabase,type SqliteDatabase,type SqliteValue} from "../../../../../../../🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import {parseSqliteDatabaseSchema,exportSqliteDatabase,importSqliteDatabase,type SqliteDatabase,type SqliteValue} from "@semio-tech/framework-sqlite-snapshot-ts";
 type Fixture={rows:Record<string,(string|number|null)[][]>;rowsTotal:number;identityOffset:number;edit:{table:string;column:string;value:string};blobSizes?:string[];clocks?:{actor:string;physicalMs:string;logical:string}[];interiorControl?:{textUnit:string;repeat:number;utf8Bytes:number}};
 type SafeIntegerQuery={safeIntegers(value:true):{all():unknown[]}};
 const quote=(value:string)=>'"'+value.replaceAll('"','""')+'"';

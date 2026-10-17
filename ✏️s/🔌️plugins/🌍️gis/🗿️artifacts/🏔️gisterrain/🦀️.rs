@@ -9,16 +9,7 @@ extern crate semio_framework_os_kernel as vcs;
 /// 📸️ Persisted GIS terrain snapshot — defined in `📸️ snapshot/🧬️ schema`, re-exported here.
 pub use crate::schema::snapshot::GisTerrainSnapshot;
 
-use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3;
-use semio_s_artifact_stdio_semio_mesh::schema::snapshot::{SemioMesh, SemioMeshSnapshot, SemioPrimitive, SemioTopology};
-
-//#region 🔹Constants
-/// 🏔️ Schema for undoable GIS terrain documents.
-pub const GIS_3D_TERRAIN_SCHEMA: &str = "gis.terrain";
-
-/// 🪪️ One canonical terrain identity shared by definition, composer and both app roles.
-pub const GISTERRAIN_DIALECT: semio_framework_artifact_reference::Dialect = semio_framework_artifact_reference::Dialect { artifact_kind: "s.gis.gisterrain", standard: semio_framework_artifact_reference::StandardId("1"), subset: semio_framework_artifact_reference::SubsetId::ANY };
-//#endregion 🔹Constants
+pub use semio_s_artifact_gis_gisterrain_inferences::{GISTERRAIN_DIALECT, GIS_3D_TERRAIN_SCHEMA};
 
 //#region 🔹Types
 //#endregion 🔹Types
@@ -55,56 +46,7 @@ pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
 }
 //#endregion 🔹ArtifactKind
 
-//#region 🔖️MeshComposition
-/// 🕸️ Deterministic content-addressed CHILD handle for the terrain's composed mesh — same
-/// `(child_id, target)` for identical `(exaggeration, imported_map)`, a different pair
-/// once either actually changes. Mirrors `💠️lowpoly`'s `mesh_child_handle`/`📐️cad`'s
-/// `cad_model_child_handle` (same `store::os_store::artifact_child::ArtifactChild::new` + `ArtifactDialect` shape).
-pub fn gis_terrain_mesh_child_handle(content_key: &str) -> store::os_store::artifact_child::ArtifactChild<SemioMeshSnapshot> {
-    let child_id = store::content_id("gisterrain-mesh", content_key.as_bytes());
-    let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "mesh".into() };
-    let target = semio_framework_artifact_reference::ArtifactRef { artifact_id: child_id.clone(), dialect };
-    store::os_store::artifact_child::ArtifactChild::new(child_id, target)
-}
-
-/// 🔑️ Construction seed for an initial terrain mesh; persisted identity survives later edits.
-pub fn gis_terrain_mesh_content_key(exaggeration: f64, imported_map: Option<&schema::ImportedMap>) -> String {
-    let identity = imported_map.map(|map| {
-        let bytes = store::pack_rt::encode_document(&schema::ImportedMap::__dsl_spec(), &map.__dsl_to_record(), &store::PackEncodeOptions::default()).expect("authored imported map native record");
-        store::content_id("gisterrain-map", &bytes)
-    }).unwrap_or_default();
-    format!("{:016x}|{}", exaggeration.to_bits(), identity)
-}
-
-/// 🏔️ WRITE direction, real (not a stub): builds an actual `SemioMeshSnapshot` from the terrain
-/// document — a single flat quad (2 triangles) sized by the imported overlay's geographic extent
-/// (falling back to a 1×1 unit quad when no overlay is present) and lifted by `exaggeration` alone
-/// (there is no DEM heightfield yet — see `gis3d_scene_media`'s own long-standing doc comment: "gis3d
-/// has no CPU-side heightmap tessellator yet"). Honest placeholder geometry, not a fake: every field
-/// is real, computed, and round-trips — the day a tessellator lands, only this function's body needs
-/// to grow real per-vertex elevation.
-pub fn gis_terrain_mesh_from_snapshot(document: &GisTerrainSnapshot) -> SemioMeshSnapshot {
-    let bounds = standards::v1::subsets::any::schema::inferences::bounds::lon_lat_bounds(&standards::v1::subsets::any::schema::inferences::bounds::imported_lon_lat_positions(document));
-    let (min_x, min_y, max_x, max_y) = bounds.map_or((0.0, 0.0, 1.0, 1.0), |b| (b.lon_min, b.lat_min, b.lon_max, b.lat_max));
-    let (min_x, max_x) = if min_x < max_x { (min_x, max_x) } else { (min_x, min_x + 1.0) };
-    let (min_y, max_y) = if min_y < max_y { (min_y, max_y) } else { (min_y, min_y + 1.0) };
-    // 🏔️ Honest gap (matches `gis3d_scene_media`'s own doc comment): with no DEM heightfield, every
-    // vertex is flat at z=0 regardless of `exaggeration` — `exaggeration` still round-trips as
-    // real document state; it currently has no
-    // per-vertex effect on THIS placeholder surface yet.
-    let z = 0.0;
-    let positions = vec![SemioPoint3 { x: min_x, y: min_y, z }, SemioPoint3 { x: max_x, y: min_y, z }, SemioPoint3 { x: max_x, y: max_y, z }, SemioPoint3 { x: min_x, y: max_y, z }];
-    SemioMeshSnapshot {
-        schema: "s.stdio.semio.mesh".into(),
-        meshes: vec![SemioMesh {
-            id: "gisterrain-surface".into(),
-            primitives: vec![SemioPrimitive { id: "gisterrain-surface-quad".into(), topology: SemioTopology::Triangles, positions, normals: Vec::new(), uvs: Vec::new(), colors: Vec::new(), indices: vec![0, 1, 2, 0, 2, 3], material_id: None }],
-        }],
-        materials: Vec::new(),
-        textures: Vec::new(),
-    }
-}
-//#endregion 🔖️MeshComposition
+pub use semio_s_artifact_gis_gisterrain_inferences::{gis_terrain_mesh_child_handle, gis_terrain_mesh_content_key, gis_terrain_mesh_from_snapshot};
 
 //#region 🔖️Register
 /// 🔖️ This artifact's declaration (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE M1) — replaces
@@ -210,103 +152,58 @@ pub mod standards {
             pub mod any {
                 #[path = "."]
                 pub mod schema {
-                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs"]
-                    mod component;
-                    pub use component::*;
-                    #[path = "."]
-                    pub mod snapshot {
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                    #[path = "."]
-                    pub mod inferences {
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                        #[path = "."]
-                        pub mod bounds {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦bounds/🦀️.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                    }
-                    #[path = "."]
-                    pub mod diff {
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/⚙️operations/🦀️.rs"]
-                    pub mod operations;
+                    pub use semio_s_artifact_gis_gisterrain_schema::standards::v1::subsets::any::schema::*;
+
+                    pub use semio_s_artifact_gis_gisterrain_inferences::standards::v1::subsets::any::schema::snapshot;
+                    pub use semio_s_artifact_gis_gisterrain_inferences::standards::v1::subsets::any::schema::inferences;
+                    pub use semio_s_artifact_gis_gisterrain_inferences::standards::v1::subsets::any::schema::diff;
+                    pub use semio_s_artifact_gis_gisterrain_operations::standards::v1::subsets::any::schema::operations;
                     #[path = "."]
                     pub mod mutations {
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
+                        pub use semio_s_artifact_gis_gisterrain_operations::standards::v1::subsets::any::schema::mutations::*;
+
                         #[path = "."]
                         pub mod change_exaggeration {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎚️change-exaggeration/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎚️change-exaggeration/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎚️change-exaggeration/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎚️change-exaggeration/🧪️tests/⛰️raises/🦀️.rs"]
-                            mod tests_raises_the_exaggeration_from_one_to_two_and_a_half;
+                            pub use semio_s_artifact_gis_gisterrain_operations::standards::v1::subsets::any::schema::mutations::change_exaggeration::*;
+                            pub use semio_s_artifact_gis_gisterrain_operations::standards::v1::subsets::any::schema::mutations::change_exaggeration::diff;
+                            pub use semio_s_artifact_gis_gisterrain_operations::standards::v1::subsets::any::schema::mutations::change_exaggeration::inverse;
+
                         }
                         #[path = "."]
                         pub mod change_imported_features {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📥change-imported-features/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📥change-imported-features/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📥change-imported-features/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📥change-imported-features/🧪️tests/📥️imports/🦀️.rs"]
-                            mod tests_imports_a_single_harbor_position_descriptor;
+                            pub use semio_s_artifact_gis_gisterrain_operations::standards::v1::subsets::any::schema::mutations::change_imported_features::*;
+                            pub use semio_s_artifact_gis_gisterrain_operations::standards::v1::subsets::any::schema::mutations::change_imported_features::diff;
+                            pub use semio_s_artifact_gis_gisterrain_operations::standards::v1::subsets::any::schema::mutations::change_imported_features::inverse;
+
                         }
                     }
                 }
                 #[path = "."]
                 pub mod io {
-                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs"]
-                    mod component;
-                    pub use component::*;
+                    pub use semio_s_artifact_gis_gisterrain_relocated_engine_tests::standards::v1::subsets::any::io::*;
+pub mod binary {
+    pub use semio_s_artifact_gis_gisterrain_relocated_engine_tests::standards::v1::subsets::any::io::binary::*;
+    pub use semio_s_artifact_gis_gisterrain_operations::standards::v1::subsets::any::io::binary::diff;
+    pub use semio_s_artifact_gis_gisterrain_terrain_descriptor::standards::v1::subsets::any::io::binary::inferences;
+    pub mod mutations {
+        pub use semio_s_artifact_gis_gisterrain_operations::standards::v1::subsets::any::io::binary::mutations::*;
+        pub use semio_s_artifact_gis_gisterrain_terrain_descriptor::standards::v1::subsets::any::io::binary::mutations::change_exaggeration;
+        pub use semio_s_artifact_gis_gisterrain_terrain_descriptor::standards::v1::subsets::any::io::binary::mutations::change_imported_features;
+    }
+}
+pub mod sqlite {
+    pub use semio_s_artifact_gis_gisterrain_terrain_descriptor::standards::v1::subsets::any::io::sqlite::*;
+    pub use semio_s_artifact_gis_gisterrain_inferences::standards::v1::subsets::any::io::sqlite::snapshot;
+}
+
                     #[path = "."]
                     pub mod import {
                         #[path = "."]
                         pub mod deserializers {
                             #[path = "."]
                             pub mod artifacts {
-                                #[path = "."]
-                                pub mod txt {
-                                    #[path = "."]
-                                    pub mod v_utf_8 {
-                                        #[path = "."]
-                                        pub mod any {
-                                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔤️txt/🔖️utf-8/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
-                                #[path = "."]
-                                pub mod json {
-                                    #[path = "."]
-                                    pub mod v_rfc8259 {
-                                        #[path = "."]
-                                        pub mod any {
-                                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
+                                pub use semio_s_artifact_gis_gisterrain_inferences::standards::v1::subsets::any::io::import::deserializers::artifacts::txt;
+                                pub use semio_s_artifact_gis_gisterrain_inferences::standards::v1::subsets::any::io::import::deserializers::artifacts::json;
                             }
                         }
                     }
@@ -316,90 +213,13 @@ pub mod standards {
                         pub mod serializers {
                             #[path = "."]
                             pub mod artifacts {
-                                #[path = "."]
-                                pub mod las {
-                                    #[path = "."]
-                                    pub mod v1_0 {
-                                        #[path = "."]
-                                        pub mod any {
-                                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/☁️las/🔖️1.0/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
-                                #[path = "."]
-                                pub mod ply {
-                                    #[path = "."]
-                                    pub mod v1_0 {
-                                        #[path = "."]
-                                        pub mod any {
-                                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🧱️ply/🔖️1.0/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
-                                #[path = "."]
-                                pub mod txt {
-                                    #[path = "."]
-                                    pub mod v_utf_8 {
-                                        #[path = "."]
-                                        pub mod any {
-                                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🔤️txt/🔖️utf-8/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
-                                #[path = "."]
-                                pub mod json {
-                                    #[path = "."]
-                                    pub mod v_rfc8259 {
-                                        #[path = "."]
-                                        pub mod any {
-                                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
-                                #[path = "."]
-                                pub mod stl {
-                                    #[path = "."]
-                                    pub mod v_ascii {
-                                        #[path = "."]
-                                        pub mod any {
-                                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🔺️stl/🔖️ascii/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
-                                #[path = "."]
-                                pub mod gltf {
-                                    #[path = "."]
-                                    pub mod v2_0 {
-                                        #[path = "."]
-                                        pub mod any {
-                                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🧊️gltf/🔖️2.0/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
-                                #[path = "."]
-                                pub mod obj {
-                                    #[path = "."]
-                                    pub mod v3_0 {
-                                        #[path = "."]
-                                        pub mod any {
-                                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🗿️obj/🔖️3.0/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
+                                pub use semio_s_artifact_gis_gisterrain_inferences::standards::v1::subsets::any::io::export::serializers::artifacts::las;
+                                pub use semio_s_artifact_gis_gisterrain_inferences::standards::v1::subsets::any::io::export::serializers::artifacts::ply;
+                                pub use semio_s_artifact_gis_gisterrain_schema::standards::v1::subsets::any::io::export::serializers::artifacts::txt;
+                                pub use semio_s_artifact_gis_gisterrain_schema::standards::v1::subsets::any::io::export::serializers::artifacts::json;
+                                pub use semio_s_artifact_gis_gisterrain_schema::standards::v1::subsets::any::io::export::serializers::artifacts::stl;
+                                pub use semio_s_artifact_gis_gisterrain_relocated_engine_tests::standards::v1::subsets::any::io::export::serializers::artifacts::gltf;
+                                pub use semio_s_artifact_gis_gisterrain_relocated_engine_tests::standards::v1::subsets::any::io::export::serializers::artifacts::obj;
                             }
                         }
                     }
@@ -414,36 +234,9 @@ pub mod schema {
     pub use super::standards::v1::subsets::any::schema::*;
 }
 
-
-
-
-pub mod diff {
-    pub use crate::standards::v1::subsets::any::schema::diff::*;
-    pub mod schema {
-        pub use crate::standards::v1::subsets::any::schema::diff::*;
-    }
-
-
-
-}
-pub mod mutations {
-    pub use crate::standards::v1::subsets::any::schema::mutations::*;
-    pub mod schema {
-        pub use crate::standards::v1::subsets::any::schema::mutations::*;
-    }
-
-
-
-}
-pub mod snapshot {
-    pub use crate::standards::v1::subsets::any::schema::snapshot::*;
-    pub mod schema {
-        pub use crate::standards::v1::subsets::any::schema::snapshot::*;
-    }
-
-
-
-}
+pub use semio_s_artifact_gis_gisterrain_inferences::diff;
+pub use semio_s_artifact_gis_gisterrain_operations::mutations;
+pub use semio_s_artifact_gis_gisterrain_inferences::snapshot;
 pub use crate::standards::v1::subsets::any::schema::diff::GisTerrainDiff;
 pub use crate::standards::v1::subsets::any::schema::mutations::GisTerrainMutation;
 
@@ -451,12 +244,8 @@ pub use crate::standards::v1::subsets::any::schema::mutations::GisTerrainMutatio
 pub mod examples {
     #[path = "."]
     pub mod demo {
-        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️.rs"]
-        mod component;
-        pub use component::*;
-        #[cfg(test)]
-        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🧩️example/🦀️.rs"]
-        mod tests;
+        pub use semio_s_artifact_gis_gisterrain_terrain_descriptor::examples::demo::*;
+
     }
 }
 
@@ -464,52 +253,39 @@ pub mod examples {
 pub mod editor {
     #[path = "."]
     pub mod gis3d {
-        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs"]
-        mod component;
-        pub use component::*;
+        pub use semio_s_artifact_gis_gisterrain_editor::editor::gis3d::*;
 
         #[path = "."]
         pub mod presence {
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🦀️.rs"]
-            mod component;
-            pub use component::*;
+            pub use semio_s_artifact_gis_gisterrain_terrain_descriptor::editor::gis3d::presence::*;
 
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema/🦀️.rs"]
-            pub mod schema;
+            pub use semio_s_artifact_gis_gisterrain_terrain_descriptor::editor::gis3d::presence::schema;
         }
 
         #[path = "."]
         pub mod examples {
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🦀️.rs"]
-            pub mod demo_session;
-            #[cfg(test)]
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🧪️tests/🧩️example/🦀️.rs"]
-            mod demo_session_tests;
+            pub use semio_s_artifact_gis_gisterrain_terrain_descriptor::editor::gis3d::examples::demo_session;
+
         }
 
-        #[path = "."]
-        pub mod commands {
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎨️example/🦀️.rs"]
-            pub mod example;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🏔️exaggeration/🦀️.rs"]
-            pub mod exaggeration;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/👁️view/🦀️.rs"]
-            pub mod view;
-        }
+        pub use semio_s_artifact_gis_gisterrain_editor::editor::gis3d::commands;
 
         #[path = "."]
         pub mod modes {
             #[path = "."]
             pub mod view {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/👁️view/🦀️.rs"]
-                mod component;
-                pub use component::*;
+                pub use semio_s_artifact_gis_gisterrain_relocated_engine_tests::editor::gis3d::modes::view::*;
 
-                #[path = "."]
                 pub mod windows {
-                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/👁️view/🪟️windows/🏔️terrain/🦀️.rs"]
-                    pub mod terrain;
-                }
+    pub use semio_s_artifact_gis_gisterrain_relocated_engine_tests::editor::gis3d::modes::view::windows::*;
+    pub mod terrain {
+        pub use semio_s_artifact_gis_gisterrain_relocated_engine_tests::editor::gis3d::modes::view::windows::terrain::*;
+        pub mod config {
+            pub use semio_s_artifact_gis_gisterrain_relocated_engine_tests::editor::gis3d::modes::view::windows::terrain::config::*;
+            pub use semio_s_artifact_gis_gisterrain_terrain_descriptor::editor::gis3d::modes::view::windows::terrain::config::schema;
+        }
+    }
+}
             }
         }
     }
@@ -519,36 +295,28 @@ pub mod editor {
 pub mod viewer {
     #[path = "."]
     pub mod gisterrain {
-        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs"]
-        mod component;
-        pub use component::*;
-        #[path = "."]
-        pub mod presence {
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/👥️presence/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
-        #[path = "."]
-        pub mod config {
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎚️config/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
+        pub use semio_s_artifact_gis_gisterrain_relocated_engine_tests::viewer::gisterrain::*;
+
+        pub use semio_s_artifact_gis_gisterrain_terrain_descriptor::viewer::gisterrain::presence;
+        pub use semio_s_artifact_gis_gisterrain_terrain_descriptor::viewer::gisterrain::config;
 
         #[path = "."]
         pub mod modes {
             #[path = "."]
             pub mod view {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🦀️.rs"]
-                mod component;
-                pub use component::*;
+                pub use semio_s_artifact_gis_gisterrain_relocated_engine_tests::viewer::gisterrain::modes::view::*;
 
-                #[path = "."]
-                pub mod windows {
-                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🏔️terrain/🦀️.rs"]
-                    pub mod terrain;
-                }
+                pub use semio_s_artifact_gis_gisterrain_relocated_engine_tests::viewer::gisterrain::modes::view::windows;
             }
         }
     }
 }
 
 pub use crate::standards::v1::subsets::any::io::{GisterrainBuilderConstruction, GisTerrainParts, GisTerrainAnalyzerAnalysis, GisterrainBuilderFacets, GisterrainBuilder, GisTerrainAnalyzer, GisTerrainComposer};
+
+#[cfg(test)]
+#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🪪️document/🦀️.rs"]
+mod hoisted_tests_0;
+#[cfg(test)]
+#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs"]
+mod hoisted_snapshot_1;

@@ -220,7 +220,7 @@ export function checkCrossCrateVisibility(repoRoot: string, crates: readonly { n
 export type CoherenceViolation = Readonly<{ crate: string; file: string; trait: string | null; selfType: string; definedIn: readonly string[] }>;
 
 /** ⚖️ Flags `impl <foreign trait> for <type defined in another carved crate>` and inherent impls of foreign types. */
-export function checkOrphanRules(crates: readonly { name: string; sources: ReadonlyMap<string, string> }[], implHeaderOf: (text: string) => { trait: string | null; self: string | null } | null, itemsOf: (text: string) => readonly RustSourceItem[]): CoherenceViolation[] {
+export function checkOrphanRules(crates: readonly { name: string; sources: ReadonlyMap<string, string> }[], implHeaderOf: (text: string) => { trait: string | null; self: string | null; traitArgs: readonly string[] } | null, itemsOf: (text: string) => readonly RustSourceItem[]): CoherenceViolation[] {
   const typeDefs = new Map<string, Set<string>>();
   const traits = new Set<string>();
   for (const crate of crates) for (const [, text] of crate.sources) for (const item of itemsOf(text)) {
@@ -235,6 +235,7 @@ export function checkOrphanRules(crates: readonly { name: string; sources: Reado
     const owners = typeDefs.get(header.self);
     if (!owners || owners.has(crate.name)) continue;
     if (header.trait && traits.has(header.trait)) continue;
+    if (header.traitArgs.some((argument) => typeDefs.get(argument)?.has(crate.name))) continue;
     violations.push({ crate: crate.name, file, trait: header.trait, selfType: header.self, definedIn: [...owners] });
   }
   return violations;

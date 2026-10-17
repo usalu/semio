@@ -14,18 +14,12 @@ use semio_framework_os_renderer_wgpu_shell_sync::Phase;
 use semio_framework_os_renderer_wgpu_shell_window_actions::WindowActionsCtx;
 use semio_framework_job::RetainedCloneGrant;
 use semio_framework_os_renderer_wgpu_host_base::{renderer_worker_pool, runtime_assets};
-#[cfg(not(target_arch = "wasm32"))]
-use semio_framework_os_renderer_wgpu_host_plumbing::native_caller;
-#[cfg(not(target_arch = "wasm32"))]
-use semio_framework_os_renderer_wgpu_native_platform::native_temporal;
 use semio_framework_os_renderer_wgpu_program_bridge::filter_plugins;
 #[cfg(not(target_arch = "wasm32"))]
 use semio_framework_os_renderer_wgpu_program_bridge::load_wasm_plugins;
 use std::collections::HashMap;
 use std::sync::Arc;
 use ui_wgpu::wgpu::IconAtlas;
-#[cfg(not(target_arch = "wasm32"))]
-use winit::event_loop::EventLoop;
 
 #[path = "../🧊️renderer/🔬️native-socket-probe/🦀️.rs"]
 mod native_socket_probe;

@@ -1,4 +1,4 @@
-use super::set_active_example;
+use crate::editor::sequence::commands::example::set_active_example;
 
 /// 🌱️ The genesis precondition of the composed-child load path, as a law rather than an assumption:
 /// `crate::genesis_sequence_child_pack` answers a `content` slot ONLY for the child id
@@ -27,13 +27,13 @@ async fn set_active_example_emits_one_load_document_effect() {
 #[semio_framework_async_macros::async_test]
 async fn set_active_example_is_declared_and_bridged() {
     use semio_framework_plugin::ArtifactEditor;
-    let definition = crate::editor::sequence::create_sequence_app();
+    let definition = crate::editor::sequence::app::create_sequence_app();
     assert!(
         definition.actions.iter().any(|action| action.id == "setActiveExample") || definition.window_kinds.iter().any(|window| window.actions.iter().any(|action| action.id == "setActiveExample")),
         "setActiveExample must be reachable from the manifest"
     );
-    let command = crate::editor::sequence::SequencePlayApp::command_from_action("setActiveExample", Some((semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({ "exampleId": "demo" }))).clone()), None).expect("setActiveExample bridges");
-    assert_eq!(crate::editor::sequence::SequencePlayApp::command_id(&command), "setActiveExample");
+    let command = crate::editor::sequence::app::SequencePlayApp::command_from_action("setActiveExample", Some((semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({ "exampleId": "demo" }))).clone()), None).expect("setActiveExample bridges");
+    assert_eq!(crate::editor::sequence::app::SequencePlayApp::command_id(&command), "setActiveExample");
 }
 
 /// 🧭️ An id belonging to another app is an empty emit, never a fault — the playground navbar

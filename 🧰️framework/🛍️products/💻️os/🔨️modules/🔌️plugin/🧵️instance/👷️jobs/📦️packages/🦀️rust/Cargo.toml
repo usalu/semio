@@ -54,5 +54,12 @@ semio-framework-trace = { workspace = true }
 semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-value-derive = { path = "../../../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
 semio_framework_ui_contract = { path = "../../../../../../../../🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
+semio-framework-plugin-instance-stores = { path = "../../../🏪️stores/📦️packages/🦀️rust" }
+semio-framework-plugin-mounted-owner = { path = "../../../../🏇️mounted-owner/📦️packages/🦀️rust" }
+semio-framework-ui-locale = { path = "../../../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
+semio_framework_ui_runtime = { path = "../../../../../../../../🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust", package = "semio-framework-ui-runtime" }
 
 [dev-dependencies]
+
+[features]
+artifact-app-testing = []

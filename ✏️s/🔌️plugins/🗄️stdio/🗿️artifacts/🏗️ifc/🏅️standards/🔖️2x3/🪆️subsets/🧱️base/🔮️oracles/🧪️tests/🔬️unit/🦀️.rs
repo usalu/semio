@@ -1,11 +1,15 @@
 use super::{oracle_apply_mutation, oracle_round_trip, project_ifc_2x3_any};
+use semio_framework_test_fixtures::{fixture_bytes, fixture_text};
 use semio_repo_test_host::{parse_json, Json};
 
-const FIXTURE: &[u8] = include_bytes!("../../../🧪️tests/🧫️fixtures/🏥️wellness-center-sama-street-level/🏥️wellness-center-sama-street-level.ifc");
+fn fixture() -> &'static [u8] {
+    static CELL: std::sync::OnceLock<Vec<u8>> = std::sync::OnceLock::new();
+    CELL.get_or_init(|| fixture_bytes!("../../../🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/🏥️wellness-center-sama-street-level/🏥️wellness-center-sama-street-level.ifc").to_vec()).as_slice()
+}
 
 /// 🧾️ The case's own `Examples` rows — the leaf wire payloads the scenarios run.
 fn feature_rows() -> Vec<(String, Json)> {
-    semio_repo_test_host::law::feature_rows(include_str!("../../../🧪️tests/🧱️mutate-ifc-2x3/🥒️.feature"))
+    semio_repo_test_host::law::feature_rows(&fixture_text!("../../../🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧪️tests/🧱️mutate-ifc-2x3/🥒️.feature").to_owned())
 }
 
 fn spec(kind: &str, params: Json) -> Json {
@@ -38,7 +42,7 @@ const ORIGINAL_WALL: &str = r#"{"instance": {"id": 270549, "entities": [{"typeNa
 
 #[test]
 fn parses_the_real_fixture_and_projects_it() {
-    let projection = project_ifc_2x3_any(FIXTURE).expect("project real fixture");
+    let projection = project_ifc_2x3_any(fixture()).expect("project real fixture");
     assert_eq!(entity_count(&projection), 3464.0);
     match projection.get("fileSchema") {
         Some(Json::Array(items)) => assert_eq!(items, &vec![Json::String("IFC2X3".to_string())]),
@@ -57,27 +61,27 @@ fn parses_the_real_fixture_and_projects_it() {
 /// projection. A row the oracle can apply without observable effect proves nothing.
 #[test]
 fn every_feature_row_is_applied_from_its_wire_payload_and_moves_the_projection() {
-    let baseline = project_ifc_2x3_any(&oracle_round_trip(FIXTURE).unwrap()).unwrap();
+    let baseline = project_ifc_2x3_any(&oracle_round_trip(fixture()).unwrap()).unwrap();
     let rows = feature_rows();
     assert_eq!(rows.iter().map(|(kind, _)| kind.as_str()).collect::<Vec<_>>(), ["upsert-instance", "remove-instance", "set-header"]);
     for (kind, params) in rows {
-        let mutated = oracle_apply_mutation(FIXTURE, &spec(&kind, params)).unwrap_or_else(|error| panic!("{kind} failed: {error}"));
+        let mutated = oracle_apply_mutation(fixture(), &spec(&kind, params)).unwrap_or_else(|error| panic!("{kind} failed: {error}"));
         assert_ne!(project_ifc_2x3_any(&mutated).unwrap(), baseline, "{kind} left the projection unchanged");
     }
 }
 
 #[test]
 fn round_trip_is_not_byte_identical_but_reparses() {
-    let output = oracle_round_trip(FIXTURE).expect("identity round trip");
-    assert_ne!(output, FIXTURE, "our own writer must not reproduce the source writer's exact bytes");
-    assert_eq!(project_ifc_2x3_any(&output).unwrap(), project_ifc_2x3_any(FIXTURE).unwrap());
+    let output = oracle_round_trip(fixture()).expect("identity round trip");
+    assert_ne!(output, fixture(), "our own writer must not reproduce the source writer's exact bytes");
+    assert_eq!(project_ifc_2x3_any(&output).unwrap(), project_ifc_2x3_any(fixture()).unwrap());
 }
 
 #[test]
 fn set_header_renames_the_model_and_inverts() {
-    let before = project_ifc_2x3_any(FIXTURE).expect("project the real fixture");
+    let before = project_ifc_2x3_any(fixture()).expect("project the real fixture");
     let row = feature_rows().into_iter().find(|(kind, _)| kind == "set-header").expect("set-header row").1;
-    let mutated = oracle_apply_mutation(FIXTURE, &spec("set-header", row)).expect("set-header");
+    let mutated = oracle_apply_mutation(fixture(), &spec("set-header", row)).expect("set-header");
     let projection = project_ifc_2x3_any(&mutated).expect("project");
     assert_eq!(entity_count(&projection), 3464.0, "set-header must not touch the entity graph");
     assert_ne!(projection, before, "set-header must MOVE the projection -- this assertion is the one that caught the projection being blind to FILE_NAME entirely");
@@ -93,7 +97,7 @@ fn set_header_renames_the_model_and_inverts() {
 #[test]
 fn upsert_instance_updates_the_real_column_and_inverts() {
     let row = feature_rows().into_iter().find(|(kind, _)| kind == "upsert-instance").expect("upsert-instance row").1;
-    let mutated = oracle_apply_mutation(FIXTURE, &spec("upsert-instance", row)).expect("upsert-instance");
+    let mutated = oracle_apply_mutation(fixture(), &spec("upsert-instance", row)).expect("upsert-instance");
     let projection = project_ifc_2x3_any(&mutated).expect("project");
     assert_eq!(entity_count(&projection), 3464.0, "updating an existing id must not change the entity count");
     let column = find_entity(&projection, 619887.0).expect("column present");
@@ -107,7 +111,7 @@ fn upsert_instance_updates_the_real_column_and_inverts() {
     };
     assert_eq!(args[2], projected("string", Json::String("WAVE8-RENAMED-COLUMN".to_string())));
     let restored = oracle_apply_mutation(&mutated, &wire("upsert-instance", ORIGINAL_COLUMN)).expect("inverse upsert-instance");
-    assert_eq!(project_ifc_2x3_any(&restored).unwrap(), project_ifc_2x3_any(FIXTURE).unwrap());
+    assert_eq!(project_ifc_2x3_any(&restored).unwrap(), project_ifc_2x3_any(fixture()).unwrap());
 }
 
 /// 🧪️ The deliberate real-reference-removal case the fleet brief asks for: `#270549` is a real
@@ -120,7 +124,7 @@ fn upsert_instance_updates_the_real_column_and_inverts() {
 /// entities afterward — documented here, not hidden.
 #[test]
 fn remove_instance_deletes_a_referenced_real_wall_and_leaves_a_documented_dangling_reference() {
-    let mutated = oracle_apply_mutation(FIXTURE, &wire("remove-instance", r#"{"id": 270549}"#)).expect("remove-instance");
+    let mutated = oracle_apply_mutation(fixture(), &wire("remove-instance", r#"{"id": 270549}"#)).expect("remove-instance");
     let projection = project_ifc_2x3_any(&mutated).expect("project removed");
     assert_eq!(entity_count(&projection), 3463.0);
     assert!(find_entity(&projection, 270549.0).is_none());
@@ -135,13 +139,13 @@ fn remove_instance_deletes_a_referenced_real_wall_and_leaves_a_documented_dangli
     let still_dangling = matches!(related_elements, Some(Json::Array(items)) if items.iter().any(|item| item.get("v") == Some(&Json::Number(270549.0))));
     assert!(still_dangling, "removing a referenced instance must leave the real relationship's reference dangling, not silently repair it");
     let reinserted = oracle_apply_mutation(&mutated, &wire("upsert-instance", ORIGINAL_WALL)).expect("inverse remove-instance (cross-kind upsert-instance)");
-    assert_eq!(project_ifc_2x3_any(&reinserted).unwrap(), project_ifc_2x3_any(FIXTURE).unwrap());
+    assert_eq!(project_ifc_2x3_any(&reinserted).unwrap(), project_ifc_2x3_any(fixture()).unwrap());
 }
 
 #[test]
 fn upsert_instance_appends_a_brand_new_id_with_decimal_reals() {
     let point = r#"{"instance": {"id": 9000001, "entities": [{"typeName": "IFCCARTESIANPOINT", "arguments": [{"kind": "list", "values": [{"kind": "real", "value": {"negative": false, "coefficient": "1", "scale": 0}}, {"kind": "real", "value": {"negative": true, "coefficient": "25", "scale": 1}}, {"kind": "real", "value": {"negative": false, "coefficient": "3", "scale": 0, "exponent": 2}}]}]}]}}"#;
-    let inserted = oracle_apply_mutation(FIXTURE, &wire("upsert-instance", point)).expect("upsert-instance append");
+    let inserted = oracle_apply_mutation(fixture(), &wire("upsert-instance", point)).expect("upsert-instance append");
     let projection = project_ifc_2x3_any(&inserted).expect("project inserted");
     assert_eq!(entity_count(&projection), 3465.0);
     let point = find_entity(&projection, 9_000_001.0).expect("appended point present");
@@ -154,15 +158,15 @@ fn upsert_instance_appends_a_brand_new_id_with_decimal_reals() {
     };
     assert_eq!(reals, Json::Array(vec![projected("real", Json::Number(1.0)), projected("real", Json::Number(-2.5)), projected("real", Json::Number(300.0))]), "a Part21Decimal wire real reaches the file as the real it denotes");
     let removed = oracle_apply_mutation(&inserted, &wire("remove-instance", r#"{"id": 9000001}"#)).expect("remove the appended instance");
-    assert_eq!(project_ifc_2x3_any(&removed).unwrap(), project_ifc_2x3_any(FIXTURE).unwrap());
+    assert_eq!(project_ifc_2x3_any(&removed).unwrap(), project_ifc_2x3_any(fixture()).unwrap());
 }
 
 #[test]
 fn unknown_kind_is_an_error_not_a_silent_no_op() {
-    assert!(oracle_apply_mutation(FIXTURE, &wire("no-mutation", "{}")).is_err());
+    assert!(oracle_apply_mutation(fixture(), &wire("no-mutation", "{}")).is_err());
 }
 
 #[test]
 fn remove_instance_of_absent_id_is_an_error_not_a_silent_no_op() {
-    assert!(oracle_apply_mutation(FIXTURE, &wire("remove-instance", r#"{"id": 999999999}"#)).is_err());
+    assert!(oracle_apply_mutation(fixture(), &wire("remove-instance", r#"{"id": 999999999}"#)).is_err());
 }

@@ -23,7 +23,7 @@ import type { Browser, Page } from "playwright";
 import { PLAYWRIGHT_MODULE_SPECIFIER } from "../../../🔌️plugin/🏗️build/📋️plan/🟦️.ts";
 import { ensureParityPlaywrightBrowsersPath } from "../../⚖️parity/🏃️execution/🟦️.ts";
 import { awaitBeacon, click, clickUncovered, dismissIntroduction, readShell, seatLocale, withDevServe, witness } from "../🧮️program-matrix/🟦️.ts";
-import { acceptanceCheckResult, publishAcceptanceCheckResult, withAcceptanceRecord } from "../../../../../🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/🟦️.ts";
+import { acceptanceCheckResult, publishAcceptanceCheckResult, withAcceptanceRecord } from "@semio-tech/repo-test/acceptance/orchestration";
 
 /** 🧰️ One program that declares a tool, and the example a run of it needs (`first` = the first non-empty one). */
 type ToolProgram = Readonly<{ pluginId: string; appId: string; toolId: string; mutating: boolean; example?: string }>;

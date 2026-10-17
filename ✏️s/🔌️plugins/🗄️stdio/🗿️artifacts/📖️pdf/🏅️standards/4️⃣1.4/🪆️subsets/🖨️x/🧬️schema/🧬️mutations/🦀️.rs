@@ -3,8 +3,7 @@
 use crate::standards::v1_4::subsets::base::schema::{diff::PdfDiff, snapshot::PdfSnapshot};
 
 //#region 🔖️Leaves
-#[path = "📐️set-page-size/🦀️.rs"]
-pub mod set_page_size;
+pub use semio_s_artifact_stdio_pdf_tests::standards::v1_4::subsets::x::schema::mutations::set_page_size;
 pub use set_page_size::SetPageSize;
 #[path = "📉️collapse-page-size/🦀️.rs"]
 pub mod collapse_page_size;
@@ -28,7 +27,5 @@ pub enum PdfX1Mutation {
 //#endregion 🔖️Delegation
 
 //#region 🧪️Structure
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Structure

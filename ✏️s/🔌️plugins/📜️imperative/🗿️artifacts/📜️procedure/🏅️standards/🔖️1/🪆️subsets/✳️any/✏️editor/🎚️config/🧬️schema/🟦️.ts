@@ -25,6 +25,10 @@ type imperativeImperativeConfigGuardSizeBounds = { readonly minItems?: number; r
 
 export const imperativeImperativeConfigGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : imperativeImperativeConfigGuardReject(at, "value is not an object");
+export const imperativeImperativeConfigGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) imperativeImperativeConfigGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const imperativeImperativeConfigGuardArray = (value: unknown, at: string, bounds: imperativeImperativeConfigGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return imperativeImperativeConfigGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) imperativeImperativeConfigGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -55,7 +59,7 @@ export const imperativeImperativeConfigGuardConstant = <T extends string | numbe
 //#endregion 🚪️Parsers
 
 export function parseImperativeConfig(value: unknown, at = "$"): ImperativeConfig {
-  const row = imperativeImperativeConfigGuardObject(value, at);
+  const row = imperativeImperativeConfigGuardClosed(imperativeImperativeConfigGuardObject(value, at), at, ["runOutputJson", "contributionsJson"]);
   return {
     runOutputJson: imperativeImperativeConfigGuardString(row["runOutputJson"], `${at}.runOutputJson`),
     contributionsJson: imperativeImperativeConfigGuardString(row["contributionsJson"], `${at}.contributionsJson`),

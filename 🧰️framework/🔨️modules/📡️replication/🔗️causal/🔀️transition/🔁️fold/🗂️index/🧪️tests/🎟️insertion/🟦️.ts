@@ -21,5 +21,4 @@ export function testHistoryIndexInsertion():void{
   reuse.delete(key);reuse.set(key,value);assert.deepEqual(Object.fromEntries(reuse),reference);assert.deepEqual(reference,fixture.reuse.expected.map);
  }
  assert.equal(stableStringify(Object.fromEntries(reuse)),stableStringify(fixture.reuse.expected.map));
- console.log("[DEBUG] original History index admitted insertion neutral rows="+map.size+" JSONPatch=true Map=true JSSet=true canonicalUTF8=true");
 }

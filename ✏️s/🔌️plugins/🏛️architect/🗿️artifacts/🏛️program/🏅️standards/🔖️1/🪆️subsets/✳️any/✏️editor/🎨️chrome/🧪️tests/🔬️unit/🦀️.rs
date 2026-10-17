@@ -1,4 +1,9 @@
-use super::*;
+use crate::standards::v1::subsets::any::schema::registers::AdjacencyKind;
+use crate::standards::v1::subsets::any::schema::kernel::EntityId;
+use semio_framework_value::DslValue as Value;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot;
+use crate::editor::architect::chrome::*;
 use crate::standards::v1::subsets::any::schema::snapshot::sample_plugin;
 
 #[semio_framework_async_macros::async_test]

@@ -146,7 +146,6 @@ async function main(argv: readonly string[]): Promise<number> {
     const before = project("⬅️before.jpg");
     const after = project("➡️after.jpg");
     if (before.image.dimensions !== expected.before.dimensions || after.image.dimensions !== expected.after.dimensions || after.image.raster.size !== expected.after.rasterBytes || before.image.raster.digest === after.image.raster.digest || after.image.xmp.present !== expected.after.xmp || after.marker.jfifUnit !== expected.after.jfifUnit || JSON.stringify(after.marker.jfifDensity) !== JSON.stringify(expected.after.jfifDensity)) throw new Error("independent ReplaceImage witness disagrees with neutral recipe");
-    console.error("[DEBUG] independent image-rs and Pillow readers witness whole-image replacement");
     process.stdout.write(`${JSON.stringify({ recipe: expected.recipe, before, after }, null, 2)}\n`);
     return 0;
   }

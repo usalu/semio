@@ -4,7 +4,7 @@
 //! plain whole-snapshot scalar (per the family root's own "simple whole-snapshot scalars"
 //! guidance) — no `InferredField`/incremental caching needed for a handful of `{x, y}` points.
 
-use crate::RewritingSnapshot;
+use crate::standards::v1::subsets::any::schema::snapshot::RewritingSnapshot;
 
 //#region 🔖️Bounds
 /// 📦 Axis-aligned 2d bounding box over `rule_layout`'s node positions.
@@ -42,8 +42,5 @@ pub fn compute_bounds(snapshot: &RewritingSnapshot) -> RewritingBounds {
 }
 //#endregion 🔖️Bounds
 
-#[cfg(test)]
-//#region 🧪️Tests
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

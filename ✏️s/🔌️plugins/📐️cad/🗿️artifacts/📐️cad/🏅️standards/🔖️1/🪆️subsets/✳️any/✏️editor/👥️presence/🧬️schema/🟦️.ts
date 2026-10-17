@@ -61,6 +61,10 @@ type cadCadPresenceGuardSizeBounds = { readonly minItems?: number; readonly maxI
 
 export const cadCadPresenceGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : cadCadPresenceGuardReject(at, "value is not an object");
+export const cadCadPresenceGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) cadCadPresenceGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const cadCadPresenceGuardArray = (value: unknown, at: string, bounds: cadCadPresenceGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return cadCadPresenceGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) cadCadPresenceGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -91,7 +95,7 @@ export const cadCadPresenceGuardConstant = <T extends string | number | boolean>
 //#endregion 🚪️Parsers
 
 export function parseCadPresence(value: unknown, at = "$"): CadPresence {
-  const row = cadCadPresenceGuardObject(value, at);
+  const row = cadCadPresenceGuardClosed(cadCadPresenceGuardObject(value, at), at, ["selectedObjectIds", "selectedNodeIds", "hoveredObjectId", "hoveredTargetObjectId", "hoveredTargetMode", "hoveredTargetId", "activeObjectId", "componentSelectionMode", "componentSelectionIds", "componentSelectionTargetsMesh", "componentSelectionTargetsVertex", "componentSelectionTargetsEdge", "componentSelectionTargetsFace", "cameraPosition", "cameraTarget", "cameraZoom", "cameraFov", "engagementStep", "engagementPane", "activeUtilityId"]);
   return {
     selectedObjectIds: cadCadPresenceGuardArray(row["selectedObjectIds"], `${at}.selectedObjectIds`).map((item, index) => cadCadPresenceGuardString(item, `${at}.selectedObjectIds[${index}]`)),
     selectedNodeIds: cadCadPresenceGuardArray(row["selectedNodeIds"], `${at}.selectedNodeIds`).map((item, index) => cadCadPresenceGuardString(item, `${at}.selectedNodeIds[${index}]`)),
@@ -106,12 +110,12 @@ export function parseCadPresence(value: unknown, at = "$"): CadPresence {
     componentSelectionTargetsVertex: cadCadPresenceGuardBoolean(row["componentSelectionTargetsVertex"], `${at}.componentSelectionTargetsVertex`),
     componentSelectionTargetsEdge: cadCadPresenceGuardBoolean(row["componentSelectionTargetsEdge"], `${at}.componentSelectionTargetsEdge`),
     componentSelectionTargetsFace: cadCadPresenceGuardBoolean(row["componentSelectionTargetsFace"], `${at}.componentSelectionTargetsFace`),
-    cameraPosition: cadCadPresenceGuardArray(row["cameraPosition"], `${at}.cameraPosition`, {"minItems": 3, "maxItems": 3}).map((item, index) => cadCadPresenceGuardNumber(item, `${at}.cameraPosition[${index}]`)),
-    cameraTarget: cadCadPresenceGuardArray(row["cameraTarget"], `${at}.cameraTarget`, {"minItems": 3, "maxItems": 3}).map((item, index) => cadCadPresenceGuardNumber(item, `${at}.cameraTarget[${index}]`)),
+    cameraPosition: ((items0) => [cadCadPresenceGuardNumber(items0[0], `${at}.cameraPosition[0]`), cadCadPresenceGuardNumber(items0[1], `${at}.cameraPosition[1]`), cadCadPresenceGuardNumber(items0[2], `${at}.cameraPosition[2]`)])(cadCadPresenceGuardArray(row["cameraPosition"], `${at}.cameraPosition`, {"minItems": 3, "maxItems": 3})),
+    cameraTarget: ((items0) => [cadCadPresenceGuardNumber(items0[0], `${at}.cameraTarget[0]`), cadCadPresenceGuardNumber(items0[1], `${at}.cameraTarget[1]`), cadCadPresenceGuardNumber(items0[2], `${at}.cameraTarget[2]`)])(cadCadPresenceGuardArray(row["cameraTarget"], `${at}.cameraTarget`, {"minItems": 3, "maxItems": 3})),
     cameraZoom: cadCadPresenceGuardNumber(row["cameraZoom"], `${at}.cameraZoom`),
     cameraFov: cadCadPresenceGuardNumber(row["cameraFov"], `${at}.cameraFov`),
-    activeUtilityId: cadCadPresenceGuardString(row["activeUtilityId"], `${at}.activeUtilityId`),
     engagementStep: cadCadPresenceGuardString(row["engagementStep"], `${at}.engagementStep`),
     engagementPane: row["engagementPane"] === undefined ? undefined : cadCadPresenceGuardString(row["engagementPane"], `${at}.engagementPane`),
+    activeUtilityId: cadCadPresenceGuardString(row["activeUtilityId"], `${at}.activeUtilityId`),
   };
 }

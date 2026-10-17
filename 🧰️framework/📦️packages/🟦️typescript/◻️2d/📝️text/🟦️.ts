@@ -1,2 +1,2 @@
 /** 📝️ SDK entry `@semio-tech/framework/2d/text`: explicit public surface of the framework module that plugins build on. */
-export { drawingTextFallbackExtent } from "../../../../🔨️modules/◻️2d/📝️text/🟦️.ts";
+export { drawingTextFallbackExtent } from "@semio-tech/framework-2d-js/text";

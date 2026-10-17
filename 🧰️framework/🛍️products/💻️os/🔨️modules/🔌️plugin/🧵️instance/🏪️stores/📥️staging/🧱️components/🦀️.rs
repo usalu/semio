@@ -1,5 +1,28 @@
 //! 🧺️ The instance components of `instance-stores`: ConstructorState, InstanceStores, PeerRoster, ActionIngress, LocalInteraction (WP6, plan section 7.3).
-use super::*;
+use semio_framework_plugin_ownership::bounded_ownership::{ARTIFACT_LIVE_OUTPUT_SLOTS, ArtifactFixedRegistry};
+#[cfg(any(test, feature = "artifact-app-testing"))]
+use std::sync::Arc;
+use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use pack::snapshot::ArtifactPack;
+use store::{ArtifactStore, ConfigStore, MemberFactory, Mutation, SpaceMember};
+use semio_framework_plugin_operation::original_catalog_constructor::{ArtifactStoreConstructorKind, ArtifactStoreConstructorPhase, OriginalCatalogConstructor};
+use std::collections::{BTreeMap, BTreeSet, HashMap};
+use semio_framework_value::retirement::controlled::ControlledRetirement;
+use semio_framework_plugin_decl_emission::Emit;
+use semio_framework::FaultFrom;
+use std::future::Future;
+use semio_framework_plugin_interaction::mutations::InteractionConfigMutation;
+use semio_framework_plugin_decl_views::{InteractionHoverState, PeerPresenceRoot};
+use std::mem::ManuallyDrop;
+use protocol::OpText;
+use semio_framework_plugin_peer::{PeerPresenceRootRetirement, PeerRosterPublication, PresenceRosterOutcome};
+use semio_framework_plugin_reactor_app::PluginApp;
+use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
+use semio_framework_plugin_child::SnapshotReadReturnPump;
+use semio_framework_plugin_window_config::WindowConfigOwnerRegistry;
+use semio_framework_plugin_window_transient::window_transient::WindowTransientOwnerRegistry;
+use semio_framework_ui_contract::*;
 
 /// 🪣️ Store-constructor state: the receipts, units and lane of the four original catalogue constructors.
 pub struct ConstructorState<A: ArtifactApp> {
@@ -181,9 +204,9 @@ impl ActionIngress {
 
 /// 🎷️ Local interaction: the framework-owned live query, topology authority, hover and snapshot read returns.
 pub struct LocalInteraction<A: ArtifactApp> {
-    pub local_interaction_query: Option<crate::local_interaction::live::LocalInteractionLiveQuery<A::Snapshot, A::Config>>,
+    pub local_interaction_query: Option<semio_framework_plugin_interaction::live::LocalInteractionLiveQuery<A::Snapshot, A::Config>>,
     pub local_interaction_query_receipt: Option<(RetainedCloneGrant,RetainedCloneProgress)>,
-    pub local_interaction_authority: crate::local_interaction::authority::LocalInteractionTopologyAuthority,
+    pub local_interaction_authority: semio_framework_plugin_interaction::authority::LocalInteractionTopologyAuthority,
     pub snapshot_read_return_stage: u8,
     pub local_interaction_query_turn: bool,
     pub local_interaction_emitted_bytes: u128,

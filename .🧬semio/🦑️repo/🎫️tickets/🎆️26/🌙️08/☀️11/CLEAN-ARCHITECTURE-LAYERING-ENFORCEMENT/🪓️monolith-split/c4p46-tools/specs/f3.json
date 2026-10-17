@@ -1,0 +1,106 @@
+{
+ "source": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛠️ShellHelpers/⏪️time-travel/🧪️tests/🧩️component/🟦️.tsx",
+ "siblingDir": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛠️ShellHelpers/⏪️time-travel/🧪️tests",
+ "ext": "tsx",
+ "support": {
+  "dir": "🧰️history-test-support",
+  "doc": "/** 🧰️ History test support: the corpus readers, the accessibility and ARIA oracles, the band mount helpers, the history body builders and the draft editor fixtures that the time-travel component suites share. */",
+  "ranges": [
+   [
+    44,
+    86
+   ],
+   [
+    411,
+    435
+   ],
+   [
+    541,
+    631
+   ]
+  ]
+ },
+ "children": [
+  {
+   "dir": "🧩️component",
+   "root": true,
+   "doc": "/** 🧩️ The React history-editing chrome against the language-neutral band corpus (`🛠️ShellHelpers/🧫️fixtures/🧫️time-travel-band`):\n * the i18n catalogue pinned to the corpus's one `labels` table (every key, both tiers, both languages, and no other key),\n * every stage's lines in English and German, the controls with their corpus-owned ids and what disables them — a refused\n * one focusable and telling its reason — the reserved verbs they dispatch with the session generation, the remappable chords (never Escape, never from a form field) published on `aria-keyshortcuts`, the\n * window indicator's accessible name and the `⏪️time-travel` bundle texts. The history body, the draft editor, the frozen and restored histories, the shell reveal wiring, the\n * mutation pages, the list inputs, the lane notices, the document load and the reprojection status are the sibling suites under `🧪️tests/`, which share `🧰️history-test-support`. Third-party oracles:\n * Ajv validates the corpus against its schema and the kernel's own `HistoryTimeTravel` wire schema, `dom-accessibility-api`\n * names every control, `aria-query` (the WAI-ARIA role model) lists the attributes each role supports,\n * and the `⏪️time-travel` module's `TIME_TRAVEL_LABELS` is the independent source of every stage and refusal text. */",
+   "ranges": [
+    [
+     88,
+     409
+    ]
+   ]
+  },
+  {
+   "dir": "🕰️history-body",
+   "doc": "/** 🕰️ The framework history body renders through the interpreter from the shell's history projection, with no host-built history tab, and the presence of peers' open history edits reads back through the ephemeral peer fields. */",
+   "ranges": [
+    [
+     437,
+     538
+    ]
+   ]
+  },
+  {
+   "dir": "📝️draft-editor",
+   "doc": "/** 📝️ The Rust-shaped history draft editor: a session change reveals the History panel and focuses the right control, and the editor is named, operable by keyboard alone and ARIA-valid. */",
+   "ranges": [
+    [
+     633,
+     864
+    ]
+   ]
+  },
+  {
+   "dir": "📌️frozen-and-restored",
+   "doc": "/** 📌️ No checkpoint reaches a frozen history (e2e R2-6), and a restored document's history replaces the displayed one. */",
+   "ranges": [
+    [
+     867,
+     921
+    ]
+   ]
+  },
+  {
+   "dir": "🛰️shell-reveal",
+   "doc": "/** 🛰️ ShellHost's reveal and focus wiring drives the History panel from the corpus's transitions. */",
+   "ranges": [
+    [
+     923,
+     1075
+    ]
+   ]
+  },
+  {
+   "dir": "🧷️refresh-and-mutation-pages",
+   "doc": "/** 🧷️ A body refresh never remounts an input that is open, and every mutation of a history row is reachable, paged and named. */",
+   "ranges": [
+    [
+     1077,
+     1343
+    ]
+   ]
+  },
+  {
+   "dir": "🧺️list-notices-and-document-load",
+   "doc": "/** 🧺️ List inputs add and remove items through the outputs, history-lane refusals reach the person, a cancelled import frees the import the guest started and a whole-document load shows its progress. */",
+   "ranges": [
+    [
+     1345,
+     1484
+    ]
+   ]
+  },
+  {
+   "dir": "📡️reprojection-status",
+   "doc": "/** 📡️ A history change replaying before adoption is announced outside the History panel, from the shell's status, in both locales. */",
+   "ranges": [
+    [
+     1486,
+     1588
+    ]
+   ]
+  }
+ ]
+}

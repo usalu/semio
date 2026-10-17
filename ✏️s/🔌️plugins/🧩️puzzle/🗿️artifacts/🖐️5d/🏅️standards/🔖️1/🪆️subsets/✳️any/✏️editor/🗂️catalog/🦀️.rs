@@ -1,6 +1,13 @@
 //! 🗂️ Catalogue of the puzzle 5d editor: the kind and part labels, the inferred kind rows and the kind distribution helpers. See [`super`].
 
-use super::*;
+use crate::Puzzle5dSnapshot;
+use semio_framework_plugin::ActionArgOption;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_pack_json::Value;
+use std::collections::HashMap;
+use crate::editor::puzzle5d::entities::{PUZZLE5D_DEFAULT_PART_RADIUS, PUZZLE5D_GRANULARITY_FASTENER, PUZZLE5D_GRANULARITY_GRIP, PUZZLE5D_GRANULARITY_PART, Puzzle5dDocument, Puzzle5dPart, puzzle5d_grip_full_id};
+use crate::editor::puzzle5d::view::{engine_grip_kind, Puzzle5dScene};
+use crate::editor::puzzle5d::entities::{grips_from_templates, resolve_part_kind_mesh_url, Puzzle5dFreshIds, Puzzle5dPart2d, Puzzle5dPart3d, PUZZLE5D_FLAT_TO_WORLD};
 
 //#region 🏷️Labels
 /// 🏷️ The catalogue display name one part kind carries (`label` → `name` → its own id), else the kind
@@ -14,7 +21,7 @@ pub fn puzzle5d_kind_catalog_label(document: &Puzzle5dDocument, kind_id: &str) -
         .into_iter()
         .flatten()
         .find(|entry| entry.get("id").and_then(Value::as_str) == Some(kind_id))
-        .map(catalogue::catalog_kind_label)
+        .map(catalog_kind_label)
         .unwrap_or_else(|| kind_id.to_string())
 }
 
@@ -55,7 +62,7 @@ pub fn puzzle5d_part_display_label(part: &Puzzle5dPart, document: &Puzzle5dDocum
 pub fn puzzle5d_entity_label(snapshot: &Puzzle5dSnapshot, kinds: &[String], id: &str) -> Option<LocalizedLabel> {
     let wants = |kind: &str| kinds.is_empty() || kinds.iter().any(|declared| declared == kind);
     let text = |value: &Option<String>| value.clone().filter(|text| !text.is_empty());
-    let part_label = |part: &crate::Puzzle5dPart| text(&part.part_3d.label).or_else(|| text(&part.part_2d.text)).or_else(|| text(&part.part_kind)).unwrap_or_else(|| part.id.clone());
+    let part_label = |part: &crate::standards::v1::subsets::any::schema::document_records::Puzzle5dPart| text(&part.part_3d.label).or_else(|| text(&part.part_2d.text)).or_else(|| text(&part.part_kind)).unwrap_or_else(|| part.id.clone());
     let port = |full_id: &str| snapshot.parts.iter().find_map(|part| part.grips.iter().find(|grip| puzzle5d_grip_full_id(&part.id, &grip.id) == full_id).map(|grip| (part, grip)));
     let label = if let Some(part) = wants(PUZZLE5D_GRANULARITY_PART).then(|| snapshot.parts.iter().find(|part| part.id == id)).flatten() {
         Some(part_label(part))
@@ -293,3 +300,107 @@ pub fn puzzle5d_kind_weight_sum(weights: &HashMap<String, f64>, kind_ids: &[Stri
     kind_ids.iter().map(|id| weights.get(id).copied().unwrap_or(0.0)).sum()
 }
 //#endregion 🔖️Distribution
+
+/// 🎨️ Palette drop: creates a free paired part at the flat drop point, deriving the volume origin from the nearest peer part's offset.
+pub fn add_palette_part(envelope: &mut Puzzle5dScene, part_kind: &str, x: f64, y: f64) {
+    let flat_to_world = PUZZLE5D_FLAT_TO_WORLD;
+    let origin = envelope
+        .document
+        .parts
+        .first()
+        .map_or([x * flat_to_world, -y * flat_to_world, 0.0], |peer| [peer.part_3d.origin[0] + (x - peer.part_2d.x) * flat_to_world, peer.part_3d.origin[1] - (y - peer.part_2d.y) * flat_to_world, peer.part_3d.origin[2]]);
+    let id = Puzzle5dFreshIds::from_document(&envelope.document).next_part();
+    let mesh_url = resolve_part_kind_mesh_url(part_kind, envelope.document.kind_catalogs.as_ref());
+    let grips = grips_from_templates(&envelope.document, part_kind);
+    // 🏷️ Stamped at creation, not derived at paint: the outliner, the 3D instance and a later export
+    // must all read the SAME authored name, and only this moment knows how many peers of this kind
+    // the document already holds.
+    let label = puzzle5d_next_part_label(&envelope.document.parts, &envelope.document, part_kind);
+    envelope.document.parts.push(Puzzle5dPart {
+        id: id,
+        anchor: Default::default(),
+        part_kind: part_kind.into(),
+        part_2d: Puzzle5dPart2d { x, y, shape: "circle".into(), radius: PUZZLE5D_DEFAULT_PART_RADIUS, width: None, height: None, text: part_kind.into(), icon_kind: None, hidden: None, locked: None },
+        part_3d: Puzzle5dPart3d { origin, mesh_url, orientation: Some([0.0, 0.0, 0.0, 1.0]), scale: None, label: Some(label) },
+        grips,
+    });
+    let _ = id;
+}
+
+/// 🏷️ One catalogue entry's display name: its authored `label`, else its `name`, else its id.
+pub fn catalog_kind_label(entry: &Value) -> String {
+    entry
+        .get("label")
+        .and_then(|value| value.as_str())
+        .filter(|value| !value.is_empty())
+        .or_else(|| entry.get("name").and_then(|value| value.as_str()).filter(|value| !value.is_empty()))
+        .or_else(|| entry.get("id").and_then(|value| value.as_str()))
+        .unwrap_or("kind")
+        .into()
+}
+
+/// 🗨️ Fixed ceiling on the part-kind rows the `addPartKind` arg form and the "Add Part" dialog offer —
+/// the manifest is minted once per process, so this select is built eagerly and must stay bounded
+/// however wide a catalog a future example declares.
+pub const PUZZLE5D_PART_KIND_OPTIONS_MAX: usize = 64;
+
+/// 🗨️ The part kinds the "Add Part" dialog (and `addPartKind`'s own arg form) offers — read from the
+/// shipped documents' own `kindCatalogs.parts`, exactly the rows `📌️panels/🛍️catalogue` renders,
+/// deduplicated across documents in catalog order, with the same part-kind inference fallback the
+/// catalogue panel applies to a document that declares no catalog. `AppDefinition` is built once per
+/// process and never sees the live document, so the union of the shipped catalogs IS the reachable
+/// kind set — not the single literal `"Part"` this select used to hardcode, which could not add a
+/// single real kind of any example.
+///
+/// 🌙️ `capsule-dream` is deliberately NOT in that union, for two independent reasons measured on
+/// 2026-09-21 (`📓️pz1-catalog-zero-diagnostics.md` §2.3):
+/// 1. **It names no kind a human could pick.** Its own `kindCatalogs.parts` is empty — the catalog
+///    is a composed child, absent from the standalone document — so the inference fallback runs over
+///    its 2 880 parts, whose `part-kind` column holds the child's raw UUIDs
+///    (`"0e240cd2-7f98-42b6-af39-34e7ee4fad35"`, …). `nakagin`'s and `concrete-forest`'s hold names
+///    (`Base`, `Bridge`, `Capital`, `Tambour`, `Capsule With Balcony J`, …). A select that offers
+///    UUIDs is a worse select, and with `PUZZLE5D_PART_KIND_OPTIONS_MAX = 64` they crowd out real
+///    kinds.
+/// 2. **It is what made this package undescribable.** Dereferencing
+///    `CAPSULE_DREAM_EXAMPLE_DOCUMENT` here parses 3 035 200 B of DSL, re-serialises ~3.5 MB of
+///    JSON and deserialises it into `Puzzle5dDocument` — inside the owned interpreter, while the
+///    bundle is assembled, i.e. before `describe()` emits anything. `AppDefinition` is built on the
+///    describe path, so this one call put `🧩️puzzle` over the 1 800 s guest epoch on its own.
+///
+/// 🖐️ Those rows are AUTHORED below rather than derived, in the two named examples' own catalog
+/// order, and pinned to the documents by
+/// `shipped_part_kinds_are_the_two_named_examples_own_catalog_rows`.
+///
+/// 🐛️ Deriving it dereferenced `CONCRETE_FOREST_EXAMPLE_DOCUMENT` and `NAKAGIN_EXAMPLE_DOCUMENT`,
+/// i.e. parsed 171 591 B of authored DSL, re-serialised it to 205 896 B of JSON and deserialised
+/// that into two typed `Puzzle5dDocument`s — on the `AppDefinition` path, which is the `describe()`
+/// path AND every actor boot. Measured natively on 2026-09-22 (slice PZ2,
+/// `🗑️generated/pz2-native-profile-*.txt`): `create_puzzle5d_app()` cost 338 ms cold and 1 ms with
+/// those two statics already warm, so ALL of it was this one select. Thirteen authored pairs cost
+/// nothing, and the law below is what keeps them true.
+pub const PUZZLE5D_SHIPPED_PART_KINDS: &[(&str, &str)] = &[
+    ("Hexagonal Cut Concrete Forest Left", "Hexagonal Cut Concrete Forest Left"),
+    ("Base", "Base"),
+    ("Bridge", "Bridge"),
+    ("Capital", "Capital"),
+    ("Capsule With Balcony Backslash", "Capsule With Balcony Backslash"),
+    ("Capsule With Balcony J", "Capsule With Balcony J"),
+    ("Capsule With Balcony L", "Capsule With Balcony L"),
+    ("Capsule With Balcony P", "Capsule With Balcony P"),
+    ("Capsule With Balcony S", "Capsule With Balcony S"),
+    ("Capsule With Balcony Slash", "Capsule With Balcony Slash"),
+    ("First Storey Tambour", "First Storey Tambour"),
+    ("Last Storey Tambour", "Last Storey Tambour"),
+    ("Tambour", "Tambour"),
+];
+
+/// 🗂️ The `partKind` select's options, mapped from [`PUZZLE5D_SHIPPED_PART_KINDS`].
+pub fn puzzle5d_part_kind_options() -> Vec<ActionArgOption> {
+    PUZZLE5D_SHIPPED_PART_KINDS.iter().take(PUZZLE5D_PART_KIND_OPTIONS_MAX).map(|(id, label)| ActionArgOption::new(*id, LocalizedLabel::data(*label))).collect()
+}
+
+/// 🗨️ The kind the `partKind` select stages when nothing is picked — the first catalog row, never a
+/// literal id no catalog declares.
+pub fn puzzle5d_default_part_kind(options: &[ActionArgOption]) -> String {
+    options.first().map(|option| option.value.clone()).unwrap_or_default()
+}

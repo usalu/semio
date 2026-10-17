@@ -1,0 +1,12 @@
+{
+ "name": "frd-a",
+ "crates": [
+  "semio-framework-test-fixtures",
+  "semio-framework-quiz-schema",
+  "semio-framework-os-infinite-world-host",
+  "semio-framework-os-mcp-capabilities",
+  "semio-s-artifact-stdio-svg-schema-2",
+  "semio-s-artifact-stdio-svg"
+ ],
+ "note": "FRD touched-crate sample, no baseline"
+}

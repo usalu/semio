@@ -1,7 +1,6 @@
 //! ✂️ `unbind-representation` — removes the link at `index` from `representations` (BASE-state
 //! addressing). Idempotent no-op if out of range; inverse escrows the removed link from BASE.
 
-use crate::schema::mutations::SemioKitMutation;
 use crate::schema::snapshot::SemioKitSnapshot;
 
 //#region 🔖️Payload
@@ -12,13 +11,16 @@ pub struct UnbindRepresentation {
     pub index: usize,
 }
 
-impl protocol::MutationKind<SemioKitSnapshot, SemioKitMutation> for UnbindRepresentation {
+impl<Op> protocol::MutationKind<SemioKitSnapshot, Op> for UnbindRepresentation
+where
+    Op: protocol::Mutation<SemioKitSnapshot, Diff = crate::schema::diff::SemioKitDiff> + From<UnbindRepresentation> + From<crate::schema::mutations::bind_representation::BindRepresentation>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "unbind", entity: "representation", kind: "unbind-representation", record: "UnboundRepresentation" };
 
-    fn diff(&self, base: &SemioKitSnapshot) -> protocol::MutationOutcome<<SemioKitMutation as protocol::Mutation<SemioKitSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioKitSnapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<SemioKitSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &SemioKitSnapshot) -> Result<Vec<SemioKitMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &SemioKitSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

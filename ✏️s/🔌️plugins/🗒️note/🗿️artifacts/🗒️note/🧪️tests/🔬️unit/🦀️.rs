@@ -1,4 +1,5 @@
 use super::*;
+use semio_framework_test_fixtures::fixture_path;
 
 /// 🗂️ The manifest-facing `ArtifactKindSpec.schema` and `NOTE_DOCUMENT_SCHEMA` are deliberately the
 /// same string here (note has no separate "fixture" store schema, unlike shooting) — pinned so a
@@ -119,7 +120,7 @@ async fn regenerate_committed_diff_fixtures() {
             }
         }
     }
-    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("..").join("..");
+    let root = fixture_path!("..").join("..");
     let mut files = Vec::new();
     walk(&root, &mut files);
     files.sort();

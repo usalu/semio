@@ -18,7 +18,7 @@ pub fn measure(camera: &NoteCamera, labels: &NotePlayLabels) -> WindowMeasure {
         loading: None,
         waiting: None,
         disabled: None,
-        on_change: crate::editor::note::note_action("setCameraZoom", None),
+        on_change: crate::editor::note::support::note_action("setCameraZoom", None),
     }
 }
 //#endregion 🔖️Measure

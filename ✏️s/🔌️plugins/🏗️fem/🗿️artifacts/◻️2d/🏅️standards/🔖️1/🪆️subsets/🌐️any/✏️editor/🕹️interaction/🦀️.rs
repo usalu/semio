@@ -157,7 +157,7 @@ fn point_in_polygon(point: (f64, f64), polygon: &[[f64; 2]]) -> bool {
 /// 🏋️ The layer-space arrow glyph one load is drawn as — start point and end point, matching
 /// `fem2d_structure_layers`' `vector_layer` calls exactly (its `y` component is negated on the way
 /// into layer space).
-pub(crate) fn fem2d_load_glyph(doc: &Fem2dSnapshot, load: &FemLoad) -> Option<((f64, f64), (f64, f64))> {
+pub fn fem2d_load_glyph(doc: &Fem2dSnapshot, load: &FemLoad) -> Option<((f64, f64), (f64, f64))> {
     let (origin, vector) = match load {
         FemLoad::Nodal { node_id, dof, value, .. } => {
             let node = find_node_2d(&doc.nodes, node_id)?;

@@ -1,6 +1,22 @@
 //! 🧵️ Sequence retained routes: the caps and the artifact, config and example tool routes that publish through retained work.
 
-use super::*;
+use semio_framework_plugin::app::ChildEmit;
+use neural_engine::{Dictionary, ValueRetirement};
+use semio_framework_plugin::{Emit, Fault, NoConfig, NoConfigMutation};
+use crate::{SEQUENCE_DOCUMENT_SCHEMA, SequenceSnapshot, SequenceWorkingScene, SlotRef, StepParams};
+use crate::mutations::SequenceMutation;
+use crate::editor::sequence::modes::edit::windows::script::transient::SequenceScriptWindowTransient;
+use crate::editor::sequence::commands::step::{add_step, add_step_dropped, add_step_to_slot, delete_selection, move_step, remove_step, set_step_collapsed, set_step_params};
+use crate::editor::sequence::commands::connection::{connect_steps, disconnect_steps};
+use crate::editor::sequence::edit_rules;
+use crate::editor::sequence::modes::edit::windows::{main, script};
+use crate::editor::sequence::commands::node_graph::{node_graph_edit, set_viewport};
+use crate::editor::sequence::commands::layout::{reorganize, set_orientation};
+use crate::editor::sequence::commands::playback::{run_command, stop_command};
+use crate::editor::sequence::commands::example::set_active_example;
+use crate::editor::sequence::base::{SEQUENCE_INTERACTION_STEPS, sequence_child_leaves_emit, sequence_fault, sequence_working_scene_from_children};
+use crate::editor::sequence::persistent::{SequencePersistentWork, sequence_close_step, sequence_drain_retirement, sequence_owner_demand, sequence_push_params, sequence_push_pending, sequence_unit};
+use crate::editor::sequence::app::SequencePlayApp;
 
 //#region 🔖️Commands
 semio_framework_plugin::app_commands! {
@@ -35,10 +51,10 @@ semio_framework_plugin::app_commands! {
 //#endregion 🔖️Commands
 
 //#region 📏️RetainedCaps
-pub(super) const SEQUENCE_STORE_MAXIMUM_SCENE_ITEMS: usize = 256;
-pub(super) const SEQUENCE_STORE_MAXIMUM_BYTES: usize = 65_536;
+pub const SEQUENCE_STORE_MAXIMUM_SCENE_ITEMS: usize = 256;
+pub const SEQUENCE_STORE_MAXIMUM_BYTES: usize = 65_536;
 
-pub(super) fn sequence_bounded_child_emit_bytes(child_emits: &[ChildEmit], maximum_bytes: usize) -> Result<usize, String> {
+pub fn sequence_bounded_child_emit_bytes(child_emits: &[ChildEmit], maximum_bytes: usize) -> Result<usize, String> {
     let mut retained_bytes = 0usize;
     let mut admit = |bytes: usize| {
         retained_bytes = retained_bytes.checked_add(bytes).ok_or_else(|| "Sequence child publication byte count overflowed".to_string())?;
@@ -64,7 +80,7 @@ pub(super) fn sequence_bounded_child_emit_bytes(child_emits: &[ChildEmit], maxim
 
 //#region 🧵️RetainedArtifactRoutes
 const SEQUENCE_RETAINED_ARTIFACT_PAYLOAD_SCHEMA: &str = "sequence.play/retained-artifact-command.v1";
-pub(super) const SEQUENCE_RETAINED_ARTIFACT_TOOL_IDS: &[&str] = &["addStep", "addStepToSlot", "addStepDropped", "removeStep", "deleteSelection", "moveStep", "connectSteps", "disconnectSteps", "setStepParams", "setStepCollapsed"];
+pub const SEQUENCE_RETAINED_ARTIFACT_TOOL_IDS: &[&str] = &["addStep", "addStepToSlot", "addStepDropped", "removeStep", "deleteSelection", "moveStep", "connectSteps", "disconnectSteps", "setStepParams", "setStepCollapsed"];
 const SEQUENCE_RETAINED_ARTIFACT_PUBLICATION_CONTRACTS: &[semio_framework_plugin::ArtifactToolPublicationContract] = &[
     semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "addStep", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Child] },
     semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "addStepToSlot", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Child] },
@@ -82,7 +98,7 @@ fn sequence_retained_id_admitted(value: &str) -> bool {
     !value.is_empty() && value.len() <= 128
 }
 
-pub(super) fn sequence_retained_artifact_command_admitted(command: &SequenceCommand) -> bool {
+pub fn sequence_retained_artifact_command_admitted(command: &SequenceCommand) -> bool {
     match command {
         SequenceCommand::AddStep(payload) => sequence_retained_id_admitted(&payload.kind) && payload.x.is_finite() && payload.y.is_finite(),
         SequenceCommand::AddStepToSlot(payload) => sequence_retained_id_admitted(&payload.kind) && sequence_retained_id_admitted(&payload.owner) && sequence_retained_id_admitted(&payload.slot_name) && payload.x.is_finite() && payload.y.is_finite(),
@@ -154,25 +170,25 @@ fn sequence_retained_artifact_emit(command: &SequenceCommand, snapshot: &Sequenc
 }
 
 #[derive(Default)]
-pub(super) struct SequenceRetainedSceneOwner {
-    pub(super) scene: Option<SequenceWorkingScene>,
-    pub(super) pending: Vec<Dictionary>,
-    pub(super) retirement: ValueRetirement,
+pub struct SequenceRetainedSceneOwner {
+    pub scene: Option<SequenceWorkingScene>,
+    pub pending: Vec<Dictionary>,
+    pub retirement: ValueRetirement,
 }
 
 impl SequenceRetainedSceneOwner {
-    pub(super) fn capture(&mut self, snapshot: &SequenceSnapshot, children: &semio_framework_plugin::app::ChildContentView) -> Result<(), Fault> {
+    pub fn capture(&mut self, snapshot: &SequenceSnapshot, children: &semio_framework_plugin::app::ChildContentView) -> Result<(), Fault> {
         if self.scene.is_none() {
             self.scene = Some(sequence_working_scene_from_children(snapshot, children)?.into_inner());
         }
         Ok(())
     }
 
-    pub(super) fn scene(&self) -> Result<&SequenceWorkingScene, Fault> {
+    pub fn scene(&self) -> Result<&SequenceWorkingScene, Fault> {
         self.scene.as_ref().ok_or_else(|| sequence_fault("sequence.content.unavailable", "sequence-retained-scene-required"))
     }
 
-    pub(super) fn release_one(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> {
+    pub fn release_one(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> {
         if grant.maximum_items == 0 {
             return Ok(semio_framework_value::retained_clone::RetainedCloneStep::Progress(Default::default()));
         }
@@ -198,28 +214,28 @@ impl SequenceRetainedSceneOwner {
         Ok(semio_framework_value::retained_clone::RetainedCloneStep::Complete(Default::default()))
     }
 
-    pub(super) fn close_demand(&self) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+    pub fn close_demand(&self) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
         let admits = !self.pending.is_empty() || self.scene.as_ref().is_some_and(|scene| !scene.steps.is_empty());
         sequence_owner_demand(&self.retirement, admits, self.scene.is_some())
     }
 
-    pub(super) fn empty(&self) -> bool {
+    pub fn empty(&self) -> bool {
         self.scene.is_none() && self.pending.is_empty() && self.retirement.terminal_is_empty()
     }
 }
 
-pub(super) struct SequenceRetainedArtifactWork {
-    pub(super) tool_id: &'static str,
-    pub(super) workspace_identity: u64,
-    pub(super) cursor: usize,
-    pub(super) replay_target: Option<usize>,
-    pub(super) scene_owner: SequenceRetainedSceneOwner,
-    pub(super) completed: bool,
-    pub(super) closing: bool,
+pub struct SequenceRetainedArtifactWork {
+    pub tool_id: &'static str,
+    pub workspace_identity: u64,
+    pub cursor: usize,
+    pub replay_target: Option<usize>,
+    pub scene_owner: SequenceRetainedSceneOwner,
+    pub completed: bool,
+    pub closing: bool,
 }
 
 impl SequenceRetainedArtifactWork {
-    pub(super) fn new(tool_id: &'static str, operation: &semio_framework_plugin::AppOperationContext) -> Self {
+    pub fn new(tool_id: &'static str, operation: &semio_framework_plugin::AppOperationContext) -> Self {
         let scope = format!("{}:{}:{}:{}", operation.app_instance_id, operation.parent_document_id, operation.operation_id, operation.generation);
         let workspace_identity = scope.as_bytes().iter().fold(0xcbf2_9ce4_8422_2325_u64, |state, byte| (state ^ u64::from(*byte)).wrapping_mul(0x100_0000_01b3));
         Self { tool_id, workspace_identity, cursor: 0, replay_target: None, scene_owner: SequenceRetainedSceneOwner::default(), completed: false, closing: false }
@@ -335,7 +351,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framewo
 }
 
 impl SequenceRetainedArtifactWork {
-    pub(super) fn write_checkpoint(&self, target: &mut [u8]) -> Result<usize, Fault> {
+    pub fn write_checkpoint(&self, target: &mut [u8]) -> Result<usize, Fault> {
         if target.len() < 24 {
             return Err(sequence_fault("sequence.editor.capacity", "sequence-retained-artifact-checkpoint-capacity"));
         }
@@ -349,7 +365,7 @@ impl SequenceRetainedArtifactWork {
 }
 
 impl SequencePersistentWork {
-    pub(super) fn write_checkpoint(&self, target: &mut [u8]) -> Result<usize, Fault> {
+    pub fn write_checkpoint(&self, target: &mut [u8]) -> Result<usize, Fault> {
         if target.len() < 24 {
             return Err(sequence_fault("sequence.editor.capacity", "sequence-persistent-checkpoint-capacity"));
         }
@@ -362,7 +378,7 @@ impl SequencePersistentWork {
 }
 
 impl SequenceRetainedConfigWork {
-    pub(super) fn write_checkpoint(&self, target: &mut [u8]) -> Result<usize, Fault> {
+    pub fn write_checkpoint(&self, target: &mut [u8]) -> Result<usize, Fault> {
         if target.len() < 24 {
             return Err(sequence_fault("sequence.editor.capacity", "sequence-retained-checkpoint-capacity"));
         }
@@ -376,7 +392,7 @@ impl SequenceRetainedConfigWork {
 }
 
 impl SequenceRetainedExampleWork {
-    pub(super) fn write_checkpoint(&self, target: &mut [u8]) -> Result<usize, Fault> {
+    pub fn write_checkpoint(&self, target: &mut [u8]) -> Result<usize, Fault> {
         if target.len() < 24 {
             return Err(sequence_fault("sequence.editor.capacity", "sequence-retained-checkpoint-capacity"));
         }
@@ -389,11 +405,11 @@ impl SequenceRetainedExampleWork {
     }
 }
 
-pub(super) struct SequenceRetainedArtifactJobFactory {
-    pub(super) keys: Vec<semio_framework::ToolFactoryKey>,
+pub struct SequenceRetainedArtifactJobFactory {
+    pub keys: Vec<semio_framework::ToolFactoryKey>,
 }
 impl SequenceRetainedArtifactJobFactory {
-    pub(super) fn new(controller_id: &str) -> Self {
+    pub fn new(controller_id: &str) -> Self {
         Self { keys: SEQUENCE_RETAINED_ARTIFACT_TOOL_IDS.iter().map(|tool_id| semio_framework::ToolFactoryKey::new(controller_id, *tool_id)).collect() }
     }
 }
@@ -419,9 +435,9 @@ impl semio_framework::ToolJobFactory for SequenceRetainedArtifactJobFactory {
         &mut self,
         _operation: semio_framework_job::Operation,
         payload: Self::Payload,
-        input: semio_framework::action_bus::RetainedToolWireInput,
-        checkpoint: Option<semio_framework::action_bus::RetainedToolWireInput>,
-    ) -> Result<Self::Job, (semio_framework::ToolJobFactoryError, semio_framework::action_bus::RetainedToolWireInput, Option<semio_framework::action_bus::RetainedToolWireInput>)> {
+        input: semio_framework_action_bus::RetainedToolWireInput,
+        checkpoint: Option<semio_framework_action_bus::RetainedToolWireInput>,
+    ) -> Result<Self::Job, (semio_framework::ToolJobFactoryError, semio_framework_action_bus::RetainedToolWireInput, Option<semio_framework_action_bus::RetainedToolWireInput>)> {
         if input.declared_bytes() > SEQUENCE_RETAINED_RAW_BYTES || checkpoint.as_ref().is_some_and(|value| value.declared_bytes() > semio_framework_plugin::retained_command::ARTIFACT_COMMAND_CHECKPOINT_MAXIMUM_BYTES) {
             return Err((semio_framework::ToolJobFactoryError::new("Sequence retained artifact command rejects oversized wire or checkpoint owner"), input, checkpoint));
         }
@@ -441,16 +457,16 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for SequenceRetainedArt
 
 //#region 🧵️RetainedConfigRoutes
 const SEQUENCE_RETAINED_PAYLOAD_SCHEMA: &str = "sequence.play/retained-config-command.v1";
-pub(super) const SEQUENCE_RETAINED_RAW_BYTES: usize = 4_096;
-pub(super) const SEQUENCE_RETAINED_MAXIMUM_UNITS: usize = 2;
-pub(super) const SEQUENCE_RETAINED_CONFIG_TOOL_IDS: &[&str] = &["setViewport", "setOrientation", "stop"];
+pub const SEQUENCE_RETAINED_RAW_BYTES: usize = 4_096;
+pub const SEQUENCE_RETAINED_MAXIMUM_UNITS: usize = 2;
+pub const SEQUENCE_RETAINED_CONFIG_TOOL_IDS: &[&str] = &["setViewport", "setOrientation", "stop"];
 const SEQUENCE_RETAINED_CONFIG_PUBLICATION_CONTRACTS: &[semio_framework_plugin::ArtifactToolPublicationContract] = &[
     semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setViewport", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::WindowConfig] },
     semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setOrientation", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::WindowConfig] },
     semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "stop", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::WindowTransient] },
 ];
 
-pub(super) fn sequence_retained_config_command_admitted(command: &SequenceCommand) -> bool {
+pub fn sequence_retained_config_command_admitted(command: &SequenceCommand) -> bool {
     match command {
         SequenceCommand::SetViewport(_) | SequenceCommand::Stop(_) => true,
         SequenceCommand::SetOrientation(payload) => payload.value.len() <= 32,
@@ -458,17 +474,17 @@ pub(super) fn sequence_retained_config_command_admitted(command: &SequenceComman
     }
 }
 
-pub(super) struct SequenceRetainedConfigWork {
-    pub(super) tool_id: &'static str,
-    pub(super) workspace_identity: u64,
-    pub(super) cursor: usize,
-    pub(super) replay_target: Option<usize>,
-    pub(super) completed: bool,
-    pub(super) closing: bool,
+pub struct SequenceRetainedConfigWork {
+    pub tool_id: &'static str,
+    pub workspace_identity: u64,
+    pub cursor: usize,
+    pub replay_target: Option<usize>,
+    pub completed: bool,
+    pub closing: bool,
 }
 
 impl SequenceRetainedConfigWork {
-    pub(super) fn new(tool_id: &'static str, operation: &semio_framework_plugin::AppOperationContext) -> Self {
+    pub fn new(tool_id: &'static str, operation: &semio_framework_plugin::AppOperationContext) -> Self {
         let scope = format!("{}:{}:{}:{}", operation.app_instance_id, operation.parent_document_id, operation.operation_id, operation.generation);
         let workspace_identity = scope.as_bytes().iter().fold(0xcbf2_9ce4_8422_2325_u64, |state, byte| (state ^ u64::from(*byte)).wrapping_mul(0x100_0000_01b3));
         Self { tool_id, workspace_identity, cursor: 0, replay_target: None, completed: false, closing: false }
@@ -589,12 +605,12 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framewo
     }
 }
 
-pub(super) struct SequenceRetainedConfigJobFactory {
-    pub(super) keys: Vec<semio_framework::ToolFactoryKey>,
+pub struct SequenceRetainedConfigJobFactory {
+    pub keys: Vec<semio_framework::ToolFactoryKey>,
 }
 
 impl SequenceRetainedConfigJobFactory {
-    pub(super) fn new(controller_id: &str) -> Self {
+    pub fn new(controller_id: &str) -> Self {
         Self { keys: SEQUENCE_RETAINED_CONFIG_TOOL_IDS.iter().map(|tool_id| semio_framework::ToolFactoryKey::new(controller_id, *tool_id)).collect() }
     }
 }
@@ -627,9 +643,9 @@ impl semio_framework::ToolJobFactory for SequenceRetainedConfigJobFactory {
         &mut self,
         _operation: semio_framework_job::Operation,
         payload: Self::Payload,
-        input: semio_framework::action_bus::RetainedToolWireInput,
-        checkpoint: Option<semio_framework::action_bus::RetainedToolWireInput>,
-    ) -> Result<Self::Job, (semio_framework::ToolJobFactoryError, semio_framework::action_bus::RetainedToolWireInput, Option<semio_framework::action_bus::RetainedToolWireInput>)> {
+        input: semio_framework_action_bus::RetainedToolWireInput,
+        checkpoint: Option<semio_framework_action_bus::RetainedToolWireInput>,
+    ) -> Result<Self::Job, (semio_framework::ToolJobFactoryError, semio_framework_action_bus::RetainedToolWireInput, Option<semio_framework_action_bus::RetainedToolWireInput>)> {
         if input.declared_bytes() > SEQUENCE_RETAINED_RAW_BYTES || checkpoint.as_ref().is_some_and(|value| value.declared_bytes() > semio_framework_plugin::retained_command::ARTIFACT_COMMAND_CHECKPOINT_MAXIMUM_BYTES) {
             return Err((semio_framework::ToolJobFactoryError::new("Sequence retained config command rejects oversized wire or checkpoint owner"), input, checkpoint));
         }
@@ -656,30 +672,30 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for SequenceRetainedCon
 /// store at all.
 const SEQUENCE_RETAINED_EXAMPLE_PAYLOAD_SCHEMA: &str = "sequence.play/retained-example-command.v1";
 const SEQUENCE_RETAINED_EXAMPLE_RAW_BYTES: usize = 4_096;
-pub(super) const SEQUENCE_RETAINED_EXAMPLE_MAXIMUM_UNITS: usize = 2;
+pub const SEQUENCE_RETAINED_EXAMPLE_MAXIMUM_UNITS: usize = 2;
 const SEQUENCE_RETAINED_EXAMPLE_MAXIMUM_ID_BYTES: usize = 256;
-pub(super) const SEQUENCE_RETAINED_EXAMPLE_TOOL_IDS: &[&str] = &["setActiveExample"];
+pub const SEQUENCE_RETAINED_EXAMPLE_TOOL_IDS: &[&str] = &["setActiveExample"];
 const SEQUENCE_RETAINED_EXAMPLE_PUBLICATION_CONTRACTS: &[semio_framework_plugin::ArtifactToolPublicationContract] =
     &[semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] }];
 
-pub(super) fn sequence_retained_example_command_admitted(command: &SequenceCommand) -> bool {
+pub fn sequence_retained_example_command_admitted(command: &SequenceCommand) -> bool {
     match command {
         SequenceCommand::SetActiveExample(payload) => payload.example_id.len() <= SEQUENCE_RETAINED_EXAMPLE_MAXIMUM_ID_BYTES,
         _ => false,
     }
 }
 
-pub(super) struct SequenceRetainedExampleWork {
-    pub(super) tool_id: &'static str,
-    pub(super) workspace_identity: u64,
-    pub(super) cursor: usize,
-    pub(super) replay_target: Option<usize>,
-    pub(super) completed: bool,
-    pub(super) closing: bool,
+pub struct SequenceRetainedExampleWork {
+    pub tool_id: &'static str,
+    pub workspace_identity: u64,
+    pub cursor: usize,
+    pub replay_target: Option<usize>,
+    pub completed: bool,
+    pub closing: bool,
 }
 
 impl SequenceRetainedExampleWork {
-    pub(super) fn new(tool_id: &'static str, operation: &semio_framework_plugin::AppOperationContext) -> Self {
+    pub fn new(tool_id: &'static str, operation: &semio_framework_plugin::AppOperationContext) -> Self {
         let scope = format!("{}:{}:{}:{}", operation.app_instance_id, operation.parent_document_id, operation.operation_id, operation.generation);
         let workspace_identity = scope.as_bytes().iter().fold(0xcbf2_9ce4_8422_2325_u64, |state, byte| (state ^ u64::from(*byte)).wrapping_mul(0x100_0000_01b3));
         Self { tool_id, workspace_identity, cursor: 0, replay_target: None, completed: false, closing: false }
@@ -788,12 +804,12 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framewo
     }
 }
 
-pub(super) struct SequenceRetainedExampleJobFactory {
-    pub(super) keys: Vec<semio_framework::ToolFactoryKey>,
+pub struct SequenceRetainedExampleJobFactory {
+    pub keys: Vec<semio_framework::ToolFactoryKey>,
 }
 
 impl SequenceRetainedExampleJobFactory {
-    pub(super) fn new(controller_id: &str) -> Self {
+    pub fn new(controller_id: &str) -> Self {
         Self { keys: SEQUENCE_RETAINED_EXAMPLE_TOOL_IDS.iter().map(|tool_id| semio_framework::ToolFactoryKey::new(controller_id, *tool_id)).collect() }
     }
 }
@@ -826,9 +842,9 @@ impl semio_framework::ToolJobFactory for SequenceRetainedExampleJobFactory {
         &mut self,
         _operation: semio_framework_job::Operation,
         payload: Self::Payload,
-        input: semio_framework::action_bus::RetainedToolWireInput,
-        checkpoint: Option<semio_framework::action_bus::RetainedToolWireInput>,
-    ) -> Result<Self::Job, (semio_framework::ToolJobFactoryError, semio_framework::action_bus::RetainedToolWireInput, Option<semio_framework::action_bus::RetainedToolWireInput>)> {
+        input: semio_framework_action_bus::RetainedToolWireInput,
+        checkpoint: Option<semio_framework_action_bus::RetainedToolWireInput>,
+    ) -> Result<Self::Job, (semio_framework::ToolJobFactoryError, semio_framework_action_bus::RetainedToolWireInput, Option<semio_framework_action_bus::RetainedToolWireInput>)> {
         if input.declared_bytes() > SEQUENCE_RETAINED_EXAMPLE_RAW_BYTES || checkpoint.as_ref().is_some_and(|value| value.declared_bytes() > semio_framework_plugin::retained_command::ARTIFACT_COMMAND_CHECKPOINT_MAXIMUM_BYTES) {
             return Err((semio_framework::ToolJobFactoryError::new("Sequence retained example command rejects oversized wire or checkpoint owner"), input, checkpoint));
         }

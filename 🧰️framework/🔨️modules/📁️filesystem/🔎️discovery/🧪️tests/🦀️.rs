@@ -18,5 +18,4 @@ fn cycle_safe_discovery_matches_closed_graph_corpus() {
         let expected = &case["expected"];
         assert_eq!(serde_json::json!({ "files": files, "directories": result.directories, "cancelled": result.cancelled }), *expected, "{}", case["id"]);
     }
-    println!("[DEBUG] cycle-safe discovery: nine closed graph cases retained");
 }

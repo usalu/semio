@@ -86,6 +86,343 @@
           "$ref": "https://json.schemas.assets.semio-tech.com/framework/process/artifacts/native-build/storage/platform/contract/mount/component.json"
         }
       }
+    },
+    "Command": {
+      "definitions": {
+        "Protocol": {
+          "const": {
+            "maximumOutputBytes": 1048576,
+            "maximumOutputLines": 32768,
+            "maximumBodyCommands": 16,
+            "maximumCleanupCommands": 3,
+            "maximumPendingCommands": 1,
+            "maximumKernelRows": 16384,
+            "maximumKernelBytes": 1048576,
+            "maximumKernelValueBytes": 4096
+          }
+        },
+        "Request": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "version",
+            "platform",
+            "phase",
+            "action",
+            "writer",
+            "accepted",
+            "activationAccepted",
+            "mapping",
+            "commands"
+          ],
+          "properties": {
+            "version": {
+              "const": 1
+            },
+            "platform": {
+              "enum": [
+                "linux",
+                "win32"
+              ]
+            },
+            "phase": {
+              "enum": [
+                "body",
+                "cleanup"
+              ]
+            },
+            "action": {
+              "enum": [
+                "allocate",
+                "format",
+                "activate",
+                "information",
+                "inactive",
+                "deactivate"
+              ]
+            },
+            "writer": {
+              "type": "boolean"
+            },
+            "accepted": {
+              "type": "boolean"
+            },
+            "activationAccepted": {
+              "type": "boolean"
+            },
+            "mapping": {
+              "enum": [
+                "unknown",
+                "inactive",
+                "exact-active",
+                "ambiguous",
+                "changed"
+              ]
+            },
+            "commands": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 16
+            }
+          }
+        },
+        "Case": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "input",
+            "expected"
+          ],
+          "properties": {
+            "input": {
+              "$ref": "#/definitions/Command/definitions/Request"
+            },
+            "expected": {
+              "type": "boolean"
+            }
+          }
+        }
+      }
+    },
+    "PreparationReceipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "receipt",
+        "before",
+        "after",
+        "expected"
+      ],
+      "properties": {
+        "receipt": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "version",
+            "platform",
+            "dev",
+            "ino",
+            "size",
+            "filesystemBytes",
+            "maximumPhysicalBytes"
+          ],
+          "properties": {
+            "version": {
+              "const": 1
+            },
+            "platform": {
+              "enum": [
+                "linux",
+                "win32"
+              ]
+            },
+            "dev": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "ino": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "size": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1099511627776
+            },
+            "filesystemBytes": {
+              "type": "integer",
+              "minimum": 33554432,
+              "maximum": 1099511627776
+            },
+            "maximumPhysicalBytes": {
+              "type": "integer",
+              "minimum": 33554432,
+              "maximum": 1099511627776
+            }
+          }
+        },
+        "expected": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "version",
+            "platform",
+            "dev",
+            "ino",
+            "size",
+            "filesystemBytes",
+            "maximumPhysicalBytes"
+          ],
+          "properties": {
+            "version": {
+              "const": 1
+            },
+            "platform": {
+              "enum": [
+                "linux",
+                "win32"
+              ]
+            },
+            "dev": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "ino": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "size": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1099511627776
+            },
+            "filesystemBytes": {
+              "type": "integer",
+              "minimum": 33554432,
+              "maximum": 1099511627776
+            },
+            "maximumPhysicalBytes": {
+              "type": "integer",
+              "minimum": 33554432,
+              "maximum": 1099511627776
+            }
+          }
+        },
+        "before": {
+          "type": "string",
+          "maxLength": 4096
+        },
+        "after": {
+          "type": "string",
+          "maxLength": 4096
+        }
+      }
+    },
+    "MaterializedPaths": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "directoryLength",
+        "leaseLength",
+        "filename",
+        "canonicalDirectory",
+        "canonicalLease",
+        "expectedAcquisitions"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "directoryLength": {
+          "type": "integer",
+          "minimum": 2,
+          "maximum": 257
+        },
+        "leaseLength": {
+          "type": "integer",
+          "minimum": 2,
+          "maximum": 257
+        },
+        "filename": {
+          "enum": [
+            "fixed.img",
+            "fixed.vhd"
+          ]
+        },
+        "canonicalDirectory": {
+          "type": "boolean"
+        },
+        "canonicalLease": {
+          "type": "boolean"
+        },
+        "expectedAcquisitions": {
+          "enum": [
+            0,
+            1
+          ]
+        }
+      }
+    },
+    "PreparationObservation": {
+      "definitions": {
+        "Protocol": {
+          "const": {
+            "version": 1,
+            "steps": [
+              "prepare",
+              "observe"
+            ],
+            "maximumFailures": 2,
+            "primary": "first-thrown",
+            "undefined": "failure",
+            "authority": false
+          }
+        },
+        "Case": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "name",
+            "prepare",
+            "oversized",
+            "primary",
+            "failures"
+          ],
+          "properties": {
+            "name": {
+              "type": "string",
+              "maxLength": 64
+            },
+            "prepare": {
+              "enum": [
+                "success",
+                "body",
+                "undefined"
+              ]
+            },
+            "oversized": {
+              "type": "boolean"
+            },
+            "primary": {
+              "enum": [
+                "value",
+                "body",
+                "undefined",
+                "observation"
+              ]
+            },
+            "failures": {
+              "type": "array",
+              "maxItems": 2,
+              "items": {
+                "enum": [
+                  "body",
+                  "undefined",
+                  "observation"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "Slot": {
+      "const": {
+        "directory": ".publication",
+        "intent": "intent.json",
+        "candidate": "receipt.json",
+        "maximumFileBytes": 4096
+      }
+    },
+    "Namespace": {
+      "const": {
+        "mode": 448,
+        "fileMode": 384,
+        "maximumEntries": 2
+      }
     }
   }
 }

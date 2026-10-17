@@ -13,8 +13,8 @@ use semio_framework_value_derive::{FromValue, ToValue};
 //#region 📖CreateStory
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 pub struct CreateStory {
@@ -63,8 +63,3 @@ pub fn inverse_create_story<Op: From<crate::delete_story::DeleteStory>>(payload:
 }
 //#endregion 📖CreateStory
 
-//#region 🪢️TaxonomyMounts
-#[cfg(test)]
-#[path = "🧪️tests/📖️appends-story-3/🦀️.rs"]
-mod tests_appends_story_3;
-//#endregion 🪢️TaxonomyMounts

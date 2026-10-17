@@ -1,6 +1,6 @@
 //! 🔤️ Direct text codec for `embed-font-file`.
 
-use crate::standards::v1_7::subsets::ua::schema::mutations::EmbedFontFile;
+use crate::standards::v1_7::subsets::ua::schema::mutations::embed_font_file::EmbedFontFile;
 
 //#region 🔖️Identity
 pub const OPCODE: &str = "embed-font-file";
@@ -20,7 +20,5 @@ pub fn parse(text: &str) -> Result<EmbedFontFile, String> {
 //#endregion 🔖️Codec
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

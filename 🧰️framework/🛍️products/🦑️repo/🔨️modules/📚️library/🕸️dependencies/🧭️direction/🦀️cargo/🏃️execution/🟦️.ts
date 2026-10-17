@@ -10,8 +10,8 @@ import { join } from "node:path";
 import { cargoDirectionInventory, cargoDirectionMetadata, cargoDependencyDirectionReport, type CargoDirectionPolicy } from "../🟦️.ts";
 
 /** 🦀️ Checks every authored Cargo declaration with independent manifest and metadata inventories. */
-export async function verifyCargoDependencyDirection(repoRoot:string,invocation:ScriptInvocation):Promise<void>{
- return withRepositoryCargoPreparationV1(repoRoot,repoRoot,invocation,process.env,async(environment,phase)=>{
+export async function verifyCargoDependencyDirection(repoRoot:string,invocation:ScriptInvocation,control:import("../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts").ResourceLeaseControl):Promise<void>{
+ return withRepositoryCargoPreparationV1(repoRoot,repoRoot,invocation,control,process.env,async(environment,phase)=>{
   const taxonomy = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"), "utf8"));
   const policy: CargoDirectionPolicy = { areaLayers: taxonomy.areaLayers, ...taxonomy.cargoDependencyDirections };
   const inventory = cargoDirectionInventory(repoRoot);

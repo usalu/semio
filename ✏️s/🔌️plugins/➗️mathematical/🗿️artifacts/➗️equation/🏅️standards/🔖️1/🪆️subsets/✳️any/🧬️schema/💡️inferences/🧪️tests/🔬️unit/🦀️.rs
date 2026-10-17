@@ -1,4 +1,5 @@
-use super::*;
+use crate::EquationSnapshot;
+use crate::standards::v1::subsets::any::schema::inferences::*;
 use protocol::Inference;
 
 //#region 🧪️InferenceLaws

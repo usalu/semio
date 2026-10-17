@@ -1,6 +1,5 @@
 //! 🌐 Puzzle5d mutation — `ChangeDomain`: changes the document's design domain classification.
 use crate::standards::v1::subsets::any::schema::diff::Puzzle5dDiff;
-use crate::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation;
 use crate::Puzzle5dSnapshot;
 
 //#region 🔖️Mutation
@@ -17,17 +16,23 @@ pub struct ChangeDomain {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_domain(new_domain: String) -> Puzzle5dMutation {
-    Puzzle5dMutation::ChangeDomain(ChangeDomain { new_domain })
+pub fn change_domain<Op>(new_domain: String) -> Op
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::change_domain::ChangeDomain>,
+{
+    Op::from(ChangeDomain { new_domain })
 }
 
-impl protocol::MutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for ChangeDomain {
+impl<Op> protocol::MutationKind<Puzzle5dSnapshot, Op> for ChangeDomain
+where
+    Op: protocol::Mutation<Puzzle5dSnapshot, Diff = Puzzle5dDiff> + From<ChangeDomain>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "domain", kind: "change-domain", record: "ChangedDomain" };
 
     fn diff(&self, base: &Puzzle5dSnapshot) -> protocol::MutationOutcome<Puzzle5dDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Puzzle5dSnapshot) -> Result<Vec<Puzzle5dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Puzzle5dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

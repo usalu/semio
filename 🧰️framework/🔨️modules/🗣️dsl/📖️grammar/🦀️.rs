@@ -19,18 +19,13 @@ use crate::{lex_with as core_lex_with, CommentDialect, LexOptions, Limits, Strin
 mod literal;
 pub use literal::walk_literal_protocol_controlled;
 
-#[path = "🧱️model/🦀️.rs"]
-mod model;
-pub use model::{Alternative, Block, Cond, CondOp, Count, DispatchOrder, Field, Framing, GrammarFile, MacroArg, NestedDispatch, Prim, Production, ProtocolFile, ProtocolMismatch, ProtocolTrace, RepeatArm, RepeatDispatch, SemioDialect, Symbol};
+pub use semio_framework_dsl_syntax::{Alternative, Block, Cond, CondOp, Count, DispatchOrder, Field, Framing, GrammarFile, MacroArg, NestedDispatch, Prim, Production, ProtocolFile, ProtocolMismatch, ProtocolTrace, RepeatArm, RepeatDispatch, SemioDialect, Symbol};
 
-#[path = "🔡️lexer/🦀️.rs"]
-mod lexer;
-use lexer::{GKind, GToken, lex};
+use semio_framework_dsl_syntax::{is_protocol_source, prim_fixed_width};
+#[cfg(test)]
+use semio_framework_dsl_syntax::{GKind, GToken, lex};
 
-#[path = "🌳️parser/🦀️.rs"]
-mod parser;
-pub use parser::{parse_grammar, parse_protocol};
-use parser::is_protocol_source;
+pub use semio_framework_dsl_syntax::{parse_grammar, parse_protocol};
 
 #[path = "🖨️writer/🦀️.rs"]
 mod writer;
@@ -42,7 +37,7 @@ pub use recognizer::{FragmentRegistry, MacroMatcher, Recognizer};
 
 #[path = "🧮️walker/🦀️.rs"]
 mod walker;
-use walker::{mismatch, prim_fixed_width};
+use walker::mismatch;
 pub use walker::{verify_protocol_source, walk_protocol};
 
 //#region 🔖️Tests

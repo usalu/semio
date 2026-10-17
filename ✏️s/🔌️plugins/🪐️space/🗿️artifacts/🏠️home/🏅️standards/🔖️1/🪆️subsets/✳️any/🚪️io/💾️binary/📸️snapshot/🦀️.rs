@@ -33,3 +33,36 @@ impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot
 fn sqlite_snapshot_codec() -> Option<store::os_store::serialization::ArtifactSqliteSnapshotCodec> { Some(<Self as store::os_store::ArtifactSqliteSnapshotOperations>::sqlite_codec()) }
 }
 }
+
+//#region 🧩️ArtifactItems
+pub mod artifact_items {
+pub const S_HOME_DOCUMENT_SCHEMA: &str = "s.home";
+}
+//#endregion 🧩️ArtifactItems
+
+//#region 🧩️ArtifactItems3
+pub mod artifact_items_3 {
+use crate::{S_HOME_DOCUMENT_SCHEMA};
+use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
+
+//#region 🔖️ArtifactKind
+/// 🗂️ OS artifact kind for this document.
+pub async fn artifact_kind() -> ArtifactKindSpec {
+    ArtifactKindSpec {
+        id: "space.shome".into(),
+        label: semio_framework_ui_locale::LocalizedLabel::native("S Home", "S-Start"),
+        source_format: S_HOME_DOCUMENT_SCHEMA.into(),
+        component_kind: "home".into(),
+        dimension: "data".into(),
+        media_capability: OsMediaCapability::MeshOnly,
+        media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
+        schema: S_HOME_DOCUMENT_SCHEMA.into(),
+        export_formats: vec![],
+        import_formats: vec![],
+        export_stdio_kinds: vec!["stdio.json".into(), "stdio.zip".into()],
+        import_stdio_kinds: vec!["stdio.json".into(), "stdio.zip".into()],
+    }
+}
+//#endregion 🔖️ArtifactKind
+}
+//#endregion 🧩️ArtifactItems3

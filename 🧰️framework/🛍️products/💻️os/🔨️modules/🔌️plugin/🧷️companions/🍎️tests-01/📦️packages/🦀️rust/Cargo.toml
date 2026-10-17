@@ -23,12 +23,36 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-framework-plugin-decl-app = { path = "../../../../📜️declaration/🧩️app/📦️packages/🦀️rust", features = ["artifact-app-testing", "reserved-producer-testing"] }
+semio-framework-plugin-decl-emission = { path = "../../../../📜️declaration/📨️emission/📦️packages/🦀️rust" }
+semio-framework-plugin-decl-views = { path = "../../../../📜️declaration/👁️view/📦️packages/🦀️rust", features = ["media-turn-testing"] }
+semio-framework-plugin-extension = { path = "../../../../🧩️extension/📦️packages/🦀️rust", features = ["original-actor-context-testing"] }
+semio-framework-plugin-instance-app = { path = "../../../../🧵️instance/📦️packages/🦀️rust", features = ["artifact-app-testing"] }
+semio-framework-plugin-instance-extension = { path = "../../../../🧵️instance/🧩️extensions/📦️packages/🦀️rust" }
+semio-framework-plugin-plugin-program = { path = "../../../../🏗️builder/🔌️program/📦️packages/🦀️rust" }
+semio-framework-plugin-reactor-app = { path = "../../../../⚛️reactor/🔌️app/📦️packages/🦀️rust", features = ["artifact-app-testing"] }
+semio-framework-plugin-reactor-lifecycle = { path = "../../../../⚛️reactor/📨️pending/📦️packages/🦀️rust", features = ["artifact-app-testing", "original-actor-context-testing"] }
+semio-framework-plugin-retained-command = { path = "../../../../🧵️retained-command/📦️packages/🦀️rust", features = ["artifact-app-testing"] }
+semio-framework-plugin-runtime-instances = { path = "../../../../⚛️reactor/🏃️runtime/📦️instances/📦️packages/🦀️rust", features = ["artifact-app-testing"] }
+semio-framework-plugin-runtime-ops = { path = "../../../../⚛️reactor/🏃️runtime/🧰️ops/📦️packages/🦀️rust", features = ["artifact-app-testing", "original-actor-context-testing"] }
 semio-framework-plugin-test-support = { path = "../../../🧯️test-support/📦️packages/🦀️rust" }
-
-[dev-dependencies]
+semio-framework-plugin-testing-fixtures-publication = { path = "../../../../🧪️testing/🧰️fixtures-publication/📦️packages/🦀️rust" }
+semio-framework-plugin-testing-laws = { path = "../../../../🧪️testing/📦️packages/🦀️rust", features = ["artifact-app-testing"] }
+semio-framework-plugin-time-travel = { path = "../../../../⏪️time-travel/📦️packages/🦀️rust", features = ["artifact-app-testing"] }
+semio-framework-plugin-window-config = { path = "../../../../🪟️window/🎚️config/📦️packages/🦀️rust" }
+semio-framework = { path = "../../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
 semio-framework-async = { path = "../../../../../../../../🔨️modules/⏳️async/📦️packages/🦀️rust", features = ["entrypoint"], package = "semio-framework-async" }
-semio-framework-async-macros = { path = "../../../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
 semio-framework-job = { path = "../../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust", features = ["testkit"], package = "semio-framework-job" }
 semio-framework-job-worker = { path = "../../../../../../../../🔨️modules/🧵️job/👷️worker/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-os-kernel = { path = "../../../../../../📦️packages/🦀️rust", features = ["mutation-testing"], package = "semio-framework-os-kernel" }
-wasmtime = { version = "47.0.3", features = ["cranelift"] }
+semio-framework-pack-json = { path = "../../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-framework-plugin-mounted-owner = { path = "../../../../🏇️mounted-owner/📦️packages/🦀️rust" }
+semio-framework-plugin-ownership = { path = "../../../../🏛️ownership/🧱️owner/📦️packages/🦀️rust" }
+semio-framework-test-fixtures = { path = "../../../../../../../../🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
+semio-framework-trace = { workspace = true }
+semio_framework_ui_contract = { path = "../../../../../../../../🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
+semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-value-derive = { path = "../../../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
+serde_json = "1.0.140"
+
+[dev-dependencies]

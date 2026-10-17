@@ -1,10 +1,11 @@
 //! 🪟️ LAW: a new window template lands through the same tab/split/root-split zones as a dock drag.
 
 use super::*;
+use semio_framework_test_fixtures::fixture_text;
 use serde_json::Value;
 
 fn fixture() -> Value {
-    serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🪟️window-lifecycle-template-drag/🔣️.json")).expect("window lifecycle fixture")
+    serde_json::from_str(fixture_text!("../../../../../🧪️tests/🧫️fixtures/🪟️window-lifecycle-template-drag/🔣️.json")).expect("window lifecycle fixture")
 }
 
 fn side(value: &str) -> DockSide {

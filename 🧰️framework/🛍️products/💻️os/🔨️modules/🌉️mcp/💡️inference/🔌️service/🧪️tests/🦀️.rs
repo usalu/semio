@@ -7,6 +7,7 @@ use semio_framework_os_kernel::os_directory::DocumentScope;
 use semio_framework_os_kernel::os_directory::client::DocumentHttpPortCodeV1;
 use semio_framework_os_kernel::os_directory::client::DocumentHttpPortDeclarationV1;
 use semio_framework_os_kernel::os_directory::client::document_http::CompiledDocumentHttpPortV1;
+use semio_framework_test_fixtures::fixture_text;
 use semio_framework_value::DslValue;
 use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
@@ -14,12 +15,9 @@ use crate::hub_wire::{InferenceHubRequestV1, InferenceHubResponseV1, InferenceHu
 use crate::service::{RemoteInferenceProtocolV1, call_remote_inference_v1, install_remote_inference_protocols_v1, remote_inference_protocol_v1};
 
 /// 🧪️ Reads a committed fixture from the package directory at run time instead of embedding it in the test binary.
-fn fixture_text(relative: &str) -> &'static str {
-    Box::leak(std::fs::read_to_string(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative)).expect(relative).into_boxed_str())
-}
 
 
-fn fixture()->serde_json::Value {serde_json::from_str(fixture_text("../../../💡️inference/🔌️service/🧪️tests/🧫️fixtures/🔣️.json")).unwrap()}
+fn fixture()->serde_json::Value {serde_json::from_str(fixture_text!("../../../💡️inference/🔌️service/🧪️tests/🧫️fixtures/🔣️.json")).unwrap()}
 
 fn value(input:&serde_json::Value)->DslValue {semio_framework_pack_json::from_json_str(&input.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()}
 

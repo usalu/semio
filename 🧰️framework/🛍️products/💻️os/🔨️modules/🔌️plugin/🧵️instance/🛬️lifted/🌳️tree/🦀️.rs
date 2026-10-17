@@ -7,7 +7,7 @@ use semio_framework::kernel::Rights;
 use semio_framework_plugin_window_kits::AppActionRegistry;
 use semio_framework_plugin_reactor_app::PluginApp;
 use semio_framework_plugin_decl_app::mount_natural_file_actions;
-use crate::artifact_instance::VcsArtifactApp;
+use crate::VcsArtifactApp;
 use semio_framework_plugin_decl_surface::ArtifactEditor;
 use semio_framework_plugin_decl_surface::ArtifactViewer;
 use semio_framework_plugin_decl_surface::EditorApp;

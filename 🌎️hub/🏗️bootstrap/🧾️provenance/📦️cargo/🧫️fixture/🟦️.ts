@@ -1,10 +1,10 @@
 import {createHash} from "node:crypto";
-import schemaDocument from "./🧬️schema/🔣️.json";
+import schemaDocument from "../🧬️schema/🔣️.json";
 import {validateJsonSchemaSubset} from "@semio-tech/schema-validator-ts";
 import {readScriptProcessJsonV1} from "@semio-tech/process/routing/invocation/process/json";
 const schema=structuredClone(schemaDocument);
 export type CheckInProcessEnvelopeV1=Readonly<{mutationId:string;dependencies:readonly string[];diffSchema:"gis.map";diff:string;inverseSchema:"gis.map";inverse:string}>;
-export type CheckInProcessFixtureV1=Readonly<{schema:"semio.hub.check-in-process-fixture/v1";profileId:"gis-map-integration-fixtures";generationId:string;documentId:string;package:Readonly<{pluginId:"gis";packageId:"semio:gis";version:string;componentSha256:string}>;artifact:Readonly<{kind:"s.gis.gismap";schema:"gis.map";packSchemaHash:string}>;surfaceId:string;payload:Readonly<{envelopes:Readonly<{path:"payload/envelopes.json";count:number;sha256:string}>}>}>;
+export type CheckInProcessFixtureV1=Readonly<{schema:"semio.hub.check-in-process-seed/v1";profileId:"gis-map-integration-fixtures";generationId:string;documentId:string;package:Readonly<{pluginId:"gis";packageId:"semio:gis";version:string;componentSha256:string}>;artifact:Readonly<{kind:"s.gis.gismap";schema:"gis.map";packSchemaHash:string}>;surfaceId:string;payload:Readonly<{envelopes:Readonly<{path:"payload/envelopes.json";count:number;sha256:string}>}>}>;
 export type CheckInProcessFixtureDataV1=Readonly<{fixture:CheckInProcessFixtureV1;envelopes:readonly CheckInProcessEnvelopeV1[]}>;
 export const checkInProcessFixturePolicyV1=Object.freeze({...schema.$defs.Policy.const});
 /** 🧫️ Captures closed native-fixture DATA without giving paths or receipts producer custody. */

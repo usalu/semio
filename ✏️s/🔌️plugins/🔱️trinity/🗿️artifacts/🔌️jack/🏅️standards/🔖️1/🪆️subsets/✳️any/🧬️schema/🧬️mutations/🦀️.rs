@@ -4,7 +4,7 @@
 //! that shared vocabulary (design §20.15), so no parent leaf reads the child.
 
 use crate::standards::v1::subsets::any::schema::diff::JackDiff;
-use crate::JackSnapshot;
+use crate::standards::v1::subsets::any::schema::snapshot::JackSnapshot;
 
 pub use super::set_query::{set_query, SetQuery};
 
@@ -20,7 +20,5 @@ pub enum TrinityGraphMutation {
 //#endregion 🔖️Aggregate
 
 //#region 🧪️StructuralCorrespondence
-#[cfg(test)]
-#[path = "🧪️tests/🔬️structural-correspondence/🦀️.rs"]
-mod structural_correspondence_tests;
+
 //#endregion 🧪️StructuralCorrespondence

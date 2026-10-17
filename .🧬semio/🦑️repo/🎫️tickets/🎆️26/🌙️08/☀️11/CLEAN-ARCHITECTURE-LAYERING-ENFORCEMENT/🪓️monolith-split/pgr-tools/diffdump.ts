@@ -1,0 +1,10 @@
+import { readFileSync } from "node:fs";
+import { diffDiagnostics } from "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️authoring/📦️crate-tree/🔬️verify/🟦️.ts";
+import { external, normalizeCombined } from "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️authoring/📦️crate-tree/🧫️sandbox/🟦️.ts";
+const [a, b] = process.argv.slice(2);
+const load = (p: string) => readFileSync(p, "utf8").split("\n").filter(Boolean).map((l) => l.split("\t@")[0]!);
+const strip = (list: string[]) => [...new Set(list.filter(external).map(normalizeCombined).map((line) => line.split("\t").slice(0, 2).join("\t")))].filter((line) => !line.includes("aborting due to"));
+const base = load(a!), comb = load(b!);
+const d = diffDiagnostics(strip(base), strip(comb));
+console.log("base", base.length, "combined", comb.length, "onlyCombined", d.onlyCandidate.length, "onlyBase", d.onlyOriginal.length);
+for (const x of d.onlyCandidate.slice(0, 20)) console.log("  +", x.slice(0, 220));

@@ -1,6 +1,20 @@
+use semio_framework_test_fixtures::{fixture_path, fixture_text};
+use {semio_framework_artifact_reference::ArtifactDialect, semio_framework_os_kernel::sqlite_snapshot::SqliteDatabase, semio_framework_os_kernel::sqlite_snapshot::SqliteValue, semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotPhase};
+use semio_framework_os_kernel::sqlite_snapshot::ValueRefusalKind;
+#[allow(unused_imports)]
+use crate::standards::v2_0::subsets::any::schema::snapshot::*;
+#[allow(unused_imports)]
+use semio_framework_os_kernel::{io_schema::IoError, io_schema::IoOutcome, sqlite_snapshot::SqliteRow, sqlite_snapshot::validate_sqlite_database_schema, sqlite_snapshot::artifact::Cell, sqlite_snapshot::artifact::Projection, sqlite_snapshot::artifact::Reconstruction, sqlite_snapshot::artifact::FloatColumn, sqlite_snapshot::artifact::FloatRow, sqlite_snapshot::artifact::insert_ieee754, sqlite_snapshot::artifact::insert_key_ieee754};
+#[allow(unused_imports)]
+use crate::standards::v2_0::subsets::any::io::sqlite::snapshot::backing::Read;
+#[allow(unused_imports)]
+use semio_framework_os_kernel::sqlite_snapshot::ValueError;
+use crate::standards::v2_0::subsets::any::io::sqlite::snapshot::{text, word, Write, material, camera, extras, encoding};
 use ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot as _;
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v2_0::subsets::any::io::sqlite::snapshot::*;
+use crate::standards::v2_0::subsets::any::schema::snapshot::*;
+use crate::standards::v2_0::subsets::any::schema::snapshot_root::GltfSnapshot;
 use semio_framework_os_kernel::{
     sqlite_snapshot::{export_sqlite_database, import_sqlite_database, SqliteDatabaseLimits, SqliteSnapshotControl},
     os_store::serialization::ArtifactSqliteSnapshotHost,
@@ -12,7 +26,7 @@ fn words() -> Vec<u64> {
     struct Words {
         binary64_bits: Vec<String>,
     }
-    let fixture: Words = semio_framework_pack_json::from_json_str(include_str!("🧫️fixtures/🔢️words/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let fixture: Words = semio_framework_pack_json::from_json_str(fixture_text!("../../../../../🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔢️words/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     fixture.binary64_bits.iter().map(|word| u64::from_str_radix(word, 16).unwrap()).collect()
 }
 fn word_snapshot(bits: u64) -> GltfSnapshot {
@@ -109,7 +123,7 @@ fn sqlite_snapshot_gltf_rejects_independently_edited_ieee_conflict_and_unowned_r
 }
 
 fn fixture() -> GltfSnapshot {
-    semio_framework_pack_json::from_json_str(include_str!("🧫️fixtures/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()
+    semio_framework_pack_json::from_json_str(fixture_text!("../../../../../🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()
 }
 
 #[test]
@@ -190,7 +204,7 @@ fn sqlite_snapshot_gltf_independent_sql_mesh_accessor_material_and_buffer_edits(
 
 #[test]
 fn sqlite_snapshot_gltf_empty_domain_tables_preserve_absence_and_present_empty_lists() {
-    let mut snapshot: GltfSnapshot = semio_framework_pack_json::from_json_str(include_str!("🧫️fixtures/🌱️minimal/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let mut snapshot: GltfSnapshot = semio_framework_pack_json::from_json_str(fixture_text!("../../../../../🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🌱️minimal/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let limits = SqliteDatabaseLimits::default();
     let before = snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true,limits)).unwrap();
     assert_eq!(before.tables.len(), 57);
@@ -229,7 +243,7 @@ fn sqlite_snapshot_gltf_deep_owned_extras_erased_payloads_have_bounded_wire_dept
     struct Depth {
         json_depth: usize,
     }
-    let depth: Depth = semio_framework_pack_json::from_json_str(include_str!("🧫️fixtures/🔢️words/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let depth: Depth = semio_framework_pack_json::from_json_str(fixture_text!("../../../../../🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔢️words/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let mut extras = GltfJson::Number(f64::from_bits(0x7ff8000000000042));
     for _ in 0..depth.json_depth {
         extras = GltfJson::Array(vec![extras])
@@ -277,7 +291,7 @@ fn sqlite_snapshot_gltf_flat_primitive_extras_keep_deep_ordered_members_and_ieee
 
 #[test]
 fn sqlite_snapshot_gltf_empty_image_and_texture_entities_survive_logical_native_lists() {
-    let snapshot: GltfSnapshot = semio_framework_pack_json::from_json_str(include_str!("🧫️fixtures/🪹️empty-entities/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let snapshot: GltfSnapshot = semio_framework_pack_json::from_json_str(fixture_text!("../../../../../🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🪹️empty-entities/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let limits = SqliteDatabaseLimits::default();
     let database = independent(&snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true,limits)).unwrap(), "SELECT 1");
     assert_eq!(database.table("gltf_image").unwrap().rows.len(), 2);
@@ -294,10 +308,10 @@ fn sqlite_snapshot_gltf_empty_image_and_texture_entities_survive_logical_native_
 
 #[test]
 fn sqlite_snapshot_gltf_authored_grammar_recognizes_each_owned_named_domain() {
-    let grammar = semio_framework_dsl::grammar::parse_grammar(include_str!("../../../📝️text/📸️snapshot/📖️.grammar.semio")).unwrap();
+    let grammar = semio_framework_dsl::grammar::parse_grammar(fixture_text!("../../../📖️.grammar.semio")).unwrap();
     let recognizer = semio_framework_dsl::grammar::Recognizer::compile(&grammar, &semio_framework_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_framework_os_kernel::os_dsl::grammar::product_macros())
         .expect("selected grammar fragments");
-    for snapshot in [fixture(), semio_framework_pack_json::from_json_str::<GltfSnapshot>(include_str!("🧫️fixtures/🪹️empty-entities/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()] {
+    for snapshot in [fixture(), semio_framework_pack_json::from_json_str::<GltfSnapshot>(fixture_text!("../../../../../🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🪹️empty-entities/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()] {
         let text = pack::snapshot::ArtifactDsl::print_dsl(&snapshot);
         assert!(recognizer.recognize(&text).unwrap(), "{text}");
     }
@@ -311,7 +325,7 @@ fn sqlite_snapshot_gltf_controlled_binding_retires_deep_completed_fields_after_f
     struct Depth {
         controlled_retirement_depth: usize,
     }
-    let depth_fixture: Depth = semio_framework_pack_json::from_json_str(include_str!("🧫️fixtures/🔢️words/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let depth_fixture: Depth = semio_framework_pack_json::from_json_str(fixture_text!("../../../../../🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔢️words/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     std::thread::Builder::new()
         .stack_size(256 * 1024)
         .spawn(move || {
@@ -419,7 +433,7 @@ fn sqlite_snapshot_gltf_independent_later_root_owner_failure_retires_completed_e
 #[test]
 fn sqlite_snapshot_gltf_curated_demo_uses_actual_owned_flat_native_records() {
     let demo = crate::standards::v2_0::subsets::any::schema::demo_gltf_snapshot();
-    let text = include_str!("../../../../📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio");
+    let text = fixture_text!("../../../../../../📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio");
     let bytes = include_bytes!("../../../../📚️examples/🎬️demo/🖼️assets/🎒️.pack.semio");
     assert_eq!(pack::snapshot::ArtifactDsl::print_dsl(&demo), text);
     assert_eq!(pack::snapshot::ArtifactPack::encode_pack(&demo), bytes);
@@ -429,7 +443,7 @@ fn sqlite_snapshot_gltf_curated_demo_uses_actual_owned_flat_native_records() {
 
 #[test]
 fn sqlite_snapshot_gltf_curated_metabolism_pack_is_current_owned_logical_state() {
-    let snapshot = crate::standards::v2_0::subsets::any::io::import::decode_glb(&std::fs::read(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🖼️assets/🌱️metabolism/🏙️base/🧊️.glb")).expect("the committed fixture is readable")[..]).unwrap();
+    let snapshot = crate::standards::v2_0::subsets::any::io::import::decode_glb(&std::fs::read(fixture_path!("../../../../../../🖼️assets/🌱️metabolism/🏙️base/🧊️.glb")).expect("the committed fixture is readable")[..]).unwrap();
     let bytes = include_bytes!("../../../../📚️examples/🌱️metabolism/🖼️assets/🎒️.pack.semio");
     assert!(pack::snapshot::ArtifactPack::encode_pack(&snapshot).as_slice() == bytes, "curated metabolism Pack must match the actual current owned native record graph");
     assert_eq!(<GltfSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes).unwrap(), snapshot);
@@ -509,7 +523,7 @@ fn sqlite_snapshot_gltf_genuine_native_output_preserves_paid_full_word_state() {
 #[test]
 fn sqlite_snapshot_gltf_genuine_native_output_rejects_limits_and_cancels_during_paid_copy() {
     use store::sqlite_snapshot::{SnapshotEncoding, SqliteSnapshotPhase};
-    let contract: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔢️words/🔣️.json")).unwrap();
+    let contract: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔢️words/🔣️.json")).unwrap();
     let work = &contract["controlledOutput"];
     let mut snapshot = fixture();
     snapshot.document.asset.generator = Some(work["textUnit"].as_str().unwrap().repeat(work["repeat"].as_u64().unwrap() as usize));

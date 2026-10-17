@@ -1,9 +1,8 @@
-use semio_framework_plugin::PluginBuilder;
 #![allow(async_fn_in_trait)]
 #![allow(long_running_const_eval)]
 //! 🎪 `stdio.dxf` artifact — stdio reference format.
+use semio_framework_plugin::PluginBuilder;
 #[cfg(test)] use semio_framework_artifact_reference::{Dialect,StandardId,SubsetId};
-
 
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
@@ -13,21 +12,16 @@ extern crate semio_framework_value_derive as value_derive;
 
 pub use semio_s_artifact_stdio_contract::{apply_mutation, apply_mutation_checked, mutation_from_payload_json, mutation_inverse, mutation_payload_json, MutationRefusal};
 
-use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
-
 pub use schema::diff::DxfDiff;
 pub use schema::mutations::DxfMutation;
 pub use schema::snapshot::{DxfArc, DxfCircle, DxfInsert, DxfLine, DxfOther, DxfPolyline, DxfSnapshot, DxfSolid, DxfText};
 pub use schema::DxfArtifact;
 
-/// 🏷️ Document schema / DSL envelope id.
-pub const STDIO_DXF_DOCUMENT_SCHEMA: &str = "stdio.dxf";
+pub use semio_s_artifact_stdio_dxf_snapshot::{STDIO_DXF_DOCUMENT_SCHEMA};
 
-/// 🧬️ Artifact schema descriptor id.
-pub const DXF_ARTIFACT_SCHEMA_ID: &str = "s.stdio.dxf";
+pub use semio_s_artifact_stdio_dxf_snapshot::{DXF_ARTIFACT_SCHEMA_ID};
 
-/// 📜 Schema-owned package definition.
-pub const ARTIFACT_DEFINITION_SCHEMA: &str = include_str!("📜️artifact-definition.json");
+pub use semio_s_artifact_stdio_dxf_snapshot::{ARTIFACT_DEFINITION_SCHEMA};
 
 pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::PluginAssemblyError> {
     let factories = native_codecs();
@@ -35,9 +29,7 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
     semio_s_artifact_stdio_contract::definition_from_schema_with_executables(ARTIFACT_DEFINITION_SCHEMA, executables)
 }
 
-pub fn formats() -> Result<Vec<semio_framework_plugin::io::FormatDescriptor>, semio_framework_plugin::ArtifactDefinitionError> {
-    semio_s_artifact_stdio_contract::format_descriptors(ARTIFACT_DEFINITION_SCHEMA)
-}
+pub use semio_s_artifact_stdio_dxf_snapshot::{formats};
 
 fn native_codec() -> store::os_store::serialization::ArtifactCodec {
     let mut codec = store::artifact_codec::<DxfSnapshot, DxfMutation>(STDIO_DXF_DOCUMENT_SCHEMA);
@@ -169,50 +161,9 @@ fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
 }
 //#endregion 🔖️Declaration
 
-//#region 🔖️ArtifactKind
-/// 🗂️ This artifact's `ArtifactKindSpec`.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn artifact_kind() -> ArtifactKindSpec {
-    ArtifactKindSpec {
-        id: "s.stdio.dxf".into(),
-        label: semio_framework_ui_locale::LocalizedLabel::native("Dxf", "Dxf"),
-        source_format: STDIO_DXF_DOCUMENT_SCHEMA.into(),
-        component_kind: "stdio".into(),
-        dimension: "data".into(),
-        media_capability: OsMediaCapability::MeshOnly,
-        media_type: MediaType { class: MediaClass::Text, form: MediaForm::Document },
-        schema: STDIO_DXF_DOCUMENT_SCHEMA.into(),
-        export_formats: vec![],
-        import_formats: vec![],
-        export_stdio_kinds: vec![],
-        import_stdio_kinds: vec![],
-    }
-}
-//#endregion 🔖️ArtifactKind
+pub use semio_s_artifact_stdio_dxf_snapshot::{artifact_kind};
 //#region 🚪️DerivedIoRegistry
-pub mod io_registry {
-    use crate::standards::v_r12::engine::io_registry as v_r12;
-    use {semio_framework_plugin::io::register_composer_entries,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposedArtifact,semio_framework_plugin::io::ComposerEntry,semio_framework_artifact_reference::Dialect,semio_framework_plugin::io::ErasedComposeSource};
-    use std::sync::OnceLock;
-
-    static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
-
-    // 🚫️async: E1 pure table accessor consumed by OnceLock::get_or_init's sync closure — see R9
-    pub fn entries() -> &'static [&'static ComposerEntry] {
-        ENTRIES.get_or_init(|| v_r12::entries().iter().collect()).as_slice()
-    }
-
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
-        let entry = entries().iter().find(|e| e.writes == target).ok_or_else(|| ComposeError { message: format!("DxfComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
-        ::semio_framework_async::poll::resolve_ready((entry.compose)(sources))
-    }
-
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn register() {
-        register_composer_entries(v_r12::entries()).expect("static Stdio registration must be available and conflict-free");
-    }
-}
+pub use semio_s_artifact_stdio_dxf_tests::io_registry;
 //#endregion 🚪️DerivedIoRegistry
 
 #[path = "."]
@@ -222,97 +173,38 @@ pub mod standards {
         // ⚙️→🚪️/🧬️ dissolved (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES):
         // real code now lives in `subsets::any::{io,schema}`; this stays an inline barrel
         // so every existing `standards::v_r12::engine::*`/root `engine::*` path still resolves.
-        pub mod engine {
-            pub use super::subsets::any::io::*;
-            pub use super::subsets::any::schema::*;
-        }
+        pub use semio_s_artifact_stdio_dxf_tests::standards::v_r12::engine;
         #[path = "."]
         pub mod subsets {
             #[path = "."]
             pub mod any {
                 #[path = "."]
                 pub mod schema {
-                    #[path = "🏅️standards/🔖️r12/🪆️subsets/📰️header/🧬️schema/🦀️.rs"]
-                    mod component;
-                    pub use component::*;
-                    #[path = "."]
-                    pub mod snapshot {
-                        #[path = "🏅️standards/🔖️r12/🪆️subsets/📰️header/🧬️schema/📸️snapshot/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                    #[path = "."]
-                    pub mod diff {
-                        #[path = "🏅️standards/🔖️r12/🪆️subsets/📰️header/🧬️schema/🔺️diff/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                    #[path = "."]
-                    pub mod inferences {
-                        #[path = "."]
-                        pub mod bounds {
-                            #[path = "🏅️standards/🔖️r12/🪆️subsets/📰️header/🧬️schema/💡️inferences/📦bounds/🦀️.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                        #[path = "🏅️standards/🔖️r12/🪆️subsets/📰️header/🧬️schema/💡️inferences/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                    #[path = "."]
-                    pub mod mutations {
-                        #[path = "🏅️standards/🔖️r12/🪆️subsets/📰️header/🧬️schema/🧬️mutations/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
+                    pub use semio_s_artifact_stdio_dxf_schema::standards::v_r12::subsets::any::schema::*;
+
+                    pub use semio_s_artifact_stdio_dxf_snapshot::standards::v_r12::subsets::any::schema::snapshot;
+                    pub use semio_s_artifact_stdio_dxf_diff::standards::v_r12::subsets::any::schema::diff;
+                    pub use semio_s_artifact_stdio_dxf_inferences::standards::v_r12::subsets::any::schema::inferences;
+                    pub use semio_s_artifact_stdio_dxf_mutations::standards::v_r12::subsets::any::schema::mutations;
                 }
                 #[path = "."]
                 pub mod io {
-                    #[path = "🏅️standards/🔖️r12/🪆️subsets/📰️header/🚪️io/🦀️.rs"]
-                    mod component;
-                    pub use component::*;
-                    #[path = "."]
-                    pub mod import {
-                        #[path = "."]
-                        pub mod deserializers {
-                            #[path = "."]
-                            pub mod artifacts {
-                                #[path = "."]
-                                pub mod txt {
-                                    #[path = "."]
-                                    pub mod v_utf_8 {
-                                        #[path = "."]
-                                        pub mod any {
-                                            #[path = "🏅️standards/🔖️r12/🪆️subsets/📰️header/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔤️txt/🔖️utf-8/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    #[path = "."]
-                    pub mod export {
-                        #[path = "."]
-                        pub mod serializers {
-                            #[path = "."]
-                            pub mod artifacts {
-                                #[path = "."]
-                                pub mod txt {
-                                    #[path = "."]
-                                    pub mod v_utf_8 {
-                                        #[path = "."]
-                                        pub mod any {
-                                            #[path = "🏅️standards/🔖️r12/🪆️subsets/📰️header/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🔤️txt/🔖️utf-8/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
+                    pub use semio_s_artifact_stdio_dxf_tests::standards::v_r12::subsets::any::io::*;
+pub mod binary {
+    pub use semio_s_artifact_stdio_dxf_tests::standards::v_r12::subsets::any::io::binary::*;
+    pub use semio_s_artifact_stdio_dxf_inferences::standards::v_r12::subsets::any::io::binary::inferences;
+}
+pub mod sqlite {
+    pub use semio_s_artifact_stdio_dxf_inferences::standards::v_r12::subsets::any::io::sqlite::*;
+    pub use semio_s_artifact_stdio_dxf_snapshot::standards::v_r12::subsets::any::io::sqlite::snapshot;
+}
+pub mod text {
+    pub use semio_s_artifact_stdio_dxf_tests::standards::v_r12::subsets::any::io::text::*;
+    pub use semio_s_artifact_stdio_dxf_inferences::standards::v_r12::subsets::any::io::text::inferences;
+}
+
+                    pub use semio_s_artifact_stdio_dxf_inferences::standards::v_r12::subsets::any::io::import;
+                    pub use semio_s_artifact_stdio_dxf_inferences::standards::v_r12::subsets::any::io::export;
                 }
             }
         }
@@ -327,52 +219,24 @@ pub mod engine {
     pub use super::standards::v_r12::engine::*;
 }
 
-
-#[path = "."]
-pub mod examples {
-    #[path = "."]
-    pub mod demo {
-        #[path = "🏅️standards/🔖️r12/🪆️subsets/📰️header/📚️examples/🎬️demo/🦀️.rs"]
-        mod component;
-        pub use component::*;
-    }
-}
+pub use semio_s_artifact_stdio_dxf_inferences::examples;
 
 #[path = "."]
 pub mod editor {
     #[path = "."]
     pub mod dxf {
-        #[path = "🏅️standards/🔖️r12/🪆️subsets/📰️header/✏️editor/🦀️.rs"]
-        mod component;
-        pub use component::*;
-        #[path = "🏅️standards/🔖️r12/🪆️subsets/📰️header/✏️editor/🧭️edit-rules/🦀️.rs"]
-        pub mod edit_rules;
-        #[path = "."]
-        pub mod presence {
-            #[path = "🏅️standards/🔖️r12/🪆️subsets/📰️header/✏️editor/👥️presence/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
-        #[path = "."]
-        pub mod config {
-            #[path = "🏅️standards/🔖️r12/🪆️subsets/📰️header/✏️editor/🎚️config/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
+        pub use semio_s_artifact_stdio_dxf_tests::editor::dxf::*;
+
+        pub use semio_s_artifact_stdio_dxf_inferences::editor::dxf::edit_rules;
+        pub use semio_s_artifact_stdio_dxf_inferences::editor::dxf::presence;
+        pub use semio_s_artifact_stdio_dxf_inferences::editor::dxf::config;
         #[path = "."]
         pub mod modes {
             #[path = "."]
             pub mod edit {
-                #[path = "🏅️standards/🔖️r12/🪆️subsets/📰️header/✏️editor/🎭️modes/✏️edit/🦀️.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "."]
-                pub mod windows {
-                    #[path = "."]
-                    pub mod main {
-                        #[path = "🏅️standards/🔖️r12/🪆️subsets/📰️header/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                }
+                pub use semio_s_artifact_stdio_dxf_mutations::editor::dxf::modes::edit::*;
+
+                pub use semio_s_artifact_stdio_dxf_inferences::editor::dxf::modes::edit::windows;
             }
         }
     }
@@ -382,35 +246,17 @@ pub mod editor {
 pub mod viewer {
     #[path = "."]
     pub mod dxf {
-        #[path = "🏅️standards/🔖️r12/🪆️subsets/📰️header/👁️viewer/🦀️.rs"]
-        mod component;
-        pub use component::*;
-        #[path = "."]
-        pub mod presence {
-            #[path = "🏅️standards/🔖️r12/🪆️subsets/📰️header/👁️viewer/👥️presence/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
-        #[path = "."]
-        pub mod config {
-            #[path = "🏅️standards/🔖️r12/🪆️subsets/📰️header/👁️viewer/🎚️config/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
+        pub use semio_s_artifact_stdio_dxf_tests::viewer::dxf::*;
+
+        pub use semio_s_artifact_stdio_dxf_inferences::viewer::dxf::presence;
+        pub use semio_s_artifact_stdio_dxf_inferences::viewer::dxf::config;
         #[path = "."]
         pub mod modes {
             #[path = "."]
             pub mod view {
-                #[path = "🏅️standards/🔖️r12/🪆️subsets/📰️header/👁️viewer/🎭️modes/👁️view/🦀️.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "."]
-                pub mod windows {
-                    #[path = "."]
-                    pub mod main {
-                        #[path = "🏅️standards/🔖️r12/🪆️subsets/📰️header/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                }
+                pub use semio_s_artifact_stdio_dxf_mutations::viewer::dxf::modes::view::*;
+
+                pub use semio_s_artifact_stdio_dxf_inferences::viewer::dxf::modes::view::windows;
             }
         }
     }
@@ -421,8 +267,11 @@ pub use crate::standards::v_r12::subsets::any::io::{DxfBuilderConstruction, DxfP
 #[cfg(test)]
 pub(crate) use semio_framework_trace_memory_testing as test_allocation;
 #[cfg(test)]
-#[global_allocator]
-static TEST_ALLOCATION_OBSERVER:test_allocation::RequestedAllocator=test_allocation::RequestedAllocator;
+pub use semio_s_artifact_stdio_dxf_snapshot::{TEST_ALLOCATION_OBSERVER};
 #[cfg(test)]
 #[path="🏅️standards/🔖️r12/🪆️subsets/📰️header/🧬️schema/♻️retirement/🧪️tests/🦀️.rs"]
 mod original_owner_tests;
+
+#[cfg(test)]
+#[path = "🏅️standards/🔖️r12/🪆️subsets/📰️header/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs"]
+mod hoisted_snapshot_0;

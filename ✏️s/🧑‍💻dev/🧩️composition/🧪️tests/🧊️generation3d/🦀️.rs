@@ -1,4 +1,4 @@
-//! 🧊️ Real extension sessions drive the public Generation3d app law corpus.
+/// 🧊️ Shared support of the Generation3d app law targets: projection reads, gumball readers, run-time fixtures, the serial lock and the flow operators.
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
@@ -57,22 +57,14 @@ pub(crate) fn gumball_param_number(snapshot: &FlowHostSnapshot, id: &str, key: &
     widget.as_ref().and_then(|widget| widget.get("params")).and_then(|params| params.get(key)).and_then(|literal| literal.get("value")).and_then(semio_framework_value::DslValue::as_f64).unwrap_or(default)
 }
 
-#[path = "🧪️tests/🔒️serial-lock-discipline/🦀️.rs"]
-pub(crate) mod serial_lock_discipline;
+#[path = "🧪️tests/🔬️serial/🦀️.rs"]
+pub(crate) mod test_serial;
 
 #[path = "🧪️tests/🔬️brep-extension/🦀️.rs"]
 pub(crate) mod brep_extension;
 
-#[path = "🧪️tests/🔬️publication-authority/🦀️.rs"]
-pub(crate) mod publication_authority;
-
-#[path = "🧪️tests/🔬️serial/🦀️.rs"]
-pub(crate) mod test_serial;
-
-include!("🔭️viewer-laws/🦀️.rs");
-include!("🪟️editor-mode-laws/🦀️.rs");
-include!("🧭️editor-structure-laws/🦀️.rs");
-include!("🎮️editor-command-laws/🦀️.rs");
-
 #[path = "🧪️tests/🔬️flow-operators/🦀️.rs"]
 pub(crate) mod flow_operators;
+
+#[path = "🧪️tests/🔬️publication-authority/🦀️.rs"]
+pub(crate) mod publication_authority;

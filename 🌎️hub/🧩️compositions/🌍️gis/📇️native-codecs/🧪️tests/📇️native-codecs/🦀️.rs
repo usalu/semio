@@ -4,6 +4,7 @@ use geo::BoundingRect;
 use semio_framework_os_kernel as store;
 use semio_framework_os_kernel::{pack::snapshot::ArtifactPack, DslValue, FromValue, Mutation, MutationDiff};
 use semio_framework_plugin::{ArtifactInferenceExecutionRequest, WireArtifactInferenceBudget, WireArtifactInferenceCacheMode};
+use semio_framework_test_fixtures::fixture_path;
 use semio_s_artifact_gis_gismap::{gis_map_inference_service, gis_map_snapshot_with_derived_children, infer_gis_map_controlled, GisMapSnapshot};
 use semio_hub_gis::native_codecs::native_codec_factory_receipts;
 
@@ -241,7 +242,7 @@ async fn gis_guest_genesis_is_byte_for_byte_the_linked_codec_pair_on_one_generat
 /// values are written in place; otherwise the committed projection must already equal the live receipts.
 #[test]
 fn native_codec_projection_pack_schema_hashes_equal_live_receipts() {
-    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../📇️native-codecs/🔣️.json");
+    let path = fixture_path!("../../📇️native-codecs/🔣️.json");
     let committed = std::fs::read_to_string(&path).unwrap();
     let mut generated = committed.clone();
     let protocol_key = "\"protocolSha256\": \"";

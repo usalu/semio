@@ -38,7 +38,7 @@ export async function buildTrunkRenderer(options: TrunkRendererBuild): Promise<v
   requireIssuedResourceControlInvocationV1(options.control,options.invocation);const mode=readBuildMode(options.profile),original=scriptInvocationEnvironment(options.invocation,options.environment??process.env),control=createRequestedIssuedResourceControlV1(options.control,buildBudgetMs(),options.signal);
   if(original.SEMIO_BUILD_MODE!==undefined&&readBuildMode(original.SEMIO_BUILD_MODE)!==mode)throw Error("Renderer mode contradicts its original environment");
   await withRepositoryCacheStoreV1(options.workspace,"products",options.invocation,control,products=>withRepositoryCompilerStoreV1(options.workspace,mode,control,original,async (store,control)=>{
-   const capacity=await acquireCompilerCapacityLeaseV1({directory:join(options.workspace,".cache/b/l/m/data"),control,environment:store.environment});
+   const capacity=await acquireCompilerCapacityLeaseV1({request:{kind:"whole-host"},directory:join(options.workspace,".cache/b/l/m/data"),control,environment:store.environment});
    try{await compileTrunkRenderer({...options,control,storage:store.storage,products,sourceBoundary:store.sourceBoundary,signal:control.signal,stateRoot:join(store.root,"trunk"),environment:{...buildModeEnvironment(mode,store.environment),SEMIO_COMPILER_CAPACITY_HELD:"true",SEMIO_COMPILER_PARALLELISM:String(capacity.parallelism),CARGO_BUILD_JOBS:String(capacity.parallelism)}});}finally{capacity.release();}
   }));
 }

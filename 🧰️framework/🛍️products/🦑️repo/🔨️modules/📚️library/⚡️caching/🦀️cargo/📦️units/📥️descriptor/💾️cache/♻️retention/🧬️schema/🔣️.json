@@ -1,0 +1,12 @@
+{
+ "$schema": "http://json-schema.org/draft-07/schema#",
+ "definitions": {
+  "Protocol": {
+   "const": {
+    "version": 3,
+    "algorithm": "oldest-unprotected",
+    "batchNodes": 128
+   }
+  }
+ }
+}

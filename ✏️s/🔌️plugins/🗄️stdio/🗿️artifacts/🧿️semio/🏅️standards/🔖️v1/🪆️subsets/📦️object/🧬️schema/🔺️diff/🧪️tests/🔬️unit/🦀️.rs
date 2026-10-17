@@ -1,4 +1,18 @@
-use super::*;
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_semio_brep::schema::snapshot::SemioBrepSnapshot;
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_semio_mesh::schema::snapshot::SemioMeshSnapshot;
+#[allow(unused_imports)]
+use crate::schema::snapshot::SemioObjectSnapshot;
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValueSnapshot;
+#[allow(unused_imports)]
+use framework_schema::ArtifactSchema;
+#[allow(unused_imports)]
+use protocol::MutationDiff;
+use crate::schema::diff::*;
 use crate::schema::snapshot::demo_object_snapshot;
 use protocol::{DiffBinary,DiffText};
 

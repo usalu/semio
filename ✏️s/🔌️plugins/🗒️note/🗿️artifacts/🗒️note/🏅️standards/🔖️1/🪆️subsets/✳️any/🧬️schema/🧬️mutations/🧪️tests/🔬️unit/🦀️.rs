@@ -1,4 +1,11 @@
-use super::*;
+use crate::NoteSnapshot;
+use protocol::Mutation;
+use semio_framework_value_derive::ToValue;
+#[allow(unused_imports)]
+use crate::NoteDiff;
+#[allow(unused_imports)]
+use semio_framework_value_derive::FromValue;
+use crate::standards::v1::subsets::any::schema::mutations::*;
 use crate::{NoteBlockNode, NoteImageAsset};
 use protocol::os_spr::protocol_laws::{assert_fatal_never_applies, assert_missing_target_is_error, assert_mutation_diff_absorb_law};
 
@@ -437,6 +444,6 @@ fn block_references_read_their_name_and_take_the_block_selection() {
     assert_eq!(names.get("b1").map(|label| label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::De).to_owned()).as_deref(), Some("Text"));
     let schema: serde_json::Value = serde_json::from_str(<DragBlocks as protocol::MutationLeaf>::PAYLOAD_SCHEMA).expect("leaf schema");
     let reference = &schema["properties"]["ids"]["x-semio-ui"]["ref"];
-    assert_eq!((reference["domain"].as_str(), reference["granularity"].as_str()), (Some(crate::editor::note::NOTE_INTERACTION_BLOCKS), Some(crate::editor::note::NOTE_INTERACTION_GRANULARITY)), "{reference}");
+    assert_eq!((reference["domain"].as_str(), reference["granularity"].as_str()), (Some(crate::editor::note::support::NOTE_INTERACTION_BLOCKS), Some(crate::editor::note::support::NOTE_INTERACTION_GRANULARITY)), "{reference}");
 }
 //#endregion ⏪️TimeTravel

@@ -1,3 +1,4 @@
+use semio_framework_test_fixtures::manifest_dir;
 use semio_framework_test_original_snapshot_owners as original_owners;
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use semio_framework_artifact_reference::io::text::artifact_reference::DialectCoordinateText;
@@ -6,7 +7,7 @@ use semio_framework_plugin_host::{GuestRuntime,GuestRuntimes,WasmtimeRuntime,Sha
 use semio_framework_plugin_interpreter_runtime::OwnedRuntime;
 use semio_framework_plugin_guest_contract::{GuestCallCancellation,sqlite_wire};
 use std::path::PathBuf;
-fn repo_root()->PathBuf {PathBuf::from(env!("CARGO_MANIFEST_DIR")).ancestors().find(|path|path.join("nx.json").exists()).unwrap().to_path_buf()}
+fn repo_root()->PathBuf {manifest_dir!().ancestors().find(|path|path.join("nx.json").exists()).unwrap().to_path_buf()}
 fn plugin_wasm()->PathBuf {
     let path=repo_root().join("🌎️hub/🧩️compositions/🗒️note/🧩️component/📦️packages/🦀️rust/dist/components/semio_hub_note_component.wasm");
     assert!(path.is_file(),"the actual shipped Note component prerequisite is required");path

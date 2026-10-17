@@ -13,7 +13,7 @@ const componentSource = "../../🟦️.tsx";
 export default {
   root: testRoot,
   resolve: {
-    alias: [{ find: "@semio-tech/ui-react", replacement: resolve(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx") }],
+    alias: [{ find: /^@semio-tech\/ui-react$/u, replacement: resolve(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx") }],
   },
   test: {
     root: testRoot,

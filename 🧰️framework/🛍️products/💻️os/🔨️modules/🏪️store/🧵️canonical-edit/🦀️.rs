@@ -286,6 +286,11 @@ impl Default for ArtifactCanonicalJsonCursor {
 }
 
 impl ArtifactCanonicalJsonCursor {
+    /// 📏️ Starts a fresh encoder whose depth grant is `maximum_depth` frames instead of the full inline capacity.
+    pub fn with_maximum_depth(maximum_depth: usize) -> Self {
+        Self { maximum_depth, ..Self::default() }
+    }
+
     pub fn next_encode_demand(&self) -> RetirementDemand {
         if self.is_complete() { return RetirementDemand::default(); }
         let frame = self.frames[self.depth - 1];

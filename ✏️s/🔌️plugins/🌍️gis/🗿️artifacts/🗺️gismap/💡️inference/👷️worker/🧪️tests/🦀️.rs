@@ -1,8 +1,20 @@
+use semio_framework_os_kernel::{os_directory::client::InstalledServiceDriverV1, os_directory::client::InstalledServiceTurnV1, os_directory::client::DocumentHttpPortCodeV1};
+use semio_framework_test_fixtures::fixture_text;
+use semio_framework_value::DslValue;
+#[allow(unused_imports)]
+use crate::inference_schema::*;
+#[allow(unused_imports)]
+use semio_framework_os_kernel::os_directory::schema::mint_directory_command_request_id;
+#[allow(unused_imports)]
+use semio_framework_os_kernel::os_directory::client::InstalledServiceContributionV1;
+#[allow(unused_imports)]
+use semio_framework_value::{ToValue, FromValue};
+use crate::inference_worker::{NativeGisMapServiceV1};
 //#region 💡️InferencePortLaws
 #[cfg(not(target_arch = "wasm32"))]
 use crate::inference_schema::*;
 use semio_framework_os_kernel::os_directory::schema::DocumentScope;
-use super::*;
+use crate::inference_worker::*;
 
 #[cfg(not(target_arch = "wasm32"))]
 fn inference_test_scope() -> DocumentScope {
@@ -182,7 +194,7 @@ fn inference_driver_ignores_an_answer_for_another_job() {
 }
 //#endregion 💡️InferencePortLaws
 
-fn recovery_fixture() -> serde_json::Value { serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap() }
+fn recovery_fixture() -> serde_json::Value { serde_json::from_str(fixture_text!("../../💡️inference/👷️worker/🧪️tests/🧫️fixtures/🔣️.json")).unwrap() }
 
 fn recovery_value(value: &serde_json::Value) -> DslValue {
     let text=serde_json::to_string(value).unwrap();

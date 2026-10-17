@@ -1,7 +1,8 @@
 //! 🧪️ The text facet's round-trip law: print → parse is the identity on every bundled example, and
 //! the printed body carries this artifact's own envelope.
 
-use crate::standards::v1::subsets::any::io::text::snapshot::*;
+use crate::schema::snapshot::Wfc3dSnapshot;
+use crate::standards::v1::subsets::any::io::text::snapshot::{parse_dsl, print_dsl};
 
 #[test]
 fn every_example_round_trips_through_the_dsl() {

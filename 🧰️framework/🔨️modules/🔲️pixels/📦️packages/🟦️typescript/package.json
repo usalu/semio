@@ -1,0 +1,18 @@
+{
+  "name": "@semio-tech/framework-pixels-ts",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./compositing": "./🧩️compositing/🟦️.ts",
+    "./compositing/frames": "./🧩️compositing/📐️frames/🟦️.ts",
+    "./compositing/layers": "./🧩️compositing/🗂️layers/🟦️.ts",
+    "./coverage": "./🖊️coverage/🟦️.ts",
+    "./editing": "./✍️editing/🟦️.ts",
+    "./image/decode": "./🖼️image/📥️decode/🟦️.ts",
+    "./image/decode/schema": "./🖼️image/📥️decode/🧬️schema/🟦️.ts",
+    "./png/encode": "./📷️png/✍️encode/🟦️.ts",
+    "./sampling/affine": "./🎨️sampling/↗️affine/🟦️.ts",
+    "./sampling/affine/testing/oracles": "./🎨️sampling/↗️affine/🧪️testing/🔭️oracles/🟦️.ts",
+    "./selection": "./🎯️selection/🟦️.ts"
+  }
+}

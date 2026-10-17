@@ -1,13 +1,13 @@
 import{join,resolve}from"node:path";
 import{lstatSync,statfsSync,realpathSync,constants}from"node:fs";
 import{open}from"node:fs/promises";
-import{withArtifactDescriptorV1}from"../../../../../../📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts";
+import{withArtifactDescriptorV1}from"@semio-tech/framework/filesystem/observation/descriptor";
 import{nativeFixedImageCommandSpecV1,nativeLinuxLoopMountV1,nativeFixedVhdFooterV1,type NativeFixedPlatformOptionsV1}from"../../🧱️fixed/🟦️.ts";
 import{nativeFixedWindowsSystemV1}from"../../🧱️fixed/🗂️system/🟦️.ts";
 import{nativeImageRootV1}from"../../🌐️platform/📋️contract/🟦️.ts";
 import type{NativeImageMountDirectoryV1}from"../../🌐️platform/📋️contract/📂️mount/🟦️.ts";
 import type{NativeImagePublicationRequestV1}from"../🟦️.ts";
-import commandSchema from"../../🧱️fixed/🎛️command/🧬️schema/🔣️.json";
+import commandSchemaComponent from"../../🧱️fixed/🧬️schema/🔣️.json";const commandSchema=commandSchemaComponent.definitions.Command;
 import imageSchema from"../../🧱️fixed/🧬️schema/🔣️.json";
 import mountSchema from"../../🌐️platform/📋️contract/📂️mount/🧬️schema/🔣️.json";
 import{validateJsonSchemaSubset}from"../../../../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";

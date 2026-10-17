@@ -15,7 +15,7 @@ test("persistent protocol canonical fields preserve exact revision bytes and ori
   expect((db.query("SELECT name FROM fields ORDER BY ordinal").all() as {name:string}[]).map(row=>row.name)).toEqual(Object.keys(JSON.parse(row.expected)));
   for (const pause of fixture.pauses) { const before=db.query("SELECT SUM(original) AS owners FROM fields").get(); expect(db.query("SELECT SUM(original) AS owners FROM fields").get()).toEqual(before); expect(pause).toBeGreaterThanOrEqual(0); }
  }
- db.close(); console.log("[DEBUG] JSON revision oracle includes transaction/provenance/Unicode/NUL and SQLite preserves native field order/original slots; sequenceNumber excluded only");
+ db.close(); 
  const owner = new URL("🦀️.rs",root); expect(existsSync(owner)).toBe(true); const source=readFileSync(owner,"utf8");
  expect(source).toContain("ArtifactCanonicalJsonTree for Edit"); expect(source).toContain("ArtifactCanonicalJsonTree for MutationMeta"); expect(source).toContain("canonical_tree_child"); expect(source).not.toContain("to_value()"); expect(source).not.toContain("canonical_json_node"); expect(source).not.toContain("transmute");
 });

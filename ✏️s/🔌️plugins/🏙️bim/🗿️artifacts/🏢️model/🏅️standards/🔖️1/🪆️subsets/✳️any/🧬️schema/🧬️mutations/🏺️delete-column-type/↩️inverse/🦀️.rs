@@ -3,11 +3,14 @@
 use super::super::create_column_type::CreateColumnType;
 use super::super::cascade;
 use super::DeleteColumnType;
-use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{snapshot::ModelSnapshot};
 
-pub fn inverse(payload: &DeleteColumnType, base: &ModelSnapshot) -> Vec<ModelMutation> {
+pub fn inverse<Op>(payload: &DeleteColumnType, base: &ModelSnapshot) -> Vec<Op>
+where
+    Op: crate::standards::v1::subsets::any::schema::mutations::cascade::RemovalInverse + From<crate::standards::v1::subsets::any::schema::mutations::create_column_type::CreateColumnType>,
+{
     match base.column_types.get(&payload.id) {
-        Some(record) => cascade::data_rows(base, &payload.id).into_iter().chain(std::iter::once(ModelMutation::CreateColumnType(CreateColumnType { id: payload.id.clone(), column_type: record.clone() }))).collect(),
+        Some(record) => cascade::data_rows(base, &payload.id).into_iter().chain(std::iter::once(Op::from(CreateColumnType { id: payload.id.clone(), column_type: record.clone() }))).collect(),
         None => Vec::new(),
     }
 }

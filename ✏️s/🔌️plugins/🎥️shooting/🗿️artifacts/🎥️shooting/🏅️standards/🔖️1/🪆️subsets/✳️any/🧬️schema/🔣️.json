@@ -332,7 +332,8 @@
           "format": "double"
         },
         "stroke": {
-          "type": "string"
+          "type": "string",
+          "default": "#000000"
         }
       }
     },

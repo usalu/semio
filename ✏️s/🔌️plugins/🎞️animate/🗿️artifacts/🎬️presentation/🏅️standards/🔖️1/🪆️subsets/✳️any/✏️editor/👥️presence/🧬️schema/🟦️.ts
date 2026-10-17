@@ -19,6 +19,10 @@ type animatePresentationPresenceGuardSizeBounds = { readonly minItems?: number; 
 
 export const animatePresentationPresenceGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : animatePresentationPresenceGuardReject(at, "value is not an object");
+export const animatePresentationPresenceGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) animatePresentationPresenceGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const animatePresentationPresenceGuardArray = (value: unknown, at: string, bounds: animatePresentationPresenceGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return animatePresentationPresenceGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) animatePresentationPresenceGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -49,5 +53,5 @@ export const animatePresentationPresenceGuardConstant = <T extends string | numb
 //#endregion 🚪️Parsers
 
 export function parsePresentationPresence(value: unknown, at = "$"): PresentationPresence {
-  return animatePresentationPresenceGuardObject(value, `${at}`);
+  return animatePresentationPresenceGuardClosed(animatePresentationPresenceGuardObject(value, `${at}`), `${at}`, []);
 }

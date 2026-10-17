@@ -30,6 +30,10 @@ type stdioTiff60DocumentSnapshotGuardSizeBounds = { readonly minItems?: number; 
 
 export const stdioTiff60DocumentSnapshotGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : stdioTiff60DocumentSnapshotGuardReject(at, "value is not an object");
+export const stdioTiff60DocumentSnapshotGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) stdioTiff60DocumentSnapshotGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const stdioTiff60DocumentSnapshotGuardArray = (value: unknown, at: string, bounds: stdioTiff60DocumentSnapshotGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return stdioTiff60DocumentSnapshotGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) stdioTiff60DocumentSnapshotGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -63,8 +67,16 @@ export const stdioTiff60DocumentSnapshotGuardConstant = <T extends string | numb
 function exact(value:unknown,keys:readonly string[],at:string):Readonly<Record<string,unknown>>{const row=stdioTiff60DocumentSnapshotGuardObject(value,at);if(Object.keys(row).length!==keys.length||Object.keys(row).some(key=>!keys.includes(key)))return stdioTiff60DocumentSnapshotGuardReject(at,"foreign or missing owned fields");return row}
 const integer=(value:unknown,at:string,min=0,max=4294967295)=>stdioTiff60DocumentSnapshotGuardInteger(value,at,{minimum:min,maximum:max});
 const sequence=stdioTiff60DocumentSnapshotGuardArray;
-export function parseTiffFieldType(value:unknown,at="$"):TiffFieldType{return stdioTiff60DocumentSnapshotGuardMember(value,at,["byte","ascii","short","long","rational","sByte","undefined","sShort","sLong","sRational","float","double"])}
-export function parseTiffWord64(value:unknown,at="$"):TiffWord64{const row=exact(value,["lo","hi"],at);return {lo:integer(row.lo,at+".lo"),hi:integer(row.hi,at+".hi")}}
+export function parseTiffFieldType(value: unknown, at = "$"): TiffFieldType {
+  return stdioTiff60DocumentSnapshotGuardMember(value, `${at}`, ["byte", "ascii", "short", "long", "rational", "sByte", "undefined", "sShort", "sLong", "sRational", "float", "double"] as const);
+}
+export function parseTiffWord64(value: unknown, at = "$"): TiffWord64 {
+  const row = stdioTiff60DocumentSnapshotGuardClosed(stdioTiff60DocumentSnapshotGuardObject(value, at), at, ["lo", "hi"]);
+  return {
+    lo: parseUInt32(row["lo"], `${at}.lo`),
+    hi: parseUInt32(row["hi"], `${at}.hi`),
+  };
+}
 export function parseTiffValues(value:unknown,at="$"):TiffValues{
  const row=exact(value,["kind","value"],at),kind=parseTiffFieldType(row.kind,at+".kind"),values=sequence(row.value,at+".value");
  const ints=(min:number,max:number)=>values.map((value,i)=>integer(value,at+".value["+i+"]",min,max));
@@ -81,12 +93,31 @@ export function parseTiffValues(value:unknown,at="$"):TiffValues{
  case "sLong":return {kind,value:ints(-2147483648,2147483647)};
  }
 }
-export function parseTiffTag(value:unknown,at="$"):TiffTag{const row=exact(value,["tag","values"],at);const tag=integer(row.tag,at+".tag",0,65535);if([259,266,273,278,279,284,317,322,323,324,325,292,293,347,512,513,514,515,517,518,519,520,521,530].includes(tag))return stdioTiff60DocumentSnapshotGuardReject(at+".tag","native layout policy has no semantic tag");return {tag,values:parseTiffValues(row.values,at+".values")}}
-export function parseTiffSampleBlock(value:unknown,at="$"):TiffSampleBlock{const row=exact(value,["x","y","width","height","channels","samples"],at);const block={x:integer(row.x,at+".x"),y:integer(row.y,at+".y"),width:integer(row.width,at+".width",1),height:integer(row.height,at+".height",1),channels:integer(row.channels,at+".channels",1,65535),samples:sequence(row.samples,at+".samples").map((v,i)=>parseTiffWord64(v,at+".samples["+i+"]"))};if(BigInt(block.width)*BigInt(block.height)*BigInt(block.channels)!==BigInt(block.samples.length))return stdioTiff60DocumentSnapshotGuardReject(at,"block sample cardinality differs");return block}
+export function parseTiffTag(value: unknown, at = "$"): TiffTag {
+  const row = stdioTiff60DocumentSnapshotGuardClosed(stdioTiff60DocumentSnapshotGuardObject(value, at), at, ["tag", "values"]);
+  return {
+    tag: parseUInt16(row["tag"], `${at}.tag`),
+    values: parseTiffValues(row["values"], `${at}.values`),
+  };
+}
+export function parseTiffSampleBlock(value: unknown, at = "$"): TiffSampleBlock {
+  const row = stdioTiff60DocumentSnapshotGuardClosed(stdioTiff60DocumentSnapshotGuardObject(value, at), at, ["x", "y", "width", "height", "channels", "samples"]);
+  return {
+    x: stdioTiff60DocumentSnapshotGuardInteger(row["x"], `${at}.x`, {"minimum": 0, "maximum": 4294967295}),
+    y: stdioTiff60DocumentSnapshotGuardInteger(row["y"], `${at}.y`, {"minimum": 0, "maximum": 4294967295}),
+    width: stdioTiff60DocumentSnapshotGuardInteger(row["width"], `${at}.width`, {"minimum": 1, "maximum": 4294967295}),
+    height: stdioTiff60DocumentSnapshotGuardInteger(row["height"], `${at}.height`, {"minimum": 1, "maximum": 4294967295}),
+    channels: stdioTiff60DocumentSnapshotGuardInteger(row["channels"], `${at}.channels`, {"minimum": 1, "maximum": 65535}),
+    samples: stdioTiff60DocumentSnapshotGuardArray(row["samples"], `${at}.samples`).map((item, index) => parseTiffWord64(item, `${at}.samples[${index}]`)),
+  };
+}
 export function tiffIntegers(page:TiffIfd,tag:number):number[]{const value=page.entries.find(v=>v.tag===tag)?.values;return value&&["byte","short","long"].includes(value.kind)?(value.value as number[]):[]}
-export function parseTiffIfd(value:unknown,at="$"):TiffIfd{
- const row=exact(value,["entries","blocks"],at),page={entries:sequence(row.entries,at+".entries").map((v,i)=>parseTiffTag(v,at+".entries["+i+"]")),blocks:sequence(row.blocks,at+".blocks").map((v,i)=>parseTiffSampleBlock(v,at+".blocks["+i+"]"))};
- validateTiffIfd(page,at);return page;
+export function parseTiffIfd(value: unknown, at = "$"): TiffIfd {
+  const row = stdioTiff60DocumentSnapshotGuardClosed(stdioTiff60DocumentSnapshotGuardObject(value, at), at, ["entries", "blocks"]);
+  return {
+    entries: stdioTiff60DocumentSnapshotGuardArray(row["entries"], `${at}.entries`).map((item, index) => parseTiffTag(item, `${at}.entries[${index}]`)),
+    blocks: stdioTiff60DocumentSnapshotGuardArray(row["blocks"], `${at}.blocks`).map((item, index) => parseTiffSampleBlock(item, `${at}.blocks[${index}]`)),
+  };
 }
 export function validateTiffIfd(page:TiffIfd,at="$"):void{
  exact(page,["entries","blocks"],at);sequence(page.entries,at+".entries");sequence(page.blocks,at+".blocks");
@@ -110,6 +141,24 @@ export function validateTiffIfd(page:TiffIfd,at="$"):void{
  if(block.x!==0||block.y!==0||block.width!==width||block.height!==height||block.channels!==channels||bits.length!==channels||formats.length!==channels||bits.some(v=>v<1||v>64)||formats.some((v,i)=>![1,2,3,4].includes(v)||v===3&&![16,32,64].includes(bits[i]!)))return stdioTiff60DocumentSnapshotGuardReject(at,"invalid exact sample interpretation");
  block.samples.forEach((v,i)=>{const position=at+".samples["+i+"]";exact(v,['lo','hi'],position);integer(v.lo,position+'.lo');integer(v.hi,position+'.hi');const word=BigInt(v.lo)|(BigInt(v.hi)<<32n);if(word>>BigInt(bits[i%channels]!)!==0n)stdioTiff60DocumentSnapshotGuardReject(position,"word exceeds channel precision")});return;
 }
-export function parseTiffSnapshot(value:unknown,at="$"):TiffSnapshot{const row=exact(value,["schema","ifds"],at);return {schema:stdioTiff60DocumentSnapshotGuardConstant(row.schema,at+".schema","stdio.tiff"),ifds:sequence(row.ifds,at+".ifds").map((v,i)=>parseTiffIfd(v,at+".ifds["+i+"]"))}}
+export function parseTiffSnapshot(value: unknown, at = "$"): TiffSnapshot {
+  const row = stdioTiff60DocumentSnapshotGuardClosed(stdioTiff60DocumentSnapshotGuardObject(value, at), at, ["schema", "ifds"]);
+  return {
+    schema: stdioTiff60DocumentSnapshotGuardConstant(row["schema"], `${at}.schema`, "stdio.tiff"),
+    ifds: stdioTiff60DocumentSnapshotGuardArray(row["ifds"], `${at}.ifds`).map((item, index) => parseTiffIfd(item, `${at}.ifds[${index}]`)),
+  };
+}
 
 export function validateTiffSnapshot(snapshot:TiffSnapshot):void{exact(snapshot,['schema','ifds'],'$');if(snapshot.schema!=="stdio.tiff")throw Error("tiff: undeclared schema");sequence(snapshot.ifds,'$.ifds');snapshot.ifds.forEach((page,index)=>validateTiffIfd(page,"$.ifds["+index+"]"));}
+
+export type UInt16 = number;
+
+export function parseUInt16(value: unknown, at = "$"): UInt16 {
+  return stdioTiff60DocumentSnapshotGuardInteger(value, `${at}`, {"minimum": 0, "maximum": 65535});
+}
+
+export type UInt32 = number;
+
+export function parseUInt32(value: unknown, at = "$"): UInt32 {
+  return stdioTiff60DocumentSnapshotGuardInteger(value, `${at}`, {"minimum": 0, "maximum": 4294967295});
+}

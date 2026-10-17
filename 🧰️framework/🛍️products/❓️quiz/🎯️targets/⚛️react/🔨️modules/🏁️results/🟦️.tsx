@@ -26,7 +26,7 @@ import { ceilSignificant, floorSignificant, formatFactor, formatQuantity, format
 import { CardAction, CardIcon, Glyph, IconLabel, Mark, QuizCard, Records, TABLE, TaskGlyph, cn } from "../🪟️chrome/🟦️.tsx";
 import { HOME_PAGES, runAwards, type QuizState } from "../🧭️session/🧮️state/🟦️.ts";
 import { type QuizSession } from "../🧭️session/🟦️.ts";
-import { PRESENCE_ANCHORS } from "../👥️presence/🟦️.tsx";
+import { PRESENCE_ANCHORS } from "../👥️presence/👁️view/🟦️.ts";
 import { ScoreFigure, TaskFigures, crowdGate, crowdShown, type OthersChoice } from "../🗳️crowd/🟦️.tsx";
 import { challengeScored } from "../⛰️challenge/🟦️.tsx";
 import { PetTopic, petProp, usePetTopic } from "../🐾️pets/🟦️.tsx";

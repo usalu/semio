@@ -2,9 +2,9 @@
 import { createElement } from "react";
 import { applyPatch } from "fast-json-patch";
 import { createTutorialClock } from "@semio-tech/ui-react";
-import { makeEffectDispatchOne } from "../../🧱️elements/🛠️ShellHelpers/🟦️.tsx";
+import { makeEffectDispatchOne } from "../../🧱️elements/🛠️ShellHelpers/🔩️plumbing/🚀️effect-dispatch/🟦️.ts";
 import { parseResolvedPluginViewState } from "../../../../../../../🔨️modules/🛂️manifest/🟦️.ts";
-import type { LoadedProgramState } from "../../🧱️elements/🐚️Shell/🟦️.tsx";
+import type { LoadedProgramState } from "../../🧱️elements/🐚️Shell/📦️program-sessions/🟦️.ts";
 import deepEqual from "fast-deep-equal";
 import dialogOriginFixture from "../../🧱️elements/🏛️ShellHost/🧪️tests/🧫️fixtures/🗨️dialog-origin/🔣️.json";
 import { createAdmittedShellInstanceV1, shellDialogOriginIsCurrentV1, shellDialogOriginV1, shellEffectOwnerIsCurrentV1, shellEffectSourceIsCurrentV1, type ShellDialogOriginV1 } from "../../🧱️elements/🏛️ShellHost/🗨️dialog-origin/🟦️.ts";

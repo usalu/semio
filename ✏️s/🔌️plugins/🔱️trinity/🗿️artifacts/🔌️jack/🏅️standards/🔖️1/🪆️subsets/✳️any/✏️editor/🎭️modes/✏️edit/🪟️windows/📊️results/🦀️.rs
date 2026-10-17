@@ -1,7 +1,7 @@
 //! 📊️ Trinity Jack app — Results window (jack-query table/graph render).
 
-use crate::ast::{QueryResult, QueryResultKind};
-use crate::PropertyValue;
+use crate::standards::v1::subsets::any::schema::ast::{QueryResult, QueryResultKind};
+use semio_framework_graph_manifest::PropertyValue;
 use semio_framework_plugin::{scene_surface, BuiltNode, NodeGraphScene, TableScene, UiAssemblyResult};
 use semio_framework_ui_contract::SurfaceKind;
 
@@ -34,7 +34,7 @@ fn result_to_table(parsed: &QueryResult) -> (String, String) {
     (semio_framework_pack_json::to_json_string(&columns), semio_framework_pack_json::to_json_string(&rows))
 }
 
-pub(crate) fn render(surface_id: &str, _controller_id: &str, result: Option<&QueryResult>, error: Option<&str>) -> UiAssemblyResult<BuiltNode> {
+pub fn render(surface_id: &str, _controller_id: &str, result: Option<&QueryResult>, error: Option<&str>) -> UiAssemblyResult<BuiltNode> {
     if let Some(error) = error {
         return semio_framework_plugin::built_text_node(semio_framework_ui_locale::Label::data(error)).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("trinity.query.error-label", "the query error exceeds its UI label bound"));
     }

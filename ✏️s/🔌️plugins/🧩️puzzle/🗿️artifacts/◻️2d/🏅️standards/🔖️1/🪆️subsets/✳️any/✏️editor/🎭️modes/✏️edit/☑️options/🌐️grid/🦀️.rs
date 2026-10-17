@@ -3,7 +3,7 @@
 
 use crate::editor::puzzle2d::config::Puzzle2dPlayRuntime;
 use crate::editor::puzzle2d::terminology::Puzzle2dLabels;
-use {crate::editor::puzzle2d::snapshot::puzzle2d_action, crate::editor::puzzle2d::snapshot::PUZZLE2D_PLAY_CONTROLLER_ID};
+use crate::editor::puzzle2d::snapshot::puzzle2d_action;
 use semio_framework_plugin::WindowMeasure;
 
 pub const PUZZLE2D_GRID_FACTOR_MIN: f64 = 0.25;

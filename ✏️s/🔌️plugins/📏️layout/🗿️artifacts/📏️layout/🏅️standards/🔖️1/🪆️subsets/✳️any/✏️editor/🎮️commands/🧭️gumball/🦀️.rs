@@ -140,8 +140,3 @@ pub fn scale(payload: &ScaleSelection, doc: &ArtifactView<'_, LayoutSnapshot>, c
     Ok(transform(payload.verb(), doc, cfg, &[], None, None).emit)
 }
 
-//#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests

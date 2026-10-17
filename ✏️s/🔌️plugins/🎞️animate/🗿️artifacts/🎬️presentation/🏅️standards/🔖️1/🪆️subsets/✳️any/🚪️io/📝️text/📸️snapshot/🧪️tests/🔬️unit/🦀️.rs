@@ -1,6 +1,10 @@
+use semio_framework_test_fixtures::fixture_path;
+
+#[allow(unused_imports)]
+use crate::{PresentationSnapshot, PRESENTATION_DOCUMENT_SCHEMA};
 use crate::standards::v1::subsets::any::io::text::snapshot::*;
 use crate::default_presentation_snapshot;
-use crate::standards::v1::subsets::any::schema::{populate_tile_drafts_from_grid, FigureTileGridSeedSpec};
+use crate::standards::v1::subsets::any::schema::tile_grid::{populate_tile_drafts_from_grid, FigureTileGridSeedSpec};
 use store::os_store::test_support;
 
 #[test]
@@ -42,7 +46,7 @@ fn the_committed_demo_asset_is_the_printers_own_demo_snapshot() {
 /// regenerated text is proven by the NEXT run.
 #[test]
 fn zzz_write_demo_example_asset() {
-    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🖼️assets/🎬️demo/🗣️.dsl.semio");
+    let path = fixture_path!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🖼️assets/🎬️demo/🗣️.dsl.semio");
     let printed = print_dsl(&crate::demo_presentation_snapshot());
     if printed != PRESENTATION_EXAMPLE_TEXT {
         std::fs::write(&path, &printed).expect("🖼️assets/🎬️demo is writable");

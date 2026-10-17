@@ -1,6 +1,13 @@
 //! 🌈️️ `set-colorspace` — authored as its own mutation leaf; its diff and inverse live in `🔺️diff` and `↩️inverse`.
 
-use super::*;
+#[allow(unused_imports)]
+use protocol::Mutation;
+#[allow(unused_imports)]
+use crate::schema::snapshot::SemioColorspace;
+#[allow(unused_imports)]
+use crate::schema::diff::SemioImageDiff;
+#[allow(unused_imports)]
+use crate::schema::snapshot::SemioImageSnapshot;
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
@@ -10,13 +17,16 @@ pub struct SetColorspace {
     pub colorspace: SemioColorspace,
 }
 
-impl protocol::MutationKind<SemioImageSnapshot, SemioImageMutation> for SetColorspace {
+impl<Op> protocol::MutationKind<SemioImageSnapshot, Op> for SetColorspace
+where
+    Op: protocol::Mutation<SemioImageSnapshot, Diff = crate::schema::diff::SemioImageDiff> + From<SetColorspace>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "colorspace", kind: "set-colorspace", record: "SetColorspace" };
 
-    fn diff(&self, base: &SemioImageSnapshot) -> protocol::MutationOutcome<<SemioImageMutation as Mutation<SemioImageSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioImageSnapshot) -> protocol::MutationOutcome<<Op as Mutation<SemioImageSnapshot>>::Diff> {
         diff::diff(self, base)
     }
-    fn inverse(&self, base: &SemioImageSnapshot) -> Result<Vec<SemioImageMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &SemioImageSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         inverse::inverse(self, base)?
     

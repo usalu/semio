@@ -1,6 +1,7 @@
+use semio_framework_test_fixtures::fixture_text;
 use semio_s_artifact_stdio_pptx_base_inferences::standards::v_ecma_376::subsets::base::schema::inferences::outline::*;
 pub(crate) fn fixture()->PptxSnapshot{
- let neutral:serde_json::Value=serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧾outline/🔣️.json")).expect("closed neutral outline fixture");
+ let neutral:serde_json::Value=serde_json::from_str(&fixture_text!("../../🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/💡️inferences/🧾outline/🔣️.json").to_owned()).expect("closed neutral outline fixture");
  semio_framework_pack_json::from_json_str(&neutral["snapshot"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).expect("actual OPC and XML fixture")
 }
 #[semio_framework_async_macros::async_test]

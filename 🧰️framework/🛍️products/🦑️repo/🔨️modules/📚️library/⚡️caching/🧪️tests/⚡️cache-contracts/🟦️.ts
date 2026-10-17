@@ -1,5 +1,5 @@
 import {testNativeExecutableControlV1,testRepositoryExecutablePinV1,testCoreExecutablePinControlV1,testNativeSessionControlV1,testExecutableDigestCleanupV1,testArtifactReleaseCleanupV1,testNativeFractionV1} from "../../📦️artifacts/📌️executable/🧪️tests/🟦️.ts";
-import {testFixtureValuesV1} from "../📋️values/🟦️.ts";
+import {testFixtureValuesV1,testMethodV1,testRecordV1,testStringsV1} from "../📋️values/🟦️.ts";
 import {testOwnedFixtureWireBindingsV1} from "../🎚️build-mode/📥️contracts/🟦️.ts";
 import {testPlaygroundPreparationBindingsV1,testPlaygroundPreparationModelV1} from "../🧊️preparation/🧪️tests/🟦️.ts";
 import type {ResourceLeaseControl} from "../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
@@ -76,7 +76,7 @@ export async function testCommandInputs(workspace: string, output: string, invoc
   await testCiResolution();
   await testCiBaselineCommand(workspace, output);
   testDevcontainerContext(workspace);
-  testContainerRuntimeBootstrap(workspace,join(workspace,(await (await import("../../../🏗️build/🕸️graph/📥️inference/🟨️.mjs")).cacheInternals.workspaceCatalogBuildContributionsV1(workspace))[0].publication.outputRoot));
+  const catalogApi=await import("../../../🏗️build/🕸️graph/📥️inference/🟨️.mjs"),contributions=await testMethodV1(catalogApi.cacheInternals,"workspaceCatalogBuildContributionsV1",workspace);assert.ok(Array.isArray(contributions));const contribution=contributions[0],catalogOutput=testRecordV1(contribution,"publication").outputRoot;assert.equal(typeof catalogOutput,"string");if(typeof catalogOutput!=="string")throw Error("Actual catalog output DATA required");testContainerRuntimeBootstrap(workspace,join(workspace,catalogOutput));
   await testDevcontainerLifecycle(workspace, output);
   await testDerivedConfig(workspace);
   const { testExtensionHostBuild } = await import("../../../../💻️client/🧩️vscode/🧪️tests/🧩️host-build/🟦️.ts");
@@ -85,8 +85,8 @@ export async function testCommandInputs(workspace: string, output: string, invoc
   await testExtensionPackage(output);
   await testCommandImportClosure(workspace, output);
   await testImportEdgeEquality(workspace, output);
-  await testTrunkLockfile(workspace);
-  await testNativeDependencies(workspace, output);
+  await testTrunkLockfile(workspace,invocation,phaseControl);
+  await testNativeDependencies(workspace, output,invocation,phaseControl);
   await testCargoCleanupBoundary(workspace, output);
   const { testWgpuWasmOutputs } = await import("../🧊️wasm-outputs/🟦️.ts");
   await testWgpuWasmOutputs(workspace, output, invocation);
@@ -129,8 +129,8 @@ export async function testCommandInputs(workspace: string, output: string, invoc
   await testNativeRendererOutputs(workspace, output, invocation, phaseControl);
   const { testStylingOutputs } = await import("../🎨️styling-outputs/🟦️.ts");
   await testStylingOutputs(workspace, output);
-  const { testStylingPythonOutputs } = await import("../🐍️styling-python-outputs/🟦️.ts");
-  await testStylingPythonOutputs(workspace, output);
+  const { testStylingPythonSourceContractV1 } = await import("../🐍️styling-python-outputs/🟦️.ts");
+  await testStylingPythonSourceContractV1(workspace);
   const { testWgpuLiveActivation } = await import("../🧊️live-activation/🟦️.ts");
   await testWgpuLiveActivation(workspace, output, invocation, phaseControl);
   const { testNativeRuntime } = await import("../🧊️native-runtime/🟦️.ts");
@@ -641,7 +641,7 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
     const { keyBy, sortBy } = createRequire(testSource.url)("lodash");
     let activationReceipt: any;
     for (const cycle of activationCases.cycles) {
-      const completed = cycle.plugins.map(([pluginId, digest]: string[]) => ({ pluginId, artifactSha256: digest.repeat(64) }));
+      const completed = cycle.plugins.map((row:unknown) => {const[pluginId,digest]=testStringsV1(row);if(typeof pluginId!=="string"||typeof digest!=="string")throw Error("Actual activation plugin/digest pair required");return{pluginId,artifactSha256:digest.repeat(64)};});
       const prior = keyBy(activationReceipt?.plugins ?? [], "pluginId");
       const nextTimestamp = Math.max(cycle.now, 1, ...Object.values(prior).map((row: any) => row.rebuiltAt + 1));
       const oracle = sortBy(completed, "pluginId").map((row: any) => ({ ...row, rebuiltAt: prior[row.pluginId]?.artifactSha256 === row.artifactSha256 ? prior[row.pluginId].rebuiltAt : nextTimestamp }));

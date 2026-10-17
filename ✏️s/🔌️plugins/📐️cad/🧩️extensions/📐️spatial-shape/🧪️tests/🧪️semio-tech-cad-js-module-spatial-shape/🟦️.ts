@@ -1,4 +1,4 @@
-import { preciseSpatialKernelMath } from "../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🧮️preview/🟦️.ts";
+import { preciseSpatialKernelMath } from "@semio-tech/s-spatial-kernel-ts/preview";
 import type { core } from "@semio-tech/cad-js";
 import type { SpatialShapeTestDependencies } from "../../🟦️.ts";
 
@@ -9,8 +9,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   type TypologyRef = core.TypologyRef;
 
   const { describe, expect, it } = vitest;
-  const runtime = await import("../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️.ts");
-  const brepjs = await import("../../../../../../🧑‍💻dev/📐️cad/🧪️tests/🔮️spatial-kernel/🧱️brepjs/🟦️.ts");
+  const runtime = await import("@semio-tech/cad-cad-ts/standards/1/subsets/any/editor/engine/runtime");
+  const brepjs = await import("@semio-tech/cad-js/testing/spatial-kernel/brepjs");
   const { bootstrapCadModules } = runtime;
   const { BrepjsKernel } = brepjs;
   const { Model, applyModelDiff, computeStat, defaultModelDefinitionId, derivePropertyValue, loadPropertyDefinition, loadStatDefinition, objectsForStatCompute } = core;

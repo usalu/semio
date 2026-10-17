@@ -5,7 +5,8 @@
 //! The same options can be typed as a line: `z <length>` (the elevation), `rot <degrees>`, `mirror`, `sys <system|none>` and `fam <id or name>`; a length is in metres, or in millimetres, centimetres or metres with its unit.
 
 use super::plane::{axis_tangent_at, point2, project, P};
-use super::session::{GestureKey, Mark, Pointer, Preview, Step, Style, Tool, ToolContext, ToolEvent, ELEVATION_STEP, PICK_PIXELS, REJECTED, STOREY_MISSING};
+use super::session::{GestureKey, Pointer, Step, Tool, ToolContext, ToolEvent, ELEVATION_STEP, PICK_PIXELS, REJECTED, STOREY_MISSING};
+use crate::editor::bim::marks::{Mark, Preview, Style};
 use super::snap::SnapHit;
 use super::typed::INVALID;
 use crate::editor::bim::entities::components::{placeable, system_of, wall_mounted, SYSTEMS};

@@ -6,7 +6,7 @@
 // #region 🔌️Adapters
 import SunCalc from "suncalc";
 import { defineTestAdapter, type AdapterContext } from "@semio-tech/framework/test/adapter";
-import { compileVizProbeDocument, probeProjection, roundProbeNumbers, roundProjectionNumbers, type ProbeProjection } from "../../🔨️modules/🧪️viz-probe/🟦️.ts";
+import { compileVizProbeDocumentInContext, probeProjection, roundProbeNumbers, roundProjectionNumbers, type ProbeProjection } from "../../🔨️modules/🧪️viz-probe/🟦️.ts";
 import { DIAGRAM_PACKAGES, DIAGRAM_PREAMBLE, FRAME, rows } from "../🚦️diagram-routing/🟦️.ts";
 // #endregion 🔌️Adapters
 
@@ -60,9 +60,8 @@ async function subject(ctx: AdapterContext): Promise<{ projection: ProbeProjecti
     });
     body.push({ raw: FRAME.close });
   }
-  const records = await compileVizProbeDocument(
-    { case: CASE, scenario: ctx.scenario.id, packages: DIAGRAM_PACKAGES, preamble: DIAGRAM_PREAMBLE, geometry: true, body },
-    { workDir: ctx.workDir },
+  const records = await compileVizProbeDocumentInContext(ctx,
+    { case: CASE, scenario: ctx.scenario.id, packages: DIAGRAM_PACKAGES, preamble: DIAGRAM_PREAMBLE, geometry: true, body }
   );
   const projection = probeProjection(roundProbeNumbers(records, DECIMALS));
   return { projection: { "geometry/diagram-sun": projection["geometry/diagram-sun"] ?? [] } };

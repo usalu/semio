@@ -2,9 +2,7 @@
 //! Before/After) stitching this app's six modeless windows into the taxonomy's mode dir. The app
 //! itself has no other mode; this is the only `ModeDefinition` `create_rewriting_app` registers.
 
-use crate::editor::rewriting::{
-    TRINITY_REWRITING_PLAY_WINDOW_AFTER, TRINITY_REWRITING_PLAY_WINDOW_BEFORE, TRINITY_REWRITING_PLAY_WINDOW_JACK, TRINITY_REWRITING_PLAY_WINDOW_LHS, TRINITY_REWRITING_PLAY_WINDOW_PARAMETERS, TRINITY_REWRITING_PLAY_WINDOW_RHS,
-};
+use crate::editor::rewriting::ids::{TRINITY_REWRITING_PLAY_WINDOW_AFTER, TRINITY_REWRITING_PLAY_WINDOW_BEFORE, TRINITY_REWRITING_PLAY_WINDOW_JACK, TRINITY_REWRITING_PLAY_WINDOW_LHS, TRINITY_REWRITING_PLAY_WINDOW_PARAMETERS, TRINITY_REWRITING_PLAY_WINDOW_RHS};
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::ModeDefinition;
 use semio_framework_plugin::WindowLayout;

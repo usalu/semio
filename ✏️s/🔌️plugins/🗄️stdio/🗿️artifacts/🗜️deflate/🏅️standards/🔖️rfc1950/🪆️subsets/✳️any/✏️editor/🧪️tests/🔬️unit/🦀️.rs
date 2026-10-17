@@ -1,4 +1,12 @@
-use super::*;
+use crate::editor::deflate::modes::edit;
+use crate::editor::deflate::modes::edit::windows::main;
+use crate::schema::mutations::set_compression_params;
+use crate::schema::mutations::set_payload;
+use crate::{DeflateMutation, DeflateSnapshot, STDIO_DEFLATE_DOCUMENT_SCHEMA};
+use semio_framework_plugin::ArtifactEditor;
+use semio_framework_plugin::Editor;
+use crate::editor::deflate::{parse_header_summary, deflate_text_emit};
+use crate::editor::deflate::*;
 
 #[semio_framework_async_macros::async_test]
 async fn create_deflate_editor_builds_a_definition_for_the_editor_role() {
@@ -102,4 +110,4 @@ fn compression_params_reject_header_fields_outside_their_four_bits() {
     assert_eq!(adapter_error.code, "snapshot-edit.schema-identity");
 }
 
-semio_framework_plugin::history_edit_acceptance_law!("stdio", super::DeflateEditor, || semio_framework_plugin::App { definition: super::create_deflate_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️rfc1950/🪆️subsets/✳️any");
+semio_framework_plugin::history_edit_acceptance_law!("stdio", crate::editor::deflate::DeflateEditor, || semio_framework_plugin::App { definition: crate::editor::deflate::create_deflate_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️rfc1950/🪆️subsets/✳️any");

@@ -4,8 +4,11 @@
  * @see ../../../🖋️latex/semio-viz-transform.sty
  */
 import { bisectRight, quantileSorted, tickIncrement, ticks } from "../📐scale/🟦️.ts";
-import { VIZ_LAYOUT_ALGORITHMS, VIZ_STACK_OFFSETS, VIZ_STACK_ORDERS, VIZ_PROJECTIONS, VIZ_TREEMAP_TILINGS, type VizChartSpecification, type VizLayerSpec, type VizOptionValue, type VizPoint, type VizRow, type VizStackOffset, type VizStackOrder, type VizTable } from "../../📸️snapshot/📊️chart/🟦️.ts";
+import { VIZ_LAYOUT_ALGORITHMS, VIZ_STACK_OFFSETS, VIZ_STACK_ORDERS, VIZ_PROJECTIONS, VIZ_TREEMAP_TILINGS, type VizChartSpecification, type VizLayerSpec, type VizOptionValue, type VizPoint, type VizRow, type VizStackOffset, type VizStackOrder, type VizTable } from "@semio-tech/print/schema/snapshot/chart";
 import * as hierarchy from "../🌳hierarchy/🟦️.ts";
+import { vizCluster, vizTree } from "../🌳hierarchy/🌲️tidy-tree-and-cluster/🟦️.ts";
+import { vizPartition, vizTreemap } from "../🌳hierarchy/🧱️treemap-tilings-and-partition/🟦️.ts";
+import { vizPack } from "../🌳hierarchy/🫧️circle-packing/🟦️.ts";
 import * as network from "../🕸️network/🟦️.ts";
 import * as flow from "../🌊flow/🟦️.ts";
 import * as spatial from "../📍spatial/🟦️.ts";
@@ -795,10 +798,10 @@ export function inferVizLayerTable(spec: VizChartSpecification, layer: VizLayerS
     const sort = optionEnum(options, "sort", ["none", "ascending", "descending"] as const, "none");
     if (sort !== "none") root.sort((a, b) => (sort === "ascending" ? 1 : -1) * ((a.value ?? 0) - (b.value ?? 0)));
     const size = [width, height] as const;
-    if (algorithm === "treemap") hierarchy.vizTreemap(root, { size, tile: optionEnum(options, "tile", VIZ_TREEMAP_TILINGS, "squarify"), round: options.round === true, paddingInner: optionNumber(options, "paddingInner", 0), paddingOuter: optionNumber(options, "paddingOuter", 0), paddingTop: optionNumber(options, "paddingTop", optionNumber(options, "paddingOuter", 0)), paddingRight: optionNumber(options, "paddingRight", optionNumber(options, "paddingOuter", 0)), paddingBottom: optionNumber(options, "paddingBottom", optionNumber(options, "paddingOuter", 0)), paddingLeft: optionNumber(options, "paddingLeft", optionNumber(options, "paddingOuter", 0)) });
-    else if (algorithm === "partition") hierarchy.vizPartition(root, { size, padding: optionNumber(options, "padding", 0), round: options.round === true });
-    else if (algorithm === "pack") hierarchy.vizPack(root, { size, padding: optionNumber(options, "padding", 0) });
-    else (algorithm === "tree" ? hierarchy.vizTree : hierarchy.vizCluster)(root, { size, separation: (a, b) => (a.parent === b.parent ? optionNumber(options, "separation", 1) : optionNumber(options, "cousinSeparation", 2)) });
+    if (algorithm === "treemap") vizTreemap(root, { size, tile: optionEnum(options, "tile", VIZ_TREEMAP_TILINGS, "squarify"), round: options.round === true, paddingInner: optionNumber(options, "paddingInner", 0), paddingOuter: optionNumber(options, "paddingOuter", 0), paddingTop: optionNumber(options, "paddingTop", optionNumber(options, "paddingOuter", 0)), paddingRight: optionNumber(options, "paddingRight", optionNumber(options, "paddingOuter", 0)), paddingBottom: optionNumber(options, "paddingBottom", optionNumber(options, "paddingOuter", 0)), paddingLeft: optionNumber(options, "paddingLeft", optionNumber(options, "paddingOuter", 0)) });
+    else if (algorithm === "partition") vizPartition(root, { size, padding: optionNumber(options, "padding", 0), round: options.round === true });
+    else if (algorithm === "pack") vizPack(root, { size, padding: optionNumber(options, "padding", 0) });
+    else (algorithm === "tree" ? vizTree : vizCluster)(root, { size, separation: (a, b) => (a.parent === b.parent ? optionNumber(options, "separation", 1) : optionNumber(options, "cousinSeparation", 2)) });
     const nodes = options.leaves === true ? root.leaves() : root.descendants();
     if (algorithm === "bundling") return result(root.links().flatMap(({ source, target }, detail) => inferHierarchyPath(target, source).map((node, order) => ({ detail, order, x: node.x, y: node.y }))));
     return result(nodes.map((node) => ({ ...node.data, value: node.value ?? 0, depth: node.depth, x: algorithm === "treemap" || algorithm === "partition" ? node.x0 : node.x, y: algorithm === "treemap" || algorithm === "partition" ? node.y0 : node.y, x2: node.x1, y2: node.y1, x0: node.x0, y0: node.y0, x1: node.x1, y1: node.y1, radius: node.r, size: Math.PI * node.r ** 2, parentX: node.parent?.x ?? node.x, parentY: node.parent?.y ?? node.y })));

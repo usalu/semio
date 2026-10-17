@@ -1,0 +1,7 @@
+# Core Input Group Independent Design Review
+
+Prospective bounded compositional group is coherent with distinct fixed Core authority: actual chain reserved synchronously once, complete disjoint canonical root/file model and aggregate64MiB validated before first effect, every root absent preflight plus immediate per-root create recheck, same actual token/Original/funding/journal/mapping lifecycle. A drift after earlier batches retains partial roots and fails; no adoption/rollback or new Original.
+
+Existing single-batch512 remains unchanged; group64roots×512files must be explicit total≤32768, not silently unbounded. Work/created-directory/FD/output/resident/manifest limits must be cumulative for the group, not reset per batch. Content64MiB alone does not bound base64/metadata serialization; define finite encoded size/root-key/receipt bounds before allocation.
+
+Only private issued group/root receipts bind actual scope/lifetime/root keys. Selected fresh checks must verify exact selected root names/7facts while all immutable bytes/funding remain checked; installed descendants in earlier roots do not authorize unknown descendants in selected fresh root. No wire receipt, callback/provider or numeric override issues authority. Actual Core group API is a prerequisite for Domain feature, not a placeholder loop. No production implementation/runtime acceptance or Native/protected observation by this review.

@@ -32,16 +32,14 @@ test("whole painted path retirement retains real children, private candidates an
    for(let at=0;at<2000000;at++){const owners=inventory(),p=retired.job.advance(grant);expect(validateRetirement(p)).toBe(true);expect(p.work-work).toBeGreaterThan(0);expect(p.work-work).toBeLessThanOrEqual(grant);expect(owners-inventory()).toBeLessThanOrEqual(grant);work=p.work;if(p.done){done=true;break;}}
    expect(done).toBe(true);expect(retired.job.terminalIsEmpty()).toBe(true);expect(retired.job.advance(1)).toEqual({phase:"complete",work,done:true});expect(inventory()).toBe(0);for(const key of ["flatten","outline","coverage","fill","flattenRetirement","outlineRetirement","coverageRetirement","fillRetirement","fillMask","strokeMask","style","strokeColor"])expect(state[key]).toBeNull();expect(state.pixels.length).toBe(0);expect(state.segments.length).toBe(0);expect(state.source.length).toBe(0);for(const record of records)expect(record.job.terminalIsEmpty()).toBe(true);expect(input).toEqual(before);
    const output=retired.output??published;if(output){expect([...output.pixels]).toEqual(source.expected);const reference=await sharp(Buffer.from(svg(input))).ensureAlpha().raw().toBuffer();expect(delta(output.pixels,reference)).toBeLessThanOrEqual(2);comparisons++;}
-   process.stderr.write(`[DEBUG] Whole painted path retirement ${row.name}: grant=${grant} structural_work=${work} children=${records.length} terminal_empty=true\n`);
   }finally{spies.forEach(spy=>spy.mockRestore());}
  }
- process.stderr.write(`[DEBUG] Whole path published ownership survived ${comparisons} independent SVG comparisons\n`);
 });
 test("async whole path drains real owners after final cancellation and callback failure",async()=>{
  const original=(PathRasterJob.prototype as any).intoRetirement;
  for(const mode of ["success","abort","callback"]){const input=rasterInput(structuredClone(cases[15]!.input)),before=structuredClone(input),controller=new AbortController();let adopted=0,closed:any=null,work=0;
   const spy=spyOn(PathRasterJob.prototype as any,"intoRetirement").mockImplementation(function(this:PathRasterJob){adopted++;const result=original.call(this);closed=result;const advance=result.job.advance.bind(result.job);result.job.advance=(grant:number)=>{expect(grant).toBe(1);const p=advance(grant);expect(p.work-work).toBe(1);work=p.work;return p;};return result;});
-  try{const pending=rasterizePath(input,{signal:controller.signal,workBudget:1,onProgress:p=>{if(p.done){if(mode==="abort")controller.abort();if(mode==="callback")throw Error("whole path completion callback failed");}}});if(mode==="success"){const image=await pending;expect(image.pixels).toBe(closed.output.pixels);expect([...image.pixels]).toEqual(cases[15]!.expected);}else{await expect(pending).rejects.toThrow(mode==="abort"?/cancelled/:/completion callback failed/);expect(closed.output).toBeNull();}expect(adopted).toBe(1);expect(closed.job.terminalIsEmpty()).toBe(true);expect(work).toBeGreaterThanOrEqual(16);expect(input).toEqual(before);process.stderr.write(`[DEBUG] Actual async whole-path ${mode}: one adoption and ${work} one-unit cleanup steps\n`);
+  try{const pending=rasterizePath(input,{signal:controller.signal,workBudget:1,onProgress:p=>{if(p.done){if(mode==="abort")controller.abort();if(mode==="callback")throw Error("whole path completion callback failed");}}});if(mode==="success"){const image=await pending;expect(image.pixels).toBe(closed.output.pixels);expect([...image.pixels]).toEqual(cases[15]!.expected);}else{await expect(pending).rejects.toThrow(mode==="abort"?/cancelled/:/completion callback failed/);expect(closed.output).toBeNull();}expect(adopted).toBe(1);expect(closed.job.terminalIsEmpty()).toBe(true);expect(work).toBeGreaterThanOrEqual(16);expect(input).toEqual(before);
   }finally{spy.mockRestore();}
  }
 });
@@ -50,7 +48,6 @@ test("painted paths retain real flattened ownership through publication",async()
  for(const row of flattenCases)for(const grant of [1,7,4096]){const source=cases.find(c=>c.name===row.source)!,input=rasterInput(source.input),before=structuredClone(input),job=new PathRasterJob(input),state=job as any;
   while(!job.advance(grant).done){}const owner=state.flattenRetirement;expect(owner).not.toBeNull();expect(owner.terminalIsEmpty()).toBe(false);const image=job.result();expect([...image.pixels]).toEqual(source.expected);const reference=await sharp(Buffer.from(svg(input))).ensureAlpha().raw().toBuffer();expect(delta(image.pixels,reference)).toBeLessThanOrEqual(2);const retired=job.intoRetirement();expect(retired.output!.pixels).toBe(image.pixels);while(!retired.job.advance(grant).done){}expect(owner.terminalIsEmpty()).toBe(true);expect(input).toEqual(before);comparisons++;
  }
- process.stderr.write(`[DEBUG] Painted paths retained flatten backing through publication: ${comparisons} independent SVG comparisons and explicit final closes\n`);
 });
 function complete(input:PathRasterInput,budget=4096) {
  const job=new PathRasterJob(input);let work=0;
@@ -131,7 +128,6 @@ test("authored curves retain transformed stroke caps, joins and dash boundaries"
   for(let at=0;at<16;at++) {const x=at%4,y=Math.floor(at/4);let alpha=0;for(let dy=0;dy<scale;dy++)for(let dx=0;dx<scale;dx++)alpha+=raw[((y*scale+dy)*4*scale+x*scale+dx)*4+3]!;max=Math.max(max,Math.abs(actual[at*4+3]!-Math.round(alpha/(scale*scale))));}
   const limit=segments[1]?.kind==="arc"?3:2;if(max>limit)throw Error(JSON.stringify({input,max,actual:[...actual]}));expect(max).toBeLessThanOrEqual(limit);comparisons++;
  }
- console.error(`[DEBUG] ${comparisons} authored curve/stroke Sharp and native-canvas comparisons completed`);
 },120000);
 test("local gradient paint follows both affine axes and canvas origin",async()=>{
  const input:PathRasterInput={...rasterInput(cases[5]!.input),width:24,height:24,origin:[-3,2],segments:[{kind:"move",to:[-100,-100]},{kind:"line",to:[100,-100]},{kind:"line",to:[100,100]},{kind:"line",to:[-100,100]},{kind:"close"}],transform:[1,.2,.4,.9,4,2],fill:{kind:"linearGradient",x1:-5,y1:3,x2:25,y2:17,stops:[{offset:0,color:[1,.2,.5,.6]},{offset:.4,color:[.2,.7,.4,.8]},{offset:1,color:[.8,.3,.1,1]}]}};
@@ -144,7 +140,7 @@ test("reversing quadratic retains the ideal segment area despite renderer cusp v
  expect([...complete(input).pixels]).toEqual([...complete(equivalent).pixels]);
  const scale=128,canvas=createCanvas(4*scale,4*scale),ctx=canvas.getContext("2d");ctx.scale(scale,scale);ctx.transform(...input.transform as [number,number,number,number,number,number]);ctx.strokeStyle="red";ctx.globalAlpha=.7;ctx.lineWidth=.5;ctx.lineCap="butt";ctx.lineJoin="miter";ctx.stroke(new Path2D(pathD(input.segments)));const reference=ctx.getImageData(0,0,canvas.width,canvas.height).data,actual=complete(input).pixels;let max=0;
  for(let at=0;at<16;at++) {let alpha=0;for(let y=0;y<scale;y++)for(let x=0;x<scale;x++)alpha+=reference[(((Math.floor(at/4)*scale+y)*4*scale+at%4*scale+x)*4)+3]!;max=Math.max(max,Math.abs(actual[at*4+3]!-Math.round(alpha/(scale*scale))));}
- expect(max).toBeLessThanOrEqual(8);console.error(`[DEBUG] Reversing quadratic equals exact doubled line area; native canvas cusp variation=${max}`);
+ expect(max).toBeLessThanOrEqual(8);
 });
 
 test("painted paths retain real stroke owners through sealed publication",async()=>{
@@ -152,7 +148,6 @@ test("painted paths retain real stroke owners through sealed publication",async(
  for(const row of strokeCases)for(const grant of [1,7,4096]){const source=cases.find(c=>c.name===row.source)!,input=rasterInput(source.input),before=structuredClone(input),job=new PathRasterJob(input),state=job as any;while(!job.advance(grant).done){}const owner=state.outlineRetirement;if(owner)expect(owner.terminalIsEmpty()).toBe(false);const image=job.result();expect([...image.pixels]).toEqual(source.expected);expect(input).toEqual(before);
   let reference=await sharp(Buffer.from(svg(input))).ensureAlpha().raw().toBuffer();if(source.name==="zero length round cap"){const raw=await sharp(Buffer.from(svg(input,128))).ensureAlpha().raw().toBuffer();let alpha=0;for(let at=3;at<raw.length;at+=4)alpha+=raw[at]!;reference=Buffer.from([255,0,0,Math.round(alpha/(128*128))]);}expect(delta(image.pixels,reference)).toBeLessThanOrEqual(2);const retired=job.intoRetirement();while(!retired.job.advance(grant).done){}if(owner)expect(owner.terminalIsEmpty()).toBe(true);comparisons++;
  }
- process.stderr.write(`[DEBUG] Painted stroke retained owners: ${comparisons} independent SVG outputs and final closes\n`);
 });
 
 test("painted stroke cleanup refuses invalid grants and interrupted output",()=>{
@@ -171,5 +166,4 @@ test("painted paths retain actual coverage owners and masks through publication"
   const spy=spyOn(CoverageJob.prototype,"intoRetirement").mockImplementation(function(this:CoverageJob){const kind=state.phase==="fillCoverage"?"fill":"stroke",mask=this.result(),owner=original.call(this);expect(owner.output).toBe(mask);records.push({kind,owner});return owner;});
   try{while(!job.advance(grant).done){}}finally{spy.mockRestore();}expect(records.map(r=>r.kind)).toEqual(row.coverage);for(const record of records){expect(record.owner.job.terminalIsEmpty()).toBe(false);expect(record.owner.output!.coverage.length).toBe(input.width*input.height);}const image=job.result();expect([...image.pixels]).toEqual(source.expected);expect(input).toEqual(before);const reference=await sharp(Buffer.from(svg(input))).ensureAlpha().raw().toBuffer();expect(delta(image.pixels,reference)).toBeLessThanOrEqual(2);const retired=job.intoRetirement();while(!retired.job.advance(grant).done){}for(const record of records)expect(record.owner.job.terminalIsEmpty()).toBe(true);comparisons++;
  }
- process.stderr.write(`[DEBUG] Painted coverage retained owners: ${comparisons} independent SVG outputs and final closes\n`);
 });

@@ -23,12 +23,14 @@ name = "quiz_schema"
 path = "../../🦀️.rs"
 
 [features]
-testkit = ["dep:serde_json"]
+testkit = ["dep:serde_json", "dep:semio-framework-test-fixtures"]
 
 [dependencies]
+semio-framework-test-fixtures = { path = "../../../../../🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust", optional = true }
 serde = { workspace = true }
 # 🎯️ `float_roundtrip`: quiz documents are read correctly rounded, as `JSON.parse` and Python read them.
 serde_json = { workspace = true, features = ["float_roundtrip"], optional = true }
 
 [dev-dependencies]
+semio-framework-test-fixtures = { path = "../../../../../🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 serde_json = { workspace = true, features = ["float_roundtrip"] }

@@ -39,3 +39,74 @@ impl FromValue for ImportedMap{
  fn default_value_controlled(control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,semio_framework_value::ValueError>{ImportedMapFields::default_value_controlled(control).map(ImportedMapFields::into_map)}
  fn retire_decoded(self){ImportedMapFields::retire_decoded(ImportedMapFields{positions:self.positions,routes:self.routes,regions:self.regions,properties:self.properties});}
 }
+
+//#region 🧩️ArtifactItems
+pub mod artifact_items {
+//#region 🔹Constants
+/// 🏔️ Schema for undoable GIS terrain documents.
+pub const GIS_3D_TERRAIN_SCHEMA: &str = "gis.terrain";
+
+/// 🪪️ One canonical terrain identity shared by definition, composer and both app roles.
+pub const GISTERRAIN_DIALECT: semio_framework_artifact_reference::Dialect = semio_framework_artifact_reference::Dialect { artifact_kind: "s.gis.gisterrain", standard: semio_framework_artifact_reference::StandardId("1"), subset: semio_framework_artifact_reference::SubsetId::ANY };
+//#endregion 🔹Constants
+}
+//#endregion 🧩️ArtifactItems
+
+//#region 🧩️ArtifactItems3
+pub mod artifact_items_3 {
+pub use crate::schema::snapshot::GisTerrainSnapshot;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3;
+use semio_s_artifact_stdio_semio_mesh::{schema::snapshot::SemioMesh, schema::snapshot::SemioMeshSnapshot, schema::snapshot::SemioPrimitive, schema::snapshot::SemioTopology};
+
+//#region 🔖️MeshComposition
+/// 🕸️ Deterministic content-addressed CHILD handle for the terrain's composed mesh — same
+/// `(child_id, target)` for identical `(exaggeration, imported_map)`, a different pair
+/// once either actually changes. Mirrors `💠️lowpoly`'s `mesh_child_handle`/`📐️cad`'s
+/// `cad_model_child_handle` (same `store::os_store::artifact_child::ArtifactChild::new` + `ArtifactDialect` shape).
+pub fn gis_terrain_mesh_child_handle(content_key: &str) -> store::os_store::artifact_child::ArtifactChild<SemioMeshSnapshot> {
+    let child_id = store::content_id("gisterrain-mesh", content_key.as_bytes());
+    let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "mesh".into() };
+    let target = semio_framework_artifact_reference::ArtifactRef { artifact_id: child_id.clone(), dialect };
+    store::os_store::artifact_child::ArtifactChild::new(child_id, target)
+}
+
+/// 🔑️ Construction seed for an initial terrain mesh; persisted identity survives later edits.
+pub fn gis_terrain_mesh_content_key(exaggeration: f64, imported_map: Option<&crate::schema::imported_map::ImportedMap>) -> String {
+    let identity = imported_map.map(|map| {
+        let bytes = store::pack_rt::encode_document(&crate::schema::imported_map::ImportedMap::__dsl_spec(), &map.__dsl_to_record(), &store::PackEncodeOptions::default()).expect("authored imported map native record");
+        store::content_id("gisterrain-map", &bytes)
+    }).unwrap_or_default();
+    format!("{:016x}|{}", exaggeration.to_bits(), identity)
+}
+
+/// 🏔️ WRITE direction, real (not a stub): builds an actual `SemioMeshSnapshot` from the terrain
+/// document — a single flat quad (2 triangles) sized by the imported overlay's geographic extent
+/// (falling back to a 1×1 unit quad when no overlay is present) and lifted by `exaggeration` alone
+/// (there is no DEM heightfield yet — see `gis3d_scene_media`'s own long-standing doc comment: "gis3d
+/// has no CPU-side heightmap tessellator yet"). Honest placeholder geometry, not a fake: every field
+/// is real, computed, and round-trips — the day a tessellator lands, only this function's body needs
+/// to grow real per-vertex elevation.
+pub fn gis_terrain_mesh_from_snapshot(document: &GisTerrainSnapshot) -> SemioMeshSnapshot {
+    let bounds = crate::standards::v1::subsets::any::schema::inferences::bounds::lon_lat_bounds(&crate::standards::v1::subsets::any::schema::inferences::bounds::imported_lon_lat_positions(document));
+    let (min_x, min_y, max_x, max_y) = bounds.map_or((0.0, 0.0, 1.0, 1.0), |b| (b.lon_min, b.lat_min, b.lon_max, b.lat_max));
+    let (min_x, max_x) = if min_x < max_x { (min_x, max_x) } else { (min_x, min_x + 1.0) };
+    let (min_y, max_y) = if min_y < max_y { (min_y, max_y) } else { (min_y, min_y + 1.0) };
+    // 🏔️ Honest gap (matches `gis3d_scene_media`'s own doc comment): with no DEM heightfield, every
+    // vertex is flat at z=0 regardless of `exaggeration` — `exaggeration` still round-trips as
+    // real document state; it currently has no
+    // per-vertex effect on THIS placeholder surface yet.
+    let z = 0.0;
+    let positions = vec![SemioPoint3 { x: min_x, y: min_y, z }, SemioPoint3 { x: max_x, y: min_y, z }, SemioPoint3 { x: max_x, y: max_y, z }, SemioPoint3 { x: min_x, y: max_y, z }];
+    SemioMeshSnapshot {
+        schema: "s.stdio.semio.mesh".into(),
+        meshes: vec![SemioMesh {
+            id: "gisterrain-surface".into(),
+            primitives: vec![SemioPrimitive { id: "gisterrain-surface-quad".into(), topology: SemioTopology::Triangles, positions, normals: Vec::new(), uvs: Vec::new(), colors: Vec::new(), indices: vec![0, 1, 2, 0, 2, 3], material_id: None }],
+        }],
+        materials: Vec::new(),
+        textures: Vec::new(),
+    }
+}
+//#endregion 🔖️MeshComposition
+}
+//#endregion 🧩️ArtifactItems3

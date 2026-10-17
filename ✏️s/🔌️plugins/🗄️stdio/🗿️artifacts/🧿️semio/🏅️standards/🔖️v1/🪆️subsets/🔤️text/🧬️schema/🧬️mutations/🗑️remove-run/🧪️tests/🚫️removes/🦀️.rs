@@ -5,25 +5,26 @@
 //! the BASE index, and wraps the whole shortened sequence in `SemioTextRunList`. The German run at
 //! #1 is the one taken out here; the two English runs close up around it.
 
+use semio_framework_test_fixtures::fixture_text;
 use semio_s_artifact_stdio_semio_text_model::schema::diff::SemioTextDiff;
 use semio_s_artifact_stdio_semio_text_mutations::schema::mutations::SemioTextMutation;
 use semio_s_artifact_stdio_semio_text_model::schema::snapshot::SemioTextSnapshot;
 use protocol::Mutation;
 
-const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗑️remove-run/🚫️removes/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗑️remove-run/🚫️removes/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗑️remove-run/🚫️removes/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗑️remove-run/🚫️removes/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗑️remove-run/🚫️removes/🎯️outcome/🔣️.json");
+static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗑️remove-run/🚫️removes/📸️snapshot/⬅️before/🔣️.json"));
+static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗑️remove-run/🚫️removes/📸️snapshot/➡️after/🔣️.json"));
+static MUTATION: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗑️remove-run/🚫️removes/🦠️mutation/🔣️.json"));
+static DIFF: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗑️remove-run/🚫️removes/🔺️diff/🔣️.json"));
+static OUTCOME: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗑️remove-run/🚫️removes/🎯️outcome/🔣️.json"));
 
 fn before() -> SemioTextSnapshot {
-    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("remove-run before snapshot decodes")
+    semio_framework_pack_json::from_json_str((*BEFORE), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("remove-run before snapshot decodes")
 }
 fn expected_after() -> SemioTextSnapshot {
-    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("remove-run after snapshot decodes")
+    semio_framework_pack_json::from_json_str((*AFTER), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("remove-run after snapshot decodes")
 }
 fn remove_run() -> SemioTextMutation {
-    semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("remove-run mutation decodes")
+    semio_framework_pack_json::from_json_str((*MUTATION), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("remove-run mutation decodes")
 }
 
 /// ▶️ Run #1 (`de`/`Beta`) disappears and the surrounding English runs close up.
@@ -55,14 +56,14 @@ async fn the_undo_insert_run_puts_the_german_run_back_in_the_middle() {
 /// 🔣️ Both snapshots and the `{"RemoveRun":{"index":1}}` payload are canonical fixed points.
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
-    for (label, text) in [("before", BEFORE), ("after", AFTER)] {
+    for (label, text) in [("before", (*BEFORE)), ("after", (*AFTER))] {
         let decoded: SemioTextSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
         let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "remove-run/removes-the-middle-run: committed {label} JSON is not canonical");
     }
     let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&(remove_run()))).expect("remove-run mutation encodes");
-    let original: serde_json::Value = serde_json::from_str(MUTATION).expect("remove-run mutation reparses");
+    let original: serde_json::Value = serde_json::from_str((*MUTATION)).expect("remove-run mutation reparses");
     assert_eq!(reencoded, original, "remove-run/removes-the-middle-run: committed mutation JSON is not canonical");
 }
 
@@ -70,7 +71,7 @@ async fn committed_json_is_canonical() {
 /// rejection branch must not fire.
 #[semio_framework_async_macros::async_test]
 async fn declared_outcome_holds_without_a_target_missing_rejection() {
-    let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
+    let outcome: serde_json::Value = serde_json::from_str((*OUTCOME)).expect("outcome decodes");
     assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("applied"), "remove-run/removes-the-middle-run: this case is declared applied");
     let produced = remove_run().diff(&before());
     assert!(produced.messages().is_empty(), "an in-range remove index must not raise mutation.target-missing");
@@ -83,23 +84,23 @@ async fn produces_committed_diff() {
     let base = before();
     let outcome = <SemioTextMutation as Mutation<SemioTextSnapshot>>::diff(&remove_run(), &base);
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
-    let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
+    let committed: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff decodes");
     assert_eq!(produced, committed, "remove-run/removes-the-middle-run: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
 
 /// 🔣️ The committed diff is canonical, and its `runs.values` is the SHORTENED sequence.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
-    let decoded: SemioTextDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed remove-run diff decodes");
+    let decoded: SemioTextDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed remove-run diff decodes");
     let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("diff re-encodes");
-    let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
+    let original: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff reparses");
     assert_eq!(reencoded, original, "remove-run/removes-the-middle-run: committed diff JSON is not canonical");
 }
 
 /// 🩹 Applying the committed diff to `before` yields `after`.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: SemioTextDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed remove-run diff decodes");
+    let decoded: SemioTextDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed remove-run diff decodes");
     let produced = protocol::apply_diff(&decoded, &before()).expect("committed remove-run diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "remove-run/removes-the-middle-run: committed diff did not carry before to after");
 }

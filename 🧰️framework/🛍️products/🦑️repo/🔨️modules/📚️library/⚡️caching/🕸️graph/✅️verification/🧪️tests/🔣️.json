@@ -1,0 +1,85 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "fault": "none",
+      "admit": true
+    },
+    {
+      "fault": "edge",
+      "admit": false
+    },
+    {
+      "fault": "project",
+      "admit": false
+    },
+    {
+      "fault": "target",
+      "admit": false
+    },
+    {
+      "fault": "cache",
+      "admit": false
+    },
+    {
+      "fault": "outputs",
+      "admit": false
+    },
+    {
+      "fault": "dependsOn",
+      "admit": false
+    }
+  ],
+  "methods": [
+    {
+      "name": "createScriptInputCache",
+      "parameters": 1,
+      "asynchronous": false
+    },
+    {
+      "name": "relativeScriptInputs",
+      "parameters": 4,
+      "asynchronous": true
+    },
+    {
+      "name": "targetPolicy",
+      "parameters": 3,
+      "asynchronous": false
+    },
+    {
+      "name": "projectInputs",
+      "parameters": 7,
+      "asynchronous": true
+    },
+    {
+      "name": "withWasmTooling",
+      "parameters": 2,
+      "asynchronous": false
+    },
+    {
+      "name": "playgroundPreparationTargets",
+      "parameters": 6,
+      "asynchronous": true
+    },
+    {
+      "name": "workspaceCatalogBuildContributionsV1",
+      "parameters": 1,
+      "asynchronous": true
+    },
+    {
+      "name": "collectImportEdges",
+      "parameters": 9,
+      "asynchronous": true
+    },
+    {
+      "name": "createDependenciesImplementation",
+      "parameters": 2,
+      "asynchronous": true
+    },
+    {
+      "name": "withNativePreparation",
+      "parameters": 6,
+      "asynchronous": false
+    }
+  ]
+}

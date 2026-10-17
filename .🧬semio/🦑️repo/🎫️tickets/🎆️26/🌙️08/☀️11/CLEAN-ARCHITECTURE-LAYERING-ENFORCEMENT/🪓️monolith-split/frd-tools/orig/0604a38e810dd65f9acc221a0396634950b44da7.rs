@@ -1,0 +1,275 @@
+use crate::{standards::isobmff::subsets::any::schema::snapshot::Mp4Movie, standards::isobmff::subsets::any::schema::snapshot::Mp4TrackMetadata, standards::isobmff::subsets::any::schema::snapshot::STDIO_MP4_DOCUMENT_SCHEMA};
+use crate::standards::isobmff::subsets::any::io::{normalized_chunk_sample_counts};
+use crate::apply_mutation;
+use crate::standards::isobmff::subsets::any::io::Mp4AnalyzerAnalysis;
+use crate::standards::isobmff::subsets::any::io::*;
+
+#[test]
+fn incremental_mux_matches_the_real_fixture_under_small_grants() {
+    let source = &std::fs::read(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🧪️tests/🧫️fixtures/🎬️.mp4")).expect("the committed fixture is readable")[..];
+    let snapshot = decode_mp4(source).expect("real MP4 fixture decodes");
+    let mut cursor = Mp4EncodeCursor::new(&snapshot);
+    let mut output = Vec::new();
+    let mut advances = 0usize;
+    loop {
+        advances += 1;
+        assert!(advances < 1_000_000, "incremental MP4 mux must terminate");
+        match cursor.advance(&snapshot, 257).expect("bounded MP4 mux advance") {
+            Mp4EncodeAdvance::Progress => {}
+            Mp4EncodeAdvance::Chunk(bytes) => { assert!(!bytes.is_empty() && bytes.len() <= 257); output.extend(bytes); }
+            Mp4EncodeAdvance::Complete => break,
+        }
+    }
+    assert!(advances > 100, "the real mux must cross many cancellable checkpoints");
+    assert_eq!(output, source);
+    assert_eq!(cursor.emitted_bytes(), source.len() as u64);
+}
+use crate::standards::isobmff::subsets::any::schema::snapshot::{Mp4Codec, Mp4CodecFormat, Mp4Ftyp, Mp4HevcConfig, Mp4HevcNalArray, Mp4Sample, Mp4Snapshot, Mp4Track};
+use protocol::command::DiffAlgebra;
+use protocol::MutationDiff;
+
+async fn synthetic_snapshot() -> Mp4Snapshot {
+    Mp4Snapshot {
+        schema: STDIO_MP4_DOCUMENT_SCHEMA.into(),
+        ftyp: Mp4Ftyp { major_brand: "isom".into(), minor_version: 512, compatible_brands: vec!["isom".into(), "avc1".into(), "mp41".into()] },
+        movie: Mp4Movie::default(),
+        tracks: vec![Mp4Track {
+            track_id: 1,
+            timescale: 90000,
+            codec: Mp4Codec::avc(vec![vec![0x67, 0x42, 0x00, 0x1E, 0x8C, 0x8D, 0x40]], vec![vec![0x68, 0xCE, 0x3C, 0x80]], 4, None),
+            width: 64,
+            height: 64,
+            metadata: Mp4TrackMetadata::default(),
+            chunk_sample_counts: vec![3],
+            samples: vec![
+                Mp4Sample { data: vec![0, 0, 0, 6, 0x65, 1, 2, 3, 4, 5], duration: 3000, cts_offset: 0, sync: true },
+                Mp4Sample { data: vec![0, 0, 0, 4, 0x61, 6, 7, 8], duration: 3000, cts_offset: 3000, sync: false },
+                Mp4Sample { data: vec![0, 0, 0, 4, 0x61, 9, 10, 11], duration: 3000, cts_offset: 0, sync: false },
+            ],
+        }],
+    }
+}
+
+#[semio_framework_async_macros::async_test]
+async fn sniff_recognizes_real_ftyp_magic_only() {
+    let bytes = encode_mp4(&synthetic_snapshot().await);
+    assert!(sniff_real_bytes(&bytes));
+    assert!(!sniff_real_bytes(b"not an mp4 at all"));
+    assert!(!sniff_real_bytes(&[0u8, 0, 0, 8, b'f', b'r', b'e', b'e']));
+}
+
+#[semio_framework_async_macros::async_test]
+async fn decode_encode_decode_round_trips_synthetic_snapshot() {
+    let snap = synthetic_snapshot().await;
+    let bytes = encode_mp4(&snap);
+    let back = decode_mp4(&bytes).expect("decode");
+    assert_eq!(back, snap, "decode(encode(snapshot)) must reproduce the snapshot exactly");
+}
+
+//#region codec_retention_law — the REAL 43KB fixture
+/// 🎬️ The real 43KB `logo.mp4` (copied verbatim from `🧰️framework/🔨️modules/🖼️assets/🪧️logos/🎞️animation/🎬️animation.mp4`
+/// into this artifact's own examples per W0/W1b — see `fixtures/mp4/NOTES.md` in the ticket
+/// folder: `ffprobe` confirms `codec_name=h264, width=410, height=140, nb_frames=1441,
+/// nal_length_size=4, extradata_size=46`).
+const REAL_LOGO_MP4: &[u8] = include_bytes!("../../../📚️examples/🎬️demo/🖼️assets/🎬️.mp4");
+
+#[semio_framework_async_macros::async_test]
+async fn codec_retention_law_decodes_the_real_fixture_with_expected_shape() {
+    let snap = decode_mp4(REAL_LOGO_MP4).expect("decode the real 43KB fixture");
+    assert_eq!(snap.ftyp.major_brand, "isom");
+    assert!(snap.ftyp.compatible_brands.iter().any(|b| b == "avc1"), "compatible_brands: {:?}", snap.ftyp.compatible_brands);
+    assert_eq!(snap.tracks.len(), 1, "logo.mp4 has exactly one (video) track");
+    let track = &snap.tracks[0];
+    assert_eq!(track.width, 410);
+    assert_eq!(track.height, 140);
+    assert_eq!(track.samples.len(), 1441, "ffprobe nb_frames=1441");
+    assert_eq!(track.codec.nal_length_size, 4, "ffprobe nal_length_size=4");
+    assert!(!track.codec.sps.is_empty() && !track.codec.pps.is_empty(), "avcC must carry real SPS/PPS (extradata_size=46)");
+    assert!(track.samples[0].sync, "the first sample of a real mp4 is always a sync/IDR sample");
+    assert!(track.samples.iter().any(|s| !s.data.is_empty()), "sample payload bytes must be real, not fabricated");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn codec_retention_law_round_trips_the_real_fixture_snapshot_exactly() {
+    // 🧪️ Strongest provable claim within this codec's documented normal-form scope (see this
+    // module's doc comment): decode -> encode -> re-decode reproduces the EXACT same
+    // snapshot — every sample's bytes/duration/cts_offset/sync flag, every track field, ftyp,
+    // and every named logical field survives through a real mux/demux cycle on
+    // real, non-synthetic, 1441-frame H.264 data.
+    let snap = decode_mp4(REAL_LOGO_MP4).expect("decode");
+    let re_encoded = encode_mp4(&snap);
+    let round_tripped = decode_mp4(&re_encoded).expect("re-decode the round-tripped bytes");
+    assert_eq!(round_tripped, snap, "decode(encode(decode(real_fixture))) must equal decode(real_fixture)");
+
+    // 🧪️ Sample PAYLOAD bytes (the actual codec substance) are byte-exact against the ORIGINAL
+    // file bytes too, not just self-consistent with our own re-encode — every sample's `data`
+    // must appear verbatim somewhere in the source file (proof the bytes were genuinely read
+    // from `mdat`, never fabricated).
+    for sample in &snap.tracks[0].samples[..50.min(snap.tracks[0].samples.len())] {
+        assert!(REAL_LOGO_MP4.windows(sample.data.len().max(1)).any(|w| w == sample.data.as_slice()), "sample data must be a verbatim slice of the real source file");
+    }
+}
+
+#[semio_framework_async_macros::async_test]
+async fn exact_bauen_mit_bestand_fixture_round_trips_byte_for_byte() {
+    use crate::standards::isobmff::subsets::any::schema::{
+        diff::Mp4Diff,
+        mutations::{Mp4Mutation},
+    };
+    use protocol::{DiffBinary,DiffCodec,DiffText, Mutation, OpBinary, OpText};
+    use semio_framework_plugin::{io::AnalyzeSource, ArtifactAnalysis, ArtifactComposition, io::ComposeSource};
+
+    let bytes = std::fs::read(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🧪️tests/🧫️fixtures/🎬️.mp4")).expect("the committed fixture is readable");
+    let snapshot = decode_mp4(&bytes).expect("decode exact MP4 fixture");
+    assert_eq!(encode_mp4(&snapshot), bytes);
+
+    let pack = <Mp4Snapshot as pack::snapshot::ArtifactPack>::encode_pack(&snapshot);
+    let from_pack = <Mp4Snapshot as pack::snapshot::ArtifactPack>::decode_pack(&pack).expect("decode MP4 pack");
+    assert_eq!(encode_mp4(&from_pack), bytes);
+
+    let dsl = <Mp4Snapshot as pack::snapshot::ArtifactDsl>::print_dsl(&snapshot);
+    let from_dsl = <Mp4Snapshot as pack::snapshot::ArtifactDsl>::parse_dsl(&dsl).expect("parse MP4 DSL");
+    assert_eq!(encode_mp4(&from_dsl), bytes);
+
+    let analysis = Mp4AnalyzerAnalysis::analyze(&[AnalyzeSource::Binary(&pack)]);
+    let analyzed = analysis.parts.snapshot.expect("MP4 analyzer snapshot");
+    assert_eq!(encode_mp4(&analyzed), bytes);
+
+    let dialect = <Mp4AnalyzerAnalysis as ArtifactAnalysis>::DIALECT;
+    let composition = Mp4ComposerComposition::compose(&[ComposeSource { dialect, payload: AnalyzeSource::Binary(&pack) }]).expect("compose MP4 pack");
+    assert_eq!(encode_mp4(&composition.snapshot), bytes);
+
+    let self_diff = Mp4Diff::default();
+    let text_diff = Mp4Diff::parse_diff(&self_diff.print_diff()).expect("parse MP4 diff text");
+    assert_eq!(encode_mp4(&protocol::apply_diff(&text_diff, &snapshot).unwrap()), bytes);
+    let binary_diff = Mp4Diff::decode_diff(&self_diff.encode_diff().expect("encode MP4 diff")).expect("decode MP4 diff");
+    assert_eq!(encode_mp4(&protocol::apply_diff(&binary_diff, &snapshot).unwrap()), bytes);
+
+    let mut no_op = snapshot.clone();
+    let no_op_mutation = Mp4Mutation::SetMovie(crate::standards::isobmff::subsets::any::schema::mutations::set_movie::SetMovie { movie: no_op.movie.clone() });
+    apply_mutation(&mut no_op, &no_op_mutation);
+    assert_eq!(encode_mp4(&no_op), bytes);
+
+    let set_movie = Mp4Mutation::SetMovie(crate::standards::isobmff::subsets::any::schema::mutations::set_movie::SetMovie { movie: snapshot.movie.clone() });
+    assert_eq!(Mp4Mutation::parse_op(&set_movie.print_op()).expect("parse MP4 operation text"), set_movie);
+    assert_eq!(Mp4Mutation::decode_op(&set_movie.encode_op().expect("encode MP4 operation")).expect("decode MP4 operation"), set_movie);
+
+    let mut changed = snapshot.clone();
+    let mutation = Mp4Mutation::SetTrackDimensions(crate::standards::isobmff::subsets::any::schema::mutations::set_track_dimensions::SetTrackDimensions { track_index: 0, width: snapshot.tracks[0].width + 1, height: snapshot.tracks[0].height });
+    apply_mutation(&mut changed, &mutation);
+    let changed_bytes = encode_mp4(&changed);
+    assert_ne!(changed_bytes, bytes, "semantic mutation must materialize changed logical state");
+
+    let diff = protocol::Mutation::diff(&mutation, &snapshot).into_parts().0;
+    let after = protocol::apply_diff(&diff, &snapshot).unwrap();
+    let restored = protocol::apply_diff(&diff.inverse(&snapshot), &after).unwrap();
+    assert_eq!(restored, snapshot, "mutation inverse must reconstruct the logical snapshot");
+    assert_eq!(encode_mp4(&restored), bytes, "restored logical state must materialize the imported MP4 exactly");
+    for inverse in mutation.inverse(&snapshot).expect("valid retained mutation inverse fixture").into_iter().rev() {
+        apply_mutation(&mut changed, &inverse);
+    }
+    assert_eq!(encode_mp4(&changed), bytes);
+}
+//#endregion codec_retention_law
+
+//#region chunk_grouping_reconciliation
+/// 🧮️ `chunk_sample_counts` is a RETAINED `stsc`/`stco` layout hint, and the sample list is the
+/// truth. When the two disagree the encoder normalizes to one chunk per track instead of
+/// aborting — reachable by construction, not a defensive nicety: a caller supplying a whole
+/// document (a natural-file open) and a sample leaf that drops a sample cannot be expected to restate a
+/// writer's chunking. Ticket 26/08/23/END-TO-END-TESTING-REFACTOR: `mutate-mp4-isobmff`'s
+/// whole-document row dropped the first track's last sample, and this encoder used to panic on it
+/// (`MP4 chunk sample counts must cover every sample`, left 47 right 46), taking the whole
+/// subject host down before a single scenario could report.
+#[test]
+fn a_stale_chunk_grouping_is_reconciled_against_the_sample_list() {
+    let sample = |n: u8| Mp4Sample { data: vec![0, 0, 0, 1, n], duration: 1000, cts_offset: 0, sync: true };
+    let track = |counts: Vec<u32>, samples: Vec<Mp4Sample>| Mp4Track {
+        track_id: 1,
+        timescale: 1000,
+        codec: Mp4Codec::avc(vec![vec![0x67, 0x42, 0x00, 0x1E, 0x8C, 0x8D, 0x40]], vec![vec![0x68, 0xCE, 0x3C, 0x80]], 4, None),
+        width: 16,
+        height: 16,
+        metadata: Mp4TrackMetadata::default(),
+        chunk_sample_counts: counts,
+        samples,
+    };
+    assert_eq!(normalized_chunk_sample_counts(&track(vec![2, 1], vec![sample(1), sample(2), sample(3)])), vec![2, 1], "a grouping that partitions the sample list is retained verbatim");
+    assert_eq!(normalized_chunk_sample_counts(&track(vec![2, 1], vec![sample(1), sample(2)])), vec![2], "a grouping left over from a longer sample list normalizes to one chunk");
+    assert_eq!(normalized_chunk_sample_counts(&track(vec![1], vec![sample(1), sample(2)])), vec![2], "a grouping left over from a shorter sample list normalizes to one chunk");
+    assert_eq!(normalized_chunk_sample_counts(&track(vec![], vec![sample(1)])), vec![1], "no retained grouping at all is the same one-chunk normal form");
+
+    let stale = Mp4Snapshot {
+        schema: STDIO_MP4_DOCUMENT_SCHEMA.into(),
+        ftyp: Mp4Ftyp { major_brand: "isom".into(), minor_version: 512, compatible_brands: vec!["isom".into(), "avc1".into()] },
+        movie: Mp4Movie::default(),
+        tracks: vec![track(vec![3], vec![sample(1), sample(2)])],
+    };
+    let bytes = encode_mp4(&stale);
+    assert!(sniff_real_bytes(&bytes), "a snapshot whose retained grouping is stale still encodes to a real MP4");
+}
+//#endregion chunk_grouping_reconciliation
+
+//#region sample_entry_formats
+/// 🔬 Every modelled sample entry survives decode∘encode with its own box type and typed
+/// configuration record: `avc3` keeps `avc3` (not normalized to `avc1`), HEVC keeps every `hvcC`
+/// field including the 48-bit constraint flags and NAL arrays, and Motion-JPEG writes no record.
+#[test]
+fn every_sample_entry_format_round_trips_with_its_configuration_record() {
+    let hevc = Mp4HevcConfig {
+        general_profile_space: 1,
+        general_tier_flag: true,
+        general_profile_idc: 2,
+        general_profile_compatibility_flags: 0x2000_0001,
+        general_constraint_indicator_flags: 0x9000_0000_0001,
+        general_level_idc: 120,
+        min_spatial_segmentation_idc: 0x0ABC,
+        parallelism_type: 3,
+        chroma_format_idc: 2,
+        bit_depth_luma_minus8: 2,
+        bit_depth_chroma_minus8: 1,
+        avg_frame_rate: 7500,
+        constant_frame_rate: 1,
+        num_temporal_layers: 3,
+        temporal_id_nested: false,
+        arrays: vec![Mp4HevcNalArray { array_completeness: true, nal_unit_type: 32, nal_units: vec![vec![0x40, 0x01, 0x0C]] }, Mp4HevcNalArray { array_completeness: false, nal_unit_type: 33, nal_units: vec![vec![0x42, 0x01], vec![0x42, 0x01, 0x01]] }],
+    };
+    let codecs = [
+        Mp4Codec { format: Mp4CodecFormat::Avc3, ..Mp4Codec::avc(vec![vec![0x67, 0x42, 0x00, 0x1E, 0x8C, 0x8D, 0x40]], vec![vec![0x68, 0xCE, 0x3C, 0x80]], 4, None) },
+        Mp4Codec::hevc(Mp4CodecFormat::Hvc1, hevc.clone(), 2),
+        Mp4Codec::hevc(Mp4CodecFormat::Hev1, Mp4HevcConfig::default(), 4),
+        Mp4Codec::jpeg(Mp4CodecFormat::Jpeg),
+        Mp4Codec::jpeg(Mp4CodecFormat::Mjpa),
+    ];
+    for codec in codecs {
+        let format = codec.format;
+        let snapshot = Mp4Snapshot {
+            schema: STDIO_MP4_DOCUMENT_SCHEMA.into(),
+            ftyp: Mp4Ftyp { major_brand: "isom".into(), minor_version: 0, compatible_brands: vec!["isom".into()] },
+            movie: Mp4Movie::default(),
+            tracks: vec![Mp4Track { track_id: 1, timescale: 1000, codec, width: 8, height: 8, metadata: Mp4TrackMetadata::default(), chunk_sample_counts: vec![1], samples: vec![Mp4Sample { data: vec![0xFF, 0xD8, 0xFF, 0xD9], duration: 40, cts_offset: 0, sync: true }] }],
+        };
+        let bytes = encode_mp4(&snapshot);
+        assert!(bytes.windows(4).any(|w| w == format.fourcc().as_bytes()), "{format:?} writes its own sample entry box type");
+        assert_eq!(bytes.windows(4).any(|w| w == b"hvcC"), format.is_hevc(), "{format:?} writes hvcC exactly when HEVC");
+        assert_eq!(bytes.windows(4).any(|w| w == b"avcC"), format.is_avc(), "{format:?} writes avcC exactly when AVC");
+        let decoded = decode_mp4(&bytes).expect("decodes");
+        assert_eq!(decoded, snapshot, "{format:?} round trips exactly");
+        assert_eq!(encode_mp4(&decoded), bytes, "{format:?} re-encodes byte-for-byte");
+    }
+}
+
+#[test]
+fn an_unmodelled_sample_entry_is_rejected_by_name() {
+    let snapshot = Mp4Snapshot {
+        schema: STDIO_MP4_DOCUMENT_SCHEMA.into(),
+        ftyp: Mp4Ftyp { major_brand: "isom".into(), minor_version: 0, compatible_brands: vec!["isom".into()] },
+        movie: Mp4Movie::default(),
+        tracks: vec![Mp4Track { track_id: 1, timescale: 1000, codec: Mp4Codec::jpeg(Mp4CodecFormat::Mjpa), width: 8, height: 8, metadata: Mp4TrackMetadata::default(), chunk_sample_counts: vec![1], samples: vec![Mp4Sample { data: vec![1, 2, 3], duration: 40, cts_offset: 0, sync: true }] }],
+    };
+    let mut bytes = encode_mp4(&snapshot);
+    let at = bytes.windows(4).position(|w| w == b"mjpa").expect("sample entry present");
+    bytes[at..at + 4].copy_from_slice(b"vp09");
+    assert_eq!(decode_mp4(&bytes).expect_err("vp09 is not modelled"), "unsupported MP4 sample entry vp09");
+}
+//#endregion sample_entry_formats

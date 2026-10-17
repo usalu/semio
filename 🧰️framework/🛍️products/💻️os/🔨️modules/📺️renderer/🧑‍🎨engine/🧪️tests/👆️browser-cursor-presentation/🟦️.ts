@@ -52,6 +52,7 @@ describe("👆️ browser cursor presentation", () => {
         appearance: { preference: "", systemDark: false },
         platform: "MacIntel",
         storage: {},
+        catalog: { version: 1 as const, targets: [], hosts: [], playgrounds: [] },
       },
       setTimer: () => 1,
       clearTimer: () => {},

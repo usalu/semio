@@ -1,7 +1,7 @@
 //! 🧪️ `createEdge` / `deleteEdge` laws: the compatibility gate, the occupied-handle refusal, and the
 //! engagement line that drives the same arm.
 
-use crate::editor::puzzle2d::unit_tests::context::*;
+use crate::editor::puzzle2d::testkit::*;
 use {crate::editor::puzzle2d::snapshot::board_snapshot_edges, crate::editor::puzzle2d::snapshot::board_snapshot_nodes};
 use semio_framework_plugin::kernel::Effect;
 use semio_framework_plugin::InvocationResult;

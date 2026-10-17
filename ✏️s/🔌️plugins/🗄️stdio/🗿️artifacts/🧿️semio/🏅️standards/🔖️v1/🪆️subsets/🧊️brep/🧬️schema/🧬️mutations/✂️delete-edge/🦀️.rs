@@ -1,6 +1,5 @@
 //! 🗑️ `delete-edge` — removes an id-keyed edge. Deliberately does NOT cascade into `loop.edges` membership: `Loop` carries no `PersistentLabel` (SMO's ruling excludes `create-loop`/`delete-loop` for exactly this reason) and no modify-verb exists for a loop's edge list, so severing that membership here would produce a diff with no corresponding inverse in the approved vocabulary — flagged as an honest limitation, not silently invented. Absent `id` is `mutation.target-missing` (Error, empty diff) — see the sibling `🔺️diff` leaf, which is the authority; this line used to claim a no-op and did not match it.
 
-use crate::schema::mutations::SemioBrepMutation;
 use crate::schema::snapshot::SemioBrepSnapshot;
 
 //#region 🔖️Payload
@@ -11,13 +10,16 @@ pub struct DeleteEdge {
     pub id: String,
 }
 
-impl protocol::MutationKind<SemioBrepSnapshot, SemioBrepMutation> for DeleteEdge {
+impl<Op> protocol::MutationKind<SemioBrepSnapshot, Op> for DeleteEdge
+where
+    Op: protocol::Mutation<SemioBrepSnapshot, Diff = crate::schema::diff::SemioBrepDiff> + From<DeleteEdge> + From<crate::schema::mutations::create_edge::CreateEdge>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "edge", kind: "delete-edge", record: "DeletedEdge" };
 
-    fn diff(&self, base: &SemioBrepSnapshot) -> protocol::MutationOutcome<<SemioBrepMutation as protocol::Mutation<SemioBrepSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioBrepSnapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<SemioBrepSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &SemioBrepSnapshot) -> Result<Vec<SemioBrepMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &SemioBrepSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

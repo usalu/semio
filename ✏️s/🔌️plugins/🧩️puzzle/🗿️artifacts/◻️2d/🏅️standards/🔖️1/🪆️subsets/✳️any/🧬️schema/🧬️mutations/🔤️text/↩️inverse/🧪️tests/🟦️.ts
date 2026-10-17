@@ -16,7 +16,6 @@ test("Puzzle2d optional text inverse restores original first-owner values and pa
   expect(restored).toEqual(before);
   for(const pause of fixture.pausePoints)expect({pause,inverse:original}).toEqual({pause,inverse:row.expectedInverse});
  }}finally{db.close()}
- console.log("[DEBUG] optional text inverse independently restores fourteen SQLite first-owner/RFC6902 cases",fixture.pausePoints);
  const path=resolve(import.meta.dir,"../🦀️.rs");expect(existsSync(path)).toBe(true);
  const source=readFileSync(path,"utf8");
  for(const marker of ["Puzzle2dTextInverseCursor","Puzzle2dTextPreparationCursor","RetainedCloneBinding::close_one","ControlledRetirement","push_reserved","self.identifier.close_step(grant)","self.preparation.close_step(grant)"])expect(source).toContain(marker);

@@ -1,9 +1,9 @@
 import{BundleScript,ScriptRouter,receiveScriptProcessInvocation,createIssuedResourceControlV1}from"../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import{readFileSync}from"node:fs";
 import{basename,join}from"node:path";
-import{withPrintExecutionV1}from"../../../../🧰️framework/🛍️products/📓️print/📦️artifacts/🎛️operation/🟦️.ts";
-import{publishPrintArtifact,withPublishedPrintDocumentV1}from"../../../../🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/🟦️.ts";
-import{readPrintMaterialFileV1}from"../../../../🧰️framework/🛍️products/📓️print/📦️artifacts/📥️material/📤️producer/🟦️.ts";
+import{withPrintExecutionV1}from"../../../../🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript/📦️artifacts/🎛️operation/🟦️.ts";
+import{publishPrintArtifact,withPublishedPrintDocumentV1}from"../../../../🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript/🔨️modules/🖨️tectonic-template-compilation/🟦️.ts";
+import{readPrintMaterialFileV1}from"../../../../🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript/📦️artifacts/📥️material/📤️producer/🟦️.ts";
 type ReportDocument = { id: string; texPath: string; sources: string[]; actorNetwork: boolean };
 const catalog: { version: number; documents: ReportDocument[] } = JSON.parse(readFileSync(new URL("./🔣️.json", import.meta.url), "utf8"));
 const product = "♻️mit-bestand/📋️bericht";

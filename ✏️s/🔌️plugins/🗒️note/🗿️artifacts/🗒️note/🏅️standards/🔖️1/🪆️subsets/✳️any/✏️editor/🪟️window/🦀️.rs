@@ -1,6 +1,6 @@
 //! 🪟️ Exact-instance Note composite-window configuration and transient owners.
 
-use crate::editor::note::NOTE_PLAY_WINDOW_COMPOSITE;
+use crate::editor::note::modes::edit::windows::composite::NOTE_PLAY_WINDOW_COMPOSITE;
 use crate::NoteCamera;
 
 #[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, Default, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
@@ -25,13 +25,13 @@ pub struct NoteCompositeWindowTransient {
     /// — never config, never history.
     #[value(default)]
     #[cfg_attr(test, serde(skip))]
-    pub ink_tool: Option<crate::editor::note::commands::ink_apply_events::NoteInkToolState>,
+    pub ink_tool: Option<crate::editor::note::window::schema::NoteInkToolState>,
 }
 
 #[path = "🔺️diff/🦀️.rs"]
 mod diff;
 #[path = "🫧️transient/🦀️.rs"]
-mod transient;
+pub mod transient;
 pub use diff::{NoteCompositeWindowConfigDiff, NoteCompositeWindowTransientDiff};
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -162,7 +162,7 @@ mutation_wire!(NoteCompositeWindowTransientMutation);
 
 semio_framework_value::artifact_retire_struct!(NoteCompositeWindowTransient { engagement_input, ink_tool });
 
-fn note_composite_window_transient_preflight(mutation: &NoteCompositeWindowTransientMutation) -> Result<store::os_store::one_item::ArtifactStoreOneItemFootprint, String> {
+pub fn note_composite_window_transient_preflight(mutation: &NoteCompositeWindowTransientMutation) -> Result<store::os_store::one_item::ArtifactStoreOneItemFootprint, String> {
     let NoteCompositeWindowTransientMutation::Snapshot { transient } = mutation;
     let ink_tool = transient.ink_tool.as_ref().map_or(0, |state| semio_framework_pack_json::to_json_string(state).len());
     let retained_bytes = size_of::<NoteCompositeWindowTransient>().checked_add(transient.engagement_input.capacity()).and_then(|bytes| bytes.checked_add(ink_tool)).ok_or_else(|| "Note composite window transient footprint overflowed".to_string())?;

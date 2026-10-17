@@ -88,7 +88,9 @@
     "modules": [
       "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🔒️lock/🟨️.mjs",
       "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🟨️.mjs",
-      "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs"
+      "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs",
+      "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/📋️data/🟨️.mjs",
+      "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/📋️data/📥️load/🟨️.mjs"
     ],
     "lock": {
       "packages": [

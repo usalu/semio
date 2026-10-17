@@ -1,12 +1,11 @@
 //! 🌉️ Sequence editor owned byte/message bridge and primitive linear-memory exports.
 
-#[path = "📡️protocol.rs"]
-pub mod protocol;
+pub use semio_s_artifact_sequence_sequence_inferences::editor::sequence::wasm::protocol;
 
-use crate::editor::sequence::SequenceHost;
+use crate::editor::sequence::host::SequenceHost;
 use crate::{SequenceHostSnapshot, SlotRef};
 use protocol::{SequenceBridge, SequenceDomain, SequenceFailure, SequencePayloadReader};
-use semio_framework::abi::{decode_abi_message, encode_abi_message, AbiErrorCode, AbiMessage, AbiPort, AbiPortPoll, AbiWorkBudget};
+use semio_framework_abi::{decode_abi_message, encode_abi_message, AbiErrorCode, AbiMessage, AbiPort, AbiPortPoll, AbiWorkBudget};
 
 //#region 🔖️DomainAdapter
 

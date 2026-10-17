@@ -20,6 +20,7 @@ doctest = false
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 semio-framework-diagnostic = { workspace = true }
 semio-framework-pack-json = { workspace = true }
+semio-framework-test-fixtures = { path = "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-framework-value = { workspace = true }
 semio-s-artifact-remodel-remodeling-model = { workspace = true }
 semio-s-artifact-remodel-remodeling-model-diff = { workspace = true }

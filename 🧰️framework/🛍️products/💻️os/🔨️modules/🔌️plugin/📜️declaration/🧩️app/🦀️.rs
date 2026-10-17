@@ -1165,3 +1165,6 @@ pub fn viewer_rejects_action(action: &str) -> bool {
 pub fn is_time_travel_action_id(action: &str) -> bool {
     HISTORY_EDIT_ACTION_IDS.contains(&action)
 }
+
+#[path="📣️proofs/🦀️.rs"]
+mod bounded_first_step_proof_catalog;

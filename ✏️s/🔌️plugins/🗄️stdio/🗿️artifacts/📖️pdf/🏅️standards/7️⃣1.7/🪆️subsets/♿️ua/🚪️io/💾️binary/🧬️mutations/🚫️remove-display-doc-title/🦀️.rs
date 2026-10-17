@@ -1,6 +1,6 @@
 //! 🚫️ Direct binary codec for `remove-display-doc-title`.
 
-use crate::standards::v1_7::subsets::ua::schema::mutations::RemoveDisplayDocTitle;
+use crate::standards::v1_7::subsets::ua::schema::mutations::remove_display_doc_title::RemoveDisplayDocTitle;
 
 //#region 🔖️Identity
 pub const TAG: u8 = 7;
@@ -21,7 +21,5 @@ pub fn decode(bytes: &[u8]) -> Result<RemoveDisplayDocTitle, String> {
 //#endregion 🔖️Codec
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

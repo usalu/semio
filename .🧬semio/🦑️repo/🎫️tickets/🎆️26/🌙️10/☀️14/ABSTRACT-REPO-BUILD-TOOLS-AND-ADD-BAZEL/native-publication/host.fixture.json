@@ -1,0 +1,194 @@
+{
+  "version": 1,
+  "policy": {
+    "maximumElapsedMilliseconds": 120000,
+    "filesystemBytes": 33554432,
+    "maximumPhysicalBytes": 34603008,
+    "maximumReceiptBytes": 4096,
+    "fields": [
+      "dev",
+      "ino",
+      "mode",
+      "nlink",
+      "size",
+      "mtimeNs",
+      "ctimeNs"
+    ],
+    "stages": [
+      "accepted",
+      "observed",
+      "witnessed",
+      "detached",
+      "underlying",
+      "staged",
+      "published",
+      "attached",
+      "verified",
+      "settled"
+    ]
+  },
+  "cases": [
+    {
+      "name": "unchanged",
+      "before": {
+        "dev": "1",
+        "ino": "2",
+        "mode": "33152",
+        "nlink": "1",
+        "size": "17",
+        "mtimeNs": "100",
+        "ctimeNs": "200",
+        "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      "after": {
+        "dev": "1",
+        "ino": "2",
+        "mode": "33152",
+        "nlink": "1",
+        "size": "17",
+        "mtimeNs": "100",
+        "ctimeNs": "200",
+        "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      "changed": []
+    },
+    {
+      "name": "ctime-only",
+      "before": {
+        "dev": "1",
+        "ino": "2",
+        "mode": "33152",
+        "nlink": "1",
+        "size": "17",
+        "mtimeNs": "100",
+        "ctimeNs": "200",
+        "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      "after": {
+        "dev": "1",
+        "ino": "2",
+        "mode": "33152",
+        "nlink": "1",
+        "size": "17",
+        "mtimeNs": "100",
+        "ctimeNs": "201",
+        "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      "changed": [
+        "ctimeNs"
+      ]
+    },
+    {
+      "name": "mtime-and-ctime",
+      "before": {
+        "dev": "1",
+        "ino": "2",
+        "mode": "33152",
+        "nlink": "1",
+        "size": "17",
+        "mtimeNs": "100",
+        "ctimeNs": "200",
+        "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      "after": {
+        "dev": "1",
+        "ino": "2",
+        "mode": "33152",
+        "nlink": "1",
+        "size": "17",
+        "mtimeNs": "101",
+        "ctimeNs": "201",
+        "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      "changed": [
+        "mtimeNs",
+        "ctimeNs"
+      ]
+    },
+    {
+      "name": "inode",
+      "before": {
+        "dev": "1",
+        "ino": "2",
+        "mode": "33152",
+        "nlink": "1",
+        "size": "17",
+        "mtimeNs": "100",
+        "ctimeNs": "200",
+        "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      "after": {
+        "dev": "1",
+        "ino": "3",
+        "mode": "33152",
+        "nlink": "1",
+        "size": "17",
+        "mtimeNs": "100",
+        "ctimeNs": "200",
+        "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      "changed": [
+        "ino"
+      ]
+    },
+    {
+      "name": "bytes-hash",
+      "before": {
+        "dev": "1",
+        "ino": "2",
+        "mode": "33152",
+        "nlink": "1",
+        "size": "17",
+        "mtimeNs": "100",
+        "ctimeNs": "200",
+        "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      "after": {
+        "dev": "1",
+        "ino": "2",
+        "mode": "33152",
+        "nlink": "1",
+        "size": "17",
+        "mtimeNs": "100",
+        "ctimeNs": "200",
+        "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      },
+      "changed": [
+        "sha256"
+      ]
+    },
+    {
+      "name": "all-fields",
+      "before": {
+        "dev": "1",
+        "ino": "2",
+        "mode": "33152",
+        "nlink": "1",
+        "size": "17",
+        "mtimeNs": "100",
+        "ctimeNs": "200",
+        "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      "after": {
+        "dev": "500",
+        "ino": "501",
+        "mode": "502",
+        "nlink": "503",
+        "size": "504",
+        "mtimeNs": "505",
+        "ctimeNs": "506",
+        "sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+      },
+      "changed": [
+        "dev",
+        "ino",
+        "mode",
+        "nlink",
+        "size",
+        "mtimeNs",
+        "ctimeNs",
+        "sha256"
+      ]
+    }
+  ]
+}

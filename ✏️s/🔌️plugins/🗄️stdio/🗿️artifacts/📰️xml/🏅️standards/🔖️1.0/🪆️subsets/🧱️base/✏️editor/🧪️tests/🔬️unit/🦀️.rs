@@ -1,5 +1,15 @@
+use crate::editor::xml_any::modes::edit::windows::main;
+use crate::schema::snapshot::XmlNode;
+use crate::{XmlMutation, XmlSnapshot, STDIO_XML_DOCUMENT_SCHEMA};
+use semio_framework_plugin::ArtifactEditor;
+use semio_framework_plugin::Editor;
+use semio_framework_plugin::EditorApp;
+use semio_framework_plugin::Fault;
+use semio_framework_plugin::InteractiveJobClassification;
+use semio_s_artifact_stdio_contract::editing::SnapshotEditEvent;
+use crate::editor::xml_any::{decode_node_id, resolve_node, XML_ANY_KIT_ACTION_ID, xml_any_example_snapshot, xml_any_command_from_action, xml_any_emit};
 use crate::apply_mutation;
-use super::*;
+use crate::editor::xml_any::*;
 
 #[test]
 fn set_node_requires_a_complete_address_and_allows_an_explicit_empty_text_node() {

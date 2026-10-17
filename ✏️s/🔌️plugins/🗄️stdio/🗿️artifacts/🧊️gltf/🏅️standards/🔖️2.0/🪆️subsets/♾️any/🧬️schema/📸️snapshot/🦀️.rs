@@ -5,14 +5,46 @@
 
 
 #[cfg(any(test, feature = "testing"))]
-use crate::standards::v2_0::subsets::any::io::text::snapshot::ordered_attr_map;
+mod ordered_attr_map {
+    use serde::de::{MapAccess, Visitor};
+    use serde::ser::SerializeMap;
+    use serde::{Deserializer, Serializer};
+    use std::fmt;
+
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn serialize<S: Serializer>(attrs: &[(String, usize)], serializer: S) -> Result<S::Ok, S::Error> {
+        let mut map = serializer.serialize_map(Some(attrs.len()))?;
+        for (k, v) in attrs {
+            map.serialize_entry(k, v)?;
+        }
+        map.end()
+    }
+
+    struct AttrVisitor;
+    impl<'de> Visitor<'de> for AttrVisitor {
+        type Value = Vec<(String, usize)>;
+        fn expecting(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+            f.write_str("a JSON object mapping attribute semantic to accessor index")
+        }
+        fn visit_map<A: MapAccess<'de>>(self, mut map: A) -> Result<Self::Value, A::Error> {
+            let mut out = Vec::new();
+            while let Some((k, v)) = map.next_entry::<String, usize>()? {
+                out.push((k, v));
+            }
+            Ok(out)
+        }
+    }
+
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn deserialize<'de, D: Deserializer<'de>>(deserializer: D) -> Result<Vec<(String, usize)>, D::Error> {
+        deserializer.deserialize_map(AttrVisitor)
+    }
+}
 
 #[path = "🌱️value/🧵️canonical/🦀️.rs"]
 mod canonical;
 
 
-use crate::standards::v2_0::subsets::any::schema::STDIO_GLTF_DOCUMENT_SCHEMA;
-use framework_schema::ArtifactSchema;
 #[cfg(any(test, feature = "testing"))]
 use serde::{Deserialize, Serialize};
 
@@ -1186,38 +1218,6 @@ pub struct GltfDocument {
 
 //#endregion 🔖️Document
 
-//#region 🔖️Snapshot
-/// 📸️ Persisted `stdio.gltf` snapshot: the fully typed [`GltfDocument`] plus `buffers`: the
-/// resolved raw bytes for each `document.buffers[i]` (index-aligned), since a `.glb`-sourced
-/// buffer may have no `uri` at all and its bytes must live somewhere other than the JSON.
-#[derive(semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, Clone, Debug, PartialEq, ArtifactSchema, value_derive::ToValue, value_derive::FromValue)]
-#[cfg_attr(any(test, feature = "testing"), derive(Serialize, Deserialize))]
-#[cfg_attr(any(test, feature = "testing"), serde(rename_all = "camelCase"))]
-#[value(rename_all = "camelCase")]
-#[artifact_schema(id = "s.stdio.gltf")]
-pub struct GltfSnapshot {
-    #[state(artifact)]
-    pub schema: String,
-    #[state(artifact)]
-    #[cfg_attr(any(test, feature = "testing"), serde(default))]
-    #[value(default)]
-    pub document: GltfDocument,
-    #[state(artifact)]
-    #[cfg_attr(any(test, feature = "testing"), serde(default))]
-    #[value(default)]
-    pub buffers: Vec<Vec<u8>>,
-    #[state(artifact)]
-    #[cfg_attr(any(test, feature = "testing"), serde(default))]
-    #[value(default)]
-    pub source_form: GltfSourceForm,
-}
-
-impl Default for GltfSnapshot {
-    fn default() -> Self {
-        Self { schema: STDIO_GLTF_DOCUMENT_SCHEMA.into(), document: GltfDocument::default(), buffers: Vec::new(), source_form: GltfSourceForm::Json }
-    }
-}
-//#endregion 🔖️Snapshot
 
 /// 🔢️ `accessor.componentType` — the 6 values glTF 2.0 permits (§5.1.1).
 #[derive(semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, Eq)]

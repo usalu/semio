@@ -6,7 +6,7 @@ use crate::lifted_store::ArtifactStore;
 use semio_framework_os_store_one_item_batch::lifted_one_item_publication::ArtifactStoreBatchPublication;
 use semio_framework_os_store_read::{ArtifactStoreDisplacedOwnerReservation, ArtifactStoreDisplacedRetirements, ArtifactStoreRevisionAccumulatorRetirement, ArtifactStoreStringRetirement, ArtifactStoreStringVectorRetirement};
 use semio_framework_os_store_ledger::{ArtifactStoreHistoryCommitReservation, CursorRevisionAccumulator, CursorRevisionRecord};
-use semio_framework_os_store_one_item::{ArtifactStoreOneItemGrant, ArtifactStoreOneItemPreparationStep};
+use semio_framework_os_store_one_item::{ArtifactStoreOneItemGrant, ArtifactStoreOneItemPreparationStep, LaneItemReceipt};
 use semio_framework_os_store_one_item_publication::ArtifactStoreOneItemPublicationPhase;
 use semio_framework_os_store_text_io::ArtifactStoreSnapshot;
 use semio_framework_os_spr::{Edit, Mutation, OpBinary, OpText};
@@ -115,7 +115,7 @@ where
                         let revision=group.revision.as_mut().unwrap();group.demand=revision.applied.next_push_allocation_bytes();ownership.copied_bytes=size_of::<CursorRevisionRecord>();ownership.retained_capacity_bytes=group.demand;
                         if grant.maximum_capacity_bytes<group.demand||grant.maximum_copy_bytes<ownership.copied_bytes{return Ok(ArtifactStoreOneItemPreparationStep::Blocked);}
                         let previous=revision.applied.last().map_or(revision.identity_digest,|record|record.prefix_digest);
-                        revision.applied.try_push(CursorRevisionRecord{ledger_key:None,id_digest:CursorRevisionAccumulator::hash_record(b"edit-id",&[stage.edit.as_ref().unwrap().id.as_bytes()]),edit_digest:stage.digest,prefix_digest:CursorRevisionAccumulator::hash_record(b"applied",&[&previous,&stage.digest])}).map_err(|_|"member appended revision exhausted")?;group.phase=6;
+                        revision.applied.try_push(CursorRevisionRecord::new(None,CursorRevisionAccumulator::hash_record(b"edit-id",&[stage.edit.as_ref().unwrap().id.as_bytes()]),stage.digest,CursorRevisionAccumulator::hash_record(b"applied",&[&previous,&stage.digest]))).map_err(|_|"member appended revision exhausted")?;group.phase=6;
                     },
                     6=>{
                         group.demand=self.log.current_checkpoint_id.as_ref().map_or(0,String::len);ownership.copied_bytes=group.demand;ownership.retained_capacity_bytes=group.demand;

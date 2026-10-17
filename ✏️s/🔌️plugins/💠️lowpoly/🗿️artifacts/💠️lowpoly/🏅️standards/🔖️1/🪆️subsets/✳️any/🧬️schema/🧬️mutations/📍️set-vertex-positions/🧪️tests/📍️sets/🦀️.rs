@@ -4,12 +4,13 @@
 //! are written straight to their absolute positions, so the same before-snapshot reaches the same after-snapshot.
 
 use crate::laws;
+use semio_framework_test_fixtures::fixture_path;
 
-static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧪️tests/🧫️fixtures/🧬️mutations/📍️set-vertex-positions/📍️sets/📸️snapshot/⬅️before/🔣️.json")).expect("../../../../🧪️tests/🧫️fixtures/🧬️mutations/📍️set-vertex-positions/📍️sets/📸️snapshot/⬅️before/🔣️.json").leak());
-static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧪️tests/🧫️fixtures/🧬️mutations/📍️set-vertex-positions/📍️sets/📸️snapshot/➡️after/🔣️.json")).expect("../../../../🧪️tests/🧫️fixtures/🧬️mutations/📍️set-vertex-positions/📍️sets/📸️snapshot/➡️after/🔣️.json").leak());
-static MUTATION: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧪️tests/🧫️fixtures/🧬️mutations/📍️set-vertex-positions/📍️sets/🦠️mutation/🔣️.json")).expect("../../../../🧪️tests/🧫️fixtures/🧬️mutations/📍️set-vertex-positions/📍️sets/🦠️mutation/🔣️.json").leak());
-static DIFF: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧪️tests/🧫️fixtures/🧬️mutations/📍️set-vertex-positions/📍️sets/🔺️diff/🔣️.json")).expect("../../../../🧪️tests/🧫️fixtures/🧬️mutations/📍️set-vertex-positions/📍️sets/🔺️diff/🔣️.json").leak());
-static OUTCOME: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧪️tests/🧫️fixtures/🧬️mutations/📍️set-vertex-positions/📍️sets/🎯️outcome/🔣️.json")).expect("../../../../🧪️tests/🧫️fixtures/🧬️mutations/📍️set-vertex-positions/📍️sets/🎯️outcome/🔣️.json").leak());
+static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| std::fs::read_to_string(fixture_path!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📍️set-vertex-positions/📍️sets/📸️snapshot/⬅️before/🔣️.json")).expect("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📍️set-vertex-positions/📍️sets/📸️snapshot/⬅️before/🔣️.json").leak());
+static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| std::fs::read_to_string(fixture_path!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📍️set-vertex-positions/📍️sets/📸️snapshot/➡️after/🔣️.json")).expect("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📍️set-vertex-positions/📍️sets/📸️snapshot/➡️after/🔣️.json").leak());
+static MUTATION: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| std::fs::read_to_string(fixture_path!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📍️set-vertex-positions/📍️sets/🦠️mutation/🔣️.json")).expect("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📍️set-vertex-positions/📍️sets/🦠️mutation/🔣️.json").leak());
+static DIFF: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| std::fs::read_to_string(fixture_path!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📍️set-vertex-positions/📍️sets/🔺️diff/🔣️.json")).expect("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📍️set-vertex-positions/📍️sets/🔺️diff/🔣️.json").leak());
+static OUTCOME: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| std::fs::read_to_string(fixture_path!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📍️set-vertex-positions/📍️sets/🎯️outcome/🔣️.json")).expect("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📍️set-vertex-positions/📍️sets/🎯️outcome/🔣️.json").leak());
 
 /// ▶️ The positions carry `before` to exactly the committed `after` and produce exactly the committed delta.
 #[test]

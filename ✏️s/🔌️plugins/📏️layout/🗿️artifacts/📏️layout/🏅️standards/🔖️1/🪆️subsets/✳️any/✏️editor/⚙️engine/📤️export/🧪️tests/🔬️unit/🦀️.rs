@@ -1,4 +1,8 @@
 use super::*;
+use semio_framework_io_ports::testkit::{bind, scene_content};
+
+/// 🎟️ Unbounded retained grant: the pre-migration step budget carried no retained limit.
+const UNBOUNDED_STEP_GRANT: semio_framework_job::RetainedCloneGrant = semio_framework_job::RetainedCloneGrant { maximum_items: usize::MAX, maximum_copy_bytes: usize::MAX, maximum_capacity_bytes: usize::MAX, maximum_release_bytes: usize::MAX, maximum_depth: usize::MAX };
 
 /// 🚧️ How many close slices this oracle gives one ladder before it calls the ladder broken. A close
 /// ladder is required to make progress on every slice; one that answers `Blocked` (or a `Pending` that
@@ -325,8 +329,8 @@ fn production_retained_wire_factory_decodes_before_reducer_and_closes_cancel_fau
             other => panic!("fixture verb {other}"),
         };
         let raw = <semio_s_artifact_layout_layout_editor::LayoutCommand as protocol::OpBinary>::encode_op(&command).expect("fixture wire");
-        for bytes in raw.chunks(semio_framework::action_bus::TOOL_WIRE_PAGE_BYTES) {
-            input.admit_page(semio_framework::action_bus::ToolWirePage::try_copy_from(bytes).expect("bounded raw page")).expect("preadmitted page");
+        for bytes in raw.chunks(semio_framework_action_bus::TOOL_WIRE_PAGE_BYTES) {
+            input.admit_page(semio_framework_action_bus::ToolWirePage::try_copy_from(bytes).expect("bounded raw page")).expect("preadmitted page");
         }
         input.seal_admitted_prefix().expect("truthful encoded prefix");
         let output_chunks = ArtifactOutputChunks::new(MAX_LAYOUT_EXPORT_OUTPUT_BYTES);
@@ -606,12 +610,13 @@ fn owned_crc32_is_standard_and_incremental() {
 
 #[test]
 fn typed_document_json_matches_serde_and_every_write_is_credit_bounded() {
+    bind(&semio_s_artifact_layout_layout_model::LAYOUT_BACKGROUND_DRAWING);
 use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactReferenceText as _};
 
     let mut snapshot = semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document();
     snapshot.name = "\u{1f642}\n".repeat(MAX_LAYOUT_EXPORT_STRING_BYTES / 5);
     snapshot.background_drawing =
-        Some(semio_s_artifact_layout_layout_model::LayoutDrawingChild { handle: store::os_store::artifact_child::ArtifactChild::new("drawing-child".into(), semio_framework_artifact_reference::ArtifactRef::parse_uri("document!s.stdio.semio@v1/drawing").expect("child reference")), content: Default::default() });
+        Some(semio_s_artifact_layout_layout_model::LayoutDrawingChild { handle: store::os_store::artifact_child::ArtifactChild::new("drawing-child".into(), semio_framework_artifact_reference::ArtifactRef::parse_uri("document!s.stdio.semio@v1/drawing").expect("child reference")), content: scene_content(&Default::default()) });
     snapshot.referenced_model = Some(store::ArtifactLink { target: semio_framework_artifact_reference::ArtifactRef::parse_uri("document!s.stdio.semio@v1/model").expect("model reference"), pin: store::LinkPin::Head, role: "model".into() });
     let expected: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&snapshot)).expect("independent document JSON oracle");
     let mut cursor = TypedJsonCursor::document();
@@ -687,10 +692,12 @@ fn one_unit_budget_forces_multiple_yields_and_stale_context_faults() {
     let mut job = fixture_export_job(operation, request(LayoutExportKind::Svg));
     let mut sequence = 0;
     for _ in 0..2 {
-        let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), semio_framework_job::default_now_us, &mut sequence);
+        let mut context_retained = semio_framework_job::RetainedCloneProgress::default();
+        let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX, UNBOUNDED_STEP_GRANT), semio_framework_job::root_cancel_token(), semio_framework_job::default_now_us, &mut sequence, &mut context_retained);
         assert_eq!(job.step(&mut context), StepOutcome::Yield);
     }
-    let mut stale = StepContext::new(operation.operation, Generation(operation.generation.0 + 1), semio_framework_job::StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), semio_framework_job::default_now_us, &mut sequence);
+    let mut stale_retained = semio_framework_job::RetainedCloneProgress::default();
+    let mut stale = StepContext::new(operation.operation, Generation(operation.generation.0 + 1), semio_framework_job::StepBudget::new(1, u64::MAX, UNBOUNDED_STEP_GRANT), semio_framework_job::root_cancel_token(), semio_framework_job::default_now_us, &mut sequence, &mut stale_retained);
     let fault = job.step(&mut stale);
     assert!(matches!(fault, StepOutcome::Fault(_)));
     close_outcome(fault);
@@ -705,7 +712,8 @@ fn checkpoint_is_lossless_bounded_and_authority_qualified() {
     let cancel = semio_framework_job::root_cancel_token();
     let mut sequence = 0;
     let mut checkpoint = loop {
-        let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX), cancel.clone(), semio_framework_job::default_now_us, &mut sequence);
+        let mut context_retained = semio_framework_job::RetainedCloneProgress::default();
+        let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX, UNBOUNDED_STEP_GRANT), cancel.clone(), semio_framework_job::default_now_us, &mut sequence, &mut context_retained);
         match job.step(&mut context) {
             StepOutcome::CheckpointReady(checkpoint) => break checkpoint,
             outcome => close_outcome(outcome),
@@ -778,12 +786,9 @@ fn the_reserved_close_ladder_leaves_the_publication_stage_in_bounded_slices() {
 #[test]
 fn pdf_export_prints_proxy_png_pixels() {
     let mut snapshot = semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document();
-    let mut image = semio_s_artifact_stdio_png::standards::v1_2::subsets::any::io::PngProjection {width:1,height:1,bit_depth:8,color_type:semio_s_artifact_stdio_png::schema::snapshot::PngColorType::Rgba,interlace:false,plte:None,trns:None,gama:None,chrm:None,srgb:None,phys:None,time:None,bkgd:None,text_chunks:Vec::new(),pixels:Vec::new(),chunk_order:Vec::new(),unknown_chunks:Vec::new()};
-    image.width = 2;
-    image.height = 2;
-    image.pixels = vec![255, 0, 0, 255, 0, 255, 0, 255, 0, 0, 255, 255, 255, 255, 255, 255];
-    let png = semio_s_artifact_stdio_png::standards::v1_2::subsets::any::io::author_png_projection(&image).expect("png");
-    let decoded = semio_s_artifact_stdio_png::standards::v1_2::subsets::any::io::project_png(&png).expect("png round trip");
+    let image = semio_framework_pixels::RasterImage { width: 2, height: 2, pixels: vec![255, 0, 0, 255, 0, 255, 0, 255, 0, 0, 255, 255, 255, 255, 255, 255] };
+    let png = semio_framework_pixels::encode_png(&image).expect("png");
+    let decoded = semio_framework_pixels::decode_png(&png).expect("png round trip");
     assert_eq!(decoded.pixels, image.pixels, "the png codec keeps the placed pixels");
     snapshot.links[0].state = Some("ready".into());
     snapshot.links[0].proxy_data_url = Some(format!("data:image/png;base64,{}", base64_encode(&png)));
@@ -814,11 +819,8 @@ fn base64_encode(bytes: &[u8]) -> String {
 #[test]
 fn pdf_export_rotates_a_proxy_with_its_frame() {
     let mut snapshot = semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document();
-    let mut image = semio_s_artifact_stdio_png::standards::v1_2::subsets::any::io::PngProjection {width:1,height:1,bit_depth:8,color_type:semio_s_artifact_stdio_png::schema::snapshot::PngColorType::Rgba,interlace:false,plte:None,trns:None,gama:None,chrm:None,srgb:None,phys:None,time:None,bkgd:None,text_chunks:Vec::new(),pixels:Vec::new(),chunk_order:Vec::new(),unknown_chunks:Vec::new()};
-    image.width = 2;
-    image.height = 2;
-    image.pixels = vec![255, 0, 0, 255, 0, 255, 0, 255, 0, 0, 255, 255, 255, 255, 255, 255];
-    let png = semio_s_artifact_stdio_png::standards::v1_2::subsets::any::io::author_png_projection(&image).expect("png");
+    let image = semio_framework_pixels::RasterImage { width: 2, height: 2, pixels: vec![255, 0, 0, 255, 0, 255, 0, 255, 0, 0, 255, 255, 255, 255, 255, 255] };
+    let png = semio_framework_pixels::encode_png(&image).expect("png");
     snapshot.links[0].state = Some("ready".into());
     snapshot.links[0].proxy_data_url = Some(format!("data:image/png;base64,{}", base64_encode(&png)));
     let frame = snapshot.pages[0].frames.iter_mut().find(|frame| frame.id() == "frame-image-1").expect("image");
@@ -921,28 +923,29 @@ fn pdf_export_omits_a_frame_on_a_hidden_layer() {
 
 #[test]
 fn pdf_export_prints_the_background_drawing() {
-    use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
-    use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
-    use semio_s_artifact_stdio_semio_drawing::schema::snapshot::{DrawLayer, DrawNode, PathSegment, SemioDrawingSnapshot};
-    let point = |x: f64, y: f64| SemioPoint2 { x, y };
-    let content = SemioDrawingSnapshot {
-        schema: "stdio.semio.drawing".into(),
+    bind(&semio_s_artifact_layout_layout_model::LAYOUT_BACKGROUND_DRAWING);
+    use semio_framework_io_ports::VectorPoint2;
+    use semio_framework_io_ports::VectorTransform;
+    use semio_framework_io_ports::{VectorLayer, VectorNode, VectorScene, VectorSegment};
+    let point = |x: f64, y: f64| VectorPoint2 { x, y };
+    let content = VectorScene {
+        schema: "test.scene".into(),
         canvas: Default::default(),
         styles: Vec::new(),
-        layers: vec![DrawLayer {
+        layers: vec![VectorLayer {
             id: "imported".into(),
             name: "Imported".into(),
             visible: true,
-            root: DrawNode::Group {
-                transform: SemioTransform::identity(),
-                children: vec![DrawNode::Path {
+            root: VectorNode::Group {
+                transform: VectorTransform::identity(),
+                children: vec![VectorNode::Path {
                     style: None,
                     segments: vec![
-                        PathSegment::MoveTo { to: point(10.0, 20.0) },
-                        PathSegment::LineTo { to: point(110.0, 20.0) },
-                        PathSegment::LineTo { to: point(110.0, 70.0) },
-                        PathSegment::LineTo { to: point(10.0, 70.0) },
-                        PathSegment::Close,
+                        VectorSegment::MoveTo { to: point(10.0, 20.0) },
+                        VectorSegment::LineTo { to: point(110.0, 20.0) },
+                        VectorSegment::LineTo { to: point(110.0, 70.0) },
+                        VectorSegment::LineTo { to: point(10.0, 70.0) },
+                        VectorSegment::Close,
                     ],
                 }],
             },
@@ -951,7 +954,7 @@ fn pdf_export_prints_the_background_drawing() {
     let mut snapshot = semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document();
     snapshot.pages[0].width = 100.0;
     snapshot.pages[0].height = 50.0;
-    snapshot.background_drawing = Some(semio_s_artifact_layout_layout_model::background_drawing_child_handle("dwg", &content));
+    snapshot.background_drawing = Some(semio_s_artifact_layout_layout_model::background_drawing_child_handle("dwg", &scene_content(&content)));
     let all = headless_batch_export(LayoutExportKind::Pdf, &snapshot, Some("page-1"), None).expect("page pdf");
     let bytes = decode_base64(&all.data).expect("base64 pdf");
     assert_pdf_structure(&bytes);
@@ -961,29 +964,30 @@ fn pdf_export_prints_the_background_drawing() {
 
 #[test]
 fn pdf_export_prints_a_styled_plan_stroke() {
-    use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
-    use semio_s_artifact_stdio_semio_base::schema::geometry::SemioRgba;
-    use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
-    use semio_s_artifact_stdio_semio_drawing::schema::snapshot::{DrawLayer, DrawNode, DrawStyle, PathSegment, SemioDrawingSnapshot};
-    let point = |x: f64, y: f64| SemioPoint2 { x, y };
-    let content = SemioDrawingSnapshot {
-        schema: "stdio.semio.drawing".into(),
+    bind(&semio_s_artifact_layout_layout_model::LAYOUT_BACKGROUND_DRAWING);
+    use semio_framework_io_ports::VectorPoint2;
+    use semio_framework_io_ports::VectorRgba;
+    use semio_framework_io_ports::VectorTransform;
+    use semio_framework_io_ports::{VectorLayer, VectorNode, VectorScene, VectorSegment, VectorStyle};
+    let point = |x: f64, y: f64| VectorPoint2 { x, y };
+    let content = VectorScene {
+        schema: "test.scene".into(),
         canvas: Default::default(),
-        styles: vec![DrawStyle { name: "red".into(), fill: None, stroke: Some(SemioRgba { r: 1.0, g: 0.0, b: 0.0, a: 1.0 }), stroke_width: Some(2.0), opacity: Some(0.5) }],
-        layers: vec![DrawLayer {
+        styles: vec![VectorStyle { name: "red".into(), fill: None, stroke: Some(VectorRgba { r: 1.0, g: 0.0, b: 0.0, a: 1.0 }), stroke_width: Some(2.0), opacity: Some(0.5) }],
+        layers: vec![VectorLayer {
             id: "imported".into(),
             name: "Imported".into(),
             visible: true,
-            root: DrawNode::Group {
-                transform: SemioTransform::identity(),
-                children: vec![DrawNode::Path {
+            root: VectorNode::Group {
+                transform: VectorTransform::identity(),
+                children: vec![VectorNode::Path {
                     style: Some("red".into()),
                     segments: vec![
-                        PathSegment::MoveTo { to: point(10.0, 20.0) },
-                        PathSegment::LineTo { to: point(110.0, 20.0) },
-                        PathSegment::LineTo { to: point(110.0, 70.0) },
-                        PathSegment::LineTo { to: point(10.0, 70.0) },
-                        PathSegment::Close,
+                        VectorSegment::MoveTo { to: point(10.0, 20.0) },
+                        VectorSegment::LineTo { to: point(110.0, 20.0) },
+                        VectorSegment::LineTo { to: point(110.0, 70.0) },
+                        VectorSegment::LineTo { to: point(10.0, 70.0) },
+                        VectorSegment::Close,
                     ],
                 }],
             },
@@ -992,7 +996,7 @@ fn pdf_export_prints_a_styled_plan_stroke() {
     let mut snapshot = semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document();
     snapshot.pages[0].width = 100.0;
     snapshot.pages[0].height = 50.0;
-    snapshot.background_drawing = Some(semio_s_artifact_layout_layout_model::background_drawing_child_handle("dwg", &content));
+    snapshot.background_drawing = Some(semio_s_artifact_layout_layout_model::background_drawing_child_handle("dwg", &scene_content(&content)));
     let mut engine = semio_s_artifact_layout_layout_engine::scene::LayoutEngine::new();
     let list = semio_s_artifact_layout_layout_engine::scene::build_display_list_for_page(&mut engine, &snapshot, &snapshot.pages[0], "", &[], None, false);
     assert_eq!(list.strokes[0].color, [1.0, 0.0, 0.0, 0.5]);
@@ -1014,29 +1018,30 @@ fn pdf_export_prints_a_styled_plan_stroke() {
 
 #[test]
 fn pdf_export_prints_a_filled_plan_path() {
-    use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
-    use semio_s_artifact_stdio_semio_base::schema::geometry::SemioRgba;
-    use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
-    use semio_s_artifact_stdio_semio_drawing::schema::snapshot::{DrawLayer, DrawNode, DrawStyle, PathSegment, SemioDrawingSnapshot};
-    let point = |x: f64, y: f64| SemioPoint2 { x, y };
-    let content = SemioDrawingSnapshot {
-        schema: "stdio.semio.drawing".into(),
+    bind(&semio_s_artifact_layout_layout_model::LAYOUT_BACKGROUND_DRAWING);
+    use semio_framework_io_ports::VectorPoint2;
+    use semio_framework_io_ports::VectorRgba;
+    use semio_framework_io_ports::VectorTransform;
+    use semio_framework_io_ports::{VectorLayer, VectorNode, VectorScene, VectorSegment, VectorStyle};
+    let point = |x: f64, y: f64| VectorPoint2 { x, y };
+    let content = VectorScene {
+        schema: "test.scene".into(),
         canvas: Default::default(),
-        styles: vec![DrawStyle { name: "blue".into(), fill: Some(SemioRgba { r: 0.0, g: 0.0, b: 1.0, a: 1.0 }), stroke: None, stroke_width: None, opacity: None }],
-        layers: vec![DrawLayer {
+        styles: vec![VectorStyle { name: "blue".into(), fill: Some(VectorRgba { r: 0.0, g: 0.0, b: 1.0, a: 1.0 }), stroke: None, stroke_width: None, opacity: None }],
+        layers: vec![VectorLayer {
             id: "imported".into(),
             name: "Imported".into(),
             visible: true,
-            root: DrawNode::Group {
-                transform: SemioTransform::identity(),
-                children: vec![DrawNode::Path {
+            root: VectorNode::Group {
+                transform: VectorTransform::identity(),
+                children: vec![VectorNode::Path {
                     style: Some("blue".into()),
                     segments: vec![
-                        PathSegment::MoveTo { to: point(10.0, 20.0) },
-                        PathSegment::LineTo { to: point(110.0, 20.0) },
-                        PathSegment::LineTo { to: point(110.0, 70.0) },
-                        PathSegment::LineTo { to: point(10.0, 70.0) },
-                        PathSegment::Close,
+                        VectorSegment::MoveTo { to: point(10.0, 20.0) },
+                        VectorSegment::LineTo { to: point(110.0, 20.0) },
+                        VectorSegment::LineTo { to: point(110.0, 70.0) },
+                        VectorSegment::LineTo { to: point(10.0, 70.0) },
+                        VectorSegment::Close,
                     ],
                 }],
             },
@@ -1045,7 +1050,7 @@ fn pdf_export_prints_a_filled_plan_path() {
     let mut snapshot = semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document();
     snapshot.pages[0].width = 100.0;
     snapshot.pages[0].height = 50.0;
-    snapshot.background_drawing = Some(semio_s_artifact_layout_layout_model::background_drawing_child_handle("dwg", &content));
+    snapshot.background_drawing = Some(semio_s_artifact_layout_layout_model::background_drawing_child_handle("dwg", &scene_content(&content)));
     let mut engine = semio_s_artifact_layout_layout_engine::scene::LayoutEngine::new();
     let list = semio_s_artifact_layout_layout_engine::scene::build_display_list_for_page(&mut engine, &snapshot, &snapshot.pages[0], "", &[], None, false);
     assert_eq!(list.strokes[0].fill, Some([0.0, 0.0, 1.0, 1.0]));
@@ -1065,28 +1070,29 @@ fn pdf_export_prints_a_filled_plan_path() {
 
 #[test]
 fn pdf_export_prints_a_placed_drawing_inside_its_frame() {
-    use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
-    use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
-    use semio_s_artifact_stdio_semio_drawing::schema::snapshot::{DrawLayer, DrawNode, PathSegment, SemioDrawingSnapshot};
-    let point = |x: f64, y: f64| SemioPoint2 { x, y };
-    let content = SemioDrawingSnapshot {
-        schema: "stdio.semio.drawing".into(),
+    bind(&semio_s_artifact_layout_layout_model::LAYOUT_BACKGROUND_DRAWING);
+    use semio_framework_io_ports::VectorPoint2;
+    use semio_framework_io_ports::VectorTransform;
+    use semio_framework_io_ports::{VectorLayer, VectorNode, VectorScene, VectorSegment};
+    let point = |x: f64, y: f64| VectorPoint2 { x, y };
+    let content = VectorScene {
+        schema: "test.scene".into(),
         canvas: Default::default(),
         styles: Vec::new(),
-        layers: vec![DrawLayer {
+        layers: vec![VectorLayer {
             id: "imported".into(),
             name: "Imported".into(),
             visible: true,
-            root: DrawNode::Group {
-                transform: SemioTransform::identity(),
-                children: vec![DrawNode::Path {
+            root: VectorNode::Group {
+                transform: VectorTransform::identity(),
+                children: vec![VectorNode::Path {
                     style: None,
                     segments: vec![
-                        PathSegment::MoveTo { to: point(0.0, 0.0) },
-                        PathSegment::LineTo { to: point(1.0, 0.0) },
-                        PathSegment::LineTo { to: point(1.0, 1.0) },
-                        PathSegment::LineTo { to: point(0.0, 1.0) },
-                        PathSegment::Close,
+                        VectorSegment::MoveTo { to: point(0.0, 0.0) },
+                        VectorSegment::LineTo { to: point(1.0, 0.0) },
+                        VectorSegment::LineTo { to: point(1.0, 1.0) },
+                        VectorSegment::LineTo { to: point(0.0, 1.0) },
+                        VectorSegment::Close,
                     ],
                 }],
             },
@@ -1095,7 +1101,7 @@ fn pdf_export_prints_a_placed_drawing_inside_its_frame() {
     let mut snapshot = semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document();
     snapshot.links[0].artifact_kind = "s.draw.drawing".into();
     snapshot.links[0].artifact_ref = "plan-1".into();
-    snapshot.background_drawing = Some(semio_s_artifact_layout_layout_model::background_drawing_child_handle("dwg", &content));
+    snapshot.background_drawing = Some(semio_s_artifact_layout_layout_model::background_drawing_child_handle("dwg", &scene_content(&content)));
     let all = headless_batch_export(LayoutExportKind::Pdf, &snapshot, Some("page-1"), None).expect("page pdf");
     let bytes = decode_base64(&all.data).expect("base64 pdf");
     assert_pdf_structure(&bytes);
@@ -1105,32 +1111,33 @@ fn pdf_export_prints_a_placed_drawing_inside_its_frame() {
 
 #[test]
 fn pdf_export_prints_drawing_text() {
-    use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
-    use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
-    use semio_s_artifact_stdio_semio_drawing::schema::snapshot::{DrawLayer, DrawNode, PathSegment, SemioDrawingSnapshot};
-    let point = |x: f64, y: f64| SemioPoint2 { x, y };
-    let content = SemioDrawingSnapshot {
-        schema: "stdio.semio.drawing".into(),
+    bind(&semio_s_artifact_layout_layout_model::LAYOUT_BACKGROUND_DRAWING);
+    use semio_framework_io_ports::VectorPoint2;
+    use semio_framework_io_ports::VectorTransform;
+    use semio_framework_io_ports::{VectorLayer, VectorNode, VectorScene, VectorSegment};
+    let point = |x: f64, y: f64| VectorPoint2 { x, y };
+    let content = VectorScene {
+        schema: "test.scene".into(),
         canvas: Default::default(),
         styles: Vec::new(),
-        layers: vec![DrawLayer {
+        layers: vec![VectorLayer {
             id: "imported".into(),
             name: "Imported".into(),
             visible: true,
-            root: DrawNode::Group {
-                transform: SemioTransform::identity(),
+            root: VectorNode::Group {
+                transform: VectorTransform::identity(),
                 children: vec![
-                    DrawNode::Path {
+                    VectorNode::Path {
                         style: None,
                         segments: vec![
-                            PathSegment::MoveTo { to: point(0.0, 0.0) },
-                            PathSegment::LineTo { to: point(1.0, 0.0) },
-                            PathSegment::LineTo { to: point(1.0, 1.0) },
-                            PathSegment::LineTo { to: point(0.0, 1.0) },
-                            PathSegment::Close,
+                            VectorSegment::MoveTo { to: point(0.0, 0.0) },
+                            VectorSegment::LineTo { to: point(1.0, 0.0) },
+                            VectorSegment::LineTo { to: point(1.0, 1.0) },
+                            VectorSegment::LineTo { to: point(0.0, 1.0) },
+                            VectorSegment::Close,
                         ],
                     },
-                    DrawNode::Text { value: "Plan".into(), at: point(0.0, 0.0), style: None },
+                    VectorNode::Text { value: "Plan".into(), at: point(0.0, 0.0), style: None },
                 ],
             },
         }],
@@ -1138,7 +1145,7 @@ fn pdf_export_prints_drawing_text() {
     let mut snapshot = semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document();
     snapshot.links[0].artifact_kind = "s.draw.drawing".into();
     snapshot.links[0].artifact_ref = "plan-1".into();
-    snapshot.background_drawing = Some(semio_s_artifact_layout_layout_model::background_drawing_child_handle("dwg", &content));
+    snapshot.background_drawing = Some(semio_s_artifact_layout_layout_model::background_drawing_child_handle("dwg", &scene_content(&content)));
     let mut engine = semio_s_artifact_layout_layout_engine::scene::LayoutEngine::new();
     let list = semio_s_artifact_layout_layout_engine::scene::build_display_list_for_page(&mut engine, &snapshot, &snapshot.pages[0], "", &[], None, false);
     let glyphs = list.text_runs.iter().map(|run| run.glyphs.len()).sum::<usize>();
@@ -1152,31 +1159,29 @@ fn pdf_export_prints_drawing_text() {
 
 #[test]
 fn pdf_export_prints_an_embedded_drawing_png() {
-    use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
-    use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
-    use semio_s_artifact_stdio_semio_drawing::schema::snapshot::{DrawLayer, DrawNode, PathSegment, SemioDrawingSnapshot};
-    let point = |x: f64, y: f64| SemioPoint2 { x, y };
-    let mut encoded = semio_s_artifact_stdio_png::standards::v1_2::subsets::any::io::PngProjection {width:1,height:1,bit_depth:8,color_type:semio_s_artifact_stdio_png::schema::snapshot::PngColorType::Rgba,interlace:false,plte:None,trns:None,gama:None,chrm:None,srgb:None,phys:None,time:None,bkgd:None,text_chunks:Vec::new(),pixels:Vec::new(),chunk_order:Vec::new(),unknown_chunks:Vec::new()};
-    encoded.width = 1;
-    encoded.height = 1;
-    encoded.pixels = vec![255, 0, 0, 255];
-    let bytes = semio_s_artifact_stdio_png::standards::v1_2::subsets::any::io::author_png_projection(&encoded).expect("png");
-    let content = SemioDrawingSnapshot {
-        schema: "stdio.semio.drawing".into(),
+    bind(&semio_s_artifact_layout_layout_model::LAYOUT_BACKGROUND_DRAWING);
+    use semio_framework_io_ports::VectorPoint2;
+    use semio_framework_io_ports::VectorTransform;
+    use semio_framework_io_ports::{VectorLayer, VectorNode, VectorScene, VectorSegment};
+    let point = |x: f64, y: f64| VectorPoint2 { x, y };
+    let encoded = semio_framework_pixels::RasterImage { width: 1, height: 1, pixels: vec![255, 0, 0, 255] };
+    let bytes = semio_framework_pixels::encode_png(&encoded).expect("png");
+    let content = VectorScene {
+        schema: "test.scene".into(),
         canvas: Default::default(),
         styles: Vec::new(),
-        layers: vec![DrawLayer {
+        layers: vec![VectorLayer {
             id: "imported".into(),
             name: "Imported".into(),
             visible: true,
-            root: DrawNode::Group {
-                transform: SemioTransform::identity(),
+            root: VectorNode::Group {
+                transform: VectorTransform::identity(),
                 children: vec![
-                    DrawNode::Path {
+                    VectorNode::Path {
                         style: None,
-                        segments: vec![PathSegment::MoveTo { to: point(0.0, 0.0) }, PathSegment::LineTo { to: point(1.0, 0.0) }, PathSegment::LineTo { to: point(1.0, 1.0) }, PathSegment::LineTo { to: point(0.0, 1.0) }, PathSegment::Close],
+                        segments: vec![VectorSegment::MoveTo { to: point(0.0, 0.0) }, VectorSegment::LineTo { to: point(1.0, 0.0) }, VectorSegment::LineTo { to: point(1.0, 1.0) }, VectorSegment::LineTo { to: point(0.0, 1.0) }, VectorSegment::Close],
                     },
-                    DrawNode::Image { at: point(0.0, 0.0), width: 1.0, height: 1.0, mime: "image/png".into(), bytes },
+                    VectorNode::Image { at: point(0.0, 0.0), width: 1.0, height: 1.0, mime: "image/png".into(), bytes },
                 ],
             },
         }],
@@ -1184,7 +1189,7 @@ fn pdf_export_prints_an_embedded_drawing_png() {
     let mut snapshot = semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document();
     snapshot.links[0].artifact_kind = "s.draw.drawing".into();
     snapshot.links[0].artifact_ref = "plan-1".into();
-    snapshot.background_drawing = Some(semio_s_artifact_layout_layout_model::background_drawing_child_handle("dwg", &content));
+    snapshot.background_drawing = Some(semio_s_artifact_layout_layout_model::background_drawing_child_handle("dwg", &scene_content(&content)));
     let all = headless_batch_export(LayoutExportKind::Pdf, &snapshot, Some("page-1"), None).expect("page pdf");
     let pdf = decode_base64(&all.data).expect("base64 pdf");
     assert_pdf_structure(&pdf);
@@ -1195,31 +1200,29 @@ fn pdf_export_prints_an_embedded_drawing_png() {
 
 #[test]
 fn pdf_export_prints_a_rotated_drawing_png() {
-    use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
-    use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
-    use semio_s_artifact_stdio_semio_drawing::schema::snapshot::{DrawLayer, DrawNode, PathSegment, SemioDrawingSnapshot};
-    let point = |x: f64, y: f64| SemioPoint2 { x, y };
-    let mut encoded = semio_s_artifact_stdio_png::standards::v1_2::subsets::any::io::PngProjection {width:1,height:1,bit_depth:8,color_type:semio_s_artifact_stdio_png::schema::snapshot::PngColorType::Rgba,interlace:false,plte:None,trns:None,gama:None,chrm:None,srgb:None,phys:None,time:None,bkgd:None,text_chunks:Vec::new(),pixels:Vec::new(),chunk_order:Vec::new(),unknown_chunks:Vec::new()};
-    encoded.width = 1;
-    encoded.height = 1;
-    encoded.pixels = vec![255, 0, 0, 255];
-    let bytes = semio_s_artifact_stdio_png::standards::v1_2::subsets::any::io::author_png_projection(&encoded).expect("png");
-    let content = SemioDrawingSnapshot {
-        schema: "stdio.semio.drawing".into(),
+    bind(&semio_s_artifact_layout_layout_model::LAYOUT_BACKGROUND_DRAWING);
+    use semio_framework_io_ports::VectorPoint2;
+    use semio_framework_io_ports::VectorTransform;
+    use semio_framework_io_ports::{VectorLayer, VectorNode, VectorScene, VectorSegment};
+    let point = |x: f64, y: f64| VectorPoint2 { x, y };
+    let encoded = semio_framework_pixels::RasterImage { width: 1, height: 1, pixels: vec![255, 0, 0, 255] };
+    let bytes = semio_framework_pixels::encode_png(&encoded).expect("png");
+    let content = VectorScene {
+        schema: "test.scene".into(),
         canvas: Default::default(),
         styles: Vec::new(),
-        layers: vec![DrawLayer {
+        layers: vec![VectorLayer {
             id: "imported".into(),
             name: "Imported".into(),
             visible: true,
-            root: DrawNode::Group {
-                transform: SemioTransform::identity(),
+            root: VectorNode::Group {
+                transform: VectorTransform::identity(),
                 children: vec![
-                    DrawNode::Path {
+                    VectorNode::Path {
                         style: None,
-                        segments: vec![PathSegment::MoveTo { to: point(0.0, 0.0) }, PathSegment::LineTo { to: point(1.0, 0.0) }, PathSegment::LineTo { to: point(1.0, 1.0) }, PathSegment::LineTo { to: point(0.0, 1.0) }, PathSegment::Close],
+                        segments: vec![VectorSegment::MoveTo { to: point(0.0, 0.0) }, VectorSegment::LineTo { to: point(1.0, 0.0) }, VectorSegment::LineTo { to: point(1.0, 1.0) }, VectorSegment::LineTo { to: point(0.0, 1.0) }, VectorSegment::Close],
                     },
-                    DrawNode::Image { at: point(0.0, 0.0), width: 1.0, height: 1.0, mime: "image/png".into(), bytes },
+                    VectorNode::Image { at: point(0.0, 0.0), width: 1.0, height: 1.0, mime: "image/png".into(), bytes },
                 ],
             },
         }],
@@ -1230,7 +1233,7 @@ fn pdf_export_prints_a_rotated_drawing_png() {
     let frame = snapshot.pages[0].frames.iter_mut().find(|frame| frame.id() == "frame-image-1").expect("image");
     let semio_s_artifact_layout_layout_model::Frame::Image { bounds, .. } = frame else { panic!("image") };
     bounds.rotation = std::f64::consts::FRAC_PI_2;
-    snapshot.background_drawing = Some(semio_s_artifact_layout_layout_model::background_drawing_child_handle("dwg", &content));
+    snapshot.background_drawing = Some(semio_s_artifact_layout_layout_model::background_drawing_child_handle("dwg", &scene_content(&content)));
     let all = headless_batch_export(LayoutExportKind::Pdf, &snapshot, Some("page-1"), None).expect("page pdf");
     let pdf = decode_base64(&all.data).expect("base64 pdf");
     let text = String::from_utf8_lossy(&pdf);
@@ -1240,26 +1243,27 @@ fn pdf_export_prints_a_rotated_drawing_png() {
 
 #[test]
 fn pdf_export_prints_edited_drawing_text() {
+    bind(&semio_s_artifact_layout_layout_model::LAYOUT_BACKGROUND_DRAWING);
     use semio_s_artifact_layout_layout_mutations_frames::set_drawing_text::SetDrawingText;
     use semio_s_artifact_layout_layout_mutations::LayoutMutation;
     use protocol::{Mutation, MutationDiff};
-    use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
-    use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
-    use semio_s_artifact_stdio_semio_drawing::schema::snapshot::{DrawLayer, DrawNode, SemioDrawingSnapshot};
-    let point = |x: f64, y: f64| SemioPoint2 { x, y };
-    let content = SemioDrawingSnapshot {
-        schema: "stdio.semio.drawing".into(),
+    use semio_framework_io_ports::VectorPoint2;
+    use semio_framework_io_ports::VectorTransform;
+    use semio_framework_io_ports::{VectorLayer, VectorNode, VectorScene};
+    let point = |x: f64, y: f64| VectorPoint2 { x, y };
+    let content = VectorScene {
+        schema: "test.scene".into(),
         canvas: Default::default(),
         styles: Vec::new(),
-        layers: vec![DrawLayer {
+        layers: vec![VectorLayer {
             id: "imported".into(),
             name: "Imported".into(),
             visible: true,
-            root: DrawNode::Group { transform: SemioTransform::identity(), children: vec![DrawNode::Text { value: "Plan".into(), at: point(0.0, 0.0), style: None }] },
+            root: VectorNode::Group { transform: VectorTransform::identity(), children: vec![VectorNode::Text { value: "Plan".into(), at: point(0.0, 0.0), style: None }] },
         }],
     };
     let mut snapshot = semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document();
-    snapshot.background_drawing = Some(semio_s_artifact_layout_layout_model::background_drawing_child_handle("dwg", &content));
+    snapshot.background_drawing = Some(semio_s_artifact_layout_layout_model::background_drawing_child_handle("dwg", &scene_content(&content)));
     let mutation = LayoutMutation::SetDrawingText(SetDrawingText { index: 0, text: "Title".into() });
     let edited = protocol::apply_diff(mutation.diff(&snapshot).diff(), &snapshot).expect("rename");
     let mut engine = semio_s_artifact_layout_layout_engine::scene::LayoutEngine::new();

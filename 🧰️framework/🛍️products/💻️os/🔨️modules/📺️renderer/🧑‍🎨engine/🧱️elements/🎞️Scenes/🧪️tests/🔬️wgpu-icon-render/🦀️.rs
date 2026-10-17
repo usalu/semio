@@ -1,4 +1,8 @@
-use super::*;
+use semio_framework_os_renderer_wgpu_contracts::framework_widget_context;
+use semio_framework_os_renderer_wgpu_scene_state::SceneChromeLabels;
+use std::collections::HashMap;
+use super::{IconRenderRequestFields, IconRenderStatus, icon_render_badge_layout, icon_render_camera_json, icon_render_content_frame, icon_render_environment_json, icon_render_footer_layout, icon_render_frame, icon_render_shadow_profile, icon_render_status, icon_render_status_message, icon_render_subject_status, paint_icon_render_chrome, render_icon_render_status, with_icon_render_mask};
+use ui_wgpu::wgpu::{ActionDescriptor, Rect, TextFace, Theme};
 
 #[test]
 fn icon_status_matches_the_shared_host_lifecycle() {
@@ -98,7 +102,7 @@ fn frame_border_is_two_px_and_badge_uses_background_token() {
     let mut collapsed = HashMap::new();
     let mut selects = HashMap::new();
     {
-        let mut ctx = crate::interpreter::framework_widget_context(&mut draw, None, &mut atlas, None, &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None, 0.0);
+        let mut ctx = framework_widget_context(&mut draw, None, &mut atlas, None, &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None, 0.0);
         paint_icon_render_chrome(&mut ctx, bounds, frame, &request, "rectangle", None);
     }
     let top_border = draw
@@ -127,7 +131,7 @@ fn an_ellipse_shot_border_follows_both_ellipse_perimeters() {
     let mut scroll = HashMap::new();
     let mut collapsed = HashMap::new();
     let mut selects = HashMap::new();
-    let mut ctx = crate::interpreter::framework_widget_context(&mut draw, None, &mut atlas, None, &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None, 0.0);
+    let mut ctx = framework_widget_context(&mut draw, None, &mut atlas, None, &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None, 0.0);
     paint_icon_render_chrome(&mut ctx, Rect::new(0.0, 0.0, 400.0, 300.0), frame, &request, "ellipse", None);
     for instance in draw.layers.iter().flat_map(|layer| &layer.ui_instances) {
         assert_eq!(instance.clip_ellipse, [2.0, 52.0, 396.0, 196.0], "badge glyphs and background share the content ellipse");
@@ -154,7 +158,7 @@ fn rectangular_icon_foreground_clips_to_its_content_and_restores_the_parent() {
     let mut scroll = HashMap::new();
     let mut collapsed = HashMap::new();
     let mut selects = HashMap::new();
-    let mut ctx = crate::interpreter::framework_widget_context(&mut draw, None, &mut atlas, None, &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None, 0.0);
+    let mut ctx = framework_widget_context(&mut draw, None, &mut atlas, None, &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None, 0.0);
     with_icon_render_mask(&mut ctx, Rect::new(183.25, 2.0, 33.5, 296.0), "rectangle", |ctx| ctx.draw.push_solid([0.0, 0.0, 400.0, 300.0], theme.text));
     let layer = draw.layers.iter().find(|layer| !layer.ui_instances.is_empty()).unwrap();
     let clip = layer.scissor.unwrap();
@@ -226,7 +230,7 @@ fn icon_render_status_line_paints_inside_the_frame() {
     let mut collapsed = HashMap::new();
     let mut selects = HashMap::new();
     {
-        let mut ctx = crate::interpreter::framework_widget_context(&mut draw, None, &mut atlas, None, &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None, 0.0);
+        let mut ctx = framework_widget_context(&mut draw, None, &mut atlas, None, &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None, 0.0);
         render_icon_render_status(&mut ctx, frame, SceneChromeLabels::english().icon_render.rendering, theme.text_muted);
     }
     let glyphs: Vec<[f32; 4]> = draw.layers.iter().flat_map(|layer| layer.ui_instances.iter()).map(|instance| instance.rect).collect();

@@ -121,7 +121,7 @@ pub fn obj_artifact_schema_descriptor() -> semio_framework_schema_registry::Arti
             proto: include_str!("📸️snapshot/🛰️.proto"),
         },
         diff: semio_framework_schema_registry::FacetLeaves {
-            rust: include_str!("🔺️diff/🦀️.rs"),
+            rust: concat!(include_str!("🔺️diff/🦀️.rs"), include_str!("🔺️diff/🧮️indexed-collections/🦀️.rs"), include_str!("🔺️diff/🏷️named-collections-and-diff/🦀️.rs"), include_str!("🔺️diff/🧵️codec-builders-and-demos/🦀️.rs")),
             typescript: include_str!("🔺️diff/🟦️.ts"),
             graphql: include_str!("🔺️diff/🔗️.graphql"),
             json_schema: include_str!("🔺️diff/🔣️.json"),

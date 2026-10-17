@@ -31,6 +31,10 @@ type stdioJpgJfif101DocumentInferenceGuardSizeBounds = { readonly minItems?: num
 
 export const stdioJpgJfif101DocumentInferenceGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : stdioJpgJfif101DocumentInferenceGuardReject(at, "value is not an object");
+export const stdioJpgJfif101DocumentInferenceGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) stdioJpgJfif101DocumentInferenceGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const stdioJpgJfif101DocumentInferenceGuardArray = (value: unknown, at: string, bounds: stdioJpgJfif101DocumentInferenceGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return stdioJpgJfif101DocumentInferenceGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) stdioJpgJfif101DocumentInferenceGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -61,14 +65,14 @@ export const stdioJpgJfif101DocumentInferenceGuardConstant = <T extends string |
 //#endregion 🚪️Parsers
 
 export function parseJpgInference(value: unknown, at = "$"): JpgInference {
-  const row = stdioJpgJfif101DocumentInferenceGuardObject(value, at);
+  const row = stdioJpgJfif101DocumentInferenceGuardClosed(stdioJpgJfif101DocumentInferenceGuardObject(value, at), at, ["dimensions"]);
   return {
     dimensions: parseJpgDimensions(row["dimensions"], `${at}.dimensions`),
   };
 }
 
 export function parseJpgDimensions(value: unknown, at = "$"): JpgDimensions {
-  const row = stdioJpgJfif101DocumentInferenceGuardObject(value, at);
+  const row = stdioJpgJfif101DocumentInferenceGuardClosed(stdioJpgJfif101DocumentInferenceGuardObject(value, at), at, ["width", "height", "bitDepth", "hasAlpha", "pixelCount"]);
   return {
     width: stdioJpgJfif101DocumentInferenceGuardInteger(row["width"], `${at}.width`, {"minimum": 0}),
     height: stdioJpgJfif101DocumentInferenceGuardInteger(row["height"], `${at}.height`, {"minimum": 0}),

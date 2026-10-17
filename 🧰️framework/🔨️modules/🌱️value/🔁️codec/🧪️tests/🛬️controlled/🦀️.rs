@@ -1,5 +1,6 @@
 use super::*;
 use crate::native_decoding::NativeDecodeControl;
+use semio_framework_test_fixtures::fixture_text;
 #[path="🫙️container/🦀️.rs"]
 mod container_original;
 
@@ -11,7 +12,7 @@ struct Entry { label:String, samples:Vec<i64>, optional:Option<bool> }
 
 #[test]
 fn controlled_value_neutral_constructor_matches_serde() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🛬️controlled/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../🔁️codec/🧪️tests/🧫️fixtures/🛬️controlled/🔣️.json")).unwrap();
     for input in fixture["entries"].as_array().unwrap() {
         let expected:Entry=serde_json::from_value(input.clone()).unwrap();
         let value=DslValue::from(input);
@@ -90,7 +91,7 @@ struct CustomTextOracle { #[serde(default)] payload:String }
 
 #[test]
 fn controlled_value_custom_defaults_require_owned_constructor_without_foreign_codec(){
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🛬️controlled/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../🔁️codec/🧪️tests/🧫️fixtures/🛬️controlled/🔣️.json")).unwrap();
     for row in fixture["customDefaults"].as_array().unwrap(){
         let input=&row["input"];
         let(actual,plain,oracle)=match row["mode"].as_str().unwrap(){
@@ -108,7 +109,7 @@ fn controlled_value_custom_defaults_require_owned_constructor_without_foreign_co
 #[test]
 fn controlled_value_hash_set_vectors_match_serde_and_first_wire_error(){
     use std::collections::HashSet;
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🛬️controlled/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../🔁️codec/🧪️tests/🧫️fixtures/🛬️controlled/🔣️.json")).unwrap();
     for row in fixture["hashSets"].as_array().unwrap(){
         let input=&row["input"];
         let oracle=serde_json::from_value::<HashSet<u32>>(input.clone());
@@ -172,7 +173,7 @@ struct SecretOracle { secret:String, later:u32 }
 #[test]
 fn controlled_value_drop_owner_preserves_destructor_on_success_and_partial_failure(){
     SECRET_DROPS.store(0,std::sync::atomic::Ordering::SeqCst);
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🛬️controlled/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../🔁️codec/🧪️tests/🧫️fixtures/🛬️controlled/🔣️.json")).unwrap();
     for row in fixture["dropOwners"].as_array().unwrap(){
         let input=&row["input"];let oracle=serde_json::from_value::<SecretOracle>(input.clone());
         let parent=serde_json::json!({"owner":{"secret":input["secret"]},"later":input["later"]});
@@ -184,7 +185,7 @@ fn controlled_value_drop_owner_preserves_destructor_on_success_and_partial_failu
 
 #[test]
 fn controlled_value_derived_shapes_match_independent_serde(){
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🛬️controlled/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../🔁️codec/🧪️tests/🧫️fixtures/🛬️controlled/🔣️.json")).unwrap();
     macro_rules! check{($ty:ty,$value:expr)=>{assert_eq!(decode::<$ty>($value).unwrap(),serde_json::from_value::<$ty>($value.clone()).unwrap())};}
     for case in fixture["representations"].as_array().unwrap(){let input=&case["value"];match case["kind"].as_str().unwrap(){
         "adjacent"=>check!(Adjacent,input),"internal"=>check!(Internal,input),"external"=>check!(External,input),"transparent"=>check!(Transparent,input),"flattened"=>check!(Flattened,input),"defaults"=>check!(Defaults,input),_=>unreachable!()
@@ -201,7 +202,7 @@ fn controlled_value_intrinsic_copy_is_exact_and_iterative(){
     let mut callback=|progress:crate::native_decoding::NativeDecodeProgress|progress.completed<256;
     assert!(DslValue::from_value_controlled(&value,&mut NativeDecodeControl::new(8*1024*1024,&mut callback)).is_err());
     DslValue::retire_decoded(value);
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🛬️controlled/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../🔁️codec/🧪️tests/🧫️fixtures/🛬️controlled/🔣️.json")).unwrap();
     for word in fixture["floatWords"].as_array().unwrap(){let bits=u64::from_str_radix(word.as_str().unwrap(),16).unwrap();
         let value=DslValue::Number(Number::Float(f64::from_bits(bits)));let mut callback=|_|true;
         let DslValue::Number(Number::Float(number))=DslValue::from_value_controlled(&value,&mut NativeDecodeControl::new(4096,&mut callback)).unwrap()else{panic!("float")};assert_eq!(number.to_bits(),bits);
@@ -217,7 +218,7 @@ fn controlled_value_budget_precedes_large_copy_and_cancels_interior(){
 
 #[test]
 fn controlled_value_intrinsic_frontier_cancels_before_materializing_wide_input(){
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🛬️controlled/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../🔁️codec/🧪️tests/🧫️fixtures/🛬️controlled/🔣️.json")).unwrap();
     let count=fixture["limits"]["nullableSlots"].as_u64().unwrap() as usize;
     let value=DslValue::Array(vec![DslValue::Null;count]);let mut observed=None;
     let mut callback=|progress:crate::native_decoding::NativeDecodeProgress|{if progress.completed>=256{observed=Some(progress);false}else{true}};
@@ -278,7 +279,7 @@ fn controlled_default(control:&mut NativeDecodeControl<'_>)->Result<String,Value
 struct UncontrolledCustom { #[value(deserialize_with="ordinary_custom")] converted:String }
 #[test]
 fn controlled_value_declared_custom_defaults_and_required_rename_are_admitted(){
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🛬️controlled/🔣️.json")).unwrap();let input=fixture["attributes"].clone();
+    let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../🔁️codec/🧪️tests/🧫️fixtures/🛬️controlled/🔣️.json")).unwrap();let input=fixture["attributes"].clone();
     let ordinary=Attributes::from_value(DslValue::from(&input)).unwrap();assert_eq!(decode::<Attributes>(&input).unwrap(),ordinary);assert_eq!(ordinary,serde_json::from_value::<Attributes>(input.clone()).unwrap());
     assert!(!ordinary.flag);assert_eq!(ordinary.skipped,"owned-default");
     assert!(decode::<Attributes>(&serde_json::json!({"converted":"exact"})).is_err());
@@ -373,18 +374,18 @@ fn controlled_value_actual_allocator_observes_refusal_before_payload_materializa
 
 #[test]
 fn controlled_value_binary32_words_survive_controlled_intrinsic_bridge(){
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🛬️controlled/🔣️.json")).unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../🔁️codec/🧪️tests/🧫️fixtures/🛬️controlled/🔣️.json")).unwrap();
  for word in fixture["binary32Words"].as_array().unwrap(){let bits=u32::from_str_radix(word.as_str().unwrap(),16).unwrap();let input=f32::from_bits(bits).to_value();let mut accepted=|_|true;let mut control=NativeDecodeControl::new(4096,&mut accepted);assert_eq!(f32::from_value_controlled(&input,&mut control).unwrap().to_bits(),bits,"{}",word.as_str().unwrap());}
 }
 #[test]
 fn controlled_value_binary32_words_survive_ordinary_intrinsic_bridge(){
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🛬️controlled/🔣️.json")).unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../🔁️codec/🧪️tests/🧫️fixtures/🛬️controlled/🔣️.json")).unwrap();
  for word in fixture["binary32Words"].as_array().unwrap(){let bits=u32::from_str_radix(word.as_str().unwrap(),16).unwrap();assert_eq!(f32::from_value(f32::from_bits(bits).to_value()).unwrap().to_bits(),bits,"{}",word.as_str().unwrap());}
 }
 
 #[test]
 fn controlled_value_binary32_nan_bridge_has_explicit_binary64_words(){
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🛬️controlled/🔣️.json")).unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../🔁️codec/🧪️tests/🧫️fixtures/🛬️controlled/🔣️.json")).unwrap();
  for row in fixture["binary32NanBridges"].as_array().unwrap(){let bits=u32::from_str_radix(row["word"].as_str().unwrap(),16).unwrap();let DslValue::Number(Number::Float(value))=f32::from_bits(bits).to_value()else{panic!("binary64 bridge")};assert_eq!(value.to_bits(),u64::from_str_radix(row["binary64Word"].as_str().unwrap(),16).unwrap());}
 }
 
@@ -405,7 +406,7 @@ impl ScalarOwnerDefaults {
 }
 #[test]
 fn controlled_value_scalar_owner_defaults_are_not_recursive_types() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🛬️controlled/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../🔁️codec/🧪️tests/🧫️fixtures/🛬️controlled/🔣️.json")).unwrap();
     for row in fixture["scalarOwnerDefaultInputs"].as_array().unwrap() {
         let oracle: ScalarOwnerDefaults = serde_json::from_value(row["input"].clone()).unwrap();
         assert_eq!(oracle.count, row["expected"]["count"].as_u64().unwrap() as u32);
@@ -423,7 +424,7 @@ struct CapacityOwner { items: [u32; CapacityOwner::SIZE] }
 impl CapacityOwner { const SIZE: usize = 2; }
 #[test]
 fn controlled_value_owner_named_array_capacity_is_not_recursive_storage() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🛬️controlled/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../🔁️codec/🧪️tests/🧫️fixtures/🛬️controlled/🔣️.json")).unwrap();
     let oracle: CapacityOwner = serde_json::from_value(fixture["scalarOwnerConstInput"].clone()).unwrap();
     assert_eq!(oracle.items, [7, 9]);
     assert_eq!(decode::<CapacityOwner>(&fixture["scalarOwnerConstInput"]).unwrap(), oracle);
@@ -431,7 +432,7 @@ fn controlled_value_owner_named_array_capacity_is_not_recursive_storage() {
 
 #[test]
 fn controlled_value_borrowed_object_keys_cancel_inside_hashing_without_copying_keys() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🛬️controlled/🔗️borrowed-keys.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../🔁️codec/🧪️tests/🧫️fixtures/🛬️controlled/🔗️borrowed-keys.json")).unwrap();
     let key = fixture["unit"].as_str().unwrap().repeat(usize::try_from(fixture["repeat"].as_u64().unwrap()).unwrap());
     let maximum = usize::try_from(fixture["maximumOwnedBytes"].as_u64().unwrap()).unwrap();
     for case in fixture["cases"].as_array().unwrap() {

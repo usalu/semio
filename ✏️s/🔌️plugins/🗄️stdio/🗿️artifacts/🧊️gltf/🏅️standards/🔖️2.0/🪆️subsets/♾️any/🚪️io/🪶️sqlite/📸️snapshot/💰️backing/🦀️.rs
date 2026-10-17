@@ -6,7 +6,7 @@ struct Entity<'a>{row:&'a SqliteRow,used:bool}
 struct Relation<'a>{owner:i64,ordinal:usize,row:&'a SqliteRow}
 struct Relations<'a>{owner_column:usize,ordinal_column:usize,rows:Vec<Relation<'a>>}
 struct TableIndex<'a>{name:&'a str,rows:Vec<Entity<'a>>,relations:Option<Relations<'a>>}
-pub(super) struct Read<'a,'c,'p>{database:&'a SqliteDatabase,control:&'c mut SqliteSnapshotControl<'p>,tables:Vec<TableIndex<'a>>,visits:usize}
+pub struct Read<'a,'c,'p>{database:&'a SqliteDatabase,control:&'c mut SqliteSnapshotControl<'p>,tables:Vec<TableIndex<'a>>,visits:usize}
 
 fn sort<T>(values:&mut[T],key:impl Fn(&T)->(i64,usize),control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{
  fn sift<T>(values:&mut[T],mut root:usize,end:usize,key:&impl Fn(&T)->(i64,usize),work:&mut usize,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{

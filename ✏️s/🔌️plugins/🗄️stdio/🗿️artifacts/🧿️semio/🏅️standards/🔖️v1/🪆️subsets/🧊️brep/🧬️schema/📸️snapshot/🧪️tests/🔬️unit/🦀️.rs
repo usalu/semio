@@ -1,4 +1,5 @@
-use super::*;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3;
+use crate::schema::snapshot::*;
 
 /// 🧱️ A small but fully-populated, self-referentially-consistent b-rep: one triangular face
 /// bounding one shell bounding one solid. Reused by the codec_retention_law test below.

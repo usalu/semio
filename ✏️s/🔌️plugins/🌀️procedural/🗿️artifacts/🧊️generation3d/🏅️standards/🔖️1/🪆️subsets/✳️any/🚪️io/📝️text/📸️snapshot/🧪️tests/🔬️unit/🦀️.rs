@@ -1,4 +1,5 @@
 use crate::snapshot::*;
+use semio_framework_test_fixtures::fixture_text;
 use semio_s_artifact_procedural_3d_model::GENERATION_3D_SCHEMA;
 use semio_framework_os_kernel::os_store::test_support;
 use pack::snapshot::ArtifactDsl;
@@ -44,7 +45,7 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
 #[test]
 fn retained_snapshot_text_projection_borrows_original_graph_and_ranked_generation_values(){
     use semio_framework_dsl_record::native_encoding::RetainedFieldProjection;use semio_framework_value::{NativeEncodeControl,ValueRefusalKind,DslValue};
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧪️tests/🧫️fixtures/🧵️continuation/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../../../../../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧪️tests/🧫️fixtures/🧵️continuation/🔣️.json")).unwrap();
     let text=fixture["textUnit"].as_str().unwrap().repeat(fixture["projection"]["textRepeats"].as_u64().unwrap()as usize);
     for source_text in [GENERATION3D_EXAMPLE_HEX_COLUMN_TEXT,GENERATION3D_EXAMPLE_RECT_EXTRUDE_TEXT,GENERATION3D_EXAMPLE_MESH_WORKBENCH_TEXT]{
         let mut source=semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshotRead::new(parse_dsl(source_text).unwrap());
@@ -59,5 +60,4 @@ fn retained_snapshot_text_projection_borrows_original_graph_and_ranked_generatio
         for budget in fixture["budgets"].as_array().unwrap(){let mut cursor=RetainedFieldProjection::new(&*source);let mut accept=|_|true;let mut control=NativeEncodeControl::new(33554432,&mut accept);assert!(cursor.step(&*source,1,&mut control).unwrap().is_none());let actual=loop{let before=cursor.position();assert!(cursor.step(&*source,0,&mut control).unwrap().is_none());assert_eq!(cursor.position(),before);if let Some(value)=cursor.step(&*source,budget.as_u64().unwrap()as usize,&mut control).unwrap(){break value}};assert_eq!(actual,semio_framework_dsl_record::FieldValue::Record(expected.clone()));{let mut close=semio_s_artifact_procedural_3d_testkit::retirement_driver::retire_owned_for_test(actual,"projection owner");semio_s_artifact_procedural_3d_testkit::retirement_driver::drive_erased_released(close.as_mut(),"projection owner");}{let mut close=semio_s_artifact_procedural_3d_testkit::retirement_driver::retire_owned_for_test(cursor,"projection owner");semio_s_artifact_procedural_3d_testkit::retirement_driver::drive_erased_released(close.as_mut(),"projection owner");}}
         for stop in [0,1,8,64,256]{let mut cursor=RetainedFieldProjection::new(&*source);let live=std::cell::Cell::new(true);let mut accept=|_|live.get();let mut control=NativeEncodeControl::new(33554432,&mut accept);for _ in 0..stop{assert!(cursor.step(&*source,1,&mut control).unwrap().is_none())}let before=cursor.position();live.set(false);assert_eq!(cursor.step(&*source,1,&mut control).unwrap_err().kind,ValueRefusalKind::Canceled);assert_eq!(cursor.position(),before);{let mut close=semio_s_artifact_procedural_3d_testkit::retirement_driver::retire_owned_for_test(cursor,"projection owner");semio_s_artifact_procedural_3d_testkit::retirement_driver::drive_erased_released(close.as_mut(),"projection owner");}}
     }
-    eprintln!("[DEBUG] Original Generation3d graph text source budgets1/8/256, ranked generations/layout/dictionaries, zero/cancel and3byte retirement passed");
 }

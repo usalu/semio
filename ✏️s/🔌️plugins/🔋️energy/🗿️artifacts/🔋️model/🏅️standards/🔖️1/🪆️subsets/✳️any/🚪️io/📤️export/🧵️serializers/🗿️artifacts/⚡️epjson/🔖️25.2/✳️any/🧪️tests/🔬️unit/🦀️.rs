@@ -1,4 +1,5 @@
 use super::*;
+use semio_framework_test_fixtures::fixture_path;
 
 fn case(name: &str) -> Model {
     crate::bestest::model(name).expect("bestest case")
@@ -185,7 +186,7 @@ async fn a_free_float_case_writes_no_hvac_at_all() {
 const COMMITTED_EPJSON_CASES: [&str; 4] = ["600", "600FF", "900", "900FF"];
 
 fn epjson_fixture_path(case: &str) -> std::path::PathBuf {
-    std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures").join(format!("🏛️bestest-{case}")).join("⚡️model.epJSON")
+    fixture_path!("../../../../🧪️tests/🧫️fixtures").join(format!("🏛️bestest-{case}")).join("⚡️model.epJSON")
 }
 
 fn exported(name: &str) -> String {

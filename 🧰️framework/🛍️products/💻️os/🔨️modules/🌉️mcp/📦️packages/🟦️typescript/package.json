@@ -6,7 +6,14 @@
   "type": "module",
   "private": true,
   "exports": {
-    ".": "./🟦️.ts"
+    ".": "./🟦️.ts",
+    "./inference/testing/inference-service-law": "./💡️inference/🧪️testing/💼️inference-service-law/🟦️.ts",
+    "./schema": "./🧬️schema/🟦️.ts",
+    "./schema-validation": "./🧬️schema-validation/🟦️.ts",
+    "./stdio/session/data": "./📡️stdio/🎫️session/📋️data/🟦️.ts",
+    "./stdio/session/published": "./📡️stdio/🎫️session/📦️published/🟦️.ts",
+    "./testing/config": "./🧪️testing/🎚️config/🟦️.ts",
+    "./testing/fixtures": "./🧪️testing/🧫️fixtures/🟦️.ts"
   },
   "devDependencies": {
     "@modelcontextprotocol/sdk": "^1.30.0",
@@ -15,7 +22,8 @@
     "vitest": "^4.0.17",
     "@semio-tech/process": "workspace:*",
     "@semio-tech/value-ts": "workspace:*",
-    "@semio-tech/framework": "workspace:*"
+    "@semio-tech/framework": "workspace:*",
+    "@semio-tech/framework-sqlite-snapshot-ts": "workspace:*"
   },
   "license": "LGPL-3.0-or-later",
   "repository": {

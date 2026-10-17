@@ -23,7 +23,6 @@ fn shared_full_grant_owns_original_aliases_weak_backing_and_each_physical_releas
             let (step,(a,r))=observe_retirement_allocations(||owner.step(grant).unwrap());let progress=step.progress();assert_eq!((progress.retained_capacity_bytes,progress.released_bytes),(a,r));assert!(progress.copied_bytes<=copy);births+=a;released+=r;copied+=progress.copied_bytes;assert!(progress.copied_items!=0,"exact shared retirement stalled on turn {turn}");
         }
         assert!(owner.terminal_is_empty());assert_eq!(copied,0,"String payload retirement is native length metadata, copy0");assert_eq!(released,original+births);
-        eprintln!("[DEBUG] Full shared owner copy={copy} logical={copied} original={original} births={births} physical={released}");
     }}
 }
 
@@ -97,7 +96,6 @@ fn erased_controlled_owner_retains_exact_independent_grants_and_returns_refused_
     assert_eq!(observe_retirement_allocations(|| drop(owner)).1, (0, frame));
     released += frame;
     assert_eq!(released, born + source_capacity);
-    eprintln!("[DEBUG] Erased genuine ControlledRetirement preserved copy3, independent exact capacity/release, refused original pointer and observed heap conservation birth={born}/release={released}");
 }
 
 #[test]
@@ -153,7 +151,6 @@ fn native_recursive_intrinsic_retirement_admits_each_constructor_and_physical_re
         assert_eq!(copied, row["payloadBytes"].as_u64().unwrap() as usize, "{}", row["kind"]);
         assert!(released >= born);
         assert_eq!(observe_retirement_allocations(|| drop(owner)).1, (0, 0));
-        println!("[DEBUG] Intrinsic retirement kind={} copy={copied} birth={born} release={released}; exact heap receipts, zero/below nonmovement, terminal0heap", row["kind"]);
     }
     let law: serde_json::Value = serde_json::from_str(crate::text("♻️retirement/🧪️tests/🧫️fixtures/🌳️intrinsic/🔣️.json")).unwrap();
     let frontier_law: serde_json::Value = serde_json::from_str(crate::text("♻️retirement/🧪️tests/🧫️fixtures/🎮️frontier/🔣️.json")).unwrap();
@@ -236,7 +233,6 @@ fn paged_native_controlled_retirement_observes_copy_demand_without_releasing_bac
         assert_eq!(copied, row["totalCopyBytes"].as_u64().unwrap() as usize);
         assert_eq!(owner.next_copy_byte_demand().unwrap(), 0);
         assert_eq!(observe_retirement_allocations(|| drop(owner)).1, (0, 0));
-        println!("[DEBUG] Native controlled copy demand kind={} copy={copied} physical-release={released}; zero/below with independent capacity retained, exact work frees0, terminal0heap", row["kind"]);
     }
     let law: serde_json::Value = serde_json::from_str(crate::text("♻️retirement/🧪️tests/🧫️fixtures/📏️copy-demand/🔣️.json")).unwrap();
     for row in law["cases"].as_array().unwrap() {
@@ -285,11 +281,10 @@ fn paged_native_retained_clone_close_admits_exact_leaf_and_composite_demand() {
             }
             let (step,allocation)=observe_retirement_allocations(||cursor.close_step(grant).unwrap());assert!(step.progress().fits(grant));assert!(allocation.0<=step.progress().retained_capacity_bytes&&allocation.1<=step.progress().released_bytes);born+=allocation.0;released+=allocation.1;copied+=step.progress().copied_bytes;
             if copy!=0 {assert_eq!(allocation.1,0);}
-            if turn>=1024&&turn.is_power_of_two(){println!("[DEBUG] Retained leaf exact close label={label} turn={turn} copy={copy} capacity={capacity} release={release} progress={:?}",step.progress());}
+            if turn>=1024&&turn.is_power_of_two(){}
             if matches!(step,RetainedCloneStep::Complete(_)){terminal=true;break;}
         }
         assert!(terminal&&cursor.terminal_is_empty(),"retained leaf exact demand must reach terminal: {label}");assert_eq!(observe_retirement_allocations(||drop(cursor)).1,(0,0));
-        println!("[DEBUG] Retained leaf exact close label={label} demand0heap; zero/one-below/exact separately admitted copy={copied} birth={born} release={released}, copy-turn-free0 terminal0heap");
     }
     let fixture:serde_json::Value=serde_json::from_str(crate::text("🧬️retained-clone/🧪️tests/🧫️fixtures/📏️release-authority/🔣️.json")).unwrap();
     run(RetainedCloneSource::from_owner(fixture["leafCloseDemand"]["scalar"].as_u64().unwrap() as u8),"scalar");
@@ -339,7 +334,6 @@ fn retirement_struct_macro_defers_exact_field_birth_and_release_allocations() {
     assert!(turns > 1 && retirement.terminal_is_empty());
     let (_, allocation) = observe_retirement_allocations(|| drop(retirement));
     assert_eq!(allocation, (0, 0));
-    println!("[DEBUG] retirement struct macro exact nested field allocation/release observed under copy64/capacity4096/release4096, turns={turns}");
 }
 
 #[test]
@@ -380,7 +374,6 @@ fn retirement_forward_deque_keeps_original_source_and_exact_physical_backing() {
         }
         assert!(owner.terminal_is_empty() && released >= backing);
         assert_eq!(observe_retirement_allocations(|| drop(owner)).1, (0, 0));
-        println!("[DEBUG] retained forward deque: rows={count} original-allocation=true backing={backing} exact-paid-release={released}");
     }
 }
 
@@ -442,7 +435,6 @@ fn paged_native_controlled_retirement_admits_actual_birth_and_release_allocation
         let (_, terminal) = observe_retirement_allocations(|| drop(retirement));
         assert_eq!(terminal, (0, 0));
     }
-    eprintln!("[DEBUG] controlled native retirement depth={depth} admitted every scaffold/frontier birth and actual release within4096");
 }
 
 #[test]
@@ -507,7 +499,6 @@ fn paged_native_append_close_exposes_exact_capacity_and_release_demand() {
         }
         assert!(retirement.terminal_is_empty());
         let (_, allocation) = observe_retirement_allocations(|| drop(retirement));assert_eq!(allocation, (0, 0));
-        eprintln!("[DEBUG] Native UTF8 append close partial={partial} exactTurns={turns} actualReleased={released}; zero heap demand/pause/undergrant and exact separately admitted birth/release");
     }
 }
 
@@ -591,7 +582,6 @@ fn paged_native_clone_close_admits_actual_birth_release_and_zero_grants() {
             assert_eq!(allocation, (0, 0));
         }
     }
-    eprintln!("[DEBUG] controlled clone close preserves zero grants and admits every actual scaffold birth and release within4096");
 }
 
 fn admit_fixture<T:RetireOwned>(value:T)->Box<dyn ErasedSnapshotRetirement> {
@@ -640,7 +630,6 @@ fn owned_retirement_matches_neutral_exact_byte_grants() {
         let logical=match row["kind"].as_str().unwrap(){"bytes"=>row["value"].as_array().unwrap().len(),"words"=>row["value"].as_array().unwrap().len()*size_of::<u32>(),_=>neutral_logical_bytes(&row["value"])};
         assert_eq!(logical,row["bytes"].as_u64().unwrap()as usize,"{} logical oracle",row["id"]);
         assert_eq!(drain(retirement,budget["items"].as_u64().unwrap()as usize,budget["bytes"].as_u64().unwrap()as usize),heap.0-heap.1,"{} physical conservation",row["id"]);
-        println!("[DEBUG] neutral full retirement id={} logical={logical} original work={} retained net={} exact heap conservation",row["id"],budget["bytes"],heap.0-heap.1);
     }}
 }
 
@@ -712,7 +701,6 @@ fn shared_source_leases_release_all_orders_with_one_bounded_owner() {
         }
         assert_eq!(released,text.len()+3*shared::shared_retirement_birth_bytes::<String>()+std::alloc::Layout::new::<[usize;2]>().extend(std::alloc::Layout::new::<String>()).unwrap().0.pad_to_align().size());assert!(leases.iter().all(Option::is_none));
     }}
-    eprintln!("[DEBUG] full source leases all six release orders and canceled/completed laws; one bounded original source release");
 }
 
 #[test]
@@ -723,7 +711,6 @@ fn native_controls_resume_same_cumulative_admission_and_cancel_before_more_work(
     let event=std::cell::Cell::new(None);let mut resumed=|value|{event.set(Some(value));true};let mut encode=NativeEncodeControl::resume(receipt,&mut resumed).unwrap();encode.checkpoint().unwrap();assert_eq!(event.get().unwrap().completed,4);assert_eq!(event.get().unwrap().total,9);assert_eq!(encode.owned_bytes(),5);encode.charge(8).unwrap();encode.advance(5).unwrap();assert_eq!(encode.owned_bytes(),maximum);assert_eq!(encode.charge(1).unwrap_err().kind,crate::ValueRefusalKind::OwnershipLimit);let receipt=encode.pause().unwrap();let mut canceled=|_|false;let mut encode=NativeEncodeControl::resume(receipt,&mut canceled).unwrap();assert_eq!(encode.step().unwrap_err().kind,crate::ValueRefusalKind::Canceled);assert_eq!(encode.owned_bytes(),maximum);
     let mut accepted=|_|true;let mut decode=NativeDecodeControl::new(maximum,&mut accepted);decode.begin_stage(9).unwrap();decode.charge(5).unwrap();decode.advance(4).unwrap();let receipt=decode.pause().unwrap();
     let event=std::cell::Cell::new(None);let mut resumed=|value|{event.set(Some(value));true};let mut decode=NativeDecodeControl::resume(receipt,&mut resumed).unwrap();decode.checkpoint().unwrap();assert_eq!(event.get().unwrap().completed,4);assert_eq!(event.get().unwrap().total,9);assert_eq!(decode.owned_bytes(),5);decode.charge(8).unwrap();decode.advance(5).unwrap();assert_eq!(decode.charge(1).unwrap_err().kind,crate::ValueRefusalKind::OwnershipLimit);let receipt=decode.pause().unwrap();let mut canceled=|_|false;let mut decode=NativeDecodeControl::resume(receipt,&mut canceled).unwrap();assert_eq!(decode.step().unwrap_err().kind,crate::ValueRefusalKind::Canceled);assert_eq!(decode.owned_bytes(),maximum);
-    eprintln!("[DEBUG] encoding/decoding resume own receipt; cumulative13bytes; fresh callback cancellation");
 }
 
 #[test]
@@ -736,7 +723,6 @@ fn native_encoding_capacity_admission_consumes_the_same_counter_owner(){
     let mut control=match control.admit_capacity(law["sourceBytes"].as_u64().unwrap()as usize,law["sourceMultiples"].as_u64().unwrap()as usize,law["scaffoldBytes"].as_u64().unwrap()as usize){Ok(control)=>control,Err(_)=>panic!("source policy capacity admitted")};assert_eq!(control.maximum_bytes(),law["maximumBytes"].as_u64().unwrap()as usize);control.checkpoint().unwrap();assert_eq!(event.get().unwrap(),before);
     let maximum=control.maximum_bytes();control.charge(maximum-control.owned_bytes()).unwrap();control.advance(prior["finalUnits"].as_u64().unwrap()as usize).unwrap();assert_eq!(control.charge(law["overrunBytes"].as_u64().unwrap()as usize).unwrap_err().kind,ValueRefusalKind::OwnershipLimit);control.checkpoint().unwrap();let complete=event.get().unwrap();assert_eq!(complete.completed,prior["total"].as_u64().unwrap()as usize);assert_eq!(complete.owned_bytes,maximum);let receipt=control.pause().unwrap();
     let canceled_event=std::cell::Cell::new(None);let mut canceled=|value|{assert_eq!(source.as_ptr(),pointer);canceled_event.set(Some(value));false};let mut control=NativeEncodeControl::resume(receipt,&mut canceled).unwrap();assert_eq!(control.step().unwrap_err().kind,ValueRefusalKind::Canceled);assert_eq!(canceled_event.get().unwrap(),complete);drop(control);assert_eq!(source.as_ptr(),pointer);assert_eq!(drain(admit_shared_fixture(source,true),1,3),law["sourceBytes"].as_u64().unwrap()as usize+shared::shared_retirement_birth_bytes::<String>()+std::alloc::Layout::new::<[usize;2]>().extend(std::alloc::Layout::new::<String>()).unwrap().0.pad_to_align().size());
-    eprintln!("[DEBUG] consuming source capacity admission kept exact owned/completed/total counters and source lease identity; refusal preserved owner; one-byte overrun and resumed cancellation");
 }
 
 #[test]
@@ -756,7 +742,6 @@ fn native_capacity_closed_vectors_preserve_the_consumed_admission_owner(){
         assert_eq!(control.owned_bytes(),before.owned_bytes);control.checkpoint().unwrap();assert_eq!(event.get().unwrap(),before);control.advance(5).unwrap();let complete=event.get().unwrap();assert_eq!(complete.completed,9);assert_eq!(complete.total,9);assert_eq!(complete.owned_bytes,before.owned_bytes);
         let receipt=control.pause().unwrap();let canceled_event=std::cell::Cell::new(None);let mut canceled=|value|{canceled_event.set(Some(value));false};let mut control=NativeEncodeControl::resume(receipt,&mut canceled).unwrap();assert_eq!(control.step().unwrap_err().kind,ValueRefusalKind::Canceled);assert_eq!(canceled_event.get().unwrap(),complete);assert_eq!(control.owned_bytes(),before.owned_bytes);
     }
-    eprintln!("[DEBUG] native source capacity twelve closed vectors preserve owner/counters/callback; checked overflow, signed ceiling, refusal and resumed cancellation");
 }
 
 use crate::{ValueRefusalKind,retirement::allocation_return::{ParentAllocationReturn,AllocationReturnStep}};
@@ -774,7 +759,6 @@ fn parent_return_fixture_demands_actual_full_allocation_release(){
     let mut released=0;for _ in 0..3{match parent.close_step(1,maximum){AllocationReturnStep::Complete=>break,AllocationReturnStep::Pending{released_items,released_bytes}=>{assert!(released_items<=1&&released_bytes<=maximum);released+=released_bytes;}}}assert_eq!(released,fixture["expectedTextBytes"].as_u64().unwrap()as usize+fixture["expectedVectorBytes"].as_u64().unwrap()as usize);assert_eq!(parent.retained_bytes(),0);assert!(parent.terminal_is_empty());
     let mut oversized="x".repeat(fixture["refusedPayloadBytes"].as_u64().unwrap()as usize);let pointer=oversized.as_ptr();let capacity=oversized.capacity();assert_eq!(parent.return_text(&mut oversized,1).unwrap_err().kind,ValueRefusalKind::OwnershipLimit);assert_eq!(oversized.as_ptr(),pointer);assert_eq!(oversized.capacity(),capacity);assert_eq!(oversized.len(),fixture["refusedPayloadBytes"].as_u64().unwrap()as usize);assert!(parent.terminal_is_empty());
     assert_eq!(serde_json::to_string(&oversized).unwrap(),serde_json::to_string(&"x".repeat(fixture["refusedPayloadBytes"].as_u64().unwrap()as usize)).unwrap());
-    eprintln!("[DEBUG] genuine parent flat-allocation tokens preserve actual source pointers/layouts, zero/full-slot/4byte refusal and terminal=false until physical full-grant deallocation; original8194 exceeds4096 authority unchanged");
 }
 
 #[test]
@@ -802,7 +786,6 @@ fn controlled_retirement_separates_logical_work_from_exact_physical_release() {
         }
         assert!(owner.terminal_is_empty());assert_eq!(processed,row["processedBytes"].as_u64().unwrap()as usize);
         assert_eq!(observe_retirement_allocations(||drop(owner)).1,(0,0));
-        println!("[DEBUG] controlled retirement work/release id={} processed={processed} exact-allocator-free={physical}",row["id"]);
     }
     let law:serde_json::Value=serde_json::from_str(crate::text("♻️retirement/🧪️tests/🧫️fixtures/⚖️physical-work/🔣️.json")).unwrap();
     let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:64,maximum_capacity_bytes:4096,maximum_release_bytes:4096,maximum_depth:64};
@@ -834,7 +817,6 @@ fn controlled_retirement_separates_logical_work_from_exact_physical_release_cold
         if terminal{assert_eq!(heap,(0,frame));terminal_frame+=1;}
     }
     assert!(slot.is_none());assert_eq!(terminal_frame,1);assert_eq!(copied,0);assert_eq!(physical,original+born);
-    println!("[DEBUG] full typed retirement original UTF8 work physical0; all scaffolds born={born}/released={physical}; exact outer frame={frame}");
 }
 
 #[test]
@@ -856,7 +838,6 @@ fn shared_retirement_physical_demand_preserves_original_backing_and_terminal_fra
             let (step,heap)=observe_retirement_allocations(||crate::close_factory_ticket(&mut slot,grant).unwrap());let progress=step.progress();assert!(progress.fits(grant));assert_eq!(heap,(progress.retained_capacity_bytes,progress.released_bytes));born+=heap.0;physical+=heap.1;copied+=progress.copied_bytes;
         }
         assert!(slot.is_none());assert_eq!(copied,0);assert_eq!(physical,backing+required+born);
-        println!("[DEBUG] shared original backing row={} pointer={pointer:p} copy={copy} logical={copied} independent birth={born} physical={physical}",row["id"]);
     }}
 }
 #[test]
@@ -911,7 +892,6 @@ fn erased_snapshot_full_grant_admission_preserves_original_owner_and_all_four_cu
             assert!(slot.is_none());
             assert_eq!(copied, 0);
             assert_eq!(released, original + born);
-            eprintln!("[DEBUG] erased full-grant original-pointer admitted work={work} copy={copied} births={born} physical={released}");
         }
     }
 }
@@ -932,7 +912,7 @@ fn original_heap_and_reverse_preserve_backing_and_full_retirement_receipts(){
             let (zero,heap)=observe(||retirement.step(RetainedCloneGrant {maximum_items:0,..grant}).unwrap());assert_eq!(zero.progress(),Default::default());assert_eq!(heap,(0,0));
             let (step,(birth,release))=observe(||retirement.step(grant).unwrap());assert!(step.progress().fits(grant));assert_eq!((birth,release),(step.progress().retained_capacity_bytes,step.progress().released_bytes));born+=birth;freed+=release;turns+=1;assert!(turns<100000);
         }
-        assert!(refused>0);assert_eq!(source_birth-source_release+born,freed);let (_,heap)=observe(||drop(retirement));assert_eq!(heap,(0,law["terminalDropBytes"].as_u64().unwrap() as usize));eprintln!("[DEBUG] Original heap/Reverse sameBacking=true sameKeys=true handoffBirth=0 handoffFree=0 copy={copy} source={} admitted={born} physical={freed} eightByteRefusals={refused} turns={turns} terminalDrop=0",source_birth-source_release);
+        assert!(refused>0);assert_eq!(source_birth-source_release+born,freed);let (_,heap)=observe(||drop(retirement));assert_eq!(heap,(0,law["terminalDropBytes"].as_u64().unwrap() as usize));
     }
 }
 
@@ -962,5 +942,4 @@ fn original_five_field_tuple_retirement_conserves_every_native_owner_and_receipt
     }
     assert!(owner.terminal_is_empty());assert_eq!(observe(||drop(owner)).1,(0,0));
     assert_eq!(original_heap.0+births,original_heap.1+releases);
-    eprintln!("[DEBUG] original tuple5 native ownership physicalConservation=true originalPointers=true independentSerde=true everyActualReceipt=true terminalDrop0=true");
 }

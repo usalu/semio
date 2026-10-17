@@ -8,8 +8,8 @@ use super::*;
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 pub struct SetShapeText {
-    pub(crate) address: PptxShapeAddress,
-    pub(crate) text: String,
+    pub address: PptxShapeAddress,
+    pub text: String,
 }
 
 impl protocol::MutationKind<PptxSnapshot, PptxMutation> for SetShapeText {

@@ -1,0 +1,106 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://json.schemas.assets.semio-tech.com/ticket/dependency-completion/proposal.json",
+  "title": "Prospective Fixed All-Scope Dependency Completion",
+  "$defs": {
+    "Protocol": {
+      "const": {
+        "version": 1,
+        "purpose": "produce-and-bind-all-current-dependencies",
+        "maximumScopes": 64,
+        "maximumPathUnits": 256,
+        "readyName": "bindings.json",
+        "readyEncoding": "canonical-firstparty-shared-codec-version-generation-ordered-bindings",
+        "readyMaximumBytes": "ProjectionPolicy.maximumReceiptBytes",
+        "sourceTransitionBarrier": "all-scopes-installed-and-256-qualified-all-ready-receipts-durable",
+        "funding": "same-live-parent-and-retained-whole-row-token-exact-current-policy-backing-raw-journal",
+        "staging": "same-live-private-core-input-completion-all-fresh-roots-no-old-probe-adoption",
+        "readyWriter": "fixed-private-repository-issuer-existing-generic-exclusive-relative-file",
+        "coreInputMeaning": "exact-staged-inputs-installedQualified-false",
+        "readyMeaning": "qualified-generation-plan-not-source-activation-or-native-authority",
+        "physicalGate": "windows-mapped-native-root-and-runtime-unqualified",
+        "wholeAllocationRetired": false
+      }
+    },
+    "Case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode",
+        "accepted",
+        "scopes",
+        "sourceTransitions",
+        "events"
+      ],
+      "properties": {
+        "mode": {
+          "enum": [
+            "all-scopes",
+            "single-scope",
+            "copied-core-completion",
+            "serialized-core-completion",
+            "old-probe-root",
+            "wrong-original",
+            "sibling-control",
+            "closed-input-scope",
+            "pending-native-reader",
+            "raw-journal-drift",
+            "whole-row-mismatch",
+            "one-root-existing",
+            "input-file-drift",
+            "recipe-drift",
+            "source-leaf-drift",
+            "ancestor-drift",
+            "unprepared-scope",
+            "path-257",
+            "directory-source-without-preserve-intent",
+            "unknown-export-target",
+            "workspace-export-unqualified",
+            "external-installer-environment",
+            "windows-native-root-unqualified",
+            "late-installer-failure",
+            "second-scope-path-refusal",
+            "ready-first-failure",
+            "ready-second-failure",
+            "source-before-first-bind",
+            "source-after-first-bind",
+            "final-cas-failure",
+            "undefined-primary-close-failure",
+            "frozen-primary-close-failure",
+            "cancel-before-first-binding",
+            "shared-32-refusal",
+            "unawaited-accepted-child-drained"
+          ]
+        },
+        "accepted": {
+          "type": "boolean"
+        },
+        "scopes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 64
+        },
+        "sourceTransitions": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4096
+        },
+        "events": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 256,
+          "items": {
+            "type": "string",
+            "pattern": "^(capture|stage-all|install:[0-9]+|qualified:[0-9]+|all-qualified|ready:[0-9]+|all-ready|bind:[0-9]+|final|settled|refused)$"
+          }
+        }
+      }
+    }
+  },
+  "type": "array",
+  "minItems": 35,
+  "maxItems": 35,
+  "items": {
+    "$ref": "#/$defs/Case"
+  }
+}

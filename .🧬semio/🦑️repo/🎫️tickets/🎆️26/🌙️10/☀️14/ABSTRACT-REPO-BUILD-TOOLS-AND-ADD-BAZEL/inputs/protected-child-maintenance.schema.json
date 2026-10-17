@@ -1,0 +1,616 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio-protected-child-maintenance-proposal",
+  "description": "Portable proposed Source-test inputs only; no boolean, request or fixture DATA grants runtime authority. Fold eventual runtime definitions into existing owning schemas.",
+  "definitions": {
+    "Admission": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "fault",
+        "expectedBoundary",
+        "childEffects",
+        "journalMutations"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9-]+$"
+        },
+        "fault": {
+          "enum": [
+            "none",
+            "read-token",
+            "copied-token",
+            "foreign-token",
+            "escaped-token",
+            "parent-not-exclusive",
+            "foreign-control",
+            "sibling-control",
+            "expired-control",
+            "cancelled-control",
+            "parent-receipt-cas",
+            "parent-backing-cas",
+            "parent-root-cas",
+            "parent-kernel-association",
+            "missing-journal",
+            "short-journal",
+            "unknown-checkpoint",
+            "journal-cas",
+            "allocation-missing",
+            "allocation-duplicate",
+            "allocation-owner",
+            "allocation-kind",
+            "allocation-phase",
+            "allocation-bytes",
+            "child-request-allocation",
+            "child-request-parent-backing",
+            "child-request-policy-sha",
+            "child-request-envelope",
+            "namespace-missing",
+            "namespace-parent-inode",
+            "namespace-entry-inode",
+            "namespace-too-deep",
+            "namespace-extra-entry",
+            "creator-claim-missing",
+            "creator-claim-incomplete",
+            "creator-parent-identity",
+            "creator-directory-identity",
+            "creator-underlying-root",
+            "creator-claim-cas",
+            "child-backing-cas",
+            "child-receipt-cas",
+            "child-receipt-not-current",
+            "child-symlink",
+            "child-alias",
+            "unknown-child-pending",
+            "child-kernel-association",
+            "child-has-descendant",
+            "child-sh-busy",
+            "child-ex-busy",
+            "mapping-sh-upgrade",
+            "mapping-ex-busy",
+            "late-journal-change",
+            "late-claim-change",
+            "late-roster-change"
+          ]
+        },
+        "expectedBoundary": {
+          "enum": [
+            "admit-model",
+            "parent-authority",
+            "control",
+            "parent-facts",
+            "journal",
+            "allocation",
+            "namespace",
+            "creator",
+            "child-facts",
+            "child-ex",
+            "mapping-ex",
+            "final-journal"
+          ]
+        },
+        "childEffects": {
+          "const": 0
+        },
+        "journalMutations": {
+          "const": 0
+        }
+      }
+    },
+    "Settlement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "action",
+        "obligations",
+        "journalDurability",
+        "expectedCharge",
+        "settlementDispatch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9-]+$"
+        },
+        "action": {
+          "enum": [
+            "publish",
+            "retire"
+          ]
+        },
+        "obligations": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "parentRetained",
+            "childExclusive",
+            "admissionClosed",
+            "workDrained",
+            "physicalRemoved",
+            "claimRemoved",
+            "claimMetadataSynced",
+            "kernelClosed",
+            "readerClosed",
+            "namespaceRemoved",
+            "namespaceMetadataSynced"
+          ],
+          "properties": {
+            "parentRetained": {
+              "type": "boolean"
+            },
+            "childExclusive": {
+              "type": "boolean"
+            },
+            "admissionClosed": {
+              "type": "boolean"
+            },
+            "workDrained": {
+              "type": "boolean"
+            },
+            "physicalRemoved": {
+              "type": "boolean"
+            },
+            "claimRemoved": {
+              "type": "boolean"
+            },
+            "claimMetadataSynced": {
+              "type": "boolean"
+            },
+            "kernelClosed": {
+              "type": "boolean"
+            },
+            "readerClosed": {
+              "type": "boolean"
+            },
+            "namespaceRemoved": {
+              "type": "boolean"
+            },
+            "namespaceMetadataSynced": {
+              "type": "boolean"
+            }
+          }
+        },
+        "journalDurability": {
+          "enum": [
+            "not-attempted",
+            "succeeded",
+            "failed-after-write"
+          ]
+        },
+        "expectedCharge": {
+          "enum": [
+            "retained",
+            "settled",
+            "uncertain-durability"
+          ]
+        },
+        "settlementDispatch": {
+          "type": "boolean"
+        }
+      }
+    },
+    "Roster": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "action",
+        "parentAssociation",
+        "before",
+        "after",
+        "selectedRoot",
+        "selectedAssociation",
+        "siblingAssociations",
+        "expected",
+        "publicationTerminalKernel"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9-]+$"
+        },
+        "action": {
+          "enum": [
+            "publish",
+            "retire"
+          ]
+        },
+        "parentAssociation": {
+          "enum": [
+            "same",
+            "changed"
+          ]
+        },
+        "before": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Association"
+          },
+          "maxItems": 64
+        },
+        "after": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Association"
+          },
+          "maxItems": 64
+        },
+        "selectedRoot": {
+          "type": "string"
+        },
+        "selectedAssociation": {
+          "enum": [
+            "same",
+            "canonical-publication-terminal",
+            "foreign"
+          ]
+        },
+        "siblingAssociations": {
+          "enum": [
+            "same",
+            "changed"
+          ]
+        },
+        "expected": {
+          "type": "boolean"
+        },
+        "publicationTerminalKernel": {
+          "type": "string",
+          "maxLength": 4096
+        }
+      }
+    },
+    "Lifetime": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "cause",
+        "acceptedBeforeClose",
+        "afterCloseAttempt",
+        "expected",
+        "primaryIdentity"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9-]+$"
+        },
+        "cause": {
+          "enum": [
+            "none",
+            "undefined",
+            "frozen",
+            "cancelled",
+            "expired",
+            "body-plus-cleanup",
+            "duplicate-primary",
+            "cleanup-expired",
+            "escaped-child",
+            "unawaited-child"
+          ]
+        },
+        "acceptedBeforeClose": {
+          "type": "boolean"
+        },
+        "afterCloseAttempt": {
+          "type": "boolean"
+        },
+        "expected": {
+          "enum": [
+            "success",
+            "late-admission-refused-and-drained",
+            "primary-preserved",
+            "cleanup-only-no-new-effects",
+            "ordered-distinct-aggregate",
+            "retain-unresolved-owner",
+            "zero-effects-refusal",
+            "failure-joined-before-parent-close"
+          ]
+        },
+        "primaryIdentity": {
+          "enum": [
+            "none",
+            "undefined",
+            "frozen",
+            "cancelled",
+            "expired",
+            "body-first",
+            "same-object",
+            "cleanup-expired",
+            "child"
+          ]
+        }
+      }
+    },
+    "Protocol": {
+      "const": {
+        "scope": "proposal-only",
+        "parentPurpose": "mounted-parent-maintenance",
+        "readPurposeUnchanged": "mounted-parent-read",
+        "maximumAcceptedChildrenPerParent": 1,
+        "maximumConcurrentChildrenPerParent": 1,
+        "nonwaitingParent": true,
+        "nonwaitingChild": true,
+        "nativeNamespaceMaximumDepth": 1,
+        "cleanupReserveMilliseconds": 10000,
+        "maximumReceiptBytes": 4096,
+        "maximumJournalBytes": 1048576,
+        "maximumCreatorClaimBytes": 16384,
+        "maximumCreatorClaimRecords": 3,
+        "maximumMappingOwners": 32,
+        "maximumMappingPending": 32,
+        "maximumMaintainedDescendants": 64,
+        "nativeEffectsInCorpus": 0,
+        "maximumEnclosingImages": 4
+      }
+    },
+    "RetirementOrder": {
+      "const": [
+        "parent-ex",
+        "parent-cleanup-enrolled",
+        "parent-facts",
+        "kernel-before",
+        "journal-snapshot-close",
+        "namespace-and-creator",
+        "child-ex",
+        "mapping-ex",
+        "journal-final-recheck",
+        "child-owner",
+        "admission-close",
+        "accepted-work-drain",
+        "physical-removal",
+        "claim-removal-sync",
+        "child-kernel-close",
+        "child-reader-close",
+        "namespace-remove-sync",
+        "journal-retiring-retired-sync",
+        "kernel-after",
+        "parent-borrower-close"
+      ]
+    },
+    "Baseline": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "parentRequest",
+        "policy",
+        "allocation",
+        "parentBackingIdentity",
+        "journalSha256",
+        "journalBytes"
+      ],
+      "properties": {
+        "parentRequest": {
+          "$ref": "#/definitions/MaintenanceParentRequest"
+        },
+        "policy": {
+          "$ref": "semio-native-storage#/definitions/Policy"
+        },
+        "allocation": {
+          "$ref": "semio-native-storage#/definitions/Allocation"
+        },
+        "parentBackingIdentity": {
+          "type": "string"
+        },
+        "journalSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "journalBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1048576
+        }
+      }
+    },
+    "MaintenanceParentRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "purpose",
+        "wait",
+        "receiptSha256",
+        "directory",
+        "backing",
+        "root"
+      ],
+      "properties": {
+        "version": {
+          "$ref": "semio-native-storage#/definitions/ProtectedParentRequest/properties/version"
+        },
+        "purpose": {
+          "const": "mounted-parent-maintenance"
+        },
+        "wait": {
+          "$ref": "semio-native-storage#/definitions/ProtectedParentRequest/properties/wait"
+        },
+        "receiptSha256": {
+          "$ref": "semio-native-storage#/definitions/ProtectedParentRequest/properties/receiptSha256"
+        },
+        "directory": {
+          "$ref": "semio-native-storage#/definitions/ProtectedParentRequest/properties/directory"
+        },
+        "backing": {
+          "$ref": "semio-native-storage#/definitions/ProtectedParentRequest/properties/backing"
+        },
+        "root": {
+          "$ref": "semio-native-storage#/definitions/ProtectedParentRequest/properties/root"
+        }
+      }
+    },
+    "Association": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "root",
+        "image",
+        "backingIdentity",
+        "kernelIdentity"
+      ],
+      "properties": {
+        "root": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "image": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "backingIdentity": {
+          "type": "string",
+          "maxLength": 4096
+        },
+        "kernelIdentity": {
+          "type": "string",
+          "maxLength": 4096
+        }
+      }
+    },
+    "Classification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "classification",
+        "completeFundedAssociation",
+        "typedDomainEnrollment",
+        "completeCurrentDomainFacts",
+        "leafJournalZero",
+        "nonRecomputableScope",
+        "knownFixtureOnly",
+        "requestedScope",
+        "expected",
+        "dedicatedParentChildCharge",
+        "command"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9-]+$"
+        },
+        "classification": {
+          "enum": [
+            "funded-child",
+            "independent-domain-leaf"
+          ]
+        },
+        "completeFundedAssociation": {
+          "type": "boolean"
+        },
+        "typedDomainEnrollment": {
+          "type": "boolean"
+        },
+        "completeCurrentDomainFacts": {
+          "type": "boolean"
+        },
+        "leafJournalZero": {
+          "type": "boolean"
+        },
+        "nonRecomputableScope": {
+          "type": "boolean"
+        },
+        "knownFixtureOnly": {
+          "type": "boolean"
+        },
+        "requestedScope": {
+          "enum": [
+            "exact-created-child",
+            "exact-declared-domain-leaf",
+            "unknown-named-subtree",
+            "historical-global-tree",
+            "exact-selected-current-fixture"
+          ]
+        },
+        "expected": {
+          "enum": [
+            "funded-child-only",
+            "independent-leaf-no-parent-charge-settlement",
+            "refuse"
+          ]
+        },
+        "dedicatedParentChildCharge": {
+          "type": "boolean"
+        },
+        "command": {
+          "enum": [
+            "publish",
+            "retire"
+          ]
+        }
+      }
+    }
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "scope",
+    "baseline",
+    "admission",
+    "rosters",
+    "settlement",
+    "lifetime",
+    "retirementOrder",
+    "classification"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "scope": {
+      "const": "portable proposed laws; no maintenance implementation or Native authority"
+    },
+    "baseline": {
+      "$ref": "#/definitions/Baseline"
+    },
+    "admission": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 128,
+      "items": {
+        "$ref": "#/definitions/Admission"
+      }
+    },
+    "rosters": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 32,
+      "items": {
+        "$ref": "#/definitions/Roster"
+      }
+    },
+    "settlement": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 32,
+      "items": {
+        "$ref": "#/definitions/Settlement"
+      }
+    },
+    "lifetime": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 32,
+      "items": {
+        "$ref": "#/definitions/Lifetime"
+      }
+    },
+    "retirementOrder": {
+      "$ref": "#/definitions/RetirementOrder"
+    },
+    "classification": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/Classification"
+      },
+      "minItems": 1,
+      "maxItems": 32
+    }
+  }
+}

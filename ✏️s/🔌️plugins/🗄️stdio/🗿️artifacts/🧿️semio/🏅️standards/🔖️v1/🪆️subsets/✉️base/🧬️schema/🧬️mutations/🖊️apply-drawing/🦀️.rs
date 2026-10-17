@@ -3,7 +3,14 @@
 //! `SemioDrawingMutation`'s own already-real `Mutation` impl (via its `🔺️diff` and `↩️inverse`), never re-deriving that subset's own
 //! per-field logic — the envelope routes, it does not redefine.
 
-use super::*;
+#[allow(unused_imports)]
+use protocol::Mutation;
+#[allow(unused_imports)]
+use crate::schema::diff::SemioDiff;
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_semio_drawing::schema::mutations::SemioDrawingMutation;
+#[allow(unused_imports)]
+use crate::schema::snapshot::SemioSnapshot;
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
@@ -13,13 +20,16 @@ pub struct ApplyDrawing {
     pub mutation: SemioDrawingMutation,
 }
 
-impl protocol::MutationKind<SemioSnapshot, SemioMutation> for ApplyDrawing {
+impl<Op> protocol::MutationKind<SemioSnapshot, Op> for ApplyDrawing
+where
+    Op: protocol::Mutation<SemioSnapshot, Diff = crate::schema::diff::SemioDiff> + From<ApplyDrawing>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "apply", entity: "drawing", kind: "apply-drawing", record: "ApplyDrawing" };
 
-    fn diff(&self, base: &SemioSnapshot) -> protocol::MutationOutcome<<SemioMutation as Mutation<SemioSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioSnapshot) -> protocol::MutationOutcome<<Op as Mutation<SemioSnapshot>>::Diff> {
         diff::diff(self, base)
     }
-    fn inverse(&self, base: &SemioSnapshot) -> Result<Vec<SemioMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &SemioSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         inverse::inverse(self, base)?
     

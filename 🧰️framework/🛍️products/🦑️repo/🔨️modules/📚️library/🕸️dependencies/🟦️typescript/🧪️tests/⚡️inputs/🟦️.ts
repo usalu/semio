@@ -41,7 +41,9 @@ export async function testTypeScriptSourceInputs(generated: string): Promise<voi
   assert.deepEqual(Object.keys(esbuild.metafile.inputs).filter(path => !fixture.contract.generated.includes(path)).sort(), files());
   const bun = await Bun.build({ entrypoints: [join(root, "entry.ts")], format: "cjs", target: "node" });
   assert.equal(bun.success, true, bun.logs.map(String).join("\n"));
-  for (const source of [esbuild.outputFiles[0].text, await bun.outputs[0].text()]) {
+  const bunOutput = bun.outputs[0];
+  assert.ok(bunOutput, "The successful Bun build must expose its authored output");
+  for (const source of [esbuild.outputFiles[0].text, await bunOutput.text()]) {
     await receiveScriptProcessInvocation(process.env, async original => {
       const output = await captureOwnedCommandV1("node", ["-e", `${source}\nconsole.log(JSON.stringify(module.exports.result))`], root, { control: scriptCompilerAdmissionControlV1(original, "build:declared-source:oracle", 10000) });
       assert.equal(Number(output.trim().split("\n").at(-1)), fixture.result);

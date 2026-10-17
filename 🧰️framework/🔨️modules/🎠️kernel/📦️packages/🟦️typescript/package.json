@@ -6,11 +6,27 @@
   "type": "module",
   "private": true,
   "exports": {
-    ".": "./🟦️.ts"
+    ".": "./🟦️.ts",
+    "./clipboard": "./📋️clipboard/🟦️.ts",
+    "./clipboard/schema": "./📋️clipboard/🧬️schema/🟦️.ts",
+    "./effect": "./⚡️effect/🟦️.ts",
+    "./merge-outcome": "./🔄️merge-outcome/🟦️.ts",
+    "./notice-labels": "./🏷️notice-labels/🟦️.ts",
+    "./package-assets": "./📦️package-assets/🟦️.ts",
+    "./plugin-source": "./🔌️plugin-source/🟦️.ts",
+    "./return/content/input": "./📤️return/📦️content/📥️input/🟦️.ts",
+    "./spawned-job": "./🛠️spawned-job/🟦️.ts",
+    "./testing/fixtures": "./🧪️testing/🧫️fixtures/🟦️.ts",
+    "./turn-outcome-broadcast": "./📡️turn-outcome-broadcast/🟦️.ts",
+    "./ui-dirty-scope": "./🎯️ui-dirty-scope/🟦️.ts",
+    "./video-render-program": "./🎥️video-render-program/🟦️.ts"
   },
   "dependencies": {
     "@semio-tech/framework": "workspace:*",
     "@semio-tech/framework-actor": "workspace:*",
+    "@semio-tech/framework-canvas-ts": "workspace:*",
+    "@semio-tech/framework-io-base64-ts": "workspace:*",
+    "@semio-tech/framework-io-schema-ts": "workspace:*",
     "@semio-tech/schema-ts": "workspace:*",
     "@semio-tech/schema-validator-ts": "workspace:*",
     "@semio-tech/value-ts": "workspace:*"
@@ -25,7 +41,8 @@
     "vitest": "^4.0.17",
     "@semio-tech/process": "workspace:*",
     "ajv": "8.20.0",
-    "iconv-lite": "0.6.3"
+    "iconv-lite": "0.6.3",
+    "@semio-tech/framework-replication": "workspace:*"
   },
   "license": "LGPL-3.0-or-later",
   "repository": {

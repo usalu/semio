@@ -1,6 +1,6 @@
 use crate::editor::puzzle2d::config::Puzzle2dConfig;
 use crate::editor::puzzle2d::modes::edit::tools::fill;
-use crate::editor::puzzle2d::unit_tests::context::*;
+use crate::editor::puzzle2d::testkit::*;
 use semio_framework_plugin::{PluginApp, ViewModel, WindowMeasure};
 use semio_framework_pack_json::json;
 

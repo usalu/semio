@@ -1,6 +1,5 @@
 //! 🕳️ `delete-texture` — removes an id-keyed texture.
 
-use crate::schema::mutations::SemioMeshMutation;
 use crate::schema::snapshot::SemioMeshSnapshot;
 
 //#region 🔖️Payload
@@ -11,13 +10,16 @@ pub struct DeleteTexture {
     pub id: String,
 }
 
-impl protocol::MutationKind<SemioMeshSnapshot, SemioMeshMutation> for DeleteTexture {
+impl<Op> protocol::MutationKind<SemioMeshSnapshot, Op> for DeleteTexture
+where
+    Op: protocol::Mutation<SemioMeshSnapshot, Diff = crate::schema::diff::SemioMeshDiff> + From<DeleteTexture> + From<crate::schema::mutations::create_texture::CreateTexture>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "texture", kind: "delete-texture", record: "DeletedTexture" };
 
-    fn diff(&self, base: &SemioMeshSnapshot) -> protocol::MutationOutcome<<SemioMeshMutation as protocol::Mutation<SemioMeshSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioMeshSnapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<SemioMeshSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &SemioMeshSnapshot) -> Result<Vec<SemioMeshMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &SemioMeshSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

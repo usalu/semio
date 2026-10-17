@@ -1,12 +1,14 @@
 //! 🧬️ Puzzle5d diff schema — sparse typed delta over the artifact: per-field entity patches and id-keyed collection deltas.
 
 use crate::standards::v1::subsets::any::schema::Puzzle5dArtifact;
-use crate::{Puzzle5dCompatSpecificity, Puzzle5dFastener, Puzzle5dGrip, Puzzle5dKindCatalogsExtra, Puzzle5dKindCompatibility, Puzzle5dMeta, Puzzle5dPart, Puzzle5dPart2d, Puzzle5dPart3d, Puzzle5dPartAnchor, Puzzle5dGrip2d, Puzzle5dGrip3d, Puzzle5dScale, Puzzle5dTargetVolume};
+use crate::standards::v1::subsets::any::schema::document_records::{Puzzle5dCompatSpecificity, Puzzle5dFastener, Puzzle5dGrip, Puzzle5dKindCompatibility, Puzzle5dMeta, Puzzle5dPart, Puzzle5dPart2d, Puzzle5dPart3d, Puzzle5dPartAnchor, Puzzle5dGrip2d, Puzzle5dGrip3d, Puzzle5dScale, Puzzle5dTargetVolume};
+use crate::standards::v1::subsets::any::schema::kind_catalogs::{Puzzle5dKindCatalogsExtra};
 use crate::Puzzle5dSnapshot;
 use ::semio_framework_schema::ArtifactSchema;
 use protocol::{DiffAlgebra, MutationDiff};
 use protocol::list_delta::RowPatch;
 use semio_s_artifact_stdio_semio_kit::schema::snapshot::SemioKitSnapshot;
+use semio_s_artifact_puzzle_3d_mutations_selection::puzzle3d_targets_invariant as puzzle5d_targets_invariant;
 
 //#region 🔖️Diff
 /// 🔺️ Sparse typed delta for the puzzle5d artifact: per-field entity patches and id-keyed collection deltas.
@@ -849,4 +851,70 @@ impl DiffAlgebra<Puzzle5dSnapshot> for Puzzle5dDiff {
     fn is_empty(&self) -> bool {
         self.artifact.is_none() && self.schema.is_none() && self.domain.is_none() && self.label.is_none() && self.meta.as_ref().is_none_or(|patch| patch.is_empty()) && self.kind_catalogs.is_none() && self.kind_catalogs_extra.is_none() && self.kind_compatibility.as_ref().is_none_or(Puzzle5dKindCompatibilityDelta::is_empty) && self.parts.as_ref().is_none_or(Puzzle5dPartsDelta::is_empty) && self.fasteners.as_ref().is_none_or(Puzzle5dFastenersDelta::is_empty) && self.target_volumes.as_ref().is_none_or(Puzzle5dTargetVolumesDelta::is_empty)
     }
+}
+
+/// 🧭️ The members of a parametric selection leaf's target set the transform acts on, in document order, with the
+/// `mutation.partial` warnings of the ones it skips. `targets` is classified by document membership against `base`: a
+/// part id goes through `parts` (its board projection for a 2d leaf, its world projection for a 3d one), a
+/// target-volume id through `volumes` (none for the board, which paints no volume), each record transformed IN PLACE.
+/// An empty or repeated target set is the Fatal `mutation.invariant` the payload schema's `minItems`/`uniqueItems`
+/// forbid. Absent ids, locked records (a part's `2d.locked`) and records the leaf does not reach are skipped with one
+/// warning per reason (in that order, ids in payload order); nothing left is `mutation.target-missing`.
+pub struct Puzzle5dSelection<'a> {
+    pub parts: Vec<&'a crate::standards::v1::subsets::any::schema::document_records::Puzzle5dPart>,
+    pub volumes: Vec<&'a crate::standards::v1::subsets::any::schema::document_records::Puzzle5dTargetVolume>,
+    pub warnings: Vec<protocol::MutationMessage>,
+}
+/// 🗃️ Classifies a selection leaf's `targets` against `base`; `Err` is the leaf's final refusal outcome.
+pub fn puzzle5d_selection<'a>(base: &'a Puzzle5dSnapshot, targets: &[String], volumes_reached: bool) -> Result<Puzzle5dSelection<'a>, protocol::MutationOutcome<Puzzle5dDiff>> {
+    if let Err(reason) = puzzle5d_targets_invariant(targets) {
+        return Err(protocol::MutationOutcome::fatal("mutation.invariant", reason, targets.to_vec()));
+    }
+    let (mut missing, mut locked, mut unreached, mut survivors) = (Vec::<String>::new(), Vec::<String>::new(), Vec::<String>::new(), std::collections::BTreeSet::<&str>::new());
+    for id in targets {
+        match (base.parts.iter().find(|entry| &entry.id == id), base.target_volumes.iter().find(|entry| &entry.id == id)) {
+            (Some(entry), _) if entry.part_2d.locked != Some(true) => {
+                survivors.insert(id.as_str());
+            }
+            (Some(_), _) => locked.push(id.clone()),
+            (None, Some(entry)) if entry.locked => locked.push(id.clone()),
+            (None, Some(_)) if !volumes_reached => unreached.push(id.clone()),
+            (None, Some(_)) => {
+                survivors.insert(id.as_str());
+            }
+            (None, None) => missing.push(id.clone()),
+        }
+    }
+    if survivors.is_empty() {
+        return Err(protocol::MutationOutcome::error("mutation.target-missing", format!("none of the {} target(s) is an unlocked part or target volume this transform reaches", targets.len()), targets.to_vec()));
+    }
+    let warnings = [(missing, "not in this puzzle"), (locked, "locked"), (unreached, "target volumes live in the world, not on the board")]
+        .into_iter()
+        .filter(|(ids, _)| !ids.is_empty())
+        .map(|(ids, reason)| protocol::MutationMessage::warning("mutation.partial", format!("{} of {} target(s) skipped ({reason}): {}", ids.len(), targets.len(), ids.join(", "))).at(ids))
+        .collect();
+    Ok(Puzzle5dSelection {
+        parts: base.parts.iter().filter(|entry| survivors.contains(entry.id.as_str())).collect(),
+        volumes: base.target_volumes.iter().filter(|entry| volumes_reached && survivors.contains(entry.id.as_str())).collect(),
+        warnings,
+    })
+}
+/// 📦️ The outcome of a selection leaf's per-member patches: the sparse diff plus the classification warnings, or the
+/// `mutation.no-op` warning (after them) when no surviving member changes.
+pub fn puzzle5d_selection_outcome(
+    selection: Puzzle5dSelection<'_>,
+    targets: &[String],
+    parts: Vec<crate::standards::v1::subsets::any::schema::diff::Puzzle5dPartModification>,
+    volumes: Vec<crate::standards::v1::subsets::any::schema::diff::Puzzle5dTargetVolumeModification>,
+) -> protocol::MutationOutcome<Puzzle5dDiff> {
+    use crate::standards::v1::subsets::any::schema::diff::{Puzzle5dPartsDelta, Puzzle5dTargetVolumesDelta};
+    if parts.is_empty() && volumes.is_empty() {
+        return protocol::MutationOutcome::new(Puzzle5dDiff::default()).absorb_messages(selection.warnings.into_iter().chain([protocol::MutationMessage::warning("mutation.no-op", "no changes to apply").at(targets.to_vec())]));
+    }
+    protocol::MutationOutcome::new(Puzzle5dDiff {
+        parts: (!parts.is_empty()).then(|| Puzzle5dPartsDelta { modified: parts, ..Default::default() }),
+        target_volumes: (!volumes.is_empty()).then(|| Puzzle5dTargetVolumesDelta { modified: volumes, ..Default::default() }),
+        ..Default::default()
+    })
+    .absorb_messages(selection.warnings)
 }

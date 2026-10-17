@@ -20,9 +20,9 @@ test("Binary committed byte histories preserve independent ordinal splice intent
   try{
    db.run("CREATE TABLE octets(ordinal INTEGER PRIMARY KEY,value INTEGER NOT NULL CHECK(value BETWEEN 0 AND 255))");
    row.before.forEach((value,index)=>db.run("INSERT INTO octets VALUES(?,?)",[index,value]));
-   const offset="offset" in row.mutation?row.mutation.offset:row.before.length;
-   const remove="remove_len" in row.mutation?row.mutation.remove_len:row.mutation.mutation==="truncateAt"?row.before.length-offset:0;
-   const inserted="insert" in row.mutation?row.mutation.insert:"data" in row.mutation?row.mutation.data:[];
+   const offset=("offset" in row.mutation?row.mutation.offset:undefined)??row.before.length;
+   const remove=("remove_len" in row.mutation?row.mutation.remove_len:undefined)??(row.mutation.mutation==="truncateAt"?row.before.length-offset:0);
+   const inserted=("insert" in row.mutation?row.mutation.insert:"data" in row.mutation?row.mutation.data:undefined)??[];
    db.run("DELETE FROM octets WHERE ordinal>=? AND ordinal<?",[offset,offset+remove]);
    db.run("UPDATE octets SET ordinal=-ordinal-1 WHERE ordinal>=?",[offset+remove]);
    db.run("UPDATE octets SET ordinal=-ordinal-1+? WHERE ordinal<0",[inserted.length-remove]);
@@ -32,7 +32,6 @@ test("Binary committed byte histories preserve independent ordinal splice intent
    expect(existsSync(resolve(owner,file)),"committed genuine byte intent").toBe(true);
    const actual=read(file);
    expect(actual).toEqual({mutation:row.mutation,before:{schema:"stdio.binary",bytes:row.before},after:{schema:"stdio.binary",bytes:row.after}});
-   console.log(`[DEBUG] Binary committed ${row.mutation.mutation} SQLite ordinal output ${JSON.stringify(row.after)}`);
   }finally{db.close();}
  }
 });

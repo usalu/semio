@@ -1,7 +1,7 @@
 // #region 🔌️Adapters
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { defineConfig } from "vitest/config";
+import { defineOwnedTestConfig } from "../../../../../🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🛠️build-tooling/🟦️.ts";
 import { frameworkSourcePath } from "../../../../../🧰️framework/📦️packages/🟦️typescript/🧪️test/📖️source-text/🟦️.ts";
 // #endregion 🔌️Adapters
 
@@ -9,10 +9,10 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), "../../📦️pack
 const repoRoot = resolve(root, "../../../../..");
 
 /** 🧪️ Vitest for `@semio-tech/animate-js`: the animate presentation app's canonical cases. The React deck renderer is the framework product `@semio-tech/presentation-react` and is tested by its owner. */
-export default defineConfig({
+export default defineOwnedTestConfig({
   root,
   resolve: {
-    alias: [{ find: "@semio-tech/presentation", replacement: frameworkSourcePath("🛍️products/🎤️presentation/📦️packages/🟦️typescript/🟦️.ts") }],
+    alias: [{ find: /^@semio-tech\/presentation$/u, replacement: frameworkSourcePath("🛍️products/🎤️presentation/📦️packages/🟦️typescript/🟦️.ts") }],
   },
   test: {
     root,

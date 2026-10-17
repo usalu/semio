@@ -1,0 +1,14 @@
+# Worker Shutdown And Exact Recovery Review
+
+Read-only actual current helper and schema/corpus Source; no protected read, Native or test execution. Finalhash binding deferred to settled High strict/report.
+
+Worker shared inputgenerator has8192bytebound and exactnewline framing. Finish awaits generator.return, retaining arbitrary bodyprimary and returnsecondary, before closedack. ActualNativeimage close is awaited before finish/ack. Parent reads closedack then shared EOF gate before conversationcallbackreturn, and still requires actualcapturestatus0/nullsignal; abortivegenericclose unchanged. Closedworker has no explicitstdoutend/destroy or retainedlivechild afterack. EOF is this helper's naturalprocessdrain condition, not a genericterminalreplacement. Durable negative waitForStop belongs only Sourceworker with actualfinitecontrol/deadlinetimer; no Nativepostackdelay. Sourcecases include actualcancel/expiry and undefined/frozenprimary. No materialshutdownbug identified in current Source.
+
+Recovery declaration validates closedfixture, oneexactpf-name, savedcreatedSHA, fullknownfacts and completecurrentprotocol before anyNativeopen. It derives actualcurrentpolicy/childrequest/policySHA and checks owner,chargeamount,directory/filesystem/physicalbounds. Bounded4096nofollow savedcreationreader supplies DATA only. Freshgenuine120Original ordinaryparent open/recoverknownid compares exactoriginalreservation/backing/policy; oldclosedtoken/opaqueprotectedread never becomes writableport. Payload exact65536bytes/knownSHA validated throughactualchild; rawjournal is currentcapturedDATA, not historicalequality claim where nohistoricaltrace saved. CurrentparentCAS derivedunderactualoperation and checkedagain. Cleanup canonicalfundedchildretire→zerocharge/absence→parentclose→exactparentretire preserved. Failure retainsfixture/custody; no rawrm/unmount/adoption bridge.
+
+No concrete materialauthorityblocker found. Knownretainedpf-q157nV originalallocation5024e08c20c0eefcfc42bdebcd7c0e45 only; this is not17historicalnestedmaintenance/GraphProductsauthority. Root's prior46364 remains actualfailedterminal, not retroactively fixed. Sourcegates do not authorizephysicalrecovery untilparentrelease/currentstrict/finalhold. OrdinaryRoot0Tools operation is separate and active underparent; this review touches noNativeSource.
+
+
+## Final Independent Six-Input Binding
+
+Readsettledimplementationreport; independentnofollow/nonblockingFD/namepre/open/post7fieldstat+bytes/SHAall6filesmatch, errors0. Exactmanifest retained implementationreport (helper37522/SHA2a164c920bb20c9f9002cca8c663ec6c7c7db2e6f76342d9dd75175690506871). Parent/HighactualSource773740 sixrealworkerchecks+11laws/2intentionalworkerskips/922assert31.31s; strict922120.31recoverycases1positive30beforeeffectrefusals. Reviewer didnotrerun. No remainingmaterialSourceblockeridentified; physicalrecovery/freshproof remainsparentrelease, nohistoricalnestedbridgeacceptance.

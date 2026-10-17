@@ -2,8 +2,6 @@
 
 #![allow(clippy::unnecessary_wraps)]
 
-#[path = "🤖️generated/📇️registry/🦀️.rs"]
-pub mod graph_manifest;
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
@@ -11,471 +9,142 @@ extern crate semio_framework_os_kernel as vcs;
 extern crate protocol as replication;
 extern crate semio_framework_value_derive as value_derive;
 
-pub trait ArtifactApps:
-    semio_framework_plugin::PluginApp
-    + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::EditorApp<editor::rewriting::TrinityRewritingPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>>
-    + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::ViewerApp<viewer::rewriting::TrinityRewritingViewer>, semio_s_artifact_stdio_semio::SemioMembers>>
-{
-}
-
-impl<PA> ArtifactApps for PA where
-    PA: semio_framework_plugin::PluginApp
-        + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::EditorApp<editor::rewriting::TrinityRewritingPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>>
-        + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::ViewerApp<viewer::rewriting::TrinityRewritingViewer>, semio_s_artifact_stdio_semio::SemioMembers>>
-{
-}
-
-use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
-
-//#region ⚠️ Errors
-/// ⚠️ Trinity rewriting-engine errors.
-#[derive(Debug)]
-pub enum TrinityRewritingError {
-    /// 🧩️ Trinity graph snapshot load/validation/mutation failure.
-    Graph(semio_s_artifact_trinity_jack::TrinityRamError),
-    /// 🧭️ VCS store/dispatch failure.
-    Vcs(vcs::VcsError),
-    /// 🧬️ JSON (de)serialization failure.
-    Json(semio_framework_value::ValueError),
-    /// 🔤️ Jack query parse/execute failure (the shared `🫀️core` jack-query kernel's own API is not
-    /// yet expressed as an owned error type).
-    Jack(String),
-    /// 🎨️ Canvas theme merge failure (`infinite_board_port_directed`'s own API is not yet
-    /// expressed as an owned error type).
-    CanvasTheme(String),
-}
-
-impl std::fmt::Display for TrinityRewritingError {
-    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::Graph(error) => write!(formatter, "{error}"),
-            Self::Vcs(error) => write!(formatter, "{error}"),
-            Self::Json(error) => write!(formatter, "{error}"),
-            Self::Jack(message) | Self::CanvasTheme(message) => formatter.write_str(message),
-        }
-    }
-}
-
-impl std::error::Error for TrinityRewritingError {
-    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
-        match self {
-            Self::Graph(error) => std::error::Error::source(error),
-            Self::Vcs(error) => std::error::Error::source(error),
-            Self::Json(error) => std::error::Error::source(error),
-            Self::Jack(_) | Self::CanvasTheme(_) => None,
-        }
-    }
-}
-
-impl From<semio_s_artifact_trinity_jack::TrinityRamError> for TrinityRewritingError {
-    fn from(error: semio_s_artifact_trinity_jack::TrinityRamError) -> Self {
-        Self::Graph(error)
-    }
-}
-
-impl From<vcs::VcsError> for TrinityRewritingError {
-    fn from(error: vcs::VcsError) -> Self {
-        Self::Vcs(error)
-    }
-}
-
-impl From<semio_framework_value::ValueError> for TrinityRewritingError {
-    fn from(error: semio_framework_value::ValueError) -> Self {
-        Self::Json(error)
-    }
-}
-//#endregion ⚠️ Errors
-
-//#region 🔖️Types
-/// 📍️ Local `{x, y}` twin for a bare `(f64, f64)` tuple — the DSL engine's `DslField` binding has no
-/// impl for raw Rust tuples (only named `DslRecord`/`DslScalar` types can bind), so `rule_layout`'s
-/// value type is this named record instead, with `From`/`Into` conversions at this crate's own
-/// remaining `(f64, f64)` call sites (tests only — no production logic reads `rule_layout` today).
-#[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
-#[canonical_json(owner = semio_framework_pack_json)]
-#[value(rename_all = "camelCase")]
-pub struct LayoutPoint {
-    pub x: f64,
-    pub y: f64,
-}
-
-impl From<(f64, f64)> for LayoutPoint {
-    fn from((x, y): (f64, f64)) -> Self {
-        Self { x, y }
-    }
-}
-
-impl From<LayoutPoint> for (f64, f64) {
-    fn from(point: LayoutPoint) -> Self {
-        (point.x, point.y)
-    }
-}
-
-pub const REWRITE_RULE_SCHEMA: &str = "trinity.rewrite.rule";
-
-/// 🎯️ Ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET: the one `Dialect` coordinate every
-/// surface (editor AND viewer) of this artifact shares — lives at the ARTIFACT level, not under
-/// `editor`, so a viewer file can read it without ever importing through the sibling `editor` module.
-/// `artifact_kind = "s.trinity.rewriting"` matches `#[artifact_schema(id = "s.trinity.rewriting")]` in
-/// this subset's own `🧬️schema/🦀️component.rs`; `standard`/`subset` match this file's own
-/// `🏅️standards/🔖️1/🪆️subsets/✳️any` location — the canonical surface id is
-/// `s.trinity.rewriting@1/*#editor` / `s.trinity.rewriting@1/*#viewer` (contract §1 grammar). NOT to be
-/// confused with the unrelated, pre-existing `const DIALECT` inside
-/// `derived_analysis::RewritingAnalyzerAnalysis` in this subset's `🧬️schema/🦀️component.rs` — a
-/// different trait (`ArtifactAnalysis`), a different string (`"s.rewriting"`), out of scope here.
-pub const TRINITY_REWRITING_DIALECT: semio_framework_artifact_reference::Dialect = semio_framework_artifact_reference::Dialect { artifact_kind: "s.trinity.rewriting", standard: semio_framework_artifact_reference::StandardId("1"), subset: semio_framework_artifact_reference::SubsetId::ANY };
-//#endregion 🔖️Types
-
 // 📜️ `RewritingSnapshot`/`RewriteRuleMutation` derive their `pack::snapshot::ArtifactDsl`/`protocol::OpText`
 // impls directly (see `#[derive(dsl::DslRecord)]` above and `#[derive(dsl::DslEnum)]` in `🔧️op`) —
 // every field already binds through the `dsl::` engine with no foreign types, so no hand-written
 // parser/printer or twin type is needed anywhere in this artifact (unlike `jack`'s `JackSnapshot`).
 
-//#region 🔖️ArtifactKind
-/// 🗂️ This artifact's `ArtifactKindSpec` — Text × Document per owner-table (`text.rewriting`).
-pub fn artifact_kind() -> ArtifactKindSpec {
-    ArtifactKindSpec {
-        id: "text.rewriting".into(),
-        label: semio_framework_ui_locale::LocalizedLabel::native("Trinity Rewrite Rule", "Trinity-Umschreibregel"),
-        source_format: REWRITE_RULE_SCHEMA.into(),
-        component_kind: "trinity".into(),
-        dimension: "text".into(),
-        media_capability: OsMediaCapability::MeshOnly,
-        media_type: MediaType { class: MediaClass::Text, form: MediaForm::Document },
-        schema: REWRITE_RULE_SCHEMA.into(),
-        export_formats: vec![],
-        import_formats: vec![],
-        export_stdio_kinds: vec!["stdio.json".into(), "stdio.txt".into()],
-        import_stdio_kinds: vec!["stdio.json".into(), "stdio.txt".into()],
-    }
-}
-//#endregion 🔖️ArtifactKind
-
-//#region 🔖️Register
-/// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built once
-/// and leaked to a `&'static` slice since `dsl::passthrough_hooks` isn't `const fn`, mirroring
-/// `io_registry::entries()`'s own `OnceLock` convention.
-/// `pub` (ticket 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME, fleet-trinity-recipe): the new
-/// declaration tree's `🪆️subsets/✳️any/🦀️.rs` reads these same five `LanguageSpec`s to build
-/// its `NativeCodecs` `LanguagePair`s (see that file's own doc for why it does not delegate to a
-/// sibling `crate::standards::v1::subsets::any::io::io()` the way `🗒️note`/`🖍️draw` do).
-pub fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
-    static LANGUAGES: std::sync::OnceLock<Vec<semio_framework_dsl::LanguageSpec>> = std::sync::OnceLock::new();
-    LANGUAGES
-        .get_or_init(|| {
-            vec![
-                semio_framework_dsl::LanguageSpec {
-                    id: "rewriting.document",
-                    extension: Some("rewriting"),
-                    role: semio_framework_dsl::LanguageRole::Document,
-                    grammar: Some(standards::v1::subsets::any::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(standards::v1::subsets::any::io::text::snapshot::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(standards::v1::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(standards::v1::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
-                    hooks: semio_framework_dsl::passthrough_hooks("rewriting.document"),
-                },
-                semio_framework_dsl::LanguageSpec {
-                    id: "rewriting.op",
-                    extension: None,
-                    role: semio_framework_dsl::LanguageRole::Ops,
-                    grammar: Some(standards::v1::subsets::any::io::text::mutations::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(standards::v1::subsets::any::io::text::mutations::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(standards::v1::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(standards::v1::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
-                    hooks: semio_framework_dsl::passthrough_hooks("rewriting.op"),
-                },
-                semio_framework_dsl::LanguageSpec {
-                    id: "rewriting.diff",
-                    extension: None,
-                    role: semio_framework_dsl::LanguageRole::Diff,
-                    grammar: Some(standards::v1::subsets::any::io::text::diff::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(standards::v1::subsets::any::io::text::diff::COMPONENT_GRAMMAR_PATH),
-                    protocol: None,
-                    protocol_path: None,
-                    hooks: semio_framework_dsl::passthrough_hooks("rewriting.diff"),
-                },
-                semio_framework_dsl::LanguageSpec {
-                    id: "rewriting.pack",
-                    extension: None,
-                    role: semio_framework_dsl::LanguageRole::Pack,
-                    grammar: None,
-                    grammar_path: None,
-                    protocol: Some(standards::v1::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(standards::v1::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
-                    hooks: semio_framework_dsl::passthrough_hooks("rewriting.pack"),
-                },
-                semio_framework_dsl::LanguageSpec {
-                    id: "rewriting.spr",
-                    extension: None,
-                    role: semio_framework_dsl::LanguageRole::Spr,
-                    grammar: None,
-                    grammar_path: None,
-                    protocol: Some(standards::v1::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(standards::v1::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
-                    hooks: semio_framework_dsl::passthrough_hooks("rewriting.spr"),
-                },
-            ]
-        })
-        .as_slice()
-}
-
-/// 🗿️ Declares the Rewriting artifact capabilities and localized identity.
-pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
-    use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
-
-    let rows: &[semio_framework_plugin::ArtifactCapabilityRow<'_>] = &[
-        ("s.trinity.rewriting.standard.v1", "standard", "1", &[], None),
-        ("s.trinity.rewriting.standard.v1.profile.any", "profile", "any", &[], None),
-        ("s.trinity.rewriting.schema.artifact", "schema", "s.trinity.rewriting", &[("schema", "s.trinity.rewriting")], None),
-        ("s.trinity.rewriting.inference.artifact", "inference", "s.trinity.rewriting.inference", &[("schema", "s.trinity.rewriting.inference")], None),
-        ("s.trinity.rewriting.composer.native", "composer", "s.trinity.rewriting@1/*", &[("dialect", "s.trinity.rewriting@1/*")], None),
-        ("s.trinity.rewriting.composer.format-1", "composer", "s.stdio.txt@utf-8/*", &[("dialect", "s.stdio.txt@utf-8/*")], None),
-        ("s.trinity.rewriting.composer.format-5", "composer", "s.stdio.json@rfc8259/*", &[("dialect", "s.stdio.json@rfc8259/*")], None),
-        ("s.trinity.rewriting.grammar.1", "grammar", "rewriting.document", &[("grammar", "rewriting.document")], None),
-        ("s.trinity.rewriting.grammar.2", "grammar", "rewriting.op", &[("grammar", "rewriting.op")], None),
-        ("s.trinity.rewriting.grammar.3", "grammar", "rewriting.diff", &[("grammar", "rewriting.diff")], None),
-        ("s.trinity.rewriting.grammar.4", "grammar", "rewriting.pack", &[("grammar", "rewriting.pack")], None),
-        ("s.trinity.rewriting.grammar.5", "grammar", "rewriting.spr", &[("grammar", "rewriting.spr")], None),
-        ("s.trinity.rewriting.codec.document-1", "codec", "trinity.rewrite.rule:rewriting", &[("codec", "trinity.rewrite.rule"), ("codec-extension", "20:trinity.rewrite.rule:rewriting")], None),
-        ("s.trinity.rewriting.localization.en", "localization", "Rewriting", &[], Some(("en", "Rewriting"))),
-        ("s.trinity.rewriting.localization.de", "localization", "Umschreiben", &[], Some(("de", "Umschreiben"))),
-    ];
-    let mut definition = ArtifactDefinition::new(ArtifactIdentity::parse("s.trinity.rewriting")?);
-    for (identity, kind, descriptor, claims, localization) in rows {
-        let mut capability = ArtifactCapability::new(ArtifactIdentity::parse(*identity)?, ArtifactCapabilityKind::parse(*kind)?).descriptor(descriptor.as_bytes())?;
-        for (namespace, value) in *claims {
-            capability = capability.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::parse(*namespace)?, *value)?)?;
-        }
-        if let Some((locale, text)) = localization {
-            capability = capability.localization(ArtifactLocalization::new(ArtifactLocale::parse(*locale)?, *text)?)?;
-        }
-        definition = definition.capability(capability)?;
-    }
-    Ok(definition)
-}
-
-/// 🌳️ This artifact's declaration tree root (ticket 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-
-/// MECHANISM design.md §2, fleet-trinity-recipe) — replaces the old `declaration()`
-/// (`ArtifactDeclaration::builder(...).schema(...).inferences(...).composers(...).languages(...)
-/// .document_codec(...)` chain, deleted outright, no dual channel) as the ONLY registration channel
-/// for schema/io/viewer/editor rows. `definition()` (old `ArtifactDefinition`/capability rows, above)
-/// is kept per debt D1, and `artifact_kind()` is kept because this crate's own plugin-root
-/// `.activation(...)` still reads `artifact_kind().id`; neither has any caller left in this function.
-pub fn artifact<PA: ArtifactApps>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<PA> {
-    use semio_framework_plugin::app::declarations::ArtifactDeclaration;
-    use {semio_framework_artifact_reference::ArtifactKindId};
-    ArtifactDeclaration { kind: ArtifactKindId::parse("s.trinity.rewriting").expect("canonical rewriting kind"), localization: &[], standards: vec![standards::v1::standard::<PA>()] }
-}
-//#endregion 🔖️Register
-
 #[path = "."]
 pub mod standards {
     #[path = "."]
     pub mod v1 {
-        #[path = "🏅️standards/🔖️1/🦀️.rs"]
-        mod component;
-        pub use component::*;
+        pub use semio_s_artifact_trinity_rewriting_v1::standards::v1::*;
+
         #[path = "."]
         pub mod subsets {
             #[path = "."]
             pub mod any {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🦀️.rs"]
-                mod component;
-                pub use component::*;
+                pub use semio_s_artifact_trinity_rewriting_v1::standards::v1::subsets::any::*;
+
                 #[path = "."]
                 pub mod schema {
-                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs"]
-                    mod component;
-                    pub use component::*;
-                    #[path = "."]
-                    pub mod snapshot {
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                    #[path = "."]
-                    pub mod inferences {
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                        #[path = "."]
-                        pub mod bounds {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦bounds/🦀️.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                    }
-                    #[path = "."]
-                    pub mod diff {
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                    #[path = "."]
-                    pub mod operations {
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/⚙️operations/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
+                    pub use semio_s_artifact_trinity_rewriting_schema::standards::v1::subsets::any::schema::*;
+
+                    pub use semio_s_artifact_trinity_rewriting_model::standards::v1::subsets::any::schema::errors;
+                    pub use semio_s_artifact_trinity_rewriting_model::standards::v1::subsets::any::schema::model;
+                    pub use semio_s_artifact_trinity_rewriting_inferences::standards::v1::subsets::any::schema::application;
+                    #[cfg(any(test, feature = "testkit"))]
+pub use semio_s_artifact_trinity_rewriting_inferences::standards::v1::subsets::any::schema::test_support;
+                    pub use semio_s_artifact_trinity_rewriting_layout::standards::v1::subsets::any::schema::graph_manifest;
+                    pub use semio_s_artifact_trinity_rewriting_inferences::standards::v1::subsets::any::schema::snapshot;
+                    pub use semio_s_artifact_trinity_rewriting_inferences::standards::v1::subsets::any::schema::inferences;
+                    pub use semio_s_artifact_trinity_rewriting_schema::standards::v1::subsets::any::schema::diff;
+                    pub use semio_s_artifact_trinity_rewriting_operations::standards::v1::subsets::any::schema::operations;
                     #[path = "."]
                     pub mod mutations {
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
+                        pub use semio_s_artifact_trinity_rewriting_operations::standards::v1::subsets::any::schema::mutations::*;
+
                         #[path = "."]
                         pub mod edit_working_graph {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️edit-working-graph/🦀️.rs"]
-                            mod component;
-                            pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️edit-working-graph/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️edit-working-graph/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️edit-working-graph/🧪️tests/🕸️swaps/🦀️.rs"]
-                            mod tests_swaps_in_a_two_node_before_graph;
+                            pub use semio_s_artifact_trinity_rewriting_mut_any::standards::v1::subsets::any::schema::mutations::edit_working_graph::*;
+
+                            pub use semio_s_artifact_trinity_rewriting_mut_any::standards::v1::subsets::any::schema::mutations::edit_working_graph::diff;
+                            pub use semio_s_artifact_trinity_rewriting_mut_any::standards::v1::subsets::any::schema::mutations::edit_working_graph::inverse;
+
                         }
                         #[path = "."]
                         pub mod edit_lhs {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👈️edit-lhs/🦀️.rs"]
-                            mod component;
-                            pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👈️edit-lhs/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👈️edit-lhs/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👈️edit-lhs/🧪️tests/👈️narrows/🦀️.rs"]
-                            mod tests_narrows_the_lhs_pattern_to_a_shaft_neighbour;
+                            pub use semio_s_artifact_trinity_rewriting_mut_any::standards::v1::subsets::any::schema::mutations::edit_lhs::*;
+
+                            pub use semio_s_artifact_trinity_rewriting_mut_any::standards::v1::subsets::any::schema::mutations::edit_lhs::diff;
+                            pub use semio_s_artifact_trinity_rewriting_mut_any::standards::v1::subsets::any::schema::mutations::edit_lhs::inverse;
+
                         }
                         #[path = "."]
                         pub mod edit_rhs {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👉️edit-rhs/🦀️.rs"]
-                            mod component;
-                            pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👉️edit-rhs/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👉️edit-rhs/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👉️edit-rhs/🧪️tests/👉️rewrites/🦀️.rs"]
-                            mod tests_rewrites_the_rhs_to_set_a_second_property;
+                            pub use semio_s_artifact_trinity_rewriting_mut_any::standards::v1::subsets::any::schema::mutations::edit_rhs::*;
+
+                            pub use semio_s_artifact_trinity_rewriting_mut_any::standards::v1::subsets::any::schema::mutations::edit_rhs::diff;
+                            pub use semio_s_artifact_trinity_rewriting_mut_any::standards::v1::subsets::any::schema::mutations::edit_rhs::inverse;
+
                         }
                         #[path = "."]
                         pub mod change_parameter_binding {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔧️change-parameter/🦀️.rs"]
-                            mod component;
-                            pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔧️change-parameter/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔧️change-parameter/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔧️change-parameter/🧪️tests/🏷️retitles/🦀️.rs"]
-                            mod tests_retitles_the_caption_binding;
+                            pub use semio_s_artifact_trinity_rewriting_mut_any::standards::v1::subsets::any::schema::mutations::change_parameter_binding::*;
+
+                            pub use semio_s_artifact_trinity_rewriting_mut_any::standards::v1::subsets::any::schema::mutations::change_parameter_binding::diff;
+                            pub use semio_s_artifact_trinity_rewriting_mut_any::standards::v1::subsets::any::schema::mutations::change_parameter_binding::inverse;
+
                         }
                         #[path = "."]
                         pub mod remove_parameter_binding {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹️remove-parameter-binding/🦀️.rs"]
-                            mod component;
-                            pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹️remove-parameter-binding/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹️remove-parameter-binding/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹️remove-parameter-binding/🧪️tests/✂️drops/🦀️.rs"]
-                            mod tests_drops_the_repeat_binding;
+                            pub use semio_s_artifact_trinity_rewriting_mut_any::standards::v1::subsets::any::schema::mutations::remove_parameter_binding::*;
+
+                            pub use semio_s_artifact_trinity_rewriting_mut_any::standards::v1::subsets::any::schema::mutations::remove_parameter_binding::diff;
+                            pub use semio_s_artifact_trinity_rewriting_mut_any::standards::v1::subsets::any::schema::mutations::remove_parameter_binding::inverse;
+
                         }
                         #[path = "."]
                         pub mod change_rule_layout_point {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️change-rule-layout/🦀️.rs"]
-                            mod component;
-                            pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️change-rule-layout/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️change-rule-layout/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️change-rule-layout/🧪️tests/📍️nudges/🦀️.rs"]
-                            mod tests_nudges_the_capsule_var_off_the_shaft;
+                            pub use semio_s_artifact_trinity_rewriting_mut_any::standards::v1::subsets::any::schema::mutations::change_rule_layout_point::*;
+
+                            pub use semio_s_artifact_trinity_rewriting_mut_any::standards::v1::subsets::any::schema::mutations::change_rule_layout_point::diff;
+                            pub use semio_s_artifact_trinity_rewriting_mut_any::standards::v1::subsets::any::schema::mutations::change_rule_layout_point::inverse;
+
                         }
                         #[path = "."]
                         pub mod remove_rule_layout_point {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️remove-rule-layout/🦀️.rs"]
-                            mod component;
-                            pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️remove-rule-layout/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️remove-rule-layout/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️remove-rule-layout/🧪️tests/📐️clears/🦀️.rs"]
-                            mod tests_clears_the_shaft_layout_point;
+                            pub use semio_s_artifact_trinity_rewriting_mut_any::standards::v1::subsets::any::schema::mutations::remove_rule_layout_point::*;
+
+                            pub use semio_s_artifact_trinity_rewriting_mut_any::standards::v1::subsets::any::schema::mutations::remove_rule_layout_point::diff;
+                            pub use semio_s_artifact_trinity_rewriting_mut_any::standards::v1::subsets::any::schema::mutations::remove_rule_layout_point::inverse;
+
                         }
                         #[path = "."]
                         pub mod drag_rule_nodes {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫳️drag-rule/🦀️.rs"]
-                            mod component;
-                            pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫳️drag-rule/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫳️drag-rule/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫳️drag-rule/🧪️tests/🫳️moves/🦀️.rs"]
-                            mod tests_drags_two_rule_nodes;
+                            pub use semio_s_artifact_trinity_rewriting_operations::standards::v1::subsets::any::schema::mutations::drag_rule_nodes::*;
+
+                            pub use semio_s_artifact_trinity_rewriting_operations::standards::v1::subsets::any::schema::mutations::drag_rule_nodes::diff;
+                            pub use semio_s_artifact_trinity_rewriting_operations::standards::v1::subsets::any::schema::mutations::drag_rule_nodes::inverse;
+
                         }
                         #[path = "."]
                         pub mod set_rule_layout_points {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️set-rule-layout/🦀️.rs"]
-                            mod component;
-                            pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️set-rule-layout/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️set-rule-layout/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️set-rule-layout/🧪️tests/📍️places/🦀️.rs"]
-                            mod tests_places_one_rule_node_and_clears_one;
+                            pub use semio_s_artifact_trinity_rewriting_operations::standards::v1::subsets::any::schema::mutations::set_rule_layout_points::*;
+
+                            pub use semio_s_artifact_trinity_rewriting_operations::standards::v1::subsets::any::schema::mutations::set_rule_layout_points::diff;
+                            pub use semio_s_artifact_trinity_rewriting_operations::standards::v1::subsets::any::schema::mutations::set_rule_layout_points::inverse;
+
                         }
                     }
                 }
+                pub use semio_s_artifact_trinity_rewriting_v1::standards::v1::subsets::any::registration;
+                pub use semio_s_artifact_trinity_rewriting_operations::standards::v1::subsets::any::content;
                 #[path = "."]
                 pub mod io {
-                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs"]
-                    mod component;
-                    pub use component::*;
+                    pub use semio_s_artifact_trinity_rewriting_tests_narrows_the_lhs_pattern_to_a_shaft_neighbour::standards::v1::subsets::any::io::*;
+pub mod binary {
+    pub use semio_s_artifact_trinity_rewriting_tests_narrows_the_lhs_pattern_to_a_shaft_neighbour::standards::v1::subsets::any::io::binary::*;
+    pub use semio_s_artifact_trinity_rewriting_schema::standards::v1::subsets::any::io::binary::diff;
+    pub use semio_s_artifact_trinity_rewriting_model::standards::v1::subsets::any::io::binary::inferences;
+}
+pub mod sqlite {
+    pub use semio_s_artifact_trinity_rewriting_layout::standards::v1::subsets::any::io::sqlite::*;
+    pub use semio_s_artifact_trinity_rewriting_inferences::standards::v1::subsets::any::io::sqlite::snapshot;
+}
+pub mod text {
+    pub use semio_s_artifact_trinity_rewriting_tests_narrows_the_lhs_pattern_to_a_shaft_neighbour::standards::v1::subsets::any::io::text::*;
+    pub use semio_s_artifact_trinity_rewriting_layout::standards::v1::subsets::any::io::text::inferences;
+}
+
                     #[path = "."]
                     pub mod import {
                         #[path = "."]
                         pub mod deserializers {
                             #[path = "."]
                             pub mod artifacts {
-                                #[path = "."]
-                                pub mod txt {
-                                    #[path = "."]
-                                    pub mod v_utf_8 {
-                                        #[path = "."]
-                                        pub mod any {
-                                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔤️txt/🔖️utf-8/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
-                                #[path = "."]
-                                pub mod json {
-                                    #[path = "."]
-                                    pub mod v_rfc8259 {
-                                        #[path = "."]
-                                        pub mod any {
-                                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
+                                pub use semio_s_artifact_trinity_rewriting_schema::standards::v1::subsets::any::io::import::deserializers::artifacts::txt;
+                                pub use semio_s_artifact_trinity_rewriting_schema::standards::v1::subsets::any::io::import::deserializers::artifacts::json;
                             }
                         }
                     }
@@ -485,30 +154,8 @@ pub mod standards {
                         pub mod serializers {
                             #[path = "."]
                             pub mod artifacts {
-                                #[path = "."]
-                                pub mod txt {
-                                    #[path = "."]
-                                    pub mod v_utf_8 {
-                                        #[path = "."]
-                                        pub mod any {
-                                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🔤️txt/🔖️utf-8/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
-                                #[path = "."]
-                                pub mod json {
-                                    #[path = "."]
-                                    pub mod v_rfc8259 {
-                                        #[path = "."]
-                                        pub mod any {
-                                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
+                                pub use semio_s_artifact_trinity_rewriting_mut_any::standards::v1::subsets::any::io::export::serializers::artifacts::txt;
+                                pub use semio_s_artifact_trinity_rewriting_mut_any::standards::v1::subsets::any::io::export::serializers::artifacts::json;
                             }
                         }
                     }
@@ -518,33 +165,12 @@ pub mod standards {
     }
 }
 
-pub use crate::standards::v1::subsets::any::schema::diff::RewritingDiff;
-pub use crate::standards::v1::subsets::any::schema::mutations::RewriteRuleMutation;
-pub use crate::standards::v1::subsets::any::schema::operations::*;
-pub use crate::standards::v1::subsets::any::schema::snapshot::RewritingSnapshot;
-
-/// ▶️ Applies one mutation to a snapshot through the central applier (`protocol::apply_diff`): the step of the editor's node-graph fold and of the mutation tests.
-pub fn apply_rewrite_rule_mutation(snapshot: &mut RewritingSnapshot, mutation: &RewriteRuleMutation) -> protocol::MutationApplyResult<()> {
-    let outcome = protocol::Mutation::diff(mutation, snapshot);
-    let next = protocol::apply_diff(outcome.diff(), snapshot)?;
-    *snapshot = next;
-    Ok(())
-}
-
-#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🪆️content/🦀️.rs"]
-pub mod content;
-pub use content::rewriting_fault_notices;
-
 #[path = "."]
 pub mod examples {
     #[path = "."]
     pub mod demo {
-        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️.rs"]
-        mod component;
-        pub use component::*;
-        #[cfg(test)]
-        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🧩️example/🦀️.rs"]
-        mod tests;
+        pub use semio_s_artifact_trinity_rewriting_layout::examples::demo::*;
+
     }
 }
 
@@ -552,213 +178,85 @@ pub mod examples {
 pub mod editor {
     #[path = "."]
     pub mod rewriting {
-        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs"]
-        mod component;
-        pub use component::*;
+        pub use semio_s_artifact_trinity_rewriting_editor::editor::rewriting::*;
 
         #[path = "."]
         pub mod examples {
             #[path = "."]
             pub mod demo_session {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🦀️.rs"]
-                mod component;
-                pub use component::*;
-                #[cfg(test)]
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🧪️tests/🧩️example/🦀️.rs"]
-                mod tests;
+                pub use semio_s_artifact_trinity_rewriting_layout::editor::rewriting::examples::demo_session::*;
+
             }
         }
 
-        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🪟️window/🎚️config/🦀️.rs"]
-        pub mod window_config;
+        pub use semio_s_artifact_trinity_rewriting_editor::editor::rewriting::window_config;
 
-        #[path = "."]
-        pub mod terminology {
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗣️terminology/🦀️.rs"]
-            mod component;
-            pub use component::*;
-        }
+        pub use semio_s_artifact_trinity_rewriting_layout::editor::rewriting::ids;
+        pub use semio_s_artifact_trinity_rewriting_editor::editor::rewriting::ui;
+        pub use semio_s_artifact_trinity_rewriting_operations::editor::rewriting::document;
+
+        pub use semio_s_artifact_trinity_rewriting_layout::editor::rewriting::terminology;
 
         #[path = "."]
         pub mod commands {
             // 🕹️ Every command file is self-contained (its own private copy of any shared
-            // helpers) and exposes exactly one `pub(crate) fn` matching its directory's verb —
+            // helpers) and exposes exactly one `pub fn` matching its directory's verb —
             // re-exported here by name, flat, matching how `TrinityRewritingCommand::handle` calls them.
-            #[path = "."]
-            mod node_graph_edit_leaf {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🕸️node-graph-edit/🦀️.rs"]
-                mod component;
-                pub(crate) use component::*;
-            }
-            pub(crate) use node_graph_edit_leaf::node_graph_edit;
+            pub use semio_s_artifact_trinity_rewriting_tests_narrows_the_lhs_pattern_to_a_shaft_neighbour::editor::rewriting::commands::node_graph_edit;
 
-            #[path = "."]
-            mod set_lhs_json_leaf {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/👈️set-lhs-json/🦀️.rs"]
-                mod component;
-                pub(crate) use component::*;
-            }
-            pub(crate) use set_lhs_json_leaf::set_lhs;
+            pub use semio_s_artifact_trinity_rewriting_operations::editor::rewriting::commands::set_lhs;
 
-            #[path = "."]
-            mod set_rhs_json_leaf {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/👉️set-rhs-json/🦀️.rs"]
-                mod component;
-                pub(crate) use component::*;
-            }
-            pub(crate) use set_rhs_json_leaf::set_rhs;
+            pub use semio_s_artifact_trinity_rewriting_tests_narrows_the_lhs_pattern_to_a_shaft_neighbour::editor::rewriting::commands::set_rhs;
 
-            #[path = "."]
-            mod set_parameter_leaf {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎛️set-parameter/🦀️.rs"]
-                mod component;
-                pub(crate) use component::*;
-            }
-            pub(crate) use set_parameter_leaf::set_parameter;
+            pub use semio_s_artifact_trinity_rewriting_operations::editor::rewriting::commands::set_parameter;
 
-            #[path = "."]
-            mod add_rule_clause_command_leaf {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/➕️add-rule-clause-command/🦀️.rs"]
-                mod component;
-                pub(crate) use component::*;
-            }
-            pub(crate) use add_rule_clause_command_leaf::add_rule_clause_command;
+            pub use semio_s_artifact_trinity_rewriting_operations::editor::rewriting::commands::add_rule_clause_command;
 
-            #[path = "."]
-            mod reset_rule_leaf {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/♻️reset-rule/🦀️.rs"]
-                mod component;
-                pub(crate) use component::*;
-            }
-            pub(crate) use reset_rule_leaf::reset_rule;
+            pub use semio_s_artifact_trinity_rewriting_tests_narrows_the_lhs_pattern_to_a_shaft_neighbour::editor::rewriting::commands::reset_rule;
 
-            #[path = "."]
-            mod set_active_example_leaf {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎯️set-active-example/🦀️.rs"]
-                mod component;
-                pub(crate) use component::*;
-            }
-            pub(crate) use set_active_example_leaf::{set_active_example};
-            #[cfg(test)] pub(crate) use set_active_example_leaf::{set_active_example_document};
+            pub use semio_s_artifact_trinity_rewriting_tests_narrows_the_lhs_pattern_to_a_shaft_neighbour::editor::rewriting::commands::set_active_example;
 
-            #[path = "."]
-            mod patch_nodes_leaf {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🩹️patch-nodes/🦀️.rs"]
-                mod component;
-                pub(crate) use component::*;
-            }
-            pub(crate) use patch_nodes_leaf::patch_nodes;
+            pub use semio_s_artifact_trinity_rewriting_tests_narrows_the_lhs_pattern_to_a_shaft_neighbour::editor::rewriting::commands::patch_nodes;
 
-            #[path = "."]
-            mod add_working_node_command_leaf {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/➕️add-working-node/🦀️.rs"]
-                mod component;
-                pub(crate) use component::*;
-            }
-            pub(crate) use add_working_node_command_leaf::add_working_node_command;
+            pub use semio_s_artifact_trinity_rewriting_tests_narrows_the_lhs_pattern_to_a_shaft_neighbour::editor::rewriting::commands::add_working_node_command;
 
-            #[path = "."]
-            mod set_viewport_leaf {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖥️set-viewport/🦀️.rs"]
-                mod component;
-                pub(crate) use component::*;
-            }
-            pub(crate) use set_viewport_leaf::set_viewport;
+            pub use semio_s_artifact_trinity_rewriting_editor::editor::rewriting::commands::set_viewport;
 
-            #[path = "."]
-            mod reorganize_leaf {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧹️reorganize/🦀️.rs"]
-                mod component;
-                pub(crate) use component::*;
-            }
-            pub(crate) use reorganize_leaf::reorganize;
+            pub use semio_s_artifact_trinity_rewriting_operations::editor::rewriting::commands::reorganize;
 
-            #[path = "."]
-            mod set_lod_mode_leaf {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔬️set-lod/🦀️.rs"]
-                mod component;
-                pub(crate) use component::*;
-            }
-            pub(crate) use set_lod_mode_leaf::set_lod_mode;
+            pub use semio_s_artifact_trinity_rewriting_editor::editor::rewriting::commands::set_lod_mode;
         }
 
         #[path = "."]
         pub mod modes {
             #[path = "."]
             pub mod edit {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🦀️.rs"]
-                mod component;
-                pub use component::*;
+                pub use semio_s_artifact_trinity_rewriting_layout::editor::rewriting::modes::edit::*;
 
                 #[path = "."]
                 pub mod windows {
-                    #[path = "."]
-                    pub(crate) mod before {
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/⬅️before/🦀️.rs"]
-                        mod component;
-                        pub(crate) use component::*;
-                    }
+                    pub use semio_s_artifact_trinity_rewriting_editor::editor::rewriting::modes::edit::windows::before;
 
-                    #[path = "."]
-                    pub(crate) mod after {
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/⏭️after/🦀️.rs"]
-                        mod component;
-                        pub(crate) use component::*;
-                    }
+                    pub use semio_s_artifact_trinity_rewriting_editor::editor::rewriting::modes::edit::windows::after;
 
-                    #[path = "."]
-                    pub(crate) mod lhs {
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/👈️lhs/🦀️.rs"]
-                        mod component;
-                        pub(crate) use component::*;
-                    }
+                    pub use semio_s_artifact_trinity_rewriting_editor::editor::rewriting::modes::edit::windows::lhs;
 
-                    #[path = "."]
-                    pub(crate) mod rhs {
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/➡️rhs/🦀️.rs"]
-                        mod component;
-                        pub(crate) use component::*;
-                    }
+                    pub use semio_s_artifact_trinity_rewriting_editor::editor::rewriting::modes::edit::windows::rhs;
 
-                    #[path = "."]
-                    pub(crate) mod jack {
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🔎️jack/🦀️.rs"]
-                        mod component;
-                        pub(crate) use component::*;
-                    }
+                    pub use semio_s_artifact_trinity_rewriting_tests_narrows_the_lhs_pattern_to_a_shaft_neighbour::editor::rewriting::modes::edit::windows::jack;
 
-                    #[path = "."]
-                    pub(crate) mod parameters {
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🎛️parameters/🦀️.rs"]
-                        mod component;
-                        pub(crate) use component::*;
-                    }
+                    pub use semio_s_artifact_trinity_rewriting_editor::editor::rewriting::modes::edit::windows::parameters;
                 }
             }
         }
 
         #[path = "."]
         pub mod panels {
-            #[path = "."]
-            pub(crate) mod document {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🗿️artifact/🦀️.rs"]
-                mod component;
-                pub(crate) use component::*;
-            }
+            pub use semio_s_artifact_trinity_rewriting_editor::editor::rewriting::panels::document;
 
-            #[path = "."]
-            pub(crate) mod catalogue {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📚️catalogue/🦀️.rs"]
-                mod component;
-                pub(crate) use component::*;
-            }
+            pub use semio_s_artifact_trinity_rewriting_editor::editor::rewriting::panels::catalogue;
 
-            #[path = "."]
-            pub(crate) mod inspection {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🦀️.rs"]
-                mod component;
-                pub(crate) use component::*;
-            }
+            pub use semio_s_artifact_trinity_rewriting_editor::editor::rewriting::panels::inspection;
         }
     }
 }
@@ -767,46 +265,19 @@ pub mod editor {
 pub mod viewer {
     #[path = "."]
     pub mod rewriting {
-        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs"]
-        mod component;
-        pub use component::*;
-        #[path = "."]
-        pub mod presence {
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/👥️presence/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
-        #[path = "."]
-        pub mod config {
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎚️config/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
+        pub use semio_s_artifact_trinity_rewriting_operations::viewer::rewriting::*;
+
+        pub use semio_s_artifact_trinity_rewriting_layout::viewer::rewriting::presence;
+        pub use semio_s_artifact_trinity_rewriting_layout::viewer::rewriting::config;
 
         #[path = "."]
         pub mod modes {
             #[path = "."]
             pub mod view {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🦀️.rs"]
-                mod component;
-                pub use component::*;
+                pub use semio_s_artifact_trinity_rewriting_mut_any::viewer::rewriting::modes::view::*;
 
-                #[path = "."]
-                pub mod windows {
-                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/📜️rule/🦀️.rs"]
-                    pub mod rule;
-                }
+                pub use semio_s_artifact_trinity_rewriting_mut_any::viewer::rewriting::modes::view::windows;
             }
         }
     }
 }
-
-//#region 🧬️ChildRestoreProjection
-/// 🧬️ The loaded-parent child projection, read off the snapshot's own derived composition fields — the ONE
-/// definition the editor and the viewer both declare. The `ArtifactEditor`/`ArtifactViewer` trait default
-/// refuses it (`… did not declare a loaded-parent child projection`), and since PX1 the live envelope load
-/// asks for it before the decoded document may replace the store, so an undeclared app fails every live load.
-pub fn rewriting_child_restore_projection(snapshot: &RewritingSnapshot) -> Result<semio_framework_composition_admission::ChildRestoreProjection<'_>, semio_framework_plugin::Fault> {
-    semio_framework_composition_admission::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("trinity.rewriting.child-projection"), error.to_string()))
-}
-//#endregion 🧬️ChildRestoreProjection
-
-pub use crate::standards::v1::subsets::any::io::{RewritingBuilderConstruction, RewritingParts, RewritingAnalyzerAnalysis, RewritingBuilderFacets, RewritingBuilder, RewritingAnalyzer, RewritingComposer};

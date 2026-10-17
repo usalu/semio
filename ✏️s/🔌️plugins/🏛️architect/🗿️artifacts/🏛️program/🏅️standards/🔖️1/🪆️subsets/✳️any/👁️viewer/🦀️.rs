@@ -7,7 +7,7 @@
 use crate::standards::v1::subsets::any::schema::mutations::ProgramMutation;
 use crate::viewer::architect::modes::view;
 use crate::viewer::architect::modes::view::windows::register;
-use crate::standards::v1::subsets::any::schema::{snapshot::{sample_plugin, ProgramSnapshot}, ARCHITECT_DIALECT, ARCHITECT_PROGRAM_SCHEMA};
+use crate::standards::v1::subsets::any::schema::{snapshot::{sample_plugin, ProgramSnapshot, ARCHITECT_PROGRAM_SCHEMA}, ARCHITECT_DIALECT};
 use semio_framework_plugin::ArtifactView;
 use semio_framework_plugin::ArtifactViewer;
 use semio_framework_plugin::ConfigView;
@@ -124,7 +124,5 @@ pub fn create_architect_viewer() -> semio_framework_plugin::AppDefinition {
 //#endregion 🔖️Manifest
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

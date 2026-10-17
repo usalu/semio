@@ -1,8 +1,9 @@
+use semio_framework_test_fixtures::fixture_path;
 use std::collections::BTreeSet;
 
 #[test]
 fn native_catalog_dependency_is_exactly_its_compiled_owner() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🗿️artifact-authority/🔏️trusted-catalog/🧫️fixtures/🔗️compiled-dependencies/🔣️.json"))).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🗿️artifact-authority/🔏️trusted-catalog/🧪️tests/🧫️fixtures/🔗️compiled-dependencies/🔣️.json"))).unwrap();
     let expected = semio_hub_stdio_catalog::native_artifact_catalog_dependency().unwrap();
     assert_eq!(serde_json::to_value(&expected).unwrap(), fixture["nativeCases"][0]["dependencies"][0]);
     let rows = fixture["nativeCases"].as_array().unwrap();
@@ -21,7 +22,7 @@ fn native_catalog_dependency_is_exactly_its_compiled_owner() {
 
 #[test]
 fn generic_plugin_builder_preserves_domain_owned_topic_contributions() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️builder/🧫️fixtures/📇️topic-contributions/🔣️.json"))).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️builder/🧪️tests/🧫️fixtures/📇️topic-contributions/🔣️.json"))).unwrap();
     for row in fixture["cases"].as_array().unwrap() {
         let plugin_id = format!("builder-topic-{}", row["id"].as_str().unwrap());
         let contributions: Vec<semio_framework::TopicContribution> = serde_json::from_value(row["contributions"].clone()).unwrap();
@@ -43,7 +44,7 @@ use semio_hub_stdio_catalog::native_codec_factory_receipts;
 
 #[test]
 fn native_composition_and_validation_claims_are_disjoint_but_each_exclusive() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../📇️catalog/🧫️fixtures/🧾️claim-authority/🔣️.json"))).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../📇️catalog/🧪️tests/🧫️fixtures/🧾️claim-authority/🔣️.json"))).unwrap();
     assert_eq!(ArtifactIdentityNamespace::validated_dialect().as_str(), "validated-dialect");
     let rows = fixture["cases"].as_array().unwrap();
     assert_eq!(rows.len(), 8);
@@ -82,7 +83,7 @@ fn artifact_owned_native_codec_receipts_form_one_complete_static_bijection() {
 #[test]
 fn native_catalog_matches_every_decoded_descriptor_kind_without_guest_app_assembly() {
     use semio_hub_stdio_catalog::{artifact_definitions, native_codec_artifact_kinds, validate_native_codec_artifact_kinds};
-    let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../📇️catalog/🧫️fixtures/📇️native-catalog-surface/🔣️.json"))).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../📇️catalog/🧪️tests/🧫️fixtures/📇️native-catalog-surface/🔣️.json"))).unwrap();
     let expected = native_codec_artifact_kinds();
     let receipts = native_codec_factory_receipts().unwrap();
     let definition_ids = artifact_definitions().unwrap().iter().map(|definition| definition.identity().as_str().to_owned()).collect::<BTreeSet<_>>();
@@ -138,7 +139,7 @@ fn native_catalog_commitment_covers_all_definition_semantics_and_codec_authoriti
             _ => {}
         }
     }
-    let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../📇️catalog/🧫️fixtures/📇️native-catalog-surface/🧪️commitment.json"))).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../📇️catalog/🧪️tests/🧫️fixtures/📇️native-catalog-surface/🧪️commitment.json"))).unwrap();
     let contribution = native_artifact_catalog_contribution().unwrap();
     let definition_count = semio_hub_stdio_catalog::artifact_definitions().unwrap().len();
     let codec_count = native_codec_factory_receipts().unwrap().len();
@@ -228,12 +229,12 @@ fn native_catalog_commitment_covers_all_definition_semantics_and_codec_authoriti
 /// rewritten in place; otherwise the committed projection must already equal the live receipts byte for byte.
 #[test]
 fn native_codec_projection_pack_schema_hashes_equal_live_receipts() {
-    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🔌️plugin/📇️catalog/📜️native-codec-factories.json");
+    let path = fixture_path!("../../🔌️plugin/📇️catalog/📜️native-codec-factories.json");
     let committed = std::fs::read_to_string(&path).unwrap();
     let mut generated = committed.clone();
     use sha2::Digest;
     let projection: serde_json::Value = serde_json::from_str(&committed).unwrap();
-    let repo_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../..");
+    let repo_root = fixture_path!("../../../../..");
     for row in projection["receipts"].as_array().unwrap() {
         let source = std::fs::read(repo_root.join(row["protocol_path"].as_str().unwrap())).unwrap();
         assert_eq!(format!("{:x}", sha2::Sha256::digest(&source)), row["protocol_source_sha256"].as_str().unwrap());
@@ -271,7 +272,7 @@ fn las_native_receipt_binds_canonical_graph_and_independent_blake3() {
             other => panic!("unexpected LAS structural shape {other}"),
         }
     }
-    let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../📇️publication/🧫️fixtures/🧬️trusted-stdio-catalog/🔣️.json"))).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../📇️publication/🧪️tests/🧫️fixtures/🧬️trusted-stdio-catalog/🔣️.json"))).unwrap();
     let spec = <semio_s_artifact_stdio_las::LasSnapshot as pack::snapshot::ArtifactPack>::record_spec().unwrap();
     let graph = pack::record::PackSchemaGraph::of(&spec);
     let json: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_string(&graph.to_json())).unwrap();
@@ -306,7 +307,7 @@ async fn text_document_codecs_compile_their_neutral_fixture_through_the_linked_r
     fn neutral<T: semio_framework_value::ToValue>(snapshot: T) -> serde_json::Value {
         serde_json::from_str(&semio_framework_pack_json::to_string(&semio_framework_pack_json::from_dsl_value(&snapshot.to_value()))).unwrap()
     }
-    let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../📇️catalog/🧫️fixtures/📇️native-text-codecs/🔣️.json"))).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../📇️catalog/🧪️tests/🧫️fixtures/📇️native-text-codecs/🔣️.json"))).unwrap();
     assert_eq!(fixture["schema"], "semio.stdio.native-text-codecs/v1");
     let receipts = native_codec_factory_receipts().expect("artifact-owned native codec receipts");
     let cases = fixture["cases"].as_array().unwrap();

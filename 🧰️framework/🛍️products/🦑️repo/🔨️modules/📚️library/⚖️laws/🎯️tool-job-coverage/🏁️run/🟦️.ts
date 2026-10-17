@@ -3,7 +3,7 @@
  */
 import { toolJobMemberStoreProducerExact, type ToolJobMemberStoreProducerSources } from "../../../../../../💻️os/🔨️modules/🏪️store/🏗️initialization/🏠️owners/🏭️member/📥️source/🟦️.ts";
 import { readMcpGatewaySource } from "../../../../../../💻️os/🔨️modules/🌉️mcp/🟦️.ts";
-import { policyReadFileSafe, policyReadModuleTreeSource } from "../../../🔍️discovery/📖️source-access/🟦️.ts";
+import { policyReadFileSafe, policyReadModuleTreeSource, POLICY_SPLIT_SOURCE_ROOTS } from "../../../🔍️discovery/📖️source-access/🟦️.ts";
 import { relative } from "node:path";
 import { policyAllRustFiles } from "../../🧩️plugin-consistency/🏛️foundation/🟦️.ts";
 import { policyReadMemberStoreProducerSources, policyReadOsStoreSource, policyReadRustPolicySource } from "../../../🔍️discovery/📖️source-access/🦀️rust-evidence/🟦️.ts";
@@ -162,7 +162,7 @@ export async function toolJobCoverageRun(root: string, lanes: SelfTestLanes): Pr
   const puzzle5d = policyReadFileSafe(root, "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs");
   const puzzle2d = policyReadModuleTreeSource(root, "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs");
   const semio = policyReadFileSafe(root, "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🦀️.rs");
-  const manifest = policyReadFileSafe(root, "🧰️framework/🔨️modules/🛂️manifest/🕹️actions/🦀️.rs");
+  const manifest = policyReadModuleTreeSource(root, "🧰️framework/🔨️modules/🛂️manifest/🕹️actions/🦀️.rs");
   const componentWit = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/📜️.wit");
   const reactor = policyReadModuleTreeSource(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🦀️.rs");
   const reactorRequests = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/📮️requests/🦀️.rs");
@@ -174,21 +174,21 @@ export async function toolJobCoverageRun(root: string, lanes: SelfTestLanes): Pr
   const femPluginRoot = policyReadFileSafe(root, "🌎️hub/🧩️compositions/🏗️fem/🦀️.rs");
   const femGlue = policyReadFileSafe(root, "🌎️hub/🧩️compositions/🏗️fem/📦️packages/🦀️rust/🦀️.rs");
   const femAnalyses = policyReadFileSafe(root, "✏️s/🔨️modules/🏗️fem/⚙️engine/🧮️analyses/🦀️.rs");
-  const femMesh = policyReadFileSafe(root, "✏️s/🔨️modules/🏗️fem/⚙️engine/🕸️mesh/🦀️.rs");
-  const femSparse = policyReadFileSafe(root, "✏️s/🔨️modules/🏗️fem/⚙️engine/🔢️sparse/🦀️.rs");
+  const femMesh = policyReadModuleTreeSource(root, "✏️s/🔨️modules/🏗️fem/⚙️engine/🕸️mesh/🦀️.rs");
+  const femSparse = policyReadModuleTreeSource(root, "✏️s/🔨️modules/🏗️fem/⚙️engine/🔢️sparse/🦀️.rs");
   const femEngineModel = policyReadFileSafe(root, "✏️s/🔨️modules/🏗️fem/⚙️engine/🏗️model/🦀️.rs");
-  const femElements2d = policyReadFileSafe(root, "✏️s/🔨️modules/🏗️fem/⚙️engine/📏️elements2d/🦀️.rs");
+  const femElements2d = policyReadModuleTreeSource(root, "✏️s/🔨️modules/🏗️fem/⚙️engine/📏️elements2d/🦀️.rs");
   const presentationEnvelopeCodec = policyReadFileSafe(root, "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/🧬️mutations/🦀️.rs");
   const presentationWasm = policyReadFileSafe(root, "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🦀️component.rs");
   const writerEnvelopeCodec = policyReadFileSafe(root, "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/🧬️mutations/🦀️.rs");
   const writerEditor = policyReadFileSafe(root, "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs");
   const writerWasm = policyReadFileSafe(root, "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🦀️component.rs");
   const jackEnvelopeCodec = policyReadFileSafe(root, "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/🧬️mutations/🦀️.rs");
-  const jackEditor = policyReadFileSafe(root, "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs");
+  const jackEditor = policyReadModuleTreeSource(root, "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs");
   const jackWasm = policyReadFileSafe(root, "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🦀️component.rs");
   const trinityRewrite = policyReadFileSafe(root, "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌍️world/🦀️.rs");
   const gisMapEnvelopeCodec = policyReadFileSafe(root, "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/🧬️mutations/🦀️.rs");
-  const gisMapEditor = policyReadFileSafe(root, "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs");
+  const gisMapEditor = policyReadModuleTreeSource(root, "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs");
   const gisMapWasm = policyReadFileSafe(root, "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🦀️component.rs");
   const rasterRetainedSource = (file: string): string => {
     const source = policyReadFileSafe(root, file);
@@ -210,6 +210,10 @@ export async function toolJobCoverageRun(root: string, lanes: SelfTestLanes): Pr
     "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/🧬️mutations/🦀️.rs",
     "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🦀️.rs",
     "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs",
+    "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🌳️layer-tree-helpers/🦀️.rs",
+    "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🗺️owned-map/🦀️.rs",
+    "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📐️layer-model/🦀️.rs",
+    "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🖼️asset-content-and-patch/🦀️.rs",
     "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
   ]
     .map(rasterRetainedSource)
@@ -221,7 +225,7 @@ export async function toolJobCoverageRun(root: string, lanes: SelfTestLanes): Pr
     "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
     "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/✏️editor/🪆️1-any/🎮️commands/🖱️canvas-pointer-down/🦀️.rs",
     "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🖼️canvas/🦀️.rs",
-  ].map((file) => policyReadFileSafe(root, file));
+  ].map((file) => POLICY_SPLIT_SOURCE_ROOTS.includes(file) ? policyReadModuleTreeSource(root, file) : policyReadFileSafe(root, file));
   const drawingEditorTestLaws = drawingEditorSources[0] ?? "";
   const drawingEditor = drawingEditorSources
     .map(toolJobProductionSource)
@@ -333,7 +337,7 @@ export async function toolJobCoverageRun(root: string, lanes: SelfTestLanes): Pr
   const inner = innerOpen < 0 ? undefined : toolJobRustBlock(plugin, innerOpen);
   if (!inner || inner.body.includes("A::handle(&command")) failures.push("dispatch_typed_command_inner still bypasses the job bus with a direct A::handle call");
   if (!toolJobMountedDispatchOneTurnExact(plugin)) failures.push("production typed dispatch is not one explicitly admitted WorkerJobSession turn");
-  if (!toolJobMicrosecondWorkerExact(plugin, jobRuntime, policyReadFileSafe(root, "🧰️framework/🔨️modules/⏱️trace/🦀️.rs"), policyReadFileSafe(root, "🧰️framework/🔨️modules/🧵️job/📬️outcome/🤝️loan/🦀️.rs"))) failures.push("bounded command worker does not enforce decoded, work, exact microsecond step-time, and output contract limits");
+  if (!toolJobMicrosecondWorkerExact(plugin, jobRuntime, policyReadModuleTreeSource(root, "🧰️framework/🔨️modules/⏱️trace/🦀️.rs"), policyReadFileSafe(root, "🧰️framework/🔨️modules/🧵️job/📬️outcome/🤝️loan/🦀️.rs"))) failures.push("bounded command worker does not enforce decoded, work, exact microsecond step-time, and output contract limits");
   const forKindStart = manifest.indexOf("pub fn for_kind(kind: ActionKind)");
   const forKindOpen = forKindStart < 0 ? -1 : manifest.indexOf("{", forKindStart);
   const forKind = forKindOpen < 0 ? undefined : toolJobRustBlock(manifest, forKindOpen);

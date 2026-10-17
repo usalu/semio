@@ -173,7 +173,8 @@ pub fn install_schema_leaf_reader(reader: &'static dyn SchemaLeafReader) -> bool
     LEAF_READER.set(reader).is_ok()
 }
 
-/// 📎️ Publishes the documents a crate serves instead of embedding; exact duplicates are accepted.
+/// 📎️ Publishes the documents a crate serves instead of embedding; exact duplicates are accepted. Documents registered for the
+/// same `(scope, export, format)` are one leaf: a read answers their bodies concatenated in registration order.
 pub fn register_schema_leaf_documents(documents: &[SchemaLeafDocument]) {
     let mut served = SERVED_LEAF_DOCUMENTS.lock().expect("schema document lock");
     for document in documents {
@@ -183,9 +184,38 @@ pub fn register_schema_leaf_documents(documents: &[SchemaLeafDocument]) {
     }
 }
 
+/// 🍃 The body `leaves` holds for `format`, or, when that body is empty, the document the registering crate serves for `(scope, export, format)`; empty when neither exists.
+pub fn resolved_leaf_body(scope: &str, export: &str, format: SchemaFormat, leaves: &FacetLeaves) -> &'static str {
+    let body = format.leaf(leaves);
+    if !body.trim().is_empty() {
+        return body;
+    }
+    served_schema_leaf(scope, export, format).unwrap_or(body)
+}
+
+static JOINED_LEAVES: Mutex<Vec<(String, &'static str)>> = Mutex::new(Vec::new());
+
 fn served_schema_leaf(scope: &str, export: &str, format: SchemaFormat) -> Option<&'static str> {
-    let path = SERVED_LEAF_DOCUMENTS.lock().ok()?.iter().find(|document| document.scope == scope && document.export == export && document.format == format)?.path;
-    LEAF_READER.get()?.read(path)
+    let paths: Vec<&'static str> = SERVED_LEAF_DOCUMENTS.lock().ok()?.iter().filter(|document| document.scope == scope && document.export == export && document.format == format).map(|document| document.path).collect();
+    let reader = LEAF_READER.get()?;
+    match paths.as_slice() {
+        [] => None,
+        [path] => reader.read(path),
+        _ => {
+            let key = paths.join("\0");
+            let mut joined = JOINED_LEAVES.lock().ok()?;
+            if let Some((_, body)) = joined.iter().find(|(known, _)| *known == key) {
+                return Some(*body);
+            }
+            let mut body = String::new();
+            for path in &paths {
+                body.push_str(reader.read(path)?);
+            }
+            let body: &'static str = Box::leak(body.into_boxed_str());
+            joined.push((key, body));
+            Some(body)
+        }
+    }
 }
 
 /// 🗂️ Reads schema documents below a repository root; each body is read once and kept for the process lifetime.
@@ -342,11 +372,8 @@ impl SchemaExportRegistry {
     /// 🔎 Resolves one `(scope id, export id, format id)` triple to its handcrafted leaf body.
     pub fn resolve(&self, scope: &str, export: &str, format: SchemaFormat) -> Result<&'static str, SchemaResolveError> {
         let leaves = self.leaves(scope, export)?;
-        let body = format.leaf(&leaves);
+        let body = resolved_leaf_body(scope, export, format, &leaves);
         if body.trim().is_empty() {
-            if let Some(served) = served_schema_leaf(scope, export, format) {
-                return Ok(served);
-            }
             return Err(SchemaResolveError::FormatAbsent { scope: scope.to_string(), export: export.to_string(), format });
         }
         Ok(body)

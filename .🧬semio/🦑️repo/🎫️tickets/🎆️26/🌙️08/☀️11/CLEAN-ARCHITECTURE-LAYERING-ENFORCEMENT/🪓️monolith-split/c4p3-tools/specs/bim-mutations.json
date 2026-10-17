@@ -1,0 +1,50 @@
+{
+ "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟦️.ts",
+ "importers": "auto",
+ "children": [
+  {
+   "dir": "🌐️spatial-structure",
+   "doc": "/** 🌐️ BIM model direct mutations for the spatial structure: site, building, storeys, project info, grid lines, zones, area schemes and spaces. */",
+   "re": [
+    "^(Create|Delete|Set|Rename|Remove)(Site|Building|Storey|StoreyHeight|StoreyLevel|StoreyCutHeight|ProjectInfo|GridLine|Zone|AreaScheme|Space|SpaceConditions)$"
+   ]
+  },
+  {
+   "dir": "🏯️building-elements",
+   "doc": "/** 🏯️ BIM model direct mutations for walls, curtain walls, columns, beams, slabs, roofs, ceilings, openings, stairs, railings, ramps, supports and loads. */",
+   "re": [
+    "^(Create|Delete|Set|Flip|Split|Offset|TrimExtend|Move)(Wall|WallTop|WallAxis|WallBaseOffset|WallTypeOf|WallLocation|WallEndJoin|WallSweep|WallBaseSlab|CurtainWall|CurtainWallTypeOf|CurtainWallGrid|CurtainPanelOverride|Column|ColumnTilt|Beam|BeamAxis|Slab|SlabBoundary|Roof|RoofFootprint|RoofShape|Ceiling|CeilingBoundary|Opening|Stair|Railing|Ramp|Support|LoadCase|Load)$"
+   ]
+  },
+  {
+   "dir": "💎️types-and-materials",
+   "doc": "/** 💎️ BIM model direct mutations for materials and element types, including their thermal data. */",
+   "re": [
+    "^(Create|Delete|Set)(Material|\\w+Type|TypeThermalData)$"
+   ]
+  },
+  {
+   "dir": "✏️element-operations",
+   "doc": "/** ✏️ BIM model direct mutations that edit selected elements: transform, copy, place, rename, properties, classification, storey and phase. */",
+   "re": [
+    "^(Move|Rotate|Delete|Place|Copy|Mirror|Array|Align)Elements$",
+    "^RenameElement$",
+    "^(Set|Remove)Element(Property|Classification|Storey|Phase)$"
+   ]
+  },
+  {
+   "dir": "📜️annotation-and-sheets",
+   "doc": "/** 📜️ BIM model direct mutations for annotations, views, schedules, sheets, viewports and sheet revisions. */",
+   "re": [
+    "^(Create|Delete|Set)(Dimension|Tag|TextNote|Leader|AnnotationStyle|View|Schedule|Sheet|Viewport|SheetRevision)$"
+   ]
+  },
+  {
+   "dir": "🤝️components-and-coordination",
+   "doc": "/** 🤝️ BIM model direct mutations for components, MEP elements, families, clash sets, rules, issues, property templates and classification systems. */",
+   "re": [
+    "^(Create|Delete|Set|Remove)(Component|ComponentOverride|MepElement|Family|FamilyParameter|FamilySolid|ClashSet|Rule|Issue|IssueComment|PropertyTemplate|ClassificationSystem)$"
+   ]
+  }
+ ]
+}

@@ -1,0 +1,132 @@
+/* 🔤️ The reveal theme variables, the heading scale and the layout of the slides and positioned arrangements. */
+
+:root {
+	--r-background-color: var(--base);
+	--r-main-font: var(--font-sans);
+	--r-main-font-size: 2.625rem;
+	--r-block-margin: 1.25rem;
+	--r-heading-margin: 0 0 1.25rem 0;
+	--r-heading-line-height: 1.2;
+	--r-heading-font-weight: 400;
+	--r-heading1-size: 2.5em;
+	--r-heading2-size: 1.6em;
+	--r-heading3-size: 1.3em;
+	--r-heading4-size: 1em;
+	--r-presentation-morph-title-size: 1.35em;
+	--r-presentation-morph-secondary-size: 1.15em;
+	--r-main-color: var(--foreground);
+	--r-heading-font: var(--font-sans);
+	--r-heading-color: var(--foreground);
+	--r-heading-text-transform: none;
+	--r-heading-letter-spacing: normal;
+	--r-link-color: var(--color-primary);
+	--r-link-color-hover: var(--color-secondary);
+	--r-selection-background-color: color-mix(in srgb, var(--color-primary) 40%, transparent);
+	--r-controls-color: var(--color-primary);
+}
+
+.reveal {
+	font-family: var(--font-sans);
+	font-size: var(--r-main-font-size);
+}
+
+/* #region 🔖️RevealTypography */
+/** Applies reveal heading scale (normally provided by a reveal theme) so layout matches eg-ice-25
+ *  and the @ui/react Tailwind preflight reset (which collapses headings to `inherit`) is overridden. */
+.reveal h1,
+.reveal h2,
+.reveal h3,
+.reveal h4,
+.reveal h5,
+.reveal h6 {
+	margin: var(--r-heading-margin);
+	color: var(--r-heading-color);
+	font-family: var(--r-heading-font);
+	font-weight: var(--r-heading-font-weight);
+	line-height: var(--r-heading-line-height);
+	letter-spacing: var(--r-heading-letter-spacing);
+	text-transform: var(--r-heading-text-transform);
+	word-wrap: break-word;
+}
+
+.reveal h1 {
+	font-size: var(--r-heading1-size);
+}
+
+.reveal h2 {
+	font-size: var(--r-heading2-size);
+}
+
+.reveal h3 {
+	font-size: var(--r-heading3-size);
+}
+
+.reveal h4 {
+	font-size: var(--r-heading4-size);
+}
+
+.reveal h5,
+.reveal h6 {
+	font-size: 1em;
+}
+
+.reveal p {
+	margin: var(--r-block-margin) 0;
+	line-height: 1.3;
+}
+
+.reveal .presentation-morph-text--title {
+	font-size: var(--r-presentation-morph-title-size);
+}
+
+.reveal .presentation-morph-text--secondary {
+	font-size: var(--r-presentation-morph-secondary-size);
+}
+/* #endregion 🔖️RevealTypography */
+
+.reveal a {
+	color: var(--color-primary);
+}
+
+.reveal .slides {
+	text-align: center;
+}
+
+.reveal .slides > section > section.presentation-arrangement--interactive {
+	text-align: initial;
+	overflow: visible;
+}
+
+.reveal
+	.slides
+	> section
+	> section.presentation-arrangement--positioned
+	> .presentation-arrangement-surface {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	overflow: visible;
+}
+
+.reveal .slides > section > section.presentation-arrangement--positioned {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	text-align: initial;
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+}
+
+.reveal .slides > section > section.presentation-arrangement--positioned > .presentation-arrangement-surface {
+	position: relative;
+	flex: 1 1 auto;
+	align-self: stretch;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 0;
+	min-height: 0;
+}

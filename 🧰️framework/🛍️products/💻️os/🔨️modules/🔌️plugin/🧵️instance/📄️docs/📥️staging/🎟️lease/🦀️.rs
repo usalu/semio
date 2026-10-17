@@ -1,9 +1,26 @@
 //! 🪮️ Staged slice of the `lease` band of the mounted artifact instance: its `instance-docs` members (WP6 step S0 of the instance family).
-use super::*;
-use super::jobs_lease::{OriginalToolLeaseAdmission};
+use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use pack::snapshot::ArtifactPack;
+use semio_framework_plugin_decl_emission::Emit;
+use semio_framework::FaultFrom;
+use semio_framework_plugin_job::reserved_jobs::FrameworkReservedCommitPermit;
+use std::future::Future;
+use std::mem::ManuallyDrop;
+use crate::docs_components::MediaTransfers;
+use store::{MemberFactory, Mutation, SpaceMember};
+use protocol::OpText;
+use semio_framework_plugin_reactor_app::PluginApp;
+use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
+use semio_framework_value::{RetirementDemand, ValueError};
+use semio_framework_plugin_operation::ToolCancellationLease;
+use semio_framework_plugin_instance_jobs::jobs_components::ToolOperations;
+use semio_framework_plugin_ownership::bounded_ownership::plugin_grant_funds;
+use semio_framework_ui_contract::*;
+use semio_framework_plugin_instance_jobs::jobs_lease::OriginalToolLeaseAdmission;
 
 impl<A: ArtifactApp> MediaTransfers<A> {
-    pub(crate) fn original_tool_lease_close_demands(&self, tools: &ToolOperations<A>,body:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{
+    pub fn original_tool_lease_close_demands(&self, tools: &ToolOperations<A>,body:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{
         use semio_framework_value::RetirementDemand;
         if tools.pending_tool_lease_admission.is_none()&&self.pending_media_import_permit.is_some(){return Ok(RetirementDemand{copy_bytes:size_of::<(FrameworkReservedCommitPermit,(semio_framework_job::OperationId,semio_framework_job::Generation,usize))>()+size_of::<OriginalToolLeaseAdmission>(),depth:1,..Default::default()})}
         let Some(pending)=tools.pending_tool_lease_admission.as_ref()else{return Ok(Default::default())};
@@ -15,7 +32,7 @@ impl<A: ArtifactApp> MediaTransfers<A> {
         Ok(RetirementDemand{copy_bytes:size_of::<OriginalToolLeaseAdmission>(),depth:1,..Default::default()})
     }
 
-    pub(crate) fn close_original_tool_lease(&mut self, tools: &mut ToolOperations<A>,cx:&mut semio_framework_job::StepContext<'_>,grant:RetainedCloneGrant)->Result<RetainedCloneStep,semio_framework_job::OriginalTurnFailure>{
+    pub fn close_original_tool_lease(&mut self, tools: &mut ToolOperations<A>,cx:&mut semio_framework_job::StepContext<'_>,grant:RetainedCloneGrant)->Result<RetainedCloneStep,semio_framework_job::OriginalTurnFailure>{
         let demand=self.original_tool_lease_close_demands(tools, grant.maximum_copy_bytes)?;
         if grant.maximum_items==0||!semio_framework_plugin_ownership::bounded_ownership::plugin_grant_funds(demand,grant){return Ok(RetainedCloneStep::Progress(Default::default()))}
         if tools.pending_tool_lease_admission.is_none(){if let Some((permit,identity))=self.pending_media_import_permit.take(){
@@ -30,7 +47,7 @@ impl<A: ArtifactApp> MediaTransfers<A> {
             if owner.terminal_is_empty(){pending.retirement.take();return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}))}
             return owner.close_step(tools.tool_cancellations.handle().unwrap(),grant).map_err(Into::into)
         }
-        if let Some(lease)=pending.lease.take(){lease.cancel();*pending.retirement=Some(crate::tool_cancellation::ToolCancellationLeaseRetirement::new(lease));return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}))}
+        if let Some(lease)=pending.lease.take(){lease.cancel();*pending.retirement=Some(semio_framework_plugin_operation::ToolCancellationLeaseRetirement::new(lease));return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}))}
         if pending.verb.is_some(){drop(pending.verb.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:demand.release_bytes,..Default::default()}))}
         if let Some(operation)=pending.operation.take(){tools.release_reserved_emit_slot(operation.operation.0);return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}))}
         if let Some(source)=pending.source.as_mut(){pending.returning=true;let step=source.close_step(cx.original_source_parent()?,cx)?;if source.terminal_is_empty(){pending.source.take();}return Ok(RetainedCloneStep::Progress(step.progress()))}

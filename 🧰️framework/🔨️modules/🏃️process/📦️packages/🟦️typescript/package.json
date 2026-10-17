@@ -60,7 +60,9 @@
     "./routing/invocation/process": "./🧭️routing/📥️invocation/🏃️process/🟦️.ts",
     "./routing/invocation/process/json": "./🧭️routing/📥️invocation/🏃️process/📥️json/🟦️.ts",
     "./testing/cargo/exact": "./🧪️testing/🦀️cargo/🎯️exact/🟦️.ts",
-    "./testing/fixtures": "./🧪️testing/🧫️fixtures/🟦️.ts"
+    "./testing/fixtures": "./🧪️testing/🧫️fixtures/🟦️.ts",
+    "./build/capacity/scope/consumption": "./🏗️build/🎟️capacity/🪆️scope/🤲️consumption/🟦️.ts",
+    "./build/capacity/schema": "./🏗️build/🎟️capacity/🧬️schema/🟦️.ts"
   },
   "license": "LGPL-3.0-or-later",
   "devDependencies": {
@@ -72,6 +74,7 @@
     "test-native-artifact-publication": "bun --cwd \"../../../../..\" repo run @semio-tech/framework-process:test-native-artifact-publication"
   },
   "dependencies": {
+    "@semio-tech/compiler-syntax-rust-ts": "workspace:*",
     "@semio-tech/framework": "workspace:*"
   }
 }

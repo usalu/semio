@@ -7,7 +7,7 @@ export interface BuildOrchestrationDeclarationV1 {readonly version:1;readonly ki
 /** 📋️ Carries the exact admitted task closure without issuing process authority. */
 export interface BuildOrchestrationContextV1 {readonly version:1;readonly task:BuildOrchestrationTaskV1;readonly targets:readonly {readonly project:string;readonly target:string;readonly delegation:BuildOrchestrationDeclarationV1|null}[]}
 /** 🗺️ Provides only the graph fields consumed by orchestration projection. */
-export interface BuildOrchestrationProjectV1 {readonly targets?:Readonly<Record<string,{readonly metadata?:unknown;readonly configurations?:Readonly<Record<string,unknown>>}>>}
+export interface BuildOrchestrationProjectV1 {readonly targets?:Readonly<Record<string,{readonly execution?:unknown;readonly metadata?:unknown;readonly configurations?:Readonly<Record<string,unknown>>}>>}
 /** 🧭️ Captures and validates the declared bounded task closure from an admitted graph. */
 export function buildOrchestrationContextV1(projects:Readonly<Record<string,BuildOrchestrationProjectV1>>,selection:Readonly<{project:string;target:string;configuration?:string}>):BuildOrchestrationContextV1|undefined;
 /** 📤️ Validates carried data and projects child capabilities without issuing an Original. */

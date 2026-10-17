@@ -1,0 +1,65 @@
+{
+  "mutations": [
+    {
+      "name": "target",
+      "path": [
+        "unit",
+        "target",
+        "name"
+      ],
+      "value": "changed"
+    },
+    {
+      "name": "environment",
+      "path": [
+        "unit",
+        "environment",
+        "SEMIO_PLAN"
+      ],
+      "value": "changed"
+    },
+    {
+      "name": "context",
+      "path": [
+        "context",
+        "facts",
+        "package"
+      ],
+      "value": "changed"
+    },
+    {
+      "name": "output",
+      "path": [
+        "outputDirectory"
+      ],
+      "value": "changed"
+    }
+  ],
+  "graphs": [
+    {
+      "nodes": 64,
+      "admitted": true
+    },
+    {
+      "nodes": 65,
+      "admitted": false
+    }
+  ],
+  "construction": [
+    {
+      "name": "declared",
+      "reverse": false,
+      "unicode": false
+    },
+    {
+      "name": "reordered",
+      "reverse": true,
+      "unicode": false
+    },
+    {
+      "name": "unicode",
+      "reverse": true,
+      "unicode": true
+    }
+  ]
+}

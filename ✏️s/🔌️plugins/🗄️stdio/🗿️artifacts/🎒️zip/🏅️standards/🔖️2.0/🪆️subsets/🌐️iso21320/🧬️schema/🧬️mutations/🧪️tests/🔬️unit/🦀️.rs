@@ -1,5 +1,9 @@
-use crate::apply_mutation;
-use super::*;
+use crate::schema::diff;
+use crate::schema::snapshot::ZipEntry;
+use crate::ZipSnapshot;
+use semio_framework_test_fixtures::fixture_text;
+use semio_s_artifact_stdio_contract::apply_mutation;
+use crate::standards::v2_0::subsets::iso21320::schema::mutations::*;
 use protocol::Mutation as _;
 
 fn entry(name: &str, data: &[u8]) -> ZipEntry {
@@ -29,7 +33,7 @@ fn kinds_matches_enum_variants_and_manifest() {
     let spelled: Vec<&'static str> = every_kind().iter().map(kind_of).collect();
     assert_eq!(spelled, KINDS.to_vec(), "KINDS must spell every variant, in declaration order");
 
-    let manifest = include_str!("../../../../🔮️oracles/🔣️.json");
+    let manifest = fixture_text!("../../../🔮️oracles/🔣️.json");
     for kind in KINDS {
         assert!(manifest.contains(&format!("\"{kind}\"")), "the oracle manifest's catalog does not declare {kind:?}");
     }

@@ -12,7 +12,7 @@ import {
   puzzle3dBrushMeshPages,
   puzzle3dBrushMeshQueueStep,
   drainPuzzle3dBrushMeshQueue,
-} from "../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛠️ShellHelpers/🟦️.tsx";
+} from "../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛠️ShellHelpers/🛑️extension-io/🟦️.ts";
 import brushMeshUploadFixture from "../🧫️fixtures/🥽️brush-mesh-upload/🔣️.json";
 
 /** 🥽️ The values one page carries, read back out of its two base64 payloads exactly as the plugin's

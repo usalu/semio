@@ -93,13 +93,9 @@ pub fn addressed(view: &semio_framework_plugin::ViewModel, mutation: EquationGra
     Ok(semio_framework_plugin::WindowConfigMutation::of::<EquationGraphWindowConfigOwner>(window_id, mutation))
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️mutation-vectors/🦀️.rs"]
-mod mutation_vectors;
+
+
 
 #[cfg(test)]
 #[path = "🧪️tests/🔬️window-config-ownership/🦀️.rs"]

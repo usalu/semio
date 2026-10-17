@@ -129,8 +129,8 @@ fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
 pub fn lowpoly_artifact_schema_descriptor() -> semio_framework_schema_registry::ArtifactSchemaDescriptor {
     semio_framework_schema_registry::ArtifactSchemaDescriptor {
         id: "s.lowpoly.lowpoly",
-        artifact: semio_s_artifact_lowpoly_lowpoly_model::ARTIFACT_LEAVES,
-        snapshot: semio_s_artifact_lowpoly_lowpoly_model::snapshot::SNAPSHOT_LEAVES,
+        artifact: semio_s_artifact_lowpoly_lowpoly_model::artifact_leaves(),
+        snapshot: semio_s_artifact_lowpoly_lowpoly_model::snapshot::snapshot_leaves(),
         diff: semio_s_artifact_lowpoly_lowpoly_model_diff::DIFF_LEAVES,
         mutations: semio_s_artifact_lowpoly_lowpoly_mutations::MUTATION_LEAVES,
     }

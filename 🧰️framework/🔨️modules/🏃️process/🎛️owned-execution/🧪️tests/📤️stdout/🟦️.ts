@@ -18,5 +18,4 @@ test("owned child stdout destination preserves machine output with independent N
   const oracle=spawnSync("node",["--eval",'const fs=require("node:fs");'+(row.mode==="ignore"?'': 'fs.writeSync('+ (row.mode==="stderr"?2:1)+',"stdout Ω\\n");')+'fs.writeSync(2,"stderr 😀\\n");'],{cwd:root});
   expect(actual.exitCode,actual.stderr.toString()).toBe(0);expect(oracle.status,oracle.stderr.toString()).toBe(0);expect(lines(actual.stdout)).toEqual(row.stdout!);expect(lines(actual.stderr)).toEqual([...row.stderr!].sort());expect(lines(actual.stdout)).toEqual(lines(oracle.stdout));expect(lines(actual.stderr)).toEqual(lines(oracle.stderr));
  }
- console.error("[DEBUG] Original owned child stdout routing agrees with closed domain Ajv and independent Node UTF8 stdio; foreign destination refused before child output");
 });

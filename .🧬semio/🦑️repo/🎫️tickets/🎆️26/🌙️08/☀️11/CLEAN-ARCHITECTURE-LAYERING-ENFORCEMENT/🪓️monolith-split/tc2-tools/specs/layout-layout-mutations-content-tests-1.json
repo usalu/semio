@@ -1,0 +1,34 @@
+{
+ "parent": "semio-s-artifact-layout-layout-mutations-content",
+ "name": "semio-s-artifact-layout-layout-mutations-content-tests-1",
+ "dir": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄️content/🧪️tests/🍯️companion-1",
+ "files": [
+  "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↔️change-page-width/🧪️tests/↔️widens-page-1/🦀️.rs",
+  "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↕️change-page-height/🧪️tests/↕️lengthens/🦀️.rs",
+  "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️delete-link/🧪️tests/📍️removes-a-middle-row/🦀️.rs",
+  "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️delete-link/🧪️tests/🔗️removes-link-2/🦀️.rs",
+  "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✍️edit-story/🧪️tests/📝️rewrites-story-1-body/🦀️.rs",
+  "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️rename-layout/🧪️tests/🏷️renames/🦀️.rs",
+  "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✒️set-story-runs/🧪️tests/🔬️unit/🦀️.rs",
+  "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-page/🧪️tests/➕️appends-page-3/🦀️.rs",
+  "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎚️update-link/🧪️tests/🔬️unit/🦀️.rs",
+  "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨️update-character-style/🧪️tests/🔬️unit/🦀️.rs",
+  "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏛️update-page-columns/🧪️tests/🏛️splits/🦀️.rs",
+  "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-page/🧪️tests/🏷️renames-page-1/🦀️.rs",
+  "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📎set-page-overrides/🧪️tests/🔬️unit/🦀️.rs",
+  "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐update-page-margins/🧪️tests/📐️sets/🦀️.rs",
+  "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️set-page-guides/🧪️tests/🔬️unit/🦀️.rs",
+  "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📓️update-spread/🧪️tests/🔬️unit/🦀️.rs",
+  "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📕delete-story/🧪️tests/📍️removes-a-middle-row/🦀️.rs"
+ ],
+ "testkit": [
+  "semio-s-artifact-layout-layout-model",
+  "semio-s-artifact-layout-layout-diff",
+  "semio-s-artifact-layout-layout-mutations",
+  "semio-s-artifact-layout-layout-mutations-frames",
+  "semio-s-artifact-layout-layout-mutations-content"
+ ],
+ "emoji": "🍯️",
+ "summary": "the mutation fixture and unit laws of the content leaves, part one.",
+ "description": "Companion test crate of semio-s-artifact-layout-layout-mutations-content: the mutation fixture and unit laws of the content leaves, part one"
+}

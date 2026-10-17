@@ -405,11 +405,6 @@ pub fn dependency(snapshot: &ModelSnapshot, opening: &Opening) -> DslValue {
     cut_dependency(snapshot, opening)
 }
 
-/// 🪟️ The frame of every opening (the `OpeningFrame` nodes of the model graph).
-#[cfg(test)]
-pub fn compute_opening_frames(snapshot: &ModelSnapshot) -> BTreeMap<String, OpeningFrame> {
-    std::mem::take(&mut super::super::model_graph::infer_selected::<{ super::super::model_graph::kinds::FRAMES }>(snapshot).opening_frames)
-}
 //#endregion 🔖️Projection
 
 #[cfg(test)]

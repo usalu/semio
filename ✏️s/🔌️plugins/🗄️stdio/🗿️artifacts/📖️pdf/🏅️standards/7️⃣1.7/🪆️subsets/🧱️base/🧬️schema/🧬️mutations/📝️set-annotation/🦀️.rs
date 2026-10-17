@@ -1,6 +1,5 @@
 //! 📝️ Authoritative PDF mutation payload, diff, inverse, and tests for `set-annotation`.
 
-use super::PdfMutation;
 use crate::standards::v1_7::subsets::base::schema::diff::{self, PdfDiff};
 use crate::standards::v1_7::subsets::base::schema::snapshot::*;
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
@@ -16,7 +15,10 @@ pub struct SetAnnotation {
     pub annotation: PdfAnnotation,
 }
 
-impl MutationKind<PdfSnapshot, PdfMutation> for SetAnnotation {
+impl<Op> MutationKind<PdfSnapshot, Op> for SetAnnotation
+where
+    Op: protocol::Mutation<PdfSnapshot, Diff = PdfDiff> + From<SetAnnotation>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "annotation", kind: "set-annotation", record: "Set" };
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
@@ -24,10 +26,10 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetAnnotation {
         MutationOutcome::new(diff::diff_set_annotation(self.index, self.at, self.annotation.clone()))
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
         let _ = base;
-        base.pages.get(self.index).and_then(|page| page.annotations.get(self.at)).map(|annotation| PdfMutation::SetAnnotation(SetAnnotation { index: self.index, at: self.at, annotation: annotation.clone() })).into_iter().collect()
+        base.pages.get(self.index).and_then(|page| page.annotations.get(self.at)).map(|annotation| Op::from(SetAnnotation { index: self.index, at: self.at, annotation: annotation.clone() })).into_iter().collect()
     
     })())
 }
@@ -44,8 +46,6 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetAnnotation {
 //#endregion 🔖️Mutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
 

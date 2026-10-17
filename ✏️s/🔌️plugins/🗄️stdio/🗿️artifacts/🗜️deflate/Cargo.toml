@@ -2,22 +2,28 @@ cargo-features = [ "trim-paths" ]
 
 [workspace]
 resolver = "2"
-members = [ "📦️packages/🦀️rust" ]
+members = [
+  "🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/📚️examples/🎬️demo/📦️packages/🦀️rust",
+  "🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🚪️io/🧮️zlib/📦️packages/🦀️rust",
+  "🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧪️tests/🔬️unit/📦️packages/🦀️rust",
+  "🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust",
+  "🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️packages/🦀️rust",
+  "🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
+  "📦️packages/🦀️rust",
+]
 exclude = [
-  "**/🏅️standards/**",
   "**/👽️guest/**",
   "**/🔮️oracles/**",
   "**/🏭️bridge/**",
-  "🔮️oracles/📦️packages/🦀️rust"
+  "🔮️oracles/📦️packages/🦀️rust",
 ]
 
 [workspace.metadata.semio.repository]
 schema-version = 1
 exclude-patterns = [
-  "**/🏅️standards/**",
   "**/👽️guest/**",
   "**/🔮️oracles/**",
-  "**/🏭️bridge/**"
+  "**/🏭️bridge/**",
 ]
 member-manifests = [ "**/📦️packages/🦀️rust/Cargo.toml" ]
 

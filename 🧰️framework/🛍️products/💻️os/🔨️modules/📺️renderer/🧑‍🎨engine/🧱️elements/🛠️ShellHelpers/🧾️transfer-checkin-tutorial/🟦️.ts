@@ -26,7 +26,9 @@ import { type Anchor, ANCHORS } from "@semio-tech/ui-react";
 import { useEffect } from "react";
 import type { DomainSelection, InteractionState } from "@semio-tech/framework/interaction";
 import type { ShellDialogV1 } from "../../🏛️ShellHost/🗨️dialog-origin/🟦️.ts";
-import { type ActiveSession, type ShellAction, type ShellState } from "../../🐚️Shell/🟦️.tsx";
+import { type ActiveSession } from "../../🐚️Shell/📦️program-sessions/🟦️.ts";
+import { type ShellState } from "../../🐚️Shell/🗃️state-shapes/🟦️.ts";
+import { type ShellAction } from "../../🐚️Shell/🎛️shell-actions/🟦️.ts";
 import { type FrozenLabel, frozenLabelText } from "../🏷️labels/🟦️.tsx";
 import { applyFrameworkLayoutSeed, captureCurrentFrameworkLayout } from "../🛣️route-and-chrome/🟦️.tsx";
 

@@ -1,0 +1,12 @@
+{
+ "name": "c4ppp2",
+ "crates": [
+  "semio-s-artifact-stdio-semio-document-examples",
+  "semio-s-artifact-stdio-semio-document-mutations",
+  "semio-s-artifact-stdio-semio-document-io",
+  "semio-s-artifact-stdio-semio-document-mut-family",
+  "semio-s-artifact-stdio-semio-document-editor",
+  "semio-s-artifact-stdio-semio-document"
+ ],
+ "note": "CENSUS4-PARTIAL package 41: the document diff owner (examples) plus its direct dependents"
+}

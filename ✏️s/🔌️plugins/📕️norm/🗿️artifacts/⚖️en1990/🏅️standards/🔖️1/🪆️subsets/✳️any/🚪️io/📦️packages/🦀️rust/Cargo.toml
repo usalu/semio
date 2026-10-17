@@ -16,6 +16,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-s-artifact-norm-en1990-io-text = { path = "../../📝️text/📦️packages/🦀️rust" }
 pack = { workspace = true }
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-diagnostic = { workspace = true }
@@ -41,5 +42,6 @@ semio-s-plugin-norm-compliance = { workspace = true }
 semio-framework-async-macros = { workspace = true }
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
+semio-framework-test-fixtures = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-s-artifact-norm-en1990-inferences = { workspace = true }
 semio-s-plugin-norm-compliance = { workspace = true, features = ["compliance-testing"] }

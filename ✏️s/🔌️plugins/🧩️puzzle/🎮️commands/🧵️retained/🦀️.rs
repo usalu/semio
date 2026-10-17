@@ -34,7 +34,7 @@ pub const PUZZLE_IMPORT_RAW_BYTES: usize = 2 * PUZZLE_IMPORT_TOTAL_BYTES + PUZZL
 
 /// 📏️ Bytes one `WireBytes` ladder step admits from the assembled wire owner.
 ///
-/// 🧨️ Derived from the wire's OWN page extent ([`semio_framework::action_bus::TOOL_WIRE_PAGE_BYTES`]),
+/// 🧨️ Derived from the wire's OWN page extent ([`semio_framework_action_bus::TOOL_WIRE_PAGE_BYTES`]),
 /// never a literal, because the ladder exists to make the scan RESUMABLE at the granularity the pages
 /// arrived in — not to spend a host turn per byte. Before ticket 26/09/02/PUZZLE-3D-END-TO-END wave B59
 /// the stride was one byte AND every one of those steps published a checkpoint whose `input_hash`
@@ -42,7 +42,7 @@ pub const PUZZLE_IMPORT_RAW_BYTES: usize = 2 * PUZZLE_IMPORT_TOTAL_BYTES + PUZZL
 /// 145 924-byte Nakagin payload) reached scan cursor ≈28 000 in 60 s and the import never reached
 /// `Decode` at all — no document edit, no history row and no notice, which is exactly the silent
 /// `paneObjects=180→180` the live `import-distinct` verdict read.
-pub const PUZZLE_COMMAND_WIRE_SCAN_STRIDE_BYTES: usize = semio_framework::action_bus::TOOL_WIRE_PAGE_BYTES;
+pub const PUZZLE_COMMAND_WIRE_SCAN_STRIDE_BYTES: usize = semio_framework_action_bus::TOOL_WIRE_PAGE_BYTES;
 
 pub fn puzzle_command_contract() -> semio_framework::ToolExecutionContract {
     semio_framework::ToolExecutionContract::resumable(PUZZLE_COMMAND_RAW_BYTES, PUZZLE_COMMAND_DECODED_ITEMS, 1, PUZZLE_COMMAND_OUTPUT_BYTES, PUZZLE_COMMAND_STEP_MICROS, 1, 1)
@@ -64,7 +64,7 @@ pub type PuzzleCommandExtent<A> = fn(&<A as ArtifactApp>::Command, &<A as Artifa
 
 /// 📋️ One literal progress step whose `{"en":…,"de":…}` preview is assembled at compile time.
 #[macro_export]
-pub macro_rules! puzzle_progress_step {
+macro_rules! puzzle_progress_step {
     ($stage:expr, $en:literal, $de:literal) => {
         semio_framework_plugin::retained_command::ArtifactCommandWorkStep::Progress { stage: $stage, preview: concat!("{\"en\":\"", $en, "\",\"de\":\"", $de, "\"}").as_bytes() }
     };

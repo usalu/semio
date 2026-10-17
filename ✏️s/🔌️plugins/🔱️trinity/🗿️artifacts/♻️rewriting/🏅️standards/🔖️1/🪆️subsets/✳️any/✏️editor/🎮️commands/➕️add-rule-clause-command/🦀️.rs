@@ -1,10 +1,13 @@
 //! 📜️ 📜️ Trinity Rewriting app command — `add-rule-clause-command`.
 
 use crate::standards::v1::subsets::any::schema::mutations::RewriteRuleMutation;
-use crate::standards::v1::subsets::any::schema::mutations::{change_parameter_binding,edit_lhs,edit_rhs};
+use crate::standards::v1::subsets::any::schema::mutations::change_parameter_binding::change_parameter_binding;
+use crate::standards::v1::subsets::any::schema::mutations::edit_lhs::edit_lhs;
+use crate::standards::v1::subsets::any::schema::mutations::edit_rhs::edit_rhs;
 
-use crate::standards::v1::subsets::any::schema::{self, ParameterKind};
-use crate::RewritingSnapshot;
+use crate::standards::v1::subsets::any::schema::{self};
+use crate::standards::v1::subsets::any::schema::rule::ParameterKind;
+use crate::standards::v1::subsets::any::schema::snapshot::RewritingSnapshot;
 use semio_framework_graph_manifest::PropertyValue;
 use semio_framework_plugin::{Emit, Fault, FaultCode, FaultOrigin, NoConfigMutation};
 
@@ -24,14 +27,14 @@ fn add_rule_clause(state: &RewritingSnapshot, clause_kind: &str) -> Result<Vec<R
             lhs.where_clause = Some(format!("{left_var}.name = 'value'"));
             return Ok(vec![edit_lhs(lhs)]);
         }
-        "create" => rhs.create.push(schema::Pattern { left_var: "n".into(), left_kind: "Piece".into(), edge_var: None, edge_kind: None, right_var: None, right_kind: None }),
-        "merge" => rhs.merge.push(schema::Pattern { left_var: "n".into(), left_kind: "Piece".into(), edge_var: None, edge_kind: None, right_var: None, right_kind: None }),
-        "set" => rhs.set.push(schema::Assignment { var: left_var, prop: "label".into(), value: PropertyValue::String(String::new()) }),
+        "create" => rhs.create.push(schema::rule::Pattern { left_var: "n".into(), left_kind: "Piece".into(), edge_var: None, edge_kind: None, right_var: None, right_kind: None }),
+        "merge" => rhs.merge.push(schema::rule::Pattern { left_var: "n".into(), left_kind: "Piece".into(), edge_var: None, edge_kind: None, right_var: None, right_kind: None }),
+        "set" => rhs.set.push(schema::rule::Assignment { var: left_var, prop: "label".into(), value: PropertyValue::String(String::new()) }),
         "delete" => rhs.delete.push(left_var),
         "parameter" => {
             let name = format!("param{}", rhs.parameters.len());
             bindings.push(change_parameter_binding(name.clone(), PropertyValue::String(String::new())));
-            rhs.parameters.push(schema::ParameterSpec { name, kind: ParameterKind::String, default: PropertyValue::String(String::new()) });
+            rhs.parameters.push(schema::rule::ParameterSpec { name, kind: ParameterKind::String, default: PropertyValue::String(String::new()) });
         }
         other => return Err(invalid(format!("unknown rule clause kind '{other}' (where, create, merge, set, delete, parameter)"))),
     }
@@ -39,6 +42,6 @@ fn add_rule_clause(state: &RewritingSnapshot, clause_kind: &str) -> Result<Vec<R
 }
 
 /// ➕️ The `addRuleClause` verb: one edit adding the requested clause, or a named refusal.
-pub(crate) fn add_rule_clause_command(state: &RewritingSnapshot, kind: &str) -> Result<Emit<RewriteRuleMutation, NoConfigMutation>, Fault> {
+pub fn add_rule_clause_command(state: &RewritingSnapshot, kind: &str) -> Result<Emit<RewriteRuleMutation, NoConfigMutation>, Fault> {
     Ok(Emit::mutations(add_rule_clause(state, kind)?))
 }

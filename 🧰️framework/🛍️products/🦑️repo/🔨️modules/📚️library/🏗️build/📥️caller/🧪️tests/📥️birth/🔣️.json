@@ -133,5 +133,10 @@
     "network": {
       "offline": true
     }
+  },
+  "defaultPolicy": {
+    "version": 1,
+    "owner": "repository:build",
+    "maximumElapsedMilliseconds": 0
   }
 }

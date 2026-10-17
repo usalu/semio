@@ -35,6 +35,10 @@ type stdioTsvIanaAnyDiffGuardSizeBounds = { readonly minItems?: number; readonly
 
 export const stdioTsvIanaAnyDiffGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : stdioTsvIanaAnyDiffGuardReject(at, "value is not an object");
+export const stdioTsvIanaAnyDiffGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) stdioTsvIanaAnyDiffGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const stdioTsvIanaAnyDiffGuardArray = (value: unknown, at: string, bounds: stdioTsvIanaAnyDiffGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return stdioTsvIanaAnyDiffGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) stdioTsvIanaAnyDiffGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -65,7 +69,7 @@ export const stdioTsvIanaAnyDiffGuardConstant = <T extends string | number | boo
 //#endregion 🚪️Parsers
 
 export function parseTsvDiff(value: unknown, at = "$"): TsvDiff {
-  const row = stdioTsvIanaAnyDiffGuardObject(value, at);
+  const row = stdioTsvIanaAnyDiffGuardClosed(stdioTsvIanaAnyDiffGuardObject(value, at), at, ["trailingNewline", "lineEnding", "records"]);
   return {
     trailingNewline: row["trailingNewline"] === undefined ? undefined : stdioTsvIanaAnyDiffGuardBoolean(row["trailingNewline"], `${at}.trailingNewline`),
     lineEnding: row["lineEnding"] === undefined ? undefined : stdioTsvIanaAnyDiffGuardMember(row["lineEnding"], `${at}.lineEnding`, ["lf", "crlf"] as const),
@@ -74,7 +78,7 @@ export function parseTsvDiff(value: unknown, at = "$"): TsvDiff {
 }
 
 export function parseTsvRowModified(value: unknown, at = "$"): TsvRowModified {
-  const row = stdioTsvIanaAnyDiffGuardObject(value, at);
+  const row = stdioTsvIanaAnyDiffGuardClosed(stdioTsvIanaAnyDiffGuardObject(value, at), at, ["index", "diff"]);
   return {
     index: stdioTsvIanaAnyDiffGuardInteger(row["index"], `${at}.index`, {"minimum": 0}),
     diff: parseTsvRowDiff(row["diff"], `${at}.diff`),
@@ -82,7 +86,7 @@ export function parseTsvRowModified(value: unknown, at = "$"): TsvRowModified {
 }
 
 export function parseTsvRowAdded(value: unknown, at = "$"): TsvRowAdded {
-  const row = stdioTsvIanaAnyDiffGuardObject(value, at);
+  const row = stdioTsvIanaAnyDiffGuardClosed(stdioTsvIanaAnyDiffGuardObject(value, at), at, ["index", "row"]);
   return {
     index: stdioTsvIanaAnyDiffGuardInteger(row["index"], `${at}.index`, {"minimum": 0}),
     row: stdioTsvIanaAnyDiffGuardArray(row["row"], `${at}.row`).map((item, index) => stdioTsvIanaAnyDiffGuardString(item, `${at}.row[${index}]`)),
@@ -90,7 +94,7 @@ export function parseTsvRowAdded(value: unknown, at = "$"): TsvRowAdded {
 }
 
 export function parseTsvRowsDiff(value: unknown, at = "$"): TsvRowsDiff {
-  const row = stdioTsvIanaAnyDiffGuardObject(value, at);
+  const row = stdioTsvIanaAnyDiffGuardClosed(stdioTsvIanaAnyDiffGuardObject(value, at), at, ["removed", "modified", "added"]);
   return {
     removed: row["removed"] === undefined ? undefined : stdioTsvIanaAnyDiffGuardArray(row["removed"], `${at}.removed`).map((item, index) => stdioTsvIanaAnyDiffGuardInteger(item, `${at}.removed[${index}]`, {"minimum": 0})),
     modified: row["modified"] === undefined ? undefined : stdioTsvIanaAnyDiffGuardArray(row["modified"], `${at}.modified`).map((item, index) => parseTsvRowModified(item, `${at}.modified[${index}]`)),
@@ -99,7 +103,7 @@ export function parseTsvRowsDiff(value: unknown, at = "$"): TsvRowsDiff {
 }
 
 export function parseTsvRowDiff(value: unknown, at = "$"): TsvRowDiff {
-  const row = stdioTsvIanaAnyDiffGuardObject(value, at);
+  const row = stdioTsvIanaAnyDiffGuardClosed(stdioTsvIanaAnyDiffGuardObject(value, at), at, ["fields"]);
   return {
     fields: row["fields"] === undefined ? undefined : stdioTsvIanaAnyDiffGuardArray(row["fields"], `${at}.fields`).map((item, index) => (item === null ? null : stdioTsvIanaAnyDiffGuardString(item, `${at}.fields[${index}]`))),
   };

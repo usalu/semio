@@ -44,6 +44,10 @@ type puzzlePuzzle3dPresenceGuardSizeBounds = { readonly minItems?: number; reado
 
 export const puzzlePuzzle3dPresenceGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : puzzlePuzzle3dPresenceGuardReject(at, "value is not an object");
+export const puzzlePuzzle3dPresenceGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) puzzlePuzzle3dPresenceGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const puzzlePuzzle3dPresenceGuardArray = (value: unknown, at: string, bounds: puzzlePuzzle3dPresenceGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return puzzlePuzzle3dPresenceGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) puzzlePuzzle3dPresenceGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -74,7 +78,7 @@ export const puzzlePuzzle3dPresenceGuardConstant = <T extends string | number | 
 //#endregion 🚪️Parsers
 
 export function parsePuzzle3dPresence(value: unknown, at = "$"): Puzzle3dPresence {
-  const row = puzzlePuzzle3dPresenceGuardObject(value, at);
+  const row = puzzlePuzzle3dPresenceGuardClosed(puzzlePuzzle3dPresenceGuardObject(value, at), at, ["selectedObjectIds", "selectedVortexIds", "selectedAttractionIds", "selectedTargetVolumeIds", "selectedReferenceIds", "hoveredObjectId", "hoveredVortexFullId", "cameraPosition", "cameraTarget", "cameraZoom", "activeToolId", "activeUtilityId"]);
   return {
     selectedObjectIds: puzzlePuzzle3dPresenceGuardArray(row["selectedObjectIds"], `${at}.selectedObjectIds`).map((item, index) => puzzlePuzzle3dPresenceGuardString(item, `${at}.selectedObjectIds[${index}]`)),
     selectedVortexIds: puzzlePuzzle3dPresenceGuardArray(row["selectedVortexIds"], `${at}.selectedVortexIds`).map((item, index) => puzzlePuzzle3dPresenceGuardString(item, `${at}.selectedVortexIds[${index}]`)),
@@ -83,10 +87,10 @@ export function parsePuzzle3dPresence(value: unknown, at = "$"): Puzzle3dPresenc
     selectedReferenceIds: puzzlePuzzle3dPresenceGuardArray(row["selectedReferenceIds"], `${at}.selectedReferenceIds`).map((item, index) => puzzlePuzzle3dPresenceGuardString(item, `${at}.selectedReferenceIds[${index}]`)),
     hoveredObjectId: row["hoveredObjectId"] === undefined ? undefined : puzzlePuzzle3dPresenceGuardString(row["hoveredObjectId"], `${at}.hoveredObjectId`),
     hoveredVortexFullId: row["hoveredVortexFullId"] === undefined ? undefined : puzzlePuzzle3dPresenceGuardString(row["hoveredVortexFullId"], `${at}.hoveredVortexFullId`),
-    cameraPosition: puzzlePuzzle3dPresenceGuardArray(row["cameraPosition"], `${at}.cameraPosition`, {"minItems": 3, "maxItems": 3}).map((item, index) => puzzlePuzzle3dPresenceGuardNumber(item, `${at}.cameraPosition[${index}]`)),
-    cameraTarget: puzzlePuzzle3dPresenceGuardArray(row["cameraTarget"], `${at}.cameraTarget`, {"minItems": 3, "maxItems": 3}).map((item, index) => puzzlePuzzle3dPresenceGuardNumber(item, `${at}.cameraTarget[${index}]`)),
+    cameraPosition: ((items0) => [puzzlePuzzle3dPresenceGuardNumber(items0[0], `${at}.cameraPosition[0]`), puzzlePuzzle3dPresenceGuardNumber(items0[1], `${at}.cameraPosition[1]`), puzzlePuzzle3dPresenceGuardNumber(items0[2], `${at}.cameraPosition[2]`)])(puzzlePuzzle3dPresenceGuardArray(row["cameraPosition"], `${at}.cameraPosition`, {"minItems": 3, "maxItems": 3})),
+    cameraTarget: ((items0) => [puzzlePuzzle3dPresenceGuardNumber(items0[0], `${at}.cameraTarget[0]`), puzzlePuzzle3dPresenceGuardNumber(items0[1], `${at}.cameraTarget[1]`), puzzlePuzzle3dPresenceGuardNumber(items0[2], `${at}.cameraTarget[2]`)])(puzzlePuzzle3dPresenceGuardArray(row["cameraTarget"], `${at}.cameraTarget`, {"minItems": 3, "maxItems": 3})),
     cameraZoom: puzzlePuzzle3dPresenceGuardNumber(row["cameraZoom"], `${at}.cameraZoom`),
-    activeUtilityId: puzzlePuzzle3dPresenceGuardString(row["activeUtilityId"], `${at}.activeUtilityId`),
     activeToolId: row["activeToolId"] === undefined ? undefined : puzzlePuzzle3dPresenceGuardString(row["activeToolId"], `${at}.activeToolId`),
+    activeUtilityId: puzzlePuzzle3dPresenceGuardString(row["activeUtilityId"], `${at}.activeUtilityId`),
   };
 }

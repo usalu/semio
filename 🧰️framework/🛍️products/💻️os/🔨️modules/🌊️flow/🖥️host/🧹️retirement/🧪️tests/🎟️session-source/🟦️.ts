@@ -20,7 +20,7 @@ test("original session custody examples preserve owners and independent UTF8 byt
   const patches=source.latches.flatMap((latch,index)=>index%2?[{op:"remove" as const,path:`/latches/${index}`}]:[]).reverse();
   const pruned=applyPatch(structuredClone(source),patches,true).newDocument;
   expect(pruned.latches).toEqual(source.latches.filter((_,index)=>index%2===0));
-  const invalidated=applyPatch(structuredClone(source),[{op:"replace",path:"/painted",value:""},{op:"replace",path:"/converged",value:""},{op:"replace",path:"/fault",value:null},{op:"replace",path:"/latches",value:[]}],true).newDocument;
+  const invalidated=applyPatch<typeof source|Omit<typeof source,"fault">&{fault:null}>(structuredClone(source),[{op:"replace",path:"/painted",value:""},{op:"replace",path:"/converged",value:""},{op:"replace",path:"/fault",value:null},{op:"replace",path:"/latches",value:[]}],true).newDocument;
   expect(invalidated).toEqual({...source,painted:"",converged:"",fault:null,latches:[]});
   const cancelled=applyPatch(structuredClone(source),source.latches.map((_,index)=>({op:"replace" as const,path:`/latches/${index}`,value:{key:index,armed:false,inFlight:0,owed:false,unfinished:false}})),true).newDocument;
   expect(cancelled).toEqual({...source,latches:source.latches.map(latch=>({...latch,armed:false,inFlight:0,owed:false,unfinished:false}))});
@@ -38,5 +38,4 @@ test("original session custody examples preserve owners and independent UTF8 byt
   const settled=applyPatch(armed,[{op:"replace",path:"/inFlight",value:0},{op:"replace",path:"/armed",value:true},{op:"replace",path:"/owed",value:false}],true).newDocument;
   expect(settled).toEqual({...original,armed:true,inFlight:0,owed:false});
  }
- console.log("[DEBUG] Original session UTF8/Buffer/JSONPatch independent custody livePublication=3 cases=3 invalidation=3 reset=3 originalSharedPublication=3 latchAdmission=3");
 });

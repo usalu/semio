@@ -1,0 +1,412 @@
+{
+  "cases": [
+    {
+      "name": "Targetless Dependency Bridge",
+      "projects": {
+        "app": {
+          "build": [
+            "^build"
+          ]
+        },
+        "bridge": {},
+        "lib": {
+          "build": []
+        }
+      },
+      "edges": [
+        [
+          "app",
+          "bridge"
+        ],
+        [
+          "bridge",
+          "lib"
+        ]
+      ],
+      "selected": [
+        "app:build"
+      ],
+      "excludeDependencies": false,
+      "expected": {
+        "app:build": [
+          "lib:build"
+        ],
+        "lib:build": []
+      }
+    },
+    {
+      "name": "Targetless Dependency Diamond",
+      "projects": {
+        "app": {
+          "build": [
+            "^build"
+          ]
+        },
+        "left": {},
+        "right": {},
+        "lib": {
+          "build": []
+        }
+      },
+      "edges": [
+        [
+          "app",
+          "left"
+        ],
+        [
+          "app",
+          "right"
+        ],
+        [
+          "left",
+          "lib"
+        ],
+        [
+          "right",
+          "lib"
+        ]
+      ],
+      "selected": [
+        "app:build"
+      ],
+      "excludeDependencies": false,
+      "expected": {
+        "app:build": [
+          "lib:build"
+        ],
+        "lib:build": []
+      }
+    },
+    {
+      "name": "Nearest Target Stops Traversal",
+      "projects": {
+        "app": {
+          "build": [
+            "^build"
+          ]
+        },
+        "middle": {
+          "build": []
+        },
+        "lib": {
+          "build": []
+        }
+      },
+      "edges": [
+        [
+          "app",
+          "middle"
+        ],
+        [
+          "middle",
+          "lib"
+        ]
+      ],
+      "selected": [
+        "app:build"
+      ],
+      "excludeDependencies": false,
+      "expected": {
+        "app:build": [
+          "middle:build"
+        ],
+        "middle:build": []
+      }
+    },
+    {
+      "name": "Selected Dependencies Retain Ordering",
+      "projects": {
+        "app": {
+          "test": [
+            "build"
+          ],
+          "build": [
+            "prepare"
+          ],
+          "prepare": []
+        }
+      },
+      "edges": [],
+      "selected": [
+        "app:test",
+        "app:build"
+      ],
+      "excludeDependencies": true,
+      "expected": {
+        "app:test": [
+          "app:build"
+        ],
+        "app:build": []
+      }
+    },
+    {
+      "name": "Unselected Dependencies Are Excluded",
+      "projects": {
+        "app": {
+          "test": [
+            "build"
+          ],
+          "build": []
+        }
+      },
+      "edges": [],
+      "selected": [
+        "app:test"
+      ],
+      "excludeDependencies": true,
+      "expected": {
+        "app:test": []
+      }
+    },
+    {
+      "name": "Direct Self Dependency Is Ignored",
+      "projects": {
+        "app": {
+          "build": [
+            "build"
+          ]
+        }
+      },
+      "edges": [],
+      "selected": [
+        "app:build"
+      ],
+      "excludeDependencies": false,
+      "expected": {
+        "app:build": []
+      }
+    },
+    {
+      "name": "Dependency Project Cycle Omits Self Edge",
+      "projects": {
+        "app": {
+          "build": [
+            "^build"
+          ]
+        },
+        "bridge": {}
+      },
+      "edges": [
+        [
+          "app",
+          "bridge"
+        ],
+        [
+          "bridge",
+          "app"
+        ]
+      ],
+      "selected": [
+        "app:build"
+      ],
+      "excludeDependencies": false,
+      "expected": {
+        "app:build": []
+      }
+    },
+    {
+      "name": "Selected Dependency Project Retains Ordering",
+      "projects": {
+        "app": {
+          "build": [
+            "^build"
+          ]
+        },
+        "bridge": {},
+        "lib": {
+          "build": []
+        }
+      },
+      "edges": [
+        [
+          "app",
+          "lib"
+        ]
+      ],
+      "selected": [
+        "app:build",
+        "lib:build"
+      ],
+      "excludeDependencies": true,
+      "expected": {
+        "app:build": [
+          "lib:build"
+        ],
+        "lib:build": []
+      }
+    },
+    {
+      "name": "Requested Missing Configuration Uses Default",
+      "projects": {
+        "app": {
+          "build": []
+        }
+      },
+      "edges": [],
+      "selected": [
+        "app:build"
+      ],
+      "configuration": "release",
+      "targetConfigurations": {
+        "app:build": {
+          "defaultConfiguration": "prototype",
+          "available": [
+            "prototype"
+          ]
+        }
+      },
+      "excludeDependencies": false,
+      "expected": {
+        "app:build:prototype": []
+      }
+    },
+    {
+      "name": "Dependency Missing Configuration Uses Default",
+      "projects": {
+        "app": {
+          "build": [
+            "^build"
+          ]
+        },
+        "lib": {
+          "build": []
+        }
+      },
+      "edges": [
+        [
+          "app",
+          "lib"
+        ]
+      ],
+      "selected": [
+        "app:build"
+      ],
+      "configuration": "release",
+      "targetConfigurations": {
+        "app:build": {
+          "available": [
+            "release"
+          ]
+        },
+        "lib:build": {
+          "defaultConfiguration": "prototype",
+          "available": [
+            "prototype"
+          ]
+        }
+      },
+      "excludeDependencies": false,
+      "expected": {
+        "app:build:release": [
+          "lib:build:prototype"
+        ],
+        "lib:build:prototype": []
+      }
+    },
+    {
+      "name": "Requested Configuration Survives Dependency Fallback",
+      "projects": {
+        "app": {
+          "build": [
+            "^build"
+          ]
+        },
+        "middle": {
+          "build": [
+            "^build"
+          ]
+        },
+        "lib": {
+          "build": []
+        }
+      },
+      "edges": [
+        [
+          "app",
+          "middle"
+        ],
+        [
+          "middle",
+          "lib"
+        ]
+      ],
+      "selected": [
+        "app:build"
+      ],
+      "configuration": "release",
+      "targetConfigurations": {
+        "app:build": {
+          "available": [
+            "release"
+          ]
+        },
+        "middle:build": {
+          "defaultConfiguration": "prototype",
+          "available": [
+            "prototype"
+          ]
+        },
+        "lib:build": {
+          "available": [
+            "prototype",
+            "release"
+          ]
+        }
+      },
+      "excludeDependencies": false,
+      "expected": {
+        "app:build:release": [
+          "middle:build:prototype"
+        ],
+        "middle:build:prototype": [
+          "lib:build:release"
+        ],
+        "lib:build:release": []
+      }
+    },
+    {
+      "name": "Root Default Becomes Inherited Configuration",
+      "projects": {
+        "app": {
+          "build": [
+            "^build"
+          ]
+        },
+        "lib": {
+          "build": []
+        }
+      },
+      "edges": [
+        [
+          "app",
+          "lib"
+        ]
+      ],
+      "selected": [
+        "app:build"
+      ],
+      "targetConfigurations": {
+        "app:build": {
+          "defaultConfiguration": "prototype",
+          "available": [
+            "prototype"
+          ]
+        },
+        "lib:build": {
+          "defaultConfiguration": "release",
+          "available": [
+            "prototype",
+            "release"
+          ]
+        }
+      },
+      "excludeDependencies": false,
+      "expected": {
+        "app:build:prototype": [
+          "lib:build:prototype"
+        ],
+        "lib:build:prototype": []
+      }
+    }
+  ]
+}

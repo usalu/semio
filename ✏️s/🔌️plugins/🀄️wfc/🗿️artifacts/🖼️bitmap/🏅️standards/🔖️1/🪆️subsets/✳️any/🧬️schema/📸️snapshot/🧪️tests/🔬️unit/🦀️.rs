@@ -3,7 +3,7 @@
 
 use crate::standards::v1::subsets::any::schema::snapshot::write_region;
 
-use super::*;
+use crate::standards::v1::subsets::any::schema::snapshot::*;
 
 fn scene() -> BitmapSnapshot {
     BitmapSnapshot {

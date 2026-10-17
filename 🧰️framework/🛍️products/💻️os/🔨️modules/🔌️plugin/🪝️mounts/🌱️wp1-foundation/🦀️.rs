@@ -4,16 +4,10 @@
 // Carving a crate removes its unit here and puts `extern crate <crate> as <old module name>;` in its place (PLAN-PLUGIN-CRATES.md, section 12.5).
 
 //#region 🏛️OwnershipFacet
-#[cfg(test)]
-#[path = "../../🌱️initialization/♻️retirement/🧪️tests/🦀️.rs"]
-mod bounded_initializer_laws;
+
 pub use semio_framework_plugin_abi::sqlite_wire;
-#[cfg(test)]
-#[path = "../../🧪️tests/🔬️app-window-kits/🦀️.rs"]
-mod app_window_kits_tests;
-#[cfg(test)]
-#[path = "../../🧪️tests/🔬️app-panel-kit/🦀️.rs"]
-mod app_panel_kit_tests;
+
+
 //#endregion 🏛️OwnershipFacet
 //#region 🪟️WindowFacet
 pub(crate) use semio_framework_plugin_window_kits_rich::document_kit;
@@ -59,13 +53,7 @@ pub use completion_vacant::{VacantVec,VacantDeque};
 pub use semio_framework_plugin_abi::operation_authority;
 //#endregion 👷️JobsFacet
 //#region 🧪️Wp1TestHosts
-#[cfg(test)]
-#[path = "🧪️test-hosts/📬️window-mutation/🦀️.rs"]
-mod window_mutation_tests;
-#[cfg(test)]
-#[path = "🧪️test-hosts/🎚️window-config/🦀️.rs"]
-mod window_config_tests;
-#[cfg(test)]
-#[path = "🧪️test-hosts/🫧️window-transient/🦀️.rs"]
-mod window_transient_tests;
+
+
+
 //#endregion 🧪️Wp1TestHosts

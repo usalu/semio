@@ -1,0 +1,23 @@
+{
+ "name": "c4p16a",
+ "crates": [
+  "semio-s-artifact-stdio-contract-part21",
+  "semio-s-artifact-stdio-contract",
+  "semio-s-plugin-stdio-document-test-oracle",
+  "semio-s-artifact-stdio-pdf-test-oracle",
+  "semio-s-artifact-stdio-docx-test-oracle",
+  "semio-s-artifact-stdio-pptx-test-oracle"
+ ],
+ "note": "CENSUS4-PKG-16 split family c4p16a",
+ "base": {
+  "rev": "b84bf526c7b",
+  "crates": [
+   "semio-s-artifact-stdio-contract-part21",
+   "semio-s-artifact-stdio-contract",
+   "semio-s-plugin-stdio-document-test-oracle",
+   "semio-s-artifact-stdio-pdf-test-oracle",
+   "semio-s-artifact-stdio-docx-test-oracle",
+   "semio-s-artifact-stdio-pptx-test-oracle"
+  ]
+ }
+}

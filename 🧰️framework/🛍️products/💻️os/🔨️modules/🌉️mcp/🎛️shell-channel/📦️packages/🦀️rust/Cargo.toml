@@ -33,4 +33,5 @@ semio-framework-os-mcp-bridge = { path = "../../../🪢️bridge-session/📦️
 
 [dev-dependencies]
 semio-framework-actor = { path = "../../../../../../../🔨️modules/🎭️actor/📦️packages/🦀️rust", package = "semio-framework-actor" }
+semio-framework-test-fixtures = { path = "../../../../../../../🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }

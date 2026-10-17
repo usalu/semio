@@ -1,5 +1,5 @@
-import resultModeSchema from "../../../../../../../../../../../../../../../⚙️engine/🖥️app-surface/🧬️schema/👁️result-mode/🔣️.json" with { type: "json" };
-import resultsAnimationSchema from "../../../../../../../../../../../../../../../⚙️engine/🖥️app-surface/🧬️schema/🔣️results-animation/🔣️.json" with { type: "json" };
+import { appSurfaceResultModeSchema as resultModeSchema } from "@semio-tech/fem-js/engine/app-surface/schema/result-mode";
+import { appSurfaceResultsAnimationSchema as resultsAnimationSchema } from "@semio-tech/fem-js/engine/app-surface/schema/results-animation";
 import assert from "node:assert/strict";
 import Ajv from "ajv/dist/2020.js";
 import draft7 from "ajv/dist/refs/json-schema-draft-07.json" with { type: "json" };

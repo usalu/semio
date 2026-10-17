@@ -1,6 +1,15 @@
 //! 🔺️ Diff for `SetLayer`.
 
-use super::super::*;
+#[allow(unused_imports)]
+use crate::schema::diff::CadLayerDiff;
+#[allow(unused_imports)]
+use crate::schema::diff::SemioCadDiff;
+#[allow(unused_imports)]
+use crate::schema::snapshot::SemioCadSnapshot;
+#[allow(unused_imports)]
+use crate::schema::mutations::support::find_layer;
+#[allow(unused_imports)]
+use crate::schema::diff::wrap_layer_diff;
 
 //#region 🔖️Diff
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

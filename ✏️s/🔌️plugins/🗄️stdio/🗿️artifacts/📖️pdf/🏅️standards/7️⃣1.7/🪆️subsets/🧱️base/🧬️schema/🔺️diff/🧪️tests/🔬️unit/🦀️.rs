@@ -1,4 +1,18 @@
-use super::*;
+#[allow(unused_imports)]
+use crate::standards::v1_7::subsets::base::schema::graph_projection::carry_graph_edit;
+#[allow(unused_imports)]
+use crate::standards::v1_7::subsets::base::schema::stream_roles::{PdfAdmittedStreamRole, validate_role_transition};
+#[allow(unused_imports)]
+use crate::standards::v1_7::subsets::base::schema::snapshot::*;
+#[allow(unused_imports)]
+use framework_schema::ArtifactSchema;
+#[allow(unused_imports)]
+use protocol::command::DiffAlgebra;
+#[allow(unused_imports)]
+use protocol::{ApplyCapability, MutationApplyError, MutationApplyResult, MutationDiff};
+#[allow(unused_imports)]
+use std::collections::{HashMap, HashSet};
+use crate::standards::v1_7::subsets::base::schema::diff::*;
 use crate::standards::v1_7::subsets::base::io::export::{text_document, PdfTextLayout};
 use protocol::{DiffBinary,DiffCodec,DiffText};
 
@@ -69,7 +83,8 @@ fn validation_rejects_out_of_range_targets() {
 #[test]
 fn a_graph_edit_carries_the_typed_lanes_it_moves_and_an_unmarked_one_does_not() {
     use crate::standards::v1_7::subsets::base::schema::conformance_support as support;
-    let base = support::document();
+use crate::standards::v1_7::subsets::base::schema::testkit;
+    let base = testkit::document();
     let rows = support::set_catalog_entry_rows(&base, "PageMode", PdfObject::Name("UseOutlines".to_string()), None);
     let marked = protocol::apply_diff(&graph_edit(rows.clone()), &base).unwrap();
     assert_eq!(support::catalog_entry(&marked, "PageMode"), Some(&PdfObject::Name("UseOutlines".to_string())));

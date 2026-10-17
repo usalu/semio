@@ -1,0 +1,19 @@
+# Inference API and Neutral Graph Verification
+
+The explicit adjacent inference declaration now names its actual owned plugin tuple, async generated project DATA, genuine receiver-or-supplied phase context, file maps, cache containers and ten concrete callable members. Catalog contribution fields reuse their first-party owner. Unknown remains only dynamic DATA; no callable Record, external Nx type, any cast or ambient declaration was introduced. The actual MJS implementation is unchanged.
+
+Graph verification now awaits the canonical neutral ALL loader using the actual Script Original and one first-issued phase, then an actual requested callback phase. It validates dependency targets against neutral projects/external nodes and compares current authored contributions after canonical target normalization. A freshly validated registry must match the returned graph admission before discovery. Actual phase checks surround awaits and each comparison loop. The raw @nx/devkit cache read, unawaited plugin Promise.flatMap, Nx node.data assumptions and Nx success messages were removed. This remains a real graph producer/reader when invoked; it was not executed here.
+
+Schema-first seven verifier mismatch rows and ten callable roster rows execute the actual method AST and actual cache/wasm functions with genuine issued controls and explicit async graph/scheduler memory ports. Ajv and SQLite independently check outcomes/roster. Expected failures use an explicit scheduling model port rather than causing an accepted PROCESS frame failure and clearing its ledger. An initial attempt using the actual accepted scheduling wrapper proved that expected assertion failures remain enrolled; its failed log is preserved, and no ledger clearing was added.
+
+`neutral-graph-verification-owned-red.log` is actual semantic RED: valid neutral input refused by the old backend-coupled method. Earlier selector/import-path/import-meta harness failures remain distinct. `neutral-graph-verification-source-port-green.log` passed one law/46 assertions/578ms. Current `neutral-graph-verification-declaration-source.log` passed two laws/125 assertions/1.241s. The laws are imported by the existing permanent main graph entry; the ticket selector is only a no-SDK Source route, not a new public command.
+
+Expanded prior 29 diagnostics are preserved in `native-caller-fixture-negative-strict-residue.log`. First corrected 18-root strict32156 is actual terminal0/17.910s. Final strict adds the new test and permanent aggregate roots and is pending. No SDK, Native image, store, Cargo child or public graph invocation ran in this batch. Fresh backend/SDK Source capture and actual runtime qualification remain separate gates.
+
+## Final Owned Hold
+
+Final 19-root `--native-caller-phase-exact --inference-verification-source-exact` session91837 is terminal0/22.493s; it includes actual new Source test plus the prior18roots. The wider `--inference-verification-tests` adds the modified existing permanent main graph entry and exposes exactly74 diagnostics:65 in that existing aggregate and9 in its imported graph-transaction test. Its failed session93561/log remains preserved. Those are further scope, not a reason to claim the full aggregate strict passes or remove registration. The original29diagnostics are resolved. Root owns the next scope decision.
+
+`inference-neutral-verification-source-held.json` records six current permanent paths/SHA/stamps. All authored paths remain below256characters. Current two-law Source gate125assertions is separate from actual public graph verification, Native fixture runtime and backend/SDK closure currentness. Low final review is pending.
+
+Low final current Source review is clean; six-path hold remains. No further edits requested. The74diagnostic aggregate and unrun full graph runtime remain separate outstanding gates.

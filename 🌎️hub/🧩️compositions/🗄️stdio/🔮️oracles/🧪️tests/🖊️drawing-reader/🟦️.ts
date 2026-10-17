@@ -5,7 +5,7 @@ import { resolve, relative } from "node:path";
 import Ajv from "ajv";
 import * as toml from "@iarna/toml";
 import { validateJsonSchemaSubset } from "@semio-tech/schema-validator-ts";
-import { inspectRustCompileReferences, rustTokens, rustTokenPairs } from "../../../../../../🧰️framework/🔨️modules/📚️compiler/📖️syntax/🦀️rust/🟦️.ts";
+import { inspectRustCompileReferences, rustTokens, rustTokenPairs } from "@semio-tech/compiler-syntax-rust-ts";
 import contract from "../🧫️fixtures/🖊️drawing-reader/🔣️.json";
 import { extractedDxfMutationSource } from "./🧩️preservation/🟦️.ts";
 

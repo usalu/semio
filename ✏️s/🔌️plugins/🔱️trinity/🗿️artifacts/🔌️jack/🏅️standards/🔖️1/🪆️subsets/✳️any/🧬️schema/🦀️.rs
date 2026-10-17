@@ -3,7 +3,7 @@
 //! Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`: `nodes`/`edges` replaced by a single
 //! composed `content: JackContentChild` slot, matching `DagArtifact`'s own field swap exactly.
 
-use crate::JackContentChild;
+use crate::standards::v1::subsets::any::schema::content::JackContentChild;
 use ::semio_framework_schema::ArtifactSchema;
 
 //#region 🔖️Artifact
@@ -75,14 +75,14 @@ impl semio_framework_value::FromValue for JackArtifact {
 //#region 🔖️Conversions
 impl Default for JackArtifact {
     fn default() -> Self {
-        Self { schema: crate::TRINITY_GRAPH_SCHEMA.into(), name: String::new(), manifest_id: None, manifest: Manifest::default(), camera: Camera::default(), content: store::os_store::artifact_child::ArtifactChild::new(String::new(),semio_framework_artifact_reference::ArtifactRef{artifact_id:String::new(),dialect:semio_framework_artifact_reference::ArtifactDialect{artifact_kind:String::new(),standard:String::new(),subset:String::new()}}), root_node_id: None, query: crate::TRINITY_JACK_DEFAULT_QUERY.into() }
+        Self { schema: crate::standards::v1::subsets::any::schema::graph::TRINITY_GRAPH_SCHEMA.into(), name: String::new(), manifest_id: None, manifest: Manifest::default(), camera: Camera::default(), content: store::os_store::artifact_child::ArtifactChild::new(String::new(),semio_framework_artifact_reference::ArtifactRef{artifact_id:String::new(),dialect:semio_framework_artifact_reference::ArtifactDialect{artifact_kind:String::new(),standard:String::new(),subset:String::new()}}), root_node_id: None, query: crate::standards::v1::subsets::any::schema::graph::TRINITY_JACK_DEFAULT_QUERY.into() }
     }
 }
 
 impl JackArtifact {
     /// 📸️ Persisted subset.
-    pub fn to_snapshot(&self) -> crate::JackSnapshot {
-        crate::JackSnapshot {
+    pub fn to_snapshot(&self) -> crate::standards::v1::subsets::any::schema::snapshot::JackSnapshot {
+        crate::standards::v1::subsets::any::schema::snapshot::JackSnapshot {
             schema: self.schema.clone(),
             name: self.name.clone(),
             manifest_id: self.manifest_id.clone(),
@@ -95,12 +95,12 @@ impl JackArtifact {
     }
 
     /// 🧬️ Builds the artifact from its document snapshot.
-    pub fn from_snapshot(snapshot: crate::JackSnapshot) -> Self {
+    pub fn from_snapshot(snapshot: crate::standards::v1::subsets::any::schema::snapshot::JackSnapshot) -> Self {
         Self { schema: snapshot.schema, name: snapshot.name, manifest_id: snapshot.manifest_id, manifest: snapshot.manifest, camera: snapshot.camera, content: snapshot.content, root_node_id: snapshot.root_node_id, query: snapshot.query }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub fn set_snapshot(&mut self, snapshot: crate::JackSnapshot) {
+    pub fn set_snapshot(&mut self, snapshot: crate::standards::v1::subsets::any::schema::snapshot::JackSnapshot) {
         self.schema = snapshot.schema;
         self.name = snapshot.name;
         self.manifest_id = snapshot.manifest_id;
@@ -112,13 +112,13 @@ impl JackArtifact {
     }
 
     /// 🔎 Live node list, read through the working-scene cache.
-    pub fn nodes(&self)->Result<Vec<crate::Node>,semio_framework_value::ValueError>{
-        Ok(crate::jack_working_scene_for_handle(&self.content)?.nodes)
+    pub fn nodes(&self)->Result<Vec<crate::standards::v1::subsets::any::schema::graph::Node>,semio_framework_value::ValueError>{
+        Ok(crate::standards::v1::subsets::any::schema::content::jack_working_scene_for_handle(&self.content)?.nodes)
     }
 
     /// 🔎 Live edge list, read through the working-scene cache.
-    pub fn edges(&self)->Result<Vec<crate::Edge>,semio_framework_value::ValueError>{
-        Ok(crate::jack_working_scene_for_handle(&self.content)?.edges)
+    pub fn edges(&self)->Result<Vec<crate::standards::v1::subsets::any::schema::graph::Edge>,semio_framework_value::ValueError>{
+        Ok(crate::standards::v1::subsets::any::schema::content::jack_working_scene_for_handle(&self.content)?.edges)
     }
 }
 //#endregion 🔖️Conversions
@@ -158,15 +158,12 @@ pub fn jack_artifact_schema_descriptor() -> ::semio_framework_schema_registry::A
 
 //#region 🔖️EmptyDocument
 /// 📦️ An empty trinity graph fixture — the app's zero-state initial document.
-pub fn empty_jack_document<C:crate::JackComposition>() -> crate::JackSnapshot {
-    crate::empty_trinity_graph_snapshot::<C>()
+pub fn empty_jack_document<C:crate::standards::v1::subsets::any::schema::composition::JackComposition>() -> crate::standards::v1::subsets::any::schema::snapshot::JackSnapshot {
+    crate::standards::v1::subsets::any::schema::snapshot::empty_trinity_graph_snapshot::<C>()
 }
 //#endregion 🔖️EmptyDocument
 
 //#region 🧪️EmptyDocumentTests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️empty-document/🦀️.rs"]
-mod empty_document_tests;
 //#endregion 🧪️EmptyDocumentTests
 
 //#region 🏗️DerivedConstruction
@@ -182,10 +179,8 @@ mod empty_document_tests;
 //#endregion 🧬️DerivedArtifactFacets
 
 //#region 🔁️Re-exports
-/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
-pub use crate::Camera;
-pub use crate::Manifest;
+/// 🔁️ The model records this schema's artifact state is made of, imported from their owners.
+use crate::standards::v1::subsets::any::schema::graph::Camera;
+use crate::standards::v1::subsets::any::schema::manifest::Manifest;
 //#endregion 🔁️Re-exports
 
-#[path="♻️retirement/🦀️.rs"]
-mod retirement;

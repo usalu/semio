@@ -1,7 +1,7 @@
 use super::*;
-use crate::standards::v1::subsets::any::schema::inferences::stair_runs::compute_stair_runs;
-use crate::standards::v1::subsets::any::schema::inferences::storey_levels::compute_storey_levels;
-use crate::standards::v1::subsets::any::schema::inferences::wall_layout::compute_wall_layout;
+use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_stair_runs;
+use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_storey_levels;
+use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_wall_layout;
 use crate::standards::v1::subsets::any::schema::snapshot::{Point2, Vertex};
 
 fn bodies(snapshot: &ModelSnapshot, storey: &str, levels: &BTreeMap<String, StoreyLevel>) -> Vec<Body> {

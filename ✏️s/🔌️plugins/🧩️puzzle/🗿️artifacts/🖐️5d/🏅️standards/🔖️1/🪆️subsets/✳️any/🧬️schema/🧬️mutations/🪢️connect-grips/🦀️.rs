@@ -1,7 +1,6 @@
 //! 🔗 Puzzle5d mutation — `ConnectGrips`: creates a fastener between two full grip ids
 //! (`part_id:grip_id`), full initial connection-parameterization payload included.
 use crate::standards::v1::subsets::any::schema::diff::Puzzle5dDiff;
-use crate::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation;
 use crate::Puzzle5dSnapshot;
 
 //#region 🔖️Mutation
@@ -32,17 +31,23 @@ pub struct ConnectGrips {
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
 #[allow(clippy::too_many_arguments)]
-pub fn connect_grips(id: String, source: String, target: String, fastener_kind: Option<String>, gap: f64, shift: f64, rise: f64, rotation: f64, turn: f64, tilt: f64, x: f64, y: f64, index: Option<usize>) -> Puzzle5dMutation {
-    Puzzle5dMutation::ConnectGrips(ConnectGrips { id, source, target, fastener_kind, gap, shift, rise, rotation, turn, tilt, x, y, index })
+pub fn connect_grips<Op>(id: String, source: String, target: String, fastener_kind: Option<String>, gap: f64, shift: f64, rise: f64, rotation: f64, turn: f64, tilt: f64, x: f64, y: f64, index: Option<usize>) -> Op
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::connect_grips::ConnectGrips>,
+{
+    Op::from(ConnectGrips { id, source, target, fastener_kind, gap, shift, rise, rotation, turn, tilt, x, y, index })
 }
 
-impl protocol::MutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for ConnectGrips {
+impl<Op> protocol::MutationKind<Puzzle5dSnapshot, Op> for ConnectGrips
+where
+    Op: protocol::Mutation<Puzzle5dSnapshot, Diff = Puzzle5dDiff> + From<ConnectGrips> + From<crate::standards::v1::subsets::any::schema::mutations::disconnect_grips::DisconnectGrips>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "connect", entity: "grips", kind: "connect-grips", record: "ConnectedGrips" };
 
     fn diff(&self, base: &Puzzle5dSnapshot) -> protocol::MutationOutcome<Puzzle5dDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Puzzle5dSnapshot) -> Result<Vec<Puzzle5dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Puzzle5dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

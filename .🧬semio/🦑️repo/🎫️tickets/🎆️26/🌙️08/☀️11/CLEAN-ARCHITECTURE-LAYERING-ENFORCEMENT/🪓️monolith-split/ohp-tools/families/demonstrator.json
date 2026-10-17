@@ -1,0 +1,12 @@
+{
+ "name": "demonstrator",
+ "crates": [
+  "semio-demonstrator-mutation-bridge",
+  "semio-s-artifact-demonstrator-playground",
+  "semio-s-artifact-demonstrator-playground-editor",
+  "semio-s-artifact-demonstrator-playground-examples",
+  "semio-s-artifact-demonstrator-playground-inferences",
+  "semio-s-artifact-demonstrator-playground-schema"
+ ],
+ "note": "ORACLE-HARVEST-PLUGINS: ✏️s/🔌️plugins/🎪️demonstrator"
+}

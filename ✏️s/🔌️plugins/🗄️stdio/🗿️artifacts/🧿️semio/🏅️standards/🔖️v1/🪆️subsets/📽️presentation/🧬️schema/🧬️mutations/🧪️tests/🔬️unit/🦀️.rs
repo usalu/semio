@@ -1,4 +1,9 @@
-use super::*;
+use semio_framework_test_fixtures::fixture_path;
+use semio_s_artifact_stdio_semio_document::schema::snapshot::DocBlock;
+use crate::schema::diff::SemioPresentationDiff;
+use crate::{schema::snapshot::SemioPresentationSnapshot, schema::snapshot::Slide, schema::snapshot::SlideFrame, schema::snapshot::SlideLayout, schema::snapshot::SlideMaster, schema::snapshot::SlideShape};
+use protocol::Mutation;
+use crate::schema::mutations::*;
 use crate::io::binary::mutations::wire_tag;
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
 use semio_s_artifact_stdio_semio_document::schema::snapshot::DocRun;
@@ -24,7 +29,7 @@ fn kinds_match_the_enum_and_the_catalog() {
     let uncovered: Vec<&&str> = KINDS.iter().zip(&covered).filter(|(_, hit)| !**hit).map(|(kind, _)| kind).collect();
     assert!(uncovered.is_empty(), "semio-presentation: demo_mutation_cases carries no instance of {uncovered:?}, so those kinds are declared but never exercised");
 
-    let manifest: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🔮️oracles/🔣️.json")).expect("the committed fixture is readable")).expect("the subset's own oracle manifest decodes");
+    let manifest: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(fixture_path!("../../../../🔮️oracles/🔣️.json")).expect("the committed fixture is readable")).expect("the subset's own oracle manifest decodes");
     let catalog = manifest["mutationCatalogs"].as_array().expect("the manifest declares mutationCatalogs").iter().find(|entry| entry["id"] == "semio-v1-presentation").expect("the manifest declares the semio-v1-presentation catalog");
     let declared: Vec<&str> = catalog["kinds"].as_array().expect("the catalog declares kinds").iter().map(|kind| kind.as_str().expect("every declared kind is a string")).collect();
     assert_eq!(declared, KINDS.to_vec(), "semio-presentation: the declared catalog and KINDS have drifted apart");

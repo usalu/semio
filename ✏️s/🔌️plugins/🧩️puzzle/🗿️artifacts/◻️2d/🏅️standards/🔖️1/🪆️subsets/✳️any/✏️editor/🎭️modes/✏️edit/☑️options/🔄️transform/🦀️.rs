@@ -4,9 +4,8 @@
 //! from its kind catalog, never from a free drag.
 
 use crate::editor::puzzle2d::config::Puzzle2dPlayRuntime;
-use crate::editor::puzzle2d::modes::edit::windows::overview::utilities::select as select_utility;
 use crate::editor::puzzle2d::terminology::Puzzle2dLabels;
-use {crate::editor::puzzle2d::snapshot::puzzle2d_action, crate::editor::puzzle2d::snapshot::PUZZLE2D_PLAY_CONTROLLER_ID};
+use crate::editor::puzzle2d::snapshot::puzzle2d_action;
 use semio_framework_plugin::WindowMeasure;
 
 /// 🎛️ Tagged with the select utility's id as a routing envelope only; `partition_window_measures`
@@ -16,7 +15,7 @@ pub fn measure(runtime: &Puzzle2dPlayRuntime, labels: &Puzzle2dLabels) -> Window
         id: format!("{PUZZLE2D_PLAY_CONTROLLER_ID}-utility-options-transform"),
         label: String::new(),
         default_open: Some(true),
-        active_utility_id: Some(select_utility::UTILITY_ID.into()),
+        active_utility_id: Some(crate::editor::puzzle2d::config::PUZZLE2D_SELECT_UTILITY_ID.into()),
         value: None,
         min: None,
         max: None,

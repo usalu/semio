@@ -1,9 +1,9 @@
 //! 🧭️ `set-suggestion-offset` command.
+use crate::editor::puzzle5d::entities::puzzle5d_absolute_or_delta;
 
-use crate::editor::puzzle5d::puzzle5d_absolute_or_delta;
-use crate::editor::puzzle5d::Puzzle5dActionCtx;
-use crate::editor::puzzle5d::PUZZLE5D_SUGGESTION_OFFSET_MAX;
-use crate::editor::puzzle5d::PUZZLE5D_SUGGESTION_OFFSET_MIN;
+use crate::editor::puzzle5d::interaction::Puzzle5dActionCtx;
+use crate::editor::puzzle5d::entities::PUZZLE5D_SUGGESTION_OFFSET_MAX;
+use crate::editor::puzzle5d::entities::PUZZLE5D_SUGGESTION_OFFSET_MIN;
 use semio_framework_pack_json::Value;
 
 /// 🧭️ How far off a grip a suggestion is offered: an absolute `value` (the brush option's slider) or

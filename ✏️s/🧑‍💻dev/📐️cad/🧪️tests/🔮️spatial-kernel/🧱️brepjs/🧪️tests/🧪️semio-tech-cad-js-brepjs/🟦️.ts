@@ -1,8 +1,8 @@
-import { aabbVolume } from "../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🧮️preview/📦️aabb/🟦️.ts";
+import { aabbVolume } from "@semio-tech/s-spatial-kernel-ts/preview/aabb";
 import type { BrepjsTestDependencies } from "../../🟦️.ts";
-import type { ModelSpaceJson } from "../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🌌️model-space/🟦️.ts";
-import type { Model } from "../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🧊️model/🟦️.ts";
-import type { EdgeRef, FaceRef, MutableSolidRecord, ShellRef, SolidRef, VertexRef, WireRef } from "../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🧮️preview/🔷️brep-records/🟦️.ts";
+import type { ModelSpaceJson } from "@semio-tech/s-spatial-kernel-ts/geometry/model-space";
+import type { Model } from "@semio-tech/s-spatial-kernel-ts/geometry/model";
+import type { EdgeRef, FaceRef, MutableSolidRecord, ShellRef, SolidRef, VertexRef, WireRef } from "@semio-tech/s-spatial-kernel-ts/preview/brep-records";
 import type { Vec3 } from "@semio-tech/framework-3d-js";
 
 type TestSource = { readonly url: string };
@@ -11,7 +11,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   const { BrepjsKernel, Model, ModelSpace, aabbDifferencePieces, aabbIntersect, applyModelDiff, boxModelDiff, defaultModelDefinitionId, deserializeWorkerValue, face, faceCentroid, fuseSolidsToExternalFaces, geom, kernelGeometry, mesh, modelObjectAabb, serializeWorkerValue, solidRef } = dependencies;
 
   const { beforeEach, describe, expect, it } = vitest;
-  const { bootstrapCadModules } = await import("../../../../../../../🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️.ts");
+  const { bootstrapCadModules } = await import("@semio-tech/cad-cad-ts/standards/1/subsets/any/editor/engine/runtime");
   const { AEC_BUILDING_MODEL_DEFINITION_ID } = await import("@semio-tech/cad-js-module-aec-building");
   const { AEC_BUILDING_ENERGY_MODEL_DEFINITION_ID } = await import("@semio-tech/cad-js-module-aec-building-energy");
   const { AEC_BUILDING_STRUCTURE_CLASSIC_MODEL_DEFINITION_ID } = await import("@semio-tech/cad-js-module-aec-building-structure");

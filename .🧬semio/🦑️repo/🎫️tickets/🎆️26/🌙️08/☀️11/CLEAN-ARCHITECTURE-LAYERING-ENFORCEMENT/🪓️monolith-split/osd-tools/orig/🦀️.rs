@@ -1,0 +1,224 @@
+//! 📇️ Directory read model — pure fold over `DirectoryEvent` (ticket 26/08/16/HUB-SPACES-LIVE-
+//! PRESENCE-AND-COLLABORATIVE-STUDIOS, contract C1). `DirectoryReadModel` is the projection the hub
+//! (and any client mirror) derives from the event log: `spaces` keyed by id, each carrying its
+//! `SpaceView` plus `members`, and `cursor` = the last folded `seq` (idempotent replay guard). A
+//! `users` side-table backfills `MemberView.email`/`display_name` from `user.created` — that event
+//! never touches `spaces` itself (per the decider laws, it "only feeds member display data"). See
+//! `🧬️schema/🦀️component.rs` for the wire types folded over here, and `🟦️.ts` for the
+//! byte-identical TypeScript twin (parity asserted over the golden fixture
+//! `🧫️fixtures/📇️directory/⚡️events.json` in both `🧪️Tests` regions).
+
+// 🧭️ Resolves relative to THIS file's own physical directory (📇️directory/), independent of how
+// this file itself got mounted into the crate from 🦀️.rs — see 🔣️taxonomy.json's
+// `rustEntryPathRules` header comment on why that holds even under `#[path]` mounting.
+#[path = "🧬️schema/🦀️.rs"]
+pub mod schema;
+
+
+// 🎫️ Lane 1-D (ticket §A ownership: "none" before this wave, ours per `📋️ownership-and-handoffs.md`
+// row `🔨️modules/📇️directory/**`): the hub client + native identity mint/restore helper. Both are
+// additive sub-modules beside `schema`, consuming `fold`/the wire types below without touching them.
+
+
+
+
+#[path = "🛡️access-policy/🧬️schema/🦀️.rs"]
+pub mod access_policy;
+
+use std::collections::BTreeMap;
+
+pub use schema::{
+    validate_document_descriptor_v1, lease_fields_from_plan_v1, mint_directory_command_request_id, same_lease_fields_v1, AdminConnectionSnapshotV1,
+    AdminIntentOutcomeV1, AdminIntentReceiptV1, AdminIntentResultV1, AdminIntentStateV1, AdminIntentV1, AdminOperationAuditPhaseV1, AdminOperationAuditV1, AdminOperationProgressV1, AdminOperationStatusV1, AdminPageV1, AdminRecordedConnectionV1,
+    ArtifactBlobRef, ArtifactCheckpoint, ArtifactFrontier, ArtifactHash, ArtifactRetention, CheckpointId, ConnectionView, DescriptorDigestError, DirectoryActor, DirectoryActorKind, DirectoryCommand, DirectoryCommandErrorCodeV1, DirectoryCommandOutcomeV1, DirectoryCommandReceiptV1, DirectoryCommandRequestV1,
+    DirectoryAccessChange, DirectoryCommandResultV1, DirectoryConnectionPhase, DirectoryEventPageErrorV1, DirectoryEventPageV1, DirectoryPresenceActor, DirectorySessionAuthorityV1, DirectorySessionKindV1, DirectorySpaceAdministrationCapabilitiesV1, DirectorySpaceAdministrationDocumentWindowV1,
+    DirectorySpaceAdministrationInviteRowV1, DirectorySpaceAdministrationInviteWindowV1, DirectorySpaceAdministrationMemberRowV1, DirectorySpaceAdministrationMemberWindowV1, DirectorySpaceAdministrationPageErrorV1,
+    DirectorySpaceAdministrationPageV1, DirectorySpaceAdministrationPublicDocumentWindowV1, DirectorySpaceAdministrationSectionV1, DirectorySpaceListEntryV1, DirectorySpaceVisibility, DirectoryStreamMessage, DocumentBrowserActorSourceV1,
+    DocumentCheckInPhaseV1, DocumentCheckInProgressV1, DocumentCheckInReadyV1, DocumentCheckInRefusalV1, DocumentCheckInStatusV1, DocumentCheckInV1, DocumentDescriptor, DocumentExecutionProtocolV1, EditedArtifactFrontierV1, DocumentExecutionTargetComponentV1, DocumentExecutionTargetDescriptorV1, DocumentExecutionTargetLeaseFieldsV1, DocumentExecutionTargetLocaleV1, DocumentExecutionTargetStatusCodeV1,
+    DocumentFrontier, DocumentOpenArtifactV1, DocumentOpenBrowserActorV1, DocumentOpenCatalogV1, DocumentOpenCheckpointV1, DocumentOpenGrantV1, DocumentOpenIntentV1, DocumentOpenPackageV1, DocumentOpenParentDialectV1, DocumentOpenPlanErrorCodeV1,
+    DocumentOpenPlanErrorV1, DocumentOpenPlanV1, DocumentOpenRendererTargetV1, DocumentOpenRevalidationV1, DocumentOpenSurfaceRoleV1, DocumentOpenSurfaceV1, DocumentOwner, DocumentPlanSocketGrantIntentV1, DocumentScope, DocumentView,
+    Hlc, InviteView, MemberSpaceViewV1, PublicDocumentCatalogEntryV1, PublicSpaceViewV1, PublishedArtifactBlob, PublishedArtifactCheckpoint, RebootstrapRequired,
+    DIRECTORY_COMMAND_INVITE_TOKEN_MAX_BYTES, DIRECTORY_COMMAND_RECEIPT_MAX_BYTES,
+    DIRECTORY_COMMAND_RECEIPT_MAX_EVENTS, DIRECTORY_COMMAND_REQUEST_ID_LEN, DIRECTORY_COMMAND_REQUEST_MAX_BYTES, DIRECTORY_EVENT_PAGE_MAX_BYTES, DIRECTORY_EVENT_PAGE_MAX_EVENT_BYTES, DIRECTORY_EVENT_PAGE_MAX_RAW_ROWS, DIRECTORY_SESSION_AUTHORITY_MAX_BYTES,
+    DIRECTORY_SPACE_ADMINISTRATION_CURSOR_MAX_BYTES, DIRECTORY_SPACE_ADMINISTRATION_PAGE_MAX_BYTES, DIRECTORY_SPACE_ADMINISTRATION_PAGE_MAX_ROWS, DIRECTORY_SPACE_ADMINISTRATION_PAGE_SCHEMA, DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES,
+    DOCUMENT_CHECK_IN_MAX_BYTES, DOCUMENT_CHECK_IN_SCHEMA_V1, DOCUMENT_CHECK_IN_STATUS_SCHEMA_V1, DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES, DOCUMENT_OPEN_ID_MAX_BYTES, DOCUMENT_OPEN_MAX_SAFE_INTEGER, DOCUMENT_OPEN_PLAN_MAX_TTL_MS,
+};
+pub use schema::{DirectoryEvent, DirectoryEventBody, DirectorySpaceKind, DirectorySpaceRole, MemberView, SpaceView, UserView};
+pub use schema::{DirectoryIndexedDocumentViewV1, DocumentIndexEntryV1};
+pub use schema::{DIRECTORY_PREFERENCE_PAGE_PATH_V1, USER_PREFERENCE_MUTATION_MAX_BYTES, USER_PREFERENCE_SCHEMA_ID_MAX_BYTES};
+pub use schema::{CanonicalCheckpointPairRefusalV1, CanonicalCheckpointPairV1};
+
+//#region 🔖️ReadModel
+/// 🏠️ One projected space: its `SpaceView` plus the current member roster.
+#[derive(Clone, Debug, PartialEq)]
+pub struct DirectorySpace {
+    pub view: SpaceView,
+    pub members: Vec<MemberView>,
+    pub documents: Vec<DocumentDescriptor>,
+    pub indexed_documents: Vec<DirectoryIndexedDocumentViewV1>,
+}
+
+/// 📇️ The directory's whole projected state, folded from the event log.
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct DirectoryReadModel {
+    pub spaces: BTreeMap<String, DirectorySpace>,
+    pub cursor: u64,
+    /// 🙋️ Side-table, not part of contract-freeze.md's C1 prose shape — backfills
+    /// `MemberView.email`/`display_name` from `user.created` events (see this file's header).
+    pub users: BTreeMap<String, UserView>,
+}
+
+/// 🔗️ Upserts `user_id`/`role` into `space.members`, joining `email`/`display_name` from
+/// `model.users` when known (falls back to empty strings for a member added before their own
+/// `user.created` — sequencing hygiene the hub's command handler guarantees never happens live).
+// 🚫️async: E1 pure mutation — I/O-free, and its only caller `fold` (above) is itself E1-tagged
+// (R9 propagates one hop backward: a helper consumed exclusively by a sync-by-necessity caller
+// cannot be async either — there is no suspension point and no legal way to await it here).
+fn upsert_member(space: &mut DirectorySpace, email: String, display_name: String, user_id: &str, role: DirectorySpaceRole, updated_at_ms: i64) {
+    match space.members.iter_mut().find(|member| member.user_id == user_id) {
+        Some(existing) => existing.role = role,
+        None => space.members.push(MemberView { user_id: user_id.to_string(), email, display_name, role }),
+    }
+    space.view.member_count = space.members.len() as u32;
+    space.view.updated_at_ms = updated_at_ms;
+}
+
+/// 🧮️ Pure fold: `model × event -> model`. Idempotent — an event whose `seq` does not strictly
+/// advance `model.cursor` (already-applied or out-of-order-old) is ignored wholesale.
+///
+/// 🪢 `DocumentIndexed` joins its announced descriptor by `document_id` alone. The entry's
+/// `dialect.artifact_kind` is the owning app's `Dialect` (`s.note.note`) while the descriptor's
+/// `artifact_kind` is the manifest `ArtifactKindSpec::id` (`2d.note`) — two id spaces that coincide
+/// for `gis` alone, so joining on their equality silently dropped every other plugin's presentation
+/// row. The entry's own grammar is bounded by `DocumentIndexEntryV1::validate` above, which is the
+/// one gate this fold and `validate_directory_event_page_event` share.
+// 🚫️async: E1 pure accessor — the only real caller is `Iterator::fold` below (`FnMut(B, Item) -> B`,
+// signature fixed outside this repo); the TS twin (`🟦️.ts` `export function fold`) is
+// already sync too — see R9, R10 residue #1.
+pub fn fold(model: DirectoryReadModel, event: &DirectoryEvent) -> DirectoryReadModel {
+    let mut next = model;
+    if event.seq <= next.cursor {
+        return next;
+    }
+    next.cursor = event.seq;
+    match &event.body {
+        DirectoryEventBody::UserCreated { user_id, email, display_name } => {
+            next.users.insert(user_id.clone(), UserView { id: user_id.clone(), email: email.clone(), display_name: display_name.clone(), created_at_ms: event.recorded_at_ms });
+        }
+        DirectoryEventBody::SpaceCreated { space_id, name, space_kind, visibility, owner_user_id } => {
+            next.spaces.insert(
+                space_id.clone(),
+                DirectorySpace {
+                    view: SpaceView {
+                        id: space_id.clone(),
+                        name: name.clone(),
+                        kind: *space_kind,
+                        visibility: *visibility,
+                        owner_user_id: owner_user_id.clone(),
+                        role: None,
+                        member_count: 0,
+                        document_count: 0,
+                        active_connections: 0,
+                        created_at_ms: event.recorded_at_ms,
+                        updated_at_ms: event.recorded_at_ms,
+                    },
+                    members: Vec::new(),
+                    documents: Vec::new(),
+                    indexed_documents: Vec::new(),
+                },
+            );
+        }
+        DirectoryEventBody::SpaceRenamed { space_id, name } => {
+            if let Some(space) = next.spaces.get_mut(space_id) {
+                space.view.name = name.clone();
+                space.view.updated_at_ms = event.recorded_at_ms;
+            }
+        }
+        DirectoryEventBody::SpaceVisibilityChanged { space_id, visibility } => {
+            if let Some(space) = next.spaces.get_mut(space_id) {
+                space.view.visibility = *visibility;
+                space.view.updated_at_ms = event.recorded_at_ms;
+            }
+        }
+        DirectoryEventBody::SpaceArchived { space_id } => {
+            if let Some(space) = next.spaces.get_mut(space_id) {
+                space.view.kind = DirectorySpaceKind::Archive;
+                for member in &mut space.members {
+                    member.role = DirectorySpaceRole::Spectator;
+                }
+                if space.view.role == Some(DirectorySpaceRole::Author) {
+                    space.view.role = Some(DirectorySpaceRole::Spectator);
+                }
+                space.view.updated_at_ms = event.recorded_at_ms;
+            }
+        }
+        DirectoryEventBody::SpaceDeleted { space_id } => {
+            next.spaces.remove(space_id);
+        }
+        DirectoryEventBody::MemberUpserted { space_id, user_id, role } => {
+            let (email, display_name) = next.users.get(user_id).map(|u| (u.email.clone(), u.display_name.clone())).unwrap_or_default();
+            if let Some(space) = next.spaces.get_mut(space_id) {
+                upsert_member(space, email, display_name, user_id, *role, event.recorded_at_ms);
+            }
+        }
+        DirectoryEventBody::MemberRemoved { space_id, user_id } => {
+            if let Some(space) = next.spaces.get_mut(space_id) {
+                space.members.retain(|member| &member.user_id != user_id);
+                space.view.member_count = space.members.len() as u32;
+                space.view.updated_at_ms = event.recorded_at_ms;
+            }
+        }
+        DirectoryEventBody::InviteRedeemed { space_id, user_id, role, .. } => {
+            let (email, display_name) = next.users.get(user_id).map(|u| (u.email.clone(), u.display_name.clone())).unwrap_or_default();
+            if let Some(space) = next.spaces.get_mut(space_id) {
+                upsert_member(space, email, display_name, user_id, *role, event.recorded_at_ms);
+            }
+        }
+        DirectoryEventBody::DocumentAnnounced { descriptor } => {
+            if let Some(space) = next.spaces.get_mut(&descriptor.space_id) {
+                if !space.documents.iter().any(|document| document.document_id == descriptor.document_id) {
+                    space.documents.push(descriptor.clone());
+                }
+                space.view.document_count = space.documents.len() as u32;
+                space.view.updated_at_ms = event.recorded_at_ms;
+            }
+        }
+        DirectoryEventBody::DocumentIndexed { scope, descriptor_digest_v1, entry } => {
+            if let (Some(space), Some(author)) = (next.spaces.get_mut(&scope.space_id), event.user_id.as_ref()) {
+                if entry.validate()
+                    && descriptor_digest_v1.0 != [0; 32]
+                    && !author.is_empty()
+                    && author.len() <= 256
+                    && event.space_id.as_deref() == Some(scope.space_id.as_str())
+                    && !space.indexed_documents.iter().any(|row| row.descriptor.document_id == scope.document_id)
+                {
+                    if let Some(descriptor) = space.documents.iter().find(|descriptor| descriptor.document_id == scope.document_id) {
+                        space.indexed_documents.push(DirectoryIndexedDocumentViewV1 {
+                            descriptor: descriptor.clone(),
+                            descriptor_digest_v1: *descriptor_digest_v1,
+                            entry: entry.clone(),
+                            created_at_ms: event.recorded_at_ms,
+                            created_by: author.clone(),
+                        });
+                    }
+                }
+            }
+        }
+        DirectoryEventBody::ArtifactCheckpointPublished { .. } | DirectoryEventBody::ArtifactRetentionAdvanced { .. } | DirectoryEventBody::UserPreferenceRecorded { .. } => {}
+    }
+    next
+}
+
+/// 🔁️ Folds every event in order — `events.iter().fold(model, fold)` spelled out for callers that
+/// do not want to import `Iterator::fold` alongside this crate's own `fold`.
+pub async fn fold_all(model: DirectoryReadModel, events: &[DirectoryEvent]) -> DirectoryReadModel {
+    events.iter().fold(model, fold)
+}
+//#endregion 🔖️ReadModel
+
+#[path = "🚪️io/🦀️.rs"]
+pub mod io;
+
+pub use semio_framework_value::{DslValue,ToValue,FromValue,ValueError};
+#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
+extern crate semio_framework_async as wasm_bindgen_futures;

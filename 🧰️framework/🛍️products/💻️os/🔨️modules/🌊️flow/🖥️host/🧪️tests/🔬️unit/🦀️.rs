@@ -52,7 +52,6 @@ fn retained_preview_phase_projection_preserves_original_status_and_cancellation(
         assert_eq!(status.units_done as u64, independent["unitsDone"].as_u64().unwrap());
         assert_eq!(status.units_total as u64, independent["unitsTotal"].as_u64().unwrap());
         assert!(!labels.0.is_empty() && !labels.1.is_empty());
-        eprintln!("[DEBUG] Retained preview phase projection={phase} cancellable={} units={}/{}", status.phase.is_cancellable(), status.units_done, status.units_total);
     }
 }
 
@@ -710,7 +709,6 @@ fn connect_ports_admits_only_declared_neutral_endpoints() {
         }
         host.retire_cold();
     }
-    println!("[DEBUG] Flow host admitted exact declared typed/untyped endpoints and refused both foreign sides; independent serde_json endpoint bytes matched four neutral cases");
 }
 
 #[test]

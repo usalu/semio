@@ -694,8 +694,8 @@ pub enum TextEditorRetainedActionStep {
 }
 
 pub(crate) struct TextEditorRetainedActionBatch {
-    pub(crate) first: ui_wgpu::wgpu::QueuedActionDescriptor,
-    pub(crate) second: Option<ui_wgpu::wgpu::QueuedActionDescriptor>,
+    pub first: ui_wgpu::wgpu::QueuedActionDescriptor,
+    pub second: Option<ui_wgpu::wgpu::QueuedActionDescriptor>,
 }
 
 /// 📄 Copies one bounded source page and yields the single artifact action only after completion.

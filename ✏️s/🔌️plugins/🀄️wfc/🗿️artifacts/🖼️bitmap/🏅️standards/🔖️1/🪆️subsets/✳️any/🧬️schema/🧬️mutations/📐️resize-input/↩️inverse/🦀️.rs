@@ -1,10 +1,14 @@
 //! ↩️ Inverse for `ResizeInput` — resize back AND write the whole prior buffer, because a shrink
 //! discards the pixels outside the new extent and a resize alone cannot bring them back.
 
-use crate::mutations::{resize_input, set_input_pixels, BitmapMutation};
+use crate::standards::v1::subsets::any::schema::mutations::resize_input::resize_input;
+use crate::standards::v1::subsets::any::schema::mutations::set_input_pixels::set_input_pixels;
 use crate::schema::snapshot::{read_region, BitmapSnapshot};
 
-pub fn inverse(payload: &super::ResizeInput, base: &BitmapSnapshot) -> Result<Vec<BitmapMutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op>(payload: &super::ResizeInput, base: &BitmapSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError>
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::resize_input::ResizeInput> + From<crate::standards::v1::subsets::any::schema::mutations::set_input_pixels::SetInputPixels>,
+{
     Ok((|| {
     if base.input.width == payload.width && base.input.height == payload.height {
         return Vec::new();

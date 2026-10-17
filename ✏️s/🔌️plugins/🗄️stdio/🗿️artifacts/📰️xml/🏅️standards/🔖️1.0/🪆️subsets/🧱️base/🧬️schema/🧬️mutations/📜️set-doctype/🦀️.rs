@@ -32,6 +32,4 @@ impl protocol::MutationKind<XmlSnapshot, super::XmlMutation> for SetDoctypeMutat
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

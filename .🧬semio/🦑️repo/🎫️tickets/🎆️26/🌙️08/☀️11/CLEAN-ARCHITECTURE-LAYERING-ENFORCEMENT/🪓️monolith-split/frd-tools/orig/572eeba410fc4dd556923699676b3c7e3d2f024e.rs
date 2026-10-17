@@ -1,0 +1,118 @@
+//! 🧪️ `set-icc` fixture — `🎨️attaches`.
+//!
+//! Transcribed from `../../🔺️diff/🦀️.rs`: an ICC value already equal to `base`'s is
+//! Warning `mutation.no-op`, otherwise the enum arm emits `icc: Some(Some(bytes))`.
+//! `SemioImageDiff::icc` is a genuine TRI-STATE `Option<Option<Vec<u8>>>` — absent = unchanged,
+//! `null` = cleared, bytes = set. This case is deliberately the SET arm: its inner value is a real
+//! array, so the committed diff survives a JSON round trip (the `null`/clear arm would not, since
+//! `Option<Option<T>>` decodes `null` back to the outer `None`).
+use crate::schema::diff::SemioImageDiff;
+use crate::schema::mutations::set_icc;
+use crate::schema::mutations::SemioImageMutation;
+use crate::schema::snapshot::SemioImageSnapshot;
+use protocol::Mutation;
+
+static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../../🧪️tests/🧫️fixtures/🧬️mutations/🎨️set-icc/🎨️attaches/📸️snapshot/⬅️before/🔣️.json"));
+static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../../🧪️tests/🧫️fixtures/🧬️mutations/🎨️set-icc/🎨️attaches/📸️snapshot/➡️after/🔣️.json"));
+static MUTATION: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../../🧪️tests/🧫️fixtures/🧬️mutations/🎨️set-icc/🎨️attaches/🦠️mutation/🔣️.json"));
+static DIFF: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../../🧪️tests/🧫️fixtures/🧬️mutations/🎨️set-icc/🎨️attaches/🔺️diff/🔣️.json"));
+static OUTCOME: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../../🧪️tests/🧫️fixtures/🧬️mutations/🎨️set-icc/🎨️attaches/🎯️outcome/🔣️.json"));
+
+fn before() -> SemioImageSnapshot {
+    semio_framework_pack_json::from_json_str((*BEFORE),semio_framework_pack_json::JsonMemberPolicy::Reject).expect("set-icc before snapshot decodes")
+}
+fn expected_after() -> SemioImageSnapshot {
+    semio_framework_pack_json::from_json_str((*AFTER),semio_framework_pack_json::JsonMemberPolicy::Reject).expect("set-icc after snapshot decodes")
+}
+fn mutation() -> SemioImageMutation {
+    semio_framework_pack_json::from_json_str((*MUTATION),semio_framework_pack_json::JsonMemberPolicy::Reject).expect("set-icc mutation decodes")
+}
+fn leaf_outcome() -> protocol::MutationOutcome<SemioImageDiff> {
+    <SemioImageMutation as Mutation<SemioImageSnapshot>>::diff(&mutation(), &before())
+}
+
+/// ▶️ The profile bytes are stored verbatim; nothing else moves.
+#[semio_framework_async_macros::async_test]
+async fn attaches_the_profile_bytes_verbatim() {
+    let base = before();
+    assert!(base.icc.is_none(), "the fixture's whole point is a base carrying no embedded profile");
+    let produced = protocol::apply_diff(leaf_outcome().diff(), &base).expect("set-icc applies to its committed before-snapshot");
+    assert_eq!(produced, expected_after(), "set-icc/attaches-an-icc-profile-where-there-was-none: applied state differs from the committed after-snapshot");
+    assert_eq!(produced.icc.as_deref(), Some([0u8, 1, 2, 3].as_slice()), "the profile bytes must be stored byte-for-byte, never re-encoded");
+    assert_eq!(produced.frames, base.frames, "attaching a profile must not touch a frame");
+    let mut in_place = before();
+    in_place = semio_s_artifact_stdio_semio_base::applied(&in_place, &mutation()).0;
+    assert_eq!(in_place, expected_after(), "the subset's own apply entry point must reach the same state as the leaf diff");
+}
+
+/// ↩️ The undo is a `set-icc` carrying BASE's own value — here `None`, i.e. clear it again.
+#[semio_framework_async_macros::async_test]
+async fn the_undo_set_icc_clears_the_profile_again() {
+    let base = before();
+    let mutation = mutation();
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
+    let undo = <SemioImageMutation as Mutation<SemioImageSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture");
+    assert_eq!(undo, vec![SemioImageMutation::SetIcc(set_icc::SetIcc { icc: None })], "the undo of an attach is a set-icc carrying BASE's own None — the mutation payload is the FINAL value, not a tri-state");
+    let mut current = before();
+    current = semio_s_artifact_stdio_semio_base::applied(&current, &mutation).0;
+    for step in undo.iter().rev() {
+        current = semio_s_artifact_stdio_semio_base::applied(&current, step).0;
+    }
+    assert_eq!(current, base, "set-icc/attaches-an-icc-profile-where-there-was-none: the undo did not restore the before-snapshot");
+}
+
+/// 🔣️ Snapshots and the `{"mutation":"setIcc","icc":[0,1,2,3]}` payload are canonical — the SNAPSHOT's `icc` has no `skip_serializing_if`, so an absent profile is an explicit `null` there, whereas the DIFF omits the key entirely when unchanged.
+#[semio_framework_async_macros::async_test]
+async fn committed_json_is_canonical() {
+    for (label, text) in [("before", (*BEFORE)), ("after", (*AFTER))] {
+        let decoded: SemioImageSnapshot = semio_framework_pack_json::from_json_str(text,semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("snapshot encodes");
+        let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
+        assert_eq!(reencoded, original, "set-icc/attaches-an-icc-profile-where-there-was-none: committed {label} JSON is not canonical");
+    }
+    let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&(mutation()))).expect("set-icc mutation encodes");
+    let original: serde_json::Value = serde_json::from_str((*MUTATION)).expect("set-icc mutation reparses");
+    assert_eq!(reencoded, original, "set-icc/attaches-an-icc-profile-where-there-was-none: committed mutation JSON is not canonical");
+}
+
+/// 🎯️ Declared `applied`: the new profile genuinely differs from the base's absent one, so mutation.no-op must not fire
+#[semio_framework_async_macros::async_test]
+async fn declared_outcome_holds_with_no_guard_branch_firing() {
+    let outcome: serde_json::Value = serde_json::from_str((*OUTCOME)).expect("outcome decodes");
+    assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("applied"), "set-icc/attaches-an-icc-profile-where-there-was-none: this case is declared applied");
+    assert!(leaf_outcome().messages().is_empty(), "the new profile genuinely differs from the base's absent one, so mutation.no-op must not fire");
+}
+
+/// 🔺️ The delta the leaf's own diff builder produces equals the committed diff. Exactly one key, whose value is the byte array (the Some(Some(..)) arm of the tri-state).
+#[semio_framework_async_macros::async_test]
+async fn produces_committed_diff() {
+    let outcome = leaf_outcome();
+    let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
+    let committed: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff decodes");
+    assert_eq!(produced, committed, "set-icc/attaches-an-icc-profile-where-there-was-none: produced diff differs from the committed 🔺️diff/🔣️.json");
+}
+
+/// 🩹 Applying the committed diff to `before` yields `after`.
+#[semio_framework_async_macros::async_test]
+async fn committed_diff_applies_to_after() {
+    let decoded: SemioImageDiff = semio_framework_pack_json::from_json_str((*DIFF),semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed set-icc diff decodes");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed set-icc diff applies to the before-snapshot");
+    assert_eq!(produced, expected_after(), "set-icc/attaches-an-icc-profile-where-there-was-none: committed diff did not carry before to after");
+}
+
+/// 🔣️ The committed diff is canonical, and its `icc` value is a real array — NOT `null`, which is
+/// what keeps this case a decode→encode fixed point.
+#[semio_framework_async_macros::async_test]
+async fn committed_diff_is_canonical_and_uses_the_set_arm_of_the_tri_state() {
+    let decoded: SemioImageDiff = semio_framework_pack_json::from_json_str((*DIFF),semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed set-icc diff decodes");
+    assert!(matches!(decoded.icc, Some(Some(_))), "the icc slot must decode as Some(Some(bytes)) — set, not cleared");
+    let committed: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff reparses");
+    assert!(committed.get("icc").expect("the committed diff names the icc slot").is_array(), "a SET profile is an array; a CLEARED one would be null and would not survive the Option<Option<..>> round trip");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("diff re-encodes");
+    assert_eq!(reencoded, committed, "set-icc/attaches-an-icc-profile-where-there-was-none: committed diff JSON is not canonical");
+}
+
+fn runtime_fixture_text(relative: &str) -> &'static str {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative);
+    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display())).into_boxed_str())
+}

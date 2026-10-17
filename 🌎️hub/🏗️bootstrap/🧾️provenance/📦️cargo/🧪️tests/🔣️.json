@@ -120,7 +120,7 @@
   "checkInSeed": {
     "envelopes": "[{\"mutationId\":\"edit-1\",\"dependencies\":[],\"diffSchema\":\"gis.map\",\"diff\":\"00\",\"inverseSchema\":\"gis.map\",\"inverse\":\"01\"}]",
     "fixture": {
-      "schema": "semio.hub.check-in-process-fixture/v1",
+      "schema": "semio.hub.check-in-process-seed/v1",
       "profileId": "gis-map-integration-fixtures",
       "generationId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
       "documentId": "mcp-cold-gis-map",

@@ -1,5 +1,5 @@
 import { buildModePolicy, readBuildMode, type BuildMode } from "../../../../../🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
-import type { OwnedBuildOptions } from "../../../../🎯️targets/⚛️react/🛠️build-tooling/🟦️.ts";
+import type { OwnedBuildOptions } from "@semio-tech/ui-react/build-tooling";
 
 /** 🌐️ Applies compiler intent to browser optimization without optimizing prototype bundles. */
 export function semioViteBuild(overrides?: OwnedBuildOptions, mode: BuildMode = readBuildMode(process.env.SEMIO_BUILD_MODE)): OwnedBuildOptions & { readonly sourcemap: boolean; readonly minify: false | "esbuild"; readonly cssMinify: boolean; readonly rollupOptions: { readonly treeshake: boolean; readonly [key: string]: unknown } } {

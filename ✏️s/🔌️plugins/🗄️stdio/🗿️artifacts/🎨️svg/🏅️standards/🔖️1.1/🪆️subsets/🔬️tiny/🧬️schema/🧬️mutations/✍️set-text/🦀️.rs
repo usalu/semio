@@ -1,6 +1,19 @@
 //! ✍️ `set-text` — authored as its own mutation leaf. It builds its own sparse diff and concrete inverse from its payload and reads of `base`.
 
-use super::*;
+#[allow(unused_imports)]
+use crate::schema::snapshot::NodePath;
+#[allow(unused_imports)]
+use crate::schema::diff::SvgDiff;
+#[allow(unused_imports)]
+use crate::schema::snapshot::SvgNode;
+#[allow(unused_imports)]
+use crate::schema::diff::SvgNodeDiff;
+#[allow(unused_imports)]
+use crate::SvgSnapshot;
+#[allow(unused_imports)]
+use crate::schema::diff::diff_at_path;
+#[allow(unused_imports)]
+use crate::schema::snapshot::node_at;
 
 //#region 🔖️Payload
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree)]
@@ -11,17 +24,20 @@ pub struct SetText {
     pub(crate) text: String,
 }
 
-impl protocol::MutationKind<SvgSnapshot, SvgTinyMutation> for SetText {
+impl<Op> protocol::MutationKind<SvgSnapshot, Op> for SetText
+where
+    Op: protocol::Mutation<SvgSnapshot, Diff = SvgDiff> + From<SetText>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "text", kind: "set-text", record: "SetText" };
 
     fn diff(&self, _base: &SvgSnapshot) -> protocol::MutationOutcome<SvgDiff> {
         let Self { path, text } = self;
         protocol::MutationOutcome::new(diff_at_path(path, SvgNodeDiff::Text { text: Some(text.clone()) }))
     }
-    fn inverse(&self, base: &SvgSnapshot) -> Result<Vec<SvgTinyMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &SvgSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         let Self { path, .. } = self;
         Ok(match node_at(&base.doc, path) {
-            Ok(SvgNode::Text { text }) => vec![SvgTinyMutation::SetText(SetText { path: path.clone(), text: text.clone() })],
+            Ok(SvgNode::Text { text }) => vec![Op::from(SetText { path: path.clone(), text: text.clone() })],
             _ => Vec::new(),
         })
     }

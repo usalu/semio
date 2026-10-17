@@ -1,6 +1,6 @@
 //! 🏷️ Direct binary codec for `set-dpart-metadata`.
 
-use crate::standards::v1_7::subsets::vt::schema::mutations::SetDpartMetadata;
+use crate::standards::v1_7::subsets::vt::schema::mutations::set_dpart_metadata::SetDpartMetadata;
 
 //#region 🔖️Identity
 pub const TAG: u8 = 16;
@@ -21,7 +21,5 @@ pub fn decode(bytes: &[u8]) -> Result<SetDpartMetadata, String> {
 //#endregion 🔖️Codec
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

@@ -1,8 +1,12 @@
 
 use super::*;
+use semio_framework_test_fixtures::fixture_bytes;
 
 /// 🧫️ The real committed package this subset's case runs on, read where the artifact keeps it.
-const FIXTURE: &[u8] = include_bytes!("../../../🧪️tests/🧫️fixtures/📜️example-readme.docx");
+fn fixture() -> &'static [u8] {
+    static CELL: std::sync::OnceLock<Vec<u8>> = std::sync::OnceLock::new();
+    CELL.get_or_init(|| fixture_bytes!("../../../🏅️standards/🔖️ecma-376/🪆️subsets/🔄️transitional/🧪️tests/🧫️fixtures/📜️example-readme.docx").to_vec()).as_slice()
+}
 
 fn json_object(pairs: Vec<(&str, Json)>) -> Json {
     Json::Object(pairs.into_iter().map(|(key, value)| (key.to_string(), value)).collect())
@@ -26,7 +30,7 @@ fn spec(kind: &str) -> Json {
 
 #[test]
 fn every_declared_kind_is_observable_and_its_inverse_restores_the_package() {
-    let original = FIXTURE.to_vec();
+    let original = fixture().to_vec();
     for kind in KINDS {
         let forward = spec(kind);
         let base = oracle_arrange(&original, &forward).unwrap_or_else(|error| panic!("{kind}: arrange failed: {error}"));
@@ -44,15 +48,15 @@ fn every_declared_kind_is_observable_and_its_inverse_restores_the_package() {
 /// 🏅️ The whole-package class stamp moves the conformance-class projection, and stamping back restores it exactly.
 #[test]
 fn the_class_stamp_is_observable_and_stamping_back_restores_the_package() {
-    let base = project_package(FIXTURE).unwrap();
-    let stamped = oracle_stamp(FIXTURE, true).unwrap();
+    let base = project_package(fixture()).unwrap();
+    let stamped = oracle_stamp(fixture(), true).unwrap();
     assert_ne!(project_package(&stamped).unwrap(), base, "the strict stamp must be observable");
     assert_eq!(project_package(&oracle_stamp(&stamped, false).unwrap()).unwrap(), base, "stamping back must restore the package");
 }
 
 #[test]
 fn unknown_kind_is_an_error_never_a_silent_no_op() {
-    assert!(oracle_apply_mutation(FIXTURE, &json_object(vec![("kind", Json::String("not-a-real-kind".to_string())), ("params", json_object(vec![]))])).is_err());
+    assert!(oracle_apply_mutation(fixture(), &json_object(vec![("kind", Json::String("not-a-real-kind".to_string())), ("params", json_object(vec![]))])).is_err());
 }
 
 #[test]
@@ -62,12 +66,12 @@ fn a_kind_this_subset_does_not_declare_is_refused_even_when_the_engine_could_per
         .find(|kind| !KINDS.contains(kind));
     let Some(kind) = undeclared else { return };
     let spec = json_object(vec![("kind", Json::String(kind.to_string())), ("params", json_object(vec![]))]);
-    assert!(oracle_apply_mutation(FIXTURE, &spec).is_err(), "{kind} is not in this subset's vocabulary and must be refused");
+    assert!(oracle_apply_mutation(fixture(), &spec).is_err(), "{kind} is not in this subset's vocabulary and must be refused");
 }
 
 #[test]
 fn the_container_round_trip_is_projection_stable_and_not_a_byte_passthrough() {
-    let rebuilt = oracle_round_trip(FIXTURE).unwrap();
-    assert_ne!(rebuilt, FIXTURE.to_vec(), "the reference rebuilds the container; identical bytes would mean the input was smuggled");
-    assert_eq!(project_package(&rebuilt).unwrap(), project_package(FIXTURE).unwrap());
+    let rebuilt = oracle_round_trip(fixture()).unwrap();
+    assert_ne!(rebuilt, fixture().to_vec(), "the reference rebuilds the container; identical bytes would mean the input was smuggled");
+    assert_eq!(project_package(&rebuilt).unwrap(), project_package(fixture()).unwrap());
 }

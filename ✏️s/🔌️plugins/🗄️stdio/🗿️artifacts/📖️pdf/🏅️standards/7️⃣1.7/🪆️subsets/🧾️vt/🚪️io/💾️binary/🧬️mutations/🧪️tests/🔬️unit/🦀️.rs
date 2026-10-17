@@ -1,4 +1,7 @@
-use super::*;
+use crate::standards::v1_7::subsets::vt::schema::mutations::PdfVtMutation;
+#[allow(unused_imports)]
+use protocol::OpBinary;
+use crate::standards::v1_7::subsets::vt::io::binary::mutations::*;
 
 #[test]
 fn canonical_framing_round_trips_and_checks_identity() {

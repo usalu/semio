@@ -2,7 +2,8 @@
 
 use semio_framework_plugin::{NoConfig, NoConfigMutation};
 use crate::editor::sequence::modes::edit::windows::main::config::current;
-use crate::editor::sequence::{host_from_host_snapshot, sequence_edit_emit, sequence_host_snapshot_from_children, sequence_scene_edit};
+use crate::editor::sequence::host::host_from_host_snapshot;
+use crate::editor::sequence::base::{sequence_edit_emit, sequence_host_snapshot_from_children, sequence_scene_edit};
 use crate::mutations::SequenceMutation;
 use crate::SequenceSnapshot;
 use semio_framework_os_infinite::board::schema::layout::{DagLayoutOptions,DagLayoutOrientation};
@@ -58,7 +59,4 @@ pub mod set_orientation {
 //#endregion 🔖️SetOrientation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

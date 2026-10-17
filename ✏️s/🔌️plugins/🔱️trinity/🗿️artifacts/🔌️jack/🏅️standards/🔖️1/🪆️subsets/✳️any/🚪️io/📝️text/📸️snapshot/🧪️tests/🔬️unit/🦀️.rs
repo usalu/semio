@@ -1,10 +1,15 @@
+use crate::standards::v1::subsets::any::schema::snapshot::JackSnapshot;
+#[allow(unused_imports)]
+use semio_framework_diagnostic::TextError;
+#[allow(unused_imports)]
+use pack::snapshot::ArtifactDsl;
 use crate::standards::v1::subsets::any::io::text::snapshot::*;
-use crate::empty_trinity_graph_snapshot;
-use crate::JackWorkingScene;
+use crate::standards::v1::subsets::any::schema::snapshot::empty_trinity_graph_snapshot;
+use crate::standards::v1::subsets::any::schema::content::JackWorkingScene;
 
 #[semio_framework_async_macros::async_test]
 async fn selected_child_parent_dsl_round_trips() {
-    let document = <crate::test_support::FixtureComposition as crate::JackComposition>::initial_snapshot();
+    let document = <crate::test_support::FixtureComposition as crate::standards::v1::subsets::any::schema::composition::JackComposition>::initial_snapshot();
     ::store::os_store::test_support::assert_dsl_round_trip(&document);
 }
 
@@ -21,7 +26,7 @@ async fn parse_dsl_rejects_unknown_keyword() {
 
 #[semio_framework_async_macros::async_test]
 async fn dsl_round_trip_selected_child_fixture() {
-    let nakagin = <crate::test_support::FixtureComposition as crate::JackComposition>::initial_snapshot();
+    let nakagin = <crate::test_support::FixtureComposition as crate::standards::v1::subsets::any::schema::composition::JackComposition>::initial_snapshot();
     ::store::os_store::test_support::assert_dsl_round_trip(&nakagin);
     ::store::os_store::test_support::assert_dsl_pack_equivalence(&nakagin);
 }
@@ -31,7 +36,10 @@ async fn dsl_round_trip_selected_child_fixture() {
 /// JSON-blob content codec round trip on non-trivial `PropertyBag`'s `Object`/`Number` variants.
 #[semio_framework_async_macros::async_test]
 async fn dsl_round_trip_mini_fixture() {
-    use crate::{Camera, Edge, JackSnapshot, Manifest, Node, Port, PortDirection, PropertyBag, PropertyValue};
+    use crate::standards::v1::subsets::any::schema::graph::{Camera, Edge, Node, Port};
+use crate::standards::v1::subsets::any::schema::snapshot::JackSnapshot;
+use crate::standards::v1::subsets::any::schema::manifest::Manifest;
+use semio_framework_graph_manifest::{PortDirection, PropertyBag, PropertyValue};
     use std::collections::BTreeMap;
 
     let fixture = JackSnapshot::with_content::<crate::test_support::FixtureComposition>(

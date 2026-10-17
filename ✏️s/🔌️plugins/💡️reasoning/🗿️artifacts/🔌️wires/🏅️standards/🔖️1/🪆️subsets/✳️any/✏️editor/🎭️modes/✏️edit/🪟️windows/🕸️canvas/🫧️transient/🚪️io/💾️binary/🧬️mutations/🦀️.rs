@@ -3,8 +3,7 @@
 #[allow(unused_imports)]
 mod mutations_codec {
 use super::*;
-use crate::editor::wires::component::window_transient::mutations::*;
-use crate::editor::wires::component::window_transient::*;
+use crate::editor::wires::window_transient::*;
 
 impl protocol::OpBinary for WiresCanvasTransientMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {

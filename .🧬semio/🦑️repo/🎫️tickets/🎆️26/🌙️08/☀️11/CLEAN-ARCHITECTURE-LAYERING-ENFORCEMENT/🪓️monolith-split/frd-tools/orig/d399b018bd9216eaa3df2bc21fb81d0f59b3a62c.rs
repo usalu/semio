@@ -1,0 +1,118 @@
+//! 🧪️ `delete-node` fixture — `🚫️removes`.
+//!
+//! Transcribed from `../../🔺️diff/🦀️.rs`: an unknown id is Error `mutation.target-missing`;
+//! otherwise the node is retained-out of `nodes` AND every edge whose `source` OR `target` is that
+//! id is retained-out of `edges`, with an INFO `mutation.cascade` counting the severed edges. The
+//! before-snapshot deliberately has an edge pointing INTO the deleted node, so the cascade is real
+//! and the committed diff must carry BOTH slots.
+use crate::schema::diff::SemioGraphDiff;
+use crate::schema::mutations::SemioGraphMutation;
+use crate::schema::snapshot::SemioGraphSnapshot;
+use protocol::Mutation;
+
+static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗑️delete-node/🚫️removes/📸️snapshot/⬅️before/🔣️.json"));
+static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗑️delete-node/🚫️removes/📸️snapshot/➡️after/🔣️.json"));
+static MUTATION: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗑️delete-node/🚫️removes/🦠️mutation/🔣️.json"));
+static DIFF: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗑️delete-node/🚫️removes/🔺️diff/🔣️.json"));
+static OUTCOME: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗑️delete-node/🚫️removes/🎯️outcome/🔣️.json"));
+
+fn before() -> SemioGraphSnapshot {
+    crate::io::text::snapshot::decode_semio_graph_snapshot_json((*BEFORE)).expect("delete-node before snapshot decodes")
+}
+fn expected_after() -> SemioGraphSnapshot {
+    crate::io::text::snapshot::decode_semio_graph_snapshot_json((*AFTER)).expect("delete-node after snapshot decodes")
+}
+fn mutation() -> SemioGraphMutation {
+    semio_framework_pack_json::from_json_str((*MUTATION), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("delete-node mutation decodes")
+}
+
+/// ▶️ The sink node goes and the edge that referenced it goes with it — a dangling edge would be
+/// an invalid graph.
+#[semio_framework_async_macros::async_test]
+async fn deletes_the_sink_node_and_severs_the_edge_that_referenced_it() {
+    let base = before();
+    assert!(base.edges.iter().any(|edge| edge.target.value == "b"), "the fixture needs an edge INTO the deleted node for the cascade to mean anything");
+    let produced = protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("delete-node applies to its committed before-snapshot");
+    assert_eq!(produced, expected_after(), "delete-node/removes-the-sink-node-and-severs-the-edge-into-it: applied state differs from the committed after-snapshot");
+    assert!(!produced.nodes.iter().any(|node| node.id.value == "b"), "the named node must be gone");
+    assert!(produced.edges.is_empty(), "the only edge referenced the deleted node, so it must have been severed");
+    assert_eq!(produced.nodes, vec![base.nodes[0].clone()], "the untargeted source node must survive byte-identical");
+}
+
+/// ↩️ The undo re-creates the node AND every severed edge at their BASE indices — one `create-node` followed by one
+/// `create-edge` per severed edge, each naming its `at`.
+#[semio_framework_async_macros::async_test]
+async fn the_undo_recreates_the_node_then_every_severed_edge_in_place() {
+    let base = before();
+    let mutation = mutation();
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
+    let undo = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
+    assert_eq!(undo.len(), 2, "one create-node plus one create-edge for the single severed edge");
+    assert!(matches!(&undo[1], SemioGraphMutation::CreateNode(node) if node.at.is_some()), "rows are stored reversed: the node row comes last and is replayed first, at its index — create-edge rejects an unknown endpoint");
+    assert!(matches!(&undo[0], SemioGraphMutation::CreateEdge(edge) if edge.at.is_some()), "the severed edge row is replayed after its endpoint exists again, at its index");
+    let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward delete-node applies");
+    for step in undo.iter().rev() {
+        current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("each undo step applies to the running state");
+    }
+    assert_eq!(current, base, "delete-node/removes-the-sink-node-and-severs-the-edge-into-it: the undo did not restore the before-snapshot");
+}
+
+/// 🔣️ Snapshots and the `{"DeleteNode":{"id":{"value":"b"}}}` payload are canonical.
+#[semio_framework_async_macros::async_test]
+async fn committed_json_is_canonical() {
+    for (label, text) in [("before", (*BEFORE)), ("after", (*AFTER))] {
+        let decoded: SemioGraphSnapshot = crate::io::text::snapshot::decode_semio_graph_snapshot_json(text).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&crate::io::text::snapshot::encode_semio_graph_snapshot_json(&decoded).expect("snapshot encodes")).expect("snapshot reparses");
+        let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
+        assert_eq!(reencoded, original, "delete-node/removes-the-sink-node-and-severs-the-edge-into-it: committed {label} JSON is not canonical");
+    }
+    let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&(mutation()))).expect("delete-node mutation encodes");
+    let original: serde_json::Value = serde_json::from_str((*MUTATION)).expect("delete-node mutation reparses");
+    assert_eq!(reencoded, original, "delete-node/removes-the-sink-node-and-severs-the-edge-into-it: committed mutation JSON is not canonical");
+}
+
+/// 🎯️ Declared `applied` WITH the `mutation.cascade` note — exactly one edge was severed, and an
+/// INFO message never turns an applied mutation into a rejected one.
+#[semio_framework_async_macros::async_test]
+async fn declared_outcome_holds_including_the_cascade_note() {
+    let outcome: serde_json::Value = serde_json::from_str((*OUTCOME)).expect("outcome decodes");
+    assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("applied"), "delete-node/removes-the-sink-node-and-severs-the-edge-into-it: this case is declared applied");
+    let produced = mutation().diff(&before());
+    let messages = produced.messages();
+    assert_eq!(messages.len(), 1, "deleting a node that really severed an edge raises exactly one message");
+    assert_eq!(messages[0].code.0, "mutation.cascade", "the message must be the cascade note, not a rejection");
+    assert_eq!(messages[0].level, semio_framework_diagnostic::Severity::Info, "a cascade note is INFO — the mutation still applies");
+}
+
+/// 🔺️ The produced delta equals the committed diff — both slots, because the severing is part of
+/// the same diff.
+#[semio_framework_async_macros::async_test]
+async fn produces_committed_diff() {
+    let base = before();
+    let outcome = <SemioGraphMutation as Mutation<SemioGraphSnapshot>>::diff(&mutation(), &base);
+    let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
+    let committed: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff decodes");
+    assert_eq!(produced, committed, "delete-node/removes-the-sink-node-and-severs-the-edge-into-it: produced diff differs from the committed 🔺️diff/🔣️.json");
+}
+
+/// 🔣️ The committed diff is canonical and its `edges` list is already emptied.
+#[semio_framework_async_macros::async_test]
+async fn committed_diff_is_canonical_and_carries_both_slots() {
+    let decoded: SemioGraphDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed delete-node diff decodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("diff re-encodes");
+    let original: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff reparses");
+    assert_eq!(reencoded, original, "delete-node/removes-the-sink-node-and-severs-the-edge-into-it: committed diff JSON is not canonical");
+}
+
+/// 🩹 Applying the committed diff to `before` yields `after`.
+#[semio_framework_async_macros::async_test]
+async fn committed_diff_applies_to_after() {
+    let decoded: SemioGraphDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed delete-node diff decodes");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed delete-node diff applies to the before-snapshot");
+    assert_eq!(produced, expected_after(), "delete-node/removes-the-sink-node-and-severs-the-edge-into-it: committed diff did not carry before to after");
+}
+
+fn runtime_fixture_text(relative: &str) -> &'static str {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative);
+    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display())).into_boxed_str())
+}

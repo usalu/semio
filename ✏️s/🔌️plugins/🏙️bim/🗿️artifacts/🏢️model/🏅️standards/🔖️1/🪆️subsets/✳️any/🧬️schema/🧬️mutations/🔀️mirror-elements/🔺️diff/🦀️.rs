@@ -6,7 +6,7 @@
 //! length, an empty selection, unknown ids, elements without a placement and a stair with a fixed hand; a selection that is already
 //! symmetric is `mutation.no-op`.
 
-use super::super::modify::{self, Map};
+use crate::standards::v1::subsets::any::schema::mutations::modify::{self, Map};
 use super::MirrorElements;
 use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};

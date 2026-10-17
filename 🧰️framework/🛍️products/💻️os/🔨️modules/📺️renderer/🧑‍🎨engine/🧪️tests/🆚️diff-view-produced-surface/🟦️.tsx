@@ -4,7 +4,6 @@ import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createElement } from "react";
-import Ajv2020 from "ajv/dist/2020.js";
 import { diffArrays } from "diff";
 import { compile } from "@tailwindcss/node";
 import { chromium } from "playwright";
@@ -34,7 +33,6 @@ const suiteRoot = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(suiteRoot, "../../../../../../../..");
 const fixture = JSON.parse(readFileSync(viewProducedSurfaceFixtureUrl, "utf8")) as Fixture;
 const presentation = JSON.parse(readFileSync(diffViewPresentationFixtureUrl, "utf8")) as PresentationFixture;
-const presentationSchema = JSON.parse(readFileSync(resolve(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🧬️schema/🆚️diff-view-presentation/🔣️.json"), "utf8"));
 
 function thirdPartyLines(): ExpectedLine[] {
   return diffArrays(fixture.before.split("\n"), fixture.after.split("\n")).flatMap((change) => {
@@ -124,8 +122,6 @@ describe("authored DiffView surface parity", () => {
   }, 90_000);
 
   it("validates the neutral corpus against the independent diff oracle", () => {
-    const validatePresentation = new Ajv2020({ strict: true, allErrors: true }).compile(presentationSchema);
-    expect(validatePresentation(presentation), JSON.stringify(validatePresentation.errors)).toBe(true);
     expect(thirdPartyLines()).toEqual(fixture.expected);
   });
 

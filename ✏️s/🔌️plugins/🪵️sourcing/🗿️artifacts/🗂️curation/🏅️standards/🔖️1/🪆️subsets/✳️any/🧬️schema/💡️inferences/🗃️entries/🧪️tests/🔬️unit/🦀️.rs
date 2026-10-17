@@ -1,5 +1,6 @@
+use crate::CurationSnapshot;
 
-use super::*;
+use crate::standards::v1::subsets::any::schema::inferences::entries::*;
 use crate::{CuratedItem, GeometryRecipe, ObjectKind};
 
 fn object_kind(id: &str) -> ObjectKind {

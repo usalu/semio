@@ -1,0 +1,13 @@
+{
+ "name": "sh7architect",
+ "crates": [
+  "semio-s-artifact-architect-program"
+ ],
+ "base": {
+  "rev": "b84bf526c7b",
+  "crates": [
+   "semio-s-artifact-architect-program"
+  ]
+ },
+ "note": "SPLIT-HARDENING-7: architect program inference descriptor concat"
+}

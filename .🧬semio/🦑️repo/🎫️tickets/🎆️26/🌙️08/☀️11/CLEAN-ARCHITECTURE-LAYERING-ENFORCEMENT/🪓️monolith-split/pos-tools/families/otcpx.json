@@ -1,0 +1,16 @@
+{
+ "name": "otcpx",
+ "crates": [
+  "semio-framework-os-kernel-dsl-derive",
+  "semio-framework-os-kernel-dsl-derive-tests",
+  "semio-framework-os-kernel-dsl-derive-expand",
+  "semio-framework-native-build-compiler-resources"
+ ],
+ "base": {
+  "rev": "1bae6115bc5",
+  "crates": [
+   "semio-framework-os-kernel-dsl-derive"
+  ]
+ },
+ "note": "OTCP dsl-derive + expand (+ compiler-resources owner of DM2)"
+}

@@ -28,6 +28,7 @@ testkit = ["semio-hub-artifact-authority/testkit", "semio-hub-inference/testkit"
 [dependencies]
 
 [dev-dependencies]
+semio-framework-test-fixtures = { path = "../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-hub-artifact-authority = { workspace = true, features = ["testkit"] }
 semio-hub-inference = { workspace = true, features = ["testkit", "integration-fixtures"] }
 semio-hub-inference-catalog = { workspace = true }

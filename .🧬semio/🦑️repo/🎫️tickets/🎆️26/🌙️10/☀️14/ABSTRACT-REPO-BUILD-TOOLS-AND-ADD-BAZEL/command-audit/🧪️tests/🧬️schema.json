@@ -1,0 +1,76 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "array",
+  "minItems": 10,
+  "items": {
+    "type": "object",
+    "required": [
+      "id",
+      "target",
+      "expected",
+      "missing"
+    ],
+    "additionalProperties": false,
+    "properties": {
+      "id": {
+        "type": "string",
+        "minLength": 1
+      },
+      "target": {
+        "type": "object",
+        "required": [
+          "execution"
+        ],
+        "properties": {
+          "execution": {
+            "type": "object"
+          },
+          "configurations": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "object",
+              "required": [
+                "execution"
+              ],
+              "properties": {
+                "execution": {
+                  "type": "object"
+                }
+              },
+              "additionalProperties": false
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "expected": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": [
+            "argv",
+            "cwd"
+          ],
+          "properties": {
+            "argv": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "cwd": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "missing": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

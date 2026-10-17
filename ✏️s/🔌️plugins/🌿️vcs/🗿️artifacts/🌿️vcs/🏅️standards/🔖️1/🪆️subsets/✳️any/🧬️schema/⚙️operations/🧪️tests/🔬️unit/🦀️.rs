@@ -1,4 +1,5 @@
-use super::*;
+use crate::mutations::VcsDemoMutation;
+use crate::standards::v1::subsets::any::schema::operations::*;
 use crate::mutations::{add_tag, add_tag_at, change_counter, change_notes, register_vcs_demo_mutation_descriptors, remove_tag, rename_vcs, AddTag, RemoveTag};
 use crate::standards::v1::subsets::any::schema::empty_vcs_snapshot;
 use protocol::{Mutation, MutationKind, SemanticMutation};
@@ -92,7 +93,7 @@ fn kinds_match_the_enum_and_the_catalog() {
     for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
         assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
     }
-    let manifest = include_str!("../../../../🔮️oracles/🔣️.json");
+    let manifest = runtime_fixture_text("../../../../../🔮️oracles/🔣️.json");
     for kind in KINDS {
         assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
     }
@@ -112,13 +113,16 @@ async fn dispatch_registers_semantic_descriptors() {
 /// 🏗 DSL txt carrier: serialize then deserialize must restore the snapshot exactly.
 #[semio_framework_async_macros::async_test]
 async fn txt_dsl_carrier_round_trips_exactly() {
-    use crate::standards::v1::subsets::any::io::export::serializers::artifacts as export;
-    use crate::standards::v1::subsets::any::io::import::deserializers::artifacts as import;
     use semio_framework_os_kernel::io::io_mechanism::{Deserializer, Serializer};
     use semio_framework::io_schema::IoPayload;
     let snapshot = crate::standards::v1::subsets::any::schema::empty_vcs_snapshot();
-    let exported = export::txt::v_utf_8::any::VcsIntoTxt::serialize(&snapshot, &semio_framework_os_kernel::io::io_mechanism::ArchiveChildren::empty()).await.expect("dsl txt export");
+    let exported = crate::standards::v1::subsets::any::io::export::serializers::artifacts::txt::v_utf_8::any::VcsIntoTxt::serialize(&snapshot, &semio_framework_os_kernel::io::io_mechanism::ArchiveChildren::empty()).await.expect("dsl txt export");
     let IoPayload::Text(text) = exported.value else { panic!("txt is a text payload") };
-    let back = import::txt::v_utf_8::any::TxtIntoVcs::deserialize(&IoPayload::Text(text)).await.expect("dsl txt import");
+    let back = crate::standards::v1::subsets::any::io::import::deserializers::artifacts::txt::v_utf_8::any::TxtIntoVcs::deserialize(&IoPayload::Text(text)).await.expect("dsl txt import");
     assert_eq!(back.value, snapshot);
+}
+
+fn runtime_fixture_text(relative: &str) -> &'static str {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative);
+    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display())).into_boxed_str())
 }

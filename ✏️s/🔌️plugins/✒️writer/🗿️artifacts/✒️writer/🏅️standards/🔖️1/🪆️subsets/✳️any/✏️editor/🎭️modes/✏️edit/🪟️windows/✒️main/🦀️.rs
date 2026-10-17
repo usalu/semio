@@ -150,7 +150,4 @@ fn writer_settings_json(config: &WriterMainWindowConfig) -> String {
 //#endregion 🔖️Render
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

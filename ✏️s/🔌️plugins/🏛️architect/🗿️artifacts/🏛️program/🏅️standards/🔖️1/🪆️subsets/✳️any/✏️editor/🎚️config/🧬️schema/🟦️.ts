@@ -28,6 +28,10 @@ type architectArchitectConfigGuardSizeBounds = { readonly minItems?: number; rea
 
 export const architectArchitectConfigGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : architectArchitectConfigGuardReject(at, "value is not an object");
+export const architectArchitectConfigGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) architectArchitectConfigGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const architectArchitectConfigGuardArray = (value: unknown, at: string, bounds: architectArchitectConfigGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return architectArchitectConfigGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) architectArchitectConfigGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -58,7 +62,7 @@ export const architectArchitectConfigGuardConstant = <T extends string | number 
 //#endregion 🚪️Parsers
 
 export function parseArchitectConfig(value: unknown, at = "$"): ArchitectConfig {
-  const row = architectArchitectConfigGuardObject(value, at);
+  const row = architectArchitectConfigGuardClosed(architectArchitectConfigGuardObject(value, at), at, ["searchQuery", "searchHistoryJson", "lastResultJson", "lastAnalysisJson"]);
   return {
     searchQuery: architectArchitectConfigGuardString(row["searchQuery"], `${at}.searchQuery`),
     searchHistoryJson: architectArchitectConfigGuardString(row["searchHistoryJson"], `${at}.searchHistoryJson`),

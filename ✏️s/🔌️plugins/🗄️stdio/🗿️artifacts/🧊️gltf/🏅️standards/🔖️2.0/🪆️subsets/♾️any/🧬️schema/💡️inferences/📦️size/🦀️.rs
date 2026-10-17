@@ -1,22 +1,15 @@
 //! 📦 GLTF size indicators.
 
-#[path = "↔️axis-aligned-bounds/🦀️.rs"]
-pub mod axis_aligned_bounds;
-#[path = "📐️bounding-box-dimensions/🦀️.rs"]
-pub mod bounding_box_dimensions;
-#[path = "🔗️characteristic-length/🦀️.rs"]
-pub mod characteristic_length;
-#[path = "🦶️footprint-area/🦀️.rs"]
-pub mod footprint_area;
-#[path = "🧭️oriented-bounds/🦀️.rs"]
-pub mod oriented_bounds;
-#[path = "📏️overall-size/🦀️.rs"]
-pub mod overall_size;
-#[path = "🎯️projected-area/🦀️.rs"]
-pub mod projected_area;
+pub use semio_s_artifact_stdio_gltf_inferences_flatness::standards::v2_0::subsets::any::schema::inferences::size::axis_aligned_bounds;
+pub use semio_s_artifact_stdio_gltf_inferences_flatness::standards::v2_0::subsets::any::schema::inferences::size::bounding_box_dimensions;
+pub use semio_s_artifact_stdio_gltf_inferences_aspect_ratios::standards::v2_0::subsets::any::schema::inferences::size::characteristic_length;
+pub use semio_s_artifact_stdio_gltf_inferences_footprint_area::standards::v2_0::subsets::any::schema::inferences::size::footprint_area;
+pub use semio_s_artifact_stdio_gltf_inferences_footprint_area::standards::v2_0::subsets::any::schema::inferences::size::oriented_bounds;
+pub use semio_s_artifact_stdio_gltf_inferences_footprint_area::standards::v2_0::subsets::any::schema::inferences::size::overall_size;
+pub use semio_s_artifact_stdio_gltf_inferences_footprint_area::standards::v2_0::subsets::any::schema::inferences::size::projected_area;
 
-use super::super::modules::measurement_contracts::*;
-use super::geometry_core::GltfGeometryContext;
+use crate::standards::v2_0::subsets::any::schema::modules::measurement_contracts::*;
+use crate::standards::v2_0::subsets::any::schema::inferences::geometry_core::GltfGeometryContext;
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]

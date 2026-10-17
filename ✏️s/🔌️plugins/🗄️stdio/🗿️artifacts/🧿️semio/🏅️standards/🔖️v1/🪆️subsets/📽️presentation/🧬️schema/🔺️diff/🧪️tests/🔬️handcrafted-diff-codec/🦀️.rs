@@ -1,4 +1,4 @@
-use super::*;
+use crate::schema::diff::*;
 use protocol::{DiffBinary,DiffText};
 
 /// 🧪️ `DiffCodec` round-trip law over the hand-rolled `SemioPresentationDiff` grammar —

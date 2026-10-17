@@ -1,0 +1,47 @@
+{
+ "name": "rsl5",
+ "crates": [
+  "semio-s-artifact-stdio-wav-io-registry",
+  "semio-s-artifact-stdio-txt-tests",
+  "semio-s-artifact-stdio-stl-examples",
+  "semio-s-artifact-stdio-dwg-editor-ac1018",
+  "semio-s-artifact-stdio-dwg-editor",
+  "semio-s-artifact-stdio-dxf",
+  "semio-s-artifact-stdio-tiff",
+  "semio-s-artifact-stdio-deflate",
+  "semio-s-artifact-stdio-obj-mutations",
+  "semio-s-artifact-stdio-gltf-editor",
+  "semio-s-artifact-stdio-ply-mutations",
+  "semio-s-artifact-stdio-json",
+  "semio-s-artifact-stdio-semio-flow",
+  "semio-s-artifact-stdio-semio-animation",
+  "semio-s-artifact-stdio-semio-video",
+  "semio-s-artifact-stdio-semio-model",
+  "semio-s-artifact-stdio-semio-table",
+  "semio-s-artifact-stdio-semio-cad"
+ ],
+ "base": {
+  "rev": "b84bf526c7ba",
+  "crates": [
+   "semio-s-artifact-stdio-wav-io-registry",
+   "semio-s-artifact-stdio-txt-tests",
+   "semio-s-artifact-stdio-stl-examples",
+   "semio-s-artifact-stdio-dwg-editor-ac1018",
+   "semio-s-artifact-stdio-dwg-editor",
+   "semio-s-artifact-stdio-dxf",
+   "semio-s-artifact-stdio-tiff",
+   "semio-s-artifact-stdio-deflate",
+   "semio-s-artifact-stdio-obj-mutations",
+   "semio-s-artifact-stdio-gltf-editor",
+   "semio-s-artifact-stdio-ply-mutations",
+   "semio-s-artifact-stdio-json",
+   "semio-s-artifact-stdio-semio-flow",
+   "semio-s-artifact-stdio-semio-animation",
+   "semio-s-artifact-stdio-semio-video",
+   "semio-s-artifact-stdio-semio-model",
+   "semio-s-artifact-stdio-semio-table",
+   "semio-s-artifact-stdio-semio-cad"
+  ]
+ },
+ "note": "RUST-LEFTOVERS F-04(a): consumers re-pointed from facade alias paths"
+}

@@ -2,10 +2,13 @@
 //! nothing has no inverse.
 
 use super::{equation_point_targets_invariant, EquationPointPosition, SetPointPositions};
-use crate::{EquationMutation, EquationSnapshot};
+use crate::EquationSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &SetPointPositions, base: &EquationSnapshot) -> Vec<EquationMutation> {
+pub fn inverse<Op>(payload: &SetPointPositions, base: &EquationSnapshot) -> Vec<Op>
+where
+    Op: From<crate::standards::v1::subsets::geometry::schema::mutations::set_point_positions::SetPointPositions>,
+{
     if equation_point_targets_invariant(&payload.indices()).is_err() || payload.positions.iter().any(|position| !position.x.is_finite() || !position.y.is_finite()) {
         return Vec::new();
     }
@@ -17,6 +20,6 @@ pub fn inverse(payload: &SetPointPositions, base: &EquationSnapshot) -> Vec<Equa
     if !placed.iter().any(|(_, moves)| *moves) {
         return Vec::new();
     }
-    vec![EquationMutation::SetPointPositions(SetPointPositions { positions: placed.into_iter().map(|(position, _)| position).collect() })]
+    vec![Op::from(SetPointPositions { positions: placed.into_iter().map(|(position, _)| position).collect() })]
 }
 //#endregion 🔖️Inverse

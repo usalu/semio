@@ -7,6 +7,7 @@
 //! this case's diff must carry BOTH `columns` and `rows` — a diff that only rebuilt `columns`
 //! would leave every row one cell short.
 
+use semio_framework_test_fixtures::fixture_text;
 use semio_s_artifact_stdio_semio_table_model::schema::diff::SemioTableDiff;
 use semio_s_artifact_stdio_semio_table_mutations::schema::mutations::SemioTableMutation;
 use semio_s_artifact_stdio_semio_table_model::schema::snapshot::SemioTableCellKind;
@@ -14,20 +15,20 @@ use semio_s_artifact_stdio_semio_table_model::schema::snapshot::SemioTableSnapsh
 use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValue;
 use protocol::Mutation;
 
-const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏗️create-column/🏗️appends/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏗️create-column/🏗️appends/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏗️create-column/🏗️appends/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏗️create-column/🏗️appends/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏗️create-column/🏗️appends/🎯️outcome/🔣️.json");
+static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏗️create-column/🏗️appends/📸️snapshot/⬅️before/🔣️.json"));
+static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏗️create-column/🏗️appends/📸️snapshot/➡️after/🔣️.json"));
+static MUTATION: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏗️create-column/🏗️appends/🦠️mutation/🔣️.json"));
+static DIFF: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏗️create-column/🏗️appends/🔺️diff/🔣️.json"));
+static OUTCOME: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏗️create-column/🏗️appends/🎯️outcome/🔣️.json"));
 
 fn before() -> SemioTableSnapshot {
-    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("create-column before snapshot decodes")
+    semio_framework_pack_json::from_json_str((*BEFORE), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("create-column before snapshot decodes")
 }
 fn expected_after() -> SemioTableSnapshot {
-    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("create-column after snapshot decodes")
+    semio_framework_pack_json::from_json_str((*AFTER), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("create-column after snapshot decodes")
 }
 fn create_column() -> SemioTableMutation {
-    semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("create-column mutation decodes")
+    semio_framework_pack_json::from_json_str((*MUTATION), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("create-column mutation decodes")
 }
 
 /// ▶️ The `area` column appears at index 1 and every row gains a `Null` cell at the same index.
@@ -67,14 +68,14 @@ async fn the_undo_delete_column_removes_the_column_and_its_padding() {
 /// present on the wire (here as a real number, never omitted).
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
-    for (label, text) in [("before", BEFORE), ("after", AFTER)] {
+    for (label, text) in [("before", (*BEFORE)), ("after", (*AFTER))] {
         let decoded: SemioTableSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
         let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "create-column/appends-a-float-column-and-null-pads-every-row: committed {label} JSON is not canonical");
     }
     let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&(create_column()))).expect("create-column mutation encodes");
-    let original: serde_json::Value = serde_json::from_str(MUTATION).expect("create-column mutation reparses");
+    let original: serde_json::Value = serde_json::from_str((*MUTATION)).expect("create-column mutation reparses");
     assert_eq!(reencoded, original, "create-column/appends-a-float-column-and-null-pads-every-row: committed mutation JSON is not canonical");
 }
 
@@ -82,7 +83,7 @@ async fn committed_json_is_canonical() {
 /// `mutation.duplicate-id` branch must not fire.
 #[semio_framework_async_macros::async_test]
 async fn declared_outcome_holds_without_a_duplicate_id_rejection() {
-    let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
+    let outcome: serde_json::Value = serde_json::from_str((*OUTCOME)).expect("outcome decodes");
     assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("applied"), "create-column/appends-a-float-column-and-null-pads-every-row: this case is declared applied");
     let produced = create_column().diff(&before());
     assert!(produced.messages().is_empty(), "creating a column with a fresh name must raise no diagnostics at all");
@@ -95,25 +96,25 @@ async fn produces_committed_diff() {
     let base = before();
     let outcome = <SemioTableMutation as Mutation<SemioTableSnapshot>>::diff(&create_column(), &base);
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
-    let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
+    let committed: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff decodes");
     assert_eq!(produced, committed, "create-column/appends-a-float-column-and-null-pads-every-row: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
 
 /// 🔣️ The committed diff is canonical and populates both `columns` and `rows`.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical_and_carries_both_slots() {
-    let decoded: SemioTableDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed create-column diff decodes");
+    let decoded: SemioTableDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed create-column diff decodes");
     assert!(decoded.columns.is_some(), "create-column must rebuild the column list");
     assert!(decoded.rows.is_some(), "create-column must ALSO rebuild the row list — the Null padding is part of the same diff");
     let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("diff re-encodes");
-    let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
+    let original: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff reparses");
     assert_eq!(reencoded, original, "create-column/appends-a-float-column-and-null-pads-every-row: committed diff JSON is not canonical");
 }
 
 /// 🩹 Applying the committed diff to `before` yields `after`.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: SemioTableDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed create-column diff decodes");
+    let decoded: SemioTableDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed create-column diff decodes");
     let produced = protocol::apply_diff(&decoded, &before()).expect("committed create-column diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "create-column/appends-a-float-column-and-null-pads-every-row: committed diff did not carry before to after");
 }

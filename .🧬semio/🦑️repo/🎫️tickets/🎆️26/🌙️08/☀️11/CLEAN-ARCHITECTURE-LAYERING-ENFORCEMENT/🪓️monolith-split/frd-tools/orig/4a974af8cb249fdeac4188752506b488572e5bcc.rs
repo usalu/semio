@@ -1,0 +1,100 @@
+use semio_framework_plugin::BuiltNode;
+use semio_framework_plugin::SurfaceKind;
+use semio_framework_plugin::TreeWindows;
+use semio_framework_plugin::UiAssemblyResult;
+use semio_framework_ui_scene::EventFeedScene;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::audit_trail;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot;
+#[allow(unused_imports)]
+use semio_framework_value::ToValue;
+#[allow(unused_imports)]
+use semio_framework_plugin::scene_surface;
+#[allow(unused_imports)]
+use semio_framework_ui_locale::LocalizedLabel;
+#[allow(unused_imports)]
+use semio_framework_plugin::WindowKindDefinition;
+#[allow(unused_imports)]
+use semio_framework_plugin::WindowOptions;
+use crate::editor::architect::modes::edit::windows::trace::{rfc3339_utc_epoch_ms};
+use crate::editor::architect::modes::edit::windows::trace::*;
+use crate::standards::v1::subsets::any::schema::kernel::{EntityHeader, TextField};
+use crate::standards::v1::subsets::any::schema::registers::{AuditAction, AuditEvent};
+use crate::standards::v1::subsets::any::schema::{snapshot::{empty_plugin, sample_plugin}, kernel::EntityId};
+
+fn event(timestamp: &str, success: bool) -> AuditEvent {
+    AuditEvent {
+        header: EntityHeader::new(EntityId("audit-event".into()), "Reception brief updated"),
+        action: AuditAction::Updated,
+        actor_id: None,
+        subject_id: EntityId("element-reception".into()),
+        subject_kind: "element".into(),
+        timestamp: timestamp.into(),
+        details: TextField::plain("Area target changed to 25 m²"),
+        before_state: None,
+        after_state: None,
+        ip_address: None,
+        client: None,
+        session_id: None,
+        change_record_id: None,
+        trace_link: None,
+        success,
+        error_message: None,
+        correlation_id: None,
+        compliance_tags: Vec::new(),
+        retention_until: None,
+    }
+}
+
+#[semio_framework_async_macros::async_test]
+async fn definition_declares_the_event_feed_surface_and_body_key() {
+    let definition = definition();
+    assert_eq!(definition.body_key, ARCHITECT_BODY_TRACE);
+    assert!(matches!(definition.surface_kind, SurfaceKind::EventFeed));
+}
+
+#[test]
+fn rfc3339_projection_keeps_epoch_domain_data_and_rejects_invalid_calendar_dates() {
+    assert_eq!(rfc3339_utc_epoch_ms("2026-08-14T00:00:00Z"), Some(1_786_665_600_000));
+    assert_eq!(rfc3339_utc_epoch_ms("2026-08-14T00:00:00.125Z"), Some(1_786_665_600_125));
+    assert_eq!(rfc3339_utc_epoch_ms("2026-02-29T00:00:00Z"), None);
+}
+
+#[semio_framework_async_macros::async_test]
+async fn authored_audit_record_projects_to_a_real_event_feed_scene() {
+    let fixture: serde_json::Value = serde_json::from_str(runtime_fixture_text("../../../../../../✏️editor/🎭️modes/✏️edit/🪟️windows/🧭️trace/🧪️tests/🧫️fixtures/🔣️.json")).expect("neutral EventFeed producer fixture");
+    let source = &fixture["source"];
+    let mut program = sample_plugin();
+    let mut audit = event(source["timestamp"].as_str().expect("timestamp"), source["success"].as_bool().expect("success"));
+    audit.header.id = EntityId(source["id"].as_str().expect("id").into());
+    audit.header.name = source["title"].as_str().expect("title").into();
+    audit.details = TextField::plain(source["detail"].as_str().expect("detail"));
+    program.audit_events = vec![audit];
+    let json = project_render(render(&program, &TreeWindows::unhosted()));
+    assert!(json.contains("event-feed"), "missing event-feed surface: {json}");
+    assert!(!json.contains("text-editor"), "trace must not fall back to a generic text surface: {json}");
+    let scene: EventFeedScene = semio_framework_plugin::artifact_app_laws::decode_fixture_scene(&json).expect("packed event-feed scene");
+    let entries: Vec<serde_json::Value> = serde_json::from_str(&scene.entries_json).expect("event entries");
+    assert_eq!(entries.len(), 1);
+    assert_eq!(entries[0], fixture["expected"]);
+    assert_eq!(scene.follow, Some(true));
+    assert_eq!(scene.activate_action, None);
+}
+
+#[semio_framework_async_macros::async_test]
+async fn empty_audit_trail_is_an_empty_authored_feed() {
+    let scene_json = project_render(render(&empty_plugin(), &TreeWindows::unhosted()));
+    let scene: EventFeedScene = semio_framework_plugin::artifact_app_laws::decode_fixture_scene(&scene_json).expect("packed event-feed scene");
+    let entries: Vec<serde_json::Value> = serde_json::from_str(&scene.entries_json).expect("event entries");
+    assert!(entries.is_empty());
+}
+
+fn project_render(node: semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode>) -> String {
+    semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node.expect("render"))).expect("retire semantic tree")
+}
+
+fn runtime_fixture_text(relative: &str) -> &'static str {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative);
+    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display())).into_boxed_str())
+}

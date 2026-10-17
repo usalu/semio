@@ -1,0 +1,89 @@
+[package]
+workspace = "../../../../../../.."
+name = "semio-framework-os-mcp"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Semio OS MCP gateway — dual-era JSON-RPC/MCP protocol core over stdio + Streamable HTTP, handle table, audit lane, shell bridge codec (packet P1b-http-handles-bridge, extending P1a-protocol-core: zero dependency on the plugin host/channel/actor crates)"
+
+[package.metadata.semio]
+role = "product"
+id = "os-mcp"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "./🦀️.rs"
+# 📚️ This crate carries no ``` doc examples (verified: zero fenced blocks in its sources), so the
+# rustdoc pass has nothing to run — it only re-links every dependency rlib. With several sessions
+# rebuilding `semio-framework`/`semio-framework-ui` concurrently in this shared tree, that link
+# step intermittently fails on an rlib replaced mid-run. Skipping it removes a false failure
+# without losing a single assertion; add real doc examples and this flips back on.
+doctest = false
+
+[[bin]]
+name = "semio-os-mcp"
+path = "../../🏗️bootstrap/⌨️entrypoint/🦀️.rs"
+
+# ⏱️ Its own process: the binding law needs an empty compiled-code map to reach every phase.
+[[test]]
+name = "binding_cancellation_law"
+path = "../../💡️inference/🧪️tests/⏱️binding-cancellation-law/🦀️.rs"
+
+[[test]]
+name = "compile_cancellation_law"
+path = "../../🏠️workspace/🧪️tests/⏱️compile-cancellation-law/🦀️.rs"
+
+[dependencies]
+semio-framework-ui-contract-validation = { path = "../../../../../../🔨️modules/🖱️ui/🧬️contract/🛡️limits/📦️packages/🦀️rust" }
+
+semio-framework-os-kernel = { path = "../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["sync", "ureq"] }
+semio-framework-pack-json = { path = "../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+serde_json = { workspace = true }
+semio-framework-os-mcp-foundation = { path = "../../🧱️foundation/📦️packages/🦀️rust" }
+semio-framework-os-mcp-wire = { path = "../../📡️wire/📦️packages/🦀️rust" }
+semio-framework-os-mcp-schema = { path = "../../📐️schema-contract/📦️packages/🦀️rust" }
+semio-framework-os-mcp-catalog = { path = "../../📚️catalog-compiler/📦️packages/🦀️rust" }
+semio-framework-os-mcp-capabilities = { path = "../../🧰️capabilities/📦️packages/🦀️rust" }
+semio-framework-os-mcp-port = { path = "../../🔌️channel-port/📦️packages/🦀️rust" }
+semio-framework-os-mcp-bridge = { path = "../../🪢️bridge-session/📦️packages/🦀️rust" }
+semio-framework-os-mcp-consent = { path = "../../🙋️consent/📦️packages/🦀️rust" }
+semio-framework-os-mcp-plugin-runtime = { path = "../../⚙️plugin-runtime/📦️packages/🦀️rust" }
+semio-framework-os-mcp-inference-hub = { path = "../../🌐️inference-hub/📦️packages/🦀️rust" }
+semio-framework-os-mcp-hub-remote = { path = "../../🌍️hub-remote/📦️packages/🦀️rust" }
+semio-framework-os-mcp-shell-channel = { path = "../../🎛️shell-channel/📦️packages/🦀️rust" }
+semio-framework-os-mcp-routing = { path = "../../🧲️channel-routing/📦️packages/🦀️rust" }
+semio-framework-os-mcp-dispatch = { path = "../../🪝️action-dispatch/📦️packages/🦀️rust" }
+semio-framework-os-mcp-workspace = { path = "../../🪟️workspace-host/📦️packages/🦀️rust" }
+semio-framework-os-mcp-tools-inference = { path = "../../🔭️inference-tools/📦️packages/🦀️rust" }
+semio-framework-os-mcp-tools-gateway = { path = "../../🧳️gateway-tools/📦️packages/🦀️rust" }
+semio-framework-os-mcp-server = { path = "../../🎯️server/📦️packages/🦀️rust" }
+semio-framework-os-mcp-http-transport = { path = "../../📮️http-transport/📦️packages/🦀️rust" }
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+semio-framework-plugin = { path = "../../../🔌️plugin/📦️packages/🦀️rust", package = "semio-framework-plugin" }
+semio-framework-plugin-host = { path = "../../../🔌️plugin/🖥️host/📦️packages/🦀️rust", package = "semio-framework-plugin-host" }
+
+[dev-dependencies]
+framework_hash = { path = "../../../../../../🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
+semio-framework = { workspace = true }
+semio-framework-actor = { path = "../../../../../../🔨️modules/🎭️actor/📦️packages/🦀️rust", package = "semio-framework-actor" }
+semio-framework-async = { workspace = true }
+semio-framework-pack = { path = "../../../../../../🔨️modules/🎒️pack/📦️packages/🦀️rust" }
+semio-framework-ui-locale = { path = "../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
+tokio = { workspace = true, features = ["full"] }
+semio-framework-trace-memory-testing = { path = "../../../../../../🔨️modules/⏱️trace/🧮️memory/🧪️testing/📥️requests/📦️packages/🦀️rust" }
+semio-framework-os-mcp-capabilities = { path = "../../🧰️capabilities/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-os-mcp-port = { path = "../../🔌️channel-port/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-os-mcp-bridge-codec = { path = "../../🧶️bridge-codec/📦️packages/🦀️rust" }
+semio-framework-os-mcp-probe-document = { path = "../../🔬️probe-document/📦️packages/🦀️rust" }
+semio-framework-os-mcp-plugin-runtime = { path = "../../⚙️plugin-runtime/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-os-mcp-routing = { path = "../../🧲️channel-routing/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-os-mcp-hub-remote = { path = "../../🌍️hub-remote/📦️packages/🦀️rust", features = ["testkit"] }

@@ -222,5 +222,4 @@ fn close_preserves_original_empty_path_and_error_backing_until_exact_release() {
     assert_eq!(caller.turn(RetainedCloneGrant { maximum_items: 1, maximum_depth: 1, ..RetainedCloneGrant::default() },|cx|job.close_step(cx)).unwrap().progress().copied_items, 1);
     assert!(job.terminal_is_empty());
     caller.retire(source);
-    println!("[DEBUG] native IO original empty PathBuf/String backing retained on zero item/depth and one-below physical release; exact capacities and separate result terminal turn");
 }

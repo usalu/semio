@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "path": "🧰️framework/Cargo.lock",
+  "sha256": "97645ef0ae370aef8ca2df22812f30d650ba6232e1a416dc30785d0d96d81975",
+  "required": [
+    "semio-framework-plugin-declared-verdict",
+    "semio-framework-plugin-testing-laws",
+    "semio-framework-plugin-ownership",
+    "semio-framework-os-kernel"
+  ],
+  "missing": [
+    "semio-framework-plugin-declared-verdict",
+    "semio-framework-plugin-testing-laws",
+    "semio-framework-plugin-ownership",
+    "semio-framework-os-kernel"
+  ],
+  "thirdpartyPinsSha256": "cec33bada3d45ab1e279cd48fa43e2b814aadaad6ee076be0fe7b39cbb8fee23"
+}

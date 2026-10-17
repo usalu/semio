@@ -52,7 +52,7 @@ fn partial_paged_cursor_is_transferred_and_closed_under_driver_grants() {
     assert!(turns > 1);
     assert!(handoff.terminal_is_empty());
     for turn in 0..100_000 {
-        if retained.terminal_is_empty() { println!("[DEBUG] handoff retained native cursor and original source reach exact independent-axis terminal custody in {turn} source turns"); return; }
+        if retained.terminal_is_empty() {  return; }
         let copy = retained.next_close_copy_byte_demand().unwrap();
         let capacity = retained.next_close_capacity_byte_demand(copy).unwrap();
         assert!(copy + capacity <= maximum_bytes);

@@ -1,0 +1,29 @@
+{
+ "name": "pch",
+ "crates": [
+  "semio-s-artifact-stdio-mp3-io-metadata",
+  "semio-s-artifact-stdio-mp3-metadata",
+  "semio-s-artifact-stdio-mp3-mutations",
+  "semio-s-plugin-puzzle-board-scene",
+  "semio-s-plugin-puzzle-jobs",
+  "semio-s-plugin-puzzle-retained",
+  "semio-s-wfc-sqlite-bitmap",
+  "semio-s-procedural-core-generation-sqlite",
+  "semio-s-procedural-core-generation-sqlite-test-support",
+  "semio-s-plugin-process-catalog-json-oracle",
+  "semio-s-plugin-sourcing-catalog-oracle",
+  "semio-framework-os-space-sqlite-cells"
+ ],
+ "base": {
+  "rev": "1bae6115bc5",
+  "crates": [
+   "semio-s-artifact-stdio-mp3-metadata",
+   "semio-s-artifact-stdio-mp3-mutations",
+   "semio-s-plugin-puzzle-jobs",
+   "semio-s-plugin-puzzle-retained",
+   "semio-s-procedural-core-generation-sqlite",
+   "semio-framework-os-space-sqlite-cells"
+  ]
+ },
+ "note": "PLUGIN-CRATE-HYGIENE: crates created or re-homed by the slice"
+}

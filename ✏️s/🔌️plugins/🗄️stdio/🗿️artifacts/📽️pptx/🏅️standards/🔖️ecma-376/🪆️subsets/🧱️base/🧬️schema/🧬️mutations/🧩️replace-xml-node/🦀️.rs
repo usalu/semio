@@ -7,8 +7,8 @@ use super::*;
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct ReplaceXmlNode {
-    pub(crate) address: PptxXmlAddress,
-    pub(crate) node: XmlNode,
+    pub address: PptxXmlAddress,
+    pub node: XmlNode,
 }
 
 impl protocol::MutationKind<PptxSnapshot, PptxMutation> for ReplaceXmlNode {

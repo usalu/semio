@@ -1,6 +1,6 @@
 /** 🔌️ Ports through which a parent owner carries one child's inline content without importing the child's owner. */
-import type { ArtifactSqliteOptions, ArtifactSqliteProjection } from "../🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
-import type { SqliteDatabase } from "../🪶️sqlite-snapshot/🟦️.ts";
+import type { ArtifactSqliteOptions, ArtifactSqliteProjection } from "@semio-tech/framework-sqlite-snapshot-ts/artifact";
+import type { SqliteDatabase } from "@semio-tech/framework-sqlite-snapshot-ts";
 
 /** 🧱️ The parse, native JSON and SQLite component facets of one child content type, supplied by the composition that knows the child's owner. */
 export interface EmbeddedChildCodecV1<Content> {

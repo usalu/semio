@@ -1,6 +1,7 @@
 //! 📡️ `set-proximity-radius` command.
 
-use crate::editor::puzzle5d::{puzzle5d_absolute_or_delta, Puzzle5dActionCtx, PUZZLE5D_PROXIMITY_RADIUS_MAX};
+use crate::editor::puzzle5d::entities::{puzzle5d_absolute_or_delta, PUZZLE5D_PROXIMITY_RADIUS_MAX};
+use crate::editor::puzzle5d::interaction::Puzzle5dActionCtx;
 use semio_framework_pack_json::Value;
 
 /// 📡️ How near (m) two open grips must come before a drop auto-connects them — an absolute `value` or

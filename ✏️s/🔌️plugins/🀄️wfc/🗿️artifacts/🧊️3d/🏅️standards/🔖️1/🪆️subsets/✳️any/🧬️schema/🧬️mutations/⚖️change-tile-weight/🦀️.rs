@@ -2,7 +2,6 @@
 //! `WeightTable` turns into a Shannon-entropy term.
 
 use crate::diff::Wfc3dDiff;
-use crate::mutations::Wfc3dMutation;
 use crate::schema::snapshot::Wfc3dSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -16,17 +15,23 @@ pub struct ChangeTileWeight {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_tile_weight(id: String, weight: f64) -> Wfc3dMutation {
-    Wfc3dMutation::ChangeTileWeight(ChangeTileWeight { id, weight })
+pub fn change_tile_weight<Op>(id: String, weight: f64) -> Op
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::change_tile_weight::ChangeTileWeight>,
+{
+    Op::from(ChangeTileWeight { id, weight })
 }
 
-impl MutationKind<Wfc3dSnapshot, Wfc3dMutation> for ChangeTileWeight {
+impl<Op> MutationKind<Wfc3dSnapshot, Op> for ChangeTileWeight
+where
+    Op: protocol::Mutation<Wfc3dSnapshot, Diff = Wfc3dDiff> + From<ChangeTileWeight>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "tile-weight", kind: "change-tile-weight", record: "ChangedTileWeight" };
 
     fn diff(&self, base: &Wfc3dSnapshot) -> protocol::MutationOutcome<Wfc3dDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Wfc3dSnapshot) -> Result<Vec<Wfc3dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Wfc3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

@@ -1,7 +1,7 @@
 import {bindSvgDocument,nativeSvgDocument}from "../../📝️text/📸️snapshot/🧮️attributes/🟦️.ts";
 /** 🎨️ SVG's persisted typed XML fields projected directly into SVG's own tables. */
 import type { SvgSnapshot } from "../../../🧬️schema/📸️snapshot/🟦️.ts";
-import { projectXmlDocument, reconstructXmlDocument, type XmlSqliteTables } from "../../../../../../../../📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🟦️.ts";
+import { projectXmlDocument, reconstructXmlDocument, type XmlSqliteTables } from "@semio-tech/stdio-xml/standards/1.0/subsets/base/io/sqlite/snapshot";
 import type { ArtifactSqliteOptions } from "@semio-tech/framework/io/sqlite-snapshot/artifact";
 import type { SqliteDatabase } from "@semio-tech/framework/io/sqlite-snapshot";
 

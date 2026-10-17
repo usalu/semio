@@ -1,4 +1,4 @@
-use super::{EquationNodePosition, SetNodePositions};
+use crate::standards::v1::subsets::graph::schema::mutations::set_node_positions::{EquationNodePosition, SetNodePositions};
 use crate::{EquationMutation, EquationSnapshot};
 
 /// ⚖️ Placing a middle subset of nodes inverts to their base positions whose diffs sum to the negative diff.

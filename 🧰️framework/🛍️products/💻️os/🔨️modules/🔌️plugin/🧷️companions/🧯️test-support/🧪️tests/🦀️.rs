@@ -1,6 +1,7 @@
 //! 🧪️ Closed-fixture laws of the module tree reader; the TypeScript `🟦️.ts` beside the fixture proves the same expectations against the independent `readModuleTreeSource`.
 
 use super::{inspect_module_children, read_module_tree_files, read_module_tree_source, slice_module_tree_source, ModuleChild, ModuleVia};
+use semio_framework_test_fixtures::fixture_path;
 use serde_json::Value;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
@@ -113,7 +114,7 @@ fn slices_run_from_the_marker_to_the_next_marker_inside_one_file() {
 
 #[test]
 fn the_plugin_trees_resolve_below_their_roots() {
-    let plugin = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../..");
+    let plugin = fixture_path!("../../../..");
     let root = plugin.join("🧵️retained-command/🦀️.rs");
     if !root.exists() {
         return;

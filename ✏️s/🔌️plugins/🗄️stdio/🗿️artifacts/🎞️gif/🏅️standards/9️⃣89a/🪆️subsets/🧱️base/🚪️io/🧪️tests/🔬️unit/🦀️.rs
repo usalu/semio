@@ -195,6 +195,8 @@ async fn rgba_derived_accessor_honors_transparent_index() {
 /// ticket's own instruction, `demo_gif_snapshot()` reuses the REAL `dancing.gif` fixture
 /// (54 frames, 800×800) for byte-real conformance, not a synthetic stand-in.
 mod conformance_laws {
+    use semio_framework_test_fixtures::fixture_path;
+
     use super::*;
     use crate::standards::v89a::subsets::any::schema::{diff, mutations, snapshot};
     use protocol::{DiffBinary,DiffCodec,DiffText, OpBinary, OpText};
@@ -282,8 +284,8 @@ mod conformance_laws {
     /// dancing.gif fixture decoded via the real 89a codec).
     #[semio_framework_async_macros::async_test]
     async fn fixture_honesty_law() {
-        static FIXTURE_DSL: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| Box::leak(std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../9️⃣89a/🪆️subsets/🧱️base/📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio")).expect("the committed fixture is readable").into_boxed_str()));
-        static FIXTURE_PACK: std::sync::LazyLock<&'static [u8]> = std::sync::LazyLock::new(|| Box::leak(std::fs::read(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../9️⃣89a/🪆️subsets/🧱️base/📚️examples/🎬️demo/🖼️assets/🎒️.pack.semio")).expect("the committed fixture is readable").into_boxed_slice()));
+        static FIXTURE_DSL: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| Box::leak(std::fs::read_to_string(fixture_path!("../../../../../../9️⃣89a/🪆️subsets/🧱️base/📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio")).expect("the committed fixture is readable").into_boxed_str()));
+        static FIXTURE_PACK: std::sync::LazyLock<&'static [u8]> = std::sync::LazyLock::new(|| Box::leak(std::fs::read(fixture_path!("../../../../../../9️⃣89a/🪆️subsets/🧱️base/📚️examples/🎬️demo/🖼️assets/🎒️.pack.semio")).expect("the committed fixture is readable").into_boxed_slice()));
 
         let demo = demo_gif_snapshot();
         assert!(pack::snapshot::ArtifactDsl::print_dsl(&demo)==(*FIXTURE_DSL), "owned native Text fixture differs");

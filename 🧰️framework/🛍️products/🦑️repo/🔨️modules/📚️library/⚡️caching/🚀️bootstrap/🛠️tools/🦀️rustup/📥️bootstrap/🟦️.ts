@@ -1,4 +1,4 @@
-import{withRepositoryToolingOperationV1}from"../../🔒️scope/🟦️.ts";
+import{withRepositoryToolingOperationV1}from"../../../../💾️storage/🔒️enforcement/🛠️tools/🟦️.ts";
 import{requireIssuedResourceControlInvocationV1,requireIssuedResourceControlRefinementV1,withRequestedIssuedResourceControlV1,withIssuedResourceOperationV1}from"../../../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import{requireToolingPublicationValueV1}from"../../🧹️retention/📏️headroom/🟦️.ts";
 import {withManagedToolingProvisionV1} from "../../🧹️retention/📥️physical/🟦️.ts";

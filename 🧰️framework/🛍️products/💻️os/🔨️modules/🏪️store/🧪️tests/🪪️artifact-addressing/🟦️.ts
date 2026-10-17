@@ -10,7 +10,7 @@ import blobSchema from "../../📦️blob/🧬️schema/🔣️.json" with { typ
 import { parseArtifactLink } from "../../🔗️link/🧬️schema/🟦️.ts";
 import childSchema from "../../🪆️child/🧬️schema/🔣️.json" with { type: "json" };
 import { manifestSchema } from "@semio-tech/framework/manifest/testing/fixtures";
-import { dialectCoordinate, parseDialectCoordinate, artifactRefUri, parseArtifactRefUri } from "../../../../../../🔨️modules/🚪️io/🧬️schema/🟦️.ts";
+import { dialectCoordinate, parseDialectCoordinate, artifactRefUri, parseArtifactRefUri } from "@semio-tech/framework-io-schema-ts";
 import { contentId, parseArtifactChild } from "../../🪆️child/🧬️schema/🟦️.ts";
 import { sha256Hex } from "@semio-tech/framework/hash";
 

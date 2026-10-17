@@ -13,7 +13,14 @@ import { argControl } from "@semio-tech/framework";
 import { Stepper } from "@semio-tech/ui-react";
 import { act, cleanup, fireEvent, render } from "@semio-tech/ui-react/test";
 import "../../../🐚️Shell/🟦️.tsx";
-import { interactionSelectionIdsV1, renderStagedArgControl, stagedNumberDisplayText, stagedNumberFacetsV1, syncShellLabelLocale, type ResolvedActionArgDef, type StagedArgContextV1 } from "../../🟦️.tsx";
+import {
+  interactionSelectionIdsV1,
+  renderStagedArgControl,
+  stagedNumberDisplayText,
+  stagedNumberFacetsV1,
+  type StagedArgContextV1
+} from "../../🪟️window-panes/📝️staged-args/🟦️.tsx";
+import { syncShellLabelLocale, type ResolvedActionArgDef } from "../../🏷️labels/🟦️.tsx";
 import { uiNumberControlsFixture as numberControls } from "../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🟦️.ts";
 import { manifestNumberFacetsFixture as numberFacets } from "../../../../../../../../../🔨️modules/🛂️manifest/🧪️tests/🧫️fixtures/🟦️.ts";
 import type { ActionArgNumberFacets } from "@semio-tech/framework";

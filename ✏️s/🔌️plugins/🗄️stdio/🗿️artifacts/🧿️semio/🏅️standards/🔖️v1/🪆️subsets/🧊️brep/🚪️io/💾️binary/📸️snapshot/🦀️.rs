@@ -19,36 +19,36 @@ use semio_s_artifact_stdio_semio_base::schema::geometry::native::NativeF64;
 /// reuse) backing the real `ArtifactPack` below — replaces the old `serde_json::to_vec`-in-
 /// envelope shortcut.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
+pub fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
     store::pack_rt::write_varint_u64(out, bytes.len() as u64);
     out.extend_from_slice(bytes);
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
+pub fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
     let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
     Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn write_str_lp(out: &mut Vec<u8>, s: &str) {
+pub fn write_str_lp(out: &mut Vec<u8>, s: &str) {
     write_bytes_lp(out, s.as_bytes());
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
+pub fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
     String::from_utf8(read_bytes_lp(reader)?).map_err(|e| e.to_string())
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn write_point3(out: &mut Vec<u8>, p: &SemioPoint3) {
+pub fn write_point3(out: &mut Vec<u8>, p: &SemioPoint3) {
     out.extend_from_slice(&p.x.to_le_bytes());
     out.extend_from_slice(&p.y.to_le_bytes());
     out.extend_from_slice(&p.z.to_le_bytes());
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_point3(reader: &mut store::ByteReader<'_>) -> Result<SemioPoint3, String> {
+pub fn read_point3(reader: &mut store::ByteReader<'_>) -> Result<SemioPoint3, String> {
     let x = reader.read_f64_le().map_err(|e| e.to_string())?;
     let y = reader.read_f64_le().map_err(|e| e.to_string())?;
     let z = reader.read_f64_le().map_err(|e| e.to_string())?;
@@ -56,7 +56,7 @@ pub(crate) fn read_point3(reader: &mut store::ByteReader<'_>) -> Result<SemioPoi
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn write_f64_vec(out: &mut Vec<u8>, v: &[f64]) {
+pub fn write_f64_vec(out: &mut Vec<u8>, v: &[f64]) {
     store::pack_rt::write_varint_u64(out, v.len() as u64);
     for x in v {
         out.extend_from_slice(&x.to_le_bytes());
@@ -64,7 +64,7 @@ pub(crate) fn write_f64_vec(out: &mut Vec<u8>, v: &[f64]) {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_f64_vec(reader: &mut store::ByteReader<'_>) -> Result<Vec<f64>, String> {
+pub fn read_f64_vec(reader: &mut store::ByteReader<'_>) -> Result<Vec<f64>, String> {
     let n = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut v = Vec::with_capacity(n as usize);
     for _ in 0..n {
@@ -74,7 +74,7 @@ pub(crate) fn read_f64_vec(reader: &mut store::ByteReader<'_>) -> Result<Vec<f64
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn write_point3_vec(out: &mut Vec<u8>, v: &[SemioPoint3]) {
+pub fn write_point3_vec(out: &mut Vec<u8>, v: &[SemioPoint3]) {
     store::pack_rt::write_varint_u64(out, v.len() as u64);
     for p in v {
         write_point3(out, p);
@@ -82,7 +82,7 @@ pub(crate) fn write_point3_vec(out: &mut Vec<u8>, v: &[SemioPoint3]) {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_point3_vec(reader: &mut store::ByteReader<'_>) -> Result<Vec<SemioPoint3>, String> {
+pub fn read_point3_vec(reader: &mut store::ByteReader<'_>) -> Result<Vec<SemioPoint3>, String> {
     let n = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut v = Vec::with_capacity(n as usize);
     for _ in 0..n {
@@ -92,18 +92,18 @@ pub(crate) fn read_point3_vec(reader: &mut store::ByteReader<'_>) -> Result<Vec<
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn write_bool(out: &mut Vec<u8>, b: bool) {
+pub fn write_bool(out: &mut Vec<u8>, b: bool) {
     out.push(if b { 1 } else { 0 });
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_bool(reader: &mut store::ByteReader<'_>) -> Result<bool, String> {
+pub fn read_bool(reader: &mut store::ByteReader<'_>) -> Result<bool, String> {
     Ok(reader.read_u8().map_err(|e| e.to_string())? != 0)
 }
 
 /// 🏷️ `BrepCurve` variant tags — 0=Line, 1=Circle, 2=Ellipse, 3=Nurbs (declaration order).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn write_curve(out: &mut Vec<u8>, c: &BrepCurve) {
+pub fn write_curve(out: &mut Vec<u8>, c: &BrepCurve) {
     match c {
         BrepCurve::Line { origin, direction } => {
             out.push(0);
@@ -134,7 +134,7 @@ pub(crate) fn write_curve(out: &mut Vec<u8>, c: &BrepCurve) {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_curve(reader: &mut store::ByteReader<'_>) -> Result<BrepCurve, String> {
+pub fn read_curve(reader: &mut store::ByteReader<'_>) -> Result<BrepCurve, String> {
     let tag = reader.read_u8().map_err(|e| e.to_string())?;
     match tag {
         0 => Ok(BrepCurve::Line { origin: read_point3(reader)?, direction: read_point3(reader)? }),
@@ -147,7 +147,7 @@ pub(crate) fn read_curve(reader: &mut store::ByteReader<'_>) -> Result<BrepCurve
 
 /// 🏷️ `BrepSurface` variant tags — 0=Plane, 1=Cylinder, 2=Cone, 3=Sphere, 4=Torus, 5=Nurbs.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn write_surface(out: &mut Vec<u8>, s: &BrepSurface) {
+pub fn write_surface(out: &mut Vec<u8>, s: &BrepSurface) {
     match s {
         BrepSurface::Plane { origin, normal } => {
             out.push(0);
@@ -194,7 +194,7 @@ pub(crate) fn write_surface(out: &mut Vec<u8>, s: &BrepSurface) {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_surface(reader: &mut store::ByteReader<'_>) -> Result<BrepSurface, String> {
+pub fn read_surface(reader: &mut store::ByteReader<'_>) -> Result<BrepSurface, String> {
     let tag = reader.read_u8().map_err(|e| e.to_string())?;
     match tag {
         0 => Ok(BrepSurface::Plane { origin: read_point3(reader)?, normal: read_point3(reader)? }),
@@ -217,19 +217,19 @@ pub(crate) fn read_surface(reader: &mut store::ByteReader<'_>) -> Result<BrepSur
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn write_vertex(out: &mut Vec<u8>, v: &BrepVertex) {
+pub fn write_vertex(out: &mut Vec<u8>, v: &BrepVertex) {
     write_str_lp(out, &v.id);
     write_point3(out, &v.point);
     out.extend_from_slice(&v.tol.to_le_bytes());
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_vertex(reader: &mut store::ByteReader<'_>) -> Result<BrepVertex, String> {
+pub fn read_vertex(reader: &mut store::ByteReader<'_>) -> Result<BrepVertex, String> {
     Ok(BrepVertex { id: read_str_lp(reader)?, point: read_point3(reader)?, tol: reader.read_f64_le().map_err(|e| e.to_string())? })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn write_edge(out: &mut Vec<u8>, e: &BrepEdge) {
+pub fn write_edge(out: &mut Vec<u8>, e: &BrepEdge) {
     write_str_lp(out, &e.id);
     write_str_lp(out, &e.start_vertex);
     write_str_lp(out, &e.end_vertex);
@@ -238,23 +238,23 @@ pub(crate) fn write_edge(out: &mut Vec<u8>, e: &BrepEdge) {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_edge(reader: &mut store::ByteReader<'_>) -> Result<BrepEdge, String> {
+pub fn read_edge(reader: &mut store::ByteReader<'_>) -> Result<BrepEdge, String> {
     Ok(BrepEdge { id: read_str_lp(reader)?, start_vertex: read_str_lp(reader)?, end_vertex: read_str_lp(reader)?, curve: read_curve(reader)?, tol: reader.read_f64_le().map_err(|e| e.to_string())? })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn write_loop_edge(out: &mut Vec<u8>, le: &BrepLoopEdge) {
+pub fn write_loop_edge(out: &mut Vec<u8>, le: &BrepLoopEdge) {
     write_str_lp(out, &le.edge);
     write_bool(out, le.orientation);
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_loop_edge(reader: &mut store::ByteReader<'_>) -> Result<BrepLoopEdge, String> {
+pub fn read_loop_edge(reader: &mut store::ByteReader<'_>) -> Result<BrepLoopEdge, String> {
     Ok(BrepLoopEdge { edge: read_str_lp(reader)?, orientation: read_bool(reader)? })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn write_loop(out: &mut Vec<u8>, l: &BrepLoop) {
+pub fn write_loop(out: &mut Vec<u8>, l: &BrepLoop) {
     write_str_lp(out, &l.id);
     store::pack_rt::write_varint_u64(out, l.edges.len() as u64);
     for le in &l.edges {
@@ -263,7 +263,7 @@ pub(crate) fn write_loop(out: &mut Vec<u8>, l: &BrepLoop) {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_loop(reader: &mut store::ByteReader<'_>) -> Result<BrepLoop, String> {
+pub fn read_loop(reader: &mut store::ByteReader<'_>) -> Result<BrepLoop, String> {
     let id = read_str_lp(reader)?;
     let n = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut edges = Vec::with_capacity(n as usize);
@@ -274,7 +274,7 @@ pub(crate) fn read_loop(reader: &mut store::ByteReader<'_>) -> Result<BrepLoop, 
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn write_face(out: &mut Vec<u8>, f: &BrepFace) {
+pub fn write_face(out: &mut Vec<u8>, f: &BrepFace) {
     write_str_lp(out, &f.id);
     write_str_lp(out, &f.outer_loop);
     store::pack_rt::write_varint_u64(out, f.inner_loops.len() as u64);
@@ -287,7 +287,7 @@ pub(crate) fn write_face(out: &mut Vec<u8>, f: &BrepFace) {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_face(reader: &mut store::ByteReader<'_>) -> Result<BrepFace, String> {
+pub fn read_face(reader: &mut store::ByteReader<'_>) -> Result<BrepFace, String> {
     let id = read_str_lp(reader)?;
     let outer_loop = read_str_lp(reader)?;
     let n = reader.read_varint_u64().map_err(|e| e.to_string())?;
@@ -302,18 +302,18 @@ pub(crate) fn read_face(reader: &mut store::ByteReader<'_>) -> Result<BrepFace, 
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn write_shell_face(out: &mut Vec<u8>, sf: &BrepShellFace) {
+pub fn write_shell_face(out: &mut Vec<u8>, sf: &BrepShellFace) {
     write_str_lp(out, &sf.face);
     write_bool(out, sf.orientation);
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_shell_face(reader: &mut store::ByteReader<'_>) -> Result<BrepShellFace, String> {
+pub fn read_shell_face(reader: &mut store::ByteReader<'_>) -> Result<BrepShellFace, String> {
     Ok(BrepShellFace { face: read_str_lp(reader)?, orientation: read_bool(reader)? })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn write_shell(out: &mut Vec<u8>, sh: &BrepShell) {
+pub fn write_shell(out: &mut Vec<u8>, sh: &BrepShell) {
     write_str_lp(out, &sh.id);
     store::pack_rt::write_varint_u64(out, sh.faces.len() as u64);
     for sf in &sh.faces {
@@ -322,7 +322,7 @@ pub(crate) fn write_shell(out: &mut Vec<u8>, sh: &BrepShell) {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_shell(reader: &mut store::ByteReader<'_>) -> Result<BrepShell, String> {
+pub fn read_shell(reader: &mut store::ByteReader<'_>) -> Result<BrepShell, String> {
     let id = read_str_lp(reader)?;
     let n = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut faces = Vec::with_capacity(n as usize);
@@ -333,18 +333,18 @@ pub(crate) fn read_shell(reader: &mut store::ByteReader<'_>) -> Result<BrepShell
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn write_solid_shell(out: &mut Vec<u8>, ss: &BrepSolidShell) {
+pub fn write_solid_shell(out: &mut Vec<u8>, ss: &BrepSolidShell) {
     write_str_lp(out, &ss.shell);
     write_bool(out, ss.is_void);
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_solid_shell(reader: &mut store::ByteReader<'_>) -> Result<BrepSolidShell, String> {
+pub fn read_solid_shell(reader: &mut store::ByteReader<'_>) -> Result<BrepSolidShell, String> {
     Ok(BrepSolidShell { shell: read_str_lp(reader)?, is_void: read_bool(reader)? })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn write_solid(out: &mut Vec<u8>, so: &BrepSolid) {
+pub fn write_solid(out: &mut Vec<u8>, so: &BrepSolid) {
     write_str_lp(out, &so.id);
     store::pack_rt::write_varint_u64(out, so.shells.len() as u64);
     for ss in &so.shells {
@@ -353,7 +353,7 @@ pub(crate) fn write_solid(out: &mut Vec<u8>, so: &BrepSolid) {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_solid(reader: &mut store::ByteReader<'_>) -> Result<BrepSolid, String> {
+pub fn read_solid(reader: &mut store::ByteReader<'_>) -> Result<BrepSolid, String> {
     let id = read_str_lp(reader)?;
     let n = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut shells = Vec::with_capacity(n as usize);
@@ -365,7 +365,7 @@ pub(crate) fn read_solid(reader: &mut store::ByteReader<'_>) -> Result<BrepSolid
 
 /// 🏷️ `BrepCurve2` variant tags — 0=Line, 1=Circle, 2=Ellipse, 3=Nurbs (declaration order).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn write_curve2(out: &mut Vec<u8>, c: &BrepCurve2) {
+pub fn write_curve2(out: &mut Vec<u8>, c: &BrepCurve2) {
     match c {
         BrepCurve2::Line { origin, direction } => {
             out.push(0);
@@ -404,7 +404,7 @@ pub(crate) fn write_curve2(out: &mut Vec<u8>, c: &BrepCurve2) {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_curve2(reader: &mut store::ByteReader<'_>) -> Result<BrepCurve2, String> {
+pub fn read_curve2(reader: &mut store::ByteReader<'_>) -> Result<BrepCurve2, String> {
     let read_f64 = |reader: &mut store::ByteReader<'_>| reader.read_f64_le().map_err(|e| e.to_string());
     let tag = reader.read_u8().map_err(|e| e.to_string())?;
     match tag {
@@ -427,7 +427,7 @@ pub(crate) fn read_curve2(reader: &mut store::ByteReader<'_>) -> Result<BrepCurv
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn write_coedge(out: &mut Vec<u8>, c: &BrepCoedge) {
+pub fn write_coedge(out: &mut Vec<u8>, c: &BrepCoedge) {
     write_str_lp(out, &c.id);
     write_str_lp(out, &c.edge);
     write_bool(out, c.forward);
@@ -446,7 +446,7 @@ pub(crate) fn write_coedge(out: &mut Vec<u8>, c: &BrepCoedge) {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_coedge(reader: &mut store::ByteReader<'_>) -> Result<BrepCoedge, String> {
+pub fn read_coedge(reader: &mut store::ByteReader<'_>) -> Result<BrepCoedge, String> {
     let id = read_str_lp(reader)?;
     let edge = read_str_lp(reader)?;
     let forward = read_bool(reader)?;
@@ -460,7 +460,7 @@ pub(crate) fn read_coedge(reader: &mut store::ByteReader<'_>) -> Result<BrepCoed
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn encode_brep_snapshot_binary(s: &SemioBrepSnapshot) -> Vec<u8> {
+pub fn encode_brep_snapshot_binary(s: &SemioBrepSnapshot) -> Vec<u8> {
     const PACK_BINARY_FORMAT: u8 = 1;
     let mut out = Vec::new();
     out.push(PACK_BINARY_FORMAT);
@@ -498,7 +498,7 @@ pub(crate) fn encode_brep_snapshot_binary(s: &SemioBrepSnapshot) -> Vec<u8> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn decode_brep_snapshot_binary(bytes: &[u8]) -> Result<SemioBrepSnapshot, String> {
+pub fn decode_brep_snapshot_binary(bytes: &[u8]) -> Result<SemioBrepSnapshot, String> {
     const PACK_BINARY_FORMAT: u8 = 1;
     let mut reader = store::ByteReader::new(bytes);
     let format = reader.read_u8().map_err(|e| e.to_string())?;

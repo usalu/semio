@@ -1,0 +1,3 @@
+/** 🎨️ Public entry `@semio-tech/s-spatial-kernel-ts/geometry/typology`: the explicit surface that importers outside the module use. */
+export { inferTypologyPrimitiveKinds, listModelDefinitionAttributeDefinitions, listModelDefinitionPropertyDefinitions, listModelDefinitionTypologies, loadAttributeDefinition, loadPropertyDefinition, loadTypology, parseAttributeDefinitionSpec, parsePropertyDefinitionSpec, parseTypologySpec, resolveTypologyStyle, typologyConstructKitByInteraction, typologyForInteraction, typologyPrimitiveToEntityKind, typologyStyleCacheKey } from "../../../../📐️geometry/🎨️typology/🟦️.ts";
+export type { AttributeDefinitionSpec, PropertyDefinitionSpec, TypologySpec, TypologyStyleSpec } from "../../../../📐️geometry/🎨️typology/🟦️.ts";

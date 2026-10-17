@@ -6,12 +6,12 @@ import { type ScriptInvocation } from "../../../🧰️framework/🔨️modules/
 import { configuredExactCargoLawPolicyV1 } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
 import { captureOwnedProcess } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { buildBudgetMs } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
-import { readModuleTreeSource } from "../../../🧰️framework/🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 import { createHash } from "node:crypto";
 import { mkdtempSync, readFileSync } from "node:fs";
 import { isAbsolute, join } from "node:path";
 import { DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1 } from "@semio-tech/framework/directory/schema";
-import { parseDocumentOpenPlanV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🔏️document-open/🟦️.ts";
+import { parseDocumentOpenPlanV1 } from "@semio-tech/framework-os/modules/directory/schema/document-open";
 import { runRepositoryExactCargoLaws, configuredRepositoryCargoPreparationPolicyV1 } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { hubSchemaExport } from "../../📦️packages/🟦️typescript/🟦️.ts";
@@ -61,7 +61,7 @@ async function proveGisMapApprovalUndoFixture(repoRoot: string): Promise<number>
     if (JSON.stringify(actual) !== JSON.stringify(trace.expected)) throw new Error(`GIS Map approval undo trace mismatch: ${trace.name}`);
   }
   const runtime = readHubInferenceRuntimeSource(repoRoot);
-  const sqlite = readFileSync(join(repoRoot, "🌎️hub", "💡️inference", "🪶️sqlite", "🦀️.rs"), "utf8");
+  const sqlite = readModuleTreeSource(join(repoRoot, "🌎️hub", "💡️inference", "🪶️sqlite", "🦀️.rs"));
   const wal = readFileSync(join(repoRoot, "🌎️hub", "💡️inference", "🧾️wal", "🦀️.rs"), "utf8");
   const mcpDispatch = join(repoRoot, "🧰️framework", "\u{1F6CD}\uFE0Fproducts", "💻️os", "🔨️modules", "🌉️mcp", "🔀️dispatch");
   const mcp = readFileSync(join(mcpDispatch, "🦀️.rs"), "utf8") + readFileSync(join(mcpDispatch, "🔌️channel-port", "🦀️.rs"), "utf8");
@@ -154,7 +154,7 @@ async function proveGisInferenceRetainedRuntimeFixture(repoRoot: string): Promis
     if (JSON.stringify(actual) !== JSON.stringify(trace.expected)) throw new Error(`retained GIS inference trace mismatch: ${trace.name}`);
   }
   const runtime = readHubInferenceRuntimeSource(repoRoot);
-  const sqlite = readFileSync(join(repoRoot, "🌎️hub", "💡️inference", "🪶️sqlite", "🦀️.rs"), "utf8");
+  const sqlite = readModuleTreeSource(join(repoRoot, "🌎️hub", "💡️inference", "🪶️sqlite", "🦀️.rs"));
   const conforms = (runtimeSource: string, sqliteSource: string): boolean => {
     const supervisor = runtimeSource.slice(runtimeSource.indexOf("struct InferenceRunKeyV1"), runtimeSource.indexOf("/// 🏃️ The hub's only inference authority"));
     const worker = runtimeSource.slice(runtimeSource.indexOf("async fn finish_retained_gis_map_job"), runtimeSource.indexOf("fn owner_page_receipt"));
@@ -505,7 +505,7 @@ export async function proveGisMapProposalApprovalFixture(repoRoot: string): Prom
   if (!walRuntime.includes("active: AtomicBool") || !walRuntime.includes("self.active.store(false, Ordering::Release)") || walRuntime.includes("self.generation.store(0, Ordering::Release)")) {
     throw new Error("mounted actor generation zero is not independently fenced from invalidation");
   }
-  const sqliteRuntime = readFileSync(join(repoRoot, "🌎️hub", "💡️inference", "🪶️sqlite", "🦀️.rs"), "utf8");
+  const sqliteRuntime = readModuleTreeSource(join(repoRoot, "🌎️hub", "💡️inference", "🪶️sqlite", "🦀️.rs"));
   if (sqliteRuntime.includes("document_generation == 0") || !sqliteRuntime.includes("witness.matches(&scope, document_generation")) {
     throw new Error("initial actor generation zero cannot reach exact fenced ledger reconciliation");
   }
@@ -717,7 +717,7 @@ async function proveGisMapFrozenBindingFixture(repoRoot: string): Promise<number
   const catalog = readFileSync(join(repoRoot, "🌎️hub", "💡️inference", "📇️catalog", "🦀️.rs"), "utf8");
   const gisBinding = readFileSync(join(repoRoot, "🌎️hub", "🧩️compositions", "🌍️gis", "💡️inference", "🦀️.rs"), "utf8");
   if (!gisBinding.includes("semio_s_artifact_gis_gismap::gis_map_inference_service()")) throw new Error("the GIS Map inference binding no longer registers the literal native executable");
-  const trusted = readFileSync(join(repoRoot, "🌎️hub", "🗿️artifact-authority", "🔏️trusted-catalog", "🦀️.rs"), "utf8");
+  const trusted = readModuleTreeSource(join(repoRoot, "🌎️hub", "🗿️artifact-authority", "🔏️trusted-catalog", "🦀️.rs"));
   const startup = readHubBinSource(repoRoot);
   const required = [
     "VerifiedGisMapArtifactBindingV1",

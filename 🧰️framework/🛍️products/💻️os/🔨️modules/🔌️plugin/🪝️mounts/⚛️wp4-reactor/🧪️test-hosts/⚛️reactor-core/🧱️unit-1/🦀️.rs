@@ -54,9 +54,9 @@ mod package_asset_tests;
 #[cfg(test)]
 #[path = "../../../../../⚛️reactor/🧪️tests/🔬️command-ingress-terminal/🦀️.rs"]
 mod command_ingress_terminal_tests;
-#[cfg(test)]
+#[doc(hidden)]
 #[path = "../../../../../⚛️reactor/🧪️tests/⚛️reactor-driver/🦀️.rs"]
-pub(crate) mod reactor_driver;
+pub mod reactor_driver;
 #[cfg(test)]
 #[path = "../../../../../⚛️reactor/🧪️tests/🔬️m1-m2-reactor/🦀️.rs"]
 mod m1_m2_reactor_tests;

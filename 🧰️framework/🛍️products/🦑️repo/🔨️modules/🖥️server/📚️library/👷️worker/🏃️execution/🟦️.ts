@@ -4,7 +4,7 @@
 // #endregion 🧲️Header
 
 
-import { createOwnedServerJobQueue, type OwnedServerJob } from "../../../🎛️coordinator/🔌️ports/🟦️.ts";
+import { createOwnedServerJobQueue, type OwnedServerJob } from "@semio-tech/repo-coordinator/ports";
 import { DATABASE_URL, markDiscordDeliveryFailed, markDiscordDeliverySent } from "../../🗄️persistence/🟦️.ts";
 import { sendDiscordMessage } from "../../📡️event/🟦️.ts";
 

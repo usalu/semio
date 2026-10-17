@@ -5,13 +5,11 @@
 //! `create_object`/`connect_vortices` become `create-part`/`connect-grips` with a board position synthesized next
 //! to the host grip, and every `instance3d` trace record gains a `placement2d` twin for the board window.
 //! Contract: `📋️tool-run-contract.md` §2.7, §3.2, §3.7.
+use crate::editor::puzzle5d::view::engine_grip_kind;
 
 use crate::editor::puzzle5d::config::Puzzle5dConfig;
 use crate::editor::puzzle5d::precompute::geometry::Puzzle5dPointGrid;
-use crate::editor::puzzle5d::{
-    collect_mesh_urls, engine_grip_kind, grips_from_templates, puzzle5d_grip_full_id, resolve_part_mesh_url, world_grip_position, Puzzle5dDocument, Puzzle5dFastener, Puzzle5dGrip, Puzzle5dGrip2d, Puzzle5dGrip3d, Puzzle5dPart, Puzzle5dPart2d,
-    Puzzle5dPart3d, PUZZLE5D_BOARD_PLACEMENT_GAP, PUZZLE5D_DEFAULT_PART_RADIUS, PUZZLE5D_FALLBACK_MESH_KIND,
-};
+use crate::editor::puzzle5d::entities::{collect_mesh_urls, grips_from_templates, puzzle5d_grip_full_id, resolve_part_mesh_url, world_grip_position, Puzzle5dDocument, Puzzle5dFastener, Puzzle5dGrip, Puzzle5dGrip2d, Puzzle5dGrip3d, Puzzle5dPart, Puzzle5dPart2d, Puzzle5dPart3d, PUZZLE5D_BOARD_PLACEMENT_GAP, PUZZLE5D_DEFAULT_PART_RADIUS, PUZZLE5D_FALLBACK_MESH_KIND};
 use crate::editor::puzzle5d::snapshot::Puzzle5dPlaySnapshot;
 use crate::standards::v1::subsets::any::schema::mutations::{connect_grips,create_part,Puzzle5dMutation};
 
@@ -64,13 +62,13 @@ pub fn puzzle5d_mesh_lane(snapshot: &Puzzle5dPlaySnapshot, document: &Puzzle5dDo
 }
 
 /// 🎚️ The planner configuration a 5d configuration asks for.
-pub(crate) fn puzzle3d_config(config: &Puzzle5dConfig) -> Puzzle3dConfig {
+pub fn puzzle3d_config(config: &Puzzle5dConfig) -> Puzzle3dConfig {
     Puzzle3dConfig { fill_count: config.fill_count, contact_tolerance: config.contact_tolerance, object_kind_weights: config.object_kind_weights.clone(), vortex_kind_weights: config.vortex_kind_weights.clone(), ..Puzzle3dConfig::default() }
 }
 
 /// 🌉️ The puzzle 3d document the planner sees for a 5d document: parts as objects with their grips as vortices,
 /// fasteners as attractions, and the kind catalogs the planner places from.
-pub fn puzzle3d_snapshot(document: &Puzzle5dDocument, catalogs: Option<crate::Puzzle5dKindCatalogs>) -> Result<Puzzle3dPlaySnapshot, Fault> {
+pub fn puzzle3d_snapshot(document: &Puzzle5dDocument, catalogs: Option<crate::standards::v1::subsets::any::schema::document_records::Puzzle5dKindCatalogs>) -> Result<Puzzle3dPlaySnapshot, Fault> {
     let kind_compatibility = document.kind_compatibility.as_ref().map(|entries| semio_framework_value::FromValue::from_value(semio_framework_value::ToValue::to_value(entries))).transpose().map_err(|error: semio_framework_value::ValueError| Fault::from(format!("puzzle5d-planner-kind-compatibility: {error}")))?.unwrap_or_default();
     let typed = Puzzle3dSnapshot {
         schema: PUZZLE_3D_SCHEMA.into(),
@@ -86,15 +84,15 @@ pub fn puzzle3d_snapshot(document: &Puzzle5dDocument, catalogs: Option<crate::Pu
 
 /// 🗂️ The authored kind catalogs of a 5d play snapshot (`kindCatalogs` child plus its `kindCatalogsExtra` rows),
 /// or `None` when it authors none.
-pub fn puzzle5d_authored_kind_catalogs(snapshot: &Puzzle5dPlaySnapshot) -> Result<Option<crate::Puzzle5dKindCatalogs>, Fault> {
+pub fn puzzle5d_authored_kind_catalogs(snapshot: &Puzzle5dPlaySnapshot) -> Result<Option<crate::standards::v1::subsets::any::schema::document_records::Puzzle5dKindCatalogs>, Fault> {
     let typed = snapshot.typed();
-    Ok(crate::kind_catalogs_of(&typed.kind_catalogs, &typed.kind_catalogs_extra).filter(|catalogs| !catalogs.parts.is_empty()))
+    Ok(crate::standards::v1::subsets::any::schema::kind_catalogs::kind_catalogs_of(&typed.kind_catalogs, &typed.kind_catalogs_extra).filter(|catalogs| !catalogs.parts.is_empty()))
 }
 
 /// 🧰️ The planner's kind catalogs for a 5d document: its authored catalogs under the engine's naming, or — for a
 /// document that authors none — the kinds it already contains, each part kind with the grips of its first part
 /// as vortex templates and every grip kind as a vortex kind, so such a document fills with its own kinds.
-pub fn puzzle3d_kind_catalogs(document: &Puzzle5dDocument, authored: Option<crate::Puzzle5dKindCatalogs>) -> Result<Puzzle3dKindCatalogs, Fault> {
+pub fn puzzle3d_kind_catalogs(document: &Puzzle5dDocument, authored: Option<crate::standards::v1::subsets::any::schema::document_records::Puzzle5dKindCatalogs>) -> Result<Puzzle3dKindCatalogs, Fault> {
     if let Some(authored) = authored {
         let renamed = puzzle3d_catalog_names(semio_framework_value::ToValue::to_value(&authored), 0);
         return semio_framework_value::FromValue::from_value(renamed).map_err(|error: semio_framework_value::ValueError| Fault::from(format!("puzzle5d-planner-kind-catalogs: {error}")));
@@ -158,7 +156,7 @@ fn puzzle3d_catalog_names(value: semio_framework_value::DslValue, depth: usize) 
     }
 }
 
-pub(crate) fn puzzle3d_object(part: &Puzzle5dPart, kind_catalogs: Option<&semio_framework_pack_json::Value>) -> Puzzle3dObject {
+pub fn puzzle3d_object(part: &Puzzle5dPart, kind_catalogs: Option<&semio_framework_pack_json::Value>) -> Puzzle3dObject {
     Puzzle3dObject {
         id: part.id.clone(),
         label: None,
@@ -189,7 +187,7 @@ fn puzzle3d_scale(scale: &semio_framework_pack_json::Value) -> Option<Puzzle3dSc
 /// 🧊️ One 5d target volume as the planner's own: the box is already stated in the 3d pose space both
 /// artifacts share, so the bridge renames the type and nothing else. A HIDDEN volume still constrains
 /// — `hidden` is a paint flag, and dropping it here would silently widen the fill region.
-pub(crate) fn puzzle3d_target_volume(volume: &crate::editor::puzzle5d::Puzzle5dTargetVolume) -> semio_s_artifact_puzzle_3d_model::Puzzle3dTargetVolume {
+pub fn puzzle3d_target_volume(volume: &crate::editor::puzzle5d::entities::Puzzle5dTargetVolume) -> semio_s_artifact_puzzle_3d_model::Puzzle3dTargetVolume {
     semio_s_artifact_puzzle_3d_model::Puzzle3dTargetVolume {
         id: volume.id.clone(),
         origin: volume.origin,
@@ -204,11 +202,11 @@ fn puzzle3d_attraction(fastener: &Puzzle5dFastener) -> Puzzle3dAttraction {
     Puzzle3dAttraction { id: fastener.id.clone(), attracting: fastener.source.clone(), attracted: fastener.target.clone(), gap: fastener.gap, shift: fastener.shift, rise: fastener.rise, rotation: fastener.rotation, turn: fastener.turn, tilt: fastener.tilt, x: fastener.x, y: fastener.y }
 }
 
-pub(crate) fn editor_part(part: &crate::Puzzle5dPart) -> Result<Puzzle5dPart, Fault> {
+pub fn editor_part(part: &crate::standards::v1::subsets::any::schema::document_records::Puzzle5dPart) -> Result<Puzzle5dPart, Fault> {
     <Puzzle5dPart as semio_framework_value::FromValue>::from_value(semio_framework_value::ToValue::to_value(part)).map_err(|error| Fault::from(format!("puzzle5d-planner-part: {error}")))
 }
 
-fn schema_part(part: &Puzzle5dPart) -> Result<crate::Puzzle5dPart, Fault> {
+fn schema_part(part: &Puzzle5dPart) -> Result<crate::standards::v1::subsets::any::schema::document_records::Puzzle5dPart, Fault> {
     semio_framework_value::FromValue::from_value(semio_framework_value::ToValue::to_value(part)).map_err(|error: semio_framework_value::ValueError| Fault::from(format!("puzzle5d-planner-part: {error}")))
 }
 //#endregion 🔖️Document
@@ -295,7 +293,7 @@ impl Puzzle5dPlannerBoard {
     /// committed part and every provisional placement of the run, so a filled part is numbered in the same
     /// series a hand-placed one would join (`puzzle5d_next_part_label`'s contract, over the board).
     fn next_label(&self, part_kind: &str) -> String {
-        let base = crate::editor::puzzle5d::puzzle5d_kind_catalog_label(&self.catalogs, part_kind);
+        let base = crate::editor::puzzle5d::catalog::puzzle5d_kind_catalog_label(&self.catalogs, part_kind);
         let peers = self.parts.iter().filter(|part| part.part_kind == part_kind).count();
         if peers == 0 { base } else { format!("{base} {}", peers.saturating_add(1)) }
     }
@@ -450,7 +448,7 @@ pub struct Puzzle5dPlannerToolRunJob {
     preview_sequence: u64,
     outbox: crate::puzzle_job::JobOutbox,
     closing: bool,
-    pub(crate) clock: fn() -> Option<u64>,
+    pub clock: fn() -> Option<u64>,
 }
 
 impl Puzzle5dPlannerToolRunJob {

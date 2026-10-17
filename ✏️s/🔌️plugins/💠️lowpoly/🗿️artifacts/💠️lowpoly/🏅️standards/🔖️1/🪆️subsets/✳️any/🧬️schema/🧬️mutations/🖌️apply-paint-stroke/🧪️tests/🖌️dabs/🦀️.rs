@@ -6,12 +6,13 @@
 //! 🖌️ Three red dabs run diagonally across the opaque-white base layer of obj-hull: each one paints a soft disc, the later dabs overpainting where they overlap.
 
 use crate::laws;
+use semio_framework_test_fixtures::fixture_path;
 
-static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧪️tests/🧫️fixtures/🧬️mutations/🖌️apply-paint-stroke/🖌️dabs/📸️snapshot/⬅️before/🔣️.json")).expect("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🖌️apply-paint-stroke/🖌️dabs/📸️snapshot/⬅️before/🔣️.json").leak());
-static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧪️tests/🧫️fixtures/🧬️mutations/🖌️apply-paint-stroke/🖌️dabs/📸️snapshot/➡️after/🔣️.json")).expect("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🖌️apply-paint-stroke/🖌️dabs/📸️snapshot/➡️after/🔣️.json").leak());
-static MUTATION: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧪️tests/🧫️fixtures/🧬️mutations/🖌️apply-paint-stroke/🖌️dabs/🦠️mutation/🔣️.json")).expect("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🖌️apply-paint-stroke/🖌️dabs/🦠️mutation/🔣️.json").leak());
-static DIFF: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧪️tests/🧫️fixtures/🧬️mutations/🖌️apply-paint-stroke/🖌️dabs/🔺️diff/🔣️.json")).expect("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🖌️apply-paint-stroke/🖌️dabs/🔺️diff/🔣️.json").leak());
-static OUTCOME: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧪️tests/🧫️fixtures/🧬️mutations/🖌️apply-paint-stroke/🖌️dabs/🎯️outcome/🔣️.json")).expect("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🖌️apply-paint-stroke/🖌️dabs/🎯️outcome/🔣️.json").leak());
+static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| std::fs::read_to_string(fixture_path!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🖌️apply-paint-stroke/🖌️dabs/📸️snapshot/⬅️before/🔣️.json")).expect("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🖌️apply-paint-stroke/🖌️dabs/📸️snapshot/⬅️before/🔣️.json").leak());
+static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| std::fs::read_to_string(fixture_path!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🖌️apply-paint-stroke/🖌️dabs/📸️snapshot/➡️after/🔣️.json")).expect("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🖌️apply-paint-stroke/🖌️dabs/📸️snapshot/➡️after/🔣️.json").leak());
+static MUTATION: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| std::fs::read_to_string(fixture_path!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🖌️apply-paint-stroke/🖌️dabs/🦠️mutation/🔣️.json")).expect("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🖌️apply-paint-stroke/🖌️dabs/🦠️mutation/🔣️.json").leak());
+static DIFF: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| std::fs::read_to_string(fixture_path!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🖌️apply-paint-stroke/🖌️dabs/🔺️diff/🔣️.json")).expect("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🖌️apply-paint-stroke/🖌️dabs/🔺️diff/🔣️.json").leak());
+static OUTCOME: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| std::fs::read_to_string(fixture_path!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🖌️apply-paint-stroke/🖌️dabs/🎯️outcome/🔣️.json")).expect("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🖌️apply-paint-stroke/🖌️dabs/🎯️outcome/🔣️.json").leak());
 
 /// ▶️ The stroke carries `before` to exactly the committed `after` and produces exactly the committed delta.
 #[test]

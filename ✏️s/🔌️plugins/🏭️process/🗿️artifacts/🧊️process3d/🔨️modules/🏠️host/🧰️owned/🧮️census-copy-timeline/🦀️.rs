@@ -239,7 +239,7 @@ pub(super) fn process3d_fault_detail(code: &[u8]) -> Vec<u8> {
 
 #[derive(semio_framework_value::RetireOwned)]
 pub(super) struct Process3dTimelineOwner {
-    steps: Vec<ProcessStep>,
+    pub(super) steps: Vec<ProcessStep>,
     tools: Vec<store::os_store::artifact_child::ArtifactChild<semio_s_artifact_stdio_semio_brep::schema::snapshot::SemioBrepSnapshot>>,
     flow: Option<store::os_store::artifact_child::ArtifactChild<semio_s_artifact_stdio_semio_flow::schema::snapshot::SemioFlowSnapshot>>,
     pub(super) phase: u8,

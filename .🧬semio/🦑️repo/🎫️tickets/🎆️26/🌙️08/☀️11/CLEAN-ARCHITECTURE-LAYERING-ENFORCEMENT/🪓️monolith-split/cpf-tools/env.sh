@@ -1,0 +1,5 @@
+export F="/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split"
+export G="$F/🗑️generated"
+export T="$F/cpf-tools"
+export R="/Users/ueli/Documents/semio"
+cd "$R"

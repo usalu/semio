@@ -38,7 +38,6 @@ fn typed_read_registry_retains_every_original_sparse_wrap_and_starvation_vector(
         for read in leases.iter_mut().filter_map(Option::as_mut){drain(read,3);}
         let mut close=SharedControlledRetirement::new(registry);drain(&mut close,3);assert!(close.terminal_is_empty());
     }
-    eprintln!("[DEBUG] Typed read registry preserved all original sparse/wrap/starvation vectors");
 }
 
 #[test]
@@ -56,7 +55,7 @@ fn typed_read_registry_ctor_return_source_and_cancel_conserve_actual_heap_with_f
         let((mut source,p),heap)=observe_retirement_allocations(||read.admit_source(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:source_copy,maximum_capacity_bytes:source_bytes,maximum_depth:1,..Default::default()}).unwrap_or_else(|_|panic!("original typed source admission")));assert_eq!(heap,(p.retained_capacity_bytes,0));assert_eq!(p.copied_bytes,source_copy);births+=heap.0;assert_eq!(source.borrow().get()as*const String,pointer);assert_eq!(source.borrow().get(),text);
         let mut capsule=recover_source(&mut source,&mut births,&mut released);let handoff=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:size_of::<ReadLease<String>>(),maximum_depth:1,..Default::default()};for currency in law["sourceHandbackRefusals"].as_array().unwrap(){let denied=match currency.as_str().unwrap(){"items"=>RetainedCloneGrant{maximum_items:0,..handoff},"copy"=>RetainedCloneGrant{maximum_copy_bytes:handoff.maximum_copy_bytes-1,..handoff},"depth"=>RetainedCloneGrant{maximum_depth:0,..handoff},_=>unreachable!()};let(result,heap)=observe_retirement_allocations(||capsule.into_read(denied));let(_,original)=result.err().unwrap();capsule=original;assert_eq!(heap,(0,0));assert_eq!(capsule.get()as*const String,pointer);}
         let((mut read,p),heap)=observe_retirement_allocations(||capsule.into_read(handoff).unwrap_or_else(|_|panic!("original typed read handoff")));assert!(p.fits(handoff));assert_eq!(heap,(0,0));assert_eq!(read.get()as*const String,pointer);
-        let(b,r,_)=drain(&mut read,copy);births+=b;released+=r;let mut close=SharedControlledRetirement::lease(registry);let(b,r,_)=drain(&mut close,copy);births+=b;released+=r;assert_eq!(released,original+births);assert_eq!(observe_retirement_allocations(||drop(source)).1,(0,0));eprintln!("[DEBUG] Typed original source handback copy={copy} original={original} births={births} physical={released}");
+        let(b,r,_)=drain(&mut read,copy);births+=b;released+=r;let mut close=SharedControlledRetirement::lease(registry);let(b,r,_)=drain(&mut close,copy);births+=b;released+=r;assert_eq!(released,original+births);assert_eq!(observe_retirement_allocations(||drop(source)).1,(0,0));
     }}
 }
 
@@ -75,7 +74,7 @@ fn erased_read_authority_retains_typed_roots_and_every_alias_until_full_physical
         let(b,r,_)=drain(&mut read,copy);births+=b;released+=r;
         let(b,r,_)=drain(&mut authority,copy);births+=b;released+=r;
         for alias in &mut aliases{let(b,r,_)=drain(alias,copy);births+=b;released+=r;}
-        assert_eq!(released,original+births);eprintln!("[DEBUG] Erased typed read authority aliases={count} copy={copy} original={original} births={births} physical={released}");
+        assert_eq!(released,original+births);
     }}
 }
 
@@ -90,7 +89,6 @@ fn erased_read_admission_preserves_original_pointer_and_cancelled_full_frame_rec
         let((mut read,p),heap)=observe_retirement_allocations(||ErasedReadLease::admit(read,g).unwrap_or_else(|_|panic!("exact erased read frame admission")));assert!(p.fits(g));assert_eq!(heap,(p.retained_capacity_bytes,0));births+=heap.0;assert_eq!(read.get::<String>().unwrap()as*const String,pointer);assert!(read.get::<u64>().is_none());assert_eq!(serde_json::to_value(read.get::<String>().unwrap()).unwrap(),"erased λ🙂");
         for _ in 0..cancel{if read.terminal_is_empty(){break;}let g=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:read.next_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:read.next_release_byte_demand().unwrap(),maximum_depth:read.next_depth_demand().unwrap()};let(step,heap)=observe_retirement_allocations(||read.close_step(g).unwrap());assert!(step.progress().fits(g));assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));births+=heap.0;released+=heap.1;}
         let(b,r,_)=drain(&mut read,copy);births+=b;released+=r;let(b,r,_)=drain(&mut authority,copy);births+=b;released+=r;assert_eq!(released,original+births);
-        eprintln!("[DEBUG] Erased read physical cancellation copy={copy} at={cancel} original={original} births={births} physical={released}");
     }}
 }
 
@@ -106,7 +104,7 @@ fn erased_read_authority_close_order_preserves_original_root_and_full_physical_r
         if order=="authority-first"{let(b,r,_)=drain(&mut authority,copy);births+=b;released+=r;assert_eq!(read.get::<String>().unwrap()as*const String,pointer);assert_eq!(serde_json::to_value(read.get::<String>().unwrap()).unwrap(),"last-reader λ🙂");}
         let(b,r,_)=drain(&mut read,copy);births+=b;released+=r;
         if order=="read-first"{let(b,r,_)=drain(&mut authority,copy);births+=b;released+=r;}
-        assert_eq!(released,original+births);eprintln!("[DEBUG] Erased read close order={order} copy={copy} original={original} births={births} physical={released}");
+        assert_eq!(released,original+births);
     }}
 }
 
@@ -127,6 +125,6 @@ fn erased_read_source_retains_original_id_commit_authority_and_root_after_read_r
         let(b,r,_)=drain(&mut authority,copy);born+=b;released+=r;assert!(authority.terminal_is_empty());assert_eq!(source.borrow().get()as*const String,pointer);assert_eq!(source.borrow().get().as_str(),vector["text"].as_str().unwrap());
         let mut capsule=recover_source(&mut source,&mut born,&mut released);let handoff=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:size_of::<ErasedReadLease>(),maximum_depth:1,..Default::default()};for currency in law["sourceHandbackRefusals"].as_array().unwrap(){let denied=match currency.as_str().unwrap(){"items"=>RetainedCloneGrant{maximum_items:0,..handoff},"copy"=>RetainedCloneGrant{maximum_copy_bytes:handoff.maximum_copy_bytes-1,..handoff},"depth"=>RetainedCloneGrant{maximum_depth:0,..handoff},_=>unreachable!()};let(result,heap)=observe_retirement_allocations(||capsule.into_read(denied));let(_,original)=result.err().unwrap();capsule=original;assert_eq!(heap,(0,0));assert_eq!(capsule.get()as*const String,pointer);}
         let((mut read,p),heap)=observe_retirement_allocations(||capsule.into_read(handoff).unwrap_or_else(|_|panic!("original erased read handoff")));assert!(p.fits(handoff));assert_eq!(heap,(0,0));assert_eq!(read.id(),Some(id));assert!(read.commit_authority_matches(generation,revision));assert_eq!(read.get::<String>().unwrap()as*const String,pointer);let(b,r,_)=drain(&mut read,copy);born+=b;released+=r;
-        assert!(source.terminal_is_empty());assert_eq!(released,original+born);assert_eq!(observe_retirement_allocations(||drop(source)).1,(0,0));assert_eq!(observe_retirement_allocations(||drop(read)).1,(0,0));assert_eq!(observe_retirement_allocations(||drop(authority)).1,(0,0));eprintln!("[DEBUG] Erased original source handback id={id:?} generation={generation} copy={copy} original={original} born={born} physical={released}");
+        assert!(source.terminal_is_empty());assert_eq!(released,original+born);assert_eq!(observe_retirement_allocations(||drop(source)).1,(0,0));assert_eq!(observe_retirement_allocations(||drop(read)).1,(0,0));assert_eq!(observe_retirement_allocations(||drop(authority)).1,(0,0));
     }
 }

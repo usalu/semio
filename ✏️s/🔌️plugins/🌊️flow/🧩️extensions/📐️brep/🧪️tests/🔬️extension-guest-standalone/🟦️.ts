@@ -10,7 +10,7 @@ import { BoxGeometry, Vector3 } from "three";
 export function channelIdentityOracle(directory: string): number {
   const root = resolve(directory, "../..");
   const fixture = JSON.parse(readFileSync(resolve(root, "🧪️tests/🧫️fixtures/🪪️channels/🔣️.json"), "utf8"));
-  const bundle = JSON.parse(readFileSync(resolve(root, "🔣️.json"), "utf8"));
+  const bundle = JSON.parse(readFileSync(resolve(root, "🧩️component/🔣️.json"), "utf8"));
   const contributions = [...bundle.contributions.topicContributions, ...bundle.manifest.topicContributions];
   const manifests = contributions.filter((entry: { payload: { manifestJson?: string } }) => entry.payload.manifestJson).map((entry: { payload: { manifestJson: string } }) => JSON.parse(entry.payload.manifestJson));
   const validate = new Ajv2020({ strict: true }).compile(JSON.parse(readFileSync(resolve(root, "🧬️schema/🪪️channels/🔣️.json"), "utf8")));

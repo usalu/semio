@@ -1,3 +1,4 @@
+use semio_framework_test_fixtures::fixture_text;
 use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::transform::from_value;
 use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::transform::to_value;
 use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::transform::DslValue;
@@ -5,7 +6,7 @@ use serde_json::Value as Json;
 
 #[test]
 fn pptx_transform_wire_vectors_match_independent_serde_signed64() {
-    let corpus: Json = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/📸️snapshot/🧭️transform/🔣️.json")).unwrap();
+    let corpus: Json = serde_json::from_str(&fixture_text!("../../🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/📸️snapshot/🧭️transform/🔣️.json").to_owned()).unwrap();
     let rows = corpus["vectors"].as_array().unwrap();
     assert_eq!(rows.len(), 16);
     for row in rows {

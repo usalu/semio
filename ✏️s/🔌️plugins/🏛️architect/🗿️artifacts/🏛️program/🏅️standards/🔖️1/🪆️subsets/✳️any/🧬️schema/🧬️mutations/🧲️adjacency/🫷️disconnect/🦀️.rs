@@ -4,7 +4,7 @@
 //! Phase 2). Behavior unchanged from the wave-2 pass — pure directory/module restructuring.
 
 use crate::standards::v1::subsets::any::schema::kernel::EntityId;
-use crate::standards::v1::subsets::any::schema::{diff::ProgramDiff, mutations::ProgramMutation, snapshot::ProgramSnapshot};
+use crate::standards::v1::subsets::any::schema::{diff::ProgramDiff, snapshot::ProgramSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 
 /// ✂️ Removes one adjacency edge by its own id.
@@ -17,12 +17,15 @@ use protocol::{MutationKind, SemanticDescriptor};
 pub struct DisconnectAdjacency {
     pub id: EntityId,
 }
-impl MutationKind<ProgramSnapshot, ProgramMutation> for DisconnectAdjacency {
+impl<Op> MutationKind<ProgramSnapshot, Op> for DisconnectAdjacency
+where
+    Op: protocol::Mutation<ProgramSnapshot, Diff = ProgramDiff> + From<DisconnectAdjacency> + From<crate::standards::v1::subsets::any::schema::mutations::connect_adjacency::ConnectAdjacency>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "disconnect", entity: "adjacency", kind: "disconnect-adjacency", record: "DisconnectedAdjacency" };
     fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &ProgramSnapshot) -> Result<Vec<ProgramMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &ProgramSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

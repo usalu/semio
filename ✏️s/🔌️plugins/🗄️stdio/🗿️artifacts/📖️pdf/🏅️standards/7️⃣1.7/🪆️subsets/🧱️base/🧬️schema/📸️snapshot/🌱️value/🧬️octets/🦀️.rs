@@ -77,13 +77,13 @@ impl FromValue for PdfObject{
     fn edit_value_at_path(&mut self,path:&[&str],edit:pack::value::ValueEdit)->Result<(),E>{pack::value::edit_through_value(self,path,edit)}
 }
 /// 🪪️ The document ID is exactly two independently owned intrinsic octet strings.
-pub(crate)fn document_id_to_value(value:&Option<[Vec<u8>;2]>)->V{value.as_ref().map_or(V::Null,|value|V::Array(vec![pack::value::bytes::to_value(&value[0]),pack::value::bytes::to_value(&value[1])]))}
-pub(crate)fn document_id_from_value(value:V)->Result<Option<[Vec<u8>;2]>,E>{match value{V::Null=>Ok(None),V::Array(mut values)if values.len()==2=>{let right=pack::value::bytes::from_value(values.pop().unwrap())?;let left=pack::value::bytes::from_value(values.pop().unwrap())?;Ok(Some([left,right]))},_=>Err(E::new(semio_framework_value::ValueRefusalKind::InvalidValue, "PDF document ID requires exactly two intrinsic octet strings"))}}
+pub fn document_id_to_value(value:&Option<[Vec<u8>;2]>)->V{value.as_ref().map_or(V::Null,|value|V::Array(vec![pack::value::bytes::to_value(&value[0]),pack::value::bytes::to_value(&value[1])]))}
+pub fn document_id_from_value(value:V)->Result<Option<[Vec<u8>;2]>,E>{match value{V::Null=>Ok(None),V::Array(mut values)if values.len()==2=>{let right=pack::value::bytes::from_value(values.pop().unwrap())?;let left=pack::value::bytes::from_value(values.pop().unwrap())?;Ok(Some([left,right]))},_=>Err(E::new(semio_framework_value::ValueRefusalKind::InvalidValue, "PDF document ID requires exactly two intrinsic octet strings"))}}
 
 fn cos_owned<T:FromValue>(value:&V,control:&mut pack::value::NativeDecodeControl<'_>)->Result<pack::value::DecodedValue<T>,E>{let value=T::from_value_controlled(value,control)?;let owner=pack::value::DecodedValue::new(value,T::retire_decoded);control.step()?;Ok(owner)}
 fn cos_bytes(value:&V,control:&mut pack::value::NativeDecodeControl<'_>)->Result<Vec<u8>,E>{match value{V::Bytes(bytes)=>control.copy_bytes(bytes),V::Array(_)=>Vec::<u8>::from_value_controlled(value,control),_=>Err(E::new(semio_framework_value::ValueRefusalKind::InvalidValue, "PDF intrinsic octet string requires bytes or canonical octets"))}}
 /// 🪪️ Borrowed document ID admission copies its two explicit octet fields under one control.
-pub(crate)fn document_id_from_value_controlled(value:&V,control:&mut pack::value::NativeDecodeControl<'_>)->Result<Option<[Vec<u8>;2]>,E>{control.scoped_stage(|control|match value{V::Null=>Ok(None),V::Array(values)if values.len()==2=>{control.begin_stage(2)?;let left=cos_bytes(&values[0],control)?;control.step()?;let right=cos_bytes(&values[1],control)?;control.step()?;Ok(Some([left,right]))},_=>Err(E::new(semio_framework_value::ValueRefusalKind::InvalidValue, "PDF document ID requires exactly two intrinsic octet strings"))})}
+pub fn document_id_from_value_controlled(value:&V,control:&mut pack::value::NativeDecodeControl<'_>)->Result<Option<[Vec<u8>;2]>,E>{control.scoped_stage(|control|match value{V::Null=>Ok(None),V::Array(values)if values.len()==2=>{control.begin_stage(2)?;let left=cos_bytes(&values[0],control)?;control.step()?;let right=cos_bytes(&values[1],control)?;control.step()?;Ok(Some([left,right]))},_=>Err(E::new(semio_framework_value::ValueRefusalKind::InvalidValue, "PDF document ID requires exactly two intrinsic octet strings"))})}
 
 fn cos_output<T:ToValue+?Sized>(fields:&mut Vec<(String,V)>,key:&str,value:&T,control:&mut pack::value::NativeEncodeControl<'_>)->Result<(),E>{
     let key_owned=control.copy_text(key)?;let value=value.to_value_controlled(control).map_err(|error|error.under(key))?;fields.push((key_owned,value));control.step()
@@ -92,7 +92,7 @@ fn cos_output_bytes(fields:&mut Vec<(String,V)>,key:&str,bytes:&[u8],control:&mu
     let key_owned=control.copy_text(key)?;let value=pack::value::bytes::to_value_controlled(bytes,control).map_err(|error|error.under(key))?;fields.push((key_owned,value));control.step()
 }
 /// 🪪️ Projects the two intrinsic document-ID octets through one admitted native output frontier.
-pub(crate)fn document_id_to_value_controlled(value:&Option<[Vec<u8>;2]>,control:&mut pack::value::NativeEncodeControl<'_>)->Result<V,E>{
+pub fn document_id_to_value_controlled(value:&Option<[Vec<u8>;2]>,control:&mut pack::value::NativeEncodeControl<'_>)->Result<V,E>{
     control.scoped_depth(64,|control|control.scoped_stage(|control|match value{
         None=>().to_value_controlled(control),Some(values)=>{control.begin_stage(2)?;let mut output=Vec::<V>::guard_decoded(control.allocate_vec(2)?);for(index,value)in values.iter().enumerate(){output.get_mut().push(pack::value::bytes::to_value_controlled(value,control).map_err(|error|error.under(index))?);control.step()?;}Ok(V::Array(output.take()))}
     }))

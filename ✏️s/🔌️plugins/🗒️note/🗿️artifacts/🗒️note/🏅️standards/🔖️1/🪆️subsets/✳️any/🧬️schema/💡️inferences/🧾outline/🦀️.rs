@@ -52,8 +52,5 @@ impl NoteOutline {
 }
 //#endregion 🔖️Outline
 
-#[cfg(test)]
-//#region 🧪️Tests
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

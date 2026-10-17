@@ -1,5 +1,6 @@
 use crate::io::text::mutations::{decode_ui_preferences_config_mutation_json};
 use super::*;
+use semio_framework_test_fixtures::fixture_path;
 
 #[test]
 fn opening_preferences_default_is_empty() {
@@ -12,7 +13,7 @@ fn opening_preferences_default_is_empty() {
 /// (`🖱️ui/🎨️styling/🧪️tests/🧩️suite/🟦️.ts`); this half replays the very same event logs through the
 /// OS config projection that owns the vocabulary, so a boot script that agreed with itself but not
 /// with the shell would still fail.
-static APPEARANCE_BOOT_FIXTURE_JSON: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../🔨️modules/🖱️ui/🎨️styling/🧪️tests/🧫️fixtures/🌓️appearance-boot.json")).expect("fixture"));
+static APPEARANCE_BOOT_FIXTURE_JSON: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(fixture_path!("../../../../../../../🔨️modules/🖱️ui/🎨️styling/🧪️tests/🧫️fixtures/🌓️appearance-boot.json")).expect("fixture"));
 
 /// ⚖️ LAW: replaying a case's `events` through `apply_ui_preferences_config_mutation` yields the
 /// `appearance` the fixture declares — the projection the head script has to reproduce by hand.

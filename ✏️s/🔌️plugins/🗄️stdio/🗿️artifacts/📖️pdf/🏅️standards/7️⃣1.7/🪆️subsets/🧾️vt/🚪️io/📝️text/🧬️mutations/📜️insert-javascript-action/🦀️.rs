@@ -1,6 +1,6 @@
 //! 📜️ Direct text codec for `insert-javascript-action`.
 
-use crate::standards::v1_7::subsets::vt::schema::mutations::InsertJavascriptAction;
+use crate::standards::v1_7::subsets::vt::schema::mutations::insert_javascript_action::InsertJavascriptAction;
 
 //#region 🔖️Identity
 pub const OPCODE: &str = "insert-javascript-action";
@@ -21,7 +21,5 @@ pub fn parse(text: &str) -> Result<InsertJavascriptAction, String> {
 //#endregion 🔖️Codec
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

@@ -84,7 +84,6 @@ fn accepted_rows_decode_like_serde_and_round_trip_exactly() {
         assert!(decoded.heap.released_bytes >= decoded.progress.released_bytes, "{name}: decode releases are never over-reported");
         assert!(decoded.progress.fits(grant(&fixture)), "{name}");
         assert_eq!((decoded.closure.requested_bytes, decoded.closure.released_bytes), (0, 0), "{name}: completed receiving leaves no pending retirement");
-        eprintln!("[DEBUG] decode {name} heap=({},{}) receipt={:?}", decoded.heap.requested_bytes, decoded.heap.released_bytes, decoded.progress);
         let encoded = encode_with(&value, &fixture, grant(&fixture), &alive());
         let bytes_out = encoded.result.unwrap_or_else(|error| panic!("{name}: {error}"));
         assert_eq!((encoded.heap.requested_bytes, encoded.heap.released_bytes), (encoded.progress.retained_capacity_bytes, encoded.progress.released_bytes), "{name}: encode heap equals accepted receipts on both axes");
@@ -134,5 +133,4 @@ fn undersized_grants_and_cancellation_refuse_typed_without_leaking() {
     let encoded = encode_with(&value, &fixture, grant(&fixture), &dead);
     assert_eq!(encoded.result.as_ref().unwrap_err().kind, ValueRefusalKind::Canceled);
     assert_eq!(refused_net(&encoded), 0, "canceled encode: no leak");
-    eprintln!("[DEBUG] presence JSON native codec refuses undersized grants and cancellation without leaking");
 }

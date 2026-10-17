@@ -1,5 +1,6 @@
 //! 🧪️ Language-neutral chart replay vectors and real inference registry dispatch.
 use crate::io::text::inferences::ChartTextOutput;
+use semio_framework_test_fixtures::fixture_path;
 
 #[test]
 fn semantic_chart_inference_owns_values_and_io_owns_native_text(){
@@ -13,7 +14,6 @@ fn semantic_chart_inference_owns_values_and_io_owns_native_text(){
     assert_eq!(keys(&semantic),fixture["semanticKeys"].as_array().unwrap().iter().map(|value|value.as_str().unwrap().to_string()).collect::<Vec<_>>());
     assert_eq!(keys(&native),fixture["nativeKeys"].as_array().unwrap().iter().map(|value|value.as_str().unwrap().to_string()).collect::<Vec<_>>());
     assert!(native["tikz"].as_str().unwrap().contains("\\begin{VizFigure}"));
-    println!("[DEBUG] typed chart inference/native text boundary oracle=serde_json");
 }
 use crate::*;
 use semio_framework_value::{DslValue,FromValue,ToValue};
@@ -24,14 +24,12 @@ fn io_value_declarations_preserve_neutral_omission_null_and_unicode(){
  let neutral:serde_json::Value=serde_json::from_str(crate::text("🚪️io/🧪️tests/🧫️fixtures/🏛️ownership/🔣️.json")).unwrap();
  for row in neutral["cases"].as_array().unwrap(){let input=DslValue::from(&row["value"]);let output=match row["kind"].as_str().unwrap(){"mutation"=>ChangeChartValue::from_value(input).unwrap().to_value(),"edit"=>ChartEdit::from_value(input).unwrap().to_value(),"diff"=>ChartDiff::from_value(input).unwrap().to_value(),_=>unreachable!()};assert_eq!(serde_json::Value::from(output),row["value"]);}
  for row in neutral["refused"].as_array().unwrap(){let input=DslValue::from(&row["value"]);assert!(match row["kind"].as_str().unwrap(){"mutation"=>ChangeChartValue::from_value(input).is_err(),"edit"=>ChartEdit::from_value(input).is_err(),_=>unreachable!()});}
- eprintln!("[DEBUG] Print original native IO value declarations preserve seven neutral null/omission/unicode vectors and four refusals; independent Serde agrees");
 }
 
 #[test]
 fn semantic_chart_validation_borrows_authored_fields(){
  let neutral:serde_json::Value=serde_json::from_str(crate::text("🚪️io/🧪️tests/🧫️fixtures/🏛️ownership/🔣️.json")).unwrap();
  for row in neutral["validation"].as_array().unwrap(){let snapshot=ChartSnapshot{chart:DslValue::from(&row["chart"])};let before=serde_json::Value::from(&snapshot.chart);assert_eq!(crate::inferences::validate_chart(&snapshot).is_ok(),row["valid"].as_bool().unwrap(),"{row}");assert_eq!(serde_json::Value::from(&snapshot.chart),before);}
- eprintln!("[DEBUG] Print semantic validation borrowed seven neutral authored chart fields without changing input; independent Serde agrees");
 }
 
 fn fixture() -> serde_json::Value { serde_json::from_str(crate::text("🧪️tests/🧫️fixtures/🧬️chart-mutations/🔣️.json")).unwrap() }
@@ -232,7 +230,6 @@ fn canonical_customization_emits_neutral_mutation_vectors(){
   if let Some(root)=std::env::var_os("PRINT_NATIVE_OPTION_TIKZ"){std::fs::create_dir_all(&root).unwrap();std::fs::write(std::path::Path::new(&root).join(format!("{}.tex",case["id"].as_str().unwrap())),inference.tikz).unwrap();}
   assert_eq!(before,ChartSnapshot::from_value(DslValue::from(case["snapshot"].clone())).unwrap());
  }
- eprintln!("[DEBUG] Canonical Rust authored option mutations inferred; emitted source awaits actual native compiler adjudication");
 }
 #[test]
 fn typed_rows_preserve_null_strings_booleans_and_color_fallback_alpha(){
@@ -293,7 +290,6 @@ fn paged_chart_original_operation_keeps_exact_variants_policy_and_source_owner()
     let mut cancel=|work:semio_framework_value::native_encoding::NativeEncodeProgress|work.completed<1024;let mut encoding=NativeEncodeControl::new(allocation,&mut cancel);
     assert_eq!(kind(operation.encode_op_into(&options,&mut prefix,&mut encoding).unwrap_err()),semio_framework_value::ValueRefusalKind::Canceled);
     assert!(prefix.len()<expected.len());assert!(prefix.iter().eq(expected[..prefix.len()].iter().copied()));close(&mut prefix);
-    println!("[DEBUG] Original Chart8194 text source preserves [1,1], UInt/Int/-0float and whole-frame caller policy under512 metadata with exact refusal prefix and fixed4096 terminal page return");
 }
 /// 🛃️ Neutral descriptor primitives and grammar alternatives survive actual mutation replay before native compilation.
 #[test]
@@ -305,7 +301,7 @@ fn canonical_option_descriptor_admission(){
   if valid&&result.complete{if let Some(root)=std::env::var_os("PRINT_NATIVE_OPTION_TIKZ"){let root=std::path::Path::new(&root).join("admission");std::fs::create_dir_all(&root).unwrap();std::fs::write(root.join(format!("{}.tex",case["id"].as_str().unwrap())),result.tikz).unwrap();}}
   assert_eq!(before,ChartSnapshot::from_value(DslValue::from(case["snapshot"].clone())).unwrap());
  }
- assert!(failures.is_empty(),"{}",failures.join("\n"));eprintln!("[DEBUG] Rust declared option admission: 58 neutral en/de actual mutation/replay/inference controls PASS; valid emission requires actual native compiler");
+ assert!(failures.is_empty(),"{}",failures.join("\n"));
 }
 /// 🗺️ Authored structured spatial carriers require valid replay and native geometry emission in both languages.
 #[test]
@@ -320,7 +316,7 @@ fn canonical_spatial_data_mutation_vectors(){
   if valid&&result.complete{emit_native_grammar_source("spatial", &format!("{id}.tex"), &result.tikz);}
   assert_eq!(before.chart.get("tables"),None);
  }}
- assert!(failures.is_empty(),"{}",failures.join("\n"));eprintln!("[DEBUG] Native spatial Rust: {} valid and{} invalid carriers in en/de and light/dark passed canonical mutation/inverse/inference/progress/cancellation; emitted valid source awaits native D3/PDF adjudication",source["cases"].as_array().unwrap().len(),source["badCases"].as_array().unwrap().len());
+ assert!(failures.is_empty(),"{}",failures.join("\n"));
 }
 /// 🐝️ Neutral planar frame and closed control mutations produce source-bound Rust grammar in both themes.
 #[test]
@@ -334,7 +330,7 @@ fn canonical_planar_frame_mutation_vectors(){
   assert_eq!(before.chart.get("presets").unwrap().as_array().unwrap()[0].get("options").unwrap().get("opacity").unwrap().as_u64(),Some(1));
  }}
  for case in source["admissionCases"].as_array().unwrap(){let mut authored=source["snapshot"].clone();authored["chart"]["language"]=case["language"].clone();authored["chart"]["tables"]=serde_json::json!([source["table"].clone()]);authored["chart"]["presets"]=serde_json::json!([{"kind":"hexbin-map","options":{"points":source["table"]["name"].clone(),"width":60,"height":30,"radius":5,"bandwidth":5,"lineWidth":".3mm","opacity":0.5}}]);let before=ChartSnapshot::from_value(DslValue::from(authored)).unwrap();let mutation=ChangeChartValue::from_value(DslValue::from(case["mutation"].clone())).unwrap();let outcome=mutation.diff(&before);assert!(outcome.messages().is_empty());let current=protocol::apply_diff(outcome.diff(),&before).unwrap();assert_eq!(protocol::apply_diff(&outcome.diff().inverse(&before),&current).unwrap(),before);let result=ChartTextOutput::render(&current).unwrap();let valid=case["valid"].as_bool().unwrap();if result.complete!=valid{failures.push(format!("{} owned={} expected={valid}: {:?}",case["id"],result.complete,result.diagnostics));}if !valid&&!result.complete{assert!(result.tikz.is_empty());assert!(!result.diagnostics.is_empty());}}
- assert!(failures.is_empty(),"{}",failures.join("\n"));eprintln!("[DEBUG] Rust planar{} mutated theme/language sources plus{} neutral accepted/rejected controls and progress/cancellation passed; emitted source awaits actual native consumption",source["cases"].as_array().unwrap().len()*2,source["admissionCases"].as_array().unwrap().len());
+ assert!(failures.is_empty(),"{}",failures.join("\n"));
 }
 
 /// 🧾️ Language-neutral scientific mode and resolved-record vectors pass canonical Rust mutation and inference admission.
@@ -342,14 +338,14 @@ fn canonical_planar_frame_mutation_vectors(){
 fn canonical_scientific_mode_record_admission_vectors(){
  let fixture:serde_json::Value=serde_json::from_str(crate::text("🧪️tests/🧬️native-chart-grammar/🔣️.json")).unwrap();let source=&fixture["nativeScientificAdmission"];let mut failures=Vec::new();
  for language in ["en","de"]{for case in source["cases"].as_array().unwrap(){let family=source["families"].as_array().unwrap().iter().find(|family|family["name"]==case["family"]).unwrap();let mut authored=source["snapshot"].clone();authored["chart"]["language"]=language.into();let mut options=case["options"].clone();options["mode"]=family["modes"][if options["mode"]==family["modes"][0]{1}else{0}].clone();authored["chart"]["presets"]=serde_json::json!([{"kind":case["kind"].clone(),"options":options}]);let before=ChartSnapshot::from_value(DslValue::from(authored)).unwrap();let mutation=ChangeChartValue::from_value(DslValue::from(serde_json::json!({"path":["presets","0","options","mode"],"value":case["options"]["mode"].clone()}))).unwrap();let outcome=mutation.diff(&before);assert!(outcome.messages().is_empty());let current=protocol::apply_diff(outcome.diff(),&before).unwrap();assert_eq!(protocol::apply_diff(&outcome.diff().inverse(&before),&current).unwrap(),before);let result=ChartTextOutput::render(&current).unwrap();let valid=case["valid"].as_bool().unwrap();if result.complete!=valid{failures.push(format!("{}-{language}: admitted={} expected={valid}: {:?}",case["id"],result.complete,result.diagnostics));}if valid&&result.complete{if let Some(root)=std::env::var_os("PRINT_NATIVE_SCIENTIFIC_ADMISSION_TIKZ"){let root=std::path::Path::new(&root);std::fs::create_dir_all(root).unwrap();std::fs::write(root.join(format!("{}-{language}.tex",case["id"].as_str().unwrap())),&result.tikz).unwrap();}}if !result.complete{assert!(result.tikz.is_empty());assert!(!result.diagnostics.is_empty());}}
- }assert!(failures.is_empty(),"{}",failures.join("\n"));eprintln!("[DEBUG] Scientific Rust admission{} neutral en/de mutation/inverse and accepted/rejected record cases passed",source["cases"].as_array().unwrap().len()*2);
+ }assert!(failures.is_empty(),"{}",failures.join("\n"));
 }
 /// 📏️ Declared scientific scale and shape controls match the same independent neutral admission corpus.
 #[test]
 fn canonical_scientific_scalar_admission_vectors(){
  let fixture:serde_json::Value=serde_json::from_str(crate::text("🧪️tests/🧬️native-chart-grammar/🔣️.json")).unwrap();let cases=fixture["scientificScalarAdmission"]["vectors"]["cases"].as_array().unwrap();
  for language in ["en","de"]{for case in cases{let key=case["key"].as_str().unwrap();let initial=if key=="nodeShape"{serde_json::Value::String(if case["value"]=="circle"{"box"}else{"circle"}.into())}else{serde_json::json!(1)};let mut options=serde_json::json!({});options[key]=initial;let before=ChartSnapshot::from_value(DslValue::from(serde_json::json!({"chart":{"width":140,"height":120,"language":language,"layers":[],"presets":[{"kind":case["kind"].clone(),"options":options}]}}))).unwrap();let mutation=ChangeChartValue::from_value(DslValue::from(serde_json::json!({"path":["presets","0","options",key],"value":case["value"].clone()}))).unwrap();let outcome=mutation.diff(&before);assert!(outcome.messages().is_empty());let current=protocol::apply_diff(outcome.diff(),&before).unwrap();assert_eq!(protocol::apply_diff(&outcome.diff().inverse(&before),&current).unwrap(),before);let result=ChartTextOutput::render(&current).unwrap();assert_eq!(result.complete,case["valid"].as_bool().unwrap(),"{}-{language}: {:?}",case["id"],result.diagnostics);if !result.complete{assert!(result.tikz.is_empty());assert!(!result.diagnostics.is_empty());}}
- }eprintln!("[DEBUG] Scientific Rust scalar admission{} neutral EN/de mutation/inverse scale and shape cases passed",cases.len()*2);
+ }
 }
 
 /// 🧠️ Neutral neural layer topology and endpoint contracts survive Rust canonical mutation and inverse replay.
@@ -360,7 +356,7 @@ fn canonical_neural_architecture_incidence_vectors(){
   let layers=source["custom"]["layers"].as_array().unwrap().iter().enumerate().map(|(index,row)|serde_json::json!({"layer":index+1,"units":row[0].clone(),"kind":row[1].clone(),"label":row[2].clone()})).collect::<Vec<_>>();let valid=[source["custom"]["links"].clone(),source["custom"]["empty"].clone()];for(links,accepted)in valid.iter().map(|value|(value,true)).chain(source["invalid"].as_array().unwrap().iter().map(|value|(value,false))){let before=ChartSnapshot::from_value(DslValue::from(serde_json::json!({"chart":{"width":80,"height":50,"language":language,"layers":[],"tables":[{"name":"neural-custom","columns":["layer","units","kind","label"],"rows":layers}],"presets":[{"kind":"feed-forward-neural-network","options":{"data":"neural-custom","links":"","connections":"full","mode":"rnn","directed":true}}]}}))).unwrap();let mutation=ChangeChartValue::from_value(DslValue::from(serde_json::json!({"path":["presets","0","options","links"],"value":links}))).unwrap();let outcome=mutation.diff(&before);assert!(outcome.messages().is_empty());let current=protocol::apply_diff(outcome.diff(),&before).unwrap();assert_eq!(protocol::apply_diff(&outcome.diff().inverse(&before),&current).unwrap(),before);let result=ChartTextOutput::render(&current).unwrap();assert_eq!(result.complete,accepted,"{language}/{links}: {:?}",result.diagnostics);if accepted{if let Some(root)=std::env::var_os("PRINT_NATIVE_NEURAL_TIKZ"){let id=if links.as_str()==Some(""){ "empty" }else{ "custom" };std::fs::create_dir_all(&root).unwrap();std::fs::write(std::path::Path::new(&root).join(format!("{id}-{language}.tex")),result.tikz).unwrap();}}else{assert!(result.tikz.is_empty());assert!(!result.diagnostics.is_empty());}count+=1;}
   for connections in source["vectors"]["implicitConnections"].as_array().unwrap(){let before=ChartSnapshot::from_value(DslValue::from(serde_json::json!({"chart":{"width":80,"height":50,"language":language,"layers":[],"tables":[{"name":"neural-custom","columns":["layer","units","kind","label"],"rows":layers}],"presets":[{"kind":"feed-forward-neural-network","options":{"data":"neural-custom","connections":"residual","mode":"rnn","directed":true,"curvature":0}}]}}))).unwrap();let mutation=ChangeChartValue::from_value(DslValue::from(serde_json::json!({"path":["presets","0","options","connections"],"value":connections}))).unwrap();let outcome=mutation.diff(&before);assert!(outcome.messages().is_empty());let current=protocol::apply_diff(outcome.diff(),&before).unwrap();assert_eq!(protocol::apply_diff(&outcome.diff().inverse(&before),&current).unwrap(),before);let result=ChartTextOutput::render(&current).unwrap();assert!(result.complete,"{language}/{connections}: {:?}",result.diagnostics);if let Some(root)=std::env::var_os("PRINT_NATIVE_NEURAL_TIKZ"){std::fs::create_dir_all(&root).unwrap();std::fs::write(std::path::Path::new(&root).join(format!("implicit-{}-{language}.tex",connections.as_str().unwrap())),result.tikz).unwrap();}count+=1;}
   for entry in source["vectors"]["selfLoops"].as_array().unwrap(){let before=ChartSnapshot::from_value(DslValue::from(serde_json::json!({"chart":{"width":80,"height":50,"language":language,"theme":{"appearance":if language=="de"{"dark"}else{"light"}},"layers":[],"tables":[{"name":"neural-self","columns":["layer","units","kind","label"],"rows":layers}],"presets":[{"kind":"feed-forward-neural-network","options":{"data":"neural-self","mode":"rnn","render":entry["render"].clone(),"directed":entry["directed"].clone(),"padding":source["vectors"]["padding"].clone(),"unitSize":source["vectors"]["unitSize"].clone(),"labels":false,"curvature":0.35,"links":"2/1/2/1"}}]}}))).unwrap();let mutation=ChangeChartValue::from_value(DslValue::from(serde_json::json!({"path":["presets","0","options","links"],"value":"2/2/2/2"}))).unwrap();let outcome=mutation.diff(&before);assert!(outcome.messages().is_empty());let current=protocol::apply_diff(outcome.diff(),&before).unwrap();assert_eq!(protocol::apply_diff(&outcome.diff().inverse(&before),&current).unwrap(),before);let result=ChartTextOutput::render(&current).unwrap();assert!(result.complete,"{language}/{}: {:?}",entry["id"],result.diagnostics);if let Some(root)=std::env::var_os("PRINT_NATIVE_NEURAL_TIKZ"){std::fs::create_dir_all(&root).unwrap();std::fs::write(std::path::Path::new(&root).join(format!("self-{}-{language}.tex",entry["id"].as_str().unwrap())),result.tikz).unwrap();}count+=1;}
- }assert_eq!(count,68);eprintln!("[DEBUG] Neural Rust{count} neutral en/de stock/custom/empty/implicit/self-loop/invalid incidence cases passed mutation, inverse and canonical inference");
+ }assert_eq!(count,68);
 }
 
 /// 📐️ Neutral construction windows preserve canonical Rust mutation, inverse replay and actual native source ownership.
@@ -372,7 +368,7 @@ fn canonical_scientific_construction_window_vectors(){
   if mode!=0&&mode!=3{changes.extend([("axes",true.into()),("grid",true.into()),("ticks",control["tickDivisions"][if mode==1{0}else{1}].clone()),("title","Cvtitle".into()),("xlabel","Cvx".into()),("ylabel","Cvy".into())]);for(key,enabled)in[("domain",[2,4,6].contains(&mode)),("range",[2,5,6].contains(&mode))]{if enabled{let mut values=control[key].as_array().unwrap().clone();if mode==6{values.reverse();}changes.push((key,values.iter().map(|value|value.to_string()).collect::<Vec<_>>().join(",").into()));}}}
   for(key,value)in changes{let mutation=ChangeChartValue::from_value(DslValue::from(serde_json::json!({"path":["presets","0","options",key],"value":value}))).unwrap();let outcome=mutation.diff(&current);assert!(outcome.messages().is_empty());let next=protocol::apply_diff(outcome.diff(),&current).unwrap();assert_eq!(protocol::apply_diff(&outcome.diff().inverse(&current),&next).unwrap(),current);current=next;}
   let result=ChartTextOutput::render(&current).unwrap();assert!(result.complete,"Cv{index}M{mode}/{appearance}: {:?}",result.diagnostics);if let Some(root)=std::env::var_os("PRINT_NATIVE_CONSTRUCTION_TIKZ"){std::fs::create_dir_all(&root).unwrap();std::fs::write(std::path::Path::new(&root).join(format!("Cv{index}M{mode}-{appearance}.tex")),result.tikz).unwrap();}assert_eq!(before.chart.get("presets").unwrap().as_array().unwrap()[0].get("options").unwrap().get("points").unwrap().as_str(),Some("O/0/0,Q/1/0,R/0/1"));count+=1;
- }}}eprintln!("[DEBUG] Construction Rust{count} neutral en/de canonical mutation/inverse/inference sources emitted for native D3/PDF verification");
+ }}}
 }
 
 #[test]
@@ -388,7 +384,6 @@ fn chart_diff_text_and_binary_preserve_owned_edits() {
     }
     assert!(ChartDiff::parse_diff("{\"edits\":[{\"path\":[],\"unknown\":1}]}").is_err());
     assert!(ChartDiff::decode_diff(&[255]).is_err());
-    eprintln!("[DEBUG] chart diff physical owners preserve typed edits; independent serde_json oracle");
 }
 
 #[test]
@@ -411,7 +406,7 @@ fn runtime_schema_assets_equal_the_documents_once_compiled_into_the_crate() {
 
 #[test]
 fn missing_schema_assets_name_the_unreadable_document() {
-    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("🕳️nowhere");
+    let root = fixture_path!("🕳️nowhere");
     let error = ChartSchemaAssets::read(&root).unwrap_err();
     assert_eq!(error.path, root.join("🦀️.rs"));
     assert_eq!(error.cause.kind(), std::io::ErrorKind::NotFound);

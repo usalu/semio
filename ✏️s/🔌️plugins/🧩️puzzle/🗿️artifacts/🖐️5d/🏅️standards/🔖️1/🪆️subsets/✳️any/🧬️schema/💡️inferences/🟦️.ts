@@ -35,6 +35,10 @@ type puzzlePuzzle5dInferenceGuardSizeBounds = { readonly minItems?: number; read
 
 export const puzzlePuzzle5dInferenceGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : puzzlePuzzle5dInferenceGuardReject(at, "value is not an object");
+export const puzzlePuzzle5dInferenceGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) puzzlePuzzle5dInferenceGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const puzzlePuzzle5dInferenceGuardArray = (value: unknown, at: string, bounds: puzzlePuzzle5dInferenceGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return puzzlePuzzle5dInferenceGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) puzzlePuzzle5dInferenceGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -65,12 +69,9 @@ export const puzzlePuzzle5dInferenceGuardConstant = <T extends string | number |
 //#endregion 🚪️Parsers
 
 export function parsePuzzle5dInference(value: unknown, at = "$"): Puzzle5dInference {
-  const row = puzzlePuzzle5dInferenceGuardObject(value, at);
-  const positions = puzzlePuzzle5dInferenceGuardObject(row["flatPositions"], at + ".flatPositions");
-  const flatPositions: Record<string, FlattenPose> = {};
-  for (const [key, pose] of Object.entries(positions)) Object.defineProperty(flatPositions, key, {value:parseFlattenPose(pose,at+".flatPositions."+key),enumerable:true,writable:true,configurable:true});
+  const row = puzzlePuzzle5dInferenceGuardClosed(puzzlePuzzle5dInferenceGuardObject(value, at), at, ["flatPositions"]);
   return {
-    flatPositions,
+    flatPositions: Object.fromEntries(Object.entries(puzzlePuzzle5dInferenceGuardObject(row["flatPositions"], `${at}.flatPositions`)).map(([key0, value0]) => [key0, parseFlattenPose(value0, `${at}.flatPositions.${key0}`)])),
   };
 }
 
@@ -80,21 +81,19 @@ const axes3 = (value: unknown, at: string): [number, number, number] => {
 };
 
 export function parseFlattenPlane(value: unknown, at = "$"): FlattenPlane {
-  const row = puzzlePuzzle5dInferenceGuardObject(value, at);
+  const row = puzzlePuzzle5dInferenceGuardClosed(puzzlePuzzle5dInferenceGuardObject(value, at), at, ["origin", "xAxis", "yAxis"]);
   return {
-    origin: axes3(row["origin"], at+".origin"),
-    xAxis: axes3(row["xAxis"], at+".xAxis"),
-    yAxis: axes3(row["yAxis"], at+".yAxis"),
+    origin: ((items0) => [puzzlePuzzle5dInferenceGuardNumber(items0[0], `${at}.origin[0]`), puzzlePuzzle5dInferenceGuardNumber(items0[1], `${at}.origin[1]`), puzzlePuzzle5dInferenceGuardNumber(items0[2], `${at}.origin[2]`)])(puzzlePuzzle5dInferenceGuardArray(row["origin"], `${at}.origin`, {"minItems": 3, "maxItems": 3})),
+    xAxis: ((items0) => [puzzlePuzzle5dInferenceGuardNumber(items0[0], `${at}.xAxis[0]`), puzzlePuzzle5dInferenceGuardNumber(items0[1], `${at}.xAxis[1]`), puzzlePuzzle5dInferenceGuardNumber(items0[2], `${at}.xAxis[2]`)])(puzzlePuzzle5dInferenceGuardArray(row["xAxis"], `${at}.xAxis`, {"minItems": 3, "maxItems": 3})),
+    yAxis: ((items0) => [puzzlePuzzle5dInferenceGuardNumber(items0[0], `${at}.yAxis[0]`), puzzlePuzzle5dInferenceGuardNumber(items0[1], `${at}.yAxis[1]`), puzzlePuzzle5dInferenceGuardNumber(items0[2], `${at}.yAxis[2]`)])(puzzlePuzzle5dInferenceGuardArray(row["yAxis"], `${at}.yAxis`, {"minItems": 3, "maxItems": 3})),
   };
 }
 
 export function parseFlattenPose(value: unknown, at = "$"): FlattenPose {
-  const row = puzzlePuzzle5dInferenceGuardObject(value, at);
-  const center=puzzlePuzzle5dInferenceGuardArray(row.center,at+".center",{minItems:2,maxItems:2});
-  const orientation=puzzlePuzzle5dInferenceGuardArray(row.orientation,at+".orientation",{minItems:4,maxItems:4});
+  const row = puzzlePuzzle5dInferenceGuardClosed(puzzlePuzzle5dInferenceGuardObject(value, at), at, ["plane", "center", "orientation"]);
   return {
     plane: parseFlattenPlane(row["plane"], `${at}.plane`),
-    center: [puzzlePuzzle5dInferenceGuardNumber(center[0],at+".center[0]"),puzzlePuzzle5dInferenceGuardNumber(center[1],at+".center[1]")],
-    orientation: [puzzlePuzzle5dInferenceGuardNumber(orientation[0],at+".orientation[0]"),puzzlePuzzle5dInferenceGuardNumber(orientation[1],at+".orientation[1]"),puzzlePuzzle5dInferenceGuardNumber(orientation[2],at+".orientation[2]"),puzzlePuzzle5dInferenceGuardNumber(orientation[3],at+".orientation[3]")],
+    center: ((items0) => [puzzlePuzzle5dInferenceGuardNumber(items0[0], `${at}.center[0]`), puzzlePuzzle5dInferenceGuardNumber(items0[1], `${at}.center[1]`)])(puzzlePuzzle5dInferenceGuardArray(row["center"], `${at}.center`, {"minItems": 2, "maxItems": 2})),
+    orientation: ((items0) => [puzzlePuzzle5dInferenceGuardNumber(items0[0], `${at}.orientation[0]`), puzzlePuzzle5dInferenceGuardNumber(items0[1], `${at}.orientation[1]`), puzzlePuzzle5dInferenceGuardNumber(items0[2], `${at}.orientation[2]`), puzzlePuzzle5dInferenceGuardNumber(items0[3], `${at}.orientation[3]`)])(puzzlePuzzle5dInferenceGuardArray(row["orientation"], `${at}.orientation`, {"minItems": 4, "maxItems": 4})),
   };
 }

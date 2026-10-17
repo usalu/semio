@@ -1,0 +1,54 @@
+[package]
+workspace = "../../../../../../../../.."
+name = "semio-framework-os-infinite-world-model"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "World3d data model: scene records, resource slots and registries, interaction ids, and the tool run trace layer"
+
+[package.metadata.semio]
+role = "product"
+id = "os-infinite-world-model"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[features]
+testkit = []
+
+[dependencies]
+semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-value-derive = { path = "../../../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
+semio-framework-job = { workspace = true }
+semio-framework-tool-run = { workspace = true }
+semio-framework-async = { workspace = true }
+semio-framework = { path = "../../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
+ui_styling = { path = "../../../../../../../../🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust", package = "semio-framework-ui-styling" }
+semio-framework-ui-contract = { path = "../../../../../../../../🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust" }
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"
+base64_codec = { path = "../../../../../../../../🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust", package = "semio-framework-io-base64" }
+
+[target.'cfg(not(all(target_arch = "wasm32", target_env = "p2")))'.dependencies]
+ui_wgpu = { path = "../../../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", package = "semio-framework-ui", features = ["wgpu", "wgpu-engine"] }
+
+[target.'cfg(all(target_arch = "wasm32", target_env = "p2"))'.dependencies]
+ui_wgpu = { path = "../../../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", package = "semio-framework-ui", features = ["wgpu"] }
+
+[dev-dependencies]
+semio-framework-job = { workspace = true, features = ["testkit"] }
+semio-framework-trace = { path = "../../../../../../../../🔨️modules/⏱️trace/📦️packages/🦀️rust" }
+semio-framework-os-kernel = { path = "../../../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["mutation-testing"] }
+
+[[test]]
+name = "world_model_unit"
+path = "../../🧪️tests/🔬️unit/🦀️.rs"
+required-features = ["testkit"]

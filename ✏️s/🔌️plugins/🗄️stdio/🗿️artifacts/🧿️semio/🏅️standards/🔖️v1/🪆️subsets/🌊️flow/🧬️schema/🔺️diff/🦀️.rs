@@ -428,9 +428,9 @@ pub fn diff_set_edge_kind(id: &str, kind: &str) -> SemioFlowDiff {
 //#region 🔖️Demo
 /// 🌱 Representative `SemioFlowDiff` cases built declaratively (empty/no-op and an empty-but-present node and edge row triple) — single source of truth for `diff_grammar_conformance_law`/`protocol_walk_law` in
 /// `🎹️composer/🦀️.rs`.
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn demo_diff_cases() -> Vec<SemioFlowDiff> {
+pub fn demo_diff_cases() -> Vec<SemioFlowDiff> {
     vec![SemioFlowDiff::default(), SemioFlowDiff { nodes: Some(Default::default()), edges: Some(Default::default()) }]
 }
 //#endregion 🔖️Demo

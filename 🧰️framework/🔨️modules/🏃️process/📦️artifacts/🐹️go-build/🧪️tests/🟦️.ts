@@ -18,7 +18,7 @@ test("Go compiles both modes, publishes immutable outputs and matches the standa
  const environment={...process.env,GOWORK:"off",GOPROXY:"off",GOTOOLCHAIN:"local",GOCACHE:join(directory,"cache")};
  for(const row of fixture.modes){const binary=join(directory,"dist/build",row.mode,`fixture${process.platform==="win32"?".exe":""}`),policy={version:1 as const,mode:row.mode as "prototype"|"release",cwd:directory,captureDirectory:join(directory,"c"),leaseDirectory:process.env.SEMIO_TEST_ARTIFACT_DIR!,budgetMs:120000};await buildGoArtifactsV1(["-o",binary,"."],policy,{environment,control:fixtureAdmissionV1()});const actual=spawnSync(binary,[],{encoding:"utf8"});expect(actual.status).toBe(0);expect(actual.stdout).toBe(fixture.stdout);
  const metadata=spawnSync("go",["version","-m",binary],{encoding:"utf8"});expect(metadata.status).toBe(0);expect(metadata.stdout).toContain(row.mode==="prototype"?"-gcflags":"-trimpath");
- const oracle=spawnSync("go",["run",...row.flags,"."],{cwd:directory,env:environment,encoding:"utf8",timeout:120000});expect(oracle.status).toBe(0);expect(oracle.stdout).toBe(actual.stdout);console.log(`[DEBUG] Go mode=${row.mode} runtime=${actual.stdout}`);}
+ const oracle=spawnSync("go",["run",...row.flags,"."],{cwd:directory,env:environment,encoding:"utf8",timeout:120000});expect(oracle.status).toBe(0);expect(oracle.stdout).toBe(actual.stdout);}
 },300000);
 
 /** 🎛️ Owns this fixture compiler phase with its actual signal and fixed test deadline. */

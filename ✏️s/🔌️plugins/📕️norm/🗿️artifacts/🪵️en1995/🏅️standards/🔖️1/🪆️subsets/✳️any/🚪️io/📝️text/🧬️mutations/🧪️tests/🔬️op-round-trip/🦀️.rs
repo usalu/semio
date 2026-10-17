@@ -1,5 +1,5 @@
 //! 🧪️ `unit_tests` — moved out of `📝️text/🦀️.rs` into its canonical test implementation.
-use crate::text::mutations::*;
+use crate::mutations::*;
 
 /// 🎬️ One representative per addressing shape — root enum, member, member action, connection, connection action.
 fn demo_mutation_cases() -> Vec<En1995Mutation> {

@@ -91,6 +91,10 @@ type stdioPly10AnyDiffGuardSizeBounds = { readonly minItems?: number; readonly m
 
 export const stdioPly10AnyDiffGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : stdioPly10AnyDiffGuardReject(at, "value is not an object");
+export const stdioPly10AnyDiffGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) stdioPly10AnyDiffGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const stdioPly10AnyDiffGuardArray = (value: unknown, at: string, bounds: stdioPly10AnyDiffGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return stdioPly10AnyDiffGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) stdioPly10AnyDiffGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -121,13 +125,11 @@ export const stdioPly10AnyDiffGuardConstant = <T extends string | number | boole
 //#endregion 🚪️Parsers
 
 export function parsePlyCommentsDiff(value: unknown, at = "$"): PlyCommentsDiff {
-  const row = stdioPly10AnyDiffGuardObject(value, at);
-  const indexed = <T>(entries: unknown, key: string, read: (entry: Record<string, unknown>, where: string) => T): T[] | undefined =>
-    entries === undefined ? undefined : stdioPly10AnyDiffGuardArray(entries, `${at}.${key}`).map((entry, position) => read(stdioPly10AnyDiffGuardObject(entry, `${at}.${key}[${position}]`), `${at}.${key}[${position}]`));
+  const row = stdioPly10AnyDiffGuardClosed(stdioPly10AnyDiffGuardObject(value, at), at, ["removed", "modified", "added"]);
   return {
-    removed: row["removed"] === undefined ? undefined : stdioPly10AnyDiffGuardArray(row["removed"], `${at}.removed`).map((item, index) => stdioPly10AnyDiffGuardInteger(item, `${at}.removed[${index}]`, { minimum: 0 })),
-    modified: indexed(row["modified"], "modified", (entry, where) => ({ index: stdioPly10AnyDiffGuardInteger(entry["index"], `${where}.index`, { minimum: 0 }), diff: stdioPly10AnyDiffGuardString(entry["diff"], `${where}.diff`) })),
-    added: indexed(row["added"], "added", (entry, where) => ({ index: stdioPly10AnyDiffGuardInteger(entry["index"], `${where}.index`, { minimum: 0 }), item: stdioPly10AnyDiffGuardString(entry["item"], `${where}.item`) })),
+    removed: row["removed"] === undefined ? undefined : stdioPly10AnyDiffGuardArray(row["removed"], `${at}.removed`).map((item, index) => stdioPly10AnyDiffGuardInteger(item, `${at}.removed[${index}]`, {"minimum": 0})),
+    modified: row["modified"] === undefined ? undefined : stdioPly10AnyDiffGuardArray(row["modified"], `${at}.modified`).map((item, index) => ((row1) => ({ index: stdioPly10AnyDiffGuardInteger(row1["index"], `${at}.modified[${index}].index`, {"minimum": 0}), diff: stdioPly10AnyDiffGuardString(row1["diff"], `${at}.modified[${index}].diff`) }))(stdioPly10AnyDiffGuardClosed(stdioPly10AnyDiffGuardObject(item, `${at}.modified[${index}]`), `${at}.modified[${index}]`, ["index", "diff"]))),
+    added: row["added"] === undefined ? undefined : stdioPly10AnyDiffGuardArray(row["added"], `${at}.added`).map((item, index) => ((row1) => ({ index: stdioPly10AnyDiffGuardInteger(row1["index"], `${at}.added[${index}].index`, {"minimum": 0}), item: stdioPly10AnyDiffGuardString(row1["item"], `${at}.added[${index}].item`) }))(stdioPly10AnyDiffGuardClosed(stdioPly10AnyDiffGuardObject(item, `${at}.added[${index}]`), `${at}.added[${index}]`, ["index", "item"]))),
   };
 }
 
@@ -173,13 +175,19 @@ export function parsePlyRowsDiff(value: unknown, at = "$"): PlyRowsDiff {
 }
 
 export function parsePlyRowAdded(value: unknown, at = "$"): PlyRowAdded {
-  const row=stdioPly10AnyDiffGuardObject(value,at);
-  return {index:stdioPly10AnyDiffGuardInteger(row["index"], `${at}.index`,{minimum:0}),row:parsePlyRow(row["row"],`${at}.row`)};
+  const row = stdioPly10AnyDiffGuardObject(value, at);
+  return {
+    index: stdioPly10AnyDiffGuardInteger(row["index"], `${at}.index`, {"minimum": 0}),
+    row: parsePlyRow(row["row"], `${at}.row`),
+  };
 }
 
 export function parsePlyElementAdded(value: unknown, at = "$"): PlyElementAdded {
-  const row=stdioPly10AnyDiffGuardObject(value,at);
-  return {index:stdioPly10AnyDiffGuardInteger(row["index"], `${at}.index`,{minimum:0}),element:parsePlyElement(row["element"],`${at}.element`)};
+  const row = stdioPly10AnyDiffGuardObject(value, at);
+  return {
+    index: stdioPly10AnyDiffGuardInteger(row["index"], `${at}.index`, {"minimum": 0}),
+    element: parsePlyElement(row["element"], `${at}.element`),
+  };
 }
 
 export function parsePlyElementDiff(value: unknown, at = "$"): PlyElementDiff {

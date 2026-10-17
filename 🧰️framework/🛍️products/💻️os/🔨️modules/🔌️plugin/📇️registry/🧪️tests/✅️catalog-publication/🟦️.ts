@@ -98,13 +98,13 @@ describe("owner catalog publication", () => {
           const source = resolve(directory, item.source), schemaPath = resolve(directory, item.payloadSchema);
           if (!inside(join(workspace, owner), source) || !inside(join(workspace, owner), schemaPath)) return false;
           if (lstatSync(source).isSymbolicLink() || lstatSync(schemaPath).isSymbolicLink()) return false;
-          const actualPayload = decodeOracle(readFileSync(source)) as any;
+          const actualPayload: unknown = decodeOracle(readFileSync(source));
           const actualSchema = decodeOracle(readFileSync(schemaPath)) as object;
           if (!ajv.compile(actualSchema)(actualPayload)) return false;
           for (const binding of item.integrity) {
             const target = resolve(directory, binding.path);
             if (!inside(workspace, target)) return false;
-            const expected = binding.pointer.slice(1).split("/").reduce((value, key) => value?.[key.replaceAll("~1", "/").replaceAll("~0", "~")], actualPayload);
+            const expected = binding.pointer.slice(1).split("/").reduce<unknown>((value, key) => (typeof value === "object" && value !== null ? Reflect.get(value, key.replaceAll("~1", "/").replaceAll("~0", "~")) : undefined), actualPayload);
             if (expected !== createHash("sha256").update(readFileSync(target)).digest("hex")) return false;
           }
         }

@@ -60,7 +60,7 @@ impl semio_hub_artifact_authority::AuthorityOperationControl for GenesisControl 
 
 #[tokio::test]
 async fn genesis_materialization_binds_exact_zero_history_and_independent_sha256() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🌱️artifact-genesis-v1/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧪️tests/🧫️fixtures/🌱️artifact-genesis-v1/🔣️.json")).unwrap();
     let descriptor: DocumentDescriptor = semio_framework_pack_json::from_json_str(&fixture["expected"]["descriptor"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let expected: ArtifactCheckpoint = semio_framework_pack_json::from_json_str(&fixture["expected"]["checkpoint"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let open: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧰️framework/🛍️products/💻️os/🧪️tests/🧫️fixtures/📇️directory/🧭️document-open-plan-v1.json")).unwrap();
@@ -207,7 +207,7 @@ impl TrustedArtifactCatalog for SlowGenesisCodec {
 /// [`AuthorityError::Stalled`] rather than by a deadline it never promised anyone.
 #[tokio::test]
 async fn creation_genesis_is_bounded_by_stalling_and_not_by_the_calendar() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🌱️artifact-genesis-v1/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧪️tests/🧫️fixtures/🌱️artifact-genesis-v1/🔣️.json")).unwrap();
     let descriptor: DocumentDescriptor = semio_framework_pack_json::from_json_str(&fixture["expected"]["descriptor"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let expected: ArtifactCheckpoint = semio_framework_pack_json::from_json_str(&fixture["expected"]["checkpoint"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let dialect: ArtifactDialect = semio_framework_pack_json::from_json_str(&fixture["dialect"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
@@ -236,7 +236,7 @@ async fn creation_genesis_is_bounded_by_stalling_and_not_by_the_calendar() {
 
 #[test]
 fn creation_contract_matches_neutral_intents_and_ready_only_coordinates() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🌱️space-artifact-creation-v1/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧪️tests/🧫️fixtures/🌱️space-artifact-creation-v1/🔣️.json")).unwrap();
     for row in fixture["requests"].as_array().unwrap() {
         let independent = serde_json::from_value::<SpaceArtifactCreateV1>(row["value"].clone()).ok();
         let accepted = row["accepted"].as_bool().unwrap();

@@ -1,7 +1,6 @@
 //! 🏗️ `create-vertex` — brings a new id-keyed vertex into existence at `point`. A duplicate `id` already present in `base` is a no-op (never a duplicate id).
 
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3;
-use crate::schema::mutations::SemioBrepMutation;
 use crate::schema::snapshot::SemioBrepSnapshot;
 
 //#region 🔖️Payload
@@ -16,13 +15,16 @@ pub struct CreateVertex {
     pub at: Option<usize>,
 }
 
-impl protocol::MutationKind<SemioBrepSnapshot, SemioBrepMutation> for CreateVertex {
+impl<Op> protocol::MutationKind<SemioBrepSnapshot, Op> for CreateVertex
+where
+    Op: protocol::Mutation<SemioBrepSnapshot, Diff = crate::schema::diff::SemioBrepDiff> + From<CreateVertex> + From<crate::schema::mutations::delete_vertex::DeleteVertex>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "vertex", kind: "create-vertex", record: "CreatedVertex" };
 
-    fn diff(&self, base: &SemioBrepSnapshot) -> protocol::MutationOutcome<<SemioBrepMutation as protocol::Mutation<SemioBrepSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioBrepSnapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<SemioBrepSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &SemioBrepSnapshot) -> Result<Vec<SemioBrepMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &SemioBrepSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

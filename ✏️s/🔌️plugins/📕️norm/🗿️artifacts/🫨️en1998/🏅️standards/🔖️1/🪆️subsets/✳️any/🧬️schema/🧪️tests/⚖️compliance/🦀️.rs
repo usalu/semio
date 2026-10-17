@@ -1,3 +1,4 @@
+use semio_framework_test_fixtures::fixture_path;
 use semio_s_artifact_norm_en1998_schema::*;
 use semio_s_plugin_norm_compliance::CheckStatus;
 use semio_s_artifact_norm_en1998_editor::field_meta::en1998_field_meta;
@@ -750,7 +751,7 @@ async fn dangling_supported_building_fails_with_one_of_remedy() {
 }
 
 fn family_any_dir() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️1/🪆️subsets/✳️any")
+    fixture_path!("../../🏅️standards/🔖️1/🪆️subsets/✳️any")
 }
 
 fn snapshot_schema_path() -> PathBuf {

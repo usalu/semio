@@ -22,11 +22,11 @@ impl RetireOwned for DecodedBuffers {
     fn controlled_retirement_supported()->bool{<Vec<Vec<u8>> as RetireOwned>::controlled_retirement_supported()}
 }
 fn caller_grant()->RetainedCloneGrant{
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=crate::fixture_json(file!(), "🧫️fixtures/🔣️.json");
     serde_json::from_value(fixture["callerGrant"].clone()).unwrap()
 }
 fn close_original_recipient(native:&mut NativeDecodeControl<'_>){
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=crate::fixture_json(file!(), "🧫️fixtures/🔣️.json");
     for _ in 0..fixture["maximumCloseTurns"].as_u64().unwrap(){
         if !native.has_retirement_owner(){return}
         let step=native.close_retirement_recipient(caller_grant()).unwrap();
@@ -55,7 +55,7 @@ fn buffer_spec_producer() -> semio_framework_dsl_record::RecordSpecProducer {
 }
 #[test]
 fn sqlite_snapshot_erased_export_dispatches_only_the_declared_controlled_native_owner() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = crate::fixture_json(file!(), "🧫️fixtures/🔣️.json");
     let case = &fixture["erasedDispatch"];
     let snapshot = DecodedBuffers { buffers: vec![vec![1; case["bufferBytes"].as_u64().unwrap() as usize]] };
     let bytes = snapshot.encode_pack();
@@ -241,7 +241,6 @@ fn sqlite_snapshot_binding_moves_original_octet_allocations_with_exact_structura
     assert!(retirement.terminal_is_empty());
     let (_, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| drop(retirement));
     assert_eq!((allocated, released), (0, 0));
-    println!("[DEBUG] SQLite binding original32768 octets in two16384-byte payload allocations moved without duplication; fixed65536 copy authority; structural receipt/System equality; denied original retained and terminalDrop0");
 }
 
 #[test]
@@ -250,7 +249,7 @@ fn sqlite_snapshot_native_decoding_admits_compressed_aggregate_before_projection
         io::Write,
         process::{Command, Stdio},
     };
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = crate::fixture_json(file!(), "🧫️fixtures/🔣️.json");
     
     let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "fixture.buffers".into(), standard: "1".into(), subset: "*".into() };
     for case in fixture["cases"].as_array().unwrap() {
@@ -296,7 +295,7 @@ fn sqlite_snapshot_native_decoding_admits_compressed_aggregate_before_projection
 
 #[test]
 fn sqlite_snapshot_native_decoding_admits_inline_empty_collection_storage() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = crate::fixture_json(file!(), "🧫️fixtures/🔣️.json");
     let case = fixture["cases"].as_array().unwrap().iter().find(|case| case["emptyBuffers"].as_u64().unwrap() > 0).unwrap();
     let mut record = semio_framework_dsl_record::RecordValue::default();
     record.fields.insert(1, semio_framework_dsl_record::FieldValue::List(std::iter::repeat_with(|| semio_framework_dsl_record::FieldValue::Bytes64(Vec::new())).take(case["emptyBuffers"].as_u64().unwrap() as usize).collect()));
@@ -313,7 +312,7 @@ fn sqlite_snapshot_metadata_admits_final_file_before_mutating_domain_database() 
         io::Write,
         process::{Command, Stdio},
     };
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = crate::fixture_json(file!(), "🧫️fixtures/🔣️.json");
     
     let rows = fixture["metadataAdmission"]["domainRows"].as_u64().unwrap() as usize;
     let file_rows = fixture["metadataAdmission"]["fileRows"].as_u64().unwrap() as usize;

@@ -48,37 +48,25 @@ import {
   canonicalUiTheme,
   commitUiPreferenceOnLaneV1,
   foldUiPreferenceLanePageV1,
+  LOCAL_ONLY_UI_PREFERENCE_VOCABULARY_V1,
   readUiPreferenceLane,
   UI_PREFERENCE_UNSHARED_TEXT_V1,
   UI_PREFERENCES_LANE_SCHEMA_V1,
   uiPreferenceEnvelopeTextV1,
   uiPreferenceLaneKeyV1
-} from "../../../🎚️UiPreferences/🟦️.ts";
-import {
-  appBreadcrumb,
-  buildOsCommands,
-  downloadMediaExport,
-  manifestLabelTextV1,
-  requestFileOpen,
-  resolveAppLabel,
-  resolveAppBreadcrumb,
-  resolveManifestLabel,
-  actionBindingToActionDescriptor
-} from "../../🛠️ShellHelpers/🟦️.tsx";
+} from "../../🎚️UiPreferences/🟦️.ts";
+import { appBreadcrumb, resolveAppBreadcrumb } from "../../🛠️ShellHelpers/🛣️route-and-chrome/🟦️.tsx";
+import { buildOsCommands } from "../../🛠️ShellHelpers/🎛️command-registry/🟦️.tsx";
+import { downloadMediaExport, requestFileOpen } from "../../🛠️ShellHelpers/🔩️plumbing/📥️downloads-and-file-requests/🟦️.ts";
+import { manifestLabelTextV1 } from "../../🛠️ShellHelpers/🔩️plumbing/🆔️action-ids/🟦️.ts";
+import { resolveAppLabel, resolveManifestLabel } from "../../🛠️ShellHelpers/🏷️labels/🟦️.tsx";
+import { actionBindingToActionDescriptor } from "../../🛠️ShellHelpers/🌳️tree-windows/🟦️.tsx";
 import { toolRunPanelTasksV1, type ToolRunPanelControlV1 } from "../../🛠️ShellHelpers/⏯️tool-run-panel/🟦️.ts";
-import {
-  createFrameworkChatPanelTab,
-  createFrameworkDisplayPanelTabs,
-  createFrameworkMarketplacePanelTab,
-  createFrameworkTaskManagerPanelTab,
-  createFrameworkSettingsPanelTab,
-  FRAMEWORK_SETTINGS_KEYBINDINGS_TAB_ID,
-  FRAMEWORK_SETTINGS_PANEL_ID,
-  type MarketplaceExtensionEntry,
-  type MarketplaceHostApi,
-  type MarketplacePluginEntry,
-  type SettingsHostApi
-} from "../../📌️ChromePanels/🟦️.tsx";
+import { createFrameworkChatPanelTab, createFrameworkTaskManagerPanelTab, createFrameworkSettingsPanelTab } from "../../📌️ChromePanels/🟦️.tsx";
+import { FRAMEWORK_SETTINGS_KEYBINDINGS_TAB_ID, FRAMEWORK_SETTINGS_PANEL_ID } from "../../📌️ChromePanels/🆔️panel-ids/🟦️.ts";
+import { createFrameworkDisplayPanelTabs } from "../../📌️ChromePanels/🖥️display-panel/🟦️.tsx";
+import { type SettingsHostApi } from "../../📌️ChromePanels/⚙️settings-general/🟦️.tsx";
+import { createFrameworkMarketplacePanelTab, type MarketplaceExtensionEntry, type MarketplaceHostApi, type MarketplacePluginEntry } from "../../📌️ChromePanels/🏪️marketplace-panel/🟦️.tsx";
 // #endregion 🔌️Adapters
 import { hubCatalogOnlyPluginsV1 } from "@semio-tech/framework/plugin-module/hub-source/resolution";
 import type { TrustedPluginModuleIndexV1 } from "@semio-tech/framework/plugin-module";
@@ -120,8 +108,9 @@ export function useThemeDriverSettings(core: ShellCoreAfterArtifactOpening) {
     extensionLedger, extensionIdSet, installExtension, installExtensionFromFile, uninstallExtension, setExtensionEnabled,
     focusedProgram, toolRunPanelNode, activeIntroduction, activeTutorials, tutorialRecorderAvailable, noteShellCommand,
     onActionStable, displayHostRef, displayHost, dispatchSetMergePolicy, defaultAppsHost, defaultAppsHostRef,
-    conflictsHost, conflictsHostRef, hasOpenArtifactSurfaces, showTransientNotice
+    conflictsHost, conflictsHostRef, hasOpenArtifactSurfaces, showTransientNotice, hostPorts
   } = core;
+  const preferenceVocabulary = hostPorts?.preferenceVocabulary ?? LOCAL_ONLY_UI_PREFERENCE_VOCABULARY_V1;
   //#region FrameworkOsShell
   //#region 🔖️ThemeMutators
   const uiThemeBase = uiThemeDraft ?? uiTheme;
@@ -166,11 +155,11 @@ export function useThemeDriverSettings(core: ShellCoreAfterArtifactOpening) {
         (mutation.mutation === "setTerminology" && locks.terminology) ||
         (mutation.mutation === "setTheme" && locks.themeId)
       ) return;
-      const { queued, unshared } = commitUiPreferenceOnLaneV1(scope.storage, mutation, preferenceLaneRef.current, mintPreferenceLaneIdV1);
+      const { queued, unshared } = commitUiPreferenceOnLaneV1(preferenceVocabulary, scope.storage, mutation, preferenceLaneRef.current, mintPreferenceLaneIdV1);
       if (queued !== null) flushPreferenceLaneRef.current();
       if (unshared) showTransientNotice(UI_PREFERENCE_UNSHARED_TEXT_V1[uiLocaleRef.current === "de" ? "de" : "en"], "warning");
     },
-    [locks, scope.storage, showTransientNotice],
+    [locks, scope.storage, showTransientNotice, preferenceVocabulary],
   );
   commitUiPreferenceRef.current = commitUiPreference;
 
@@ -197,7 +186,7 @@ export function useThemeDriverSettings(core: ShellCoreAfterArtifactOpening) {
     const lane = preferenceLaneRef.current;
     if (message.kind === "preference-lane-page") {
       if (lane === null || identityRef.current?.userId !== message.userId) return;
-      foldUiPreferenceLanePageV1(scope.storage, lane, message);
+      foldUiPreferenceLanePageV1(preferenceVocabulary, scope.storage, lane, message);
       flushPreferenceLaneRef.current();
       return;
     }

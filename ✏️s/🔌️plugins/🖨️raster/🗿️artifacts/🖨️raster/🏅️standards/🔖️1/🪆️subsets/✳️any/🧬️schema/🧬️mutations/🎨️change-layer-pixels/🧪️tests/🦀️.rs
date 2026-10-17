@@ -5,7 +5,7 @@ use protocol::{Mutation, OpBinary, OpText};
 
 #[test]
 fn change_layer_pixels_matches_independent_json_and_round_trips() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(runtime_fixture_text("../../../../🎨️change-layer-pixels/🧪️tests/🔣️.json")).unwrap();
     let before_json = fixture["before"].to_string();
     let base: RasterSnapshot = semio_framework_pack_json::from_json_str(&before_json, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let mutation: RasterMutation = semio_framework_pack_json::from_json_str(&fixture["mutation"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
@@ -42,4 +42,9 @@ fn json_numbers(mut value: serde_json::Value) -> serde_json::Value {
         serde_json::Value::Object(values) => serde_json::Value::Object(std::mem::take(values).into_iter().map(|(key, value)| (key, json_numbers(value))).collect()),
         _ => value,
     }
+}
+
+fn runtime_fixture_text(relative: &str) -> &'static str {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative);
+    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display())).into_boxed_str())
 }

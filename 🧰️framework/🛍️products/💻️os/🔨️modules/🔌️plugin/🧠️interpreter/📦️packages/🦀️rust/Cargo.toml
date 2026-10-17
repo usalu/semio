@@ -25,6 +25,7 @@ semio-framework-value = { workspace = true }
 semio-framework-job = { workspace = true, features = ["testkit"] }
 # 🐎️ The independent execution oracle of the interpreter's laws (`🧪️tests/🔬️unit`): the same Wasmtime the plugin host links, never a
 # dependency of the crate itself.
+semio-framework-test-fixtures = { path = "../../../../../../../🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 wasmtime = { version = "47.0.3", features = ["cranelift", "component-model", "component-model-async"] }
 semio-framework-trace = { workspace = true }
 serde = { workspace = true }

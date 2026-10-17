@@ -1,9 +1,12 @@
 //! ⏱️ The strict lifecycle authority must price the guest's own work, never the browser's or the
 //! operating system's descheduling of a suspended turn.
-use super::*;
+use std::cell::Cell;
+#[cfg(all(target_arch = "wasm32", target_env = "p2"))]
+use semio_framework_plugin_reactor_wit_bridge::wit_bridge::poll;
 use std::future::Future as _;
 
-fn law() -> serde_json::Value {
+#[doc(hidden)]
+pub fn law() -> serde_json::Value {
     serde_json::from_str(include_str!("../../../🚪️lifetime/🧪️tests/🧫️fixtures/⏱️execution.json")).unwrap()
 }
 

@@ -1,6 +1,5 @@
 //! 📥️ Direct insert-page payload, sparse diff, concrete inverse, and laws.
 
-use super::PdfMutation;
 use crate::standards::v1_4::subsets::base::schema::diff::{PdfDiff, PdfPageAdded, PdfPagesDiff};
 use crate::standards::v1_4::subsets::base::schema::snapshot::{PageDoc, PdfSnapshot};
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
@@ -37,7 +36,10 @@ impl InsertPage {
     }
 }
 
-impl MutationKind<PdfSnapshot, PdfMutation> for InsertPage {
+impl<Op> MutationKind<PdfSnapshot, Op> for InsertPage
+where
+    Op: protocol::Mutation<PdfSnapshot, Diff = PdfDiff> + From<InsertPage> + From<crate::standards::v1_4::subsets::base::schema::mutations::remove_page::RemovePage>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "insert", entity: "page", kind: "insert-page", record: "InsertedPage" };
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
@@ -47,12 +49,12 @@ impl MutationKind<PdfSnapshot, PdfMutation> for InsertPage {
         MutationOutcome::new(PdfDiff { pages: Some(PdfPagesDiff { added: vec![PdfPageAdded { index: self.index, page: self.page.clone() }], ..Default::default() }) })
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
         if !self.valid(base) {
             return Vec::new();
         }
-        vec![PdfMutation::RemovePage(super::RemovePage { index: self.index })]
+        vec![Op::from(crate::standards::v1_4::subsets::base::schema::mutations::component::RemovePage { index: self.index })]
     
     })())
 }
@@ -71,11 +73,7 @@ impl MutationKind<PdfSnapshot, PdfMutation> for InsertPage {
 //#endregion 🔖️Codecs
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔄️round/🦀️.rs"]
-mod tests_round_trips_the_concrete_inverse;
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
+
 //#endregion 🧪️Tests

@@ -7,6 +7,7 @@
 
 use crate::host::inferences::solve;
 use crate::schema::snapshot::Grid3dSnapshot;
+use semio_framework_test_fixtures::fixture_text;
 
 const OUTCOME_SCHEMA: &str = "s.wfc.grid3d.example-outcome/v1";
 
@@ -18,8 +19,8 @@ struct Committed {
 
 fn committed() -> Vec<Committed> {
     vec![
-        Committed { example: super::blocks::ID, json: include_str!("../../🧱️blocks/🧪️tests/🧫️fixtures/🧩️example/🔣️.json"), snapshot: super::blocks::snapshot },
-        Committed { example: super::pipes_3d::ID, json: include_str!("../../🪠️pipes-3d/🧪️tests/🧫️fixtures/🧩️example/🔣️.json"), snapshot: super::pipes_3d::snapshot },
+        Committed { example: crate::examples::blocks::ID, json: fixture_text!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🧱️blocks/🧪️tests/🧫️fixtures/🧩️example/🔣️.json"), snapshot: crate::examples::blocks::snapshot },
+        Committed { example: crate::examples::pipes_3d::ID, json: fixture_text!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🪠️pipes-3d/🧪️tests/🧫️fixtures/🧩️example/🔣️.json"), snapshot: crate::examples::pipes_3d::snapshot },
     ]
 }
 
@@ -86,6 +87,6 @@ fn every_committed_assignment_respects_the_pins_the_mask_and_the_rules() {
 
 #[test]
 fn the_bundled_roster_is_exactly_the_committed_set() {
-    let ids: Vec<String> = super::sources().iter().map(|source| source.id().to_string()).collect();
-    assert_eq!(ids, vec![super::blocks::ID.to_string(), super::pipes_3d::ID.to_string()]);
+    let ids: Vec<String> = crate::examples::sources().iter().map(|source| source.id().to_string()).collect();
+    assert_eq!(ids, vec![crate::examples::blocks::ID.to_string(), crate::examples::pipes_3d::ID.to_string()]);
 }

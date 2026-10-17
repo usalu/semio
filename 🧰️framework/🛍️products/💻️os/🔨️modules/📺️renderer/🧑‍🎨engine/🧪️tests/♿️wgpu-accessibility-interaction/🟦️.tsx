@@ -71,14 +71,14 @@ type Fixture = {
 
 type OracleTreeNode = { readonly node: ProjectionNode; readonly children: OracleTreeNode[] };
 
-const fixture = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../🧫️fixtures/♿️wgpu-accessibility-interaction/🔣️.json"), "utf8")) as Fixture;
+const fixture = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../🧫️fixtures/♿️wgpu-accessibility-interaction/🔣️.json"), "utf8")) as Fixture;
 type DockTabKeyboardFixture = {
   readonly projection: AccessibilityProjectionWindow & { readonly nodes: readonly (AccessibilityProjectionWindow["nodes"][number] & { readonly tabbable: boolean; readonly controls?: string; readonly selected?: boolean })[] };
   readonly stacks: readonly { readonly id: string; readonly panel: string; readonly active: string; readonly tabs: readonly string[] }[];
   readonly cases: readonly { readonly id: string; readonly stack: string; readonly from: string; readonly key: "ArrowLeft" | "ArrowRight" | "Home" | "End" | "Enter" | " "; readonly focus: string; readonly activate: string | null }[];
   readonly stale: { readonly node: string; readonly generation: number };
 };
-const dockTabKeyboardFixture = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../🧫️fixtures/⌨️dock-tab-keyboard/🔣️.json"), "utf8")) as DockTabKeyboardFixture;
+const dockTabKeyboardFixture = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../🧫️fixtures/⌨️dock-tab-keyboard/🔣️.json"), "utf8")) as DockTabKeyboardFixture;
 const { computeAccessibleDescription, computeAccessibleName, getRole }: typeof AccessibilityOracle = createRequire(import.meta.url)("dom-accessibility-api");
 const mounted: Root[] = [];
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -369,6 +369,7 @@ describe("wgpu accessibility interaction contract", () => {
         appearance: { preference: "", systemDark: false },
         platform: "MacIntel",
         storage: {},
+        catalog: { version: 1 as const, targets: [], hosts: [], playgrounds: [] },
       },
       setTimer: () => 1,
       clearTimer: () => {},
@@ -454,7 +455,7 @@ describe("wgpu accessibility interaction contract", () => {
 
   it("mirrors every transient notice as the polite status React renders, named by its message and described by its code", async () => {
     type NoticeFixture = { readonly node: { readonly key: string; readonly role: string; readonly live: string }; readonly notices: readonly { readonly code: string | null; readonly message: string }[] };
-    const notices = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../🧫️fixtures/🧯️wgpu-transient-notice/🔣️.json"), "utf8")) as NoticeFixture;
+    const notices = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../🧫️fixtures/🧯️wgpu-transient-notice/🔣️.json"), "utf8")) as NoticeFixture;
     vi.useFakeTimers();
     for (const notice of notices.notices) {
       const root = document.createElement("div");

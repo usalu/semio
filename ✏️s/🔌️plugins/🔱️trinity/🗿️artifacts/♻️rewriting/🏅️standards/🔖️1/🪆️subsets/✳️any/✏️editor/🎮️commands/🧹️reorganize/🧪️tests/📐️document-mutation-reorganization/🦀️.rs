@@ -1,11 +1,12 @@
 //! 📐️ Reorganizing a rule changes its document layout through reversible mutations.
 
-use super::reorganize;
-use crate::{apply_rewrite_rule_mutation, inverse_rewrite_rule_mutation, RewritingSnapshot};
+use crate::editor::rewriting::commands::reorganize::reorganize;
+use crate::standards::v1::subsets::any::schema::operations::{apply_rewrite_rule_mutation, inverse_rewrite_rule_mutation};
+use crate::standards::v1::subsets::any::schema::snapshot::RewritingSnapshot;
 
 #[semio_framework_async_macros::async_test]
 async fn reorganize_uses_document_mutations() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📐️document-mutation-reorganization/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(runtime_fixture_text("../../../../../../../✏️editor/🎮️commands/🧹️reorganize/🧪️tests/🧫️fixtures/📐️document-mutation-reorganization/🔣️.json")).unwrap();
     for case in fixture["cases"].as_array().unwrap() {
         let mut before = RewritingSnapshot::default();
         before.rule_layout = semio_framework_pack_json::from_json_str(&case["before"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
@@ -30,4 +31,9 @@ async fn reorganize_uses_document_mutations() {
         }
         assert_eq!(after, before);
     }
+}
+
+fn runtime_fixture_text(relative: &str) -> &'static str {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative);
+    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display())).into_boxed_str())
 }

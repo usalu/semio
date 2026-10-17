@@ -1,0 +1,82 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "cases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 7,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "body",
+          "child",
+          "failed",
+          "events",
+          "preparations"
+        ],
+        "properties": {
+          "name": {
+            "enum": [
+              "empty",
+              "body-error",
+              "body-undefined",
+              "child-success",
+              "child-error",
+              "child-undefined",
+              "invalid-consumer"
+            ]
+          },
+          "body": {
+            "enum": [
+              "return",
+              "error",
+              "undefined",
+              "invalid"
+            ]
+          },
+          "child": {
+            "enum": [
+              "none",
+              "success",
+              "error",
+              "undefined"
+            ]
+          },
+          "failed": {
+            "type": "boolean"
+          },
+          "events": {
+            "type": "array",
+            "items": {
+              "enum": [
+                "prepare",
+                "consume",
+                "child-start",
+                "body-return",
+                "child-close",
+                "deliver",
+                "failed"
+              ]
+            }
+          },
+          "preparations": {
+            "enum": [
+              0,
+              1
+            ]
+          }
+        }
+      }
+    }
+  }
+}

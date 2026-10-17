@@ -1,0 +1,53 @@
+[package]
+workspace = "../../../../../../.."
+name = "semio-s-artifact-stdio-semio-mesh-io"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Component crate of semio-s-artifact-stdio-semio-mesh: io"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "🦀️.rs"
+
+[dependencies]
+semio-framework = { workspace = true }
+semio-framework-2d = { workspace = true }
+semio-framework-artifact-reference = { workspace = true }
+semio-framework-diagnostic = { workspace = true }
+semio-framework-job = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-pack = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
+semio-framework-pack-json = { workspace = true }
+semio-framework-plugin = { workspace = true }
+semio-framework-schema = { workspace = true }
+semio-framework-schema-composition = { workspace = true }
+semio-framework-schema-registry = { workspace = true }
+semio-framework-schema-state = { workspace = true }
+semio-framework-ui-locale = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-framework-value-derive = { workspace = true }
+semio-s-artifact-stdio-contract = { workspace = true }
+semio-s-artifact-stdio-semio-base = { workspace = true }
+semio-s-artifact-stdio-semio-mesh-examples = { path = "../../../📚️examples/🧊️cube/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-semio-mesh-mutations = { path = "../../💾️binary/🧬️mutations/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-semio-mesh-schema = { path = "../../../🧬️schema/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-semio-mesh-snapshot = { path = "../../../🧬️schema/📸️snapshot/📦️packages/🦀️rust" }
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+[dev-dependencies]
+semio-framework-async = { workspace = true }
+semio-framework-async-macros = { workspace = true }
+semio-framework-dsl = { workspace = true }
+semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
+semio-framework-test-fixtures = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-contract = { workspace = true, features = ["testing"] }
+semio-s-artifact-stdio-semio-mesh-examples = { path = "../../../📚️examples/🧊️cube/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-stdio-semio-mesh-mutations = { path = "../../💾️binary/🧬️mutations/📦️packages/🦀️rust", features = ["testkit"] }

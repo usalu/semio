@@ -1,0 +1,64 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛠️ShellHelpers/🪟️window-panes/🟦️.tsx",
+ "importers": "auto",
+ "children": [
+  {
+   "dir": "🎚️window-measures",
+   "doc": "/** 🎚️ Window panes, window measures: the sliders, selects, toggles and numbers a window declares as measures, their tree items, overlay and chrome and the dom id qualification. */",
+   "lines": [
+    [
+     93,
+     275
+    ],
+    [
+     355,
+     396
+    ]
+   ]
+  },
+  {
+   "dir": "🪛️utility-bar-options",
+   "doc": "/** 🪛️ Window panes, utility bar options: the options of the selection utility and the utility bar node. */",
+   "lines": [
+    [
+     277,
+     353
+    ],
+    [
+     398,
+     427
+    ]
+   ]
+  },
+  {
+   "dir": "📝️staged-args",
+   "doc": "/** 📝️ Window panes, staged args: the staged argument controls (reference, color, vector, number) and the form gate of an action. */",
+   "lines": [
+    [
+     430,
+     753
+    ]
+   ]
+  },
+  {
+   "dir": "⌨️keyboard-chords",
+   "doc": "/** ⌨️ Window panes, keyboard chords: the editable-target and keyboard-ownership guards, the canonical chord tokens, the chord matcher and the keybinding intent. */",
+   "lines": [
+    [
+     755,
+     846
+    ]
+   ]
+  },
+  {
+   "dir": "📋️clipboard-activation",
+   "doc": "/** 📋️ Window panes, clipboard activation: the clipboard fragment of an effect, the paste action with its retained fragment and the utility activation. */",
+   "lines": [
+    [
+     848,
+     877
+    ]
+   ]
+  }
+ ]
+}

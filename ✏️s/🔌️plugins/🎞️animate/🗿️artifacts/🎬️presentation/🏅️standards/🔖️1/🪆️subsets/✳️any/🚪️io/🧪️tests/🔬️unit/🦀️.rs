@@ -1,9 +1,10 @@
-use super::*;
+use crate::standards::v1::subsets::any::io::*;
 use semio_framework_pack_json::{object, Object, Value};
+use semio_framework_test_fixtures::fixture_text;
 
 #[test]
 fn title_cards_match_the_neutral_xml_oracle() {
-    let vectors: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️title-cards.json")).expect("neutral vectors");
+    let vectors: serde_json::Value = serde_json::from_str(fixture_text!("../../../../🚪️io/🧪️tests/🧫️fixtures/🔣️title-cards.json")).expect("neutral vectors");
     for row in vectors["cases"].as_array().expect("cases") {
         let value = semio_framework_pack_json::parse(&row["document"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("owned JSON");
         let (svg, width, height) = animate_presentation_document_json_to_svg(&value).expect("title card");

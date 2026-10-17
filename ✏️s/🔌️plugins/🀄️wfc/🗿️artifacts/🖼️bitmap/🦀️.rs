@@ -18,440 +18,134 @@ extern crate semio_framework_os_kernel as vcs;
 pub use crate::schema::snapshot::WFC_BITMAP_DOCUMENT_SCHEMA;
 
 use crate::schema::snapshot::{BitmapColor, BitmapPinnedPixel};
-use {semio_framework_plugin::ArtifactKindSpec,semio_framework_artifact_reference::Dialect,semio_framework_plugin::MediaClass,semio_framework_plugin::MediaForm,semio_framework_plugin::MediaType,semio_framework_plugin::OsMediaCapability,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
-//#region 🔖️Dialect
-/// 🪪️ The canonical surface-id coordinate for this artifact's ONE subset — `s.wfc.bitmap@1/*`.
-/// Lives at the ARTIFACT root (not under `✏️editor`/`👁️viewer`) so a viewer file can read it without
-/// importing through the sibling mutation-capable surface. `artifact_kind` matches
-/// `BitmapSnapshot`/`BitmapDiff`'s own `#[artifact_schema(id = "s.wfc.bitmap")]` attribute and
-/// `WFC_BITMAP_DOCUMENT_SCHEMA`'s literal value; `standard`/`subset` match this file's own
-/// `🏅️standards/🔖️1/🪆️subsets/✳️any` location on disk.
-pub const WFC_BITMAP_DIALECT: Dialect = Dialect { artifact_kind: WFC_BITMAP_DOCUMENT_SCHEMA, standard: StandardId("1"), subset: SubsetId::ANY };
-//#endregion 🔖️Dialect
+pub use semio_s_artifact_wfc_bitmap_tests_shrinks_the_output_and_cascades_a_pin::{WFC_BITMAP_DIALECT};
 
-//#region 🔖️ArtifactKind
-/// 🗂️ This artifact's `ArtifactKindSpec`. A bitmap problem is genuinely two-dimensional raster media
-/// — its input IS an image and its inferred output is another — so `dimension`/`media_class`/
-/// `media_form` say `2d`/`TwoD`/`Raster` rather than the headless `data` shape a pure rule spec
-/// would take.
-pub fn artifact_kind() -> ArtifactKindSpec {
-    ArtifactKindSpec {
-        id: "2d.wfcbitmap".into(),
-        label: semio_framework_ui_locale::LocalizedLabel::native("WFC Bitmap", "WFC-Bitmap"),
-        source_format: WFC_BITMAP_DOCUMENT_SCHEMA.into(),
-        component_kind: "wfcbitmap".into(),
-        dimension: "2d".into(),
-        media_capability: OsMediaCapability::MeshOnly,
-        media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Raster },
-        schema: WFC_BITMAP_DOCUMENT_SCHEMA.into(),
-        export_formats: vec![],
-        import_formats: vec![],
-        export_stdio_kinds: vec!["stdio.txt".into(), "stdio.json".into()],
-        import_stdio_kinds: vec!["stdio.txt".into(), "stdio.json".into()],
-    }
-}
-//#endregion 🔖️ArtifactKind
+pub use semio_s_artifact_wfc_bitmap_bitmap::{artifact_kind};
 
-//#region 🎨️CanvasLayers
-/// 🚚️ The byte budget one window's `layersJson` may occupy. `Canvas2dScene` keeps `layersJson` in
-/// the 32 KiB fixed-capacity surface spine — it has no lane of its own, unlike a paint-2d document
-/// sync — so a bitmap whose run-merged rectangles would not fit is rendered at a coarser block size
-/// instead of silently failing the whole surface encode.
-pub const BITMAP_LAYERS_JSON_BUDGET_BYTES: usize = 24 * 1024;
+pub use semio_s_artifact_wfc_bitmap_snapshot::{BITMAP_LAYERS_JSON_BUDGET_BYTES, bitmap_layers_at_block, bitmap_layers_json, bitmap_rect_layer};
 
-/// 🎨️ Builds one canvas-2d layer list for a palette-indexed bitmap: a background rectangle for the
-/// whole extent, one filled path per horizontal run of equal indices, and one outlined marker per
-/// pinned cell. Shared by both surfaces from the ARTIFACT root so the read-only viewer never has to
-/// import through the editor to draw the same pixels.
-///
-/// An empty `indices` slice draws the extent and the pins only — the honest rendering of an output
-/// nobody has collapsed yet, and the reason a window is never structurally empty.
-pub fn bitmap_layers_json(prefix: &str, width: u32, height: u32, palette: &[BitmapColor], indices: &[u8], pins: &[BitmapPinnedPixel]) -> String {
-    let mut block = 1u32;
-    loop {
-        let layers = bitmap_layers_at_block(prefix, width, height, palette, indices, pins, block);
-        let text = semio_framework_pack_json::to_string(&semio_framework_pack_json::array(layers));
-        if text.len() <= BITMAP_LAYERS_JSON_BUDGET_BYTES || block >= width.max(height).max(1) {
-            return text;
-        }
-        block *= 2;
-    }
-}
-
-fn bitmap_rect_layer(id: &str, x: f64, y: f64, w: f64, h: f64, color: [f64; 4]) -> semio_framework_pack_json::Value {
-    let segments = semio_framework_pack_json::array(vec![
-        semio_framework_pack_json::object([("kind".to_string(), semio_framework_pack_json::Value::from("move")), ("to".to_string(), semio_framework_pack_json::array(vec![semio_framework_pack_json::Value::from(x), semio_framework_pack_json::Value::from(y)]))]),
-        semio_framework_pack_json::object([("kind".to_string(), semio_framework_pack_json::Value::from("line")), ("to".to_string(), semio_framework_pack_json::array(vec![semio_framework_pack_json::Value::from(x + w), semio_framework_pack_json::Value::from(y)]))]),
-        semio_framework_pack_json::object([("kind".to_string(), semio_framework_pack_json::Value::from("line")), ("to".to_string(), semio_framework_pack_json::array(vec![semio_framework_pack_json::Value::from(x + w), semio_framework_pack_json::Value::from(y + h)]))]),
-        semio_framework_pack_json::object([("kind".to_string(), semio_framework_pack_json::Value::from("line")), ("to".to_string(), semio_framework_pack_json::array(vec![semio_framework_pack_json::Value::from(x), semio_framework_pack_json::Value::from(y + h)]))]),
-        semio_framework_pack_json::object([("kind".to_string(), semio_framework_pack_json::Value::from("close"))]),
-    ]);
-    let fill = semio_framework_pack_json::object([
-        ("kind".to_string(), semio_framework_pack_json::Value::from("solid")),
-        ("color".to_string(), semio_framework_pack_json::array(color.iter().map(|channel| semio_framework_pack_json::Value::from(*channel)).collect::<Vec<_>>())),
-    ]);
-    semio_framework_pack_json::object([("id".to_string(), semio_framework_pack_json::Value::from(id)), ("kind".to_string(), semio_framework_pack_json::Value::from("path")), ("segments".to_string(), segments), ("fill".to_string(), fill)])
-}
-
-fn bitmap_layers_at_block(prefix: &str, width: u32, height: u32, palette: &[BitmapColor], indices: &[u8], pins: &[BitmapPinnedPixel], block: u32) -> Vec<semio_framework_pack_json::Value> {
-    let mut layers = vec![bitmap_rect_layer(&format!("{prefix}-extent"), 0.0, 0.0, f64::from(width), f64::from(height), [0.09, 0.10, 0.12, 1.0])];
-    let cells = (width as usize) * (height as usize);
-    if indices.len() == cells {
-        for y in (0..height).step_by(block as usize) {
-            let mut x = 0u32;
-            while x < width {
-                let index = indices[(y * width + x) as usize];
-                let mut run = block.min(width - x);
-                while x + run < width && indices[(y * width + x + run) as usize] == index {
-                    run += block.min(width - x - run);
-                }
-                if let Some(color) = palette.get(usize::from(index)) {
-                    layers.push(bitmap_rect_layer(&format!("{prefix}-{x}-{y}"), f64::from(x), f64::from(y), f64::from(run), f64::from(block.min(height - y)), color.to_unit_rgba()));
-                }
-                x += run;
-            }
-        }
-    }
-    for pin in pins {
-        if pin.x < width && pin.y < height {
-            let color = palette.get(pin.color as usize).map_or([1.0, 1.0, 1.0, 1.0], |color| color.to_unit_rgba());
-            layers.push(bitmap_rect_layer(&format!("{prefix}-pin-{}-{}", pin.x, pin.y), f64::from(pin.x) + 0.2, f64::from(pin.y) + 0.2, 0.6, 0.6, color));
-        }
-    }
-    layers
-}
-//#endregion 🎨️CanvasLayers
-
-//#region 🔖️Declaration
-/// 🧾️ Defines `s.wfc.bitmap`'s immutable runtime capability leaves.
-pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
-    use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
-
-    let rows: &[semio_framework_plugin::ArtifactCapabilityRow<'_>] = &[
-        ("s.wfc.bitmap.standard.v1", "standard", "1", &[], None),
-        ("s.wfc.bitmap.standard.v1.profile.any", "profile", "any", &[], None),
-        ("s.wfc.bitmap.schema.artifact", "schema", "s.wfc.bitmap", &[("schema", "s.wfc.bitmap")], None),
-        ("s.wfc.bitmap.inference.artifact", "inference", "s.wfc.bitmap.solve", &[("schema", "s.wfc.bitmap.solve")], None),
-        ("s.wfc.bitmap.composer.native", "composer", "s.wfc.bitmap@1/*", &[("dialect", "s.wfc.bitmap@1/*")], None),
-        ("s.wfc.bitmap.composer.format-1", "composer", "s.stdio.txt@utf-8/*", &[("dialect", "s.stdio.txt@utf-8/*")], None),
-        ("s.wfc.bitmap.composer.format-2", "composer", "s.stdio.json@rfc8259/*", &[("dialect", "s.stdio.json@rfc8259/*")], None),
-        ("s.wfc.bitmap.grammar.1", "grammar", "wfc.bitmap", &[("grammar", "wfc.bitmap")], None),
-        ("s.wfc.bitmap.grammar.2", "grammar", "wfc.bitmap.op", &[("grammar", "wfc.bitmap.op")], None),
-        ("s.wfc.bitmap.codec.document-1", "codec", "s.wfc.bitmap:wfcbitmap", &[("codec", "s.wfc.bitmap"), ("codec-extension", "12:s.wfc.bitmap:wfcbitmap")], None),
-        ("s.wfc.bitmap.localization.en", "localization", "Bitmap", &[], Some(("en", "Bitmap"))),
-        ("s.wfc.bitmap.localization.de", "localization", "Bitmap", &[], Some(("de", "Bitmap"))),
-    ];
-    let mut definition = ArtifactDefinition::new(ArtifactIdentity::parse("s.wfc.bitmap")?);
-    for (identity, kind, descriptor, claims, localization) in rows {
-        let mut capability = ArtifactCapability::new(ArtifactIdentity::parse(*identity)?, ArtifactCapabilityKind::parse(*kind)?).descriptor(descriptor.as_bytes())?;
-        for (namespace, value) in *claims {
-            capability = capability.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::parse(*namespace)?, *value)?)?;
-        }
-        if let Some((locale, text)) = localization {
-            capability = capability.localization(ArtifactLocalization::new(ArtifactLocale::parse(*locale)?, *text)?)?;
-        }
-        definition = definition.capability(capability)?;
-    }
-    Ok(definition)
-}
-
-/// 🎭️ The two app bindings every declaration of this artifact must be able to absorb.
-pub trait ArtifactApps:
-    semio_framework_plugin::PluginApp
-    + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::EditorApp<editor::bitmap::BitmapEditor>>>
-    + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::ViewerApp<viewer::bitmap::BitmapViewer>>>
-{
-}
-
-impl<PA> ArtifactApps for PA where
-    PA: semio_framework_plugin::PluginApp
-        + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::EditorApp<editor::bitmap::BitmapEditor>>>
-        + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::ViewerApp<viewer::bitmap::BitmapViewer>>>
-{
-}
-
-/// 🌳️ This artifact's declaration tree root — the ONLY registration channel for schema/io/viewer/
-/// editor rows. `definition()` above is the separate capability-row channel.
-pub fn artifact<PA: ArtifactApps>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<PA> {
-    use semio_framework_plugin::app::declarations::ArtifactDeclaration;
-    use {semio_framework_artifact_reference::ArtifactKindId};
-    ArtifactDeclaration { kind: ArtifactKindId::parse("s.wfc.bitmap").expect("canonical wfc bitmap kind"), localization: &[], standards: vec![standards::v1::standard::<PA>()] }
-}
-
-/// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built once
-/// and leaked to a `&'static` slice since `dsl::passthrough_hooks` isn't `const fn`. The index order
-/// `[document, op, pack, spr]` is the one `io()` reads its `NativeCodecs` slots from.
-pub fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
-    static LANGUAGES: std::sync::OnceLock<Vec<semio_framework_dsl::LanguageSpec>> = std::sync::OnceLock::new();
-    LANGUAGES
-        .get_or_init(|| {
-            vec![
-                semio_framework_dsl::LanguageSpec {
-                    id: "wfc.bitmap",
-                    extension: Some("wfcbitmap"),
-                    role: semio_framework_dsl::LanguageRole::Document,
-                    grammar: Some(standards::v1::subsets::any::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(standards::v1::subsets::any::io::text::snapshot::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(standards::v1::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(standards::v1::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
-                    hooks: semio_framework_dsl::passthrough_hooks("wfc.bitmap"),
-                },
-                semio_framework_dsl::LanguageSpec {
-                    id: "wfc.bitmap.op",
-                    extension: None,
-                    role: semio_framework_dsl::LanguageRole::Ops,
-                    grammar: Some(standards::v1::subsets::any::io::text::mutations::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(standards::v1::subsets::any::io::text::mutations::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(standards::v1::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(standards::v1::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
-                    hooks: semio_framework_dsl::passthrough_hooks("wfc.bitmap.op"),
-                },
-                semio_framework_dsl::LanguageSpec {
-                    id: "wfc.bitmap.pack",
-                    extension: None,
-                    role: semio_framework_dsl::LanguageRole::Pack,
-                    grammar: None,
-                    grammar_path: None,
-                    protocol: Some(standards::v1::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(standards::v1::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
-                    hooks: semio_framework_dsl::passthrough_hooks("wfc.bitmap.pack"),
-                },
-                semio_framework_dsl::LanguageSpec {
-                    id: "wfc.bitmap.spr",
-                    extension: None,
-                    role: semio_framework_dsl::LanguageRole::Spr,
-                    grammar: None,
-                    grammar_path: None,
-                    protocol: Some(standards::v1::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(standards::v1::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
-                    hooks: semio_framework_dsl::passthrough_hooks("wfc.bitmap.spr"),
-                },
-            ]
-        })
-        .as_slice()
-}
-//#endregion 🔖️Declaration
+pub use semio_s_artifact_wfc_bitmap_bitmap::{ArtifactApps, artifact, definition, pilot_languages};
 
 #[path = "."]
 pub mod standards {
     #[path = "."]
     pub mod v1 {
-        #[path = "🏅️standards/🔖️1/🦀️.rs"]
-        mod component;
-        pub use component::*;
+        pub use semio_s_artifact_wfc_bitmap_bitmap::standards::v1::*;
 
         #[path = "."]
         pub mod subsets {
             #[path = "."]
             pub mod any {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🦀️.rs"]
-                mod component;
-                pub use component::*;
+                pub use semio_s_artifact_wfc_bitmap_bitmap::standards::v1::subsets::any::*;
 
                 #[path = "."]
                 pub mod schema {
-                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs"]
-                    mod component;
-                    pub use component::*;
-                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs"]
-                    pub mod diff;
-                    #[path = "."]
-                    pub mod snapshot {
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
+                    pub use semio_s_artifact_wfc_bitmap_schema::standards::v1::subsets::any::schema::*;
+
+                    pub use semio_s_artifact_wfc_bitmap_snapshot::standards::v1::subsets::any::schema::diff;
+                    pub use semio_s_artifact_wfc_bitmap_snapshot::standards::v1::subsets::any::schema::snapshot;
                     #[path = "."]
                     pub mod mutations {
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
+                        pub use semio_s_artifact_wfc_bitmap_inferences::standards::v1::subsets::any::schema::mutations::*;
+
                         #[path = "."]
                         pub mod change_seed {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎲️change-seed/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎲️change-seed/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎲️change-seed/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎲️change-seed/🧪️tests/🎲️reseeds/🦀️.rs"]
-                            mod tests_reseeds_the_solve_from_7_to_99;
+                            pub use semio_s_artifact_wfc_bitmap_snapshot::standards::v1::subsets::any::schema::mutations::change_seed::*;
+                            pub use semio_s_artifact_wfc_bitmap_snapshot::standards::v1::subsets::any::schema::mutations::change_seed::diff;
+                            pub use semio_s_artifact_wfc_bitmap_snapshot::standards::v1::subsets::any::schema::mutations::change_seed::inverse;
+
                         }
                         #[path = "."]
                         pub mod resize_input {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️resize-input/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️resize-input/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️resize-input/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️resize-input/🧪️tests/📐️grows/🦀️.rs"]
-                            mod tests_grows_the_sample_to_6_by_4;
+                            pub use semio_s_artifact_wfc_bitmap_mut_family::standards::v1::subsets::any::schema::mutations::resize_input::*;
+                            pub use semio_s_artifact_wfc_bitmap_mut_family::standards::v1::subsets::any::schema::mutations::resize_input::diff;
+                            pub use semio_s_artifact_wfc_bitmap_mut_family::standards::v1::subsets::any::schema::mutations::resize_input::inverse;
+
                         }
                         #[path = "."]
                         pub mod set_input_pixels {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖌️set-input-pixels/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖌️set-input-pixels/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖌️set-input-pixels/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖌️set-input-pixels/🧪️tests/🖌️paints/🦀️.rs"]
-                            mod tests_paints_a_2_by_2_block_of_colour_1;
+                            pub use semio_s_artifact_wfc_bitmap_mut_family::standards::v1::subsets::any::schema::mutations::set_input_pixels::*;
+                            pub use semio_s_artifact_wfc_bitmap_mut_family::standards::v1::subsets::any::schema::mutations::set_input_pixels::diff;
+                            pub use semio_s_artifact_wfc_bitmap_mut_family::standards::v1::subsets::any::schema::mutations::set_input_pixels::inverse;
+
                         }
                         #[path = "."]
                         pub mod add_palette_color {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨️add-palette-color/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨️add-palette-color/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨️add-palette-color/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨️add-palette-color/🧪️tests/🎨️appends/🦀️.rs"]
-                            mod tests_appends_a_third_colour;
+                            pub use semio_s_artifact_wfc_bitmap_mut_family::standards::v1::subsets::any::schema::mutations::add_palette_color::*;
+                            pub use semio_s_artifact_wfc_bitmap_mut_family::standards::v1::subsets::any::schema::mutations::add_palette_color::diff;
+                            pub use semio_s_artifact_wfc_bitmap_mut_family::standards::v1::subsets::any::schema::mutations::add_palette_color::inverse;
+
                         }
                         #[path = "."]
                         pub mod change_palette_color {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖍️change-palette-color/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖍️change-palette-color/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖍️change-palette-color/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖍️change-palette-color/🧪️tests/🖍️recolours/🦀️.rs"]
-                            mod tests_recolours_the_second_entry;
+                            pub use semio_s_artifact_wfc_bitmap_mut_family::standards::v1::subsets::any::schema::mutations::change_palette_color::*;
+                            pub use semio_s_artifact_wfc_bitmap_mut_family::standards::v1::subsets::any::schema::mutations::change_palette_color::diff;
+                            pub use semio_s_artifact_wfc_bitmap_mut_family::standards::v1::subsets::any::schema::mutations::change_palette_color::inverse;
+
                         }
                         #[path = "."]
                         pub mod remove_palette_color {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧽️remove-palette-color/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧽️remove-palette-color/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧽️remove-palette-color/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧽️remove-palette-color/🧪️tests/🧽️drops/🦀️.rs"]
-                            mod tests_drops_the_unused_third_colour;
+                            pub use semio_s_artifact_wfc_bitmap_mut_family::standards::v1::subsets::any::schema::mutations::remove_palette_color::*;
+                            pub use semio_s_artifact_wfc_bitmap_mut_family::standards::v1::subsets::any::schema::mutations::remove_palette_color::diff;
+                            pub use semio_s_artifact_wfc_bitmap_mut_family::standards::v1::subsets::any::schema::mutations::remove_palette_color::inverse;
+
                         }
                         #[path = "."]
                         pub mod resize_output {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️resize-output/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️resize-output/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️resize-output/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️resize-output/🧪️tests/🖼️shrinks/🦀️.rs"]
-                            mod tests_shrinks_the_output_and_cascades_a_pin;
+                            pub use semio_s_artifact_wfc_bitmap_mut_family_2::standards::v1::subsets::any::schema::mutations::resize_output::*;
+                            pub use semio_s_artifact_wfc_bitmap_mut_family_2::standards::v1::subsets::any::schema::mutations::resize_output::diff;
+                            pub use semio_s_artifact_wfc_bitmap_mut_family_2::standards::v1::subsets::any::schema::mutations::resize_output::inverse;
+
                         }
                         #[path = "."]
                         pub mod change_model {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚙️change-model/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚙️change-model/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚙️change-model/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚙️change-model/🧪️tests/⚙️widens/🦀️.rs"]
-                            mod tests_widens_the_window_to_three;
+                            pub use semio_s_artifact_wfc_bitmap_mut_family::standards::v1::subsets::any::schema::mutations::change_model::*;
+                            pub use semio_s_artifact_wfc_bitmap_mut_family::standards::v1::subsets::any::schema::mutations::change_model::diff;
+                            pub use semio_s_artifact_wfc_bitmap_mut_family::standards::v1::subsets::any::schema::mutations::change_model::inverse;
+
                         }
                         #[path = "."]
                         pub mod pin_pixel {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📌️pin-pixel/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📌️pin-pixel/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📌️pin-pixel/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📌️pin-pixel/🧪️tests/📌️pins/🦀️.rs"]
-                            mod tests_pins_the_origin_cell_to_colour_1;
+                            pub use semio_s_artifact_wfc_bitmap_mut_family_2::standards::v1::subsets::any::schema::mutations::pin_pixel::*;
+                            pub use semio_s_artifact_wfc_bitmap_mut_family_2::standards::v1::subsets::any::schema::mutations::pin_pixel::diff;
+                            pub use semio_s_artifact_wfc_bitmap_mut_family_2::standards::v1::subsets::any::schema::mutations::pin_pixel::inverse;
+
                         }
                         #[path = "."]
                         pub mod unpin_pixel {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️unpin-pixel/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️unpin-pixel/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️unpin-pixel/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️unpin-pixel/🧪️tests/📍️releases/🦀️.rs"]
-                            mod tests_releases_the_pinned_origin_cell;
+                            pub use semio_s_artifact_wfc_bitmap_mut_family_2::standards::v1::subsets::any::schema::mutations::unpin_pixel::*;
+                            pub use semio_s_artifact_wfc_bitmap_mut_family_2::standards::v1::subsets::any::schema::mutations::unpin_pixel::diff;
+                            pub use semio_s_artifact_wfc_bitmap_mut_family_2::standards::v1::subsets::any::schema::mutations::unpin_pixel::inverse;
+
                         }
                         #[path = "."]
                         pub mod paint_input_stroke {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✍️paint-input-stroke/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✍️paint-input-stroke/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✍️paint-input-stroke/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✍️paint-input-stroke/🧪️tests/✍️paints/🦀️.rs"]
-                            mod tests_paints_a_diagonal_stroke_in_colour_1;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✍️paint-input-stroke/🧪️tests/⚠️clips/🦀️.rs"]
-                            mod tests_clips_a_stroke_leaving_the_sample;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✍️paint-input-stroke/🧪️tests/🔬️unit/🦀️.rs"]
-                            mod tests_unit;
+                            pub use semio_s_artifact_wfc_bitmap_mut_family_2::standards::v1::subsets::any::schema::mutations::paint_input_stroke::*;
+                            pub use semio_s_artifact_wfc_bitmap_mut_family_2::standards::v1::subsets::any::schema::mutations::paint_input_stroke::diff;
+                            pub use semio_s_artifact_wfc_bitmap_mut_family_2::standards::v1::subsets::any::schema::mutations::paint_input_stroke::inverse;
+
                         }
                     }
-                    #[path = "."]
-                    pub mod inferences {
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
+                    pub use semio_s_artifact_wfc_bitmap_inferences::standards::v1::subsets::any::schema::inferences;
                 }
 
                 #[path = "."]
                 pub mod io {
-                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs"]
-                    mod component;
-                    pub use component::*;
+                    pub use semio_s_artifact_wfc_bitmap_bitmap::standards::v1::subsets::any::io::*;
+pub mod sqlite {
+    pub use semio_s_artifact_wfc_bitmap_mut_family::standards::v1::subsets::any::io::sqlite::*;
+    pub use semio_s_artifact_wfc_bitmap_snapshot::standards::v1::subsets::any::io::sqlite::snapshot;
+}
+
                     #[path = "."]
                     pub mod import {
                         #[path = "."]
                         pub mod deserializers {
                             #[path = "."]
                             pub mod artifacts {
-                                #[path = "."]
-                                pub mod txt {
-                                    #[path = "."]
-                                    pub mod v_utf_8 {
-                                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔤️txt/🔖️utf-8/✳️any/🦀️.rs"]
-                                        pub mod any;
-                                    }
-                                }
-                                #[path = "."]
-                                pub mod json {
-                                    #[path = "."]
-                                    pub mod v_rfc8259 {
-                                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🦀️.rs"]
-                                        pub mod any;
-                                    }
-                                }
+                                pub use semio_s_artifact_wfc_bitmap_snapshot::standards::v1::subsets::any::io::import::deserializers::artifacts::txt;
+                                pub use semio_s_artifact_wfc_bitmap_snapshot::standards::v1::subsets::any::io::import::deserializers::artifacts::json;
                             }
                         }
                     }
@@ -461,22 +155,8 @@ pub mod standards {
                         pub mod serializers {
                             #[path = "."]
                             pub mod artifacts {
-                                #[path = "."]
-                                pub mod txt {
-                                    #[path = "."]
-                                    pub mod v_utf_8 {
-                                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🔤️txt/🔖️utf-8/✳️any/🦀️.rs"]
-                                        pub mod any;
-                                    }
-                                }
-                                #[path = "."]
-                                pub mod json {
-                                    #[path = "."]
-                                    pub mod v_rfc8259 {
-                                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🦀️.rs"]
-                                        pub mod any;
-                                    }
-                                }
+                                pub use semio_s_artifact_wfc_bitmap_snapshot::standards::v1::subsets::any::io::export::serializers::artifacts::txt;
+                                pub use semio_s_artifact_wfc_bitmap_snapshot::standards::v1::subsets::any::io::export::serializers::artifacts::json;
                             }
                         }
                     }
@@ -490,72 +170,44 @@ pub mod standards {
 pub mod editor {
     #[path = "."]
     pub mod bitmap {
-        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs"]
-        mod component;
-        pub use component::*;
-        #[path = "."]
-        pub mod presence {
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
-        #[path = "."]
-        pub mod config {
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
+        pub use semio_s_artifact_wfc_bitmap_bitmap::editor::bitmap::*;
 
-        #[path = "."]
+        pub use semio_s_artifact_wfc_bitmap_mut_family::editor::bitmap::presence;
+        pub use semio_s_artifact_wfc_bitmap_mut_family::editor::bitmap::config;
+
         pub mod transient {
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🦀️.rs"]
-            mod component;
-            pub use component::*;
+    pub use semio_s_artifact_wfc_bitmap_transient::editor::bitmap::transient::*;
+    pub mod io {
+        pub use semio_s_artifact_wfc_bitmap_mut_family::editor::bitmap::transient::io::*;
+        pub mod binary {
+            pub use semio_s_artifact_wfc_bitmap_snapshot::editor::bitmap::transient::io::binary::*;
+            pub use semio_s_artifact_wfc_bitmap_transient::editor::bitmap::transient::io::binary::mutations;
         }
+        pub mod text {
+            pub use semio_s_artifact_wfc_bitmap_snapshot::editor::bitmap::transient::io::text::*;
+            pub use semio_s_artifact_wfc_bitmap_transient::editor::bitmap::transient::io::text::mutations;
+        }
+    }
+}
 
         #[path = "."]
         pub mod commands {
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎬️set-active-example/🦀️.rs"]
-            pub mod set_active_example;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📌️pin-solution/🦀️.rs"]
-            pub mod pin_solution;
+            pub use semio_s_artifact_wfc_bitmap_tests_shrinks_the_output_and_cascades_a_pin::editor::bitmap::commands::set_active_example;
+            pub use semio_s_artifact_wfc_bitmap_tests_shrinks_the_output_and_cascades_a_pin::editor::bitmap::commands::pin_solution;
         }
 
         #[path = "."]
         pub mod modes {
             #[path = "."]
             pub mod edit {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🦀️.rs"]
-                mod component;
-                pub use component::*;
+                pub use semio_s_artifact_wfc_bitmap_bitmap::editor::bitmap::modes::edit::*;
 
-                #[path = "."]
-                pub mod tools {
-                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🛠️tools/🌡fill/🦀️.rs"]
-                    pub mod fill;
-                }
+                pub use semio_s_artifact_wfc_bitmap_bitmap::editor::bitmap::modes::edit::tools;
 
                 #[path = "."]
                 pub mod windows {
-                    #[path = "."]
-                    pub mod input {
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🖼️input/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🖼️input/🎚️config/🦀️.rs"]
-                        pub mod config;
-                        #[path = "."]
-                        pub mod utilities {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🖼️input/🪛️utilities/🖌️brush/🦀️.rs"]
-                            pub mod brush;
-                        }
-                    }
-                    #[path = "."]
-                    pub mod output {
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧩️output/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧩️output/🎚️config/🦀️.rs"]
-                        pub mod config;
-                    }
+                    pub use semio_s_artifact_wfc_bitmap_bitmap::editor::bitmap::modes::edit::windows::input;
+                    pub use semio_s_artifact_wfc_bitmap_bitmap::editor::bitmap::modes::edit::windows::output;
                 }
             }
         }
@@ -566,34 +218,21 @@ pub mod editor {
 pub mod viewer {
     #[path = "."]
     pub mod bitmap {
-        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs"]
-        mod component;
-        pub use component::*;
-        #[path = "."]
-        pub mod presence {
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/👥️presence/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
-        #[path = "."]
-        pub mod config {
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎚️config/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
+        pub use semio_s_artifact_wfc_bitmap_tests_shrinks_the_output_and_cascades_a_pin::viewer::bitmap::*;
+
+        pub use semio_s_artifact_wfc_bitmap_mut_family::viewer::bitmap::presence;
+        pub use semio_s_artifact_wfc_bitmap_mut_family::viewer::bitmap::config;
 
         #[path = "."]
         pub mod modes {
             #[path = "."]
             pub mod view {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🦀️.rs"]
-                mod component;
-                pub use component::*;
+                pub use semio_s_artifact_wfc_bitmap_snapshot::viewer::bitmap::modes::view::*;
 
                 #[path = "."]
                 pub mod windows {
-                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🖼️input/🦀️.rs"]
-                    pub mod input;
-                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🧩️output/🦀️.rs"]
-                    pub mod output;
+                    pub use semio_s_artifact_wfc_bitmap_snapshot::viewer::bitmap::modes::view::windows::input;
+                    pub use semio_s_artifact_wfc_bitmap_snapshot::viewer::bitmap::modes::view::windows::output;
                 }
             }
         }
@@ -605,28 +244,7 @@ pub mod viewer {
 /// four-colour meadow with a ground constraint. Each slug owns its own directory under
 /// `🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/`, and the Rust builder there is the authority its
 /// `🗣️.dsl.semio` asset is printed from.
-#[path = "."]
-pub mod examples {
-    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🚪️rooms-16/🦀️.rs"]
-    pub mod rooms_16;
-    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🌸️flowers-24/🦀️.rs"]
-    pub mod flowers_24;
-
-    /// 📇️ Every bundled example, in the order the editor's example picker offers them.
-    pub fn sources() -> Vec<semio_framework_plugin::ExampleSource> {
-        vec![rooms_16::source(), flowers_24::source()]
-    }
-
-    /// 📇️ The same roster as a `&'static` slice, which is the shape `SubsetDeclaration` takes.
-    pub fn example_source_slice() -> &'static [semio_framework_plugin::ExampleSource] {
-        static EXAMPLES: std::sync::OnceLock<Vec<semio_framework_plugin::ExampleSource>> = std::sync::OnceLock::new();
-        EXAMPLES.get_or_init(sources).as_slice()
-    }
-
-    #[cfg(test)]
-    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🧪️tests/🧩️outcome/🦀️.rs"]
-    mod tests;
-}
+pub use semio_s_artifact_wfc_bitmap_tests_shrinks_the_output_and_cascades_a_pin::examples;
 //#endregion 📚️Examples
 
 /// 🪞️ Flat access from the artifact root, mirroring the sibling wfc artifacts: the subset's schema
@@ -656,7 +274,6 @@ pub use crate::standards::v1::subsets::any::schema::snapshot::BitmapSnapshot;
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 
-
 #[cfg(test)]
 #[path = "🧪️tests/🔬️store-fixture/🦀️.rs"]
 mod store_fixture;
@@ -666,3 +283,7 @@ mod store_fixture;
 pub mod host;
 
 pub use host::inferences::*;
+
+#[cfg(test)]
+#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs"]
+mod hoisted_snapshot_0;

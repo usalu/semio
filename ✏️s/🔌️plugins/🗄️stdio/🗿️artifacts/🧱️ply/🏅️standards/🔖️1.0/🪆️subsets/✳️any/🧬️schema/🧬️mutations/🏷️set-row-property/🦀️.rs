@@ -8,10 +8,10 @@ use super::*;
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 pub struct SetRowProperty {
-    pub(crate) element_name: String,
-    pub(crate) row_index: usize,
-    pub(crate) property_name: String,
-    pub(crate) value: PlyValue,
+    pub element_name: String,
+    pub row_index: usize,
+    pub property_name: String,
+    pub value: PlyValue,
 }
 
 impl protocol::MutationKind<PlySnapshot, PlyMutation> for SetRowProperty {

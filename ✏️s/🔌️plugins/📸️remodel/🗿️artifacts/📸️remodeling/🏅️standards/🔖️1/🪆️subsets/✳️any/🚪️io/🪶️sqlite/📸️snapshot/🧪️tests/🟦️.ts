@@ -135,7 +135,6 @@ test("SQLite remodeling structured durable content is authoritative in scalar re
   db.run("UPDATE remodel_durable_float SET sample=1.5,sample_bits=1069547520 WHERE ordinal=0 AND chunk_id=(SELECT c.id FROM remodel_durable_chunk c JOIN remodel_durable_artifact a ON a.id=c.artifact_id WHERE a.content_id=? AND c.ordinal=0)",[law.sparse.contentId]);
   const edited=structuredClone(snapshot);new DataView(edited.durableArtifacts[law.sparse.contentId]!.chunks[0]!.buffer).setUint32(0,1069547520,true);
   expect(await ownerSqlite0.remodelingSnapshotFromSqliteDatabase(await importSqliteDatabase(new Uint8Array(db.serialize())))).toEqual(edited);
-  console.log("[DEBUG] Remodeling typed durable scalar and mesh fields remain authoritative after independent SQLite edit");
  }finally{db.close()}
 });
 
@@ -155,7 +154,6 @@ test("SQLite remodeling preserves every authored structured fragment without opa
     expect(db.query("SELECT content FROM remodel_durable_text WHERE chunk_id=?").get(boundary.id)).toEqual(expected.textRow);
    }
    expect(await ownerSqlite0.remodelingSnapshotFromSqliteDatabase(await importSqliteDatabase(new Uint8Array(db.serialize())))).toEqual(snapshot);
-   console.log("[DEBUG] Remodeling total fragment authority",value.name,value.chunks.length);
   }finally{db.close()}
  }
 },15000);
@@ -179,7 +177,6 @@ test("SQLite remodeling restores independently reordered physical tables and ref
    const restoredDatabase=await importSqliteDatabase(new Uint8Array(oracle.serialize()));
    expect(restoredDatabase.tables.map(table=>table.name)).toEqual(tables.map(table=>table.name));
    expect(await ownerSqlite0.remodelingSnapshotFromSqliteDatabase(restoredDatabase)).toEqual(snapshot);
-   console.log("[DEBUG] Remodeling original physical table order restores",order,tables.length);
   }finally{oracle.close()}
  }
  const bytes=await exportSqliteDatabase(database);
@@ -190,7 +187,6 @@ test("SQLite remodeling restores independently reordered physical tables and ref
    oracle.run(changed==="renamed"?"ALTER TABLE remodel_document RENAME TO unexpected_document":"DROP TABLE remodel_document");
    expect(oracle.query("PRAGMA integrity_check").get()).toEqual({integrity_check:"ok"});
    await expect(ownerSqlite0.remodelingSnapshotFromSqliteDatabase(await importSqliteDatabase(new Uint8Array(oracle.serialize())))).rejects.toThrow();
-   console.log("[DEBUG] Remodeling changed physical table owner refused",changed);
   }finally{oracle.close()}
  }
 },15000);

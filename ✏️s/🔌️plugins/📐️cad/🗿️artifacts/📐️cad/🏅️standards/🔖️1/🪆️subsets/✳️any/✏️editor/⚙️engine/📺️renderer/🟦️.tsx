@@ -6,62 +6,23 @@
 // #endregion 🧲️Header
 
 import { reactHostPort, uiDataLabel, WINDOW_SEARCH_USER } from "@semio-tech/framework/ui/targets/react";
-import { emptyMeshTransfer, kernelGeometry, solidRef } from "../../../../../../../../../⚙️engine/📔️registry/🟦️.ts";
-import { resolveTypologyStyle, typologyStyleCacheKey } from "../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🎨️typology/🟦️.ts";
-import { listStatDefinitionsForModelDefinition, statDefinitionAppliesToScope } from "../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/📊️stats/🟦️.ts";
-import { defaultModelDefinitionId } from "../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/📥️definition-catalog/🟦️.ts";
-import { Model } from "../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🧊️model/🟦️.ts";
+import { emptyMeshTransfer, kernelGeometry, solidRef } from "@semio-tech/cad-engine-ts/registry";
+import { resolveTypologyStyle, typologyStyleCacheKey } from "@semio-tech/s-spatial-kernel-ts/geometry/typology";
+import { listStatDefinitionsForModelDefinition, statDefinitionAppliesToScope } from "@semio-tech/s-spatial-kernel-ts/geometry/stats";
+import { defaultModelDefinitionId } from "@semio-tech/s-spatial-kernel-ts/geometry/definition-catalog";
+import { Model } from "@semio-tech/s-spatial-kernel-ts/geometry/model";
 import { ensureTypologyObjectFromCreateDiff } from "../🧬️typology/🟦️.ts";
-import { applyModelDiff } from "../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️.ts";
-import { mergeInteractionSpatial } from "../🎬️actions/🟦️.ts";
-import { loadSpatialInteraction } from "../🗿️artifact/🟦️.ts";
-import { preciseSpatialKernelMath } from "../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🧮️preview/🟦️.ts";
+import { applyModelDiff } from "@semio-tech/s-spatial-kernel-ts/spatial";
+import { mergeInteractionSpatial } from "../🎬️actions/🎰️interaction-state/🟦️.ts";
+import { loadSpatialInteraction } from "../🗿️artifact/📚️interaction-catalog/🟦️.ts";
+import { preciseSpatialKernelMath } from "@semio-tech/s-spatial-kernel-ts/preview";
 import { THREE } from "./🔌️ports/🟦️.ts";
 import { resetSpatialSceneColorCache, spatialSceneColors } from "./🎨️style/🟦️.ts";
-import {
-  buildGeometryObjectIndex,
-  buildPlanarFaceMeshTransfer,
-  collectGeometryEdgeSegments,
-  COMMITTED_MESH_FACE_OPACITY,
-  createSpatialPickEvent,
-  createSpatialPickTargets,
-  createTypologyStyledMaterial,
-  defaultSpatialPrimitiveToggles,
-  defaultSpatialTypologyTogglesForModelDefinition,
-  filterCommittedMeshesForModelDefinition,
-  filterFootprintBoxPreviewDisplayItems,
-  filterSpatialPickTargets,
-  filterSpatialPickTargetsForActiveView,
-  filterSpatialPickTargetsForEntityFlags,
-  filterSpatialPickTargetsForPrimitiveToggles,
-  filterSpatialPickTargetsForTypologyToggles,
-  geometryBuckets,
-  geometryEntityNurbsPoles,
-  geometryEntityWireSegments,
-  historyEntryArchivesBoxFootprint,
-  isRenderableMeshTransfer,
-  listFactoryFaceMeshesForModelDefinition,
-  modelDefinitionPickTargetKinds,
-  modelDefinitionTypologyIds,
-  nurbsPolesFromEdge,
-  pinnedPickTargetKeys,
-  pruneSelectionTargetsForEntityFlags,
-  resolveCommittedMeshMaterialProps,
-  resolveSpatialEntityFlags,
-  resolveSpatialSceneVisibility,
-  spatialHoverKeyAliases,
-  spatialHoverKeysMatch,
-  spatialPickKindTogglesFromTypologyFilteredTargets,
-  spatialPickTargetKey,
-  spatialSceneKindTogglesForModelDefinition,
-  spatialToggleCheckboxState,
-  spatialToggleGroupFill,
-  spatialToggleGroupState,
-  spatialTypologyToggleLabel,
-  TessellatedCommitMesh,
-  typologyStyleToMaterialProps,
-  visibleSolidRefsForModelDefinition
-} from "./🧲️geometry-targets/🟦️.tsx";
+import { COMMITTED_MESH_FACE_OPACITY, filterFootprintBoxPreviewDisplayItems, historyEntryArchivesBoxFootprint, resolveCommittedMeshMaterialProps, TessellatedCommitMesh } from "./🧲️geometry-targets/🟦️.tsx";
+import { defaultSpatialPrimitiveToggles, defaultSpatialTypologyTogglesForModelDefinition, filterSpatialPickTargetsForActiveView, filterSpatialPickTargetsForEntityFlags, filterSpatialPickTargetsForPrimitiveToggles, filterSpatialPickTargetsForTypologyToggles, modelDefinitionPickTargetKinds, modelDefinitionTypologyIds, pruneSelectionTargetsForEntityFlags, resolveSpatialSceneVisibility, spatialPickKindTogglesFromTypologyFilteredTargets, spatialPickTargetKey, spatialSceneKindTogglesForModelDefinition, spatialToggleCheckboxState, spatialToggleGroupFill, spatialToggleGroupState, spatialTypologyToggleLabel } from "./🧲️geometry-targets/🎯️pick-model/🟦️.ts";
+import { buildGeometryObjectIndex, collectGeometryEdgeSegments, createSpatialPickEvent, createSpatialPickTargets, filterSpatialPickTargets, geometryBuckets, geometryEntityNurbsPoles, geometryEntityWireSegments, nurbsPolesFromEdge } from "./🧲️geometry-targets/🧬️geometry-index/🟦️.ts";
+import { createTypologyStyledMaterial, pinnedPickTargetKeys, spatialHoverKeyAliases, spatialHoverKeysMatch, typologyStyleToMaterialProps } from "./🧲️geometry-targets/🎨️pick-styling/🟦️.ts";
+import { buildPlanarFaceMeshTransfer, filterCommittedMeshesForModelDefinition, isRenderableMeshTransfer, listFactoryFaceMeshesForModelDefinition, resolveSpatialEntityFlags, visibleSolidRefsForModelDefinition } from "./🧲️geometry-targets/🧊️mesh-transfers/🟦️.ts";
 import { PreviewItem } from "./🖼️display/🟦️.tsx";
 import { defaultInteractionSpatialViewTheme, projectRayToVerticalZLine, projectRayToYzPlaneAtX, transformGumballMatrixDiff } from "./🔖️interaction/🟦️.tsx";
 import {
@@ -107,98 +68,12 @@ export {
   spatialSceneColors
 } from "./🎨️style/🟦️.ts";
 
-export {
-  type ArchivedBoxLayout,
-  bboxFromPoints,
-  bboxWireSegments,
-  boundsFromMeshTransfers,
-  boundsFromSpatialPickGeometry,
-  buildBufferGeometryFromMeshTransfer,
-  buildGeometryObjectIndex,
-  buildGeometryTypologyIndex,
-  buildPlanarFaceMeshTransfer,
-  collectGeometryEdgeSegments,
-  collectGeometryEdgeSegmentsForMembers,
-  COMMITTED_MESH_FACE_OPACITY,
-  CommittedMeshLayer,
-  type CommittedMeshVisibilityOptions,
-  computeBoxPreviewLayout,
-  computeSpherePreviewLayout,
-  createSpatialPickEvent,
-  createSpatialPickTargets,
-  createTypologyStyledMaterial,
-  defaultSpatialPickKindToggles,
-  defaultSpatialPickKindTogglesForModelDefinition,
-  defaultSpatialPrimitiveToggles,
-  defaultSpatialTypologyTogglesForModelDefinition,
-  type FactoryFaceMeshRow,
-  FactoryFaceSurfaceLayer,
-  filterCommittedMeshesForModelDefinition,
-  filterFootprintBoxPreviewDisplayItems,
-  filterSpatialPickTargets,
-  filterSpatialPickTargetsForActiveView,
-  filterSpatialPickTargetsForEntityFlags,
-  filterSpatialPickTargetsForPrimitiveToggles,
-  filterSpatialPickTargetsForTypologyToggles,
-  filterSpatialPickTargetsForVisibility,
-  findFaceGroupAt,
-  geometryEntityNurbsPoles,
-  geometryEntityWireSegments,
-  geometryPreviewTransformFromDisplay,
-  historyEntryArchivesBoxFootprint,
-  intersectSpatialPickKindToggles,
-  isRenderableMeshTransfer,
-  listFactoryFaceMeshesForModelDefinition,
-  listModelSolidRefs,
-  meshTransferContentKey,
-  meshTransferOrigin,
-  modelDefinitionPickTargetKinds,
-  modelDefinitionTypologyIds,
-  modelHasCommittedSolidsForDisplay,
-  modelHasFactoryFaceDisplay,
-  nurbsPolesFromEdge,
-  pickTargetPrimitiveKind,
-  polylineWireSegments,
-  pruneSelectionTargetsForEntityFlags,
-  resolveCommittedMeshMaterialProps,
-  resolveFaceInfoFromTriangleIndex,
-  resolveSpatialEntityFlags,
-  resolveSpatialSceneVisibility,
-  selectionTargetHoverKey,
-  SPATIAL_PICK_TARGET_KINDS,
-  SPATIAL_PRIMITIVE_KINDS,
-  type SpatialDragSelectionState,
-  spatialEntityFlagsForModelEntity,
-  type SpatialGeometryPickTargetKind,
-  spatialHoverKeyAliases,
-  spatialHoverKeysMatch,
-  type SpatialPickGeometry,
-  type SpatialPickKind,
-  type SpatialPickKindToggles,
-  spatialPickKindTogglesFromTypologyFilteredTargets,
-  type SpatialPickTarget,
-  spatialPickTargetKey,
-  type SpatialPickTargetKind,
-  type SpatialPrimitiveToggles,
-  spatialSceneKindTogglesForModelDefinition,
-  type SpatialSelectionMethod,
-  type SpatialSelectionRequest,
-  spatialToggleCheckboxState,
-  spatialToggleGroupFill,
-  spatialToggleGroupState,
-  type SpatialToggleGroupState,
-  spatialTypologyToggleLabel,
-  type SpatialTypologyToggles,
-  TessellatedCommitMesh,
-  type TessellatedCommitMeshProps,
-  transformPointsForPreviewKind,
-  tryArchivedBoxFromContext,
-  typologyStyleToMaterialProps,
-  useDocumentMeshes,
-  useTessellation,
-  visibleFaceRefsForModelDefinition,
-  visibleSolidRefsForModelDefinition
-} from "./🧲️geometry-targets/🟦️.tsx";
+export { type ArchivedBoxLayout, COMMITTED_MESH_FACE_OPACITY, CommittedMeshLayer, FactoryFaceSurfaceLayer, filterFootprintBoxPreviewDisplayItems, historyEntryArchivesBoxFootprint, modelHasCommittedSolidsForDisplay, modelHasFactoryFaceDisplay, resolveCommittedMeshMaterialProps, TessellatedCommitMesh, type TessellatedCommitMeshProps, tryArchivedBoxFromContext } from "./🧲️geometry-targets/🟦️.tsx";
+export { bboxFromPoints, bboxWireSegments, computeBoxPreviewLayout, computeSpherePreviewLayout, geometryPreviewTransformFromDisplay, transformPointsForPreviewKind } from "./🧲️geometry-targets/📐️preview-layout/🟦️.ts";
+export { defaultSpatialPickKindToggles, defaultSpatialPickKindTogglesForModelDefinition, defaultSpatialPrimitiveToggles, defaultSpatialTypologyTogglesForModelDefinition, filterSpatialPickTargetsForActiveView, filterSpatialPickTargetsForEntityFlags, filterSpatialPickTargetsForPrimitiveToggles, filterSpatialPickTargetsForTypologyToggles, filterSpatialPickTargetsForVisibility, intersectSpatialPickKindToggles, modelDefinitionPickTargetKinds, modelDefinitionTypologyIds, pickTargetPrimitiveKind, pruneSelectionTargetsForEntityFlags, resolveSpatialSceneVisibility, selectionTargetHoverKey, SPATIAL_PICK_TARGET_KINDS, SPATIAL_PRIMITIVE_KINDS, type SpatialDragSelectionState, spatialEntityFlagsForModelEntity, type SpatialGeometryPickTargetKind, type SpatialPickGeometry, type SpatialPickKind, type SpatialPickKindToggles, spatialPickKindTogglesFromTypologyFilteredTargets, type SpatialPickTarget, spatialPickTargetKey, type SpatialPickTargetKind, type SpatialPrimitiveToggles, spatialSceneKindTogglesForModelDefinition, type SpatialSelectionMethod, type SpatialSelectionRequest, spatialToggleCheckboxState, spatialToggleGroupFill, spatialToggleGroupState, type SpatialToggleGroupState, spatialTypologyToggleLabel, type SpatialTypologyToggles } from "./🧲️geometry-targets/🎯️pick-model/🟦️.ts";
+export { boundsFromSpatialPickGeometry, buildGeometryObjectIndex, buildGeometryTypologyIndex, collectGeometryEdgeSegments, collectGeometryEdgeSegmentsForMembers, createSpatialPickEvent, createSpatialPickTargets, filterSpatialPickTargets, geometryEntityNurbsPoles, geometryEntityWireSegments, nurbsPolesFromEdge, polylineWireSegments } from "./🧲️geometry-targets/🧬️geometry-index/🟦️.ts";
+export { createTypologyStyledMaterial, spatialHoverKeyAliases, spatialHoverKeysMatch, typologyStyleToMaterialProps } from "./🧲️geometry-targets/🎨️pick-styling/🟦️.ts";
+export { boundsFromMeshTransfers, buildBufferGeometryFromMeshTransfer, buildPlanarFaceMeshTransfer, type CommittedMeshVisibilityOptions, type FactoryFaceMeshRow, filterCommittedMeshesForModelDefinition, findFaceGroupAt, isRenderableMeshTransfer, listFactoryFaceMeshesForModelDefinition, listModelSolidRefs, meshTransferContentKey, meshTransferOrigin, resolveFaceInfoFromTriangleIndex, resolveSpatialEntityFlags, useDocumentMeshes, useTessellation, visibleFaceRefsForModelDefinition, visibleSolidRefsForModelDefinition } from "./🧲️geometry-targets/🧊️mesh-transfers/🟦️.ts";
 
 export {
   getSpatialDisplayItemKindRenderer,
@@ -306,11 +181,11 @@ export {
   InteractionReplViewport
 } from "./🎛️repl/🟦️.tsx";
 
-export type { SpatialComputeMode } from "../🗿️artifact/🟦️.ts";
+export type { SpatialComputeMode } from "../🗿️artifact/📨️interaction-model/🟦️.ts";
 
 // #region 🧪️Tests
 const __cadRendererTestRuntime = import.meta.vitest ? await import("../🏃️runtime/🟦️.ts") : null;
-const __cadRendererTestKernel = import.meta.vitest ? await import("../../../../../../../../../../../🧑‍💻dev/📐️cad/🧪️tests/🔮️spatial-kernel/🧱️brepjs/🟦️.ts") : null;
+const __cadRendererTestKernel = import.meta.vitest ? await import("@semio-tech/cad-js/testing/spatial-kernel/brepjs") : null;
 
 /** 🎒️ The values this module hands its extracted suite `./🧪️tests/🧪️repluserfacingsuggestiondetail/🟦️.tsx`. */
 export type RendererTestDependencies = {

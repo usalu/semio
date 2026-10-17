@@ -1,6 +1,6 @@
 /** 🧬️ HtmlArtifact schema — full artifact state, mirrors `HtmlSnapshot` field for field. See the
  * sibling `📸️snapshot/🟦️.ts` for the canonical `HtmlNode`/`HtmlAttr`/`RawTextKind` shapes. */
-import type { HtmlNode } from './📸️snapshot/🟦️.ts';
+import { parseHtmlSnapshot, type HtmlNode } from './📸️snapshot/🟦️.ts';
 export type { HtmlNode };
 
 export interface HtmlArtifact {
@@ -57,9 +57,5 @@ export const stdioHtml5AnyArtifactGuardConstant = <T extends string | number | b
 //#endregion 🚪️Parsers
 
 export function parseHtmlArtifact(value: unknown, at = "$"): HtmlArtifact {
-  const row = stdioHtml5AnyArtifactGuardObject(value, at);
-  return {
-    schema: row["schema"] === undefined ? undefined : stdioHtml5AnyArtifactGuardString(row["schema"], `${at}.schema`),
-    entries: row["entries"] === undefined ? undefined : stdioHtml5AnyArtifactGuardArray(row["entries"], `${at}.entries`).map((item, index) => stdioHtml5AnyArtifactGuardObject(item, `${at}.entries[${index}]`)),
-  };
+  return parseHtmlSnapshot(value, at);
 }

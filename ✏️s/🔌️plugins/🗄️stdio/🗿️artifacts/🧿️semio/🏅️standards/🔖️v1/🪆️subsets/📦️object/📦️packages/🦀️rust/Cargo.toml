@@ -16,6 +16,11 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-s-artifact-stdio-semio-object-snapshot = { path = "../../🧬️schema/📸️snapshot/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-semio-object-examples = { path = "../../📚️examples/📦️crate/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-semio-object-schema = { path = "../../🧬️schema/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-semio-object-mut-family = { path = "../../🧬️schema/🧬️mutations/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-semio-object-editor = { path = "../../✏️editor/📦️packages/🦀️rust" }
 semio-framework-pack = { path = "../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 semio-framework-schema-state = { workspace = true }
 semio-framework-schema-composition = { workspace = true }
@@ -26,6 +31,7 @@ semio-framework-job = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-pack-json = { workspace = true }
 semio-framework-plugin = { workspace = true }
+semio-framework-action-bus = { path = "../../../../../../../../../../../🧰️framework/🔨️modules/🎯️action-bus/📦️packages/🦀️rust" }
 semio-framework-schema = { workspace = true }
 semio-framework-schema-registry = { workspace = true }
 semio-framework-ui-locale = { workspace = true }
@@ -40,6 +46,9 @@ semio-s-artifact-stdio-semio-value-model = { workspace = true }
 serde_json = { workspace = true }
 
 [dev-dependencies]
+semio-s-artifact-stdio-semio-object-editor = { path = "../../✏️editor/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-stdio-semio-object-snapshot = { path = "../../🧬️schema/📸️snapshot/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-stdio-semio-object-examples = { path = "../../📚️examples/📦️crate/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
 semio-s-artifact-stdio-contract = { workspace = true, features = ["testing"] }

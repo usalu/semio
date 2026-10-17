@@ -1,0 +1,14 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧾️app-channel/🟦️.ts",
+ "importers": "auto",
+ "childrenImportParent": true,
+ "allowManual": [],
+ "children": [
+  {"dir": "🏷️codec-primitives", "lines": [[88, 138]], "doc": "/** 🏷️ App channel codec primitives: the media export handle wire, the exact media export frame, the document identity assertion and the command and frame tag tables. */"},
+  {"dir": "🎛️command-codec", "lines": [[139, 501]], "doc": "/** 🎛️ App channel command codec: `encodeAppCommand` and `decodeAppCommand` over the tagged app command wire. */"},
+  {"dir": "🎞️frame-codec", "lines": [[502, 860]], "doc": "/** 🎞️ App channel frame codec: `encodeAppFrame` and `decodeAppFrame` over the tagged app frame wire. */"},
+  {"dir": "📋️report-decoders", "lines": [[861, 934]], "doc": "/** 📋️ App channel report decoders: faults, dispatch reports, merge reports and conflicts decoded from their pack encoded wire forms. */"},
+  {"dir": "🔢️request-sequence", "lines": [[935, 1033]], "doc": "/** 🔢️ App channel request sequence: the channel version admission, the handle port, local interaction query ownership, transaction replies and the request sequence. */"},
+  {"dir": "🗃️archive-load-host", "lines": [[1034, 1198]], "doc": "/** 🗃️ App channel document archive load host: the archive load steps, outcomes, fault error and the host that drives a load to its answer. */"}
+ ]
+}

@@ -1,4 +1,27 @@
-use super::*;
+use crate::{NoteBlockNode, NoteSnapshot, NoteTextParagraph, NoteTextRun};
+use semio_s_artifact_stdio_dwg_geometry::standards::v_ac1024::subsets::any::schema::geometry::DwgDrawing;
+use semio_s_artifact_stdio_dwg_geometry::standards::v_ac1024::subsets::any::schema::geometry::DwgGeometry;
+use semio_s_artifact_stdio_semio_drawing::schema::snapshot::DrawNode;
+use serde_json::Value;
+#[allow(unused_imports)]
+use {semio_framework_plugin::app::io_dispatch, semio_framework_artifact_reference::Dialect, semio_framework_plugin::app::ErasedComposeSource, semio_framework_plugin::app::IoDirection, semio_framework_plugin::app::IoKey, semio_framework_plugin::app::IoPayload, semio_framework_artifact_reference::StandardId, semio_framework_artifact_reference::SubsetId};
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3;
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioQuaternion;
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioRgba;
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_semio_drawing::io as semio_drawing_composer;
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_semio_drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawStyle, PathSegment, SemioDrawingSnapshot, STDIO_SEMIODRAWING_DOCUMENT_SCHEMA};
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::io::text::snapshot::write_svg_xml;
+use crate::standards::v1::subsets::any::io::*;
 use crate::{NoteImageAsset, NoteTableCell};
 use semio_s_artifact_stdio_dwg_geometry::standards::v_ac1024::subsets::any::schema::geometry::DwgColor;
 use semio_s_artifact_stdio_dwg_geometry::standards::v_ac1024::subsets::any::schema::geometry::DwgEntity;

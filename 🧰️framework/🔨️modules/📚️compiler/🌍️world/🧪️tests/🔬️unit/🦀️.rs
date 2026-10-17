@@ -1,5 +1,6 @@
 use super::*;
 use semio_framework_pack_json::{JsonMemberPolicy, Value};
+use semio_framework_test_fixtures::fixture_path;
 use std::{
     fs, io,
     path::{Path, PathBuf},
@@ -7,7 +8,7 @@ use std::{
 };
 
 fn font_directory() -> PathBuf {
-    Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🌍️world/🔤️fonts")
+    fixture_path!("../../🌍️world/🔤️fonts")
 }
 
 pub(crate) fn test_fonts() -> FontSet<'static> {
@@ -128,7 +129,7 @@ fn rust_sources_outside_tests(directory: &Path, found: &mut Vec<PathBuf>) {
 #[test]
 fn compiler_sources_embed_no_font_bytes() {
     let mut sources = Vec::new();
-    rust_sources_outside_tests(&Path::new(env!("CARGO_MANIFEST_DIR")).join("../.."), &mut sources);
+    rust_sources_outside_tests(&fixture_path!("../.."), &mut sources);
     assert!(sources.len() >= 10, "scan must reach the crate sources: {sources:?}");
     let needle = concat!("include_", "bytes!");
     for source in sources {

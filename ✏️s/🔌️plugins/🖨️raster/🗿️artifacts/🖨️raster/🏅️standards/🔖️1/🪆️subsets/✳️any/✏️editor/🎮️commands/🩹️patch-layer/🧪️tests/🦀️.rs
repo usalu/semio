@@ -1,10 +1,16 @@
 //! 🎛️ Property actions compared with independent JSON field updates.
-use super::*;
+use semio_s_artifact_raster_raster_mutations::RasterMutation;
+use semio_s_artifact_raster_raster_model::{find_layer, layer_transform};
+use semio_s_artifact_raster_raster_model::RasterLayerNode;
+use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
+use semio_framework_pack_json::Value;
+use semio_s_artifact_raster_raster_editor::commands::patch_layer::*;
 use protocol::Mutation;
+use semio_framework_test_fixtures::fixture_text;
 
 #[test]
 fn mask_link_changes_preserve_nested_composite_pixels_and_exact_undo() {
-    use semio_s_artifact_raster_raster_model::testing::raster_image_test_snapshot;
+    use semio_s_artifact_raster_raster_io::testing::raster_image_test_snapshot;
     use semio_s_artifact_raster_raster_model::snapshot::retire_raster_snapshot;
     use pack::snapshot::ArtifactPack;
     for owner in ["paint","group"] {
@@ -32,7 +38,7 @@ fn mask_link_changes_preserve_nested_composite_pixels_and_exact_undo() {
 
 #[test]
 fn inspector_mask_controls_emit_semantic_changes_and_restore_history() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../🎮️commands/🩹️patch-layer/🧪️tests/🔣️.json")).unwrap();
     for kind in ["pixel", "group"] {
         let mut expected = serde_json::json!({"schema":"raster.document","id":"mask-controls","title":null,"assets":{},"layers":[{"kind":"pixel","id":"paint","name":"Paint","visible":true,"opacity":1.0,"blendMode":"normal","transform":{"x":0.0,"y":0.0,"a":1.0,"b":0.0,"c":-0.0,"d":1.0},"width":32,"height":16,"imageKey":null,"mask":null}]});
         if kind == "group" {
@@ -75,7 +81,7 @@ fn inspector_mask_controls_emit_semantic_changes_and_restore_history() {
 
 #[test]
 fn property_commands_enforce_neutral_protection_capabilities() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../../../../../../🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧪️tests/🧫️fixtures/🔒️protection/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../../../../../../../../../../../../🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧪️tests/🧫️fixtures/🔒️protection/🔣️.json")).unwrap();
     let mut document=semio_s_artifact_raster_raster_model::io::text::snapshot::snapshot_wire_codec::empty_raster_snapshot();document.layers=semio_framework_pack_json::from_json_str(&fixture["layers"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     for case in fixture["cases"].as_array().unwrap() {
         let id=case["id"].as_str().unwrap();
@@ -100,7 +106,7 @@ fn layer_transform_controls_apply_neutral_vectors_and_restore_exact_history(){
     use semio_s_artifact_raster_raster_model::{create_layer_of_kind, layer_node_id};
     use semio_s_artifact_raster_raster_model::snapshot::retire_raster_snapshot;
     use semio_s_artifact_raster_raster_model::io::text::snapshot::snapshot_wire_codec::empty_raster_snapshot;
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../🧬️schema/🧬️mutations/📐️change-layer-transform/🧪️tests/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../../../🧬️schema/🧬️mutations/📐️change-layer-transform/🧪️tests/🔣️.json")).unwrap();
     for kind in ["pixel","group"] {
         let mut document=empty_raster_snapshot();document.layers.push(create_layer_of_kind(kind));let id=layer_node_id(&document.layers[0]).to_owned();
         for row in fixture["controls"].as_array().unwrap(){
@@ -118,13 +124,13 @@ fn layer_transform_controls_apply_neutral_vectors_and_restore_exact_history(){
 
 #[semio_framework_async_macros::async_test]
 async fn layer_transform_controls_publish_independent_reversible_edits(){
-    use crate::RasterCommand;
+    use semio_s_artifact_raster_raster_editor::RasterCommand;
     use crate::unit_tests::context;
     use semio_s_artifact_raster_raster_model::{create_layer_of_kind, layer_node_id};
     use semio_s_artifact_raster_raster_model::snapshot::retire_raster_snapshot;
     use semio_s_artifact_raster_raster_model::io::text::snapshot::snapshot_wire_codec::empty_raster_snapshot;
     use semio_framework_plugin::PluginApp;
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../🧬️schema/🧬️mutations/📐️change-layer-transform/🧪️tests/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../../../🧬️schema/🧬️mutations/📐️change-layer-transform/🧪️tests/🔣️.json")).unwrap();
     for kind in ["pixel","group"] {
         let mut source=empty_raster_snapshot();source.layers.push(create_layer_of_kind(kind));let id=layer_node_id(&source.layers[0]).to_owned();
         let envelope=store::os_store::document_materialize::create_document_envelope::<RasterSnapshot,RasterMutation>(semio_s_artifact_raster_raster_model::RASTER_DOCUMENT_SCHEMA,"transform-controls",source,None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);

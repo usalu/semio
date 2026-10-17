@@ -16,7 +16,7 @@ pub struct ResetTry {
     pub window_kind_id: String,
 }
 
-pub(crate) fn handle_window(
+pub fn handle_window(
     payload: &ResetTry,
     operation: &semio_framework_plugin::AppOperationContext,
     lease: &FormsTryWindowLease,

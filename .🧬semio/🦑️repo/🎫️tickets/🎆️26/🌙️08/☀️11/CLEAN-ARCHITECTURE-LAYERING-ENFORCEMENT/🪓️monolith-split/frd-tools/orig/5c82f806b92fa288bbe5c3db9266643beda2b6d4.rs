@@ -1,0 +1,357 @@
+use crate::{schema::diff, schema::diff::StlDiff};
+use crate::schema::snapshot::StlTriangle;
+use crate::StlSnapshot;
+use crate::apply_mutation;
+use crate::standards::v_ascii::subsets::any::schema::mutations::*;
+use crate::schema::diff::{StlTriangleAdded, StlTriangleDiff, StlTriangleModified, StlTrianglesDiff};
+use protocol::command::DiffAlgebra;
+use protocol::{DiffBinary,DiffCodec,DiffText, MutationDiff};
+
+//#region Fixtures
+async fn tri(nx: f64, ny: f64, nz: f64, seed: f64) -> StlTriangle {
+    StlTriangle { normal: [nx, ny, nz], vertices: [[seed, 0.0, 0.0], [seed + 1.0, 0.0, 0.0], [seed, 1.0, 0.0]] }
+}
+
+async fn base_snapshot() -> StlSnapshot {
+    StlSnapshot { schema: "stdio.stl".into(), solid_name: "mesh".into(), triangles: vec![tri(0.0, 0.0, 1.0, 0.0).await, tri(0.0, 0.0, 1.0, 10.0).await, tri(0.0, 0.0, 1.0, 20.0).await] }
+}
+//#endregion Fixtures
+
+//#region 🔖️mutation_diff_law
+async fn assert_mutation_diff_law(base: &StlSnapshot, mutation: StlMutation) {
+    let expected_diff = mutation.diff(base);
+    let mut applied_snapshot = base.clone();
+    let returned_diff = apply_mutation(&mut applied_snapshot, &mutation);
+    assert_eq!(returned_diff, expected_diff, "apply_mutation must return mutation.diff(base) for {mutation:?}");
+    assert_eq!(protocol::apply_diff(expected_diff.diff(), base).expect("valid mutation diff"), applied_snapshot, "diff.diff().apply(base) must equal the imperative mutation result for {mutation:?}");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn mutation_diff_law() {
+    let base = base_snapshot().await;
+    assert_mutation_diff_law(&base, StlMutation::SetSolidName(set_solid_name::SetSolidName { name: "renamed".into() })).await;
+    assert_mutation_diff_law(&base, StlMutation::InsertTriangle(insert_triangle::InsertTriangle { index: 1, triangle: tri(1.0, 0.0, 0.0, 99.0).await })).await;
+    assert_mutation_diff_law(&base, StlMutation::RemoveTriangle(remove_triangle::RemoveTriangle { index: 1 })).await;
+    assert_mutation_diff_law(&base, StlMutation::SetTriangleNormal(set_triangle_normal::SetTriangleNormal { index: 0, normal: [1.0, 0.0, 0.0] })).await;
+    assert_mutation_diff_law(&base, StlMutation::SetTriangleVertices(set_triangle_vertices::SetTriangleVertices { index: 0, vertices: [[9.0, 9.0, 9.0], [8.0, 8.0, 8.0], [7.0, 7.0, 7.0]] })).await;
+}
+//#endregion 🔖️mutation_diff_law
+
+//#region 🔖️inverse_law
+#[semio_framework_async_macros::async_test]
+async fn inverse_law() {
+    let base = base_snapshot().await;
+    let variants = vec![
+        StlMutation::SetSolidName(set_solid_name::SetSolidName { name: "changed".into() }),
+        StlMutation::InsertTriangle(insert_triangle::InsertTriangle { index: 1, triangle: tri(1.0, 0.0, 0.0, 99.0).await }),
+        StlMutation::RemoveTriangle(remove_triangle::RemoveTriangle { index: 1 }),
+        StlMutation::SetTriangleNormal(set_triangle_normal::SetTriangleNormal { index: 0, normal: [1.0, 0.0, 0.0] }),
+        StlMutation::SetTriangleVertices(set_triangle_vertices::SetTriangleVertices { index: 0, vertices: [[9.0, 9.0, 9.0], [8.0, 8.0, 8.0], [7.0, 7.0, 7.0]] }),
+    ];
+    for m in variants {
+        // Mutation-level round trip.
+        let mut snap = base.clone();
+        apply_mutation(&mut snap, &m);
+        for inv in m.inverse(&base).expect("valid retained mutation inverse fixture").into_iter().rev() {
+            apply_mutation(&mut snap, &inv);
+        }
+        assert_eq!(snap, base, "mutation-level inverse must restore base for {m:?}");
+
+        // Diff-level round trip.
+        let d = m.diff(&base);
+        let mutated = protocol::apply_diff(d.diff(), &base).expect("valid forward diff");
+        let inv_d = d.diff().inverse(&base);
+        assert_eq!(protocol::apply_diff(&inv_d, &mutated).expect("valid inverse diff"), base, "diff-level inverse must restore base for {m:?}");
+    }
+}
+//#endregion 🔖️inverse_law
+
+//#region 🔖️absorb_law
+async fn assert_absorb_law(base: &StlSnapshot, m1: StlMutation, m2: StlMutation) {
+    let d1 = m1.diff(base);
+    let mid = protocol::apply_diff(d1.diff(), base).expect("valid first diff");
+    let d2 = m2.diff(&mid);
+    let sequential = protocol::apply_diff(d2.diff(), &mid).expect("valid second diff");
+
+    let mut merged = d1.diff().clone();
+    merged.absorb(d2.diff().clone());
+    assert_eq!(protocol::apply_diff(&merged, base).expect("valid absorbed diff"), sequential, "absorb(d1,d2).apply(base) must equal sequential application for {m1:?} + {m2:?}");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn absorb_law() {
+    let base = base_snapshot().await;
+
+    // Insert+Remove-before: added triangle lands correctly once an earlier-positioned base
+    // survivor is removed by the second mutation (the recipe's own canonical shift case).
+    assert_absorb_law(&base, StlMutation::InsertTriangle(insert_triangle::InsertTriangle { index: 2, triangle: tri(1.0, 0.0, 0.0, 99.0).await }), StlMutation::RemoveTriangle(remove_triangle::RemoveTriangle { index: 0 })).await;
+
+    // Insert+Insert-same-index: both survive.
+    assert_absorb_law(
+        &base,
+        StlMutation::InsertTriangle(insert_triangle::InsertTriangle { index: 1, triangle: tri(1.0, 0.0, 0.0, 91.0).await }),
+        StlMutation::InsertTriangle(insert_triangle::InsertTriangle { index: 1, triangle: tri(0.0, 1.0, 0.0, 92.0).await }),
+    )
+    .await;
+
+    // Add+SetField: the second mutation patches directly into the still-pending added triangle.
+    assert_absorb_law(
+        &base,
+        StlMutation::InsertTriangle(insert_triangle::InsertTriangle { index: 0, triangle: tri(1.0, 0.0, 0.0, 99.0).await }),
+        StlMutation::SetTriangleNormal(set_triangle_normal::SetTriangleNormal { index: 0, normal: [0.0, 1.0, 0.0] }),
+    )
+    .await;
+
+    // Modify+Remove: a pending field patch on a since-removed base triangle vanishes.
+    assert_absorb_law(&base, StlMutation::SetTriangleNormal(set_triangle_normal::SetTriangleNormal { index: 0, normal: [0.0, 0.0, -1.0] }), StlMutation::RemoveTriangle(remove_triangle::RemoveTriangle { index: 0 })).await;
+
+    // Insert then annihilate the very same insert.
+    assert_absorb_law(&base, StlMutation::InsertTriangle(insert_triangle::InsertTriangle { index: 0, triangle: tri(1.0, 0.0, 0.0, 99.0).await }), StlMutation::RemoveTriangle(remove_triangle::RemoveTriangle { index: 0 })).await;
+
+    // Two unrelated scalar sets absorb via LWW.
+    assert_absorb_law(&base, StlMutation::SetSolidName(set_solid_name::SetSolidName { name: "first".into() }), StlMutation::SetSolidName(set_solid_name::SetSolidName { name: "second".into() })).await;
+
+    // Modify+Modify on the same triangle: both fields land, per-field absorbed.
+    assert_absorb_law(
+        &base,
+        StlMutation::SetTriangleNormal(set_triangle_normal::SetTriangleNormal { index: 1, normal: [1.0, 0.0, 0.0] }),
+        StlMutation::SetTriangleVertices(set_triangle_vertices::SetTriangleVertices { index: 1, vertices: [[1.0, 1.0, 1.0], [2.0, 2.0, 2.0], [3.0, 3.0, 3.0]] }),
+    )
+    .await;
+}
+
+#[semio_framework_async_macros::async_test]
+async fn absorb_law_associativity() {
+    let base = base_snapshot().await;
+    let d1 = StlMutation::SetSolidName(set_solid_name::SetSolidName { name: "one".into() }).diff(&base);
+    let mid1 = protocol::apply_diff(d1.diff(), &base).expect("valid first diff");
+    let d2 = StlMutation::InsertTriangle(insert_triangle::InsertTriangle { index: 0, triangle: tri(1.0, 0.0, 0.0, 50.0).await }).diff(&mid1);
+    let mid2 = protocol::apply_diff(d2.diff(), &mid1).expect("valid second diff");
+    let d3 = StlMutation::SetTriangleNormal(set_triangle_normal::SetTriangleNormal { index: 0, normal: [0.0, 1.0, 0.0] }).diff(&mid2);
+
+    // (d1∘d2)∘d3
+    let mut left = d1.diff().clone();
+    left.absorb(d2.diff().clone());
+    left.absorb(d3.diff().clone());
+
+    // d1∘(d2∘d3)
+    let mut d23 = d2.diff().clone();
+    d23.absorb(d3.diff().clone());
+    let mut right = d1.diff().clone();
+    right.absorb(d23);
+
+    assert_eq!(protocol::apply_diff(&left, &base).expect("valid left diff"), protocol::apply_diff(&right, &base).expect("valid right diff"), "absorb must associate");
+    assert_eq!(protocol::apply_diff(&left, &base).expect("valid associated diff"), protocol::apply_diff(d3.diff(), &mid2).expect("valid third diff"), "associated absorb must match full sequential application");
+}
+//#endregion 🔖️between_roundtrip_law
+
+//#region 🔖️codec_retention_law
+#[semio_framework_async_macros::async_test]
+async fn codec_retention_law() {
+    let bytes = std::fs::read(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../📚️examples/🎬️demo/🖼️assets/🧊️.stl"));
+    // The checked-in fixture at this path is a shared cross-artifact demo placeholder
+    // (not real STL text) — fall back to a synthetic document so this law still exercises
+    // a genuine decode -> encode -> decode identity.
+    let decoded = match bytes.ok().and_then(|b| String::from_utf8(b).ok()).and_then(|text| crate::engine::decode_stl_ascii(&text).ok()) {
+        Some(decoded) => decoded,
+        None => base_snapshot().await,
+    };
+    let reencoded = crate::engine::encode_stl_ascii(&decoded);
+    let redecoded = crate::engine::decode_stl_ascii(&reencoded).expect("re-decode");
+    assert_eq!(redecoded.solid_name, decoded.solid_name);
+    assert_eq!(redecoded.triangles, decoded.triangles);
+}
+//#endregion 🔖️codec_retention_law
+
+//#region 🔖️field_sweep
+/// 🌪️ `sweep_a`/`sweep_b` differ in EVERY mutable field. `triangles` is intentionally
+/// asymmetric-length (2 vs 3) — per this ticket's documented fix (an equal-length flat/
+/// unkeyed index collection can structurally only ever show `removed` XOR `added` from a
+/// single `between()` call, never both; asymmetric lengths + asserting across BOTH
+/// directions is the correct way to exercise every triple-kind, matching `txt`'s field_sweep
+/// fix for the identical structural issue).
+async fn sweep_a() -> StlSnapshot {
+    StlSnapshot { schema: "stdio.stl".into(), solid_name: "before".into(), triangles: vec![tri(1.0, 0.0, 0.0, 0.0).await, tri(0.0, 1.0, 0.0, 10.0).await] }
+}
+
+async fn sweep_b() -> StlSnapshot {
+    StlSnapshot {
+        schema: "stdio.stl".into(),
+        solid_name: "after".into(),
+        triangles: vec![
+            tri(0.0, 0.0, 1.0, 5.0).await,   // index 0: modified from sweep_a's index 0 (normal AND vertices differ — different seed)
+            tri(0.0, 1.0, 0.0, 10.0).await,  // index 1: unchanged
+            tri(-1.0, 0.0, 0.0, 20.0).await, // index 2: added (b longer than a)
+        ],
+    }
+}
+
+//#endregion 🔖️field_sweep
+
+//#region 🔖️CanonicalCases
+/// 🎯 The recipe's own canonical absorb shapes, asserted structurally (not just via
+/// `assert_absorb_law`'s apply-equivalence) — `Insert(2)+Remove(0)` and
+/// `Insert(2,f)+Insert(2,g)`.
+#[semio_framework_async_macros::async_test]
+async fn insert_then_remove_before_matches_canonical_shape() {
+    let d1 = StlDiff { solid_name: None, triangles: Some(StlTrianglesDiff { removed: vec![], modified: vec![], added: vec![StlTriangleAdded { index: 2, triangle: tri(1.0, 0.0, 0.0, 1.0).await }] }) };
+    let d2 = StlDiff { solid_name: None, triangles: Some(StlTrianglesDiff { removed: vec![0], modified: vec![], added: vec![] }) };
+    let mut merged = d1.clone();
+    merged.absorb(d2.clone());
+    let td = merged.triangles.clone().expect("triangles diff present");
+    assert_eq!(td.removed, vec![0]);
+    assert_eq!(td.added, vec![StlTriangleAdded { index: 1, triangle: tri(1.0, 0.0, 0.0, 1.0).await }]);
+    assert!(td.modified.is_empty());
+
+    let base = base_snapshot().await;
+    let sequential = {
+        let mid = protocol::apply_diff(&d1, &base).expect("valid first diff");
+        protocol::apply_diff(&d2, &mid).expect("valid second diff")
+    };
+    assert_eq!(protocol::apply_diff(&merged, &base).expect("valid absorbed diff"), sequential);
+}
+
+#[semio_framework_async_macros::async_test]
+async fn insert_insert_same_index_both_survive() {
+    let d1 = StlDiff { solid_name: None, triangles: Some(StlTrianglesDiff { removed: vec![], modified: vec![], added: vec![StlTriangleAdded { index: 2, triangle: tri(1.0, 0.0, 0.0, 1.0).await }] }) };
+    let d2 = StlDiff { solid_name: None, triangles: Some(StlTrianglesDiff { removed: vec![], modified: vec![], added: vec![StlTriangleAdded { index: 2, triangle: tri(0.0, 1.0, 0.0, 2.0).await }] }) };
+    let mut merged = d1.clone();
+    merged.absorb(d2.clone());
+    let base = base_snapshot().await;
+    let sequential = {
+        let mid = protocol::apply_diff(&d1, &base).expect("valid first diff");
+        protocol::apply_diff(&d2, &mid).expect("valid second diff")
+    };
+    assert_eq!(protocol::apply_diff(&merged, &base).expect("valid absorbed diff"), sequential);
+    assert_eq!(sequential.triangles.len(), base.triangles.len() + 2);
+}
+
+#[semio_framework_async_macros::async_test]
+async fn add_then_set_field_patches_into_added() {
+    let d1 = StlDiff { solid_name: None, triangles: Some(StlTrianglesDiff { removed: vec![], modified: vec![], added: vec![StlTriangleAdded { index: 1, triangle: tri(1.0, 0.0, 0.0, 1.0).await }] }) };
+    let d2 = StlDiff { solid_name: None, triangles: Some(StlTrianglesDiff { removed: vec![], modified: vec![StlTriangleModified { index: 1, diff: StlTriangleDiff { normal: Some([0.0, 1.0, 0.0]), vertices: None } }], added: vec![] }) };
+    let mut merged = d1.clone();
+    merged.absorb(d2.clone());
+    let td = merged.triangles.clone().expect("triangles diff present");
+    assert!(td.modified.is_empty(), "patched value should live in the added entry, not a separate modified entry");
+    assert_eq!(td.added.len(), 1);
+    assert_eq!(td.added[0].triangle.normal, [0.0, 1.0, 0.0]);
+
+    let base = base_snapshot().await;
+    let sequential = {
+        let mid = protocol::apply_diff(&d1, &base).expect("valid first diff");
+        protocol::apply_diff(&d2, &mid).expect("valid second diff")
+    };
+    assert_eq!(protocol::apply_diff(&merged, &base).expect("valid absorbed diff"), sequential);
+}
+//#endregion 🔖️CanonicalCases
+
+#[semio_framework_async_macros::async_test]
+async fn out_of_range_triangle_mutation_is_rejected_without_mutating() {
+    let base = base_snapshot().await;
+    let mut snap = base.clone();
+    let outcome = apply_mutation(&mut snap, &StlMutation::SetTriangleNormal(set_triangle_normal::SetTriangleNormal { index: 999, normal: [1.0, 1.0, 1.0] }));
+    assert_eq!(snap, base);
+    assert_eq!(outcome.messages()[0].target, vec!["triangles", "999"]);
+    let outcome = apply_mutation(&mut snap, &StlMutation::RemoveTriangle(remove_triangle::RemoveTriangle { index: 999 }));
+    assert_eq!(snap, base);
+    assert_eq!(outcome.messages()[0].target, vec!["triangles", "999"]);
+}
+
+//#region 🔖️F6RoundtripLaws
+/// 🧪️ F6: `OpText`/`OpBinary` round-trip laws (hand-rolled grammar, see this file's `OpCodecs`
+/// region) — every variant, incl. the struct-valued payload (`InsertTriangle`) and the fixed-size-array payloads (`SetTriangleNormal`,
+/// `SetTriangleVertices`) that carry the doubly-nested `[[f64; 3]; 3]` the `dsl`-derive bug
+/// blocks.
+#[semio_framework_async_macros::async_test]
+async fn op_text_binary_roundtrip_law() {
+    // FG1: reuses `demo_mutation_cases()` (this file's own `DemoCases` region, above), the
+    // single source of truth also exercised by `⚙️engine::conformance_laws`'s `ops_grammar_
+    // conformance_law`/`protocol_walk_law` — same reuse pattern `binary`'s own pilot precedent.
+    for mutation in demo_mutation_cases() {
+        let printed = mutation.print_op();
+        assert!(!printed.contains('\n'), "print_op must be one line, got {printed:?}");
+        let parsed = StlMutation::parse_op(&printed).unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));
+        assert_eq!(parsed, mutation, "print_op/parse_op round-trip mismatch for {mutation:?} (printed {printed:?})");
+
+        let encoded = mutation.encode_op().unwrap_or_else(|e| panic!("encode_op({mutation:?}) failed: {e}"));
+        let decoded = StlMutation::decode_op(&encoded).unwrap_or_else(|e| panic!("decode_op failed: {e}"));
+        assert_eq!(decoded, mutation, "encode_op/decode_op round-trip mismatch for {mutation:?}");
+    }
+}
+
+/// 🧪️ F6: `DiffCodec` round-trip laws for the hand-rolled `StlDiff` grammar (`🔺️diff::component`'s
+/// `HandcraftedDiffCodec` region) — exercises `solid_name` plus every triangle-triple section
+/// (`removed`/`modified`/`added`), incl. the doubly-nested `vertices` field, simultaneously via
+/// real `between()` results in both directions.
+#[semio_framework_async_macros::async_test]
+async fn diff_codec_text_binary_roundtrip_law() {
+    // FG1: reuses `diff::demo_diff_cases()` (this artifact's `🔺️diff::component`'s own
+    // `DemoCases` region), the single source of truth also exercised by `⚙️engine::
+    // conformance_laws`'s `diff_grammar_conformance_law`/`protocol_walk_law`.
+    for d in diff::demo_diff_cases() {
+        let printed = d.print_diff();
+        assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");
+        let parsed = StlDiff::parse_diff(&printed).unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));
+        assert_eq!(parsed, d, "print_diff/parse_diff round-trip mismatch (printed {printed:?})");
+
+        let encoded = d.encode_diff().unwrap_or_else(|e| panic!("encode_diff failed: {e}"));
+        let decoded = StlDiff::decode_diff(&encoded).unwrap_or_else(|e| panic!("decode_diff failed: {e}"));
+        assert_eq!(decoded, d, "encode_diff/decode_diff round-trip mismatch");
+    }
+}
+//#endregion 🔖️F6RoundtripLaws
+
+//#region 🔖️KindsConformanceLaw
+/// 🧭️ `kind_of` is an EXHAUSTIVE match (no wildcard arm) — the compiler refuses this file if a
+/// variant is added to `StlMutation` without a matching kebab-case spelling here, which is what
+/// keeps `KINDS` honest against the enum. The second half reads the sibling oracle manifest's
+/// `kinds` array as text (the framework never parses Rust, so this is the only side that can
+/// prove the manifest matches) and asserts the same list, in the same order.
+#[semio_framework_async_macros::async_test]
+async fn kinds_match_enum_and_catalog() {
+    fn kind_of(mutation: &StlMutation) -> &'static str {
+        match mutation {
+            StlMutation::SetSolidName(_) => "set-solid-name",
+            StlMutation::InsertTriangle(_) => "insert-triangle",
+            StlMutation::RemoveTriangle(_) => "remove-triangle",
+            StlMutation::SetTriangleNormal(_) => "set-triangle-normal",
+            StlMutation::SetTriangleVertices(_) => "set-triangle-vertices",
+        }
+    }
+    let samples = [
+        StlMutation::SetSolidName(set_solid_name::SetSolidName { name: String::new() }),
+        StlMutation::InsertTriangle(insert_triangle::InsertTriangle { index: 0, triangle: StlTriangle::default() }),
+        StlMutation::RemoveTriangle(remove_triangle::RemoveTriangle { index: 0 }),
+        StlMutation::SetTriangleNormal(set_triangle_normal::SetTriangleNormal { index: 0, normal: [0.0, 0.0, 0.0] }),
+        StlMutation::SetTriangleVertices(set_triangle_vertices::SetTriangleVertices { index: 0, vertices: [[0.0, 0.0, 0.0]; 3] }),
+    ];
+    let from_enum: Vec<&'static str> = samples.iter().map(kind_of).collect();
+    assert_eq!(from_enum, KINDS, "KINDS must list every StlMutation variant, in declaration order");
+
+    let manifest = include_str!("../../../../🔮️oracles/🔣️.json");
+    let needle = "\"kinds\": [";
+    let start = manifest.find(needle).expect("manifest declares a kinds array") + needle.len();
+    let end = start + manifest[start..].find(']').expect("kinds array is closed");
+    let declared: Vec<String> = manifest[start..end].split(',').map(|entry| entry.trim().trim_matches('"').to_string()).filter(|entry| !entry.is_empty()).collect();
+    assert_eq!(declared, KINDS, "the oracle manifest's kinds must match StlMutation exactly");
+}
+//#endregion 🔖️KindsConformanceLaw
+
+/// ⚖️ `stl_mutation_inverse_sum_law`: for every leaf the inverse diffs sum to the negative forward diff; the triangle list is
+/// exercised with a MIDDLE row so the inverse must restore the original position.
+#[semio_framework_async_macros::async_test]
+async fn stl_mutation_inverse_sum_law_holds_for_every_leaf() {
+    let mut base = base_snapshot().await;
+    base.triangles = vec![tri(1.0, 0.0, 0.0, 1.0).await, tri(0.0, 1.0, 0.0, 2.0).await, tri(0.0, 0.0, 1.0, 3.0).await];
+    for mutation in [
+        StlMutation::SetSolidName(set_solid_name::SetSolidName { name: "renamed".into() }),
+        StlMutation::InsertTriangle(insert_triangle::InsertTriangle { index: 1, triangle: tri(1.0, 1.0, 0.0, 99.0).await }),
+        StlMutation::InsertTriangle(insert_triangle::InsertTriangle { index: 3, triangle: tri(1.0, 1.0, 0.0, 98.0).await }),
+        StlMutation::RemoveTriangle(remove_triangle::RemoveTriangle { index: 1 }),
+        StlMutation::SetTriangleNormal(set_triangle_normal::SetTriangleNormal { index: 1, normal: [0.0, 0.0, -1.0] }),
+        StlMutation::SetTriangleVertices(set_triangle_vertices::SetTriangleVertices { index: 1, vertices: [[9.0, 9.0, 9.0], [8.0, 8.0, 8.0], [7.0, 7.0, 7.0]] }),
+    ] {
+        protocol::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
+    }
+}

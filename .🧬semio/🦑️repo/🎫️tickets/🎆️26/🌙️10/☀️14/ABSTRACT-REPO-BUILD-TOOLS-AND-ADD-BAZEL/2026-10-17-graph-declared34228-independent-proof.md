@@ -1,0 +1,7 @@
+# Declared Graph Publication 34228 Independent Proof
+
+Four saved files match stable nofollow FD/name seven-field metadata, bytes and SHA256: the20158276-byte terminal log streamed under32MiB, all-stage trace62266, publication result62266 and fresh census61981. Receipt: `🗑️generated/graph-declared34228-independent-hold.json`. A current helper Source SHA is separately recorded as a current snapshot, not an invented loaded-byte proof.
+
+Root reports34228 natural0. Saved result has success:true, ordinary mounted-application-preserved qualification and ownedCustodyClosed:true. All ten ordered stages are present without refusal; only the expected published receipt replacement changes identity. Published→attached→verified→settled full observation equality preserves seven/eight stamp fields and SHA. Final elapsed346586.342125ms is under genuine Root0 ordinary policy, not a finite120s pass.
+
+Witness:29541 files/8941 directories/1824227406 bytes, journal d306a6ac28ddb8c6bc9714e38359124b580a1a5ce8550eda3d6aafcc3d6e0e97 and application3bb4b6a41668fa41c4225065050223f7f46ed000c30a0555164a49f43c47912b; authenticated FSEvents service136 files/6596879 bytes is separately recorded. This is the enclosing declared Graph partition publication after nested maintenance, not main Graph allocation retirement. No public build/all-task or other partition acceptance follows. No protected read or Native operation performed.

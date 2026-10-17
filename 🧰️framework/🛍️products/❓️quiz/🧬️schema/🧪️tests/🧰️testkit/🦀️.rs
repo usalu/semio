@@ -5,14 +5,14 @@
 //! @see ../../../🧪️tests/🧫️fixtures — the shared documents
 
 use super::*;
+use semio_framework_test_fixtures::fixture_path;
 use serde::de::DeserializeOwned;
 use serde_json::Value;
-use std::path::PathBuf;
 
 const TOLERANCE: f64 = 1e-12;
 
 pub fn fixture(case: &str) -> Value {
-    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../🧪️tests/🧫️fixtures");
+    let root = fixture_path!("../../../🧪️tests/🧫️fixtures");
     let directory = std::fs::read_dir(&root).into_iter().flatten().flatten().map(|entry| entry.path()).find(|path| path.file_name().and_then(|name| name.to_str()).is_some_and(|name| name.ends_with(case)));
     let path = directory.unwrap_or_else(|| panic!("no fixture case {case} under {}", root.display())).join("🔣️.json");
     let text = std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("{}: {error}", path.display()));

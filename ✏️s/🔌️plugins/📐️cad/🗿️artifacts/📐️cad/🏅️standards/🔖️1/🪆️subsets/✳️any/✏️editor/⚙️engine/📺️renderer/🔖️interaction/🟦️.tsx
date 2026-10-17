@@ -17,20 +17,14 @@ import {
   type Ray as ThreeRay
 } from "@semio-tech/framework/ui/targets/react";
 // #endregion 🔌️Adapters
-import { type Vec3 } from "../../../../../../../../../../⚙️engine/📔️registry/🟦️.ts";
-import { Model } from "../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🧊️model/🟦️.ts";
-import { type InteractionEvent, type SelectionTarget } from "../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🪪️selection/🟦️.ts";
-import { isEmptyModelDiff, type SpatialPreviewKernel, type ModelDiff } from "../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️.ts";
-import {
-  cadGumballConfigVisible,
-  selectionTargetsCenter,
-  selectionTargetsPointTransformDiff,
-  selectionTargetsHaveTransformableVertices,
-  type CadGumballConfig
-} from "../../🎬️actions/🟦️.ts";
+import { type Vec3 } from "@semio-tech/cad-engine-ts/registry";
+import { Model } from "@semio-tech/s-spatial-kernel-ts/geometry/model";
+import { type InteractionEvent, type SelectionTarget } from "@semio-tech/s-spatial-kernel-ts/geometry/selection";
+import { isEmptyModelDiff, type SpatialPreviewKernel, type ModelDiff } from "@semio-tech/s-spatial-kernel-ts/spatial";
+import { cadGumballConfigVisible, selectionTargetsCenter, selectionTargetsPointTransformDiff, selectionTargetsHaveTransformableVertices, type CadGumballConfig } from "../../🎬️actions/🧲️selection-targets/🟦️.ts";
 import { r3fPreviewKernel, THREE, useThree } from "../🔌️ports/🟦️.ts";
 import { spatialSceneColors } from "../🎨️style/🟦️.ts";
-import { raycastNone, readVec3 } from "../🧲️geometry-targets/🟦️.tsx";
+import { raycastNone, readVec3 } from "../🧲️geometry-targets/📐️preview-layout/🟦️.ts";
 
 // #region 🖼️DisplayPrimitives
 // #region 🎨️HostCustomization

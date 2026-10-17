@@ -1,0 +1,9 @@
+# Windows relative capability final Source review
+
+All six manifest paths passed stable nofollow regular-FD/name seven-stamp and exact bytes/SHA binding. Receipt: `🗑️generated/windows-relative-six-independent-hold.json`. No material blocker remains identified within this explicitly modeled Windows Source scope.
+
+All three preliminary findings are resolved: absence is minted only by the private probe-open sentinel; enumeration yields on a bounded threshold across page boundaries; held deletion handle now proves constrained pending identity/security/stream/type/size/write-time facts before close. Its n-or-n−1 preclose link allowance is explicitly not a final decrement/zero-charge proof. Actual close, name absence and parent anchor remain required; distinct arbitrary body/close failures retain order.
+
+The implementation retains private rooted NT handles, shared descriptor capacity before acquisition, no-share-delete, strong128bitID/volume/security/streams and explicit uncertain acquisition/IO/close retention. Sync requires actual writable-directory Flush result. None of those modeled ABI facts establishes real NTFS durability or acceptance. Ordinary root construction rejects reparse mount roots; Native mapped-root anchor and bounded iterative depth are separate pending features. Current retained ancestry can exhaust32capacity honestly.
+
+Agent reports actual4344 strict0, separate Windows3tests2961assert and RootPOSIX1test222assert0fail,60 portable cases with Ajv/SQLite/Node/Python independent byte/layout oracles. Semantic RED evidence distinguishes prior harness failures. This reviewer read Source and held bytes, without rerunning tests, invoking Windows/Native or reading protected payload. Root-owned POSIX prefix shares these whole-file hashes but has its own qualification requirements; this review does not silently broaden platform runtime claims.

@@ -24,12 +24,10 @@ test("Layout media adoption corpus agrees with independent Ajv validation", () =
     expect(validateJsonSchemaSubset(schema, value).length === 0).toBe(accepted);
     expect(validate(value)).toBe(accepted);
   }
-  console.log("[DEBUG] S Layout portable adoption corpus: first-party schema validator agrees with independent strict Ajv");
 });
 
 test("Layout editor delegates exact mutable original slots to its owned paid export definition", () => {
   expect(admits(sources)).toBe(true);
-  console.log("[DEBUG] actual Layout editor/export defining bodies preserve mutable slots, original context, paid body/authority/request custody and snapshot-output close wiring; Source inspection only");
 });
 
 for (const row of corpus.negativeBindings) test(`Layout source adoption refuses ${row.id}`, () => {

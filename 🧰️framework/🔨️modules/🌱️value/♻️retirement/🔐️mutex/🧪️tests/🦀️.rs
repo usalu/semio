@@ -1,9 +1,10 @@
 use super::*;
 use crate::allocation_testing::observe_retirement_allocations as observe;
+use semio_framework_test_fixtures::fixture_text;
 
 #[test]
 fn original_mutex_owned_and_poisoned_payloads_preserve_exact_heap_custody(){
- let corpus:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
+ let corpus:serde_json::Value=serde_json::from_str(fixture_text!("../../🔐️mutex/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
  let ((),probe)=observe(||{let probe=std::sync::Mutex::new(0u8);drop(probe.lock());drop(probe);});let lock_backing=probe.0;
  for row in corpus["cases"].as_array().unwrap(){
   let original=row["owner"].as_str().unwrap().to_owned();let pointer=original.as_ptr();let bytes=original.capacity();let mutex=std::sync::Mutex::new(original);
@@ -17,5 +18,4 @@ fn original_mutex_owned_and_poisoned_payloads_preserve_exact_heap_custody(){
   }
   assert!(owner.terminal_is_empty());assert_eq!(released,bytes+born+lock_backing);assert_eq!(observe(||drop(owner)).1,(0,0));assert_eq!(serde_json::json!({"preserved":true,"terminal":true}),row["expected"]);
  }
- eprintln!("[DEBUG] original owned/poisoned mutex payload retains exact pointer and all denied/physical retirement currencies");
 }

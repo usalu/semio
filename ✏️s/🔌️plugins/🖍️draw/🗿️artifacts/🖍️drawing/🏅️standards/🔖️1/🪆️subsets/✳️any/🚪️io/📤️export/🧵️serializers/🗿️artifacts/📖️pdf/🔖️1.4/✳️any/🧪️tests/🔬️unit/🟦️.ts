@@ -2,11 +2,11 @@
 import { expect, test } from "bun:test";
 import { join } from "node:path";
 import { testLevelBudgetMs } from "@semio-tech/framework/process/test-budget";
-import { createCanvas, DOMMatrix, ImageData, Path2D } from "@napi-rs/canvas";
+import { createCanvas, DOMMatrix, ImageData, Path2D, type Canvas, type SKRSContext2D } from "@napi-rs/canvas";
 import sharp from "sharp";
 import cases from "../../../../../../../../../🧪️tests/🧫️fixtures/🎬️scene/🧩️compositing/🔣️.json";
 
-type Surface = {canvas:ReturnType<typeof createCanvas> | null; context:ReturnType<ReturnType<typeof createCanvas>["getContext"]> | null};
+type Surface = {canvas:Canvas | null; context:SKRSContext2D | null};
 class OracleCanvasFactory {
   create(width:number,height:number):Surface { const canvas=createCanvas(width,height); return {canvas,context:canvas.getContext("2d")}; }
   reset(surface:Surface,width:number,height:number):void { surface.canvas!.width=width; surface.canvas!.height=height; }
@@ -21,7 +21,7 @@ test.skipIf(!directory)("native PDF transparency matches independent SVG rasteri
     const { getDocument } = await import("pdfjs-dist/legacy/build/pdf.mjs");
     for (const fixture of cases) {
       const bytes = new Uint8Array(await Bun.file(join(directory!,`${fixture.name}.pdf`)).arrayBuffer());
-      const task = getDocument({ data:bytes, useSystemFonts:false, isEvalSupported:false, CanvasFactory:OracleCanvasFactory });
+      const task = getDocument({ data:bytes, useSystemFonts:false, CanvasFactory:OracleCanvasFactory });
       try {
         const document = await task.promise;
         expect(document.numPages).toBe(1);

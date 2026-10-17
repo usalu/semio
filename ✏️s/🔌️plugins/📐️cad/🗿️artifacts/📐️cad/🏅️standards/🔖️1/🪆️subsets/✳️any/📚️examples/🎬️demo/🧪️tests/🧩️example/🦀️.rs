@@ -1,6 +1,8 @@
+use semio_framework_test_fixtures::fixture_path;
+
 #[semio_framework_async_macros::async_test]
 async fn primary_asset_is_nonempty() {
-    let text = std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🖼️assets/🗣️.dsl.semio")).expect("../../🖼️assets/🗣️.dsl.semio").leak();
+    let text = std::fs::read_to_string(fixture_path!("../../🖼️assets/🗣️.dsl.semio")).expect("../../🖼️assets/🗣️.dsl.semio").leak();
     assert!(text.len() > 8);
 }
 
@@ -10,7 +12,7 @@ async fn primary_asset_is_nonempty() {
 /// drift re-hashes the children) would otherwise load four silently empty panes.
 #[test]
 fn demo_asset_is_the_concrete_forest_and_every_pane_resolves() {
-    let snapshot = <semio_s_artifact_cad_cad_model::snapshot::CadSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🖼️assets/🗣️.dsl.semio")).expect("../../🖼️assets/🗣️.dsl.semio").leak()).expect("demo asset parses");
+    let snapshot = <semio_s_artifact_cad_cad_model::snapshot::CadSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(std::fs::read_to_string(fixture_path!("../../🖼️assets/🗣️.dsl.semio")).expect("../../🖼️assets/🗣️.dsl.semio").leak()).expect("demo asset parses");
     let forest = semio_s_artifact_cad_cad_inferences::forest_play_scene();
     for pane in semio_s_artifact_cad_cad_model::snapshot::CadPaneId::all() {
         assert_eq!(semio_s_artifact_cad_cad_model::snapshot::cad_pane_model(&snapshot, pane).map(|child| child.child_id.as_str()), semio_s_artifact_cad_cad_model::snapshot::cad_pane_model(&forest, pane).map(|child| child.child_id.as_str()), "{pane:?} pane child id");
@@ -30,7 +32,7 @@ fn demo_asset_is_the_concrete_forest_and_every_pane_resolves() {
 #[semio_framework_async_macros::async_test]
 async fn inference_determinism_law() {
     use protocol::Inference;
-    let text = std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🖼️assets/🗣️.dsl.semio")).expect("../../🖼️assets/🗣️.dsl.semio").leak();
+    let text = std::fs::read_to_string(fixture_path!("../../🖼️assets/🗣️.dsl.semio")).expect("../../🖼️assets/🗣️.dsl.semio").leak();
     let snapshot = <semio_s_artifact_cad_cad_model::snapshot::CadSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text).expect("demo fixture parses");
     let inference = semio_s_artifact_cad_cad_inferences::CadInference::infer(&snapshot).expect("valid materialized inference fixture");
     assert_eq!(inference, semio_s_artifact_cad_cad_inferences::CadInference::infer(&snapshot).expect("valid materialized inference fixture"));
@@ -108,7 +110,7 @@ impl SubsetRoundtripSpec for CadAnyRoundtrip {
 
 #[semio_framework_async_macros::async_test]
 async fn demo_subset_integrated_roundtrip() {
-    let text = std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🖼️assets/🗣️.dsl.semio")).expect("../../🖼️assets/🗣️.dsl.semio").leak();
+    let text = std::fs::read_to_string(fixture_path!("../../🖼️assets/🗣️.dsl.semio")).expect("../../🖼️assets/🗣️.dsl.semio").leak();
     let asset = ExampleAsset { bytes: text.as_bytes(), text: Some(text), provenance: "../../🖼️assets/🗣️.dsl.semio" };
     test_support::assert_subset_roundtrip::<CadAnyRoundtrip>(&asset, None).await;
 }

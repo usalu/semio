@@ -2,7 +2,7 @@
 
 use crate::editor::shooting::config::ShootingConfig;
 use crate::editor::shooting::terminology::ShootingLabels;
-use crate::editor::shooting::{shooting_action, ui_capacity_error, ui_label, ui_text, ui_value_list, ui_value_map, ui_value_text};
+use crate::editor::shooting::ui_helpers_and_io::{shooting_action, ui_capacity_error, ui_label, ui_text, ui_value_list, ui_value_map, ui_value_text};
 use semio_framework_plugin::ui_node_list;
 use crate::{ShootingShot, ShootingSnapshot, SHOOTING_DOCUMENT_SCHEMA};
 use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase, HasChildren, InputKind, Trigger};
@@ -80,7 +80,7 @@ fn shot_inspector_group(shot: &ShootingShot, labels: &ShootingLabels) -> semio_f
 /// 🔍️ Resolves shot configuration selection, then the document's active shot, then a localized summary.
 pub fn render(snapshot: &ShootingSnapshot, cfg: &ShootingConfig, labels: &ShootingLabels) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let selected = cfg.selected_shot_ids.first().and_then(|id| snapshot.shots.iter().find(|shot| &shot.id == id));
-    if let Some(shot) = selected.or_else(|| crate::standards::v1::subsets::any::schema::active_shot(snapshot)) {
+    if let Some(shot) = selected.or_else(|| crate::active_shot(snapshot)) {
         return shot_inspector_group(shot, labels);
     }
     let summary = ui_node_list([
@@ -93,11 +93,7 @@ pub fn render(snapshot: &ShootingSnapshot, cfg: &ShootingConfig, labels: &Shooti
 //#endregion 🔖️Render
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️semantic-contract/🦀️.rs"]
-mod semantic_contract;
+

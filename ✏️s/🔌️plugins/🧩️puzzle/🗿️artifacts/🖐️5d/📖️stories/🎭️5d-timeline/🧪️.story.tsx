@@ -147,6 +147,10 @@ function applyStoryMerge(current: readonly string[], id: string, merge: string):
 }
 
 /** 🧩️ Story-local reducer: `checkoutCheckpoint` (from `🌳️GraphTimelineHost`) scrubs `revealCount`; `worldPick`/`setHover`/`setCamera` (from `World3dHost`) mirror the same subset `../3d/World.stories.tsx` implements, resolved against the *currently revealed* parts slice. */
+function storyActionArguments(value: unknown): Record<string, unknown> | undefined {
+  return typeof value === "object" && value !== null && !Array.isArray(value) ? Object.fromEntries(Object.entries(value)) : undefined;
+}
+
 function reduceStoryPuzzle5dAction(state: StoryPuzzle5dState, action: string, args: Record<string, unknown> | undefined): StoryPuzzle5dState {
   const { fixture, runtime } = state;
   const revealed = fixture.parts.slice(0, runtime.revealCount);
@@ -247,7 +251,7 @@ function Puzzle5dTimelineStoryHost({ fixtureDsl }: { readonly fixtureDsl: string
   }, [fixtureDsl]);
 
   const onAction = useCallback((descriptor: ActionDescriptor): void => {
-    setState((current) => (current ? reduceStoryPuzzle5dAction(current, descriptor.action, descriptor.args) : current));
+    setState((current) => (current ? reduceStoryPuzzle5dAction(current, descriptor.action, storyActionArguments(descriptor.args)) : current));
   }, []);
 
   const worldNode = useMemo(() => (state ? buildStoryWorld3dNode(state.fixture, state.runtime) : null), [state]);

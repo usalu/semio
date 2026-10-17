@@ -1,5 +1,6 @@
 /** 🪟️ Captures one immutable original presentation body without reconstructing any field. */
-import type {ToolRunIdentity,ToolRunState} from "../../🟦️.ts";
+import type { ToolRunIdentity } from "../../🟦️.ts";
+import type { ToolRunState } from "../../🚦️lifecycle/🟦️.ts";
 import type {ToolRunPresentationFields} from "./🧬️update/🟦️.ts";
 export class ToolRunPresentation<T> {
  private value:T|undefined;

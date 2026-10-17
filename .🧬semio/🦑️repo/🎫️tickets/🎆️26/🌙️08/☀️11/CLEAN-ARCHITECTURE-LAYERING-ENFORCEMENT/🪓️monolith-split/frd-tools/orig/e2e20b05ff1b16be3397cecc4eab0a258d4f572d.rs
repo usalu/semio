@@ -1,0 +1,232 @@
+use super::*;
+use semio_s_artifact_cad_cad_mut_references::{change_reference_hidden::ChangeReferenceHidden, change_reference_locked::ChangeReferenceLocked, change_reference_width::ChangeReferenceWidth, move_reference::MoveReference, replace_reference_media::ReplaceReferenceMedia, replace_references::ReplaceReferences};
+use semio_s_artifact_cad_cad_mut_slots::{create_building_model::CreateBuildingModel, create_energy_model::CreateEnergyModel, create_shape_model::CreateShapeModel, create_structure_classic_model::CreateStructureClassicModel, delete_building_model::DeleteBuildingModel, delete_energy_model::DeleteEnergyModel, delete_shape_model::DeleteShapeModel, delete_structure_classic_model::DeleteStructureClassicModel};
+use semio_s_artifact_cad_cad_mut_documents::{create_drawing::CreateDrawing, delete_drawing::DeleteDrawing};
+use semio_s_artifact_cad_cad_mut_nodes::{create_node::CreateNode, delete_node::DeleteNode, rename_node::RenameNode};
+use semio_s_artifact_cad_cad_testing::{sample_model_child, sample_reference, sample_scene};
+use protocol::Mutation;
+
+/// ⚖️ One value per `CadMutation` variant — the closed set every wire law below iterates.
+pub fn every_mutation() -> Vec<CadMutation> {
+    let sample = sample_model_child("fresh-model-1");
+    vec![
+        CadMutation::CreateShapeModel(CreateShapeModel { child_id: sample.child_id.clone(), target: sample.target.clone() }),
+        CadMutation::DeleteShapeModel(DeleteShapeModel {}),
+        CadMutation::CreateBuildingModel(CreateBuildingModel { child_id: sample.child_id.clone(), target: sample.target.clone() }),
+        CadMutation::DeleteBuildingModel(DeleteBuildingModel {}),
+        CadMutation::CreateEnergyModel(CreateEnergyModel { child_id: sample.child_id.clone(), target: sample.target.clone() }),
+        CadMutation::DeleteEnergyModel(DeleteEnergyModel {}),
+        CadMutation::CreateStructureClassicModel(CreateStructureClassicModel { child_id: sample.child_id.clone(), target: sample.target.clone() }),
+        CadMutation::DeleteStructureClassicModel(DeleteStructureClassicModel {}),
+        CadMutation::CreateDrawing(CreateDrawing { child_id: "drawing-fresh".into(), target: sample.target.clone() , index: None }),
+        CadMutation::DeleteDrawing(DeleteDrawing { child_id: "drawing-fresh".into() }),
+        CadMutation::CreateBrep(semio_s_artifact_cad_cad_mut_documents::create_brep::CreateBrep { child_id: "brep-fresh".into(), target: semio_framework_artifact_reference::ArtifactRef { artifact_id: "topology-fresh".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "brep".into() } }, index: 0 }),
+        CadMutation::DeleteBrep(semio_s_artifact_cad_cad_mut_documents::delete_brep::DeleteBrep { child_id: "brep-fresh".into() }),
+        CadMutation::CreateNode(CreateNode { node: semio_s_artifact_cad_cad_model::snapshot::CadNode { id: "node-fresh".into(), label: "Root".into(), kind: "group".into() } , index: None }),
+        CadMutation::DeleteNode(DeleteNode { node_id: "node-1".into() }),
+        CadMutation::RenameNode(RenameNode { node_id: "node-1".into(), new_label: "Renamed".into() }),
+        CadMutation::ChangeReferenceHidden(ChangeReferenceHidden { model_definition_id: "spatial.shape".into(), reference_id: "ref-1".into(), new_hidden: true }),
+        CadMutation::ChangeReferenceLocked(ChangeReferenceLocked { model_definition_id: "spatial.shape".into(), reference_id: "ref-1".into(), new_locked: false }),
+        CadMutation::ChangeReferenceWidth(ChangeReferenceWidth { model_definition_id: "spatial.shape".into(), reference_id: "ref-1".into(), new_width_world: 12.0 }),
+        CadMutation::MoveReference(MoveReference { model_definition_id: "spatial.shape".into(), reference_id: "ref-1".into(), new_origin: [1.0, 1.0, 1.0] }),
+        CadMutation::ReplaceReferenceMedia(ReplaceReferenceMedia {
+            model_definition_id: "spatial.shape".into(),
+            reference_id: "ref-1".into(),
+            new_source_url: "https://example.test/other.png".into(),
+            new_media_kind: "image".into(),
+            new_orientation: None,
+            new_scale: Some(2.0),
+            new_opacity: Some(0.5),
+        }),
+        CadMutation::ReplaceReferences(ReplaceReferences { model_definition_id: "spatial.shape".into(), references: vec![sample_reference()] }),
+    ]
+}
+
+#[semio_framework_async_macros::async_test]
+async fn inverse_inverts_every_variant_against_a_populated_scene() {
+    let base = sample_scene();
+    for op in every_mutation() {
+        let forward = protocol::apply_diff(op.diff(&base).diff(), &base).expect("valid mutation diff");
+        let mut restored = forward.clone();
+        for inverse in op.inverse(&base).expect("valid retained mutation inverse fixture") {
+            restored = protocol::apply_diff(inverse.diff(&restored).diff(), &restored).expect("valid inverse mutation diff");
+        }
+        assert_eq!(restored, base, "inverse must restore the base scene for {op:?}");
+    }
+}
+
+#[semio_framework_async_macros::async_test]
+async fn every_variant_registers_an_approved_semantic_descriptor() {
+    for op in every_mutation() {
+        let descriptor = protocol::SemanticMutation::semantics(&op);
+        assert!(protocol::is_approved_verb(descriptor.verb), "unapproved verb {:?} on {op:?}", descriptor.verb);
+    }
+    assert_eq!(<CadMutation as protocol::SemanticMutation<CadSnapshot>>::kinds().len(), every_mutation().len(), "kinds() must register exactly one descriptor per dispatch variant");
+}
+
+//#region 🧪️MutationLaws
+/// ⚖️ Shared law helpers from `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️test/🦀️kit.rs`
+/// (reachable here as `store::os_spr::protocol_laws`, the same `semio_framework_os_kernel` alias every
+/// other law/round-trip assertion in this crate already goes through), exercised against the
+/// three most structurally distinct new variants: a fixed-slot create/delete pair
+/// (`create-shape-model`), a Vec-collection create/delete pair (`create-drawing`), and a
+/// nested-address scalar setter (`change-reference-hidden`) carried over unchanged.
+#[semio_framework_async_macros::async_test]
+async fn create_shape_model_satisfies_the_inverse_and_absorb_laws() {
+    let base = sample_scene();
+    let sample = sample_model_child("law-model-1");
+    let mutation = CadMutation::CreateShapeModel(CreateShapeModel { child_id: sample.child_id.clone(), target: sample.target.clone() });
+    store::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &mutation).await;
+    let d1 = mutation.diff(&base).diff().clone();
+    let d2 = CadMutation::DeleteShapeModel(DeleteShapeModel {}).diff(&base).diff().clone();
+    store::os_spr::protocol_laws::assert_mutation_diff_absorb_law(&base, d1, d2).await;
+}
+
+#[semio_framework_async_macros::async_test]
+async fn create_drawing_satisfies_the_inverse_and_absorb_laws() {
+    let base = sample_scene();
+    let mutation = CadMutation::CreateDrawing(CreateDrawing { child_id: "drawing-law-1".into(), target: semio_framework_artifact_reference::ArtifactRef { artifact_id:"drawing-law-1".into(), dialect:semio_framework_artifact_reference::ArtifactDialect {artifact_kind:"s.stdio.semio".into(),standard:"v1".into(),subset:"drawing".into()} } , index: None });
+    store::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &mutation).await;
+    let d1 = mutation.diff(&base).diff().clone();
+    let d2 = CadMutation::DeleteDrawing(DeleteDrawing { child_id: "drawing-law-1".into() }).diff(&base).diff().clone();
+    store::os_spr::protocol_laws::assert_mutation_diff_absorb_law(&base, d1, d2).await;
+}
+
+#[semio_framework_async_macros::async_test]
+async fn change_reference_hidden_satisfies_the_inverse_and_absorb_laws() {
+    let base = sample_scene();
+    let mutation = CadMutation::ChangeReferenceHidden(ChangeReferenceHidden { model_definition_id: "spatial.shape".into(), reference_id: "ref-1".into(), new_hidden: true });
+    store::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &mutation).await;
+    let d1 = mutation.diff(&base).diff().clone();
+    let d2 = CadMutation::ChangeReferenceLocked(ChangeReferenceLocked { model_definition_id: "spatial.shape".into(), reference_id: "ref-1".into(), new_locked: false }).diff(&base).diff().clone();
+    store::os_spr::protocol_laws::assert_mutation_diff_absorb_law(&base, d1, d2).await;
+}
+//#endregion 🧪️MutationLaws
+
+//#region 🧪️OutcomeLaws
+/// ⚖️ `📋️contract-freeze.md` §C2 laws, per verb family: `assert_missing_target_is_error`/
+/// `assert_fatal_never_applies` below, `assert_outcome_policy_matrix` cases further down (delete
+/// node/drawing, rename, change, create node/drawing).
+#[semio_framework_async_macros::async_test]
+async fn delete_missing_node_is_a_target_missing_error() {
+    let base = sample_scene();
+    store::os_spr::protocol_laws::assert_missing_target_is_error(&base, &CadMutation::DeleteNode(DeleteNode { node_id: "does-not-exist".into() })).await;
+}
+
+#[semio_framework_async_macros::async_test]
+async fn rename_missing_node_is_a_target_missing_error() {
+    let base = sample_scene();
+    store::os_spr::protocol_laws::assert_missing_target_is_error(&base, &CadMutation::RenameNode(RenameNode { node_id: "does-not-exist".into(), new_label: "New".into() })).await;
+}
+
+#[semio_framework_async_macros::async_test]
+async fn change_hidden_on_missing_reference_is_a_target_missing_error() {
+    let base = sample_scene();
+    store::os_spr::protocol_laws::assert_missing_target_is_error(&base, &CadMutation::ChangeReferenceHidden(ChangeReferenceHidden { model_definition_id: "spatial.shape".into(), reference_id: "does-not-exist".into(), new_hidden: true })).await;
+}
+
+#[semio_framework_async_macros::async_test]
+async fn create_node_duplicate_id_never_applies() {
+    let base = sample_scene();
+    let duplicate = CadMutation::CreateNode(CreateNode { node: semio_s_artifact_cad_cad_model::snapshot::CadNode { id: "node-1".into(), label: "Dup".into(), kind: "group".into() } , index: None });
+    store::os_spr::protocol_laws::assert_fatal_never_applies(&duplicate.diff(&base)).await;
+}
+
+#[semio_framework_async_macros::async_test]
+async fn delete_missing_drawing_is_a_target_missing_error() {
+    let base = sample_scene();
+    store::os_spr::protocol_laws::assert_missing_target_is_error(&base, &CadMutation::DeleteDrawing(DeleteDrawing { child_id: "does-not-exist".into() })).await;
+}
+
+#[semio_framework_async_macros::async_test]
+async fn create_drawing_duplicate_id_never_applies() {
+    let sample = sample_model_child("dup-drawing-1");
+    let mut base = sample_scene();
+    base = protocol::apply_diff(CadMutation::CreateDrawing(CreateDrawing { child_id: "drawing-dup".into(), target: sample.target.clone() , index: None }).diff(&base).diff(), &base).expect("valid mutation diff");
+    let duplicate = CadMutation::CreateDrawing(CreateDrawing { child_id: "drawing-dup".into(), target: sample.target.clone() , index: None });
+    store::os_spr::protocol_laws::assert_fatal_never_applies(&duplicate.diff(&base)).await;
+}
+
+#[semio_framework_async_macros::async_test]
+async fn delete_node_outcome_obeys_the_policy_matrix() {
+    let base = sample_scene();
+    store::os_spr::protocol_laws::assert_outcome_policy_matrix(&base, &CadMutation::DeleteNode(DeleteNode { node_id: "node-1".into() })).await;
+}
+
+#[semio_framework_async_macros::async_test]
+async fn rename_node_outcome_obeys_the_policy_matrix() {
+    let base = sample_scene();
+    store::os_spr::protocol_laws::assert_outcome_policy_matrix(&base, &CadMutation::RenameNode(RenameNode { node_id: "node-1".into(), new_label: "Renamed".into() })).await;
+}
+
+#[semio_framework_async_macros::async_test]
+async fn change_reference_hidden_outcome_obeys_the_policy_matrix() {
+    let base = sample_scene();
+    store::os_spr::protocol_laws::assert_outcome_policy_matrix(&base, &CadMutation::ChangeReferenceHidden(ChangeReferenceHidden { model_definition_id: "spatial.shape".into(), reference_id: "ref-1".into(), new_hidden: true })).await;
+}
+
+#[semio_framework_async_macros::async_test]
+async fn create_node_outcome_obeys_the_policy_matrix() {
+    let base = sample_scene();
+    store::os_spr::protocol_laws::assert_outcome_policy_matrix(&base, &CadMutation::CreateNode(CreateNode { node: semio_s_artifact_cad_cad_model::snapshot::CadNode { id: "node-fresh".into(), label: "Root".into(), kind: "group".into() } , index: None })).await;
+}
+
+#[semio_framework_async_macros::async_test]
+async fn delete_drawing_outcome_obeys_the_policy_matrix() {
+    let sample = sample_model_child("law-drawing-2");
+    let mut base = sample_scene();
+    base = protocol::apply_diff(CadMutation::CreateDrawing(CreateDrawing { child_id: "cad-drawing-2".into(), target: sample.target.clone() , index: None }).diff(&base).diff(), &base).expect("valid mutation diff");
+    store::os_spr::protocol_laws::assert_outcome_policy_matrix(&base, &CadMutation::DeleteDrawing(DeleteDrawing { child_id: "cad-drawing-2".into() })).await;
+}
+
+#[semio_framework_async_macros::async_test]
+async fn create_drawing_outcome_obeys_the_policy_matrix() {
+    let base = sample_scene();
+    let sample = sample_model_child("law-drawing-3");
+    store::os_spr::protocol_laws::assert_outcome_policy_matrix(&base, &CadMutation::CreateDrawing(CreateDrawing { child_id: "cad-drawing-3".into(), target: sample.target.clone() , index: None })).await;
+}
+//#endregion 🧪️OutcomeLaws
+//#region 🧪️KindsCatalog
+/// 🏷️ [`KINDS`] must name every declared variant, in the exact order and spelling
+/// `#[derive(dsl::Mutations)]` assigns, and every entry must also appear in the committed oracle
+/// manifest's catalog — the framework never parses Rust, so this is the only thing that keeps
+/// the declared vocabulary and the measured one from drifting apart.
+#[test]
+fn kinds_match_the_enum_and_the_catalog() {
+    let descriptors = <CadMutation as protocol::SemanticMutation<CadSnapshot>>::kinds();
+    assert_eq!(KINDS.len(), descriptors.len(), "KINDS must name exactly one entry per declared CadMutation variant");
+    for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
+        assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
+    }
+    let manifest = std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🔮️oracles/🔣️.json")).expect("../../../../🔮️oracles/🔣️.json").leak();
+    for kind in KINDS {
+        assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
+    }
+}
+//#endregion 🧪️KindsCatalog
+
+/// ⚖️ Ordered-collection law on a MIDDLE row: deleting the middle node or drawing inverts to an insert at its original index,
+/// the concrete inverse sums to exactly the negative diff, and an explicit-index insert lands where it says.
+#[semio_framework_async_macros::async_test]
+async fn deleting_a_middle_row_inverts_at_its_original_index() {
+    let mut base = sample_scene();
+    for id in ["node-a", "node-b", "node-c"] {
+        base.nodes.push(semio_s_artifact_cad_cad_model::snapshot::CadNode { id: id.into(), label: id.into(), kind: "group".into() });
+    }
+    let target = sample_model_child("middle-drawing").target;
+    for id in ["drawing-a", "drawing-b", "drawing-c"] {
+        base.drawings.push(semio_s_artifact_cad_cad_model::snapshot::cad_drawing_child(id, &target).expect("drawing child"));
+    }
+    let delete_node = CadMutation::DeleteNode(DeleteNode { node_id: "node-b".into() });
+    let position = base.nodes.iter().position(|node| node.id == "node-b").expect("middle node");
+    assert!(matches!(delete_node.inverse(&base).expect("inverse").as_slice(), [CadMutation::CreateNode(CreateNode { index: Some(index), .. })] if *index as usize == position));
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&delete_node, &base).await;
+    let delete_drawing = CadMutation::DeleteDrawing(DeleteDrawing { child_id: "drawing-b".into() });
+    let position = base.drawings.iter().position(|drawing| drawing.child_id == "drawing-b").expect("middle drawing");
+    assert!(matches!(delete_drawing.inverse(&base).expect("inverse").as_slice(), [CadMutation::CreateDrawing(CreateDrawing { index: Some(index), .. })] if *index as usize == position));
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&delete_drawing, &base).await;
+    let insert = CadMutation::CreateNode(CreateNode { node: semio_s_artifact_cad_cad_model::snapshot::CadNode { id: "node-first".into(), label: "First".into(), kind: "group".into() }, index: Some(0) });
+    let after = protocol::apply_diff(insert.diff(&base).diff(), &base).expect("insert applies");
+    assert_eq!(after.nodes[0].id, "node-first");
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&insert, &base).await;
+}

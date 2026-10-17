@@ -1,3 +1,6 @@
+use crate::schema::block_tree_row_id;
+use crate::NoteSnapshot;
+use semio_framework_plugin::UiText;
 use crate::editor::note::unit_tests::context::{note_app, render as render_body};
 use crate::editor::note::NOTE_PLAY_BODY_ARTIFACT as BODY_ARTIFACT;
 use semio_framework_plugin::PluginApp;
@@ -51,7 +54,7 @@ async fn note_labels_resolve_native_by_default() {
 // (c) a host `TreeWindowRequest{offset, rows}` materialises exactly `[offset, offset + rows)` keyed by
 // the row's own target id, (d) pick rows carry a granularity and no binding of their own while the
 // tree root carries exactly one `interactionSelect`.
-use super::render;
+use crate::editor::note::panels::document::render;
 use crate::editor::note::terminology::note_play_labels;
 use crate::NoteBlockNode;
 use semio_framework_plugin::{BuiltNode, Component, TreeWindowRequest, TreeWindows, ViewModel, INTERACTION_SELECT_ACTION_ID};

@@ -1,0 +1,35 @@
+{
+  "name": "@semio-tech/s-spatial-kernel-ts",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./geometry": "./📐️geometry/🟦️.ts",
+    "./geometry/definition-catalog": "./📐️geometry/📥️definition-catalog/🟦️.ts",
+    "./geometry/definition-ownership": "./📐️geometry/🧭️definition-ownership/🟦️.ts",
+    "./geometry/expressions": "./📐️geometry/🧮️expressions/🟦️.ts",
+    "./geometry/interaction-spec": "./📐️geometry/🎰️interaction-spec/🟦️.ts",
+    "./geometry/model": "./📐️geometry/🧊️model/🟦️.ts",
+    "./geometry/model-space": "./📐️geometry/🌌️model-space/🟦️.ts",
+    "./geometry/paths": "./📐️geometry/🗺️paths/🟦️.ts",
+    "./geometry/primitive-document": "./📐️geometry/🧾️primitive-document/🟦️.ts",
+    "./geometry/selection": "./📐️geometry/🪪️selection/🟦️.ts",
+    "./geometry/selection-operations": "./📐️geometry/🧷️selection-operations/🟦️.ts",
+    "./geometry/stats": "./📐️geometry/📊️stats/🟦️.ts",
+    "./geometry/transformation-apply": "./📐️geometry/🔁️transformation-apply/🟦️.ts",
+    "./geometry/transformation-spec": "./📐️geometry/🔄️transformation-spec/🟦️.ts",
+    "./geometry/typology": "./📐️geometry/🎨️typology/🟦️.ts",
+    "./preview": "./🧮️preview/🟦️.ts",
+    "./preview/aabb": "./🧮️preview/📦️aabb/🟦️.ts",
+    "./preview/anchor-placement": "./🧮️preview/⚓️anchor-placement/🟦️.ts",
+    "./preview/brep-records": "./🧮️preview/🔷️brep-records/🟦️.ts",
+    "./preview/curve-sampling": "./🧮️preview/🌀️curve-sampling/🟦️.ts",
+    "./preview/face-geometry": "./🧮️preview/🔺️face-geometry/🟦️.ts",
+    "./preview/preview-params": "./🧮️preview/🎚️preview-params/🟦️.ts",
+    "./preview/vec3": "./🧮️preview/📏️vec3/🟦️.ts",
+    "./semio": "./🧠️semio/🟦️.ts",
+    "./spatial": "./🗺️spatial/🟦️.ts"
+  },
+  "dependencies": {
+    "@semio-tech/s-spatial-kernel-semio-session-ts": "workspace:*"
+  }
+}

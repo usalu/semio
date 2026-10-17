@@ -1,7 +1,6 @@
 //! 🏗️ `create-object` — appends a new owned CHILD handle to the kit's `objects` collection
 //! (FINAL-state addressing per `📓️taxonomy.md`'s insert/create convention).
 
-use crate::schema::mutations::SemioKitMutation;
 use crate::schema::snapshot::SemioKitSnapshot;
 
 //#region 🔖️Payload
@@ -15,13 +14,16 @@ pub struct CreateObject {
     pub at: Option<usize>,
 }
 
-impl protocol::MutationKind<SemioKitSnapshot, SemioKitMutation> for CreateObject {
+impl<Op> protocol::MutationKind<SemioKitSnapshot, Op> for CreateObject
+where
+    Op: protocol::Mutation<SemioKitSnapshot, Diff = crate::schema::diff::SemioKitDiff> + From<CreateObject> + From<crate::schema::mutations::delete_object::DeleteObject>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "object", kind: "create-object", record: "CreatedObject" };
 
-    fn diff(&self, base: &SemioKitSnapshot) -> protocol::MutationOutcome<<SemioKitMutation as protocol::Mutation<SemioKitSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioKitSnapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<SemioKitSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &SemioKitSnapshot) -> Result<Vec<SemioKitMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &SemioKitSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

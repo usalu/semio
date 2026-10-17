@@ -34,9 +34,7 @@ impl protocol::OpText for VcsDemoMutation {
 //#endregion 🔖️HandcraftedOpCodecs
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
 
 /// 📜️ Describes the artifact mutation dialect.

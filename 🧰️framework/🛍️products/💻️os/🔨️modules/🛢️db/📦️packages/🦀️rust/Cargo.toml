@@ -51,7 +51,7 @@ semio-framework-os-kernel = { path = "../../../../📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-framework-os-kernel-db-actor = { path = "../../🎭️actor/📦️packages/🦀️rust" }
-semio-framework-os-kernel-db-artifact-history = { path = "../../🗿️artifact/📜️history/📦️packages/🦀️rust" }
+semio-framework-os-kernel-db-artifact-history = { path = "../../🗿️artifact/📜️history/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-os-kernel-db-cluster = { path = "../../🌐️cluster/📦️packages/🦀️rust" }
 semio-framework-os-kernel-db-compact = { path = "../../🗜️compact/📦️packages/🦀️rust" }
 semio-framework-os-kernel-db-conflict = { path = "../../⚔️conflict/📦️packages/🦀️rust" }
@@ -61,3 +61,4 @@ semio-framework-os-kernel-db-query = { path = "../../🔍️query/📦️package
 semio-framework-os-kernel-db-snapshot = { path = "../../📸️snapshot/📦️packages/🦀️rust" }
 semio-framework-os-kernel-db-state = { path = "../../🔘️state/📦️packages/🦀️rust" }
 semio-framework-async-macros = { path = "../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
+semio-framework-os-kernel-db-io-driver = { path = "../../🗄️storage/🚦️io-driver/📦️packages/🦀️rust", features = ["testkit"] }

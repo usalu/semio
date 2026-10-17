@@ -35,6 +35,7 @@ serde = { workspace = true }
 semio-framework-os-space-sqlite-cells = { path = "../../../../🪶️sqlite/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-framework-test-fixtures = { path = "../../../../../../../../🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-framework-trace = { workspace = true }
 semio-framework-trace-memory-testing = { path = "../../../../../../../../🔨️modules/⏱️trace/🧮️memory/🧪️testing/📥️requests/📦️packages/🦀️rust" }
 semio-framework-job = { workspace = true }

@@ -1,7 +1,6 @@
 //! 🌱 Direct `create-curated-item` mutation owner: brings a new id-keyed curated selection into
 //! existence.
 use crate::diff::CurationDiff;
-use crate::mutations::SourcingMutation;
 use crate::{CurationSnapshot, CuratedItem};
 
 //#region 🔖️Mutation
@@ -20,22 +19,31 @@ pub struct CreateCuratedItem {
 }
 
 /// 🏗️ Builder — appends the item after the existing ones.
-pub fn create_curated_item(item: CuratedItem) -> SourcingMutation {
-    SourcingMutation::CreateCuratedItem(CreateCuratedItem { item, index: None })
+pub fn create_curated_item<Op>(item: CuratedItem) -> Op
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::create_curated_item::CreateCuratedItem>,
+{
+    Op::from(CreateCuratedItem { item, index: None })
 }
 
 /// 📍️ Builder — inserts the item at `index` (an index past the end appends).
-pub fn create_curated_item_at(item: CuratedItem, index: u32) -> SourcingMutation {
-    SourcingMutation::CreateCuratedItem(CreateCuratedItem { item, index: Some(index) })
+pub fn create_curated_item_at<Op>(item: CuratedItem, index: u32) -> Op
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::create_curated_item::CreateCuratedItem>,
+{
+    Op::from(CreateCuratedItem { item, index: Some(index) })
 }
 
-impl protocol::MutationKind<CurationSnapshot, SourcingMutation> for CreateCuratedItem {
+impl<Op> protocol::MutationKind<CurationSnapshot, Op> for CreateCuratedItem
+where
+    Op: protocol::Mutation<CurationSnapshot, Diff = CurationDiff> + From<CreateCuratedItem> + From<crate::standards::v1::subsets::any::schema::mutations::delete_curated_item::DeleteCuratedItem>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "curated-item", kind: "create-curated-item", record: "CreatedCuratedItem" };
 
     fn diff(&self, base: &CurationSnapshot) -> protocol::MutationOutcome<CurationDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &CurationSnapshot) -> Result<Vec<SourcingMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &CurationSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

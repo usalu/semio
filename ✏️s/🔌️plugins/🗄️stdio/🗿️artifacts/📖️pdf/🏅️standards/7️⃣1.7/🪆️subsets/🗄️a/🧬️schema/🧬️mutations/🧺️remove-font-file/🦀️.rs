@@ -1,7 +1,6 @@
 //! 🧺️ Authoritative PDF/A mutation for detaching a font program from a font descriptor.
 
-use super::embed_font_file::EmbedFontFile;
-use super::PdfAMutation;
+use crate::standards::v1_7::subsets::a::schema::mutations::embed_font_file::EmbedFontFile;
 use crate::standards::v1_7::subsets::base::schema::conformance_support as support;
 use crate::standards::v1_7::subsets::base::schema::diff::{self, PdfDiff};
 use crate::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot;
@@ -16,7 +15,10 @@ pub struct RemoveFontFile {
     pub descriptor_ordinal: usize,
 }
 
-impl MutationKind<PdfSnapshot, PdfAMutation> for RemoveFontFile {
+impl<Op> MutationKind<PdfSnapshot, Op> for RemoveFontFile
+where
+    Op: protocol::Mutation<PdfSnapshot, Diff = PdfDiff> + From<RemoveFontFile> + From<crate::standards::v1_7::subsets::a::schema::mutations::embed_font_file::EmbedFontFile>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "remove", entity: "font-file", kind: "remove-font-file", record: "Remove" };
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
@@ -24,12 +26,12 @@ impl MutationKind<PdfSnapshot, PdfAMutation> for RemoveFontFile {
         MutationOutcome::new(diff::graph_edit(rows))
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfAMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         Ok({
             let Some(id) = support::font_descriptors(base).get(self.descriptor_ordinal).copied() else { return Ok(Vec::new()) };
             support::font_program(base, id).map(|(key, program)| {
                 let entry_index = support::entry_position(base, id, &key);
-                PdfAMutation::EmbedFontFile(EmbedFontFile { descriptor_ordinal: self.descriptor_ordinal, key, program, entry_index })
+                Op::from(EmbedFontFile { descriptor_ordinal: self.descriptor_ordinal, key, program, entry_index })
             }).into_iter().collect()
         })
     }
@@ -45,7 +47,5 @@ impl MutationKind<PdfSnapshot, PdfAMutation> for RemoveFontFile {
 //#endregion 🔖️Mutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

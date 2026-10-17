@@ -163,7 +163,7 @@ pub struct BitmapInferenceJob {
 }
 
 impl BitmapInferenceJob {
-    pub(crate) fn new(mut operation: semio_framework_job::Operation, request: BitmapInferenceRequest) -> Result<Self, String> {
+    pub fn new(mut operation: semio_framework_job::Operation, request: BitmapInferenceRequest) -> Result<Self, String> {
         let snapshot = request.resolve_snapshot()?;
         let input_cells = (snapshot.input.width as usize).saturating_mul(snapshot.input.height as usize);
         let output_cells = (snapshot.output.width as usize).saturating_mul(snapshot.output.height as usize);
@@ -938,6 +938,4 @@ impl store::InferredField<BitmapSnapshot> for BitmapEntropy {
         pattern_universe_entropy(snapshot)
     }
 }
-#[cfg(test)]
-#[path="🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

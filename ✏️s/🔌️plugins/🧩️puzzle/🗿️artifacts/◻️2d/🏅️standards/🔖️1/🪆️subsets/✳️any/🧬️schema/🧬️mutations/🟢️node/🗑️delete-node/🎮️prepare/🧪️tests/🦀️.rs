@@ -1,8 +1,16 @@
 //! 🧪️ Native deletion descriptors match literal SQLite/RFC6902 cascade order with zero heap.
 
-use super::*;
+use crate::standards::v1::subsets::any::schema::mutations::delete_node::DeleteNode;
+use crate::Puzzle2dSnapshot;
+use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::lookup::{Puzzle2dLookupCursor, Puzzle2dLookupScope, Puzzle2dLookupStep};
+#[allow(unused_imports)]
+use semio_framework_value::{ValueError, ValueRefusalKind, retained_clone::RetainedCloneBinding, retained_clone::RetainedCloneRef, retained_clone::RetainedCloneStep, retained_clone::paged::PagedUtf8BoundedOrdCursor, retained_clone::ordered_map::BoundedOrdCursor, retained_clone::ordered_map::BoundedOrdGrant, retained_clone::ordered_map::BoundedOrdStep};
+use crate::standards::v1::subsets::any::schema::preparation::delete_node_preparation::*;
+use semio_framework_test_fixtures::fixture_text;
 use semio_framework_value::paged::PagedUtf8;
-use crate::test_source_custody;
+use crate::standards::v1::subsets::any::schema::testkit as test_source_custody;
 
 fn close(cursor: &mut Puzzle2dDeleteNodePreparationCursor) {
     cursor.begin_close();
@@ -21,14 +29,14 @@ fn close(cursor: &mut Puzzle2dDeleteNodePreparationCursor) {
 #[test]
 fn history_edit_puzzle2d_borrowed_delete_preparation_streams_cascade_ordinals_without_owned_payloads() {
     assert!(std::mem::size_of::<Puzzle2dDeleteNodePreparationCursor>() <= 4096);
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗑️delete-node/🎮️prepare/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗑️delete-node/🎮️prepare/🔣️.json")).unwrap();
     let controls = &corpus["control"];
     let text = |value: &serde_json::Value| { let value = value.as_str().unwrap(); match value.strip_prefix("$large:") { Some(suffix) => PagedUtf8::<{usize::MAX}>::from(format!("{}{suffix}", controls["largePrefix"].as_str().unwrap().repeat(controls["largeRepeats"].as_u64().unwrap() as usize))), None => value.into() } };
     let grant = RetainedCloneGrant::one_payload_turn(32,64);
     for case in corpus["cases"].as_array().unwrap() {
         let mut snapshot = Puzzle2dSnapshot::default();
-        snapshot.nodes = case["nodes"].as_array().unwrap().iter().map(|node| crate::standards::v1::subsets::any::schema::Puzzle2dNode { id: text(&node["id"]), handles: node["handles"].as_array().unwrap().iter().map(|id| crate::standards::v1::subsets::any::schema::Puzzle2dHandle { id: text(id), ..Default::default() }).collect(), ..Default::default() }).collect();
-        snapshot.edges = case["edges"].as_array().unwrap().iter().map(|edge| crate::standards::v1::subsets::any::schema::Puzzle2dEdge { id: text(&edge["id"]), source: text(&edge["source"]), target: text(&edge["target"]), ..Default::default() }).collect();
+        snapshot.nodes = case["nodes"].as_array().unwrap().iter().map(|node| crate::standards::v1::subsets::any::schema::records::Puzzle2dNode { id: text(&node["id"]), handles: node["handles"].as_array().unwrap().iter().map(|id| crate::standards::v1::subsets::any::schema::records::Puzzle2dHandle { id: text(id), ..Default::default() }).collect(), ..Default::default() }).collect();
+        snapshot.edges = case["edges"].as_array().unwrap().iter().map(|edge| crate::standards::v1::subsets::any::schema::records::Puzzle2dEdge { id: text(&edge["id"]), source: text(&edge["source"]), target: text(&edge["target"]), ..Default::default() }).collect();
         let payload = DeleteNode { id: text(&case["target"]) };
         let original = serde_json::to_value(&snapshot).unwrap();
         let original_payload = serde_json::to_value(&payload).unwrap();
@@ -74,6 +82,5 @@ fn history_edit_puzzle2d_borrowed_delete_preparation_streams_cascade_ordinals_wi
         assert_eq!(serde_json::to_value(&snapshot).unwrap(), original);
         assert_eq!(serde_json::to_value(&payload).unwrap(), original_payload);
         test_source_custody::close(&mut source);test_source_custody::close(&mut mutation);
-        eprintln!("[DEBUG] Puzzle2d deletion {} streamed one first-node descriptor and {} ordered cascade edges with constructor/normal advance/cancel alias closure zero heap", case["id"].as_str().unwrap(), edges.len());
     }
 }

@@ -34,6 +34,10 @@ type stdioMdCommonmarkAnyInferenceGuardSizeBounds = { readonly minItems?: number
 
 export const stdioMdCommonmarkAnyInferenceGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : stdioMdCommonmarkAnyInferenceGuardReject(at, "value is not an object");
+export const stdioMdCommonmarkAnyInferenceGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) stdioMdCommonmarkAnyInferenceGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const stdioMdCommonmarkAnyInferenceGuardArray = (value: unknown, at: string, bounds: stdioMdCommonmarkAnyInferenceGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return stdioMdCommonmarkAnyInferenceGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) stdioMdCommonmarkAnyInferenceGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -64,14 +68,14 @@ export const stdioMdCommonmarkAnyInferenceGuardConstant = <T extends string | nu
 //#endregion 🚪️Parsers
 
 export function parseMdInference(value: unknown, at = "$"): MdInference {
-  const row = stdioMdCommonmarkAnyInferenceGuardObject(value, at);
+  const row = stdioMdCommonmarkAnyInferenceGuardClosed(stdioMdCommonmarkAnyInferenceGuardObject(value, at), at, ["outline"]);
   return {
     outline: parseMdOutline(row["outline"], `${at}.outline`),
   };
 }
 
 export function parseMdHeadingEntry(value: unknown, at = "$"): MdHeadingEntry {
-  const row = stdioMdCommonmarkAnyInferenceGuardObject(value, at);
+  const row = stdioMdCommonmarkAnyInferenceGuardClosed(stdioMdCommonmarkAnyInferenceGuardObject(value, at), at, ["level", "text"]);
   return {
     level: stdioMdCommonmarkAnyInferenceGuardInteger(row["level"], `${at}.level`),
     text: stdioMdCommonmarkAnyInferenceGuardString(row["text"], `${at}.text`),
@@ -79,7 +83,7 @@ export function parseMdHeadingEntry(value: unknown, at = "$"): MdHeadingEntry {
 }
 
 export function parseMdOutline(value: unknown, at = "$"): MdOutline {
-  const row = stdioMdCommonmarkAnyInferenceGuardObject(value, at);
+  const row = stdioMdCommonmarkAnyInferenceGuardClosed(stdioMdCommonmarkAnyInferenceGuardObject(value, at), at, ["sectionOutline", "blockCount", "wordCount"]);
   return {
     sectionOutline: stdioMdCommonmarkAnyInferenceGuardArray(row["sectionOutline"], `${at}.sectionOutline`).map((item, index) => parseMdHeadingEntry(item, `${at}.sectionOutline[${index}]`)),
     blockCount: stdioMdCommonmarkAnyInferenceGuardInteger(row["blockCount"], `${at}.blockCount`),

@@ -47,12 +47,11 @@ test("oversized cache authority still parses current source without creating cac
     expect(cacheInternals.moduleSourceRecordCacheRootV1(root)).toBeUndefined();
     for(const temperature of ["cold","warm"]){
       const targets=new Set<string>();
-      await cacheInternals.collectImportEdges(root,{caller:[{file,hash}]},{caller:{root:""},leaf:{root:"leaf.ts"}},new Map(),undefined,(_from:string,target:string)=>targets.add(target));
+      await cacheInternals.collectImportEdges(root,{caller:[{file,hash}]},{caller:{root:""},leaf:{root:"leaf.ts"}},new Map(),undefined,(_from:string,target:string|undefined)=>{if(target!==undefined)targets.add(target);});
       expect([...targets],temperature).toEqual(["leaf"]);
     }
     expect(existsSync(process.env.NX_WORKSPACE_DATA_DIRECTORY)).toBe(false);
     expect(readdirSync(root)).toEqual([file]);
-    console.log("[DEBUG] oversized source-fact cache skipped; original import parsed twice with esbuild parity");
   }finally{
     if(previous===undefined)delete process.env.NX_WORKSPACE_DATA_DIRECTORY;
     else process.env.NX_WORKSPACE_DATA_DIRECTORY=previous;

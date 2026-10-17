@@ -1,3 +1,4 @@
+import { parseMdBlock, parseMdInline } from "../📸️snapshot/🟦️.ts";
 import type { MdBlock, MdInline } from '../📸️snapshot/🟦️.ts';
 
 /** 🔺️ Diff for `stdio.md`. `blocks` is an index-keyed recursive triple over the top-level block
@@ -131,14 +132,6 @@ export function parseMdBlockModified(value: unknown, at = "$"): MdBlockModified 
   };
 }
 
-export function parseMdBlockAdded(value: unknown, at = "$"): MdBlockAdded {
-  const row = stdioMdCommonmarkAnyDiffGuardObject(value, at);
-  return {
-    index: stdioMdCommonmarkAnyDiffGuardInteger(row["index"], `${at}.index`, {"minimum": 0}),
-    item: stdioMdCommonmarkAnyDiffGuardObject(row["item"], `${at}.item`),
-  };
-}
-
 export function parseMdListItemsDiff(value: unknown, at = "$"): MdListItemsDiff {
   const row = stdioMdCommonmarkAnyDiffGuardObject(value, at);
   return {
@@ -156,16 +149,24 @@ export function parseMdListItemModified(value: unknown, at = "$"): MdListItemMod
   };
 }
 
-export function parseMdListItemAdded(value: unknown, at = "$"): MdListItemAdded {
+export function parseMdBlockAdded(value: unknown, at = "$"): MdBlockAdded {
   const row = stdioMdCommonmarkAnyDiffGuardObject(value, at);
   return {
     index: stdioMdCommonmarkAnyDiffGuardInteger(row["index"], `${at}.index`, {"minimum": 0}),
-    item: stdioMdCommonmarkAnyDiffGuardArray(row["item"], `${at}.item`).map((item, index) => stdioMdCommonmarkAnyDiffGuardObject(item, `${at}.item[${index}]`)),
+    item: parseMdBlock(row["item"], `${at}.item`),
   };
 }
 
 export function parseMdBlockDiff(value: unknown, at = "$"): MdBlockDiff {
-  return ((row0) => { switch (stdioMdCommonmarkAnyDiffGuardMember(row0["kind"], `${at}.kind`, ["heading", "paragraph", "list", "codeBlock", "blockQuote", "thematicBreak", "htmlBlock", "replace"] as const)) { case "heading": return { kind: "heading", level: row0["level"] === undefined ? undefined : stdioMdCommonmarkAnyDiffGuardInteger(row0["level"], `${at}.level`), inlines: row0["inlines"] === undefined ? undefined : [...stdioMdCommonmarkAnyDiffGuardArray(row0["inlines"], `${at}.inlines`)] }; case "paragraph": return { kind: "paragraph", inlines: row0["inlines"] === undefined ? undefined : [...stdioMdCommonmarkAnyDiffGuardArray(row0["inlines"], `${at}.inlines`)] }; case "list": return { kind: "list", ordered: row0["ordered"] === undefined ? undefined : stdioMdCommonmarkAnyDiffGuardBoolean(row0["ordered"], `${at}.ordered`), start: row0["start"] === undefined ? undefined : parseNullableUint32(row0["start"], `${at}.start`), tight: row0["tight"] === undefined ? undefined : stdioMdCommonmarkAnyDiffGuardBoolean(row0["tight"], `${at}.tight`), items: row0["items"] === undefined ? undefined : parseMdListItemsDiff(row0["items"], `${at}.items`) }; case "codeBlock": return { kind: "codeBlock", info: row0["info"] === undefined ? undefined : parseNullableString(row0["info"], `${at}.info`), literal: row0["literal"] === undefined ? undefined : stdioMdCommonmarkAnyDiffGuardString(row0["literal"], `${at}.literal`) }; case "blockQuote": return { kind: "blockQuote", blocks: row0["blocks"] === undefined ? undefined : parseMdBlocksDiff(row0["blocks"], `${at}.blocks`) }; case "thematicBreak": return { kind: "thematicBreak" }; case "htmlBlock": return { kind: "htmlBlock", raw: row0["raw"] === undefined ? undefined : stdioMdCommonmarkAnyDiffGuardString(row0["raw"], `${at}.raw`) }; case "replace": return { kind: "replace", block: stdioMdCommonmarkAnyDiffGuardObject(row0["block"], `${at}.block`) }; } })(stdioMdCommonmarkAnyDiffGuardObject(value, `${at}`));
+  return ((row0) => { switch (stdioMdCommonmarkAnyDiffGuardMember(row0["kind"], `${at}.kind`, ["heading", "paragraph", "list", "codeBlock", "blockQuote", "thematicBreak", "htmlBlock", "replace"] as const)) { case "heading": return { kind: "heading", level: row0["level"] === undefined ? undefined : stdioMdCommonmarkAnyDiffGuardInteger(row0["level"], `${at}.level`), inlines: row0["inlines"] === undefined ? undefined : stdioMdCommonmarkAnyDiffGuardArray(row0["inlines"], `${at}.inlines`).map((item1, index1) => parseMdInline(item1, `${at}.inlines[${index1}]`)) }; case "paragraph": return { kind: "paragraph", inlines: row0["inlines"] === undefined ? undefined : stdioMdCommonmarkAnyDiffGuardArray(row0["inlines"], `${at}.inlines`).map((item1, index1) => parseMdInline(item1, `${at}.inlines[${index1}]`)) }; case "list": return { kind: "list", ordered: row0["ordered"] === undefined ? undefined : stdioMdCommonmarkAnyDiffGuardBoolean(row0["ordered"], `${at}.ordered`), start: row0["start"] === undefined ? undefined : parseNullableUint32(row0["start"], `${at}.start`), tight: row0["tight"] === undefined ? undefined : stdioMdCommonmarkAnyDiffGuardBoolean(row0["tight"], `${at}.tight`), items: row0["items"] === undefined ? undefined : parseMdListItemsDiff(row0["items"], `${at}.items`) }; case "codeBlock": return { kind: "codeBlock", info: row0["info"] === undefined ? undefined : parseNullableString(row0["info"], `${at}.info`), literal: row0["literal"] === undefined ? undefined : stdioMdCommonmarkAnyDiffGuardString(row0["literal"], `${at}.literal`) }; case "blockQuote": return { kind: "blockQuote", blocks: row0["blocks"] === undefined ? undefined : parseMdBlocksDiff(row0["blocks"], `${at}.blocks`) }; case "thematicBreak": return { kind: "thematicBreak" }; case "htmlBlock": return { kind: "htmlBlock", raw: row0["raw"] === undefined ? undefined : stdioMdCommonmarkAnyDiffGuardString(row0["raw"], `${at}.raw`) }; case "replace": return { kind: "replace", block: parseMdBlock(row0["block"], `${at}.block`) }; } })(stdioMdCommonmarkAnyDiffGuardObject(value, `${at}`));
+}
+
+export function parseMdListItemAdded(value: unknown, at = "$"): MdListItemAdded {
+  const row = stdioMdCommonmarkAnyDiffGuardObject(value, at);
+  return {
+    index: stdioMdCommonmarkAnyDiffGuardInteger(row["index"], `${at}.index`, {"minimum": 0}),
+    item: stdioMdCommonmarkAnyDiffGuardArray(row["item"], `${at}.item`).map((item, index) => parseMdBlock(item, `${at}.item[${index}]`)),
+  };
 }
 
 export type NullableString = string | null;

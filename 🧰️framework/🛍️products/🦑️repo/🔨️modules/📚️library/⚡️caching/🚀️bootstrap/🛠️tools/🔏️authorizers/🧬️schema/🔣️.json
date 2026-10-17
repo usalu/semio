@@ -88,6 +88,160 @@
           "$ref": "#/properties/sources"
         }
       }
+    },
+    "ReceiptFailureDiagnostic": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "purpose",
+        "directory",
+        "reason",
+        "authority",
+        "publicationRetirementDispatches",
+        "validation"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "purpose": {
+          "const": "unqualified-authorizer-receipt-data"
+        },
+        "directory": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "reason": {
+          "enum": [
+            "receipt-schema",
+            "source-read",
+            "source-json",
+            "source-digest",
+            "source-manifest",
+            "manifest-entry",
+            "manifest-order",
+            "output-read",
+            "output-digest"
+          ]
+        },
+        "authority": {
+          "const": false
+        },
+        "publicationRetirementDispatches": {
+          "const": 0
+        },
+        "validation": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "count",
+            "sample"
+          ],
+          "properties": {
+            "count": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1048576
+            },
+            "sample": {
+              "type": "array",
+              "maxItems": 8,
+              "items": {
+                "type": "string",
+                "maxLength": 512
+              }
+            }
+          }
+        }
+      }
+    },
+    "ReceiptFailureCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fault",
+        "accepted",
+        "reason",
+        "reads"
+      ],
+      "properties": {
+        "fault": {
+          "enum": [
+            "none",
+            "receipt-schema",
+            "source-read",
+            "source-json",
+            "source-digest",
+            "source-manifest",
+            "manifest-entry",
+            "manifest-order",
+            "manifest-duplicate",
+            "output-read",
+            "output-digest"
+          ]
+        },
+        "accepted": {
+          "type": "boolean"
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "enum": [
+                "receipt-schema",
+                "source-read",
+                "source-json",
+                "source-digest",
+                "source-manifest",
+                "manifest-entry",
+                "manifest-order",
+                "output-read",
+                "output-digest"
+              ]
+            }
+          ]
+        },
+        "reads": {
+          "type": "array",
+          "maxItems": 2,
+          "items": {
+            "enum": [
+              ".semio-authorizer-source.json",
+              "semio-authorizers.mjs"
+            ]
+          }
+        }
+      }
+    },
+    "RetirementIntegrityCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fault",
+        "accepted"
+      ],
+      "properties": {
+        "fault": {
+          "enum": [
+            "complete",
+            "opaque-missing-resolution",
+            "opaque-invalid-json",
+            "opaque-foreign-path",
+            "source-drift",
+            "output-drift",
+            "receipt-extra",
+            "receipt-output-name",
+            "receipt-version"
+          ]
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
     }
   },
   "properties": {

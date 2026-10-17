@@ -220,7 +220,7 @@ const DAG_RETAINED_DOCUMENT_TOOL_IDS: &[&str] =
 /// `unreachable` at boot). Two factories over one owner therefore cannot both be proven, so the
 /// config verb and the document verbs share one factory and the reduce is picked per id in
 /// `build_tool_job`.
-const DAG_RETAINED_TOOL_IDS: &[&str] = &[
+pub const DAG_RETAINED_TOOL_IDS: &[&str] = &[
     "nodeGraphViewport",
     "setActiveExample",
     "addNode",
@@ -238,7 +238,7 @@ const DAG_RETAINED_TOOL_IDS: &[&str] = &[
 /// 🚦️ The config verb's lane in front of the document verbs' lanes, in `DAG_RETAINED_TOOL_IDS` order. Every verb that
 /// edits the graph publishes leaves of the composed `content` child (design §20.15: the parent vocabulary is
 /// uninhabited), so its lane is `Child`; an `Artifact` lane could never carry anything.
-const DAG_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
+pub const DAG_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
     ArtifactToolPublicationContract { tool_id: "nodeGraphViewport", lanes: &[ArtifactToolPublicationLane::Config] },
     ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[ArtifactToolPublicationLane::HostOnly] },
     ArtifactToolPublicationContract { tool_id: "addNode", lanes: &[ArtifactToolPublicationLane::Child] },
@@ -362,7 +362,7 @@ fn dag_command_from_action(action: &str, args: Option<&semio_framework_value::Ds
     }
 }
 
-struct DagRetainedCommandJobFactory {
+pub struct DagRetainedCommandJobFactory {
     keys: Vec<ToolFactoryKey>,
 }
 
@@ -396,9 +396,9 @@ impl semio_framework::ToolJobFactory for DagRetainedCommandJobFactory {
         &mut self,
         _operation: semio_framework_job::Operation,
         payload: Self::Payload,
-        input: semio_framework::action_bus::RetainedToolWireInput,
-        checkpoint: Option<semio_framework::action_bus::RetainedToolWireInput>,
-    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework::action_bus::RetainedToolWireInput, Option<semio_framework::action_bus::RetainedToolWireInput>)> {
+        input: semio_framework_action_bus::RetainedToolWireInput,
+        checkpoint: Option<semio_framework_action_bus::RetainedToolWireInput>,
+    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework_action_bus::RetainedToolWireInput, Option<semio_framework_action_bus::RetainedToolWireInput>)> {
         if input.declared_bytes() > DAG_RETAINED_RAW_BYTES || checkpoint.is_some() {
             return Err((ToolJobFactoryError::new("bounded DAG retained command rejects oversized wire or checkpoint owner"), input, checkpoint));
         }
@@ -443,7 +443,7 @@ fn dag_retained_config_extent(command: &DagCommand, _snapshot: &DagSnapshot, _in
 //#endregion 🧵️RetainedConfigCommands
 
 //#region 📬️ConfigStorePreparation
-const DAG_CONFIG_STORE_MAXIMUM_BYTES: usize = 768;
+pub const DAG_CONFIG_STORE_MAXIMUM_BYTES: usize = 768;
 const DAG_CONFIG_METADATA_BYTES: usize = 64;
 
 #[derive(semio_framework_value::FactoryPayloadRetirement)]
@@ -456,7 +456,7 @@ struct DagConfigPreparation {
     cancelled: bool,
 }
 
-fn dag_config_footprint(mutation: &DagConfigMutation) -> Result<store::os_store::one_item::ArtifactStoreOneItemFootprint, String> {
+pub fn dag_config_footprint(mutation: &DagConfigMutation) -> Result<store::os_store::one_item::ArtifactStoreOneItemFootprint, String> {
     match mutation {
         DagConfigMutation::ReplaceConfig(crate::editor::dag::config::ReplaceConfig { .. }) => return Err("DAG Config preparation rejects whole-snapshot input".into()),
         DagConfigMutation::ChangeCamera(crate::editor::dag::config::ChangeCamera { .. }) => {}
@@ -464,7 +464,7 @@ fn dag_config_footprint(mutation: &DagConfigMutation) -> Result<store::os_store:
     Ok(store::os_store::one_item::ArtifactStoreOneItemFootprint::for_leaf(mutation, DAG_CONFIG_STORE_MAXIMUM_BYTES * 4 + 1_024))
 }
 
-fn prepare_dag_config(base: &DagConfig, mutation: &DagConfigMutation) -> Result<(DagConfig, Vec<DagConfigMutation>), String> {
+pub fn prepare_dag_config(base: &DagConfig, mutation: &DagConfigMutation) -> Result<(DagConfig, Vec<DagConfigMutation>), String> {
     dag_config_footprint(mutation)?;
     let mut post = base.clone();
     let inverse = match mutation {
@@ -968,9 +968,33 @@ pub(crate) mod unit_tests;
 //#endregion 🧪️UnitTests
 
 //#region 🪢️TaxonomyMounts
-#[path = "📚️examples/🎬️demo-session/🦀️.rs"]
-pub mod demo_session;
-#[cfg(test)]
-#[path = "📚️examples/🎬️demo-session/🧪️tests/🧩️example/🦀️.rs"]
-mod example;
+
+
 //#endregion 🪢️TaxonomyMounts
+
+//#region 🧩️ArtifactItems9
+pub mod artifact_items_9 {
+use crate::{DAG_DOCUMENT_SCHEMA};
+use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
+
+//#region 🔖️ArtifactKind
+/// 🗂️ This artifact's `ArtifactKindSpec` — stitched into the app manifest.
+pub fn artifact_kind() -> ArtifactKindSpec {
+    ArtifactKindSpec {
+        id: "graph.dag".into(),
+        label: semio_framework_ui_locale::LocalizedLabel::native("DAG", "DAG"),
+        source_format: DAG_DOCUMENT_SCHEMA.into(),
+        component_kind: "dag".into(),
+        dimension: "graph".into(),
+        media_capability: OsMediaCapability::MeshOnly,
+        media_type: MediaType { class: MediaClass::Graph, form: MediaForm::Dag },
+        schema: DAG_DOCUMENT_SCHEMA.into(),
+        export_formats: vec![],
+        import_formats: vec![],
+        export_stdio_kinds: vec![],
+        import_stdio_kinds: vec![],
+    }
+}
+//#endregion 🔖️ArtifactKind
+}
+//#endregion 🧩️ArtifactItems9

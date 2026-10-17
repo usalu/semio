@@ -2,7 +2,6 @@
 //! that named it plus every slot pin that held it, so no reference is ever left dangling.
 
 use crate::diff::Wfc2dDiff;
-use crate::mutations::Wfc2dMutation;
 use crate::schema::snapshot::Wfc2dSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -17,17 +16,23 @@ pub struct DeleteTile {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn delete_tile(id: String) -> Wfc2dMutation {
-    Wfc2dMutation::DeleteTile(DeleteTile { id })
+pub fn delete_tile<Op>(id: String) -> Op
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::delete_tile::DeleteTile>,
+{
+    Op::from(DeleteTile { id })
 }
 
-impl MutationKind<Wfc2dSnapshot, Wfc2dMutation> for DeleteTile {
+impl<Op> MutationKind<Wfc2dSnapshot, Op> for DeleteTile
+where
+    Op: protocol::Mutation<Wfc2dSnapshot, Diff = Wfc2dDiff> + From<DeleteTile> + From<crate::standards::v1::subsets::any::schema::mutations::create_rule::CreateRule> + From<crate::standards::v1::subsets::any::schema::mutations::create_tile::CreateTile> + From<crate::standards::v1::subsets::any::schema::mutations::pin_slot::PinSlot>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "tile", kind: "delete-tile", record: "DeletedTile" };
 
     fn diff(&self, base: &Wfc2dSnapshot) -> protocol::MutationOutcome<Wfc2dDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Wfc2dSnapshot) -> Result<Vec<Wfc2dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Wfc2dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

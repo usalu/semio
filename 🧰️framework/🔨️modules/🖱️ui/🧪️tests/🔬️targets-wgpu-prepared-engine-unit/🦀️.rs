@@ -19,7 +19,7 @@ fn original_zero_index_geometry_submits_without_fabricated_surface_or_missing_me
     let limit = law["retirementTurns"].as_u64().unwrap() as usize;
     let mut gpu = match semio_framework_async::block_on(semio_framework_ui_wgpu_render::GpuContext::headless(width, height)) {
         Ok(gpu) => gpu,
-        Err(error) => { assert!(error.starts_with("offscreen adapter:"), "{error}"); eprintln!("[DEBUG] originalZeroIndexGpu adapterUnavailable=true runtimeQualified=false"); return; }
+        Err(error) => { assert!(error.starts_with("offscreen adapter:"), "{error}");  return; }
     };
     let reference = tiny_skia::Pixmap::new(width, height).unwrap();
     let rgba: [u8; 4] = serde_json::from_value(law["rgba"].clone()).unwrap();
@@ -121,7 +121,6 @@ fn original_zero_index_geometry_submits_without_fabricated_surface_or_missing_me
     assert!(gpu.mesh_table_terminal_is_empty());
     for _ in 0..limit { if gpu.close_raster_table_step().unwrap() { break; } }
     assert!(gpu.raster_table_terminal_is_empty());
-    eprintln!("[DEBUG] originalZeroIndexGpu actualDevice=true uploaded={} submittedPaths={} residentPaths={} absentVersionPaths={} readbackTinySkia=true noFabricatedTriangles=true exactResidencyMarkers=true exactOwnersClosed=true", fixture["zeroIndex"]["accepted"].as_array().unwrap().len(), fixture["zeroIndex"]["accepted"].as_array().unwrap().len() * 6, fixture["zeroIndex"]["accepted"].as_array().unwrap().len() * 3, fixture["zeroIndex"]["accepted"].as_array().unwrap().len() * 3);
 }
 
 /// 🖥️ LAW: grid uniforms stay in logical scene units at every device scale; only the

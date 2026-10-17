@@ -50,7 +50,7 @@ fn require_positive(name: &str, value: f64) -> Result<(), KernelError> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn attach_face(body: &mut Body, surface_id: semio_framework_3d_brep_representation::arena::SurfaceId, members: &[(EdgeId, bool)], flipped: bool, tol: Tol, rec: &mut OpRecorder) -> FaceId {
+pub fn attach_face(body: &mut Body, surface_id: semio_framework_3d_brep_representation::arena::SurfaceId, members: &[(EdgeId, bool)], flipped: bool, tol: Tol, rec: &mut OpRecorder) -> FaceId {
     let outer = make_loop(body, placeholder_face(), members);
     let face = add_face(body, surface_id, Some(outer), vec![], flipped, tol, rec);
     body.loops.get_mut(outer).unwrap().face = face;
@@ -69,7 +69,7 @@ pub(crate) fn plane_at(origin: Pnt3, normal: Vec3) -> Surface {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn finish_solid(body: &mut Body, faces: Vec<FaceId>, rec: &mut OpRecorder) -> SolidId {
+pub fn finish_solid(body: &mut Body, faces: Vec<FaceId>, rec: &mut OpRecorder) -> SolidId {
     let shell = add_shell(body, faces, rec);
     add_solid(body, shell, vec![], rec)
 }

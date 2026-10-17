@@ -1,4 +1,4 @@
-use super::*;
+use crate::editor::vcs::modes::edit::windows::editor::*;
 use crate::editor::vcs::unit_tests::context::{app, render as render_body};
 
 #[semio_framework_async_macros::async_test]

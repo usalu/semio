@@ -1,0 +1,112 @@
+{
+ "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs",
+ "original": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/🗑️generated/c4p28-orig/5.rs",
+ "stage": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/🗑️generated/c4p28-stage",
+ "descendants": [
+  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🔬️precompute-model/🦀️.rs",
+  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/📸️snapshot/🦀️.rs",
+  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/📸️snapshot/🦀️.rs"
+ ],
+ "chunks": [
+  {
+   "name": "artifact_identity",
+   "folder": "🗿️artifact-identity",
+   "doc": "🗿️ Artifact identity: the artifact state record and its conversions, the schema id, the dialect coordinate and the two artifact kinds.",
+   "segments": [
+    {
+     "lines": [
+      13,
+      82
+     ]
+    },
+    {
+     "lines": [
+      872,
+      881
+     ]
+    },
+    {
+     "lines": [
+      1816,
+      1864
+     ]
+    }
+   ]
+  },
+  {
+   "name": "precompute_catalogs",
+   "folder": "🧱️precompute-catalogs",
+   "doc": "🧱️ Precompute catalogs: the host rules and weights, the kind catalogs, the scene wire projection and the object, vortex and attraction props the precompute session exchanges with its host.",
+   "segments": [
+    {
+     "lines": [
+      95,
+      454
+     ],
+     "after": [
+      "//#endregion 🔖️PrecomputeModel"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "precompute_commands",
+   "folder": "🎬️precompute-commands",
+   "doc": "🎬️ Precompute commands: the brush and fill readouts, the run stage, counter and reason vocabularies, the typed command envelope and the session errors.",
+   "segments": [
+    {
+     "lines": [
+      456,
+      799
+     ],
+     "before": [
+      "//#region 🔖️PrecomputeModel"
+     ]
+    },
+    {
+     "lines": [
+      801,
+      827
+     ]
+    },
+    {
+     "lines": [
+      838,
+      870
+     ]
+    }
+   ]
+  },
+  {
+   "name": "document_model",
+   "folder": "📚️document-model",
+   "doc": "📚️ Document model: the scale, the objects, vortices, attractions, target volumes, references, the kind catalogs and the document meta of the puzzle 3d artifact.",
+   "segments": [
+    {
+     "lines": [
+      883,
+      1574
+     ],
+     "after": [
+      "// #endregion 🔖️Document"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "pose_math",
+   "folder": "📐️pose-math",
+   "doc": "📐️ Pose math: the vector and quaternion helpers, the vortex full id and the attraction pose derivation.",
+   "segments": [
+    {
+     "lines": [
+      1576,
+      1814
+     ]
+    }
+   ]
+  }
+ ]
+}

@@ -1,5 +1,5 @@
 use super::*;
-use crate::editor::bim::unit_tests::support::{applied, ctx, demo, run};
+use crate::editor::bim::fixture::support::{applied, ctx, demo, run};
 
 fn rename(id: &str, name: &str) -> Result<Emit<ModelMutation, NoConfigMutation>, Fault> {
     let snapshot = demo();

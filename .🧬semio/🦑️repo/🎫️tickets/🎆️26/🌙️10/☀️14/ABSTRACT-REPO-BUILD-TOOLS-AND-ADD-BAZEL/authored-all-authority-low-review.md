@@ -1,0 +1,9 @@
+# Authored ALL Authority Reader Review
+
+Initial read-only Source review. Final strict, repeated portable oracle and held FD manifest remain pending. No ALL build, SDK/store, Native action or test was performed by this audit.
+
+The new readBuildGraphModuleAuthorityV1 calls the existing loaded-current guard before returning a frozen primitive copy of the private loaded authority. Its public return uses only the repository-owned two-string BuildGraphModuleAuthorityV1 type. The current inventory/read-policy/observation guards and defining20-source ordered SHA-string algorithm plus publication-schema digest remain the production definition. No second list, fallback, alias, external type or authority grant is added.
+
+The ticket currentModuleFingerprint now delegates to this API. Its independent witness derives the defining URL array and publication URL from actual TypeScript AST, calls the actual API and helper, validates closed authority DATA and compares bounded ordinary Python hashlib FD reads with Bun independent fixture hashes. It checks order sensitivity, distinguishes raw-byte hashing and rereads loaded-current authority after the oracle. Optional Python nofollow/nonblock flags are ordinary Source diagnostic portability, not proof of Windows Native path authority. Full pre/post regular single-link named/FD stamps remain required. The20 bounded production guards are existing synchronous Source-currentness checks; the new API does not mint or replace any Original/control.
+
+The authored ALL policy/eleven override refusal/two-refresh guard and existing process transport remain separate unchanged behavior. A Source model or fingerprint oracle does not establish current authenticated SDK or actual ALL execution. No concrete design blocker was found in this initial wrapper/helper change.

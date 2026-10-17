@@ -69,6 +69,7 @@ export function createArtifactRegistry(declarations: readonly ArtifactDeclaratio
   }
   for (const [first, second] of collisions.sort((a, b) => a[0] - b[0] || a[1] - b[1])) {
     const entry = deliverables[first], other = deliverables[second];
+    if (!entry || !other) throw new Error("Artifact collision lost its indexed declaration");
     findings.push({ rule: "CACHE-03", owner: other.owner, path: other.path, evidence: `Output overlaps ${entry.owner} at ${entry.path}` });
   }
   for (const [owner, path, category] of stores) entries.set(JSON.stringify([owner, path]), {

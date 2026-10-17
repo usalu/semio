@@ -1,0 +1,214 @@
+{
+  "version": 1,
+  "readContexts": [
+    {
+      "name": "full-current-projection",
+      "effect": "ordinary",
+      "accepted": true
+    },
+    {
+      "name": "released-scoped-view",
+      "effect": "released",
+      "accepted": false
+    },
+    {
+      "name": "foreign-phase",
+      "effect": "foreign-control",
+      "accepted": false
+    },
+    {
+      "name": "cancelled-phase",
+      "effect": "cancelled",
+      "accepted": false
+    },
+    {
+      "name": "changed-source-byte",
+      "effect": "changed-source",
+      "accepted": false
+    },
+    {
+      "name": "changed-receipt-CAS",
+      "effect": "changed-receipt",
+      "accepted": false
+    },
+    {
+      "name": "changed-current-link",
+      "effect": "changed-link",
+      "accepted": false
+    },
+    {
+      "name": "ordinary-wrapper-rejects-structural-store",
+      "effect": "fake-store",
+      "accepted": false
+    }
+  ],
+  "bindings": [
+    {
+      "name": "all-uninstalled-current-scopes",
+      "selected": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "scopes": [
+        {
+          "scope": ".",
+          "packages": [
+            {
+              "source": "node_modules",
+              "kind": "missing",
+              "generation": null
+            }
+          ]
+        }
+      ],
+      "receipt": true,
+      "unqualified": false,
+      "accepted": true
+    },
+    {
+      "name": "other-current-generation",
+      "selected": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "scopes": [
+        {
+          "scope": ".",
+          "packages": [
+            {
+              "source": "node_modules",
+              "kind": "bound",
+              "generation": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            }
+          ]
+        }
+      ],
+      "receipt": true,
+      "unqualified": false,
+      "accepted": true
+    },
+    {
+      "name": "selected-root-active",
+      "selected": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "scopes": [
+        {
+          "scope": ".",
+          "packages": [
+            {
+              "source": "node_modules",
+              "kind": "bound",
+              "generation": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            }
+          ]
+        }
+      ],
+      "receipt": true,
+      "unqualified": false,
+      "accepted": false
+    },
+    {
+      "name": "selected-later-scope-active",
+      "selected": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "scopes": [
+        {
+          "scope": ".",
+          "packages": [
+            {
+              "source": "node_modules",
+              "kind": "bound",
+              "generation": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            }
+          ]
+        },
+        {
+          "scope": "x",
+          "packages": [
+            {
+              "source": "x/node_modules",
+              "kind": "bound",
+              "generation": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            }
+          ]
+        }
+      ],
+      "receipt": true,
+      "unqualified": false,
+      "accepted": false
+    },
+    {
+      "name": "selected-workspace-member-active",
+      "selected": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "scopes": [
+        {
+          "scope": ".",
+          "packages": [
+            {
+              "source": "node_modules",
+              "kind": "bound",
+              "generation": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            {
+              "source": "w/a/node_modules",
+              "kind": "bound",
+              "generation": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            }
+          ]
+        }
+      ],
+      "receipt": true,
+      "unqualified": false,
+      "accepted": false
+    },
+    {
+      "name": "unknown-binding",
+      "selected": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "scopes": [
+        {
+          "scope": ".",
+          "packages": [
+            {
+              "source": "node_modules",
+              "kind": "unknown",
+              "generation": null
+            }
+          ]
+        }
+      ],
+      "receipt": true,
+      "unqualified": false,
+      "accepted": false
+    },
+    {
+      "name": "missing-selected-receipt",
+      "selected": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "scopes": [
+        {
+          "scope": ".",
+          "packages": [
+            {
+              "source": "node_modules",
+              "kind": "missing",
+              "generation": null
+            }
+          ]
+        }
+      ],
+      "receipt": false,
+      "unqualified": false,
+      "accepted": false
+    },
+    {
+      "name": "retained-unqualified-material",
+      "selected": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "scopes": [
+        {
+          "scope": ".",
+          "packages": [
+            {
+              "source": "node_modules",
+              "kind": "missing",
+              "generation": null
+            }
+          ]
+        }
+      ],
+      "receipt": true,
+      "unqualified": true,
+      "accepted": false
+    }
+  ]
+}

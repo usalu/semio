@@ -2,7 +2,8 @@ use super::*;
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::{plan::solid_steps, ModelNode};
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::SolidKey;
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::testing::{assert_matches_oracle, case, close, raised};
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::{compute_element_solids, parts, SolidFamily};
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::{parts, SolidFamily};
+use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_element_solids;
 use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
 use protocol::Inference;
 

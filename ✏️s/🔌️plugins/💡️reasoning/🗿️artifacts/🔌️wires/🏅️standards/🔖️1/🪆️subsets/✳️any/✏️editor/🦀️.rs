@@ -1,7 +1,6 @@
 //! ✏️ Wires document editing with gestures owned by each concrete canvas window.
 
-#[path = "🎭️modes/✏️edit/🪟️windows/🕸️canvas/🫧️transient/🦀️.rs"]
-pub mod window_transient;
+pub use semio_s_artifact_reasoning_wires_window_transient::editor::wires::window_transient;
 
 use crate::editor::wires::commands::add_node;
 use crate::editor::wires::commands::add_relationship;
@@ -207,11 +206,11 @@ pub struct ReasoningWiresPlayApp;
 /// refuses anything not classified `Migrated`, and `Migrated` in turn only survives the guest's
 /// `interactive-job.catalog-incomplete` boot check when this list, the publication contracts and the
 /// `bounded_first_step_tool_proofs!` row below name the same ids.
-const WIRES_RETAINED_TOOL_IDS: &[&str] = &["setActiveExample", "addNode", "addRelationship", "deleteSelection", "canvasPointerDown", "canvasPointerMove", "canvasPointerUp", "nodeGraphViewport"];
+pub const WIRES_RETAINED_TOOL_IDS: &[&str] = &["setActiveExample", "addNode", "addRelationship", "deleteSelection", "canvasPointerDown", "canvasPointerMove", "canvasPointerUp", "nodeGraphViewport"];
 const WIRES_RETAINED_PAYLOAD_SCHEMA: &str = "reasoning.wires.tool-command.v1";
-const WIRES_RETAINED_RAW_BYTES: usize = 8_192;
-const WIRES_RETAINED_WORK_ITEMS: usize = 1_048_576;
-const WIRES_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
+pub const WIRES_RETAINED_RAW_BYTES: usize = 8_192;
+pub const WIRES_RETAINED_WORK_ITEMS: usize = 1_048_576;
+pub const WIRES_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
     ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[ArtifactToolPublicationLane::HostOnly] },
     ArtifactToolPublicationContract { tool_id: "addNode", lanes: &[ArtifactToolPublicationLane::Child] },
     ArtifactToolPublicationContract { tool_id: "addRelationship", lanes: &[ArtifactToolPublicationLane::Child] },
@@ -479,7 +478,7 @@ impl ArtifactCommandWork<EditorApp<ReasoningWiresPlayApp>> for WiresWindowDragWo
     }
 }
 
-struct WiresRetainedCommandJobFactory {
+pub struct WiresRetainedCommandJobFactory {
     keys: Vec<ToolFactoryKey>,
 }
 
@@ -517,9 +516,9 @@ impl ToolJobFactory for WiresRetainedCommandJobFactory {
         &mut self,
         _operation: semio_framework_job::Operation,
         payload: Self::Payload,
-        input: semio_framework::action_bus::RetainedToolWireInput,
-        checkpoint: Option<semio_framework::action_bus::RetainedToolWireInput>,
-    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework::action_bus::RetainedToolWireInput, Option<semio_framework::action_bus::RetainedToolWireInput>)> {
+        input: semio_framework_action_bus::RetainedToolWireInput,
+        checkpoint: Option<semio_framework_action_bus::RetainedToolWireInput>,
+    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework_action_bus::RetainedToolWireInput, Option<semio_framework_action_bus::RetainedToolWireInput>)> {
         if input.declared_bytes() > WIRES_RETAINED_RAW_BYTES || checkpoint.is_some() {
             return Err((ToolJobFactoryError::new("Wires bounded command rejects oversized wire or checkpoint owner"), input, checkpoint));
         }
@@ -872,17 +871,40 @@ pub fn create_wires_app() -> semio_framework_plugin::AppDefinition {
 /// able to drive the whole app without re-deriving the harness.
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
-pub(crate) mod unit_tests;
+pub mod unit_tests;
 
-#[cfg(test)]
-#[path = "🧪️tests/⚖️declared-verbs/🦀️.rs"]
-mod declared_verb_laws;
+
 //#endregion 🧪️UnitTests
 
 //#region 🪢️TaxonomyMounts
-#[path = "📚️examples/🎬️demo-session/🦀️.rs"]
-pub mod demo_session;
-#[cfg(test)]
-#[path = "📚️examples/🎬️demo-session/🧪️tests/🧩️example/🦀️.rs"]
-mod example;
+
+
 //#endregion 🪢️TaxonomyMounts
+
+//#region 🧩️ArtifactItems4
+pub mod artifact_items_4 {
+use crate::{MINDMAP_WIRES_SCHEMA};
+use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
+
+//#region 🔖️ArtifactKind
+/// 🗂️ This artifact's `ArtifactKindSpec` — stitched into the app manifest by
+/// `crate::editor::wires::create_wires_app`'s `🔖️Manifest` region.
+pub fn artifact_kind() -> ArtifactKindSpec {
+    ArtifactKindSpec {
+        id: "graph.wires".into(),
+        label: semio_framework_ui_locale::LocalizedLabel::native("Wires Graph", "Leitungsgraph"),
+        source_format: MINDMAP_WIRES_SCHEMA.into(),
+        component_kind: "wires".into(),
+        dimension: "graph".into(),
+        media_capability: OsMediaCapability::MeshOnly,
+        media_type: MediaType { class: MediaClass::Graph, form: MediaForm::Dag },
+        schema: MINDMAP_WIRES_SCHEMA.into(),
+        export_formats: vec![],
+        import_formats: vec![],
+        export_stdio_kinds: vec!["stdio.json".into()],
+        import_stdio_kinds: vec!["stdio.json".into()],
+    }
+}
+//#endregion 🔖️ArtifactKind
+}
+//#endregion 🧩️ArtifactItems4

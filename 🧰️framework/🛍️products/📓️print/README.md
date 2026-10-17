@@ -83,7 +83,7 @@ element, one section per taxonomy §76 namespace with all 246 families and their
 adding a chart kind, a family or a test, and a chapter on the numerics and the measured limits.
 Build it with `bun ./📜️script.ts build viz api`; it compiles in both themes.
 
-`vizApiReference()` in `🔨️modules/📊️visualization-gallery/🟦️.ts` is the machine-readable twin of
+`vizApiReference()` in `🔨️modules/📊️visualization-gallery/🧾️api-reference/🟦️.ts` is the machine-readable twin of
 that document: every package with its public commands and its documented key families, plus the
 schema's bilingual family option vocabulary.
 

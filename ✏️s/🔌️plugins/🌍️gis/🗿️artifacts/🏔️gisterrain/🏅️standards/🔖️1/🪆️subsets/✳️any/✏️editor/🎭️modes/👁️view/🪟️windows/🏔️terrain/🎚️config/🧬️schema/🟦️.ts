@@ -24,6 +24,10 @@ type gisGisTerrainWindowConfigGuardSizeBounds = { readonly minItems?: number; re
 
 export const gisGisTerrainWindowConfigGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : gisGisTerrainWindowConfigGuardReject(at, "value is not an object");
+export const gisGisTerrainWindowConfigGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) gisGisTerrainWindowConfigGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const gisGisTerrainWindowConfigGuardArray = (value: unknown, at: string, bounds: gisGisTerrainWindowConfigGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return gisGisTerrainWindowConfigGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) gisGisTerrainWindowConfigGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -54,7 +58,7 @@ export const gisGisTerrainWindowConfigGuardConstant = <T extends string | number
 //#endregion 🚪️Parsers
 
 export function parseGisTerrainWindowConfig(value: unknown, at = "$"): GisTerrainWindowConfig {
-  const row = parseSchemaRecord(value, ["cameraJson"], at);
+  const row = gisGisTerrainWindowConfigGuardClosed(gisGisTerrainWindowConfigGuardObject(value, at), at, ["cameraJson"]);
   return {
     cameraJson: gisGisTerrainWindowConfigGuardString(row["cameraJson"], `${at}.cameraJson`),
   };

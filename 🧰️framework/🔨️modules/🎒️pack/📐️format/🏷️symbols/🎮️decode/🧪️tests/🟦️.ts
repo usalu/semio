@@ -29,7 +29,7 @@ test("retained inline symbols preserve original wire indices and independent can
       expect(reader.pos).toBe(row.prefixBytes);
       expect(Buffer.from(writer.finish())).toEqual(Buffer.from(bytes.subarray(row.sourceOffset,reader.pos)));
       expect(database.query("SELECT ordinal,value FROM symbols ORDER BY ordinal").all().map((value:any)=>({ordinal:value.ordinal,text:new TextDecoder().decode(value.value)}))).toEqual(row.symbols.map((text:string,ordinal:number)=>({ordinal,text})));
-      expect(applyPatch({symbols},[{op:"move",from:"/symbols",path:"/retained"}],true,false).newDocument).toEqual({retained:row.symbols});
+      expect(applyPatch<{symbols:string[]}|{retained:string[]}>({symbols},[{op:"move",from:"/symbols",path:"/retained"}],true,false).newDocument).toEqual({retained:row.symbols});
     }
     for(const row of law.invalid){
       const bytes=Uint8Array.from(Buffer.from(row.hex,"hex"));
@@ -61,5 +61,4 @@ test("retained inline symbols preserve original wire indices and independent can
   expect(source.includes("RetainedCloneBinding::close_one")).toBe(true);
   expect(source.includes("decode_inline_symbols(")).toBe(false);
   expect(source.includes("Utf8Admission")).toBe(false);
-  console.log("[DEBUG] Retained inline symbol indices/canonical unsigned wire/UTF8/NUL/empty/duplicate/prefix tail agree with Protobuf.js, fatal TextDecoder, SQLite ordinal BLOBs and RFC6902; native bounded parsing/heap/alias proof remains required");
 });

@@ -1,6 +1,6 @@
 //! 🔤️ Direct binary codec for `embed-font-file`.
 
-use crate::standards::v1_7::subsets::ua::schema::mutations::EmbedFontFile;
+use crate::standards::v1_7::subsets::ua::schema::mutations::embed_font_file::EmbedFontFile;
 
 //#region 🔖️Identity
 pub const TAG: u8 = 9;
@@ -21,7 +21,5 @@ pub fn decode(bytes: &[u8]) -> Result<EmbedFontFile, String> {
 //#endregion 🔖️Codec
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

@@ -1,15 +1,15 @@
 //! 📐️ 📐️ Forms play app commands command — `patch-vector-field`.
 
 use crate::editor::forms::config::{FormsConfig, FormsConfigMutation};
-use crate::editor::forms::parse_value_json;
-use crate::schema::update_block_operations;
+use crate::editor::forms::support::parse_value_json;
+use crate::mutations::update_block_operations;
 use crate::{op::FormMutation, FormsSnapshot};
 use semio_framework_pack_json::Value;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Shell
-fn patch_vector_field(spec: &FormsSnapshot, question_id: &str, field_key: &str, field: &str, raw_value: &Value) -> Option<Vec<FormMutation>> {
+pub fn patch_vector_field(spec: &FormsSnapshot, question_id: &str, field_key: &str, field: &str, raw_value: &Value) -> Option<Vec<FormMutation>> {
     update_block_operations(spec, question_id, |question| {
         let mut fields = question.fields.take().unwrap_or_default();
         if let Some(entry) = fields.iter_mut().find(|item| item.key == field_key) {
@@ -42,7 +42,5 @@ pub fn handle(payload: &PatchVectorField, doc: &ArtifactView<'_, FormsSnapshot>,
 }
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

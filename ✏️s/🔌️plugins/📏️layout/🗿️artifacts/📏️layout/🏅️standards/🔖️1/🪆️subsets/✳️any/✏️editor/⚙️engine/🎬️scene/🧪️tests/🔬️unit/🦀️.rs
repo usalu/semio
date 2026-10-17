@@ -1,4 +1,9 @@
 use super::*;
+use semio_framework_io_ports::testkit::{bind, scene_content};
+
+fn bind_drawing() {
+    bind(&semio_s_artifact_layout_layout_model::LAYOUT_BACKGROUND_DRAWING);
+}
 
 fn sample_document() -> LayoutSnapshot {
     semio_s_artifact_layout_layout_model::io::text::snapshot::parse_dsl(semio_s_artifact_layout_layout_model::io::text::snapshot::LAYOUT_SAMPLE_TEXT).expect("sample fixture parses")
@@ -251,7 +256,6 @@ async fn package_zip_bundles_document_and_preflight() {
 
 #[semio_framework_async_macros::async_test]
 async fn svg_export_contains_path_and_wraps_a_valid_document() {
-    semio_s_artifact_layout_layout_io::ensure_stdio_semio_drawing_registered();
     let doc = sample_document();
     let svg = export_document_svg_headless_batch(&doc, "page-1").expect("svg export succeeds");
     assert!(svg.starts_with("<svg"));
@@ -348,28 +352,29 @@ async fn moving_a_frame_onto_a_hidden_layer_drops_only_that_frame() {
 
 #[test]
 fn background_drawing_fits_an_offset_plan_onto_the_page() {
-    use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
-    use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
-    use semio_s_artifact_stdio_semio_drawing::schema::snapshot::{DrawLayer, DrawNode, PathSegment, SemioDrawingSnapshot};
-    let point = |x: f64, y: f64| SemioPoint2 { x, y };
-    let content = SemioDrawingSnapshot {
-        schema: "stdio.semio.drawing".into(),
+    bind_drawing();
+    use semio_framework_io_ports::VectorPoint2;
+    use semio_framework_io_ports::VectorTransform;
+    use semio_framework_io_ports::{VectorLayer, VectorNode, VectorScene, VectorSegment};
+    let point = |x: f64, y: f64| VectorPoint2 { x, y };
+    let content = VectorScene {
+        schema: "test.scene".into(),
         canvas: Default::default(),
         styles: Vec::new(),
-        layers: vec![DrawLayer {
+        layers: vec![VectorLayer {
             id: "imported".into(),
             name: "Imported".into(),
             visible: true,
-            root: DrawNode::Group {
-                transform: SemioTransform::identity(),
-                children: vec![DrawNode::Path {
+            root: VectorNode::Group {
+                transform: VectorTransform::identity(),
+                children: vec![VectorNode::Path {
                     style: None,
                     segments: vec![
-                        PathSegment::MoveTo { to: point(10.0, 20.0) },
-                        PathSegment::LineTo { to: point(110.0, 20.0) },
-                        PathSegment::LineTo { to: point(110.0, 70.0) },
-                        PathSegment::LineTo { to: point(10.0, 70.0) },
-                        PathSegment::Close,
+                        VectorSegment::MoveTo { to: point(10.0, 20.0) },
+                        VectorSegment::LineTo { to: point(110.0, 20.0) },
+                        VectorSegment::LineTo { to: point(110.0, 70.0) },
+                        VectorSegment::LineTo { to: point(10.0, 70.0) },
+                        VectorSegment::Close,
                     ],
                 }],
             },
@@ -378,7 +383,7 @@ fn background_drawing_fits_an_offset_plan_onto_the_page() {
     let mut document = semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document();
     document.pages[0].width = 100.0;
     document.pages[0].height = 50.0;
-    document.background_drawing = Some(semio_s_artifact_layout_layout_model::background_drawing_child_handle("dwg", &content));
+    document.background_drawing = Some(semio_s_artifact_layout_layout_model::background_drawing_child_handle("dwg", &scene_content(&content)));
     let mut engine = LayoutEngine::new();
     let list = build_display_list_for_page(&mut engine, &document, &document.pages[0], "", &[], None, false);
     let stroke = &list.strokes[0];
@@ -389,34 +394,36 @@ fn background_drawing_fits_an_offset_plan_onto_the_page() {
     assert_eq!(stroke.points[0], (0.0, 0.0));
     assert_eq!(stroke.points[1], (100.0, 0.0));
     assert_eq!(stroke.points[2], (100.0, 50.0));
-    document.background_drawing.as_mut().unwrap().content.layers[0].visible = false;
+    let mut hidden_scene = content.clone();
+    hidden_scene.layers[0].visible = false;
+    document.background_drawing = Some(semio_s_artifact_layout_layout_model::background_drawing_child_handle("dwg", &scene_content(&hidden_scene)));
     let hidden = build_display_list_for_page(&mut engine, &document, &document.pages[0], "", &[], None, false);
     assert!(hidden.strokes.is_empty());
 }
 
-fn unit_square_drawing() -> semio_s_artifact_stdio_semio_drawing::schema::snapshot::SemioDrawingSnapshot {
-    use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
-    use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
-    use semio_s_artifact_stdio_semio_drawing::schema::snapshot::{DrawLayer, DrawNode, PathSegment, SemioDrawingSnapshot};
-    let point = |x: f64, y: f64| SemioPoint2 { x, y };
-    SemioDrawingSnapshot {
-        schema: "stdio.semio.drawing".into(),
+fn unit_square_drawing() -> semio_framework_io_ports::VectorScene {
+    use semio_framework_io_ports::VectorPoint2;
+    use semio_framework_io_ports::VectorTransform;
+    use semio_framework_io_ports::{VectorLayer, VectorNode, VectorScene, VectorSegment};
+    let point = |x: f64, y: f64| VectorPoint2 { x, y };
+    VectorScene {
+        schema: "test.scene".into(),
         canvas: Default::default(),
         styles: Vec::new(),
-        layers: vec![DrawLayer {
+        layers: vec![VectorLayer {
             id: "imported".into(),
             name: "Imported".into(),
             visible: true,
-            root: DrawNode::Group {
-                transform: SemioTransform::identity(),
-                children: vec![DrawNode::Path {
+            root: VectorNode::Group {
+                transform: VectorTransform::identity(),
+                children: vec![VectorNode::Path {
                     style: None,
                     segments: vec![
-                        PathSegment::MoveTo { to: point(0.0, 0.0) },
-                        PathSegment::LineTo { to: point(1.0, 0.0) },
-                        PathSegment::LineTo { to: point(1.0, 1.0) },
-                        PathSegment::LineTo { to: point(0.0, 1.0) },
-                        PathSegment::Close,
+                        VectorSegment::MoveTo { to: point(0.0, 0.0) },
+                        VectorSegment::LineTo { to: point(1.0, 0.0) },
+                        VectorSegment::LineTo { to: point(1.0, 1.0) },
+                        VectorSegment::LineTo { to: point(0.0, 1.0) },
+                        VectorSegment::Close,
                     ],
                 }],
             },
@@ -426,10 +433,11 @@ fn unit_square_drawing() -> semio_s_artifact_stdio_semio_drawing::schema::snapsh
 
 #[test]
 fn a_placed_drawing_frame_fits_the_plan_inside_its_bounds() {
+    bind_drawing();
     let mut document = semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document();
     document.links[0].artifact_kind = "s.draw.drawing".into();
     document.links[0].artifact_ref = "plan-1".into();
-    document.background_drawing = Some(semio_s_artifact_layout_layout_model::background_drawing_child_handle("dwg", &unit_square_drawing()));
+    document.background_drawing = Some(semio_s_artifact_layout_layout_model::background_drawing_child_handle("dwg", &scene_content(&unit_square_drawing())));
     let mut engine = LayoutEngine::new();
     let list = build_display_list_for_page(&mut engine, &document, &document.pages[0], "", &[], None, false);
     assert_eq!(list.frame_strokes[0].points, vec![(146.0, 435.0), (186.0, 435.0), (186.0, 475.0), (146.0, 475.0)]);
@@ -441,32 +449,33 @@ fn a_placed_drawing_frame_fits_the_plan_inside_its_bounds() {
 
 #[test]
 fn drawing_text_lands_on_the_page_and_inside_the_placed_frame() {
-    use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
-    use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
-    use semio_s_artifact_stdio_semio_drawing::schema::snapshot::{DrawLayer, DrawNode, PathSegment, SemioDrawingSnapshot};
-    let point = |x: f64, y: f64| SemioPoint2 { x, y };
-    let content = SemioDrawingSnapshot {
-        schema: "stdio.semio.drawing".into(),
+    bind_drawing();
+    use semio_framework_io_ports::VectorPoint2;
+    use semio_framework_io_ports::VectorTransform;
+    use semio_framework_io_ports::{VectorLayer, VectorNode, VectorScene, VectorSegment};
+    let point = |x: f64, y: f64| VectorPoint2 { x, y };
+    let content = VectorScene {
+        schema: "test.scene".into(),
         canvas: Default::default(),
         styles: Vec::new(),
-        layers: vec![DrawLayer {
+        layers: vec![VectorLayer {
             id: "imported".into(),
             name: "Imported".into(),
             visible: true,
-            root: DrawNode::Group {
-                transform: SemioTransform::identity(),
+            root: VectorNode::Group {
+                transform: VectorTransform::identity(),
                 children: vec![
-                    DrawNode::Path {
+                    VectorNode::Path {
                         style: None,
                         segments: vec![
-                            PathSegment::MoveTo { to: point(0.0, 0.0) },
-                            PathSegment::LineTo { to: point(1.0, 0.0) },
-                            PathSegment::LineTo { to: point(1.0, 1.0) },
-                            PathSegment::LineTo { to: point(0.0, 1.0) },
-                            PathSegment::Close,
+                            VectorSegment::MoveTo { to: point(0.0, 0.0) },
+                            VectorSegment::LineTo { to: point(1.0, 0.0) },
+                            VectorSegment::LineTo { to: point(1.0, 1.0) },
+                            VectorSegment::LineTo { to: point(0.0, 1.0) },
+                            VectorSegment::Close,
                         ],
                     },
-                    DrawNode::Text { value: "Plan".into(), at: point(0.0, 0.0), style: None },
+                    VectorNode::Text { value: "Plan".into(), at: point(0.0, 0.0), style: None },
                 ],
             },
         }],
@@ -474,7 +483,7 @@ fn drawing_text_lands_on_the_page_and_inside_the_placed_frame() {
     let mut document = semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document();
     document.links[0].artifact_kind = "s.draw.drawing".into();
     document.links[0].artifact_ref = "plan-1".into();
-    document.background_drawing = Some(semio_s_artifact_layout_layout_model::background_drawing_child_handle("dwg", &content));
+    document.background_drawing = Some(semio_s_artifact_layout_layout_model::background_drawing_child_handle("dwg", &scene_content(&content)));
     let mut engine = LayoutEngine::new();
     let list = build_display_list_for_page(&mut engine, &document, &document.pages[0], "", &[], None, false);
     let labels: Vec<_> = list.text_runs.iter().filter(|run| run.content == "Plan").collect();
@@ -485,40 +494,36 @@ fn drawing_text_lands_on_the_page_and_inside_the_placed_frame() {
 }
 
 fn red_png() -> Vec<u8> {
-    let mut encoded = semio_s_artifact_stdio_png::standards::v1_2::subsets::any::io::PngProjection {width:1,height:1,bit_depth:8,color_type:semio_s_artifact_stdio_png::schema::snapshot::PngColorType::Rgba,interlace:false,plte:None,trns:None,gama:None,chrm:None,srgb:None,phys:None,time:None,bkgd:None,text_chunks:Vec::new(),pixels:Vec::new(),chunk_order:Vec::new(),unknown_chunks:Vec::new()};
-    encoded.width = 1;
-    encoded.height = 1;
-    encoded.pixels = vec![255, 0, 0, 255];
-    semio_s_artifact_stdio_png::standards::v1_2::subsets::any::io::author_png_projection(&encoded).expect("png")
+    semio_framework_pixels::encode_png(&semio_framework_pixels::RasterImage { width: 1, height: 1, pixels: vec![255, 0, 0, 255] }).expect("png")
 }
 
-fn drawing_with_red_png() -> semio_s_artifact_stdio_semio_drawing::schema::snapshot::SemioDrawingSnapshot {
-    use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
-    use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
-    use semio_s_artifact_stdio_semio_drawing::schema::snapshot::{DrawLayer, DrawNode, PathSegment, SemioDrawingSnapshot};
-    let point = |x: f64, y: f64| SemioPoint2 { x, y };
-    SemioDrawingSnapshot {
-        schema: "stdio.semio.drawing".into(),
+fn drawing_with_red_png() -> semio_framework_io_ports::VectorScene {
+    use semio_framework_io_ports::VectorPoint2;
+    use semio_framework_io_ports::VectorTransform;
+    use semio_framework_io_ports::{VectorLayer, VectorNode, VectorScene, VectorSegment};
+    let point = |x: f64, y: f64| VectorPoint2 { x, y };
+    VectorScene {
+        schema: "test.scene".into(),
         canvas: Default::default(),
         styles: Vec::new(),
-        layers: vec![DrawLayer {
+        layers: vec![VectorLayer {
             id: "imported".into(),
             name: "Imported".into(),
             visible: true,
-            root: DrawNode::Group {
-                transform: SemioTransform::identity(),
+            root: VectorNode::Group {
+                transform: VectorTransform::identity(),
                 children: vec![
-                    DrawNode::Path {
+                    VectorNode::Path {
                         style: None,
                         segments: vec![
-                            PathSegment::MoveTo { to: point(0.0, 0.0) },
-                            PathSegment::LineTo { to: point(1.0, 0.0) },
-                            PathSegment::LineTo { to: point(1.0, 1.0) },
-                            PathSegment::LineTo { to: point(0.0, 1.0) },
-                            PathSegment::Close,
+                            VectorSegment::MoveTo { to: point(0.0, 0.0) },
+                            VectorSegment::LineTo { to: point(1.0, 0.0) },
+                            VectorSegment::LineTo { to: point(1.0, 1.0) },
+                            VectorSegment::LineTo { to: point(0.0, 1.0) },
+                            VectorSegment::Close,
                         ],
                     },
-                    DrawNode::Image { at: point(0.0, 0.0), width: 1.0, height: 1.0, mime: "image/png".into(), bytes: red_png() },
+                    VectorNode::Image { at: point(0.0, 0.0), width: 1.0, height: 1.0, mime: "image/png".into(), bytes: red_png() },
                 ],
             },
         }],
@@ -527,10 +532,11 @@ fn drawing_with_red_png() -> semio_s_artifact_stdio_semio_drawing::schema::snaps
 
 #[test]
 fn an_embedded_drawing_png_fits_the_page_and_the_placed_frame() {
+    bind_drawing();
     let mut document = semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document();
     document.links[0].artifact_kind = "s.draw.drawing".into();
     document.links[0].artifact_ref = "plan-1".into();
-    document.background_drawing = Some(semio_s_artifact_layout_layout_model::background_drawing_child_handle("dwg", &drawing_with_red_png()));
+    document.background_drawing = Some(semio_s_artifact_layout_layout_model::background_drawing_child_handle("dwg", &scene_content(&drawing_with_red_png())));
     let mut engine = LayoutEngine::new();
     let list = build_display_list_for_page(&mut engine, &document, &document.pages[0], "", &[], None, false);
     let rasters: Vec<_> = list.images.iter().filter(|image| image.proxy_data_url.as_deref().is_some_and(|url| url.starts_with("data:image/png;base64,"))).collect();
@@ -540,23 +546,24 @@ fn an_embedded_drawing_png_fits_the_page_and_the_placed_frame() {
 
 #[test]
 fn an_imported_arc_bulges_off_its_chord() {
-    use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
-    use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
-    use semio_s_artifact_stdio_semio_drawing::schema::snapshot::{DrawLayer, DrawNode, PathSegment, SemioDrawingSnapshot};
-    let point = |x: f64, y: f64| SemioPoint2 { x, y };
-    let content = SemioDrawingSnapshot {
-        schema: "stdio.semio.drawing".into(),
+    bind_drawing();
+    use semio_framework_io_ports::VectorPoint2;
+    use semio_framework_io_ports::VectorTransform;
+    use semio_framework_io_ports::{VectorLayer, VectorNode, VectorScene, VectorSegment};
+    let point = |x: f64, y: f64| VectorPoint2 { x, y };
+    let content = VectorScene {
+        schema: "test.scene".into(),
         canvas: Default::default(),
         styles: Vec::new(),
-        layers: vec![DrawLayer {
+        layers: vec![VectorLayer {
             id: "imported".into(),
             name: "Imported".into(),
             visible: true,
-            root: DrawNode::Group {
-                transform: SemioTransform::identity(),
-                children: vec![DrawNode::Path {
+            root: VectorNode::Group {
+                transform: VectorTransform::identity(),
+                children: vec![VectorNode::Path {
                     style: None,
-                    segments: vec![PathSegment::MoveTo { to: point(0.0, 0.0) }, PathSegment::ArcTo { rx: 1.0, ry: 1.0, x_rotation: 0.0, large_arc: false, sweep: true, to: point(2.0, 0.0) }],
+                    segments: vec![VectorSegment::MoveTo { to: point(0.0, 0.0) }, VectorSegment::ArcTo { rx: 1.0, ry: 1.0, x_rotation: 0.0, large_arc: false, sweep: true, to: point(2.0, 0.0) }],
                 }],
             },
         }],
@@ -564,7 +571,7 @@ fn an_imported_arc_bulges_off_its_chord() {
     let mut document = semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document();
     document.pages[0].width = 200.0;
     document.pages[0].height = 100.0;
-    document.background_drawing = Some(semio_s_artifact_layout_layout_model::background_drawing_child_handle("dwg", &content));
+    document.background_drawing = Some(semio_s_artifact_layout_layout_model::background_drawing_child_handle("dwg", &scene_content(&content)));
     let mut engine = LayoutEngine::new();
     let list = build_display_list_for_page(&mut engine, &document, &document.pages[0], "", &[], None, false);
     let stroke = &list.strokes[0];
@@ -574,13 +581,14 @@ fn an_imported_arc_bulges_off_its_chord() {
 
 #[test]
 fn a_rotated_drawing_frame_turns_the_plan_and_keeps_its_png() {
+    bind_drawing();
     let mut document = semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document();
     document.links[0].artifact_kind = "s.draw.drawing".into();
     document.links[0].artifact_ref = "plan-1".into();
     let frame = document.pages[0].frames.iter_mut().find(|frame| frame.id() == "frame-image-1").expect("image");
     let semio_s_artifact_layout_layout_model::Frame::Image { bounds, .. } = frame else { panic!("image") };
     bounds.rotation = std::f64::consts::FRAC_PI_2;
-    document.background_drawing = Some(semio_s_artifact_layout_layout_model::background_drawing_child_handle("dwg", &drawing_with_red_png()));
+    document.background_drawing = Some(semio_s_artifact_layout_layout_model::background_drawing_child_handle("dwg", &scene_content(&drawing_with_red_png())));
     let mut engine = LayoutEngine::new();
     let list = build_display_list_for_page(&mut engine, &document, &document.pages[0], "", &[], None, false);
     assert_eq!(list.frame_strokes[0].points[0], (186.0, 435.0));
@@ -659,7 +667,7 @@ fn a_missing_native_catalog_is_reported_not_silently_ignored() {
     assert!(matches!(error, TextFontsInstallError::Unreadable(_)), "{error}");
 }
 
-const FONT_FIXTURE: &str = include_str!("../../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🖌️render/🧪️tests/🧫️fixtures/🔤️text-fonts/🔣️.json");
+const FONT_FIXTURE: &str = include_str!("../../../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🖌️render/🧪️tests/🧫️fixtures/🔤️text-fonts/🔣️.json");
 
 fn delivered_package_assets() -> std::collections::HashMap<String, &'static [u8]> {
     TextFontRole::ALL

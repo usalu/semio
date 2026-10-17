@@ -23,8 +23,3 @@ pub fn block5d_labels(view_state: &semio_framework_plugin::ViewModel) -> &'stati
 }
 //#endregion 🔖️Labels
 
-//#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests

@@ -12,22 +12,23 @@
 use crate::schema::mutations::{inverse_writer_mutation, WriterMutation};
 use crate::WriterDiff;
 use crate::WriterSnapshot;
-use crate::central_apply::{apply_writer_mutation};
+use crate::schema::mutations::central_apply::{apply_writer_mutation};
+use semio_framework_test_fixtures::fixture_text;
 
-const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔗change-uri/🔗️republishes/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔗change-uri/🔗️republishes/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔗change-uri/🔗️republishes/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔗change-uri/🔗️republishes/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔗change-uri/🔗️republishes/🎯️outcome/🔣️.json");
+static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔗change-uri/🔗️republishes/📸️snapshot/⬅️before/🔣️.json"));
+static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔗change-uri/🔗️republishes/📸️snapshot/➡️after/🔣️.json"));
+static MUTATION: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔗change-uri/🔗️republishes/🦠️mutation/🔣️.json"));
+static DIFF: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔗change-uri/🔗️republishes/🔺️diff/🔣️.json"));
+static OUTCOME: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔗change-uri/🔗️republishes/🎯️outcome/🔣️.json"));
 
 fn before() -> WriterSnapshot {
-    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before writer document decodes")
+    semio_framework_pack_json::from_json_str((*BEFORE), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before writer document decodes")
 }
 fn expected_after() -> WriterSnapshot {
-    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after writer document decodes")
+    semio_framework_pack_json::from_json_str((*AFTER), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after writer document decodes")
 }
 fn mutation() -> WriterMutation {
-    semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("change-uri mutation decodes")
+    semio_framework_pack_json::from_json_str((*MUTATION), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("change-uri mutation decodes")
 }
 
 /// ▶️ Moving the brief from `writer://drafts/` to `writer://published/` rewrites `uri` alone.
@@ -58,14 +59,14 @@ async fn relocating_back_restores_before() {
 /// even though it carries `#[serde(default = "default_uri")]`, since it has no skip attribute.
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
-    for (label, text) in [("before", BEFORE), ("after", AFTER)] {
+    for (label, text) in [("before", (*BEFORE)), ("after", (*AFTER))] {
         let decoded: WriterSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("writer document decodes");
         let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("writer document encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("writer document reparses");
         assert_eq!(reencoded, original, "change-uri/republishes-the-brief-under-a-new-uri: committed {label} document JSON is not canonical");
     }
     let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&(mutation()))).expect("changeUri payload encodes");
-    let original: serde_json::Value = serde_json::from_str(MUTATION).expect("changeUri payload reparses");
+    let original: serde_json::Value = serde_json::from_str((*MUTATION)).expect("changeUri payload reparses");
     assert_eq!(reencoded, original, "change-uri/republishes-the-brief-under-a-new-uri: committed changeUri JSON is not canonical");
 }
 
@@ -73,7 +74,7 @@ async fn committed_json_is_canonical() {
 /// fire and the declared `applied` outcome must be message-free.
 #[semio_framework_async_macros::async_test]
 async fn declared_outcome_holds() {
-    let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
+    let declared: serde_json::Value = serde_json::from_str((*OUTCOME)).expect("outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "change-uri/republishes-the-brief-under-a-new-uri: this fixture declares an applied outcome");
     let produced = <WriterMutation as protocol::Mutation<WriterSnapshot>>::diff(&mutation(), &before());
     assert_eq!(produced.worst_level(), None, "change-uri/republishes-the-brief-under-a-new-uri: a genuinely new uri must not raise mutation.no-op");
@@ -85,25 +86,25 @@ async fn declared_outcome_holds() {
 async fn produces_committed_diff() {
     let outcome = <WriterMutation as protocol::Mutation<WriterSnapshot>>::diff(&mutation(), &before());
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced change-uri diff encodes");
-    let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
+    let committed: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff decodes");
     assert_eq!(produced, committed, "change-uri/republishes-the-brief-under-a-new-uri: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
 
 /// 🔣️ The committed diff decodes to `WriterDiff` and re-encodes unchanged.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
-    let decoded: WriterDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed change-uri diff decodes");
+    let decoded: WriterDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed change-uri diff decodes");
     assert_eq!(decoded.uri.as_deref(), Some("writer://published/brief.md"), "change-uri/republishes-the-brief-under-a-new-uri: the committed diff must set the new uri");
     assert!(decoded.id.is_none(), "change-uri/republishes-the-brief-under-a-new-uri: relocating must not smuggle an identity change into the same diff");
     let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("committed diff re-encodes");
-    let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
+    let original: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff reparses");
     assert_eq!(reencoded, original, "change-uri/republishes-the-brief-under-a-new-uri: committed diff JSON is not canonical");
 }
 
 /// 🩹 The committed diff alone carries the before-document to the after-document.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: WriterDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed change-uri diff decodes");
+    let decoded: WriterDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed change-uri diff decodes");
     let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-document");
     assert_eq!(produced, expected_after(), "change-uri/republishes-the-brief-under-a-new-uri: committed diff did not carry before to after");
 }

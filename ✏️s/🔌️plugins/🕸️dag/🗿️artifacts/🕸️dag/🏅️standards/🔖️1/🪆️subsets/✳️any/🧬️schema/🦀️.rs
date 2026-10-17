@@ -278,9 +278,7 @@ pub fn remove_nodes_leaves(scene: &DagScene, node_ids: &[String]) -> Vec<SemioGr
 //#endregion 🔖️DocumentHelpers
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🧩️document-behavior/🦀️.rs"]
-mod document_behavior_tests;
+
 //#endregion 🧪️Tests
 
 //#region 🔁️Re-exports
@@ -290,6 +288,141 @@ pub use crate::DagHostSnapshotEdge;
 pub use crate::DagNodeSpec;
 //#endregion 🔁️Re-exports
 
-#[cfg(test)]
-#[path = "🧪️tests/🪪️document-contract/🦀️.rs"]
-mod document_contract_tests;
+
+
+//#region 🧩️ArtifactItems2
+pub mod artifact_items_2 {
+/// 🪪️ This artifact's canonical dialect (ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET
+/// contract §1) — lives at the ARTIFACT level (not under `editor`/`viewer`) specifically so a
+/// viewer file can read it without ever importing through the sibling `editor` module. Matches
+/// `#[artifact_schema(id = "s.dag.dag")]` on `DagArtifact`; `standard`/`subset` match this
+/// artifact's own `🏅️standards/🔖️1/🪆️subsets/✳️any` location — the canonical surface id is
+/// `s.dag.dag@1/*#editor` / `s.dag.dag@1/*#viewer`.
+pub const DAG_DIALECT: semio_framework_plugin::app::Dialect = semio_framework_plugin::app::Dialect { artifact_kind: "s.dag.dag", standard: semio_framework_plugin::app::StandardId("1"), subset: semio_framework_plugin::app::SubsetId::ANY };
+}
+//#endregion 🧩️ArtifactItems2
+
+//#region 🧩️ArtifactItems4
+pub mod artifact_items_4 {
+use crate::{DagScene, dag_scene_of_content};
+use semio_s_artifact_stdio_semio_graph::schema::snapshot::SemioGraphSnapshot;
+pub use crate::standards::v1::subsets::any::schema::snapshot::DagSnapshot;
+
+//#region 🔖️Scene
+/// 🧸️ Composes the scene from the document's exact published `content` child (`doc.children`, design §20.15).
+pub fn dag_scene_from_children(snapshot: &DagSnapshot, children: &semio_framework_plugin::app::ChildContentView) -> Result<DagScene, semio_framework_plugin::Fault> {
+    let child_id = &snapshot.content.child_id;
+    let dialect = children.dialect("content", child_id).ok_or_else(|| semio_framework_plugin::Fault::from("dag-content-child-dialect-required"))?;
+    if dialect.artifact_kind != "s.stdio.semio" || dialect.standard != "v1" || dialect.subset != "graph" {
+        return Err(semio_framework_plugin::Fault::from("dag-content-child-dialect-mismatch"));
+    }
+    let content = children.typed_read::<SemioGraphSnapshot>("content", child_id)?;
+    Ok(dag_scene_of_content(&content))
+}
+
+/// 🧸️ [`dag_scene_from_children`] over a document view.
+pub fn dag_scene(doc: &semio_framework_plugin::ArtifactView<'_, DagSnapshot>) -> Result<DagScene, semio_framework_plugin::Fault> {
+    dag_scene_from_children(doc.snapshot, &doc.children)
+}
+//#endregion 🔖️Scene
+}
+//#endregion 🧩️ArtifactItems4
+
+//#region 🧩️ArtifactItems5
+pub mod artifact_items_5 {
+use crate::{SemioGraphMutation};
+use semio_s_artifact_stdio_semio_graph::schema::snapshot::SemioGraphSnapshot;
+pub use crate::standards::v1::subsets::any::schema::mutations::DagMutation;
+pub use crate::standards::v1::subsets::any::schema::snapshot::DagSnapshot;
+
+//#region 🔖️ChildEmit
+/// 🧬️ Publishes child `leaves` as ONE edit of the exact composed `content` child; no leaf is the empty emit.
+pub fn dag_child_emit<C, D>(snapshot: &DagSnapshot, leaves: Vec<SemioGraphMutation>) -> semio_framework_plugin::Emit<DagMutation, C, D> {
+    if leaves.is_empty() {
+        return semio_framework_plugin::Emit::default();
+    }
+    semio_framework_plugin::Emit { child_preparations: std::collections::VecDeque::from([semio_framework_plugin::app::ChildEmitPreparation::of::<SemioGraphSnapshot, _>("content", &snapshot.content.child_id, leaves)]), ..Default::default() }
+}
+//#endregion 🔖️ChildEmit
+}
+//#endregion 🧩️ArtifactItems5
+
+//#region 🧩️ArtifactItems7
+pub mod artifact_items_7 {
+use crate::{SemioGraphMutation, dag_graph_edge, dag_graph_node};
+pub use semio_framework_os_infinite_directed_presentation::DagHostSnapshotEdge;
+pub use semio_framework_os_infinite_directed_presentation::DagNodeSpec;
+use semio_s_artifact_stdio_semio_graph::{schema::snapshot::GraphEdgeId as SemioGraphEdgeId, schema::snapshot::GraphNodeId as SemioGraphNodeId, schema::snapshot::SemioGraphEdge, schema::snapshot::SemioGraphNode};
+
+//#region 🔖️ChildLeaves
+/// 🌱 The graph child leaf that creates one DAG node (appended).
+pub fn create_node_leaf(node: &DagNodeSpec) -> SemioGraphMutation {
+    use semio_s_artifact_stdio_semio_graph::schema::mutations::create_node::CreateNode;
+    let SemioGraphNode { id, kind, label, position, width, height, ports, properties } = dag_graph_node(node);
+    SemioGraphMutation::CreateNode(CreateNode { id, kind, label, position, width, height, ports, properties, at: None })
+}
+
+/// 🤝️ The graph child leaf that creates one DAG edge (appended).
+pub fn create_edge_leaf(edge: &DagHostSnapshotEdge) -> SemioGraphMutation {
+    use semio_s_artifact_stdio_semio_graph::schema::mutations::create_edge::CreateEdge;
+    let SemioGraphEdge { id, source, target, kind, label, source_port, target_port, properties } = dag_graph_edge(edge);
+    SemioGraphMutation::CreateEdge(CreateEdge { id, source, target, kind, label, source_port, target_port, properties, at: None })
+}
+
+/// ✂️ The graph child leaf that deletes one DAG edge.
+pub fn delete_edge_leaf(edge_id: &str) -> SemioGraphMutation {
+    use semio_s_artifact_stdio_semio_graph::schema::mutations::delete_edge::DeleteEdge;
+    SemioGraphMutation::DeleteEdge(DeleteEdge { id: SemioGraphEdgeId::new(edge_id) })
+}
+
+/// ✋️ The relative graph child leaf that drags DAG nodes by one offset.
+pub fn drag_nodes_leaf(node_ids: Vec<String>, dx: f64, dy: f64) -> SemioGraphMutation {
+    use semio_s_artifact_stdio_semio_graph::schema::mutations::drag_nodes::DragNodes;
+    SemioGraphMutation::DragNodes(DragNodes { targets: node_ids.into_iter().map(SemioGraphNodeId::new).collect(), dx, dy })
+}
+
+/// 🏷️ The graph child leaf that changes a DAG node's identity key (its edges follow).
+pub fn rename_node_leaf(id: &str, new_id: &str) -> SemioGraphMutation {
+    use semio_s_artifact_stdio_semio_graph::schema::mutations::rename_node::RenameNode;
+    SemioGraphMutation::RenameNode(RenameNode { id: SemioGraphNodeId::new(id), new_id: SemioGraphNodeId::new(new_id) })
+}
+//#endregion 🔖️ChildLeaves
+}
+//#endregion 🧩️ArtifactItems7
+
+//#region 🧩️ArtifactItems8
+pub mod artifact_items_8 {
+use serde::{Deserialize, Serialize};
+
+//#region 🔖️Domain
+/// 🎥️ Viewport camera for the DAG canvas (plugin-owned; distinct from framework `dag` kernel helpers).
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+pub struct DagCamera {
+    pub x: f64,
+    pub y: f64,
+    pub zoom: f64,
+}
+
+impl Default for DagCamera {
+    fn default() -> Self {
+        Self { x: 0.0, y: 0.0, zoom: 1.0 }
+    }
+}
+
+impl From<DagCamera> for semio_framework_os_infinite_directed_presentation::DagCamera {
+    fn from(value: DagCamera) -> Self {
+        Self { x: value.x, y: value.y, zoom: value.zoom }
+    }
+}
+
+impl From<semio_framework_os_infinite_directed_presentation::DagCamera> for DagCamera {
+    fn from(value: semio_framework_os_infinite_directed_presentation::DagCamera) -> Self {
+        Self { x: value.x, y: value.y, zoom: value.zoom }
+    }
+}
+//#endregion 🔖️Domain
+}
+//#endregion 🧩️ArtifactItems8

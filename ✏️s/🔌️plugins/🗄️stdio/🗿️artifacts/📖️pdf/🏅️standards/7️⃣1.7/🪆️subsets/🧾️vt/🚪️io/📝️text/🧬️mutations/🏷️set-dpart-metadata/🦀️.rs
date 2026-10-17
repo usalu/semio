@@ -1,6 +1,6 @@
 //! 🏷️ Direct text codec for `set-dpart-metadata`.
 
-use crate::standards::v1_7::subsets::vt::schema::mutations::SetDpartMetadata;
+use crate::standards::v1_7::subsets::vt::schema::mutations::set_dpart_metadata::SetDpartMetadata;
 
 //#region 🔖️Identity
 pub const OPCODE: &str = "set-dpart-metadata";
@@ -20,7 +20,5 @@ pub fn parse(text: &str) -> Result<SetDpartMetadata, String> {
 //#endregion 🔖️Codec
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

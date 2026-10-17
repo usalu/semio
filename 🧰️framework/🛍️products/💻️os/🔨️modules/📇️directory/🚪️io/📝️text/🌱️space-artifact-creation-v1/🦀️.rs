@@ -1,6 +1,6 @@
 //! 🚪️ Physical Directory wire admission, canonical emission and bounded receipts.
 
-use super::super::super::schema::space_artifact_creation::*;
+use crate::space_artifact_creation::*;
 
 impl SpaceArtifactCreationCatalogV1 {
     /// 📤️ Canonical json.

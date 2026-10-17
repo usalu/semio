@@ -4,7 +4,7 @@
 //! fan-out). Physical dir name (`🩹update-block`, wired by `🦀️.rs`) predates the semantic
 //! rename; the Rust module is still `update_block`, the type/variant/kind are `replace-block`.
 
-use crate::{FormMutation, FormQuestion, FormsDiff, FormsSnapshot};
+use crate::{FormQuestion, FormsDiff, FormsSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 
 //#region 🔁️ReplaceBlock
@@ -18,15 +18,18 @@ pub struct ReplaceBlock {
     pub block: FormQuestion,
 }
 
-impl MutationKind<FormsSnapshot, FormMutation> for ReplaceBlock {
+impl<Op> MutationKind<FormsSnapshot, Op> for ReplaceBlock
+where
+    Op: protocol::Mutation<FormsSnapshot, Diff = FormsDiff> + From<ReplaceBlock>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "replace", entity: "block", kind: "replace-block", record: "ReplacedBlock" };
 
     fn diff(&self, base: &FormsSnapshot) -> protocol::MutationOutcome<FormsDiff> {
-        super::diff::diff_replace_block(self, base)
+        crate::standards::v1::subsets::any::schema::mutations::replace_block::diff::diff_replace_block(self, base)
     }
-    fn inverse(&self, base: &FormsSnapshot) -> Result<Vec<FormMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &FormsSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
-        super::inverse::inverse_replace_block(self, base)?
+        crate::standards::v1::subsets::any::schema::mutations::replace_block::inverse::inverse_replace_block(self, base)?
     
     })
 }

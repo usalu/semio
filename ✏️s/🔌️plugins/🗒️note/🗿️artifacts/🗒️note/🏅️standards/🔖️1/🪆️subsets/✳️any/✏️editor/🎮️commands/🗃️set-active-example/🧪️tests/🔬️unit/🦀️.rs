@@ -1,4 +1,14 @@
-use super::*;
+use crate::NoteSnapshot;
+use semio_framework_plugin::{ArtifactView, ConfigView};
+#[allow(unused_imports)]
+use crate::op::NoteMutation;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::io::text::snapshot::semio_example_snapshot;
+#[allow(unused_imports)]
+use semio_framework_plugin::{Emit, Fault};
+#[allow(unused_imports)]
+use semio_framework_value_derive::{FromValue, ToValue};
+use crate::editor::note::commands::set_active_example::*;
 use crate::editor::note::commands::load_document_json;
 use crate::standards::v1::subsets::any::io::text::snapshot::empty_note_snapshot;
 use semio_framework::kernel::Effect;
@@ -17,7 +27,7 @@ async fn load_document_json_replaces_document() {
     let doc = ArtifactView::new(&snapshot, &history);
     let cfg_snapshot = semio_framework_plugin::NoConfig::default();
     let cfg = ConfigView { snapshot: &cfg_snapshot, window: None };
-    let mut ctx = crate::editor::note::NoteDispatchCtx { selected_block_ids: Vec::new(), id_owner: crate::schema::NoteIdOwner::new("active-example-test", 0), view_state: None, window_transient: Default::default(), window_transient_owner: None };
+    let mut ctx = crate::editor::note::dispatch_ctx::NoteDispatchCtx { selected_block_ids: Vec::new(), id_owner: crate::schema::NoteIdOwner::new("active-example-test", 0), view_state: None, window_transient: Default::default(), window_transient_owner: None };
     let emit = load_document_json::handle(&load_document_json::LoadDocumentJson { json: crate::standards::v1::subsets::any::io::text::snapshot::semio_example_json() }, &doc, &cfg, &mut ctx).expect("handle");
     assert!(emit.artifact_mutations.is_empty(), "whole-document load must not go through the Mutation enum");
     let Effect::LoadDocument { pack, .. } = emit.effects.first().expect("loadDocumentJson must emit a LoadDocument effect") else {
@@ -33,7 +43,7 @@ async fn set_active_example_loads_the_registered_demo_and_refuses_unknown_ids() 
     let doc = ArtifactView::new(&snapshot, &history);
     let cfg_snapshot = semio_framework_plugin::NoConfig::default();
     let cfg = ConfigView { snapshot: &cfg_snapshot, window: None };
-    let mut ctx = crate::editor::note::NoteDispatchCtx { selected_block_ids: Vec::new(), id_owner: crate::schema::NoteIdOwner::new("active-example-test", 0), view_state: None, window_transient: Default::default(), window_transient_owner: None };
+    let mut ctx = crate::editor::note::dispatch_ctx::NoteDispatchCtx { selected_block_ids: Vec::new(), id_owner: crate::schema::NoteIdOwner::new("active-example-test", 0), view_state: None, window_transient: Default::default(), window_transient_owner: None };
 
     let emit = handle(&SetActiveExample { example_id: crate::standards::v1::subsets::any::examples::demo::ID.into() }, &doc, &cfg, &mut ctx).expect("handle");
     let Effect::LoadDocument { pack, .. } = emit.effects.first().expect("setActiveExample must emit a LoadDocument effect") else {

@@ -10,26 +10,26 @@ use super::*;
 pub struct EventFeedEntryJson {
     pub id: String,
     #[serde(default)]
-    timestamp_ms: i64,
+    pub timestamp_ms: i64,
     #[serde(default)]
-    pub(crate) icon_id: String,
+    pub icon_id: String,
     #[serde(default)]
-    pub(crate) title: String,
+    pub title: String,
     #[serde(default)]
-    pub(crate) detail: Option<String>,
+    pub detail: Option<String>,
     #[serde(default)]
-    tone: Option<String>,
+    pub tone: Option<String>,
 }
 
 pub fn host_temporal_now_ms() -> i64 {
     crate::host_base::app_now_ms() as i64
 }
 
-fn event_feed_time_id(timestamp_ms: i64) -> String {
+pub fn event_feed_time_id(timestamp_ms: i64) -> String {
     format!("event-feed:{timestamp_ms}")
 }
 
-fn event_feed_time_request(entries: &[EventFeedEntryJson]) -> ui_contract::HostTemporalFormatRequestV1 {
+pub fn event_feed_time_request(entries: &[EventFeedEntryJson]) -> ui_contract::HostTemporalFormatRequestV1 {
     let mut values = Vec::new();
     for timestamp_ms in entries.iter().map(|entry| entry.timestamp_ms).filter(|timestamp_ms| (ui_contract::HOST_TEMPORAL_FORMAT_MIN_TIMESTAMP_MS..=ui_contract::HOST_TEMPORAL_FORMAT_MAX_TIMESTAMP_MS).contains(timestamp_ms)) {
         let id = event_feed_time_id(timestamp_ms);
@@ -43,7 +43,7 @@ fn event_feed_time_request(entries: &[EventFeedEntryJson]) -> ui_contract::HostT
     ui_contract::HostTemporalFormatRequestV1 { now_ms: host_temporal_now_ms(), values }
 }
 
-fn publish_host_temporal_reply(token: AdmittedSurfaceToken, generation: u64, request: &ui_contract::HostTemporalFormatRequestV1, reply: ui_contract::HostTemporalFormatReplyV1) -> bool {
+pub fn publish_host_temporal_reply(token: AdmittedSurfaceToken, generation: u64, request: &ui_contract::HostTemporalFormatRequestV1, reply: ui_contract::HostTemporalFormatReplyV1) -> bool {
     SCENE_STATE.with(|cell| cell.borrow_mut().get_token_mut(token).is_some_and(|state| state.host_temporal.publish(generation, request, reply)))
 }
 
@@ -383,7 +383,7 @@ pub fn discard_graph_timeline_accessibility_candidates(epoch: u64) {
     });
 }
 
-fn event_feed_tone_color(tone: Option<&str>, theme: &Theme) -> Rgba {
+pub fn event_feed_tone_color(tone: Option<&str>, theme: &Theme) -> Rgba {
     match tone {
         Some("success") => theme.success,
         Some("warning") => theme.warning,
@@ -394,12 +394,12 @@ fn event_feed_tone_color(tone: Option<&str>, theme: &Theme) -> Rgba {
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 struct EventFeedLayout {
-    pub(crate) inner: Rect,
-    pub(crate) card_gap: f32,
-    card_padding: f32,
+    pub inner: Rect,
+    pub card_gap: f32,
+    pub card_padding: f32,
     line_height: f32,
-    pub(crate) icon_size: f32,
-    time_font_size: f32,
+    pub icon_size: f32,
+    pub time_font_size: f32,
 }
 
 pub fn event_feed_layout(bounds: Rect, theme: &Theme) -> EventFeedLayout {
@@ -449,11 +449,11 @@ pub fn event_feed_hit(scene: &UiComponentSceneNode, bounds: Rect, x: f32, y: f32
     None
 }
 
-fn event_feed_accessibility_label(entry: &EventFeedEntryJson, time_label: Option<&str>) -> String {
+pub fn event_feed_accessibility_label(entry: &EventFeedEntryJson, time_label: Option<&str>) -> String {
     std::iter::once(entry.title.as_str()).chain(time_label).chain(entry.detail.as_deref()).filter(|part| !part.is_empty()).collect::<Vec<_>>().join(" ")
 }
 
-fn event_feed_accessibility_controls(
+pub fn event_feed_accessibility_controls(
     scene: &UiComponentSceneNode,
     layout: &EventFeedLayout,
     entries: &[EventFeedEntryJson],
@@ -589,17 +589,11 @@ pub fn render_event_feed(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut F
 
 //#endregion EventFeed
 
-//#region EventFeedTests
-#[cfg(test)]
-#[path = "../../../🧪️tests/🔬️wgpu-event-feed/🦀️.rs"]
-mod event_feed_tests;
-//#endregion EventFeedTests
-
 //#region GraphTimeline
 /** 🗄️ Mirrors `store::HistoryColumn` / React `HistoryColumn` (`ui/js/react/index.tsx:19116`). */
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
-struct HistoryColumnAuthorJson {
+pub struct HistoryColumnAuthorJson {
     #[serde(default)]
     pub(crate) id: String,
     #[serde(default)]
@@ -614,20 +608,20 @@ fn deserialize_history_avatar<'de, D: serde::Deserializer<'de>>(deserializer: D)
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
-struct HistoryColumnJson {
-    pub(crate) checkpoint_id: String,
+pub struct HistoryColumnJson {
+    pub checkpoint_id: String,
     #[serde(default)]
-    pub(crate) labels: Vec<String>,
+    pub labels: Vec<String>,
     #[serde(default)]
-    authors: Vec<HistoryColumnAuthorJson>,
+    pub authors: Vec<HistoryColumnAuthorJson>,
     #[serde(default)]
-    parent_checkpoint_id: Option<String>,
+    pub parent_checkpoint_id: Option<String>,
     #[serde(default)]
-    pub(crate) description: Option<String>,
+    pub description: Option<String>,
     #[serde(default)]
-    mutation_level: Option<String>,
+    pub mutation_level: Option<String>,
     #[serde(default)]
-    pub(crate) lane: usize,
+    pub lane: usize,
 }
 
 const HISTORY_LANE_PITCH: f32 = 16.0;
@@ -638,27 +632,27 @@ fn history_avatar_x(base: f32, index: usize, size: f32, overlap: f32) -> f32 {
     base + index as f32 * (size - overlap)
 }
 
-fn history_avatar_image_id(host_id: &str, checkpoint_id: &str, author: &HistoryColumnAuthorJson, index: usize) -> String {
+pub fn history_avatar_image_id(host_id: &str, checkpoint_id: &str, author: &HistoryColumnAuthorJson, index: usize) -> String {
     let author_key = if author.id.is_empty() { index.to_string() } else { author.id.clone() };
     format!("{host_id}.history.avatar.{checkpoint_id}.{author_key}")
 }
 
-fn history_lane_count(columns: &[HistoryColumnJson]) -> usize {
+pub fn history_lane_count(columns: &[HistoryColumnJson]) -> usize {
     columns.iter().map(|column| column.lane + 1).max().unwrap_or(1).max(1)
 }
 
-fn history_graph_width(lane_count: usize) -> f32 {
+pub fn history_graph_width(lane_count: usize) -> f32 {
     (HISTORY_LANE_PAD * 2.0 + lane_count as f32 * HISTORY_LANE_PITCH).max(56.0)
 }
 
-fn history_lane_x(lane: usize, lane_count: usize, graph_width: f32) -> f32 {
+pub fn history_lane_x(lane: usize, lane_count: usize, graph_width: f32) -> f32 {
     if lane_count <= 1 {
         return graph_width * 0.5;
     }
     HISTORY_LANE_PAD + lane as f32 * HISTORY_LANE_PITCH + HISTORY_LANE_PITCH * 0.5
 }
 
-fn history_row_lane_guides(columns: &[HistoryColumnJson], lane_count: usize) -> Vec<Vec<bool>> {
+pub fn history_row_lane_guides(columns: &[HistoryColumnJson], lane_count: usize) -> Vec<Vec<bool>> {
     let mut guides = vec![vec![false; lane_count]; columns.len()];
     let row_by_id: HashMap<&str, usize> = columns.iter().enumerate().map(|(index, column)| (column.checkpoint_id.as_str(), index)).collect();
     for (row_index, column) in columns.iter().enumerate() {
@@ -690,7 +684,7 @@ fn history_row_lane_guides(columns: &[HistoryColumnJson], lane_count: usize) -> 
     guides
 }
 
-fn graph_timeline_avatar_initials(name: &str) -> String {
+pub fn graph_timeline_avatar_initials(name: &str) -> String {
     let letters: String = name.split_whitespace().filter_map(|word| word.chars().next()).take(2).flat_map(char::to_uppercase).collect();
     if letters.is_empty() {
         "?".to_string()
@@ -717,14 +711,14 @@ fn paint_history_avatar(ctx: &mut FrameworkWidgetContext<'_>, image_id: &str, au
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 struct GraphTimelineLayout {
-    pub(crate) inner: Rect,
-    pub(crate) row_height: f32,
-    label_track_width: f32,
-    graph_width: f32,
-    graph_column_width: f32,
-    selectable_width: f32,
-    avatar_size: f32,
-    avatar_overlap: f32,
+    pub inner: Rect,
+    pub row_height: f32,
+    pub label_track_width: f32,
+    pub graph_width: f32,
+    pub graph_column_width: f32,
+    pub selectable_width: f32,
+    pub avatar_size: f32,
+    pub avatar_overlap: f32,
 }
 
 /// 🏷️ React's checkpoint chips, their `checkpoint` placeholder and the mutation badge are `text-2xs` (`🕰️HistoryTable/🟦️.tsx`).
@@ -737,7 +731,7 @@ fn graph_timeline_chip_text_width(atlas: &mut ui_wgpu::wgpu::FontAtlas, text: &s
 
 /// 📏️ The label track React's `auto` grid column resolves to: the widest row's chips (each `px-1.5` around its measured label,
 /// `gap-1` apart) or its `checkpoint` placeholder, inside the row's `px-single` padding.
-fn graph_timeline_label_track_width(columns: &[HistoryColumnJson], theme: &Theme, atlas: &mut ui_wgpu::wgpu::FontAtlas) -> f32 {
+pub fn graph_timeline_label_track_width(columns: &[HistoryColumnJson], theme: &Theme, atlas: &mut ui_wgpu::wgpu::FontAtlas) -> f32 {
     let chip_padding = theme.root_rem_pixels * 0.375;
     let chip_gap = theme.root_rem_pixels * 0.25;
     columns
@@ -760,12 +754,12 @@ pub fn graph_timeline_scene_label_track(scene: &UiComponentSceneNode, theme: &Th
 }
 
 /// 📏️ The label track `host_id`'s last paint measured (`0` before its first paint).
-fn graph_timeline_painted_label_track(host_id: &str) -> f32 {
+pub fn graph_timeline_painted_label_track(host_id: &str) -> f32 {
     SCENE_STATE.with(|cell| cell.borrow().get(host_id).map_or(0.0, |state| state.graph_timeline_label_track))
 }
 
 /// 📐️ One accepted geometry authority shared by GraphTimeline paint, pointer, scrolling and AT.
-fn graph_timeline_layout(bounds: Rect, columns: &[HistoryColumnJson], theme: &Theme, label_track: f32) -> GraphTimelineLayout {
+pub fn graph_timeline_layout(bounds: Rect, columns: &[HistoryColumnJson], theme: &Theme, label_track: f32) -> GraphTimelineLayout {
     let inner = bounds.inset(theme.padding_standard);
     let graph_width = history_graph_width(history_lane_count(columns));
     let graph_column_width = graph_width + HISTORY_AUTHOR_SLOT;
@@ -988,9 +982,3 @@ pub fn graph_timeline_hit(scene: &UiComponentSceneNode, bounds: Rect, x: f32, y:
 }
 
 //#endregion GraphTimeline
-
-//#region GraphTimelineTests
-#[cfg(test)]
-#[path = "../../../🧪️tests/🔬️wgpu-graph-timeline/🦀️.rs"]
-mod graph_timeline_tests;
-//#endregion GraphTimelineTests

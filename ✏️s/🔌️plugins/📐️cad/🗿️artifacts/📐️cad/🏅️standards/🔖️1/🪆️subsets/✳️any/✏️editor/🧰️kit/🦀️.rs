@@ -258,7 +258,7 @@ pub fn cad_pane_camera_runtime_mut(runtime: &mut CadPlayRuntime, pane: CadPaneId
 /// lives in the wrapping `VcsArtifactApp`'s stores, its runtime view-state in config and the window transient.
 pub struct CadPlayView {
     pub document: CadSnapshot,
-    pub(crate) panes: CadComposedPanes,
+    pub panes: CadComposedPanes,
     pub runtime: CadPlayRuntime,
     /// 🕹️ The live `"cad"` domain at this render — empty on the interaction-less `render` path
     /// (exports, tests) and on every `handle`-side view.

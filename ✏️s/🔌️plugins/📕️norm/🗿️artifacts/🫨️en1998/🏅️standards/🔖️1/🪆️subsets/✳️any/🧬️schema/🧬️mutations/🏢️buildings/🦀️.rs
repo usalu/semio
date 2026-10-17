@@ -13,20 +13,12 @@ extern crate semio_framework_value_derive as value_derive;
 pub mod change_annex;
 #[path = "../🧭️change-building-plan-regular/🦀️.rs"]
 pub mod change_building_plan_regular;
-#[path = "../📏️change-elevation-regular/🦀️.rs"]
-pub mod change_elevation_regular;
 #[path = "../📏️change-storey-drift-xm/🦀️.rs"]
 pub mod change_storey_drift_xm;
-#[path = "../⚖️change-storey-permanent-gk-n/🦀️.rs"]
-pub mod change_storey_permanent_gk_n;
 #[path = "../📐️change-storey-stiffness-x/🦀️.rs"]
 pub mod change_storey_stiffness_x;
-#[path = "../💪️change-system-v-rd-n/🦀️.rs"]
-pub mod change_system_v_rd_n;
-#[path = "../➕️insert-building/🦀️.rs"]
-pub mod insert_building;
-#[path = "../➖️remove-building/🦀️.rs"]
-pub mod remove_building;
 #[path = "../🌚️update-site/🦀️.rs"]
 pub mod update_site;
 //#endregion 🪢️Mounts
+
+pub use semio_s_artifact_norm_en1998_mut_buildings_2::{change_elevation_regular, change_storey_permanent_gk_n, change_system_v_rd_n, insert_building, remove_building};

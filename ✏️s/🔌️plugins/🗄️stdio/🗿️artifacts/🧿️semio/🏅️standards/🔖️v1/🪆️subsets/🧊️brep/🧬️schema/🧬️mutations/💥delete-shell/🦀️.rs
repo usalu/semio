@@ -1,6 +1,5 @@
 //! 🗑️ `delete-shell` — removes an id-keyed shell. Does NOT cascade into `solid.shells` membership, for the same reason `delete-face` does not cascade into `shell.faces` — flagged, not invented. Absent `id` is a no-op.
 
-use crate::schema::mutations::SemioBrepMutation;
 use crate::schema::snapshot::SemioBrepSnapshot;
 
 //#region 🔖️Payload
@@ -11,13 +10,16 @@ pub struct DeleteShell {
     pub id: String,
 }
 
-impl protocol::MutationKind<SemioBrepSnapshot, SemioBrepMutation> for DeleteShell {
+impl<Op> protocol::MutationKind<SemioBrepSnapshot, Op> for DeleteShell
+where
+    Op: protocol::Mutation<SemioBrepSnapshot, Diff = crate::schema::diff::SemioBrepDiff> + From<DeleteShell> + From<crate::schema::mutations::create_shell::CreateShell>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "shell", kind: "delete-shell", record: "DeletedShell" };
 
-    fn diff(&self, base: &SemioBrepSnapshot) -> protocol::MutationOutcome<<SemioBrepMutation as protocol::Mutation<SemioBrepSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioBrepSnapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<SemioBrepSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &SemioBrepSnapshot) -> Result<Vec<SemioBrepMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &SemioBrepSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

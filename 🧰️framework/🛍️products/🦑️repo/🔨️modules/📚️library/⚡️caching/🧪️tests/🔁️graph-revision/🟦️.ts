@@ -1,3 +1,4 @@
+import{testMethodV1,testStringsV1,testRecordV1}from"../📋️values/🟦️.ts";
 import {repositoryCargoPreparationStorageV1} from "../../📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🟦️.ts";
 import assert from "node:assert/strict";
 import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
@@ -9,7 +10,7 @@ export async function testGraphRevision(workspace: string, output: string): Prom
   const require = createRequire(import.meta.url), fixture = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🔁️graph-revision/🔣️.json"), "utf8"));
   const { runTool } = await import("../../🚀️bootstrap/📦️dependencies/🟦️.ts");
   const { cacheInternals } = await import("../../../🏗️build/🕸️graph/📥️inference/🟨️.mjs");
-  const commandSources = (await cacheInternals.relativeScriptInputs(fixture.commandSources.map((source: string) => join(workspace, source)), workspace)).map((source: string) => source.slice("{workspaceRoot}/".length));
+  const commandSources = (testStringsV1(await testMethodV1(cacheInternals,"relativeScriptInputs",fixture.commandSources.map((source: string) => join(workspace, source)), workspace))).map((source: string) => source.slice("{workspaceRoot}/".length));
   const root = mkdtempSync(join(output, "graph-revision-")), controller = new AbortController(), stop = (): void => controller.abort();
   process.once("SIGINT", stop); process.once("SIGTERM", stop);
   let passed = false;

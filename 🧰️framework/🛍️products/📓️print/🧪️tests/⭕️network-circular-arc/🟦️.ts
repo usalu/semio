@@ -6,7 +6,7 @@
 // #region 🔌️Adapters
 import { range } from "d3-array";
 import { defineTestAdapter, type AdapterContext } from "@semio-tech/framework/test/adapter";
-import { compileVizProbeDocument, probeProjection, roundProbeNumbers, type ProbeProjection, type VizProbeStatement } from "../../🔨️modules/🧪️viz-probe/🟦️.ts";
+import { compileVizProbeDocumentInContext, probeProjection, roundProbeNumbers, type ProbeProjection, type VizProbeStatement } from "../../🔨️modules/🧪️viz-probe/🟦️.ts";
 // #endregion 🔌️Adapters
 
 // #region 🧫️Vectors
@@ -104,9 +104,8 @@ function preamble(ctx: AdapterContext): VizProbeStatement[] {
 }
 
 async function subject(ctx: AdapterContext, call: string, key: string): Promise<{ projection: ProbeProjection }> {
-  const records = await compileVizProbeDocument(
-    { case: CASE, scenario: ctx.scenario.id, packages: ["semio-viz-network"], body: [...preamble(ctx), { raw: call }] },
-    { workDir: ctx.workDir },
+  const records = await compileVizProbeDocumentInContext(ctx,
+    { case: CASE, scenario: ctx.scenario.id, packages: ["semio-viz-network"], body: [...preamble(ctx), { raw: call }] }
   );
   const projection = probeProjection(roundProbeNumbers(records, DECIMALS));
   return { projection: { [key]: projection[key] ?? [] } };

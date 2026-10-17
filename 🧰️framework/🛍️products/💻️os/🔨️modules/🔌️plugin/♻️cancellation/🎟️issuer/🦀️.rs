@@ -231,3 +231,6 @@ mod original_laws;
 #[cfg(any(test,feature="media-turn-testing"))]
 #[doc(hidden)]
 pub use original_laws::cancellation_issuer_original_creation_physical_birth_and_close;
+#[cfg(test)]
+#[path="🧪️tests/📜️contract/🦀️.rs"]
+mod contract_laws;

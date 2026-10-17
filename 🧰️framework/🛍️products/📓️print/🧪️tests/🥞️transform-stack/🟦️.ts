@@ -40,14 +40,14 @@ function grid(values: readonly number[]): number[] {
 }
 
 /** 🥞️ One d3 stack over the demo series with the given order and offset. */
-function stacked(order: (series: Series<Row, string>) => number[], offset?: (series: Series<Row, string>, order: readonly number[]) => void): Series<Row, string> {
+function stacked(order: (series: Series<Row, string>) => Iterable<number>, offset?: (series: Series<Row, string>[], order: Iterable<number>) => void): Series<Row, string>[] {
   const generator = stack<Row>().keys([...KEYS]).order(order);
   if (offset !== undefined) generator.offset(offset);
   return generator(ROWS);
 }
 
 /** 🥞️ The baselines of one series of a stack, in the probe's key layout. */
-function baselines(series: Series<Row, string>, key: string, prefix: string, side: 0 | 1): Record<string, (number | string)[]> {
+function baselines(series: Series<Row, string>[], key: string, prefix: string, side: 0 | 1): Record<string, (number | string)[]> {
   const found = series.find((entry) => entry.key === key)!;
   return { [`${prefix}/${key}/y${side}`]: grid(found.map((point) => point[side])) };
 }

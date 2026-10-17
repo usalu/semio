@@ -57,7 +57,7 @@ function independent(hex: string): Database {
   for(const[ordinal,a]of document.rhs.set.entries())db.query("INSERT INTO rewriting_assignment VALUES(?,1,?,?,?,?)").run(ordinal+1,ordinal,a.var,a.prop,insert(property(a.value)));
   for(const[ordinal,p]of document.rhs.parameters.entries())db.query("INSERT INTO rewriting_parameter VALUES(?,1,?,?,?,?)").run(ordinal+1,ordinal,p.name,p.kind,insert(property(p.default)));
   const graph=document.workingGraph;
-  db.query("INSERT INTO jack_document VALUES(1,?,?,?,?,?)").run(graph.schema,graph.name,graph.manifestId??null,graph.rootNodeId??null,graph.query);
+  db.query("INSERT INTO jack_document VALUES(1,?,?,?,?,?)").run(graph.schema,graph.name,null,null,graph.query);
   const camera=[graph.camera.x,graph.camera.y,graph.camera.zoom].map(v=>scalar(v.bits));
   db.query("INSERT INTO jack_camera VALUES(1,1,?,?,?,?,?,?,?,?,?)").run(...camera.map(v=>v[0]),...camera.flatMap(v=>[v[1],v[2]]));
   const child=graph.content;
@@ -69,13 +69,15 @@ function independent(hex: string): Database {
     if(v.kind==="schema")db.query("INSERT INTO jack_value_type_schema VALUES(?,?,?)").run(++schemas,id,v.of);
     return id;
   }
+  type KindRow={readonly name:string;readonly direction?:string;readonly portKinds?:readonly string[];readonly properties:readonly {readonly name:string;readonly kind:string;readonly expr?:string;readonly valueType:unknown}[]};
+  const kindRows:Record<"node"|"edge"|"port",readonly KindRow[]>={node:graph.manifest.nodeKinds,edge:graph.manifest.edgeKinds,port:graph.manifest.portKinds};
   for(const family of ["node","edge","port"] as const){
     let properties=0,ports=0;
-    for(const[ordinal,kind]of graph.manifest[family+"Kinds"].entries()){
+    for(const[ordinal,kind]of kindRows[family].entries()){
       const id=ordinal+1;
-      if(family==="port")db.query("INSERT INTO jack_port_kind VALUES(?,1,?,?,?)").run(id,ordinal,kind.name,kind.direction);
+      if(family==="port")db.query("INSERT INTO jack_port_kind VALUES(?,1,?,?,?)").run(id,ordinal,kind.name,kind.direction??null);
       else db.query("INSERT INTO jack_"+family+"_kind VALUES(?,1,?,?)").run(id,ordinal,kind.name);
-      if(family==="node")for(const[index,name]of kind.portKinds.entries())db.query("INSERT INTO jack_node_kind_port VALUES(?,?,?,?)").run(++ports,id,index,name);
+      if(family==="node")for(const[index,name]of (kind.portKinds??[]).entries())db.query("INSERT INTO jack_node_kind_port VALUES(?,?,?,?)").run(++ports,id,index,name);
       for(const[index,p]of kind.properties.entries())db.query("INSERT INTO jack_"+family+"_property VALUES(?,?,?,?,?,?,?)").run(++properties,id,index,p.name,p.kind,p.expr??null,valueType(p.valueType));
     }
   }

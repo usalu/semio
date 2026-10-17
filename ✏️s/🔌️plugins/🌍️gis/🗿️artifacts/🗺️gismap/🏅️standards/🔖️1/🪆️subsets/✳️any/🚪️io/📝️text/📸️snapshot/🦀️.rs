@@ -9,7 +9,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 use crate::GisMapSnapshot;
 
 /// 🗺️ The bundled "reuse map" example document, handcrafted in the `.gismap` DSL.
-pub const REUSE_MAP_EXAMPLE_TEXT: &str = include_str!("../../../🖼️assets/🎬️demo/🗣️.dsl.semio");
+pub const REUSE_MAP_EXAMPLE_TEXT: &str = semio_s_artifact_gis_gismap_demo_asset::DEMO_DSL;
 
 /// 📖️ Parses `.gismap` DSL text into a `GisMapSnapshot`.
 pub fn parse_dsl(text: &str) -> Result<GisMapSnapshot, semio_framework_diagnostic::TextError> {
@@ -50,7 +50,8 @@ impl pack::snapshot::ArtifactDsl for GisMapSnapshot{
 mod snapshot_codec {
 use super::*;
 use crate::standards::v1::subsets::any::schema::snapshot::*;
-use crate::{gis_map_drawing_child_handle, gis_map_value_child_handle, GisMapDrawingChild, GisMapImageChild, GisMapValueChild, MapFeature};
+use crate::{MapFeature};
+use crate::standards::v1::subsets::any::map_composition::{gis_map_drawing_child_handle, gis_map_value_child_handle, GisMapDrawingChild, GisMapImageChild, GisMapValueChild};
 use ::semio_framework_schema::ArtifactSchema;
 use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
@@ -73,62 +74,63 @@ use semio_s_artifact_stdio_semio_base::io::text::codec::strip_brackets;
 mod snapshot_wire_codec {
 use super::*;
 use crate::standards::v1::subsets::any::schema::snapshot::*;
-use crate::{gis_map_drawing_child_handle, gis_map_value_child_handle, GisMapDrawingChild, GisMapImageChild, GisMapValueChild, MapFeature};
+use crate::{MapFeature};
+use crate::standards::v1::subsets::any::map_composition::{gis_map_drawing_child_handle, gis_map_value_child_handle, GisMapDrawingChild, GisMapImageChild, GisMapValueChild};
 use ::semio_framework_schema::ArtifactSchema;
 use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
 use semio_s_artifact_stdio_semio_base::io::text::codec::split_top_level;
 use semio_s_artifact_stdio_semio_base::io::text::codec::strip_brackets;
 
-pub(crate) fn hex_encode(bytes: &[u8]) -> String {
+pub fn hex_encode(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
 
-pub(crate) fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
+pub fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     if !s.len().is_multiple_of(2) {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
 
-pub(crate) fn enc_str(s: &str) -> String {
+pub fn enc_str(s: &str) -> String {
     hex_encode(s.as_bytes())
 }
 
-pub(crate) fn dec_str(s: &str) -> Result<String, String> {
+pub fn dec_str(s: &str) -> Result<String, String> {
     String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
 }
 
-pub(crate) fn enc_ref(r: &semio_framework_artifact_reference::ArtifactRef) -> String {
+pub fn enc_ref(r: &semio_framework_artifact_reference::ArtifactRef) -> String {
 use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactReferenceText as _};
 
     enc_str(&r.to_uri())
 }
 
-pub(crate) fn dec_ref(s: &str) -> Result<semio_framework_artifact_reference::ArtifactRef, String> {
+pub fn dec_ref(s: &str) -> Result<semio_framework_artifact_reference::ArtifactRef, String> {
 use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactReferenceText as _};
 
     semio_framework_artifact_reference::ArtifactRef::parse_uri(&dec_str(s)?)
 }
 
-pub(crate) fn enc_child<S>(c: &store::os_store::artifact_child::ArtifactChild<S>) -> String {
+pub fn enc_child<S>(c: &store::os_store::artifact_child::ArtifactChild<S>) -> String {
     format!("[{},{}]", enc_str(&c.child_id), enc_ref(&c.target))
 }
 
-pub(crate) fn dec_child<S>(s: &str) -> Result<store::os_store::artifact_child::ArtifactChild<S>, String> {
+pub fn dec_child<S>(s: &str) -> Result<store::os_store::artifact_child::ArtifactChild<S>, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [child_id, target] = parts.as_slice() else { return Err(format!("child handle: expected 2 fields, got {}", parts.len())) };
     Ok(store::os_store::artifact_child::ArtifactChild::new(dec_str(child_id)?, dec_ref(target)?))
 }
 
-pub(crate) fn enc_child_opt<S>(c: &Option<store::os_store::artifact_child::ArtifactChild<S>>) -> String {
+pub fn enc_child_opt<S>(c: &Option<store::os_store::artifact_child::ArtifactChild<S>>) -> String {
     match c {
         Some(c) => enc_child(c),
         None => "[]".to_string(),
     }
 }
 
-pub(crate) fn dec_child_opt<S>(s: &str) -> Result<Option<store::os_store::artifact_child::ArtifactChild<S>>, String> {
+pub fn dec_child_opt<S>(s: &str) -> Result<Option<store::os_store::artifact_child::ArtifactChild<S>>, String> {
     if s == "[]" {
         return Ok(None);
     }
@@ -138,11 +140,11 @@ pub(crate) fn dec_child_opt<S>(s: &str) -> Result<Option<store::os_store::artifa
 /// 🧾️ `positions`/`routes`/`regions` are structured (`Vec<MapFeature>`, already
 /// `Serialize`/`Deserialize`): serialize to JSON, then hex-encode the JSON bytes — same convention
 /// every other text field in this file already uses (`📐️cad`'s `enc_json`/`dec_json`).
-pub(crate) fn enc_json<T: ToValue>(value: &T) -> String {
+pub fn enc_json<T: ToValue>(value: &T) -> String {
     enc_str(&semio_framework_pack_json::to_json_string(value))
 }
 
-pub(crate) fn dec_json<T: FromValue>(s: &str) -> Result<T, String> {
+pub fn dec_json<T: FromValue>(s: &str) -> Result<T, String> {
     semio_framework_pack_json::from_json_str(&dec_str(s)?, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|e| e.to_string())
 }
 
@@ -179,11 +181,9 @@ pub use snapshot_wire_codec::*;
 #[allow(unused_imports)]
 mod snapshot_wire2_codec {
 use super::*;
-use crate::standards::v1::subsets::any::schema::*;
 use crate::standards::v1::subsets::any::io::text::snapshot::REUSE_MAP_EXAMPLE_TEXT;
-use crate::mutations::{create_position, create_region, create_route, delete_position, delete_region, delete_route, replace_position_data, replace_region_data, replace_route_data};
-use crate::standards::v1::subsets::any::schema::mutations::GisMapMutation;
-use crate::{gis_map_snapshot_with_derived_children, GisMapDrawingChild, GisMapImageChild, GisMapSnapshot, GisMapValueChild, MapFeature};
+use crate::{GisMapSnapshot, MapFeature};
+use crate::standards::v1::subsets::any::map_composition::{gis_map_snapshot_with_derived_children, GisMapDrawingChild, GisMapImageChild, GisMapValueChild};
 use ::semio_framework_schema::ArtifactSchema;
 use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
@@ -212,7 +212,7 @@ pub fn default_document() -> GisMapSnapshot {
 /// 🔑️ The `s.stdio.semio/v1/drawing` → `s.stdio.svg/1.1/*` `IoKey`, derived from
 /// `SemioDrawingToSvg`'s own `FROM`/`INTO` dialect constants (no hardcoded coordinate strings —
 /// stays correct if stdio ever renames the dialect).
-pub(crate) fn drawing_to_svg_io_key() -> IoKey {
+pub fn drawing_to_svg_io_key() -> IoKey {
     let from = SemioDrawingToSvg::FROM;
     let into = SemioDrawingToSvg::INTO;
     IoKey {
@@ -229,7 +229,7 @@ pub(crate) fn drawing_to_svg_io_key() -> IoKey {
 /// 🌉️ Renders a `SemioDrawingSnapshot` to real SVG text + dimensions through stdio's registered
 /// `s.stdio.semio/v1/drawing` → `s.stdio.svg` bridge — the ONLY svg-producing call in this plugin
 /// (no hand-rolled `<svg>` string emission left in gis).
-pub(crate) fn render_drawing_to_svg(drawing: &SemioDrawingSnapshot) -> Result<(String, u32, u32), String> {
+pub fn render_drawing_to_svg(drawing: &SemioDrawingSnapshot) -> Result<(String, u32, u32), String> {
     let width = drawing.canvas.width.round().max(1.0) as u32;
     let height = drawing.canvas.height.round().max(1.0) as u32;
     let pack_bytes = <SemioDrawingSnapshot as pack::snapshot::ArtifactPack>::encode_pack(drawing);
@@ -248,11 +248,9 @@ pub use snapshot_wire2_codec::*;
 
 #[allow(unused_imports)]
 mod snapshot_wire3_codec {
-use crate::standards::v1::subsets::any::schema::*;
 use crate::standards::v1::subsets::any::io::text::snapshot::REUSE_MAP_EXAMPLE_TEXT;
-use crate::mutations::{create_position, create_region, create_route, delete_position, delete_region, delete_route, replace_position_data, replace_region_data, replace_route_data};
-use crate::standards::v1::subsets::any::schema::mutations::GisMapMutation;
-use crate::{gis_map_snapshot_with_derived_children, GisMapDrawingChild, GisMapImageChild, GisMapSnapshot, GisMapValueChild, MapFeature};
+use crate::{GisMapSnapshot, MapFeature};
+use crate::standards::v1::subsets::any::map_composition::{gis_map_snapshot_with_derived_children, GisMapDrawingChild, GisMapImageChild, GisMapValueChild};
 use ::semio_framework_schema::ArtifactSchema;
 use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
@@ -270,7 +268,7 @@ use std::collections::HashSet;
 /// 🧭️ Relocated from the artifact's `⚙️engine` (ticket
 /// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES): pure document helpers over
 /// `GisMapSnapshot`/`MapFeature`, no app-state dependency — an artifact must never depend on an app.
-pub(crate) fn value_to_dsl(value: &Value) -> semio_framework_value::DslValue {
+pub fn value_to_dsl(value: &Value) -> semio_framework_value::DslValue {
     semio_framework_value::DslValue::from(value)
 }
 
@@ -301,10 +299,10 @@ pub use snapshot_wire3_codec::*;
 mod map_json_output {
 use super::{value_to_dsl,render_drawing_to_svg};
 use crate::{GisMapSnapshot,MapFeature};
-use crate::schema::gis_map_snapshot_to_drawing;
+use crate::schema::drawing_bridge::gis_map_snapshot_to_drawing;
 use semio_framework_value::FromValue;
 use serde_json::Value;
-pub(crate) fn dsl_to_value(value: &semio_framework_value::DslValue) -> Value {
+pub fn dsl_to_value(value: &semio_framework_value::DslValue) -> Value {
     Value::from(value)
 }
 

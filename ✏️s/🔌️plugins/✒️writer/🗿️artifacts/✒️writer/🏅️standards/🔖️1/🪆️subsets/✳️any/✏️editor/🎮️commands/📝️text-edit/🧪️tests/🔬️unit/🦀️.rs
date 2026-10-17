@@ -1,5 +1,5 @@
 use crate::editor::writer::commands::{commit_rename, format_document, set_active_example, set_text};
-use crate::editor::writer::unit_tests::context::{app_with_jack, dispatch, end_typing_run, new_app, type_delivery};
+use crate::editor_unit_tests::context::{app_with_jack, dispatch, end_typing_run, new_app, type_delivery};
 use crate::editor::writer::WriterCommand;
 use crate::schema::jack_variable_occurrences;
 use crate::{writer_text, WriterSnapshot};
@@ -20,7 +20,7 @@ fn loaded_document(result: &semio_framework_plugin::InvocationResult) -> WriterS
 }
 
 /// ⌨️ One whole-text `textEdit` delivery of the main window's typing run.
-async fn type_text(app: &mut crate::editor::writer::unit_tests::context::WriterApp, text: &str, now_ms: u64) {
+async fn type_text(app: &mut crate::editor_unit_tests::context::WriterApp, text: &str, now_ms: u64) {
     type_delivery(app, "textEdit", vec![("text".into(), semio_framework_value::DslValue::String(text.into()))], now_ms).await;
 }
 
@@ -42,7 +42,7 @@ async fn a_typing_burst_is_one_run_one_edit_and_one_undo_step() {
     assert_eq!(transactions.len(), edits + 1, "one run is one edit");
     let transaction = transactions.last().cloned().flatten().expect("the run's edit carries its TransactionRef");
     assert!(transaction.id.starts_with("tx-") && transaction.tool.ends_with("#textEdit"), "{transaction:?}");
-    crate::editor::writer::unit_tests::context::history_verb(&mut app, "undo").await;
+    crate::editor_unit_tests::context::history_verb(&mut app, "undo").await;
     assert_eq!(writer_text(&app.snapshot().expect("projection")), "", "one undo reverts the whole run");
 }
 
@@ -63,9 +63,9 @@ async fn a_typing_run_longer_than_the_edit_ledger_saves_and_undoes_as_one_step()
     assert_eq!(writer_text(&app.rendered_snapshot()), run.expected);
     end_typing_run(&mut app, "textEdit", "idle", 20_000 + 40 * run.texts.len() as u64 + 750).await;
     assert_eq!(writer_text(&app.snapshot().expect("projection")), run.expected);
-    crate::editor::writer::unit_tests::context::history_verb(&mut app, "undo").await;
+    crate::editor_unit_tests::context::history_verb(&mut app, "undo").await;
     assert_eq!(writer_text(&app.snapshot().expect("projection")), run.initial, "one undo reverts the whole run");
-    crate::editor::writer::unit_tests::context::history_verb(&mut app, "redo").await;
+    crate::editor_unit_tests::context::history_verb(&mut app, "redo").await;
     assert_eq!(writer_text(&app.snapshot().expect("projection")), run.expected, "one redo restores the whole run");
     }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original coupled fixture caller closes");result
 }
@@ -118,7 +118,7 @@ async fn a_ten_thousand_keystroke_burst_applies_every_key_in_order() {
 async fn format_artifact_reformats_jack_query() {
     let mut app = app_with_jack().await;
     dispatch(&mut app, WriterCommand::SetText(set_text::SetText { text: "MATCH (a:Piece)   WHERE a.name='core' RETURN a.name".into() })).await;
-    let result = crate::editor::writer::unit_tests::context::dispatch(&mut app, WriterCommand::FormatDocument(format_document::FormatDocument {})).await;
+    let result = crate::editor_unit_tests::context::dispatch(&mut app, WriterCommand::FormatDocument(format_document::FormatDocument {})).await;
     // 🧾️ A MOUNTED app never surfaces its operations in `result.mutations`: the edit lands through
     // the retained publication lane and `InvocationResult::mutations` stays empty (fleet-brief
     // stale-test bucket 3). Asserting a count of 1 there tested the UNMOUNTED shape this harness
@@ -132,14 +132,14 @@ async fn format_document_without_change_emits_no_operation() {
     // A no-operation format (already-formatted or non-jack empty doc) bumps the format signal but must
     // not record a history entry.
     let mut app = new_app().await;
-    let result = crate::editor::writer::unit_tests::context::dispatch(&mut app, WriterCommand::FormatDocument(format_document::FormatDocument {})).await;
+    let result = crate::editor_unit_tests::context::dispatch(&mut app, WriterCommand::FormatDocument(format_document::FormatDocument {})).await;
     assert!(result.mutations.is_empty());
 }
 
 #[semio_framework_async_macros::async_test]
 async fn set_text_action_updates_projection() {
     let mut app = new_app().await;
-    let result = crate::editor::writer::unit_tests::context::dispatch(&mut app, WriterCommand::SetText(set_text::SetText { text: "MATCH (a) RETURN a".into() })).await;
+    let result = crate::editor_unit_tests::context::dispatch(&mut app, WriterCommand::SetText(set_text::SetText { text: "MATCH (a) RETURN a".into() })).await;
     // 🧾️ Mounted dispatch — see the note on `format_artifact_reformats_jack_query`.
     assert!(result.mutations.is_empty(), "a mounted dispatch publishes through its receipt lanes, not result.mutations: {:?}", result.mutations);
     assert_eq!(writer_text(&app.snapshot().expect("projection")), "MATCH (a) RETURN a");
@@ -151,11 +151,11 @@ async fn set_text_undo_redo_round_trips_through_the_wrapper() {
     dispatch(&mut app, WriterCommand::SetText(set_text::SetText { text: "first".into() })).await;
     dispatch(&mut app, WriterCommand::SetText(set_text::SetText { text: "second".into() })).await;
     assert_eq!(writer_text(&app.snapshot().expect("projection")), "second");
-    let undo = crate::editor::writer::unit_tests::context::history_verb(&mut app, "undo").await;
+    let undo = crate::editor_unit_tests::context::history_verb(&mut app, "undo").await;
     assert!(undo.mutations.is_empty());
     assert!(undo.events.iter().any(|event| event.kind == "history-changed"));
     assert_eq!(writer_text(&app.snapshot().expect("projection")), "first");
-    crate::editor::writer::unit_tests::context::history_verb(&mut app, "redo").await;
+    crate::editor_unit_tests::context::history_verb(&mut app, "redo").await;
     assert_eq!(writer_text(&app.snapshot().expect("projection")), "second");
 }
 
@@ -168,7 +168,7 @@ async fn commit_rename_renames_all_spans_at_the_config_selection() {
     // 🎯️ `CommitRename` reads the rename target from the exact main-window transient selection — set it via
     // a real selection command first (mirrors what the editor surface does before offering rename).
     dispatch(&mut app, WriterCommand::SetEditorSelection(crate::editor::writer::commands::set_editor_selection::SetEditorSelection { start, end: start, splice: 0 })).await;
-    let result = crate::editor::writer::unit_tests::context::dispatch(&mut app, WriterCommand::CommitRename(commit_rename::CommitRename { text: "piece".into() })).await;
+    let result = crate::editor_unit_tests::context::dispatch(&mut app, WriterCommand::CommitRename(commit_rename::CommitRename { text: "piece".into() })).await;
     // 🧾️ Mounted dispatch — see the note on `format_artifact_reformats_jack_query`.
     assert!(result.mutations.is_empty(), "a mounted dispatch publishes through its receipt lanes, not result.mutations: {:?}", result.mutations);
     let text = writer_text(&app.snapshot().expect("projection"));
@@ -186,7 +186,7 @@ async fn commit_rename_renames_all_spans_at_the_config_selection() {
 #[semio_framework_async_macros::async_test]
 async fn set_active_example_loads_jack_fixture() {
     let mut app = new_app().await;
-    let result = crate::editor::writer::unit_tests::context::dispatch(&mut app, WriterCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: crate::examples::demo::ID.into() })).await;
+    let result = crate::editor_unit_tests::context::dispatch(&mut app, WriterCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: crate::examples::demo::ID.into() })).await;
     assert!(result.mutations.is_empty(), "whole-document replace is an effect, not an in-history mutation");
     let projection = loaded_document(&result);
     assert_eq!(projection.id, "jack");
@@ -196,7 +196,7 @@ async fn set_active_example_loads_jack_fixture() {
 #[semio_framework_async_macros::async_test]
 async fn set_active_example_loads_dag_jack_fixture() {
     let mut app = new_app().await;
-    let result = crate::editor::writer::unit_tests::context::dispatch(&mut app, WriterCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "dag.jack".into() })).await;
+    let result = crate::editor_unit_tests::context::dispatch(&mut app, WriterCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "dag.jack".into() })).await;
     assert!(result.mutations.is_empty());
     assert_eq!(loaded_document(&result).id, "dag-jack");
 }
@@ -208,7 +208,7 @@ async fn set_active_example_loads_dag_jack_fixture() {
 #[semio_framework_async_macros::async_test]
 async fn set_active_example_falls_back_to_empty_document() {
     let mut app = app_with_jack().await;
-    let result = crate::editor::writer::unit_tests::context::dispatch(&mut app, WriterCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "not-a-published-example".into() })).await;
+    let result = crate::editor_unit_tests::context::dispatch(&mut app, WriterCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "not-a-published-example".into() })).await;
     assert!(result.mutations.is_empty());
     let projection = loaded_document(&result);
     assert_eq!(projection.id, "empty");

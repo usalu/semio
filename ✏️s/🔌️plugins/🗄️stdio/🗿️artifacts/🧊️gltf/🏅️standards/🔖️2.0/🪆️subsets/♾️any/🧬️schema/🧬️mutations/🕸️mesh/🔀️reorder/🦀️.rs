@@ -36,7 +36,10 @@ pub fn plan(p: &GltfReorderMeshsPayload, base: &GltfSnapshot) -> Result<GltfDiff
     Ok(diff)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn inverse(p: &GltfReorderMeshsPayload, base: &GltfSnapshot) -> Vec<super::GltfMutation> {
+pub fn inverse<Op>(p: &GltfReorderMeshsPayload, base: &GltfSnapshot) -> Vec<Op>
+where
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::remove_used_extension::RemoveUsedExtensionMutation>,
+{
     if validate(p, base).is_err() {
         return Vec::new();
     }
@@ -53,11 +56,17 @@ pub enum ReorderMeshsMutation {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn mutation(payload: GltfReorderMeshsPayload) -> super::GltfMutation {
-    super::GltfMutation::ReorderMeshs(ReorderMeshsMutation::Apply(payload))
+pub fn mutation<Op>(payload: GltfReorderMeshsPayload) -> Op
+where
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::reorder_meshs::ReorderMeshsMutation>,
+{
+    Op::from(ReorderMeshsMutation::Apply(payload))
 }
 
-impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ReorderMeshsMutation {
+impl<Op> protocol::MutationKind<GltfSnapshot, Op> for ReorderMeshsMutation
+where
+    Op: protocol::Mutation<GltfSnapshot, Diff = GltfDiff> + From<ReorderMeshsMutation>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "reorder", entity: "meshs", kind: "reorder-meshs", record: "ReorderedMeshs" };
 
     fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<GltfDiff> {
@@ -69,7 +78,7 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ReorderMeshsM
         }
     }
 
-    fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<super::GltfMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         match self {
             Self::Apply(payload) => Ok(inverse(payload, base)),
         }
@@ -86,7 +95,5 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ReorderMeshsM
 //#endregion 🧬️DirectMutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔀️flips-the-hull-ebfffa/🦀️.rs"]
-mod case_flips_the_hull_ebfffa;
+
 //#endregion 🧪️Tests

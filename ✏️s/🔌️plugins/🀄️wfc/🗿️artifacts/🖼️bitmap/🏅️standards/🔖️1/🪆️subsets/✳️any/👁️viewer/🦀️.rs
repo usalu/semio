@@ -138,3 +138,20 @@ pub fn create_bitmap_viewer() -> semio_framework_plugin::AppDefinition {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🧩️ArtifactItems
+pub mod artifact_items {
+pub use crate::schema::snapshot::WFC_BITMAP_DOCUMENT_SCHEMA;
+use semio_framework_artifact_reference::{Dialect, StandardId, SubsetId};
+
+//#region 🔖️Dialect
+/// 🪪️ The canonical surface-id coordinate for this artifact's ONE subset — `s.wfc.bitmap@1/*`.
+/// Lives at the ARTIFACT root (not under `✏️editor`/`👁️viewer`) so a viewer file can read it without
+/// importing through the sibling mutation-capable surface. `artifact_kind` matches
+/// `BitmapSnapshot`/`BitmapDiff`'s own `#[artifact_schema(id = "s.wfc.bitmap")]` attribute and
+/// `WFC_BITMAP_DOCUMENT_SCHEMA`'s literal value; `standard`/`subset` match this file's own
+/// `🏅️standards/🔖️1/🪆️subsets/✳️any` location on disk.
+pub const WFC_BITMAP_DIALECT: Dialect = Dialect { artifact_kind: WFC_BITMAP_DOCUMENT_SCHEMA, standard: StandardId("1"), subset: SubsetId::ANY };
+//#endregion 🔖️Dialect
+}
+//#endregion 🧩️ArtifactItems

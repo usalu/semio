@@ -1,4 +1,6 @@
-use super::*;
+use crate::standards::v6_0::subsets::baseline::schema::snapshot::TiffSnapshot;
+use semio_framework_ui_locale::Locale;
+use crate::editor::tiff_baseline::modes::edit::windows::main::*;
 
 #[semio_framework_async_macros::async_test]
 async fn definition_uses_the_frozen_window_kit_kind_id() {

@@ -32,5 +32,6 @@ semio-s-artifact-block-5d-model = { workspace = true }
 [dev-dependencies]
 semio-framework-async-macros = { workspace = true }
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-framework-test-fixtures = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-s-mutation-vectors = { workspace = true }
 serde = { workspace = true }

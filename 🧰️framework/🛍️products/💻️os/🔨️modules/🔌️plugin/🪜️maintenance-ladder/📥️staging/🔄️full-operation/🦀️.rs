@@ -1,8 +1,23 @@
 //! 🏺️ Staged slice of the `full-operation` band of the mounted artifact instance: its `instance-ladders` members (WP6 step S0 of the instance family).
-use super::*;
+use semio_framework_plugin_ownership::bounded_ownership::{ARTIFACT_LIVE_OUTPUT_SLOTS, PluginLifecycleStep};
+use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use pack::snapshot::ArtifactPack;
+use semio_framework_plugin_decl_emission::Emit;
+use semio_framework::FaultFrom;
+use std::future::Future;
+use semio_framework_plugin_instance_extension::InstanceExtension;
+use crate::ladder_bundle::{LadderCtx, LadderRef};
+use store::{MemberFactory, Mutation, SpaceMember};
+use semio_framework_plugin_composition_publication::MountedTypedCommandFullOperationStage;
+use protocol::OpText;
+use semio_framework_plugin_reactor_app::PluginApp;
+use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
+use semio_framework_value::{RetirementDemand, ValueError};
+use semio_framework_ui_contract::*;
 
 impl<'ctx, A:ArtifactApp,M:SpaceMember+MemberFactory+Send+'static, X: InstanceExtension> LadderCtx<'ctx, A, M, X> {
- pub(crate) fn granted_mounted_retirement_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<RetainedCloneStep,crate::PluginLifecycleFailure>{
+ pub fn granted_mounted_retirement_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<RetainedCloneStep,semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{
   if self.shared().next_granted_mounted_retirement().is_none(){return Ok(RetainedCloneStep::Complete(Default::default()))}
   let grant=cx.retained_grant();let demand=self.shared().granted_mounted_retirement_demands(grant.maximum_copy_bytes)?;
   let step=semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|same,actual|{
@@ -11,7 +26,7 @@ impl<'ctx, A:ArtifactApp,M:SpaceMember+MemberFactory+Send+'static, X: InstanceEx
   Ok(RetainedCloneStep::Progress(step.progress().unwrap_or_default()))
  }
 
- fn granted_mounted_retirement_original(&mut self,cx:&mut semio_framework_job::StepContext<'_>,grant:RetainedCloneGrant)->Result<RetainedCloneStep,crate::PluginLifecycleFailure>{
+ fn granted_mounted_retirement_original(&mut self,cx:&mut semio_framework_job::StepContext<'_>,grant:RetainedCloneGrant)->Result<RetainedCloneStep,semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{
   let Some((index,id))=self.shared().next_granted_mounted_retirement()else{return Ok(RetainedCloneStep::Complete(Default::default()))};
   let closing=self.close.close_started;
   if closing||self.tools.tool_operations.get(id).unwrap().stage==MountedTypedCommandFullOperationStage::Retiring{self.as_render().request_gesture_cancellation(id);}
@@ -52,7 +67,7 @@ impl<'ctx, A:ArtifactApp,M:SpaceMember+MemberFactory+Send+'static, X: InstanceEx
 impl<'v, A:ArtifactApp,M:SpaceMember+MemberFactory+Send+'static, X: InstanceExtension> LadderRef<'v, A, M, X> {
  pub(crate) fn next_granted_mounted_retirement(&self)->Option<(usize,u64)>{(0..ARTIFACT_LIVE_OUTPUT_SLOTS).find_map(|offset|{let index=(self.close.close_typed_operation_cursor+offset)%ARTIFACT_LIVE_OUTPUT_SLOTS;self.tools.tool_operations.entry(index).filter(|(_,owner)|self.close.close_started||owner.stage==MountedTypedCommandFullOperationStage::Retiring||(owner.granted_retirement_ready()&&owner.granted_retirement_pending())).map(|(id,_)|(index,*id))})}
 
- pub(crate) fn granted_mounted_retirement_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
+ pub fn granted_mounted_retirement_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
   let Some((_,id))=self.next_granted_mounted_retirement()else{return Ok(Default::default());};let owner=self.tools.tool_operations.get(id).unwrap();
   if owner.close_fault_pending(){return owner.close_fault_demands(body);}
   if owner.stage==MountedTypedCommandFullOperationStage::Retiring { if let Some(group)=owner.owned_child_group { return if self.child_composition.private_child_groups.get(group).is_some(){self.child_composition.private_child_group_operation_close_demands(group, body)}else{Ok(RetirementDemand{depth:1,..Default::default()})}; } }

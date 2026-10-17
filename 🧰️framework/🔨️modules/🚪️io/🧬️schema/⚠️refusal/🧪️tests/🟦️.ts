@@ -5,8 +5,8 @@ import {IoError as ExposedIoError} from "../../🟦️.ts";
 import {IoError,encodeIoErrorControlled,decodeIoErrorControlled} from "../🟦️.ts";
 import {ValueError,type ValueRefusalKind} from "../../../../🌱️value/📦️packages/🟦️typescript/⚠️refusal/🟦️.ts";
 import {NativeDecodeControl} from "@semio-tech/value-ts/decode";
-import {TextError} from "../../../../⚠️diagnostic/🚧️text-error/🟦️.ts";
-import {encodeDiagnosticControlled,decodeDiagnosticControlled} from "../../../../⚠️diagnostic/🎛️controlled/🟦️.ts";
+import {TextError} from "@semio-tech/framework-diagnostic-ts/text-error";
+import {encodeDiagnosticControlled,decodeDiagnosticControlled} from "@semio-tech/framework-diagnostic-ts/controlled";
 import type {IntrinsicValue} from "@semio-tech/value-ts/schema/intrinsic";
 import {binary64,binary64Value} from "../../../../🌱️value/📦️packages/🟦️typescript/🔢️ieee754/🟦️.ts";
 
@@ -19,7 +19,7 @@ import { refusalWireFixture as wireCases } from "@semio-tech/framework/io/testin
 
 
 
-import { diagnosticControlledFixture as diagnosticCases } from "../../../../⚠️diagnostic/🧪️tests/🧫️fixtures/🟦️.ts";
+import { diagnosticControlledFixture as diagnosticCases } from "@semio-tech/framework-diagnostic-ts/testing/fixtures";
 const kinds:ValueRefusalKind[]=["invalidValue","canceled","ownershipLimit","allocationFailed","workLimit","depthLimit","unsupportedOwner","invariantViolated"];
 function intrinsic(value:unknown):IntrinsicValue {
  if(value===null)return{kind:"null"};
@@ -46,17 +46,14 @@ test("IO owned cause retains actual ValueError identity and text source data",as
   else{expect(error.diagnostics[0]?.span).toEqual(row.span);expect(error.diagnostics[0]?.message).toBe(row.message);expect(error.diagnostics[0]?.expected?.tokens).toEqual([row.expected]);}
   if("expectedWire"in row){expect(output(await encodeIoErrorControlled(error,control()))).toEqual(row.expectedWire);}
  }
- for(const row of copyCases){const message=row.unit.repeat(row.repeat),observed:{completed:number;total:number}[]=[];const c=new NativeDecodeControl(row.maximumBytes,event=>{observed.push(event);return row.cancelAfterCompleted===0||event.total<=1||event.completed<row.cancelAfterCompleted;});const source=TextError.expected("invariantViolated",message,{line:7,column:11,length:4},"required");if(row.expectedKind==="success"){const error=await IoError.fromTextErrorControlled(source,c);expect(error.cause.message).toBe(message);expect(error.cause.kind).toBe("invariantViolated");expect(error.diagnostics[0]?.message).toBe(message);}else await refused(()=>IoError.fromTextErrorControlled(source,c),row.expectedKind);if(row.cancelAfterCompleted!==0)expect(observed.some(event=>event.total>1&&event.completed>=row.cancelAfterCompleted)).toBe(true);expect(source.message).toBe(message);console.log(`[DEBUG] IO long source ${row.id} observed ${observed.length} controlled frontiers, UTF8=${Buffer.byteLength(message)}`);}
- console.log(`[DEBUG] IO projection ${cases.length} shared cases preserve kinds, original physical receipts and the actual ValueError pointer`);
+ for(const row of copyCases){const message=row.unit.repeat(row.repeat),observed:{completed:number;total:number}[]=[];const c=new NativeDecodeControl(row.maximumBytes,event=>{observed.push(event);return row.cancelAfterCompleted===0||event.total<=1||event.completed<row.cancelAfterCompleted;});const source=TextError.expected("invariantViolated",message,{line:7,column:11,length:4},"required");if(row.expectedKind==="success"){const error=await IoError.fromTextErrorControlled(source,c);expect(error.cause.message).toBe(message);expect(error.cause.kind).toBe("invariantViolated");expect(error.diagnostics[0]?.message).toBe(message);}else await refused(()=>IoError.fromTextErrorControlled(source,c),row.expectedKind);if(row.cancelAfterCompleted!==0)expect(observed.some(event=>event.total>1&&event.completed>=row.cancelAfterCompleted)).toBe(true);expect(source.message).toBe(message);}
 });
 test("IO controlled wire preserves all kinds and refuses closed members and hostile controls",async()=>{
  for(const row of cases){if(!("expectedWire"in row))continue;const decoded=await decodeIoErrorControlled(intrinsic(row.expectedWire),control());expect(output(await encodeIoErrorControlled(decoded,control()))).toEqual(JSON.parse(JSON.stringify(row.expectedWire)));}
  for(const row of wireCases){const value:IntrinsicValue={kind:"object",members:row.members.map(member=>{if(typeof member[0]!=="string")throw Error("fixture member requires a name");return{name:member[0],value:intrinsic(member[1])};})};const c=control(row.maximumBytes,row.accept);await refused(()=>row.operation==="encode"?encodeIoErrorControlled(IoError.fromValueError(new ValueError("workLimit","canceled spoofed prose")),c):decodeIoErrorControlled(value,c),row.expectedKind);}
- console.log(`[DEBUG] IO closed wire ${cases.filter(row=>"expectedWire"in row).length} positive and ${wireCases.length} refusal cases preserve original receipts`);
 });
 test("Diagnostic portable codec replays the original closed owner cases",async()=>{
  for(const row of diagnosticCases.cases){if(row.owner!=="Diagnostic")continue;if(!row.accepted){await refused(()=>decodeDiagnosticControlled(intrinsic(row.input),control()),"invalidValue");continue;}const actual=await decodeDiagnosticControlled(intrinsic(row.input),control());expect(output(await encodeDiagnosticControlled(actual,control()))).toEqual("expected"in row?row.expected:row.input);}
  const spanCases=diagnosticCases.cases.filter(row=>row.owner==="TextSpan");
  for(const row of spanCases){const diagnostic=intrinsic({code:"test",severity:"error",span:row.input,message:"message"});if(row.accepted)expect((await decodeDiagnosticControlled(diagnostic,control())).span as unknown).toEqual("expected"in row?row.expected:row.input);else await refused(()=>decodeDiagnosticControlled(diagnostic,control()),"invalidValue");}
- console.log("[DEBUG] Diagnostic portable closed cases and exact span laws replayed");
 });

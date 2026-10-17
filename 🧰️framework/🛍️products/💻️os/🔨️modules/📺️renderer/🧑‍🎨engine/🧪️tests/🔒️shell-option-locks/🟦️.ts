@@ -1,6 +1,19 @@
 /** 🔒 Shell option locks. */
 import { shouldStartIntroduction } from "../../../../../../../🔨️modules/🖱️ui/🎓️introduction/🟦️.ts";
-import { SET_ACTIVE_EXAMPLE_ACTION_ID, appSwitchesExamples, appOffersRegisteredExamples, frameworkOwnsExampleSwitch, buildActiveExampleAction, navbarExampleIdFromHistoryUpserts, rememberedExampleIdFromDispatchV1, interactionViewFromLeftoverOutput, leftoverInteractionStateV1, leftoverWorldGumballPoseV1 } from "../../🧱️elements/🛠️ShellHelpers/🟦️.tsx";
+import {
+  SET_ACTIVE_EXAMPLE_ACTION_ID,
+  appSwitchesExamples,
+  appOffersRegisteredExamples,
+  frameworkOwnsExampleSwitch,
+  buildActiveExampleAction,
+  navbarExampleIdFromHistoryUpserts,
+  rememberedExampleIdFromDispatchV1
+} from "../../🧱️elements/🛠️ShellHelpers/🔩️plumbing/🔀️example-switching/🟦️.ts";
+import {
+  interactionViewFromLeftoverOutput,
+  leftoverInteractionStateV1,
+  leftoverWorldGumballPoseV1
+} from "../../🧱️elements/🛠️ShellHelpers/🔩️plumbing/🎮️leftover-views/🟦️.ts";
 import { FRAMEWORK_HISTORY_BODY_KEY, resolveUiDirtyScope } from "@semio-tech/framework";
 import exampleOfferFixture from "../../🧱️elements/🐚️Shell/🧪️tests/🧫️fixtures/📚️example-offer/🔣️.json";
 import exampleOfferSchema from "../../🧱️elements/🐚️Shell/📚️example-offer/🔣️.json";
@@ -10,10 +23,15 @@ import { examplesForApp, examplesForDialect, surfaceAppId, type AppRole } from "
 import { readModuleTreeSource, sliceModuleTreeSource } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
 import { describe, expect, it, vi } from "vitest";
 import { createMemoryStoragePort } from "@semio-tech/framework";
-import { leftoverHoveredVortexFullIdV1, leftoverOverlayCarryingSelectionV1, leftoverSelectIdsMustNameHoverPickV1, leftoverOverlayCarryingUtilityV1, leftoverOverlayArmedBrushUtilityV1, leftoverTreeItemSelectedV1, leftoverWorldOverlayAppliesV1, mergeWorldInteractionWithLeftoverV1, mergeWorldSelectionWithLeftoverV1 } from "../../🧱️elements/🌐️World3dHost/🟦️.tsx";
+import { leftoverHoveredVortexFullIdV1, leftoverOverlayCarryingSelectionV1, leftoverSelectIdsMustNameHoverPickV1, leftoverOverlayCarryingUtilityV1, leftoverOverlayArmedBrushUtilityV1, leftoverTreeItemSelectedV1, leftoverWorldOverlayAppliesV1, mergeWorldInteractionWithLeftoverV1, mergeWorldSelectionWithLeftoverV1 } from "../../🧱️elements/🌐️World3dHost/🔗️instance-selection/🟦️.ts";
 import { leftoverInspectionPanelHash, leftoverInspectionRefreshScope, uiRefreshSectionUnchanged } from "../../🧱️elements/🔌️PluginRuntime/🟦️.tsx";
 import { initialShellState, world3dGumballSelectionArgsV1, buildOsCommands, dispatchOsCommand, mergeShellLockSources, resolveBootExampleId, resolveShellDefaults, resolveShellLocks, shouldPersistIntroductionSeen, shouldReplayIntroductionOnLoad, isEphemeralShellBrand, clearDurableShellStorage } from "../../🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx";
-import { browserActorDispatchUiScopeV1, browserActorWindowConfigDispatchUiScopeV1, hostEffectRefreshScopeV1, typedOperationCompletionRefreshV1 } from "../../🧱️elements/🛠️ShellHelpers/🟦️.tsx";
+import {
+  browserActorDispatchUiScopeV1,
+  browserActorWindowConfigDispatchUiScopeV1,
+  hostEffectRefreshScopeV1,
+  typedOperationCompletionRefreshV1
+} from "../../🧱️elements/🛠️ShellHelpers/🔄️ui-refresh/🟦️.ts";
 import { existsSync } from "node:fs";
 import "../🧰️engine-contract-helpers/🟦️.ts";
 
@@ -234,7 +252,7 @@ describe("shell option locks (SEMIO_LOCKED_*)", () => {
   it("every pane of one document names its OWN window surface, and publishes the selection it paints", async () => {
     const { default: identity } = await import("../../🧱️elements/🌐️World3dHost/🧪️tests/🧫️fixtures/🪪️world-surface-identity.json");
     const { surfaceHostIdentityV1 } = await import("../../🧱️elements/🗣️Interpreter/🔌️surface-bridge/🟦️.tsx");
-    const { worldSurfaceSelectionDomV1, worldSurfaceGuestSelectionDomV1 } = await import("../../🧱️elements/🌐️World3dHost/🟦️.tsx");
+    const { worldSurfaceSelectionDomV1, worldSurfaceGuestSelectionDomV1 } = await import("../../🧱️elements/🌐️World3dHost/🔗️instance-selection/🟦️.ts");
 
     const identities = identity.panes.map((pane) => surfaceHostIdentityV1(pane.documentSurface, pane.recordKey, pane.recordId));
     for (const [index, pane] of identity.panes.entries()) expect(identities[index], `pane ${pane.window}`).toEqual(pane.identity);
@@ -267,7 +285,7 @@ describe("shell option locks (SEMIO_LOCKED_*)", () => {
   it("the leftover world overlay is per window INSTANCE: arming one pane leaves its sibling's record untouched", async () => {
     const { default: identity } = await import("../../🧱️elements/🌐️World3dHost/🧪️tests/🧫️fixtures/🪪️world-surface-identity.json");
     const { surfaceHostIdentityV1 } = await import("../../🧱️elements/🗣️Interpreter/🔌️surface-bridge/🟦️.tsx");
-    const world = await import("../../🧱️elements/🌐️World3dHost/🟦️.tsx");
+    const world = await import("../../🧱️elements/🌐️World3dHost/🔗️instance-selection/🟦️.ts");
     const [perspective, top] = identity.panes.map((pane) => pane.window);
     const surfaces = identity.panes.map((pane) => surfaceHostIdentityV1(pane.documentSurface, pane.recordKey, pane.recordId).surfaceId);
     expect(new Set(surfaces).size, "two panes of one document bind two records").toBe(2);
@@ -297,7 +315,7 @@ describe("shell option locks (SEMIO_LOCKED_*)", () => {
   });
 
   it("a republished equal leftover keeps every pane's overlay object and notifies nobody; one pane's hover changes only its own", async () => {
-    const world = await import("../../🧱️elements/🌐️World3dHost/🟦️.tsx");
+    const world = await import("../../🧱️elements/🌐️World3dHost/🔗️instance-selection/🟦️.ts");
     const [a, b] = ["puzzle3d#perspective", "puzzle3d#top"];
     const idle = { ids: ["seed-left-001"] as readonly string[], hoveredId: null, gumballActive: false, gumballAnchorId: null, activeUtility: "select", activeToolId: null };
     world.publishLeftoverWorldSelectionV1(null, { kind: "allWindows" });
@@ -325,7 +343,7 @@ describe("shell option locks (SEMIO_LOCKED_*)", () => {
   });
 
   it("the first leftover a pane publishes never lends its hover or utility to the document slot, so a sibling pane without its own overlay reads none", async () => {
-    const world = await import("../../🧱️elements/🌐️World3dHost/🟦️.tsx");
+    const world = await import("../../🧱️elements/🌐️World3dHost/🔗️instance-selection/🟦️.ts");
     const [a, b] = ["puzzle3d#perspective", "puzzle3d#top"];
     const hovered = { ids: [] as readonly string[], hoveredId: "seed-left-001", hoveredDomain: "object", gumballActive: false, gumballAnchorId: null, activeUtility: "brush" };
     world.publishLeftoverWorldSelectionV1(null, { kind: "allWindows" });
@@ -339,7 +357,7 @@ describe("shell option locks (SEMIO_LOCKED_*)", () => {
   });
 
   it("one arm authority publishes the armed pane's own overlay through explicit window scope", async () => {
-    const world = await import("../../🧱️elements/🌐️World3dHost/🟦️.tsx");
+    const world = await import("../../🧱️elements/🌐️World3dHost/🔗️instance-selection/🟦️.ts");
     const a = "generation3d-preview#a";
     const b = "generation3d-preview#b";
     const documentSelection = { ids: ["solid-a"], hoveredId: null, gumballActive: false, gumballAnchorId: null, activeUtility: "select" } as const;
@@ -440,7 +458,7 @@ describe("shell option locks (SEMIO_LOCKED_*)", () => {
     // leftover `output` field. Measured on generation3d 2026-09-14: `data-guest-selection-json` `[]`
     // against `data-selection-json` `["shell@solid"]` for six of eight examples, and the next plain
     // REPLACE click then read back `["fuse@solid","shell@solid"]`.
-    const world = await import("../../🧱️elements/🌐️World3dHost/🟦️.tsx");
+    const world = await import("../../🧱️elements/🌐️World3dHost/🔗️instance-selection/🟦️.ts");
     const previewWindow = "generation3d-play-window-preview#1";
     world.publishLeftoverWorldSelectionV1(null, { kind: "allWindows" });
     const picked = interactionViewFromLeftoverOutput({

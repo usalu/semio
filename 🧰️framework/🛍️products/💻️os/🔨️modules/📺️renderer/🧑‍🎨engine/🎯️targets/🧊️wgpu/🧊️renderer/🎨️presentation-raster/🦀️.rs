@@ -92,7 +92,15 @@ impl RuntimePresentationAuthority {
 }
 
 struct RuntimeRasterOperationAuthorityInner {
+    #[cfg(any(test, feature = "testkit"))]
+    #[doc(hidden)]
+    pub next_operation: AtomicU64,
+    #[cfg(not(any(test, feature = "testkit")))]
     next_operation: AtomicU64,
+    #[cfg(any(test, feature = "testkit"))]
+    #[doc(hidden)]
+    pub exhausted: AtomicBool,
+    #[cfg(not(any(test, feature = "testkit")))]
     exhausted: AtomicBool,
     current: Mutex<Option<ui_gpu::RasterTextureWitness>>,
 }
@@ -159,6 +167,16 @@ pub fn returned_completion(revision: u64, apply: RuntimeApply) -> RuntimeComplet
     RuntimeCompletion { key: None, revision, requires_interaction: false, restores_interaction: apply.restores_interaction(), apply }
 }
 
+#[cfg(all(any(test, feature = "testkit"), not(target_arch = "wasm32")))]
+thread_local! {
+    static AFTER_COMPLETION_PUBLICATION: std::cell::RefCell<Option<Box<dyn Fn()>>> = const { std::cell::RefCell::new(None) };
+}
+
+/// 🪝️ Installs (`Some`) or clears (`None`) this thread's hook that [`enqueue_runtime_completion`] runs right after a completion is published and its scene invalidated, before the host waker: the seam a law uses to hold the writer between the two steps.
+#[cfg(all(any(test, feature = "testkit"), not(target_arch = "wasm32")))]
+pub fn set_after_completion_publication_hook(hook: Option<Box<dyn Fn()>>) {
+    AFTER_COMPLETION_PUBLICATION.with(|slot| *slot.borrow_mut() = hook);
+}
 
 /// 📮️ Publishes one completion and its scene invalidation as ONE observation. The invalidation is
 /// written while the mailbox lock is still held, so a reader that takes that lock can never see a
@@ -168,7 +186,7 @@ pub fn returned_completion(revision: u64, apply: RuntimeApply) -> RuntimeComplet
 /// run AFTER `drop(queue)`, and a reader landing in that window read `ready.len() == 1` beside the
 /// OLD witness — a completion the frame it is about to present does not know it must rebuild for.
 /// `mark_scene_changed` is a single `fetch_add` on an `AtomicU64`, so it adds no lock order.
-fn enqueue_runtime_completion(completions: &Mutex<RuntimeCompletionQueue>, presentation: &RuntimePresentationAuthority, waker: &Mutex<Option<RuntimeHostWaker>>, completion: RuntimeCompletion) -> bool {
+pub fn enqueue_runtime_completion(completions: &Mutex<RuntimeCompletionQueue>, presentation: &RuntimePresentationAuthority, waker: &Mutex<Option<RuntimeHostWaker>>, completion: RuntimeCompletion) -> bool {
     let mut queue = completions.lock().expect("runtime completion mailbox lock");
     if !queue.enqueue(completion) {
         return false;
@@ -176,7 +194,11 @@ fn enqueue_runtime_completion(completions: &Mutex<RuntimeCompletionQueue>, prese
     presentation.mark_scene_changed();
     drop(queue);
     #[cfg(all(any(test, feature = "testkit"), not(target_arch = "wasm32")))]
-    runtime_publication_tests::pause_after_completion_publication();
+    AFTER_COMPLETION_PUBLICATION.with(|slot| {
+        if let Some(hook) = slot.borrow().as_ref() {
+            hook();
+        }
+    });
     if let Some(waker) = waker.lock().expect("runtime completion waker lock").as_ref() {
         waker();
     }
@@ -733,11 +755,11 @@ struct FrameMaintenanceExecutionGuard<R> {
 
 #[cfg(not(target_arch = "wasm32"))]
 impl<R> FrameMaintenanceExecutionGuard<R> {
-    fn owner_mut(&mut self) -> Option<&mut FrameMaintenanceOwner> {
+    pub(crate) fn owner_mut(&mut self) -> Option<&mut FrameMaintenanceOwner> {
         self.owner.as_mut()
     }
 
-    fn finish(mut self) -> bool {
+    pub(crate) fn finish(mut self) -> bool {
         let Some(owner) = self.owner.as_mut() else { return false };
         let Some((interaction, cursor)) = owner.take_pair() else { return false };
         if !self.registry.complete(self.generation) {
@@ -766,7 +788,28 @@ impl<R> Drop for FrameMaintenanceExecutionGuard<R> {
     }
 }
 
-pub struct RuntimeDispatchReturn<R>{mailbox:RuntimeMailbox<R>,revision:u64,cursor:Option<RuntimeDispatchCursor>,interaction:Option<AppInteractionState>}
+pub struct RuntimeDispatchReturn<R> {
+    #[cfg(any(test, feature = "testkit"))]
+    #[doc(hidden)]
+    pub mailbox: RuntimeMailbox<R>,
+    #[cfg(not(any(test, feature = "testkit")))]
+    mailbox: RuntimeMailbox<R>,
+    #[cfg(any(test, feature = "testkit"))]
+    #[doc(hidden)]
+    pub revision: u64,
+    #[cfg(not(any(test, feature = "testkit")))]
+    revision: u64,
+    #[cfg(any(test, feature = "testkit"))]
+    #[doc(hidden)]
+    pub cursor: Option<RuntimeDispatchCursor>,
+    #[cfg(not(any(test, feature = "testkit")))]
+    cursor: Option<RuntimeDispatchCursor>,
+    #[cfg(any(test, feature = "testkit"))]
+    #[doc(hidden)]
+    pub interaction: Option<AppInteractionState>,
+    #[cfg(not(any(test, feature = "testkit")))]
+    interaction: Option<AppInteractionState>,
+}
 impl<R> RuntimeDispatchReturn<R>{
     pub async fn run(mut self){
         let cursor=self.cursor.as_mut().expect("original dispatch cursor remains owned");let event=cursor.inflight.as_mut().expect("original in-flight event remains owned");let interaction=self.interaction.as_mut().expect("original dispatch interaction remains owned");
@@ -821,11 +864,11 @@ struct FrameDeferredExecutionGuard<R> {
 
 #[cfg(not(target_arch = "wasm32"))]
 impl<R> FrameDeferredExecutionGuard<R> {
-    fn owner_mut(&mut self) -> Option<&mut FrameDeferredExecutionOwner> {
+    pub(crate) fn owner_mut(&mut self) -> Option<&mut FrameDeferredExecutionOwner> {
         self.owner.as_mut()
     }
 
-    fn finish(mut self) -> bool {
+    pub(crate) fn finish(mut self) -> bool {
         let Some(owner) = self.owner.as_mut() else { return false };
         let Some((interaction, cursor)) = owner.take_pair() else { return false };
         if !self.registry.complete(self.generation) {

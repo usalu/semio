@@ -1,4 +1,5 @@
-use super::*;
+use crate::{schema::snapshot::DocBlock, schema::snapshot::DocRun, schema::snapshot::SemioDocumentSnapshot};
+use crate::schema::inferences::outline::*;
 use crate::schema::snapshot::{DocListItem, DocTableCell, DocTableRow, STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA};
 
 #[semio_framework_async_macros::async_test]

@@ -26,6 +26,5 @@ test("Deflate committed header and payload intents agree with independent zlib",
     const path=resolve(root,`🧪️tests/🧫️fixtures/🧬️history-edits/${row.id}/🦠️mutation/🔣️.json`);
     expect(existsSync(path)).toBe(true);
     expect(JSON.parse(readFileSync(path,"utf8"))).toEqual({mutation:row.mutation,before,after:row.after});
-    console.log("[DEBUG] Deflate committed native intent agrees with independent zlib",row.id,output[0],output[1],row.after.payload);
   }
 });

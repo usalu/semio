@@ -41,26 +41,12 @@ fn hit_test_at(doc: &LayoutSnapshot, config: &LayoutWindowConfig, sx: f64, sy: f
 }
 //#endregion 🔖️Shared
 
-//#region 🔖️CanvasPointerDown
-//#endregion 🔖️CanvasPointerDown
 
-//#region 🔖️CanvasPointerMove
-//#endregion 🔖️CanvasPointerMove
 
-//#region 🔖️CanvasPointerUp
-//#endregion 🔖️CanvasPointerUp
 
-//#region 🔖️CanvasDragOver
-//#endregion 🔖️CanvasDragOver
 
-//#region 🔖️CanvasDragLeave
-//#endregion 🔖️CanvasDragLeave
 
-//#region 🔖️SetCamera
-//#endregion 🔖️SetCamera
 
-//#region 🔖️CanvasDrop
-//#endregion 🔖️CanvasDrop
 
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword = "canvas-pointer-down")]
@@ -90,8 +76,3 @@ pub fn handle(payload: &CanvasPointerDown, doc: &ArtifactView<'_, LayoutSnapshot
     Ok(Emit::effect(effect))
 }
 
-//#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests

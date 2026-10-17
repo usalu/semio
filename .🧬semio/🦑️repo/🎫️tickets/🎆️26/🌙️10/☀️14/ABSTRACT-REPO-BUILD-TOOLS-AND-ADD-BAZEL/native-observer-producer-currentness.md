@@ -1,0 +1,29 @@
+# Native Observer And Producer Currentness
+
+Saved controlled Source4119 aggregate reports both complete2048-file/34816-byte captures and Python equality under the same55000ms phase: elapsed33729.339ms, remaining21270.536ms. No-effect observer calls113174 and publisher calls113175; publisher interval25163.980ms and summed observer interval19271.383ms. Descriptor custody active0/unresolved0, cleanup failures0 and Native effects0. The earlier no-effect count117402 differs by4228 (3.601 percent); host/load/cache/order confounds forbid wall-time causal attribution. This is Generated Source instrumentation, not a Native or Tools result. A final owning-lane timing FD/source binding is pending.
+
+The producer schema is a direct runtime dependency. `artifacts/💾️cache/🏗️producer/🟦️.ts` imports its Protocol and uses its resource and maximumOperations in actual exclusive producer admission. `artifacts/💾️cache/💾️volume/🟦️.ts` imports both that producer API and the same schema, using creationResource and catalogueResource on actual cache creation/catalogue transactions. A schema digest change cannot be treated as test-only solely because other definitions describe cases.
+
+The current schema must receive an exact FD/hash binding and the prior captured schema bytes must be located before claiming the semantic scope of the old-to-current change. The old SHA by itself proves no semantic delta. The unchanged private helper's actual import reachability remains to be inspected once its exact path is identified. Previous private/Tools gates remain historical until current coupled Source and payload gates settle. No execution is authorized or performed by this audit.
+
+## Independent Producer Delta Proof
+
+Bounded nofollow FD/name reread confirms current schema5934 bytes and SHA `7ca96fffb35468dba2db8eb129939e994095d5380c0f41f485027c5e5af3429e`. Parsing its DATA, deleting only `definitions.VictimCase` and canonically serializing reconstructs exact prior SHA `bf1f5a3c4b68c9071479ed110c9bdc81d9ea498f5220e96178eaa89b8b8f197d`. The input was not copied or mutated. All other definitions, including Protocol, are unchanged. Details are held in `🗑️generated/native-producer-schema-independent-held.json`.
+
+The actual runtime consumers above read only unchanged `definitions.Protocol.const`; they do not execute VictimCase. The unchanged private `native-publication/📜️script.ts --run` imports the native platform/storage/fixed/publication owners, with no direct cache producer or cache-volume call. The inspected native retirement contract imports cache descriptor-custody validation; that descriptor module imports the separate cache schema and has no producer dependency. No executed VictimCase relationship has been demonstrated. Its unexecuted feature law remains excluded from proof scope, while the current producer schema remains in fresh Source capture. This is not a scanner-cap or policy exception.
+
+Before a fresh physical attempt, retain current full P/W laws and strict, exact current Windows payload-meter focused/full/strict and its Low hold, then combine current held inputs and reread exact Source FD/name metadata. Older private stages and failed Tools120 evidence must remain historical. The new complete Generated benchmark validates Source output equality only; it does not replace current Native stages, raw journal/alias/Node relations, canonical retirement or fresh protected census.
+
+## Final Observer Binding
+
+Independent bounded nofollow FD/name reread of `publication-descriptor-boundary-final-held.json` matches all sixteen Source/evidence rows with zero byte/hash/stamp discrepancies. Manifest is `🗑️generated/publication-descriptor-boundary-final-independent-held.json`. Saved controlled log confirms one law/twelve assertions and complete Python equality; saved full Source log confirms46 laws/5412 assertions, no failures. No new tools were executed by this audit.
+
+The earlier five-input W schema SHA `a1ce190...` is historical: the final combined schema is `15e1339...`. The final owner manifest explicitly records that movement and retains the observer-relevant Protocol/ObserverBenchmark/DescriptorBoundaryCase projection separately. Do not describe the older whole-file hold as current. Exact Windows schema delta and final Windows gates remain under audit before combining currentness conclusions.
+
+## Combined Schema Currentness Resolution
+
+Independently deleting only aggregate-body-meter-failure from both Windows meter id enums reconstructs earliera1ce190 whole-schema SHA exactly; body-meter-failure already existed there. Observer Protocol/ObserverBenchmark/DescriptorBoundaryCase and runtime W are unchanged, while current Windows focused/full/strict evidence and refreshed ten-input binding now qualify the new meter scope. The prior claim of two newly added ids is corrected. The full observer13588 process imported its actual schema during execution; the final whole-file hold alone cannot establish that exact import instant. Bound unchanged observer projections plus separately current Windows gates support their scoped Source conclusions without claiming prior whole-schema freshness or physical acceptance.
+
+## Private Helper Preflight Review
+
+Independent exact nofollow FD/name/hash reread matches all34 selected current preflight rows, including expected retired-path absence, with zero discrepancies. `🗑️generated/native-observer-current-independent-preflight.json` retains the result. The two omitted cache-retirement test/corpus inputs remain explicitly excluded as unexecuted proof scope, with their later drift and refusal receipts preserved; no mapping-suite currentness, scanner-cap exception or erased peer change is inferred. The Windows final ten inputs were independently bound at the current qualified point. This clears no Native stage by itself; actual unchanged private helper execution and its post-Source currentness/stages/custody remain Root work.

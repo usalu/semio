@@ -1,8 +1,16 @@
-use super::*;
+use crate::GisTerrainSnapshot;
+use semio_framework_test_fixtures::fixture_path;
+#[allow(unused_imports)]
+use crate::diff::GisTerrainDiff;
+#[allow(unused_imports)]
+use semio_framework_value_derive::{FromValue, ToValue};
+#[allow(unused_imports)]
+use serde::{Deserialize, Serialize};
+use crate::standards::v1::subsets::any::schema::mutations::*;
 
 #[test]
 fn direct_owners_descriptors_surfaces_and_catalog_correspond() {
-    let mutation_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations");
+    let mutation_root = fixture_path!("../../../🧬️mutations");
     let descriptor_kinds: Vec<_> = <GisTerrainMutation as protocol::SemanticMutation<GisTerrainSnapshot>>::kinds().iter().map(|descriptor| descriptor.kind).collect();
     let catalog: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(mutation_root.join("../../🔮️oracles/🔣️.json")).expect("language-neutral catalog")).expect("valid catalog");
     let mutation_catalog = &catalog["mutationCatalogs"][0];

@@ -1,4 +1,10 @@
-use super::*;
+#[allow(unused_imports)]
+use crate::{writer_text, WriterSnapshot};
+#[allow(unused_imports)]
+use semio_framework_plugin::app::{TextView, TextWindowKit};
+#[allow(unused_imports)]
+use semio_framework_plugin::{BuiltNode, UiAssemblyResult, WindowKindDefinition, WindowKit};
+use crate::viewer::writer::modes::view::windows::main::*;
 
 #[semio_framework_async_macros::async_test]
 async fn definition_uses_the_framework_text_window_kits_frozen_kind_id() {

@@ -54,5 +54,7 @@ use std::collections::HashMap;
 
     /// ✅️ Checks the owned profile without a physical codec.
     pub fn check_svg_basic_conformance(snapshot:&SvgSnapshot)->Vec<Diagnostic>{check_svg_basic_conformance_with(snapshot,&mut |_,_|Ok(())).expect("owned SVG validation count")}
+    /// 🚦️ Binds physical SQLite progress to pure owned profile validation.
+    pub fn check_svg_basic_conformance_controlled(snapshot:&SvgSnapshot,control:&mut semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl<'_>)->Result<Vec<Diagnostic>,semio_framework_value::ValueError>{check_svg_basic_conformance_with(snapshot,&mut |completed,total|control.checkpoint(semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotPhase::ProjectSnapshot,completed,total))}
 
 

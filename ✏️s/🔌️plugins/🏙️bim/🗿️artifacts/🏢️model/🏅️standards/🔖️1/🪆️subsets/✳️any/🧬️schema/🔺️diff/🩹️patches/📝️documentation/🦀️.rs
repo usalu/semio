@@ -30,13 +30,13 @@ impl Patch<Dimension> for DimensionPatch {
         Self { storey: restore(&self.storey, &base.storey), anchors: restore(&self.anchors, &base.anchors), angle: restore(&self.angle, &base.angle), offset: restore(&self.offset, &base.offset), style: restore(&self.style, &base.style), lock: restore_assigned(&self.lock, &base.lock), name: restore(&self.name, &base.name) }
     }
     fn merge(&mut self, later: Self) {
-        merge_slot!(&mut self.storey, later.storey);
-        merge_slot!(&mut self.anchors, later.anchors);
-        merge_slot!(&mut self.angle, later.angle);
-        merge_slot!(&mut self.offset, later.offset);
-        merge_slot!(&mut self.style, later.style);
-        merge_slot!(&mut self.lock, later.lock);
-        merge_slot!(&mut self.name, later.name);
+        merge_slot(&mut self.storey, later.storey);
+        merge_slot(&mut self.anchors, later.anchors);
+        merge_slot(&mut self.angle, later.angle);
+        merge_slot(&mut self.offset, later.offset);
+        merge_slot(&mut self.style, later.style);
+        merge_slot(&mut self.lock, later.lock);
+        merge_slot(&mut self.name, later.name);
     }
     fn minimal(&self, base: &Dimension) -> Self {
         Self { storey: changed(&self.storey, &base.storey), anchors: changed(&self.anchors, &base.anchors), angle: changed(&self.angle, &base.angle), offset: changed(&self.offset, &base.offset), style: changed(&self.style, &base.style), lock: changed_assigned(&self.lock, &base.lock), name: changed(&self.name, &base.name) }
@@ -95,11 +95,11 @@ impl Patch<Tag> for TagPatch {
         Self { storey: restore(&self.storey, &base.storey), element: restore(&self.element, &base.element), category: restore(&self.category, &base.category), offset: restore(&self.offset, &base.offset), style: restore(&self.style, &base.style) }
     }
     fn merge(&mut self, later: Self) {
-        merge_slot!(&mut self.storey, later.storey);
-        merge_slot!(&mut self.element, later.element);
-        merge_slot!(&mut self.category, later.category);
-        merge_slot!(&mut self.offset, later.offset);
-        merge_slot!(&mut self.style, later.style);
+        merge_slot(&mut self.storey, later.storey);
+        merge_slot(&mut self.element, later.element);
+        merge_slot(&mut self.category, later.category);
+        merge_slot(&mut self.offset, later.offset);
+        merge_slot(&mut self.style, later.style);
     }
     fn minimal(&self, base: &Tag) -> Self {
         Self { storey: changed(&self.storey, &base.storey), element: changed(&self.element, &base.element), category: changed(&self.category, &base.category), offset: changed(&self.offset, &base.offset), style: changed(&self.style, &base.style) }
@@ -152,11 +152,11 @@ impl Patch<TextNote> for TextNotePatch {
         Self { storey: restore(&self.storey, &base.storey), position: restore(&self.position, &base.position), text: restore(&self.text, &base.text), rotation: restore(&self.rotation, &base.rotation), style: restore(&self.style, &base.style) }
     }
     fn merge(&mut self, later: Self) {
-        merge_slot!(&mut self.storey, later.storey);
-        merge_slot!(&mut self.position, later.position);
-        merge_slot!(&mut self.text, later.text);
-        merge_slot!(&mut self.rotation, later.rotation);
-        merge_slot!(&mut self.style, later.style);
+        merge_slot(&mut self.storey, later.storey);
+        merge_slot(&mut self.position, later.position);
+        merge_slot(&mut self.text, later.text);
+        merge_slot(&mut self.rotation, later.rotation);
+        merge_slot(&mut self.style, later.style);
     }
     fn minimal(&self, base: &TextNote) -> Self {
         Self { storey: changed(&self.storey, &base.storey), position: changed(&self.position, &base.position), text: changed(&self.text, &base.text), rotation: changed(&self.rotation, &base.rotation), style: changed(&self.style, &base.style) }
@@ -209,11 +209,11 @@ impl Patch<Leader> for LeaderPatch {
         Self { storey: restore(&self.storey, &base.storey), anchor: restore(&self.anchor, &base.anchor), offset: restore(&self.offset, &base.offset), text: restore(&self.text, &base.text), style: restore(&self.style, &base.style) }
     }
     fn merge(&mut self, later: Self) {
-        merge_slot!(&mut self.storey, later.storey);
-        merge_slot!(&mut self.anchor, later.anchor);
-        merge_slot!(&mut self.offset, later.offset);
-        merge_slot!(&mut self.text, later.text);
-        merge_slot!(&mut self.style, later.style);
+        merge_slot(&mut self.storey, later.storey);
+        merge_slot(&mut self.anchor, later.anchor);
+        merge_slot(&mut self.offset, later.offset);
+        merge_slot(&mut self.text, later.text);
+        merge_slot(&mut self.style, later.style);
     }
     fn minimal(&self, base: &Leader) -> Self {
         Self { storey: changed(&self.storey, &base.storey), anchor: changed(&self.anchor, &base.anchor), offset: changed(&self.offset, &base.offset), text: changed(&self.text, &base.text), style: changed(&self.style, &base.style) }
@@ -272,14 +272,14 @@ impl Patch<AnnotationStyle> for AnnotationStylePatch {
         Self { name: restore(&self.name, &base.name), text_height: restore(&self.text_height, &base.text_height), terminator: restore(&self.terminator, &base.terminator), unit: restore(&self.unit, &base.unit), precision: restore(&self.precision, &base.precision), mark_size: restore(&self.mark_size, &base.mark_size), gap: restore(&self.gap, &base.gap), overshoot: restore(&self.overshoot, &base.overshoot) }
     }
     fn merge(&mut self, later: Self) {
-        merge_slot!(&mut self.name, later.name);
-        merge_slot!(&mut self.text_height, later.text_height);
-        merge_slot!(&mut self.terminator, later.terminator);
-        merge_slot!(&mut self.unit, later.unit);
-        merge_slot!(&mut self.precision, later.precision);
-        merge_slot!(&mut self.mark_size, later.mark_size);
-        merge_slot!(&mut self.gap, later.gap);
-        merge_slot!(&mut self.overshoot, later.overshoot);
+        merge_slot(&mut self.name, later.name);
+        merge_slot(&mut self.text_height, later.text_height);
+        merge_slot(&mut self.terminator, later.terminator);
+        merge_slot(&mut self.unit, later.unit);
+        merge_slot(&mut self.precision, later.precision);
+        merge_slot(&mut self.mark_size, later.mark_size);
+        merge_slot(&mut self.gap, later.gap);
+        merge_slot(&mut self.overshoot, later.overshoot);
     }
     fn minimal(&self, base: &AnnotationStyle) -> Self {
         Self { name: changed(&self.name, &base.name), text_height: changed(&self.text_height, &base.text_height), terminator: changed(&self.terminator, &base.terminator), unit: changed(&self.unit, &base.unit), precision: changed(&self.precision, &base.precision), mark_size: changed(&self.mark_size, &base.mark_size), gap: changed(&self.gap, &base.gap), overshoot: changed(&self.overshoot, &base.overshoot) }
@@ -351,16 +351,16 @@ impl Patch<Sheet> for SheetPatch {
         Self { number: restore(&self.number, &base.number), name: restore(&self.name, &base.name), paper: restore(&self.paper, &base.paper), orientation: restore(&self.orientation, &base.orientation), project: restore(&self.project, &base.project), drawn_by: restore(&self.drawn_by, &base.drawn_by), checked_by: restore(&self.checked_by, &base.checked_by), date: restore(&self.date, &base.date), revision: restore(&self.revision, &base.revision), scale_label: restore(&self.scale_label, &base.scale_label) }
     }
     fn merge(&mut self, later: Self) {
-        merge_slot!(&mut self.number, later.number);
-        merge_slot!(&mut self.name, later.name);
-        merge_slot!(&mut self.paper, later.paper);
-        merge_slot!(&mut self.orientation, later.orientation);
-        merge_slot!(&mut self.project, later.project);
-        merge_slot!(&mut self.drawn_by, later.drawn_by);
-        merge_slot!(&mut self.checked_by, later.checked_by);
-        merge_slot!(&mut self.date, later.date);
-        merge_slot!(&mut self.revision, later.revision);
-        merge_slot!(&mut self.scale_label, later.scale_label);
+        merge_slot(&mut self.number, later.number);
+        merge_slot(&mut self.name, later.name);
+        merge_slot(&mut self.paper, later.paper);
+        merge_slot(&mut self.orientation, later.orientation);
+        merge_slot(&mut self.project, later.project);
+        merge_slot(&mut self.drawn_by, later.drawn_by);
+        merge_slot(&mut self.checked_by, later.checked_by);
+        merge_slot(&mut self.date, later.date);
+        merge_slot(&mut self.revision, later.revision);
+        merge_slot(&mut self.scale_label, later.scale_label);
     }
     fn minimal(&self, base: &Sheet) -> Self {
         Self { number: changed(&self.number, &base.number), name: changed(&self.name, &base.name), paper: changed(&self.paper, &base.paper), orientation: changed(&self.orientation, &base.orientation), project: changed(&self.project, &base.project), drawn_by: changed(&self.drawn_by, &base.drawn_by), checked_by: changed(&self.checked_by, &base.checked_by), date: changed(&self.date, &base.date), revision: changed(&self.revision, &base.revision), scale_label: changed(&self.scale_label, &base.scale_label) }
@@ -430,12 +430,12 @@ impl Patch<Viewport> for ViewportPatch {
         Self { sheet: restore(&self.sheet, &base.sheet), view: restore(&self.view, &base.view), position: restore(&self.position, &base.position), scale: restore(&self.scale, &base.scale), crop: restore_assigned(&self.crop, &base.crop), label: restore_assigned(&self.label, &base.label) }
     }
     fn merge(&mut self, later: Self) {
-        merge_slot!(&mut self.sheet, later.sheet);
-        merge_slot!(&mut self.view, later.view);
-        merge_slot!(&mut self.position, later.position);
-        merge_slot!(&mut self.scale, later.scale);
-        merge_slot!(&mut self.crop, later.crop);
-        merge_slot!(&mut self.label, later.label);
+        merge_slot(&mut self.sheet, later.sheet);
+        merge_slot(&mut self.view, later.view);
+        merge_slot(&mut self.position, later.position);
+        merge_slot(&mut self.scale, later.scale);
+        merge_slot(&mut self.crop, later.crop);
+        merge_slot(&mut self.label, later.label);
     }
     fn minimal(&self, base: &Viewport) -> Self {
         Self { sheet: changed(&self.sheet, &base.sheet), view: changed(&self.view, &base.view), position: changed(&self.position, &base.position), scale: changed(&self.scale, &base.scale), crop: changed_assigned(&self.crop, &base.crop), label: changed_assigned(&self.label, &base.label) }
@@ -491,11 +491,11 @@ impl Patch<SheetRevision> for SheetRevisionPatch {
         Self { sheet: restore(&self.sheet, &base.sheet), number: restore(&self.number, &base.number), date: restore(&self.date, &base.date), description: restore(&self.description, &base.description), author: restore(&self.author, &base.author) }
     }
     fn merge(&mut self, later: Self) {
-        merge_slot!(&mut self.sheet, later.sheet);
-        merge_slot!(&mut self.number, later.number);
-        merge_slot!(&mut self.date, later.date);
-        merge_slot!(&mut self.description, later.description);
-        merge_slot!(&mut self.author, later.author);
+        merge_slot(&mut self.sheet, later.sheet);
+        merge_slot(&mut self.number, later.number);
+        merge_slot(&mut self.date, later.date);
+        merge_slot(&mut self.description, later.description);
+        merge_slot(&mut self.author, later.author);
     }
     fn minimal(&self, base: &SheetRevision) -> Self {
         Self { sheet: changed(&self.sheet, &base.sheet), number: changed(&self.number, &base.number), date: changed(&self.date, &base.date), description: changed(&self.description, &base.description), author: changed(&self.author, &base.author) }
@@ -564,19 +564,19 @@ impl Patch<View> for ViewPatch {
         Self { building: restore(&self.building, &base.building), name: restore(&self.name, &base.name), kind: restore(&self.kind, &base.kind), storey: restore_assigned(&self.storey, &base.storey), plane: restore_assigned(&self.plane, &base.plane), camera: restore_assigned(&self.camera, &base.camera), cut_height: restore_assigned(&self.cut_height, &base.cut_height), depth: restore(&self.depth, &base.depth), crop: restore_assigned(&self.crop, &base.crop), hidden: restore(&self.hidden, &base.hidden), phase: restore_assigned(&self.phase, &base.phase), scale: restore(&self.scale, &base.scale), detail: restore(&self.detail, &base.detail) }
     }
     fn merge(&mut self, later: Self) {
-        merge_slot!(&mut self.building, later.building);
-        merge_slot!(&mut self.name, later.name);
-        merge_slot!(&mut self.kind, later.kind);
-        merge_slot!(&mut self.storey, later.storey);
-        merge_slot!(&mut self.plane, later.plane);
-        merge_slot!(&mut self.camera, later.camera);
-        merge_slot!(&mut self.cut_height, later.cut_height);
-        merge_slot!(&mut self.depth, later.depth);
-        merge_slot!(&mut self.crop, later.crop);
-        merge_slot!(&mut self.hidden, later.hidden);
-        merge_slot!(&mut self.phase, later.phase);
-        merge_slot!(&mut self.scale, later.scale);
-        merge_slot!(&mut self.detail, later.detail);
+        merge_slot(&mut self.building, later.building);
+        merge_slot(&mut self.name, later.name);
+        merge_slot(&mut self.kind, later.kind);
+        merge_slot(&mut self.storey, later.storey);
+        merge_slot(&mut self.plane, later.plane);
+        merge_slot(&mut self.camera, later.camera);
+        merge_slot(&mut self.cut_height, later.cut_height);
+        merge_slot(&mut self.depth, later.depth);
+        merge_slot(&mut self.crop, later.crop);
+        merge_slot(&mut self.hidden, later.hidden);
+        merge_slot(&mut self.phase, later.phase);
+        merge_slot(&mut self.scale, later.scale);
+        merge_slot(&mut self.detail, later.detail);
     }
     fn minimal(&self, base: &View) -> Self {
         Self { building: changed(&self.building, &base.building), name: changed(&self.name, &base.name), kind: changed(&self.kind, &base.kind), storey: changed_assigned(&self.storey, &base.storey), plane: changed_assigned(&self.plane, &base.plane), camera: changed_assigned(&self.camera, &base.camera), cut_height: changed_assigned(&self.cut_height, &base.cut_height), depth: changed(&self.depth, &base.depth), crop: changed_assigned(&self.crop, &base.crop), hidden: changed(&self.hidden, &base.hidden), phase: changed_assigned(&self.phase, &base.phase), scale: changed(&self.scale, &base.scale), detail: changed(&self.detail, &base.detail) }
@@ -661,15 +661,15 @@ impl Patch<Schedule> for SchedulePatch {
         Self { name: restore(&self.name, &base.name), category: restore(&self.category, &base.category), columns: restore(&self.columns, &base.columns), sort: restore(&self.sort, &base.sort), filter: restore(&self.filter, &base.filter), group: restore(&self.group, &base.group), itemize: restore(&self.itemize, &base.itemize), storeys: restore(&self.storeys, &base.storeys), phases: restore(&self.phases, &base.phases) }
     }
     fn merge(&mut self, later: Self) {
-        merge_slot!(&mut self.name, later.name);
-        merge_slot!(&mut self.category, later.category);
-        merge_slot!(&mut self.columns, later.columns);
-        merge_slot!(&mut self.sort, later.sort);
-        merge_slot!(&mut self.filter, later.filter);
-        merge_slot!(&mut self.group, later.group);
-        merge_slot!(&mut self.itemize, later.itemize);
-        merge_slot!(&mut self.storeys, later.storeys);
-        merge_slot!(&mut self.phases, later.phases);
+        merge_slot(&mut self.name, later.name);
+        merge_slot(&mut self.category, later.category);
+        merge_slot(&mut self.columns, later.columns);
+        merge_slot(&mut self.sort, later.sort);
+        merge_slot(&mut self.filter, later.filter);
+        merge_slot(&mut self.group, later.group);
+        merge_slot(&mut self.itemize, later.itemize);
+        merge_slot(&mut self.storeys, later.storeys);
+        merge_slot(&mut self.phases, later.phases);
     }
     fn minimal(&self, base: &Schedule) -> Self {
         Self { name: changed(&self.name, &base.name), category: changed(&self.category, &base.category), columns: changed(&self.columns, &base.columns), sort: changed(&self.sort, &base.sort), filter: changed(&self.filter, &base.filter), group: changed(&self.group, &base.group), itemize: changed(&self.itemize, &base.itemize), storeys: changed(&self.storeys, &base.storeys), phases: changed(&self.phases, &base.phases) }

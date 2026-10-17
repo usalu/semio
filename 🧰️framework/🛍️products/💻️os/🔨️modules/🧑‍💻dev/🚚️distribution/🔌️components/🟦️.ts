@@ -1,8 +1,8 @@
 import { buildModePolicy, readBuildMode, type BuildMode } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 import { join } from "node:path";
-import { fontAssetPublicationRootV1 } from "../../../../../../🔨️modules/🖼️canvas/🔤️fonts/📦️publication/🟦️.ts";
+import { fontAssetPublicationRootV1 } from "@semio-tech/framework-canvas-ts/fonts/publication";
 import {repositoryCachePartitionRootDataV1} from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📂️paths/🟦️.ts";
-import { canvasRuntimeAssetSources } from "../../../../../../🔨️modules/🖼️canvas/🔌️runtime-assets/🚚️staging/🟦️.ts";
+import { canvasRuntimeAssetSources } from "@semio-tech/framework-canvas-ts/runtime-assets/staging";
 import { parseInstallationDirectoryV1 } from "@semio-tech/framework/identity/installation";
 import { MODULE_EXTENSION_ROUTE, MODULE_PLUGIN_ROUTE, MODULE_SHARD_DIRECTORY, MODULE_VENDOR_DIRECTORY, moduleDirectoryName } from "../../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
 import { PREVIEW2_VENDOR_RELATIVE } from "../../../🔌️plugin/🌐️browser-bundle/🕸️imports/🟦️.ts";

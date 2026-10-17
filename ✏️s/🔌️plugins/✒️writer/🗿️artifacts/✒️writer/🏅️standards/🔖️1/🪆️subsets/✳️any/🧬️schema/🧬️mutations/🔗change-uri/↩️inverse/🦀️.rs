@@ -1,13 +1,15 @@
 //! ↩️ Inverse for `ChangeUri` — reads the BASE uri, never the diff.
 use super::ChangeUri;
-use crate::schema::mutations::WriterMutation;
 use crate::WriterSnapshot;
 
 //#region 🔖️Inverse
 /// ↩️ Undo restores `base.uri`.
-pub fn inverse(_payload: &ChangeUri, base: &WriterSnapshot) -> Result<Vec<WriterMutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op>(_payload: &ChangeUri, base: &WriterSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError>
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::change_uri::ChangeUri>,
+{
     Ok((|| {
-    vec![WriterMutation::ChangeUri(ChangeUri { new_uri: base.uri.clone() })]
+    vec![Op::from(ChangeUri { new_uri: base.uri.clone() })]
 
     })())
 }

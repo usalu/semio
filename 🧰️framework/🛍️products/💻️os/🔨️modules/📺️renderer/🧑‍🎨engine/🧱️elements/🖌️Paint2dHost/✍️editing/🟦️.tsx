@@ -2,7 +2,7 @@ import { parsePixelLayerSelectionV1 } from "@semio-tech/framework/pixels/selecti
 /** 🧰️ Accessible pixel tools over the authoritative paint scene and command channel. */
 import { useEffect, useMemo, useRef, useState, type PointerEvent, type WheelEvent, type RefObject } from "react";
 import { GestureRecognizer } from "@semio-tech/framework";
-import { canvasPinchCamera, type CanvasCamera } from "../../📐️Canvas2dHost/🟦️.tsx";
+import { canvasPinchCamera, type CanvasCamera } from "../../📐️Canvas2dHost/📷️camera-math/🟦️.ts";
 import { useTranslation } from "@semio-tech/ui-react";
 import { combineSelections, floodSelection, selectPixels, validateExtent, type PixelImage, type PixelPoint, type SelectionMerge } from "@semio-tech/framework/pixels/editing";
 import { editSelection, layerPoint, pixelLayers, maskLayers, pixelGestureRevision, selectionBounds, selectionSpans, restoreSelection, type PixelLayer } from "./🟦️.ts";

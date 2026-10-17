@@ -1,11 +1,14 @@
 //! ↩️ Inverse for `DragNodes`.
 
-use {crate::schema::mutations::move_node::MoveNode, crate::schema::mutations::SemioGraphMutation};
+use crate::schema::mutations::move_node::MoveNode;
 use crate::schema::snapshot::SemioGraphSnapshot;
 
 //#region 🔖️Inverse
 /// ↩️ The exact undo: one absolute `move-node` per moved node carrying its BASE position — never a negated offset.
-pub fn inverse(payload: &super::DragNodes, base: &SemioGraphSnapshot) -> Result<Vec<SemioGraphMutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op>(payload: &super::DragNodes, base: &SemioGraphSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError>
+where
+    Op: From<crate::schema::mutations::move_node::MoveNode>,
+{
     Ok((|| {
     if payload.targets.is_empty() || !(payload.dx.is_finite() && payload.dy.is_finite()) || (payload.dx, payload.dy) == (0.0, 0.0) {
         return Vec::new();
@@ -16,7 +19,7 @@ pub fn inverse(payload: &super::DragNodes, base: &SemioGraphSnapshot) -> Result<
         .iter()
         .filter(|id| seen.insert(id.value.as_str()))
         .filter_map(|id| base.nodes.iter().find(|node| node.id == *id))
-        .map(|node| SemioGraphMutation::MoveNode(MoveNode { id: node.id.clone(), new_position: node.position }))
+        .map(|node| Op::from(MoveNode { id: node.id.clone(), new_position: node.position }))
         .collect()
 
     })())

@@ -1,6 +1,14 @@
 //! 🗺️ Patch round-trip tests of the context registers: site, organizational, service, infrastructure, information, communication, wayfinding, schedule, flexibility, growth, sustainability, resilience, cost and delivery records plus risks and conflicts.
 
-use super::*;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::kernel::*;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::registers::kernel::*;
+#[allow(unused_imports)]
+use protocol::Identified;
+#[allow(unused_imports)]
+use protocol::list_delta::RowPatch;
+use crate::standards::v1::subsets::any::schema::registers::context_requirements::*;
 
 macro_rules! patch_through_program {
     ($item:ident, $patch:expr, $field:ident, $delta:ty, $id:expr) => {{

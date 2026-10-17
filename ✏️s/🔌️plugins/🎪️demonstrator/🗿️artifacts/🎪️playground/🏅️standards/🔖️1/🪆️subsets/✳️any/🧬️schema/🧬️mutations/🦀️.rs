@@ -16,7 +16,5 @@ pub enum PlaygroundMutation {
 //#endregion 🔖️Aggregate
 
 //#region 🧪️StructuralCorrespondence
-#[cfg(test)]
-#[path = "🧪️tests/🔬️structural-correspondence/🦀️.rs"]
-mod structural_correspondence_tests;
+
 //#endregion 🧪️StructuralCorrespondence

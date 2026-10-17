@@ -1,4 +1,4 @@
-import type {XmlDocument,XmlNode}from '../../../../../../../../../📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🟦️.ts';
+import type {XmlDocument,XmlNode}from '@semio-tech/stdio-xml/standards/1.0/subsets/base/schema/snapshot';
 import type {SvgDocument,SvgNode,SvgAttributeValue,TransformOp,PathCommand}from '../../../../🧬️schema/📸️snapshot/🧩️document/🟦️.ts';
 const numeric=/[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?/g;
 const fail=(detail:string):never=>{throw new Error(`svg: ${detail}`)};

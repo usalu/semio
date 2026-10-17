@@ -17,7 +17,6 @@ test("prepared publication identity fields are native paged text owners", () => 
   expect(db.query("SELECT actor,applied,tail FROM identities").get()).toEqual({ actor, applied: fixture.id, tail: fixture.id });
   expect(JSON.parse(JSON.stringify({ actor, applied: fixture.id, tail: fixture.id }))).toEqual({ actor, applied: fixture.id, tail: fixture.id });
   db.close();
-  console.log("[DEBUG] independent JSON UTF8 and SQLite exact original actor/applied/tail semantics retain giant actor beyond4096 with Unicode and NUL");
   const store = readFileSync(new URL("../../🦀️.rs", root), "utf8");
   const start = store.indexOf("pub struct ArtifactStoreOneItemPrepared<P, Mutation>");
   const fields = store.slice(start, store.indexOf("impl<P, Mutation>", start));

@@ -10,8 +10,8 @@ use super::*;
 #[value(rename_all = "camelCase")]
 pub struct RemoveContentType {
     #[value(default)]
-    pub(crate) is_override: bool,
-    pub(crate) name: String,
+    pub is_override: bool,
+    pub name: String,
 }
 
 impl protocol::MutationKind<XlsxSnapshot, XlsxMutation> for RemoveContentType {

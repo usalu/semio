@@ -5,7 +5,7 @@ import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import Ajv2020 from "ajv/dist/2020";
 import { cleanup, fireEvent, render } from "@semio-tech/ui-react/test";
 import { Mode, uiDataLabel, type WindowLayoutNode } from "@semio-tech/ui-react";
-import { resolveFrameworkLayoutSeed, retitleWindowLayoutNode } from "../../🧱️elements/🛠️ShellHelpers/🟦️.tsx";
+import { resolveFrameworkLayoutSeed, retitleWindowLayoutNode } from "../../🧱️elements/🛠️ShellHelpers/🛣️route-and-chrome/🟦️.tsx";
 import fixture from "../../🧱️elements/🐚️Shell/🧪️tests/🧫️fixtures/🪟️maximize-resync/🔣️.json";
 
 beforeEach(() => {

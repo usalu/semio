@@ -87,7 +87,5 @@ pub fn source() -> ExampleSource {
 }
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🧩️example/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

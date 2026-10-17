@@ -17,7 +17,6 @@ test("coincident boundaries agree with independent Manifold occupancy and volume
       let boundary = false;
       for (let index = 0; index < mesh.triVerts.length; index += 3) if ([0, 1, 2].every(offset => mesh.vertProperties[mesh.triVerts[index + offset]! * mesh.numProp + 2] === 1)) boundary = true;
       expect(boundary).toBe(row.retainsBoundary);
-      console.log(`[DEBUG] Independent coincident boundary ${row.operation} aligned=${row.aligned} retained=${boundary} volume=${result.volume()}`);
     } finally { result.delete(); b.delete(); seed.delete(); a.delete(); }
   }
 }, 30000);
@@ -32,6 +31,5 @@ test("coincident bore refill has a closed shell and independent Manifold volume"
     expect(filled.status() === "NoError").toBe(row.closedShell);
     expect(Math.abs(filled.volume() - row.expectedVolume)).toBeLessThan(1e-5);
     expect(stock.volume()).toBe(1);
-    console.log(`[DEBUG] Independent Manifold bore refill closed=${row.closedShell} volume=${filled.volume()} analytic=${row.expectedVolume} segments=${row.circularSegments}`);
   } finally { filled.delete(); bored.delete(); bit.delete(); seed.delete(); stock.delete(); }
 }, 30000);

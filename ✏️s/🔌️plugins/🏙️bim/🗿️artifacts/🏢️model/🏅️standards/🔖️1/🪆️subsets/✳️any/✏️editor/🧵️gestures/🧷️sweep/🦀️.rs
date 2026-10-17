@@ -3,7 +3,8 @@
 //! a warning when the model would refuse it. One click writes the sweep.
 
 use super::plane::{axis_length, axis_point_at, axis_tangent_at, project, P};
-use super::session::{Mark, Pointer, Preview, Step, Style, Tool, ToolContext, ToolEvent, PICK_PIXELS, REJECTED, TYPE_MISSING};
+use super::session::{Pointer, Step, Tool, ToolContext, ToolEvent, PICK_PIXELS, REJECTED, TYPE_MISSING};
+use crate::editor::bim::marks::{Mark, Preview, Style};
 use crate::editor::bim::entities::wall_sweeps::baseboard;
 use crate::standards::v1::subsets::any::schema::mutations::create_wall_sweep::CreateWallSweep;
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::wall_sweeps::extents_of;

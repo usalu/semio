@@ -204,5 +204,83 @@
       "kind": "unreadable",
       "admit": false
     }
+  ],
+  "retirementPending": [
+    {
+      "kind": "directory",
+      "stage": "admission"
+    },
+    {
+      "kind": "directory",
+      "stage": "detach"
+    },
+    {
+      "kind": "directory",
+      "stage": "delete"
+    },
+    {
+      "kind": "valid-intent",
+      "stage": "admission"
+    },
+    {
+      "kind": "valid-intent",
+      "stage": "detach"
+    },
+    {
+      "kind": "valid-intent",
+      "stage": "delete"
+    },
+    {
+      "kind": "malformed-intent",
+      "stage": "admission"
+    },
+    {
+      "kind": "malformed-intent",
+      "stage": "detach"
+    },
+    {
+      "kind": "malformed-intent",
+      "stage": "delete"
+    },
+    {
+      "kind": "file",
+      "stage": "admission"
+    },
+    {
+      "kind": "file",
+      "stage": "detach"
+    },
+    {
+      "kind": "file",
+      "stage": "delete"
+    },
+    {
+      "kind": "dangling-link",
+      "stage": "admission"
+    },
+    {
+      "kind": "dangling-link",
+      "stage": "detach"
+    },
+    {
+      "kind": "dangling-link",
+      "stage": "delete"
+    },
+    {
+      "kind": "unreadable",
+      "stage": "admission"
+    },
+    {
+      "kind": "unreadable",
+      "stage": "detach"
+    },
+    {
+      "kind": "unreadable",
+      "stage": "delete"
+    },
+    {
+      "kind": "absent",
+      "stage": "complete"
+    }
   ]
 }

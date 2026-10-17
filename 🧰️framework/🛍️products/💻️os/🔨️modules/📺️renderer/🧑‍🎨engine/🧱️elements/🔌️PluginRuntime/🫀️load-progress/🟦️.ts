@@ -2,7 +2,7 @@
  * is taking minutes is still moving or has stopped.
  *
  * It exists as its own leaf because both halves of that decision live in different files: the deadline
- * rule is read by the shell's `loadPluginModuleResilient` (`🛠️ShellHelpers/🟦️.tsx`) while the proofs of
+ * rule is read by the shell's `loadPluginModuleResilient` (`🛠️ShellHelpers/🛣️route-and-chrome/🟦️.tsx`) while the proofs of
  * progress are stamped by the runtime's `loadPluginModule` and by every shard-worker beat
  * (`🔌️PluginRuntime/🟦️.tsx`). Nothing here touches React, the DOM or a `Worker`, so the accounting is
  * testable on its own — see `🧪️tests/🫀️plugin-load-progress/🟦️.ts`. */

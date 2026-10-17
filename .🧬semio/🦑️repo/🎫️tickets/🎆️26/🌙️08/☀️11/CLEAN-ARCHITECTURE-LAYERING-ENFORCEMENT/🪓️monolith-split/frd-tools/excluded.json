@@ -1,0 +1,53 @@
+{
+  "comment": "Running slices at 17:46: path fragments whose crates are mid-edit (record sites for a later pass).",
+  "fragments": [
+    {
+      "owner": "r9a",
+      "fragment": "/🔌️plugins/🏙️bim/"
+    },
+    {
+      "owner": "r8a",
+      "fragment": "/🔌️plugins/🧩️puzzle/"
+    },
+    {
+      "owner": "bd10",
+      "fragment": "/🔌️plugins/🖨️raster/"
+    },
+    {
+      "owner": "bd10",
+      "fragment": "/🔌️plugins/🏭️process/"
+    },
+    {
+      "owner": "ohp",
+      "fragment": "/🔌️plugins/➗️mathematical/"
+    },
+    {
+      "owner": "ohp",
+      "fragment": "/🔌️plugins/🔱️trinity/"
+    },
+    {
+      "owner": "ohp",
+      "fragment": "/🔌️plugins/🌿️vcs/"
+    },
+    {
+      "owner": "ohp",
+      "fragment": "/🔌️plugins/🕸️dag/"
+    },
+    {
+      "owner": "ohp",
+      "fragment": "/🔌️plugins/📖️playbook/"
+    },
+    {
+      "owner": "ohp",
+      "fragment": "/🔌️plugins/💡️reasoning/"
+    },
+    {
+      "owner": "ohp",
+      "fragment": "/🔌️plugins/🎪️demonstrator/"
+    },
+    {
+      "owner": "self",
+      "fragment": "/🧪️test/🧲️fixture-reader/"
+    }
+  ]
+}

@@ -4,6 +4,7 @@ use crate::io::text::mutations::print_semio_video_mutation;
 use crate::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO as WIRE_PROTOCOL;
 use protocol::command::DiffAlgebra;
 use protocol::MutationDiff;
+use semio_framework_test_fixtures::fixture_text;
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn fixture() -> SemioVideoSnapshot {
@@ -85,7 +86,7 @@ fn kinds_match_the_enum_and_the_catalog() {
         assert_eq!(KINDS[ordinal], print_semio_video_mutation(&mutation).split(' ').next().unwrap_or_default(), "KINDS[{ordinal}] must be the keyword {mutation:?} prints");
     }
     assert!(seen.iter().all(|hit| *hit), "every declared variant must be represented in sample_mutations");
-    let manifest = include_str!("../../../../🔮️oracles/🔣️.json");
+    let manifest = fixture_text!("../../../../🔮️oracles/🔣️.json");
     for kind in KINDS {
         assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
     }

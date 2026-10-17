@@ -1,6 +1,6 @@
 //! 🌲️ Direct text codec for `set-struct-tree-root`.
 
-use crate::standards::v1_7::subsets::ua::schema::mutations::SetStructTreeRoot;
+use crate::standards::v1_7::subsets::ua::schema::mutations::set_struct_tree_root::SetStructTreeRoot;
 
 //#region 🔖️Identity
 pub const OPCODE: &str = "set-struct-tree-root";
@@ -20,7 +20,5 @@ pub fn parse(text: &str) -> Result<SetStructTreeRoot, String> {
 //#endregion 🔖️Codec
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

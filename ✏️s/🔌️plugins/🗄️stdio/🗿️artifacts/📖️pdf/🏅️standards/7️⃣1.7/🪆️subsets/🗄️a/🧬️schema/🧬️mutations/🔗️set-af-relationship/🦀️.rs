@@ -1,7 +1,6 @@
 //! 🔗️ Authoritative PDF/A mutation for setting an attached file relationship.
 
-use super::remove_af_relationship::RemoveAfRelationship;
-use super::PdfAMutation;
+use crate::standards::v1_7::subsets::a::schema::mutations::remove_af_relationship::RemoveAfRelationship;
 use crate::standards::v1_7::subsets::base::schema::conformance_support as support;
 use crate::standards::v1_7::subsets::base::schema::diff::{self, PdfDiff};
 use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfObject, PdfSnapshot};
@@ -19,7 +18,10 @@ pub struct SetAfRelationship {
     pub entry_index: Option<usize>,
 }
 
-impl MutationKind<PdfSnapshot, PdfAMutation> for SetAfRelationship {
+impl<Op> MutationKind<PdfSnapshot, Op> for SetAfRelationship
+where
+    Op: protocol::Mutation<PdfSnapshot, Diff = PdfDiff> + From<SetAfRelationship> + From<crate::standards::v1_7::subsets::a::schema::mutations::remove_af_relationship::RemoveAfRelationship>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "af-relationship", kind: "set-af-relationship", record: "Set" };
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
@@ -27,12 +29,12 @@ impl MutationKind<PdfSnapshot, PdfAMutation> for SetAfRelationship {
         MutationOutcome::new(diff::graph_edit(rows))
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfAMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         Ok({
             let Some(id) = support::file_spec_named(base, &self.file_name) else { return Ok(Vec::new()) };
             match support::object(base, id).and_then(|value| support::dict_name(value, "AFRelationship")) {
-                Some(previous) => vec![PdfAMutation::SetAfRelationship(SetAfRelationship { file_name: self.file_name.clone(), relationship: previous.to_string(), entry_index: None })],
-                None => vec![PdfAMutation::RemoveAfRelationship(RemoveAfRelationship { file_name: self.file_name.clone() })],
+                Some(previous) => vec![Op::from(SetAfRelationship { file_name: self.file_name.clone(), relationship: previous.to_string(), entry_index: None })],
+                None => vec![Op::from(RemoveAfRelationship { file_name: self.file_name.clone() })],
             }
         })
     }
@@ -48,7 +50,5 @@ impl MutationKind<PdfSnapshot, PdfAMutation> for SetAfRelationship {
 //#endregion 🔖️Mutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

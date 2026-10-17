@@ -47,7 +47,10 @@ pub fn plan(p: &GltfChangeSceneExtensionDataPayload, base: &GltfSnapshot) -> Res
     Ok(GltfDiff { scenes: patch(p.scene, GltfSceneDiff { extensions: (current != &requested(p)).then(|| requested(p)), ..Default::default() }), ..Default::default() })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn inverse(p: &GltfChangeSceneExtensionDataPayload, base: &GltfSnapshot) -> Vec<super::GltfMutation> {
+pub fn inverse<Op>(p: &GltfChangeSceneExtensionDataPayload, base: &GltfSnapshot) -> Vec<Op>
+where
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::remove_used_extension::RemoveUsedExtensionMutation>,
+{
     if validate(p, base).is_err() {
         return Vec::new();
     }
@@ -68,11 +71,17 @@ pub enum ChangeSceneExtensionDataMutation {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn mutation(payload: GltfChangeSceneExtensionDataPayload) -> super::GltfMutation {
-    super::GltfMutation::ChangeSceneExtensionData(ChangeSceneExtensionDataMutation::Apply(payload))
+pub fn mutation<Op>(payload: GltfChangeSceneExtensionDataPayload) -> Op
+where
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::change_scene_extension_data::ChangeSceneExtensionDataMutation>,
+{
+    Op::from(ChangeSceneExtensionDataMutation::Apply(payload))
 }
 
-impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ChangeSceneExtensionDataMutation {
+impl<Op> protocol::MutationKind<GltfSnapshot, Op> for ChangeSceneExtensionDataMutation
+where
+    Op: protocol::Mutation<GltfSnapshot, Diff = GltfDiff> + From<ChangeSceneExtensionDataMutation>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "scene-extension-data", kind: "change-scene-extension-data", record: "ChangedSceneExtensionData" };
 
     fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<GltfDiff> {
@@ -84,7 +93,7 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ChangeSceneEx
         }
     }
 
-    fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<super::GltfMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         match self {
             Self::Apply(payload) => Ok(inverse(payload, base)),
         }
@@ -101,7 +110,5 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ChangeSceneEx
 //#endregion 🧬️DirectMutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️t050/🦀️.rs"]
-mod case_t050;
+
 //#endregion 🧪️Tests

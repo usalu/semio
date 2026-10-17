@@ -26,6 +26,8 @@ import { startNativeProgress } from "../../../🧰️framework/🔨️modules/�
 
 /** 📦️ The crate that holds the binary. */
 export const PROCTOR_PACKAGE = "teaching-proctor";
+/** 🧱️ The library crates below the proctor, whose unit laws run with the proctor's own: the base (storage, catalog, config, crowd, presence) and the domain (deciders, projections, queries). */
+export const PROCTOR_LIBRARY_PACKAGES = ["teaching-proctor-base", "teaching-proctor-domain"];
 
 /** 🎓️ The Cargo workspace of the teaching products, relative to the repository root: the proctor is a member of it, not of the root workspace. */
 export const TEACHING_WORKSPACE = "🎓️teaching";

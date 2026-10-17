@@ -7,7 +7,8 @@ use crate::editor::flow::modes::edit::windows::main::config::FlowMainWindowConfi
 use semio_framework_plugin::NoConfig;
 use semio_framework_plugin::NoConfigMutation;
 use crate::editor::flow::edit_rules::ContentEdit;
-use crate::editor::flow::{apply_canvas_options, flow_content_leaves_emit, seed_host_catalogue, sync_host_selection_domains, FLOW_GRAPH_OPERATION_RAW_BYTES};
+use crate::editor::flow::host::{apply_canvas_options, flow_content_leaves_emit, seed_host_catalogue, sync_host_selection_domains};
+use crate::editor::flow::base::FLOW_GRAPH_OPERATION_RAW_BYTES;
 use crate::{FlowMutation, FlowSnapshot};
 use flow::{neural::ColdRetire, FlowEvalSession};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
@@ -100,7 +101,7 @@ pub fn node_graph_edit_result(doc: &ArtifactView<'_, FlowSnapshot>, config: &Flo
     let content = doc.children.typed_read::<SemioFlowSnapshot>("content", child_id)?;
     let (widgets, synapses, layout) = crate::working_from_flow_content_snapshot(&content);
     let live = semio_framework_artifact_flow_flow::FlowHostSnapshot { schema: "flow.host_snapshot".into(), camera: config.camera.clone(), widgets, synapses, layout };
-    let mut host = crate::editor::flow::host_with_session(live, session);
+    let mut host = crate::editor::flow::host::host_with_session(live, session);
     seed_host_catalogue(&mut host, &config.catalogue_sections_json);
     apply_canvas_options(&mut host, config);
     let drags = node_graph_edit_drags(operations);
@@ -173,7 +174,5 @@ pub fn handle(payload: &NodeGraphEdit, doc: &ArtifactView<'_, FlowSnapshot>, cfg
 }
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

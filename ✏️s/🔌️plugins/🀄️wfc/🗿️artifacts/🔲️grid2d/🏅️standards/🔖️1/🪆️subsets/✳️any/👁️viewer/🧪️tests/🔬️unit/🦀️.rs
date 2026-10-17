@@ -1,6 +1,11 @@
 //! 🧪️ Viewer laws — a read-only surface that boots the same scene the editor does.
 
-use super::*;
+use crate::viewer::grid2d::modes::view::windows::preview;
+use crate::{Grid2dSnapshot, WFC_GRID2D_DIALECT};
+use semio_framework_plugin::ArtifactToolPublicationLane;
+use semio_framework_plugin::ArtifactViewer;
+use semio_framework_plugin::Viewer;
+use crate::viewer::grid2d::*;
 
 #[test]
 fn the_viewer_builds_a_definition_for_the_viewer_role() {

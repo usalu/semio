@@ -1,6 +1,6 @@
 //! 🧬️ Replace Presence in the architect.presence channel.
 
-use super::*;
+use crate::editor::architect::presence::component::mutations::*;
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
@@ -12,7 +12,10 @@ pub struct ReplacePresence {
     pub presence: ArchitectPresence,
 }
 
-impl protocol::MutationKind<ArchitectPresence, ArchitectPresenceMutation> for ReplacePresence {
+impl<Op> protocol::MutationKind<ArchitectPresence, Op> for ReplacePresence
+where
+    Op: protocol::Mutation<ArchitectPresence, Diff = ArchitectPresenceDiff> + From<ReplacePresence>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "presence", kind: "replace-presence", record: "ReplacePresence" };
     fn diff(&self, base: &ArchitectPresence) -> protocol::MutationOutcome<ArchitectPresenceDiff> {
         if &self.presence == base {
@@ -27,9 +30,9 @@ impl protocol::MutationKind<ArchitectPresence, ArchitectPresenceMutation> for Re
             graph_camera_zoom: (base.graph_camera_zoom != requested.graph_camera_zoom).then_some(requested.graph_camera_zoom),
         })
     }
-    fn inverse(&self, base: &ArchitectPresence) -> Result<Vec<ArchitectPresenceMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &ArchitectPresence) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
-        vec![ArchitectPresenceMutation::ReplacePresence(Self { presence: base.clone() })]
+        vec![Op::from(Self { presence: base.clone() })]
     
     })())
 }

@@ -29,6 +29,10 @@ type stdioSemioV1VideoInferenceGuardSizeBounds = { readonly minItems?: number; r
 
 export const stdioSemioV1VideoInferenceGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : stdioSemioV1VideoInferenceGuardReject(at, "value is not an object");
+export const stdioSemioV1VideoInferenceGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) stdioSemioV1VideoInferenceGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const stdioSemioV1VideoInferenceGuardArray = (value: unknown, at: string, bounds: stdioSemioV1VideoInferenceGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return stdioSemioV1VideoInferenceGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) stdioSemioV1VideoInferenceGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -59,14 +63,14 @@ export const stdioSemioV1VideoInferenceGuardConstant = <T extends string | numbe
 //#endregion 🚪️Parsers
 
 export function parseSemioVideoInference(value: unknown, at = "$"): SemioVideoInference {
-  const row = stdioSemioV1VideoInferenceGuardObject(value, at);
+  const row = stdioSemioV1VideoInferenceGuardClosed(stdioSemioV1VideoInferenceGuardObject(value, at), at, ["duration"]);
   return {
     duration: parseSemioVideoDuration(row["duration"], `${at}.duration`),
   };
 }
 
 export function parseSemioVideoDuration(value: unknown, at = "$"): SemioVideoDuration {
-  const row = stdioSemioV1VideoInferenceGuardObject(value, at);
+  const row = stdioSemioV1VideoInferenceGuardClosed(stdioSemioV1VideoInferenceGuardObject(value, at), at, ["durationSeconds", "streamCount", "sampleCount"]);
   return {
     durationSeconds: stdioSemioV1VideoInferenceGuardNumber(row["durationSeconds"], `${at}.durationSeconds`, {"minimum": 0}),
     streamCount: stdioSemioV1VideoInferenceGuardInteger(row["streamCount"], `${at}.streamCount`, {"minimum": 0}),

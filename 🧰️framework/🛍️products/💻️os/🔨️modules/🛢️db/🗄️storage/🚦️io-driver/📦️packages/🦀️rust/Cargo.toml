@@ -39,3 +39,4 @@ semio-framework-os-kernel-db-durability = { path = "../../../../💾️durabilit
 semio-framework-os-kernel-db-io-core = { path = "../../../🧱️io-core/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-async = { workspace = true, features = ["testkit"] }
 semio-framework-async-macros = { path = "../../../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
+semio-framework-test-fixtures = { path = "../../../../../../../../🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }

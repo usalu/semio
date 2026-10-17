@@ -33,19 +33,10 @@ impl<T> WorkerCell<T> {
     }
 }
 
-#[cfg(any(test, feature = "testkit"))]
-thread_local! {
-    /// 🧪️ This test thread's state of each worker cell, by the cell's address; leaked for the thread's (one law's) life.
-    static TEST_WORKER_CELLS: std::cell::RefCell<std::collections::HashMap<usize, &'static dyn std::any::Any>> = std::cell::RefCell::new(std::collections::HashMap::new());
-}
-
 /// 🧪️ The calling test thread's own instance of the worker-cell state at `key`, built by the cell's `initialize` on first
 /// use. Every renderer `WorkerCell` (this module's, the scenes' and the engine canvas') resolves through it under `cfg(test)`.
 #[cfg(any(test, feature = "testkit"))]
-pub fn test_worker_cell<T: 'static>(key: usize, initialize: impl FnOnce() -> T) -> &'static Mutex<T> {
-    let state = TEST_WORKER_CELLS.with(|cells| *cells.borrow_mut().entry(key).or_insert_with(|| Box::leak(Box::new(Mutex::new(initialize()))) as &'static dyn std::any::Any));
-    state.downcast_ref::<Mutex<T>>().expect("one worker cell holds one state type")
-}
+pub use semio_framework_os_renderer_wgpu_thread_isolation::isolated_cell as test_worker_cell;
 
 impl<T: 'static> WorkerCell<T> {
     pub fn state(&self) -> &Mutex<T> {

@@ -16,6 +16,29 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-s-artifact-puzzle-5d-document-records = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧱️document-records/📦️packages/🦀️rust" }
+semio-s-artifact-puzzle-5d-kind-catalogs = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🗂️kind-catalogs/📦️packages/🦀️rust" }
+semio-s-artifact-puzzle-5d-snapshot = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️packages/🦀️rust" }
+semio-s-artifact-puzzle-5d-diff = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/📦️packages/🦀️rust" }
+semio-s-artifact-puzzle-5d-schema = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust" }
+semio-s-artifact-puzzle-5d-mut-any = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust" }
+semio-s-artifact-puzzle-5d-mut-any-2 = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖋️edit-part3d-label/🔺️diff/📦️packages/🦀️rust" }
+semio-s-artifact-puzzle-5d-mut-any-3 = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗒️change-description/🔺️diff/📦️packages/🦀️rust" }
+semio-s-artifact-puzzle-5d-diff-2 = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🙈change-target-volume-hidden/🔺️diff/📦️packages/🦀️rust" }
+semio-s-artifact-puzzle-5d-mut-any-4 = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-part/🔺️diff/📦️packages/🦀️rust" }
+semio-s-artifact-puzzle-5d-mut-any-5 = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-part/🧪️tests/🌱️appends-part-c/📦️packages/🦀️rust" }
+semio-s-artifact-puzzle-5d-mut-any-6 = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍move-part2d/🧪️tests/📍️moves-part-a/📦️packages/🦀️rust" }
+semio-s-artifact-puzzle-5d-mut-any-7 = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🤝connect-kind-compatibility/🧪️tests/🤝️adds/📦️packages/🦀️rust" }
+semio-s-artifact-puzzle-5d-mut-any-8 = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔐change-target-volume-locked/🧪️tests/🚫️rejects/📦️packages/🦀️rust" }
+semio-s-artifact-puzzle-5d-tests = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️unit/📦️packages/🦀️rust" }
+semio-s-artifact-puzzle-5d-catalog = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗂️catalog/📦️packages/🦀️rust" }
+semio-s-artifact-puzzle-5d-interaction = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🕹️interaction/📦️packages/🦀️rust" }
+semio-s-artifact-puzzle-5d-store-preparation = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧰️kit/💾️store-preparation/📦️packages/🦀️rust" }
+semio-s-artifact-puzzle-5d-dispatch = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎬️dispatch/📦️packages/🦀️rust" }
+semio-s-artifact-puzzle-5d-retained = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️retained/📦️packages/🦀️rust" }
+semio-s-artifact-puzzle-5d-puzzle5d = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust" }
+semio-s-artifact-puzzle-5d-v1 = { path = "../../🏅️standards/🔖️1/📦️packages/🦀️rust" }
+semio-s-artifact-puzzle-5d-host-admission-tests = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️host-admission/📦️packages/🦀️rust" }
 semio-s-artifact-puzzle-3d-editor = { workspace = true }
 semio-s-artifact-puzzle-3d-editor-config = { workspace = true }
 semio-s-artifact-puzzle-3d-editor-modes = { workspace = true }
@@ -44,6 +67,7 @@ semio-framework-2d = { path = "../../../../../../../🧰️framework/🔨️modu
 semio-framework-value = { path = "../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 wasm-bindgen = { workspace = true }
 semio-framework = { workspace = true }
+semio-framework-action-bus = { path = "../../../../../../../🧰️framework/🔨️modules/🎯️action-bus/📦️packages/🦀️rust" }
 semio-framework-hash = { workspace = true }
 semio-framework-job = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
@@ -83,6 +107,7 @@ semio-s-plugin-puzzle-retained = { workspace = true }
 js-sys = { workspace = true }
 
 [dev-dependencies]
+semio-framework-test-fixtures = { path = "../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-s-plugin-puzzle-jobs = { workspace = true, features = ["testing"] }
 semio-s-plugin-puzzle-retained = { workspace = true, features = ["testing"] }
 semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }

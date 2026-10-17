@@ -3,7 +3,7 @@
 pub const OPCODE: &str = "set-page-crop-box";
 pub const TEXT_OPCODE: &str = OPCODE;
 
-use crate::standards::v1_7::subsets::base::schema::mutations::SetPageCropBox;
+use crate::standards::v1_7::subsets::base::schema::mutations::set_page_crop_box::SetPageCropBox;
 
 /// 🖨️ Prints this direct payload through its schema-derived JSON representation.
 pub fn print(payload: &SetPageCropBox) -> Result<String, String> {

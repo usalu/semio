@@ -11,7 +11,7 @@ await receiveScriptProcessInvocation(process.env,async invocation=>{
   let entered!:()=>void;const ready=new Promise<void>(accept=>entered=accept);
   void withCompilerWriterCustodyV1(image,leaseDirectory,heldControl,{version:1,wait:false},async()=>{
    void retireInactiveCargoStoreV1({workspace:root,invocation,control:heldControl,buildDirectory,relatedDirectories:[targetDirectory],leaseDirectory,artifactDirectory:join(root,".unissued-historical-custody"),preview:true,wait:false,policy:{version:1,retainedBytes:0,targetAvailableBytes:0,maximumDeletionBytes:0}}).catch(()=>{});
-   console.log("[DEBUG] Actual detached lower historical retirement accepted before callback return; invalid policy must surface through owner drain before effects");entered();
+   entered();
   }).catch(()=>{});
   await ready;
  });

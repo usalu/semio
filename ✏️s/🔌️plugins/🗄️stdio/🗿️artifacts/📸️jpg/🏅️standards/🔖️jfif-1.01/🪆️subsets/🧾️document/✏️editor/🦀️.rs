@@ -157,9 +157,9 @@ impl ToolJobFactory for JpgAnyEditorExampleFactory {
         &mut self,
         _operation: semio_framework_job::Operation,
         payload: Self::Payload,
-        input: semio_framework_plugin::action_bus::RetainedToolWireInput,
-        checkpoint: Option<semio_framework_plugin::action_bus::RetainedToolWireInput>,
-    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework_plugin::action_bus::RetainedToolWireInput, Option<semio_framework_plugin::action_bus::RetainedToolWireInput>)> {
+        input: semio_framework_action_bus::RetainedToolWireInput,
+        checkpoint: Option<semio_framework_action_bus::RetainedToolWireInput>,
+    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework_action_bus::RetainedToolWireInput, Option<semio_framework_action_bus::RetainedToolWireInput>)> {
         if input.declared_bytes() > STDIO_JPG_DOCUMENT_SCHEMA_EXAMPLE_BYTES || checkpoint.is_some() {
             return Err((ToolJobFactoryError::new("stdio example command rejects oversized wire"), input, checkpoint));
         }
@@ -349,7 +349,18 @@ pub fn create_jpg_any_editor() -> semio_framework_plugin::AppDefinition {
 //#endregion 🔖️Manifest
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
+
+//#region 🧩️ArtifactItems7
+pub mod artifact_items_7 {
+use crate::{native_codecs};
+use crate::{ARTIFACT_DEFINITION_SCHEMA};
+
+pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::PluginAssemblyError> {
+    let factories = native_codecs();
+    let executables = semio_s_artifact_stdio_contract::native_codec_executables(ARTIFACT_DEFINITION_SCHEMA, &factories)?;
+    semio_s_artifact_stdio_contract::definition_from_schema_with_executables(ARTIFACT_DEFINITION_SCHEMA, executables)
+}
+}
+//#endregion 🧩️ArtifactItems7

@@ -1,0 +1,3 @@
+/** 🧾️ Public entry `@semio-tech/s-spatial-kernel-ts/geometry/primitive-document`: the explicit surface that importers outside the module use. */
+export { buildModelPrimitiveDocument, buildTypologyToEntityKindMapForModelDefinition, derivePropertyValue, listApplicablePropertyDefinitionsForModelDefinition, objectMatchesTypologyPrimitives, propertyDefinitionAppliesToObject, registerPropertyComputer, typologyAllowsPrimitiveKind } from "../../../../📐️geometry/🧾️primitive-document/🟦️.ts";
+export type { ModelPrimitiveDocumentNode, PropertyComputeContext, PropertyComputer } from "../../../../📐️geometry/🧾️primitive-document/🟦️.ts";

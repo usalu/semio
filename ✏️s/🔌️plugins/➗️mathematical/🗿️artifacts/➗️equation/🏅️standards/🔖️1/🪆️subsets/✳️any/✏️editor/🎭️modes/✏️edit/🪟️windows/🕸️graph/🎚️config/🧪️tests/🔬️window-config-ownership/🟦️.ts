@@ -6,7 +6,7 @@ import { applyEquationGraphWindowConfigMutation, type EquationGraphWindowConfigM
 
 /** 🧪️ Validates exact Equation graph-window partitions with Ajv and independent JSON Patch. */
 export function testEquationGraphWindowConfigOracle(): void {
-  const fixture = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🔬️window/🔣️.json", import.meta.url), "utf8"));
+  const fixture = JSON.parse(readFileSync(new URL("../🧫️fixtures/🔬️window-config-ownership/🔣️.json", import.meta.url), "utf8"));
   const configSchema = JSON.parse(readFileSync(new URL("../../🧬️schema/🔣️.json", import.meta.url), "utf8"));
   const mutationSchema = JSON.parse(readFileSync(new URL("../../🧬️schema/🧬️mutations/🔣️.json", import.meta.url), "utf8"));
   const ajv = semioSchemaAjvV1({ allErrors: true });

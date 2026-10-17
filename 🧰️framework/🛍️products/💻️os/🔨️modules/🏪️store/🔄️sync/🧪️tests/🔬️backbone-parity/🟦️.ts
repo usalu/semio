@@ -2,9 +2,10 @@ import examples from "../../⚖️parity/🧪️tests/🧫️fixtures/🔣️.js
 import Ajv from "ajv";
 import { HISTORY_TRANSITION_DIFF_SCHEMA, encodeClientFrame, encodePresencePeer, type MutationEnvelope, type ServerFrame, type WireFrontierSummary, type WireMutationEnvelope } from "@semio-tech/framework-replication";
 import { decodeBackboneMessage, type ArtifactActorConfig } from "../../../../../🟦️.ts";
-import type { ArtifactState, BackboneWorkerTestDependencies } from "../../../👷️worker/🟦️.ts";
+import * as vitest from "vitest";
+import { documentWorkerTestDependenciesV1, type ArtifactState, type BackboneWorkerTestDependencies } from "../../../👷️worker/🟦️.ts";
 
-type Vitest = NonNullable<ImportMeta["vitest"]>;
+type Vitest = typeof import("vitest");
 
 type Fixture = {
   readonly version: 1;
@@ -350,3 +351,5 @@ export async function registerBackboneParityTests(vitest: Vitest, dependencies: 
     });
   }
 }
+
+await registerBackboneParityTests(vitest, documentWorkerTestDependenciesV1());

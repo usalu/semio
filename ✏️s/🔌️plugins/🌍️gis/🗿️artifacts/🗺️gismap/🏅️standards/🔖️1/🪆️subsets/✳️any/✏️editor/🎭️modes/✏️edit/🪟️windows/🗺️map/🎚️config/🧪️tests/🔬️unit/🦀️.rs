@@ -1,4 +1,10 @@
-use super::*;
+#[allow(unused_imports)]
+use semio_framework_value_derive::{FromValue, ToValue};
+#[allow(unused_imports)]
+use serde::{Deserialize, Serialize};
+#[allow(unused_imports)]
+use std::collections::BTreeMap;
+use crate::editor::gis2d::modes::edit::windows::map::config::*;
 use protocol::Mutation;
 
 #[semio_framework_async_macros::async_test]

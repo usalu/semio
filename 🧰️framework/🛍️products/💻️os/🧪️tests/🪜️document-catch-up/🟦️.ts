@@ -1,6 +1,6 @@
 /** 🪜️ Document catch-up: a remote batch before the child exists, remote operations folded over pending local ones and the rebuild welcome. */
 import type { BackboneWorkerTestDependencies } from "../../🔨️modules/🏪️store/👷️worker/🟦️.ts";
-import { workerLawFakesV1 } from "../🧰️worker-law-fakes/🟦️.ts";
+import { workerLawFakesV1, WORKER_LAW_ACTOR_IDENTITY_GRANT } from "../🧰️worker-law-fakes/🟦️.ts";
 import type { TestSource } from "../🧰️worker-law-fakes/🟦️.ts";
 
 type ArtifactState = import("../../🔨️modules/🏪️store/👷️worker/🟦️.ts").ArtifactState;
@@ -16,12 +16,12 @@ export async function registerDocumentCatchUpTests(vitest: Vitest, dependencies:
     it("keeps a remote batch that arrives before an actor-bound document's child exists for that child, never the Shell", async () => {
       const fixture = JSON.parse(await (await import("node:fs/promises")).readFile(new URL("../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧪️tests/🧫️fixtures/🔏️document-execution-target-lease-v1/🔣️.json", source.url), "utf8"));
       const hexBytes = (hex: string): Uint8Array => Uint8Array.from({ length: hex.length / 2 }, (_unused, index) => Number.parseInt(hex.slice(index * 2, index * 2 + 2), 16));
-      const { encodeDocumentBackboneEnvelopeBatchExact: encodeBatch } = await import("../../../../🔨️modules/📡️replication/🟦️.ts");
+      const { encodeDocumentBackboneEnvelopeBatchExact: encodeBatch } = await import("@semio-tech/framework-replication");
       const posted: BackboneWorkerResponse[] = [];
       testSeams.workerPostTestSink = (message) => posted.push(message);
       try {
         for (const [documentId, actorBound] of [["tail-before-session", true], ["tail-without-actor-lease", false]] as const) {
-          openArtifact({ documentId, schema: fixture.manifest.artifact.schema, bindings: [], actor: "local-ui" });
+          openArtifact({ documentId, schema: fixture.manifest.artifact.schema, bindings: [], actor: "local-ui", actorIdentityGrant: WORKER_LAW_ACTOR_IDENTITY_GRANT });
           const state = artifactState(documentId)!;
           artifacts.delete(state.runtimeKey);
           const binding = { kind: "hub", dataClass: "persistedShared", baseUrl: fixture.hubOrigin, spaceId: "tail-space", requestedSurfaceId: fixture.manifest.surface.surfaceId } as const;
@@ -33,9 +33,9 @@ export async function registerDocumentCatchUpTests(vitest: Vitest, dependencies:
           fields.checkpoint = { ...fields.checkpoint, baselineFrontier: { ...fields.checkpoint.baselineFrontier, documentId } };
           state.executionTargetLease = !actorBound ? null : new DocumentExecutionTargetLease(documentExecutionTargetLeaseMintToken, parseDocumentExecutionTargetLeaseFieldsV1(fields), fixture.hubOrigin, hexBytes(fixture.componentHex), hexBytes(fixture.descriptorHex));
           state.actor = "hub.v1.self";
-          const envelope = { mutation_id: `${documentId}:m-1`, document_id: documentId, actor: "hub.v1.peer", dependencies: [], observed: null, target: [], diff: { schema: "demo.map.operation", payload: encodePackValue({ op: 1 }) }, inverse: { schema: "demo.map.operation.inverse", payload: encodePackValue(null) }, timestamp: { actor: 2n, physical_ms: 3n, logical: 0n }, transaction: null };
+          const envelope = { mutation_id: `${documentId}:m-1`, document_id: documentId, actor: "hub.v1.peer", dependencies: [], observed: null, target: [], diff: { schema: "demo.map.operation", payload: encodePackValue({ op: 1 }) }, inverse: { schema: "demo.map.operation.inverse", payload: encodePackValue(null) }, timestamp: { actor: 2n, physical_ms: 3n, logical: 0n }, transaction: null, verb: null, line: null };
           const batch = encodeBatch([envelope]);
-          const frontier = { document_id: documentId, head_edit_ordinal: 1, head_edit_id: envelope.mutation_id, last_commit_seq: 1, chain_hash: new Array(32).fill(1) };
+          const frontier = { document_id: documentId, head_edit_ordinal: 1, head_edit_id: envelope.mutation_id, last_commit_seq: 1, chain_hash: new Array(32).fill(1), verb: null, line: null };
           posted.length = 0;
           await handleHubFrame(state, { Commands: { envelopes: [{ ...envelope, diff: { schema: envelope.diff.schema, payload: Array.from(envelope.diff.payload) }, inverse: { schema: envelope.inverse.schema, payload: Array.from(envelope.inverse.payload) }, timestamp: { actor: 2, physical_ms: 3, logical: 0 } }], origin: "hub.v1.peer", frontier } } as unknown as Parameters<typeof handleHubFrame>[1], null, null, batch);
           const shellDeliveries = posted.filter((message) => message.kind === "event" && message.event.kind === "documentBackbone");
@@ -61,12 +61,12 @@ export async function registerDocumentCatchUpTests(vitest: Vitest, dependencies:
     it("rebuilds an actor-bound document from the hub once its own operations are accepted after another human's were folded over them", async () => {
       const fixture = JSON.parse(await (await import("node:fs/promises")).readFile(new URL("../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧪️tests/🧫️fixtures/🔏️document-execution-target-lease-v1/🔣️.json", source.url), "utf8"));
       const hexBytes = (hex: string): Uint8Array => Uint8Array.from({ length: hex.length / 2 }, (_unused, index) => Number.parseInt(hex.slice(index * 2, index * 2 + 2), 16));
-      const { encodeDocumentBackboneEnvelopeBatchExact: encodeBatch } = await import("../../../../🔨️modules/📡️replication/🟦️.ts");
+      const { encodeDocumentBackboneEnvelopeBatchExact: encodeBatch } = await import("@semio-tech/framework-replication");
       const posted: BackboneWorkerResponse[] = [];
       testSeams.workerPostTestSink = (message) => posted.push(message);
       try {
         for (const [documentId, interleaved] of [["fold-remote-over-local", true], ["fold-local-only", false]] as const) {
-          openArtifact({ documentId, schema: fixture.manifest.artifact.schema, bindings: [], actor: "local-ui" });
+          openArtifact({ documentId, schema: fixture.manifest.artifact.schema, bindings: [], actor: "local-ui", actorIdentityGrant: WORKER_LAW_ACTOR_IDENTITY_GRANT });
           const state = artifactState(documentId)!;
           artifacts.delete(state.runtimeKey);
           const binding = { kind: "hub", dataClass: "persistedShared", baseUrl: fixture.hubOrigin, spaceId: "fold-space", requestedSurfaceId: fixture.manifest.surface.surfaceId } as const;
@@ -83,7 +83,7 @@ export async function registerDocumentCatchUpTests(vitest: Vitest, dependencies:
           state.pendingBatches.set(7, [local]);
           const frontier = (ordinal: number, head: string) => ({ document_id: documentId, head_edit_ordinal: ordinal, head_edit_id: head, last_commit_seq: ordinal, chain_hash: new Array(32).fill(ordinal) });
           if (interleaved) {
-            const remote = { mutation_id: `${documentId}:peer-1`, document_id: documentId, actor: "hub.v1.peer", dependencies: [], observed: null, target: [], diff: { schema: "demo.map.operation", payload: encodePackValue({ op: 1 }) }, inverse: { schema: "demo.map.operation.inverse", payload: encodePackValue(null) }, timestamp: { actor: 2n, physical_ms: 3n, logical: 0n }, transaction: null };
+            const remote = { mutation_id: `${documentId}:peer-1`, document_id: documentId, actor: "hub.v1.peer", dependencies: [], observed: null, target: [], diff: { schema: "demo.map.operation", payload: encodePackValue({ op: 1 }) }, inverse: { schema: "demo.map.operation.inverse", payload: encodePackValue(null) }, timestamp: { actor: 2n, physical_ms: 3n, logical: 0n }, transaction: null, verb: null, line: null };
             await handleHubFrame(state, { Commands: { envelopes: [{ ...remote, diff: { schema: remote.diff.schema, payload: Array.from(remote.diff.payload) }, inverse: { schema: remote.inverse.schema, payload: Array.from(remote.inverse.payload) }, timestamp: { actor: 2, physical_ms: 3, logical: 0 } }], origin: "hub.v1.peer", frontier: frontier(1, remote.mutation_id) } } as unknown as Parameters<typeof handleHubFrame>[1], null, null, encodeBatch([remote]));
           }
           expect(state.remoteFoldedOverLocal, documentId).toBe(interleaved);
@@ -115,7 +115,7 @@ export async function registerDocumentCatchUpTests(vitest: Vitest, dependencies:
       try {
         for (const [index, row] of corpus.rows.entries()) {
           const documentId = `rebuild-welcome-${index}`;
-          openArtifact({ documentId, schema: fixture.manifest.artifact.schema, bindings: [], actor: "local-ui" });
+          openArtifact({ documentId, schema: fixture.manifest.artifact.schema, bindings: [], actor: "local-ui", actorIdentityGrant: WORKER_LAW_ACTOR_IDENTITY_GRANT });
           const state = artifactState(documentId)!;
           artifacts.delete(state.runtimeKey);
           const binding = { kind: "hub", dataClass: "persistedShared", baseUrl: fixture.hubOrigin, spaceId: "rebuild-space", requestedSurfaceId: fixture.manifest.surface.surfaceId } as const;

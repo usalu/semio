@@ -1,7 +1,6 @@
 //! 🌱 Shooting mutation payload — `CreateAsset`. Brings a new asset into existence. `index` is descriptive of authoring intent (the append-only apply always pushes onto the end of the list).
 
 use crate::diff::ShootingDiff;
-use crate::mutations::ShootingMutation;
 use crate::{ShootingAsset, ShootingSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 
@@ -16,12 +15,15 @@ pub struct CreateAsset {
     pub index: Option<usize>,
 }
 
-impl MutationKind<ShootingSnapshot, ShootingMutation> for CreateAsset {
+impl<Op> MutationKind<ShootingSnapshot, Op> for CreateAsset
+where
+    Op: protocol::Mutation<ShootingSnapshot, Diff = ShootingDiff> + From<CreateAsset> + From<crate::standards::v1::subsets::any::schema::mutations::delete_asset::DeleteAsset>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "asset", kind: "create-asset", record: "CreatedAsset" };
     fn diff(&self, base: &ShootingSnapshot) -> protocol::MutationOutcome<ShootingDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &ShootingSnapshot) -> Result<Vec<ShootingMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &ShootingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

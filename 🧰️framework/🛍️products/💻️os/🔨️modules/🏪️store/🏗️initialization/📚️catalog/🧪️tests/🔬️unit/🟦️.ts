@@ -26,5 +26,4 @@ test("empty initialization catalog retires one admitted native page at a time",(
  const source=readFileSync(resolve(import.meta.dir,"../../🦀️.rs"),"utf8");
  expect(source).toContain("fn next_release_byte_demand(");expect(source).toContain("fn close_step(");
  expect(source).toContain("next_empty_page_release_byte_demand");
- console.log("[DEBUG] Empty initialization catalog SQLite/RFC6902: six native lanes, zero/one-below retain, exact one-page release, no final backing");
 });

@@ -3,12 +3,13 @@ use crate::{SequenceHostSnapshot, SequenceSnapshot};
 use dsl::os_pack as pack;
 use semio_framework_os_kernel::io::io_mechanism::{Deserializer, Serializer};
 use semio_framework::io_schema::IoPayload;
+use semio_framework_test_fixtures::fixture_text;
 use semio_s_artifact_stdio_csv::CsvSnapshot;
 use semio_s_artifact_stdio_md::{schema::snapshot::MdBlock, MdSnapshot};
 
 #[semio_framework_async_macros::async_test]
 async fn sequence_carrier_contracts_match_the_json_oracle() {
-    let vectors: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔁️carrier-contracts.json")).expect("neutral carrier vectors");
+    let vectors: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../🚪️io/🧪️tests/🧫️fixtures/🔁️carrier-contracts.json")).expect("neutral carrier vectors");
     for row in vectors["cases"].as_array().expect("cases") {
         let fixture = neural_engine::ColdOwner::new(semio_framework_pack_json::from_json_str::<SequenceHostSnapshot>(&row["fixture"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("owned fixture decoder"));
         assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&*fixture)).expect("independent fixture oracle"), row["fixture"]);
@@ -47,8 +48,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
     use semio_framework_os_kernel::io::io_mechanism::{io_entries, io_register, io_route};
     use {semio_framework_artifact_reference::ArtifactDialect,semio_framework::io_schema::IoEntryDescriptor,semio_framework::io_schema::IoRoute};
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📇️descriptor-parity.json")).expect("neutral descriptors");
-    let declaration = super::io();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../🚪️io/🧪️tests/🧫️fixtures/📇️descriptor-parity.json")).expect("neutral descriptors");
+    let declaration = crate::standards::v1::subsets::any::io::io();
     let actual = declaration.entries.iter().map(|entry| IoEntryDescriptor { from: ArtifactDialect::from(entry.from), into: ArtifactDialect::from(entry.into), fidelity: entry.fidelity, sniffs: entry.sniff.is_some() }).collect::<Vec<_>>();
     let encoded: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&actual)).expect("independent descriptor JSON oracle");
     assert_eq!(encoded, fixture["entries"]);
@@ -78,15 +79,15 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 async fn artifact_io_reset_payload_and_registered_text_route_preserve_the_native_snapshot() {
     use semio_framework_os_kernel::io::io_mechanism::{io_register, io_route, io_run};
     use {semio_framework_artifact_reference::ArtifactDialect,semio_framework::io_schema::CARRIER_TEXT};
-    let vectors: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔁️carrier-contracts.json")).expect("neutral native snapshots");
-    io_register(super::io().entries).expect("sequence IO registration");
+    let vectors: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../🚪️io/🧪️tests/🧫️fixtures/🔁️carrier-contracts.json")).expect("neutral native snapshots");
+    io_register(crate::standards::v1::subsets::any::io::io().entries).expect("sequence IO registration");
     let native = ArtifactDialect::from(crate::SEQUENCE_DIALECT);
     let text = ArtifactDialect::from(CARRIER_TEXT);
     for row in vectors["cases"].as_array().expect("cases") {
         let snapshot = neural_engine::ColdOwner::new(SequenceSnapshot::from_host_snapshot(semio_framework_pack_json::from_json_str::<SequenceHostSnapshot>(&row["fixture"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("neutral snapshot")));
-        let payload = super::snapshot_pack(&snapshot);
+        let payload = crate::standards::v1::subsets::any::io::snapshot_pack(&snapshot);
         assert_eq!(payload, <SequenceSnapshot as pack::snapshot::ArtifactPack>::encode_pack(&snapshot));
-        let effect = crate::editor::sequence::reset_sequence_document_effect(&snapshot);
+        let effect = crate::editor::sequence::base::reset_sequence_document_effect(&snapshot);
         let semio_framework_plugin::Effect::LoadDocument { pack: effect_pack, spr } = effect else { panic!("load effect") };
         assert_eq!(effect_pack, payload);
         assert!(!spr.is_empty());

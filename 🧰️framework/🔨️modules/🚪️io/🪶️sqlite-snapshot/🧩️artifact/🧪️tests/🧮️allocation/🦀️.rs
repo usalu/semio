@@ -1,10 +1,11 @@
 //! 🧮️ Actual shared provider backing, independent of semantic limits and retired ownership.
 use super::{Cell,FloatColumn,Projection,ordered_row_refs,insert_ieee754,project_text,reconstruct_text,reconstruct_blob};
 use super::super::{SqliteDatabaseLimits,SqliteSnapshotControl as Control,SqliteSnapshotPhase as Phase,SqliteSnapshotProgress,SqliteTable,SqliteRow,SqliteValue,ValueError,ValueRefusalKind};
+use semio_framework_test_fixtures::fixture_text;
 use std::cell::Cell as Local;
 use semio_framework_trace_memory_testing::observe;
 
-fn fixture()->serde_json::Value{serde_json::from_str(include_str!("../🧫️fixtures/🧮️allocation/🔣️.json")).unwrap()}
+fn fixture()->serde_json::Value{serde_json::from_str(fixture_text!("../../../../🧩️artifact/🧪️tests/🧫️fixtures/🧮️allocation/🔣️.json")).unwrap()}
 fn n(f:&serde_json::Value,key:&str)->usize{f[key].as_u64().unwrap()as usize}
 fn limits(f:&serde_json::Value,allocation:usize)->SqliteDatabaseLimits{SqliteDatabaseLimits{max_allocation_bytes:allocation,max_value_bytes:n(f,"semanticBytes"),max_file_bytes:n(f,"fileBytes"),max_schema_bytes:n(f,"schemaBytes"),..Default::default()}}
 fn ownership<T>(result:Result<T,ValueError>)->ValueError{match result{Err(error)=>{assert_eq!(error.kind,ValueRefusalKind::OwnershipLimit);error},Ok(_)=>panic!("provider must refuse concrete backing before allocation")}}
@@ -21,14 +22,12 @@ fn shared_provider_allocation_schema_tables_exact_refused_repeated_and_canceled(
  let cost=schema_cost(&f);let mut accept=|_|true;let mut control=Control::new(&mut accept,limits(&f,cost*2));for _ in 0..2{drop(Projection::new(sql,&mut control).unwrap());}assert_eq!(control.allocation_remaining_bytes(),0);ownership(Projection::new(sql,&mut control).map(drop));
  let mut accept=|_|true;let mut control=Control::new(&mut accept,limits(&f,cost-1));ownership(Projection::new(sql,&mut control).map(drop));
  let interior=Local::new(false);let mut callback=|event:SqliteSnapshotProgress|{let stop=event.phase==Phase::ProjectSnapshot&&event.total==sql.len()&&event.completed>=256&&event.completed<event.total;interior.set(interior.get()||stop);!stop};let mut control=Control::new(&mut callback,limits(&f,n(&f,"allocationBytes")));let error=Projection::new(sql,&mut control).err().expect("schema producer must check interior cancellation");assert_eq!(error.kind,ValueRefusalKind::Canceled);assert!(interior.get());assert!(control.allocation_remaining_bytes()<n(&f,"allocationBytes"));
- eprintln!("[DEBUG] Shared schema/table requested backing {cost}");
 }
 
 #[test]
 fn shared_provider_allocation_numeric_cells_and_rows_have_actual_exact_backing(){
  let f=fixture();let sql=f["schemaSql"].as_str().unwrap();let table=f["relationTable"].as_str().unwrap();let cells=[Cell::Integer(1),Cell::Integer(0),Cell::Integer(7)];let mut accept=|_|true;let mut control=Control::new(&mut accept,limits(&f,n(&f,"allocationBytes")));let mut projection=Projection::new(sql,&mut control).unwrap();let before=projection.control.allocation_remaining_bytes();let(result,requested)=observe(||projection.insert(table,&cells));result.unwrap();let cost=before-projection.control.allocation_remaining_bytes();assert!(cost>=4*std::mem::size_of::<SqliteValue>()+std::mem::size_of::<SqliteRow>());assert_eq!(cost,requested,"numeric-only cells and row Vec backing require admission");drop(projection);
  for allowance in [cost,cost-1,0]{let mut accept=|_|true;let mut control=Control::new(&mut accept,limits(&f,n(&f,"allocationBytes")));let mut projection=Projection::new(sql,&mut control).unwrap();projection.control.limits.max_allocation_bytes=projection.control.allocation_bytes()+allowance;let(result,requested)=observe(||projection.insert(table,&cells));if allowance==cost{result.unwrap();assert_eq!(requested,cost);assert_eq!(projection.control.allocation_remaining_bytes(),0);}else{let error=ownership(result);assert_eq!(requested,allowance-projection.control.allocation_remaining_bytes()+message_owned_bytes(&error),"refused cell/row frontier must not allocate");assert!(projection.database.table(table).unwrap().rows.is_empty());}}
- eprintln!("[DEBUG] Shared numeric cell/row requested backing {cost}");
 }
 
 #[test]
@@ -38,7 +37,6 @@ fn shared_provider_allocation_text_blob_exact_and_retired_copies_remain_cumulati
  let mut accept=|_|true;let mut control=Control::new(&mut accept,limits(&f,maximum-1));drop(reconstruct_text(&mut control,&text).unwrap());ownership(reconstruct_blob(&mut control,&blob));assert_eq!(control.allocation_remaining_bytes(),blob.len()-1);
  let mut accept=|_|true;let mut control=Control::new(&mut accept,limits(&f,n(&f,"repeatedAllocationBytes")));for _ in 0..2{assert_eq!(reconstruct_text(&mut control,f["repeatedText"].as_str().unwrap()).unwrap(),f["repeatedText"].as_str().unwrap());}assert_eq!(control.allocation_remaining_bytes(),0);ownership(reconstruct_text(&mut control,f["repeatedText"].as_str().unwrap()));
  let mut accept=|_|true;let mut control=Control::new(&mut accept,limits(&f,0));assert_eq!(project_text(&mut control,"").unwrap(),"");assert!(reconstruct_blob(&mut control,&[]).unwrap().is_empty());assert_eq!(control.allocation_remaining_bytes(),0);ownership(project_text(&mut control,"x"));ownership(reconstruct_blob(&mut control,&[1]));
- eprintln!("[DEBUG] Shared text/blob exact backing {maximum}, retired reconstruction copies remain cumulative");
 }
 
 #[test]
@@ -46,7 +44,6 @@ fn shared_provider_allocation_text_blob_interior_cancellation_retains_backing(){
  let f=fixture();let(text,blob)=payloads(&f);
  for binary in [false,true]{let total=if binary{blob.len()}else{text.len()};let cancellations=Local::new(0);let mut callback=|event:SqliteSnapshotProgress|{let stop=event.phase==Phase::ReconstructSnapshot&&event.total==total&&event.completed>=n(&f,"copyFrontier")&&event.completed<total;if stop{cancellations.set(cancellations.get()+1);}!stop};let mut control=Control::new(&mut callback,limits(&f,total));let(result,requested)=observe(||if binary{reconstruct_blob(&mut control,&blob).map(drop)}else{reconstruct_text(&mut control,&text).map(drop)});let error=result.unwrap_err();assert_eq!(error.kind,ValueRefusalKind::Canceled);assert_eq!(cancellations.get(),1);assert_eq!(control.allocation_remaining_bytes(),0,"late canceled field must retain its requested backing");assert_eq!(requested,total+cancellation_diagnostic_bytes(&f,if binary{"child-blob-interior"}else{"child-text-interior"},&error),"only exact paid payload and the declared actual diagnostic ledger may allocate");ownership(reconstruct_text(&mut control,"x"));}
  let mut cancel=|_|false;let mut control=Control::new(&mut cancel,limits(&f,n(&f,"textBytes")));let error=project_text(&mut control,&text).unwrap_err();assert_eq!(error.kind,ValueRefusalKind::Canceled);assert_eq!(control.allocation_remaining_bytes(),n(&f,"textBytes"));
- eprintln!("[DEBUG] Shared text/blob interior cancellation retains 100000 requested bytes per field");
 }
 
 #[test]
@@ -55,7 +52,6 @@ fn shared_provider_allocation_ordered_frontier_exact_refused_duplicate_and_cance
  for allowance in [cost,cost-1,0]{let mut accept=|_|true;let mut control=Control::new(&mut accept,limits(&f,allowance));let(result,requested)=observe(||ordered_row_refs(&table,2,&mut control));if allowance==cost{drop(result.unwrap());assert_eq!(requested,cost);assert_eq!(control.allocation_remaining_bytes(),0);}else{let error=ownership(result);assert_eq!(requested,allowance-control.allocation_remaining_bytes()+message_owned_bytes(&error));}}
  let duplicate=relation(&[0,0,2]);let mut accept=|_|true;let mut control=Control::new(&mut accept,limits(&f,n(&f,"allocationBytes")));assert_eq!(ordered_row_refs(&duplicate,2,&mut control).unwrap_err().kind,ValueRefusalKind::InvalidValue);
  let table=relation(&(0..n(&f,"orderedCancellationRows")).rev().collect::<Vec<_>>());let interior=Local::new(false);let mut callback=|event:SqliteSnapshotProgress|{let stop=event.phase==Phase::ReconstructSnapshot&&event.completed>=n(&f,"orderedCancelAt")&&event.completed<event.total;interior.set(interior.get()||stop);!stop};let mut control=Control::new(&mut callback,limits(&f,n(&f,"allocationBytes")));assert_eq!(ordered_row_refs(&table,2,&mut control).unwrap_err().kind,ValueRefusalKind::Canceled);assert!(interior.get());assert!(control.allocation_remaining_bytes()<n(&f,"allocationBytes"));
- eprintln!("[DEBUG] Shared ordered reference requested backing {cost}");
 }
 
 #[test]
@@ -66,14 +62,13 @@ fn shared_provider_allocation_ieee_cells_exact_refused_duplicate_and_canceled(){
  let(text,blob)=payloads(&f);
  for binary in [false,true]{let total=if binary{blob.len()}else{text.len()};let cancellations=Local::new(0);let mut callback=|event:SqliteSnapshotProgress|{let stop=event.phase==Phase::ProjectSnapshot&&event.total==total&&event.completed>=n(&f,"copyFrontier")&&event.completed<total;if stop{cancellations.set(cancellations.get()+1);}!stop};let mut control=Control::new(&mut callback,limits(&f,n(&f,"allocationBytes")));let mut projection=Projection::new(sql,&mut control).unwrap();let before=projection.control.allocation_remaining_bytes();let cells=[Cell::Text(if binary{""}else{&text}),Cell::Blob(if binary{&blob}else{&[]}),Cell::Real(f64::from_bits(0x8000000000000000))];let(result,requested)=observe(||insert_ieee754(&mut projection,table,&cells,&columns));let error=result.unwrap_err();assert_eq!(error.kind,ValueRefusalKind::Canceled);assert_eq!(cancellations.get(),1);let paid=before-projection.control.allocation_remaining_bytes();assert!(paid>=total+5*std::mem::size_of::<Cell<'_>>()+6*std::mem::size_of::<SqliteValue>());assert_eq!(requested,paid+cancellation_diagnostic_bytes(&f,if binary{"child-ieee-blob-interior"}else{"child-ieee-text-interior"},&error),"canceled owned IEEE field must have no unpaid payload/frontier");assert!(projection.database.table(table).unwrap().rows.is_empty());}
  let mut accept=|_|true;let mut control=Control::new(&mut accept,limits(&f,n(&f,"allocationBytes")));let mut projection=Projection::new(sql,&mut control).unwrap();assert_eq!(insert_ieee754(&mut projection,table,&cells,&[columns[0],columns[0]]).unwrap_err().kind,ValueRefusalKind::InvalidValue);
- eprintln!("[DEBUG] Shared IEEE companion requested backing {cost}");
 }
 
 
 #[test]
 fn history_edit_sqlite_paged_text_cells_keep_borrowed_measurement_allocation_free_and_cancel_owned_copy(){
  use semio_framework_value::paged::PagedUtf8;
- let f:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🧵️paged-text/🔣️.json")).unwrap();
+ let f:serde_json::Value=serde_json::from_str(fixture_text!("../../../../🧩️artifact/🧪️tests/🧫️fixtures/🧵️paged-text/🔣️.json")).unwrap();
  let mut accept=|_|true;let mut control=Control::new(&mut accept,SqliteDatabaseLimits::default());let mut projection=Projection::new(f["schemaSql"].as_str().unwrap(),&mut control).unwrap();
  for sample in f["samples"].as_array().unwrap(){let text=sample["text"].as_str().unwrap();let owner=PagedUtf8::<{usize::MAX}>::from(text);assert_eq!(owner.len(),n(sample,"bytes"));projection.insert(f["table"].as_str().unwrap(),&[Cell::PagedText(&owner)]).unwrap();}
  let database=projection.finish().unwrap();let rows=&database.table(f["table"].as_str().unwrap()).unwrap().rows;
@@ -81,17 +76,15 @@ fn history_edit_sqlite_paged_text_cells_keep_borrowed_measurement_allocation_fre
  let text=f["large"]["unit"].as_str().unwrap().repeat(n(&f["large"],"repeats"));let owner=PagedUtf8::<{usize::MAX}>::from(text.as_str());assert_eq!(owner.len(),n(&f["large"],"bytes"));
  for exact in [true,false]{let maximum=owner.len()+n(&f,"semanticIdentityBytes")-usize::from(!exact);let mut accept=|_|true;let mut control=Control::new(&mut accept,SqliteDatabaseLimits{max_value_bytes:maximum,..Default::default()});let before=control.allocation_remaining_bytes();let(result,requested)=observe(||{let mut out=super::row_writer::RowWriter::borrowed(&mut control,Phase::EncodeNative)?;out.insert(f["table"].as_str().unwrap(),&[Cell::PagedText(&owner)])?;out.finish_borrowed()});if exact{result.unwrap();assert_eq!(requested,n(&f,"borrowedAllocationBytes"));assert_eq!(control.allocation_remaining_bytes(),before);}else{assert_eq!(result.unwrap_err().kind,ValueRefusalKind::OwnershipLimit);}}
  let cancelled=Local::new(false);let mut callback=|event:SqliteSnapshotProgress|{let stop=event.phase==Phase::ProjectSnapshot&&event.total==owner.len()&&event.completed>=n(&f["large"],"cancelAfterBytes")&&event.completed<owner.len();cancelled.set(cancelled.get()||stop);!stop};let mut control=Control::new(&mut callback,SqliteDatabaseLimits::default());let before=control.allocation_remaining_bytes();let(result,requested)=observe(||Cell::PagedText(&owner).owned(&mut control));let error=result.unwrap_err();assert_eq!(error.kind,ValueRefusalKind::Canceled);assert!(cancelled.get());assert_eq!(before-control.allocation_remaining_bytes(),owner.len());assert_eq!(requested,owner.len()+message_owned_bytes(&error));
- eprintln!("[DEBUG] Native paged SQLite TEXT: three authored cells, zero allocation borrowed160000-byte text, exact semantic refusal and interior owned-copy cancellation");
 }
 
 
 #[test]
 fn history_edit_sqlite_native_paged_reconstruction_accounts_actual_pages_and_interior_cancellation(){
- let f:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🧵️paged-text/🔣️.json")).unwrap();
+ let f:serde_json::Value=serde_json::from_str(fixture_text!("../../../../🧩️artifact/🧪️tests/🧫️fixtures/🧵️paged-text/🔣️.json")).unwrap();
  for sample in f["samples"].as_array().unwrap(){let text=sample["text"].as_str().unwrap();let mut accept=|_|true;let mut control=Control::new(&mut accept,SqliteDatabaseLimits::default());let before=control.allocation_remaining_bytes();let(result,requested)=observe(||super::Reconstruction::new(&mut control)?.paged_text(text));let owner=result.unwrap();assert!(owner.eq_str(text));assert_eq!(owner.len(),n(sample,"bytes"));assert_eq!(before-control.allocation_remaining_bytes(),requested);}
  let text=f["large"]["unit"].as_str().unwrap().repeat(n(&f["large"],"repeats"));let mut accept=|_|true;let mut control=Control::new(&mut accept,SqliteDatabaseLimits::default());let before=control.allocation_remaining_bytes();let(result,cost)=observe(||super::Reconstruction::new(&mut control)?.paged_text(&text));let owner=result.unwrap();assert!(owner.eq_str(&text));assert_eq!(before-control.allocation_remaining_bytes(),cost);assert!(cost>text.len());assert!(owner.chunks().all(|chunk|chunk.len()<=n(&f["reconstruction"],"chunkBytes")));drop(owner);
  let mut accept=|_|true;let mut control=Control::new(&mut accept,SqliteDatabaseLimits{max_allocation_bytes:cost*n(&f["reconstruction"],"aggregateCopies"),max_value_bytes:text.len()*n(&f["reconstruction"],"aggregateCopies"),..Default::default()});for _ in 0..n(&f["reconstruction"],"aggregateCopies"){let(result,requested)=observe(||super::Reconstruction::new(&mut control)?.paged_text(&text));assert!(result.unwrap().eq_str(&text));assert_eq!(requested,cost);}assert_eq!(control.allocation_remaining_bytes(),0);assert_eq!(super::Reconstruction::new(&mut control).unwrap().paged_text("x").unwrap_err().kind,ValueRefusalKind::OwnershipLimit);
  for allowance in [cost,cost-n(&f["reconstruction"],"refusedAllocationDelta")]{let mut accept=|_|true;let mut control=Control::new(&mut accept,SqliteDatabaseLimits{max_allocation_bytes:allowance,..Default::default()});let before=control.allocation_remaining_bytes();let(result,requested)=observe(||super::Reconstruction::new(&mut control)?.paged_text(&text));let paid=before-control.allocation_remaining_bytes();if allowance==cost{assert!(result.unwrap().eq_str(&text));assert_eq!(requested,paid);}else{let error=result.unwrap_err();assert_eq!(error.kind,ValueRefusalKind::OwnershipLimit);assert!(requested<=paid+message_owned_bytes(&error));}}
  let interior=Local::new(false);let mut callback=|event:SqliteSnapshotProgress|{let stop=event.phase==Phase::ReconstructSnapshot&&event.total==text.len()&&event.completed>=n(&f["reconstruction"],"cancelAfterBytes")&&event.completed<text.len();interior.set(interior.get()||stop);!stop};let mut control=Control::new(&mut callback,SqliteDatabaseLimits::default());let before=control.allocation_remaining_bytes();let(result,requested)=observe(||super::Reconstruction::new(&mut control)?.paged_text(&text));let error=result.unwrap_err();assert_eq!(error.kind,ValueRefusalKind::Canceled);assert!(interior.get());assert!(requested<=before-control.allocation_remaining_bytes()+message_owned_bytes(&error));assert!(before-control.allocation_remaining_bytes()<cost);
- eprintln!("[DEBUG] Native SQLite PagedUtf8 reconstruction conserved empty/NUL/Unicode, actual page+chunk backing{cost}, exact refusal, cumulative retirement and interior cancellation");
 }

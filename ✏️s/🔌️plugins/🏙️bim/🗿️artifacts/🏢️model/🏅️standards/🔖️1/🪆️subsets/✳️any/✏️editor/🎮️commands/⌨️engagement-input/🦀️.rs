@@ -2,7 +2,7 @@
 //! authors see what is being typed; the document and the gesture in progress are untouched until the line is submitted.
 
 use crate::editor::bim::gestures::keep_entry;
-use crate::editor::bim::BimDispatchCtx;
+use crate::editor::bim::dispatch_context::BimDispatchCtx;
 use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use value_derive::{FromValue, ToValue};

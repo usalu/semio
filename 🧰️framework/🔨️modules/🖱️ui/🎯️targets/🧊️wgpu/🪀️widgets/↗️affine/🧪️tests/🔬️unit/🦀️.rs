@@ -15,7 +15,6 @@ fn authored_glyph_family_selects_original_catalog_face() {
         let actual=atlas.measure_text_face(face,text,size).0;assert!((actual-oracle).abs()<0.01,"{name} {actual} != {oracle}");
     }
     for rejected in law["rejected"].as_array().unwrap(){let name=rejected.as_str().unwrap();assert!(TextFace::from_catalog_family(name).is_none());assert!(serde_json::from_value::<TextFace>(serde_json::json!(name)).is_err());}
-    eprintln!("[DEBUG] Explicit catalog family selected original glyph advances for all four families; Swash independent font metrics matched");
 }
 
 #[test]
@@ -46,7 +45,6 @@ fn authored_glyph_runs_transform_the_actual_font_atlas_quads() {
             }
         }
     }
-    eprintln!("[DEBUG] Actual native font atlas affine quads matched Tiny Skia for five transforms");
 }
 
 #[cfg(not(target_arch="wasm32"))]
@@ -61,7 +59,6 @@ fn authored_glyph_shader_accepts_complete_affine_basis() {
     let _shader=device.create_shader_module(wgpu::ShaderModuleDescriptor {label:Some("authored_affine_ui_shader"),source:wgpu::ShaderSource::Wgsl(semio_framework_ui_wgpu_render::testing::ui_shader_source().into())});
     device.poll(wgpu::PollType::Poll).unwrap();
     assert!(semio_framework_async::block_on(validation.pop()).is_none());
-    eprintln!("[DEBUG] Actual GPU validated the production affine glyph/image shader");
 }
 
 #[cfg(not(target_arch="wasm32"))]
@@ -152,5 +149,4 @@ fn authored_glyph_image_shader_paints_the_actual_affine_quad() {
         readback.unmap();
     }
     assert!(semio_framework_async::block_on(validation.pop()).is_none());
-    eprintln!("[DEBUG] Actual GPU affine image framebuffer matched Tiny Skia across five transforms and 5120 pixels");
 }

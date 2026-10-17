@@ -1,3 +1,4 @@
+use semio_framework_test_fixtures::fixture_path;
 use semio_s_artifact_lowpoly_lowpoly_model::standards::v1::subsets::any::io::text::snapshot::default_snapshot;
 use super::*;
 use semio_s_artifact_lowpoly_lowpoly_model::{default_snapshot, snapshot::LowpolyObject, snapshot::LowpolySnapshot};
@@ -120,7 +121,7 @@ fn kinds_match_the_enum_and_the_catalog() {
     for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
         assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
     }
-    let manifest = std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🔮️oracles/🔣️.json")).expect("../../../../🔮️oracles/🔣️.json").leak();
+    let manifest = std::fs::read_to_string(fixture_path!("../../../../🔮️oracles/🔣️.json")).expect("../../../../🔮️oracles/🔣️.json").leak();
     for kind in KINDS {
         assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
     }
@@ -144,7 +145,7 @@ fn refresh_lowpoly_mutation_fixtures_when_requested() {
         return;
     }
     use std::path::{Path, PathBuf};
-    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🧬️mutations");
+    let root = fixture_path!("../../../../🧪️tests/🧫️fixtures/🧬️mutations");
     fn collect_cases(dir: &Path, cases: &mut Vec<PathBuf>) {
         for entry in std::fs::read_dir(dir).expect("read fixtures dir") {
             let path = entry.expect("fixture dir entry").path();

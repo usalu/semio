@@ -4,7 +4,7 @@
 //! (`bulge = tan(sweep / 4)`); an opening belongs to the part that contains its offset.
 
 use super::super::{component_rules, elements};
-use super::super::wall_geometry::{snap, split, Split};
+use crate::standards::v1::subsets::any::schema::mutations::wall_geometry::{snap, split, Split};
 use super::SplitWall;
 use crate::standards::v1::subsets::any::schema::{diff::{Entry, KeyedDelta, ModelDiff, patches::{OpeningPatch, WallPatch}}, snapshot::{ModelSnapshot, Opening, Wall, WallSweep}};
 use protocol::{MutationOutcome, OutcomeCode};

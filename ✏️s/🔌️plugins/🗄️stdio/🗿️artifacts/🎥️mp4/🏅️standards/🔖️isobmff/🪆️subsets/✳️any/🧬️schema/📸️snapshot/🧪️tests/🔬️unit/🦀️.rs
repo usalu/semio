@@ -1,4 +1,5 @@
 use crate::standards::isobmff::subsets::any::schema::snapshot::*;
+use semio_framework_test_fixtures::{fixture_path, fixture_text};
 
 async fn sample_snapshot() -> Mp4Snapshot {
     Mp4Snapshot {
@@ -49,27 +50,27 @@ async fn logical_snapshot_and_facets_have_no_shadow_state() {
         assert!(!model.contains(forbidden), "snapshot contains forbidden shadow field {forbidden}");
     }
     for facet in [
-        include_str!("../../🟦️.ts"),
-        include_str!("../../🔗️.graphql"),
-        include_str!("../../🔣️.json"),
-        include_str!("../../🛰️.proto"),
-        include_str!("../../../🔺️diff/🦀️.rs"),
-        include_str!("../../../🔺️diff/🟦️.ts"),
-        include_str!("../../../🔺️diff/🔗️.graphql"),
-        include_str!("../../../🔺️diff/🔣️.json"),
-        include_str!("../../../🔺️diff/🛰️.proto"),
-        include_str!("../../../🧬️mutations/🦀️.rs"),
-        include_str!("../../../🧬️mutations/🟦️.ts"),
-        include_str!("../../../🧬️mutations/🔗️.graphql"),
-        include_str!("../../../🧬️mutations/🔣️.json"),
-        include_str!("../../../🧬️mutations/🛰️.proto"),
-        include_str!("../../../../🚪️io/💾️binary/📸️snapshot/🔠️.abnf"),
-        include_str!("../../../../🚪️io/💾️binary/📸️snapshot/📡️.protocol.semio"),
-        include_str!("../../../../🚪️io/📝️text/🧬️mutations/📖️.grammar.semio"),
-        include_str!("../../../../🚪️io/📝️text/🧬️mutations/🔤️.ebnf"),
-        include_str!("../../../../🚪️io/📝️text/🧬️mutations/🅰️.g4"),
-        include_str!("../../../../🚪️io/💾️binary/🧬️mutations/📡️.protocol.semio"),
-        include_str!("../../../../🚪️io/💾️binary/🧬️mutations/🌶️.spicy"),
+        fixture_text!("../../../../🟦️.ts"),
+        fixture_text!("../../../../🔗️.graphql"),
+        fixture_text!("../../../../🔣️.json"),
+        fixture_text!("../../../../🛰️.proto"),
+        fixture_text!("../../../../../🔺️diff/🦀️.rs"),
+        fixture_text!("../../../../../🔺️diff/🟦️.ts"),
+        fixture_text!("../../../../../🔺️diff/🔗️.graphql"),
+        fixture_text!("../../../../../🔺️diff/🔣️.json"),
+        fixture_text!("../../../../../🔺️diff/🛰️.proto"),
+        fixture_text!("../../../../../🧬️mutations/🦀️.rs"),
+        fixture_text!("../../../../../🧬️mutations/🟦️.ts"),
+        fixture_text!("../../../../../🧬️mutations/🔗️.graphql"),
+        fixture_text!("../../../../../🧬️mutations/🔣️.json"),
+        fixture_text!("../../../../../🧬️mutations/🛰️.proto"),
+        fixture_text!("../../../../../../🚪️io/💾️binary/📸️snapshot/🔠️.abnf"),
+        fixture_text!("../../../../../../🚪️io/💾️binary/📸️snapshot/📡️.protocol.semio"),
+        fixture_text!("../../../../../../🚪️io/📝️text/🧬️mutations/📖️.grammar.semio"),
+        fixture_text!("../../../../../../🚪️io/📝️text/🧬️mutations/🔤️.ebnf"),
+        fixture_text!("../../../../../../🚪️io/📝️text/🧬️mutations/🅰️.g4"),
+        fixture_text!("../../../../../../🚪️io/💾️binary/🧬️mutations/📡️.protocol.semio"),
+        fixture_text!("../../../../../../🚪️io/💾️binary/🧬️mutations/🌶️.spicy"),
     ] {
         for forbidden in ["unknownBoxes", "unknown_boxes", "Mp4CodecOther", "ADD_UNKNOWN_BOX", "addUnknownBox", "nativeArchive", "sourceBytes", "serde_json::", "json_line", "jsonLine", "json_utf8", "JSON bytes", "iso-bmff-box-stream"] {
             assert!(!facet.contains(forbidden), "facet contains forbidden shadow concept {forbidden}");
@@ -79,7 +80,7 @@ async fn logical_snapshot_and_facets_have_no_shadow_state() {
 
 #[semio_framework_async_macros::async_test]
 async fn exact_fixture_survives_pack_and_dsl_codecs() {
-    let bytes = std::fs::read(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../🧪️tests/🧫️fixtures/🎬️.mp4")).expect("the committed fixture is readable");
+    let bytes = std::fs::read(fixture_path!("../../../../../../🧪️tests/🧫️fixtures/🎬️.mp4")).expect("the committed fixture is readable");
     let snapshot = crate::standards::isobmff::subsets::any::io::decode_mp4(&bytes).expect("decode exact MP4 fixture");
 
     let pack = <Mp4Snapshot as pack::snapshot::ArtifactPack>::encode_pack(&snapshot);

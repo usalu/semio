@@ -14,7 +14,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import Ajv from "ajv";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { requireMcpBinary, spawnRawMcp, type RawMcpProcess } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🟦️.ts";
+import { requireMcpBinary, spawnRawMcp, type RawMcpProcess } from "@semio-tech/framework-os-mcp";
 import { getWorkspaceRoot } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 
 const repoRoot = getWorkspaceRoot();

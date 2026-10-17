@@ -64,7 +64,7 @@ fn member_receipt_drive(owner: &mut MountedMemberReceipt, fixture: &serde_json::
 }
 #[test]
 fn mounted_member_receipt_preserves_ordered_multiple_operations_and_original_causal_owners() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = crate::fixture_json("🧾️receipt/📦️group/👤️member/🧪️tests/🧫️fixtures/🔣️.json");
     assert_eq!(fixture["maximumCopyBytes"],64);assert_eq!(fixture["maximumCapacityBytes"],MOUNTED_RECEIPT_MAXIMUM_BYTES);assert_eq!(fixture["operations"][0]["text"].as_str().unwrap().len(),8194);
     for (count,inverse_count) in [(0,0),(1,0),(2,2)] {
         let publication = member_receipt_fixture(&fixture,count,inverse_count); let original: Vec<_> = publication.forward.iter().map(|body| (body.0.as_ptr(),body.0.capacity())).collect();
@@ -82,20 +82,19 @@ fn mounted_member_receipt_preserves_ordered_multiple_operations_and_original_cau
             assert_eq!(owner.ready_edit_id(),Some(publication.edit.as_str())); assert_eq!(publication.forward[index].0.as_ptr(),original[index].0);assert_eq!(publication.forward[index].0.capacity(),8194);
         }
         assert!(owner.take_next_triple(grant).is_none());member_receipt_close(&mut owner);let (_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(|| drop(owner));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
-        println!("[DEBUG] member receipt operations={count} inverse={inverse_count}: distinct exact schemas, framed serde inverses, original8194 pointers, ordered partial pop0heap and every causal physical owner admitted");
     }
 }
 #[test]
 fn mounted_member_receipt_cancellation_preserves_every_original_owner_and_partial_transfer() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = crate::fixture_json("🧾️receipt/📦️group/👤️member/🧪️tests/🧫️fixtures/🔣️.json");
     for turns in fixture["cancelTurns"].as_array().unwrap().iter().map(|value|value.as_u64().unwrap()as usize).chain([12000]) {
         let publication=member_receipt_fixture(&fixture,2,2);let source=member_receipt_source(&fixture,&publication,0);let mut owner=MountedMemberReceipt::new(&source).unwrap();member_receipt_drive(&mut owner,&fixture,&publication,turns);
         if owner.is_complete() { let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:64,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:64};let (triple,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.take_next_triple(grant).unwrap());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(triple.0.id.0,"mutation:one");drop(triple);assert_eq!(owner.triples.len(),1); }
-        member_receipt_close(&mut owner);let (_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(owner));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));println!("[DEBUG] member receipt cancel turns={turns}: exact whole allocation denials, retained inverse/triples/backing/edit, partial original first triple stays source ordered");
+        member_receipt_close(&mut owner);let (_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(owner));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
     }
 }
 #[test]
 fn mounted_member_receipt_refuses_missing_original_metadata_before_acknowledgment() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
-    for refusal in 0..4 { let mut publication=member_receipt_fixture(&fixture,2,2);match refusal {0=>publication.metadata[0].mutation_id=None,1=>publication.metadata[0].group_id=Some("foreign-group".into()),2=>publication.metadata.clear(),_=>publication.metadata[0].group_id=Some("x".repeat(fixture["groupId"].as_str().unwrap().len()))};let source=member_receipt_source(&fixture,&publication,0);let mut owner=MountedMemberReceipt::new(&source).unwrap();if refusal == 3 { let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:64,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:64};assert_eq!(owner.next_capacity_byte_demand(&source).unwrap(),0);assert!(owner.advance(&source,grant).is_err()); } else { assert!(owner.next_capacity_byte_demand(&source).is_err()); } assert!(!owner.is_complete());assert_eq!(publication.forward.len(),2);member_receipt_close(&mut owner);println!("[DEBUG] member receipt refused original metadata case={refusal} before codec birth or acknowledgment; original publication owners unchanged"); }
+    let fixture:serde_json::Value=crate::fixture_json("🧾️receipt/📦️group/👤️member/🧪️tests/🧫️fixtures/🔣️.json");
+    for refusal in 0..4 { let mut publication=member_receipt_fixture(&fixture,2,2);match refusal {0=>publication.metadata[0].mutation_id=None,1=>publication.metadata[0].group_id=Some("foreign-group".into()),2=>publication.metadata.clear(),_=>publication.metadata[0].group_id=Some("x".repeat(fixture["groupId"].as_str().unwrap().len()))};let source=member_receipt_source(&fixture,&publication,0);let mut owner=MountedMemberReceipt::new(&source).unwrap();if refusal == 3 { let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:64,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:64};assert_eq!(owner.next_capacity_byte_demand(&source).unwrap(),0);assert!(owner.advance(&source,grant).is_err()); } else { assert!(owner.next_capacity_byte_demand(&source).is_err()); } assert!(!owner.is_complete());assert_eq!(publication.forward.len(),2);member_receipt_close(&mut owner); }
 }

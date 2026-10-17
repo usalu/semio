@@ -1,6 +1,6 @@
 //! 🚫️ Direct binary codec for `remove-javascript-action`.
 
-use crate::standards::v1_7::subsets::x::schema::mutations::RemoveJavascriptAction;
+use crate::standards::v1_7::subsets::x::schema::mutations::remove_javascript_action::RemoveJavascriptAction;
 
 //#region 🔖️Identity
 pub const TAG: u8 = 9;
@@ -21,7 +21,5 @@ pub fn decode(bytes: &[u8]) -> Result<RemoveJavascriptAction, String> {
 //#endregion 🔖️Codec
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

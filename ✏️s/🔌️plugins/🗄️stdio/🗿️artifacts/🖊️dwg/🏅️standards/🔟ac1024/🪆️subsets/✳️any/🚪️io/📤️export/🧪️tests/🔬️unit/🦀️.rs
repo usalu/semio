@@ -14,7 +14,7 @@ use semio_s_artifact_stdio_dwg_snapshot::standards::v_ac1024::subsets::any::sche
 /// 🏛️ The real ~145KB AC1024 drawing the architectural example ships, read directly from its asset.
 /// 📂️ Reads one committed fixture by its path relative to this crate's manifest directory.
 fn fixture(relative: &str) -> Vec<u8> {
-    std::fs::read(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative)).unwrap_or_else(|error| panic!("{relative}: {error}"))
+    std::fs::read(fixture_path!(relative)).unwrap_or_else(|error| panic!("{relative}: {error}"))
 }
 
 #[semio_framework_async_macros::async_test]
@@ -438,6 +438,8 @@ async fn well_known_fixture_lossless_system_roundtrip() {
 /// out of `⚙️engine`'s own test region (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES)
 /// — mirrors `stdio.binary`/`stdio.txt`'s own `conformance_laws` module shape exactly.
 mod conformance_laws {
+    use semio_framework_test_fixtures::fixture_path;
+
     use super::*;
     use semio_s_artifact_stdio_dwg_write_records::standards::v_ac1024::subsets::any::io::export::records::bits::DwgBitWriter;
     use semio_s_artifact_stdio_dwg_write_records::standards::v_ac1024::subsets::any::io::export::records::container::compress_r2004_section;
@@ -638,7 +640,7 @@ mod conformance_laws {
     #[ignore]
     async fn zzz_write_demo_fixtures() {
         let demo = semio_s_artifact_stdio_dwg_snapshot::standards::v_ac1024::subsets::any::schema::snapshot::demo_dwg_snapshot();
-        let assets = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../../../4️⃣ac1018/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets");
+        let assets = fixture_path!("../../../../../../../4️⃣ac1018/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets");
         std::fs::write(assets.join("🗣️.dsl.semio"), pack::snapshot::ArtifactDsl::print_dsl(&demo)).expect("write 🗣️.dsl.semio");
         std::fs::write(assets.join("🎒️.pack.semio"), pack::snapshot::ArtifactPack::encode_pack(&demo)).expect("write 🎒️.pack.semio");
     }

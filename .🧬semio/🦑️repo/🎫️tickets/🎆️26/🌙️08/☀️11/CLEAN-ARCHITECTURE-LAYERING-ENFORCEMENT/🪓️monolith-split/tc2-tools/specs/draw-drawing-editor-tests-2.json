@@ -1,0 +1,39 @@
+{
+  "parent": "semio-s-artifact-draw-drawing-editor",
+  "name": "semio-s-artifact-draw-drawing-editor-tests-2",
+  "dir": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🍰️companion-2",
+  "files": [
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/✏️edit-path/🧵️simplify/🧪️tests/🔬️unit/🦀️.rs",
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📤️export-document/🧵️export/🧪️tests/🔬️unit/🦀️.rs",
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📥️import-image/🧵️admission/🧪️tests/🔬️unit/🦀️.rs",
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📋️clipboard/🧵️job/📋️metadata/🧪️tests/🔬️unit/🦀️.rs",
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📬️completion/🧪️tests/🦀️.rs",
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🌉️args-bridge/🦀️.rs",
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️gesture-operation-owner/🦀️.rs"
+  ],
+  "testkit": [
+    "semio-s-artifact-draw-drawing-model",
+    "semio-s-artifact-draw-drawing-diff",
+    "semio-s-artifact-draw-drawing-geometry",
+    "semio-s-artifact-draw-drawing-mutations",
+    "semio-s-artifact-draw-drawing-transform",
+    "semio-s-artifact-draw-drawing-style",
+    "semio-s-artifact-draw-drawing-structure",
+    "semio-s-artifact-draw-drawing-metadata",
+    "semio-s-artifact-draw-drawing-scene",
+    "semio-s-artifact-draw-drawing-editor-interaction",
+    "semio-s-artifact-draw-drawing-editor"
+  ],
+  "emoji": "🍰️",
+  "summary": "the unit laws of the drawing editor commands, clipboard, completion, argument bridge and gesture operation owner outside the shared unit context.",
+  "description": "Companion test crate of semio-s-artifact-draw-drawing-editor: the unit laws of the drawing editor commands, clipboard, completion, argument bridge and gesture operation owner outside the shared unit context",
+  "crate_map": {
+    "schema::scene_identity::": "semio_s_artifact_draw_drawing_scene::identity::"
+  },
+  "extra_use": {
+    "📋️clipboard/🧵️job/📋️metadata/🧪️tests/🔬️unit/🦀️.rs": [
+      "use semio_framework_value::retirement::controlled::ControlledRetirement;",
+      "use semio_framework_value::retained_clone::RetainedCloneGrant;"
+    ]
+  }
+}

@@ -42,7 +42,6 @@ test("repository journal joins installed native watcher, Git census and no-follo
   expect(await journal.verify(original, scope, control)).toBe(false);
   await symlink(join(root, "a"), join(root, "alias"), process.platform === "win32" ? "junction" : "dir");
   await expect(journal.capture({ roots: ["alias"], files: [] }, control)).rejects.toThrow("no-follow");
-  console.log("[DEBUG] Native watcher/Git journal preserved unrelated source, witnessed new owner and refused symlink");
  } finally { await journal?.close(); if(!journal && watcher) await watcher.stop(); await rm(root, { recursive: true, force: true }); }
 }, 35_000);
 
@@ -56,7 +55,6 @@ test("cold journal discovers a wholly ignored structural owner absent from nativ
   const ordinary=(await nxGraphSourceMembershipV2(root,signal)).files;expect(ordinary).not.toContain(fixture.ignoredOwner.path);
   journal=await createRepositoryFilesystemJournalV1(root,{watch(){return async()=>{};},flush(){return [];},async census(){return ordinary;},async admittedPaths(paths){return paths.filter(path=>ordinary.includes(path));},isGlobalIdentity:path=>path.endsWith("/package.json")},control);
   expect((await journal.capture({roots:[],files:[]},control)).globalIdentity.paths).toEqual(fixture.expectedGlobal);
-  console.log("[DEBUG] wholly ignored structural owner admitted alongside native effective census");
  }finally{await journal?.close();await rm(root,{recursive:true,force:true});}
 },35000);
 
@@ -72,7 +70,6 @@ test("directory deletion alone admits the actual renamed parent membership and i
   const observed=await journal.capture(scope,control),physical=(await readdir(join(root,law.destination))).map(file=>law.destination+"/"+file).sort();expect(physical).toEqual(law.expectedMembership);expect(observed.selectedMembership.paths).toEqual(physical);expect(observed.globalIdentity.paths).toEqual(law.expectedGlobal);expect(await journal.verify(before,scope,control)).toBe(false);
   expect(new Ajv({strict:true}).compile(schema)(observed)).toBe(true);
   const selected=await journal.capture({roots:[law.destination],files:[]},control);expect(selected.sequence).toBeGreaterThan(0);expect(selected.changes.some(row=>row.path===law.destination+"/main.ts"&&row.type==="create")).toBe(true);
-  console.log("[DEBUG] Original delete-only native rename reconciled affected physical parent and published exact new selected/global membership");
  }finally{await journal?.close();await rm(root,{recursive:true,force:true})}
 },35000);
 

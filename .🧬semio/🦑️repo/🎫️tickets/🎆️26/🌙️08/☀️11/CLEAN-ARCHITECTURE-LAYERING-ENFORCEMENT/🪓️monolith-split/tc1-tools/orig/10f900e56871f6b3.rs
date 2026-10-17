@@ -1,0 +1,96 @@
+cargo-features = [ "trim-paths" ]
+
+[workspace]
+resolver = "2"
+members = [
+    "🏅️standards/🔖️1.0/🪆️subsets/✳️any/👁️viewer/🧪️tests/🔬️unit/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
+    "📦️packages/🦀️rust",
+]
+exclude = [
+    "**/🏭️bridge/**",
+    "**/👽️guest/**",
+    "**/🔮️oracles/**",
+    "🔮️oracles/📦️packages/🦀️rust",
+]
+
+[workspace.metadata.semio.repository]
+schema-version = 1
+exclude-patterns = [
+  "**/👽️guest/**",
+  "**/🔮️oracles/**",
+  "**/🏭️bridge/**",
+]
+member-manifests = [ "**/📦️packages/🦀️rust/Cargo.toml" ]
+
+  [workspace.package]
+  version = "0.1.0"
+  edition = "2021"
+  rust-version = "1.95"
+
+[workspace.dependencies.pack]
+path = "../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust"
+package = "semio-framework-pack"
+
+[workspace.dependencies.semio-framework-artifact-reference]
+path = "../../../../../🧰️framework/🔨️modules/🗿️artifact-reference/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-async-macros]
+path = "../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-hash]
+path = "../../../../../🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-job]
+path = "../../../../../🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-os-kernel]
+path = "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-plugin]
+path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-schema]
+path = "../../../../../🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-value-derive]
+path = "../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-contract]
+path = "../../📇️registry/🧬️contract/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-txt]
+path = "../🔤️txt/📦️packages/🦀️rust"
+
+[workspace.dependencies.serde_json]
+version = "1.0.149"
+features = [ "raw_value" ]
+
+[workspace.lints.rust]
+unsafe_op_in_unsafe_fn = "warn"
+unused_lifetimes = "warn"
+unused_qualifications = "warn"
+
+  [workspace.lints.rust.future_incompatible]
+  level = "warn"
+  priority = -1
+
+  [workspace.lints.rust.rust_2018_idioms]
+  level = "warn"
+  priority = -1
+
+[workspace.lints.clippy]
+cloned_instead_of_copied = "warn"
+inefficient_to_string = "warn"
+map_unwrap_or = "warn"
+needless_pass_by_value = "warn"
+semicolon_if_nothing_returned = "warn"
+unnecessary_wraps = "warn"
+redundant_clone = "warn"
+
+  [workspace.lints.clippy.all]
+  level = "warn"
+  priority = -1
+

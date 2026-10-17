@@ -4,7 +4,28 @@
 //! the framework runner (resumed by stable ids, committed as ONE transaction or dropped with zero trace), and a committed
 //! leaf states its inputs at their declared precision.
 
-use super::*;
+use crate::standards::v1::subsets::any::schema::mutations::rotate_selection;
+use crate::standards::v1::subsets::any::io::text::mutations::puzzle2d_declared_precision;
+use crate::Puzzle2dSnapshot;
+use semio_framework_tool_machine::GesturePhase;
+use std::sync::Arc;
+#[allow(unused_imports)]
+use crate::editor::puzzle2d::snapshot::{board_snapshot_nodes, puzzle2d_occupied_handles, puzzle2d_push_edge, PUZZLE2D_PROXIMITY_GESTURE_MAX};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::{mutations::connect_handles_in_proximity, mutations::drag_selection, puzzle2d_handle_distance, mutations::scale_selection, mutations::Puzzle2dMutation};
+#[allow(unused_imports)]
+use machine::Command;
+#[allow(unused_imports)]
+use semio_framework_ui_locale::LocalizedLabel;
+#[allow(unused_imports)]
+use semio_framework_plugin::UtilityCategory;
+#[allow(unused_imports)]
+use semio_framework_plugin::UtilityDefinition;
+#[allow(unused_imports)]
+use semio_framework_tool_machine::{GestureChart, ToolMachineRunner, ToolStep, ToolYield};
+#[allow(unused_imports)]
+use semio_framework_pack_json::Value;
+use crate::editor::puzzle2d::modes::edit::windows::overview::utilities::select::*;
 use crate::standards::v1::subsets::any::schema::mutations::apply_puzzle2d_mutation;
 use crate::standards::v1::subsets::any::schema::mutations::{ConnectHandles,DragSelection};
 
@@ -75,7 +96,7 @@ fn a_drag_record_yields_its_leaf_then_the_connection_its_drop_lands() {
 #[test]
 fn recorded_pairs_connect_as_recorded_and_minted_ids_stay_unique() {
     let mut base = board();
-    base.edges.push(crate::standards::v1::subsets::any::schema::Puzzle2dEdge { id: "edge-right:v0-left:v0".into(), source: "ghost:a".into(), target: "ghost:b".into(), ..Default::default() });
+    base.edges.push(crate::standards::v1::subsets::any::schema::records::Puzzle2dEdge { id: "edge-right:v0-left:v0".into(), source: "ghost:a".into(), target: "ghost:b".into(), ..Default::default() });
     let record = Puzzle2dSelectionRecord { targets: ids(&["right"]), motion: Puzzle2dSelectionMotion::Drag { dx: -10.0, dy: 0.0 }, proximity: vec![("right:v0".into(), "left:v0".into()), ("right:v0".into(), "missing:v9".into())], connect: false };
     let yields = puzzle2d_selection_yields(&base, &[record], 0.0);
     assert_eq!(yields.iter().map(|(key, _)| key.as_str()).collect::<Vec<_>>(), vec!["selection:0", "connect:edge-right:v0-left:v0-2"], "the recorded pair connects as recorded, past the id the document already holds; a pair naming a missing handle is dropped");

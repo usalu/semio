@@ -1,8 +1,8 @@
 //! 📤️ Deterministic, resumable Layout export jobs.
 
-use semio_framework_job_publication::{RetainedJobPublication,JobPublicationKind};
 #![allow(clippy::result_large_err)]
 #![allow(unexpected_cfgs)]
+use semio_framework_job_publication::{RetainedJobPublication,JobPublicationKind};
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
@@ -22,7 +22,7 @@ use semio_s_artifact_layout_layout_engine_json::integer_json_scalar;
 use semio_s_artifact_layout_layout_engine_json::typed_json_node_owned_bytes;
 use semio_s_artifact_layout_layout_model::{Frame, GridSettings, LayoutBounds, Page, PageOverride};
 use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
-use semio_framework::action_bus::RetainedToolWireInput;
+use semio_framework_action_bus::RetainedToolWireInput;
 use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
 #[cfg(test)]
 use semio_framework_job::{Generation, InteractiveStage, RevisionId};
@@ -32,12 +32,6 @@ use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep, JobOutcomeBor
 use semio_framework_plugin::app::{ArtifactDownloadOutput, ArtifactMediaExportCompletion, ArtifactMediaExportCredit, ArtifactMediaExportResult, ArtifactOutputChunks, ArtifactReservedToolJob, ArtifactSnapshotCloseLease, ArtifactToolCompletion};
 use semio_framework_plugin::{ArtifactReservedJob, ArtifactToolPublicationContract, ArtifactToolPublicationLane, EditorApp, EphemeralEmit, Fault, MediaClass, MediaForm, MediaType};
 use semio_framework_value_derive::{FromValue, ToValue};
-use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
-use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3;
-use semio_s_artifact_stdio_semio_base::schema::geometry::SemioQuaternion;
-use semio_s_artifact_stdio_semio_base::schema::geometry::SemioRgba;
-use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
-use semio_s_artifact_stdio_semio_drawing::schema::snapshot::{DrawNode, PathSegment};
 use std::sync::Arc;
 use semio_s_artifact_layout_layout_engine_json::dictionary::DictionaryJsonCursor;
 
@@ -1367,7 +1361,7 @@ impl LayoutExportJob {
 fn proxy_png_rgb(data_url: &str) -> Option<PdfRaster> {
     let payload = data_url.strip_prefix("data:image/png;base64,")?;
     let bytes = decode_base64(payload).ok()?;
-    let snapshot = semio_s_artifact_stdio_png::standards::v1_2::subsets::any::io::project_png(&bytes).ok()?;
+    let snapshot = semio_framework_pixels::decode_png(&bytes).ok()?;
     let pixels = u64::from(snapshot.width).checked_mul(u64::from(snapshot.height))?;
     if pixels == 0 || pixels > 65_536 {
         return None;

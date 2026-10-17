@@ -1,27 +1,33 @@
-use super::pending::with_state as with_pending;
-use super::turn::{
-    drive_reconcile_within, more_work_drive_budget_ms, more_work_drive_steps, reconcile_arms_turn, MEASURED_GUEST_TURN_COST_MS, PATCH_CLOSE_UNITS_PER_TURN, PATCH_RETIREMENT_BYTES_PER_UNIT, PATCH_RETIREMENT_ITEMS_PER_UNIT,
-    REACTOR_TURN_EXECUTOR_HOLD_MS,
-};
-use super::*;
+use semio_framework_plugin_reactor_lifecycle::with_state as with_pending;
+use semio_framework_plugin_reactor_turn::{drive_reconcile_within, more_work_drive_budget_ms, more_work_drive_steps, reconcile_arms_turn, MEASURED_GUEST_TURN_COST_MS, PATCH_CLOSE_UNITS_PER_TURN, PATCH_RETIREMENT_BYTES_PER_UNIT, PATCH_RETIREMENT_ITEMS_PER_UNIT, REACTOR_TURN_EXECUTOR_HOLD_MS};
+use std::cell::RefCell;
+use semio_framework_plugin_reactor_turn::TurnMoreWorkSources;
+use semio_framework::kernel::UiPatch;
+use semio_framework_plugin_reactor_lifecycle::instance_lifetime;
+use semio_framework_plugin_reactor_patches as patches;
+use semio_framework_plugin_reactor_lifecycle as pending;
+use semio_framework_plugin_reactor_turn as turn;
+use semio_framework_ui_contract as ui_contract;
 use semio_framework::kernel::{ActorInstanceLifetime, ActorUiPatchReceipt};
 use semio_framework_ui_runtime::{ComponentTree, TreeNode};
 use std::cell::Cell;
 
 /// 🌲️ The cheapest admissible retained tree — this suite prices CROSSINGS, never bytes.
-fn tree(text: &str) -> ComponentTree {
+#[doc(hidden)]
+pub fn tree(text: &str) -> ComponentTree {
     let value = ui_contract::UiText::try_from_str(text).expect("bounded fixture text");
     let root = TreeNode::try_new("root", ui_contract::Component::Text(ui_contract::TextProps { value: ui_contract::Label(value), emphasize: None, data_attributes: None })).expect("bounded fixture tree");
     ComponentTree::new(root)
 }
 
-fn contract() -> serde_json::Value {
+#[doc(hidden)]
+pub fn contract() -> serde_json::Value {
     serde_json::from_str(include_str!("../🧫️fixtures/🚚️more-work-drive.json")).expect("more-work drive contract fixture")
 }
 
 #[test]
 fn late_ui_owners_arm_turns_until_their_credits_return_without_waiting_for_live_siblings() {
- let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original reconcile fixture caller");
+ let mut original_caller=semio_framework_plugin_testing_laws::OriginalFixtureCaller::admit().expect("independently authored original reconcile fixture caller");
  let mut original_context=original_caller.context();let cx=&mut original_context;
  let result=(||{
     use ui_contract::{Buildable, HasBase, HasChildren};
@@ -29,7 +35,7 @@ fn late_ui_owners_arm_turns_until_their_credits_return_without_waiting_for_live_
     let limit = fixture["maximumTurns"].as_u64().unwrap() as usize;
     for case in fixture["cases"].as_array().unwrap() {
         for _ in 0..limit {
-            if !super::turn::close_late_ui_retirement().unwrap() {
+            if !semio_framework_plugin_reactor_turn::close_late_ui_retirement().unwrap() {
                 break;
             }
         }
@@ -63,11 +69,11 @@ fn late_ui_owners_arm_turns_until_their_credits_return_without_waiting_for_live_
         } else {
             drop(args);
         }
-        assert!(super::turn::close_late_ui_retirement().unwrap(), "{} must keep queued ownership runnable", case["name"]);
+        assert!(semio_framework_plugin_reactor_turn::close_late_ui_retirement().unwrap(), "{} must keep queued ownership runnable", case["name"]);
         let mut settled = false;
         for _ in 0..limit {
-            let pending = super::turn::close_late_ui_retirement().unwrap();
-            let sources = super::turn::TurnMoreWorkSources { ui_retirement: pending, ..Default::default() };
+            let pending = semio_framework_plugin_reactor_turn::close_late_ui_retirement().unwrap();
+            let sources = semio_framework_plugin_reactor_turn::TurnMoreWorkSources { ui_retirement: pending, ..Default::default() };
             assert_eq!(sources.any(), pending);
             if !pending {
                 settled = true;
@@ -83,7 +89,7 @@ fn late_ui_owners_arm_turns_until_their_credits_return_without_waiting_for_live_
         }
     }
     for _ in 0..limit {
-        if !super::turn::close_late_ui_retirement().unwrap() {
+        if !semio_framework_plugin_reactor_turn::close_late_ui_retirement().unwrap() {
             return;
         }
     }
@@ -93,7 +99,8 @@ fn late_ui_owners_arm_turns_until_their_credits_return_without_waiting_for_live_
  let fuel=original_context.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original reconcile fixture source close");result
 }
 
-fn number(fixture: &serde_json::Value, key: &str) -> u64 {
+#[doc(hidden)]
+pub fn number(fixture: &serde_json::Value, key: &str) -> u64 {
     fixture[key].as_u64().unwrap_or_else(|| panic!("the more-work drive contract declares no {key}"))
 }
 
@@ -117,8 +124,8 @@ enum DriveStop {
 /// does the reactor still owe another turn.
 #[derive(Clone, Copy)]
 struct TurnOutcome {
-    carried: bool,
-    arms: bool,
+    pub carried: bool,
+    pub arms: bool,
 }
 
 /// 🚚️ The worker-owned drive, as the test model of the loop
@@ -166,7 +173,7 @@ fn drive_more_work(steps: usize, mut turn: impl FnMut() -> TurnOutcome, input_pe
 /// CEILING derived from that measurement, and the same k answers cost one crossing.
 #[test]
 fn a_guest_answering_more_work_k_times_with_nothing_costs_one_host_crossing() {
- let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original reconcile fixture caller");
+ let mut original_caller=semio_framework_plugin_testing_laws::OriginalFixtureCaller::admit().expect("independently authored original reconcile fixture caller");
  let mut original_context=original_caller.context();let cx=&mut original_context;
  let result=(||{
     let fixture = contract();
@@ -210,7 +217,7 @@ fn a_guest_answering_more_work_k_times_with_nothing_costs_one_host_crossing() {
 /// what fails if a future drive ever turns a bounded host loop into an unbounded one.
 #[test]
 fn the_hosts_continuation_ceiling_covers_more_guest_turns_under_the_drive_never_fewer() {
- let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original reconcile fixture caller");
+ let mut original_caller=semio_framework_plugin_testing_laws::OriginalFixtureCaller::admit().expect("independently authored original reconcile fixture caller");
  let mut original_context=original_caller.context();let cx=&mut original_context;
  let result=(||{
     let fixture = contract();
@@ -251,7 +258,7 @@ fn the_hosts_continuation_ceiling_covers_more_guest_turns_under_the_drive_never_
 /// — ends it within ONE turn, so the drive can never delay what the host is waiting to say.
 #[test]
 fn a_pending_host_input_interrupts_the_drive_within_one_turn() {
- let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original reconcile fixture caller");
+ let mut original_caller=semio_framework_plugin_testing_laws::OriginalFixtureCaller::admit().expect("independently authored original reconcile fixture caller");
  let mut original_context=original_caller.context();let cx=&mut original_context;
  let result=(||{
     let fixture = contract();
@@ -285,7 +292,7 @@ fn a_pending_host_input_interrupts_the_drive_within_one_turn() {
 /// drive on the turn it lands, never on the next turn the guest happens to publish.
 #[test]
 fn a_cancellation_mid_drive_ends_the_drive_on_the_turn_it_lands() {
- let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original reconcile fixture caller");
+ let mut original_caller=semio_framework_plugin_testing_laws::OriginalFixtureCaller::admit().expect("independently authored original reconcile fixture caller");
  let mut original_context=original_caller.context();let cx=&mut original_context;
  let result=(||{
     let steps = declared_steps();
@@ -323,7 +330,7 @@ fn a_cancellation_mid_drive_ends_the_drive_on_the_turn_it_lands() {
 /// again, and the one to re-read when the measured turn cost moves.
 #[test]
 fn the_worker_drive_budget_is_derived_from_the_measured_turn_cost_not_from_the_reactors_hold() {
- let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original reconcile fixture caller");
+ let mut original_caller=semio_framework_plugin_testing_laws::OriginalFixtureCaller::admit().expect("independently authored original reconcile fixture caller");
  let mut original_context=original_caller.context();let cx=&mut original_context;
  let result=(||{
     let fixture = contract();
@@ -356,7 +363,7 @@ fn the_worker_drive_budget_is_derived_from_the_measured_turn_cost_not_from_the_r
 /// measured boot turns had exactly ONE surface ready while the wire could already carry sixteen.
 #[test]
 fn a_ready_output_is_not_blocked_by_another_allocations_running_job() {
- let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original reconcile fixture caller");
+ let mut original_caller=semio_framework_plugin_testing_laws::OriginalFixtureCaller::admit().expect("independently authored original reconcile fixture caller");
  let mut original_context=original_caller.context();let cx=&mut original_context;
  let result=(||{
     let own = instance_lifetime::NativeCloseKey::fixture(71, 1);
@@ -388,7 +395,7 @@ fn a_ready_output_is_not_blocked_by_another_allocations_running_job() {
 /// publication on the real ladder.
 #[test]
 fn the_widened_readiness_gate_keeps_every_surfaces_own_publication_order() {
- let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original reconcile fixture caller");
+ let mut original_caller=semio_framework_plugin_testing_laws::OriginalFixtureCaller::admit().expect("independently authored original reconcile fixture caller");
  let mut original_context=original_caller.context();let cx=&mut original_context;
  let result=(||{
     let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
@@ -449,7 +456,7 @@ fn the_widened_readiness_gate_keeps_every_surfaces_own_publication_order() {
 /// when the worker owns the pump, and not one of those crossings carries nothing.
 #[test]
 fn the_production_reconcile_ladder_costs_fewer_crossings_when_the_worker_owns_the_pump() {
- let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original reconcile fixture caller");
+ let mut original_caller=semio_framework_plugin_testing_laws::OriginalFixtureCaller::admit().expect("independently authored original reconcile fixture caller");
  let mut original_context=original_caller.context();let cx=&mut original_context;
  let result=(||{
     let host_polled = settle_one_opportunity_per_turn(72, 8, 1,cx);
@@ -485,7 +492,7 @@ fn the_production_reconcile_ladder_costs_fewer_crossings_when_the_worker_owns_th
 /// shape a world-3d surface produces against the real per-lane budget.
 #[test]
 fn a_page_cut_by_its_byte_budget_stages_exactly_what_it_delivered_and_loses_nothing() {
- let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original reconcile fixture caller");
+ let mut original_caller=semio_framework_plugin_testing_laws::OriginalFixtureCaller::admit().expect("independently authored original reconcile fixture caller");
  let mut original_context=original_caller.context();let cx=&mut original_context;
  let result=(||{
     let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
@@ -557,16 +564,16 @@ fn a_page_cut_by_its_byte_budget_stages_exactly_what_it_delivered_and_loses_noth
 /// 🧾️ One turn's page under a byte budget that admits its first entry and at most one more — the
 /// production ladder (`take_turn_patch_page`) with the budget dialled down to a measured patch unit.
 fn turn_patch_page_of_two(unit_bytes: usize) -> Vec<ui_contract::UiPatch> {
-    let page = super::turn::take_turn_patch_page(unit_bytes.saturating_add(unit_bytes / 2)).expect("turn patch page");
+    let page = semio_framework_plugin_reactor_turn::take_turn_patch_page(unit_bytes.saturating_add(unit_bytes / 2)).expect("turn patch page");
     page.into_iter().collect()
 }
 
 #[derive(Default)]
 struct DriveLedger {
-    crossings: usize,
-    turns: usize,
-    idle: usize,
-    published: usize,
+    pub crossings: usize,
+    pub turns: usize,
+    pub idle: usize,
+    pub published: usize,
 }
 
 /// 🧹️ Retires one patch the way the HOST does once it has admitted it.

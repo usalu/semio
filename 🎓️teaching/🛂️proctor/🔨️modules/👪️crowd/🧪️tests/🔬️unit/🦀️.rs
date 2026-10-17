@@ -1,5 +1,5 @@
 use super::*;
-use crate::catalog::tests::fixture;
+use crate::catalog::fixtures::fixture;
 use quiz::{Challenge, ClassificationItemResult, DimensionResult, MatchingItemResult, SortingItemResult, CHALLENGES, CROWD_SCORE_BINS};
 
 /// 🎲️ A small deterministic generator (SplitMix64), so every run folds the same results.

@@ -11,7 +11,7 @@ use super::*;
 use semio_framework_os_kernel::os_directory::{MemberSpaceViewV1, PublicSpaceViewV1};
 
 const FIXTURE: &str = include_str!("../../../../../../📇️directory/🧪️tests/🧫️fixtures/🏘️spaces/🔣️.json");
-const DIRECTORY_SCHEMA_SOURCE: &str = include_str!("../../../../../../📇️directory/🧬️schema/🦀️.rs");
+const DIRECTORY_SCHEMA_SOURCE: &str = include_str!("../../../../../../📇️directory/🧬️schema/📖️events-commands-and-admin/🦀️.rs");
 
 fn fixture() -> serde_json::Value {
     serde_json::from_str(FIXTURE).expect("the shared spaces fixture is valid JSON")

@@ -1,0 +1,86 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "bazel-release",
+      "schema": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🏗️bazel/🧬️schema/🔣️.json",
+      "retired": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🏗️bazel/🔣️.json",
+      "definition": "Release",
+      "validation": null,
+      "hadDefinitions": false,
+      "dataSha256": "d565befd11f7510fd8b21b86b612235ce70516ffd47b481e4736dc2ad297bbd8",
+      "contractSha256": "678088d68c80ae6d05b2d34341af13222cb0a99f1f969bfaee09ddb26872b3c2"
+    },
+    {
+      "id": "bun-release",
+      "schema": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🟦️bun/🧬️schema/🔣️.json",
+      "retired": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🟦️bun/🔣️.json",
+      "definition": "Release",
+      "validation": null,
+      "hadDefinitions": false,
+      "dataSha256": "846cb8a6809086440dbd544d4f8821e959b68ecb767d0c74059d04041d3ad277",
+      "contractSha256": "7571c1e717a81f10bd8334a62aa320a53b746d4fb25e7de006ef4cae7108ecb8"
+    },
+    {
+      "id": "wasm-release",
+      "schema": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🕸️wasm/🧬️schema/🔣️.json",
+      "retired": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🕸️wasm/🔣️.json",
+      "definition": "Release",
+      "validation": null,
+      "hadDefinitions": false,
+      "dataSha256": "1d4eba0d9e8084e0ba2ee72029a58882509c17d6f006e0a7ca10fbe8096119b6",
+      "contractSha256": "b2427d696ee5d50f8a34885ecc6a174124b658a85b5b42d9a7292869e9f7164a"
+    },
+    {
+      "id": "bazel-policy",
+      "schema": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧬️schema/🔣️.json",
+      "retired": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🔣️policy.json",
+      "definition": "Policy",
+      "validation": "ImplementationPolicy",
+      "hadDefinitions": true,
+      "dataSha256": "dd1fb5c6bc466d5a9d7a882efe299e5b759ce39bccb4fc58f5a7425445795303",
+      "contractSha256": "bdbf93da8d641d25d95cd0112f7721b3484bdd0c7392d4a7d5117dc39af3d65a"
+    },
+    {
+      "id": "preparation-policy",
+      "schema": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🧬️schema/🔣️.json",
+      "retired": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🔣️policy.json",
+      "definition": "Policy",
+      "validation": null,
+      "hadDefinitions": false,
+      "dataSha256": "9e125d7f4f44cc5c340bf22c0387a781caab8b0da71a1cf3fd3a313b9dac2530",
+      "contractSha256": "187a2ac246582bd5f6a7dd65364ae0e1b3a436512f60e6b41651148b4d7ad69c"
+    },
+    {
+      "id": "compiler-environment-policy",
+      "schema": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🕸️units/📦️package/🌱️environment/📖️references/🧬️schema/🔣️.json",
+      "retired": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🕸️units/📦️package/🌱️environment/📖️references/🔣️policy.json",
+      "definition": "Policy",
+      "validation": "Policy",
+      "hadDefinitions": false,
+      "dataSha256": "8bc668dc5062fa6dac8f30a9ba897f753e51154a7e8878fabfa378e868d49cb2",
+      "contractSha256": "dbd2903103bc46fe2a3883ad601747cce2caedf50b5000ff72cfab56499056ac"
+    },
+    {
+      "id": "cargo-launch-configuration",
+      "schema": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🚪️launcher/🧬️schema/🔣️.json",
+      "retired": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🚪️launcher/🔣️policy.json",
+      "definition": "Configuration",
+      "validation": "Policy",
+      "hadDefinitions": true,
+      "dataSha256": "67c5981277afeed64fd4cdf687e507fdfcdf87363321845790e737729fcfd8fc",
+      "contractSha256": "49fd0710050b956b8e0bffcfa03b7d9c40ff833b6643c3179e9bba7479ba3984"
+    }
+  ],
+  "protocol": {
+    "commands": [
+      "--run",
+      "--tool-tests",
+      "--backend-tests",
+      "--support-tests",
+      "--dependency-tests",
+      "--dependency-producer-tests",
+      "--dependency-storage-tests"
+    ]
+  }
+}

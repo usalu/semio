@@ -1,9 +1,11 @@
 //! 🐚️ Jack query shell for trinity graphs.
 
 extern crate semio_framework_os_kernel as store;
-use semio_s_artifact_trinity_jack::ast::QueryResult;
-use semio_s_artifact_trinity_jack::standards::v1::subsets::any::io::text::snapshot::run;
-use semio_s_artifact_trinity_jack::{Graph, JackSnapshot, PropertyValue};
+use semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::ast::QueryResult;
+use semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::runner::run;
+use semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::memory::Graph;
+use semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::snapshot::JackSnapshot;
+use semio_framework_graph_manifest::PropertyValue;
 use std::env;
 use std::fs;
 use std::io::{self, BufRead, Write};
@@ -15,7 +17,7 @@ use pack::snapshot::ArtifactDsl;
 enum TrinityJackShellError {
     ReadFixture { path: String, source: io::Error },
     Dsl { path: String, source: store::TextError },
-    Graph(semio_s_artifact_trinity_jack::TrinityRamError),
+    Graph(semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::errors::TrinityRamError),
     Query(String),
     Io(io::Error),
 }
@@ -44,8 +46,8 @@ impl std::error::Error for TrinityJackShellError {
     }
 }
 
-impl From<semio_s_artifact_trinity_jack::TrinityRamError> for TrinityJackShellError {
-    fn from(error: semio_s_artifact_trinity_jack::TrinityRamError) -> Self {
+impl From<semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::errors::TrinityRamError> for TrinityJackShellError {
+    fn from(error: semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::errors::TrinityRamError) -> Self {
         Self::Graph(error)
     }
 }

@@ -1,0 +1,621 @@
+[
+  {
+    "id": "authored",
+    "target": {
+      "execution": {
+        "kind": "command",
+        "command": "node \"two words\" value"
+      }
+    },
+    "expected": [
+      {
+        "argv": [
+          "node",
+          "two words",
+          "value"
+        ],
+        "cwd": "/workspace"
+      }
+    ],
+    "missing": []
+  },
+  {
+    "id": "authored-list",
+    "target": {
+      "execution": {
+        "kind": "command",
+        "commands": [
+          "node one",
+          {
+            "command": "node two",
+            "forwardAllArgs": false
+          }
+        ]
+      }
+    },
+    "expected": [
+      {
+        "argv": [
+          "node",
+          "one"
+        ],
+        "cwd": "/workspace"
+      },
+      {
+        "argv": [
+          "node",
+          "two"
+        ],
+        "cwd": "/workspace"
+      }
+    ],
+    "missing": []
+  },
+  {
+    "id": "literal",
+    "target": {
+      "execution": {
+        "kind": "command",
+        "program": "node",
+        "args": [
+          "two words",
+          "",
+          "{projectName}",
+          "{options.missing}",
+          "'\"$;\\",
+          "🎯"
+        ]
+      }
+    },
+    "expected": [
+      {
+        "argv": [
+          "node",
+          "two words",
+          "",
+          "{projectName}",
+          "{options.missing}",
+          "'\"$;\\",
+          "🎯"
+        ],
+        "cwd": "/workspace"
+      }
+    ],
+    "missing": []
+  },
+  {
+    "id": "literal-program",
+    "target": {
+      "execution": {
+        "kind": "command",
+        "program": "two words",
+        "args": []
+      }
+    },
+    "expected": [
+      {
+        "argv": [
+          "two words"
+        ],
+        "cwd": "/workspace"
+      }
+    ],
+    "missing": []
+  },
+  {
+    "id": "literal-cwd",
+    "target": {
+      "execution": {
+        "kind": "command",
+        "program": "node",
+        "cwd": "{projectRoot}"
+      }
+    },
+    "expected": [
+      {
+        "argv": [
+          "node"
+        ],
+        "cwd": "/workspace/{projectRoot}"
+      }
+    ],
+    "missing": []
+  },
+  {
+    "id": "authored-cwd",
+    "target": {
+      "execution": {
+        "kind": "command",
+        "command": "node",
+        "cwd": "{projectRoot}"
+      }
+    },
+    "expected": [
+      {
+        "argv": [
+          "node"
+        ],
+        "cwd": "/workspace/app"
+      }
+    ],
+    "missing": []
+  },
+  {
+    "id": "noop",
+    "target": {
+      "execution": {
+        "kind": "noop"
+      }
+    },
+    "expected": [],
+    "missing": []
+  },
+  {
+    "id": "literal-disabled",
+    "target": {
+      "execution": {
+        "kind": "command",
+        "program": "node",
+        "args": [
+          "missing/📜️script.ts"
+        ],
+        "forwardAllArgs": false
+      }
+    },
+    "expected": [
+      {
+        "argv": [
+          "node"
+        ],
+        "cwd": "/workspace"
+      }
+    ],
+    "missing": []
+  },
+  {
+    "id": "authored-defaults",
+    "target": {
+      "execution": {
+        "kind": "command",
+        "command": "node \"two words\"",
+        "args": [
+          "",
+          "{projectName}",
+          "payload/📜️script.ts"
+        ]
+      }
+    },
+    "expected": [
+      {
+        "argv": [
+          "node",
+          "two words",
+          "",
+          "{projectName}",
+          "payload/📜️script.ts"
+        ],
+        "cwd": "/workspace"
+      }
+    ],
+    "missing": []
+  },
+  {
+    "id": "authored-disabled",
+    "target": {
+      "execution": {
+        "kind": "command",
+        "command": "node",
+        "args": [
+          "ignored"
+        ],
+        "forwardAllArgs": false
+      }
+    },
+    "expected": [
+      {
+        "argv": [
+          "node"
+        ],
+        "cwd": "/workspace"
+      }
+    ],
+    "missing": []
+  },
+  {
+    "id": "list-overrides-global-false",
+    "target": {
+      "execution": {
+        "kind": "command",
+        "commands": [
+          {
+            "command": "node one",
+            "forwardAllArgs": true
+          },
+          {
+            "command": "node two",
+            "forwardAllArgs": false
+          },
+          "node three"
+        ],
+        "args": [
+          "literal default"
+        ],
+        "forwardAllArgs": false
+      }
+    },
+    "expected": [
+      {
+        "argv": [
+          "node",
+          "one",
+          "literal default"
+        ],
+        "cwd": "/workspace"
+      },
+      {
+        "argv": [
+          "node",
+          "two"
+        ],
+        "cwd": "/workspace"
+      },
+      {
+        "argv": [
+          "node",
+          "three"
+        ],
+        "cwd": "/workspace"
+      }
+    ],
+    "missing": []
+  },
+  {
+    "id": "list-overrides-global-true",
+    "target": {
+      "execution": {
+        "kind": "command",
+        "commands": [
+          {
+            "command": "node one",
+            "forwardAllArgs": false
+          },
+          {
+            "command": "node two",
+            "forwardAllArgs": true
+          },
+          "node three"
+        ],
+        "args": [
+          "literal default"
+        ],
+        "forwardAllArgs": true
+      }
+    },
+    "expected": [
+      {
+        "argv": [
+          "node",
+          "one"
+        ],
+        "cwd": "/workspace"
+      },
+      {
+        "argv": [
+          "node",
+          "two",
+          "literal default"
+        ],
+        "cwd": "/workspace"
+      },
+      {
+        "argv": [
+          "node",
+          "three",
+          "literal default"
+        ],
+        "cwd": "/workspace"
+      }
+    ],
+    "missing": []
+  },
+  {
+    "id": "literal-owner-arguments",
+    "target": {
+      "execution": {
+        "kind": "command",
+        "program": "node",
+        "args": [
+          "transported/📜️script.ts"
+        ],
+        "ownerArguments": true
+      }
+    },
+    "expected": [
+      {
+        "argv": [
+          "node"
+        ],
+        "cwd": "/workspace"
+      }
+    ],
+    "missing": []
+  },
+  {
+    "id": "authored-owner-arguments",
+    "target": {
+      "execution": {
+        "kind": "command",
+        "commands": [
+          {
+            "command": "node one",
+            "forwardAllArgs": true
+          },
+          "node two"
+        ],
+        "args": [
+          "transported/📜️script.ts"
+        ],
+        "ownerArguments": true
+      }
+    },
+    "expected": [
+      {
+        "argv": [
+          "node",
+          "one"
+        ],
+        "cwd": "/workspace"
+      },
+      {
+        "argv": [
+          "node",
+          "two"
+        ],
+        "cwd": "/workspace"
+      }
+    ],
+    "missing": []
+  },
+  {
+    "id": "configured-literal-defaults",
+    "target": {
+      "execution": {
+        "kind": "command",
+        "program": "node",
+        "args": [
+          "base"
+        ]
+      },
+      "configurations": {
+        "release": {
+          "execution": {
+            "args": [
+              "release",
+              ""
+            ]
+          }
+        }
+      }
+    },
+    "expected": [
+      {
+        "argv": [
+          "node",
+          "base"
+        ],
+        "cwd": "/workspace"
+      },
+      {
+        "argv": [
+          "node",
+          "release",
+          ""
+        ],
+        "cwd": "/workspace"
+      }
+    ],
+    "missing": []
+  },
+  {
+    "id": "configured-forwarding",
+    "target": {
+      "execution": {
+        "kind": "command",
+        "program": "node",
+        "args": [
+          "base"
+        ]
+      },
+      "configurations": {
+        "release": {
+          "execution": {
+            "forwardAllArgs": false
+          }
+        }
+      }
+    },
+    "expected": [
+      {
+        "argv": [
+          "node",
+          "base"
+        ],
+        "cwd": "/workspace"
+      },
+      {
+        "argv": [
+          "node"
+        ],
+        "cwd": "/workspace"
+      }
+    ],
+    "missing": []
+  },
+  {
+    "id": "configured-owner-arguments",
+    "target": {
+      "execution": {
+        "kind": "command",
+        "command": "node",
+        "args": [
+          "base"
+        ],
+        "ownerArguments": true
+      },
+      "configurations": {
+        "release": {
+          "execution": {
+            "args": [
+              "release"
+            ]
+          }
+        }
+      }
+    },
+    "expected": [
+      {
+        "argv": [
+          "node"
+        ],
+        "cwd": "/workspace"
+      }
+    ],
+    "missing": []
+  },
+  {
+    "id": "configured-command-text",
+    "target": {
+      "execution": {
+        "kind": "command",
+        "command": "node base",
+        "args": [
+          "x"
+        ]
+      },
+      "configurations": {
+        "release": {
+          "execution": {
+            "command": "node release",
+            "args": [
+              "y"
+            ]
+          }
+        }
+      }
+    },
+    "expected": [
+      {
+        "argv": [
+          "node",
+          "base",
+          "x"
+        ],
+        "cwd": "/workspace"
+      },
+      {
+        "argv": [
+          "node",
+          "release",
+          "y"
+        ],
+        "cwd": "/workspace"
+      }
+    ],
+    "missing": []
+  },
+  {
+    "id": "configured-cwd",
+    "target": {
+      "execution": {
+        "kind": "command",
+        "program": "node",
+        "cwd": "base"
+      },
+      "configurations": {
+        "release": {
+          "execution": {
+            "cwd": "release"
+          }
+        }
+      }
+    },
+    "expected": [
+      {
+        "argv": [
+          "node"
+        ],
+        "cwd": "/workspace/base"
+      },
+      {
+        "argv": [
+          "node"
+        ],
+        "cwd": "/workspace/release"
+      }
+    ],
+    "missing": []
+  },
+  {
+    "id": "noop-missing-cwd",
+    "target": {
+      "execution": {
+        "kind": "noop",
+        "cwd": "absent"
+      }
+    },
+    "expected": [],
+    "missing": [
+      "/workspace/absent"
+    ]
+  },
+  {
+    "id": "configured-noop-missing-cwd",
+    "target": {
+      "execution": {
+        "kind": "noop"
+      },
+      "configurations": {
+        "release": {
+          "execution": {
+            "cwd": "absent"
+          }
+        }
+      }
+    },
+    "expected": [],
+    "missing": [
+      "/workspace/absent"
+    ]
+  },
+  {
+    "id": "configured-identical-operation-deduplicated",
+    "target": {
+      "execution": {
+        "kind": "command",
+        "program": "node",
+        "args": [
+          "same"
+        ]
+      },
+      "configurations": {
+        "release": {
+          "execution": {
+            "args": [
+              "same"
+            ]
+          }
+        }
+      }
+    },
+    "expected": [
+      {
+        "argv": [
+          "node",
+          "same"
+        ],
+        "cwd": "/workspace"
+      }
+    ],
+    "missing": []
+  }
+]

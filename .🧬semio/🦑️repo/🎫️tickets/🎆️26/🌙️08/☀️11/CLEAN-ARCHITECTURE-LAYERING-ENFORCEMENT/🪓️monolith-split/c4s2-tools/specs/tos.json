@@ -1,0 +1,102 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧪️ticket-owned-browser-host-staging/🟦️.ts",
+ "fn": "registerTests1",
+ "depsType": "TestDependencies",
+ "sourceType": "TestSource",
+ "parentTypeUses": [
+  "TestSource"
+ ],
+ "kit": {
+  "dir": "🧰️test-kit",
+  "fn": "createTestKit",
+  "doc": "/** 🧰️ The shared fixtures of the ticket-owned browser host staging suite: the namespace bag of every owner module the cases drive, the source location, and the helpers several case groups use. */",
+  "moveTop": [
+   "testDependencies",
+   "TestSource"
+  ],
+  "typeExports": [
+   "TestDependencies",
+   "TestSource"
+  ],
+  "extraText": "export type TestDependencies = typeof testDependencies;"
+ },
+ "groups": [
+  {
+   "dir": "🌉️fixtures-and-pixels",
+   "fn": "registerFixtureAndPixelTests",
+   "doc": "/** 🌉️ The scale fixture artifacts, the linked session engines and the owned parity pixel comparison of the ticket-owned browser host staging suite. */",
+   "lines": [
+    [
+     120,
+     360
+    ]
+   ]
+  },
+  {
+   "dir": "🛂️routes-and-bridge",
+   "fn": "registerRouteAndBridgeTests",
+   "doc": "/** 🛂️ The descriptor route guard, the catalog state transition probe and the plugin component bridge source of the ticket-owned browser host staging suite. */",
+   "lines": [
+    [
+     362,
+     621
+    ]
+   ]
+  },
+  {
+   "dir": "🧬️jco-rewrites",
+   "fn": "registerJcoRewriteTests",
+   "doc": "/** 🧬️ The jco asset URL, async result and preview2 shim rewrites and the component instantiation of the ticket-owned browser host staging suite. */",
+   "lines": [
+    [
+     622,
+     850
+    ]
+   ]
+  },
+  {
+   "dir": "🚚️vendor-transport",
+   "fn": "registerVendorTransportTests",
+   "doc": "/** 🚚️ The deployed vendor transport cases of the ticket-owned browser host staging suite. */",
+   "lines": [
+    [
+     851,
+     1264
+    ]
+   ]
+  },
+  {
+   "dir": "🏗️profile-and-catalog-build",
+   "fn": "registerProfileAndCatalogBuildTests",
+   "doc": "/** 🏗️ The WASI component profile policy, cargo component settings, the concurrency limiter and the bounded-parallel plugin catalog build of the ticket-owned browser host staging suite. */",
+   "lines": [
+    [
+     1265,
+     1403
+    ]
+   ]
+  },
+  {
+   "dir": "🗃️handles-and-output",
+   "fn": "registerHandleAndOutputTests",
+   "doc": "/** 🗃️ The per-path sqlite handle cache and the deployment output preservation of the ticket-owned browser host staging suite. */",
+   "lines": [
+    [
+     1405,
+     1521
+    ]
+   ]
+  },
+  {
+   "dir": "📡️poll-and-smoke",
+   "fn": "registerPollAndSmokeTests",
+   "doc": "/** 📡️ The poll census helpers and the catalog smoke aggregation of the ticket-owned browser host staging suite. */",
+   "lines": [
+    [
+     1523,
+     1731
+    ]
+   ]
+  }
+ ]
+}

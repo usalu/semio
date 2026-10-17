@@ -1,0 +1,20 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Draw Source Commit Single-Case Route",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "contractId", "command", "target", "budgetMs", "bunTimeoutMs", "testName", "runner", "extraArguments", "launchName", "launchOrder"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "contractId": { "const": "draw-source-commit-route-v1" },
+    "command": { "const": "artifact-source-commit" },
+    "target": { "const": "test-artifact-source-commit" },
+    "budgetMs": { "const": 120000 },
+    "bunTimeoutMs": { "const": 120000 },
+    "testName": { "const": "rolls back and atomically applies CAD and Draw projections to an empty second plan" },
+    "runner": { "const": "runTestBudgeted" },
+    "extraArguments": { "const": false },
+    "launchName": { "const": "🧹clean🧩️taxonomy🧪️artifact-source-commit" },
+    "launchOrder": { "const": 410.198 }
+  }
+}

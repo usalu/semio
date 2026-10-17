@@ -6,7 +6,8 @@
   "type": "module",
   "private": true,
   "exports": {
-    ".": "./🟦️.ts"
+    ".": "./🟦️.ts",
+    "./testing/fixtures": "./🧪️testing/🧫️fixtures/🟦️.ts"
   },
   "scripts": {
     "test": "bun --cwd \"../../../../..\" repo run @semio-tech/framework-3d-js:test"
@@ -14,7 +15,8 @@
   "devDependencies": {
     "typescript": "^5.9.3",
     "vitest": "^4.0.17",
-    "@semio-tech/process": "workspace:*"
+    "@semio-tech/process": "workspace:*",
+    "@semio-tech/framework": "workspace:*"
   },
   "license": "LGPL-3.0-or-later",
   "repository": {

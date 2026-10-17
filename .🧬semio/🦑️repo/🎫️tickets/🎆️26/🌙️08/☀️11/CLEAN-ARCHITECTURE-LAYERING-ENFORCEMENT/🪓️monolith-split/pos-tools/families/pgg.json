@@ -1,0 +1,21 @@
+{
+ "name": "pgg",
+ "crates": [
+  "semio-s-artifact-energy-model-editor-edit",
+  "semio-s-artifact-energy-model-session",
+  "semio-s-artifact-energy-model-viewer",
+  "semio-s-artifact-norm-vdi3805-inferences",
+  "semio-framework-test-original-snapshot-owners"
+ ],
+ "base": {
+  "rev": "1bae6115bc5",
+  "crates": [
+   "semio-s-artifact-energy-model-editor-edit",
+   "semio-s-artifact-energy-model-session",
+   "semio-s-artifact-energy-model-viewer",
+   "semio-s-artifact-norm-vdi3805-inferences",
+   "semio-framework-test-original-snapshot-owners"
+  ]
+ },
+ "note": "PLUGIN-GATES-GREEN"
+}

@@ -1,0 +1,239 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "mode": "absent",
+      "accepted": true,
+      "completedRetentions": 0,
+      "transitionMayBeUnresolved": false
+    },
+    {
+      "mode": "one-unready",
+      "accepted": true,
+      "completedRetentions": 1,
+      "transitionMayBeUnresolved": false
+    },
+    {
+      "mode": "two-unready",
+      "accepted": true,
+      "completedRetentions": 2,
+      "transitionMayBeUnresolved": false
+    },
+    {
+      "mode": "different-canonical-root-link",
+      "accepted": true,
+      "completedRetentions": 1,
+      "transitionMayBeUnresolved": false
+    },
+    {
+      "mode": "ordinary-source",
+      "accepted": true,
+      "completedRetentions": 1,
+      "transitionMayBeUnresolved": false
+    },
+    {
+      "mode": "missing-source",
+      "accepted": true,
+      "completedRetentions": 1,
+      "transitionMayBeUnresolved": false
+    },
+    {
+      "mode": "selected-root-alias",
+      "accepted": false,
+      "completedRetentions": 0,
+      "transitionMayBeUnresolved": false
+    },
+    {
+      "mode": "selected-member-alias",
+      "accepted": false,
+      "completedRetentions": 0,
+      "transitionMayBeUnresolved": false
+    },
+    {
+      "mode": "foreign-alias",
+      "accepted": false,
+      "completedRetentions": 0,
+      "transitionMayBeUnresolved": false
+    },
+    {
+      "mode": "relative-alias",
+      "accepted": false,
+      "completedRetentions": 0,
+      "transitionMayBeUnresolved": false
+    },
+    {
+      "mode": "dotsegment-alias",
+      "accepted": false,
+      "completedRetentions": 0,
+      "transitionMayBeUnresolved": false
+    },
+    {
+      "mode": "unknown-subpath-alias",
+      "accepted": false,
+      "completedRetentions": 0,
+      "transitionMayBeUnresolved": false
+    },
+    {
+      "mode": "ready-file",
+      "accepted": false,
+      "completedRetentions": 0,
+      "transitionMayBeUnresolved": false
+    },
+    {
+      "mode": "ready-directory",
+      "accepted": false,
+      "completedRetentions": 0,
+      "transitionMayBeUnresolved": false
+    },
+    {
+      "mode": "ready-link",
+      "accepted": false,
+      "completedRetentions": 0,
+      "transitionMayBeUnresolved": false
+    },
+    {
+      "mode": "ready-invalid",
+      "accepted": false,
+      "completedRetentions": 0,
+      "transitionMayBeUnresolved": false
+    },
+    {
+      "mode": "root-file",
+      "accepted": false,
+      "completedRetentions": 0,
+      "transitionMayBeUnresolved": false
+    },
+    {
+      "mode": "root-link",
+      "accepted": false,
+      "completedRetentions": 0,
+      "transitionMayBeUnresolved": false
+    },
+    {
+      "mode": "cross-device",
+      "accepted": false,
+      "completedRetentions": 0,
+      "transitionMayBeUnresolved": false
+    },
+    {
+      "mode": "root-drift",
+      "accepted": false,
+      "completedRetentions": 0,
+      "transitionMayBeUnresolved": false
+    },
+    {
+      "mode": "parent-drift",
+      "accepted": false,
+      "completedRetentions": 0,
+      "transitionMayBeUnresolved": false
+    },
+    {
+      "mode": "ready-race",
+      "accepted": false,
+      "completedRetentions": 0,
+      "transitionMayBeUnresolved": false
+    },
+    {
+      "mode": "capsule-collision",
+      "accepted": false,
+      "completedRetentions": 0,
+      "transitionMayBeUnresolved": false
+    },
+    {
+      "mode": "cancel-before",
+      "accepted": false,
+      "completedRetentions": 0,
+      "transitionMayBeUnresolved": false
+    },
+    {
+      "mode": "cancel-after-one",
+      "accepted": false,
+      "completedRetentions": 1,
+      "transitionMayBeUnresolved": false
+    },
+    {
+      "mode": "undefined-after-one",
+      "accepted": false,
+      "completedRetentions": 1,
+      "transitionMayBeUnresolved": false
+    },
+    {
+      "mode": "frozen-after-one",
+      "accepted": false,
+      "completedRetentions": 1,
+      "transitionMayBeUnresolved": false
+    },
+    {
+      "mode": "close-uncertain",
+      "accepted": false,
+      "completedRetentions": 0,
+      "transitionMayBeUnresolved": true
+    },
+    {
+      "mode": "foreign-after-retain",
+      "accepted": false,
+      "completedRetentions": 1,
+      "transitionMayBeUnresolved": false
+    },
+    {
+      "mode": "stage-failure",
+      "accepted": false,
+      "completedRetentions": 2,
+      "transitionMayBeUnresolved": false
+    },
+    {
+      "mode": "installer-failure",
+      "accepted": false,
+      "completedRetentions": 2,
+      "transitionMayBeUnresolved": false
+    },
+    {
+      "mode": "forged-control",
+      "accepted": false,
+      "completedRetentions": 0,
+      "transitionMayBeUnresolved": false
+    },
+    {
+      "mode": "wrong-root",
+      "accepted": false,
+      "completedRetentions": 0,
+      "transitionMayBeUnresolved": false
+    },
+    {
+      "mode": "wrong-input",
+      "accepted": false,
+      "completedRetentions": 0,
+      "transitionMayBeUnresolved": false
+    },
+    {
+      "mode": "wrong-funding",
+      "accepted": false,
+      "completedRetentions": 0,
+      "transitionMayBeUnresolved": false
+    },
+    {
+      "mode": "expired",
+      "accepted": false,
+      "completedRetentions": 0,
+      "transitionMayBeUnresolved": false
+    },
+    {
+      "mode": "unknown-j-role",
+      "accepted": true,
+      "completedRetentions": 1,
+      "transitionMayBeUnresolved": false
+    },
+    {
+      "mode": "malformed-capsule",
+      "accepted": true,
+      "completedRetentions": 1,
+      "transitionMayBeUnresolved": false
+    },
+    {
+      "mode": "windows",
+      "accepted": false,
+      "completedRetentions": 0,
+      "transitionMayBeUnresolved": false
+    }
+  ]
+}

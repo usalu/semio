@@ -1,0 +1,27 @@
+[package]
+workspace = "../../../../../../../../.."
+name = "semio-framework-os-directory-browser-actor"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Directory browser actor identities (leaf of the wire contract)"
+
+[package.metadata.semio]
+role = "framework"
+id = "os-directory-browser-actor"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
+protocol = { path = "../../../../../../../../🔨️modules/📡️replication/📦️packages/🦀️rust", package = "semio-framework-replication" }
+semio-framework-value-derive = { path = "../../../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust" }

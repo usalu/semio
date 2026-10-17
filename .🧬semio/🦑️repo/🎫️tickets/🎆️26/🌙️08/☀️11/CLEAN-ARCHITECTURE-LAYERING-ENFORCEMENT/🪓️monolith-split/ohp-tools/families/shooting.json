@@ -1,0 +1,20 @@
+{
+ "name": "shooting",
+ "crates": [
+  "semio-s-artifact-shooting-shooting",
+  "semio-s-artifact-shooting-shooting-config",
+  "semio-s-artifact-shooting-shooting-inferences",
+  "semio-s-artifact-shooting-shooting-mut-any",
+  "semio-s-artifact-shooting-shooting-mut-any-2",
+  "semio-s-artifact-shooting-shooting-mut-any-3",
+  "semio-s-artifact-shooting-shooting-mut-family",
+  "semio-s-artifact-shooting-shooting-mutations",
+  "semio-s-artifact-shooting-shooting-schema",
+  "semio-s-artifact-shooting-shooting-set-active-asset",
+  "semio-s-artifact-shooting-shooting-shooting",
+  "semio-s-artifact-shooting-shooting-tests",
+  "semio-s-artifact-shooting-shooting-tests-dims-scene-sun-to-half",
+  "semio-shooting-mutation-bridge"
+ ],
+ "note": "ORACLE-HARVEST-PLUGINS: ✏️s/🔌️plugins/🎥️shooting"
+}

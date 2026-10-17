@@ -2,7 +2,7 @@
 //! utility, snap status).
 
 use crate::editor::note::terminology::NotePlayLabels;
-use crate::editor::note::ui_label;
+use crate::editor::note::support::ui_label;
 use crate::schema::flatten_blocks;
 use crate::NoteSnapshot;
 use semio_framework_plugin::tree_item_desc;
@@ -58,11 +58,7 @@ pub fn render(document: &NoteSnapshot, active_utility_id: &str, labels: &NotePla
 //#endregion 🔖️Render
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️semantic-contract/🦀️.rs"]
-mod semantic_contract;
+

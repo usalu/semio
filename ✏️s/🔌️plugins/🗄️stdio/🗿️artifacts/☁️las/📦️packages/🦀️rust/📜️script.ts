@@ -10,6 +10,6 @@ class OriginalReceivingSource extends BundleScript{
 }
 /** 🦀️ Runs the actual LAS physical receiving laws under the original finite policy. */
 class OriginalReceivingNative extends OriginalReceivingSource{
- async run(args:string[]):Promise<void>{await super.run(args);await runArtifactRustTests("semio-s-artifact-stdio-las",this.repoRoot,["--lib","sqlite_snapshot_las_original_receiving_","--no-fail-fast"],this.invocation.control);}
+ async run(args:string[]):Promise<void>{await super.run(args);await runArtifactRustTests("semio-s-artifact-stdio-las",this.repoRoot,["--lib","sqlite_snapshot_las_original_receiving_","--no-fail-fast"],this.invocation);}
 }
 await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-stdio-las", { packages: ["semio-s-artifact-stdio-las", "semio-s-artifact-stdio-las-mutations", "semio-s-artifact-stdio-las-schema", "semio-s-artifact-stdio-las-snapshot", "semio-s-artifact-stdio-las-tests", "semio-s-artifact-stdio-las-tests-2"],commands:{"test-original-receiving-source":OriginalReceivingSource,"test-original-receiving-native":OriginalReceivingNative}, snapshotSqliteTests: ["../../🏅️standards/🔖️1.0/🪆️subsets/🎩️header/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"] });

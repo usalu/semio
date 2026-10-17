@@ -1,0 +1,19 @@
+{
+ "name": "dm2m",
+ "crates": [
+  "semio-framework-os-mcp-foundation",
+  "semio-framework-os-mcp-plugin-runtime",
+  "semio-framework-os-mcp",
+  "semio-framework-trace-memory-testing"
+ ],
+ "base": {
+  "rev": "1bae6115bc5",
+  "crates": [
+   "semio-framework-os-mcp-foundation",
+   "semio-framework-os-mcp-plugin-runtime",
+   "semio-framework-os-mcp",
+   "semio-framework-trace-memory-testing"
+  ]
+ },
+ "note": "DM2 requested-allocation observer re-pointing (mcp)"
+}

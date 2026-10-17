@@ -5,7 +5,7 @@ use crate::host::owned::{puzzle2d_store, close_puzzle2d_store};
 fn puzzle2d_document_vcs_replays_granular_operations() {
     use crate::standards::v1::subsets::any::schema::empty_puzzle2d_snapshot;
     use crate::standards::v1::subsets::any::schema::mutations::create_node;
-    use {crate::standards::v1::subsets::any::schema::Puzzle2dNode, crate::standards::v1::subsets::any::schema::PUZZLE_2D_SCHEMA};
+    use {crate::standards::v1::subsets::any::schema::records::Puzzle2dNode, crate::standards::v1::subsets::any::schema::records::PUZZLE_2D_SCHEMA};
     use store::{os_store::document_materialize::create_document_envelope, os_store::store_schema::ArtifactCommand};
 
     let mut store = ::semio_framework_async::poll::resolve_ready(puzzle2d_store(create_document_envelope(PUZZLE_2D_SCHEMA, "puzzle2d", empty_puzzle2d_snapshot(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))).expect("store");

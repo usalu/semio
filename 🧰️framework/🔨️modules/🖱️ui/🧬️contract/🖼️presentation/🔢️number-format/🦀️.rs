@@ -1,3 +1,7 @@
+/// 🔬️ The largest `InputProps::precision`/`NumberStepperProps::precision` a renderer honours —
+/// the fraction digits an `f64` still carries meaningfully.
+pub const UI_NUMBER_PRECISION_MAX: u16 = 15;
+
 /// 🔢️ Twelve significant decimal digits with the same display thresholds as React's formatNumber.
 pub fn format_ui_number(value: f64) -> String {
     if !value.is_finite() { return String::new() }
@@ -47,7 +51,7 @@ fn exact_decimal_half(value: f64, decimal_power: i32) -> bool {
 pub fn format_ui_number_fixed(value: f64, precision: u16) -> String {
     if !value.is_finite() { return String::new() }
     if value.abs() >= 1e21 { return format_ui_number(value) }
-    let digits = usize::from(precision.min(crate::UI_NUMBER_PRECISION_MAX));
+    let digits = usize::from(precision.min(UI_NUMBER_PRECISION_MAX));
     let magnitude = value.abs();
     let text = if exact_decimal_half(magnitude, -(digits as i32)) {
         let exact = format!("{magnitude:.*}", digits + 1);

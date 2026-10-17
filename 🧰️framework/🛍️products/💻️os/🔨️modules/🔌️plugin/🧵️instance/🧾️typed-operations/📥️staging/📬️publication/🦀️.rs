@@ -1,12 +1,43 @@
 //! 🏈️ Staged `publication` members of the `instance-typed-ops` use cases, as methods of the borrowed bundle (WP7 of the instance family).
 //!
 //! 📬️ Typed operation publication: the mounted publication units, the latest-wins ladder and the stall witness.
-use super::*;
-use super::docs_instance_root::tool_transaction_shape_fault;
-use super::docs_instance_root::typed_operation_document_is_fresh;
-use super::docs_instance_root::viewer_read_only_fault;
-use super::typed_ops_instance_root::store_publication_fault;
-use super::typed_ops_plugin_app_impl::PUBLICATION_RETURNED_ROOT_ALLOWANCE;
+use semio_framework_plugin_ownership::bounded_ownership::{ARTIFACT_LIVE_OUTPUT_SLOTS, plugin_retirement_fault};
+use semio_framework::{AppRole, Fault, FaultCode, FaultFrom, FaultOrigin};
+#[cfg(any(test, feature = "artifact-app-testing"))]
+use std::sync::Arc;
+use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_framework_plugin_operation::{ArtifactDocumentAuthority, ToolCancellationLease, ToolOperationKey};
+use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use pack::snapshot::ArtifactPack;
+use semio_framework_plugin_decl_app::tool_contract::{ArtifactToolCompletionValue, ArtifactToolPublicationLane, TYPED_OPERATION_FAULT_PAGE_BYTES, TypedOperationResultLane};
+use semio_framework_plugin_decl_views::child_view::ChildContentView;
+use semio_framework_plugin_decl_emission::child_emit_preparation::ChildEmitPreparationStep;
+use semio_framework_plugin_composition_publication::{ChildPublicationResultV1, ComposedGestureResult, MountedTypedCommandFullOperationStage, PendingArtifactStorePublication, PendingChildGroupPublication, PendingChildGroupPublicationPhase};
+use semio_framework_plugin_job::{DownloadResultPayload, INTERACTIVE_TURN_WORKER_WALL_US, TYPED_OPERATION_PUBLICATION_PUMPS, TYPED_OPERATION_STALL_FAULT_CEILING, TYPED_OPERATION_STALL_PROGRESS_MIX, TYPED_OPERATION_STALL_PUBLISHING_STAGE, TYPED_OPERATION_STALL_WITNESS_FLOOR, TransactionProposalDraft, TypedOperationCompletionWitness, TypedOperationLeftover, TypedOperationResultPage, TypedOperationUnitKind, record_typed_operation_unit};
+use semio_framework_value::{DslValue, ValueError};
+use semio_framework::kernel::{Effect, UiDirtyScope};
+use semio_framework_plugin_decl_emission::{Emit, TransactionPhase};
+use std::future::Future;
+use std::collections::HashSet;
+use store::os_store::store_schema::HistoryLane;
+use semio_framework_plugin_instance_extension::InstanceExtension;
+use semio_framework_plugin_instance_stores::stores_components::InstanceStores;
+use semio_framework_plugin_instance_docs::docs_components::MediaTransfers;
+use store::{MemberFactory, Mutation, SpaceMember};
+use semio_framework_plugin_retained_command::typed_operation::{MountedTypedCommandFullOperation, PendingPublicationOutcome};
+use protocol::OpText;
+use semio_framework_plugin_composition_publication::group::private_publication_group::owner::PRIVATE_CHILD_GROUP_MAXIMUM_CHILDREN;
+use semio_framework_plugin_reactor_app::PluginApp;
+use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
+use crate::typed_bundle::TypedCtx;
+use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
+use semio_framework_plugin_interaction::interaction_topology::take_inline_interaction_verbs;
+use semio_framework_ui_contract::*;
+use semio_framework_plugin_instance_docs::docs_instance_root::tool_transaction_shape_fault;
+use semio_framework_plugin_instance_docs::docs_instance_root::typed_operation_document_is_fresh;
+use semio_framework_plugin_instance_docs::docs_instance_root::viewer_read_only_fault;
+use crate::typed_ops_instance_root::store_publication_fault;
+use crate::typed_ops_plugin_app_impl::PUBLICATION_RETURNED_ROOT_ALLOWANCE;
 
 /// 🩺️ How many consecutive publication units advanced the SAME operation without changing any of
 /// [`Self::typed_operation_stall_witness`]'s three facts — `Some(streak)` only on a power of two at
@@ -56,13 +87,13 @@ pub(crate) fn mounted_typed_interaction_writes_are_next<A: ArtifactApp>(mounted:
 }
 
 impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceExtension> TypedCtx<'ctx, A, M, X> {
-    pub(crate) async fn advance_typed_operation_publication_one(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<(),crate::PluginLifecycleFailure>{
+    pub async fn advance_typed_operation_publication_one(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<(),semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{
         let before = self.tools.typed_operation_stall_witness();
         let advanced = self.advance_typed_operation_publication_unit(cx).await;
         if let (Some(before), Some(after)) = (before, self.tools.typed_operation_stall_witness()) {
             if let Some(streak) = typed_operation_stall_streak::<A>(before, after) {
                 let verb = self.tools.tool_operations.get(after.0).map_or("<released>", |operation| operation.verb.as_str());
-                crate::plugin_runtime::debug_runtime_line(format_args!("[TRACE] typed-operation {verb} advanced {streak} units with no change: operation={} stage={} flags={:#010b}", after.0, after.1, after.2));
+                semio_framework_plugin_reactor_app::debug_runtime_line(format_args!("[TRACE] typed-operation {verb} advanced {streak} units with no change: operation={} stage={} flags={:#010b}", after.0, after.1, after.2));
                 if after.1 == TYPED_OPERATION_STALL_PUBLISHING_STAGE && streak >= TYPED_OPERATION_STALL_FAULT_CEILING {
                     self.tools.fault_stalled_typed_operation_publication(after.0, streak)?;
                 }
@@ -80,7 +111,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
     /// migrated dispatch's document change lands on the Artifact lane, so this is where the
     /// revalidation belongs; `mounted` is out of the registry here, so the async pass is free
     /// to borrow the app, and the flag makes it exactly one pass per operation.
-    async fn advance_typed_operation_publication_unit(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<(),crate::PluginLifecycleFailure>{
+    async fn advance_typed_operation_publication_unit(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<(),semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{
         let retained=cx.retained_grant();if cx.should_yield(){return Ok(())}
         if !self.tools.latest_wins_commands.is_empty() && (self.tools.latest_wins_turn || self.tools.tool_operations.is_empty()) {
             self.tools.latest_wins_turn = false;
@@ -160,7 +191,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
     /// the host must acknowledge before the operation may continue (`stage` leaves `Publishing`), a
     /// completion that is not ready yet so nothing is staged to advance, [`TYPED_OPERATION_PUBLICATION_PUMPS`],
     /// and [`INTERACTIVE_TURN_WORKER_WALL_US`]. Ticket 26/09/02/PUZZLE-3D-END-TO-END wave B54.
-    pub(crate) async fn publish_mounted_typed_operation_run(&mut self, mounted: &mut MountedTypedCommandFullOperation<A>,cx:&mut semio_framework_job::StepContext<'_>, retained:RetainedCloneGrant) -> Result<(),crate::PluginLifecycleFailure> {
+    pub async fn publish_mounted_typed_operation_run(&mut self, mounted: &mut MountedTypedCommandFullOperation<A>,cx:&mut semio_framework_job::StepContext<'_>, retained:RetainedCloneGrant) -> Result<(),semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
         if mounted.identity.is_none() {
             let completion = mounted.completion.as_ref().ok_or_else(|| plugin_sdk_fault("mounted publication lacks its original effect completion"))?;
             let (receipt, progress) = completion.take_authoring_identity()?.ok_or_else(|| plugin_sdk_fault("mounted publication lacks its original app-owned effect receipt"))?;
@@ -184,21 +215,21 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
         result
     }
 
-    async fn publish_mounted_typed_operation_run_admitted(&mut self, mounted: &mut MountedTypedCommandFullOperation<A>, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>, retained:RetainedCloneGrant) -> Result<(),crate::PluginLifecycleFailure> {
+    async fn publish_mounted_typed_operation_run_admitted(&mut self, mounted: &mut MountedTypedCommandFullOperation<A>, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>, retained:RetainedCloneGrant) -> Result<(),semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
         if mounted.publication_ownership_progress.is_some(){return Ok(());}
         let mut spent = RetainedCloneProgress::default();
         let outcome = self.publish_mounted_typed_operation_pump(mounted, identity, retained, &mut spent,cx).await;
         if spent != RetainedCloneProgress::default() {
             assert!(mounted.publication_ownership_progress.is_none(), "typed preparation cannot overwrite an unreturned original receipt");
-            mounted.publication_ownership_progress = Some((crate::plugin_runtime::original_plugin_turn_grant(self.mounted_policy.preparation, retained), spent));
+            mounted.publication_ownership_progress = Some((semio_framework_plugin_reactor_app::original_plugin_turn_grant(self.mounted_policy.preparation, retained), spent));
         }
         outcome
     }
 
     /// 🏃️ Spends ONE host turn's grant on consecutive publication units: each unit receives what the turn still owns, its receipt is summed into `spent`, and the pump hands the turn back as soon as the grant is exhausted — so a grant of one item still publishes one unit per turn, and a larger grant batches exactly as many units as it pays for.
-    async fn publish_mounted_typed_operation_pump(&mut self, mounted: &mut MountedTypedCommandFullOperation<A>, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, retained:RetainedCloneGrant, spent: &mut RetainedCloneProgress,cx:&mut semio_framework_job::StepContext<'_>) -> Result<(),crate::PluginLifecycleFailure> {
+    async fn publish_mounted_typed_operation_pump(&mut self, mounted: &mut MountedTypedCommandFullOperation<A>, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, retained:RetainedCloneGrant, spent: &mut RetainedCloneProgress,cx:&mut semio_framework_job::StepContext<'_>) -> Result<(),semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
         let started_us=cx.now_us();
-        let turn = crate::plugin_runtime::original_plugin_turn_grant(self.mounted_policy.preparation, retained);
+        let turn = semio_framework_plugin_reactor_app::original_plugin_turn_grant(self.mounted_policy.preparation, retained);
         for _ in 0..TYPED_OPERATION_PUBLICATION_PUMPS {
             if cx.should_yield(){return Ok(())}
             let before=cx.retained_progress();let fuel=cx.fuel_remaining();
@@ -216,13 +247,13 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
                 self.publish_mounted_typed_inline_interaction_unit(mounted, identity).await?;
             } else {
                 let before = (mounted.publication_progress, mounted.publication.is_some(), mounted.pending_artifact_publication.is_some(), mounted.stage);
-                self.publish_mounted_typed_operation_unit(mounted,crate::plugin_runtime::original_plugin_turn_grant(self.mounted_policy.preparation,semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_grant(cx,crate::plugin_runtime::remaining_plugin_turn_grant(turn,*spent))))?;
+                self.publish_mounted_typed_operation_unit(mounted,semio_framework_plugin_reactor_app::original_plugin_turn_grant(self.mounted_policy.preparation,semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_grant(cx,semio_framework_plugin_reactor_app::remaining_plugin_turn_grant(turn,*spent))))?;
                 let receipt = mounted.publication_ownership_progress.take();
                 if let Some((_, unit)) = receipt {
                     cx.consume_retained(unit)?;
                     *spent = spent.checked_add(unit).map_err(|error| plugin_sdk_fault(error.to_string()))?;
                     if cx.fuel_remaining()==fuel{cx.consume_fuel(1)}
-                    if unit.copied_items == 0 || crate::plugin_runtime::remaining_plugin_turn_grant(turn,*spent).maximum_items == 0 { return Ok(()); }
+                    if unit.copied_items == 0 || semio_framework_plugin_reactor_app::remaining_plugin_turn_grant(turn,*spent).maximum_items == 0 { return Ok(()); }
                 }
                 if self.stores.store.backbone_ref().is_some() {
                     self.stores.store.flush_announcements().await.map_err(|error| plugin_sdk_fault(error.to_string()))?;
@@ -310,12 +341,12 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
             self.tools.typed_inline_interaction_leftover = Some(TypedOperationLeftover { operation: mounted.operation.operation.0, view });
         }
         for diagnostic in fold.diagnostics {
-            crate::plugin_runtime::debug_runtime_line(format_args!("[TRACE] {} {}", diagnostic.code.0, diagnostic.message));
+            semio_framework_plugin_reactor_app::debug_runtime_line(format_args!("[TRACE] {} {}", diagnostic.code.0, diagnostic.message));
         }
         Ok(())
     }
 
-    pub(crate) async fn advance_latest_wins_command_one(&mut self,retained:RetainedCloneGrant, cx:&mut semio_framework_job::StepContext<'_>) -> Result<(), crate::PluginLifecycleFailure> {
+    pub async fn advance_latest_wins_command_one(&mut self,retained:RetainedCloneGrant, cx:&mut semio_framework_job::StepContext<'_>) -> Result<(), semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
         if retained.maximum_items==0||retained.maximum_depth==0{return Ok(());}
         let Some(operation_id) = self.tools.latest_wins_order.items.front().copied() else { return Ok(()) };
         let mut pending = self.tools.latest_wins_commands.remove(operation_id).expect("exact pending keyed command");
@@ -564,7 +595,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
         }
     }
 
-    pub(crate) fn publish_mounted_typed_operation_unit(&mut self, mounted: &mut MountedTypedCommandFullOperation<A>, retained:RetainedCloneGrant) -> Result<(), Fault> {
+    pub fn publish_mounted_typed_operation_unit(&mut self, mounted: &mut MountedTypedCommandFullOperation<A>, retained:RetainedCloneGrant) -> Result<(), Fault> {
         if mounted.reject_cancelled_publication()? {
             self.stores.handoff_mounted_durable_publication(mounted)?;
             return Ok(());
@@ -723,13 +754,13 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
                     };
                     let grant=self.mounted_policy.maintenance;
                     let refresh=match self.stores.window_transient_store.refresh_demands(authority,grant.maximum_copy_bytes){Ok(_)=>self.stores.window_transient_store.refresh(authority,grant),Err(error)=>Err(plugin_retirement_fault(error))};
-                    match refresh{Ok(super::super::window_mutation::WindowAuthorityRefreshStep::Ready(_))=>{},Ok(super::super::window_mutation::WindowAuthorityRefreshStep::Pending(_))=>{ephemeral.window_transient.push(mutation);return Ok(());},Err(fault)=>{ephemeral.window_transient.push(mutation);return Err(fault);}}
+                    match refresh{Ok(semio_framework_plugin_window_config::window_mutation::refresh::WindowAuthorityRefreshStep::Ready(_))=>{},Ok(semio_framework_plugin_window_config::window_mutation::refresh::WindowAuthorityRefreshStep::Pending(_))=>{ephemeral.window_transient.push(mutation);return Ok(());},Err(fault)=>{ephemeral.window_transient.push(mutation);return Err(fault);}}
                     match self.stores.window_transient_store.begin(mounted.operation.operation, authority, mutation) {
                         Ok(publication) => {
                             mounted.pending_artifact_publication = Some(PendingArtifactStorePublication::WindowTransient(publication));
                             return Ok(());
                         }
-                        Err(super::super::window_transient::RejectedWindowTransientEmission { mutation, fault }) => {
+                        Err(semio_framework_plugin_window_transient::window_transient::RejectedWindowTransientEmission { mutation, fault }) => {
                             ephemeral.window_transient.push(mutation);
                             return Err(fault);
                         }
@@ -903,13 +934,13 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
                     };
                     let grant=self.mounted_policy.maintenance;
                     let refresh=match self.stores.window_transient_store.refresh_demands(authority,grant.maximum_copy_bytes){Ok(_)=>self.stores.window_transient_store.refresh(authority,grant),Err(error)=>Err(plugin_retirement_fault(error))};
-                    match refresh{Ok(super::super::window_mutation::WindowAuthorityRefreshStep::Ready(_))=>{},Ok(super::super::window_mutation::WindowAuthorityRefreshStep::Pending(_))=>{ephemeral.window_transient.push(mutation);return Ok(());},Err(fault)=>{ephemeral.window_transient.push(mutation);return Err(fault);}}
+                    match refresh{Ok(semio_framework_plugin_window_config::window_mutation::refresh::WindowAuthorityRefreshStep::Ready(_))=>{},Ok(semio_framework_plugin_window_config::window_mutation::refresh::WindowAuthorityRefreshStep::Pending(_))=>{ephemeral.window_transient.push(mutation);return Ok(());},Err(fault)=>{ephemeral.window_transient.push(mutation);return Err(fault);}}
                     match self.stores.window_transient_store.begin(mounted.operation.operation, authority, mutation) {
                         Ok(publication) => {
                             mounted.pending_artifact_publication = Some(PendingArtifactStorePublication::WindowTransient(publication));
                             return Ok(());
                         }
-                        Err(super::super::window_transient::RejectedWindowTransientEmission { mutation, fault }) => {
+                        Err(semio_framework_plugin_window_transient::window_transient::RejectedWindowTransientEmission { mutation, fault }) => {
                             ephemeral.window_transient.push(mutation);
                             return Err(fault);
                         }
@@ -939,7 +970,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
                         match () {
                             () if !emit.tasks.is_empty() => {
                                 let task = emit.tasks.remove(0);
-                                crate::reactor::spawn_task(mounted.meta.instance_id, &mounted.meta, task)?;
+                                semio_framework_plugin_reactor_tasks::tasks_task_lane::spawn_task(mounted.meta.instance_id, &mounted.meta, task)?;
                                 return Ok(());
                             }
                             () if mounted.ui_pending => {

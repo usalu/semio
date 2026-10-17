@@ -35,8 +35,5 @@ pub fn compute_semio_image_dimensions(snapshot: &SemioImageSnapshot) -> SemioIma
 }
 //#endregion 🔖️Dimensions
 
-#[cfg(test)]
-//#region 🧪️Tests
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

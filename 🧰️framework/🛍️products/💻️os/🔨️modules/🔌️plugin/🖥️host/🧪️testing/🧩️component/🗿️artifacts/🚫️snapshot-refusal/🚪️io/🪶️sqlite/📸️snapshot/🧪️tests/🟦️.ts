@@ -19,7 +19,7 @@ test("declared compiled refusal owner closes all i32 fields and eight exact dial
    expect(db.query("SELECT id,value,typeof(value) AS storage FROM fixture_refusal").get()).toEqual({id:1,value,storage:"integer"});
    expect(db.query("SELECT name FROM sqlite_schema WHERE type='table' ORDER BY name").all()).toEqual([{name:"fixture_refusal"}]);
    expect(db.query("PRAGMA table_info(fixture_refusal)").all().map(row=>(row as {name:string}).name)).toEqual(["id","value"]);
-   const reopened=Database.deserialize(db.serialize());try{expect(reopened.query("SELECT id,value FROM fixture_refusal").all().map(row=>Object.values(row))).toEqual([fixture.rows[index]]);}finally{reopened.close();}
+   const reopened=Database.deserialize(db.serialize());try{expect(reopened.query<object,[]>("SELECT id,value FROM fixture_refusal").all().map(row=>Object.values(row))).toEqual([fixture.rows[index]]);}finally{reopened.close();}
    const word=new DataView(new ArrayBuffer(4));word.setInt32(0,value,true);expect(word.getInt32(0,true)).toBe(value);
    db.query("UPDATE fixture_refusal SET value=? WHERE id=1").run(-value-1);
    expect(db.query("SELECT value FROM fixture_refusal").get()).toEqual({value:-value-1});

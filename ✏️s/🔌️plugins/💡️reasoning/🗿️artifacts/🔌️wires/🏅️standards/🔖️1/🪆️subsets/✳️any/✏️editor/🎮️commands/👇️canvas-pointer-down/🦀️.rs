@@ -20,7 +20,4 @@ pub fn handle(_payload: &CanvasPointerDown, _doc: &ArtifactView<'_, WiresSnapsho
 }
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

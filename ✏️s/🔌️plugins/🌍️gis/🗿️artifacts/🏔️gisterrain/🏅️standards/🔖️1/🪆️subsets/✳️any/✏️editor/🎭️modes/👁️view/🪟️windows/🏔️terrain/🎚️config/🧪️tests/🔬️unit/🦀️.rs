@@ -1,4 +1,10 @@
-use super::*;
+use semio_framework_test_fixtures::fixture_text;
+
+#[allow(unused_imports)]
+use semio_framework_value_derive::{FromValue, ToValue};
+#[allow(unused_imports)]
+use serde::{Deserialize, Serialize};
+use crate::editor::gis3d::modes::view::windows::terrain::config::*;
 use protocol::Mutation;
 
 #[test]
@@ -64,7 +70,7 @@ fn gis_terrain_window_config_isolates_two_registered_windows_and_reloads() {
                 use crate::editor::gis3d::Gis3dCommand;
                 use semio_framework_plugin::{PluginApp, ViewModel, ViewWindowInstance, WindowConfigOwner};
 
-                let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔬️window/🔣️.json")).expect("neutral Terrain window fixture");
+                let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../🎭️modes/👁️view/🪟️windows/🏔️terrain/🎚️config/🧪️tests/🧫️fixtures/🔬️window/🔣️.json")).expect("neutral Terrain window fixture");
                 let left_id = fixture["leftWindowId"].as_str().expect("left window id");
                 let right_id = fixture["rightWindowId"].as_str().expect("right window id");
                 let roster = ViewModel { window_instances: [left_id, right_id].into_iter().map(|id| ViewWindowInstance { id: id.into(), window_kind_id: GisTerrainWindowConfigOwner::WINDOW_KIND_ID.into() }).collect(), ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
@@ -91,8 +97,8 @@ fn gis_terrain_window_config_isolates_two_registered_windows_and_reloads() {
                 assert_eq!(running.window_transient_generation(&left).expect("left transient inventory"), None);
                 assert_eq!(running.window_transient_generation(&right).expect("right transient inventory"), None);
 
-                let left_json = render_at(&mut running, super::super::GIS3D_PLAY_BODY_COMPOSITE, &left).await;
-                let right_json = render_at(&mut running, super::super::GIS3D_PLAY_BODY_COMPOSITE, &right).await;
+                let left_json = render_at(&mut running, crate::editor::gis3d::modes::view::windows::terrain::GIS3D_PLAY_BODY_COMPOSITE, &left).await;
+                let right_json = render_at(&mut running, crate::editor::gis3d::modes::view::windows::terrain::GIS3D_PLAY_BODY_COMPOSITE, &right).await;
                 let left_scene = semio_framework_plugin::artifact_app_laws::decode_fixture_scene::<semio_framework_plugin::World3dScene>(&left_json).expect("left scene");
                 let right_scene = semio_framework_plugin::artifact_app_laws::decode_fixture_scene::<semio_framework_plugin::World3dScene>(&right_json).expect("right scene");
                 assert_eq!(left_scene.camera_json, fixture["cases"][0]["cameraJson"].as_str().expect("left expected"));
@@ -103,8 +109,8 @@ fn gis_terrain_window_config_isolates_two_registered_windows_and_reloads() {
                 for pack in packs {
                     reopened.load_window_config_pack(pack).await.expect("reload window pack");
                 }
-                let reopened_left = semio_framework_plugin::artifact_app_laws::decode_fixture_scene::<semio_framework_plugin::World3dScene>(&render_at(&mut reopened, super::super::GIS3D_PLAY_BODY_COMPOSITE, &left).await).expect("reopened left");
-                let reopened_right = semio_framework_plugin::artifact_app_laws::decode_fixture_scene::<semio_framework_plugin::World3dScene>(&render_at(&mut reopened, super::super::GIS3D_PLAY_BODY_COMPOSITE, &right).await).expect("reopened right");
+                let reopened_left = semio_framework_plugin::artifact_app_laws::decode_fixture_scene::<semio_framework_plugin::World3dScene>(&render_at(&mut reopened, crate::editor::gis3d::modes::view::windows::terrain::GIS3D_PLAY_BODY_COMPOSITE, &left).await).expect("reopened left");
+                let reopened_right = semio_framework_plugin::artifact_app_laws::decode_fixture_scene::<semio_framework_plugin::World3dScene>(&render_at(&mut reopened, crate::editor::gis3d::modes::view::windows::terrain::GIS3D_PLAY_BODY_COMPOSITE, &right).await).expect("reopened right");
                 assert_eq!(reopened_left.camera_json, left_scene.camera_json);
                 assert_eq!(reopened_right.camera_json, right_scene.camera_json);
 

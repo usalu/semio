@@ -1,5 +1,6 @@
 use super::*;
 use semio_framework_3d_brep_engine::Brep;
+use semio_framework_test_fixtures::fixture_path;
 
 fn point_arg(x: f64, y: f64, z: f64) -> DslValue {
     DslValue::object([("point".to_string(), vec3_json([x, y, z]))])
@@ -25,7 +26,7 @@ async fn catalog_lists_every_model_definition_asset() {
 /// on-disk `🕹️interactions` folders so a new or renamed asset cannot silently vanish from the app.
 #[semio_framework_async_macros::async_test]
 async fn every_interaction_asset_on_disk_is_embedded() {
-    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions");
+    let root = fixture_path!("../../../../../📚️examples/🖼️assets/🏗️modelDefinitions");
     let mut on_disk = Vec::new();
     for model_definition in std::fs::read_dir(&root).expect("model definitions root") {
         let interactions = model_definition.expect("entry").path().join("🕹️interactions");

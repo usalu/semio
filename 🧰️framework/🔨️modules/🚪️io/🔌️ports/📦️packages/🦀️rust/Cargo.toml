@@ -1,0 +1,33 @@
+[package]
+workspace = "../../../../.."
+name = "semio-framework-io-ports"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Ports through which a parent owner carries one child's inline content without importing the child's owner: the embedded child slot, its codec contract and the neutral vector scene it lowers to"
+
+[package.metadata.semio]
+role = "framework"
+id = "io-ports"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[features]
+# 🪝️ Exposes `testkit`: the codec parents bind in their own unit tests, where the real owner of the child is not a dependency.
+testkit = []
+
+[dependencies]
+semio-framework-value = { path = "../../../../🌱️value/📦️packages/🦀️rust" }
+semio-framework-value-derive = { path = "../../../../🌱️value/✨️derive/📦️packages/🦀️rust" }
+semio-framework-io-sqlite-snapshot = { path = "../../../🪶️sqlite-snapshot/📦️packages/🦀️rust" }
+
+[dev-dependencies]

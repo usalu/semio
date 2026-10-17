@@ -2,7 +2,7 @@
 //! addressed by BASE-state index: the exact undo of a `move-points` drag (every moved point back at its base position) and
 //! of itself.
 
-use crate::{EquationMutation, EquationSnapshot};
+use crate::EquationSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Payload
@@ -47,13 +47,16 @@ pub fn equation_point_targets(indices: &[usize]) -> Vec<String> {
     indices.iter().map(usize::to_string).collect()
 }
 
-impl protocol::MutationKind<EquationSnapshot, EquationMutation> for SetPointPositions {
+impl<Op> protocol::MutationKind<EquationSnapshot, Op> for SetPointPositions
+where
+    Op: protocol::Mutation<EquationSnapshot, Diff = crate::EquationDiff> + From<SetPointPositions>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "point-positions", kind: "set-point-positions", record: "SetPointPositions" };
 
-    fn diff(&self, base: &EquationSnapshot) -> protocol::MutationOutcome<<EquationMutation as protocol::Mutation<EquationSnapshot>>::Diff> {
+    fn diff(&self, base: &EquationSnapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<EquationSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &EquationSnapshot) -> Result<Vec<EquationMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EquationSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         Ok(super::inverse::inverse(self, base))
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {

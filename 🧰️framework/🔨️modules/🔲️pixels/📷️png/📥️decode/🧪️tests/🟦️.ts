@@ -31,7 +31,6 @@ describe("PNG reconstruction",()=>{
   let seed=0x762ba5;const width=257,height=41,expected:number[]=[],raw:number[]=[];
   for(let y=0;y<height;y++){raw.push(0);for(let x=0;x<width*4;x++){seed=(Math.imul(seed,1664525)+1013904223)>>>0;const value=x%9===0?seed>>>24:(x+y)%32;raw.push(value);expected.push(value);}}
   for(const strategy of [undefined,4,0]){const data=build(width,height,raw,strategy);for(const grant of [1,97,4096])expect(Array.from(finish(new PngDecodeJob({data,maxPixels:16384,maxBytes:1048576,maxChunks:4096}),grant).pixels)).toEqual(expected);expect(Array.from(PNG.sync.read(Buffer.from(data)).data)).toEqual(expected);}
-  console.info("[DEBUG] Seeded independent PNG compression matched RGBA under bounded grants");
  });
  for(const row of invalid)test("reject "+row.name,()=>{
   let job:PngDecodeJob|undefined;
@@ -45,7 +44,6 @@ describe("PNG reconstruction",()=>{
  });
  test("every truncated fixture prefix refuses publication",()=>{
   let prefixes=0;for(const row of cases){for(let length=0;length<row.input.data.length;length++){expect(()=>finish(new PngDecodeJob({...input(row.input),data:Uint8Array.from(row.input.data.slice(0,length))}),4096)).toThrow();prefixes++;}}
-  console.info("[DEBUG] PNG reconstruction refused all "+prefixes+" truncated fixture prefixes");
  });
  test("async grants yield, abort during progress and refuse callback failures",async()=>{
   const source=input(cases[0]!.input),control=new AbortController();let calls=0,timer=false;
@@ -56,7 +54,6 @@ describe("PNG reconstruction",()=>{
   await expect(decodePngImage(source,{workGrant:funded,onProgress:()=>{throw Error("observer failure");}})).rejects.toThrow("observer failure");
   const completeControl=new AbortController();await expect(decodePngImage(source,{workGrant:funded,onProgress:p=>{if(p.done)completeControl.abort();},signal:completeControl.signal})).rejects.toMatchObject({name:"AbortError"});
   const result=await decodePngImage(source,{workGrant:funded,workBudget:4096});expect(Array.from(result.pixels)).toEqual(cases[0]!.expected.pixels);expect(result.pixels.buffer).not.toBe(source.data.buffer);
-  console.info("[DEBUG] Async PNG reconstruction yielded and cancelled before publication");
  });
 });
 
@@ -64,5 +61,4 @@ test("Original PNG funding preserves independent axes, source bytes and private 
  const source=input(cases[funding.fixtureCase]!.input),before=source.data.slice();
  for(const row of funding.cases){const job=new PngDecodeJob(source);if(row.axis==="maximumCapacityBytes"||row.axis==="releaseForCapacity")while(!job.nextCapacityByteDemand())job.advance({...funded,maximumItems:1});const grant={maximumItems:1,maximumCopyBytes:job.nextCopyByteDemand(),maximumCapacityBytes:job.nextCapacityByteDemand(),maximumReleaseBytes:0,maximumDepth:1};if(row.axis==="maximumItems")grant.maximumItems=0;else if(row.axis==="maximumCopyBytes")grant.maximumCopyBytes--;else if(row.axis==="maximumCapacityBytes")grant.maximumCapacityBytes--;else if(row.axis==="releaseForCapacity"){grant.maximumCapacityBytes=0;grant.maximumReleaseBytes=4096;}else if(row.axis==="maximumDepth")grant.maximumDepth=0;const old=job.progress(),step=job.advance(grant);expect(step.progress.work!==old.work).toBe(row.accepted);expect(source.data).toEqual(before);if(!row.accepted)expect(step.receipt).toEqual({copiedItems:0,copiedBytes:0,retainedCapacityBytes:0,releasedBytes:0});}
  const job=new PngDecodeJob(source),result=finish(job,4096);expect(job.takeResult({...funded,maximumCopyBytes:funding.handoffBytes-1})).toBeUndefined();expect(job.result()).toBe(result);const handoff=job.takeResult({...funded,maximumCopyBytes:funding.handoffBytes})!;expect(handoff.value).toBe(result);expect(handoff.receipt.copiedBytes).toBe(funding.handoffBytes);expect(Array.from(PNG.sync.read(Buffer.from(source.data)).data)).toEqual(Array.from(result.pixels));
- console.info("[DEBUG] PNG original independent grant denial and separately funded handoff match pngjs byte oracle");
 });

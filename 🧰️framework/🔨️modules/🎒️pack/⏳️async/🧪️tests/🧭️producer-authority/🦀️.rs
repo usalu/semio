@@ -28,5 +28,4 @@ fn actual_scheduler_pre_cancel_and_pending_read_keep_canceled_authority(){
  let refusal=semio_framework_async::block_on(pending).unwrap_err();
  assert_eq!(refusal.refusal_kind(),Some(ValueRefusalKind::Canceled));
  assert!(matches!(refusal,PackError::Refusal(semio_framework_pack_error::PackRefusal::ValueRefusal(_))));
- eprintln!("[DEBUG] Pack scheduler both observed token producers retained Canceled");
 }

@@ -1,0 +1,145 @@
+{
+ "crates": {
+  "agg": {
+   "ident": "semio_s_artifact_raster_raster",
+   "root": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🦀️.rs",
+   "desc": "raster raster artifact"
+  },
+  "model": {
+   "ident": "semio_s_artifact_raster_raster_model",
+   "root": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs",
+   "desc": "Raster document model: schema, snapshot, inferences and the snapshot codecs"
+  },
+  "diff": {
+   "ident": "semio_s_artifact_raster_raster_diff",
+   "root": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs",
+   "desc": "Raster document diff"
+  },
+  "mutations": {
+   "ident": "semio_s_artifact_raster_raster_mutations",
+   "root": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs",
+   "desc": "Raster closed mutation vocabulary and mutation codecs"
+  },
+  "layers": {
+   "ident": "semio_s_artifact_raster_raster_mutations_layers",
+   "root": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗂️layers/🦀️.rs",
+   "desc": "Raster layer structure mutations"
+  },
+  "layer_properties": {
+   "ident": "semio_s_artifact_raster_raster_mutations_layer_properties",
+   "root": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️layer-properties/🦀️.rs",
+   "desc": "Raster layer property mutations"
+  },
+  "pixels": {
+   "ident": "semio_s_artifact_raster_raster_mutations_pixels",
+   "root": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖌️pixels/🦀️.rs",
+   "desc": "Raster pixel mutations"
+  },
+  "io": {
+   "ident": "semio_s_artifact_raster_raster_io",
+   "root": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs",
+   "desc": "Raster import and export registry"
+  },
+  "editor": {
+   "ident": "semio_s_artifact_raster_raster_editor",
+   "root": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+   "desc": "Raster editor app"
+  },
+  "viewer": {
+   "ident": "semio_s_artifact_raster_raster_viewer",
+   "root": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+   "desc": "Raster viewer"
+  },
+  "host": {
+   "ident": "semio_s_artifact_raster_raster_host",
+   "root": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🔨️modules/🏠️host/🧰️owned/🦀️.rs",
+   "desc": "Raster owned-document host"
+  },
+  "examples": {
+   "ident": "semio_s_artifact_raster_raster_examples",
+   "root": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🦀️.rs",
+   "desc": "Raster examples"
+  },
+  "mutations_tests": {
+   "ident": "semio_s_artifact_raster_raster_mutations_tests",
+   "root": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🥣️companion/🦀️.rs",
+   "desc": "Companion test crate of the raster layer and pixel mutations: the leaf laws that apply a mutation through the closed vocabulary",
+   "companion": true
+  },
+  "pixels_tests": {
+   "ident": "semio_s_artifact_raster_raster_mutations_pixels_tests",
+   "root": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖌️pixels/🧪️tests/🥣️companion/🦀️.rs",
+   "desc": "Companion test crate of the raster pixel mutations: the pixel leaf laws that run through the owned-document host",
+   "companion": true
+  },
+  "stack_tests": {
+   "ident": "semio_s_artifact_raster_raster_tests",
+   "root": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🥣️companion/🦀️.rs",
+   "desc": "Companion test crate of the raster artifact crates: the full-stack laws from the model through the vocabulary, the codecs and the host",
+   "companion": true
+  },
+  "descriptor": {
+   "ident": "semio_s_artifact_raster_raster_descriptor",
+   "root": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📇️descriptor/🦀️.rs",
+   "desc": "Raster schema descriptor: the handcrafted facet leaves of the artifact, snapshot and mutation schemas"
+  },
+  "descriptor_diff": {
+   "ident": "semio_s_artifact_raster_raster_descriptor_diff",
+   "root": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/📇️descriptor/🦀️.rs",
+   "desc": "Raster diff schema descriptor: the handcrafted facet leaves of the diff schema"
+  },
+  "editor_session": {
+   "ident": "semio_s_artifact_raster_raster_editor_session",
+   "root": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧠️session/🦀️.rs",
+   "desc": "Raster editor session state"
+  },
+  "editor_modes": {
+   "ident": "semio_s_artifact_raster_raster_editor_modes",
+   "root": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/📦️packages/🦀️rust/🦀️.rs",
+   "desc": "Raster editor modes"
+  },
+  "editor_panels": {
+   "ident": "semio_s_artifact_raster_raster_editor_panels",
+   "root": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🦀️.rs",
+   "desc": "Raster editor panels"
+  },
+  "editor_commands": {
+   "ident": "semio_s_artifact_raster_raster_editor_commands",
+   "root": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🦀️.rs",
+   "desc": "Raster editor commands"
+  },
+  "editor_tests": {
+   "ident": "semio_s_artifact_raster_raster_editor_tests",
+   "root": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🥣️companion/🦀️.rs",
+   "desc": "Companion test crate of the raster editor crates: the laws that drive the whole editor app through its command channel, panels, modes and media export",
+   "companion": true
+  }
+ },
+ "features": {
+  "io": {
+   "testkit": []
+  }
+ },
+ "devFeatures": {
+  "stack_tests": {
+   "io": [
+    "testkit"
+   ]
+  },
+  "mutations_tests": {
+   "io": [
+    "testkit"
+   ]
+  },
+  "pixels_tests": {
+   "io": [
+    "testkit"
+   ]
+  },
+  "editor_tests": {
+   "io": [
+    "testkit"
+   ]
+  }
+ }
+}

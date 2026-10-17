@@ -1,0 +1,25 @@
+{
+  "name": "@semio-tech/framework-time-travel-ts",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./🟦️.ts",
+    "./actions": "./🕹️actions/🟦️.ts",
+    "./testing/arguments": "./🧪️testing/🧭️arguments/🟦️.ts",
+    "./testing/aria-oracle": "./🧪️testing/♿️aria-oracle/🟦️.ts",
+    "./testing/band": "./🧪️testing/🎗️band/🟦️.ts",
+    "./testing/chrome": "./🧪️testing/🧱️chrome/🟦️.ts",
+    "./testing/console": "./🧪️testing/🎧️console/🟦️.ts",
+    "./testing/copy": "./🧪️testing/🌍️copy/🟦️.ts",
+    "./testing/editor": "./🧪️testing/🖊️editor/🟦️.ts",
+    "./testing/history": "./🧪️testing/📜️history/🟦️.ts",
+    "./testing/history-session": "./🧪️testing/🧵️history-session/🟦️.ts",
+    "./testing/page": "./🧪️testing/📄️page/🟦️.ts",
+    "./testing/replay-arm": "./🧪️testing/🔁️replay-arm/🟦️.ts",
+    "./testing/report": "./🧪️testing/🧾️report/🟦️.ts",
+    "./testing/reprojection": "./🧪️testing/🔄️reprojection/🟦️.ts",
+    "./testing/scenario": "./🧪️testing/🧩️scenario/🟦️.ts",
+    "./testing/state": "./🧪️testing/🧠️state/🟦️.ts",
+    "./testing/wgpu-mirror": "./🧪️testing/🧊️wgpu-mirror/🟦️.ts"
+  }
+}

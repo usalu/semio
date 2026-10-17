@@ -1,7 +1,10 @@
 //! 🖼️ Authored-view rules shared by the three view leaves, the editor and the `view-linework` inference: which fields a view kind owns, the conventions of its defaults and
 //! why a view cannot be written. Pure, total and read-only: a refusal names the field below the view record and carries the message.
 
-use super::{DetailLevel, ModelSnapshot, Phase, Point2, View, ViewCamera, ViewCategory, ViewCrop, ViewKind, ViewPlane, DEFAULT_CUT_HEIGHT};
+use super::values::{DetailLevel, Phase, Point2, ViewCamera, ViewCategory, ViewCrop, ViewKind, ViewPlane};
+use super::ModelSnapshot;
+use super::entities::View;
+use super::validity::DEFAULT_CUT_HEIGHT;
 use std::f64::consts::FRAC_PI_2;
 
 //#region 🔖️Defaults
@@ -16,23 +19,6 @@ pub const DEFAULT_VIEW_SCALE: u32 = 100;
 
 /// 📏️ The largest scale denominator a view accepts (1:10000).
 pub const MAX_VIEW_SCALE: u32 = 10_000;
-
-impl ViewKind {
-    /// 🗺️ Whether the kind cuts a storey horizontally.
-    pub fn is_plan(self) -> bool {
-        matches!(self, Self::Plan | Self::CeilingPlan)
-    }
-
-    /// 📐️ Whether the kind looks through a vertical plane.
-    pub fn is_vertical(self) -> bool {
-        matches!(self, Self::Section | Self::Elevation)
-    }
-
-    /// 🎥️ Whether the kind is a camera.
-    pub fn is_camera(self) -> bool {
-        matches!(self, Self::Orthographic | Self::Perspective)
-    }
-}
 
 impl View {
     /// 🖼️ A view of `kind` with the conventions of a new view: unlimited depth, 1:100, medium detail, nothing hidden, no crop, every phase.

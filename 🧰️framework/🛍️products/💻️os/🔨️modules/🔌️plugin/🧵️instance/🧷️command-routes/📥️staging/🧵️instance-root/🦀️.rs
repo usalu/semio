@@ -1,7 +1,22 @@
 //! 🧲️ Staged slice of the `instance-root` band of the mounted artifact instance: its `instance-commands` members (WP6 step S0 of the instance family).
 //!
 //! 🧵️ The mounted artifact instance `VcsArtifactApp`: its state, its turns and its `PluginApp` implementation.
-use super::*;
+use semio_framework::{ActionKind, Fault, FaultCode, FaultFrom, FaultOrigin, NOTE_SHELL_COMMAND_ACTION_ID, SET_HISTORY_COMMAND_FILTER_ACTION_ID};
+use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use pack::snapshot::ArtifactPack;
+use semio_framework_plugin_operation::CANCEL_TYPED_OPERATION_ACTION_ID;
+use semio_framework_plugin_job::reserved_jobs::{CLIPBOARD_ACTION_IDS, is_framework_reserved_action_id};
+use semio_framework_value::DslValue;
+use semio_framework_plugin_decl_emission::Emit;
+use std::future::Future;
+use semio_framework_plugin_interaction::interaction_topology::INTERACTION_ACTION_IDS;
+use semio_framework_plugin_instance_extension::InstanceExtension;
+use semio_framework_ui_locale::LocalizedLabel;
+use store::{MemberFactory, Mutation, SpaceMember};
+use protocol::OpText;
+use semio_framework_plugin_reactor_app::PluginApp;
+use semio_framework_ui_contract::*;
 
 /// 📚️ Turns a registered example body into the app snapshot. A `{` body is the JSON a deferred
 /// producer emits; anything else is the subset's own DSL.
@@ -16,7 +31,8 @@ where
     }
 }
 
-pub(crate) fn framework_reserved_action_kind(action: &str) -> Option<ActionKind> {
+#[doc(hidden)]
+pub fn framework_reserved_action_kind(action: &str) -> Option<ActionKind> {
     if !is_framework_reserved_action_id(action) {
         return None;
     }
@@ -53,21 +69,3 @@ pub(crate) fn note_shell_command_label(label: Option<&DslValue>, command_id: &st
     }
 }
 
-/// 🎞️ The document-store commands an emission's artifact lane dispatches (design §15): a streamed tick appends to its
-/// transaction's open edit (opening it), a commit closes the open edit of its transaction (appending its last operations
-/// first) or, with none open, records its operations as one edit carrying the ref, an abort reverts the open edit, and an
-/// emission outside a transaction applies as one plain edit. An empty list publishes nothing.
-pub(crate) fn artifact_lane_commands<M>(mutations: Vec<M>, transaction: Option<protocol::TransactionRef>, phase: TransactionPhase, open: Option<&store::os_store::store_schema::OpenToolTransaction>) -> Vec<ArtifactCommand<M>> {
-    let open = open.zip(transaction.as_ref()).is_some_and(|(open, transaction)| open.transaction.id == transaction.id);
-    let append = |mutations: Vec<M>, transaction: protocol::TransactionRef| (!mutations.is_empty()).then(|| ArtifactCommand::AppendTransaction { mutations, transaction });
-    match (transaction, phase) {
-        (Some(transaction), TransactionPhase::Stream) => append(mutations, transaction).into_iter().collect(),
-        (Some(transaction), TransactionPhase::Commit) if open => {
-            let transaction_id = transaction.id.clone();
-            append(mutations, transaction).into_iter().chain([ArtifactCommand::CommitTransaction { transaction_id }]).collect()
-        }
-        (Some(transaction), TransactionPhase::Abort) => open.then(|| ArtifactCommand::AbortTransaction { transaction_id: transaction.id }).into_iter().collect(),
-        (_, _) if mutations.is_empty() => Vec::new(),
-        (transaction, _) => vec![ArtifactCommand::Apply { mutations, transaction }],
-    }
-}

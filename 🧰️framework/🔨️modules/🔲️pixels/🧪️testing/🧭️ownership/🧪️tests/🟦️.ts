@@ -16,7 +16,7 @@ const strictFlags = ["--noEmit", "--strict", "--noUncheckedIndexedAccess", "--sk
 for (const row of fixture.cases) test(row.name, () => {
   const candidate = structuredClone(descriptor);
   if (row.field) (candidate[row.field as "strictRoots" | "testRoots" | "inputs"]).push(row.value!);
-  if (row.admit) expect<unknown>(readPixelsTaskDescriptorV1(candidate)).toEqual(candidate);
+  if (row.admit) {const admitted = readPixelsTaskDescriptorV1(candidate);expect(admitted).toEqual<typeof candidate>(candidate);}
   else expect(() => readPixelsTaskDescriptorV1(candidate)).toThrow();
 });
 

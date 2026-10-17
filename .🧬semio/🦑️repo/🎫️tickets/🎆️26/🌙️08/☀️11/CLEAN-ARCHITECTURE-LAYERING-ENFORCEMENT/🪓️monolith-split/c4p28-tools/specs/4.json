@@ -1,0 +1,79 @@
+{
+ "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️retained/🗂️document/🦀️.rs",
+ "original": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/🗑️generated/c4p28-orig/4.rs",
+ "stage": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/🗑️generated/c4p28-stage",
+ "descendants": [],
+ "chunks": [
+  {
+   "name": "kind_weight_work",
+   "folder": "⚖️kind-weight-work",
+   "doc": "⚖️ Kind weight work: the staged edit of the brush kind weights, the catalog, its validation, the sum of the other weights and the rebuilt publication.",
+   "segments": [
+    {
+     "lines": [
+      33,
+      277
+     ]
+    }
+   ],
+   "replace": [
+    [
+     "    pub(super) fn new(tool_id: &'static str) -> Self {",
+     "    pub fn new(tool_id: &'static str) -> Self {"
+    ]
+   ]
+  },
+  {
+   "name": "add_object_kind_work",
+   "folder": "➕️add-object-kind-work",
+   "doc": "➕️ Add object kind work: the staged addition of one object kind, decoded and checked against the catalog, with its representation and vortex, then published.",
+   "segments": [
+    {
+     "lines": [
+      279,
+      540
+     ]
+    }
+   ]
+  },
+  {
+   "name": "patch_inspector_work",
+   "folder": "🔍️patch-inspector-work",
+   "doc": "🔍️ Patch inspector work: the staged inspector patch that pages through the selected objects, vortices, attractions, references and target volumes.",
+   "segments": [
+    {
+     "lines": [
+      542,
+      972
+     ]
+    }
+   ]
+  },
+  {
+   "name": "create_attraction_work",
+   "folder": "💞️create-attraction-work",
+   "doc": "💞️ Create attraction work: the staged creation of one attraction, its existing attractions, the two endpoints and their compatibility, with the relocation page size.",
+   "segments": [
+    {
+     "lines": [
+      974,
+      1202
+     ]
+    }
+   ]
+  },
+  {
+   "name": "set_active_example_work",
+   "folder": "📚️set-active-example-work",
+   "doc": "📚️ Set active example work: the staged switch of the active example document in fixed steps and bounded chunks.",
+   "segments": [
+    {
+     "lines": [
+      1204,
+      1536
+     ]
+    }
+   ]
+  }
+ ]
+}

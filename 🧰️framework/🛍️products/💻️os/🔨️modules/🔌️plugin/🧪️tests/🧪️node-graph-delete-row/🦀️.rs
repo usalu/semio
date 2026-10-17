@@ -4,12 +4,26 @@
 //! the row disabled with its reason and no action (`🖱️context-menu/🧫️fixtures/🔣️.json` `deleteRows`).
 //! @see 🧰️framework/🔨️modules/🛠️tool-machine/🧫️fixtures/🧫️node-graph-edit-rows/🔣️.json
 
-use super::*;
+#[cfg(test)]
+use semio_framework_plugin_decl_app::ArtifactApp;
+use pack::snapshot::ArtifactPack;
+use store::{ArtifactStoreInitializationAuthority, MemberFactory, Mutation, SpaceMember};
+use semio_framework_value::DslValue;
+use std::future::Future;
+use semio_framework_ui_locale::{Locale, Terminology};
+#[cfg(test)]
+use semio_framework_plugin_window_kits::{NodeGraphDeleteDispatch, delete_selection, node_graph_delete_selection_spec, nothing_selected};
+#[cfg(test)]
+use semio_framework_plugin_window_config::WindowConfigOwner;
+#[cfg(test)]
+use semio_framework_plugin_window_transient::window_transient::WindowTransientOwner;
+use semio_framework_ui_contract::*;
 use semio_framework_tool_machine::{node_graph_edit_rows, NodeGraphEditRow};
 
 const NODE_GRAPH_EDIT_ROWS_FIXTURE_JSON: &str = include_str!("../../../../../../🔨️modules/🛠️tool-machine/🧪️tests/🧫️fixtures/🧫️node-graph-edit-rows/🔣️.json");
 
-fn ids(values: &[&str]) -> Vec<String> {
+#[doc(hidden)]
+pub fn ids(values: &[&str]) -> Vec<String> {
     values.iter().map(|value| (*value).to_string()).collect()
 }
 

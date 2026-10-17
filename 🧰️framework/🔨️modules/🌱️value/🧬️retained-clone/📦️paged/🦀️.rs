@@ -290,8 +290,8 @@ impl<const N: usize> RetainedClone for PagedUtf8<N> {
 #[derive(Default)]
 pub struct PagedUtf8BoundedOrdCursor<const N: usize> {
     initialized:bool,
-    left: Option<RetainedCloneBinding>,
-    right: Option<RetainedCloneBinding>,
+    #[doc(hidden)] pub left: Option<RetainedCloneBinding>,
+    #[doc(hidden)] pub right: Option<RetainedCloneBinding>,
     left_chunk: usize,
     right_chunk: usize,
     left_byte: usize,

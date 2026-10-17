@@ -1,8 +1,18 @@
-use super::*;
-const CORPUS: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/📄️resolved-page-domain/🔣️.json");
+use crate::editor::pdf14::page;
+use crate::standards::v1_4::subsets::base::schema::snapshot::PdfSnapshot;
+use semio_framework_test_fixtures::fixture_text;
+use semio_framework_ui_locale::Locale;
+use semio_framework_plugin::TreeWindows;
+use semio_framework_ui_contract::UiPublicationRevision;
+#[allow(unused_imports)]
+use semio_framework_plugin::{WindowKindDefinition, UiAssemblyResult};
+#[allow(unused_imports)]
+use semio_framework_ui_contract::BuiltNode;
+use crate::editor::pdf14::modes::edit::windows::main::*;
+static CORPUS: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧱️base/✏️editor/🧪️tests/🧫️fixtures/📄️resolved-page-domain/🔣️.json"));
 fn fixture() -> crate::standards::v1_4::subsets::base::schema::snapshot::PdfSnapshot {
     use crate::standards::v1_4::subsets::base::schema::snapshot::{PdfSnapshot, PageDoc};
-    let fixture: serde_json::Value = serde_json::from_str(CORPUS).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str((*CORPUS)).unwrap();
     PdfSnapshot { schema: fixture["schema"].as_str().unwrap().into(), pages: fixture["pages"].as_array().unwrap().iter().map(|page| PageDoc { width: page["width"].as_f64().unwrap(), height: page["height"].as_f64().unwrap(), text: page["text"].as_str().unwrap().into() }).collect() }
 }
 

@@ -31,6 +31,5 @@ test("authored nested native owners survive deletion without concealing retained
   const scopes=discoverCargoWorkspaces(root),packages=cargoRepositoryPackages(root);expect(scopes.map(s=>s.directory).sort()).toEqual([...row.expectedOwnerDirectories].sort());expect(packages.length).toBe(scopes.length);
   for(const scope of scopes){const source=readFileSync(join(root,scope.manifest),"utf8");expect(Bun.TOML.parse(source)).toEqual(TOML.parse(source));publishCargoWorkspaceMembership(root,scope,"write");const actual=native(root,scope.manifest);expect(actual.exitCode===0,actual.stderr.toString()).toBe(scope.directory==="owners/application"?row.applicationMetadataValid:true);if(actual.exitCode===0){const metadata=JSON.parse(actual.stdout.toString());expect(metadata.workspace_members.length).toBe(packages.filter(p=>p.workspace===scope.directory).length);}}
   if(row.removed==="none")expect(cargoWorkspaceForManifest(root,"owners/application/extension/artifact/oracle/native/Cargo.toml").directory).toBe("owners/application/extension/artifact/oracle/native");
-  console.log("[DEBUG] Nested Cargo owner "+JSON.stringify({id:row.id,owners:scopes.map(s=>s.directory),packages:packages.map(p=>p.name)}));
  }
 });

@@ -66,4 +66,5 @@ semio-framework-3d-brep-tolerance = { workspace = true }
 semio-framework-3d-brep-vector = { workspace = true }
 semio-s-artifact-procedural-3d-io-geometry = { workspace = true }
 semio-s-artifact-procedural-3d-io-text = { workspace = true }
+semio-s-artifact-procedural-3d-model = { workspace = true, features = ["testkit"] }
 

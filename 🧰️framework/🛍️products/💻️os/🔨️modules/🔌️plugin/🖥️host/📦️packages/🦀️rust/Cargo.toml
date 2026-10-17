@@ -81,6 +81,7 @@ semio-framework-async-macros = { path = "../../../../../../../🔨️modules/⏳
 # ManualRuntime`, this crate's own `#[cfg(test)]` double for `⚡️effects/🦀️.rs`'s tests —
 # same pattern `semio-framework-os-services`'s own Cargo.toml already establishes.
 semio-framework-async = { workspace = true, features = ["testkit"] }
+semio-framework-test-fixtures = { path = "../../../../../../../🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 serde = { version = "1.0.219", features = ["derive"] }
 semio-framework-artifact-reference = { workspace = true }
 wasmtime = { version = "47.0.3", features = ["cranelift", "component-model", "component-model-async"] }

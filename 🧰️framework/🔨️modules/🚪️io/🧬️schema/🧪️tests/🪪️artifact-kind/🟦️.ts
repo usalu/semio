@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import Ajv from "ajv";
 import { expect, test } from "bun:test";
-import { isCanonicalArtifactKind } from "../../🟦️.ts";
+import { isCanonicalArtifactKind } from "@semio-tech/schema-ts/artifact-reference";
 
 test("artifact kinds admit every canonical domain and preserve exact owner segments", () => {
   const contract = JSON.parse(readFileSync(join(import.meta.dir, "../../🧬️schema/🔣️.json"), "utf8"));

@@ -1,4 +1,5 @@
 use super::*;
+use semio_framework_test_fixtures::fixture_text;
 use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxBlock;
 use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxDocument;
 use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_docx;
@@ -20,7 +21,7 @@ async fn render_emits_one_page_per_top_level_block() {
 #[semio_framework_async_macros::async_test]
 async fn nested_table_text_remains_editable_in_the_document_window() {
     use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapshot::xml_document_from_text;
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../🧱️base/🧪️tests/🧫️fixtures/🧭️table-run-projection/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../🧱️base/🧪️tests/🧫️fixtures/🧭️table-run-projection/🔣️.json")).unwrap();
     let mut snapshot = semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_docx(semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxDocument::default());
     let part_path = semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::inferences::document::main_document_path(&snapshot.opc).unwrap();
     snapshot.xml_part_mut(&part_path).unwrap().replace_document(xml_document_from_text(fixture["xml"].as_str().unwrap()).unwrap()).unwrap();

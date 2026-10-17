@@ -26,12 +26,15 @@ pub fn plan(p: &GltfUnbindNodeMeshPayload, base: &GltfSnapshot) -> Result<GltfDi
     Ok(GltfDiff { nodes: patch(p.node, GltfNodeDiff { mesh: Some(None), ..Default::default() }), ..Default::default() })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn inverse(p: &GltfUnbindNodeMeshPayload, base: &GltfSnapshot) -> Vec<super::GltfMutation> {
+pub fn inverse<Op>(p: &GltfUnbindNodeMeshPayload, base: &GltfSnapshot) -> Vec<Op>
+where
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::remove_used_extension::RemoveUsedExtensionMutation>,
+{
     if validate(p, base).is_err() {
         return Vec::new();
     }
     match base.document.nodes[p.node].mesh {
-        Some(current) => vec![super::bind_node_mesh::mutation(super::bind_node_mesh::GltfBindNodeMeshPayload { node: p.node, mesh: current })],
+        Some(current) => vec![crate::standards::v2_0::subsets::any::schema::mutations::bind_node_mesh::mutation(crate::standards::v2_0::subsets::any::schema::mutations::bind_node_mesh::GltfBindNodeMeshPayload { node: p.node, mesh: current })],
         None => Vec::new(),
     }
 }
@@ -46,11 +49,17 @@ pub enum UnbindNodeMeshMutation {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn mutation(payload: GltfUnbindNodeMeshPayload) -> super::GltfMutation {
-    super::GltfMutation::UnbindNodeMesh(UnbindNodeMeshMutation::Apply(payload))
+pub fn mutation<Op>(payload: GltfUnbindNodeMeshPayload) -> Op
+where
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::unbind_node_mesh::UnbindNodeMeshMutation>,
+{
+    Op::from(UnbindNodeMeshMutation::Apply(payload))
 }
 
-impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for UnbindNodeMeshMutation {
+impl<Op> protocol::MutationKind<GltfSnapshot, Op> for UnbindNodeMeshMutation
+where
+    Op: protocol::Mutation<GltfSnapshot, Diff = GltfDiff> + From<UnbindNodeMeshMutation>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "unbind", entity: "node-mesh", kind: "unbind-node-mesh", record: "UnboundNodeMesh" };
 
     fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<GltfDiff> {
@@ -62,7 +71,7 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for UnbindNodeMes
         }
     }
 
-    fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<super::GltfMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         match self {
             Self::Apply(payload) => Ok(inverse(payload, base)),
         }
@@ -79,7 +88,5 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for UnbindNodeMes
 //#endregion 🧬️DirectMutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔗️clears-the-mesh-c9c254/🦀️.rs"]
-mod case_clears_the_mesh_c9c254;
+
 //#endregion 🧪️Tests

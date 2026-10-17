@@ -10,5 +10,4 @@ test("causal fixed slots separate exact owners from bounded physical pages",()=>
  expect(source.includes("next_backing_release_byte_demand")).toBe(true);
  expect(source.includes("close_backing_step")).toBe(true);
  expect(source.includes("backing_is_empty")).toBe(true);
- console.log("[DEBUG] Node Uint16Array/RFC6902 neutral8192slots/64page/1024turn identity and indivisible physical retirement checked");
 });

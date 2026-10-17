@@ -8,9 +8,8 @@ import { describe, expect, it } from "vitest";
 import { UI_REFRESH_SECTIONS } from "@semio-tech/framework/manifest";
 import { manifestUiRefreshSectionFixture as neutral } from "@semio-tech/framework/manifest/testing/fixtures/ui-refresh-section";
 import { BROWSER_ACTOR_VISIBLE_SURFACES_V1, browserActorVisibleSurfacesV1, type BrowserActorVisibleTurnV1 } from "../../🔨️modules/🏪️store/👷️worker/🪟️visible-surfaces/🟦️.ts";
-import schema from "../../🔨️modules/🏪️store/👷️worker/🪟️visible-surfaces/🧬️schema/🔣️.json" with { type: "json" };
+import { workerVisibleSurfacesSchema as schema, workerVisibleSurfacesFixture as examples } from "../../🔨️modules/🏪️store/🧪️tests/🧫️fixtures/🟦️.ts";
 
-import examples from "../../🔨️modules/🏪️store/👷️worker/🪟️visible-surfaces/🧪️tests/🧫️fixtures/🔣️.json" with { type: "json" };
 
 const contract = BROWSER_ACTOR_VISIBLE_SURFACES_V1;
 const turns = Object.keys(contract.turns) as BrowserActorVisibleTurnV1[];

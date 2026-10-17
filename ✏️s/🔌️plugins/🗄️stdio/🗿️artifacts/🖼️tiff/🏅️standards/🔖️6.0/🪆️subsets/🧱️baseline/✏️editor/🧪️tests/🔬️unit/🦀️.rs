@@ -1,4 +1,11 @@
-use super::*;
+use crate::standards::v6_0::subsets::baseline::schema::mutations::TiffBaselineMutation;
+use crate::standards::v6_0::subsets::baseline::schema::snapshot::TiffSnapshot;
+use crate::TIFF_BASELINE_DIALECT;
+use semio_framework_plugin::ArtifactEditor;
+use semio_framework_plugin::Editor;
+use semio_framework_test_fixtures::fixture_text;
+use semio_s_artifact_stdio_contract::editing;
+use crate::editor::tiff_baseline::*;
 
 /// 🧬️ Registers the document schema tiff's declaration contributes — the contract every snapshot edit validates against;
 /// a fixture editor runs without the plugin assembly that publishes it.
@@ -21,7 +28,7 @@ async fn editor_dialect_matches_the_artifact_coordinate() {
 #[test]
 fn payload_detail_edits_publish_the_exact_requested_value() {
     register_document_schema();
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../📇️registry/🧬️contract/✏️editing/🩹️patch/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../../../../../📇️registry/🧬️contract/✏️editing/🩹️patch/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let mut snapshot = crate::schema::blank_tiff_snapshot();
     snapshot.ifds[0].blocks.clear();
     let bits=snapshot.ifds[0].entries.iter().position(|entry|entry.tag==258).unwrap();
@@ -45,4 +52,4 @@ fn payload_detail_edits_publish_the_exact_requested_value() {
     }
 }
 
-semio_framework_plugin::history_edit_acceptance_law!("stdio", super::TiffBaselineEditor, || semio_framework_plugin::App { definition: super::create_tiff_baseline_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️6.0/🪆️subsets/🧱️baseline");
+semio_framework_plugin::history_edit_acceptance_law!("stdio", crate::editor::tiff_baseline::TiffBaselineEditor, || semio_framework_plugin::App { definition: crate::editor::tiff_baseline::create_tiff_baseline_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️6.0/🪆️subsets/🧱️baseline");

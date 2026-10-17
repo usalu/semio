@@ -15,7 +15,6 @@ test("Puzzle2d optional native text preparation preserves SQLite equality and RF
   expect(after.value).toBe(row.next);expect(JSON.parse(JSON.stringify(before))).toEqual(before);
   for(const pause of fixture.pausePoints)expect({pause,disposition:result?.disposition??"targetMissing"}).toEqual({pause,disposition:row.expected});
  }}finally{db.close()}
- console.log("[DEBUG] Puzzle2d optional UTF8 preparation matches independent SQLite and RFC6902",fixture.cases.length,fixture.pausePoints);
  const path=resolve(import.meta.dir,"../🦀️.rs");expect(existsSync(path)).toBe(true);
  const source=readFileSync(path,"utf8");
  for(const marker of ["Puzzle2dTextPreparationCursor","Puzzle2dLookupCursor","PagedUtf8BoundedOrdCursor","RetainedCloneBinding::close_one","ChangeNodeIcon","EditTargetRegionLabel"])expect(source).toContain(marker);

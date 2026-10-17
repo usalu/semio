@@ -48,6 +48,3 @@ impl<Op> protocol::MutationKind<RasterSnapshot, Op> for ChangeLayerPixels where 
     fn target(&self) -> Vec<String> { vec![self.layer_id.clone()] }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;

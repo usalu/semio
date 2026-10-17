@@ -1,7 +1,10 @@
 import { rustTokenPairs, rustTokenSegments, rustTokens, type RustToken } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/🟦️.ts";
 import { collectDecls, superReach, type ModuleDecl } from "../🧱️decl-tree/🟦️.ts";
-import { absolutizeSuperPaths } from "../🧪️test-closure/🟦️.ts";
-import { parseRustSourceTree, useLeafNames, type RustSourceItem } from "../🌳️module-tree/🟦️.ts";
+import { absolutizeSuperPaths, declaredNames } from "../🧪️test-closure/🟦️.ts";
+import { identifierSet, parseRustSourceTree, useLeafNames, type RustSourceItem } from "../🌳️module-tree/🟦️.ts";
+import { flattenUse, pruneUseLeaves } from "./🌳️use-tree/🟦️.ts";
+import { hoistAggregateSupport } from "./🧰️support-hoist/🟦️.ts";
+import { absolutizeBeyond } from "../🪜️lift-kids/🟦️.ts";
 
 /** 🧬️ One variant of a transparent mutation aggregate: the single-field tuple wrapping a leaf payload. */
 export type MutationVariant = { readonly variant: string; readonly payload: string; readonly path: string };
@@ -15,6 +18,7 @@ export type LeafBuilder = { readonly name: string; readonly params: string; read
 /** 🧬️ What one conversion run rewrote and what it left for hand work. */
 export type MutationFamilyResult = {
   readonly edits: Map<string, string>;
+  readonly creates: Map<string, string>;
   readonly notes: string[];
   readonly aggregates: readonly MutationAggregate[];
   readonly converted: readonly string[];
@@ -41,6 +45,11 @@ function chainStart(tokens: readonly RustToken[], index: number): number {
   let cursor = index;
   while (tokens[cursor - 1]?.text === "::" && tokens[cursor - 2]?.kind === "identifier") cursor -= 2;
   return cursor;
+}
+
+/** 🧭️ The module path of a declaration without the private `component` mounts, so a path written into another file names only modules other crates can reach. */
+function plainPath(eff: readonly string[]): string {
+  return eff.filter((segment) => segment !== "component").join("::");
 }
 
 function lineOf(text: string, offset: number): number {
@@ -123,69 +132,6 @@ export function findMutationAggregates(decls: Iterable<ModuleDecl>, readText: (a
     }
   }
   return out;
-}
-
-type UseTree = { prefix: string[]; glob: boolean; alias: string | null; children: UseTree[] | null };
-
-function parseUseTree(tokens: readonly RustToken[], start: number): { tree: UseTree; next: number } | null {
-  let k = start;
-  const prefix: string[] = [];
-  if (tokens[k]?.text === "::") k += 1;
-  for (;;) {
-    const token = tokens[k];
-    if (!token) return null;
-    if (token.text === "*") return { tree: { prefix, glob: true, alias: null, children: null }, next: k + 1 };
-    if (token.text === "{") {
-      const children: UseTree[] = [];
-      k += 1;
-      while (tokens[k] && tokens[k]!.text !== "}") {
-        const child = parseUseTree(tokens, k);
-        if (!child) return null;
-        children.push(child.tree);
-        k = child.next;
-        if (tokens[k]?.text === ",") k += 1;
-      }
-      return { tree: { prefix, glob: false, alias: null, children }, next: k + 1 };
-    }
-    if (token.kind !== "identifier") return null;
-    prefix.push(token.text);
-    k += 1;
-    if (tokens[k]?.text === "::") { k += 1; continue; }
-    let alias: string | null = null;
-    if (tokens[k]?.text === "as") { alias = tokens[k + 1]!.text; k += 2; }
-    return { tree: { prefix, glob: false, alias, children: null }, next: k };
-  }
-}
-
-function pruneUseTree(tree: UseTree, drop: ReadonlySet<string>): UseTree | null {
-  if (tree.children) {
-    const children = tree.children.map((child) => pruneUseTree(child, drop)).filter((child): child is UseTree => child !== null);
-    if (!children.length) return null;
-    if (children.length === 1 && !children[0]!.alias && children[0]!.prefix[0] !== "self") return { prefix: [...tree.prefix, ...children[0]!.prefix], glob: children[0]!.glob, alias: children[0]!.alias, children: children[0]!.children };
-    return { ...tree, children };
-  }
-  if (tree.glob) return tree;
-  const leaf = tree.alias ?? (tree.prefix.at(-1) === "self" ? tree.prefix.at(-2) : tree.prefix.at(-1));
-  return leaf !== undefined && drop.has(leaf) ? null : tree;
-}
-
-function renderUseTree(tree: UseTree): string {
-  const head = tree.prefix.join("::");
-  if (tree.children) return `${head}${head ? "::" : ""}{${tree.children.map(renderUseTree).join(", ")}}`;
-  if (tree.glob) return `${head}${head ? "::" : ""}*`;
-  return `${head}${tree.alias ? ` as ${tree.alias}` : ""}`;
-}
-
-/** ✂️ Removes the named leaves from a `use` statement of any nesting; answers `null` when nothing is left to import. */
-export function pruneUseLeaves(statement: string, drop: ReadonlySet<string>): string | null {
-  const tokens = rustTokens(statement);
-  const useIndex = tokens.findIndex((token) => token.text === "use");
-  if (useIndex < 0) return statement;
-  const parsed = parseUseTree(tokens, useIndex + 1);
-  if (!parsed || tokens[parsed.next]?.text !== ";") return statement;
-  const pruned = pruneUseTree(parsed.tree, drop);
-  if (!pruned) return null;
-  return `${statement.slice(0, tokens[useIndex + 1]!.start)}${renderUseTree(pruned)};`;
 }
 
 function topLevelItemAt(items: readonly RustSourceItem[], offset: number): RustSourceItem | null {
@@ -291,8 +237,26 @@ function rewriteFunction(text: string, tokens: readonly RustToken[], pairs: Read
   return { builder: { name: name.text, params: paramsText, args: params.join(", "), chain: "" } };
 }
 
+/** 🧷️ The `Op: A + B` bounds of the top-level functions a companion already wrote generic over its aggregate (`fn x<Op>(..) where Op: A + B`); the leaf impl must carry them. */
+function genericBounds(text: string): Set<string> {
+  const bounds = new Set<string>();
+  if (!/\bOp\b/u.test(text)) return bounds;
+  const tokens = rustTokens(text);
+  const pairs = rustTokenPairs(tokens);
+  for (let k = 0; k + 6 < tokens.length; k += 1) {
+    if (tokens[k]!.text !== "fn" || tokens[k + 2]?.text !== "<" || tokens[k + 3]?.text !== "Op" || tokens[k + 4]?.text !== ">" || tokens[k + 5]?.text !== "(") continue;
+    let clause = (pairs.get(k + 5) ?? k + 5) + 1;
+    while (clause < tokens.length && tokens[clause]!.text !== "where" && tokens[clause]!.text !== "{" && tokens[clause]!.text !== ";") clause += 1;
+    if (tokens[clause]?.text !== "where" || tokens[clause + 1]?.text !== "Op" || tokens[clause + 2]?.text !== ":") continue;
+    let bodyAt = clause + 3;
+    while (bodyAt < tokens.length && tokens[bodyAt]!.text !== "{") bodyAt += 1;
+    for (const [a, b] of rustTokenSegments(tokens, pairs, clause + 3, bodyAt, "+")) bounds.add(text.slice(tokens[a]!.start, tokens[b - 1]!.end).replace(/,\s*$/u, "").trim());
+  }
+  return bounds;
+}
+
 function rewriteSource(text: string, ctx: LeafContext, role: "component" | "companion", extraBounds: ReadonlySet<string>): Rewritten | Fail {
-  if (!text.includes(ctx.agg)) return { text, bounds: new Set(), builders: [] };
+  if (!text.includes(ctx.agg)) return { text, bounds: role === "companion" ? genericBounds(text) : new Set(), builders: [] };
   const tree = parseRustSourceTree(text);
   const tokens = rustTokens(text);
   const pairs = rustTokenPairs(tokens);
@@ -338,7 +302,13 @@ function rewriteSource(text: string, ctx: LeafContext, role: "component" | "comp
     }
     return { error: `the aggregate is used by a ${item.kind} item at line ${lineOf(text, item.declStart)}` };
   }
-  return { text: applyEdits(text, edits), bounds, builders };
+  let rewritten = applyEdits(text, edits);
+  const prefix = role === "companion" ? "super::super::" : "super::";
+  for (const chain of ctx.variantChain.values()) {
+    const [leaf, payload] = chain.split("::").slice(-2);
+    if (leaf && payload) rewritten = rewritten.replaceAll(`${prefix}${leaf}::${payload}`, chain);
+  }
+  return { text: rewritten, bounds, builders };
 }
 
 function kernelPathOf(traitPath: string, text: string): string | null {
@@ -440,25 +410,6 @@ function paramsResolveIn(params: string, known: ReadonlySet<string>): boolean {
   return true;
 }
 
-export function flattenUse(statement: string): { path: string[]; leaf: string }[] {
-  const tokens = rustTokens(statement);
-  const useIndex = tokens.findIndex((token) => token.text === "use");
-  if (useIndex < 0) return [];
-  const parsed = parseUseTree(tokens, useIndex + 1);
-  if (!parsed) return [];
-  const out: { path: string[]; leaf: string }[] = [];
-  const visit = (tree: UseTree, prefix: readonly string[]): void => {
-    const path = [...prefix, ...tree.prefix];
-    if (tree.children) { for (const child of tree.children) visit(child, path); return; }
-    if (tree.glob) return;
-    const selfLeaf = path.at(-1) === "self";
-    const clean = selfLeaf ? path.slice(0, -1) : path;
-    out.push({ path: clean, leaf: tree.alias ?? clean.at(-1)! });
-  };
-  visit(parsed.tree, []);
-  return out;
-}
-
 function resolveDiff(diff: string | null, fullPaths: ReadonlyMap<string, string>, aggregateEff: readonly string[]): string | null {
   if (!diff) return null;
   if (/^(?:crate|::)/u.test(diff)) return diff;
@@ -472,7 +423,7 @@ function payloadDefinition(decls: readonly ModuleDecl[], readText: (absolute: st
     if (decl.testOnly || decl.file === null) continue;
     const text = readText(decl.file);
     if (text === null) continue;
-    const match = new RegExp(`\\bpub\\s+struct\\s+${name}\\b`, "u").exec(text);
+    const match = new RegExp(`\\bpub\\s+(?:struct|enum)\\s+${name}\\b`, "u").exec(text);
     if (!match) continue;
     const window = text.slice(Math.max(0, match.index - 1800), match.index);
     const attribute = window.lastIndexOf("MutationLeaf");
@@ -486,18 +437,88 @@ function payloadDefinition(decls: readonly ModuleDecl[], readText: (absolute: st
   return found;
 }
 
+type AggregateName = { readonly kind: "import" | "module"; readonly statement: string } | { readonly kind: "item" };
+
+/** 🔭️ What the namespace of an aggregate module offers to a leaf below it: its imports (as absolute statements), its public child modules and its own items. */
+export type AggregateScope = { readonly names: ReadonlyMap<string, AggregateName>; readonly glob: boolean };
+
+/** 🔭️ Reads the names an aggregate module file puts in scope for the leaves mounted below it. */
+export function aggregateScope(text: string, eff: readonly string[], isComponent: boolean): AggregateScope {
+  const tree = parseRustSourceTree(text);
+  const names = new Map<string, AggregateName>();
+  const children = new Set(tree.modules.map((node) => node.name));
+  const above = isComponent ? eff : eff.slice(0, -1);
+  let glob = false;
+  for (const item of tree.items) {
+    if (item.attributeTexts.some((attribute) => /cfg\(\s*test\s*\)/u.test(attribute))) continue;
+    if (item.kind === "use") {
+      const statement = text.slice(item.declStart, item.end);
+      if (/\*\s*;\s*$/u.test(statement)) { glob = true; continue; }
+      for (const entry of flattenUse(statement)) {
+        const head = entry.path[0];
+        let absolute: string[] | null = null;
+        if (head === "crate") absolute = entry.path;
+        else if (head === "self") absolute = ["crate", ...eff, ...entry.path.slice(1)];
+        else if (head === "super") absolute = entry.path[1] === "super" ? null : ["crate", ...above, ...entry.path.slice(1)];
+        else if (head !== undefined && children.has(head)) absolute = ["crate", ...eff, ...entry.path];
+        else absolute = entry.path;
+        if (absolute === null) { names.set(entry.leaf, { kind: "item" }); continue; }
+        names.set(entry.leaf, { kind: "import", statement: `use ${absolute.join("::")}${entry.leaf === absolute.at(-1) ? "" : ` as ${entry.leaf}`};` });
+      }
+    } else if (item.name && item.kind !== "impl" && item.kind !== "extern-crate" && item.kind !== "macro") names.set(item.name, { kind: "item" });
+  }
+  for (const node of tree.modules) {
+    if (node.conditionalTest || node.name === "component") continue;
+    names.set(node.name, node.visibility === "pub" ? { kind: "module", statement: `use ${["crate", ...eff, node.name].join("::")};` } : { kind: "item" });
+  }
+  return { names, glob };
+}
+
+/** 🔗️ Replaces the `use super::..::*;` glob of a leaf file that reaches the aggregate by explicit absolute imports of the names the file uses; answers the names that cannot be imported (the leaf then stays coupled to the aggregate). */
+export function decoupleFromAggregate(text: string, depth: number, scope: AggregateScope): { readonly text: string; readonly coupled: readonly string[] } | null {
+  const tree = parseRustSourceTree(text);
+  const pattern = new RegExp(`^use\\s+(?:super\\s*::\\s*){${depth}}\\*\\s*;`, "u");
+  const glob = tree.items.find((item) => item.kind === "use" && item.visibility === "private" && pattern.test(text.slice(item.declStart, item.end)));
+  if (!glob) return null;
+  if (scope.glob) return { text, coupled: ["the aggregate imports through a glob"] };
+  const own = new Set<string>([...declaredNames(text), ...tree.modules.map((node) => node.name)]);
+  const statements: string[] = [];
+  const coupled: string[] = [];
+  const used = identifierSet(`${text.slice(0, glob.declStart)}${text.slice(glob.end)}`);
+  for (const name of [...used].sort()) {
+    const entry = scope.names.get(name);
+    if (!entry || own.has(name)) continue;
+    if (entry.kind === "item") coupled.push(name);
+    else statements.push(`#[allow(unused_imports)]\n${entry.statement}`);
+  }
+  if (coupled.length) return { text, coupled };
+  const after = text[glob.end] === "\n" ? glob.end + 1 : glob.end;
+  const replacement = statements.length ? `${statements.join("\n")}\n` : "";
+  return { text: `${text.slice(0, glob.declStart)}${replacement}${text.slice(after)}`, coupled: [] };
+}
+
 /** 🏘️ Converts every concrete mutation leaf to a leaf generic over its aggregate, so leaves and aggregate no longer form one dependency cycle and the planner can place the leaves in family crates. */
 export function convertMutationLeaves(rootFile: string, rootSource: string, readText: (absolute: string) => string | null): MutationFamilyResult {
   const decls = collectDecls(rootFile, rootSource, readText);
   const list = [...decls.decls.values()];
   const aggregates = findMutationAggregates(list, readText);
   const edits = new Map<string, string>();
+  const creates = new Map<string, string>();
   const notes: string[] = [];
   const converted: string[] = [];
   const hand: { payload: string; reason: string }[] = [];
   const read = (file: string): string => edits.get(file) ?? readText(file) ?? "";
   for (const aggregate of aggregates) {
     const located = new Map<string, { decl: ModuleDecl; file: string }>();
+    const home = list.find((decl) => decl.file === aggregate.file && !decl.testOnly) ?? null;
+    if (home && !home.isComponent && home.node.visibility === "private") {
+      notes.push(`mutation aggregate ${aggregate.name} stays concrete: its module is private, so no absolute path can name its leaves`);
+      continue;
+    }
+    if (home && superReach(read(aggregate.file)) > 0) {
+      const absolute = absolutizeSuperPaths(read(aggregate.file), home.isComponent ? [...aggregate.effPath, "component"] : aggregate.effPath);
+      if (absolute !== null) edits.set(aggregate.file, absolute);
+    }
     const aggregateText0 = read(aggregate.file);
     const reexports = new Map<string, string[]>();
     const fullPaths = new Map<string, string>();
@@ -517,23 +538,44 @@ export function convertMutationLeaves(rootFile: string, rootSource: string, read
       else hand.push({ payload: variant.payload, reason: found.length ? `payload defined in ${found.length} files` : "payload struct with MutationLeaf not found" });
     }
     const variantChain = new Map<string, string>();
-    for (const [variant, place] of located) variantChain.set(variant, `crate::${place.decl.eff.join("::")}::${aggregate.variants.find((entry) => entry.variant === variant)!.payload}`);
+    for (const [variant, place] of located) variantChain.set(variant, `crate::${plainPath(place.decl.eff)}::${aggregate.variants.find((entry) => entry.variant === variant)!.payload}`);
     const builderChain = new Map<string, string>();
     const prepared: { variant: MutationVariant; place: { decl: ModuleDecl; file: string }; companions: ModuleDecl[] }[] = [];
+    const holderOf = (place: { decl: ModuleDecl; file: string }): ModuleDecl => {
+      const parent = place.decl.parentId ? decls.decls.get(place.decl.parentId) ?? null : null;
+      if (!parent) return place.decl;
+      if (place.decl.isComponent) return parent;
+      const alone = parent.node.inline && !place.decl.children.length && [...located.values()].every((other) => other.decl === place.decl || other.decl.parentId !== parent.id);
+      return alone ? parent : place.decl;
+    };
     for (const variant of aggregate.variants) {
       const place = located.get(variant.variant);
       if (!place) continue;
-      const holder = place.decl.isComponent && place.decl.parentId ? decls.decls.get(place.decl.parentId)! : place.decl;
+      const holder = holderOf(place);
       const companions = holder.children.map((id) => decls.decls.get(id)!).filter((child) => child.id !== place.decl.id && !child.testOnly && child.file !== null);
       prepared.push({ variant, place, companions });
       const source = readText(place.file) ?? "";
       for (const match of source.matchAll(/\bpub\s+fn\s+(\w+)\s*\([^)]*\)\s*->\s*(?:[A-Za-z0-9_]+::)*(\w+)\s*\{/gu)) if (match[2] === aggregate.name) builderChain.set(match[1]!, variantChain.get(variant.variant)!);
     }
     const builders = new Map<string, LeafBuilder>();
+    const aggregateDecl = list.find((decl) => decl.file === aggregate.file && !decl.testOnly) ?? null;
+    const scope0 = aggregateDecl ? aggregateScope(aggregateText0, aggregate.effPath, aggregateDecl.isComponent) : null;
+    if (aggregateDecl && scope0 && prepared.length) {
+      const holder = aggregateDecl.isComponent && aggregateDecl.parentId ? decls.decls.get(aggregateDecl.parentId)! : aggregateDecl;
+      const leafTexts = list.filter((decl) => decl !== aggregateDecl && decl.file !== null && !decl.testOnly && decl.raw.length > holder.raw.length && holder.raw.every((segment, index) => decl.raw[index] === segment)).map((decl) => read(decl.file!));
+      const hoisted = hoistAggregateSupport({ aggregateFile: aggregate.file, aggregateText: aggregateText0, aggregateName: aggregate.name, leafTexts, scope: scope0 });
+      if (hoisted) {
+        edits.set(aggregate.file, hoisted.aggregateText);
+        creates.set(hoisted.supportFile, hoisted.supportText);
+        notes.push(`mutation aggregate ${aggregate.name}: ${hoisted.moved.length} helper(s) hosted in a support module (${hoisted.moved.join(", ")})`);
+      }
+    }
+    const aggregateText1 = read(aggregate.file);
+    const scope = aggregateDecl ? aggregateScope(aggregateText1, aggregate.effPath, aggregateDecl.isComponent) : null;
     let count = 0;
     for (const entry of prepared) {
       const payload = entry.variant.payload;
-      const ctx: LeafContext = { agg: aggregate.name, variantChain, builderChain, leafChain: `crate::${entry.place.decl.eff.join("::")}`, payload, snapshot: aggregate.snapshot, diff: aggregate.diff, diffResolved: resolveDiff(aggregate.diff, fullPaths, aggregate.effPath) };
+      const ctx: LeafContext = { agg: aggregate.name, variantChain, builderChain, leafChain: `crate::${plainPath(entry.place.decl.eff)}`, payload, snapshot: aggregate.snapshot, diff: aggregate.diff, diffResolved: resolveDiff(aggregate.diff, fullPaths, aggregate.effPath) };
       const staged = new Map<string, string>();
       let failure: string | null = null;
       const union = new Set<string>();
@@ -552,7 +594,7 @@ export function convertMutationLeaves(rootFile: string, rootSource: string, read
         }
       }
       if (failure === null) {
-        const holder = entry.place.decl.isComponent && entry.place.decl.parentId ? decls.decls.get(entry.place.decl.parentId)! : entry.place.decl;
+        const holder = holderOf(entry.place);
         for (const childId of holder.children) {
           const test = decls.decls.get(childId)!;
           if (!test.testOnly || test.node.inline || test.file === null || test.children.length) continue;
@@ -564,6 +606,22 @@ export function convertMutationLeaves(rootFile: string, rootSource: string, read
         }
       }
       if (failure !== null) { hand.push({ payload, reason: failure }); continue; }
+      if (scope && aggregateDecl && !entry.place.decl.isComponent) {
+        const files = new Map<string, ModuleDecl>([[entry.place.file, entry.place.decl], ...entry.companions.map((companion): [string, ModuleDecl] => [companion.file!, companion])]);
+        for (const [file, decl] of files) {
+          const decoupled = decoupleFromAggregate(staged.get(file) ?? read(file), decl.raw.length - aggregateDecl.raw.length, scope);
+          if (!decoupled) continue;
+          if (decoupled.coupled.length) notes.push(`mutation leaf ${payload} stays coupled to its aggregate in ${decl.raw.at(-1)}: uses ${decoupled.coupled.join(", ")}`);
+          else staged.set(file, decoupled.text);
+        }
+        for (const [file, decl] of files) {
+          const text = staged.get(file) ?? read(file);
+          const keep = decl.raw.length - entry.place.decl.raw.length;
+          if (superReach(text) <= keep) continue;
+          const absolute = absolutizeBeyond(text, decl.raw, keep, false);
+          if (absolute !== null) staged.set(file, absolute);
+        }
+      }
       for (const [file, text] of staged) if (text !== read(file)) edits.set(file, text);
       converted.push(payload);
       count += 1;
@@ -597,5 +655,5 @@ export function convertMutationLeaves(rootFile: string, rootSource: string, read
     notes.push(`mutation aggregate ${aggregate.name}: ${count}/${aggregate.variants.length} leaves converted to generic leaves, ${reexported.size} concrete builder(s) kept on the aggregate`);
   }
   for (const entry of hand) notes.push(`mutation leaf ${entry.payload} stays concrete: ${entry.reason}`);
-  return { edits, notes, aggregates, converted, hand };
+  return { edits, creates, notes, aggregates, converted, hand };
 }

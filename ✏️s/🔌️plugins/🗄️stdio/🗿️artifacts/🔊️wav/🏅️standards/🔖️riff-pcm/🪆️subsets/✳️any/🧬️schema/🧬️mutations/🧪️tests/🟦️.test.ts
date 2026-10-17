@@ -34,10 +34,11 @@ const operations = [
   { mutation: "setData", data },
   { mutation: "patchData", index: 1, removeCount: 2, data: { kind: "pcm16", value: [3_000] }, moveTo: 0 },
   { mutation: "setOtherChunks", chunks: [{ fourcc: "LIST", data: [1, 2, 3, 4], padByte: 0 }], chunkOrder: [{ kind: "format" }, { kind: "samples" }, { kind: "other", value: 0n }] },
+  { mutation: "setPadBytes", fmtPadByte: boundaries.validOddFmtPadByte, dataPadByte: boundaries.validOddDataPadByte },
 ] satisfies readonly WavMutation[];
-const tags = ["setFmt", "setData", "patchData", "setOtherChunks"] as const satisfies readonly WavMutation["mutation"][];
+const tags = ["setFmt", "setData", "patchData", "setOtherChunks", "setPadBytes"] as const satisfies readonly WavMutation["mutation"][];
 const fields: Readonly<Record<WavMutation["mutation"], readonly string[]>> = {
-  setFmt: ["mutation", "fmt"], setData: ["mutation", "data"], patchData: ["mutation", "index", "removeCount", "data", "moveTo"], setOtherChunks: ["mutation", "chunks", "chunkOrder"],
+  setFmt: ["mutation", "fmt"], setData: ["mutation", "data"], patchData: ["mutation", "index", "removeCount", "data", "moveTo"], setOtherChunks: ["mutation", "chunks", "chunkOrder"], setPadBytes: ["mutation", "fmtPadByte", "dataPadByte"],
 };
 
 describe("WAV mutation TypeScript facets", () => {

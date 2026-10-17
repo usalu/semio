@@ -932,7 +932,6 @@ async fn receive_under_fixture_identity(session: &mut SyncSession<DemoSnapshot, 
     let result = session.receive(envelope, &mut identity).await;
     drop(identity.pause().expect("original fixture receive identity receipt"));
     drop(observer);
-    eprintln!("[DEBUG] original receive identity owned={observed} ceiling={CEILING}");
     result
 }
 
@@ -1153,7 +1152,7 @@ async fn rollback_envelope_synthesizes_an_undo_from_the_original_inverse() {
 /// The current socket hello round-trips in memory; the committed obsolete hello must reject.
 #[semio_framework_async_macros::async_test]
 async fn wire_fixtures_stay_byte_identical_across_rust_and_ts() {
-    let fixtures_dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../../../../../🔨️modules/📡️replication/🧫️fixtures/📡️wire");
+    let fixtures_dir = fixture_path!("../../../../../../../../../🔨️modules/📡️replication/🧪️tests/🧫️fixtures/📡️wire");
 
     async fn check_client(dir: &std::path::Path, name: &str, frame: &ClientFrame, lane: Lane) {
         let bytes = std::fs::read(dir.join(name)).unwrap_or_else(|error| panic!("read {name}: {error}"));
@@ -1431,6 +1430,8 @@ async fn op_envelope_from_stored_edit_round_trips_through_ingest() {
 //#region 🧪️Actor
 #[cfg(not(target_arch = "wasm32"))]
 mod actor_tests {
+    use semio_framework_test_fixtures::fixture_path;
+
     use super::*;
     use semio_framework_os_store_sync::{ARTIFACT_MAILBOX_BYTES, ARTIFACT_MAILBOX_ITEMS, ArtifactActorConfig, ArtifactActorMsg, ArtifactDocumentKey, ArtifactEvent, ArtifactMailboxSendError, ArtifactSyncStatus, CommandAckOutcome, DocumentBackboneRetentionV1, HISTORY_TRANSITION_REFUSED_CODE, OpenDocument, PersistenceBinding, PresenceHeartbeatProducer, RemoteState, SyncError, SyncSession, artifact_actor_message_bytes, artifact_mailbox_pair, backbone_worker_wire, decode_document_backbone_message_exact, envelopes_from_history_edit, frontier_reaches, hub_ws_url, presence_to_bytes, rollback_envelope, spr_op_ids, stamp_session};
 use semio_framework_os_spr::{AckStage, ActorId, ApplyOutcome, ArtifactBootstrap, ArtifactBootstrapPair, Bootstrap, ClientFrame, Lane, MutationEnvelope, MutationId, PresencePeer, PresenceToolRun, RuntimeFrontierSummary, ServerFrame, decode_envelopes, decode_server_frame, encode_client_frame, encode_envelopes};
@@ -2245,7 +2246,7 @@ use tokio::sync::broadcast;
     // sequence and final timeline. The same fixtures drive WS-E's vitest harness against the TS twin.
     #[tokio::test]
     async fn fixtures_replay_matches_expected_events() {
-        let fixtures_dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../🧫️fixtures");
+        let fixtures_dir = fixture_path!("../../../../🧫️fixtures");
         let fixtures = load_fixtures(&fixtures_dir).await;
         assert!(!fixtures.is_empty(), "expected fixtures in {fixtures_dir:?}");
         for fixture in fixtures {

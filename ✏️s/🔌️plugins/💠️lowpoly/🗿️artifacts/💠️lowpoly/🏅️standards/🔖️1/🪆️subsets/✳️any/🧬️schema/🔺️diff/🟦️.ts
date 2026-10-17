@@ -1,6 +1,6 @@
 import{parseLowpolyMeshAttribute,parseLowpolyMeshState,type LowpolyMeshAttribute,type LowpolyMeshState}from"../🕸️mesh/🟦️.ts";
 /** 🧬️ Lowpoly diff schema — sparse field delta. */
-import { parseArtifactChild, type ArtifactChild } from "../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts";
+import { parseArtifactChild, type ArtifactChild } from "@semio-tech/framework-os/modules/store/child/schema";
 import { type Binary32 } from "@semio-tech/framework/value/ieee754";
 import { parseBinary32 } from "@semio-tech/framework/value/ieee754";
 import { parseLowpolyObject, parseLowpolyPaintLayer, type LowpolyObject, type LowpolyPaintLayer } from "../🟦️.ts";
@@ -91,6 +91,10 @@ type lowpolyLowpolyDiffGuardSizeBounds = { readonly minItems?: number; readonly 
 
 export const lowpolyLowpolyDiffGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : lowpolyLowpolyDiffGuardReject(at, "value is not an object");
+export const lowpolyLowpolyDiffGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) lowpolyLowpolyDiffGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const lowpolyLowpolyDiffGuardArray = (value: unknown, at: string, bounds: lowpolyLowpolyDiffGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return lowpolyLowpolyDiffGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) lowpolyLowpolyDiffGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -224,7 +228,7 @@ export function parseLowpolyPaintLayerPatch(value: unknown, at = "$"): LowpolyPa
 }
 
 export function parsePixelRun(value: unknown, at = "$"): PixelRun {
-  const row = lowpolyLowpolyDiffGuardObject(value, at);
+  const row = lowpolyLowpolyDiffGuardClosed(lowpolyLowpolyDiffGuardObject(value, at), at, ["offset", "bytes"]);
   return {
     offset: lowpolyLowpolyDiffGuardInteger(row["offset"], `${at}.offset`, {"minimum": 0}),
     bytes: lowpolyLowpolyDiffGuardString(row["bytes"], `${at}.bytes`),

@@ -1,0 +1,29 @@
+{
+ "name": "lowpoly",
+ "crates": [
+  "semio-lowpoly-mutation-bridge",
+  "semio-s-artifact-lowpoly-lowpoly",
+  "semio-s-artifact-lowpoly-lowpoly-commands",
+  "semio-s-artifact-lowpoly-lowpoly-config",
+  "semio-s-artifact-lowpoly-lowpoly-editor",
+  "semio-s-artifact-lowpoly-lowpoly-engine",
+  "semio-s-artifact-lowpoly-lowpoly-examples",
+  "semio-s-artifact-lowpoly-lowpoly-inferences",
+  "semio-s-artifact-lowpoly-lowpoly-io",
+  "semio-s-artifact-lowpoly-lowpoly-kit",
+  "semio-s-artifact-lowpoly-lowpoly-model",
+  "semio-s-artifact-lowpoly-lowpoly-model-diff",
+  "semio-s-artifact-lowpoly-lowpoly-modes",
+  "semio-s-artifact-lowpoly-lowpoly-mut-geometry",
+  "semio-s-artifact-lowpoly-lowpoly-mut-laws",
+  "semio-s-artifact-lowpoly-lowpoly-mut-objects",
+  "semio-s-artifact-lowpoly-lowpoly-mut-paint",
+  "semio-s-artifact-lowpoly-lowpoly-mutations",
+  "semio-s-artifact-lowpoly-lowpoly-options",
+  "semio-s-artifact-lowpoly-lowpoly-panels",
+  "semio-s-artifact-lowpoly-lowpoly-presence",
+  "semio-s-artifact-lowpoly-lowpoly-view",
+  "semio-s-artifact-lowpoly-lowpoly-viewer"
+ ],
+ "note": "ORACLE-HARVEST-PLUGINS: ✏️s/🔌️plugins/💠️lowpoly"
+}

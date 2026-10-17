@@ -11,7 +11,7 @@
 //! honestly re-derivable from `nodes`/`edges`/`root_node_id` alone, so it moved out of the manifest's
 //! former `flatPosition` `"derived"` node property into this family instead).
 
-use crate::JackSnapshot;
+use crate::standards::v1::subsets::any::schema::snapshot::JackSnapshot;
 use ::semio_framework_schema::ArtifactSchema;
 
 use super::flat_position::compute_flat_position;
@@ -65,10 +65,6 @@ pub fn jack_artifact_inference_descriptor() -> ::semio_framework_schema_registry
 }
 //#endregion 🔖️Descriptor
 
-#[cfg(test)]
-//#region 🧪️Tests
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests
 
 //#region 🔁️Re-exports

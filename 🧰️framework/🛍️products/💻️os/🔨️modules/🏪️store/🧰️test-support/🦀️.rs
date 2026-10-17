@@ -77,10 +77,10 @@ where
 //#endregion 🧪️MutationReport
 
 /// 🧬️ Order-preserving test projection for an independent JSON byte encoder.
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 pub struct SerdeValue<'a>(pub &'a DslValue);
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 impl Serialize for SerdeValue<'_> {
     fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         use serde::ser::{SerializeMap, SerializeSeq};

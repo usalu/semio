@@ -107,5 +107,4 @@ pub fn note_presence_store_disposer() -> Box<dyn semio_framework_plugin::Artifac
 #[path = "🧪️tests/🔬️contract-vectors/🦀️.rs"]
 mod contract_vectors;
 
-#[path = "🚪️io/🦀️.rs"]
-pub mod io;
+

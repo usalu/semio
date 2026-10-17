@@ -3,8 +3,7 @@
 use crate::standards::v1_4::subsets::base::schema::{diff::PdfDiff, snapshot::PdfSnapshot};
 
 //#region 🔖️Leaves
-#[path = "📝️set-page-text/🦀️.rs"]
-pub mod set_page_text;
+pub use semio_s_artifact_stdio_pdf_tests::standards::v1_4::subsets::a::schema::mutations::set_page_text;
 pub use set_page_text::SetPageText;
 #[path = "🧹️clear-page-text/🦀️.rs"]
 pub mod clear_page_text;
@@ -28,7 +27,5 @@ pub enum PdfA1Mutation {
 //#endregion 🔖️Delegation
 
 //#region 🧪️Structure
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Structure

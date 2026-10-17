@@ -1,8 +1,9 @@
 //! 📥️ glTF 2.0 byte reader of `stdio.gltf`: `.gltf` JSON text and the `.glb` binary container parsed into the typed
 //! snapshot through the first-party [`pack::json`] codec, with every `data:` buffer resolved. Depends on the model only.
 
-use crate::standards::v2_0::subsets::any::schema::snapshot::{GltfDocument, GltfSnapshot, GltfSourceForm};
-use crate::standards::v2_0::subsets::any::schema::STDIO_GLTF_DOCUMENT_SCHEMA;
+use crate::standards::v2_0::subsets::any::schema::snapshot::{GltfDocument, GltfSourceForm};
+use crate::standards::v2_0::subsets::any::schema::snapshot_root::GltfSnapshot;
+use crate::standards::v2_0::subsets::any::schema::snapshot_root::STDIO_GLTF_DOCUMENT_SCHEMA;
 use crate::standards::v2_0::subsets::any::io::{CHUNK_TYPE_BIN, CHUNK_TYPE_JSON, GLB_MAGIC, GLB_VERSION, decode_data_uri, validate_document};
 
 //#region 🔖️DocumentCodec

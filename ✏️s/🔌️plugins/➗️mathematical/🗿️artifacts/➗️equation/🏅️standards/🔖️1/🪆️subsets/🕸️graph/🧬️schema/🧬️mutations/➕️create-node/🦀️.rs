@@ -1,6 +1,6 @@
 //! 🟢️ `create-node` — brings a new id-keyed graph node into existence.
 
-use crate::{EquationMutation, EquationSnapshot};
+use crate::EquationSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Payload
@@ -17,13 +17,16 @@ pub struct CreateNode {
     pub index: Option<usize>,
 }
 
-impl protocol::MutationKind<EquationSnapshot, EquationMutation> for CreateNode {
+impl<Op> protocol::MutationKind<EquationSnapshot, Op> for CreateNode
+where
+    Op: protocol::Mutation<EquationSnapshot, Diff = crate::EquationDiff> + From<CreateNode> + From<crate::standards::v1::subsets::graph::schema::mutations::delete_node::DeleteNode>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "node", kind: "create-node", record: "CreatedNode" };
 
-    fn diff(&self, base: &EquationSnapshot) -> protocol::MutationOutcome<<EquationMutation as protocol::Mutation<EquationSnapshot>>::Diff> {
+    fn diff(&self, base: &EquationSnapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<EquationSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &EquationSnapshot) -> Result<Vec<EquationMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EquationSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

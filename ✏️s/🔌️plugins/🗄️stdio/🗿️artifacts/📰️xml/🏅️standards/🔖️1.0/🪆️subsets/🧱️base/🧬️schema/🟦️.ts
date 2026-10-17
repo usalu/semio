@@ -1,5 +1,5 @@
 /** 🧬️ XmlArtifact schema — full persisted state. */
-import type { XmlDocument } from './📸️snapshot/🟦️.ts';
+import { parseXmlSnapshot, type XmlDocument } from './📸️snapshot/🟦️.ts';
 
 export interface XmlArtifact {
   /** @state artifact */ schema: string;
@@ -54,9 +54,5 @@ export const stdioXml10BaseArtifactGuardConstant = <T extends string | number | 
 //#endregion 🚪️Parsers
 
 export function parseXmlArtifact(value: unknown, at = "$"): XmlArtifact {
-  const row = stdioXml10BaseArtifactGuardObject(value, at);
-  return {
-    schema: stdioXml10BaseArtifactGuardString(row["schema"], `${at}.schema`),
-    doc: stdioXml10BaseArtifactGuardObject(row["doc"], `${at}.doc`),
-  };
+  return parseXmlSnapshot(value, at);
 }

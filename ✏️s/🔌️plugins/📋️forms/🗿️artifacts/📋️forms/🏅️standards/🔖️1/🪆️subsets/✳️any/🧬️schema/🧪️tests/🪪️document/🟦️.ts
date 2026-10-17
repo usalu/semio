@@ -1,5 +1,5 @@
 import { artifactReferenceSchema as artifactReferenceSchema } from "@semio-tech/framework/schema/artifact-reference";
-import {parseFormsJsonArtifact,formsArtifactJson} from "../../../🚪️io/📝️text/📸️snapshot/🔣️json/🟦️.ts";
+import {parseFormsJsonArtifact,formsArtifactJson,formsDiffJson} from "../../../🚪️io/📝️text/📸️snapshot/🔣️json/🟦️.ts";
 import {parseFormsJsonDiff} from "../../../🚪️io/📝️text/🔺️diff/🔣️json/🟦️.ts";
 import { applyPatch, compare } from "fast-json-patch";
 import { applyFormsDiff } from "../../🔺️diff/🟦️.ts";
@@ -8,7 +8,7 @@ import { assertDocumentContractOracle, declaredChildDialectSchema } from "@semio
 /** 🧪️ Forms persisted fields and child identities agree with independent JSON Schema validation. */
 import { fileURLToPath } from "node:url";
 import { ioSchema as ioSchema } from "@semio-tech/framework/io/schema";
-import childSchema from "../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔣️.json" with { type: "json" };
+import { storeChildSchema as childSchema } from "@semio-tech/framework-os/modules/store/child/schema";
 import artifactSchema from "../../🔣️.json" with { type: "json" };
 import snapshotSchema from "../../📸️snapshot/🔣️.json" with { type: "json" };
 import diffSchema from "../../🔺️diff/🔣️.json" with { type: "json" };
@@ -53,7 +53,7 @@ export function testFormsDocumentContractOracle(): void {
     dependencies: [ioSchema, childSchema, semioChildSchema, definitionSchema, responseSchema,artifactReferenceSchema],
     artifact: { schema: artifactSchema, parse: parseFormsJsonArtifact, nativeJson:value=>formsArtifactJson(value as artifact.FormsArtifact) },
     snapshot: { schema: snapshotSchema, parse: parseFormsJsonArtifact, nativeJson:value=>formsArtifactJson(value as artifact.FormsArtifact) },
-    diff: { schema: diffSchema, parse: parseFormsJsonDiff, nativeJson:value=>formsArtifactJson(value as diff.FormsDiff) },
+    diff: { schema: diffSchema, parse: parseFormsJsonDiff, nativeJson:value=>formsDiffJson(value as diff.FormsDiff) },
     validDocuments: [{ input: vectors.document, output: vectors.document }, { input: base, output: base }, { input: { ...base, title: null }, output: base }, ...vectors.validIndependentChildDocuments.map(value=>({input:value,output:value}))],
     invalidDocuments: [...vectors.invalidIdentityDocuments, ...Object.entries(vectors.invalidDocumentFields).map(([key, value]) => ({ ...vectors.document, [key]: value })), ...vectors.invalidChildren.map((child) => ({ ...vectors.document, structure: child }))],
     invalidDiffs: vectors.invalidDiffs,

@@ -3,7 +3,7 @@
 use crate::standards::v1::subsets::any::io::binary::snapshot::decode_palette_indices;
 use crate::standards::v1::subsets::any::io::binary::snapshot::encode_palette_indices;
 
-use super::*;
+use crate::standards::v1::subsets::any::schema::snapshot::*;
 
 fn scene() -> Grid2dSnapshot {
     Grid2dSnapshot { width: 3, height: 2, cell_width: 4.0, cell_height: 5.0, ..Default::default() }

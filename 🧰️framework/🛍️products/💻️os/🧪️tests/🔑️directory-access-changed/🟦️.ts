@@ -6,11 +6,12 @@
  * space created before their cursor never saw its `space.created`, so Home listed it only after a reload). */
 import { directoryStreamWakeV1 } from "@semio-tech/framework/directory";
 import type { DirectoryStreamMessage } from "@semio-tech/framework/directory/schema";
+import { loadAccessChangedV1Fixture, loadDirectorySchema } from "../../🔨️modules/📇️directory/🧪️tests/🧫️fixtures/🟦️.ts";
 
 export async function registerDirectoryAccessChangedTests(vitest: NonNullable<ImportMeta["vitest"]>): Promise<void> {
   const { describe, it, expect } = vitest;
-  const { default: fixture } = await import("../../🔨️modules/📇️directory/🧪️tests/🧫️fixtures/🔑️access-changed-v1/🔣️.json");
-  const { default: schema } = await import("../../🔨️modules/📇️directory/🧬️schema/🔣️.json");
+  const fixture = await loadAccessChangedV1Fixture();
+  const schema = await loadDirectorySchema();
   type Case = { id: string; createdOnSocket: string[]; message: DirectoryStreamMessage; frame: DirectoryStreamMessage | null };
   const cases = fixture.cases as unknown as Case[];
   const wakes = fixture.wakes as unknown as { id: string; message: DirectoryStreamMessage; wake: "origin" | "next-page" | "none" }[];

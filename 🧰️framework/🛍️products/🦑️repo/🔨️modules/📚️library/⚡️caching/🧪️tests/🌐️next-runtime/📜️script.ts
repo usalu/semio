@@ -15,8 +15,8 @@ const artifact = realpathSync(directory), require = createRequire(import.meta.ur
   }
   return resolved;
 };
-process.on("SIGTERM", () => { console.log(`[DEBUG] Standalone runtime resolved ${observed.size} local modules without ancestor fallback`); process.exit(0); });
-process.on("SIGINT", () => { console.log(`[DEBUG] Standalone runtime resolved ${observed.size} local modules without ancestor fallback`); process.exit(0); });
+process.on("SIGTERM", () => {  process.exit(0); });
+process.on("SIGINT", () => {  process.exit(0); });
 require(join(artifact, "server.js"));
 
-setImmediate(() => console.log(`[DEBUG] Standalone runtime resolved ${observed.size} local modules without ancestor fallback`));
+setImmediate(() => {});

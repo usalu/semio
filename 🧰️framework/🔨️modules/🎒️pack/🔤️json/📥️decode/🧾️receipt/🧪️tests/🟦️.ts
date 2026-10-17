@@ -45,7 +45,6 @@ test("post-effect cancellation receipts retain independently authored work",()=>
       }
     }
   }finally{database.close();}
-  console.log("[DEBUG] JSON post-effect receipt3 canonical Grant validation and independent SQLite UTF8 byte ownership passed");
 });
 
 test("actual grammar publishes physical progress before the post-effect cancellation checkpoint",()=>{
@@ -56,6 +55,6 @@ test("actual grammar publishes physical progress before the post-effect cancella
   expect(receipt>=0&&checkpoint>receipt).toBe(true);
 });
 
-test("original receipt order fold 0 keeps plain trials outside schema authority",async()=>{const {existsSync}=await import("node:fs");expect(existsSync(new URL("../🧬️schema/🔣️.json",import.meta.url))).toBe(false);console.log("[DEBUG] Original receipt/order/fold trial has no whole-corpus schema authority");});
+test("original receipt order fold 0 keeps plain trials outside schema authority",async()=>{const {existsSync}=await import("node:fs");expect(existsSync(new URL("../🧬️schema/🔣️.json",import.meta.url))).toBe(false);});
 
-test("original receipt order fold 4 keeps frontier trials outside schema authority",async()=>{const {existsSync}=await import("node:fs");expect(existsSync(new URL("../🧬️schema/⚠️frontier.json",import.meta.url))).toBe(false);console.log("[DEBUG] Original failed-frontier trial has no whole-corpus schema authority");});
+test("original receipt order fold 4 keeps frontier trials outside schema authority",async()=>{const {existsSync}=await import("node:fs");expect(existsSync(new URL("../🧬️schema/⚠️frontier.json",import.meta.url))).toBe(false);});

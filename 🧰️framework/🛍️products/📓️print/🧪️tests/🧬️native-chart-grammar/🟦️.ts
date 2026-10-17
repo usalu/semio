@@ -17,7 +17,7 @@ import { interpolateRgb, interpolateLab, interpolateHcl } from "d3-interpolate";
 import { utcDay } from "d3-time";
 import { sort } from "d3-array";
 import { geoEquirectangular } from "d3-geo";
-import { buildVizCoordinate } from "../../🧬️schema/💡️inferences/🧭coordinate/🟦️.ts";
+import { buildVizCoordinate } from "@semio-tech/print-viz-inference/coordinate";
 import { compileVizProbeDocument } from "../../🔨️modules/🧪️viz-probe/🟦️.ts";
 import { nativeTransformGrammarChecks } from "../🧬️chart-transform-grammar/🟦️.ts";
 import { nativeLayoutGrammarChecks } from "../🧬️chart-layout-grammar/🟦️.ts";

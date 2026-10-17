@@ -45,13 +45,13 @@ CadEntity::Insert{block_name,insertion_point,scale,rotation}=>{let target=cad_re
 CadEntity::Solid{p1,p2,p3,p4}=>p.insert_key_float("semio_cad_solid",id,&[Cell::Real(p1.x),Cell::Real(p1.y),Cell::Real(p2.x),Cell::Real(p2.y),Cell::Real(p3.x),Cell::Real(p3.y),Cell::Real(p4.x),Cell::Real(p4.y)],float_columns("semio_cad_solid"))?,
 CadEntity::Dimension{def_point,text_position,measurement,text}=>p.insert_key_float("semio_cad_dimension",id,&[Cell::Real(def_point.x),Cell::Real(def_point.y),Cell::Real(text_position.x),Cell::Real(text_position.y),Cell::Real(*measurement),Cell::Text(text)],float_columns("semio_cad_dimension"))?}
 Ok(())}/// 🎟️ Admits all typed CAD cells before native forecasting or materialization.
-pub(crate)fn admit_values(snapshot:&SemioCadSnapshot,phase:SqliteSnapshotPhase,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{semantic::layout(control.limits())?;let mut out=RowWriter::borrowed(control,phase)?;visit_rows(snapshot,&mut out)?;out.finish_borrowed()}
+pub fn admit_values(snapshot:&SemioCadSnapshot,phase:SqliteSnapshotPhase,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{semantic::layout(control.limits())?;let mut out=RowWriter::borrowed(control,phase)?;visit_rows(snapshot,&mut out)?;out.finish_borrowed()}
 /// 🏛️ Admits the exact authored table and column layout before native ownership.
 pub(crate)fn admit_layout(limits:store::sqlite_snapshot::SqliteDatabaseLimits)->Result<(),ValueError>{semantic::layout(limits)}
 /// 📦️ Counts the actual native primitive cells before typed ownership.
 pub(crate)fn admit_binary(body:&[u8],control:&mut semio_framework_value::NativeDecodeControl<'_>,limits:store::sqlite_snapshot::SqliteDatabaseLimits)->Result<(),ValueError>{semantic::binary(body,control,limits)}
 /// 📝️ Counts the actual native primitive cells before typed ownership.
-pub(crate)fn admit_document(body:&str,control:&mut semio_framework_value::NativeDecodeControl<'_>,limits:store::sqlite_snapshot::SqliteDatabaseLimits)->Result<(),ValueError>{semantic::document(body,control,limits)}
+pub fn admit_document(body:&str,control:&mut semio_framework_value::NativeDecodeControl<'_>,limits:store::sqlite_snapshot::SqliteDatabaseLimits)->Result<(),ValueError>{semantic::document(body,control,limits)}
 
 fn number(value:usize)->Result<i64,ValueError>{i64::try_from(value).map_err(|error|ValueError::new(ValueRefusalKind::WorkLimit,error.to_string()))}
 fn identity<'a>(row:impl std::borrow::Borrow<SqliteRow<'a>>,columns:usize)->Result<(),ValueError>{let row=*row.borrow();if row.rowid<=0||row.integer(0)?!=row.rowid||row.values.len()!=columns{Err(ValueError::new(ValueRefusalKind::InvalidValue,"invalid Semio CAD row identity or columns"))}else{Ok(())}}

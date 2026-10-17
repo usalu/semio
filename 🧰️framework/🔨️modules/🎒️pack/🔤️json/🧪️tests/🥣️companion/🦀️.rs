@@ -3,6 +3,8 @@
 //! 🧭️ The unit laws are mounted flat, so `super::*` resolves to the public vocabulary of the crate; the laws of the private encode and decode modules sit below wrappers that restate those modules' imports.
 #![cfg(test)]
 
+use semio_framework_test_fixtures::fixture_path;
+
 pub use semio_framework_pack_json::*;
 pub use semio_framework_pack_json::testkit::JsonLexeme;
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
@@ -15,7 +17,7 @@ use std::{collections::HashMap, path::{Path, PathBuf}, sync::{Mutex, OnceLock}};
 
 pub fn product_directory() -> &'static Path {
     static DIRECTORY: OnceLock<PathBuf> = OnceLock::new();
-    DIRECTORY.get_or_init(|| Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../.."))
+    DIRECTORY.get_or_init(|| fixture_path!("../../../.."))
 }
 
 fn leaked(relative: &str) -> &'static [u8] {
@@ -86,5 +88,4 @@ fn owned_json_member_transfer_keeps_independent_key_value_and_backing_custody() 
     assert_eq!(object.pop_member().expect("first member").1.as_bool(), independent["first"].as_bool());
     assert!(object.last_member().is_none());
     assert_eq!(object.member_storage_bytes(), backing);
-    eprintln!("[DEBUG] PackJSON owned member transfer keeps actual key pointer, independent value and terminal vector backing");
 }

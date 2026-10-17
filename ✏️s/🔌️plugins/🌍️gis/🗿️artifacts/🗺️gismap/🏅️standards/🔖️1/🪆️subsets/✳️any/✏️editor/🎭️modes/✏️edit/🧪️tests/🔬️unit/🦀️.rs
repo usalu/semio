@@ -1,4 +1,13 @@
-use super::*;
+use crate::editor::gis2d::modes::edit::windows::map;
+#[allow(unused_imports)]
+use semio_framework_plugin::create_default_layout;
+#[allow(unused_imports)]
+use semio_framework_ui_locale::LocalizedLabel;
+#[allow(unused_imports)]
+use semio_framework_plugin::ModeDefinition;
+#[allow(unused_imports)]
+use semio_framework_plugin::WindowLayout;
+use crate::editor::gis2d::modes::edit::*;
 
 #[semio_framework_async_macros::async_test]
 async fn the_default_layout_lists_the_single_map_window() {

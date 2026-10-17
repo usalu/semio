@@ -73,3 +73,11 @@ semio-framework-os-store-sync-native = { path = "../../../../🖥️native/📦�
 tokio-tungstenite = "0.26"
 
 [dev-dependencies]
+semio-framework-os-directory-client = { path = "../../../../../../📇️directory/🔌️client/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-test-fixtures = { path = "../../../../../../../../../🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
+
+[target.'cfg(not(all(target_arch = "wasm32", target_env = "p2")))'.dev-dependencies]
+semio-framework-os-store-sync = { path = "../../../../📦️packages/🦀️rust", features = ["testing"] }
+
+[target.'cfg(not(target_arch = "wasm32"))'.dev-dependencies]
+semio-framework-os-store-sync-native = { path = "../../../../🖥️native/📦️packages/🦀️rust", features = ["testing"] }

@@ -1,6 +1,17 @@
 //! ↩️ Native optional text inverses preserve original owners and measured cancellation.
-use super::*;
-use crate::test_source_custody;
+use crate::standards::v1::subsets::any::schema::mutations::{ChangeNodeIcon, EditTargetRegionLabel, Puzzle2dMutation};
+use crate::Puzzle2dSnapshot;
+use semio_framework_value::{paged::PagedUtf8, retirement::controlled::ControlledRetirement, ValueError, ValueRefusalKind, retained_clone::RetainedCloneGrant, retained_clone::RetainedCloneProgress, retained_clone::RetainedCloneStep};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::preparation::text_preparation::{Puzzle2dTextIntent, Puzzle2dTextPlan, Puzzle2dTextPreparationCursor, Puzzle2dTextPreparationStep};
+#[allow(unused_imports)]
+use semio_framework_value::{list::PagedList, retained_clone::RetainedClone, retained_clone::RetainedCloneBinding, retained_clone::RetainedCloneCursor, retained_clone::RetainedCloneRef};
+#[allow(unused_imports)]
+use std::{mem::ManuallyDrop, mem::size_of, ops::Deref, ops::DerefMut};
+use crate::standards::v1::subsets::any::schema::preparation::text_inverse::{payload};
+use crate::standards::v1::subsets::any::schema::preparation::text_inverse::*;
+use crate::standards::v1::subsets::any::schema::testkit as test_source_custody;
+use semio_framework_test_fixtures::fixture_text;
 fn grant(turn:usize)->RetainedCloneGrant{match turn%3{0=>RetainedCloneGrant::one_capacity_turn(4096,128),1=>RetainedCloneGrant::one_payload_turn(4096,128),_=>RetainedCloneGrant::one_release_turn(4096,128)}}
 fn observed(step:Result<RetainedCloneStep,ValueError>,heap:semio_framework_trace::HeapAllocationObservation,grant:RetainedCloneGrant)->RetainedCloneStep{
  let step=step.unwrap();let progress=step.progress();assert!(progress.fits(grant));assert!(!heap.overflowed);assert!(heap.requested_bytes<=progress.retained_capacity_bytes);assert!(heap.released_bytes<=progress.released_bytes);assert!(progress.copied_bytes+progress.retained_capacity_bytes+progress.released_bytes<=4096);step
@@ -27,6 +38,6 @@ fn law<T:Puzzle2dTextInverse+Clone>(snapshot:&Puzzle2dSnapshot,payload:T,expecte
 }
 #[test]
 fn history_edit_puzzle2d_optional_text_inverse_clones_only_original_paged_id_and_value_with_exact_cancel(){
- let corpus:serde_json::Value=serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔤️text/↩️inverse/🔣️.json")).unwrap();for row in corpus["cases"].as_array().unwrap(){let mut snapshot=Puzzle2dSnapshot::default();let id=if row["target"].as_bool().unwrap(){"retained"}else{"missing"}.into();let previous=row["before"].as_str().map(PagedUtf8::from);let next=row["next"].as_str().map(PagedUtf8::from);if row["role"]=="nodeIcon"{snapshot.nodes.push(crate::standards::v1::subsets::any::schema::Puzzle2dNode{id:"retained".into(),icon_kind:previous,..Default::default()});snapshot.nodes.push(crate::standards::v1::subsets::any::schema::Puzzle2dNode{id:"retained".into(),icon_kind:Some("second owner".into()),..Default::default()});law(&snapshot,ChangeNodeIcon{id,new_icon_kind:next},&row["expectedInverse"])}else{snapshot.target_regions.push(crate::standards::v1::subsets::any::schema::Puzzle2dTargetRegion{id:"retained".into(),label:previous,..Default::default()});snapshot.target_regions.push(crate::standards::v1::subsets::any::schema::Puzzle2dTargetRegion{id:"retained".into(),label:Some("second owner".into()),..Default::default()});law(&snapshot,EditTargetRegionLabel{id,new_label:next},&row["expectedInverse"])}}
- let text="😀\0甲".repeat(20000);let mut snapshot=Puzzle2dSnapshot::default();snapshot.nodes.push(crate::standards::v1::subsets::any::schema::Puzzle2dNode{id:"retained".into(),icon_kind:Some(text.clone().into()),..Default::default()});law(&snapshot,ChangeNodeIcon{id:"retained".into(),new_icon_kind:None},&serde_json::json!([{"id":"retained","previous":text}]));eprintln!("[DEBUG] optional text inverse fourteen first-owner cases plus160000byte Unicode/NUL clone; constructor0, every actual copy/capacity/release4096, five exact cancellation points and output retirement");
+ let corpus:serde_json::Value=serde_json::from_str(fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔤️text/↩️inverse/🔣️.json")).unwrap();for row in corpus["cases"].as_array().unwrap(){let mut snapshot=Puzzle2dSnapshot::default();let id=if row["target"].as_bool().unwrap(){"retained"}else{"missing"}.into();let previous=row["before"].as_str().map(PagedUtf8::from);let next=row["next"].as_str().map(PagedUtf8::from);if row["role"]=="nodeIcon"{snapshot.nodes.push(crate::standards::v1::subsets::any::schema::records::Puzzle2dNode{id:"retained".into(),icon_kind:previous,..Default::default()});snapshot.nodes.push(crate::standards::v1::subsets::any::schema::records::Puzzle2dNode{id:"retained".into(),icon_kind:Some("second owner".into()),..Default::default()});law(&snapshot,ChangeNodeIcon{id,new_icon_kind:next},&row["expectedInverse"])}else{snapshot.target_regions.push(crate::standards::v1::subsets::any::schema::records::Puzzle2dTargetRegion{id:"retained".into(),label:previous,..Default::default()});snapshot.target_regions.push(crate::standards::v1::subsets::any::schema::records::Puzzle2dTargetRegion{id:"retained".into(),label:Some("second owner".into()),..Default::default()});law(&snapshot,EditTargetRegionLabel{id,new_label:next},&row["expectedInverse"])}}
+ let text="😀\0甲".repeat(20000);let mut snapshot=Puzzle2dSnapshot::default();snapshot.nodes.push(crate::standards::v1::subsets::any::schema::records::Puzzle2dNode{id:"retained".into(),icon_kind:Some(text.clone().into()),..Default::default()});law(&snapshot,ChangeNodeIcon{id:"retained".into(),new_icon_kind:None},&serde_json::json!([{"id":"retained","previous":text}]));
 }

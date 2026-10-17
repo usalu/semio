@@ -15,7 +15,10 @@ pub struct SetTransformPayload {
     pub index: Option<usize>,
 }
 
-impl protocol::MutationKind<SvgSnapshot, super::SvgMutation> for SetTransformPayload {
+impl<Op> protocol::MutationKind<SvgSnapshot, Op> for SetTransformPayload
+where
+    Op: protocol::Mutation<SvgSnapshot, Diff = SvgDiff> + From<SetTransformPayload>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "transform", kind: "set-transform", record: "SetTransform" };
 
     fn diff(&self, base: &SvgSnapshot) -> protocol::MutationOutcome<SvgDiff> {
@@ -23,10 +26,10 @@ impl protocol::MutationKind<SvgSnapshot, super::SvgMutation> for SetTransformPay
         protocol::MutationOutcome::new(attribute_diff_at_path(base, path, "transform", transform.clone().map(SvgAttributeValue::Transform), *index))
     }
 
-    fn inverse(&self, base: &SvgSnapshot) -> Result<Vec<super::SvgMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &SvgSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         let Self { path, .. } = self;
         let (value, index) = prior_attribute(base, path, "transform");
-        Ok(vec![super::SvgMutation::SetTransform(Self { path: path.clone(), transform: value.and_then(|value| if let SvgAttributeValue::Transform(transform) = value { Some(transform) } else { None }), index })])
+        Ok(vec![Op::from(Self { path: path.clone(), transform: value.and_then(|value| if let SvgAttributeValue::Transform(transform) = value { Some(transform) } else { None }), index })])
     }
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
@@ -37,6 +40,4 @@ impl protocol::MutationKind<SvgSnapshot, super::SvgMutation> for SetTransformPay
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

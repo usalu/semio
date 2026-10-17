@@ -1,12 +1,8 @@
 //! 🚪️ Artifact representation module ownership.
 
-#[path = "📸️snapshot/🦀️.rs"]
-pub mod snapshot;
+pub use semio_s_artifact_wfc_grid2d_snapshot::standards::v1::subsets::any::io::text::snapshot;
 
-#[path = "🧬️mutations/🦀️.rs"]
-pub mod mutations;
+pub use semio_s_artifact_wfc_grid2d_inferences::standards::v1::subsets::any::io::text::mutations;
 
-#[path = "🔺️diff/🦀️.rs"]
-pub mod diff;
-#[path="💡️inferences/🦀️.rs"]
-pub mod inferences;
+
+pub use semio_s_artifact_wfc_grid2d_inferences::standards::v1::subsets::any::io::text::inferences;

@@ -1,9 +1,9 @@
 import type { StatelyMachineSpec, StatelyTestDependencies } from "../../🟦️.ts";
-import type { EdgeRef, FaceRef, VertexRef, WireRef } from "../../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️.ts";
-import type { Model } from "../../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🧊️model/🟦️.ts";
+import type { EdgeRef, FaceRef, VertexRef, WireRef } from "@semio-tech/s-spatial-kernel-ts/geometry";
+import type { Model } from "@semio-tech/s-spatial-kernel-ts/geometry/model";
 import type { Command } from "@semio-tech/framework/machine";
-import type { InteractionRuntime } from "../../../🗿️artifact/🟦️.ts";
-import type { ModelDiff } from "../../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️.ts";
+import type { InteractionRuntime } from "../../../🗿️artifact/🏃️interaction-runtime/🟦️.ts";
+import type { ModelDiff } from "@semio-tech/s-spatial-kernel-ts/spatial";
 import type { Vec3 } from "@semio-tech/framework/3d";
 
 type TestSource = { readonly url: string };

@@ -15,7 +15,7 @@ import { fileURLToPath } from "node:url";
 import Ajv from "ajv";
 import { afterEach, describe, expect, it } from "vitest";
 import { WindowMeasureNumber, WindowMeasureSelect, WindowMeasureToggle } from "../../🧱️elements/🛠️ShellHelpers/🎚️measure-controls/🟦️.tsx";
-import { renderWindowMeasuresTree } from "../../🧱️elements/🛠️ShellHelpers/🟦️.tsx";
+import { renderWindowMeasuresTree } from "../../🧱️elements/🛠️ShellHelpers/🪟️window-panes/🎚️window-measures/🟦️.tsx";
 import { UiDocumentStore } from "../../🧱️elements/📃️UiDocumentStore/🟦️.tsx";
 import { UiNodeView } from "../../🧱️elements/🗣️Interpreter/🧱️node-tree/🟦️.tsx";
 import { FlowProvider } from "@semio-tech/ui-react";

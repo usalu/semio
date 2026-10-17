@@ -36,7 +36,6 @@ fn sqlite_snapshot_native_text_controls_wire_ownership(){
         let mut control=semio_framework_value::NativeEncodeControl::new(1,&mut accepted_output);assert_eq!(<Wire as DslField>::to_value_controlled(&bound,&mut control).unwrap_err().kind,semio_framework_value::ValueRefusalKind::OwnershipLimit);
         <Wire as DslField>::retire_decoded(bound);
     }
-    println!("[DEBUG] controlled native wire field projection and construction retain fixture endpoints, labels and properties");
 }
 
 #[test]

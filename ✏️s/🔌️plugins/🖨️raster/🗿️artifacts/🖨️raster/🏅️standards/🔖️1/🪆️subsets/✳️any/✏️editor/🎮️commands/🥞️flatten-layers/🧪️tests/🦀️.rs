@@ -1,10 +1,14 @@
 //! 🥞️ Flattening preserves rendered pixels, world placement and complete inverse history.
+use semio_s_artifact_raster_raster_model::RasterLayerNode;
+use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
+use semio_framework_pixels::png_encoding::PngEncodeJob;
+use semio_framework_test_fixtures::fixture_text;
 use semio_s_artifact_raster_raster_model::RasterImageAsset;
-use super::*;
+use semio_s_artifact_raster_raster_editor::commands::flatten_layers::*;
 use protocol::Mutation;
 #[test]
 fn flatten_preserves_the_composite_and_restores_every_original_layer() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../../🎮️commands/🥞️flatten-layers/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     for capacity in fixture["assetCapacities"].as_array().unwrap() {
     let mut document=semio_s_artifact_raster_raster_model::io::text::snapshot::snapshot_wire_codec::empty_raster_snapshot();
     document.layers=semio_framework_pack_json::from_json_str(&fixture["layers"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
@@ -58,7 +62,7 @@ fn retire(document:RasterSnapshot) {semio_s_artifact_raster_raster_model::snapsh
 
 #[test]
 fn flatten_refuses_a_protected_descendant_without_changing_the_document() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../../../../../../🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧪️tests/🧫️fixtures/🔒️protection/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../../../../../../../../../../../../🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧪️tests/🧫️fixtures/🔒️protection/🔣️.json")).unwrap();
     let mut document=semio_s_artifact_raster_raster_model::io::text::snapshot::snapshot_wire_codec::empty_raster_snapshot();document.layers=semio_framework_pack_json::from_json_str(&fixture["layers"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let before=semio_framework_pack_json::to_json_string(&document);
     assert!(prepare(&FlattenLayers {name:"Flattened".into()},&document).is_err());assert_eq!(semio_framework_pack_json::to_json_string(&document),before);

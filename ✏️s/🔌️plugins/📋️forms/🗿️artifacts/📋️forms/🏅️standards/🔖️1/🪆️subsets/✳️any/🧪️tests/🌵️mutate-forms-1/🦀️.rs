@@ -15,7 +15,7 @@
 //! it and the reference requires it to equal the committed before-document, so the row cannot drift.
 
 use semio_repo_test_host::Adapter;
-use semio_s_artifact_forms_forms::central_apply::{apply_form_mutation_outcome};
+use semio_s_artifact_forms_forms::mutations::apply::{apply_form_mutation_outcome};
 
 //#region 🔖️Kinds
 #[cfg(feature = "sut")]

@@ -1,5 +1,6 @@
 //! 🧬️ The TypeScript bindings rendered from the owned schema metadata equal the checked-in generated file.
 use super::*;
+use semio_framework_test_fixtures::fixture_text;
 
 #[test]
 fn exports_typescript_bindings() {
@@ -8,6 +9,6 @@ fn exports_typescript_bindings() {
     if let Some(path) = std::env::var_os("SEMIO_TYPEGEN_OUT") {
         std::fs::write(path, &rendered).unwrap();
     } else {
-        assert_eq!(rendered, include_str!("../../../🛂️manifest/🤖️generated/🪪️manifest/🟦️.ts"));
+        assert_eq!(rendered, fixture_text!("../../🔨️modules/🛂️manifest/🤖️generated/🪪️manifest/🟦️.ts"));
     }
 }

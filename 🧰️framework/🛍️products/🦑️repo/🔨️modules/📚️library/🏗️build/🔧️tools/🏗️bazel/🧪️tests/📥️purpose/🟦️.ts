@@ -36,7 +36,6 @@ export async function executeBazelLiteralParityV1(root:string,project:string,gra
   }
   });
  }else await runBazelTasksV1(root,graph,{tasks:Object.keys(targets).map(target=>"argument-parity:"+target+":converted"),args:caller,parallel:2} satisfies BazelTaskRequestV1,original,createIssuedResourceControlV1(original,"bazel:parity-fixture",0));
- console.log("[DEBUG] Actual purpose "+variant+" preserves all "+expected.length+" converted literal argument vectors");
 }
 
 /** 🛑️ Retains expected negative task settlement in its real same-wire process owner. */

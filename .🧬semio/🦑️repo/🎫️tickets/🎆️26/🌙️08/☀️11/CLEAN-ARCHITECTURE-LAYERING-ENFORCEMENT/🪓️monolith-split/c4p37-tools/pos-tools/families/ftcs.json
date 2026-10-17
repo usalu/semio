@@ -1,0 +1,14 @@
+{
+ "name": "ftcs",
+ "crates": [
+  "semio-framework-server",
+  "semio-framework-server-tests"
+ ],
+ "base": {
+  "rev": "1bae6115bc5",
+  "crates": [
+   "semio-framework-server"
+  ]
+ },
+ "note": "FTC server"
+}

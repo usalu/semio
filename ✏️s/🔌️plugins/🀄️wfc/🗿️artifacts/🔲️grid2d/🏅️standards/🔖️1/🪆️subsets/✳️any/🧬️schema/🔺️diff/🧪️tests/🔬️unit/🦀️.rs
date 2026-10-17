@@ -1,6 +1,7 @@
 //! 🧪️ `Grid2dDiff` — apply, absorb and inverse laws over the id-keyed tile rows.
 
-use super::*;
+use crate::{schema::snapshot::Grid2dSnapshot, schema::snapshot::WfcPinnedCell2d, schema::snapshot::WfcTile2d};
+use crate::standards::v1::subsets::any::schema::diff::*;
 use protocol::{DiffAlgebra, MutationDiff};
 
 fn tile(id: &str, weight: f64) -> WfcTile2d {

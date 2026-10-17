@@ -1,0 +1,37 @@
+# Independent Cargo Planning Reader Audit — Final Bounded Freeze
+
+Scoped CLEAN for corrected CFG/shared revision Source and retained final gate evidence. Publication remains HOLD. No Cargo, compiler, Native, provider, SDK, image/cache effects or giant Source cohort was executed by this audit. Python read/hash/census checks and direct Source review were executed; the test processes below were inspected as retained terminal evidence, not rerun here.
+
+## Frozen Report And Independent Identity Checks
+
+Root report cargo-planning-reader-current.md is exactly 382137 bytes, SHA256 ccc4f0e4a1318560c63b980638e48475ff4924d84d19a2251547f6520094c2ff. Independently read/rehashed all 1719 recorded identities: all 31 terminal logs and five input/snapshot files match; 1682 of 1683 current static-relative Source rows match. The one subsequent shared wrapper drift is recorded below. This is a declared static observation perimeter, not a complete executing/runtime or exact loader closure.
+
+Independently compared retained before/after bounded snapshots: 1683 rows each; all twelve Root-changed rows match across final gates. Exactly one other snapshot row changed, Graph G, matching Root's explicit before/current-only declaration. Its current Source matches the frozen current-only row; the later Graph epoch is not promoted into a zero-drift final execution claim.
+
+Post-freeze shared wrapper drift: T/typescript-artifact/📜️script.ts is now 107401 bytes, SHA256 6a47d3fc4c72ad1a2d9cccce28289466163ebadc78fce76f076eaf78dd801d46. Root relayed funding author confirmation: only the conditional NativeStoragePort census immediately after concurrentStateFiles changed, preserving its ordered 35-root prefix and appending12 roots (47 total); no CFG selector/test/filter/flag change. Funding reports its expanded strict prototype6-root check exit0; this audit does not treat that separate checkpoint as the Root final gate. Current cargo configuration selector still chooses exactly CFG/helper two test files and seven strict roots, with noEmit/strict/noUncheckedIndexedAccess/skipLibCheck/importing extensions/JSON/module flags. Selector line SHA256 is 9b6873774726dbf602da9150e370568abcdd1c9363af2db9adbf2dbf2bcb2aaf. Current .vscode/launch.json matches its frozen whole-file identity and contains the exact four cargo-planning-source test/types prototype/release routes and four selector flags. Therefore this audit qualifies the later whole-wrapper epoch while retaining final evidence for its earlier frozen gate epoch; no unrelated branch change caused a broad rerun or identity rewrite.
+
+## Accepted P2 And Corrective Review
+
+Initial actual requireCurrent readFileSync calls could allocate arbitrarily large replacement Source/schema bodies before stale-revision refusal, outside the descriptor caps. Initial runtime schema import also preceded bootstrap admission. This independent finding was reported before correction; guard-red2 retained log reaches rawReads1 and refusal, reproducing the allocation path.
+
+Observed corrective CFG and shared lower revision helper close this P2: no raw readFileSync or runtime schema import in CFG/helper; schema is privately parsed from the same bounded opened descriptor under 65536 bytes. Source revision capture is at most 8388608 bytes, fixed window at most 65536; current checks reduce to initially captured lengths. Actual entry/delivery/bootstrap oversized negative observations are six per final log, each rawReads0/target opens0. They interpose ordinary filesystem observations before importing the current actual body and never physically edit Source or fake Native/store acceptance.
+
+Helper authenticates primitive canonical path and finite reducing numeric cap, physical ancestors at most64, no-follow/single-link regular leaf, linked/opened stamps before and after stream, FD stamp per chunk and exact EOF. It zeroes bounded buffers, attempts one actual close and preserves exact first Error/undefined across a close failure. Parent-symlink RED exposed the initially omitted ancestry check; current physical ancestry checks and ten negative physical/failure cases retain its correction. These facts are ordinary Source capture, not host JS loader allocation or exact executing-byte custody proof.
+
+## Planning, DATA And Lifetime Review
+
+Actual configuration authenticates issued phase/cancellation before request DATA, captures closed own canonical coordinates and exactly two unique dense names before await, and rejects wide key cardinality before creating its descriptor map. Nested shared inventory capture refuses proxies/accessors/sparse/extra/duplicate/escaping names without executing getters. The key enumeration itself remains JS engine work as explicitly qualified by Root.
+
+Actual finite policy remains 256 roster names,64 ancestors,4MiB planning file,8MiB defining file,64MiB aggregate actual bytes. Duplicate roles keep the stricter cap. Before every read the reader passes min(role cap, remaining aggregate) to the defining exact reader, including zero remaining. Lower reader checks reducing caps before admission/allocation and against cached facts, retains physical ancestry/opened/path/EOF checks, streams Source bodies, and drains accepted work before batch retirement. No copied phase/store token or mutable authority bypass was introduced. Planning freshness remains separate from exact two compiler-defining records; previous effective closure semantics and fourteen mutation obligations remain.
+
+## Final Evidence Provenance
+
+Independently inspected both final bounded Source logs: each contains adapter10/216, CFG12/509 and helper3/105, all zero failures. Thus final Source is fifteen tests/614 assertions across the two isolated owner files, adapter separately. Root's terminal collector mapping records prototype38604/release3390 exits0, strict64952/90631 exits0; strict logs are empty and frozen, with seven roots listed. They are the corrected final checkpoint, not earlier 11/467/five-root success or the later shared wrapper epoch.
+
+Current neutral corpora retain40 CFG vectors and20 helper extent/physical vectors plus14 previous mutation cases. AJV, SQLite and independent Bun SHA oracles are consumed by the actual tests. The current Node helper green2 log records schema SHA256 9b7eec33a748a50a253b6841740de0952a676dbd4e4d5331385b5e5a899ea0bd,1910 bytes, frozen DATA and finite retained text; it matches current schema. Failure history distinguishes timed-out aggregate cascades, ineffective raw FS reassignment, actual guard allocation RED, wide descriptor-map RED, parent ancestry RED and later final successes. No failed Original or budget was renewed to manufacture a pass.
+
+## Open Findings Outside This Cut
+
+P1 next-cut boundaries remain in separate rust-descriptor-reader-boundary-audit-current.md: U raw descriptor parse before genuine store admission and unbounded/unheld predecessor receipt read. Compact DAG growth is design only. Giant facade/lock graph, Native/physical cache enforcement and retirement, cross-platform, installed Cargo/Nx cold/warm/all-core/multiple-agent behavior, default SDK/publication and full Source-to-promotion interval remain OPEN/HOLD. Ordinary read bounds do not qualify performance or whole-build success.
+
+No remaining actionable defect found in the corrected bounded planning/helper perimeter. Only this audit and the separately requested exploration report were authored by this audit lane; no production or Git mutation, ticket/goal lifecycle action or agent delegation.

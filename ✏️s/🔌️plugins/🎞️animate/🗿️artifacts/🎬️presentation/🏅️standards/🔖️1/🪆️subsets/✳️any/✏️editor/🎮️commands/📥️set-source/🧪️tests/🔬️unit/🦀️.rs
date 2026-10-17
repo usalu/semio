@@ -1,4 +1,22 @@
-use super::*;
+use crate::editor::animate::config::PresentationConfig;
+use crate::editor::animate::support::PresentationDispatchCtx;
+use crate::PresentationSnapshot;
+use semio_framework_plugin::{ArtifactView, ConfigView};
+#[allow(unused_imports)]
+use crate::editor::animate::config::PresentationConfigMutation;
+#[allow(unused_imports)]
+use crate::{editor::animate::support::interaction_select_effect, editor::animate::support::tile_roster_mutations};
+#[allow(unused_imports)]
+use crate::mutations::replace_source::ReplaceSource;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::mutations::PresentationMutation;
+#[allow(unused_imports)]
+use crate::FigureTileSource;
+#[allow(unused_imports)]
+use semio_framework_plugin::{Emit, Fault};
+#[allow(unused_imports)]
+use semio_framework_value_derive::{FromValue, ToValue};
+use crate::editor::animate::commands::set_source::*;
 use crate::editor::animate::commands::{set_active_example, set_frame};
 use crate::editor::animate::unit_tests::context::{dispatch, presentation_app};
 use crate::editor::animate::PresentationCommand;

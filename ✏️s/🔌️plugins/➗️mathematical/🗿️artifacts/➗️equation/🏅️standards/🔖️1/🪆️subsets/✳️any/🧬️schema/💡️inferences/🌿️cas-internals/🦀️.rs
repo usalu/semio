@@ -23,103 +23,83 @@
 //! `pub use … as cas;` / `pub use … as polynomial;` alias in `🦀️.rs` — the physical file moved,
 //! the module's internal wiring did not.
 // #region 🔖️Fnkind
-#[path = "🏷️fnkind/🦀️.rs"]
-pub mod fnkind;
+pub use semio_s_artifact_mathematical_equation_examples::cas::fnkind;
 // #endregion 🔖️Fnkind
 
 // #region 🔖️Expr
-#[path = "🧮️expr/🦀️.rs"]
-pub mod expr;
+pub use semio_s_artifact_mathematical_equation_snapshot::cas::expr;
 // #endregion 🔖️Expr
 
 // #region 🔖️Canon
-#[path = "📏️canon/🦀️.rs"]
-mod canon;
+pub use semio_s_artifact_mathematical_equation_snapshot::cas::canon;
 // #endregion 🔖️Canon
 
 // #region 🔖️Assume
-#[path = "🧷️assume/🦀️.rs"]
-pub mod assume;
+pub use semio_s_artifact_mathematical_equation_snapshot::cas::assume;
 // #endregion 🔖️Assume
 
 // #region 🔖️Visit
-#[path = "🧭️visit/🦀️.rs"]
-pub mod visit;
+pub use semio_s_artifact_mathematical_equation_snapshot::cas::visit;
 // #endregion 🔖️Visit
 
 // #region 🔖️Fmt
-#[path = "🖨️fmt/🦀️.rs"]
-pub mod fmt;
+pub use semio_s_artifact_mathematical_equation_snapshot::cas::fmt;
 // #endregion 🔖️Fmt
 
 // #region 🔖️Pattern
-#[path = "🧩️pattern/🦀️.rs"]
-pub mod pattern;
+pub use semio_s_artifact_mathematical_equation_schema::cas::pattern;
 // #endregion 🔖️Pattern
 
 // #region 🔖️Polybridge
-#[path = "🌉️polybridge/🦀️.rs"]
-pub mod polybridge;
+pub use semio_s_artifact_mathematical_equation_snapshot::cas::polybridge;
 // #endregion 🔖️Polybridge
 
 // #region 🔖️Simplify
-#[path = "🧹️simplify/🦀️.rs"]
-pub mod simplify;
+pub use semio_s_artifact_mathematical_equation_update_graph_algorithm::cas::simplify;
 // #endregion 🔖️Simplify
 
 // #region 🔖️Trig
-#[path = "📐️trig/🦀️.rs"]
-pub mod trig;
+pub use semio_s_artifact_mathematical_equation_schema::cas::trig;
 // #endregion 🔖️Trig
 
 // #region 🔖️Diff
-#[path = "📈️diff/🦀️.rs"]
-pub mod diff;
+pub use semio_s_artifact_mathematical_equation_schema::cas::diff;
 // #endregion 🔖️Diff
 
 // #region 🔖️Series
-#[path = "🎞️series/🦀️.rs"]
-pub mod series;
+pub use semio_s_artifact_mathematical_equation_inferences::cas::series;
 // #endregion 🔖️Series
 
 // #region 🔖️Limits
-#[path = "🎯️limits/🦀️.rs"]
-pub mod limits;
+pub use semio_s_artifact_mathematical_equation_update_graph_algorithm::cas::limits;
 // #endregion 🔖️Limits
 
 // #region 🔖️Rootof
-#[path = "🌱️rootof/🦀️.rs"]
-pub mod rootof;
+pub use semio_s_artifact_mathematical_equation_snapshot::cas::rootof;
 // #endregion 🔖️Rootof
 
 // #region 🔖️Solve
-#[path = "🧠️solve/🦀️.rs"]
-pub mod solve;
+pub use semio_s_artifact_mathematical_equation_mut_family::cas::solve;
 // #endregion 🔖️Solve
 
 // #region 🔖️Matrix
-#[path = "🔢️matrix/🦀️.rs"]
-pub mod matrix;
+pub use semio_s_artifact_mathematical_equation_mut_family::cas::matrix;
 // #endregion 🔖️Matrix
 
 // #region 🔖️Integrate
-#[path = "➗️integrate/🦀️.rs"]
-pub mod integrate;
+pub use semio_s_artifact_mathematical_equation_mut_family::cas::integrate;
 // #endregion 🔖️Integrate
 
 // #region 🔖️Sums
-#[path = "➕️sums/🦀️.rs"]
-pub mod sums;
+pub use semio_s_artifact_mathematical_equation_mutations::cas::sums;
 // #endregion 🔖️Sums
 
 // #region 🔖️Ode
-#[path = "🌊️ode/🦀️.rs"]
-pub mod ode;
+pub use semio_s_artifact_mathematical_equation_mut_family::cas::ode;
 // #endregion 🔖️Ode
 
 // #region 🔖️Transforms
-#[path = "🔄️transforms/🦀️.rs"]
-pub mod transforms;
+pub use semio_s_artifact_mathematical_equation_snapshot::cas::transforms;
 // #endregion 🔖️Transforms
 
 pub use assume::{is_even, is_integer, is_nonzero, is_positive, is_real, AssumeSet, Assumptions, RelationalOperator as AssumeRelationalOperator};

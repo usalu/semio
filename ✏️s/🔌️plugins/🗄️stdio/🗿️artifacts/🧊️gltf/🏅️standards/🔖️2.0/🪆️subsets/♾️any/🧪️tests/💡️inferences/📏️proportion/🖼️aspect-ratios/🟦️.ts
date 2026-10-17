@@ -10,5 +10,4 @@ for (const vector of vectors.vectors) {
     throw new Error(vector.name);
   }
 }
-  console.log("[DEBUG] Original GLTF 💡️inferences/📏️proportion/🖼️aspect-ratios vectors=" + vectors.vectors.length);
 });

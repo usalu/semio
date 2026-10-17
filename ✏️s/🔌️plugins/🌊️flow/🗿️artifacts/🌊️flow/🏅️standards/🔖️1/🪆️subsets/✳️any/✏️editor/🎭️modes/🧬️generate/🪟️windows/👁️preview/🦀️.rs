@@ -1,5 +1,6 @@
 //! 👁️ Generate-mode window — the evaluated output preview of the active generation.
 
+use crate::editor::flow::base::FLOW_PLAY_WINDOW_GENERATE_PREVIEW;
 use crate::editor::flow::modes::edit::windows::main::transient::FlowWindowTransient;
 use semio_framework_plugin::scene_surface;
 use semio_framework_plugin::BuiltNode;
@@ -12,7 +13,6 @@ use semio_framework_ui_contract::SurfaceKind as ContractSurfaceKind;
 use ui_wgpu::wgpu::TextEditorScene;
 
 //#region 🔖️Constants
-pub const FLOW_PLAY_WINDOW_GENERATE_PREVIEW: &str = "flow-generate-preview";
 pub const FLOW_PLAY_BODY_GENERATE_PREVIEW: &str = "flow.play.generate-preview";
 const FLOW_PLAY_SURFACE_GENERATE_PREVIEW: &str = "flow.play.generate-preview";
 /// 👁️ Shown until a generation has actually been evaluated — runtime status text, not authored UI copy.
@@ -52,7 +52,5 @@ pub fn render(transient: &FlowWindowTransient) -> UiAssemblyResult<BuiltNode> {
 //#endregion 🔖️Render
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

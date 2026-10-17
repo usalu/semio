@@ -31,9 +31,7 @@ fn sqlite_snapshot_codec() -> Option<store::os_store::serialization::ArtifactSql
 //#endregion 🔖️ArtifactPackCodec
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
 
 /// 🫴️ Declares this owner’s actual controlled native record factories.

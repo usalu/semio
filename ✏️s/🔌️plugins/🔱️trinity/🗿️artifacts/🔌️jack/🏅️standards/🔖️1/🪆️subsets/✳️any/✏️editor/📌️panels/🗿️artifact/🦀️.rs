@@ -12,7 +12,7 @@ use semio_framework_ui_contract as ui;
 /// same selection) and marked with the domain's `"node"` granularity. The tree-level
 /// `.interaction_domain(...)` binding carries the dispatch, so the row itself binds no action and spends
 /// no `UiValue` arena — which is what lets a full window of rows exist at all.
-fn node_row(node: &crate::JackContentNodeView<'_>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+fn node_row(node: &semio_s_artifact_trinity_jack_graph_query::JackContentNodeView<'_>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let label = crate::editor::jack::ui_label(node.presented_label())?;
     let granularity = semio_framework_plugin::UiText::try_from_str("node").ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("trinity.document.granularity", "the fixed pick granularity exceeds its UI bound"))?;
     let mut builder = ui::tree_item(label)
@@ -25,12 +25,12 @@ fn node_row(node: &crate::JackContentNodeView<'_>) -> semio_framework_plugin::Ui
     builder.try_build().map_err(|_| semio_framework_plugin::PluginAssemblyError::new("trinity.document.node", "the node row exceeds its UI bound"))
 }
 
-fn edge_row(edge: &crate::JackContentEdgeView<'_>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+fn edge_row(edge: &semio_s_artifact_trinity_jack_graph_query::JackContentEdgeView<'_>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let label = crate::editor::jack::ui_label(format!("{}{} → {}{}",edge.source,edge.source_port.map(|port|format!("@{port}")).unwrap_or_default(),edge.target,edge.target_port.map(|port|format!("@{port}")).unwrap_or_default()))?;
     semio_framework_plugin::tree_item(format!("trinity-document.edge.{}", edge.id), label)
 }
 
-pub(crate) fn render(content: &dyn crate::JackContentVisual, _cfg: &semio_framework_plugin::NoConfig, labels: &TrinityJackLabels, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(content: &dyn semio_s_artifact_trinity_jack_graph_query::JackContentVisual, _cfg: &semio_framework_plugin::NoConfig, labels: &TrinityJackLabels, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let (node_count,edge_count)=content.visual_counts();
     let nodes:Vec<_>=(0..node_count).filter_map(|index|content.node_view(index)).collect();
     let edges:Vec<_>=(0..edge_count).filter_map(|index|content.edge_view(index)).collect();
@@ -43,7 +43,4 @@ pub(crate) fn render(content: &dyn crate::JackContentVisual, _cfg: &semio_framew
 //#endregion 🔖️Render
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

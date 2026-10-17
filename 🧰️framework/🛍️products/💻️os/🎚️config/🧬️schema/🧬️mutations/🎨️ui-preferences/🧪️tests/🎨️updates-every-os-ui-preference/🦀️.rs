@@ -2,10 +2,11 @@
 
 use super::super::super::UiPreferences;
 use super::super::UiPreferencesConfigMutation;
+use semio_framework_test_fixtures::fixture_path;
 
-static BEFORE: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🧫️fixtures/🧬️mutations/🎨️ui-preferences/🎨️updates-every-os-ui-preference/📸️snapshot/⬅️before/🔣️.json")).expect("fixture"));
-static AFTER: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🧫️fixtures/🧬️mutations/🎨️ui-preferences/🎨️updates-every-os-ui-preference/📸️snapshot/➡️after/🔣️.json")).expect("fixture"));
-static MUTATIONS: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🧫️fixtures/🧬️mutations/🎨️ui-preferences/🎨️updates-every-os-ui-preference/🦠️mutations/🔣️.json")).expect("fixture"));
+static BEFORE: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(fixture_path!("../../../🧫️fixtures/🧬️mutations/🎨️ui-preferences/🎨️updates-every-os-ui-preference/📸️snapshot/⬅️before/🔣️.json")).expect("fixture"));
+static AFTER: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(fixture_path!("../../../🧫️fixtures/🧬️mutations/🎨️ui-preferences/🎨️updates-every-os-ui-preference/📸️snapshot/➡️after/🔣️.json")).expect("fixture"));
+static MUTATIONS: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(fixture_path!("../../../🧫️fixtures/🧬️mutations/🎨️ui-preferences/🎨️updates-every-os-ui-preference/🦠️mutations/🔣️.json")).expect("fixture"));
 
 fn preferences(text: &str) -> UiPreferences {
     semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("OS UI preferences decode")

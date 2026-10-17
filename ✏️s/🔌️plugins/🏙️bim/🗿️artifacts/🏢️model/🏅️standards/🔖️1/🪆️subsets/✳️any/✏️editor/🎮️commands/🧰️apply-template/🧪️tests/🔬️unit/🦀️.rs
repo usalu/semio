@@ -1,5 +1,5 @@
 use super::*;
-use crate::editor::bim::unit_tests::support::{applied, ctx, demo, run};
+use crate::editor::bim::fixture::support::{applied, ctx, demo, run};
 use crate::standards::v1::subsets::any::schema::snapshot::{PropertyDef, PropertyKind, PropertyTemplate, PropertyValue, TemplateTarget};
 
 fn definition(name: &str, kind: PropertyKind, default_value: Option<PropertyValue>) -> PropertyDef {

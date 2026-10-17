@@ -1,5 +1,6 @@
 /** 🔐️ Logical child captures keep the original Tick and prevent handback while borrowed. */
-import type {ToolRunTick,ToolRunTracePage} from "../../🟦️.ts";
+import type { ToolRunTracePage } from "../../🗄️trace-store/🟦️.ts";
+import type { ToolRunTick } from "../../🎞️tick/🟦️.ts";
 type Root={original:ToolRunTick,aliases:number};
 class TickCapture<T>{
  private root:Root|undefined;

@@ -1,0 +1,73 @@
+{
+ "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs",
+ "original": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/🗑️generated/c4p28-orig/1.rs",
+ "stage": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/🗑️generated/c4p28-stage",
+ "chunks": [
+  {
+   "name": "🕹️roster-and-read-laws",
+   "folder": "🕹️roster-and-read-laws",
+   "doc": "🕹️ Roster and read laws: the dispatchable action roster, the paged local interaction reads under render pressure and the interactive step budget of every maintenance unit.",
+   "ranges": [
+    [
+     119,
+     333
+    ]
+   ]
+  },
+  {
+   "name": "🧵️cursorized-route-laws",
+   "folder": "🧵️cursorized-route-laws",
+   "doc": "🧵️ Cursorized route laws: the exact retained publication contracts and the static laws that keep the suggestion, transform, focus, inspector, attraction and active-example routes cursorized.",
+   "ranges": [
+    [
+     334,
+     572
+    ]
+   ]
+  },
+  {
+   "name": "🧮️extent-and-step-laws",
+   "folder": "🧮️extent-and-step-laws",
+   "doc": "🧮️ Extent and step laws: the Nakagin-scale extents and step loops of world relocation, attraction creation, suggestion acceptance, inspector patches and the active example switch.",
+   "ranges": [
+    [
+     574,
+     863
+    ]
+   ]
+  },
+  {
+   "name": "🎛️dispatch-and-operation-laws",
+   "folder": "🎛️dispatch-and-operation-laws",
+   "doc": "🎛️ Dispatch and operation laws: gumball gestures, the reserved refresh sections, the remaining cursorized routes, the operations on the concrete forest and the command envelope round trip.",
+   "ranges": [
+    [
+     865,
+     1272
+    ]
+   ]
+  },
+  {
+   "name": "🧾️inspector-and-manifest-laws",
+   "folder": "🧾️inspector-and-manifest-laws",
+   "doc": "🧾️ Inspector and manifest laws: the selected object and vortex inspector, the patch field actions, the declared windows, dialogs, panel tabs, bridged actions and the German labels.",
+   "ranges": [
+    [
+     1274,
+     1658
+    ]
+   ]
+  },
+  {
+   "name": "💡️suggestion-and-scene-laws",
+   "folder": "💡️suggestion-and-scene-laws",
+   "doc": "💡️ Suggestion and scene laws: the context menu, the vortex suggestion popup, the paged world scene carrier, the per-window utilities and the read-only brush search.",
+   "ranges": [
+    [
+     1660,
+     2241
+    ]
+   ]
+  }
+ ]
+}

@@ -3,8 +3,7 @@
 #[allow(unused_imports)]
 mod mutations_codec {
 use super::*;
-use crate::editor::animate::presence::component::mutations::*;
-use crate::editor::animate::presence::component::*;
+use crate::editor::animate::presence::*;
 use crate::editor::animate::presence::ReplacePresence;
 
 impl protocol::OpBinary for PresentationPresenceMutation {

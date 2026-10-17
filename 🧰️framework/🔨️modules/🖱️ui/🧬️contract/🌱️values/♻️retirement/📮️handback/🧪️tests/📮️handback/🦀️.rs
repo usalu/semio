@@ -1,7 +1,8 @@
 use super::*;
+use semio_framework_test_fixtures::fixture_text;
 
 fn fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../../../../♻️retirement/📮️handback/🧪️tests/🧫️fixtures/🔣️.json")).unwrap()
+    serde_json::from_str(fixture_text!("../../../♻️retirement/📮️handback/🧪️tests/🧫️fixtures/🔣️.json")).unwrap()
 }
 
 #[test]

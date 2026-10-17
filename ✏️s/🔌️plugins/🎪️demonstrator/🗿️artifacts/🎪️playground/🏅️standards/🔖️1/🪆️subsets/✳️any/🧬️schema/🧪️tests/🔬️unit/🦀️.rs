@@ -1,4 +1,4 @@
-use super::*;
+use crate::standards::v1::subsets::any::schema::*;
 
 #[test]
 fn empty_snapshot_matches_schema() {

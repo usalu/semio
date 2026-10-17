@@ -10,113 +10,59 @@ extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_schema as framework_schema;
 extern crate semio_framework_value_derive as value_derive;
 
-#[path = "."]
 pub mod io {
-    #[path = "🚪️io/🦀️.rs"]
-    mod component;
-    pub use component::*;
+    pub use semio_s_artifact_stdio_semio_image_io::io::*;
+    pub mod binary {
+        pub use semio_s_artifact_stdio_semio_image_io::io::binary::*;
+        pub use semio_s_artifact_stdio_semio_image_diff::io::binary::inferences;
+    }
+    pub mod sqlite {
+        pub use semio_s_artifact_stdio_semio_image_diff::io::sqlite::*;
+        pub use semio_s_artifact_stdio_semio_image_snapshot::io::sqlite::snapshot;
+    }
+    pub mod text {
+        pub use semio_s_artifact_stdio_semio_image_io::io::text::*;
+        pub use semio_s_artifact_stdio_semio_image_diff::io::text::inferences;
+    }
 }
 #[path = "."]
 pub mod schema {
-    #[path = "🧬️schema/🦀️.rs"]
-    mod component;
-    pub use component::*;
-    #[path = "."]
-    pub mod snapshot {
-        #[path = "🧬️schema/📸️snapshot/🦀️.rs"]
-        mod component;
-        pub use component::*;
-    }
-    #[path = "."]
-    pub mod diff {
-        #[path = "🧬️schema/🔺️diff/🦀️.rs"]
-        mod component;
-        pub use component::*;
-    }
-    #[path = "."]
-    pub mod inferences {
-        #[path = "🧬️schema/💡️inferences/🦀️.rs"]
-        mod component;
-        pub use component::*;
-        #[path = "."]
-        pub mod dimensions {
-            #[path = "🧬️schema/💡️inferences/📐dimensions/🦀️.rs"]
-            mod component;
-            pub use component::*;
-        }
-    }
-    #[path = "."]
-    pub mod mutations {
-        #[path = "🧬️schema/🧬️mutations/🦀️.rs"]
-        mod component;
-        pub use component::*;
-    }
+    pub use semio_s_artifact_stdio_semio_image_schema::schema::*;
+
+    pub use semio_s_artifact_stdio_semio_image_snapshot::schema::snapshot;
+    pub use semio_s_artifact_stdio_semio_image_diff::schema::diff;
+    pub use semio_s_artifact_stdio_semio_image_schema::schema::inferences;
+    pub use semio_s_artifact_stdio_semio_image_editor::schema::mutations;
 }
 #[path = "."]
 pub mod editor {
-    #[path = "✏️editor/🦀️.rs"]
-    mod component;
-    pub use component::*;
-    #[path = "."]
-    pub mod presence {
-        #[path = "✏️editor/👥️presence/🧬️schema/🦀️.rs"]
-        pub mod schema;
-    }
-    #[path = "."]
-    pub mod config {
-        #[path = "✏️editor/🎚️config/🧬️schema/🦀️.rs"]
-        pub mod schema;
-    }
+    pub use semio_s_artifact_stdio_semio_image_editor::editor::*;
+
+    pub use semio_s_artifact_stdio_semio_image_diff::editor::presence;
+    pub use semio_s_artifact_stdio_semio_image_diff::editor::config;
     #[path = "."]
     pub mod modes {
         #[path = "."]
         pub mod edit {
-            #[path = "✏️editor/🎭️modes/✏️edit/🦀️.rs"]
-            mod component;
-            pub use component::*;
-            #[path = "."]
-            pub mod windows {
-                #[path = "."]
-                pub mod main {
-                    #[path = "✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️.rs"]
-                    mod component;
-                    pub use component::*;
-                }
-            }
+            pub use semio_s_artifact_stdio_semio_image_diff::editor::modes::edit::*;
+
+            pub use semio_s_artifact_stdio_semio_image_diff::editor::modes::edit::windows;
         }
     }
 }
 #[path = "."]
 pub mod viewer {
-    #[path = "👁️viewer/🦀️.rs"]
-    mod component;
-    pub use component::*;
-    #[path = "."]
-    pub mod presence {
-        #[path = "👁️viewer/👥️presence/🧬️schema/🦀️.rs"]
-        pub mod schema;
-    }
-    #[path = "."]
-    pub mod config {
-        #[path = "👁️viewer/🎚️config/🧬️schema/🦀️.rs"]
-        pub mod schema;
-    }
+    pub use semio_s_artifact_stdio_semio_image_editor::viewer::*;
+
+    pub use semio_s_artifact_stdio_semio_image_diff::viewer::presence;
+    pub use semio_s_artifact_stdio_semio_image_diff::viewer::config;
     #[path = "."]
     pub mod modes {
         #[path = "."]
         pub mod view {
-            #[path = "👁️viewer/🎭️modes/👁️view/🦀️.rs"]
-            mod component;
-            pub use component::*;
-            #[path = "."]
-            pub mod windows {
-                #[path = "."]
-                pub mod main {
-                    #[path = "👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️.rs"]
-                    mod component;
-                    pub use component::*;
-                }
-            }
+            pub use semio_s_artifact_stdio_semio_image_editor::viewer::modes::view::*;
+
+            pub use semio_s_artifact_stdio_semio_image_diff::viewer::modes::view::windows;
         }
     }
 }

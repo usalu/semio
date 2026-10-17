@@ -1,6 +1,7 @@
 use super::*;
-use crate::editor::bim::gestures::session::{Modifiers, Shape, ToolEvent};
-use crate::editor::bim::gestures::tests::fixture::{room, Rig};
+use crate::editor::bim::gestures::session::{Modifiers, ToolEvent};
+use crate::editor::bim::marks::Shape;
+use crate::editor::bim::fixture::{room, Rig};
 use crate::standards::v1::subsets::any::schema::{snapshot::{Axis, Point2}, mutations::ModelMutation};
 
 fn only(mutations: &[ModelMutation]) -> &ModelMutation {

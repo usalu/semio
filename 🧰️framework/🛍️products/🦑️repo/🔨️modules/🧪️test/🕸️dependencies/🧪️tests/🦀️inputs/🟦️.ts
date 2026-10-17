@@ -3,6 +3,7 @@ import { mkdirSync, mkdtempSync, readFileSync, writeFileSync, symlinkSync, rmSyn
 import { dirname, join, relative } from "node:path";
 import { createRequire } from "node:module";
 import { pathToFileURL } from "node:url";
+import {testMethodV1,testRecordV1} from "../../../../📚️library/⚡️caching/🧪️tests/📋️values/🟦️.ts";
 
 /** 🦀️ Compares inferred test ownership with Cargo's local package graph and mounted compiler inputs. */
 export async function testInferredNativeInputs(workspace: string, output: string): Promise<void> {
@@ -21,9 +22,15 @@ export async function testInferredNativeInputs(workspace: string, output: string
   const kind = vocabulary.fileKinds[vocabulary.testFeatureFileKindId];
   const feature = `${caseRoot}/${kind.emoji}${kind.extensionChains[0]}`;
   put(feature, "Feature: Native cache inputs\n  Scenario: Source closure\n    Then all compiler inputs are owned\n");
-  const plugin = (await import("../../../🟨️.mjs")).default;
-  const nodes = await plugin.createNodesV2[1]([feature], {}, { workspaceRoot: root });
-  const project: any = Object.values(nodes[0][1].projects)[0];
+  const plugin = testRecordV1((await import("../../../🟨️.mjs")).default),nodesV2=plugin.createNodesV2;
+  assert.ok(Array.isArray(nodesV2));
+  const createNodes=nodesV2[1];
+  assert.ok(typeof createNodes==="function");
+  const nodes:unknown=await Reflect.apply(createNodes,nodesV2,[[feature], {}, { workspaceRoot: root }]);
+  assert.ok(Array.isArray(nodes));
+  const firstNode=nodes[0];
+  assert.ok(Array.isArray(firstNode));
+  const project: any = Object.values(testRecordV1(firstNode[1],"projects"))[0];
   const commandSources = project.namedInputs?.testCommandSources?.filter((input: any) => typeof input === "string" && input.endsWith(".ts")) ?? [];
   assert.deepEqual([...commandSources].sort(), fixture.commandSources.map((path: string) => `{workspaceRoot}/${path}`).sort(), "Every phase must hash the executable router's imports outside the test domain");
   const bundled = await require("esbuild").build({ entryPoints: [join(root, fixture.domain, "📜️script.ts")], absWorkingDir: root, bundle: true, write: false, platform: "node", packages: "external", metafile: true, logLevel: "silent" });
@@ -44,8 +51,9 @@ export async function testInferredNativeInputs(workspace: string, output: string
   assert.deepEqual(cargoRoots, Object.keys(fixture.projects).sort());
   const { cacheInternals } = await import("../../../../📚️library/🏗️build/🕸️graph/📥️inference/🟨️.mjs");
   const projects: Record<string, any> = { [project.name]: project };
-  for (const [path, name] of Object.entries(fixture.projects)) projects[String(name)] = { name, root: path, namedInputs: await cacheInternals.projectInputs({ name, targets: {} }, path, root, new Map()), targets: {} };
-  const edges = await plugin.createDependencies({}, { workspaceRoot: root, projects });
+  for (const [path, name] of Object.entries(fixture.projects)) projects[String(name)] = { name, root: path, namedInputs: testRecordV1(await testMethodV1(cacheInternals,"projectInputs",{ name, targets: {} }, path, root, new Map())), targets: {} };
+  const edges:unknown = await testMethodV1(plugin,"createDependencies",{}, { workspaceRoot: root, projects });
+  assert.ok(Array.isArray(edges));
   assert.deepEqual(edges.filter((edge: any) => edge.source === project.name).map((edge: any) => edge.target).sort(), [...fixture.subjectRoots].sort());
   assert.ok(edges.every((edge: any) => edge.sourceFile === feature));
   const matches = (path: string) => fixture.subjectRoots.some((name: string) => {

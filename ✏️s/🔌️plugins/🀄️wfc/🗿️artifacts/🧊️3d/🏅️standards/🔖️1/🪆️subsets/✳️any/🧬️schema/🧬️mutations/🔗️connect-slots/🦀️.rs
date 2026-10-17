@@ -2,7 +2,6 @@
 //! existence at a FINAL-state insertion index — the graph topology the engine propagates over.
 
 use crate::diff::Wfc3dDiff;
-use crate::mutations::Wfc3dMutation;
 use crate::schema::snapshot::{SlotEdge, Wfc3dSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -16,17 +15,23 @@ pub struct ConnectSlots {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn connect_slots(index: usize, edge: SlotEdge) -> Wfc3dMutation {
-    Wfc3dMutation::ConnectSlots(ConnectSlots { index, edge })
+pub fn connect_slots<Op>(index: usize, edge: SlotEdge) -> Op
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::connect_slots::ConnectSlots>,
+{
+    Op::from(ConnectSlots { index, edge })
 }
 
-impl MutationKind<Wfc3dSnapshot, Wfc3dMutation> for ConnectSlots {
+impl<Op> MutationKind<Wfc3dSnapshot, Op> for ConnectSlots
+where
+    Op: protocol::Mutation<Wfc3dSnapshot, Diff = Wfc3dDiff> + From<ConnectSlots> + From<crate::standards::v1::subsets::any::schema::mutations::disconnect_slots::DisconnectSlots>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "connect", entity: "slots", kind: "connect-slots", record: "ConnectedSlots" };
 
     fn diff(&self, base: &Wfc3dSnapshot) -> protocol::MutationOutcome<Wfc3dDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Wfc3dSnapshot) -> Result<Vec<Wfc3dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Wfc3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

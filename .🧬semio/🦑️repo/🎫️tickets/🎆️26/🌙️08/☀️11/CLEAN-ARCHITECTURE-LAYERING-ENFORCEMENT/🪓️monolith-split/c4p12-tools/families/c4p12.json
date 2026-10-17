@@ -1,0 +1,53 @@
+{
+ "name": "c4p12",
+ "crates": [
+  "semio-s-artifact-layout-layout-diff",
+  "semio-s-artifact-cad-cad-picking",
+  "semio-s-artifact-cad-cad-editor",
+  "semio-s-artifact-cad-cad-inferences",
+  "semio-s-plugin-norm-compliance",
+  "semio-s-plugin-norm-app-surface",
+  "semio-s-artifact-norm-en1990-inferences",
+  "semio-s-artifact-cad-cad",
+  "semio-s-artifact-cad-cad-model",
+  "semio-s-artifact-cad-cad-modes",
+  "semio-s-artifact-cad-cad-panels",
+  "semio-s-artifact-cad-cad-io",
+  "semio-s-artifact-cad-cad-config",
+  "semio-s-artifact-layout-layout",
+  "semio-s-artifact-layout-layout-io",
+  "semio-s-artifact-layout-layout-mutations",
+  "semio-s-artifact-norm-en1990",
+  "semio-s-artifact-norm-en1990-io",
+  "semio-s-artifact-norm-en1990-editor",
+  "semio-s-artifact-norm-en1990-checks",
+  "semio-s-artifact-norm-en1990-model"
+ ],
+ "note": "CENSUS4-PKG-12 split crates (layout diff, cad picking, cad editor, cad inferences, norm compliance, norm app-surface, en1990 inferences) plus direct dependents (en1990 and vdi3805 as the norm sample)",
+ "base": {
+  "rev": "b84bf526c7b",
+  "crates": [
+   "semio-s-artifact-layout-layout-diff",
+   "semio-s-artifact-cad-cad-picking",
+   "semio-s-artifact-cad-cad-editor",
+   "semio-s-artifact-cad-cad-inferences",
+   "semio-s-plugin-norm-compliance",
+   "semio-s-plugin-norm-app-surface",
+   "semio-s-artifact-norm-en1990-inferences",
+   "semio-s-artifact-cad-cad",
+   "semio-s-artifact-cad-cad-model",
+   "semio-s-artifact-cad-cad-modes",
+   "semio-s-artifact-cad-cad-panels",
+   "semio-s-artifact-cad-cad-io",
+   "semio-s-artifact-cad-cad-config",
+   "semio-s-artifact-layout-layout",
+   "semio-s-artifact-layout-layout-io",
+   "semio-s-artifact-layout-layout-mutations",
+   "semio-s-artifact-norm-en1990",
+   "semio-s-artifact-norm-en1990-io",
+   "semio-s-artifact-norm-en1990-editor",
+   "semio-s-artifact-norm-en1990-checks",
+   "semio-s-artifact-norm-en1990-model"
+  ]
+ }
+}

@@ -20,10 +20,10 @@ pub struct ArtifactStoreBackboneRetirement {
 impl ArtifactStoreBackboneRetirement {
     pub fn new(backbone: Backbones) -> Self { Self { backbone: ManuallyDrop::new(Some(backbone)), queue: ManuallyDrop::new(None), message: ManuallyDrop::new(None), bytes: ManuallyDrop::new(None), wake: ManuallyDrop::new(None) } }
     pub(super) fn from_queue(queue: VecDeque<BackboneMessage>) -> Self { Self { backbone: ManuallyDrop::new(None), queue: ManuallyDrop::new(Some(queue)), message: ManuallyDrop::new(None), bytes: ManuallyDrop::new(None), wake: ManuallyDrop::new(None) } }
-    pub(super) const fn constructor_capacity_bytes() -> usize { size_of::<Self>() }
+    pub const fn constructor_capacity_bytes() -> usize { size_of::<Self>() }
     pub(super) fn admit_queue(queue: VecDeque<BackboneMessage>, grant: RetainedCloneGrant) -> Result<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, VecDeque<BackboneMessage>)> { Self::admit_frame(queue, grant, Self::from_queue) }
     pub(super) fn admit_backbone(backbone: Backbones, grant: RetainedCloneGrant) -> Result<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, Backbones)> { Self::admit_frame(backbone, grant, Self::new) }
-    pub(super) fn admit_attached(queue: &mut VecDeque<BackboneMessage>, backbone: &mut Option<Backbones>, grant: RetainedCloneGrant) -> Result<(Option<Box<dyn ErasedSnapshotRetirement>>, RetainedCloneProgress), ValueError> {
+    pub fn admit_attached(queue: &mut VecDeque<BackboneMessage>, backbone: &mut Option<Backbones>, grant: RetainedCloneGrant) -> Result<(Option<Box<dyn ErasedSnapshotRetirement>>, RetainedCloneProgress), ValueError> {
         if queue.capacity() != 0 {
             return match Self::admit_queue(std::mem::take(queue), grant) {
                 Ok((owner, progress)) => Ok((Some(owner), progress)),

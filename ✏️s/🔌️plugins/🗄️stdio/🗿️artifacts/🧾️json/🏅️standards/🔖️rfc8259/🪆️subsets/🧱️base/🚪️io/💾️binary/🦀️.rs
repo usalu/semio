@@ -1,13 +1,16 @@
 //! 🚪️ Artifact representation module ownership.
 
-#[path = "📸️snapshot/🦀️.rs"]
-pub mod snapshot;
+pub use semio_s_artifact_stdio_json_schema_2::standards::v_rfc8259::subsets::base::io::binary::snapshot;
 
-#[path = "🧬️mutations/🦀️.rs"]
-pub mod mutations;
+pub mod mutations {
+    pub use semio_s_artifact_stdio_json_mutations::standards::v_rfc8259::subsets::base::io::binary::mutations::*;
+    pub use semio_s_artifact_stdio_json_mutations_2::standards::v_rfc8259::subsets::base::io::binary::mutations::insert_array_element;
+    pub use semio_s_artifact_stdio_json_mutations_2::standards::v_rfc8259::subsets::base::io::binary::mutations::remove_array_element;
+    pub use semio_s_artifact_stdio_json_mutations_2::standards::v_rfc8259::subsets::base::io::binary::mutations::remove_member;
+    pub use semio_s_artifact_stdio_json_mutations_2::standards::v_rfc8259::subsets::base::io::binary::mutations::set_member;
+    pub use semio_s_artifact_stdio_json_mutations_2::standards::v_rfc8259::subsets::base::io::binary::mutations::set_scalar;
+}
 
-#[path = "🔺️diff/🦀️.rs"]
-pub mod diff;
+pub use semio_s_artifact_stdio_json_mutations::standards::v_rfc8259::subsets::base::io::binary::diff;
 
-#[path = "💡️inferences/🦀️.rs"]
-pub mod inferences;
+

@@ -1,9 +1,9 @@
 //! 🖊️ Typed stroke endings, joins and bounded editable dash patterns.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslScalar, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
 pub enum StrokeCap { Butt, Round, Square }
 
 impl StrokeCap {
@@ -17,9 +17,9 @@ impl StrokeCap {
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslScalar, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
 pub enum StrokeJoin { Miter, Round, Bevel }
 
 impl StrokeJoin {
@@ -34,11 +34,15 @@ impl StrokeJoin {
 
 #[cfg(test)]
 mod tests {
+use semio_framework_test_fixtures::fixture_text;
+
+    use semio_framework_test_fixtures::fixture_path;
+
     #[test]
     fn stroke_enums_match_neutral_cases_and_codecs() {
         use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
-        let cases: serde_json::Value = serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/🖊️stroke/🎚️enums/🔣️.json")).unwrap();
+        let cases: serde_json::Value = serde_json::from_str(fixture_text!("../../../🧪️tests/🧫️fixtures/🖊️stroke/🎚️enums/🔣️.json")).unwrap();
         for case in cases.as_array().unwrap() {
             let value = case["value"].clone();
             let valid = case["valid"] == true;
@@ -70,7 +74,7 @@ use semio_framework_value::ToValue;
 
     #[test]
     fn dash_pattern_fixtures() {
-        let cases: serde_json::Value = serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/🖊️stroke/🔣️.json")).unwrap();
+        let cases: serde_json::Value = serde_json::from_str(fixture_text!("../../../🧪️tests/🧫️fixtures/🖊️stroke/🔣️.json")).unwrap();
         for case in cases.as_array().unwrap() {
             let parsed = {let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(4096,&mut accepted);semio_s_artifact_draw_drawing_io::text::dash::decode_dash_text(case["value"].as_str().unwrap(),&mut control)};
             if case["error"] == true { assert!(parsed.is_err(), "{case}"); }

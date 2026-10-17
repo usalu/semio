@@ -1,4 +1,10 @@
-use super::*;
+use crate::standards::v1_4::subsets::base::schema::mutations::PdfMutation;
+use semio_framework_test_fixtures::fixture_text;
+#[allow(unused_imports)]
+use crate::standards::v1_4::subsets::base::schema::diff::{PdfDiff, PdfPageAdded, PdfPagesDiff};
+#[allow(unused_imports)]
+use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
+use crate::standards::v1_4::subsets::base::schema::mutations::move_page::*;
 use crate::standards::v1_4::subsets::base::schema::snapshot::{PageDoc, PdfSnapshot};
 use protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law;
 use crate::standards::v1_4::subsets::base::io::binary::mutations as binary;
@@ -9,7 +15,7 @@ use protocol::Mutation;
 /// `move-page` must raise, leave the document untouched, and offer no undo.
 #[test]
 fn missing_page_refuses_without_inverse_or_state_change() {
-    let mutation: PdfMutation = semio_framework_pack_json::from_json_str(include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔀️move-page/🔄️round/🦠️mutation/🔣️.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed move-page payload decodes");
+    let mutation: PdfMutation = semio_framework_pack_json::from_json_str(fixture_text!("../../4️⃣1.4/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/🧬️mutations/🔀️move-page/🔄️round/🦠️mutation/🔣️.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed move-page payload decodes");
     let base = PdfSnapshot { pages: Vec::new(), ..Default::default() };
     let mut state = base.clone();
     assert!(!crate::standards::v1_4::subsets::base::io::mutation_bridge::apply_outcome(mutation.diff(&state), &mut state).messages().is_empty(), "move-page: an unaddressable page must be refused");

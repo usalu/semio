@@ -1,4 +1,5 @@
 use super::*;
+use semio_framework_test_fixtures::fixture_text;
 use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
 struct ScalarJob(bool);
 impl InteractiveJob for ScalarJob{
@@ -28,7 +29,7 @@ fn original_return(session:WorkerJobSession<ScalarJob>,caller:&mut OriginalJobFi
 #[test]
 fn original_session_frame_return_has_exact_custody(){
  let _admission=worker_session_slots_shared();
- let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../♻️session-return/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
  for row in fixture["cases"].as_array().unwrap(){
   let(mut session,mut caller)=source();
   if row["phase"]=="terminal"{close_body(&mut session,&mut caller);}
@@ -59,12 +60,11 @@ fn original_session_frame_return_has_exact_custody(){
    assert_eq!((heap.requested_bytes,heap.released_bytes),(0,bytes));
   }
   caller.retire(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:65536,maximum_release_bytes:262144,maximum_depth:64});
-  eprintln!("[DEBUG] original session frame {} exact={bytes}",row["name"]);
  }
 }
 
 #[test]
-fn original_terminal_witness_finishes_without_admitting_live_phase_contention(){let _slots=worker_session_slots_shared();let(mut session,mut caller)=source();for phase in [SESSION_TRANSITION,SESSION_IDLE,SESSION_SUBMITTED,SESSION_OUTCOME,SESSION_TERMINAL,SESSION_REJECTED,SESSION_CHECKED_OUT]{session.inner.phase.store(phase,Ordering::Release);assert!(matches!(session.has_original_cancel_alias_witness(caller.cancel()),Err(WorkerJobDemandError::Contention(_))));assert_eq!(session.inner.phase(),phase);}session.inner.phase.store(SESSION_IDLE,Ordering::Release);close_body(&mut session,&mut caller);assert_eq!(session.inner.phase(),SESSION_EMPTY);assert!(!session.has_original_cancel_alias_witness(caller.cancel()).unwrap());assert!(session.return_original_cancel_alias_step(caller.cancel(),WORKER_TEST_STOCK).unwrap().is_none());for _ in 0..8{if session.terminal_is_empty(){break}caller.close_owner(WORKER_TEST_STOCK,&mut session).unwrap();}assert!(session.terminal_is_empty());caller.retire(WORKER_TEST_STOCK);eprintln!("[DEBUG] actual admitted session retains all7 live phase refusals, then paid authority empty returns false/none and actual original Arc/node finish");}
+fn original_terminal_witness_finishes_without_admitting_live_phase_contention(){let _slots=worker_session_slots_shared();let(mut session,mut caller)=source();for phase in [SESSION_TRANSITION,SESSION_IDLE,SESSION_SUBMITTED,SESSION_OUTCOME,SESSION_TERMINAL,SESSION_REJECTED,SESSION_CHECKED_OUT]{session.inner.phase.store(phase,Ordering::Release);assert!(matches!(session.has_original_cancel_alias_witness(caller.cancel()),Err(WorkerJobDemandError::Contention(_))));assert_eq!(session.inner.phase(),phase);}session.inner.phase.store(SESSION_IDLE,Ordering::Release);close_body(&mut session,&mut caller);assert_eq!(session.inner.phase(),SESSION_EMPTY);assert!(!session.has_original_cancel_alias_witness(caller.cancel()).unwrap());assert!(session.return_original_cancel_alias_step(caller.cancel(),WORKER_TEST_STOCK).unwrap().is_none());for _ in 0..8{if session.terminal_is_empty(){break}caller.close_owner(WORKER_TEST_STOCK,&mut session).unwrap();}assert!(session.terminal_is_empty());caller.retire(WORKER_TEST_STOCK);}
 
 #[test]
 fn parked_original_alias_uses_its_initiating_caller_without_slot_residue(){
@@ -74,5 +74,5 @@ fn parked_original_alias_uses_its_initiating_caller_without_slot_residue(){
  let metadata=RetainedCloneGrant{maximum_items:1,maximum_depth:1,..Default::default()};
  for denied in [RetainedCloneGrant{maximum_items:0,..metadata},RetainedCloneGrant{maximum_depth:0,..metadata}]{let(step,heap)=observe(||caller.turn(denied,|cx|pump_worker_job_retirements(1,cx)).unwrap());assert_eq!(step.progress(),Default::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(worker_job_retirement_phase(1),Some(WorkerJobClosePhase::ParamsRelease));}
  let before=caller.cumulative_receipt();let(step,heap)=observe(||caller.turn(metadata,|cx|pump_worker_job_retirements(1,cx)).unwrap());let receipt=RetainedCloneProgress{copied_items:1,..Default::default()};assert_eq!(step,WorkerJobCloseStep::Pending{progress:receipt});assert_eq!(caller.cumulative_receipt(),before.checked_add(receipt).unwrap());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
- for _ in 0..32{if !worker_job_retirements_are_parked(){break}caller.turn(WORKER_TEST_STOCK,|cx|pump_worker_job_retirements(1,cx)).unwrap();}assert!(!worker_job_retirements_are_parked());assert!(caller.retire(WORKER_TEST_STOCK)>0);eprintln!("[DEBUG] isolated parked same-Original alias metadata1/heap0, item/depth denial0, exact cumulative receipt, independently paid authority/frame/node and no occupied-slot residue");
+ for _ in 0..32{if !worker_job_retirements_are_parked(){break}caller.turn(WORKER_TEST_STOCK,|cx|pump_worker_job_retirements(1,cx)).unwrap();}assert!(!worker_job_retirements_are_parked());assert!(caller.retire(WORKER_TEST_STOCK)>0);
 }

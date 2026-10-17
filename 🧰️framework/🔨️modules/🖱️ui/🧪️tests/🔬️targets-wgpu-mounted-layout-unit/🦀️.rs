@@ -191,7 +191,6 @@ fn mounted_layout_worker_runs_on_shared_user_visible_lane_and_pool_thread() {
     assert_eq!(caller.receipt(), birth);
     assert!(birth.fits(ui_contract::UI_WORKER_RETIREMENT_POLICY));
     assert!(original_job.is_none() && original_params.is_none());
-    eprintln!("[DEBUG] actual Mounted admission original operation29/generation11 cancellation witness and clock; receipt before exposure={birth:?} physical={heap:?}");
     let pool = semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1));
     let lane = semio_framework_async::Lane::UserVisible;
     for _ in 0..10_000 {
@@ -215,13 +214,12 @@ fn mounted_layout_worker_runs_on_shared_user_visible_lane_and_pool_thread() {
         let grant = ui_contract::UI_WORKER_RETIREMENT_POLICY;
         let demand = session.retirement_demands(grant.maximum_copy_bytes).expect("original layout worker close demands");
         if !ui_contract::ui_worker_retirement_permits(demand) {
-            eprintln!("[DEBUG] mounted layout retained original close phase={:?} demand={demand:?} fixedPolicy={grant:?}", session.close_phase());
         }
         assert!(ui_contract::ui_worker_retirement_permits(demand));
         let phase=session.close_phase();
         let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||caller.close_owner(grant,&mut session).unwrap());
         let progress=step.progress();
-        if (progress.retained_capacity_bytes,progress.released_bytes)!=(heap.requested_bytes,heap.released_bytes){eprintln!("[DEBUG] actual mounted worker physical receipt phase={phase:?} demand={demand:?} progress={progress:?} originalHeap={heap:?}");}
+        if (progress.retained_capacity_bytes,progress.released_bytes)!=(heap.requested_bytes,heap.released_bytes){}
         assert_eq!((progress.retained_capacity_bytes,progress.released_bytes),(heap.requested_bytes,heap.released_bytes));
         assert!(progress.fits(grant));
         if session.terminal_is_empty() {
@@ -230,7 +228,6 @@ fn mounted_layout_worker_runs_on_shared_user_visible_lane_and_pool_thread() {
     }
     assert!(session.terminal_is_empty());
     let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(session));
-    eprintln!("[DEBUG] actual mounted worker terminal Drop physical={} birth={}",heap.released_bytes,heap.requested_bytes);
     assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));caller.retire(source);
 }
 
@@ -247,7 +244,7 @@ fn mounted_layout_cancel_before_and_after_owned_text_call_is_typed_and_retained(
     before.begin_close();let mut turns=0;while !before.terminal_is_empty(){
         let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||before_caller.turn(source,|cx|semio_framework_job::InteractiveJob::close_step(&mut before,cx)).unwrap());assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));assert_eq!(step.progress(),before_caller.receipt());born+=heap.requested_bytes;released+=heap.released_bytes;turns+=1;assert!(turns<1024);
     }
-    let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(before));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(born,released);println!("[DEBUG] original text pre-cancel sourceBornUncredited={born} nativeRelease={released} terminalDrop0");before_caller.retire(source);
+    let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(before));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(born,released);before_caller.retire(source);
 
     let mut caller=semio_framework_job::OriginalJobFixtureCaller::admit(semio_framework_job::OperationId(37),semio_framework_job::Generation(11),source,clock_zero,u64::MAX,1);
     let(mut after,birth)=semio_framework_trace::observe_heap_allocations_on_this_thread(||text_job(&tree,root));let(mut born,mut released)=(birth.requested_bytes,birth.released_bytes);
@@ -268,7 +265,7 @@ fn mounted_layout_cancel_before_and_after_owned_text_call_is_typed_and_retained(
         let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||caller.turn(source,|cx|semio_framework_job::InteractiveJob::close_step(&mut after,cx)).unwrap());
         assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));assert_eq!(step.progress(),caller.receipt());born+=heap.requested_bytes;released+=heap.released_bytes;turns+=1;assert!(turns<1024);
     }
-    let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(after));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(born,released);println!("[DEBUG] original text post-cancel sourceBornUncredited={born} nativeRelease={released} originalAliasReturn terminalDrop0");
+    let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(after));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(born,released);
     caller.retire(source);
 }
 
@@ -675,5 +672,4 @@ fn mounted_layout_original_fault_descriptor_preserves_custody_and_paid_acknowled
         if job.terminal_is_empty() { break; }
     }
     assert!(job.terminal_is_empty());
-    eprintln!("[DEBUG] Mounted original fault custody samePointer=true deniedAdmission0heap=true nativeBorrow0heap=true separatePaidAck=true originalPolicy=true physicalClose=true");
 }

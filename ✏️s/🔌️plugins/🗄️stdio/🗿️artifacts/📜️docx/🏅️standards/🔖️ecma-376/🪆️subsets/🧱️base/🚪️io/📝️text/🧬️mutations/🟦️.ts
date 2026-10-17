@@ -1,4 +1,4 @@
-import {parseXmlDocumentJson,xmlDocumentJsonValue} from "../../../../../../../../📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🚪️io/📝️text/📸️snapshot/🔣️json/🟦️.ts";
+import {parseXmlDocumentJson,xmlDocumentJsonValue} from "@semio-tech/stdio-xml/standards/1.0/subsets/base/io/text/snapshot/json";
 /** 📝️ Native SetPart grammar with explicit owned JSON payloads. */
 import {parseDocxSetPart} from "../../../🧬️schema/🧬️mutations/📦set-part/🟦️.ts";
 import type {DocxSetPart} from "../../../🧬️schema/🧬️mutations/🟦️.ts";

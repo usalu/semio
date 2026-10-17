@@ -1,6 +1,6 @@
 /** 📂️ Browser document open: attempt ownership, installed-artifact authority and the authenticated plan and receipt exchange. */
 import type { BackboneWorkerTestDependencies } from "../../🔨️modules/🏪️store/👷️worker/🟦️.ts";
-import { workerLawFakesV1, FakeHubWebSocket, WORKER_LAW_CAPABILITY } from "../🧰️worker-law-fakes/🟦️.ts";
+import { workerLawFakesV1, FakeHubWebSocket, WORKER_LAW_CAPABILITY, WORKER_LAW_ACTOR_IDENTITY_GRANT } from "../🧰️worker-law-fakes/🟦️.ts";
 import type { TestSource } from "../🧰️worker-law-fakes/🟦️.ts";
 
 type ArtifactActorConfig = import("../../🟦️.ts").ArtifactActorConfig;
@@ -77,6 +77,7 @@ export async function registerDocumentOpenTests(vitest: Vitest, dependencies: Ba
         schema: fixture.plan.artifact.schema,
         bindings: [{ kind: "hub", dataClass: "persistedShared", baseUrl: "http://hub.test", spaceId, installedTarget: fixture.installedTarget }],
         actor: "caller-selected-actor",
+        actorIdentityGrant: WORKER_LAW_ACTOR_IDENTITY_GRANT,
       });
       try {
         dispatch(open(attemptA));
@@ -117,6 +118,7 @@ export async function registerDocumentOpenTests(vitest: Vitest, dependencies: Ba
         schema: fixture.plan.artifact.schema,
         bindings: [{ kind: "hub", dataClass: "persistedShared", baseUrl: "http://hub.test", spaceId: fixture.intent.scope.spaceId, installedTarget: fixture.installedTarget }],
         actor: "caller-selected-actor",
+        actorIdentityGrant: WORKER_LAW_ACTOR_IDENTITY_GRANT,
       });
       dispatch({ kind: "send", documentId, spaceId: fixture.intent.scope.spaceId, clientInstanceId, message: { kind: "detach" } });
       dispatch({ kind: "close", documentId, spaceId: fixture.intent.scope.spaceId, clientInstanceId });
@@ -138,12 +140,14 @@ export async function registerDocumentOpenTests(vitest: Vitest, dependencies: Ba
           schema: fixture.installedTarget.artifact.schema,
           bindings: [{ kind: "hub", dataClass: "persistedShared", baseUrl: "http://hub.test", spaceId: left.spaceId, installedTarget: fixture.installedTarget }],
           actor: "caller-selected-actor",
+          actorIdentityGrant: WORKER_LAW_ACTOR_IDENTITY_GRANT,
         });
         openArtifact({
           documentId: right.documentId,
           schema: fixture.installedTarget.artifact.schema,
           bindings: [{ kind: "hub", dataClass: "persistedShared", baseUrl: "http://hub.test", spaceId: right.spaceId, installedTarget: fixture.installedTarget }],
           actor: "caller-selected-actor",
+          actorIdentityGrant: WORKER_LAW_ACTOR_IDENTITY_GRANT,
         });
         expect(documentRuntimeKeyV1({ kind: "hub", dataClass: "persistedShared", ...left })).toBe(fixture.expected.scopeIsolation.leftKey);
         expect(documentRuntimeKeyV1({ kind: "hub", dataClass: "persistedShared", ...right })).toBe(fixture.expected.scopeIsolation.rightKey);
@@ -174,6 +178,7 @@ export async function registerDocumentOpenTests(vitest: Vitest, dependencies: Ba
         bindings: [{ kind: "hub", dataClass: "persistedShared", baseUrl: "http://hub.test", spaceId: fixture.intent.scope.spaceId, installedTarget: fixture.installedTarget }],
         actor: "caller-selected-actor",
         packSchemaHash: new Array(32).fill(fixture.expected.helloPackSchemaHashByte),
+        actorIdentityGrant: WORKER_LAW_ACTOR_IDENTITY_GRANT,
       };
       expect(documentOpenPlanAuthority(fixture.plan, fixture.intent, config, fixture.installedTarget).surfaceId).toBe(fixture.installedTarget.surface.surfaceId);
       const replacements: readonly [string, string, unknown][] = [
@@ -222,6 +227,7 @@ export async function registerDocumentOpenTests(vitest: Vitest, dependencies: Ba
           schema: fixture.plan.artifact.schema,
           bindings: [{ kind: "hub", dataClass: "persistedShared", baseUrl: "http://hub.test", spaceId: fixture.intent.scope.spaceId, installedTarget: fixture.installedTarget }],
           actor: "caller-selected-actor",
+          actorIdentityGrant: WORKER_LAW_ACTOR_IDENTITY_GRANT,
         });
         const socket = await waitForDocumentSocket();
         expect(requests).toHaveLength(2);
@@ -280,6 +286,7 @@ export async function registerDocumentOpenTests(vitest: Vitest, dependencies: Ba
           schema: fixture.plan.artifact.schema,
           bindings: [{ kind: "hub", dataClass: "persistedShared", baseUrl: "http://hub.test", spaceId: fixture.intent.scope.spaceId, installedTarget: fixture.installedTarget }],
           actor: "caller-selected-actor",
+          actorIdentityGrant: WORKER_LAW_ACTOR_IDENTITY_GRANT,
         });
         const socket = await waitForDocumentSocket();
         socket.open();
@@ -308,7 +315,7 @@ export async function registerDocumentOpenTests(vitest: Vitest, dependencies: Ba
       testSeams.documentSocketGrantTestIssue = null;
       const openOwner = async (proof: string): Promise<Readonly<{ state: ArtifactState; binding: Extract<PersistenceBinding, { kind: "hub", dataClass: "persistedShared" }> }>> => {
         await acceptCurrentTestBrowserSessionAuthority(proof);
-        openArtifact({ documentId: fixture.intent.scope.documentId, schema: fixture.plan.artifact.schema, bindings: [], actor: "caller-selected-actor" });
+        openArtifact({ documentId: fixture.intent.scope.documentId, schema: fixture.plan.artifact.schema, bindings: [], actor: "caller-selected-actor", actorIdentityGrant: WORKER_LAW_ACTOR_IDENTITY_GRANT });
         const state = artifactState(fixture.intent.scope.documentId)!;
         state.openClientInstanceId = fixture.intent.clientInstanceId;
         const binding: Extract<PersistenceBinding, { kind: "hub", dataClass: "persistedShared" }> = { kind: "hub", dataClass: "persistedShared", baseUrl: "http://hub.test", spaceId: fixture.intent.scope.spaceId, installedTarget: fixture.installedTarget };

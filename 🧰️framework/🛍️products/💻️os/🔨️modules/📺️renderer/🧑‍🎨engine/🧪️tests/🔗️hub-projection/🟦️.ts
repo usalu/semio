@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 
 import { describe, expect, test } from "vitest";
 import { hubConnectionSummaryV1 } from "../../🧱️elements/🔄️ShellSync/🟦️.tsx";
-import { hubConnectionOperationOwnerCurrentV1 } from "../../🧱️elements/🔗️HubConnection/🟦️.tsx";
+import { hubConnectionOperationOwnerCurrentV1 } from "../../🧱️elements/🔗️HubConnection/🔌️connection-contract/🟦️.ts";
 import { SHELL_HUB_ROUTE } from "../../🧱️elements/🏛️ShellHost/🔀️surface-switch/🟦️.ts";
 import { readModuleTreeSource } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
 
@@ -62,7 +62,7 @@ describe("🔗️ target-neutral Hub projection", () => {
     const shellSync = readFileSync(join(engineRoot, "🧱️elements", "🔄️ShellSync", "🟦️.tsx"), "utf8");
     const signIn = readFileSync(join(engineRoot, "🧱️elements", "🔐️HubSignIn", "🟦️.tsx"), "utf8");
     const spaces = readFileSync(join(engineRoot, "🧱️elements", "🏘️SpaceBrowser", "🟦️.tsx"), "utf8");
-    const labels = readFileSync(join(engineRoot, "🧱️elements", "🔗️HubConnection", "🟦️.tsx"), "utf8");
+    const labels = readFileSync(join(engineRoot, "🧱️elements", "🔗️HubConnection", "🌐️ui-labels", "🟦️.ts"), "utf8");
     expect(shellSync).toContain("framework.hub.signIn");
     expect(SHELL_HUB_ROUTE).toBe("/hub");
     expect(host).toContain("navigateHistory(SHELL_HUB_ROUTE)");

@@ -8,10 +8,4 @@ pub mod diff;
 #[path = "↩️inverse/🦀️.rs"]
 pub mod inverse;
 pub use component::*;
-#[cfg(test)]
-#[path = "🧪️tests/✅️relevels/🦀️.rs"]
-mod tests_relevels;
-#[cfg(test)]
-#[path = "🧪️tests/🚫️level-taken/🦀️.rs"]
-mod tests_level_taken;
 //#endregion 🔖️Leaves

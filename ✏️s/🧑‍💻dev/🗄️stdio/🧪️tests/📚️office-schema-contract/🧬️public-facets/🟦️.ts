@@ -1,13 +1,13 @@
-import type { DocxArtifact as DocxBaseArtifact } from '../../../../../🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🟦️.ts';
-import type { DocxArtifact as DocxStrictArtifact } from '../../../../../🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/📏️strict/🧬️schema/🟦️.ts';
-import type { DocxArtifact as DocxTransitionalArtifact } from '../../../../../🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🔄️transitional/🧬️schema/🟦️.ts';
-import type { XlsxArtifact as XlsxBaseArtifact } from '../../../../../🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🟦️.ts';
-import type { XlsxArtifact as XlsxStrictArtifact } from '../../../../../🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🔒️strict/🧬️schema/🟦️.ts';
-import type { XlsxArtifact as XlsxTransitionalArtifact } from '../../../../../🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🌉️transitional/🧬️schema/🟦️.ts';
-import type { PptxArtifact as PptxBaseArtifact } from '../../../../../🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🟦️.ts';
-import type { PptxArtifact as PptxStrictArtifact } from '../../../../../🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🔒️strict/🧬️schema/🟦️.ts';
-import type { PptxArtifact as PptxTransitionalArtifact } from '../../../../../🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🌉️transitional/🧬️schema/🟦️.ts';
-import { parseDocxXmlAddress, type DocxMutation } from '../../../../../🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🟦️.ts';
+import type { DocxArtifact as DocxBaseArtifact } from '@semio-tech/stdio-docx/standards/ecma-376/subsets/base/schema';
+import type { DocxArtifact as DocxStrictArtifact } from '@semio-tech/stdio-docx/standards/ecma-376/subsets/strict/schema';
+import type { DocxArtifact as DocxTransitionalArtifact } from '@semio-tech/stdio-docx/standards/ecma-376/subsets/transitional/schema';
+import type { XlsxArtifact as XlsxBaseArtifact } from '@semio-tech/stdio-xlsx/standards/ecma-376/subsets/base/schema';
+import type { XlsxArtifact as XlsxStrictArtifact } from '@semio-tech/stdio-xlsx/standards/ecma-376/subsets/strict/schema';
+import type { XlsxArtifact as XlsxTransitionalArtifact } from '@semio-tech/stdio-xlsx/standards/ecma-376/subsets/transitional/schema';
+import type { PptxArtifact as PptxBaseArtifact } from '@semio-tech/stdio-pptx/standards/ecma-376/subsets/base/schema';
+import type { PptxArtifact as PptxStrictArtifact } from '@semio-tech/stdio-pptx/standards/ecma-376/subsets/strict/schema';
+import type { PptxArtifact as PptxTransitionalArtifact } from '@semio-tech/stdio-pptx/standards/ecma-376/subsets/transitional/schema';
+import { parseDocxXmlAddress, type DocxMutation } from '@semio-tech/stdio-docx/standards/ecma-376/subsets/base/schema/mutations';
 
 type WithoutEntries<T> = 'entries' extends keyof T ? never : T;
 

@@ -32,4 +32,5 @@ parley = { version = "0.5.0", default-features = false, features = ["libm"] }
 swash = { version = "0.2.6", default-features = false, features = ["render", "std"] }
 
 [dev-dependencies]
+semio-framework-test-fixtures = { path = "../../../../../🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 serde_json = { version = "1.0.140" }

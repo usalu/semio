@@ -27,7 +27,6 @@ test("BIM costs agree with independent decimal arithmetic and currency totals", 
     expect(row.total).toBe(new Decimal(row.quantity).mul(row.unit_cost).mul(row.factor).toDecimalPlaces(row.precision, Decimal.ROUND_HALF_UP).toNumber());
   }
   expect(costs.diagnostics).toEqual([]);
-  console.log("[DEBUG] BIM costs matched decimal.js for all lines and independent authored fixture totals.");
 });
 
 test("BIM quantity edits and inverse replay update costs without mutating authored records", () => {

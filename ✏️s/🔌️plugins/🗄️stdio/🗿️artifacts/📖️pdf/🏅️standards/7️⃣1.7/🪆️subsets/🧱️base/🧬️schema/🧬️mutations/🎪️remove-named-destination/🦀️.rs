@@ -1,6 +1,5 @@
 //! 🎪️ Authoritative PDF mutation payload, diff, inverse, and tests for `remove-named-destination`.
 
-use super::PdfMutation;
 use crate::standards::v1_7::subsets::base::schema::diff::{self, PdfDiff};
 use crate::standards::v1_7::subsets::base::schema::snapshot::*;
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
@@ -14,7 +13,10 @@ pub struct RemoveNamedDestination {
     pub name: String,
 }
 
-impl MutationKind<PdfSnapshot, PdfMutation> for RemoveNamedDestination {
+impl<Op> MutationKind<PdfSnapshot, Op> for RemoveNamedDestination
+where
+    Op: protocol::Mutation<PdfSnapshot, Diff = PdfDiff> + From<RemoveNamedDestination> + From<crate::standards::v1_7::subsets::base::schema::mutations::set_named_destination::SetNamedDestination>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "remove", entity: "named-destination", kind: "remove-named-destination", record: "Remove" };
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
@@ -22,10 +24,10 @@ impl MutationKind<PdfSnapshot, PdfMutation> for RemoveNamedDestination {
         MutationOutcome::new(diff::diff_remove_named_destination(base, &self.name))
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
         let _ = base;
-        base.named_destinations.iter().position(|item| item.name == self.name).map(|index| PdfMutation::SetNamedDestination(super::set_named_destination::SetNamedDestination { destination: base.named_destinations[index].clone(), index: Some(index) })).into_iter().collect()
+        base.named_destinations.iter().position(|item| item.name == self.name).map(|index| Op::from(crate::standards::v1_7::subsets::base::schema::mutations::set_named_destination::SetNamedDestination { destination: base.named_destinations[index].clone(), index: Some(index) })).into_iter().collect()
     
     })())
 }
@@ -42,8 +44,6 @@ impl MutationKind<PdfSnapshot, PdfMutation> for RemoveNamedDestination {
 //#endregion 🔖️Mutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
 

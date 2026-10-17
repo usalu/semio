@@ -1,4 +1,5 @@
 /** 🧫 The infinite module's public fixture entry: the language-neutral corpora its consumers read, exposed by name under one import so no consumer spells the owner's internal folders. */
+import { fixtureUrl } from "@semio-tech/framework/test/source-text";
 export { default as sceneShadowParityFixture } from "../../🌍️world/🧪️tests/🧫️fixtures/🌑️scene-shadow-parity/🔣️.json" with { type: "json" };
 export { default as worldSceneShadowsFixture } from "../../🌍️world/🧪️tests/🧫️fixtures/🌑️scene-shadows/🔣️.json" with { type: "json" };
 export { default as worldSceneLightingFixture } from "../../🌍️world/🧪️tests/🧫️fixtures/🌞️scene-lighting/🔣️.json" with { type: "json" };
@@ -6,4 +7,4 @@ export const loadPrimaryGeometryStyleFixture = () => import("../../🌍️world/
 export { default as dagSliderOverlayFixture } from "../../🎲️board/🔌️ports/➡️directed/🕸️dag/🧪️tests/🧫️fixtures/🎚️slider-overlay.json" with { type: "json" };
 export { default as infiniteFontsReadingSchema } from "../../🔤️fonts/👓️reading/🧬️schema/🔣️.json" with { type: "json" };
 export { default as artifactsDagVcsSchema } from "../../🗿️artifacts/🕸️dag/🌿️vcs/🧬️schema/🔣️.json" with { type: "json" };
-export const worldSceneShadingFixtureUrl = new URL("../../🌍️world/🧪️tests/🧫️fixtures/🎨️scene-shading/🔣️.json", import.meta.url);
+export const worldSceneShadingFixtureUrl = fixtureUrl(import.meta.url, "../../🌍️world/🧪️tests/🧫️fixtures/🎨️scene-shading/🔣️.json");

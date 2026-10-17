@@ -1,9 +1,9 @@
 //! 📜️ 📜️ Trinity Rewriting app command — `set-parameter`.
 
-use crate::standards::v1::subsets::any::schema::mutations::change_parameter_binding;
+use crate::standards::v1::subsets::any::schema::mutations::change_parameter_binding::change_parameter_binding;
 use crate::standards::v1::subsets::any::schema::mutations::RewriteRuleMutation;
-use crate::standards::v1::subsets::any::schema::ParameterKind;
-use crate::RewritingSnapshot;
+use crate::standards::v1::subsets::any::schema::rule::ParameterKind;
+use crate::standards::v1::subsets::any::schema::snapshot::RewritingSnapshot;
 use semio_framework_graph_manifest::PropertyValue;
 use semio_framework_plugin::Emit;
 use semio_framework_plugin::NoConfigMutation;
@@ -11,7 +11,7 @@ use semio_framework_plugin::NoConfigMutation;
 /// 🎛️ One rule parameter's bound value, read by its declared kind, as ONE `change-parameter-binding {key, newValue}` — the
 /// field-parametric leaf history edits; a value the binding already holds, an unknown name's unparseable number or an empty
 /// name moves nothing. The parameters window commits it once per field, on blur or Enter (design §13.2).
-pub(crate) fn set_parameter(state: &RewritingSnapshot, name: &str, value: &str) -> Emit<RewriteRuleMutation, NoConfigMutation> {
+pub fn set_parameter(state: &RewritingSnapshot, name: &str, value: &str) -> Emit<RewriteRuleMutation, NoConfigMutation> {
     if name.is_empty() {
         return Emit::default();
     }

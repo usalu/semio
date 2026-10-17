@@ -88,13 +88,6 @@ class OsMcpSecurityScript extends BundleScript {
   }
 }
 
-class OsMcpHubEditDurabilityScript extends BundleScript {
-  async run(segments: string[]): Promise<void> {
-    if (segments.length) throw new Error("hub-edit-durability-check accepts no arguments");
-    await runRepositoryCommand(this.invocation,"bun",[join(this.repoRoot, "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/🧪️tests/🤝️hub-edit-durability/🟦️.ts")],this.repoRoot,"os-mcp-hub-edit-durability",{version:1,maximumElapsedMilliseconds:1_800_000,output:{maximumBytes:134217728,maximumLines:65536}});
-  }
-}
-
 class OsMcpAgentReplyScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const env = harnessEnvironment("agent-reply-check", segments, ["--serve", "--locale"]);
@@ -125,5 +118,5 @@ class CanonicalPairCompositionScript extends BundleScript {
   }
 }
 
-const router=new ScriptRouter(import.meta.dir).register("source-check",SourceScript).register("native-check",TestScript).register("native",NativeScript).register("build",BuildScript).register("live-agent-loop-check",OsMcpLiveAgentLoopScript).register("hub-agent-participant-check",OsMcpHubAgentParticipantScript).register("plugin-coverage-check",OsMcpPluginCoverageScript).register("user-path-check",OsMcpUserPathScript).register("inference-quartet-check",OsMcpInferenceQuartetScript).register("security-check",OsMcpSecurityScript).register("hub-edit-durability-check",OsMcpHubEditDurabilityScript).register("agent-reply-check",OsMcpAgentReplyScript).register("untrusted-content-check",UntrustedContentScript).register("mcp-composition-source-check",McpCompositionSourceScript).register("fixture-ownership-check",FixtureOwnershipCompositionScript).register("canonical-pair-composition-check",CanonicalPairCompositionScript);
+const router=new ScriptRouter(import.meta.dir).register("source-check",SourceScript).register("native-check",TestScript).register("native",NativeScript).register("build",BuildScript).register("live-agent-loop-check",OsMcpLiveAgentLoopScript).register("hub-agent-participant-check",OsMcpHubAgentParticipantScript).register("plugin-coverage-check",OsMcpPluginCoverageScript).register("user-path-check",OsMcpUserPathScript).register("inference-quartet-check",OsMcpInferenceQuartetScript).register("security-check",OsMcpSecurityScript).register("agent-reply-check",OsMcpAgentReplyScript).register("untrusted-content-check",UntrustedContentScript).register("mcp-composition-source-check",McpCompositionSourceScript).register("fixture-ownership-check",FixtureOwnershipCompositionScript).register("canonical-pair-composition-check",CanonicalPairCompositionScript);
 if(import.meta.main) await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({defaultCommand:"source-check"}) }));

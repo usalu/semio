@@ -29,10 +29,11 @@ export async function testWgpuBrowserServing(workspace: string, output: string, 
     for (const profile of fixture.profiles) {
       const app = join(root, profile), publicRoot = join(app, "public"), config = join(app, "⚙️vite.config.ts");
       const roots = Object.fromEntries(["boot", "library", "worker", "compiler", "modules", "extensions", "fonts"].map(name => [name, join(app, name)]));
-      const reloadFile = join(roots.modules, "reload.json");
-      for (const route of fixture.routes) { put(join(roots[route.root], route.file), route.content); put(join(publicRoot, decodeURI(route.url)), route.content); }
+      const rootFor=(name:string):string=>{const path=roots[name];assert.ok(path,"Declared fixture root required: "+name);return path;};
+      const reloadFile = join(rootFor("modules"), "reload.json");
+      for (const route of fixture.routes) { put(join(rootFor(route.root), route.file), route.content); put(join(publicRoot, decodeURI(route.url)), route.content); }
       const wasm = new Uint8Array([0, 97, 115, 109, 1, 0, 0, 0]);
-      writeFileSync(join(roots.compiler, "semio-framework-os-renderer-wgpu-component_bg.wasm"), wasm);
+      writeFileSync(join(rootFor("compiler"), "semio-framework-os-renderer-wgpu-component_bg.wasm"), wasm);
       put(reloadFile, "0");
       copyFileSync(template, join(app, "🌐️.html"));
       put(config, 'import { createWgpuBrowserConfig } from ' + JSON.stringify(implementation) + ';\nexport default () => createWgpuBrowserConfig(' + JSON.stringify({ catalog: { version: 1, targets: [], hosts: [], playgrounds: [] }, workspace: root, root: app, profile, compilerRoot: roots.compiler, moduleRoot: roots.modules, extensionRoot: roots.extensions, bootRoot: roots.boot, libraryRoot: roots.library, workerRoot: roots.worker, fontRoot: roots.fonts, reloadFile, assets: [], assetServeMode: "fetch" }) + ');\n');
@@ -64,7 +65,7 @@ export async function testWgpuBrowserServing(workspace: string, output: string, 
           const timer = setTimeout(() => reject(new Error("Missing completed-artifact reload")), 10000);
           socket.on("message", (message: Buffer) => { if (JSON.parse(message.toString()).type === "full-reload") { clearTimeout(timer); resolve(); } });
         });
-        put(join(roots.compiler, fixture.routes[2].file), fixture.reload);
+        put(join(rootFor("compiler"), (()=>{const route=fixture.routes[2];assert.ok(route,"Actual compiler reload route required");return route.file;})()), fixture.reload);
         put(reloadFile, "1");
         await reloaded;
         assert.equal(await (await fetch(new URL(fixture.routes[2].url, url))).text(), fixture.reload);

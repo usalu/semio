@@ -2,7 +2,7 @@
 import { describe, expect, test } from "bun:test";
 import Ajv from "ajv";
 import toolRunSchema from "../../🧬️schema/🔣️.json";
-import { TOOL_RUN_ACTIONS, TOOL_RUN_LABELS } from "../../🟦️.ts";
+import { TOOL_RUN_ACTIONS, TOOL_RUN_LABELS } from "../../🏷️actions-labels/🟦️.ts";
 import fixture from "./🧫️fixtures/🔣️.json";
 import { manifestSchema as schema } from "@semio-tech/framework/manifest/testing/fixtures";
 import { appDeclaresToolRun } from "../🟦️.ts";

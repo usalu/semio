@@ -7,9 +7,10 @@ import { createMemoryStoragePort } from "@semio-tech/framework";
 import { isIconName } from "@semio-tech/framework/assets";
 import { createWorldProjectionTemplates, decodeWorldProjectionTemplateId, encodeWorldProjectionTemplateId, worldProjectionSpecIconId, worldProjectionSpecLabel, worldProjectionTemplateApplySpec, worldProjectionTemplateSelectionId, type WorldProjectionSpec, type WorldProjectionTemplateDescriptor } from "@semio-tech/infinite-world-r3f";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { resolveFrameworkLayoutSeed, retitleWindowLayoutNode } from "../../🟦️.tsx";
+import { resolveFrameworkLayoutSeed, retitleWindowLayoutNode } from "../../🛣️route-and-chrome/🟦️.tsx";
 import fixture from "../🧫️fixtures/🌐️instance-title/🔣️.json" with { type: "json" };
-import { initialShellState, shellReducer, type ActiveSession } from "../../../🐚️Shell/🟦️.tsx";
+import { type ActiveSession } from "../../../🐚️Shell/📦️program-sessions/🟦️.ts";
+import { initialShellState, shellReducer } from "../../../🐚️Shell/🕹️shell-store/🟦️.ts";
 
 function leaves(node: WindowLayoutNode): Extract<WindowLayoutNode, { kind: "window" }>[] {
   return node.kind === "window" ? [node] : node.children.flatMap(leaves);

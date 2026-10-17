@@ -1,6 +1,0 @@
-import{requireRepositoryCacheStoreV1,withRepositoryCacheStoreConsumerV1}from"../../../💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
-import{requireIssuedResourceControlInvocationV1,requireIssuedResourceControlRefinementV1}from"../../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
-import type{ResourceLeaseControl}from"../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
-import type{RepositoryToolingStoreV1}from"../../../💾️storage/🔒️enforcement/🛠️tools/🟦️.ts";
-/** 🧵️ Retains exact tooling ownership and the actual carried operation phase through accepted settlement. */
-export function withRepositoryToolingOperationV1<T>(workspace:string,store:RepositoryToolingStoreV1,control:ResourceLeaseControl,body:(actualControl:ResourceLeaseControl)=>Promise<T>):Promise<T>{requireRepositoryCacheStoreV1(store,workspace,"tools");requireIssuedResourceControlInvocationV1(control,store.invocation);requireIssuedResourceControlRefinementV1(store.control,control);const work=withRepositoryCacheStoreConsumerV1({storage:store.storage,control:store.control,invocation:store.invocation,phaseControl:control},body);if(work===undefined)throw Error("Actual tooling store consumer required");return work;}

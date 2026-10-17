@@ -15,6 +15,7 @@ use semio_framework_value::ValueRefusalKind;
 use semio_framework_dsl_record::native_encoding::FieldProjectionSource;
 use semio_framework_value::retirement::RetireOwned;
 
+#[doc(hidden)]
 #[cfg(test)]
 #[path="../../../../../🧩️extension/📨️invoke/⚠️failure/🧪️tests/🦀️.rs"]
-mod tests;
+pub mod tests;

@@ -1,5 +1,5 @@
 
-use super::*;
+use crate::examples::deck::*;
 #[semio_framework_async_macros::async_test]
 async fn deck_source_nonempty() {
     assert!(!PRIMARY_TEXT.is_empty());

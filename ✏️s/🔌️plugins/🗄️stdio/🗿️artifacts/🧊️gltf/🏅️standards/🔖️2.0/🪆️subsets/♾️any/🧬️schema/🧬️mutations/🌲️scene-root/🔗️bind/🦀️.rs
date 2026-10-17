@@ -32,11 +32,14 @@ pub fn plan(p: &GltfBindSceneRootNodePayload, base: &GltfSnapshot) -> Result<Glt
     Ok(GltfDiff { scenes: patch(p.scene, GltfSceneDiff { nodes: Some(GltfRefsDelta::insertion(p.position, GltfRef(p.node))), ..Default::default() }), ..Default::default() })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn inverse(p: &GltfBindSceneRootNodePayload, base: &GltfSnapshot) -> Vec<super::GltfMutation> {
+pub fn inverse<Op>(p: &GltfBindSceneRootNodePayload, base: &GltfSnapshot) -> Vec<Op>
+where
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::remove_used_extension::RemoveUsedExtensionMutation>,
+{
     if validate(p, base).is_err() {
         return Vec::new();
     }
-    vec![super::unbind_scene_root_node::mutation(super::unbind_scene_root_node::GltfUnbindSceneRootNodePayload { scene: p.scene, node: p.node })]
+    vec![crate::standards::v2_0::subsets::any::schema::mutations::unbind_scene_root_node::mutation(crate::standards::v2_0::subsets::any::schema::mutations::unbind_scene_root_node::GltfUnbindSceneRootNodePayload { scene: p.scene, node: p.node })]
 }
 
 //#region 🧬️DirectMutation
@@ -49,11 +52,17 @@ pub enum BindSceneRootNodeMutation {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn mutation(payload: GltfBindSceneRootNodePayload) -> super::GltfMutation {
-    super::GltfMutation::BindSceneRootNode(BindSceneRootNodeMutation::Apply(payload))
+pub fn mutation<Op>(payload: GltfBindSceneRootNodePayload) -> Op
+where
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::bind_scene_root_node::BindSceneRootNodeMutation>,
+{
+    Op::from(BindSceneRootNodeMutation::Apply(payload))
 }
 
-impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for BindSceneRootNodeMutation {
+impl<Op> protocol::MutationKind<GltfSnapshot, Op> for BindSceneRootNodeMutation
+where
+    Op: protocol::Mutation<GltfSnapshot, Diff = GltfDiff> + From<BindSceneRootNodeMutation>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "bind", entity: "scene-root-node", kind: "bind-scene-root-node", record: "BoundSceneRootNode" };
 
     fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<GltfDiff> {
@@ -65,7 +74,7 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for BindSceneRoot
         }
     }
 
-    fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<super::GltfMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         match self {
             Self::Apply(payload) => Ok(inverse(payload, base)),
         }
@@ -82,11 +91,7 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for BindSceneRoot
 //#endregion 🧬️DirectMutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/📥️promotes-the-b86f40/🦀️.rs"]
-mod case_promotes_the_b86f40;
+
 //#endregion 🧪️Tests
 
-#[cfg(test)]
-#[path = "📜️contract/🧪️tests/🔬️unit/🦀️.rs"]
-mod contract;
+

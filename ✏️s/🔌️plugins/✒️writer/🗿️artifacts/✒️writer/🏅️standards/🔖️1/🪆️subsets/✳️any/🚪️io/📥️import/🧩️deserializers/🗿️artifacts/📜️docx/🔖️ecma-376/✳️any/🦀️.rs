@@ -41,6 +41,4 @@ impl Deserializer<WriterSnapshot> for DocxIntoWriter {
 }
 //#endregion 🔖️Deserializer
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

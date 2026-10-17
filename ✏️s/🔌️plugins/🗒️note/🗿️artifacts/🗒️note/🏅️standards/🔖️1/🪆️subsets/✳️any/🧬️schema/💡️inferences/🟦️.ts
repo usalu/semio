@@ -29,6 +29,10 @@ type noteNoteInferenceGuardSizeBounds = { readonly minItems?: number; readonly m
 
 export const noteNoteInferenceGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : noteNoteInferenceGuardReject(at, "value is not an object");
+export const noteNoteInferenceGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) noteNoteInferenceGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const noteNoteInferenceGuardArray = (value: unknown, at: string, bounds: noteNoteInferenceGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return noteNoteInferenceGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) noteNoteInferenceGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -59,14 +63,14 @@ export const noteNoteInferenceGuardConstant = <T extends string | number | boole
 //#endregion 🚪️Parsers
 
 export function parseNoteInference(value: unknown, at = "$"): NoteInference {
-  const row = noteNoteInferenceGuardObject(value, at);
+  const row = noteNoteInferenceGuardClosed(noteNoteInferenceGuardObject(value, at), at, ["outline"]);
   return {
     outline: parseNoteOutline(row["outline"], `${at}.outline`),
   };
 }
 
 export function parseNoteOutline(value: unknown, at = "$"): NoteOutline {
-  const row = noteNoteInferenceGuardObject(value, at);
+  const row = noteNoteInferenceGuardClosed(noteNoteInferenceGuardObject(value, at), at, ["sectionOutline", "blockCount", "wordCount"]);
   return {
     sectionOutline: noteNoteInferenceGuardArray(row["sectionOutline"], `${at}.sectionOutline`).map((item, index) => noteNoteInferenceGuardString(item, `${at}.sectionOutline[${index}]`)),
     blockCount: noteNoteInferenceGuardInteger(row["blockCount"], `${at}.blockCount`),

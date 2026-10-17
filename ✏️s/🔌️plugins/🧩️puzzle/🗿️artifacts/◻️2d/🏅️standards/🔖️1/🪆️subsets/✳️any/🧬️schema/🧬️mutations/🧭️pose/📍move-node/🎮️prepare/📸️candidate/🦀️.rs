@@ -1,7 +1,9 @@
 //! 📸️ Produces a native candidate with granted snapshot copying and scalar placement.
 
-use crate::standards::v1::subsets::any::schema::mutations::native_preparation_child::{Puzzle2dCloseAxis,close_child_demand,close_demand_methods};
-use super::{MoveNode, Puzzle2dMoveNodeDisposition, Puzzle2dMoveNodePlan, Puzzle2dMoveNodePreparationCursor, Puzzle2dMoveNodePreparationStep, Puzzle2dSnapshot};
+use crate::standards::v1::subsets::any::schema::preparation::native_preparation_child::Puzzle2dCloseAxis;
+use super::{Puzzle2dMoveNodeDisposition, Puzzle2dMoveNodePlan, Puzzle2dMoveNodePreparationCursor, Puzzle2dMoveNodePreparationStep};
+use crate::standards::v1::subsets::any::schema::mutations::{MoveNode};
+use crate::standards::v1::subsets::any::schema::snapshot::Puzzle2dSnapshot;
 use semio_framework_value::{ValueError, ValueRefusalKind, retirement::controlled::ControlledRetirement, retained_clone::{RetainedClone, RetainedCloneBinding, RetainedCloneCursor, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneRef, RetainedCloneStep}};
 use std::{mem::{ManuallyDrop, size_of}, ops::{Deref, DerefMut}};
 
@@ -87,7 +89,7 @@ impl Puzzle2dMoveNodeCandidateCursor {
     pub fn begin_close(&mut self) { self.closing = true; self.preparation.begin_close(); self.snapshot_clone.begin_close(); }
 
     fn close_demand(&self,axis:Puzzle2dCloseAxis)->Result<usize,ValueError>{
-        if !self.preparation.terminal_is_empty(){return close_child_demand!(axis,self.preparation)}
+        if !self.preparation.terminal_is_empty(){return match axis {Puzzle2dCloseAxis::Copy=>self.preparation.next_close_copy_byte_demand(),Puzzle2dCloseAxis::Capacity(body)=>self.preparation.next_close_capacity_byte_demand(body),Puzzle2dCloseAxis::Release=>self.preparation.next_close_release_byte_demand(),Puzzle2dCloseAxis::Depth=>self.preparation.next_close_depth_demand()}}
         if !self.snapshot_clone.terminal_is_empty(){return axis.retained::<Puzzle2dSnapshot,_>(&self.snapshot_clone)}
         if let Some(owner)=self.candidate_close.as_ref(){return axis.retirement(owner)}
         if self.candidate.is_some(){return axis.inline::<Puzzle2dSnapshot>()}
@@ -95,7 +97,10 @@ impl Puzzle2dMoveNodeCandidateCursor {
         axis.binding(if self.source.is_some(){&self.source}else{&self.mutation})
     }
 
-    close_demand_methods!(next_close_copy_byte_demand,next_close_capacity_byte_demand,next_close_release_byte_demand,next_close_depth_demand);
+    pub fn next_close_copy_byte_demand(&self)->Result<usize,ValueError>{self.close_demand(Puzzle2dCloseAxis::Copy)}
+    pub fn next_close_capacity_byte_demand(&self,body:usize)->Result<usize,ValueError>{self.close_demand(Puzzle2dCloseAxis::Capacity(body))}
+    pub fn next_close_release_byte_demand(&self)->Result<usize,ValueError>{self.close_demand(Puzzle2dCloseAxis::Release)}
+    pub fn next_close_depth_demand(&self)->Result<usize,ValueError>{self.close_demand(Puzzle2dCloseAxis::Depth)}
 
     pub fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         if !self.closing { return Err(refusal("move candidate closure was not started")); }
@@ -125,6 +130,4 @@ impl Drop for Puzzle2dMoveNodeCandidateCursor { fn drop(&mut self) { let empty =
 fn close_progress(step: RetainedCloneStep) -> RetainedCloneStep { RetainedCloneStep::Progress(step.progress()) }
 fn refusal(message: &str) -> ValueError { ValueError::new(ValueRefusalKind::InvariantViolated, message) }
 
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;
+

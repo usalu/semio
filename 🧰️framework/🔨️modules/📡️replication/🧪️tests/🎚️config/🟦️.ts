@@ -26,9 +26,7 @@ export default defineConfig({
   root: testRoot,
   cacheDir: testCacheDirectoryV1(process.env, "framework-replication"),
   resolve: {
-    alias: {
-      "@semio-tech/framework-replication": resolve(root, "📦️packages/🟦️typescript/🟦️.ts"),
-    },
+    alias: [{ find: /^@semio-tech\/framework-replication$/u, replacement: resolve(root, "📦️packages/🟦️typescript/🟦️.ts") }],
   },
   test: {
     root: testRoot,

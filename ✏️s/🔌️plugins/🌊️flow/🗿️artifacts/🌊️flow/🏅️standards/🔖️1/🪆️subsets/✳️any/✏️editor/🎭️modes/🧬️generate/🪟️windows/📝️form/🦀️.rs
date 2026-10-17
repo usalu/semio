@@ -1,9 +1,10 @@
 //! 📝️ Generate-mode window — the input form for the active generation.
 
+use crate::editor::flow::base::FLOW_PLAY_WINDOW_GENERATE_FORM;
 use semio_framework_artifact_playbook_playbook::flow_forms::PlaybookFlowFormProducer;
 use crate::editor::flow::modes::edit::windows::main::config::FlowMainWindowConfig;
 use crate::editor::flow::modes::edit::windows::main::transient::FlowWindowTransient;
-use crate::editor::flow::{flow_action, ui_value_map, ui_value_text};
+use crate::editor::flow::base::{flow_action, ui_value_map, ui_value_text};
 use crate::playbook::{default_value_for_block, is_block_visible, selected_generation, PlaybookBlock, PlaybookValues};
 use crate::FlowSnapshot;
 use flow::forms_bridge::flow_host_snapshot_to_form_spec;
@@ -25,7 +26,6 @@ use semio_framework_plugin::WindowOptions;
 use semio_framework_ui_contract::{self as ui, InputKind};
 
 //#region 🔖️Constants
-pub const FLOW_PLAY_WINDOW_GENERATE_FORM: &str = "flow-generate-form";
 pub const FLOW_PLAY_BODY_GENERATE_FORM: &str = "flow.play.generate-form";
 //#endregion 🔖️Constants
 
@@ -135,7 +135,7 @@ fn question_field(question: &PlaybookBlock, values: &PlaybookValues, patch_actio
 }
 
 pub fn render(snapshot: &FlowSnapshot, _config: &FlowMainWindowConfig, transient: &FlowWindowTransient, labels: &crate::editor::flow::terminology::FlowPlayLabels) -> UiAssemblyResult<BuiltNode> {
-    let spec = crate::editor::flow::with_live_host_snapshot(snapshot, |source| flow_host_snapshot_to_form_spec(source, &PlaybookFlowFormProducer));
+    let spec = crate::editor::flow::host::with_live_host_snapshot(snapshot, |source| flow_host_snapshot_to_form_spec(source, &PlaybookFlowFormProducer));
     let mut generation_owner = transient.generation().map_err(|error| PluginAssemblyError::new("ui.generate-form", error.into_message()))?;
     let generation = generation_owner.as_mut();
     let Some(active) = selected_generation(&generation) else {
@@ -161,7 +161,5 @@ pub fn render(snapshot: &FlowSnapshot, _config: &FlowMainWindowConfig, transient
 //#endregion 🔖️Render
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

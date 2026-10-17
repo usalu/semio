@@ -65,7 +65,10 @@ pub fn plan(p: &GltfReparentNodePayload, base: &GltfSnapshot) -> Result<GltfDiff
     })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn inverse(p: &GltfReparentNodePayload, base: &GltfSnapshot) -> Vec<super::GltfMutation> {
+pub fn inverse<Op>(p: &GltfReparentNodePayload, base: &GltfSnapshot) -> Vec<Op>
+where
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::remove_used_extension::RemoveUsedExtensionMutation>,
+{
     if validate(p, base).is_err() {
         return Vec::new();
     }
@@ -74,18 +77,18 @@ pub fn inverse(p: &GltfReparentNodePayload, base: &GltfSnapshot) -> Vec<super::G
     let parent_changed = parent_children.iter().position(|candidate| *candidate == child) != Some(p.position) || parent_children.iter().filter(|candidate| **candidate == child).count() != 1;
     let mut rows = Vec::new();
     if parent_changed {
-        rows.push(super::unbind_node_child::mutation(super::unbind_node_child::GltfUnbindNodeChildPayload { parent: p.parent, child }));
+        rows.push(crate::standards::v2_0::subsets::any::schema::mutations::unbind_node_child::mutation(crate::standards::v2_0::subsets::any::schema::mutations::unbind_node_child::GltfUnbindNodeChildPayload { parent: p.parent, child }));
     }
     for (parent, node) in base.document.nodes.iter().enumerate() {
         if let Some(position) = node.children.iter().position(|candidate| *candidate == child) {
             if parent != p.parent || parent_changed {
-                rows.push(super::bind_node_child::mutation(super::bind_node_child::GltfBindNodeChildPayload { parent, child, position }));
+                rows.push(crate::standards::v2_0::subsets::any::schema::mutations::bind_node_child::mutation(crate::standards::v2_0::subsets::any::schema::mutations::bind_node_child::GltfBindNodeChildPayload { parent, child, position }));
             }
         }
     }
     for (scene, entry) in base.document.scenes.iter().enumerate() {
         if let Some(position) = entry.nodes.iter().position(|candidate| *candidate == child) {
-            rows.push(super::bind_scene_root_node::mutation(super::bind_scene_root_node::GltfBindSceneRootNodePayload { scene, node: child, position }));
+            rows.push(crate::standards::v2_0::subsets::any::schema::mutations::bind_scene_root_node::mutation(crate::standards::v2_0::subsets::any::schema::mutations::bind_scene_root_node::GltfBindSceneRootNodePayload { scene, node: child, position }));
         }
     }
     rows.reverse();
@@ -102,11 +105,17 @@ pub enum MoveNodeParentMutation {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn mutation(payload: GltfReparentNodePayload) -> super::GltfMutation {
-    super::GltfMutation::MoveNodeParent(MoveNodeParentMutation::Apply(payload))
+pub fn mutation<Op>(payload: GltfReparentNodePayload) -> Op
+where
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::move_node_parent::MoveNodeParentMutation>,
+{
+    Op::from(MoveNodeParentMutation::Apply(payload))
 }
 
-impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for MoveNodeParentMutation {
+impl<Op> protocol::MutationKind<GltfSnapshot, Op> for MoveNodeParentMutation
+where
+    Op: protocol::Mutation<GltfSnapshot, Diff = GltfDiff> + From<MoveNodeParentMutation>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "move", entity: "node-parent", kind: "move-node-parent", record: "MovedNodeParent" };
 
     fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<GltfDiff> {
@@ -118,7 +127,7 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for MoveNodeParen
         }
     }
 
-    fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<super::GltfMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         match self {
             Self::Apply(payload) => Ok(inverse(payload, base)),
         }
@@ -135,7 +144,5 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for MoveNodeParen
 //#endregion 🧬️DirectMutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🌿️adopts-the-3c6965/🦀️.rs"]
-mod case_adopts_the_3c6965;
+
 //#endregion 🧪️Tests

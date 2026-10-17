@@ -1,7 +1,6 @@
 //! 📏️ `scale-object` — sets the object's `transform.scale`, keeping translation/rotation.
 
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3;
-use crate::schema::mutations::SemioObjectMutation;
 use crate::schema::snapshot::SemioObjectSnapshot;
 
 //#region 🔖️Payload
@@ -13,13 +12,16 @@ pub struct ScaleObject {
     pub scale: SemioPoint3,
 }
 
-impl protocol::MutationKind<SemioObjectSnapshot, SemioObjectMutation> for ScaleObject {
+impl<Op> protocol::MutationKind<SemioObjectSnapshot, Op> for ScaleObject
+where
+    Op: protocol::Mutation<SemioObjectSnapshot, Diff = crate::schema::diff::SemioObjectDiff> + From<ScaleObject>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "scale", entity: "object", kind: "scale-object", record: "ScaledObject" };
 
-    fn diff(&self, base: &SemioObjectSnapshot) -> protocol::MutationOutcome<<SemioObjectMutation as protocol::Mutation<SemioObjectSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioObjectSnapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<SemioObjectSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &SemioObjectSnapshot) -> Result<Vec<SemioObjectMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &SemioObjectSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

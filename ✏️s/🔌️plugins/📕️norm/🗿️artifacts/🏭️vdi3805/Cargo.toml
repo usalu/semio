@@ -7,7 +7,9 @@ members = [
   "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/📦️packages/🦀️rust",
   "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/❌️failing/📦️packages/🦀️rust",
   "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📦️packages/🦀️rust",
+  "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🪜️failing-2/📦️packages/🦀️rust",
   "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📦️packages/🦀️rust",
+  "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/📦️packages/🦀️rust",
   "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/⚖️checks/📦️packages/🦀️rust",
   "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦️packages/🦀️rust",
   "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust",
@@ -134,6 +136,9 @@ path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📦️p
 
 [workspace.dependencies.semio-s-artifact-norm-vdi3805-examples-failing]
 path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/❌️failing/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-vdi3805-examples-failing-2]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🪜️failing-2/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-s-artifact-norm-vdi3805-examples]
 path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📦️packages/🦀️rust"

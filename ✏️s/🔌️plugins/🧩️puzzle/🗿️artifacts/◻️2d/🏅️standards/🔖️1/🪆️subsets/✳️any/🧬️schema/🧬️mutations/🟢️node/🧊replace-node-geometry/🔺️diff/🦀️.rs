@@ -2,7 +2,7 @@
 use crate::standards::v1::subsets::any::schema::diff::{Puzzle2dDiff, Puzzle2dNodePatch, Puzzle2dNodesDelta};
 use protocol::list_delta::RowPatch;
 use crate::Puzzle2dSnapshot;
-use {crate::standards::v1::subsets::any::schema::puzzle2d_positive, crate::standards::v1::subsets::any::schema::puzzle2d_shape};
+use {crate::standards::v1::subsets::any::schema::records::puzzle2d_positive, crate::standards::v1::subsets::any::schema::records::puzzle2d_shape};
 
 
 //#region 🔖️Diff

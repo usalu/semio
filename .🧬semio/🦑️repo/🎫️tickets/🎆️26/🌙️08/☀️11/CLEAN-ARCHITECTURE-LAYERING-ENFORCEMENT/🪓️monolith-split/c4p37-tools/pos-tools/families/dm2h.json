@@ -1,0 +1,16 @@
+{
+ "name": "dm2h",
+ "crates": [
+  "semio-framework-os-history",
+  "semio-framework-os-history-record-decode",
+  "semio-framework-os-history-testing-retirement"
+ ],
+ "base": {
+  "rev": "1bae6115bc5",
+  "crates": [
+   "semio-framework-os-history",
+   "semio-framework-os-history-record-decode"
+  ]
+ },
+ "note": "DM2 history retirement helper"
+}

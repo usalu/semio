@@ -20,22 +20,17 @@ use protocol::Mutation;
 
 
 //#region 🔖️Mutation
-#[path = "📻insert-channel/🦀️.rs"]
-pub mod insert_channel;
-#[path = "🔑insert-keyframe/🦀️.rs"]
-pub mod insert_keyframe;
-#[path = "🎬insert-timeline/🦀️.rs"]
-pub mod insert_timeline;
-#[path = "🗑️remove-channel/🦀️.rs"]
-pub mod remove_channel;
-#[path = "🔓remove-keyframe/🦀️.rs"]
-pub mod remove_keyframe;
-#[path = "🧹remove-timeline/🦀️.rs"]
-pub mod remove_timeline;
-#[path = "📈set-channel-interpolation/🦀️.rs"]
-pub mod set_channel_interpolation;
-#[path = "🎯set-channel-target/🦀️.rs"]
-pub mod set_channel_target;
+pub use semio_s_artifact_stdio_semio_animation_examples::schema::mutations::support;
+#[allow(unused_imports)]
+use support::{channel_at, diff_channel_collection, diff_channel_field, diff_keyframe_collection, diff_keyframe_field, diff_timeline_field, keyframe_at, timeline_at};
+pub use semio_s_artifact_stdio_semio_animation_schema_3::schema::mutations::insert_channel;
+pub use semio_s_artifact_stdio_semio_animation_schema_3::schema::mutations::insert_keyframe;
+pub use semio_s_artifact_stdio_semio_animation_schema_3::schema::mutations::insert_timeline;
+pub use semio_s_artifact_stdio_semio_animation_schema_3::schema::mutations::remove_channel;
+pub use semio_s_artifact_stdio_semio_animation_schema_3::schema::mutations::remove_keyframe;
+pub use semio_s_artifact_stdio_semio_animation_schema_3::schema::mutations::remove_timeline;
+pub use semio_s_artifact_stdio_semio_animation_schema_3::schema::mutations::set_channel_interpolation;
+pub use semio_s_artifact_stdio_semio_animation_schema_3::schema::mutations::set_channel_target;
 #[path = "🕐set-keyframe-time/🦀️.rs"]
 pub mod set_keyframe_time;
 #[path = "🔢set-keyframe-value/🦀️.rs"]
@@ -76,45 +71,7 @@ pub const KINDS: &[&str] =
     &["insert-timeline", "remove-timeline", "set-timeline-name", "insert-channel", "remove-channel", "set-channel-target", "set-channel-interpolation", "insert-keyframe", "remove-keyframe", "set-keyframe-time", "set-keyframe-value"];
 //#endregion 🔖️Mutation
 
-//#region 🔖️DiffBuilders
-/// 🧱️ Wraps a per-timeline `AnimTimelineDiff` into a full `SemioAnimationDiff` — the innermost
-/// layer of the nested-diff tree every non-collection-root mutation ultimately builds on.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn diff_timeline_field(index: usize, diff: AnimTimelineDiff) -> SemioAnimationDiff {
-    SemioAnimationDiff { timelines: Some(IndexedTripleDiff { modified: vec![IndexModified { index, diff }], ..Default::default() }) }
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn diff_channel_collection(timeline_index: usize, channels: IndexedTripleDiff<AnimChannelDiff, AnimChannel>) -> SemioAnimationDiff {
-    diff_timeline_field(timeline_index, AnimTimelineDiff { name: None, channels: Some(channels) })
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn diff_channel_field(timeline_index: usize, index: usize, diff: AnimChannelDiff) -> SemioAnimationDiff {
-    diff_channel_collection(timeline_index, IndexedTripleDiff { modified: vec![IndexModified { index, diff }], ..Default::default() })
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn diff_keyframe_collection(timeline_index: usize, channel_index: usize, keyframes: IndexedTripleDiff<AnimKeyframeDiff, AnimKeyframe>) -> SemioAnimationDiff {
-    diff_channel_field(timeline_index, channel_index, AnimChannelDiff { target: None, interpolation: None, keyframes: Some(keyframes) })
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn diff_keyframe_field(timeline_index: usize, channel_index: usize, index: usize, diff: AnimKeyframeDiff) -> SemioAnimationDiff {
-    diff_keyframe_collection(timeline_index, channel_index, IndexedTripleDiff { modified: vec![IndexModified { index, diff }], ..Default::default() })
-}
-//#endregion 🔖️DiffBuilders
 
-//#region 🔖️BaseAccessors
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn timeline_at(base: &SemioAnimationSnapshot, i: usize) -> Option<&AnimTimeline> {
-    base.timelines.get(i)
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn channel_at(base: &SemioAnimationSnapshot, ti: usize, ci: usize) -> Option<&AnimChannel> {
-    base.timelines.get(ti).and_then(|t| t.channels.get(ci))
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn keyframe_at(base: &SemioAnimationSnapshot, ti: usize, ci: usize, ki: usize) -> Option<&AnimKeyframe> {
-    base.timelines.get(ti).and_then(|t| t.channels.get(ci)).and_then(|c| c.keyframes.get(ki))
-}
-//#endregion 🔖️BaseAccessors
 
 /// 🧮️ Pure diff face of [`Mutation::diff`], named only in this subset's own reachable types (`protocol` is a private
 /// `extern crate` alias, so an owner-root test adapter cannot bring the `Mutation` trait into scope).
@@ -144,30 +101,14 @@ pub fn inverse_semio_animation_mutation(mutation: &SemioAnimationMutation, base:
 
 //#endregion 🔖️MutationTrait
 
-//#region SnapshotLit
 
-
-//#endregion SnapshotLit
-
-//#region OpCodecs
-
-
-
-
-
-
-
-
-
-
-//#endregion OpCodecs
 
 /// 🧱️ Module-scope (not `mod tests`-local) fixture + demo mutation cases — so the `🎹️composer`
 /// conformance-law tests can reuse them, same promotion pattern every prior semio wave's report
 /// documents (a private item of a child `mod tests` isn't visible to a sibling module).
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn fixture() -> SemioAnimationSnapshot {
+pub fn fixture() -> SemioAnimationSnapshot {
     SemioAnimationSnapshot {
         timelines: vec![AnimTimeline {
             name: Some("walk".into()),
@@ -181,7 +122,7 @@ fn fixture() -> SemioAnimationSnapshot {
     }
 }
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_mutation_cases() -> Vec<SemioAnimationMutation> {
     let base = fixture();

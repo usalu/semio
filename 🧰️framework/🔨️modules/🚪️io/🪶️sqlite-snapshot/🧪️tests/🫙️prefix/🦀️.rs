@@ -20,7 +20,6 @@ fn sqlite_original_recipient_denies_missing_occupied_nested_before_progress_or_h
   let prior=control.allocation_bytes();let events_before=events.get();let(result,requested,released)=observe_backing(||control.with_retirement_owner(SqliteSnapshotPhase::ReconstructSnapshot,64,|_|(Ok::<_,ValueError>(()),None)));assert_eq!(result.unwrap_err().kind,ValueRefusalKind::OwnershipLimit);assert_eq!((control.allocation_bytes(),events.get(),requested,released),(prior,events_before,0,0));assert_eq!(control.install_native_retirement_recipient(&mut other).unwrap_err().kind,ValueRefusalKind::OwnershipLimit);(Ok::<_,ValueError>(()),None)
  }).unwrap();assert_eq!((&**control.native_retirement.as_ref().unwrap()) as *const _ as usize,recipient_pointer);
  let owner=ControlledRetirement::new(Vec::<u8>::new()).unwrap();control.with_retirement_owner(SqliteSnapshotPhase::ReconstructSnapshot,size_of_val(&owner),|_|(Ok::<_,ValueError>(()),Some(Box::new(owner)))).unwrap();let prior=control.allocation_bytes();let event=events.get();let(result,requested,released)=observe_backing(||control.with_retirement_owner(SqliteSnapshotPhase::ReconstructSnapshot,64,|_|(Ok::<_,ValueError>(()),None)));assert_eq!(result.unwrap_err().kind,ValueRefusalKind::OwnershipLimit);assert_eq!((control.allocation_bytes(),events.get(),requested,released),(prior,event,0,0));drop(control);drain(&mut recipient);assert!(other.terminal_is_empty());
- println!("[DEBUG] Original recipient denies missing, occupied, nested scopes and nested replacement before callback, ledger or heap change");
 }
 
 #[test]
@@ -33,7 +32,6 @@ fn sqlite_original_recipient_returns_cancelled_prefix_and_restores_same_referenc
   }));assert_eq!(released,0);if stop==0{assert_eq!(requested,0);assert_eq!(control.allocation_bytes(),size_of::<ControlledRetirement<Vec<u8>>>());}else{assert_eq!(requested,control.allocation_bytes());}assert_eq!((&**control.native_retirement.as_ref().unwrap()) as *const _ as usize,original_ref);assert_eq!(source.as_ptr(),pointer);if stop==usize::MAX{assert_eq!(result.unwrap(),source.len());}else{assert_eq!(result.unwrap_err().kind,ValueRefusalKind::Canceled);}drop(control);drain(&mut recipient);
   let mut callback=|_|true;let mut control=SqliteSnapshotControl::new(&mut callback,SqliteDatabaseLimits{max_allocation_bytes:0,..SqliteDatabaseLimits::default()});control.install_native_retirement_recipient(&mut recipient).unwrap();let(result,requested,released)=observe_backing(||control.with_retirement_owner(SqliteSnapshotPhase::ReconstructSnapshot,1,|_|(Ok::<_,ValueError>(()),None)));assert_eq!(result.unwrap_err().kind,ValueRefusalKind::OwnershipLimit);assert_eq!((control.allocation_bytes(),requested,released),(0,0,0));assert_eq!((&**control.native_retirement.as_ref().unwrap()) as *const _ as usize,original_ref);drop(control);assert!(recipient.terminal_is_empty());
  }
- println!("[DEBUG] Original typed prefix survives five cancellations and completion; every physical release is funded and every Result restores the same recipient");
 }
 
 #[derive(Debug,semio_framework_value::RetireOwned)]
@@ -43,7 +41,6 @@ struct Fields{text:String,blob:Vec<u8>}
 fn sqlite_original_recipient_nested_field_preserves_original_typed_child(){
  let mut bytes=Vec::<u8>::with_capacity(65537);bytes.resize(65537,7);let source=bytes.as_ptr();let capacity=bytes.capacity();let mut inner=NativeDecodeRetirementRecipient::new();inner.with_reserved_owner(||{let owner=Box::new(ControlledRetirement::new(bytes).unwrap());assert_eq!(owner.original().unwrap().as_ptr(),source);(Ok::<_,ValueError>(()),Some(owner as Box<dyn ErasedSnapshotRetirement>))}).unwrap();let original=capacity+size_of::<ControlledRetirement<Vec<u8>>>();let mut outer=NativeDecodeRetirementRecipient::new();let mut callback=|_|true;let mut control=SqliteSnapshotControl::new(&mut callback,SqliteDatabaseLimits::default());control.install_native_retirement_recipient(&mut outer).unwrap();
  let(result,born,released)=observe_backing(||control.with_retirement_owner(SqliteSnapshotPhase::ReconstructSnapshot,size_of::<ControlledRetirement<NativeDecodeRetirementRecipient>>(),|_|{let owner=Box::new(ControlledRetirement::new(inner).unwrap_or_else(|(error,_)|panic!("original recipient field refused: {error}")));assert!(owner.original().unwrap().has_owner());(Ok::<_,ValueError>(()),Some(owner as Box<dyn ErasedSnapshotRetirement>))}));result.unwrap();assert_eq!(released,0);assert_eq!(born,control.allocation_bytes());drop(control);let(requested,released)=drain(&mut outer);assert_eq!(original+born+requested,released);assert!(outer.terminal_is_empty());
- println!("[DEBUG] Actual nested recipient field preserves original typed Vec pointer/backing and delegates all5 funded currencies: original={original} wrapper={born} retirement={requested} physical={released}");
 }
 
 #[test]
@@ -56,7 +53,6 @@ fn sqlite_original_recipient_field_copies_retain_completed_and_partial_originals
    let mut owner=Box::new(ControlledRetirement::new(Fields{text:String::new(),blob:Vec::new()}).unwrap());let fields=owner.original_mut().unwrap();let result=(||->std::result::Result<(),ValueError>{reconstruct_text_into(&mut fields.text,control,&text)?;reconstruct_blob_into(&mut fields.blob,control,&blob)?;Ok(())})();text_capacity.set(fields.text.capacity());blob_capacity.set(fields.blob.capacity());if result.is_ok(){assert_eq!(fields.text,text);assert_eq!(fields.blob,blob);}else{assert!(!fields.text.is_empty());if mode==2{assert_eq!(fields.text,text);assert!(!fields.blob.is_empty());}}assert_ne!(fields.text.as_ptr(),text_pointer);if fields.blob.capacity()!=0{assert_ne!(fields.blob.as_ptr(),blob_pointer);}(result,Some(owner as Box<dyn ErasedSnapshotRetirement>))
   }));assert_eq!(released,0);assert_eq!(requested,control.allocation_bytes());assert_eq!(requested,size_of::<ControlledRetirement<Fields>>()+text_capacity.get()+blob_capacity.get());assert_eq!((text.as_ptr(),blob.as_ptr()),(text_pointer,blob_pointer));assert_eq!(reached.get(),mode!=0);if mode==0{result.unwrap();}else{assert_eq!(result.unwrap_err().kind,ValueRefusalKind::Canceled);}drop(control);drain(&mut recipient);
  }
- println!("[DEBUG] Original field copies preserve completed UTF8 and interior64KiB text/blob prefixes, exact backing ledger and caller-funded physical retirement");
 }
 
 #[derive(Debug,semio_framework_value::RetireOwned)]
@@ -71,7 +67,6 @@ fn sqlite_original_recipient_schema_validation_preserves_semantics_and_cancelled
  }
  let literal="Grüße 🧬 '".repeat(8193).replace('\'',"''");let sql=format!("CREATE TABLE original_schema (id INTEGER PRIMARY KEY, text TEXT DEFAULT '{literal}');");let mut database=SqliteDatabase::from_schema(&sql).unwrap();database.tables.push(SqliteDatabase::from_schema("CREATE TABLE sibling(id INTEGER PRIMARY KEY);").unwrap().tables.remove(0));let source=database.tables[0].sql.as_ptr();
  for stop in [1,7,13,31,71,usize::MAX]{let events=Cell::new(0);let mut callback=|_|{let current=events.get();events.set(current+1);current!=stop};let mut control=SqliteSnapshotControl::new(&mut callback,SqliteDatabaseLimits::default());let mut recipient=NativeDecodeRetirementRecipient::new();control.install_native_retirement_recipient(&mut recipient).unwrap();let(result,requested,released)=observe_backing(||control.with_retirement_owner(SqliteSnapshotPhase::ReconstructSnapshot,size_of::<ControlledRetirement<SchemaValidationStorage>>(),|control|{let mut owner=Box::new(ControlledRetirement::new(SchemaValidationStorage::empty()).unwrap());let result=(||{validate_component_into(owner.original_mut().unwrap(),&database,&sql,SqliteSnapshotPhase::ReconstructSnapshot,control)?;validate_table_into(owner.original_mut().unwrap(),&database.tables[0],&sql,SqliteSnapshotPhase::ReconstructSnapshot,control)})();(result,Some(owner as Box<dyn ErasedSnapshotRetirement>))}));assert_eq!(released,0);assert_eq!(requested,control.allocation_bytes());assert_eq!(database.tables[0].sql.as_ptr(),source);if stop==usize::MAX{result.unwrap();}else{assert_eq!(result.unwrap_err().kind,ValueRefusalKind::Canceled);}drop(control);drain(&mut recipient);}
- println!("[DEBUG] Shared schema corpus preserves identifier quotes and literal spelling; five lexical/structural cancellation boundaries and composed-table validation retain every original scratch allocation until funded close");
 }
 
 #[test]
@@ -84,7 +79,6 @@ fn sqlite_original_recipient_scalar_indexes_preserve_original_cancellation_works
    let mut owner=Box::new(ControlledRetirement::new(IndexPrefix{rows:RowIndexStorage::empty(),order:Vec::new(),unique:Vec::new(),parents:Vec::new()}).unwrap());let prefix=owner.original_mut().unwrap();let result=(||->std::result::Result<(),ValueError>{stage.set(0);let rows=RowIndex::new(&mut prefix.rows,&database,"neutral_row",5,&[],control,"invalid neutral row")?;stage.set(1);rows.grouped_by_into(&mut prefix.order,2,control,"invalid neutral ordinal",|row|Ok((0,Some(row.integer(1)?))))?;stage.set(2);rows.unique_text(&mut prefix.unique,rows.indices(),3,control,"duplicate neutral literal")?;stage.set(3);rows.parent_positions_into(&mut prefix.parents,4,control,"dangling neutral parent")?;RowIndex::cycles(&mut prefix.parents,control,"cyclic neutral parent")?;let mut ids=[0;4];for(index,position)in prefix.order.iter().enumerate(){ids[index]=rows.row(*position)?.rowid;}for(index,id)in ids.iter().enumerate(){assert_eq!(*id,fixture["groupedIds"][index].as_i64().unwrap());}Ok(())})();(result,Some(owner as Box<dyn ErasedSnapshotRetirement>))
   }));assert_eq!(released,0);assert_eq!(requested,control.allocation_bytes());assert_eq!(database.tables[0].rows.as_ptr(),source);assert_eq!(reached.get(),cancelled<4);if cancelled<4{assert_eq!(result.unwrap_err().kind,ValueRefusalKind::Canceled);}else{result.unwrap();}drop(control);drain(&mut recipient);
  }
- println!("[DEBUG] Original row index, grouped positions, uniqueness and parent buffers survive four distinct cancellations and completed SQLite-equivalent ordering until actual funded retirement");
 }
 
 #[test]
@@ -100,7 +94,6 @@ fn sqlite_original_recipient_database_keeps_all_original_cells_until_funded_clos
   (Ok::<_,ValueError>(()),Some(owner as Box<dyn ErasedSnapshotRetirement>))
  }));result.unwrap();assert_eq!(released,0);assert_eq!(born,control.allocation_bytes());drop(control);
  let(requested,released)=drain(&mut recipient);assert_eq!(original+born+requested,released);let(result,terminal_requested,terminal_released)=observe_backing(||recipient.close_step(grant()));assert!(matches!(result.unwrap(),RetainedCloneStep::Complete(_)));assert_eq!((terminal_requested,terminal_released),(0,0));
- println!("[DEBUG] Complete original SQLite database fields preserve source identities and all independent cells: original={original} wrapper={born} retirement={requested} physical={released}, terminal zero");
 }
 
 #[test]
@@ -126,7 +119,6 @@ fn sqlite_original_recipient_child_loans_borrow_original_ledgers_callbacks_and_c
    (result,Some(owner as Box<dyn ErasedSnapshotRetirement>))
   }));assert_eq!(released,0);assert_eq!(requested,control.allocation_bytes());assert_eq!((text.as_ptr(),blob.as_ptr()),(text_pointer,blob_pointer));assert_eq!(reached.get(),mode!=0);if mode==0{result.unwrap();}else{assert_eq!(result.unwrap_err().kind,ValueRefusalKind::Canceled);}drop(control);drain(&mut parent);
  }
- println!("[DEBUG] Actual nested conversion producers borrow identical ledger/callback addresses, preserve complete/partial original fields across interior cancellation, reject occupied loans without progress or heap, and close under all five caller currencies");
 }
 
 #[test]
@@ -168,7 +160,6 @@ fn sqlite_original_projection_retains_schema_census_rows_and_interior_fields(){
   let(result,terminal_requested,terminal_released)=observe_backing(||recipient.close_step(grant()));assert!(matches!(result.unwrap(),RetainedCloneStep::Complete(_)));assert_eq!((terminal_requested,terminal_released),(0,0));
  }
  assert!(retained>=6);assert!(interior_seen);
- println!("[DEBUG] Original projected schema, per-table identities, row/cell prefixes and interior UTF8 preserve physical backing through all five denied close currencies");
 }
 
 #[test]
@@ -177,5 +168,4 @@ fn sqlite_original_projection_refuses_missing_recipient_before_original_birth(){
  let entered=Cell::new(false);let mut callback=|_|true;let mut control=SqliteSnapshotControl::new(&mut callback,SqliteDatabaseLimits::default());
  let(result,requested,released)=observe_backing(||project_owned(&mut control,||{entered.set(true);ProjectionStorage::empty()},|_,_|Ok(()),|_|()));
  assert_eq!(result.unwrap_err().kind,ValueRefusalKind::OwnershipLimit);assert!(!entered.get());assert_eq!((requested,released,control.allocation_bytes()),(0,0,0));
- println!("[DEBUG] Original projection refuses a missing recipient before any schema, census, row or field backing");
 }

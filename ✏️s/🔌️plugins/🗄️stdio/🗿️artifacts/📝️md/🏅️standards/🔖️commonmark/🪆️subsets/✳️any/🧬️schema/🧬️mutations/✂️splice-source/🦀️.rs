@@ -22,7 +22,7 @@ pub struct SourceSplice {
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SpliceSource {
-    pub(crate) splices: Vec<SourceSplice>,
+    pub splices: Vec<SourceSplice>,
 }
 //#endregion 🔖️Payload
 

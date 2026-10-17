@@ -29,7 +29,6 @@ where
     let result = store.dispatch(command, &mut identity).await;
     drop(identity.pause().expect("original cumulative fixture identity receipt"));
     drop(observer);
-    eprintln!("[DEBUG] fixture caller identity owned={observed} ceiling={FIXTURE_IDENTITY_BYTE_CEILING}");
     result
 }
 
@@ -43,7 +42,7 @@ where P:Clone+ToValue+FromValue+ArtifactPack + semio_framework_os_store_text_io:
     let mut identity:semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(FIXTURE_IDENTITY_BYTE_CEILING,&mut observer).expect("original fixture finalization identity authority");
     let result=store.commit_finished_replay(finished,finalization,&mut identity).await;
     drop(identity.pause().expect("original fixture finalization cumulative identity receipt"));drop(observer);
-    eprintln!("[DEBUG] fixture finalize caller identity owned={observed} ceiling={FIXTURE_IDENTITY_BYTE_CEILING}");result
+    result
 }
 
 fn fixture_retirement_policy(maximum_items:usize,maximum_release_bytes:usize)->RetainedCloneGrant { RetainedCloneGrant { maximum_items:maximum_items.min(1),maximum_release_bytes,..physical_test_close_grant() } }
@@ -648,7 +647,6 @@ async fn a_member_document_with_supersessions_hydrates_to_its_superseded_state()
             PersistedDocumentHydrationStep::Rejected(diagnostic) => panic!("hydration refused a superseded history: {diagnostic:?}"),
         }
     }
-    eprintln!("[DEBUG] superseded history hydration retains original caller receipt {hydration_receipts:?}");
     let member = ArtifactStore(member.unwrap_or_else(|| panic!("hydration converges; it still retains {:?}", hydration.remaining_owner())), Some(close_test_store::<DemoSnapshot, DemoMutation>));
     assert_eq!(member.snapshot_ref().n, Some(16), "the hydrated member folds the effective forwards");
     assert_eq!(member.supersessions(), reference.supersessions());
@@ -709,7 +707,6 @@ async fn retained_hydration_preserves_the_original_opened_actor_across_stored_au
                     _ => panic!("original member actor hydration returned another output"),
                 }
             }
-            eprintln!("[DEBUG] opened-actor hydration retains original caller receipt {hydration_receipts:?}");
             assert!(hydration.terminal_is_empty(), "hydration still retains {:?}", hydration.remaining_owner());
         }
         let hydrated = ArtifactStore(hydrated.expect("original actor hydration converges"), Some(close_test_store::<DemoSnapshot, DemoMutation>));
@@ -718,7 +715,6 @@ async fn retained_hydration_preserves_the_original_opened_actor_across_stored_au
         assert_eq!(semio_framework_pack_json::to_json_string(hydrated.local_actor_id()), serde_json::to_string(&fixture["openedActor"]).unwrap());
         assert_eq!(hydrated.envelope().vcs.edits.last().unwrap().actor.as_deref(), Some(author));
     }
-    println!("[DEBUG] Original persisted/config hydrators preserve opened actor={opened} independently of stored author={author}");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -748,7 +744,6 @@ async fn cancelled_hydration_retires_the_same_original_opened_actor_owner() {
     assert_eq!(receipts[1] - receipts[0], fixture["retiredActorByteDifference"].as_u64().unwrap() as usize);
     let oracle: Vec<String> = serde_json::from_value(fixture["retiredActors"].clone()).unwrap();
     assert_eq!(oracle[1].len() - oracle[0].len(), receipts[1] - receipts[0]);
-    println!("[DEBUG] Original cancelled hydration actor byte receipts={receipts:?}, exact actor-only difference={}", receipts[1] - receipts[0]);
 }
 
 /// 🧯️ A replacement input breaking the supersede law — garbage bytes and a foreign schema from a remote replica — folds
@@ -1390,9 +1385,7 @@ async fn bounded_history_read_cursors_obey_the_neutral_law() {
             semio_framework_value::retained_clone::RetainedCloneStep::Progress(progress) => { physical_releases.insert(progress.released_bytes); assert!(progress.fits(grant)); }
         }
     }
-    println!("[DEBUG] History reader exact physical census demands={physical_demands:?} releases={physical_releases:?} headBlocked={blocked_on_head} turns={turns}");
     assert!(physical_page_seen, "actual retained inverse4096-byte allocation is observed before release");
-    println!("[DEBUG] History read physical inverse page4096 released under exact whole-backing authority with exact captured head preserved");
     assert!(turns > 1 && law["expected"]["cancelRetirementCompletes"].as_bool().unwrap());
     assert!(!blocked_on_head, "retiring this read cursor releases its own alias without consuming the independently captured head");
     let held_head = held_head.take().expect("the external readable head remains owned after cursor retirement");
@@ -1454,5 +1447,4 @@ async fn bounded_history_read_cursors_obey_the_neutral_law() {
     assert!(store.mutation_position(&tail).is_err(), "the exact authority refuses an undone identity");
     fixture_author(&mut store, ArtifactCommand::Redo).await.unwrap();
     assert_eq!(store.mutation_position(&tail).unwrap(), (2, 0));
-    eprintln!("[DEBUG] Bounded history planning, prefix folding, replay and cancelled ownership retirement match the neutral law without publishing");
 }

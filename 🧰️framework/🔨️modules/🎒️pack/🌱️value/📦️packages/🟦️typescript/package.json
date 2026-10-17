@@ -1,0 +1,12 @@
+{
+  "name": "@semio-tech/framework-pack-record-ts",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./scalar-witness/testing": "./🔎️scalar-witness/🧪️testing/🟦️.ts",
+    "./script": "./📜️script.ts",
+    "./testing/fixtures/intrinsic-media": "./🧪️testing/🧫️fixtures/🎞️intrinsic-media/🟦️.ts",
+    "./testing/fixtures/wire-materialization": "./🧪️testing/🧫️fixtures/🧮️wire-materialization/🟦️.ts",
+    "./testing/preflight/pack": "./🧪️testing/🫳️preflight/🔮️pack/🟦️.ts"
+  }
+}

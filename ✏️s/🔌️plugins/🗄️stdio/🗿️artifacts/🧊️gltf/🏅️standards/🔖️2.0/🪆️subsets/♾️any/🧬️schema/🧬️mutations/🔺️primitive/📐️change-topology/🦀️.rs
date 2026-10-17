@@ -31,7 +31,10 @@ pub fn plan(p: &GltfChangePrimitiveTopologyModePayload, base: &GltfSnapshot) -> 
     Ok(GltfDiff { meshes: primitive_patch(p.mesh, p.primitive, GltfPrimitiveDiff { mode: (value != base.document.meshes[p.mesh].primitives[p.primitive].mode).then(|| value), ..Default::default() }), ..Default::default() })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn inverse(p: &GltfChangePrimitiveTopologyModePayload, base: &GltfSnapshot) -> Vec<super::GltfMutation> {
+pub fn inverse<Op>(p: &GltfChangePrimitiveTopologyModePayload, base: &GltfSnapshot) -> Vec<Op>
+where
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::remove_used_extension::RemoveUsedExtensionMutation>,
+{
     if validate(p, base).is_err() {
         return Vec::new();
     }
@@ -51,11 +54,17 @@ pub enum ChangePrimitiveTopologyModeMutation {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn mutation(payload: GltfChangePrimitiveTopologyModePayload) -> super::GltfMutation {
-    super::GltfMutation::ChangePrimitiveTopologyMode(ChangePrimitiveTopologyModeMutation::Apply(payload))
+pub fn mutation<Op>(payload: GltfChangePrimitiveTopologyModePayload) -> Op
+where
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::change_primitive_topology_mode::ChangePrimitiveTopologyModeMutation>,
+{
+    Op::from(ChangePrimitiveTopologyModeMutation::Apply(payload))
 }
 
-impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ChangePrimitiveTopologyModeMutation {
+impl<Op> protocol::MutationKind<GltfSnapshot, Op> for ChangePrimitiveTopologyModeMutation
+where
+    Op: protocol::Mutation<GltfSnapshot, Diff = GltfDiff> + From<ChangePrimitiveTopologyModeMutation>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "primitive-topology-mode", kind: "change-primitive-topology-mode", record: "ChangedPrimitiveTopologyMode" };
 
     fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<GltfDiff> {
@@ -67,7 +76,7 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ChangePrimiti
         }
     }
 
-    fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<super::GltfMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         match self {
             Self::Apply(payload) => Ok(inverse(payload, base)),
         }
@@ -84,7 +93,5 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ChangePrimiti
 //#endregion 🧬️DirectMutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/📐️triangle-81bc44/🦀️.rs"]
-mod case_triangle_81bc44;
+
 //#endregion 🧪️Tests

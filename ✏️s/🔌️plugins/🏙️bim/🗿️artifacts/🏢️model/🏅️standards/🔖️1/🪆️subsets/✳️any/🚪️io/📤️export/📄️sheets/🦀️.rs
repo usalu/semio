@@ -85,7 +85,7 @@ impl Serializer<ModelSnapshot> for ModelIntoSheetsPdf {
 }
 //#endregion 🔖️Serializer
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 #[path = "🧪️tests/🧰️testkit/🦀️.rs"]
 pub mod testkit;
 

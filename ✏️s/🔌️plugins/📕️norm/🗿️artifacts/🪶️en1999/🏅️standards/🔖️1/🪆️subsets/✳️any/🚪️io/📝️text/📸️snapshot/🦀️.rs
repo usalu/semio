@@ -38,7 +38,7 @@ pub type En1999SnapshotText = String;
 
 #[allow(unused_imports)]
 mod snapshot_codec {
-use crate::text::snapshot::*;
+use crate::snapshot::*;
 use semio_s_artifact_norm_en1999_model::*;
 use semio_s_plugin_norm_compliance::AnnexChoice;
 use framework_schema::ArtifactSchema;
@@ -59,16 +59,16 @@ pub fn encode_en1999_dsl(snapshot: &En1999Snapshot) -> String {
     pack::snapshot::ArtifactDsl::print_dsl(snapshot)
 }
 }
-pub use crate::text::snapshot::snapshot_codec::*;
+pub use crate::snapshot::snapshot_codec::*;
 
 #[allow(unused_imports)]
 mod snapshot_wire_codec {
-use crate::text::snapshot::*;
+use crate::snapshot::*;
 use semio_s_artifact_norm_en1999_model::*;
 use semio_s_plugin_norm_compliance::AnnexChoice;
 use framework_schema::ArtifactSchema;
 
 }
-#[cfg(test)] pub use crate::text::snapshot::snapshot_wire_codec::*;
+#[cfg(test)] pub use crate::snapshot::snapshot_wire_codec::*;
 
 semio_s_plugin_norm_compliance::impl_norm_artifact_record!(@text En1999Snapshot, extension="en1999", envelope_id="norm.en1999");

@@ -42,7 +42,6 @@ fn backbone_retirement_installed_admission_keeps_original_backbone_after_empty_q
     assert_eq!(released, 2 * frame + queue_capacity * size_of::<BackboneMessage>() + uri_capacity);
     let (_, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| drop((queue, backbone)));
     assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
-    eprintln!("[DEBUG] installed backbone preserved original URI pointer across empty queue closure; exact release={released}");
 }
 
 #[test]
@@ -89,7 +88,6 @@ fn backbone_retirement_installed_admission_preserves_empty_queue_capacity_until_
     let (result, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| ArtifactStoreBackboneRetirement::admit_attached(&mut queue, &mut backbone, full));
     assert!(result.unwrap().0.is_none());
     assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
-    eprintln!("[DEBUG] installed backbone original empty queue capacity={capacity} admitted frame={frame} with separate exact release");
 }
 
 #[test]
@@ -131,5 +129,4 @@ fn backbone_retirement_constructor_preserves_original_queue_on_every_refusal() {
     assert_eq!(released, capacity + original_capacity * size_of::<BackboneMessage>() + 65536);
     let (_, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| drop(owner));
     assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
-    eprintln!("[DEBUG] backbone constructor refused original queue unchanged then admitted frame={capacity} exact released={released}");
 }

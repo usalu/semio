@@ -1,7 +1,7 @@
 //! 🔎️ TrinityGraph mutation — `SetQuery`: replaces the document's Jack query text.
 use crate::standards::v1::subsets::any::schema::diff::JackDiff;
 use crate::standards::v1::subsets::any::schema::mutations::TrinityGraphMutation;
-use crate::JackSnapshot;
+use crate::standards::v1::subsets::any::schema::snapshot::JackSnapshot;
 
 //#region 🔖️Mutation
 /// 🔎️ `set-query` payload — the whole query text the document holds afterwards.

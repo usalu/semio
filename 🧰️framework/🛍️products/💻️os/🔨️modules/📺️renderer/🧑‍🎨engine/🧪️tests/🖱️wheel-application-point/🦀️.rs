@@ -27,7 +27,7 @@ fn every_admitted_wheel_reaches_dispatch_at_its_original_point() {
         let mut actual = Vec::new();
         while !queue.is_empty() {
             let page = queue.drain_page(ui_host::WorkerContext::new(queue.current_generation()));
-            let mut caller=crate::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);let original=caller.turn(super::RuntimeDispatchSource::admit).unwrap().unwrap();
+            let mut caller=semio_framework_os_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);let original=caller.turn(super::RuntimeDispatchSource::admit).unwrap().unwrap();
             let mut cursor = super::RuntimeDispatchCursor::new_for_generation(page, 1,original);
             while let Some(event) = cursor.take_next() {
                 if let DispatchEvent::Scroll { x, y, delta_x, delta_y, modifiers } = event {

@@ -255,7 +255,6 @@ fn installed_gis_descriptor_discovery_uses_the_registered_tool_without_granting_
     let workspace=std::sync::Arc::new(HeadlessWorkspace::open_folder(folder,"agent:test".into(),Vec::new(),catalog).unwrap());
     let mut registry=InMemoryToolRegistry::new();register_inference_tools(&mut registry,Some(workspace));
     let result=registry.call(fixture["tool"].as_str().unwrap(),fixture["arguments"].clone()).unwrap();
-    println!("[DEBUG] owner descriptor discovery error={} structured={:?}",result.is_error,result.structured_content);
     assert!(!result.is_error);assert_eq!(result.structured_content.unwrap(),fixture["expected"]);
     let denied=registry.call("inference_get",serde_json::json!({"artifactId":fixture["unboundArtifact"],"inferenceSchema":GIS_MAP_INFERENCE_SERVICE_ID})).unwrap();
     assert!(denied.is_error);assert_eq!(denied.structured_content.unwrap()["code"],fixture["executionError"]);

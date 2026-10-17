@@ -44,9 +44,7 @@ pub type GisMapStore = ArtifactStore<GisMapSnapshot, GisMapMutation>;
 //#endregion 🔹Operation
 
 //#region 🔹Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🔹Tests
 
 pub fn inverse_gis_map_mutation(snapshot: &GisMapSnapshot, mutation: &GisMapMutation) -> Result<Vec<GisMapMutation>, semio_framework_value::ValueError> {
@@ -70,7 +68,5 @@ pub const KINDS: &[&str] =
 //#endregion 🌉️TestBridge
 
 //#region 🧪️KindsConformance
-#[cfg(test)]
-#[path = "🧪️tests/🔬️kinds-conformance/🦀️.rs"]
-mod kinds_conformance;
+
 //#endregion 🧪️KindsConformance

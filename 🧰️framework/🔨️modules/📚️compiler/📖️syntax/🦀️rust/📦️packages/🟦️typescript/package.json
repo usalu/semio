@@ -2,6 +2,9 @@
   "name": "@semio-tech/compiler-syntax-rust-ts",
   "private": true,
   "version": "0.0.0",
+  "exports": {
+    ".": "./🟦️.ts"
+  },
   "scripts": {
     "test": "bun --cwd \"../../../../../../..\" repo run @semio-tech/compiler-syntax-rust-ts:test",
     "test-path-literals": "bun --cwd \"../../../../../../..\" repo run @semio-tech/compiler-syntax-rust-ts:test-path-literals",

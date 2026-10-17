@@ -2,6 +2,7 @@
 //! route's own request and drawn frame sequences on every socket, from deterministic language-neutral seeds, within a
 //! bounded time, and shrinks what it finds before reporting it with its seed.
 
+use semio_framework_test_fixtures::fixture_path;
 use semio_hub_state::HubState;
 use semio_hub_route_testkit::{RawHttpResponse, hostile_http_request, issue_test_session};
 use semio_framework_hash::Sha256;
@@ -112,7 +113,7 @@ struct HostileRouteV1 {
 /// references, one level deep), so drawn bodies reach past the first field check.
 fn declared_body_names(route: &serde_json::Value) -> Vec<String> {
     let (Some(module), Some(def)) = (route["body"]["schema"]["module"].as_str(), route["body"]["schema"]["def"].as_str()) else { return Vec::new() };
-    let Ok(text) = std::fs::read_to_string(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../..").join(module)) else { return Vec::new() };
+    let Ok(text) = std::fs::read_to_string(fixture_path!("../../..").join(module)) else { return Vec::new() };
     let Ok(document) = serde_json::from_str::<serde_json::Value>(&text) else { return Vec::new() };
     let mut names = std::collections::BTreeSet::new();
     let mut definitions = vec![document["$defs"][def].clone()];

@@ -1,0 +1,23 @@
+{
+ "name": "forms",
+ "crates": [
+  "semio-forms-mutation-bridge",
+  "semio-s-artifact-forms-forms",
+  "semio-s-artifact-forms-forms-commands",
+  "semio-s-artifact-forms-forms-config",
+  "semio-s-artifact-forms-forms-config-tests",
+  "semio-s-artifact-forms-forms-definition",
+  "semio-s-artifact-forms-forms-diff",
+  "semio-s-artifact-forms-forms-forms",
+  "semio-s-artifact-forms-forms-inferences",
+  "semio-s-artifact-forms-forms-mutations",
+  "semio-s-artifact-forms-forms-questions",
+  "semio-s-artifact-forms-forms-schema",
+  "semio-s-artifact-forms-forms-snapshot",
+  "semio-s-artifact-forms-forms-terminology-tests",
+  "semio-s-artifact-forms-forms-tests",
+  "semio-s-artifact-forms-forms-tests-2",
+  "semio-s-artifact-forms-forms-tests-3"
+ ],
+ "note": "ORACLE-HARVEST-PLUGINS: ✏️s/🔌️plugins/📋️forms, ✏️s/🧑‍💻dev/📋️forms"
+}

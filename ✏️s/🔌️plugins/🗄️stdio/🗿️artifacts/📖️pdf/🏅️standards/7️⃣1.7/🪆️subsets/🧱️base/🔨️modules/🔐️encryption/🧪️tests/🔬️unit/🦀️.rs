@@ -1,4 +1,11 @@
-use super::*;
+use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfDictEntry, PdfEncryption, PdfEncryptionAlgorithm, PdfObject};
+#[allow(unused_imports)]
+use crate::standards::v1_7::subsets::base::modules::lexer::{dict_get, dict_i64, dict_name};
+#[allow(unused_imports)]
+use crate::standards::v1_7::subsets::base::io::error::{PResult, PdfEngineError};
+#[allow(unused_imports)]
+use semio_framework_hash::Sha256;
+use crate::standards::v1_7::subsets::base::modules::encryption::*;
 
 fn hex(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()

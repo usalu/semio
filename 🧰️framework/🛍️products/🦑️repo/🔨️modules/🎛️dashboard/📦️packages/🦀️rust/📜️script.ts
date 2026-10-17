@@ -15,6 +15,7 @@ import { projectDashboardLaunch, ticketLaunchCommands, launchParameterArguments 
 import { captureDashboardSources, installedDashboard, installDashboard, staleDashboard, launchDashboard, withInstalledDashboardV1, type DashboardExecutionOptions } from "../../📦️installation/🟦️.ts";
 import {runRepositoryCargoTests} from "../../../📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
 import {devToolingEnv} from "../../../📚️library/🏃️process/🌿️environment/🟦️.ts";
+import {repoTestArtifactEnvironment} from "../../../📚️library/🏃️process/🌿️environment/🧪️test-output/🟦️.ts";
 import {runCmd} from "../../../📚️library/🏃️process/🟦️.ts";
 import { BundleScript, ScriptRouter, type ScriptInvocation } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -45,7 +46,6 @@ class LaunchScript extends BundleScript {
     const projected=projectDashboardLaunch(current,commands,ticket);
     if(action==="check"&&JSON.stringify(current)!==JSON.stringify(projected))throw new Error("Dashboard launch projection is stale");
     if(action==="generate")await writeFile(output,JSON.stringify(projected,null,2)+"\n");
-    console.log(`[DEBUG] dashboard launch ${action} owner=${ticket} commands=${commands.length} locales=en,de unrelatedPreserved=true`);
   }
 }
 
@@ -74,7 +74,7 @@ class TestScript extends BundleScript {
       const { rest } = resolveTestLevel(segments.slice(1));
       await runRepositoryCargoTests(crates, this.repoRoot, this.invocation, rest); return;
     }
-    runCmd("bun", ["test", join(this.root, "../../🧪️tests/🧭️authority/🟦️.ts")], { cwd: this.repoRoot, env: devToolingEnv() });
+    runCmd("bun", ["test", join(this.root, "../../🧪️tests/🧭️authority/🟦️.ts")], { cwd: this.repoRoot, env: devToolingEnv(repoTestArtifactEnvironment(this.repoRoot,"dashboard-authority")) });
     if (segments[0] === "authority") return;
     if (segments[0] === "execution") {
       const artifacts = process.env.SEMIO_TEST_ARTIFACT_DIR ?? join(this.repoRoot, ".🧬semio/🦑️repo/⚡️cache/tests/dashboard-execution");

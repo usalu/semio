@@ -1,4 +1,6 @@
-use super::*;
+use graph_core::{AttrView, EdgeRef, EdgeWeights, GraphView};
+use graph_manifest::{PropertyBag, PropertyValue};
+use crate::schema::ports_internals::directed::normal::*;
 
 #[test]
 fn parallel_directed_edges_are_never_upserted() {

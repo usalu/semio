@@ -12,7 +12,7 @@ pub struct BitmapIntoJson;
 
 /// 🖨️ Typed encode of `BitmapSnapshot` into its canonical JSON text.
 pub fn serialize(from: &BitmapSnapshot) -> String {
-    crate::standards::v1::subsets::any::io::text::bitmap_json_encode(from)
+    crate::standards::v1::subsets::any::io::text::snapshot::bitmap_json_encode(from)
 }
 
 impl Serializer<BitmapSnapshot> for BitmapIntoJson {
@@ -25,7 +25,5 @@ impl Serializer<BitmapSnapshot> for BitmapIntoJson {
 
 
 //#region 🧪Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪Tests

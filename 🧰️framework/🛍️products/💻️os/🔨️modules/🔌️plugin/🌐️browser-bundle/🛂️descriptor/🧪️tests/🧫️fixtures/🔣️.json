@@ -3,13 +3,21 @@
     "reactor": [
       "stageCommandPage",
       "stageColdPairPage",
+      "admitActorContext",
+      "closeActorContext",
+      "reservePollInput",
+      "writePollInput",
+      "closePollInput",
       "poll",
       "channelVersion"
     ],
     "jobs": [
       "startJob",
       "stepJob",
+      "readJobOutput",
+      "acknowledgeJobOutput",
       "cancelJob",
+      "closeJobs",
       "takeSegmentedDownloadChunk"
     ],
     "checkpoint": [
@@ -23,6 +31,10 @@
       "sqliteSchema",
       "sqliteExport",
       "sqliteImport",
+      "sqliteTakeFile",
+      "sqliteTakePayload",
+      "sqliteRetirement",
+      "sqliteClose",
       "packSchemaHash",
       "genesis",
       "printMirror",

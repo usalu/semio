@@ -1,4 +1,5 @@
 use super::*;
+use semio_framework_test_fixtures::fixture_text;
 use semio_framework_value::ValueError;
 
 fn specimen() -> SqliteDatabase {
@@ -24,7 +25,7 @@ fn refusal(operation: &str) -> ValueError {
 
 #[test]
 fn sqlite_refusal_producers_retain_language_neutral_owned_authorities() {
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(fixture_text!("../../../../⚠️refusal/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let rows = corpus["cases"].as_array().unwrap();
     assert_eq!(rows.len(), 13);
     for row in rows {
@@ -33,6 +34,4 @@ fn sqlite_refusal_producers_retain_language_neutral_owned_authorities() {
         assert!(!error.message.is_empty());
         assert_eq!(error.clone().under("document").kind, error.kind);
     }
-    eprintln!("[DEBUG] Thirteen actual SQLite native producer kinds retained");
 }
-

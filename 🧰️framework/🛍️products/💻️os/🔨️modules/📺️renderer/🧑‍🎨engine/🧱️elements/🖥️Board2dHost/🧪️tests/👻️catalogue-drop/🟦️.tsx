@@ -5,7 +5,7 @@
 
 // #region 🔌️Adapters
 import { afterEach, describe, expect, it } from "vitest";
-import { boardCatalogueDropHostContainsPoint, boardCatalogueDropPointOverRect, boardDropPreviewJson, registerBoardCatalogueDropHost } from "../../🟦️.tsx";
+import { boardCatalogueDropHostContainsPoint, boardCatalogueDropPointOverRect, boardDropPreviewJson, registerBoardCatalogueDropHost } from "../../📍️drop-and-camera/🟦️.ts";
 // #endregion 🔌️Adapters
 
 // #region 👻️CatalogueDropLaws

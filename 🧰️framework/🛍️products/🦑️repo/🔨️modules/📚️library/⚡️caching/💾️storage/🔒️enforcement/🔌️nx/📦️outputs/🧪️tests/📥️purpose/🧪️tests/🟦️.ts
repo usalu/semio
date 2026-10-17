@@ -10,4 +10,4 @@ test("output negative awaited binding refusal is isolated from accepted parent c
 
 import{withBuildTestInvocationV1}from"../../../../../../../../🏗️build/🧪️tests/📥️invocation/🟦️.ts";
 import{observeOutputNegativePurposeV1}from"../🟦️.ts";
-test("output negative actual custody owner model retains caught operation failure only in its receiver",async()=>withBuildTestInvocationV1(async original=>{await observeOutputNegativePurposeV1(original,createIssuedResourceControlV1(original,"outputs:model-entry",0),"ledger-model");expect(original.control.signal.aborted).toBe(false);console.log("[DEBUG] Actual output custody function with explicit physical ports and genuine ledger failed its receiver after caught awaited mutation; same-wire parent remains healthy");}));
+test("output negative actual custody owner model retains caught operation failure only in its receiver",async()=>withBuildTestInvocationV1(async original=>{await observeOutputNegativePurposeV1(original,createIssuedResourceControlV1(original,"outputs:model-entry",0),"ledger-model");expect(original.control.signal.aborted).toBe(false);}));

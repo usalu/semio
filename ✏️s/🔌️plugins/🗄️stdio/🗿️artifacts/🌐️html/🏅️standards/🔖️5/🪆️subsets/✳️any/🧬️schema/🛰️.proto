@@ -1,7 +1,10 @@
 syntax = "proto3";
-// 🚧 scaffolded by W1b — generic facet mirror.
 package semio.s_stdio_html.artifact;
+
+import "s_stdio_html_snapshot.proto";
+
 message HtmlArtifact {
   string schema = 1;
-  string entries_wire = 2;
+  optional string doctype = 2;
+  semio.s_stdio_html.snapshot.HtmlNode root = 3;
 }

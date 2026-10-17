@@ -60,7 +60,5 @@ pub fn handle(payload: &SetActiveExample, doc: &ArtifactView<'_, BitmapSnapshot>
 //#endregion 🔖️Handler
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

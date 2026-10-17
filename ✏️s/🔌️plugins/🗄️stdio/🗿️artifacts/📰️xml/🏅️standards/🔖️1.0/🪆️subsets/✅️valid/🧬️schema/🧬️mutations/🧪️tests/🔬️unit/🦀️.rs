@@ -1,13 +1,18 @@
+use crate::schema::diff::XmlDiff;
+use crate::{schema::snapshot::XmlDtdDeclaration, schema::snapshot::XmlExternalId};
+use crate::standards::v1_0::subsets::base::schema::mutations::XmlNodePath;
+use crate::XmlSnapshot;
 use crate::apply_mutation;
-use super::*;
+use crate::standards::v1_0::subsets::valid::schema::valid_mutations::*;
 use crate::standards::v1_0::subsets::valid::schema::{CODE_DOCTYPE_MISSING, CODE_ROOT_NAME_MISMATCH};
+use semio_framework_test_fixtures::fixture_text;
 
 #[test]
 fn history_text_fixture_preserves_doctype_and_matches_independent_xml_reader() {
     use quick_xml::{Reader, events::Event};
-    let before = include_str!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/✍️set-text/🔤️history/📸️snapshot/⬅️before/🗣️.dsl.semio");
-    let after = include_str!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/✍️set-text/🔤️history/📸️snapshot/➡️after/🗣️.dsl.semio");
-    let wire = include_str!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/✍️set-text/🔤️history/🦠️mutation/🔣️.json");
+    let before = fixture_text!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✍️set-text/🔤️history/📸️snapshot/⬅️before/🗣️.dsl.semio");
+    let after = fixture_text!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✍️set-text/🔤️history/📸️snapshot/➡️after/🗣️.dsl.semio");
+    let wire = fixture_text!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✍️set-text/🔤️history/🦠️mutation/🔣️.json");
     let mutation: XmlValidMutation = semio_framework_pack_json::from_json_str(wire, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let base = <XmlSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(before).unwrap();
     let (next, outcome) = applied(&base, &mutation);
@@ -35,7 +40,6 @@ fn history_text_fixture_preserves_doctype_and_matches_independent_xml_reader() {
         apply_mutation(&mut restored, &inverse);
     }
     assert_eq!(restored, base);
-    println!("[DEBUG] XML history fixture edits Unicode text, retains DOCTYPE, and restores its exact inverse");
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

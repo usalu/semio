@@ -1,4 +1,10 @@
-use super::*;
+use semio_framework_test_fixtures::fixture_path;
+
+#[allow(unused_imports)]
+use crate::{AnimationChild, PresentationChild};
+#[allow(unused_imports)]
+use schema::ArtifactSchema;
+use crate::standards::v1::subsets::any::schema::snapshot::*;
 
 #[test]
 fn pack_round_trips() {
@@ -40,7 +46,7 @@ fn the_demo_figure_source_names_a_shipped_asset() {
     const SEMIO_ASSET_ROUTE: &str = "/🖼️assets/";
     let source = crate::default_figure_tile_source();
     let relative = source.src.strip_prefix(SEMIO_ASSET_ROUTE).unwrap_or_else(|| panic!("the demo figure must live under the shared asset route {SEMIO_ASSET_ROUTE}, not at {}", source.src));
-    let repo_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../../..");
+    let repo_root = fixture_path!("../../../../../../../../../../../../..");
     let path = repo_root.join("🧰️framework/🔨️modules/🖼️assets").join(relative);
     assert!(path.is_file(), "the demo figure {} resolves to {}, which this repository does not ship", source.src, path.display());
     assert_eq!(source.source_aspect, Some(crate::DEMO_FIGURE_PIXEL_WIDTH / crate::DEMO_FIGURE_PIXEL_HEIGHT), "the declared physical aspect must be the shipped figure's own pixel aspect");

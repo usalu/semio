@@ -1,7 +1,7 @@
 //! 🗂️ `select-same-kind` command.
 
-use crate::editor::puzzle5d::Puzzle5dActionCtx;
-use crate::editor::puzzle5d::PUZZLE5D_GRANULARITY_PART;
+use crate::editor::puzzle5d::interaction::Puzzle5dActionCtx;
+use crate::editor::puzzle5d::entities::PUZZLE5D_GRANULARITY_PART;
 
 /// 🧬️ Widens the selection to every part sharing the clicked part's kind. Selection is framework-owned
 /// (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM), so this emits one `InteractionWrite`

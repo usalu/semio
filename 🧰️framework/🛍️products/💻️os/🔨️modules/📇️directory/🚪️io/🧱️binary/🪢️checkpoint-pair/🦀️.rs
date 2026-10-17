@@ -1,6 +1,7 @@
 //! 🪢️ Explicit native binary checkpoint framing and digest admission.
 
-use crate::schema::{ArtifactFrontier, ArtifactHash, CanonicalCheckpointPairV1, CanonicalCheckpointPairRefusalV1, DocumentScope, PublishedArtifactBlob, DOCUMENT_OPEN_ID_MAX_BYTES, DOCUMENT_OPEN_MAX_SAFE_INTEGER};
+use crate::{AdmittedCheckpointSelectionV1, CanonicalCheckpointPairRefusalV1, CanonicalCheckpointPairV1};
+use semio_framework_os_directory_schema::{ArtifactFrontier, ArtifactHash, DocumentScope, PublishedArtifactBlob, DOCUMENT_OPEN_ID_MAX_BYTES, DOCUMENT_OPEN_MAX_SAFE_INTEGER};
 
 pub const CANONICAL_CHECKPOINT_PAIR_MEDIA_TYPE_V1: &str = "application/vnd.semio.canonical-checkpoint-pair.v1";
 pub const CANONICAL_CHECKPOINT_PAIR_HEADER_MAX_BYTES: usize = 16 * 1024;
@@ -178,9 +179,9 @@ pub fn decode_canonical_checkpoint_pair_v1(input: &[u8]) -> Result<CanonicalChec
 }
 
 /// 🎫️ Admits checkpoint transport hashes before the pure pair identity gate.
-pub fn admit_checkpoint_selection_v1(expected: &crate::schema::DocumentOpenCheckpointV1) -> Result<crate::schema::AdmittedCheckpointSelectionV1, CanonicalCheckpointPairRefusalV1> {
+pub fn admit_checkpoint_selection_v1(expected: &semio_framework_os_directory_schema::DocumentOpenCheckpointV1) -> Result<AdmittedCheckpointSelectionV1, CanonicalCheckpointPairRefusalV1> {
     use super::artifact_hash::parse_artifact_hash_hex;
-    Ok(crate::schema::AdmittedCheckpointSelectionV1 {
+    Ok(AdmittedCheckpointSelectionV1 {
         checkpoint_id: parse_artifact_hash_hex(&expected.checkpoint_id).ok_or(CanonicalCheckpointPairRefusalV1::Checkpoint)?,
         descriptor_digest_v1: parse_artifact_hash_hex(&expected.descriptor_digest_v1).ok_or(CanonicalCheckpointPairRefusalV1::Descriptor)?,
         baseline_frontier: expected.baseline_frontier.clone(),

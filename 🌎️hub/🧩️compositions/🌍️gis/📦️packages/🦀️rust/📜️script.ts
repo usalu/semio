@@ -4,6 +4,7 @@ import { resolveTestLevel } from "../../../../../🧰️framework/🔨️modules
 import { buildBudgetMs } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 import { TEST_LEVEL_BUDGET_MS } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { runOwnedCommand } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import { runRepositoryCommand } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts";
 /** 🌍️ GIS plugin package command router. */
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
@@ -14,7 +15,7 @@ import { BundleScript, ScriptRouter } from "../../../../../🧰️framework/🔨
 import { runScriptMain } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { ComponentColdMapPatchCheckScript, ComponentColdMapPatchNativeCheckScript } from "../../🧪️tests/🌉️component-cold-map-patch/🟦️.ts";
 import { DurableThreeStoreAssemblyCheckScript, DurableThreeStoreAssemblyNativeCheckScript } from "../../🧪️tests/🗄️durable-three-store-assembly/🟦️.ts";
-import { MapCreateRegionGroupCheckScript, MapCreateRegionGroupNativeCheckScript } from "../../../../../✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🧪️tests/🧩️map-create-region-group/🟦️.ts";
+import { MapCreateRegionGroupCheckScript, MapCreateRegionGroupNativeCheckScript } from "../../../../../✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🟦️typescript/🧪️testing/🧩️map-create-region-group/🟦️.ts";
 import { NativeCodecCheckScript, proveGisNativeCodecReceipts } from "../../🧪️tests/📇️native-codecs/🟦️.ts";
 import { proveGisControlledProposal } from "../../🧪️tests/💡️inference-control/🟦️.ts";
 import { InferenceDiscoveryOracleScript, InferenceDiscoveryCheckScript } from "../../🧪️tests/💡️inference-discovery/🟦️.ts";
@@ -37,6 +38,14 @@ class InstalledServiceSourceScript extends BundleScript {
     const options={signal:this.invocation.control.signal};
     await runOwnedCommand(process.execPath,[Bun.resolveSync("typescript/bin/tsc",this.root),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",source,...receivers],this.repoRoot,"gis-installed-service-strict",TEST_LEVEL_BUDGET_MS.long,options);
     await runOwnedCommand(process.execPath,["test",source],this.repoRoot,"gis-installed-service-source",TEST_LEVEL_BUDGET_MS.long,options);
+  }
+}
+
+/** 🤝️ Runs the hub edit durability gate: every accepted hub edit is durable collaboration state across a hub restart. */
+class HubEditDurabilityCheckScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments.length) throw new Error("hub-edit-durability-check accepts no arguments");
+    await runRepositoryCommand(this.invocation, "bun", [resolve(this.root, "../../🧪️tests/🤝️hub-edit-durability/🟦️.ts")], this.repoRoot, "os-mcp-hub-edit-durability", { version: 1, maximumElapsedMilliseconds: 1_800_000, output: { maximumBytes: 134217728, maximumLines: 65536 } });
   }
 }
 
@@ -92,5 +101,6 @@ const router = new ScriptRouter(import.meta.dir)
   .register("durable-three-store-assembly-check", DurableThreeStoreAssemblyCheckScript)
   .register("durable-three-store-assembly-native-check", DurableThreeStoreAssemblyNativeCheckScript)
   .register("component-cold-map-patch-check", ComponentColdMapPatchCheckScript)
-  .register("component-cold-map-patch-native-check", ComponentColdMapPatchNativeCheckScript);
+  .register("component-cold-map-patch-native-check", ComponentColdMapPatchNativeCheckScript)
+  .register("hub-edit-durability-check", HubEditDurabilityCheckScript);
 if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({ defaultCommand: "test" }) }));

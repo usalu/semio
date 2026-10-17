@@ -60,4 +60,14 @@ if __name__ == "__main__":
             print("  -", k)
         for k, v in sorted(only_b.items())[:30]:
             print("  +", k)
-        print("IDENTICAL" if not only_a and not only_b else "DIFFERENT")
+        na, nb = collections.Counter(), collections.Counter()
+        for k, v in a.items():
+            na[k[1]] += v
+        for k, v in b.items():
+            nb[k[1]] += v
+        print("by name (files ignored): only baseline", sum((na - nb).values()), "only live", sum((nb - na).values()))
+        for k in sorted((nb - na)):
+            print("  + name", k)
+        for k in sorted((na - nb)):
+            print("  - name", k)
+        print("IDENTICAL" if not only_a and not only_b else "DIFFERENT (files)")

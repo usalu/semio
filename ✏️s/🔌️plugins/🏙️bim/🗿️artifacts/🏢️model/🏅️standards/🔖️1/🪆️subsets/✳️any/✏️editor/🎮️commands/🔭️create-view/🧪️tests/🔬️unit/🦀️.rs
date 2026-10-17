@@ -1,6 +1,6 @@
 use super::*;
-use crate::editor::bim::unit_tests::context::view as window_view;
-use crate::editor::bim::unit_tests::support::{applied, ctx, demo, german, run};
+use crate::editor::bim::fixture::context::view as window_view;
+use crate::editor::bim::fixture::support::{applied, ctx, demo, german, run};
 use semio_framework_ui_locale::Locale;
 
 fn create(kind: &str, parent: &str, name: &str, selected: &[&str], german_view: bool) -> Result<Emit<ModelMutation, NoConfigMutation>, Fault> {
@@ -82,11 +82,11 @@ async fn the_names_speak_the_addressed_locale() {
 async fn the_new_view_is_selected_and_bound_to_the_addressed_window() {
     let snapshot = demo();
     let addressed = window_view(Locale::En, &[("window", crate::editor::bim::modes::edit::windows::section::WINDOW_KIND_ID)], Some("window"));
-    let mut ctx = crate::editor::bim::BimDispatchCtx::new(Vec::new(), Vec::new(), Some(&addressed), None, None);
+    let mut ctx = crate::editor::bim::dispatch_context::BimDispatchCtx::new(Vec::new(), Vec::new(), Some(&addressed), None, None);
     let emit = run(&snapshot, |doc, cfg| handle(&CreateView { kind: "section".into(), parent: String::new(), name: "Cross".into() }, doc, cfg, &mut ctx)).expect("creates");
     assert_eq!(emit.window_config_mutations.len(), 1, "a section window now shows the new section");
     assert_eq!(emit.effects.len(), 1, "the new view is selected");
-    let mut plan_ctx = crate::editor::bim::BimDispatchCtx::new(Vec::new(), Vec::new(), Some(&addressed), None, None);
+    let mut plan_ctx = crate::editor::bim::dispatch_context::BimDispatchCtx::new(Vec::new(), Vec::new(), Some(&addressed), None, None);
     let plan = run(&snapshot, |doc, cfg| handle(&CreateView { kind: "plan".into(), parent: String::new(), name: "Another".into() }, doc, cfg, &mut plan_ctx)).expect("creates");
     assert!(plan.window_config_mutations.is_empty(), "a plan does not rebind a section window");
 }

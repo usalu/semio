@@ -1,7 +1,7 @@
 //! 🖼️ 🖼️ Raster play app commands command — `toggle-layer-visible`.
 
 use crate::config::{RasterConfig, RasterConfigMutation};
-use semio_s_artifact_raster_raster_mutations_layers::change_layer_visible;
+use semio_s_artifact_raster_raster_mutations_layer_properties::change_layer_visible;
 use semio_s_artifact_raster_raster_mutations::RasterMutation;
 use semio_s_artifact_raster_raster_model::{find_layer, layer_visible};
 use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;

@@ -16,7 +16,6 @@ extern crate semio_framework_value_derive as value_derive;
 
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 
-
 pub use schema::diff::SemioDiff;
 pub use schema::mutations::SemioMutation;
 pub use schema::snapshot::SemioSnapshot;
@@ -24,7 +23,6 @@ pub use schema::SemioArtifact;
 
 /// 🏷️ Document schema / DSL envelope id.
 pub const STDIO_SEMIO_DOCUMENT_SCHEMA: &str = "stdio.semio";
-
 
 /// 📜 Schema-owned package definition.
 pub const ARTIFACT_DEFINITION_SCHEMA: &str = include_str!("📜️artifact-definition.json");
@@ -36,9 +34,6 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 pub fn formats() -> Result<Vec<semio_framework_plugin::io::FormatDescriptor>, semio_framework_plugin::ArtifactDefinitionError> {
     semio_s_artifact_stdio_contract::format_descriptors(ARTIFACT_DEFINITION_SCHEMA)
 }
-
-
-
 
 /// 🧾️ The runtime `semio` declares: the `✉️base` envelope schema opens the declaration and every subset appends its own
 /// rows (`subsets::*::io::declare`, the declarative twin of each subset's `register`).
@@ -66,8 +61,6 @@ pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition, conve
     let builder = semio_s_artifact_stdio_semio_video::io::declare(builder);
     conversions.iter().fold(builder, |builder, conversion| (conversion.declare)(builder)).try_build()
 }
-
-
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn artifact_kind() -> ArtifactKindSpec {
@@ -155,9 +148,7 @@ pub fn composable_subsets() -> Vec<&'static str> {
     semio_subset_table!(subset_names)
 }
 
-
 //#region 🧹️SnapshotRetirement
-
 
 #[cfg(test)]
 use semio_s_artifact_stdio_semio_text_model::schema::snapshot as text;
@@ -202,73 +193,7 @@ pub async fn open_semio_member(expected: &semio_framework_artifact_reference::Ar
 }
 //#endregion 🔖️Members
 
-//#region 🚪️DerivedIoRegistry
-pub mod io_registry {
-    use crate::io::io_registry as v1;
-    use {semio_framework_plugin::io::register_composer_entries,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposedArtifact,semio_framework_plugin::io::ComposerEntry,semio_framework_artifact_reference::Dialect,semio_framework_plugin::io::ErasedComposeSource};
-    use std::sync::OnceLock;
-
-    static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
-
-    // 🚫️async: E1 pure table accessor consumed by OnceLock::get_or_init's sync closure — see R9
-    pub fn entries() -> &'static [&'static ComposerEntry] {
-        ENTRIES.get_or_init(|| v1::entries().iter().collect()).as_slice()
-    }
-
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
-        let entry = entries().iter().find(|e| e.writes == target).ok_or_else(|| ComposeError { message: format!("SemioComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
-        ::semio_framework_async::poll::resolve_ready((entry.compose)(sources))
-    }
-
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn register(_conversions: &[semio_s_artifact_stdio_semio_base::SemioConversion]) {
-        register_composer_entries(v1::entries()).expect("static Stdio registration must be available and conflict-free");
-    }
-}
-//#endregion 🚪️DerivedIoRegistry
-
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "."]
-mod subset_sqlite_snapshot_tests {
-    #[path = "🏅️standards/🔖️v1/🪆️subsets/🎞️animation/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs"]
-    pub(crate) mod animation;
-    #[path = "🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs"]
-    pub(crate) mod audio;
-    #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs"]
-    pub(crate) mod brep;
-    #[path = "🏅️standards/🔖️v1/🪆️subsets/📐️cad/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs"]
-    pub(crate) mod cad;
-    #[path = "🏅️standards/🔖️v1/🪆️subsets/📑️document/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs"]
-    pub(crate) mod document;
-    #[path = "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs"]
-    pub(crate) mod drawing;
-    #[path = "🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs"]
-    pub(crate) mod flow;
-    #[path = "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs"]
-    pub(crate) mod graph;
-    #[path = "🏅️standards/🔖️v1/🪆️subsets/🖼️image/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs"]
-    pub(crate) mod image;
-    #[path = "🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs"]
-    pub(crate) mod kit;
-    #[path = "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs"]
-    pub(crate) mod mesh;
-    #[path = "🏅️standards/🔖️v1/🪆️subsets/🏛️model/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs"]
-    pub(crate) mod model;
-    #[path = "🏅️standards/🔖️v1/🪆️subsets/📦️object/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs"]
-    pub(crate) mod object;
-    #[path = "🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs"]
-    pub(crate) mod presentation;
-    #[path = "🏅️standards/🔖️v1/🪆️subsets/📊️table/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs"]
-    pub(crate) mod table;
-    #[path = "🏅️standards/🔖️v1/🪆️subsets/🔤️text/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs"]
-    pub(crate) mod text;
-    #[path = "🏅️standards/🔖️v1/🪆️subsets/🔢️value/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs"]
-    pub(crate) mod value;
-    #[path = "🏅️standards/🔖️v1/🪆️subsets/🎬️video/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs"]
-    pub(crate) mod video;
-}
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
@@ -281,107 +206,44 @@ mod sqlite_snapshot_controlled_owners;
 pub mod io;
 #[path = "."]
 pub mod schema {
-    #[path = "🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/🦀️.rs"]
-    mod component;
-    pub use component::*;
-    #[path = "."]
-    pub mod snapshot {
-        #[path = "🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/📸️snapshot/🦀️.rs"]
-        mod component;
-        pub use component::*;
-    }
-    #[path = "."]
-    pub mod diff {
-        #[path = "🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/🔺️diff/🦀️.rs"]
-        mod component;
-        pub use component::*;
-    }
-    #[path = "."]
-    pub mod inferences {
-        #[path = "🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/💡️inferences/🦀️.rs"]
-        mod component;
-        pub use component::*;
-        #[path = "."]
-        pub mod kind {
-            #[path = "🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/💡️inferences/🏷️kind/🦀️.rs"]
-            mod component;
-            pub use component::*;
-        }
-    }
-    #[path = "."]
-    pub mod mutations {
-        #[path = "🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/🧬️mutations/🦀️.rs"]
-        mod component;
-        pub use component::*;
-    }
+    pub use semio_s_artifact_stdio_semio_schema::schema::*;
+
+    pub use semio_s_artifact_stdio_semio_snapshot::schema::snapshot;
+    pub use semio_s_artifact_stdio_semio_inferences::schema::diff;
+    pub use semio_s_artifact_stdio_semio_inferences::schema::inferences;
+    pub use semio_s_artifact_stdio_semio_editor::schema::mutations;
 }
 
 #[path = "."]
 pub mod editor {
-    #[path = "🏅️standards/🔖️v1/🪆️subsets/✉️base/✏️editor/🦀️.rs"]
-    mod component;
-    pub use component::*;
-    #[path = "."]
-    pub mod presence {
-        #[path = "🏅️standards/🔖️v1/🪆️subsets/✉️base/✏️editor/👥️presence/🧬️schema/🦀️.rs"]
-        pub mod schema;
-    }
-    #[path = "."]
-    pub mod config {
-        #[path = "🏅️standards/🔖️v1/🪆️subsets/✉️base/✏️editor/🎚️config/🧬️schema/🦀️.rs"]
-        pub mod schema;
-    }
+    pub use semio_s_artifact_stdio_semio_editor::editor::*;
+
+    pub use semio_s_artifact_stdio_semio_inferences::editor::presence;
+    pub use semio_s_artifact_stdio_semio_inferences::editor::config;
     #[path = "."]
     pub mod modes {
         #[path = "."]
         pub mod edit {
-            #[path = "🏅️standards/🔖️v1/🪆️subsets/✉️base/✏️editor/🎭️modes/✏️edit/🦀️.rs"]
-            mod component;
-            pub use component::*;
-            #[path = "."]
-            pub mod windows {
-                #[path = "."]
-                pub mod main {
-                    #[path = "🏅️standards/🔖️v1/🪆️subsets/✉️base/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️.rs"]
-                    mod component;
-                    pub use component::*;
-                }
-            }
+            pub use semio_s_artifact_stdio_semio_mut_family_2::editor::modes::edit::*;
+
+            pub use semio_s_artifact_stdio_semio_inferences::editor::modes::edit::windows;
         }
     }
 }
 
 #[path = "."]
 pub mod viewer {
-    #[path = "🏅️standards/🔖️v1/🪆️subsets/✉️base/👁️viewer/🦀️.rs"]
-    mod component;
-    pub use component::*;
-    #[path = "."]
-    pub mod presence {
-        #[path = "🏅️standards/🔖️v1/🪆️subsets/✉️base/👁️viewer/👥️presence/🧬️schema/🦀️.rs"]
-        pub mod schema;
-    }
-    #[path = "."]
-    pub mod config {
-        #[path = "🏅️standards/🔖️v1/🪆️subsets/✉️base/👁️viewer/🎚️config/🧬️schema/🦀️.rs"]
-        pub mod schema;
-    }
+    pub use semio_s_artifact_stdio_semio_editor::viewer::*;
+
+    pub use semio_s_artifact_stdio_semio_inferences::viewer::presence;
+    pub use semio_s_artifact_stdio_semio_inferences::viewer::config;
     #[path = "."]
     pub mod modes {
         #[path = "."]
         pub mod view {
-            #[path = "🏅️standards/🔖️v1/🪆️subsets/✉️base/👁️viewer/🎭️modes/👁️view/🦀️.rs"]
-            mod component;
-            pub use component::*;
-            #[path = "."]
-            pub mod windows {
-                #[path = "."]
-                pub mod main {
-                    #[path = "🏅️standards/🔖️v1/🪆️subsets/✉️base/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️.rs"]
-                    mod component;
-                    pub use component::*;
-                }
-            }
+            pub use semio_s_artifact_stdio_semio_mut_family_2::viewer::modes::view::*;
+
+            pub use semio_s_artifact_stdio_semio_inferences::viewer::modes::view::windows;
         }
     }
 }
@@ -391,21 +253,9 @@ pub mod viewer {
 pub mod examples_note;
 //#endregion 🪢️TaxonomyMounts
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           
+#[cfg(test)]
+#[path = "🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs"]
+mod hoisted_snapshot_0;
+#[cfg(test)]
+#[path = "🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/🧬️mutations/🖼️apply-image/🧪️tests/🚫️refuses/🦀️.rs"]
+mod hoisted_tests_1;

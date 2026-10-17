@@ -434,15 +434,15 @@ pub(crate) fn generation2d_retire_mutation_cold(mutation: Generation2dMutation) 
 }
 
 /// 🧊️ The plural twin of [`generation2d_retire_mutation_cold`].
-#[cfg(test)]
-pub(crate) fn generation2d_retire_mutations_cold(mutations: Vec<Generation2dMutation>) {
+#[cfg(any(test, feature = "testkit"))]
+pub fn generation2d_retire_mutations_cold(mutations: Vec<Generation2dMutation>) {
     for mutation in mutations {
         generation2d_retire_mutation_cold(mutation);
     }
 }
 
-#[cfg(test)]
-pub(crate) fn generation2d_apply_retained_mutations_for_test(snapshot: &mut Generation2dSnapshot, mutations: &[Generation2dMutation]) {
+#[cfg(any(test, feature = "testkit"))]
+pub fn generation2d_apply_retained_mutations_for_test(snapshot: &mut Generation2dSnapshot, mutations: &[Generation2dMutation]) {
     for mutation in mutations {
         if let Some(displaced) = generation2d_apply_initialization_mutation(snapshot, mutation).expect("P2 production fixture retained replay") {
             generation2d_retire_displaced_cold(displaced);

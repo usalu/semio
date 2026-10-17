@@ -1,0 +1,312 @@
+{
+ "combine": [
+  {
+   "name": "duplicate",
+   "extra": false,
+   "nodes": 3
+  },
+  {
+   "name": "distinct",
+   "extra": true,
+   "nodes": 6
+  }
+ ],
+ "retirement": [
+  {
+   "name": "retained",
+   "order": [
+    "o0",
+    "w0",
+    "o1",
+    "w1",
+    "o2",
+    "w2"
+   ],
+   "nodes": 6,
+   "below": 0,
+   "kind": "retained",
+   "victims": []
+  },
+  {
+   "name": "one-node",
+   "order": [
+    "o0",
+    "w0",
+    "o1",
+    "w1",
+    "o2",
+    "w2"
+   ],
+   "nodes": 5,
+   "below": 0,
+   "kind": "retired",
+   "victims": [
+    "o0"
+   ]
+  },
+  {
+   "name": "protected-first",
+   "order": [
+    "w0",
+    "o0",
+    "w1",
+    "o1",
+    "w2",
+    "o2"
+   ],
+   "nodes": 5,
+   "below": 0,
+   "kind": "retired",
+   "victims": [
+    "o0"
+   ]
+  },
+  {
+   "name": "partial",
+   "order": [
+    "o0",
+    "o1",
+    "w0"
+   ],
+   "nodes": 4,
+   "below": 0,
+   "kind": "retired",
+   "victims": [
+    "o0"
+   ]
+  },
+  {
+   "name": "bytes",
+   "order": [
+    "o0",
+    "w0",
+    "o1",
+    "w1",
+    "o2",
+    "w2"
+   ],
+   "nodes": 6,
+   "below": 1,
+   "kind": "retired",
+   "victims": [
+    "o0",
+    "o1"
+   ]
+  },
+  {
+   "name": "too-large",
+   "order": [
+    "o0",
+    "w0",
+    "o1",
+    "w1",
+    "o2",
+    "w2"
+   ],
+   "nodes": 2,
+   "below": 0,
+   "kind": "too-large",
+   "victims": []
+  }
+ ],
+ "io": [
+  {
+   "name": "single",
+   "missing": false,
+   "bytes": false,
+   "tooLarge": false,
+   "retired": 1,
+   "keptOld": 2
+  },
+  {
+   "name": "bytes",
+   "missing": false,
+   "bytes": true,
+   "tooLarge": false,
+   "retired": 2,
+   "keptOld": 1
+  },
+  {
+   "name": "missing",
+   "missing": true,
+   "bytes": false,
+   "tooLarge": false,
+   "retired": 1,
+   "keptOld": 2
+  },
+  {
+   "name": "too-large",
+   "missing": false,
+   "bytes": false,
+   "tooLarge": true,
+   "retired": 0,
+   "keptOld": 3
+  }
+ ],
+ "production": {
+  "preparation": "prepareSelectedRustUnitProjectsV3",
+  "publication": "withSelectedRustUnitDescriptorSetV1",
+  "retirement": "retireRustUnitDescriptorCacheV3",
+  "maintenanceMustNotCall": [
+   "prepareSelectedRustGraphInStoreV1",
+   "prepareSelectedRustUnitProjectsV3",
+   "captureCargoCompilationGraphV1"
+  ],
+  "publicationMustNotCall": [
+   "captureCargoCompilationGraphV1",
+   "materializeCargoRustUnitsV1",
+   "captureSelectedCargoConfigurationV1"
+  ]
+ },
+ "interruption": [
+  {
+   "name": "before-unlink",
+   "stage": "before",
+   "cancel": false,
+   "oldPresent": 3
+  },
+  {
+   "name": "after-unlink",
+   "stage": "after",
+   "cancel": false,
+   "oldPresent": 2
+  },
+  {
+   "name": "after-unlink-cancel",
+   "stage": "after",
+   "cancel": true,
+   "oldPresent": 2
+  },
+  {
+   "name": "delete-rollback",
+   "stage": "sql",
+   "cancel": false,
+   "oldPresent": 1
+  }
+ ],
+ "concurrent": [
+  {
+   "name": "same",
+   "variant": false,
+   "kinds": [
+    "admitted",
+    "admitted"
+   ],
+   "callbacks": [
+    1,
+    1
+   ],
+   "nodes": 6
+  },
+  {
+   "name": "distinct",
+   "variant": true,
+   "kinds": [
+    "admitted",
+    "pressure"
+   ],
+   "callbacks": [
+    0,
+    1
+   ],
+   "nodes": 6
+  }
+ ],
+ "limits": {
+  "graphBytes": 268435456,
+  "workingSetBytes": 1073741824,
+  "cases": [
+   {
+    "graphs": [
+     268435456,
+     268435456
+    ],
+    "accepted": true
+   },
+   {
+    "graphs": [
+     268435456,
+     268435456,
+     268435456,
+     268435456
+    ],
+    "accepted": true
+   },
+   {
+    "graphs": [
+     268435456,
+     268435456,
+     268435456,
+     268435456,
+     1
+    ],
+    "accepted": false
+   }
+  ]
+ },
+ "publication": {
+  "entry": "publishRustUnitDescriptorFilesV3",
+  "failures": [
+   {
+    "name": "body-error",
+    "body": "error",
+    "cleanup": "error",
+    "files": 0
+   },
+   {
+    "name": "body-undefined",
+    "body": "undefined",
+    "cleanup": "error",
+    "files": 0
+   },
+   {
+    "name": "cleanup-error",
+    "body": "none",
+    "cleanup": "error",
+    "files": 1
+   },
+   {
+    "name": "cleanup-undefined",
+    "body": "none",
+    "cleanup": "undefined",
+    "files": 1
+   }
+  ],
+  "maximumLeaseDatabases": 3,
+  "forbiddenLeasePrefix": "rust-descriptor:",
+  "generations": 4
+ },
+ "collection": {
+  "entry": "withRustUnitDescriptorWorkingSetCollectionV3",
+  "cases": [
+   {
+    "name": "overlap",
+    "requests": 24,
+    "extra": false,
+    "nodes": 3,
+    "unawaited": false
+   },
+   {
+    "name": "overlap-and-distinct",
+    "requests": 24,
+    "extra": true,
+    "nodes": 6,
+    "unawaited": false
+   },
+   {
+    "name": "accepted-child-drain",
+    "requests": 24,
+    "extra": true,
+    "nodes": 6,
+    "unawaited": true
+   }
+  ],
+  "guards": [
+   "copied-control",
+   "cancelled",
+   "escaped",
+   "ambiguous",
+   "body-undefined"
+  ]
+ }
+}

@@ -23,7 +23,4 @@ pub fn handle(_payload: &PresenceHeartbeat, _doc: &ArtifactView<'_, SHomeSnapsho
 //#endregion 🔖️Handle
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

@@ -20,7 +20,7 @@ test("Drawing parent composition matches shared fixtures and Three.js matrices",
   for (const entry of fixture.matrices) {
     const own = multiply(entry.parent as Matrix, entry.child as Matrix);
     const oracle = matrix(entry.parent).multiply(matrix(entry.child)).elements;
-    expect(own).toEqual(entry.expected);
+    expect<typeof entry.expected>(own).toEqual(entry.expected);
     expect(own).toEqual([oracle[0],oracle[1],oracle[3],oracle[4],oracle[6],oracle[7]]);
   }
 });

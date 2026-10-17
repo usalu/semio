@@ -5,7 +5,7 @@ import { randomBytes } from "node:crypto";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { spawn, type ChildProcess } from "node:child_process";
-import { requireMcpBinary } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🟦️.ts";
+import { requireMcpBinary } from "@semio-tech/framework-os-mcp";
 import { cargoTargetDirectory } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
 import { runCmd, orchestratorBudgetOpts } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { deliverCredentialEnvelopeToChild } from "../../🔐️auth/📤️credential-delivery/🟦️.ts";
@@ -104,7 +104,7 @@ export type CheckInProcessEnvelopeV1 = {
 };
 
 export type CheckInProcessFixtureV1 = {
-  readonly schema: "semio.hub.check-in-process-fixture/v1";
+  readonly schema: "semio.hub.check-in-process-seed/v1";
   readonly profileId: string;
   readonly generationId: string;
   readonly documentId: string;

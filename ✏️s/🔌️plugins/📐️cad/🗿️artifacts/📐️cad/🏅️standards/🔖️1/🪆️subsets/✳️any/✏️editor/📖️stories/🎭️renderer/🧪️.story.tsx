@@ -22,7 +22,7 @@ import { core } from "@semio-tech/cad-js";
 import * as renderer from "../../⚙️engine/📺️renderer/🟦️.tsx";
 const { InteractionCanvas, InteractionSpatialView, r3fPreviewKernel, useInteractionRuntime, useInteractionSnapshot, useTessellation } = renderer;
 const { Model, loadSpatialInteraction, solidRef } = core;
-type InteractionRuntimeOptions = core.InteractionRuntimeOptions;
+type InteractionRuntimeOptions = Parameters<typeof useInteractionRuntime>[1];
 type InteractionSpec = core.InteractionSpec;
 type MeshTransfer = core.MeshTransfer;
 type SpatialKernel = core.SpatialKernel;
@@ -109,7 +109,7 @@ function CadBoxInteractionStory({ autoRun }: { readonly autoRun: boolean }): Rea
   if (!specRef.current) specRef.current = loadSpatialInteraction(BOX_INTERACTION_ID);
   const spec = specRef.current;
 
-  const modelRef = useRef<Model | null>(null);
+  const modelRef = useRef<InstanceType<typeof Model> | null>(null);
   if (!modelRef.current) modelRef.current = new Model();
   const kernelRef = useRef<StoryBoxKernel | null>(null);
   if (!kernelRef.current) kernelRef.current = new StoryBoxKernel();

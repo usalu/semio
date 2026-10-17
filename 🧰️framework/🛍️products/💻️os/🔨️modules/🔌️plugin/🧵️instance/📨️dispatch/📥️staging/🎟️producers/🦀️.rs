@@ -1,13 +1,50 @@
 //! 🎾️ Staged `producers` members of the `instance-dispatch` use cases, as methods of the borrowed bundle (WP7 of the instance family).
 //!
 //! 🎟️ The reserved emit producers: lease admission, owner mounting and the producer admission fixtures.
-use super::*;
-use super::jobs_lease::OriginalToolLeaseAdmission;
-use crate::tool_jobs::time_travel;
-use crate::child_content::*;
+use semio_framework_plugin_ownership::bounded_ownership::ARTIFACT_LIVE_OUTPUT_SLOTS;
+use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_framework_plugin_decl_views::child_view::ChildContentView;
+use semio_framework_value::retirement::controlled::ControlledRetirement;
+use semio_framework_value::DslValue;
+use semio_framework_plugin_decl_emission::Emit;
+use semio_framework::Fault;
+use semio_framework::FaultCode;
+use semio_framework::FaultOrigin;
+use std::mem::ManuallyDrop;
+use store::MemberFactory;
+use semio_framework_value::retained_clone::RetainedCloneGrant;
+use semio_framework_value::retained_clone::RetainedCloneProgress;
+use store::SpaceMember;
+use semio_framework_value::ValueError;
+use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
+use semio_framework::FaultFrom;
+use semio_framework_plugin_decl_emission::ActionMeta;
+#[cfg(any(test, feature = "artifact-app-testing"))]
+use std::sync::Arc;
+use semio_framework_plugin_decl_app::tool_contract::{ArtifactBoundedToolFault, ArtifactReservedToolJob, ArtifactToolCompletion, ArtifactToolCompletionValue};
+use semio_framework_plugin_operation::{ArtifactDocumentAuthority, ToolCancellationLease, ToolOperationKey};
+use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use pack::snapshot::ArtifactPack;
+use crate::dispatch_bundle::DispatchCtx;
+use semio_framework_plugin_decl_app::app_emission::EphemeralEmit;
+use semio_framework_plugin_job::reserved_jobs::{FrameworkReservedCommitPermit, QualifiedToolProof};
+use std::future::Future;
+use semio_framework_plugin_instance_extension::InstanceExtension;
+use semio_framework::kernel::{InvocationResult, UiDirtyScope};
+use semio_framework_plugin_retained_command::typed_operation::{MountedTypedCommandFullOperation, PendingPublicationOutcome};
+use semio_framework_plugin_composition_publication::MountedTypedCommandFullOperationStage;
+use store::Mutation;
+use protocol::OpText;
+use semio_framework_plugin_reactor_app::PluginApp;
+use semio_framework_plugin_instance_jobs::jobs_components::ToolOperations;
+use semio_framework_plugin_interaction::interaction_topology::take_inline_interaction_verbs;
+use semio_framework_ui_contract::*;
+use semio_framework_plugin_instance_jobs::jobs_lease::OriginalToolLeaseAdmission;
+use semio_framework_plugin_decl_views::child_view::ChildContentRetainers;
+use semio_framework_os_kernel as store;
 
 impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceExtension> DispatchCtx<'ctx, A, M, X> {
-    pub(super) async fn admit_framework_reserved_spawn(&mut self, verb: &str, raw: &[u8], decoded_items: usize, meta: &ActionMeta,cx:&mut semio_framework_job::StepContext<'_>) -> Result<Option<FrameworkReservedCommitPermit>, semio_framework_job::OriginalTurnFailure> {
+    pub async fn admit_framework_reserved_spawn(&mut self, verb: &str, raw: &[u8], decoded_items: usize, meta: &ActionMeta,cx:&mut semio_framework_job::StepContext<'_>) -> Result<Option<FrameworkReservedCommitPermit>, semio_framework_job::OriginalTurnFailure> {
         let proof = self.tools.qualified_tool_proof(&*self.stores, verb)?;
         if !matches!(proof, QualifiedToolProof::FrameworkOwned(_) | QualifiedToolProof::AppOwned(_)) {
             return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.reserved-proof"), format!("framework route '{verb}' did not resolve its route-specific factory")).into());
@@ -30,7 +67,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
     }
 
     /// 📥️ Keeps the original producer and completion in their fixed slot through every fallible worker boundary.
-    pub(super) async fn dispatch_reserved_original_producer(&mut self,verb:&str,raw:&[u8],decoded_items:usize,job:ArtifactReservedToolJob,completion:ArtifactToolCompletion<A>,meta:&ActionMeta,admission:Option<semio_framework::ToolWireAdmission>,mut permit:FrameworkReservedCommitPermit, cx:&mut semio_framework_job::StepContext<'_>)->Result<InvocationResult,Fault>{
+    pub async fn dispatch_reserved_original_producer(&mut self,verb:&str,raw:&[u8],decoded_items:usize,job:ArtifactReservedToolJob,completion:ArtifactToolCompletion<A>,meta:&ActionMeta,admission:Option<semio_framework::ToolWireAdmission>,mut permit:FrameworkReservedCommitPermit, cx:&mut semio_framework_job::StepContext<'_>)->Result<InvocationResult,Fault>{
         let id=permit.operation.operation.0;
         let started=self.mount_original_reserved_owners(verb,None,Some(job),Some(completion),meta,Some((permit.operation,permit.lease,permit.identity.take().ok_or_else(||plugin_sdk_fault("original reserved producer lost its authoring receipt"))?)), cx).await?;
         let proof=self.tools.qualified_tool_proof(&*self.stores, verb)?;
@@ -89,7 +126,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
     }
 
     /// 🎟️ Seals one genuine publication slot and keyed lease before a reserved producer receives source owners.
-    pub(super) fn admit_reserved_emit_producer(&mut self,verb:&str,meta:&ActionMeta,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<FrameworkReservedCommitPermit>,semio_framework_job::OriginalTurnFailure>{
+    pub fn admit_reserved_emit_producer(&mut self,verb:&str,meta:&ActionMeta,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<FrameworkReservedCommitPermit>,semio_framework_job::OriginalTurnFailure>{
         let proof=self.tools.qualified_tool_proof(&*self.stores, verb)?;
         if !matches!(proof,QualifiedToolProof::FrameworkOwned(_)|QualifiedToolProof::AppOwned(_)){return Err(plugin_sdk_fault("reserved producer lacks its exact registered publication proof").into())}
         let Some((operation,lease))=self.admit_original_tool_lease(verb,meta,true,cx)?else{return Ok(None)};
@@ -98,7 +135,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
 
     /// 🔬️ Exercises real reserved slot admission without exporting private producer authority.
     #[cfg(test)]
-    pub(crate) fn test_reserved_emit_admission_case(&mut self, occupied: usize, meta: &ActionMeta) -> bool {
+    pub fn test_reserved_emit_admission_case(&mut self, occupied: usize, meta: &ActionMeta) -> bool {
         let before = self.tools.typed_operation_reservations;
         for slot in 0..occupied { self.tools.typed_operation_reservations[slot] = Some((slot + 128) as u64); }
         let original = self.tools.typed_operation_reservations;
@@ -125,7 +162,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
 
     /// 🧪️ Keeps cancelled worker completion tied to the actual original permit through handoff.
     #[cfg(test)]
-    pub(crate) async fn test_reserved_emit_cancelled_worker_handoff(&mut self, meta: &ActionMeta) -> bool {
+    pub async fn test_reserved_emit_cancelled_worker_handoff(&mut self, meta: &ActionMeta) -> bool {
         let permit = self.admit_reserved_emit_producer("cut", meta).expect("original cut producer admission");
         let id = permit.operation.operation;
         permit.lease.cancel();
@@ -138,7 +175,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
 
     /// 🧫️ Observes busy original completion retention without exposing producer authority.
     #[cfg(test)]
-    pub(crate) async fn test_reserved_emit_busy_completion_owner(&mut self, meta: &ActionMeta, cx:&mut semio_framework_job::StepContext<'_>) -> bool {
+    pub async fn test_reserved_emit_busy_completion_owner(&mut self, meta: &ActionMeta, cx:&mut semio_framework_job::StepContext<'_>) -> bool {
         let permit=self.admit_reserved_emit_producer("cut",meta).expect("fixture cut admission");
         let id=permit.operation.operation.0;
         let completion=ArtifactToolCompletion::<A>::new();

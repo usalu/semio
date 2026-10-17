@@ -149,21 +149,21 @@ pub fn cad_brep_child(child_id: &str, target: &semio_framework_artifact_referenc
 #[value(rename_all = "camelCase")]
 pub struct CadWorkingScene {
     #[value(default)]
-    pub(crate) objects: Vec<crate::geometry::CadObject>,
+    pub objects: Vec<crate::geometry::CadObject>,
     #[value(default)]
-    pub(crate) building_objects: Vec<crate::geometry::CadObject>,
+    pub building_objects: Vec<crate::geometry::CadObject>,
     #[value(default)]
-    pub(crate) energy_objects: Vec<crate::geometry::CadObject>,
+    pub energy_objects: Vec<crate::geometry::CadObject>,
     #[value(default)]
-    pub(crate) structure_classic_objects: Vec<crate::geometry::CadObject>,
+    pub structure_classic_objects: Vec<crate::geometry::CadObject>,
     #[value(default)]
-    pub(crate) geometry: Option<crate::geometry::CadGeometry>,
+    pub geometry: Option<crate::geometry::CadGeometry>,
     #[value(default)]
-    pub(crate) building_geometry: Option<crate::geometry::CadGeometry>,
+    pub building_geometry: Option<crate::geometry::CadGeometry>,
     #[value(default)]
-    pub(crate) energy_geometry: Option<crate::geometry::CadGeometry>,
+    pub energy_geometry: Option<crate::geometry::CadGeometry>,
     #[value(default)]
-    pub(crate) structure_classic_geometry: Option<crate::geometry::CadGeometry>,
+    pub structure_classic_geometry: Option<crate::geometry::CadGeometry>,
 }
 /// 🌉 WRITE direction: a deterministic, content-addressed `s.stdio.semio.model` CHILD HANDLE for
 /// `pane`, minted from `content_json` (mirrors `💠️lowpoly`'s `mesh_child_handle` — same pattern,

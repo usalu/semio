@@ -4,6 +4,7 @@
 //! each component's own facts into its retained node: a slider's detents paint one tick each, a stepper and
 //! a number field carry their precision, a recipe keeps its keys, a dialog's choices stay buttons.
 
+use semio_framework_test_fixtures::fixture_path;
 use semio_framework_ui_retained_tree::reconcile::*;
 use crate::wgpu::engine::{Ui, UiLayoutStep};
 use crate::wgpu::text::FontAtlas;
@@ -12,7 +13,7 @@ use semio_framework_ui_declaration::ui::UiNode;
 use ui_contract::{UiNodeId, SurfaceId, UiDocumentLeaseHeader, UiRevision};
 
 fn corpus_dir() -> std::path::PathBuf {
-    std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🧬️contract/🧪️tests/🧫️fixtures/🧪️conformance")
+    fixture_path!("../../🧬️contract/🧪️tests/🧫️fixtures/🧪️conformance")
 }
 
 fn read(path: &std::path::Path) -> serde_json::Value {

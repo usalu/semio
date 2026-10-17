@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "iterations": 4097,
+  "preparedContracts": 2,
+  "oneShotCalls": 0,
+  "profileValidationsPerIteration": 3,
+  "suffixValidationsPerIteration": 1,
+  "schemaAliasSnapshot": true,
+  "freshInputValidation": true
+}

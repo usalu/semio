@@ -1,6 +1,7 @@
 use super::*;
 use crate::standards::v1::subsets::any::io::text::snapshot::{parse_dsl, BIM_EXAMPLE_TEXT};
 use crate::standards::v1::subsets::any::schema::inferences::spaces::SpaceStatus;
+use crate::standards::v1::subsets::any::schema::mutations::ModelMutation;
 use crate::standards::v1::subsets::any::schema::snapshot::{Phase, Point2, Space, SpaceBoundary};
 use protocol::Inference;
 

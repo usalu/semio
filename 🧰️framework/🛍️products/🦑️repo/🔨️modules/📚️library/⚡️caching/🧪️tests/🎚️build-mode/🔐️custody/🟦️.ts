@@ -55,7 +55,6 @@ mkdirSync(${JSON.stringify(productOutput)},{recursive:true});writeFileSync(${JSO
     await launch("warm").done;
     assert.equal(Number(readFileSync(join(root, "count"), "utf8")), row.expectedExecutions, "Edited execution must not become a stale cache hit; the unchanged third execution must hit");
     assert.equal(JSON.parse(readFileSync(join(productOutput, "result.json"), "utf8")).value, row.during);
-    console.log("[DEBUG] Installed Nx withheld mid-task source promotion, then executed fresh and restored warm cache");
     }catch(error){failed=true;failure=error;}finally{stop.abort(Error("Source custody fixture closing"));const settled=await Promise.allSettled([...pending]);for(const row of settled)if(row.status==="rejected"&&!failed){failed=true;failure=row.reason;}}if(failed)throw failure;
    });
   }catch(error){failed=true;failure=error;}finally{stop.abort(Error("Source custody fixture closing"));const settled=await Promise.allSettled([...pending]);for(const row of settled)if(row.status==="rejected"&&!failed){failed=true;failure=row.reason;}try{rmSync(root,{recursive:true,force:true});}catch(error){if(!failed){failed=true;failure=error;}}}if(failed)throw failure;

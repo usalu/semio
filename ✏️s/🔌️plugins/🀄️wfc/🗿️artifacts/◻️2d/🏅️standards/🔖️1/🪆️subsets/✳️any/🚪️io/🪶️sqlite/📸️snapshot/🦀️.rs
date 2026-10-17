@@ -8,14 +8,14 @@ fn invalid(message:impl Into<String>)->ValueError{ValueError::new(semio_framewor
 fn ordinal(n:usize)->Result<i64,ValueError>{i64::try_from(n).map_err(|_|ValueError::new(semio_framework_value::ValueRefusalKind::WorkLimit,"wfc2d ordinal overflow"))}
 fn floats(t:&str)->&'static[FloatColumn]{match t{"wfc2d_tile"=>&[FloatColumn::Binary64(5)],"wfc2d_path"=>&[FloatColumn::Binary64(3)],"wfc2d_segment"=>&[FloatColumn::Binary64(4),FloatColumn::Binary64(5),FloatColumn::Binary64(6),FloatColumn::Binary64(7),FloatColumn::Binary64(8),FloatColumn::Binary64(9)],"wfc2d_slot"=>&[FloatColumn::Binary64(4),FloatColumn::Binary64(5),FloatColumn::Binary64(6),FloatColumn::Binary64(7)],_=>&[]}}
 fn identity(r:FloatRow<'_>,n:usize)->Result<(),ValueError>{if r.rowid<=0||r.integer(0)?!=r.rowid||r.values.len()!=n{return Err(invalid("wfc2d entity identity or columns differ"))}Ok(())}
-fn word(r:FloatRow<'_>,i:usize)->Result<u32,ValueError>{u32::try_from(r.integer(i)?).map_err(|_|invalid("wfc2d unsigned32 differs"))}
+pub fn word(r:FloatRow<'_>,i:usize)->Result<u32,ValueError>{u32::try_from(r.integer(i)?).map_err(|_|invalid("wfc2d unsigned32 differs"))}
 fn flag(r:FloatRow<'_>,i:usize)->Result<bool,ValueError>{match r.integer(i)?{0=>Ok(false),1=>Ok(true),_=>Err(invalid("wfc2d boolean differs"))}}
 fn rows<'a>(d:&'a SqliteDatabase,t:&str,c:&mut SqliteSnapshotControl<'_>)->Result<Vec<FloatRow<'a>>,ValueError>{let mut result=Vec::new();let mut seen=BTreeSet::new();for(i,r)in d.table(t)?.rows.iter().enumerate(){if i%256==0{c.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,i,0)?;}let r=FloatRow::new(r,floats(t))?;if !seen.insert(r.rowid){return Err(invalid("duplicate wfc2d entity identity"))}result.push(r);}Ok(result)}
 fn ordered(mut rows:Vec<FloatRow<'_>>)->Result<Vec<FloatRow<'_>>,ValueError>{rows.sort_by_key(|r|r.integer(2).unwrap_or(-1));for(i,r)in rows.iter().enumerate(){if r.integer(2)?!=ordinal(i)?{return Err(invalid("wfc2d ordinals must be contiguous"))}}Ok(rows)}
 fn groups<'a>(d:&'a SqliteDatabase,t:&str,n:usize,owners:&BTreeSet<i64>,c:&mut SqliteSnapshotControl<'_>)->Result<BTreeMap<i64,Vec<FloatRow<'a>>>,ValueError>{let mut map=BTreeMap::<i64,Vec<FloatRow<'a>>>::new();for(i,r)in rows(d,t,c)?.into_iter().enumerate(){identity(r,n)?;let owner=r.integer(1)?;if !owners.contains(&owner){return Err(invalid("wfc2d relationship has unknown owner"))}map.entry(owner).or_default().push(r);if i%256==0{c.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,i,0)?;}}Ok(map)}
-fn media<'a>(d:&'a SqliteDatabase,t:&str,n:usize,owners:&BTreeSet<i64>,c:&mut SqliteSnapshotControl<'_>)->Result<BTreeMap<i64,FloatRow<'a>>,ValueError>{let mut map=BTreeMap::new();for(i,r)in rows(d,t,c)?.into_iter().enumerate(){identity(r,n)?;if !owners.contains(&r.rowid){return Err(invalid("wfc2d media has wrong-kind or unknown owner"))}map.insert(r.rowid,r);if i%256==0{c.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,i,0)?;}}if map.len()!=owners.len(){return Err(invalid("wfc2d media ownership is incomplete"))}Ok(map)}
-fn color(r:FloatRow<'_>,i:usize,owned:&mut Reconstruction<'_,'_>)->Result<Wfc2dColor,ValueError>{for _ in 0..4{owned.scalar()?;}Ok(Wfc2dColor{r:word(r,i)?,g:word(r,i+1)?,b:word(r,i+2)?,a:word(r,i+3)?})}
-fn point(r:FloatRow<'_>,i:usize,owned:&mut Reconstruction<'_,'_>)->Result<[f64;2],ValueError>{owned.scalar()?;owned.scalar()?;Ok([r.real(i)?,r.real(i+1)?])}
+pub fn media<'a>(d:&'a SqliteDatabase,t:&str,n:usize,owners:&BTreeSet<i64>,c:&mut SqliteSnapshotControl<'_>)->Result<BTreeMap<i64,FloatRow<'a>>,ValueError>{let mut map=BTreeMap::new();for(i,r)in rows(d,t,c)?.into_iter().enumerate(){identity(r,n)?;if !owners.contains(&r.rowid){return Err(invalid("wfc2d media has wrong-kind or unknown owner"))}map.insert(r.rowid,r);if i%256==0{c.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,i,0)?;}}if map.len()!=owners.len(){return Err(invalid("wfc2d media ownership is incomplete"))}Ok(map)}
+pub fn color(r:FloatRow<'_>,i:usize,owned:&mut Reconstruction<'_,'_>)->Result<Wfc2dColor,ValueError>{for _ in 0..4{owned.scalar()?;}Ok(Wfc2dColor{r:word(r,i)?,g:word(r,i+1)?,b:word(r,i+2)?,a:word(r,i+3)?})}
+pub fn point(r:FloatRow<'_>,i:usize,owned:&mut Reconstruction<'_,'_>)->Result<[f64;2],ValueError>{owned.scalar()?;owned.scalar()?;Ok([r.real(i)?,r.real(i+1)?])}
 fn color_cells(c:Wfc2dColor)->[Cell<'static>;4]{[Cell::Integer(i64::from(c.r)),Cell::Integer(i64::from(c.g)),Cell::Integer(i64::from(c.b)),Cell::Integer(i64::from(c.a))]}
 impl ArtifactSqliteSnapshotHost for Wfc2dSnapshot{
 
@@ -60,7 +60,4 @@ impl Wfc2dSnapshot{
  pub(crate) fn admit_sqlite_values(&self,c:&mut SqliteSnapshotControl<'_>,phase:SqliteSnapshotPhase)->Result<(),ValueError>{let mut p=RowWriter::borrowed(c,phase)?;self.write_sqlite_rows(&mut p)?;p.finish_borrowed()}
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;
 

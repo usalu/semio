@@ -1,5 +1,4 @@
 import { fixtureOriginalWorkStock } from "../../../../../../../🔨️modules/🎭️actor/🎟️retained-turn/🏛️bootstrap/🧪️tests/🧫️fixtures/🟦️.ts";
-import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
@@ -73,7 +72,7 @@ function harness(options: { now?: () => number; onProgress?: (stage: string) => 
   const continuations: Array<() => void> = [];
   const transport = new BrowserFrameTransport({ originalWorkStock: fixtureOriginalWorkStock(),
     worker,
-    boot: { bindingsModuleUrl: "renderer.js", bindingsWasmUrl: "renderer.wasm", canvas: {} as OffscreenCanvas, width: 1, height: 1, dpr: 1, locale: "en", descriptor: testBootDescriptor("generation3d"), appearance: TEST_HOST_APPEARANCE, platform: TEST_HOST_PLATFORM, storage: TEST_HOST_STORAGE },
+    boot: { bindingsModuleUrl: "renderer.js", bindingsWasmUrl: "renderer.wasm", canvas: {} as OffscreenCanvas, width: 1, height: 1, dpr: 1, locale: "en", descriptor: testBootDescriptor("generation3d"), appearance: TEST_HOST_APPEARANCE, platform: TEST_HOST_PLATFORM, storage: TEST_HOST_STORAGE, catalog: { version: 1 as const, targets: [], hosts: [], playgrounds: [] } },
     ...(options.now ? { now: options.now } : {}),
     setTimer: (callback, delayMs) => (delayMs === 0 ? continuations.push(callback) : 0),
     clearTimer: () => {},
@@ -104,7 +103,7 @@ function spinMs(milliseconds: number): void {
 
 describe("wgpu UI-turn budget", () => {
   it("pins the ceiling and the attribution law to their Rust twins", () => {
-    const trace = readFileSync(TRACE_RS, "utf8");
+    const trace = readModuleTreeSource(TRACE_RS);
     const sustained = /pub const SUSTAINED_OVERRUN_QUARANTINE_STEPS: u32 = (\d+);/.exec(trace);
     expect(sustained?.[1]).toBeDefined();
     expect(SUSTAINED_TURN_OVERRUN_TURNS).toBe(Number(sustained![1]));

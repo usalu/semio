@@ -2,6 +2,9 @@
   "name": "@semio-tech/compute-ownership-runner",
   "private": true,
   "type": "module",
+  "exports": {
+    ".": "./🟦️.ts"
+  },
   "scripts": {
     "test": "bun --cwd \"../../../../../../..\" repo run @semio-tech/compute-ownership-runner:test"
   },

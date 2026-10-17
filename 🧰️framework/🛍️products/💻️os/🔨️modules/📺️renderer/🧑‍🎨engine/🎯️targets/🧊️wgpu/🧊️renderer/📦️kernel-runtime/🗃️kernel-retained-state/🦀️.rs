@@ -224,6 +224,11 @@ impl RetainedSurface {
         self.published.as_ref()?.try_alias().ok()
     }
 
+    /// 🔎️ Whether a document is currently published on this surface, so a pool can tell a surface that never rendered from one that did.
+    pub fn has_published(&self) -> bool {
+        self.published.is_some()
+    }
+
     pub fn close_step(&mut self) -> bool {
         if let Some(current) = self.patch.take() {
             match current {
@@ -568,6 +573,10 @@ struct MountedReplayRecoveryToken {
 }
 
 struct MountedReplayRecoveryOwner {
+    #[cfg(any(test, feature = "testkit"))]
+    #[doc(hidden)]
+    pub generation: u64,
+    #[cfg(not(any(test, feature = "testkit")))]
     generation: u64,
     pub actor: ActorId,
     pub job: u64,
@@ -579,6 +588,10 @@ struct MountedReplayRecoveryOwner {
 struct MountedReplayRecoverySlot {
     pub epoch: u64,
     pub reserved: bool,
+    #[cfg(any(test, feature = "testkit"))]
+    #[doc(hidden)]
+    pub owner: Option<MountedReplayRecoveryOwner>,
+    #[cfg(not(any(test, feature = "testkit")))]
     owner: Option<MountedReplayRecoveryOwner>,
 }
 
@@ -674,13 +687,15 @@ fn mounted_replay_recovery_owner_close_one(owner: &mut MountedReplayRecoveryOwne
         log.begin_close();
         let now = semio_framework_job::default_now_us();
         let mut preview_sequence = owner.job;
+        let mut retained_progress = semio_framework_job::RetainedCloneProgress::default();
         let mut context = semio_framework_job::StepContext::new(
             semio_framework_job::OperationId(owner.actor.0),
             semio_framework_job::Generation(owner.generation),
-            now.and_then(|now| semio_framework_job::StepBudget::from_duration(1, now, semio_framework_job::MAINTENANCE_LANE_WALL_US)).unwrap_or(semio_framework_job::StepBudget::new(0, 0)),
+            now.and_then(|now| semio_framework_job::StepBudget::from_duration(1, now, semio_framework_job::MAINTENANCE_LANE_WALL_US, JOB_REPLAY_STEP_GRANT)).unwrap_or(semio_framework_job::StepBudget::new(0, 0, JOB_REPLAY_STEP_GRANT)),
             semio_framework_job::root_cancel_token(),
             semio_framework_job::default_now_us,
             &mut preview_sequence,
+            &mut retained_progress,
         );
         let _ = log.close_step(&mut context);
         if log.terminal_is_empty() {
@@ -854,7 +869,7 @@ impl CommandDocumentRetirementRegistry {
         self.slots.iter().flatten().any(|state| matches!(state, CommandDocumentRetirementState::Closing { .. }))
     }
 
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testkit"))]
     pub fn batch_is_empty(&self, batch: u64, generation: u64) -> bool {
         !self.slots.iter().flatten().any(|state| match state {
             CommandDocumentRetirementState::Reserved { batch: owner_batch, generation: owner_generation, .. }

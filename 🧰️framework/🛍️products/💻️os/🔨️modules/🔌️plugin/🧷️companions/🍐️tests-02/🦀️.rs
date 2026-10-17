@@ -1,3 +1,18 @@
-//! 🍐️ Companion test crate tests-02 of the plugin SDK partition (hosts: window-config).
+//! 🍐️ Companion test crate tests-02 of the plugin SDK partition: hosts the test roots `app_builder_tests_host`, `child_test_hosts`, `publication_mounted_test_hosts`, `tool_run_test_hosts`.
 //!
-//! 🧭️ WP1 left this companion empty on purpose: every WP1 test that cannot stay in its crate names `cfg(test)` fixtures of the facade (`test_app_mutation_fixture`, `publication_fixture`, `tool_jobs::test_*`) or items of layers above its crate, which a dev-dependency cannot reach; those tests run as hub test hosts of the facade (`🪝️mounts/🌱️wp1-foundation/🧪️test-hosts` and the `app_*_tests` mounts of hub 1) until the facade fixtures are public API (WP7 re-homes them here).
+//! 🧭️ The test sources stay where they are and are mounted here with `#[path]`; every name they use from the former facade root is spelled with the crate that owns it.
+
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as vcs;
+extern crate semio_framework_os_kernel as pack;
+
+#[cfg(test)]
+
+#[path = "../../🪝️mounts/📜️wp2-declaration/🧪️hosts/🏗️app-builder/🦀️.rs"]
+pub mod app_builder_tests_host;
+#[path = "../../🪝️mounts/👥️wp3-owners/🧪️test-hosts/🪆️child/🦀️.rs"]
+pub mod child_test_hosts;
+#[path = "../../🪝️mounts/👥️wp3-owners/🧪️test-hosts/🏇️publication-mounted/🦀️.rs"]
+pub mod publication_mounted_test_hosts;
+

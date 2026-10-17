@@ -11,7 +11,7 @@ const FRAME:&[FloatColumn]=&[FloatColumn::Binary64(2),FloatColumn::Binary64(3),F
 const GLB:&[FloatColumn]=&[FloatColumn::Binary64(3)];
 const MESH:&[FloatColumn]=&[FloatColumn::Binary32(3)];
 #[path="📏️cells/🦀️.rs"]mod cells;
-#[path="💰️backing/🦀️.rs"]mod backing;
+#[path="💰️backing/🦀️.rs"]pub mod backing;
 fn row_count(snapshot:&CurationSnapshot,control:&mut SqliteSnapshotControl<'_>,phase:SqliteSnapshotPhase)->Result<usize,ValueError>{
  let mut total=2usize.checked_add(snapshot.curated.len()).ok_or_else(||ValueError::new(semio_framework_value::ValueRefusalKind::WorkLimit,"Curation row count overflow"))?;control.check_rows(total)?;
  for(index,extra)in snapshot.stock_extra.iter().enumerate(){if index%256==0{control.checkpoint(phase,index,snapshot.stock_extra.len())?}total=total.checked_add(3).and_then(|n|n.checked_add(extra.typology_path.len())).ok_or_else(||ValueError::new(semio_framework_value::ValueRefusalKind::WorkLimit,"Curation row count overflow"))?;if let GeometryRecipe::Mesh{positions,normals,indices}=extra.geometry.as_ref(){total=total.checked_add(positions.len()).and_then(|n|n.checked_add(normals.len())).and_then(|n|n.checked_add(indices.len())).ok_or_else(||ValueError::new(semio_framework_value::ValueRefusalKind::WorkLimit,"Curation row count overflow"))?}control.check_rows(total)?}Ok(total)
@@ -60,6 +60,3 @@ fn to_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<Sqli
 fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{backing::reconstruct(database,control)}
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;

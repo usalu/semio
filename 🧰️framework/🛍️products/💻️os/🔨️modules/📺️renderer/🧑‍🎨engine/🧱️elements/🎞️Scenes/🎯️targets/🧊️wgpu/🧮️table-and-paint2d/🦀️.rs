@@ -1,31 +1,33 @@
 //! 🧮️ Paint2d navigator helpers and the table scene.
 
 use super::*;
+#[cfg(any(test, feature = "testkit"))]
+use semio_framework_os_renderer_wgpu_scene_state::Viewport;
 
 //#region Paint2d
 // 🖌️ Production paint-2d rendering and input live on `RasterHost`
 // (`🔨️modules/🗺️surface/🎨️paint/🦀️.rs`, attached by `semio_framework_os_renderer_wgpu_engine_attach::engine_surface_attach::sync_paint2d_scene`) — the SAME
 // host React's wasm `RasterSession` wraps. What remains in this region is the fixture-side document
 // projection the standalone tests read.
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 #[derive(Deserialize, Clone, Copy)]
-struct Paint2dCameraFields {
+pub struct Paint2dCameraFields {
     #[serde(default)]
-    pub(crate) x: f64,
+    pub x: f64,
     #[serde(default)]
-    pub(crate) y: f64,
+    pub y: f64,
     #[serde(default = "paint2d_default_one")]
-    pub(crate) zoom: f64,
+    pub zoom: f64,
 }
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 impl Default for Paint2dCameraFields {
     fn default() -> Self {
         Self { x: 0.0, y: 0.0, zoom: 1.0 }
     }
 }
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 fn paint2d_default_one() -> f64 {
     1.0
 }
@@ -58,6 +60,35 @@ pub const PAINT2D_NAVIGATOR_PADDING: f32 = 24.0;
  * now calls directly through the attached host). Falls back to a neutral centered camera when the
  * document has no pixel content. */
 
+#[cfg(any(test, feature = "testkit"))]
+pub fn paint2d_navigator_fit_viewport(flat: &[Paint2dFlatLayer], inner: Rect) -> Viewport {
+    let mut min_x = f32::INFINITY;
+    let mut min_y = f32::INFINITY;
+    let mut max_x = f32::NEG_INFINITY;
+    let mut max_y = f32::NEG_INFINITY;
+    for layer in flat {
+        let w = layer.width as f64 * layer.scale_x;
+        let h = layer.height as f64 * layer.scale_y;
+        let x0 = (layer.x - w * 0.5) as f32;
+        let y0 = (layer.y - h * 0.5) as f32;
+        let x1 = (layer.x + w * 0.5) as f32;
+        let y1 = (layer.y + h * 0.5) as f32;
+        min_x = min_x.min(x0.min(x1));
+        min_y = min_y.min(y0.min(y1));
+        max_x = max_x.max(x0.max(x1));
+        max_y = max_y.max(y0.max(y1));
+    }
+    if !min_x.is_finite() || !min_y.is_finite() || !max_x.is_finite() || !max_y.is_finite() {
+        return Viewport { x: 0.0, y: 0.0, zoom: 1.0 };
+    }
+    let content_w = (max_x - min_x).max(1.0);
+    let content_h = (max_y - min_y).max(1.0);
+    let inner_w = (inner.w - PAINT2D_NAVIGATOR_PADDING * 2.0).max(1.0);
+    let inner_h = (inner.h - PAINT2D_NAVIGATOR_PADDING * 2.0).max(1.0);
+    let zoom = (inner_w / content_w).min(inner_h / content_h).clamp(0.05, 32.0);
+    Viewport { x: min_x + (max_x - min_x) * 0.5, y: min_y + (max_y - min_y) * 0.5, zoom }
+}
+
 /** 🧭️ Maps the main (composite) viewport's visible world rect into the navigator's own fitted
  * screen space, producing the "you are here" overlay rectangle — a port of
  * `RasterHost::navigator_viewport_overlay_json`. `content_camera_json` is the main surface's
@@ -66,6 +97,24 @@ pub const PAINT2D_NAVIGATOR_PADDING: f32 = 24.0;
  * the React reference's `setCompositeViewport` action / this renderer's `ResizeObserver` equivalent
  * — see report for the pointer/resize wiring gap notes). Returns `None` when the main viewport size
  * hasn't been reported yet. */
+
+#[cfg(any(test, feature = "testkit"))]
+pub fn paint2d_navigator_overlay_rect(content_camera_json: &str, content_viewport_json: Option<&str>, navigator_viewport: &Viewport, navigator_inner: Rect) -> Option<Rect> {
+    let content_viewport_json = content_viewport_json?;
+    let content_camera = Viewport::from_json(content_camera_json);
+    let size: Value = serde_json::from_str(content_viewport_json).ok()?;
+    let content_w = size.get("width").and_then(Value::as_f64).unwrap_or(0.0) as f32;
+    let content_h = size.get("height").and_then(Value::as_f64).unwrap_or(0.0) as f32;
+    if content_w <= 0.0 || content_h <= 0.0 {
+        return None;
+    }
+    let content_rect = Rect::new(0.0, 0.0, content_w, content_h);
+    let (wx0, wy0) = content_camera.screen_to_world(0.0, 0.0, content_rect);
+    let (wx1, wy1) = content_camera.screen_to_world(content_w, content_h, content_rect);
+    let (sx0, sy0) = navigator_viewport.world_to_screen(wx0, wy0, navigator_inner);
+    let (sx1, sy1) = navigator_viewport.world_to_screen(wx1, wy1, navigator_inner);
+    Some(Rect::new(sx0.min(sx1), sy0.min(sy1), (sx1 - sx0).abs(), (sy1 - sy0).abs()))
+}
 
 //#endregion Paint2dNavigator
 
@@ -157,7 +206,7 @@ fn table_row_buttons(buttons: &[TableCellButtonPayload]) -> Vec<&TableCellButton
 }
 
 /// 📐️ One logical segment shared by Table paint, pointer routing and accessibility.
-fn table_segment_rect(rect: Rect, index: usize, count: usize) -> Option<Rect> {
+pub fn table_segment_rect(rect: Rect, index: usize, count: usize) -> Option<Rect> {
     if count == 0 || index >= count || rect.w <= 0.0 || rect.h <= 0.0 || !rect.x.is_finite() || !rect.y.is_finite() || !rect.w.is_finite() || !rect.h.is_finite() {
         return None;
     }
@@ -171,7 +220,7 @@ fn table_segment_index_at_x(rect: Rect, x: f32, count: usize) -> Option<usize> {
 }
 
 /// ✂️ The visible intersection accessibility may announce inside the Table body.
-fn table_visible_rect(rect: Rect, clip: Rect) -> Option<Rect> {
+pub fn table_visible_rect(rect: Rect, clip: Rect) -> Option<Rect> {
     let x = rect.x.max(clip.x);
     let y = rect.y.max(clip.y);
     let right = (rect.x + rect.w).min(clip.x + clip.w);
@@ -224,11 +273,11 @@ fn render_table_cell(cell: &Value, id: &str, rect: Rect, ctx: &mut FrameworkWidg
 /// path re-derives hits from, so a header band, a row band and their hit bands cannot drift.
 struct TableMetrics {
     pub(crate) header_h: f32,
-    pub(crate) row_h: f32,
+    pub row_h: f32,
     pub(crate) pad: f32,
     col_w: f32,
     pub(crate) handle_size: f32,
-    pub(crate) body: Rect,
+    pub body: Rect,
 }
 
 pub fn table_metrics(inner: Rect, columns: usize, theme: &Theme) -> TableMetrics {
@@ -243,7 +292,7 @@ pub fn table_metrics(inner: Rect, columns: usize, theme: &Theme) -> TableMetrics
     }
 }
 
-fn table_transfer_handle_rect(row: Rect, theme: &Theme) -> Rect {
+pub fn table_transfer_handle_rect(row: Rect, theme: &Theme) -> Rect {
     let size = theme.control_height_small.min(row.h).min(row.w.max(0.0));
     Rect::new(row.x + theme.padding_standard, row.y + (row.h - size) * 0.5, size.min((row.w - theme.padding_standard).max(0.0)), size)
 }
@@ -303,7 +352,7 @@ fn table_next_sort_direction(sort: Option<&TableSortJson>, column_id: &str) -> &
 
 /// 🎯️ The cell control a press at `x` lands on inside `cell_rect`, or `None` when the cell is plain
 /// text and the press belongs to the row underneath.
-fn table_cell_hit(cell: &Value, cell_rect: Rect, x: f32) -> Option<Option<ActionDescriptor>> {
+pub fn table_cell_hit(cell: &Value, cell_rect: Rect, x: f32) -> Option<Option<ActionDescriptor>> {
     let payload = serde_json::from_value::<TableCellPayload>(cell.clone()).ok()?;
     match payload {
         TableCellPayload::Stepper { value, min, max, step, action } => {
@@ -369,7 +418,7 @@ pub fn table_editable_text_focus_target(scene: &UiComponentSceneNode, inner: Rec
 }
 
 /** 📦️ Commits an editable cell draft only while its persisted base still matches the focused base. */
-pub(crate) fn table_editable_text_commit(
+pub fn table_editable_text_commit(
     scene: &UiComponentSceneNode,
     row_id: &str,
     column_id: &str,
@@ -765,9 +814,3 @@ pub fn render_table(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Framew
 }
 
 //#endregion Table
-
-//#region TableTests
-#[cfg(test)]
-#[path = "../../../🧪️tests/🔬️wgpu-table/🦀️.rs"]
-mod table_tests;
-//#endregion TableTests

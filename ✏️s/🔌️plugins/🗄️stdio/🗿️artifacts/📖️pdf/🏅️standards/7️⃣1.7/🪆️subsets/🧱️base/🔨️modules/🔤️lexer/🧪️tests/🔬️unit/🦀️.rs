@@ -1,4 +1,9 @@
-use super::*;
+use crate::standards::v1_7::subsets::base::schema::snapshot::{ObjRef, PdfDecimal, PdfDictEntry, PdfObject};
+#[allow(unused_imports)]
+use crate::standards::v1_7::subsets::base::io::error::{malformed, PResult, PdfEngineError};
+#[allow(unused_imports)]
+use std::collections::HashMap;
+use crate::standards::v1_7::subsets::base::modules::lexer::*;
 
 fn parse(text: &str) -> PdfObject {
     Lexer::new(text.as_bytes()).parse_object().expect("parses")

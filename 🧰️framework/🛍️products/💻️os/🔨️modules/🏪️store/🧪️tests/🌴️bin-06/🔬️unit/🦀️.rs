@@ -318,7 +318,6 @@ fn initialization_runtime_preserves_physical_backing_and_terminal_cursor_box() {
                 assert!(step.progress().fits(policy));assert_eq!((allocated,released),(step.progress().retained_capacity_bytes,step.progress().released_bytes));
             }
             assert!(runtime.terminal_is_empty());
-            eprintln!("[DEBUG] initialization runtime {method}: backing={extent} cursor-box={frame}; supplied physical policy, exact allocator receipts and separate terminal frame");
         }
     }
 }
@@ -378,7 +377,6 @@ fn an_erased_retirement_publishes_its_physical_close_demand_and_a_nested_driver_
     let frame=std::mem::size_of::<DemandingBufferRetirement>();
     let(step,allocated,released)=semio_framework_trace_memory_testing::observe_backing(||nested.close(RetainedCloneGrant { maximum_release_bytes:frame-1,..grant }).unwrap());assert_eq!((allocated,released),(0,0));assert_eq!(step.progress(),RetainedCloneProgress::default());assert!(nested.inner.is_some());
     let(step,allocated,released)=semio_framework_trace_memory_testing::observe_backing(||nested.close(grant).unwrap());assert_eq!((allocated,released),(0,frame));assert_eq!(step.progress().released_bytes,frame);assert!(nested.inner.is_none());
-    eprintln!("[DEBUG] original buffer pointer={pointer:p}; denied grant retained owner; exact physical8192 release and cursor frame{frame} are separate paid turns, no demand-to-grant conversion");
 }
 
 //#endregion 🔖️ErasedCloseDemandTests
@@ -458,7 +456,6 @@ async fn dispatch_group_borrowed_child_keeps_exact_sources_on_policy_refusal() {
     assert!(parent.envelope().vcs.edits.is_empty()&&child.envelope().vcs.edits.is_empty());
     assert_eq!(source[0].as_ptr(),bytes);
     assert_eq!(source[0],expected);
-    println!("[DEBUG] exact child source, label and schema borrows survive genuine group policy refusal");
     identity.encode(|control| { assert!(control.owned_bytes() <= IDENTITY_CEILING); Ok::<(), semio_framework_value::ValueError>(()) }).expect("same original cumulative identity observation");
     drop(identity.pause().expect("original Unit cumulative identity receipt"));
 }
@@ -498,7 +495,6 @@ fn immutable_stored_genesis_obeys_the_neutral_law() {
     assert_eq!(born.facts().digest(), digests[0]);
     assert_ne!(digests[0], digests[1]);
     assert!(semio_framework_os_vcs::io::text::genesis::decode_genesis_hex_controlled("7B",&mut semio_framework_value::NativeDecodeControl::new(4096,&mut |_|true)).is_err());
-    eprintln!("[DEBUG] Immutable genesis law preserves exact stored bytes, cached identity and shared decoded owners; birth1 encode, reload2 decodes0 encode");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -535,7 +531,6 @@ async fn opened_actor_ownership_obeys_the_neutral_law() {
     let mut candidate = parsed.into_envelope();
     candidate.vcs.edits.iter_mut().next().unwrap().actor = None;
     assert!(semio_framework_os_store_engine::lifted_store::ArtifactStore::new::<semio_framework_os_store_initialization_runtime::native_publication_producer::ArtifactSnapshotPublication>(candidate, actor).await.is_err());
-    eprintln!("[DEBUG] Opened actor law preserves construction identity, explicit peer author, bare local author, transition author and reopen; actorless durable edit refused");
     identity.encode(|control| { assert!(control.owned_bytes() <= IDENTITY_CEILING); Ok::<(), semio_framework_value::ValueError>(()) }).expect("same original cumulative identity observation");
     drop(identity.pause().expect("original Unit cumulative identity receipt"));
 }
@@ -587,7 +582,6 @@ fn stored_genesis_capture_is_bounded_and_cancellable() {
             assert!(cursor.terminal_is_empty());
         }
     }
-    eprintln!("[DEBUG] Stored Pack capture respects one-byte fuel and stale/cancel fences, hashes incrementally and retires exact admitted bytes");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -598,7 +592,6 @@ async fn retained_hydrators_refuse_actorless_history_from_the_neutral_law() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧫️actor-genesis/🔣️.json")).unwrap();
     for config in [false, true] {
         for row in fixture["retainedAdmissions"].as_array().unwrap() {
-            eprintln!("[DEBUG] Retained admission begins config={config}, authors={row}");
             let initial = DemoSnapshot { n: Some(0) };
             let mut envelope = create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "actorless-hydration", initial.clone(), None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
             if config { envelope.history_shape = semio_framework_os_spr::HistoryShape::Config; }
@@ -613,8 +606,7 @@ async fn retained_hydrators_refuse_actorless_history_from_the_neutral_law() {
             let mut rejected = false;
             if config {
                 let mut hydration = RetainedConfigStoreHydration::<DemoSnapshot, DemoMutation>::from_snapshots(live.envelope().vcs.genesis.clone(), initial.clone(), initial.clone(), history, live.envelope().id.clone(), "demo/v1".into(), complete_test_catalog(semio_framework_os_store_testing_doubles::DemoMemberStoreProducer::<DemoMutation>::new().member_store_owners(physical_test_close_grant())), 0, 65536, actor);
-                for _ in 0..1_000_000 { match hydration.advance(physical_test_close_grant()) { ConfigStoreHydrationStep::Pending(_) => {}, ConfigStoreHydrationStep::Rejected(diagnostic) => { eprintln!("[DEBUG] Retained config author admission refused: {diagnostic:?}"); rejected = true; break; }, ConfigStoreHydrationStep::Ready(mut store) => { close_test_store(&mut store); break; } } }
-                eprintln!("[DEBUG] Retained admission cleanup config={config}, rejected={rejected}");
+                for _ in 0..1_000_000 { match hydration.advance(physical_test_close_grant()) { ConfigStoreHydrationStep::Pending(_) => {}, ConfigStoreHydrationStep::Rejected(diagnostic) => {  rejected = true; break; }, ConfigStoreHydrationStep::Ready(mut store) => { close_test_store(&mut store); break; } } }
                 let mut closed = false;
                 for _ in 0..100000 { if hydration.terminal_is_empty() { closed = true; break; } let step=hydration.close_step(physical_test_close_grant()).unwrap();assert!(step.progress().fits(physical_test_close_grant())); }
                 assert!(closed, "retained hydration closes exactly");
@@ -626,9 +618,8 @@ async fn retained_hydrators_refuse_actorless_history_from_the_neutral_law() {
                 for _ in 0..1_000_000 {
                     let mut original_retained_progress_13=semio_framework_value::RetainedCloneProgress::default();
         let mut cx = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(64, u64::MAX, physical_test_close_grant()), semio_framework_job::root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_13);
-                    match hydration.step(&mut cx, physical_test_close_grant()) { PersistedDocumentHydrationStep::Pending(_) => {}, PersistedDocumentHydrationStep::Rejected(diagnostic) => { eprintln!("[DEBUG] Retained document author admission refused: {diagnostic:?}"); rejected = true; break; }, PersistedDocumentHydrationStep::Ready(PersistedDocumentHydrationOutput::Store(mut store)) => { close_test_store(&mut store); break; }, _ => panic!("requested store output") }
+                    match hydration.step(&mut cx, physical_test_close_grant()) { PersistedDocumentHydrationStep::Pending(_) => {}, PersistedDocumentHydrationStep::Rejected(diagnostic) => {  rejected = true; break; }, PersistedDocumentHydrationStep::Ready(PersistedDocumentHydrationOutput::Store(mut store)) => { close_test_store(&mut store); break; }, _ => panic!("requested store output") }
                 }
-                eprintln!("[DEBUG] Retained admission cleanup config={config}, rejected={rejected}");
                 let mut closed = false;
                 for _ in 0..100000 { if hydration.terminal_is_empty() { closed = true; break; } let step=hydration.close_step(physical_test_close_grant()).unwrap();assert!(step.progress().fits(physical_test_close_grant())); }
                 assert!(closed, "retained hydration closes exactly");
@@ -636,7 +627,6 @@ async fn retained_hydrators_refuse_actorless_history_from_the_neutral_law() {
             assert_eq!(!rejected, row["accepted"].as_bool().unwrap(), "config={config}, authors={row}");
         }
     }
-    eprintln!("[DEBUG] Original document/config retained admission rejects missing edit and operation authors under exact cleanup");
     identity.encode(|control| { assert!(control.owned_bytes() <= IDENTITY_CEILING); Ok::<(), semio_framework_value::ValueError>(()) }).expect("same original cumulative identity observation");
     drop(identity.pause().expect("original Unit cumulative identity receipt"));
 }
@@ -678,7 +668,6 @@ fn fresh_vcs_release_publishes_actual_retained_backing_demand() {
         let funded_terminal = owner.terminal_is_empty();
         for _ in 0..1024 { if owner.terminal_is_empty() { break; } let grant = RetainedCloneGrant { maximum_capacity_bytes: admission, maximum_release_bytes: admission, ..physical_test_close_grant() }; owner.close_step(grant).unwrap(); }
         assert!(owner.terminal_is_empty(), "exact independently admitted allocation grant drains the fixture before assertions");
-        eprintln!("[DEBUG] Fresh VCS physical backing={extent} advertised={advertised} inner-demand={physical} eight-turn-terminal={funded_terminal} actual-release-progress={progress:?}");
         let exact_accounting = progress.iter().all(|(step, actual)| step.progress().released_bytes == *actual);
         if advertised != physical || !funded_terminal || !exact_accounting || caller_released != caller_expected { failures.push((extent, advertised, physical, funded_terminal, exact_accounting)); }
     }
@@ -709,7 +698,6 @@ fn vcs_retirement_propagates_nested_physical_allocation_demand() {
         for _ in 0..1024 { if owner.terminal_is_empty() { break; } owner.close_step(RetainedCloneGrant { maximum_capacity_bytes:admission,maximum_release_bytes:admission,..physical_test_close_grant() }).unwrap(); }
         assert!(owner.terminal_is_empty());
         let exact_accounting = progress.iter().all(|(step, actual)| step.progress().released_bytes == *actual);
-        eprintln!("[DEBUG] VCS retirement backing={extent} advertised={demand} eight-turn-terminal={terminal} actual-release-progress={progress:?}");
         if demand != extent || !terminal || !exact_accounting || caller_released != caller_expected { failures.push((extent, demand, terminal, exact_accounting)); }
     }
     assert!(failures.is_empty(), "VCS retirement publishes and funds exact nested physical allocations: {failures:?}");
@@ -747,7 +735,6 @@ fn fresh_field_release_propagates_retained_target_allocation_demand() {
         for _ in 0..1024 { if owner.terminal_is_empty() { break; } let grant = RetainedCloneGrant { maximum_capacity_bytes: admission, maximum_release_bytes: admission, ..physical_test_close_grant() }; owner.close_step(grant).unwrap(); }
         assert!(owner.terminal_is_empty());
         let exact_accounting = progress.iter().all(|(step, actual)| step.progress().released_bytes == *actual);
-        eprintln!("[DEBUG] Fresh field target backing={extent} advertised={demand} eight-turn-terminal={terminal} actual-release-progress={progress:?}");
         if demand != extent || !terminal || !exact_accounting || caller_released != caller_expected { failures.push((extent, demand, terminal, exact_accounting)); }
     }
     assert!(failures.is_empty(), "fresh field release publishes and funds exact retained target allocations: {failures:?}");
@@ -784,7 +771,6 @@ fn fresh_vcs_preserves_terminal_snapshot_cursor_box_under_grant() {
         assert!(owner.terminal_is_empty());
         let expected = row["releasedBytes"].as_u64().unwrap() as usize;
         let reported = step.progress().released_bytes;
-        eprintln!("[DEBUG] Fresh VCS terminal snapshot cursor extent={N} demand={demand} caller={caller} actual-release={released} step={step:?} retained={retained}");
         (demand == N && released == expected && reported == released && retained == (expected == 0), N, demand, released, step)
     }
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🧵️job/🧪️tests/🧫️fixtures/📏️close-demand/🔣️.json")).unwrap();
@@ -837,7 +823,6 @@ fn fresh_vcs_active_history_decoder_propagates_physical_release_demand() {
         for _ in 0..1024 { if owner.terminal_is_empty() { break; } let grant = RetainedCloneGrant { maximum_capacity_bytes: admission, maximum_release_bytes: admission, ..physical_test_close_grant() }; owner.close_step(grant).unwrap(); }
         assert!(owner.terminal_is_empty());
         let exact = progress.iter().all(|(step, actual)| step.progress().released_bytes == *actual);
-        eprintln!("[DEBUG] Active edit history physical={extent} advertised={demand} terminal={terminal} exact={exact} progress={progress:?}");
         if demand != extent || actual != row["releasedBytes"].as_u64().unwrap() as usize || !terminal || !exact { failures.push((extent, demand, terminal, exact)); }
     }
     assert!(failures.is_empty(), "active history decoder preserves and funds every exact retained allocation: {failures:?}");
@@ -941,7 +926,6 @@ fn displaced_store_owner_preserves_terminal_physical_grants() {
         let backing = queue.backing_release_byte_demand().unwrap();
         let (step, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| queue.release_empty_backing_step(grant).unwrap());
         assert!(matches!(step, RetainedCloneStep::Complete(_))); assert!(step.progress().fits(grant)); assert_eq!((allocated, released), (0, backing)); assert_eq!(step.progress().released_bytes, backing);
-        println!("[DEBUG] displaced original terminal owner extent={N} caller={caller} release={expected}; denied original pointer retained, declared fixed policy pays Box and separate queue backing");
     }
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🧵️job/🧪️tests/🧫️fixtures/📏️close-demand/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap() { match row["physicalBytes"].as_u64().unwrap() { 1 => check::<1>(row), 16384 => check::<16384>(row), 65536 => check::<65536>(row), 262144 => check::<262144>(row), _ => panic!("declared neutral displaced-owner extents") } }
@@ -993,7 +977,6 @@ async fn installed_store_disposer_preserves_terminal_physical_grant() {
         if expected == 0 { assert_eq!(cursor.active.as_ref().unwrap().as_ref() as *const dyn ErasedSnapshotRetirement as *const (), original); }
         for _ in 0..8 { if cursor.active.is_none() { break; } cursor.close_step(&mut ArtifactStoreCloseView { store: &mut store }, grant_for(1, admission)).unwrap(); }
         assert!(cursor.active.is_none());
-        eprintln!("[DEBUG] Store nested cursor extent={N} demand={nested_demand} caller={caller} actual={nested_actual} reported={nested_report}");
         if nested_demand != N || nested_actual != expected || nested_report != nested_actual { failures.push((N, nested_demand, nested_actual, nested_report)); }
         *store.owners.owned_disposer = Some(Box::new(TerminalDisposer::<N>([0; N])));
         store.owners.owned_disposer_terminal = false;
@@ -1004,7 +987,6 @@ async fn installed_store_disposer_preserves_terminal_physical_grant() {
         let expected = row["releasedBytes"].as_u64().unwrap() as usize;
         for _ in 0..8 { if store.close_owned_terminal_is_empty() { break; } store.close_owned_step(grant_for(1, admission)).unwrap(); }
         assert!(store.close_owned_terminal_is_empty());
-        eprintln!("[DEBUG] Store terminal disposer extent={N} demand={demand} caller={caller} actual={actual} reported={reported}");
         if demand != N || actual != expected || reported != actual { failures.push((N, demand, actual, reported)); }
     }
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🧵️job/🧪️tests/🧫️fixtures/📏️close-demand/🔣️.json")).unwrap();
@@ -1055,7 +1037,6 @@ async fn member_owned_publication_birth_refuses_without_allocating_or_transferri
         assert!(request.mutations.terminal_is_empty());
         for _ in 0..65_536 { if matches!(SpaceMember::close_owned_step(&mut member, physical_test_close_grant()).unwrap(), RetainedCloneStep::Complete(_)) { break; } }
         assert!(SpaceMember::close_owned_terminal_is_empty(&member));
-        println!("[DEBUG] owned publication exact birth={birth} paid={allocated} zero/one-below allocations=0 original-vector-and-metadata-retained=true");
     }
 }
 
@@ -1108,7 +1089,6 @@ fn current_box_retirement_preserves_denied_owner_and_exact_physical_shell() {
     }
     assert!(slot.is_none());
     assert_eq!(freed, born);
-    eprintln!("[DEBUG] genuine Value erased String retains original identity under constructor/depth/item refusal; actual allocator agrees with all helper turns and separate Box shell");
 }
 
 #[test]
@@ -1145,7 +1125,6 @@ fn artifact_store_group_visibility_retires_original_noncopy_atomic_with_exact_fr
         assert_eq!(cursor.terminal_release_bytes(), Some(extent));
         let (_, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| drop(cursor));
         assert_eq!((allocated, released), (0, extent));
-        eprintln!("[DEBUG] original group atomic state={} bounded copy={copied} actual terminal frame={extent} no Copy projection", row["committed"]);
     }
 }
 
@@ -1237,7 +1216,6 @@ fn current_catalog_sources_admit_original_allocations_then_fund_each_ticket() {
         assert_eq!(step.progress().released_bytes, released);
     }
     assert!(owners.uninstalled_owners_terminal_is_empty());
-    eprintln!("[DEBUG] catalog original sources allocated={capacity}; original alias/ticket stages={constructor_turns} complete and close within exact physical receipts");
 }
 
 /// 🏗️ Verifies actual source construction is absent on denial and every later ticket/free is physically paid.
@@ -1287,7 +1265,6 @@ fn current_member_source_constructor_is_not_invoked_under_denied_axes() {
     }
     assert!(owners.uninstalled_owners_terminal_is_empty());
     assert_eq!(total_born, total_released);
-    eprintln!("[DEBUG] member source constructor: denied calls=0 funded calls=1 original ingress={capacity}; ticket births and final physical frees exactly match System allocator");
 }
 
 #[test]
@@ -1308,18 +1285,7 @@ fn ephemeral_member_original_preparation_frame_requires_exact_granted_release() 
         fn terminal_is_empty(&self) -> bool { true }
     }
     fn check<const N: usize>(row: &serde_json::Value) {
-        use std::mem::ManuallyDrop as Held;
-        let mut publication = ArtifactEphemeralOneItemPublication::<DemoSnapshot, DemoMutation> {
-            operation: semio_framework_job::OperationId(1), expected_generation: 0,
-            footprint: ArtifactStoreOneItemFootprint::for_ephemeral_item(0),
-            preparation: Held::new(Some(Box::new(TerminalPreparation::<N>([0; N])))),
-            displaced_root_retirement: Held::new(None),root_retirement_factory: Held::new(None),
-            returned_read_registry: Held::new(None),returned_read_retirement: Held::new(None),
-            owned_retirement_factory: Held::new(None),receipt: Held::new(None),
-            retained_checkpoint: Default::default(),factory_retirement: [None,None],
-            attempts: 0,published: false,cancel_requested: false,close_started: true,
-            fault: Held::new(None),phase: ArtifactStoreOneItemPublicationPhase::Closing,
-        };
+        let mut publication = ArtifactEphemeralOneItemPublication::<DemoSnapshot, DemoMutation>::closing_with_preparation(semio_framework_job::OperationId(1), Box::new(TerminalPreparation::<N>([0; N])));
         let pointer = publication.original_preparation().unwrap() as *const dyn ArtifactEphemeralOneItemPreparation<DemoSnapshot, DemoMutation> as *const ();
         let authority = |items,release,depth| ArtifactStoreOneItemGrant { maximum_items: items,maximum_copy_bytes: 0,maximum_capacity_bytes: 0,maximum_release_bytes: release,maximum_depth: depth };
         assert_eq!(publication.retirement_demands(0).unwrap(), semio_framework_value::RetirementDemand { release_bytes: N,depth: 1,..Default::default() });
@@ -1339,7 +1305,6 @@ fn ephemeral_member_original_preparation_frame_requires_exact_granted_release() 
         }
         assert!(publication.original_preparation().is_none());assert!(!publication.terminal_is_empty());
         let(step,allocated,released)=semio_framework_trace_memory_testing::observe_backing(||publication.close_step(authority(1,0,1)).unwrap());assert_eq!((allocated,released),(0,0));assert_eq!(step,RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1,..Default::default() }));assert!(publication.terminal_is_empty());
-        eprintln!("[DEBUG] ephemeral original member preparation frame extent={N} caller={caller} actual release={expected}; denied pointer retained and child/frame/phase terminal distinct");
     }
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../🔨️modules/🧵️job/🧪️tests/🧫️fixtures/📏️close-demand/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap(){match row["physicalBytes"].as_u64().unwrap(){1=>check::<1>(row),16384=>check::<16384>(row),65536=>check::<65536>(row),262144=>check::<262144>(row),_=>panic!("authored neutral original frame extent")}}
@@ -1376,7 +1341,6 @@ fn live_read_factory_admission_preserves_exact_registry_generation_on_refusal() 
     let mut registry=registry.take().map(SnapshotReadRegistryAliasRetirement::new);
     for _ in 0..32 {if registry.is_none(){break;}snapshot_registry_alias_close_step(&mut registry,cleanup).unwrap();}
     assert!(registry.is_none());
-    eprintln!("[DEBUG] live read admission preserves original pointer/index/generation on three denied axes; actual admitted Box birth and separate terminal shell agree with allocator");
 }
 
 #[test]
@@ -1390,7 +1354,6 @@ fn current_shared_grant_coverage_preserves_every_denied_axis() {
         match row["axis"].as_str().unwrap() { "maximumItems" => denied.maximum_items=value, "maximumCopyBytes" => denied.maximum_copy_bytes=value, "maximumCapacityBytes" => denied.maximum_capacity_bytes=value, "maximumReleaseBytes" => denied.maximum_release_bytes=value, "maximumDepth" => denied.maximum_depth=value, _ => panic!("unknown plain physical axis") }
         let (covered,born,freed)=semio_framework_trace_memory_testing::observe_backing(||artifact_retirement_grant_covers(denied,demand));assert!(!covered);assert_eq!((born,freed),(0,0));
     }
-    eprintln!("[DEBUG] actual shared Store grant coverage denies all five independently supplied limits without allocating or releasing owners");
 }
 
 #[test]
@@ -1431,7 +1394,6 @@ fn field_close_failure_preserves_real_receipts_through_the_original_decode_job()
     assert!(job.terminal_is_empty());assert!(registry.terminal_is_empty());
     drop(cx);
     caller.retire(grant);
-    eprintln!("[DEBUG] actual failed field close retains original frame allocation={allocated} release={released} through decode authority");
 }
 
 #[test]
@@ -1463,7 +1425,6 @@ fn normal_decode_release_records_original_wallet_even_after_child_fault(){
  for axis in fixture["deniedAxes"].as_array().unwrap(){let mut grant=supplied;match axis.as_str().unwrap(){"maximumItems"=>grant.maximum_items=0,"maximumCopyBytes"=>grant.maximum_copy_bytes=0,"maximumCapacityBytes"=>grant.maximum_capacity_bytes=0,"maximumReleaseBytes"=>grant.maximum_release_bytes=0,"maximumDepth"=>grant.maximum_depth=0,_=>panic!("closed original grant axis")};let mut receipt=RetainedCloneProgress::default();let mut sequence=0;let mut cx=owner.context(StepBudget::new(7,1500,grant),cancel.clone(),||Some(1000),&mut sequence,&mut receipt).unwrap();cx.set_stage("wallet.heap-warmup");let(step,born,freed)=semio_framework_trace_memory_testing::observe_backing(||job.step(&mut cx));assert!(matches!(step,Ok(None)),"denied axis {axis} answered {:?}",step.as_ref().map(|value|value.is_some()).map_err(|error|(&error.primary,&error.receipt_refusal)));assert_eq!((born,freed),(0,0),"denied axis {axis}");assert_eq!(cx.retained_progress(),Default::default());assert_eq!(cx.fuel_remaining(),7);assert_eq!(job.released_field_bytes(),0);assert!(matches!(job.state,ArtifactEnvelopeDecodeState::ReleaseCancelled));}
  let mut receipt=RetainedCloneProgress::default();let mut sequence=0;let mut cx=owner.context(StepBudget::new(7,1500,supplied),cancel.clone(),||Some(1000),&mut sequence,&mut receipt).unwrap();let(step,born,freed)=semio_framework_trace_memory_testing::observe_backing(||job.step(&mut cx));let failure=step.expect_err("funded original field failure remains complete");assert_eq!((born,freed),(64,32));let field_receipt:RetainedCloneProgress=serde_json::from_value(fixture["receipt"].clone()).unwrap();assert_eq!(failure.primary.retained_progress(),field_receipt);assert!(failure.receipt_refusal.is_none()&&failure.context_refusal.is_none());assert_eq!(cx.retained_progress(),field_receipt,"the failed field posts once and publishes no yield outcome");assert_eq!(cx.operation(),OperationId(98146));assert_eq!(cx.generation(),Generation(17));assert_eq!(cx.deadline_us(),1500);assert_eq!(cx.fuel_remaining(),6);assert_eq!(job.released_field_bytes(),32);let ArtifactEnvelopeDecodeState::ReleaseFault(diagnostic)=job.state else{panic!("real field fault remains attached")};assert_eq!(diagnostic.code,"field.wallet-after-real-turn");assert_eq!(diagnostic.retained_progress,field_receipt);drop(cx);
  let mut detached=None;for _ in 0..4096{drive_test_envelope_field_return(&registry,&mut detached);if job.terminal_is_empty(){break}let before=cleanup_cx.retained_progress();let(step,born,freed)=semio_framework_trace_memory_testing::observe_backing(||cleanup_cx.with_retained_loan(supplied,|cx|job.close_step(cx)).unwrap());assert_eq!(cleanup_cx.retained_progress(),before.checked_add(step.progress()).unwrap());assert!(step.progress().fits(supplied));assert_eq!((born,freed),(step.progress().retained_capacity_bytes,step.progress().released_bytes));}assert!(job.terminal_is_empty());assert!(registry.terminal_is_empty());while !owner.terminal_is_empty(){let(step,born,freed)=semio_framework_trace_memory_testing::observe_backing(||owner.close_step(supplied));assert!(step.progress().fits(supplied));assert_eq!((step.progress().retained_capacity_bytes,step.progress().released_bytes),(born,freed));}retire_original_envelope_cancel(cancel,supplied);drop(cleanup_cx);cleanup_caller.retire(supplied);
- eprintln!("[DEBUG] actual Store failed field keeps same operation98146/generation17/deadline1500/fuel7, zero denied physical effects and original wallet copy23/birth64/release32 with cumulative field release32");
 }
 
 #[test]
@@ -1535,5 +1496,4 @@ fn decode_fault_descriptor_borrows_original_payload_until_paid_nested_close() {
         let(step,born,freed)=semio_framework_trace_memory_testing::observe_backing(||owner.close_step(original_grant));assert!(step.progress().fits(original_grant));assert_eq!((step.progress().retained_capacity_bytes,step.progress().released_bytes),(born,freed));
     }
     retire_original_envelope_cancel(cancel,original_grant);
-    eprintln!("[DEBUG] Store fault descriptor borrows same in-place payload and paid admission twice with zero heap, then original nested close preserves refusal custody and physical receipts");
 }

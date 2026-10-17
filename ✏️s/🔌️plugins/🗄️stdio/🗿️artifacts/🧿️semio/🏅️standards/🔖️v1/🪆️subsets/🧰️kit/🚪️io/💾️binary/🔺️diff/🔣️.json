@@ -14,5 +14,10 @@
       "type": "string",
       "contentEncoding": "hex"
     }
-  }
+  },
+  "required": [
+    "format",
+    "presence",
+    "payload"
+  ]
 }

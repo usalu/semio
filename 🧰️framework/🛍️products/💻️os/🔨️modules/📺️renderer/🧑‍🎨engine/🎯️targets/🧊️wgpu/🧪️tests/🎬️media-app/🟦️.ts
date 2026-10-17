@@ -46,7 +46,6 @@ export async function runBrowserMediaAppAcceptance(segments: readonly string[]):
           const node = surface?.nodes.find((node) => String(node.nodeId) === nodeId && node.key === nodeKey);
           const acceptedRoot = surface && node ? { windowId: surface.windowId, windowGeneration: surface.windowGeneration, nodeId: node.nodeId, key: node.key, role: node.role } : null;
           const rootCorrelated = acceptedRoot !== null;
-          console.debug(`[DEBUG] app-backed-media ${input.id} accepted=${windowId}/${nodeId}/${nodeKey} token=${element.dataset.mediaSlot} state=${element.dataset.mediaState} root-correlated=${rootCorrelated}`);
           return { id: input.id, url: location.href, acceptedWindow: windowId, acceptedNode: nodeKey, token: element.dataset.mediaSlot!, state: element.dataset.mediaState!, kind: element.dataset.mediaKind!, mediaType: element.dataset.mediaType!, reason: element.textContent ?? "", rootCorrelated, acceptedRoot };
         }, specimen);
         assert.equal(receipt.state, fixture.capability);
@@ -59,7 +58,6 @@ export async function runBrowserMediaAppAcceptance(segments: readonly string[]):
         assert.equal(await page.locator("#semio-wgpu-accessibility [data-node-id]").evaluateAll((nodes, key) => nodes.filter((node) => node.getAttribute("data-node-key") === key).length, receipt.acceptedNode), 0);
         receipts.push(receipt);
         await page.screenshot({ path: resolve(outputDirectory, `${specimen.id}-${locale}.png`), fullPage: true });
-        console.log(`[DEBUG] app-backed-media ${specimen.id} ${locale} accepted-root-worker-dom unsupported verified`);
       } catch (error) {
         await page.screenshot({ path: resolve(outputDirectory, `${specimen.id}-${locale}-fault.png`), fullPage: true }).catch(() => {});
         throw error;

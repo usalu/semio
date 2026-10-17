@@ -1,6 +1,6 @@
 //! 🧬️ Architect architect.config mutation collection.
 
-use super::*;
+use crate::editor::architect::config::*;
 #[path = "📸️set-config/🦀️.rs"]
 mod set_config;
 pub use set_config::SetConfig;

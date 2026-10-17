@@ -14,13 +14,12 @@ test("Puzzle2d optional text candidate changes only first original owner and ret
   const before={owners:[{id:"retained",value:row.before},{id:"retained",value:"second owner"}]};
   if(row.expected==="changed"){
    db.query("UPDATE target SET value=? WHERE ordinal=(SELECT ordinal FROM target WHERE id=? ORDER BY ordinal LIMIT 1)").run(row.next,"retained");
-   const result=db.query("SELECT id,value FROM target ORDER BY ordinal").all();
+   const result=db.query<{id:string;value:string|null},[]>("SELECT id,value FROM target ORDER BY ordinal").all();
    const after=applyPatch(structuredClone(before),[{op:"replace",path:"/owners/0/value",value:row.next}],true,true).newDocument;
    expect(after.owners).toEqual(result);expect(after.owners[1]).toEqual(before.owners[1]);expect(before.owners[0]!.value).toBe(row.before);
-  }else expect(db.query("SELECT id,value FROM target ORDER BY ordinal").all()).toEqual(before.owners);
+  }else expect(db.query<{id:string;value:string|null},[]>("SELECT id,value FROM target ORDER BY ordinal").all()).toEqual(before.owners);
   for(const pause of fixture.pausePoints)expect({pause,source:before.owners[0]!.value}).toEqual({pause,source:row.before});
  }}finally{db.close()}
- console.log("[DEBUG] optional text candidates match fourteen SQLite first-owner/RFC6902 cases; duplicates and source retained",fixture.pausePoints);
  const path=resolve(import.meta.dir,"../🦀️.rs");expect(existsSync(path)).toBe(true);const source=readFileSync(path,"utf8");
  for(const marker of ["Puzzle2dTextCandidateCursor","Puzzle2dTextPreparationCursor","RetainedFieldCursor","ControlledRetirement","displaced","self.snapshot_clone.close_step(grant)","self.preparation.close_step(grant)","RetainedCloneBinding::close_one"])expect(source).toContain(marker);
  expect(source).not.toContain("SnapshotRetirementStep");

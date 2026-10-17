@@ -1,6 +1,6 @@
 //! 💡️ `hover-suggestion` command.
 
-use {crate::editor::puzzle2d::snapshot::puzzle2d_restore_brush_slot, crate::editor::puzzle2d::snapshot::puzzle2d_window_and_measures_scope, crate::editor::puzzle2d::Puzzle2dActionCtx};
+use {crate::editor::puzzle2d::interaction::puzzle2d_restore_brush_slot, crate::editor::puzzle2d::snapshot::puzzle2d_window_and_measures_scope, crate::editor::puzzle2d::interaction::Puzzle2dActionCtx};
 use semio_framework_pack_json::Value;
 
 /// 🖱️ Previews one candidate PROVISIONALLY — the board host rebuilds its ghost on `index` and nothing

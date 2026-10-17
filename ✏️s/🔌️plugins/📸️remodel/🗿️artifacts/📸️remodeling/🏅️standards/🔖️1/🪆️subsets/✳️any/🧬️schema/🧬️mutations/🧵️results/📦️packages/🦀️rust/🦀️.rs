@@ -25,33 +25,6 @@ pub mod standards {
                             pub mod inverse;
                         }
                         #[path = "."]
-                        pub mod replace_sparse {
-                            #[path = "../../../⭐replace-sparse/🦀️.rs"]
-                            mod component;
-                            #[path = "../../../⭐replace-sparse/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "../../../⭐replace-sparse/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                        }
-                        #[path = "."]
-                        pub mod replace_dense {
-                            #[path = "../../../☁️replace-dense/🦀️.rs"]
-                            mod component;
-                            #[path = "../../../☁️replace-dense/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "../../../☁️replace-dense/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                        }
-                        #[path = "."]
-                        pub mod replace_mesh_result {
-                            #[path = "../../../🧱replace-mesh-result/🦀️.rs"]
-                            mod component;
-                            #[path = "../../../🧱replace-mesh-result/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "../../../🧱replace-mesh-result/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                        }
-                        #[path = "."]
                         pub mod replace_trajectory {
                             #[path = "../../../🛣️replace-trajectory/🦀️.rs"]
                             mod component;
@@ -60,33 +33,8 @@ pub mod standards {
                             #[path = "../../../🛣️replace-trajectory/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                         }
-                        #[path = "."]
-                        pub mod replace_tracks {
-                            #[path = "../../../🚂replace-tracks/🦀️.rs"]
-                            mod component;
-                            #[path = "../../../🚂replace-tracks/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "../../../🚂replace-tracks/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                        }
-                        #[path = "."]
-                        pub mod replace_geo_products {
-                            #[path = "../../../🗾replace-geo-products/🦀️.rs"]
-                            mod component;
-                            #[path = "../../../🗾replace-geo-products/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "../../../🗾replace-geo-products/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                        }
-                        #[path = "."]
-                        pub mod replace_qc {
-                            #[path = "../../../🧾replace-qc/🦀️.rs"]
-                            mod component;
-                            #[path = "../../../🧾replace-qc/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "../../../🧾replace-qc/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                        }
+                        pub use semio_s_artifact_remodel_remodeling_mut_results_2::standards::v1::subsets::any::schema::mutations::{replace_sparse, replace_mesh_result, replace_tracks, replace_qc};
+                        pub use semio_s_artifact_remodel_remodeling_mut_results_3::standards::v1::subsets::any::schema::mutations::{replace_dense, replace_geo_products};
                     }
                 }
             }

@@ -64,7 +64,6 @@ fn owned_operation_byte_pages_preserve_8194_words_and_return_each_actual_backing
     assert_eq!(owner.allocated_bytes(), fixture["expected"]["terminalAllocatedBytes"].as_u64().unwrap() as usize);
     assert_eq!(total, retained);
     assert!(total >= expected.len());
-    println!("[DEBUG] All 8194 original operation octets retain exact source identity; each measured physical allocation and return obeys the unchanged 4096 grant, with zero grants preserving the same owner");
 }
 
 #[test]
@@ -105,7 +104,6 @@ fn owned_operation_byte_pages_borrowed_reader_keeps_the_same_8194_source_without
         if owner.close_one(1, 4096).unwrap() == OperationByteCloseStep::Complete { break; }
     }
     assert!(owner.terminal_is_empty());
-    println!("[DEBUG] Paged operation reader borrows the same full8194 source, crosses physical pages with fixed stack words, and never allocates a flattened operation");
 }
 
 #[test]
@@ -160,7 +158,6 @@ fn owned_operation_byte_pages_canonical_comparison_retains_exact_source_and_firs
     assert_eq!(serde_json::to_value(&source).unwrap(),serde_json::to_value(&expected).unwrap());
     for _ in 0..fixture["maximumCloseSteps"].as_u64().unwrap(){if source.close_one(1,4096).unwrap()==OperationByteCloseStep::Complete{break;}}
     assert!(source.terminal_is_empty());
-    println!("[DEBUG] Exact whole 8194 source comparison has zero backing allocation, keeps first mismatch and cancellation position, and retains source until fixed 4096 terminal retirement");
 }
 
 #[test]
@@ -205,7 +202,6 @@ fn owned_operation_byte_pages_complete_operation_limit_counts_header_and_returns
     assert_eq!(source.len(),258);
     assert!(source.iter().eq(expected[..258].iter().copied()));
     close(&mut source);
-    println!("[DEBUG] Complete 8194 operation limit includes its header, one-byte-short refusal preserves the accepted whole fragment prefix, and inner cancellation retains its exact actual source for fixed 4096 terminal release");
 }
 
 #[test]
@@ -253,7 +249,6 @@ fn owned_operation_byte_pages_fund_complete_backing_across_hops_before_actual_em
             assert!(source.terminal_is_empty());assert_eq!(source.allocated_bytes(),0);
         }
     }
-    println!("[DEBUG] Same8194 original octets use step-funded actual backing under4096 and same consuming Native admission receipt; actual emission allocates no backing, cancellation retains only genuine256 prefix and all unpaid-to-release ownership");
 }
 
 #[test]
@@ -267,7 +262,6 @@ fn owned_operation_byte_pages_empty_prepaid_handback_keeps_exact_zero_payload_au
     let demand=source.next_allocation_bytes();
     assert_eq!(source.close_one(1,4096).unwrap(),OperationByteCloseStep::Complete);assert!(source.terminal_is_empty());
     assert_eq!(demand.expect_err("exact zero emitted operation cannot acquire a later payload allocation").kind,semio_framework_value::ValueRefusalKind::OwnershipLimit);
-    println!("[DEBUG] Empty measured operation handback preserves exact zero payload authority and cannot acquire future backing after publication");
 }
 
 #[test]
@@ -297,7 +291,6 @@ fn owned_operation_byte_pages_measure_complete_operation_without_retaining_paylo
     assert_eq!(measured.write_bytes(&expected[2..],&mut control).unwrap_err().kind(),semio_framework_value::ValueRefusalKind::Canceled);
     assert_eq!(control.owned_bytes(),0);assert!(measured.exact_length().is_err());
     assert_eq!(serde_json::to_value(&expected).unwrap().as_array().unwrap().len(),fixture["expected"]["payloadBytes"].as_u64().unwrap()as usize);
-    println!("[DEBUG] Genuine operation measurement preserves complete8194 whole-frame ceiling and same Native control without any payload backing; finite refusal/cancellation latch prevents a false funding length");
 }
 
 #[test]
@@ -315,7 +308,6 @@ fn operation_byte_comparison_preserves_enclosing_workload_on_acceptance_and_refu
         if candidate==&source{result.unwrap();comparison.finish().unwrap();}else{assert_eq!(result.unwrap_err().kind(),semio_framework_value::ValueRefusalKind::InvalidValue);assert_eq!(comparison.position(),0);assert!(comparison.finish().is_err());}
         control.step().expect("exact enclosing caller stage survives nested sink workload");assert_eq!(observed.get(),(total,total));assert_eq!(control.owned_bytes(),0);
     }
-    println!("[DEBUG] Exact borrowed comparison restores caller2/2 workload after nested acceptance and original typed refusal, with no source/output ownership transfer");
 }
 
 #[test]
@@ -358,6 +350,5 @@ fn child_paged_operation_carrier_borrows_exact8194_and_returns_actual_pages_with
     let mut outer=0;
     while !collection.terminal_is_empty(){let(step,a,r)=semio_framework_trace_memory_testing::observe_backing(||collection.return_empty_page(&mut parent,1));let step=step.unwrap();assert!(step.progressed);assert_eq!((a,r),(0,0));assert_eq!(step.returned_allocation_bytes,parent.retained_bytes());let(drain,a,r)=semio_framework_trace_memory_testing::observe_backing(||parent.close_step(1,max));assert_eq!(a,0);assert!(r<=max);assert_eq!(drain,AllocationReturnStep::Pending{released_items:1,released_bytes:r});outer+=r;}
     assert!(parent.terminal_is_empty());assert_eq!(outer,collection_bytes);
-    eprintln!("[DEBUG] actual paged Child operation capability borrows exact original8194 refs without allocation; physical allocator proves every source and outer collection handoff releases0 child bytes, parent full4096 deallocation only");
 }
 

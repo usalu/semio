@@ -1,10 +1,11 @@
 use super::*;
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::testing::{assert_matches_oracle, case, close, group_extent, raised};
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::SolidKey;
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::{compute_element_solids, SolidFamily};
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::SolidFamily;
+use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_element_solids;
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::{plan::solid_steps, ModelInferenceSession, ModelNode};
-use crate::standards::v1::subsets::any::schema::inferences::stair_runs::compute_stair_runs;
-use crate::standards::v1::subsets::any::schema::inferences::storey_levels::compute_storey_levels;
+use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_stair_runs;
+use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_storey_levels;
 use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff, patches::StairPatch}, inferences::ModelInference, snapshot::ModelSnapshot};
 use protocol::Inference;
 use std::collections::BTreeMap;

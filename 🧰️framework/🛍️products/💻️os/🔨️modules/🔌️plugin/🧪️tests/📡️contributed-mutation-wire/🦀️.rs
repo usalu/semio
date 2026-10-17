@@ -4,11 +4,12 @@
 use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 
+#[doc(hidden)]
 #[derive(Clone, Debug, PartialEq, Serialize, ToValue, Deserialize, FromValue)]
 #[serde(deny_unknown_fields)]
 #[value(deny_unknown_fields)]
-pub(crate) struct WireTestSnapshot {
-    pub(crate) value: i32,
+pub struct WireTestSnapshot {
+    pub value: i32,
 }
 
 impl pack::snapshot::ArtifactPack for WireTestSnapshot {
@@ -28,7 +29,7 @@ impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot
 #[serde(deny_unknown_fields)]
 #[value(deny_unknown_fields)]
 pub(crate) struct WireTestDiff {
-    pub(crate) deltas: Vec<i32>,
+    pub deltas: Vec<i32>,
 }
 
 impl protocol::DiffAlgebra<WireTestSnapshot> for WireTestDiff {
@@ -54,11 +55,14 @@ impl protocol::MutationDiff<WireTestSnapshot> for WireTestDiff {
     }
 }
 
+#[doc(hidden)]
 #[path = "../../🧪️testing/📡️contributed-mutation-wire/🧬️mutations/🦀️.rs"]
-pub(crate) mod mutations;
-pub(crate) use mutations::{AddValue, WireTestMutation};
+pub mod mutations;
+pub use crate::contributed_mutation_wire::mutations::add_value::AddValue;
+pub use crate::contributed_mutation_wire::mutations::WireTestMutation;
 
+#[doc(hidden)]
 #[cfg(test)]
 #[path = "../📡️contributed-mutation-wire-unit/🦀️.rs"]
-mod tests;
+pub mod tests;
 //#endregion 📡️ContributedMutationWireFixture

@@ -54,7 +54,4 @@ pub use mutation::AddLayerAsset;
 pub mod diff;
 #[path = "↩️inverse/🦀️.rs"]
 pub mod inverse;
-#[cfg(test)]
-#[path = "🧪️tests/🖼️declines/🦀️.rs"]
-mod tests_declines_to_reattach_an_asset_already_on_the_document;
 //#endregion 🪢️TaxonomyMounts

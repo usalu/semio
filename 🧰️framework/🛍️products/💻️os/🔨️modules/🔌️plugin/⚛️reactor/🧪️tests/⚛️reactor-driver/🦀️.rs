@@ -1,15 +1,31 @@
-use super::*;
+use semio_framework::kernel::{Event, UiPatch};
+use semio_framework_plugin_reactor_tasks::{INSTANCE_METADATA, REGISTRY, TASK_EXECUTOR, TASK_RECORDS, TASK_RESUMES};
+use semio_framework_plugin_reactor_tasks::tasks_instance_metadata::InstanceMetadataRegistry;
+use semio_framework_plugin_reactor_patches::PATCHES;
+use semio_framework_plugin_reactor_tasks::tasks_fixed_slots::REACTOR_TASK_SLOTS;
+#[cfg(test)]
+use semio_framework_ui_runtime::SurfaceReconcileReadyPatch;
+use semio_framework_plugin_reactor_tasks::tasks_task_lane::TaskResumeOutcome;
+use semio_framework_plugin_actor_host::{executor, requests};
+use semio_framework_plugin_reactor_patches as patches;
+use semio_framework_plugin_reactor_lifecycle as pending;
+use semio_framework_plugin_reactor_turn as turn;
+use semio_framework_ui_contract as ui_contract;
+use semio_framework_plugin_reactor_lifecycle::life_reactor_close::reactor_close_fault;
 
-pub(crate) fn queue_external_patch(patch: UiPatch) {
+#[doc(hidden)]
+pub fn queue_external_patch(patch: UiPatch) {
     pending::with_state(|pending| pending.borrow_mut().push_external(patch)).unwrap();
 }
 
-pub(crate) fn patch_receipt_is_issued(receipt: ActorUiPatchReceipt) -> bool {
+#[doc(hidden)]
+pub fn patch_receipt_is_issued(receipt: ActorUiPatchReceipt) -> bool {
     pending::with_state(|pending| pending.borrow().receipt_is_issued(receipt))
 }
 
-pub(crate) async fn poll_with_patch_output_fault<PA: crate::plugin_app::PluginApp>(
-    runtime: &crate::plugin_runtime::PluginRuntime<PA>,
+#[doc(hidden)]
+pub async fn poll_with_patch_output_fault<PA: semio_framework_plugin_reactor_app::PluginApp>(
+    runtime: &semio_framework_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<PA>,
     events: Vec<Event>,
     budget: semio_framework::kernel::Budget,
     late_clock: bool,
@@ -31,23 +47,26 @@ pub(crate) async fn poll_with_patch_output_fault<PA: crate::plugin_app::PluginAp
             }
         },
         |_, ()| (),
-        &mut crate::app_testing::artifact_app_laws::fixture_identity(), &mut crate::app_testing::artifact_app_laws::fixture_step_context())
+        &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity(), &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_step_context())
     .await;
     (result, receipt)
 }
 
-pub(crate) async fn poll_with_output_failure<PA: crate::plugin_app::PluginApp>(runtime: &crate::plugin_runtime::PluginRuntime<PA>, events: Vec<Event>, budget: semio_framework::kernel::Budget) -> Result<(), semio_framework::Fault> {
-    turn::poll_kernel_output(runtime, events, None, None, budget, |_| Err(reactor_close_fault("injected output conversion failure")), |_, ()| (), &mut crate::app_testing::artifact_app_laws::fixture_identity(), &mut crate::app_testing::artifact_app_laws::fixture_step_context()).await
+#[doc(hidden)]
+pub async fn poll_with_output_failure<PA: semio_framework_plugin_reactor_app::PluginApp>(runtime: &semio_framework_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<PA>, events: Vec<Event>, budget: semio_framework::kernel::Budget) -> Result<(), semio_framework::Fault> {
+    turn::poll_kernel_output(runtime, events, None, None, budget, |_| Err(reactor_close_fault("injected output conversion failure")), |_, ()| (), &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity(), &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_step_context()).await
 }
 
 /// ▶️ The exact `run_until_idle` call `poll` makes after routing events, exposed directly.
-pub(crate) async fn run_until_idle(max_iterations: u32) -> bool {
+#[doc(hidden)]
+pub async fn run_until_idle(max_iterations: u32) -> bool {
     TASK_EXECUTOR.with(|executor| executor.run_until_idle(max_iterations))
 }
 
 /// ✅️ The exact `REGISTRY::resolve` call `poll`'s `Event::Completed` arm makes, exposed
 /// directly — the native stand-in for "an injected `Event::Completed`".
-pub(crate) async fn resolve_request(id: u64, result: Result<Vec<u8>, semio_framework::Fault>) {
+#[doc(hidden)]
+pub async fn resolve_request(id: u64, result: Result<Vec<u8>, semio_framework::Fault>) {
     REGISTRY.with(|registry| registry.resolve(semio_framework::kernel::RequestId(id), result));
 }
 
@@ -55,12 +74,13 @@ pub(crate) async fn resolve_request(id: u64, result: Result<Vec<u8>, semio_frame
 /// resolution surfaces as `Err` here instead — `drain_task_resumes` frames that straight to
 /// the shell without ever reaching `plugin_runtime`, so a test asserting on it never needs
 /// `plugin_resume_task` at all).
-pub(crate) async fn pop_task_resume() -> Option<(u32, crate::app_emission::ActionMeta, Result<crate::plugin_runtime::TaskResumeInput, semio_framework::Fault>)> {
+#[doc(hidden)]
+pub async fn pop_task_resume() -> Option<(u32, semio_framework_plugin_decl_emission::ActionMeta, Result<semio_framework_plugin_runtime_ops::ops_typed_operations::TaskResumeInput, semio_framework::Fault>)> {
     TASK_RESUMES.with(|resumes| resumes.borrow_mut().pop()).map(|resume| {
         let input = match resume.outcome {
-            TaskResumeOutcome::Command(bytes) => Ok(crate::plugin_runtime::TaskResumeInput::Command(bytes)),
+            TaskResumeOutcome::Command(bytes) => Ok(semio_framework_plugin_runtime_ops::ops_typed_operations::TaskResumeInput::Command(bytes)),
             #[cfg(test)]
-            TaskResumeOutcome::Emit { artifact_ops, config_ops, draft_ops } => Ok(crate::plugin_runtime::TaskResumeInput::Emit { artifact_ops, config_ops, draft_ops }),
+            TaskResumeOutcome::Emit { artifact_ops, config_ops, draft_ops } => Ok(semio_framework_plugin_runtime_ops::ops_typed_operations::TaskResumeInput::Emit { artifact_ops, config_ops, draft_ops }),
             #[cfg(test)]
             TaskResumeOutcome::Fault(fault) => Err(fault),
         };
@@ -68,15 +88,18 @@ pub(crate) async fn pop_task_resume() -> Option<(u32, crate::app_emission::Actio
     })
 }
 
-pub(crate) async fn task_count_for_instance(instance: u32) -> usize {
+#[doc(hidden)]
+pub async fn task_count_for_instance(instance: u32) -> usize {
     TASK_RECORDS.with(|records| records.borrow().count_instance(instance))
 }
 
-pub(crate) async fn task_key_is_live(instance: u32, key: &str) -> bool {
+#[doc(hidden)]
+pub async fn task_key_is_live(instance: u32, key: &str) -> bool {
     TASK_RECORDS.with(|records| records.borrow().find_key(instance, key).is_some())
 }
 
-pub(crate) async fn set_instance_quota(instance: u32, outstanding_requests: u64) {
+#[doc(hidden)]
+pub async fn set_instance_quota(instance: u32, outstanding_requests: u64) {
     INSTANCE_METADATA.with(|metadata| {
         let mut metadata = metadata.borrow_mut();
         if let Some(entry) = metadata.slots.get_mut(InstanceMetadataRegistry::index(instance)).filter(|entry| entry.instance == instance) {
@@ -87,7 +110,8 @@ pub(crate) async fn set_instance_quota(instance: u32, outstanding_requests: u64)
     });
 }
 
-pub(crate) async fn pending_request_count() -> usize {
+#[doc(hidden)]
+pub async fn pending_request_count() -> usize {
     REGISTRY.with(|registry| registry.pending_ids().len())
 }
 
@@ -96,7 +120,8 @@ pub(crate) async fn pending_request_count() -> usize {
 /// fired. Needed because retiring a request out from under a LIVE task deliberately issues no
 /// wake (`RequestRegistry::begin_cancel_instance`), so `run_until_idle` alone would never visit
 /// the parked task that must observe its retirement. Answers how many tasks completed on it.
-pub(crate) async fn poll_instance_tasks_once(instance: u32) -> usize {
+#[doc(hidden)]
+pub async fn poll_instance_tasks_once(instance: u32) -> usize {
     let ids: Vec<_> = (0..REACTOR_TASK_SLOTS).filter_map(|index| TASK_RECORDS.with(|records| records.borrow().entry_at(index).and_then(|(id, record)| (record.instance == instance).then_some(id)))).collect();
     let mut completed = 0;
     for id in ids {
@@ -111,7 +136,8 @@ pub(crate) async fn poll_instance_tasks_once(instance: u32) -> usize {
 /// 🚫️ The exact `RequestRegistry::cancel_instance` call `poll`'s `Event::InstanceClose` arm
 /// makes right after `cancel_instance_tasks`, exposed directly for a test to run the SAME
 /// two-step sequence natively.
-pub(crate) async fn cancel_instance_registry_requests(instance: u32) -> usize {
+#[doc(hidden)]
+pub async fn cancel_instance_registry_requests(instance: u32) -> usize {
     REGISTRY.with(|registry| {
         let before = registry.pending_ids().len();
         let mut cursor = registry.begin_cancel_instance(instance);

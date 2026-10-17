@@ -31,6 +31,10 @@ type stdioObj30GeometryInferenceGuardSizeBounds = { readonly minItems?: number; 
 
 export const stdioObj30GeometryInferenceGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : stdioObj30GeometryInferenceGuardReject(at, "value is not an object");
+export const stdioObj30GeometryInferenceGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) stdioObj30GeometryInferenceGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const stdioObj30GeometryInferenceGuardArray = (value: unknown, at: string, bounds: stdioObj30GeometryInferenceGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return stdioObj30GeometryInferenceGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) stdioObj30GeometryInferenceGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -61,17 +65,17 @@ export const stdioObj30GeometryInferenceGuardConstant = <T extends string | numb
 //#endregion 🚪️Parsers
 
 export function parseObjInference(value: unknown, at = "$"): ObjInference {
-  const row = stdioObj30GeometryInferenceGuardObject(value, at);
+  const row = stdioObj30GeometryInferenceGuardClosed(stdioObj30GeometryInferenceGuardObject(value, at), at, ["bounds"]);
   return {
     bounds: parseObjBounds(row["bounds"], `${at}.bounds`),
   };
 }
 
 export function parseObjBounds(value: unknown, at = "$"): ObjBounds {
-  const row = stdioObj30GeometryInferenceGuardObject(value, at);
+  const row = stdioObj30GeometryInferenceGuardClosed(stdioObj30GeometryInferenceGuardObject(value, at), at, ["min", "max", "vertexCount", "faceCount", "groupCount"]);
   return {
-    min: stdioObj30GeometryInferenceGuardArray(row["min"], `${at}.min`, {"minItems": 3, "maxItems": 3}).map((item, index) => stdioObj30GeometryInferenceGuardNumber(item, `${at}.min[${index}]`)),
-    max: stdioObj30GeometryInferenceGuardArray(row["max"], `${at}.max`, {"minItems": 3, "maxItems": 3}).map((item, index) => stdioObj30GeometryInferenceGuardNumber(item, `${at}.max[${index}]`)),
+    min: ((items0) => [stdioObj30GeometryInferenceGuardNumber(items0[0], `${at}.min[0]`), stdioObj30GeometryInferenceGuardNumber(items0[1], `${at}.min[1]`), stdioObj30GeometryInferenceGuardNumber(items0[2], `${at}.min[2]`)])(stdioObj30GeometryInferenceGuardArray(row["min"], `${at}.min`, {"minItems": 3, "maxItems": 3})),
+    max: ((items0) => [stdioObj30GeometryInferenceGuardNumber(items0[0], `${at}.max[0]`), stdioObj30GeometryInferenceGuardNumber(items0[1], `${at}.max[1]`), stdioObj30GeometryInferenceGuardNumber(items0[2], `${at}.max[2]`)])(stdioObj30GeometryInferenceGuardArray(row["max"], `${at}.max`, {"minItems": 3, "maxItems": 3})),
     vertexCount: stdioObj30GeometryInferenceGuardInteger(row["vertexCount"], `${at}.vertexCount`, {"minimum": 0}),
     faceCount: stdioObj30GeometryInferenceGuardInteger(row["faceCount"], `${at}.faceCount`, {"minimum": 0}),
     groupCount: stdioObj30GeometryInferenceGuardInteger(row["groupCount"], `${at}.groupCount`, {"minimum": 0}),

@@ -31,11 +31,14 @@ pub fn plan(p: &GltfCreatePrimitivePayload, base: &GltfSnapshot) -> Result<GltfD
     Ok(GltfDiff { meshes: primitives_rows(p.mesh, GltfPrimitivesDiff { added: vec![GltfAdded { index: p.position, item: p.primitive.as_deref().cloned().unwrap_or_default() }], ..Default::default() }), ..Default::default() })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn inverse(p: &GltfCreatePrimitivePayload, base: &GltfSnapshot) -> Vec<super::GltfMutation> {
+pub fn inverse<Op>(p: &GltfCreatePrimitivePayload, base: &GltfSnapshot) -> Vec<Op>
+where
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::remove_used_extension::RemoveUsedExtensionMutation>,
+{
     if validate(p, base).is_err() {
         return Vec::new();
     }
-    vec![super::delete_primitive::mutation(super::delete_primitive::GltfDeletePrimitivePayload { mesh: p.mesh, primitive: p.position })]
+    vec![crate::standards::v2_0::subsets::any::schema::mutations::delete_primitive::mutation(crate::standards::v2_0::subsets::any::schema::mutations::delete_primitive::GltfDeletePrimitivePayload { mesh: p.mesh, primitive: p.position })]
 }
 
 //#region 🧬️DirectMutation
@@ -48,11 +51,17 @@ pub enum CreatePrimitiveMutation {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn mutation(payload: GltfCreatePrimitivePayload) -> super::GltfMutation {
-    super::GltfMutation::CreatePrimitive(CreatePrimitiveMutation::Apply(payload))
+pub fn mutation<Op>(payload: GltfCreatePrimitivePayload) -> Op
+where
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::create_primitive::CreatePrimitiveMutation>,
+{
+    Op::from(CreatePrimitiveMutation::Apply(payload))
 }
 
-impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for CreatePrimitiveMutation {
+impl<Op> protocol::MutationKind<GltfSnapshot, Op> for CreatePrimitiveMutation
+where
+    Op: protocol::Mutation<GltfSnapshot, Diff = GltfDiff> + From<CreatePrimitiveMutation>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "primitive", kind: "create-primitive", record: "CreatedPrimitive" };
 
     fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<GltfDiff> {
@@ -64,7 +73,7 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for CreatePrimiti
         }
     }
 
-    fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<super::GltfMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         match self {
             Self::Apply(payload) => Ok(inverse(payload, base)),
         }
@@ -81,7 +90,5 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for CreatePrimiti
 //#endregion 🧬️DirectMutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️t061/🦀️.rs"]
-mod case_t061;
+
 //#endregion 🧪️Tests

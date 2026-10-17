@@ -7,6 +7,7 @@ import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { SEMIO_SCHEMA_VENDOR_VOCABULARY_V1, semioSchemaAjvV1 } from "@semio-tech/schema-ts/oracles/validator";
+import { directorySchemaUrl } from "../../🔨️modules/📇️directory/🧪️tests/🧫️fixtures/🟦️.ts";
 
 const os = fileURLToPath(new URL("../..", import.meta.url));
 const hub = fileURLToPath(new URL("../../../../../🌎️hub", import.meta.url));
@@ -52,7 +53,7 @@ describe("🏷️ x-semio vendor annotation vocabulary", () => {
   }, 120_000);
 
   it("compiles the schemas carrying x-semio-note in strict mode", () => {
-    const directory = json(fileURLToPath(new URL("../../🔨️modules/📇️directory/🧬️schema/🔣️.json", import.meta.url)));
+    const directory = json(fileURLToPath(directorySchemaUrl));
     const twoClient = json(join(hub, "🧬️schema/🤝️two-client-document-v1/🔣️.json"));
     expect(annotations(directory).some(([keyword]) => keyword === "x-semio-note")).toBe(true);
     expect(() => semioSchemaAjvV1({ allErrors: true }).addSchema(directory).addSchema(twoClient).compile({ $ref: directory.$id })).not.toThrow();

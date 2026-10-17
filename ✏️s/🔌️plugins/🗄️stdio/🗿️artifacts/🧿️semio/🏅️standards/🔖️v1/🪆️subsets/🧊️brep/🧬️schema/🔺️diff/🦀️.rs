@@ -468,9 +468,9 @@ impl DiffAlgebra<SemioBrepSnapshot> for SemioBrepDiff {
 //#region 🔖️Demo
 /// 🌱 Representative `SemioBrepDiff` cases built declaratively (empty/no-op and an empty-but-present row triple per collection) — single source of truth for `diff_grammar_conformance_law`/`protocol_walk_law` in
 /// `🎹️composer/🦀️.rs`.
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn demo_diff_cases() -> Vec<SemioBrepDiff> {
+pub fn demo_diff_cases() -> Vec<SemioBrepDiff> {
     vec![
         SemioBrepDiff::default(),
         SemioBrepDiff { vertices: Some(Default::default()), edges: Some(Default::default()), loops: Some(Default::default()), faces: Some(Default::default()), shells: Some(Default::default()), solids: Some(Default::default()) },

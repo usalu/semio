@@ -1,6 +1,8 @@
+use crate::schema::diff;
 use crate::apply_mutation;
-use super::*;
+use crate::standards::v2_0::subsets::base::schema::mutations::*;
 use protocol::{Mutation as _, MutationDiff as _, OpBinary as _, OpText as _};
+use semio_framework_test_fixtures::fixture_text;
 
 #[semio_framework_async_macros::async_test]
 async fn logical_mutations_diff_and_codecs_round_trip() {
@@ -25,7 +27,7 @@ async fn kinds_matches_enum_variants_and_manifest() {
     assert_eq!(observed, declared, "KINDS must list exactly the kebab-case spelling of every ZipMutation variant");
     assert_eq!(KINDS.len(), demo_mutation_cases().len(), "KINDS must cover every variant exactly once, with no duplicates");
 
-    let manifest: serde_json::Value = serde_json::from_str(include_str!("../../../../🔮️oracles/🔣️.json")).expect("valid oracle manifest JSON");
+    let manifest: serde_json::Value = serde_json::from_str(fixture_text!("../../../../🔮️oracles/🔣️.json")).expect("valid oracle manifest JSON");
     let catalog_kinds: std::collections::BTreeSet<String> = manifest["mutationCatalogs"][0]["kinds"].as_array().expect("mutationCatalogs[0].kinds array").iter().map(|value| value.as_str().expect("kind is a string").to_string()).collect();
     let declared_owned: std::collections::BTreeSet<String> = KINDS.iter().map(|kind| kind.to_string()).collect();
     assert_eq!(catalog_kinds, declared_owned, "the oracle manifest's mutationCatalogs[0].kinds must match KINDS exactly");

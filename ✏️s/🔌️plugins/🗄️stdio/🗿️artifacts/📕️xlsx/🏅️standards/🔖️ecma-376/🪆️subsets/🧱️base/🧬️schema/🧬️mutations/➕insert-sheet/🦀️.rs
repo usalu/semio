@@ -8,11 +8,11 @@ use super::*;
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct InsertSheet {
-    pub(crate) sheet: XlsxSheet,
+    pub sheet: XlsxSheet,
     #[value(default, skip_serializing_if = "Option::is_none")]
-    pub(crate) index: Option<usize>,
+    pub index: Option<usize>,
     #[value(default, skip_serializing_if = "Option::is_none")]
-    pub(crate) slot: Option<XlsxSheetSlot>,
+    pub slot: Option<XlsxSheetSlot>,
 }
 
 /// 🧩️ Everything the workbook holds for one sheet beyond its typed cells: the `sheet` entry's attributes, the workbook relationship to the worksheet part, the part itself and

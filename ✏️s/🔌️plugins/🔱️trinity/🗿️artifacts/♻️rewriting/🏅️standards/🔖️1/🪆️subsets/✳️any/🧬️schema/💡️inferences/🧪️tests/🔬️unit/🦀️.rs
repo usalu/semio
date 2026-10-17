@@ -1,10 +1,15 @@
-use super::*;
-use crate::LayoutPoint;
+use crate::standards::v1::subsets::any::schema::snapshot::RewritingSnapshot;
+#[allow(unused_imports)]
+use ::semio_framework_schema::ArtifactSchema;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::bounds::compute_bounds;
+use crate::standards::v1::subsets::any::schema::inferences::*;
+use crate::standards::v1::subsets::any::schema::model::LayoutPoint;
 use protocol::Inference;
 
 //#region 🧸️Fixtures
 fn two_point_snapshot() -> RewritingSnapshot {
-    let mut rule_layout = crate::standards::v1::subsets::any::schema::RuleLayout::new();
+    let mut rule_layout = crate::standards::v1::subsets::any::schema::layout::RuleLayout::new();
     rule_layout.insert("a".to_string(), LayoutPoint { x: 0.0, y: 0.0 });
     rule_layout.insert("b".to_string(), LayoutPoint { x: -140.0, y: 80.0 });
     RewritingSnapshot { rule_layout, ..RewritingSnapshot::default() }

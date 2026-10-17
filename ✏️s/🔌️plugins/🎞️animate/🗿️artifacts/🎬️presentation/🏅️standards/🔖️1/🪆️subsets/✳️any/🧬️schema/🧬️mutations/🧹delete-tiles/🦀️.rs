@@ -3,7 +3,6 @@
 //! bulk/plural rule, never a bare `Vec` arg bolted onto the singular `delete-tile`).
 
 use crate::diff::PresentationDiff;
-use crate::mutations::PresentationMutation;
 use crate::PresentationSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 
@@ -19,14 +18,17 @@ pub struct DeleteTiles {
     pub ids: Vec<String>,
 }
 
-impl MutationKind<PresentationSnapshot, PresentationMutation> for DeleteTiles {
+impl<Op> MutationKind<PresentationSnapshot, Op> for DeleteTiles
+where
+    Op: protocol::Mutation<PresentationSnapshot, Diff = PresentationDiff> + From<DeleteTiles> + From<crate::standards::v1::subsets::any::schema::mutations::create_tile::CreateTile>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "tiles", kind: "delete-tiles", record: "DeletedTiles" };
 
     fn diff(&self, base: &PresentationSnapshot) -> protocol::MutationOutcome<PresentationDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &PresentationSnapshot) -> Result<Vec<PresentationMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &PresentationSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

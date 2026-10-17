@@ -5,7 +5,7 @@ import { resolve } from "node:path";
 import Ajv from "ajv";
 import * as toml from "@iarna/toml";
 import fixture from "../🧫️fixtures/🏷️type/🔣️.json";
-import { valueTypeFixtureUrl } from "../../../../🌱️value/🧪️tests/🧫️fixtures/🟦️.ts";
+import { valueTypeFixtureUrl } from "@semio-tech/value-ts/testing/fixtures";
 
 const root = resolve(import.meta.dir, "../../../../../..");
 const ajv = new Ajv({strict: true, allErrors: true});

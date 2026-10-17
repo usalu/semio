@@ -1,14 +1,14 @@
-import * as nativeRender from "../../../../../🚪️io/📝️text/💡️inferences/🖋️latex/🟦️.ts";
-import { legendSceneChecks } from "../../../../../🧪️tests/🎬️render-scene/🧭️legend/🟦️.ts";
-import { printFontMetricsChecks } from "../../../../../🔨️modules/🔤print-font-catalog/📏️metrics/🧪️tests/🟦️.ts";
-import type { VizLayoutAlgorithm, VizRow, VizTransformKind } from "../../../../📸️snapshot/📊️chart/🟦️.ts";
+import * as nativeRender from "@semio-tech/print/io/text/inferences/latex";
+import { legendSceneChecks } from "@semio-tech/print/testing/render-scene/legend";
+import { printFontMetricsChecks } from "@semio-tech/print/modules/print-font-catalog/metrics/testing";
+import type { VizLayoutAlgorithm, VizRow, VizTransformKind } from "@semio-tech/print/schema/snapshot/chart";
 import * as transform from "../../../🧮transform/🟦️.ts";
 import * as mark from "../../../✒️mark/🟦️.ts";
 import * as render from "../../../🖼️render/🟦️.ts";
-import { authoredColorScaleChecks } from "../../../../../🧪️tests/🎨️authored-color-scales/🟦️.ts";
-import { chartInferenceResultChecks } from "../../../../../🧪️tests/📜️chart-inference-result/🟦️.ts";
-import { chartSpecificationChecks } from "../../../../../🧪️tests/📜️chart-specification/🟦️.ts";
-import { chartMutationInferenceChecks } from "../../../../../🧪️tests/🧬️chart-mutations/🟦️.ts";
+import { authoredColorScaleChecks } from "@semio-tech/print/testing/authored-color-scales";
+import { chartInferenceResultChecks } from "@semio-tech/print/testing/chart-inference-result";
+import { chartSpecificationChecks } from "@semio-tech/print/testing/chart-specification";
+import { chartMutationInferenceChecks } from "@semio-tech/print/testing/chart-mutations";
 import { type Level, type VizKernelCheck, recordD3Path } from "./🧰️probe-kit/🟦️.ts";
 import { scaleChecks, formatChecks } from "./📐️scale-and-format/🟦️.ts";
 import { transformChecks, shapeChecks } from "./🧮️transform-and-shape/🟦️.ts";
@@ -81,8 +81,8 @@ async function inferredLayerChecks(): Promise<VizKernelCheck[]> {
   const alluvialRows = [{ first: "a", second: "b", value: 2 }, { first: "a", second: "c", value: 3 }];
   checks.push(check("alluvial", () => layout("alluvial", { stages: "first,second", width: 100, height: 80, nodeWidth: 4, nodePadding: 2 }, alluvialRows).map((row) => [row.source, row.target, row.x, row.y, row.x2, row.y2, row.width]), () => { const graph = d3sankey.sankey<{ id: string }, Record<never, never>>().nodeId((node) => node.id).extent([[0, 0], [100, 80]]).nodeWidth(4).nodePadding(2)({ nodes: ["first/a", "second/b", "second/c"].map((id) => ({ id })), links: [...array.rollup(alluvialRows, (bucket) => array.sum(bucket, (row) => row.value), (row) => row.second)].map(([target, value]) => ({ source: "first/a", target: `second/${target}`, value })) }); return graph.links.map((link) => { if (typeof link.source !== "object" || typeof link.target !== "object") throw new Error("D3 Sankey did not resolve link nodes"); return [link.source.id, link.target.id, link.source.x1, link.y0, link.target.x0, link.y1, link.width]; }); }));
   checks.push(check("density", () => layout("density", { width: 8, height: 8, cellSize: 2, bandwidth: 2, kernel: "uniform", thresholds: 2 }, [{ x: 2, y: 2 }, { x: 3, y: 3 }]).map((row) => [row.x, row.y]), () => { const points = [[2, 2], [3, 3]]; const grid = array.range(25).map((i) => array.mean(points, ([x, y]) => Math.abs((i % 5) * 2 - x!) <= 2 && Math.abs(Math.floor(i / 5) * 2 - y!) <= 2 ? 0.25 / 4 : 0)!); return d3contour.contours().size([5, 5]).thresholds(2)(grid).flatMap((contour) => contour.coordinates.flatMap((polygon) => polygon.flatMap((ring) => ring.map(([x,y])=>{if(x===undefined||y===undefined)throw Error("Actual D3 contour point required");return[x*2,y*2];})))); }));
-  const fixtures = (await import("../../../../../🧪️tests/🧮️inferred-layer-pipeline/🔣️.json")).default;
-  const { inferLayerScenario } = await import("../../../../../🧪️tests/🧮️inferred-layer-pipeline/🟦️.ts");
+  const fixtures = (await import("@semio-tech/print/testing/inferred-layer-pipeline")).inferredLayerPipelineFixture;
+  const { inferLayerScenario } = await import("@semio-tech/print/testing/inferred-layer-pipeline");
   for (const fixture of fixtures) checks.push(check(`fixture-${fixture.name}`, () => { const result = inferLayerScenario(fixture as Parameters<typeof inferLayerScenario>[0]); return [result.deterministic, result.immutable, result.table.rows.length > 0]; }, () => [true, true, true]));
   for (const kind of ["rollup", "summary"]) checks.push(check(kind, () => infer(kind, { column: "value", operation: "mean" }).map((row) => row.value), () => [array.mean(rows, (row) => row.value)]));
   checks.push(check("invalid-option", () => { try { infer("sort", { column: "x", unsupported: true }); return false; } catch (error) { return String(error).includes("Unknown sort option unsupported"); } }, () => true));
@@ -97,13 +97,13 @@ async function inferredLayerChecks(): Promise<VizKernelCheck[]> {
 
 /** 🧩 Resolves language-neutral chart fixtures and compares geometry with D3. */
 export async function renderGrammarChecks(): Promise<VizKernelCheck[]> {
-  const { inferVizChart } = await import("../../../../../🔨️modules/🏠️host/💡️inferences/🟦️.ts");
+  const { inferVizChart } = await import("@semio-tech/print/modules/host/inferences");
   const guideScale = await import("d3-scale");
   const d3 = await import("d3-shape");
   const d3Color = await import("d3-color");
   const d3Chord = await import("d3-chord");
-  const customization = (await import("../../../../../🧪️tests/🎬️render-scene/🔣️customization.json")).default;
-  const axisFixtures = (await import("../../../../../🧪️tests/🎬️render-scene/🔣️axis.json")).default;
+  const customization = (await import("@semio-tech/print/testing/render-scene")).renderSceneCustomizationFixture;
+  const axisFixtures = (await import("@semio-tech/print/testing/render-scene")).renderSceneAxisFixture;
   const fixtures = {cases:[...customization.cases,...axisFixtures.cases]};
   const checks: VizKernelCheck[] = fixtures.cases.map((fixture) => {
     const spec = fixture.spec as Parameters<typeof render.planVizChart>[0];
@@ -161,7 +161,7 @@ export async function renderGrammarChecks(): Promise<VizKernelCheck[]> {
     if(wanted===undefined || (fixture as {oracle?:string}).oracle===undefined)continue;
     checks.push({module:"render",name:`emitter/${fixture.id}`,subject:()=>wanted.map((part)=>nativeRender.renderVizTikz(fixture.spec as Parameters<typeof render.planVizChart>[0]).includes(part)),oracle:()=>wanted.map(()=>true)});
   }
-  const baselineFixtures=(await import("../../../../../🧪️tests/🎬️render-scene/🔣️baseline.json")).default;
+  const baselineFixtures=(await import("@semio-tech/print/testing/render-scene")).renderSceneBaselineFixture;
   for(const fixture of baselineFixtures.cases)checks.push({module:"render",name:`grammar/${fixture.id}`,subject:()=>{const spec={language:"en",width:10,height:10,margin:{top:0,right:0,bottom:0,left:0},tables:[],layers:[]} satisfies Parameters<typeof render.planVizChart>[0],base=render.planVizChart(spec),plan={...base,items:[fixture.item as render.VizRenderItem]},scene=render.renderVizScenePlan(plan),tikz=nativeRender.renderVizTikzPlan(plan);return {baseline:scene.nodes[0]!.node.kind==="text"?scene.nodes[0]!.node.baseline:undefined,anchor:tikz.match(/anchor=([^,]+)/)![1]};},oracle:()=>({baseline:(fixture as {expectedBaseline?:string}).expectedBaseline??fixture.item.baseline??"middle",anchor:fixture.expectedAnchor})});
   return checks;
 }

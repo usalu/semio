@@ -14,7 +14,7 @@ pub mod editor {
 }
 //#endregion 🧩️Modules
 
-use semio_s_artifact_process_process3d_model::{snapshot::MachineCatalog, snapshot::MachineCatalogs, snapshot::Process3dSnapshot, snapshot::WorkshopMachine};
+use semio_s_artifact_process_process3d_model::{snapshot::ContributedMachineCatalog, snapshot::MachineCatalog, snapshot::MachineCatalogs, snapshot::Process3dSnapshot, snapshot::ProcessMachinesTopicPayload, snapshot::WorkshopMachine};
 use semio_s_artifact_process_process3d_config::{Process3dConfig, Process3dConfigMutation};
 use semio_s_artifact_process_process3d_mutations::Process3dMutation;
 use semio_framework_artifact_reference::io::text::artifact_reference::ArtifactReferenceText as _;
@@ -317,7 +317,7 @@ fn contributed_machine_catalogs(contributions_json: &str) -> Vec<ContributedMach
         if machines.len() > PROCESS_CONTRIBUTION_MAX_ITEMS {
             continue;
         }
-        catalogs.push(ContributedMachineCatalog { catalog_id: module_id, label, icon_id, machines });
+        catalogs.push(ContributedMachineCatalog::new(module_id, label, icon_id, machines));
     }
     catalogs
 }
@@ -338,7 +338,7 @@ pub fn builtin_installed_catalogs() -> Vec<MachineCatalogs> {
 pub fn installed_catalogs(contributions_json: &str) -> Vec<MachineCatalogs> {
     let mut catalogs = builtin_installed_catalogs();
     for contributed in contributed_machine_catalogs(contributions_json) {
-        if catalogs.iter().any(|catalog| catalog.catalog_id() == contributed.catalog_id) {
+        if catalogs.iter().any(|catalog| catalog.catalog_id() == contributed.catalog_id()) {
             continue;
         }
         catalogs.push(MachineCatalogs::from(contributed));

@@ -17,5 +17,5 @@ test("visible surface policy is admitted independently and contains no examples"
 for (const row of examples.cases) test(row.name, () => {
   const actual = browserActorVisibleSurfacesV1(row.surfaces, row.turn as BrowserActorVisibleTurnV1);
   expect(require("fast-deep-equal")(actual, row.visible)).toBe(true);
-  expect(actual).toEqual(row.visible);
+  expect<typeof row.visible>([...actual]).toEqual(row.visible);
 });

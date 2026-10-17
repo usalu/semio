@@ -3,7 +3,7 @@
 pub const OPCODE: &str = "remove-page";
 pub const TEXT_OPCODE: &str = OPCODE;
 
-use crate::standards::v1_7::subsets::base::schema::mutations::RemovePage;
+use crate::standards::v1_7::subsets::base::schema::mutations::remove_page::RemovePage;
 
 /// 🖨️ Prints this direct payload through its schema-derived JSON representation.
 pub fn print(payload: &RemovePage) -> Result<String, String> {

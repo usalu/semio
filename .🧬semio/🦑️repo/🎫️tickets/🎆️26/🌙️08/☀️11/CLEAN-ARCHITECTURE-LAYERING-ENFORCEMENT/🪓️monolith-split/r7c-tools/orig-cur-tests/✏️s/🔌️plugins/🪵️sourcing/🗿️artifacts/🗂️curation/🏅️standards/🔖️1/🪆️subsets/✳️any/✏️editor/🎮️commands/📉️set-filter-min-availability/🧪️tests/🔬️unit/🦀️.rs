@@ -1,0 +1,20 @@
+
+use super::*;
+use crate::editor::sourcing::SourcingCurationCommand;
+use crate::editor::sourcing::modes::edit::windows::pool;
+use crate::editor_unit_tests::context::{dispatch, new_app};
+
+#[semio_framework_async_macros::async_test]
+async fn set_filter_min_availability_clamps_to_zero() {
+    let mut app = new_app().await;
+    dispatch(&mut app, SourcingCurationCommand::SetFilterMinAvailability(SetFilterMinAvailability { delta: Some(-1000.0), value: None })).await;
+    // Filters are config-only now — the pool render reflects the clamp indirectly via an empty result
+    // for an unreasonably high min-availability; assert the clamp directly through a second command
+    // that reports back the applied absolute value.
+    dispatch(&mut app, SourcingCurationCommand::SetFilterMinAvailability(SetFilterMinAvailability { delta: Some(0.0), value: None })).await;
+    let rendered = semio_framework_plugin::PluginApp::render(&mut *app, pool::SOURCING_CURATION_BODY_POOL, None, &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("render");
+    let surface = rendered.root.children.iter().find(|child| matches!(child.component, semio_framework_plugin::Component::Surface(_))).expect("pool table surface");
+    let scene = crate::editor_unit_tests::context::table_scene_of(surface).expect("complete retained table scene");
+    // A clamped-to-zero min-availability keeps every stock row (all availabilities are >= 0).
+    assert_eq!(serde_json::from_str::<serde_json::Value>(&scene.rows_json).unwrap().as_array().unwrap().len(), crate::stock_of(&app.snapshot().expect("snapshot")).len());
+}

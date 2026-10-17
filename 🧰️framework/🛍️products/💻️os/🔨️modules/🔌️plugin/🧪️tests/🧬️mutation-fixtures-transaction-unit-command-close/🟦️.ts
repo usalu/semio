@@ -25,5 +25,4 @@ test("transaction fixture close retains its declared caller grant independently 
  expect(source.includes("retire_completion(external, original)")).toBe(true);
  expect(close.includes("fn job_grant")).toBe(false);
  expect(close.includes("plugin_demand_grant")).toBe(false);
- console.log("[DEBUG] Ajv and SQLite agree on the original five-axis fixture policy; close quotes never fund success turns");
 });

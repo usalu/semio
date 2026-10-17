@@ -40,10 +40,10 @@ impl Generation3dSnapshot {
 /// owned projection, and a bare drop of one aborts the whole test binary on
 /// `ordered-map root must be explicitly retired before drop`; this dereferences to the projection
 /// and retires it on the way out (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 pub struct Generation3dSnapshotRead(Option<Generation3dSnapshot>);
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 impl Generation3dSnapshotRead {
     pub fn new(snapshot: Generation3dSnapshot) -> Self {
         Self(Some(snapshot))
@@ -55,7 +55,7 @@ impl Generation3dSnapshotRead {
     }
 }
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 impl std::ops::Deref for Generation3dSnapshotRead {
     type Target = Generation3dSnapshot;
     fn deref(&self) -> &Self::Target {
@@ -63,14 +63,14 @@ impl std::ops::Deref for Generation3dSnapshotRead {
     }
 }
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 impl std::ops::DerefMut for Generation3dSnapshotRead {
     fn deref_mut(&mut self) -> &mut Self::Target {
         self.0.as_mut().expect("a projection read is inhabited until it is taken or dropped")
     }
 }
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 impl Drop for Generation3dSnapshotRead {
     fn drop(&mut self) {
         if let Some(snapshot) = self.0.take() {
@@ -79,21 +79,21 @@ impl Drop for Generation3dSnapshotRead {
     }
 }
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 impl PartialEq for Generation3dSnapshotRead {
     fn eq(&self, other: &Self) -> bool {
         **self == **other
     }
 }
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 impl PartialEq<Generation3dSnapshot> for Generation3dSnapshotRead {
     fn eq(&self, other: &Generation3dSnapshot) -> bool {
         **self == *other
     }
 }
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 impl std::fmt::Debug for Generation3dSnapshotRead {
     fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Debug::fmt(&**self, formatter)

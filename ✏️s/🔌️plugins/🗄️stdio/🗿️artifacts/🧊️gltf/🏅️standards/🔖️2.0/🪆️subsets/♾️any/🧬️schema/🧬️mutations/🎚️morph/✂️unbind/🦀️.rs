@@ -36,7 +36,10 @@ pub fn plan(p: &GltfUnbindMorphTargetAttributePayload, base: &GltfSnapshot) -> R
     Ok(GltfDiff { meshes: primitive_patch(p.mesh, p.primitive, GltfPrimitiveDiff { targets: Some(rows), ..Default::default() }), ..Default::default() })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn inverse(p: &GltfUnbindMorphTargetAttributePayload, base: &GltfSnapshot) -> Vec<super::GltfMutation> {
+pub fn inverse<Op>(p: &GltfUnbindMorphTargetAttributePayload, base: &GltfSnapshot) -> Vec<Op>
+where
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::remove_used_extension::RemoveUsedExtensionMutation>,
+{
     if validate(p, base).is_err() {
         return Vec::new();
     }
@@ -44,9 +47,9 @@ pub fn inverse(p: &GltfUnbindMorphTargetAttributePayload, base: &GltfSnapshot) -
         return Vec::new();
     };
     let accessor = base.document.meshes[p.mesh].primitives[p.primitive].targets[p.target].0[index].1;
-    let mut rows = vec![super::bind_morph_target_attribute::mutation(super::bind_morph_target_attribute::GltfBindMorphTargetAttributePayload { mesh: p.mesh, primitive: p.primitive, target: p.target, semantic: p.semantic.clone(), accessor })];
+    let mut rows = vec![crate::standards::v2_0::subsets::any::schema::mutations::bind_morph_target_attribute::mutation(crate::standards::v2_0::subsets::any::schema::mutations::bind_morph_target_attribute::GltfBindMorphTargetAttributePayload { mesh: p.mesh, primitive: p.primitive, target: p.target, semantic: p.semantic.clone(), accessor })];
     if index + 1 != base.document.meshes[p.mesh].primitives[p.primitive].targets[p.target].0.len() {
-        rows.push(super::move_morph_target_attribute::mutation(super::move_morph_target_attribute::GltfMoveMorphTargetAttributePayload { mesh: p.mesh, primitive: p.primitive, target: p.target, semantic: p.semantic.clone(), position: index }));
+        rows.push(crate::standards::v2_0::subsets::any::schema::mutations::move_morph_target_attribute::mutation(crate::standards::v2_0::subsets::any::schema::mutations::move_morph_target_attribute::GltfMoveMorphTargetAttributePayload { mesh: p.mesh, primitive: p.primitive, target: p.target, semantic: p.semantic.clone(), position: index }));
     }
     rows.reverse();
     rows
@@ -62,11 +65,17 @@ pub enum UnbindMorphTargetAttributeMutation {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn mutation(payload: GltfUnbindMorphTargetAttributePayload) -> super::GltfMutation {
-    super::GltfMutation::UnbindMorphTargetAttribute(UnbindMorphTargetAttributeMutation::Apply(payload))
+pub fn mutation<Op>(payload: GltfUnbindMorphTargetAttributePayload) -> Op
+where
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::unbind_morph_target_attribute::UnbindMorphTargetAttributeMutation>,
+{
+    Op::from(UnbindMorphTargetAttributeMutation::Apply(payload))
 }
 
-impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for UnbindMorphTargetAttributeMutation {
+impl<Op> protocol::MutationKind<GltfSnapshot, Op> for UnbindMorphTargetAttributeMutation
+where
+    Op: protocol::Mutation<GltfSnapshot, Diff = GltfDiff> + From<UnbindMorphTargetAttributeMutation>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "unbind", entity: "morph-target-attribute", kind: "unbind-morph-target-attribute", record: "UnboundMorphTargetAttribute" };
 
     fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<GltfDiff> {
@@ -78,7 +87,7 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for UnbindMorphTa
         }
     }
 
-    fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<super::GltfMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         match self {
             Self::Apply(payload) => Ok(inverse(payload, base)),
         }
@@ -95,10 +104,6 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for UnbindMorphTa
 //#endregion 🧬️DirectMutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔗️unbinds-normal-9e80f9/🦀️.rs"]
-mod case_unbinds_normal_9e80f9;
-#[cfg(test)]
-#[path = "🧪️tests/🔬️middle-row/🦀️.rs"]
-mod case_middle_row;
+
+
 //#endregion 🧪️Tests

@@ -201,14 +201,14 @@
       "body": "undefined",
       "terminal": "failure",
       "binding": "actual",
-      "expected": "aggregate"
+      "expected": "undefined"
     },
     {
       "name": "frozen body plus cleanup failure is observable",
       "body": "frozen",
       "terminal": "failure",
       "binding": "actual",
-      "expected": "aggregate"
+      "expected": "frozen"
     },
     {
       "name": "cancelled at ex retains pre-effect anchor",
@@ -341,5 +341,4578 @@
       "fault": "underlying",
       "accepted": false
     }
-  ]
+  ],
+  "protectedJournalCaseSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "kind",
+      "present",
+      "sequence",
+      "allocations"
+    ],
+    "properties": {
+      "kind": {
+        "enum": [
+          "absent",
+          "empty",
+          "committed"
+        ]
+      },
+      "present": {
+        "type": "boolean"
+      },
+      "sequence": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 2
+      },
+      "allocations": {
+        "enum": [
+          0,
+          1
+        ]
+      }
+    }
+  },
+  "protectedJournals": [
+    {
+      "kind": "absent",
+      "present": false,
+      "sequence": 0,
+      "allocations": 0
+    },
+    {
+      "kind": "empty",
+      "present": true,
+      "sequence": 0,
+      "allocations": 0
+    },
+    {
+      "kind": "committed",
+      "present": true,
+      "sequence": 2,
+      "allocations": 1
+    }
+  ],
+  "protectedRequestCaseSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "effect",
+      "accepted"
+    ],
+    "properties": {
+      "effect": {
+        "enum": [
+          "ordinary",
+          "purpose",
+          "wait",
+          "receipt",
+          "root",
+          "negative",
+          "unsafe",
+          "extra",
+          "accessor",
+          "symbol",
+          "function",
+          "proxy"
+        ]
+      },
+      "accepted": {
+        "type": "boolean"
+      }
+    }
+  },
+  "protectedRequests": [
+    {
+      "effect": "ordinary",
+      "accepted": true
+    },
+    {
+      "effect": "purpose",
+      "accepted": false
+    },
+    {
+      "effect": "wait",
+      "accepted": false
+    },
+    {
+      "effect": "receipt",
+      "accepted": false
+    },
+    {
+      "effect": "root",
+      "accepted": false
+    },
+    {
+      "effect": "negative",
+      "accepted": false
+    },
+    {
+      "effect": "unsafe",
+      "accepted": false
+    },
+    {
+      "effect": "extra",
+      "accepted": false
+    },
+    {
+      "effect": "accessor",
+      "accepted": false
+    },
+    {
+      "effect": "symbol",
+      "accepted": false
+    },
+    {
+      "effect": "function",
+      "accepted": false
+    },
+    {
+      "effect": "proxy",
+      "accepted": false
+    }
+  ],
+  "protectedReads": [
+    {
+      "effect": "missing",
+      "accepted": false
+    },
+    {
+      "effect": "empty",
+      "accepted": true
+    },
+    {
+      "effect": "committed",
+      "accepted": true
+    },
+    {
+      "effect": "checkpoint",
+      "accepted": true
+    },
+    {
+      "effect": "malformed",
+      "accepted": false
+    },
+    {
+      "effect": "unterminated",
+      "accepted": false
+    },
+    {
+      "effect": "replaced",
+      "accepted": false
+    },
+    {
+      "effect": "wrong-policy",
+      "accepted": false
+    },
+    {
+      "effect": "copied-control",
+      "accepted": false
+    },
+    {
+      "effect": "cancelled",
+      "accepted": false
+    },
+    {
+      "effect": "undefined",
+      "accepted": false
+    },
+    {
+      "effect": "frozen",
+      "accepted": false
+    }
+  ],
+  "protectedReadCaseSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "effect",
+      "accepted"
+    ],
+    "properties": {
+      "effect": {
+        "enum": [
+          "missing",
+          "empty",
+          "committed",
+          "checkpoint",
+          "malformed",
+          "unterminated",
+          "replaced",
+          "wrong-policy",
+          "copied-control",
+          "cancelled",
+          "undefined",
+          "frozen"
+        ]
+      },
+      "accepted": {
+        "type": "boolean"
+      }
+    }
+  },
+  "protectedFailures": [
+    {
+      "body": "undefined",
+      "release": "none",
+      "count": 1
+    },
+    {
+      "body": "undefined",
+      "release": "same",
+      "count": 1
+    },
+    {
+      "body": "undefined",
+      "release": "undefined",
+      "count": 1
+    },
+    {
+      "body": "undefined",
+      "release": "frozen",
+      "count": 2
+    },
+    {
+      "body": "frozen",
+      "release": "none",
+      "count": 1
+    },
+    {
+      "body": "frozen",
+      "release": "same",
+      "count": 1
+    },
+    {
+      "body": "frozen",
+      "release": "undefined",
+      "count": 2
+    },
+    {
+      "body": "frozen",
+      "release": "frozen",
+      "count": 2
+    },
+    {
+      "body": "aggregate",
+      "release": "none",
+      "count": 1
+    },
+    {
+      "body": "aggregate",
+      "release": "same",
+      "count": 1
+    },
+    {
+      "body": "aggregate",
+      "release": "undefined",
+      "count": 2
+    },
+    {
+      "body": "aggregate",
+      "release": "frozen",
+      "count": 2
+    },
+    {
+      "body": "empty-aggregate",
+      "release": "none",
+      "count": 1
+    },
+    {
+      "body": "empty-aggregate",
+      "release": "same",
+      "count": 1
+    },
+    {
+      "body": "empty-aggregate",
+      "release": "undefined",
+      "count": 2
+    },
+    {
+      "body": "empty-aggregate",
+      "release": "frozen",
+      "count": 2
+    },
+    {
+      "body": "undefined",
+      "release": "aggregate",
+      "count": 2
+    },
+    {
+      "body": "frozen",
+      "release": "aggregate",
+      "count": 2
+    },
+    {
+      "body": "aggregate",
+      "release": "aggregate",
+      "count": 2
+    },
+    {
+      "body": "empty-aggregate",
+      "release": "aggregate",
+      "count": 2
+    }
+  ],
+  "protectedFailureCaseSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "body",
+      "release",
+      "count"
+    ],
+    "properties": {
+      "body": {
+        "enum": [
+          "undefined",
+          "frozen",
+          "aggregate",
+          "empty-aggregate"
+        ]
+      },
+      "release": {
+        "enum": [
+          "none",
+          "same",
+          "undefined",
+          "frozen",
+          "aggregate"
+        ]
+      },
+      "count": {
+        "enum": [
+          1,
+          2
+        ]
+      }
+    }
+  },
+  "protectedScopes": [
+    {
+      "effect": "ordinary",
+      "status": 0,
+      "callbacks": 1,
+      "message": null
+    },
+    {
+      "effect": "busy",
+      "status": 0,
+      "callbacks": 0,
+      "message": null
+    },
+    {
+      "effect": "drain",
+      "status": 0,
+      "callbacks": 1,
+      "message": null
+    },
+    {
+      "effect": "undefined",
+      "status": 1,
+      "callbacks": 1,
+      "message": null
+    },
+    {
+      "effect": "frozen",
+      "status": 1,
+      "callbacks": 1,
+      "message": null
+    },
+    {
+      "effect": "aggregate",
+      "status": 1,
+      "callbacks": 1,
+      "message": null
+    },
+    {
+      "effect": "cancelled",
+      "status": 1,
+      "callbacks": 1,
+      "message": null
+    },
+    {
+      "effect": "expired",
+      "status": 1,
+      "callbacks": 1,
+      "message": null
+    },
+    {
+      "effect": "mac",
+      "status": 0,
+      "callbacks": 1,
+      "message": null
+    },
+    {
+      "effect": "mac-cas",
+      "status": 1,
+      "callbacks": 0,
+      "message": "Exact protected persistent parent CAS required"
+    },
+    {
+      "effect": "mac-mapping",
+      "status": 1,
+      "callbacks": 0,
+      "message": "One exact protected persistent image association required"
+    },
+    {
+      "effect": "linux",
+      "status": 0,
+      "callbacks": 1,
+      "message": null
+    },
+    {
+      "effect": "linux-cas",
+      "status": 1,
+      "callbacks": 0,
+      "message": "Exact protected fixed parent CAS required"
+    },
+    {
+      "effect": "linux-mapping",
+      "status": 1,
+      "callbacks": 0,
+      "message": "One exact loop filesystem mount required"
+    }
+  ],
+  "protectedScopeCaseSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "effect",
+      "status",
+      "callbacks",
+      "message"
+    ],
+    "properties": {
+      "effect": {
+        "enum": [
+          "ordinary",
+          "busy",
+          "drain",
+          "undefined",
+          "frozen",
+          "aggregate",
+          "cancelled",
+          "expired",
+          "mac",
+          "mac-cas",
+          "mac-mapping",
+          "linux",
+          "linux-cas",
+          "linux-mapping"
+        ]
+      },
+      "status": {
+        "enum": [
+          0,
+          1
+        ]
+      },
+      "callbacks": {
+        "enum": [
+          0,
+          1
+        ]
+      },
+      "message": {
+        "type": [
+          "string",
+          "null"
+        ]
+      }
+    }
+  },
+  "protectedPurposes": [
+    {
+      "effect": "actual",
+      "id": "graph",
+      "accepted": true
+    },
+    {
+      "effect": "actual",
+      "id": "products",
+      "accepted": true
+    },
+    {
+      "effect": "actual",
+      "id": "tools",
+      "accepted": false
+    },
+    {
+      "effect": "original-copy",
+      "id": "graph",
+      "accepted": false
+    },
+    {
+      "effect": "control-copy",
+      "id": "graph",
+      "accepted": false
+    },
+    {
+      "effect": "request-accessor",
+      "id": "graph",
+      "accepted": false
+    }
+  ],
+  "protectedPurposeCaseSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "effect",
+      "id",
+      "accepted"
+    ],
+    "properties": {
+      "effect": {
+        "enum": [
+          "actual",
+          "original-copy",
+          "control-copy",
+          "request-accessor"
+        ]
+      },
+      "id": {
+        "enum": [
+          "graph",
+          "products",
+          "tools"
+        ]
+      },
+      "accepted": {
+        "type": "boolean"
+      }
+    }
+  },
+  "privateContinuations": [
+    {
+      "effect": "ordinary",
+      "status": 0,
+      "parentRetired": true
+    },
+    {
+      "effect": "old-port",
+      "status": 1,
+      "parentRetired": false
+    },
+    {
+      "effect": "wrong-id",
+      "status": 1,
+      "parentRetired": false
+    },
+    {
+      "effect": "owner",
+      "status": 1,
+      "parentRetired": false
+    },
+    {
+      "effect": "amount",
+      "status": 1,
+      "parentRetired": false
+    },
+    {
+      "effect": "child",
+      "status": 1,
+      "parentRetired": false
+    },
+    {
+      "effect": "policy",
+      "status": 1,
+      "parentRetired": false
+    },
+    {
+      "effect": "backing",
+      "status": 1,
+      "parentRetired": false
+    },
+    {
+      "effect": "claim",
+      "status": 1,
+      "parentRetired": false
+    },
+    {
+      "effect": "pending",
+      "status": 1,
+      "parentRetired": false
+    },
+    {
+      "effect": "child-busy",
+      "status": 1,
+      "parentRetired": false
+    },
+    {
+      "effect": "retire",
+      "status": 1,
+      "parentRetired": false
+    },
+    {
+      "effect": "close",
+      "status": 1,
+      "parentRetired": false
+    },
+    {
+      "effect": "undefined",
+      "status": 1,
+      "parentRetired": false
+    },
+    {
+      "effect": "frozen",
+      "status": 1,
+      "parentRetired": false
+    },
+    {
+      "effect": "aggregate",
+      "status": 1,
+      "parentRetired": false
+    }
+  ],
+  "privateContinuationCaseSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "effect",
+      "status",
+      "parentRetired"
+    ],
+    "properties": {
+      "effect": {
+        "enum": [
+          "ordinary",
+          "old-port",
+          "wrong-id",
+          "owner",
+          "amount",
+          "child",
+          "policy",
+          "backing",
+          "claim",
+          "pending",
+          "child-busy",
+          "retire",
+          "close",
+          "undefined",
+          "frozen",
+          "aggregate"
+        ]
+      },
+      "status": {
+        "enum": [
+          0,
+          1
+        ]
+      },
+      "parentRetired": {
+        "type": "boolean"
+      }
+    }
+  },
+  "privateFixtureProtocol": {
+    "version": 1,
+    "parentFilesystemBytes": 134217728,
+    "parentMaximumPhysicalBytes": 135266304,
+    "childFilesystemBytes": 33554432,
+    "childMaximumPhysicalBytes": 34603008,
+    "metadataBytes": 65536,
+    "maximumWorkspaceBytes": 67108864,
+    "maximumArtifactBytes": 1048576,
+    "maximumOutputBytes": 65536,
+    "maximumOutputLines": 256
+  },
+  "privateFixtureSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "version",
+      "backingIdentity",
+      "allocation"
+    ],
+    "properties": {
+      "version": {
+        "const": 1
+      },
+      "backingIdentity": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 2048
+      },
+      "allocation": {
+        "allOf": [
+          {
+            "$ref": "https://semio.tech/framework/process/native-storage/v1#/definitions/Allocation"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "const": "compiler-state"
+              },
+              "phase": {
+                "const": "committed"
+              }
+            }
+          }
+        ]
+      }
+    }
+  },
+  "privateReaderSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "version",
+      "directory",
+      "leaseDirectory",
+      "expected"
+    ],
+    "properties": {
+      "version": {
+        "const": 1
+      },
+      "directory": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 256
+      },
+      "leaseDirectory": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 256
+      },
+      "expected": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "receiptSha256",
+          "dev",
+          "ino",
+          "size",
+          "allocatedBytes"
+        ],
+        "properties": {
+          "receiptSha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "dev": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "ino": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "size": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "allocatedBytes": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          }
+        }
+      }
+    }
+  },
+  "privateContinuationReceiptSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "version",
+      "effect",
+      "failed",
+      "parentRetired",
+      "oldPortRefused",
+      "events",
+      "closed",
+      "expectedFailure"
+    ],
+    "properties": {
+      "version": {
+        "const": 1
+      },
+      "effect": {
+        "enum": [
+          "ordinary",
+          "old-port",
+          "wrong-id",
+          "owner",
+          "amount",
+          "child",
+          "policy",
+          "backing",
+          "claim",
+          "pending",
+          "child-busy",
+          "retire",
+          "close",
+          "undefined",
+          "frozen",
+          "aggregate"
+        ]
+      },
+      "failed": {
+        "type": "boolean"
+      },
+      "parentRetired": {
+        "type": "boolean"
+      },
+      "oldPortRefused": {
+        "type": "boolean"
+      },
+      "closed": {
+        "type": "boolean"
+      },
+      "expectedFailure": {
+        "type": "boolean"
+      },
+      "events": {
+        "type": "array",
+        "maxItems": 8,
+        "items": {
+          "enum": [
+            "original-close",
+            "fresh-open",
+            "verify",
+            "child-retire",
+            "fresh-close",
+            "parent-retire"
+          ]
+        }
+      }
+    }
+  },
+  "privateReaderReadySchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "event",
+      "wire",
+      "expected"
+    ],
+    "properties": {
+      "event": {
+        "const": "ready"
+      },
+      "wire": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 65536
+      },
+      "expected": {
+        "$ref": "#/privateReaderSchema/properties/expected"
+      }
+    }
+  },
+  "privateTraceFaults": [
+    {
+      "effect": "ordinary",
+      "opens": 2,
+      "closes": 2
+    },
+    {
+      "effect": "hash-init",
+      "opens": 0,
+      "closes": 0
+    },
+    {
+      "effect": "buffer-init",
+      "opens": 0,
+      "closes": 0
+    },
+    {
+      "effect": "read-undefined",
+      "opens": 1,
+      "closes": 1
+    },
+    {
+      "effect": "read-frozen",
+      "opens": 1,
+      "closes": 1
+    },
+    {
+      "effect": "close",
+      "opens": 1,
+      "closes": 1
+    },
+    {
+      "effect": "same-close",
+      "opens": 1,
+      "closes": 1
+    },
+    {
+      "effect": "both-close",
+      "opens": 1,
+      "closes": 1
+    },
+    {
+      "effect": "undefined-close",
+      "opens": 1,
+      "closes": 1
+    },
+    {
+      "effect": "aggregate-close",
+      "opens": 1,
+      "closes": 1
+    }
+  ],
+  "privateTraceFaultSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "effect",
+      "opens",
+      "closes"
+    ],
+    "properties": {
+      "effect": {
+        "enum": [
+          "ordinary",
+          "hash-init",
+          "buffer-init",
+          "read-undefined",
+          "read-frozen",
+          "close",
+          "same-close",
+          "both-close",
+          "undefined-close",
+          "aggregate-close"
+        ]
+      },
+      "opens": {
+        "enum": [
+          0,
+          1,
+          2
+        ]
+      },
+      "closes": {
+        "enum": [
+          0,
+          1,
+          2
+        ]
+      }
+    }
+  },
+  "maintenanceRequest": {
+    "version": 1,
+    "purpose": "mounted-parent-maintenance",
+    "wait": false,
+    "receiptSha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+    "directory": {
+      "dev": 1,
+      "ino": 7,
+      "mode": 16832
+    },
+    "backing": {
+      "dev": 1,
+      "ino": 2,
+      "size": 134217728,
+      "allocatedBytes": 134217728
+    },
+    "root": {
+      "dev": 3,
+      "ino": 4,
+      "mode": 16832
+    }
+  },
+  "maintenanceRosters": [
+    {
+      "id": "retire-exact-one-removal",
+      "before": [
+        {
+          "root": "/fixture/p/m/n/c/m",
+          "image": "/fixture/p/m/n/c/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/n/c/m",
+          "kernelIdentity": "device:3"
+        },
+        {
+          "root": "/fixture/p/m/s/c/m",
+          "image": "/fixture/p/m/s/c/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/s/c/m",
+          "kernelIdentity": "device:3"
+        }
+      ],
+      "after": [
+        {
+          "root": "/fixture/p/m/s/c/m",
+          "image": "/fixture/p/m/s/c/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/s/c/m",
+          "kernelIdentity": "device:3"
+        }
+      ],
+      "transition": {
+        "operation": "retire",
+        "root": "/fixture/p/m/n/c/m",
+        "terminal": null
+      },
+      "accepted": true
+    },
+    {
+      "id": "retire-selected-still-mounted",
+      "before": [
+        {
+          "root": "/fixture/p/m/n/c/m",
+          "image": "/fixture/p/m/n/c/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/n/c/m",
+          "kernelIdentity": "device:3"
+        },
+        {
+          "root": "/fixture/p/m/s/c/m",
+          "image": "/fixture/p/m/s/c/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/s/c/m",
+          "kernelIdentity": "device:3"
+        }
+      ],
+      "after": [
+        {
+          "root": "/fixture/p/m/n/c/m",
+          "image": "/fixture/p/m/n/c/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/n/c/m",
+          "kernelIdentity": "device:3"
+        },
+        {
+          "root": "/fixture/p/m/s/c/m",
+          "image": "/fixture/p/m/s/c/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/s/c/m",
+          "kernelIdentity": "device:3"
+        }
+      ],
+      "transition": {
+        "operation": "retire",
+        "root": "/fixture/p/m/n/c/m",
+        "terminal": null
+      },
+      "accepted": false
+    },
+    {
+      "id": "retire-sibling-also-removed",
+      "before": [
+        {
+          "root": "/fixture/p/m/n/c/m",
+          "image": "/fixture/p/m/n/c/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/n/c/m",
+          "kernelIdentity": "device:3"
+        },
+        {
+          "root": "/fixture/p/m/s/c/m",
+          "image": "/fixture/p/m/s/c/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/s/c/m",
+          "kernelIdentity": "device:3"
+        }
+      ],
+      "after": [],
+      "transition": {
+        "operation": "retire",
+        "root": "/fixture/p/m/n/c/m",
+        "terminal": null
+      },
+      "accepted": false
+    },
+    {
+      "id": "retire-new-sibling",
+      "before": [
+        {
+          "root": "/fixture/p/m/n/c/m",
+          "image": "/fixture/p/m/n/c/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/n/c/m",
+          "kernelIdentity": "device:3"
+        },
+        {
+          "root": "/fixture/p/m/s/c/m",
+          "image": "/fixture/p/m/s/c/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/s/c/m",
+          "kernelIdentity": "device:3"
+        }
+      ],
+      "after": [
+        {
+          "root": "/fixture/p/m/s/c/m",
+          "image": "/fixture/p/m/s/c/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/s/c/m",
+          "kernelIdentity": "device:3"
+        },
+        {
+          "root": "/fixture/p/m/new/m",
+          "image": "/fixture/p/m/new/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/new/m",
+          "kernelIdentity": "device:3"
+        }
+      ],
+      "transition": {
+        "operation": "retire",
+        "root": "/fixture/p/m/n/c/m",
+        "terminal": null
+      },
+      "accepted": false
+    },
+    {
+      "id": "retire-sibling-association-drift",
+      "before": [
+        {
+          "root": "/fixture/p/m/n/c/m",
+          "image": "/fixture/p/m/n/c/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/n/c/m",
+          "kernelIdentity": "device:3"
+        },
+        {
+          "root": "/fixture/p/m/s/c/m",
+          "image": "/fixture/p/m/s/c/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/s/c/m",
+          "kernelIdentity": "device:3"
+        }
+      ],
+      "after": [
+        {
+          "root": "/fixture/p/m/s/c/m",
+          "image": "/fixture/p/m/s/c/fixed.dmg",
+          "backingIdentity": "backing:foreign",
+          "kernelIdentity": "device:3"
+        }
+      ],
+      "transition": {
+        "operation": "retire",
+        "root": "/fixture/p/m/n/c/m",
+        "terminal": null
+      },
+      "accepted": false
+    },
+    {
+      "id": "retire-selected-has-descendant",
+      "before": [
+        {
+          "root": "/fixture/p/m/n/c/m",
+          "image": "/fixture/p/m/n/c/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/n/c/m",
+          "kernelIdentity": "device:3"
+        },
+        {
+          "root": "/fixture/p/m/n/c/m/nested/m",
+          "image": "/fixture/p/m/n/c/m/nested/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/n/c/m/nested/m",
+          "kernelIdentity": "device:3"
+        },
+        {
+          "root": "/fixture/p/m/s/c/m",
+          "image": "/fixture/p/m/s/c/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/s/c/m",
+          "kernelIdentity": "device:3"
+        }
+      ],
+      "after": [
+        {
+          "root": "/fixture/p/m/s/c/m",
+          "image": "/fixture/p/m/s/c/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/s/c/m",
+          "kernelIdentity": "device:3"
+        }
+      ],
+      "transition": {
+        "operation": "retire",
+        "root": "/fixture/p/m/n/c/m",
+        "terminal": null
+      },
+      "accepted": false
+    },
+    {
+      "id": "publish-canonical-terminal-roster",
+      "before": [
+        {
+          "root": "/fixture/p/m/n/c/m",
+          "image": "/fixture/p/m/n/c/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/n/c/m",
+          "kernelIdentity": "device:3"
+        },
+        {
+          "root": "/fixture/p/m/s/c/m",
+          "image": "/fixture/p/m/s/c/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/s/c/m",
+          "kernelIdentity": "device:3"
+        }
+      ],
+      "after": [
+        {
+          "root": "/fixture/p/m/n/c/m",
+          "image": "/fixture/p/m/n/c/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/n/c/m",
+          "kernelIdentity": "device:9"
+        },
+        {
+          "root": "/fixture/p/m/s/c/m",
+          "image": "/fixture/p/m/s/c/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/s/c/m",
+          "kernelIdentity": "device:3"
+        }
+      ],
+      "transition": {
+        "operation": "publish",
+        "root": "/fixture/p/m/n/c/m",
+        "terminal": {
+          "root": "/fixture/p/m/n/c/m",
+          "image": "/fixture/p/m/n/c/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/n/c/m",
+          "kernelIdentity": "device:9"
+        }
+      },
+      "accepted": true
+    },
+    {
+      "id": "publish-arbitrary-new-device",
+      "before": [
+        {
+          "root": "/fixture/p/m/n/c/m",
+          "image": "/fixture/p/m/n/c/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/n/c/m",
+          "kernelIdentity": "device:3"
+        },
+        {
+          "root": "/fixture/p/m/s/c/m",
+          "image": "/fixture/p/m/s/c/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/s/c/m",
+          "kernelIdentity": "device:3"
+        }
+      ],
+      "after": [
+        {
+          "root": "/fixture/p/m/n/c/m",
+          "image": "/fixture/p/m/n/c/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/n/c/m",
+          "kernelIdentity": "device:foreign"
+        },
+        {
+          "root": "/fixture/p/m/s/c/m",
+          "image": "/fixture/p/m/s/c/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/s/c/m",
+          "kernelIdentity": "device:3"
+        }
+      ],
+      "transition": {
+        "operation": "publish",
+        "root": "/fixture/p/m/n/c/m",
+        "terminal": {
+          "root": "/fixture/p/m/n/c/m",
+          "image": "/fixture/p/m/n/c/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/n/c/m",
+          "kernelIdentity": "device:9"
+        }
+      },
+      "accepted": false
+    },
+    {
+      "id": "publish-selected-disappeared",
+      "before": [
+        {
+          "root": "/fixture/p/m/n/c/m",
+          "image": "/fixture/p/m/n/c/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/n/c/m",
+          "kernelIdentity": "device:3"
+        },
+        {
+          "root": "/fixture/p/m/s/c/m",
+          "image": "/fixture/p/m/s/c/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/s/c/m",
+          "kernelIdentity": "device:3"
+        }
+      ],
+      "after": [
+        {
+          "root": "/fixture/p/m/s/c/m",
+          "image": "/fixture/p/m/s/c/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/s/c/m",
+          "kernelIdentity": "device:3"
+        }
+      ],
+      "transition": {
+        "operation": "publish",
+        "root": "/fixture/p/m/n/c/m",
+        "terminal": null
+      },
+      "accepted": false
+    },
+    {
+      "id": "publish-sibling-association-drift",
+      "before": [
+        {
+          "root": "/fixture/p/m/n/c/m",
+          "image": "/fixture/p/m/n/c/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/n/c/m",
+          "kernelIdentity": "device:3"
+        },
+        {
+          "root": "/fixture/p/m/s/c/m",
+          "image": "/fixture/p/m/s/c/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/s/c/m",
+          "kernelIdentity": "device:3"
+        }
+      ],
+      "after": [
+        {
+          "root": "/fixture/p/m/n/c/m",
+          "image": "/fixture/p/m/n/c/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/n/c/m",
+          "kernelIdentity": "device:9"
+        },
+        {
+          "root": "/fixture/p/m/s/c/m",
+          "image": "/fixture/p/m/s/c/fixed.dmg",
+          "backingIdentity": "backing:foreign",
+          "kernelIdentity": "device:3"
+        }
+      ],
+      "transition": {
+        "operation": "publish",
+        "root": "/fixture/p/m/n/c/m",
+        "terminal": {
+          "root": "/fixture/p/m/n/c/m",
+          "image": "/fixture/p/m/n/c/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/n/c/m",
+          "kernelIdentity": "device:9"
+        }
+      },
+      "accepted": false
+    },
+    {
+      "id": "retire-duplicate-before-root",
+      "before": [
+        {
+          "root": "/fixture/p/m/n/c/m",
+          "image": "/fixture/p/m/n/c/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/n/c/m",
+          "kernelIdentity": "device:3"
+        },
+        {
+          "root": "/fixture/p/m/s/c/m",
+          "image": "/fixture/p/m/s/c/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/s/c/m",
+          "kernelIdentity": "device:3"
+        },
+        {
+          "root": "/fixture/p/m/n/c/m",
+          "image": "/fixture/p/m/n/c/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/n/c/m",
+          "kernelIdentity": "device:3"
+        }
+      ],
+      "after": [
+        {
+          "root": "/fixture/p/m/s/c/m",
+          "image": "/fixture/p/m/s/c/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/s/c/m",
+          "kernelIdentity": "device:3"
+        }
+      ],
+      "transition": {
+        "operation": "retire",
+        "root": "/fixture/p/m/n/c/m",
+        "terminal": null
+      },
+      "accepted": false
+    },
+    {
+      "id": "retire-duplicate-after-root",
+      "before": [
+        {
+          "root": "/fixture/p/m/n/c/m",
+          "image": "/fixture/p/m/n/c/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/n/c/m",
+          "kernelIdentity": "device:3"
+        },
+        {
+          "root": "/fixture/p/m/s/c/m",
+          "image": "/fixture/p/m/s/c/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/s/c/m",
+          "kernelIdentity": "device:3"
+        }
+      ],
+      "after": [
+        {
+          "root": "/fixture/p/m/s/c/m",
+          "image": "/fixture/p/m/s/c/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/s/c/m",
+          "kernelIdentity": "device:3"
+        },
+        {
+          "root": "/fixture/p/m/s/c/m",
+          "image": "/fixture/p/m/s/c/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/s/c/m",
+          "kernelIdentity": "device:3"
+        }
+      ],
+      "transition": {
+        "operation": "retire",
+        "root": "/fixture/p/m/n/c/m",
+        "terminal": null
+      },
+      "accepted": false
+    },
+    {
+      "id": "retire-selected-absent-before",
+      "before": [
+        {
+          "root": "/fixture/p/m/s/c/m",
+          "image": "/fixture/p/m/s/c/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/s/c/m",
+          "kernelIdentity": "device:3"
+        }
+      ],
+      "after": [
+        {
+          "root": "/fixture/p/m/s/c/m",
+          "image": "/fixture/p/m/s/c/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/s/c/m",
+          "kernelIdentity": "device:3"
+        }
+      ],
+      "transition": {
+        "operation": "retire",
+        "root": "/fixture/p/m/n/c/m",
+        "terminal": null
+      },
+      "accepted": false
+    },
+    {
+      "id": "retire-same-root-different-before-backing",
+      "before": [
+        {
+          "root": "/fixture/p/m/n/c/m",
+          "image": "/fixture/p/m/n/c/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/n/c/m",
+          "kernelIdentity": "device:3"
+        },
+        {
+          "root": "/fixture/p/m/s/c/m",
+          "image": "/fixture/p/m/s/c/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/s/c/m",
+          "kernelIdentity": "device:3"
+        },
+        {
+          "root": "/fixture/p/m/n/c/m",
+          "image": "/fixture/p/m/n/c/fixed.dmg",
+          "backingIdentity": "backing:substitute",
+          "kernelIdentity": "device:3"
+        }
+      ],
+      "after": [
+        {
+          "root": "/fixture/p/m/s/c/m",
+          "image": "/fixture/p/m/s/c/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/s/c/m",
+          "kernelIdentity": "device:3"
+        }
+      ],
+      "transition": {
+        "operation": "retire",
+        "root": "/fixture/p/m/n/c/m",
+        "terminal": null
+      },
+      "accepted": false
+    },
+    {
+      "id": "retire-same-sibling-root-different-after-backing",
+      "before": [
+        {
+          "root": "/fixture/p/m/n/c/m",
+          "image": "/fixture/p/m/n/c/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/n/c/m",
+          "kernelIdentity": "device:3"
+        },
+        {
+          "root": "/fixture/p/m/s/c/m",
+          "image": "/fixture/p/m/s/c/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/s/c/m",
+          "kernelIdentity": "device:3"
+        }
+      ],
+      "after": [
+        {
+          "root": "/fixture/p/m/s/c/m",
+          "image": "/fixture/p/m/s/c/fixed.dmg",
+          "backingIdentity": "backing:substitute",
+          "kernelIdentity": "device:3"
+        }
+      ],
+      "transition": {
+        "operation": "retire",
+        "root": "/fixture/p/m/n/c/m",
+        "terminal": null
+      },
+      "accepted": false
+    },
+    {
+      "id": "retire-prefix-peer-is-not-descendant",
+      "before": [
+        {
+          "root": "/fixture/p/m/n/c/m",
+          "image": "/fixture/p/m/n/c/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/n/c/m",
+          "kernelIdentity": "device:3"
+        },
+        {
+          "root": "/fixture/p/m/s/c/m",
+          "image": "/fixture/p/m/s/c/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/s/c/m",
+          "kernelIdentity": "device:3"
+        },
+        {
+          "root": "/fixture/p/m/n/c/m-peer",
+          "image": "/fixture/p/m/n/peer/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/n/c/m-peer",
+          "kernelIdentity": "device:3"
+        }
+      ],
+      "after": [
+        {
+          "root": "/fixture/p/m/s/c/m",
+          "image": "/fixture/p/m/s/c/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/s/c/m",
+          "kernelIdentity": "device:3"
+        },
+        {
+          "root": "/fixture/p/m/n/c/m-peer",
+          "image": "/fixture/p/m/n/peer/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/n/c/m-peer",
+          "kernelIdentity": "device:3"
+        }
+      ],
+      "transition": {
+        "operation": "retire",
+        "root": "/fixture/p/m/n/c/m",
+        "terminal": null
+      },
+      "accepted": true
+    }
+  ],
+  "maintenanceOwnerCaseSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "effect",
+      "callbacks",
+      "failed"
+    ],
+    "properties": {
+      "effect": {
+        "enum": [
+          "ordinary",
+          "busy",
+          "copy",
+          "foreign-control",
+          "escaped",
+          "drain",
+          "undefined",
+          "frozen",
+          "cancelled",
+          "duplicate-cleanup",
+          "distinct-cleanup"
+        ]
+      },
+      "callbacks": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 1
+      },
+      "failed": {
+        "type": "boolean"
+      }
+    }
+  },
+  "maintenanceOwners": [
+    {
+      "effect": "ordinary",
+      "callbacks": 1,
+      "failed": false
+    },
+    {
+      "effect": "busy",
+      "callbacks": 0,
+      "failed": false
+    },
+    {
+      "effect": "copy",
+      "callbacks": 1,
+      "failed": false
+    },
+    {
+      "effect": "foreign-control",
+      "callbacks": 1,
+      "failed": false
+    },
+    {
+      "effect": "escaped",
+      "callbacks": 1,
+      "failed": false
+    },
+    {
+      "effect": "drain",
+      "callbacks": 1,
+      "failed": false
+    },
+    {
+      "effect": "undefined",
+      "callbacks": 1,
+      "failed": true
+    },
+    {
+      "effect": "frozen",
+      "callbacks": 1,
+      "failed": true
+    },
+    {
+      "effect": "cancelled",
+      "callbacks": 1,
+      "failed": true
+    },
+    {
+      "effect": "duplicate-cleanup",
+      "callbacks": 1,
+      "failed": true
+    },
+    {
+      "effect": "distinct-cleanup",
+      "callbacks": 1,
+      "failed": true
+    }
+  ],
+  "maintenanceDispatchCaseSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "mode",
+      "failed",
+      "maximumCommands"
+    ],
+    "properties": {
+      "mode": {
+        "enum": [
+          "retire",
+          "busy",
+          "publish",
+          "forged-true",
+          "forged-null",
+          "forged-undefined",
+          "forged-receipt",
+          "double",
+          "concurrent",
+          "dedicated-charge",
+          "journal-busy",
+          "mapping-busy"
+        ]
+      },
+      "failed": {
+        "type": "boolean"
+      },
+      "maximumCommands": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 1
+      }
+    }
+  },
+  "maintenanceDispatches": [
+    {
+      "mode": "retire",
+      "failed": false,
+      "maximumCommands": 1
+    },
+    {
+      "mode": "busy",
+      "failed": false,
+      "maximumCommands": 0
+    },
+    {
+      "mode": "publish",
+      "failed": false,
+      "maximumCommands": 1
+    },
+    {
+      "mode": "forged-true",
+      "failed": true,
+      "maximumCommands": 1
+    },
+    {
+      "mode": "forged-null",
+      "failed": true,
+      "maximumCommands": 1
+    },
+    {
+      "mode": "forged-undefined",
+      "failed": true,
+      "maximumCommands": 1
+    },
+    {
+      "mode": "forged-receipt",
+      "failed": true,
+      "maximumCommands": 1
+    },
+    {
+      "mode": "double",
+      "failed": true,
+      "maximumCommands": 1
+    },
+    {
+      "mode": "concurrent",
+      "failed": true,
+      "maximumCommands": 1
+    },
+    {
+      "mode": "dedicated-charge",
+      "failed": true,
+      "maximumCommands": 0
+    },
+    {
+      "mode": "journal-busy",
+      "failed": true,
+      "maximumCommands": 0
+    },
+    {
+      "mode": "mapping-busy",
+      "failed": true,
+      "maximumCommands": 0
+    }
+  ],
+  "maintenanceLifetimeCaseSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "mode",
+      "admitted"
+    ],
+    "properties": {
+      "mode": {
+        "enum": [
+          "settled-descendant"
+        ]
+      },
+      "admitted": {
+        "const": false
+      }
+    }
+  },
+  "maintenanceLifetimes": [
+    {
+      "mode": "settled-descendant",
+      "admitted": false
+    }
+  ],
+  "maintenanceRetainedCaseSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "mode",
+      "accepted"
+    ],
+    "properties": {
+      "mode": {
+        "enum": [
+          "valid",
+          "copied-loan",
+          "foreign-enrollment",
+          "foreign-body",
+          "cancelled-refinement",
+          "released-guard",
+          "copied-custody",
+          "released-custody"
+        ]
+      },
+      "accepted": {
+        "type": "boolean"
+      }
+    }
+  },
+  "maintenanceRetainedCases": [
+    {
+      "mode": "valid",
+      "accepted": true
+    },
+    {
+      "mode": "copied-loan",
+      "accepted": false
+    },
+    {
+      "mode": "foreign-enrollment",
+      "accepted": false
+    },
+    {
+      "mode": "foreign-body",
+      "accepted": false
+    },
+    {
+      "mode": "cancelled-refinement",
+      "accepted": false
+    },
+    {
+      "mode": "released-guard",
+      "accepted": false
+    },
+    {
+      "mode": "copied-custody",
+      "accepted": false
+    },
+    {
+      "mode": "released-custody",
+      "accepted": false
+    }
+  ],
+  "maintenancePublisherOrderSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "before",
+      "after"
+    ],
+    "properties": {
+      "before": {
+        "enum": [
+          "child-ex",
+          "outer-loan",
+          "private-owner",
+          "accepted",
+          "information",
+          "witness",
+          "detach",
+          "settled",
+          "retained-custody"
+        ]
+      },
+      "after": {
+        "enum": [
+          "child-ex",
+          "outer-loan",
+          "private-owner",
+          "accepted",
+          "information",
+          "witness",
+          "detach",
+          "settled",
+          "retained-custody"
+        ]
+      }
+    }
+  },
+  "maintenancePublisherOrder": [
+    {
+      "before": "child-ex",
+      "after": "outer-loan"
+    },
+    {
+      "before": "outer-loan",
+      "after": "private-owner"
+    },
+    {
+      "before": "private-owner",
+      "after": "accepted"
+    },
+    {
+      "before": "accepted",
+      "after": "information"
+    },
+    {
+      "before": "information",
+      "after": "witness"
+    },
+    {
+      "before": "witness",
+      "after": "detach"
+    },
+    {
+      "before": "detach",
+      "after": "settled"
+    },
+    {
+      "before": "settled",
+      "after": "retained-custody"
+    }
+  ],
+  "maintenanceNestedCaseSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "mode",
+      "failed",
+      "parents",
+      "commands"
+    ],
+    "properties": {
+      "mode": {
+        "enum": [
+          "depth-four",
+          "depth-five",
+          "ancestor-second",
+          "observe-then-retire",
+          "observe-cas-drift",
+          "observe-second-target",
+          "observe-envelope-drift",
+          "observe-lease-drift",
+          "observe-absent"
+        ]
+      },
+      "failed": {
+        "type": "boolean"
+      },
+      "parents": {
+        "const": 4
+      },
+      "commands": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 1
+      }
+    }
+  },
+  "maintenanceNestedCases": [
+    {
+      "mode": "depth-four",
+      "failed": false,
+      "parents": 4,
+      "commands": 1
+    },
+    {
+      "mode": "depth-five",
+      "failed": true,
+      "parents": 4,
+      "commands": 0
+    },
+    {
+      "mode": "ancestor-second",
+      "failed": true,
+      "parents": 4,
+      "commands": 1
+    },
+    {
+      "mode": "observe-then-retire",
+      "failed": false,
+      "parents": 4,
+      "commands": 1
+    },
+    {
+      "mode": "observe-cas-drift",
+      "failed": true,
+      "parents": 4,
+      "commands": 0
+    },
+    {
+      "mode": "observe-second-target",
+      "failed": true,
+      "parents": 4,
+      "commands": 0
+    },
+    {
+      "mode": "observe-envelope-drift",
+      "failed": true,
+      "parents": 4,
+      "commands": 0
+    },
+    {
+      "mode": "observe-lease-drift",
+      "failed": true,
+      "parents": 4,
+      "commands": 0
+    },
+    {
+      "mode": "observe-absent",
+      "failed": false,
+      "parents": 4,
+      "commands": 1
+    }
+  ],
+  "artifactMaintenanceCaseSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "mode",
+      "accepted",
+      "reads",
+      "failed"
+    ],
+    "properties": {
+      "mode": {
+        "enum": [
+          "root0",
+          "finite",
+          "retire-intent",
+          "copied-token",
+          "foreign-control",
+          "cancelled",
+          "expired",
+          "released",
+          "duplicate-capture",
+          "busy-journal",
+          "policy-cas",
+          "backing-cas",
+          "row-cas",
+          "raw-journal-cas",
+          "extra-allocation",
+          "persistent-state",
+          "descendant",
+          "settled-descendant",
+          "read-raw-cas",
+          "read-row-cas",
+          "read-busy",
+          "read-cancelled",
+          "read-expired",
+          "detached-input",
+          "tree-empty",
+          "tree-file",
+          "tree-cancelled",
+          "tree-escaped",
+          "presence-absent",
+          "presence-empty",
+          "presence-committed",
+          "presence-busy",
+          "presence-malformed",
+          "presence-cancelled",
+          "presence-strict-absent",
+          "fault-undefined",
+          "fault-frozen",
+          "fault-nested-undefined",
+          "presence-appeared",
+          "fault-pending-undefined",
+          "drain-lifetime",
+          "fault-profile-undefined",
+          "fault-profile-frozen",
+          "lease-reopen",
+          "lease-busy",
+          "lease-maintenance-undefined",
+          "lease-first-close-frozen",
+          "lease-reopen-undefined",
+          "lease-maintenance-close",
+          "lease-second-recheck-close",
+          "independent-absent",
+          "independent-empty",
+          "independent-history",
+          "independent-active-row",
+          "independent-absence-appeared",
+          "independent-present-missing",
+          "independent-journal-cas",
+          "independent-tree-cas",
+          "independent-foreign-parent",
+          "independent-foreign-control",
+          "independent-reader-busy",
+          "independent-concurrent",
+          "independent-double",
+          "independent-scope-escape",
+          "independent-callback",
+          "independent-cancel-before",
+          "independent-cancel-after",
+          "independent-undefined-after",
+          "independent-frozen-after",
+          "independent-sync-failure",
+          "independent-unknown-file",
+          "independent-symlink",
+          "independent-hardlink",
+          "independent-service-spoof",
+          "independent-policy-cas",
+          "independent-busy-journal",
+          "independent-stream-absent",
+          "independent-stream-empty",
+          "independent-stream-copy",
+          "independent-stream-appeared"
+        ]
+      },
+      "accepted": {
+        "type": "boolean"
+      },
+      "reads": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 2
+      },
+      "failed": {
+        "type": "boolean"
+      }
+    }
+  },
+  "artifactMaintenanceCases": [
+    {
+      "mode": "root0",
+      "accepted": true,
+      "reads": 1,
+      "failed": false
+    },
+    {
+      "mode": "finite",
+      "accepted": true,
+      "reads": 1,
+      "failed": false
+    },
+    {
+      "mode": "retire-intent",
+      "accepted": true,
+      "reads": 1,
+      "failed": false
+    },
+    {
+      "mode": "copied-token",
+      "accepted": true,
+      "reads": 1,
+      "failed": false
+    },
+    {
+      "mode": "foreign-control",
+      "accepted": true,
+      "reads": 1,
+      "failed": false
+    },
+    {
+      "mode": "cancelled",
+      "accepted": false,
+      "reads": 0,
+      "failed": true
+    },
+    {
+      "mode": "expired",
+      "accepted": false,
+      "reads": 0,
+      "failed": true
+    },
+    {
+      "mode": "released",
+      "accepted": true,
+      "reads": 1,
+      "failed": false
+    },
+    {
+      "mode": "duplicate-capture",
+      "accepted": false,
+      "reads": 0,
+      "failed": true
+    },
+    {
+      "mode": "busy-journal",
+      "accepted": false,
+      "reads": 0,
+      "failed": true
+    },
+    {
+      "mode": "policy-cas",
+      "accepted": false,
+      "reads": 0,
+      "failed": true
+    },
+    {
+      "mode": "backing-cas",
+      "accepted": false,
+      "reads": 0,
+      "failed": true
+    },
+    {
+      "mode": "row-cas",
+      "accepted": false,
+      "reads": 0,
+      "failed": true
+    },
+    {
+      "mode": "raw-journal-cas",
+      "accepted": false,
+      "reads": 0,
+      "failed": true
+    },
+    {
+      "mode": "extra-allocation",
+      "accepted": false,
+      "reads": 0,
+      "failed": true
+    },
+    {
+      "mode": "persistent-state",
+      "accepted": false,
+      "reads": 0,
+      "failed": true
+    },
+    {
+      "mode": "descendant",
+      "accepted": false,
+      "reads": 0,
+      "failed": true
+    },
+    {
+      "mode": "settled-descendant",
+      "accepted": true,
+      "reads": 1,
+      "failed": false
+    },
+    {
+      "mode": "read-raw-cas",
+      "accepted": false,
+      "reads": 0,
+      "failed": true
+    },
+    {
+      "mode": "read-row-cas",
+      "accepted": false,
+      "reads": 0,
+      "failed": true
+    },
+    {
+      "mode": "read-busy",
+      "accepted": false,
+      "reads": 0,
+      "failed": true
+    },
+    {
+      "mode": "read-cancelled",
+      "accepted": false,
+      "reads": 0,
+      "failed": true
+    },
+    {
+      "mode": "read-expired",
+      "accepted": false,
+      "reads": 0,
+      "failed": true
+    },
+    {
+      "mode": "detached-input",
+      "accepted": true,
+      "reads": 1,
+      "failed": false
+    },
+    {
+      "mode": "tree-empty",
+      "accepted": true,
+      "reads": 1,
+      "failed": false
+    },
+    {
+      "mode": "tree-file",
+      "accepted": true,
+      "reads": 1,
+      "failed": false
+    },
+    {
+      "mode": "tree-cancelled",
+      "accepted": false,
+      "reads": 0,
+      "failed": true
+    },
+    {
+      "mode": "tree-escaped",
+      "accepted": true,
+      "reads": 1,
+      "failed": false
+    },
+    {
+      "mode": "presence-absent",
+      "accepted": true,
+      "reads": 1,
+      "failed": false
+    },
+    {
+      "mode": "presence-empty",
+      "accepted": true,
+      "reads": 1,
+      "failed": false
+    },
+    {
+      "mode": "presence-committed",
+      "accepted": true,
+      "reads": 1,
+      "failed": false
+    },
+    {
+      "mode": "presence-busy",
+      "accepted": false,
+      "reads": 0,
+      "failed": true
+    },
+    {
+      "mode": "presence-malformed",
+      "accepted": false,
+      "reads": 0,
+      "failed": true
+    },
+    {
+      "mode": "presence-cancelled",
+      "accepted": false,
+      "reads": 0,
+      "failed": true
+    },
+    {
+      "mode": "presence-strict-absent",
+      "accepted": false,
+      "reads": 0,
+      "failed": true
+    },
+    {
+      "mode": "fault-undefined",
+      "accepted": false,
+      "reads": 0,
+      "failed": true
+    },
+    {
+      "mode": "fault-frozen",
+      "accepted": false,
+      "reads": 0,
+      "failed": true
+    },
+    {
+      "mode": "fault-nested-undefined",
+      "accepted": false,
+      "reads": 0,
+      "failed": true
+    },
+    {
+      "mode": "presence-appeared",
+      "accepted": false,
+      "reads": 0,
+      "failed": true
+    },
+    {
+      "mode": "fault-pending-undefined",
+      "accepted": false,
+      "reads": 0,
+      "failed": true
+    },
+    {
+      "mode": "drain-lifetime",
+      "accepted": true,
+      "reads": 1,
+      "failed": false
+    },
+    {
+      "mode": "fault-profile-undefined",
+      "accepted": false,
+      "reads": 0,
+      "failed": true
+    },
+    {
+      "mode": "fault-profile-frozen",
+      "accepted": false,
+      "reads": 0,
+      "failed": true
+    },
+    {
+      "mode": "lease-reopen",
+      "accepted": true,
+      "reads": 1,
+      "failed": false
+    },
+    {
+      "mode": "lease-busy",
+      "accepted": true,
+      "reads": 1,
+      "failed": false
+    },
+    {
+      "mode": "lease-maintenance-undefined",
+      "accepted": false,
+      "reads": 0,
+      "failed": true
+    },
+    {
+      "mode": "lease-first-close-frozen",
+      "accepted": false,
+      "reads": 0,
+      "failed": true
+    },
+    {
+      "mode": "lease-reopen-undefined",
+      "accepted": false,
+      "reads": 0,
+      "failed": true
+    },
+    {
+      "mode": "lease-maintenance-close",
+      "accepted": false,
+      "reads": 0,
+      "failed": true
+    },
+    {
+      "mode": "lease-second-recheck-close",
+      "accepted": false,
+      "reads": 0,
+      "failed": true
+    },
+    {
+      "mode": "independent-absent",
+      "accepted": true,
+      "reads": 0,
+      "failed": false
+    },
+    {
+      "mode": "independent-empty",
+      "accepted": true,
+      "reads": 0,
+      "failed": false
+    },
+    {
+      "mode": "independent-history",
+      "accepted": true,
+      "reads": 0,
+      "failed": false
+    },
+    {
+      "mode": "independent-active-row",
+      "accepted": false,
+      "reads": 0,
+      "failed": true
+    },
+    {
+      "mode": "independent-absence-appeared",
+      "accepted": false,
+      "reads": 0,
+      "failed": true
+    },
+    {
+      "mode": "independent-present-missing",
+      "accepted": false,
+      "reads": 0,
+      "failed": true
+    },
+    {
+      "mode": "independent-journal-cas",
+      "accepted": false,
+      "reads": 0,
+      "failed": true
+    },
+    {
+      "mode": "independent-tree-cas",
+      "accepted": false,
+      "reads": 0,
+      "failed": true
+    },
+    {
+      "mode": "independent-foreign-parent",
+      "accepted": false,
+      "reads": 0,
+      "failed": true
+    },
+    {
+      "mode": "independent-foreign-control",
+      "accepted": false,
+      "reads": 0,
+      "failed": true
+    },
+    {
+      "mode": "independent-reader-busy",
+      "accepted": true,
+      "reads": 0,
+      "failed": false
+    },
+    {
+      "mode": "independent-concurrent",
+      "accepted": true,
+      "reads": 0,
+      "failed": false
+    },
+    {
+      "mode": "independent-double",
+      "accepted": false,
+      "reads": 0,
+      "failed": true
+    },
+    {
+      "mode": "independent-scope-escape",
+      "accepted": true,
+      "reads": 0,
+      "failed": false
+    },
+    {
+      "mode": "independent-callback",
+      "accepted": false,
+      "reads": 0,
+      "failed": true
+    },
+    {
+      "mode": "independent-cancel-before",
+      "accepted": false,
+      "reads": 0,
+      "failed": true
+    },
+    {
+      "mode": "independent-cancel-after",
+      "accepted": false,
+      "reads": 0,
+      "failed": true
+    },
+    {
+      "mode": "independent-undefined-after",
+      "accepted": false,
+      "reads": 0,
+      "failed": true
+    },
+    {
+      "mode": "independent-frozen-after",
+      "accepted": false,
+      "reads": 0,
+      "failed": true
+    },
+    {
+      "mode": "independent-sync-failure",
+      "accepted": false,
+      "reads": 0,
+      "failed": true
+    },
+    {
+      "mode": "independent-unknown-file",
+      "accepted": false,
+      "reads": 0,
+      "failed": true
+    },
+    {
+      "mode": "independent-symlink",
+      "accepted": false,
+      "reads": 0,
+      "failed": true
+    },
+    {
+      "mode": "independent-hardlink",
+      "accepted": false,
+      "reads": 0,
+      "failed": true
+    },
+    {
+      "mode": "independent-service-spoof",
+      "accepted": false,
+      "reads": 0,
+      "failed": true
+    },
+    {
+      "mode": "independent-policy-cas",
+      "accepted": false,
+      "reads": 0,
+      "failed": true
+    },
+    {
+      "mode": "independent-busy-journal",
+      "accepted": false,
+      "reads": 0,
+      "failed": true
+    },
+    {
+      "mode": "independent-stream-absent",
+      "accepted": true,
+      "reads": 0,
+      "failed": false
+    },
+    {
+      "mode": "independent-stream-empty",
+      "accepted": true,
+      "reads": 0,
+      "failed": false
+    },
+    {
+      "mode": "independent-stream-copy",
+      "accepted": false,
+      "reads": 0,
+      "failed": true
+    },
+    {
+      "mode": "independent-stream-appeared",
+      "accepted": false,
+      "reads": 0,
+      "failed": true
+    }
+  ],
+  "artifactMaintenanceLaunchCases": [
+    {
+      "language": "EN",
+      "order": 920.6,
+      "policyText": "Default Policy (No Overall Deadline)"
+    },
+    {
+      "language": "DE",
+      "order": 920.7,
+      "policyText": "Standardrichtlinie (Ohne Gesamtablauf)"
+    }
+  ],
+  "artifactMaintenanceLaunchCaseSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "language",
+      "order",
+      "policyText"
+    ],
+    "properties": {
+      "language": {
+        "enum": [
+          "EN",
+          "DE"
+        ]
+      },
+      "order": {
+        "type": "number",
+        "minimum": 920.6,
+        "maximum": 920.7
+      },
+      "policyText": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 128
+      }
+    }
+  },
+  "artifactPayloadSchemaCases": [
+    {
+      "mode": "complete",
+      "accepted": true
+    },
+    {
+      "mode": "empty",
+      "accepted": true
+    },
+    {
+      "mode": "callback",
+      "accepted": false
+    },
+    {
+      "mode": "unknown",
+      "accepted": false
+    },
+    {
+      "mode": "duplicate",
+      "accepted": false
+    },
+    {
+      "mode": "parent-missing",
+      "accepted": false
+    },
+    {
+      "mode": "traversal",
+      "accepted": false
+    },
+    {
+      "mode": "journal",
+      "accepted": false
+    },
+    {
+      "mode": "service",
+      "accepted": false
+    },
+    {
+      "mode": "directory-hash",
+      "accepted": false
+    },
+    {
+      "mode": "file-null-hash",
+      "accepted": false
+    },
+    {
+      "mode": "unsorted",
+      "accepted": false
+    }
+  ],
+  "artifactPayloadCaseSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "mode",
+      "accepted"
+    ],
+    "properties": {
+      "mode": {
+        "enum": [
+          "complete",
+          "empty",
+          "callback",
+          "unknown",
+          "duplicate",
+          "parent-missing",
+          "traversal",
+          "journal",
+          "service",
+          "directory-hash",
+          "file-null-hash",
+          "unsorted"
+        ]
+      },
+      "accepted": {
+        "type": "boolean"
+      }
+    }
+  },
+  "artifactRetirementCaseSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "mode",
+      "failed",
+      "reads",
+      "allocationCount",
+      "deleted"
+    ],
+    "properties": {
+      "mode": {
+        "enum": [
+          "terminal-success",
+          "terminal-empty",
+          "terminal-retain-intent",
+          "terminal-copied-token",
+          "terminal-payload-cas",
+          "terminal-unknown-file",
+          "terminal-symlink",
+          "terminal-hardlink",
+          "terminal-service-spoof",
+          "terminal-cancel-before",
+          "terminal-cancel-after",
+          "terminal-frozen-after",
+          "terminal-undefined-after",
+          "terminal-sync-failure",
+          "terminal-row-drift",
+          "terminal-busy-journal",
+          "terminal-double",
+          "terminal-foreign-control",
+          "terminal-scope-escape",
+          "terminal-extra-argument",
+          "terminal-true",
+          "terminal-null",
+          "terminal-undefined",
+          "terminal-concurrent",
+          "terminal-reader-busy",
+          "terminal-journal-partial",
+          "terminal-journal-sync-failure",
+          "terminal-root-sync-failure",
+          "terminal-stream-success",
+          "terminal-stream-copy",
+          "terminal-stream-no-selector",
+          "terminal-stream-wrong-purpose",
+          "terminal-stream-row-drift",
+          "terminal-stream-foreign-control",
+          "terminal-stream-double",
+          "terminal-stream-short",
+          "terminal-stream-empty-eofs"
+        ]
+      },
+      "failed": {
+        "type": "boolean"
+      },
+      "reads": {
+        "const": 0
+      },
+      "allocationCount": {
+        "anyOf": [
+          {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "deleted": {
+        "type": "boolean"
+      }
+    }
+  },
+  "artifactRetirementCases": [
+    {
+      "mode": "terminal-success",
+      "failed": false,
+      "reads": 0,
+      "allocationCount": 0,
+      "deleted": true
+    },
+    {
+      "mode": "terminal-empty",
+      "failed": false,
+      "reads": 0,
+      "allocationCount": 0,
+      "deleted": false
+    },
+    {
+      "mode": "terminal-retain-intent",
+      "failed": true,
+      "reads": 0,
+      "allocationCount": 1,
+      "deleted": false
+    },
+    {
+      "mode": "terminal-copied-token",
+      "failed": true,
+      "reads": 0,
+      "allocationCount": 1,
+      "deleted": false
+    },
+    {
+      "mode": "terminal-payload-cas",
+      "failed": true,
+      "reads": 0,
+      "allocationCount": 1,
+      "deleted": false
+    },
+    {
+      "mode": "terminal-unknown-file",
+      "failed": true,
+      "reads": 0,
+      "allocationCount": 1,
+      "deleted": false
+    },
+    {
+      "mode": "terminal-symlink",
+      "failed": true,
+      "reads": 0,
+      "allocationCount": 1,
+      "deleted": false
+    },
+    {
+      "mode": "terminal-hardlink",
+      "failed": true,
+      "reads": 0,
+      "allocationCount": 1,
+      "deleted": false
+    },
+    {
+      "mode": "terminal-service-spoof",
+      "failed": true,
+      "reads": 0,
+      "allocationCount": 1,
+      "deleted": false
+    },
+    {
+      "mode": "terminal-cancel-before",
+      "failed": true,
+      "reads": 0,
+      "allocationCount": 1,
+      "deleted": false
+    },
+    {
+      "mode": "terminal-cancel-after",
+      "failed": true,
+      "reads": 0,
+      "allocationCount": 1,
+      "deleted": true
+    },
+    {
+      "mode": "terminal-frozen-after",
+      "failed": true,
+      "reads": 0,
+      "allocationCount": 1,
+      "deleted": true
+    },
+    {
+      "mode": "terminal-undefined-after",
+      "failed": true,
+      "reads": 0,
+      "allocationCount": 1,
+      "deleted": true
+    },
+    {
+      "mode": "terminal-sync-failure",
+      "failed": true,
+      "reads": 0,
+      "allocationCount": 1,
+      "deleted": true
+    },
+    {
+      "mode": "terminal-row-drift",
+      "failed": true,
+      "reads": 0,
+      "allocationCount": 1,
+      "deleted": false
+    },
+    {
+      "mode": "terminal-busy-journal",
+      "failed": true,
+      "reads": 0,
+      "allocationCount": 1,
+      "deleted": false
+    },
+    {
+      "mode": "terminal-double",
+      "failed": true,
+      "reads": 0,
+      "allocationCount": 0,
+      "deleted": true
+    },
+    {
+      "mode": "terminal-foreign-control",
+      "failed": true,
+      "reads": 0,
+      "allocationCount": 1,
+      "deleted": false
+    },
+    {
+      "mode": "terminal-scope-escape",
+      "failed": false,
+      "reads": 0,
+      "allocationCount": 1,
+      "deleted": false
+    },
+    {
+      "mode": "terminal-extra-argument",
+      "failed": true,
+      "reads": 0,
+      "allocationCount": 1,
+      "deleted": false
+    },
+    {
+      "mode": "terminal-true",
+      "failed": true,
+      "reads": 0,
+      "allocationCount": 1,
+      "deleted": false
+    },
+    {
+      "mode": "terminal-null",
+      "failed": true,
+      "reads": 0,
+      "allocationCount": 1,
+      "deleted": false
+    },
+    {
+      "mode": "terminal-undefined",
+      "failed": true,
+      "reads": 0,
+      "allocationCount": 1,
+      "deleted": false
+    },
+    {
+      "mode": "terminal-concurrent",
+      "failed": false,
+      "reads": 0,
+      "allocationCount": 0,
+      "deleted": true
+    },
+    {
+      "mode": "terminal-reader-busy",
+      "failed": false,
+      "reads": 0,
+      "allocationCount": 0,
+      "deleted": true
+    },
+    {
+      "mode": "terminal-journal-partial",
+      "failed": true,
+      "reads": 0,
+      "allocationCount": null,
+      "deleted": true
+    },
+    {
+      "mode": "terminal-journal-sync-failure",
+      "failed": true,
+      "reads": 0,
+      "allocationCount": 0,
+      "deleted": true
+    },
+    {
+      "mode": "terminal-root-sync-failure",
+      "failed": true,
+      "reads": 0,
+      "allocationCount": 0,
+      "deleted": true
+    },
+    {
+      "mode": "terminal-stream-success",
+      "failed": false,
+      "reads": 0,
+      "allocationCount": 0,
+      "deleted": true
+    },
+    {
+      "mode": "terminal-stream-copy",
+      "failed": true,
+      "reads": 0,
+      "allocationCount": 1,
+      "deleted": false
+    },
+    {
+      "mode": "terminal-stream-no-selector",
+      "failed": true,
+      "reads": 0,
+      "allocationCount": 1,
+      "deleted": false
+    },
+    {
+      "mode": "terminal-stream-wrong-purpose",
+      "failed": true,
+      "reads": 0,
+      "allocationCount": 1,
+      "deleted": false
+    },
+    {
+      "mode": "terminal-stream-row-drift",
+      "failed": true,
+      "reads": 0,
+      "allocationCount": 1,
+      "deleted": false
+    },
+    {
+      "mode": "terminal-stream-foreign-control",
+      "failed": true,
+      "reads": 0,
+      "allocationCount": 1,
+      "deleted": false
+    },
+    {
+      "mode": "terminal-stream-double",
+      "failed": true,
+      "reads": 0,
+      "allocationCount": 0,
+      "deleted": true
+    },
+    {
+      "mode": "terminal-stream-short",
+      "failed": false,
+      "reads": 0,
+      "allocationCount": 0,
+      "deleted": true
+    },
+    {
+      "mode": "terminal-stream-empty-eofs",
+      "failed": false,
+      "reads": 0,
+      "allocationCount": 1,
+      "deleted": false
+    }
+  ],
+  "artifactRemovedInodeCases": [
+    {
+      "kind": "file",
+      "beforeLinks": 1,
+      "afterLinks": 0,
+      "sameIdentity": true,
+      "nameAbsent": true,
+      "accepted": true
+    },
+    {
+      "kind": "file",
+      "beforeLinks": 1,
+      "afterLinks": 1,
+      "sameIdentity": true,
+      "nameAbsent": true,
+      "accepted": false
+    },
+    {
+      "kind": "directory",
+      "beforeLinks": 2,
+      "afterLinks": 2,
+      "sameIdentity": true,
+      "nameAbsent": true,
+      "accepted": true
+    },
+    {
+      "kind": "directory",
+      "beforeLinks": 2,
+      "afterLinks": 0,
+      "sameIdentity": true,
+      "nameAbsent": true,
+      "accepted": true
+    },
+    {
+      "kind": "directory",
+      "beforeLinks": 2,
+      "afterLinks": 2,
+      "sameIdentity": true,
+      "nameAbsent": false,
+      "accepted": false
+    },
+    {
+      "kind": "directory",
+      "beforeLinks": 2,
+      "afterLinks": 2,
+      "sameIdentity": false,
+      "nameAbsent": true,
+      "accepted": false
+    }
+  ],
+  "artifactRemovedInodeCaseSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "kind",
+      "beforeLinks",
+      "afterLinks",
+      "sameIdentity",
+      "nameAbsent",
+      "accepted"
+    ],
+    "properties": {
+      "kind": {
+        "enum": [
+          "file",
+          "directory"
+        ]
+      },
+      "beforeLinks": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 64
+      },
+      "afterLinks": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 64
+      },
+      "sameIdentity": {
+        "type": "boolean"
+      },
+      "nameAbsent": {
+        "type": "boolean"
+      },
+      "accepted": {
+        "type": "boolean"
+      }
+    }
+  },
+  "maintenancePresenceSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "id",
+      "value",
+      "accepted"
+    ],
+    "properties": {
+      "id": {
+        "type": "string",
+        "minLength": 1
+      },
+      "value": {},
+      "accepted": {
+        "type": "boolean"
+      }
+    }
+  },
+  "maintenancePresenceCases": [
+    {
+      "id": "absent-current-observation",
+      "value": {
+        "version": 1,
+        "presence": "absent",
+        "backing": {
+          "root": "/fixture/m",
+          "identity": "fixture",
+          "maximumPhysicalBytes": 34603008
+        }
+      },
+      "accepted": true
+    },
+    {
+      "id": "present-empty-current-observation",
+      "value": {
+        "version": 1,
+        "presence": "present",
+        "backing": {
+          "root": "/fixture/m",
+          "identity": "fixture",
+          "maximumPhysicalBytes": 34603008
+        },
+        "state": {
+          "version": 1,
+          "sequence": 0,
+          "allocations": []
+        },
+        "journalSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "journalBytes": 0
+      },
+      "accepted": true
+    },
+    {
+      "id": "absent-never-state",
+      "value": {
+        "version": 1,
+        "presence": "absent",
+        "backing": {
+          "root": "/fixture/m",
+          "identity": "fixture",
+          "maximumPhysicalBytes": 34603008
+        },
+        "state": {
+          "version": 1,
+          "sequence": 0,
+          "allocations": []
+        }
+      },
+      "accepted": false
+    },
+    {
+      "id": "absent-never-digest",
+      "value": {
+        "version": 1,
+        "presence": "absent",
+        "backing": {
+          "root": "/fixture/m",
+          "identity": "fixture",
+          "maximumPhysicalBytes": 34603008
+        },
+        "journalSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "accepted": false
+    },
+    {
+      "id": "absent-never-bytes",
+      "value": {
+        "version": 1,
+        "presence": "absent",
+        "backing": {
+          "root": "/fixture/m",
+          "identity": "fixture",
+          "maximumPhysicalBytes": 34603008
+        },
+        "journalBytes": 0
+      },
+      "accepted": false
+    },
+    {
+      "id": "present-requires-state",
+      "value": {
+        "version": 1,
+        "presence": "present",
+        "backing": {
+          "root": "/fixture/m",
+          "identity": "fixture",
+          "maximumPhysicalBytes": 34603008
+        },
+        "journalSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "journalBytes": 0
+      },
+      "accepted": false
+    },
+    {
+      "id": "unknown-presence",
+      "value": {
+        "version": 1,
+        "presence": "unknown",
+        "backing": {
+          "root": "/fixture/m",
+          "identity": "fixture",
+          "maximumPhysicalBytes": 34603008
+        }
+      },
+      "accepted": false
+    },
+    {
+      "id": "readonly-purpose-no-presence",
+      "value": {
+        "version": 1,
+        "presence": "absent",
+        "backing": {
+          "root": "/fixture/m",
+          "identity": "fixture",
+          "maximumPhysicalBytes": 34603008
+        },
+        "purpose": "mounted-parent-read"
+      },
+      "accepted": false
+    }
+  ],
+  "leaseReopenCases": [
+    {
+      "mode": "lease-reopen",
+      "accepted": true,
+      "opened": 2,
+      "closed": 2,
+      "failures": 0
+    },
+    {
+      "mode": "lease-busy",
+      "accepted": true,
+      "opened": 2,
+      "closed": 2,
+      "failures": 0
+    },
+    {
+      "mode": "lease-maintenance-undefined",
+      "accepted": false,
+      "opened": 1,
+      "closed": 1,
+      "failures": 1
+    },
+    {
+      "mode": "lease-first-close-frozen",
+      "accepted": false,
+      "opened": 1,
+      "closed": 1,
+      "failures": 1
+    },
+    {
+      "mode": "lease-reopen-undefined",
+      "accepted": false,
+      "opened": 1,
+      "closed": 1,
+      "failures": 1
+    },
+    {
+      "mode": "lease-maintenance-close",
+      "accepted": false,
+      "opened": 1,
+      "closed": 1,
+      "failures": 2
+    },
+    {
+      "mode": "lease-second-recheck-close",
+      "accepted": false,
+      "opened": 2,
+      "closed": 2,
+      "failures": 2
+    }
+  ],
+  "leaseReopenCaseSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "mode",
+      "accepted",
+      "opened",
+      "closed",
+      "failures"
+    ],
+    "properties": {
+      "mode": {
+        "enum": [
+          "lease-reopen",
+          "lease-busy",
+          "lease-maintenance-undefined",
+          "lease-first-close-frozen",
+          "lease-reopen-undefined",
+          "lease-maintenance-close",
+          "lease-second-recheck-close"
+        ]
+      },
+      "accepted": {
+        "type": "boolean"
+      },
+      "opened": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 2
+      },
+      "closed": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 2
+      },
+      "failures": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 2
+      }
+    }
+  },
+  "protectedPublicationCaseSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "mode",
+      "accepted"
+    ],
+    "properties": {
+      "mode": {
+        "enum": [
+          "absent",
+          "empty",
+          "intent",
+          "partial",
+          "zero",
+          "unknown",
+          "third",
+          "namespace-file",
+          "namespace-link",
+          "foreign-device",
+          "file-directory",
+          "file-link",
+          "file-hardlink",
+          "oversized",
+          "file-drift",
+          "directory-drift",
+          "read-undefined",
+          "read-frozen",
+          "cancelled",
+          "namespace-mode",
+          "file-mode",
+          "descriptor-cap"
+        ]
+      },
+      "accepted": {
+        "type": "boolean"
+      }
+    }
+  },
+  "protectedPublicationCases": [
+    {
+      "mode": "absent",
+      "accepted": true
+    },
+    {
+      "mode": "empty",
+      "accepted": true
+    },
+    {
+      "mode": "intent",
+      "accepted": true
+    },
+    {
+      "mode": "partial",
+      "accepted": true
+    },
+    {
+      "mode": "zero",
+      "accepted": true
+    },
+    {
+      "mode": "unknown",
+      "accepted": false
+    },
+    {
+      "mode": "third",
+      "accepted": false
+    },
+    {
+      "mode": "namespace-file",
+      "accepted": false
+    },
+    {
+      "mode": "namespace-link",
+      "accepted": false
+    },
+    {
+      "mode": "foreign-device",
+      "accepted": false
+    },
+    {
+      "mode": "file-directory",
+      "accepted": false
+    },
+    {
+      "mode": "file-link",
+      "accepted": false
+    },
+    {
+      "mode": "file-hardlink",
+      "accepted": false
+    },
+    {
+      "mode": "oversized",
+      "accepted": false
+    },
+    {
+      "mode": "file-drift",
+      "accepted": false
+    },
+    {
+      "mode": "directory-drift",
+      "accepted": false
+    },
+    {
+      "mode": "read-undefined",
+      "accepted": false
+    },
+    {
+      "mode": "read-frozen",
+      "accepted": false
+    },
+    {
+      "mode": "cancelled",
+      "accepted": false
+    },
+    {
+      "mode": "namespace-mode",
+      "accepted": false
+    },
+    {
+      "mode": "file-mode",
+      "accepted": false
+    },
+    {
+      "mode": "descriptor-cap",
+      "accepted": false
+    }
+  ],
+  "independentPayloadExpectationCases": [
+    {
+      "mode": "absent",
+      "accepted": true
+    },
+    {
+      "mode": "present",
+      "accepted": true
+    },
+    {
+      "mode": "state-on-absent",
+      "accepted": false
+    },
+    {
+      "mode": "allocation",
+      "accepted": false
+    },
+    {
+      "mode": "purpose",
+      "accepted": false
+    },
+    {
+      "mode": "unknown",
+      "accepted": false
+    }
+  ],
+  "independentPayloadExpectationCaseSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "mode",
+      "accepted"
+    ],
+    "properties": {
+      "mode": {
+        "enum": [
+          "absent",
+          "present",
+          "state-on-absent",
+          "allocation",
+          "purpose",
+          "unknown"
+        ]
+      },
+      "accepted": {
+        "type": "boolean"
+      }
+    }
+  },
+  "protectedPublicationPhysicalCaseSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "mode",
+      "captured",
+      "checked"
+    ],
+    "properties": {
+      "mode": {
+        "enum": [
+          "absent",
+          "pending",
+          "appeared",
+          "disappeared",
+          "changed",
+          "unknown",
+          "copied-proof",
+          "cancelled"
+        ]
+      },
+      "captured": {
+        "type": "boolean"
+      },
+      "checked": {
+        "type": "boolean"
+      }
+    }
+  },
+  "protectedPublicationPhysicalCases": [
+    {
+      "mode": "absent",
+      "captured": true,
+      "checked": true
+    },
+    {
+      "mode": "pending",
+      "captured": true,
+      "checked": true
+    },
+    {
+      "mode": "appeared",
+      "captured": true,
+      "checked": false
+    },
+    {
+      "mode": "disappeared",
+      "captured": true,
+      "checked": false
+    },
+    {
+      "mode": "changed",
+      "captured": true,
+      "checked": false
+    },
+    {
+      "mode": "unknown",
+      "captured": false,
+      "checked": false
+    },
+    {
+      "mode": "copied-proof",
+      "captured": false,
+      "checked": false
+    },
+    {
+      "mode": "cancelled",
+      "captured": false,
+      "checked": false
+    }
+  ],
+  "independentPayloadCases": [
+    {
+      "mode": "independent-absent",
+      "failed": false,
+      "deleted": true
+    },
+    {
+      "mode": "independent-empty",
+      "failed": false,
+      "deleted": true
+    },
+    {
+      "mode": "independent-history",
+      "failed": false,
+      "deleted": true
+    },
+    {
+      "mode": "independent-active-row",
+      "failed": true,
+      "deleted": false
+    },
+    {
+      "mode": "independent-absence-appeared",
+      "failed": true,
+      "deleted": false
+    },
+    {
+      "mode": "independent-present-missing",
+      "failed": true,
+      "deleted": false
+    },
+    {
+      "mode": "independent-journal-cas",
+      "failed": true,
+      "deleted": false
+    },
+    {
+      "mode": "independent-tree-cas",
+      "failed": true,
+      "deleted": false
+    },
+    {
+      "mode": "independent-foreign-parent",
+      "failed": true,
+      "deleted": false
+    },
+    {
+      "mode": "independent-foreign-control",
+      "failed": true,
+      "deleted": false
+    },
+    {
+      "mode": "independent-reader-busy",
+      "failed": false,
+      "deleted": true
+    },
+    {
+      "mode": "independent-concurrent",
+      "failed": false,
+      "deleted": true
+    },
+    {
+      "mode": "independent-double",
+      "failed": true,
+      "deleted": true
+    },
+    {
+      "mode": "independent-scope-escape",
+      "failed": false,
+      "deleted": false
+    },
+    {
+      "mode": "independent-callback",
+      "failed": true,
+      "deleted": false
+    },
+    {
+      "mode": "independent-cancel-before",
+      "failed": true,
+      "deleted": false
+    },
+    {
+      "mode": "independent-cancel-after",
+      "failed": true,
+      "deleted": true
+    },
+    {
+      "mode": "independent-undefined-after",
+      "failed": true,
+      "deleted": true
+    },
+    {
+      "mode": "independent-frozen-after",
+      "failed": true,
+      "deleted": true
+    },
+    {
+      "mode": "independent-sync-failure",
+      "failed": true,
+      "deleted": true
+    },
+    {
+      "mode": "independent-unknown-file",
+      "failed": true,
+      "deleted": false
+    },
+    {
+      "mode": "independent-symlink",
+      "failed": true,
+      "deleted": false
+    },
+    {
+      "mode": "independent-hardlink",
+      "failed": true,
+      "deleted": false
+    },
+    {
+      "mode": "independent-service-spoof",
+      "failed": true,
+      "deleted": false
+    },
+    {
+      "mode": "independent-policy-cas",
+      "failed": true,
+      "deleted": false
+    },
+    {
+      "mode": "independent-busy-journal",
+      "failed": true,
+      "deleted": false
+    },
+    {
+      "mode": "independent-stream-absent",
+      "failed": false,
+      "deleted": true
+    },
+    {
+      "mode": "independent-stream-empty",
+      "failed": false,
+      "deleted": true
+    },
+    {
+      "mode": "independent-stream-copy",
+      "failed": true,
+      "deleted": false
+    },
+    {
+      "mode": "independent-stream-appeared",
+      "failed": true,
+      "deleted": false
+    }
+  ],
+  "independentPayloadCaseSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "mode",
+      "failed",
+      "deleted"
+    ],
+    "properties": {
+      "mode": {
+        "enum": [
+          "independent-absent",
+          "independent-empty",
+          "independent-history",
+          "independent-active-row",
+          "independent-absence-appeared",
+          "independent-present-missing",
+          "independent-journal-cas",
+          "independent-tree-cas",
+          "independent-foreign-parent",
+          "independent-foreign-control",
+          "independent-reader-busy",
+          "independent-concurrent",
+          "independent-double",
+          "independent-scope-escape",
+          "independent-callback",
+          "independent-cancel-before",
+          "independent-cancel-after",
+          "independent-undefined-after",
+          "independent-frozen-after",
+          "independent-sync-failure",
+          "independent-unknown-file",
+          "independent-symlink",
+          "independent-hardlink",
+          "independent-service-spoof",
+          "independent-policy-cas",
+          "independent-busy-journal",
+          "independent-stream-absent",
+          "independent-stream-empty",
+          "independent-stream-copy",
+          "independent-stream-appeared"
+        ]
+      },
+      "failed": {
+        "type": "boolean"
+      },
+      "deleted": {
+        "type": "boolean"
+      }
+    }
+  },
+  "independentPayloadReservationCases": [
+    {
+      "mode": "deferred",
+      "scheduled": true,
+      "failed": false
+    },
+    {
+      "mode": "ancestor-reserved",
+      "scheduled": false,
+      "failed": true
+    },
+    {
+      "mode": "ancestor-effect",
+      "scheduled": false,
+      "failed": true
+    },
+    {
+      "mode": "undefined-schedule",
+      "scheduled": true,
+      "failed": true
+    },
+    {
+      "mode": "frozen-schedule",
+      "scheduled": true,
+      "failed": true
+    }
+  ],
+  "independentPayloadReservationCaseSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "mode",
+      "scheduled",
+      "failed"
+    ],
+    "properties": {
+      "mode": {
+        "enum": [
+          "deferred",
+          "ancestor-reserved",
+          "ancestor-effect",
+          "undefined-schedule",
+          "frozen-schedule"
+        ]
+      },
+      "scheduled": {
+        "type": "boolean"
+      },
+      "failed": {
+        "type": "boolean"
+      }
+    }
+  },
+  "artifactInputCases": [
+    {
+      "mode": "valid",
+      "accepted": true,
+      "schemaAccepted": true
+    },
+    {
+      "mode": "empty-file",
+      "accepted": true,
+      "schemaAccepted": true
+    },
+    {
+      "mode": "extra",
+      "accepted": false,
+      "schemaAccepted": false
+    },
+    {
+      "mode": "purpose",
+      "accepted": false,
+      "schemaAccepted": false
+    },
+    {
+      "mode": "empty-roots",
+      "accepted": false,
+      "schemaAccepted": false
+    },
+    {
+      "mode": "index",
+      "accepted": false,
+      "schemaAccepted": true
+    },
+    {
+      "mode": "root-case",
+      "accepted": false,
+      "schemaAccepted": true
+    },
+    {
+      "mode": "root-overlap",
+      "accepted": false,
+      "schemaAccepted": true
+    },
+    {
+      "mode": "root-order",
+      "accepted": false,
+      "schemaAccepted": true
+    },
+    {
+      "mode": "file-order",
+      "accepted": false,
+      "schemaAccepted": true
+    },
+    {
+      "mode": "file-case",
+      "accepted": false,
+      "schemaAccepted": true
+    },
+    {
+      "mode": "file-parent",
+      "accepted": false,
+      "schemaAccepted": true
+    },
+    {
+      "mode": "absolute",
+      "accepted": false,
+      "schemaAccepted": true
+    },
+    {
+      "mode": "traversal",
+      "accepted": false,
+      "schemaAccepted": true
+    },
+    {
+      "mode": "backslash",
+      "accepted": false,
+      "schemaAccepted": true
+    },
+    {
+      "mode": "empty-segment",
+      "accepted": false,
+      "schemaAccepted": true
+    },
+    {
+      "mode": "reserved",
+      "accepted": false,
+      "schemaAccepted": true
+    },
+    {
+      "mode": "ads",
+      "accepted": false,
+      "schemaAccepted": true
+    },
+    {
+      "mode": "trailing-dot",
+      "accepted": false,
+      "schemaAccepted": true
+    },
+    {
+      "mode": "unicode",
+      "accepted": false,
+      "schemaAccepted": true
+    },
+    {
+      "mode": "service",
+      "accepted": false,
+      "schemaAccepted": true
+    },
+    {
+      "mode": "journal",
+      "accepted": false,
+      "schemaAccepted": true
+    },
+    {
+      "mode": "encoded-length",
+      "accepted": false,
+      "schemaAccepted": true
+    },
+    {
+      "mode": "hash",
+      "accepted": false,
+      "schemaAccepted": false
+    },
+    {
+      "mode": "file-bound",
+      "accepted": false,
+      "schemaAccepted": false
+    },
+    {
+      "mode": "root-without-file",
+      "accepted": false,
+      "schemaAccepted": true
+    },
+    {
+      "mode": "detached",
+      "accepted": true,
+      "schemaAccepted": true
+    }
+  ],
+  "artifactInputCaseSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "mode",
+      "accepted",
+      "schemaAccepted"
+    ],
+    "properties": {
+      "mode": {
+        "enum": [
+          "valid",
+          "empty-file",
+          "extra",
+          "purpose",
+          "empty-roots",
+          "index",
+          "root-case",
+          "root-overlap",
+          "root-order",
+          "file-order",
+          "file-case",
+          "file-parent",
+          "absolute",
+          "traversal",
+          "backslash",
+          "empty-segment",
+          "reserved",
+          "ads",
+          "trailing-dot",
+          "unicode",
+          "service",
+          "journal",
+          "encoded-length",
+          "hash",
+          "file-bound",
+          "root-without-file",
+          "detached"
+        ]
+      },
+      "accepted": {
+        "type": "boolean"
+      },
+      "schemaAccepted": {
+        "type": "boolean"
+      }
+    }
+  },
+  "artifactInputContentCases": [
+    {
+      "mode": "valid",
+      "accepted": true
+    },
+    {
+      "mode": "empty",
+      "accepted": true
+    },
+    {
+      "mode": "multi-chunk",
+      "accepted": true
+    },
+    {
+      "mode": "invalid-base64",
+      "accepted": false
+    },
+    {
+      "mode": "noncanonical",
+      "accepted": false
+    },
+    {
+      "mode": "wrong-hash",
+      "accepted": false
+    },
+    {
+      "mode": "wrong-size",
+      "accepted": false
+    },
+    {
+      "mode": "cancelled",
+      "accepted": false
+    },
+    {
+      "mode": "cancel-between",
+      "accepted": false
+    }
+  ],
+  "artifactInputContentCaseSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "mode",
+      "accepted"
+    ],
+    "properties": {
+      "mode": {
+        "enum": [
+          "valid",
+          "empty",
+          "multi-chunk",
+          "invalid-base64",
+          "noncanonical",
+          "wrong-hash",
+          "wrong-size",
+          "cancelled",
+          "cancel-between"
+        ]
+      },
+      "accepted": {
+        "type": "boolean"
+      }
+    }
+  },
+  "artifactInputWorkerCases": [
+    {
+      "mode": "input-success",
+      "failed": false,
+      "wrote": true
+    },
+    {
+      "mode": "input-finite",
+      "failed": false,
+      "wrote": true
+    },
+    {
+      "mode": "input-copied-token",
+      "failed": true,
+      "wrote": false
+    },
+    {
+      "mode": "input-foreign-control",
+      "failed": true,
+      "wrote": false
+    },
+    {
+      "mode": "input-wrong-hash",
+      "failed": true,
+      "wrote": false
+    },
+    {
+      "mode": "input-base64",
+      "failed": true,
+      "wrote": false
+    },
+    {
+      "mode": "input-existing-root",
+      "failed": true,
+      "wrote": false
+    },
+    {
+      "mode": "input-symlink-parent",
+      "failed": true,
+      "wrote": false
+    },
+    {
+      "mode": "input-cancel-before",
+      "failed": true,
+      "wrote": false
+    },
+    {
+      "mode": "input-cancel-write",
+      "failed": true,
+      "wrote": true
+    },
+    {
+      "mode": "input-undefined-write",
+      "failed": true,
+      "wrote": true
+    },
+    {
+      "mode": "input-frozen-write",
+      "failed": true,
+      "wrote": true
+    },
+    {
+      "mode": "input-hardlink",
+      "failed": true,
+      "wrote": false
+    },
+    {
+      "mode": "input-sync-failure",
+      "failed": true,
+      "wrote": true
+    },
+    {
+      "mode": "input-read-drift",
+      "failed": true,
+      "wrote": true
+    },
+    {
+      "mode": "input-journal-drift",
+      "failed": true,
+      "wrote": true
+    },
+    {
+      "mode": "input-expired-before",
+      "failed": true,
+      "wrote": false
+    },
+    {
+      "mode": "input-retire-action",
+      "failed": true,
+      "wrote": false
+    },
+    {
+      "mode": "input-root-preflight",
+      "failed": true,
+      "wrote": false
+    },
+    {
+      "mode": "input-path-limit",
+      "failed": true,
+      "wrote": false
+    },
+    {
+      "mode": "input-unawaited",
+      "failed": false,
+      "wrote": true
+    },
+    {
+      "mode": "input-multiple-roots",
+      "failed": false,
+      "wrote": true
+    },
+    {
+      "mode": "input-empty-file",
+      "failed": false,
+      "wrote": false
+    },
+    {
+      "mode": "input-short-write",
+      "failed": false,
+      "wrote": true
+    },
+    {
+      "mode": "input-late-unknown-file",
+      "failed": true,
+      "wrote": true
+    },
+    {
+      "mode": "input-late-unknown-directory",
+      "failed": true,
+      "wrote": true
+    },
+    {
+      "mode": "input-fresh-read-unknown",
+      "failed": true,
+      "wrote": true
+    },
+    {
+      "mode": "input-selected-fresh-root",
+      "failed": false,
+      "wrote": true
+    },
+    {
+      "mode": "input-selected-unknown-root",
+      "failed": true,
+      "wrote": true
+    },
+    {
+      "mode": "input-selected-root-index",
+      "failed": true,
+      "wrote": true
+    }
+  ],
+  "artifactInputWorkerCaseSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "mode",
+      "failed",
+      "wrote"
+    ],
+    "properties": {
+      "mode": {
+        "enum": [
+          "input-success",
+          "input-finite",
+          "input-copied-token",
+          "input-foreign-control",
+          "input-wrong-hash",
+          "input-base64",
+          "input-existing-root",
+          "input-symlink-parent",
+          "input-cancel-before",
+          "input-cancel-write",
+          "input-undefined-write",
+          "input-frozen-write",
+          "input-hardlink",
+          "input-sync-failure",
+          "input-read-drift",
+          "input-journal-drift",
+          "input-expired-before",
+          "input-retire-action",
+          "input-root-preflight",
+          "input-path-limit",
+          "input-unawaited",
+          "input-multiple-roots",
+          "input-empty-file",
+          "input-short-write",
+          "input-late-unknown-file",
+          "input-late-unknown-directory",
+          "input-fresh-read-unknown",
+          "input-selected-fresh-root",
+          "input-selected-unknown-root",
+          "input-selected-root-index"
+        ]
+      },
+      "failed": {
+        "type": "boolean"
+      },
+      "wrote": {
+        "type": "boolean"
+      }
+    }
+  },
+  "artifactInputBoundaryCases": [
+    {
+      "mode": "roots64",
+      "accepted": true
+    },
+    {
+      "mode": "roots65",
+      "accepted": false
+    },
+    {
+      "mode": "files512",
+      "accepted": true
+    },
+    {
+      "mode": "files513",
+      "accepted": false
+    },
+    {
+      "mode": "directories1024",
+      "accepted": true
+    },
+    {
+      "mode": "directories1025",
+      "accepted": false
+    },
+    {
+      "mode": "depth64",
+      "accepted": true
+    },
+    {
+      "mode": "depth65",
+      "accepted": false
+    },
+    {
+      "mode": "path257",
+      "accepted": false
+    },
+    {
+      "mode": "name256bytes",
+      "accepted": false
+    },
+    {
+      "mode": "directory-case",
+      "accepted": false
+    }
+  ],
+  "artifactSourceReceiptSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "mode",
+      "pid",
+      "failed",
+      "reads",
+      "rootMaximum",
+      "rootDeadline",
+      "wireSha256",
+      "capabilitiesSha256",
+      "nativeEffects"
+    ],
+    "properties": {
+      "mode": {
+        "enum": [
+          "root0",
+          "finite",
+          "retire-intent",
+          "copied-token",
+          "foreign-control",
+          "cancelled",
+          "expired",
+          "released",
+          "duplicate-capture",
+          "busy-journal",
+          "policy-cas",
+          "backing-cas",
+          "row-cas",
+          "raw-journal-cas",
+          "extra-allocation",
+          "persistent-state",
+          "descendant",
+          "settled-descendant",
+          "read-raw-cas",
+          "read-row-cas",
+          "read-busy",
+          "read-cancelled",
+          "read-expired",
+          "detached-input",
+          "tree-empty",
+          "tree-file",
+          "tree-cancelled",
+          "tree-escaped",
+          "presence-absent",
+          "presence-empty",
+          "presence-committed",
+          "presence-busy",
+          "presence-malformed",
+          "presence-cancelled",
+          "presence-strict-absent",
+          "fault-undefined",
+          "fault-frozen",
+          "fault-nested-undefined",
+          "presence-appeared",
+          "fault-pending-undefined",
+          "drain-lifetime",
+          "fault-profile-undefined",
+          "fault-profile-frozen",
+          "lease-reopen",
+          "lease-busy",
+          "lease-maintenance-undefined",
+          "lease-first-close-frozen",
+          "lease-reopen-undefined",
+          "lease-maintenance-close",
+          "lease-second-recheck-close",
+          "independent-absent",
+          "independent-empty",
+          "independent-history",
+          "independent-active-row",
+          "independent-absence-appeared",
+          "independent-present-missing",
+          "independent-journal-cas",
+          "independent-tree-cas",
+          "independent-foreign-parent",
+          "independent-foreign-control",
+          "independent-reader-busy",
+          "independent-concurrent",
+          "independent-double",
+          "independent-scope-escape",
+          "independent-callback",
+          "independent-cancel-before",
+          "independent-cancel-after",
+          "independent-undefined-after",
+          "independent-frozen-after",
+          "independent-sync-failure",
+          "independent-unknown-file",
+          "independent-symlink",
+          "independent-hardlink",
+          "independent-service-spoof",
+          "independent-policy-cas",
+          "independent-busy-journal",
+          "terminal-success",
+          "terminal-empty",
+          "terminal-retain-intent",
+          "terminal-copied-token",
+          "terminal-payload-cas",
+          "terminal-unknown-file",
+          "terminal-symlink",
+          "terminal-hardlink",
+          "terminal-service-spoof",
+          "terminal-cancel-before",
+          "terminal-cancel-after",
+          "terminal-frozen-after",
+          "terminal-undefined-after",
+          "terminal-sync-failure",
+          "terminal-row-drift",
+          "terminal-busy-journal",
+          "terminal-double",
+          "terminal-foreign-control",
+          "terminal-scope-escape",
+          "terminal-extra-argument",
+          "terminal-true",
+          "terminal-null",
+          "terminal-undefined",
+          "terminal-concurrent",
+          "terminal-reader-busy",
+          "terminal-journal-partial",
+          "terminal-journal-sync-failure",
+          "terminal-root-sync-failure",
+          "terminal-stream-success",
+          "terminal-stream-copy",
+          "terminal-stream-no-selector",
+          "terminal-stream-wrong-purpose",
+          "terminal-stream-row-drift",
+          "terminal-stream-foreign-control",
+          "terminal-stream-double",
+          "terminal-stream-short",
+          "terminal-stream-empty-eofs",
+          "independent-stream-absent",
+          "independent-stream-empty",
+          "independent-stream-copy",
+          "independent-stream-appeared"
+        ]
+      },
+      "pid": {
+        "type": "integer",
+        "minimum": 1
+      },
+      "failed": {
+        "type": "boolean"
+      },
+      "reads": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 4
+      },
+      "rootMaximum": {
+        "const": 0
+      },
+      "rootDeadline": {
+        "const": null
+      },
+      "wireSha256": {
+        "type": "string",
+        "pattern": "^[a-f0-9]{64}$"
+      },
+      "capabilitiesSha256": {
+        "type": "string",
+        "pattern": "^[a-f0-9]{64}$"
+      },
+      "nativeEffects": {
+        "const": 0
+      }
+    }
+  },
+  "artifactInputReservationCases": [
+    {
+      "mode": "deferred",
+      "scheduled": true
+    },
+    {
+      "mode": "undefined",
+      "scheduled": true
+    },
+    {
+      "mode": "frozen",
+      "scheduled": true
+    },
+    {
+      "mode": "ancestor-effect",
+      "scheduled": false
+    },
+    {
+      "mode": "ancestor-unreserved",
+      "scheduled": false
+    },
+    {
+      "mode": "ancestor-owned",
+      "scheduled": false
+    },
+    {
+      "mode": "reader-pending",
+      "scheduled": false
+    },
+    {
+      "mode": "retire-action",
+      "scheduled": false
+    }
+  ],
+  "artifactInputReservationCaseSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "mode",
+      "scheduled"
+    ],
+    "properties": {
+      "mode": {
+        "enum": [
+          "deferred",
+          "undefined",
+          "frozen",
+          "ancestor-effect",
+          "ancestor-unreserved",
+          "ancestor-owned",
+          "reader-pending",
+          "retire-action"
+        ]
+      },
+      "scheduled": {
+        "type": "boolean"
+      }
+    }
+  }
 }

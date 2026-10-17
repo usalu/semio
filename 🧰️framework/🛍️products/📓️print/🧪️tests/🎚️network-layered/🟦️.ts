@@ -6,7 +6,7 @@
 // #region 🔌️Adapters
 import dagre from "dagre";
 import { defineTestAdapter, type AdapterContext } from "@semio-tech/framework/test/adapter";
-import { compileVizProbeDocument, probeProjection, roundProbeNumbers, type ProbeProjection, type VizProbeStatement } from "../../🔨️modules/🧪️viz-probe/🟦️.ts";
+import { compileVizProbeDocumentInContext, probeProjection, roundProbeNumbers, type ProbeProjection, type VizProbeStatement } from "../../🔨️modules/🧪️viz-probe/🟦️.ts";
 // #endregion 🔌️Adapters
 
 // #region 🧫️Vectors
@@ -99,9 +99,8 @@ function statements(ctx: AdapterContext): VizProbeStatement[] {
 
 /** 🎯️ The probe emits index, layer, position, x and y per node; a scenario keeps the columns it asserts. */
 async function subject(ctx: AdapterContext, columns: readonly number[]): Promise<{ projection: ProbeProjection }> {
-  const records = await compileVizProbeDocument(
-    { case: CASE, scenario: ctx.scenario.id, packages: ["semio-viz-network"], body: statements(ctx) },
-    { workDir: ctx.workDir },
+  const records = await compileVizProbeDocumentInContext(ctx,
+    { case: CASE, scenario: ctx.scenario.id, packages: ["semio-viz-network"], body: statements(ctx) }
   );
   const projection = probeProjection(roundProbeNumbers(records, DECIMALS));
   const values = projection["geometry/layout/layered"] ?? [];

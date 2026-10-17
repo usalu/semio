@@ -5,6 +5,7 @@ use semio_framework::manifest::CapabilityEffects;
 use semio_framework::manifest::CapabilityExecution;
 use semio_framework::manifest::CapabilityPolicy;
 use semio_framework::manifest::kernel;
+use semio_framework_test_fixtures::fixture_text;
 use std::sync::Arc;
 use std::sync::OnceLock;
 use crate::approval_coordinator::{ApprovalChannel, ApprovalCoordinator, ApprovalRequest, ApprovalResolution};
@@ -21,9 +22,6 @@ use semio_framework_os_mcp_wire::notify::{active_request_cancel_requested, enter
 use semio_framework_os_mcp_wire::protocol::ClientFeatures;
 
 /// 🧪️ Reads a committed fixture from the package directory at run time instead of embedding it in the test binary.
-fn fixture_text(relative: &str) -> &'static str {
-    Box::leak(std::fs::read_to_string(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative)).expect(relative).into_boxed_str())
-}
 
 
 fn capability(id: &str, scopes: &[&str], approval: ApprovalMode, destructive: bool) -> CapabilityDefinition {
@@ -459,7 +457,7 @@ fn a_cancelled_tool_call_ends_its_parked_shell_approval_instead_of_waiting_out_t
 /// stopped waiting (cancel, countdown, a newer shell) — and a superseded request moves to the newer shell.
 #[test]
 fn every_published_approval_closes_on_its_shell_with_a_decision_or_a_named_withdrawal() {
-    let law: serde_json::Value = serde_json::from_str(fixture_text("../../../🛡️policy/🧪️tests/🧫️fixtures/🪦️approval-withdrawal.json")).expect("approval withdrawal law");
+    let law: serde_json::Value = serde_json::from_str(fixture_text!("../../../🛡️policy/🧪️tests/🧫️fixtures/🪦️approval-withdrawal.json")).expect("approval withdrawal law");
     let closing = |frame: &GatewayToShell| {
         let value = serde_json::to_value(frame).expect("frame json");
         let mut kept = serde_json::Map::new();

@@ -5,25 +5,26 @@
 //! `.pack.semio`/`.patch.semio` encodings are derived from it by `fixtures generate` and are
 //! asserted by the shared codec-matrix harness, not here.
 
+use semio_framework_test_fixtures::fixture_text;
 use semio_s_artifact_draw_drawing_mutations::{inverse_drawing_mutation, DrawingMutation};
 use semio_s_artifact_draw_drawing_mutations::text::apply_drawing_mutation;
 use semio_s_artifact_draw_drawing_model::{find_drawing_layer, layer_id};
 use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
 
-const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔃reorder-layer/⬆️moves/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔃reorder-layer/⬆️moves/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔃reorder-layer/⬆️moves/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔃reorder-layer/⬆️moves/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔃reorder-layer/⬆️moves/🎯️outcome/🔣️.json");
+static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧫️fixtures/🧬️mutations/🔃reorder-layer/⬆️moves/📸️snapshot/⬅️before/🔣️.json"));
+static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧫️fixtures/🧬️mutations/🔃reorder-layer/⬆️moves/📸️snapshot/➡️after/🔣️.json"));
+static MUTATION: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧫️fixtures/🧬️mutations/🔃reorder-layer/⬆️moves/🦠️mutation/🔣️.json"));
+static DIFF: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧫️fixtures/🧬️mutations/🔃reorder-layer/⬆️moves/🔺️diff/🔣️.json"));
+static OUTCOME: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧫️fixtures/🧬️mutations/🔃reorder-layer/⬆️moves/🎯️outcome/🔣️.json"));
 
 fn before() -> DrawingSnapshot {
-    serde_json::from_str(BEFORE).expect("before snapshot decodes")
+    serde_json::from_str(*BEFORE).expect("before snapshot decodes")
 }
 fn expected_after() -> DrawingSnapshot {
-    serde_json::from_str(AFTER).expect("after snapshot decodes")
+    serde_json::from_str(*AFTER).expect("after snapshot decodes")
 }
 fn mutation() -> DrawingMutation {
-    serde_json::from_str(MUTATION).expect("mutation decodes")
+    serde_json::from_str(*MUTATION).expect("mutation decodes")
 }
 
 /// ▶️ The mutation carries `before` to exactly the committed `after`.
@@ -66,14 +67,14 @@ async fn inverse_restores_the_previous_address() {
 /// 🔣️ Both committed snapshots are already canonical: decode→encode is a fixed point.
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
-    for (label, text) in [("before", BEFORE), ("after", AFTER)] {
+    for (label, text) in [("before", *BEFORE), ("after", *AFTER)] {
         let decoded: DrawingSnapshot = serde_json::from_str(text).expect("snapshot decodes");
         let reencoded = serde_json::to_value(&decoded).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "reorder-layer/moves-shape-a-above-shape-b: committed {label} JSON is not canonical");
     }
     let reencoded = serde_json::to_value(mutation()).expect("mutation encodes");
-    let original: serde_json::Value = serde_json::from_str(MUTATION).expect("mutation reparses");
+    let original: serde_json::Value = serde_json::from_str(*MUTATION).expect("mutation reparses");
     assert_eq!(reencoded, original, "reorder-layer/moves-shape-a-above-shape-b: committed mutation JSON is not canonical");
 }
 
@@ -82,7 +83,7 @@ async fn committed_json_is_canonical() {
 /// remove-then-insert pair or a whole-list permutation.
 #[semio_framework_async_macros::async_test]
 async fn declared_outcome_holds() {
-    let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
+    let outcome: serde_json::Value = serde_json::from_str(*OUTCOME).expect("outcome decodes");
     assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("applied"), "reorder-layer/moves-shape-a-above-shape-b declares an applied outcome");
     let produced = <DrawingMutation as protocol::Mutation<DrawingSnapshot>>::diff(&mutation(), &before());
     assert!(produced.messages().is_empty(), "reorder-layer/moves-shape-a-above-shape-b: index 1 differs from BASE's index 0, so no no-op warning is expected, got {:?}", produced.messages());
@@ -100,7 +101,7 @@ async fn declared_outcome_holds() {
 async fn produces_committed_diff() {
     let outcome = <DrawingMutation as protocol::Mutation<DrawingSnapshot>>::diff(&mutation(), &before());
     let produced = serde_json::to_value(outcome.diff()).expect("produced diff encodes");
-    let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
+    let committed: serde_json::Value = serde_json::from_str(*DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "reorder-layer/moves-shape-a-above-shape-b: produced diff differs from the committed 🔺️diff/🔣️.json");
     let delta = outcome.diff().layers.clone().expect("reorder-layer pins a layers delta");
     assert!(delta.removed.is_empty() && delta.inserted.is_empty() && delta.modified.is_empty(), "a reorder removes, inserts and patches nothing");
@@ -108,17 +109,17 @@ async fn produces_committed_diff() {
     assert_eq!(delta.moved[0].id, "shape-a", "the move row names the addressed layer, never carries it");
     assert_eq!((delta.moved[0].from.parent_id.clone(), delta.moved[0].from.index), (None, 0), "from is the layer's BASE address");
     assert_eq!((delta.moved[0].to.parent_id.clone(), delta.moved[0].to.index), (None, 1), "to is the AFTER address");
-    assert_eq!(DIFF.matches("shape-b").count(), 0, "the untouched sibling is not mentioned at all");
-    assert_eq!(DIFF.matches("shape-a").count(), 1, "the layer is named once and never carried");
+    assert_eq!((*DIFF).matches("shape-b").count(), 0, "the untouched sibling is not mentioned at all");
+    assert_eq!((*DIFF).matches("shape-a").count(), 1, "the layer is named once and never carried");
 }
 
 /// 🔣️ The committed diff is itself canonical: it decodes to the artifact's own diff type and
 /// re-encodes byte-for-byte, so the file is a faithful `DrawingDiff`, not prose that merely resembles one.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
-    let decoded: semio_s_artifact_draw_drawing_diff::DrawingDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
+    let decoded: semio_s_artifact_draw_drawing_diff::DrawingDiff = serde_json::from_str(*DIFF).expect("committed diff decodes");
     let reencoded = serde_json::to_value(&decoded).expect("diff re-encodes");
-    let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
+    let original: serde_json::Value = serde_json::from_str(*DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "reorder-layer/moves-shape-a-above-shape-b: committed diff JSON is not canonical");
 }
 
@@ -126,7 +127,7 @@ async fn committed_diff_is_canonical() {
 /// complete description of the change, not a summary of it.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: semio_s_artifact_draw_drawing_diff::DrawingDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
+    let decoded: semio_s_artifact_draw_drawing_diff::DrawingDiff = serde_json::from_str(*DIFF).expect("committed diff decodes");
     let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "reorder-layer/moves-shape-a-above-shape-b: committed diff did not carry before to after");
 }
@@ -134,6 +135,6 @@ async fn committed_diff_applies_to_after() {
 /// ⚖️ The concrete inverse's diffs sum to exactly the negative of the forward diff, restoring the committed before-document.
 #[semio_framework_async_macros::async_test]
 async fn inverse_sums_to_the_negative_diff() {
-    let mutation: DrawingMutation = serde_json::from_str(MUTATION).unwrap();
+    let mutation: DrawingMutation = serde_json::from_str(*MUTATION).unwrap();
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &before()).await;
 }

@@ -15,7 +15,6 @@ async fn composition_group_siblings_commit_without_post_flip_allocation_or_stale
     assert_eq!(result,Ok(()));assert_eq!((allocated,released),(0,0));assert_eq!(graph.owns_generation,1);
     close_group(&mut graph,&mut preparation);
     close_graph(&mut graph);
-    println!("[DEBUG] ownership siblings common-root commit allocated0 released0 generation1");
 }
 fn seal_root(graph: &CompositionGraph, preparation: &mut GroupOwnsPreparation) -> Result<GroupOwnsStep, GroupOwnsError> {
     let demand=preparation.next_preparation_demands(graph);let grant=preparation_grant(demand);
@@ -108,7 +107,6 @@ async fn composition_group_sorted_root_is_atomic_and_every_owner_retirement_is_p
     assert_eq!(graph.owner_of("before").await, Some("prior"));
     close_group(&mut graph, &mut preparation);
     close_graph(&mut graph);
-    println!("[DEBUG] sorted sibling root committed allocation0/free0 generation1; every String/row backing undergrant retained and exact free reported");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -140,7 +138,6 @@ async fn composition_group_cycle_hops_and_cancellation_preserve_original_forest(
     let rows = fixture["pendingCycle"]["additions"].as_array().unwrap();
     for (index, row) in rows.iter().enumerate() { let result = prepare_edge(&graph, &mut preparation, row[0].as_str().unwrap(), row[1].as_str().unwrap(), row[2].as_str().unwrap()); if index == 0 { assert!(result.is_ok()); } else { assert_eq!(result, Err(GroupOwnsError::Cycle)); } }
     assert!(owner.abort()); close_group(&mut graph, &mut preparation); close_graph(&mut graph); assert!(graph.terminal_is_empty());
-    println!("[DEBUG] SQLite neutral65hop/pending cycles refused;16 partial metadata/merge/seal cancellations preserve original live root and exact physical ownership");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -154,7 +151,6 @@ async fn composition_group_live_root_retirement_moves_one_row_without_metadata_b
     let (step, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| graph.close_step(grant));
     assert_eq!(step.unwrap(), RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: bytes, ..Default::default() }));
     assert_eq!((allocated, released), (0, 0)); close_graph(&mut graph);
-    println!("[DEBUG] actual live graph row transfer copied={bytes} allocated0 released0, exact separate backing close");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -168,7 +164,6 @@ async fn composition_group_link_retirement_retains_underfunded_original_backing(
     assert_eq!(graph.links.capacity(), capacity); assert!(graph.links.get("source").unwrap().iter().any(|target| target == "target"));
     close_graph(&mut graph);
     let (_, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| drop(graph)); assert_eq!((allocated, released), (0, 0));
-    println!("[DEBUG] original linked graph underfunded allocation0 free0; exact string/row/backing release closes terminalDrop0");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -177,7 +172,6 @@ async fn composition_group_weak_authority_remains_external_without_false_frame_r
     let weak = Arc::downgrade(graph.owns_authority.as_ref().unwrap());
     assert_eq!(graph.next_close_release_byte_demand().unwrap(), 0);
     close_graph(&mut graph); assert!(weak.upgrade().is_none());
-    println!("[DEBUG] graph final strong lease closes allocation0 free0 with external weak backing retained");
     drop(weak);
 }
 
@@ -190,5 +184,4 @@ async fn composition_group_empty_additions_preserve_original_root_with_exact_bac
     assert!(graph.owns_group_ready(&preparation));assert_eq!(graph.owner_of(row[2].as_str().unwrap()).await,row[0].as_str());assert!(owner.commit());
     let(answer,allocated,released)=semio_framework_trace_memory_testing::observe_backing(||graph.commit_owns_group(&mut preparation));assert_eq!(answer,Ok(()));assert_eq!((allocated,released),(0,0));
     assert_eq!(graph.owner_of(row[2].as_str().unwrap()).await,row[0].as_str());assert_eq!(graph.slot_of(row[2].as_str().unwrap()).await,row[1].as_str());close_group(&mut graph,&mut preparation);close_graph(&mut graph);
-    println!("[DEBUG] zero additions keep original owner/slot through exact work/backing grants and allocation0 committed flip");
 }

@@ -9,6 +9,3 @@ pub fn scene_admission(captured:SceneIdentity,live:Option<SceneIdentity>,visual:
  if visual.is_some_and(|visual|captured.matches(visual)){return SceneAdmissionStatus::Ready;}
  if failed{SceneAdmissionStatus::Failed}else if preparing{SceneAdmissionStatus::Pending}else{SceneAdmissionStatus::Unavailable}
 }
-#[cfg(test)]
-#[path="🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;

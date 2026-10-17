@@ -1,5 +1,8 @@
+use semio_s_space_core::HomeTableLabels;
+use semio_framework_plugin::app::TreeWindows;
+use crate::viewer::home::modes::view::windows::main::{render_rows};
 
-use super::*;
+use crate::viewer::home::modes::view::windows::main::*;
 
 fn project(node: semio_framework_plugin::BuiltNode) -> String {
     semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("Home viewer tree projection")

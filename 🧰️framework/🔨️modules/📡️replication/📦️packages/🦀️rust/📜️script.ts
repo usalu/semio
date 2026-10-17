@@ -17,8 +17,9 @@ import { runBudgetedTestCommand } from "../../../🏃️process/📦️packages/
 import { testLevelBudgetMs } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { cmdBudgetMs } from "../../../🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 import assert from "node:assert/strict";
-import{unsignedLebOracleV1}from"../../../🎒️pack/📐️format/🧪️tests/🔮️oracles/🔢️leb/🟦️.ts";
+import{unsignedLebOracleV1}from"../../../🎒️pack/📦️packages/🟦️typescript/📐️format/🧪️testing/🔮️oracles/🔢️leb/🟦️.ts";
 import { readFileSync } from "node:fs";
+import { readModuleTreeSource } from "../../../📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
 import { join, resolve } from "node:path";
 import { readCargoTestPolicyV1 } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
 
@@ -387,7 +388,7 @@ class PresencePeerCodecScript extends BundleScript {
     const extra = JSON.parse(JSON.stringify(fixture)) as { readonly cases: readonly Record<string, unknown>[] };
     extra.cases[0]!.authority = true;
     
-    const source = readFileSync(join(this.root, "../../📡️wire/👥️presence/🦀️.rs"), "utf8");
+    const source = readModuleTreeSource(join(this.root, "../../📡️wire/👥️presence/🦀️.rs"));
     const tests = readFileSync(join(this.root, "../../📡️wire/🧪️tests/🔬️presence-codec/🦀️.rs"), "utf8");
     const laws = ["presence_peer_decoder_matches_neutral_bounded_exact_corpus", "presence_peer_decoder_rejects_hostile_counts_before_allocation"];
     for (const law of laws) assert(tests.includes(`fn ${law}(`), `missing native presence codec law ${law}`);

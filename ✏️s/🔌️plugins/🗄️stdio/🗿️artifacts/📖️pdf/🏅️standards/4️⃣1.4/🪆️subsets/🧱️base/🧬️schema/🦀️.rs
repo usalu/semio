@@ -3,9 +3,6 @@
 use crate::standards::v1_4::subsets::base::schema::snapshot::{PageDoc, PdfSnapshot};
 use framework_schema::ArtifactSchema;
 
-/// 🏷️ Document schema / DSL envelope id of the PDF 1.4 standard.
-pub const STDIO_PDF_DOCUMENT_SCHEMA: &str = "stdio.pdf";
-
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.pdf")]

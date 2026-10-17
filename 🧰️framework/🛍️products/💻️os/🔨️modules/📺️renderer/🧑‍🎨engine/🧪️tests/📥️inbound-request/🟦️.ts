@@ -20,8 +20,13 @@ import { SemioFaultError } from "@semio-tech/framework";
 import { GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES, GUEST_HOST_ANSWER_CEILING_BYTES } from "../../../../../../../🔨️modules/⏱️trace/🧮️memory/🟦️.ts";
 import { driveInboundRequest, INBOUND_REQUEST_TURN_BUDGET, wireEffectToFriendly, wireRespondAnswer, type WireVariant } from "../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/🟦️.ts";
 import { EXTENSION_WORKER_LOST_FAULT, runInvokeExtensionEffect } from "../../🧱️elements/🏛️ShellHost/🟦️.tsx";
-import { abortExtensionRequestsForActor, declareSurfaceCancelAction, inFlightExtensionRequestCount, isDeclaredSurfaceCancelAction } from "../../🧱️elements/🛠️ShellHelpers/🟦️.tsx";
-import type { LoadedProgramState } from "../../🧱️elements/🐚️Shell/🟦️.tsx";
+import {
+  abortExtensionRequestsForActor,
+  declareSurfaceCancelAction,
+  inFlightExtensionRequestCount,
+  isDeclaredSurfaceCancelAction
+} from "../../🧱️elements/🛠️ShellHelpers/🛑️extension-io/🟦️.ts";
+import type { LoadedProgramState } from "../../🧱️elements/🐚️Shell/📦️program-sessions/🟦️.ts";
 
 import inboundRequestFixture from "../../../../🔌️plugin/⚛️reactor/🧪️tests/🧫️fixtures/📥️inbound-request/🔣️.json";
 import { extensionInvocationWireFixture } from "../../../../🌊️flow/🧪️tests/🧫️fixtures/🟦️.ts";

@@ -17,7 +17,6 @@ fn owned_result_preserves_original_fixed_actor_receipt_without_allocation() {
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
         assert!(matches!(result, Err(TurnFault::Host(PluginHostError::NativeIo(error))) if error.kind == semio_framework_value::ValueRefusalKind::InvalidValue));
     }
-    println!("[DEBUG] Original owned receipt accepted current112 scalar bytes, rejected truncation without JSON allocation");
 }
 
 fn budget() -> Budget {

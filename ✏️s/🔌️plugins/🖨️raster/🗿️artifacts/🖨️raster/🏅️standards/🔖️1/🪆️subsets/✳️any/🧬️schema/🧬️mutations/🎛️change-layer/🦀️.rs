@@ -1,6 +1,5 @@
 //! 🎛️ Conflict-checked, undoable editing of one non-destructive tone parameter.
 use semio_s_artifact_raster_raster_model::{RasterAdjustmentParameter, RasterLayerNode, RasterLayerPatch};
-#[cfg(test)] use semio_s_artifact_raster_raster_mutations::RasterMutation;
 use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
 use semio_s_artifact_raster_raster_diff::{diff_patch_layer, RasterDiff};
 use semio_s_artifact_raster_raster_model::find_layer;
@@ -23,9 +22,6 @@ pub fn validate(payload: &ChangeLayerAdjustmentParameter, base: &RasterSnapshot)
     if previous.is_none() && payload.value.is_some() && params.len() >= semio_s_artifact_raster_raster_model::RASTER_OWNED_MAP_CAPACITY { return Err(protocol::OutcomeCode::TargetMismatch); }
     Ok(())
 }
-#[cfg(test)]
-#[path="🧪️tests/🦀️.rs"]
-mod tests;
 
 impl<Op> protocol::MutationKind<RasterSnapshot, Op> for ChangeLayerAdjustmentParameter where Op: protocol::Mutation<RasterSnapshot, Diff = semio_s_artifact_raster_raster_diff::RasterDiff> + From<crate::change_layer_adjustment_parameter::ChangeLayerAdjustmentParameter> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb:"change",entity:"layer-adjustment-parameter",kind:"change-layer-adjustment-parameter",record:"ChangedLayerAdjustmentParameter" };

@@ -1,5 +1,7 @@
 //! 🧪️ Language-neutral modeling fixtures assert the surface, not just growing arrays.
-use super::*;
+use semio_framework_3d::mesh::*;
+use std::collections::{BTreeMap,HashMap,HashSet};
+use semio_framework_value::{ToValue,FromValue};
 
 #[test]
 fn knife_cut_fixtures_preserve_surfaces_and_shared_boundaries() {

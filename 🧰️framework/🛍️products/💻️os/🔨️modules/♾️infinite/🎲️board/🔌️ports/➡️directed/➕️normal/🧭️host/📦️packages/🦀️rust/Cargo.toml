@@ -40,12 +40,13 @@ semio-framework-os-infinite-board-normal-gestures = { path = "../../../🕹️ge
 semio-framework-os-infinite-board-normal-fill = { path = "../../../🪣️fill/📦️packages/🦀️rust" }
 
 [dev-dependencies]
-semio-framework-os-infinite-board-normal-host = { path = ".", features = ["testkit"] }
 semio-framework-job = { workspace = true, features = ["testkit"] }
 semio-framework-pack-json = { path = "../../../../../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-framework-test-fixtures = { path = "../../../../../../../../../../../🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-graph-drawing = { path = "../../../../../../../../../../../🔨️modules/🕸️graph/🖊️drawing/📦️packages/🦀️rust" }
 
 [[test]]
 name = "board_normal_host_board_host"
 path = "../../🧪️tests/🔬️board-host/🦀️.rs"
+required-features = ["testkit"]

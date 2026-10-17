@@ -46,5 +46,4 @@ fn portable_assembly_exclusion_release_and_poison_refusal() {
     }).join().is_err());
     assert!(matches!(assembly::begin(), Err(assembly::Error::Unavailable)));
     assert!(matches!(assembly::try_begin(), Err(assembly::Error::Unavailable)));
-    println!("[DEBUG] Registry assembly: two portable exclusion/release vectors match Tokio; one process-wide barrier refuses writer poison");
 }

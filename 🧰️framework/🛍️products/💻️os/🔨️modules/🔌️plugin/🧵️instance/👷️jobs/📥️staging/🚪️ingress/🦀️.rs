@@ -1,17 +1,38 @@
 //! 🔧️ Staged slice of the `ingress` band of the mounted artifact instance: its `instance-jobs` members (WP6 step S0 of the instance family).
 //!
 //! 🚪️ Ingress of the mounted artifact instance: framework-reserved job driving, constructors, store-constructor units, envelope ingress and decode, document archive genesis and merge, child members and packs.
-use super::*;
-use crate::tool_jobs::time_travel;
+use semio_framework_plugin_ownership::bounded_ownership::{ARTIFACT_LIVE_OUTPUT_SLOTS, plugin_grant_funds, plugin_retirement_fault};
+use semio_framework::{ActionKind, Fault, FaultCode, FaultFrom, FaultOrigin};
+use semio_framework_plugin_decl_emission::{ActionMeta, Emit};
+use semio_framework_plugin_command::command_admission::{AdmittedToolCommand, TypedCommandWireWriter};
+use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use pack::snapshot::ArtifactPack;
+use std::collections::{BTreeMap, BTreeSet};
+use semio_framework_plugin_instance_children::children_components::ChildComposition;
+use semio_framework_plugin_instance_history::history_components::{CommandHistory, HostEvents};
+use semio_framework_value::{DslValue, RetirementDemand};
+use semio_framework_plugin_job::reserved_jobs::{FrameworkReservedCommitPermit, QualifiedToolProof, RESERVED_OUTCOME_ACKNOWLEDGE_TURNS, plugin_job_yield_once, reserved_pump_fault_detail, reserved_pump_fault_is_transient, retained_payload_eq_slice};
+use std::future::Future;
+use semio_framework_plugin_instance_stores::stores_components::InstanceStores;
+use store::{MemberFactory, Mutation, SpaceMember};
+use protocol::OpText;
+use semio_framework_plugin_reactor_app::PluginApp;
+use semio_framework_value::retained_clone::RetainedCloneProgress;
+use semio_framework_plugin_operation::ToolCancellationHandle;
+use crate::jobs_components::ToolOperations;
+use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
+use semio_framework_plugin_window_kits::validate_ui_dispatch_classification;
+use semio_framework_ui_contract::*;
 
 impl<A: ArtifactApp> ToolOperations<A> {
     #[cfg(test)]
-    pub(crate) fn test_registered_tool_keys(&self) -> BTreeSet<(String, String)> {
+    pub fn test_registered_tool_keys(&self) -> BTreeSet<(String, String)> {
         self.tool_jobs.keys().into_iter().map(|key| (key.controller_id, key.tool_id)).collect()
     }
 
     #[cfg(test)]
-    pub(crate) fn test_framework_tool_registrations(&self) -> BTreeMap<String, (semio_framework::ToolFactoryKey, String, std::any::TypeId, &'static str, semio_framework::ToolExecutionContract)> {
+    pub fn test_framework_tool_registrations(&self) -> BTreeMap<String, (semio_framework::ToolFactoryKey, String, std::any::TypeId, &'static str, semio_framework::ToolExecutionContract)> {
         self.framework_tool_registrations
             .iter()
             .map(|(tool_id, registration)| (tool_id.clone(), (registration.key.clone(), registration.schema_id.clone(), registration.factory_type_id, registration.factory_type_name, registration.contract)))
@@ -23,20 +44,20 @@ impl<A: ArtifactApp> ToolOperations<A> {
     }
 
     /// 🧷️ Clears only the original reserved publication identity without changing a foreign slot.
-    pub(crate) fn release_reserved_emit_slot(&mut self, operation: u64) {
+    pub fn release_reserved_emit_slot(&mut self, operation: u64) {
         let reservation = &mut self.typed_operation_reservations[operation as usize % ARTIFACT_LIVE_OUTPUT_SLOTS];
         if *reservation == Some(operation) { *reservation = None; }
     }
 
     /// 🏁️ Returns a reserved producer's original slot and keyed cancellation authority after ordinary completion.
-    pub(crate) fn finish_reserved_emit_producer(&mut self, permit: FrameworkReservedCommitPermit) {
+    pub fn finish_reserved_emit_producer(&mut self, permit: FrameworkReservedCommitPermit) {
         self.release_reserved_emit_slot(permit.operation.operation.0);
         permit.finish();
     }
 
     /// 🛡️ Keeps producer admission failures tied to the original reserved identity.
-    pub(crate) async fn run_framework_reserved_job<J: semio_framework_job::InteractiveJob + Send + 'static>(
-        &mut self, mounted_policy: &crate::MountedOwnerPolicyV1, stores: &mut InstanceStores<A>, verb: &str, raw: &[u8], decoded_items: usize, job: J, meta: &ActionMeta,
+    pub async fn run_framework_reserved_job<J: semio_framework_job::InteractiveJob + Send + 'static>(
+        &mut self, mounted_policy: &semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, stores: &mut InstanceStores<A>, verb: &str, raw: &[u8], decoded_items: usize, job: J, meta: &ActionMeta,
         supplied_admission: Option<semio_framework::ToolWireAdmission>,
         supplied_authority: FrameworkReservedCommitPermit,
      cx:&mut semio_framework_job::StepContext<'_>) -> Result<FrameworkReservedCommitPermit, (semio_framework_job::OriginalTurnFailure,FrameworkReservedCommitPermit)> {
@@ -47,13 +68,13 @@ impl<A: ArtifactApp> ToolOperations<A> {
         }
     }
 
-    pub(crate) async fn run_framework_reserved_job_inner<J: semio_framework_job::InteractiveJob + Send + 'static>(&mut self, mounted_policy: &crate::MountedOwnerPolicyV1, stores: &mut InstanceStores<A>,verb:&str,raw:&[u8],decoded_items:usize,job:J,meta:&ActionMeta,supplied_admission:Option<semio_framework::ToolWireAdmission>,supplied_authority:&FrameworkReservedCommitPermit, cx:&mut semio_framework_job::StepContext<'_>)->Result<(),semio_framework_job::OriginalTurnFailure>{
+    pub(crate) async fn run_framework_reserved_job_inner<J: semio_framework_job::InteractiveJob + Send + 'static>(&mut self, mounted_policy: &semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, stores: &mut InstanceStores<A>,verb:&str,raw:&[u8],decoded_items:usize,job:J,meta:&ActionMeta,supplied_admission:Option<semio_framework::ToolWireAdmission>,supplied_authority:&FrameworkReservedCommitPermit, cx:&mut semio_framework_job::StepContext<'_>)->Result<(),semio_framework_job::OriginalTurnFailure>{
         if supplied_authority.lease.keyed && (self.typed_operation_reservations[supplied_authority.operation.operation.0 as usize % ARTIFACT_LIVE_OUTPUT_SLOTS]!=Some(supplied_authority.operation.operation.0)||supplied_authority.lease.key.operation_id!=supplied_authority.operation.operation){return Err(plugin_sdk_fault("reserved producer lost its original keyed slot admission").into());}
         self.drive_framework_reserved_worker(mounted_policy, stores, verb, raw, decoded_items, job, meta, supplied_admission, supplied_authority.operation, supplied_authority.lease.cancel_token(), false, cx).await
     }
 
     pub(crate) async fn drive_framework_reserved_worker<J: semio_framework_job::InteractiveJob + Send + 'static>(
-        &mut self, mounted_policy: &crate::MountedOwnerPolicyV1, stores: &mut InstanceStores<A>,
+        &mut self, mounted_policy: &semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, stores: &mut InstanceStores<A>,
         verb: &str,
         raw: &[u8],
         decoded_items: usize,
@@ -223,7 +244,7 @@ impl<A: ArtifactApp> ToolOperations<A> {
         Ok(())
     }
 
-    pub(crate) fn qualified_tool_proof(&self, stores: &InstanceStores<A>, verb: &str) -> Result<QualifiedToolProof, Fault> {
+    pub fn qualified_tool_proof(&self, stores: &InstanceStores<A>, verb: &str) -> Result<QualifiedToolProof, Fault> {
         if let Some(lane) = stores.unsupported_publication_contracts.get(verb) {
             return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.publication-authority-missing"), format!("typed command '{verb}' declares the unsupported {lane} publication lane")));
         }
@@ -289,7 +310,7 @@ impl<A: ArtifactApp> ToolOperations<A> {
         Ok(AdmittedToolCommand { verb: verb.to_string(), proof, wire_admission: admission, decoded_items, raw_wire })
     }
 
-    pub(crate) async fn admit_command_wire(&self, stores: &InstanceStores<A>, verb: &str, payload: &[u8], decoded_items: usize) -> Result<AdmittedToolCommand, Fault> {
+    pub async fn admit_command_wire(&self, stores: &InstanceStores<A>, verb: &str, payload: &[u8], decoded_items: usize) -> Result<AdmittedToolCommand, Fault> {
         self.require_ui_safe_declaration(verb)?;
         let proof = self.qualified_tool_proof(stores, verb)?;
         self.admit_command_wire_with_proof(proof, verb, payload, decoded_items).await
@@ -313,7 +334,7 @@ impl<A: ArtifactApp> ToolOperations<A> {
         Ok(AdmittedToolCommand { verb: verb.to_string(), proof, wire_admission: admission, decoded_items: 0, raw_wire })
     }
 
-    pub(crate) async fn admit_host_configuration_json(&self, stores: &InstanceStores<A>, verb: &str, args: Option<&DslValue>) -> Result<AdmittedToolCommand, Fault> {
+    pub async fn admit_host_configuration_json(&self, stores: &InstanceStores<A>, verb: &str, args: Option<&DslValue>) -> Result<AdmittedToolCommand, Fault> {
         self.require_ui_safe_declaration(verb)?;
         let proof = self.qualified_host_configuration_tool_proof(stores, verb)?;
         self.admit_command_json_with_proof(proof, verb, args).await
@@ -328,7 +349,7 @@ impl<A: ArtifactApp> ToolOperations<A> {
     /// [`Self::retire_typed_operation_unit`] call this; `command_logged` makes the second a no-op.
     /// Silent for a faulted operation, exactly as `dispatch_emit`'s `Err` path is, and for a `View`
     /// whose only durable emission is the per-window config lane — an orbit tick is not a command.
-    pub(crate) fn record_settled_typed_operation_command(&mut self, history: &mut CommandHistory<A>, host_events: &mut HostEvents, operation_id: u64) {
+    pub fn record_settled_typed_operation_command(&mut self, history: &mut CommandHistory<A>, host_events: &mut HostEvents, operation_id: u64) {
         if host_events.host_event_operations.remove(&operation_id) {
             if let Some(operation) = self.tool_operations.get_mut(operation_id) {
                 operation.command_logged = true;
@@ -356,7 +377,7 @@ impl<A: ArtifactApp> ToolOperations<A> {
     /// 🧾️ The declared [`ActionKind`] one migrated verb logs under — the same three-step resolution
     /// [`Self::dispatch_emit`] runs, with the same last resort: an unresolved verb that reached a
     /// document store is a `Mutation`, one that reached nothing is a `View`.
-    pub(crate) fn typed_operation_command_kind(&self, host_events: &HostEvents, verb: &str, artifact_lane: bool) -> ActionKind {
+    pub fn typed_operation_command_kind(&self, host_events: &HostEvents, verb: &str, artifact_lane: bool) -> ActionKind {
         match host_events.invocation_kind {
             Some(kind) => kind,
             None => match self.registry.get(verb).map(|definition| definition.kind) {
@@ -371,7 +392,7 @@ impl<A: ArtifactApp> ToolOperations<A> {
     }
 
     /// 📏️ Quotes the next retiring typed-operation turn: its private child group's close, one owner hand-off, or the operation's own retirement.
-    pub(crate) fn typed_operation_retirement_demands<M: SpaceMember + MemberFactory + 'static>(&self, child_composition: &ChildComposition<M>, operation_id: u64, body: usize) -> Result<RetirementDemand, Fault> {
+    pub fn typed_operation_retirement_demands<M: SpaceMember + MemberFactory + 'static>(&self, child_composition: &ChildComposition<M>, operation_id: u64, body: usize) -> Result<RetirementDemand, Fault> {
         let operation = self.tool_operations.get(operation_id).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.typed-operation-retirement-authority"), "typed operation owner changed before its retirement quote"))?;
         if operation.close_fault_pending(){return operation.close_fault_demands(body).map_err(plugin_retirement_fault);}
         if let Some(group) = operation.owned_child_group {

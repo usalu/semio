@@ -10,7 +10,7 @@ import { join } from "node:path";
 import Ajv from "ajv";
 import { I18nextProvider } from "react-i18next";
 import { Mode } from "../../../🎨️Canvas/🟦️.tsx";
-import { createShellI18nInstance, disposeShellI18nInstance } from "../../../../🎯️targets/⚛️react/🟦️.tsx";
+import { createShellI18nInstance, disposeShellI18nInstance } from "@semio-tech/ui-react/source";
 import dockNames from "../../../../🧪️tests/🧫️fixtures/🪟️dock-accessible-names/🔣️.json";
 import Ajv2020 from "ajv/dist/2020.js";
 import searchRouting from "../🧫️fixtures/🔎️search-fold-routing/🔣️.json";
@@ -37,7 +37,6 @@ it("keeps Actions and Search pane folds independent in both explicit locales", (
       root.remove();
     }
   }
-  console.info("[DEBUG] Window independent pane folds: twelve bilingual native DOM toggle sequences");
 });
 
 it("unfolds only Search for admitted printable keys in either explicit locale", () => {
@@ -65,7 +64,6 @@ it("unfolds only Search for admitted printable keys in either explicit locale", 
       root.remove();
     }
   }
-  console.info("[DEBUG] Search fold routing: sixteen explicit-locale native keyboard event cases");
 });
 
 // #region 🪜️ChromeStacking
@@ -152,7 +150,7 @@ describe("Dock accessible names", () => {
 });
 
 import contentClearance from "../🧫️fixtures/🚧️content-clearance/🔣️.json";
-import { ChromeAwareWindowScrollSurface, Scrollable } from "../../../../🎯️targets/⚛️react/🟦️.tsx";
+import { ChromeAwareWindowScrollSurface, Scrollable } from "@semio-tech/ui-react/source";
 
 it("keeps the first chrome-aware content control reachable without changing scroll position", () => {
   for (const row of contentClearance.cases) {

@@ -1,10 +1,14 @@
-use super::*;
+use semio_framework_test_fixtures::fixture_text;
+
+#[allow(unused_imports)]
+use pack::snapshot::ArtifactPack;
+use crate::editor::animate::presence::*;
 use dsl::os_pack as pack;
 use protocol::{Mutation, OpBinary, OpText};
 
 #[test]
 fn presentation_presence_contract_vectors_match_the_json_oracle() {
-    let vectors: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔁️mutation-contracts.json")).expect("neutral contract vectors");
+    let vectors: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../✏️editor/👥️presence/🧪️tests/🧫️fixtures/🔁️mutation-contracts.json")).expect("neutral contract vectors");
     let base: PresentationPresence = semio_framework_pack_json::from_json_str(&vectors["base"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("owned base decoder");
     assert_eq!(<PresentationPresenceMutation as Mutation<PresentationPresence>>::DESCRIPTORS.len(), vectors["cases"].as_array().expect("cases").len());
     for vector in vectors["cases"].as_array().expect("cases") {

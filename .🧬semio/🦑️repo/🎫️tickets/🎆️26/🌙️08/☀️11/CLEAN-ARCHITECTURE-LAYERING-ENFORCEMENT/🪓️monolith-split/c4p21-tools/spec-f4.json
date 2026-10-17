@@ -1,0 +1,43 @@
+{
+ "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/📸️mutate-remodeling-1/🐍️.py",
+ "snapshot": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/🗑️generated/c4p21-snap/f4.py",
+ "alias": "mutate_remodeling_1_",
+ "children": [
+  {
+   "key": "vocabulary",
+   "dir": "📖️vocabulary",
+   "doc": "The kind tables, parameter and result slots, durable-content envelopes, fixture readers and the addressing helpers.",
+   "regions": [
+    "🔖️Vocabulary",
+    "🔖️Fixtures",
+    "🔖️Addressing"
+   ]
+  },
+  {
+   "key": "appliers",
+   "dir": "⚙️forward-appliers",
+   "doc": "The forward appliers: one function per kind that moves the document.",
+   "regions": [
+    "🔖️Vocabulary — forward appliers"
+   ]
+  },
+  {
+   "key": "rules",
+   "dir": "⛔️refusals-and-inverses",
+   "doc": "The refusal rules each verb means and the single-step inverse of every kind.",
+   "regions": [
+    "🔖️Vocabulary — refusal rules",
+    "🔖️Vocabulary — inverse rule"
+   ]
+  },
+  {
+   "key": "scenarios",
+   "dir": "🔮️oracle-scenarios",
+   "doc": "The oracle that compares an outcome with the committed after-document and the scenario handlers.",
+   "regions": [
+    "🔖️Oracle",
+    "🔖️Scenarios"
+   ]
+  }
+ ]
+}

@@ -40,7 +40,7 @@ fn retained_scene_original_source_and_all_physical_custody_receipts_are_exact(){
  assert!(cursor.advance(1,true).is_err());assert!(cursor.take_output().is_none());
  let(_,requests,releases)=semio_framework_trace_memory_testing::observe_backing(||cursor.close_step(RetainedCloneGrant::default()).unwrap());assert_eq!((requests,releases),(0,0));let mut released=0;
  for _ in 0..1000000{if cursor.terminal_is_empty(){break}let(demand,requests,releases)=semio_framework_trace_memory_testing::observe_backing(||cursor.next_close_copy_byte_demand());assert_eq!((requests,releases),(0,0));let copy=demand.unwrap().max(3);let release=cursor.next_close_release_byte_demand().unwrap();let capacity=cursor.next_close_capacity_byte_demand(copy.max(release)).unwrap();let depth=cursor.next_close_depth_demand().unwrap();let(step,requests,releases)=semio_framework_trace_memory_testing::observe_backing(||cursor.close_step(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:capacity,maximum_release_bytes:release,maximum_depth:depth}).unwrap());let receipt=step.progress();assert_eq!(requests,receipt.retained_capacity_bytes);assert_eq!(releases,receipt.released_bytes);released+=releases;}
- assert!(cursor.terminal_is_empty());assert!(released>=backing);println!("[DEBUG] Surface retained original wire, typed records, eight embedded codec outputs and writer scaffolds close under exact physical receipts");
+ assert!(cursor.terminal_is_empty());assert!(released>=backing);
 }
 
 #[test]
@@ -49,7 +49,6 @@ fn retained_scene_neutral_phase_cancellation_preserves_each_actual_partial_owner
  for phase in corpus()["cancelStages"].as_array().unwrap(){let phase=phase.as_str().unwrap();let mut cursor=SceneDecodeCursor::new(RetainedIntrinsicInput::Borrowed(&input),IntrinsicFormat::Body,limits(1<<24)).unwrap();if phase=="retirement"{cursor.advance(1,false).unwrap();cursor.close_step(RetainedCloneGrant{maximum_items:1,maximum_depth:1,..Default::default()}).unwrap();}else{for _ in 0..1000000{if cursor.phase().as_str()==phase{break}assert!(!cursor.advance(cursor.next_work_demand(),false).unwrap().complete,"phase {phase} was never reached");}}
   assert_eq!(cursor.phase().as_str(),phase);let(result,requests,releases)=semio_framework_trace_memory_testing::observe_backing(||cursor.advance(1,true));assert_eq!(result.unwrap_err().kind,ValueRefusalKind::Canceled);assert_eq!((requests,releases),(0,0));assert!(cursor.take_output().is_none());close(&mut cursor);
  }
- println!("[DEBUG] Surface cancellation retains actual input, projection, Base64, Pack, JSON measure/write and retirement partial owners");
 }
 
 #[test]
@@ -57,7 +56,6 @@ fn retained_scene_neutral_exact_and_one_short_cumulative_materialization_bounds(
  let input=bytes(wire()["combinedHex"].as_str().unwrap());let mut baseline=SceneDecodeCursor::new(RetainedIntrinsicInput::Borrowed(&input),IntrinsicFormat::Body,limits(1<<24)).unwrap();for _ in 0..1000000{if baseline.advance(baseline.next_work_demand(),false).unwrap().complete{break}}let required=baseline.admitted_bytes();close(&mut baseline);
  for offset in corpus()["ownershipOffsets"].as_array().unwrap(){let offset=offset.as_i64().unwrap();let maximum=required.checked_add_signed(offset as isize).unwrap();let mut cursor=SceneDecodeCursor::new(RetainedIntrinsicInput::Borrowed(&input),IntrinsicFormat::Body,limits(maximum)).unwrap();let mut refusal=None;let mut complete=false;let mut mismatch=None;for _ in 0..1000000{let before=cursor.admitted_bytes();let phase=cursor.phase();let(result,requests,releases)=semio_framework_trace_memory_testing::observe_backing(||cursor.advance(cursor.next_work_demand(),false));let admitted=cursor.admitted_bytes()-before;if requests!=admitted||releases!=0{mismatch=Some((phase,requests,admitted,releases));break}match result{Ok(step)=>if step.complete{complete=true;break},Err(error)=>{refusal=Some(error.kind);break}}}let admitted=cursor.admitted_bytes();let output_absent=cursor.take_output().is_none();close(&mut cursor);assert_eq!(mismatch,None,"ownership offset {offset}");assert_eq!(complete,offset>=0);if offset<0{assert_eq!(refusal,Some(ValueRefusalKind::OwnershipLimit));assert!(output_absent)}else{assert!(refusal.is_none());assert_eq!(admitted,required)}
  }
- println!("[DEBUG] Surface original eight-field corpus respects exact and one-short cumulative materialization admission");
 }
 
 #[test]
@@ -72,5 +70,4 @@ fn retained_scene_neutral_semantic_viewport_refusal_has_no_unadmitted_heap_work(
   for _ in 0..1000000{let before=cursor.admitted_bytes();let phase=cursor.phase();let(result,requests,releases)=semio_framework_trace_memory_testing::observe_backing(||cursor.advance(cursor.next_work_demand(),false));let born=cursor.admitted_bytes()-before;if requests!=born||releases!=0{mismatch=Some((phase,requests,born,releases));}match result{Ok(step)=>assert!(!step.complete),Err(error)=>{refused=Some(error);break}}}
   close(&mut cursor);assert_eq!(mismatch,None,"semantic refusal {}",row["id"]);let error=refused.expect("semantic viewport refused");assert_eq!(error.kind,ValueRefusalKind::InvalidValue);assert_eq!(error.message.as_ref(),row["refusalMessage"].as_str().unwrap());
  }
- println!("[DEBUG] Surface semantic zoom refusals retain exact classification/prose without unadmitted error allocation or release");
 }

@@ -3,7 +3,7 @@
 //! that field, so a history edit changes exactly that value and replays it on any base. `replace-block` stays for a
 //! whole-question replacement by intent (a kind change re-seeds the question).
 
-use crate::{FormExpr, FormMutation, FormQuestion, FormQuestionOption, FormVectorField, FormsDiff, FormsSnapshot};
+use crate::{FormExpr, FormQuestion, FormQuestionOption, FormVectorField, FormsDiff, FormsSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 
 //#region 🎛️BlockField
@@ -170,15 +170,18 @@ impl semio_framework_pack_json::ArtifactCanonicalJsonTree for ChangeBlockField {
     }
 }
 
-impl MutationKind<FormsSnapshot, FormMutation> for ChangeBlockField {
+impl<Op> MutationKind<FormsSnapshot, Op> for ChangeBlockField
+where
+    Op: protocol::Mutation<FormsSnapshot, Diff = FormsDiff> + From<ChangeBlockField>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "block-field", kind: "change-block-field", record: "ChangedBlockField" };
 
     fn diff(&self, base: &FormsSnapshot) -> protocol::MutationOutcome<FormsDiff> {
-        super::diff::diff_change_block_field(self, base)
+        crate::standards::v1::subsets::any::schema::mutations::change_block_field::diff::diff_change_block_field(self, base)
     }
-    fn inverse(&self, base: &FormsSnapshot) -> Result<Vec<FormMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &FormsSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
-        super::inverse::inverse_change_block_field(self, base)?
+        crate::standards::v1::subsets::any::schema::mutations::change_block_field::inverse::inverse_change_block_field(self, base)?
     
     })
 }

@@ -1,0 +1,1710 @@
+//! 📐️ CAD play app — the plugin's play app: its `ArtifactApp` impl (dispatch-only), the
+//! `CadPlayRuntime` scratch mirror of `CadConfig`, the shared view/export helpers its command,
+//! panel and window nodes build on, and the manifest that stitches those nodes together.
+//!
+//! 🧭️ Every behavioural arm lives in `🎮️commands/<group>/🦀️.rs`; every rendered surface in
+//! `📌️panels/<panel>` or `🎭️modes/✏️edit/🪟️windows/<window>`. This file dispatches and stitches.
+
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+
+//#region 🧩️Modules
+#[path = "🌉️wasm/🦀️.rs"]
+pub mod wasm;
+//#endregion 🧩️Modules
+
+use semio_s_artifact_cad_cad_commands::{camera::set_camera, camera::set_projection, camera::set_projection_param};
+use semio_s_artifact_cad_cad_commands::contribution::set_contributions;
+use semio_s_artifact_cad_cad_commands::{engagement::engagement_abort, engagement::engagement_input, engagement::engagement_possible_select, engagement::engagement_repeat_last, engagement::engagement_submit, engagement::world_pointer_down, engagement::world_pointer_move};
+use semio_s_artifact_cad_cad_commands::{io::import_cad_file, io::load_raw_request, io::save_current, io::save_in_play, io::save_selected};
+use semio_s_artifact_cad_cad_commands::model_definition::set_active_example;
+use semio_s_artifact_cad_cad_commands::{node::add_node, node::rename_node, node::set_node_selection};
+use semio_s_artifact_cad_cad_commands::{object::add_object, object::delete_object, object::duplicate_object, object::patch_object, object::patch_selection};
+use semio_s_artifact_cad_cad_commands::{reference::patch_cad_play_reference, reference::reference_hover, reference::set_reference_hidden, reference::set_reference_locked, reference::set_reference_selection};
+use semio_s_artifact_cad_cad_commands::{sun::set_sun_azimuth, sun::set_sun_elevation, sun::set_sun_intensity, sun::toggle_sun};
+use semio_s_artifact_cad_cad_commands::{transform::apply_transformation, transform::rotate_selection, transform::scale_selection, transform::translate_selection};
+use semio_s_artifact_cad_cad_commands::utility::set_dislocate_option;
+use semio_s_artifact_cad_cad_config::{cad_sun_config_to_world, CadConfig, CadConfigMutation, CadDislocateOptions, SetEdit, SetContributionsEdit};
+use semio_s_artifact_cad_cad_interaction::{self, apply_event, can_commit, keyed_transitions, resolve_interaction_key, start_session, CadEngagementScratch};
+use semio_s_artifact_cad_cad_modes;
+use semio_s_artifact_cad_cad_transform::{cad_import_object_emit, CadPaneModels, CadToolEntry, CadToolLeaf, CadTransformRecord};
+use semio_s_artifact_cad_cad_modes::window_transient;
+use semio_s_artifact_cad_cad_transient::CadWorldWindowTransient;
+use semio_s_artifact_cad_cad_modes::{windows::building, windows::energy, windows::shape, windows::structure_classic};
+use semio_s_artifact_cad_cad_panels::{catalogue, document, inspection};
+use semio_s_artifact_cad_cad_kit::{editor::cad::terminology::cad_is_de_locale, editor::cad::terminology::cad_labels};
+use semio_s_artifact_cad_cad_mutations::CadMutation;
+use semio_s_artifact_cad_cad_model::{geometry::cad_object_from_model_element, geometry::model_element_from_cad_object, geometry::objects_from_model_snapshot, geometry::CadObject, geometry::CAD_OBJECT_PSET};
+use semio_s_artifact_cad_cad_io::{export_solids_as, CadSolidExport, CAD_SOLID_EXPORT_DIALECT_STEP};
+use semio_s_artifact_cad_cad_inferences::{cad_brep_kernel, cad_camera_projection_config, ensure_object_solid_handle, forest_play_scene, next_cad_id, CAD_EXAMPLE_FOREST_LEFT, CAD_MODEL_DEFINITION_BUILDING, CAD_MODEL_DEFINITION_ENERGY, CAD_MODEL_DEFINITION_SHAPE, CAD_MODEL_DEFINITION_STRUCTURE_CLASSIC};
+use semio_s_artifact_cad_cad_model::{snapshot::artifact_kind, snapshot::CadCamera, snapshot::CadPaneId, snapshot::CadSnapshot, snapshot::CadWorkingScene, snapshot::CAD_DOCUMENT_SCHEMA};
+use semio_s_artifact_cad_cad_play::CadComposedPanes;
+use {semio_s_artifact_stdio_semio_model::schema::mutations::remove_element::RemoveElement, semio_s_artifact_stdio_semio_model::schema::mutations::set_element::SetElement, semio_s_artifact_stdio_semio_model::schema::mutations::SemioModelMutation};
+#[cfg(test)] use semio_s_artifact_stdio_semio_model::schema::mutations::insert_element::InsertElement;
+use semio_s_artifact_stdio_semio_model::schema::snapshot::SemioModelElement;
+use semio_framework::kernel::Effect;
+use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
+use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload};
+use semio_framework_plugin::tree_item as framework_tree_item;
+use semio_framework_plugin::tree_item_with_action;
+use semio_framework_plugin::world3d_camera_projection_json;
+use semio_framework_plugin::ActionArgDef;
+use semio_framework_plugin::ActionArgOption;
+use semio_framework_plugin::ActionDefinition;
+use semio_framework_plugin::ActionDescriptor;
+use semio_framework_plugin::ActionKind;
+use semio_framework_plugin::AppActionRegistry;
+use semio_framework_plugin::AppOperationContext;
+use semio_framework_plugin::ArtifactOwnedToolJobFactory;
+use semio_framework_plugin::ArtifactOwnedToolJobRequest;
+use semio_framework_plugin::ArtifactToolFactoryRegistry;
+use semio_framework_plugin::ArtifactToolPublicationContract;
+use semio_framework_plugin::ArtifactToolPublicationLane;
+use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::ChildContentView;
+use semio_framework_plugin::CommandDefinition;
+use semio_framework_plugin::ConfigView;
+use semio_framework_plugin::ContextMenuItemSpec;
+use semio_framework_plugin::ContextMenuRequest;
+use semio_framework_plugin::DraftView;
+use semio_framework_plugin::EditorApp;
+use semio_framework_plugin::Emit;
+use semio_framework_plugin::Fault;
+use semio_framework_ui_locale::Label;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::Media;
+use semio_framework_plugin::MediaClass;
+use semio_framework_plugin::MediaError;
+use semio_framework_plugin::MediaForm;
+use semio_framework_plugin::MediaPayload;
+use semio_framework_plugin::MediaType;
+use semio_framework_plugin::Menu;
+use semio_framework_plugin::NoDraft;
+use semio_framework_plugin::NoDraftMutation;
+use semio_framework_plugin::PluginAssemblyError;
+use semio_framework_plugin::TreeWindows;
+use semio_framework_plugin::UiText;
+use semio_framework_plugin::UiValue;
+use semio_framework_plugin::UtilityCategory;
+use semio_framework_plugin::UtilityDefinition;
+use semio_framework_plugin::ViewModel;
+use semio_framework_plugin::WindowEngagement;
+use semio_framework_plugin::WindowMeasure;
+use semio_framework_plugin::WorldSunConfig;
+use semio_framework_3d_brep_engine::{Brep, GeometryHandle};
+// 🚧️ SDK GAP: `ArtifactEditor`/`Editor`/`Dialect` (ticket 26/08/16 contract §2.1/§2.4)? are not yet
+// in `semio_framework_plugin`'s curated crate-root re-export list (`🔌️plugin/🦀️.rs:17858`)
+// — only reachable through the `app` submodule they're actually declared in. Not fixable here
+// (`🧰️framework/**` is outside this packet's lease); flagged for W1-A in the migration report.
+use semio_framework_plugin::app::{ArtifactEditor, Dialect, Editor};
+use semio_framework_value_derive::{FromValue, ToValue};
+// 🌉️ Test harness only — `protocol::json` (the `pack::json` re-export) carries its own first-party
+// `json!` macro (`Value`-producing, same object/array literal syntax as `serde_json::json!`) and
+// `Value` type (`Index`/`PartialEq<&str>`/`as_*` parity with `serde_json::Value`), so no
+// `serde_json` dependency survives even here (ticket 26/09/01/
+// RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS).
+#[cfg(test)]
+use semio_framework_pack_json::Value;
+use std::collections::HashMap;
+use semio_framework_2d::compute::EngineHandles;
+
+
+
+
+
+//#region 🔖️Commands
+
+
+
+
+semio_framework_plugin::app_commands! {
+    /// 🎯️ `CadPlayApp::Command` — the SOLE dispatch surface for cad's own behavior, decomposed into
+    /// one `🎮️commands/<group>/<command>` payload module per row. Row order IS the binary variant
+    /// ordinal and the two literals are two different vocabularies (camelCase manifest action id,
+    /// kebab wire keyword) — both are copied verbatim from the pre-consolidation `CadCommand` enum.
+    pub enum CadCommand for CadSnapshot, CadMutation, CadConfig, CadConfigMutation, ctx = CadDispatchCtx {
+        // 🔧️ Document-mutating — dispatched as VCS operations with a true inverse.
+        "addObject" as "add-object" => add_object::AddObject,
+        "patchObject" as "patch-object" => patch_object::PatchObject,
+        "patchSelection" as "patch-selection" => patch_selection::PatchSelection,
+        "deleteObject" as "delete-object" => delete_object::DeleteObject,
+        "duplicateObject" as "duplicate-object" => duplicate_object::DuplicateObject,
+        "addNode" as "add-node" => add_node::AddNode,
+        "renameNode" as "rename-node" => rename_node::RenameNode,
+        "translateSelection" as "translate-selection" => translate_selection::TranslateSelection,
+        "rotateSelection" as "rotate-selection" => rotate_selection::RotateSelection,
+        "scaleSelection" as "scale-selection" => scale_selection::ScaleSelection,
+        "applyTransformation" as "apply-transformation" => apply_transformation::ApplyTransformation,
+        "importCadFile" as "import-cad-file" => import_cad_file::ImportCadFile,
+        "patchCadPlayReference" as "patch-cad-play-reference" => patch_cad_play_reference::PatchCadPlayReference,
+        "setReferenceHidden" as "set-reference-hidden" => set_reference_hidden::SetReferenceHidden,
+        "setReferenceLocked" as "set-reference-locked" => set_reference_locked::SetReferenceLocked,
+        "engagementSubmit" as "engagement-submit" => engagement_submit::EngagementSubmit,
+        "setActiveExample" as "set-active-example" => set_active_example::SetActiveExample,
+        "worldPointerDown" as "world-pointer-down" => world_pointer_down::WorldPointerDown,
+
+        // 👁️ Local configuration only — emit app or exact-window configuration, never document operations.
+        "setCamera" as "camera" => set_camera::SetCamera,
+        "setProjection" as "projection" => set_projection::SetProjection,
+        "setProjectionParam" as "projection-param" => set_projection_param::SetProjectionParam,
+        "setDislocateOption" as "dislocate-option" => set_dislocate_option::SetDislocateOption,
+        "setNodeSelection" as "set-node-selection" => set_node_selection::SetNodeSelection,
+        "setReferenceSelection" as "reference-selection" => set_reference_selection::SetReferenceSelection,
+        "referenceHover" as "reference-hover" => reference_hover::ReferenceHover,
+        "engagementInput" as "engagement-input" => engagement_input::EngagementInput,
+        "engagementPossibleSelect" as "engagement-possible-select" => engagement_possible_select::EngagementPossibleSelect,
+        "engagementRepeatLast" as "engagement-repeat-last" => engagement_repeat_last::EngagementRepeatLast,
+        "engagementAbort" as "engagement-abort" => engagement_abort::EngagementAbort,
+        "worldPointerMove" as "world-pointer-move" => world_pointer_move::WorldPointerMove,
+        "toggleSun" as "toggle-sun" => toggle_sun::ToggleSun,
+        "setSunAzimuth" as "sun-azimuth" => set_sun_azimuth::SetSunAzimuth,
+        "setSunElevation" as "sun-elevation" => set_sun_elevation::SetSunElevation,
+        "setSunIntensity" as "sun-intensity" => set_sun_intensity::SetSunIntensity,
+        "setContributions" as "contributions" => set_contributions::SetContributions,
+
+        // 🐚️ Shell effects — export/import round-trips through the host, no operations either way.
+        "saveSelected" as "save-selected" => save_selected::SaveSelected,
+        "saveInPlay" as "save-in-play" => save_in_play::SaveInPlay,
+        "saveCurrent" as "save-current" => save_current::SaveCurrent,
+        "loadRawRequest" as "load-raw-request" => load_raw_request::LoadRawRequest,
+    }
+}
+
+/// 🙈️ A reference set-verb (`setReferenceHidden{hidden}`, `setReferenceLocked{locked}`) sets exactly the boolean its
+/// arguments carry — the row target's explicit next state — so a missing value is refused, never defaulted into a flip.
+fn cad_flag_value_required(action: &str, flag: &str) -> Fault {
+    Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("cad.action.flag-value-required"), format!("action '{action}' requires the boolean '{flag}' it sets"))
+}
+
+/// 🌉️ Converts the host shell's declared action id and JSON arguments into cad's closed typed
+/// command vocabulary before the app dispatches through the binary command path.
+fn cad_command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<CadCommand, Fault> {
+    let str_field = |key: &str| args.and_then(|value| value.get(key)).and_then(semio_framework_value::DslValue::as_str).map(str::to_string);
+    let f64_field = |key: &str| args.and_then(|value| value.get(key)).and_then(semio_framework_value::DslValue::as_f64);
+    let bool_field = |key: &str| args.and_then(|value| value.get(key)).and_then(semio_framework_value::DslValue::as_bool);
+    let str_vec_field = |key: &str| -> Vec<String> { args.and_then(|value| value.get(key)).and_then(|value| semio_framework_value::FromValue::from_value(value.clone()).ok()).unwrap_or_default() };
+    let value_string = || -> Option<String> {
+        args.and_then(|value| value.get("value")).and_then(|value| match value {
+            semio_framework_value::DslValue::String(text) => Some(text.clone()),
+            semio_framework_value::DslValue::Bool(flag) => Some(flag.to_string()),
+            semio_framework_value::DslValue::Number(number) => Some(match number {
+                semio_framework_value::Number::UInt(number) => number.to_string(),
+                semio_framework_value::Number::Int(number) => number.to_string(),
+                semio_framework_value::Number::Float(number) => number.to_string(),
+            }),
+            _ => None,
+        })
+    };
+    let position_axis = |index: usize| args.and_then(|value| value.get("position")).and_then(semio_framework_value::DslValue::as_array).and_then(|array| array.get(index)).and_then(semio_framework_value::DslValue::as_f64);
+    Ok(match action {
+        "setActiveExample" => CadCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: str_field("exampleId").unwrap_or_default() }),
+        "setDislocateOption" => CadCommand::SetDislocateOption(set_dislocate_option::SetDislocateOption { pane: str_field("pane"), option: str_field("option").unwrap_or_default(), pressed: bool_field("pressed") }),
+        "setNodeSelection" => CadCommand::SetNodeSelection(set_node_selection::SetNodeSelection { node_ids: str_vec_field("nodeIds") }),
+        "setCamera" => CadCommand::SetCamera(set_camera::SetCamera { pane: str_field("surfaceId"), camera: args.and_then(|value| value.get("camera")).and_then(|value| semio_framework_value::FromValue::from_value(value.clone()).ok()).unwrap_or_default() }),
+        "setProjection" => CadCommand::SetProjection(set_projection::SetProjection {
+            pane: str_field("surfaceId"),
+            field: str_field("field"),
+            value_str: args.and_then(|value| value.get("value")).and_then(semio_framework_value::DslValue::as_str).map(String::from),
+            value_num: args.and_then(|value| value.get("value")).and_then(semio_framework_value::DslValue::as_f64),
+            param: str_field("param"),
+        }),
+        "setProjectionParam" => CadCommand::SetProjectionParam(set_projection_param::SetProjectionParam {
+            pane: str_field("surfaceId"),
+            field: str_field("field"),
+            value_str: args.and_then(|value| value.get("value")).and_then(semio_framework_value::DslValue::as_str).map(String::from),
+            value_num: args.and_then(|value| value.get("value")).and_then(semio_framework_value::DslValue::as_f64),
+            param: str_field("param"),
+        }),
+        "translateSelection" => {
+            CadCommand::TranslateSelection(translate_selection::TranslateSelection { object_ids: str_vec_field("objectIds"), dx: f64_field("dx").unwrap_or(0.0), dy: f64_field("dy").unwrap_or(0.0), dz: f64_field("dz").unwrap_or(0.0) })
+        }
+        "rotateSelection" => CadCommand::RotateSelection(rotate_selection::RotateSelection {
+            object_ids: str_vec_field("objectIds"),
+            ax: f64_field("ax").unwrap_or(0.0),
+            ay: f64_field("ay").unwrap_or(0.0),
+            az: f64_field("az").unwrap_or(0.0),
+            angle: f64_field("angle").unwrap_or(0.0),
+        }),
+        "scaleSelection" => CadCommand::ScaleSelection(scale_selection::ScaleSelection { object_ids: str_vec_field("objectIds"), sx: f64_field("sx").unwrap_or(1.0), sy: f64_field("sy").unwrap_or(1.0), sz: f64_field("sz").unwrap_or(1.0) }),
+        "addObject" => CadCommand::AddObject(add_object::AddObject { typology: str_field("typology") }),
+        "patchObject" => CadCommand::PatchObject(patch_object::PatchObject { object_id: str_field("objectId").unwrap_or_default(), field: str_field("field").unwrap_or_default(), value: value_string(), delta: f64_field("delta") }),
+        "patchSelection" => CadCommand::PatchSelection(patch_selection::PatchSelection { object_ids: str_vec_field("objectIds"), field: str_field("field").unwrap_or_default(), value: value_string(), delta: f64_field("delta") }),
+        "deleteObject" => CadCommand::DeleteObject(delete_object::DeleteObject { object_id: str_field("objectId").unwrap_or_default() }),
+        "duplicateObject" => CadCommand::DuplicateObject(duplicate_object::DuplicateObject { object_id: str_field("objectId").unwrap_or_default() }),
+        "addNode" => CadCommand::AddNode(add_node::AddNode { kind: str_field("kind").unwrap_or_else(|| "solid".into()) }),
+        "renameNode" => CadCommand::RenameNode(rename_node::RenameNode { node_id: str_field("nodeId").unwrap_or_default(), value: str_field("value").unwrap_or_default() }),
+        "applyTransformation" => CadCommand::ApplyTransformation(apply_transformation::ApplyTransformation { qid: str_field("qid").unwrap_or_default() }),
+        "saveSelected" => CadCommand::SaveSelected(save_selected::SaveSelected {}),
+        "saveInPlay" => CadCommand::SaveInPlay(save_in_play::SaveInPlay {}),
+        "saveCurrent" => CadCommand::SaveCurrent(save_current::SaveCurrent { format: str_field("format") }),
+        "loadRawRequest" => CadCommand::LoadRawRequest(load_raw_request::LoadRawRequest {}),
+        "importCadFile" => {
+            let payload = args.and_then(|value| value.get("payload").or_else(|| value.get("modelSpace"))).cloned().or_else(|| args.cloned());
+            let payload = match payload {
+                Some(semio_framework_value::DslValue::String(text)) => text,
+                Some(other) => semio_framework_pack_json::to_json_string(&other),
+                None => String::new(),
+            };
+            CadCommand::ImportCadFile(import_cad_file::ImportCadFile { name: str_field("name").unwrap_or_default(), payload })
+        }
+        "setReferenceSelection" => CadCommand::SetReferenceSelection(set_reference_selection::SetReferenceSelection { pane: str_field("pane"), model_definition_id: str_field("modelDefinitionId"), reference_id: str_field("referenceId") }),
+        "referenceHover" => CadCommand::ReferenceHover(reference_hover::ReferenceHover { reference_id: str_field("referenceId") }),
+        "patchCadPlayReference" => CadCommand::PatchCadPlayReference(patch_cad_play_reference::PatchCadPlayReference {
+            model_definition_id: str_field("modelDefinitionId").unwrap_or_default(),
+            reference_id: str_field("referenceId").unwrap_or_default(),
+            field: str_field("field").unwrap_or_default(),
+            value: value_string(),
+            delta: f64_field("delta"),
+        }),
+        "setReferenceHidden" => CadCommand::SetReferenceHidden(set_reference_hidden::SetReferenceHidden {
+            model_definition_id: str_field("modelDefinitionId").unwrap_or_default(),
+            reference_id: str_field("referenceId").unwrap_or_default(),
+            hidden: bool_field("hidden").ok_or_else(|| cad_flag_value_required(action, "hidden"))?,
+        }),
+        "setReferenceLocked" => CadCommand::SetReferenceLocked(set_reference_locked::SetReferenceLocked {
+            model_definition_id: str_field("modelDefinitionId").unwrap_or_default(),
+            reference_id: str_field("referenceId").unwrap_or_default(),
+            locked: bool_field("locked").ok_or_else(|| cad_flag_value_required(action, "locked"))?,
+        }),
+        "engagementInput" => CadCommand::EngagementInput(engagement_input::EngagementInput { value: str_field("value").unwrap_or_default(), pane: str_field("pane") }),
+        "engagementSubmit" => CadCommand::EngagementSubmit(engagement_submit::EngagementSubmit { pane: str_field("pane") }),
+        "engagementPossibleSelect" => CadCommand::EngagementPossibleSelect(engagement_possible_select::EngagementPossibleSelect { pane: str_field("pane"), possible_id: str_field("possibleId").unwrap_or_default() }),
+        "engagementRepeatLast" => CadCommand::EngagementRepeatLast(engagement_repeat_last::EngagementRepeatLast { pane: str_field("pane") }),
+        "engagementAbort" => CadCommand::EngagementAbort(engagement_abort::EngagementAbort {}),
+        "worldPointerDown" => CadCommand::WorldPointerDown(world_pointer_down::WorldPointerDown { pane: str_field("pane"), surface_id: str_field("surfaceId"), x: position_axis(0), y: position_axis(1), z: position_axis(2) }),
+        "worldPointerMove" => CadCommand::WorldPointerMove(world_pointer_move::WorldPointerMove { x: position_axis(0), y: position_axis(1), z: position_axis(2) }),
+        "toggleSun" => CadCommand::ToggleSun(toggle_sun::ToggleSun {}),
+        "setSunAzimuth" => CadCommand::SetSunAzimuth(set_sun_azimuth::SetSunAzimuth { value: f64_field("value").unwrap_or(0.0) }),
+        "setSunElevation" => CadCommand::SetSunElevation(set_sun_elevation::SetSunElevation { value: f64_field("value").unwrap_or(0.0) }),
+        "setSunIntensity" => CadCommand::SetSunIntensity(set_sun_intensity::SetSunIntensity { value: f64_field("value").unwrap_or(0.0) }),
+        "setContributions" => CadCommand::SetContributions(set_contributions::SetContributions { json: str_field("json").unwrap_or_else(|| "[]".into()) }),
+        other => return Err(Fault::from(format!("unknown cad action '{other}'"))),
+    })
+}
+//#endregion 🔖️Commands
+
+//#region 🔖️PlayApp
+// 📐️ B1/WORKFLOWS-END-TO-END-TYPED-PORTS: unit-struct-shaped pure `ArtifactApp` — every former
+// `CadPlayRuntime`/`self.runtime` field lives in `CadConfig` (written through `CadConfigMutation`s with real
+// `backwards`) or, for the per-frame engagement state, in the addressed world window's transient (design §17.4).
+#[derive(Default, Clone, Copy)]
+pub struct CadPlayApp;
+
+impl CadPlayApp {
+    /// 🪟️ The one window-chrome implementation both trait entry points share — `interaction` is the
+    /// live `"cad"` domain for the request-context twin and empty for the interaction-less one.
+    fn window_engagements_body(doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, view_state: &ViewModel, transient: &CadWorldWindowTransient, interaction: CadInteractionSnapshot) -> HashMap<String, WindowEngagement> {
+        let view = CadPlayView::of(doc.snapshot, &doc.children, runtime_of(cfg, transient), interaction);
+        let labels = cad_labels(view_state);
+        HashMap::from([
+            (shape::WINDOW_KIND_ID.to_string(), shape::engagement(&view, labels)),
+            (building::WINDOW_KIND_ID.to_string(), building::engagement(&view, labels)),
+            (energy::WINDOW_KIND_ID.to_string(), energy::engagement(&view, labels)),
+            (structure_classic::WINDOW_KIND_ID.to_string(), structure_classic::engagement(&view, labels)),
+        ])
+    }
+
+    /// 🖼️ The one render implementation both trait entry points share.
+    fn render_body(body_key: &str, doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, view_state: &ViewModel, transient: &CadWorldWindowTransient, interaction: CadInteractionSnapshot) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+        semio_s_artifact_cad_cad_inferences::validate_cad_computer_contributions(&cfg.snapshot.contributions_json);
+        let view = CadPlayView::of(doc.snapshot, &doc.children, runtime_of(cfg, transient), interaction);
+        let labels = cad_labels(view_state);
+        let window_kind_id = match body_key {
+            shape::BODY_KEY => shape::WINDOW_KIND_ID,
+            building::BODY_KEY => building::WINDOW_KIND_ID,
+            energy::BODY_KEY => energy::WINDOW_KIND_ID,
+            structure_classic::BODY_KEY => structure_classic::WINDOW_KIND_ID,
+            _ => shape::WINDOW_KIND_ID,
+        };
+        let active_utility = view_state.active_utility_id.as_deref();
+        let options = view.runtime.dislocate_options(window_kind_id);
+        match body_key {
+            shape::BODY_KEY => shape::render(&view, active_utility, options).map(semio_framework_plugin::built_to_component_tree),
+            building::BODY_KEY => building::render(&view, active_utility, options).map(semio_framework_plugin::built_to_component_tree),
+            energy::BODY_KEY => energy::render(&view, active_utility, options).map(semio_framework_plugin::built_to_component_tree),
+            structure_classic::BODY_KEY => structure_classic::render(&view, active_utility, options).map(semio_framework_plugin::built_to_component_tree),
+            // 🪟️ One `TreeWindows` per rendered body, read from the host's `ViewModel.tree_windows`:
+            // it decides which containers are open and which row slice each one materialises.
+            document::CAD_PLAY_BODY_ARTIFACT => document::build_document_tree(&view, labels, &TreeWindows::for_body(view_state, document::CAD_PLAY_BODY_ARTIFACT)).map(semio_framework_plugin::built_to_component_tree),
+            catalogue::CAD_PLAY_BODY_CATALOGUE => catalogue::build_catalogue_tree(labels, &TreeWindows::for_body(view_state, catalogue::CAD_PLAY_BODY_CATALOGUE)).map(semio_framework_plugin::built_to_component_tree),
+            inspection::CAD_PLAY_BODY_PROPERTIES => {
+                inspection::build_properties_panel(&view, labels, active_utility, &TreeWindows::for_body(view_state, inspection::CAD_PLAY_BODY_PROPERTIES)).map(semio_framework_plugin::built_to_component_tree)
+            }
+            _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
+        }
+    }
+}
+
+//#region 🧵️RetainedCommands
+// 🤝️ `engagementSubmit`/`engagementPossibleSelect`/`worldPointerDown` are admitted against the document like every object
+// gesture: an interaction step that reaches its commit state lands child leaves on the panes' model children (Child)
+// besides the addressed window's engagement transient (WindowTransient, design §17.4, §20.15).
+const CAD_RETAINED_ARTIFACT_TOOL_IDS: &[&str] = &["addNode", "renameNode", "patchCadPlayReference", "setReferenceHidden", "setReferenceLocked", "addObject", "patchObject", "patchSelection", "deleteObject", "duplicateObject", "translateSelection", "rotateSelection", "scaleSelection", "engagementSubmit", "engagementPossibleSelect", "worldPointerDown", "applyTransformation"];
+const CAD_RETAINED_CONFIG_TOOL_IDS: &[&str] = &[
+    "setCamera",
+    "setProjection",
+    "setProjectionParam",
+    "setDislocateOption",
+    "setNodeSelection",
+    "setReferenceSelection",
+    "referenceHover",
+    "toggleSun",
+    "setSunAzimuth",
+    "setSunElevation",
+    "setSunIntensity",
+    "setContributions",
+    "setActiveExample",
+    "importCadFile",
+];
+/// 🫧️ The engagement steps that commit nothing: they publish only the addressed window's transient (design §17.4).
+const CAD_RETAINED_ENGAGEMENT_TOOL_IDS: &[&str] = &["engagementInput", "engagementRepeatLast", "engagementAbort", "worldPointerMove"];
+/// 📤️ The exports read the scene and hand the host a download; they touch no store.
+const CAD_RETAINED_EXPORT_TOOL_IDS: &[&str] = &["saveSelected", "saveInPlay", "saveCurrent"];
+const CAD_RETAINED_TOOL_IDS: &[&str] = &[
+    "addNode",
+    "renameNode",
+    "patchCadPlayReference",
+    "setReferenceHidden",
+    "setReferenceLocked",
+    "addObject",
+    "patchObject",
+    "patchSelection",
+    "deleteObject",
+    "duplicateObject",
+    "translateSelection",
+    "rotateSelection",
+    "scaleSelection",
+    "engagementSubmit",
+    "worldPointerDown",
+    "setCamera",
+    "setProjection",
+    "setProjectionParam",
+    "setDislocateOption",
+    "setNodeSelection",
+    "setReferenceSelection",
+    "referenceHover",
+    "engagementInput",
+    "engagementPossibleSelect",
+    "engagementRepeatLast",
+    "engagementAbort",
+    "worldPointerMove",
+    "toggleSun",
+    "setSunAzimuth",
+    "setSunElevation",
+    "setSunIntensity",
+    "setContributions",
+    "setActiveExample",
+    "loadRawRequest",
+    "applyTransformation",
+    "importCadFile",
+    "saveSelected",
+    "saveInPlay",
+    "saveCurrent",
+];
+const CAD_RETAINED_COMMAND_SCHEMA: &str = "cad.scene.tool-command.v1";
+const CAD_RETAINED_RAW_BYTES: usize = 8_192;
+const CAD_RETAINED_WORK_ITEMS: usize = 1;
+const CAD_CONFIG_STORE_MAXIMUM_BYTES: usize = 65_536;
+const CAD_CONFIG_STORE_MAXIMUM_ITEMS: usize = 256;
+
+const CAD_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
+    ArtifactToolPublicationContract { tool_id: "addNode", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config] },
+    ArtifactToolPublicationContract { tool_id: "renameNode", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "patchCadPlayReference", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "setReferenceHidden", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "setReferenceLocked", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    // 🪆️ Every object gesture publishes on the Child lane alone: its leaves land in the addressed panes' composed
+    // `s.stdio.semio@v1/model` children, never in the parent document (design §20.15).
+    ArtifactToolPublicationContract { tool_id: "addObject", lanes: &[ArtifactToolPublicationLane::Child] },
+    ArtifactToolPublicationContract { tool_id: "patchObject", lanes: &[ArtifactToolPublicationLane::Child] },
+    ArtifactToolPublicationContract { tool_id: "patchSelection", lanes: &[ArtifactToolPublicationLane::Child] },
+    ArtifactToolPublicationContract { tool_id: "deleteObject", lanes: &[ArtifactToolPublicationLane::Child] },
+    ArtifactToolPublicationContract { tool_id: "duplicateObject", lanes: &[ArtifactToolPublicationLane::Child] },
+    ArtifactToolPublicationContract { tool_id: "translateSelection", lanes: &[ArtifactToolPublicationLane::Child] },
+    ArtifactToolPublicationContract { tool_id: "rotateSelection", lanes: &[ArtifactToolPublicationLane::Child] },
+    ArtifactToolPublicationContract { tool_id: "scaleSelection", lanes: &[ArtifactToolPublicationLane::Child] },
+    // 🤝️ Interaction steps: the window's engagement transient (WindowTransient) every step, plus the committed
+    // objects' child leaves (Child) on the step that reaches the spec's commit state — never a config edit (design §17.4).
+    ArtifactToolPublicationContract { tool_id: "engagementSubmit", lanes: &[ArtifactToolPublicationLane::Child, ArtifactToolPublicationLane::WindowTransient] },
+    ArtifactToolPublicationContract { tool_id: "worldPointerDown", lanes: &[ArtifactToolPublicationLane::Child, ArtifactToolPublicationLane::WindowTransient] },
+    ArtifactToolPublicationContract { tool_id: "setCamera", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
+    ArtifactToolPublicationContract { tool_id: "setProjection", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
+    ArtifactToolPublicationContract { tool_id: "setProjectionParam", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
+    ArtifactToolPublicationContract { tool_id: "setDislocateOption", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
+    ArtifactToolPublicationContract { tool_id: "setNodeSelection", lanes: &[ArtifactToolPublicationLane::Config] },
+    ArtifactToolPublicationContract { tool_id: "setReferenceSelection", lanes: &[ArtifactToolPublicationLane::Config, ArtifactToolPublicationLane::Interaction] },
+    ArtifactToolPublicationContract { tool_id: "referenceHover", lanes: &[ArtifactToolPublicationLane::Config] },
+    ArtifactToolPublicationContract { tool_id: "engagementInput", lanes: &[ArtifactToolPublicationLane::WindowTransient] },
+    ArtifactToolPublicationContract { tool_id: "engagementPossibleSelect", lanes: &[ArtifactToolPublicationLane::Child, ArtifactToolPublicationLane::WindowTransient] },
+    ArtifactToolPublicationContract { tool_id: "engagementRepeatLast", lanes: &[ArtifactToolPublicationLane::WindowTransient] },
+    ArtifactToolPublicationContract { tool_id: "engagementAbort", lanes: &[ArtifactToolPublicationLane::WindowTransient] },
+    ArtifactToolPublicationContract { tool_id: "worldPointerMove", lanes: &[ArtifactToolPublicationLane::WindowTransient] },
+    ArtifactToolPublicationContract { tool_id: "toggleSun", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
+    ArtifactToolPublicationContract { tool_id: "setSunAzimuth", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
+    ArtifactToolPublicationContract { tool_id: "setSunElevation", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
+    ArtifactToolPublicationContract { tool_id: "setSunIntensity", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
+    ArtifactToolPublicationContract { tool_id: "setContributions", lanes: &[ArtifactToolPublicationLane::Config] },
+    // 🗃️ An example switch records the active example id in the session config and hands the host
+    // ONE whole-document `LoadDocument` effect, which the store admits through
+    // `build_document_store_initialization_job` — never an in-history artifact edit.
+    ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[ArtifactToolPublicationLane::Config, ArtifactToolPublicationLane::WindowTransient] },
+    ArtifactToolPublicationContract { tool_id: "loadRawRequest", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+    ArtifactToolPublicationContract { tool_id: "applyTransformation", lanes: &[ArtifactToolPublicationLane::Child] },
+    // 🗃️ A whole spatial scene imports like an example switch: the window's reset engagement plus ONE host `LoadDocument`;
+    // a single object file lands as ONE `insert-element` transaction on the addressed pane's model child (Child).
+    ArtifactToolPublicationContract { tool_id: "importCadFile", lanes: &[ArtifactToolPublicationLane::Child, ArtifactToolPublicationLane::WindowTransient] },
+    ArtifactToolPublicationContract { tool_id: "saveSelected", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+    ArtifactToolPublicationContract { tool_id: "saveInPlay", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+    ArtifactToolPublicationContract { tool_id: "saveCurrent", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+];
+
+/// 🧾️ The ONE execution contract every retained cad tool is admitted under. Its wire ceiling is
+/// [`semio_framework_plugin::CONTRIBUTIONS_COMMAND_RAW_WIRE_BYTES`] because ONE of those tools —
+/// `setContributions` — carries a host pack, not a gesture, and a factory declares one contract for
+/// every tool it serves (`ArtifactOwnedToolJobFactory::execution_contract`), which the proof
+/// catalogue must join exactly. Widening the ADMISSION does not widen what any gesture may actually
+/// send: [`cad_retained_raw_bytes`] is what the payload reserves and what the wire factory refuses
+/// past, per tool id.
+fn cad_retained_contract() -> ToolExecutionContract {
+    ToolExecutionContract::bounded_first_step(semio_framework_plugin::CONTRIBUTIONS_COMMAND_RAW_WIRE_BYTES, 64, CAD_RETAINED_WORK_ITEMS as u64, 16_384, 7_500)
+}
+
+/// 📏️ The raw-wire ceiling one retained tool id is admitted against — the twin of its registered
+/// contract, which the wire factory and the payload builder must both honour or an admitted pack
+/// is refused one layer deeper.
+fn cad_retained_raw_bytes(tool_id: &str) -> usize {
+    if tool_id == "setContributions" || tool_id == "importCadFile" {
+        semio_framework_plugin::CONTRIBUTIONS_COMMAND_RAW_WIRE_BYTES
+    } else {
+        CAD_RETAINED_RAW_BYTES
+    }
+}
+
+fn cad_retained_extent(command: &CadCommand, _snapshot: &CadSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
+    CAD_RETAINED_TOOL_IDS.contains(&command.command_id()).then_some(1)
+}
+
+/// 🧵️ One retained cad command over the operation's observed roots: the command's reducer over the dispatch context
+/// the operation carries — the panes' composed model children the object writers decide against, the addressed
+/// window's engagement transient in and its next state out (design §17.4, §20.15).
+fn cad_retained_reduce(input: &ArtifactCommandInputs<'_, EditorApp<CadPlayApp>>) -> Result<(Emit<CadMutation, CadConfigMutation, NoDraftMutation>, Option<CadWorldWindowTransient>), Fault> {
+    let ArtifactCommandInputs { snapshot_owner: _, command, snapshot, config, history, interaction, hover, context, operation } = *input;
+    let doc = match context {
+        Some(context) => ArtifactView::with_children(snapshot, history, (*context.children).clone()).bound_to_operation(operation.clone()),
+        None => ArtifactView::with_operation(snapshot, history, operation.clone()),
+    };
+    let cfg = ConfigView { snapshot: config, window: context.and_then(|context| context.window_config.as_ref()) };
+    let selection = interaction.selection.get(CAD_INTERACTION_DOMAIN).cloned().unwrap_or_default();
+    let hovered_ids = hover.get(CAD_INTERACTION_DOMAIN).filter(|hover| hover.channel == CadInteractionSnapshot::POINTER_CHANNEL).map(|hover| hover.ids.clone()).unwrap_or_default();
+    let retained_interaction = CadInteractionSnapshot { granularity: selection.granularity.clone(), ids: selection.ids.clone(), anchor_id: selection.anchor_id, hovered_ids };
+    let mut ctx = CadDispatchCtx::new(retained_interaction, context.and_then(|context| context.view_state.clone()), window_transient::from_snapshot(context.and_then(|context| context.window_transient.as_ref())));
+    let command_id = command.command_id();
+    let emit = if CAD_RETAINED_ARTIFACT_TOOL_IDS.contains(&command_id) || CAD_RETAINED_EXPORT_TOOL_IDS.contains(&command_id) {
+        admit_cad_snapshot(snapshot).map_err(Fault::from)?;
+        command.dispatch(&doc, &cfg, &mut ctx)?
+    } else if CAD_RETAINED_CONFIG_TOOL_IDS.contains(&command_id) {
+        admit_cad_config(config).map_err(Fault::from)?;
+        command.dispatch(&doc, &cfg, &mut ctx)?
+    } else if CAD_RETAINED_ENGAGEMENT_TOOL_IDS.contains(&command_id) {
+        command.dispatch(&doc, &cfg, &mut ctx)?
+    } else {
+        match command {
+            CadCommand::LoadRawRequest(payload) => load_raw_request::handle(payload, &doc, &cfg, &mut ctx)?,
+            _ => return Err(Fault::from("cad-retained-route-mismatch")),
+        }
+    };
+    Ok((emit, ctx.next_window_transient))
+}
+
+/// 🧵️ The ONE retained work every cad tool runs ([`cad_retained_reduce`]): it completes with the addressed window's
+/// next engagement transient as ephemeral local-only window state when the command changed it — a dispatch that
+/// addresses no window (an agent, the palette) keeps none.
+struct CadRetainedCommandWork {
+    tool_id: &'static str,
+    consumed: bool,
+}
+
+impl ArtifactCommandWork<EditorApp<CadPlayApp>> for CadRetainedCommandWork {
+    fn work_demands(&self, _input: &ArtifactCommandInputs<'_, EditorApp<CadPlayApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        Ok(semio_framework_value::RetirementDemand { copy_bytes: size_of::<Self>(), depth: 1, ..Default::default() })
+    }
+    fn terminal_frame_release_bytes(&self) -> Option<usize> {
+        self.terminal_is_empty().then_some(size_of::<Self>())
+    }
+    fn tool_id(&self) -> &'static str {
+        self.tool_id
+    }
+
+    fn extent(&self, command: &CadCommand, snapshot: &CadSnapshot, interaction: &protocol::InteractionState, _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<CadPlayApp>>>) -> Option<usize> {
+        cad_retained_extent(command, snapshot, interaction)
+    }
+
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<CadPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<CadPlayApp>>, semio_framework_job::OriginalTurnFailure> {
+        let original: Result<_, Fault> = (|| {
+        if self.consumed {
+            return Err(Fault::from("cad-retained-work-repeated"));
+        }
+        self.consumed = true;
+        let (emit, transient) = cad_retained_reduce(input)?;
+        let view = input.context.and_then(|context| context.view_state.as_ref()).filter(|view| view.window_id.is_some());
+        Ok(match (transient, view) {
+            (Some(transient), Some(view)) => ArtifactCommandWorkStep::CompleteWithEphemeral { emit, ephemeral: semio_framework_plugin::EphemeralEmit { window_transient: vec![window_transient::addressed(view, transient)?], ..Default::default() } },
+            _ => ArtifactCommandWorkStep::Complete(emit),
+        })
+    
+        })();
+        original.map_err(semio_framework_job::OriginalTurnFailure::from)
+    }
+}
+
+struct CadRetainedCommandJobFactory {
+    keys: Vec<ToolFactoryKey>,
+}
+
+impl CadRetainedCommandJobFactory {
+    fn new(controller_id: &str) -> Self {
+        Self { keys: CAD_RETAINED_TOOL_IDS.iter().map(|tool_id| ToolFactoryKey::new(controller_id, *tool_id)).collect() }
+    }
+}
+
+impl ToolJobFactory for CadRetainedCommandJobFactory {
+    type Payload = ArtifactRetainedCommandPayload<EditorApp<CadPlayApp>>;
+    type Job = ArtifactRetainedCommandJob<EditorApp<CadPlayApp>>;
+
+    fn keys(&self) -> &[ToolFactoryKey] {
+        &self.keys
+    }
+
+    fn payload_schema_id(&self) -> &str {
+        CAD_RETAINED_COMMAND_SCHEMA
+    }
+
+    fn classification(&self) -> InteractiveJobClassification {
+        InteractiveJobClassification::Migrated
+    }
+
+    fn execution_contract(&self) -> ToolExecutionContract {
+        cad_retained_contract()
+    }
+
+    fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> {
+        Ok(ArtifactRetainedCommandJob::new(payload))
+    }
+
+    fn create_job_from_wire_pages_with_payload(
+        &mut self,
+        _operation: semio_framework_job::Operation,
+        payload: Self::Payload,
+        input: semio_framework_action_bus::RetainedToolWireInput,
+        checkpoint: Option<semio_framework_action_bus::RetainedToolWireInput>,
+    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework_action_bus::RetainedToolWireInput, Option<semio_framework_action_bus::RetainedToolWireInput>)> {
+        if input.declared_bytes() > payload.maximum_raw_bytes || checkpoint.is_some() {
+            return Err((ToolJobFactoryError::new("CAD retained command rejects oversized wire or checkpoint owner"), input, checkpoint));
+        }
+        Ok(ArtifactRetainedCommandJob::from_wire(payload, input))
+    }
+}
+
+impl ArtifactOwnedToolJobFactory for CadRetainedCommandJobFactory {
+    type Owner = EditorApp<CadPlayApp>;
+    const TOOL_IDS: &'static [&'static str] = CAD_RETAINED_TOOL_IDS;
+    const DOCUMENT_SCHEMA: &'static str = CAD_DOCUMENT_SCHEMA;
+    const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = CAD_RETAINED_PUBLICATION_CONTRACTS;
+}
+//#endregion 🧵️RetainedCommands
+
+
+/// 🎞️ A media delivery uses the retained command's exact preparation and publication lifecycle.
+struct CadMediaJob(ArtifactRetainedCommandJob<EditorApp<CadPlayApp>>);
+
+impl semio_framework_job::InteractiveJob for CadMediaJob {
+    fn step<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> { semio_framework_job::InteractiveJob::step(&mut self.0, cx) }
+    fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, semio_framework_value::ValueError> { semio_framework_job::InteractiveJob::borrow_outcome(&self.0, descriptor) }
+    fn begin_close(&mut self) { semio_framework_job::InteractiveJob::begin_close(&mut self.0); }
+    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep { semio_framework_job::InteractiveJob::close_step(&mut self.0, grant) }
+    fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { semio_framework_job::InteractiveJob::next_close_copy_byte_demand(&self.0) }
+    fn next_close_capacity_byte_demand(&self, maximum_copy_bytes: usize) -> Result<usize, semio_framework_value::ValueError> { semio_framework_job::InteractiveJob::next_close_capacity_byte_demand(&self.0, maximum_copy_bytes) }
+    fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { semio_framework_job::InteractiveJob::next_close_release_byte_demand(&self.0) }
+    fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> { semio_framework_job::InteractiveJob::next_close_depth_demand(&self.0) }
+    fn terminal_is_empty(&self) -> bool { semio_framework_job::InteractiveJob::terminal_is_empty(&self.0) }
+}
+
+impl semio_framework_plugin::ArtifactReservedJob for CadMediaJob {}
+
+struct CadMediaWork {
+    port: String,
+    media: Option<Media>,
+    children: Option<ChildContentView>,
+    pending: Option<(String, String, semio_framework_value::DslValue)>,
+    retirement: Option<Box<dyn store::ErasedSnapshotRetirement>>,
+    priced_bytes: usize,
+    price_checksum: u64,
+    pricing_complete: bool,
+    consumed: bool,
+    closing: bool,
+}
+
+impl CadMediaWork {
+    fn new(port: String, media: Media, children: Option<ChildContentView>) -> Self {
+        Self { port, media: Some(media), children, pending: None, retirement: None, priced_bytes: 0, price_checksum: 0, pricing_complete: false, consumed: false, closing: false }
+    }
+    fn borrowed_source(&self) -> Result<&[u8], Fault> {
+        match &self.media.as_ref().ok_or_else(|| Fault::from("Cad media input owner is absent"))?.payload {
+            MediaPayload::Structured { json, .. } => Ok(json.as_bytes()),
+            MediaPayload::Intrinsic { value, .. } => value.as_bytes().or_else(|| value.as_str().map(str::as_bytes)).ok_or_else(|| Fault::new(semio_framework_diagnostic::FaultOrigin::App, semio_framework_diagnostic::FaultCode::new("cad.media-input-shape"), "Cad file media requires borrowed intrinsic text or bytes")),
+            MediaPayload::Binary { .. } => Err(Fault::new(semio_framework_diagnostic::FaultOrigin::App, semio_framework_diagnostic::FaultCode::new("cad.media-input-shape"), "Cad file media requires a retained source rather than a binary address")),
+        }
+    }
+    fn price_source(&mut self, maximum_bytes: usize) -> Result<usize, Fault> {
+        if maximum_bytes == 0 || self.pricing_complete { return Ok(0); }
+        let source = self.borrowed_source()?;
+        if source.len() > semio_framework_plugin::CONTRIBUTIONS_COMMAND_RAW_WIRE_BYTES {
+            return Err(Fault::new(semio_framework_diagnostic::FaultOrigin::App, semio_framework_diagnostic::FaultCode::new("cad.media-input-capacity"), "Cad media source exceeds its declared retained raw-byte authority"));
+        }
+        let end = self.priced_bytes.saturating_add(maximum_bytes.min(64)).min(source.len());
+        let mut checksum = self.price_checksum;
+        for byte in &source[self.priced_bytes..end] { checksum = checksum.wrapping_mul(31).wrapping_add(u64::from(*byte)); }
+        let complete = end == source.len();
+        let charged = end - self.priced_bytes;
+        self.price_checksum = checksum;
+        self.priced_bytes = end;
+        self.pricing_complete = complete;
+        Ok(charged)
+    }
+    fn price_step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, Fault> {
+        if cx.is_cancelled() { return Err(Fault::new(semio_framework_diagnostic::FaultOrigin::Framework, semio_framework_diagnostic::FaultCode::new("interactive-job.cancelled"), "Cad media pricing was cancelled before conversion")); }
+        if cx.should_yield() { return Ok(false); }
+        if !self.pricing_complete {
+            self.price_source(64)?;
+            cx.consume_fuel(1);
+            return Ok(false);
+        }
+        Ok(true)
+    }
+}
+
+impl ArtifactCommandWork<EditorApp<CadPlayApp>> for CadMediaWork {
+    fn work_demands(&self, _input: &ArtifactCommandInputs<'_, EditorApp<CadPlayApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        Ok(semio_framework_value::RetirementDemand { copy_bytes: size_of::<Self>(), depth: 1, ..Default::default() })
+    }
+    fn terminal_frame_release_bytes(&self) -> Option<usize> {
+        self.terminal_is_empty().then_some(size_of::<Self>())
+    }
+    fn tool_id(&self) -> &'static str { "importCadFile" }
+    fn workspace_identity(&self) -> u64 { self.borrowed_source().map_or(0, |source| (source.as_ptr() as usize as u64).wrapping_add(source.len() as u64)) }
+    fn extent(&self, _: &CadCommand, _: &CadSnapshot, _: &protocol::InteractionState, _: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<CadPlayApp>>>) -> Option<usize> { Some(1) }
+    fn checkpoint_byte(&self,index:usize)->Option<u8>{match index{0..=7=>Some(((self.priced_bytes as u64)>>(index*8))as u8),8..=15=>Some((self.price_checksum>>((index-8)*8))as u8),16=>Some(u8::from(self.pricing_complete)),17..=23=>Some(0),_=>None}}
+    fn restore(&mut self, checkpoint: &[u8]) -> Result<(), Fault> {
+        if checkpoint.len() != 24 || checkpoint[16] > 1 || checkpoint[17..].iter().any(|byte| *byte != 0) { return Err(Fault::from("Cad media pricing checkpoint shape")); }
+        let offset = usize::try_from(u64::from_le_bytes(checkpoint[..8].try_into().map_err(|_| Fault::from("Cad media pricing offset"))?)).map_err(|_| Fault::from("Cad media pricing offset authority"))?;
+        let source = self.borrowed_source()?;
+        if offset > source.len() || (checkpoint[16] == 1 && offset != source.len()) { return Err(Fault::from("Cad media pricing checkpoint source extent")); }
+        self.priced_bytes = offset;
+        self.price_checksum = u64::from_le_bytes(checkpoint[8..16].try_into().map_err(|_| Fault::from("Cad media pricing checksum"))?);
+        self.pricing_complete = checkpoint[16] == 1;
+        Ok(())
+    }
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<CadPlayApp>>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<CadPlayApp>>, semio_framework_job::OriginalTurnFailure> {
+        let original: Result<_, Fault> = (|| {
+        if self.consumed { return Err(Fault::from("Cad media operation was already consumed")); }
+        let before = (self.priced_bytes, self.pricing_complete);
+        if !self.price_step(cx)? {
+            let preview = br#"{"en":"Pricing media","de":"Medienaufwand bestimmen"}"#;
+            return Ok(if before == (self.priced_bytes, self.pricing_complete) { ArtifactCommandWorkStep::Replay { stage: "cad-media-pricing", preview } } else { ArtifactCommandWorkStep::Progress { stage: "cad-media-pricing", preview } });
+        }
+        self.consumed = true;
+        cx.set_stage("cad-media-decode");
+        let mut operation = input.operation.clone();
+        operation.operation_id = cx.operation().0;
+        operation.generation = cx.generation().0;
+        let doc = ArtifactView::with_children(input.snapshot, input.history, self.children.as_ref().ok_or_else(|| Fault::from("Cad media child read owner is absent"))?.clone()).bound_to_operation(operation);
+        let media = self.media.as_ref().ok_or_else(|| Fault::from("Cad media input owner is absent"))?;
+        let emit = CadPlayApp::import_media(&self.port, media, &doc).map_err(|error| Fault::from(error.to_string()))?;
+        Ok(ArtifactCommandWorkStep::Complete(emit))
+    
+        })();
+        original.map_err(semio_framework_job::OriginalTurnFailure::from)
+    }
+    fn begin_close(&mut self) { self.closing = true; }
+    fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.close_demand(0)?.copy_bytes) }
+    fn next_close_capacity_byte_demand(&self, maximum_copy_bytes: usize) -> Result<usize, semio_framework_value::ValueError> { Ok(self.close_demand(maximum_copy_bytes)?.capacity_bytes) }
+    fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.close_demand(0)?.release_bytes) }
+    fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.close_demand(0)?.depth) }
+    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep {
+        use semio_framework_job::InteractiveJobCloseStep;
+        use semio_framework_value::retained_clone::RetainedCloneStep;
+        if !self.closing || grant.maximum_items == 0 { return InteractiveJobCloseStep::Pending { progress: Default::default() }; }
+        let child = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth.saturating_sub(1), ..grant };
+        let mapped = |step: Result<RetainedCloneStep, semio_framework_value::ValueError>| match step {
+            Ok(RetainedCloneStep::Progress(progress)) | Ok(RetainedCloneStep::Complete(progress)) => InteractiveJobCloseStep::Pending { progress },
+            Err(error) => InteractiveJobCloseStep::Refused { kind: error.kind, progress: error.retained_progress() },
+        };
+        if self.retirement.is_some() { return mapped(store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement, child)); }
+        if self.pending.is_some() { return mapped(store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.pending, &mut self.retirement, child)); }
+        if self.media.is_some() {
+            let payload = self.media.take().expect("admitted media owner").payload;
+            let (schema, value) = match payload {
+                MediaPayload::Structured { schema, json } => (schema, semio_framework_value::DslValue::String(json)),
+                MediaPayload::Intrinsic { schema, value } => (schema, value),
+                MediaPayload::Binary { format_kind, blob_hash } => (format_kind, semio_framework_value::DslValue::String(blob_hash)),
+            };
+            self.pending = Some((std::mem::take(&mut self.port), schema, value));
+            return InteractiveJobCloseStep::Pending { progress: semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, ..Default::default() } };
+        }
+        if self.children.take().is_some() {
+            return InteractiveJobCloseStep::Pending { progress: semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, ..Default::default() } };
+        }
+        InteractiveJobCloseStep::Complete { progress: Default::default() }
+    }
+    fn terminal_is_empty(&self) -> bool { self.closing && self.media.is_none() && self.port.is_empty() && self.children.is_none() && self.pending.is_none() && self.retirement.is_none() }
+}
+
+impl CadMediaWork {
+    fn close_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        let nested = |mut demand: semio_framework_value::RetirementDemand| -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+            demand.depth = demand.depth.checked_add(1).ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "Cad media close depth overflow"))?;
+            Ok(demand)
+        };
+        if let Some(retirement) = self.retirement.as_ref() {
+            return nested(store::os_store::snapshot_read::artifact_retirement_box_demands(retirement, body)?);
+        }
+        if self.pending.is_some() {
+            return nested(store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.pending)?);
+        }
+        Ok(if self.media.is_some() || self.children.is_some() { semio_framework_value::RetirementDemand { depth: 1, ..Default::default() } } else { Default::default() })
+    }
+}
+
+//#region 📬️ConfigStorePreparation
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
+struct CadConfigStorePreparationFactory;
+
+struct CadConfigStorePreparation {
+    owners: store::OneItemOwners<CadConfig, CadConfigMutation>,
+    checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint,
+    cancelled: bool,
+}
+
+fn cad_config_retained_bytes(config: &CadConfig) -> usize {
+    let option_bytes = [
+        config.hovered_reference_id.as_deref(),
+        config.active_example_id.as_deref(),
+        config.selected_reference_model_definition_id.as_deref(),
+        config.selected_reference_id.as_deref(),
+    ]
+    .into_iter()
+    .flatten()
+    .fold(0usize, |bytes, value| bytes.saturating_add(value.len()));
+    config
+        .selected_node_ids
+        .iter()
+        .fold(0usize, |bytes, value| bytes.saturating_add(value.len()))
+        .saturating_add(option_bytes)
+        .saturating_add(config.contributions_json.len())
+}
+
+/// 🧺️ Admits a CAD config against its fixed retained item and byte envelope, answering its retained bytes.
+fn admit_cad_config(config: &CadConfig) -> Result<usize, String> {
+    if config.selected_node_ids.len() > CAD_CONFIG_STORE_MAXIMUM_ITEMS {
+        return Err("CAD config exceeds its fixed retained item envelope".into());
+    }
+    let retained_bytes = cad_config_retained_bytes(config);
+    if retained_bytes > CAD_CONFIG_STORE_MAXIMUM_BYTES {
+        return Err("CAD config exceeds its fixed retained byte envelope".into());
+    }
+    Ok(retained_bytes)
+}
+
+fn admit_cad_config_mutation(mutation: &CadConfigMutation) -> Result<store::os_store::one_item::ArtifactStoreOneItemFootprint, String> {
+    let retained_bytes = match mutation {
+        CadConfigMutation::Set(SetEdit { config }) => admit_cad_config(config)?,
+        CadConfigMutation::SetContributions(SetContributionsEdit { json }) if json.len() <= CAD_CONFIG_STORE_MAXIMUM_BYTES => json.len(),
+        CadConfigMutation::SetContributions(_) => return Err("CAD config mutation exceeds its fixed retained byte envelope".into()),
+    };
+    Ok(store::os_store::one_item::ArtifactStoreOneItemFootprint::for_leaf(mutation, retained_bytes))
+}
+
+fn cad_refusal(message: impl Into<String>) -> semio_framework_value::ValueError {
+    semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, message.into())
+}
+
+fn prepare_cad_config(base: &CadConfig, mutation: &CadConfigMutation) -> Result<(CadConfig, Vec<CadConfigMutation>), semio_framework_value::ValueError> {
+    admit_cad_config(base).map_err(cad_refusal)?;
+    admit_cad_config_mutation(mutation).map_err(cad_refusal)?;
+    let inverse = <CadConfigMutation as protocol::Mutation<CadConfig>>::inverse(mutation, base)?;
+    let post = protocol::apply_diff(&<CadConfigMutation as protocol::Mutation<CadConfig>>::diff(mutation, base).into_parts().0, base).map_err(|error| cad_refusal(error.to_string()))?;
+    admit_cad_config(&post).map_err(cad_refusal)?;
+    Ok((post, inverse))
+}
+
+impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<CadConfig, CadConfigMutation> for CadConfigStorePreparationFactory {
+    fn begin_batch_digest(&self, edit: &mut Option<Box<protocol::Edit<CadConfigMutation>>>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<Option<(Box<dyn store::ArtifactStoreBatchDigest<CadConfigMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress)>, semio_framework_value::ValueError> {
+        store::admit_artifact_batch_digest(edit, grant)
+    }
+
+    fn preflight(&self, mutation: &CadConfigMutation, lane: store::os_store::store_schema::HistoryLane) -> Result<store::os_store::one_item::ArtifactStoreOneItemFootprint, String> {
+        if lane != store::os_store::store_schema::HistoryLane::Document {
+            return Err("CAD config preparation rejected its lane".into());
+        }
+        admit_cad_config_mutation(mutation)
+    }
+
+    fn begin_demand(&self, _mutation: &CadConfigMutation, _lane: store::os_store::store_schema::HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
+        Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: size_of::<CadConfigStorePreparation>(), depth: 1 })
+    }
+
+    fn begin(&self, request: store::os_store::one_item_publication::ArtifactStoreOneItemPreparationRequest<CadConfig, CadConfigMutation, CadConfigMutation>, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<(Box<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<CadConfig, CadConfigMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError, store::os_store::one_item_publication::ArtifactStoreOneItemPreparationRequest<CadConfig, CadConfigMutation, CadConfigMutation>)> {
+        if request.lane != store::os_store::store_schema::HistoryLane::Document || request.operation != request.authority.operation() || request.generation != request.authority.generation() || request.base_revision != request.authority.base_revision() || request.authority.actor().len() > store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_ID_BYTES {
+            return Err((semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "CAD config preparation rejected original publication authority"), request));
+        }
+        let demand = match self.begin_demand(&request.mutation, request.lane) { Ok(demand) => demand, Err(error) => return Err((error, request)) };
+        let progress = match demand.admit(grant.retained_grant()) { Ok(progress) => progress, Err(error) => return Err((error, request)) };
+        Ok((Box::new(CadConfigStorePreparation {
+            owners: store::OneItemOwners::from_request(request),
+            checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint::default(),
+            cancelled: false,
+        }), progress))
+    }
+}
+
+impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<CadConfig, CadConfigMutation> for CadConfigStorePreparation {
+    fn advance(&mut self, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<store::os_store::one_item::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
+        if !grant.permits_one() || self.cancelled { return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked); }
+        if self.owners.refused.is_some() { return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "preparation retains its original semantic refusal")); }
+        if self.owners.prepared.is_some() { return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, Default::default())); }
+        let base = self.owners.base.as_ref().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "CAD config preparation lost its exact base root"))?;
+        let mutation = self.owners.mutation.as_ref().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "CAD config preparation lost its mutation owner"))?;
+        let (post, inverse) = prepare_cad_config(base.get(), mutation)?;
+        let authority = self.owners.authority.as_ref().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "CAD config preparation lost its Store authority"))?;
+        let forward = self.owners.mutation.take().expect("observed original mutation owner");
+        let edit = authority.next_edit(forward, inverse);
+        let prepared = match authority.prepare_one_item(edit, std::sync::Arc::new(post)) {
+            Ok(prepared) => prepared,
+            Err((error, edit, post)) => { *self.owners.refused = Some((edit, post)); return Err(error); }
+        };
+        self.checkpoint = store::os_store::one_item::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: 1, digest: prepared.edit_digest() };
+        *self.owners.prepared = Some(prepared);
+        Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, Default::default()))
+    }
+
+    fn checkpoint(&self) -> store::os_store::one_item::ArtifactStoreOneItemCheckpoint { self.checkpoint }
+    fn prepared(&self) -> Option<&store::os_store::one_item_publication::ArtifactStoreOneItemPrepared<CadConfig, CadConfigMutation>> { self.owners.prepared.as_ref() }
+    fn take_prepared(&mut self) -> Option<store::os_store::one_item_publication::ArtifactStoreOneItemPrepared<CadConfig, CadConfigMutation>> { self.owners.prepared.take() }
+    fn cancel(&mut self) { self.cancelled = true; }
+    fn begin_close(&mut self) { self.owners.begin_close(); }
+    fn close_step(&mut self, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> { self.owners.close_step(grant.retained_grant()) }
+    fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.owners.close_demands(0)?.copy_bytes) }
+    fn next_close_capacity_byte_demand(&self, body: usize) -> Result<usize, semio_framework_value::ValueError> { Ok(self.owners.close_demands(body)?.capacity_bytes) }
+    fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.owners.close_demands(0)?.release_bytes) }
+    fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.owners.close_demands(0)?.depth) }
+    fn terminal_is_empty(&self) -> bool { self.owners.terminal_is_empty() }
+}
+//#endregion 📬️ConfigStorePreparation
+
+//#region 📬️ArtifactStorePreparation
+const CAD_ARTIFACT_STORE_MAXIMUM_BYTES: usize = 65_536;
+const CAD_ARTIFACT_STORE_MAXIMUM_ITEMS: usize = 512;
+
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
+struct CadArtifactStorePreparationFactory;
+
+struct CadArtifactStorePreparation {
+    owners: store::OneItemOwners<CadSnapshot, CadMutation>,
+    checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint,
+    cancelled: bool,
+}
+
+fn cad_child_retained_bytes<S>(child: &store::os_store::artifact_child::ArtifactChild<S>) -> usize {
+    child.child_id.len()+child.target.artifact_id.len()+child.target.dialect.artifact_kind.len()+child.target.dialect.standard.len()+child.target.dialect.subset.len()
+}
+
+fn cad_snapshot_retained_bytes(snapshot: &CadSnapshot) -> usize {
+    let fixed_children = [
+        snapshot.shape_model.as_ref().map(cad_child_retained_bytes),
+        snapshot.building_model.as_ref().map(cad_child_retained_bytes),
+        snapshot.energy_model.as_ref().map(cad_child_retained_bytes),
+        snapshot.structure_classic_model.as_ref().map(cad_child_retained_bytes),
+    ]
+    .into_iter()
+    .flatten()
+    .fold(0usize, usize::saturating_add);
+    let drawing_bytes = snapshot.drawings.iter().map(cad_child_retained_bytes).fold(0usize, usize::saturating_add);
+    let reference_bytes = snapshot.references_by_model_definition_id.iter().fold(0usize, |bytes, (model_definition_id, references)| {
+        references.iter().fold(bytes.saturating_add(model_definition_id.len()), |bytes, reference| bytes.saturating_add(reference.id.len()).saturating_add(reference.source_url.len()).saturating_add(reference.media_kind.len()))
+    });
+    let node_bytes = snapshot.nodes.iter().fold(0usize, |bytes, node| bytes.saturating_add(node.id.len()).saturating_add(node.label.len()).saturating_add(node.kind.len()));
+    snapshot.schema.len().saturating_add(snapshot.id.len()).saturating_add(fixed_children).saturating_add(drawing_bytes).saturating_add(reference_bytes).saturating_add(node_bytes)
+}
+
+fn cad_snapshot_items(snapshot: &CadSnapshot) -> usize {
+    snapshot
+        .drawings
+        .len()
+        .saturating_add(snapshot.nodes.len())
+        .saturating_add(snapshot.references_by_model_definition_id.values().map(Vec::len).sum::<usize>())
+        .saturating_add(snapshot.shape_model.is_some() as usize)
+        .saturating_add(snapshot.building_model.is_some() as usize)
+        .saturating_add(snapshot.energy_model.is_some() as usize)
+        .saturating_add(snapshot.structure_classic_model.is_some() as usize)
+}
+
+/// 🧺️ Admits a CAD Artifact against its fixed retained item and byte envelope, answering its retained bytes.
+fn admit_cad_snapshot(snapshot: &CadSnapshot) -> Result<usize, String> {
+    let work_items = cad_snapshot_items(snapshot);
+    let retained_bytes = cad_snapshot_retained_bytes(snapshot);
+    if work_items > CAD_ARTIFACT_STORE_MAXIMUM_ITEMS || retained_bytes > CAD_ARTIFACT_STORE_MAXIMUM_BYTES {
+        return Err("CAD Artifact exceeds its fixed retained preparation envelope".into());
+    }
+    Ok(retained_bytes)
+}
+
+fn admit_cad_artifact_mutation(mutation: &CadMutation) -> Result<store::os_store::one_item::ArtifactStoreOneItemFootprint, String> {
+    let retained_bytes = semio_framework_pack_json::to_json_string(mutation).len();
+    if retained_bytes > CAD_ARTIFACT_STORE_MAXIMUM_BYTES {
+        return Err("CAD Artifact mutation exceeds its fixed retained byte envelope".into());
+    }
+    Ok(store::os_store::one_item::ArtifactStoreOneItemFootprint::for_leaf(mutation, retained_bytes))
+}
+
+fn prepare_cad_artifact(base: &CadSnapshot, mutation: &CadMutation) -> Result<(CadSnapshot, Vec<CadMutation>), semio_framework_value::ValueError> {
+    admit_cad_snapshot(base).map_err(cad_refusal)?;
+    admit_cad_artifact_mutation(mutation).map_err(cad_refusal)?;
+    let inverse = <CadMutation as protocol::Mutation<CadSnapshot>>::inverse(mutation, base)?;
+    let outcome = <CadMutation as protocol::Mutation<CadSnapshot>>::diff(mutation, base);
+    let post = protocol::apply_diff(outcome.diff(), base).map_err(|error| cad_refusal(error.to_string()))?;
+    admit_cad_snapshot(&post).map_err(cad_refusal)?;
+    Ok((post, inverse))
+}
+
+impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<CadSnapshot, CadMutation> for CadArtifactStorePreparationFactory {
+    fn begin_batch_digest(&self, edit: &mut Option<Box<protocol::Edit<CadMutation>>>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<Option<(Box<dyn store::ArtifactStoreBatchDigest<CadMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress)>, semio_framework_value::ValueError> {
+        store::admit_artifact_batch_digest(edit, grant)
+    }
+
+    fn operation_wire_source<'a>(&self, operation: &'a CadMutation) -> Option<store::ArtifactPreparedOperationSource<'a>> {
+        semio_s_artifact_cad_cad_mutations::standards::v1::subsets::any::io::binary::mutations::prepared_operation_wire_source(operation)
+    }
+
+    fn operation_schema_parts<'a>(&'a self, operation: &'a CadMutation) -> Option<(&'a str, &'a str)> {
+        let semantics = protocol::SemanticMutation::semantics(operation);
+        Some((semantics.entity, semantics.kind))
+    }
+
+    fn preflight(&self, mutation: &CadMutation, lane: store::os_store::store_schema::HistoryLane) -> Result<store::os_store::one_item::ArtifactStoreOneItemFootprint, String> {
+        if lane != store::os_store::store_schema::HistoryLane::Document {
+            return Err("CAD Artifact preparation rejected its lane".into());
+        }
+        admit_cad_artifact_mutation(mutation)
+    }
+
+    fn begin_demand(&self, _mutation: &CadMutation, _lane: store::os_store::store_schema::HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
+        Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: size_of::<CadArtifactStorePreparation>(), depth: 1 })
+    }
+
+    fn begin(&self, request: store::os_store::one_item_publication::ArtifactStoreOneItemPreparationRequest<CadSnapshot, CadMutation, CadMutation>, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<(Box<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<CadSnapshot, CadMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError, store::os_store::one_item_publication::ArtifactStoreOneItemPreparationRequest<CadSnapshot, CadMutation, CadMutation>)> {
+        if request.lane != store::os_store::store_schema::HistoryLane::Document || request.operation != request.authority.operation() || request.generation != request.authority.generation() || request.base_revision != request.authority.base_revision() || request.authority.actor().len() > store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_ID_BYTES {
+            return Err((semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "CAD Artifact preparation rejected original publication authority"), request));
+        }
+        let demand = match self.begin_demand(&request.mutation, request.lane) { Ok(demand) => demand, Err(error) => return Err((error, request)) };
+        let progress = match demand.admit(grant.retained_grant()) { Ok(progress) => progress, Err(error) => return Err((error, request)) };
+        Ok((Box::new(CadArtifactStorePreparation {
+            owners: store::OneItemOwners::from_request(request),
+            checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint::default(),
+            cancelled: false,
+        }), progress))
+    }
+}
+
+impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<CadSnapshot, CadMutation> for CadArtifactStorePreparation {
+    fn advance(&mut self, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<store::os_store::one_item::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
+        if !grant.permits_one() || self.cancelled { return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked); }
+        if self.owners.refused.is_some() { return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "preparation retains its original semantic refusal")); }
+        if self.owners.prepared.is_some() { return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, Default::default())); }
+        let base = self.owners.base.as_ref().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "CAD Artifact preparation lost its exact base root"))?;
+        let mutation = self.owners.mutation.as_ref().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "CAD Artifact preparation lost its mutation owner"))?;
+        let (post, inverse) = prepare_cad_artifact(base.get(), mutation)?;
+        let authority = self.owners.authority.as_ref().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "CAD Artifact preparation lost its Store authority"))?;
+        let forward = self.owners.mutation.take().expect("observed original mutation owner");
+        let edit = authority.next_edit(forward, inverse);
+        let prepared = match authority.prepare_one_item(edit, std::sync::Arc::new(post)) {
+            Ok(prepared) => prepared,
+            Err((error, edit, post)) => { *self.owners.refused = Some((edit, post)); return Err(error); }
+        };
+        self.checkpoint = store::os_store::one_item::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: 1, digest: prepared.edit_digest() };
+        *self.owners.prepared = Some(prepared);
+        Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, Default::default()))
+    }
+
+    fn checkpoint(&self) -> store::os_store::one_item::ArtifactStoreOneItemCheckpoint { self.checkpoint }
+    fn prepared(&self) -> Option<&store::os_store::one_item_publication::ArtifactStoreOneItemPrepared<CadSnapshot, CadMutation>> { self.owners.prepared.as_ref() }
+    fn take_prepared(&mut self) -> Option<store::os_store::one_item_publication::ArtifactStoreOneItemPrepared<CadSnapshot, CadMutation>> { self.owners.prepared.take() }
+    fn cancel(&mut self) { self.cancelled = true; }
+    fn begin_close(&mut self) { self.owners.begin_close(); }
+    fn close_step(&mut self, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> { self.owners.close_step(grant.retained_grant()) }
+    fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.owners.close_demands(0)?.copy_bytes) }
+    fn next_close_capacity_byte_demand(&self, body: usize) -> Result<usize, semio_framework_value::ValueError> { Ok(self.owners.close_demands(body)?.capacity_bytes) }
+    fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.owners.close_demands(0)?.release_bytes) }
+    fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.owners.close_demands(0)?.depth) }
+    fn terminal_is_empty(&self) -> bool { self.owners.terminal_is_empty() }
+}
+//#endregion 📬️ArtifactStorePreparation
+
+
+/// 🎯️ The four world bodies the `cad` interaction domain paints into.
+pub(crate) const CAD_WORLD_BODY_KEYS: [&str; 4] = [shape::BODY_KEY, building::BODY_KEY, energy::BODY_KEY, structure_classic::BODY_KEY];
+
+/// 🎯️ `CadPlayApp::interaction_scope`'s pure body — see the method's doc. `None` hands a verb that
+/// touched a domain this app does not declare (or none) back to the framework's own answer.
+pub(crate) fn cad_interaction_scope(verb: semio_framework_plugin::InteractionVerb, domains: &[&str]) -> Option<semio_framework::kernel::UiDirtyScope> {
+    use semio_framework::kernel::UiDirtyScope;
+    use semio_framework_plugin::InteractionVerb;
+    if domains.is_empty() || domains.iter().any(|domain| *domain != CAD_INTERACTION_DOMAIN) {
+        return None;
+    }
+    let windows: Vec<String> = CAD_WORLD_BODY_KEYS.iter().map(|key| (*key).to_string()).collect();
+    Some(match verb {
+        InteractionVerb::Hover => UiDirtyScope::Partial { window_bodies: windows, panel_bodies: Vec::new(), utilities: false, tools: false, engagements: false, measures: false, labels: false },
+        // 🎯️ A selection change: the world bodies, the two panels that render the selection, and the
+        // engagement HUD's `N selected` count.
+        InteractionVerb::Select | InteractionVerb::ClearSelection | InteractionVerb::SelectAll => UiDirtyScope::Partial {
+            window_bodies: windows,
+            panel_bodies: vec![inspection::CAD_PLAY_BODY_PROPERTIES.to_string(), document::CAD_PLAY_BODY_ARTIFACT.to_string()],
+            utilities: false,
+            tools: false,
+            engagements: true,
+            measures: false,
+            labels: false,
+        },
+        InteractionVerb::SetSelectionMode | InteractionVerb::SetGranularity => UiDirtyScope::None,
+    })
+}
+
+impl ArtifactEditor for CadPlayApp {
+    fn owned_mutation_batch_birth_bytes()->Option<usize>{Some(store::MemberStoreOwnedBatch::scaffold_byte_demand::<CadMutation>())}
+    fn admit_owned_mutation_batch(values:&mut Option<Vec<CadMutation>>,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<Option<(store::MemberStoreOwnedBatch,semio_framework_value::retained_clone::RetainedCloneProgress)>,semio_framework_value::ValueError>{store::MemberStoreOwnedBatch::admit(values,grant)}
+    /// 📚️ Artifact catalogue stamped by `PluginBuilder::editor` onto the navbar dropdown.
+    fn examples() -> Vec<semio_framework_plugin::ExampleSource> {
+        vec![semio_s_artifact_cad_cad_examples::source()]
+    }
+    type Snapshot = CadSnapshot;
+    type Mutation = CadMutation;
+    type Config = CadConfig;
+    type ConfigMutation = CadConfigMutation;
+    type Draft = NoDraft;
+    type DraftMutation = NoDraftMutation;
+    type Presence = semio_s_artifact_cad_cad_presence::CadPresence;
+    type PresenceMutation = semio_s_artifact_cad_cad_presence::CadPresenceMutation;
+    type Transient = semio_framework_plugin::NoTransient;
+    type TransientMutation = semio_framework_plugin::NoTransientMutation;
+    type Command = CadCommand;
+    /// 🧩️ Every pane's model (and the forward-declared drawing) child is an `s.stdio.semio` member.
+    type Members = semio_s_artifact_stdio_semio::SemioMembers;
+
+    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<semio_framework_composition_admission::ChildRestoreProjection<'_>, Fault> {
+        semio_s_artifact_cad_cad_model::snapshot::cad_child_restore_projection(snapshot)
+    }
+
+    /// 🌱️ See [`crate::cad_genesis_child_pack`].
+    fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Result<Option<Vec<u8>>,semio_framework_value::ValueError> {
+ Ok((||{
+        semio_s_artifact_cad_cad_play::cad_genesis_child_pack(snapshot, slot, child_id)
+    
+})())
+}
+
+    fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
+        Some(std::sync::Arc::new(semio_s_artifact_cad_cad_presence::retirement::CadPresenceRetirementFactory))
+    }
+
+    fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
+        Some(std::sync::Arc::new(semio_s_artifact_cad_cad_presence::retirement::CadPresenceRetirementFactory))
+    }
+
+    fn build_presence_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
+        Some(semio_s_artifact_cad_cad_presence::retirement::store_disposer())
+    }
+
+    /// 🎯️ The framework interaction verbs on the `cad` domain, answered out of this app's own body
+    /// table instead of the framework's fallback (every window kind that declares the domain — the
+    /// same four bodies — but `Full` for a verb the fallback cannot place). A hover repaints the four
+    /// world bodies alone (the four panes share the domain, and only their selection lanes read the
+    /// hover); a selection change adds the two panels that render the selection (Inspection and the
+    /// Artifact tree); a mode/granularity switch touches nothing this app renders differently.
+    fn interaction_scope(verb: semio_framework_plugin::InteractionVerb, domains: &[&str]) -> Option<semio_framework::kernel::UiDirtyScope> {
+        cad_interaction_scope(verb, domains)
+    }
+
+    fn register_window_config_owners(registry: &mut semio_framework_plugin::WindowConfigOwnerRegistry) -> Result<(), Fault> {
+        registry.register::<shape::config::CadShapeWindowConfigOwner>()?;
+        registry.register::<building::config::CadBuildingWindowConfigOwner>()?;
+        registry.register::<energy::config::CadEnergyWindowConfigOwner>()?;
+        registry.register::<structure_classic::config::CadStructureClassicWindowConfigOwner>()
+    }
+
+    /// 🫧️ Every world window's engagement transient (design §17.4).
+    fn register_window_transient_owners(registry: &mut semio_framework_plugin::WindowTransientOwnerRegistry) -> Result<(), Fault> {
+        window_transient::register(registry)
+    }
+
+    const DIALECT: Dialect = semio_s_artifact_cad_cad_model::snapshot::CAD_DIALECT;
+    const DOCUMENT_SCHEMA: &'static str = CAD_DOCUMENT_SCHEMA;
+
+    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
+        Some(std::sync::Arc::new(CadArtifactStorePreparationFactory))
+    }
+
+    fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
+        Some(std::sync::Arc::new(CadConfigStorePreparationFactory))
+    }
+
+    semio_framework_plugin::bounded_first_step_tool_proofs! {
+        owner: EditorApp<CadPlayApp>,
+        owner_file: "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+        controller: "s.cad.cad@1/*#editor",
+        artifact_schema: "cad.scene",
+        factory: "CadRetainedCommandJobFactory",
+        factory_type: CadRetainedCommandJobFactory,
+        contract: cad_retained_contract(),
+        tools: [
+            "addNode",
+            "renameNode",
+            "patchCadPlayReference",
+            "setReferenceHidden",
+            "setReferenceLocked",
+            "addObject",
+            "patchObject",
+            "patchSelection",
+            "deleteObject",
+            "duplicateObject",
+            "translateSelection",
+            "rotateSelection",
+            "scaleSelection",
+            "engagementSubmit",
+            "worldPointerDown",
+            "setCamera",
+            "setProjection",
+            "setProjectionParam",
+            "setDislocateOption",
+            "setNodeSelection",
+            "setReferenceSelection",
+            "referenceHover",
+            "engagementInput",
+            "engagementPossibleSelect",
+            "engagementRepeatLast",
+            "engagementAbort",
+            "worldPointerMove",
+            "toggleSun",
+            "setSunAzimuth",
+            "setSunElevation",
+            "setSunIntensity",
+            "setContributions",
+            "setActiveExample",
+            "loadRawRequest",
+            "applyTransformation",
+            "importCadFile",
+            "saveSelected",
+            "saveInPlay",
+            "saveCurrent"
+        ]
+    }
+
+    fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
+        let controller = registry.controller_id().to_string();
+        registry.register(CadRetainedCommandJobFactory::new(&controller))
+    }
+
+    fn build_tool_job(request: ArtifactOwnedToolJobRequest<EditorApp<Self>>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
+        if !CAD_RETAINED_TOOL_IDS.contains(&request.tool_id.as_str()) {
+            return Ok(None);
+        }
+        if request.command.command_id() != request.tool_id || cad_retained_extent(&request.command, &request.snapshot, &request.interaction_state) != Some(1) {
+            return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "CAD command does not match its exact retained tool registration"));
+        }
+        let tool_id = request.command.command_id();
+        let work: Box<dyn ArtifactCommandWork<EditorApp<Self>>> = Box::new(CadRetainedCommandWork { tool_id, consumed: false });
+        let operation_context = AppOperationContext { retained: request.retained,
+            app_instance_id: request.app_instance_id,
+            parent_document_id: request.parent_document_id.clone(),
+            operation_id: request.operation.operation.0,
+            generation: request.operation.generation.0,
+            canonical_base_revision: request.canonical_base_revision,
+            authoring_seed: request.authoring_seed.clone(),
+        };
+        let payload = ArtifactRetainedCommandPayload::new(
+            semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {
+                command: *request.command,
+                snapshot: request.snapshot,
+                snapshot_read: request.snapshot_read,
+                config: request.config,
+                history: request.history,
+                interaction_state: request.interaction_state,
+                interaction_hover: request.interaction_hover,
+                context: Some(request.context),
+                operation: operation_context,
+                completion: request.completion,
+            },
+            CadCommand::command_id,
+            cad_retained_raw_bytes(tool_id),
+            CAD_RETAINED_WORK_ITEMS,
+            work,
+        );
+        Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
+    }
+
+    fn build_reserved_tool_job(request: semio_framework_plugin::ArtifactReservedToolJobRequest<EditorApp<Self>>) -> Result<Option<semio_framework_plugin::ArtifactReservedToolJob>, Fault> {
+        if request.tool_id != "import-media" { return Ok(None); }
+        if !request.raw_wire.is_empty() || request.authoring_seed.is_empty() { return Err(Fault::from("Cad media requires exact decoded admission authority")); }
+        let semio_framework_plugin::ArtifactReservedToolInput::Media { port, media } = request.input else { return Err(Fault::from("Cad media requires its declared input owner")); };
+        if !matches!(port.as_str(), "geometry:in" | "artifact:in") { return Err(Fault::from("Cad media input port is not declared")); }
+        let operation = AppOperationContext { retained: request.retained, app_instance_id: request.app_instance_id, parent_document_id: request.parent_document_id, operation_id: 0, generation: 0, canonical_base_revision: request.canonical_base_revision, authoring_seed: request.authoring_seed };
+        let work = Box::new(CadMediaWork::new(port, media, Some(request.children)));
+        let payload = ArtifactRetainedCommandPayload::new(
+            semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs { command: CadCommand::ImportCadFile(import_cad_file::ImportCadFile { name: String::new(), payload: String::new() }), snapshot: request.snapshot, snapshot_read:request.snapshot_read, config: request.config, history: request.history, interaction_state: std::sync::Arc::new(protocol::InteractionState::default()), interaction_hover: std::sync::Arc::new(Default::default()), context: None, operation, completion: request.completion },
+            CadCommand::command_id, CAD_RETAINED_RAW_BYTES, CAD_RETAINED_WORK_ITEMS, work,
+        );
+        Ok(Some(semio_framework_plugin::ArtifactReservedToolJob::new(CadMediaJob(ArtifactRetainedCommandJob::new(payload)))))
+    }
+
+    fn app_schema() -> Option<::semio_framework_schema_registry::AppSchemaDescriptor> {
+        Some(semio_s_artifact_cad_cad_config::schema::app_schema_descriptor())
+    }
+
+    fn initial_snapshot() -> CadSnapshot {
+        forest_play_scene()
+    }
+
+    fn io() -> Option<semio_framework_plugin::AppIo> {
+        Some(cad_io())
+    }
+
+    /// 🎞️ `geometry:in` (WORKFLOWS-END-TO-END-TYPED-PORTS port recipe): accepts incoming mesh/brep
+    /// geometry from any upstream 3D producer and inserts it as one `insert-element` on the Shape pane's composed model
+    /// child, through the same brep kernel every other import path shares (design §20.15). Falls through to the default
+    /// `document:in` importer for any other port.
+    fn import_media(port: &str, media: &Media, doc: &ArtifactView<'_, CadSnapshot>) -> Result<Emit<CadMutation, CadConfigMutation, Self::DraftMutation>, MediaError> {
+        if port != "geometry:in" {
+            if port != "artifact:in" {
+                return Err(MediaError::NotImplemented);
+            }
+            let MediaPayload::Structured { json, .. } = &media.payload else {
+                return Err(MediaError::Payload(port.to_string(), "default document:in importer only accepts a Structured (base64 pack) payload".into()));
+            };
+            let bytes = store::pack_rt::pack_value_from_base64(json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
+            let projection = <CadSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
+            return Ok(Emit { effects: vec![reset_document_effect(&projection)], ..Default::default() });
+        }
+        let name = match &media.media_type.form {
+            MediaForm::Brep => "import.step",
+            _ => "import.obj",
+        };
+        let structured;
+        let payload = match &media.payload {
+            MediaPayload::Structured { json, .. } => { structured = semio_framework_value::DslValue::String(json.clone()); &structured },
+            MediaPayload::Intrinsic { value, .. } => value,
+            MediaPayload::Binary { .. } => return Err(MediaError::Payload(port.to_string(), "geometry:in requires an intrinsic or structured file payload".into())),
+        };
+        let imported = semio_s_artifact_cad_cad_io::import_cad_object_by_extension(name, payload).ok_or_else(|| MediaError::Payload(port.to_string(), "unrecognized geometry payload".into()))?;
+        cad_import_object_emit(doc, CadPaneId::Shape, "import-media", imported).map_err(|fault| MediaError::Payload(port.to_string(), fault.message))
+    }
+
+    /// 🎞️ `brep:out` (WORKFLOWS-END-TO-END-TYPED-PORTS port recipe): exports the cad document's current
+    /// brep geometry (every pane's solids fused into one modelspace, same as `saveInPlay`'s STEP export)
+    /// wrapped as `Media`. Falls through to the default whole-document `document:out` for any other port.
+    fn export_media(port: &str, doc: &ArtifactView<'_, CadSnapshot>) -> Result<Media, MediaError> {
+        if port != "brep:out" {
+            if port != "artifact:out" {
+                return Err(MediaError::NotImplemented);
+            }
+            let media_type = Self::io().map_or(MediaType { class: MediaClass::ThreeD, form: MediaForm::Brep }, |io| io.artifact_media_type);
+            let bytes = <CadSnapshot as pack::snapshot::ArtifactPack>::encode_pack(doc.snapshot);
+            return Ok(Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } });
+        }
+        let view = CadPlayView::of(doc.snapshot, &doc.children, CadPlayRuntime::default(), CadInteractionSnapshot::default());
+        let mut kernel = cad_brep_kernel();
+        let solids = collect_modelspace_solids(&mut kernel, &view);
+        if solids.is_empty() {
+            return Err(MediaError::Payload(port.to_string(), "no solids to export".into()));
+        }
+        let Some(export) = export_solids_as(&mut kernel, &solids, CAD_SOLID_EXPORT_DIALECT_STEP, "cad.modelspace") else {
+            return Err(MediaError::Payload(port.to_string(), "brep export failed".into()));
+        };
+        let text = match export.data {
+            semio_framework_value::DslValue::String(text) => text,
+            other => semio_framework_pack_json::to_json_string(&other),
+        };
+        Ok(Media { media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Brep }, payload: MediaPayload::Structured { schema: "3d.cad".into(), json: base64_codec::base64_standard_encode(text.as_bytes()) } })
+    }
+
+    fn command_id(command: &CadCommand) -> &'static str {
+        command.command_id()
+    }
+
+    fn command_from_action(action: &str, args: &mut Option<semio_framework_value::DslValue>, original_fault: &mut Option<Fault>) -> Result<CadCommand, Fault> {
+        if let Some(fault) = original_fault.take() { return Err(fault); }
+        let args = args.as_ref();
+        cad_command_from_action(action, args)
+    }
+
+    fn host_configuration_mutation(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Option<Self::ConfigMutation>, Fault> {
+        Ok((action == "setContributions").then(|| CadConfigMutation::SetContributions(SetContributionsEdit { json: args.and_then(|value| value.get("json")).and_then(semio_framework_value::DslValue::as_str).unwrap_or("[]").to_string() })))
+    }
+
+    fn handle(
+        command: &CadCommand,
+        doc: &ArtifactView<'_, CadSnapshot>,
+        cfg: &ConfigView<'_, CadConfig>,
+        interaction: &semio_framework_plugin::app::InteractionView<'_>,
+        view_state: Option<&ViewModel>,
+        _draft: &DraftView<'_, Self::Draft>,
+        _engines: &EngineHandles,
+    ) -> Result<Emit<CadMutation, CadConfigMutation, Self::DraftMutation>, Fault> {
+        let mut ctx = CadDispatchCtx::new(CadInteractionSnapshot::from_interaction(interaction), view_state.cloned(), CadWorldWindowTransient::default());
+        command.dispatch(doc, cfg, &mut ctx)
+    }
+
+    /// 🕹️ Interaction-less twin of [`Self::render_with_request_context`] (exports, tests, the
+    /// framework's own `render_with_request_context` default body): one render implementation
+    /// ([`Self::render_body`]) against an empty `"cad"` domain.
+    fn render(body_key: &str, doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, view_state: &ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+        Self::render_body(body_key, doc, cfg, view_state, &CadWorldWindowTransient::default(), CadInteractionSnapshot::default())
+    }
+
+    /// 🕹️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: resolves the live `"cad"` domain (selection +
+    /// `"pointer"` hover) once per render and threads it through [`CadPlayView`] into every body —
+    /// the world scenes' selected/hovered instance flags and gumball, the engagement HUD's selected
+    /// count, the inspection panel's selected-object fields and the document tree's marks.
+    fn render_with_request_context(
+        _owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
+        body_key: &str,
+        doc: &ArtifactView<'_, CadSnapshot>,
+        cfg: &ConfigView<'_, CadConfig>,
+        view_state: &ViewModel,
+        transient: &semio_framework_plugin::TransientView<'_, semio_framework_plugin::NoTransient>,
+        interaction: &semio_framework_plugin::app::InteractionView<'_>,
+        cx:&mut semio_framework_plugin::StepContext<'_>,
+    ) -> semio_framework_plugin::OriginalRenderResult<semio_framework_plugin::ComponentTree> {
+        let rendered:semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree>=(||{
+        Self::render_body(body_key, doc, cfg, view_state, &window_transient::current(transient), CadInteractionSnapshot::from_interaction(interaction))
+
+        })();
+        rendered.map(Some).map_err(Into::into)
+        }
+
+    /// 🕹️ Interaction-less twin of [`Self::window_engagements_with_request_context`] — the HUD's
+    /// selected count reads `0` here, which is correct for an empty `"cad"` domain.
+    fn window_engagements(doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, view_state: &ViewModel) -> HashMap<String, WindowEngagement> {
+        Self::window_engagements_body(doc, cfg, view_state, &CadWorldWindowTransient::default(), CadInteractionSnapshot::default())
+    }
+
+    /// 🕹️ The engagement HUD's `"N selected"` status reads the live framework-owned `"cad"` selection —
+    /// the same one [`Self::render_with_request_context`] paints the world scenes from, so the HUD and
+    /// the viewport can never disagree about what is picked.
+    fn window_engagements_with_request_context(
+        doc: &ArtifactView<'_, CadSnapshot>,
+        cfg: &ConfigView<'_, CadConfig>,
+        view_state: &ViewModel,
+        transient: &semio_framework_plugin::TransientView<'_, semio_framework_plugin::NoTransient>,
+        interaction: &semio_framework_plugin::app::InteractionView<'_>,
+    ) -> HashMap<String, WindowEngagement> {
+        Self::window_engagements_body(doc, cfg, view_state, &window_transient::current(transient), CadInteractionSnapshot::from_interaction(interaction))
+    }
+
+    /// 🪟️ Resolves measures for the exact addressed world-window instance.
+    fn window_measures(_doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, view_state: &ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
+        let Some(window_id) = view_state.window_id.as_deref() else { return HashMap::new() };
+        let Some(kind) = view_state.window_instances.iter().find(|window| window.id == window_id).map(|window| window.window_kind_id.as_str()) else { return HashMap::new() };
+        let runtime = runtime_of(cfg, &CadWorldWindowTransient::default());
+        let is_de = cad_is_de_locale(view_state);
+        let measures = match kind {
+            shape::WINDOW_KIND_ID => shape::window_measures(&runtime, is_de),
+            building::WINDOW_KIND_ID => building::window_measures(&runtime, is_de),
+            energy::WINDOW_KIND_ID => energy::window_measures(&runtime, is_de),
+            structure_classic::WINDOW_KIND_ID => structure_classic::window_measures(&runtime, is_de),
+            _ => return HashMap::new(),
+        };
+        HashMap::from([(window_id.to_string(), measures)])
+    }
+
+    /// 🖱️ Transform/duplicate/delete section for the World3d context menu. Deliberately NOT gated on
+    /// "is anything selected": every row already no-ops on an empty `"cad"` selection at dispatch
+    /// time, and the section is what makes the menu discoverable before the first pick. The
+    /// `InteractionView` is available here now (via `context_menu_with_request_context`), so gating is
+    /// a UX decision this app can revisit — it is no longer an SDK limitation.
+    fn context_menu(_request: &ContextMenuRequest, _doc: &ArtifactView<'_, CadSnapshot>, _cfg: &ConfigView<'_, CadConfig>, view_state: &ViewModel, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
+        Menu::of(registry, view_state).action("translateSelection").action("rotateSelection").action("scaleSelection").action("duplicateObject").destructive("deleteObject").build()
+    }
+}
+//#endregion 🔖️PlayApp
+
+//#region 🔖️Manifest
+/// 🧰️ The window-scoped CAD Dislocate utility, whose Move and Rotate handles are utility options.
+pub fn cad_dislocate_utility() -> UtilityDefinition {
+    UtilityDefinition { category: Some(UtilityCategory::Utilities), ..UtilityDefinition::new(CAD_DISLOCATE_UTILITY_ID, LocalizedLabel::native("Dislocate", "Versetzen"), "move-3d") }
+}
+
+/// 🧰️ The single Dislocate utility ref exposed independently by each world-3d window.
+pub fn cad_dislocate_utility_refs() -> Vec<semio_framework_plugin::UtilityRef> {
+    vec![CAD_DISLOCATE_UTILITY_ID.into()]
+}
+
+/// 🕹️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): the `"cad"` mesh interaction domain —
+/// whole objects (`"object"`, the default granularity) plus component-level vertex/edge/face
+/// picking, all `u32` ids stringified at the `InteractionTarget` boundary (round-tripped back to
+/// `u32` inside command handlers, e.g. `🎮️commands/🔄️transform`). CAUTION: NOT the same thing as
+/// `crate::standards::v1::subsets::any::io::InteractionSpec` (a CAD-artifact DSL
+/// type for engagement statecharts, `🗿️artifacts/📐️cad/…/🎬️interaction-spec/🦀️.rs`) —
+/// unrelated, pre-existing, untouched by this migration.
+pub fn cad_interaction_definition() -> semio_framework_plugin::InteractionDefinition {
+    use semio_framework_plugin::{GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, MergeMode, SelectionMethod, SelectionMode, SelectionSpec};
+    InteractionDefinition {
+        id: CAD_INTERACTION_DOMAIN.into(),
+        label: LocalizedLabel::native("Mesh", "Netz"),
+        granularities: vec![
+            GranularityDefinition { id: "object".into(), label: LocalizedLabel::native("Object", "Objekt"), icon_id: "box".into() },
+            GranularityDefinition { id: "vertex".into(), label: LocalizedLabel::native("Vertex", "Eckpunkt"), icon_id: "circle-dot".into() },
+            GranularityDefinition { id: "edge".into(), label: LocalizedLabel::native("Edge", "Kante"), icon_id: "minus".into() },
+            GranularityDefinition { id: "face".into(), label: LocalizedLabel::native("Face", "Fläche"), icon_id: "square".into() },
+        ],
+        hierarchy: HierarchyProvider::Flat,
+        hover: HoverSpec::default(),
+        selection: SelectionSpec {
+            modes: vec![SelectionMode::Multiple, SelectionMode::Single],
+            methods: vec![SelectionMethod::Pick, SelectionMethod::Rectangle, SelectionMethod::Lasso],
+            merges: vec![MergeMode::Replace, MergeMode::Additive, MergeMode::Subtractive, MergeMode::Invertive, MergeMode::Range],
+            transitive: false,
+            broadcast: true,
+        },
+    }
+}
+
+pub fn create_cad_app() -> semio_framework_plugin::AppDefinition {
+    Editor::builder(semio_s_artifact_cad_cad_model::snapshot::CAD_DIALECT).document(["semio", "cad"])
+            .command({
+                let mut definition = CommandDefinition { in_palette: false, ..CommandDefinition::bounded_catalog("setContributions", LocalizedLabel::native("Set Contributions", "Beiträge festlegen"), "host", ActionKind::View).with_args([ActionArgDef::text("json", LocalizedLabel::native("Contributions", "Beiträge"))]) };
+                definition.semantics.execution.interactive_job = InteractiveJobClassification::Migrated;
+                definition
+            })
+            .artifact_kind(artifact_kind())
+            .icon_id("box")
+            .terminology("reuse")
+            .terminology_document("reuse", ["Entwerfen mit Bestand", "Koordinator"])
+            .mode_def(edit::definition())
+            .default_mode_id(edit::CAD_PLAY_MODE_EDIT)
+            .window_kind_def(shape::definition())
+            .window_kind_def(building::definition())
+            .window_kind_def(energy::definition())
+            .window_kind_def(structure_classic::definition())
+            .default_layout(edit::layout())
+            .mutation("addObject", LocalizedLabel::native("Add Object", "Objekt hinzufügen"))
+            .mutation("patchObject", LocalizedLabel::native("Patch Object", "Objekt aktualisieren"))
+            .mutation("patchSelection", LocalizedLabel::native("Patch Selection", "Auswahl aktualisieren"))
+            .action_with(ActionDefinition::bounded_catalog("deleteObject", LocalizedLabel::native("Delete Object", "Objekt löschen"), ActionKind::Mutation).category("actions"))
+            .action_with(ActionDefinition::bounded_catalog("duplicateObject", LocalizedLabel::native("Duplicate Object", "Objekt duplizieren"), ActionKind::Mutation).category("create"))
+            .mutation("addNode", LocalizedLabel::native("Add Node", "Knoten hinzufügen"))
+            .mutation("renameNode", LocalizedLabel::native("Rename Node", "Knoten umbenennen"))
+            .action_with(ActionDefinition::bounded_catalog("translateSelection", LocalizedLabel::native("Translate Selection", "Auswahl verschieben"), ActionKind::Mutation).category("transform"))
+            .action_with(ActionDefinition::bounded_catalog("rotateSelection", LocalizedLabel::native("Rotate Selection", "Auswahl drehen"), ActionKind::Mutation).category("transform"))
+            .action_with(ActionDefinition::bounded_catalog("scaleSelection", LocalizedLabel::native("Scale Selection", "Auswahl skalieren"), ActionKind::Mutation).category("transform"))
+            .mutation("applyTransformation", LocalizedLabel::native("Apply Transformation", "Transformation anwenden"))
+            .mutation("importCadFile", LocalizedLabel::native("Import CAD File", "CAD-Datei importieren"))
+            .action_with(ActionDefinition::bounded_catalog("patchCadPlayReference", LocalizedLabel::native("Patch Reference", "Referenz aktualisieren"), ActionKind::Mutation).in_palette(false))
+            .action_with(cad_reference_flag_action("setReferenceHidden", "hidden", LocalizedLabel::native("Set Reference Hidden", "Referenz verborgen festlegen"), LocalizedLabel::native("Hidden", "Verborgen")))
+            .action_with(cad_reference_flag_action("setReferenceLocked", "locked", LocalizedLabel::native("Set Reference Locked", "Referenz gesperrt festlegen"), LocalizedLabel::native("Locked", "Gesperrt")))
+            .action_with(ActionDefinition::bounded_catalog("engagementSubmit", LocalizedLabel::native("Engagement Submit", "Eingabe bestätigen"), ActionKind::Mutation).in_palette(false))
+            .action_with(ActionDefinition::new("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"), ActionKind::View, "camera"))
+            .action_with(ActionDefinition::new("setProjection", LocalizedLabel::native("Set Projection", "Projektion festlegen"), ActionKind::View, "scan"))
+            .action_with(ActionDefinition::new("setProjectionParam", LocalizedLabel::native("Set Projection Parameter", "Projektionsparameter festlegen"), ActionKind::View, "scan"))
+            .action_with(ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), ActionKind::Mutation, "panel-left"))
+            .action_with(ActionDefinition::bounded_catalog("setNodeSelection", LocalizedLabel::native("Set Node Selection", "Knotenauswahl festlegen"), ActionKind::View).in_palette(false))
+            .action_with(ActionDefinition::bounded_catalog("setReferenceSelection", LocalizedLabel::native("Set Reference Selection", "Referenzauswahl festlegen"), ActionKind::View).in_palette(false))
+            .action_with(ActionDefinition::bounded_catalog("referenceHover", LocalizedLabel::native("Reference Hover", "Überfahren (Referenz)"), ActionKind::View).in_palette(false))
+            .action_with(ActionDefinition::new("engagementInput", LocalizedLabel::native("Engagement Input", "Eingabe"), ActionKind::View, "hand").in_palette(false))
+            .action_with(ActionDefinition::bounded_catalog("engagementPossibleSelect", LocalizedLabel::native("Engagement Possible Select", "Eingabeoption auswählen"), ActionKind::View).in_palette(false))
+            .action_with(ActionDefinition::bounded_catalog("engagementRepeatLast", LocalizedLabel::native("Engagement Repeat Last", "Letzte Eingabe wiederholen"), ActionKind::View).in_palette(false))
+            .action_with(ActionDefinition::new("engagementAbort", LocalizedLabel::native("Engagement Abort", "Eingabe abbrechen"), ActionKind::View, "hand").in_palette(false))
+            .action_with(ActionDefinition::new("worldPointerDown", LocalizedLabel::native("World Pointer Down", "Welt-Zeiger gedrückt"), ActionKind::View, "mouse-pointer").in_palette(false))
+            .action_with(ActionDefinition::bounded_catalog("worldPointerMove", LocalizedLabel::native("World Pointer Move", "Welt-Zeiger bewegt"), ActionKind::View).in_palette(false))
+            .action_with(ActionDefinition::new("toggleSun", LocalizedLabel::native("Toggle Sun", "Sonne umschalten"), ActionKind::View, "sun"))
+            .action_with(ActionDefinition::new("setSunAzimuth", LocalizedLabel::native("Set Sun Azimuth", "Sonnenazimut festlegen"), ActionKind::View, "sun"))
+            .action_with(ActionDefinition::new("setSunElevation", LocalizedLabel::native("Set Sun Elevation", "Sonnenhöhe festlegen"), ActionKind::View, "sun"))
+            .action_with(ActionDefinition::new("setSunIntensity", LocalizedLabel::native("Set Sun Intensity", "Sonnenintensität festlegen"), ActionKind::View, "sun"))
+            .action_with(ActionDefinition::bounded_catalog("setDislocateOption", LocalizedLabel::native("Set Dislocate Option", "Versetzen-Option festlegen"), ActionKind::View).in_palette(false))
+            .shell_action("saveSelected", LocalizedLabel::native("Save Selected", "Auswahl speichern"))
+            .shell_action("saveInPlay", LocalizedLabel::native("Save In Play", "Im Play speichern"))
+            .shell_action("saveCurrent", LocalizedLabel::native("Save Current", "Aktuelles speichern"))
+            .shell_action("loadRawRequest", LocalizedLabel::native("Load Raw Request", "Rohdaten laden"))
+            .action_args("saveCurrent", vec![ActionArgDef::select("format", LocalizedLabel::native("Format", "Format"), vec![
+                ActionArgOption::new("step", LocalizedLabel::native("STEP", "STEP")),
+                ActionArgOption::new("obj", LocalizedLabel::native("OBJ", "OBJ")),
+                ActionArgOption::new("stl", LocalizedLabel::native("STL", "STL")),
+            ]).default_value(&"step")])
+            .action_args("setActiveExample", vec![ActionArgDef::select("exampleId", LocalizedLabel::native("Example", "Beispiel"), vec![
+                ActionArgOption::new(CAD_EXAMPLE_FOREST_LEFT, LocalizedLabel::native("Hexagonal Cut Concrete Forest Left", "Sechseckig geschnittener Betonwald links")),
+            ]).required()])
+            // 💬️ Agent-facing descriptions (ticket 26/09/18 slice M5a) — EN first, DE second.
+            .action_describe("addObject", LocalizedLabel::native("Adds a new geometric object to the CAD model.", "Fügt dem CAD-Modell ein neues geometrisches Objekt hinzu."))
+            .action_use_when("addObject", vec!["add a box".into(), "create an object".into(), "place a solid in the model".into()])
+            .action_describe("patchObject", LocalizedLabel::native("Sets one named property of one CAD object — its name, material, dimensions or placement.", "Setzt eine benannte Eigenschaft eines CAD-Objekts — Name, Material, Abmessungen oder Platzierung."))
+            .action_describe("patchSelection", LocalizedLabel::native("Sets one named property on every currently selected CAD object.", "Setzt eine benannte Eigenschaft auf allen aktuell ausgewählten CAD-Objekten."))
+            .action_describe("deleteObject", LocalizedLabel::native("Removes one object from the CAD model by id.", "Entfernt ein Objekt anhand seiner Id aus dem CAD-Modell."))
+            .action_describe("duplicateObject", LocalizedLabel::native("Copies one CAD object and inserts the copy alongside the original.", "Kopiert ein CAD-Objekt und fügt die Kopie neben dem Original ein."))
+            .action_describe("addNode", LocalizedLabel::native("Adds a node to the model tree — the grouping level CAD objects hang from.", "Fügt dem Modellbaum einen Knoten hinzu — die Gruppierungsebene, an der CAD-Objekte hängen."))
+            .action_describe("renameNode", LocalizedLabel::native("Renames one node of the model tree.", "Benennt einen Knoten des Modellbaums um."))
+            .action_describe("translateSelection", LocalizedLabel::native("Moves the selected objects by a delta along x, y and z.", "Verschiebt die ausgewählten Objekte um einen Versatz entlang x, y und z."))
+            .action_use_when("translateSelection", vec!["move the selection".into(), "shift these objects 2 metres east".into()])
+            .action_describe("rotateSelection", LocalizedLabel::native("Rotates the selected objects by an angle around a given axis.", "Dreht die ausgewählten Objekte um einen Winkel um eine angegebene Achse."))
+            .action_use_when("rotateSelection", vec!["rotate the selection 90 degrees".into()])
+            .action_describe("scaleSelection", LocalizedLabel::native("Scales the selected objects by a factor per axis.", "Skaliert die ausgewählten Objekte um einen Faktor je Achse."))
+            .action_describe("applyTransformation", LocalizedLabel::native("Bakes the staged transformation into the target pane's model; refused until its derivation rules exist.", "Schreibt die vorbereitete Transformation fest in das Modell des Zielbereichs; abgelehnt, bis ihre Ableitungsregeln existieren."))
+            .action_describe("importCadFile", LocalizedLabel::native("Replaces the whole CAD scene with a spatial scene file, or inserts a single STEP, OBJ or STL object into the addressed pane's model.", "Ersetzt die gesamte CAD-Szene durch eine räumliche Szenendatei oder fügt ein einzelnes STEP-, OBJ- oder STL-Objekt in das Modell des angesprochenen Bereichs ein."))
+            .action_use_when("importCadFile", vec!["import a step file".into(), "load this geometry".into()])
+            .action_describe("setActiveExample", LocalizedLabel::native("Replaces the whole model with one of the plugin's declared playground examples.", "Ersetzt das gesamte Modell durch eines der deklarierten Beispiele des Plugins."))
+            .action_describe("saveCurrent", LocalizedLabel::native("Exports the current model to a downloadable CAD file in the chosen format.", "Exportiert das aktuelle Modell als herunterladbare CAD-Datei im gewählten Format."))
+            .action_use_when("saveCurrent", vec!["export the model as step".into(), "download this as an obj".into()])
+            .action_describe("saveSelected", LocalizedLabel::native("Exports only the selected objects to a downloadable CAD file.", "Exportiert nur die ausgewählten Objekte als herunterladbare CAD-Datei."))
+            .action_describe("saveInPlay", LocalizedLabel::native("Writes the current model back into the playground document it was opened from.", "Schreibt das aktuelle Modell in das Playground-Dokument zurück, aus dem es geöffnet wurde."))
+            .action_describe("loadRawRequest", LocalizedLabel::native("Asks the host to open a raw geometry file and load it into the model.", "Fordert den Host auf, eine Rohgeometriedatei zu öffnen und in das Modell zu laden."))
+            .action_describe("patchCadPlayReference", LocalizedLabel::native("Sets one named property of one reference in the model's play definition — its target, placement or parameter.", "Setzt eine benannte Eigenschaft einer Referenz in der Play-Definition des Modells — Ziel, Platzierung oder Parameter."))
+            .action_describe("setReferenceHidden", LocalizedLabel::native("Sets one reference overlay hidden or shown, to exactly the value passed; repeating it changes nothing.", "Verbirgt eine Referenzüberlagerung oder zeigt sie, genau nach dem übergebenen Wert; eine Wiederholung ändert nichts."))
+            .action_describe("setReferenceLocked", LocalizedLabel::native("Sets one reference overlay locked or unlocked, to exactly the value passed; repeating it changes nothing.", "Sperrt eine Referenzüberlagerung oder entsperrt sie, genau nach dem übergebenen Wert; eine Wiederholung ändert nichts."))
+            .action_describe("setProjection", LocalizedLabel::native("Switches the viewport between perspective and the orthographic projections.", "Schaltet das Ansichtsfenster zwischen Perspektive und den orthografischen Projektionen um."))
+            .action_describe("toggleSun", LocalizedLabel::native("Turns the scene's sun light on or off.", "Schaltet das Sonnenlicht der Szene ein oder aus."))
+            .action_describe("setSunAzimuth", LocalizedLabel::native("Sets the sun's compass direction, in degrees.", "Legt die Himmelsrichtung der Sonne in Grad fest."))
+            .action_describe("setSunElevation", LocalizedLabel::native("Sets the sun's height above the horizon, in degrees.", "Legt die Höhe der Sonne über dem Horizont in Grad fest."))
+            .action_describe("setSunIntensity", LocalizedLabel::native("Sets how bright the scene's sun light is.", "Legt fest, wie hell das Sonnenlicht der Szene ist."))
+            // ⚠️ Discards content no later verb reconstructs — the gateway asks a human first.
+            .action_destructive("deleteObject")
+            .action_destructive("setActiveExample")
+            .action_destructive("saveCurrent")
+            .action_destructive("saveSelected")
+            .action_destructive("saveInPlay")
+            // 🖱️ Raw input plumbing — the 3D viewport and the engagement bar feed these, agents never do.
+            .action_audience("engagementSubmit", semio_framework_plugin::CapabilityAudience::Input)
+            .action_audience("engagementInput", semio_framework_plugin::CapabilityAudience::Input)
+            .action_audience("engagementPossibleSelect", semio_framework_plugin::CapabilityAudience::Input)
+            .action_audience("engagementRepeatLast", semio_framework_plugin::CapabilityAudience::Input)
+            .action_audience("engagementAbort", semio_framework_plugin::CapabilityAudience::Input)
+            .action_audience("worldPointerDown", semio_framework_plugin::CapabilityAudience::Input)
+            .action_audience("worldPointerMove", semio_framework_plugin::CapabilityAudience::Input)
+            .action_audience("referenceHover", semio_framework_plugin::CapabilityAudience::Input)
+            .action_audience("setCamera", semio_framework_plugin::CapabilityAudience::Chrome)
+            .action_audience("setProjectionParam", semio_framework_plugin::CapabilityAudience::Chrome)
+            .utility(cad_dislocate_utility())
+            .window_kind_utilities(shape::WINDOW_KIND_ID, cad_dislocate_utility_refs())
+            .window_kind_utilities(building::WINDOW_KIND_ID, cad_dislocate_utility_refs())
+            .window_kind_utilities(energy::WINDOW_KIND_ID, cad_dislocate_utility_refs())
+            .window_kind_utilities(structure_classic::WINDOW_KIND_ID, cad_dislocate_utility_refs())
+            // 🕹️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): the single mesh
+            // object/vertex/edge/face interaction domain, shared by all four World3d panes — the
+            // framework auto-injects `interactionSelect`/`interactionHover`/`clearSelection`/
+            // `selectAll`/`setSelectionMode`/`setInteractionGranularity` for it; this app never
+            // declares those verbs itself. `HierarchyProvider::Flat`: a component id (vertex/edge/
+            // face) is only ever meaningful within its owning object, not a tree the framework can
+            // walk itself — `transitive` therefore stays false (requires `hierarchy != Flat`).
+            .interaction(cad_interaction_definition())
+            .window_kind_interactions(shape::WINDOW_KIND_ID, vec![semio_framework_plugin::InteractionRef::new(CAD_INTERACTION_DOMAIN)])
+            .window_kind_interactions(building::WINDOW_KIND_ID, vec![semio_framework_plugin::InteractionRef::new(CAD_INTERACTION_DOMAIN)])
+            .window_kind_interactions(energy::WINDOW_KIND_ID, vec![semio_framework_plugin::InteractionRef::new(CAD_INTERACTION_DOMAIN)])
+            .window_kind_interactions(structure_classic::WINDOW_KIND_ID, vec![semio_framework_plugin::InteractionRef::new(CAD_INTERACTION_DOMAIN)])
+            .panel_tab_def(document::definition())
+            .panel_tab_def(catalogue::definition())
+            .panel_tab_def(inspection::definition())
+            // 🎯️ Typed channel + port surface (WORKFLOWS-END-TO-END-TYPED-PORTS Wave 2) — `cad_io()` is
+            // this same `3d.cad`/Brep information's single source of truth, reused here rather than
+            // duplicated; `config_spec()` stays empty (cad has no sticky-default settings analogous to
+            // shooting's format defaults — every `CadConfig` field is session view-state, not a setting).
+            .config(CadPlayApp::config_spec())
+            .io(cad_io())
+            .action_interactive_job("addObject", InteractiveJobClassification::Migrated)
+            .action_interactive_job("patchObject", InteractiveJobClassification::Migrated)
+            .action_interactive_job("patchSelection", InteractiveJobClassification::Migrated)
+            .action_interactive_job("deleteObject", InteractiveJobClassification::Migrated)
+            .action_interactive_job("duplicateObject", InteractiveJobClassification::Migrated)
+            .action_interactive_job("addNode", InteractiveJobClassification::Migrated)
+            .action_interactive_job("renameNode", InteractiveJobClassification::Migrated)
+            .action_interactive_job("translateSelection", InteractiveJobClassification::Migrated)
+            .action_interactive_job("rotateSelection", InteractiveJobClassification::Migrated)
+            .action_interactive_job("scaleSelection", InteractiveJobClassification::Migrated)
+            .action_interactive_job("applyTransformation", InteractiveJobClassification::Migrated)
+            .action_interactive_job("importCadFile", InteractiveJobClassification::Migrated)
+            .action_interactive_job("patchCadPlayReference", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setReferenceHidden", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setReferenceLocked", InteractiveJobClassification::Migrated)
+            .action_interactive_job("engagementSubmit", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setActiveExample", InteractiveJobClassification::Migrated)
+            .action_interactive_job("worldPointerDown", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setCamera", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setProjection", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setProjectionParam", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setDislocateOption", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setNodeSelection", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setReferenceSelection", InteractiveJobClassification::Migrated)
+            .action_interactive_job("referenceHover", InteractiveJobClassification::Migrated)
+            .action_interactive_job("engagementInput", InteractiveJobClassification::Migrated)
+            .action_interactive_job("engagementPossibleSelect", InteractiveJobClassification::Migrated)
+            .action_interactive_job("engagementRepeatLast", InteractiveJobClassification::Migrated)
+            .action_interactive_job("engagementAbort", InteractiveJobClassification::Migrated)
+            .action_interactive_job("worldPointerMove", InteractiveJobClassification::Migrated)
+            .action_interactive_job("toggleSun", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setSunAzimuth", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setSunElevation", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setSunIntensity", InteractiveJobClassification::Migrated)
+            .action_interactive_job("saveSelected", InteractiveJobClassification::Migrated)
+            .action_interactive_job("saveInPlay", InteractiveJobClassification::Migrated)
+            .action_interactive_job("saveCurrent", InteractiveJobClassification::Migrated)
+            .action_interactive_job("loadRawRequest", InteractiveJobClassification::Migrated)
+            // 🚧️ SDK GAP (contract §2.4): `EditorBuilder`/`Viewer`/`.editor::<E>(def: AppDefinition)`
+            // take a bare `AppDefinition`, not the old `App { definition, examples }` — there is no
+            // `.example(...)`/`.workflow(...)` on this builder, so the old
+            // `CAD_EXAMPLE_FOREST_LEFT` app-level example registration and the no-op `.workflow("cad",
+            // …)` call are dropped here (not silently: reported in the packet's migration report).
+            // The subset's own `📚️examples/🎬️demo` facet (`crate::examples::...`,
+            // real content, pre-existing) is the modern, role-agnostic replacement surface for this.
+            .build_definition()
+}
+//#endregion 🔖️Manifest
+
+//#region 🔖️WorkingSceneFixtures
+/// 🌲️ The Concrete Forest Left example's REAL per-pane object content, built straight from the
+/// same fixture JSON `forest_play_scene()`'s (persisted, handle-only) `CadSnapshot` is built from —
+/// see `crate::standards::v1::subsets::any::io::geometry_import::forest_pane_bundle`.
+/// This is the app-layer `CadWorkingScene` counterpart to `forest_play_scene()`: use `forest_play_scene()`
+/// for `drive`/render dispatch (a `CadSnapshot`, composed-child HANDLES only) and this for reading
+/// actual object data in tests/render-path exemplars.
+pub fn forest_working_scene() -> CadWorkingScene {
+    use semio_s_artifact_cad_cad_play::forest_pane_bundle;
+    let (objects, geometry) = forest_pane_bundle(CadPaneId::Shape);
+    let (building_objects, building_geometry) = forest_pane_bundle(CadPaneId::Building);
+    let (energy_objects, energy_geometry) = forest_pane_bundle(CadPaneId::Energy);
+    let (structure_classic_objects, structure_classic_geometry) = forest_pane_bundle(CadPaneId::StructureClassic);
+    CadWorkingScene {
+        objects,
+        geometry: Some(geometry),
+        building_objects,
+        building_geometry: Some(building_geometry),
+        energy_objects,
+        energy_geometry: Some(energy_geometry),
+        structure_classic_objects,
+        structure_classic_geometry: Some(structure_classic_geometry),
+    }
+}
+
+/// 🟦️ The single-box placeholder scene `default_document()`'s `CadSnapshot` used to inline directly
+/// (pre-wave-3) — realized now as the app-layer `CadWorkingScene` counterpart: use `default_document()`
+/// for `drive`/render dispatch, this for reading its (one, real) object.
+pub fn default_working_scene() -> CadWorkingScene {
+    CadWorkingScene { objects: vec![make_object_for_typology("spatial.shape.primitive.box", 0, CadPaneId::Shape)], ..CadWorkingScene::default() }
+}
+//#endregion 🔖️WorkingSceneFixtures
+
+//#region 🧪️Tests
+
+//#endregion 🧪️Tests
+
+//#region 🪢️TaxonomyMounts
+#[path = "📚️examples/🎬️demo-session/🦀️.rs"]
+pub mod demo_session;
+#[cfg(test)]
+#[path = "📚️examples/🎬️demo-session/🧪️tests/🧩️example/🦀️.rs"]
+mod example;
+//#endregion 🪢️TaxonomyMounts

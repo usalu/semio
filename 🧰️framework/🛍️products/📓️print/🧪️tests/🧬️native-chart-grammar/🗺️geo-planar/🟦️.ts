@@ -74,7 +74,6 @@ export async function compileNativeGeoPlanarGrammar(execution:PrintExecutionV1,r
   });}
   if(JSON.stringify(control)!==before)throw Error("Planar controls mutated authored input");
   if(failures.length)throw Error("Planar frame/paint failures:\n"+failures.join("\n"));
-  console.log("[DEBUG] Geo planar "+control.cases.length*2+" actual EN/de light/dark controls matched raw D3 hexbin and fitted contour/PDF frame/paint outputs");
 });}
 
 /** 📐️ Reads straight closed PDF paths relative to declared per-case physical canvas markers. */
@@ -121,7 +120,6 @@ export async function compileNativeGeoPlanarAdmission(execution:PrintExecutionV1
     if(JSON.stringify(base.chart.presets![0]!.options)!==JSON.stringify({points:control.table.name,width:60,height:30,radius:5,bandwidth:5,lineWidth:".3mm",opacity:.5}))throw Error(entry.id+" planar mutation changed authored input");
   }
   if(failures.length)throw Error("Planar source-owned admission failures:\n"+failures.join("\n"));
-  console.log("[DEBUG] Geo planar "+control.admissionCases.length+" neutral closed-vocabulary/positive/numeric-literal/expression mutation controls matched owned inference and AJV");
 });}
 
 /** 🛑️ Exercises evaluated TeX dimensions and native kernel/frame predicates before drawing. */
@@ -152,5 +150,4 @@ export async function compileNativeGeoContourBoundary(execution:PrintExecutionV1
     if(actual.length!==expected.length)throw Error(entry.id+" closed ring inventory mismatch");
     for(const ring of actual){const index=expected.findIndex(candidate=>candidate.length===ring.length&&candidate.every((point,vertex)=>point.every((value,axis)=>Math.abs(value-ring[vertex]![axis]!)<1e-7)));if(index<0)throw Error(entry.id+" unmatched complete D3 exterior/hole ring "+JSON.stringify(ring));expected.splice(index,1);}
   }
-  console.log("[DEBUG] Native five single/row/boundary/hole/saddle grid rings matched complete independent D3 contours");
 });}

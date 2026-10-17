@@ -33,11 +33,14 @@ pub fn plan(p: &GltfCreateAnimationPayload, base: &GltfSnapshot) -> Result<GltfD
     Ok(diff)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn inverse(p: &GltfCreateAnimationPayload, base: &GltfSnapshot) -> Vec<super::GltfMutation> {
+pub fn inverse<Op>(p: &GltfCreateAnimationPayload, base: &GltfSnapshot) -> Vec<Op>
+where
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::remove_used_extension::RemoveUsedExtensionMutation>,
+{
     if validate(p, base).is_err() {
         return Vec::new();
     }
-    vec![super::delete_animation::mutation(super::delete_animation::GltfDeleteAnimationPayload { index: p.position })]
+    vec![crate::standards::v2_0::subsets::any::schema::mutations::delete_animation::mutation(crate::standards::v2_0::subsets::any::schema::mutations::delete_animation::GltfDeleteAnimationPayload { index: p.position })]
 }
 
 //#region 🧬️DirectMutation
@@ -50,11 +53,17 @@ pub enum CreateAnimationMutation {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn mutation(payload: GltfCreateAnimationPayload) -> super::GltfMutation {
-    super::GltfMutation::CreateAnimation(CreateAnimationMutation::Apply(payload))
+pub fn mutation<Op>(payload: GltfCreateAnimationPayload) -> Op
+where
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::create_animation::CreateAnimationMutation>,
+{
+    Op::from(CreateAnimationMutation::Apply(payload))
 }
 
-impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for CreateAnimationMutation {
+impl<Op> protocol::MutationKind<GltfSnapshot, Op> for CreateAnimationMutation
+where
+    Op: protocol::Mutation<GltfSnapshot, Diff = GltfDiff> + From<CreateAnimationMutation>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "animation", kind: "create-animation", record: "CreatedAnimation" };
 
     fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<GltfDiff> {
@@ -66,7 +75,7 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for CreateAnimati
         }
     }
 
-    fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<super::GltfMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         match self {
             Self::Apply(payload) => Ok(inverse(payload, base)),
         }
@@ -83,7 +92,5 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for CreateAnimati
 //#endregion 🧬️DirectMutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🎞️inserts-an-empty-99ef88/🦀️.rs"]
-mod case_inserts_an_empty_99ef88;
+
 //#endregion 🧪️Tests

@@ -11,23 +11,24 @@
 
 use crate::standards::v1::subsets::any::schema::{diff::ProgramDiff, mutations::ProgramMutation, snapshot::ProgramSnapshot};
 use protocol::Mutation;
+use semio_framework_test_fixtures::fixture_text;
 
-const BEFORE: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏷️meta/♻️replace/♻️block/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏷️meta/♻️replace/♻️block/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏷️meta/♻️replace/♻️block/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏷️meta/♻️replace/♻️block/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏷️meta/♻️replace/♻️block/🎯️outcome/🔣️.json");
+static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏷️meta/♻️replace/♻️block/📸️snapshot/⬅️before/🔣️.json"));
+static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏷️meta/♻️replace/♻️block/📸️snapshot/➡️after/🔣️.json"));
+static MUTATION: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏷️meta/♻️replace/♻️block/🦠️mutation/🔣️.json"));
+static DIFF: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏷️meta/♻️replace/♻️block/🔺️diff/🔣️.json"));
+static OUTCOME: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏷️meta/♻️replace/♻️block/🎯️outcome/🔣️.json"));
 
 fn before() -> ProgramSnapshot {
-    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("replace-meta/replaces-the-document-meta-block: before snapshot decodes")
+    semio_framework_pack_json::from_json_str((*BEFORE), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("replace-meta/replaces-the-document-meta-block: before snapshot decodes")
 }
 
 fn expected_after() -> ProgramSnapshot {
-    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("replace-meta/replaces-the-document-meta-block: after snapshot decodes")
+    semio_framework_pack_json::from_json_str((*AFTER), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("replace-meta/replaces-the-document-meta-block: after snapshot decodes")
 }
 
 fn mutation() -> ProgramMutation {
-    serde_json::from_str(MUTATION).expect("replace-meta/replaces-the-document-meta-block: mutation decodes")
+    serde_json::from_str((*MUTATION)).expect("replace-meta/replaces-the-document-meta-block: mutation decodes")
 }
 
 /// ▶️ replace-meta carries the committed before-snapshot to exactly the committed after-snapshot.
@@ -57,21 +58,21 @@ async fn replace_meta_inverse_restores_before() {
 /// is a fixed point.
 #[semio_framework_async_macros::async_test]
 async fn replace_meta_committed_json_is_canonical() {
-    for (side, text) in [("before", BEFORE), ("after", AFTER)] {
+    for (side, text) in [("before", (*BEFORE)), ("after", (*AFTER))] {
         let decoded: ProgramSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("replace-meta/replaces-the-document-meta-block: snapshot decodes");
         let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("replace-meta/replaces-the-document-meta-block: snapshot re-encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("replace-meta/replaces-the-document-meta-block: snapshot reparses");
         assert_eq!(reencoded, original, "replace-meta/replaces-the-document-meta-block: committed {side} snapshot JSON is not canonical");
     }
     let reencoded = serde_json::to_value(mutation()).expect("replace-meta/replaces-the-document-meta-block: replace-meta payload re-encodes");
-    let original: serde_json::Value = serde_json::from_str(MUTATION).expect("replace-meta/replaces-the-document-meta-block: replace-meta payload reparses");
+    let original: serde_json::Value = serde_json::from_str((*MUTATION)).expect("replace-meta/replaces-the-document-meta-block: replace-meta payload reparses");
     assert_eq!(reencoded, original, "replace-meta/replaces-the-document-meta-block: committed replace-meta payload JSON is not canonical");
 }
 
 /// 🎯️ The declared outcome holds: replace-meta applies cleanly here and raises no diagnostic at all.
 #[semio_framework_async_macros::async_test]
 async fn replace_meta_declared_outcome_holds() {
-    let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("replace-meta/replaces-the-document-meta-block: outcome decodes");
+    let declared: serde_json::Value = serde_json::from_str((*OUTCOME)).expect("replace-meta/replaces-the-document-meta-block: outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "replace-meta/replaces-the-document-meta-block: this fixture declares an applied outcome");
     let base = before();
     let outcome = mutation().diff(&base);
@@ -84,16 +85,16 @@ async fn replace_meta_declared_outcome_holds() {
 #[semio_framework_async_macros::async_test]
 async fn replace_meta_produces_committed_diff() {
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(mutation().diff(&before()).diff())).expect("replace-meta/replaces-the-document-meta-block: produced diff encodes");
-    let committed: serde_json::Value = serde_json::from_str(DIFF).expect("replace-meta/replaces-the-document-meta-block: committed diff decodes");
+    let committed: serde_json::Value = serde_json::from_str((*DIFF)).expect("replace-meta/replaces-the-document-meta-block: committed diff decodes");
     assert_eq!(produced, committed, "replace-meta/replaces-the-document-meta-block: the diff replace-meta builds differs from the committed 🔺️diff/🔣️.json");
 }
 
 /// 🔣️ The committed diff is itself canonical and decodes to ProgramDiff.
 #[semio_framework_async_macros::async_test]
 async fn replace_meta_committed_diff_is_canonical() {
-    let decoded: ProgramDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("replace-meta/replaces-the-document-meta-block: committed diff decodes");
+    let decoded: ProgramDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("replace-meta/replaces-the-document-meta-block: committed diff decodes");
     let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("replace-meta/replaces-the-document-meta-block: committed diff re-encodes");
-    let original: serde_json::Value = serde_json::from_str(DIFF).expect("replace-meta/replaces-the-document-meta-block: committed diff reparses");
+    let original: serde_json::Value = serde_json::from_str((*DIFF)).expect("replace-meta/replaces-the-document-meta-block: committed diff reparses");
     assert_eq!(reencoded, original, "replace-meta/replaces-the-document-meta-block: committed diff JSON is not canonical");
 }
 
@@ -101,7 +102,7 @@ async fn replace_meta_committed_diff_is_canonical() {
 /// after-snapshot — the diff is a complete description of what replace-meta does, not a summary.
 #[semio_framework_async_macros::async_test]
 async fn replace_meta_committed_diff_applies_to_after() {
-    let decoded: ProgramDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("replace-meta/replaces-the-document-meta-block: committed diff decodes");
+    let decoded: ProgramDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("replace-meta/replaces-the-document-meta-block: committed diff decodes");
     let produced = protocol::apply_diff(&decoded, &before()).expect("replace-meta/replaces-the-document-meta-block: committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "replace-meta/replaces-the-document-meta-block: the committed diff did not carry before to after");
 }

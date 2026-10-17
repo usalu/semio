@@ -1,7 +1,6 @@
 //! 🚪️ IO s.puzzle5d (1/✳️any) — registration now flows through 🎹️composer::register
 //! (called once from this file's own `io_registry::register()`), not per-leaf register().
-#[path="🔣️json/🦀️.rs"]
-pub(crate) mod puzzle5d_json;
+pub(crate) use semio_s_artifact_puzzle_5d_diff::standards::v1::subsets::any::io::puzzle5d_json;
 
 pub fn import_stdio_kinds() -> &'static [&'static str] {
     &["stdio.json", "stdio.txt", "stdio.zip"]
@@ -194,14 +193,18 @@ pub fn puzzle5d_board_drawing(snapshot: &crate::Puzzle5dSnapshot) -> semio_s_art
 mod tests;
 //#endregion 🧪️Tests
 
-#[path = "💾️binary/🦀️.rs"]
-pub mod binary;
+pub mod binary {
+    pub use semio_s_artifact_puzzle_5d_mut_any_8::standards::v1::subsets::any::io::binary::*;
+    pub use semio_s_artifact_puzzle_5d_diff_2::standards::v1::subsets::any::io::binary::diff;
+    pub use semio_s_artifact_puzzle_5d_document_records::standards::v1::subsets::any::io::binary::inferences;
+}
 
-#[path = "📝️text/🦀️.rs"]
-pub mod text;
+pub mod text {
+    pub use semio_s_artifact_puzzle_5d_mut_any_8::standards::v1::subsets::any::io::text::*;
+    pub use semio_s_artifact_puzzle_5d_document_records::standards::v1::subsets::any::io::text::inferences;
+}
 
-#[path = "🪶️sqlite/🦀️.rs"]
-pub mod sqlite;
+
 
 pub mod derived_construction {
     use crate::{Puzzle5dDiff, Puzzle5dMutation, Puzzle5dSnapshot};

@@ -1,11 +1,12 @@
 //! 🧬️ Native Puzzle2d cloning consumes the authored corpus under exact grants.
 
-use crate::Puzzle2dSnapshot;
+use crate::standards::v1::subsets::any::schema::snapshot::Puzzle2dSnapshot;
+use semio_framework_test_fixtures::fixture_text;
 use semio_framework_value::retained_clone::{RetainedClone, RetainedCloneCursor, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 use semio_framework_value::retirement::{RetireOwned, controlled::ControlledRetirement};
 use std::sync::Arc;
 
-fn settle_clone<T: RetainedClone>(cursor: &mut T::Cursor, bytes: usize) {
+fn settle_clone<T: RetainedClone, C: RetainedCloneCursor<T>>(cursor: &mut C, bytes: usize) {
     cursor.begin_close();
     for _ in 0..1_000_000 {
         if cursor.terminal_is_empty() { return; }
@@ -45,8 +46,8 @@ fn settle_snapshot<T: RetireOwned>(snapshot: T, bytes: usize) {
 
 #[test]
 fn history_edit_puzzle2d_retained_snapshot_clone_preserves_native_ownership_and_cancellation() {
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/📸️snapshot/🧬️retained-clone/🔣️.json")).unwrap();
-    let original: serde_json::Value = serde_json::from_str(include_str!("../../../../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../🧪️tests/🧫️fixtures/📸️snapshot/🧬️retained-clone/🔣️.json")).unwrap();
+    let original: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let controls = &corpus["control"];
     let grant = RetainedCloneGrant {
         maximum_items: controls["maximumItems"].as_u64().unwrap() as usize,
@@ -58,11 +59,11 @@ fn history_edit_puzzle2d_retained_snapshot_clone_preserves_native_ownership_and_
         if journey == "largeUtf8" { snapshot.nodes[0].text = Some("😀".repeat(controls["largeTextScalars"].as_u64().unwrap() as usize).into()); }
         let length = controls["largeCollectionItems"].as_u64().unwrap() as usize;
         if journey == "largeNodes" { snapshot.nodes = (0..length).map(|index| { let mut node = snapshot.nodes[0].clone(); node.id = format!("node-{index}").into(); node }).collect(); }
-        if journey == "nestedHandles" { snapshot.nodes[0].handles = (0..length).map(|index| crate::standards::v1::subsets::any::schema::Puzzle2dHandle { id: format!("handle-{index}").into(), ..Default::default() }).collect(); }
+        if journey == "nestedHandles" { snapshot.nodes[0].handles = (0..length).map(|index| crate::standards::v1::subsets::any::schema::records::Puzzle2dHandle { id: format!("handle-{index}").into(), ..Default::default() }).collect(); }
         if journey == "nestedCatalogs" { snapshot.meta.kind_catalogs.as_mut().unwrap().nodes[0].representations[0].tags = (0..length).map(|index| format!("tag-{index}").into()).collect(); }
         let expected = serde_json::to_value(&snapshot).unwrap();
         let owner = Arc::new(snapshot);
-        let mut source = crate::test_source_custody::admit_source(Arc::clone(&owner));
+        let mut source = crate::standards::v1::subsets::any::schema::testkit::admit_source(Arc::clone(&owner));
         let (mut cursor,allocation)=semio_framework_trace::observe_heap_allocations_on_this_thread(Puzzle2dSnapshot::retained_clone_cursor);
         assert!(!allocation.overflowed);assert_eq!((allocation.requested_bytes,allocation.released_bytes),(0,0),"native snapshot cursor constructor must be allocation-free: {allocation:?}");
         let (result,allocation)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cursor.advance(source.borrow(),RetainedCloneGrant::default()));
@@ -76,7 +77,7 @@ fn history_edit_puzzle2d_retained_snapshot_clone_preserves_native_ownership_and_
             let step=result.unwrap();
             let progress = step.progress();
             totals[0] += progress.copied_items; totals[1] += progress.copied_bytes; totals[2] += progress.retained_capacity_bytes; totals[3] += progress.released_bytes;
-            if journey == "largeNodes" && ((turn >= 1023 && (turn + 1).is_power_of_two()) || turn == 999999) { eprintln!("[DEBUG] Puzzle2d native snapshot clone journey={journey} turn={} step={step:?} cumulativeItemsCopyCapacityRelease={totals:?}", turn + 1); }
+            if journey == "largeNodes" && ((turn >= 1023 && (turn + 1).is_power_of_two()) || turn == 999999) {  }
             assert!(!allocation.overflowed);assert!(allocation.requested_bytes<=step.progress().retained_capacity_bytes,"{journey}: actual allocation requests {} exceed admitted retained capacity {}",allocation.requested_bytes,step.progress().retained_capacity_bytes);
             assert!(allocation.released_bytes<=step.progress().released_bytes,"native clone released unadmitted layout bytes: {allocation:?}");
             assert!(step.progress().fits(turn_grant));
@@ -87,20 +88,19 @@ fn history_edit_puzzle2d_retained_snapshot_clone_preserves_native_ownership_and_
         assert_eq!(serde_json::to_value(owner.as_ref()).unwrap(), expected);
         if journey == "cancelDuringCopy" {
             assert!(!completed);
-            settle_clone::<Puzzle2dSnapshot>(&mut cursor, grant.maximum_capacity_bytes);
+            settle_clone::<Puzzle2dSnapshot, _>(&mut cursor, grant.maximum_capacity_bytes);
             assert!(cursor.take().is_none());
         } else {
             assert!(completed, "{journey}: clone did not complete within its exact grants");
             let cloned = cursor.take().unwrap();
             assert_eq!(serde_json::to_value(&cloned).unwrap(), expected);
             assert!(cursor.take().is_none());
-            settle_clone::<Puzzle2dSnapshot>(&mut cursor, grant.maximum_capacity_bytes);
+            settle_clone::<Puzzle2dSnapshot, _>(&mut cursor, grant.maximum_capacity_bytes);
             settle_snapshot(cloned, grant.maximum_capacity_bytes);
         }
         assert!(cursor.terminal_is_empty());
-        crate::test_source_custody::close_source(&mut source);
+        crate::standards::v1::subsets::any::schema::testkit::close_source(&mut source);
         assert_eq!(serde_json::to_value(owner.as_ref()).unwrap(),expected);
-        eprintln!("[DEBUG] Puzzle2d paged snapshot clone {journey} preserved native JSON and reached exact closure");
     }
 }
 
@@ -108,8 +108,8 @@ fn history_edit_puzzle2d_retained_snapshot_clone_preserves_native_ownership_and_
 #[test]
 fn history_edit_puzzle2d_borrowed_mutations_clone_every_authored_leaf_with_exact_retirement() {
     use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
-    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🧬️mutations");
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/📸️snapshot/🧬️retained-clone/🔣️.json")).unwrap();
+    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../../🧫️fixtures/🧬️mutations");
+    let corpus: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../🧪️tests/🧫️fixtures/📸️snapshot/🧬️retained-clone/🔣️.json")).unwrap();
     let controls = &corpus["control"];
     let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: controls["maximumCopyBytes"].as_u64().unwrap() as usize, maximum_capacity_bytes: controls["maximumCapacityBytes"].as_u64().unwrap() as usize, maximum_depth: 64, maximum_release_bytes: controls["maximumReleaseBytes"].as_u64().unwrap() as usize };
     let mut kinds = std::collections::BTreeSet::new();
@@ -124,7 +124,7 @@ fn history_edit_puzzle2d_borrowed_mutations_clone_every_authored_leaf_with_exact
             let Ok(original) = serde_json::from_str::<Puzzle2dMutation>(&text) else { continue; };
             let expected = serde_json::to_value(&original).unwrap();
             kinds.insert(expected["mutation"].as_str().unwrap().to_owned());
-            let mut authority = crate::test_source_custody::admit();
+            let mut authority = crate::standards::v1::subsets::any::schema::testkit::admit();
             let (mut cursor,allocation)=semio_framework_trace::observe_heap_allocations_on_this_thread(Puzzle2dMutation::retained_clone_cursor);
             assert!(!allocation.overflowed);assert_eq!((allocation.requested_bytes,allocation.released_bytes),(0,0),"native mutation cursor constructor must be allocation-free: {allocation:?}");
             let (result,allocation)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cursor.advance(authority.borrow(&original),RetainedCloneGrant::default()));
@@ -145,9 +145,9 @@ fn history_edit_puzzle2d_borrowed_mutations_clone_every_authored_leaf_with_exact
             assert_eq!(serde_json::to_value(&owned).unwrap(), expected);
             assert_eq!(serde_json::to_value(&original).unwrap(), expected);
             assert!(cursor.take().is_none());
-            settle_clone::<Puzzle2dMutation>(&mut cursor, grant.maximum_capacity_bytes);
+            settle_clone::<Puzzle2dMutation, _>(&mut cursor, grant.maximum_capacity_bytes);
             settle_snapshot(owned, grant.maximum_capacity_bytes);
-            crate::test_source_custody::close(&mut authority);
+            crate::standards::v1::subsets::any::schema::testkit::close(&mut authority);
             count += 1;
         }
     }
@@ -155,7 +155,7 @@ fn history_edit_puzzle2d_borrowed_mutations_clone_every_authored_leaf_with_exact
     for cancelled in [false, true] {
         let original = Puzzle2dMutation::EditNodeText(crate::standards::v1::subsets::any::schema::mutations::EditNodeText { id: "owned".into(), new_text: Some("😀".repeat(4096).into()) });
         let swapped = original.clone();
-        let mut authority = crate::test_source_custody::admit();
+        let mut authority = crate::standards::v1::subsets::any::schema::testkit::admit();
         let (mut cursor,allocation)=semio_framework_trace::observe_heap_allocations_on_this_thread(Puzzle2dMutation::retained_clone_cursor);
             assert!(!allocation.overflowed);assert_eq!((allocation.requested_bytes,allocation.released_bytes),(0,0),"native mutation cursor constructor must be allocation-free: {allocation:?}");
         let grant = RetainedCloneGrant { maximum_copy_bytes: 4, ..grant };
@@ -168,10 +168,9 @@ fn history_edit_puzzle2d_borrowed_mutations_clone_every_authored_leaf_with_exact
             assert!(step.progress().fits(turn_grant));
         }
         if !cancelled { assert!(cursor.advance(authority.borrow(&swapped), grant).is_err()); }
-        settle_clone::<Puzzle2dMutation>(&mut cursor, grant.maximum_capacity_bytes);
+        settle_clone::<Puzzle2dMutation, _>(&mut cursor, grant.maximum_capacity_bytes);
         assert!(cursor.terminal_is_empty());
         assert!(cursor.take().is_none());
-        crate::test_source_custody::close(&mut authority);
+        crate::standards::v1::subsets::any::schema::testkit::close(&mut authority);
     }
-    eprintln!("[DEBUG] Puzzle2d borrowed clone preserved {count} authored mutations across {} leaves and exact cancellation closure", kinds.len());
 }

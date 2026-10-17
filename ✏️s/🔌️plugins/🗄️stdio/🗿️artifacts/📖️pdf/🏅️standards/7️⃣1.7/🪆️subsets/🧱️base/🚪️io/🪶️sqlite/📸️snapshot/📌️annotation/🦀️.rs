@@ -1,6 +1,12 @@
 //! 📌️ Annotation variants, appearances, markup and ordered geometric coordinates.
 use semio_framework_value::{ValueError,ValueRefusalKind};
-use crate::standards::v1_7::subsets::base::io::sqlite::snapshot::*;
+use crate::standards::v1_7::subsets::base::schema::snapshot::model::*;
+use crate::standards::v1_7::subsets::base::io::sqlite::snapshot::reader::{integer, boolean, optional_integer, optional_typed_integer, optional_real, real_cell, integer_cell, text_cell, optional_array, array_cells, write_sequence, read_sequence, null_except, Reader};
+use store::sqlite_snapshot::{artifact::{Cell as C}};
+use crate::standards::v1_7::subsets::base::io::sqlite::snapshot::number::{Row, Projection};
+use crate::standards::v1_7::subsets::base::io::sqlite::snapshot::cos;
+use crate::standards::v1_7::subsets::base::io::sqlite::snapshot::metadata;
+use crate::standards::v1_7::subsets::base::io::sqlite::snapshot::navigation;
 
 #[derive(Clone,Copy)]
 #[repr(usize)]
@@ -84,8 +90,8 @@ fn read_kind(reader:&mut Reader<'_,'_,'_>,key:i64)->Result<PdfAnnotationKind,Val
         "unknown"=>(PdfAnnotationKind::Unknown{subtype:reader.text(row,O::Subtype as usize)?,entries:cos::read_dictionary(reader,row.integer(O::Entries as usize)?)?},&[O::Subtype,O::Entries]),_=>return Err(ValueError::new(ValueRefusalKind::InvalidValue,"unknown PDF annotation kind")),
     };let columns=present.iter().map(|value|*value as usize).collect::<Vec<_>>();null_except(row,2..WIDTH,&columns)?;Ok(value)
 }
-pub(super) fn write_annotation(out:&mut Projection<'_,'_>,value:&PdfAnnotation)->Result<i64,ValueError>{
+pub fn write_annotation(out:&mut Projection<'_,'_>,value:&PdfAnnotation)->Result<i64,ValueError>{
     let border=value.border.as_ref().map(|value|write_border(out,value)).transpose()?;let appearance=value.appearance.as_ref().map(|value|write_appearance(out,value)).transpose()?;let markup=value.markup.as_ref().map(|value|write_markup(out,value)).transpose()?;let extra=cos::write_dictionary(out,&value.extra)?;let detail=write_kind(out,&value.kind)?;
     let mut cells=value.rect.map(C::Real).to_vec();cells.extend([text_cell(&value.contents),text_cell(&value.name),text_cell(&value.modified),C::Integer(i64::from(value.flags)),border.map_or(C::Null,C::Integer),appearance.map_or(C::Null,C::Integer),text_cell(&value.appearance_state),markup.map_or(C::Null,C::Integer),text_cell(&value.optional_content),integer_cell(value.struct_parent),C::Integer(extra),C::Integer(detail)]);let key=out.insert("pdf_annotation",&cells)?;write_sequence(out,"pdf_annotation_real",key,&value.color)?;Ok(key)
 }
-pub(super) fn read_annotation(reader:&mut Reader<'_,'_,'_>,key:i64)->Result<PdfAnnotation,ValueError>{let row=reader.take("pdf_annotation",key,17)?;Ok(PdfAnnotation{rect:[row.real(1)?,row.real(2)?,row.real(3)?,row.real(4)?],kind:read_kind(reader,row.integer(16)?)?,contents:reader.optional_text(row,5)?,name:reader.optional_text(row,6)?,modified:reader.optional_text(row,7)?,flags:integer(row,8)?,border:optional_integer(row,9)?.map(|key|read_border(reader,key)).transpose()?,color:read_sequence(reader,"pdf_annotation_real",key)?,appearance:optional_integer(row,10)?.map(|key|read_appearance(reader,key)).transpose()?,appearance_state:reader.optional_text(row,11)?,markup:optional_integer(row,12)?.map(|key|read_markup(reader,key)).transpose()?,optional_content:reader.optional_text(row,13)?,struct_parent:optional_typed_integer(row,14)?,extra:cos::read_dictionary(reader,row.integer(15)?)?})}
+pub fn read_annotation(reader:&mut Reader<'_,'_,'_>,key:i64)->Result<PdfAnnotation,ValueError>{let row=reader.take("pdf_annotation",key,17)?;Ok(PdfAnnotation{rect:[row.real(1)?,row.real(2)?,row.real(3)?,row.real(4)?],kind:read_kind(reader,row.integer(16)?)?,contents:reader.optional_text(row,5)?,name:reader.optional_text(row,6)?,modified:reader.optional_text(row,7)?,flags:integer(row,8)?,border:optional_integer(row,9)?.map(|key|read_border(reader,key)).transpose()?,color:read_sequence(reader,"pdf_annotation_real",key)?,appearance:optional_integer(row,10)?.map(|key|read_appearance(reader,key)).transpose()?,appearance_state:reader.optional_text(row,11)?,markup:optional_integer(row,12)?.map(|key|read_markup(reader,key)).transpose()?,optional_content:reader.optional_text(row,13)?,struct_parent:optional_typed_integer(row,14)?,extra:cos::read_dictionary(reader,row.integer(15)?)?})}

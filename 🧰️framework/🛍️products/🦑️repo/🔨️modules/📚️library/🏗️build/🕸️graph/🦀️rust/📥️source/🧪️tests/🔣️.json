@@ -1,0 +1,100 @@
+{
+  "version": 1,
+  "files": [
+    {
+      "name": "lib.rs",
+      "source": "pub const N:u32=1;",
+      "changed": "pub const N:u32=2;"
+    }
+  ],
+  "failures": [
+    "stale",
+    "ancestor",
+    "copied",
+    "retired"
+  ],
+  "rosters": [
+    {
+      "id": "empty",
+      "value": [],
+      "accepted": true
+    },
+    {
+      "id": "regular",
+      "value": [
+        {
+          "path": "lib.rs",
+          "digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "bytes": 1
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "duplicate",
+      "value": [
+        {
+          "path": "lib.rs",
+          "digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "bytes": 1
+        },
+        {
+          "path": "lib.rs",
+          "digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "bytes": 1
+        }
+      ],
+      "accepted": false
+    },
+    {
+      "id": "conflicting-duplicate",
+      "value": [
+        {
+          "path": "lib.rs",
+          "digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "bytes": 1
+        },
+        {
+          "path": "lib.rs",
+          "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "bytes": 1
+        }
+      ],
+      "accepted": false
+    },
+    {
+      "id": "extra-field",
+      "value": [
+        {
+          "path": "lib.rs",
+          "digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "bytes": 1,
+          "extra": true
+        }
+      ],
+      "accepted": false
+    },
+    {
+      "id": "escape",
+      "value": [
+        {
+          "path": "../lib.rs",
+          "digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "bytes": 1
+        }
+      ],
+      "accepted": false
+    },
+    {
+      "id": "bad-digest",
+      "value": [
+        {
+          "path": "lib.rs",
+          "digest": "opaque",
+          "bytes": 1
+        }
+      ],
+      "accepted": false
+    }
+  ]
+}

@@ -3,7 +3,7 @@ import {receiveScriptProcessInvocation,scriptInvocationEnvironment} from "../../
 import {scriptCompilerAdmissionControlV1} from "@semio-tech/process/compiler-capacity";
 import {captureOwnedCommandResultV1} from "@semio-tech/process/owned-execution";
 import {withBuiltLocalHubHostV1,withLocalHubHostTaskV1,stopLocalHubV1,waitForLocalHubExitV1,startLocalHub,finishLocalHub,waitForReadiness,TRUSTED_CATALOG_READINESS_STALL_BOUND_MS} from "../../🚀️local-bootstrap/🏃️execution/🟦️.ts";
-import {withMaterializedTrustedCatalogBundleV1} from "../../🏗️bootstrap/🧾️provenance/🚚️bootstrap-publication/🟦️.ts";
+import { withMaterializedTrustedCatalogBundleV1 } from "../../🏗️bootstrap/🧾️provenance/🚚️bootstrap-publication/🧱️materialized-bundle/🟦️.ts";
 import {trustedBootstrapSelectPackages} from "../../🏗️bootstrap/🧾️provenance/🧭️bootstrap-selection/🟦️.ts";
 // #region Header
 /**
@@ -45,7 +45,7 @@ function pick(parent: string, pred: (n: string) => boolean): string {
 
 const repoRoot = findWorkspaceRoot(dirname(fileURLToPath(import.meta.url)));
 const hubRoot = pick(repoRoot, (n) => n.endsWith("hub") && !n.startsWith("."));
-const fixture = JSON.parse(readFileSync(join(pick(pick(hubRoot, (n) => n.includes("fixtures")), (n) => n.includes("document-growth")), "🔣️.json"), "utf8"));
+const fixture = JSON.parse(readFileSync(join(pick(join(hubRoot, "🧪️tests", "🧫️fixtures"), (n) => n.includes("document-growth")), "🔣️.json"), "utf8"));
 
 
 type Frame = Record<string, any>;

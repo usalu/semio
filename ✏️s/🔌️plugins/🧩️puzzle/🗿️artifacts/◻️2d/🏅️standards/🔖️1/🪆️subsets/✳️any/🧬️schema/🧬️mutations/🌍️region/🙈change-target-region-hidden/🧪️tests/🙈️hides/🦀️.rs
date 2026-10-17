@@ -10,23 +10,24 @@
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
 use crate::standards::v1::subsets::any::schema::mutations::apply_puzzle2d_mutation;
 use crate::standards::v1::subsets::any::schema::mutations::{inverse_puzzle2d_mutation};
+use semio_framework_test_fixtures::fixture_text;
 
 use crate::Puzzle2dSnapshot;
 
-const BEFORE: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🙈change-target-region-hidden/🙈️hides/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🙈change-target-region-hidden/🙈️hides/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🙈change-target-region-hidden/🙈️hides/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🙈change-target-region-hidden/🙈️hides/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🙈change-target-region-hidden/🙈️hides/🎯️outcome/🔣️.json");
+static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🙈change-target-region-hidden/🙈️hides/📸️snapshot/⬅️before/🔣️.json"));
+static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🙈change-target-region-hidden/🙈️hides/📸️snapshot/➡️after/🔣️.json"));
+static MUTATION: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🙈change-target-region-hidden/🙈️hides/🦠️mutation/🔣️.json"));
+static DIFF: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🙈change-target-region-hidden/🙈️hides/🔺️diff/🔣️.json"));
+static OUTCOME: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🙈change-target-region-hidden/🙈️hides/🎯️outcome/🔣️.json"));
 
 fn before() -> Puzzle2dSnapshot {
-    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes")
+    semio_framework_pack_json::from_json_str((*BEFORE), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes")
 }
 fn expected_after() -> Puzzle2dSnapshot {
-    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after snapshot decodes")
+    semio_framework_pack_json::from_json_str((*AFTER), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after snapshot decodes")
 }
 fn mutation() -> Puzzle2dMutation {
-    semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation decodes")
+    semio_framework_pack_json::from_json_str((*MUTATION), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation decodes")
 }
 
 /// ▶️ The committed `change-target-region-hidden` payload carries `before` to exactly the committed `after`, and lands the
@@ -38,8 +39,8 @@ fn applies_to_committed_after() {
     assert_eq!(snapshot, expected_after(), "change-target-region-hidden/hides-region-1: applied state differs from committed after-snapshot");
     let region = snapshot.target_regions.iter().find(|region| region.id == "region-1").expect("region-1 survives being hidden");
     assert!(region.hidden, "change-target-region-hidden/hides-region-1: region-1 is not hidden");
-    assert!(crate::standards::v1::subsets::any::schema::puzzle2d_regions_contain_bounds(&snapshot.target_regions, [900.0, 900.0, 901.0, 901.0]), "change-target-region-hidden/hides-region-1: a board whose every region is hidden constrains nothing");
-    assert!(!crate::standards::v1::subsets::any::schema::puzzle2d_regions_contain_bounds(&before().target_regions, [900.0, 900.0, 901.0, 901.0]), "change-target-region-hidden/hides-region-1: the same box must be refused while the region is still visible");
+    assert!(crate::standards::v1::subsets::any::schema::records::puzzle2d_regions_contain_bounds(&snapshot.target_regions, [900.0, 900.0, 901.0, 901.0]), "change-target-region-hidden/hides-region-1: a board whose every region is hidden constrains nothing");
+    assert!(!crate::standards::v1::subsets::any::schema::records::puzzle2d_regions_contain_bounds(&before().target_regions, [900.0, 900.0, 901.0, 901.0]), "change-target-region-hidden/hides-region-1: the same box must be refused while the region is still visible");
 }
 
 /// ↩️ Applying `change-target-region-hidden` then the inverse it derives from `before` restores `before` exactly.
@@ -60,7 +61,7 @@ fn inverse_restores_before() {
 /// decode→encode is a fixed point.
 #[test]
 fn committed_json_is_canonical() {
-    for (label, text) in [("before", BEFORE), ("after", AFTER)] {
+    for (label, text) in [("before", (*BEFORE)), ("after", (*AFTER))] {
         let decoded: Puzzle2dSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
         let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
@@ -68,14 +69,14 @@ fn committed_json_is_canonical() {
     }
     let decoded_mutation = mutation();
     let reencoded = serde_json::to_value(&decoded_mutation).expect("mutation encodes");
-    let original: serde_json::Value = serde_json::from_str(MUTATION).expect("mutation reparses");
+    let original: serde_json::Value = serde_json::from_str((*MUTATION)).expect("mutation reparses");
     assert_eq!(reencoded, original, "change-target-region-hidden/hides-region-1: committed mutation JSON is not canonical");
 }
 
 /// 🎯️ The declared outcome matches what `change-target-region-hidden` actually produces on this base.
 #[test]
 fn declared_outcome_holds() {
-    let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
+    let outcome: serde_json::Value = serde_json::from_str((*OUTCOME)).expect("outcome decodes");
     let status = outcome.get("status").and_then(serde_json::Value::as_str).expect("outcome carries a status");
     let mut snapshot = before();
     let applied = apply_puzzle2d_mutation(&mut snapshot, &mutation()).is_ok();
@@ -96,7 +97,7 @@ fn produces_committed_diff() {
     let base = before();
     let outcome = <Puzzle2dMutation as protocol::Mutation<Puzzle2dSnapshot>>::diff(&mutation(), &base);
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
-    let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
+    let committed: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff decodes");
     assert_eq!(produced, committed, "change-target-region-hidden/hides-region-1: produced diff differs from the committed 🔺️diff/🔣️.json");
     assert_eq!(committed["targetRegions"]["modified"][0]["patch"]["hidden"].as_bool(), Some(true), "change-target-region-hidden/hides-region-1: the patch must carry the new flag");
     assert!(committed["nodes"].is_null() && committed["edges"].is_null() && committed["meta"].is_null(), "change-target-region-hidden/hides-region-1: a target region is neither a node, an edge nor document meta");
@@ -105,9 +106,9 @@ fn produces_committed_diff() {
 /// 🔣️ The committed `change-target-region-hidden` diff is itself canonical and decodes to `Puzzle2dDiff`.
 #[test]
 fn committed_diff_is_canonical() {
-    let decoded: crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
+    let decoded: crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
     let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("diff re-encodes");
-    let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
+    let original: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff reparses");
     assert_eq!(reencoded, original, "change-target-region-hidden/hides-region-1: committed diff JSON is not canonical");
 }
 
@@ -115,7 +116,7 @@ fn committed_diff_is_canonical() {
 /// diff is a complete description of the change, not a summary of it.
 #[test]
 fn committed_diff_applies_to_after() {
-    let decoded: crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
+    let decoded: crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
     let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-target-region-hidden/hides-region-1: committed diff did not carry before to after");
 }

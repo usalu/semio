@@ -180,7 +180,7 @@ pub struct EngineSurfaceLiveFreshness {
 pub struct EngineSurfaceSlot {
     pub id: Option<EngineSurfaceId>,
     pub generation: u64,
-    pub(super) exhausted: bool,
+    pub exhausted: bool,
     pub value: Option<EngineSurface>,
     pub retirement: Option<EngineSurfaceRetirement>,
 }
@@ -216,7 +216,7 @@ impl EngineSurfaceRegistry {
         self.slots[index].value.as_mut()
     }
 
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testkit"))]
     pub fn token(&self, id: &str) -> Option<EngineSurfaceToken> {
         let index = self.slot_index(id)?;
         Some(EngineSurfaceToken { slot: index as u16, generation: self.slots[index].generation })
@@ -267,7 +267,7 @@ impl EngineSurfaceRegistry {
         Ok(())
     }
 
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testkit"))]
     pub fn remove(&mut self, id: &str) -> Option<EngineSurface> {
         let index = self.slot_index(id)?;
         let slot = &mut self.slots[index];
@@ -1148,7 +1148,7 @@ pub struct TextEditorDeliverySnapshot {
 pub struct TextEditorTypingRun {
     pub controller_id: String,
     pub surface_id: String,
-    last_ms: f64,
+    pub last_ms: f64,
 }
 
 /// 🏁️ Why the host ends an open typing run before its idle bound (the `typingCommit` reasons of the text-splice corpus
@@ -1181,30 +1181,30 @@ pub fn text_editor_now_ms() -> f64 {
 }
 
 pub struct TextEditorDeliveryInFlight {
-    source: EngineSurfaceToken,
+    pub source: EngineSurfaceToken,
     pub token: std::num::NonZeroU64,
     pub snapshot: TextEditorDeliverySnapshot,
-    pending_members: u8,
+    pub pending_members: u8,
 }
 
 pub struct TextEditorDraftPublication {
-    source: String,
-    restore: Option<String>,
+    pub source: String,
+    pub restore: Option<String>,
     pub action: ui_wgpu::wgpu::RetainedStringAction,
 }
 
 pub struct TextEditorDeliveryPublication {
-    source: String,
+    pub source: String,
     pub action: ui_wgpu::wgpu::RetainedStringAction,
     pub snapshot: TextEditorDeliverySnapshot,
-    include_selection: bool,
+    pub include_selection: bool,
 }
 
 #[derive(Default)]
 pub struct TextEditorDeliveryState {
     pub active: Option<TextEditorDeliveryInFlight>,
-    latest: Option<TextEditorDeliverySnapshot>,
-    publication: Option<TextEditorDeliveryPublication>,
+    pub latest: Option<TextEditorDeliverySnapshot>,
+    pub publication: Option<TextEditorDeliveryPublication>,
     pub pending_echoes: VecDeque<String>,
     acknowledged: Option<String>,
     pub read_only: bool,
@@ -1219,8 +1219,8 @@ pub struct TextEditorDeliveryState {
     pub(super) explicit_publication: Option<TextEditorDraftPublication>,
     pub(super) explicit_active: Option<std::num::NonZeroU64>,
     pub(super) explicit_error: Option<String>,
-    typing: Option<TextEditorTypingRun>,
-    typing_end: Option<TextEditorTypingEnd>,
+    pub typing: Option<TextEditorTypingRun>,
+    pub typing_end: Option<TextEditorTypingEnd>,
 }
 
 impl TextEditorDeliveryState {

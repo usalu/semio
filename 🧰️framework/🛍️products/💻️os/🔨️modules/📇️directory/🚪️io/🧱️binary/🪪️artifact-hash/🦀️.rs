@@ -1,5 +1,5 @@
 //! 🪪️ Explicit hash text admission and frontier projection.
-use crate::schema::{ArtifactHash, ArtifactFrontier, EditedArtifactFrontierV1, valid_document_open_hash};
+use semio_framework_os_directory_schema::{ArtifactHash, ArtifactFrontier, EditedArtifactFrontierV1, valid_document_open_hash};
 
 /// 🔤️ Admits a canonical nonzero lowercase SHA256 text representation.
 pub fn parse_artifact_hash_hex(value: &str) -> Option<ArtifactHash> {

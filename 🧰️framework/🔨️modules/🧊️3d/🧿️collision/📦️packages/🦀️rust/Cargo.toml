@@ -1,0 +1,28 @@
+[package]
+workspace = "../../../../.."
+name = "semio-framework-3d-collision"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+
+[lints]
+workspace = true
+
+[package.metadata.semio]
+role = "framework"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-3d-rigid = { path = "../../../🌀️rigid/📦️packages/🦀️rust" }
+semio-framework-value.workspace = true
+semio-framework-value-derive.workspace = true
+
+[dev-dependencies]
+parry3d = "0.17"

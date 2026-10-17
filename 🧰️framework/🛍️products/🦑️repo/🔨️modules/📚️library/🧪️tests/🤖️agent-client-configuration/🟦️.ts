@@ -1,6 +1,6 @@
 /** 🤖️ Agent client configuration canon: every MCP client file is derived from the one root dashboard declaration. The rendered
- * text is compared with a language-agnostic fixture; its meaning is read back by third-party parsers (jsonc-parser, smol-toml,
- * toml) and the declaration is validated by Ajv against the registry schema. @see ../../🧫️fixtures/🤖️agent-client-configuration/🔣️.json */
+ * text is compared with a language-agnostic fixture; its meaning is read back independently by jsonc-parser, smol-toml
+ * and Bun TOML and the declaration is validated by Ajv against the registry schema. @see ../🧫️fixtures/🤖️agent-client-configuration/🔣️.json */
 import { describe, expect, test } from "bun:test";
 import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -8,7 +8,6 @@ import { dirname, join, resolve } from "node:path";
 import Ajv2020 from "ajv/dist/2020";
 import { parse as parseJsonc } from "jsonc-parser";
 import * as SmolToml from "smol-toml";
-import * as LegacyToml from "toml";
 import { AGENT_CLIENTS, AGENT_CLIENT_DECLARATION_MANIFEST, agentClientLauncher, checkAgentClients, deriveAgentClientFiles, mcpServersOf, readDeclaredTools, writeAgentClients, type DeclaredTool, type McpServer } from "../../🤖️agent-clients/🟦️.ts";
 
 type Fixture = Readonly<{
@@ -21,7 +20,7 @@ type Fixture = Readonly<{
 
 const libraryRoot = resolve(import.meta.dir, "../..");
 const repoRoot = resolve(libraryRoot, "../../../../..");
-const fixture = JSON.parse(readFileSync(join(libraryRoot, "🧫️fixtures/🤖️agent-client-configuration/🔣️.json"), "utf8")) as Fixture;
+const fixture = JSON.parse(readFileSync(join(libraryRoot, "🧪️tests/🧫️fixtures/🤖️agent-client-configuration/🔣️.json"), "utf8")) as Fixture;
 const registrySchema = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧬️schema/🎮️registry/🔣️.json"), "utf8")) as { $id: string; $defs: { AgentClientId: { enum: string[] } } };
 
 type ServerTable = Record<string, { type?: string; command: string; args: string[]; enabled?: boolean; cwd?: string }>;
@@ -50,7 +49,7 @@ describe("derivation from a fixture declaration", () => {
 
   test("a second TOML parser reads the Codex file the same way", () => {
     const codex = files.find((file) => file.client === "codex")!;
-    expect(LegacyToml.parse(codex.text)).toEqual(SmolToml.parse(codex.text) as object);
+    expect(Bun.TOML.parse(codex.text)).toEqual(SmolToml.parse(codex.text) as object);
   });
 
   test("server resolution is the fixture's independent statement", () => {
@@ -95,7 +94,7 @@ describe("the registry schema", () => {
   const validateDeclaration = ajv.getSchema(`${registrySchema.$id}#/$defs/ProjectDeclaration`)!;
 
   test("names exactly the clients the writer knows", () => {
-    expect([...AGENT_CLIENTS]).toEqual(registrySchema.$defs.AgentClientId.enum);
+    expect([...AGENT_CLIENTS] as string[]).toEqual(registrySchema.$defs.AgentClientId.enum);
   });
 
   test("accepts the fixture declaration and the root declaration", () => {

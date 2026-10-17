@@ -1,0 +1,304 @@
+{
+  "version": 1,
+  "intents": [
+    {
+      "mode": "prototype",
+      "host": "linux",
+      "operation": "setup",
+      "preset": "linux-prototype",
+      "configuration": "Debug",
+      "compiler": false
+    },
+    {
+      "mode": "prototype",
+      "host": "linux",
+      "operation": "configure",
+      "preset": "linux-prototype",
+      "configuration": "Debug",
+      "compiler": true
+    },
+    {
+      "mode": "prototype",
+      "host": "linux",
+      "operation": "build",
+      "preset": "linux-prototype",
+      "configuration": "Debug",
+      "compiler": true
+    },
+    {
+      "mode": "prototype",
+      "host": "linux",
+      "operation": "test",
+      "preset": "linux-prototype",
+      "configuration": "Debug",
+      "compiler": false
+    },
+    {
+      "mode": "prototype",
+      "host": "macos",
+      "operation": "setup",
+      "preset": "macos-prototype",
+      "configuration": "Debug",
+      "compiler": false
+    },
+    {
+      "mode": "prototype",
+      "host": "macos",
+      "operation": "configure",
+      "preset": "macos-prototype",
+      "configuration": "Debug",
+      "compiler": true
+    },
+    {
+      "mode": "prototype",
+      "host": "macos",
+      "operation": "build",
+      "preset": "macos-prototype",
+      "configuration": "Debug",
+      "compiler": true
+    },
+    {
+      "mode": "prototype",
+      "host": "macos",
+      "operation": "test",
+      "preset": "macos-prototype",
+      "configuration": "Debug",
+      "compiler": false
+    },
+    {
+      "mode": "prototype",
+      "host": "windows",
+      "operation": "setup",
+      "preset": "windows-prototype",
+      "configuration": "Debug",
+      "compiler": false
+    },
+    {
+      "mode": "prototype",
+      "host": "windows",
+      "operation": "configure",
+      "preset": "windows-prototype",
+      "configuration": "Debug",
+      "compiler": true
+    },
+    {
+      "mode": "prototype",
+      "host": "windows",
+      "operation": "build",
+      "preset": "windows-prototype",
+      "configuration": "Debug",
+      "compiler": true
+    },
+    {
+      "mode": "prototype",
+      "host": "windows",
+      "operation": "test",
+      "preset": "windows-prototype",
+      "configuration": "Debug",
+      "compiler": false
+    },
+    {
+      "mode": "release",
+      "host": "linux",
+      "operation": "setup",
+      "preset": "linux-release",
+      "configuration": "Release",
+      "compiler": false
+    },
+    {
+      "mode": "release",
+      "host": "linux",
+      "operation": "configure",
+      "preset": "linux-release",
+      "configuration": "Release",
+      "compiler": true
+    },
+    {
+      "mode": "release",
+      "host": "linux",
+      "operation": "build",
+      "preset": "linux-release",
+      "configuration": "Release",
+      "compiler": true
+    },
+    {
+      "mode": "release",
+      "host": "linux",
+      "operation": "test",
+      "preset": "linux-release",
+      "configuration": "Release",
+      "compiler": false
+    },
+    {
+      "mode": "release",
+      "host": "macos",
+      "operation": "setup",
+      "preset": "macos-release",
+      "configuration": "Release",
+      "compiler": false
+    },
+    {
+      "mode": "release",
+      "host": "macos",
+      "operation": "configure",
+      "preset": "macos-release",
+      "configuration": "Release",
+      "compiler": true
+    },
+    {
+      "mode": "release",
+      "host": "macos",
+      "operation": "build",
+      "preset": "macos-release",
+      "configuration": "Release",
+      "compiler": true
+    },
+    {
+      "mode": "release",
+      "host": "macos",
+      "operation": "test",
+      "preset": "macos-release",
+      "configuration": "Release",
+      "compiler": false
+    },
+    {
+      "mode": "release",
+      "host": "windows",
+      "operation": "setup",
+      "preset": "windows-release",
+      "configuration": "Release",
+      "compiler": false
+    },
+    {
+      "mode": "release",
+      "host": "windows",
+      "operation": "configure",
+      "preset": "windows-release",
+      "configuration": "Release",
+      "compiler": true
+    },
+    {
+      "mode": "release",
+      "host": "windows",
+      "operation": "build",
+      "preset": "windows-release",
+      "configuration": "Release",
+      "compiler": true
+    },
+    {
+      "mode": "release",
+      "host": "windows",
+      "operation": "test",
+      "preset": "windows-release",
+      "configuration": "Release",
+      "compiler": false
+    }
+  ],
+  "failures": [
+    "error",
+    "undefined",
+    "cancel"
+  ],
+  "caches": [
+    {
+      "text": "//Captured cache DATA\nCMAKE_HOME_DIRECTORY:INTERNAL=/state/source\nCMAKE_CXX_COMPILER:FILEPATH=/tools/c++\nCMAKE_BUILD_TYPE:STRING=Debug\nCMAKE_GENERATOR:INTERNAL=Ninja\n",
+      "facts": {
+        "sourceRoot": "/state/source",
+        "compiler": "/tools/c++",
+        "configuration": "Debug",
+        "generator": "Ninja"
+      },
+      "accepted": true
+    },
+    {
+      "text": "//Captured cache DATA\nCMAKE_HOME_DIRECTORY:INTERNAL=/state/source\nCMAKE_CXX_COMPILER:FILEPATH=/tools/c++\nCMAKE_BUILD_TYPE:STRING=Release\nCMAKE_GENERATOR:INTERNAL=Ninja\n",
+      "facts": {
+        "sourceRoot": "/state/source",
+        "compiler": "/tools/c++",
+        "configuration": "Release",
+        "generator": "Ninja"
+      },
+      "accepted": true
+    },
+    {
+      "text": "//Captured cache DATA\nCMAKE_HOME_DIRECTORY:INTERNAL=/state/source\nCMAKE_CXX_COMPILER:FILEPATH=/tools/c++\nCMAKE_BUILD_TYPE:STRING=Debug\nCMAKE_GENERATOR:INTERNAL=Ninja\n",
+      "facts": {
+        "sourceRoot": "/state/source",
+        "compiler": "/tools/c++",
+        "configuration": "Debug",
+        "generator": "Ninja"
+      },
+      "accepted": true
+    },
+    {
+      "text": "//Captured cache DATA\nCMAKE_HOME_DIRECTORY:INTERNAL=/state/source\nCMAKE_CXX_COMPILER:FILEPATH=/tools/c++\nCMAKE_BUILD_TYPE:STRING=Release\nCMAKE_GENERATOR:INTERNAL=Ninja\n",
+      "facts": {
+        "sourceRoot": "/state/source",
+        "compiler": "/tools/c++",
+        "configuration": "Release",
+        "generator": "Ninja"
+      },
+      "accepted": true
+    },
+    {
+      "text": "//Captured cache DATA\nCMAKE_HOME_DIRECTORY:INTERNAL=/state/source\nCMAKE_CXX_COMPILER:FILEPATH=/tools/c++\nCMAKE_BUILD_TYPE:STRING=Debug\nCMAKE_GENERATOR:INTERNAL=Visual Studio 18 2026\n",
+      "facts": {
+        "sourceRoot": "/state/source",
+        "compiler": "/tools/c++",
+        "configuration": "Debug",
+        "generator": "Visual Studio 18 2026"
+      },
+      "accepted": true
+    },
+    {
+      "text": "//Captured cache DATA\nCMAKE_HOME_DIRECTORY:INTERNAL=/state/source\nCMAKE_CXX_COMPILER:FILEPATH=/tools/c++\nCMAKE_BUILD_TYPE:STRING=Release\nCMAKE_GENERATOR:INTERNAL=Visual Studio 18 2026\n",
+      "facts": {
+        "sourceRoot": "/state/source",
+        "compiler": "/tools/c++",
+        "configuration": "Release",
+        "generator": "Visual Studio 18 2026"
+      },
+      "accepted": true
+    },
+    {
+      "text": "//Captured cache DATA\nCMAKE_HOME_DIRECTORY:INTERNAL=/state/source\nCMAKE_CXX_COMPILER:FILEPATH=/tools/c++\nCMAKE_BUILD_TYPE:STRING=Debug\nCMAKE_GENERATOR:INTERNAL=Ninja\nCMAKE_BUILD_TYPE:STRING=Release\n",
+      "facts": {
+        "sourceRoot": "/state/source",
+        "compiler": "/tools/c++",
+        "configuration": "Debug",
+        "generator": "Ninja"
+      },
+      "accepted": false
+    },
+    {
+      "text": "//Captured cache DATA\nCMAKE_HOME_DIRECTORY:INTERNAL=/state/source\nCMAKE_CXX_COMPILER:FILEPATH=/tools/c++\nCMAKE_GENERATOR:INTERNAL=Ninja\n",
+      "facts": {
+        "sourceRoot": "/state/source",
+        "compiler": "/tools/c++",
+        "configuration": "Debug",
+        "generator": "Ninja"
+      },
+      "accepted": false
+    },
+    {
+      "text": "//Captured cache DATA\nCMAKE_HOME_DIRECTORY:INTERNAL=/state/source\nCMAKE_CXX_COMPILER:FILEPATH=/tools/c++\nCMAKE_BUILD_TYPE:STRING=RelWithDebInfo\nCMAKE_GENERATOR:INTERNAL=Ninja\n",
+      "facts": {
+        "sourceRoot": "/state/source",
+        "compiler": "/tools/c++",
+        "configuration": "Debug",
+        "generator": "Ninja"
+      },
+      "accepted": false
+    },
+    {
+      "text": "//Captured cache DATA\r\nCMAKE_HOME_DIRECTORY:INTERNAL=/state/source\r\nCMAKE_CXX_COMPILER:FILEPATH=/tools/c++\r\nCMAKE_BUILD_TYPE:STRING=Debug\r\nCMAKE_GENERATOR:INTERNAL=Visual Studio 18 2026\r\n",
+      "facts": {
+        "sourceRoot": "/state/source",
+        "compiler": "/tools/c++",
+        "configuration": "Debug",
+        "generator": "Visual Studio 18 2026"
+      },
+      "accepted": true
+    }
+  ]
+}

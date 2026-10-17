@@ -3,10 +3,10 @@ import { Database } from "bun:sqlite";
 import { expect, test } from "bun:test";
 import { exportSqliteDatabase, importSqliteDatabase } from "@semio-tech/framework";
 import fixture from "../../🧫️fixtures/🚢️shipped-fleet/🪶️sqlite/🧠️owners/🔣️.json";
-import { binarySnapshotToSqliteDatabase, binarySnapshotFromSqliteDatabase } from "../../../🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🟦️.ts";
-import { txtSnapshotToSqliteDatabase, txtSnapshotFromSqliteDatabase } from "../../../🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🟦️.ts";
-import { jsonSnapshotToSqliteDatabase, jsonSnapshotFromSqliteDatabase } from "../../../🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🟦️.ts";
-import type { JsonSnapshot, JsonValue } from "../../../🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🟦️.ts";
+import { binarySnapshotToSqliteDatabase, binarySnapshotFromSqliteDatabase } from "@semio-tech/stdio-binary/standards/raw/subsets/any/io/sqlite/snapshot";
+import { txtSnapshotToSqliteDatabase, txtSnapshotFromSqliteDatabase } from "@semio-tech/stdio-txt/standards/utf-8/subsets/any/io/sqlite/snapshot";
+import { jsonSnapshotToSqliteDatabase, jsonSnapshotFromSqliteDatabase } from "@semio-tech/stdio-json/standards/rfc8259/subsets/base/io/sqlite/snapshot";
+import type { JsonSnapshot, JsonValue } from "@semio-tech/stdio-json/standards/rfc8259/subsets/base/schema/snapshot";
 
 type LogicalDatabase = Awaited<ReturnType<typeof binarySnapshotToSqliteDatabase>>;
 
@@ -26,7 +26,6 @@ async function assertOwner<S>(index: number, source: S, project: (source: S) => 
       expect(db.query(`SELECT * FROM ${name} ORDER BY id`).all()).toEqual(rows);
     }
     expect(source).toEqual(await reconstruct(await importSqliteDatabase(new Uint8Array(db.serialize()))));
-    console.log(`[DEBUG] Source primary owner ${witness.kind}/${witness.standard}/${witness.subset}: complete domain tables=${tables.length}, bytes=${bytes.length}, full owner restored`);
   } finally { db.close(); }
 }
 
@@ -86,7 +85,6 @@ test("primary dependent schema contracts compile independently with exact origin
   }
   for (const contract of dependencies.contracts) {
     expect(typeof ajv.compile(await read(contract.schemaPath))).toBe("function");
-    console.log("[DEBUG] independent structural contract " + contract.scope + ": exact original dependencies resolved");
   }
 });
 
@@ -96,7 +94,6 @@ test("primary dependent declarations explicitly own every published structural s
     const definition = JSON.parse(await Bun.file(new URL("../../../🗿️artifacts/" + owner.artifact + "/📜️artifact-definition.json", import.meta.url)).text());
     const claim = owner.scope + "#" + owner.export;
     expect(definition.runtime_capabilities.filter((row: {category:string,claims:{namespace:string,value:string}[]}) => row.category === "schema" && row.claims.some(value => value.namespace === "schema-export" && value.value === claim))).toHaveLength(1);
-    console.log("[DEBUG] declared structural dependency " + definition.id + ": " + claim);
   }
 });
 

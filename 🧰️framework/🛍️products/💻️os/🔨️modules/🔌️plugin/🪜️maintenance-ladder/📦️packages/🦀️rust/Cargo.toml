@@ -19,7 +19,7 @@ maxActiveLines = 4000
 workspace = true
 
 [lib]
-path = "🦀️.rs"
+path = "../../🦀️.rs"
 
 [dependencies]
 semio-framework-plugin-interaction = { path = "../../../🕹️interaction/📦️packages/🦀️rust" }
@@ -54,5 +54,10 @@ semio-framework-plugin-tool-run-turns = { path = "../../../⏯️tool-run/🧵�
 semio-framework-plugin-tool-run = { path = "../../../⏯️tool-run/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-value-derive = { path = "../../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
+semio-framework = { path = "../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
+semio-framework-plugin-decl-emission = { path = "../../../📜️declaration/📨️emission/📦️packages/🦀️rust" }
+semio-framework-plugin-mounted-owner = { path = "../../../🏇️mounted-owner/📦️packages/🦀️rust" }
+semio-framework-plugin-reactor-app = { path = "../../../⚛️reactor/🔌️app/📦️packages/🦀️rust" }
+semio_framework_ui_contract = { path = "../../../../../../../🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
 
 [dev-dependencies]

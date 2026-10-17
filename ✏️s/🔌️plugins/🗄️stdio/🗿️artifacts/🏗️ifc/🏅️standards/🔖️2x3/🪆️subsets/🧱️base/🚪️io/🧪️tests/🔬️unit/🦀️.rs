@@ -1,3 +1,4 @@
+use semio_framework_test_fixtures::fixture_path;
 use semio_s_artifact_stdio_ifc_2x3_base::standards::v2x3::subsets::base::io::*;
 use semio_s_artifact_stdio_ifc_2x3_base_model::standards::v2x3::subsets::base::schema::demo_ifc2x3_snapshot;
 use semio_s_artifact_stdio_ifc_2x3_base_model::standards::v2x3::subsets::base::schema::empty_ifc2x3_snapshot;
@@ -8,7 +9,7 @@ const IFC2X3_FIXTURE: &str = "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION((''),'2;1
 
 async fn exact_fixture_bytes() -> &'static [u8] {
     static BYTES: OnceLock<Vec<u8>> = OnceLock::new();
-    BYTES.get_or_init(|| std::fs::read(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧫️fixtures/🏥️wellness-center-sama-street-level/🏥️wellness-center-sama-street-level.ifc")).expect("read temp/wellness-center-sama.ifc"))
+    BYTES.get_or_init(|| std::fs::read(fixture_path!("../../🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/🏥️wellness-center-sama-street-level/🏥️wellness-center-sama-street-level.ifc")).expect("read temp/wellness-center-sama.ifc"))
 }
 
 async fn assert_exact(label: &str, actual: &[u8]) {
@@ -249,7 +250,7 @@ mod conformance_laws {
 #[test]
 fn committed_ifc2x3_fixtures_read_through_the_canonical_part21_codec() {
     use semio_s_artifact_stdio_contract::part21::{parse_part21, write_part21};
-    let mut pending = vec![std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️2x3")];
+    let mut pending = vec![fixture_path!("../../🏅️standards/🔖️2x3")];
     let mut files = Vec::new();
     while let Some(directory) = pending.pop() {
         for entry in std::fs::read_dir(&directory).expect("fixture directory") {

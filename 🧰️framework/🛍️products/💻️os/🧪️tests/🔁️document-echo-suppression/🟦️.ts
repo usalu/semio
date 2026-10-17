@@ -2,6 +2,8 @@
  * (`🔨️modules/🏪️store/🔄️sync/🧪️tests/🔬️document-echo-suppression/🦀️.rs`), using operation identity: a late
  * joiner applies the whole catch-up tail even when the hub stamped it with the joiner's own actor, the same user's second device applies
  * the first device's edits, and a genuine echo is applied exactly once (ticket 26/09/23 session 12, run s12i). */
+import { loadEchoSuppressionV1Fixture } from "../../🔨️modules/🏪️store/🧪️tests/🧫️fixtures/🟦️.ts";
+
 export async function registerDocumentEchoSuppressionTests(
   vitest: NonNullable<ImportMeta["vitest"]>,
   twin: {
@@ -10,7 +12,7 @@ export async function registerDocumentEchoSuppressionTests(
   },
 ): Promise<void> {
   const { describe, it, expect } = vitest;
-  const { default: fixture } = await import("../../🔨️modules/🏪️store/🧪️tests/🧫️fixtures/document-echo-suppression-v1/🔣️.json");
+  const fixture = await loadEchoSuppressionV1Fixture();
   type Envelope = { readonly mutationId: string; readonly actor: string };
 
   describe("DocumentEchoSuppression", () => {

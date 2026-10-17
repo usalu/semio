@@ -2,7 +2,12 @@
 //! one-shot is ONE transaction, a streamed gesture accumulates ONE net leaf in its open transaction until its commit,
 //! every host abort leaves zero trace, and the persisted state round-trips through the window transient's value form.
 
-use super::*;
+#[allow(unused_imports)] use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
+#[allow(unused_imports)] use semio_framework_plugin::Emit;
+#[allow(unused_imports)] use semio_framework_tool_machine::{ToolAbortReason, ToolMachineRunner, ToolRefusal, ToolStep, ToolTransaction, ToolTransactionState, ToolYield};
+#[allow(unused_imports)] use semio_framework_value_derive::{FromValue, ToValue};
+#[allow(unused_imports)] use std::sync::Arc;
+#[allow(unused_imports)] use semio_s_artifact_layout_layout_editor_commands::modes::edit::windows::blueprint::transform::*;
 
 fn document() -> LayoutSnapshot {
     semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document()

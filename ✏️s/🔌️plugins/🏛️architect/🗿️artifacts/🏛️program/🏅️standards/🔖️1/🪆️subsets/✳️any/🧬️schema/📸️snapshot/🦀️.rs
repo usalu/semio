@@ -3,8 +3,10 @@
 use crate::standards::v1::subsets::any::schema::kernel::*;
 use crate::standards::v1::subsets::any::schema::registers::*;
 use framework_schema::ArtifactSchema;
-use crate::standards::v1::subsets::any::schema::ARCHITECT_PROGRAM_SCHEMA;
 
+
+/// 📜️ Persisted architect program document schema identifier.
+pub const ARCHITECT_PROGRAM_SCHEMA: &str = "architect.program";
 
 //#region 🔖️Snapshot
 /// 📸️ Persisted architect program snapshot (persistent fields of the artifact).
@@ -675,7 +677,7 @@ pub fn sample_plugin() -> ProgramSnapshot {
         success_metrics: Vec::new(),
     });
 
-    let (a, b) = standards::v1::subsets::any::schema::normalize_pair(&reception_id, &waiting_id);
+    let (a, b) = standards::v1::subsets::any::schema::kernel::normalize_pair(&reception_id, &waiting_id);
     program.adjacencies.push(Adjacency {
         header: EntityHeader::new(EntityId::new_serial("adjacency", "Reception ↔ Waiting"), "Reception ↔ Waiting"),
         element_a_id: a,

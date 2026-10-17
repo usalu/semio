@@ -1,10 +1,19 @@
-use super::*;
+use crate::schema::mutations::set_archive_comment;
+use crate::{ZipMutation, ZipSnapshot};
+use semio_framework_plugin::BuiltNode;
+use semio_framework_plugin::TreeWindows;
+use semio_framework_plugin::UiAssemblyResult;
+use semio_framework_plugin::Fault;
+use semio_framework_test_fixtures::fixture_text;
+use semio_framework_ui_locale::Locale;
+use crate::editor::editing::{fault, draft};
+use crate::editor::editing::*;
 use protocol::command::DiffAlgebra;
 use protocol::{Mutation, MutationDiff};
 use semio_framework_plugin::ArtifactEditor;
 
 fn fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap()
+    serde_json::from_str(fixture_text!("../../🧪️tests/🧫️fixtures/🔣️.json")).unwrap()
 }
 
 #[test]
@@ -349,7 +358,7 @@ async fn iso_archive_draft_uses_the_registered_retained_factory() {
 fn archive_registered_factory_resumes_the_exact_cursor_and_refuses_another_revision() {
     use protocol::OpBinary;
     use semio_framework_job::{Generation, InteractiveJob, JobOutcomeBorrow, Operation, OperationId, RevisionId, StepBudget, StepContext};
-    use semio_framework_plugin::action_bus::{ActionBus, ToolOperationSpec, ToolWirePage, TOOL_WIRE_PAGE_BYTES};
+    use semio_framework_action_bus::{ActionBus, ToolOperationSpec, ToolWirePage, TOOL_WIRE_PAGE_BYTES};
     use semio_framework_plugin::app::{AppOperationContext, ArtifactOwnedToolJobContext, ArtifactOwnedToolJobSnapshots, ArtifactToolCompletion, ChildContentView, InteractionHoverState};
     use semio_framework_plugin::retained_command::{ArtifactOwnedContextHandle, ArtifactRetainedCommandInputs, ArtifactRetainedCommandPayload};
     use semio_framework_plugin::{EditorApp, HistoryView};

@@ -1,0 +1,14 @@
+{
+ "name": "c4p49",
+ "crates": [
+  "semio-framework-surface-tiled-map",
+  "semio-framework-manifest-actions",
+  "semio-framework-manifest-arg-schema",
+  "semio-framework-manifest-app-surface",
+  "semio-framework-tool-machine",
+  "semio-framework-tool-machine-tests",
+  "semio-framework-math-sampling-config",
+  "semio-framework-math-sampling-vocabulary"
+ ],
+ "note": "CENSUS4-PKG-49: the eight crates that mount the seven split files"
+}

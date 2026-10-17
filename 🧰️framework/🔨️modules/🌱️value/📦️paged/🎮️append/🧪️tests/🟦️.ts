@@ -16,6 +16,5 @@ test("native UTF8 append quotes original scalar page and publication work", () =
     expect(db.query("SELECT bytes FROM chunks WHERE text=?").get(text)).toEqual({ bytes: Buffer.byteLength(text) });
   }
   db.close();
-  console.log("[DEBUG] independent Node UTF8 scalar1..4 and SQLite exact byte ownership agree with native1024 chunk/4096 work quotes");
   expect(readFileSync(new URL("🦀️.rs", root), "utf8")).toContain("pub fn next_advance_demand");
 });

@@ -1,8 +1,8 @@
 use super::*;
-use crate::actors::tests::{id, ADA, BOB, TENANT};
-use crate::catalog::tests::fixture;
+use crate::actors::fixtures::{id, ADA, BOB, TENANT};
+use teaching_proctor_base::catalog::fixtures::fixture;
 use crate::projections::LEADERBOARD;
-use crate::storage::{Database, SqliteProjectionStore};
+use teaching_proctor_base::storage::{Database, SqliteProjectionStore};
 use quiz::{Identity, Leaderboard, LeaderboardPeriod, Transcript, TranscriptRun, CHALLENGES, LEADERBOARD_PERIODS};
 use server::contract::{Principal, QueryConsistency, QueryId, Scope};
 
@@ -125,7 +125,7 @@ async fn a_handle_is_recalled_by_a_read_that_writes_nothing() {
     }
     projections.put(HANDLES, "grace", b"{}".to_vec()).await.unwrap();
     assert!(matches!(handle.handle(&asked("Grace"), &projections).await, Err(ServerError::Internal(_))), "a holder that does not decode is not a free handle");
-    assert_eq!(crate::storage::SqliteAuthorityStore::new(database).log_head().unwrap(), 0, "recalling appends no event");
+    assert_eq!(teaching_proctor_base::storage::SqliteAuthorityStore::new(database).log_head().unwrap(), 0, "recalling appends no event");
 }
 
 #[tokio::test]

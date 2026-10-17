@@ -1,6 +1,6 @@
 //! 🏁️ Replaces the app-local solve result every WFC 3D window paints from.
 
-use super::{Wfc3dTransient, Wfc3dTransientDiff, Wfc3dTransientMutation};
+use super::{Wfc3dTransient, Wfc3dTransientDiff};
 use crate::editor::wfc3d::transient::Wfc3dAssignment;
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
@@ -14,7 +14,10 @@ pub struct SetSolve {
     pub contradiction: bool,
 }
 
-impl protocol::MutationKind<Wfc3dTransient, Wfc3dTransientMutation> for SetSolve {
+impl<Op> protocol::MutationKind<Wfc3dTransient, Op> for SetSolve
+where
+    Op: protocol::Mutation<Wfc3dTransient, Diff = Wfc3dTransientDiff> + From<SetSolve>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "solve", kind: "set-solve", record: "SetSolve" };
     fn diff(&self, base: &Wfc3dTransient) -> protocol::MutationOutcome<Wfc3dTransientDiff> {
         let diff = Wfc3dTransientDiff { assignments: (base.assignments != self.assignments).then(|| self.assignments.clone()), contradiction: (base.contradiction != self.contradiction).then_some(self.contradiction) };
@@ -23,7 +26,7 @@ impl protocol::MutationKind<Wfc3dTransient, Wfc3dTransientMutation> for SetSolve
         }
         protocol::MutationOutcome::new(diff)
     }
-    fn inverse(&self, base: &Wfc3dTransient) -> Result<Vec<Wfc3dTransientMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Wfc3dTransient) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
         vec![Self { assignments: base.assignments.clone(), contradiction: base.contradiction }.into()]
     

@@ -10,7 +10,6 @@ pub fn label() -> LocalizedLabel {
 }
 pub const ICON: &str = "building-2";
 pub const PRIMARY_TEXT: &str = include_str!("../../🖼️assets/🏢️office/🗣️.dsl.semio");
-pub const SNAPSHOT_JSON: &str = include_str!("../../🖼️assets/🏢️office/📸️snapshot.json");
 pub fn source() -> ExampleSource {
     ExampleSource::new(ID, label(), PRIMARY_TEXT, ICON)
 }

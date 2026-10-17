@@ -1,8 +1,14 @@
-use super::*;
+use semio_framework_test_fixtures::fixture_text;
+
+#[allow(unused_imports)] use semio_s_artifact_draw_drawing_model::PathSegment;
+#[allow(unused_imports)] use semio_s_artifact_draw_drawing_geometry::editing::PathPoint;
+#[allow(unused_imports)] use semio_framework_hash::Hasher;
+#[allow(unused_imports)] use semio_framework_value::paged::Utf8Text;
+#[allow(unused_imports)] use semio_s_artifact_draw_drawing_editor_interaction::points::*;
 
 #[test]
 fn point_references_match_neutral_topology_and_blake3_oracle() {
-    let cases:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let cases:serde_json::Value=serde_json::from_str(fixture_text!("../../../../🎯️points/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     for row in cases.as_array().unwrap() {
         let segments:Vec<PathSegment>=serde_json::from_value(row["segments"].clone()).unwrap();
         let geometry=geometry_id(&segments).unwrap();
@@ -42,7 +48,7 @@ fn point_reference_parser_rejects_ambiguous_addresses() {
 
 #[test]
 fn modified_point_picks_match_neutral_selection_contract() {
-    let cases:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🖱️picking/🔣️.json")).unwrap();
+    let cases:serde_json::Value=serde_json::from_str(fixture_text!("../../../../🎯️points/🧪️tests/🧫️fixtures/🖱️picking/🔣️.json")).unwrap();
     for row in cases.as_array().unwrap() {
         let current:Vec<String>=serde_json::from_value(row["current"].clone()).unwrap();
         let result=pick_point_selection(&current,row["hit"].as_str(),serde_json::from_value(row["mode"].clone()).unwrap());
@@ -52,7 +58,7 @@ fn modified_point_picks_match_neutral_selection_contract() {
 
 #[test]
 fn point_marquee_matches_transformed_anchor_and_merge_fixtures() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔲️marquee/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../../🎯️points/🧪️tests/🧫️fixtures/🔲️marquee/🔣️.json")).unwrap();
     let segments:Vec<PathSegment>=serde_json::from_value(fixture["segments"].clone()).unwrap();
     for case in fixture["cases"].as_array().unwrap() {
         let matrix=serde_json::from_value(case["matrix"].clone()).unwrap();let start=serde_json::from_value(case["start"].clone()).unwrap();let end=serde_json::from_value(case["end"].clone()).unwrap();

@@ -72,7 +72,7 @@ fn frame_to_canvas(frame: &FigureTileFrame, scale: f64) -> (f64, f64, f64, f64) 
 
 /// 👁️ Pure `PresentationSnapshot -> layers JSON` read: the same source-figure-plus-crop-tiles content the
 /// editor's own canvas renders, with no selection/engagement overlay (a viewer has neither).
-fn deck_to_canvas_layers(deck: &PresentationSnapshot) -> String {
+pub fn deck_to_canvas_layers(deck: &PresentationSnapshot) -> String {
     const SCALE: f64 = crate::PRESENTATION_CANVAS_SCALE;
     let (source, tiles) = crate::presentation_working_scene(deck);
     let mut layers = Vec::new();

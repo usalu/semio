@@ -18,3 +18,6 @@ path = "🦀️.rs"
 [dependencies]
 serde = { workspace = true }
 serde_json = { workspace = true }
+
+[dev-dependencies]
+semio-framework-test-fixtures = { path = "../../../../../../🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }

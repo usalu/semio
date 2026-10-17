@@ -1,0 +1,98 @@
+[
+  {
+    "id": "unchanged",
+    "member": "backing",
+    "field": "none",
+    "accepted": true
+  },
+  {
+    "id": "backing-stamp",
+    "member": "backing",
+    "field": "stamp",
+    "accepted": true
+  },
+  {
+    "id": "folder-stamp",
+    "member": "folder",
+    "field": "stamp",
+    "accepted": true
+  },
+  {
+    "id": "root-stamp",
+    "member": "root",
+    "field": "stamp",
+    "accepted": true
+  },
+  {
+    "id": "receipt-stamp",
+    "member": "receipt",
+    "field": "stamp",
+    "accepted": true
+  },
+  {
+    "id": "backing-dev",
+    "member": "backing",
+    "field": "dev",
+    "accepted": false
+  },
+  {
+    "id": "backing-ino",
+    "member": "backing",
+    "field": "ino",
+    "accepted": false
+  },
+  {
+    "id": "backing-mode",
+    "member": "backing",
+    "field": "mode",
+    "accepted": false
+  },
+  {
+    "id": "backing-nlink",
+    "member": "backing",
+    "field": "nlink",
+    "accepted": false
+  },
+  {
+    "id": "backing-size",
+    "member": "backing",
+    "field": "size",
+    "accepted": false
+  },
+  {
+    "id": "backing-allocatedBytes",
+    "member": "backing",
+    "field": "allocatedBytes",
+    "accepted": false
+  },
+  {
+    "id": "folder-ino",
+    "member": "folder",
+    "field": "ino",
+    "accepted": false
+  },
+  {
+    "id": "root-dev",
+    "member": "root",
+    "field": "dev",
+    "accepted": false
+  },
+  {
+    "id": "receipt-ino",
+    "member": "receipt",
+    "field": "ino",
+    "accepted": false
+  },
+  {
+    "id": "receipt-size",
+    "member": "receipt",
+    "field": "size",
+    "accepted": false
+  },
+  {
+    "id": "receipt-sha256",
+    "member": "receipt",
+    "field": "sha256",
+    "accepted": false
+  }
+]

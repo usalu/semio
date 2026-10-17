@@ -1,0 +1,50 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "device",
+      "stampIndex": 0,
+      "bytesChanged": false
+    },
+    {
+      "id": "inode",
+      "stampIndex": 1,
+      "bytesChanged": false
+    },
+    {
+      "id": "mode",
+      "stampIndex": 2,
+      "bytesChanged": false
+    },
+    {
+      "id": "links",
+      "stampIndex": 3,
+      "bytesChanged": false
+    },
+    {
+      "id": "size",
+      "stampIndex": 4,
+      "bytesChanged": false
+    },
+    {
+      "id": "modified",
+      "stampIndex": 5,
+      "bytesChanged": false
+    },
+    {
+      "id": "changed",
+      "stampIndex": 6,
+      "bytesChanged": false
+    },
+    {
+      "id": "bytes",
+      "stampIndex": null,
+      "bytesChanged": true
+    },
+    {
+      "id": "both",
+      "stampIndex": 6,
+      "bytesChanged": true
+    }
+  ]
+}

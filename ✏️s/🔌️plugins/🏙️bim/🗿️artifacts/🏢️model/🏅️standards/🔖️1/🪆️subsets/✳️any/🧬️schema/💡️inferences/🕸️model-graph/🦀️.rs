@@ -52,6 +52,8 @@ pub mod projection;
 pub mod instance;
 #[path = "📡️session/🦀️.rs"]
 pub mod session;
+#[path = "🧰️standalone/🦀️.rs"]
+pub mod standalone;
 
 pub use session::{ModelInferenceSession, RunProgress, SessionRun, UpdateReport};
 

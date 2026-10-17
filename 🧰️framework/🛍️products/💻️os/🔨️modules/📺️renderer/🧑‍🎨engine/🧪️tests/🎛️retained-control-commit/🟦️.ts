@@ -7,9 +7,9 @@
  * rather than as a silent renderer difference.
  *
  * The rules re-derived here are React's, at their source:
- *  - `🛠️ShellHelpers/🟦️.tsx`'s `uiInputField` — a scalar payload is named by its TRIGGER (`delta`
+ *  - `🛠️ShellHelpers/🌳️tree-windows/🟦️.tsx`'s `uiInputField` — a scalar payload is named by its TRIGGER (`delta`
  *    for `Trigger::Delta`, `value` for every other).
- *  - `🛠️ShellHelpers/🟦️.tsx`'s `uiIntentPayload` — the named payload is MERGED OVER the node's
+ *  - `🛠️ShellHelpers/🌳️tree-windows/🟦️.tsx`'s `uiIntentPayload` — the named payload is MERGED OVER the node's
  *    authored args (`{...args, ...named}`), never substituted for them.
  *  - `📃️UiDocumentStore/🟦️.tsx`'s `emitIntent` — a node with no binding for the trigger dispatches
  *    nothing at all.

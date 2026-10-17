@@ -1,0 +1,298 @@
+/** 🔤️ The language of the stories page and its menagerie source: the English and German labels, the names of the ways of getting around, the browser's language and the first valid menagerie found in the handed-over document. */
+import { MENAGERIE_SCHEMA, menagerieIssues, type Activity, type Issue, type Menagerie } from "@semio-tech/pets";
+import "../🎨️.css";
+
+//#region 🔖️Language
+export const LABELS = {
+  en: {
+    title: "Pet stories",
+    species: "Species",
+    sandbox: "Sandbox",
+    language: "Language",
+    dark: "Dark page",
+    mood: "Mood",
+    intensity: "Intensity",
+    lid: "Lid",
+    blinking: "Blink",
+    mirrored: "Face left",
+    speed: "Speed",
+    zoom: "Size",
+    rest: "rest",
+    light: "light ground",
+    darkGround: "dark ground",
+    loop: "loop",
+    once: "once",
+    unused: "no activity",
+    gait: "gait",
+    hover: "hover",
+    grip: "grip",
+    reach: "reach",
+    gear: "gear",
+    none: "none",
+    canopy: "own canopy",
+    rests: "rests",
+    counts: "states · tricks · emitters",
+    clips: "At rest and every clip",
+    states: "States: tint, look and particles",
+    tricks: "Tricks and the purr",
+    around: "Getting around and being handled",
+    noClips: "No clip in the repertoire for",
+    missingClip: "missing clip",
+    missingEmitter: "missing emitter",
+    tint: "tint",
+    noTint: "no tint",
+    lasts: "lasts",
+    purr: "purr",
+    missing: "No file at",
+    empty: "No valid menagerie in",
+    issues: "Issues",
+    scene: "Scene",
+    mode: "Mode",
+    off: "off",
+    quiet: "Quiet",
+    play: "Play",
+    mischief: "Mischief",
+    capacity: "Capacity",
+    scale: "Scale",
+    seed: "Seed",
+    reseed: "New seed",
+    tempo: "Tempo",
+    scroll: "Scroll the cards",
+    rearrange: "Rearrange the cards",
+    remove: "Take a card away",
+    restore: "Put the card back",
+    card: "Card",
+    cardText: "Pets walk along the top edge of a card and climb its sides. Text and controls are kept free.",
+    action: "A button",
+    note: "A note on the edge",
+    shelf: "A scrolling shelf",
+    task: "Task",
+    taskText: "Rows a pet may play with:",
+    noProps: "The species of this scene name no grounds.",
+    hand: "The hand",
+    handHint: "Press on a pet and move to pick it up by its scruff; let go to throw it — from high up its parachute opens. Escape gives it back. Click a pet: hello, then its tricks, then a purr, then enough. Circle the pointer round a pet, clockwise or counter-clockwise, or stroke back and forth over it.",
+    inspect: "Inspect a pet",
+    pet: "Pet",
+    nobody: "Nobody on stage yet.",
+    state: "State",
+    trick: "Trick",
+    activity: "Activity",
+    footing: "Footing",
+    enter: "Enter",
+    perform: "Perform",
+    feel: "Feel",
+    act: "Do it",
+    deeds: "Deeds",
+    deedHello: "Hello",
+    deedTrick: "Trick",
+    deedPet: "Pet it",
+    deedToss: "Toss",
+    pickUp: "Pick up (hand)",
+    drop: "Drop (air)",
+    dropHigh: "Drop from high (chute)",
+    dropOnHead: "Drop on a neighbour (head)",
+    routes: "Walls, ladders and ropes are taken by the pets on their own routes.",
+    readout: "Live",
+    tick: "tick",
+    rate: "rate",
+    steps: "frames per second",
+    poofs: "poofs",
+    overlaps: "overlaps now",
+    overlapped: "frames with an overlap",
+    frames: "frames",
+    particles: "particles alive",
+    puffs: "dust clouds",
+    ladders: "ladders standing",
+    lifts: "lifted fixtures",
+    held: "held",
+    unseen: "The stage has not drawn a frame yet.",
+    applied: "applied",
+    refused: "not now: it is not on a perch",
+  },
+  de: {
+    title: "Tierchengeschichten",
+    species: "Arten",
+    sandbox: "Sandkasten",
+    language: "Sprache",
+    dark: "Dunkle Seite",
+    mood: "Stimmung",
+    intensity: "Stärke",
+    lid: "Lid",
+    blinking: "Blinzeln",
+    mirrored: "Nach links schauen",
+    speed: "Tempo",
+    zoom: "Größe",
+    rest: "Ruhe",
+    light: "heller Grund",
+    darkGround: "dunkler Grund",
+    loop: "Schleife",
+    once: "einmal",
+    unused: "keine Aktivität",
+    gait: "Gangart",
+    hover: "Schwebehöhe",
+    grip: "Griff",
+    reach: "Reichweite",
+    gear: "Ausrüstung",
+    none: "keine",
+    canopy: "eigener Schirm",
+    rests: "ruht",
+    counts: "Zustände · Kunststücke · Quellen",
+    clips: "In Ruhe und jeder Clip",
+    states: "Zustände: Tönung, Aussehen und Partikel",
+    tricks: "Kunststücke und das Schnurren",
+    around: "Unterwegs und in der Hand",
+    noClips: "Kein Clip im Repertoire für",
+    missingClip: "fehlender Clip",
+    missingEmitter: "fehlende Quelle",
+    tint: "Tönung",
+    noTint: "keine Tönung",
+    lasts: "hält",
+    purr: "Schnurren",
+    missing: "Keine Datei unter",
+    empty: "Keine gültige Menagerie in",
+    issues: "Befunde",
+    scene: "Szene",
+    mode: "Modus",
+    off: "aus",
+    quiet: "Ruhe",
+    play: "Spielen",
+    mischief: "Unfug",
+    capacity: "Plätze",
+    scale: "Maßstab",
+    seed: "Startwert",
+    reseed: "Neuer Startwert",
+    tempo: "Zeitraffer",
+    scroll: "Karten rollen",
+    rearrange: "Karten umstellen",
+    remove: "Eine Karte wegnehmen",
+    restore: "Karte zurücklegen",
+    card: "Karte",
+    cardText: "Tierchen laufen auf der Oberkante einer Karte und klettern an ihren Seiten. Text und Bedienelemente bleiben frei.",
+    action: "Ein Knopf",
+    note: "Eine Notiz auf der Kante",
+    shelf: "Ein rollendes Regal",
+    task: "Aufgabe",
+    taskText: "Zeilen, mit denen ein Tierchen spielen darf:",
+    noProps: "Die Arten dieser Szene nennen keine Themen.",
+    hand: "Die Hand",
+    handHint: "Drück auf ein Tierchen und beweg den Zeiger, um es am Nackenfell hochzuheben; lass los, um es zu werfen — von weit oben öffnet sich sein Fallschirm. Escape gibt es zurück. Klick ein Tierchen an: Hallo, dann seine Kunststücke, dann ein Schnurren, dann ist es genug. Kreise mit dem Zeiger um ein Tierchen, im oder gegen den Uhrzeigersinn, oder streichle hin und her darüber.",
+    inspect: "Ein Tierchen untersuchen",
+    pet: "Tierchen",
+    nobody: "Noch niemand auf der Bühne.",
+    state: "Zustand",
+    trick: "Kunststück",
+    activity: "Tätigkeit",
+    footing: "Halt",
+    enter: "Eintreten",
+    perform: "Vorführen",
+    feel: "Fühlen",
+    act: "Tun",
+    deeds: "Taten",
+    deedHello: "Hallo",
+    deedTrick: "Kunststück",
+    deedPet: "Streicheln",
+    deedToss: "Werfen",
+    pickUp: "Hochheben (Hand)",
+    drop: "Fallen lassen (Luft)",
+    dropHigh: "Von weit oben fallen lassen (Fallschirm)",
+    dropOnHead: "Auf einen Nachbarn fallen lassen (Kopf)",
+    routes: "Wände, Leitern und Seile nehmen die Tierchen auf eigenen Wegen.",
+    readout: "Live",
+    tick: "Tick",
+    rate: "Rate",
+    steps: "Bilder pro Sekunde",
+    poofs: "Verpuffungen",
+    overlaps: "Überlappungen jetzt",
+    overlapped: "Bilder mit Überlappung",
+    frames: "Bilder",
+    particles: "lebende Partikel",
+    puffs: "Staubwolken",
+    ladders: "stehende Leitern",
+    lifts: "angehobene Elemente",
+    held: "gehalten",
+    unseen: "Die Bühne hat noch kein Bild gezeichnet.",
+    applied: "angewandt",
+    refused: "nicht jetzt: es sitzt nicht auf einem Platz",
+  },
+} as const;
+
+/** 🗣️ The languages of the gallery, English first. */
+export type Language = keyof typeof LABELS;
+
+/** 🏷️ Every label of the gallery in one language. */
+export type Labels = { readonly [label in keyof (typeof LABELS)["en"]]: string };
+
+export const LANGUAGES = Object.keys(LABELS) as Language[];
+
+/** 🧗️ The activities of getting around and being handled that the species pages show with what goes with them, in the order of the contract; `ladder` is the climb on a standing ladder. */
+export const GETTING_AROUND = ["hang", "tumble", "glide", "aim", "reel", "climb", "mantle", "slide", "carry", "push", "dizzy", "shrug", "scoot"] as const satisfies readonly Activity[];
+
+/** 🛤️ A way of getting around that a species page shows, the climb on a standing ladder and the poof. */
+export type Way = (typeof GETTING_AROUND)[number] | "ladder" | "poof";
+
+export const WAYS: { readonly [language in Language]: { readonly [way in Way]: string } } = {
+  en: {
+    hang: "held at the scruff: the whole drawing swings about the grip (dot)",
+    tumble: "thrown: the whole drawing turns about its middle",
+    glide: "under its open parachute, hanging from the grip",
+    aim: "with the grappling gun at its side",
+    reel: "on the rope from its hands to the hook on a ledge",
+    climb: "at a wall on the side it faces, leaning in",
+    ladder: "on a ladder that stands against a wall",
+    mantle: "over the corner of a wall onto its top",
+    slide: "down a wall on the side it faces",
+    carry: "with its ladder on its back",
+    push: "against a block it shoves out of its stack",
+    dizzy: "after a hard landing or a shake",
+    shrug: "after a miss, or when it has had enough",
+    scoot: "making room for a neighbour",
+    poof: "the last resort: it vanishes in a puff of dust and arrives anew",
+  },
+  de: {
+    hang: "am Nackenfell gehalten: die ganze Zeichnung schwingt um den Griff (Punkt)",
+    tumble: "geworfen: die ganze Zeichnung dreht sich um ihre Mitte",
+    glide: "unter dem offenen Fallschirm, am Griff hängend",
+    aim: "mit der Seilpistole an der Seite",
+    reel: "am Seil von den Händen zum Haken an einer Kante",
+    climb: "an einer Wand auf der Seite, in die es schaut, angelehnt",
+    ladder: "auf einer Leiter, die an einer Wand lehnt",
+    mantle: "über die Ecke einer Wand auf ihre Oberkante",
+    slide: "eine Wand hinunter, auf der Seite, in die es schaut",
+    carry: "mit seiner Leiter auf dem Rücken",
+    push: "gegen einen Block, den es aus seinem Stapel schiebt",
+    dizzy: "nach einer harten Landung oder einem Schütteln",
+    shrug: "nach einem Fehlschuss, oder wenn es genug hat",
+    scoot: "macht einem Nachbarn Platz",
+    poof: "der letzte Ausweg: es verschwindet in einer Staubwolke und kommt neu an",
+  },
+};
+
+/** 🌍️ The first language the browser asks for that the gallery speaks; English when it asks for neither. */
+export function preferredLanguage(): Language {
+  return navigator.languages.map((tag) => tag.slice(0, 2).toLowerCase()).find((tag): tag is Language => tag in LABELS) ?? "en";
+}
+
+//#endregion 🔖️Language
+//#region 🔖️Menagerie
+const SEARCH_DEPTH = 8;
+
+/** 🎪️ What the menagerie file holds: the outermost document that calls itself a menagerie and passes validation — an export of a module, a JSON document or a member of one, such as the sample of the conformance vectors — and otherwise the issues of the outermost one that fails. */
+export function menagerieOf(source: unknown): { readonly menagerie: Menagerie | null; readonly issues: readonly Issue[] } {
+  let issues: readonly Issue[] = [];
+  let level: unknown[] = [source];
+  for (let depth = 0; depth < SEARCH_DEPTH && level.length > 0; depth++) {
+    const inner: unknown[] = [];
+    for (const value of level) {
+      if (typeof value !== "object" || value === null) continue;
+      if ((value as { readonly schema?: unknown }).schema === MENAGERIE_SCHEMA && Object.prototype.toString.call(value) !== "[object Module]") {
+        const found = menagerieIssues(value);
+        if (found.length === 0) return { menagerie: value as Menagerie, issues: [] };
+        if (issues.length === 0) issues = found;
+      }
+      inner.push(...Object.values(value));
+    }
+    level = inner;
+  }
+  return { menagerie: null, issues };
+}
+//#endregion 🔖️Menagerie

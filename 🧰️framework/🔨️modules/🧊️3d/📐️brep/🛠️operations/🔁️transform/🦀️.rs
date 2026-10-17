@@ -217,31 +217,31 @@ pub fn copy_solid(body: &mut Body, solid: SolidId, rec: &mut OpRecorder) -> Resu
 /// 🧩️ Copies faces one at a time while sharing copied edges and vertices between adjacent faces — a
 /// detached copy of kept faces whose adjacent copies stay stitched together.
 #[derive(Default)]
-pub(crate) struct FaceCopier {
+pub struct FaceCopier {
     ctx: CopyCtx,
     faces: Vec<FaceId>,
 }
 
 impl FaceCopier {
     /// 🧩️ Copies `face` as the next member of the shared copy.
-    pub(crate) fn copy(&mut self, body: &mut Body, face: FaceId, rec: &mut OpRecorder) -> Result<(), KernelError> {
+    pub fn copy(&mut self, body: &mut Body, face: FaceId, rec: &mut OpRecorder) -> Result<(), KernelError> {
         require_face(body, face)?;
         self.faces.push(copy_face(body, &mut self.ctx, face, &Affine3::IDENTITY, 1.0, rec));
         Ok(())
     }
 
     /// 🧩️ The copies made so far, in copy order.
-    pub(crate) fn faces(&self) -> &[FaceId] {
+    pub fn faces(&self) -> &[FaceId] {
         &self.faces
     }
 
     /// 🪪️ The copy of source `edge`, if a copied face used it.
-    pub(crate) fn edge(&self, edge: EdgeId) -> Option<EdgeId> {
+    pub fn edge(&self, edge: EdgeId) -> Option<EdgeId> {
         self.ctx.edges.get(&edge).copied()
     }
 
     /// 🪪️ The copy of source `vertex`, if a copied face used it.
-    pub(crate) fn vertex(&self, vertex: VertexId) -> Option<VertexId> {
+    pub fn vertex(&self, vertex: VertexId) -> Option<VertexId> {
         self.ctx.vertices.get(&vertex).copied()
     }
 }

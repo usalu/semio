@@ -9,23 +9,24 @@
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
 use crate::standards::v1::subsets::any::schema::mutations::apply_puzzle2d_mutation;
 use crate::standards::v1::subsets::any::schema::mutations::{inverse_puzzle2d_mutation};
+use semio_framework_test_fixtures::fixture_text;
 
 use crate::Puzzle2dSnapshot;
 
-const BEFORE: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏷️change-edge-kind/🏷️kinds/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏷️change-edge-kind/🏷️kinds/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏷️change-edge-kind/🏷️kinds/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏷️change-edge-kind/🏷️kinds/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏷️change-edge-kind/🏷️kinds/🎯️outcome/🔣️.json");
+static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏷️change-edge-kind/🏷️kinds/📸️snapshot/⬅️before/🔣️.json"));
+static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏷️change-edge-kind/🏷️kinds/📸️snapshot/➡️after/🔣️.json"));
+static MUTATION: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏷️change-edge-kind/🏷️kinds/🦠️mutation/🔣️.json"));
+static DIFF: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏷️change-edge-kind/🏷️kinds/🔺️diff/🔣️.json"));
+static OUTCOME: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏷️change-edge-kind/🏷️kinds/🎯️outcome/🔣️.json"));
 
 fn before() -> Puzzle2dSnapshot {
-    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes")
+    semio_framework_pack_json::from_json_str((*BEFORE), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes")
 }
 fn expected_after() -> Puzzle2dSnapshot {
-    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after snapshot decodes")
+    semio_framework_pack_json::from_json_str((*AFTER), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after snapshot decodes")
 }
 fn mutation() -> Puzzle2dMutation {
-    semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation decodes")
+    semio_framework_pack_json::from_json_str((*MUTATION), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation decodes")
 }
 
 /// ▶️ The committed `change-edge-kind` payload carries `before` to exactly the committed `after`.
@@ -57,21 +58,21 @@ fn inverse_restores_before() {
 /// decode→encode is a fixed point.
 #[test]
 fn committed_json_is_canonical() {
-    for (label, text) in [("before", BEFORE), ("after", AFTER)] {
+    for (label, text) in [("before", (*BEFORE)), ("after", (*AFTER))] {
         let decoded: Puzzle2dSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
         let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "change-edge-kind/kinds-a-capsule-door-edge-as-a-link: committed {label} JSON is not canonical");
     }
     let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&mutation())).expect("mutation encodes");
-    let original: serde_json::Value = serde_json::from_str(MUTATION).expect("mutation reparses");
+    let original: serde_json::Value = serde_json::from_str((*MUTATION)).expect("mutation reparses");
     assert_eq!(reencoded, original, "change-edge-kind/kinds-a-capsule-door-edge-as-a-link: committed mutation JSON is not canonical");
 }
 
 /// 🎯️ The declared outcome matches what `change-edge-kind` actually produces on this base.
 #[test]
 fn declared_outcome_holds() {
-    let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
+    let outcome: serde_json::Value = serde_json::from_str((*OUTCOME)).expect("outcome decodes");
     assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("applied"), "change-edge-kind/kinds-a-capsule-door-edge-as-a-link declares an applied outcome");
     let produced = <Puzzle2dMutation as protocol::Mutation<Puzzle2dSnapshot>>::diff(&mutation(), &before());
     assert!(produced.messages().is_empty(), "change-edge-kind/kinds-a-capsule-door-edge-as-a-link: an applied vector carries no diagnostic, got {:?}", produced.messages());
@@ -84,7 +85,7 @@ fn produces_committed_diff() {
     let base = before();
     let outcome = <Puzzle2dMutation as protocol::Mutation<Puzzle2dSnapshot>>::diff(&mutation(), &base);
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
-    let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
+    let committed: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff decodes");
     assert_eq!(produced, committed, "change-edge-kind/kinds-a-capsule-door-edge-as-a-link: produced diff differs from the committed 🔺️diff/🔣️.json");
     assert!(committed["nodes"].is_null(), "change-edge-kind/kinds-a-capsule-door-edge-as-a-link: this mutation must never touch the nodes delta");
     assert_eq!(committed["edges"]["modified"][0]["id"].as_str(), Some("015032e9-67ed-4736-adab-a6e10351079b"), "change-edge-kind/kinds-a-capsule-door-edge-as-a-link: the diff must patch exactly the addressed edge");
@@ -96,9 +97,9 @@ fn produces_committed_diff() {
 /// 🔣️ The committed `change-edge-kind` diff is itself canonical and decodes to `Puzzle2dDiff`.
 #[test]
 fn committed_diff_is_canonical() {
-    let decoded: crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
+    let decoded: crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
     let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("diff re-encodes");
-    let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
+    let original: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff reparses");
     assert_eq!(reencoded, original, "change-edge-kind/kinds-a-capsule-door-edge-as-a-link: committed diff JSON is not canonical");
 }
 
@@ -106,7 +107,7 @@ fn committed_diff_is_canonical() {
 /// the diff is a complete description of the change, not a summary of it.
 #[test]
 fn committed_diff_applies_to_after() {
-    let decoded: crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
+    let decoded: crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
     let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-edge-kind/kinds-a-capsule-door-edge-as-a-link: committed diff did not carry before to after");
 }

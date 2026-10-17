@@ -1,4 +1,6 @@
-use super::*;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioRgba;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
+use crate::schema::snapshot::*;
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn sample() -> SemioDrawingSnapshot {

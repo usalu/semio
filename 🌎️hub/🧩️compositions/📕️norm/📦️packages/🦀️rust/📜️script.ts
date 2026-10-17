@@ -404,10 +404,10 @@ class MutationLeafTaxonomyCheckScript extends BundleScript {
 
     if (!validateUniqueTaxonomy(fixture)) throw new Error("norm mutation-leaf taxonomy contains a duplicate source or aggregate variant");
     if (JSON.stringify(actual) !== JSON.stringify(fixture)) throw new Error("norm mutation-leaf taxonomy is stale; run the registered generate target");
-    const missing = structuredClone(fixture) as { rows: Record<string, unknown>[] };
+    const missing: { rows: Record<string, unknown>[] } = JSON.parse(JSON.stringify(fixture));
     delete missing.rows[0]!.kind;
     if (JSON.stringify(actual) === JSON.stringify(missing)) throw new Error("Actual taxonomy omitted its semantic kind");
-    const wrongLayout = structuredClone(fixture) as { rows: Record<string, unknown>[] };
+    const wrongLayout: { rows: Record<string, unknown>[] } = JSON.parse(JSON.stringify(fixture));
     wrongLayout.rows[0]!.physicalLayout = "ambient";
     if (JSON.stringify(actual) === JSON.stringify(wrongLayout)) throw new Error("Actual taxonomy used an ambient mutation-leaf layout");
     const duplicate = structuredClone(fixture) as MutationLeafTaxonomy;

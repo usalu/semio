@@ -1,6 +1,7 @@
 //! ➕️ `add-target-volume` command.
 
-use crate::editor::puzzle5d::{puzzle5d_value_as_f64_3, Puzzle5dActionCtx, Puzzle5dFreshIds};
+use crate::editor::puzzle5d::entities::{puzzle5d_value_as_f64_3, Puzzle5dFreshIds};
+use crate::editor::puzzle5d::interaction::Puzzle5dActionCtx;
 use crate::standards::v1::subsets::any::schema::mutations::{create_target_volume, Puzzle5dMutation};
 use semio_framework_pack_json::Value;
 
@@ -10,8 +11,8 @@ pub fn add_target_volume_mutation(id: String, origin: [f64; 3], grid_spacing: f6
     let grid_spacing = grid_spacing.max(0.1);
     let snapped = [0, 1, 2].map(|axis| (origin[axis] / grid_spacing).round() * grid_spacing);
     let [w, d, h] = voxel_dims;
-    let scale = crate::Puzzle5dScale::Vec3([f64::from(w) * grid_spacing, f64::from(d) * grid_spacing, f64::from(h) * grid_spacing]);
-    create_target_volume(crate::Puzzle5dTargetVolume { id, origin: snapped, orientation: None, scale: Some(scale), hidden: false, locked: false }, None)
+    let scale = crate::standards::v1::subsets::any::schema::document_records::Puzzle5dScale::Vec3([f64::from(w) * grid_spacing, f64::from(d) * grid_spacing, f64::from(h) * grid_spacing]);
+    create_target_volume(crate::standards::v1::subsets::any::schema::document_records::Puzzle5dTargetVolume { id, origin: snapped, orientation: None, scale: Some(scale), hidden: false, locked: false }, None)
 }
 
 /// 🧊️ Places one grid-snapped target volume at `args.origin`, sized by the world window's own W/D/H

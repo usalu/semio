@@ -33,6 +33,5 @@ test("Semio Graph native object identifiers expose truthful primitive child cont
       expect(label.en.length).toBeGreaterThan(0);
       expect(label.de.length).toBeGreaterThan(0);
     }
-    console.log("[DEBUG] Semio Graph native object ID preserves Ajv/RFC6902 payload and primitive reference control",row.leaf,row.field,replacement);
   }
 });

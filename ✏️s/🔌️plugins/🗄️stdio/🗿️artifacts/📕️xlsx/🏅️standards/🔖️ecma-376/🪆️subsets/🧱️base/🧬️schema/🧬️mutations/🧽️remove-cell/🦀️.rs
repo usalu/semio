@@ -7,7 +7,7 @@ use super::*;
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct RemoveCell {
-    pub(crate) address: cell_address::XlsxCellAddress,
+    pub address: cell_address::XlsxCellAddress,
 }
 
 impl protocol::MutationKind<XlsxSnapshot, XlsxMutation> for RemoveCell {

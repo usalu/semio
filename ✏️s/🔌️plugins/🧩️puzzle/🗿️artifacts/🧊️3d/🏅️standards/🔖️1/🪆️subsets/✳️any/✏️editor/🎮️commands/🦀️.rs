@@ -64,7 +64,7 @@ pub struct Puzzle3dActionPrologue {
     base: Option<std::sync::Arc<Puzzle3dSnapshot>>,
     sync_stage: Puzzle3dPrologueSyncStage,
     built: Option<semio_s_artifact_puzzle_3d_model::SceneConfig>,
-    tool_run: Option<semio_framework_plugin::ToolRunView>,
+    pub tool_run: Option<semio_framework_plugin::ToolRunView>,
 }
 
 impl Puzzle3dActionPrologue {

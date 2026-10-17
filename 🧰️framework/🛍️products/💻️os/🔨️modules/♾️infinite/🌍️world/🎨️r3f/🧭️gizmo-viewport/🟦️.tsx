@@ -42,15 +42,9 @@ import {
   worldCameraIsOrthographic,
   worldCameraZoom
 } from "../📷️camera-view/🟦️.tsx";
-import {
-  orbitViewToWorldProjectionSpec,
-  resolveProjectionGizmoSpec,
-  worldProjectionGoalMatrix,
-  worldProjectionMorphMatrix,
-  worldProjectionPerspectiveFov,
-  worldProjectionSpecToOrbitView,
-  worldProjectionTransitionPose
-} from "../📐️projection/🟦️.tsx";
+import { worldProjectionPerspectiveFov } from "../📐️projection/🧮️projection-pose/🟦️.ts";
+import { worldProjectionGoalMatrix, worldProjectionMorphMatrix, worldProjectionTransitionPose } from "../📐️projection/🔄️projection-matrices/🟦️.ts";
+import { orbitViewToWorldProjectionSpec, resolveProjectionGizmoSpec, worldProjectionSpecToOrbitView } from "../📐️projection/🧭️projection-gizmo-specs/🟦️.ts";
 
 // #region 📷️OrbitCameraView
 const WORLD_ORBIT_VIEW_SNAP_DURATION_MS = 280;

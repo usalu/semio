@@ -3,7 +3,7 @@
 import { runArtifactRustPackageMain } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts";
 import { runDefinitionChecks } from "../../🧪️tests/📜️definition/🟦️.ts";
 import { runBorrowedCarrierChecks } from "../../🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/💾️binary/📸️snapshot/📦️pack/🧪️tests/🫳️borrowed-carriers/🟦️.ts";
-import { BundleScript } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
+import { BundleScript, createIssuedResourceControlV1, createRequestedIssuedResourceControlV1, scriptInvocationEnvironment } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
 import { runOwnedCommand } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🎛️execution/🟦️.ts";
 import {prepareCargoWorkspaceInvocation } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🟦️.ts";
 import {repositoryCargoPreparationStorageV1} from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🟦️.ts";
@@ -37,8 +37,9 @@ class NativeSchemaScript extends BundleScript {
       ["semio-s-artifact-stdio-gltf-model", "standards::v2_0::subsets::any::io::component::sqlite::snapshot::tests::sqlite_snapshot_gltf_independent_bad_later_json_owner_retires_deep_completed_sibling"],
     ];
     const args = ["test", "--offline", "--manifest-path", manifest, ...[...new Set(laws.map(([name]) => name))].flatMap((name) => ["-p", name]), "--lib"];
-    prepareCargoWorkspaceInvocation(repositoryCargoPreparationStorageV1(workspace),workspace,args,workspace,process.env);
-    const controller = new AbortController(), abort = () => controller.abort(), budget = buildBudgetMs() || 1_200_000, timer = setTimeout(abort, budget);
+    const budget = buildBudgetMs() || 1_200_000, phaseControl = createIssuedResourceControlV1(this.invocation, "gltf:native-schema", 0);
+    await prepareCargoWorkspaceInvocation(repositoryCargoPreparationStorageV1(workspace),workspace,args,workspace,scriptInvocationEnvironment(this.invocation, process.env),createRequestedIssuedResourceControlV1(phaseControl, budget));
+    const controller = new AbortController(), abort = () => controller.abort(), timer = setTimeout(abort, budget);
     process.once("SIGINT", abort); process.once("SIGTERM", abort);
     let lease: Awaited<ReturnType<typeof acquireCargoBuildLeaseV1>> | undefined;
     try {

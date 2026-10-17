@@ -1,5 +1,7 @@
-use super::*;
-use crate::editor::bim::entities::components::tests::furnished;
+use super::{MEP_INFERRED, TRAY, create_mep, default_shape, parse_path, parse_shape, path_text, shape_text, size_text};
+use crate::standards::v1::subsets::any::schema::snapshot::{MepElement, MepShape, MepSystem, ModelSnapshot, Point3};
+use crate::standards::v1::subsets::any::schema::mutations::ModelMutation;
+use crate::editor::bim::fixture::furnished;
 use crate::editor::bim::entities::{kind_holding, kind_of};
 use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
 use protocol::Inference;

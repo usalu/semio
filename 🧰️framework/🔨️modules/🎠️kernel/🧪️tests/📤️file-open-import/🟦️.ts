@@ -13,7 +13,7 @@ import {
   type ImportChunk
 } from "../../🗄️file-open-import/🟦️.ts";
 import { GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES } from "@semio-tech/framework/trace/memory";
-import { wireEffectToFriendly } from "../../../🎭️actor/🖼️wire-turn/🟦️.ts";
+import { wireEffectToFriendly } from "@semio-tech/framework-actor/wire-turn";
 
 /** 📤️ TypeScript twin of `🧪️tests/📤️file-open-import/🦀️.rs`, driven from the SAME fixture
  * (`🧫️fixtures/📤️file-open-import/🔣️.json`): what `Effect::RequestFileOpen` looks like on the wire,

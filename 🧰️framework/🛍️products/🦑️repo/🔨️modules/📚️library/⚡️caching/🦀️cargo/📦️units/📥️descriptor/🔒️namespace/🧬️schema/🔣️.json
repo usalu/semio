@@ -1,0 +1,15 @@
+{
+ "$schema": "http://json-schema.org/draft-07/schema#",
+ "definitions": {
+  "Protocol": {
+   "const": {
+    "version": 2,
+    "resourcePrefix": "rust-descriptor-namespace:",
+    "admissionPrefix": "rust-descriptor-admission:",
+    "rootDirectory": "cargo",
+    "captureDirectory": "captures",
+    "nodeDirectory": "units"
+   }
+  }
+ }
+}

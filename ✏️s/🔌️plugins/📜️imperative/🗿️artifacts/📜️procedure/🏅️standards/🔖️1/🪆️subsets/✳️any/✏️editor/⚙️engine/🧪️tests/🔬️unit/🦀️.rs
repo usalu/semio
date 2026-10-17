@@ -48,7 +48,7 @@ async fn host_adds_nested_step_in_control_body() {
     let path_ref = PathRef { owner: Some(owner.clone()), slot: Some("then".into()) };
     let nested = host.add_step_at(&path_ref, "log.print", None).expect("add nested");
     assert_eq!(nested, "step-102");
-    let owner_step = host.path.steps.iter().find(|step| step.id == owner).expect("owner");
+    let owner_step = host.path().steps.iter().find(|step| step.id == owner).expect("owner");
     assert_eq!(owner_step.bodies.get("then").map(|path| path.steps.len()), Some(1));
 }
 
@@ -84,10 +84,10 @@ async fn host_add_step_at_reports_unknown_owner_step() {
 #[semio_framework_async_macros::async_test]
 async fn host_add_step_clamps_out_of_range_index() {
     let mut host = demo_host();
-    let before = host.path.steps.len();
+    let before = host.path().steps.len();
     let id = host.add_step("log.print", Some(9999));
-    assert_eq!(host.path.steps.last().map(|step| &step.id), Some(&id));
-    assert_eq!(host.path.steps.len(), before + 1);
+    assert_eq!(host.path().steps.last().map(|step| &step.id), Some(&id));
+    assert_eq!(host.path().steps.len(), before + 1);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -102,7 +102,7 @@ async fn host_remove_step_false_for_unresolvable_path_ref_and_unknown_id() {
 async fn host_remove_step_true_when_removed() {
     let mut host = demo_host();
     assert!(host.remove_step("step-1"));
-    assert!(host.path.steps.iter().all(|step| step.id != "step-1"));
+    assert!(host.path().steps.iter().all(|step| step.id != "step-1"));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -117,7 +117,7 @@ async fn host_move_step_false_for_unresolvable_path_ref_and_unknown_id() {
 async fn host_move_step_true_and_reorders() {
     let mut host = demo_host();
     assert!(host.move_step("step-2", 0));
-    assert_eq!(host.path.steps[0].id, "step-2");
+    assert_eq!(host.path().steps[0].id, "step-2");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -134,7 +134,7 @@ async fn host_set_step_params_updates_existing_step() {
     use neural_engine::{Atom, Value};
     let mut host = demo_host();
     host.set_step_params_json("step-2", r#"{"message":"updated"}"#).expect("sets params");
-    let step = host.path.steps.iter().find(|step| step.id == "step-2").expect("step-2 exists");
+    let step = host.path().steps.iter().find(|step| step.id == "step-2").expect("step-2 exists");
     assert_eq!(step.params.get("message"), Some(&Value::Atom(Atom::String("updated".into()))));
 }
 

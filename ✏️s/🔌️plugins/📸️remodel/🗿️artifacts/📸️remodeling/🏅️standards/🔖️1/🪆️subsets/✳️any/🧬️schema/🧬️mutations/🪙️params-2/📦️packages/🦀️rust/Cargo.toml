@@ -1,0 +1,39 @@
+[package]
+workspace = "../../../../../../../../.."
+name = "semio-s-artifact-remodel-remodeling-mut-params-2"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "remodeling parameter mutations: the eight update-*-params leaves. (part 2)"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-dsl-record = { workspace = true }
+semio-framework-dsl-record-derive = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-pack-json = { workspace = true }
+semio-framework-ui-locale = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-framework-value-derive = { workspace = true }
+semio-s-artifact-remodel-remodeling-model = { workspace = true }
+semio-s-artifact-remodel-remodeling-model-diff = { workspace = true }
+serde = { workspace = true }
+
+[dev-dependencies]
+semio-framework-async-macros = { workspace = true }
+semio-framework-diagnostic = { workspace = true }
+semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-s-artifact-remodel-remodeling-mutations = { workspace = true }
+semio-s-artifact-remodel-remodeling-mut-vectors = { workspace = true }
+
+[[test]]
+name = "vectors"
+path = "🧪️tests/🔬️vectors/🦀️.rs"

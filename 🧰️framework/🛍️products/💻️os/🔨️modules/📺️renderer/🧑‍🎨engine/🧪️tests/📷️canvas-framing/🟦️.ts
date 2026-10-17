@@ -37,7 +37,7 @@ it("rejects nonfinite requests and unmeasured viewports", () => {
 });
 
 it("fits once after measurement and preserves subsequent wheel navigation until a new revision", async () => {
-  const { JsonLayersCanvasSession } = await import("../../🧱️elements/📐️Canvas2dHost/🟦️.tsx");
+  const { JsonLayersCanvasSession } = await import("../../🧱️elements/📐️Canvas2dHost/🗂️layers-session/🟦️.ts");
   let request = { revision: 1,bounds: [-100,-50,300,150] as const,padding: 40 };
   const cameras: any[] = [];
   const session = new JsonLayersCanvasSession(() => "[]",{ x: 0,y: 0,zoom: 1 },camera => cameras.push(camera),undefined,() => request);

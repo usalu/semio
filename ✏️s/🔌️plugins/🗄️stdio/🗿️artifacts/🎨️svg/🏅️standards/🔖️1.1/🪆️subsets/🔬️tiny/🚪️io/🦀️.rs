@@ -187,8 +187,6 @@ use semio_framework_diagnostic::Severity;
     pub const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.svg", standard: StandardId("1.1"), subset: SubsetId("tiny") };
 
     use crate::standards::v1_1::subsets::tiny::schema::conformance::*;
-    /// 🚦️ Binds physical SQLite progress to pure owned profile validation.
-    pub fn check_svg_tiny_conformance_controlled(snapshot:&SvgSnapshot,control:&mut semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl<'_>)->Result<Vec<Diagnostic>,semio_framework_value::ValueError>{check_svg_tiny_conformance_with(snapshot,&mut |completed,total|control.checkpoint(semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotPhase::ProjectSnapshot,completed,total))}
 
     //#region 🔖️Analyzer
     /// 🧐️ Analyzes `stdio.svg` (1.1/🔬️tiny): delegates the real parse to the ✳️any subset's analyzer

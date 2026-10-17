@@ -3,7 +3,6 @@
 
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3;
 use crate::schema::diff::NodePath;
-use crate::schema::mutations::SemioDrawingMutation;
 use crate::schema::snapshot::SemioDrawingSnapshot;
 
 //#region 🔖️Payload
@@ -15,13 +14,16 @@ pub struct ScaleNode {
     pub new_scale: SemioPoint3,
 }
 
-impl protocol::MutationKind<SemioDrawingSnapshot, SemioDrawingMutation> for ScaleNode {
+impl<Op> protocol::MutationKind<SemioDrawingSnapshot, Op> for ScaleNode
+where
+    Op: protocol::Mutation<SemioDrawingSnapshot, Diff = crate::schema::diff::SemioDrawingDiff> + From<ScaleNode>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "scale", entity: "node", kind: "scale-node", record: "ScaledNode" };
 
-    fn diff(&self, base: &SemioDrawingSnapshot) -> protocol::MutationOutcome<<SemioDrawingMutation as protocol::Mutation<SemioDrawingSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioDrawingSnapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<SemioDrawingSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &SemioDrawingSnapshot) -> Result<Vec<SemioDrawingMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &SemioDrawingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

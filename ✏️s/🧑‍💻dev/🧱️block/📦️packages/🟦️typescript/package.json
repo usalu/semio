@@ -1,0 +1,14 @@
+{
+  "name": "@semio-tech/s-dev-block-ts",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./stories/coordination": "./📖️stories/🧭️coordination/🟦️.ts"
+  },
+  "devDependencies": {
+    "@semio-tech/block-2d": "workspace:*",
+    "@semio-tech/block-3d": "workspace:*",
+    "@semio-tech/block-5d": "workspace:*",
+    "@semio-tech/assets": "workspace:*"
+  }
+}

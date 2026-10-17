@@ -39,10 +39,10 @@
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲️Header
 
-import { parseViewport2d, type Viewport2d } from "../../../../../🧰️framework/🔨️modules/🖱️ui/🪟️viewport/◻️2d/🧬️schema/🟦️.ts";
-import { parseViewport3dOrbit, type Viewport3dOrbit } from "../../../../../🧰️framework/🔨️modules/🖱️ui/🪟️viewport/🧊️3d/🧬️schema/🟦️.ts";
-import fem2dDemoDsl from "../../../../🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🖼️assets/🎬️demo/🗣️.dsl.semio?raw";
-import fem3dDemoDsl from "../../../../🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🖼️assets/🎬️demo/🗣️.dsl.semio?raw";
+import { parseViewport2d, type Viewport2d } from "@semio-tech/framework-ui-viewport-ts/2d/schema";
+import { parseViewport3dOrbit, type Viewport3dOrbit } from "@semio-tech/framework-ui-viewport-ts/3d/schema";
+import { fem2dDemoDsl } from "@semio-tech/fem-2d/standards/1/subsets/any/assets/demo";
+import { fem3dDemoDsl } from "@semio-tech/fem-3d/standards/1/subsets/any/assets/demo";
 
 //#region 🔖️Model
 /** 🗂️ One parsed fem DSL document: the banner dialect/version, top-level scalars, `name { … }` statement blocks and `name [cols] { rows }` tables. */

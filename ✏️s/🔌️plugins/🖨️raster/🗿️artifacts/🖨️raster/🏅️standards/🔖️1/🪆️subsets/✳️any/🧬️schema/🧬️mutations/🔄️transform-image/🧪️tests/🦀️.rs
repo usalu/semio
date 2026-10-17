@@ -3,8 +3,14 @@
 //! inverse restores the exact prior image, extent and placement; a transform edited in history re-derives itself and its
 //! downstream; the store folds it like the leaf.
 
-use super::*;
-use crate::paint_stroke::{paint_stroke, RasterBrush, RasterStrokePoint};
+use semio_s_artifact_raster_raster_diff::RasterDiff;
+use semio_s_artifact_raster_raster_mutations::RasterMutation;
+use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
+use semio_s_artifact_raster_raster_model::RasterTransform;
+use semio_framework_pixels::editing::{PixelEditJob, PixelOperation};
+use semio_framework_pixels::RasterImage;
+use semio_s_artifact_raster_raster_mutations_pixels::transform_image::*;
+use semio_s_artifact_raster_raster_mutations_pixels::paint_stroke::{paint_stroke, RasterBrush, RasterStrokePoint};
 use semio_s_artifact_raster_raster_mutations::inverse_raster_mutation;
 use semio_s_artifact_raster_raster_mutations::text::apply_raster_mutation;
 use semio_s_artifact_raster_raster_model::find_layer;

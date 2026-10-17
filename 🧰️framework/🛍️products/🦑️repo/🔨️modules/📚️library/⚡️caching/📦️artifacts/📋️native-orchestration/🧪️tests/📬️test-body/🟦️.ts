@@ -44,7 +44,6 @@ test("typed owner transport prepares only at actual current Cargo consumption",a
    expect(records,row.id).toEqual(row.expected);
   }
  }
- console.log("[DEBUG] actual native wrapper and actual Cargo consumer executed through Bun/TypeScript; independent Node argv oracle admits generic transport, refuses the retired special route and requires fresh current Cargo-body preparation");
 });
 
 test("canonical Nx inference delegates every owned command without eager or special test preparation",()=>{
@@ -77,7 +76,6 @@ test("canonical Nx inference delegates every owned command without eager or spec
   const project=JSON.parse(readFileSync(resolve(repository,root,"📋️project.json"),"utf8"));
   expect(project.targets.test.metadata?.semio?.nativePreparation,project.name).toBeUndefined();
  }
- console.log("[DEBUG] actual complete Nx target inference and independent esbuild agree; generic/test/build argv preserved; Ajv admits current owner requests;5 redundant metadata declarations absent");
 });
 
 test("canonical selected native callers preserve compiler argv and keep full setup explicit",()=>{
@@ -102,7 +100,6 @@ test("canonical selected native callers preserve compiler argv and keep full set
   expect(launch.inputs.filter((row:any)=>row.id==="cargoSynchronizationManifest").length,path).toBe(1);
  }
  const router=readFileSync(resolve(library,"⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/📜️script.ts"),"utf8");expect(router).toContain('.register("synchronize",SynchronizeScript)');
- console.log("[DEBUG]4 real native caller vectors retain compiler argv/tool prerequisites; Node JSON oracle agrees; explicit global setup and mandatory-manifest Nx/live/seed synchronization route admitted");
 });
 
 
@@ -119,7 +116,6 @@ for(const selected of fixture.consumingAdapters)test("actual Cargo adapters forw
   if(row.owner==="artifact")await run("owner/Cargo.toml",row.args.slice(3),"/repo",{command:row.args[0],environment:row.env,control});else if(row.owner==="streaming")await run(row.args,"/repo/owner",row.env,{invocation,policy:{version:1,mode:"prototype",cwd:"/repo/owner",buildDirectory:"/compiler",leaseDirectory:"/leases",captureDirectory:"/captures",budgetMs:1000}});else await run(invocation,"cargo",row.args,"/repo/owner","selected",{version:1,maximumElapsedMilliseconds:1000,output:{maximumBytes:67108864,maximumLines:65536}},{env:row.env});
   expect(records.length,row.id).toBe(1);expect(records[0].args,row.id).toEqual(row.args);expect(records[0].env,row.id).toEqual(row.env);expect(records[0].root).toBe("/repo");expect(records[0].cwd).toBe(row.owner==="artifact"?"/repo":"/repo/owner");
  }
- console.log("[DEBUG] actual artifact/streaming/owned-command adapters execute under Bun and independent esbuild with exact package selectors/environment; one preparation call per consumption");
 });
 
 test("actual fresh Hub Cargo consumers asynchronously prepare controlled current inputs before capture",async()=>{
@@ -140,7 +136,6 @@ test("actual fresh Hub Cargo consumers asynchronously prepare controlled current
   const run=new Function(...Object.keys(bindings),compile(body)+";return freshRun;")(...Object.values(bindings));
   try{const call=()=>run(row.command,args,root,env,control,row.id,0,1);if(row.refused)await expect(call()).rejects.toThrow("current selected preparation refused");else{const receipt=await call();if(row.command==="cargo"){const retained=JSON.parse(readFileSync(receipt,"utf8"));expect(retained.args).toEqual(argv);expect(retained.manifest).toBe(resolve(root,selected[selected.indexOf("--manifest-path")+1]));expect(stages).toContain("compiler-provenance");}}expect(records,row.id).toEqual(row.expected);expect(stages).toContain(row.id);}finally{fs.rmSync(root,{recursive:true,force:true});}
  }
- console.log("[DEBUG] original Fresh consumer rows execute actual finite selector/preparation/lease/physical writer ports with mandatory original storage/policy; original Node argv oracle and independent esbuild agree");
 });
 
 
@@ -168,5 +163,4 @@ test("current Cargo relay physical authority retains cancellation through public
   }finally{fs.rmSync(root,{recursive:true,force:true});}
  }
  for(const path of [".vscode/launch.json",".vscode/🧩️launch.seed.jsonc"]){const errors:any[]=[],launch=parseJsonc(readFileSync(join(repository,path),"utf8"),errors,{allowTrailingComma:path.endsWith("jsonc")});expect(errors).toEqual([]);const entries=launch.configurations.filter((entry:any)=>entry.name==="🧫️fixtures-testing-only-provenance-physical🧪️");expect(entries.length).toBe(1);expect(entries[0].command).toContain("ticket-fixture-verification:publication-provenance-physical-source");expect(entries[0].presentation).toEqual({group:"4_gate",order:900.29872});expect(entries[0].env.SEMIO_TEST_ARTIFACT_DIR.endsWith("/🗑️generated/p")).toBe(true);}
- console.log("[DEBUG] current selected Cargo relay and real physical writer retain original-byte/digest/dep-info authority, compiler refusal status, progress and cancellation through publication; independent esbuild and Node/WebCrypto agree; neutral transport starts no compiler");
 });

@@ -1,6 +1,6 @@
 //! 🚚️ `relocate-target-region` command.
 
-use crate::editor::puzzle2d::Puzzle2dActionCtx;
+use crate::editor::puzzle2d::interaction::Puzzle2dActionCtx;
 use semio_framework_pack_json::Value;
 
 /// 🚚️ Absolute pose push from the board gumball for one unlocked target region — `after.position`

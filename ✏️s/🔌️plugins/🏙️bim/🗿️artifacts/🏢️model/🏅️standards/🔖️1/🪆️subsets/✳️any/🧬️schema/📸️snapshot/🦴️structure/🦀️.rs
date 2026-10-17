@@ -1,5 +1,6 @@
 //! 🦴️ Authored structural boundary conditions and SI loading; geometry and connectivity are inferred.
-use super::{ModelSnapshot, Point3};
+use super::ModelSnapshot;
+use super::values::Point3;
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 pub enum StructuralLocation { Point { station: f64 }, Line { start: f64, end: f64 }, Area }

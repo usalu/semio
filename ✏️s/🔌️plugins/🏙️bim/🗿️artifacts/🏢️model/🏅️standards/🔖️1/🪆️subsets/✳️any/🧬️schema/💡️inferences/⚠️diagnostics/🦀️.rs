@@ -398,12 +398,6 @@ pub fn ordered(mut found: Vec<Diagnostic>) -> Vec<Diagnostic> {
     found
 }
 
-/// ⚠️ The findings of the whole model (the `Diagnostics` nodes of the model graph, ordered).
-#[cfg(test)]
-pub fn compute_diagnostics(snapshot: &ModelSnapshot) -> Vec<Diagnostic> {
-    std::mem::take(&mut super::super::model_graph::infer_selected::<{ super::super::model_graph::kinds::DIAGNOSTICS }>(snapshot).diagnostics)
-}
-
 /// 📖️ The codes a third-party library can adjudicate on its own: pairs of prismatic bodies, missing ids, extents and level arithmetic.
 pub const ADJUDICATED: &[DiagnosticCode] = &[
     DiagnosticCode::ClashWallWall,
@@ -429,9 +423,7 @@ pub fn measure_of(finding: &Diagnostic) -> f64 {
     }
 }
 
-
 //#endregion 🔖️Scopes
-
 
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]

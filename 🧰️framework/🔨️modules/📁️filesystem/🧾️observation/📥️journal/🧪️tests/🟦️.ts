@@ -31,7 +31,6 @@ test("warm selection observes only changed membership instead of all source iden
  expect(after.globalIdentity.sha256).toBe(before.globalIdentity.sha256);
  expect(after.sequence).toBe(before.sequence);
  expect(identityReads).toBeLessThan(fixture.scaling.maximumWarmIdentityReads);
- console.log("[DEBUG] live journal selection sourceFiles=" + files.length + " warmIdentityReads=" + identityReads + " selectedFiles=" + after.selectedMembership.paths.length);
  await journal.close();
 });
 

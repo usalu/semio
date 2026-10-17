@@ -17,10 +17,13 @@ import base from "../📐️scale-continuous/🟦️.ts";
 // #region 🧫️Vectors
 const DECIMALS = 6;
 
-/** 🔢️ Rounds the twin's numbers onto the emission grid the LaTeX probe writes on. */
-function grid(values: readonly number[]): number[] {
+/** 🔢️ Rounds the twin's numbers onto the emission grid the LaTeX probe writes on; a scale without an `unknown` option maps every value to a number. */
+function grid(values: readonly unknown[]): number[] {
   const factor = 10 ** DECIMALS;
-  return values.map((value) => Math.round(value * factor) / factor + 0);
+  return values.map((value) => {
+    if (typeof value !== "number") throw new Error(`a continuous scale mapped to ${String(value)}, not to a number`);
+    return Math.round(value * factor) / factor + 0;
+  });
 }
 
 /** 🔮️ The oracle of `scale-continuous`, reused so both subjects meet the same reference numbers. */

@@ -5,7 +5,7 @@
 //! payload-dependent `command_id` override this pair replaced).
 
 use crate::editor::shooting::config::{ShootingConfig, ShootingConfigMutation};
-use crate::editor::shooting::ShootingDispatchCtx;
+use crate::editor::shooting::ui_helpers_and_io::ShootingDispatchCtx;
 use crate::standards::v1::subsets::any::schema::mutations::ShootingMutation;
 use crate::standards::v1::subsets::any::io::text::snapshot::shooting_icon_render_request_json;
 use crate::{ShootingShot, ShootingSnapshot};
@@ -16,8 +16,8 @@ use semio_framework_value_derive::{FromValue, ToValue};
 fn export(all: bool, doc: &ArtifactView<'_, ShootingSnapshot>, cfg: &ConfigView<'_, ShootingConfig>) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
     let snapshot = doc.snapshot;
     let config = cfg.snapshot;
-    if let Some(asset) = crate::standards::v1::subsets::any::schema::active_asset(doc.snapshot) {
-        let shots: Vec<&ShootingShot> = if all { snapshot.shots.iter().collect() } else { crate::standards::v1::subsets::any::schema::active_shot(doc.snapshot).into_iter().collect() };
+    if let Some(asset) = crate::active_asset(doc.snapshot) {
+        let shots: Vec<&ShootingShot> = if all { snapshot.shots.iter().collect() } else { crate::active_shot(doc.snapshot).into_iter().collect() };
         let items: Vec<IconRenderExportItem> = shots
             .iter()
             .map(|shot| IconRenderExportItem {

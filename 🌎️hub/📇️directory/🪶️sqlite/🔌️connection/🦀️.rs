@@ -46,24 +46,24 @@ impl SqliteDirectory {
     }
 
     /// 🧪️ Simulates a lost commit acknowledgement after the real SQLite transaction commits.
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testkit"))]
     pub fn fail_next_append_commit_ack(&self) {
         self.append_commit_ack_failure.store(true, std::sync::atomic::Ordering::SeqCst);
     }
 
     /// 🧪️ Drops only the genesis acknowledgement after its entire real transaction commits.
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testkit"))]
     pub fn fail_next_genesis_commit_ack(&self) {
         self.genesis_commit_ack_failure.store(1, std::sync::atomic::Ordering::SeqCst);
     }
 
     /// 🧪️ Drops the commit acknowledgement and exactly one subsequent receipt or event read.
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testkit"))]
     pub fn fail_next_genesis_reconciliation(&self, events: bool) {
         self.genesis_commit_ack_failure.store(if events { 3 } else { 2 }, std::sync::atomic::Ordering::SeqCst);
     }
 
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testkit"))]
     pub fn install_invite_projection_failure(&self) -> DirectoryResult<()> {
         self.lock()?
             .execute_batch(
@@ -74,12 +74,12 @@ impl SqliteDirectory {
             .map_err(backend)
     }
 
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testkit"))]
     pub fn clear_invite_projection_failure(&self) -> DirectoryResult<()> {
         self.lock()?.execute_batch("DROP TRIGGER hub_test_fail_invite_projection;").map_err(backend)
     }
 
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testkit"))]
     pub fn install_invite_acceptance_marker_for_test(&self, invite_id: &str, event_id: &str) -> DirectoryResult<()> {
         self.lock()?.execute("UPDATE hub_space_invite SET accepted_event_id = ?1 WHERE id = ?2", rusqlite::params![event_id, invite_id]).map(|_| ()).map_err(backend)
     }

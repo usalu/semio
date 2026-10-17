@@ -1,6 +1,17 @@
 //! 🔺️ Diff for `ApplyImage`.
 
-use super::super::*;
+#[allow(unused_imports)]
+use protocol::Mutation;
+#[allow(unused_imports)]
+use crate::schema::diff::SemioDiff;
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_semio_image::schema::mutations::SemioImageMutation;
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_semio_image::schema::snapshot::SemioImageSnapshot;
+#[allow(unused_imports)]
+use crate::schema::snapshot::SemioSnapshot;
+#[allow(unused_imports)]
+use crate::schema::snapshot::SemioSubsetSnapshot;
 
 //#region 🔖️Diff
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

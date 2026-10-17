@@ -3,7 +3,7 @@
 #![allow(clippy::result_large_err)]
 
 use crate::editor::animate::config::{PresentationConfig, PresentationConfigMutation};
-use crate::editor::animate::{tile_morph_prompt_effect, PresentationDispatchCtx};
+use crate::editor::animate::support::{tile_morph_prompt_effect, PresentationDispatchCtx};
 use crate::standards::v1::subsets::any::schema::mutations::PresentationMutation;
 use crate::PresentationSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
@@ -21,7 +21,5 @@ pub fn handle(_payload: &CopyPrompt, doc: &ArtifactView<'_, PresentationSnapshot
 }
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

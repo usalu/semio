@@ -28,6 +28,10 @@ type stdioTsvIanaAnyInferenceGuardSizeBounds = { readonly minItems?: number; rea
 
 export const stdioTsvIanaAnyInferenceGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : stdioTsvIanaAnyInferenceGuardReject(at, "value is not an object");
+export const stdioTsvIanaAnyInferenceGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) stdioTsvIanaAnyInferenceGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const stdioTsvIanaAnyInferenceGuardArray = (value: unknown, at: string, bounds: stdioTsvIanaAnyInferenceGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return stdioTsvIanaAnyInferenceGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) stdioTsvIanaAnyInferenceGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -58,14 +62,14 @@ export const stdioTsvIanaAnyInferenceGuardConstant = <T extends string | number 
 //#endregion 🚪️Parsers
 
 export function parseTsvInference(value: unknown, at = "$"): TsvInference {
-  const row = stdioTsvIanaAnyInferenceGuardObject(value, at);
+  const row = stdioTsvIanaAnyInferenceGuardClosed(stdioTsvIanaAnyInferenceGuardObject(value, at), at, ["outline"]);
   return {
     outline: parseTsvOutline(row["outline"], `${at}.outline`),
   };
 }
 
 export function parseTsvOutline(value: unknown, at = "$"): TsvOutline {
-  const row = stdioTsvIanaAnyInferenceGuardObject(value, at);
+  const row = stdioTsvIanaAnyInferenceGuardClosed(stdioTsvIanaAnyInferenceGuardObject(value, at), at, ["recordCount", "columnCount"]);
   return {
     recordCount: stdioTsvIanaAnyInferenceGuardInteger(row["recordCount"], `${at}.recordCount`),
     columnCount: stdioTsvIanaAnyInferenceGuardInteger(row["columnCount"], `${at}.columnCount`),

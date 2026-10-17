@@ -8,7 +8,7 @@ pub fn label() -> LocalizedLabel {
     LocalizedLabel::native("Reuse Map", "Karte wiederverwenden")
 }
 pub const ICON: &str = "file";
-pub const PRIMARY_TEXT: &str = include_str!("../../🖼️assets/🎬️demo/🗣️.dsl.semio");
+pub const PRIMARY_TEXT: &str = semio_s_artifact_gis_gismap_demo_asset::DEMO_DSL;
 pub fn source() -> ExampleSource {
     ExampleSource::new(ID, label(), PRIMARY_TEXT, ICON)
 }

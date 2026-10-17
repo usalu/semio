@@ -7,11 +7,17 @@
 //! The same corpus is folded by the independent Python oracle and validated with `jsonschema`
 //! (`🧪️w3-t-puzzle-oracle-selfcheck.py` in ticket `26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING`).
 
-use super::*;
+use crate::Puzzle5dSnapshot;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::diff::Puzzle5dDiff;
+#[allow(unused_imports)]
+use protocol::{DiffAlgebra, Mutation};
+use crate::standards::v1::subsets::any::schema::mutations::*;
 use crate::apply_puzzle5d_mutation;
 use protocol::OpBinary;
+use semio_framework_test_fixtures::fixture_text;
 
-const CORPUS: &str = include_str!("../../../../🧪️tests/🧫️fixtures/🧫️selection-time-travel/🔣️.json");
+static CORPUS: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../🧪️tests/🧫️fixtures/🧫️selection-time-travel/🔣️.json"));
 
 /// 🗂️ One decoded corpus case.
 struct TimeTravelCase {
@@ -30,7 +36,7 @@ struct TimeTravelCase {
 /// `float_roundtrip` lands some 17-digit decimals one ulp off (`1.9999999999999993` → `…91`), which made an exact
 /// cross-language state compare fail on the harness, not on the leaves.
 fn cases() -> Vec<TimeTravelCase> {
-    let corpus = semio_framework_pack_json::parse(CORPUS, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the corpus parses");
+    let corpus = semio_framework_pack_json::parse((*CORPUS), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the corpus parses");
     let snapshot = |value: &semio_framework_pack_json::Value| -> Puzzle5dSnapshot { semio_framework_pack_json::from_json_str(&semio_framework_pack_json::to_string(value), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("a corpus snapshot decodes") };
     let mutation = |value: &semio_framework_pack_json::Value| -> Puzzle5dMutation { semio_framework_pack_json::from_json_str(&semio_framework_pack_json::to_string(value), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("a corpus payload decodes") };
     let level = |value: &semio_framework_pack_json::Value| match value.as_str() {

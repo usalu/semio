@@ -1,13 +1,9 @@
 //! 🚪️ Artifact representation module ownership.
 
-#[path = "📸️snapshot/🦀️.rs"]
-pub mod snapshot;
+pub use semio_s_artifact_trinity_jack_inferences::standards::v1::subsets::any::io::text::snapshot;
 
-#[path = "🧬️mutations/🦀️.rs"]
-pub mod mutations;
+pub use semio_s_artifact_trinity_jack_language_service::standards::v1::subsets::any::io::text::mutations;
 
-#[path = "🔺️diff/🦀️.rs"]
-pub mod diff;
+pub use semio_s_artifact_trinity_jack_language_service::standards::v1::subsets::any::io::text::diff;
 
-#[path = "💡️inferences/🦀️.rs"]
-pub mod inferences;
+

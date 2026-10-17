@@ -63,7 +63,6 @@ test("current plugin example folders belong beneath actual neutral tests owners"
     expect([...file].length).toBeLessThanOrEqual(256);
     expect(file.length).toBeLessThanOrEqual(256);
   }
-  console.log(`[DEBUG] plugin placement agrees with fast-glob on ${actual.length} physical examples`);
 }, 120_000);
 
 test("native plugin example includes retain physical test-only source ownership", async () => {
@@ -102,7 +101,6 @@ test("native plugin example includes retain physical test-only source ownership"
       }
     }
     expect(count).toBeGreaterThan(50);
-    console.log(`[DEBUG] plugin native include source resolved ${count} physical readers with cfg(test) qualification`);
   } finally { parser?.delete(); }
 }, 120_000);
 
@@ -122,7 +120,6 @@ test("direct plugin TypeScript example imports retain physical coordinates", () 
     }
   }
   expect(count).toBeGreaterThan(15);
-  console.log(`[DEBUG] plugin direct TypeScript imports resolve ${count} owned examples`);
 }, 120_000);
 
 test("Rust test-only predicates agree with independent JavaScript truth tables", () => {
@@ -167,7 +164,6 @@ test("original example generators default to physical test owners", () => {
     inspect(source);
   }
   expect(coordinates).toBeGreaterThan(20);
-  console.log(`[DEBUG] Original TypeScript AST generator declarations resolved ${coordinates} physical example destinations`);
 }, 120_000);
 
 test("original Cargo-manifest example coordinates remain test owned", () => {
@@ -184,5 +180,4 @@ test("original Cargo-manifest example coordinates remain test owned", () => {
     }
   }
   expect(readers).toBeGreaterThan(30);
-  console.log(`[DEBUG] ${readers} original manifest-anchored example readers retain physical tests ownership`);
 });

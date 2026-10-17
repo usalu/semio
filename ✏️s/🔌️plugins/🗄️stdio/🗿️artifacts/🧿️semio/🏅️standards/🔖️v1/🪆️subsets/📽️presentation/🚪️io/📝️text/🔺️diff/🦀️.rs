@@ -24,8 +24,8 @@ use semio_s_artifact_stdio_semio_base::io::text::codec::split_top_level;
 /// the sibling `🧬️mutations`/`📸️snapshot` facets can import `{enc_block, dec_block}` from THIS
 /// module (matching the pre-existing convention where this file is the one place that owns every
 /// value codec presentation's other facets import from).
-use semio_s_artifact_stdio_semio_document::io::text::diff::dec_block;
-use semio_s_artifact_stdio_semio_document::io::text::diff::enc_block;
+use semio_s_artifact_stdio_semio_document::io::text::snapshot::dec_block;
+use semio_s_artifact_stdio_semio_document::io::text::snapshot::enc_block;
 use semio_s_artifact_stdio_semio_document::schema::snapshot::DocBlock;
 use crate::schema::snapshot::SemioPresentationSnapshot;
 use crate::schema::snapshot::{PlaceholderKind, Slide, SlideFrame, SlideLayout, SlideMaster, SlidePictureImage, SlideShape, SlideTableCell, SlideTableRow};

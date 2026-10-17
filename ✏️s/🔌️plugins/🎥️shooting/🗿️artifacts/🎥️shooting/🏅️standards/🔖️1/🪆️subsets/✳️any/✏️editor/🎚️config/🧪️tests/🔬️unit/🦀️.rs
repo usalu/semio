@@ -1,4 +1,7 @@
-use super::*;
+use crate::ShootingCamera;
+#[allow(unused_imports)]
+use protocol::Mutation;
+use crate::editor::shooting::config::*;
 
 #[semio_framework_async_macros::async_test]
 async fn shooting_config_default_matches_the_existing_action_arg_sticky_defaults() {

@@ -1,7 +1,8 @@
 use super::*;
+use semio_framework_test_fixtures::fixture_text;
 #[test]
 fn original_owned_actor_layout_retains_borrowed_vm_and_visits_without_allocation(){
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../🚪️io/📤️checkpoint/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let core=CoreInstance::instantiate(std::sync::Arc::new(CoreModule::parse(&fixture["coreModule"].as_array().unwrap().iter().map(|byte|byte.as_u64().unwrap()as u8).collect::<Vec<_>>()).unwrap())).unwrap();
     let actor=OwnedSemioInstance{component_fingerprint:fixture["componentFingerprint"].as_u64().unwrap(),core};let expected=actor.checkpoint();
     let mut observe=|_:semio_framework_value::native_encoding::NativeEncodeProgress|true;let mut control=semio_framework_value::NativeEncodeControl::new(fixture["originalMaximumBytes"].as_u64().unwrap()as usize,&mut observe);

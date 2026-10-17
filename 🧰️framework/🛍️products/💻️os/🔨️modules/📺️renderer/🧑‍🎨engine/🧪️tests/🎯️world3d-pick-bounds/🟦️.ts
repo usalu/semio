@@ -11,7 +11,9 @@
  */
 import { describe, expect, it } from "vitest";
 import fixture from "../../🧱️elements/🌐️World3dHost/🧪️tests/🧫️fixtures/🎯️pick-bounds.json" with { type: "json" };
-import { hoveredInteractionTargetV1, mergeWorldSelectionWithLeftoverV1, resolveClickInstanceIdFromProjected, world3dInstanceLocalCorners } from "../../🧱️elements/🌐️World3dHost/🟦️.tsx";
+import { world3dInstanceLocalCorners } from "../../🧱️elements/🌐️World3dHost/🎨️mesh-render/🪟️glb-bounds-and-styling/🟦️.ts";
+import { resolveClickInstanceIdFromProjected } from "../../🧱️elements/🌐️World3dHost/🎯️marquee-and-bridges/🟦️.tsx";
+import { hoveredInteractionTargetV1, mergeWorldSelectionWithLeftoverV1 } from "../../🧱️elements/🌐️World3dHost/🔗️instance-selection/🟦️.ts";
 
 type Corner = readonly [number, number, number];
 

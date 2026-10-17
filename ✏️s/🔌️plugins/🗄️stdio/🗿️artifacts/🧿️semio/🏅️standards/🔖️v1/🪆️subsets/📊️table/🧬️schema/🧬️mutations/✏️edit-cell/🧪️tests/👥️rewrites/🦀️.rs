@@ -6,26 +6,27 @@
 //! `new_value`. None fire here. The cell is addressed by `{row_index, column_name}` but WRITTEN at
 //! the column's resolved POSITION, so this case pins that name→index resolution.
 
+use semio_framework_test_fixtures::fixture_text;
 use semio_s_artifact_stdio_semio_table_model::schema::diff::SemioTableDiff;
 use semio_s_artifact_stdio_semio_table_mutations::schema::mutations::SemioTableMutation;
 use semio_s_artifact_stdio_semio_table_model::schema::snapshot::SemioTableSnapshot;
 use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValue;
 use protocol::Mutation;
 
-const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✏️edit-cell/👥️rewrites/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✏️edit-cell/👥️rewrites/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✏️edit-cell/👥️rewrites/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✏️edit-cell/👥️rewrites/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✏️edit-cell/👥️rewrites/🎯️outcome/🔣️.json");
+static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/✏️edit-cell/👥️rewrites/📸️snapshot/⬅️before/🔣️.json"));
+static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/✏️edit-cell/👥️rewrites/📸️snapshot/➡️after/🔣️.json"));
+static MUTATION: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/✏️edit-cell/👥️rewrites/🦠️mutation/🔣️.json"));
+static DIFF: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/✏️edit-cell/👥️rewrites/🔺️diff/🔣️.json"));
+static OUTCOME: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/✏️edit-cell/👥️rewrites/🎯️outcome/🔣️.json"));
 
 fn before() -> SemioTableSnapshot {
-    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("edit-cell before snapshot decodes")
+    semio_framework_pack_json::from_json_str((*BEFORE), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("edit-cell before snapshot decodes")
 }
 fn expected_after() -> SemioTableSnapshot {
-    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("edit-cell after snapshot decodes")
+    semio_framework_pack_json::from_json_str((*AFTER), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("edit-cell after snapshot decodes")
 }
 fn edit_cell() -> SemioTableMutation {
-    semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("edit-cell mutation decodes")
+    semio_framework_pack_json::from_json_str((*MUTATION), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("edit-cell mutation decodes")
 }
 
 /// ▶️ Exactly one cell — row #1, resolved column index 1 — takes the new value.
@@ -59,14 +60,14 @@ async fn the_undo_edit_cell_restores_the_captured_value() {
 /// payload are canonical — `new_value` is a full internally-tagged `SemioValue`, not a bare scalar.
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
-    for (label, text) in [("before", BEFORE), ("after", AFTER)] {
+    for (label, text) in [("before", (*BEFORE)), ("after", (*AFTER))] {
         let decoded: SemioTableSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
         let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "edit-cell/rewrites-the-population-cell-of-the-second-row: committed {label} JSON is not canonical");
     }
     let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&(edit_cell()))).expect("edit-cell mutation encodes");
-    let original: serde_json::Value = serde_json::from_str(MUTATION).expect("edit-cell mutation reparses");
+    let original: serde_json::Value = serde_json::from_str((*MUTATION)).expect("edit-cell mutation reparses");
     assert_eq!(reencoded, original, "edit-cell/rewrites-the-population-cell-of-the-second-row: committed mutation JSON is not canonical");
 }
 
@@ -74,7 +75,7 @@ async fn committed_json_is_canonical() {
 /// value differs from the current one — so none of the four guard branches may fire.
 #[semio_framework_async_macros::async_test]
 async fn declared_outcome_holds_with_no_guard_branch_firing() {
-    let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
+    let outcome: serde_json::Value = serde_json::from_str((*OUTCOME)).expect("outcome decodes");
     assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("applied"), "edit-cell/rewrites-the-population-cell-of-the-second-row: this case is declared applied");
     let produced = edit_cell().diff(&before());
     assert!(produced.messages().is_empty(), "a reachable cell edited to a genuinely different value must raise no diagnostics");
@@ -86,25 +87,25 @@ async fn produces_committed_diff() {
     let base = before();
     let outcome = <SemioTableMutation as Mutation<SemioTableSnapshot>>::diff(&edit_cell(), &base);
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
-    let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
+    let committed: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff decodes");
     assert_eq!(produced, committed, "edit-cell/rewrites-the-population-cell-of-the-second-row: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
 
 /// 🔣️ The committed diff is canonical, omits `columns`, and already carries the new cell value.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical_and_omits_columns_entirely() {
-    let decoded: SemioTableDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed edit-cell diff decodes");
+    let decoded: SemioTableDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed edit-cell diff decodes");
     assert!(decoded.columns.is_none(), "edit-cell must leave the columns slot untouched");
     let _rows = decoded.rows.as_ref().expect("an applied edit-cell diff carries a rows list");
     let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("diff re-encodes");
-    let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
+    let original: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff reparses");
     assert_eq!(reencoded, original, "edit-cell/rewrites-the-population-cell-of-the-second-row: committed diff JSON is not canonical");
 }
 
 /// 🩹 Applying the committed diff to `before` yields `after`.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: SemioTableDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed edit-cell diff decodes");
+    let decoded: SemioTableDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed edit-cell diff decodes");
     let produced = protocol::apply_diff(&decoded, &before()).expect("committed edit-cell diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "edit-cell/rewrites-the-population-cell-of-the-second-row: committed diff did not carry before to after");
 }

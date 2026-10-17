@@ -1,4 +1,3 @@
-use super::*;
 
 #[test]
 fn job_completion_ownership_survives_newer_render_generations() {
@@ -26,7 +25,6 @@ fn job_completion_ownership_survives_newer_render_generations() {
             }
         }
     }
-    println!("[DEBUG] Job completion ownership: five neutral multi-job histories preserve terminals and reject stale repaint");
 }
 
 #[test]

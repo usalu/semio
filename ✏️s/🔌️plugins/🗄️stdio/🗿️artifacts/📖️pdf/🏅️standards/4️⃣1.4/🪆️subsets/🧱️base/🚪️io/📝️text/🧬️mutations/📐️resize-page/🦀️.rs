@@ -1,8 +1,8 @@
 //! 📝️ resize-page text payload owner.
 
 use crate::standards::v1_4::subsets::base::schema::mutations::PdfMutation;
-use crate::standards::v1_4::subsets::base::io::text::mutations::{hex, unhex};
-use crate::standards::v1_4::subsets::base::schema::mutations::ResizePage;
+use crate::standards::v1_4::subsets::base::io::text::mutations::wire::{hex, unhex};
+use crate::standards::v1_4::subsets::base::schema::mutations::resize_page::ResizePage;
 
 //#region 🔖️Codec
 pub const OPCODE: &str = "resize-page";

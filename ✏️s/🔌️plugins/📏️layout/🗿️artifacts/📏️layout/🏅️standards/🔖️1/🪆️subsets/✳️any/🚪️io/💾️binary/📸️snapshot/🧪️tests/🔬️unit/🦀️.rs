@@ -78,7 +78,8 @@ async fn pack_schema_identity_carries_the_background_drawing_child_and_model_lin
 use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactReferenceText as _};
 
     let mut document = dsl::parse_dsl(dsl::LAYOUT_SAMPLE_TEXT).expect("parse sample layout fixture");
-    document.background_drawing = Some(crate::background_drawing_child_handle("dxf", &semio_s_artifact_stdio_semio_drawing::schema::snapshot::SemioDrawingSnapshot::default()));
+    semio_framework_io_ports::testkit::bind(&crate::LAYOUT_BACKGROUND_DRAWING);
+    document.background_drawing = Some(crate::background_drawing_child_handle("dxf", &semio_framework_io_ports::testkit::scene_content(&Default::default())));
     document.referenced_model = Some(store::ArtifactLink { target: semio_framework_artifact_reference::ArtifactRef::parse_uri("plan-1!s.architect.model@1/*").expect("uri"), pin: store::LinkPin::Checkpoint { id: "cp-1".into() }, role: "model".into() });
     store::os_store::test_support::assert_pack_schema_identity(&document);
 }

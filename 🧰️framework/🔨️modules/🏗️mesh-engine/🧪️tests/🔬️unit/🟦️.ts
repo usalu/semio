@@ -19,5 +19,4 @@ test("original attributed mesh fixture agrees with independent metadata publicat
   for (const field of ["attributes", "materials", "textures"]) expect(wire.userData[field]).toEqual(mesh[field]);
   expect(geometry.getAttribute("position").count).toBe(1);
   geometry.dispose();
-  console.log("[DEBUG] independent metadata publication attributes=1 materials=1 textures=1 vertices=1");
 });

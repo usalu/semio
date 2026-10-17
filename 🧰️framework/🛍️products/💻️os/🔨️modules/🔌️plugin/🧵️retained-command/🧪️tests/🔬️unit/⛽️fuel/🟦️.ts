@@ -10,5 +10,4 @@ test("retained command borrows original fuel and charges scalar fallback once",(
   expect(final).toEqual({fuel:row.remaining,observed:row.domainObserves});
  }
  expect(fixture.sourceKind).toBe("original-parent");expect(fixture.grantUnits).toBeGreaterThan(1);expect(fixture.phaseOrder).toEqual(["preflight","receive-original-command","work","publish"]);
- console.log("[DEBUG] Retained command independent original fuel authority domain/fallback cases=2");
 });

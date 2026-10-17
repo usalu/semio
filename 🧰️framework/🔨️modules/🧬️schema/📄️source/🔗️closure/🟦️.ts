@@ -1,5 +1,5 @@
-import { decodeJsonSyntax, JsonSyntaxError, type JsonSyntaxNode, type JsonSyntaxErrorCode } from "../../../🎒️pack/🔤️json/📥️decode/🟦️.ts";
-import { JsonMemberPolicy } from "../../../🎒️pack/🔤️json/🧩️members/🟦️.ts";
+import { decodeJsonSyntax, JsonSyntaxError, type JsonSyntaxNode, type JsonSyntaxErrorCode } from "@semio-tech/pack-json-decode-ts";
+import { JsonMemberPolicy } from "@semio-tech/framework-pack-json-ts/members";
 
 /** 📄️ Captured immutable source coordinates, with an explicit retrieval URI. */
 export interface SchemaSourceInput { readonly id: string; readonly path: string; readonly baseUri: string; readonly source: string }

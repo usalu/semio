@@ -62,7 +62,7 @@ fn react_declared_storage_keys() -> std::collections::BTreeSet<String> {
         "🧰️framework/🔨️modules/🖱️ui/🔨️modules/💾️keybinding-persistence/🟦️.ts",
         "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🚗️UiDriver/🟦️.tsx",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx",
-        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛠️ShellHelpers/🟦️.tsx",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛠️ShellHelpers/🔩️plumbing/👥️presence-identity/🟦️.ts",
     ];
     let mut keys = std::collections::BTreeSet::new();
     for file in files {

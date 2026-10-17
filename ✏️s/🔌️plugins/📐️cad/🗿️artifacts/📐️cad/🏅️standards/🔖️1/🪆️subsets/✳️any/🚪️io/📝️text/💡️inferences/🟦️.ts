@@ -57,10 +57,10 @@ export function parseCadInferenceText(value: unknown, at = "$"): CadInferenceTex
 import { CstParser, createToken, Lexer } from "chevrotain";
 import type { CstElement, CstNode, IToken } from "chevrotain";
 import { emptyMeshTransfer, solidRef } from "@semio-tech/framework/3d";
-import { Model } from "../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🧊️model/🟦️.ts";
-import { type Expr, type ExprBinop, type ExprField, type ExprVar } from "../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🧮️expressions/🟦️.ts";
-import { applyModelDiff } from "../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️.ts";
-import { modelDefinitionActionRegistry, type ConstructQueryContext, type ConstructQueryResult, type ConstructRunner } from "../../../✏️editor/⚙️engine/🎬️actions/🟦️.ts";
+import { Model } from "@semio-tech/s-spatial-kernel-ts/geometry/model";
+import { type Expr, type ExprBinop, type ExprField, type ExprVar } from "@semio-tech/s-spatial-kernel-ts/geometry/expressions";
+import { applyModelDiff } from "@semio-tech/s-spatial-kernel-ts/spatial";
+import { modelDefinitionActionRegistry, type ConstructQueryContext, type ConstructQueryResult, type ConstructRunner } from "../../../✏️editor/⚙️engine/🎬️actions/🏃️action-execution/🟦️.ts";
 import { assertConstructAst, runConstructAst, type ConstructAst, type ConstructClauseAst, type NodePatternAst, type RelPatternAst, type PatternAst, type PatternElementAst, type ReturnClauseAst, type YieldItemAst } from "../../../🧬️schema/💡️inferences/🟦️.ts";
 
 // #region Lexer
@@ -813,7 +813,7 @@ export const defaultConstructRunner: ConstructRunner = (text, ctx) => runConstru
 
 // #region 🧪️Tests
 const __spatialQueryTestRuntime = import.meta.vitest ? await import("../../../✏️editor/⚙️engine/🏃️runtime/🟦️.ts") : null;
-const __spatialQueryTestKernel = import.meta.vitest ? await import("../../../../../../../../../../../🧑‍💻dev/📐️cad/🧪️tests/🔮️spatial-kernel/🧱️brepjs/🟦️.ts") : null;
+const __spatialQueryTestKernel = import.meta.vitest ? await import("@semio-tech/cad-js/testing/spatial-kernel/brepjs") : null;
 
 /** 🎒️ The values this module hands its extracted suite `./🧪️tests/🧪️semio-tech-cad-js-query-parse/🟦️.ts`. */
 export type InferencesTestDependencies = {

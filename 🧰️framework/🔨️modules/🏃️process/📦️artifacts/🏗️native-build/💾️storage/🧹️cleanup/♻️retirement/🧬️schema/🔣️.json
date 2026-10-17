@@ -16,6 +16,12 @@
         "disposableReserveMilliseconds": 10000,
         "maximumDisposableAllocations": 1
       }
+    },
+    "SelectedDescriptorPhase": {
+      "enum": [
+        "mounted",
+        "inactive"
+      ]
     }
   },
   "$ref": "#/definitions/Protocol"

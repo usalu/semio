@@ -1,6 +1,15 @@
 //! 🧩️ `add-block-entity` — authored as its own mutation leaf; its diff and inverse live in `🔺️diff` and `↩️inverse`.
 
-use super::*;
+#[allow(unused_imports)]
+use crate::schema::snapshot::CadEntityRecord;
+#[allow(unused_imports)]
+use protocol::Mutation;
+#[allow(unused_imports)]
+use crate::schema::diff::SemioCadDiff;
+#[allow(unused_imports)]
+use crate::schema::snapshot::SemioCadSnapshot;
+#[allow(unused_imports)]
+use crate::schema::mutations::remove_block_entity;
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
@@ -14,13 +23,16 @@ pub struct AddBlockEntity {
     pub at: Option<usize>,
 }
 
-impl protocol::MutationKind<SemioCadSnapshot, SemioCadMutation> for AddBlockEntity {
+impl<Op> protocol::MutationKind<SemioCadSnapshot, Op> for AddBlockEntity
+where
+    Op: protocol::Mutation<SemioCadSnapshot, Diff = crate::schema::diff::SemioCadDiff> + From<AddBlockEntity> + From<crate::schema::mutations::remove_block_entity::RemoveBlockEntity>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "block-entity", kind: "add-block-entity", record: "AddBlockEntity" };
 
-    fn diff(&self, base: &SemioCadSnapshot) -> protocol::MutationOutcome<<SemioCadMutation as Mutation<SemioCadSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioCadSnapshot) -> protocol::MutationOutcome<<Op as Mutation<SemioCadSnapshot>>::Diff> {
         diff::diff(self, base)
     }
-    fn inverse(&self, base: &SemioCadSnapshot) -> Result<Vec<SemioCadMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &SemioCadSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         inverse::inverse(self, base)?
     

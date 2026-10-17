@@ -22,5 +22,4 @@ fn source_projection_preserves_explicit_deletion_and_exact_predecessors() {
         let actual = match result { Ok(value) => value, Err(error) => serde_json::json!({ "refusal": { "code": error.code.as_str(), "path": error.path } }) };
         assert_eq!(actual, row["expected"], "{}", row["id"]);
     }
-    println!("[DEBUG] source projection: shared corpus preserved without physical fallback for deletions");
 }

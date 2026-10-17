@@ -277,7 +277,7 @@ fn retained_pixel_region_accepts_dci_4k_raster_with_bounded_work() {
 fn registered_pixel_region_factory_cancellation_retires_without_publication() {
     use protocol::OpBinary;
     use semio_framework_job::{Generation, InteractiveJob, Operation, OperationId, RevisionId, StepBudget, StepContext};
-    use semio_framework_plugin::action_bus::{ActionBus, ToolOperationSpec, ToolWirePage, TOOL_WIRE_PAGE_BYTES};
+    use semio_framework_action_bus::{ActionBus, ToolOperationSpec, ToolWirePage, TOOL_WIRE_PAGE_BYTES};
     use semio_framework_plugin::app::ArtifactToolCompletion;
     use std::sync::Arc;
     let snapshot = Arc::new(rgba_snapshot(1_024, 512, vec![7; 1_024 * 512 * 4]));

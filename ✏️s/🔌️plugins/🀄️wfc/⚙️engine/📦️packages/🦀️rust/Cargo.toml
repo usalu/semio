@@ -16,6 +16,11 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-s-plugin-wfc-engine-foundation = { path = "../../🏛️foundation/📦️packages/🦀️rust" }
+semio-s-plugin-wfc-engine-kernel = { path = "../../🧠️kernel/📦️packages/🦀️rust" }
+semio-s-plugin-wfc-engine-job = { path = "../../💼️job/📦️packages/🦀️rust" }
+semio-s-plugin-wfc-engine-solve = { path = "../../🧗️solve/📦️packages/🦀️rust" }
+semio-s-plugin-wfc-engine-lattice = { path = "../../🧮️lattice/📦️packages/🦀️rust" }
 semio-framework-job-publication = { path = "../../../../../../🧰️framework/🔨️modules/🧵️job/📬️outcome/📤️publication/📦️packages/🦀️rust" }
 semio-framework-job-worker = { path = "../../../../../../🧰️framework/🔨️modules/🧵️job/👷️worker/📦️packages/🦀️rust" }
 semio-framework-job-worker-authority = { path = "../../../../../../🧰️framework/🔨️modules/🧵️job/👷️worker/🎟️authority/📦️packages/🦀️rust" }
@@ -31,5 +36,6 @@ semio-framework-pack-json = { path = "../../../../../../🧰️framework/🔨️
 semio-framework-value-derive = { workspace = true }
 
 [dev-dependencies]
+semio-s-plugin-wfc-engine-oracle = { path = "../../🧿️oracle/📦️packages/🦀️rust" }
 semio-framework-os-kernel = { workspace = true, features = ["mutation-testing"] }
 serde_json = { workspace = true }

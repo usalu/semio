@@ -1,0 +1,24 @@
+# Direct Rust Compiler Capacity and Consumer Frontier
+
+Read-only Root Source trace after the descriptor/observation LOW review. No rustc/compiler/Native/cache/provider/OS sampling/network action ran. This report records actual Source facts; it makes no measured thread-count or current performance claim.
+
+The actual rustLibraryCompilerPortV1 still invokes raw withCompilerCapacityScopeV1 with requestedParallelism:1 and passes SEMIO_COMPILER_PARALLELISM:"1" to its child, discarding the returned capacity facts. Its --print cfg invocation runs earlier outside that capacity scope. The same CPU callback also reads/validates consumed.d and rechecks the storage reservation. Thus the reviewed shared consumer helper is not yet consumed by this actual direct-unit compiler; its postcompiler evidence work keeps the CPU lease, and no genuine per-unit jobserver is constructed/passed by this path. It requires -Zthreads=1 in the semantic arguments. The exact effect of those flags/environment on all rustc backend worker pools has not been executed or independently verified here; no assertion that the existing physical compiler used1 or all host cores follows from this trace.
+
+The current generic capacity request is either undefined (exclusive whole host) or a fixed requestedParallelism count (shared fair gate plus that many actual core leases). It has no explicit root-level opportunistic request to take at least one currently free core up to a known bound. The existing Native stage "available" borrows genuinely available slots from an already-created jobserver and then scopes that exact count; it is not a general replacement for the per-unit root request. A worker environment hint alone never grants or constrains a real kernel allocation.
+
+## Next Consumed Design
+
+Schema-first explicit capacity intent should distinguish exact, available-up-to-bound and whole-host rather than adding another ambiguous environment marker or optional legacy branch. An available root request must use the existing shared fair admission/picker and actual individual core leases, wait for at least one, then take only the free core set up to its schema-owned ceiling. It must return the real acquired count, handle cancellation/progress and release partial attempts exactly. Canonical nested borrowing must subdivide the actual retained frame with the same available semantics and drain all accepted descendants. No new Original, physical owner, lease registrar or clock is permitted. Migrate all actual callers atomically if the request contract changes; no compatibility alias/default is retained merely to avoid migration.
+
+The actual Rust unit path then uses the sole consumed Core CPU→consumer continuation. Keep genuine dependency SH/compiler-state/output/store/toolchain readers throughout; acquire CPU only for the real cfg/compiler stages, pass a genuine owned jobserver tied to the actual held workers into the compiler, and close/join it before the CPU stage drains. Preserve every semantic compiler/profile flag unless a separately proved adapter contract deliberately changes it. Move consumed-byte evidence verification into the retained input/output phase after actual CPU release, with the original narrower nonCPU control; never pass dead FIFO/broker endpoints into the consumer. Prototype codegen parallelism must be genuinely funded and bounded; release one-codegen-unit and unknown backend cases need explicit supported resource classes, not guessed thread counts. Existing -Zthreads=1 must not be silently rewritten contrary to the hashed descriptor.
+
+Before edits: census every actual capacity call/owner, inspect exact jobserver lifecycle, author neutral request/lease/cancellation/drain vectors with independent SQLite/Node oracles, and reproduce missing actual direct-unit helper/consumer Source laws. No fake Native/rustc positive provider is accepted; genuine ordinary CPU/FS/Node mechanisms and actual consumed Source checks are permitted. Actual Rust/metadata/performance/Native behavior remains HOLD and must be qualified separately. Do not create an unused generic helper; the corrected contract must be consumed by actual Rust unit and existing producers in this same coherent slice.
+
+## Observed Source Identity
+
+| Source | Bytes | SHA-256 |
+| --- | ---: | --- |
+| `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🏗️compiler/🦀️rustc/🟦️.ts` | 9535 | `4df8a5084dd28908c1d52b9f318590e73e6990d4e2d11e7a4549634b6da17c90` |
+| `🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🟦️.ts` | 6948 | `251f12687b36188a191f780301febfd4852358637bf9fcc3f6509ae69b0dae55` |
+| `🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🪆️scope/🟦️.ts` | 6869 | `33187cec9195b598020ea7fa5b36d59ac762a2c043e965dd75b97af6b8fe32c9` |
+| `🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🪆️scope/🤲️consumption/🟦️.ts` | 1026 | `4ee0f4e7a5efaa9d6f5504d71e51ee26e076f509c265c5a3d4bb3473b4efefcd` |

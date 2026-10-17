@@ -1,0 +1,78 @@
+[package]
+workspace = "../../../../.."
+name = "semio-s-artifact-stdio-semio-sqlite-laws-4"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Sqlite snapshot laws of the semio root artifact for the subsets mesh, presentation, document, text"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "🦀️.rs"
+
+[dependencies]
+semio-framework-2d = { workspace = true }
+semio-framework-action-bus = { path = "../../../../../../../../../../🧰️framework/🔨️modules/🎯️action-bus/📦️packages/🦀️rust" }
+semio-framework-artifact-reference = { workspace = true }
+semio-framework-async = { workspace = true }
+semio-framework-async-macros = { workspace = true }
+semio-framework-diagnostic = { workspace = true }
+semio-framework-dsl = { workspace = true }
+semio-framework-io-sqlite-snapshot-testing-backing = { path = "../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️testing/💰️backing/📦️packages/🦀️rust" }
+semio-framework-job = { workspace = true }
+semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-framework-pack = { path = "../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
+semio-framework-pack-json = { workspace = true }
+semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
+semio-framework-schema = { workspace = true }
+semio-framework-schema-composition = { workspace = true }
+semio-framework-schema-registry = { workspace = true }
+semio-framework-schema-state = { workspace = true }
+semio-framework-trace = { workspace = true }
+semio-framework-ui-locale = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-framework-value-derive = { workspace = true }
+semio-s-artifact-stdio-contract = { workspace = true, features = ["testing"] }
+semio-s-artifact-stdio-semio = { path = "../../../../../📦️packages/🦀️rust" }
+semio-s-artifact-stdio-semio-animation = { workspace = true }
+semio-s-artifact-stdio-semio-mut-family-2 = { path = "../../../../../🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/🧬️mutations/🕸️apply-mesh/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-semio-audio = { workspace = true }
+semio-s-artifact-stdio-semio-audio-model = { workspace = true }
+semio-s-artifact-stdio-semio-audio-mutations = { workspace = true }
+semio-s-artifact-stdio-semio-base = { workspace = true }
+semio-s-artifact-stdio-semio-base-examples = { workspace = true }
+semio-s-artifact-stdio-semio-brep = { workspace = true }
+semio-s-artifact-stdio-semio-cad = { workspace = true }
+semio-s-artifact-stdio-semio-document = { workspace = true }
+semio-s-artifact-stdio-semio-drawing = { workspace = true }
+semio-s-artifact-stdio-semio-editor = { path = "../../../../../🏅️standards/🔖️v1/🪆️subsets/✉️base/✏️editor/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-stdio-semio-flow = { workspace = true }
+semio-s-artifact-stdio-semio-graph = { workspace = true }
+semio-s-artifact-stdio-semio-image = { workspace = true }
+semio-s-artifact-stdio-semio-inferences = { path = "../../../../../🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/💡️inferences/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-stdio-semio-kit = { workspace = true }
+semio-s-artifact-stdio-semio-mesh = { workspace = true }
+semio-s-artifact-stdio-semio-model = { workspace = true }
+semio-s-artifact-stdio-semio-mut-family = { path = "../../../../../🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/🧬️mutations/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-semio-object = { workspace = true }
+semio-s-artifact-stdio-semio-presentation = { workspace = true }
+semio-s-artifact-stdio-semio-schema = { path = "../../../../../🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-semio-snapshot = { path = "../../../../../🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/📸️snapshot/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-stdio-semio-table = { workspace = true }
+semio-s-artifact-stdio-semio-table-model = { workspace = true }
+semio-s-artifact-stdio-semio-table-mutations = { workspace = true }
+semio-s-artifact-stdio-semio-text = { workspace = true }
+semio-s-artifact-stdio-semio-text-model = { workspace = true }
+semio-s-artifact-stdio-semio-text-mutations = { workspace = true }
+semio-s-artifact-stdio-semio-value = { workspace = true }
+semio-s-artifact-stdio-semio-value-model = { workspace = true }
+semio-s-artifact-stdio-semio-value-mutations = { workspace = true }
+semio-s-artifact-stdio-semio-video = { workspace = true }
+semio-s-artifact-stdio-semio-video-model = { workspace = true }
+semio-s-artifact-stdio-semio-video-mutations = { workspace = true }
+serde_json = { workspace = true }

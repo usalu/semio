@@ -26,12 +26,15 @@ pub fn plan(p: &GltfUnbindNodeCameraPayload, base: &GltfSnapshot) -> Result<Gltf
     Ok(GltfDiff { nodes: patch(p.node, GltfNodeDiff { camera: Some(None), ..Default::default() }), ..Default::default() })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn inverse(p: &GltfUnbindNodeCameraPayload, base: &GltfSnapshot) -> Vec<super::GltfMutation> {
+pub fn inverse<Op>(p: &GltfUnbindNodeCameraPayload, base: &GltfSnapshot) -> Vec<Op>
+where
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::remove_used_extension::RemoveUsedExtensionMutation>,
+{
     if validate(p, base).is_err() {
         return Vec::new();
     }
     match base.document.nodes[p.node].camera {
-        Some(current) => vec![super::bind_node_camera::mutation(super::bind_node_camera::GltfBindNodeCameraPayload { node: p.node, camera: current })],
+        Some(current) => vec![crate::standards::v2_0::subsets::any::schema::mutations::bind_node_camera::mutation(crate::standards::v2_0::subsets::any::schema::mutations::bind_node_camera::GltfBindNodeCameraPayload { node: p.node, camera: current })],
         None => Vec::new(),
     }
 }
@@ -46,11 +49,17 @@ pub enum UnbindNodeCameraMutation {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn mutation(payload: GltfUnbindNodeCameraPayload) -> super::GltfMutation {
-    super::GltfMutation::UnbindNodeCamera(UnbindNodeCameraMutation::Apply(payload))
+pub fn mutation<Op>(payload: GltfUnbindNodeCameraPayload) -> Op
+where
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::unbind_node_camera::UnbindNodeCameraMutation>,
+{
+    Op::from(UnbindNodeCameraMutation::Apply(payload))
 }
 
-impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for UnbindNodeCameraMutation {
+impl<Op> protocol::MutationKind<GltfSnapshot, Op> for UnbindNodeCameraMutation
+where
+    Op: protocol::Mutation<GltfSnapshot, Diff = GltfDiff> + From<UnbindNodeCameraMutation>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "unbind", entity: "node-camera", kind: "unbind-node-camera", record: "UnboundNodeCamera" };
 
     fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<GltfDiff> {
@@ -62,7 +71,7 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for UnbindNodeCam
         }
     }
 
-    fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<super::GltfMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         match self {
             Self::Apply(payload) => Ok(inverse(payload, base)),
         }
@@ -79,7 +88,5 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for UnbindNodeCam
 //#endregion 🧬️DirectMutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔗️clears-the-d53789/🦀️.rs"]
-mod case_clears_the_d53789;
+
 //#endregion 🧪️Tests

@@ -1,0 +1,68 @@
+[package]
+workspace = "../../../../../../../../.."
+name = "semio-framework-plugin-tests-02-2"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Companion test crate tests-02 of the plugin SDK partition (hosts: window-config) (part 2)"
+publish = false
+
+[package.metadata.semio]
+role = "framework"
+id = "plugin-tests-02-2"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-plugin-app-builder = { path = "../../../../🏗️builder/🧩️app/📦️packages/🦀️rust", features = ["artifact-app-testing"] }
+semio-framework-plugin-child = { path = "../../../../🪆️child/📦️packages/🦀️rust", features = ["artifact-app-testing"] }
+semio-framework-plugin-command = { path = "../../../../🎮️command/📦️packages/🦀️rust", features = ["artifact-app-testing"] }
+semio-framework-plugin-composition-emission = { path = "../../../../🧩️composition/📦️packages/🦀️rust", features = ["artifact-app-testing"] }
+semio-framework-plugin-composition-publication = { path = "../../../../🧩️composition/📬️publication/📦️packages/🦀️rust", features = ["artifact-app-testing"] }
+semio-framework-plugin-decl-app = { path = "../../../../📜️declaration/🧩️app/📦️packages/🦀️rust", features = ["artifact-app-testing", "reserved-producer-testing"] }
+semio-framework-plugin-decl-emission = { path = "../../../../📜️declaration/📨️emission/📦️packages/🦀️rust" }
+semio-framework-plugin-decl-views = { path = "../../../../📜️declaration/👁️view/📦️packages/🦀️rust", features = ["media-turn-testing"] }
+semio-framework-plugin-document-media = { path = "../../../../🗃️document/📦️packages/🦀️rust", features = ["artifact-app-testing", "media-turn-testing"] }
+semio-framework-plugin-instance-app = { path = "../../../../🧵️instance/📦️packages/🦀️rust", features = ["artifact-app-testing"] }
+semio-framework-plugin-job = { path = "../../../../👷️job/📦️packages/🦀️rust", features = ["artifact-app-testing"] }
+semio-framework-plugin-operation = { path = "../../../../♻️cancellation/📦️packages/🦀️rust", features = ["media-turn-testing"] }
+semio-framework-plugin-publication-mounted = { path = "../../../../🧩️composition/📬️publication/🤝️group/🪟️mounted/📦️packages/🦀️rust", features = ["artifact-app-testing"] }
+semio-framework-plugin-reactor-app = { path = "../../../../⚛️reactor/🔌️app/📦️packages/🦀️rust", features = ["artifact-app-testing"] }
+semio-framework-plugin-retained-command = { path = "../../../../🧵️retained-command/📦️packages/🦀️rust", features = ["artifact-app-testing"] }
+semio-framework-plugin-testing-fixtures = { path = "../../../../🧪️testing/🧰️fixtures/📦️packages/🦀️rust" }
+semio-framework-plugin-testing-laws = { path = "../../../../🧪️testing/📦️packages/🦀️rust", features = ["artifact-app-testing"] }
+semio-framework-plugin-time-travel = { path = "../../../../⏪️time-travel/📦️packages/🦀️rust", features = ["artifact-app-testing"] }
+semio-framework-plugin-window-config = { path = "../../../../🪟️window/🎚️config/📦️packages/🦀️rust" }
+semio-framework-plugin-window-kits = { path = "../../../../🪟️window-kits/📦️packages/🦀️rust", features = ["artifact-app-testing"] }
+semio-framework = { path = "../../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
+semio-framework-artifact-reference = { workspace = true }
+semio-framework-async = { path = "../../../../../../../../🔨️modules/⏳️async/📦️packages/🦀️rust", features = ["entrypoint"], package = "semio-framework-async" }
+semio-framework-async-macros = { path = "../../../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
+semio-framework-job = { path = "../../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust", features = ["testkit"], package = "semio-framework-job" }
+semio-framework-os-kernel = { path = "../../../../../../📦️packages/🦀️rust", features = ["mutation-testing"], package = "semio-framework-os-kernel" }
+semio-framework-pack-json = { path = "../../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-framework-plugin-ownership = { path = "../../../../🏛️ownership/🧱️owner/📦️packages/🦀️rust" }
+semio-framework-time-travel = { workspace = true }
+semio-framework-tool-machine = { workspace = true }
+semio-framework-tool-run = { workspace = true }
+semio-framework-trace = { workspace = true }
+semio_framework_ui_contract = { path = "../../../../../../../../🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
+semio-framework-ui-layout = { path = "../../../../../../../../🔨️modules/🖱️ui/📜️declaration/📐️layout/📦️packages/🦀️rust" }
+semio-framework-ui-locale = { path = "../../../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-value-derive = { path = "../../../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
+serde_json = "1.0.140"
+
+[dev-dependencies]
+
+[features]
+artifact-app-testing = []

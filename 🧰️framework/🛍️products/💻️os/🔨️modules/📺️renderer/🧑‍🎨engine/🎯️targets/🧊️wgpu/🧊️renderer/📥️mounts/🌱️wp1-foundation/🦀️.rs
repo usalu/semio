@@ -77,9 +77,6 @@ extern crate semio_framework_os_renderer_wgpu_kernel_runtime as kernel_runtime;
 //#endregion 🎠️KernelRuntime
 
 //#region 🧭️BootAxisParityTests
-#[cfg(test)]
-#[path = "../../../../../🧪️tests/🧭️boot-axis-parity/🦀️.rs"]
-mod boot_axis_parity_tests;
 //#endregion 🧭️BootAxisParityTests
 
 //#region 🔖️OsHostDecomposition
@@ -103,19 +100,9 @@ use semio_framework_os_renderer_wgpu_program_bridge::native_runtime_modules;
 
 //#region 🧭️HostBaseTestHosts
 // 🧪️ Test hosts of laws that name the monolith (shell source text, entry point, scenes) and therefore cannot live in the crate that owns the code they test.
-#[cfg(test)]
-#[path = "🧪️test-hosts/⏱️frame-latency/🦀️.rs"]
-mod frame_latency_diagnostics_host;
 
 #[cfg(all(test, not(target_arch = "wasm32")))]
 #[path = "🧪️test-hosts/🔬️renderer-io/🦀️.rs"]
 mod renderer_io_retained_host;
 
-#[cfg(test)]
-#[path = "🧪️test-hosts/📇️directory-door/🦀️.rs"]
-mod directory_door_host;
-
-#[cfg(all(test, not(target_arch = "wasm32")))]
-#[path = "🧪️test-hosts/🛰️dock-unit/🦀️.rs"]
-mod dock_unit_host;
 //#endregion 🧭️HostBaseTestHosts

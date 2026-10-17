@@ -17,8 +17,8 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
 use std::time::Duration;
 
-use proctor::catalog::load_catalog;
-use proctor::config::{CrossOriginPolicy, Forwarding, Gate, SIGN_UP};
+use teaching_proctor_base::catalog::load_catalog;
+use teaching_proctor_base::config::{CrossOriginPolicy, Forwarding, Gate, SIGN_UP};
 use proctor::instance::Proctor;
 use semio_framework_async::CancelToken;
 use serde_json::{json, Value};

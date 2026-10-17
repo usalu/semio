@@ -1,4 +1,7 @@
-use super::*;
+use crate::standards::v1::subsets::any::schema::registers::ProgramElement;
+#[allow(unused_imports)]
+use std::{collections::BTreeMap, collections::HashMap, collections::HashSet, collections::VecDeque};
+use crate::standards::v1::subsets::any::schema::inferences::topology::*;
 use crate::standards::v1::subsets::any::schema::kernel::{EntityHeader, EntityId, QuantitySpec};
 use crate::standards::v1::subsets::any::schema::registers::ProgramElementKind;
 

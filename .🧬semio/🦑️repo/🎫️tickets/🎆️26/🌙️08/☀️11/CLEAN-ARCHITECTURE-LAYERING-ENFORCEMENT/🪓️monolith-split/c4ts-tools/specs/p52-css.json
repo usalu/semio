@@ -1,0 +1,10 @@
+{"snapshot": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/🗑️generated/c4ts-snap/p52-f2.css", "root": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🎤️presentation/📦️packages/🟦️typescript/🎯️targets/⚛️react/🎨️.css", "base": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🎤️presentation/📦️packages/🟦️typescript/🎯️targets/⚛️react/🎨️styles", "keepRootLines": 1,
+ "children": [
+  [3, 133, "🔤️reveal-typography-and-slides", "The reveal theme variables, the heading scale and the layout of the slides and positioned arrangements."],
+  [134, 446, "🖱️interaction-selection-and-enlarge", "The interaction layer, hover and selection paint of dispositions, the enlarged state, pinned and canvas-framed dispositions and their chrome."],
+  [447, 694, "🔲️interaction-handles-and-controls", "The resize handles, the action buttons, the enlarge control, the pdf page navigation and the slide reset control."],
+  [695, 851, "🧱️arrangement-canvas-and-embodiments", "The arrangement canvas, row bands, disposition frames, morph anchors, markdown prose and the json tree."],
+  [852, 1110, "🎥️media-teaser-and-figure-scroll", "The media teaser veils, the figure scroll viewports and bars, and the figure crop slots."],
+  [1111, 1309, "👻️morph-keyframes-ghosts-and-pdf", "The figure crop morph keyframes, the target and source ghosts, the overlay frames and the pdf documents."],
+  [1310, 1406, "🌱️intro-arrangement-and-reveal-chrome", "The goal heading, the intro arrangement rows and lines, the progress bar and the reveal chrome."]
+ ]}

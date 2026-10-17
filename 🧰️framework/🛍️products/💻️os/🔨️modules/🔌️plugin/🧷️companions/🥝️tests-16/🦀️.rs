@@ -1,3 +1,15 @@
-//! 🥝️ Companion test crate tests-16 of the plugin SDK partition (hosts: TOP).
+//! 🥝️ Companion test crate tests-16 of the plugin SDK partition: hosts the test roots `plugin_builder_contract_tests_3`, `receipt_tests_host`.
 //!
-//! 🧭️ WP7 skeleton of `semio-framework-plugin`: the sources move in with the work package.
+//! 🧭️ The test sources stay where they are and are mounted here with `#[path]`; every name they use from the former facade root is spelled with the crate that owns it.
+
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as vcs;
+extern crate semio_framework_os_kernel as pack;
+
+#[cfg(test)]
+#[path = "../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-3/🦀️.rs"]
+pub mod plugin_builder_contract_tests_3;
+#[cfg(test)]
+#[path = "../../🪝️mounts/📜️wp2-declaration/🧪️hosts/🎟️child-receipt/🦀️.rs"]
+pub mod receipt_tests_host;

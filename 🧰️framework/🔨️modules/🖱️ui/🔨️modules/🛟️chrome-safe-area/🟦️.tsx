@@ -4,7 +4,7 @@ import { ephemeralMap } from "../../../🫧️transient/🟦️.ts";
 import * as React from "react";
 import { reactHostPort } from "../../🧱️elements/🔌️Ports/🟦️.tsx";
 import { useShellScopeOptional } from "../../🧱️elements/🐚️ShellScope/🟦️.tsx";
-import { resolveElementsSurfaceChromeRoot } from "../../🎯️targets/⚛️react/🌓️appearance/🟦️.ts";
+import { resolveElementsSurfaceChromeRoot } from "@semio-tech/ui-react/appearance";
 import { type Anchor, anchorHorizontal, anchorVertical } from "../⚓️panel-anchor/🟦️.ts";
 
 // 🐚️ Keyed by shell root (falling back to `document.documentElement` outside any shell) so two navbars

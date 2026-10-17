@@ -1,8 +1,10 @@
+use crate::standards::v2_0::subsets::any::io::text::inferences::{write_canonical_json};
 use crate::standards::v2_0::subsets::any::io::text::inferences::*;
+use semio_framework_test_fixtures::fixture_text;
 
 #[test]
 fn canonical_json_bytes_matches_the_portable_byte_array_contract() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../📝️text/💡️inferences/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap() {
         let bytes: Vec<u8> = serde_json::from_value(row["bytes"].clone()).unwrap();
         let expected = row["canonical"].as_str().unwrap();

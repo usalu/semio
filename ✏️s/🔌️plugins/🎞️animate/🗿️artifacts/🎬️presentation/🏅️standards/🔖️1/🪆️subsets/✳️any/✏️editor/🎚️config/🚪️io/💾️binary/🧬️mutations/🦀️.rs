@@ -3,8 +3,7 @@
 #[allow(unused_imports)]
 mod mutations_codec {
 use super::*;
-use crate::editor::animate::config::component::mutations::*;
-use crate::editor::animate::config::component::*;
+use crate::editor::animate::config::*;
 use crate::editor::animate::config::SetEngagementInput;
 
 impl protocol::OpBinary for PresentationConfigMutation {

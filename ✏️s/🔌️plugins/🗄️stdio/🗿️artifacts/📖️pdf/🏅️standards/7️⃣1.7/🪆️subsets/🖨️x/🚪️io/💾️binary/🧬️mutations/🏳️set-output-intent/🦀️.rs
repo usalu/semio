@@ -1,6 +1,6 @@
 //! 🏳️ Direct binary codec for `set-output-intent`.
 
-use crate::standards::v1_7::subsets::x::schema::mutations::SetOutputIntent;
+use crate::standards::v1_7::subsets::x::schema::mutations::set_output_intent::SetOutputIntent;
 
 //#region 🔖️Identity
 pub const TAG: u8 = 2;
@@ -21,7 +21,5 @@ pub fn decode(bytes: &[u8]) -> Result<SetOutputIntent, String> {
 //#endregion 🔖️Codec
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

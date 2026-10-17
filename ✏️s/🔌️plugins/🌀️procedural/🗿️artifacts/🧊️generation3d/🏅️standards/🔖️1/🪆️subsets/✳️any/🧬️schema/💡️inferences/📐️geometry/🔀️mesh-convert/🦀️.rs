@@ -3,6 +3,7 @@
 //! A mesh is turned into B-Rep as triangles: polygons are triangulated first, every triangle becomes a planar face, a closed oriented mesh becomes a solid and an open one a shell. Curved surfaces are not reconstructed.
 #![allow(clippy::result_large_err)]
 
+use semio_framework_3d::mesh::{MeshModelingOps};
 use semio_s_artifact_procedural_3d_model::catalogue::Kind;
 use semio_s_artifact_procedural_3d_mesh_support::cancelled_fault;
 use semio_s_artifact_procedural_3d_mesh_support::capacity_fault;

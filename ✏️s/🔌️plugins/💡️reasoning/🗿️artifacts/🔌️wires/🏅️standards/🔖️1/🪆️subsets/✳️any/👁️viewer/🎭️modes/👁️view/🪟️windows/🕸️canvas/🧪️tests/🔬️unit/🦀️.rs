@@ -1,4 +1,7 @@
-use super::*;
+use semio_framework_pack_json::Value;
+use semio_framework_plugin::Canvas2dScene;
+use semio_framework_plugin::SurfaceKind;
+use crate::viewer::wires::modes::view::windows::canvas::*;
 
 #[semio_framework_async_macros::async_test]
 async fn definition_declares_the_canvas_2d_surface_and_body_key() {

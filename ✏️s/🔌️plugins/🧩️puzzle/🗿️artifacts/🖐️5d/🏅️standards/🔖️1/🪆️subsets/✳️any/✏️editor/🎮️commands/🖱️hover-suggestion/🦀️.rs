@@ -1,6 +1,6 @@
 //! 🖱️ `hover-suggestion` command.
 
-use crate::editor::puzzle5d::Puzzle5dActionCtx;
+use crate::editor::puzzle5d::interaction::Puzzle5dActionCtx;
 use semio_framework_pack_json::Value;
 
 /// 🖱️ The suggestion row under the pointer becomes the candidate an argument-less accept or cycle starts from.

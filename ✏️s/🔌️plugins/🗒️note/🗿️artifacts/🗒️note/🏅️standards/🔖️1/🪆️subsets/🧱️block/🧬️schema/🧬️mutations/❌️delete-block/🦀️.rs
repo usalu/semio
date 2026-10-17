@@ -1,6 +1,5 @@
 //! ❌ Note mutation — `DeleteBlock`: removes a block (and its subtree, if it is a group).
 
-use crate::schema::mutations::NoteMutation;
 use crate::{NoteDiff, NoteSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -19,17 +18,23 @@ pub struct DeleteBlock {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn delete_block(id: String) -> NoteMutation {
-    NoteMutation::DeleteBlock(DeleteBlock { id })
+pub fn delete_block<Op>(id: String) -> Op
+where
+    Op: From<crate::standards::v1::subsets::block::schema::mutations::delete_block::DeleteBlock>,
+{
+    Op::from(DeleteBlock { id })
 }
 
-impl MutationKind<NoteSnapshot, NoteMutation> for DeleteBlock {
+impl<Op> MutationKind<NoteSnapshot, Op> for DeleteBlock
+where
+    Op: protocol::Mutation<NoteSnapshot, Diff = NoteDiff> + From<DeleteBlock> + From<crate::standards::v1::subsets::block::schema::mutations::create_block::CreateBlock>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "block", kind: "delete-block", record: "DeletedBlock" };
 
     fn diff(&self, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &NoteSnapshot) -> Result<Vec<NoteMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &NoteSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

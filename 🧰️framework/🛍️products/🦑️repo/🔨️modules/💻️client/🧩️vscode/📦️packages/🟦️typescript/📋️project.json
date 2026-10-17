@@ -49,7 +49,7 @@
       },
       "cache": true,
       "outputs": [
-        "{projectRoot}/dist/{options.env.SEMIO_BUILD_MODE}/extension"
+        "{projectRoot}/📤️dist/{options.env.SEMIO_BUILD_MODE}"
       ],
       "inputs": [
         "default",
@@ -85,14 +85,14 @@
       },
       "cache": true,
       "outputs": [
-        "{projectRoot}/dist/{options.env.SEMIO_BUILD_MODE}/vsix/🧩️repo.vsix"
+        "{projectRoot}/📤️dist/{options.env.SEMIO_BUILD_MODE}/🧩️repo.vsix"
       ]
     },
     "compile-extension": {
       "executor": "repo:script",
       "cache": false,
       "outputs": [
-        "{projectRoot}/dist/{options.env.SEMIO_BUILD_MODE}/extension-debug"
+        "{projectRoot}/📤️dist/{options.env.SEMIO_BUILD_MODE}"
       ],
       "inputs": [
         "default",
@@ -110,28 +110,19 @@
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts compile-extension",
-        "forwardAllArgs": true,
-        "args": [
-          "./dist/prototype/extension-debug"
-        ]
+        "forwardAllArgs": true
       },
       "defaultConfiguration": "prototype",
       "configurations": {
         "prototype": {
           "env": {
             "SEMIO_BUILD_MODE": "prototype"
-          },
-          "args": [
-            "./dist/prototype/extension-debug"
-          ]
+          }
         },
         "release": {
           "env": {
             "SEMIO_BUILD_MODE": "release"
-          },
-          "args": [
-            "./dist/release/extension-debug"
-          ]
+          }
         }
       }
     },
@@ -140,7 +131,7 @@
       "continuous": true,
       "cache": false,
       "outputs": [
-        "{projectRoot}/dist/{options.env.SEMIO_BUILD_MODE}/extension-debug-watch"
+        "{projectRoot}/📤️dist/{options.env.SEMIO_BUILD_MODE}"
       ],
       "dependsOn": [
         {
@@ -154,28 +145,16 @@
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts watch-extension",
-        "args": [
-          "./🟦️.ts",
-          "./dist/prototype/extension-debug-watch"
-        ],
         "forwardAllArgs": true
       },
       "defaultConfiguration": "prototype",
       "configurations": {
         "prototype": {
-          "args": [
-            "./🟦️.ts",
-            "./dist/prototype/extension-debug-watch"
-          ],
           "env": {
             "SEMIO_BUILD_MODE": "prototype"
           }
         },
         "release": {
-          "args": [
-            "./🟦️.ts",
-            "./dist/release/extension-debug-watch"
-          ],
           "env": {
             "SEMIO_BUILD_MODE": "release"
           }
@@ -231,6 +210,32 @@
       "dependsOn": [
         "generate-graphql-types"
       ]
+    },
+    "test-custody": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "default"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test-custody"
+      },
+      "defaultConfiguration": "prototype",
+      "configurations": {
+        "prototype": {
+          "env": {
+            "SEMIO_BUILD_MODE": "prototype"
+          }
+        },
+        "release": {
+          "env": {
+            "SEMIO_BUILD_MODE": "release"
+          }
+        }
+      }
     }
   },
   "implicitDependencies": [

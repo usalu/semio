@@ -304,7 +304,5 @@ pub fn status_json(document: &Wfc3dSnapshot, transient: &Wfc3dTransient) -> Stri
 //#endregion 🔖️Render
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

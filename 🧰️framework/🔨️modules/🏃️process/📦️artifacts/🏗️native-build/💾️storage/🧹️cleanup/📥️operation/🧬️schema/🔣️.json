@@ -84,6 +84,98 @@
           "type": "boolean"
         }
       }
+    },
+    "CarriedPreparationCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "carried",
+        "failed",
+        "useOriginal",
+        "deferCleanup"
+      ],
+      "properties": {
+        "carried": {
+          "type": "boolean"
+        },
+        "failed": {
+          "type": "boolean"
+        },
+        "useOriginal": {
+          "type": "boolean"
+        },
+        "deferCleanup": {
+          "type": "boolean"
+        }
+      }
+    },
+    "OpenLifetime": {
+      "definitions": {
+        "Protocol": {
+          "const": {
+            "maximumOwners": 32,
+            "maximumClosers": 1
+          }
+        },
+        "Case": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "name",
+            "closeFails",
+            "undefinedFailure",
+            "cancel",
+            "expected"
+          ],
+          "properties": {
+            "name": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            },
+            "closeFails": {
+              "type": "boolean"
+            },
+            "undefinedFailure": {
+              "type": "boolean"
+            },
+            "cancel": {
+              "type": "boolean"
+            },
+            "expected": {
+              "enum": [
+                "success",
+                "close-error",
+                "close-undefined",
+                "cancel"
+              ]
+            }
+          }
+        },
+        "RefinementCase": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "allowed"
+          ],
+          "properties": {
+            "kind": {
+              "enum": [
+                "zero-alias",
+                "finite-sibling",
+                "extra-signal",
+                "copied",
+                "retired"
+              ]
+            },
+            "allowed": {
+              "type": "boolean"
+            }
+          }
+        }
+      },
+      "$ref": "#/definitions/OpenLifetime/definitions/Case"
     }
   }
 }

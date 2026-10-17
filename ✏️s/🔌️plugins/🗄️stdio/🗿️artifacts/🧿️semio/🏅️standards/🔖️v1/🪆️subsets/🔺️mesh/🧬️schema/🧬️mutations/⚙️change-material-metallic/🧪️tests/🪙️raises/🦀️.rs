@@ -10,21 +10,22 @@ use crate::schema::diff::SemioMeshDiff;
 use crate::schema::mutations::SemioMeshMutation;
 use crate::schema::snapshot::SemioMeshSnapshot;
 use protocol::Mutation;
+use semio_framework_test_fixtures::fixture_text;
 
-const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/⚙️change-material-metallic/🪙️raises/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/⚙️change-material-metallic/🪙️raises/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/⚙️change-material-metallic/🪙️raises/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/⚙️change-material-metallic/🪙️raises/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/⚙️change-material-metallic/🪙️raises/🎯️outcome/🔣️.json");
+static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧪️tests/🧫️fixtures/🧬️mutations/⚙️change-material-metallic/🪙️raises/📸️snapshot/⬅️before/🔣️.json"));
+static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧪️tests/🧫️fixtures/🧬️mutations/⚙️change-material-metallic/🪙️raises/📸️snapshot/➡️after/🔣️.json"));
+static MUTATION: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧪️tests/🧫️fixtures/🧬️mutations/⚙️change-material-metallic/🪙️raises/🦠️mutation/🔣️.json"));
+static DIFF: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧪️tests/🧫️fixtures/🧬️mutations/⚙️change-material-metallic/🪙️raises/🔺️diff/🔣️.json"));
+static OUTCOME: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧪️tests/🧫️fixtures/🧬️mutations/⚙️change-material-metallic/🪙️raises/🎯️outcome/🔣️.json"));
 
 fn before() -> SemioMeshSnapshot {
-    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("change-material-metallic before snapshot decodes")
+    semio_framework_pack_json::from_json_str((*BEFORE), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("change-material-metallic before snapshot decodes")
 }
 fn expected_after() -> SemioMeshSnapshot {
-    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("change-material-metallic after snapshot decodes")
+    semio_framework_pack_json::from_json_str((*AFTER), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("change-material-metallic after snapshot decodes")
 }
 fn mutation() -> SemioMeshMutation {
-    semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("change-material-metallic mutation decodes")
+    semio_framework_pack_json::from_json_str((*MUTATION), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("change-material-metallic mutation decodes")
 }
 
 /// ▶️ Only the metallic factor moves; roughness and the base color stay.
@@ -58,21 +59,21 @@ async fn the_undo_change_material_metallic_restores_the_original_factor() {
 /// 🔣️ Snapshots and the `{"ChangeMaterialMetallic":{"id":"mat-a","new_metallic":1.0}}` payload are canonical — the factor is an `f32` written as a dyadic literal.
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
-    for (label, text) in [("before", BEFORE), ("after", AFTER)] {
+    for (label, text) in [("before", (*BEFORE)), ("after", (*AFTER))] {
         let decoded: SemioMeshSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
         let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "change-material-metallic/raises-the-metallic-factor-to-fully-metallic: committed {label} JSON is not canonical");
     }
     let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&(mutation()))).expect("change-material-metallic mutation encodes");
-    let original: serde_json::Value = serde_json::from_str(MUTATION).expect("change-material-metallic mutation reparses");
+    let original: serde_json::Value = serde_json::from_str((*MUTATION)).expect("change-material-metallic mutation reparses");
     assert_eq!(reencoded, original, "change-material-metallic/raises-the-metallic-factor-to-fully-metallic: committed mutation JSON is not canonical");
 }
 
 /// 🎯️ Declared `applied`: the material exists, the factor genuinely differs and is finite, so none of the three guards may fire
 #[semio_framework_async_macros::async_test]
 async fn declared_outcome_holds_as_committed() {
-    let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
+    let outcome: serde_json::Value = serde_json::from_str((*OUTCOME)).expect("outcome decodes");
     assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("applied"), "change-material-metallic/raises-the-metallic-factor-to-fully-metallic: this case is declared applied");
     let produced = mutation().diff(&before());
     assert!(produced.messages().is_empty(), "raising the metallic factor to a finite, genuinely different value must raise no diagnostics");
@@ -84,7 +85,7 @@ async fn produces_committed_diff() {
     let base = before();
     let outcome = <SemioMeshMutation as Mutation<SemioMeshSnapshot>>::diff(&mutation(), &base);
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
-    let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
+    let committed: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff decodes");
     assert_eq!(produced, committed, "change-material-metallic/raises-the-metallic-factor-to-fully-metallic: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
 
@@ -92,21 +93,21 @@ async fn produces_committed_diff() {
 /// allowed to touch appears in it at all.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical_and_narrowly_scoped() {
-    let decoded: SemioMeshDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed change-material-metallic diff decodes");
+    let decoded: SemioMeshDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed change-material-metallic diff decodes");
     let materials = decoded.materials.as_ref().expect("change-material-metallic must write the materials triple");
     let mdiff = &materials.modified[0].diff;
     assert_eq!(mdiff.metallic, Some(1.0), "the metallic factor must be written");
     assert!(mdiff.roughness.is_none() && mdiff.base_color.is_none(), "the sibling factor and the color must stay unwritten");
     assert!(decoded.meshes.is_none() && decoded.textures.is_none(), "no mesh or texture slot may appear in the diff");
     let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("diff re-encodes");
-    let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
+    let original: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff reparses");
     assert_eq!(reencoded, original, "change-material-metallic/raises-the-metallic-factor-to-fully-metallic: committed diff JSON is not canonical");
 }
 
 /// 🩹 Applying the committed diff to `before` yields `after`.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: SemioMeshDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed change-material-metallic diff decodes");
+    let decoded: SemioMeshDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed change-material-metallic diff decodes");
     let produced = protocol::apply_diff(&decoded, &before()).expect("committed change-material-metallic diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-material-metallic/raises-the-metallic-factor-to-fully-metallic: committed diff did not carry before to after");
 }

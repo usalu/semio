@@ -11,23 +11,24 @@
 
 use crate::standards::v1::subsets::any::schema::{diff::ProgramDiff, mutations::ProgramMutation, snapshot::ProgramSnapshot};
 use protocol::Mutation;
+use semio_framework_test_fixtures::fixture_text;
 
-const BEFORE: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏙️project/🏷️rename/🏷️code/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏙️project/🏷️rename/🏷️code/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏙️project/🏷️rename/🏷️code/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏙️project/🏷️rename/🏷️code/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏙️project/🏷️rename/🏷️code/🎯️outcome/🔣️.json");
+static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏙️project/🏷️rename/🏷️code/📸️snapshot/⬅️before/🔣️.json"));
+static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏙️project/🏷️rename/🏷️code/📸️snapshot/➡️after/🔣️.json"));
+static MUTATION: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏙️project/🏷️rename/🏷️code/🦠️mutation/🔣️.json"));
+static DIFF: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏙️project/🏷️rename/🏷️code/🔺️diff/🔣️.json"));
+static OUTCOME: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏙️project/🏷️rename/🏷️code/🎯️outcome/🔣️.json"));
 
 fn before() -> ProgramSnapshot {
-    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("rename-project/renames-the-project-code: before snapshot decodes")
+    semio_framework_pack_json::from_json_str((*BEFORE), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("rename-project/renames-the-project-code: before snapshot decodes")
 }
 
 fn expected_after() -> ProgramSnapshot {
-    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("rename-project/renames-the-project-code: after snapshot decodes")
+    semio_framework_pack_json::from_json_str((*AFTER), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("rename-project/renames-the-project-code: after snapshot decodes")
 }
 
 fn mutation() -> ProgramMutation {
-    serde_json::from_str(MUTATION).expect("rename-project/renames-the-project-code: mutation decodes")
+    serde_json::from_str((*MUTATION)).expect("rename-project/renames-the-project-code: mutation decodes")
 }
 
 /// ▶️ rename-project carries the committed before-snapshot to exactly the committed after-snapshot.
@@ -57,21 +58,21 @@ async fn rename_project_inverse_restores_before() {
 /// is a fixed point.
 #[semio_framework_async_macros::async_test]
 async fn rename_project_committed_json_is_canonical() {
-    for (side, text) in [("before", BEFORE), ("after", AFTER)] {
+    for (side, text) in [("before", (*BEFORE)), ("after", (*AFTER))] {
         let decoded: ProgramSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("rename-project/renames-the-project-code: snapshot decodes");
         let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("rename-project/renames-the-project-code: snapshot re-encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("rename-project/renames-the-project-code: snapshot reparses");
         assert_eq!(reencoded, original, "rename-project/renames-the-project-code: committed {side} snapshot JSON is not canonical");
     }
     let reencoded = serde_json::to_value(mutation()).expect("rename-project/renames-the-project-code: rename-project payload re-encodes");
-    let original: serde_json::Value = serde_json::from_str(MUTATION).expect("rename-project/renames-the-project-code: rename-project payload reparses");
+    let original: serde_json::Value = serde_json::from_str((*MUTATION)).expect("rename-project/renames-the-project-code: rename-project payload reparses");
     assert_eq!(reencoded, original, "rename-project/renames-the-project-code: committed rename-project payload JSON is not canonical");
 }
 
 /// 🎯️ The declared outcome holds: rename-project applies cleanly here and raises no diagnostic at all.
 #[semio_framework_async_macros::async_test]
 async fn rename_project_declared_outcome_holds() {
-    let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("rename-project/renames-the-project-code: outcome decodes");
+    let declared: serde_json::Value = serde_json::from_str((*OUTCOME)).expect("rename-project/renames-the-project-code: outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "rename-project/renames-the-project-code: this fixture declares an applied outcome");
     let base = before();
     let outcome = mutation().diff(&base);
@@ -84,16 +85,16 @@ async fn rename_project_declared_outcome_holds() {
 #[semio_framework_async_macros::async_test]
 async fn rename_project_produces_committed_diff() {
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(mutation().diff(&before()).diff())).expect("rename-project/renames-the-project-code: produced diff encodes");
-    let committed: serde_json::Value = serde_json::from_str(DIFF).expect("rename-project/renames-the-project-code: committed diff decodes");
+    let committed: serde_json::Value = serde_json::from_str((*DIFF)).expect("rename-project/renames-the-project-code: committed diff decodes");
     assert_eq!(produced, committed, "rename-project/renames-the-project-code: the diff rename-project builds differs from the committed 🔺️diff/🔣️.json");
 }
 
 /// 🔣️ The committed diff is itself canonical and decodes to ProgramDiff.
 #[semio_framework_async_macros::async_test]
 async fn rename_project_committed_diff_is_canonical() {
-    let decoded: ProgramDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("rename-project/renames-the-project-code: committed diff decodes");
+    let decoded: ProgramDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("rename-project/renames-the-project-code: committed diff decodes");
     let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("rename-project/renames-the-project-code: committed diff re-encodes");
-    let original: serde_json::Value = serde_json::from_str(DIFF).expect("rename-project/renames-the-project-code: committed diff reparses");
+    let original: serde_json::Value = serde_json::from_str((*DIFF)).expect("rename-project/renames-the-project-code: committed diff reparses");
     assert_eq!(reencoded, original, "rename-project/renames-the-project-code: committed diff JSON is not canonical");
 }
 
@@ -101,7 +102,7 @@ async fn rename_project_committed_diff_is_canonical() {
 /// after-snapshot — the diff is a complete description of what rename-project does, not a summary.
 #[semio_framework_async_macros::async_test]
 async fn rename_project_committed_diff_applies_to_after() {
-    let decoded: ProgramDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("rename-project/renames-the-project-code: committed diff decodes");
+    let decoded: ProgramDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("rename-project/renames-the-project-code: committed diff decodes");
     let produced = protocol::apply_diff(&decoded, &before()).expect("rename-project/renames-the-project-code: committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "rename-project/renames-the-project-code: the committed diff did not carry before to after");
 }

@@ -1,4 +1,4 @@
-import registrySchema from "../../../../../../../../../../📇️registry/🧬️schema/🔣️.json";
+import { stdioRegistrySchema as registrySchema } from "@semio-tech/stdio-registry-ts/schema";
 /** 🧫️ Canonical GLTF mutation/source snapshots retain every finite native wire field.
  * The strict independent Ajv oracle validates all committed and malformed JSON fixtures;
  * scalar assertions compare exact bigint, binary64 and ordered local JSON/pair values.

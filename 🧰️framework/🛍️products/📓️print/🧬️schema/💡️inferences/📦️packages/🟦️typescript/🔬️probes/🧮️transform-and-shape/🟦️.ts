@@ -5,6 +5,11 @@
  */
 import * as transform from "../../../../🧮transform/🟦️.ts";
 import * as mark from "../../../../✒️mark/🟦️.ts";
+import { curveLinear, curveLinearClosed, curveStep, curveStepAfter, curveStepBefore } from "../../../../✒️mark/🪜️curves-linear-and-step/🟦️.ts";
+import { curveBasis, curveBasisClosed, curveBasisOpen, curveBundle, curveBundleBeta } from "../../../../✒️mark/🌀️curves-basis-and-bundle/🟦️.ts";
+import { curveCardinal, curveCardinalClosed, curveCardinalOpen, curveCardinalTension, curveCatmullRom, curveCatmullRomAlpha, curveCatmullRomClosed, curveCatmullRomOpen } from "../../../../✒️mark/🎢️curves-cardinal-and-catmull-rom/🟦️.ts";
+import { curveBumpX, curveBumpY, curveMonotoneX, curveMonotoneY, curveNatural } from "../../../../✒️mark/🏔️curves-monotone-natural-and-bump/🟦️.ts";
+import { vizCurve, vizSymbol } from "../../../../✒️mark/💠️curve-registry-and-symbols/🟦️.ts";
 import * as shape from "../../../../🥧shape/🟦️.ts";
 import { type Level, type VizKernelCheck, samples } from "../🧰️probe-kit/🟦️.ts";
 
@@ -159,30 +164,30 @@ export async function shapeChecks(level: Level): Promise<VizKernelCheck[]> {
   const d3Shape = await import("d3-shape");
   const d3Chord = await import("d3-chord");
   const points = curvePoints(level);
-  const curves: readonly (readonly [string, unknown, ReturnType<typeof mark.vizCurve>])[] = [
-    ["linear", d3Shape.curveLinear, mark.curveLinear],
-    ["linear-closed", d3Shape.curveLinearClosed, mark.curveLinearClosed],
-    ["step", d3Shape.curveStep, mark.curveStep],
-    ["step-before", d3Shape.curveStepBefore, mark.curveStepBefore],
-    ["step-after", d3Shape.curveStepAfter, mark.curveStepAfter],
-    ["basis", d3Shape.curveBasis, mark.curveBasis],
-    ["basis-closed", d3Shape.curveBasisClosed, mark.curveBasisClosed],
-    ["basis-open", d3Shape.curveBasisOpen, mark.curveBasisOpen],
-    ["bundle", d3Shape.curveBundle, mark.curveBundle],
-    ["bundle-beta-0.4", d3Shape.curveBundle.beta(0.4), mark.curveBundleBeta(0.4)],
-    ["cardinal", d3Shape.curveCardinal, mark.curveCardinal],
-    ["cardinal-tension-0.5", d3Shape.curveCardinal.tension(0.5), mark.curveCardinalTension(0.5)],
-    ["cardinal-closed", d3Shape.curveCardinalClosed, mark.curveCardinalClosed],
-    ["cardinal-open", d3Shape.curveCardinalOpen, mark.curveCardinalOpen],
-    ["catmull-rom", d3Shape.curveCatmullRom, mark.curveCatmullRom],
-    ["catmull-rom-alpha-1", d3Shape.curveCatmullRom.alpha(1), mark.curveCatmullRomAlpha(1)],
-    ["catmull-rom-closed", d3Shape.curveCatmullRomClosed, mark.curveCatmullRomClosed],
-    ["catmull-rom-open", d3Shape.curveCatmullRomOpen, mark.curveCatmullRomOpen],
-    ["monotone-x", d3Shape.curveMonotoneX, mark.curveMonotoneX],
-    ["monotone-y", d3Shape.curveMonotoneY, mark.curveMonotoneY],
-    ["natural", d3Shape.curveNatural, mark.curveNatural],
-    ["bump-x", d3Shape.curveBumpX, mark.curveBumpX],
-    ["bump-y", d3Shape.curveBumpY, mark.curveBumpY],
+  const curves: readonly (readonly [string, unknown, ReturnType<typeof vizCurve>])[] = [
+    ["linear", d3Shape.curveLinear, curveLinear],
+    ["linear-closed", d3Shape.curveLinearClosed, curveLinearClosed],
+    ["step", d3Shape.curveStep, curveStep],
+    ["step-before", d3Shape.curveStepBefore, curveStepBefore],
+    ["step-after", d3Shape.curveStepAfter, curveStepAfter],
+    ["basis", d3Shape.curveBasis, curveBasis],
+    ["basis-closed", d3Shape.curveBasisClosed, curveBasisClosed],
+    ["basis-open", d3Shape.curveBasisOpen, curveBasisOpen],
+    ["bundle", d3Shape.curveBundle, curveBundle],
+    ["bundle-beta-0.4", d3Shape.curveBundle.beta(0.4), curveBundleBeta(0.4)],
+    ["cardinal", d3Shape.curveCardinal, curveCardinal],
+    ["cardinal-tension-0.5", d3Shape.curveCardinal.tension(0.5), curveCardinalTension(0.5)],
+    ["cardinal-closed", d3Shape.curveCardinalClosed, curveCardinalClosed],
+    ["cardinal-open", d3Shape.curveCardinalOpen, curveCardinalOpen],
+    ["catmull-rom", d3Shape.curveCatmullRom, curveCatmullRom],
+    ["catmull-rom-alpha-1", d3Shape.curveCatmullRom.alpha(1), curveCatmullRomAlpha(1)],
+    ["catmull-rom-closed", d3Shape.curveCatmullRomClosed, curveCatmullRomClosed],
+    ["catmull-rom-open", d3Shape.curveCatmullRomOpen, curveCatmullRomOpen],
+    ["monotone-x", d3Shape.curveMonotoneX, curveMonotoneX],
+    ["monotone-y", d3Shape.curveMonotoneY, curveMonotoneY],
+    ["natural", d3Shape.curveNatural, curveNatural],
+    ["bump-x", d3Shape.curveBumpX, curveBumpX],
+    ["bump-y", d3Shape.curveBumpY, curveBumpY],
   ];
   const symbols: readonly (readonly [string, unknown, string])[] = [
     ["circle", d3Shape.symbolCircle, "circle"],
@@ -272,7 +277,7 @@ export async function shapeChecks(level: Level): Promise<VizKernelCheck[]> {
     ...symbols.map(([name, d3Symbol, ownKind]) => ({
       module: "mark",
       name: `symbol-${name}`,
-      subject: () => mark.vizSymbol(ownKind as never, 137),
+      subject: () => vizSymbol(ownKind as never, 137),
       oracle: () => {
         const recorder = mark.vizPathRecorder();
         (d3Symbol as { draw(context: unknown, size: number): void }).draw(recorder, 137);

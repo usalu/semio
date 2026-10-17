@@ -3,7 +3,7 @@ import {parseRewritingArtifact,parseRhs,type RewritingArtifact} from "../../../.
 import {parseRewritingDiff,type RewritingDiff} from "../../../../../../../🧬️schema/🔺️diff/🟦️.ts";
 import {parseMapDelta} from "@semio-tech/framework/replication/mutation/map/schema";
 import {binary64FromJson,parsePropertyValueJson} from "@semio-tech/framework/graph/manifest/value";
-import {parseJackJsonValue} from "./../../../../../../../../../../../../🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🟦️.ts";
+import {parseJackJsonValue} from "@semio-tech/trinity-jack/subsets/any/io/import/deserializers/artifacts/json/rfc8259/any";
 function record(value:unknown):Record<string,unknown>{if(!value||typeof value!=="object"||Array.isArray(value))throw Error("Rewriting JSON object required");return value as Record<string,unknown>;}
 /** 🔺️ The declared JSON map envelope delegates each set payload to its exact word owner. */
 export function parseRewritingDiffJsonValue(value:unknown):RewritingDiff{const row=record(value);return parseRewritingDiff({...row,workingGraph:row.workingGraph==null?null:parseJackJsonValue(row.workingGraph),rhs:row.rhs==null?null:parseRhs(row.rhs,parsePropertyValueJson),parameterBindings:row.parameterBindings==null?null:parseMapDelta(row.parameterBindings,parsePropertyValueJson),ruleLayout:row.ruleLayout==null?null:parseMapDelta(row.ruleLayout,value=>{const point=record(value);if(Object.keys(point).length!==2||!Object.hasOwn(point,"x")||!Object.hasOwn(point,"y"))throw Error("Rewriting JSON layout fields differ");return{x:binary64FromJson(point.x),y:binary64FromJson(point.y)};})});}

@@ -39,14 +39,12 @@ test("Exact work/source/byte boundaries and sticky private refusal",()=>{
   if(job){let first:unknown;try{advance(job,1);}catch(e){first=e;}try{advance(job,1);}catch(e){expect(e).toBe(first);}expect(()=>job!.result()).toThrow();}
  }
  for(const budget of [-1,NaN,Infinity,0.5])expect(()=>advance(newJob(row.input),budget)).toThrow();
- console.info("[DEBUG] Encoded binary font/image sources admit exact source/byte/work limits and refuse private overages");
 });
 test("Every source phase cancels and published output stays owned",()=>{
  const row=cases[1]!,probe=newJob(row.input),seen=new Set<string>();let steps=0;
  for(;;){const p=advance(probe,1);steps++;if(!seen.has(p.phase)){seen.add(p.phase);const job=newJob(row.input);for(let n=0;n<steps;n++)advance(job,1);const published=p.done?job.result():undefined;job.cancel();expect(()=>job.result()).toThrow(/cancel/i);expect(()=>advance(job,1)).toThrow(/cancel/i);if(published)expect(Array.from(published)).toEqual(row.expected);}if(p.done)break;}
  expect([...seen]).toEqual(["header","validate","decode","complete"]);
  expect(row.input.data).toBe(cases[1]!.input.data);
- console.info("[DEBUG] Encoded binary source header/validation/decode/publication cancellation preserves published bytes");
 });
 test("Async source decoding yields and checks completion observers",async()=>{
  const row=cases[2]!;let timer=false,calls=0;setTimeout(()=>{timer=true;},0);
@@ -54,7 +52,6 @@ test("Async source decoding yields and checks completion observers",async()=>{
  for(const phase of ["header","validate","decode","complete"]){const control=new AbortController();await expect(decodeBinarySource(row.input,{workGrant:funded,signal:control.signal,workBudget:1,onProgress:(p:{phase:string})=>{if(p.phase===phase)control.abort();}})).rejects.toMatchObject({name:"AbortError"});}
  const stopped=new AbortController();stopped.abort();await expect(decodeBinarySource(row.input,{workGrant:funded,signal:stopped.signal})).rejects.toMatchObject({name:"AbortError"});
  await expect(decodeBinarySource(row.input,{workGrant:funded,onProgress:()=>{throw Error("observer");}})).rejects.toThrow("observer");
- console.info("[DEBUG] Binary font/image resource jobs yield and observer abort prevents publication");
 },30000);
 
 for(const row of fonts)test(row.name,async()=>{
@@ -64,5 +61,4 @@ for(const row of fonts)test(row.name,async()=>{
  expect(valid(input)).toBe(true);
  const output=await decodeBinarySource(input,{workGrant:funded,workBudget:4096});expect(Array.from(output)).toEqual(Array.from(source));expect(Array.from(toByteArray(data.slice(data.indexOf(",")+1)))).toEqual(Array.from(source));
  expect(Array.from(new Uint8Array(await(await fetch(data)).arrayBuffer()))).toEqual(Array.from(source));
- console.info("[DEBUG] Bundled "+row.mime+" encoded resource retained all "+row.bytes+" bytes through the real source job");
 });

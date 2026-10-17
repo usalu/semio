@@ -5,8 +5,6 @@ use semio_framework_value::paged::PagedUtf8;
 use crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff;
 use crate::Puzzle2dSnapshot;
 
-#[path = "🎮️prepare/🦀️.rs"]
-pub mod preparation;
 
 //#region 🔖️Mutation
 /// 📍 `move-node` payload — absolute FINAL-state position.

@@ -3,9 +3,11 @@
  * recording path context the marks use.
  * @see ../../../🖋️latex/semio-viz-shape.sty
  */
-import { curveBumpX, curveBumpY, curveLinear, vizPathRecorder, type VizCurveFactory, type VizPathCommand, type VizPathContext } from "../✒️mark/🟦️.ts";
+import { vizPathRecorder, type VizCurveFactory, type VizPathCommand, type VizPathContext } from "../✒️mark/🟦️.ts";
+import { curveLinear } from "../✒️mark/🪜️curves-linear-and-step/🟦️.ts";
+import { curveBumpX, curveBumpY } from "../✒️mark/🏔️curves-monotone-natural-and-bump/🟦️.ts";
 import { stack, type VizStackSeries } from "../🧮transform/🟦️.ts";
-import type { VizPoint } from "../../📸️snapshot/📊️chart/🟦️.ts";
+import type { VizPoint } from "@semio-tech/print/schema/snapshot/chart";
 
 //#region 🔖️LineArea
 /** 📈️ Options of `\SemioVizLine`: the accessors, the curve and the definedness predicate. */

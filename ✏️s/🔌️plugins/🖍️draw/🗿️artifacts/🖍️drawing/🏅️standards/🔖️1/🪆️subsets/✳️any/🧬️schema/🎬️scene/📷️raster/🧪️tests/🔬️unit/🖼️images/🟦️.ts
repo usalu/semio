@@ -26,5 +26,4 @@ test("filtered scenes expose image progress and cancel private reduction",async(
  const v=input(cases[0]!.input);const controller=new AbortController();let seen=false;
  const source={width:64,height:64,pixels:new Uint8Array(64*64*4).fill(255)},nodes=[{...v.nodes[0]!,transform:[1/64,0,0,1/64,0,0] as const,content:{kind:"pixels" as const,image:source}}];
  await expect(rasterizeScene({...v,maxPixels:4097,nodes},{workBudget:64,signal:controller.signal,onProgress:p=>{if(p.phase==="image"){seen=true;controller.abort();}}})).rejects.toThrow(/cancel/);expect(seen).toBe(true);
- console.error("[DEBUG] Filtered scene reductions exposed cancellable image work");
 });

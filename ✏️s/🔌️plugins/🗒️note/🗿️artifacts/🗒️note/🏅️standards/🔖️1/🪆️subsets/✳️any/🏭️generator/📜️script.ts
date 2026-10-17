@@ -184,7 +184,7 @@ async function main(argv: readonly string[]): Promise<number> {
       return [];
     }
   })();
-  const indexed = committed
+  const indexed: Record<string, unknown>[] = committed
     ? manifests.map((manifest) => {
         const recipe = RECIPES.find(({ id }) => id === manifest.id)!;
         return { ...manifest, files: (manifest.files as EvidenceFile[]).map((file) => ({ ...file, path: file.path.replace("../🧫️fixtures", `../../${recipe.subsetDirectoryName}/🧫️fixtures/`) })) };

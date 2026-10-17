@@ -27,7 +27,4 @@ pub fn handle(payload: &ManageSpace, _doc: &ArtifactView<'_, SHomeSnapshot>, _cf
 //#endregion 🔖️Handle
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

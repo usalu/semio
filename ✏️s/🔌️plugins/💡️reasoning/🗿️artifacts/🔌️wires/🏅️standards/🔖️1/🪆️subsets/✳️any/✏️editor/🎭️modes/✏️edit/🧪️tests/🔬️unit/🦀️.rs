@@ -1,4 +1,5 @@
-use super::*;
+use crate::editor::wires::modes::edit::windows::canvas;
+use crate::editor::wires::modes::edit::*;
 
 #[semio_framework_async_macros::async_test]
 async fn the_default_layout_lists_the_canvas_window() {

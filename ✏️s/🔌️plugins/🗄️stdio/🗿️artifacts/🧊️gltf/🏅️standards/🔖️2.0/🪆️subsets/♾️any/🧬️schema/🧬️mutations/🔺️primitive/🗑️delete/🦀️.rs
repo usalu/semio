@@ -25,11 +25,14 @@ pub fn plan(p: &GltfDeletePrimitivePayload, base: &GltfSnapshot) -> Result<GltfD
     Ok(GltfDiff { meshes: primitives_rows(p.mesh, GltfPrimitivesDiff { removed: vec![p.primitive], ..Default::default() }), ..Default::default() })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn inverse(p: &GltfDeletePrimitivePayload, base: &GltfSnapshot) -> Vec<super::GltfMutation> {
+pub fn inverse<Op>(p: &GltfDeletePrimitivePayload, base: &GltfSnapshot) -> Vec<Op>
+where
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::remove_used_extension::RemoveUsedExtensionMutation>,
+{
     if validate(p, base).is_err() {
         return Vec::new();
     }
-    vec![super::create_primitive::mutation(super::create_primitive::GltfCreatePrimitivePayload { mesh: p.mesh, position: p.primitive, primitive: Some(Box::new(base.document.meshes[p.mesh].primitives[p.primitive].clone())) })]
+    vec![crate::standards::v2_0::subsets::any::schema::mutations::create_primitive::mutation(crate::standards::v2_0::subsets::any::schema::mutations::create_primitive::GltfCreatePrimitivePayload { mesh: p.mesh, position: p.primitive, primitive: Some(Box::new(base.document.meshes[p.mesh].primitives[p.primitive].clone())) })]
 }
 
 //#region 🧬️DirectMutation
@@ -42,11 +45,17 @@ pub enum DeletePrimitiveMutation {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn mutation(payload: GltfDeletePrimitivePayload) -> super::GltfMutation {
-    super::GltfMutation::DeletePrimitive(DeletePrimitiveMutation::Apply(payload))
+pub fn mutation<Op>(payload: GltfDeletePrimitivePayload) -> Op
+where
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::delete_primitive::DeletePrimitiveMutation>,
+{
+    Op::from(DeletePrimitiveMutation::Apply(payload))
 }
 
-impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for DeletePrimitiveMutation {
+impl<Op> protocol::MutationKind<GltfSnapshot, Op> for DeletePrimitiveMutation
+where
+    Op: protocol::Mutation<GltfSnapshot, Diff = GltfDiff> + From<DeletePrimitiveMutation>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "primitive", kind: "delete-primitive", record: "DeletedPrimitive" };
 
     fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<GltfDiff> {
@@ -58,7 +67,7 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for DeletePrimiti
         }
     }
 
-    fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<super::GltfMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         match self {
             Self::Apply(payload) => Ok(inverse(payload, base)),
         }
@@ -75,10 +84,6 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for DeletePrimiti
 //#endregion 🧬️DirectMutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🚫️removes-the-8d7de9/🦀️.rs"]
-mod case_removes_the_8d7de9;
-#[cfg(test)]
-#[path = "🧪️tests/🔬️middle-row/🦀️.rs"]
-mod case_middle_row;
+
+
 //#endregion 🧪️Tests

@@ -2,6 +2,8 @@
 
 #[cfg(test)]
 mod tests {
+    use semio_framework_test_fixtures::fixture_path;
+
     use semio_s_artifact_norm_vdi3805_inferences::evaluate;
     use semio_s_artifact_norm_vdi3805_checks::sync_typed_attributes_into_records;
     use semio_s_artifact_norm_vdi3805_model::attributes_from_records;
@@ -11,11 +13,11 @@ mod tests {
     use std::process::Command;
 
     fn oracle_dir() -> PathBuf {
-        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles/⚖️compliance")
+        fixture_path!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles/⚖️compliance")
     }
 
     fn snapshot_schema_path() -> PathBuf {
-        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json")
+        fixture_path!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json")
     }
 
     fn write_snapshot(doc: &Vdi3805Snapshot, path: &std::path::Path) {

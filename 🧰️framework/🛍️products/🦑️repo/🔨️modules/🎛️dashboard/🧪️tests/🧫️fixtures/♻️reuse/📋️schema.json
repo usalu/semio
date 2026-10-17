@@ -1,0 +1,210 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "cases",
+    "policyCases",
+    "windowsPolicyCases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "running",
+          "asked",
+          "client",
+          "args",
+          "same",
+          "tool",
+          "default"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "running": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 2,
+              "maxItems": 2
+            }
+          },
+          "asked": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 2,
+              "maxItems": 2
+            }
+          },
+          "client": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 2,
+              "maxItems": 2
+            }
+          },
+          "args": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "same": {
+            "type": "boolean"
+          },
+          "tool": {
+            "anyOf": [
+              {
+                "enum": [
+                  "nx",
+                  "bazel"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "cmd": {
+            "type": "string"
+          },
+          "default": {
+            "enum": [
+              "nx",
+              "bazel"
+            ]
+          },
+          "cwd": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "policyCases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "policy",
+          "cmd",
+          "args",
+          "declared",
+          "client",
+          "tool",
+          "error"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "policy": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "cmd": {
+            "type": "string"
+          },
+          "args": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "declared": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 2,
+              "maxItems": 2
+            }
+          },
+          "client": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 2,
+              "maxItems": 2
+            }
+          },
+          "tool": {
+            "anyOf": [
+              {
+                "enum": [
+                  "nx",
+                  "bazel"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "error": {
+            "type": "boolean"
+          },
+          "rebindPolicy": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "duringBatchPolicy": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "windowsPolicyCases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "attributes",
+          "refused"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "attributes": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4294967295
+          },
+          "refused": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

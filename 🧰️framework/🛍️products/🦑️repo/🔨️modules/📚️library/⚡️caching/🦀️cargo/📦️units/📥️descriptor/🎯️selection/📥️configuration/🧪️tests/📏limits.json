@@ -1,0 +1,220 @@
+{
+  "reads": [
+    {
+      "name": "empty-zero",
+      "bytes": 0,
+      "limits": [
+        0
+      ],
+      "accepted": true
+    },
+    {
+      "name": "exact",
+      "bytes": 8,
+      "limits": [
+        8
+      ],
+      "accepted": true
+    },
+    {
+      "name": "smaller",
+      "bytes": 8,
+      "limits": [
+        7
+      ],
+      "accepted": false
+    },
+    {
+      "name": "cached-smaller",
+      "bytes": 8,
+      "limits": [
+        8,
+        7
+      ],
+      "accepted": false
+    },
+    {
+      "name": "cached-equal",
+      "bytes": 8,
+      "limits": [
+        8,
+        8
+      ],
+      "accepted": true
+    },
+    {
+      "name": "negative",
+      "bytes": 0,
+      "limits": [
+        -1
+      ],
+      "accepted": false
+    },
+    {
+      "name": "over-private",
+      "bytes": 0,
+      "limits": [
+        536870913
+      ],
+      "accepted": false
+    }
+  ],
+  "configuration": [
+    {
+      "name": "Cargo.lock",
+      "bytes": 4194304,
+      "accepted": true
+    },
+    {
+      "name": "Cargo.lock",
+      "bytes": 4194305,
+      "accepted": false
+    },
+    {
+      "name": "Cargo.toml",
+      "bytes": 4194304,
+      "accepted": true
+    },
+    {
+      "name": "Cargo.toml",
+      "bytes": 4194305,
+      "accepted": false
+    },
+    {
+      "name": "sealed/code.mjs",
+      "bytes": 8388608,
+      "accepted": true
+    },
+    {
+      "name": "sealed/code.mjs",
+      "bytes": 8388609,
+      "accepted": false
+    }
+  ],
+  "requests": [
+    {
+      "name": "own",
+      "accepted": true
+    },
+    {
+      "name": "capture-before-wait",
+      "accepted": true
+    },
+    {
+      "name": "accessor",
+      "accepted": false
+    },
+    {
+      "name": "proxy",
+      "accepted": false
+    },
+    {
+      "name": "symbol",
+      "accepted": false
+    },
+    {
+      "name": "hidden",
+      "accepted": false
+    },
+    {
+      "name": "array-proxy",
+      "accepted": false
+    },
+    {
+      "name": "sparse",
+      "accepted": false
+    },
+    {
+      "name": "duplicate",
+      "accepted": false
+    },
+    {
+      "name": "expanded",
+      "accepted": false
+    },
+    {
+      "name": "escape",
+      "accepted": false
+    },
+    {
+      "name": "cwd-escape",
+      "accepted": false
+    },
+    {
+      "name": "copied-control",
+      "accepted": false
+    },
+    {
+      "name": "cancelled",
+      "accepted": false
+    },
+    {
+      "name": "wide",
+      "accepted": false
+    }
+  ],
+  "aggregate": [
+    {
+      "bytes": 67108864,
+      "accepted": true
+    },
+    {
+      "bytes": 67108865,
+      "accepted": false
+    }
+  ],
+  "epochs": [
+    {
+      "target": "source",
+      "stage": "entry",
+      "accepted": false
+    },
+    {
+      "target": "source",
+      "stage": "delivery",
+      "accepted": false
+    },
+    {
+      "target": "policy",
+      "stage": "entry",
+      "accepted": false
+    },
+    {
+      "target": "policy",
+      "stage": "delivery",
+      "accepted": false
+    }
+  ],
+  "guards": [
+    {
+      "target": "source",
+      "stage": "entry",
+      "accepted": false
+    },
+    {
+      "target": "policy",
+      "stage": "entry",
+      "accepted": false
+    },
+    {
+      "target": "source",
+      "stage": "delivery",
+      "accepted": false
+    },
+    {
+      "target": "policy",
+      "stage": "delivery",
+      "accepted": false
+    },
+    {
+      "target": "source",
+      "stage": "bootstrap",
+      "accepted": false
+    },
+    {
+      "target": "policy",
+      "stage": "bootstrap",
+      "accepted": false
+    }
+  ]
+}

@@ -1,6 +1,15 @@
-use super::*;
+use crate::schema::create_block_by_kind;
+use crate::NoteSnapshot;
+use semio_framework_plugin::{ArtifactView, ConfigView};
+#[allow(unused_imports)]
+use crate::op::NoteMutation;
+#[allow(unused_imports)]
+use semio_framework_plugin::{Emit, Fault};
+#[allow(unused_imports)]
+use semio_framework_value_derive::{FromValue, ToValue};
+use crate::editor::note::commands::add_block::*;
 use crate::editor::note::unit_tests::context::{dispatch, note_app};
-use crate::editor::note::NoteCommand;
+use crate::editor::note::command_enum::NoteCommand;
 use crate::schema::{block_id, find_block};
 use crate::NoteBlockNode;
 
@@ -58,7 +67,7 @@ async fn duplicate_selection_clones_with_offset() {
     let source_id = block_id(&source).to_string();
     let document = crate::NoteSnapshot { blocks: vec![source], ..crate::standards::v1::subsets::any::io::text::snapshot::empty_note_snapshot() };
     let history = semio_framework_plugin::HistoryView::empty();
-    let mut ctx = crate::editor::note::NoteDispatchCtx { selected_block_ids: vec![source_id.clone()], id_owner: crate::schema::NoteIdOwner::new("duplicate-test", 1), view_state: None, window_transient: Default::default(), window_transient_owner: None };
+    let mut ctx = crate::editor::note::dispatch_ctx::NoteDispatchCtx { selected_block_ids: vec![source_id.clone()], id_owner: crate::schema::NoteIdOwner::new("duplicate-test", 1), view_state: None, window_transient: Default::default(), window_transient_owner: None };
     let emit = crate::editor::note::commands::duplicate_selection::handle(
         &crate::editor::note::commands::duplicate_selection::DuplicateSelection {},
         &semio_framework_plugin::ArtifactView::new(&document, &history),

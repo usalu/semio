@@ -1,4 +1,12 @@
-use super::*;
+use crate::editor::modes::edit;
+use crate::schema::snapshot::SemioMeshSnapshot;
+use semio_framework::DslValue;
+use semio_framework_plugin::ArtifactEditor;
+use semio_framework_plugin::Editor;
+use semio_framework_plugin::EditorApp;
+use semio_s_artifact_stdio_contract::editing;
+use crate::editor::{move_vertex_mutation};
+use crate::editor::*;
 
 #[semio_framework_async_macros::async_test]
 async fn create_editor_builds_a_definition_for_the_editor_role() {

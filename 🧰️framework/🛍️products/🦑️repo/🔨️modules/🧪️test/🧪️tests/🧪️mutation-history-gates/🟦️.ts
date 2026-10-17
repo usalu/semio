@@ -245,7 +245,7 @@ describe("schema-mutation-editability", () => {
     expect(declared.length).toBeGreaterThan(0);
     expect(inert.sort()).toEqual(declared.sort());
     expect(report.census.reduce((sum, row) => sum + row.withdrawOnly, 0)).toBe(declared.length);
-    expect(report.diagnostics.filter((entry) => declared.some((path) => entry.path.startsWith(`${path}/`) || entry.path === path))).toEqual([]);
+    expect(report.diagnostics.filter((entry) => declared.some((path) => (entry.path?.startsWith(`${path}/`) ?? false) || entry.path === path))).toEqual([]);
   }, 120_000);
   test("a hand-written aggregate declares why it is not edited, or is a finding", () => {
     const body = (source: string) => [...source.matchAll(/[\p{L}_][\p{L}\p{N}_]*/gu)].map(([text]) => ({ kind: "ident" as const, text }));

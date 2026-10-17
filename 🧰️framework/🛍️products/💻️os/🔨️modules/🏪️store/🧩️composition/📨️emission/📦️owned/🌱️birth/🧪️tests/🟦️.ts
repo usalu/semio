@@ -13,5 +13,4 @@ test("owned publication birth preserves borrowed source until whole physical fun
  const store=readFileSync(resolve(import.meta.dir,"../../../../../🦀️.rs"),"utf8");
  expect(store.includes("fn owned_publication_birth_bytes(")).toBe(true);
  expect(store.includes("grant.maximum_bytes < birth_bytes")).toBe(true);
- console.log("[DEBUG] Node Buffer owned publication birth oracle: three exact UTF-8 metadata rows, borrowed refusal retains original source");
 });

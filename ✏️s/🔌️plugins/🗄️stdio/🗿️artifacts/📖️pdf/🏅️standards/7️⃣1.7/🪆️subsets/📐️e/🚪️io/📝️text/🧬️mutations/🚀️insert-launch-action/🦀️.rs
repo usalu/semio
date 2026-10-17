@@ -3,7 +3,7 @@
 pub const OPCODE: &str = "insert-launch-action";
 pub const TEXT_OPCODE: &str = OPCODE;
 
-use crate::standards::v1_7::subsets::e::schema::mutations::InsertLaunchAction;
+use crate::standards::v1_7::subsets::e::schema::mutations::insert_launch_action::InsertLaunchAction;
 
 /// 🖨️ Prints this direct payload through its schema-derived JSON representation.
 pub fn print(payload: &InsertLaunchAction) -> Result<String, String> {

@@ -1,0 +1,7 @@
+# Dependency Producer Probe Preliminary Review
+
+Read-only review of current fixed ADMIN suffix `prepareRepositoryDependencyProducerEnvironmentV1`, `runRepositoryDependencyProducerProbeV1` and `probeRepositoryDependencyProducerV1`; no final byte hold or Native execution.
+
+The public owner authenticates actual setup-all purpose, current whole committed Dependencies allocation, genuine parent and retained Core token, global bindings EX and complete Source ALL custody. Short protected reads close before staging/installer phases. Core staging and strict fresh-root checks therefore run with quiescent read custody; actual journal/funding checks remain Core-owned. Each fixed Bun invocation uses the shared authored arguments/environment, finite issued child grant and actual per-role descriptor anchors. The subsequent installed-path scanner is reached under a fresh genuine protected read context. Source bindings are rechecked and no binding write/ready receipt is performed.
+
+The result explicitly remains installedQualified false and bindingsChanged zero. It cannot establish a published or runnable producer from modeled installer ports. Existing objects at freshly staged roots must remain a refusal; no overwrite/reuse authority follows from a failed probe. No material ordering or authority defect identified in this preliminary scope. Final Source worker outcomes, environment-anchor drift/cancellation/primary-preservation coverage and settled manifest remain required before release.

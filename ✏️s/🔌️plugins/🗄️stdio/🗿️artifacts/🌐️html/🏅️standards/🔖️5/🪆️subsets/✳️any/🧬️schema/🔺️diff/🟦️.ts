@@ -30,14 +30,14 @@ export interface HtmlAttributesDiff {
 
 export interface HtmlAttrModified {
   name: string;
-  /** absent = the attribute is now valueless. */
-  value?: string;
+  /** absent = unchanged, null = the attribute is now valueless, string = set. */
+  value?: string | null;
 }
 
 export interface HtmlAttrAdded {
   index: number;
   name: string;
-  value?: string;
+  value?: string | null;
 }
 
 /** 🌳 Index-keyed, recursive children triple. */

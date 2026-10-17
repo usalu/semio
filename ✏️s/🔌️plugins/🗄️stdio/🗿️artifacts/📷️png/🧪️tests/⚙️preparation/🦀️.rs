@@ -56,7 +56,6 @@ fn publication_preparation_edits_an_image_beyond_the_one_item_cap() {
         apply_mutation(&mut restored, row);
     }
     assert_eq!(restored, base);
-    eprintln!("[DEBUG] png {}-byte image edited in {} turns, peak live {}", base.image.samples.len() * 2, law.turns, law.peak_live_capacity_bytes);
 }
 
 #[test]
@@ -66,7 +65,6 @@ fn publication_preparation_turns_are_bounded_by_pages_at_real_image_size() {
     use semio_s_artifact_stdio_png::schema::operations::png_revision;
     use semio_s_artifact_stdio_png::schema::snapshot::{PngNativePaint, PngRegion};
     let grant = store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: 1 << 16, maximum_capacity_bytes: 1 << 26, maximum_release_bytes: 1 << 26, maximum_depth: 4096 };
-    let started = std::time::Instant::now();
     let mut turns_by_size = Vec::new();
     for (width, height) in [(256u32, 128u32), (512, 264), (1024, 512)] {
         let mut base = PngSnapshot::default();
@@ -87,7 +85,6 @@ fn publication_preparation_turns_are_bounded_by_pages_at_real_image_size() {
         }
         assert_eq!(restored, base);
         let pages = bytes.div_ceil(RETAINED_CLONE_BULK_PAGE_BYTES);
-        eprintln!("[DEBUG] png {width}x{height} RGBA16 {bytes} bytes = {pages} pages edited in {} turns (turns per page {:.1}), {:?}", law.turns, law.turns as f64 / pages as f64, started.elapsed());
         turns_by_size.push((pages, law.turns));
     }
     let (small_pages, small_turns) = turns_by_size[0];
@@ -122,6 +119,5 @@ fn publication_preparation_turns_of_a_large_paint_region_are_bounded_by_pages_th
     }
     assert_eq!(restored, base);
     let pages = (base.image.samples.len() * 2 + region_samples * 6).div_ceil(RETAINED_CLONE_BULK_PAGE_BYTES);
-    eprintln!("[DEBUG] png 1024x512 paint of {region_samples} samples ({pages} pages of image plus inverse JSON) edited in {} turns", law.turns);
     assert!(law.turns < 12_000, "a {region_samples}-sample paint seals its inverse a page per turn: {} turns", law.turns);
 }

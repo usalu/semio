@@ -11,6 +11,12 @@ import { mkdtempSync, mkdirSync, readFileSync, writeFileSync, unlinkSync } from 
 import { join, relative } from "node:path";
 import { acquireQueuedResourceLease } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import { cargoRepositoryPackageSelections, publishCargoWorkspaceMemberships, parseCargoWorkspaceContribution, discoverCargoWorkspaces, cargoWorkspaceMembers, cargoWorkspaceForManifest, selectedCargoArguments, prepareCargoWorkspaceInvocation, cargoCommandRequiresOwnerPreparationV1, publishCargoWorkspaceMembership, parseCargoPreparation, prepareCargoOwners } from "../🟦️.ts";
+
+/** 📜️ Admits the one TOML input shape these tests feed: source text. */
+const tomlText = (input: Parameters<typeof Bun.TOML.parse>[0]): string => {
+  if (typeof input !== "string") throw new Error("TOML source text required");
+  return input;
+};
 const fixture = JSON.parse(readFileSync(new URL("./🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
 const schema = JSON.parse(readFileSync(new URL("../🧬️schema/🔣️.json", import.meta.url), "utf8"));
 const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);
@@ -132,7 +138,7 @@ test("one membership invocation parses each current manifest once and observes l
   const original = Bun.TOML.parse;
   const calls = new Map<string, number>();
   const documents = new Map<string, unknown>();
-  const parser = spyOn(Bun.TOML, "parse").mockImplementation((source: string) => {
+  const parser = spyOn(Bun.TOML, "parse").mockImplementation((input) => { const source = tomlText(input);
     calls.set(source, (calls.get(source) ?? 0) + 1);
     const result = original(source);
     documents.set(source, result);
@@ -141,7 +147,7 @@ test("one membership invocation parses each current manifest once and observes l
   const check = (expected: readonly string[]): void => {
     calls.clear(); documents.clear();
     const rows = cargoWorkspaceMembers(root, owner);
-    expect(rows.map(row => row.name)).toEqual(expected);
+    expect(rows.map(row => row.name)).toEqual([...expected]);
     for (const [source, document] of documents) expect(document).toEqual(TOML.parse(source));
     expect(Math.max(...calls.values())).toBeLessThanOrEqual(law.maxParsesPerManifest);
   };
@@ -165,7 +171,7 @@ test("batch package selection discovers one fresh repository inventory", () => {
   for (let index = 0; index < law.members; index++) put(root, `packages/${String(index).padStart(3, "0")}/Cargo.toml`, pkg(names[index]!));
   const original = Bun.TOML.parse;
   let rootParses = 0;
-  const parser = spyOn(Bun.TOML, "parse").mockImplementation((source: string) => { if (source.includes('owner-manifests=["*/Cargo.toml"]') && source.includes('member-manifests=["packages/*/Cargo.toml"]')) rootParses++; return original(source); });
+  const parser = spyOn(Bun.TOML, "parse").mockImplementation((input) => { const source = tomlText(input); if (source.includes('owner-manifests=["*/Cargo.toml"]') && source.includes('member-manifests=["packages/*/Cargo.toml"]')) rootParses++; return original(source); });
   try {
     expect(cargoRepositoryPackageSelections(root, law.selectedIndices.map((index: number) => names[index])) .map(row => row.name)).toEqual(law.selectedIndices.map((index: number) => names[index]));
     expect(rootParses).toBeLessThanOrEqual(law.maxRepositoryParses);
@@ -181,7 +187,7 @@ test("batch owner publication discovers one fresh repository inventory", () => {
   for (let index = 0; index < law.members; index++) put(root, `packages/${String(index).padStart(3, "0")}/Cargo.toml`, pkg(names[index]!));
   const original = Bun.TOML.parse;
   let rootParses = 0;
-  const parser = spyOn(Bun.TOML, "parse").mockImplementation((source: string) => { if (source.includes('owner-manifests=["*/Cargo.toml"]') && source.includes('member-manifests=["packages/*/Cargo.toml"]')) rootParses++; return original(source); });
+  const parser = spyOn(Bun.TOML, "parse").mockImplementation((input) => { const source = tomlText(input); if (source.includes('owner-manifests=["*/Cargo.toml"]') && source.includes('member-manifests=["packages/*/Cargo.toml"]')) rootParses++; return original(source); });
   try {
     for (let index = 0; index < law.publicationOwners; index++) {
       put(root, `owner-${index}/Cargo.toml`, workspace(["members/*"]));
@@ -217,7 +223,6 @@ test("selected preparation development closure matches Cargo tree root ownership
   put(root,"📜️script.ts",'import {appendFileSync} from "node:fs";import {join} from "node:path";appendFileSync(join(process.env.SEMIO_WORKSPACE_ROOT!,"events.jsonl"),process.argv[2]+"\\n");');
   prepareCargoOwners(root,cargoWorkspaceForManifest(root,"Cargo.toml"),row.roots);
   expect(readFileSync(join(root,"events.jsonl"),"utf8").trim().split("\n").sort()).toEqual(reached);
-  console.log(`[DEBUG] Cargo preparation development closure roots=${row.roots.join(",")||"workspace"} exactPrepared=${reached.length}`);
  }
 });
 
@@ -243,7 +248,7 @@ test("Cargo preparation diagnostics observe only opted-in exact phases",async()=
   const records=output.filter(line=>line.startsWith("[DEBUG] cargo-preparation ")).map(line=>JSON.parse(line.slice("[DEBUG] cargo-preparation ".length)));
   expect([...new Set(records.map(row=>row.phase))].sort()).toEqual([...law.phases].sort());
   for(const record of records)expect(validate(record),JSON.stringify(validate.errors)).toBe(true);
-  expect(records.filter(row=>row.phase==="recipe").map(row=>TOML.parse(readFileSync(join(root,row.owner),"utf8")).package!.name).sort()).toEqual(reached);
+  expect(records.filter(row=>row.phase==="recipe").map(row=>(TOML.parse(readFileSync(join(root,row.owner),"utf8")).package as {name:string}).name).sort()).toEqual(reached);
   expect(records.filter(row=>row.phase==="inventory")).toHaveLength(law.inventoryEpochs);
   expect(records.filter(row=>row.phase==="finished").map(row=>row.items)).toEqual([reached.length]);
  }finally{logger.mockRestore();if(old===undefined)delete process.env.SEMIO_CARGO_PREPARATION_TIMING;else process.env.SEMIO_CARGO_PREPARATION_TIMING=old;}
@@ -254,7 +259,6 @@ test("Cargo preparation diagnostics observe only opted-in exact phases",async()=
  expect(records.filter(row=>law.scriptPhases.includes(row.phase)).map(row=>row.phase)).toEqual(law.scriptPhases);
  for(const record of records)expect(validate(record),JSON.stringify(validate.errors)).toBe(true);
  expect((TOML.parse(readFileSync(join(root,"Cargo.toml"),"utf8")).workspace as {members:string[]}).members.sort()).toEqual(glob.sync("packages/*/Cargo.toml",{cwd:root,onlyFiles:true}).map(path=>path.slice(0,-"/Cargo.toml".length)).sort());
- console.log(`[DEBUG] independent Cargo/TOML preparation diagnostic phases=${law.phases.length} exactRecipes=${reached.length} defaultQuiet=true`);
 });
 
 test("queued Cargo preparation exposes opted-in waiting before the protected operation completes",async()=>{
@@ -271,7 +275,6 @@ test("queued Cargo preparation exposes opted-in waiting before the protected ope
   const observed=await Promise.race([observation(),new Promise<never>((_,reject)=>{timeout=setTimeout(()=>reject(Error("No live stderr lease-wait observation")),law.waiting.maximumObservationMs);})]);
   const record=JSON.parse(observed.slice("[DEBUG] cargo-preparation ".length));
   expect(validate(record),JSON.stringify(validate.errors)).toBe(true);expect(record.phase).toBe(law.waiting.phase);expect(record.owner).toBe(law.waiting.owner);expect(record.items).toBe(law.waiting.items);expect(child.exitCode).toBe(null);
-  console.log(`[DEBUG] queued Cargo preparation live stderr phase=${record.phase} protectedOperationIncomplete=true`);
  }finally{if(timeout)clearTimeout(timeout);child.kill("SIGTERM");await child.exited;reader.releaseLock();lease.release();}
 },10000);
 
@@ -316,11 +319,10 @@ test("membership discovery compiles bounded matchers independent of unrelated le
  Object.defineProperty(Bun,"Glob",{configurable:descriptor.configurable,enumerable:descriptor.enumerable,writable:true,value:class extends original {constructor(pattern:string){super(pattern);matchers++;}}});
  try {
   const actual=cargoWorkspaceMembers(root,owner);
-  const independent=glob.sync(owner.memberManifests,{cwd:root,onlyFiles:true,followSymbolicLinks:false,ignore:law.exclude}).sort();
+  const independent=glob.sync([...owner.memberManifests],{cwd:root,onlyFiles:true,followSymbolicLinks:false,ignore:law.exclude}).sort();
   expect(actual.map(row=>row.manifest)).toEqual(independent);
   expect(actual.map(row=>row.name)).toEqual(law.expectedNames);
   expect(matchers).toBeLessThanOrEqual(law.maximumMatchers);
-  console.log(`[DEBUG] Cargo membership discovery unrelatedLeaves=${law.noiseFiles} compiledMatchers=${matchers} exactManifests=${actual.length}`);
  } finally {Object.defineProperty(Bun,"Glob",descriptor);}
 });
 
@@ -337,7 +339,7 @@ test("current physical workspace admissions and selected nextest profiles match 
  const root=process.cwd(),{repositoryCargoTestPolicyV1}=await import("../../../🟦️.ts"),scopes=discoverCargoWorkspaces(root),packages=scopes.flatMap(scope=>{const members=cargoWorkspaceMembers(root,scope),document=TOML.parse(readFileSync(join(root,scope.manifest),"utf8")) as any;
   expect(members.map(row=>relative(join(root,scope.directory),join(root,row.directory)).replaceAll("\\","/")||".").sort()).toEqual([...document.workspace.members].sort());return members;});
  for(const target of fixture.policyPackages){const selected=packages.find(row=>row.name===target.name);expect(selected?.workspace).toBe(target.workspace);const configPath=join(root,target.workspace,".config/nextest.toml"),source=readFileSync(configPath,"utf8"),config=TOML.parse(source) as any;expect(Bun.TOML.parse(source)).toEqual(config);
-  for(const [level,period]of Object.entries(fixture.profilePeriods)){expect(config.profile[level]["slow-timeout"]).toEqual({period,"terminate-after":1});const policy=repositoryCargoTestPolicyV1(join(root,selected!.manifest),root,{...process.env,SEMIO_TEST_LEVEL:level});expect(policy.configPath).toBe(configPath);expect(policy.level).toBe(level);expect(policy.nextest).toBe(nativeNextest);}
+  for(const [level,period]of Object.entries(fixture.profilePeriods)){expect(config.profile[level]["slow-timeout"]).toEqual({period,"terminate-after":1});const policy=repositoryCargoTestPolicyV1(join(root,selected!.manifest),root,{...process.env,SEMIO_TEST_LEVEL:level});expect(policy.configPath).toBe(configPath);expect<typeof level>(policy.level).toBe(level);expect(policy.nextest).toBe(nativeNextest);}
  }
 },30000);
 

@@ -1,6 +1,5 @@
 //! 📐️ Direct resize-page payload, sparse diff, concrete inverse, and laws.
 
-use super::PdfMutation;
 use crate::standards::v1_4::subsets::base::schema::diff::{PdfDiff, PdfPageDiff, PdfPageModified, PdfPagesDiff};
 use crate::standards::v1_4::subsets::base::schema::snapshot::PdfSnapshot;
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
@@ -24,7 +23,10 @@ impl ResizePage {
     }
 }
 
-impl MutationKind<PdfSnapshot, PdfMutation> for ResizePage {
+impl<Op> MutationKind<PdfSnapshot, Op> for ResizePage
+where
+    Op: protocol::Mutation<PdfSnapshot, Diff = PdfDiff> + From<ResizePage>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "resize", entity: "page", kind: "resize-page", record: "ResizedPage" };
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
@@ -34,12 +36,12 @@ impl MutationKind<PdfSnapshot, PdfMutation> for ResizePage {
         MutationOutcome::new(PdfDiff { pages: Some(PdfPagesDiff { modified: vec![PdfPageModified { index: self.index, diff: PdfPageDiff { width: Some(self.width), height: Some(self.height), text: None } }], ..Default::default() }) })
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
         if !self.valid(base) {
             return Vec::new();
         }
-        vec![PdfMutation::ResizePage(ResizePage { index: self.index, width: base.pages[self.index].width, height: base.pages[self.index].height })]
+        vec![Op::from(ResizePage { index: self.index, width: base.pages[self.index].width, height: base.pages[self.index].height })]
     
     })())
 }
@@ -58,11 +60,7 @@ impl MutationKind<PdfSnapshot, PdfMutation> for ResizePage {
 //#endregion 🔖️Codecs
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔄️round/🦀️.rs"]
-mod tests_round_trips_the_concrete_inverse;
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
+
 //#endregion 🧪️Tests

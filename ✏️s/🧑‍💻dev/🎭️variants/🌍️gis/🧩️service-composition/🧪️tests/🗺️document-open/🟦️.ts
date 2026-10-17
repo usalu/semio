@@ -1,22 +1,22 @@
 /** 🗺️ GIS document open: the GIS wasm lease, the viewer's renderer-unavailable state and the cold pair transfer with inference approval Undo. */
-import { stubFetch } from "../../../../../../../🧰️framework/🛍️products/💻️os/🧪️tests/🌐️fetch-stub/🟦️.ts";
-import { parseGisMapInferenceApprovalReceiptV1, idleGisMapInferencePortStatusV1 } from "../../../../../../🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🧬️schema/🟦️.ts";
+import { stubFetch } from "@semio-tech/framework-os/testing/fetch-stub";
+import { parseGisMapInferenceApprovalReceiptV1, idleGisMapInferencePortStatusV1 } from "@semio-tech/gis-gismap-js/inference/schema";
 import { documentServiceRequestV1 } from "@semio-tech/framework/inference/service/io";
-import { gisMapDocumentServiceDeclarationV1 } from "../../../../../../🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🔌️client/🟦️.ts";
-import { workerLawFakesV1, executionTargetBytes, WORKER_LAW_CAPABILITY_TWO, FakeHubWebSocket, sampleEnvelope } from "../../../../../../../🧰️framework/🛍️products/💻️os/🧪️tests/🧰️worker-law-fakes/🟦️.ts";
-import type { TestSource } from "../../../../../../../🧰️framework/🛍️products/💻️os/🧪️tests/🧰️worker-law-fakes/🟦️.ts";
+import { gisMapDocumentServiceDeclarationV1 } from "@semio-tech/gis-gismap-js/inference/client";
+import { workerLawFakesV1, executionTargetBytes, WORKER_LAW_CAPABILITY_TWO, FakeHubWebSocket, sampleEnvelope, WORKER_LAW_ACTOR_IDENTITY_GRANT } from "@semio-tech/framework-os/testing/worker-law-fakes";
+import type { TestSource } from "@semio-tech/framework-os/testing/worker-law-fakes";
 import type { ServiceCompositionTestDependenciesV1, InferenceOperationV1 } from "../🧰️dependencies/🟦️.ts";
 
 type ActorInstanceLifetime = import("../../../../../../../🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🟦️.ts").ActorInstanceLifetime;
-type ArtifactEvent = import("../../../../../../../🧰️framework/🛍️products/💻️os/🟦️.ts").ArtifactEvent;
-type ArtifactState = import("../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🟦️.ts").ArtifactState;
-type BackboneWorkerResponse = import("../../../../../../../🧰️framework/🛍️products/💻️os/🟦️.ts").BackboneWorkerResponse;
+type ArtifactEvent = import("@semio-tech/framework-os").ArtifactEvent;
+type ArtifactState = import("@semio-tech/framework-os/modules/store/worker").ArtifactState;
+type BackboneWorkerResponse = import("@semio-tech/framework-os").BackboneWorkerResponse;
 type BrowserActorChildValue = import("@semio-tech/framework/browser-bundle/child/schema").BrowserActorChildValue;
 type BrowserActorUiPatchOfferV1 = import("@semio-tech/framework/browser-bundle/patch-handoff").BrowserActorUiPatchOfferV1;
-type DocumentBrowserActorChild = import("../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🟦️.ts").DocumentBrowserActorChild;
-type MutationEnvelope = import("../../../../../../../🧰️framework/🔨️modules/📡️replication/🟦️.ts").MutationEnvelope;
+type DocumentBrowserActorChild = import("@semio-tech/framework-os/modules/store/worker").DocumentBrowserActorChild;
+type MutationEnvelope = import("@semio-tech/framework-replication").MutationEnvelope;
 type ResolvedPluginViewState = import("@semio-tech/framework/manifest").ResolvedPluginViewState;
-type WireArtifactBootstrap = import("../../../../../../../🧰️framework/🔨️modules/📡️replication/🟦️.ts").WireArtifactBootstrap;
+type WireArtifactBootstrap = import("@semio-tech/framework-replication").WireArtifactBootstrap;
 type Vitest = NonNullable<ImportMeta["vitest"]>;
 
 export async function registerGisDocumentOpenTests(vitest: Vitest, dependencies: ServiceCompositionTestDependenciesV1, source: TestSource): Promise<void> {
@@ -119,14 +119,14 @@ export async function registerGisDocumentOpenTests(vitest: Vitest, dependencies:
       ];
       const panelVisible = (view: ResolvedPluginViewState) => panelSurfaces.map((panel) => ({ tag: "surface-visible", val: { surface: { instance: 0, surface: panel.key }, bodyKey: panel.bodyKey, viewState: encodePackValue(panelViewContext(view)) } }));
       const { panelViewContext, sectionViewContext, windowViewContext } = await import("@semio-tech/framework/manifest");
-      const { BROWSER_ACTOR_VISIBLE_SURFACES_V1 } = await import("../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🪟️visible-surfaces/🟦️.ts");
+      const { BROWSER_ACTOR_VISIBLE_SURFACES_V1 } = await import("@semio-tech/framework-os/modules/store/worker/visible-surfaces");
       const sectionVisible = (view: ResolvedPluginViewState, mount: boolean) => BROWSER_ACTOR_VISIBLE_SURFACES_V1.sections.filter((section) => mount || !section.static).map((section) => ({ tag: "surface-visible", val: { surface: { instance: 0, surface: section.bodyKey }, bodyKey: section.bodyKey, viewState: encodePackValue(sectionViewContext(view)) } }));
       const secondWindowVisible = (view: ResolvedPluginViewState) => ({ tag: "surface-visible", val: { surface: { instance: 0, surface: secondWindow.key }, bodyKey: secondWindow.bodyKey, viewState: encodePackValue(windowViewContext(view, secondWindow.key)!) } });
       const descriptor = encodePackValue(guest),
         descriptorByteSha256 = await executionTargetSha256Hex(descriptor);
       const { UiDocumentStore } = await import("../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📃️UiDocumentStore/🟦️.tsx");
       const { decodeDocumentBackboneControlV1, encodeDocumentBackboneControlV1 } = await import("@semio-tech/framework/backbone/binding");
-      const { decodeAppCommand, encodeAppFrame } = await import("../../../../../../../🧰️framework/🛍️products/💻️os/🟦️.ts");
+      const { decodeAppCommand, encodeAppFrame } = await import("@semio-tech/framework-os");
       const { readActorBytePage } = await import("../../../../../../../🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/📃️page/🟦️.ts");
       const { createBrowserActorAppCommandRequestV1 } = await import("@semio-tech/framework/browser-bundle/action-handoff/command");
       const { createBrowserActorUiIntentRequestV1 } = await import("@semio-tech/framework/browser-bundle/action-handoff/intent");
@@ -430,7 +430,7 @@ export async function registerGisDocumentOpenTests(vitest: Vitest, dependencies:
         return executionTargetBodyResponse(actorBytes);
       });
       const documentId = "cold-browser-pair";
-      openArtifact({ documentId, schema: fixture.manifest.artifact.schema, bindings: [], actor: "untrusted-ui-actor" });
+      openArtifact({ documentId, schema: fixture.manifest.artifact.schema, bindings: [], actor: "untrusted-ui-actor", actorIdentityGrant: WORKER_LAW_ACTOR_IDENTITY_GRANT });
       const state = artifactState(documentId)!;
       artifacts.delete(state.runtimeKey);
       const binding = { kind: "hub", dataClass: "persistedShared", baseUrl: fixture.hubOrigin, spaceId: "cold-browser-space", requestedSurfaceId: fixture.manifest.surface.surfaceId } as const;

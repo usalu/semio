@@ -1,22 +1,22 @@
 // #region 🔌️Adapters
-import react from "@vitejs/plugin-react";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { defineConfig } from "vitest/config";
-import { createWorkspaceViteResolveConfig } from "../../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts";
+import { defineOwnedTestConfig, uiReactBuildPlugin } from "../../../../../🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🛠️build-tooling/🟦️.ts";
+import { createWorkspaceViteResolveConfig } from "../../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/🏗️builder/🌐️vite/🟦️.ts";
 
-const testRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../../../..");
+const testRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../../../🔌️plugins/📐️cad");
 // #endregion 🔌️Adapters
 
 const configDir = resolve(dirname(fileURLToPath(import.meta.url)), "../../📦️packages/🟦️typescript");
 const root = resolve(configDir, "../../../../🔌️plugins/📐️cad"); // ✏️s/🔌️plugins/📐️cad
 const repoRoot = resolve(configDir, "../../../../..");
+const fromRepo = (path: string): string => resolve(repoRoot, path);
 const reactRoot = resolve(repoRoot, "node_modules/react");
 const reactDomRoot = resolve(repoRoot, "node_modules/react-dom");
 const threeModule = resolve(repoRoot, "node_modules/three/build/three.module.js");
 const threePackageRoot = resolve(repoRoot, "node_modules/three");
 
-const workspaceResolve = createWorkspaceViteResolveConfig(repoRoot, [{ find: "@semio-tech/framework-3d-js", replacement: resolve(repoRoot, "🧰️framework/🔨️modules/🧊️3d/📦️packages/🟦️typescript/🟦️.ts") }]);
+const workspaceResolve = createWorkspaceViteResolveConfig(repoRoot, [{ find: /^@semio-tech\/framework-3d-js$/u, replacement: resolve(repoRoot, "🧰️framework/🔨️modules/🧊️3d/📦️packages/🟦️typescript/🟦️.ts") }]);
 
 const ARTIFACT_EDITOR_ENGINE = "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine";
 const DOMAIN_FILES = [
@@ -33,9 +33,9 @@ const DOMAIN_FILES = [
 ];
 
 /** 🧪️ Vitest for `@semio-tech/cad-js` — one project covering all 10 domain files: artifact `✏️editor/⚙️engine` (renderer/stately/runtime/actions/artifact), `🌐️spatial-kernel` module `⚙️engine` (brepjs/geometry/spatial/semio), and `💡️inferences` schema leaf; base `environment` is `node`, renderer opts into jsdom via its own `@vitest-environment jsdom` file pragma (vitest 4 dropped `environmentMatchGlobs`). In-source suites use `includeSource` only (`include: []`) so vitest does not double-collect. */
-export default defineConfig({
+export default defineOwnedTestConfig({
   root: testRoot,
-  plugins: [react()],
+  plugins: [uiReactBuildPlugin()],
   assetsInclude: ["**/*.wasm"],
   server: workspaceResolve.server,
   resolve: {
@@ -44,10 +44,9 @@ export default defineConfig({
   test: {
     root: testRoot,
     name: "@semio-tech/cad-js",
-    mode: "test",
-    include: ["✏️s/🔌️plugins/📐️cad/🗿️artifacts/**/📚️examples/**/🧪️tests/🧩️example/🟦️.ts", "✏️s/🧑‍💻dev/📐️cad/🧪️tests/🔬️layering/🟦️.ts"],
-    includeSource: DOMAIN_FILES,
-    coverage: { include: [...DOMAIN_FILES, `${ARTIFACT_EDITOR_ENGINE}/📺️renderer/*/🟦️.{ts,tsx}`] },
+    include: ["✏️s/🔌️plugins/📐️cad/🗿️artifacts/**/📚️examples/**/🧪️tests/🧩️example/🟦️.ts", "✏️s/🧑‍💻dev/📐️cad/🧪️tests/🔬️layering/🟦️.ts"].map(fromRepo),
+    includeSource: DOMAIN_FILES.map(fromRepo),
+    coverage: { include: [...DOMAIN_FILES, `${ARTIFACT_EDITOR_ENGINE}/📺️renderer/*/🟦️.{ts,tsx}`].map(fromRepo) },
     environment: "node",
     passWithNoTests: false,
     server: {

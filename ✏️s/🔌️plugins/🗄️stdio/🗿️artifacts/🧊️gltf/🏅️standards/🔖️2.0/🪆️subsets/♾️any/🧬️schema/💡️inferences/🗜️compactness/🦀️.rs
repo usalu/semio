@@ -11,8 +11,8 @@ pub mod sphericity;
 #[path = "➗️surface-to-volume-ratio/🦀️.rs"]
 pub mod surface_to_volume_ratio;
 
-use super::super::modules::measurement_contracts::*;
-use super::geometry_core::{convex_hull_metrics, hull_sample, GltfGeometryContext};
+use crate::standards::v2_0::subsets::any::schema::modules::measurement_contracts::*;
+use crate::standards::v2_0::subsets::any::schema::inferences::geometry_core::{convex_hull_metrics, hull_sample, GltfGeometryContext};
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
@@ -26,14 +26,14 @@ pub struct GltfCompactnessIndicators {
 
 pub struct GltfCompactnessInference;
 
-pub(crate) struct GltfCompactnessRaw {
-    pub(crate) ratio: Option<f64>,
-    pub(crate) sphericity: Option<f64>,
-    pub(crate) hull_volume: Option<f64>,
+pub struct GltfCompactnessRaw {
+    pub ratio: Option<f64>,
+    pub sphericity: Option<f64>,
+    pub hull_volume: Option<f64>,
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn raw(context: &GltfGeometryContext<'_>) -> GltfCompactnessRaw {
+pub fn raw(context: &GltfGeometryContext<'_>) -> GltfCompactnessRaw {
     let hull_input = hull_sample(&context.points, context.policy.sampling_budget as usize);
     let tolerance = (context.diagonal * context.policy.relative_tolerance).max(context.policy.absolute_length_tolerance);
     let hull_volume = convex_hull_metrics(&hull_input, tolerance).map(|(_, volume, _)| volume);

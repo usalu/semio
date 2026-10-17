@@ -1,4 +1,47 @@
-use super::*;
+use semio_s_artifact_stdio_semio_audio_model::schema::diff::SemioAudioDiff;
+use crate::{schema::snapshot::SemioSnapshot, schema::snapshot::SemioSubsetSnapshot};
+use protocol::MutationApplyError;
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_semio_animation::{schema::diff::SemioAnimationDiff, schema::snapshot::SemioAnimationSnapshot};
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_semio_brep::{schema::diff::SemioBrepDiff, schema::snapshot::SemioBrepSnapshot};
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_semio_cad::{schema::diff::SemioCadDiff, schema::snapshot::SemioCadSnapshot};
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_semio_document::{schema::diff::SemioDocumentDiff, schema::snapshot::SemioDocumentSnapshot};
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_semio_drawing::{schema::diff::SemioDrawingDiff, schema::snapshot::SemioDrawingSnapshot};
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_semio_flow::{schema::diff::SemioFlowDiff, schema::snapshot::SemioFlowSnapshot};
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_semio_graph::{schema::diff::SemioGraphDiff, schema::snapshot::SemioGraphSnapshot};
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_semio_image::{schema::diff::SemioImageDiff, schema::snapshot::SemioImageSnapshot};
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_semio_kit::{schema::diff::SemioKitDiff, schema::snapshot::SemioKitSnapshot};
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_semio_mesh::{schema::diff::SemioMeshDiff, schema::snapshot::SemioMeshSnapshot};
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_semio_model::{schema::diff::SemioModelDiff, schema::snapshot::SemioModelSnapshot};
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_semio_object::{schema::diff::SemioObjectDiff, schema::snapshot::SemioObjectSnapshot};
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_semio_presentation::{schema::diff::SemioPresentationDiff, schema::snapshot::SemioPresentationSnapshot};
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_semio_table_model::{schema::diff::SemioTableDiff, schema::snapshot::SemioTableSnapshot};
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_semio_text_model::{schema::diff::SemioTextDiff, schema::snapshot::SemioTextSnapshot};
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_semio_value_model::{schema::diff::SemioValueTreeDiff, schema::snapshot::SemioValueSnapshot};
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_semio_video_model::{schema::diff::SemioVideoDiff, schema::snapshot::SemioVideoSnapshot};
+#[allow(unused_imports)]
+use protocol::command::DiffAlgebra;
+#[allow(unused_imports)]
+use protocol::MutationDiff;
+#[allow(unused_imports)]
+use protocol::{DiffBinary, DiffText};
+use crate::schema::diff::*;
 use semio_s_artifact_stdio_semio_audio_model::schema::snapshot::SemioAudioFormat;
 use semio_s_artifact_stdio_semio_audio_model::schema::snapshot::SemioAudioSnapshot;
 

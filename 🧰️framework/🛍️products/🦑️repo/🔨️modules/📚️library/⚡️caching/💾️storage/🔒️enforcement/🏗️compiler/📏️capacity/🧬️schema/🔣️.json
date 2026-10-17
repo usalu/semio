@@ -36,7 +36,8 @@
         "maximumDeletionBytes": 4294967296,
         "maximumTerminalBytes": 134217728,
         "nativePublicationMetadataBytes": 1048576,
-        "maximumMaintenancePasses": 4
+        "maximumMaintenancePasses": 4,
+        "maximumOperations": 1024
       }
     },
     "WriterRequest": {
@@ -52,6 +53,59 @@
         },
         "wait": {
           "type": "boolean"
+        }
+      }
+    },
+    "CustodyCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode",
+        "live",
+        "writer",
+        "producer"
+      ],
+      "properties": {
+        "mode": {
+          "enum": [
+            "exclusive",
+            "shared",
+            "lifetime"
+          ]
+        },
+        "live": {
+          "type": "boolean"
+        },
+        "writer": {
+          "type": "boolean"
+        },
+        "producer": {
+          "type": "boolean"
+        }
+      }
+    },
+    "BorrowCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "method",
+        "effects"
+      ],
+      "properties": {
+        "method": {
+          "enum": [
+            "lifetime",
+            "write",
+            "borrow",
+            "custody",
+            "borrow-custody",
+            "store",
+            "artifact-cache",
+            "writer-operation"
+          ]
+        },
+        "effects": {
+          "const": 0
         }
       }
     }

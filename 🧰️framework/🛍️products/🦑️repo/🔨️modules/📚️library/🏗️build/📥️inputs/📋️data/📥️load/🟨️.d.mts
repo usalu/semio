@@ -1,0 +1,10 @@
+export type SourceInputInventoryV1=Readonly<{version:1;files:readonly string[]}>;
+export type CargoLockInventoryV1=Readonly<{version:1;manifest:string}>;
+export type CapturedInputInventoryV1<T>=Readonly<{value:T;text:string;utf8Bytes:number}>;
+export function captureRepositorySourceRootV1(root:unknown):string;
+export function captureRepositorySourcePathV1(value:unknown):string;
+export function captureExactSourcePathV1(root:unknown,value:unknown):string;
+export function captureSourceInputInventoryV1(value:unknown,root:unknown):CapturedInputInventoryV1<SourceInputInventoryV1>;
+export function captureCargoLockInventoryV1(value:unknown,root:unknown):CapturedInputInventoryV1<CargoLockInventoryV1>;
+export function admitExactSourceExtentV1(input:unknown):Readonly<{sourceBytes:number;metadataBytes:number;inventories:number}>;
+export function requireCurrentSourceInventoryV1():void;

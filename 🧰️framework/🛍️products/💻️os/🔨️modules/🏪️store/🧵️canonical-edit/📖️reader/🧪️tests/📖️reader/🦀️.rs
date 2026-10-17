@@ -283,7 +283,6 @@ fn canonical_reader_error_after_partial_unicode_output_accounts_every_initialize
             let retired=snapshot_bytes;let mut physical_released=0;
             for _ in 0..256 {
                 let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| reader.close_step(*RETIREMENT_POLICY).unwrap());
-                eprintln!("[DEBUG] reader close step {:?} heap ({}, {}) demand {:?}", step, heap.requested_bytes, heap.released_bytes, reader.retirement_demands(4096));
                 assert_eq!((heap.requested_bytes, heap.released_bytes), (step.progress().retained_capacity_bytes, step.progress().released_bytes));
                 match step {
                     RetainedCloneStep::Progress(progress) => { assert!(progress.fits(*RETIREMENT_POLICY));physical_released+=progress.released_bytes; }
@@ -297,7 +296,6 @@ fn canonical_reader_error_after_partial_unicode_output_accounts_every_initialize
             assert_eq!(complete, fixture["expectedComplete"].as_bool().unwrap());
             assert_eq!(count.load(Ordering::SeqCst) as u64, fixture["expectedRootRetirements"].as_u64().unwrap());
             assert_eq!(retired as u64, fixture["expectedSnapshotBytes"].as_u64().unwrap());
-            eprintln!("[DEBUG] canonical reader failed mode={mode} grant={bytes} with all{reported} initialized prefix bytes owned, original UTF8 snapshot bytes={retired}, physical closure bytes={physical_released}");
         }
     }
 }
@@ -381,7 +379,6 @@ fn canonical_reader_sealer_failed_prefix_is_accounted_without_minting_authority(
             }
             assert!(owner.terminal_is_empty());
             assert_eq!(count.load(Ordering::SeqCst), 0, "the native source retires its original edit directly, never through the mutation factory");
-            eprintln!("[DEBUG] failed canonical sealer exposes no prepared authority and closes exactly borrowed={borrowed} grant={maximum_bytes}");
         }
     }
 }

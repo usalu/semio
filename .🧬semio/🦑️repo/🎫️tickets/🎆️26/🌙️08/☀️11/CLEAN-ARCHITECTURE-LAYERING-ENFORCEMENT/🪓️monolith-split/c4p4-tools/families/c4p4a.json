@@ -1,0 +1,37 @@
+{
+ "name": "c4p4a",
+ "crates": [
+  "semio-s-artifact-draw-drawing-model",
+  "semio-s-artifact-draw-drawing-diff",
+  "semio-s-artifact-draw-drawing-host-arena",
+  "semio-s-artifact-draw-drawing-host-digest",
+  "semio-s-artifact-draw-drawing-host",
+  "semio-s-artifact-draw-drawing-geometry",
+  "semio-s-artifact-draw-drawing-scene",
+  "semio-s-artifact-draw-drawing-mutations",
+  "semio-s-artifact-draw-drawing-structure",
+  "semio-s-artifact-draw-drawing-style",
+  "semio-s-artifact-draw-drawing-transform",
+  "semio-s-artifact-draw-drawing-metadata",
+  "semio-s-artifact-draw-drawing-io"
+ ],
+ "base": {
+  "rev": "b84bf526c7b",
+  "crates": [
+   "semio-s-artifact-draw-drawing-model",
+   "semio-s-artifact-draw-drawing-diff",
+   "semio-s-artifact-draw-drawing-host-arena",
+   "semio-s-artifact-draw-drawing-host-digest",
+   "semio-s-artifact-draw-drawing-host",
+   "semio-s-artifact-draw-drawing-geometry",
+   "semio-s-artifact-draw-drawing-scene",
+   "semio-s-artifact-draw-drawing-mutations",
+   "semio-s-artifact-draw-drawing-structure",
+   "semio-s-artifact-draw-drawing-style",
+   "semio-s-artifact-draw-drawing-transform",
+   "semio-s-artifact-draw-drawing-metadata",
+   "semio-s-artifact-draw-drawing-io"
+  ]
+ },
+ "note": "C4P4 draw schema/diff/arena/digest/host plus direct dependents"
+}

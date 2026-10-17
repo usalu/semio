@@ -3,7 +3,7 @@
 pub const TAG: u8 = dsl::protocol_record::tag_u8(include_str!("../📡️.protocol.semio"), "remove-annotation");
 pub const BINARY_TAG: u8 = TAG;
 
-use crate::standards::v1_7::subsets::base::schema::mutations::RemoveAnnotation;
+use crate::standards::v1_7::subsets::base::schema::mutations::remove_annotation::RemoveAnnotation;
 
 /// 📤️ Encodes this direct payload as canonical schema JSON bytes.
 pub fn encode(payload: &RemoveAnnotation) -> Result<Vec<u8>, String> {

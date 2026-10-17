@@ -38,5 +38,4 @@ fn typed_block_list_shared_fixture_round_trips_without_nested_text() {
         assert!(serde_json::from_value::<BlockListScene>(row["value"].clone()).is_err(),"independent typed refusal {}",row["name"]);
     }
     let mut duplicate=scene.to_value().into_object().expect("owned scene fields");duplicate.push(("steps".into(),DslValue::Array(Vec::new())));assert!(BlockListScene::from_value(DslValue::Object(duplicate)).is_err());
-    println!("[DEBUG] Native typed block-list: sections={} palette={} refusals={} duplicateFieldsRefused=true valueRoundTrip=true packRoundTrip=true independentSerde=true",scene.steps.len(),scene.palette.len(),fixture["refusals"].as_array().unwrap().len());
 }

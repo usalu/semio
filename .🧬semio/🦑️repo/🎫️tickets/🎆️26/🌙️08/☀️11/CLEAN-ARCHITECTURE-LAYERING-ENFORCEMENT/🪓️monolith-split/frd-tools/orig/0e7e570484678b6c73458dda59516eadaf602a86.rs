@@ -1,0 +1,102 @@
+//! 🧪️ `duplicate-layer` fixture — `🚫️rejects`.
+//!
+//! Source of truth is the committed JSON quartet beside this file (contract D1, ticket
+//! `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`). Per contract D6 a rejected case carries
+//! `🔺️diff/🚫️.absent` instead of a diff encoding, and `➡️after` is byte-identical to
+//! `⬅️before`.
+//!
+//! 📋️ Missing source remains the authored refusal; positive duplication carries explicit target identities.
+
+use semio_s_artifact_draw_drawing_mutations::{inverse_drawing_mutation, DrawingMutation};
+use semio_s_artifact_draw_drawing_mutations::text::apply_drawing_mutation;
+use semio_s_artifact_draw_drawing_model::find_drawing_layer;
+use semio_s_artifact_draw_drawing_diff::DrawingDiff;
+use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
+
+static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../../🧫️fixtures/🧬️mutations/📋️duplicate-layer/🚫️rejects/📸️snapshot/⬅️before/🔣️.json"));
+static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../../🧫️fixtures/🧬️mutations/📋️duplicate-layer/🚫️rejects/📸️snapshot/➡️after/🔣️.json"));
+static MUTATION: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../../🧫️fixtures/🧬️mutations/📋️duplicate-layer/🚫️rejects/🦠️mutation/🔣️.json"));
+static OUTCOME: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../../🧫️fixtures/🧬️mutations/📋️duplicate-layer/🚫️rejects/🎯️outcome/🔣️.json"));
+
+fn before() -> DrawingSnapshot {
+    serde_json::from_str(*BEFORE).expect("before snapshot decodes")
+}
+fn expected_after() -> DrawingSnapshot {
+    serde_json::from_str(*AFTER).expect("after snapshot decodes")
+}
+fn mutation() -> DrawingMutation {
+    serde_json::from_str(*MUTATION).expect("mutation decodes")
+}
+
+/// ▶️ A rejected `duplicate-layer` leaves the document byte-identical: the committed `after` is the
+/// committed `before`.
+#[semio_framework_async_macros::async_test]
+async fn rejection_leaves_the_document_at_the_committed_after() {
+    let base = before();
+    assert!(find_drawing_layer(&base, "shape-missing").is_none(), "rejects-a-missing-source-layer's before-snapshot must NOT carry the addressed source");
+    let mut snapshot = base.clone();
+    apply_drawing_mutation(&mut snapshot, &mutation()).expect("an empty diff still applies cleanly");
+    assert_eq!(snapshot, expected_after(), "duplicate-layer/rejects-a-missing-source-layer: applied state differs from committed after-snapshot");
+    assert_eq!(snapshot, base, "a rejected duplicate must not touch the document");
+}
+
+/// 🧬️ `duplicate-layer` addresses only its SOURCE — it carries no id for the copy. With that source
+/// absent, the diff builder reports `mutation.target-missing` against the source id and produces an
+/// empty diff, never a partially-built clone.
+#[semio_framework_async_macros::async_test]
+async fn missing_source_is_reported_as_target_missing() {
+    let produced = <DrawingMutation as protocol::Mutation<DrawingSnapshot>>::diff(&mutation(), &before());
+    assert_eq!(produced.diff(), &DrawingDiff::default(), "a rejecting duplicate-layer must carry an empty diff");
+    let messages = produced.messages();
+    assert_eq!(messages.len(), 1, "exactly one diagnostic is expected, got {messages:?}");
+    assert_eq!(messages[0].code.0, "mutation.target-missing", "duplicate-layer reports a missing source as target-missing");
+    assert_eq!(messages[0].level, semio_framework_diagnostic::Severity::Error, "a missing source is an Error, not a Fatal — the duplicate-id guard is the Fatal one");
+    assert_eq!(messages[0].target, vec!["shape-missing".to_string()], "the diagnostic addresses the payload's own layer_id");
+}
+
+/// ↩️ With no source to copy there is nothing to undo, so the inverse is empty — not a `delete-layer`
+/// of an id that was never minted.
+#[semio_framework_async_macros::async_test]
+async fn inverse_has_nothing_to_undo() {
+    let inverse = inverse_drawing_mutation(&before(), &mutation()).expect("valid retained mutation inverse fixture");
+    assert!(inverse.is_empty(), "duplicate-layer/rejects-a-missing-source-layer: a rejected duplicate must have no inverse steps, got {inverse:?}");
+}
+
+/// 🔣️ Both committed snapshots are already canonical: decode→encode is a fixed point.
+#[semio_framework_async_macros::async_test]
+async fn committed_json_is_canonical() {
+    for (label, text) in [("before", *BEFORE), ("after", *AFTER)] {
+        let decoded: DrawingSnapshot = serde_json::from_str(text).expect("snapshot decodes");
+        let reencoded = serde_json::to_value(&decoded).expect("snapshot encodes");
+        let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
+        assert_eq!(reencoded, original, "duplicate-layer/rejects-a-missing-source-layer: committed {label} JSON is not canonical");
+    }
+    let reencoded = serde_json::to_value(mutation()).expect("mutation encodes");
+    let original: serde_json::Value = serde_json::from_str(*MUTATION).expect("mutation reparses");
+    assert_eq!(reencoded, original, "duplicate-layer/rejects-a-missing-source-layer: committed mutation JSON is not canonical");
+}
+
+/// 🎯️ The declared rejection — status, code and path — is exactly what the diff builder emits.
+#[semio_framework_async_macros::async_test]
+async fn declared_outcome_holds() {
+    let outcome: serde_json::Value = serde_json::from_str(*OUTCOME).expect("outcome decodes");
+    assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("rejected"), "duplicate-layer/rejects-a-missing-source-layer declares a rejected outcome");
+    let produced = <DrawingMutation as protocol::Mutation<DrawingSnapshot>>::diff(&mutation(), &before());
+    let message = produced.messages().first().expect("a rejected outcome carries a diagnostic");
+    assert_eq!(outcome.get("code").and_then(serde_json::Value::as_str), Some(message.code.0.as_str()), "the declared code must match the emitted one");
+    let declared_path: Vec<String> = outcome.get("path").and_then(serde_json::Value::as_array).expect("a rejected outcome declares a path").iter().map(|entry| entry.as_str().expect("path segments are strings").to_string()).collect();
+    assert_eq!(declared_path, message.target, "the declared path must match the emitted target");
+}
+
+/// ⚖️ A duplicate of a present layer sums its inverse diffs to exactly the negative of the forward insert.
+#[semio_framework_async_macros::async_test]
+async fn a_present_source_inverse_sums_to_the_negative_diff() {
+    let base = DrawingSnapshot { layers: vec![semio_s_artifact_draw_drawing_model::create_drawing_shape_layer_rect(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Rect")).to_string().into()).expect("nonempty authored identity"), "Rect")].into(), ..Default::default() };
+    let source = semio_s_artifact_draw_drawing_model::layer_id(&base.layers[0]).clone();
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&semio_s_artifact_draw_drawing_structure::duplicate_layer::mutation::duplicate_layer(source.clone(),vec![semio_s_artifact_draw_drawing_model::identity::DrawingIdentityAssignment{source:source.clone(),target:"duplicate-target".into()}].into()), &base).await;
+}
+
+fn runtime_fixture_text(relative: &str) -> &'static str {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative);
+    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display())).into_boxed_str())
+}

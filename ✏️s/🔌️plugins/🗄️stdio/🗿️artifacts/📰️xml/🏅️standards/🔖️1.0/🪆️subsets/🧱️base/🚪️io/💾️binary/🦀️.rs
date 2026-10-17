@@ -1,13 +1,17 @@
 //! 🚪️ Artifact representation module ownership.
 
-#[path = "📸️snapshot/🦀️.rs"]
-pub mod snapshot;
+pub use semio_s_artifact_stdio_xml_snapshot::standards::v1_0::subsets::base::io::binary::snapshot;
 
-#[path = "🧬️mutations/🦀️.rs"]
-pub mod mutations;
+pub mod mutations {
+    pub use semio_s_artifact_stdio_xml_mutations::standards::v1_0::subsets::base::io::binary::mutations::*;
+    pub use semio_s_artifact_stdio_xml_schema_2::standards::v1_0::subsets::base::io::binary::mutations::insert_element;
+    pub use semio_s_artifact_stdio_xml_schema_2::standards::v1_0::subsets::base::io::binary::mutations::remove_element;
+    pub use semio_s_artifact_stdio_xml_schema_2::standards::v1_0::subsets::base::io::binary::mutations::set_attribute;
+    pub use semio_s_artifact_stdio_xml_schema_2::standards::v1_0::subsets::base::io::binary::mutations::set_declaration;
+    pub use semio_s_artifact_stdio_xml_schema_2::standards::v1_0::subsets::base::io::binary::mutations::set_doctype;
+    pub use semio_s_artifact_stdio_xml_schema_2::standards::v1_0::subsets::base::io::binary::mutations::set_text;
+}
 
-#[path = "🔺️diff/🦀️.rs"]
-pub mod diff;
+pub use semio_s_artifact_stdio_xml_schema::standards::v1_0::subsets::base::io::binary::diff;
 
-#[path = "💡️inferences/🦀️.rs"]
-pub mod inferences;
+

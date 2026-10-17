@@ -29,6 +29,10 @@ type stdioWavRiffpcmAnyInferenceGuardSizeBounds = { readonly minItems?: number; 
 
 export const stdioWavRiffpcmAnyInferenceGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : stdioWavRiffpcmAnyInferenceGuardReject(at, "value is not an object");
+export const stdioWavRiffpcmAnyInferenceGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) stdioWavRiffpcmAnyInferenceGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const stdioWavRiffpcmAnyInferenceGuardArray = (value: unknown, at: string, bounds: stdioWavRiffpcmAnyInferenceGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return stdioWavRiffpcmAnyInferenceGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) stdioWavRiffpcmAnyInferenceGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -59,14 +63,14 @@ export const stdioWavRiffpcmAnyInferenceGuardConstant = <T extends string | numb
 //#endregion 🚪️Parsers
 
 export function parseWavInference(value: unknown, at = "$"): WavInference {
-  const row = stdioWavRiffpcmAnyInferenceGuardObject(value, at);
+  const row = stdioWavRiffpcmAnyInferenceGuardClosed(stdioWavRiffpcmAnyInferenceGuardObject(value, at), at, ["duration"]);
   return {
     duration: parseWavDuration(row["duration"], `${at}.duration`),
   };
 }
 
 export function parseWavDuration(value: unknown, at = "$"): WavDuration {
-  const row = stdioWavRiffpcmAnyInferenceGuardObject(value, at);
+  const row = stdioWavRiffpcmAnyInferenceGuardClosed(stdioWavRiffpcmAnyInferenceGuardObject(value, at), at, ["durationSeconds", "frameCount", "bitsPerSample"]);
   return {
     durationSeconds: stdioWavRiffpcmAnyInferenceGuardNumber(row["durationSeconds"], `${at}.durationSeconds`, {"minimum": 0}),
     frameCount: stdioWavRiffpcmAnyInferenceGuardInteger(row["frameCount"], `${at}.frameCount`, {"minimum": 0}),

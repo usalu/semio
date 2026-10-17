@@ -1,7 +1,7 @@
 //! 🧬️ Puzzle2d diff schema — sparse typed delta over the artifact: per-field entity patches and id-keyed collection deltas.
 
 use crate::standards::v1::subsets::any::schema::Puzzle2dArtifact;
-use {crate::standards::v1::subsets::any::schema::Puzzle2dCamera, crate::standards::v1::subsets::any::schema::Puzzle2dCompatSpecificity, crate::standards::v1::subsets::any::schema::Puzzle2dEdge, crate::standards::v1::subsets::any::schema::Puzzle2dHandle, crate::standards::v1::subsets::any::schema::Puzzle2dKindCatalogs, crate::standards::v1::subsets::any::schema::Puzzle2dKindCompatibility, crate::standards::v1::subsets::any::schema::Puzzle2dMeta, crate::standards::v1::subsets::any::schema::Puzzle2dNode, crate::standards::v1::subsets::any::schema::Puzzle2dNodeAnchor, crate::standards::v1::subsets::any::schema::Puzzle2dTargetRegion};
+use {crate::standards::v1::subsets::any::schema::records::Puzzle2dCamera, crate::standards::v1::subsets::any::schema::records::Puzzle2dCompatSpecificity, crate::standards::v1::subsets::any::schema::records::Puzzle2dEdge, crate::standards::v1::subsets::any::schema::records::Puzzle2dHandle, crate::standards::v1::subsets::any::schema::records::Puzzle2dKindCatalogs, crate::standards::v1::subsets::any::schema::records::Puzzle2dKindCompatibility, crate::standards::v1::subsets::any::schema::records::Puzzle2dMeta, crate::standards::v1::subsets::any::schema::records::Puzzle2dNode, crate::standards::v1::subsets::any::schema::records::Puzzle2dNodeAnchor, crate::standards::v1::subsets::any::schema::records::Puzzle2dTargetRegion};
 use crate::Puzzle2dSnapshot;
 use ::semio_framework_schema::ArtifactSchema;
 use protocol::{DiffAlgebra, MutationDiff};

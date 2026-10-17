@@ -1,6 +1,6 @@
 //! 🚀️ Direct binary codec for `insert-launch-action`.
 
-use crate::standards::v1_7::subsets::vt::schema::mutations::InsertLaunchAction;
+use crate::standards::v1_7::subsets::vt::schema::mutations::insert_launch_action::InsertLaunchAction;
 
 //#region 🔖️Identity
 pub const TAG: u8 = 10;
@@ -21,7 +21,5 @@ pub fn decode(bytes: &[u8]) -> Result<InsertLaunchAction, String> {
 //#endregion 🔖️Codec
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

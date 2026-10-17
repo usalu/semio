@@ -112,6 +112,23 @@ impl<P, Mutation> ArtifactEphemeralOneItemPublication<P, Mutation> {
     #[cfg(any(test,feature="testkit"))]
     pub fn original_preparation(&self) -> Option<&dyn ArtifactEphemeralOneItemPreparation<P, Mutation>> { self.preparation.as_deref() }
 
+    /// 🧪️ Builds a publication already closing around one preparation so native custody laws can walk its retirement demands.
+    #[cfg(any(test,feature="testkit"))]
+    pub fn closing_with_preparation(operation: semio_framework_job::OperationId, preparation: Box<dyn ArtifactEphemeralOneItemPreparation<P, Mutation>>) -> Self {
+        use std::mem::ManuallyDrop as Held;
+        Self {
+            operation, expected_generation: 0,
+            footprint: ArtifactStoreOneItemFootprint::for_ephemeral_item(0),
+            preparation: Held::new(Some(preparation)),
+            displaced_root_retirement: Held::new(None), root_retirement_factory: Held::new(None),
+            returned_read_registry: Held::new(None), returned_read_retirement: Held::new(None),
+            owned_retirement_factory: Held::new(None), receipt: Held::new(None),
+            retained_checkpoint: Default::default(), factory_retirement: [None, None],
+            attempts: 0, published: false, cancel_requested: false, close_started: true,
+            fault: Held::new(None), phase: ArtifactStoreOneItemPublicationPhase::Closing,
+        }
+    }
+
     pub fn operation(&self) -> semio_framework_job::OperationId {
         self.operation
     }

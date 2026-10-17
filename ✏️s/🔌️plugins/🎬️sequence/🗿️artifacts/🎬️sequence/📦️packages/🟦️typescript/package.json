@@ -23,7 +23,9 @@
       "import": "./dist/🟦️.js"
     }
   },
-  "dependencies": {},
+  "dependencies": {
+    "@semio-tech/framework-os": "workspace:*"
+  },
   "license": "LGPL-3.0-or-later",
   "repository": {
     "type": "git",

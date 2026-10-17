@@ -1,11 +1,18 @@
 //! 🧪️ The completeness law of the editor UI: every mutation kind has a way in from the UI (a command, a field row or a tool), every visible text comes from the one `app_labels!` block
 //! in both languages, every window and panel has an accessible name, and the gesture in progress shows in the 3D window too.
 
-use super::*;
+use crate::editor::bim::dispatch_context::BimDispatchCtx;
+use crate::editor::bim::terminology::{BimLabels, bim_labels};
+use semio_framework_plugin::{ConfigView, Emit, Fault, NoConfig, NoConfigMutation, ViewModel, WindowMeasure};
+use crate::standards::v1::subsets::any::schema::mutations::ModelMutation;
+use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use crate::editor::bim::commands::{create_entity, flip_walls, move_storey, place_elements, remove_classification, remove_property, rename_entity, select_findings, set_classification, set_field, set_property, set_view, split_wall};
+use crate::editor::bim::panels::{diagnostics as diagnostics_panel, library as library_panel, outliner as outliner_panel, properties as properties_panel};
+use crate::editor::bim::modes::edit::windows::{plan, schedule, section, world};
 use semio_framework_plugin::PluginApp as _;
 use crate::editor::bim::entities::kind_of;
-use crate::editor::bim::unit_tests::context::{bim_app, dispatch, history_verb, render_text, view, BimApp};
-use crate::editor::bim::unit_tests::support::{applied, ctx, demo, run};
+use crate::editor::bim::fixture::context::{bim_app, dispatch, history_verb, render_text, view, BimApp};
+use crate::editor::bim::fixture::support::{applied, ctx, demo, run};
 use semio_framework_ui_locale::{LabelText, Locale};
 
 fn code(result: Result<Emit<ModelMutation, NoConfigMutation>, Fault>) -> Option<String> {
@@ -380,7 +387,7 @@ async fn properties_classifications_the_project_and_typed_placements_are_undoabl
 //#region 🔖️WorldPreview
 #[semio_framework_async_macros::async_test]
 async fn the_marks_of_a_gesture_become_segments_and_points_at_the_floor_of_the_storey_in_the_3d_window() {
-    use crate::editor::bim::gestures::tests::fixture::{room, Rig};
+    use crate::editor::bim::fixture::{room, Rig};
     let mut rig = Rig::plan("wall", room());
     rig.down(0.0, -2.0);
     rig.mv(3.0, -2.0);
@@ -402,7 +409,7 @@ async fn the_marks_of_a_gesture_become_segments_and_points_at_the_floor_of_the_s
 
 #[semio_framework_async_macros::async_test]
 async fn a_closed_path_gets_its_closing_segment_and_a_label_has_no_3d_form() {
-    use crate::editor::bim::gestures::session::{Mark, Preview, Style};
+    use crate::editor::bim::marks::{Mark, Preview, Style};
     let snapshot = demo();
     let inference = crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference(None, &snapshot, Clone::clone);
     let preview = Preview::of(vec![Mark::path(&[[0.0, 0.0], [2.0, 0.0], [2.0, 2.0]], true, Style::Ghost), Mark::label([1.0, 1.0], "2.00 m")]);

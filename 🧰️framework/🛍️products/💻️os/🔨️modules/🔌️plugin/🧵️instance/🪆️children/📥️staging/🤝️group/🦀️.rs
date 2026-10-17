@@ -1,14 +1,37 @@
 //! 🎹️ Staged slice of the `group` band of the mounted artifact instance: its `instance-children` members (WP6 step S0 of the instance family).
 //!
 //! 🤝️ The instance's private child group publication and mounted command log turns.
-use super::*;
-use crate::child_content::MountedChildGroupIdentitySource;
-use crate::child_content::*;
-use crate::child_content::mounted_child_group_receipt_group::{MountedGroupMemberReceipts,MountedCommandEntry,MountedCommandEntrySource};
-use super::ladders_close_ladder::{child_grant};
+use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_framework::Fault;
+use store::MemberFactory;
+use semio_framework_plugin_publication_mounted::owner::MountedPrivateChildGroup;
+use semio_framework_value::retained_clone::RetainedCloneGrant;
+use semio_framework_value::retained_clone::RetainedCloneProgress;
+use semio_framework_value::retained_clone::RetainedCloneStep;
+use semio_framework_value::RetirementDemand;
+use store::SpaceMember;
+use semio_framework_value::ValueError;
+use semio_framework_plugin_publication_mounted::mounted_child_group_receipt;
+use semio_framework_plugin_ownership::bounded_ownership::plugin_grant_funds;
+use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
+use semio_framework_plugin_decl_emission::Emit;
+use semio_framework::FaultFrom;
+use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use pack::snapshot::ArtifactPack;
+use crate::children_components::ChildComposition;
+use std::future::Future;
+use semio_framework_plugin_instance_stores::stores_components::InstanceStores;
+use store::Mutation;
+use protocol::OpText;
+use semio_framework_plugin_reactor_app::PluginApp;
+use semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep;
+use semio_framework_ui_contract::*;
+use semio_framework_plugin_decl_views::child_view::ChildContentRetainers;
+use semio_framework_plugin_publication_mounted::mounted_child_group_receipt::mounted_nested_retirement_demand;
+use semio_framework_os_kernel as store;
 
 impl<M: SpaceMember + MemberFactory + 'static> ChildComposition<M> {
-    pub(crate) fn admit_private_child_group_frame(&mut self,operation:u64,captured_millis:i64,expires_at_us:u64,grant:RetainedCloneGrant)->Result<RetainedCloneStep,Fault>{
+    pub fn admit_private_child_group_frame(&mut self,operation:u64,captured_millis:i64,expires_at_us:u64,grant:RetainedCloneGrant)->Result<RetainedCloneStep,Fault>{
         use semio_framework_value::retained_clone::{RetainedCloneProgress,RetainedCloneStep};
         if grant.maximum_items==0||grant.maximum_depth==0{return Ok(RetainedCloneStep::Progress(Default::default()));}
         if self.private_child_groups.get(operation).is_some(){return Ok(RetainedCloneStep::Complete(Default::default()));}
@@ -19,7 +42,7 @@ impl<M: SpaceMember + MemberFactory + 'static> ChildComposition<M> {
         Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,retained_capacity_bytes:bytes,..Default::default()}))
     }
 
-    pub(crate) fn private_child_group_close_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
+    pub fn private_child_group_close_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
         let Some((_,operation))=self.private_child_groups.next_id_from(0) else {
             let release_bytes=self.private_child_groups.empty_backing_byte_demand().ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"private group registry still owns its original slot"))?;
             return Ok(RetirementDemand { release_bytes, depth:usize::from(release_bytes!=0), ..Default::default() });
@@ -27,15 +50,15 @@ impl<M: SpaceMember + MemberFactory + 'static> ChildComposition<M> {
         self.private_child_group_operation_close_demands(operation, body)
     }
 
-    pub(crate) fn private_child_group_operation_close_demands(&self, operation:u64, body:usize) -> Result<RetirementDemand, ValueError> {
+    pub fn private_child_group_operation_close_demands(&self, operation:u64, body:usize) -> Result<RetirementDemand, ValueError> {
         let Some(owner)=self.private_child_groups.get(operation)else{return Ok(Default::default());};
         if owner.terminal_is_empty(){return Ok(RetirementDemand{release_bytes:MountedPrivateChildGroup::<M>::frame_birth_bytes(),depth:1,..Default::default()});}
         mounted_child_group_receipt::mounted_nested_retirement_demand(owner.retirement_demands(body)?,1)
     }
 
-    pub(crate) fn private_child_groups_terminal_is_empty(&self)->bool{self.private_child_groups.is_empty()&&self.private_child_groups.empty_backing_byte_demand()==Some(0)}
+    pub fn private_child_groups_terminal_is_empty(&self)->bool{self.private_child_groups.is_empty()&&self.private_child_groups.empty_backing_byte_demand()==Some(0)}
 
-    pub(crate) fn close_private_child_group_step<A: ArtifactApp>(&mut self, stores: &mut InstanceStores<A>,cx:&mut semio_framework_job::StepContext<'_>,grant:RetainedCloneGrant)->Result<semio_framework_job::InteractiveJobCloseStep,crate::PluginLifecycleFailure>{
+    pub fn close_private_child_group_step<A: ArtifactApp>(&mut self, stores: &mut InstanceStores<A>,cx:&mut semio_framework_job::StepContext<'_>,grant:RetainedCloneGrant)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{
         let grant=semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_grant(cx,grant);
         let demand=self.private_child_group_close_demands(grant.maximum_copy_bytes)?;
         if self.private_child_groups_terminal_is_empty(){return Ok(semio_framework_job::InteractiveJobCloseStep::Complete{progress:Default::default()});}
@@ -51,7 +74,7 @@ impl<M: SpaceMember + MemberFactory + 'static> ChildComposition<M> {
         self.close_private_child_group_operation_step(stores, operation, cx, grant)
     }
 
-    pub(crate) fn close_private_child_group_operation_step<A: ArtifactApp>(&mut self, stores: &mut InstanceStores<A>,operation:u64,cx:&mut semio_framework_job::StepContext<'_>,loan:RetainedCloneGrant)->Result<semio_framework_job::InteractiveJobCloseStep,crate::PluginLifecycleFailure>{
+    pub fn close_private_child_group_operation_step<A: ArtifactApp>(&mut self, stores: &mut InstanceStores<A>,operation:u64,cx:&mut semio_framework_job::StepContext<'_>,loan:RetainedCloneGrant)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{
         let demand=self.private_child_group_operation_close_demands(operation, loan.maximum_copy_bytes)?;
         let step=semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,loan,demand,|same,grant|{
             let step=self.close_private_child_group_operation_granted(stores, operation, same, grant)?;
@@ -61,7 +84,7 @@ impl<M: SpaceMember + MemberFactory + 'static> ChildComposition<M> {
         Ok(match step{PluginLifecycleStep::Progress(progress)=>semio_framework_job::InteractiveJobCloseStep::Pending{progress},PluginLifecycleStep::Complete(progress)=>semio_framework_job::InteractiveJobCloseStep::Complete{progress},PluginLifecycleStep::AwaitingInput{..}|PluginLifecycleStep::Blocked{..}=>semio_framework_job::InteractiveJobCloseStep::Blocked})
     }
 
-    pub(crate) fn close_private_child_group_operation_granted<A: ArtifactApp>(&mut self, stores: &mut InstanceStores<A>,operation:u64,cx:&mut semio_framework_job::StepContext<'_>,grant:RetainedCloneGrant)->Result<semio_framework_job::InteractiveJobCloseStep,crate::PluginLifecycleFailure>{
+    pub(crate) fn close_private_child_group_operation_granted<A: ArtifactApp>(&mut self, stores: &mut InstanceStores<A>,operation:u64,cx:&mut semio_framework_job::StepContext<'_>,grant:RetainedCloneGrant)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{
         let Some(original)=self.private_child_groups.get(operation)else{return Ok(semio_framework_job::InteractiveJobCloseStep::Complete{progress:Default::default()});};
         let terminal=original.terminal_is_empty();
         let demand=self.private_child_group_operation_close_demands(operation, grant.maximum_copy_bytes)?;

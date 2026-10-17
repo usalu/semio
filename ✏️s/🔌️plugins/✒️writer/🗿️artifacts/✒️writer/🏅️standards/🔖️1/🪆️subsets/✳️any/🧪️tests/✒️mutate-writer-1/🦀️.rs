@@ -28,7 +28,7 @@
 //! derived from the committed bytes, never transcribed beside them.
 
 use semio_repo_test_host::Adapter;
-use semio_s_artifact_writer_writer::central_apply::{apply_writer_mutation_outcome};
+use semio_s_artifact_writer_writer::mutations::central_apply::{apply_writer_mutation_outcome};
 
 //#region 🔖️Kinds
 #[cfg(feature = "sut")]

@@ -41,7 +41,7 @@ fn canonical_native_paged_utf8_key_and_scalar_match_serde_with_zero_heap_copy_tu
         }
         let mut retirement = ControlledRetirement::new(root).unwrap_or_else(|_| panic!("native text record retirement"));
         for turn in 0..100_000 {
-            if retirement.terminal_is_empty() { println!("[DEBUG] native canonical key/scalar Unicode/NUL/escaping matches Serde; every copy turn zero heap, actual owner closure {turn} turns"); break; }
+            if retirement.terminal_is_empty() {  break; }
             let copy = retirement.next_copy_byte_demand().unwrap();
             let capacity = retirement.next_capacity_byte_demand(copy).unwrap();
             assert!(copy + capacity <= 4096);

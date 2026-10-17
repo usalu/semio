@@ -1,14 +1,40 @@
 //! 🕹️ Interaction of the puzzle 5d editor: copy and paste helpers, the context menu, the `Puzzle5dCommand` vocabulary with its variant macro and the action context every command arm reads and writes. See [`super`].
 
-use super::*;
+use crate::editor::puzzle5d::snapshot::Puzzle5dPlaySnapshot;
+use crate::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation;
+use crate::editor::puzzle5d::config::Puzzle5dConfigMutation;
+use semio_s_artifact_puzzle_3d_editor::Puzzle3dInstanceOperationOwner;
+use crate::{editor::puzzle5d::terminology::puzzle5d_labels, editor::puzzle5d::terminology::Puzzle5dLabels};
+use semio_framework_plugin::{kernel::ClipboardError, kernel::ClipboardFragment, kernel::Effect, kernel::PasteAnchor, kernel::PastePlacement, kernel::UiDirtyScope};
+use semio_framework_plugin::Emit;
+use semio_framework_plugin::InteractionTarget;
+use semio_framework_plugin::InteractionWrite;
+use semio_framework_ui_locale::Label;
+use semio_framework_plugin::MediaClass;
+use semio_framework_plugin::MediaForm;
+use semio_framework_plugin::MediaType;
+use semio_framework_plugin::MergeMode;
+use semio_framework_plugin::app::InteractionView;
+use semio_framework_value::FromValue;
+use semio_framework_pack_json::{parse, Value};
+use std::{collections::HashMap, collections::HashSet};
+use crate::editor::puzzle5d::entities::{PUZZLE5D_GRANULARITY_FASTENER, PUZZLE5D_GRANULARITY_GRIP, PUZZLE5D_GRANULARITY_PART, PUZZLE5D_GRANULARITY_TARGET_VOLUME, PUZZLE5D_INTERACTION_DOMAIN, PUZZLE5D_PLAY_APP_ID, PUZZLE5D_SCHEMA, Puzzle5dDocument, Puzzle5dFastener, Puzzle5dFreshIds, Puzzle5dPart, mesh_selection_ids, puzzle5d_document_from_snapshot, puzzle5d_editor_projection};
+use crate::editor::puzzle5d::view::{Puzzle5dInteractionSnapshot, Puzzle5dScene};
+use crate::editor::puzzle5d::config::Puzzle5dConfig;
+use crate::editor::puzzle5d::modes::edit;
+use crate::editor::puzzle5d::modes::edit::windows::world3d;
+use crate::editor::puzzle5d::presence::{Puzzle5dPresence, Puzzle5dPresenceMutation};
+use semio_framework_plugin::ArtifactEditor;
+use semio_framework_plugin::NoDraft;
+use semio_framework_plugin::NoDraftMutation;
 
 //#region 🔖️CopyPaste
 /// 🧩️ The part id a `"part_id:grip_id"` full grip reference belongs to.
-pub(super) fn owning_part_id_local(grip_ref: &str) -> &str {
+pub fn owning_part_id_local(grip_ref: &str) -> &str {
     grip_ref.split(':').next().unwrap_or(grip_ref)
 }
 
-pub(super) fn rewrite_grip_ref_local(grip_ref: &str, id_map: &HashMap<String, String>) -> String {
+pub fn rewrite_grip_ref_local(grip_ref: &str, id_map: &HashMap<String, String>) -> String {
     match grip_ref.split_once(':') {
         Some((part_id, grip_id)) => match id_map.get(part_id) {
             Some(fresh_part_id) => format!("{fresh_part_id}:{grip_id}"),
@@ -22,7 +48,7 @@ pub(super) fn rewrite_grip_ref_local(grip_ref: &str, id_map: &HashMap<String, St
 /// endpoint parts, then expands the fastener set to include every fastener whose BOTH endpoints are
 /// now in the part set — the untyped structural-twin twin of
 /// `crate::standards::v1::subsets::any::schema::transfer::copy_selection`.
-pub(super) fn copy_selection_local(document: &Puzzle5dDocument, part_ids: &[String], fastener_ids: &[String]) -> (Vec<Puzzle5dPart>, Vec<Puzzle5dFastener>) {
+pub fn copy_selection_local(document: &Puzzle5dDocument, part_ids: &[String], fastener_ids: &[String]) -> (Vec<Puzzle5dPart>, Vec<Puzzle5dFastener>) {
     let mut part_set: HashSet<String> = part_ids.iter().cloned().collect();
     for fastener in &document.fasteners {
         if fastener_ids.contains(&fastener.id) {
@@ -62,7 +88,7 @@ fn centroid_2d_local(parts: &[Puzzle5dPart]) -> Option<(f64, f64)> {
 /// override verbatim; every other anchor uses the target-minus-source centroid delta plus the
 /// (optional) position override — mirrors semio_compose_rs's `__pasteCoordinateOffset`
 /// (`semio_compose_rs/dev/algorithm/js/index.ts:358`).
-pub(super) fn paste_delta_2d(fragment_parts: &[Puzzle5dPart], target_parts: &[Puzzle5dPart], placement: &PastePlacement) -> (f64, f64) {
+pub fn paste_delta_2d(fragment_parts: &[Puzzle5dPart], target_parts: &[Puzzle5dPart], placement: &PastePlacement) -> (f64, f64) {
     let (offset_x, offset_y) = placement.position.map_or((0.0, 0.0), |position| (position[0], position[1]));
     if matches!(placement.anchor, PasteAnchor::Original) {
         return (offset_x, offset_y);
@@ -76,7 +102,7 @@ pub(super) fn paste_delta_2d(fragment_parts: &[Puzzle5dPart], target_parts: &[Pu
 /// 🧮️ Materializes a copied fragment at 2D delta `delta` (applied verbatim to the 3D origin's x/y
 /// too) — document-scoped fresh ids dodge collisions with the live document,
 /// and fastener endpoints are remapped onto the fresh part ids.
-pub(super) fn paste_selection_local(document: &Puzzle5dDocument, fragment_parts: &[Puzzle5dPart], fragment_fasteners: &[Puzzle5dFastener], delta: (f64, f64)) -> (Vec<Puzzle5dPart>, Vec<Puzzle5dFastener>) {
+pub fn paste_selection_local(document: &Puzzle5dDocument, fragment_parts: &[Puzzle5dPart], fragment_fasteners: &[Puzzle5dFastener], delta: (f64, f64)) -> (Vec<Puzzle5dPart>, Vec<Puzzle5dFastener>) {
     let mut fresh_ids = Puzzle5dFreshIds::from_document(document);
     let mut id_map: HashMap<String, String> = HashMap::new();
     let mut fresh_parts = Vec::with_capacity(fragment_parts.len());
@@ -175,7 +201,7 @@ impl Puzzle5dContextSelection {
         }
     }
 
-    pub(super) fn is_empty(&self) -> bool {
+    pub fn is_empty(&self) -> bool {
         self.part_ids.is_empty() && self.grip_ids.is_empty() && self.fastener_ids.is_empty()
     }
 }
@@ -195,7 +221,7 @@ pub const PUZZLE5D_CONTEXT_MENU_RESERVED_ACTIONS: [&str; 4] = ["copy", "cut", "p
 /// against the registry, so a typo'd id is a construction-time panic rather than a dead row.
 /// `organize_context_menu`, run at the `VcsArtifactApp::context_menu` funnel, handles taxonomy
 /// ordering and separator placement — this function only emits rows.
-pub(super) fn puzzle5d_context_menu_items(
+pub fn puzzle5d_context_menu_items(
     envelope: &Puzzle5dScene,
     selection: &Puzzle5dContextSelection,
     labels: &Puzzle5dLabels,
@@ -503,7 +529,7 @@ impl<'a> Puzzle5dActionCtx<'a> {
     pub fn commit_gumball(&mut self, verb: &str, args: Option<&Value>) {
         let targets = [mesh_selection_ids(args, &self.selected_part_ids()), self.selected_ids(PUZZLE5D_GRANULARITY_TARGET_VOLUME)].concat();
         if let Some(record) = semio_s_artifact_puzzle_3d_editor_transform::Puzzle3dSelectionRecord::from_gumball(verb, args, targets) {
-            self.commit_selection(verb, vec![world3d::utilities::transform::Puzzle5dSelectionRecord::world(record)]);
+            self.commit_selection(verb, vec![crate::editor::puzzle5d::modes::edit::windows::world3d::utilities::transform::Puzzle5dSelectionRecord::world(record)]);
         }
     }
 
@@ -512,7 +538,7 @@ impl<'a> Puzzle5dActionCtx<'a> {
     /// nothing named that exists, is the `nothing_selected` refusal; a request whose every target is locked is
     /// the `selection_locked` one; a request with a movable target is yielded whole, and its leaf reports the
     /// locked rest as `mutation.partial`. A motionless request leaves zero trace.
-    pub fn commit_selection(&mut self, verb: &str, records: Vec<world3d::utilities::transform::Puzzle5dSelectionRecord>) {
+    pub fn commit_selection(&mut self, verb: &str, records: Vec<crate::editor::puzzle5d::modes::edit::windows::world3d::utilities::transform::Puzzle5dSelectionRecord>) {
         let base = self.snapshot.typed_arc();
         if records.iter().all(|record| !record.names_any(&base)) {
             self.refuse_without_selection(&[]);
@@ -523,8 +549,8 @@ impl<'a> Puzzle5dActionCtx<'a> {
             self.abort = true;
             return;
         }
-        let request = world3d::utilities::transform::TransformToolRequest { base, records };
-        if let Some((transaction, mutations)) = world3d::utilities::transform::puzzle5d_transform_tool_commit(verb, self.authoring_seed, request) {
+        let request = crate::editor::puzzle5d::modes::edit::windows::world3d::utilities::transform::TransformToolRequest { base, records };
+        if let Some((transaction, mutations)) = crate::editor::puzzle5d::modes::edit::windows::world3d::utilities::transform::puzzle5d_transform_tool_commit(verb, self.authoring_seed, request) {
             self.transaction = (!self.authoring_seed.is_empty()).then_some(transaction);
             self.artifact_mutations.extend(mutations);
         }
@@ -536,7 +562,7 @@ impl<'a> Puzzle5dActionCtx<'a> {
         self.instance_owner?.with_mut::<Puzzle3dInstanceOperationOwner, _>(|owner| Ok(apply(&mut owner.brush_suggestions))).ok()
     }
 
-    pub(super) fn selected_ids(&self, granularity_id: &str) -> Vec<String> {
+    pub fn selected_ids(&self, granularity_id: &str) -> Vec<String> {
         if self.selection.granularity == granularity_id {
             self.selection.ids.clone()
         } else {
@@ -627,7 +653,7 @@ pub const PUZZLE5D_LOCALIZATION_UNSUPPORTED: &str = "ui.localization.unsupported
 /// nothing tells the user WHY, instead of the bare `Emit::default()` every refusal path used to complete
 /// with. The scope is [`UiDirtyScope::None`]: a work that refused published nothing, so there is nothing to
 /// repaint — the notice itself travels on the effect lane, which the host applies before it consults scope.
-pub(super) fn puzzle5d_notice_emit(view_state: Option<&semio_framework_plugin::ViewModel>, message: impl Fn(&Puzzle5dLabels) -> &'static str) -> Emit<Puzzle5dMutation, Puzzle5dConfigMutation> {
+pub fn puzzle5d_notice_emit(view_state: Option<&semio_framework_plugin::ViewModel>, message: impl Fn(&Puzzle5dLabels) -> &'static str) -> Emit<Puzzle5dMutation, Puzzle5dConfigMutation> {
     let text = view_state.and_then(puzzle5d_labels).map_or_else(|| PUZZLE5D_LOCALIZATION_UNSUPPORTED.to_string(), |labels| message(labels).to_string());
     Emit { effects: vec![Effect::Notify { message: text }], ui_scope: UiDirtyScope::None, ..Default::default() }
 }
@@ -675,7 +701,7 @@ pub fn puzzle5d_cut_operations(snapshot: &Puzzle5dPlaySnapshot, part_ids: &[Stri
 /// 🕹️ `copy_fragment`/`cut_operations` have no `Puzzle5dActionCtx` (only `doc`/`cfg`/`interaction`
 /// per `ArtifactApp`'s signature) — a free-function twin of `Puzzle5dActionCtx::selected_part_ids`/
 /// `selected_fastener_ids` for those two call sites.
-pub(super) fn puzzle5d_interaction_part_and_fastener_ids(interaction: &InteractionView<'_>) -> (Vec<String>, Vec<String>) {
+pub fn puzzle5d_interaction_part_and_fastener_ids(interaction: &InteractionView<'_>) -> (Vec<String>, Vec<String>) {
     let selection = interaction.selection(PUZZLE5D_INTERACTION_DOMAIN);
     match selection.granularity.as_str() {
         PUZZLE5D_GRANULARITY_PART => (selection.ids.clone(), Vec::new()),
@@ -688,3 +714,93 @@ pub fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyRes
     semio_framework_ui_contract::Label::try_from(value.as_ref().to_string()).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "puzzle5d label admission failed"))
 }
 //#endregion 🔖️ActionContext
+
+pub const PUZZLE5D_RETAINED_TOOL_IDS: &[&str] = &[
+    "addTargetVolume",
+    "deleteTargetVolume",
+    "relocateTargetVolume",
+    "setTargetVolumeFlag",
+    "setTargetVolumeHidden",
+    "setTargetVolumeLocked",
+    "setVoxelDims",
+    "canvasPointerDown",
+    "cycleBrushCandidate",
+    "cycleBrushCandidateBack",
+    "worldPointerDown",
+    "deleteSelection",
+    "duplicateSelection",
+    "engagementAbort",
+    "engagementControlSelect",
+    "engagementInput",
+    "engagementRepeatLast",
+    "engagementSubmit",
+    "exportSnapshot",
+    "importSnapshot",
+    "openAddPartDialog",
+    "openImportSnapshot",
+    "selectSameKindSelection",
+    "setFillCount",
+    "setSelectionFlag",
+    "setSelectionHidden",
+    "setSelectionLocked",
+    "targetBrushSuggestions",
+    "openVortexSuggestions",
+    "closeVortexSuggestions",
+    "hoverSuggestion",
+    "acceptSuggestion",
+    "focusSelection",
+    "addBrushPart",
+    "addNode",
+    "addPartKind",
+    "applyBoardEvents",
+    "createFastener",
+    "deleteFastener",
+    "editFastener",
+    "patchFastener",
+    "patchGrip",
+    "patchPart",
+    "proximityConnect",
+    "registerBrushMesh",
+    "retargetFastener",
+    "rotateSelection",
+    "scaleSelection",
+    "setActiveExample",
+    "translateSelection",
+    "worldRelocate",
+    "setCamera",
+    "setCamera2d",
+    "setCamera3d",
+    "setGridFactor",
+    "setGridSnapEnabled",
+    "setLodMode",
+    "setSuggestionOffset",
+    "toggleSun",
+    "setSunAzimuth",
+    "setSunElevation",
+    "setSunIntensity",
+    "setBrushPlacementContactTolerance",
+    "setProximityRadius",
+    "setChunkSize",
+    "setPartKindWeight",
+    "setGripKindWeight",
+    "setGridVisible",
+    "setGridSpacing",
+    "setProjection",
+    "setProjectionParam",
+    "setGripShow",
+    "setGripDirection",
+    "setSelectableKind",
+    "setLodAutomatic",
+    "setLodDepthVariable",
+    "setLodManual",
+    "setTransformGumballFlag",
+];
+
+//#region 🧩️EditorContract
+/// 🧩️ The puzzle5d editor contract: every editor whose lanes are puzzle5d's play snapshot, mutation union, config,
+/// presence and command vocabulary. The action dispatch, the retained works and the tool run builders are written
+/// against it, so they sit below the one concrete editor that implements it.
+pub trait Puzzle5dEditor: semio_framework_plugin::ArtifactEditor<Snapshot = Puzzle5dPlaySnapshot, Mutation = Puzzle5dMutation, Config = crate::editor::puzzle5d::config::Puzzle5dConfig, ConfigMutation = Puzzle5dConfigMutation, Draft = semio_framework_plugin::NoDraft, DraftMutation = semio_framework_plugin::NoDraftMutation, Presence = crate::editor::puzzle5d::presence::Puzzle5dPresence, PresenceMutation = crate::editor::puzzle5d::presence::Puzzle5dPresenceMutation, Transient = semio_framework_plugin::NoTransient, TransientMutation = semio_framework_plugin::NoTransientMutation, Command = Puzzle5dCommand> {}
+
+impl<A> Puzzle5dEditor for A where A: semio_framework_plugin::ArtifactEditor<Snapshot = Puzzle5dPlaySnapshot, Mutation = Puzzle5dMutation, Config = crate::editor::puzzle5d::config::Puzzle5dConfig, ConfigMutation = Puzzle5dConfigMutation, Draft = semio_framework_plugin::NoDraft, DraftMutation = semio_framework_plugin::NoDraftMutation, Presence = crate::editor::puzzle5d::presence::Puzzle5dPresence, PresenceMutation = crate::editor::puzzle5d::presence::Puzzle5dPresenceMutation, Transient = semio_framework_plugin::NoTransient, TransientMutation = semio_framework_plugin::NoTransientMutation, Command = Puzzle5dCommand> {}
+//#endregion 🧩️EditorContract

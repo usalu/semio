@@ -1,0 +1,55 @@
+[package]
+workspace = "../../../../../../../../.."
+name = "semio-s-artifact-flow-flow-unit-tests-2"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Component crate of semio-s-artifact-flow-flow: unit-tests-2"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "🦀️.rs"
+
+[dependencies]
+semio-framework-job.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+flow = { path = "../../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust", package = "semio-framework-os-flow" }
+machine = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🔄️machine/📦️packages/🦀️rust", package = "semio-framework-machine" }
+semio-framework = { path = "../../../../../../../../../../../../../../🧰️framework/📦️packages/🦀️rust", package = "semio-framework" }
+semio-framework-2d = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/📦️packages/🦀️rust" }
+semio-framework-artifact-flow-flow = { workspace = true }
+semio-framework-artifact-playbook-playbook = { workspace = true }
+semio-framework-artifact-reference = { workspace = true }
+semio-framework-os-infinite-directed-presentation = { path = "../../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🧬️schema/🖼️presentation/📦️packages/🦀️rust" }
+semio-framework-os-kernel = { path = "../../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+semio-framework-pack-json = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-framework-plugin = { path = "../../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", package = "semio-framework-plugin" }
+semio-framework-tool-machine = { workspace = true }
+semio-framework-ui-locale = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-s-artifact-flow-flow-config = { path = "../../../../🎭️modes/✏️edit/🪟️windows/🌊️main/🎚️config/📦️packages/🦀️rust" }
+semio-s-artifact-flow-flow-editor-leaves = { path = "../../../../🎮️commands/🔗️connect-media-ports/📦️packages/🦀️rust" }
+semio-s-artifact-flow-flow-editor = { path = "../../../../📦️packages/🦀️rust" }
+semio-s-artifact-flow-flow-inferences = { path = "../../../../../🧬️schema/💡️inferences/📦️packages/🦀️rust" }
+semio-s-artifact-flow-flow-mutations = { path = "../../../../../🧬️schema/🧬️mutations/📦️packages/🦀️rust" }
+semio-s-artifact-flow-flow-schema = { path = "../../../../../🧬️schema/📦️packages/🦀️rust" }
+semio-s-artifact-flow-flow-tests = { path = "../../../../../🧬️schema/💡️inferences/🧪️tests/🔬️unit/📦️packages/🦀️rust" }
+semio-s-artifact-flow-flow-viewer = { path = "../../../../../👁️viewer/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-semio = { workspace = true }
+semio-s-artifact-stdio-semio-base = { workspace = true }
+semio-s-artifact-stdio-semio-flow = { workspace = true }
+semio_framework_ui_contract = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
+ui_wgpu = {path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust", package = "semio-framework-ui", features = ["wgpu"]}
+
+[dev-dependencies]
+semio-framework-async-macros = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
+semio-framework-os-kernel = { path = "../../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["protocol-laws", "mutation-testing"] }
+semio-framework-plugin = { path = "../../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", features = ["artifact-app-testing"], package = "semio-framework-plugin" }
+semio-framework-test-fixtures = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
+semio-s-artifact-flow-flow-unit-tests = { path = "../../../🔬️unit/📦️packages/🦀️rust", features = ["testkit"] }

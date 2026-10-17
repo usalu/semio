@@ -1,5 +1,5 @@
 //! 🔐️ Canonical descriptor binary admission and authority hashing.
-use crate::schema::{ArtifactHash, DescriptorDigestError, DocumentDescriptor, validate_document_descriptor_v1};
+use semio_framework_os_directory_schema::{ArtifactHash, DescriptorDigestError, DocumentDescriptor, validate_document_descriptor_v1};
 
 pub const DESCRIPTOR_DIGEST_V1_DOMAIN: &[u8] = b"semio.document-descriptor.digest.v1\0";
 

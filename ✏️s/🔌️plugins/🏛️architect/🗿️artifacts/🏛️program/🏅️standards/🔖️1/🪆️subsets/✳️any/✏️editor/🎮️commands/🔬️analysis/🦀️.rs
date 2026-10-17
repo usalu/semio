@@ -4,7 +4,7 @@
 pub mod run_validation {
     use crate::editor::architect::config::{snapshot, ArchitectConfig, ArchitectConfigMutation};
     use crate::standards::v1::subsets::any::schema::mutations::ProgramMutation;
-    use crate::standards::v1::subsets::any::schema::registers::RegisterRow;
+    use crate::standards::v1::subsets::any::schema::registers::catalog::RegisterRow;
     use crate::standards::v1::subsets::any::schema::inferences::validate_plugin;
     use crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot;
     use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};

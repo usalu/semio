@@ -1162,7 +1162,7 @@ struct JsonProjectionFrame {pub values:JsonProjectionIterator<Value>,pub entries
 struct JsonCompletedFrameRetirement {pub frame:std::mem::ManuallyDrop<JsonProjectionFrame>,pub phase:u8}
 impl JsonCompletedFrameRetirement {
     fn new(frame:JsonProjectionFrame)->Result<Self,(ValueError,JsonProjectionFrame)>{if frame.values.len()!=0||frame.entries.len()!=0||!frame.array.is_empty()||!frame.object.is_empty()||frame.key.is_some(){return Err((ValueError::literal(ValueRefusalKind::InvariantViolated,"completed JSON input frame still owns an untransferred value"),frame));}Ok(Self{frame:std::mem::ManuallyDrop::new(frame),phase:0})}
-    fn release_demand(&self)->usize{match self.phase{0=>self.frame.values.allocation,1=>self.frame.entries.allocation,2=>self.frame.array.capacity()*size_of::<DslValue>(),3=>self.frame.object.capacity()*size_of::<(String,DslValue)>(),_=>0}}
+    #[doc(hidden)] pub fn release_demand(&self)->usize{match self.phase{0=>self.frame.values.allocation,1=>self.frame.entries.allocation,2=>self.frame.array.capacity()*size_of::<DslValue>(),3=>self.frame.object.capacity()*size_of::<(String,DslValue)>(),_=>0}}
 }
 impl semio_framework_value::retirement::RetirementCursor for JsonCompletedFrameRetirement {
     fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value::retirement::RetirementStep{use semio_framework_value::retirement::RetirementStep;if grant.maximum_items==0{return RetirementStep::BudgetExhausted;}if self.phase==4{return RetirementStep::Complete;}let bytes=self.release_demand();if bytes>grant.maximum_release_bytes{return RetirementStep::BudgetExhausted;}match self.phase{0=>drop(std::mem::replace(&mut self.frame.values,JsonProjectionIterator::new(Vec::new()))),1=>drop(std::mem::replace(&mut self.frame.entries,JsonProjectionIterator::new(Vec::new()))),2=>drop(std::mem::take(&mut self.frame.array)),3=>drop(std::mem::take(&mut self.frame.object)),_=>unreachable!()}self.phase+=1;if bytes==0{RetirementStep::Advanced}else{RetirementStep::Bytes(bytes)}}
@@ -1909,7 +1909,7 @@ impl JsonBorrowedWriteCursor {
         }
         demand.copy_bytes=measured.bytes;Ok(demand)
     }
-    fn retained_capacity_bytes(&self)->Result<usize,ValueError>{
+    #[doc(hidden)] pub fn retained_capacity_bytes(&self)->Result<usize,ValueError>{
         self.frames.capacity().checked_mul(size_of::<JsonWriteFrame>()).and_then(|frames|self.path.capacity().checked_mul(size_of::<usize>()).and_then(|path|frames.checked_add(path))).and_then(|bytes|bytes.checked_add(self.writer.output.as_ref().map_or(0,|output|output.capacity()))).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"JSON writer physical backing extent overflow"))
     }
     pub fn step<S:JsonWriteSource+?Sized>(&mut self,source:&S,maximum_units:usize,control:&mut semio_framework_value::NativeEncodeControl<'_>,grant:RetainedCloneGrant)->Result<Option<String>,ValueError>{

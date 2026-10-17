@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { parse } from "@iarna/toml";
+import { parse, type AnyJson, type JsonMap } from "@iarna/toml";
 import { readFileSync } from "node:fs";
 import { frameworkSourcePath } from "@semio-tech/framework/test/source-text";
 
@@ -24,10 +24,14 @@ export function runAssemblyChecks(): number {
     checks++;
   }
   const cargo = readFileSync(new URL("../../📦️packages/🦀️rust/Cargo.toml", import.meta.url), "utf8");
-  const manifest = Bun.TOML.parse(cargo) as any;
-  assert.deepEqual(manifest, parse(cargo));
-  assert.equal(manifest.package.metadata.component, undefined);
-  assert.deepEqual(Object.keys(manifest.dependencies).sort(), ["semio-framework-plugin", "semio-s-artifact-stdio-contract"]);
+  const table = (value: AnyJson | undefined): JsonMap => {
+    if (typeof value === "object" && value !== null && !Array.isArray(value) && !(value instanceof Date)) return value;
+    throw new Error("A TOML table was expected");
+  };
+  const manifest = parse(cargo);
+  assert.deepEqual(Bun.TOML.parse(cargo), manifest);
+  assert.equal(table(table(manifest.package).metadata).component, undefined);
+  assert.deepEqual(Object.keys(table(manifest.dependencies)).sort(), ["semio-framework-plugin", "semio-s-artifact-stdio-contract"]);
   checks++;
   const source = readFileSync(new URL("../../🦀️.rs", import.meta.url), "utf8");
   assert.equal(/selected_contributions|plugin_exports!|semio_s_artifact_stdio_(?!contract)|include_str!/u.test(source), false);

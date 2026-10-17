@@ -2,9 +2,9 @@
 import { expect, test } from "vitest";
 
 import { getValueByPointer } from "fast-json-patch";
-import { createShellI18nInstance, disposeShellI18nInstance, resolveUiLabel, uiChromeTranslationBundles } from "../../../../🎯️targets/⚛️react/🌐️i18n/🟦️.ts";
+import { createShellI18nInstance, disposeShellI18nInstance, resolveUiLabel, uiChromeTranslationBundles } from "@semio-tech/ui-react/i18n";
 import fixture from "../🧫️fixtures/🌐️translation-totality/🔣️.json";
-import { mutationOutcomeCodeFixture as outcomeCodes } from "../../../../../📡️replication/🧪️tests/🧫️fixtures/🟦️.ts";
+import { mutationOutcomeCodeFixture as outcomeCodes } from "@semio-tech/framework-replication/testing/fixtures";
 
 test("every frozen outcome code has distinct en and de labels", () => {
   const keys = [...outcomeCodes.codes.map((row) => row.code.slice("mutation.".length).replace(/-([a-z0-9])/g, (_, letter: string) => letter.toUpperCase())), "apply"];

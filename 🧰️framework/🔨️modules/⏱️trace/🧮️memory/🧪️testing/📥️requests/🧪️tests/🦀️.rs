@@ -78,7 +78,6 @@ fn shared_requested_layout_scopes_preserve_totals_nesting_and_unwind() {
     assert!(output.status.success(), "{}", String::from_utf8_lossy(&output.stderr));
     let totals: Vec<usize> = serde_json::from_slice(&output.stdout).unwrap();
     assert_eq!(totals, fixture["cases"].as_array().unwrap().iter().map(|scope| scope["expectedRequestedBytes"].as_u64().unwrap() as usize).collect::<Vec<_>>());
-    eprintln!("[DEBUG] Shared requested allocation scopes retain layout totals, inclusive nesting, unwind restoration, System/HeapWitness and SQLite references");
 }
 
 #[test]
@@ -113,5 +112,4 @@ fn shared_requested_overflow_delegates_bounded_allocation_then_restores_before_r
         }
     });
     assert_eq!(requested, probe);
-    eprintln!("[DEBUG] Synthetic requested-counter overflow delegates a bounded allocation, counts its parent, and restores observation before refusal");
 }

@@ -36,7 +36,10 @@ pub fn plan(p: &GltfReorderTexturesPayload, base: &GltfSnapshot) -> Result<GltfD
     Ok(diff)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn inverse(p: &GltfReorderTexturesPayload, base: &GltfSnapshot) -> Vec<super::GltfMutation> {
+pub fn inverse<Op>(p: &GltfReorderTexturesPayload, base: &GltfSnapshot) -> Vec<Op>
+where
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::remove_used_extension::RemoveUsedExtensionMutation>,
+{
     if validate(p, base).is_err() {
         return Vec::new();
     }
@@ -53,11 +56,17 @@ pub enum ReorderTexturesMutation {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn mutation(payload: GltfReorderTexturesPayload) -> super::GltfMutation {
-    super::GltfMutation::ReorderTextures(ReorderTexturesMutation::Apply(payload))
+pub fn mutation<Op>(payload: GltfReorderTexturesPayload) -> Op
+where
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::reorder_textures::ReorderTexturesMutation>,
+{
+    Op::from(ReorderTexturesMutation::Apply(payload))
 }
 
-impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ReorderTexturesMutation {
+impl<Op> protocol::MutationKind<GltfSnapshot, Op> for ReorderTexturesMutation
+where
+    Op: protocol::Mutation<GltfSnapshot, Diff = GltfDiff> + From<ReorderTexturesMutation>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "reorder", entity: "textures", kind: "reorder-textures", record: "ReorderedTextures" };
 
     fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<GltfDiff> {
@@ -69,7 +78,7 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ReorderTextur
         }
     }
 
-    fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<super::GltfMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         match self {
             Self::Apply(payload) => Ok(inverse(payload, base)),
         }
@@ -86,7 +95,5 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ReorderTextur
 //#endregion 🧬️DirectMutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔀️flips-the-albedo-fc33d9/🦀️.rs"]
-mod case_flips_the_albedo_fc33d9;
+
 //#endregion 🧪️Tests

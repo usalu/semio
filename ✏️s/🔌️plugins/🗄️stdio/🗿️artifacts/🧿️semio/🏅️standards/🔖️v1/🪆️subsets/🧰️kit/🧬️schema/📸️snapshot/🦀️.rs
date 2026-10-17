@@ -274,9 +274,9 @@ impl semio_framework_value::FromValue for SemioKitSnapshot {
 /// 🌱 The demo `s.stdio.semio.kit` — one type ("chair") with one representation link, one design
 /// ("living-room") with two pieces and one connection, one owned object child, one owned model
 /// child, and a properties child. Exercises every field shape at least once.
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn demo_kit_snapshot() -> SemioKitSnapshot {
+pub fn demo_kit_snapshot() -> SemioKitSnapshot {
     let dialect = |subset: &str| semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: subset.into() };
     SemioKitSnapshot {
         schema: STDIO_SEMIOKIT_DOCUMENT_SCHEMA.into(),
@@ -296,9 +296,7 @@ pub(crate) fn demo_kit_snapshot() -> SemioKitSnapshot {
 //#endregion 🔖️Demo
 
 //#region 🔖️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🔖️Tests
 
 

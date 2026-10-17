@@ -1,0 +1,14 @@
+{
+"name": "oksql",
+"crates": [
+"semio-framework-os-store-space-history",
+"semio-framework-os-store-text-io",
+"semio-framework-os-store-codec-registry",
+"semio-framework-os-io",
+"semio-framework-os-store-sync",
+"semio-framework-os-store-sync-native",
+"semio-framework-os-store-sync-wasm"
+],
+"base": null,
+"note": "OS-KERNEL-SQLITE-HOST + sync, absolute"
+}

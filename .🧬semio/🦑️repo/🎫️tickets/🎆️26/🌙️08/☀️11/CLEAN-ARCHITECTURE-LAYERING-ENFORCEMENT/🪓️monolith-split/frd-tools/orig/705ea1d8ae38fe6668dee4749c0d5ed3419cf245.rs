@@ -1,0 +1,220 @@
+//! 🔬️ Mutation-vocabulary laws — the kebab roster matches the enum, every builder round-trips through
+//! its own op text and binary forms, and a collection insert lands at the canonical sorted position.
+
+use crate::schema::snapshot::Grid3dSnapshot;
+use crate::standards::v1::subsets::any::schema::mutations::*;
+use crate::schema::snapshot::{Grid3dCell, Grid3dDirection, Grid3dPinnedCell, Grid3dRule, Grid3dTile};
+use protocol::{OpBinary, OpText};
+
+fn every_mutation() -> Vec<Grid3dMutation> {
+    vec![
+        change_seed(99),
+        resize_grid(2, 2, 2),
+        change_cell_sizes(crate::schema::snapshot::Grid3dAxis::X, vec![1.0, 2.0]),
+        change_periodicity(true, false, true),
+        create_tile(Grid3dTile { id: "zzz".into(), label: Some("Z".into()), weight: 2.0, media: Default::default() }),
+        delete_tile("wall".into()),
+        change_tile_weight("wall".into(), 5.0),
+        change_tile_media("wall".into(), Default::default()),
+        create_rule(Grid3dRule { id: "r-zzz".into(), tile_a_id: "air".into(), tile_b_id: "wall".into(), direction: Grid3dDirection::Top, allowed: true }),
+        delete_rule("r-top-air-air".into()),
+        pin_cell(Grid3dPinnedCell { x: 1, y: 1, z: 1, tile_id: "wall".into() }),
+        unpin_cell(0, 0, 0),
+        mask_cell(Grid3dCell { x: 2, y: 2, z: 2 }),
+        unmask_cell(3, 2, 3),
+    ]
+}
+
+#[test]
+fn the_kebab_roster_matches_the_enum_in_declaration_order() {
+    assert_eq!(KINDS.len(), every_mutation().len());
+    for (kind, mutation) in KINDS.iter().zip(every_mutation()) {
+        assert_eq!(*kind, protocol::SemanticMutation::<Grid3dSnapshot>::semantics(&mutation).kind, "roster order must match the enum");
+    }
+}
+
+#[test]
+fn every_mutation_round_trips_through_its_op_text_form() {
+    for mutation in every_mutation() {
+        let line = OpText::print_op(&mutation);
+        assert!(!line.trim().is_empty());
+        assert_eq!(<Grid3dMutation as OpText>::parse_op(&line).expect("op line parses"), mutation, "round trip failed for {line}");
+    }
+}
+
+#[test]
+fn every_mutation_round_trips_through_its_binary_form() {
+    for mutation in every_mutation() {
+        let bytes = OpBinary::encode_op(&mutation).expect("op encodes");
+        assert_eq!(<Grid3dMutation as OpBinary>::decode_op(&bytes).expect("op decodes"), mutation);
+    }
+}
+
+#[test]
+fn an_ordered_index_is_the_existing_slot_or_the_sorted_insertion_point() {
+    let items = ["b".to_string(), "d".to_string()];
+    let key = |item: &String| item.clone();
+    assert_eq!(ordered_index(&items, "a", key), 0);
+    assert_eq!(ordered_index(&items, "b", key), 0);
+    assert_eq!(ordered_index(&items, "c", key), 1);
+    assert_eq!(ordered_index(&items, "e", key), 2);
+}
+
+#[test]
+fn every_mutation_and_its_inverse_return_the_document_to_where_it_started() {
+    let base = crate::examples::blocks::snapshot();
+    for mutation in every_mutation() {
+        let mut snapshot = base.clone();
+        let inverse = inverse_grid3d_mutation(&base, &mutation).expect("valid retained mutation inverse fixture");
+        if vcs::apply_mutation(&snapshot, &mutation).map(|(applied_state, _)| { snapshot = applied_state; }).is_err() {
+            continue;
+        }
+        for step in &inverse {
+            vcs::apply_mutation(&snapshot, step).map(|(applied_state, _)| { snapshot = applied_state; }).expect("inverse step applies");
+        }
+        assert_eq!(snapshot, base, "inverse did not restore the document for {:?}", protocol::SemanticMutation::<Grid3dSnapshot>::semantics(&mutation).kind);
+    }
+}
+
+//#region 🏷️Roster
+/// 🏷️ The mutation VOCABULARY the enum declares, the kebab roster `KINDS` publishes, the per-kind manifests on disk,
+/// the payload schemas, the oracle catalog, the TypeScript twin and the `🧩️mutate-wfc-grid3d-1` case's feature table
+/// and Python oracle are one and the same set, in one order. The committed quintets themselves are replayed per kind by
+/// each mutation's own fixture test and by that case.
+mod roster {
+    use super::KINDS;
+
+    /// 🏷️ Every kind's directory name under `🧬️schema/🧬️mutations/`, in `KINDS` order.
+    const DIRECTORIES: [&str; 14] = [
+        "🎲️change-seed",
+        "📐️resize-grid",
+        "📏️change-cell-sizes",
+        "🔁️change-periodicity",
+        "🧱️create-tile",
+        "🕳️delete-tile",
+        "⚖️change-tile-weight",
+        "🖼️change-tile-media",
+        "🚦️create-rule",
+        "❌️delete-rule",
+        "📌️pin-cell",
+        "📍️unpin-cell",
+        "🚫️mask-cell",
+        "🔓️unmask-cell",
+    ];
+
+    /// 🔣️ Each kind's committed manifest, mounted by `include_str!` so a renamed directory breaks the
+    /// build instead of silently dropping a row from the roster.
+    static MANIFESTS: std::sync::LazyLock<[&str; 14]> = std::sync::LazyLock::new(|| [
+        super::runtime_fixture_text("../../🎲️change-seed/🔣️.json"),
+        super::runtime_fixture_text("../../📐️resize-grid/🔣️.json"),
+        super::runtime_fixture_text("../../📏️change-cell-sizes/🔣️.json"),
+        super::runtime_fixture_text("../../🔁️change-periodicity/🔣️.json"),
+        super::runtime_fixture_text("../../🧱️create-tile/🔣️.json"),
+        super::runtime_fixture_text("../../🕳️delete-tile/🔣️.json"),
+        super::runtime_fixture_text("../../⚖️change-tile-weight/🔣️.json"),
+        super::runtime_fixture_text("../../🖼️change-tile-media/🔣️.json"),
+        super::runtime_fixture_text("../../🚦️create-rule/🔣️.json"),
+        super::runtime_fixture_text("../../❌️delete-rule/🔣️.json"),
+        super::runtime_fixture_text("../../📌️pin-cell/🔣️.json"),
+        super::runtime_fixture_text("../../📍️unpin-cell/🔣️.json"),
+        super::runtime_fixture_text("../../🚫️mask-cell/🔣️.json"),
+        super::runtime_fixture_text("../../🔓️unmask-cell/🔣️.json"),
+    ]);
+
+    static PAYLOAD_SCHEMAS: std::sync::LazyLock<[&str; 14]> = std::sync::LazyLock::new(|| [
+        super::runtime_fixture_text("../../🎲️change-seed/🧬️schema/🔣️.json"),
+        super::runtime_fixture_text("../../📐️resize-grid/🧬️schema/🔣️.json"),
+        super::runtime_fixture_text("../../📏️change-cell-sizes/🧬️schema/🔣️.json"),
+        super::runtime_fixture_text("../../🔁️change-periodicity/🧬️schema/🔣️.json"),
+        super::runtime_fixture_text("../../🧱️create-tile/🧬️schema/🔣️.json"),
+        super::runtime_fixture_text("../../🕳️delete-tile/🧬️schema/🔣️.json"),
+        super::runtime_fixture_text("../../⚖️change-tile-weight/🧬️schema/🔣️.json"),
+        super::runtime_fixture_text("../../🖼️change-tile-media/🧬️schema/🔣️.json"),
+        super::runtime_fixture_text("../../🚦️create-rule/🧬️schema/🔣️.json"),
+        super::runtime_fixture_text("../../❌️delete-rule/🧬️schema/🔣️.json"),
+        super::runtime_fixture_text("../../📌️pin-cell/🧬️schema/🔣️.json"),
+        super::runtime_fixture_text("../../📍️unpin-cell/🧬️schema/🔣️.json"),
+        super::runtime_fixture_text("../../🚫️mask-cell/🧬️schema/🔣️.json"),
+        super::runtime_fixture_text("../../🔓️unmask-cell/🧬️schema/🔣️.json"),
+    ]);
+
+    static ORACLE_CATALOG: std::sync::LazyLock<&str> = std::sync::LazyLock::new(|| super::runtime_fixture_text("../../../../🔮️oracles/🔣️.json"));
+    static TYPESCRIPT_TWIN: std::sync::LazyLock<&str> = std::sync::LazyLock::new(|| super::runtime_fixture_text("../../🟦️.ts"));
+    static FEATURE: std::sync::LazyLock<&str> = std::sync::LazyLock::new(|| super::runtime_fixture_text("../../../../🧪️tests/🧩️mutate-wfc-grid3d-1/🥒️.feature"));
+    static PYTHON_ORACLE: std::sync::LazyLock<&str> = std::sync::LazyLock::new(|| super::runtime_fixture_text("../../../../🧪️tests/🧩️mutate-wfc-grid3d-1/🐍️.py"));
+
+    fn value(text: &str) -> semio_framework_value::DslValue {
+        semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed json"))
+    }
+
+    fn field(value: &semio_framework_value::DslValue, key: &str) -> String {
+        value.get(key).and_then(semio_framework_value::DslValue::as_str).unwrap_or_default().to_string()
+    }
+
+    #[test]
+    fn every_manifest_declares_the_kind_its_own_slot_in_the_roster_names() {
+        assert_eq!(KINDS.len(), (*MANIFESTS).len());
+        for (index, text) in (*MANIFESTS).iter().enumerate() {
+            let manifest = value(text);
+            assert_eq!(field(&manifest, "semanticKind"), KINDS[index], "manifest {} names the wrong kind", DIRECTORIES[index]);
+            assert!(field(&manifest, "owner").ends_with(DIRECTORIES[index]), "manifest {} names the wrong owner directory", DIRECTORIES[index]);
+            assert_eq!(field(&manifest, "payloadSchema"), "🧬️schema/🔣️.json");
+            assert_eq!(field(&manifest, "invertibility"), "explicit-mutation");
+            assert_eq!(field(&manifest, "composition"), "atomic");
+        }
+    }
+
+    #[test]
+    fn every_payload_schema_is_a_self_contained_draft_07_document() {
+        for (index, text) in (*PAYLOAD_SCHEMAS).iter().enumerate() {
+            let schema = value(text);
+            assert_eq!(field(&schema, "$schema"), "http://json-schema.org/draft-07/schema#", "{}", DIRECTORIES[index]);
+            assert!(!text.contains("$defs"), "{} must stay self-contained", DIRECTORIES[index]);
+            assert!(field(&schema, "$id").contains(KINDS[index]), "{} names the wrong id", DIRECTORIES[index]);
+        }
+    }
+
+    #[test]
+    fn media_payload_documents_are_independently_compiled_without_external_refs() {
+        use std::io::Write;
+        use std::process::{Command,Stdio};
+        let fixture:serde_json::Value=serde_json::from_str(super::runtime_fixture_text("../../../../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+        let input=serde_json::json!({"schemas":[serde_json::from_str::<serde_json::Value>(super::runtime_fixture_text("../../🧱️create-tile/🧬️schema/🔣️.json")).unwrap(),serde_json::from_str::<serde_json::Value>(super::runtime_fixture_text("../../🖼️change-tile-media/🧬️schema/🔣️.json")).unwrap()],"media":fixture["payloadMedia"]});
+        let script="import Ajv from 'ajv';const x=JSON.parse(await Bun.stdin.text());const a=new Ajv({strict:true}).addKeyword('x-semio-ui');const c=x.schemas.map(s=>a.compile(s));for(const media of x.media){if(!c[0]({tile:{id:'',weight:1,media}})||!c[1]({tileId:'',media}))throw Error('neutral media refused')}const media={kind:'mesh',mesh:{positions:[0],indices:[4294967296]}};if(c[0]({tile:{id:'',weight:1,media}})||c[1]({tileId:'',media}))throw Error('u32 overflow admitted');console.log('independent media schemas accepted')";
+        let mut child=Command::new("bun").args(["-e",script]).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();child.stdin.take().unwrap().write_all(&serde_json::to_vec(&input).unwrap()).unwrap();let output=child.wait_with_output().unwrap();assert!(output.status.success(),"{}",String::from_utf8_lossy(&output.stderr));assert_eq!(String::from_utf8(output.stdout).unwrap().trim(),"independent media schemas accepted");
+    }
+
+    #[test]
+    fn the_oracle_catalog_carries_a_vector_for_every_kind() {
+        let catalog = value((*ORACLE_CATALOG));
+        let catalogs = catalog.get("mutationCatalogs").and_then(semio_framework_value::DslValue::as_array).expect("the manifest declares mutationCatalogs");
+        let vectors = catalogs[0].get("vectors").and_then(semio_framework_value::DslValue::as_array).expect("the catalog declares vectors");
+        assert_eq!(vectors.len(), KINDS.len());
+        for (index, vector) in vectors.iter().enumerate() {
+            assert_eq!(field(vector, "mutationId"), KINDS[index]);
+            assert_eq!(field(vector, "mutationDirectoryName"), DIRECTORIES[index]);
+        }
+    }
+
+    #[test]
+    fn the_typescript_twin_publishes_the_same_roster_in_the_same_order() {
+        let start = (*TYPESCRIPT_TWIN).find("GRID3D_MUTATION_KINDS = [").expect("the twin publishes its roster");
+        let end = (*TYPESCRIPT_TWIN)[start..].find(']').expect("the roster is a literal array") + start;
+        let declared: Vec<&str> = (*TYPESCRIPT_TWIN)[start..end].lines().filter_map(|line| line.trim().strip_prefix('"')).filter_map(|line| line.split('"').next()).collect();
+        assert_eq!(declared, KINDS.to_vec());
+    }
+
+    #[test]
+    fn the_feature_table_and_the_python_oracle_cover_every_kind() {
+        for kind in KINDS {
+            assert!((*FEATURE).contains(kind), "the feature table is missing {kind}");
+            assert!((*PYTHON_ORACLE).contains(kind), "the python oracle is missing {kind}");
+        }
+    }
+}
+//#endregion 🏷️Roster
+
+fn runtime_fixture_text(relative: &str) -> &'static str {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative);
+    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display())).into_boxed_str())
+}

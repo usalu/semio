@@ -29,6 +29,10 @@ type stdioIfc2x3BaseInferenceGuardSizeBounds = { readonly minItems?: number; rea
 
 export const stdioIfc2x3BaseInferenceGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : stdioIfc2x3BaseInferenceGuardReject(at, "value is not an object");
+export const stdioIfc2x3BaseInferenceGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) stdioIfc2x3BaseInferenceGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const stdioIfc2x3BaseInferenceGuardArray = (value: unknown, at: string, bounds: stdioIfc2x3BaseInferenceGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return stdioIfc2x3BaseInferenceGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) stdioIfc2x3BaseInferenceGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -59,17 +63,17 @@ export const stdioIfc2x3BaseInferenceGuardConstant = <T extends string | number 
 //#endregion 🚪️Parsers
 
 export function parseIfc2x3Inference(value: unknown, at = "$"): Ifc2x3Inference {
-  const row = stdioIfc2x3BaseInferenceGuardObject(value, at);
+  const row = stdioIfc2x3BaseInferenceGuardClosed(stdioIfc2x3BaseInferenceGuardObject(value, at), at, ["bounds"]);
   return {
     bounds: parseIfc2x3Bounds(row["bounds"], `${at}.bounds`),
   };
 }
 
 export function parseIfc2x3Bounds(value: unknown, at = "$"): Ifc2x3Bounds {
-  const row = stdioIfc2x3BaseInferenceGuardObject(value, at);
+  const row = stdioIfc2x3BaseInferenceGuardClosed(stdioIfc2x3BaseInferenceGuardObject(value, at), at, ["min", "max", "pointCount"]);
   return {
-    min: stdioIfc2x3BaseInferenceGuardArray(row["min"], `${at}.min`, {"minItems": 3, "maxItems": 3}).map((item, index) => stdioIfc2x3BaseInferenceGuardNumber(item, `${at}.min[${index}]`)),
-    max: stdioIfc2x3BaseInferenceGuardArray(row["max"], `${at}.max`, {"minItems": 3, "maxItems": 3}).map((item, index) => stdioIfc2x3BaseInferenceGuardNumber(item, `${at}.max[${index}]`)),
+    min: ((items0) => [stdioIfc2x3BaseInferenceGuardNumber(items0[0], `${at}.min[0]`), stdioIfc2x3BaseInferenceGuardNumber(items0[1], `${at}.min[1]`), stdioIfc2x3BaseInferenceGuardNumber(items0[2], `${at}.min[2]`)])(stdioIfc2x3BaseInferenceGuardArray(row["min"], `${at}.min`, {"minItems": 3, "maxItems": 3})),
+    max: ((items0) => [stdioIfc2x3BaseInferenceGuardNumber(items0[0], `${at}.max[0]`), stdioIfc2x3BaseInferenceGuardNumber(items0[1], `${at}.max[1]`), stdioIfc2x3BaseInferenceGuardNumber(items0[2], `${at}.max[2]`)])(stdioIfc2x3BaseInferenceGuardArray(row["max"], `${at}.max`, {"minItems": 3, "maxItems": 3})),
     pointCount: stdioIfc2x3BaseInferenceGuardInteger(row["pointCount"], `${at}.pointCount`, {"minimum": 0}),
   };
 }

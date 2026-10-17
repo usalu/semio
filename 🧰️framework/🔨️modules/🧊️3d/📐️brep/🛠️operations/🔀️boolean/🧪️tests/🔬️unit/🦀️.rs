@@ -2,6 +2,7 @@ use super::*;
 use semio_framework_3d_brep_construction::primitives::{make_box, make_cylinder, make_sphere};
 use semio_framework_3d_brep_construction::transform::transform_solid;
 use semio_framework_3d_brep_vector::matrix::Affine3;
+use semio_framework_test_fixtures::fixture_path;
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn translate_solid(body: &mut Body, solid: SolidId, delta: Vec3, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
@@ -411,7 +412,7 @@ async fn box_minus_cylinder_blind_bore_removes_the_bore_volume() {
 /// 🧪️ Preserves coincident boundary occupancy across aligned and opposed outward orientations.
 #[test]
 fn coincident_face_boundary_selection_agrees_with_the_neutral_law() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/coincident-boundary/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(fixture_path!("../../🧪️tests/🧫️fixtures/coincident-boundary/🔣️.json")).unwrap()).unwrap();
     for row in fixture["cases"].as_array().unwrap() {
         let op = match row["operation"].as_str().unwrap() { "union" => BooleanOp::Unite, "intersection" => BooleanOp::Intersect, "difference" => BooleanOp::Cut, _ => unreachable!() };
         assert_eq!(keep_coincident_boundary(op, row["aligned"].as_bool().unwrap()), row["retainsBoundary"].as_bool().unwrap(), "neutral coincident boundary: {row}");
@@ -427,14 +428,13 @@ fn coincident_face_boundary_selection_agrees_with_the_neutral_law() {
     let opposed = find_coincident_face_pairs(&body, &body.solid_faces(a), &body.solid_faces(adjacent), 1e-6);
     assert_eq!(opposed.len(), 1);
     assert!(!opposed[0].2);
-    eprintln!("[DEBUG] Coincident boundary neutral cases=6 aligned cube faces=6 opposed shared face=1");
 }
 
 
 /// 🧪️ Retains one closed shared seam when a cylindrical bore is refilled by its matching tool.
 #[semio_framework_async_macros::async_test]
 async fn coincident_bore_refill_retains_a_closed_owned_seam() {
-    let row: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/coincident-seam/🔣️.json")).unwrap();
+    let row: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(fixture_path!("../../🧪️tests/🧫️fixtures/coincident-seam/🔣️.json")).unwrap()).unwrap();
     let mut body = Body::new();
     let mut rec = OpRecorder::new();
     let dims = row["stock"].as_array().unwrap();
@@ -448,5 +448,4 @@ async fn coincident_bore_refill_retains_a_closed_owned_seam() {
     assert_eq!(issues.is_empty(), row["closedShell"].as_bool().unwrap(), "neutral closed seam: {issues:?}");
     let volume = solid_volume(&body, filled, 1e-4).unwrap();
     assert!((volume - row["expectedVolume"].as_f64().unwrap()).abs() < 1e-3);
-    eprintln!("[DEBUG] Native bore refill retained closed seam volume={volume} independent serde_json dimensions matched");
 }

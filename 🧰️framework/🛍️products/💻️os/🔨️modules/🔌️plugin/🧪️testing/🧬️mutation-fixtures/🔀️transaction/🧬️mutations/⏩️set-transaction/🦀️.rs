@@ -1,4 +1,5 @@
-use super::super::{TxnDiff, TxnMutation, TxnSnapshot};
+use crate::testing_laws_unit_1::mutation_fixture::transaction::{TxnDiff, TxnSnapshot};
+use crate::testing_laws_unit_1::mutation_fixture::transaction::mutations::TxnMutation;
 use protocol::{MutationKind, MutationOutcome, OpBinary, OpText, ProtocolError, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 #[derive(semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, ToValue, FromValue, dsl::MutationLeaf)]
@@ -9,8 +10,8 @@ pub(crate) struct SetTransactionCountWithoutPreflight {
     pub value: i32,
 }
 impl SetTransactionCountWithoutPreflight {
-    const OPCODE: &'static str = "set-transaction-count-without-preflight";
-    const TAG: u8 = 0x63;
+    pub const OPCODE: &'static str = "set-transaction-count-without-preflight";
+    pub const TAG: u8 = 0x63;
 }
 impl OpText for SetTransactionCountWithoutPreflight {
     fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
@@ -54,4 +55,4 @@ impl MutationKind<TxnSnapshot, TxnMutation> for SetTransactionCountWithoutPrefli
         panic!("no-foreign mutations must bypass foreign-step preflight")
     }
 }
-use super::SetTransactionCount;
+use crate::testing_laws_unit_1::mutation_fixture::transaction::mutations::set_transaction_count::SetTransactionCount;

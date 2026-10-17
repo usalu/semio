@@ -1,14 +1,14 @@
-use crate::editor::sequence::unit_tests::context::{dispatch, live_host_snapshot, new_app};
-use crate::editor::sequence::SequenceCommand;
+use crate::editor_unit_tests::context::{dispatch, live_host_snapshot, new_app};
+use crate::editor::sequence::retained::SequenceCommand;
 
-use super::reorganize::Reorganize;
-use super::set_orientation::SetOrientation;
+use crate::editor::sequence::commands::layout::reorganize::Reorganize;
+use crate::editor::sequence::commands::layout::set_orientation::SetOrientation;
 use move_step_helper::move_all_steps_to_origin;
 
 mod move_step_helper {
     use crate::editor::sequence::commands::step::move_step::MoveStep;
-    use crate::editor::sequence::unit_tests::context::{dispatch, live_host_snapshot, SequenceApp};
-    use crate::editor::sequence::SequenceCommand;
+    use crate::editor_unit_tests::context::{dispatch, live_host_snapshot, SequenceApp};
+    use crate::editor::sequence::retained::SequenceCommand;
 
     pub async fn move_all_steps_to_origin(app: &mut SequenceApp) {
         let ids: Vec<String> = live_host_snapshot(&app).await.steps.iter().map(|step| step.id.clone()).collect();

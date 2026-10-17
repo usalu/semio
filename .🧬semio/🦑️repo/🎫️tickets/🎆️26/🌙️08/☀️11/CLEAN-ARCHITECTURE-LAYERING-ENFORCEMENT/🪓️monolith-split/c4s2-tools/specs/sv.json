@@ -1,0 +1,70 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🖥️server/🟦️.ts",
+ "importers": "auto",
+ "allowManual": [
+  "📦️packages/🟦️typescript/🟦️.ts",
+  "🧪️tests/🔬️wire/🟦️.ts"
+ ],
+ "children": [
+  {
+   "dir": "🧬️wire-types",
+   "doc": "/** 🧬️ The wire types of the server product: identities, commands and their outcomes, queries, event and ephemeral frames, presence, policy, the module manifest and the instance definition.\n *\n * @see ../🟦️.ts — the TypeScript twin of the server product's wire contract\n */",
+   "lines": [
+    [
+     1,
+     293
+    ]
+   ]
+  },
+  {
+   "dir": "🚚️transport",
+   "doc": "/** 🚚️ The transport of the server product's TypeScript twin: error bodies, blob and app install receipts, the wire and call errors, and the owned transport interface with its fetch implementation.\n *\n * @see ../🟦️.ts — the TypeScript twin of the server product's wire contract\n */",
+   "lines": [
+    [
+     295,
+     349
+    ],
+    [
+     359,
+     406
+    ]
+   ]
+  },
+  {
+   "dir": "🔤️codec",
+   "doc": "/** 🔤️ The codec of the server product's wire contract: the primitive readers and the decode and encode functions that convert every wire type between its JSON and its owned TypeScript value.\n *\n * @see ../🟦️.ts — the TypeScript twin of the server product's wire contract\n */",
+   "lines": [
+    [
+     408,
+     966
+    ]
+   ]
+  },
+  {
+   "dir": "🛣️routes-and-sockets",
+   "doc": "/** 🛣️ The sockets and routes of the server product: the event stream and document frames, the route table, the error kinds, the capability header, the lanes and the presence socket URL.\n *\n * @see ../🟦️.ts — the TypeScript twin of the server product's wire contract\n */",
+   "lines": [
+    [
+     968,
+     1091
+    ]
+   ],
+   "names": [
+    "socketRoot"
+   ]
+  },
+  {
+   "dir": "📡️client",
+   "doc": "/** 📡️ The typed client of the server product over an owned transport, and the websocket root of an http base URL.\n *\n * @see ../🟦️.ts — the TypeScript twin of the server product's wire contract\n */",
+   "lines": [
+    [
+     1092,
+     1219
+    ]
+   ],
+   "names": [
+    "serverCallError"
+   ]
+  }
+ ]
+}

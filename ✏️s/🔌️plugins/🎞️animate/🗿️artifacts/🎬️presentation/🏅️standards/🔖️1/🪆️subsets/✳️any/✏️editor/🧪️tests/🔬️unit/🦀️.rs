@@ -1,5 +1,119 @@
+use crate::{editor::animate::commands::add_tile, editor::animate::commands::canvas_pointer_down, editor::animate::commands::clear_tiles, editor::animate::commands::copy_prompt, editor::animate::commands::delete_selection, editor::animate::commands::delete_tile, editor::animate::commands::engagement_input, editor::animate::commands::engagement_submit, editor::animate::commands::export_video_from_deck, editor::animate::commands::no_operation, editor::animate::commands::patch_tile_crops, editor::animate::commands::rename_tiles, editor::animate::commands::reset_grid, editor::animate::commands::seed_grid, editor::animate::commands::set_active_example, editor::animate::commands::set_frame, editor::animate::commands::set_source};
+use crate::editor::animate::config::PresentationConfigMutation;
+use crate::editor::animate::modes::main;
+use crate::editor::animate::modes::main::windows::tile_editor;
+use crate::{default_presentation_snapshot, PRESENTATION_DOCUMENT_SCHEMA};
+use semio_framework_plugin::ActionKind;
+use semio_framework_plugin::EditorApp;
+use semio_framework_plugin::Effect;
+use semio_framework_plugin::Fault;
+use semio_framework_plugin::HierarchyProvider;
+use semio_framework_plugin::Media;
+use semio_framework_plugin::MediaPayload;
+use semio_framework_test_fixtures::fixture_text;
+#[allow(unused_imports)]
+use semio_framework_job_publication::{RetainedJobPublication, JobPublicationKind};
+#[allow(unused_imports)]
+use crate::editor::animate::config::PresentationConfig;
+#[allow(unused_imports)]
+use crate::{editor::animate::panels::artifact, editor::animate::panels::catalogue, editor::animate::panels::inspection};
+#[allow(unused_imports)]
+use crate::editor::animate::terminology::animate_presentation_labels;
+#[allow(unused_imports)]
+use crate::editor::animate::support::*;
+#[allow(unused_imports)]
+use crate::mutations::create_tile::CreateTile;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::mutations::PresentationMutation;
+#[allow(unused_imports)]
+use crate::{FigureTileDraft, PresentationSnapshot};
+#[allow(unused_imports)]
+use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
+#[allow(unused_imports)]
+use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, StepContext};
+#[allow(unused_imports)]
+use semio_framework_plugin::app::InteractionView;
+#[allow(unused_imports)]
+use semio_framework_plugin::{app::ArtifactReservedToolInput, app::ArtifactReservedToolJob, app::ArtifactReservedToolJobRequest, app::ArtifactToolCompletion};
+#[allow(unused_imports)]
+use semio_framework_plugin::ArtifactReservedJob;
+#[allow(unused_imports)]
+use semio_framework_plugin::ActionArgDef;
+#[allow(unused_imports)]
+use semio_framework_plugin::ActionArgOption;
+#[allow(unused_imports)]
+use semio_framework_plugin::AppIo;
+#[allow(unused_imports)]
+use semio_framework_plugin::AppOperationContext;
+#[allow(unused_imports)]
+use semio_framework_plugin::ArtifactEditor;
+#[allow(unused_imports)]
+use semio_framework_plugin::ArtifactOwnedToolJobFactory;
+#[allow(unused_imports)]
+use semio_framework_plugin::ArtifactOwnedToolJobRequest;
+#[allow(unused_imports)]
+use semio_framework_plugin::ArtifactToolFactoryRegistry;
+#[allow(unused_imports)]
+use semio_framework_plugin::ArtifactToolPublicationContract;
+#[allow(unused_imports)]
+use semio_framework_plugin::ArtifactToolPublicationLane;
+#[allow(unused_imports)]
+use semio_framework_plugin::ArtifactView;
+#[allow(unused_imports)]
+use semio_framework_plugin::ComponentTree;
+#[allow(unused_imports)]
+use semio_framework_plugin::ConfigView;
+#[allow(unused_imports)]
+use semio_framework_artifact_reference::Dialect;
+#[allow(unused_imports)]
+use semio_framework_plugin::DraftView;
+#[allow(unused_imports)]
+use semio_framework_plugin::Editor;
+#[allow(unused_imports)]
+use semio_framework_plugin::Emit;
+#[allow(unused_imports)]
+use semio_framework_plugin::GranularityDefinition;
+#[allow(unused_imports)]
+use semio_framework_plugin::HoverSpec;
+#[allow(unused_imports)]
+use semio_framework_plugin::InteractionDefinition;
+#[allow(unused_imports)]
+use semio_framework_plugin::InteractionRef;
+#[allow(unused_imports)]
+use semio_framework_ui_locale::Label;
+#[allow(unused_imports)]
+use semio_framework_ui_locale::LocalizedLabel;
+#[allow(unused_imports)]
+use semio_framework_plugin::MediaError;
+#[allow(unused_imports)]
+use semio_framework_plugin::MergeMode;
+#[allow(unused_imports)]
+use semio_framework_plugin::NoDraft;
+#[allow(unused_imports)]
+use semio_framework_plugin::NoDraftMutation;
+#[allow(unused_imports)]
+use semio_framework_plugin::SelectionMethod;
+#[allow(unused_imports)]
+use semio_framework_plugin::SelectionMode;
+#[allow(unused_imports)]
+use semio_framework_plugin::SelectionSpec;
+#[allow(unused_imports)]
+use semio_framework_2d::compute::EngineHandles;
+use crate::editor::animate::{ANIMATE_PRESENTATION_RETAINED_TOOL_IDS, ANIMATE_PRESENTATION_CONFIG_VALUE_BYTES, ANIMATE_PRESENTATION_CONFIG_STEP_BYTES, ANIMATE_PRESENTATION_RETAINED_PUBLICATION_CONTRACTS, AnimatePresentationConfigPreparationFactory, AnimatePresentationConfigPreparation, AnimatePresentationConfigByteCounter};
 pub(crate) mod context {
-    use super::super::*;
+    use crate::editor::animate::*;
+use crate::{editor::animate::commands::add_tile, editor::animate::commands::canvas_pointer_down, editor::animate::commands::clear_tiles, editor::animate::commands::copy_prompt, editor::animate::commands::delete_selection, editor::animate::commands::delete_tile, editor::animate::commands::engagement_input, editor::animate::commands::engagement_submit, editor::animate::commands::export_video_from_deck, editor::animate::commands::no_operation, editor::animate::commands::patch_tile_crops, editor::animate::commands::rename_tiles, editor::animate::commands::reset_grid, editor::animate::commands::seed_grid, editor::animate::commands::set_active_example, editor::animate::commands::set_frame, editor::animate::commands::set_source};
+use crate::editor::animate::config::PresentationConfigMutation;
+use crate::editor::animate::modes::main;
+use crate::editor::animate::modes::main::windows::tile_editor;
+use crate::{default_presentation_snapshot, PRESENTATION_DOCUMENT_SCHEMA};
+use semio_framework_plugin::ActionKind;
+use semio_framework_plugin::EditorApp;
+use semio_framework_plugin::Effect;
+use semio_framework_plugin::Fault;
+use semio_framework_plugin::HierarchyProvider;
+use semio_framework_plugin::Media;
+use semio_framework_plugin::MediaPayload;
     use semio_framework_plugin::artifact_app_laws::{close_registered_fixture_app, meta, new_app_with_registry_and_members, settle_registered_typed_operation};
     use semio_framework_plugin::{EditorApp, Effect, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
 
@@ -118,13 +232,14 @@ pub(crate) mod context {
     }
 }
 
-use super::*;
+use crate::editor::animate::*;
+use crate::editor::animate::support::*;
 
 //#region 🧪️RetainedCommandEnvelope
 #[test]
 fn retained_command_fixture_matches_exact_routes_and_serde_json_boundaries() {
     use store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory as _;
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧫️retained-command-limits/🔣️.json")).expect("language-neutral retained fixture");
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../🧪️tests/🧫️fixtures/🧫️retained-command-limits/🔣️.json")).expect("language-neutral retained fixture");
     let migrated: Vec<&str> = fixture["routes"].as_array().expect("routes").iter().filter(|row| row["disposition"] == "Migrated").map(|row| row["id"].as_str().expect("route id")).collect();
     assert_eq!(migrated, ANIMATE_PRESENTATION_RETAINED_TOOL_IDS);
     assert_eq!(ANIMATE_PRESENTATION_RETAINED_PUBLICATION_CONTRACTS.len(), migrated.len());
@@ -445,10 +560,10 @@ async fn optional_field_rows_keep_their_pre_migration_bytes() {
 /// 🔢️ The declared `PresentationCommand` row count. It was 18 while a `setLocale` row existed; the
 /// locale moved to the window config and the row was dropped, so the count belongs in ONE place that
 /// both the uniqueness law and the wire-keyword table read.
-pub(super) const PRESENTATION_COMMAND_ROW_COUNT: usize = 17;
+pub(crate) const PRESENTATION_COMMAND_ROW_COUNT: usize = 17;
 
 /// 🧾️ One representative value per row, in declaration (= binary ordinal) order.
-pub(super) fn every_command() -> Vec<PresentationCommand> {
+pub(crate) fn every_command() -> Vec<PresentationCommand> {
     vec![
         PresentationCommand::SeedGrid(seed_grid::SeedGrid { rows: 2, columns: 3 }),
         PresentationCommand::AddTile(add_tile::AddTile { crop: Some(crate::FigureTileFrame { x: 0.1, y: 0.1, width: 0.2, height: 0.2 }) }),

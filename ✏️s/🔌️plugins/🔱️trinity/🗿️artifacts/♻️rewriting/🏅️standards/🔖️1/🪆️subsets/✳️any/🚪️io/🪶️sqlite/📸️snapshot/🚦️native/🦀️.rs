@@ -1,5 +1,5 @@
 //! 🛬️ Rewriting preserves its original declared envelope and record inside the actual receiving frame.
-use crate::RewritingSnapshot;
+use crate::standards::v1::subsets::any::schema::snapshot::RewritingSnapshot;
 use semio_framework_os_kernel::{NativeSnapshotDecodeOwner,sqlite_snapshot::SqliteSnapshotControl};
 use semio_framework_value::ValueError;
 pub(super) fn decode(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut NativeSnapshotDecodeOwner<'_, '_>)->Result<RewritingSnapshot,ValueError>{

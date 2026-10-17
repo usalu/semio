@@ -24,6 +24,10 @@ type gisGis3dPresenceGuardSizeBounds = { readonly minItems?: number; readonly ma
 
 export const gisGis3dPresenceGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : gisGis3dPresenceGuardReject(at, "value is not an object");
+export const gisGis3dPresenceGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) gisGis3dPresenceGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const gisGis3dPresenceGuardArray = (value: unknown, at: string, bounds: gisGis3dPresenceGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return gisGis3dPresenceGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) gisGis3dPresenceGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -54,7 +58,7 @@ export const gisGis3dPresenceGuardConstant = <T extends string | number | boolea
 //#endregion 🚪️Parsers
 
 export function parseGis3dPresence(value: unknown, at = "$"): Gis3dPresence {
-  const row = gisGis3dPresenceGuardObject(value, at);
+  const row = gisGis3dPresenceGuardClosed(gisGis3dPresenceGuardObject(value, at), at, ["cameraJson", "selectedIds"]);
   return {
     cameraJson: gisGis3dPresenceGuardString(row["cameraJson"], `${at}.cameraJson`),
     selectedIds: gisGis3dPresenceGuardArray(row["selectedIds"], `${at}.selectedIds`).map((item, index) => gisGis3dPresenceGuardString(item, `${at}.selectedIds[${index}]`)),

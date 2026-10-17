@@ -1,4 +1,9 @@
-use super::*;
+use crate::ShootingSnapshot;
+#[allow(unused_imports)]
+use schema::ArtifactSchema;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::topology::compute_shooting_topology;
+use crate::standards::v1::subsets::any::schema::inferences::*;
 use crate::{ShootingCamera, ShootingSavedCamera, ShootingShot};
 use protocol::Inference;
 

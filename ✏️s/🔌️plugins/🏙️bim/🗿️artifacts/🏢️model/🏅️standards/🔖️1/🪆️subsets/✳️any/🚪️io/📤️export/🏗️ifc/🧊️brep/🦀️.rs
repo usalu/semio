@@ -1,7 +1,7 @@
 //! 🧊️ Triangle meshes as bodies, for elements without an extruded-profile form (roofs, stairs, railings, sloped slabs, curtain-wall parts): an `IfcFacetedBrep` in IFC 2x3, an `IfcTriangulatedFaceSet`
 //! (representation type `Tessellation`) in IFC4, whose point list and index list replace the three entities per triangle of the brep.
 
-use super::writer::{flag, int, list, real, refs, rf, unset, Ifc, Schema};
+use crate::standards::v1::subsets::any::io::export::ifc::writer::{flag, int, list, real, refs, rf, unset, Ifc, Schema};
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::{ElementSolid, SolidGroup};
 use semio_framework_geometry::mesh::TriMesh;
 

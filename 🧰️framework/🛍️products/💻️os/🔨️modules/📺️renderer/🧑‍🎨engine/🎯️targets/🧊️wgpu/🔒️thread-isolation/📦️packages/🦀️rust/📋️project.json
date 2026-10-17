@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/os-renderer-wgpu-thread-isolation-rs",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

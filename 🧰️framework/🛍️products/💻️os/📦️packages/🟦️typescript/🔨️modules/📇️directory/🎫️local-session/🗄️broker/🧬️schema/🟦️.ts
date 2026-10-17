@@ -1,0 +1,3 @@
+/** 🧬️ Public entry `@semio-tech/framework-os/modules/directory/local-session/broker/schema`: the explicit surface that importers outside the module use. */
+export { LOCAL_SESSION_BROKER_FILE, LOCAL_SESSION_BROKER_REQUEST_MAX_BYTES, LOCAL_SESSION_BROKER_SCHEMA, LOCAL_SESSION_SCHEMA, isLocalSessionProfileIdV1, isLocalSessionTokenV1, parseLocalSessionBrokerRecordV1, parseLocalSessionRequestV1, parseLocalSessionV1 } from "../../../../../../../🔨️modules/📇️directory/🎫️local-session/🗄️broker/🧬️schema/🟦️.ts";
+export type { LocalSessionBrokerRecordV1, LocalSessionV1 } from "../../../../../../../🔨️modules/📇️directory/🎫️local-session/🗄️broker/🧬️schema/🟦️.ts";

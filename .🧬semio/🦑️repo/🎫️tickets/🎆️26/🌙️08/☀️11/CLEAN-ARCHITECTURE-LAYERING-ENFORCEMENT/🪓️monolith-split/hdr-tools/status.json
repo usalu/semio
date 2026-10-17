@@ -1,0 +1,1422 @@
+{
+ "semio-s-artifact-stdio-las-schema": {
+  "state": "DONE",
+  "after": "0.313 (lib 10/42026/477; test 10/42026/477)",
+  "note": "descriptor facets served at run time (new leaves --rust + default reader install)"
+ },
+ "semio-s-artifact-stdio-ply-schema": {
+  "state": "DONE",
+  "after": "0.406 (lib 10/38545/445; test 13/43148/535)",
+  "note": "descriptor facets served at run time (new leaves --rust + default reader install)"
+ },
+ "semio-s-artifact-stdio-step-base": {
+  "state": "DONE",
+  "after": "0.500 (lib 13/42638/526; test 16/54562/662)",
+  "note": "descriptor facets served at run time (new leaves --rust + default reader install)"
+ },
+ "semio-s-artifact-procedural-2d-model": {
+  "state": "DONE",
+  "after": "0.500 (lib 11/118910/1263; test 15/131203/1519)",
+  "note": "descriptor facets served at run time (new leaves --rust + default reader install)"
+ },
+ "semio-s-artifact-fem-2d": {
+  "state": "DONE",
+  "after": "0.356 (lib 8/68613/257; test 10/93361/356)",
+  "note": "descriptor facets served at run time (new leaves --rust + default reader install)"
+ },
+ "semio-s-artifact-fem-3d": {
+  "state": "DONE",
+  "after": "0.338 (lib 8/62915/255; test 10/88554/353)",
+  "note": "descriptor facets served at run time (new leaves --rust + default reader install)"
+ },
+ "semio-s-artifact-stdio-txt-schema": {
+  "state": "DONE",
+  "after": "0.500 (lib 15/67759/731; test 16/83307/811)",
+  "note": "descriptor facets served at run time (new leaves --rust + default reader install)"
+ },
+ "semio-s-artifact-stdio-dxf-schema": {
+  "state": "DONE",
+  "after": "0.188 (lib 6/46004/222; test 6/46004/222)",
+  "note": "descriptor facets served at run time (new leaves --rust + default reader install)"
+ },
+ "semio-s-artifact-stdio-gif-schema-2": {
+  "state": "DONE",
+  "after": "0.593 (lib 11/125152/2034; test 14/145752/2371)",
+  "note": "descriptor facets served at run time (new leaves --rust + default reader install)"
+ },
+ "semio-s-artifact-stdio-deflate-schema": {
+  "state": "DONE",
+  "after": "0.438 (lib 9/27749/309; test 14/60291/720)",
+  "note": "descriptor facets served at run time (new leaves --rust + default reader install)"
+ },
+ "semio-s-artifact-stdio-ply-inferences": {
+  "state": "DONE",
+  "after": "0.875 (lib 27/200125/2919; test 28/201465/2998)",
+  "note": "inference descriptor facets served at run time (new leaves --rust, inference export added to the tool) + default reader install"
+ },
+ "semio-s-artifact-mathematical-equation-inferences": {
+  "state": "DONE",
+  "after": "0.813 (lib 21/70780/1361; test 26/87317/1663)",
+  "note": "inference descriptor facets served at run time (new leaves --rust, inference export added to the tool) + default reader install"
+ },
+ "semio-s-artifact-wfc-grid2d-inferences": {
+  "state": "DONE",
+  "after": "0.813 (lib 20/107708/2029; test 26/159132/2841)",
+  "note": "inference descriptor facets served at run time (new leaves --rust, inference export added to the tool) + default reader install"
+ },
+ "semio-s-artifact-gis-gisterrain-inferences": {
+  "state": "DONE",
+  "after": "0.813 (lib 23/92714/1163; test 26/98489/1273)",
+  "note": "inference descriptor facets served at run time (new leaves --rust, inference export added to the tool) + default reader install"
+ },
+ "semio-s-artifact-vcs-vcs-inferences": {
+  "state": "DONE",
+  "after": "0.813 (lib 25/56627/948; test 26/57256/957)",
+  "note": "inference descriptor facets served at run time (new leaves --rust, inference export added to the tool) + default reader install"
+ },
+ "semio-s-artifact-shooting-shooting-inferences": {
+  "state": "DONE",
+  "after": "0.813 (lib 25/94570/1357; test 26/98139/1416)",
+  "note": "inference descriptor facets served at run time (new leaves --rust, inference export added to the tool) + default reader install"
+ },
+ "semio-s-artifact-playbook-playbook-inferences": {
+  "state": "DONE",
+  "after": "0.813 (lib 19/132463/2169; test 26/147675/2485)",
+  "note": "inference descriptor facets served at run time (new leaves --rust, inference export added to the tool) + default reader install"
+ },
+ "semio-s-artifact-imperative-procedure-inferences": {
+  "state": "DONE",
+  "after": "0.813 (lib 19/75428/1427; test 26/87379/1691)",
+  "note": "inference descriptor facets served at run time (new leaves --rust, inference export added to the tool) + default reader install"
+ },
+ "semio-s-artifact-dag-dag-inferences": {
+  "state": "DONE",
+  "after": "0.813 (lib 24/61993/1033; test 26/65696/1098)",
+  "note": "inference descriptor facets served at run time (new leaves --rust, inference export added to the tool) + default reader install"
+ },
+ "semio-s-artifact-stdio-zip-inferences": {
+  "state": "DONE",
+  "after": "0.813 (lib 22/80420/990; test 26/86719/1120)",
+  "note": "inference descriptor facets served at run time (new leaves --rust, inference export added to the tool) + default reader install"
+ },
+ "semio-s-artifact-stdio-bcf-inferences": {
+  "state": "DONE",
+  "after": "0.813 (lib 24/181081/2847; test 26/184700/2931)",
+  "note": "inference descriptor facets served at run time (new leaves --rust, inference export added to the tool) + default reader install"
+ },
+ "semio-s-artifact-stdio-xml-inferences": {
+  "state": "DONE",
+  "after": "0.813 (lib 25/31835/495; test 26/32038/503)",
+  "note": "inference descriptor facets served at run time (new leaves --rust, inference export added to the tool) + default reader install"
+ },
+ "semio-s-artifact-stdio-dxf-inferences": {
+  "state": "DONE",
+  "after": "0.813 (lib 21/37608/704; test 26/51738/928)",
+  "note": "inference descriptor facets served at run time (new leaves --rust, inference export added to the tool) + default reader install"
+ },
+ "semio-s-artifact-stdio-tiff-inferences": {
+  "state": "DONE",
+  "after": "0.813 (lib 19/130290/1608; test 26/159405/1897)",
+  "note": "inference descriptor facets served at run time (new leaves --rust, inference export added to the tool) + default reader install"
+ },
+ "semio-s-artifact-stdio-json-schema": {
+  "state": "DONE",
+  "after": "0.860 (lib 23/218027/2847; test 26/225346/3018)",
+  "note": "inference descriptor facets served at run time (new leaves --rust, inference export added to the tool) + default reader install"
+ },
+ "semio-s-artifact-space-home-inferences": {
+  "state": "DONE",
+  "after": "0.813 (lib 25/39337/658; test 26/40020/674)",
+  "note": "inference descriptor facets served at run time (new leaves --rust, inference export added to the tool) + default reader install"
+ },
+ "semio-s-artifact-procedural-3d-editor-commands": {
+  "state": "DONE",
+  "after": "0.500 (lib 16/25517/436; test 16/25517/436)",
+  "note": "family split (famsplit.py): leaves moved to a sibling part crate, old crate re-exports them with an explicit pub use; part registered in the artifact workspace (member, dependency table) and the owner rows"
+ },
+ "semio-s-artifact-stdio-pptx-base-model": {
+  "state": "PARTIAL",
+  "after": "0.969 (lib 30/155140/2770; test 31/156317/2819)",
+  "note": "embedded test fixtures read at run time (fixt.ts / fixturesToRuntime)"
+ },
+ "semio-s-artifact-stdio-semio-table-mutations": {
+  "state": "PARTIAL",
+  "after": "0.969 (lib 30/63218/1126; test 31/74231/1346)",
+  "note": "embedded test fixtures read at run time (fixt.ts / fixturesToRuntime) | fixtures read at run time through the shared test-fixtures reader macros (fixt.ts, dev-dependency added)"
+ },
+ "semio-s-artifact-stdio-semio-audio-mutations": {
+  "state": "PARTIAL",
+  "after": "0.969 (lib 30/49889/947; test 31/56882/1097)",
+  "note": "embedded test fixtures read at run time (fixt.ts / fixturesToRuntime)"
+ },
+ "semio-s-artifact-stdio-semio": {
+  "state": "DONE",
+  "after": "0.722 (lib 5/86172/636; test 14/189305/1342)",
+  "note": "18 hoisted inverse-law tests moved to the new companion test crate semio-s-artifact-stdio-semio-inverts-tests (mkcomp2.py): owner crate named by its own path, extern alias, dev-dependencies, run-time fixture paths rebased to the new manifest directory, test-fixtures dev-dependency"
+ },
+ "semio-framework-value-intrinsic": {
+  "state": "PARTIAL",
+  "after": "0.936 (lib 16/158380/2640; test 22/237122/3745)",
+  "note": "embedded test fixtures read at run time (fixt.ts / fixturesToRuntime)"
+ },
+ "semio-framework-dsl": {
+  "state": "DONE",
+  "after": "0.639 (lib 7/81852/1735; test 10/125897/2555)",
+  "note": "grammar syntax layer (model, lexer, parsers; 1,456 lines) carved into new crate semio-framework-dsl-syntax (registered: member, owner row, 6 launch routes); prim_fixed_width moved to the model; GKind/GToken/lex/is_protocol_source widened to pub; pos oracle hdr-dsl lib/test NEW 0 GONE 0, negative control caught (E0603)"
+ },
+ "semio-framework-job": {
+  "state": "PARTIAL",
+  "after": "0.991 (lib 23/223519/2367; test 27/259692/2647)",
+  "note": "embedded test fixtures read at run time (fixt.ts / fixturesToRuntime)"
+ },
+ "semio-s-artifact-stdio-mp3-test-oracle": {
+  "state": "DONE",
+  "after": "0.158 (lib 2/29041/503; test 3/36977/633)",
+  "note": "embedded test fixtures read at run time (fixt.ts / fixturesToRuntime)"
+ },
+ "semio-s-artifact-procedural-3d-editor": {
+  "state": "PARTIAL",
+  "after": "0.949 (lib 4/217197/3050; test 6/248820/3611)",
+  "note": "embedded test fixtures read at run time (fixt.ts / fixturesToRuntime)"
+ },
+ "semio-s-artifact-procedural-3d-io-text": {
+  "state": "DONE",
+  "after": "0.844 (lib 23/106747/2031; test 27/130346/2368)",
+  "note": "embedded test fixtures read at run time (fixt.ts / fixturesToRuntime)"
+ },
+ "semio-s-artifact-stdio-mp4-tests": {
+  "state": "DONE",
+  "after": "0.746 (lib 7/141464/2582; test 10/165852/2984)",
+  "note": "embedded test fixtures read at run time (fixt.ts / fixturesToRuntime)"
+ },
+ "semio-s-artifact-stdio-xlsx-transitional": {
+  "state": "PARTIAL",
+  "after": "0.938 (lib 22/84337/1487; test 30/107312/1849)",
+  "note": "embedded test fixtures read at run time (fixt.ts / fixturesToRuntime)"
+ },
+ "semio-s-artifact-stdio-docx-base": {
+  "state": "DONE",
+  "after": "0.781 (lib 20/111008/1872; test 25/162817/2577)",
+  "note": "embedded test fixtures read at run time (fixt.ts / fixturesToRuntime)"
+ },
+ "semio-s-artifact-stdio-jpg-mutations": {
+  "state": "DONE",
+  "after": "0.875 (lib 26/101572/1909; test 28/124660/2105)",
+  "note": "embedded test fixtures read at run time (fixt.ts / fixturesToRuntime)"
+ },
+ "semio-s-artifact-stdio-semio-text-mutations": {
+  "state": "PARTIAL",
+  "after": "0.938 (lib 27/55082/998; test 30/64981/1199)",
+  "note": "embedded test fixtures read at run time (fixt.ts / fixturesToRuntime) | fixtures read at run time through the shared test-fixtures reader macros (fixt.ts, dev-dependency added)"
+ },
+ "semio-framework-value-retirement": {
+  "state": "DONE",
+  "after": "0.625 (lib 12/93885/1300; test 20/136944/1552)",
+  "note": "embedded test fixtures read at run time (fixt.ts / fixturesToRuntime)"
+ },
+ "semio-framework-io-sqlite-snapshot-tests": {
+  "state": "DONE",
+  "after": "0.524 (lib 1/2813/0; test 12/137334/799)",
+  "note": "embedded test fixtures read at run time (fixt.ts / fixturesToRuntime)"
+ },
+ "semio-framework-os-vcs": {
+  "state": "DONE",
+  "after": "0.813 (lib 21/153633/2568; test 26/196245/3106)",
+  "note": "embedded test fixtures read at run time (fixt.ts / fixturesToRuntime)"
+ },
+ "semio-framework-job-worker": {
+  "state": "PARTIAL",
+  "after": "0.909 (lib 8/123533/1617; test 16/238318/2605)",
+  "note": "embedded test fixtures read at run time (fixt.ts / fixturesToRuntime) | fixtures read at run time through the shared test-fixtures reader macros (fixt.ts, dev-dependency added)"
+ },
+ "semio-framework-plugin-instance-app": {
+  "state": "PARTIAL",
+  "after": "0.957 (lib 9/241072/3057; test 10/250865/3171)",
+  "note": "embedded test fixtures read at run time (fixt.ts / fixturesToRuntime)"
+ },
+ "semio-framework-os-kernel-db-sync": {
+  "state": "PARTIAL",
+  "after": "0.964 (lib 1/141733/2666; test 2/205392/3855)",
+  "note": "embedded test fixtures read at run time (fixt.ts / fixturesToRuntime)"
+ },
+ "semio-framework-ui-prepared": {
+  "state": "PARTIAL",
+  "after": "0.958 (lib 1/144127/2584; test 4/215214/3832)",
+  "note": "embedded test fixtures read at run time (fixt.ts / fixturesToRuntime)"
+ },
+ "semio-framework-3d-brep-construction": {
+  "state": "PARTIAL",
+  "after": "0.958 (lib 6/155549/2870; test 14/210117/3832)",
+  "note": "embedded test fixtures read at run time (fixt.ts / fixturesToRuntime)"
+ },
+ "semio-hub-directory-laws": {
+  "state": "DONE",
+  "after": "0.783 (lib 1/719/12; test 14/205295/2185)",
+  "note": "famsplit.py part crate (hub directory laws)"
+ },
+ "semio-framework-ui-retained-tree": {
+  "state": "DONE",
+  "after": "0.622 (lib 2/108503/1695; test 3/136759/2489)",
+  "note": "module tree (1,194 lines) carved into new crate semio-framework-ui-retained-tree-tree by peel2.py (parent keeps pub use ... as tree; module-root restricted items widened to pub); pos hdr-retained lib/test NEW 0 GONE 0"
+ },
+ "semio-framework-ui-contract-values": {
+  "state": "PARTIAL",
+  "after": "0.949 (lib 6/126908/2931; test 13/169495/3797)",
+  "note": "embedded test fixtures read at run time (fixt.ts / fixturesToRuntime)"
+ },
+ "semio-s-artifact-stdio-dwg-snapshot": {
+  "state": "DONE",
+  "after": "0.816 (lib 15/131330/1613; test 19/213813/2255)",
+  "note": "embedded test fixtures read at run time (fixt.ts / fixturesToRuntime)"
+ },
+ "semio-framework-os-renderer-wgpu-dock": {
+  "state": "PARTIAL",
+  "after": "0.944 (lib 2/109951/2158; test 7/203725/3777)",
+  "note": "embedded test fixtures read at run time (fixt.ts / fixturesToRuntime)"
+ },
+ "semio-s-artifact-fem-3d-mutations": {
+  "state": "DONE",
+  "after": "0.576 (lib 8/24759/410; test 16/150979/1921)",
+  "note": "embedded test fixtures read at run time (fixt.ts / fixturesToRuntime)"
+ },
+ "semio-s-artifact-procedural-2d-editor": {
+  "state": "DONE",
+  "after": "0.767 (lib 11/162305/2543; test 14/192555/3068)",
+  "note": "the editor-routes integration target (pure mount list, 18 case mounts) split into two sibling targets (splittarget.py); [[test]] stanza added"
+ },
+ "semio-s-artifact-norm-en1996-editor": {
+  "state": "PARTIAL",
+  "after": "0.906 (lib 18/56743/1029; test 29/98688/1717)",
+  "note": "embedded test fixtures read at run time (fixt.ts / fixturesToRuntime)"
+ },
+ "semio-s-artifact-stdio-step-snapshot": {
+  "state": "DONE",
+  "after": "0.875 (lib 22/198933/2759; test 28/221809/3129)",
+  "note": "embedded test fixtures read at run time (fixt.ts / fixturesToRuntime)"
+ },
+ "semio-framework-value-native-decoding": {
+  "state": "DONE",
+  "after": "0.500 (lib 9/44279/382; test 16/118334/850)",
+  "note": "embedded test fixtures read at run time (fixt.ts / fixturesToRuntime)"
+ },
+ "semio-framework-plugin-testing-fixtures": {
+  "state": "DONE",
+  "after": "0.813 (lib 19/64243/955; test 26/83194/1259)",
+  "note": "embedded test fixtures read at run time (fixt.ts / fixturesToRuntime)"
+ },
+ "semio-framework-ui-contract": {
+  "state": "PARTIAL",
+  "after": "0.937 (lib 16/136838/2968; test 22/174144/3749)",
+  "note": "embedded test fixtures read at run time (fixt.ts / fixturesToRuntime)"
+ },
+ "semio-s-artifact-fem-2d-mutations": {
+  "state": "DONE",
+  "after": "0.617 (lib 8/23303/412; test 16/161615/1975)",
+  "note": "embedded test fixtures read at run time (fixt.ts / fixturesToRuntime)"
+ },
+ "semio-framework-replication-error": {
+  "state": "DONE",
+  "after": "0.333 (lib 2/8472/133; test 4/21685/264)",
+  "note": "embedded test fixtures read at run time (fixt.ts / fixturesToRuntime)"
+ },
+ "semio-s-artifact-procedural-3d-preview-eval": {
+  "state": "DONE",
+  "after": "0.724 (lib 8/163349/2425; test 9/189732/2774)",
+  "note": "embedded test fixtures read at run time (fixt.ts / fixturesToRuntime)"
+ },
+ "semio-framework-os-renderer-wgpu-engine-attach-tests": {
+  "state": "DONE",
+  "after": "0.274 (lib 1/2441/0; test 3/57234/1097)",
+  "note": "famsplit.py part crate (attach tests)"
+ },
+ "semio-framework-os-kernel-db-io-driver": {
+  "state": "PARTIAL",
+  "after": "0.923 (lib 1/91649/1761; test 3/188087/3693)",
+  "note": "embedded test fixtures read at run time (fixt.ts / fixturesToRuntime)"
+ },
+ "semio-s-artifact-process-process3d-model": {
+  "state": "PARTIAL",
+  "after": "0.922 (lib 24/232302/3238; test 25/241775/3419)",
+  "note": "embedded test fixtures read at run time (fixt.ts / fixturesToRuntime)"
+ },
+ "semio-framework-plugin-interpreter": {
+  "state": "PARTIAL",
+  "after": "0.922 (lib 3/175356/3293; test 6/216295/3687)",
+  "note": "embedded test fixtures read at run time (fixt.ts / fixturesToRuntime)"
+ },
+ "semio-s-artifact-stdio-gltf-mutations-mut-any-4": {
+  "state": "DONE",
+  "after": "0.071 (lib 2/17370/284; test 2/17370/285)",
+  "note": "embedded test fixtures read at run time (fixt.ts / fixturesToRuntime)"
+ },
+ "semio-framework-value-derive": {
+  "state": "PARTIAL",
+  "after": "0.919 (lib 9/227493/3551; test 11/237023/3676)",
+  "note": "embedded test fixtures read at run time (fixt.ts / fixturesToRuntime) | fixtures read at run time through the shared test-fixtures reader macros (fixt.ts, dev-dependency added)"
+ },
+ "semio-framework-os-kernel-db-io-core": {
+  "state": "PARTIAL",
+  "after": "0.918 (lib 1/145294/3316; test 4/161560/3671)",
+  "note": "embedded test fixtures read at run time (fixt.ts / fixturesToRuntime)"
+ },
+ "semio-framework-os-kernel": {
+  "state": "DONE",
+  "after": "0.898 (lib 5/111356/1392; test 13/235360/2226)",
+  "note": "embedded test fixtures read at run time (fixt.ts / fixturesToRuntime) | fixtures read at run time through the shared test-fixtures reader macros (fixt.ts, dev-dependency added)"
+ },
+ "semio-framework-os-infinite-world-model": {
+  "state": "PARTIAL",
+  "after": "0.912 (lib 7/151082/3299; test 8/167655/3647)",
+  "note": "embedded test fixtures read at run time (fixt.ts / fixturesToRuntime)"
+ },
+ "semio-framework-os-renderer-wgpu-shell-tests-input-1": {
+  "state": "PARTIAL",
+  "after": "0.911 (lib 1/4540/0; test 23/238816/2593)",
+  "note": "embedded test fixtures read at run time (fixt.ts / fixturesToRuntime)"
+ },
+ "semio-s-artifact-fem-3d-editor": {
+  "state": "DONE",
+  "after": "0.690 (lib 19/151378/2202; test 16/180928/2163)",
+  "note": "the editor_app integration target (pure mount list, 25 case mounts) split into two sibling targets (splittarget.py); [[test]] stanza added"
+ },
+ "semio-framework-plugin-decl-views": {
+  "state": "PARTIAL",
+  "after": "0.909 (lib 13/215589/3445; test 18/238197/3598)",
+  "note": "embedded test fixtures read at run time (fixt.ts / fixturesToRuntime)"
+ },
+ "semio-framework-pets-contract": {
+  "state": "PARTIAL",
+  "after": "0.907 (lib 8/114570/2743; test 11/172381/3629)",
+  "note": "embedded test fixtures read at run time (fixt.ts / fixturesToRuntime)"
+ },
+ "semio-s-artifact-vcs-vcs-tests": {
+  "state": "DONE",
+  "after": "0.844 (lib 15/43676/728; test 27/65744/1133)",
+  "note": "embedded test fixtures read at run time (fixt.ts / fixturesToRuntime)"
+ },
+ "semio-s-artifact-norm-din18599-editor": {
+  "state": "PARTIAL",
+  "after": "0.906 (lib 18/61640/1083; test 29/88171/1576)",
+  "note": "embedded test fixtures read at run time (fixt.ts / fixturesToRuntime)"
+ },
+ "semio-s-artifact-stdio-svg-mutations-2": {
+  "state": "DONE",
+  "after": "0.875 (lib 20/99279/1671; test 28/145331/2410)",
+  "note": "embedded test fixtures read at run time (fixt.ts / fixturesToRuntime)"
+ },
+ "semio-s-artifact-stdio-csv-mutations": {
+  "state": "DONE",
+  "after": "0.875 (lib 22/97775/1829; test 28/135259/2504)",
+  "note": "embedded test fixtures read at run time (fixt.ts / fixturesToRuntime)"
+ },
+ "semio-s-artifact-stdio-docx-transitional": {
+  "state": "DONE",
+  "after": "0.844 (lib 19/82952/1457; test 27/111557/1921)",
+  "note": "embedded test fixtures read at run time (fixt.ts / fixturesToRuntime)"
+ },
+ "semio-s-artifact-stdio-pptx-transitional": {
+  "state": "DONE",
+  "after": "0.875 (lib 20/78882/1405; test 28/105063/1825)",
+  "note": "embedded test fixtures read at run time (fixt.ts / fixturesToRuntime)"
+ },
+ "semio-s-artifact-stdio-txt-tests": {
+  "state": "DONE",
+  "after": "0.719 (lib 11/79983/1337; test 23/147901/2317)",
+  "note": "embedded test fixtures read at run time (fixt.ts / fixturesToRuntime)"
+ },
+ "semio-s-artifact-stdio-json-mutations": {
+  "state": "DONE",
+  "after": "0.844 (lib 22/100912/1959; test 27/143445/2709)",
+  "note": "embedded test fixtures read at run time (fixt.ts / fixturesToRuntime)"
+ },
+ "semio-s-artifact-stdio-semio-video-mutations": {
+  "state": "DONE",
+  "after": "0.875 (lib 27/51251/962; test 28/69591/1268)",
+  "note": "embedded test fixtures read at run time (fixt.ts / fixturesToRuntime)"
+ },
+ "semio-s-artifact-stdio-bmp-mutation-regressions": {
+  "state": "DONE",
+  "after": "0.438 (lib 8/13679/301; test 14/34650/638)",
+  "note": "embedded test fixtures read at run time (fixt.ts / fixturesToRuntime)"
+ },
+ "semio-framework-trace": {
+  "state": "DONE",
+  "after": "0.759 (lib 13/94361/2079; test 20/140770/3035)",
+  "note": "embedded test fixtures read at run time (fixt.ts / fixturesToRuntime)"
+ },
+ "semio-framework-dsl-record": {
+  "note": "fixtures served at run time (20 reads, sha256 in hdr-fixt-dsl-record.log) and 4 public-API tests became [[test]] targets; pos hdr-dslrecord lib NEW 0 GONE 0, test NEW 0 GONE 88 (moved tests)",
+  "after": "0.863 (lib 8/113307/1477; test 14/226141/2799)",
+  "state": "DONE"
+ },
+ "semio-s-artifact-block-2d-mut-handles": {
+  "note": "family split (famsplit.py): leaves moved to a sibling part crate, old crate re-exports them with an explicit pub use; part registered in the artifact workspace (member, dependency table) and the owner rows",
+  "after": "0.500 (lib 16/21961/423; test 16/21961/423)",
+  "state": "DONE"
+ },
+ "semio-framework-dsl-syntax": {
+  "note": "",
+  "after": "0.364 (lib 4/65091/1456; test 4/65091/1456)",
+  "state": "DONE"
+ },
+ "semio-s-artifact-block-2d-mut-handles-2": {
+  "note": "family split (famsplit.py): leaves moved to a sibling part crate, old crate re-exports them with an explicit pub use; part registered in the artifact workspace (member, dependency table) and the owner rows (new crate)",
+  "after": "0.500 (lib 16/21825/420; test 16/21825/420)",
+  "state": "DONE"
+ },
+ "semio-s-artifact-block-3d-mut-representations": {
+  "note": "family split (famsplit.py): leaves moved to a sibling part crate, old crate re-exports them with an explicit pub use; part registered in the artifact workspace (member, dependency table) and the owner rows",
+  "after": "0.500 (lib 16/24398/442; test 16/24398/442)",
+  "state": "DONE"
+ },
+ "semio-s-artifact-block-3d-mut-representations-2": {
+  "note": "family split (famsplit.py): leaves moved to a sibling part crate, old crate re-exports them with an explicit pub use; part registered in the artifact workspace (member, dependency table) and the owner rows (new crate)",
+  "after": "0.500 (lib 16/24094/444; test 16/24094/444)",
+  "state": "DONE"
+ },
+ "semio-s-artifact-block-5d-mut-representations": {
+  "note": "family split (famsplit.py): leaves moved to a sibling part crate, old crate re-exports them with an explicit pub use; part registered in the artifact workspace (member, dependency table) and the owner rows",
+  "after": "0.500 (lib 16/24398/442; test 16/24398/442)",
+  "state": "DONE"
+ },
+ "semio-s-artifact-block-5d-mut-representations-2": {
+  "note": "family split (famsplit.py): leaves moved to a sibling part crate, old crate re-exports them with an explicit pub use; part registered in the artifact workspace (member, dependency table) and the owner rows (new crate)",
+  "after": "0.500 (lib 16/24094/444; test 16/24094/444)",
+  "state": "DONE"
+ },
+ "semio-s-artifact-fem-2d-load": {
+  "note": "family split (famsplit.py): leaves moved to a sibling part crate, old crate re-exports them with an explicit pub use; part registered in the artifact workspace (member, dependency table) and the owner rows",
+  "after": "0.500 (lib 16/26939/500; test 16/26939/500)",
+  "state": "DONE"
+ },
+ "semio-s-artifact-fem-2d-load-2": {
+  "note": "family split (famsplit.py): leaves moved to a sibling part crate, old crate re-exports them with an explicit pub use; part registered in the artifact workspace (member, dependency table) and the owner rows (new crate)",
+  "after": "0.500 (lib 16/31192/565; test 16/31192/565)",
+  "state": "DONE"
+ },
+ "semio-s-artifact-fem-3d-load": {
+  "note": "family split (famsplit.py): leaves moved to a sibling part crate, old crate re-exports them with an explicit pub use; part registered in the artifact workspace (member, dependency table) and the owner rows",
+  "after": "0.500 (lib 16/26366/492; test 16/26366/492)",
+  "state": "DONE"
+ },
+ "semio-s-artifact-fem-3d-load-2": {
+  "note": "family split (famsplit.py): leaves moved to a sibling part crate, old crate re-exports them with an explicit pub use; part registered in the artifact workspace (member, dependency table) and the owner rows (new crate)",
+  "after": "0.500 (lib 16/31205/562; test 16/31205/562)",
+  "state": "DONE"
+ },
+ "semio-s-artifact-norm-din4108-mut-elements": {
+  "note": "family split (famsplit.py): leaves moved to a sibling part crate, old crate re-exports them with an explicit pub use; part registered in the artifact workspace (member, dependency table) and the owner rows",
+  "after": "0.500 (lib 16/18773/345; test 16/18773/345)",
+  "state": "DONE"
+ },
+ "semio-s-artifact-norm-din4108-mut-elements-2": {
+  "note": "family split (famsplit.py): leaves moved to a sibling part crate, old crate re-exports them with an explicit pub use; part registered in the artifact workspace (member, dependency table) and the owner rows (new crate)",
+  "after": "0.500 (lib 16/18016/348; test 16/18016/348)",
+  "state": "DONE"
+ },
+ "semio-s-artifact-norm-en1991-mut-silos": {
+  "note": "family split (famsplit.py): leaves moved to a sibling part crate, old crate re-exports them with an explicit pub use; part registered in the artifact workspace (member, dependency table) and the owner rows",
+  "after": "0.500 (lib 16/16102/330; test 16/16102/330)",
+  "state": "DONE"
+ },
+ "semio-s-artifact-norm-en1991-mut-silos-2": {
+  "note": "family split (famsplit.py): leaves moved to a sibling part crate, old crate re-exports them with an explicit pub use; part registered in the artifact workspace (member, dependency table) and the owner rows (new crate)",
+  "after": "0.500 (lib 16/15235/328; test 16/15235/328)",
+  "state": "DONE"
+ },
+ "semio-s-artifact-norm-en1991-mut-traffic": {
+  "note": "family split (famsplit.py): leaves moved to a sibling part crate, old crate re-exports them with an explicit pub use; part registered in the artifact workspace (member, dependency table) and the owner rows",
+  "after": "0.500 (lib 16/16298/330; test 16/16298/330)",
+  "state": "DONE"
+ },
+ "semio-s-artifact-norm-en1991-mut-traffic-2": {
+  "note": "family split (famsplit.py): leaves moved to a sibling part crate, old crate re-exports them with an explicit pub use; part registered in the artifact workspace (member, dependency table) and the owner rows (new crate)",
+  "after": "0.500 (lib 16/15908/328; test 16/15908/328)",
+  "state": "DONE"
+ },
+ "semio-s-artifact-norm-en1993-mut-general": {
+  "note": "family split (famsplit.py): leaves moved to a sibling part crate, old crate re-exports them with an explicit pub use; part registered in the artifact workspace (member, dependency table) and the owner rows",
+  "after": "0.406 (lib 13/14000/256; test 13/14000/256)",
+  "state": "DONE"
+ },
+ "semio-s-artifact-norm-en1993-mut-general-2": {
+  "note": "family split (famsplit.py): leaves moved to a sibling part crate, old crate re-exports them with an explicit pub use; part registered in the artifact workspace (member, dependency table) and the owner rows (new crate)",
+  "after": "0.594 (lib 19/21655/359; test 19/21655/359)",
+  "state": "DONE"
+ },
+ "semio-s-artifact-norm-en1995-mut-members": {
+  "note": "family split (famsplit.py): leaves moved to a sibling part crate, old crate re-exports them with an explicit pub use; part registered in the artifact workspace (member, dependency table) and the owner rows",
+  "after": "0.500 (lib 16/17761/276; test 16/17761/276)",
+  "state": "DONE"
+ },
+ "semio-s-artifact-norm-en1995-mut-members-2": {
+  "note": "family split (famsplit.py): leaves moved to a sibling part crate, old crate re-exports them with an explicit pub use; part registered in the artifact workspace (member, dependency table) and the owner rows (new crate)",
+  "after": "0.500 (lib 16/16969/247; test 16/16969/247)",
+  "state": "DONE"
+ },
+ "semio-s-artifact-norm-en1996-mut-loads": {
+  "note": "family split (famsplit.py): leaves moved to a sibling part crate, old crate re-exports them with an explicit pub use; part registered in the artifact workspace (member, dependency table) and the owner rows",
+  "after": "0.500 (lib 16/17917/348; test 16/17917/348)",
+  "state": "DONE"
+ },
+ "semio-s-artifact-norm-en1996-mut-loads-2": {
+  "note": "family split (famsplit.py): leaves moved to a sibling part crate, old crate re-exports them with an explicit pub use; part registered in the artifact workspace (member, dependency table) and the owner rows (new crate)",
+  "after": "0.500 (lib 16/18385/348; test 16/18385/348)",
+  "state": "DONE"
+ },
+ "semio-s-artifact-norm-en1996-mut-walls": {
+  "note": "family split (famsplit.py): leaves moved to a sibling part crate, old crate re-exports them with an explicit pub use; part registered in the artifact workspace (member, dependency table) and the owner rows",
+  "after": "0.500 (lib 16/16321/318; test 16/16321/318)",
+  "state": "DONE"
+ },
+ "semio-s-artifact-norm-en1996-mut-walls-2": {
+  "note": "family split (famsplit.py): leaves moved to a sibling part crate, old crate re-exports them with an explicit pub use; part registered in the artifact workspace (member, dependency table) and the owner rows (new crate)",
+  "after": "0.500 (lib 16/15695/320; test 16/15695/320)",
+  "state": "DONE"
+ },
+ "semio-s-artifact-norm-en1998-mut-buildings": {
+  "note": "family split (famsplit.py): leaves moved to a sibling part crate, old crate re-exports them with an explicit pub use; part registered in the artifact workspace (member, dependency table) and the owner rows",
+  "after": "0.500 (lib 16/18096/373; test 16/18096/373)",
+  "state": "DONE"
+ },
+ "semio-s-artifact-norm-en1998-mut-buildings-2": {
+  "note": "family split (famsplit.py): leaves moved to a sibling part crate, old crate re-exports them with an explicit pub use; part registered in the artifact workspace (member, dependency table) and the owner rows (new crate)",
+  "after": "0.500 (lib 16/19010/384; test 16/19010/384)",
+  "state": "DONE"
+ },
+ "semio-s-artifact-norm-iso16757-mut-products": {
+  "note": "family split (famsplit.py): leaves moved to a sibling part crate, old crate re-exports them with an explicit pub use; part registered in the artifact workspace (member, dependency table) and the owner rows",
+  "after": "0.500 (lib 16/21297/419; test 16/21297/419)",
+  "state": "DONE"
+ },
+ "semio-s-artifact-norm-iso16757-mut-products-2": {
+  "note": "family split (famsplit.py): leaves moved to a sibling part crate, old crate re-exports them with an explicit pub use; part registered in the artifact workspace (member, dependency table) and the owner rows (new crate)",
+  "after": "0.500 (lib 16/20707/411; test 16/20707/411)",
+  "state": "DONE"
+ },
+ "semio-s-artifact-norm-vdi3805-examples-failing": {
+  "note": "family split (famsplit.py): leaves moved to a sibling part crate, old crate re-exports them with an explicit pub use; part registered in the artifact workspace (member, dependency table) and the owner rows",
+  "after": "0.500 (lib 11/12440/110; test 16/15739/185)",
+  "state": "DONE"
+ },
+ "semio-s-artifact-norm-vdi3805-examples-failing-2": {
+  "note": "family split (famsplit.py): leaves moved to a sibling part crate, old crate re-exports them with an explicit pub use; part registered in the artifact workspace (member, dependency table) and the owner rows (new crate)",
+  "after": "0.500 (lib 11/13739/108; test 16/17032/183)",
+  "state": "DONE"
+ },
+ "semio-s-artifact-procedural-3d-editor-commands-2": {
+  "note": "family split (famsplit.py): leaves moved to a sibling part crate, old crate re-exports them with an explicit pub use; part registered in the artifact workspace (member, dependency table) and the owner rows (new crate)",
+  "after": "0.500 (lib 14/47200/679; test 16/58696/799)",
+  "state": "DONE"
+ },
+ "semio-s-artifact-puzzle-3d-commands-runtime": {
+  "note": "family split (famsplit.py): leaves moved to a sibling part crate, old crate re-exports them with an explicit pub use; part registered in the artifact workspace (member, dependency table) and the owner rows",
+  "after": "0.469 (lib 15/19441/347; test 15/19441/347)",
+  "state": "DONE"
+ },
+ "semio-s-artifact-puzzle-3d-commands-runtime-2": {
+  "note": "family split (famsplit.py): leaves moved to a sibling part crate, old crate re-exports them with an explicit pub use; part registered in the artifact workspace (member, dependency table) and the owner rows (new crate)",
+  "after": "0.500 (lib 16/16446/294; test 16/16446/294)",
+  "state": "DONE"
+ },
+ "semio-s-artifact-remodel-remodeling-mut-calib": {
+  "note": "family split (famsplit.py): leaves moved to a sibling part crate, old crate re-exports them with an explicit pub use; part registered in the artifact workspace (member, dependency table) and the owner rows",
+  "after": "0.375 (lib 10/18499/331; test 12/11465/212)",
+  "state": "DONE"
+ },
+ "semio-s-artifact-remodel-remodeling-mut-calib-2": {
+  "note": "family split (famsplit.py): leaves moved to a sibling part crate, old crate re-exports them with an explicit pub use; part registered in the artifact workspace (member, dependency table) and the owner rows (new crate)",
+  "after": "0.500 (lib 16/29747/525; test 16/29747/525)",
+  "state": "DONE"
+ },
+ "semio-s-artifact-remodel-remodeling-mut-media": {
+  "note": "family split (famsplit.py): leaves moved to a sibling part crate, old crate re-exports them with an explicit pub use; part registered in the artifact workspace (member, dependency table) and the owner rows",
+  "after": "0.438 (lib 10/17339/325; test 14/13387/247)",
+  "state": "DONE"
+ },
+ "semio-s-artifact-remodel-remodeling-mut-media-2": {
+  "note": "family split (famsplit.py): leaves moved to a sibling part crate, old crate re-exports them with an explicit pub use; part registered in the artifact workspace (member, dependency table) and the owner rows (new crate)",
+  "after": "0.500 (lib 16/39397/654; test 16/39397/654)",
+  "state": "DONE"
+ },
+ "semio-s-artifact-remodel-remodeling-mut-params": {
+  "note": "family split (famsplit.py): leaves moved to a sibling part crate, old crate re-exports them with an explicit pub use; part registered in the artifact workspace (member, dependency table) and the owner rows",
+  "after": "0.250 (lib 7/11185/212; test 8/7578/138)",
+  "state": "DONE"
+ },
+ "semio-s-artifact-remodel-remodeling-mut-params-2": {
+  "note": "family split (famsplit.py): leaves moved to a sibling part crate, old crate re-exports them with an explicit pub use; part registered in the artifact workspace (member, dependency table) and the owner rows (new crate)",
+  "after": "0.469 (lib 13/20720/390; test 15/14806/269)",
+  "state": "DONE"
+ },
+ "semio-s-artifact-remodel-remodeling-mut-results": {
+  "note": "family split (famsplit.py): leaves moved to a sibling part crate, old crate re-exports them with an explicit pub use; part registered in the artifact workspace (member, dependency table) and the owner rows",
+  "after": "0.250 (lib 7/17896/306; test 8/8049/139)",
+  "state": "DONE"
+ },
+ "semio-s-artifact-remodel-remodeling-mut-results-2": {
+  "note": "family split (famsplit.py): leaves moved to a sibling part crate, old crate re-exports them with an explicit pub use; part registered in the artifact workspace (member, dependency table) and the owner rows (new crate)",
+  "after": "0.500 (lib 13/19598/378; test 16/15129/286)",
+  "state": "DONE"
+ },
+ "semio-s-artifact-remodel-remodeling-mut-results-3": {
+  "note": "family split (famsplit.py): leaves moved to a sibling part crate, old crate re-exports them with an explicit pub use; part registered in the artifact workspace (member, dependency table) and the owner rows (new crate)",
+  "after": "0.250 (lib 7/10052/203; test 8/7317/138)",
+  "state": "DONE"
+ },
+ "semio-s-artifact-remodel-remodeling-mut-params-3": {
+  "note": "family split (famsplit.py): leaves moved to a sibling part crate, old crate re-exports them with an explicit pub use; part registered in the artifact workspace (member, dependency table) and the owner rows (new crate)",
+  "after": "0.250 (lib 7/10420/203; test 8/7544/138)",
+  "state": "DONE"
+ },
+ "semio-s-artifact-remodel-remodeling-mut-media-3": {
+  "note": "family split (famsplit.py): leaves moved to a sibling part crate, old crate re-exports them with an explicit pub use; part registered in the artifact workspace (member, dependency table) and the owner rows (new crate)",
+  "after": "0.313 (lib 7/13887/245; test 10/9277/172)",
+  "state": "DONE"
+ },
+ "semio-s-artifact-remodel-remodeling-mut-calib-3": {
+  "note": "family split (famsplit.py): leaves moved to a sibling part crate, old crate re-exports them with an explicit pub use; part registered in the artifact workspace (member, dependency table) and the owner rows (new crate)",
+  "after": "0.281 (lib 7/10151/214; test 9/8185/155)",
+  "state": "DONE"
+ },
+ "semio-framework-plugin-tests-01": {
+  "note": "companion test bin split (famsplit.py --sibling --no-reexport): test roots distributed over a sibling bin; part registered in the root workspace, owner row, project.json and six launch routes",
+  "after": "0.843 (lib 9/220914/2055; test 9/220914/2055)",
+  "state": "DONE"
+ },
+ "semio-framework-plugin-tests-01-2": {
+  "note": "companion test bin split (famsplit.py --sibling --no-reexport): test roots distributed over a sibling bin; part registered in the root workspace, owner row, project.json and six launch routes (new crate)",
+  "after": "0.281 (lib 1/842/11; test 9/32495/415)",
+  "state": "DONE"
+ },
+ "semio-framework-plugin-tests-02": {
+  "note": "companion test bin split (famsplit.py --sibling --no-reexport): test roots distributed over a sibling bin; part registered in the root workspace, owner row, project.json and six launch routes",
+  "after": "0.840 (lib 9/37124/320; test 25/220081/2077)",
+  "state": "DONE"
+ },
+ "semio-framework-plugin-tests-02-2": {
+  "note": "companion test bin split (famsplit.py --sibling --no-reexport): test roots distributed over a sibling bin; part registered in the root workspace, owner row, project.json and six launch routes (new crate)",
+  "after": "0.188 (lib 1/731/11; test 6/22409/310)",
+  "state": "DONE"
+ },
+ "semio-framework-plugin-tests-03": {
+  "note": "companion test bin split (famsplit.py --sibling --no-reexport): test roots distributed over a sibling bin; part registered in the root workspace, owner row, project.json and six launch routes",
+  "after": "0.281 (lib 1/1028/12; test 9/71519/333)",
+  "state": "DONE"
+ },
+ "semio-framework-plugin-tests-03-2": {
+  "note": "companion test bin split (famsplit.py --sibling --no-reexport): test roots distributed over a sibling bin; part registered in the root workspace, owner row, project.json and six launch routes (new crate)",
+  "after": "0.719 (lib 1/649/9; test 23/168570/2446)",
+  "state": "DONE"
+ },
+ "semio-framework-plugin-tests-04": {
+  "note": "companion test bin split (famsplit.py --sibling --no-reexport): test roots distributed over a sibling bin; part registered in the root workspace, owner row, project.json and six launch routes",
+  "after": "0.345 (lib 1/808/13; test 7/90405/860)",
+  "state": "DONE"
+ },
+ "semio-framework-plugin-tests-04-2": {
+  "note": "companion test bin split (famsplit.py --sibling --no-reexport): test roots distributed over a sibling bin; part registered in the root workspace, owner row, project.json and six launch routes (new crate)",
+  "after": "0.781 (lib 1/718/11; test 25/145428/2089)",
+  "state": "DONE"
+ },
+ "semio-framework-plugin-tests-05": {
+  "note": "companion test bin split (famsplit.py --sibling --no-reexport): test roots distributed over a sibling bin; part registered in the root workspace, owner row, project.json and six launch routes",
+  "after": "0.724 (lib 3/185492/2714; test 6/189918/2789)",
+  "state": "DONE"
+ },
+ "semio-framework-plugin-tests-05-2": {
+  "note": "companion test bin split (famsplit.py --sibling --no-reexport): test roots distributed over a sibling bin; part registered in the root workspace, owner row, project.json and six launch routes (new crate)",
+  "after": "0.625 (lib 1/707/10; test 20/71858/684)",
+  "state": "DONE"
+ },
+ "semio-framework-plugin-tests-06": {
+  "note": "companion test bin split (famsplit.py --sibling --no-reexport): test roots distributed over a sibling bin; part registered in the root workspace, owner row, project.json and six launch routes",
+  "after": "0.542 (lib 9/136159/1232; test 11/142105/1258)",
+  "state": "DONE"
+ },
+ "semio-framework-plugin-tests-06-2": {
+  "note": "companion test bin split (famsplit.py --sibling --no-reexport): test roots distributed over a sibling bin; part registered in the root workspace, owner row, project.json and six launch routes (new crate)",
+  "after": "0.594 (lib 1/592/9; test 19/115755/977)",
+  "state": "DONE"
+ },
+ "semio-framework-plugin-tests-07": {
+  "note": "companion test bin split (famsplit.py --sibling --no-reexport): test roots distributed over a sibling bin; part registered in the root workspace, owner row, project.json and six launch routes",
+  "after": "0.188 (lib 1/786/12; test 6/15606/183)",
+  "state": "DONE"
+ },
+ "semio-framework-plugin-tests-07-2": {
+  "state": "DONE",
+  "after": "0.642 (lib 1/690/10; test 3/168191/1904)",
+  "note": "the two test roots mounted by the time-travel root (gesture, folder-reload-route, 72 KB) moved to the new companion bin semio-framework-plugin-tests-07-3 (binsplit.py: member, project.json, owner row, six routes in launch.json and the seed)"
+ },
+ "semio-framework-plugin-tests-08": {
+  "note": "companion test bin split (famsplit.py --sibling --no-reexport): test roots distributed over a sibling bin; part registered in the root workspace, owner row, project.json and six launch routes",
+  "after": "0.869 (lib 1/867/13; test 14/227899/2751)",
+  "state": "DONE"
+ },
+ "semio-framework-plugin-tests-08-2": {
+  "note": "companion test bin split (famsplit.py --sibling --no-reexport): test roots distributed over a sibling bin; part registered in the root workspace, owner row, project.json and six launch routes (new crate)",
+  "after": "0.313 (lib 1/906/12; test 10/30682/279)",
+  "state": "DONE"
+ },
+ "semio-framework-plugin-tests-09": {
+  "note": "companion test bin split (famsplit.py --sibling --no-reexport): test roots distributed over a sibling bin; part registered in the root workspace, owner row, project.json and six launch routes",
+  "after": "0.344 (lib 1/1277/15; test 11/39524/571)",
+  "state": "DONE"
+ },
+ "semio-framework-plugin-tests-09-2": {
+  "note": "companion test bin split (famsplit.py --sibling --no-reexport): test roots distributed over a sibling bin; part registered in the root workspace, owner row, project.json and six launch routes (new crate)",
+  "after": "0.813 (lib 1/766/10; test 7/213195/2313)",
+  "state": "DONE"
+ },
+ "semio-framework-plugin-tests-11": {
+  "note": "companion test bin split (famsplit.py --sibling --no-reexport): test roots distributed over a sibling bin; part registered in the root workspace, owner row, project.json and six launch routes",
+  "after": "0.375 (lib 1/1216/14; test 12/23440/305)",
+  "state": "DONE"
+ },
+ "semio-framework-plugin-tests-11-2": {
+  "note": "companion test bin split (famsplit.py --sibling --no-reexport): test roots distributed over a sibling bin; part registered in the root workspace, owner row, project.json and six launch routes (new crate)",
+  "after": "0.814 (lib 1/758/10; test 10/213366/1902)",
+  "state": "DONE"
+ },
+ "semio-framework-plugin-tests-12": {
+  "note": "companion test bin split (famsplit.py --sibling --no-reexport): test roots distributed over a sibling bin; part registered in the root workspace, owner row, project.json and six launch routes",
+  "after": "0.250 (lib 1/603/11; test 8/50107/483)",
+  "state": "DONE"
+ },
+ "semio-framework-plugin-tests-12-2": {
+  "note": "companion test bin split (famsplit.py --sibling --no-reexport): test roots distributed over a sibling bin; part registered in the root workspace, owner row, project.json and six launch routes (new crate)",
+  "after": "0.783 (lib 1/646/10; test 11/205328/1501)",
+  "state": "DONE"
+ },
+ "semio-framework-plugin-tests-14": {
+  "note": "companion test bin split (famsplit.py --sibling --no-reexport): test roots distributed over a sibling bin; part registered in the root workspace, owner row, project.json and six launch routes",
+  "after": "0.250 (lib 1/592/11; test 8/58482/775)",
+  "state": "DONE"
+ },
+ "semio-framework-plugin-tests-14-2": {
+  "note": "companion test bin split (famsplit.py --sibling --no-reexport): test roots distributed over a sibling bin; part registered in the root workspace, owner row, project.json and six launch routes (new crate)",
+  "after": "0.743 (lib 1/653/10; test 10/194694/1686)",
+  "state": "DONE"
+ },
+ "semio-s-artifact-lowpoly-lowpoly-model": {
+  "note": "artifact and snapshot schema leaves (consts) became register-and-serve functions: rust/typescript/graphql/proto served from their documents, default reader installed; caller in the lowpoly root updated",
+  "after": "0.844 (lib 24/196308/1439; test 27/202613/1571)",
+  "state": "DONE"
+ },
+ "semio-framework-3d-brep-boolean": {
+  "note": "",
+  "after": "0.988 (lib 3/176708/3333; test 5/213580/3951)",
+  "state": "OPEN"
+ },
+ "semio-s-artifact-flow-flow-unit-tests": {
+  "state": "DONE",
+  "after": "0.719 (lib 2/13795/211; test 23/141720/2363)",
+  "note": "harness 'context' extracted into its own file behind cfg(any(test, feature=testkit)) (testkit feature forwards plugin artifact-app-testing and os-kernel protocol-laws/mutation-testing); five heavy test mounts (node-graph-edit, interactive-job, declared-verbs, document panel, generations) moved to the companion semio-s-artifact-flow-flow-unit-tests-2 (0.444); --check-applied exit 0 (0/0)"
+ },
+ "semio-s-artifact-procedural-2d-mutations": {
+  "note": "fixtures read at run time through the shared test-fixtures reader macros (fixt.ts, dev-dependency added)",
+  "after": "0.194 (lib 2/45019/681; test 6/50839/735)",
+  "state": "DONE"
+ },
+ "semio-s-artifact-procedural-3d-mutations": {
+  "note": "fixtures read at run time through the shared test-fixtures reader macros (fixt.ts, dev-dependency added)",
+  "after": "0.196 (lib 2/25417/436; test 6/51443/730)",
+  "state": "DONE"
+ },
+ "semio-s-artifact-vcs-vcs-editor": {
+  "note": "",
+  "after": "0.969 (lib 25/117041/2027; test 31/186692/3184)",
+  "state": "OPEN"
+ },
+ "semio-s-artifact-forms-forms-commands": {
+  "note": "",
+  "after": "0.969 (lib 31/78702/1534; test 31/78702/1559)",
+  "state": "OPEN"
+ },
+ "semio-s-artifact-stdio-semio-base-examples": {
+  "note": "famsplit.py part crate (examples family)",
+  "after": "0.531 (lib 17/14023/176; test 17/14023/176)",
+  "state": "DONE"
+ },
+ "semio-framework-repo-model": {
+  "note": "",
+  "after": "0.969 (lib 10/141350/3874; test 10/141350/3874)",
+  "state": "OPEN"
+ },
+ "semio-s-plugin-energy-engine-sim": {
+  "note": "",
+  "after": "0.968 (lib 7/149581/3019; test 8/195985/3871)",
+  "state": "OPEN"
+ },
+ "semio-s-artifact-stdio-svg-snapshot": {
+  "note": "",
+  "after": "0.968 (lib 20/240661/3842; test 20/240661/3870)",
+  "state": "OPEN"
+ },
+ "semio-s-artifact-gis-gismap-gis2d": {
+  "note": "",
+  "after": "0.962 (lib 15/152707/2401; test 20/242185/3849)",
+  "state": "OPEN"
+ },
+ "semio-s-artifact-layout-layout-engine-export": {
+  "note": "",
+  "after": "0.962 (lib 1/122371/2338; test 2/204731/3846)",
+  "state": "OPEN"
+ },
+ "semio-framework-quiz-tests": {
+  "note": "",
+  "after": "0.956 (lib 1/786/0; test 15/250510/3740)",
+  "state": "OPEN"
+ },
+ "semio-s-artifact-cad-cad": {
+  "note": "",
+  "after": "0.945 (lib 1/8914/130; test 16/247598/3047)",
+  "state": "OPEN"
+ },
+ "semio-s-artifact-puzzle-3d-editor": {
+  "note": "",
+  "after": "0.947 (lib 9/162603/2012; test 15/248230/3550)",
+  "state": "OPEN"
+ },
+ "semio-framework-os-directory-client-tests": {
+  "note": "fixtures read at run time through the shared test-fixtures reader macros (fixt.ts, dev-dependency added)",
+  "after": "0.432 (lib 1/3648/0; test 7/106744/1727)",
+  "state": "DONE"
+ },
+ "semio-s-artifact-wfc-bitmap-bitmap": {
+  "note": "",
+  "after": "0.941 (lib 18/204478/3545; test 22/216586/3763)",
+  "state": "OPEN"
+ },
+ "semio-s-artifact-reasoning-wires-wires": {
+  "note": "",
+  "after": "0.940 (lib 14/111150/1869; test 21/246393/3691)",
+  "state": "OPEN"
+ },
+ "semio-framework-os-mcp-hub-remote": {
+  "note": "",
+  "after": "0.939 (lib 10/135734/2324; test 12/223104/3757)",
+  "state": "OPEN"
+ },
+ "semio-s-artifact-mathematical-equation-snapshot": {
+  "note": "",
+  "after": "0.938 (lib 20/179996/3307; test 28/196715/3751)",
+  "state": "OPEN"
+ },
+ "semio-s-artifact-norm-iso16757-io": {
+  "note": "",
+  "after": "0.543 (lib 14/140692/1010; test 16/142368/1050)",
+  "state": "DONE"
+ },
+ "semio-s-artifact-norm-en1995-io": {
+  "note": "",
+  "after": "0.500 (lib 14/44530/427; test 16/48011/497)",
+  "state": "DONE"
+ },
+ "semio-s-artifact-stdio-gif-editor": {
+  "note": "",
+  "after": "0.938 (lib 18/84475/1351; test 30/123118/2027)",
+  "state": "OPEN"
+ },
+ "semio-s-artifact-stdio-binary-snapshot": {
+  "note": "",
+  "after": "0.938 (lib 27/71971/904; test 30/94507/1027)",
+  "state": "OPEN"
+ },
+ "semio-s-artifact-stdio-docx-base-mutations": {
+  "note": "",
+  "after": "0.938 (lib 30/224985/3364; test 30/224985/3478)",
+  "state": "OPEN"
+ },
+ "semio-s-artifact-stdio-xml-mutations": {
+  "note": "",
+  "after": "0.938 (lib 23/62470/1184; test 30/79576/1532)",
+  "state": "OPEN"
+ },
+ "semio-s-artifact-stdio-dwg-sqlite-drawing": {
+  "note": "famsplit.py part crate (dwg sqlite drawing)",
+  "after": "0.572 (lib 11/149870/388; test 11/149870/388)",
+  "state": "DONE"
+ },
+ "semio-s-artifact-stdio-dwg-sqlite-objects": {
+  "note": "",
+  "after": "0.934 (lib 18/244909/926; test 18/244909/926)",
+  "state": "OPEN"
+ },
+ "semio-s-artifact-gis-gismap-demo-asset": {
+  "note": "",
+  "after": "0.930 (lib 2/243819/5; test 2/243819/5)",
+  "state": "OPEN"
+ },
+ "semio-s-artifact-cad-cad-play": {
+  "note": "",
+  "after": "0.928 (lib 2/243230/191; test 2/243230/191)",
+  "state": "OPEN"
+ },
+ "semio-s-artifact-stdio-dwg-read-objects": {
+  "note": "",
+  "after": "0.926 (lib 6/242787/3187; test 6/242787/3187)",
+  "state": "OPEN"
+ },
+ "semio-s-artifact-stdio-dxf-diff": {
+  "note": "",
+  "after": "0.923 (lib 21/208233/3693; test 21/208233/3693)",
+  "state": "OPEN"
+ },
+ "semio-framework-3d-mesh-document": {
+  "note": "",
+  "after": "0.921 (lib 12/176268/2997; test 25/241379/3438)",
+  "state": "OPEN"
+ },
+ "semio-framework-plugin-child-group-wire-laws": {
+  "note": "",
+  "after": "0.920 (test 27/241181/1975)",
+  "state": "OPEN"
+ },
+ "semio-framework-3d-brep-queries": {
+  "note": "",
+  "after": "0.920 (lib 4/142032/2927; test 10/180016/3679)",
+  "state": "OPEN"
+ },
+ "semio-framework-3d-brep-offset": {
+  "note": "",
+  "after": "0.918 (lib 3/181084/3224; test 5/205353/3674)",
+  "state": "OPEN"
+ },
+ "semio-s-artifact-gis-gismap-tests": {
+  "note": "",
+  "after": "0.908 (lib 16/108948/1899; test 29/231385/3634)",
+  "state": "OPEN"
+ },
+ "semio-s-artifact-norm-en1993-checks": {
+  "note": "",
+  "after": "0.915 (lib 5/147116/2969; test 6/178363/3661)",
+  "state": "OPEN"
+ },
+ "semio-framework-value-tests": {
+  "note": "famsplit.py part crate (value tests)",
+  "after": "0.843 (lib 1/2072/0; test 19/221100/2336)",
+  "state": "DONE"
+ },
+ "semio-framework-os-services": {
+  "note": "",
+  "after": "0.915 (lib 15/200954/3662; test 15/200954/3662)",
+  "state": "OPEN"
+ },
+ "semio-s-artifact-process-process3d-host": {
+  "note": "",
+  "after": "1.084 (lib 8/202340/3576; test 9/246706/4335)",
+  "state": "OPEN"
+ },
+ "semio-s-artifact-procedural-generation3d": {
+  "note": "",
+  "after": "0.911 (lib 1/59416/582; test 22/238781/1693)",
+  "state": "OPEN"
+ },
+ "semio-s-artifact-wfc-3d-wfc3d": {
+  "note": "",
+  "after": "0.909 (lib 14/152345/2776; test 19/204981/3637)",
+  "state": "OPEN"
+ },
+ "semio-s-artifact-wfc-grid3d-editor": {
+  "note": "",
+  "after": "0.908 (lib 11/166963/2985; test 17/205397/3633)",
+  "state": "OPEN"
+ },
+ "semio-s-artifact-stdio-xml-snapshot": {
+  "note": "",
+  "after": "0.907 (lib 22/215306/3587; test 23/217896/3630)",
+  "state": "OPEN"
+ },
+ "semio-s-artifact-mathematical-equation-update-graph-algorithm": {
+  "note": "",
+  "after": "0.906 (lib 25/59951/1323; test 29/69728/1521)",
+  "state": "OPEN"
+ },
+ "semio-s-artifact-wfc-2d-diff": {
+  "note": "",
+  "after": "0.906 (lib 28/48659/1065; test 29/50414/1098)",
+  "state": "OPEN"
+ },
+ "semio-s-artifact-wfc-2d-mutations": {
+  "note": "",
+  "after": "0.906 (lib 13/54888/933; test 29/191693/2962)",
+  "state": "OPEN"
+ },
+ "semio-s-artifact-wfc-2d-pin-slot": {
+  "note": "",
+  "after": "0.906 (lib 21/49193/1029; test 29/66124/1387)",
+  "state": "OPEN"
+ },
+ "semio-s-artifact-wfc-grid2d-diff": {
+  "note": "",
+  "after": "0.906 (lib 26/58389/1260; test 29/63136/1379)",
+  "state": "OPEN"
+ },
+ "semio-s-artifact-wfc-grid2d-create-tile": {
+  "note": "",
+  "after": "0.906 (lib 27/43352/895; test 29/51642/1058)",
+  "state": "OPEN"
+ },
+ "semio-s-artifact-wfc-3d-mutations": {
+  "note": "",
+  "after": "0.906 (lib 13/52029/854; test 29/187827/3025)",
+  "state": "OPEN"
+ },
+ "semio-s-artifact-wfc-grid3d-mutations": {
+  "note": "",
+  "after": "0.906 (lib 16/49898/858; test 29/163711/2563)",
+  "state": "OPEN"
+ },
+ "semio-s-artifact-flow-flow-editor-leaves": {
+  "note": "",
+  "after": "0.906 (lib 25/84947/1526; test 29/95341/1704)",
+  "state": "OPEN"
+ },
+ "semio-s-artifact-flow-flow-schema": {
+  "state": "DONE",
+  "after": "0.469 (lib 14/61465/831; test 15/62479/849)",
+  "note": "descriptor facets served at run time (new leaves --rust + default reader install)"
+ },
+ "semio-s-artifact-gis-gismap-mutations": {
+  "note": "",
+  "after": "0.906 (lib 27/70676/1093; test 29/87116/1331)",
+  "state": "OPEN"
+ },
+ "semio-s-artifact-animate-presentation-viewer": {
+  "state": "DONE",
+  "after": "0.719 (lib 22/34941/610; test 23/37232/649)",
+  "note": "app descriptor (config + presence) facets served at run time"
+ },
+ "semio-s-artifact-animate-presentation-mutations": {
+  "note": "",
+  "after": "0.906 (lib 14/80660/1376; test 29/198722/3038)",
+  "state": "OPEN"
+ },
+ "semio-s-artifact-shooting-shooting-tests": {
+  "note": "",
+  "after": "0.906 (lib 22/58170/1174; test 29/79220/1580)",
+  "state": "OPEN"
+ },
+ "semio-s-artifact-shooting-shooting-mutations": {
+  "note": "",
+  "after": "0.906 (lib 10/53288/730; test 29/175941/2387)",
+  "state": "OPEN"
+ },
+ "semio-s-artifact-shooting-shooting-set-active-asset": {
+  "note": "",
+  "after": "0.906 (lib 27/46031/909; test 29/47631/944)",
+  "state": "OPEN"
+ },
+ "semio-s-artifact-forms-forms-forms": {
+  "note": "",
+  "after": "0.906 (lib 10/107281/1669; test 29/232298/3521)",
+  "state": "OPEN"
+ },
+ "semio-s-artifact-forms-forms-tests-2": {
+  "note": "",
+  "after": "0.906 (lib 19/88417/1575; test 29/111683/2006)",
+  "state": "OPEN"
+ },
+ "semio-s-artifact-forms-forms-diff": {
+  "note": "",
+  "after": "0.906 (lib 29/80237/1491; test 29/80237/1491)",
+  "state": "OPEN"
+ },
+ "semio-s-artifact-norm-en1990-io": {
+  "note": "",
+  "after": "0.500 (lib 14/48732/563; test 16/53951/691)",
+  "state": "DONE"
+ },
+ "semio-s-artifact-norm-din18599-io": {
+  "note": "",
+  "after": "0.500 (lib 14/47548/478; test 16/49801/533)",
+  "state": "DONE"
+ },
+ "semio-s-artifact-norm-en1997-io": {
+  "note": "",
+  "after": "0.500 (lib 14/45510/437; test 16/47400/476)",
+  "state": "DONE"
+ },
+ "semio-s-artifact-norm-din16798-io": {
+  "note": "",
+  "after": "0.500 (lib 14/73122/952; test 16/73994/979)",
+  "state": "DONE"
+ },
+ "semio-s-artifact-norm-vdi3805-io": {
+  "note": "",
+  "after": "0.500 (lib 14/93819/778; test 16/95392/814)",
+  "state": "DONE"
+ },
+ "semio-s-artifact-norm-din4108-io": {
+  "note": "",
+  "after": "0.906 (lib 25/83490/961; test 29/87835/1067)",
+  "state": "OPEN"
+ },
+ "semio-s-artifact-norm-en1996-io": {
+  "note": "",
+  "after": "0.500 (lib 14/43904/445; test 16/45807/484)",
+  "state": "DONE"
+ },
+ "semio-s-artifact-norm-en1999-io": {
+  "note": "",
+  "after": "0.500 (lib 14/52851/465; test 16/53756/489)",
+  "state": "DONE"
+ },
+ "semio-s-artifact-norm-en1998-io": {
+  "note": "",
+  "after": "0.469 (lib 13/76335/792; test 15/78088/829)",
+  "state": "DONE"
+ },
+ "semio-s-artifact-trinity-rewriting-operations": {
+  "note": "",
+  "after": "0.906 (lib 22/78977/1315; test 29/151399/2278)",
+  "state": "OPEN"
+ },
+ "semio-s-artifact-trinity-rewriting-mut-any": {
+  "note": "",
+  "after": "0.906 (lib 27/44151/887; test 29/47158/951)",
+  "state": "OPEN"
+ },
+ "semio-s-artifact-stdio-html-mutations": {
+  "note": "",
+  "after": "0.906 (lib 21/90365/1567; test 29/134585/2293)",
+  "state": "OPEN"
+ },
+ "semio-s-artifact-stdio-zip-schema": {
+  "note": "",
+  "after": "0.906 (lib 25/94625/1988; test 29/101537/2144)",
+  "state": "OPEN"
+ },
+ "semio-s-artifact-stdio-svg-handcrafted-diff-codec-tests": {
+  "note": "",
+  "after": "0.906 (lib 27/29716/643; test 29/35209/723)",
+  "state": "OPEN"
+ },
+ "semio-s-artifact-stdio-svg-mutations": {
+  "note": "",
+  "after": "0.906 (lib 26/62002/1255; test 29/70960/1426)",
+  "state": "OPEN"
+ },
+ "semio-s-artifact-stdio-svg-tests": {
+  "note": "",
+  "after": "0.906 (lib 16/33775/647; test 29/44665/878)",
+  "state": "OPEN"
+ },
+ "semio-s-artifact-stdio-docx-base-model": {
+  "note": "",
+  "after": "0.906 (lib 29/166675/2716; test 29/166675/2809)",
+  "state": "OPEN"
+ },
+ "semio-s-artifact-stdio-md-diff": {
+  "note": "",
+  "after": "0.906 (lib 24/120198/2159; test 29/125021/2353)",
+  "state": "OPEN"
+ },
+ "semio-s-artifact-stdio-xml-schema-2": {
+  "note": "",
+  "after": "0.906 (lib 23/90224/1583; test 29/104769/1850)",
+  "state": "OPEN"
+ },
+ "semio-s-artifact-stdio-jpg-schema-2": {
+  "note": "",
+  "after": "0.906 (lib 17/66232/1292; test 29/122169/2155)",
+  "state": "OPEN"
+ },
+ "semio-s-artifact-stdio-tiff-snapshot": {
+  "note": "",
+  "after": "0.906 (lib 29/83463/734; test 29/83463/734)",
+  "state": "OPEN"
+ },
+ "semio-s-artifact-stdio-gltf-inferences-clearance": {
+  "note": "",
+  "after": "0.906 (lib 10/24920/362; test 29/31054/533)",
+  "state": "OPEN"
+ },
+ "semio-s-artifact-stdio-gltf-mutations-mut-any-5": {
+  "note": "",
+  "after": "0.906 (lib 2/14180/157; test 29/49065/709)",
+  "state": "OPEN"
+ },
+ "semio-s-artifact-stdio-gltf-mutations-mut-any-9": {
+  "note": "",
+  "after": "0.906 (lib 2/14360/161; test 29/37522/487)",
+  "state": "OPEN"
+ },
+ "semio-s-artifact-stdio-gltf-mutations-mut-any-6": {
+  "note": "",
+  "after": "0.906 (lib 2/15327/174; test 29/49632/625)",
+  "state": "OPEN"
+ },
+ "semio-s-artifact-stdio-gltf-mutations-mut-any-8": {
+  "note": "",
+  "after": "0.906 (lib 2/13183/149; test 29/36165/478)",
+  "state": "OPEN"
+ },
+ "semio-s-artifact-stdio-gltf-mutations-mut-any-7": {
+  "note": "",
+  "after": "0.906 (lib 2/11830/129; test 29/35424/463)",
+  "state": "OPEN"
+ },
+ "semio-s-artifact-stdio-semio-value-mutations": {
+  "note": "fixtures read at run time through the shared test-fixtures reader macros (fixt.ts, dev-dependency added)",
+  "after": "0.906 (lib 29/65022/1085; test 29/65022/1129)",
+  "state": "PARTIAL"
+ },
+ "semio-s-artifact-stdio-semio-kit-mutations": {
+  "note": "",
+  "after": "0.906 (lib 27/61878/1102; test 29/63310/1162)",
+  "state": "OPEN"
+ },
+ "semio-s-artifact-note-note-diff": {
+  "note": "",
+  "after": "0.906 (lib 24/82966/1634; test 29/90199/1785)",
+  "state": "OPEN"
+ },
+ "semio-s-artifact-note-note-mutations": {
+  "note": "",
+  "after": "0.906 (lib 20/144571/1716; test 29/182387/2413)",
+  "state": "OPEN"
+ },
+ "semio-s-artifact-note-note-tests-hides-the-grid": {
+  "note": "",
+  "after": "0.906 (lib 22/63771/1140; test 29/129217/2016)",
+  "state": "OPEN"
+ },
+ "semio-s-artifact-note-note-delete-blocks": {
+  "note": "",
+  "after": "0.906 (lib 28/62200/1334; test 29/62944/1352)",
+  "state": "OPEN"
+ },
+ "semio-framework-os-config": {
+  "note": "",
+  "after": "0.906 (lib 29/103232/2166; test 29/103232/2166)",
+  "state": "OPEN"
+ },
+ "semio-framework-artifact-workflow-run": {
+  "note": "",
+  "after": "0.906 (lib 29/96203/1417; test 29/96203/1417)",
+  "state": "OPEN"
+ },
+ "semio-framework-plugin-tests-18": {
+  "state": "DONE",
+  "after": "0.656 (lib 1/967/13; test 21/133510/1708)",
+  "note": "eight embedded fixtures read at run time (fixt.ts) and the shared test-fixtures reader added as dev-dependency"
+ },
+ "semio-framework-os-run": {
+  "note": "",
+  "after": "0.904 (lib 10/175089/2551; test 11/236919/3501)",
+  "state": "OPEN"
+ },
+ "semio-s-artifact-gis-gismap": {
+  "note": "",
+  "after": "0.891 (lib 16/112155/1467; test 28/233615/3178)",
+  "state": "DONE"
+ },
+ "semio-framework-ui-retained-tree-tree": {
+  "note": "",
+  "after": "0.326 (lib 1/55772/1194; test 2/60247/1304)",
+  "state": "DONE"
+ },
+ "semio-s-artifact-stdio-semio-inverts-tests": {
+  "state": "DONE",
+  "after": "0.594 (lib 1/3717/41; test 19/28986/366)",
+  "note": "new companion test crate"
+ },
+ "semio-s-artifact-norm-en1990-io-text": {
+  "note": "",
+  "after": "0.406 (lib 11/27837/371; test 13/29147/428)",
+  "state": "DONE"
+ },
+ "semio-s-artifact-norm-en1995-io-text": {
+  "note": "",
+  "after": "0.438 (lib 11/14414/231; test 14/33780/391)",
+  "state": "DONE"
+ },
+ "semio-s-artifact-norm-en1996-io-text": {
+  "note": "",
+  "after": "0.406 (lib 11/14294/235; test 13/17318/295)",
+  "state": "DONE"
+ },
+ "semio-s-artifact-norm-en1997-io-text": {
+  "note": "",
+  "after": "0.406 (lib 11/21378/305; test 13/25631/383)",
+  "state": "DONE"
+ },
+ "semio-s-artifact-norm-en1998-io-text": {
+  "note": "",
+  "after": "0.438 (lib 11/35766/356; test 14/36663/539)",
+  "state": "DONE"
+ },
+ "semio-s-artifact-norm-en1999-io-text": {
+  "note": "",
+  "after": "0.406 (lib 11/21707/275; test 13/22722/307)",
+  "state": "DONE"
+ },
+ "semio-s-artifact-norm-din16798-io-text": {
+  "note": "",
+  "after": "0.406 (lib 11/39850/416; test 13/40782/491)",
+  "state": "DONE"
+ },
+ "semio-s-artifact-norm-din18599-io-text": {
+  "note": "",
+  "after": "0.406 (lib 11/23615/349; test 13/24687/381)",
+  "state": "DONE"
+ },
+ "semio-s-artifact-norm-vdi3805-io-text": {
+  "note": "",
+  "after": "0.406 (lib 11/41145/613; test 13/47094/782)",
+  "state": "DONE"
+ },
+ "semio-s-artifact-norm-iso16757-io-text": {
+  "note": "",
+  "after": "0.438 (lib 12/54006/582; test 14/56277/714)",
+  "state": "DONE"
+ },
+ "semio-framework-os-directory-tests-1": {
+  "note": "fixtures read at run time through the shared test-fixtures reader macros (fixt.ts, dev-dependency added)",
+  "after": "0.112 (lib 1/482/0; test 2/28142/448)",
+  "state": "DONE"
+ },
+ "semio-s-artifact-stdio-pdf-tables": {
+  "state": "DONE",
+  "after": "0.476 (lib 2/124701/269; test 2/124701/269)",
+  "note": "the Adobe Glyph List (125 KB) split into the new sibling producer crate semio-s-artifact-stdio-pdf-glyph-list (artifact member, owner row, fonts crate re-exports it); generator script now writes both files; --check-applied exit 0 (0/0)"
+ },
+ "semio-s-artifact-layout-layout-editor-commands": {
+  "state": "DONE",
+  "after": "0.636 (lib 20/134506/2447; test 20/134506/2545)",
+  "note": "lib was 32/32 files; commands moved to layout-editor-commands-2 (16 files), helper code moved from both roots into child modules of the lower crate; the old root keeps explicit re-exports (52 lines), its ratchet pin removed"
+ },
+ "semio-s-artifact-stdio-semio-presentation-schema": {
+  "state": "DONE",
+  "after": "0.406 (lib 10/32733/271; test 13/37426/361)",
+  "note": "was 33/32 files (new over-gate peer regression): descriptor facets served at run time (new leaves --rust + default reader install)"
+ },
+ "semio-s-artifact-sequence-sequence-schema": {
+  "state": "DONE",
+  "after": "0.625 (lib 19/76094/1116; test 20/77926/1156)",
+  "note": "descriptor facets served at run time (new leaves --rust + default reader install)"
+ },
+ "semio-s-artifact-stdio-semio-document-schema": {
+  "state": "DONE",
+  "after": "0.406 (lib 12/42315/317; test 13/43431/344)",
+  "note": "descriptor facets served at run time (new leaves --rust + default reader install)"
+ },
+ "semio-s-artifact-block-2d-editor": {
+  "state": "DONE",
+  "after": "0.750 (lib 21/96520/1557; test 24/137394/2199)",
+  "note": "app descriptor (config + presence) facets served at run time: new leaves generator learned the config and presence exports (test added), component GraphQL SDL reader resolves them"
+ },
+ "semio-s-artifact-block-5d-editor": {
+  "state": "DONE",
+  "after": "0.719 (lib 20/93270/1551; test 23/131388/2164)",
+  "note": "app descriptor (config + presence) facets served at run time"
+ },
+ "semio-s-artifact-writer-writer-schema": {
+  "state": "DONE",
+  "after": "0.500 (lib 16/75316/1304; test 16/75316/1304)",
+  "note": "descriptor facets served at run time (new leaves --rust + default reader install)"
+ }
+}

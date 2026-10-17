@@ -1,0 +1,143 @@
+{
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind"
+      ],
+      "properties": {
+        "kind": {
+          "const": "Coplanar"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "edges"
+      ],
+      "properties": {
+        "kind": {
+          "const": "DissolveEdges"
+        },
+        "edges": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4294967295
+          }
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "vertices"
+      ],
+      "properties": {
+        "kind": {
+          "const": "DissolveVertices"
+        },
+        "vertices": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4294967295
+          }
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "vertices",
+        "mode",
+        "threshold"
+      ],
+      "properties": {
+        "kind": {
+          "const": "Vertices"
+        },
+        "vertices": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4294967295
+          }
+        },
+        "mode": {
+          "enum": [
+            "Center",
+            "First",
+            "ByDistance"
+          ]
+        },
+        "threshold": {
+          "type": "number"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "mode": {
+                "const": "ByDistance"
+              }
+            }
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "threshold": {
+                "type": "number",
+                "minimum": 0
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "precision"
+      ],
+      "properties": {
+        "kind": {
+          "const": "Grid"
+        },
+        "precision": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "MeshPrimitiveKind": {
+      "enum": [
+        "Box",
+        "Plane",
+        "Cylinder",
+        "Cone",
+        "IcoSphere"
+      ]
+    }
+  }
+}

@@ -1,5 +1,6 @@
 //! 🛡️ Parsed Rust syntax enforces renderer-neutral artifact IO authority.
 use proc_macro2::{TokenStream, TokenTree};
+use semio_framework_test_fixtures::fixture_path;
 use serde::Deserialize;
 use std::path::Path;
 use syn::visit::{self, Visit};
@@ -117,6 +118,6 @@ fn generation3d_io_authority_is_renderer_neutral_in_parsed_rust() {
     for case in &fixture.cases {
         assert_eq!(violations(&case.source, &fixture).is_empty(), case.allowed, "{}", case.id);
     }
-    let directory = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io");
+    let directory = fixture_path!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io");
     inspect_directory(&directory, &fixture);
 }

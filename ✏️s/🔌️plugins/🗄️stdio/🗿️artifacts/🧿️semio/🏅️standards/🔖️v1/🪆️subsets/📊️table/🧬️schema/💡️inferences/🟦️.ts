@@ -34,6 +34,10 @@ type stdioSemioV1TableInferenceGuardSizeBounds = { readonly minItems?: number; r
 
 export const stdioSemioV1TableInferenceGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : stdioSemioV1TableInferenceGuardReject(at, "value is not an object");
+export const stdioSemioV1TableInferenceGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) stdioSemioV1TableInferenceGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const stdioSemioV1TableInferenceGuardArray = (value: unknown, at: string, bounds: stdioSemioV1TableInferenceGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return stdioSemioV1TableInferenceGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) stdioSemioV1TableInferenceGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -64,14 +68,14 @@ export const stdioSemioV1TableInferenceGuardConstant = <T extends string | numbe
 //#endregion 🚪️Parsers
 
 export function parseSemioTableInference(value: unknown, at = "$"): SemioTableInference {
-  const row = stdioSemioV1TableInferenceGuardObject(value, at);
+  const row = stdioSemioV1TableInferenceGuardClosed(stdioSemioV1TableInferenceGuardObject(value, at), at, ["shape"]);
   return {
     shape: parseSemioTableShape(row["shape"], `${at}.shape`),
   };
 }
 
 export function parseSemioTableShape(value: unknown, at = "$"): SemioTableShape {
-  const row = stdioSemioV1TableInferenceGuardObject(value, at);
+  const row = stdioSemioV1TableInferenceGuardClosed(stdioSemioV1TableInferenceGuardObject(value, at), at, ["columnCount", "rowCount", "nullColumnCount", "boolColumnCount", "intColumnCount", "floatColumnCount", "strColumnCount", "bytesColumnCount"]);
   return {
     columnCount: stdioSemioV1TableInferenceGuardInteger(row["columnCount"], `${at}.columnCount`, {"minimum": 0}),
     rowCount: stdioSemioV1TableInferenceGuardInteger(row["rowCount"], `${at}.rowCount`, {"minimum": 0}),

@@ -454,7 +454,7 @@
       "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
-      "inputs": ["{projectRoot}/**/*"],
+      "inputs": ["{projectRoot}/**/*", "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🏗️compiler/🦀️rustc/**/*"],
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🏃️process",

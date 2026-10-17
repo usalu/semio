@@ -30,6 +30,10 @@ type stdioSemioV1FlowInferenceGuardSizeBounds = { readonly minItems?: number; re
 
 export const stdioSemioV1FlowInferenceGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : stdioSemioV1FlowInferenceGuardReject(at, "value is not an object");
+export const stdioSemioV1FlowInferenceGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) stdioSemioV1FlowInferenceGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const stdioSemioV1FlowInferenceGuardArray = (value: unknown, at: string, bounds: stdioSemioV1FlowInferenceGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return stdioSemioV1FlowInferenceGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) stdioSemioV1FlowInferenceGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -60,17 +64,17 @@ export const stdioSemioV1FlowInferenceGuardConstant = <T extends string | number
 //#endregion 🚪️Parsers
 
 export function parseSemioFlowInference(value: unknown, at = "$"): SemioFlowInference {
-  const row = stdioSemioV1FlowInferenceGuardObject(value, at);
+  const row = stdioSemioV1FlowInferenceGuardClosed(stdioSemioV1FlowInferenceGuardObject(value, at), at, ["topology"]);
   return {
     topology: parseSemioFlowTopology(row["topology"], `${at}.topology`),
   };
 }
 
 export function parseSemioFlowTopology(value: unknown, at = "$"): SemioFlowTopology {
-  const row = stdioSemioV1FlowInferenceGuardObject(value, at);
+  const row = stdioSemioV1FlowInferenceGuardClosed(stdioSemioV1FlowInferenceGuardObject(value, at), at, ["topoOrder", "depth", "cycleFree", "nodeCount"]);
   return {
     topoOrder: stdioSemioV1FlowInferenceGuardArray(row["topoOrder"], `${at}.topoOrder`).map((item, index) => stdioSemioV1FlowInferenceGuardString(item, `${at}.topoOrder[${index}]`)),
-    depth: stdioSemioV1FlowInferenceGuardObject(row["depth"], `${at}.depth`),
+    depth: Object.fromEntries(Object.entries(stdioSemioV1FlowInferenceGuardObject(row["depth"], `${at}.depth`)).map(([key0, value0]) => [key0, stdioSemioV1FlowInferenceGuardInteger(value0, `${at}.depth.${key0}`)])),
     cycleFree: stdioSemioV1FlowInferenceGuardBoolean(row["cycleFree"], `${at}.cycleFree`),
     nodeCount: stdioSemioV1FlowInferenceGuardInteger(row["nodeCount"], `${at}.nodeCount`),
   };

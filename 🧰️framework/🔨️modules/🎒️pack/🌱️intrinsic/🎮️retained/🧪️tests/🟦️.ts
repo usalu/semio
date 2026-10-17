@@ -3,7 +3,7 @@ import Ajv from "ajv/dist/2020";
 import {parse,ParseError} from "jsonc-parser";
 import contract from "../🧬️schema/🔣️.json";
 import corpus from "../🧪️tests/🧫️fixtures/🔣️.json";
-import {readIntrinsicBody} from "../../../🌱️value/🧪️tests/🫳️preflight/🔮️pack/🟦️.ts";
+import {readIntrinsicBody,type ClosedValue} from "@semio-tech/framework-pack-record-ts/testing/preflight/pack";
 
 test("retained intrinsic ingress has a variable production contract and finite work grants",()=>{
  const ajv=new Ajv({strict:true});ajv.addSchema(contract);const request=ajv.compile({$ref:contract.$id+"#/$defs/Request"});const document=ajv.compile({$ref:contract.$id+"#/$defs/DocumentRequest"});const grant=ajv.compile({$ref:contract.$id+"#/$defs/AdvanceGrant"});
@@ -13,7 +13,7 @@ test("retained intrinsic ingress has a variable production contract and finite w
  expect(document({inputBytes:256,maximumOwnedBytes:1048576,maximumDepth:64,maximumItems:100})).toBe(true);expect(document({inputBytes:256,maximumOwnedBytes:0,maximumDepth:64,maximumItems:100})).toBe(false);expect(document({inputBytes:256,maximumOwnedBytes:1048576,maximumDepth:64,maximumItems:100,guessBody:true})).toBe(false);
 });
 
-function exactWords(value:unknown):unknown{
+function exactWords(value:ClosedValue):ClosedValue{
  if(typeof value==="number")return String(value);
  if(Array.isArray(value))return value.map(exactWords);
  if(value!==null&&typeof value==="object")return Object.fromEntries(Object.entries(value).map(([key,child])=>[key,exactWords(child)]));

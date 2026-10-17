@@ -3,11 +3,12 @@ import * as React from "react";
 import {act,render} from "@testing-library/react";
 import {expect,it} from "vitest";
 import { createMemoryStoragePort } from "../../🔨️modules/🗄️storage-port/🟦️.ts";
-import { Window, uiSpacingPx } from "../../🎯️targets/⚛️react/🟦️.tsx";
+import { Window, uiSpacingPx } from "@semio-tech/ui-react/source";
 import { Pane, PaneHost } from "../../🧱️elements/📌️WindowPane/🟦️.tsx";
 import { publishShellChromePanelBox } from "../../🔨️modules/🛟️chrome-safe-area/🟦️.tsx";
 import { type Anchor } from "../../🔨️modules/⚓️panel-anchor/🟦️.ts";
 import {ShellScopeProvider,createShellScope} from "../../🧱️elements/🐚️ShellScope/🟦️.tsx";
+import { uiDataLabel } from "../../🧱️elements/🎗️UiLabel/🟦️.tsx";
 import fixture from "../🧫️fixtures/🛟️chrome-panel-safe-area/🔣️.json";
 
 const rect=(box:readonly number[],inline=0,block=0):DOMRect=>({x:box[0]!+inline,y:box[1]!+block,left:box[0]!+inline,top:box[1]!+block,right:box[0]!+inline+box[2]!,bottom:box[1]!+block+box[3]!,width:box[2]!,height:box[3]!,toJSON:()=>({})}) as DOMRect;
@@ -23,7 +24,7 @@ it("moves each mounted pane clear of its shell panel and restores its authored a
    if(this.getAttribute("data-slot")==="test-safe-pane")return rect(row.affordance,Number(this.getAttribute("data-safe-area-inline")??0)*(row.anchor.includes("right")?-1:1),Number(this.getAttribute("data-safe-area-block")??0)*(row.anchor.includes("bottom")?-1:1));
    return original.call(this);
   };
-  const view=render(<ShellScopeProvider scope={scope}><PaneHost><Pane id={row.id} anchor={row.anchor as Anchor} icon="layers" label="Layers" overlaySlot="test-safe-pane" chromePanelGapPx={row.gap}>Body</Pane></PaneHost></ShellScopeProvider>,{container:app});
+  const view=render(<ShellScopeProvider scope={scope}><PaneHost><Pane id={row.id} anchor={row.anchor as Anchor} icon="layers" label={uiDataLabel(row.id)} overlaySlot="test-safe-pane" chromePanelGapPx={row.gap}>Body</Pane></PaneHost></ShellScopeProvider>,{container:app});
   try{
    const pane=app.querySelector('[data-slot="test-safe-pane"]')!;
    act(()=>{for(const [i,p] of row.panels.entries())publishShellChromePanelBox(root,String(i),row.anchor as Anchor,{left:p[0]!,top:p[1]!,right:p[0]!+p[2]!,bottom:p[1]!+p[3]!});});
@@ -35,7 +36,6 @@ it("moves each mounted pane clear of its shell panel and restores its authored a
   }finally{view.unmount();root.remove();Element.prototype.getBoundingClientRect=original;}
  }
  expect(rows).toHaveLength(8);
- process.stderr.write("[DEBUG] Mounted panes cleared shell occupancy and restored placement at all eight anchors\n");
 });
 
 it("connects the Window Actions pane outside PaneHost to the live window bounds",()=>{
@@ -55,5 +55,4 @@ it("connects the Window Actions pane outside PaneHost to the live window bounds"
   expect(Number(pane.getAttribute("data-safe-area-block")??0)).toBe(0);
   expect(app.querySelector('[data-testid="canvas"]')?.closest('[data-slot="pane-host-root"]')).not.toBeNull();
  }finally{view.unmount();root.remove();Element.prototype.getBoundingClientRect=original;}
- process.stderr.write("[DEBUG] Window Actions consumed its explicit host bounds outside the canvas PaneHost\n");
 });

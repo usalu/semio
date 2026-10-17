@@ -3,7 +3,7 @@
 pub const OPCODE: &str = "set-color-space";
 pub const TEXT_OPCODE: &str = OPCODE;
 
-use crate::standards::v1_7::subsets::base::schema::mutations::SetColorSpace;
+use crate::standards::v1_7::subsets::base::schema::mutations::set_color_space::SetColorSpace;
 
 /// 🖨️ Prints this direct payload through its schema-derived JSON representation.
 pub fn print(payload: &SetColorSpace) -> Result<String, String> {

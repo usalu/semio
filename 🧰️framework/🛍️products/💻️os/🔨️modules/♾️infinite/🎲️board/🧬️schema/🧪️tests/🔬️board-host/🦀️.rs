@@ -2,16 +2,14 @@
 
 
 
+use semio_framework_test_fixtures::fixture_text;
+
 /// 📖️ Reads one test input at run time (relative to the package manifest) so it does not count as an embedded compile input.
-fn read_static(path_from_manifest: &str) -> &'static str {
-    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(path_from_manifest);
-    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("test input {}: {error}", path.display())).into_boxed_str())
-}
 
 #[cfg(test)]
 #[allow(non_snake_case)]
 fn BOARD_HOST_SOURCE() -> &'static str {
-    read_static("../../../🔌️ports/➡️directed/➕️normal/🪣️fill/🦀️.rs")
+    fixture_text!("../../../🔌️ports/➡️directed/➕️normal/🪣️fill/🦀️.rs")
 }
 
 #[cfg(test)]

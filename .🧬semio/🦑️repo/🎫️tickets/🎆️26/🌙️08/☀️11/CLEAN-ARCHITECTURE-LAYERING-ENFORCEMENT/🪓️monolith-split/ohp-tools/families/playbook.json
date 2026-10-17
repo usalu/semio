@@ -1,0 +1,16 @@
+{
+ "name": "playbook",
+ "crates": [
+  "semio-playbook-mutation-bridge",
+  "semio-s-artifact-playbook-playbook",
+  "semio-s-artifact-playbook-playbook-examples",
+  "semio-s-artifact-playbook-playbook-inferences",
+  "semio-s-artifact-playbook-playbook-schema",
+  "semio-s-artifact-playbook-playbook-snapshot",
+  "semio-s-artifact-playbook-playbook-v1",
+  "semio-s-artifact-playbook-playbook-viewer",
+  "semio-s-plugin-playbook-procedural",
+  "semio-s-plugin-playbook-procedural-component"
+ ],
+ "note": "ORACLE-HARVEST-PLUGINS: ✏️s/🔌️plugins/📖️playbook"
+}

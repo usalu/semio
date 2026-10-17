@@ -1,4 +1,6 @@
-use super::*;
+use crate::schema::snapshot::SemioBrepSnapshot;
+use crate::schema::inferences::validation_report::*;
+use semio_framework_test_fixtures::fixture_text;
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3;
 use crate::schema::snapshot::{BrepCurve, BrepEdge, BrepFace, BrepLoop, BrepLoopEdge, BrepShell, BrepShellFace, BrepSolid, BrepSolidShell, BrepSurface, BrepVertex};
 use store::{InferenceCache, InferenceCacheConfig};
@@ -73,12 +75,11 @@ async fn changing_any_collection_misses_the_cache() {
 #[test]
 fn owned_dependency_matches_neutral_fixture_and_serde_oracle() {
     use store::InferredField;
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/✅validation-report/🌱️owned-dependency/🔣️.json")).expect("neutral dependency");
+    let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../../🧪️tests/🧫️fixtures/💡️inferences/✅validation-report/🌱️owned-dependency/🔣️.json")).expect("neutral dependency");
     let snapshot=SemioBrepSnapshot::default();
     let dependency=BrepValidationReport::dep_input(&snapshot,&"document".into(),&[]);
     let actual:serde_json::Value=serde_json::from_str(&semio_framework_pack_json::to_json_string(&dependency)).expect("owned dependency output");
     let oracle=serde_json::json!({"vertices":[],"edges":[],"loops":[],"faces":[],"shells":[],"solids":[]});
     assert_eq!(actual,oracle);
     assert_eq!(actual,fixture["expected"]);
-    eprintln!("[DEBUG] Typed inference dependency matches authored values and independent serde_json output");
 }

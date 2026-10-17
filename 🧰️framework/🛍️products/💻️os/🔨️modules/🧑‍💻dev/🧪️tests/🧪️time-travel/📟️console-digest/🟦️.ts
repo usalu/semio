@@ -1,10 +1,10 @@
 /** 📟️ The console digest step: uncaught errors, hard faults and the notices of a locale. */
-import { consoleRows, BENIGN_RE, pageErrors, hardFaults, readableUrlText } from "../../../../../../../🔨️modules/⏪️time-travel/🧪️testing/🎧️console/🟦️.ts";
-import type { ConsoleRow } from "../../../../../../../🔨️modules/⏪️time-travel/🧪️testing/🎧️console/🟦️.ts";
-import { currentLocale, renderer } from "../../../../../../../🔨️modules/⏪️time-travel/🧪️testing/🧠️state/🟦️.ts";
-import { shownNoticeCodes, shownNotices, shownBandFaults } from "../../../../../../../🔨️modules/⏪️time-travel/🧪️testing/🎗️band/🟦️.ts";
-import { COPY } from "../../../../../../../🔨️modules/⏪️time-travel/🧪️testing/🌍️copy/🟦️.ts";
-import { verdict, note } from "../../../../../../../🔨️modules/⏪️time-travel/🧪️testing/🧾️report/🟦️.ts";
+import { consoleRows, BENIGN_RE, pageErrors, hardFaults, readableUrlText } from "@semio-tech/framework-time-travel-ts/testing/console";
+import type { ConsoleRow } from "@semio-tech/framework-time-travel-ts/testing/console";
+import { currentLocale, renderer } from "@semio-tech/framework-time-travel-ts/testing/state";
+import { shownNoticeCodes, shownNotices, shownBandFaults } from "@semio-tech/framework-time-travel-ts/testing/band";
+import { COPY } from "@semio-tech/framework-time-travel-ts/testing/copy";
+import { verdict, note } from "@semio-tech/framework-time-travel-ts/testing/report";
 
 //#region 🔖️Steps
 

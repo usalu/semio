@@ -14,7 +14,6 @@ test("original ordered mixed receipt keeps independent copy, retained capacity a
   expect(stableStringify(demand)).toBe(stableStringify(fixture.expectedMixedDemand));
   expect(stableStringify(fixture.deque.source)).toBe(fixture.deque.canonicalSource);
   for(const text of fixture.deque.source)expect(Buffer.byteLength(text)).toBeLessThan(fixture.deque.payloadCapacity);
-  console.log("[DEBUG] original ordered mixed receipt independentBufferCopy=true independentDemand=true");
 });
 
 type Corpus={cases:{id:string,key:string,keyCapacity:number,value:string,valueCapacity:number}[],grants:number[],expected:{terminalOwners:number,stepBirthBytes:number,reportedReleaseEqualsAllocator:boolean,actualReleaseFitsGrant:boolean,sourcePayloadPointerPreserved:boolean}};

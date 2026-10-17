@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "Prototype Base",
+      "mode": "prototype",
+      "platform": "posix",
+      "selected": "base",
+      "incremental": false
+    },
+    {
+      "name": "Prototype Incremental Dependency",
+      "mode": "prototype",
+      "platform": "posix",
+      "selected": "consumer",
+      "incremental": true
+    },
+    {
+      "name": "Release Dependency",
+      "mode": "release",
+      "platform": "posix",
+      "selected": "consumer",
+      "incremental": false
+    },
+    {
+      "name": "Windows Prototype Dependency",
+      "mode": "prototype",
+      "platform": "win32",
+      "selected": "consumer",
+      "incremental": true
+    },
+    {
+      "name": "Windows Release Base",
+      "mode": "release",
+      "platform": "win32",
+      "selected": "base",
+      "incremental": false
+    }
+  ],
+  "refusals": [
+    "extra",
+    "proxy",
+    "accessor",
+    "sparse",
+    "dependency-proxy",
+    "dependency-accessor",
+    "missing-dependency",
+    "wrong-dependency",
+    "duplicate-dependency",
+    "relative-path",
+    "nonnormal-path",
+    "incremental-mismatch",
+    "output-path"
+  ],
+  "dataOnly": true,
+  "fanIn": 4096
+}

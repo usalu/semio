@@ -8,25 +8,26 @@
 //! The `.op.semio`/`.spr.semio`/`.dsl.semio`/`.pack.semio`/`.patch.semio` encodings are derived
 //! from this quintet by `fixtures generate`, never hand-forged here.
 
+use semio_framework_test_fixtures::fixture_text;
 use semio_s_artifact_stdio_semio_text_model::schema::diff::SemioTextDiff;
 use semio_s_artifact_stdio_semio_text_mutations::schema::mutations::SemioTextMutation;
 use semio_s_artifact_stdio_semio_text_model::schema::snapshot::SemioTextSnapshot;
 use protocol::Mutation;
 
-const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📥insert-run/📥️inserts/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📥insert-run/📥️inserts/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📥insert-run/📥️inserts/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📥insert-run/📥️inserts/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📥insert-run/📥️inserts/🎯️outcome/🔣️.json");
+static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/📥insert-run/📥️inserts/📸️snapshot/⬅️before/🔣️.json"));
+static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/📥insert-run/📥️inserts/📸️snapshot/➡️after/🔣️.json"));
+static MUTATION: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/📥insert-run/📥️inserts/🦠️mutation/🔣️.json"));
+static DIFF: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/📥insert-run/📥️inserts/🔺️diff/🔣️.json"));
+static OUTCOME: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/📥insert-run/📥️inserts/🎯️outcome/🔣️.json"));
 
 fn before() -> SemioTextSnapshot {
-    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("insert-run before snapshot decodes")
+    semio_framework_pack_json::from_json_str((*BEFORE), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("insert-run before snapshot decodes")
 }
 fn expected_after() -> SemioTextSnapshot {
-    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("insert-run after snapshot decodes")
+    semio_framework_pack_json::from_json_str((*AFTER), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("insert-run after snapshot decodes")
 }
 fn insert_run() -> SemioTextMutation {
-    semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("insert-run mutation decodes")
+    semio_framework_pack_json::from_json_str((*MUTATION), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("insert-run mutation decodes")
 }
 
 /// ▶️ The German run lands at FINAL index 1, between the two English runs, and nothing else moves.
@@ -60,14 +61,14 @@ async fn the_undo_remove_run_takes_the_german_run_back_out() {
 /// stay `index`/`run` verbatim).
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
-    for (label, text) in [("before", BEFORE), ("after", AFTER)] {
+    for (label, text) in [("before", (*BEFORE)), ("after", (*AFTER))] {
         let decoded: SemioTextSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
         let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "insert-run/inserts-a-german-run-between-two-english-runs: committed {label} JSON is not canonical");
     }
     let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&(insert_run()))).expect("insert-run mutation encodes");
-    let original: serde_json::Value = serde_json::from_str(MUTATION).expect("insert-run mutation reparses");
+    let original: serde_json::Value = serde_json::from_str((*MUTATION)).expect("insert-run mutation reparses");
     assert_eq!(reencoded, original, "insert-run/inserts-a-german-run-between-two-english-runs: committed mutation JSON is not canonical");
 }
 
@@ -75,7 +76,7 @@ async fn committed_json_is_canonical() {
 /// diff leaf's `mutation.clamped` warning branch must NOT fire.
 #[semio_framework_async_macros::async_test]
 async fn declared_outcome_holds_without_a_clamp_warning() {
-    let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
+    let outcome: serde_json::Value = serde_json::from_str((*OUTCOME)).expect("outcome decodes");
     assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("applied"), "insert-run/inserts-a-german-run-between-two-english-runs: this case is declared applied");
     let produced = insert_run().diff(&before());
     assert!(produced.messages().is_empty(), "an in-range insert index must not raise mutation.clamped");
@@ -88,7 +89,7 @@ async fn produces_committed_diff() {
     let base = before();
     let outcome = <SemioTextMutation as Mutation<SemioTextSnapshot>>::diff(&insert_run(), &base);
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
-    let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
+    let committed: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff decodes");
     assert_eq!(produced, committed, "insert-run/inserts-a-german-run-between-two-english-runs: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
 
@@ -97,10 +98,10 @@ async fn produces_committed_diff() {
 /// entire encoding.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
-    let decoded: SemioTextDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed insert-run diff decodes");
+    let decoded: SemioTextDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed insert-run diff decodes");
     assert!(decoded.runs.is_some(), "an applied insert-run diff must carry a runs list, not an empty diff");
     let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("diff re-encodes");
-    let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
+    let original: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff reparses");
     assert_eq!(reencoded, original, "insert-run/inserts-a-german-run-between-two-english-runs: committed diff JSON is not canonical");
 }
 
@@ -108,7 +109,7 @@ async fn committed_diff_is_canonical() {
 /// is a complete description of the insert, not a summary of it.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: SemioTextDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed insert-run diff decodes");
+    let decoded: SemioTextDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed insert-run diff decodes");
     let produced = protocol::apply_diff(&decoded, &before()).expect("committed insert-run diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "insert-run/inserts-a-german-run-between-two-english-runs: committed diff did not carry before to after");
 }

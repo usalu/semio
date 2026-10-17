@@ -8,7 +8,7 @@ fn invalid(message:impl Into<String>)->ValueError{ValueError::new(semio_framewor
 fn index(n:usize)->Result<i64,ValueError>{i64::try_from(n).map_err(|_|ValueError::new(semio_framework_value::ValueRefusalKind::WorkLimit,"wfc3d ordinal overflow"))}
 fn floats(t:&str)->&'static[FloatColumn]{match t{"wfc3d_tile"=>&[FloatColumn::Binary64(5)],"wfc3d_position"=>&[FloatColumn::Binary64(3)],"wfc3d_slot"=>&[FloatColumn::Binary64(4),FloatColumn::Binary64(5),FloatColumn::Binary64(6),FloatColumn::Binary64(7),FloatColumn::Binary64(8),FloatColumn::Binary64(9)],_=>&[]}}
 fn identity(r:FloatRow<'_>,n:usize)->Result<(),ValueError>{if r.rowid<=0||r.integer(0)?!=r.rowid||r.values.len()!=n{return Err(invalid("wfc3d entity identity or columns differ"))}Ok(())}
-fn word(r:FloatRow<'_>,i:usize)->Result<u32,ValueError>{u32::try_from(r.integer(i)?).map_err(|_|invalid("wfc3d unsigned32 differs"))}
+pub fn word(r:FloatRow<'_>,i:usize)->Result<u32,ValueError>{u32::try_from(r.integer(i)?).map_err(|_|invalid("wfc3d unsigned32 differs"))}
 fn byte(r:FloatRow<'_>,i:usize)->Result<u8,ValueError>{u8::try_from(r.integer(i)?).map_err(|_|invalid("wfc3d unsigned8 color differs"))}
 fn flag(r:FloatRow<'_>,i:usize)->Result<bool,ValueError>{match r.integer(i)?{0=>Ok(false),1=>Ok(true),_=>Err(invalid("wfc3d boolean differs"))}}
 fn rows<'a>(d:&'a SqliteDatabase,t:&str,c:&mut SqliteSnapshotControl<'_>)->Result<Vec<FloatRow<'a>>,ValueError>{let mut result=Vec::new();let mut seen=BTreeSet::new();for(i,r)in d.table(t)?.rows.iter().enumerate(){if i%256==0{c.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,i,0)?;}let r=FloatRow::new(r,floats(t))?;if !seen.insert(r.rowid){return Err(invalid("duplicate wfc3d entity identity"))}result.push(r);}Ok(result)}
@@ -53,7 +53,4 @@ fn from_sqlite_database(d:&SqliteDatabase,c:&mut SqliteSnapshotControl<'_>)->Res
 }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;
 

@@ -1,5 +1,13 @@
-pub(crate) mod context {
-    use super::super::*;
+use semio_framework_test_fixtures::fixture_text;
+
+pub mod context {
+    use semio_framework_plugin::AppActionRegistry;
+    use semio_s_artifact_stdio_semio_flow::schema::snapshot::SemioFlowSnapshot;
+    use crate::SequenceHostSnapshot;
+    use crate::editor::sequence::modes::edit::windows::{main, script};
+    use crate::editor::sequence::base::SEQUENCE_INTERACTION_STEPS;
+    use crate::editor::sequence::retained::SequenceCommand;
+    use crate::editor::sequence::app::{SequencePlayApp, create_sequence_app};
     use semio_framework_plugin::artifact_app_laws::meta;
     use semio_framework_plugin::{App, EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
     use semio_s_artifact_stdio_semio::{create_semio_member, SemioMembers};
@@ -72,7 +80,7 @@ pub(crate) mod context {
     /// `App { definition, examples }` `new_app_with_registry` still expects (SDK gap, unchanged by
     /// this ticket — `context::assert_declared_actions_bridge_to_commands` carries the identical gap
     /// per `📓️w0-f-report.md` Gap 3) — wraps it with an empty `examples` list rather than porting one.
-    pub(crate) fn sequence_manifest_for_tests() -> App {
+    pub fn sequence_manifest_for_tests() -> App {
         App { definition: create_sequence_app(), examples: Vec::new() }
     }
 
@@ -188,9 +196,29 @@ pub(crate) mod context {
     }
 }
 
-use super::*;
+use neural_engine::Value as NeuralValue;
+use semio_framework_plugin::{AppActionRegistry, DslValue, Media, MediaPayload};
+use semio_framework_os_infinite::board::schema::layout::DagLayoutOptions;
+use semio_framework_os_infinite_directed_presentation::{EdgeRouteStyle, PortShape};
+use crate::{SEQUENCE_DOCUMENT_SCHEMA, SequenceCamera, SequenceEdge, SequenceHostSnapshot, SequenceStep, SlotRef, StepParams};
+use crate::editor::sequence::commands::step::{add_step, add_step_dropped, add_step_to_slot, delete_selection, move_step, remove_step, set_step_collapsed, set_step_params};
+use crate::editor::sequence::modes::edit::windows::{compiled, main, script};
+use crate::editor::sequence::commands::connection::{connect_steps, disconnect_steps};
+use crate::editor::sequence::modes::edit;
+use semio_framework_pack_json::json;
+use crate::editor::sequence::commands::node_graph::{node_graph_edit, set_viewport};
+use crate::editor::sequence::commands::layout::{reorganize, set_orientation};
+use crate::editor::sequence::commands::playback::{run_command, stop_command};
+use crate::editor::sequence::commands::example::set_active_example;
+use crate::editor::sequence::panels::document::SEQUENCE_PLAY_BODY_ARTIFACT;
+use crate::editor::sequence::panels::catalogue::SEQUENCE_PLAY_BODY_CATALOGUE;
+use crate::editor::sequence::panels::inspection::SEQUENCE_PLAY_BODY_INSPECTOR;
+use crate::editor::sequence::retained::SequenceCommand;
+use crate::editor::sequence::base::{SequenceCoreError, sequence_io};
+use crate::editor::sequence::host::SequenceHost;
+use crate::editor::sequence::app::{SequencePlayApp, create_sequence_app, sequence_context_menu_items};
 use crate::default_snapshot;
-use crate::editor::sequence::unit_tests::context::{live_host_snapshot, new_app, new_app_with_registry_wired};
+use crate::editor_unit_tests::context::{live_host_snapshot, new_app, new_app_with_registry_wired};
 use semio_framework_ui_locale::Locale;
 use semio_framework_plugin::PluginApp;
 use semio_framework_ui_locale::Terminology;
@@ -355,7 +383,7 @@ async fn import_media_steps_in_wraps_a_bare_scalar_payload() {
 #[semio_framework_async_macros::async_test]
 async fn import_media_steps_in_consumes_original_intrinsic_unicode_and_signed_scalar(){
     use semio_framework_value::{DslValue,Number};
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧪️tests/🧫️fixtures/🧵️continuation/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧪️tests/🧫️fixtures/🧵️continuation/🔣️.json")).unwrap();
     let text=fixture["textUnit"].as_str().unwrap().repeat(fixture["projection"]["textRepeats"].as_u64().unwrap()as usize);
     assert_eq!(serde_json::from_str::<String>(&serde_json::to_string(&text).unwrap()).unwrap(),text);
     let mut app=new_app_with_registry_wired().await;
@@ -368,7 +396,6 @@ async fn import_media_steps_in_consumes_original_intrinsic_unicode_and_signed_sc
     assert_eq!(after.steps.len(),before+2);
     assert_eq!(after.steps[before].params.get("message").and_then(|value|value.as_atom()).and_then(|atom|atom.as_str()),Some(text.as_str()));
     assert_eq!(after.steps[before+1].params.get("value").and_then(|value|value.as_atom()).and_then(|atom|atom.as_f64()),Some(42.));
-    eprintln!("[DEBUG] Sequence admitted intrinsic original Unicode object and signed scalar pass through the registered import owner");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -422,7 +449,7 @@ async fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
 }
 
 /// 🧾️ One representative value per row, in declaration (= binary ordinal) order.
-pub(super) fn every_command() -> Vec<SequenceCommand> {
+pub fn every_command() -> Vec<SequenceCommand> {
     vec![
         SequenceCommand::AddStep(add_step::AddStep { kind: "log.print".into(), x: 1.0, y: 2.0 }),
         SequenceCommand::AddStepToSlot(add_step_to_slot::AddStepToSlot { kind: "log.print".into(), x: 1.0, y: 2.0, owner: "step-1".into(), slot_name: "then".into() }),

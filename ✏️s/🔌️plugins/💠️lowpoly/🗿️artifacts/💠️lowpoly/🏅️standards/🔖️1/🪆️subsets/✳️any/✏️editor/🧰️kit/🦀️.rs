@@ -12,7 +12,7 @@ use pack::snapshot::ArtifactPack;
 
 //#region 🔖️Constants
 pub const LOWPOLY_PLAY_APP_ID: &str = "lowpoly-play";
-pub(crate) const LOWPOLY_PLAY_CONTROLLER_ID: &str = "lowpoly-play";
+pub const LOWPOLY_PLAY_CONTROLLER_ID: &str = "lowpoly-play";
 /// 🎯️ An `ActionDescriptor` addressed at this app — the single factory every taxonomy node's chrome
 /// (`🛠️options/*`, `📌️panels/*`, window/engagement builders) builds its `on_change`/item actions with.
 pub fn lowpoly_action(action: &str, args: Option<semio_framework_plugin::UiValue>) -> semio_framework_plugin::UiAssemblyResult<(semio_framework_plugin::ActionId, Option<semio_framework_plugin::UiValue>)> {

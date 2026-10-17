@@ -1,16 +1,19 @@
 //! ↩️ Inverse for `FlattenNode`.
 
 use crate::schema::diff::node_at;
-use crate::schema::mutations::{unflatten_node, SemioDrawingMutation};
+use crate::schema::mutations::unflatten_node;
 use crate::schema::snapshot::{DrawNode, SemioDrawingSnapshot};
 
 //#region 🔖️Inverse
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn inverse(payload: &super::FlattenNode, base: &SemioDrawingSnapshot) -> Result<Vec<SemioDrawingMutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op>(payload: &super::FlattenNode, base: &SemioDrawingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError>
+where
+    Op: From<crate::schema::mutations::unflatten_node::UnflattenNode>,
+{
     Ok((|| {
     match node_at(base, &payload.at) {
         Some(node @ DrawNode::Group { children, .. }) if super::collect_flattened_leaves(children).is_some() => {
-            vec![SemioDrawingMutation::UnflattenNode(unflatten_node::UnflattenNode { at: payload.at.clone(), original: node.clone() })]
+            vec![Op::from(unflatten_node::UnflattenNode { at: payload.at.clone(), original: node.clone() })]
         }
         _ => Vec::new(),
     }

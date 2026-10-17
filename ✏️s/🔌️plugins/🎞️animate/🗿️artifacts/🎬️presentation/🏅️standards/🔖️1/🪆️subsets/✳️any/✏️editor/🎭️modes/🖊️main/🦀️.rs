@@ -26,3 +26,13 @@ pub fn layout() -> WindowLayout {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🧩️ArtifactItems8
+pub mod artifact_items_8 {
+pub use crate::{snapshot::schema::default_snapshot, snapshot::schema::PresentationSnapshot};
+
+pub fn default_presentation_snapshot() -> PresentationSnapshot {
+    default_snapshot()
+}
+}
+//#endregion 🧩️ArtifactItems8

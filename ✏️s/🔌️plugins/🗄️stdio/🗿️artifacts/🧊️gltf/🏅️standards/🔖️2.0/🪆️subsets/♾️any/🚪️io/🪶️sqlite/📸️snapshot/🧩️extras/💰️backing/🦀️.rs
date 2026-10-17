@@ -7,7 +7,7 @@ impl Values{
  fn put(&mut self,key:i64,value:GltfJson,read:&mut Read<'_,'_,'_>)->Result<(),ValueError>{let value=owned(value);match self.0.binary_search_by_key(&key,|item|item.0){Ok(_)=>Err(ValueError::new(ValueRefusalKind::InvalidValue,"GLTF extras value has multiple owners")),Err(position)=>{if self.0.len()==self.0.capacity(){let additional=self.0.capacity().max(1);read.reserve_fields(&mut self.0,additional)?;}self.0.insert(position,(key,Some(value.take())));Ok(())}}}
  fn take(&mut self,key:i64)->Result<GltfJson,ValueError>{self.0.binary_search_by_key(&key,|item|item.0).ok().and_then(|index|self.0.remove(index).1).ok_or_else(||ValueError::new(ValueRefusalKind::InvalidValue,"GLTF extras child is absent or multiply owned"))}
 }
-struct Object(Vec<(String,GltfJson)>);
+pub struct Object(Vec<(String,GltfJson)>);
 impl Drop for Object{fn drop(&mut self){for(_,value)in self.0.drain(..){<GltfJson as semio_framework_dsl_record::DslField>::retire_decoded(value);}}}
 enum Pending{Value(i64),Array(i64,Vec<i64>),Object(i64,Vec<(String,i64)>)}
 pub(super) fn reconstruct(read:&mut Read<'_,'_,'_>,root:i64)->Result<GltfJson,ValueError>{

@@ -1,4 +1,4 @@
-use super::*;
+use crate::editor::forms::commands::patch_vector_field::*;
 use crate::editor::forms::commands::add_vector_field::AddVectorField;
 use crate::editor::forms::commands::remove_vector_field::RemoveVectorField;
 use crate::editor::forms::unit_tests::context::{dispatch, forms_app};

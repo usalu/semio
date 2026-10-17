@@ -204,14 +204,18 @@ pub fn puzzle2d_board_drawing(snapshot: &crate::Puzzle2dSnapshot) -> semio_s_art
 mod tests;
 //#endregion 🧪️Tests
 
-#[path = "💾️binary/🦀️.rs"]
-pub mod binary;
+pub mod binary {
+    pub use semio_s_artifact_puzzle_2d_mut_any_10::standards::v1::subsets::any::io::binary::*;
+    pub use semio_s_artifact_puzzle_2d_schema::standards::v1::subsets::any::io::binary::diff;
+    pub use semio_s_artifact_puzzle_2d_records::standards::v1::subsets::any::io::binary::inferences;
+}
 
-#[path = "📝️text/🦀️.rs"]
-pub mod text;
+pub mod text {
+    pub use semio_s_artifact_puzzle_2d_mut_any_10::standards::v1::subsets::any::io::text::*;
+    pub use semio_s_artifact_puzzle_2d_records::standards::v1::subsets::any::io::text::inferences;
+}
 
-#[path = "🪶️sqlite/🦀️.rs"]
-pub mod sqlite;
+pub use semio_s_artifact_puzzle_2d_inferences::standards::v1::subsets::any::io::sqlite;
 
 pub mod derived_construction {
     use crate::{Puzzle2dDiff, Puzzle2dMutation, Puzzle2dSnapshot};

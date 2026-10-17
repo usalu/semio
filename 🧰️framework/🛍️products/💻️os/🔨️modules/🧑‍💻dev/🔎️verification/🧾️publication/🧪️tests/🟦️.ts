@@ -6,7 +6,7 @@ import { join, relative } from "node:path";
 import { createHash } from "node:crypto";
 import { joinProtectedActorResponsesV1, ProtectedActorResponseCaptureV1, executeProtectedActorChildV1, type ProtectedActorBrowserPortV1, protectedActorChildUrlV1, observeNormalDevHubPublicationOwnerV1 } from "../🟦️.ts";
 import { blake3Hex } from "@semio-tech/framework/hash";
-import { targetLeaseV1FixtureUrl } from "../../../../📇️directory/🧪️tests/🧫️fixtures/🟦️.ts";
+import { targetLeaseV1FixtureUrl } from "@semio-tech/framework-os/modules/directory/testing/fixtures";
 
 /** 🧪️ Exercises semantic byte joins using plain cases and independent JSON Schema/WebCrypto oracles. */
 export async function testProtectedActorPublicationV1(root: string): Promise<void> {
@@ -85,7 +85,7 @@ export async function testProtectedActorChildExecutionV1(root:string,page:Protec
   }
   assert.equal(oracleCount,8);
 
-  const {encodePackValue}=await import("../../../../../🟦️.ts");
+  const {encodePackValue}=await import("@semio-tech/framework-os");
   const descriptor=JSON.parse(readFileSync(join(root,"🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧾️describe/🧪️tests/🧫️fixtures/🔣️.json"),"utf8")).descriptor,staged=encodePackValue(descriptor);
   const guest=encodePackValue(descriptor),actor=Buffer.from(`export async function activate(){return{async invoke(path,args){if(path.join('.')!=='describe.describe'||args.length)throw Error('neutral describe path');return new Uint8Array(${JSON.stringify(Array.from(guest))});},async close(){}};}`);
   const joined={actor,descriptor:staged} as Parameters<typeof executeProtectedActorChildV1>[2];

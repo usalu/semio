@@ -10,7 +10,7 @@
 #![allow(unexpected_cfgs)]
 
 use crate::editor::shooting::config::{ShootingConfig, ShootingConfigMutation};
-use crate::editor::shooting::{ShootingDispatchCtx, SHOOTING_PLAY_APP_ID};
+use crate::editor::shooting::ui_helpers_and_io::{ShootingDispatchCtx, SHOOTING_PLAY_APP_ID};
 use crate::standards::v1::subsets::any::schema::mutations::ShootingMutation;
 use crate::ShootingSnapshot;
 use machine::Command;
@@ -197,7 +197,5 @@ pub mod scale_selection {
 //#endregion 🔖️ScaleSelection
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

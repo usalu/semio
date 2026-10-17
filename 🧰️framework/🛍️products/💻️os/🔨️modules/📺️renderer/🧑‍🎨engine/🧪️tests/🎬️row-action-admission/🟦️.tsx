@@ -7,16 +7,17 @@ import fixture from "../🧫️fixtures/🎬️row-action-admission/🔣️.json
 import { UiDocumentStore } from "../../🧱️elements/📃️UiDocumentStore/🟦️.tsx";
 import { UiNodeView } from "../../🧱️elements/🗣️Interpreter/🧱️node-tree/🟦️.tsx";
 import { LocalDocumentOwnerRegistryV1 } from "../../🧱️elements/🗣️Interpreter/🧭️local-document-owner/🟦️.ts";
+import type { InputOutcomeV1 } from "../../🧱️elements/🏛️ShellHost/🎯️input-ledger/🟦️.ts";
 
 afterEach(cleanup);
 
 type Case = typeof fixture.initial;
-type Deferred = { readonly promise: Promise<unknown>; resolve(value: unknown): void; reject(reason: unknown): void };
+type Deferred = { readonly promise: Promise<InputOutcomeV1>; resolve(value: InputOutcomeV1): void; reject(reason: unknown): void };
 
 const deferred = (): Deferred => {
-  let resolve = (_value: unknown): void => {};
+  let resolve = (_value: InputOutcomeV1): void => {};
   let reject = (_reason: unknown): void => {};
-  const promise = new Promise<unknown>((accept, refuse) => { resolve = accept; reject = refuse; });
+  const promise = new Promise<InputOutcomeV1>((accept, refuse) => { resolve = accept; reject = refuse; });
   return { promise, resolve, reject };
 };
 
@@ -87,7 +88,7 @@ for (const ending of ["completed", "refused", "rejected"] as const) it(`recovers
   expect(document.activeElement === tableAction(), "the pressed action keeps the focus its press gave it").toBe(true);
   await act(async () => {
     if (ending === "rejected") mounted.settlements[0]!.reject(new Error("transport refused"));
-    else mounted.settlements[0]!.resolve(ending === "completed" ? { kind: "applied", inputSeq: 1 } : { kind: "refused", inputSeq: 1, reason: "row-conflict", retryable: true });
+    else mounted.settlements[0]!.resolve(ending === "completed" ? { kind: "applied", inputSeq: 1 } : { kind: "refused", inputSeq: 1, reason: "mutation-rejected", retryable: true });
     await Promise.resolve();
   });
   for (const button of [tableAction(), treeAction()]) expect([button.disabled, button.hasAttribute("aria-disabled"), button.hasAttribute("aria-busy")], `a ${ending} settlement ends the pending state it began`).toEqual([false, false, false]);
@@ -146,7 +147,7 @@ it("isolates replacement target, Store and owner lifetimes from an older pending
   expect(mounted.intents).toHaveLength(fixture.expected.replacementDispatches);
   await act(async () => { mounted.settlements[0]!.resolve({ kind: "applied", inputSeq: 1 }); await Promise.resolve(); });
   expect(pending(tableAction(fixture.replacement.action.label))).toBe(true);
-  await act(async () => { mounted.settlements[1]!.resolve({ kind: "refused", inputSeq: 2, reason: "row-conflict", retryable: true }); await Promise.resolve(); });
+  await act(async () => { mounted.settlements[1]!.resolve({ kind: "refused", inputSeq: 2, reason: "mutation-rejected", retryable: true }); await Promise.resolve(); });
   expect(pending(tableAction(fixture.replacement.action.label))).toBe(false);
   const replacementStore = new UiDocumentStore("row-action-admission");
   replacementStore.loadSnapshot(snapshot(3, fixture.replacement) as any);

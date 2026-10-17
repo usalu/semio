@@ -22,18 +22,6 @@ mod artifacts {
 }
 //#endregion 🗿️Artifacts
 
-//#region ✏️Editor
-mod editor {
-    pub use semio_s_artifact_raster_raster_editor::*;
-}
-//#endregion ✏️Editor
-
-//#region 👁️Viewer
-mod viewer {
-    pub use semio_s_artifact_raster_raster_viewer::*;
-}
-//#endregion 👁️Viewer
-
 //#region 🔖️Plugin
 #[path = "../../🦀️.rs"]
 pub mod plugin;

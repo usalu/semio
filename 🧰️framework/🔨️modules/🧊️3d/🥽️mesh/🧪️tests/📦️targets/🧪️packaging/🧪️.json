@@ -1,0 +1,147 @@
+{
+  "version": 1,
+  "packages": [
+    {
+      "name": "semio-framework-3d",
+      "directory": "📦️packages/🦀️rust",
+      "production": [
+        "semio-framework-3d-collision",
+        "semio-framework-3d-rigid",
+        "semio-framework-3d-mesh-reconstruction",
+        "semio-framework-3d-mesh-document",
+        "semio-framework-3d-mesh-contract",
+        "semio-framework-3d-mesh-clipping",
+        "semio-framework-3d-brep-vector",
+        "semio-framework-value",
+        "semio-framework-mesh-engine",
+        "semio-framework-value-derive"
+      ],
+      "development": []
+    },
+    {
+      "name": "semio-framework-3d-rigid",
+      "directory": "🌀️rigid/📦️packages/🦀️rust",
+      "production": [
+        "semio-framework-value",
+        "semio-framework-value-derive"
+      ],
+      "development": []
+    },
+    {
+      "name": "semio-framework-3d-collision",
+      "directory": "🧿️collision/📦️packages/🦀️rust",
+      "production": [
+        "semio-framework-3d-rigid",
+        "semio-framework-value",
+        "semio-framework-value-derive"
+      ],
+      "development": [
+        "parry3d"
+      ]
+    },
+    {
+      "name": "semio-framework-3d-mesh-contract",
+      "directory": "🥽️mesh/🧬️contract/📦️packages/🦀️rust",
+      "production": [
+        "semio-framework-value",
+        "semio-framework-value-derive"
+      ],
+      "development": [
+        "serde"
+      ]
+    },
+    {
+      "name": "semio-framework-3d-mesh-document",
+      "directory": "🥽️mesh/📄️document/📦️packages/🦀️rust",
+      "production": [
+        "semio-framework-3d-mesh-contract",
+        "semio-framework-pack-json",
+        "semio-framework-value",
+        "semio-framework-mesh-engine",
+        "semio-framework-value-derive"
+      ],
+      "development": [
+        "serde",
+        "serde_json",
+        "parry3d",
+        "semio-framework-3d-testing-support"
+      ]
+    },
+    {
+      "name": "semio-framework-3d-mesh-clipping",
+      "directory": "🥽️mesh/🛠️modeling/✂️clipping/📦️packages/🦀️rust",
+      "production": [
+        "semio-framework-3d-mesh-contract",
+        "semio-framework-value",
+        "semio-framework-mesh-engine"
+      ],
+      "development": [
+        "serde_json"
+      ]
+    },
+    {
+      "name": "semio-framework-3d-mesh-reconstruction",
+      "directory": "🥽️mesh/🛠️modeling/🔁️reconstruction/📦️packages/🦀️rust",
+      "production": [
+        "semio-framework-3d-mesh-document",
+        "semio-framework-3d-mesh-contract",
+        "semio-framework-value",
+        "semio-framework-mesh-engine"
+      ],
+      "development": [
+        "serde_json",
+        "semio-framework-3d-testing-support"
+      ]
+    },
+    {
+      "name": "semio-framework-3d-mesh-tests",
+      "directory": "🥽️mesh/🧪️tests/📦️targets/📦️packages/🦀️rust",
+      "production": [],
+      "development": [
+        "semio-framework-3d",
+        "semio-framework-3d-mesh-reconstruction",
+        "semio-framework-value",
+        "semio-framework-pack-json",
+        "semio-framework-async-macros",
+        "semio-framework-3d-testing-support",
+        "semio-framework-mesh-engine",
+        "serde_json",
+        "parry3d",
+        "semio-framework-trace"
+      ]
+    }
+  ],
+  "locks": [
+    "✏️s/Cargo.lock",
+    "✏️s/🔌️plugins/🌀️procedural/🏭️bridge/Cargo.lock",
+    "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/Cargo.lock",
+    "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/Cargo.lock",
+    "✏️s/🔌️plugins/🏭️process/🏭️bridge/Cargo.lock",
+    "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/Cargo.lock",
+    "✏️s/🔌️plugins/🏭️process/🧩️extensions/🔩️metal/Cargo.lock",
+    "✏️s/🔌️plugins/🏭️process/🧩️extensions/🤖️robotic/Cargo.lock",
+    "✏️s/🔌️plugins/🏭️process/🧩️extensions/🧱️concrete/Cargo.lock",
+    "✏️s/🔌️plugins/🏭️process/🧩️extensions/🪵️wood/Cargo.lock",
+    "✏️s/🔌️plugins/💠️lowpoly/🏭️bridge/Cargo.lock",
+    "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/Cargo.lock",
+    "✏️s/🔌️plugins/📐️cad/🏭️bridge/Cargo.lock",
+    "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/Cargo.lock",
+    "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building/Cargo.lock",
+    "✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/Cargo.lock",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/Cargo.lock",
+    "✏️s/🔌️plugins/🧩️puzzle/🏭️bridge/Cargo.lock",
+    "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/Cargo.lock",
+    "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/Cargo.lock",
+    "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/Cargo.lock",
+    "✏️s/🔌️plugins/🪐️space/🏭️bridge/Cargo.lock",
+    "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/Cargo.lock",
+    "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/Cargo.lock",
+    "✏️s/🧑‍💻dev/🌊️flow/Cargo.lock",
+    "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/Cargo.lock",
+    "✏️s/🧑‍💻dev/📐️cad/Cargo.lock",
+    "✏️s/🧑‍💻dev/🧩️composition/Cargo.lock",
+    "✏️s/🧑‍💻dev/🧹️fixture-sweep/Cargo.lock",
+    "🌎️hub/Cargo.lock",
+    "🧰️framework/Cargo.lock"
+  ]
+}

@@ -10,7 +10,6 @@
 //! | `example-picker-dismiss` | `engagementAbort` | (none) | the open picker made `idle` false, so the app-keybinding rung never ran, and the sync Escape arm closed the picker and returned |
 
 use semio_framework_os_renderer_wgpu_fixtures::shell::{retained_world_sequence_probe, test_app};
-use test_app;
 use super::*;
 use infinite_world::world::World3dState;
 use semio_framework::manifest::Keybinding;

@@ -1,7 +1,15 @@
-use super::*;
+#[allow(unused_imports)]
+use crate::op::NoteMutation;
+#[allow(unused_imports)]
+use crate::NoteSnapshot;
+#[allow(unused_imports)]
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+#[allow(unused_imports)]
+use semio_framework_value_derive::{FromValue, ToValue};
+use crate::editor::note::commands::set_grid_subdivisions::*;
 use crate::editor::note::commands::set_grid_opacity;
 use crate::editor::note::unit_tests::context::{dispatch, note_app};
-use crate::editor::note::NoteCommand;
+use crate::editor::note::command_enum::NoteCommand;
 
 #[semio_framework_async_macros::async_test]
 async fn set_grid_subdivisions_and_opacity_clamp() {

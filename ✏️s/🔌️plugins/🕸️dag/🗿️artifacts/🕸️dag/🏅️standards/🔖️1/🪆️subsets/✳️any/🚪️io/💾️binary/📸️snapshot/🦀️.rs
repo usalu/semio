@@ -71,9 +71,7 @@ fn sqlite_snapshot_codec() -> Option<store::os_store::serialization::ArtifactSql
 mod tests;
 //#endregion 🧪️Tests
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️semio-protocol-conformance/🦀️.rs"]
-mod semio_protocol_conformance;
+
 
 /// 🫴️ Declares this owner’s actual controlled native record factories.
 impl pack::snapshot::ArtifactNativeSnapshot for DagSnapshot {

@@ -1,0 +1,106 @@
+{
+ "file": "🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/🧪️tests/🔬️unit/🦀️.rs",
+ "original": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/c4p49-tools/orig/tml.rs",
+ "stage": "/Users/ueli/.cache/c4p49/stage-frag",
+ "chunks": [
+  {
+   "name": "🧫️scene-fixtures",
+   "folder": "🧫️scene-fixtures",
+   "doc": "🧫️ Scene fixtures of the tiled map tests: the 1x1 PNG, the synthetic land tile, the land cover and overlay extensions, the overlay host and the Zurich pin constants.",
+   "ranges": [
+    [
+     8,
+     71
+    ]
+   ]
+  },
+  {
+   "name": "📷️camera-and-visible-tiles",
+   "folder": "📷️camera-and-visible-tiles",
+   "doc": "📷️ Camera and visible tiles: viewport clamping, the camera zoom, the bounded visible tiles, the vector tile zoom pick, the overzoom, the layer visibility and stroke scale JSON and the visible tiles at the world zoom.",
+   "ranges": [
+    [
+     73,
+     192
+    ]
+   ]
+  },
+  {
+   "name": "🎯️feature-picking-and-overlays",
+   "folder": "🎯️feature-picking-and-overlays",
+   "doc": "🎯️ Feature picking and overlays: the raster affine, the overlay JSON, the feature screen projection, the hit tests, the rectangle and line queries, the interaction sync, the pointer up camera emission, the overlay paint order and the map theme JSON.",
+   "ranges": [
+    [
+     194,
+     324
+    ]
+   ]
+  },
+  {
+   "name": "🎨️render-scene-and-vector-cache",
+   "folder": "🎨️render-scene-and-vector-cache",
+   "doc": "🎨️ Render scene and vector scene cache: the device pixel ratio scene, the render mode, the vector style preset and the cache hits and invalidations of the vector scene.",
+   "ranges": [
+    [
+     326,
+     515
+    ]
+   ]
+  },
+  {
+   "name": "🧱️tile-retention-and-polygon-queries",
+   "folder": "🧱️tile-retention-and-polygon-queries",
+   "doc": "🧱️ Tile retention and polygon queries: the raster and vector ancestor retention, the tile rectangle intersection, the point and polyline geometry, the interaction plan, the polygon feature queries and the feature screen coverage.",
+   "ranges": [
+    [
+     517,
+     661
+    ]
+   ]
+  },
+  {
+   "name": "🧭️interaction-sync-and-focus",
+   "folder": "🧭️interaction-sync-and-focus",
+   "doc": "🧭️ Interaction sync and focus: the selection replacement, the hover and kind, the declared granularity, the focus on points and lines and the tile presence.",
+   "ranges": [
+    [
+     663,
+     736
+    ]
+   ]
+  },
+  {
+   "name": "⬆️tile-uploads-and-prefetch",
+   "folder": "⬆️tile-uploads-and-prefetch",
+   "doc": "⬆️ Tile uploads and prefetch: the raster and vector uploads and their idempotence, the visible tile revisions, the prefetch tiles and the pinned LRU eviction.",
+   "ranges": [
+    [
+     738,
+     876
+    ]
+   ]
+  },
+  {
+   "name": "🎚️theme-lod-and-label-guards",
+   "folder": "🎚️theme-lod-and-label-guards",
+   "doc": "🎚️ Theme, level of detail and label guards: the invalid theme, layer visibility and stroke scale JSON, the neutral band list, the pinned band fallback, the opaque fill and the label declutter.",
+   "ranges": [
+    [
+     878,
+     935
+    ]
+   ]
+  },
+  {
+   "name": "🌍️mercator-oracle-and-tile-budget",
+   "folder": "🌍️mercator-oracle-and-tile-budget",
+   "doc": "🌍️ Mercator oracle and tile budget: the committed Web Mercator fixture, the fixture band policy, the band selection, the host band report and the visible tile request bound.",
+   "ranges": [
+    [
+     937,
+     1001
+    ]
+   ]
+  }
+ ]
+}

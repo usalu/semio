@@ -1,0 +1,1513 @@
+//! 🧵️ Surface-neutral preview evaluation — the ONE read-only `previewEval` tool run both generation3d
+//! surfaces run (`📋️tool-run-contract.md` §2, §3.7; ticket 26/09/13/INTERACTIVE-TOOLS-VISIBLE-PROCESS).
+//!
+//! ⏯️ The framework owns the lifecycle: a surface's `pending_effects` starts the run once an attached
+//! preview window owes an evaluation, and start, pause, single step, abort and finalize are the
+//! framework-reserved actions. [`PreviewEvalRunJob`] owns the scheduling: each algorithm unit is ONE
+//! chain hop it hands the host through its [`ToolRunJobPort`] (`flowEvalTick` addressed at a preview
+//! window), after which it waits until a hop settles. The hop advances the retained
+//! [`FlowEvalSession`], publishes the evaluation into the addressed window's retained transient and
+//! parks an [`semio_framework_plugin::ExtensionInvocation`] (`evaluate` while operators are still
+//! pending, then `tessellate`); `flowEvalResolve` / `flowTessellateResolve` fold the answers and wake
+//! the job. Every observed node transition becomes a trace record keyed by the node's entity id. Abort
+//! is host-driven by construction: the job's close quiesces the session and hands the host one
+//! `flowEvalRelease` hop that reaches the geometry extension's own retained kernel jobs. No surface
+//! may run a synchronous
+//! `FlowEvalSession::tick` loop instead: the brep/math operators are CONTRIBUTED by the host at
+//! runtime (`setContributions`) and are never linked into the guest, so an in-guest tick can only
+//! ever fault (`📓️audit-window-inventory-2026-09-12.md` §4 P0 item 1).
+//!
+//! 🪆️ This module lives at the SUBSET level, beside `✏️editor` and `👁️viewer` rather than inside
+//! either, because both run the identical chain and `policyViewerPurityBreaches` forbids a viewer
+//! file reaching through `::editor::`. Everything a surface owns alone — its config type, its
+//! interaction marks, its payload assembly, its window chrome — stays on that surface; everything
+//! the chain itself is made of lives here exactly once (CLAUDE.md: repeated code MUST be close to
+//! each other). Ticket 26/09/09/PROCEDURAL-3D-END-TO-END.
+#![allow(clippy::result_large_err)]
+
+use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, StepContext};
+use semio_s_artifact_procedural_3d_model::host_with_session;
+use semio_framework_os_flow::{FlowEvalPublication, FlowEvalSession};
+use semio_framework_plugin::ArtifactInstanceOperationOwnerHandle;
+use semio_framework_plugin::Effect;
+use semio_framework_plugin::ExtensionInvocation;
+use semio_framework_plugin::Fault;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::MeshData;
+use semio_framework_plugin::ToolDefinition;
+use semio_framework_plugin::ToolRunJobPort;
+use semio_framework_plugin::ToolRunView;
+use semio_framework_plugin::ViewModel;
+use semio_framework_tool_run::{
+    ToolRunCounter, ToolRunDefinition, ToolRunIdentity, ToolRunProgress, ToolRunState, ToolRunStepArg, ToolRunStepKind, ToolRunStepRing, ToolRunTickWriter, ToolRunTraceSubject, ToolRunVerdict, TOOL_RUN_ABORT_ACTION_ID, TOOL_RUN_ARG_GENERATION, TOOL_RUN_ARG_RUN_ID,
+    TOOL_RUN_ARG_TOOL_ID, TOOL_RUN_FINALIZE_ACTION_ID, TOOL_RUN_START_ACTION_ID,
+};
+use semio_framework_value_derive::{FromValue, ToValue};
+use std::collections::{BTreeMap, HashSet};
+#[path="📥️tessellation/🦀️.rs"]
+mod tessellation_receiving;
+pub use tessellation_receiving::{PreviewTessellateReceive,PreviewEvalReceive};
+
+//#region 🪟️Addressing
+/// 🪟️ The evaluation tick names the preview window that OWNS the evaluation it advances.
+///
+/// The tick publishes into one window's retained window transient, so the retained route is
+/// window-scoped and its work refuses any command that does not name that window. Every tick is a
+/// hop the run job hands the host as an `Effect::DispatchAction`, and an effect carries no window of
+/// its own: the shell redispatches it under whichever window is current. Carrying the id ON THE
+/// PAYLOAD is how `retained_window_transient_target` can capture the preview window's transient
+/// authority (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
+#[dsl(keyword = "flow-eval-tick")]
+pub struct FlowEvalTick {
+    pub window_id: String,
+    pub window_kind_id: String,
+}
+
+/// ✅️ One `evaluate` round trip's answer, echoed back onto the response action by
+/// `reactor::extension_response_args` — including the window address, so the re-armed tick keeps
+/// addressing the preview window that owns this evaluation.
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
+#[dsl(keyword = "flow-eval-resolve")]
+pub struct FlowEvalResolve {
+    pub window_id: String,
+    pub window_kind_id: String,
+    pub node_hash: u64,
+    pub output: semio_framework_value::DslValue,
+    #[value(default)]
+    pub fault: Option<semio_framework::Fault>,
+    /// 🪪️ Which extension this answer came from, echoed back off the request's own correlation.
+    #[value(default)]
+    pub extension_id: String,
+    /// ✅️ The SDK's own outcome flag (`reactor::extension_response_args`), present on every answer
+    /// the runtime builds. Defaulted so a hand-authored fixture may still address only the fields it
+    /// cares about.
+    #[value(default)]
+    pub ok: bool,
+    #[value(default)]
+    pub original_input:Option<semio_framework_value::DslValue>,
+    pub input_valid:bool,
+}
+
+/// 🔺️ One budgeted `tessellate` round trip's answer, carrying the same echoed window address so a
+/// resumable tessellation re-arms the tick on the window that owns the mesh it is building.
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
+#[dsl(keyword = "flow-tessellate-resolve")]
+pub struct FlowTessellateResolve {
+    pub window_id: String,
+    pub window_kind_id: String,
+    pub node_hash: u64,
+    pub handle: String,
+    pub tolerance: f64,
+    pub output: semio_framework_value::DslValue,
+    #[value(default)]
+    pub fault: Option<semio_framework::Fault>,
+    #[value(default)]
+    pub original_input:Option<semio_framework_value::DslValue>,
+    pub input_valid:bool,
+}
+
+/// 🧯️ The geometry extension's `tessellateCancel` answer, echoed back onto the cancel's own response
+/// action with the window address it was asked under. `retired` is how many kernel jobs the
+/// extension actor actually retired — publication-free bookkeeping, kept because a cancel that
+/// retires nothing on an actor that was supposed to be busy is the one symptom that distinguishes
+/// "the gesture reached the kernel" from "the gesture reached only this process".
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
+#[dsl(keyword = "flow-tessellate-cancel-resolve")]
+pub struct FlowTessellateCancelResolve {
+    pub window_id: String,
+    pub window_kind_id: String,
+    #[value(default)]
+    pub output:semio_framework_value::DslValue,
+    #[value(default)]
+    pub fault:Option<semio_framework::Fault>,
+    #[value(default)]
+    pub ok: bool,
+    #[value(default)]
+    pub original_input:Option<semio_framework_value::DslValue>,
+    pub input_valid:bool,
+}
+
+/// 🧯️ The hop an aborted or restarted run hands the host to release the kernel work it left behind in
+/// the geometry extension's own instance. Never a user gesture: the framework's `toolRunAbort` is the
+/// gesture, and this hop is how its close reaches the registries the guest cannot see. Addressed at a
+/// preview window because `reactor::extension_response_args` echoes the request's fields onto
+/// `flowTessellateCancelResolve`, whose retained route needs a window it may name.
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
+#[dsl(keyword = "flow-eval-release")]
+pub struct FlowEvalRelease {
+    #[value(default)]
+    pub window_id: String,
+    #[value(default)]
+    pub window_kind_id: String,
+}
+
+/// 🪪️ The request id every hop effect of the run carries; the hop's own payload is its address.
+const PREVIEW_EVAL_HOP_REQUEST: u64 = 103;
+
+/// ⏱️ The evaluation hop the run job hands the host, addressed to ONE preview window.
+pub fn tick_effect(window_id: &str, window_kind_id: &str) -> Effect {
+    hop_effect("flowEvalTick", window_id, window_kind_id)
+}
+
+/// 🧯️ The kernel release hop, addressed to ONE preview window.
+pub fn release_effect(window_id: &str, window_kind_id: &str) -> Effect {
+    hop_effect("flowEvalRelease", window_id, window_kind_id)
+}
+
+fn hop_effect(action: &str, window_id: &str, window_kind_id: &str) -> Effect {
+    Effect::DispatchAction { req: semio_framework_plugin::RequestId(PREVIEW_EVAL_HOP_REQUEST), action: action.into(), args: Some(window_args(window_id, window_kind_id)), delay_ms: 0 }
+}
+
+/// 🚧️ Whether an unfinished evaluation of `fixture` may start or continue at all.
+///
+/// A graph whose operator kinds no contributed extension serves faults
+/// `flow.extension-not-contributed`, and NOTHING a tick does can change that: the evaluator answers
+/// `unknown kind`, the error dictionary is never cached, and the next tick recomputes the identical
+/// miss. The pre-contribution chain therefore used to re-arm itself forever — and because every
+/// settle drives a host `refreshUi`, the spin also starved the very push that would have fixed it
+/// (45 s of live console with zero `[TRACE] contributions …` lines). The ONE thing that resumes
+/// this chain is `setContributions`, whose route invalidates the retained session against the moved
+/// registry generation and re-arms one tick per attached preview window
+/// (`📓️contributions-rearm-2026-09-10.md`, ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+///
+/// 🪪️ This supersedes `📓️fault-arm-symmetry-2026-09-10.md`'s "the fault arm is symmetric with the
+/// ok arm": that report is about how a fault VALUE is encoded on the extension-result wire (pack,
+/// not JSON) and says nothing about who owes the next tick. Symmetry of encoding is not symmetry of
+/// continuation — a fault nothing in this process can clear owes no continuation at all. The run
+/// therefore neither starts on such a graph nor continues it.
+pub fn may_rearm(host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot) -> bool {
+    semio_framework_os_flow::unserved_flow_operator_kinds(host_snapshot, &semio_framework_os_flow::flow_operator_registry()).is_empty()
+}
+
+/// 🪟️ The one argument object every hop of the chain carries, on the redispatch and on the
+/// extension request alike — `reactor::extension_response_args` echoes an invocation request's own
+/// fields back onto the response action, so the window address survives the round trip without the
+/// SDK ever learning what it means.
+pub fn window_args(window_id: &str, window_kind_id: &str) -> semio_framework_value::DslValue {
+    semio_framework_value::DslValue::object([
+        ("windowId".to_string(), semio_framework_value::DslValue::String(window_id.to_string())),
+        ("windowKindId".to_string(), semio_framework_value::DslValue::String(window_kind_id.to_string())),
+    ])
+}
+
+/// 🧾️ The APPLIED document-edit stack, folded into one number — what an evaluation is actually
+/// computed from, independent of the route that changed it.
+///
+/// 🐛️ [`owe_attached_previews_for_mutations`] reads a gesture's OWN emit, so it can only ever see a
+/// route the app itself handles. `undo` and `redo` are FRAMEWORK-RESERVED (`HISTORY_ACTION_IDS`,
+/// intercepted before `dispatch_action` reaches the app), so an undo rewound the document and the app
+/// never learned: measured on :6023, `mod+z` after a slider edit moved `height` 8 → 6 in the graph's
+/// own published fixture and armed `canRedo`, while the preview kept delivering the 8-unit extrusion
+/// and the console carried neither a `toolRunStart` nor a `flowEvalTick` after the chord
+/// (`📓️react-final-sweep-2026-09-15.md` §7). The user pressed undo and the 3d view did not move.
+///
+/// Every route that changes the document moves this stack — a gesture's edit appends an applied entry,
+/// an undo flips one to unapplied, a redo flips it back, `revertToCommand` and a checkpoint checkout
+/// move several — so THIS is the rule, and the emit route stays the fast path a gesture takes without
+/// waiting for a poll. Rows with no `edit_id` are cursor-motion and config entries, which the
+/// evaluation does not read (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+pub fn applied_document_edits_digest(history: &semio_framework_plugin::HistoryView) -> u64 {
+    const OFFSET: u64 = 0xcbf2_9ce4_8422_2325;
+    const PRIME: u64 = 0x0000_0100_0000_01b3;
+    let mut digest = OFFSET;
+    for command in history.commands.iter().filter(|command| command.edit_id.is_some()) {
+        digest = (digest ^ command.seq).wrapping_mul(PRIME);
+        digest = (digest ^ u64::from(command.applied)).wrapping_mul(PRIME);
+    }
+    digest
+}
+
+/// 🧵️ Marks every attached preview window as owing an evaluation — what a gesture owes after it
+/// changed what the evaluation would produce (`setActiveExample`, `setContributions`, the generation
+/// commands, every viewer view command). The window's latch keeps the debt until a hop pays it, so a
+/// window already chasing an answer is evaluated again the moment that answer settles; the live run
+/// job is woken, and a surface without a live run starts one from its next `pending_effects`.
+pub fn owe_attached_previews(session: &mut FlowEvalSession, link: &mut PreviewEvalRunLink, windows: &[(&str, &'static str)], grant: semio_framework_value::RetainedCloneGrant) -> Result<(), semio_framework_value::ValueError> {
+    for (window_id, _) in windows {
+        session.note_window_tick_outcome(window_id, true, grant)?;
+    }
+    link.requested = None;
+    link.wake();
+    Ok(())
+}
+
+/// 🩹️ What a LANDED GESTURE owes the attached previews, read off the gesture's own emit instead of a
+/// roster of tool ids: a gesture that authored artifact mutations moved the document the evaluation is
+/// computed from, so it owes every attached preview window exactly one fresh evaluation; one that
+/// authored none changed nothing the evaluation reads and owes a settled run nothing. Answers whether
+/// it owed.
+///
+/// 🪪️ A hand-kept roster can only approximate this, and did not: only `setActiveExample`, the six
+/// generation commands, `setContributions` and a closing `importDocument` ever owed, so the inspector's
+/// `patchFlowWidgets` — and `addWidget`, `removeWidget`, `nodeGraphEdit`, `deleteSelection`,
+/// `reorganize` and every transform with it — moved the document and left the preview showing the old
+/// geometry for good. `FlowEvalSession::abandon_window_tick` already names an EDIT as one of the three
+/// gestures that may resume a chain; this is the editor half of that sentence
+/// (`📓️preview-rearm-after-inspector-edit-2026-09-14.md`, `📓️tick-arming-latch-2026-09-12.md`).
+///
+/// 🚦️ Recording the debt is only half of paying it. A LIVE run is woken through its port and picks the
+/// debt up on its next step, but a surface whose run has already settled and been finalized holds
+/// nothing that would ask the host for another `pending_effects` poll — the host polls once per
+/// `refreshUi`, and it refreshes on ACTIVITY, so a document mutation that leaves the guest with nothing
+/// further to say produces no poll at all. Measured: the inspector's slider recorded a perfect debt
+/// (`owedAfter=["procedural-preview", "generation3d-generate-preview"]`) and the console then went
+/// silent for 60 s with not one poll to read it. So a gesture with no live run carries the run start on
+/// its OWN emit, under the same one-request latch `preview_eval_run_effects` asks through, and an
+/// unservable graph carries nothing for the reason that function refuses one.
+pub fn owe_attached_previews_for_mutations<M, C, D>(session: &mut FlowEvalSession, link: &mut PreviewEvalRunLink, windows: &[(&str, &'static str)], servable: bool, emit: &mut semio_framework_plugin::Emit<M, C, D>, grant: semio_framework_value::RetainedCloneGrant) -> Result<bool, semio_framework_value::ValueError> {
+    if emit.artifact_mutations.is_empty() {
+        link.wake();
+        return Ok(false);
+    }
+    owe_attached_previews_carrying(session, link, windows, servable, emit, grant)?;
+    Ok(true)
+}
+
+/// 🚦️ Owes every attached preview window an evaluation AND puts on `emit` whatever asks for it: a live
+/// run is woken through its port and needs nothing, a surface with no live run carries the run start
+/// itself. What every gesture route that owes the previews — a generation command, an example switch, a
+/// contributions install, a closing import chunk, an inspector patch — hands back with its own emit.
+///
+/// 🪪️ Recording the debt alone is not enough, at ANY route: the host polls `pending_effects` once per
+/// `refreshUi` and refreshes on ACTIVITY, so a gesture whose guest work leaves nothing further to say
+/// produces no poll and the debt is never read. Measured on 6018 as `addGeneration` leaving the generate
+/// preview empty for 120 s with not one `toolRunStart` in the console, and as an inspector slider that
+/// moved `height` 6 → 7 against a preview that never re-evaluated
+/// (`📓️preview-rearm-after-inspector-edit-2026-09-14.md`).
+pub fn owe_attached_previews_carrying<M, C, D>(session: &mut FlowEvalSession, link: &mut PreviewEvalRunLink, windows: &[(&str, &'static str)], servable: bool, emit: &mut semio_framework_plugin::Emit<M, C, D>, grant: semio_framework_value::RetainedCloneGrant) -> Result<(), semio_framework_value::ValueError> {
+    owe_attached_previews(session, link, windows, grant)?;
+    // ⏰️ Only a job that has NOT settled can be woken into more work: a settled one answers `Complete`
+    // to every wake, so a surface holding one is exactly as unable to pay a fresh debt as a surface
+    // holding none. Reading "a job is attached" as "a run will pick this up" left the edit preview
+    // stale after every gesture that followed a settled evaluation
+    // (`📓️preview-rearm-after-inspector-edit-2026-09-14.md`).
+    let woken = link.port.is_some() && link.settled.is_none();
+    if !windows.is_empty() && servable && !woken && link.requested.is_none() {
+        link.requested = Some((PreviewEvalRunRequest::Start, None));
+        emit.effects.push(run_action_effect(TOOL_RUN_START_ACTION_ID, semio_framework_value::DslValue::object([(TOOL_RUN_ARG_TOOL_ID.to_string(), semio_framework_value::DslValue::String(PREVIEW_EVAL_TOOL_ID.into()))])));
+    }
+    Ok(())
+}
+
+/// 🪟️ The preview window kind this surface recognises, or `None` — the surface hands in its own
+/// roster of preview kind ids (`procedural-preview` + `generation3d-generate-preview` for the
+/// editor, `procedural-view-preview` for the viewer) and the answer is the `'static` id the window
+/// transient owner is keyed by.
+pub fn preview_kind(kind: &str, preview_kinds: &[&'static str]) -> Option<&'static str> {
+    preview_kinds.iter().copied().find(|candidate| *candidate == kind)
+}
+
+/// 🪟️ Every attached preview window, in roster order — the windows a `flowEvalTick` chain can be
+/// addressed to. Each holds its OWN retained evaluation publication, so each gets its own armed
+/// chain; an empty answer means no surface is mounted yet and NOTHING may be armed at all.
+pub fn attached_preview_windows<'a>(view: Option<&'a ViewModel>, preview_kinds: &[&'static str]) -> Vec<(&'a str, &'static str)> {
+    view.map(|view| view.window_instances.iter().filter_map(|window| preview_kind(&window.window_kind_id, preview_kinds).map(|kind| (window.id.as_str(), kind))).collect()).unwrap_or_default()
+}
+//#endregion 🪟️Addressing
+
+//#region 🧊️Geometry
+/// ⏱️ Face/edge units one `tessellate` STEP may spend — the granularity at which a cancel can land
+/// inside the kernel, never the round trip's own bound.
+pub const PREVIEW_TESSELLATE_STEP_BUDGET: u32 = 24;
+
+/// ⏱️ Wall-clock microseconds one `tessellate` ROUND TRIP may spend stepping before it answers.
+///
+/// ⚖️ This is the bound that actually matters, because a unit is not a unit of time: on this kernel
+/// one step measured 29 µs and another 5.9 s. Bounding only the units made five consecutive
+/// microsecond-long steps each pay a WHOLE `flowEvalTick` round trip — seconds apiece in a served
+/// build — which is most of why `box-fillet-preview` needed eight round trips to paint and never
+/// finished inside a patience window (`📓️preview-mesh-delivery-2026-09-12.md`).
+pub const PREVIEW_TESSELLATE_STEP_WALL_MICROS: u64 = semio_framework_os_flow::mesh::TESSELLATE_STEP_WALL_MICROS;
+
+/// 🔬️ The deflection one LOD step asks the kernel for — the ONE mapping both surfaces read, so an
+/// editor mesh and a viewer mesh of the same handle at the same LOD are byte-identical.
+pub fn preview_tolerance(lod_mode: &str) -> f64 {
+    match lod_mode {
+        "coarse" => 0.15,
+        "fine" => 0.02,
+        _ => 0.05,
+    }
+}
+
+/// 🧊️ The flow-domain id of the geometry extension whose kernel tessellates every preview handle.
+/// It is NOT an invocation address: the host resolves an extension actor by the CONTRIBUTING
+/// PLUGIN's id, which [`semio_framework_os_flow::flow_extension_invocation_address`] — the ONE
+/// translation surface — looks up from the live contribution table.
+pub const GENERATION_3D_GEOMETRY_EXTENSION_ID: &str = "brep";
+
+/// 🧊️ The geometry kernel's invocation address, resolved through the one translation surface every
+/// producer and every status projection shares. Both callers own the same typed miss, so an
+/// unaddressable kernel reaches a preview window as `phase: "faulted"` with its own English/German
+/// label instead of a per-tick `eprintln!` nobody reads.
+pub fn geometry_extension_address() -> Result<String, semio_framework_os_flow::FlowExtensionAddressMiss> {
+    semio_framework_os_flow::flow_extension_invocation_address(GENERATION_3D_GEOMETRY_EXTENSION_ID)
+}
+
+pub fn is_brep_geometry_handle(handle: &str) -> bool {
+    if handle.is_empty() {
+        return false;
+    }
+    if handle.starts_with("solid-")
+        || handle.starts_with("shell-")
+        || handle.starts_with("face-")
+        || handle.starts_with("wire-")
+        || handle.starts_with("edge-")
+        || handle.starts_with("vertex-")
+        || handle.starts_with("compound-")
+        || handle.starts_with("curve-")
+        || handle.starts_with("surface-")
+    {
+        return true;
+    }
+    // Blake3 hex digests minted by `BrepKernel::mint` (no kind prefix).
+    handle.len() == 64 && handle.as_bytes().iter().all(u8::is_ascii_hexdigit)
+}
+
+/// 🔌️ Point/vector geometry synthesized without a kernel round-trip, for a math-style output
+/// channel that carries `x`/`y`/`z` coordinates instead of a brep handle.
+#[derive(Clone, Debug, PartialEq)]
+pub enum PreviewInlineGeometry {
+    Point { x: f64, y: f64, z: f64 },
+    Vector { x: f64, y: f64, z: f64 },
+    Mesh { preview: String, data: String },
+}
+
+/// 🔌️ One previewable value found on one output channel of one widget — the channel-aware
+/// replacement for unordered handle flattening, so preview instance ids can be channel-qualified
+/// (`{widgetId}@{channel}#{index}`).
+#[derive(Clone, Debug, PartialEq)]
+pub struct PreviewChannelItem {
+    pub channel: String,
+    pub index: usize,
+    pub handle: String,
+    pub inline: Option<PreviewInlineGeometry>,
+}
+
+/// 🔎️ A `$schema: "list"` dictionary's entries in index order (`"0"`, `"1"`, …) — the wire form
+/// flow dictionary lists actually take (an object with numeric-string keys, not a JSON array), so
+/// ordering has to be recovered by parsing the keys rather than trusting map iteration.
+fn preview_channel_list_entries(map: &semio_framework_pack_json::Object) -> Vec<&semio_framework_pack_json::Value> {
+    let mut entries: Vec<(usize, &semio_framework_pack_json::Value)> = map.iter().filter_map(|(key, value)| key.parse::<usize>().ok().map(|index| (index, value))).collect();
+    entries.sort_by_key(|(index, _)| *index);
+    entries.into_iter().map(|(_, value)| value).collect()
+}
+
+/// 🔎️ Depth-first walk of one channel's evaluated value, emitting one [`PreviewChannelItem`] per
+/// geometry-bearing leaf in encounter order. Arrays and `$schema: "list"` dictionaries recurse; a
+/// handle passing [`is_brep_geometry_handle`] or an `x`/`y`/`z` point/vector is a leaf; everything
+/// else is pure data and yields nothing.
+fn collect_preview_channel_items(channel: &str, value: &semio_framework_pack_json::Value, index: &mut usize, items: &mut Vec<PreviewChannelItem>) {
+    match value {
+        semio_framework_pack_json::Value::Object(map) => {
+            if map.get("$schema").and_then(semio_framework_pack_json::Value::as_str) == Some("mesh") {
+                if let (Some(preview), Some(data)) = (map.get("preview").and_then(semio_framework_pack_json::Value::as_str), map.get("data").and_then(semio_framework_pack_json::Value::as_str)) {
+                    items.push(PreviewChannelItem { channel: channel.into(), index: *index, handle: String::new(), inline: Some(PreviewInlineGeometry::Mesh { preview: preview.into(), data: data.into() }) });
+                    *index += 1;
+                }
+                return;
+            }
+            if let Some(handle) = map.get("handle").and_then(semio_framework_pack_json::Value::as_str) {
+                if is_brep_geometry_handle(handle) {
+                    items.push(PreviewChannelItem { channel: channel.into(), index: *index, handle: handle.into(), inline: None });
+                    *index += 1;
+                    return;
+                }
+            }
+            if map.get("$schema").and_then(semio_framework_pack_json::Value::as_str) == Some("list") {
+                for entry in preview_channel_list_entries(map) {
+                    collect_preview_channel_items(channel, entry, index, items);
+                }
+                return;
+            }
+            let coords = ["x", "y", "z"].into_iter().map(|key| map.get(key).and_then(semio_framework_pack_json::Value::as_f64)).collect::<Option<Vec<_>>>();
+            if let Some(coords) = coords {
+                let (x, y, z) = (coords[0], coords[1], coords[2]);
+                let inline = if map.get("$schema").and_then(semio_framework_pack_json::Value::as_str) == Some("vector") { PreviewInlineGeometry::Vector { x, y, z } } else { PreviewInlineGeometry::Point { x, y, z } };
+                items.push(PreviewChannelItem { channel: channel.into(), index: *index, handle: String::new(), inline: Some(inline) });
+                *index += 1;
+            }
+        }
+        semio_framework_pack_json::Value::Array(list) => {
+            for entry in list {
+                collect_preview_channel_items(channel, entry, index, items);
+            }
+        }
+        _ => {}
+    }
+}
+
+/// 🔌️ Channel-by-channel enumeration of one widget's preview-bearing values: sorted `"out"` channel
+/// keys (falling back to `"in"` only when the widget has no `"out"` at all), each walked depth-first
+/// into its geometry-bearing leaves.
+pub fn preview_channel_items_for_widget(eval: &semio_framework_pack_json::Value, widget_id: &str) -> Vec<PreviewChannelItem> {
+    let Some(widget_eval) = eval.get(widget_id) else {
+        return Vec::new();
+    };
+    let Some(channels) = widget_eval.get("out").or_else(|| widget_eval.get("in")) else {
+        return Vec::new();
+    };
+    let Some(map) = channels.as_object() else {
+        return Vec::new();
+    };
+    let mut keys: Vec<&str> = map.iter().map(|(key, _)| key).collect();
+    keys.sort();
+    let mut items = Vec::new();
+    for key in keys {
+        let mut index = 0usize;
+        if let Some(value) = map.get(key) {
+            collect_preview_channel_items(key, value, &mut index, &mut items);
+        }
+    }
+    items
+}
+
+/// 🪪️ Every preview-bearing widget id of a host_snapshot, in declaration order.
+pub fn preview_widget_ids(host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot) -> Vec<String> {
+    host_snapshot.widgets.iter().filter(|widget| semio_s_artifact_procedural_3d_model::widget_previews(widget)).map(|widget| semio_s_artifact_procedural_3d_model::widget_id(widget).to_string()).collect()
+}
+
+pub fn mesh_has_preview_geometry(data: &MeshData) -> bool {
+    (!data.indices.is_empty() && data.positions.len() >= 9) || data.edge_positions.len() >= 6 || (data.positions.len() >= 3 && data.indices.is_empty())
+}
+
+/// 🏷️ Every role a published preview mesh may declare, in the order a reader ranks them: a body
+/// with triangles, a body that is only a polyline, the axis cross of a point channel, the arrow of
+/// a vector channel.
+pub const PREVIEW_MESH_ROLES: [&str; 4] = ["solid", "wire", "point", "vector"];
+
+/// 🏷️ What ONE published preview mesh is, stamped into the payload beside its geometry so a reader
+/// never has to re-derive it from the arrays.
+///
+/// ⚖️ A preview publishes one mesh per geometry-bearing output CHANNEL, so a document whose graph
+/// previews three nodes publishes a solid beside the wire it was extruded from and the vector that
+/// drove it — three meshes for one visible body. Counting entries therefore says nothing about how
+/// many solids are on screen, which is exactly the reconciliation the runtime oracles could not
+/// make (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-mesh-oracle-2026-09-14.md`).
+///
+/// 🎨️ The role is what the payload CARRIES, not what the channel was named: `apply_show_mode_mesh`
+/// strips triangles in `wireframe` mode, and a solid published without them really is a wire on
+/// screen. The inline markers keep their own role because their arrays are indistinguishable from a
+/// tessellated polyline.
+pub fn preview_mesh_role(inline: Option<&PreviewInlineGeometry>, data: &MeshData) -> &'static str {
+    match inline {
+        Some(PreviewInlineGeometry::Point { .. }) => "point",
+        Some(PreviewInlineGeometry::Vector { .. }) => "vector",
+        _ if !data.indices.is_empty() => "solid",
+        _ if !data.edge_positions.is_empty() => "wire",
+        _ => "point",
+    }
+}
+
+/// 📦️ The axis-aligned extent of everything ONE published preview payload puts on screen, read back
+/// off the payload itself (`positions` plus `edgePositions`, so a wire-only example has an extent
+/// too) rather than recomputed from the handles.
+///
+/// ⚖️ This is the delivery's own extent, and it is deliberately not `expect.boundingBox*`: the
+/// committed `expect` box is the FINE tessellation the native lane measures, while the surface
+/// paints the preview LOD, which inscribes it. The example fixtures commit both
+/// (`delivery.boundingBoxMin/Max` beside `expect.boundingBoxMin/Max`), which is what lets the
+/// browser oracle and the native lane grade the same number instead of an envelope
+/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️boot-camera-framing-2026-09-15.md`).
+pub fn preview_payload_bounds(meshes_json: &str) -> Option<([f64; 3], [f64; 3])> {
+    let parsed = semio_framework_pack_json::parse(meshes_json, semio_framework_pack_json::JsonMemberPolicy::Reject).ok()?;
+    let entries = parsed.as_array()?;
+    let mut minimum = [f64::INFINITY; 3];
+    let mut maximum = [f64::NEG_INFINITY; 3];
+    for entry in entries {
+        let Some(data) = entry.get("data") else { continue };
+        for lane in ["positions", "edgePositions"] {
+            let Some(values) = data.get(lane).and_then(semio_framework_pack_json::Value::as_array) else { continue };
+            for point in values.chunks_exact(3) {
+                for axis in 0..3 {
+                    let Some(value) = point[axis].as_f64() else { continue };
+                    minimum[axis] = minimum[axis].min(value);
+                    maximum[axis] = maximum[axis].max(value);
+                }
+            }
+        }
+    }
+    (0..3).all(|axis| minimum[axis].is_finite() && maximum[axis].is_finite()).then_some((minimum, maximum))
+}
+
+/// 🎯️ Headroom the preview leaves around the delivered bounds — the render hosts' own margin rides
+/// on top of the exact fitting distance, so this padding only has to say "do not hug the box".
+pub const PREVIEW_FIT_PADDING: f64 = 1.12;
+
+/// 🎯️ Which DOCUMENT the preview is framing, as a number the render hosts key their one-shot fit on.
+///
+/// ⚖️ Hashed over the graph's TOPOLOGY (widget ids, their kinds, the synapse wiring) and never over
+/// parameter values: switching example replaces the whole graph, while dragging a slider keeps it,
+/// so this is exactly the line between "frame the example the user just opened" and "yank the camera
+/// out from under an edit". Every re-evaluation of one example answers the same revision, which is
+/// what makes the hosts' framing one-shot at all
+/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️boot-camera-framing-2026-09-15.md`).
+pub fn preview_fit_revision(host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot) -> u32 {
+    let mut hash = 0xcbf2_9ce4_8422_2325u64;
+    let mut eat = |text: &str| {
+        for byte in text.as_bytes() {
+            hash ^= u64::from(*byte);
+            hash = hash.wrapping_mul(0x0000_0100_0000_01b3);
+        }
+        hash ^= 0xff;
+        hash = hash.wrapping_mul(0x0000_0100_0000_01b3);
+    };
+    eat(&host_snapshot.schema);
+    for widget in &host_snapshot.widgets {
+        eat(semio_s_artifact_procedural_3d_model::widget_id(widget));
+        eat(widget_kind_tag(widget));
+    }
+    for synapse in &host_snapshot.synapses {
+        eat(&synapse.from);
+        eat(&synapse.from_port);
+        eat(&synapse.to);
+        eat(&synapse.to_port);
+    }
+    (hash >> 32) as u32
+}
+
+/// 🏷️ The kind tag [`preview_fit_revision`] hashes per widget — what the node IS, never what it is
+/// currently set to.
+fn widget_kind_tag(widget: &semio_framework_artifact_flow_flow::Widget) -> &str {
+    use semio_framework_artifact_flow_flow::Widget;
+    match widget {
+        Widget::Neuron { neuron_kind, .. } => neuron_kind.as_str(),
+        Widget::InputSlider { .. } => "input.slider",
+        Widget::OutputPreview { .. } => "output.preview",
+        _ => "widget",
+    }
+}
+
+/// 🎯️ The `World3dScene.fit_json` every generation3d preview window publishes: frame the delivered
+/// bounds once per document, never again while that document is on screen.
+pub fn preview_fit_json(host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot, meshes_json: &str) -> String {
+    semio_framework_ui::wgpu::world3d_fit_json(preview_fit_revision(host_snapshot), PREVIEW_FIT_PADDING, preview_payload_bounds(meshes_json))
+}
+
+/// 🔌️ Half-extent (world units) of the axis cross drawn for a [`PreviewInlineGeometry::Point`].
+const PREVIEW_POINT_MARKER_HALF_EXTENT: f64 = 0.05;
+
+/// 🔌️ A small axis cross at `(x, y, z)` — the point-channel preview marker, built without a kernel
+/// round-trip. Carries both `positions` (so `"points"` show mode still has something to draw once
+/// [`apply_show_mode_mesh`] strips `edge_positions`) and the cross itself as edges.
+pub fn point_marker_mesh(x: f64, y: f64, z: f64) -> MeshData {
+    let (x, y, z) = (x as f32, y as f32, z as f32);
+    let e = PREVIEW_POINT_MARKER_HALF_EXTENT as f32;
+    MeshData { positions: vec![x, y, z], edge_positions: vec![x - e, y, z, x + e, y, z, x, y - e, z, x, y + e, z, x, y, z - e, x, y, z + e], ..Default::default() }
+}
+
+/// 🔌️ A line segment from the world origin to `(x, y, z)` — the vector-channel preview marker,
+/// built without a kernel round-trip.
+pub fn vector_marker_mesh(x: f64, y: f64, z: f64) -> MeshData {
+    let (x, y, z) = (x as f32, y as f32, z as f32);
+    MeshData { positions: vec![0.0, 0.0, 0.0, x, y, z], edge_positions: vec![0.0, 0.0, 0.0, x, y, z], ..Default::default() }
+}
+
+/// 👁️ The shading mode decides which mesh channels survive into the payload at all, so
+/// wireframe/points really are cheaper.
+pub fn apply_show_mode_mesh(mut data: MeshData, show_mode: &str) -> MeshData {
+    let show_mode = match show_mode {
+        "solid" | "shaded" | "shaded+edges" | "wireframe" | "points" => show_mode,
+        _ => "shaded",
+    };
+    match show_mode {
+        "wireframe" => {
+            data.positions.clear();
+            data.normals.clear();
+            data.indices.clear();
+            data.face_ids.clear();
+            data
+        }
+        "points" => {
+            data.indices.clear();
+            data.normals.clear();
+            data.edge_positions.clear();
+            data
+        }
+        _ => data,
+    }
+}
+
+/// 🎒️ Decodes a base64 `pack` mesh body the extension shipped back — the single decode seam every
+/// preview reader goes through.
+pub fn decode_preview_mesh_pack(base64_body: &str) -> Option<MeshData> {
+    let bytes = semio_framework_os_flow::mesh::decode_base64(base64_body).ok()?;
+    semio_framework_os_flow::mesh::decode_mesh_pack(&bytes).ok()
+}
+
+/// 🧵️ The mesh the CHAIN produced for this handle: the retained session's resolved `pack` body,
+/// decoded into typed arrays. `None` while the tessellate round trip is still in flight, and `None`
+/// forever once the handle carries diagnostics.
+pub fn session_preview_mesh(handle: &str, session: &FlowEvalSession) -> Option<MeshData> {
+    let data = decode_preview_mesh_pack(session.preview_mesh_pack(handle)?)?;
+    mesh_has_preview_geometry(&data).then_some(data)
+}
+
+/// 🧵️ Rendering consumes only mesh output completed by the retained preview chain.
+pub fn mesh_data_for_preview_handle(handle: &str, _tolerance: f64, session: Option<&FlowEvalSession>) -> Option<MeshData> {
+    session_preview_mesh(handle, session?)
+}
+
+/// 🔁️ The converged walk's brep handle for the same preview channel leaf — used while a slider edit
+/// has already minted a new handle but its tessellation has not landed.
+/// 🔁 When the painted handle has no pack yet, the one OTHER packed handle this session still
+/// holds — true after convergence superseded the handle and retired the old one from every eval text.
+fn superseded_preview_mesh_handle(session: &FlowEvalSession, painted_handle: &str) -> Option<String> {
+    let mut candidates = session
+        .preview_packed_handles()
+        .into_iter()
+        .filter(|handle| handle != painted_handle && session_preview_mesh(handle, session).is_some())
+        .collect::<Vec<_>>();
+    match candidates.len() {
+        0 => None,
+        1 => Some(candidates.remove(0)),
+        _ => None,
+    }
+}
+
+fn converged_preview_handle(session: &FlowEvalSession, _host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot, widget_id: &str, channel: &str, index: usize) -> Option<String> {
+    let converged = session.converged_eval_json();
+    if converged.is_empty() {
+        return None;
+    }
+    let eval = semio_framework_pack_json::parse(converged, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_else(|_| semio_framework_pack_json::Value::Object(semio_framework_pack_json::Object::new()));
+    preview_channel_items_for_widget(&eval, widget_id)
+        .into_iter()
+        .find(|item| item.channel == channel && item.index == index)
+        .map(|item| item.handle)
+        .filter(|handle| !handle.is_empty())
+}
+
+/// 🧵️ Mesh lookup for one preview channel while a live evaluation is in flight: the new handle's
+/// pack when it exists, otherwise the last converged handle's retained pack — never a second kernel
+/// round trip on geometry the session already tessellated.
+pub fn mesh_data_for_session_preview_channel(
+    handle: &str,
+    widget_id: &str,
+    channel: &str,
+    index: usize,
+    tolerance: f64,
+    session: &FlowEvalSession,
+    host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot,
+) -> Option<MeshData> {
+    if let Some(data) = mesh_data_for_preview_handle(handle, tolerance, Some(session)) {
+        return Some(data);
+    }
+    // 🚦️ A refused handle must not keep painting the last converged solid on top of the fault the
+    // status pill already names — the supersession fallback is only for "new pack still crossing".
+    if session.preview_diagnostics(handle).is_some() {
+        return None;
+    }
+    if let Some(fallback) = converged_preview_handle(session, host_snapshot, widget_id, channel, index).filter(|fallback| fallback != handle) {
+        if let Some(data) = session_preview_mesh(&fallback, session) {
+            return Some(data);
+        }
+    }
+    superseded_preview_mesh_handle(session, handle).and_then(|fallback| session_preview_mesh(&fallback, session))
+}
+
+/// 📏️ Fingerprint of whichever mesh pack a preview channel would paint — the live handle's or the
+/// converged fallback's while tessellation is outstanding.
+pub fn preview_mesh_pack_fingerprint(
+    session: &FlowEvalSession,
+    host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot,
+    widget_id: &str,
+    item: &PreviewChannelItem,
+) -> usize {
+    if item.handle.is_empty() {
+        return 0;
+    }
+    if let Some(pack) = session.preview_mesh_pack(&item.handle) {
+        return pack.len();
+    }
+    if session.preview_diagnostics(&item.handle).is_some() {
+        return 0;
+    }
+    if let Some(fallback) = converged_preview_handle(session, host_snapshot, widget_id, &item.channel, item.index).filter(|fallback| *fallback != item.handle) {
+        if let Some(pack) = session.preview_mesh_pack(&fallback) {
+            return pack.len();
+        }
+    }
+    superseded_preview_mesh_handle(session, &item.handle)
+        .and_then(|fallback| session.preview_mesh_pack(&fallback))
+        .map_or(0, |pack| pack.len())
+}
+
+/// 📏️ What the preview would paint from `eval` given the session's current mesh packs — changes when
+/// `flowTessellateResolve` lands even though the evaluation text did not move one byte.
+fn preview_mesh_residency_digest(session: &FlowEvalSession, host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot, eval: &semio_framework_pack_json::Value) -> u64 {
+    use std::hash::{Hash, Hasher};
+    let mut hasher = std::collections::hash_map::DefaultHasher::new();
+    for (id, channel) in semio_s_artifact_procedural_3d_mesh_bridge::retained_geometry_channels(host_snapshot) {
+        for item in preview_channel_items_for_widget(eval, &id).into_iter().filter(|item| channel.as_ref().is_none_or(|channel| *channel == item.channel)) {
+            if item.handle.is_empty() {
+                continue;
+            }
+            preview_mesh_pack_fingerprint(session, host_snapshot, &id, &item).hash(&mut hasher);
+        }
+    }
+    hasher.finish()
+}
+
+/// 📤️ Whether the addressed preview window owes a fresh publication. The painted evaluation text is
+/// the primary signal; mesh residency is the second — tessellation can finish without moving eval
+/// json, and a signature that looked only at bytes pinned the first (empty or stale) table forever
+/// (`📓️slider-mesh-supersession-fallback-2026-09-15.md`, viewer `preview_mesh_signature`).
+pub fn preview_eval_publication_for(session: &mut FlowEvalSession, host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot, retained_eval: Option<&str>) -> FlowEvalPublication {
+    let painted = session.painted_eval_json().to_string();
+    let digest = if painted.is_empty() {
+        0
+    } else {
+        semio_framework_pack_json::parse(&painted, semio_framework_pack_json::JsonMemberPolicy::Reject).map(|eval| preview_mesh_residency_digest(session, host_snapshot, &eval)).unwrap_or(0)
+    };
+    let publication = session.eval_publication_for(retained_eval);
+    match publication {
+        FlowEvalPublication::Changed(eval) => {
+            session.note_published_preview_mesh_digest(digest);
+            FlowEvalPublication::Changed(eval)
+        }
+        FlowEvalPublication::Retained if session.published_preview_mesh_digest() == digest => FlowEvalPublication::Retained,
+        FlowEvalPublication::Retained => {
+            session.note_published_preview_mesh_digest(digest);
+            FlowEvalPublication::Changed((!painted.is_empty()).then_some(painted))
+        }
+    }
+}
+
+/// 🧹 Every brep handle whose tessellation pack must stay live across a handle supersession.
+pub fn preview_mesh_retention_handles(eval: &semio_framework_pack_json::Value, host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot, session: &FlowEvalSession) -> HashSet<String> {
+    let mut live = HashSet::new();
+    let mut channel_missing_pack = false;
+    for widget in &host_snapshot.widgets {
+        let id = semio_s_artifact_procedural_3d_model::widget_id(widget).to_string();
+        for item in preview_channel_items_for_widget(eval, &id) {
+            if item.handle.is_empty() {
+                continue;
+            }
+            live.insert(item.handle.clone());
+            if session_preview_mesh(&item.handle, session).is_none() && session.preview_diagnostics(&item.handle).is_none() {
+                channel_missing_pack = true;
+                if let Some(fallback) = converged_preview_handle(session, host_snapshot, &id, &item.channel, item.index) {
+                    if fallback != item.handle {
+                        live.insert(fallback);
+                    }
+                }
+                if let Some(fallback) = superseded_preview_mesh_handle(session, &item.handle) {
+                    live.insert(fallback);
+                }
+            }
+        }
+    }
+    if channel_missing_pack {
+        for handle in session.preview_packed_handles() {
+            live.insert(handle);
+        }
+    }
+    live
+}
+
+/// 🧊 Geometry handles on preview widgets that still need an extension tessellate. Takes the ALREADY
+/// PARSED evaluation: its caller parses the same document one line earlier to collect the live
+/// handle set, and re-parsing a whole eval session per tick is the cost this path exists to avoid.
+pub fn pending_preview_tessellate_handles(eval: &semio_framework_pack_json::Value, host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot, session: &FlowEvalSession) -> Vec<String> {
+    let mut handles = Vec::new();
+    for (id, channel) in semio_s_artifact_procedural_3d_mesh_bridge::retained_geometry_channels(host_snapshot) {
+        for handle in preview_channel_items_for_widget(eval, &id).into_iter().filter(|item| channel.as_ref().is_none_or(|channel| *channel == item.channel)).filter_map(|item| (!item.handle.is_empty()).then_some(item.handle)) {
+            if session.preview_diagnostics(&handle).is_some() {
+                continue;
+            }
+            if session_preview_mesh(&handle, session).is_none() {
+                handles.push(handle);
+            }
+        }
+    }
+    handles
+}
+
+/// 📨 Extension invocations that tessellate preview handles inside the owning brep extension kernel.
+/// Each one names `flowTessellateResolve` as its response action, so the SDK's request registry
+/// mints the `req`, parks the continuation and dispatches the mesh JSON straight back into the
+/// addressed surface — a hand-minted `RequestId` owns no registry slot, so every tessellation result
+/// would be discarded and the 3d preview could never paint.
+pub fn preview_tessellate_invocations(window_id: &str, window_kind_id: &str, session: &mut FlowEvalSession, host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot, tolerance: f64, grant: semio_framework_value::RetainedCloneGrant) -> Result<Vec<ExtensionInvocation>, semio_framework_value::ValueError> {
+    let Ok(geometry_extension_address) = geometry_extension_address() else {
+        return Ok(Vec::new());
+    };
+    let tolerance_bits = tolerance.to_bits();
+    // 🖼️ The PAINTED evaluation, not the live walk's own: `retain_preview_meshes` below drops every
+    // mesh whose handle is not in this set, and a node that is merely recomputing has no handle in
+    // the live answer at all — so retaining against it threw away the very mesh the preview is still
+    // showing, and the geometry could not come back without a fresh round trip it had already paid
+    // (`📓️slider-latency-incremental-eval-2026-09-15.md` §3.2). A stale handle that already holds a
+    // mesh is skipped by `pending_preview_tessellate_handles`, so nothing is re-tessellated for it.
+    let (live, pending) = {
+        let eval_json = session.painted_eval_json();
+        if eval_json.is_empty() {
+            return Ok(Vec::new());
+        }
+        let eval = semio_framework_pack_json::parse(eval_json, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_else(|_| semio_framework_pack_json::Value::Object(semio_framework_pack_json::Object::new()));
+        let live = preview_mesh_retention_handles(&eval, host_snapshot, session);
+        (live, pending_preview_tessellate_handles(&eval, host_snapshot, session))
+    };
+    retain_preview_meshes(session, live, grant)?;
+    let mut invocations = Vec::new();
+    for handle in pending {
+        let node_hash = semio_framework_os_flow::preview_tessellate_node_hash(&handle, tolerance_bits);
+        if session.note_pending_tessellate(node_hash, handle.clone()) {
+            let mut request_object = semio_framework_pack_json::Object::new();
+            request_object.insert("handle", semio_framework_pack_json::Value::String(handle));
+            request_object.insert("tolerance", semio_framework_pack_json::Value::from(tolerance));
+            request_object.insert("nodeHash", semio_framework_pack_json::Value::from(node_hash));
+            request_object.insert("budget", semio_framework_pack_json::Value::from(u64::from(PREVIEW_TESSELLATE_STEP_BUDGET)));
+            request_object.insert("wallMicros", semio_framework_pack_json::Value::from(PREVIEW_TESSELLATE_STEP_WALL_MICROS));
+            request_object.insert("windowId", semio_framework_pack_json::Value::String(window_id.to_string()));
+            request_object.insert("windowKindId", semio_framework_pack_json::Value::String(window_kind_id.to_string()));
+            let request_json = semio_framework_pack_json::to_string(&semio_framework_pack_json::Value::Object(request_object));
+            invocations.push(ExtensionInvocation::new(geometry_extension_address.clone(), "tessellate", request_json, "flowTessellateResolve"));
+        }
+    }
+    Ok(invocations)
+}
+
+/// 🧹️ Retains exactly the live roster of preview meshes, one granted retention turn at a time, and refuses a retention that stops making progress.
+pub fn retain_preview_meshes(session: &mut FlowEvalSession, live: HashSet<String>, grant: semio_framework_value::RetainedCloneGrant) -> Result<(), semio_framework_value::ValueError> {
+    session.begin_retain_preview_meshes(live.into_iter().collect()).map_err(|(error, _)| error)?;
+    while !session.preview_retention_terminal_is_empty() {
+        session.retain_preview_meshes_step(grant)?;
+        if session.preview_retention_step_progress() == Default::default() && !session.preview_retention_terminal_is_empty() {
+            return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit, "preview mesh retention was granted too little to advance"));
+        }
+    }
+    Ok(())
+}
+//#endregion 🧊️Geometry
+
+//#region ⏱️Tick
+/// ⏱️ What one evaluation tick owes its caller: the extension work it declared and whether the
+/// addressed window's retained publication actually changed. It owes no continuation: the run job
+/// schedules the next hop off the window's latch.
+pub struct FlowEvalTickOutcome {
+    pub extension_invocations: Vec<ExtensionInvocation>,
+    pub publication: FlowEvalPublication,
+    /// 🕸️ Whether this tick moved the per-node evaluation census the GRAPH body paints. The preview
+    /// is republished on every hop because that is what delivers geometry; the graph is the most
+    /// expensive body in the app and only its computing chrome depends on the chain, so it is
+    /// republished exactly when that chrome moved (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+    pub census_moved: bool,
+}
+
+/// 🐢️ What ONE evaluation hop of the chain actually invalidates: the preview window it is addressed
+/// to, the panels that read the chain's own status back, and — only when this hop moved the per-node
+/// census — the graph body that paints the computing chrome.
+///
+/// 🐛️ Every hop used to declare the default [`UiDirtyScope::Full`], so one slider step paid THREE
+/// whole-shell refreshes of 452, 574 and 558 ms, each re-rendering `procedural.play.main` at a
+/// 183–266 ms patch install, for a walk whose own guest work measured 2.3 ms. Worse, the geometry a
+/// hop published could not reach the screen until that refresh finished: the first mesh landed 474 ms
+/// after the tick that produced it had already settled
+/// (`📓️slider-latency-incremental-eval-2026-09-15.md` §1).
+///
+/// 🚦️ Never [`UiDirtyScope::None`]: the host polls `pending_effects` once per `refreshUi`, so a hop
+/// that asked for no refresh at all would be the last hop a settled chain could ever take — the same
+/// reason [`owe_attached_previews_carrying`] carries a run start rather than trusting a poll.
+pub fn chain_ui_scope(preview_body: &str, graph_body: Option<&str>, panel_bodies: &[&str], census_moved: bool) -> semio_framework::kernel::UiDirtyScope {
+    let mut window_bodies = vec![preview_body.to_string()];
+    if census_moved {
+        window_bodies.extend(graph_body.map(str::to_string));
+    }
+    semio_framework::kernel::UiDirtyScope::Partial { window_bodies, panel_bodies: panel_bodies.iter().map(|body| (*body).to_string()).collect(), utilities: false, tools: false, engagements: false, measures: false, labels: false }
+}
+
+/// 🏁️ Whether the tick that just ran leaves its window UNFINISHED — the one rule the run job's
+/// settle decision turns on, named so a law can state it without a contributed registry.
+///
+/// A window owes more work when the evaluation itself said so (`more`) **or** when the tick parked
+/// extension answers it is still waiting for. Recording only `more` was the whole defect: `!more` is
+/// exactly the branch that emits the `tessellate` invocations, so a window still owing mesh round
+/// trips recorded itself FINISHED and [`FlowEvalSession::window_tick_owed`] went false for good — the
+/// first answer that came back `Ready` while another handle was untessellated stranded the surface
+/// at `inFlight: 1` forever (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+pub fn tick_is_unfinished(more: bool, parked_extension_invocations: usize) -> bool {
+    more || parked_extension_invocations > 0
+}
+
+pub use semio_framework_os_flow::flow_inference_dependency_json as geometry_dependency_json;
+
+/// 🧮️ ONE evaluation tick of the shared chain, for ANY surface.
+///
+/// ⏱️ The tick's own wall cost is recorded into `semio_framework_os_flow`'s evaluation-step ledger
+/// ONLY while `semio_framework_job::runtime_diagnostics_enabled()` is armed — this is the ONE app
+/// work step the 8 ms interactive ceiling governs, and a normal boot must not pay two clock reads
+/// per tick to measure it.
+///
+/// 📤️ `retained_eval` is the evaluation the addressed window ALREADY holds — the tick republishes
+/// only when it differs, so redispatch ticks that move no node allocate and retire nothing.
+///
+/// 🔁️ `turn_started_us` is when the guest turn this walk belongs to began. A tick the host
+/// dispatched opens its own turn and passes `None`; a tick an answer's fold runs INLINE passes the
+/// fold's own turn start, so every walk of one turn shares one wall deadline
+/// ([`semio_framework_os_flow::flow_eval_tick_budget`]).
+pub fn evaluate_tick(
+    window_id: &str,
+    window_kind_id: &str,
+    host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot,
+    tolerance: f64,
+    session: &mut FlowEvalSession,
+    retained_eval: Option<&str>,
+    turn_started_us: Option<u64>,
+    retained_grant: semio_framework_value::RetainedCloneGrant,
+) -> Result<FlowEvalTickOutcome, semio_framework_value::ValueError> {
+    let started_us = semio_framework_job::runtime_diagnostics_enabled().then(semio_framework_job::default_now_us).flatten();
+    // ▶️ The armed tick is now RUNNING, so its latch is free for whatever THIS tick decides to arm.
+    session.begin_window_tick(window_id, retained_grant)?;
+    let census_before = node_census_digest(session.status_json());
+    let mut host = host_with_session(host_snapshot, session, retained_grant)?;
+    let more = session.tick_cold(&mut host, turn_started_us);
+    let pending_extension_evals = host.take_pending_extension_evals();
+    host.retire_cold();
+    let mut extension_invocations = Vec::new();
+    // 🌊️ ONE WAVE, ONE HOP: every request the walk parked had its inputs ready in the same tick, so
+    // no member consumes another member's output and all of them may be outstanding at once. The
+    // per-window latch already counts a fan-out and hands the re-arm to whichever answer lands LAST
+    // (`FlowEvalSession::settle_window_extension`), so the chain now costs one round trip per
+    // dependency LEVEL rather than one per contributed node — which is what made a four-operator
+    // example spend seven `flowEvalTick` hops at roughly a second apiece
+    // (`📓️react-perf-ceilings-audit-2026-09-14.md` §1, §3 item 3).
+    for pending in pending_extension_evals {
+        let resume = session.has_evaluation_progress(pending.node_hash);
+        let dependency_json = if resume { String::new() } else { geometry_dependency_json(host_snapshot, &pending.neuron_id) };
+        extension_invocations.push(evaluate_invocation(pending, resume, dependency_json, window_id, window_kind_id));
+    }
+    if extension_invocations.is_empty() && !more {
+        extension_invocations.extend(preview_tessellate_invocations(window_id, window_kind_id, session, host_snapshot, tolerance, retained_grant)?);
+    }
+    // ⏳️ A tick that parked extension work is emphatically NOT FINISHED, whatever the evaluation's own
+    // `more` says: `!more` is exactly the branch above that parks `tessellate`, and a window recorded
+    // finished while it still owes mesh round trips strands its surface at `inFlight: 1`
+    // (`📓️wgpu-example-chain-2026-09-13.md` §6.1). A graph nothing in this process can serve gives up.
+    session.note_window_tick_outcome(window_id, tick_is_unfinished(more, extension_invocations.len()), retained_grant)?;
+    if !extension_invocations.is_empty() {
+        session.note_window_extensions_in_flight(window_id, extension_invocations.len(), retained_grant)?;
+    } else if more && !may_rearm(host_snapshot) {
+        session.abandon_window_tick(window_id, retained_grant)?;
+    }
+    let publication = preview_eval_publication_for(session, host_snapshot, retained_eval);
+    if let (Some(started_us), Some(finished_us)) = (started_us, started_us.and_then(|_| semio_framework_job::default_now_us())) {
+        semio_framework_os_flow::record_flow_eval_step(finished_us.saturating_sub(started_us));
+    }
+    Ok(FlowEvalTickOutcome { extension_invocations, publication, census_moved: node_census_digest(session.status_json()) != census_before })
+}
+
+/// 📨️ The original evaluation request carries business identity and address; its caller lends execution authority through the actual context.
+pub fn evaluate_invocation(pending: semio_framework_artifact_flow_flow::neural::PendingExtensionEval, resume: bool, dependency_json: String, window_id: &str, window_kind_id: &str) -> ExtensionInvocation {
+    let request_json = semio_framework_pack_json::to_json_string(&semio_framework_value::DslValue::object([
+        ("neuronId".to_string(), semio_framework_value::DslValue::String(pending.neuron_id)),
+        ("operatorId".to_string(), semio_framework_value::DslValue::String(pending.operator_id.clone())),
+        ("inputJson".to_string(), semio_framework_value::DslValue::String(if resume { String::new() } else { pending.input_json })),
+        ("dependencyJson".to_string(), semio_framework_value::DslValue::String(dependency_json)),
+        ("operatorVersion".to_string(), semio_framework_value::DslValue::String(format!("registry:{};geometry:1;policy:1", semio_framework_os_flow::flow_extension_registry_generation()))),
+        ("nodeHash".to_string(), semio_framework_value::DslValue::uint(pending.node_hash)),
+        ("resume".to_string(), semio_framework_value::DslValue::Bool(resume)),
+        ("windowId".to_string(), semio_framework_value::DslValue::String(window_id.to_string())),
+        ("windowKindId".to_string(), semio_framework_value::DslValue::String(window_kind_id.to_string())),
+        ("extensionId".to_string(), semio_framework_value::DslValue::String(pending.extension_id.clone())),
+    ]));
+    ExtensionInvocation::new(pending.extension_id, "evaluate", request_json, "flowEvalResolve")
+}
+
+/// 🕸️ One number over the part of the per-node census that is worth re-rendering the GRAPH body for:
+/// whether the computing chrome is on screen at all, and which nodes carry a fault the user has to
+/// see.
+///
+/// ⚖️ Deliberately NOT the whole census. Every hop of a live evaluation reshuffles `computing` and
+/// `queued` among nodes that are all already busy, and paying a 188–265 ms `patch.install` of
+/// `procedural.play.main` for that reshuffle costs four times per evaluation — measured at 974 ms of
+/// a 2 529 ms re-evaluation, in front of the very geometry whose progress it is reporting. A progress
+/// indicator may not outrank the thing whose progress it reports: the chrome is painted when it
+/// APPEARS and when it CLEARS, a fault moves it whenever it lands, and the per-hop advance the user
+/// actually watches is the preview's own status pill, which is republished every hop
+/// (`📓️slider-latency-incremental-eval-2026-09-15.md` §3.1).
+fn node_census_digest(status_json: &str) -> u64 {
+    const OFFSET: u64 = 0xcbf2_9ce4_8422_2325;
+    const PRIME: u64 = 0x0000_0100_0000_01b3;
+    let mut digest = OFFSET;
+    for byte in census_chrome_marks(status_json).as_bytes() {
+        digest = (digest ^ u64::from(*byte)).wrapping_mul(PRIME);
+    }
+    digest
+}
+
+/// 🕸️ The census reduced to what the graph body actually paints differently: one mark per widget that
+/// is NOT `ok` — `e` for an error, `b` for a blocked port, `·` for merely busy — in declaration
+/// order. Two censuses that differ only in WHICH busy node is the active one reduce to the same
+/// marks, and an empty answer means the chrome is off.
+pub fn census_chrome_marks(status_json: &str) -> String {
+    let Ok(status) = semio_framework_pack_json::parse(status_json, semio_framework_pack_json::JsonMemberPolicy::Reject) else {
+        return status_json.to_string();
+    };
+    let Some(map) = status.as_object() else {
+        return status_json.to_string();
+    };
+    let mut marks = String::new();
+    for (id, entry) in map.iter() {
+        match entry.get("status").and_then(semio_framework_pack_json::Value::as_str).unwrap_or("ok") {
+            "ok" => continue,
+            "error" => {
+                marks.push('e');
+                marks.push_str(entry.get("message").and_then(semio_framework_pack_json::Value::as_str).unwrap_or_default());
+            }
+            "blocked" => marks.push('b'),
+            _ => marks.push('\u{b7}'),
+        }
+        marks.push_str(id);
+    }
+    marks
+}
+
+/// ✅️ Folds one `evaluate` answer into the retained session and settles the window's outstanding
+/// answer.
+///
+/// 🔁️ The fold itself still arms and dispatches NOTHING. What changed is who runs the hop the settle
+/// leaves owed: the answer's own route is window-addressed, so once the LAST answer of a wave lands
+/// it holds everything the next wave needs — the retained session, the document, the config and the
+/// addressed window's transient — and runs that wave INLINE inside this turn rather than costing a
+/// `flowEvalResolve` → `flowEvalTick` pair (1 391 ms on React,
+/// `📓️react-hop-latency-2026-09-14.md` §2.1). The decision is
+/// [`FlowEvalSession::inline_continuation_admitted`] and the surface makes it after this fold; a
+/// declined continuation leaves the latch exactly as this fold left it, which is the park — the
+/// `previewEval` run job reads the same debt on its next step and dispatches the round trip.
+///
+/// 🚧️ An answer that could NOT be folded is a fault settle, not slow work: the host answers a
+/// faulted `invokeExtension` with an empty `outputJson`, the node cache keeps no entry, and the next
+/// tick would park the identical request and fault again at the host's own cadence forever. Such a
+/// settle gives the window up, for the same reason [`may_rearm`] gives up an uncontributed graph, and so
+/// does a `cancelled` envelope: whoever cancelled the kernel job owes nobody a continuation.
+///
+/// ⏱️ A budgeted `evaluate` answers an ENVELOPE: a step that spent its wall allowance without
+/// finishing says `done: false` and parks its job under this same `nodeHash`, so the window stays
+/// unfinished and owes one more identical hop (`📓️extension-evaluate-budget-2026-09-12.md`).
+pub fn resolve_eval(payload:&FlowEvalResolve,receiver:&mut semio_framework_os_flow::FlowEvaluationReplyReceiver,session:&mut FlowEvalSession,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+    let address=semio_framework_os_flow::FlowEvaluationReplyAddress{node_hash:payload.node_hash,window_id:&payload.window_id,window_kind_id:&payload.window_kind_id};receiver.step(session,&address,cx)
+}
+
+/// 💥 Retains (or forgets) the evaluate fault one answer carried. Publication only — no arming.
+
+/// 🧯️ A closed run reaches the geometry extension's owned Session jobs and parked evaluations through
+/// the extension's own `evaluateCancel` and `tessellateCancel` capabilities — two doors, because
+/// there are two registries and each names its own (`📓️preview-eval-cancellation-2026-09-12.md`).
+/// Both answers land on `flowTessellateCancelResolve`, which arms nothing.
+pub fn release_invocations(payload: &FlowEvalRelease) -> Vec<ExtensionInvocation> {
+    release_invocations_for(payload, geometry_extension_address())
+}
+
+/// 🧯️ The release over an ALREADY RESOLVED geometry address — pure in both inputs, for the same
+/// reason [`preview_progress_status_json_for`] is. An unaddressable extension has no actor to tell.
+pub fn release_invocations_for(payload: &FlowEvalRelease, address: Result<String, semio_framework_os_flow::FlowExtensionAddressMiss>) -> Vec<ExtensionInvocation> {
+    let Ok(address) = address else {
+        return Vec::new();
+    };
+    vec![
+        ExtensionInvocation::new(address.clone(), "evaluateCancel", FlowEvalSession::preview_eval_cancel_invocation_request_json(&payload.window_id, &payload.window_kind_id), "flowTessellateCancelResolve"),
+        ExtensionInvocation::new(address, "tessellateCancel", FlowEvalSession::preview_cancel_invocation_request_json(&payload.window_id, &payload.window_kind_id), "flowTessellateCancelResolve"),
+    ]
+}
+
+/// 🧯️ Pending cancellation continues bounded retirement through the same response chain.
+pub fn resolve_tessellate_cancel(payload: &FlowTessellateCancelResolve, session: &mut FlowEvalSession) -> Vec<ExtensionInvocation> {
+    resolve_tessellate_cancel_for(payload, session, geometry_extension_address())
+}
+
+/// 🔓️ A resolved address keeps cancellation independent of any new evaluator or task registry.
+pub fn resolve_tessellate_cancel_for(payload: &FlowTessellateCancelResolve, session: &mut FlowEvalSession, address: Result<String, semio_framework_os_flow::FlowExtensionAddressMiss>) -> Vec<ExtensionInvocation> {
+    let _ = session;
+    if !payload.ok { eprintln!("flowTessellateCancelResolve: geometry extension refused the cancel for window {}", payload.window_id); return Vec::new(); }
+    let pending=payload.output.get("ok").and_then(semio_framework_value::DslValue::as_bool)==Some(true)&&payload.output.get("pending").and_then(semio_framework_value::DslValue::as_bool)==Some(true);
+    let Ok(address) = address else { return Vec::new() };
+    if !pending { return Vec::new(); }
+    vec![ExtensionInvocation::new(address, "evaluateCancel", FlowEvalSession::preview_eval_cancel_invocation_request_json(&payload.window_id, &payload.window_kind_id), "flowTessellateCancelResolve")]
+}
+
+/// ✅️ Folds one budgeted `tessellate` round trip into the retained session and settles the window's
+/// outstanding answer. The tick that parked it left the window unfinished, so once its LAST answer
+/// lands the terminal hop is owed — the one that finds whatever handle is still untessellated, or
+/// finds nothing and records the window finished.
+///
+/// 🔁️ That hop is the one a mesh body pays PER CHUNK, so it is the same round trip
+/// [`resolve_eval`] now runs inline and for the same reason: this route is window-addressed too, and
+/// the surface continues the chain here whenever
+/// [`FlowEvalSession::inline_continuation_admitted`] says the turn still has room.
+pub fn resolve_tessellate(payload:&FlowTessellateResolve,receiver:&mut semio_framework_os_flow::FlowPreviewCompletedReceiver,session:&mut FlowEvalSession,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+    let address=semio_framework_os_flow::FlowPreviewCompletedAddress{node_hash:payload.node_hash,window_id:&payload.window_id,window_kind_id:&payload.window_kind_id,handle:&payload.handle,tolerance:payload.tolerance};session.resolve_preview_tessellate(receiver,&address,cx)
+}
+
+//#endregion ⏱️Tick
+
+//#region 📈️Status
+/// 📈️ The ONE status object EVERY generation3d World3d preview window publishes — edit mode's
+/// `procedural-preview`, generate mode's `generation3d-generate-preview` and the viewer's
+/// `procedural-view-preview`. One projection, one schema, one place.
+///
+/// 🐛️ It used to live on `✏️editor`, so the viewer's preview published a `World3dScene` with
+/// `status_json: None`: meshes rendered, but `data-status-json` carried no `phase`, no `progress`
+/// and no `cancellable`, i.e. a read-only surface could watch nothing and stop nothing
+/// (`🗑️generated/journey-7/results.json`, rows `view:*`, ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+/// A viewer file may not reach through `::editor::` (`policyViewerPurityBreaches`), so the fix is
+/// the same one the tick chain got: the projection moves HERE and both surfaces bind it.
+///
+/// 🔒️ `session` is OPTIONAL because a surface's marks-free `render` entry point is handed no
+/// retained session at all. A window with no session still publishes the full contract — idle
+/// phase, zero progress, nothing to abort — rather than the empty status that was the whole defect.
+
+/// 📈️ The per-widget half: the evaluation's own `error`, or the `widgetErrors` map of every widget
+/// whose evaluation carries one. Surface-neutral — it reads the evaluation text and the fixture the
+/// surface is looking at, nothing else.
+pub fn preview_status_json(eval_json: &str, host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot) -> Option<String> {
+    let eval = semio_framework_pack_json::parse(eval_json, semio_framework_pack_json::JsonMemberPolicy::Reject).ok()?;
+    if eval.get("error").and_then(semio_framework_pack_json::Value::as_str).is_some() {
+        let mut error_object = semio_framework_pack_json::Object::new();
+        error_object.insert("error", eval.get("error").cloned().unwrap_or(semio_framework_pack_json::Value::Null));
+        return Some(semio_framework_pack_json::to_string(&semio_framework_pack_json::Value::Object(error_object)));
+    }
+    let mut errors = semio_framework_pack_json::Object::new();
+    for widget in &host_snapshot.widgets {
+        let id = semio_s_artifact_procedural_3d_model::widget_id(widget).to_string();
+        let Some(entry) = eval.get(&id) else { continue };
+        if let Some(error) = entry.get("error").and_then(semio_framework_pack_json::Value::as_str) {
+            errors.insert(id, semio_framework_pack_json::Value::String(error.to_string()));
+        }
+    }
+    if errors.is_empty() {
+        None
+    } else {
+        let mut wrapper = semio_framework_pack_json::Object::new();
+        wrapper.insert("widgetErrors", semio_framework_pack_json::Value::Object(errors));
+        Some(semio_framework_pack_json::to_string(&semio_framework_pack_json::Value::Object(wrapper)))
+    }
+}
+
+/// 🧩️ Folds one status object's keys onto another's, right-hand side winning.
+fn merge_status_json(computing: Option<String>, preview_status: Option<String>) -> Option<String> {
+    match (computing, preview_status) {
+        (Some(c), Some(p)) => {
+            let mut computing_object = semio_framework_pack_json::parse(&c, semio_framework_pack_json::JsonMemberPolicy::Reject).ok().and_then(|value| value.as_object().cloned()).unwrap_or_else(|| {
+                let mut fallback = semio_framework_pack_json::Object::new();
+                fallback.insert("computing", semio_framework_pack_json::Value::Bool(true));
+                fallback
+            });
+            let preview_object = semio_framework_pack_json::parse(&p, semio_framework_pack_json::JsonMemberPolicy::Reject).ok().and_then(|value| value.as_object().cloned()).unwrap_or_default();
+            for (key, value) in preview_object.iter() {
+                computing_object.insert(key, value.clone());
+            }
+            Some(semio_framework_pack_json::to_string(&semio_framework_pack_json::Value::Object(computing_object)))
+        }
+        (Some(c), None) => Some(c),
+        (None, Some(p)) => Some(p),
+        (None, None) => None,
+    }
+}
+
+/// 👁️ Merges the session's live "still computing" flag, the resumable tessellation's progress and a
+/// fresh [`preview_status_json`] result into the one status object a preview window publishes.
+pub fn preview_scene_status_json(session: Option<&FlowEvalSession>, run: Option<&ToolRunView>, preview_status: Option<String>) -> Option<String> {
+    // ⛓️ `FlowEvalSession::pending` is `tick_scheduled` alone, which is FALSE at every hop boundary
+    // of a chain — a window waiting on an extension answer is marked owed, not armed. The chain
+    // ledger is the one that stays live for the whole evaluation (see `preview_chain_status`).
+    // 🏁️ The chain is the LIVE ledger and the run view LAGS it, so the run may raise `computing`
+    // only while the chain has not settled — before the first hop publishes a census the run
+    // legitimately knows more, and after the last one it knows less.
+    let chain = session.map(FlowEvalSession::preview_chain_status).unwrap_or_default();
+    let computing = (chain.working || (run.is_some_and(preview_eval_run_is_abortable) && !chain.settled())).then(|| r#"{"computing":true}"#.to_string());
+    merge_status_json(merge_status_json(computing, Some(preview_progress_status_json(session, run))), preview_status)
+}
+
+/// ⏯️ Whether `run` is this surface's preview evaluation and still has work its abort would stop.
+pub fn preview_eval_run_is_abortable(run: &ToolRunView) -> bool {
+    run.tool_id == PREVIEW_EVAL_TOOL_ID && matches!(run.state, ToolRunState::Starting | ToolRunState::Running | ToolRunState::Paused)
+}
+
+/// 📈 The schema-first tessellation progress object: `phase` (wire tag) and its `phaseLabel`
+/// English/German pair, the monotone `progress` counters and ratio, the abort affordance
+/// (`cancellable`, `cancelAction` = the framework's `toolRunAbort`, `cancelArgs` = the run's
+/// `{runId, generation}`) and any typed validate-gate `diagnostics`.
+///
+/// 🪪️ An unaddressable geometry kernel outranks whatever the tessellation ledger last recorded:
+/// nothing was ever invoked, so the ledger's `idle` is a lie the surface cannot act on. The miss is
+/// resolved through the SAME [`geometry_extension_address`] the invocation producer uses — read
+/// live, never cached — and published as `phase: "faulted"` plus a `fault` object naming the flow
+/// extension id and every `<manifest id> → <owning plugin id>` translation the session does carry.
+pub fn preview_progress_status_json(session: Option<&FlowEvalSession>, run: Option<&ToolRunView>) -> String {
+    preview_progress_status_json_for(session, run, geometry_extension_address())
+}
+
+/// 📈 The projection itself, over an ALREADY RESOLVED geometry address — pure in both its inputs, so
+/// the unaddressable branch is provable without mutating the process-global contribution table (a
+/// test that uninstalls and reinstalls it poisons the flow catalogue's cache lock and leaves the
+/// neural registry unretired for every later test in the binary).
+pub fn preview_progress_status_json_for(session: Option<&FlowEvalSession>, run: Option<&ToolRunView>, address: Result<String, semio_framework_os_flow::FlowExtensionAddressMiss>) -> String {
+    let status = session.map(FlowEvalSession::preview_tessellate_status).unwrap_or_default();
+    // ⏱️ The budgeted-evaluation ledger — the half of a preview's work the tessellation ledger is
+    // structurally blind to, because a long operator admits no tessellation until it has finished
+    // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️extension-evaluate-budget-2026-09-12.md`).
+    let eval_status = session.map(FlowEvalSession::preview_eval_status).unwrap_or_default();
+    // ⛓️ The chain ledger — the only one of the three that is live at a hop BOUNDARY, which is where
+    // every status a preview publishes is built. Without it a whole evaluation published
+    // `phase: "idle" inFlight: 0 ratio: 1.0` on both renderers
+    // (`📓️wgpu-progress-visibility-2026-09-14.md`).
+    let chain = session.map(FlowEvalSession::preview_chain_status).unwrap_or_default();
+    // 🛑 An aborted run OUTRANKS the tessellation ledger, which knows nothing about an abort raised
+    // while the evaluation was still in its `evaluate` round trips (no tessellation admitted yet, so
+    // no progress row to stamp) — that case used to publish `phase: "idle"` and swallow the gesture.
+    let phase = if address.is_err() {
+        semio_framework_os_flow::PreviewTessellatePhase::Faulted
+    } else if session.is_some_and(FlowEvalSession::preview_cancelled) {
+        semio_framework_os_flow::PreviewTessellatePhase::Cancelled
+    } else {
+        status.phase
+    };
+    // 🛑 The abort affordance is the RUN's: it exists exactly while the framework would accept
+    // `toolRunAbort` for WORK THAT IS STILL OUTSTANDING, and it names the run it stops. A settled
+    // chain has none, whatever the run view still says — see [`PreviewChainStatus::settled`]: the
+    // view is a host artifact that reaches this surface on a render, so a run whose job has finished
+    // but whose terminal state has not been rendered back yet would otherwise offer a Cancel for an
+    // evaluation with nothing left to cancel (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+    let abortable = run.filter(|run| preview_eval_run_is_abortable(run) && address.is_ok() && !chain.settled());
+    // ⏱️ While a budgeted evaluation is the ONLY work outstanding, the surface names THAT phase —
+    // the tessellation ledger would say `idle` for the whole of it.
+    let show_eval_phase = eval_status.in_flight > 0 && status.in_flight == 0 && matches!(phase, semio_framework_os_flow::PreviewTessellatePhase::Idle);
+    // ⛓️ …and while NEITHER finer ledger has anything, the chain still does. This is the branch the
+    // whole of a live evaluation actually takes: both finer ledgers are empty at a hop boundary, so
+    // without it the surface names `idle` for work it can see is outstanding.
+    let show_chain_phase = !show_eval_phase && chain.working && status.in_flight == 0 && matches!(phase, semio_framework_os_flow::PreviewTessellatePhase::Idle);
+    let (phase_tag, english, german) = if show_eval_phase {
+        let (english, german) = eval_status.phase.labels();
+        (eval_status.phase.tag(), english, german)
+    } else if show_chain_phase {
+        let (english, german) = semio_framework_os_flow::PreviewEvalPhase::Computing.labels();
+        (semio_framework_os_flow::PreviewEvalPhase::Computing.tag(), english, german)
+    } else {
+        let (english, german) = phase.labels();
+        (phase.tag(), english, german)
+    };
+    let mut label = semio_framework_pack_json::Object::new();
+    label.insert("en", semio_framework_pack_json::Value::String(english.to_string()));
+    label.insert("de", semio_framework_pack_json::Value::String(german.to_string()));
+    let mut progress = semio_framework_pack_json::Object::new();
+    // 📈 `unitsDone`/`unitsTotal` are the UNITS OF THE WORK THIS STATUS IS ABOUT, which is what the
+    // consumer contract declares them to be (`World3dComputeStatusV1`, and its Rust twin
+    // `world3d_compute_status`) and what both renderers price the pill's `n/m (x%)` off.
+    //
+    // ⚖️ The PHASE is the finest name available; the PROGRESS is the only ledger that spans the whole
+    // evaluation. The budgeted-eval ledger aggregates its LIVE rows only, so finishing a node shrinks
+    // both halves of the fraction and the published pill counted DOWN — measured on 6018 as
+    // `Computing 7/7 (100%)` → `4/6 (67%)` → `3/6 (50%)` → `2/6 (33%)` across one evaluation
+    // (`📓️wgpu-progress-visibility-2026-09-14.md`). A progress bar that runs backwards is worse than
+    // none. The chain census is monotone inside one chain, so whenever it exists it is the fraction,
+    // whatever names the phase; `evalUnitsDone`/`evalUnitsTotal` still carry the finer detail.
+    // ⚖️ The chain owns the fraction while it is working, EXCEPT where it has no census of its own
+    // and a single budgeted evaluation does — there the finer ledger is the best denominator
+    // available. A working chain may never publish `ratio: 1.0`, census or not: `Computing 0/0
+    // (100%)` is the same lie as `idle`.
+    let chain_progress = chain.working && status.in_flight == 0 && matches!(phase, semio_framework_os_flow::PreviewTessellatePhase::Idle) && (chain.nodes_total > 0 || eval_status.in_flight == 0);
+    let (units_done, units_total) = if chain_progress {let(done,total)=chain.units();(u64::from(done),u64::from(total))} else { (status.units_done, status.units_total) };
+    progress.insert("unitsDone", semio_framework_pack_json::Value::from(u64::from(units_done)));
+    progress.insert("unitsTotal", semio_framework_pack_json::Value::from(u64::from(units_total)));
+    progress.insert("facesDone", semio_framework_pack_json::Value::from(u64::from(status.faces_done)));
+    progress.insert("facesTotal", semio_framework_pack_json::Value::from(u64::from(status.faces_total)));
+    // ⏱️ `inFlight` counts EVERY kind of outstanding kernel work. A boolean preview spends its
+    // whole slow half in `evaluate` round trips that admit no tessellation, so the tessellation
+    // ledger alone published `inFlight: 0` while the kernel was busy for sixteen seconds
+    // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). The three ledgers OVERLAP by construction — a
+    // parked tessellate is a row in the tessellation ledger and a parked request in the chain's —
+    // so the count is whichever of them sees more, never their sum.
+    progress.insert("inFlight", semio_framework_pack_json::Value::from(u64::from(chain.in_flight.max(status.in_flight.saturating_add(eval_status.in_flight)))));
+    progress.insert("evalUnitsDone", semio_framework_pack_json::Value::from(u64::from(eval_status.units_done)));
+    progress.insert("evalUnitsTotal", semio_framework_pack_json::Value::from(u64::from(eval_status.units_total)));
+    progress.insert("nodesDone", semio_framework_pack_json::Value::from(u64::from(chain.nodes_done)));
+    progress.insert("nodesTotal", semio_framework_pack_json::Value::from(u64::from(chain.nodes_total)));
+    let ratio = if chain_progress {
+        chain.ratio()
+    } else if show_eval_phase {
+        eval_status.ratio()
+    } else {
+        status.ratio()
+    };
+    progress.insert("ratio", semio_framework_pack_json::Value::from(ratio));
+    let mut object = semio_framework_pack_json::Object::new();
+    object.insert("phase", semio_framework_pack_json::Value::String(phase_tag.to_string()));
+    object.insert("phaseLabel", semio_framework_pack_json::Value::Object(label));
+    object.insert("progress", semio_framework_pack_json::Value::Object(progress));
+    object.insert("cancellable", semio_framework_pack_json::Value::Bool(abortable.is_some()));
+    object.insert("cancelAction", semio_framework_pack_json::Value::String(TOOL_RUN_ABORT_ACTION_ID.to_string()));
+    if let Some(run) = abortable {
+        let mut arguments = semio_framework_pack_json::Object::new();
+        arguments.insert(TOOL_RUN_ARG_RUN_ID, semio_framework_pack_json::Value::String(run.identity.id.run.to_string()));
+        arguments.insert(TOOL_RUN_ARG_GENERATION, semio_framework_pack_json::Value::from(u64::from(run.identity.generation)));
+        object.insert("cancelArgs", semio_framework_pack_json::Value::Object(arguments));
+    }
+    // 💥 A live evaluate fault OUTRANKS the ledger phase for the same reason an addressing miss
+    // does — the surface must state what it is actually living with. It can only exist once the
+    // address resolved (an unaddressable extension is never invoked), so the two fault objects are
+    // mutually exclusive by construction, and a contribution install clears this one
+    // (`FlowEvalSession::invalidate_for_flow_extension_registry`) before the first tick settles.
+    if let Some(evaluate_fault) = session.and_then(FlowEvalSession::extension_evaluate_fault) {
+        let (english, german) = evaluate_fault.labels();
+        let mut message = semio_framework_pack_json::Object::new();
+        message.insert("en", semio_framework_pack_json::Value::String(english));
+        message.insert("de", semio_framework_pack_json::Value::String(german));
+        let mut fault = semio_framework_pack_json::Object::new();
+        fault.insert("code", semio_framework_pack_json::Value::String(semio_framework_os_flow::ExtensionEvaluateFault::CODE.to_string()));
+        fault.insert("extensionId", semio_framework_pack_json::Value::String(evaluate_fault.extension_id.clone()));
+        fault.insert("capability", semio_framework_pack_json::Value::String(evaluate_fault.capability.clone()));
+        fault.insert("faultCode", semio_framework_pack_json::Value::String(evaluate_fault.code.clone()));
+        fault.insert("faultMessage", semio_framework_pack_json::Value::String(evaluate_fault.message.clone()));
+        fault.insert("message", semio_framework_pack_json::Value::Object(message));
+        let (faulted_en, faulted_de) = semio_framework_os_flow::PreviewTessellatePhase::Faulted.labels();
+        let mut faulted_label = semio_framework_pack_json::Object::new();
+        faulted_label.insert("en", semio_framework_pack_json::Value::String(faulted_en.to_string()));
+        faulted_label.insert("de", semio_framework_pack_json::Value::String(faulted_de.to_string()));
+        object.insert("phase", semio_framework_pack_json::Value::String(semio_framework_os_flow::PreviewTessellatePhase::Faulted.tag().to_string()));
+        object.insert("phaseLabel", semio_framework_pack_json::Value::Object(faulted_label));
+        object.insert("fault", semio_framework_pack_json::Value::Object(fault));
+    } else if let Err(miss) = address {
+        let (english, german) = miss.labels();
+        let mut message = semio_framework_pack_json::Object::new();
+        message.insert("en", semio_framework_pack_json::Value::String(english));
+        message.insert("de", semio_framework_pack_json::Value::String(german));
+        let mut fault = semio_framework_pack_json::Object::new();
+        fault.insert("code", semio_framework_pack_json::Value::String(semio_framework_os_flow::FlowExtensionAddressMiss::CODE.to_string()));
+        fault.insert("extensionId", semio_framework_pack_json::Value::String(miss.extension_id));
+        fault.insert("message", semio_framework_pack_json::Value::Object(message));
+        fault.insert(
+            "contributed",
+            semio_framework_pack_json::Value::Array(
+                miss.contributed
+                    .into_iter()
+                    .map(|(extension_id, plugin_id)| {
+                        let mut entry = semio_framework_pack_json::Object::new();
+                        entry.insert("extensionId", semio_framework_pack_json::Value::String(extension_id));
+                        entry.insert("pluginId", semio_framework_pack_json::Value::String(plugin_id));
+                        semio_framework_pack_json::Value::Object(entry)
+                    })
+                    .collect(),
+            ),
+        );
+        object.insert("fault", semio_framework_pack_json::Value::Object(fault));
+    }
+    if status.diagnostics > 0 {
+        object.insert("diagnosticCount", semio_framework_pack_json::Value::from(u64::from(status.diagnostics)));
+        let entries: Vec<semio_framework_pack_json::Value> = session
+            .map(FlowEvalSession::preview_diagnostic_entries)
+            .unwrap_or_default()
+            .into_iter()
+            .map(|(handle, issues)| {
+                let mut entry = semio_framework_pack_json::Object::new();
+                entry.insert("handle", semio_framework_pack_json::Value::String(handle.to_string()));
+                entry.insert("issues", semio_framework_pack_json::parse(issues, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or(semio_framework_pack_json::Value::Array(Vec::new())));
+                semio_framework_pack_json::Value::Object(entry)
+            })
+            .collect();
+        object.insert("diagnostics", semio_framework_pack_json::Value::Array(entries));
+    }
+    semio_framework_pack_json::to_string(&semio_framework_pack_json::Value::Object(object))
+}
+
+/// 🐞️ The observable counters a preview window stamps onto its status so the browser probe can read
+/// back off `data-status-json` what actually reached the SCENE, without a screenshot.
+///
+/// 🧹️ `eval_json` is deliberately absent. It used to ride along as `evalLen` plus an `evalHead` of
+/// the first 240 characters of the raw evaluation text — on EVERY status frame of every preview
+/// window, in the payload `World3dHost` renders progress chrome from. Neither is a fact about the
+/// scene: the evaluation's own failures are already projected as `error`/`widgetErrors` by
+/// [`preview_status_json`], and its progress as `phase`/`progress` by
+/// [`preview_progress_status_json`], so the pair was pure debug spill that also leaked document text
+/// into view state (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
+/// `📓️audit-user-journey-gaps-2026-09-13.md` §9 item 17).
+pub struct PreviewStatusDebug<'a> {
+    pub meshes_json: &'a str,
+    pub instances_json: &'a str,
+}
+
+/// 📈️ THE preview-window status projection: progress + widget errors + debug counters + the
+/// optional authored hint a window shows while it has nothing to paint. All three World3d preview
+/// windows publish exactly this, so a probe, a shell pane and a law can name one shape.
+pub fn preview_window_status_json(session: Option<&FlowEvalSession>, run: Option<&ToolRunView>, widget_status: Option<String>, debug: &PreviewStatusDebug<'_>, hint: Option<&str>) -> Option<String> {
+    let base = preview_scene_status_json(session, run, widget_status);
+    let mut object = base.as_deref().and_then(|text| semio_framework_pack_json::parse(text, semio_framework_pack_json::JsonMemberPolicy::Reject).ok()).and_then(|value| value.as_object().cloned()).unwrap_or_else(semio_framework_pack_json::Object::new);
+    let mut debug_object = semio_framework_pack_json::Object::new();
+    debug_object.insert("meshesLen", semio_framework_pack_json::Value::from(debug.meshes_json.len()));
+    debug_object.insert("instancesLen", semio_framework_pack_json::Value::from(debug.instances_json.len()));
+    object.insert("debug", semio_framework_pack_json::Value::Object(debug_object));
+    if let Some(hint) = hint {
+        object.insert("hint", semio_framework_pack_json::Value::String(hint.to_string()));
+    }
+    Some(semio_framework_pack_json::to_string(&semio_framework_pack_json::Value::Object(object)))
+}
+//#endregion 📈️Status
+
+//#region ⏯️Run
+#[path = "⏯️tool-run/🦀️.rs"]
+mod tool_run;
+pub use tool_run::*;
+//#endregion ⏯️Run
+
+#[cfg(test)]
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
+
+pub fn split_endpoint(endpoint: &str) -> (String, String) {
+    endpoint.split_once('@').map_or_else(|| (endpoint.to_string(), "out".into()), |(node, port)| (node.to_string(), port.to_string()))
+}
+
+pub fn dag_host_snapshot_to_workflow(host_snapshot: &semio_framework_os_infinite_directed_presentation::DagHostSnapshot) -> (Vec<semio_framework_ui::wgpu::NodeGraphNodeRecord>, Vec<semio_framework_ui::wgpu::NodeGraphEdgeRecord>) {
+    let nodes: Vec<semio_framework_ui::wgpu::NodeGraphNodeRecord> = host_snapshot
+        .nodes
+        .iter()
+        .map(|node| semio_framework_ui::wgpu::NodeGraphNodeRecord {
+            id: node.id.clone(),
+            label: Some(if node.name.is_empty() { node.id.clone() } else { node.name.clone() }),
+            x: node.x,
+            y: node.y,
+            width: node.width,
+            height: node.height,
+            inputs: node.inputs().iter().filter(|port| port.visible).map(|port| semio_framework_ui::wgpu::NodeGraphPortRecord { id: format!("{}@{}", node.id, port.id), label: Some(port.label.clone()), value_type: port.value_type.clone(), ..Default::default() }).collect(),
+            outputs: node.outputs().iter().filter(|port| port.visible).map(|port| semio_framework_ui::wgpu::NodeGraphPortRecord { id: format!("{}@{}", node.id, port.id), label: Some(port.label.clone()), value_type: port.value_type.clone(), ..Default::default() }).collect(),
+            ..Default::default()
+        })
+        .collect();
+    let edges: Vec<semio_framework_ui::wgpu::NodeGraphEdgeRecord> = host_snapshot
+        .edges
+        .iter()
+        .map(|edge| {
+            let (source_node_id, source_port_id) = split_endpoint(&edge.source);
+            let (target_node_id, target_port_id) = split_endpoint(&edge.target);
+            semio_framework_ui::wgpu::NodeGraphEdgeRecord { id: edge.id.clone(), source_node_id, source_port_id, target_node_id, target_port_id, label: None }
+        })
+        .collect();
+    (nodes, edges)
+}
+
+/// 🪪️ Reads exact retained channel packs without display filtering or another kernel evaluation.
+pub fn export_meshes_from_evaluation(snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot, session: &FlowEvalSession, widget_id: Option<&str>) -> Result<Vec<semio_framework_plugin::MeshData>, semio_framework_diagnostic::TextError> {
+    use semio_s_artifact_procedural_3d_mesh_bridge::io_error;
+    if session.preview_chain_status().working || session.preview_eval_status().in_flight > 0 || session.preview_tessellate_status().in_flight > 0 { return Err(io_error("generation3d export is waiting for the current geometry evaluation")); }
+    let sources = semio_s_artifact_procedural_3d_mesh_bridge::export_source_channels(snapshot, widget_id)?;
+    let eval = semio_framework_pack_json::parse(session.eval_json(), semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| io_error(error.to_string()))?;
+    if let Some(error) = eval.get("error").and_then(semio_framework_pack_json::Value::as_str) { return Err(io_error(error)); }
+    let mut meshes = Vec::new();
+    let mut seen = std::collections::BTreeSet::new();
+    for (source, channel) in sources {
+        for item in preview_channel_items_for_widget(&eval, &source).into_iter().filter(|item| channel.as_ref().is_none_or(|channel| *channel == item.channel)) {
+            let key = if item.handle.is_empty() { format!("{source}@{}#{}", item.channel, item.index) } else { item.handle.clone() };
+            if !seen.insert(key) { continue; }
+            let mesh = match item.inline {
+                Some(PreviewInlineGeometry::Point { x, y, z }) => Some(point_marker_mesh(x, y, z)),
+                Some(PreviewInlineGeometry::Vector { .. }) => continue,
+                Some(PreviewInlineGeometry::Mesh { preview, .. }) => decode_preview_mesh_pack(&preview),
+                None => session_preview_mesh(&item.handle, session),
+            }.ok_or_else(|| io_error(format!("generation3d export geometry '{source}@{}' is unavailable", item.channel)))?;
+            meshes.push(mesh);
+        }
+    }
+    if meshes.is_empty() { return Err(io_error("generation3d export has no connected geometry")); }
+    Ok(meshes)
+}

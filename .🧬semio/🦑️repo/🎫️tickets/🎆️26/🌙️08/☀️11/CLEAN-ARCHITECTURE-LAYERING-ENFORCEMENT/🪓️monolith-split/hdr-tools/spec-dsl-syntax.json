@@ -1,0 +1,30 @@
+{
+ "pkg": "semio-framework-dsl-syntax",
+ "id": "dsl-syntax",
+ "dir": "🧰️framework/🔨️modules/🗣️dsl/📖️grammar/📝️syntax",
+ "parent": "semio-framework-dsl",
+ "parent_node": "🧰️framework/🔨️modules/🗣️dsl",
+ "route_index": 1,
+ "workspace_dep": false,
+ "desc": "Syntax layer of the self-hosted grammar format - the grammar and protocol model, the grammar lexer and the grammar and protocol parsers",
+ "deps": [
+  {
+   "name": "semio-framework-diagnostic",
+   "path": "🧰️framework/🔨️modules/⚠️diagnostic"
+  },
+  {
+   "name": "semio-framework-dsl-lexical",
+   "path": "🧰️framework/🔨️modules/🗣️dsl/🔍️lexer"
+  },
+  {
+   "name": "semio-framework-dsl-token",
+   "path": "🧰️framework/🔨️modules/🗣️dsl/🔤️token"
+  },
+  {
+   "name": "semio-framework-value",
+   "path": "🧰️framework/🔨️modules/🌱️value"
+  }
+ ],
+ "dev": [],
+ "route_after": "semio-framework-dsl-lexical"
+}

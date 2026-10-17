@@ -25,6 +25,34 @@
         ],
         "auditFlag": "--qualified-audits"
       }
+    },
+    "ModuleAuthorityCases": {
+      "const": [
+        {
+          "id": "ordered",
+          "sources": [
+            "alpha\n",
+            "beta"
+          ],
+          "sha256": "a2e9fa487d60c7f2188455d0ee223dec3537948b021850a191bf15a646b678a9"
+        },
+        {
+          "id": "reordered",
+          "sources": [
+            "beta",
+            "alpha\n"
+          ],
+          "sha256": "751bf88f515db686f8f88bb985e6407eb999cab067e53458e13f06b42add96fc"
+        },
+        {
+          "id": "unicode-zero",
+          "sources": [
+            "β\u0000",
+            "last\n"
+          ],
+          "sha256": "4e71e4d886842d7892abc56399b62b8b8805020f50a38102b2e2aea9b8570944"
+        }
+      ]
     }
   },
   "type": "object",

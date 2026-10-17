@@ -253,7 +253,5 @@ impl protocol::DiffAlgebra<Grid2dSnapshot> for Grid2dDiff {
 //#endregion 🔖️Apply
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

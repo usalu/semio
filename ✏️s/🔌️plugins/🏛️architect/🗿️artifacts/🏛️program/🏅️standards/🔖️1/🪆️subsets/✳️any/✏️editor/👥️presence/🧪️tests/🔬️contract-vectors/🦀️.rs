@@ -1,10 +1,16 @@
-use super::*;
+use semio_framework_test_fixtures::fixture_text;
+
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::registers::AdjacencyKind;
+#[allow(unused_imports)]
+use pack::snapshot::ArtifactPack;
+use crate::editor::architect::presence::*;
 use dsl::os_pack as pack;
 use protocol::{Mutation, OpBinary, OpText};
 
 #[semio_framework_async_macros::async_test]
 async fn architect_presence_contract_vectors_match_the_json_oracle() {
-    let vectors: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔁️mutation-contracts.json")).expect("neutral contract vectors");
+    let vectors: serde_json::Value = serde_json::from_str(fixture_text!("../../../../✏️editor/👥️presence/🧪️tests/🧫️fixtures/🔁️mutation-contracts.json")).expect("neutral contract vectors");
     let base: ArchitectPresence = semio_framework_pack_json::from_json_str(&vectors["base"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("owned base decoder");
     assert_eq!(<ArchitectPresenceMutation as Mutation<ArchitectPresence>>::DESCRIPTORS.len(), vectors["cases"].as_array().expect("cases").len());
     for vector in vectors["cases"].as_array().expect("cases") {

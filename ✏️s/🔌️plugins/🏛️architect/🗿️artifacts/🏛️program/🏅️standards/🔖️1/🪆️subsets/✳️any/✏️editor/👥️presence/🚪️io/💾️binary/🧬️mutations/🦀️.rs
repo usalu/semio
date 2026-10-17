@@ -3,9 +3,9 @@
 #[allow(unused_imports)]
 mod mutations_codec {
 use super::*;
-use crate::editor::architect::presence::component::mutations::*;
-use crate::editor::architect::presence::component::*;
-use crate::editor::architect::presence::component::mutations::ReplacePresence;
+use crate::editor::architect::presence::mutations::*;
+use crate::editor::architect::presence::*;
+use crate::editor::architect::presence::mutations::ReplacePresence;
 
 impl protocol::OpBinary for ArchitectPresenceMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {

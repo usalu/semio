@@ -1,0 +1,37 @@
+{
+  "parent": "semio-s-artifact-draw-drawing-editor-commands",
+  "name": "semio-s-artifact-draw-drawing-editor-commands-tests",
+  "dir": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧪️tests/🥣️companion",
+  "files": [
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/✂️delete-selection/🧪️tests/🔬️unit/🦀️.rs",
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/➕️add-layer/🧪️tests/🔬️unit/🦀️.rs",
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎛️edit-selection/🧪️tests/🔬️unit/🦀️.rs",
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📥️import-image/🧪️tests/🔬️unit/🦀️.rs",
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📥️import-image/🧵️publication/🧪️tests/🦀️.rs",
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔀️combine-boolean/🧪️tests/🔬️unit/🦀️.rs",
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🕹️nudge-selection/🧪️tests/🔬️unit/🦀️.rs",
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🚚️move-layer/🧪️tests/🔬️unit/🦀️.rs",
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🩹️patch-layer/🧪️tests/🔬️unit/🦀️.rs"
+  ],
+  "testkit": [
+    "semio-s-artifact-draw-drawing-model",
+    "semio-s-artifact-draw-drawing-diff",
+    "semio-s-artifact-draw-drawing-geometry",
+    "semio-s-artifact-draw-drawing-mutations",
+    "semio-s-artifact-draw-drawing-transform",
+    "semio-s-artifact-draw-drawing-style",
+    "semio-s-artifact-draw-drawing-structure",
+    "semio-s-artifact-draw-drawing-metadata",
+    "semio-s-artifact-draw-drawing-scene",
+    "semio-s-artifact-draw-drawing-editor-interaction",
+    "semio-s-artifact-draw-drawing-editor-commands",
+    "semio-s-artifact-draw-drawing-editor"
+  ],
+  "emoji": "🥣️",
+  "summary": "the unit laws of the drawing editor commands.",
+  "description": "Companion test crate of semio-s-artifact-draw-drawing-editor-commands: the unit laws of the drawing editor commands",
+  "crate_map": {
+    "DrawingAttributes": "semio_s_artifact_draw_drawing_model::DrawingAttributes",
+    "schema::geometry::editing::": "semio_s_artifact_draw_drawing_geometry::editing::"
+  }
+}

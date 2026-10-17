@@ -1,6 +1,6 @@
 //! 🔺️ Sparse diff builder for `SetQuery` — only the `query` slot moves.
 use crate::standards::v1::subsets::any::schema::diff::JackDiff;
-use crate::JackSnapshot;
+use crate::standards::v1::subsets::any::schema::snapshot::JackSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::SetQuery, base: &JackSnapshot) -> protocol::MutationOutcome<JackDiff> {

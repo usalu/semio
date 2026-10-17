@@ -37,14 +37,9 @@ pub fn decode(bytes: &[u8]) -> Result<NoteSnapshot, PackError> {
 //#endregion 🔖️Store
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️semio-protocol-conformance/🦀️.rs"]
-mod semio_protocol_conformance;
+
 
 #[allow(unused_imports)]
 mod snapshot_codec {

@@ -29,6 +29,5 @@ export function proveGisMapInferenceClientV1(): number {
   }
   assert.equal(validators.size, 11);
   assert.equal(fixture.reconciliationVectors.length, 10);
-  console.log("[DEBUG] GIS owner client schemas=" + validators.size + " vectors=" + fixture.schemaVectors.length + " reconciliation=" + fixture.reconciliationVectors.length);
   return checks;
 }

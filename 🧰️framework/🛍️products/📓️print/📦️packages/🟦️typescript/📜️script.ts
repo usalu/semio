@@ -6,7 +6,7 @@ import { BundleScript, ScriptRouter } from "../../../../🔨️modules/🏃️pr
 import { runScriptMain } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { PrintFontProvisioningCommand } from "../../🎮️commands/🔤print-font-provisioning/🟦️.ts";
 import { PrintTokenPreviewScript } from "../../🔨️modules/🎨print-design-token-paints/📜️script.ts";
-import { generateVizArtifacts } from "../../🔨️modules/📊️visualization-gallery/🟦️.ts";
+import { generateVizArtifacts } from "../../🔨️modules/📊️visualization-gallery/🏭️artifact-generation/🟦️.ts";
 import {runArtifactTypeScriptPackageMain} from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts";
 
 //#region 🖨️RouterAdapters

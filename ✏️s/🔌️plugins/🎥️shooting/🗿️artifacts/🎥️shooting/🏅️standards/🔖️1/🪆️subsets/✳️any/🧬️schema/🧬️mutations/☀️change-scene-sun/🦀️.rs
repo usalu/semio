@@ -1,7 +1,6 @@
 //! ☀️ Shooting mutation payload — `ChangeSceneSunEnabled`. One of the scene's independently-settable fields (no bundled `update-scene-sun` facet — the play app's `☀️scene` commands set each field separately).
 
 use crate::diff::ShootingDiff;
-use crate::mutations::ShootingMutation;
 use crate::ShootingSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 
@@ -15,12 +14,15 @@ pub struct ChangeSceneSunEnabled {
     pub new_enabled: bool,
 }
 
-impl MutationKind<ShootingSnapshot, ShootingMutation> for ChangeSceneSunEnabled {
+impl<Op> MutationKind<ShootingSnapshot, Op> for ChangeSceneSunEnabled
+where
+    Op: protocol::Mutation<ShootingSnapshot, Diff = ShootingDiff> + From<ChangeSceneSunEnabled>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "scene-sun-enabled", kind: "change-scene-sun-enabled", record: "ChangedSceneSunEnabled" };
     fn diff(&self, base: &ShootingSnapshot) -> protocol::MutationOutcome<ShootingDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &ShootingSnapshot) -> Result<Vec<ShootingMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &ShootingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

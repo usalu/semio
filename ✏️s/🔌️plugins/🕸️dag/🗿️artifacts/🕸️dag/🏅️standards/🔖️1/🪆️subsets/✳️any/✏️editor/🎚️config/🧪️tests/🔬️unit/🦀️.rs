@@ -1,4 +1,5 @@
-use super::*;
+use semio_framework_os_infinite_directed_presentation::DagCamera;
+use crate::editor::dag::config::*;
 use protocol::Mutation;
 
 #[semio_framework_async_macros::async_test]

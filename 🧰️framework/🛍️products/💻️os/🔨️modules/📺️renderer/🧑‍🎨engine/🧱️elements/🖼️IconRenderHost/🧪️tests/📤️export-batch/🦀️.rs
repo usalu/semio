@@ -142,5 +142,5 @@ fn icon_export_prepared_close_borrows_original_work_and_physical_receipt(){
     assert!(done.unwrap());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,bytes));assert_eq!(observed(||drop(text)).1.released_bytes,expected["terminalDropBytes"].as_u64().unwrap()as usize);
     let failure=caller.turn(|cx|semio_framework_os_renderer_wgpu_icon_host::icon_export::close_prepared(cx,Ok(RetainedCloneGrant{maximum_items:1,maximum_depth:1,..Default::default()}),|_|Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"original icon producer refusal")))).unwrap_err();
     let IconExportFault::Original(failure)=failure else{panic!("complete original producer failure retained")};assert_eq!(failure.primary.message(),"original icon producer refusal");assert!(failure.receipt_refusal.is_none());assert!(failure.context_refusal.is_none());
-    caller.finish();eprintln!("[DEBUG] Original Icon close denied0 fundedBacking={bytes} completeFailure terminalDrop0");
+    caller.finish();
 }

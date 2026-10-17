@@ -3,7 +3,6 @@
 //! what this kind's committed vector does.
 
 use crate::diff::Wfc2dDiff;
-use crate::mutations::Wfc2dMutation;
 use crate::schema::snapshot::Wfc2dSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -20,17 +19,23 @@ pub struct ChangeTileMedia {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_tile_media(tile_id: String, media: Wfc2dTileMedia) -> Wfc2dMutation {
-    Wfc2dMutation::ChangeTileMedia(ChangeTileMedia { tile_id, media })
+pub fn change_tile_media<Op>(tile_id: String, media: Wfc2dTileMedia) -> Op
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::change_tile_media::ChangeTileMedia>,
+{
+    Op::from(ChangeTileMedia { tile_id, media })
 }
 
-impl MutationKind<Wfc2dSnapshot, Wfc2dMutation> for ChangeTileMedia {
+impl<Op> MutationKind<Wfc2dSnapshot, Op> for ChangeTileMedia
+where
+    Op: protocol::Mutation<Wfc2dSnapshot, Diff = Wfc2dDiff> + From<ChangeTileMedia>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "tile-media", kind: "change-tile-media", record: "ChangedTileMedia" };
 
     fn diff(&self, base: &Wfc2dSnapshot) -> protocol::MutationOutcome<Wfc2dDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Wfc2dSnapshot) -> Result<Vec<Wfc2dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Wfc2dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

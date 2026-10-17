@@ -1,7 +1,8 @@
 //! 🧪️ `rooms-16` — the committed asset IS the print of the authored spec, and the closed form
 //! really produces the regularity the model is meant to learn.
 
-use super::{indices, label, snapshot, DOOR, EDGE, FLOOR, PRIMARY_TEXT, SEED, WALL};
+use semio_framework_ui_locale::LocalizedLabel;
+use crate::examples::rooms_16::{indices, label, snapshot, DOOR, EDGE, FLOOR, PRIMARY_TEXT, SEED, WALL};
 use crate::standards::v1::subsets::any::io::text::snapshot::{parse_dsl, print_dsl};
 
 #[test]

@@ -1,5 +1,6 @@
-use super::*;
-use crate::editor::sequence::unit_tests::context::{new_app, render as render_body};
+use semio_framework_plugin::SurfaceKind;
+use crate::editor::sequence::modes::edit::windows::script::{SEQUENCE_PLAY_BODY_SCRIPT, definition};
+use crate::editor_unit_tests::context::{new_app, render as render_body};
 
 #[semio_framework_async_macros::async_test]
 async fn renders_script_editor() {

@@ -31,7 +31,7 @@ fn drain(cursor: &mut OperationMessageDrain, ledger: &mut ReplayMessageAccumulat
 
 fn close(ledger: &mut ReplayMessageAccumulator) {
     for turn in 0..100000 {
-        if ledger.terminal_is_empty() { println!("[DEBUG] original diagnostic native pages/strings/targets exact three-axis terminal turns={turn}"); return; }
+        if ledger.terminal_is_empty() {  return; }
         let ((copy, release), heap) = observe_heap_allocations_on_this_thread(|| (ledger.next_close_copy_byte_demand(), ledger.next_close_release_byte_demand().unwrap()));
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
         let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: copy, maximum_capacity_bytes: 0, maximum_release_bytes: release, maximum_depth: 64 };
@@ -88,7 +88,6 @@ fn replay_message_accumulator_native_original_rows_paid_vec_scaffold_and_partial
         assert_eq!(outcome.messages.capacity(), 0);
         let (_, heap) = observe_heap_allocations_on_this_thread(|| drop(cursor));
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
-        println!("[DEBUG] original message transfer cancel={cancel_at:?} rows={} exact original empty Vec release={scaffold}; body4096 and separately admitted structural release", ledger.rows().len());
         close(&mut ledger);
         let (_, heap) = observe_heap_allocations_on_this_thread(|| drop(ledger));
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));

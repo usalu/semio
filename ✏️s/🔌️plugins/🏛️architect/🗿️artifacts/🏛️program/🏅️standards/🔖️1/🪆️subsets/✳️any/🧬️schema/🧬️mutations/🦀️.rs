@@ -24,20 +24,20 @@ use crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot;
 #[cfg_attr(test, serde(tag = "mutation", rename_all = "camelCase"))]
 #[mutations(snapshot = ProgramSnapshot, diff = ProgramDiff, schema = "s.architect.program")]
 pub enum ProgramMutation {
-    CreateRegisterRow(super::create_register_row::CreateRegisterRow),
-    DeleteRegisterRow(super::delete_register_row::DeleteRegisterRow),
-    RenameRegisterRow(super::rename_register_row::RenameRegisterRow),
-    ReplaceRegisterRow(super::replace_register_row::ReplaceRegisterRow),
-    ConnectAdjacency(super::connect_adjacency::ConnectAdjacency),
-    DisconnectAdjacency(super::disconnect_adjacency::DisconnectAdjacency),
-    ConnectTrace(super::connect_trace::ConnectTrace),
-    DisconnectTrace(super::disconnect_trace::DisconnectTrace),
-    RenameMeta(super::rename_meta::RenameMeta),
-    ReplaceMeta(super::replace_meta::ReplaceMeta),
-    RenameProject(super::rename_project::RenameProject),
-    ReplaceProject(super::replace_project::ReplaceProject),
-    RenameGovernance(super::rename_governance::RenameGovernance),
-    ReplaceGovernance(super::replace_governance::ReplaceGovernance),
+    CreateRegisterRow(crate::standards::v1::subsets::any::schema::mutations::create_register_row::CreateRegisterRow),
+    DeleteRegisterRow(crate::standards::v1::subsets::any::schema::mutations::delete_register_row::DeleteRegisterRow),
+    RenameRegisterRow(crate::standards::v1::subsets::any::schema::mutations::rename_register_row::RenameRegisterRow),
+    ReplaceRegisterRow(crate::standards::v1::subsets::any::schema::mutations::replace_register_row::ReplaceRegisterRow),
+    ConnectAdjacency(crate::standards::v1::subsets::any::schema::mutations::connect_adjacency::ConnectAdjacency),
+    DisconnectAdjacency(crate::standards::v1::subsets::any::schema::mutations::disconnect_adjacency::DisconnectAdjacency),
+    ConnectTrace(crate::standards::v1::subsets::any::schema::mutations::connect_trace::ConnectTrace),
+    DisconnectTrace(crate::standards::v1::subsets::any::schema::mutations::disconnect_trace::DisconnectTrace),
+    RenameMeta(crate::standards::v1::subsets::any::schema::mutations::rename_meta::RenameMeta),
+    ReplaceMeta(crate::standards::v1::subsets::any::schema::mutations::replace_meta::ReplaceMeta),
+    RenameProject(crate::standards::v1::subsets::any::schema::mutations::rename_project::RenameProject),
+    ReplaceProject(crate::standards::v1::subsets::any::schema::mutations::replace_project::ReplaceProject),
+    RenameGovernance(crate::standards::v1::subsets::any::schema::mutations::rename_governance::RenameGovernance),
+    ReplaceGovernance(crate::standards::v1::subsets::any::schema::mutations::replace_governance::ReplaceGovernance),
 }
 //#endregion 🔖️ProgramMutation
 

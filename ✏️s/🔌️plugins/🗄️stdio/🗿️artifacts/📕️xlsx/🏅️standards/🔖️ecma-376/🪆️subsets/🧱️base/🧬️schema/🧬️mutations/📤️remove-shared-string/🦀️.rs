@@ -7,7 +7,7 @@ use super::*;
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct RemoveSharedString {
-    pub(crate) index: usize,
+    pub index: usize,
 }
 
 impl protocol::MutationKind<XlsxSnapshot, XlsxMutation> for RemoveSharedString {

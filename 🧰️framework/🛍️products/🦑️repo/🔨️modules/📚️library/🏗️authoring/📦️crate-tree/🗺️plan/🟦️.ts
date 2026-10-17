@@ -3,12 +3,16 @@ import { existsSync, readFileSync } from "node:fs";
 import { dirname, join, posix, relative, resolve } from "node:path";
 import { rustTokenPairs, rustTokens } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/🟦️.ts";
 import { readRustSourceClosureV1, type RustSourceInputV1 } from "../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🟦️.ts";
-import { identifierSet, parseRustSourceTree, demoteDanglingOuterDocs, prunedUse, rustItemStartWithComments, rustOuterDocStart, useLeafNames, type RustModuleNode, type RustSourceItem, type RustSourceTree } from "../🌳️module-tree/🟦️.ts";
+import { identifierSet, parseRustSourceTree, referencedItemNames, demoteDanglingOuterDocs, prunedUse, rustItemStartWithComments, rustOuterDocStart, useLeafNames, type RustModuleNode, type RustSourceItem, type RustSourceTree } from "../🌳️module-tree/🟦️.ts";
 import { classifyPackageSource, loadCatalogTaxonomy } from "../../../🔍️discovery/🟦️.ts";
 import { buildSlices, collectDecls, type CarveSlice, type ModuleDecl } from "../🧱️decl-tree/🟦️.ts";
 import { rebaseManifestDirPaths, rebaseRustIncludes, renderMirrorFiles, renderMirrorRoot, relativePosix, type MirrorImport, type MirrorSpec, type MirrorUnit } from "../📝️render/🟦️.ts";
 import { transformTestClosure, type TestTransformOptions } from "../🧪️test-closure/🟦️.ts";
-import { convertMutationLeaves, flattenUse } from "../🧬️mutation-families/🟦️.ts";
+import { liftModuleKids } from "../🪜️lift-kids/🟦️.ts";
+import { inlineRootFileModules } from "../🫗️inline-root/🟦️.ts";
+import { inlineMountTreeFiles } from "../🌲️inline-mounts/🟦️.ts";
+import { convertMutationLeaves } from "../🧬️mutation-families/🟦️.ts";
+import { flattenUse } from "../🧬️mutation-families/🌳️use-tree/🟦️.ts";
 import { MeasureUnion, totalsFit, type FileMeasure } from "../📏️measure-union/🟦️.ts";
 
 /** 📏️ Source-gate budget of one compilation unit. */
@@ -19,6 +23,14 @@ export const CRATE_TARGET_BUDGET: CrateBudget = { files: 28, bytes: 230000, line
 
 /** 🚧️ The compiler-ingress source boundary. */
 export const CRATE_HARD_BUDGET: CrateBudget = { files: 32, bytes: 262144, lines: 4000 };
+
+/** 🎚️ Parses the `files/bytes/lines` text of a `--target` flag into a crate budget; every part is a positive integer. */
+export function parseCrateBudget(text: string): CrateBudget {
+  const parts = text.split("/");
+  const numbers = parts.map((part) => (/^[1-9][0-9]*$/u.test(part) ? Number(part) : Number.NaN));
+  if (parts.length !== 3 || numbers.some((value) => !Number.isSafeInteger(value))) throw new Error(`a crate budget is written <files>/<bytes>/<lines> with positive integers, got ${JSON.stringify(text)}`);
+  return { files: numbers[0]!, bytes: numbers[1]!, lines: numbers[2]! };
+}
 
 /** 📐️ Measured closure of one crate in one cfg. */
 export type CrateMeasure = Readonly<{ files: number; bytes: number; lines: number; embedded: number; paths: readonly string[]; sourcePaths: readonly string[]; entries: ReadonlyMap<string, FileMeasure> }>;
@@ -56,6 +68,7 @@ export type ArtifactCratePlan = {
   readonly tree: RustSourceTree;
   readonly crates: readonly PlannedCrate[];
   readonly wrapperNodes: ReadonlyMap<string, RustModuleNode>;
+  readonly gates: ReadonlyMap<string, readonly string[]>;
   readonly rootEdits: readonly RootEdit[];
   readonly weave: readonly WovenExport[];
   readonly placement: ReadonlyMap<string, string>;
@@ -83,6 +96,27 @@ export type PlanBlocker = { readonly slices: number; readonly files: number; rea
 export type PackingStats = { pruned: number; measured: number; merged: number };
 
 const HOST_CFG: { value: string[] | null } = { value: null };
+const WASM_CFG: { value: string[] | null } = { value: null };
+
+/** 🏷️ The mutation family a carve slice belongs to: the subset below `subsets`, else the leaf directly below `mutations`; null for a slice outside every mutation family. */
+export function mutationFamilyOf(eff: readonly string[]): string | null {
+  const at = eff.indexOf("mutations");
+  const subset = eff.indexOf("subsets");
+  return at >= 0 && eff.length > at + 1 ? (eff[subset >= 0 ? subset + 1 : at + 1] ?? "") : null;
+}
+
+/** 🏷️ The crate label of a group whose slices carry these families: `mut-<family>` for one shared family and `mut-family` for several, whenever most of the slices sit in a mutation family (a leaf-family crate also hosts a few support slices); null for every other group. */
+export function mutationCrateLabel(families: readonly (string | null)[]): string | null {
+  const named = families.filter((family): family is string => family !== null);
+  if (named.length * 2 <= families.length) return null;
+  const distinct = [...new Set(named)];
+  return `mut-${facetSlug(distinct.length === 1 ? distinct[0]!.replaceAll("_", "-") : "family")}`.replace(/-$/u, "");
+}
+
+/** 🏷️ True for a label that names a mutation family, which a duplicate keeps and numbers instead of renaming it after its first leaf. */
+export function isMutationCrateLabel(label: string): boolean {
+  return label.startsWith("mut-");
+}
 
 /** 🧭️ Plans the crate split of one artifact; when the plain split cannot meet the budget and the artifact has mutation aggregates, the plan is retried with the mutation leaves converted to leaves generic over their aggregate and the plan with fewer problems wins. */
 export async function planArtifactCrates(repoRoot: string, packageDirRel: string, options: PlanOptions = {}): Promise<ArtifactCratePlan> {
@@ -103,14 +137,22 @@ export function crateTreeHostCfg(): readonly string[] {
   return (HOST_CFG.value = [...cfg, "debug_assertions"]);
 }
 
-/** 📐️ Measures a crate root through the canonical source-closure counter, with optional in-memory files. */
-export async function measureRustCrate(repoRoot: string, entry: string, withTest: boolean, overlay: ReadonlyMap<string, string> = new Map(), manifestDirectory?: string): Promise<CrateMeasure> {
+/** 🌉️ The cfg of a `wasm32-unknown-unknown` build, used to scan the code that only the guest target compiles. */
+export function crateTreeWasmCfg(): readonly string[] {
+  if (WASM_CFG.value) return WASM_CFG.value;
+  const rustc = execFileSync("rustup", ["which", "rustc"], { encoding: "utf8" }).trim();
+  const cfg = execFileSync(rustc, ["--print", "cfg", "--target", "wasm32-unknown-unknown"], { encoding: "utf8" }).trim().split("\n").map((value) => value.replace(/=(".*")$/u, (_, quoted) => "=" + JSON.parse(quoted)));
+  return (WASM_CFG.value = [...cfg, "debug_assertions"]);
+}
+
+/** 📐️ Measures a crate root through the canonical source-closure counter, with optional in-memory files; `cfgOverride` replaces the host cfg (the `test` flag is still added). */
+export async function measureRustCrate(repoRoot: string, entry: string, withTest: boolean, overlay: ReadonlyMap<string, string> = new Map(), manifestDirectory?: string, cfgOverride?: readonly string[]): Promise<CrateMeasure> {
   const read = async (path: string): Promise<Uint8Array | null> => {
     const virtual = overlay.get(path);
     if (virtual !== undefined) return Buffer.from(virtual, "utf8");
     try { return readFileSync(path); } catch (error) { if ((error as NodeJS.ErrnoException).code === "ENOENT") return null; throw error; }
   };
-  const cfg = [...crateTreeHostCfg(), ...(withTest ? ["test"] : [])];
+  const cfg = [...(cfgOverride ?? crateTreeHostCfg()), ...(withTest ? ["test"] : [])];
   const inputs = await readRustSourceClosureV1([entry], repoRoot, cfg, read, { manifestDirectory: manifestDirectory ?? dirname(entry), generated: () => undefined });
   return summarize(inputs);
 }
@@ -149,7 +191,8 @@ export function crateRelativeChains(source: string): string[][] {
       if (tokens[cursor + 1]?.text === "::" && tokens[cursor + 2]?.kind === "identifier") cursor += 2;
       else { cursor += 1; break; }
     }
-    if (chain.length) chains.push(chain);
+    const grouped = tokens[cursor]?.text === "::" && tokens[cursor + 1]?.text === "{";
+    if (chain.length && !grouped) chains.push(chain);
     if (tokens[cursor - 0]?.text === "::" && tokens[cursor + 1]?.text === "{") {
       const close = pairs.get(cursor + 1);
       if (close !== undefined) groupHeads(tokens, pairs, cursor + 2, close, chain, chains);
@@ -257,7 +300,7 @@ export function readMeasureSources(repoRoot: string, measure: CrateMeasure, over
 
 
 /** 🧮️ Options of the planner. */
-export type PlanOptions = Readonly<{ target?: CrateBudget; hard?: CrateBudget; tests?: TestTransformOptions; mutationFamilies?: "off" | "on" | "auto"; weave?: boolean; incrementalMeasure?: boolean }>;
+export type PlanOptions = Readonly<{ target?: CrateBudget; hard?: CrateBudget; tests?: TestTransformOptions; mutationFamilies?: "off" | "on" | "auto"; inlineRootModules?: boolean; weave?: boolean; incrementalMeasure?: boolean; lift?: readonly string[] }>;
 
 function lcaDirectory(files: readonly string[]): string {
   const parts = files.map((file) => dirname(file).split("/"));
@@ -293,6 +336,7 @@ type SliceInfo = {
   effs: string[];
   lib: CrateMeasure | null;
   test: CrateMeasure | null;
+  wasm: CrateMeasure | null;
   libEdges: Set<string>;
   testEdges: Set<string>;
   rootRefs: Set<string>;
@@ -315,11 +359,14 @@ async function planArtifactCratesOnce(repoRoot: string, packageDirRel: string, o
   const manifest = Bun.TOML.parse(readFileSync(manifestPath, "utf8")) as { package?: { workspace?: string } };
   const oldRootDir = dirname(lib.entry);
   const artifactDir = resolve(dirname(manifestPath), manifest.package?.workspace ?? ".");
-  const originalRootSource = readFileSync(lib.entry, "utf8");
+  const folded = inlineMountTreeFiles(lib.entry, readFileSync(lib.entry, "utf8"), (absolute) => (existsSync(absolute) ? readFileSync(absolute, "utf8") : null));
+  const originalRootSource = folded.rootSource;
   const originalTree = parseRustSourceTree(originalRootSource);
   const rootItemNames = new Set<string>([...topLevelNames(originalRootSource, originalTree.items)].filter(([, item]) => item.kind !== "use").map(([name]) => name));
   for (const node of originalTree.modules) if (!node.inline) rootItemNames.add(node.name);
-  const transform = options.tests ? transformTestClosure(repoRoot, lib.entry, originalRootSource, rootItemNames, options.tests) : null;
+  const testTransform = options.tests ? transformTestClosure(repoRoot, lib.entry, originalRootSource, rootItemNames, options.tests) : null;
+  const lifted = options.lift?.length ? liftModuleKids(testTransform, lib.entry, originalRootSource, options.lift) : testTransform;
+  const transform = options.inlineRootModules ? inlineRootFileModules(lifted, lib.entry, originalRootSource) : lifted;
   const rootSource = transform?.rootSource ?? originalRootSource;
   const tree = parseRustSourceTree(rootSource);
   const problems: string[] = [];
@@ -331,17 +378,23 @@ async function planArtifactCratesOnce(repoRoot: string, packageDirRel: string, o
     return existsSync(absolute) ? readFileSync(absolute, "utf8") : null;
   };
   const family = convert ? convertMutationLeaves(lib.entry, rootSource, readText) : null;
-  for (const [file, text] of family?.edits ?? []) baseOverlay.set(file, text);
+  for (const [file, text] of [...(family?.edits ?? []), ...(family?.creates ?? [])]) baseOverlay.set(file, text);
   const detaching = new Set<string>((family?.aggregates ?? []).filter((aggregate) => (family?.converted.length ?? 0) > 0).map((aggregate) => aggregate.name));
   const declTree = collectDecls(lib.entry, rootSource, readText);
   const built = buildSlices(declTree, readText, undefined, { detachTestsMentioning: detaching, detachAllTests: options.weave !== false });
   const rootRelatives = new Set(declTree.roots);
   const keptModules = tree.modules.filter((node) => !node.inline).map((node) => node.name);
   const shims = rootAliasModules(rootSource, tree.modules);
+  const unnestShim = (chain: string[]): string[] => { const shim = chain[0] ? shims.get(chain[0]) : undefined; return shim && chain[1] !== undefined && shim.nested.has(chain[1]) ? [chain[0]!, ...chain.slice(2)] : chain; };
   const isShimDecl = (decl: ModuleDecl): boolean => rootRelatives.has(decl.id) && decl.node.inline && shims.has(decl.node.name);
   const carvable = built.slices.filter((slice) => !slice.attach.every((decl) => (rootRelatives.has(decl.id) && !decl.node.inline) || isShimDecl(decl)) && !slice.attach.some((decl) => decl.testOnly && rootRelatives.has(decl.id)));
   const sliceOfDecl = new Map<string, CarveSlice>();
   for (const slice of carvable) for (const decl of slice.decls) sliceOfDecl.set(decl.id, slice);
+  const gates = new Map<string, readonly string[]>();
+  for (const decl of declTree.decls.values()) {
+    const cfgs = decl.node.attributeTexts.filter((text) => /^cfg\s*\(/u.test(text.trim()) && !/^cfg\s*\(\s*test\s*\)$/u.test(text.trim()));
+    if (cfgs.length && !decl.testOnly) gates.set(decl.eff.join("::"), cfgs.map((text) => `#[${text}]`));
+  }
   const wrapperNodes = new Map<string, RustModuleNode>();
   for (const id of built.namespaces) {
     const decl = declTree.decls.get(id)!;
@@ -407,23 +460,25 @@ async function planArtifactCratesOnce(repoRoot: string, packageDirRel: string, o
   };
   const effWrappersSpec = (members: readonly CarveSlice[], extra: Partial<MirrorSpec> = {}): { spec: MirrorSpec; attach: ModuleDecl[] } => {
     const { owned, attach } = unitsOf(members);
-    return { spec: { doc: "//! 🪞️ planning mirror", newRootDir: measureRoot, innerAttributes: [], externLines: [], movedItemsText: "", itemImports: [], owned, imported: [], wrapperNodes, ...extra }, attach };
+    return { spec: { doc: "//! 🪞️ planning mirror", newRootDir: measureRoot, innerAttributes: [], externLines: [], movedItemsText: "", itemImports: [], owned, imported: [], wrapperNodes, gates, ...extra }, attach };
   };
-  const measureMembers = async (members: readonly CarveSlice[], withTest: boolean): Promise<CrateMeasure> => {
+  const measureMembers = async (members: readonly CarveSlice[], withTest: boolean, cfgOverride?: readonly string[]): Promise<CrateMeasure> => {
     const { spec } = effWrappersSpec(members);
     const entry = join(measureRoot, "🦀️.rs");
     const overlay = new Map<string, string>([...baseOverlay, ...cutOverlay(members), [entry, renderMirrorRoot(spec)]]);
-    return measureRustCrate(repoRoot, entry, withTest, overlay, measureRoot);
+    return measureRustCrate(repoRoot, entry, withTest, overlay, measureRoot, cfgOverride);
   };
+  const wasmGated = /target_arch\s*=\s*"wasm32"/u.test(rootSource) || [...declTree.decls.values()].some((decl) => !decl.node.inline && decl.file !== null && /target_arch\s*=\s*"wasm32"/u.test(readText(decl.file) ?? ""));
   const coherenceType = new Map<string, string>();
   const traitNames = new Set<string>();
   const typeDefs = new Map<string, Set<string>>();
   const infos: SliceInfo[] = [];
   const infoOf = new Map<string, SliceInfo>();
   for (const [index, slice] of carvable.entries()) {
-    const info: SliceInfo = { slice, index, effs: slice.attach.map((decl) => decl.eff.join("::")), lib: null, test: null, libEdges: new Set(), testEdges: new Set(), rootRefs: new Set(), testRootRefs: new Set(), keptRefs: new Set(), shimRefs: new Set(), testShimRefs: new Set(), heads: new Set(), coherence: new Set(), why: new Map(), firstFile: slice.attach.map((decl) => decl.file).find((file): file is string => file !== null) ?? "" };
+    const info: SliceInfo = { slice, index, effs: slice.attach.map((decl) => decl.eff.join("::")), lib: null, test: null, wasm: null, libEdges: new Set(), testEdges: new Set(), rootRefs: new Set(), testRootRefs: new Set(), keptRefs: new Set(), shimRefs: new Set(), testShimRefs: new Set(), heads: new Set(), coherence: new Set(), why: new Map(), firstFile: slice.attach.map((decl) => decl.file).find((file): file is string => file !== null) ?? "" };
     info.lib = await measureMembers([slice], false);
     info.test = await measureMembers([slice], true);
+    if (wasmGated) info.wasm = await measureMembers([slice], false, crateTreeWasmCfg());
     infos.push(info);
     infoOf.set(slice.id, info);
   }
@@ -438,6 +493,16 @@ async function planArtifactCratesOnce(repoRoot: string, packageDirRel: string, o
     for (let length = Math.min(chain.length, longestEff); length >= 0; length--) {
       const owner = ownerByEff.get(chain.slice(0, length).join("\0"));
       if (owner) return owner;
+    }
+    return null;
+  };
+  const declEffKeys = new Set<string>([...declTree.decls.values()].map((decl) => decl.eff.join("\0")));
+  const ownerOfReachedChain = (chain: readonly string[]): SliceInfo | null => {
+    for (let length = Math.min(chain.length, longestEff); length >= 0; length--) {
+      const owner = ownerByEff.get(chain.slice(0, length).join("\0"));
+      if (!owner) continue;
+      const next = chain.slice(0, length + 1).join("\0");
+      return length < chain.length && declEffKeys.has(next) && !owner.slice.decls.some((decl) => decl.eff.join("\0") === next) ? null : owner;
     }
     return null;
   };
@@ -457,6 +522,8 @@ async function planArtifactCratesOnce(repoRoot: string, packageDirRel: string, o
   const restrictedTarget = (owner: SliceInfo, chain: readonly string[]): string | null => {
     if (chain.includes("component")) return `${chain.join("::")} (private component module)`;
     const decls = owner.slice.decls.filter((decl) => decl.eff.length <= chain.length && decl.eff.every((segment, index) => segment === chain[index]));
+    const gated = decls.find((decl) => decl.testOnly && decl.eff.length > 0);
+    if (gated) return `${gated.eff.join("::")} (cfg(test) module)`;
     const deepest = Math.max(0, ...decls.map((decl) => decl.eff.length));
     for (const decl of decls.filter((candidate) => candidate.eff.length === deepest)) {
       if (!decl.isComponent && decl.node.visibility !== "pub" && deepest > 0) return `${chain.join("::")} (module ${decl.node.visibility})`;
@@ -491,9 +558,9 @@ async function planArtifactCratesOnce(repoRoot: string, packageDirRel: string, o
   for (const info of infos) {
     const scan = (measure: CrateMeasure, edges: Set<string>, refs: Set<string>, shimRefs: Set<string>): void => {
       for (const [file, text] of sourcesOf(info, measure)) {
-        for (const chain of [...crateRelativeChains(text), ...aliasChains(text)]) {
+        for (const chain of [...crateRelativeChains(text), ...aliasChains(text)].map(unnestShim)) {
           if (viaShim(info, chain, edges, shimRefs, file)) continue;
-          const owner = ownerOfChain(chain);
+          const owner = ownerOfReachedChain(chain);
           if (owner && owner !== info) { edges.add(owner.slice.id); noteWhy(info, owner, chain, file); const hidden = restrictedTarget(owner, chain); if (hidden) { info.coherence.add(owner.slice.id); coherenceType.set(`${info.slice.id}>${owner.slice.id}`, `visibility ${hidden}`); } }
           if (chain.length > 1) {
             const parentChain = chain.slice(0, -1);
@@ -504,7 +571,7 @@ async function planArtifactCratesOnce(repoRoot: string, packageDirRel: string, o
             refs.add(chain[0]);
             for (const targetChain of rootUseTargets.get(chain[0]) ?? []) {
               if (viaShim(info, targetChain, edges, shimRefs)) continue;
-              const via = ownerOfChain(targetChain);
+              const via = ownerOfChain([...targetChain, ...chain.slice(1)]);
               if (via && via !== info) edges.add(via.slice.id);
             }
           } else if (!owner && chain[0] && rootModuleNames.has(chain[0]) && !declTree.decls.has(chain[0]) ) info.keptRefs.add(chain.slice(0, 2).join("::"));
@@ -512,6 +579,7 @@ async function planArtifactCratesOnce(repoRoot: string, packageDirRel: string, o
       }
     };
     scan(info.lib!, info.libEdges, info.rootRefs, info.shimRefs);
+    if (info.wasm) scan(info.wasm, info.libEdges, info.rootRefs, info.shimRefs);
     scan(info.test!, info.testEdges, info.testRootRefs, info.testShimRefs);
     for (const decl of info.slice.decls) {
       if (!decl.node.inline || isShimDecl(decl)) continue;
@@ -521,13 +589,13 @@ async function planArtifactCratesOnce(repoRoot: string, packageDirRel: string, o
         if (owner && owner !== info) (decl.testOnly ? info.testEdges : info.libEdges).add(owner.slice.id);
       }
     }
-    for (const measure of [info.lib!, info.test!]) for (const [, text] of sourcesOf(info, measure)) for (const name of pathHeadNames(text)) info.heads.add(name);
+    for (const measure of [info.lib!, info.test!, ...(info.wasm ? [info.wasm] : [])]) for (const [, text] of sourcesOf(info, measure)) for (const name of pathHeadNames(text)) info.heads.add(name);
     for (const decl of info.slice.decls) for (const name of info.heads) {
       const childEff = [...decl.eff, name];
       const owner = ownerOfChain(childEff);
       if (owner && owner !== info && owner.slice.attach.some((owned) => underPath(owned.eff, childEff))) info.libEdges.add(owner.slice.id);
     }
-    for (const [measure, edges] of [[info.lib!, info.libEdges], [info.test!, info.testEdges]] as const) {
+    for (const [measure, edges] of [[info.lib!, info.libEdges], [info.test!, info.testEdges], ...(info.wasm ? [[info.wasm, info.libEdges] as const] : [])] as const) {
       const relative: string[][] = [];
       for (const [, text] of sourcesOf(info, measure)) relative.push(...relativeHeadChains(text));
       if (!relative.length) continue;
@@ -574,8 +642,8 @@ async function planArtifactCratesOnce(repoRoot: string, packageDirRel: string, o
       const members = region ? tree.items.filter((other) => region.start <= other.start && other.end <= region.end) : [item];
       for (const member of members) {
         const text = qualifyRootHeads(rootSource.slice(member.declStart, member.end));
-        for (const chain of [...crateRelativeChains(text), ...aliasChains(text)]) for (const owner of chainOwners(chain)) out.add(owner.slice.id);
-        for (const identifier of identifierSet(text)) if (itemByName.has(identifier)) queue.push(identifier);
+        for (const chain of [...crateRelativeChains(text), ...aliasChains(text)].map(unnestShim)) for (const owner of chainOwners(chain)) { out.add(owner.slice.id) }
+        for (const identifier of referencedItemNames(text)) if (itemByName.has(identifier)) { queue.push(identifier) }
       }
     }
     rootItemClosure.set(name, out);
@@ -596,6 +664,7 @@ async function planArtifactCratesOnce(repoRoot: string, packageDirRel: string, o
         if (item.kind !== "impl") continue;
         const header = implHeader(text.slice(item.declStart, item.end));
         if (!header || (header.trait && traitNames.has(header.trait)) || !header.self) continue;
+        if (header.traitArgs.some((argument) => typeDefs.get(argument)?.has(info.slice.id))) continue;
         const declared = typeDefs.get(header.self);
         const owners = declared && declared.size > 1 && !declared.has(info.slice.id) ? closestOwners(info, declared) : declared;
         if (!owners || owners.has(info.slice.id) || owners.size !== 1) { if (owners && owners.size > 1 && !owners.has(info.slice.id)) problems.push(`ambiguous coherence: ${info.effs.join(",")} implements for ${header.self}, defined in ${owners.size} slices`); continue; }
@@ -608,8 +677,19 @@ async function planArtifactCratesOnce(repoRoot: string, packageDirRel: string, o
   const droppedTests = new Set<string>();
   const rootItemPaths: string[][] = tree.items.filter((item) => item.kind !== "use").flatMap((item) => {
     const text = qualifyRootHeads(rootSource.slice(item.declStart, item.end));
-    return [...crateRelativeChains(text), ...aliasChains(text)].flatMap((chain) => { const shim = chain[0] ? shims.get(chain[0]) : undefined; return shim ? shim.targets.map((target) => [...target, ...chain.slice(1)]) : [chain]; });
+    return [...crateRelativeChains(text), ...aliasChains(text)].map(unnestShim).flatMap((chain) => { const shim = chain[0] ? shims.get(chain[0]) : undefined; return shim ? shim.targets.map((target) => [...target, ...chain.slice(1)]) : [chain]; });
   });
+  for (const node of tree.modules) {
+    if (node.inline || node.conditionalTest || node.pathAttribute === null) continue;
+    const keptText = readText(resolve(dirname(lib.entry), node.pathAttribute));
+    if (keptText === null) continue;
+    const qualified = qualifyRootHeads(keptText);
+    for (const chain of [...crateRelativeChains(qualified), ...aliasChains(qualified)].map(unnestShim)) {
+      const shim = chain[0] ? shims.get(chain[0]) : undefined;
+      if (shim) for (const target of shim.targets) rootItemPaths.push([...target, ...chain.slice(1)]);
+      else rootItemPaths.push(chain);
+    }
+  }
   const namedByRootItems = (child: ModuleDecl): boolean => rootItemPaths.some((path) => underPath(path, child.eff) || underPath(child.eff, path));
   const usedBelow = (parent: ModuleDecl, name: string): boolean => infos.some((other) => other.heads.has(name) && other.slice.attach.some((decl) => decl.eff.length >= parent.eff.length && parent.eff.every((segment, index) => segment === decl.eff[index])));
   const referencedFromOutside = (child: ModuleDecl, childSlice: CarveSlice): boolean => infos.some((other) => other.slice.id !== childSlice.id && !other.slice.attach.some((owned) => underPath(owned.eff, child.eff)) && [...other.libEdges, ...other.testEdges].some((id) => infoOf.get(id)?.slice.attach.some((owned) => underPath(owned.eff, child.eff))));
@@ -666,8 +746,8 @@ async function planArtifactCratesOnce(repoRoot: string, packageDirRel: string, o
   };
   const mergeFileChains = (): boolean => {
     let changed = false;
-    for (const a of infos) for (const outer of a.slice.attach) {
-      if (outer.node.inline || outer.isComponent) continue;
+    for (const a of infos) for (const outer of a.slice.decls) {
+      if (outer.node.inline || outer.isComponent || outer.file === null) continue;
       for (const b of infos) {
         if (find(a.slice.id) !== find(b.slice.id)) continue;
         for (const inner of b.slice.attach) {
@@ -718,6 +798,7 @@ async function planArtifactCratesOnce(repoRoot: string, packageDirRel: string, o
           if (!reasons.get(from)!.has(to)) reasons.get(from)!.set(to, `${short(member)} -> ${member.why.get(id) ?? effOfSlice(id).split("::").slice(-3).join("::")}`);
         }
         const lines = [...groups].map(([rep, list]) => `group ${name(rep)} files=${list.reduce((n, m) => n + (m.lib?.files ?? 0), 0)} bytes=${list.reduce((n, m) => n + (m.lib?.bytes ?? 0), 0)} lines=${list.reduce((n, m) => n + (m.lib?.lines ?? 0), 0)}`);
+        if (process.env.F3_SLICES) for (const member of members) lines.push(`slice ${member.effs.map((eff) => eff.split("::").slice(-4).join("::")).join(" + ")} [${name(preGroup.get(member.slice.id)!)}] files=${member.lib?.files ?? 0} bytes=${member.lib?.bytes ?? 0} lines=${member.lib?.lines ?? 0} -> ${[...edgesOf(member)].filter((id) => ids.has(id)).map((id) => `${effOfSlice(id).split("::").slice(-4).join("::")}${member.libEdges.has(id) ? "" : " [test]"} (${member.why.get(id) ?? "?"})`).join(" ; ")}`);
         for (const ring of stronglyConnected([...groups.keys()], graph)) {
           if (ring.length < 2) continue;
           lines.push(`cycle of ${ring.length} groups: ${ring.map(name).join(" , ")}`);
@@ -821,7 +902,7 @@ async function planArtifactCratesOnce(repoRoot: string, packageDirRel: string, o
         if (movedItems.has(member)) continue;
         movedItems.add(member);
         if (member.name) movedNames.add(member.name);
-        for (const identifier of identifierSet(rootSource.slice(member.declStart, member.end))) {
+        for (const identifier of referencedItemNames(rootSource.slice(member.declStart, member.end))) {
           const other = itemByName.get(identifier);
           if (other && !movedItems.has(other) && !movedNames.has(identifier) && identifier !== member.name) { movedNames.add(identifier); changed = true; }
         }
@@ -843,7 +924,7 @@ async function planArtifactCratesOnce(repoRoot: string, packageDirRel: string, o
   const pieceDeps = new Map<string, Set<string>>();
   for (const [key, items] of pieceItems) {
     const deps = new Set<string>();
-    for (const item of items) for (const identifier of identifierSet(rootSource.slice(item.declStart, item.end))) {
+    for (const item of items) for (const identifier of referencedItemNames(rootSource.slice(item.declStart, item.end))) {
       const other = pieceOfName.get(identifier);
       if (other && other !== key) deps.add(other);
     }
@@ -940,6 +1021,7 @@ async function planArtifactCratesOnce(repoRoot: string, packageDirRel: string, o
   for (const unit of movedUnits) {
     if (required.has(unit.index)) continue;
     const footprint = footprintOf(unit);
+    if (footprint.size) { unit.host = -1; continue; }
     let missing = false;
     for (const dep of unit.dependsOn) { const host = movedUnits[dep]!.host; if (host < 0) missing = true; else footprint.add(host); }
     if (missing || !assign(unit, new Set<number>(), footprint)) unit.host = -1;
@@ -958,22 +1040,29 @@ async function planArtifactCratesOnce(repoRoot: string, packageDirRel: string, o
     const isSchema = (slice: CarveSlice): boolean => slice.attach.some((decl) => decl.eff[0] === "standards" && decl.eff[4] === "schema");
     const depthOf = (slice: CarveSlice): number => Math.min(...slice.attach.map((decl) => decl.eff.length));
     const biggest = [...slices].sort((a, b) => Number(isSchema(b)) - Number(isSchema(a)) || depthOf(a) - depthOf(b) || b.decls.length - a.decls.length)[0]!;
-    const familyOf = (slice: CarveSlice): string | null => {
-      const eff = slice.attach[0]?.eff ?? [];
-      const at = eff.indexOf("mutations");
-      const subset = eff.indexOf("subsets");
-      return at >= 0 && eff.length > at + 1 ? (eff[subset >= 0 ? subset + 1 : at + 1] ?? "") : null;
-    };
-    const families = slices.map(familyOf);
-    const dominant = families.every((family) => family !== null) ? `mut-${facetSlug([...new Set(families)].length === 1 ? families[0]!.replaceAll("_", "-") : "family")}`.replace(/-$/u, "") : labelOf(biggest.attach[0]!);
+    const familyOf = (slice: CarveSlice): string | null => mutationFamilyOf(slice.attach[0]?.eff ?? []);
+    const familySlices = slices.filter((slice) => familyOf(slice) !== null);
+    const dominant = mutationCrateLabel(slices.map(familyOf)) ?? labelOf(biggest.attach[0]!);
     const firstFile = (members: readonly ModuleDecl[]): string | null => [...members].filter((decl) => decl.file !== null).sort((a, b) => a.raw.length - b.raw.length)[0]?.file ?? null;
     const anchorFile = firstFile(biggest.decls) ?? firstFile(attach) ?? null;
     const anchor = attach[0]!;
-    const dirOf = anchorFile ? dirname(anchorFile) : lcaDirectory(slices.flatMap((slice) => slice.decls.map((decl) => decl.file ?? "")).filter(Boolean));
-    return { i, slices, attach, label: dominant, dir: dirOf, anchor };
+    const familyDir = isMutationCrateLabel(dominant) && familySlices.length > 1 ? lcaDirectory(familySlices.flatMap((slice) => slice.decls.map((decl) => decl.file ?? "")).filter(Boolean)) : "";
+    const dirOf = familyDir || (anchorFile ? dirname(anchorFile) : lcaDirectory(slices.flatMap((slice) => slice.decls.map((decl) => decl.file ?? "")).filter(Boolean)));
+    const named = biggest.attach[0]!.eff;
+    return { i, slices, attach, label: dominant, dir: dirOf, anchor, eff: named };
   });
+  const sharedLabels = new Map<string, number>();
+  for (const entry of draft) sharedLabels.set(entry.label, (sharedLabels.get(entry.label) ?? 0) + 1);
+  const labelSet = new Set(draft.map((entry) => entry.label));
+  for (const entry of draft) {
+    if ((sharedLabels.get(entry.label) ?? 0) < 2 || isMutationCrateLabel(entry.label) || entry.eff[0] === "standards" || entry.eff.length < 2) continue;
+    const last = facetSlug(entry.eff.at(-1)!.replaceAll("_", "-"));
+    const pair = facetSlug(entry.eff.slice(-2).join("-").replaceAll("_", "-"));
+    entry.label = last && !labelSet.has(last) ? last : pair || entry.label;
+    labelSet.add(entry.label);
+  }
   const usedNames = new Set<string>();
-  const usedDirs = new Set<string>();
+  const usedDirs = new Set<string>([dirname(dirname(resolve(repoRoot, packageDirRel)))]);
   const crates: PlannedCrate[] = [];
   for (const entry of draft) {
     let name = `${lib.name}-${entry.label}`;
@@ -981,6 +1070,7 @@ async function planArtifactCratesOnce(repoRoot: string, packageDirRel: string, o
     usedNames.add(name);
     let dir = entry.dir;
     for (const decl of entry.attach) { if (!usedDirs.has(dir)) break; if (decl.file && !usedDirs.has(dirname(decl.file))) dir = dirname(decl.file); }
+    if (usedDirs.has(dir)) dir = join(dir, `🧩️${entry.label}`);
     void entry.anchor;
     usedDirs.add(dir);
     const imports: MirrorImport[] = [];
@@ -996,6 +1086,16 @@ async function planArtifactCratesOnce(repoRoot: string, packageDirRel: string, o
         if (imports.some((existing) => existing.glob === decl.isComponent && existing.path.join("::") === key)) continue;
         imports.push({ path: decl.eff, crateIdent: String(to), visibility: decl.node.visibility === "private" ? "pub" : decl.node.visibility, order: decl.node.start, glob: decl.isComponent });
       }
+    }
+    for (const tested of entry.slices.flatMap((slice) => slice.attach).filter((decl) => decl.testOnly && decl.parentId)) {
+      const hostSlice = sliceOfDecl.get(tested.parentId!);
+      const hostCrate = hostSlice ? crateOfSlice.get(hostSlice.id) : undefined;
+      const host = hostSlice?.decls.find((decl) => decl.id === tested.parentId);
+      if (hostCrate === undefined || hostCrate === entry.i || !host || host.testOnly) continue;
+      const key = host.eff.join("::");
+      if (attachPaths.includes(key)) continue;
+      if (imports.some((existing) => existing.glob === host.isComponent && existing.path.join("::") === key)) continue;
+      imports.push({ path: host.eff, crateIdent: String(hostCrate), visibility: host.node.visibility === "private" ? "pub" : host.node.visibility, order: host.node.start, glob: host.isComponent });
     }
     const pruned = imports.filter((entryImport) => !imports.some((other) => other !== entryImport && !other.glob && other.crateIdent === entryImport.crateIdent && other.path.length < entryImport.path.length && other.path.every((segment, k) => segment === entryImport.path[k])));
     const nestedGlobs: MirrorImport[] = [];
@@ -1045,11 +1145,18 @@ async function planArtifactCratesOnce(repoRoot: string, packageDirRel: string, o
     const entry = join(packageDirAbs, "🦀️.rs");
     const { owned } = unitsOf(crate.slices);
     const hostedHere = hostedAt(Number(crate.id));
-    const anchorDecl = hostedHere.length ? [...crate.attach].filter((decl) => decl.file !== null && !decl.testOnly).sort((a, b) => Number(b.isComponent) - Number(a.isComponent) || a.eff.length - b.eff.length)[0] ?? null : null;
+    const globComponent = (decl: ModuleDecl): boolean => {
+      if (decl.isComponent) return true;
+      const parent = decl.parentId === null ? undefined : declTree.decls.get(decl.parentId);
+      return parent !== undefined && parent.node.items.some((item) => item.kind === "use" && new RegExp(`^pub\\s+use\\s+${decl.node.name}::\\*\\s*;`, "u").test(parent.declText.slice(item.declStart, item.end)));
+    };
+    const anchorChoices = (decls: readonly ModuleDecl[]): ModuleDecl[] => decls.filter((decl) => decl.file !== null && !decl.testOnly).sort((a, b) => Number(b.isComponent) - Number(a.isComponent) || a.eff.length - b.eff.length);
+    const anchorDecl = hostedHere.length ? anchorChoices(crate.attach)[0] ?? anchorChoices(crate.slices.flatMap((slice) => slice.decls))[0] ?? null : null;
+    const anchorPath = anchorDecl && globComponent(anchorDecl) && !anchorDecl.isComponent ? anchorDecl.eff.slice(0, -1) : anchorDecl?.eff ?? [];
     if (hostedHere.length && !anchorDecl) problems.push(`crate ${crate.name} owns the moved root items but mounts no file to host them`);
-    const destinationImport = anchorDecl ? hostedHere.flatMap((unit) => gatedUses(`crate::${anchorDecl.eff.join("::")}::${unit.module}`, [...unit.exports].filter((name) => unit.names.has(name) || !crate.itemImportLines.some((line) => new RegExp(`\\b${name}\\b`, "u").test(line))))) : [];
+    const destinationImport = anchorDecl ? hostedHere.flatMap((unit) => gatedUses(`crate::${anchorPath.join("::")}::${unit.module}`, [...unit.exports].filter((name) => unit.names.has(name) || !crate.itemImportLines.some((line) => new RegExp(`\\b${name}\\b`, "u").test(line))))) : [];
     const importLines = [...itemImportLines, ...destinationImport];
-    const specBase: MirrorSpec = { doc: "//! 🪞️ planning mirror", newRootDir: packageDirAbs, innerAttributes, externLines: [], movedItemsText: "", itemImports: importLines, owned, imported: imports, wrapperNodes };
+    const specBase: MirrorSpec = { doc: "//! 🪞️ planning mirror", newRootDir: packageDirAbs, innerAttributes, externLines: [], movedItemsText: "", itemImports: importLines, owned, imported: imports, wrapperNodes, gates };
     const cuts = cutOverlay(crate.slices);
     for (const slice of crate.slices) for (const decl of slice.decls) {
       if (decl.file === null) continue;
@@ -1122,12 +1229,12 @@ async function planArtifactCratesOnce(repoRoot: string, packageDirRel: string, o
         }
         continue;
       }
-      const text = `${visibility} use ${crateIdentName}::${decl.eff.join("::")};`;
+      const text = `${(gates.get(decl.eff.join("::")) ?? []).map((gate) => `${gate}\n`).join("")}${visibility} use ${crateIdentName}::${decl.eff.join("::")};`;
       if (decl.declFile === lib.entry) rootEdits.push({ start: decl.node.start, end: decl.node.end, text, anchor: { eff: decl.eff, crate: crateIdentName, visibility: visibility === "private" ? "pub" : visibility.startsWith("pub(") ? "pub" : visibility, component: false } });
       else if (droppedTests.has(decl.id) && !parentIsNamespace) fileCuts.push({ file: decl.declFile, start: decl.node.start, end: decl.node.end, text: "" });
       else if (woven.has(decl.id) && !parentIsNamespace) {
         fileCuts.push({ file: decl.declFile, start: decl.node.start, end: decl.node.end, text: "" });
-        weave.push({ eff: decl.eff, crate: crateIdentName });
+        if (decl.node.visibility !== "private") weave.push({ eff: decl.eff, crate: crateIdentName });
       } else fileCuts.push({ file: decl.declFile, start: decl.node.start, end: decl.node.end, text, anchor: { eff: decl.eff, crate: crateIdentName, visibility: visibility === "private" || visibility.startsWith("pub(") ? "pub" : visibility, component: false } });
     }
   }
@@ -1136,8 +1243,8 @@ async function planArtifactCratesOnce(repoRoot: string, packageDirRel: string, o
     const hit = movedPlaced.flatMap((unit) => unit.blocks).find((block) => edit.start < block.end && block.start < edit.end);
     if (hit) problems.push(`the carved root module ${edit.anchor?.eff.join("::") ?? `at offset ${edit.start}`} overlaps a root region that moves into artifact_items; split the region first`);
   }
-  if (weave.length) problems.push(...weaveRootEdits(rootEdits, wrapperNodes, weave, placement, fileCuts).problems);
-  const plan: ArtifactCratePlan = { repoRoot, artifactDir, artifactCrate: lib.name, packageDir: packageDirRel, rootFile: relativePosix(repoRoot, lib.entry), tree, crates: resolved, wrapperNodes, rootEdits, weave, placement, fileCuts, movedUnits: movedPlaced.map((unit) => ({ names: [...unit.exports].sort(), blocks: unit.blocks, to: crates[unit.host]!.id })), movedAppends, keptModules, overlay: { edits: new Map([...(transform?.edits ?? []), ...(family?.edits ?? [])]), creates: transform?.creates ?? new Map(), deletes: transform?.deletes ?? new Set(), notes: [...(transform?.notes ?? []), ...(family?.notes ?? [])] }, rootMeasure: null, problems, blockers, packing };
+  if (weave.length) problems.push(...weaveRootEdits(rootEdits, wrapperNodes, weave, placement, fileCuts, gates).problems);
+  const plan: ArtifactCratePlan = { repoRoot, artifactDir, artifactCrate: lib.name, packageDir: packageDirRel, rootFile: relativePosix(repoRoot, lib.entry), tree, crates: resolved, wrapperNodes, gates, rootEdits, weave, placement, fileCuts, movedUnits: movedPlaced.map((unit) => ({ names: [...unit.exports].sort(), blocks: unit.blocks, to: crates[unit.host]!.id })), movedAppends, keptModules, overlay: { edits: new Map([...(transform?.edits ?? []), ...(family?.edits ?? [])]), creates: new Map([...(transform?.creates ?? []), ...(family?.creates ?? [])]), deletes: new Set([...folded.deletes, ...(transform?.deletes ?? [])]), notes: [...folded.notes, ...(transform?.notes ?? []), ...(family?.notes ?? [])] }, rootMeasure: null, problems, blockers, packing };
   return plan;
 }
 
@@ -1149,7 +1256,7 @@ function crateIdentPlaceholder(index: number): string {
 type WeaveNode = { crate: string | null; children: Map<string, WeaveNode> };
 
 /** 🧵️ Rewrites the artifact root so every module whose mount was cut out of its parent is exported again at its original path: module-level `pub use` and, where a module has woven children, a local `pub mod` that glob-re-exports the module of the crate that owns it (a local module shadows the glob, so no path changes). */
-export function weaveRootEdits(rootEdits: readonly RootEdit[], wrapperNodes: ReadonlyMap<string, RustModuleNode>, weave: readonly WovenExport[], placement: ReadonlyMap<string, string>, fileCuts: readonly DeclCut[] = []): { edits: RootEdit[]; cuts: DeclCut[]; problems: string[] } {
+export function weaveRootEdits(rootEdits: readonly RootEdit[], wrapperNodes: ReadonlyMap<string, RustModuleNode>, weave: readonly WovenExport[], placement: ReadonlyMap<string, string>, fileCuts: readonly DeclCut[] = [], gates: ReadonlyMap<string, readonly string[]> = new Map()): { edits: RootEdit[]; cuts: DeclCut[]; problems: string[] } {
   const edits: RootEdit[] = [...rootEdits.map((edit) => ({ ...edit })), ...fileCuts.map((cut) => ({ start: cut.start, end: cut.end, text: cut.text, anchor: cut.anchor }))];
   const cutCount = fileCuts.length;
   const problems: string[] = [];
@@ -1178,10 +1285,11 @@ export function weaveRootEdits(rootEdits: readonly RootEdit[], wrapperNodes: Rea
     const lines: string[] = [];
     for (const [name, child] of [...node.children].sort((left, right) => Buffer.compare(Buffer.from(left[0]), Buffer.from(right[0])))) {
       const here = [...path, name];
-      if (!child.children.size && child.crate) { lines.push(`${indent}pub use ${child.crate}::${here.join("::")};`); continue; }
+      const gate = (gates.get(here.join("::")) ?? []).map((text) => `${indent}${text}`);
+      if (!child.children.size && child.crate) { lines.push(...gate, `${indent}pub use ${child.crate}::${here.join("::")};`); continue; }
       const owner = child.crate ?? placement.get(here.join("::")) ?? null;
       if (!owner) { problems.push(`cannot weave below ${here.join("::")}: no crate owns that module`); continue; }
-      lines.push(`${indent}pub mod ${name} {`, `${indent}    pub use ${owner}::${here.join("::")}::*;`, ...render(child, here, `${indent}    `), `${indent}}`);
+      lines.push(...gate, `${indent}pub mod ${name} {`, `${indent}    pub use ${owner}::${here.join("::")}::*;`, ...render(child, here, `${indent}    `), `${indent}}`);
     }
     return lines;
   };
@@ -1192,7 +1300,8 @@ export function weaveRootEdits(rootEdits: readonly RootEdit[], wrapperNodes: Rea
     if (group.anchorIndex !== null) {
       const edit = edits[group.anchorIndex]!;
       const anchor = edit.anchor!;
-      const head = anchor.component ? edit.text : `${anchor.visibility} mod ${anchor.eff.at(-1)} {\n    pub use ${anchor.crate}::${anchor.eff.join("::")}::*;\n${lines.map((line) => `    ${line}`).join("\n")}\n}`;
+      const anchorGates = (gates.get(anchor.eff.join("::")) ?? []).map((gate) => `${gate}\n`).join("");
+      const head = anchor.component ? edit.text : `${anchorGates}${anchor.visibility} mod ${anchor.eff.at(-1)} {\n    pub use ${anchor.crate}::${anchor.eff.join("::")}::*;\n${lines.map((line) => `    ${line}`).join("\n")}\n}`;
       edits[group.anchorIndex] = { ...edit, text: anchor.component ? `${head}\n${lines.join("\n")}` : head };
     } else {
       const node = group.wrapper!;
@@ -1208,14 +1317,17 @@ export function weaveRootEdits(rootEdits: readonly RootEdit[], wrapperNodes: Rea
 
 /** 🔗️ Chains that go through a `use crate::..::name;` alias: `name::tail` is `crate::..::name::tail`. */
 export function aliasChains(source: string): string[][] {
-  const tree = parseRustSourceTree(source);
   const aliases = new Map<string, string[]>();
-  for (const item of tree.items) {
-    if (item.kind !== "use") continue;
-    for (const entry of flattenUse(source.slice(item.declStart, item.end))) if (entry.path[0] === "crate" && entry.path.length > 1 && entry.leaf !== "*") aliases.set(entry.leaf, entry.path.slice(1));
+  const tokens = rustTokens(source);
+  for (let at = 0; at < tokens.length; at += 1) {
+    if (tokens[at]!.text !== "use" || ["::", ".", "$"].includes(tokens[at - 1]?.text ?? "")) continue;
+    let end = at;
+    while (end < tokens.length && tokens[end]!.text !== ";") end += 1;
+    if (end >= tokens.length) break;
+    for (const entry of flattenUse(source.slice(tokens[at]!.start, tokens[end]!.end))) if (entry.path[0] === "crate" && entry.path.length > 1 && entry.leaf !== "*") aliases.set(entry.leaf, entry.path.slice(1));
+    at = end;
   }
   if (!aliases.size) return [];
-  const tokens = rustTokens(source);
   const out: string[][] = [];
   for (let i = 0; i + 2 < tokens.length; i += 1) {
     const base = aliases.get(tokens[i]!.text);
@@ -1229,16 +1341,24 @@ export function aliasChains(source: string): string[][] {
 }
 
 /** 🪞️ Root inline modules that only re-export `crate::`/`super::` paths (`pub mod schema { pub use super::a::b::*; }`): the paths each one aliases and the text to copy into every crate that goes through it. */
-export function rootAliasModules(source: string, modules: readonly RustModuleNode[]): Map<string, { targets: string[][]; text: string }> {
-  const out = new Map<string, { targets: string[][]; text: string }>();
-  for (const node of modules) {
-    if (!node.inline || node.pathAttribute !== null || node.children.length || !node.items.length || node.items.some((item) => item.kind !== "use")) continue;
+export function rootAliasModules(source: string, modules: readonly RustModuleNode[]): Map<string, { targets: string[][]; text: string; nested: ReadonlySet<string> }> {
+  const out = new Map<string, { targets: string[][]; text: string; nested: ReadonlySet<string> }>();
+  const targetsOf = (node: RustModuleNode): string[][] | null => {
+    if (!node.inline || node.pathAttribute !== null || !node.items.length || node.items.some((item) => item.kind !== "use")) return null;
     const targets: string[][] = [];
     for (const item of node.items) {
       const match = /^(?:pub(?:\([^)]*\))?\s+)?use\s+(?:crate|super)::([A-Za-z0-9_]+(?:::[A-Za-z0-9_]+)*)(?:::\*)?\s*;$/u.exec(source.slice(item.declStart, item.end).trim());
-      if (match) targets.push(match[1]!.split("::")); else { targets.length = 0; break; }
+      if (match) targets.push(match[1]!.split("::")); else return null;
     }
-    if (targets.length) out.set(node.name, { targets, text: source.slice(node.start, node.end) });
+    return targets.length ? targets : null;
+  };
+  for (const node of modules) {
+    const targets = targetsOf(node);
+    if (!targets) continue;
+    const key = (rows: string[][]) => rows.map((row) => row.join("::")).sort().join("|");
+    const nested = node.children.map((child) => ({ child, targets: targetsOf(child) }));
+    if (nested.some((entry) => entry.targets === null || key(entry.targets) !== key(targets))) continue;
+    out.set(node.name, { targets, text: source.slice(node.start, node.end), nested: new Set(nested.map((entry) => entry.child.name)) });
   }
   return out;
 }
@@ -1353,7 +1473,8 @@ export function pathHeadNames(text: string): Set<string> {
   return out;
 }
 
-export function implHeader(text: string): { trait: string | null; self: string | null } | null {
+/** 🧬️ The parsed head of one `impl`: its trait, its self type, and the identifiers inside the generic arguments of the trait path (a local type there satisfies the orphan rule). */
+export function implHeader(text: string): { trait: string | null; self: string | null; traitArgs: string[] } | null {
   const tokens = rustTokens(text);
   const start = tokens.findIndex((token) => token.text === "impl");
   if (start < 0) return null;
@@ -1362,7 +1483,7 @@ export function implHeader(text: string): { trait: string | null; self: string |
     let depth = 0;
     for (; cursor < tokens.length; cursor += 1) {
       if (tokens[cursor]!.text === "<") depth += 1;
-      else if (tokens[cursor]!.text === ">") { depth -= 1; if (depth === 0) { cursor += 1; break; } }
+      else if (tokens[cursor]!.text === ">" || tokens[cursor]!.text === ">>") { depth -= tokens[cursor]!.text.length; if (depth <= 0) { cursor += 1; break; } }
     }
   }
   let end = cursor;
@@ -1371,7 +1492,7 @@ export function implHeader(text: string): { trait: string | null; self: string |
   for (; end < tokens.length; end += 1) {
     const token = tokens[end]!.text;
     if (token === "<") depth += 1;
-    else if (token === ">") depth -= 1;
+    else if (token === ">" || token === ">>") depth -= token.length;
     else if (depth === 0 && token === "for" && forAt < 0) forAt = end;
     else if (depth === 0 && (token === "{" || token === "where")) break;
   }
@@ -1381,13 +1502,24 @@ export function implHeader(text: string): { trait: string | null; self: string |
     for (let i = from; i < to; i += 1) {
       const token = tokens[i]!;
       if (token.text === "<") nested += 1;
-      else if (token.text === ">") nested -= 1;
+      else if (token.text === ">" || token.text === ">>") nested -= token.text.length;
       else if (nested === 0 && token.kind === "identifier" && !["dyn", "mut", "impl", "for"].includes(token.text)) name = token.text;
     }
     return name;
   };
-  if (forAt >= 0) return { trait: lastIdent(cursor, forAt), self: lastIdent(forAt + 1, end) };
-  return { trait: null, self: lastIdent(cursor, end) };
+  const argsOf = (from: number, to: number): string[] => {
+    const out: string[] = [];
+    let nested = 0;
+    for (let i = from; i < to; i += 1) {
+      const token = tokens[i]!;
+      if (token.text === "<") nested += 1;
+      else if (token.text === ">" || token.text === ">>") nested -= token.text.length;
+      else if (nested > 0 && token.kind === "identifier") out.push(token.text);
+    }
+    return out;
+  };
+  if (forAt >= 0) return { trait: lastIdent(cursor, forAt), self: lastIdent(forAt + 1, end), traitArgs: argsOf(cursor, forAt) };
+  return { trait: null, self: lastIdent(cursor, end), traitArgs: [] };
 }
 
 export { identifierSet, useLeafNames };

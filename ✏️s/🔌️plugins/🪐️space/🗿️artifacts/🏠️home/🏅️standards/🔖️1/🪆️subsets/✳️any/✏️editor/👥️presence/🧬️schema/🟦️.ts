@@ -19,6 +19,10 @@ type spaceHomePresenceGuardSizeBounds = { readonly minItems?: number; readonly m
 
 export const spaceHomePresenceGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : spaceHomePresenceGuardReject(at, "value is not an object");
+export const spaceHomePresenceGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) spaceHomePresenceGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const spaceHomePresenceGuardArray = (value: unknown, at: string, bounds: spaceHomePresenceGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return spaceHomePresenceGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) spaceHomePresenceGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -49,5 +53,5 @@ export const spaceHomePresenceGuardConstant = <T extends string | number | boole
 //#endregion 🚪️Parsers
 
 export function parseHomePresence(value: unknown, at = "$"): HomePresence {
-  return spaceHomePresenceGuardObject(value, `${at}`);
+  return spaceHomePresenceGuardClosed(spaceHomePresenceGuardObject(value, `${at}`), `${at}`, []);
 }

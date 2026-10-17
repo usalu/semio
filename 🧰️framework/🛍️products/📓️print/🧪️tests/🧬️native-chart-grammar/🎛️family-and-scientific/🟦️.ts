@@ -191,7 +191,6 @@ export function compileNativeScientificDefaults():void{
   
   for(const entry of control.vectors){const value=(chartSchema["x-semio-family-options"] as Record<string,{options:Record<string,{default?:unknown}>}>)[entry.family]!.options[entry.key]!.default,independent=ajv.compile({const:entry.expected})(value);if(independent!==(value===entry.expected)||!independent)failures.push(entry.family+"/"+entry.key+" schema default "+JSON.stringify(value)+" expected native "+entry.expected);}
   if(failures.length)throw Error("Scientific per-family default contracts:\n"+failures.join("\n"));
-  console.log("[DEBUG] Scientific "+control.vectors.length+" native per-family default contracts matched independent AJV");
 }
 
 /** 🧫️ Verifies scientific customization through canonical mutations, D3 and owned actual PDF paint. */
@@ -293,7 +292,6 @@ export async function compileNativeScientificControlEffects(execution:PrintExecu
   });}
   if(JSON.stringify(controls)!==before)throw Error("Scientific neutral vectors changed");
   if(failures.length)throw Error("Scientific control effects:\n"+failures.join("\n"));
-  console.log("[DEBUG] Scientific "+controls.cases.length*themes.length+" explicit locale/theme cases and "+painted+" independently matched actual painted D3 geometries");
 });}
 
 /** 🏷️ Supplies independent body/chrome ownership for actual scientific PDF probes. */
@@ -365,7 +363,7 @@ export async function compileNativeScientificCanvasControls(execution:PrintExecu
       }catch(error){failures.push(appearance+"/"+entry.entry.family+"/"+entry.id+": "+String(error));}
     }
   });}
-  if(JSON.stringify(control)!==before)throw Error("Scientific canvas neutral vectors changed");if(failures.length)throw Error("Scientific physical canvas effects:\n"+failures.join("\n"));console.log("[DEBUG] Scientific canvas "+cases.length*themes.length+" canonical cases and "+matched+" actual body paths matched independent D3 affine paint and isolated chrome");
+  if(JSON.stringify(control)!==before)throw Error("Scientific canvas neutral vectors changed");if(failures.length)throw Error("Scientific physical canvas effects:\n"+failures.join("\n"));
 });}
 
 /** 🧭️ Checks numeric and physical branch windows without changing their domain-specific coordinates. */
@@ -406,7 +404,7 @@ export async function compileNativeScientificMixedControls(execution:PrintExecut
   });}
   const previous=process.env.PRINT_NATIVE_CANVAS_REPLAY;if(process.env.PRINT_NATIVE_MIXED_REPLAY)process.env.PRINT_NATIVE_CANVAS_REPLAY=join(process.env.PRINT_NATIVE_MIXED_REPLAY,"physical");
   try{await compileNativeScientificCanvasControls(execution,fixture.scientificMixedPhysicalWindows);}catch(error){failures.push(String(error));}finally{if(previous===undefined)delete process.env.PRINT_NATIVE_CANVAS_REPLAY;else process.env.PRINT_NATIVE_CANVAS_REPLAY=previous;}
-  if(JSON.stringify(control)!==original)throw Error("Mixed scientific vectors changed");if(failures.length)throw Error("Mixed scientific control effects:\n"+failures.join("\n"));console.log("[DEBUG] Mixed scientific "+cases.length*themes.length+" numeric cases matched "+matched+" independent D3 actual geometries plus physical branch affine/chrome cases");
+  if(JSON.stringify(control)!==original)throw Error("Mixed scientific vectors changed");if(failures.length)throw Error("Mixed scientific control effects:\n"+failures.join("\n"));
 });}
 
 /** 🧬️ Checks mode-conditioned defaults with explicit neutral vectors and actual D3 relations. */
@@ -457,7 +455,7 @@ export async function compileNativeScientificModeDefaults(execution:PrintExecuti
       }
     }catch(error){failures.push(appearance+"/"+entry.id+": "+String(error));}
   });}
-  if(JSON.stringify(control)!==original)throw Error("Mode neutral vector changed");if(failures.length)throw Error("Scientific mode defaults:\n"+failures.join("\n"));console.log("[DEBUG] Native scientific "+compared+" default bodies and "+relations+" independently projected D3 relations matched "+families.reduce((sum,family)=>sum+family.modes.length,0)+" authored mode/stock contracts");
+  if(JSON.stringify(control)!==original)throw Error("Mode neutral vector changed");if(failures.length)throw Error("Scientific mode defaults:\n"+failures.join("\n"));
   if(!stock)await compileNativeScientificModeDefaults(execution,true);
 });}
 
@@ -474,13 +472,13 @@ export async function compileNativeScientificAdmission(execution:PrintExecutionV
     if(expected!==entry.valid)throw Error(entry.id+" independent neutral oracle mismatch "+JSON.stringify(validate.errors));
     for(const language of ["en","de"]as const){const options={...entry.options,mode:entry.options.mode===family.modes[0]?family.modes[1]:family.modes[0]},base={chart:{...neutral.snapshot.chart,language,presets:[{kind:entry.kind,options}]}}as unknown as VizChartSnapshot,original=JSON.stringify(base),outcome=changeVizChartValue(base,{path:["presets","0","options","mode"],value:entry.options.mode});if(outcome.messages.length||outcome.diff.edits.length!==1)throw Error(entry.id+" admission mutation refused");const replay=applyVizChartDiff(base,outcome.diff),inverse=applyVizChartDiff(replay.snapshot,inverseVizChartDiff(base,outcome.diff));deepStrictEqual(inverse.snapshot,base);if(replay.messages.length||inverse.messages.length||JSON.stringify(base)!==original)throw Error(entry.id+" admission inverse/purity");const result=await inferVizChart(replay.snapshot);results.push({id:entry.id,language,valid:entry.valid,complete:result.complete,diagnostics:result.diagnostics});if(result.complete!==entry.valid)failures.push(entry.id+" "+language+" admitted="+result.complete+" expected="+entry.valid);if(entry.valid&&result.complete)await Bun.write(join(workDir,entry.id+"-"+language+".tex"),result.tikz);if(!result.complete&&(result.tikz||!result.diagnostics.length))throw Error(entry.id+" rejected admission has partial/undiagnosed output");}
   }
-  await Bun.write(join(workDir,"admission-results.json"),JSON.stringify(results,null,2));if(JSON.stringify(neutral)!==before)throw Error("Admission neutral changed");if(failures.length)throw Error("Scientific canonical admission:\n"+failures.join("\n"));console.log("[DEBUG] Scientific admission "+neutral.cases.length*2+" canonical language mutations matched independent AJV fields and D3 unique-ID/reference incidence");
+  await Bun.write(join(workDir,"admission-results.json"),JSON.stringify(results,null,2));if(JSON.stringify(neutral)!==before)throw Error("Admission neutral changed");if(failures.length)throw Error("Scientific canonical admission:\n"+failures.join("\n"));
 });}
 
 /** 🧭 Compares specialized placement and fabric permutations with actual D3 closed-form and force outputs. */
 export async function compileNativeSpecializedPlacementControls(execution:PrintExecutionV1,owner?:string):Promise<void>{if(["PRINT_NATIVE_PLACEMENT_REPLAY"].some(key=>process.env[key]!==undefined))throw Error("Actual owned probe required; environment path replay refused");return withPrintScratchV1(execution,"native/specialized-placement-controls",async({directory:workDir,execution})=>{
   if(process.env.PRINT_NATIVE_PLACEMENT_PHASE==="guard"){await compileNativeSpecializedPlacementAdmission(execution);return;}
-  if(!owner&&!process.env.PRINT_NATIVE_PLACEMENT_FAMILY&&!process.env.PRINT_NATIVE_PLACEMENT_REPLAY){for(const family of ["biofabric","data-structure","commit-graph"]){console.log("[DEBUG] Specialized placement batch "+family);await compileNativeSpecializedPlacementControls(execution,family);}await compileNativeSpecializedPlacementAdmission(execution);return;}
+  if(!owner&&!process.env.PRINT_NATIVE_PLACEMENT_FAMILY&&!process.env.PRINT_NATIVE_PLACEMENT_REPLAY){for(const family of ["biofabric","data-structure","commit-graph"]){await compileNativeSpecializedPlacementControls(execution,family);}await compileNativeSpecializedPlacementAdmission(execution);return;}
   const contract=fixture.nativeSpecializedPlacementControls,control={...contract.vectors,cases:contract.vectors.cases.filter(entry=>(!process.env.PRINT_NATIVE_PLACEMENT_BASELINE||entry.layout!=="force")&&(!process.env.PRINT_NATIVE_PLACEMENT_CASE||entry.id===process.env.PRINT_NATIVE_PLACEMENT_CASE))},{forceSimulation,forceLink,forceManyBody,forceCenter}=await import("d3-force"),{randomLcg}=await import("d3-random"),{pointRadial}=await import("d3-shape"),{default:dagre}=await import("dagre");const failures:string[]=[],oracles:unknown[]=[],families=["biofabric","data-structure","commit-graph"].filter(family=>!(owner??process.env.PRINT_NATIVE_PLACEMENT_FAMILY)||family===(owner??process.env.PRINT_NATIVE_PLACEMENT_FAMILY));
   const oracle=(entry:typeof control.cases[number],family:string)=>{const ids=control.nodes.map(row=>row.id),edges=family==="data-structure"?control.nodes.flatMap((row,index)=>{const parent=entry.parents.length?entry.parents[index]!:row.parent;return parent?[[parent,row.id]]:[]}):(entry.edges.length?entry.edges:control.edges),points=ids.map((id,index)=>({id,x:entry.initial.length?entry.initial[index]![0]!:NaN,y:entry.initial.length?entry.initial[index]![1]!:NaN})),order=entry.order==="name"?[...ids].sort():ids;
     if(entry.layout==="force"){const simulation=forceSimulation(points).stop().randomSource(randomLcg(entry.seed));for(const name of entry.forces)simulation.force(name,name==="link"?forceLink(edges.map(([source,target])=>({source:source!,target:target!}))).id(node=>String((node as typeof points[number]).id)).distance(entry.linkDistance):name==="many-body"?forceManyBody().strength(entry.charge).theta(0):forceCenter(0,0));simulation.tick(entry.iterations);}
@@ -496,7 +494,7 @@ export async function compileNativeSpecializedPlacementControls(execution:PrintE
     else{const margin=2.6*control.size,xmin=Math.min(...points.map(point=>point.x)),xmax=Math.max(...points.map(point=>point.x)),ymin=Math.min(...points.map(point=>point.y)),ymax=Math.max(...points.map(point=>point.y)),scale=Math.min((74-2*margin)/Math.max(1e-6,xmax-xmin),(34-2*margin)/Math.max(1e-6,ymax-ymin)),x=scaleLinear([xmin,xmax],[(80-scale*(xmax-xmin))/2,(80+scale*(xmax-xmin))/2]),y=scaleLinear([ymin,ymax],[(40-scale*(ymax-ymin))/2,(40+scale*(ymax-ymin))/2]),circles=paint.paths.filter(path=>path.closed&&path.points.length>20&&Math.abs(path.bounds[2]!-path.bounds[0]!-2*control.size)<.04);if(circles.length!==points.length)throw Error(id+" actual node inventory "+circles.length);for(const[index,point]of points.entries()){const circle=circles[index]!;equal([(circle.bounds[0]!+circle.bounds[2]!)/2,(circle.bounds[1]!+circle.bounds[3]!)/2],[x(point.x),y(point.y)],id+" independent D3 node "+point.id,control.toleranceMm);const glyph=paint.glyphs.find(glyph=>glyph.text===point.id);if(!glyph?.origin||!glyph.advance)throw Error(id+" stable ID caption missing");equal([glyph.origin[0]!+glyph.advance[0]!/2],[x(point.x)],id+" actual stable caption x for "+point.id,control.toleranceMm);}}
     }catch(error){failures.push(language+"/"+appearance+" "+family+"/"+entry.id+" "+String(error));}
   });}
-  mkdirSync(workDir,{recursive:true});await Bun.write(join(workDir,"placement-oracle.json"),JSON.stringify(oracles,null,2));if(failures.length)throw Error("Specialized placement controls:\n"+failures.join("\n"));console.log(`[DEBUG] Specialized placement ${oracles.length} actual selected language/theme layout/order/columns/force/iterations/charge/linkDistance cases matched D3 force and closed-form producer coordinates or fabric permutations`);
+  mkdirSync(workDir,{recursive:true});await Bun.write(join(workDir,"placement-oracle.json"),JSON.stringify(oracles,null,2));if(failures.length)throw Error("Specialized placement controls:\n"+failures.join("\n"));
 });}
 
 /** 🛡️ Checks native scientific record domains against AJV rows and D3 incidence. */
@@ -522,7 +520,7 @@ export async function compileNativeScientificRecordDomain(execution:PrintExecuti
     for(const entry of control.cases)try{equal(records.find(record=>record.scenario===entry.id&&record.key==="native/valid")!.values.map(Number),[entry.valid?1:0],entry.id+" native evaluated validity");}catch(error){failures.push(appearance+"/"+String(error));}
     for(const entry of control.hardCases)try{await hard(appearance,[entry],entry.id);}catch(error){failures.push(appearance+"/"+String(error));}
   }
-  if(JSON.stringify(control)!==before)throw Error("Native scientific neutral changed");if(failures.length)throw Error("Scientific native domains:\n"+failures.join("\n"));console.log("[DEBUG] Native scientific60 evaluated record predicates and6 actual compiler rejections matched AJV/D3 unique-ID/finite/vocabulary contracts");
+  if(JSON.stringify(control)!==before)throw Error("Native scientific neutral changed");if(failures.length)throw Error("Scientific native domains:\n"+failures.join("\n"));
   await compileNativeScientificScalarAdmission();
   await compileNativeScientificModeDomain(execution);
 });}
@@ -551,7 +549,7 @@ export async function compileNativeScientificRelationStyles(execution:PrintExecu
       if(entry.hook?hooks.length!==1:hooks.length!==0)throw Error("Injection source hook geometry differs "+hooks.length);if(entry.double&&Math.max(...shafts.map(path=>path.width))-Math.min(...shafts.map(path=>path.width))<.12)throw Error("Double relation has no separated visible strokes");
     }catch(error){failures.push(appearance+"/"+entry.style+": "+String(error));}
   });}
-  if(JSON.stringify(control)!==original)throw Error("Style vector changed");if(failures.length)throw Error("Scientific relation styles:\n"+failures.join("\n"));console.log("[DEBUG] Scientific16 actual bilingual/theme relation styles matched D3 shafts, multiplicity, target heads, injection hooks and PDF dash state");
+  if(JSON.stringify(control)!==original)throw Error("Style vector changed");if(failures.length)throw Error("Scientific relation styles:\n"+failures.join("\n"));
 });}
 
 /** 📏️ Verifies canonical shape vocabularies and positive scientific body scales. */
@@ -566,7 +564,7 @@ export async function compileNativeScientificScalarAdmission():Promise<void>{
       if(outcome.messages.length||outcome.diff.edits.length!==1||replay.messages.length||inverse.messages.length||JSON.stringify(base)!==before)throw Error("Scientific scalar mutation refused");deepStrictEqual(inverse.snapshot,base);const result=await inferVizChart(replay.snapshot);if(result.complete!==entry.valid)failures.push(entry.id+"/"+language+" admitted="+result.complete+" expected="+entry.valid);if(!result.complete&&(result.tikz||!result.diagnostics.length))throw Error("Scientific scalar rejected with partial/undiagnosed output");
     }
   }
-  if(JSON.stringify(control)!==original)throw Error("Scientific scalar neutral mutated");if(failures.length)throw Error("Scientific scalar admission:\n"+failures.join("\n"));console.log("[DEBUG] Scientific32 bilingual scalar mutations matched independent AJV closed shapes and positive body scale contracts");
+  if(JSON.stringify(control)!==original)throw Error("Scientific scalar neutral mutated");if(failures.length)throw Error("Scientific scalar admission:\n"+failures.join("\n"));
 }
 
 /** 🔒️ Verifies native mode admission against the authored eight-family vocabulary. */
@@ -585,7 +583,7 @@ export async function compileNativeScientificModeDomain(execution:PrintExecution
     {const refusal=await inspectVizProbeDocumentRefusalV1({case:"scientific-mode-domain",scenario:appearance,documentClass:"semio",documentClassOptions:"type=paper,language="+language+",theme="+appearance,packages:["semio-viz"],preamble:["\\title{Scientific Mode Rejection}","\\author{Semio}","\\date{}"],body:[{raw:"\\ExplSyntaxOn\\keys_set:nn{semio/viz/family/"+entry.family+"}{mode="+entry.mode+"}\\ExplSyntaxOff"},{values:{key:"native/accepted",clist:"1"}}]},{execution,scenario:undefined});const log=refusal.log;if(!log.includes("Scientific record domain")||!log.includes(entry.family))throw Error("Unexpected actual compiler diagnostic: "+log);}
     
   }
-  if(JSON.stringify(control)!==original)throw Error("Native mode vector changed");console.log("[DEBUG] Native scientific"+control.cases.length*themes.length+" closed mode predicates and"+control.families.length*themes.length+" hard compiler rejections matched independent AJV eight-family vocabulary");
+  if(JSON.stringify(control)!==original)throw Error("Native mode vector changed");
 });}
 
 /** 🛡️ Requires finite complete public force-start pairs before the existing native solver. */
@@ -604,5 +602,5 @@ export async function compileNativeSpecializedPlacementAdmission(execution:Print
 
     }
   }
-  if(failures.length)throw Error("Public force starts:\n"+failures.join("\n"));console.log("[DEBUG] Public force-start "+executed+" actual canonical compiler diagnostics matched D3 CSV/AJV finite complete pairs");
+  if(failures.length)throw Error("Public force starts:\n"+failures.join("\n"));
 });}

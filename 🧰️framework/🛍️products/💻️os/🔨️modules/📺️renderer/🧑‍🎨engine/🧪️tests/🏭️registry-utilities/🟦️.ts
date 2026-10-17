@@ -2,7 +2,7 @@
 import gumballTargetsFixture from "../../🧱️elements/🌐️World3dHost/🧪️tests/🧫️fixtures/🧭️gesture-targets.json";
 import gumballTargetsSchema from "../../🧱️elements/🌐️World3dHost/🧬️schema/🧭️gesture-targets/🔣️.json";
 import gumballLiveProtocolFixture from "../../🧱️elements/🌐️World3dHost/🧪️tests/🧫️fixtures/🛠️gumball-live-protocol.json";
-import { worldGumballStep, WORLD_GUMBALL_IDLE, type WorldGumballEvent, type WorldGumballTargets } from "../../🧱️elements/🌐️World3dHost/🟦️.tsx";
+import { worldGumballStep, WORLD_GUMBALL_IDLE, type WorldGumballEvent, type WorldGumballTargets } from "../../🧱️elements/🌐️World3dHost/🧮️gumball-math/🟦️.ts";
 import { type ReactElement } from "react";
 import { hostArmedViewContext, windowViewContext } from "../../../../../../../🔨️modules/🛂️manifest/🟦️.ts";
 import Ajv2020 from "ajv/dist/2020";
@@ -14,7 +14,7 @@ import { describe, expect, it, vi } from "vitest";
 import { deriveUtilityNodes, actionSemanticsForKind, resolveWindowActions, resolveModeTools, type ActionDefinition, type AppDefinition, type AppModeDefinition, type AppWindowKindDefinition, type CommandDefinition, type UtilityDefinition, type WindowMeasure } from "@semio-tech/framework";
 import { progressPanelTabSelection, resolvePanelBranchBodyLeaf, type PanelTabNode, type TreeDataSection } from "@semio-tech/ui-react";
 import { builtNodeToSnapshot, snapWorldPointToGrid, UiDocumentStore, findPressedUtilityLeafId, resolveUtilityNodes, resolveUtilities, panelTabDefinitionToNode, panelAnchorForGroup, partitionFrameworkHistoryPanelTab, shellLabel, syncShellLabelLocale, resolveUtilityActivation, isWorldTransformGumballMode, worldGumballConfigForProjection, gumballTransformDeltaBetweenPoses, gumballIdentityDelta, worldPaintStep, WORLD_PAINT_IDLE, world3dGumballSelectionArgsV1, world3dRelocateDragTargetV1, world3dRelocateDispatchArgsV1, world3dVolumeBrushOriginV1, world3dVolumeBrushCommits, gumballLivePreviewDeltaBetweenPoses, applyGumballLivePreviewDeltaToPose, resolveCommands, commandAddressKey, commandCategories, buildOsCommands, createCoalescingActionDispatcher, dispatchOsCommand, type ResolvedToolDefinition, buildToolTabs, toolCategoryOpenPath, toolLeafInactiveRepress, toolIdFromPanelTabId, reconcileToolTabSelection, toolPanelTreeContentRevision, type ToolTabSelection } from "../../🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx";
-import { programArmedToolRevealV1 } from "../../🧱️elements/🛠️ShellHelpers/🟦️.tsx";
+import { programArmedToolRevealV1 } from "../../🧱️elements/🛠️ShellHelpers/🎛️command-registry/🟦️.tsx";
 import { buildContractNode, panelTreePanelHost } from "../🧰️engine-contract-helpers/🟦️.ts";
 
 describe("registry-derived utilities and activation (P5)", () => {

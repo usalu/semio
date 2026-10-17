@@ -1,0 +1,13 @@
+{
+ "name": "c4p4b",
+ "crates": [
+  "semio-s-artifact-draw-drawing-editor"
+ ],
+ "base": {
+  "rev": "b84bf526c7b",
+  "crates": [
+   "semio-s-artifact-draw-drawing-editor"
+  ]
+ },
+ "note": "C4P4 draw editor unit tests"
+}

@@ -4,7 +4,8 @@ import{requireIssuedResourceControlRefinementV1}from"../../../../../../../🔨�
 import{cargoConfigurationArgumentsV1}from"../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts";
 import type{CargoCompilerInputsPortV1}from"../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️inputs/🟦️.ts";
 import{repositoryCargoCommandV1}from"../../../⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🚪️ingress/📥️arguments/📤️forwarding/🟦️.ts";
-import cargoLaunchPolicy from"../🚪️launcher/🔣️policy.json";
+import cargoLaunchSchema from"../🚪️launcher/🧬️schema/🔣️.json";
+const cargoLaunchPolicy=cargoLaunchSchema.definitions.Configuration.const;
 import{readCargoProfileConsumptionV1,type CargoProfileConsumptionV1}from"../../../🏗️build/🎚️mode/🦀️profile/🟦️.ts";
 import{requireIssuedResourceControlInvocationV1,withIssuedResourceOperationV1,withRequestedIssuedResourceControlV1}from"../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import{withCompilerWorkspaceWriteV1}from"../../../⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🟦️.ts";
@@ -56,7 +57,7 @@ async function admitRepositoryCargoInputsV1(options:RepositoryCargoInputsV1,conf
 /** 🏪️ Holds genuine bounded registry writer/read custody across fetch, planning and terminal compiler settlement. */
 async function withRepositoryCargoInputsOwnedV1<T>(options:RepositoryCargoInputsV1,view:RepositoryCargoInputsViewV1,body:(view:RepositoryCargoInputsViewV1)=>Promise<T>):Promise<T>{
  const {control,storage}=options,{requests,home,environment}=await admitRepositoryCargoInputsV1(options,view.selections);
- return withRepositoryCargoRegistryReadyV1({...options,requests,home,environment},()=>withCompilerWorkspaceWriteV1(storage,join(options.workspace,".cache/b/l/m/data"),control,async()=>{await storage.recheck();process.stderr.write("[DEBUG] Original bounded Cargo dependency fetch "+JSON.stringify({manifest:options.manifest,offline:environment.CARGO_NET_OFFLINE==="true",home})+"\n");try{for(const request of requests){await storage.recheck();const output=await captureOwnedCommandV1("cargo",request.args,request.cwd,{control,env:{...environment,CARGO_NET_OFFLINE:String(request.args.includes("--offline"))},output:{maximumBytes:16777216,maximumLines:65536}});if(output)process.stderr.write(output);}}catch(error){if(environment.CARGO_NET_OFFLINE==="true")throw Error("Original offline Cargo dependency acquisition refused: "+(error instanceof Error?error.message:String(error)));throw error;}await storage.recheck();}),()=>body(view));
+ return withRepositoryCargoRegistryReadyV1({...options,requests,home,environment},()=>withCompilerWorkspaceWriteV1(storage,join(options.workspace,".cache/b/l/m/data"),control,async()=>{await storage.recheck();try{for(const request of requests){await storage.recheck();const output=await captureOwnedCommandV1("cargo",request.args,request.cwd,{control,env:{...environment,CARGO_NET_OFFLINE:String(request.args.includes("--offline"))},output:{maximumBytes:16777216,maximumLines:65536}});if(output)process.stderr.write(output);}}catch(error){if(environment.CARGO_NET_OFFLINE==="true")throw Error("Original offline Cargo dependency acquisition refused: "+(error instanceof Error?error.message:String(error)));throw error;}await storage.recheck();}),()=>body(view));
 }
 
 /** 🔐️ Holds exclusive bounded registry writer custody for a lockfile resolution that must not first fetch its stale locked graph. */

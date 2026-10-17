@@ -5,7 +5,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parse } from "@iarna/toml";
-import { readModuleTreeSource } from "../../../../../🧰️framework/🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 
 const root = fileURLToPath(new URL("../..", import.meta.url));
 const read = (path: string) => readFileSync(resolve(root, path), "utf8");
@@ -20,6 +20,9 @@ const unitKey = (unit: RetainedArtifactUnit) => `${unit.package} ${unit.target.k
 export function retainedLawGroups() {
   return [...new Map(fixture.retainedArtifactUnits.map(unit => [unitKey(unit), unit])).values()].map(owner => ({ package: owner.package, target: owner.target, laws: fixture.retainedArtifactUnits.filter(unit => unitKey(unit) === unitKey(owner)).flatMap(unit => unit.laws) }));
 }
+
+/** 🧬️ A selected target name addresses its own target and every target named `<selection>-<slice>`, so one family can span several Cargo targets. */
+export const inTargetFamily = (name: string, selection: string | undefined) => selection === undefined || name === selection || name.startsWith(`${selection}-`);
 
 /** 🧾️ Each Cargo target executes the exact preserved laws in its own process. */
 export function compositionLawGroups() {
@@ -37,7 +40,7 @@ export function testCompositionOwnership(target?: string): void {
   const packageRow=manifest.package;assert(packageRow&&typeof packageRow==="object"&&!Array.isArray(packageRow),"Actual composition package required");assert.equal(Reflect.get(packageRow,"name"),fixture.package);
   const metadata:unknown=Reflect.get(packageRow,"metadata");assert(metadata&&typeof metadata==="object"&&!Array.isArray(metadata),"Actual package metadata required");const semio:unknown=Reflect.get(metadata,"semio");assert(semio&&typeof semio==="object"&&!Array.isArray(semio),"Actual Semio metadata required");assert.equal(Reflect.get(semio,"role"),"test");
   const targets=manifest.test;assert(Array.isArray(targets),"Actual declared Cargo test targets required");
-  for (const suite of fixture.suites.filter(suite => target === undefined || suite.target === target)) {
+  for (const suite of fixture.suites.filter(suite => inTargetFamily(suite.target, target))) {
     const source = suite.tree === true ? readModuleTreeSource(resolve(root, suite.path)) : read(suite.path);
     assert.equal(createHash("sha256").update(source).digest("hex"), suite.sha256, suite.target);
     const previous = resolve(root, "../../..", suite.previousPath);
@@ -54,7 +57,7 @@ export function testCompositionOwnership(target?: string): void {
   const targetNames = new Set(compositionLawGroups().map(group => group.target.name));
   for (const [name, declaration] of Object.entries(project.targets)) {
     const selected = declaration.options?.command?.match(/(?:^|\s)--test\s+(\S+)/)?.[1];
-    if (selected !== undefined) assert(targetNames.has(selected) || selected === RETAINED_ARTIFACT_UNITS, `${name}: unknown native law target ${selected}`);
+    if (selected !== undefined) assert([...targetNames].some(name => inTargetFamily(name, selected)) || selected === RETAINED_ARTIFACT_UNITS, `${name}: unknown native law target ${selected}`);
   }
   const family = "../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d";
   const members = (parse(read(`${family}/Cargo.toml`)) as { workspace: { members: string[] } }).workspace.members.map(member => parse(read(`${family}/${member}/Cargo.toml`)) as { package: { name: string }; lib?: { name?: string }; test?: { name: string }[] });

@@ -19,12 +19,12 @@
 //! the same pair through its OWN verbs, `setTargetVolumeHidden`/`setTargetVolumeLocked` over `{hidden, id, locked}`,
 //! because the selection verbs write the part slice only. Grips and fasteners carry no such flag in this document model,
 //! so their rows carry no toggle. A row whose toggles the argument arena refuses is still built.
+use crate::editor::puzzle5d::catalog::puzzle5d_part_display_label;
+use crate::editor::puzzle5d::interaction::ui_label;
 
 use crate::editor::puzzle5d::terminology::Puzzle5dLabels;
-use crate::editor::puzzle5d::{
-    find_part_by_grip_full_id, puzzle5d_grip_full_id, puzzle5d_part_display_label, ui_label, Puzzle5dDocument, Puzzle5dFastener, Puzzle5dGrip, Puzzle5dPart, Puzzle5dScene, Puzzle5dTargetVolume, PUZZLE5D_GRANULARITY_FASTENER,
-    PUZZLE5D_GRANULARITY_GRIP, PUZZLE5D_GRANULARITY_PART, PUZZLE5D_GRANULARITY_TARGET_VOLUME, PUZZLE5D_INTERACTION_DOMAIN, PUZZLE5D_PLAY_CONTROLLER_ID,
-};
+use crate::editor::puzzle5d::entities::{find_part_by_grip_full_id, puzzle5d_grip_full_id, Puzzle5dDocument, Puzzle5dFastener, Puzzle5dGrip, Puzzle5dPart, Puzzle5dTargetVolume, PUZZLE5D_GRANULARITY_FASTENER, PUZZLE5D_GRANULARITY_GRIP, PUZZLE5D_GRANULARITY_PART, PUZZLE5D_GRANULARITY_TARGET_VOLUME, PUZZLE5D_INTERACTION_DOMAIN, PUZZLE5D_PLAY_CONTROLLER_ID};
+use crate::editor::puzzle5d::view::Puzzle5dScene;
 use semio_framework_plugin::plugin_app_close_prelude::{Buildable, BuiltNode, HasBase, RowActionPlacement};
 use semio_framework_plugin::row_action;
 use semio_framework_plugin::row_target;
@@ -180,7 +180,5 @@ pub fn render(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels, windows: &TreeW
 //#endregion 🔖️Render
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

@@ -1,3 +1,4 @@
+use semio_framework_test_fixtures::fixture_path;
 use semio_s_plugin_norm_compliance::{AnnexChoice, CheckStatus};
 use semio_s_artifact_norm_en1991_model::En1991Snapshot;
 use semio_s_artifact_norm_en1991_inferences::{evaluate, check_full_actions};
@@ -272,7 +273,7 @@ async fn regenerate_example_assets_once() {
     use std::fs;
     use std::path::PathBuf;
     if std::env::var("EN1991_REGEN_ASSETS").ok().as_deref() != Some("1") { return; }
-    let fam = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..");
+    let fam = fixture_path!("../..");
     let assets = fam.join("🏅️standards").read_dir().unwrap().next().unwrap().unwrap().path()
         .read_dir().unwrap().map(|e| e.unwrap().path()).find(|p| p.is_dir()).unwrap()
         .read_dir().unwrap().map(|e| e.unwrap().path()).find(|p| p.is_dir()).unwrap()
@@ -292,7 +293,7 @@ async fn python_oracle_within_half_percent() {
     let doc = En1991Snapshot::default();
     let report = evaluate(&doc);
     let json = encode_en1991_snapshot_json(&doc);
-    let any = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../..")
+    let any = fixture_path!("../..")
         .join("🏅️standards").read_dir().unwrap().next().unwrap().unwrap().path()
         .read_dir().unwrap().map(|e| e.unwrap().path()).find(|p| p.is_dir()).unwrap()
         .read_dir().unwrap().map(|e| e.unwrap().path()).find(|p| p.is_dir()).unwrap();
@@ -320,7 +321,7 @@ async fn snapshot_json_validates_against_schema() {
     use std::process::Command;
     let doc = En1991Snapshot::default();
     let json = encode_en1991_snapshot_json(&doc);
-    let any = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../..")
+    let any = fixture_path!("../..")
         .join("🏅️standards").read_dir().unwrap().next().unwrap().unwrap().path()
         .read_dir().unwrap().map(|e| e.unwrap().path()).find(|p| p.is_dir()).unwrap()
         .read_dir().unwrap().map(|e| e.unwrap().path()).find(|p| p.is_dir()).unwrap();
@@ -672,7 +673,7 @@ async fn duplicate_accidental_id_fails_integrity() {
 #[semio_framework_async_macros::async_test]
 async fn oracle_manifest_kind_count_matches_mutation_enum() {
     use semio_s_artifact_norm_en1991_mutations::KINDS;
-    let any = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../..")
+    let any = fixture_path!("../..")
         .join("🏅️standards").read_dir().unwrap().next().unwrap().unwrap().path()
         .read_dir().unwrap().map(|e| e.unwrap().path()).find(|p| p.is_dir()).unwrap()
         .read_dir().unwrap().map(|e| e.unwrap().path()).find(|p| p.is_dir()).unwrap();

@@ -1,4 +1,5 @@
-use super::*;
+use crate::{DagHostSnapshotEdge, DagNodeSpec};
+use crate::standards::v1::subsets::any::schema::inferences::topology::*;
 
 fn node(id: &str) -> DagNodeSpec {
     DagNodeSpec { id: id.into(), ..Default::default() }
@@ -53,7 +54,7 @@ async fn port_endpoints_resolve_to_their_nodes() {
 /// large layered DAG (best of the fixture's attempts); above it the inference would need a stepped run.
 #[semio_framework_async_macros::async_test]
 async fn topology_of_a_large_layered_dag_stays_below_the_interactive_ceiling() {
-    let law: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧭topology/⏱️cost.json")).expect("cost law parses");
+    let law: serde_json::Value = serde_json::from_str(runtime_fixture_text("../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧭topology/⏱️cost.json")).expect("cost law parses");
     let (layers, width) = (law["layers"].as_u64().expect("layers") as usize, law["width"].as_u64().expect("width") as usize);
     let id = |layer: usize, column: usize| format!("n{layer}-{column}");
     let nodes: Vec<DagNodeSpec> = (0..layers).flat_map(|layer| (0..width).map(move |column| (layer, column))).map(|(layer, column)| node(&id(layer, column))).collect();
@@ -74,4 +75,9 @@ async fn topology_of_a_large_layered_dag_stays_below_the_interactive_ceiling() {
     let topology = compute_dag_topology(&nodes, &edges);
     assert!(ids.iter().zip(&oracle).all(|(id, layer)| topology.depth.get(id) == Some(layer)), "every depth equals the petgraph longest-path layer");
     assert!(best < u128::from(law["ceilingUs"].as_u64().expect("ceiling")), "topology took {best} µs");
+}
+
+fn runtime_fixture_text(relative: &str) -> &'static str {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative);
+    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display())).into_boxed_str())
 }

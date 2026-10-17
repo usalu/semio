@@ -235,6 +235,1219 @@
       "const": {
         "maximumPendingOperations": 32
       }
+    },
+    "CurrentMaintenanceProtocol": {
+      "const": {
+        "maximumCapturedValues": 1024,
+        "maximumDepth": 6,
+        "purpose": "current-recomputable-domain-maintenance",
+        "maximumLeaseDatabaseBytes": 16384,
+        "maximumObservationValues": 65536,
+        "maximumObservationDepth": 12,
+        "maximumObservationTextBytes": 2097152,
+        "maximumProducerBytes": 65536,
+        "maximumDescriptorBytes": 2048,
+        "maximumFixtureEntries": 4096,
+        "poolResidualRoles": {
+          "emptyToolkitPrefixPattern": "^nx/graphs/[a-f0-9]{20}$",
+          "namespaceLock": {
+            "basename": "project-graph.lock",
+            "maximumBytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        },
+        "maximumImageMetadataNames": 4
+      }
+    },
+    "CurrentMaintenanceIntent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "purpose",
+        "selection"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "purpose": {
+          "const": "current-recomputable-domain-maintenance"
+        },
+        "selection": {
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "namespace"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "graph-namespace"
+                },
+                "namespace": {
+                  "$ref": "#/definitions/Namespace"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "namespaces"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "graph-pool"
+                },
+                "namespaces": {
+                  "type": "array",
+                  "maxItems": 64,
+                  "uniqueItems": true,
+                  "items": {
+                    "$ref": "#/definitions/Namespace"
+                  }
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "fixtureName",
+                "producerLogSha256",
+                "namespaces"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "products-graph-fixture"
+                },
+                "fixtureName": {
+                  "type": "string",
+                  "pattern": "^gf-[A-Za-z0-9]{6}$"
+                },
+                "producerLogSha256": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "namespaces": {
+                  "type": "array",
+                  "maxItems": 64,
+                  "uniqueItems": true,
+                  "items": {
+                    "$ref": "#/definitions/Namespace"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "CurrentMaintenanceImage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "role",
+        "directory",
+        "root",
+        "parentDirectory",
+        "leaseDirectory",
+        "filesystemBytes",
+        "maximumPhysicalBytes",
+        "ledger"
+      ],
+      "properties": {
+        "role": {
+          "enum": [
+            "namespace",
+            "pool",
+            "graph",
+            "leases"
+          ]
+        },
+        "directory": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "root": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "parentDirectory": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "leaseDirectory": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "filesystemBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "maximumPhysicalBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "ledger": {
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "requirement"
+              ],
+              "properties": {
+                "requirement": {
+                  "const": "empty"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "requirement",
+                "owner",
+                "bytes",
+                "policy"
+              ],
+              "properties": {
+                "requirement": {
+                  "const": "current-domain-artifact"
+                },
+                "owner": {
+                  "enum": [
+                    "repository:nx-graph-pool",
+                    "repository:graph-store"
+                  ]
+                },
+                "bytes": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 9007199254740991
+                },
+                "policy": {
+                  "$ref": "https://semio.tech/framework/process/native-storage/v1#/definitions/Policy"
+                }
+              }
+            }
+          ]
+        },
+        "maximumLeaseDatabaseBytes": {
+          "const": 16384
+        }
+      }
+    },
+    "CurrentMaintenancePlan": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "purpose",
+        "repositoryRoot",
+        "partition",
+        "hostDirectory",
+        "workspace",
+        "producerLogSha256",
+        "intent",
+        "containers",
+        "targets"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "purpose": {
+          "const": "current-recomputable-domain-maintenance"
+        },
+        "repositoryRoot": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "partition": {
+          "enum": [
+            "graph",
+            "products"
+          ]
+        },
+        "hostDirectory": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "workspace": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "producerLogSha256": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "intent": {
+          "$ref": "#/definitions/CurrentMaintenanceIntent"
+        },
+        "containers": {
+          "type": "array",
+          "maxItems": 2,
+          "items": {
+            "$ref": "#/definitions/CurrentMaintenanceImage"
+          }
+        },
+        "targets": {
+          "type": "array",
+          "maxItems": 67,
+          "items": {
+            "$ref": "#/definitions/CurrentMaintenanceImage"
+          }
+        }
+      }
+    },
+    "CurrentMaintenanceStamp": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "dev",
+        "ino",
+        "mode",
+        "nlink",
+        "size",
+        "mtimeNs",
+        "ctimeNs"
+      ],
+      "properties": {
+        "dev": {
+          "type": "string",
+          "pattern": "^(?:0|[1-9][0-9]*)$"
+        },
+        "ino": {
+          "type": "string",
+          "pattern": "^(?:0|[1-9][0-9]*)$"
+        },
+        "mode": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "nlink": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "size": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "mtimeNs": {
+          "type": "string",
+          "pattern": "^(?:0|[1-9][0-9]*)$"
+        },
+        "ctimeNs": {
+          "type": "string",
+          "pattern": "^(?:0|[1-9][0-9]*)$"
+        }
+      }
+    },
+    "CurrentMaintenanceFile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "text",
+        "before",
+        "after"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "text": {
+          "type": "string",
+          "maxLength": 65536
+        },
+        "before": {
+          "$ref": "#/definitions/CurrentMaintenanceStamp"
+        },
+        "after": {
+          "$ref": "#/definitions/CurrentMaintenanceStamp"
+        }
+      }
+    },
+    "CurrentMaintenanceDirectory": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "directory",
+        "before",
+        "after",
+        "entries"
+      ],
+      "properties": {
+        "directory": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "before": {
+          "$ref": "#/definitions/CurrentMaintenanceStamp"
+        },
+        "after": {
+          "$ref": "#/definitions/CurrentMaintenanceStamp"
+        },
+        "entries": {
+          "type": "array",
+          "maxItems": 4096,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "path",
+              "kind"
+            ],
+            "properties": {
+              "path": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "kind": {
+                "enum": [
+                  "directory",
+                  "file"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "CurrentMaintenanceScope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "directory",
+        "root",
+        "backing",
+        "policy",
+        "journal",
+        "associations"
+      ],
+      "properties": {
+        "directory": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "root": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "backing": {
+          "$ref": "https://semio.tech/framework/process/native-storage/v1#/definitions/ProtectedParentJournal/properties/backing"
+        },
+        "policy": {
+          "$ref": "https://semio.tech/framework/process/native-storage/v1#/definitions/Policy"
+        },
+        "journal": {
+          "$ref": "https://semio.tech/framework/process/native-storage/v1#/definitions/ProtectedMaintenanceJournalPresence"
+        },
+        "associations": {
+          "$ref": "https://semio.tech/framework/process/native-storage/v1#/definitions/ProtectedMaintenanceRoster"
+        }
+      }
+    },
+    "CurrentMaintenanceImageObservation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "directory",
+        "root",
+        "backing",
+        "policy",
+        "journal",
+        "associations",
+        "current",
+        "association"
+      ],
+      "properties": {
+        "directory": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "root": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "backing": {
+          "$ref": "https://semio.tech/framework/process/native-storage/v1#/definitions/ProtectedParentJournal/properties/backing"
+        },
+        "policy": {
+          "$ref": "https://semio.tech/framework/process/native-storage/v1#/definitions/Policy"
+        },
+        "journal": {
+          "$ref": "https://semio.tech/framework/process/native-storage/v1#/definitions/ProtectedMaintenanceJournalPresence"
+        },
+        "associations": {
+          "$ref": "https://semio.tech/framework/process/native-storage/v1#/definitions/ProtectedMaintenanceRoster"
+        },
+        "current": {
+          "$ref": "https://semio.tech/framework/process/native-storage/v1#/definitions/ProtectedMaintenanceRequest"
+        },
+        "association": {
+          "$ref": "https://semio.tech/framework/process/native-storage/v1#/definitions/ProtectedMaintenanceAssociation"
+        }
+      }
+    },
+    "CurrentMaintenanceObservation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "operation",
+        "directory",
+        "host",
+        "images",
+        "descriptors",
+        "fixture",
+        "producer"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "operation": {
+          "enum": [
+            "publish",
+            "retire"
+          ]
+        },
+        "directory": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "host": {
+          "$ref": "#/definitions/CurrentMaintenanceScope"
+        },
+        "images": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 3,
+          "items": {
+            "$ref": "#/definitions/CurrentMaintenanceImageObservation"
+          }
+        },
+        "descriptors": {
+          "type": "array",
+          "maxItems": 64,
+          "items": {
+            "$ref": "#/definitions/CurrentMaintenanceFile"
+          }
+        },
+        "fixture": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/definitions/CurrentMaintenanceDirectory"
+            }
+          ]
+        },
+        "producer": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/definitions/CurrentMaintenanceFile"
+            }
+          ]
+        }
+      }
+    },
+    "CurrentMaintenanceCommand": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "intent",
+        "operation",
+        "directory",
+        "parent",
+        "producerLogPath"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "intent": {
+          "$ref": "#/definitions/CurrentMaintenanceIntent"
+        },
+        "operation": {
+          "enum": [
+            "publish",
+            "retire"
+          ]
+        },
+        "directory": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "parent": {
+          "$ref": "https://semio.tech/framework/process/native-storage/v1#/definitions/ProtectedMaintenanceRequest"
+        },
+        "producerLogPath": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            }
+          ]
+        }
+      }
+    },
+    "CurrentMaintenanceDispatchCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "operation",
+        "fault",
+        "effectCount",
+        "accepted"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "operation": {
+          "enum": [
+            "publish",
+            "retire"
+          ]
+        },
+        "fault": {
+          "enum": [
+            "none",
+            "parent-busy",
+            "container-busy",
+            "descriptor-change",
+            "ledger-foreign",
+            "gate-primary",
+            "gate-close"
+          ]
+        },
+        "effectCount": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "accepted": {
+          "type": "boolean"
+        },
+        "servicePolicy": {
+          "enum": [
+            "exact-payload",
+            "unknown",
+            "prepared-service"
+          ]
+        },
+        "platform": {
+          "enum": [
+            "darwin",
+            "linux",
+            "win32"
+          ]
+        }
+      }
+    },
+    "CurrentMaintenanceFileCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "kind",
+        "hex",
+        "maximum",
+        "accepted"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "file",
+            "oversize",
+            "hardlink",
+            "symlink",
+            "ancestor",
+            "directory",
+            "invalid-utf8",
+            "replacement"
+          ]
+        },
+        "hex": {
+          "type": "string",
+          "pattern": "^(?:[a-f0-9]{2})*$"
+        },
+        "maximum": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65536
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "CurrentMaintenanceDirectoryCloseCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "body",
+        "close",
+        "failureCount"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "body": {
+          "enum": [
+            "none",
+            "undefined",
+            "frozen"
+          ]
+        },
+        "close": {
+          "type": "boolean"
+        },
+        "failureCount": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2
+        }
+      }
+    },
+    "CurrentArtifactCommand": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "intent",
+        "operation",
+        "directory",
+        "parent",
+        "producerLogPath",
+        "purpose"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "intent": {
+          "$ref": "#/definitions/CurrentMaintenanceIntent"
+        },
+        "operation": {
+          "enum": [
+            "retire-artifact",
+            "retire-empty-image"
+          ]
+        },
+        "directory": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "parent": {
+          "$ref": "https://semio.tech/framework/process/native-storage/v1#/definitions/ProtectedMaintenanceRequest"
+        },
+        "producerLogPath": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            }
+          ]
+        },
+        "purpose": {
+          "const": "current-graph-artifact-maintenance"
+        },
+        "capturePurpose": {
+          "const": "current-bounded-complete-payload-stream"
+        }
+      }
+    },
+    "CurrentArtifactObservation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "operation",
+        "directory",
+        "host",
+        "images",
+        "descriptors",
+        "fixture",
+        "producer",
+        "purpose",
+        "payload",
+        "payloadFiles"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "operation": {
+          "enum": [
+            "retire-artifact",
+            "retire-empty-image"
+          ]
+        },
+        "directory": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "host": {
+          "$ref": "#/definitions/CurrentMaintenanceScope"
+        },
+        "images": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 3,
+          "items": {
+            "$ref": "#/definitions/CurrentMaintenanceImageObservation"
+          }
+        },
+        "descriptors": {
+          "type": "array",
+          "maxItems": 64,
+          "items": {
+            "$ref": "#/definitions/CurrentMaintenanceFile"
+          }
+        },
+        "fixture": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/definitions/CurrentMaintenanceDirectory"
+            }
+          ]
+        },
+        "producer": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/definitions/CurrentMaintenanceFile"
+            }
+          ]
+        },
+        "purpose": {
+          "const": "current-graph-artifact-maintenance"
+        },
+        "payload": {
+          "$ref": "https://semio.tech/framework/process/native-storage/v1#/definitions/ProtectedArtifactPayload"
+        },
+        "payloadFiles": {
+          "type": "array",
+          "maxItems": 64,
+          "items": {
+            "$ref": "#/definitions/CurrentMaintenanceFile"
+          }
+        },
+        "capturePurpose": {
+          "const": "current-bounded-complete-payload-stream"
+        }
+      }
+    },
+    "CurrentNativePayloadProtocol": {
+      "const": {
+        "version": 1,
+        "fileName": "nx_files.nxt",
+        "watcherDirectory": "watchers",
+        "watcherPattern": "^[a-f0-9]{24}$",
+        "maximumEntries": 64,
+        "sdkVersion": "23.2.0"
+      }
+    },
+    "CurrentNativePayloadCommand": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "intent",
+        "operation",
+        "directory",
+        "parent",
+        "producerLogPath",
+        "purpose"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "intent": {
+          "$ref": "#/definitions/CurrentMaintenanceIntent"
+        },
+        "operation": {
+          "const": "retire-native-payload"
+        },
+        "directory": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "parent": {
+          "$ref": "https://semio.tech/framework/process/native-storage/v1#/definitions/ProtectedMaintenanceRequest"
+        },
+        "producerLogPath": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            }
+          ]
+        },
+        "purpose": {
+          "const": "current-graph-native-payload-maintenance"
+        },
+        "capturePurpose": {
+          "const": "current-bounded-complete-payload-stream"
+        }
+      }
+    },
+    "CurrentNativePayloadObservation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "operation",
+        "directory",
+        "host",
+        "images",
+        "descriptors",
+        "fixture",
+        "producer",
+        "purpose",
+        "payload"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "operation": {
+          "const": "retire-native-payload"
+        },
+        "directory": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "host": {
+          "$ref": "#/definitions/CurrentMaintenanceScope"
+        },
+        "images": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 3,
+          "items": {
+            "$ref": "#/definitions/CurrentMaintenanceImageObservation"
+          }
+        },
+        "descriptors": {
+          "type": "array",
+          "maxItems": 64,
+          "items": {
+            "$ref": "#/definitions/CurrentMaintenanceFile"
+          }
+        },
+        "fixture": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/definitions/CurrentMaintenanceDirectory"
+            }
+          ]
+        },
+        "producer": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/definitions/CurrentMaintenanceFile"
+            }
+          ]
+        },
+        "purpose": {
+          "const": "current-graph-native-payload-maintenance"
+        },
+        "payload": {
+          "$ref": "https://semio.tech/framework/process/native-storage/v1#/definitions/ProtectedArtifactPayload"
+        },
+        "capturePurpose": {
+          "const": "current-bounded-complete-payload-stream"
+        }
+      }
+    },
+    "CurrentNativePayloadCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode",
+        "accepted"
+      ],
+      "properties": {
+        "mode": {
+          "enum": [
+            "opaque",
+            "watcher",
+            "absent",
+            "unknown",
+            "state",
+            "funded",
+            "wrong-root",
+            "wrong-device",
+            "hardlink",
+            "directory-file",
+            "empty",
+            "extra",
+            "duplicate"
+          ]
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "PoolResidualRoleCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fault",
+        "accepted"
+      ],
+      "properties": {
+        "fault": {
+          "enum": [
+            "empty-prefix",
+            "namespace-lock",
+            "both",
+            "bad-prefix",
+            "prefix-child",
+            "nonempty-lock",
+            "other-lock",
+            "root-lock",
+            "foreign-namespace",
+            "lock-directory",
+            "lock-hardlink",
+            "lock-device",
+            "lock-drift",
+            "lock-hash"
+          ]
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "GraphPublicationPolicy": {
+      "const": {
+        "journalMaximumBytes": 16384,
+        "maximumFileBytes": 536870912,
+        "maximumFiles": 3,
+        "version": 1
+      }
+    },
+    "GraphPublicationIdentity": {
+      "additionalProperties": false,
+      "properties": {
+        "bytes": {
+          "maximum": 536870912,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "identity": {
+          "pattern": "^[0-9]+:[0-9]+$",
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[a-f0-9]{64}$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "identity",
+        "bytes",
+        "sha256"
+      ],
+      "type": "object"
+    },
+    "GraphPublicationJournal": {
+      "additionalProperties": false,
+      "properties": {
+        "files": {
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "name": {
+                "enum": [
+                  "project-graph.json",
+                  "source-maps.json",
+                  "file-map.json"
+                ]
+              },
+              "next": {
+                "additionalProperties": false,
+                "properties": {
+                  "bytes": {
+                    "maximum": 536870912,
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  "identity": {
+                    "anyOf": [
+                      {
+                        "type": "null"
+                      },
+                      {
+                        "pattern": "^[0-9]+:[0-9]+$",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "sha256": {
+                    "pattern": "^[a-f0-9]{64}$",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "identity",
+                  "bytes",
+                  "sha256"
+                ],
+                "type": "object"
+              },
+              "prior": {
+                "anyOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/definitions/GraphPublicationIdentity"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "name",
+              "prior",
+              "next"
+            ],
+            "type": "object"
+          },
+          "maxItems": 3,
+          "minItems": 2,
+          "type": "array"
+        },
+        "generation": {
+          "pattern": "^[a-f0-9]{16}$",
+          "type": "string"
+        },
+        "phase": {
+          "enum": [
+            "preparing",
+            "publishing",
+            "committed"
+          ]
+        },
+        "version": {
+          "const": 1
+        }
+      },
+      "required": [
+        "version",
+        "generation",
+        "phase",
+        "files"
+      ],
+      "type": "object"
+    },
+    "CurrentStreamSnapshotCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "effect",
+        "accepted"
+      ],
+      "properties": {
+        "effect": {
+          "enum": [
+            "complete",
+            "without-file-map",
+            "watcher",
+            "missing-journal",
+            "preparing",
+            "duplicate-row",
+            "wrong-hash",
+            "wrong-inode",
+            "wrong-size",
+            "unknown-file",
+            "unknown-watcher",
+            "foreign-kind",
+            "oversize",
+            "strict-no-purpose",
+            "extra-journal",
+            "unexpected-text"
+          ]
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
     }
   }
 }

@@ -1,14 +1,13 @@
 
 use super::*;
+use semio_framework_test_fixtures::{fixture_bytes, fixture_text};
 use semio_repo_test_host::parse_json;
 
-/// 🧫️ The real committed document `📑️mutate-pdf-1-7` runs on, read where the artifact already
-/// keeps it — a 6.3 MB, 65-page LaTeX bachelor thesis carrying 3,173 indirect objects, a
-/// six-entry outline tree and an `/OpenAction` `/GoTo` destination.
-const FIXTURE: &[u8] = include_bytes!("../../../🖼️assets/🎓️bachelor-thesis/🎓️bachelor-thesis.pdf");
-
 /// 🥒️ The case this module is the reference of — its Examples rows are the only parameter source here.
-const FEATURE: &str = include_str!("../../../🧪️tests/📑️mutate-pdf-1-7/🥒️.feature");
+fn feature() -> &'static str {
+    static CELL: std::sync::OnceLock<String> = std::sync::OnceLock::new();
+    CELL.get_or_init(|| fixture_text!("../../../🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧪️tests/📑️mutate-pdf-1-7/🥒️.feature").to_owned()).as_str()
+}
 
 fn json_object(pairs: Vec<(&str, Json)>) -> Json {
     Json::Object(pairs.into_iter().map(|(key, value)| (key.to_string(), value)).collect())
@@ -21,7 +20,7 @@ fn text(value: &str) -> Json {
 /// 🧾️ The leaf wire payload the feature's first Examples row for `kind` carries — the same target against the same real
 /// document, read from the feature itself, so a failure here and a failure there have the same cause and the same fix.
 fn params_for(kind: &str) -> Json {
-    FEATURE
+    feature()
         .lines()
         .find_map(|line| {
             let cells: Vec<&str> = line.split('|').map(str::trim).collect();
@@ -34,8 +33,11 @@ fn spec(kind: &str) -> Json {
     json_object(vec![("kind", text(kind)), ("params", params_for(kind))])
 }
 
+/// 🧫️ The real committed document `📑️mutate-pdf-1-7` runs on, read where the artifact already
+/// keeps it — a 6.3 MB, 65-page LaTeX bachelor thesis carrying 3,173 indirect objects, a
+/// six-entry outline tree and an `/OpenAction` `/GoTo` destination.
 fn fixture() -> Vec<u8> {
-    FIXTURE.to_vec()
+    fixture_bytes!("../../../🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🖼️assets/🎓️bachelor-thesis/🎓️bachelor-thesis.pdf").to_vec()
 }
 
 /// ⚖️ The two laws `📑️mutate-pdf-1-7`'s adapter asserts in role, proven here against the real
@@ -110,10 +112,10 @@ fn unknown_kind_is_an_error_never_a_silent_no_op() {
 /// `🔣️.json`, and the `Examples` rows of the case that claims it.
 #[test]
 fn kinds_matches_the_catalog_and_every_feature_row() {
-    let manifest = include_str!("../../🔣️.json");
+    let manifest = fixture_text!("../../../🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🔮️oracles/🔣️.json").to_owned();
     for kind in KINDS {
         assert!(manifest.contains(&format!("\"{kind}\"")), "the pdf-1-7-base catalog is missing {kind:?}");
-        assert!(FEATURE.contains(&format!("| {kind} ")) || FEATURE.contains(&format!("| {kind}\n")), "the feature declares no Examples row for {kind:?}");
+        assert!(feature().contains(&format!("| {kind} ")) || feature().contains(&format!("| {kind}\n")), "the feature declares no Examples row for {kind:?}");
     }
     assert_eq!(KINDS.len(), 16, "the pdf-1-7-base vocabulary declares sixteen direct kinds");
 }

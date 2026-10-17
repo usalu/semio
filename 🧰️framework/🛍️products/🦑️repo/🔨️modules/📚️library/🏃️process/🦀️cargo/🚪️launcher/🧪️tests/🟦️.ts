@@ -31,7 +31,6 @@ test("repository Cargo launch arguments agree with commander, Ajv and an indepen
    expect([selected.store,selected.configuration,independent.args],row.name).toEqual([request.store,request.configuration,[...request.cargo]]);expect(selected.parallelism===undefined?availableParallelism():Number(selected.parallelism),row.name).toBe(request.parallelism);
    const kind=oracle.query("SELECT subcommands.key AS kind FROM json_each(json_extract(?, '$.subcommands')) AS subcommands, json_each(subcommands.value) AS names WHERE names.value = ?").get(JSON.stringify(REPOSITORY_CARGO_LAUNCH_POLICY_V1),request.cargo[0]!) as {kind:string};expect(kind.kind,row.name).toBe(request.kind);
   }
-  console.log(`[DEBUG] ${fixture.arguments.length} repository Cargo launch argument cases agree with commander, Ajv and SQLite`);
  }finally{oracle.close();}
 });
 
@@ -39,7 +38,6 @@ test("cache TestScript admits every branch through one original diagnostics call
  const text=readFileSync(new URL("../../../../⚡️caching/📜️script.ts",import.meta.url),"utf8"),source=ts.createSourceFile("script.ts",text,ts.ScriptTarget.Latest,true),owner=source.statements.find(node=>ts.isClassDeclaration(node)&&node.name?.text==="TestScript") as ts.ClassDeclaration|undefined;expect(owner).toBeDefined();
  const run=owner!.members.find(node=>ts.isMethodDeclaration(node)&&node.name.getText(source)==="run") as ts.MethodDeclaration|undefined,calls:string[]=[];const visit=(node:ts.Node):void=>{if(ts.isCallExpression(node))calls.push(node.expression.getText(source));ts.forEachChild(node,visit);};if(run)visit(run);expect(calls.includes("withRepositoryTestArtifactsV1")).toBe(fixture.diagnostics.allCacheTestBranches);expect(calls.includes("this.runTests")).toBe(true);expect(owner!.getText(source)).not.toContain("repoCacheDirectory(");expect(!owner!.getText(source).includes("runCmd(")).toBe(fixture.diagnostics.asyncChildren);const imports=source.statements.filter(ts.isImportDeclaration).map(node=>(node.moduleSpecifier as ts.StringLiteral).text);expect(!imports.includes("../📦️packages/🟦️typescript/🟦️.ts")).toBe(fixture.diagnostics.specificHelpers);
  const database=new Database(":memory:");try{expect((database.query("SELECT ? = 'diagnostics' AND ? = 1 AS admitted").get(fixture.diagnostics.partition,Number(fixture.diagnostics.allCacheTestBranches)) as {admitted:number}).admitted).toBe(1);}finally{database.close();}
- console.log("[DEBUG] Independent TypeScript syntax and SQLite contract require one original diagnostics callback for every cache test branch");
 });
 
 test("isolated Cargo stores are removed on every owner settlement and swept only after their kernel claim is released",async()=>{
@@ -69,7 +67,6 @@ test("isolated Cargo stores are removed on every owner settlement and swept only
     expect(present(root),row.name).toBe(!row.removedAfterOwner);
    }
    expect(spawnSync("python3",["-c","import os,sys;print(len([n for n in os.listdir(sys.argv[1])]))",isolated],{encoding:"utf8"}).stdout.trim()).toBe("0");
-   console.log(`[DEBUG] ${fixture.lifecycle.length} isolated store lifecycles: settled owners removed, killed owner swept, live peer kept until released; Python and SQLite agree`);
   }finally{db.close();await storage.retire();await image.close();await retireNativeImageStorageV1({directory,leaseDirectory,filesystemBytes:33554432,maximumPhysicalBytes:34603008,control});rmSync(parent,{recursive:true,force:true});}
  });
 }));
@@ -77,5 +74,5 @@ test("isolated Cargo stores are removed on every owner settlement and swept only
 
 test("isolated store refuses an invented reservation before any filesystem effect",async()=>{
  const control={signal:new AbortController().signal,remainingMilliseconds:()=>1000,publish:async()=>{},yieldContinuation:async()=>{}},base=join(process.env.SEMIO_TEST_ARTIFACT_DIR??process.cwd(),"invented-isolated");
- await expect(withRepositoryCargoIsolatedStoreV1({storage:{} as never,base,control},async()=>{})).rejects.toThrow();expect(existsSync(base)).toBe(false);expect(readFileSync(new URL("../🔣️policy.json",import.meta.url),"utf8")).toContain("isolatedDirectory");
+ await expect(withRepositoryCargoIsolatedStoreV1({storage:{} as never,base,control},async()=>{})).rejects.toThrow();expect(existsSync(base)).toBe(false);expect(readFileSync(new URL("../🧬️schema/🔣️.json",import.meta.url),"utf8")).toContain("isolatedDirectory");
 });

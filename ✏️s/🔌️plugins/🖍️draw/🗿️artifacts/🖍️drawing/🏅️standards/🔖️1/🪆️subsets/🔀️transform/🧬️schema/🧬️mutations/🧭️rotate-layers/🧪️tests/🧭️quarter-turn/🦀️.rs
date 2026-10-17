@@ -1,34 +1,35 @@
 //! 🧪️ `rotate-layers` fixture — `🧭️quarter-turn`. The committed quintet is computed by an independent Python implementation
 //! (`🧪️w3-t-draw-selection-leaves.py`, ticket `26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING`); these laws hold the Rust leaf to it
 //! byte for byte and pin the rotate handle's equivalence and the leaf's outcome and label laws.
+use semio_framework_test_fixtures::fixture_text;
 use semio_s_artifact_draw_drawing_mutations::{inverse_drawing_mutation, DrawingMutation};
-use crate::rotate_layers::mutation::rotate_layers;
+use semio_s_artifact_draw_drawing_transform::rotate_layers::mutation::rotate_layers;
 use semio_s_artifact_draw_drawing_mutations::text::apply_drawing_mutation;
 use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
 use protocol::{Mutation, SemanticMutation};
 
-const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧭️rotate-layers/🧭️quarter-turn/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧭️rotate-layers/🧭️quarter-turn/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧭️rotate-layers/🧭️quarter-turn/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧭️rotate-layers/🧭️quarter-turn/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧭️rotate-layers/🧭️quarter-turn/🎯️outcome/🔣️.json");
+static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧫️fixtures/🧬️mutations/🧭️rotate-layers/🧭️quarter-turn/📸️snapshot/⬅️before/🔣️.json"));
+static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧫️fixtures/🧬️mutations/🧭️rotate-layers/🧭️quarter-turn/📸️snapshot/➡️after/🔣️.json"));
+static MUTATION: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧫️fixtures/🧬️mutations/🧭️rotate-layers/🧭️quarter-turn/🦠️mutation/🔣️.json"));
+static DIFF: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧫️fixtures/🧬️mutations/🧭️rotate-layers/🧭️quarter-turn/🔺️diff/🔣️.json"));
+static OUTCOME: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧫️fixtures/🧬️mutations/🧭️rotate-layers/🧭️quarter-turn/🎯️outcome/🔣️.json"));
 
 fn before() -> DrawingSnapshot {
-    serde_json::from_str(BEFORE).expect("before snapshot decodes")
+    serde_json::from_str(*BEFORE).expect("before snapshot decodes")
 }
 
 /// ▶️ The quarter turn about `(10, 0)` lands exactly on the committed after-document and diff.
 #[test]
 fn applies_to_committed_after_and_diff() {
-    let mutation: DrawingMutation = serde_json::from_str(MUTATION).unwrap();
+    let mutation: DrawingMutation = serde_json::from_str(*MUTATION).unwrap();
     let outcome = mutation.diff(&before());
     assert!(outcome.messages().is_empty(), "{:?}", outcome.messages());
-    assert_eq!(serde_json::to_value(outcome.diff()).unwrap(), serde_json::from_str::<serde_json::Value>(DIFF).unwrap());
+    assert_eq!(serde_json::to_value(outcome.diff()).unwrap(), serde_json::from_str::<serde_json::Value>(*DIFF).unwrap());
     let mut snapshot = before();
     apply_drawing_mutation(&mut snapshot, &mutation).unwrap();
-    assert_eq!(snapshot, serde_json::from_str::<DrawingSnapshot>(AFTER).unwrap());
-    assert_eq!(serde_json::from_str::<serde_json::Value>(OUTCOME).unwrap()["status"], "applied");
-    assert_eq!(serde_json::to_value(&mutation).unwrap(), serde_json::from_str::<serde_json::Value>(MUTATION).unwrap());
+    assert_eq!(snapshot, serde_json::from_str::<DrawingSnapshot>(*AFTER).unwrap());
+    assert_eq!(serde_json::from_str::<serde_json::Value>(*OUTCOME).unwrap()["status"], "applied");
+    assert_eq!(serde_json::to_value(&mutation).unwrap(), serde_json::from_str::<serde_json::Value>(*MUTATION).unwrap());
     store::os_store::test_support::assert_op_text_binary_equivalence(&mutation);
 }
 
@@ -36,7 +37,7 @@ fn applies_to_committed_after_and_diff() {
 #[test]
 fn inverse_restores_before() {
     let base = before();
-    let mutation: DrawingMutation = serde_json::from_str(MUTATION).unwrap();
+    let mutation: DrawingMutation = serde_json::from_str(*MUTATION).unwrap();
     let mut snapshot = base.clone();
     apply_drawing_mutation(&mut snapshot, &mutation).unwrap();
     for step in inverse_drawing_mutation(&base, &mutation).expect("valid retained mutation inverse fixture") {
@@ -75,7 +76,7 @@ fn outcome_laws() {
 /// 🗣️ The history row label reads the rotation in degrees, in English and German.
 #[test]
 fn label_reads_degrees() {
-    let label = serde_json::from_str::<DrawingMutation>(MUTATION).unwrap().label();
+    let label = serde_json::from_str::<DrawingMutation>(*MUTATION).unwrap().label();
     assert_eq!(label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En), "Rotate 1 layer by 90°");
     assert_eq!(label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::De), "1 Ebene um 90° drehen");
 }
@@ -83,6 +84,6 @@ fn label_reads_degrees() {
 /// ⚖️ The concrete inverse's diffs sum to exactly the negative of the forward diff, restoring the committed before-document.
 #[semio_framework_async_macros::async_test]
 async fn inverse_sums_to_the_negative_diff() {
-    let mutation: DrawingMutation = serde_json::from_str(MUTATION).unwrap();
+    let mutation: DrawingMutation = serde_json::from_str(*MUTATION).unwrap();
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &before()).await;
 }

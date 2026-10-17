@@ -200,8 +200,8 @@ impl protocol::OpText for FormMutation {
 
 //#region 🔖️DemoCases
 /// 🧪️ One representative value per variant — reused by the round-trip law test below.
-#[cfg(test)]
-pub(crate) fn demo_mutation_cases() -> Vec<FormMutation> {
+#[cfg(any(test, feature = "testkit"))]
+pub fn demo_mutation_cases() -> Vec<FormMutation> {
     let step = FormStep { id: "s1".into(), title: "Step One".into(), description: Some("A \"quoted\" description".into()), blocks: Vec::new() };
     let block = FormQuestion {
         id: "b1".into(),
@@ -244,9 +244,7 @@ pub(crate) fn demo_mutation_cases() -> Vec<FormMutation> {
 //#endregion 🔖️DemoCases
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
 
 #[allow(unused_imports)]

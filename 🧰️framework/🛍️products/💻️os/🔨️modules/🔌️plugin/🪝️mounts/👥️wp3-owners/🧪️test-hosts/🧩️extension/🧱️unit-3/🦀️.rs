@@ -15,6 +15,7 @@ use semio_framework_value::ErasedSnapshotRetirement;
 use semio_framework_pack_json::JsonWriteSource;
 use semio_framework_value::retirement::RetireOwned;
 
+#[doc(hidden)]
 #[cfg(test)]
 #[path="../../../../../💡️inference/🚪️gateway/🧪️tests/🦀️.rs"]
-mod tests;
+pub mod tests;

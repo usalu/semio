@@ -6,7 +6,7 @@
 
 use super::super::elements;
 use super::super::horizontal_rules::{holes_fault, loop_fault};
-use super::super::modify::cut::{contains, crosses, cut_loop, CutFlaw};
+use crate::standards::v1::subsets::any::schema::mutations::modify::cut::{contains, crosses, cut_loop, CutFlaw};
 use super::SplitSlab;
 use crate::standards::v1::subsets::any::schema::{diff::{Entry, KeyedDelta, ModelDiff, patches::SlabPatch}, snapshot::{ModelSnapshot, Slab, Vertex}};
 use protocol::{MutationOutcome, OutcomeCode};

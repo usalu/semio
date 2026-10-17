@@ -18,25 +18,23 @@ use semio_framework_os_kernel::os_directory::client::HttpResponse;
 use semio_framework_os_kernel::os_directory::client::LocalHubCredential;
 use semio_framework_os_kernel::os_directory::client::TransportError;
 use semio_framework_os_kernel::os_directory::descriptor_digest_v1;
+use semio_framework_test_fixtures::fixture_text;
 use std::collections::HashMap;
 use std::collections::VecDeque;
 use std::sync::Arc;
 use std::sync::Mutex;
 use std::sync::atomic::AtomicUsize;
 use std::sync::atomic::Ordering;
-use crate::remote::{AuthorizedDocumentView, HUB_AUTHORITY_SETTLE_WAIT_MS, HUB_BINDING_DIAGNOSTIC_MAX_BYTES, HUB_COMPONENT_STREAM_ATTEMPTS, HUB_DESCRIPTOR_INDEX_MAX_DOCUMENTS, HUB_NETWORK_BUDGET_SETTLE_WAIT_MS, HUB_REFRESH_NETWORK_BUDGET_BYTES, HUB_REFRESH_RETRY_BASE_MS, HUB_REFRESH_RETRY_MAX_MS, HubBindingPhase, HubBindingProgress, HubComponentTransferPhase, HubRemoteBinding, HubRemoteBindingState, HubStreamObservation, await_network_budget, binding_error_to_gateway, bounded_diagnostic, descriptor_resource_uri, directory_dial_refusal, hub_refresh_retry_ms, map_catalog_client_error, map_client_error, parse_descriptor_resource_uri, validate_document_count, validate_hub_origin};
+use semio_framework_os_mcp_hub_remote::remote::{AuthorizedDocumentView, HUB_AUTHORITY_SETTLE_WAIT_MS, HUB_BINDING_DIAGNOSTIC_MAX_BYTES, HUB_COMPONENT_STREAM_ATTEMPTS, HUB_DESCRIPTOR_INDEX_MAX_DOCUMENTS, HUB_NETWORK_BUDGET_SETTLE_WAIT_MS, HUB_REFRESH_NETWORK_BUDGET_BYTES, HUB_REFRESH_RETRY_BASE_MS, HUB_REFRESH_RETRY_MAX_MS, HubBindingPhase, HubBindingProgress, HubComponentTransferPhase, HubRemoteBinding, HubRemoteBindingState, HubStreamObservation, await_network_budget, binding_error_to_gateway, bounded_diagnostic, descriptor_resource_uri, directory_dial_refusal, hub_refresh_retry_ms, map_catalog_client_error, map_client_error, parse_descriptor_resource_uri, validate_document_count, validate_hub_origin};
 use semio_framework_os_mcp_foundation::errors::GatewayErrorCode;
 use semio_framework_os_mcp_hub_pair::binding_errors::{HUB_UNAVAILABLE_DETAIL_MAX_CHARS, HubBindingError, HubUnavailableCause};
 use semio_framework_os_mcp_hub_pair::pair::{CanonicalPairBody, CanonicalPairMountError};
 #[cfg(any(test, feature = "testkit"))]
 use semio_framework_os_mcp_capabilities::source_builders::catalog_contract_descriptor;
 #[cfg(not(target_arch = "wasm32"))]
-use crate::remote::{HubComponentAssets, complete_authorized_directory_dial, settled_pair_attempt};
+use semio_framework_os_mcp_hub_remote::remote::{HubComponentAssets, complete_authorized_directory_dial, settled_pair_attempt};
 
 /// 🧪️ Reads a committed fixture from the package directory at run time instead of embedding it in the test binary.
-fn fixture_text(relative: &str) -> &'static str {
-    Box::leak(std::fs::read_to_string(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative)).expect(relative).into_boxed_str())
-}
 
 
 #[derive(Clone)]
@@ -134,7 +132,7 @@ fn context(deadline_ms: Option<u64>) -> OperationContext {
 }
 
 fn fixture() -> serde_json::Value {
-    serde_json::from_str(fixture_text("../../../🏠️workspace/🔗️remote/🧪️tests/🧫️fixtures/🔣️authenticated-hub-descriptor-index.json")).unwrap()
+    serde_json::from_str(fixture_text!("../../../🏠️workspace/🔗️remote/🧪️tests/🧫️fixtures/🔣️authenticated-hub-descriptor-index.json")).unwrap()
 }
 
 fn client_for(case: &serde_json::Value) -> (DirectoryClient<RecordingTransport>, Arc<Mutex<Vec<(HttpMethod, String, bool)>>>) {
@@ -184,7 +182,7 @@ async fn authenticated_hub_catalog_hydrates_exact_selected_descriptor_and_revoca
     let seed_binding = HubRemoteBinding::new("http://hub.invalid", "space-a").unwrap();
     let seed = seed_binding.refresh(&directory_client, &context(Some(20_000)), 1_000, 10_000).await.unwrap();
 
-    let corpus: serde_json::Value = serde_json::from_str(fixture_text("../../../../📇️directory/🧪️tests/🧫️fixtures/🔏️document-execution-target-lease-v1/🔣️.json")).expect("execution-target corpus json");
+    let corpus: serde_json::Value = serde_json::from_str(fixture_text!("../../../../📇️directory/🧪️tests/🧫️fixtures/🔏️document-execution-target-lease-v1/🔣️.json")).expect("execution-target corpus json");
     let mut manifest: DocumentExecutionTargetLeaseFieldsV1 = semio_framework_pack_json::from_json_str(&serde_json::to_string(&corpus["manifest"]).unwrap(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("manifest");
     let (descriptor, descriptor_bytes) = catalog_contract_descriptor();
     let descriptor_sha256 = framework_hash::sha256_hex(&descriptor_bytes);
@@ -446,7 +444,7 @@ fn authenticated_hub_workspace_fixed_caps_and_scoped_uri_laws() {
 /// `network-budget` cause — the hub is fine and the call continues once the budget refills (session 14c).
 #[test]
 fn a_hub_unavailable_refusal_names_its_typed_cause_in_english_and_german() {
-    let corpus: serde_json::Value = serde_json::from_str(fixture_text("../../../🏠️workspace/🔗️remote/🧪️tests/🧫️fixtures/🔣️hub-unavailable-refusal.json")).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(fixture_text!("../../../🏠️workspace/🔗️remote/🧪️tests/🧫️fixtures/🔣️hub-unavailable-refusal.json")).unwrap();
     assert_eq!(corpus["detailMaxChars"], HUB_UNAVAILABLE_DETAIL_MAX_CHARS);
     for case in corpus["cases"].as_array().unwrap() {
         let fault = &case["fault"];
@@ -495,7 +493,7 @@ fn a_directory_dial_refusal_names_its_cause_and_stays_retryable() {
 /// 🧾️ A GIS selection whose authenticated lease names `document_id` in the fixture's space: the manifest, the document view
 /// the snapshot holds for it, and the canonical descriptor bytes both name.
 fn catalog_selection(seed: &AuthorizedDocumentView, document_id: &str) -> (DocumentExecutionTargetLeaseFieldsV1, AuthorizedDocumentView, Vec<u8>) {
-    let corpus: serde_json::Value = serde_json::from_str(fixture_text("../../../../📇️directory/🧪️tests/🧫️fixtures/🔏️document-execution-target-lease-v1/🔣️.json")).expect("execution-target corpus json");
+    let corpus: serde_json::Value = serde_json::from_str(fixture_text!("../../../../📇️directory/🧪️tests/🧫️fixtures/🔏️document-execution-target-lease-v1/🔣️.json")).expect("execution-target corpus json");
     let mut manifest: DocumentExecutionTargetLeaseFieldsV1 = semio_framework_pack_json::from_json_str(&serde_json::to_string(&corpus["manifest"]).unwrap(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("manifest");
     let (descriptor, descriptor_bytes) = catalog_contract_descriptor();
     let descriptor_sha256 = framework_hash::sha256_hex(&descriptor_bytes);
@@ -726,7 +724,7 @@ fn asset_hub(component: Vec<u8>, busy_retry_after_ms: u64) -> AssetHub {
 fn a_component_is_a_static_asset_kept_once_and_streamed_only_when_the_store_lacks_it() {
     use semio_framework_os_kernel::os_directory::client::ExecutionTargetModuleStore;
     use semio_framework_os_kernel::os_directory::DocumentExecutionTargetComponentV1;
-    let corpus: serde_json::Value = serde_json::from_str(fixture_text("../../../🏠️workspace/🔗️remote/🧪️tests/🧫️fixtures/🔣️hub-component-asset.json")).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(fixture_text!("../../../🏠️workspace/🔗️remote/🧪️tests/🧫️fixtures/🔣️hub-component-asset.json")).unwrap();
     assert_eq!(corpus["streamAttempts"].as_u64(), Some(u64::from(HUB_COMPONENT_STREAM_ATTEMPTS)));
     let length = corpus["component"]["byteLength"].as_u64().unwrap() as usize;
     let component: Vec<u8> = (0..length).map(|index| ((index * 31 + 7) % 251) as u8).collect();

@@ -1,0 +1,2 @@
+/** 🔏️ Public entry `@semio-tech/framework-os/modules/directory/schema/document-open`: the explicit surface that importers outside the module use. */
+export { DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES, leaseFieldsFromPlanV1, parseDocumentExecutionTargetLeaseFieldsV1, parseDocumentOpenIntentV1, parseDocumentOpenPlanV1, parseDocumentPlanSocketGrantIntentV1, sameLeaseFieldsV1 } from "../../../../../../🔨️modules/📇️directory/🧬️schema/🔏️document-open/🟦️.ts";

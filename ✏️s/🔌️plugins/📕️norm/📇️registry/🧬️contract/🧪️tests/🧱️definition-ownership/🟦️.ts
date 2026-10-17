@@ -8,7 +8,7 @@ import { rustSourceDirectionEdges, rustSourceTargets } from "../../../../../../.
 
 const contract = resolve(import.meta.dir, "../.."), plugin = resolve(contract, "../..");
 const read = (path: string): string => readFileSync(join(contract, path), "utf8");
-const fixture = JSON.parse(read("./🧪️tests/🧫️fixtures/🧱️definition-ownership/🔣️.json")) as Readonly<{ source: string; mount: string; definition: string; retired: string; forbiddenPrefix: string; expectedEdges: readonly unknown[] }>;
+const fixture = JSON.parse(read("./🧪️tests/🧫️fixtures/🧱️definition-ownership/🔣️.json")) as Readonly<{ source: string; mount: string; definition: string; retired: string; forbiddenPrefix: string; expectedEdges: ReturnType<typeof rustSourceDirectionEdges> }>;
 
 test("the language-neutral definition ownership corpus is closed", () => {
   const references = inspectRustCompileReferences(readFileSync(join(plugin, fixture.source), "utf8"));

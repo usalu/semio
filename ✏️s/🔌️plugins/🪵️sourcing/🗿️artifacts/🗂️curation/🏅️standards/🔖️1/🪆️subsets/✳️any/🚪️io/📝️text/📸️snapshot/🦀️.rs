@@ -31,9 +31,6 @@ pub fn print_dsl(document: &CurationSnapshot) -> String {
 }
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests
 
 impl pack::snapshot::ArtifactDsl for CurationSnapshot {
@@ -64,8 +61,8 @@ pub fn print_curation_dsl(snapshot: &CurationSnapshot) -> String { print_dsl(sna
 #[allow(unused_imports)]
 mod snapshot_codec {
 use super::*;
-use crate::standards::v1::subsets::any::schema::*;
-use crate::{CurationSnapshot, SourcingMutation};
+use crate::standards::v1::subsets::any::schema::domain::{ContributedSourcingModule, SOURCING_CURATION_APP_ID, SOURCING_JSON_MAX_BYTES, SOURCING_JSON_MAX_DEPTH, SOURCING_JSON_MAX_ITEMS, SOURCING_JSON_MAX_STRING_BYTES, SOURCING_MAXIMUM_MODULES, SOURCING_MODULE_TOPIC, TypologyNode, authored_modules, demo_stock};
+use crate::CurationSnapshot;
 use framework_schema::ArtifactSchema;
 use semio_framework::parse_contributions;
 use semio_framework_plugin::world3d_mesh_id_from_url;
@@ -74,9 +71,9 @@ use semio_s_artifact_stdio_semio_kit::schema::snapshot::SemioKitSnapshot;
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
 use crate::GeometryRecipe;
 use crate::ObjectKind;
-use crate::ObjectKindExtra;
+
 use crate::CuratedItem;
-use crate::Filters;
+
 
 /// 🗂️ `topic_contribution.payload` shape for the `"sourcing.module"` topic.
 /// See `TopicContribution` in `🧰️framework/🔨️modules/🛂️manifest/🦀️.rs`.

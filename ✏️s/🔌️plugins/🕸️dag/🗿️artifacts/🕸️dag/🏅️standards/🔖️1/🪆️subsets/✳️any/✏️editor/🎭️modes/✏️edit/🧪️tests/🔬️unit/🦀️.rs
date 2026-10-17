@@ -1,4 +1,5 @@
-use super::*;
+use crate::{editor::dag::modes::edit::windows::compiled, editor::dag::modes::edit::windows::main};
+use crate::editor::dag::modes::edit::*;
 
 #[semio_framework_async_macros::async_test]
 async fn the_default_layout_lists_both_edit_windows() {

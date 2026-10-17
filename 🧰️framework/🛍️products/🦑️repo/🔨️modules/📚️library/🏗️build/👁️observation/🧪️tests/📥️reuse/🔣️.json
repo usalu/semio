@@ -1,0 +1,203 @@
+{
+  "cases": [
+    {
+      "id": "empty",
+      "value": null,
+      "references": []
+    },
+    {
+      "id": "ordinary-env",
+      "value": {
+        "targets": {
+          "build": {
+            "inputs": [
+              {
+                "env": "SEMIO_BUILD_MODE"
+              }
+            ]
+          }
+        }
+      },
+      "references": []
+    },
+    {
+      "id": "nested",
+      "value": {
+        "namedInputs": {
+          "default": [
+            {
+              "env": "SEMIO_SOURCE_CLOSURE_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            }
+          ]
+        },
+        "targets": {
+          "build": {
+            "inputs": [
+              {
+                "env": "SEMIO_CARGO_LOCK_bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+              }
+            ],
+            "configurations": {
+              "prototype": {
+                "inputs": [
+                  {
+                    "env": "SEMIO_SOURCE_CLOSURE_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                  }
+                ]
+              }
+            }
+          }
+        }
+      },
+      "references": [
+        "SEMIO_CARGO_LOCK_bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "SEMIO_SOURCE_CLOSURE_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      ]
+    },
+    {
+      "id": "root-nodes",
+      "value": [
+        [
+          "project.json",
+          {
+            "projects": {
+              "a": {
+                "namedInputs": {
+                  "default": [
+                    {
+                      "env": "SEMIO_SOURCE_CLOSURE_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        ]
+      ],
+      "references": [
+        "SEMIO_SOURCE_CLOSURE_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      ]
+    },
+    {
+      "id": "inert-member",
+      "value": {
+        "__proto__": {
+          "env": "SEMIO_CARGO_LOCK_bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        },
+        "env": {
+          "SEMIO_SOURCE_CLOSURE_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa": "not-an-input"
+        }
+      },
+      "references": [
+        "SEMIO_CARGO_LOCK_bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      ]
+    }
+  ],
+  "hostile": [
+    "proxy",
+    "getter",
+    "symbol",
+    "sparse",
+    "cycle",
+    "class",
+    "function",
+    "infinite",
+    "malformed",
+    "depth",
+    "members",
+    "text",
+    "values"
+  ],
+  "inventories": [
+    {
+      "kind": "source",
+      "value": {
+        "version": 1,
+        "files": [
+          "leaf.rs"
+        ]
+      },
+      "namespace": "build-input-closures",
+      "prefix": "SEMIO_SOURCE_CLOSURE_"
+    },
+    {
+      "kind": "lock",
+      "value": {
+        "version": 1,
+        "manifest": "Cargo.toml"
+      },
+      "namespace": "build-lock-closures",
+      "prefix": "SEMIO_CARGO_LOCK_"
+    }
+  ],
+  "warmCounts": [
+    1,
+    1,
+    2,
+    2
+  ],
+  "failureKinds": [
+    "error",
+    "undefined",
+    "cancel",
+    "malformed",
+    "unsafe"
+  ],
+  "cohorts": [
+    {
+      "usedBytes": 0,
+      "records": 1,
+      "accepted": true
+    },
+    {
+      "usedBytes": 0,
+      "records": 2,
+      "accepted": true
+    },
+    {
+      "usedBytes": 0,
+      "records": 3,
+      "accepted": false
+    },
+    {
+      "usedBytes": 0,
+      "records": 0,
+      "accepted": false
+    },
+    {
+      "usedBytes": 4026531840,
+      "records": 2,
+      "accepted": true
+    },
+    {
+      "usedBytes": 4026531841,
+      "records": 2,
+      "accepted": false
+    },
+    {
+      "usedBytes": 4160749568,
+      "records": 1,
+      "accepted": true
+    },
+    {
+      "usedBytes": 4160749569,
+      "records": 1,
+      "accepted": false
+    },
+    {
+      "usedBytes": 4294967296,
+      "records": 1,
+      "accepted": false
+    },
+    {
+      "usedBytes": -1,
+      "records": 1,
+      "accepted": false
+    }
+  ],
+  "sourceRace": {
+    "before": "first",
+    "after": "changed",
+    "calls": 2
+  }
+}

@@ -26,6 +26,10 @@ type dagDagPresenceGuardSizeBounds = { readonly minItems?: number; readonly maxI
 
 export const dagDagPresenceGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : dagDagPresenceGuardReject(at, "value is not an object");
+export const dagDagPresenceGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) dagDagPresenceGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const dagDagPresenceGuardArray = (value: unknown, at: string, bounds: dagDagPresenceGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return dagDagPresenceGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) dagDagPresenceGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -56,7 +60,7 @@ export const dagDagPresenceGuardConstant = <T extends string | number | boolean>
 //#endregion 🚪️Parsers
 
 export function parseDagPresence(value: unknown, at = "$"): DagPresence {
-  const row = dagDagPresenceGuardObject(value, at);
+  const row = dagDagPresenceGuardClosed(dagDagPresenceGuardObject(value, at), at, ["cameraX", "cameraY", "cameraZoom"]);
   return {
     cameraX: dagDagPresenceGuardNumber(row["cameraX"], `${at}.cameraX`),
     cameraY: dagDagPresenceGuardNumber(row["cameraY"], `${at}.cameraY`),

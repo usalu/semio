@@ -21,7 +21,7 @@ fn bounded_history_set_retains_original_keys_and_each_physical_allocation(){
             if grant.maximum_release_bytes>law["maximumReleaseBytes"].as_u64().unwrap() as usize{for _ in 0..2{let (step,heap)=observe(||retirement.step(RetainedCloneGrant {maximum_release_bytes:law["maximumReleaseBytes"].as_u64().unwrap() as usize,..grant}).unwrap());assert_eq!(step.progress(),Default::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(retirement.next_release_byte_demand().unwrap(),grant.maximum_release_bytes);refused+=1;}}
             let (step,heap)=observe(||retirement.step(grant).unwrap());assert!(step.progress().fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));born+=heap.requested_bytes;freed+=heap.released_bytes;turns+=1;assert!(turns<100000);
         }
-        assert!(refused>0);assert_eq!(source.requested_bytes-source.released_bytes+inserted.requested_bytes-inserted.released_bytes+born,freed);let (_,drop_heap)=observe(||drop(retirement));assert_eq!((drop_heap.requested_bytes,drop_heap.released_bytes),(0,0));eprintln!("[DEBUG] Original generic membership originalKeys=true takeBirth=0 takeRelease=0 copy={copy} source={} admittedBirth={born} physicalRelease={freed} eightByteRefusals={refused} turns={turns} terminalDrop=0",source.requested_bytes-source.released_bytes+inserted.requested_bytes-inserted.released_bytes);
+        assert!(refused>0);assert_eq!(source.requested_bytes-source.released_bytes+inserted.requested_bytes-inserted.released_bytes+born,freed);let (_,drop_heap)=observe(||drop(retirement));assert_eq!((drop_heap.requested_bytes,drop_heap.released_bytes),(0,0));
     }
 }
 fn check<K:Ord,V>(tree:&HistoryFoldIndex<K,V>,root:Option<usize>)->(usize,usize){let Some(root)=root else{return(0,0)};let(left,left_count)=check(tree,tree.nodes[root].left);let(right,right_count)=check(tree,tree.nodes[root].right);assert!(left.abs_diff(right)<=1);assert_eq!(tree.nodes[root].height,1+left.max(right));assert_eq!(tree.nodes[root].count,1+left_count+right_count);(1+left.max(right),1+left_count+right_count)}
@@ -43,7 +43,6 @@ fn bounded_history_owned_index_matches_independent_json_and_preserves_arena_cust
     let node_slots=owned.nodes.len();let backing=owned.nodes.capacity();let original_keys=owned.displaced_keys.len();assert!(original_keys>=4);
     for(key,value)in independent{assert_eq!(owned.pop_first(),Some((key,value.as_str().unwrap().to_owned())));assert_eq!((owned.nodes.len(),owned.nodes.capacity()),(node_slots,backing));}
     assert!(owned.is_empty());assert!(owned.nodes.iter().all(|node|node.entry.is_none()));assert_eq!(owned.displaced_keys.len(),original_keys);
-    println!("[DEBUG] owned fold AVL index matches independent JSON after every insert/remove; all rotations balance; live equality ignores arena history; removed node slots and key allocations remain owned");
 }
 
 #[test]
@@ -76,7 +75,6 @@ fn bounded_history_owned_index_tail_handoff_preserves_original_key_and_arena_aft
     assert!(owner.nodes.iter().all(|node| node.entry.is_none()));
     assert!(!owner.terminal_is_empty());
     assert_eq!(law["expected"]["tailHandoff"], "greatest-first-original-row-with-retained-arena");
-    eprintln!("[DEBUG] original AVL greatest-first row handoff equals standard BTreeMap; every balance valid, same key pointer, zero heap, retained native arena");
 }
 
 /// 🌱️ Lazy Copy-key entry preserves the original payload, arena and every physical close receipt.
@@ -103,7 +101,7 @@ fn original_fold_index_lazy_entry_preserves_source_and_full_grant_receipts(){
             for denied in [capacity,depth,release,zero_copy].into_iter().flatten(){let (result,heap)=observe(||retirement.step(denied));if denied.maximum_depth<grant.maximum_depth{assert!(matches!(result,Err(error) if error.kind==semio_framework_value::ValueRefusalKind::DepthLimit));}else{assert_eq!(result.unwrap().progress(),RetainedCloneProgress::default());}assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));}
             let (step,heap)=observe(||retirement.step(grant).unwrap());assert!(step.progress().fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));added+=heap.requested_bytes;released+=heap.released_bytes;
         }
-        assert_eq!(released,source.requested_bytes+added);let (_,drop_heap)=observe(||drop(retirement));assert_eq!((drop_heap.requested_bytes,drop_heap.released_bytes),(0,0));eprintln!("[DEBUG] original fold index lazy Copy entry samePayload=true sameArena=true borrowBirth=0 occupiedCalls={occupied_calls} vacantCalls={vacant_calls} copy={copy} source={} admitted={added} physical={released} turns={turns} terminalDropFree=0",source.requested_bytes);
+        assert_eq!(released,source.requested_bytes+added);let (_,drop_heap)=observe(||drop(retirement));assert_eq!((drop_heap.requested_bytes,drop_heap.released_bytes),(0,0));
     }
 }
 
@@ -135,7 +133,6 @@ fn original_fold_index_admitted_insert_keeps_each_physical_page(){
   let (mut close,handoff)=observe(||ControlledRetirement::new((owner,displaced)).unwrap_or_else(|(error,_)|panic!("original inserted owner refused: {error}")));assert_eq!((handoff.requested_bytes,handoff.released_bytes),(0,0));let mut turns=0;
   while !close.terminal_is_empty(){turns+=1;assert!(turns<law["maximumTurns"].as_u64().unwrap());let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy.as_u64().unwrap()as usize,maximum_capacity_bytes:close.next_capacity_byte_demand(copy.as_u64().unwrap()as usize).unwrap(),maximum_release_bytes:close.next_release_byte_demand().unwrap(),maximum_depth:close.next_depth_demand().unwrap()};let (step,heap)=observe(||close.step(grant).unwrap());assert_eq!((step.progress().retained_capacity_bytes,step.progress().released_bytes),(heap.requested_bytes,heap.released_bytes));admitted+=heap.requested_bytes;releases+=heap.released_bytes;}
   let (_,terminal)=observe(||drop(close));assert_eq!((terminal.requested_bytes,terminal.released_bytes),(0,law["expected"]["terminalDropBytes"].as_u64().unwrap()as usize));assert_eq!(original+admitted,releases);
-  eprintln!("[DEBUG] original paged Index insertion copy={} rows=140 reserveTurns={reservation_turns} original={original} admitted={admitted} physical={releases} closeTurns={turns} sameOriginalKey=true placementBirth0/free0 terminalDrop0",copy);
  }
 }
 
@@ -160,7 +157,7 @@ fn original_fold_index_reuses_each_detached_slot_without_heap_growth(){
   for lazy in [false,true]{let key=*owner.first_key_value().unwrap().0;let slot=owner.locate(&key).unwrap();let pointer=owner.get(&key).unwrap().as_ptr();let row=owner.remove_entry(&key).unwrap();let (_,heap)=observe(||{let resumed=if lazy{owner.entry(row.0).or_insert_with(||row.1)}else{owner.get_or_insert(row.0,row.1)};assert_eq!(resumed.as_ptr(),pointer);});assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(owner.locate(&key),Some(slot));assert_eq!(owner.slot_count(),slots);check(&owner,owner.root);}
   assert_eq!(serde_json::to_value(&owner).unwrap(),reuse["expected"]["map"]);let (mut close,handoff)=observe(||ControlledRetirement::new(owner).unwrap_or_else(|_|panic!("original reused index authority")));assert_eq!((handoff.requested_bytes,handoff.released_bytes),(0,0));let(mut born,mut freed,mut turns)=(0,0,0);
   while !close.terminal_is_empty(){turns+=1;assert!(turns<law["maximumTurns"].as_u64().unwrap());let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy.as_u64().unwrap()as usize,maximum_capacity_bytes:close.next_capacity_byte_demand(copy.as_u64().unwrap()as usize).unwrap(),maximum_release_bytes:close.next_release_byte_demand().unwrap(),maximum_depth:close.next_depth_demand().unwrap()};let (step,heap)=observe(||close.step(grant).unwrap());assert!(step.progress().fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));born+=heap.requested_bytes;freed+=heap.released_bytes;}
-  assert_eq!(source.requested_bytes-source.released_bytes+born,freed);let (_,terminal)=observe(||drop(close));assert_eq!((terminal.requested_bytes,terminal.released_bytes),(0,0));eprintln!("[DEBUG] original Index reused slots copy={copy} rounds=36 slotGrowth0 sameSlot=true sameValue=true sameBacking=true original={} admitted={born} physical={freed} turns={turns} terminalDrop0",source.requested_bytes-source.released_bytes);
+  assert_eq!(source.requested_bytes-source.released_bytes+born,freed);let (_,terminal)=observe(||drop(close));assert_eq!((terminal.requested_bytes,terminal.released_bytes),(0,0));
  }
 }
 
@@ -179,6 +176,6 @@ fn original_fold_membership_admitted_insert_keeps_each_original_key(){
   }
   assert_eq!(serde_json::to_value(&set).unwrap(),law["setExpectedKeys"]);let(mut close,handoff)=observe(||ControlledRetirement::new(set).unwrap_or_else(|_|panic!("original membership close")));assert_eq!((handoff.requested_bytes,handoff.released_bytes),(0,0));let mut turns=0;
   while !close.terminal_is_empty(){turns+=1;assert!(turns<law["maximumTurns"].as_u64().unwrap());let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy.as_u64().unwrap()as usize,maximum_capacity_bytes:close.next_capacity_byte_demand(copy.as_u64().unwrap()as usize).unwrap(),maximum_release_bytes:close.next_release_byte_demand().unwrap(),maximum_depth:close.next_depth_demand().unwrap()};let(step,heap)=observe(||close.step(grant).unwrap());assert!(step.progress().fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));admitted+=heap.requested_bytes;freed+=heap.released_bytes;}
-  assert_eq!(original+admitted,freed);let(_,terminal)=observe(||drop(close));assert_eq!((terminal.requested_bytes,terminal.released_bytes),(0,0));eprintln!("[DEBUG] original admitted membership copy={copy} keys=140 original={original} admitted={admitted} physical={freed} turns={turns} originalPointers=true incomingHandback=true placement0/0 terminalDrop0");
+  assert_eq!(original+admitted,freed);let(_,terminal)=observe(||drop(close));assert_eq!((terminal.requested_bytes,terminal.released_bytes),(0,0));
  }
 }

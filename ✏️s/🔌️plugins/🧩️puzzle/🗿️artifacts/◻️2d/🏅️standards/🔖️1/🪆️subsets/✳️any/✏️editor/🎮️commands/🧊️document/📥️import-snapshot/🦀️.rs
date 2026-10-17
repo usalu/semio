@@ -5,7 +5,7 @@
 //! (`semio_framework::kernel::ImportStaging`, admitted in the SDK's `dispatch_action`), so the action reads
 //! one whole `payload`, which may contain picked JSON text or an explicit inline snapshot object.
 
-use {crate::editor::puzzle2d::snapshot::puzzle2d_load_document_effect, crate::editor::puzzle2d::Puzzle2dActionCtx, crate::editor::puzzle2d::snapshot::PUZZLE2D_BOARD_SNAPSHOT_SCHEMA};
+use {crate::editor::puzzle2d::snapshot::puzzle2d_load_document_effect, crate::editor::puzzle2d::interaction::Puzzle2dActionCtx, crate::editor::puzzle2d::snapshot::PUZZLE2D_BOARD_SNAPSHOT_SCHEMA};
 use crate::retained_command::PUZZLE_IMPORT_TOTAL_BYTES;
 use semio_framework::kernel::{UiDirtyScope, IMPORT_ARGUMENT_PAYLOAD};
 use semio_framework_pack_json::Value;

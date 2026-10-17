@@ -29,7 +29,6 @@ fn portable_coordinates_match_original_production_descriptor_oracle() {
         let mut observe = |_| Ok(());
         let output = inventory_for_command(PRODUCED_BY, CONTRIBUTIONS, &arguments, &mut observe).unwrap();
         assert_eq!(serde_json::from_slice::<Value>(&output).unwrap(), expected);
-        println!("[DEBUG] child={} surface={} mutations={} bytes={}", coordinate.artifact,coordinate.surface.unwrap_or("document"),expected["mutations"].as_array().unwrap().len(),output.len());
     }
 }
 
@@ -43,7 +42,6 @@ fn child_refuses_sibling_coordinate_and_retains_progress_cancellation() {
     for sibling in siblings {
         args[1] = sibling.as_str().unwrap().into();
         assert_eq!(inventory_for_command(PRODUCED_BY, CONTRIBUTIONS, &args, &mut observe).unwrap_err(), MutationInventoryError::Coordinate);
-        println!("[DEBUG] child={} refusedSibling={}", CONTRIBUTIONS[0].coordinate.artifact, args[1]);
     }
     args[1] = CONTRIBUTIONS[0].coordinate.artifact.into();
     let mut callbacks = 0;

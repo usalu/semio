@@ -10,7 +10,7 @@ import { testSchemaRecordOracle } from "@semio-tech/framework/schema/record/test
 import { join } from "node:path";
 import { assertDocumentContractOracle } from "@semio-tech/framework/schema/oracles/document";
 import { ioSchema as ioSchema } from "@semio-tech/framework/io/schema";
-import childSchema from "../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔣️.json" with { type: "json" };
+import { storeChildSchema as childSchema } from "@semio-tech/framework-os/modules/store/child/schema";
 import { valueSchema as valueSchema } from "@semio-tech/framework/value/schema";
 import featureSchema from "../../📍️feature/🔣️.json" with { type: "json" };
 import artifactSchema from "../../🔣️.json" with { type: "json" };
@@ -73,5 +73,4 @@ test("GIS sparse feature patches match all nine neutral payload/property mutatio
   }
  }
  assert.equal(count,9);
- console.log(`[DEBUG] GIS sparse feature patches executed ${count} independent JSON Patch mutation witnesses`);
 });

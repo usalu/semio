@@ -1,8 +1,7 @@
 //! 🔗️ `proximity-connect` command, and the proximity search the node drop and `translateSelection` share.
 
-use crate::editor::puzzle2d::modes::edit::windows::overview::utilities::select::puzzle2d_minted_edge_id;
 use crate::editor::puzzle2d::recorder::Puzzle2dRecorder;
-use {crate::editor::puzzle2d::snapshot::board_snapshot_nodes, crate::editor::puzzle2d::snapshot::puzzle2d_entity_hidden, crate::editor::puzzle2d::snapshot::puzzle2d_handle_world_position, crate::editor::puzzle2d::snapshot::puzzle2d_kinds_compatible, crate::editor::puzzle2d::snapshot::puzzle2d_node_reach, crate::editor::puzzle2d::snapshot::puzzle2d_occupied_handles, crate::editor::puzzle2d::Puzzle2dActionCtx, crate::editor::puzzle2d::snapshot::PUZZLE2D_PROXIMITY_CONNECT_MAX, crate::editor::puzzle2d::snapshot::PUZZLE2D_PROXIMITY_GESTURE_MAX};
+use {crate::editor::puzzle2d::snapshot::board_snapshot_nodes, crate::editor::puzzle2d::snapshot::puzzle2d_entity_hidden, crate::editor::puzzle2d::snapshot::puzzle2d_handle_world_position, crate::editor::puzzle2d::snapshot::puzzle2d_kinds_compatible, crate::editor::puzzle2d::snapshot::puzzle2d_node_reach, crate::editor::puzzle2d::snapshot::puzzle2d_occupied_handles, crate::editor::puzzle2d::interaction::Puzzle2dActionCtx, crate::editor::puzzle2d::snapshot::PUZZLE2D_PROXIMITY_CONNECT_MAX, crate::editor::puzzle2d::snapshot::PUZZLE2D_PROXIMITY_GESTURE_MAX};
 use {crate::standards::v1::subsets::any::schema::mutations::connect_handles_in_proximity, crate::standards::v1::subsets::any::schema::puzzle2d_handle_distance};
 use semio_framework_pack_json::Value;
 use std::collections::HashSet;
@@ -142,7 +141,5 @@ pub fn proximity_connect(ctx: &mut Puzzle2dActionCtx<'_>, args: Option<&Value>) 
 }
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

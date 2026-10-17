@@ -1,6 +1,6 @@
 /** 🛡️ Literal namespace entities and relationships establish exact DOCX profiles. */
 import type{DocxSnapshot,XmlDocument,XmlNode,XmlAttr}from"../🟦️.ts";
-import{materializeRetainedXmlDocument}from"../../../../../../../../📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🟦️.ts";
+import{materializeRetainedXmlDocument}from"@semio-tech/stdio-xml/standards/1.0/subsets/base/schema/snapshot";
 import {NativeDecodeControl,type NativeDecodeProgress} from "@semio-tech/framework/value/decode";
 import {textUtf8ByteLength} from "@semio-tech/framework/value/text";
 export interface DocxProfileOptions{readonly maximumBytes?:number;readonly signal?:AbortSignal;readonly onProgress?:(progress:NativeDecodeProgress)=>void}

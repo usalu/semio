@@ -41,7 +41,7 @@ function applyRows<T, Q>(base: readonly T[], rows: Grid2dRows<T, Q>, key: (row: 
   }
   for (const move of rows.moved) slots[move.to] = base[move.from];
   const survivors = base.filter((_, index) => !taken.has(index));
-  const items = slots.map((slot) => slot ?? survivors.shift()!);
+  const items: T[] = slots.map((slot) => slot ?? survivors.shift()!);
   if (new Set(items.map(key)).size !== items.length) throw new RangeError("two rows of the after list carry the same key");
   for (const entry of rows.modified) {
     const at = items.findIndex((item) => key(item) === entry.id);

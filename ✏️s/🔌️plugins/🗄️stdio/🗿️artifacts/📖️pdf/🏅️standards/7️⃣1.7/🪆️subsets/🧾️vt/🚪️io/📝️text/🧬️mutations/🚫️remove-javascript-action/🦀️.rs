@@ -1,6 +1,6 @@
 //! 🚫️ Direct text codec for `remove-javascript-action`.
 
-use crate::standards::v1_7::subsets::vt::schema::mutations::RemoveJavascriptAction;
+use crate::standards::v1_7::subsets::vt::schema::mutations::remove_javascript_action::RemoveJavascriptAction;
 
 //#region 🔖️Identity
 pub const OPCODE: &str = "remove-javascript-action";
@@ -21,7 +21,5 @@ pub fn parse(text: &str) -> Result<RemoveJavascriptAction, String> {
 //#endregion 🔖️Codec
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

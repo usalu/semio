@@ -16,7 +16,6 @@ test("direct original owned child dispatch uses the mounted publication authorit
   expect(source.includes("self.mount_original_emit_publication(verb, emit, meta, None).await")).toBe(true);
   const owner = await Bun.file(new URL("../../../🧩️composition/📬️publication/🤝️group/🪟️mounted/📦️owner/🦀️.rs", import.meta.url)).text();
   expect(owner.includes("fn mount_original_emit_publication")).toBe(true);
-  console.log("[DEBUG] RFC6902/Node UTF8 original direct owned child two cases, unchanged one-item262144/100000 limits");
 });
 
 test("original completed output is retained before fallible mounted capture", async () => {
@@ -34,5 +33,4 @@ test("original completed output is retained before fallible mounted capture", as
   expect(body.indexOf("self.qualified_tool_proof(verb)")).toBeGreaterThan(installed);
   expect(body.indexOf("self.window_config_store.capture")).toBeGreaterThan(installed);
   expect(body.includes("mounted.terminal_fault")).toBe(true);
-  console.log("[DEBUG] RFC6902/Node original completed-output success/refusal traces retain both authored operations and exactidentity beforefalliblecapture");
 });

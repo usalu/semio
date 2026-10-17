@@ -17,7 +17,11 @@ import { useCallback, useMemo, useState, type ReactElement } from "react";
 import { Canvas2dHost, TableHost, World3dHost } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx";
 import type { ActionDescriptor } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx";
 
-import { REMODEL_DEFAULT_CONFIG, REMODEL_POPULATED_SCENE, remodelLabelsFor, REMODEL_MODES, reduceRemodelStoryAction, remodelWindowNode } from "../🧭️coordination/🟦️.ts";
+import { reduceRemodelStoryAction } from "../🧭️coordination/🟦️.ts";
+import { REMODEL_DEFAULT_CONFIG } from "../🧭️coordination/📐️scene-model/🟦️.ts";
+import { REMODEL_POPULATED_SCENE } from "../🧭️coordination/🗂️documents/🟦️.ts";
+import { remodelLabelsFor } from "../🧭️coordination/🗣️labels/🟦️.ts";
+import { REMODEL_MODES, remodelWindowNode } from "../🧭️coordination/🪟️window-scenes/🟦️.ts";
 
 type RemodelModeId = (typeof REMODEL_MODES)[number]["id"];
 

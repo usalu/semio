@@ -1,6 +1,6 @@
 //! ❌️ `delete-node` — removes an id-keyed graph node, cascading to every edge incident on it.
 
-use crate::{EquationMutation, EquationSnapshot};
+use crate::EquationSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Payload
@@ -12,13 +12,16 @@ pub struct DeleteNode {
     pub id: String,
 }
 
-impl protocol::MutationKind<EquationSnapshot, EquationMutation> for DeleteNode {
+impl<Op> protocol::MutationKind<EquationSnapshot, Op> for DeleteNode
+where
+    Op: protocol::Mutation<EquationSnapshot, Diff = crate::EquationDiff> + From<DeleteNode> + From<crate::standards::v1::subsets::graph::schema::mutations::connect_nodes::ConnectNodes> + From<crate::standards::v1::subsets::graph::schema::mutations::create_node::CreateNode>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "node", kind: "delete-node", record: "DeletedNode" };
 
-    fn diff(&self, base: &EquationSnapshot) -> protocol::MutationOutcome<<EquationMutation as protocol::Mutation<EquationSnapshot>>::Diff> {
+    fn diff(&self, base: &EquationSnapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<EquationSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &EquationSnapshot) -> Result<Vec<EquationMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EquationSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

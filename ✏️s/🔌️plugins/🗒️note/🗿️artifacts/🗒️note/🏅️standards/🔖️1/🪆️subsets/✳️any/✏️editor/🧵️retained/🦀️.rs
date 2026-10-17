@@ -1,7 +1,10 @@
 //! 🧵️ Note-owned retained command microstate and exact publication contracts.
 
 use crate::editor::note::commands::patch_blocks;
-use crate::editor::note::{NoteCommand, NoteDispatchCtx, NotePlayApp, NOTE_INTERACTION_BLOCKS};
+use crate::editor::note::command_enum::NoteCommand;
+use crate::editor::note::dispatch_ctx::NoteDispatchCtx;
+use crate::editor::note::support::NOTE_INTERACTION_BLOCKS;
+use crate::editor::note::NotePlayApp;
 use crate::schema::NoteIdOwner;
 use crate::{NoteSnapshot, NOTE_DOCUMENT_SCHEMA};
 use semio_framework::{ToolExecutionContract, ToolFactoryKey, ToolJobFactoryError};
@@ -426,9 +429,9 @@ impl semio_framework::ToolJobFactory for NoteCommandJobFactory {
         &mut self,
         _operation: semio_framework_job::Operation,
         payload: Self::Payload,
-        input: semio_framework::action_bus::RetainedToolWireInput,
-        checkpoint: Option<semio_framework::action_bus::RetainedToolWireInput>,
-    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework::action_bus::RetainedToolWireInput, Option<semio_framework::action_bus::RetainedToolWireInput>)> {
+        input: semio_framework_action_bus::RetainedToolWireInput,
+        checkpoint: Option<semio_framework_action_bus::RetainedToolWireInput>,
+    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework_action_bus::RetainedToolWireInput, Option<semio_framework_action_bus::RetainedToolWireInput>)> {
         if input.declared_bytes() > NOTE_RETAINED_RAW_BYTES || checkpoint.as_ref().is_some_and(|value| value.declared_bytes() > ARTIFACT_COMMAND_CHECKPOINT_MAXIMUM_BYTES) {
             return Err((ToolJobFactoryError::new("Note retained command rejects oversized wire or checkpoint owner"), input, checkpoint));
         }

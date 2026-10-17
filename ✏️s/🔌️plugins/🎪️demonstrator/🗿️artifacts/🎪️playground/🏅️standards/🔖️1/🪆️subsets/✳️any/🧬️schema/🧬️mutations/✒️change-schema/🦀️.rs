@@ -52,7 +52,5 @@ pub const KINDS: &[&str] = &["change-schema"];
 //#endregion 🌉️ExternalCodecBridge
 
 //#region 🧪️Behavior
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Behavior

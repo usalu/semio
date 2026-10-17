@@ -1,6 +1,13 @@
 //! 🎯️ `set-channel-target` — authored as its own mutation leaf; its diff and inverse live in `🔺️diff` and `↩️inverse`.
 
-use super::*;
+#[allow(unused_imports)]
+use crate::schema::snapshot::AnimTarget;
+#[allow(unused_imports)]
+use protocol::Mutation;
+#[allow(unused_imports)]
+use crate::schema::diff::SemioAnimationDiff;
+#[allow(unused_imports)]
+use crate::schema::snapshot::SemioAnimationSnapshot;
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
@@ -13,13 +20,16 @@ pub struct SetChannelTarget {
     pub target: AnimTarget,
 }
 
-impl protocol::MutationKind<SemioAnimationSnapshot, SemioAnimationMutation> for SetChannelTarget {
+impl<Op> protocol::MutationKind<SemioAnimationSnapshot, Op> for SetChannelTarget
+where
+    Op: protocol::Mutation<SemioAnimationSnapshot, Diff = crate::schema::diff::SemioAnimationDiff> + From<SetChannelTarget>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "channel-target", kind: "set-channel-target", record: "SetChannelTarget" };
 
-    fn diff(&self, base: &SemioAnimationSnapshot) -> protocol::MutationOutcome<<SemioAnimationMutation as Mutation<SemioAnimationSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioAnimationSnapshot) -> protocol::MutationOutcome<<Op as Mutation<SemioAnimationSnapshot>>::Diff> {
         diff::diff(self, base)
     }
-    fn inverse(&self, base: &SemioAnimationSnapshot) -> Result<Vec<SemioAnimationMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &SemioAnimationSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         inverse::inverse(self, base)?
     

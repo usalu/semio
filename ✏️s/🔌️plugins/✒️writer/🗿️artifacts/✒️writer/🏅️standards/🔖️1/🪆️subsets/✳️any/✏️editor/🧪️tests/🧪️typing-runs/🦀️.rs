@@ -4,7 +4,7 @@
 //! Idle and a caret jump split runs, a frozen document refuses typing with zero trace, a peer sees the run only once it commits,
 //! a run edited in history replays deterministically, and typing never spends the 64-slot edit ledger.
 use crate::editor::writer::commands::set_text;
-use crate::editor::writer::unit_tests::context::{main_window_view, WRITER_TYPING_BUFFER};
+use crate::editor_unit_tests::context::{main_window_view, WRITER_TYPING_BUFFER};
 use crate::editor::writer::{create_writer_app, WriterCommand, WriterPlayApp};
 use crate::writer_text;
 use semio_framework::kernel::{HistoryEntry, HistoryTimeTravelStage};

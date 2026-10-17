@@ -17,6 +17,5 @@ test("Ordered mutable surface lookup matches independent SQLite ordinal semantic
   expect(database.query("SELECT id, value FROM surfaces ORDER BY ordinal").values()).toEqual(fixture.expected);expect(ordinal.get(fixture.absentIndex)).toBeNull();
   const source=readFileSync(new URL("../../🎯️targets/🧊️wgpu/🦀️.rs",import.meta.url),"utf8"),lookup=source.slice(source.indexOf("pub fn get_mut_at("),source.indexOf("pub fn len(",source.indexOf("pub fn get_mut_at(")));
   expect(lookup).toContain("self.order.get(index).copied().flatten()");expect(lookup).toContain("self.slots.get_mut(slot)");expect(lookup).not.toMatch(/clone\(|to_owned\(|to_string\(|Box::|Vec::/u);
-  console.log("[DEBUG] Ordered surface lookup SQLite ordinal reuse and absent-index oracle=true sourceUsesOriginalSlot=true nativeHeapLaw=awaiting-native-gate");
  }finally{database.close();}
 });

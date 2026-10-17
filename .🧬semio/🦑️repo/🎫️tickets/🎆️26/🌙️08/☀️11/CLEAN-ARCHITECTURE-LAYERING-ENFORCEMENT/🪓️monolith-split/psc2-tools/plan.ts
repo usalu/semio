@@ -7,18 +7,20 @@ import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { ROOT } from "../sdkb-tools/lib.ts";
 import { loadPolicy, groupsOf, segName, isAsset, nfc, type Edge, type Group, type PolicyPkg } from "./model.ts";
-import { edgeSkip } from "./skip.ts";
+import { edgeSkip, skipReason, crossScope } from "./skip.ts";
 
 const args = process.argv.slice(2);
 const [policyPath, scanPath, planPath] = args;
 const multi = (n: string) => args.flatMap((a, i) => (a === n ? [args[i + 1]] : []));
 const owners = new Set(multi("--owner").map(nfc));
 const excludeTarget = multi("--exclude-target").map(nfc);
+const excludeOwnerTarget = multi("--exclude-owner-target").map(x => { const [o, ...rest] = x.split("="); return { owner: nfc(o), prefix: nfc(rest.join("=")) }; });
 const newPkgs = new Map(multi("--ts-package").map(s => { const [o, rest] = s.split("="); const [dir, name] = rest.split(":"); return [nfc(o), { dir: nfc(dir), name }]; }));
 const policy = loadPolicy(policyPath);
 const groups = new Map(groupsOf(policy).map(g => [g.sourceOwner, g]));
 const problems: string[] = [];
-const edges: Edge[] = (JSON.parse(readFileSync(scanPath, "utf8")) as Edge[]).filter(e => owners.has(e.sourceOwner) && !edgeSkip(e) && !excludeTarget.some(p => e.resolved.startsWith(p)));
+const withSkippedImporters = args.includes("--with-skipped-importers");
+const edges: Edge[] = (JSON.parse(readFileSync(scanPath, "utf8")) as Edge[]).filter(e => owners.has(e.sourceOwner) && (withSkippedImporters ? !skipReason(e.resolved) && !crossScope(e.file, e.resolved) : !edgeSkip(e)) && !excludeTarget.some(p => e.resolved.startsWith(p)) && !excludeOwnerTarget.some(x => e.sourceOwner === x.owner && e.resolved.startsWith(x.prefix)));
 
 interface PkgRef { name: string; dir: string; created: boolean }
 const exporterOf = (g: Group): PkgRef | null => {
@@ -57,7 +59,7 @@ for (const e of edges) {
     if (e.namespaceName) u.flags.push(`namespace-asset ${e.file}:${e.line}`);
   } else {
     if (e.defaultName) u.hasDefault = true;
-    if (e.exportStar || e.membersUnknown) u.all = true;
+    if (e.exportStar || e.membersUnknown || (e.kind === "export" && e.namespaceName)) u.all = true;
     if (e.sideEffect) { u.sideEffect = true; }
   }
 }
@@ -148,8 +150,10 @@ function jsonExportName(g: Group, target: string): string {
   let parts = [...dir.slice(-2), ...(baseName ? [baseName] : [])];
   while (parts.length > 1 && /^\d/u.test(parts[0])) parts = parts.slice(1);
   if (!parts.length) parts = [segName(g.sourceOwner.split("/").pop()!)];
-  const n = camel(parts.join("-"));
-  return n.charAt(0).toLowerCase() + n.slice(1) + (isFixture ? "Fixture" : "Schema");
+  let n = camel(parts.join("-"));
+  n = n.charAt(0).toLowerCase() + n.slice(1);
+  if (/^\d/u.test(n)) { const own = camel(segName(g.sourceOwner.split("/").pop()!).replace(/[^\w-]/gu, "")); n = own + n.charAt(0).toUpperCase() + n.slice(1); }
+  return n + (isFixture ? "Fixture" : "Schema");
 }
 
 function isPureFacade(rel: string): boolean {
@@ -241,7 +245,7 @@ for (const [t, u] of sortedUses) {
   fe.adds.set(t, add);
   if (!asset) {
     for (const [n, v] of names) add.names.push({ name: n, value: v });
-    if (u.sideEffect && !names.size) add.sideEffect = true;
+    if (!names.size) add.sideEffect = true;
   } else if (u.jsonDefault) add.json.push({ exportName: jsonExportName(g, t), file: t });
   targetMap[t] = { pkg: ex.name, pkgDir: ex.dir, subpath, facade, direct: false, ...(u.hasDefault ? { hasDefault: true } : {}), ...(asset && u.jsonDefault ? { jsonExport: jsonExportName(g, t) } : {}) };
 }

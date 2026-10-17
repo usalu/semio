@@ -25,8 +25,6 @@
 //! `semio_framework_tool_machine` (`ScrubMachine`, `TypingMachine`, `ChartGesture`).
 
 use semio_framework_plugin_ownership::bounded_ownership::ARTIFACT_LIVE_OUTPUT_SLOTS;
-#[cfg(any(test, feature = "artifact-app-testing"))]
-use semio_framework::kernel::ActorId;
 use semio_framework_plugin_decl_app::ArtifactApp;
 #[cfg(test)]
 use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
@@ -42,7 +40,7 @@ use store::{Mutation, MutationDiff};
 use semio_framework_plugin_decl_views::{NoConfig, NoConfigMutation};
 use protocol::{OpBinary, OpText};
 #[cfg(test)]
-use crate::plugin_app::PluginApp;
+use semio_framework_plugin_reactor_app::PluginApp;
 use semio_framework_value::retained_clone::RetainedCloneGrant;
 #[cfg(test)]
 use semio_framework_plugin_decl_views::tool_run_contract::ToolRunRetargetableJob;
@@ -51,21 +49,17 @@ use serde_json::Value;
 use semio_framework_plugin_window_config::{WindowConfigMutation, WindowConfigSnapshot};
 #[cfg(any(test, feature = "artifact-app-testing"))]
 use semio_framework_plugin_window_config::WindowConfigOwner;
-#[cfg(test)]
-use crate::app_testing::artifact_app_laws;
 use semio_framework_ui_contract::*;
 use semio_framework_value::OriginalAliasBatch as ToolOriginalAliasBatch;
-use semio_framework_tool_machine::{
-    GestureHostEvent, GestureLedger, ScrubLedger, ScrubPhase, ToolAbortReason, ToolStep, TypingLedger,
-};
-#[cfg(test)]
-use semio_framework_tool_machine::{TypingCommit, TypingInput};
+use semio_framework_tool_machine::{GestureHostEvent, GestureLedger, ScrubLedger, ScrubPhase, ToolAbortReason, ToolStep, TypingLedger};
 use std::collections::BTreeMap;
 use std::sync::Arc;
+#[doc(hidden)]
 #[path="🖐️gesture/🎟️issuer/🦀️.rs"]
-pub(crate) mod gesture_issuer;
-use gesture_issuer::GestureOperation;
-use semio_framework_value::retirement::{RetireOwned,controlled::ControlledRetirement};
+pub mod gesture_issuer;
+use crate::tool_jobs_tool_machine::gesture_issuer::GestureOperation;
+use semio_framework_value::retirement::RetireOwned;
+use semio_framework_value::retirement::controlled::ControlledRetirement;
 
 /// 🧮️ Folds the provisional `leaf` onto `running` (else `committed`) and answers whether it applied (a leaf its base refuses
 /// is skipped); the displaced intermediate joins `displaced`, which the caller retires through its store, never plainly.
@@ -113,7 +107,8 @@ pub enum ToolTag {
 
 /// 🚦️ How `dispatch_action` proceeds once it read the tool arguments: a plain dispatch, a press or typed edit whose operation
 /// carries the tag, or a dispatch the tool runtime settled itself (a host abort, a commit signal, a frozen edit).
-pub(crate) enum ToolDispatch {
+#[doc(hidden)]
+pub enum ToolDispatch {
     Plain,
     Tagged(ToolTag),
     Settled(Result<InvocationResult, Fault>),
@@ -130,7 +125,8 @@ pub fn gesture_emit<Mutation, ConfigMutation, DraftMutation>(committed: Option<(
 }
 
 /// 📡️ The gesture fact a host event is (law table `hostEvents` of the tool-machine gesture-drive corpus).
-pub(crate) fn gesture_host_event(event: &HostEvent) -> GestureHostEvent {
+#[doc(hidden)]
+pub fn gesture_host_event(event: &HostEvent) -> GestureHostEvent {
     match event {
         HostEvent::WindowBlurred { .. } => GestureHostEvent::Blur,
         HostEvent::PointerCaptureLost { .. } => GestureHostEvent::CaptureLost,
@@ -147,8 +143,9 @@ pub(crate) fn gesture_host_event(event: &HostEvent) -> GestureHostEvent {
 /// share, an app-config or a window-config mutation. Every lane rides the window's ONE scrub, so ONE ledger step decides
 /// them all: a tick holds them as the press's provisional overlay, the release commits them as ONE transaction, a late input
 /// of a closed press and a refused input leave every lane as it was, a host abort drops them all with zero trace.
+#[doc(hidden)]
 #[derive(Clone)]
-pub(crate) enum PressLeaf<M, CM> {
+pub enum PressLeaf<M, CM> {
     Member(M),
     Child(ChildEmit),
     Config(CM),
@@ -156,21 +153,21 @@ pub(crate) enum PressLeaf<M, CM> {
 }
 
 impl<M, CM> PressLeaf<M, CM> {
-    fn member(&self) -> Option<&M> {
+    pub fn member(&self) -> Option<&M> {
         match self {
             Self::Member(leaf) => Some(leaf),
             _ => None,
         }
     }
 
-    fn config(&self) -> Option<&CM> {
+    pub fn config(&self) -> Option<&CM> {
         match self {
             Self::Config(leaf) => Some(leaf),
             _ => None,
         }
     }
 
-    pub(crate) fn window_config(&self) -> Option<&WindowConfigMutation> {
+    pub fn window_config(&self) -> Option<&WindowConfigMutation> {
         match self {
             Self::WindowConfig(leaf) => Some(leaf),
             _ => None,
@@ -184,28 +181,28 @@ impl<M, CM> PressLeaf<M, CM> {
 /// document, the app config and each window's config —, the tag of the dispatch being admitted, the tags of admitted
 /// operations until their completion publishes, and the logical tick that makes every typing clock unique.
 pub struct ToolMachineRuntime<P, M:RetireOwned+Send+'static, C = NoConfig, CM = NoConfigMutation> {
-    pub(crate) presses: ScrubLedger<PressLeaf<M, CM>>,
-    pub(crate) gestures: GestureLedger<M>,
-    pub(crate) gesture_operations: [Option<GestureOperation<M>>;ARTIFACT_LIVE_OUTPUT_SLOTS],
-    pub(crate) gesture_retirement:Option<ControlledRetirement<GestureOperation<M>>>,
-    pub(crate) gesture_ended: bool,
-    pub(crate) typing: TypingLedger<M>,
-    pub(crate) overlay: Option<Arc<P>>,
+    pub presses: ScrubLedger<PressLeaf<M, CM>>,
+    pub gestures: GestureLedger<M>,
+    pub gesture_operations: [Option<GestureOperation<M>>;ARTIFACT_LIVE_OUTPUT_SLOTS],
+    pub gesture_retirement:Option<ControlledRetirement<GestureOperation<M>>>,
+    pub gesture_ended: bool,
+    pub typing: TypingLedger<M>,
+    pub overlay: Option<Arc<P>>,
     overlay_generation: u64,
-    provisional_generation: u64,
-    pub(crate) config_overlay: Option<Arc<C>>,
+    pub provisional_generation: u64,
+    pub config_overlay: Option<Arc<C>>,
     config_overlay_generation: u64,
-    pub(crate) pending_overlay_aliases: Option<Vec<Arc<P>>>,
-    pub(crate) overlay_alias_retirement: Option<ToolOriginalAliasBatch<P>>,
-    pub(crate) pending_config_aliases: Option<Vec<Arc<C>>>,
-    pub(crate) config_alias_retirement: Option<ToolOriginalAliasBatch<C>>,
-    pub(crate) refold_owed: bool,
-    pub(crate) window_overlays: BTreeMap<String, WindowConfigSnapshot>,
-    pub(crate) ingress: Option<ToolTag>,
-    operations: Vec<(u64, ToolTag)>,
-    tick: u64,
+    pub pending_overlay_aliases: Option<Vec<Arc<P>>>,
+    pub overlay_alias_retirement: Option<ToolOriginalAliasBatch<P>>,
+    pub pending_config_aliases: Option<Vec<Arc<C>>>,
+    pub config_alias_retirement: Option<ToolOriginalAliasBatch<C>>,
+    pub refold_owed: bool,
+    pub window_overlays: BTreeMap<String, WindowConfigSnapshot>,
+    pub ingress: Option<ToolTag>,
+    pub operations: Vec<(u64, ToolTag)>,
+    pub tick: u64,
     #[cfg(any(test, feature = "artifact-app-testing"))]
-    pub(crate) now_ms: Option<u64>,
+    pub now_ms: Option<u64>,
 }
 
 impl<P, M:RetireOwned+Send+'static, C, CM> Default for ToolMachineRuntime<P, M, C, CM> {
@@ -269,7 +266,7 @@ impl<P, M: Mutation<P> + RetireOwned+Send+'static, C, CM: Mutation<C> + 'static>
 
     /// ⏰️ The clock of one typing input: the wall clock with a logical tick unique to this instance, so two runs opened in
     /// the same millisecond never mint the same transaction id.
-    pub(crate) fn clock(&mut self) -> HybridLogicalTimestamp {
+    pub fn clock(&mut self) -> HybridLogicalTimestamp {
         self.tick = self.tick.wrapping_add(1);
         #[cfg(any(test, feature = "artifact-app-testing"))]
         if let Some(physical_ms) = self.now_ms {
@@ -280,14 +277,14 @@ impl<P, M: Mutation<P> + RetireOwned+Send+'static, C, CM: Mutation<C> + 'static>
 
     /// 🏷️ Keeps `tag` for the admitted `operation` until its completion publishes; the oldest tag of an operation that
     /// never completed (a superseded latest-wins tick) yields its place.
-    pub(crate) fn bind(&mut self, operation: u64, tag: ToolTag) {
+    pub fn bind(&mut self, operation: u64, tag: ToolTag) {
         if self.operations.len() >= ARTIFACT_LIVE_OUTPUT_SLOTS {
             self.operations.remove(0);
         }
         self.operations.push((operation, tag));
     }
 
-    pub(crate) fn take_operation(&mut self, operation: u64) -> Option<ToolTag> {
+    pub fn take_operation(&mut self, operation: u64) -> Option<ToolTag> {
         let index = self.operations.iter().position(|(owner, _)| *owner == operation)?;
         Some(self.operations.remove(index).1)
     }
@@ -296,7 +293,7 @@ impl<P, M: Mutation<P> + RetireOwned+Send+'static, C, CM: Mutation<C> + 'static>
     /// moved under one. Scrub leaves are absolute and fold on any base (a leaf the base refuses is skipped); a typing run
     /// whose leaves the moved base refuses is a conflict and aborts with zero trace (`baseMoved`). Answers every snapshot
     /// alias the refold displaced (the caller retires them through the store, never plainly) and every aborted run.
-    pub(crate) fn follow(&mut self, committed: &Arc<P>, generation: u64, changed: bool) -> (Vec<Arc<P>>, Vec<ToolStep<M>>) {
+    pub fn follow(&mut self, committed: &Arc<P>, generation: u64, changed: bool) -> (Vec<Arc<P>>, Vec<ToolStep<M>>) {
         if self.presses.provisional().all(|leaf| leaf.member().is_none()) && self.gestures.is_empty() && self.typing.is_empty() {
             let dropped: Vec<Arc<P>> = self.overlay.take().into_iter().collect();
             self.provisional_generation = self.provisional_generation.wrapping_add(u64::from(!dropped.is_empty()));
@@ -339,7 +336,7 @@ impl<P, M: Mutation<P> + RetireOwned+Send+'static, C, CM: Mutation<C> + 'static>
 
     /// 🪞️ Refolds the app-config overlay on `committed` (config generation `generation`) when a held press changed or the
     /// config moved under one; answers the displaced aliases (retired by the caller through the config store).
-    pub(crate) fn follow_config(&mut self, committed: &Arc<C>, generation: u64, changed: bool) -> Vec<Arc<C>> {
+    pub fn follow_config(&mut self, committed: &Arc<C>, generation: u64, changed: bool) -> Vec<Arc<C>> {
         if self.presses.provisional().all(|leaf| leaf.config().is_none()) {
             return self.config_overlay.take().into_iter().collect();
         }
@@ -359,11 +356,5 @@ impl<P, M: Mutation<P> + RetireOwned+Send+'static, C, CM: Mutation<C> + 'static>
 //#endregion 🔖️Runtime
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "../🧪️tests/🧪️scrub/🦀️.rs"]
-mod tests;
 
-#[cfg(test)]
-#[path = "../🧪️tests/🧪️typing/🦀️.rs"]
-mod typing_tests;
 //#endregion 🧪️Tests

@@ -10,11 +10,17 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import ts from "typescript";
 import { GestureRecognizer } from "@semio-tech/framework";
-import { createByteLru, createBoundedSet, createLeadingTrailingDebounce, mapFeatureHoverActionArgs, mapFeatureSelectionActionArgs, MapRenderer, parseMapOverlayIndex, resolveMapInteractionSync } from "../../🟦️.tsx";
+import { mapFeatureHoverActionArgs, mapFeatureSelectionActionArgs, parseMapOverlayIndex, resolveMapInteractionSync } from "../../📐️map-parsing/🟦️.ts";
+import { createByteLru, createBoundedSet, createLeadingTrailingDebounce } from "../../🗃️tile-cache/🟦️.ts";
+import { MapRenderer } from "../../🖼️map-renderer/🟦️.ts";
 import type { MapWasmSession } from "../../../🪪️WasmSessionLoader/🟦️.tsx";
 import repaintFixture from "../🧫️fixtures/🔁️repaint/🔣️.json";
 import lifecycleFixture from "../../../../🧪️tests/🧫️fixtures/♻️tiled-map-gesture-lifecycle/🔣️.json";
-import rendererSource from "../../🟦️.tsx?raw";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+import { readModuleTreeSource } from "@semio-tech/framework/compiler/syntax/module-tree";
+
+const rendererSource = readModuleTreeSource(resolve(dirname(fileURLToPath(import.meta.url)), "../../🟦️.tsx"));
 // #endregion 🔌️Adapters
 
 const bytes = (n: number): ArrayBuffer => new ArrayBuffer(n);

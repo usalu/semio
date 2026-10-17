@@ -48,3 +48,7 @@ semio-framework-ui-locale = { path="../../../../../../../🔨️modules/🖱️u
 semio-framework-schema-state = { path="../../../../../../../🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust" }
 semio-framework-os-command = { path="../../../../📡️spr/🎮️command/📦️packages/🦀️rust", features=["mutation-testing"] }
 semio-framework-value-snapshot-read = { path = "../../../../../../../🔨️modules/🌱️value/📸️snapshot/👁️read/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-async = { path = "../../../../../../../🔨️modules/⏳️async/📦️packages/🦀️rust" }
+semio-framework-io-control = { path = "../../../../../../../🔨️modules/🚪️io/⏱️control/📦️packages/🦀️rust" }
+semio-framework-job-worker = { path = "../../../../../../../🔨️modules/🧵️job/👷️worker/📦️packages/🦀️rust" }
+semio-framework-job-worker-authority = { path = "../../../../../../../🔨️modules/🧵️job/👷️worker/🎟️authority/📦️packages/🦀️rust" }

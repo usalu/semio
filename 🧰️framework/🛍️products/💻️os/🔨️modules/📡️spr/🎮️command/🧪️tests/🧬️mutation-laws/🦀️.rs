@@ -66,12 +66,14 @@ fn assert_counter_leaf_descriptor<T: protocol::MutationLeaf>(descriptor: &str) {
 
 #[cfg(test)]
 mod tests {
+    use semio_framework_test_fixtures::fixture_path;
+
     use super::*;
     use crate::fold::{fold_plan_diff, fold_plan_inverse};
     use protocol::{Mutation, OpBinary, OpText};
 
     fn cases() -> serde_json::Value {
-        serde_json::from_str(std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧪️testing/🧬️mutation-laws/🔣️.json")).expect("fixture").as_str()).unwrap()
+        serde_json::from_str(std::fs::read_to_string(fixture_path!("../../../../🧪️testing/🧬️mutation-laws/🔣️.json")).expect("fixture").as_str()).unwrap()
     }
 
     const WITNESSES: [&str; 5] = [

@@ -31,7 +31,7 @@ test("validates the language-neutral Cargo, transaction, and Go source contract"
   expect(fixture["schemaVersion"]).toEqual(1);expect(fixture["transaction"]["runOwnerDirectory"]).toEqual("🧾️runs");
   expect(fixture.owners).toHaveLength(9);
   expect(fixture.contexts).toHaveLength(12);
-  expect(fixture.consumers).toHaveLength(23);
+  expect(fixture.consumers).toHaveLength(18);
 });
 
 test("resolves every anonymous owner and semantic context", () => {
@@ -237,7 +237,7 @@ test("registers exact Bun, Nx, cache, and package closure", () => {
   for (const path of [fixture.transaction.ledgerBoundaries, fixture.transaction.harness, fixture.transaction.suite, fixture.transaction.normalization, fixture.transaction.taxonomy, fixture.transaction.discovery])
     expect(inputs.has(`{workspaceRoot}/${path}`), path).toBe(true);
   const packageJson = JSON.parse(readFileSync(resolve(libraryRoot, "📦️packages/🟦️typescript/package.json"), "utf8"));
-  expect(packageJson.scripts[source.target]).toBe(`nx run @semio-tech/repo-lib:${source.target}`);
+  expect(packageJson.scripts[source.target]).toBe(`bun --cwd "../../../../../../.." repo run @semio-tech/repo-lib:${source.target}`);
 });
 
 

@@ -15,7 +15,10 @@ import { createAssetBuildPluginsV1 } from "../../../../🧰️framework/🔨️m
 import { packageAssetDeliveries } from "../../../../🧰️framework/🔨️modules/🎠️kernel/📦️package-assets/🟦️.ts";
 import { PLAYGROUND_ASSET_PROVIDERS_V1 } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🎮️playground/🖼️assets/🧩️composition/🟦️.ts";
 import { MODULE_EXTENSION_ROUTE, MODULE_PLUGIN_ROUTE } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
-import { devStreamMuxServer, semioBackboneVitePlugin, semioBlobVitePlugin, semioActivationVitePlugin } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️vite-plugins/🟦️.ts";
+import { devStreamMuxServer } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️vite-plugins/🔀️stream-mux-server/🟦️.ts";
+import { semioBackboneVitePlugin } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️vite-plugins/🧱️backbone-vite-plugin/🟦️.ts";
+import { semioActivationVitePlugin } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️vite-plugins/🚀️activation-vite-plugin/🟦️.ts";
+import { semioBlobVitePlugin } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️vite-plugins/🫧️blob-vite-plugin/🟦️.ts";
 import { semioExtensionStoreVitePlugin } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏪️store/📥️installation/🟦️.ts";
 import { playGisMapTileServeMode } from "../../🔨️modules/📦️site/🗺️tile-serve-mode/🟦️.ts";
 import { playDevStaticDirMounts } from "../../🔨️modules/🧩️runtime/📦️assets/🟦️.ts";
@@ -50,16 +53,16 @@ export default defineOwnedBuildConfigFactory(({ command, mode }) => {
     resolve: {
       alias: [
         ...playgroundSceneHostResolveAliases(repoRoot),
-        { find: "@semio-tech/ui-react/test", replacement: path.resolve(repoRoot, "./🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🖌️render/🟦️.ts") },
-        { find: "@semio-tech/ui-react/runtime", replacement: path.resolve(repoRoot, "./🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🎠️runtime/🟦️.ts") },
-        { find: "@semio-tech/ui-react", replacement: path.resolve(repoRoot, "./🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx") },
-        { find: "@semio-tech/assets", replacement: path.resolve(repoRoot, "./🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/🟦️.ts") },
-        { find: "@semio-tech/ui-styling", replacement: path.resolve(repoRoot, "./🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript") },
-        { find: "@semio-tech/canvas-react-renderer", replacement: path.resolve(repoRoot, "./🧰️framework/🔨️modules/🖼️canvas/🎨️react-renderer/📦️packages/🟦️typescript/🟦️.tsx") },
-        { find: "@semio-tech/infinite-world-r3f", replacement: path.resolve(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript/🟦️.tsx") },
-        { find: "@semio-tech/framework-renderer-react", replacement: path.resolve(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx") },
+        { find: /^@semio-tech\/ui-react\/test$/u, replacement: path.resolve(repoRoot, "./🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🖌️render/🟦️.ts") },
+        { find: /^@semio-tech\/ui-react\/runtime$/u, replacement: path.resolve(repoRoot, "./🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🎠️runtime/🟦️.ts") },
+        { find: /^@semio-tech\/ui-react$/u, replacement: path.resolve(repoRoot, "./🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx") },
+        { find: /^@semio-tech\/assets$/u, replacement: path.resolve(repoRoot, "./🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/🟦️.ts") },
+        { find: /^@semio-tech\/ui-styling$/u, replacement: path.resolve(repoRoot, "./🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript") },
+        { find: /^@semio-tech\/canvas-react-renderer$/u, replacement: path.resolve(repoRoot, "./🧰️framework/🔨️modules/🖼️canvas/🎨️react-renderer/📦️packages/🟦️typescript/🟦️.tsx") },
+        { find: /^@semio-tech\/infinite-world-r3f$/u, replacement: path.resolve(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript/🟦️.tsx") },
+        { find: /^@semio-tech\/framework-renderer-react$/u, replacement: path.resolve(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx") },
         { find: /^@semio-tech\/framework$/u, replacement: path.resolve(repoRoot, "./🧰️framework/📦️packages/🟦️typescript/🟦️.ts") },
-        { find: "@semio-tech/framework-os", replacement: path.resolve(repoRoot, "./🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🟦️.ts") },
+        { find: /^@semio-tech\/framework-os$/u, replacement: path.resolve(repoRoot, "./🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🟦️.ts") },
         { find: MODULE_PLUGIN_ROUTE, replacement: pluginModulesDir },
         ...extensionModuleDirNames.map(name => ({ find: `${MODULE_EXTENSION_ROUTE}/${name}`, replacement: extensionDir(name) })),
         { find: MODULE_EXTENSION_ROUTE, replacement: installedExtensionsDir },
@@ -77,7 +80,7 @@ export default defineOwnedBuildConfigFactory(({ command, mode }) => {
       semioServeCloseVitePlugin(),
       ...semioHostHtmlVitePlugin(repoRoot, { title: "semio · Play", entry: "./🟦️.tsx", bodyClass: "h-screen w-screen overflow-hidden bg-background text-foreground", cnameHost: PLAY_HOST }),
       semioEmojiIndexHtmlVitePlugin(playDir),
-      managedWasmPackagesVitePluginV1(frameworkOsEngineDeliveriesV1(repositoryCachePartitionRootDataV1(repoRoot,"products"),{version:1,mode:readBuildMode(mode),facet:"play"}).map(({packageName,root,entry,files})=>({packageName,root,entry,files}))),
+      managedWasmPackagesVitePluginV1(frameworkOsEngineDeliveriesV1(repositoryCachePartitionRootDataV1(repoRoot,"products"),{version:1,mode:readBuildMode(mode),facet:"play"})),
       playgroundFlowWasmDevStubPlugin(repoRoot,flowBrowserDeliveryV1(repoRoot,repositoryCachePartitionRootDataV1(repoRoot,"products"),{version:1,mode:readBuildMode(mode),command})),
       semioBackboneVitePlugin(),
       semioBlobVitePlugin(),

@@ -1,0 +1,41 @@
+//! 🌫️ Drawing mutation — `SetLayerOpacity`: sets one layer's `opacity` scalar.
+use semio_s_artifact_draw_drawing_diff::DrawingDiff;
+
+use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
+
+//#region 🔖️Mutation
+/// 🌫️ `set-layer-opacity` payload.
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner=semio_framework_pack_json)]
+#[mutation_leaf(contract = ::protocol)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[dsl(keyword = "set-layer-opacity")]
+pub struct SetLayerOpacity {
+    pub layer_id: semio_framework_value::paged::PagedUtf8<{usize::MAX}>,
+    pub opacity: f64,
+}
+
+/// 🏗️ Builder — wraps the payload in its dispatch variant.
+pub fn set_layer_opacity<Op: From<SetLayerOpacity>>(layer_id: semio_framework_value::paged::PagedUtf8<{usize::MAX}>, opacity: f64) -> Op {
+    Op::from(SetLayerOpacity { layer_id, opacity })
+}
+
+impl<Op> protocol::MutationKind<DrawingSnapshot, Op> for SetLayerOpacity where Op: protocol::Mutation<DrawingSnapshot, Diff = semio_s_artifact_draw_drawing_diff::DrawingDiff> + From<SetLayerOpacity> {
+    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "layer", kind: "set-layer-opacity", record: "SetLayerOpacity" };
+
+    fn diff(&self, base: &DrawingSnapshot) -> protocol::MutationOutcome<DrawingDiff> {
+        super::diff::diff(self, base)
+    }
+    fn inverse(&self, base: &DrawingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+        super::inverse::inverse(self, base)
+    }
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set layer \"{}\" opacity to {}", self.layer_id, self.opacity), &format!("Deckkraft von Ebene \"{}\" auf {} setzen", self.layer_id, self.opacity))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.layer_id.to_string_owner()]
+    }
+}
+//#endregion 🔖️Mutation

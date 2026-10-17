@@ -53,7 +53,4 @@ pub fn handle(payload: &CurationAdd, doc: &ArtifactView<'_, CurationSnapshot>, _
 }
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

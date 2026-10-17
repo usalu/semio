@@ -1,5 +1,6 @@
 use super::*;
 use semio_framework_plugin_ownership::bounded_ownership::{plugin_demand_grant, PluginLifecycleStep};
+use semio_framework_test_fixtures::fixture_text;
 use semio_framework_value::RetirementDemand;
 
 /// 🎟️ Funds one quoted retirement turn on every axis, with `copy` as the smallest payload credit.
@@ -9,7 +10,7 @@ fn funded(demand: RetirementDemand, copy: usize) -> RetainedCloneGrant {
 
 #[test]
 fn empty_transient_retirement_waits_for_read_release_and_matches_neutral_vectors() {
-    let vector: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📖️read-retirement/🔣️.json")).expect("neutral transient read retirement vector");
+    let vector: serde_json::Value = serde_json::from_str(fixture_text!("../../../../🫧️transient/♻️retirement/🧪️tests/🧫️fixtures/📖️read-retirement/🔣️.json")).expect("neutral transient read retirement vector");
     let maximum_steps = vector["maximumSteps"].as_u64().unwrap() as usize;
     let maximum_bytes = vector["maximumBytes"].as_u64().unwrap() as usize;
     let mut owner = Store::new(NoTransient::default());

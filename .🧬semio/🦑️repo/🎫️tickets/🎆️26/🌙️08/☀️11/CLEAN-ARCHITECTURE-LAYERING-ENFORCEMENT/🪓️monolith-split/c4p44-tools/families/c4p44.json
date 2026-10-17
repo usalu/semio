@@ -1,0 +1,13 @@
+{
+ "name": "c4p44",
+ "crates": [
+  "semio-framework-os-mcp-plugin-runtime",
+  "semio-framework-os-mcp-workspace",
+  "semio-framework-os-mcp",
+  "semio-framework-os-mcp-tools-inference",
+  "semio-framework-os-mcp-catalog",
+  "semio-framework-os-mcp-schema",
+  "semio-framework-os-mcp-bridge"
+ ],
+ "note": "CENSUS4-PKG-44: the seven os/mcp crates that mount the seven split files"
+}

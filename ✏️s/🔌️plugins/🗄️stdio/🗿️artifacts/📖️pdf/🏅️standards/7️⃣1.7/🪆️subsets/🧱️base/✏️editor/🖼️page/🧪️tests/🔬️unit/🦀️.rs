@@ -1,4 +1,72 @@
-use super::*;
+use crate::standards::v1_7::subsets::base::schema::mutations::set_font::SetFont;
+use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfAnnotation, PdfAppearanceEntry, PdfBaseEncoding, PdfColorSpace, PdfDestination, PdfEncryptionAlgorithm, PdfFont, PdfLineCap, PdfFontKind, PdfFontProgram, PdfFormFieldKind, PdfFunction, PdfFormXObject, PdfImageBody, PdfImageMask, PdfObject, PdfOpenAction, PdfPatternKind, PdfSimpleEncoding, PdfPageLabelStyle, PdfShadingKind};
+use crate::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot;
+use semio_framework_ui_locale::Locale;
+use serde_json::Value;
+#[allow(unused_imports)]
+use crate::standards::v1_7::subsets::base::schema::diff::PdfPageBox;
+#[allow(unused_imports)]
+use crate::standards::v1_7::subsets::base::schema::mutations::{insert_object::InsertObject, insert_page::InsertPage, move_page::MovePage, remove_catalog_entry::RemoveCatalogEntry, remove_object::RemoveObject, remove_embedded_file::RemoveEmbeddedFile, remove_named_destination::RemoveNamedDestination, remove_page::RemovePage, replace_page::ReplacePage, remove_trailer_entry::RemoveTrailerEntry, set_annotation::SetAnnotation, set_embedded_file::SetEmbeddedFile, set_acro_form::SetAcroForm, set_document_id::SetDocumentId, set_color_space::SetColorSpace, set_catalog_entry::SetCatalogEntry, set_encryption::SetEncryption, set_ext_g_state::SetExtGState, set_form::SetForm, set_trailer_entry::SetTrailerEntry, set_open_action::SetOpenAction, set_output_intents::SetOutputIntents, set_pattern::SetPattern, set_properties::SetProperties, set_image::SetImage, set_info::SetInfo, set_language::SetLanguage, set_mark_info::SetMarkInfo, set_metadata::SetMetadata, set_named_destination::SetNamedDestination, set_object_value::SetObjectValue, set_optional_content::SetOptionalContent, set_outlines::SetOutlines, set_page_box::SetPageBox, set_page_content::SetPageContent, set_page_labels::SetPageLabels, set_page_layout::SetPageLayout, set_page_media_box::SetPageMediaBox, set_page_mode::SetPageMode, set_page_rotation::SetPageRotation, set_page_user_unit::SetPageUserUnit, set_shading::SetShading, set_viewer_preferences::SetViewerPreferences, PdfMutation};
+#[allow(unused_imports)]
+use crate::standards::v1_7::subsets::base::schema::snapshot::{ObjRef, PdfAction, PdfAppearance, PdfBorderStyle, PdfCharProc, PdfDate, PdfDestinationFit, PdfDictEntry, PdfEmbeddedFile, PdfEncryption, PdfExtGState, PdfFileSpecification, PdfLineJoin, PdfFontDescriptor, PdfFormField, PdfMarkInfo, PdfMarkupAnnotation, PdfMatrix, PdfNamedColorSpace, PdfNamedDestination, PdfNamedProperties, PdfOutputIntent, PdfPattern, PdfOptionalContentGroup, PdfOutlineItem, PdfPageLabelRange, PdfTextArrayItem, PdfTransparencyGroup, PdfViewerPreferences, PDF_IDENTITY_MATRIX};
+#[allow(unused_imports)]
+use semio_framework_plugin::plugin_app_close_prelude as ui;
+#[allow(unused_imports)]
+use semio_framework_plugin::ActionArgDef;
+#[allow(unused_imports)]
+use semio_framework_plugin::ActionDefinition;
+#[allow(unused_imports)]
+use semio_framework_plugin::ActionId;
+#[allow(unused_imports)]
+use semio_framework_plugin::ActionKind;
+#[allow(unused_imports)]
+use semio_framework_plugin::Buildable;
+#[allow(unused_imports)]
+use semio_framework_plugin::Canvas2dScene;
+#[allow(unused_imports)]
+use semio_framework_plugin::Fault;
+#[allow(unused_imports)]
+use semio_framework_plugin::FaultCode;
+#[allow(unused_imports)]
+use semio_framework_plugin::FaultOrigin;
+#[allow(unused_imports)]
+use semio_framework_plugin::HasBase;
+#[allow(unused_imports)]
+use semio_framework_plugin::HasChildren;
+#[allow(unused_imports)]
+use semio_framework_ui_locale::LocalizedLabel;
+#[allow(unused_imports)]
+use semio_framework_plugin::PluginAssemblyError;
+#[allow(unused_imports)]
+use semio_framework_plugin::SurfaceKind;
+#[allow(unused_imports)]
+use semio_framework_plugin::UiAssemblyResult;
+#[allow(unused_imports)]
+use semio_framework_plugin::UiMapBuilder;
+#[allow(unused_imports)]
+use semio_framework_plugin::UiText;
+#[allow(unused_imports)]
+use semio_framework_plugin::UiValue;
+#[allow(unused_imports)]
+use semio_framework_plugin::WindowKindDefinition;
+#[allow(unused_imports)]
+use semio_framework_plugin::WindowLayout;
+#[allow(unused_imports)]
+use semio_framework_plugin::WindowLayoutAxisNode;
+#[allow(unused_imports)]
+use semio_framework_plugin::WindowLayoutChild;
+#[allow(unused_imports)]
+use semio_framework_plugin::WindowLayoutRoot;
+#[allow(unused_imports)]
+use semio_framework_plugin::WindowLayoutStackNode;
+#[allow(unused_imports)]
+use semio_framework_plugin::WindowLayoutWindowNode;
+#[allow(unused_imports)]
+use semio_framework_plugin::WindowOptions;
+#[allow(unused_imports)]
+use serde_json::json;
+use crate::editor::page::{inspector};
+use crate::editor::page::*;
 use crate::standards::v1_7::subsets::base::io::mutation_bridge::apply_pdf_mutation;
 use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfAnnotationKind, PdfImage, PdfOp, PdfPage, PdfPageLayout, PdfPageMode, PdfTextString};
 

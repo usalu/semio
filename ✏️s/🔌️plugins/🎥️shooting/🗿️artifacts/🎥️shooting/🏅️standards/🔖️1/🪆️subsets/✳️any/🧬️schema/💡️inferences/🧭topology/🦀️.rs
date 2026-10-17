@@ -48,8 +48,5 @@ pub fn compute_shooting_topology(snapshot: &ShootingSnapshot) -> ShootingTopolog
 }
 //#endregion 🔖️Topology
 
-#[cfg(test)]
-//#region 🧪️Tests
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

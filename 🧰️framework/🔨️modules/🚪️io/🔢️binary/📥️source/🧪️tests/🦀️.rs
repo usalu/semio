@@ -27,13 +27,11 @@ fn oracle(data:&str)->Vec<u8>{if data.get(..5).is_some_and(|value|value.eq_ignor
 fn binary_sources_match_neutral_font_image_bytes_and_independent_oracles(){
  let rows:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
  for row in rows.as_array().unwrap(){let input=input(&row["input"]);let expected:Vec<u8>=serde_json::from_value(row["expected"].clone()).unwrap();assert_eq!(oracle(input.data),expected);for items in [1,7,4096]{let mut job=BinarySourceJob::new(input).unwrap();finish(&mut job,input.data,items);assert_eq!(job.result().unwrap(),expected);let output=output(&mut job);drain(job);drain(output);}}
- eprintln!("[DEBUG] Native borrowed binary sources matched shared bytes and independent base64/percent oracles");
 }
 #[test]
 fn binary_sources_refuse_malformed_contracts_and_private_failures(){
  let rows:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/⚠️invalid/🔣️.json")).unwrap();
  for row in rows.as_array().unwrap(){let Some(input)=parsed_input(&row["input"])else{continue;};if let Ok(mut job)=BinarySourceJob::new(input){let mut error=None;for _ in 0..2000000{let grant=funded(&job);match job.advance(input.data,grant){Ok((p,_))=>assert!(!p.done,"{}",row["name"]),Err(value)=>{error=Some(value);break;}}}let error=error.unwrap();assert_eq!(job.advance(input.data,funded(&job)).unwrap_err(),error);assert!(job.result().is_err());drain(job);}}
- eprintln!("[DEBUG] Native malformed sources kept private original source and refused output");
 }
 #[test]
 fn original_binary_source_funding_preserves_axes_and_allocator_receipts(){
@@ -46,11 +44,9 @@ fn original_binary_source_funding_preserves_axes_and_allocator_receipts(){
  }
  for phase in fixture["cancelPhases"].as_array().unwrap(){let mut job=BinarySourceJob::new(input).unwrap();let mut born=0;while job.progress().phase!=phase.as_str().unwrap(){let grant=funded(&job);let((_,receipt),physical)=observed(||job.advance(input.data,grant).unwrap());assert_eq!(physical,(receipt.retained_capacity_bytes,0));born+=physical.0;}assert_eq!(observed(||job.cancel()).1,(0,0));assert_eq!(job.result().unwrap_err(),BinarySourceError::Cancelled);assert_eq!(input.data.as_ptr(),original_pointer);let(a,r)=drain(job);assert_eq!(born+a,r);}
  let equal_content=input.data.to_owned();let mut job=BinarySourceJob::new(input).unwrap();assert_eq!(observed(||job.advance(&equal_content,funded(&job))).1,(0,0));assert_eq!(job.progress().work,0);drain(job);
- eprintln!("[DEBUG] Original binary source9neutral grants,4cancel phases,changed-source refusal,independent oracle and exact allocator conservation");
 }
 #[test]
 fn binary_sources_load_actual_bundled_font_resources(){
  let rows:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔤️fonts/🔣️.json")).unwrap();let fonts:&[&[u8]]=&[include_bytes!("../../../../🖼️assets/🔤️fonts/😀️noto-emoji/🪉️supplement/⚖️medium/🔤️outline.ttf"),include_bytes!("../../../../📚️compiler/🌍️world/🔤️fonts/⌨️LibertinusMono-Regular.otf")];
  for(row,bytes)in rows.as_array().unwrap().iter().zip(fonts){assert_eq!(bytes.len(),row["bytes"].as_u64().unwrap()as usize);let mime=row["mime"].as_str().unwrap();let data=format!("data:{mime};name=Document%20Font;base64,{}",base64::engine::general_purpose::STANDARD.encode(bytes));let input=BinarySourceInput{mime,data:&data,min_bytes:bytes.len(),max_bytes:bytes.len(),max_source_bytes:data.len(),max_work:data.len()as u64*2+2};let mut job=BinarySourceJob::new(input).unwrap();finish(&mut job,&data,4096);assert_eq!(job.result().unwrap(),*bytes);assert_eq!(oracle(&data),*bytes);let output=output(&mut job);drain(job);drain(output);}
- eprintln!("[DEBUG] Original bundled native fonts retained exact bytes through granted source decoding");
 }

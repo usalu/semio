@@ -1,5 +1,4 @@
 //! ✏️ Direct Writer mutation — `EditText` replaces the document's authored text body.
-use crate::schema::mutations::WriterMutation;
 use crate::WriterDiff;
 use crate::WriterSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
@@ -20,18 +19,24 @@ pub struct EditText {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn edit_text(text: String) -> WriterMutation {
-    WriterMutation::EditText(EditText { text })
+pub fn edit_text<Op>(text: String) -> Op
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::edit_text::EditText>,
+{
+    Op::from(EditText { text })
 }
 
-impl MutationKind<WriterSnapshot, WriterMutation> for EditText {
+impl<Op> MutationKind<WriterSnapshot, Op> for EditText
+where
+    Op: protocol::Mutation<WriterSnapshot, Diff = WriterDiff> + From<EditText>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "edit", entity: "text", kind: "edit-text", record: "EditedText" };
 
     fn diff(&self, base: &WriterSnapshot) -> protocol::MutationOutcome<WriterDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &WriterSnapshot) -> Result<Vec<WriterMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &WriterSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

@@ -57,7 +57,7 @@ fn close(cursor: &mut RetainedInlineSymbols, source: &RetainedCloneSource<Vec<u8
         if release > 0 { assert_eq!(observed(cursor, source, RetainedCloneGrant::one_release_turn(release - 1, 64), true).unwrap(), RetainedCloneProgress::default()); }
         let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: copy, maximum_capacity_bytes: capacity, maximum_release_bytes: release, maximum_depth: depth };
         observed(cursor, source, grant, true).unwrap();
-        if cursor.terminal_is_empty() { println!("[DEBUG] Retained inline symbols exact alias/native-page closure turns={turn} terminal0heap"); return; }
+        if cursor.terminal_is_empty() {  return; }
     }
     panic!("retained symbols close did not reach terminal");
 }
@@ -85,7 +85,6 @@ fn prepared(wire: Vec<u8>, expected: &[String], prefix: usize, cancel_at: Option
             for (index, text) in expected.iter().enumerate() { assert_eq!(cursor.symbol_bytes(source.borrow(), index).unwrap(), Some(text.as_bytes())); }
             assert_eq!(cursor.symbol_bytes(source.borrow(), expected.len()).unwrap(), None);
             assert_eq!(cursor.symbol_bytes(other.borrow(), 0), Err(InlineSymbolRefusal::Source));
-            println!("[DEBUG] Retained inline symbols original-index/UTF8/canonical-prefix count={} prefix={prefix} turns={turn}", expected.len());
             close(&mut cursor, &source);
             break;
         }

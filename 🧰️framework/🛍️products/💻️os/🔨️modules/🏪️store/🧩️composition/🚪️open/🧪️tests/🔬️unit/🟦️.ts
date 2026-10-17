@@ -30,5 +30,4 @@ test("member opening retains six rejection stages and queries indivisible physic
   for (const axis of ["copy_byte", "capacity_byte", "release_byte", "depth"]) expect(decoded).toContain(`fn next_${axis}_demand`);
   expect(decoded).not.toContain("next_close_byte_demand");
   expect(decoded.includes("artifact_retirement_box_close_step")).toBe(true);
-  console.log("[DEBUG] member opening: six unchanged retention stages use six independently checked physical extents within admission262144");
 });

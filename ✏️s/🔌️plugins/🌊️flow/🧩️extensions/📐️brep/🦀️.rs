@@ -5,6 +5,7 @@ use flow_extension_sdk::mesh::*;
 use flow_extension_sdk::build_manifest_json;
 use neural_engine::{channel_output, ChannelSpec, Dictionary, EvalError, Operator, OperatorImpl, OperatorInfo, Registry, Value};
 use semio_framework_3d_brep_boolean::BooleanOp;
+use semio_s_plugin_flow_brep_mesh::retire_geometry_capture;
 use semio_framework_3d_brep_engine::{BrepBooleanAdmission, BrepBooleanJob, BrepBooleanStep, BrepKernel};
 
 #[path="📐️tessellate/🦀️.rs"]
@@ -24,7 +25,7 @@ fn q(method: &str, summary: &str) -> String {
 /// reflectively derived (mirrors W1-A's `OPERATION_QUALITY` table's own documented rationale):
 /// whoever adds a node must add its row here, or `operation_quality_tags_match_the_kernel_contract`
 /// fails.
-const NODE_KERNEL_METHOD: &[(&str, &str)] = &[
+pub const NODE_KERNEL_METHOD: &[(&str, &str)] = &[
     ("brep.brep", "deconstruct"),
     ("brep.prim3d.box", "box_prim"),
     ("brep.prim3d.sphere", "sphere_prim"),
@@ -120,32 +121,6 @@ const NODE_KERNEL_METHOD: &[(&str, &str)] = &[
     ("brep.io.importDwg", "import_mesh"),
 ];
 
-/// 🙈️ `BrepKernel` methods this extension deliberately exposes NO node for, with why — checked by
-/// `every_kernel_operation_is_either_a_node_or_explicitly_unexposed` against
-/// [`BREP_KERNEL_OPERATIONS`] so a newly added trait method can never silently fall through both
-/// lists unnoticed.
-#[cfg(test)]
-const INTENTIONALLY_UNEXPOSED: &[(&str, &str)] = &[
-    ("scale", "Uniform scaling is represented by equal factors in the scale_axes widget"),
-    ("kind", "internal handle-kind lookup behind geometry_dict, not a graph operation"),
-    ("tessellate", "internal preview/export bridge (tessellate_geometry), not a graph node"),
-    ("dispose", "internal GC primitive (dispose_geometry), not a graph node"),
-    ("retain", "internal GC primitive (retain_geometry_handles), not a graph node"),
-    ("registry_len", "internal diagnostic counter, not a graph node"),
-    ("export_gltf", "glTF/GLB leaves the extension only via the tessellation mesh bridge (export_solid_json \"glb\"), never this trait method directly"),
-];
-
-macro_rules! retire_geometry_capture {
-    ($field:tt) => {
-        fn retirement_is_empty(&self) -> bool { self.$field.terminal_is_empty() }
-        fn retire_step(&mut self, grant:semio_framework_value::retained_clone::RetainedCloneGrant, _: &mut neural_engine::ValueRetirement) -> Result<semio_framework_value::retained_clone::RetainedCloneStep,semio_framework_value::ValueError> { self.$field.close_step(grant) }
-        fn next_retire_copy_byte_demand(&self)->Result<usize,semio_framework_value::ValueError> {self.$field.next_close_copy_byte_demand()}
-        fn next_retire_capacity_byte_demand(&self,copy:usize)->Result<usize,semio_framework_value::ValueError> {self.$field.next_close_capacity_byte_demand(copy)}
-        fn next_retire_release_byte_demand(&self)->Result<usize,semio_framework_value::ValueError> {self.$field.next_close_release_byte_demand()}
-        fn next_retire_depth_demand(&self)->Result<usize,semio_framework_value::ValueError> {self.$field.next_close_depth_demand()}
-        fn retire_cold(mut self:Box<Self>) { self.$field.retire_cold(); }
-    };
-}
 
 macro_rules! geo_operation {
     ($name:ident, $channel:literal, |$k:ident, $i:ident| $expr:expr) => {
@@ -1301,8 +1276,7 @@ impl Operator for ImportDwg {
 }
 // #endregion 🔖️IO
 
-#[path = "🥽️mesh/🦀️.rs"]
-mod mesh;
+use semio_s_plugin_flow_brep_mesh as mesh;
 
 /// 📦️ Registers brep geometry schema and operators.
 pub fn register(registry: &mut Registry, session: &Session) {
@@ -2409,13 +2383,6 @@ pub fn module_registry(session: &Session) -> Registry {
     registry
 }
 
-// #region 🔖️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-
-// #endregion 🔖️Tests
-
 #[path = "💡️inferences/📐️geometry/🦀️.rs"]
 pub mod geometry_inference;
 
@@ -2436,7 +2403,7 @@ pub mod extension_guest {
     /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
     const TESSELLATE_STEP_BUDGET: usize = 24;
 
-    pub(crate) fn bundle() -> ExtensionBundle {
+    pub fn bundle() -> ExtensionBundle {
         owned_bundle(super::geometry_inference::GeometryInferenceContext::new(super::Session::new().capture()))
     }
 
@@ -2455,8 +2422,7 @@ pub mod extension_guest {
         bundle.resource_owner(BrepExtensionResources { context }).owned_handler("evaluate").owned_handler("tessellate").owned_handler("evaluateCancel").owned_handler("tessellateCancel")
     }
 
-    #[cfg(test)]
-    fn scoped_bundle()->(ExtensionBundle,neural_engine::SharedRegistry) {let context=super::geometry_inference::GeometryInferenceContext::new(super::Session::new().capture());let scope=context.evaluation().registry().expect("original fixture must admit its registry before reader handoff").clone();(owned_bundle(context),scope)}
+    pub fn scoped_bundle()->(ExtensionBundle,neural_engine::SharedRegistry) {let context=super::geometry_inference::GeometryInferenceContext::new(super::Session::new().capture());let scope=context.evaluation().registry().expect("original fixture must admit its registry before reader handoff").clone();(owned_bundle(context),scope)}
 
     struct BrepExtensionResources { context:super::geometry_inference::GeometryInferenceContext }
 
@@ -2503,17 +2469,11 @@ pub mod extension_guest {
         fn resume_close(&mut self) { if !self.context.session().terminal_is_empty() { self.context.session().resume_close(); } }
     }
 
-    #[cfg(test)]
-    include!("🧪️tests/🔬️extension-guest-standalone/🦀️.rs");
-
 }
 // #endregion 🔖️ExtensionGuest
 
-#[cfg(test)]
-use semio_framework_3d_brep_representation::contract::BREP_KERNEL_OPERATIONS;
-
 fn out_step() -> ChannelSpec { ChannelSpec::named("S","Stp","step","StepExport").with_value_types(&["text"]) }
 
-fn operation_quality(method:&str) -> semio_framework_3d_brep_representation::contract::OpQuality {
+pub fn operation_quality(method:&str) -> semio_framework_3d_brep_representation::contract::OpQuality {
     if semio_s_artifact_stdio_step_geometry::geometry::STEP_GEOMETRY_OPERATIONS.contains(&method) { semio_s_artifact_stdio_step_geometry::geometry::operation_quality(method) } else { semio_framework_3d_brep_representation::contract::operation_quality(method) }
 }

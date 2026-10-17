@@ -8,7 +8,7 @@
 //! across this app — the textbook D5 Behavioral case, and one of the two `*Engine` structs in this
 //! ticket that IS constructed outside its own file (see the region → destination map's exception
 //! clause). `parse_layout_document`/`resolve_page` (pure, artifact-level) stayed at `🧬️schema`;
-//! `compose_svg_from_drawing`/`rect_path_segments`/`LayoutError` (io/codec-dispatch territory) stayed
+//! `export_scene`/`rect_path_segments`/`LayoutError` (io/codec-dispatch territory) stayed
 //! at `🚪️io` — this file reaches both by qualified path, which is the normal app→artifact direction.
 
 use semio_s_artifact_layout_layout_model::LayoutError;
@@ -16,6 +16,7 @@ use semio_s_artifact_layout_layout_model::resolve_page;
 use semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire2_codec::parse_layout_document;
 use semio_s_artifact_layout_layout_model::{Frame, LayoutBounds, LayoutRect, Page, ParagraphStyle, TextStory};
 use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
+use semio_framework_io_ports::{VectorNode, VectorScene, VectorSegment, VectorStyle};
 use semio_framework_canvas::camera::{self, Camera, Viewport};
 use semio_framework_canvas::{Affine, BezPath, Color, FillRule, Line, Point, Rect, RoundedRect, RoundedRectRadii, Scene, Stroke, Vec2};
 #[cfg(test)]
@@ -485,10 +486,14 @@ struct DrawingLabel {
     y: f32,
 }
 
-fn raw_drawing_labels(doc: &LayoutSnapshot) -> Vec<DrawingLabel> {
-    let Some(drawing) = doc.background_drawing.as_ref() else { return Vec::new() };
+fn background_scene(doc: &LayoutSnapshot) -> Option<VectorScene> {
+    semio_s_artifact_layout_layout_model::background_drawing_scene(doc).ok().flatten()
+}
+
+fn raw_drawing_labels(scene: Option<&VectorScene>) -> Vec<DrawingLabel> {
+    let Some(drawing) = scene else { return Vec::new() };
     let mut labels = Vec::new();
-    for layer in &drawing.content.layers {
+    for layer in &drawing.layers {
         if !layer.visible {
             continue;
         }
@@ -497,23 +502,22 @@ fn raw_drawing_labels(doc: &LayoutSnapshot) -> Vec<DrawingLabel> {
     labels
 }
 
-fn collect_drawing_text(node: &semio_s_artifact_stdio_semio_drawing::schema::snapshot::DrawNode, tx: f64, ty: f64, labels: &mut Vec<DrawingLabel>) {
-    use semio_s_artifact_stdio_semio_drawing::schema::snapshot::DrawNode;
+fn collect_drawing_text(node: &VectorNode, tx: f64, ty: f64, labels: &mut Vec<DrawingLabel>) {
     match node {
-        DrawNode::Group { transform, children } => {
+        VectorNode::Group { transform, children } => {
             let next_x = tx + transform.translation.x;
             let next_y = ty + transform.translation.y;
             for child in children {
                 collect_drawing_text(child, next_x, next_y, labels);
             }
         }
-        DrawNode::Text { value, at, .. } => {
+        VectorNode::Text { value, at, .. } => {
             let text = value.trim();
             if !text.is_empty() && labels.len() < 32 {
                 labels.push(DrawingLabel { text: text.to_string(), x: (at.x + tx) as f32, y: (at.y + ty) as f32 });
             }
         }
-        DrawNode::Path { .. } | DrawNode::Image { .. } => {}
+        VectorNode::Path { .. } | VectorNode::Image { .. } => {}
     }
 }
 
@@ -596,7 +600,7 @@ fn png_data_url(bytes: &[u8]) -> Option<String> {
     if bytes.len() < 8 || bytes.len() > 8192 {
         return None;
     }
-    semio_s_artifact_stdio_png::standards::v1_2::subsets::any::io::decode_png(bytes).ok()?;
+    semio_framework_pixels::decode_png(bytes).ok()?;
     const TABLE: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
     let mut encoded = String::new();
     for chunk in bytes.chunks(3) {
@@ -611,10 +615,10 @@ fn png_data_url(bytes: &[u8]) -> Option<String> {
     Some(format!("data:image/png;base64,{encoded}"))
 }
 
-fn raw_drawing_rasters(doc: &LayoutSnapshot) -> Vec<DrawingRaster> {
-    let Some(drawing) = doc.background_drawing.as_ref() else { return Vec::new() };
+fn raw_drawing_rasters(scene: Option<&VectorScene>) -> Vec<DrawingRaster> {
+    let Some(drawing) = scene else { return Vec::new() };
     let mut rasters = Vec::new();
-    for layer in &drawing.content.layers {
+    for layer in &drawing.layers {
         if !layer.visible {
             continue;
         }
@@ -623,24 +627,23 @@ fn raw_drawing_rasters(doc: &LayoutSnapshot) -> Vec<DrawingRaster> {
     rasters
 }
 
-fn collect_drawing_rasters(node: &semio_s_artifact_stdio_semio_drawing::schema::snapshot::DrawNode, tx: f64, ty: f64, rasters: &mut Vec<DrawingRaster>) {
-    use semio_s_artifact_stdio_semio_drawing::schema::snapshot::DrawNode;
+fn collect_drawing_rasters(node: &VectorNode, tx: f64, ty: f64, rasters: &mut Vec<DrawingRaster>) {
     match node {
-        DrawNode::Group { transform, children } => {
+        VectorNode::Group { transform, children } => {
             let next_x = tx + transform.translation.x;
             let next_y = ty + transform.translation.y;
             for child in children {
                 collect_drawing_rasters(child, next_x, next_y, rasters);
             }
         }
-        DrawNode::Image { at, width, height, mime, bytes } => {
+        VectorNode::Image { at, width, height, mime, bytes } => {
             if rasters.len() >= 8 || *width <= 0.0 || *height <= 0.0 || !mime.contains("png") {
                 return;
             }
             let Some(data_url) = png_data_url(bytes) else { return };
             rasters.push(DrawingRaster { x: (at.x + tx) as f32, y: (at.y + ty) as f32, width: *width as f32, height: *height as f32, data_url });
         }
-        DrawNode::Path { .. } | DrawNode::Text { .. } => {}
+        VectorNode::Path { .. } | VectorNode::Text { .. } => {}
     }
 }
 
@@ -660,23 +663,23 @@ fn place_drawing_rasters(rasters: &[DrawingRaster], strokes: &[DisplayStroke], b
     images
 }
 
-fn raw_drawing_strokes(doc: &LayoutSnapshot) -> Vec<DisplayStroke> {
-    let Some(drawing) = doc.background_drawing.as_ref() else { return Vec::new() };
+fn raw_drawing_strokes(scene: Option<&VectorScene>) -> Vec<DisplayStroke> {
+    let Some(drawing) = scene else { return Vec::new() };
     let mut raw = Vec::new();
-    for layer in &drawing.content.layers {
+    for layer in &drawing.layers {
         if !layer.visible {
             continue;
         }
-        collect_draw_node(&layer.root, &drawing.content.styles, 0.0, 0.0, &mut raw);
+        collect_draw_node(&layer.root, &drawing.styles, 0.0, 0.0, &mut raw);
     }
     raw
 }
 
-fn drawing_strokes(doc: &LayoutSnapshot, page_width: f64, page_height: f64) -> Vec<DisplayStroke> {
+fn drawing_strokes(raw: &[DisplayStroke], page_width: f64, page_height: f64) -> Vec<DisplayStroke> {
     if page_width <= 0.0 || page_height <= 0.0 {
         return Vec::new();
     }
-    fit_strokes(&raw_drawing_strokes(doc), page_width, page_height)
+    fit_strokes(raw, page_width, page_height)
 }
 
 fn drawing_kind(kind: &str) -> bool {
@@ -719,7 +722,7 @@ fn place_drawing_in_frame(raw: &[DisplayStroke], bounds: &LayoutBounds) -> Vec<D
         .collect()
 }
 
-fn plan_stroke_paint(styles: &[semio_s_artifact_stdio_semio_drawing::schema::snapshot::DrawStyle], name: &Option<String>) -> (Option<[f32; 4]>, [f32; 4], f32) {
+fn plan_stroke_paint(styles: &[VectorStyle], name: &Option<String>) -> (Option<[f32; 4]>, [f32; 4], f32) {
     let mut color = [0.15_f32, 0.2, 0.28, 1.0];
     let mut width = 1.0_f32;
     let mut fill = None;
@@ -743,17 +746,16 @@ fn plan_stroke_paint(styles: &[semio_s_artifact_stdio_semio_drawing::schema::sna
     (fill, color, width)
 }
 
-fn collect_draw_node(node: &semio_s_artifact_stdio_semio_drawing::schema::snapshot::DrawNode, styles: &[semio_s_artifact_stdio_semio_drawing::schema::snapshot::DrawStyle], tx: f64, ty: f64, out: &mut Vec<DisplayStroke>) {
-    use semio_s_artifact_stdio_semio_drawing::schema::snapshot::{DrawNode, PathSegment};
+fn collect_draw_node(node: &VectorNode, styles: &[VectorStyle], tx: f64, ty: f64, out: &mut Vec<DisplayStroke>) {
     match node {
-        DrawNode::Group { transform, children } => {
+        VectorNode::Group { transform, children } => {
             let next_x = tx + transform.translation.x;
             let next_y = ty + transform.translation.y;
             for child in children {
                 collect_draw_node(child, styles, next_x, next_y, out);
             }
         }
-        DrawNode::Path { segments, style } => {
+        VectorNode::Path { segments, style } => {
             let (fill, color, width) = plan_stroke_paint(styles, style);
             let mut current: Option<(f64, f64)> = None;
             let mut points = Vec::new();
@@ -768,12 +770,12 @@ fn collect_draw_node(node: &semio_s_artifact_stdio_semio_drawing::schema::snapsh
             };
             for segment in segments {
                 match segment {
-                    PathSegment::MoveTo { to } => {
+                    VectorSegment::MoveTo { to } => {
                         flush(&mut points, &mut closed, out);
                         current = Some((to.x + tx, to.y + ty));
                         points.push(((to.x + tx) as f32, (to.y + ty) as f32));
                     }
-                    PathSegment::LineTo { to } => {
+                    VectorSegment::LineTo { to } => {
                         let point = (to.x + tx, to.y + ty);
                         if points.is_empty() {
                             if let Some(start) = current {
@@ -783,7 +785,7 @@ fn collect_draw_node(node: &semio_s_artifact_stdio_semio_drawing::schema::snapsh
                         push_point(&mut points, point);
                         current = Some(point);
                     }
-                    PathSegment::CubicTo { c1, c2, to } => {
+                    VectorSegment::CubicTo { c1, c2, to } => {
                         let start = current.unwrap_or((c1.x + tx, c1.y + ty));
                         for step in 1..=4 {
                             let t = step as f64 / 4.0;
@@ -791,7 +793,7 @@ fn collect_draw_node(node: &semio_s_artifact_stdio_semio_drawing::schema::snapsh
                         }
                         current = Some((to.x + tx, to.y + ty));
                     }
-                    PathSegment::QuadTo { c, to } => {
+                    VectorSegment::QuadTo { c, to } => {
                         let start = current.unwrap_or((c.x + tx, c.y + ty));
                         for step in 1..=4 {
                             let t = step as f64 / 4.0;
@@ -799,7 +801,7 @@ fn collect_draw_node(node: &semio_s_artifact_stdio_semio_drawing::schema::snapsh
                         }
                         current = Some((to.x + tx, to.y + ty));
                     }
-                    PathSegment::ArcTo { rx, ry, x_rotation, large_arc, sweep, to } => {
+                    VectorSegment::ArcTo { rx, ry, x_rotation, large_arc, sweep, to } => {
                         let end = (to.x + tx, to.y + ty);
                         let start = current.unwrap_or(end);
                         let sampled = arc_points(start, *rx, *ry, *x_rotation, *large_arc, *sweep, end);
@@ -812,12 +814,12 @@ fn collect_draw_node(node: &semio_s_artifact_stdio_semio_drawing::schema::snapsh
                         }
                         current = Some(end);
                     }
-                    PathSegment::Close => closed = true,
+                    VectorSegment::Close => closed = true,
                 }
             }
             flush(&mut points, &mut closed, out);
         }
-        DrawNode::Text { .. } | DrawNode::Image { .. } => {}
+        VectorNode::Text { .. } | VectorNode::Image { .. } => {}
     }
 }
 
@@ -944,9 +946,10 @@ fn assemble_display_list(mut engine: Option<&mut LayoutEngine>, doc: &LayoutSnap
     let mut text_runs = Vec::new();
     let mut images = Vec::new();
     let mut frame_strokes = Vec::new();
-    let raw_drawing = raw_drawing_strokes(doc);
-    let raw_labels = raw_drawing_labels(doc);
-    let raw_rasters = raw_drawing_rasters(doc);
+    let background = background_scene(doc);
+    let raw_drawing = raw_drawing_strokes(background.as_ref());
+    let raw_labels = raw_drawing_labels(background.as_ref());
+    let raw_rasters = raw_drawing_rasters(background.as_ref());
     let mut frame_labels: Vec<(u32, DrawingLabel)> = Vec::new();
     let mut guides = if chrome_blueprint && page.id == active_page_id { page_margin_guides(page) } else { Vec::new() };
 
@@ -1072,7 +1075,7 @@ fn assemble_display_list(mut engine: Option<&mut LayoutEngine>, doc: &LayoutSnap
         }
     }
 
-    let strokes = drawing_strokes(doc, page.width, page.height);
+    let strokes = drawing_strokes(&raw_drawing, page.width, page.height);
     let label_fit = fit_from_points(stroke_points(&raw_drawing), page.width, page.height).or_else(|| fit_from_points(raw_labels.iter().map(|label| (label.x, label.y)), page.width, page.height));
     if let Some(engine) = engine.as_deref_mut() {
         if let Some((scale, ox, oy)) = label_fit {

@@ -1,4 +1,7 @@
-use super::*;
+use crate::{schema::snapshot::ZipCentralHeaderMetadata, schema::snapshot::ZipEntry, schema::snapshot::ZipEntryMetadata, schema::snapshot::ZipExtraField, schema::snapshot::ZipLocalHeaderMetadata};
+use crate::{ZipSnapshot, STDIO_ZIP_DOCUMENT_SCHEMA};
+use crate::standards::v2_0::subsets::base::io::*;
+use semio_framework_test_fixtures::fixture_text;
 use std::io::Read;
 
 //#region Fixtures
@@ -242,7 +245,7 @@ fn decode_rich_synthetic_archive() {
 
 #[test]
 fn header_fidelity_fixture_survives_exactly_and_matches_independent_zip_reader() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧭️header-fidelity/🔣️.json")).expect("neutral ZIP header fixture");
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../🏅️standards/🔖️2.0/🪆️subsets/🧱️base/🚪️io/🧪️tests/🧫️fixtures/🧭️header-fidelity/🔣️.json")).expect("neutral ZIP header fixture");
     let bytes = |at: &serde_json::Value| at.as_array().expect("byte array").iter().map(|value| value.as_u64().expect("byte") as u8).collect::<Vec<_>>();
     let number = |at: &serde_json::Value| at.as_u64().expect("number");
     let directory = &fixture["directory"];
@@ -549,7 +552,7 @@ fn sniff_recognizes_real_magic_and_rejects_garbage() {
 
 #[test]
 fn logical_diff_does_not_require_native_comment_encoding(){
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🚪️logical-diff-independence/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../🏅️standards/🔖️2.0/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/🚪️logical-diff-independence/🔣️.json")).unwrap();
     let base=ZipSnapshot{comment_utf8:fixture["before"]["commentUtf8"].as_bool().unwrap(),..ZipSnapshot::default()};
     let diff=crate::standards::v2_0::subsets::base::schema::diff::ZipDiff{comment:Some(fixture["mutation"]["comment"].as_str().unwrap().into()),..crate::standards::v2_0::subsets::base::schema::diff::ZipDiff::default()};
     let after=protocol::apply_diff(&diff,&base).expect("logical comment edit must not materialize native ZIP");
@@ -557,5 +560,4 @@ fn logical_diff_does_not_require_native_comment_encoding(){
     let mut reference=fixture["before"].clone();reference["comment"]=fixture["mutation"]["comment"].clone();
     assert_eq!(reference,fixture["after"]);assert_eq!(actual,reference);
     assert_eq!(crate::standards::v2_0::subsets::base::io::encode_zip(&after).is_ok(),fixture["nativeEncode"].as_bool().unwrap());
-    eprintln!("[DEBUG] ZIP logical diff and separate native admission oracle=serde_json");
 }

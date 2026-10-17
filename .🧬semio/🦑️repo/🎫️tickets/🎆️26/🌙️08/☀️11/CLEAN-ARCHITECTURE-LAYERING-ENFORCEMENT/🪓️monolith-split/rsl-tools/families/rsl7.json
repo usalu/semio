@@ -1,0 +1,35 @@
+{
+ "name": "rsl7",
+ "crates": [
+  "semio-s-artifact-block-5d-editor",
+  "semio-s-artifact-block-3d-editor",
+  "semio-s-artifact-space-home",
+  "semio-s-artifact-space-space-editor",
+  "semio-s-artifact-sourcing-curation",
+  "semio-s-dev-trinity-jack",
+  "semio-hub-space-app",
+  "semio-framework-os-mcp-catalog",
+  "semio-framework-os-flow-wasm-actions-b",
+  "semio-framework-os-flow-wasm-actions-a",
+  "semio-framework-os-flow-wasm",
+  "semio-framework-os-flow-wasm-domain"
+ ],
+ "base": {
+  "rev": "b84bf526c7ba",
+  "crates": [
+   "semio-s-artifact-block-5d-editor",
+   "semio-s-artifact-block-3d-editor",
+   "semio-s-artifact-space-home",
+   "semio-s-artifact-space-space-editor",
+   "semio-s-artifact-sourcing-curation",
+   "semio-s-dev-trinity-jack",
+   "semio-hub-space-app",
+   "semio-framework-os-mcp-catalog",
+   "semio-framework-os-flow-wasm-actions-b",
+   "semio-framework-os-flow-wasm-actions-a",
+   "semio-framework-os-flow-wasm",
+   "semio-framework-os-flow-wasm-domain"
+  ]
+ },
+ "note": "RUST-LEFTOVERS F-04(a): consumers re-pointed from facade alias paths"
+}

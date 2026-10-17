@@ -1,6 +1,10 @@
 //! 🧪️ The sheet rows: papers and dates read as text, every field reads and the writable ones become the mutation that sets exactly that field, a new sheet, viewport or revision applies cleanly, and the inferred rows read off the layout.
 
-use super::*;
+use super::{REVISION, SHEET, VIEWPORT, create_revision, create_sheet, create_viewport, next_mark, next_number, orientation_choices, parse_paper, scale_of, sheet_choices, view_choices};
+use crate::editor::bim::entities::EntityKind;
+use crate::editor::bim::terminology::BimLabels;
+use crate::standards::v1::subsets::any::schema::snapshot::{IsoSize, ModelSnapshot, Orientation, Paper, Point2};
+use crate::standards::v1::subsets::any::schema::mutations::ModelMutation;
 use crate::standards::v1::subsets::any::io::export::sheets::testkit::{house_with_sheets, inferred};
 use protocol::Mutation;
 

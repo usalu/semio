@@ -1,6 +1,6 @@
 //! 🧮️ The protocol byte walker: deep-walks bytes against a `ProtocolFile` with walk-wide state and exact mismatch offsets.
 
-use super::{Block, Cond, CondOp, Count, DispatchOrder, Field, Framing, NestedDispatch, Prim, ProtocolFile, ProtocolMismatch, ProtocolTrace, RepeatDispatch, parse_protocol, walk_literal_protocol_controlled};
+use super::{prim_fixed_width, Block, Cond, CondOp, Count, DispatchOrder, Field, Framing, NestedDispatch, Prim, ProtocolFile, ProtocolMismatch, ProtocolTrace, RepeatDispatch, parse_protocol, walk_literal_protocol_controlled};
 
 //#region 📡️ProtocolWalk
 /// 🧮️ P2-M2 items 3+6: walk-wide state threaded through the ENTIRE `walk_protocol` pass
@@ -14,19 +14,6 @@ use super::{Block, Cond, CondOp, Count, DispatchOrder, Field, Framing, NestedDis
 struct WalkState {
     pub(super) env: std::collections::HashMap<String, u64>,
     big_endian: bool,
-}
-
-pub(super) fn prim_fixed_width(prim: &Prim) -> Option<usize> {
-    match prim {
-        Prim::U8 => Some(1),
-        Prim::U16 | Prim::U16Be => Some(2),
-        Prim::U32 | Prim::I32 | Prim::F32 | Prim::U32Be | Prim::I32Be | Prim::F32Be => Some(4),
-        Prim::U64 | Prim::I64 | Prim::F64 | Prim::U64Be | Prim::I64Be | Prim::F64Be => Some(8),
-        Prim::Fixed(n) => Some(*n),
-        Prim::MarkerScan(_) => Some(1),
-        Prim::Endian(arms) => Some(arms.first().map_or(0, |(k, _)| k.len())),
-        Prim::Varint | Prim::Zigzag | Prim::Tag | Prim::Bytes | Prim::Utf8 | Prim::Array(_, _) | Prim::Ref(_) => None,
-    }
 }
 
 fn decode_u16(slice: &[u8], big_endian: bool) -> u16 {

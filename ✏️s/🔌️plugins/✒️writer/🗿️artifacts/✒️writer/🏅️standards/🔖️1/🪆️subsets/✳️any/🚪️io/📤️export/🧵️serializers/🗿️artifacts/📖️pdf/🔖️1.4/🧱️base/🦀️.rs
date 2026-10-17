@@ -19,6 +19,4 @@ impl Serializer<WriterSnapshot> for WriterIntoPdf {
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

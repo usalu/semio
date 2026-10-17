@@ -101,6 +101,10 @@ type stdioXml10BaseSnapshotGuardSizeBounds = { readonly minItems?: number; reado
 
 export const stdioXml10BaseSnapshotGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : stdioXml10BaseSnapshotGuardReject(at, "value is not an object");
+export const stdioXml10BaseSnapshotGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) stdioXml10BaseSnapshotGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const stdioXml10BaseSnapshotGuardArray = (value: unknown, at: string, bounds: stdioXml10BaseSnapshotGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return stdioXml10BaseSnapshotGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) stdioXml10BaseSnapshotGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -139,8 +143,7 @@ export function parseXmlSnapshot(value: unknown, at = "$"): XmlSnapshot {
 }
 
 export function parseXmlAttr(value: unknown, at = "$"): XmlAttr {
-  const row = stdioXml10BaseSnapshotGuardObject(value, at);
-  for (const key of Object.keys(row)) if (key !== "name" && key !== "value") stdioXml10BaseSnapshotGuardReject(`${at}.${key}`, "unknown XML attribute field");
+  const row = stdioXml10BaseSnapshotGuardClosed(stdioXml10BaseSnapshotGuardObject(value, at), at, ["name", "value"]);
   return {
     name: stdioXml10BaseSnapshotGuardString(row["name"], `${at}.name`),
     value: stdioXml10BaseSnapshotGuardString(row["value"], `${at}.value`),
@@ -149,14 +152,11 @@ export function parseXmlAttr(value: unknown, at = "$"): XmlAttr {
 
 export function parseXmlDeclaration(value: unknown, at = "$"): XmlDeclaration {
   const row = stdioXml10BaseSnapshotGuardObject(value, at);
-  const version = stdioXml10BaseSnapshotGuardString(row["version"], `${at}.version`);
-  const encoding = row["encoding"] === undefined ? undefined : stdioXml10BaseSnapshotGuardString(row["encoding"], `${at}.encoding`);
-  const quote = row["quote"] === undefined ? undefined : stdioXml10BaseSnapshotGuardMember<XmlQuote>(row["quote"], `${at}.quote`, ["double", "single"]);
   return {
-    version,
-    encoding,
+    version: stdioXml10BaseSnapshotGuardString(row["version"], `${at}.version`),
+    encoding: row["encoding"] === undefined ? undefined : stdioXml10BaseSnapshotGuardString(row["encoding"], `${at}.encoding`),
     standalone: row["standalone"] === undefined ? undefined : stdioXml10BaseSnapshotGuardBoolean(row["standalone"], `${at}.standalone`),
-    quote,
+    quote: row["quote"] === undefined ? undefined : stdioXml10BaseSnapshotGuardMember(row["quote"], `${at}.quote`, ["double", "single"] as const),
   };
 }
 
@@ -171,31 +171,11 @@ export function parseXmlDtdDeclaration(value: unknown, at = "$"): XmlDtdDeclarat
 }
 
 export function parseXmlExternalId(value: unknown, at = "$"): XmlExternalId {
-  const row = stdioXml10BaseSnapshotGuardObject(value, at);
-  const kind = stdioXml10BaseSnapshotGuardMember(row["kind"], `${at}.kind`, ["system", "public"] as const);
-  if (kind === "system") return { kind, systemId: stdioXml10BaseSnapshotGuardString(row["systemId"], `${at}.systemId`) };
-  return {
-    kind,
-    publicId: stdioXml10BaseSnapshotGuardString(row["publicId"], `${at}.publicId`),
-    systemId: stdioXml10BaseSnapshotGuardString(row["systemId"], `${at}.systemId`),
-  };
+  return ((row0) => { switch (stdioXml10BaseSnapshotGuardMember(row0["kind"], `${at}.kind`, ["system", "public"] as const)) { case "system": return { kind: "system", systemId: stdioXml10BaseSnapshotGuardString(row0["systemId"], `${at}.systemId`) }; case "public": return { kind: "public", publicId: stdioXml10BaseSnapshotGuardString(row0["publicId"], `${at}.publicId`), systemId: stdioXml10BaseSnapshotGuardString(row0["systemId"], `${at}.systemId`) }; } })(stdioXml10BaseSnapshotGuardObject(value, `${at}`));
 }
 
 export function parseXmlNode(value: unknown, at = "$"): XmlNode {
-  const row = stdioXml10BaseSnapshotGuardObject(value, at);
-  const kind = stdioXml10BaseSnapshotGuardMember(row["kind"], `${at}.kind`, ["element", "text", "cData", "comment", "processingInstruction"] as const);
-  if (kind === "element") return {
-    kind,
-    name: stdioXml10BaseSnapshotGuardString(row["name"], `${at}.name`),
-    attrs: stdioXml10BaseSnapshotGuardArray(row["attrs"], `${at}.attrs`).map((item, index) => parseXmlAttr(item, `${at}.attrs[${index}]`)),
-    children: stdioXml10BaseSnapshotGuardArray(row["children"], `${at}.children`).map((item, index) => parseXmlNode(item, `${at}.children[${index}]`)),
-  };
-  if (kind === "processingInstruction") return {
-    kind,
-    target: stdioXml10BaseSnapshotGuardString(row["target"], `${at}.target`),
-    data: stdioXml10BaseSnapshotGuardString(row["data"], `${at}.data`),
-  };
-  return { kind, text: stdioXml10BaseSnapshotGuardString(row["text"], `${at}.text`) };
+  return ((row0) => { switch (stdioXml10BaseSnapshotGuardMember(row0["kind"], `${at}.kind`, ["element", "text", "cData", "comment", "processingInstruction"] as const)) { case "element": return { kind: "element", name: stdioXml10BaseSnapshotGuardString(row0["name"], `${at}.name`), attrs: stdioXml10BaseSnapshotGuardArray(row0["attrs"], `${at}.attrs`).map((item1, index1) => parseXmlAttr(item1, `${at}.attrs[${index1}]`)), children: stdioXml10BaseSnapshotGuardArray(row0["children"], `${at}.children`).map((item1, index1) => parseXmlNode(item1, `${at}.children[${index1}]`)) }; case "text": return { kind: "text", text: stdioXml10BaseSnapshotGuardString(row0["text"], `${at}.text`) }; case "cData": return { kind: "cData", text: stdioXml10BaseSnapshotGuardString(row0["text"], `${at}.text`) }; case "comment": return { kind: "comment", text: stdioXml10BaseSnapshotGuardString(row0["text"], `${at}.text`) }; case "processingInstruction": return { kind: "processingInstruction", target: stdioXml10BaseSnapshotGuardString(row0["target"], `${at}.target`), data: stdioXml10BaseSnapshotGuardString(row0["data"], `${at}.data`) }; } })(stdioXml10BaseSnapshotGuardObject(value, `${at}`));
 }
 
 export function parseXmlDoctype(value: unknown, at = "$"): XmlDoctype {
@@ -210,14 +190,13 @@ export function parseXmlDoctype(value: unknown, at = "$"): XmlDoctype {
 
 export function parseXmlDocument(value: unknown, at = "$"): XmlDocument {
   const row = stdioXml10BaseSnapshotGuardObject(value, at);
-  const document = {
+  return {
     root: row["root"] === undefined ? undefined : parseXmlNode(row["root"], `${at}.root`),
     doctype: row["doctype"] === undefined ? undefined : parseXmlDoctype(row["doctype"], `${at}.doctype`),
     declaration: row["declaration"] === undefined ? undefined : parseXmlDeclaration(row["declaration"], `${at}.declaration`),
     prolog: row["prolog"] === undefined ? [] : stdioXml10BaseSnapshotGuardArray(row["prolog"], `${at}.prolog`).map((item, index) => parseXmlNode(item, `${at}.prolog[${index}]`)),
     epilog: row["epilog"] === undefined ? [] : stdioXml10BaseSnapshotGuardArray(row["epilog"], `${at}.epilog`).map((item, index) => parseXmlNode(item, `${at}.epilog[${index}]`)),
   };
-  return document;
 }
 
 const retainedExact = (row: Readonly<Record<string, unknown>>, fields: readonly string[], at: string): void => {
@@ -227,70 +206,54 @@ const retainedIndex = (value: unknown, at: string): number => stdioXml10BaseSnap
 const retainedNullableIndex = (value: unknown, at: string): number | null => value === null ? null : retainedIndex(value, at);
 
 /** 🚪️ Parses one retained XML node value. */
-export function parseRetainedXmlNodeKind(value: unknown, at = '$'): RetainedXmlNodeKind {
-  const row = stdioXml10BaseSnapshotGuardObject(value, at);
-  const kind = stdioXml10BaseSnapshotGuardMember(row.kind, `${at}.kind`, ['element', 'text', 'cData', 'comment', 'processingInstruction'] as const);
-  if (kind === 'element') {
-    retainedExact(row, ['kind', 'name', 'first_attribute', 'attribute_count', 'first_child'], at);
-    return { kind, name: stdioXml10BaseSnapshotGuardString(row.name, `${at}.name`), first_attribute: retainedIndex(row.first_attribute, `${at}.first_attribute`), attribute_count: retainedIndex(row.attribute_count, `${at}.attribute_count`), first_child: retainedNullableIndex(row.first_child, `${at}.first_child`) };
-  }
-  if (kind === 'processingInstruction') {
-    retainedExact(row, ['kind', 'target', 'data'], at);
-    return { kind, target: stdioXml10BaseSnapshotGuardString(row.target, `${at}.target`), data: stdioXml10BaseSnapshotGuardString(row.data, `${at}.data`) };
-  }
-  retainedExact(row, ['kind', 'text'], at);
-  return { kind, text: stdioXml10BaseSnapshotGuardString(row.text, `${at}.text`) };
+export function parseRetainedXmlNodeKind(value: unknown, at = "$"): RetainedXmlNodeKind {
+  return ((row0) => { switch (stdioXml10BaseSnapshotGuardMember(row0["kind"], `${at}.kind`, ["element", "text", "cData", "comment", "processingInstruction"] as const)) { case "element": stdioXml10BaseSnapshotGuardClosed(row0, `${at}`, ["kind", "name", "first_attribute", "attribute_count", "first_child"]); return { kind: "element", name: stdioXml10BaseSnapshotGuardString(row0["name"], `${at}.name`), first_attribute: stdioXml10BaseSnapshotGuardInteger(row0["first_attribute"], `${at}.first_attribute`, {"minimum": 0}), attribute_count: stdioXml10BaseSnapshotGuardInteger(row0["attribute_count"], `${at}.attribute_count`, {"minimum": 0}), first_child: (row0["first_child"] === null ? null : stdioXml10BaseSnapshotGuardInteger(row0["first_child"], `${at}.first_child`, {"minimum": 0})) }; case "text": stdioXml10BaseSnapshotGuardClosed(row0, `${at}`, ["kind", "text"]); return { kind: "text", text: stdioXml10BaseSnapshotGuardString(row0["text"], `${at}.text`) }; case "cData": stdioXml10BaseSnapshotGuardClosed(row0, `${at}`, ["kind", "text"]); return { kind: "cData", text: stdioXml10BaseSnapshotGuardString(row0["text"], `${at}.text`) }; case "comment": stdioXml10BaseSnapshotGuardClosed(row0, `${at}`, ["kind", "text"]); return { kind: "comment", text: stdioXml10BaseSnapshotGuardString(row0["text"], `${at}.text`) }; case "processingInstruction": stdioXml10BaseSnapshotGuardClosed(row0, `${at}`, ["kind", "target", "data"]); return { kind: "processingInstruction", target: stdioXml10BaseSnapshotGuardString(row0["target"], `${at}.target`), data: stdioXml10BaseSnapshotGuardString(row0["data"], `${at}.data`) }; } })(stdioXml10BaseSnapshotGuardObject(value, `${at}`));
 }
 
 /** 🚪️ Parses one retained XML node. */
-export function parseRetainedXmlNode(value: unknown, at = '$'): RetainedXmlNode {
-  const row = stdioXml10BaseSnapshotGuardObject(value, at);
-  retainedExact(row, ['nextSibling', 'value'], at);
-  return { nextSibling: retainedNullableIndex(row.nextSibling, `${at}.nextSibling`), value: parseRetainedXmlNodeKind(row.value, `${at}.value`) };
+export function parseRetainedXmlNode(value: unknown, at = "$"): RetainedXmlNode {
+  const row = stdioXml10BaseSnapshotGuardClosed(stdioXml10BaseSnapshotGuardObject(value, at), at, ["nextSibling", "value"]);
+  return {
+    nextSibling: (row["nextSibling"] === null ? null : stdioXml10BaseSnapshotGuardInteger(row["nextSibling"], `${at}.nextSibling`, {"minimum": 0})),
+    value: parseRetainedXmlNodeKind(row["value"], `${at}.value`),
+  };
 }
 
 /** 🚪️ Parses one retained XML external identifier. */
-export function parseRetainedXmlExternalId(value: unknown, at = '$'): RetainedXmlExternalId {
-  const row = stdioXml10BaseSnapshotGuardObject(value, at);
-  const kind = stdioXml10BaseSnapshotGuardMember(row.kind, `${at}.kind`, ['system', 'public'] as const);
-  if (kind === 'system') {
-    retainedExact(row, ['kind', 'systemId'], at);
-    return { kind, systemId: stdioXml10BaseSnapshotGuardString(row.systemId, `${at}.systemId`) };
-  }
-  retainedExact(row, ['kind', 'publicId', 'systemId'], at);
-  return { kind, publicId: stdioXml10BaseSnapshotGuardString(row.publicId, `${at}.publicId`), systemId: stdioXml10BaseSnapshotGuardString(row.systemId, `${at}.systemId`) };
+export function parseRetainedXmlExternalId(value: unknown, at = "$"): RetainedXmlExternalId {
+  return ((row0) => { switch (stdioXml10BaseSnapshotGuardMember(row0["kind"], `${at}.kind`, ["system", "public"] as const)) { case "system": stdioXml10BaseSnapshotGuardClosed(row0, `${at}`, ["kind", "systemId"]); return { kind: "system", systemId: stdioXml10BaseSnapshotGuardString(row0["systemId"], `${at}.systemId`) }; case "public": stdioXml10BaseSnapshotGuardClosed(row0, `${at}`, ["kind", "publicId", "systemId"]); return { kind: "public", publicId: stdioXml10BaseSnapshotGuardString(row0["publicId"], `${at}.publicId`), systemId: stdioXml10BaseSnapshotGuardString(row0["systemId"], `${at}.systemId`) }; } })(stdioXml10BaseSnapshotGuardObject(value, `${at}`));
 }
 
 /** 🚪️ Parses one retained XML DTD declaration. */
-export function parseRetainedXmlDtdDeclaration(value: unknown, at = '$'): RetainedXmlDtdDeclaration {
-  const row = stdioXml10BaseSnapshotGuardObject(value, at);
-  retainedExact(row, ['kind', 'parameter', 'name', 'value'], at);
-  return { kind: stdioXml10BaseSnapshotGuardConstant(row.kind, `${at}.kind`, 'entity'), parameter: stdioXml10BaseSnapshotGuardBoolean(row.parameter, `${at}.parameter`), name: stdioXml10BaseSnapshotGuardString(row.name, `${at}.name`), value: stdioXml10BaseSnapshotGuardString(row.value, `${at}.value`) };
+export function parseRetainedXmlDtdDeclaration(value: unknown, at = "$"): RetainedXmlDtdDeclaration {
+  const row = stdioXml10BaseSnapshotGuardClosed(stdioXml10BaseSnapshotGuardObject(value, at), at, ["kind", "parameter", "name", "value"]);
+  return {
+    kind: stdioXml10BaseSnapshotGuardConstant(row["kind"], `${at}.kind`, "entity"),
+    parameter: stdioXml10BaseSnapshotGuardBoolean(row["parameter"], `${at}.parameter`),
+    name: stdioXml10BaseSnapshotGuardString(row["name"], `${at}.name`),
+    value: stdioXml10BaseSnapshotGuardString(row["value"], `${at}.value`),
+  };
 }
 
 /** 🚪️ Parses one retained XML document type. */
-export function parseRetainedXmlDoctype(value: unknown, at = '$'): RetainedXmlDoctype {
-  const row = stdioXml10BaseSnapshotGuardObject(value, at);
-  retainedExact(row, ['prologPosition', 'name', 'externalId', 'declarations'], at);
-  const prologPosition = stdioXml10BaseSnapshotGuardString(row.prologPosition, `${at}.prologPosition`);
-  parseXmlPosition(prologPosition, `${at}.prologPosition`);
+export function parseRetainedXmlDoctype(value: unknown, at = "$"): RetainedXmlDoctype {
+  const row = stdioXml10BaseSnapshotGuardClosed(stdioXml10BaseSnapshotGuardObject(value, at), at, ["prologPosition", "name", "externalId", "declarations"]);
   return {
-    prologPosition,
-    name: stdioXml10BaseSnapshotGuardString(row.name, `${at}.name`),
-    externalId: row.externalId === null ? null : parseRetainedXmlExternalId(row.externalId, `${at}.externalId`),
-    declarations: stdioXml10BaseSnapshotGuardArray(row.declarations, `${at}.declarations`).map((item, index) => parseRetainedXmlDtdDeclaration(item, `${at}.declarations[${index}]`)),
+    prologPosition: stdioXml10BaseSnapshotGuardString(row["prologPosition"], `${at}.prologPosition`, {"maxLength": 20, "pattern": "^(0|[1-9][0-9]*)$"}),
+    name: stdioXml10BaseSnapshotGuardString(row["name"], `${at}.name`),
+    externalId: (row["externalId"] === null ? null : parseRetainedXmlExternalId(row["externalId"], `${at}.externalId`)),
+    declarations: stdioXml10BaseSnapshotGuardArray(row["declarations"], `${at}.declarations`).map((item, index) => parseRetainedXmlDtdDeclaration(item, `${at}.declarations[${index}]`)),
   };
 }
 
 /** 🚪️ Parses one retained XML declaration. */
-export function parseRetainedXmlDeclaration(value: unknown, at = '$'): RetainedXmlDeclaration {
-  const row = stdioXml10BaseSnapshotGuardObject(value, at);
-  retainedExact(row, ['version', 'encoding', 'standalone', 'quote'], at);
+export function parseRetainedXmlDeclaration(value: unknown, at = "$"): RetainedXmlDeclaration {
+  const row = stdioXml10BaseSnapshotGuardClosed(stdioXml10BaseSnapshotGuardObject(value, at), at, ["version", "encoding", "standalone", "quote"]);
   return {
-    version: stdioXml10BaseSnapshotGuardString(row.version, `${at}.version`),
-    encoding: row.encoding === null ? null : stdioXml10BaseSnapshotGuardString(row.encoding, `${at}.encoding`),
-    standalone: row.standalone === null ? null : stdioXml10BaseSnapshotGuardBoolean(row.standalone, `${at}.standalone`),
-    quote: stdioXml10BaseSnapshotGuardMember(row.quote, `${at}.quote`, ['double', 'single'] as const),
+    version: stdioXml10BaseSnapshotGuardString(row["version"], `${at}.version`),
+    encoding: (row["encoding"] === null ? null : stdioXml10BaseSnapshotGuardString(row["encoding"], `${at}.encoding`)),
+    standalone: (row["standalone"] === null ? null : stdioXml10BaseSnapshotGuardBoolean(row["standalone"], `${at}.standalone`)),
+    quote: stdioXml10BaseSnapshotGuardMember(row["quote"], `${at}.quote`, ["double", "single"] as const),
   };
 }
 
@@ -322,20 +285,17 @@ const validateRetainedXmlDocument = (document: RetainedXmlDocument, at: string):
 };
 
 /** 🚪️ Parses and validates the flat retained XML authority. */
-export function parseRetainedXmlDocument(value: unknown, at = '$'): RetainedXmlDocument {
-  const row = stdioXml10BaseSnapshotGuardObject(value, at);
-  retainedExact(row, ['nodes', 'attributes', 'prolog', 'epilog', 'root', 'doctype', 'declaration'], at);
-  const document: RetainedXmlDocument = {
-    nodes: stdioXml10BaseSnapshotGuardArray(row.nodes, `${at}.nodes`).map((item, index) => parseRetainedXmlNode(item, `${at}.nodes[${index}]`)),
-    attributes: stdioXml10BaseSnapshotGuardArray(row.attributes, `${at}.attributes`).map((item, index) => parseXmlAttr(item, `${at}.attributes[${index}]`)),
-    prolog: stdioXml10BaseSnapshotGuardArray(row.prolog, `${at}.prolog`).map((item, index) => retainedIndex(item, `${at}.prolog[${index}]`)),
-    epilog: stdioXml10BaseSnapshotGuardArray(row.epilog, `${at}.epilog`).map((item, index) => retainedIndex(item, `${at}.epilog[${index}]`)),
-    root: retainedNullableIndex(row.root, `${at}.root`),
-    doctype: row.doctype === null ? null : parseRetainedXmlDoctype(row.doctype, `${at}.doctype`),
-    declaration: row.declaration === null ? null : parseRetainedXmlDeclaration(row.declaration, `${at}.declaration`),
+export function parseRetainedXmlDocument(value: unknown, at = "$"): RetainedXmlDocument {
+  const row = stdioXml10BaseSnapshotGuardClosed(stdioXml10BaseSnapshotGuardObject(value, at), at, ["nodes", "attributes", "prolog", "epilog", "root", "doctype", "declaration"]);
+  return {
+    nodes: stdioXml10BaseSnapshotGuardArray(row["nodes"], `${at}.nodes`).map((item, index) => parseRetainedXmlNode(item, `${at}.nodes[${index}]`)),
+    attributes: stdioXml10BaseSnapshotGuardArray(row["attributes"], `${at}.attributes`).map((item, index) => parseRetainedXmlAttribute(item, `${at}.attributes[${index}]`)),
+    prolog: stdioXml10BaseSnapshotGuardArray(row["prolog"], `${at}.prolog`).map((item, index) => stdioXml10BaseSnapshotGuardInteger(item, `${at}.prolog[${index}]`, {"minimum": 0})),
+    epilog: stdioXml10BaseSnapshotGuardArray(row["epilog"], `${at}.epilog`).map((item, index) => stdioXml10BaseSnapshotGuardInteger(item, `${at}.epilog[${index}]`, {"minimum": 0})),
+    root: (row["root"] === null ? null : stdioXml10BaseSnapshotGuardInteger(row["root"], `${at}.root`, {"minimum": 0})),
+    doctype: (row["doctype"] === null ? null : parseRetainedXmlDoctype(row["doctype"], `${at}.doctype`)),
+    declaration: (row["declaration"] === null ? null : parseRetainedXmlDeclaration(row["declaration"], `${at}.declaration`)),
   };
-  validateRetainedXmlDocument(document, at);
-  return document;
 }
 
 /** 📥️ Flattens one ordinary XML tree into the retained ownership authority. */
@@ -465,3 +425,11 @@ export function validateXmlDeclarationWire(declaration:XmlDeclaration,at="$" ):v
 }
 
 function xmlOwnedPosition(value:unknown,at:string):bigint{if(typeof value!=="bigint"||value<0n||value>18446744073709551615n)throw new Error(`${at}: expected owned unsigned64`);return value;}
+
+export function parseRetainedXmlAttribute(value: unknown, at = "$"): RetainedXmlAttribute {
+  const row = stdioXml10BaseSnapshotGuardClosed(stdioXml10BaseSnapshotGuardObject(value, at), at, ["name", "value"]);
+  return {
+    name: stdioXml10BaseSnapshotGuardString(row["name"], `${at}.name`),
+    value: stdioXml10BaseSnapshotGuardString(row["value"], `${at}.value`),
+  };
+}

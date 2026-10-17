@@ -171,6 +171,4 @@ impl protocol::DiffAlgebra<PresentationSnapshot> for PresentationDiff {
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

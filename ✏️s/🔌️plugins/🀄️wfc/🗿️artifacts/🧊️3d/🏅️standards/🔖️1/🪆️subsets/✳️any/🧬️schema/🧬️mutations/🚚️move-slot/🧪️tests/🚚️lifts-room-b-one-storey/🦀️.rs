@@ -9,23 +9,24 @@
 use crate::diff::Wfc3dDiff;
 use crate::mutations::Wfc3dMutation;
 use crate::schema::snapshot::Wfc3dSnapshot;
+use semio_framework_test_fixtures::fixture_text;
 
-const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🚚️move-slot/🚚️lifts-room-b-one-storey/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🚚️move-slot/🚚️lifts-room-b-one-storey/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🚚️move-slot/🚚️lifts-room-b-one-storey/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🚚️move-slot/🚚️lifts-room-b-one-storey/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🚚️move-slot/🚚️lifts-room-b-one-storey/🎯️outcome/🔣️.json");
+static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🚚️move-slot/🚚️lifts-room-b-one-storey/📸️snapshot/⬅️before/🔣️.json"));
+static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🚚️move-slot/🚚️lifts-room-b-one-storey/📸️snapshot/➡️after/🔣️.json"));
+static MUTATION: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🚚️move-slot/🚚️lifts-room-b-one-storey/🦠️mutation/🔣️.json"));
+static DIFF: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🚚️move-slot/🚚️lifts-room-b-one-storey/🔺️diff/🔣️.json"));
+static OUTCOME: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🚚️move-slot/🚚️lifts-room-b-one-storey/🎯️outcome/🔣️.json"));
 
 fn before() -> Wfc3dSnapshot {
-    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes")
+    semio_framework_pack_json::from_json_str((*BEFORE), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes")
 }
 
 fn expected_after() -> Wfc3dSnapshot {
-    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after snapshot decodes")
+    semio_framework_pack_json::from_json_str((*AFTER), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after snapshot decodes")
 }
 
 fn mutation() -> Wfc3dMutation {
-    semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation decodes")
+    semio_framework_pack_json::from_json_str((*MUTATION), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation decodes")
 }
 
 /// ▶️ The mutation carries `before` to exactly the committed `after`.
@@ -51,7 +52,7 @@ fn inverse_restores_before() {
 /// 🔣️ Both committed snapshots are already canonical: decode→encode is a fixed point.
 #[test]
 fn committed_json_is_canonical() {
-    for (label, text, snapshot) in [("⬅️before", BEFORE, before()), ("➡️after", AFTER, expected_after())] {
+    for (label, text, snapshot) in [("⬅️before", (*BEFORE), before()), ("➡️after", (*AFTER), expected_after())] {
         let committed: serde_json::Value = serde_json::from_str(text).expect("committed snapshot decodes");
         let printed: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&snapshot)).expect("snapshot encodes");
         assert_eq!(printed, committed, "🚚️lifts-room-b-one-storey: committed {label} is not canonical");
@@ -62,7 +63,7 @@ fn committed_json_is_canonical() {
 /// matches what the mutation actually produces.
 #[test]
 fn declared_outcome_holds() {
-    let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
+    let outcome: serde_json::Value = serde_json::from_str((*OUTCOME)).expect("outcome decodes");
     let status = outcome.get("status").and_then(serde_json::Value::as_str).expect("outcome carries a status");
     let declared: Vec<(String, String)> = outcome
         .get("messages")
@@ -99,16 +100,16 @@ fn produces_committed_diff() {
     let base = before();
     let raised = <Wfc3dMutation as protocol::Mutation<Wfc3dSnapshot>>::diff(&mutation(), &base);
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(raised.diff())).expect("produced diff encodes");
-    let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
+    let committed: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff decodes");
     assert_eq!(produced, committed, "🚚️lifts-room-b-one-storey: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
 
 /// 🔣️ The committed diff is itself canonical and decodes to the artifact's own diff type.
 #[test]
 fn committed_diff_is_canonical() {
-    let decoded: Wfc3dDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes to Wfc3dDiff");
+    let decoded: Wfc3dDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes to Wfc3dDiff");
     let printed: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&decoded)).expect("diff encodes");
-    let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
+    let committed: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff decodes");
     assert_eq!(printed, committed, "🚚️lifts-room-b-one-storey: the committed diff is not canonical");
 }
 
@@ -116,7 +117,7 @@ fn committed_diff_is_canonical() {
 /// COMPLETE description of what this mutation changed, not a summary of it.
 #[test]
 fn committed_diff_applies_to_after() {
-    let decoded: Wfc3dDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
+    let decoded: Wfc3dDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
     let applied = protocol::apply_diff(&decoded, &before()).expect("the committed diff applies");
     assert_eq!(applied, expected_after(), "🚚️lifts-room-b-one-storey: the committed diff must be complete");
 }

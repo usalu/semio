@@ -3,7 +3,7 @@
 pub const OPCODE: &str = "set-page-labels";
 pub const TEXT_OPCODE: &str = OPCODE;
 
-use crate::standards::v1_7::subsets::base::schema::mutations::SetPageLabels;
+use crate::standards::v1_7::subsets::base::schema::mutations::set_page_labels::SetPageLabels;
 
 /// 🖨️ Prints this direct payload through its schema-derived JSON representation.
 pub fn print(payload: &SetPageLabels) -> Result<String, String> {

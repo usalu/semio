@@ -1,6 +1,12 @@
+use crate::standards::v1::subsets::any::schema::inferences::flat_position::flatten_snapshot;
+use crate::Puzzle5dSnapshot;
+#[allow(unused_imports)]
+use ::semio_framework_schema::ArtifactSchema;
+#[allow(unused_imports)]
+use std::collections::BTreeMap;
 
-use super::*;
-use crate::{Puzzle5dFastener, Puzzle5dGrip, Puzzle5dGrip2d, Puzzle5dGrip3d, Puzzle5dMeta, Puzzle5dPart, Puzzle5dPart2d, Puzzle5dPart3d, Puzzle5dPartAnchor};
+use crate::standards::v1::subsets::any::schema::inferences::*;
+use crate::standards::v1::subsets::any::schema::document_records::{Puzzle5dFastener, Puzzle5dGrip, Puzzle5dGrip2d, Puzzle5dGrip3d, Puzzle5dMeta, Puzzle5dPart, Puzzle5dPart2d, Puzzle5dPart3d, Puzzle5dPartAnchor};
 use protocol::Inference;
 
 //#region 🧸️Fixtures

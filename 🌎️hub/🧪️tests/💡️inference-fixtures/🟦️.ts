@@ -429,7 +429,7 @@ async function proveInferenceJobReconcileFixture(repoRoot: string): Promise<void
 export class CanonicalArchitectureScript extends BundleScript {
   async run(): Promise<void> {
     await proveInferenceJobReconcileFixture(this.repoRoot);
-    const { proveLocalSessionBrokerContract } = await import("../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🎫️local-session/🗄️broker/🧪️tests/🔬️contract/🟦️.ts");
+    const { proveLocalSessionBrokerContract } = await import("@semio-tech/framework-os/modules/directory/local-session/broker/testing/contract");
     await proveLocalSessionBrokerContract(this.invocation,exactCargoCallerControlV1(this.invocation,"hub:session-contract",30000));
     await runRepositoryExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),preparation: configuredRepositoryCargoPreparationPolicyV1(),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: 3_600_000, listMilliseconds: 60_000, lawMilliseconds: 120_000 },cwd: this.repoRoot,...exactCargoStageEnvironments(),groups: [{
       package: "semio-hub-trusted-catalog-contract-laws",

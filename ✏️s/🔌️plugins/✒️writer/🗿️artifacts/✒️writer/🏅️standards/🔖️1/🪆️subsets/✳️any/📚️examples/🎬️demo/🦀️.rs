@@ -14,7 +14,4 @@ pub fn source() -> ExampleSource {
 }
 
 //#region 🪢️TaxonomyMounts
-#[cfg(test)]
-#[path = "🧪️tests/🧩️example/🦀️.rs"]
-mod example;
 //#endregion 🪢️TaxonomyMounts

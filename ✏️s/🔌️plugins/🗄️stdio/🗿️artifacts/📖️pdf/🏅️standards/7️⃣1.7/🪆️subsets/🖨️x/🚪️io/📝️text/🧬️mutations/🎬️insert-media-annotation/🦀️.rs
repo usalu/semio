@@ -1,6 +1,6 @@
 //! 🎬️ Direct text codec for `insert-media-annotation`.
 
-use crate::standards::v1_7::subsets::x::schema::mutations::InsertMediaAnnotation;
+use crate::standards::v1_7::subsets::x::schema::mutations::insert_media_annotation::InsertMediaAnnotation;
 
 //#region 🔖️Identity
 pub const OPCODE: &str = "insert-media-annotation";
@@ -21,7 +21,5 @@ pub fn parse(text: &str) -> Result<InsertMediaAnnotation, String> {
 //#endregion 🔖️Codec
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

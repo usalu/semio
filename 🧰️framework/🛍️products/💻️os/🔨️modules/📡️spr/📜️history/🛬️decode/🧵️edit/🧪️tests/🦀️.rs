@@ -22,5 +22,4 @@ fn original_history_edit_native_pages_assemble_all_fields_operations_inverse_met
   assert!(owner.terminal_is_empty());assert_eq!(births,releases);assert_eq!(control.owned_bytes(),admitted.load(std::sync::atomic::Ordering::SeqCst));let(_,born,released)=observe(||drop(owner));assert_eq!((born,released),(0,0));dictionary.cancel();dictionary.close_step(&source,g).unwrap();dictionary.take_receipt();assert!(dictionary.terminal_is_empty());drop(control);assert!(retirement.terminal_is_empty());
  }}}
  let prior_capacity=prior[0].id.capacity();let mut callback=|_:semio_framework_value::NativeDecodeProgress|true;let mut control=NativeDecodeControl::new(control_limit,&mut callback);let(b,r)=close_original(prior.into_iter().next().unwrap(),&mut control,g);assert_eq!(prior_capacity+b,r);
- eprintln!("[DEBUG] Original Edit pages assemble every optional field, raw/epoch/delta timestamp, op/inverse and typedMeta; unchanged original source/ledger/grants, paid receiving/cancellation, exact native births/releases and terminalDrop0");
 }

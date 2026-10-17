@@ -21,6 +21,6 @@ test("window refresh retains original address and displaced snapshot across ever
    try{ready=transferWindowRefresh(current,pending,queue,grant).kind==="ready";}catch{expect(current.value).toBe(before);expect(pending.value).toBe(after);expect(before.windowId).toBe(law.windowId);expect(after.windowId).toBe("");}
   }
   expect(ready).toBe(true);expect(current.value).toBe(after);expect(current.value.windowId).toBe(law.windowId);expect(retained[0]).toBe(before);expect(before.windowId).toBe("");expect(db.query("SELECT owner,address FROM custody WHERE slot='current'").get()).toEqual({owner:law.after,address:law.windowId});expect(db.query("SELECT owner,address FROM custody WHERE slot='retired'").get()).toEqual({owner:law.before,address:""});
-  db.close();console.log(`[DEBUG] Window refresh grant=${copy} reject=${rejected} original retained address preserved SQL matched`);
+  db.close();
  }}
 });

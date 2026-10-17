@@ -22,7 +22,7 @@ import { join, resolve } from "node:path";
 import type { Browser, CDPSession, Page } from "playwright";
 import { PLAYWRIGHT_MODULE_SPECIFIER } from "../../../🔌️plugin/🏗️build/📋️plan/🟦️.ts";
 import { ensureParityPlaywrightBrowsersPath } from "../../⚖️parity/🏃️execution/🟦️.ts";
-import { acceptanceCheckResult, publishAcceptanceCheckResult } from "../../../../../🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/🟦️.ts";
+import { acceptanceCheckResult, publishAcceptanceCheckResult } from "@semio-tech/repo-test/acceptance/orchestration";
 import { awaitBeacon, dismissIntroduction, keyOf, kindOf, roleOf, windowIds, type MatrixProgram } from "../🧮️program-matrix/🟦️.ts";
 
 //#region 🎞️Trace

@@ -9,8 +9,9 @@
 use super::*;
 use crate::editor_domain::editor_laws::context::{empty_history_view, retire_flow_eval_session};
 use semio_framework_plugin::{ArtifactView, ConfigView};
+use semio_framework_test_fixtures::repo_text;
 
-const EVALUATE_BUDGET_FIXTURE_JSON: &str = include_str!("../../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/⏱️evaluate-budget.json");
+fn evaluate_budget_fixture_json() -> &'static str { repo_text!("✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/⏱️evaluate-budget.json") }
 const GEOMETRY_EXTENSION_PLUGIN_ID: &str = "flow-extension-brep";
 const BUDGET_WINDOW_ID: &str = "procedural-preview-test";
 const BUDGET_NODE_HASH: u64 = 0x_b0_07_ca_11_u64;
@@ -70,7 +71,7 @@ struct SteppedOperator {
 }
 
 fn fixture() -> EvaluateBudgetFixture {
-    let fixture: EvaluateBudgetFixture = serde_json::from_str(EVALUATE_BUDGET_FIXTURE_JSON).expect("evaluate budget fixture");
+    let fixture: EvaluateBudgetFixture = serde_json::from_str(evaluate_budget_fixture_json()).expect("evaluate budget fixture");
     assert_eq!(fixture.format, "semio.generation3d.evaluate-budget");
     assert_eq!(fixture.version, 1);
     fixture
@@ -297,7 +298,7 @@ struct InlineContinuationRow {
 }
 
 fn inline_continuation_fixture() -> InlineContinuationFixture {
-    let root: serde_json::Value = serde_json::from_str(EVALUATE_BUDGET_FIXTURE_JSON).expect("evaluate budget fixture");
+    let root: serde_json::Value = serde_json::from_str(evaluate_budget_fixture_json()).expect("evaluate budget fixture");
     serde_json::from_value(root["inlineContinuation"].clone()).expect("the fixture declares its inline-continuation law")
 }
 

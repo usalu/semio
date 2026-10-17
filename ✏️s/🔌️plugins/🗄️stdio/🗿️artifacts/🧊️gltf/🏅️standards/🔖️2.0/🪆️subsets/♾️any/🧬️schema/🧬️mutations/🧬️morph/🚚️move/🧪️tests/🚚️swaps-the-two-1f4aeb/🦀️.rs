@@ -1,9 +1,10 @@
 //! 🚚️ `move-morph-target` implementation case `🚚️swaps`: the committed fixture bundle
 //! `♾️any/🧫️fixtures/🧬️mutations/🧬️morph/🚚️move/🚚️swaps/` holds every corpus law, and the leaf keeps its language-neutral semantic identity.
-use super::*;
+use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfSnapshot;
+use crate::standards::v2_0::subsets::any::schema::mutations::move_morph_target::*;
 
 #[test]
 fn committed_case_holds_the_corpus_law() {
-    assert_eq!(<MoveMorphTargetMutation as protocol::MutationKind<GltfSnapshot, super::super::GltfMutation>>::SEMANTICS.kind, "move-morph-target");
-    super::super::component::fixture_corpus_tests::assert_case("🧬️morph/🚚️move/🚚️swaps");
+    assert_eq!(<MoveMorphTargetMutation as protocol::MutationKind<GltfSnapshot, crate::standards::v2_0::subsets::any::schema::mutations::GltfMutation>>::SEMANTICS.kind, "move-morph-target");
+    crate::standards::v2_0::subsets::any::schema::mutations::fixture_corpus_tests::assert_case("🧬️morph/🚚️move/🚚️swaps");
 }

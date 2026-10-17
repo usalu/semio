@@ -3,7 +3,7 @@
 pub const OPCODE: &str = "remove-ext-g-state";
 pub const TEXT_OPCODE: &str = OPCODE;
 
-use crate::standards::v1_7::subsets::base::schema::mutations::RemoveExtGState;
+use crate::standards::v1_7::subsets::base::schema::mutations::remove_ext_g_state::RemoveExtGState;
 
 /// 🖨️ Prints this direct payload through its schema-derived JSON representation.
 pub fn print(payload: &RemoveExtGState) -> Result<String, String> {

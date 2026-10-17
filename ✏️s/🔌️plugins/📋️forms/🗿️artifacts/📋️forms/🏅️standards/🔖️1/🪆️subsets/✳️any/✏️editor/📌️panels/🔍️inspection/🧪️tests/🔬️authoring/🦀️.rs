@@ -1,9 +1,10 @@
-use super::*;
+use crate::editor::forms::panels::inspection::*;
 use semio_framework_plugin::ArtifactEditor;
+use semio_framework_test_fixtures::fixture_text;
 
 #[test]
 fn inspection_selection_matches_shared_authoring_vectors() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️authoring.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../📌️panels/🔍️inspection/🧪️tests/🧫️fixtures/🔣️authoring.json")).unwrap();
     let steps: Vec<crate::FormStep> = semio_framework_pack_json::from_json_str(&fixture["steps"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     for case in fixture["cases"].as_array().unwrap() {
         let selected: Vec<String> = serde_json::from_value(case["selected"].clone()).unwrap();
@@ -15,7 +16,7 @@ fn inspection_selection_matches_shared_authoring_vectors() {
 
 #[test]
 fn inspection_controls_bind_to_real_typed_commands() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️authoring.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../📌️panels/🔍️inspection/🧪️tests/🧫️fixtures/🔣️authoring.json")).unwrap();
     let steps: Vec<crate::FormStep> = semio_framework_pack_json::from_json_str(&fixture["steps"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let spec = crate::forms_snapshot_with_state(crate::FORMS_DOCUMENT_SCHEMA.into(), "authoring".into(), "1".into(), Some("Authoring".into()), &steps);
     let view = semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);

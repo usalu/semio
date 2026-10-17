@@ -1,0 +1,112 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🛰️backbone/🟦️.ts",
+ "importers": "auto",
+ "childrenImportParent": true,
+ "allowManual": [],
+ "children": [
+  {
+   "dir": "🧭️opening-relay",
+   "lines": [
+    [
+     94,
+     185
+    ]
+   ],
+   "doc": "/** 🧭️ Artifact opening relay: resolves the opening preferences, role and router a relayed artifact opening carries. */"
+  },
+  {
+   "dir": "🌐️envelope-io",
+   "lines": [
+    [
+     289,
+     407
+    ]
+   ],
+   "doc": "/** 🌐️ Backbone envelope IO: bounded, jittered-retry reads and writes of document envelopes over the backbone HTTP endpoint. */"
+  },
+  {
+   "dir": "🔀️message",
+   "lines": [
+    [
+     408,
+     546
+    ]
+   ],
+   "doc": "/** 🔀️ Binary backbone message: the ordinal-tagged binary message codec and the document backbone message parsers. */"
+  },
+  {
+   "dir": "🪟️desktop-window",
+   "lines": [
+    [
+     565,
+     609
+    ]
+   ],
+   "doc": "/** 🪟️ Desktop window chrome: the window control channels, their handler registration and the renderer bridge. */"
+  },
+  {
+   "dir": "🔑️persistence-binding",
+   "lines": [
+    [
+     619,
+     686
+    ]
+   ],
+   "doc": "/** 🔑️ Document runtime key and persistence binding: the collision-free ownership key, data classes of wire lanes and the persistence binding constructors. */"
+  },
+  {
+   "dir": "🎭️artifact-actor",
+   "lines": [
+    [
+     687,
+     748
+    ],
+    [
+     1414,
+     1507
+    ]
+   ],
+   "doc": "/** 🎭️ Artifact actor wire: the actor configuration, messages and events with their wire forms and parsers. */"
+  },
+  {
+   "dir": "🧱️worker-wire",
+   "lines": [
+    [
+     750,
+     979
+    ]
+   ],
+   "doc": "/** 🧱️ Backbone worker wire: the framed request and response encoders and decoders of the backbone worker protocol. */"
+  },
+  {
+   "dir": "🔬️worker-parsers",
+   "lines": [
+    [
+     980,
+     1186
+    ]
+   ],
+   "doc": "/** 🔬️ Backbone worker parsers: bounded field parsers and the directory administration and space artifact creation request and status parsers. */"
+  },
+  {
+   "dir": "📨️worker-messages",
+   "lines": [
+    [
+     1187,
+     1413
+    ]
+   ],
+   "doc": "/** 📨️ Backbone worker messages: the request, response and bootstrap event types of the backbone worker protocol. */"
+  },
+  {
+   "dir": "🗺️workflow-planner",
+   "lines": [
+    [
+     1508,
+     1624
+    ]
+   ],
+   "doc": "/** 🗺️ Workflow planner: the media flow topology types, topological node order and the workflow plan. */"
+  }
+ ]
+}

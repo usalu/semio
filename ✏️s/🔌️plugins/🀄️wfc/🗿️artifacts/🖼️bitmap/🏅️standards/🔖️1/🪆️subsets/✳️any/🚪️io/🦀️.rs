@@ -50,11 +50,14 @@ pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
 }
 //#endregion 🔖️IoDeclaration
 
-#[path = "💾️binary/🦀️.rs"]
-pub mod binary;
+pub mod binary {
+    pub use semio_s_artifact_wfc_bitmap_tests_shrinks_the_output_and_cascades_a_pin::standards::v1::subsets::any::io::binary::*;
+    pub use semio_s_artifact_wfc_bitmap_snapshot::standards::v1::subsets::any::io::binary::diff;
+}
 
-#[path = "📝️text/🦀️.rs"]
-pub mod text;
+pub mod text {
+    pub use semio_s_artifact_wfc_bitmap_inferences::standards::v1::subsets::any::io::text::*;
+    pub use semio_s_artifact_wfc_bitmap_snapshot::standards::v1::subsets::any::io::text::diff;
+}
 
-#[path = "🪶️sqlite/🦀️.rs"]
-pub mod sqlite;
+

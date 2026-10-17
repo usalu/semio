@@ -63,7 +63,7 @@ use semio_framework_os_store_replay::{REPROJECTION_OWNER_SLOTS, fold_effective_e
 //#region 🔖️Backbone
 //#region 🔖️Backbone
 use semio_framework_os_store_backbone as backbone;
-use backbone::{BackboneMessage, Backbones};
+use backbone::{Backbone, BackboneMessage, Backbones};
 use semio_framework_os_store_backbone::backbone_retirement::ArtifactStoreBackboneRetirement;
 use semio_framework_os_store_engine_owners::lifted_store::ArtifactStoreOwnedDisposer;
 use semio_framework_os_store_initialization_runtime::lifted_store::bound_edit_messages;
@@ -1814,8 +1814,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
             return;
         }
         let cursor = store_log.envelope.cursor.as_mut().expect("a mirrored cursor remains present");
-        let applied = mirror_id_suffix(&mut cursor.applied_edit_ids, &store_log.applied_edit_ids, dirt.applied);
-        let redo = mirror_id_suffix(&mut cursor.redo_edit_ids, &store_log.redo_edit_ids, dirt.redo);
+        let applied = mirror_id_suffix(&mut cursor.applied_edit_ids, &store_log.applied_edit_ids, dirt.first_applied());
+        let redo = mirror_id_suffix(&mut cursor.redo_edit_ids, &store_log.redo_edit_ids, dirt.first_redo());
         let checkpoint = if cursor.checkpoint_id != *store_log.current_checkpoint_id { std::mem::replace(&mut cursor.checkpoint_id, (*store_log.current_checkpoint_id).clone()) } else { None };
         for displaced in [applied, redo].into_iter().flatten() {
             self.displaced_retirements.push_reserved(Box::new(ArtifactStoreStringVectorRetirement::new(displaced)));
@@ -2475,25 +2475,25 @@ where
     /// 🖍️ The applied tail edit's recorded content changed outside a mutation (a group or origin stamp): the next
     /// {@link bump} rebuilds its revision record.
     pub fn restamp_applied_tail(&mut self, store_log: &mut StoreLog<P, Mutation>) {
-        self.mirror_dirt.applied = self.mirror_dirt.applied.min(store_log.applied_edit_ids.len().saturating_sub(1));
+        self.mirror_dirt.dirty_applied_from(store_log.applied_edit_ids.len().saturating_sub(1));
     }
 
     /// ➕️ Pushes `edit_id` onto the applied stack; its mirrors are stale from the new tail on.
     pub fn push_applied_edit_id(&mut self, store_log: &mut StoreLog<P, Mutation>, edit_id: String) {
-        self.mirror_dirt.applied = self.mirror_dirt.applied.min(store_log.applied_edit_ids.len());
+        self.mirror_dirt.dirty_applied_from(store_log.applied_edit_ids.len());
         store_log.applied_edit_ids.push(edit_id);
     }
 
     /// ➕️ Pushes `edit_id` onto the redo stack; its mirrors are stale from the new top on.
     pub fn push_redo_edit_id(&mut self, store_log: &mut StoreLog<P, Mutation>, edit_id: String) {
-        self.mirror_dirt.redo = self.mirror_dirt.redo.min(store_log.redo_edit_ids.len());
+        self.mirror_dirt.dirty_redo_from(store_log.redo_edit_ids.len());
         store_log.redo_edit_ids.push(edit_id);
     }
 
     /// ➖️ Pops the redo top; its mirrors are stale past the new length.
     pub fn pop_redo_edit_id(&mut self, store_log: &mut StoreLog<P, Mutation>) -> Option<String> {
         let edit_id = store_log.redo_edit_ids.pop()?;
-        self.mirror_dirt.redo = self.mirror_dirt.redo.min(store_log.redo_edit_ids.len());
+        self.mirror_dirt.dirty_redo_from(store_log.redo_edit_ids.len());
         Some(edit_id)
     }
 }

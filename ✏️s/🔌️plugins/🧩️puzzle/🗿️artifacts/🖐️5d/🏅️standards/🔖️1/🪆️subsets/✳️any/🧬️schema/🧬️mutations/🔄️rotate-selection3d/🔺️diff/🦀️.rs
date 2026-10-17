@@ -3,7 +3,8 @@
 //! quaternion, so the leaf replays on any base.
 use crate::standards::v1::subsets::any::schema::diff::{Puzzle5dDiff, Puzzle5dPart3dPatch, Puzzle5dPartPatch, Puzzle5dPartModification, Puzzle5dTargetVolumePatch, Puzzle5dTargetVolumeModification};
 use protocol::list_delta::RowPatch;
-use crate::standards::v1::subsets::any::schema::mutations::{puzzle5d_selection, puzzle5d_selection_outcome, quat_from_axis_angle, quat_mul};
+use crate::standards::v1::subsets::any::schema::mutations::{quat_from_axis_angle, quat_mul};
+use crate::standards::v1::subsets::any::schema::diff::{puzzle5d_selection, puzzle5d_selection_outcome};
 use crate::Puzzle5dSnapshot;
 
 //#region 🔖️Diff

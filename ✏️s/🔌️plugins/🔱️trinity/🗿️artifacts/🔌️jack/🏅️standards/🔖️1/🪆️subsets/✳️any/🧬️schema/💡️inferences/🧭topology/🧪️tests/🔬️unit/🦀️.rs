@@ -1,6 +1,10 @@
-use crate::JackWorkingScene;
-use super::*;
-use crate::{Edge, Node, Port, PortDirection, PropertyBag};
+use crate::standards::v1::subsets::any::schema::snapshot::JackSnapshot;
+#[allow(unused_imports)]
+use semio_framework_value::ValueError;
+use crate::standards::v1::subsets::any::schema::content::JackWorkingScene;
+use crate::standards::v1::subsets::any::schema::inferences::topology::*;
+use crate::standards::v1::subsets::any::schema::graph::{Edge, Node, Port};
+use semio_framework_graph_manifest::{PortDirection, PropertyBag};
 
 //#region 🧸️Fixtures
 fn node(id: &str) -> Node {
@@ -52,6 +56,6 @@ async fn a_cycle_is_reported_as_not_cycle_free() {
 
 #[semio_framework_async_macros::async_test]
 async fn empty_snapshot_yields_default_topology() {
-    assert_eq!(compute_topology(&<crate::test_support::FixtureComposition as crate::JackComposition>::initial_snapshot()).expect("valid retained child inference fixture"), JackTopology::default());
+    assert_eq!(compute_topology(&<crate::test_support::FixtureComposition as crate::standards::v1::subsets::any::schema::composition::JackComposition>::initial_snapshot()).expect("valid retained child inference fixture"), JackTopology::default());
 }
 //#endregion 🧪️TopologyLaws

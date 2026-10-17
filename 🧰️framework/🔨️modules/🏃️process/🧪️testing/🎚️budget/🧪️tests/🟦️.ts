@@ -28,7 +28,8 @@ test("neutral level selection follows portable CLI and environment laws", async 
       for (const key of keys) delete process.env[key];
       Object.assign(process.env, row.environment);
       const selected = api.resolveTestLevel(row.segments, row.minimum as typeof TEST_LEVELS[number]);
-      expect<unknown>({ ...selected, budgetMs: api.testLevelBudgetMs(), rank: api.testLevelRank(), coverage: process.env.SEMIO_COVERAGE ?? null }).toEqual(row.expected);
+      const observed = { ...selected, budgetMs: api.testLevelBudgetMs(), rank: api.testLevelRank(), coverage: process.env.SEMIO_COVERAGE ?? null };
+      expect(observed).toEqual<typeof row.expected>(row.expected);
       const independent = row.segments[0] in fixture.levels ? row.segments[0] : (row.environment as Record<string, string>).SEMIO_TEST_LEVEL;
       const ranks = Object.keys(fixture.levels);
       const level = ranks[Math.max(Math.max(0, ranks.indexOf(independent ?? "")), ranks.indexOf(row.minimum))]!;

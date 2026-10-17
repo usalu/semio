@@ -1,5 +1,18 @@
 //! 🪷️ The instance components of `instance-ladders`: MaintenanceCursors, CloseCursors (WP6, plan section 7.3).
-use super::*;
+use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_framework_plugin_ownership::store_lifecycle::{ArtifactDisposal, ArtifactDocumentStoreDisposer, ArtifactOwnedDisposer};
+use pack::snapshot::ArtifactPack;
+use store::{ArtifactStore, ConfigStore, MemberFactory, Mutation, SpaceMember};
+use semio_framework_plugin_child::ChildMemberRetirement;
+use semio_framework_plugin_decl_emission::Emit;
+use semio_framework::FaultFrom;
+use std::future::Future;
+use semio_framework_plugin_instance_extension::InstanceExtension;
+use semio_framework_plugin_interaction::mutations::InteractionConfigMutation;
+use std::mem::ManuallyDrop;
+use protocol::OpText;
+use semio_framework_plugin_reactor_app::PluginApp;
+use semio_framework_ui_contract::*;
 
 /// 🪻️ Maintenance cursors: the rotation positions of the live-maintenance ladder.
 pub struct MaintenanceCursors {

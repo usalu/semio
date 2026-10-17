@@ -1,15 +1,12 @@
 //! 🔗 GLTF adjacency indicators.
 
-#[path = "🧩️connected-components/🦀️.rs"]
-pub mod connected_components;
-#[path = "🌐️contact-graph-degree/🦀️.rs"]
-pub mod contact_graph_degree;
-#[path = "🔢️number-of-contacts/🦀️.rs"]
-pub mod number_of_contacts;
+pub use semio_s_artifact_stdio_gltf_inferences_connected_components::standards::v2_0::subsets::any::schema::inferences::adjacency::connected_components;
+pub use semio_s_artifact_stdio_gltf_inferences_connected_components::standards::v2_0::subsets::any::schema::inferences::adjacency::contact_graph_degree;
+pub use semio_s_artifact_stdio_gltf_inferences_connected_components::standards::v2_0::subsets::any::schema::inferences::adjacency::number_of_contacts;
 
-use super::super::modules::measurement_contracts::*;
-use super::super::modules::mesh_topology::Topology;
-use super::geometry_core::{GltfGeometryContext, GltfPairGeometry};
+use crate::standards::v2_0::subsets::any::schema::modules::measurement_contracts::*;
+use crate::standards::v2_0::subsets::any::schema::modules::mesh_topology::Topology;
+use crate::standards::v2_0::subsets::any::schema::inferences::geometry_core::{GltfGeometryContext, GltfPairGeometry};
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
@@ -23,12 +20,12 @@ pub struct GltfAdjacencyInference;
 
 impl GltfAdjacencyInference {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub(crate) fn infer_pair(pair: &GltfPairGeometry) -> GltfMeasure<bool> {
+    pub fn infer_pair(pair: &GltfPairGeometry) -> GltfMeasure<bool> {
         number_of_contacts::infer_pair(pair)
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub(crate) fn infer_assembly(indicators: &mut GltfAdjacencyIndicators, part_count: usize, contacts: u64, sample_count: usize, topology: Topology) {
+    pub fn infer_assembly(indicators: &mut GltfAdjacencyIndicators, part_count: usize, contacts: u64, sample_count: usize, topology: Topology) {
         indicators.number_of_contacts = number_of_contacts::from_assembly(part_count, contacts, sample_count, topology);
         indicators.contact_graph_degree = contact_graph_degree::from_assembly(part_count, contacts, sample_count, topology);
     }

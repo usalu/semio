@@ -1,6 +1,5 @@
 //! 🎯 Note mutation — `DuplicateBlock`: copies a block to a new identity, placed after its source.
 
-use crate::schema::mutations::NoteMutation;
 use crate::{NoteDiff, NoteSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -19,17 +18,23 @@ pub struct DuplicateBlock {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn duplicate_block(source_id: String, block: crate::NoteBlockNode) -> NoteMutation {
-    NoteMutation::DuplicateBlock(DuplicateBlock { source_id, block: Box::new(block) })
+pub fn duplicate_block<Op>(source_id: String, block: crate::NoteBlockNode) -> Op
+where
+    Op: From<crate::standards::v1::subsets::block::schema::mutations::duplicate_block::DuplicateBlock>,
+{
+    Op::from(DuplicateBlock { source_id, block: Box::new(block) })
 }
 
-impl MutationKind<NoteSnapshot, NoteMutation> for DuplicateBlock {
+impl<Op> MutationKind<NoteSnapshot, Op> for DuplicateBlock
+where
+    Op: protocol::Mutation<NoteSnapshot, Diff = NoteDiff> + From<DuplicateBlock> + From<crate::standards::v1::subsets::block::schema::mutations::delete_block::DeleteBlock>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "duplicate", entity: "block", kind: "duplicate-block", record: "DuplicatedBlock" };
 
     fn diff(&self, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &NoteSnapshot) -> Result<Vec<NoteMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &NoteSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

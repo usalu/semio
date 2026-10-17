@@ -1,9 +1,13 @@
-use super::*;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::diff::JackDiff;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::snapshot::JackSnapshot;
+use crate::standards::v1::subsets::any::schema::mutations::*;
 use protocol::SemanticMutation;
 
 #[test]
 fn direct_owners_descriptors_and_language_neutral_catalog_correspond() {
-    let mutation_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations");
+    let mutation_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🧬️mutations");
     let descriptor_kinds: Vec<_> = TrinityGraphMutation::kinds().iter().map(|descriptor| descriptor.kind).collect();
     let catalog_source = std::fs::read_to_string(mutation_root.join("../../🔮️oracles/🔣️.json")).expect("language-neutral oracle catalog");
     let catalog: semio_framework_pack_json::Value = semio_framework_pack_json::parse(&catalog_source, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("language-neutral oracle catalog must be valid JSON");

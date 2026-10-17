@@ -1,3 +1,12 @@
+use crate::standards::v1::subsets::any::schema::snapshot::SHomeSnapshot;
+use semio_framework_test_fixtures::fixture_text;
+#[allow(unused_imports)]
+use store::{sqlite_snapshot::SqliteDatabase, sqlite_snapshot::validate_sqlite_database_schema, sqlite_snapshot::artifact::Cell, sqlite_snapshot::artifact::Reconstruction, sqlite_snapshot::artifact::RowWriter};
+#[allow(unused_imports)]
+use semio_framework_value::{ValueError, ValueRefusalKind};
+#[allow(unused_imports)]
+use semio_framework_dsl_record::{FieldValue, RecordValue};
+use crate::standards::v1::subsets::any::io::sqlite::snapshot::{invalid};
 use semio_framework_test_original_snapshot_owners as original_owners;
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v1::subsets::any::io::sqlite::snapshot::*;
@@ -8,7 +17,7 @@ fn sqlite_snapshot_home_controlled_native_output_retains_exact_fields_and_cancel
  let(fixture,snapshots)=fixtures();let mut snapshot=snapshots.last().unwrap().clone();snapshot.schema=fixture["schemaScanSeeds"][1].as_str().unwrap().repeat(fixture["schemaScanRepeat"].as_u64().unwrap()as usize);
  let limits=SqliteDatabaseLimits::default();for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let payload=original_owners::with_encoding(|native_owner|snapshot.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,limits), native_owner)).unwrap();assert_eq!(original_owners::with_decoding(|native_owner|SHomeSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,limits), native_owner)).unwrap(),snapshot);let mut interior=false;assert!(original_owners::with_encoding(|native_owner|snapshot.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |event|{if event.phase==SqliteSnapshotPhase::EncodeNative&&event.total==snapshot.schema.len()&&event.completed>=65536&&event.completed<event.total{interior=true;false}else{true}},limits), native_owner)).is_err());assert!(interior);assert!(original_owners::with_encoding(|native_owner|snapshot.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits{max_value_bytes:snapshot.schema.len()-1,..limits}), native_owner)).is_err());assert!(original_owners::with_encoding(|native_owner|snapshot.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits{max_rows:0,..limits}), native_owner)).is_err());}
 }
-fn fixtures()->(serde_json::Value,Vec<SHomeSnapshot>){let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();let snapshots=fixture["cases"].as_array().unwrap().iter().map(|row|SHomeSnapshot{schema:row["schema"].as_str().unwrap().into(),catalog_generation:row["catalogGeneration"].as_str().unwrap().parse().unwrap()}).collect();(fixture,snapshots)}
+fn fixtures()->(serde_json::Value,Vec<SHomeSnapshot>){let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let snapshots=fixture["cases"].as_array().unwrap().iter().map(|row|SHomeSnapshot{schema:row["schema"].as_str().unwrap().into(),catalog_generation:row["catalogGeneration"].as_str().unwrap().parse().unwrap()}).collect();(fixture,snapshots)}
 #[test]
 fn sqlite_snapshot_home_unicode_native_parser_known_work_and_interior_cancellation(){
  let(fixture,_)=fixtures();let limits=SqliteDatabaseLimits::default();
@@ -57,7 +66,7 @@ async fn sqlite_snapshot_home_actual_owned_declaration_public_and_erased_routes(
 #[test]
 fn sqlite_snapshot_home_closed_exact_semantic_cells_and_direct_native_limits(){
  use std::{io::Write,process::{Command,Stdio}};
- let corpus:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🛂️semantic/🔣️.json")).unwrap();
+ let corpus:serde_json::Value=serde_json::from_str(fixture_text!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🛂️semantic/🔣️.json")).unwrap();
  
  for case in corpus["cases"].as_array().unwrap(){
   let snapshot=SHomeSnapshot{schema:case["schema"].as_str().unwrap().into(),catalog_generation:case["catalogGeneration"].as_str().unwrap().parse().unwrap()};let total=case["valueBytes"].as_u64().unwrap()as usize;let defaults=SqliteDatabaseLimits::default();

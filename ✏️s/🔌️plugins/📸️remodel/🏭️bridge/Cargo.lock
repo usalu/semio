@@ -2188,6 +2188,7 @@ dependencies = [
  "semio-framework-plugin-reactor-tasks",
  "semio-framework-plugin-reactor-turn",
  "semio-framework-plugin-reactor-wit-bridge",
+ "semio-framework-plugin-registration",
  "semio-framework-plugin-retained-command",
  "semio-framework-plugin-runtime-exchange",
  "semio-framework-plugin-runtime-instances",
@@ -2534,6 +2535,17 @@ dependencies = [
  "semio-framework-value",
  "semio-framework-value-derive",
  "serde_json",
+]
+
+[[package]]
+name = "semio-framework-plugin-declared-verdict"
+version = "0.1.0"
+dependencies = [
+ "semio-framework",
+ "semio-framework-pack-json",
+ "semio-framework-plugin-ownership",
+ "semio-framework-schema",
+ "semio-framework-ui-locale",
 ]
 
 [[package]]
@@ -3266,6 +3278,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-framework-plugin-registration"
+version = "0.1.0"
+dependencies = [
+ "semio-framework",
+]
+
+[[package]]
 name = "semio-framework-plugin-retained-command"
 version = "0.1.0"
 dependencies = [
@@ -3367,6 +3386,16 @@ dependencies = [
  "semio-framework-trace",
  "semio-framework-value",
  "semio-framework-value-derive",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-framework-plugin-testing-caller"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-job",
+ "semio-framework-value",
  "serde",
  "serde_json",
 ]
@@ -4759,6 +4788,7 @@ dependencies = [
 name = "semio-s-artifact-stdio-contract-editing"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-action-bus",
  "semio-framework-artifact-reference",
  "semio-framework-diagnostic",
  "semio-framework-job",
@@ -4899,6 +4929,7 @@ name = "semio-s-artifact-stdio-semio-image"
 version = "0.1.0"
 dependencies = [
  "semio-framework-2d",
+ "semio-framework-action-bus",
  "semio-framework-artifact-reference",
  "semio-framework-diagnostic",
  "semio-framework-job",

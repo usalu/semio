@@ -1,0 +1,47 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/❓️quiz/🧪️tests/🧗️challenge-ladder/🟦️.ts",
+ "importers": [],
+ "children": [
+  {
+   "dir": "🧱️challenge-ladder-kit",
+   "doc": "/** 🧱️ Shared builders of the challenge-ladder suites: the sheet tasks, the classification task and the independent oracle formulas (reach, misses, verdict, compare, cap) over mathjs. */",
+   "lines": [
+    [
+     42,
+     161
+    ]
+   ]
+  },
+  {
+   "dir": "💡️challenge-sorting-hints",
+   "doc": "/** 💡️ The hints of an easy run on a sorting task (`hintsOf`): which relations are questioned, in which order, and how they agree with the same rule over mathjs. */",
+   "lines": [
+    [
+     395,
+     646
+    ]
+   ]
+  },
+  {
+   "dir": "🧲️challenge-matching-hints",
+   "doc": "/** 🧲️ The hints of an easy run on a matching task (`hintsOf`): per dimension and item, the assigned cards that miss, and how they agree with the same rule over mathjs. */",
+   "lines": [
+    [
+     648,
+     792
+    ]
+   ]
+  },
+  {
+   "dir": "🗂️challenge-classification-hints",
+   "doc": "/** 🗂️ The hints of an easy run on a classification task (`hintsOf`): profile hints, pairs and categories, and how they agree with the same rules over mathjs. */",
+   "lines": [
+    [
+     794,
+     1024
+    ]
+   ]
+  }
+ ],
+ "childRoot": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/❓️quiz/🧪️tests"
+}

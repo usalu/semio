@@ -16,6 +16,8 @@
   },
   "dependencies": {
     "@semio-tech/framework": "workspace:*",
+    "@semio-tech/framework-actor": "workspace:*",
+    "@semio-tech/framework-canvas-ts": "workspace:*",
     "@semio-tech/framework-os": "workspace:*",
     "@semio-tech/framework-renderer-react": "workspace:*",
     "@semio-tech/framework-renderer-wgpu": "workspace:*",
@@ -39,10 +41,34 @@
     "ajv": "8.20.0",
     "aria-query": "5.3.0",
     "dom-accessibility-api": "0.5.16",
-    "@semio-tech/process": "workspace:*"
+    "@semio-tech/process": "workspace:*",
+    "@semio-tech/repo-test": "workspace:*",
+    "@semio-tech/framework-os-mcp": "workspace:*",
+    "@semio-tech/framework-kernel": "workspace:*",
+    "@semio-tech/framework-time-travel-ts": "workspace:*"
   },
   "license": "LGPL-3.0-or-later",
   "exports": {
-    ".": "./🟦️.ts"
+    ".": "./🟦️.ts",
+    "./activation": "./♻️activation/🟦️.ts",
+    "./activation/readiness": "./♻️activation/🩺️readiness/🟦️.ts",
+    "./builder/vite": "./🏗️builder/🌐️vite/🟦️.ts",
+    "./builder/vite/artifacts": "./🏗️builder/🌐️vite/📥️artifacts/🟦️.ts",
+    "./builder/vite/artifacts/engines": "./🏗️builder/🌐️vite/📥️artifacts/🕸️engines/🟦️.ts",
+    "./engine/publication": "./⚙️engine/📤️publication/🟦️.ts",
+    "./engine/selection": "./⚙️engine/🧭️selection/🟦️.ts",
+    "./local-hub/execution": "./🚀️local-hub/🏃️execution/🟦️.ts",
+    "./local-hub/session/data": "./🚀️local-hub/🎫️session/📋️data/🟦️.ts",
+    "./local-hub/session/io": "./🚀️local-hub/🎫️session/📥️io/🟦️.ts",
+    "./parity/execution": "./⚖️parity/🏃️execution/🟦️.ts",
+    "./playground-session/execution": "./🎮️playground-session/🏃️execution/🟦️.ts",
+    "./playground-session/schema": "./🎮️playground-session/🧬️schema/🟦️.ts",
+    "./testing/program-matrix": "./🧪️testing/🧮️program-matrix/🟦️.ts",
+    "./testing/studio": "./🧪️testing/🎬️studio/🟦️.ts",
+    "./verification/publication": "./🔎️verification/🧾️publication/🟦️.ts",
+    "./vite-plugins": "./🔌️vite-plugins/🟦️.ts",
+    "./boot-query": "./🔗️boot-query/🟦️.ts",
+    "./distribution/components/testing/production-browser-artifacts": "./🚚️distribution/🔌️components/🧪️testing/🌐️production-browser-artifacts/🟦️.ts",
+    "./testing/fixtures": "./🧪️testing/🧫️fixtures/🟦️.ts"
   }
 }

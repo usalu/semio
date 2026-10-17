@@ -3,22 +3,19 @@
 use semio_framework_os_infinite_world_model::WorldSubElementPaint;
 use semio_framework_os_infinite_world_components::{face_overlay_color, WorldMeshBuffers};
 use semio_framework_os_infinite_world_bridge::{component_overlay_color, srgb_byte_to_linear, world3d_apply_scalar_field_colors, world3d_scalar_field_fits, world3d_sub_element_paint_native, world3d_tone_rgba};
+use semio_framework_test_fixtures::fixture_text;
 use std::collections::HashSet;
 use semio_framework_value::RetainedCloneGrant;
 use ui_wgpu::wgpu::{Rgba, Theme};
 use serde_json::json;
 
 /// 📖️ Reads one test input at run time (relative to the package manifest) so it does not count as an embedded compile input.
-fn read_static(path_from_manifest: &str) -> &'static str {
-    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(path_from_manifest);
-    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("test input {}: {error}", path.display())).into_boxed_str())
-}
 
 /// 📖️ Reads several test inputs at run time and joins them into the one text the unsplit sources formed.
 fn read_joined(paths: &[&str]) -> &'static str {
     let mut joined = String::new();
     for path in paths {
-        joined.push_str(read_static(path));
+        joined.push_str(fixture_text!(path));
     }
     Box::leak(joined.into_boxed_str())
 }
@@ -26,7 +23,7 @@ fn read_joined(paths: &[&str]) -> &'static str {
 //#region 🔖️Modelling
 #[allow(non_snake_case)]
 fn MODELLING_FIXTURE() -> &'static str {
-    read_static("../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧪️tests/🧫️fixtures/📏️world3d-modelling/🔣️.json")
+    fixture_text!("../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧪️tests/🧫️fixtures/📏️world3d-modelling/🔣️.json")
 }
 
 fn modelling_fixture() -> serde_json::Value {
@@ -125,7 +122,7 @@ fn every_tone_resolves_to_an_opaque_theme_colour() {
 }
 
 fn world_original_fixture_grant()->semio_framework_value::RetainedCloneGrant{
-    let law:serde_json::Value=serde_json::from_str(read_static("../../../🧪️tests/🔬️unit/🧫️retained-attributes.json")).unwrap();let axes=&law["grant"];
+    let law:serde_json::Value=serde_json::from_str(fixture_text!("../../../🧪️tests/🔬️unit/🧫️retained-attributes.json")).unwrap();let axes=&law["grant"];
     semio_framework_value::RetainedCloneGrant{maximum_items:axes["items"].as_u64().unwrap()as usize,maximum_copy_bytes:axes["copyBytes"].as_u64().unwrap()as usize,maximum_capacity_bytes:axes["capacityBytes"].as_u64().unwrap()as usize,maximum_release_bytes:axes["releaseBytes"].as_u64().unwrap()as usize,maximum_depth:axes["depth"].as_u64().unwrap()as usize}
 }
 

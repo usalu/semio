@@ -28,9 +28,15 @@ export function readGeneratedCatalogProjection(generatedDir = runtimeCatalogProj
     if (!Array.isArray(parsed)) throw new Error(`📇️registry: ${name} is not a projected row array`);
     return parsed as T[];
   };
-  const entries = read<unknown>(GENERATED_PLUGINS_PROJECTION).map(parseDeployedRegistryEntryV1);
+  return parseGeneratedCatalogProjectionV1({ entries: read<unknown>(GENERATED_PLUGINS_PROJECTION), playgrounds: read<unknown>(GENERATED_PLAYGROUNDS_PROJECTION) });
+}
+
+/** 📖️ Admits one projected catalog document: both row arrays are parsed row by row and the module directories must stay unique. */
+export function parseGeneratedCatalogProjectionV1(value: unknown): GeneratedCatalogProjection {
+  if (typeof value !== "object" || value === null || !("entries" in value) || !("playgrounds" in value) || !Array.isArray(value.entries) || !Array.isArray(value.playgrounds)) throw new Error("📇️registry: catalog projection requires entries and playgrounds row arrays");
+  const entries = value.entries.map(parseDeployedRegistryEntryV1);
   registryModuleDirectories(entries);
-  return { entries, playgrounds: read<unknown>(GENERATED_PLAYGROUNDS_PROJECTION).map(parseProjectedPlaygroundV1) };
+  return { entries, playgrounds: value.playgrounds.map(parseProjectedPlaygroundV1) };
 }
 
 /** 🏠️ Host detection of projected rows: a variant, alias or bare plugin id whose crate declares

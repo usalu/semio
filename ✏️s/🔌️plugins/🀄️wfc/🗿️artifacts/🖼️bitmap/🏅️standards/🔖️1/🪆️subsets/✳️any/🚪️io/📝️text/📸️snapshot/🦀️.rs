@@ -54,7 +54,7 @@ pub fn pin_from_dsl(pin: &BitmapPinnedPixelDsl) -> BitmapPinnedPixel {
 
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(id = "wfc.bitmap", layout = "lines")]
-pub(crate) struct BitmapSnapshotDsl {
+pub struct BitmapSnapshotDsl {
     schema: String,
     seed: u64,
     input_width: u32,
@@ -109,7 +109,7 @@ impl pack::snapshot::ArtifactDsl for BitmapSnapshotDsl {
 
 
 
-pub(crate) fn bitmap_document_to_dsl(document: &BitmapSnapshot) -> BitmapSnapshotDsl {
+pub fn bitmap_document_to_dsl(document: &BitmapSnapshot) -> BitmapSnapshotDsl {
     BitmapSnapshotDsl {
         schema: document.schema.clone(),
         seed: document.seed,
@@ -128,7 +128,7 @@ pub(crate) fn bitmap_document_to_dsl(document: &BitmapSnapshot) -> BitmapSnapsho
     }
 }
 
-pub(crate) fn bitmap_document_from_dsl(parsed: BitmapSnapshotDsl) -> Result<BitmapSnapshot, semio_framework_value::ValueError> {
+pub fn bitmap_document_from_dsl(parsed: BitmapSnapshotDsl) -> Result<BitmapSnapshot, semio_framework_value::ValueError> {
     Ok(BitmapSnapshot {
         schema: parsed.schema,
         seed: parsed.seed,
@@ -143,13 +143,13 @@ pub(crate) fn bitmap_document_from_dsl(parsed: BitmapSnapshotDsl) -> Result<Bitm
 
 
 /// 🛬️ Moves the authored bitmap grammar into persisted fields under one native ownership control.
-pub(crate) fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut store::sqlite_snapshot::SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<BitmapSnapshot,semio_framework_value::ValueError>{
+pub fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut store::sqlite_snapshot::SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<BitmapSnapshot,semio_framework_value::ValueError>{
     let maximum_rows=control.limits().max_rows;
     let snapshot=store::decode_sqlite_snapshot_record_native(payload,<BitmapSnapshot as pack::snapshot::ArtifactDsl>::envelope_id(),BitmapSnapshotDsl::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, semio_framework_value::ValueError> = (|| {construct_native_record(record,native,maximum_rows)})(); *snapshot_output = Some(constructed?); Ok(()) },control,native_control)?;snapshot.admit_sqlite_values(control,store::sqlite_snapshot::SqliteSnapshotPhase::DecodeNative)?;Ok(snapshot)
 }
 
 /// 🛫️ Admits every owned bitmap native field before its canonical record and physical output.
-pub(crate) fn encode_sqlite_snapshot_native(document:&BitmapSnapshot,encoding:store::sqlite_snapshot::SnapshotEncoding,control:&mut store::sqlite_snapshot::SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,semio_framework_value::ValueError>{
+pub fn encode_sqlite_snapshot_native(document:&BitmapSnapshot,encoding:store::sqlite_snapshot::SnapshotEncoding,control:&mut store::sqlite_snapshot::SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,semio_framework_value::ValueError>{
     let rows=4usize.checked_add(document.input.palette.len()).and_then(|n|n.checked_add(document.pinned.len())).ok_or_else(||semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::WorkLimit,"bitmap native entity count overflow"))?;
     control.check_rows(rows)?;document.admit_sqlite_values(control,store::sqlite_snapshot::SqliteSnapshotPhase::EncodeNative)?;
     store::encode_sqlite_snapshot_record_native(encoding,<BitmapSnapshot as pack::snapshot::ArtifactDsl>::envelope_id(),BitmapSnapshotDsl::__dsl_spec_producer(),|native|project_native_record(document,native),control,native_owner)
@@ -184,9 +184,7 @@ pub fn print_dsl(document: &BitmapSnapshot) -> String {
 }
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
 
 //#region 🚚️Carrier
@@ -214,28 +212,13 @@ use semio_framework_value_derive::{FromValue, ToValue};
 #[allow(unused_imports)]
 mod mutations_codec {
 use super::*;
-use crate::standards::v1::subsets::any::schema::mutations::*;
-use crate::diff::BitmapDiff;
 use crate::schema::snapshot::BitmapSnapshot;
-use protocol::Mutation;
-use semio_framework_value_derive::{FromValue, ToValue};
-use crate::standards::v1::subsets::any::schema::mutations::add_palette_color::add_palette_color;
-use crate::standards::v1::subsets::any::schema::mutations::change_model::change_model;
-use crate::standards::v1::subsets::any::schema::mutations::change_palette_color::change_palette_color;
-use crate::standards::v1::subsets::any::schema::mutations::change_seed::change_seed;
-use crate::standards::v1::subsets::any::schema::mutations::paint_input_stroke::{paint_input_stroke, stroke_cells, stroke_extent, BitmapStrokePoint, BITMAP_STROKE_MAXIMUM_POINTS};
-use crate::standards::v1::subsets::any::schema::mutations::pin_pixel::pin_pixel;
-use crate::standards::v1::subsets::any::schema::mutations::remove_palette_color::remove_palette_color;
-use crate::standards::v1::subsets::any::schema::mutations::resize_input::resize_input;
-use crate::standards::v1::subsets::any::schema::mutations::resize_output::resize_output;
-use crate::standards::v1::subsets::any::schema::mutations::set_input_pixels::set_input_pixels;
-use crate::standards::v1::subsets::any::schema::mutations::unpin_pixel::unpin_pixel;
 
 /// 🔁️ Decodes one snapshot through this subset's production JSON codec and re-encodes it — the subject half of the
 /// case's `identity-round-trip` scenario.
 pub fn bitmap_snapshot_json_round_trip(text: &str) -> Result<String, String> {
-    let snapshot: BitmapSnapshot = crate::standards::v1::subsets::any::io::text::bitmap_json_decode(text).map_err(|error| error.to_string())?;
-    Ok(crate::standards::v1::subsets::any::io::text::bitmap_json_encode(&snapshot))
+    let snapshot: BitmapSnapshot = crate::standards::v1::subsets::any::io::text::snapshot::bitmap_json_decode(text).map_err(|error| error.to_string())?;
+    Ok(crate::standards::v1::subsets::any::io::text::snapshot::bitmap_json_encode(&snapshot))
 }
 }
 pub use mutations_codec::*;
@@ -258,7 +241,7 @@ pub fn encode_base64(bytes: &[u8]) -> String {
     }
     out
 }
-pub(crate) fn base64_value(byte: u8) -> Option<u32> {
+pub fn base64_value(byte: u8) -> Option<u32> {
     match byte {
         b'A'..=b'Z' => Some(u32::from(byte - b'A')),
         b'a'..=b'z' => Some(u32::from(byte - b'a') + 26),
@@ -306,7 +289,7 @@ pub fn decode_base64(text: &str) -> Option<Vec<u8>> {
 pub fn decode_pixel_text(text:&str)->Result<Vec<u8>,semio_framework_value::ValueError>{decode_base64(text).ok_or_else(||semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,"Bitmap pixels require canonical base64"))}
 
 /// 🫴️ Binds the literal bitmap fields under original native admission.
-pub(crate)fn construct_native_record(record:&semio_framework_dsl_record::RecordValue,native:&mut semio_framework_value::NativeDecodeControl<'_>,maximum_rows:usize)->Result<BitmapSnapshot,semio_framework_value::ValueError>{
+pub fn construct_native_record(record:&semio_framework_dsl_record::RecordValue,native:&mut semio_framework_value::NativeDecodeControl<'_>,maximum_rows:usize)->Result<BitmapSnapshot,semio_framework_value::ValueError>{
         let parsed=BitmapSnapshotDsl::__dsl_from_record_controlled(record,native)?;
         let entities=parsed.palette.len().checked_add(parsed.pinned.len()).ok_or_else(||semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,("bitmap native entity count overflow").to_string()))?;
         if entities.checked_add(4).is_none_or(|rows|rows>maximum_rows){return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,("bitmap native entity count exceeds caller limit").to_string()));}
@@ -324,7 +307,7 @@ pub(crate)fn construct_native_record(record:&semio_framework_dsl_record::RecordV
     }
 
 /// 🫴️ Binds the literal bitmap fields under original native admission.
-pub(crate)fn project_native_record(document:&BitmapSnapshot,native:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<semio_framework_dsl_record::RecordValue,semio_framework_value::ValueError>{
+pub fn project_native_record(document:&BitmapSnapshot,native:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<semio_framework_dsl_record::RecordValue,semio_framework_value::ValueError>{
         let schema=native.copy_text(&document.schema)?;
         native.charge(document.input.pixels.len().div_ceil(3)*4)?;
         let input_pixels=encode_base64(&document.input.pixels);
@@ -342,3 +325,50 @@ pub(crate)fn project_native_record(document:&BitmapSnapshot,native:&mut semio_fr
         })?;
         BitmapSnapshotDsl{schema,seed:document.seed,input_width:document.input.width,input_height:document.input.height,input_pixels,output_width:document.output.width,output_height:document.output.height,output_periodic:document.output.periodic,pattern_size:document.model.pattern_size,symmetry:document.model.symmetry,periodic_input:document.model.periodic_input,ground:document.model.ground,palette,pinned}.__dsl_to_record_controlled(native)
     }
+
+/// 🔤️ Encodes the artifact's intrinsic byte values as compact physical base64 fields.
+pub fn bitmap_json_value<T: semio_framework_value::ToValue>(value: &T) -> semio_framework_value::DslValue {
+    fn encode(value: semio_framework_value::DslValue) -> semio_framework_value::DslValue {
+        use semio_framework_value::DslValue;
+        match value {
+            DslValue::Bytes(bytes) => DslValue::String(encode_base64(&bytes)),
+            DslValue::Array(values) => DslValue::Array(values.into_iter().map(encode).collect()),
+            DslValue::Object(fields) => DslValue::Object(fields.into_iter().map(|(name, value)| (name, encode(value))).collect()),
+            value => value,
+        }
+    }
+    encode(semio_framework_value::ToValue::to_value(value))
+}
+
+/// 📤️ Renders decoded artifact values using the declared physical JSON byte representation.
+pub fn bitmap_json_encode<T: semio_framework_value::ToValue>(value: &T) -> String {
+    semio_framework_pack_json::to_string(&semio_framework_pack_json::from_dsl_value(&bitmap_json_value(value)))
+}
+
+/// 📥️ Binds declared base64 byte fields before semantic type validation.
+pub fn bitmap_json_bind<T: semio_framework_value::FromValue>(value: semio_framework_value::DslValue) -> Result<T, semio_framework_value::ValueError> {
+    fn decode(value: semio_framework_value::DslValue) -> Result<semio_framework_value::DslValue, semio_framework_value::ValueError> {
+        use semio_framework_value::{DslValue, ValueError, ValueRefusalKind};
+        match value {
+            DslValue::Array(values) => Ok(DslValue::Array(values.into_iter().enumerate().map(|(index, value)| decode(value).map_err(|error| error.under(index.to_string()))).collect::<Result<_, _>>()?)),
+            DslValue::Object(fields) => Ok(DslValue::Object(fields.into_iter().map(|(name, value)| {
+                let result = if matches!(name.as_str(), "pixels" | "inputPixels") {
+                    match value {
+                        DslValue::Null if name == "inputPixels" => Ok(DslValue::Null),
+                        DslValue::String(encoded) => decode_pixel_text(&encoded).map(DslValue::Bytes),
+                        _ => Err(ValueError::new(ValueRefusalKind::InvalidValue, "physical byte fields require base64 strings")),
+                    }
+                } else { decode(value) };
+                result.map(|value| (name.clone(), value)).map_err(|error| error.under(name))
+            }).collect::<Result<_, _>>()?)),
+            value => Ok(value),
+        }
+    }
+    semio_framework_value::FromValue::from_value(decode(value)?)
+}
+
+/// 📖️ Parses physical JSON independently from the semantic intrinsic byte binder.
+pub fn bitmap_json_decode<T: semio_framework_value::FromValue>(text: &str) -> Result<T, semio_framework_value::ValueError> {
+    let value = semio_framework_pack_json::parse(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string()))?;
+    bitmap_json_bind(semio_framework_pack_json::to_dsl_value(&value))
+}

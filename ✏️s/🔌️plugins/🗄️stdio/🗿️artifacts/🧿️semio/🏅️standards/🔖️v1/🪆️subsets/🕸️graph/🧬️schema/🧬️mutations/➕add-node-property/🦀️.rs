@@ -3,7 +3,6 @@
 //! inside `nodes` — exactly mirrors `add-node-port` but operating on `properties` instead of
 //! `ports`; REUSES `🔢️value`'s `SemioValueEntry`).
 
-use crate::schema::mutations::SemioGraphMutation;
 use crate::schema::snapshot::{GraphNodeId, SemioGraphSnapshot};
 use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValueEntry;
 
@@ -17,13 +16,16 @@ pub struct AddNodeProperty {
     pub property: SemioValueEntry,
 }
 
-impl protocol::MutationKind<SemioGraphSnapshot, SemioGraphMutation> for AddNodeProperty {
+impl<Op> protocol::MutationKind<SemioGraphSnapshot, Op> for AddNodeProperty
+where
+    Op: protocol::Mutation<SemioGraphSnapshot, Diff = crate::schema::diff::SemioGraphDiff> + From<AddNodeProperty> + From<crate::schema::mutations::remove_node_property::RemoveNodeProperty>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "node-property", kind: "add-node-property", record: "AddedNodeProperty" };
 
-    fn diff(&self, base: &SemioGraphSnapshot) -> protocol::MutationOutcome<<SemioGraphMutation as protocol::Mutation<SemioGraphSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioGraphSnapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<SemioGraphSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &SemioGraphSnapshot) -> Result<Vec<SemioGraphMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &SemioGraphSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

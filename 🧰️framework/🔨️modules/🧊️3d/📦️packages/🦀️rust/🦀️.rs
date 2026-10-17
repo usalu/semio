@@ -26,26 +26,19 @@ pub mod mesh;
 //#region 🔖️Rigid
 /// 🌀️ Single-precision rigid-body algebra: vectors, points, unit quaternions, isometries —
 /// the framework-owned replacement for the `nalgebra` surface plugins used to reach for directly.
-#[path = "../../🌀️rigid/🦀️.rs"]
-pub mod rigid;
+pub use semio_framework_3d_rigid as rigid;
 //#endregion 🔖️Rigid
 
 //#region 🔖️Collision
 /// 🧿️ BVH-accelerated triangle-mesh collision queries: shape-vs-shape intersection and
 /// winding-number point containment — the framework-owned replacement for `parry3d::shape` plus
 /// `parry3d::query::intersection_test`.
-#[path = "../../🧿️collision/🦀️.rs"]
-pub mod collision;
+pub use semio_framework_3d_collision as collision;
 //#endregion 🔖️Collision
 
 //#region 🔖️Inertia
 /// 🛞️ Symmetric 3x3 eigen solver, principal inertia and parallel-axis algebra shared by the
 /// B-Rep and mesh analysis queries.
-#[path = "../../🛞️inertia/🦀️.rs"]
-pub mod inertia;
+pub use semio_framework_3d_mesh_document::inertia;
 //#endregion 🔖️Inertia
 
-//#region 🧪️TestSupport
-#[cfg(test)]
-pub(crate) use semio_framework_3d_testing_support as test_support;
-//#endregion 🧪️TestSupport

@@ -7,7 +7,7 @@ import { buildResolutionScope, expandThoughtSlides, intro, resolveArrangement, s
 import type { DispositionPosition } from "../../🎯️targets/⚛️react/🟦️.tsx";
 import { describe, expect, it } from "vitest";
 import { SLIDE_INTERACTIVE_ENLARGE_FRAME, buildInteractiveSlideLayout, clientToSectionFraction, dispositionHasEphemeralLayout, dispositionPlacementContainer, flowDispositionManipulationRect, flowDispositionOffsetStyle, flowPixelOffsetToSectionRect, flowPointerDeltaToLocal, groupBoundingRect, interactiveDispositionChromeStyle, interactiveDispositionContentScale, interactiveDispositionContentScaleStyle, isFlowPixelOffsetTransform, isNormalizedSlideFrame, isUsableMeasuredRect, marqueeSelectionRule, marqueeSelects, measureDispositionBoundsInContainer, measureDispositionBoundsInSection, normalizeMarquee, pointerNearSlideResetHotspot, rectContains, rectsIntersect, resizeDispositionRect, resolveRevealArrangement, revealDeckInOverview, scaleRectWithinGroup, slideCoordinateRoot, slideHasEphemeralLayout, suppressRevealOverviewSlideNavigation, tightElementBoundsRect, toggleEnlargeRect, transformFrameStyle, translateDispositionRect } from "../../🎯️targets/⚛️react/🟦️.tsx";
-import { source, stylesheetRelativePath } from "../🧰️presentation-deck-helpers/🟦️.tsx";
+import { globalsCssSource } from "../🧰️presentation-deck-helpers/🟦️.tsx";
 
 describe("presentation interaction geometry", () => {
   it("detects disposition ephemeral layout from anchor and transform", () => {
@@ -404,11 +404,7 @@ describe("presentation interaction geometry", () => {
   });
 
   it("styles source ghosts hidden at rest and visible during auto-animate", async () => {
-    const { readFileSync } = await import("node:fs");
-    const { dirname, resolve } = await import("node:path");
-    const { fileURLToPath } = await import("node:url");
-    const cssPath = resolve(dirname(fileURLToPath(source.url)), stylesheetRelativePath);
-    const css = readFileSync(cssPath, "utf8");
+    const css = globalsCssSource;
     expect(css).toContain(".reveal .presentation-source-ghost");
     expect(css).toContain('section[data-auto-animate="pending"] .presentation-source-ghost');
     expect(css).not.toContain('section[title="catalogue-focus"]');

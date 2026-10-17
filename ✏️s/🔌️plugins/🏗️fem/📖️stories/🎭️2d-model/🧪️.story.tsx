@@ -35,7 +35,7 @@ import {
   reduceFem2dStoryAction,
   type Fem2dStoryState,
   type FemStoryLocale,
-} from "../../../../🧑‍💻dev/🏗️fem/📖️stories/🧭️coordination/🟦️.ts";
+} from "@semio-tech/s-fem-composition-tests/stories/coordination";
 
 //#region StoryHost
 /** 🪟️ `WINDOW_KIND_ID` / `BODY_KEY` / `FEM2D_APP_ID` as the Rust window declares them. */

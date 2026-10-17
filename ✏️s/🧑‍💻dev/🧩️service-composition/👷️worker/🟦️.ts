@@ -1,5 +1,5 @@
 import { mountSDevInventoryV1, type SDevMountV1, type SDevOperationV1 } from "../🟦️.ts";
-import type { installDocumentServiceWorkerV1 } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🟦️.ts";
+import type { installDocumentServiceWorkerV1 } from "@semio-tech/framework-os/modules/store/worker";
 
 export interface SDevWorkerContributionV1 {
   readonly owner: string;

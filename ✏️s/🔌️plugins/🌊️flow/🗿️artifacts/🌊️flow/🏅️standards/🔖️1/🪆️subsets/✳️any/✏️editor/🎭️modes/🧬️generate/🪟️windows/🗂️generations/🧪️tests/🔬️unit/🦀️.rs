@@ -1,4 +1,52 @@
-use super::*;
+use crate::editor::flow::modes::edit::windows::main::transient::FlowWindowTransient;
+use crate::playbook::FormGeneration;
+use semio_framework_plugin::BuiltNode;
+use semio_framework_ui_locale::Locale;
+use semio_framework_ui_locale::Terminology;
+use semio_framework_plugin::TreeWindows;
+#[allow(unused_imports)]
+use crate::editor::flow::base::FLOW_PLAY_WINDOW_GENERATIONS;
+#[allow(unused_imports)]
+use crate::editor::flow::base::{flow_action, ui_value_map, ui_value_text};
+#[allow(unused_imports)]
+use semio_framework_ui_contract::Label;
+#[allow(unused_imports)]
+use semio_framework_plugin::activation_target;
+#[allow(unused_imports)]
+use semio_framework_plugin::row_action;
+#[allow(unused_imports)]
+use semio_framework_plugin::tree_item_with_action;
+#[allow(unused_imports)]
+use semio_framework_plugin::Buildable;
+#[allow(unused_imports)]
+use semio_framework_plugin::HasBase;
+#[allow(unused_imports)]
+use semio_framework_plugin::HasChildren;
+#[allow(unused_imports)]
+use semio_framework_ui_locale::LocalizedLabel;
+#[allow(unused_imports)]
+use semio_framework_plugin::PanelTreeBuilder;
+#[allow(unused_imports)]
+use semio_framework_plugin::PluginAssemblyError;
+#[allow(unused_imports)]
+use semio_framework_plugin::RowActionPlacement;
+#[allow(unused_imports)]
+use semio_framework_plugin::SurfaceKind;
+#[allow(unused_imports)]
+use semio_framework_plugin::Trigger;
+#[allow(unused_imports)]
+use semio_framework_plugin::UiAssemblyResult;
+#[allow(unused_imports)]
+use semio_framework_plugin::UiFixedList;
+#[allow(unused_imports)]
+use semio_framework_plugin::UiText;
+#[allow(unused_imports)]
+use semio_framework_plugin::WindowKindDefinition;
+#[allow(unused_imports)]
+use semio_framework_plugin::WindowOptions;
+#[allow(unused_imports)]
+use semio_framework_ui_contract as ui;
+use crate::editor::flow::modes::generate::windows::generations::*;
 use crate::editor::flow::unit_tests::context::{flow_app, render as render_body};
 
 #[semio_framework_async_macros::async_test]

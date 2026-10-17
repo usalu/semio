@@ -1,7 +1,6 @@
 //! 📐 Shooting mutation payload — `ChangeShotHeight`. Sets a shot's render `height`.
 
 use crate::diff::ShootingDiff;
-use crate::mutations::ShootingMutation;
 use crate::ShootingSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 
@@ -16,12 +15,15 @@ pub struct ChangeShotHeight {
     pub new_height: u32,
 }
 
-impl MutationKind<ShootingSnapshot, ShootingMutation> for ChangeShotHeight {
+impl<Op> MutationKind<ShootingSnapshot, Op> for ChangeShotHeight
+where
+    Op: protocol::Mutation<ShootingSnapshot, Diff = ShootingDiff> + From<ChangeShotHeight>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "shot-height", kind: "change-shot-height", record: "ChangedShotHeight" };
     fn diff(&self, base: &ShootingSnapshot) -> protocol::MutationOutcome<ShootingDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &ShootingSnapshot) -> Result<Vec<ShootingMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &ShootingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

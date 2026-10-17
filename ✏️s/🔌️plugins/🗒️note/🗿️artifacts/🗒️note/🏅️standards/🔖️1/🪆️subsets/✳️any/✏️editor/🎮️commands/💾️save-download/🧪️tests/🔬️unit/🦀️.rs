@@ -1,6 +1,15 @@
-use super::*;
+use semio_framework_plugin::Effect;
+#[allow(unused_imports)]
+use crate::op::NoteMutation;
+#[allow(unused_imports)]
+use crate::NoteSnapshot;
+#[allow(unused_imports)]
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+#[allow(unused_imports)]
+use semio_framework_value_derive::{FromValue, ToValue};
+use crate::editor::note::commands::save_download::*;
 use crate::editor::note::unit_tests::context::{dispatch, note_app};
-use crate::editor::note::NoteCommand;
+use crate::editor::note::command_enum::NoteCommand;
 
 #[semio_framework_async_macros::async_test]
 async fn save_download_requests_a_media_export() {

@@ -1,0 +1,24 @@
+{
+ "created": [
+  "🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/🧪️tests/🔬️unit/🧫️scene-fixtures/🦀️.rs",
+  "🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/🧪️tests/🔬️unit/📷️camera-and-visible-tiles/🦀️.rs",
+  "🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/🧪️tests/🔬️unit/🎯️feature-picking-and-overlays/🦀️.rs",
+  "🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/🧪️tests/🔬️unit/🎨️render-scene-and-vector-cache/🦀️.rs",
+  "🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/🧪️tests/🔬️unit/🧱️tile-retention-and-polygon-queries/🦀️.rs",
+  "🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/🧪️tests/🔬️unit/🧭️interaction-sync-and-focus/🦀️.rs",
+  "🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/🧪️tests/🔬️unit/⬆️tile-uploads-and-prefetch/🦀️.rs",
+  "🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/🧪️tests/🔬️unit/🎚️theme-lod-and-label-guards/🦀️.rs",
+  "🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/🧪️tests/🔬️unit/🌍️mercator-oracle-and-tile-budget/🦀️.rs",
+  "🧰️framework/🔨️modules/🛠️tool-machine/🧪️tests/🔬️unit/📄️fixture-readers/🦀️.rs",
+  "🧰️framework/🔨️modules/🛠️tool-machine/🧪️tests/🔬️unit/🧮️reducer-and-id-laws/🦀️.rs",
+  "🧰️framework/🔨️modules/🛠️tool-machine/🧪️tests/🔬️unit/🌊️gesture-tool-laws/🦀️.rs",
+  "🧰️framework/🔨️modules/🛠️tool-machine/🧪️tests/🔬️unit/🏃️runner-laws/🦀️.rs",
+  "🧰️framework/🔨️modules/🛠️tool-machine/🧪️tests/🔬️unit/🫧️scrub-laws/🦀️.rs",
+  "🧰️framework/🔨️modules/🛠️tool-machine/🧪️tests/🔬️unit/⌨️typing-laws/🦀️.rs",
+  "🧰️framework/🔨️modules/🛠️tool-machine/🧪️tests/🔬️unit/🕸️node-drag-and-once-laws/🦀️.rs"
+ ],
+ "rewritten": [
+  "🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/🧪️tests/🔬️unit/🦀️.rs",
+  "🧰️framework/🔨️modules/🛠️tool-machine/🧪️tests/🔬️unit/🦀️.rs"
+ ]
+}

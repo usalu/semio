@@ -27,6 +27,4 @@ fn image_view(snapshot: &SvgSnapshot) -> semio_framework_plugin::UiAssemblyResul
     Ok(ImageView { width: 300, height: 150, mime: "image/svg+xml".into(), base64: crate::base64_standard(xml.as_bytes()) })
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

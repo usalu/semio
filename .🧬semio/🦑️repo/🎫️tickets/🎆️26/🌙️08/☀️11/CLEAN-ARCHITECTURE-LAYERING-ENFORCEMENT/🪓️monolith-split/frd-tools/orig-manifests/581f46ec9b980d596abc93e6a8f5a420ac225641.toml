@@ -1,0 +1,34 @@
+[package]
+workspace = "../../../../../.."
+name = "semio-framework-quiz-schema"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Quiz contract types: the hand-written Rust twin of the normative quiz schema (scalars, quiz and catalog documents, sheets, answers, results, lifecycle commands and events, read-model views and presence) with its fixture test kit. Types only; the rules live in semio-framework-quiz and the TypeScript twin is @semio-tech/quiz."
+
+[package.metadata.semio]
+role = "product"
+id = "quiz-schema"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+name = "quiz_schema"
+path = "../../🦀️.rs"
+
+[features]
+testkit = ["dep:serde_json"]
+
+[dependencies]
+serde = { workspace = true }
+# 🎯️ `float_roundtrip`: quiz documents are read correctly rounded, as `JSON.parse` and Python read them.
+serde_json = { workspace = true, features = ["float_roundtrip"], optional = true }
+
+[dev-dependencies]
+serde_json = { workspace = true, features = ["float_roundtrip"] }

@@ -1,5 +1,6 @@
 /** 🧫 The io module's public fixture entry: the language-neutral corpora its consumers read, exposed by name under one import so no consumer spells the owner's internal folders. */
-export const snapshotEncodeOwnerFixtureUrl = new URL("../../⏱️control/🛫️snapshot/🧪️tests/🧫️fixtures/🎟️encode-owner/🔣️.json", import.meta.url);
-export { default as rfc4648Base64urlVectorsFixture } from "../../🔤️base64/🧪️tests/🧫️fixtures/🔣️rfc4648-base64url-vectors.json" with { type: "json" };
-export { default as ioSchema } from "../../🧬️schema/🔣️.json" with { type: "json" };
-export const controlSnapshotReceivingFixtureUrl = new URL("../../⏱️control/🛫️snapshot/🧪️tests/🧫️fixtures/🪆️receiving/🔣️.json", import.meta.url);
+import { fixtureUrl } from "../../../🧪️test/📖️source-text/🟦️.ts";
+export const snapshotEncodeOwnerFixtureUrl = fixtureUrl(import.meta.url, "../../⏱️control/🛫️snapshot/🧪️tests/🧫️fixtures/🎟️encode-owner/🔣️.json");
+export { rfc4648Base64urlVectorsFixture } from "@semio-tech/framework-io-base64-ts/testing/fixtures";
+export { schemaSchema as ioSchema } from "@semio-tech/framework-io-schema-ts";
+export const controlSnapshotReceivingFixtureUrl = fixtureUrl(import.meta.url, "../../⏱️control/🛫️snapshot/🧪️tests/🧫️fixtures/🪆️receiving/🔣️.json");

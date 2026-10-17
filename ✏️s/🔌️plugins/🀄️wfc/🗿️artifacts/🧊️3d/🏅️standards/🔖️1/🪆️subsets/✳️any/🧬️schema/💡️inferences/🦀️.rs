@@ -39,7 +39,7 @@ use std::collections::BTreeMap;
 
 /// 🧮️ The compatibility table is `relations × tiles²` bits, so the tile and relation universes are
 /// the two admissions that actually bound compile work; slots/edges/rules only bound linear passes.
-pub(crate) const MAX_WFC3D_TILES: usize = 256;
+pub const MAX_WFC3D_TILES: usize = 256;
 pub(crate) const MAX_WFC3D_RELATIONS: usize = 32;
 pub(crate) const MAX_WFC3D_SLOTS: usize = 65_536;
 pub(crate) const MAX_WFC3D_EDGES: usize = 262_144;

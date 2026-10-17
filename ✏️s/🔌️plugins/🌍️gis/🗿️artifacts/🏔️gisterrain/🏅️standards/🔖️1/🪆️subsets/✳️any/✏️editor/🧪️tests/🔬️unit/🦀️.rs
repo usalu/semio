@@ -1,5 +1,111 @@
-pub(crate) mod context {
-    use super::super::*;
+use crate::{editor::gis3d::commands::example, editor::gis3d::commands::exaggeration, editor::gis3d::commands::view};
+use crate::editor::gis3d::modes::view::windows::terrain;
+use crate::standards::v1::subsets::any::schema::mutations::GisTerrainMutation;
+use crate::standards::v1::subsets::any::io::text::snapshot::default_terrain_document;
+use crate::GIS_3D_TERRAIN_SCHEMA;
+use semio_framework::{InteractiveJobClassification, ToolExecutionContract};
+use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::Media;
+use semio_framework_plugin::MediaClass;
+use semio_framework_plugin::MediaForm;
+use semio_framework_plugin::MediaPayload;
+use semio_framework_plugin::MediaType;
+use semio_framework_test_fixtures::fixture_text;
+use serde_json::Value;
+use example::set_active_example;
+use exaggeration::set_exaggeration;
+use view::set_camera;
+#[allow(unused_imports)]
+use crate::editor::gis3d::modes::view as view_mode;
+#[allow(unused_imports)]
+use crate::GisTerrainSnapshot;
+#[allow(unused_imports)]
+use semio_framework::{ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
+#[allow(unused_imports)]
+use semio_framework_plugin::app::InteractionView;
+#[allow(unused_imports)]
+use semio_framework_plugin::{retained_command::ArtifactRetainedCommandJob, retained_command::ArtifactRetainedCommandPayload, retained_command::BoundedArtifactCommandWork};
+#[allow(unused_imports)]
+use semio_framework_plugin::AppIo;
+#[allow(unused_imports)]
+use semio_framework_plugin::AppOperationContext;
+#[allow(unused_imports)]
+use semio_framework_plugin::ArtifactEditor;
+#[allow(unused_imports)]
+use semio_framework_plugin::ArtifactOwnedToolJobRequest;
+#[allow(unused_imports)]
+use semio_framework_plugin::ArtifactToolFactoryRegistry;
+#[allow(unused_imports)]
+use semio_framework_plugin::ArtifactToolPublicationContract;
+#[allow(unused_imports)]
+use semio_framework_plugin::ArtifactToolPublicationLane;
+#[allow(unused_imports)]
+use semio_framework_plugin::ConfigView;
+#[allow(unused_imports)]
+use semio_framework_artifact_reference::Dialect;
+#[allow(unused_imports)]
+use semio_framework_plugin::DraftView;
+#[allow(unused_imports)]
+use semio_framework_plugin::Editor;
+#[allow(unused_imports)]
+use semio_framework_plugin::Emit;
+#[allow(unused_imports)]
+use semio_framework_plugin::Fault;
+#[allow(unused_imports)]
+use semio_framework_plugin::GranularityDefinition;
+#[allow(unused_imports)]
+use semio_framework_plugin::HierarchyProvider;
+#[allow(unused_imports)]
+use semio_framework_plugin::HoverSpec;
+#[allow(unused_imports)]
+use semio_framework_plugin::InteractionDefinition;
+#[allow(unused_imports)]
+use semio_framework_plugin::InteractionRef;
+#[allow(unused_imports)]
+use semio_framework_ui_locale::Label;
+#[allow(unused_imports)]
+use semio_framework_ui_locale::LocalizedLabel;
+#[allow(unused_imports)]
+use semio_framework_plugin::MediaError;
+#[allow(unused_imports)]
+use semio_framework_plugin::MergeMode;
+#[allow(unused_imports)]
+use semio_framework_plugin::NoConfig;
+#[allow(unused_imports)]
+use semio_framework_plugin::NoConfigMutation;
+#[allow(unused_imports)]
+use semio_framework_plugin::NoDraft;
+#[allow(unused_imports)]
+use semio_framework_plugin::NoDraftMutation;
+#[allow(unused_imports)]
+use semio_framework_plugin::SelectionMethod;
+#[allow(unused_imports)]
+use semio_framework_plugin::SelectionMode;
+#[allow(unused_imports)]
+use semio_framework_plugin::SelectionSpec;
+#[allow(unused_imports)]
+use pack::snapshot::ArtifactPack;
+#[allow(unused_imports)]
+use semio_framework_2d::compute::EngineHandles;
+use crate::editor::gis3d::{GIS3D_EXAGGERATION_MINIMUM, GIS3D_EXAGGERATION_MAXIMUM, GIS3D_EXAGGERATION_STAGED_DEFAULT, GIS3D_RETAINED_TOOL_IDS, GIS3D_RETAINED_RAW_BYTES, GIS3D_RETAINED_WORK_ITEMS, gis3d_retained_extent, Gis3dCommandJobFactory};
+pub mod context {
+    use crate::editor::gis3d::*;
+use crate::{editor::gis3d::commands::example, editor::gis3d::commands::exaggeration, editor::gis3d::commands::view};
+use crate::editor::gis3d::modes::view::windows::terrain;
+use crate::standards::v1::subsets::any::schema::mutations::GisTerrainMutation;
+use crate::standards::v1::subsets::any::io::text::snapshot::default_terrain_document;
+use crate::GIS_3D_TERRAIN_SCHEMA;
+use semio_framework::{InteractiveJobClassification, ToolExecutionContract};
+use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::Media;
+use semio_framework_plugin::MediaClass;
+use semio_framework_plugin::MediaForm;
+use semio_framework_plugin::MediaPayload;
+use semio_framework_plugin::MediaType;
+use serde_json::Value;
+use example::set_active_example;
+use exaggeration::set_exaggeration;
+use view::set_camera;
     use semio_framework_plugin::artifact_app_laws::{close_registered_fixture_app, meta, new_app_with_registry, settle_registered_typed_operation, TypedOperationFixtureReceipt};
     use semio_framework_plugin::{EditorApp, PluginApp, VcsArtifactApp, ViewModel, ViewWindowInstance};
     
@@ -71,12 +177,12 @@ pub(crate) mod context {
     }
 }
 
-use super::*;
+use crate::editor::gis3d::*;
 use crate::editor::gis3d::unit_tests::context::{app, close, dispatch, gis3d_app_manifest_for_tests, render};
 use semio_framework_plugin::EditorApp;
 use serde_json::json;
 
-const RETAINED_LIMITS: &str = include_str!("../🧫️fixtures/🧫️retained-command-limits/🔣️.json");
+static RETAINED_LIMITS: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../🧪️tests/🧫️fixtures/🧫️retained-command-limits/🔣️.json"));
 
 //#region 🔖️CommandSurface
 /// 🎯️ One value per `app_commands!` row, in row order.
@@ -138,7 +244,7 @@ async fn command_from_action_reads_the_nested_camera_object() {
 
 #[test]
 fn retained_command_factory_matches_the_language_neutral_maximum_oracle() {
-    let fixture: Value = serde_json::from_str(RETAINED_LIMITS).expect("GIS terrain retained limits decode through serde_json");
+    let fixture: Value = serde_json::from_str((*RETAINED_LIMITS)).expect("GIS terrain retained limits decode through serde_json");
     let maximum = fixture.get("maximumTextBytes").and_then(Value::as_u64).expect("maximumTextBytes") as usize;
     let additional = fixture.get("rejectedAdditionalBytes").and_then(Value::as_u64).expect("rejectedAdditionalBytes") as usize;
     let expected_items = fixture.get("expectedWorkItems").and_then(Value::as_u64).expect("expectedWorkItems") as usize;
@@ -196,7 +302,7 @@ async fn retained_commands_publish_only_their_declared_store_lanes() {
         }
     }
     let mut app = app().await;
-    let fixture: Value = serde_json::from_str(RETAINED_LIMITS).expect("GIS terrain retained completion oracle");
+    let fixture: Value = serde_json::from_str((*RETAINED_LIMITS)).expect("GIS terrain retained completion oracle");
     let expected = |command: &str| fixture["publicationLanes"][command].as_array().expect("publication lanes").iter().map(|lane| lane.as_str().expect("publication lane").to_string()).collect::<Vec<_>>();
     let camera = dispatch(&mut app, Gis3dCommand::SetCamera(set_camera::SetCamera { camera_json: "{}".into() })).await;
     let camera_lanes = camera.lanes.iter().map(lane_name).map(str::to_string).collect::<Vec<_>>();
@@ -239,7 +345,7 @@ async fn import_media_map_in_writes_the_imported_features_operation() {
     let media = Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector }, payload: MediaPayload::Intrinsic { schema: "2d.map".into(), value: semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse(&incoming,semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()) } };
     let emit = Gis3dPlayApp::import_media("map:in", &media, &doc).expect("map:in import");
     use crate::mutations::change_imported_features::ChangeImportedFeatures;
-    assert_eq!(emit.artifact_mutations, vec![GisTerrainMutation::ChangeImportedFeatures(ChangeImportedFeatures { new_imported_map: Some(crate::schema::ImportedMap::from_json(&incoming).unwrap()) })]);
+    assert_eq!(emit.artifact_mutations, vec![GisTerrainMutation::ChangeImportedFeatures(ChangeImportedFeatures { new_imported_map: Some(crate::schema::imported_map::ImportedMap::from_json(&incoming).unwrap()) })]);
     close(&mut app);
 }
 

@@ -80,7 +80,6 @@ export async function registerTests1(
           await scope.fetch(post);
           expect(requests.at(-1)?.input).toBe(post);
         }
-        console.log("[DEBUG] Published worker URL/Request routing and diagnostic import verified");
       } finally { rmSync(root, { recursive: true, force: true }); }
     });
     for (const row of corpus.publication.cases) it(`counts final publication bytes for ${row.id}`, () => {
@@ -114,7 +113,6 @@ export async function registerTests1(
         const imports = importsOf(worker);
         expect(imports.map(row => ({ kind: row.kind, specifier: row.specifier }))).toEqual(corpus.worker.generatedImports.map(row => ({ kind: row.kind, specifier: row.specifier === null ? null : corpus.worker.importUrl })));
         expect(imports.find(row => row.specifier === null)?.expression).toBe("moduleUrl");
-        console.log("[DEBUG] Actual generated worker import forms and publication targets verified");
       } finally { rmSync(root, { recursive: true, force: true }); }
     });
     it("requires revalidation of stable assets on every published host", () => {
@@ -137,7 +135,6 @@ export async function registerTests1(
           expect(current.satisfiesWithoutRevalidation(request)).toBe(corpus.cache.satisfiesWithoutRevalidation);
           if (name !== "play") expect(headers["access-control-allow-origin"]).toBe("*");
         }
-        console.log("[DEBUG] Every published host requires stable asset cache revalidation");
       } finally { rmSync(root, { recursive: true, force: true }); }
     });
     const entries = [

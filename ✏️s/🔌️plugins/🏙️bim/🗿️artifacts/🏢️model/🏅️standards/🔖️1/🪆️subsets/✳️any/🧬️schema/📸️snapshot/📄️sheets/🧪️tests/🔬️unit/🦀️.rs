@@ -1,6 +1,8 @@
 //! 🧪️ The sheet rules: paper sizes, orientation, dates and why a sheet, a viewport or a revision row cannot be written.
 
 use super::*;
+use crate::standards::v1::subsets::any::schema::snapshot::values::*;
+use crate::standards::v1::subsets::any::schema::snapshot::sheets_values::*;
 use crate::standards::v1::subsets::any::schema::snapshot::{View, ViewKind};
 
 fn model() -> ModelSnapshot {

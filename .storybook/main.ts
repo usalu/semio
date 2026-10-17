@@ -15,11 +15,14 @@ import { fileURLToPath } from "node:url";
 import { dirname, join, resolve } from "node:path";
 
 import type { StorybookConfig } from "@storybook/react-vite";
-import { semioAssetsVitePlugin, createWorkspaceViteResolveConfig, findWorkspacePackages, playgroundAssetVitePlugins, playgroundFlowWasmDevStubPlugin } from "../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts";
-import { uiTailwindBuildPlugins } from "../🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🛠️build-tooling/🟦️.ts";
-import { resolveActiveScopes, buildScopeStoryGlobs, buildScopeAliases, buildScopeWatchIgnores, type StoryScope } from "./📖️stories/🧭️coordination/🟦️.ts";
-import { repoCacheDirectory } from "../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
-import { pluginModulesRoot, builtPluginModulesRootIn } from "../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🟦️.ts";
+import { semioAssetsVitePlugin, createWorkspaceViteResolveConfig, findWorkspacePackages, playgroundFlowWasmDevStubPlugin } from "../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts";
+import { hostBuildPlugins, uiTailwindBuildPlugins } from "../🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🛠️build-tooling/🟦️.ts";
+import { resolveActiveScopes, buildScopeStoryGlobs, buildScopeAliases, buildExactAliasEntries, buildScopeWatchIgnores, type StoryScope } from "./📖️stories/🧭️coordination/🟦️.ts";
+import { repositoryCachePartitionRootDataV1 } from "../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📂️paths/🟦️.ts";
+import { createAssetBuildPluginsV1 } from "../🧰️framework/🔨️modules/🖼️assets/🔍️resolver/🧭️dispatch/🟦️.ts";
+import { PLAYGROUND_ASSET_PROVIDERS_V1 } from "../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🎮️playground/🖼️assets/🧩️composition/🟦️.ts";
+import { flowBrowserDeliveryV1 } from "../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🌐️browser/📦️publication/📋️contract/🟦️.ts";
+import { builtPluginModulesRootIn } from "../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🟦️.ts";
 import { RUNTIME_ASSET_CHANNELS } from "../🧰️framework/🔨️modules/🖼️canvas/🔌️runtime-assets/🟦️.ts";
 
 const require = createRequire(import.meta.url);
@@ -49,14 +52,10 @@ function getAbsolutePath(value: string): string {
 const activeScopes: readonly StoryScope[] = resolveActiveScopes(storybookScope);
 const activeScopeIds: readonly string[] = activeScopes.map((s) => s.id);
 
-/** 🔗️ Irregular per-scope aliases + a fixed baseline of always-present workspace shortcuts (css subpaths, single-file entries) not worth registering per-scope. */
+/** 🔗️ Irregular per-scope aliases + a fixed baseline of always-present workspace shortcuts (css subpaths, single-file entries) not worth registering per-scope.
+ * `viteFinal` turns every key into an exact-match entry (`buildExactAliasEntries`), so the bare package aliases never swallow a subpath. `🟦️Interpreter/🟦️.tsx` reaches `ui-react/test` through a runtime `await import(...)` that Vite still resolves at build time, so a plain (non-test) storybook build fails without the `ui-react/test` alias; this mirrors the same pair in os/dev's builder. */
 function buildStorybookAliases(): Record<string, string> {
   const baseline: Record<string, string> = {
-    // 🧪️ More specific than the bare package alias, so it must come FIRST — Vite substitutes an
-    // alias by prefix, and without this `@semio-tech/ui-react/test` resolves to a literal
-    // `<uiReactDir>/test` that does not exist. `🟦️Interpreter/🟦️.tsx` reaches it through a
-    // runtime `await import(...)`, which Vite still has to resolve at build time, so a plain
-    // (non-test) storybook build fails on it. Mirrors the same pair in os/dev's `⚙️vite.config.ts`.
     "@semio-tech/ui-react/test": toVitePath(join(uiReactDir, "🟦️.ts")),
     // 📦️ Point at the package's real entry FILE, not the directory: Vite's alias substitution is
     // literal, and it only auto-resolves a directory via a bare `index.*`, which an emoji-prefixed
@@ -83,7 +82,7 @@ const config: StorybookConfig = {
   // by `dev`'s materialize step, not sources — storybook only serves whatever is already on disk and
   // never triggers a cargo build itself. The runtime asset channels (compiler fonts, label face, icon pack)
   // serve every wasm session story the fonts and icons Canvas no longer embeds.
-  staticDirs: [{ from: process.env.SEMIO_STORYBOOK_BUILD === "true" ? builtPluginModulesRootIn(repoRootPath, readBuildMode(process.env.SEMIO_BUILD_MODE)) : pluginModulesRoot(), to: "/plugin-modules" }, ...RUNTIME_ASSET_CHANNELS.map(({ route, directory }) => ({ from: resolve(repoRootPath, directory), to: route }))],
+  staticDirs: [{ from: builtPluginModulesRootIn(repoRootPath, readBuildMode(process.env.SEMIO_BUILD_MODE)), to: "/plugin-modules" }, ...RUNTIME_ASSET_CHANNELS.map(({ route, directory }) => ({ from: resolve(repoRootPath, directory), to: route }))],
   addons: [getAbsolutePath("@storybook/addon-vitest"), getAbsolutePath("@storybook/addon-docs")],
   framework: {
     name: getAbsolutePath("@storybook/react-vite"),
@@ -103,7 +102,8 @@ const config: StorybookConfig = {
   async viteFinal(config, { configType }) {
     // ⚡️ Routes Storybook's Vite dependency-optimizer cache into the ONE shared cache root instead of
     // the Vite default (`node_modules/.vite`), so disk is bounded by the pruner rather than by `node_modules`.
-    config.cacheDir = viteCacheDirectory(repoCacheDirectory(repoRootPath, "vite", "storybook"), { ...process.env, SEMIO_BUILD_MODE: configType === "DEVELOPMENT" ? "prototype" : readBuildMode(process.env.SEMIO_BUILD_MODE) }, import.meta.url);
+    const buildMode = configType === "DEVELOPMENT" ? "prototype" : readBuildMode(process.env.SEMIO_BUILD_MODE);
+    config.cacheDir = viteCacheDirectory(repoRootPath, { ...process.env, SEMIO_BUILD_MODE: buildMode });
     config.resolve = config.resolve || {};
     // #region 🔖️ResolvePackageExports
     /** SB 10’s resolver prefers `storybook`/`stories` export conditions; most deps only declare `import`/`require`, so `"."` fails. Put standard bundler conditions first. */
@@ -124,13 +124,10 @@ const config: StorybookConfig = {
         aliasRecord[item.find] = item.replacement;
       }
     }
-    config.resolve.alias = {
-      ...((config.resolve.alias as any) || {}),
-      ...aliasRecord,
-    };
-    config.assetsInclude = [...(config.assetsInclude ?? []), "**/*.wasm"];
+    config.resolve.alias = buildExactAliasEntries(aliasRecord, config.resolve.alias);
+    config.assetsInclude = [...[config.assetsInclude ?? []].flat(), "**/*.wasm"];
     config.server = config.server || {};
-    config.server.allowedHosts = Array.from(new Set([...(config.server.allowedHosts || []), "127.0.0.1", "localhost"]));
+    config.server.allowedHosts = config.server.allowedHosts === true ? true : Array.from(new Set([...(config.server.allowedHosts ?? []), "127.0.0.1", "localhost"]));
     config.server.fs = {
       ...(config.server.fs || {}),
       allow: Array.from(new Set([...(config.server.fs?.allow || []), repoRootPath])),
@@ -148,24 +145,24 @@ const config: StorybookConfig = {
     config.plugins = config.plugins || [];
     const hasTailwindPlugin = config.plugins.some((plugin) => plugin && typeof plugin === "object" && "name" in plugin && plugin.name === "@tailwindcss/vite");
     if (!hasTailwindPlugin) {
-      config.plugins.push(...uiTailwindBuildPlugins());
+      config.plugins.push(...hostBuildPlugins(uiTailwindBuildPlugins()));
     }
     const hasUiAssetsPlugin = config.plugins.some((plugin) => plugin && typeof plugin === "object" && "name" in plugin && plugin.name === "ui-assets-serve");
     if (!hasUiAssetsPlugin) {
-      config.plugins.push(...semioAssetsVitePlugin(repoRootPath));
+      config.plugins.push(...hostBuildPlugins(semioAssetsVitePlugin(repoRootPath)));
     }
-    if (configType !== "DEVELOPMENT") config.plugins.unshift(canonicalWasmBuildVitePlugin(repoRootPath, readBuildMode(process.env.SEMIO_BUILD_MODE)));
-    config.plugins.push(playgroundFlowWasmDevStubPlugin(repoRootPath));
+    if (configType !== "DEVELOPMENT") config.plugins.unshift(...hostBuildPlugins([canonicalWasmBuildVitePlugin(repoRootPath, buildMode)]));
+    config.plugins.push(...hostBuildPlugins([playgroundFlowWasmDevStubPlugin(repoRootPath, flowBrowserDeliveryV1(repoRootPath, repositoryCachePartitionRootDataV1(repoRootPath, "products"), { version: 1, mode: buildMode, command: configType === "DEVELOPMENT" ? "serve" : "build" }))]));
     // #region 🔖️ScopeAssetsAndPlugins
     /** 🌐️ Static-dir / tile-proxy / mesh-collection assets declared by active scopes (e.g. `framework/os`'s `/plugin-modules`, `/renderer-modules`). */
     const scopeAssets = activeScopes.flatMap((s) => s.assets ?? []);
     if (scopeAssets.length > 0) {
-      config.plugins.push(...playgroundAssetVitePlugins(repoRootPath, scopeAssets));
+      config.plugins.push(...hostBuildPlugins(createAssetBuildPluginsV1(repoRootPath, scopeAssets, PLAYGROUND_ASSET_PROVIDERS_V1)));
     }
     /** 🌐️ Lazy scope-gated Vite plugins (only imported when the owning scope is active). */
     for (const scope of activeScopes) {
       if (scope.vitePlugins) {
-        config.plugins.push(...(await scope.vitePlugins()));
+        config.plugins.push(...hostBuildPlugins(await scope.vitePlugins()));
       }
     }
     // #endregion 🔖️ScopeAssetsAndPlugins
@@ -199,7 +196,7 @@ const config: StorybookConfig = {
       loader: { ...(config.optimizeDeps.esbuildOptions?.loader || {}), ".ts": "tsx" },
     };
     const currentRollup = config.build?.rollupOptions;
-    config.build = { ...config.build, ...semioViteBuild(undefined, configType === "DEVELOPMENT" ? "prototype" : readBuildMode(process.env.SEMIO_BUILD_MODE)) };
+    config.build = { ...config.build, ...semioViteBuild(undefined, buildMode) };
     config.build.target = "es2022";
     config.build.rollupOptions = { ...currentRollup, ...config.build.rollupOptions };
     const existingExternal = config.build.rollupOptions.external;

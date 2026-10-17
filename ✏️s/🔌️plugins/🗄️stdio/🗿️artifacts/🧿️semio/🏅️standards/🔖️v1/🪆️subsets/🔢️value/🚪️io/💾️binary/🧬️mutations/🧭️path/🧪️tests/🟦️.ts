@@ -13,5 +13,4 @@ test("Semio binary path frames match neutral and independent protobuf outputs",(
   expect([...bytes]).toEqual(row.bytes);expect([...bytes]).toEqual([...writer.finish()]);expect(decodeSemioValuePath(bytes)).toEqual(path);
  }
  for(const bytes of fixture.malformed)expect(()=>decodeSemioValuePath(new Uint8Array(bytes))).toThrow();
- console.log("[DEBUG] Semio binary path source neutral/protobuf exact bytes and malformed child refusal");
 });

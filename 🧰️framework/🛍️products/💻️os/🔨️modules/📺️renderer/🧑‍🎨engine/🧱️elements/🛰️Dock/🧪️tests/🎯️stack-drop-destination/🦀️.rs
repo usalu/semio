@@ -1,6 +1,7 @@
 //! 🎯️ Neutral whole-stack drops address the tree presented after source extraction.
 
 use super::*;
+use semio_framework_test_fixtures::fixture_text;
 use serde_json::{json, Value};
 
 fn stack_projections(node: &DockNode, path: &mut DockPath, out: &mut Vec<Value>) {
@@ -18,7 +19,7 @@ fn stack_projections(node: &DockNode, path: &mut DockPath, out: &mut Vec<Value>)
 
 #[test]
 fn committed_stack_drops_land_on_every_neutral_visible_destination() {
-    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧱️elements/🎨️Canvas/🧪️tests/🧫️fixtures/🎯️stack-drop-destination/🔣️.json")).unwrap();
+    let fixture: Value = serde_json::from_str(fixture_text!("../../../../../../../../../../🔨️modules/🖱️ui/🧱️elements/🎨️Canvas/🧪️tests/🧫️fixtures/🎯️stack-drop-destination/🔣️.json")).unwrap();
     for law in fixture["cases"].as_array().unwrap() {
         let initial = law["initialStacks"].as_array().unwrap();
         let source_index = law["sourceIndex"].as_u64().unwrap() as usize;
@@ -44,6 +45,5 @@ fn committed_stack_drops_land_on_every_neutral_visible_destination() {
         stack_projections(&dock.root, &mut Vec::new(), &mut actual);
         assert_eq!(json!(actual), law["expectedStacks"], "{}", law["id"]);
         if law["accepted"] == false { assert_eq!(dock.root, before); }
-        println!("[DEBUG] WGPU stack drop {}: {}", law["id"], json!(actual));
     }
 }

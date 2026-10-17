@@ -64,7 +64,7 @@ fn frame_to_canvas(frame: &FigureTileFrame, scale: f64) -> (f64, f64, f64, f64) 
 /// `InteractionView`) — the selection overlay this used to bake into every tile's `kind` is gone; the
 /// client renders that highlight itself from the framework's own interaction state now (matches
 /// `🖍️draw`'s canvas render, same reason).
-fn deck_to_canvas_layers(deck: &PresentationSnapshot) -> String {
+pub fn deck_to_canvas_layers(deck: &PresentationSnapshot) -> String {
     const SCALE: f64 = crate::PRESENTATION_CANVAS_SCALE;
     let (source, tiles) = crate::presentation_working_scene(deck);
     let mut layers = Vec::new();
@@ -88,7 +88,5 @@ pub fn render(deck: &PresentationSnapshot) -> semio_framework_plugin::UiAssembly
 //#endregion 🔖️Render
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

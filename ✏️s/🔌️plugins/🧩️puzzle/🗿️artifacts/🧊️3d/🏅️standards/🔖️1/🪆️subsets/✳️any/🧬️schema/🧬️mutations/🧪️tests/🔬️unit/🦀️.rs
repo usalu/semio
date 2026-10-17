@@ -365,7 +365,6 @@ fn puzzle3d_typed_mutation_fixture_and_refusal_law() {
             current=protocol::apply_diff(Mutation::<Puzzle3dSnapshot>::diff(operation,&current).diff(),&current).expect("typed inverse apply");
         }
         assert_eq!(current,oracle_before);
-        println!("[DEBUG] puzzle3d typed mutations {} {}",case["name"],operations.len());
     }
     for value in fixture["invalid"].as_array().expect("invalid") {
         let actual= <Puzzle3dSnapshot as semio_framework_value::FromValue>::from_value(semio_framework_value::DslValue::from(value));
@@ -386,6 +385,5 @@ fn puzzle3d_native_float_typed_mutation_fixture() {
         let patch=<Puzzle3dObjectPatch as semio_framework_value::FromValue>::from_value(value).expect("typed patch");
         let actual:Vec<String>=patch.origin.expect("native origin").iter().map(|number|number.to_bits().to_string()).collect();
         assert_eq!(serde_json::to_value(actual).expect("third-party output"),case["words"]);
-        println!("[DEBUG] puzzle3d native field words {}",case["name"]);
     }
 }

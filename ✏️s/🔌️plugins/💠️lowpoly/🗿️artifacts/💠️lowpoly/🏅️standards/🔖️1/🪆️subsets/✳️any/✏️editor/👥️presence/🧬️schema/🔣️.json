@@ -15,7 +15,8 @@
     "worldCameraPosition",
     "worldCameraTarget",
     "worldCameraFov",
-    "paintUtility"
+    "paintUtility",
+    "activeUtilityId"
   ],
   "properties": {
     "selectionMode": {
@@ -93,6 +94,10 @@
       "x-semio-state": "presence"
     },
     "paintUtility": {
+      "type": "string",
+      "x-semio-state": "presence"
+    },
+    "activeUtilityId": {
       "type": "string",
       "x-semio-state": "presence"
     }

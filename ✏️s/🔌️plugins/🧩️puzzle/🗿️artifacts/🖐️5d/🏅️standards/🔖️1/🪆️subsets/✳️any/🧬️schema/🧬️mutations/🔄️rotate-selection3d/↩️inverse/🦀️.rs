@@ -1,10 +1,14 @@
 //! ↩️ Inverse for `RotateSelection3d` — the absolute setters restoring every BASE pose field the transform changes (exact,
 //! never a negated parameter that would accumulate float error). Nothing moved ⇒ `Vec::new()`.
-use crate::standards::v1::subsets::any::schema::mutations::{puzzle5d_selection, quat_from_axis_angle, quat_mul, rotate_part_3d, rotate_target_volume, Puzzle5dMutation};
+use crate::standards::v1::subsets::any::schema::mutations::{quat_from_axis_angle, quat_mul, rotate_part_3d, rotate_target_volume};
+use crate::standards::v1::subsets::any::schema::diff::{puzzle5d_selection};
 use crate::Puzzle5dSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &super::RotateSelection3d, base: &Puzzle5dSnapshot) -> Result<Vec<Puzzle5dMutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op>(payload: &super::RotateSelection3d, base: &Puzzle5dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError>
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::rotate_part_3d::RotatePart3d> + From<crate::standards::v1::subsets::any::schema::mutations::rotate_target_volume::RotateTargetVolume>,
+{
     let Ok(selection) = puzzle5d_selection(base, &payload.targets, true) else { return Ok(Vec::new()) };
     if !(payload.axis.iter().all(|value| value.is_finite()) && payload.angle.is_finite()) {
         return Ok(Vec::new());

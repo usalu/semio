@@ -1,19 +1,21 @@
 //! 🔬️ Unit tests of the GIS map policy: band and tile-z selection, OpenMapTiles paint gates, stroke widths, label rules, weight sliders, and a `MapHost` rendering the demotiles fixtures by it — the GIS assertions moved out of the framework tiled-map tests.
 
+use semio_framework_test_fixtures::{fixture_bytes, fixture_text};
+use serde_json::Value;
 use crate::standards::v1::subsets::any::io::text::snapshot::default_document;
 use crate::tile_coordinates::gis_policy::{gis_map_extension, gis_map_layer_weight_slider_ids_json, gis_map_lod_scale_json, gis_map_overlays_value, gis_map_policy, gis_map_scene_descriptor_json, GIS_MAP_LAYER_KEYS, GIS_MAP_POLICY_ID};
 use crate::GisMapSnapshot;
 use semio_framework_surface::tiled_map::projection::tile_world_rect;
 use semio_framework_surface::tiled_map::{MapFeatureFacts, MapHost, MapLayerGates, MapLayerRole, MapPolicy, MapTileMode, MAP_CAMERA_ZOOM_MAX, MAX_VISIBLE_TILE_REQUESTS};
 
-const FIXTURE_TILES: &[(&str, &[u8])] = &[
-    ("0-0-0", include_bytes!("../../../../../../../../../🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/🧪️tests/🧫️fixtures/🗺️vector-tiles/0-0-0/🛰️.pbf")),
-    ("3-4-2", include_bytes!("../../../../../../../../../🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/🧪️tests/🧫️fixtures/🗺️vector-tiles/3-4-2/🛰️.pbf")),
-    ("5-17-11", include_bytes!("../../../../../../../../../🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/🧪️tests/🧫️fixtures/🗺️vector-tiles/5-17-11/🛰️.pbf")),
-];
+static FIXTURE_TILES: std::sync::LazyLock<&[(&str, &[u8])]> = std::sync::LazyLock::new(|| &*Box::leak(Box::new( [
+    ("0-0-0", fixture_bytes!("../../../../../../../🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/🧪️tests/🧫️fixtures/🗺️vector-tiles/0-0-0/🛰️.pbf")),
+    ("3-4-2", fixture_bytes!("../../../../../../../🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/🧪️tests/🧫️fixtures/🗺️vector-tiles/3-4-2/🛰️.pbf")),
+    ("5-17-11", fixture_bytes!("../../../../../../../🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/🧪️tests/🧫️fixtures/🗺️vector-tiles/5-17-11/🛰️.pbf")),
+])));
 
 fn fixture_tile(key: &str) -> &'static [u8] {
-    FIXTURE_TILES.iter().find(|(name, _)| *name == key).expect("demotiles fixture").1
+    (*FIXTURE_TILES).iter().find(|(name, _)| *name == key).expect("demotiles fixture").1
 }
 
 fn gis_host() -> MapHost {
@@ -342,7 +344,7 @@ fn lod_scale_json_lists_all_eight_bands() {
 
 #[test]
 fn band_selection_matches_frozen_specification_vectors() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).expect("fixture json");
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../🗺️tiles/🌍️gis-policy/🧪️tests/🧫️fixtures/🔣️.json")).expect("fixture json");
     let policy = gis_map_policy();
     for entry in fixture["lodBands"].as_array().expect("lodBands array") {
         let span = entry["spanDeg"].as_f64().expect("spanDeg");

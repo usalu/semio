@@ -7,12 +7,13 @@
 
 use crate::opening_config::mutations::UiPreferencesConfigMutation;
 use crate::opening_config::{UiPreferences, UiPreferencesDiff};
+use semio_framework_test_fixtures::fixture_path;
 
-static BEFORE: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🧫️fixtures/🧬️mutations/⌨️set-keybinding-override/✏️sets-keybinding/📸️snapshot/⬅️before/🔣️.json")).expect("fixture"));
-static AFTER: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🧫️fixtures/🧬️mutations/⌨️set-keybinding-override/✏️sets-keybinding/📸️snapshot/➡️after/🔣️.json")).expect("fixture"));
-static MUTATION: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🧫️fixtures/🧬️mutations/⌨️set-keybinding-override/✏️sets-keybinding/🦠️mutation/🔣️.json")).expect("fixture"));
-static DIFF: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🧫️fixtures/🧬️mutations/⌨️set-keybinding-override/✏️sets-keybinding/🔺️diff/🔣️.json")).expect("fixture"));
-static OUTCOME: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🧫️fixtures/🧬️mutations/⌨️set-keybinding-override/✏️sets-keybinding/🎯️outcome/🔣️.json")).expect("fixture"));
+static BEFORE: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(fixture_path!("../../../🧫️fixtures/🧬️mutations/⌨️set-keybinding-override/✏️sets-keybinding/📸️snapshot/⬅️before/🔣️.json")).expect("fixture"));
+static AFTER: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(fixture_path!("../../../🧫️fixtures/🧬️mutations/⌨️set-keybinding-override/✏️sets-keybinding/📸️snapshot/➡️after/🔣️.json")).expect("fixture"));
+static MUTATION: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(fixture_path!("../../../🧫️fixtures/🧬️mutations/⌨️set-keybinding-override/✏️sets-keybinding/🦠️mutation/🔣️.json")).expect("fixture"));
+static DIFF: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(fixture_path!("../../../🧫️fixtures/🧬️mutations/⌨️set-keybinding-override/✏️sets-keybinding/🔺️diff/🔣️.json")).expect("fixture"));
+static OUTCOME: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(fixture_path!("../../../🧫️fixtures/🧬️mutations/⌨️set-keybinding-override/✏️sets-keybinding/🎯️outcome/🔣️.json")).expect("fixture"));
 
 fn before() -> UiPreferences {
     semio_framework_pack_json::from_json_str(BEFORE.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before preferences decode")

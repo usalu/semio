@@ -55,5 +55,4 @@ test("General Actor source and test mounts reject product references", async () 
   expect(built.outputs.length).toBe(fixture.entrypoints.length);
   expect(observed.size).toBeGreaterThan(fixture.entrypoints.length);
   expect([...observed].every(path => !relative(owner, path).replaceAll("\\", "/").includes("🛍️products"))).toBe(true);
-  console.log("[DEBUG] Closed Ajv/SQLite owner corpus, independent TypeScript AST and actual Bun production bundler denied every product resolution", { requiredOwners: fixture.sourceOwners.length, definingSources: ownedSources.length, modules: observed.size, entries: built.outputs.length });
 });

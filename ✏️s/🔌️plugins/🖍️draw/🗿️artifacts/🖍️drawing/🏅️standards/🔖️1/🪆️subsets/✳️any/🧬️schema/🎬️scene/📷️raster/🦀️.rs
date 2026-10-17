@@ -30,7 +30,7 @@ use semio_framework_pixels::{editing::{validate_extent,validate_image},compositi
 use std::collections::VecDeque;
 use semio_framework_pixels::retirement::RasterLease;
 use semio_framework_value::retirement::{RetireOwned,RetirementCursor};
-const IDENTITY:[f64;6]=[1.0,0.0,0.0,1.0,0.0,0.0];
+pub const IDENTITY:[f64;6]=[1.0,0.0,0.0,1.0,0.0,0.0];
 #[derive(semio_framework_value::RetireOwned)]
 struct SceneTable<T:RetireOwned>(Vec<(String,T)>);
 impl<T:RetireOwned> Default for SceneTable<T>{fn default()->Self{Self(Vec::new())}}
@@ -236,6 +236,3 @@ impl RetireOwned for RasterSceneJob {
  fn controlled_retirement_supported()->bool{RasterSceneOwners::controlled_retirement_supported()}
 }
 semio_framework_2d::physical_work_retirement!(RasterSceneRetirement,RasterSceneJob,RasterSceneError,|error:&str|invalid(error));
-#[cfg(test)]
-#[path="🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;

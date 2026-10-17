@@ -1,0 +1,70 @@
+{
+  "version": 1,
+  "mutation": {
+    "selection": {
+      "project": "app",
+      "target": "build",
+      "configuration": "prototype",
+      "excludeTaskDependencies": false
+    },
+    "graph": {
+      "nodes": {
+        "app": {
+          "data": {
+            "root": "app",
+            "targets": {
+              "build": {}
+            }
+          }
+        }
+      },
+      "dependencies": {
+        "app": []
+      }
+    },
+    "expected": {
+      "version": 1,
+      "tasks": [
+        "app:build:prototype"
+      ],
+      "roots": [
+        "app"
+      ],
+      "files": []
+    }
+  },
+  "values": [
+    null,
+    false,
+    0,
+    "",
+    [
+      1,
+      2
+    ],
+    {
+      "nodes": {},
+      "dependencies": {}
+    },
+    {
+      "__proto__": {
+        "inert": true
+      }
+    }
+  ],
+  "refusals": [
+    "proxy",
+    "getter",
+    "symbol",
+    "sparse",
+    "cycle",
+    "class",
+    "function",
+    "nan",
+    "infinity",
+    "depth",
+    "members",
+    "bytes",
+    "values"
+  ]
+}

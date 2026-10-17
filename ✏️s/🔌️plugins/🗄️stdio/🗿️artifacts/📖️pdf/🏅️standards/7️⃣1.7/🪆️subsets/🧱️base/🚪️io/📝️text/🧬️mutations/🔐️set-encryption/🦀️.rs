@@ -3,7 +3,7 @@
 pub const OPCODE: &str = "set-encryption";
 pub const TEXT_OPCODE: &str = OPCODE;
 
-use crate::standards::v1_7::subsets::base::schema::mutations::SetEncryption;
+use crate::standards::v1_7::subsets::base::schema::mutations::set_encryption::SetEncryption;
 
 /// 🖨️ Prints this direct payload through its schema-derived JSON representation.
 pub fn print(payload: &SetEncryption) -> Result<String, String> {

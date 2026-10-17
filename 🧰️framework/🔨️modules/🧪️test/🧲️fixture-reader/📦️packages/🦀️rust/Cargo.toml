@@ -1,0 +1,28 @@
+[package]
+workspace = "../../../../.."
+name = "semio-framework-test-fixtures"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Run-time test fixture reader: resolves fixture paths below the manifest directory of the calling crate, so no test file keeps its own copy."
+publish = false
+
+[package.metadata.semio]
+role = "test"
+id = "test-fixtures"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+doctest = false
+
+[dependencies]
+
+[dev-dependencies]

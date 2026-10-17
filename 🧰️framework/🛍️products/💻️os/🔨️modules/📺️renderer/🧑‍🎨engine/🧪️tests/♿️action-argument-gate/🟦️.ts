@@ -4,8 +4,10 @@ import { afterEach, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render } from "@semio-tech/ui-react/test";
 import { Tree } from "@semio-tech/ui-react";
 import { actionSemanticsForKind } from "@semio-tech/framework";
-import { buildActionCategoryTree, buildCommandCategoryTree, syncShellLabelLocale, type ResolvedActionDefinition, type ResolvedCommand } from "../../🧱️elements/🛠️ShellHelpers/🟦️.tsx";
-import { actionStageKey } from "../../🧱️elements/🐚️Shell/🟦️.tsx";
+import { buildActionCategoryTree } from "../../🧱️elements/🛠️ShellHelpers/🪟️window-panes/🟦️.tsx";
+import { buildCommandCategoryTree, type ResolvedCommand } from "../../🧱️elements/🛠️ShellHelpers/🎛️command-registry/🟦️.tsx";
+import { syncShellLabelLocale, type ResolvedActionDefinition } from "../../🧱️elements/🛠️ShellHelpers/🏷️labels/🟦️.tsx";
+import { actionStageKey } from "../../🧱️elements/🐚️Shell/🗃️state-shapes/🟦️.ts";
 import fixture from "./🧫️fixtures/🔣️.json";
 
 afterEach(cleanup);

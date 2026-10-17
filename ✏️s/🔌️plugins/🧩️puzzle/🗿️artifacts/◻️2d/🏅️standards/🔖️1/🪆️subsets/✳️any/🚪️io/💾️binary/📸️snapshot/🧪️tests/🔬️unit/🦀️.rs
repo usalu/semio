@@ -20,7 +20,7 @@ fn command_envelope_round_trip_holds_for_an_applied_operation() {
     use crate::host::owned::{close_puzzle2d_store,puzzle2d_store};
 
     use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
-    use {crate::standards::v1::subsets::any::schema::Puzzle2dNode, crate::standards::v1::subsets::any::schema::PUZZLE_2D_SCHEMA};
+    use {crate::standards::v1::subsets::any::schema::records::Puzzle2dNode, crate::standards::v1::subsets::any::schema::records::PUZZLE_2D_SCHEMA};
     use protocol::{ArtifactId, Edit, SchemaId};
     use store::{os_store::document_materialize::create_document_envelope, os_store::store_schema::ArtifactCommand};
 

@@ -1,6 +1,6 @@
 //! 🔀️ `change-graph-directed` — flips the graph playground's directed/undirected toggle.
 
-use crate::{EquationMutation, EquationSnapshot};
+use crate::EquationSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Payload
@@ -12,13 +12,16 @@ pub struct ChangeGraphDirected {
     pub new_directed: bool,
 }
 
-impl protocol::MutationKind<EquationSnapshot, EquationMutation> for ChangeGraphDirected {
+impl<Op> protocol::MutationKind<EquationSnapshot, Op> for ChangeGraphDirected
+where
+    Op: protocol::Mutation<EquationSnapshot, Diff = crate::EquationDiff> + From<ChangeGraphDirected>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "graph", kind: "change-graph-directed", record: "ChangedGraphDirected" };
 
-    fn diff(&self, base: &EquationSnapshot) -> protocol::MutationOutcome<<EquationMutation as protocol::Mutation<EquationSnapshot>>::Diff> {
+    fn diff(&self, base: &EquationSnapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<EquationSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &EquationSnapshot) -> Result<Vec<EquationMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EquationSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

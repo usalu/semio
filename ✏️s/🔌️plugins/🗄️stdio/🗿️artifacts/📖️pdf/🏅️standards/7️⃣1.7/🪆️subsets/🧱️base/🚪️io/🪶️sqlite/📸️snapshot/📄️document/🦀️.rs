@@ -2,7 +2,22 @@
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v1_7::subsets::base::io::text::snapshot as snapshot_text;
 use semio_framework_value::{ValueError,ValueRefusalKind};
-use crate::standards::v1_7::subsets::base::io::sqlite::snapshot::*;
+use crate::standards::v1_7::subsets::base::schema::snapshot::*;
+use crate::standards::v1_7::subsets::base::io::sqlite::snapshot::reader::{integer, optional_integer, optional_typed_integer, optional_real, real_cell, integer_cell, text_cell, optional_array, array_cells, Reader};
+use store::sqlite_snapshot::{self, SqliteDatabase as Db, SqliteValue as V, SqliteSnapshotControl as Control, SqliteSnapshotPhase as Phase, artifact::{Cell as C}};
+use std::collections::{BTreeMap};
+use crate::standards::v1_7::subsets::base::io::sqlite::snapshot::number::{Projection};
+use crate::standards::v1_7::subsets::base::io::sqlite::snapshot::stream_roles;
+use crate::standards::v1_7::subsets::base::io::sqlite::snapshot::cos;
+use crate::standards::v1_7::subsets::base::io::sqlite::snapshot::color;
+use crate::standards::v1_7::subsets::base::io::sqlite::snapshot::font;
+use crate::standards::v1_7::subsets::base::io::sqlite::snapshot::content;
+use crate::standards::v1_7::subsets::base::io::sqlite::snapshot::resource;
+use crate::standards::v1_7::subsets::base::io::sqlite::snapshot::metadata;
+use crate::standards::v1_7::subsets::base::io::sqlite::snapshot::navigation;
+use crate::standards::v1_7::subsets::base::io::sqlite::snapshot::annotation;
+use crate::standards::v1_7::subsets::base::io::sqlite::snapshot::form;
+use crate::standards::v1_7::subsets::base::io::sqlite::snapshot::admission;
 use store::os_store::serialization::ArtifactSqliteSnapshotHost;
 fn write_page(out:&mut Projection<'_,'_>,value:&PdfPage)->Result<i64,ValueError>{let content=content::write_ops(out,&value.content)?;let group=value.group.as_ref().map(|value|resource::write_group(out,value)).transpose()?;let transition=value.transition.as_ref().map(|value|cos::write_dictionary(out,value)).transpose()?;let actions=cos::write_dictionary(out,&value.additional_actions)?;let extra=cos::write_dictionary(out,&value.extra)?;let mut cells=value.media_box.map(C::Real).to_vec();for array in [&value.crop_box,&value.bleed_box,&value.trim_box,&value.art_box]{cells.extend(array_cells(array));}cells.extend([C::Integer(i64::from(value.rotate)),real_cell(value.user_unit),C::Integer(content),group.map_or(C::Null,C::Integer),text_cell(&value.thumbnail),integer_cell(value.struct_parents),transition.map_or(C::Null,C::Integer),real_cell(value.duration),text_cell(&value.metadata),C::Integer(actions),C::Integer(extra)]);let key=out.insert("pdf_page",&cells)?;for(ordinal,value)in value.annotations.iter().enumerate(){let annotation=annotation::write_annotation(out,value)?;out.insert("pdf_page_annotation",&[C::Integer(key),C::Integer(ordinal as i64),C::Integer(annotation)])?;}Ok(key)}
 fn read_page(reader:&mut Reader<'_,'_,'_>,key:i64)->Result<PdfPage,ValueError>{let row=reader.take("pdf_page",key,32)?;let mut annotations=Vec::new();for child in reader.children("pdf_page_annotation",1,2,key)?{let child=reader.take("pdf_page_annotation",child.rowid,4)?;annotations.push(annotation::read_annotation(reader,child.integer(3)?)?);}Ok(PdfPage{media_box:[row.real(1)?,row.real(2)?,row.real(3)?,row.real(4)?],crop_box:optional_array(row,5)?,bleed_box:optional_array(row,9)?,trim_box:optional_array(row,13)?,art_box:optional_array(row,17)?,rotate:integer(row,21)?,user_unit:optional_real(row,22)?,content:content::read_ops(reader,row.integer(23)?)?,annotations,group:optional_integer(row,24)?.map(|key|resource::read_group(reader,key)).transpose()?,thumbnail:reader.optional_text(row,25)?,struct_parents:optional_typed_integer(row,26)?,transition:optional_integer(row,27)?.map(|key|cos::read_dictionary(reader,key)).transpose()?,duration:optional_real(row,28)?,metadata:reader.optional_text(row,29)?,additional_actions:cos::read_dictionary(reader,row.integer(30)?)?,extra:cos::read_dictionary(reader,row.integer(31)?)?})}

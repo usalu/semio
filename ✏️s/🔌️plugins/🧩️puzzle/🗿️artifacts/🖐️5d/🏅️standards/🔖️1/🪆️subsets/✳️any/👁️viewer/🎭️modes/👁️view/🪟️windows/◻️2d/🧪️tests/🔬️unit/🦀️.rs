@@ -1,4 +1,22 @@
-use super::*;
+use crate::Puzzle5dSnapshot;
+use crate::standards::v1::subsets::any::schema::document_records::{Puzzle5dFastener, Puzzle5dPart};
+use semio_framework_pack_json::{json, Value};
+#[allow(unused_imports)]
+use semio_framework_plugin::Board2dScene;
+#[allow(unused_imports)]
+use semio_framework_ui_locale::LocalizedLabel;
+#[allow(unused_imports)]
+use semio_framework_plugin::SurfaceKind;
+#[allow(unused_imports)]
+use semio_framework_plugin::WindowEngagementSlot;
+#[allow(unused_imports)]
+use semio_framework_plugin::WindowKindDefinition;
+#[allow(unused_imports)]
+use semio_framework_plugin::WindowOptions;
+#[allow(unused_imports)]
+use semio_framework_ui_contract::BuiltNode;
+use crate::viewer::puzzle5d::modes::view::windows::board2d::{board_scene};
+use crate::viewer::puzzle5d::modes::view::windows::board2d::*;
 
 #[test]
 fn definition_is_a_read_only_board_window() {

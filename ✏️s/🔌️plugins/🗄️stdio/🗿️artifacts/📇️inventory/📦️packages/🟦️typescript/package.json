@@ -1,0 +1,8 @@
+{
+  "name": "@semio-tech/stdio-inventory-ts",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./🟦️.ts"
+  }
+}

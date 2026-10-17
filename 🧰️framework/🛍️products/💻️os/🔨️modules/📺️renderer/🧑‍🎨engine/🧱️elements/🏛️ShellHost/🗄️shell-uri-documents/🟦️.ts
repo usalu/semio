@@ -34,18 +34,16 @@ import { shellSessionRouteV1 } from "../🔀️surface-switch/🟦️.ts";
 import { spawnedProgramViewStateV1, spawnProgramRefusalCodeV1, spawnProgramRefusalNoticeTextV1, type SpawnProgramRefusalReasonV1 } from "../🪟️spawned-program/🟦️.ts";
 import { LOCAL_CATALOG_ACTIONS_V1, localCatalogRehydrationArgumentsV1 } from "../🗂️local-catalog/🟦️.ts";
 import { resolveDocumentOpeningBindings, resolveDocumentOpeningTarget, type DocumentOpeningReference } from "../🧭️opening/🟦️.ts";
-import { type ActiveSession, type SpaceProgramEntry } from "../../🐚️Shell/🟦️.tsx";
+import { type ActiveSession, type SpaceProgramEntry } from "../../🐚️Shell/📦️program-sessions/🟦️.ts";
 import type { ViewModel } from "../../🔌️PluginRuntime/🧷️handle-contract/🟦️.ts";
+import { buildSpacePanelState, parsePanelState, studioPanelFocusingSpawned } from "../../🛠️ShellHelpers/📌️panel/🟦️.ts";
+import { parseShellRoute } from "../../🛠️ShellHelpers/🛣️route-and-chrome/🟦️.tsx";
+import { syncAttachDocumentIdV1 } from "../../🛠️ShellHelpers/🧾️transfer-checkin-tutorial/🟦️.ts";
 import {
-  buildSpacePanelState,
-  parsePanelState,
-  parseShellRoute,
-  syncAttachDocumentIdV1,
   requestBackboneFilePath,
-  requestBackboneFolderPath,
-  shellLabel,
-  studioPanelFocusingSpawned
-} from "../../🛠️ShellHelpers/🟦️.tsx";
+  requestBackboneFolderPath
+} from "../../🛠️ShellHelpers/🔩️plumbing/📥️downloads-and-file-requests/🟦️.ts";
+import { shellLabel } from "../../🛠️ShellHelpers/🏷️labels/🟦️.tsx";
 // #endregion 🔌️Adapters
 import { commitLocalFoldersConfigMutationV1, localFolderReconnectOfferV1, readLocalFolderBindingsV1, type LocalFolderIdentityV1 } from "../📎️local-folders/🟦️.tsx";
 import { attachLocalFolder, detachLocalFolder, type LocalFolderBinding, type LocalFolderBindings } from "@semio-tech/framework/config/mutations";
@@ -87,7 +85,7 @@ export function useShellUriAndDocuments(core: ShellCoreAfterApplyHostEffects) {
       // 📇️ ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS §5 — `/spaces/{id}/studio`
       // (optionally `/instances/{id}`) opens the workflow studio (the canonical resolved host app,
       // pre-existing behaviour every bare `/spaces/{id}` used to trigger). `parseShellRoute` (owned by
-      // `ShellHelpers/🟦️.tsx`, outside this lane's lease) has no concept of a `/studio`
+      // `🛠️ShellHelpers/🛣️route-and-chrome/🟦️.tsx`, outside this lane's lease) has no concept of a `/studio`
       // segment, so it's matched locally here first — `parseShellRoute` itself is never edited, and
       // its own existing route classification (and tests) stay exactly as they were.
       const studioMatch = /^\/spaces\/([^/]+)\/studio(?:\/instances\/([^/]+))?$/.exec(path);

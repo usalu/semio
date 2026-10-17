@@ -47,51 +47,25 @@ impl protocol::InferenceSpec<GisTerrainSnapshot> for GisTerrainInference {
 }
 //#endregion 🔖️Inference
 
-//#region 🔖️FixtureText
-/// 🧭️ Relocated from the artifact's `⚙️engine` (ticket
-/// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES): `parse_descriptor` is a pure
-/// snapshot → projection function (`&GisTerrainSnapshot` → `TerrainDescriptorJson`), matching the
-/// `🧬️schema/💡️inferences/` destination — same family as `GisTerrainInference` above, just not yet
-/// wired through the typed `#[derived]` registry.
-///
-/// ⚠️ `crate::modules::terrain` used to be a pre-existing unresolved import (predating this ticket,
-/// flagged by another session — `crate::modules` was never mounted in this crate's `🦀️.rs`).
-/// Fixed opportunistically while touching this file for the `mesh` composition (ticket
-/// `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`): the real home of these types is
-/// `crate::schema`'s `🔖️TerrainDescriptor` region — a one-line path
-/// correction, not an engine-dissolution rewrite.
-use crate::schema::{TerrainDescriptorJson, TerrainPositionData, TerrainProjectOrigin};
-/// 📌️ Pin projection requires an identifier; durable map admission remains independent.
-fn map_positions(map:&crate::schema::ImportedMap)->Vec<TerrainPositionData>{
-    map.positions.iter().filter_map(|entry|Some(TerrainPositionData{id:entry.get("id")?.as_str()?.to_string(),lon:entry.get("lon")?.as_f64()?,lat:entry.get("lat")?.as_f64()?,label:entry.get("label").and_then(|value|value.as_str()).map(str::to_string),icon:entry.get("icon").and_then(|value|value.as_str()).map(str::to_string)})).collect()
-}
-/// 🔌️ The optional imported map contributes an independent pin overlay.
-fn imported_positions(document: &GisTerrainSnapshot) -> Vec<TerrainPositionData> {
-    let Some(map) = &document.imported_map else { return Vec::new(); };
-    map_positions(map)
-}
-
-/// 🏔️ The full rendering descriptor (project origin + fixture pins + `map:in` overlay pins +
-/// exaggeration) for the given document — `exaggeration` always mirrors the LIVE document, and the
-/// bundled fixture's own `gisterrain exaggeration=...` header only ever seeds it once via
-/// `crate::schema::default_terrain_document`.
-pub fn parse_descriptor(document:&GisTerrainSnapshot,map:&crate::schema::ImportedMap)->TerrainDescriptorJson {
-    let origin=map.properties.iter().find(|member|member.name=="projectOrigin").map(|member|&member.value);
-    let project_origin=TerrainProjectOrigin{lon:origin.and_then(|value|value.get("lon")).and_then(|value|value.as_f64()).unwrap_or(0.0),lat:origin.and_then(|value|value.get("lat")).and_then(|value|value.as_f64()).unwrap_or(0.0)};
-    let mut descriptor=TerrainDescriptorJson{schema:crate::GIS_3D_TERRAIN_SCHEMA.into(),project_origin,positions:map_positions(map),exaggeration:document.exaggeration};
-    descriptor.positions.extend(imported_positions(document));
-    descriptor
-}
-//#endregion 🔖️FixtureText
 
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.gis.gisterrain.inference`'s facet leaves into the OS-wide inference catalog —
 /// call once at plugin init, alongside `gisterrain_artifact_schema_descriptor`'s registration.
 pub fn gisterrain_artifact_inference_descriptor() -> ::semio_framework_schema_registry::ArtifactInferenceDescriptor {
+    ::semio_framework_schema_registry::register_schema_leaf_documents(&[
+        ::semio_framework_schema_registry::SchemaLeafDocument { scope: "s.gis.gisterrain.inference", export: "inference", format: ::semio_framework_schema_registry::SchemaFormat::Rust, path: "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs" },
+        ::semio_framework_schema_registry::SchemaLeafDocument { scope: "s.gis.gisterrain.inference", export: "inference", format: ::semio_framework_schema_registry::SchemaFormat::Typescript, path: "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🟦️.ts" },
+        ::semio_framework_schema_registry::SchemaLeafDocument { scope: "s.gis.gisterrain.inference", export: "inference", format: ::semio_framework_schema_registry::SchemaFormat::Graphql, path: "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🔗️.graphql" },
+        ::semio_framework_schema_registry::SchemaLeafDocument { scope: "s.gis.gisterrain.inference", export: "inference", format: ::semio_framework_schema_registry::SchemaFormat::Protobuf, path: "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🛰️.proto" },
+    ]);
+    #[cfg(target_arch = "wasm32")]
+    semio_framework_schema_registry::install_default_schema_leaf_reader(semio_framework_plugin::reactor::package_asset, "");
+    #[cfg(not(target_arch = "wasm32"))]
+    semio_framework_schema_registry::install_default_schema_leaf_reader(semio_framework_plugin::reactor::package_asset, env!("CARGO_MANIFEST_DIR"));
     ::semio_framework_schema_registry::ArtifactInferenceDescriptor {
         id: "s.gis.gisterrain.inference",
         inference: ::semio_framework_schema_registry::FacetLeaves {
-            rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto")
+            rust: "", typescript: "", graphql: "", json_schema: include_str!("🔣️.json"), proto: ""
         },
     }
 }

@@ -1,4 +1,15 @@
-use super::*;
+use semio_framework_ui_contract::BuiltNode;
+#[allow(unused_imports)]
+use crate::editor::page;
+#[allow(unused_imports)]
+use crate::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot;
+#[allow(unused_imports)]
+use semio_framework_ui_locale::Locale;
+#[allow(unused_imports)]
+use semio_framework_plugin::TreeWindows;
+#[allow(unused_imports)]
+use semio_framework_plugin::WindowKindDefinition;
+use crate::editor::pdf17::modes::edit::windows::main::*;
 use crate::standards::v1_7::subsets::base::io::export::demo_pdf17_snapshot;
 
 #[test]

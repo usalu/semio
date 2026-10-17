@@ -33,6 +33,7 @@ import { createBrowserStoragePort, resolvePlaygroundBoot, type ShellLocale } fro
 import { composeSpecificOsCatalogV1 } from "../../✏️s/🧑‍💻dev/🧩️catalog/🟦️.ts";
 import { FrameworkOsShell, resolveShellLocks, resolveShellDefaults } from "@semio-tech/framework-renderer-react";
 import { PUZZLE_BOARD_SESSION_FACTORIES } from "@semio-tech/puzzle-2d";
+import { createFrameworkOsHostPortsV1 } from "../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🪝️host-ports/🟦️.ts";
 import { PlayCard } from "./⚛️play-card.tsx";
 import { resolvePlayLocale, PLAY_PANES, playIntroduction, SEMIO_TECH_PLAY_LOGO_SVG, type PlayPaneSpec } from "./🪧️brand.ts";
 import "./🎨️globals.css";
@@ -40,6 +41,9 @@ import "./🎨️globals.css";
 // 🎡️ Page-owning (single React root, no `ShellScope` of its own) — plain browser storage is correct;
 // each pane's own `FrameworkOsShell` gets its own `ShellScope` (ephemeral brands → in-memory storage).
 const playStorage = createBrowserStoragePort();
+
+/** 🪝️ The one set of ports every pane's shell reads: the page's composition root binds them once. */
+const FRAMEWORK_OS_HOST_PORTS = createFrameworkOsHostPortsV1();
 
 bootstrapElementsSurfaceChromeDocument(readStoredUiChromeAppearance(playStorage));
 const requestedLocale = resolvePlayLocale(readStoredUiChromeLocale(playStorage), typeof navigator === "undefined" ? [] : navigator.languages);
@@ -115,6 +119,7 @@ function PlayShell({ pane, opened, locale }: { readonly pane: PlayPaneSpec; read
       pluginFilter={pane.variant}
       plugins={boot.plugins}
       surfaceSessionFactories={PUZZLE_BOARD_SESSION_FACTORIES}
+      hostPorts={FRAMEWORK_OS_HOST_PORTS}
       appId={boot.defaultAppId}
       locks={locks}
       defaults={defaults}

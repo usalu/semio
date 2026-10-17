@@ -1,6 +1,5 @@
 //! 🅾️ Authoritative PDF mutation payload, diff, inverse, and tests for `remove-font`.
 
-use super::PdfMutation;
 use crate::standards::v1_7::subsets::base::schema::diff::{self, PdfDiff};
 use crate::standards::v1_7::subsets::base::schema::snapshot::*;
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
@@ -14,7 +13,10 @@ pub struct RemoveFont {
     pub id: String,
 }
 
-impl MutationKind<PdfSnapshot, PdfMutation> for RemoveFont {
+impl<Op> MutationKind<PdfSnapshot, Op> for RemoveFont
+where
+    Op: protocol::Mutation<PdfSnapshot, Diff = PdfDiff> + From<RemoveFont> + From<crate::standards::v1_7::subsets::base::schema::mutations::set_font::SetFont>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "remove", entity: "font", kind: "remove-font", record: "Remove" };
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
@@ -22,10 +24,10 @@ impl MutationKind<PdfSnapshot, PdfMutation> for RemoveFont {
         MutationOutcome::new(diff::diff_remove_font(base, &self.id))
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
         let _ = base;
-        base.fonts.iter().position(|item| item.id == self.id).map(|index| PdfMutation::SetFont(super::set_font::SetFont { font: base.fonts[index].clone(), index: Some(index) })).into_iter().collect()
+        base.fonts.iter().position(|item| item.id == self.id).map(|index| Op::from(crate::standards::v1_7::subsets::base::schema::mutations::set_font::SetFont { font: base.fonts[index].clone(), index: Some(index) })).into_iter().collect()
     
     })())
 }
@@ -42,8 +44,6 @@ impl MutationKind<PdfSnapshot, PdfMutation> for RemoveFont {
 //#endregion 🔖️Mutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
 

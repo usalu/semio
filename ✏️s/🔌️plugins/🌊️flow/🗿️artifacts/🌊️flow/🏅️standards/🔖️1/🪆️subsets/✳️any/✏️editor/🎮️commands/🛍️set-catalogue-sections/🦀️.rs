@@ -18,7 +18,5 @@ pub fn handle(_payload: &SetCatalogueSections, _doc: &ArtifactView<'_, FlowSnaps
 }
 
 //#region 🪢️TaxonomyMounts
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod unit;
+
 //#endregion 🪢️TaxonomyMounts

@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import {createHash} from "node:crypto";
 import { dirname, isAbsolute, join } from "node:path";
-import { CARGO_CONTRACT_NAME, JsonMap, BUILD_CONTRACT_NAME, StdioArtifactPackageRecord, canonicalStdioArtifactNames, stdioArtifactPackageContract, slashStdioPath } from "../../../../🔌️plugins/🗄️stdio/🗿️artifacts/📇️inventory/🟦️.ts";
+import { CARGO_CONTRACT_NAME, JsonMap, BUILD_CONTRACT_NAME, StdioArtifactPackageRecord, canonicalStdioArtifactNames, stdioArtifactPackageContract, slashStdioPath } from "@semio-tech/stdio-inventory-ts";
 import { cargoWorkspaceForManifest } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🟦️.ts";
 import { readBuildGraphV1,resolveBuildInputsV1, type BuildGraphV1 } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🟦️.ts";
 import {validateJsonSchemaSubset} from "@semio-tech/schema-validator-ts";
@@ -48,9 +48,8 @@ function assertActualCargoDag(metadata: JsonMap, artifactCargoNames: ReadonlySet
 
 /** 🦀️ Reads Cargo's own package graph without compiling Stdio. */
 export async function stdioCargoMetadata(repoRoot:string,invocation:ScriptInvocation):Promise<JsonMap>{
- checkScriptInvocation(invocation);const phase=nativeCallerPhaseV1(invocation,repoRoot);await phase.advance("stdio:cargo-metadata");
- const timeout=new AbortController(),timer=setTimeout(()=>timeout.abort(Error("Original native child deadline exhausted")),phase.budget());
- try{return await withScriptInvocationSignalV1(invocation,timeout.signal,bounded=>{
+ checkScriptInvocation(invocation);const phase=nativeCallerPhaseV1(invocation,repoRoot,createIssuedResourceControlV1(invocation,"stdio:cargo-metadata-entry",0));await phase.advance("stdio:cargo-metadata");
+ return withScriptInvocationSignalV1(invocation,phase.leaseControl.signal,bounded=>{
  const control=createIssuedResourceControlV1(bounded,"stdio:cargo-metadata",Math.floor(phase.budget()));
  return withRepositoryToolingStoreV1(repoRoot,bounded,control,(store,toolsPhase)=>withRepositoryRustToolchainV1(repoRoot,store,toolsPhase,async(generation,cargoPhase)=>{
   const manifests=[...new Set(stdioArtifactPackageContract(repoRoot).packages.map(entry=>cargoWorkspaceForManifest(repoRoot,entry.rust.manifest).manifest))],packages:JsonMap[]=[];
@@ -59,11 +58,10 @@ export async function stdioCargoMetadata(repoRoot:string,invocation:ScriptInvoca
    const result=await captureOwnedCommandResultV1(generation.cargo,["metadata","--locked","--no-deps","--format-version","1","--manifest-path",join(repoRoot,manifest)],repoRoot,{control:cargoPhase,env:phase.options({...process.env,...generation.environment}).env,output:{maximumBytes:Math.min(16777216,phase.authority.transport.maximumBytes),maximumLines:Math.min(65536,phase.authority.transport.maximumLines)}});checkResourceLeaseControl(cargoPhase);
    assert.equal(result.status,0,result.stderr||"Original Cargo metadata failed");assert.equal(result.signal,null,"Original Cargo metadata interrupted");
    const metadata=JSON.parse(result.stdout) as JsonMap;assert(Array.isArray(metadata.packages),"Original Cargo metadata packages required");packages.push(...metadata.packages);await generation.recheck();checkResourceLeaseControl(cargoPhase);phase.budget();checkScriptInvocation(invocation);
-   console.log("[DEBUG] Stdio sealed Cargo metadata "+JSON.stringify({manifest,stdoutBytes:Buffer.byteLength(result.stdout),stderrBytes:Buffer.byteLength(result.stderr),packages:metadata.packages.length,generation:generation.digest}));
   }
   return{packages:[...new Map(packages.map(entry=>[entry.id,entry])).values()]};
  }));
- });}finally{clearTimeout(timer);}
+ });
 }
 
 /** 🕸️ Compares the admitted artifact contract with Cargo's actual native metadata graph. */

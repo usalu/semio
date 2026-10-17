@@ -76,7 +76,7 @@ test("escaped-source authority retains exact representation root digest and sele
   expect(() => run({ ...contract, sha256: sha(object) }, Buffer.from(object))).toThrow(/root/u);
 });
 
-test("the original frozen seal ledger remains independently parsed historical test data",()=>{const text=readFileSync(join(libraryRoot,"🧪️tests/🧫️fixtures/🧫️frozen-seal-ledger/🔣️.json"),"utf8");expect(getNodeValue(parseTree(text)!)).toEqual(ledger);expect(ledger.pinnedFor).toBe(historical.id);expect(ledger.contracts[historical.id]).toBeUndefined();for(const entry of Object.values(ledger.contracts))for(const row of entry.reseals??[]){expect(row.reason.length).toBeGreaterThan(0);expect(row.coordinatesSha256).toMatch(/^[0-9a-f]{64}$/u);}console.log("[DEBUG] Original historical ledger is plain test data with preserved recorded seals");});
+test("the original frozen seal ledger remains independently parsed historical test data",()=>{const text=readFileSync(join(libraryRoot,"🧪️tests/🧫️fixtures/🧫️frozen-seal-ledger/🔣️.json"),"utf8");expect(getNodeValue(parseTree(text)!)).toEqual(ledger);expect(ledger.pinnedFor).toBe(historical.id);expect(ledger.contracts[historical.id]).toBeUndefined();for(const entry of Object.values(ledger.contracts))for(const row of entry.reseals??[]){expect(row.reason.length).toBeGreaterThan(0);expect(row.coordinatesSha256).toMatch(/^[0-9a-f]{64}$/u);}});
 
 test("one exact encoded historical source is registered without changing the previous JSON contracts", () => {
   const contracts = loadCatalogTaxonomy().frozenCoordinateEvidenceContracts;
@@ -91,10 +91,10 @@ test("one exact encoded historical source is registered without changing the pre
     expect([id, sha(canonicalJson(seal[id]!))]).toEqual([id, recorded]);
     let previous = entry.coordinatesSha256;
     for (const reseal of entry.reseals ?? []) {
-      if (reseal.coordinates === "unchanged") expect([id, reseal.recordedBy, reseal.coordinatesSha256]).toEqual([id, reseal.recordedBy, previous]);
+      if (reseal.coordinates === "unchanged") expect<(string | undefined)[]>([id, reseal.recordedBy, reseal.coordinatesSha256]).toEqual([id, reseal.recordedBy, previous]);
       previous = reseal.coordinatesSha256;
     }
-    if (entry.reseals && contracts[id]!.retired === undefined) expect([id, sealedCoordinatesSha256(id, contracts[id]!)]).toEqual([id, previous]);
+    if (entry.reseals && contracts[id]!.retired === undefined) expect<(string | undefined)[]>([id, sealedCoordinatesSha256(id, contracts[id]!)]).toEqual([id, previous]);
   }
 });
 
@@ -226,4 +226,4 @@ test("both historical source gates are mounted through Nx", () => {
   for (const row of vector.execution) expect(project.targets["test-" + row.id]?.options.command).toBe("bun ./📜️script.ts test " + row.id);
 });
 
-test("historical whole ledger wrapper has no public schema authority",()=>{expect(existsSync(join(libraryRoot,"🧬️schema/🔣️frozen-seal-ledger/🔣️.json"))).toBe(false);console.log("[DEBUG] Historical whole-ledger schema authority is absent");});
+test("historical whole ledger wrapper has no public schema authority",()=>{expect(existsSync(join(libraryRoot,"🧬️schema/🔣️frozen-seal-ledger/🔣️.json"))).toBe(false);});

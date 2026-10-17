@@ -2,7 +2,6 @@
 //! `set-edge-property`, so a history edit of an earlier row never re-targets it; the inverse restores the entry at its
 //! BASE index, byte-exact).
 
-use crate::schema::mutations::SemioGraphMutation;
 use crate::schema::snapshot::{GraphEdgeId, SemioGraphSnapshot};
 
 //#region 🔖️Payload
@@ -15,13 +14,16 @@ pub struct RemoveEdgeProperty {
     pub key: String,
 }
 
-impl protocol::MutationKind<SemioGraphSnapshot, SemioGraphMutation> for RemoveEdgeProperty {
+impl<Op> protocol::MutationKind<SemioGraphSnapshot, Op> for RemoveEdgeProperty
+where
+    Op: protocol::Mutation<SemioGraphSnapshot, Diff = crate::schema::diff::SemioGraphDiff> + From<RemoveEdgeProperty> + From<crate::schema::mutations::add_edge_property::AddEdgeProperty>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "edge-property", kind: "remove-edge-property", record: "RemovedEdgeProperty" };
 
-    fn diff(&self, base: &SemioGraphSnapshot) -> protocol::MutationOutcome<<SemioGraphMutation as protocol::Mutation<SemioGraphSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioGraphSnapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<SemioGraphSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &SemioGraphSnapshot) -> Result<Vec<SemioGraphMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &SemioGraphSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         Ok(super::inverse::inverse(self, base))
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {

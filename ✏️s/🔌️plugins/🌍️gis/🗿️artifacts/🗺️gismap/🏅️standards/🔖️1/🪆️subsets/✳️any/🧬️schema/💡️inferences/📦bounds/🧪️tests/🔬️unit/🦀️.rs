@@ -1,4 +1,7 @@
-use super::*;
+use crate::GisMapSnapshot;
+#[allow(unused_imports)]
+use semio_framework_value_derive::{FromValue, ToValue};
+use crate::standards::v1::subsets::any::schema::inferences::bounds::*;
 use crate::MapFeature;
 
 fn dsl_of(value: serde_json::Value) -> semio_framework_value::DslValue {

@@ -21,6 +21,5 @@ fn original_json_operation_enforces_semantic_container_depth_before_empty_contai
         while !operation.terminal_is_empty(){let(result,born,released)=semio_framework_trace_memory_testing::observe_backing(||operation.close_step(close_turn));let step=result.unwrap();assert_eq!((born,released),(step.progress().retained_capacity_bytes,step.progress().released_bytes));turns+=1;assert!(turns<maximum_turns);}
         assert_eq!(refusal.is_none(),row["expected"]=="admitted","source={source} maximumDepth={}",row["maximumDepth"]);
         if row["expected"]=="depthLimit"{assert_eq!(refusal,Some(ValueRefusalKind::DepthLimit));assert_eq!(position,row["refusedPosition"].as_u64().unwrap()as usize);if row["maximumDepth"]==0{assert_eq!(normal_birth,0);}}
-        println!("[DEBUG] JSON source={source} original semantic maximumDepth={} position={position} normalBirth={normal_birth} paidClosureTurns={turns} independentSerde=true",row["maximumDepth"]);
     }
 }

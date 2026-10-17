@@ -154,7 +154,7 @@ impl protocol::DiffAlgebra<ArchitectConfig> for ArchitectConfigDiff {
 }
 
 #[path = "🧬️schema/🧬️mutations/🦀️.rs"]
-mod mutations;
+pub mod mutations;
 pub use mutations::*;
 //#endregion 🔖️Config
 
@@ -178,14 +178,9 @@ pub fn snapshot(base: &ArchitectConfig, next: ArchitectConfig) -> Vec<ArchitectC
 //#endregion 🔖️Readers
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️contract-vectors/🦀️.rs"]
-mod contract_vectors;
 
-#[path = "🚪️io/🦀️.rs"]
-pub mod io;
+
+

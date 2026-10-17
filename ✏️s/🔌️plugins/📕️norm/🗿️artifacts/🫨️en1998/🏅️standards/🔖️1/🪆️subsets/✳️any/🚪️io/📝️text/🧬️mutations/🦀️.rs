@@ -182,7 +182,7 @@ impl protocol::OpText for En1998Mutation {
     }
 }
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 pub fn demo_mutation_cases() -> Vec<En1998Mutation> {
     let snap = semio_s_artifact_norm_en1998_model::En1998Snapshot::default();
     let building = snap.buildings[0].clone();
@@ -335,7 +335,7 @@ mod tests;
 
 #[allow(unused_imports)]
 mod mutations_codec {
-use crate::text::mutations::*;
+use crate::mutations::*;
 use semio_s_artifact_norm_en1998_mutations::*;
 use semio_s_artifact_norm_en1998_diff::En1998Diff;
 use semio_s_artifact_norm_en1998_model::En1998Snapshot;
@@ -374,7 +374,7 @@ pub fn decode_en1998_mutation_json(text: &str) -> Result<En1998Mutation, String>
     semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
 }
 }
-pub use crate::text::mutations::mutations_codec::*;
+pub use crate::mutations::mutations_codec::*;
 
 /// 📜️ Describes the artifact mutation dialect.
 pub const MUTATION_GRAMMAR_SEMIO: &str = include_str!("📖️mutations.grammar.semio");

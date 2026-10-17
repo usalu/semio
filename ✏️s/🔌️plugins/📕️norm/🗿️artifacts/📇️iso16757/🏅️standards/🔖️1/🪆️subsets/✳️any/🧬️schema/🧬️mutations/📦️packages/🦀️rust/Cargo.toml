@@ -36,6 +36,7 @@ semio-s-plugin-norm-app-surface = { workspace = true }
 [dev-dependencies]
 semio-framework-async-macros = { workspace = true }
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-framework-test-fixtures = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-s-plugin-norm-app-surface = { workspace = true, features = ["compliance-testing"] }
 semio-s-plugin-norm-compliance = { workspace = true }
 semio-s-mutation-vectors = { workspace = true }

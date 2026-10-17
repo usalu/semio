@@ -1,7 +1,7 @@
 //! 🧩️ 🧩️ Sourcing curation app commands command — `set-contributions`.
 
 use crate::{schema::mutations::SourcingMutation, CurationSnapshot};
-use crate::editor::sourcing::component::SOURCING_CURATION_CONFIG_CONTRIBUTIONS_BYTES;
+use crate::editor::sourcing::base::SOURCING_CURATION_CONFIG_CONTRIBUTIONS_BYTES;
 use crate::editor::sourcing::config::{SourcingCurationConfig, SourcingCurationConfigMutation, SetContributionsEdit};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};

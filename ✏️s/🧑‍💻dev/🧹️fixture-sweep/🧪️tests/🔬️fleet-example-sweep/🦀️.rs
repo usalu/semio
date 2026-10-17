@@ -4,6 +4,8 @@
 
 #[cfg(test)]
 mod tests {
+    use semio_framework_test_fixtures::manifest_dir;
+
     use std::path::{Path, PathBuf};
 
     //#region 🔖️AppTypes
@@ -66,8 +68,8 @@ mod tests {
     use semio_s_artifact_sourcing_curation::CurationSnapshot as CurationDocument;
     use semio_framework_artifact_space_collection::CollectionSnapshot;
     use semio_framework_artifact_space_space::SpaceSnapshot;
-    use semio_s_artifact_trinity_jack::JackSnapshot as GraphFixture;
-    use semio_s_artifact_trinity_rewriting::RewritingSnapshot as RewriteRuleModel;
+    use semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::snapshot::JackSnapshot as GraphFixture;
+    use semio_s_artifact_trinity_rewriting::standards::v1::subsets::any::schema::snapshot::RewritingSnapshot as RewriteRuleModel;
     use semio_s_artifact_vcs_vcs::VcsSnapshot;
     use semio_s_artifact_writer_writer::WriterSnapshot;
     //#endregion 🔖️AppTypes
@@ -145,7 +147,7 @@ mod tests {
     /// 🏠️ Ascends from `CARGO_MANIFEST_DIR` looking for `nx.json` (a repo-root-only marker)
     /// rather than hardcoding a `../..` depth — robust to this crate ever moving.
     fn repo_root() -> PathBuf {
-        let mut dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        let mut dir = manifest_dir!();
         loop {
             if dir.join("nx.json").is_file() {
                 return dir;

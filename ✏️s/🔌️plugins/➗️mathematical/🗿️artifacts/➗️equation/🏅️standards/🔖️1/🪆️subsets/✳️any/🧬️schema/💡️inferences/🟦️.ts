@@ -30,6 +30,10 @@ type equationEquationInferenceGuardSizeBounds = { readonly minItems?: number; re
 
 export const equationEquationInferenceGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : equationEquationInferenceGuardReject(at, "value is not an object");
+export const equationEquationInferenceGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) equationEquationInferenceGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const equationEquationInferenceGuardArray = (value: unknown, at: string, bounds: equationEquationInferenceGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return equationEquationInferenceGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) equationEquationInferenceGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -60,17 +64,17 @@ export const equationEquationInferenceGuardConstant = <T extends string | number
 //#endregion 🚪️Parsers
 
 export function parseEquationInference(value: unknown, at = "$"): EquationInference {
-  const row = equationEquationInferenceGuardObject(value, at);
+  const row = equationEquationInferenceGuardClosed(equationEquationInferenceGuardObject(value, at), at, ["topology"]);
   return {
     topology: parseEquationTopology(row["topology"], `${at}.topology`),
   };
 }
 
 export function parseEquationTopology(value: unknown, at = "$"): EquationTopology {
-  const row = equationEquationInferenceGuardObject(value, at);
+  const row = equationEquationInferenceGuardClosed(equationEquationInferenceGuardObject(value, at), at, ["topoOrder", "depth", "cycleFree", "nodeCount"]);
   return {
     topoOrder: equationEquationInferenceGuardArray(row["topoOrder"], `${at}.topoOrder`).map((item, index) => equationEquationInferenceGuardString(item, `${at}.topoOrder[${index}]`)),
-    depth: Object.fromEntries(Object.entries(equationEquationInferenceGuardObject(row["depth"], `${at}.depth`)).map(([key,value])=>[key,equationEquationInferenceGuardInteger(value,`${at}.depth.${key}`)])),
+    depth: Object.fromEntries(Object.entries(equationEquationInferenceGuardObject(row["depth"], `${at}.depth`)).map(([key0, value0]) => [key0, equationEquationInferenceGuardInteger(value0, `${at}.depth.${key0}`)])),
     cycleFree: equationEquationInferenceGuardBoolean(row["cycleFree"], `${at}.cycleFree`),
     nodeCount: equationEquationInferenceGuardInteger(row["nodeCount"], `${at}.nodeCount`),
   };

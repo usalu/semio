@@ -2,7 +2,8 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use graph_core::{AttrView, Directed, EdgeId, EdgeRef, EdgeWeights, GraphView, HandleId, NodeId, Normal, Ported, PropertyBag, PropertyValue, Storage, Undirected};
+use graph_core::{AttrView, Directed, EdgeId, EdgeRef, EdgeWeights, GraphView, HandleId, NodeId, Normal, Ported, Storage, Undirected};
+use graph_manifest::{PropertyBag, PropertyValue};
 
 // #region 🔖️PortDirectedGraph
 /// 🔀️ NetworkX `MultiDiGraph` parity facade: wraps `Storage<Ported, Directed>` and hides handle bookkeeping behind a
@@ -551,7 +552,5 @@ impl EdgeWeights for PortDirectedGraph {
 // #endregion 🔖️ViewDelegation
 
 // #region 🔖️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 // #endregion 🔖️Tests

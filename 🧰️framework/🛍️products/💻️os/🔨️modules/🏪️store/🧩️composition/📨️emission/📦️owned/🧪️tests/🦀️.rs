@@ -36,7 +36,6 @@ fn member_owned_batch_copy_query_preserves_zero_work_and_exact_physical_receipts
         }
         assert!(owner.terminal_is_empty());
         assert_eq!(work, count * std::mem::size_of::<i32>());
-        println!("[DEBUG] owned typed scalar source count={count} work={work} exact physical releases={released}; original count*8+32 bound and zero-work allocator parity preserved");
     }
 }
 
@@ -59,7 +58,6 @@ fn member_owned_batch_borrowed_admission_preserves_original_parent_source() {
     let close=RetainedCloneGrant{maximum_capacity_bytes:4096,..grant};
     for _ in 0..1024{if batch.terminal_is_empty(){break;}assert!(batch.close_granted(close).unwrap().progress().fits(close));}
     assert!(batch.terminal_is_empty());
-    println!("[DEBUG] borrowed parent admission preserved original pointer/capacity/ordered serde source on zero and one-below grants before funded handoff");
 }
 
 #[test]
@@ -78,7 +76,6 @@ fn member_owned_batch_phase_queries_fund_actual_scalar_retirement_births() {
         assert!(progress.copied_items > 0 || progress.retained_capacity_bytes > 0 || progress.released_bytes > 0, "queried scalar phase must fund its real birth or release");
     }
     assert!(batch.terminal_is_empty());
-    println!("[DEBUG] owned scalar source exact phase queries funded every real constructor and physical release");
 }
 
 #[test]
@@ -128,7 +125,6 @@ fn member_owned_batch_retains_exact_type_source_and_physical_grants() {
     assert!(batch.terminal_is_empty());
     assert!(released >= birth.retained_capacity_bytes);
     assert_eq!(batch.next_demands(0).unwrap(), semio_framework_value::RetirementDemand::default());
-    println!("[DEBUG] Owned member batch exact pointer/type/order retained across zero capacity, wrong type, restore, zero work and one-below physical release; born={} released={released}", birth.retained_capacity_bytes);
 }
 
 #[test]

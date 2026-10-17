@@ -126,7 +126,6 @@ fn original_public_actor_paired_admission_retains_exact_host_input_and_native_gu
  assert_eq!(released, births);
  assert_eq!(observe(|| drop(guest)).1, (0, 0));
  assert_eq!(observe(|| drop(host)).1, (0, 0));
- eprintln!("[DEBUG] Actual paired source97 samePointer={pointer:p}; source32 items admission4/body1; original fuel64-paid5=59; explicit policy; paid input97 and guest224 close; terminalDrop0");
 }
 
 #[test]
@@ -200,5 +199,4 @@ fn original_public_actor_guest_call_returns_actual_failed_body_receipt_and_paid_
  assert_eq!(released, births);
  assert_eq!(observe(|| drop(guest)).1, (0, 0));
  assert_eq!(observe(|| drop(host)).1, (0, 0));
- eprintln!("[DEBUG] Actual failed semantic call returns source items1/copy7/work1 with raw receipt before phase; paid readiness; source97/guest224 returned; finite32 total; terminalDrop0");
 }

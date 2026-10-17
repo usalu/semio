@@ -10,250 +10,82 @@ extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_schema as framework_schema;
 extern crate semio_framework_value_derive as value_derive;
 
-#[path = "."]
 pub mod io {
-    #[path = "🚪️io/🦀️.rs"]
-    mod component;
-    pub use component::*;
+    pub use semio_s_artifact_stdio_semio_brep_io::io::*;
+    pub mod binary {
+        pub use semio_s_artifact_stdio_semio_brep_io::io::binary::*;
+        pub use semio_s_artifact_stdio_semio_brep_examples::io::binary::inferences;
+    }
+    pub mod sqlite {
+        pub use semio_s_artifact_stdio_semio_brep_examples::io::sqlite::*;
+        pub use semio_s_artifact_stdio_semio_brep_snapshot::io::sqlite::snapshot;
+    }
+    pub mod text {
+        pub use semio_s_artifact_stdio_semio_brep_io::io::text::*;
+        pub use semio_s_artifact_stdio_semio_brep_examples::io::text::inferences;
+    }
 }
 #[path = "."]
 pub mod schema {
-    #[path = "🧬️schema/🦀️.rs"]
-    mod component;
-    pub use component::*;
+    pub use semio_s_artifact_stdio_semio_brep_schema::schema::*;
+
     #[path = "."]
     pub mod snapshot {
-        #[path = "🧬️schema/📸️snapshot/🦀️.rs"]
-        mod component;
-        pub use component::*;
-        #[path = "🧬️schema/📸️snapshot/🔁️body/🦀️.rs"]
-        pub mod body;
+        pub use semio_s_artifact_stdio_semio_brep_snapshot::schema::snapshot::*;
+
+        pub use semio_s_artifact_stdio_semio_brep_schema::schema::snapshot::body;
     }
-    #[path = "."]
-    pub mod diff {
-        #[path = "🧬️schema/🔺️diff/🦀️.rs"]
-        mod component;
-        pub use component::*;
-    }
-    #[path = "."]
-    pub mod inferences {
-        #[path = "🧬️schema/💡️inferences/🦀️.rs"]
-        mod component;
-        pub use component::*;
-        #[path = "."]
-        pub mod validation_report {
-            #[path = "🧬️schema/💡️inferences/✅validation-report/🦀️.rs"]
-            mod component;
-            pub use component::*;
-        }
-    }
+    pub use semio_s_artifact_stdio_semio_brep_examples::schema::diff;
+    pub use semio_s_artifact_stdio_semio_brep_examples::schema::inferences;
     #[path = "."]
     pub mod mutations {
-        #[path = "🧬️schema/🧬️mutations/🦀️.rs"]
-        mod component;
-        pub use component::*;
-        #[path = "."]
-        pub mod delete_edge {
-            #[path = "🧬️schema/🧬️mutations/✂️delete-edge/🦀️.rs"]
-            mod component;
-            #[path = "🧬️schema/🧬️mutations/✂️delete-edge/🔺️diff/🦀️.rs"]
-            pub mod diff;
-            #[path = "🧬️schema/🧬️mutations/✂️delete-edge/↩️inverse/🦀️.rs"]
-            pub mod inverse;
-            pub use component::*;
-        }
-        #[path = "."]
-        pub mod replace_curve {
-            #[path = "🧬️schema/🧬️mutations/➰replace-curve/🦀️.rs"]
-            mod component;
-            #[path = "🧬️schema/🧬️mutations/➰replace-curve/🔺️diff/🦀️.rs"]
-            pub mod diff;
-            #[path = "🧬️schema/🧬️mutations/➰replace-curve/↩️inverse/🦀️.rs"]
-            pub mod inverse;
-            pub use component::*;
-        }
-        #[path = "."]
-        pub mod create_vertex {
-            #[path = "🧬️schema/🧬️mutations/🏗️create-vertex/🦀️.rs"]
-            mod component;
-            #[path = "🧬️schema/🧬️mutations/🏗️create-vertex/🔺️diff/🦀️.rs"]
-            pub mod diff;
-            #[path = "🧬️schema/🧬️mutations/🏗️create-vertex/↩️inverse/🦀️.rs"]
-            pub mod inverse;
-            pub use component::*;
-        }
-        #[path = "."]
-        pub mod create_shell {
-            #[path = "🧬️schema/🧬️mutations/🐚create-shell/🦀️.rs"]
-            mod component;
-            #[path = "🧬️schema/🧬️mutations/🐚create-shell/🔺️diff/🦀️.rs"]
-            pub mod diff;
-            #[path = "🧬️schema/🧬️mutations/🐚create-shell/↩️inverse/🦀️.rs"]
-            pub mod inverse;
-            pub use component::*;
-        }
-        #[path = "."]
-        pub mod delete_shell {
-            #[path = "🧬️schema/🧬️mutations/💥delete-shell/🦀️.rs"]
-            mod component;
-            #[path = "🧬️schema/🧬️mutations/💥delete-shell/🔺️diff/🦀️.rs"]
-            pub mod diff;
-            #[path = "🧬️schema/🧬️mutations/💥delete-shell/↩️inverse/🦀️.rs"]
-            pub mod inverse;
-            pub use component::*;
-        }
-        #[path = "."]
-        pub mod move_vertex {
-            #[path = "🧬️schema/🧬️mutations/📍move-vertex/🦀️.rs"]
-            mod component;
-            #[path = "🧬️schema/🧬️mutations/📍move-vertex/🔺️diff/🦀️.rs"]
-            pub mod diff;
-            #[path = "🧬️schema/🧬️mutations/📍move-vertex/↩️inverse/🦀️.rs"]
-            pub mod inverse;
-            pub use component::*;
-        }
-        #[path = "."]
-        pub mod create_edge {
-            #[path = "🧬️schema/🧬️mutations/🖇️create-edge/🦀️.rs"]
-            mod component;
-            #[path = "🧬️schema/🧬️mutations/🖇️create-edge/🔺️diff/🦀️.rs"]
-            pub mod diff;
-            #[path = "🧬️schema/🧬️mutations/🖇️create-edge/↩️inverse/🦀️.rs"]
-            pub mod inverse;
-            pub use component::*;
-        }
-        #[path = "."]
-        pub mod create_face {
-            #[path = "🧬️schema/🧬️mutations/🔷create-face/🦀️.rs"]
-            mod component;
-            #[path = "🧬️schema/🧬️mutations/🔷create-face/🔺️diff/🦀️.rs"]
-            pub mod diff;
-            #[path = "🧬️schema/🧬️mutations/🔷create-face/↩️inverse/🦀️.rs"]
-            pub mod inverse;
-            pub use component::*;
-        }
-        #[path = "."]
-        pub mod delete_solid {
-            #[path = "🧬️schema/🧬️mutations/🕳️delete-solid/🦀️.rs"]
-            mod component;
-            #[path = "🧬️schema/🧬️mutations/🕳️delete-solid/🔺️diff/🦀️.rs"]
-            pub mod diff;
-            #[path = "🧬️schema/🧬️mutations/🕳️delete-solid/↩️inverse/🦀️.rs"]
-            pub mod inverse;
-            pub use component::*;
-        }
-        #[path = "."]
-        pub mod delete_vertex {
-            #[path = "🧬️schema/🧬️mutations/🗑️delete-vertex/🦀️.rs"]
-            mod component;
-            #[path = "🧬️schema/🧬️mutations/🗑️delete-vertex/🔺️diff/🦀️.rs"]
-            pub mod diff;
-            #[path = "🧬️schema/🧬️mutations/🗑️delete-vertex/↩️inverse/🦀️.rs"]
-            pub mod inverse;
-            pub use component::*;
-        }
-        #[path = "."]
-        pub mod replace_surface {
-            #[path = "🧬️schema/🧬️mutations/🗺️replace-surface/🦀️.rs"]
-            mod component;
-            #[path = "🧬️schema/🧬️mutations/🗺️replace-surface/🔺️diff/🦀️.rs"]
-            pub mod diff;
-            #[path = "🧬️schema/🧬️mutations/🗺️replace-surface/↩️inverse/🦀️.rs"]
-            pub mod inverse;
-            pub use component::*;
-        }
-        #[path = "."]
-        pub mod delete_face {
-            #[path = "🧬️schema/🧬️mutations/🚮delete-face/🦀️.rs"]
-            mod component;
-            #[path = "🧬️schema/🧬️mutations/🚮delete-face/🔺️diff/🦀️.rs"]
-            pub mod diff;
-            #[path = "🧬️schema/🧬️mutations/🚮delete-face/↩️inverse/🦀️.rs"]
-            pub mod inverse;
-            pub use component::*;
-        }
-        #[path = "."]
-        pub mod create_solid {
-            #[path = "🧬️schema/🧬️mutations/🧊create-solid/🦀️.rs"]
-            mod component;
-            #[path = "🧬️schema/🧬️mutations/🧊create-solid/🔺️diff/🦀️.rs"]
-            pub mod diff;
-            #[path = "🧬️schema/🧬️mutations/🧊create-solid/↩️inverse/🦀️.rs"]
-            pub mod inverse;
-            pub use component::*;
-        }
+        pub use semio_s_artifact_stdio_semio_brep_viewer::schema::mutations::*;
+
+        pub use semio_s_artifact_stdio_semio_brep_mut_family::schema::mutations::delete_edge;
+        pub use semio_s_artifact_stdio_semio_brep_mut_family::schema::mutations::replace_curve;
+        pub use semio_s_artifact_stdio_semio_brep_viewer::schema::mutations::create_vertex;
+        pub use semio_s_artifact_stdio_semio_brep_mut_family::schema::mutations::create_shell;
+        pub use semio_s_artifact_stdio_semio_brep_mut_family::schema::mutations::delete_shell;
+        pub use semio_s_artifact_stdio_semio_brep_mut_family::schema::mutations::move_vertex;
+        pub use semio_s_artifact_stdio_semio_brep_mut_family::schema::mutations::create_edge;
+        pub use semio_s_artifact_stdio_semio_brep_mut_family::schema::mutations::create_face;
+        pub use semio_s_artifact_stdio_semio_brep_viewer::schema::mutations::delete_solid;
+        pub use semio_s_artifact_stdio_semio_brep_viewer::schema::mutations::delete_vertex;
+        pub use semio_s_artifact_stdio_semio_brep_viewer::schema::mutations::replace_surface;
+        pub use semio_s_artifact_stdio_semio_brep_mut_family::schema::mutations::delete_face;
+        pub use semio_s_artifact_stdio_semio_brep_viewer::schema::mutations::create_solid;
     }
 }
-#[path = "."]
-pub mod examples {
-    #[path = "📚️examples/🧊️solid/🦀️.rs"]
-    pub mod solid;
-}
+pub use semio_s_artifact_stdio_semio_brep_examples::examples;
 #[path = "."]
 pub mod editor {
-    #[path = "✏️editor/🦀️.rs"]
-    mod component;
-    pub use component::*;
-    #[path = "."]
-    pub mod presence {
-        #[path = "✏️editor/👥️presence/🧬️schema/🦀️.rs"]
-        pub mod schema;
-    }
-    #[path = "."]
-    pub mod config {
-        #[path = "✏️editor/🎚️config/🧬️schema/🦀️.rs"]
-        pub mod schema;
-    }
+    pub use semio_s_artifact_stdio_semio_brep_io::editor::*;
+
+    pub use semio_s_artifact_stdio_semio_brep_examples::editor::presence;
+    pub use semio_s_artifact_stdio_semio_brep_examples::editor::config;
     #[path = "."]
     pub mod modes {
         #[path = "."]
         pub mod edit {
-            #[path = "✏️editor/🎭️modes/✏️edit/🦀️.rs"]
-            mod component;
-            pub use component::*;
-            #[path = "."]
-            pub mod windows {
-                #[path = "."]
-                pub mod main {
-                    #[path = "✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️.rs"]
-                    mod component;
-                    pub use component::*;
-                }
-            }
+            pub use semio_s_artifact_stdio_semio_brep_io::editor::modes::edit::*;
+
+            pub use semio_s_artifact_stdio_semio_brep_io::editor::modes::edit::windows;
         }
     }
 }
 #[path = "."]
 pub mod viewer {
-    #[path = "👁️viewer/🦀️.rs"]
-    mod component;
-    pub use component::*;
-    #[path = "."]
-    pub mod presence {
-        #[path = "👁️viewer/👥️presence/🧬️schema/🦀️.rs"]
-        pub mod schema;
-    }
-    #[path = "."]
-    pub mod config {
-        #[path = "👁️viewer/🎚️config/🧬️schema/🦀️.rs"]
-        pub mod schema;
-    }
+    pub use semio_s_artifact_stdio_semio_brep_viewer::viewer::*;
+
+    pub use semio_s_artifact_stdio_semio_brep_examples::viewer::presence;
+    pub use semio_s_artifact_stdio_semio_brep_examples::viewer::config;
     #[path = "."]
     pub mod modes {
         #[path = "."]
         pub mod view {
-            #[path = "👁️viewer/🎭️modes/👁️view/🦀️.rs"]
-            mod component;
-            pub use component::*;
-            #[path = "."]
-            pub mod windows {
-                #[path = "."]
-                pub mod main {
-                    #[path = "👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️.rs"]
-                    mod component;
-                    pub use component::*;
-                }
-            }
+            pub use semio_s_artifact_stdio_semio_brep_viewer::viewer::modes::view::*;
+
+            pub use semio_s_artifact_stdio_semio_brep_viewer::viewer::modes::view::windows;
         }
     }
 }

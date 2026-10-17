@@ -1,7 +1,7 @@
 /** 🏔️ Terrain document data and exact durable mesh child identity. */
 import { parseSchemaRecord } from "@semio-tech/framework/schema/record";
-import { parseArtifactChild, type ArtifactChild } from "../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts";
-export type { ArtifactChild } from "../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts";
+import { parseArtifactChild, type ArtifactChild } from "@semio-tech/framework-os/modules/store/child/schema";
+export type { ArtifactChild } from "@semio-tech/framework-os/modules/store/child/schema";
 
 import { type Binary64 } from "@semio-tech/framework/value/ieee754";
 import { parseBinary64 } from "@semio-tech/framework/value/ieee754";

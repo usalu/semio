@@ -171,28 +171,41 @@ fn retained_config_preparation_matches_the_json_oracle_and_rejects_maximum_plus_
     let base_value = semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&base));
     let mut expected: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_string(&base_value)).expect("third-party JSON decode");
     expected["workflowEngagementInput"] = serde_json::json!("draft");
-    let (post, inverse, _) = prepare_space_config(&base, SpaceConfigMutation::SetWorkflowEngagementInput(WorkflowEngagementInputSetting { value: "draft".into() })).expect("bounded config candidate");
+    let draft = SpaceConfigMutation::SetWorkflowEngagementInput(WorkflowEngagementInputSetting { value: "draft".into() });
+    let (post, _messages) = store::apply_mutation(&base, &draft).expect("bounded config candidate");
     let post_value = semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&post));
     let post_oracle: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_string(&post_value)).expect("third-party JSON decode");
     assert_eq!(post_oracle, expected);
-    assert!(matches!(inverse, SpaceConfigMutation::SetWorkflowEngagementInput(WorkflowEngagementInputSetting { value }) if value == base.workflow_engagement_input));
-    assert!(space_config_mutation_bytes(&SpaceConfigMutation::SetWorkflowEngagementInput(WorkflowEngagementInputSetting { value: "x".repeat(SPACE_CONFIG_TEXT_BYTES) })).is_ok());
-    assert!(space_config_mutation_bytes(&SpaceConfigMutation::SetWorkflowEngagementInput(WorkflowEngagementInputSetting { value: "x".repeat(SPACE_CONFIG_TEXT_BYTES + 1) })).is_err());
-    // 🚪️ `openSpace`/`openInstance`/`spawnApp` publish exactly these four session mutations, so
-    // the retained config lane must admit them — it rejected every one of them before.
+    let inverse = protocol::Mutation::inverse(&draft, &base).expect("bounded config inverse");
+    assert!(matches!(inverse.as_slice(), [SpaceConfigMutation::SetWorkflowEngagementInput(WorkflowEngagementInputSetting { value })] if *value == base.workflow_engagement_input));
+    let factory = space_retained_store_preparation::<SpaceConfig, SpaceConfigMutation>("space-studio-config-retained-law", SPACE_CONFIG_RETAINED_BYTES).expect("space lanes always supply a preparation factory");
+    let lane = store::os_store::store_schema::HistoryLane::Document;
+    let sized = |bytes: usize| factory.preflight(&SpaceConfigMutation::SetWorkflowEngagementInput(WorkflowEngagementInputSetting { value: "x".repeat(bytes) }), lane);
+    let (mut maximum, mut ceiling) = (0usize, SPACE_CONFIG_RETAINED_BYTES);
+    while maximum < ceiling {
+        let probe = (maximum + ceiling).div_ceil(2);
+        if sized(probe).is_ok() {
+            maximum = probe;
+        } else {
+            ceiling = probe - 1;
+        }
+    }
+    assert!(maximum > 8_192, "the retained config lane must admit a text well beyond one toggle, admitted {maximum}");
+    assert!(sized(maximum).expect("maximum text is admitted").retained_bytes <= SPACE_CONFIG_RETAINED_BYTES);
+    assert!(sized(maximum + 1).is_err(), "the retained config lane must refuse maximum plus one");
     for admitted in [
         SpaceConfigMutation::SetClipboard(ClipboardSetting { node_ids: Vec::new() }),
         SpaceConfigMutation::SetSpaceId(SpaceIdSetting { space_id: Some("demo".into()) }),
         SpaceConfigMutation::SetActiveNode(ActiveNodeSetting { node_id: Some("node-1".into()) }),
         SpaceConfigMutation::SetFocusedNode(FocusedNodeSetting { node_id: Some("node-1".into()) }),
     ] {
-        assert!(space_config_mutation_bytes(&admitted).is_ok(), "the retained config lane must admit {admitted:?}");
-        assert!(prepare_space_config(&base, admitted).is_ok());
+        assert!(factory.preflight(&admitted, lane).is_ok(), "the retained config lane must admit the session mutation published by openSpace/openInstance/spawnApp");
+        assert!(store::apply_mutation(&base, &admitted).is_ok());
     }
-    assert_eq!(SPACE_CONFIG_MAXIMUM_BYTES * 4 + 1_024, 263_168);
     let active = SpaceConfigMutation::SetActiveNode(ActiveNodeSetting { node_id: Some("node-1".into()) });
-    let candidate = space_config_candidate_bytes(space_config_bytes(&base).expect("base config"), space_config_mutation_bytes(&active).expect("active node"));
-    assert!(candidate <= 4_096, "one real session config turn must fit the host's fixed 4 KiB typed-operation page grant, priced {candidate}");
+    let footprint = factory.preflight(&active, lane).expect("active node footprint");
+    assert!(footprint.retained_bytes <= 4_096, "one real session config turn must fit the host's fixed 4 KiB typed-operation page grant, priced {}", footprint.retained_bytes);
+    assert_eq!(footprint.work_items, store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_INVERTIBLE_WORK_ITEMS);
 }
 //#endregion 🧪️RetainedConfigOracle
 use crate::demo_space_projection;

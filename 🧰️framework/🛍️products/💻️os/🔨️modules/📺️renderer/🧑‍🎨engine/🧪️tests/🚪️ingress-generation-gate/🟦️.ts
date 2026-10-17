@@ -17,8 +17,12 @@
  */
 import { describe, expect, it } from "vitest";
 import fixture from "../../🧱️elements/🛠️ShellHelpers/🧪️tests/🧫️fixtures/🚪️ingress-generation-gate.json" with { type: "json" };
-import { resolvePluginCanvasStatus } from "../../🧱️elements/🐚️Shell/🟦️.tsx";
-import { createUiRefreshCoalescerV1, uiDirtyScopeCoveredByV1, uiRefreshAlreadyAnsweredV1 } from "../../🧱️elements/🛠️ShellHelpers/🟦️.tsx";
+import { resolvePluginCanvasStatus } from "../../🧱️elements/🐚️Shell/📦️program-sessions/🟦️.ts";
+import {
+  createUiRefreshCoalescerV1,
+  uiDirtyScopeCoveredByV1,
+  uiRefreshAlreadyAnsweredV1
+} from "../../🧱️elements/🛠️ShellHelpers/🔄️ui-refresh/🟦️.ts";
 import { uiIntakeOwesYieldV1 } from "../../🧱️elements/🔌️PluginRuntime/🟦️.tsx";
 import type { UiDirtyScope } from "@semio-tech/framework";
 

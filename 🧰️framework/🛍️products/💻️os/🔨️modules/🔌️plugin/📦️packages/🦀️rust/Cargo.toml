@@ -22,7 +22,7 @@ workspace = true
 path = "🦀️.rs"
 
 [features]
-artifact-app-testing = ["dep:semio-framework-plugin-testing-laws", "dep:semio-framework-plugin-testing-acceptance", "semio-framework-plugin-child/artifact-app-testing", "semio-framework-plugin-job/artifact-app-testing", "semio-framework-plugin-retained-command/artifact-app-testing", "semio-framework-plugin-decl-surface/artifact-app-testing", "semio-framework-plugin-instance-typed-ops/artifact-app-testing", "semio-framework-plugin-instance-commands/artifact-app-testing", "semio-framework-plugin-instance-app/artifact-app-testing", "semio-framework-plugin-app-builder/artifact-app-testing", "semio-framework-plugin-tool-run/artifact-app-testing", "semio-framework-plugin-window-kits/artifact-app-testing", "semio-framework-plugin-peer/artifact-app-testing", "semio-framework-plugin-document-media/artifact-app-testing", "semio-framework-plugin-reactor-core/artifact-app-testing", "semio-framework-plugin-time-travel-turns/artifact-app-testing", "semio-framework-plugin-window-kits-rich/artifact-app-testing", "semio-framework-plugin-composition-emission/artifact-app-testing", "semio-framework-plugin-composition-publication/artifact-app-testing", "semio-framework-plugin-publication-mounted/artifact-app-testing", "semio-framework-plugin-command/artifact-app-testing", "semio-framework-plugin-reactor-lifecycle/artifact-app-testing", "semio-framework-plugin-reactor-patches/artifact-app-testing", "semio-framework-plugin-reactor-tasks/artifact-app-testing", "semio-framework-plugin-runtime-instances/artifact-app-testing", "semio-framework-plugin-runtime-ops/artifact-app-testing", "semio-framework-plugin-time-travel-panel/artifact-app-testing"]
+artifact-app-testing = ["dep:semio-framework-plugin-testing-laws", "dep:semio-framework-plugin-testing-acceptance", "semio-framework-plugin-child/artifact-app-testing", "semio-framework-plugin-job/artifact-app-testing", "semio-framework-plugin-retained-command/artifact-app-testing", "semio-framework-plugin-decl-surface/artifact-app-testing", "semio-framework-plugin-instance-typed-ops/artifact-app-testing", "semio-framework-plugin-instance-commands/artifact-app-testing", "semio-framework-plugin-instance-app/artifact-app-testing", "semio-framework-plugin-app-builder/artifact-app-testing", "semio-framework-plugin-tool-run/artifact-app-testing", "semio-framework-plugin-window-kits/artifact-app-testing", "semio-framework-plugin-peer/artifact-app-testing", "semio-framework-plugin-document-media/artifact-app-testing", "semio-framework-plugin-reactor-core/artifact-app-testing", "semio-framework-plugin-time-travel-turns/artifact-app-testing", "semio-framework-plugin-window-kits-rich/artifact-app-testing", "semio-framework-plugin-composition-emission/artifact-app-testing", "semio-framework-plugin-composition-publication/artifact-app-testing", "semio-framework-plugin-publication-mounted/artifact-app-testing", "semio-framework-plugin-command/artifact-app-testing", "semio-framework-plugin-reactor-lifecycle/artifact-app-testing", "semio-framework-plugin-reactor-patches/artifact-app-testing", "semio-framework-plugin-reactor-tasks/artifact-app-testing", "semio-framework-plugin-runtime-instances/artifact-app-testing", "semio-framework-plugin-runtime-ops/artifact-app-testing", "semio-framework-plugin-time-travel-panel/artifact-app-testing", "semio-framework-plugin-time-travel/artifact-app-testing", "semio-framework-plugin-instance-stores/artifact-app-testing", "semio-framework-plugin-instance-history/artifact-app-testing", "semio-framework-plugin-instance-children/artifact-app-testing", "semio-framework-plugin-instance-jobs/artifact-app-testing", "semio-framework-plugin-instance-docs/artifact-app-testing", "semio-framework-plugin-instance-render/artifact-app-testing", "semio-framework-plugin-instance-dispatch/artifact-app-testing", "semio-framework-plugin-tool-run-turns/artifact-app-testing", "semio-framework-plugin-testing-laws/artifact-app-testing", "semio-framework-plugin-testing-acceptance/artifact-app-testing", "semio-framework-plugin-reactor-app/artifact-app-testing"]
 media-turn-testing = ["semio-framework-plugin-decl-views/media-turn-testing", "semio-framework-plugin-operation/media-turn-testing", "semio-framework-plugin-document-media/media-turn-testing"]
 reserved-producer-testing = ["semio-framework-plugin-decl-app/reserved-producer-testing"]
 original-actor-context-testing = ["semio-framework-plugin-guest-contract/original-actor-context-testing", "semio-framework-plugin-reactor-context/original-actor-context-testing", "semio-framework-plugin-reactor-patches/original-actor-context-testing", "semio-framework-plugin-reactor-lifecycle/original-actor-context-testing", "semio-framework-plugin-runtime-ops/original-actor-context-testing", "semio-framework-plugin-extension/original-actor-context-testing"]
@@ -174,11 +174,14 @@ semio-framework-plugin-instance-extension = { path = "../../🧵️instance/🧩
 semio-framework-plugin-instance-commands = { path = "../../🧵️instance/🧷️command-routes/📦️packages/🦀️rust" }
 semio-framework-plugin-instance-typed-ops = { path = "../../🧵️instance/🧾️typed-operations/📦️packages/🦀️rust" }
 semio-framework-plugin-instance-render = { path = "../../🧵️instance/🖼️render/📦️packages/🦀️rust" }
+semio-framework-plugin-instance-dispatch = { path = "../../🧵️instance/📨️dispatch/📦️packages/🦀️rust" }
+semio-framework-plugin-testing-caller = { path = "../../🧪️testing/🎟️caller/📦️packages/🦀️rust" }
 semio-framework-plugin-instance-ladders = { path = "../../🪜️maintenance-ladder/📦️packages/🦀️rust" }
 semio-framework-plugin-time-travel-turns = { path = "../../⏪️time-travel/🧵️instance/📦️packages/🦀️rust" }
 semio-framework-plugin-tool-run-turns = { path = "../../⏯️tool-run/🧵️instance/📦️packages/🦀️rust" }
 semio-framework-plugin-instance-app = { path = "../../🧵️instance/📦️packages/🦀️rust" }
 semio-framework-plugin-builder = { path = "../../🏗️builder/📦️packages/🦀️rust" }
+semio-framework-plugin-registration = { path = "../../🏗️builder/📜️registration/📦️packages/🦀️rust" }
 semio-framework-plugin-testing-laws = { path = "../../🧪️testing/📦️packages/🦀️rust", optional = true }
 semio-framework-plugin-testing-acceptance = { path = "../../🧪️tests/🧪️history-edit-acceptance/📦️packages/🦀️rust", optional = true }
 
@@ -186,6 +189,7 @@ semio-framework-plugin-testing-acceptance = { path = "../../🧪️tests/🧪️
 semio-framework-plugin-reactor-wit-bridge = { path = "../../⚛️reactor/🧬️wit-bridge/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-framework-plugin-surface-fixture = { path = "../../🧪️tests/🪟️surface-fixture/📦️packages/🦀️rust" }
 semio-framework-job-worker = { path = "../../../../../../🔨️modules/🧵️job/👷️worker/📦️packages/🦀️rust", features = ["testkit"] }
 
 semio-framework-job = { path = "../../../../../../../🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust", package = "semio-framework-job", features = ["testkit"] }
@@ -199,11 +203,9 @@ semio-framework-async = { path = "../../../../../../../🧰️framework/🔨️m
 wasmtime = { version = "47.0.3", features = ["cranelift"] }
 # 📖️ Source-text laws read module trees at run time (WP3 replaced the `include_str!` source embeds).
 semio-framework-plugin-test-support = { path = "../../🧷️companions/🧯️test-support/📦️packages/🦀️rust" }
-
-[[test]]
-name = "media-turn"
-path = "../../🎞️media/⚠️turn/🧪️tests/🎟️native/🦀️.rs"
-required-features = ["media-turn-testing"]
+semio-framework-plugin-instance-app = { path = "../../🧵️instance/📦️packages/🦀️rust", features = ["artifact-app-testing"] }
+semio-framework-plugin-window-kits = { path = "../../🪟️window-kits/📦️packages/🦀️rust", features = ["artifact-app-testing"] }
+semio-framework-plugin-reactor-patches = { path = "../../⚛️reactor/🩹️patches/📦️packages/🦀️rust", features = ["artifact-app-testing"] }
 
 [[test]]
 name = "owned-output"
@@ -214,3 +216,5 @@ required-features = ["original-actor-context-testing"]
 name = "reserved-producer"
 path = "../../📜️declaration/👷️job/🎟️birth/🧪️tests/🎟️native/🦀️.rs"
 required-features = ["reserved-producer-testing"]
+semio-framework-plugin-testing-fixtures = { path = "../../🧪️testing/🧰️fixtures/📦️packages/🦀️rust" }
+semio-framework-plugin-testing-fixtures-publication = { path = "../../🧪️testing/🧰️fixtures-publication/📦️packages/🦀️rust" }

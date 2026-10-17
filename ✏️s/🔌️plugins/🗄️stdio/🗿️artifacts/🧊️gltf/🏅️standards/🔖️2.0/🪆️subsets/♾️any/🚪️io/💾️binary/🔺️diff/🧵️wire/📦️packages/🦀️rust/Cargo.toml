@@ -1,0 +1,52 @@
+[package]
+workspace = "../../../../../../../../../.."
+name = "semio-s-artifact-stdio-gltf-model-wire"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Component crate of semio-s-artifact-stdio-gltf-model: wire"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "🦀️.rs"
+
+[dependencies]
+pack = { workspace = true }
+semio-framework-artifact-reference = { workspace = true }
+semio-framework-diagnostic = { workspace = true }
+semio-framework-dsl-record = { workspace = true }
+semio-framework-dsl-record-derive = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-pack-json = { workspace = true }
+semio-framework-schema = { workspace = true }
+semio-framework-schema-composition = { workspace = true }
+semio-framework-schema-registry = { workspace = true }
+semio-framework-schema-state = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-framework-value-derive = { workspace = true }
+semio-s-artifact-stdio-gltf-exports-graphql = { workspace = true }
+semio-s-artifact-stdio-gltf-exports-json = { workspace = true }
+semio-s-artifact-stdio-gltf-exports-proto = { workspace = true }
+semio-s-artifact-stdio-gltf-exports-rust = { workspace = true }
+semio-s-artifact-stdio-gltf-exports-typescript = { workspace = true }
+semio-s-artifact-stdio-gltf-model-schema = { path = "../../../../../📝️text/📸️snapshot/🧪️serde-oracle/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-gltf-model-snapshot = { path = "../../../../../../🧬️schema/📸️snapshot/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-json = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+[features]
+testing = ["semio-s-artifact-stdio-gltf-model-snapshot/testing", "semio-s-artifact-stdio-gltf-model-schema/testing"]
+
+[dev-dependencies]
+semio-framework-async-macros = { workspace = true }
+semio-framework-dsl = { workspace = true }
+semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-s-artifact-stdio-contract = { workspace = true, features = ["testing"] }
+semio-s-artifact-stdio-gltf-model-schema = { path = "../../../../../📝️text/📸️snapshot/🧪️serde-oracle/📦️packages/🦀️rust", features = ["testing"] }
+semio-s-artifact-stdio-gltf-model-snapshot = { path = "../../../../../../🧬️schema/📸️snapshot/📦️packages/🦀️rust", features = ["testing"] }

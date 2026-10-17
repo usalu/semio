@@ -16,6 +16,17 @@ export function buildOptionV1(args:readonly string[],name:string,short?:string):
   }
 }
 
+/** 🛑️ Reads the last explicit boolean value without consuming literal callback arguments. */
+export function buildBooleanOptionV1(args:readonly string[],name:string):boolean|undefined {
+  let selected:boolean|undefined;
+  for(let index=0;index<args.length&&args[index]!=="--";index++){
+    const argument=args[index]!;
+    if(argument===`--${name}`){const next=args[index+1];selected=next!=="false";if(next==="true"||next==="false")index++;}
+    else if(argument.startsWith(`--${name}=`)){const value=argument.slice(argument.indexOf("=")+1);if(value!=="true"&&value!=="false")throw Error(`Build option requires a boolean: ${argument}`);selected=value==="true";}
+  }
+  return selected;
+}
+
 /** 🧵️ Matches project selectors using literal text and portable wildcards. */
 export function buildPatternV1(pattern:string,value:string):boolean { if(/[?\[\]{}()\\]/u.test(pattern))throw Error("Unsupported build selector pattern: "+pattern);return new RegExp("^"+pattern.split("*").map(part=>part.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")).join(".*")+"$").test(value); }
 
@@ -34,6 +45,7 @@ function shellArgument(value:string):string { return process.platform==="win32"?
 export async function selectBuildTasksV1(root:string,graph:BuildGraphV1,args:readonly string[],invocation:ScriptInvocation):Promise<{tasks:string[];args:string[];parallel?:number;skipCache:boolean;skipRemoteCache:boolean;excludeDependencies:boolean;bail:boolean;verbose:boolean;outputStyle?:"stream"|"stream-without-prefixes"|"static"}> {
   checkScriptInvocation(invocation);
   const boundary=args.indexOf("--"),head=args.slice(0,boundary<0?undefined:boundary),forwarded=boundary<0?[]:args.slice(boundary+1),operation=head[0];
+  const enabled=(names:string[])=>head.some(argument=>names.some(name=>argument===name||argument===name+"=true"));
   const configuration=buildOptionV1(head,"configuration","c"),projectOptions=(buildOptionV1(head,"projects","p")??"").split(",").filter(Boolean),excluded=(buildOptionV1(head,"exclude")??"").split(",").filter(Boolean);
   let projects=selectBuildProjectsV1(graph,projectOptions,excluded),tasks:string[]=[];
   if(operation==="run"){
@@ -47,14 +59,14 @@ export async function selectBuildTasksV1(root:string,graph:BuildGraphV1,args:rea
   }else if(operation==="exec"){
     if(!forwarded.length)throw Error("Expected repo exec --projects=<projects> -- <command>");
     for(const project of projects){
-      graph.projects[project]!.targets["repo-exec"]={execution:{kind:"command",command:forwarded.map(shellArgument).join(" "),cwd:graph.projects[project]!.root,forwardAllArgs:false},cache:false,outputs:[]};
+      graph.projects[project]!.targets["repo-exec"]={execution:{kind:"command",program:forwarded[0]!,args:forwarded.slice(1),cwd:graph.projects[project]!.root,forwardAllArgs:true},cache:false,outputs:[]};
       tasks.push(project+":repo-exec");
     }
   }else if(operation==="run-many"||operation==="affected"){
     if(operation==="affected"){
       let files=(buildOptionV1(head,"files")??"").split(",").filter(Boolean);
-      if(!files.length&&!head.includes("--all")){
-        const control=scriptCompilerAdmissionControlV1(invocation,"build:affected-files",30_000),base=buildOptionV1(head,"base")??"HEAD",revision=buildOptionV1(head,"head"),uncommitted=head.includes("--uncommitted"),untracked=head.includes("--untracked");
+      if(!files.length&&!enabled(["--all"])){
+        const control=scriptCompilerAdmissionControlV1(invocation,"build:affected-files",30_000),base=buildOptionV1(head,"base")??"HEAD",revision=buildOptionV1(head,"head"),uncommitted=enabled(["--uncommitted"]),untracked=enabled(["--untracked"]);
         const commands:Promise<string>[]=[];
         if(!untracked||uncommitted)commands.push(captureOwnedCommandV1("git",["-c","core.fsmonitor=false","diff","--name-only","-z",uncommitted?"HEAD":base,...(revision&&!uncommitted?[revision]:[])],root,{control}));
         if(untracked||!uncommitted&&!revision)commands.push(captureOwnedCommandV1("git",["-c","core.fsmonitor=false","ls-files","--others","--exclude-standard","-z"],root,{control}));
@@ -62,7 +74,7 @@ export async function selectBuildTasksV1(root:string,graph:BuildGraphV1,args:rea
       }
       const owners=Object.keys(graph.projects).sort((a,b)=>graph.projects[b]!.root.length-graph.projects[a]!.root.length),affected=new Set(files.flatMap(file=>{const name=owners.find(name=>graph.projects[name]!.root==="."||file.startsWith(graph.projects[name]!.root+"/"));return name?[name]:[];}));
       let changed=true;while(changed){changed=false;for(const edge of graph.dependencies)if(affected.has(edge.target)&&!affected.has(edge.source)){affected.add(edge.source);changed=true;}}
-      if(!head.includes("--all"))projects=projects.filter(project=>affected.has(project));
+      if(!enabled(["--all"]))projects=projects.filter(project=>affected.has(project));
     }
     const targetOptions=(buildOptionV1(head,"targets","t")??buildOptionV1(head,"target")??"").split(",").filter(Boolean);
     for(const pattern of targetOptions)buildPatternV1(pattern,"");
@@ -71,8 +83,7 @@ export async function selectBuildTasksV1(root:string,graph:BuildGraphV1,args:rea
   }else throw Error(`Unknown repository build command: ${operation??""}`);
   const parallelValue=buildOptionV1(head,"parallel")??process.env.SEMIO_BUILD_PARALLEL,parallel=parallelValue===undefined?undefined:Number(parallelValue);
   if(parallel!==undefined&&(!Number.isSafeInteger(parallel)||parallel<1))throw Error("Build parallelism must be a positive integer");
-  const enabled=(names:string[])=>head.some(argument=>names.some(name=>argument===name||argument===name+"=true"));
-  return {bail:!head.includes("--bail=false"),verbose:enabled(["--verbose"])||process.env.SEMIO_BUILD_VERBOSE==="true",outputStyle:(buildOptionV1(head,"output")??buildOptionV1(head,"output-style")) as "stream"|"stream-without-prefixes"|"static"|undefined,tasks,args:operation==="exec"?[]:[...forwarded],...(parallel?{parallel}:{}),skipCache:enabled(["--skip-cache"]),skipRemoteCache:enabled(["--skip-remote-cache"]),excludeDependencies:enabled(["--exclude-dependencies","--exclude-task-dependencies"])};
+  return {bail:buildBooleanOptionV1(head,"bail")??false,verbose:enabled(["--verbose"])||process.env.SEMIO_BUILD_VERBOSE==="true",outputStyle:(buildOptionV1(head,"output")??buildOptionV1(head,"output-style")) as "stream"|"stream-without-prefixes"|"static"|undefined,tasks,args:operation==="exec"?[]:[...forwarded],...(parallel?{parallel}:{}),skipCache:enabled(["--skip-cache"]),skipRemoteCache:enabled(["--skip-remote-cache"]),excludeDependencies:enabled(["--exclude-dependencies","--exclude-task-dependencies"])};
 }
 
 /** 👁️ Watches source events beneath the exact active issued phase through descendant drainage. */
@@ -81,6 +92,7 @@ export async function watchBuildInvocationV1(root:string,graph:BuildGraphV1,args
   const controller=new AbortController(),control=createRequestedIssuedResourceControlV1(phaseControl,0,controller.signal),check=()=>checkResourceLeaseControl(control);
   const boundary=args.indexOf("--"),command=boundary<0?[]:args.slice(boundary+1);
   if(!command.length)throw Error("Expected repo watch --projects=<projects> -- <command>");
+  const includeGlobal=args.slice(0,boundary).some(argument=>argument==="--include-global-files"||argument==="--include-global-files=true");
   const {watchBuildChildArgumentsV1,buildWatchChangesEnvironmentV1,watchBuildChangeLimitsV1}=await import("./👁️watch/🟦️.ts");check();const child=watchBuildChildArgumentsV1(root,command);
   if(child){const {readOwnedBuildInvocationV1}=await import("../📥️caller/🟦️.ts");check();readOwnedBuildInvocationV1(root,invocation,child);check();}
   const names=selectBuildProjectsV1(graph,(buildOptionV1(args,"projects","p")??"").split(",").filter(Boolean),(buildOptionV1(args,"exclude")??"").split(",").filter(Boolean)),changed=new Set<string>();
@@ -94,7 +106,7 @@ export async function watchBuildInvocationV1(root:string,graph:BuildGraphV1,args
     if(stopped||!filename)return;try{check();}catch(fault){error(fault);return;}const path=filename.toString().replaceAll("\\","/");
     if(path.split("/").some(part=>[...cachePolicy.generatedDirectories,".git",".🧬semio","temp"].includes(part)))return;
     if(path.split("/").some((part,index,parts)=>ownership.collections.names.includes(part)&&parts[index-1]!==ownership.collections.moduleMember))return;
-    const selected=names.some(name=>graph.projects[name]!.root==="."||path.startsWith(graph.projects[name]!.root+"/")),global=args.some(argument=>argument==="--include-global-files"||argument==="--include-global-files=true")&&!Object.values(graph.projects).some(project=>project.root!=="."&&path.startsWith(project.root+"/"));
+    const selected=names.some(name=>graph.projects[name]!.root==="."||path.startsWith(graph.projects[name]!.root+"/")),global=includeGlobal&&!Object.values(graph.projects).some(project=>project.root!=="."&&path.startsWith(project.root+"/"));
     if(!selected&&!global)return;
     if(path.length>watchBuildChangeLimitsV1.path||!changed.has(path)&&changed.size>=watchBuildChangeLimitsV1.files){error(Error("Bounded watch source event set required"));return;}
     changed.add(path);if(pending)clearTimeout(pending);pending=setTimeout(flush,200);
@@ -114,7 +126,7 @@ export function validateBuildTaskArgumentsV1(args:readonly string[]):void {
     if(!argument.startsWith("-"))throw Error(`Unexpected build argument before --: ${argument}`);
     const equal=argument.indexOf("="),name=(equal<0?argument:argument.slice(0,equal)).replace(/^--?/u,""),value=equal<0?undefined:argument.slice(equal+1);
     if(values.has(name)){if(value===undefined&&(!args[index+1]||args[index+1]!.startsWith("-")))throw Error(`Build option requires a value: ${argument}`);if(value===undefined)index++;}
-    else if(booleans.has(name)){if(value!==undefined&&!["true","false"].includes(value))throw Error(`Build option requires a boolean: ${argument}`);}
+    else if(booleans.has(name)){if(value!==undefined&&!["true","false"].includes(value))throw Error(`Build option requires a boolean: ${argument}`);if(name==="bail"&&value===undefined&&["true","false"].includes(args[index+1]??""))index++;}
     else if(optional.has(name)){if(value===undefined&&args[index+1]&&!args[index+1]!.startsWith("-"))index++;}
     else throw Error(`Unsupported build option: ${argument}`);
   }

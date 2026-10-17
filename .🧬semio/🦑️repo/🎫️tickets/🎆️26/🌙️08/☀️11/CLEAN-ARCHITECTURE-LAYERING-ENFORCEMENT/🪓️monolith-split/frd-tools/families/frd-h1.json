@@ -1,0 +1,20 @@
+{
+ "name": "frd-h1",
+ "crates": [
+  "semio-framework-test-fixtures",
+  "semio-hub-auth",
+  "semio-hub-directory",
+  "semio-hub-hostile-input-laws",
+  "semio-hub-norm",
+  "semio-hub-stdio",
+  "semio-hub-testing",
+  "semio-s-artifact-stdio-jpg-test-oracle",
+  "semio-s-artifact-stdio-pptx-test-oracle",
+  "semio-s-artifact-stdio-tiff-test-oracle",
+  "semio-s-composition-laws",
+  "semio-s-fixture-sweep",
+  "teaching-proctor",
+  "teaching-proctor-base"
+ ],
+ "note": "FRD sample, no baseline"
+}

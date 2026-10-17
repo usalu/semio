@@ -1,0 +1,26 @@
+{
+ "name": "osd",
+ "crates": [
+  "semio-framework-os-directory",
+  "semio-framework-os-directory-schema",
+  "semio-framework-os-directory-browser-actor",
+  "semio-framework-os-directory-check-in",
+  "semio-framework-os-directory-binary",
+  "semio-framework-os-directory-access-policy",
+  "semio-framework-os-directory-tests-1",
+  "semio-framework-os-directory-tests-2",
+  "semio-framework-os-directory-client",
+  "semio-framework-os-directory-client-tests"
+ ],
+ "base": {
+  "rev": "",
+  "crates": [
+   "semio-framework-os-directory",
+   "semio-framework-os-directory-tests-1",
+   "semio-framework-os-directory-tests-2",
+   "semio-framework-os-directory-client",
+   "semio-framework-os-directory-client-tests"
+  ]
+ },
+ "note": "OSD carve: os-directory split into schema, browser-actor, check-in, binary, access-policy and the facade; base = the git index (the pre-carve tree)"
+}

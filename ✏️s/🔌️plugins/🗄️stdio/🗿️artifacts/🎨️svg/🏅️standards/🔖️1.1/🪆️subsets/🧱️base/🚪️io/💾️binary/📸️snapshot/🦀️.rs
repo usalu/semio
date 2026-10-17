@@ -53,8 +53,6 @@ fn sqlite_snapshot_codec() -> Option<store::os_store::serialization::ArtifactSql
 
 #[allow(unused_imports)]
 mod snapshot_wire_codec {
-use crate::standards::v1_1::subsets::base::schema::mutation_support::*;
-use crate::schema::diff::{diff_at_path, SvgAttrAdded, SvgAttrModified, SvgAttributesDiff, SvgDiff, SvgElementDiff, SvgNodeDiff};
 use crate::schema::snapshot::node_at;
 use crate::SvgSnapshot;
 use crate::schema::snapshot::{SvgDocument, SvgNode};

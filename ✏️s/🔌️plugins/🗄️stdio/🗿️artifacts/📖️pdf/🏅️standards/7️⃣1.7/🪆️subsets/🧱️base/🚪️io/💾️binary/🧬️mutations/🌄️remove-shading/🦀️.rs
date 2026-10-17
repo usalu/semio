@@ -3,7 +3,7 @@
 pub const TAG: u8 = dsl::protocol_record::tag_u8(include_str!("../📡️.protocol.semio"), "remove-shading");
 pub const BINARY_TAG: u8 = TAG;
 
-use crate::standards::v1_7::subsets::base::schema::mutations::RemoveShading;
+use crate::standards::v1_7::subsets::base::schema::mutations::remove_shading::RemoveShading;
 
 /// 📤️ Encodes this direct payload as canonical schema JSON bytes.
 pub fn encode(payload: &RemoveShading) -> Result<Vec<u8>, String> {

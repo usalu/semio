@@ -1,5 +1,5 @@
 /** 🧬️ Sequence snapshot schema — artifact-lane fields only. */
-import type { ArtifactChild } from "../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts";
+import type { ArtifactChild } from "@semio-tech/framework-os/modules/store/child/schema";
 
 export interface SequenceSnapshot {
   /** @state artifact */ schema: string;

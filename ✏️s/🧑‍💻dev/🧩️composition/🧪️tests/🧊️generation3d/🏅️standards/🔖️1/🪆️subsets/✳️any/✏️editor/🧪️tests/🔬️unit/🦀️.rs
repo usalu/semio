@@ -1,4 +1,6 @@
-pub(crate) const KEYBOARD_REACHABILITY_FIXTURE_JSON: &str = include_str!("../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/⌨️keyboard-reachability.json");
+use semio_framework_test_fixtures::repo_text;
+
+pub(crate) fn keyboard_reachability_fixture_json() -> &'static str { repo_text!("✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/⌨️keyboard-reachability.json") }
 use semio_s_artifact_procedural_3d_mesh_bridge::generation3d_document_from_mesh;
 use semio_s_artifact_procedural_3d_mesh_bridge::generation3d_mesh_from_document;
 use semio_s_artifact_procedural_3d_mesh_bridge::merge_meshes;
@@ -359,12 +361,4 @@ use super::*;
 use self::context::{app, app_with_registry, drain_flow_eval_ticks, drain_flow_eval_ticks_with_view, preview_views};
 use semio_framework_plugin::PluginApp;
 use serde_json::json;
-
-include!("🕹️command-surface/🦀️.rs");
-include!("🪟️window-and-menu-laws/🦀️.rs");
-include!("🧮️engine-compute/🦀️.rs");
-include!("📏️surface-budget-and-retirement/🦀️.rs");
-include!("🔁️extension-round-trip/🦀️.rs");
-include!("📈️hot-path-and-fault-laws/🦀️.rs");
-include!("🪄️mesh-component-laws/🦀️.rs");
-include!("🚪️archive-and-brep-laws/🦀️.rs");
+include!("🧰️shared-helpers/🦀️.rs");

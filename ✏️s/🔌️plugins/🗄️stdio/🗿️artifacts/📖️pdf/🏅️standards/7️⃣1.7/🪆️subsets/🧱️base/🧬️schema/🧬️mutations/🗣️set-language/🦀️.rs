@@ -1,6 +1,5 @@
 //! 🗣️ Authoritative PDF mutation payload, diff, inverse, and tests for `set-language`.
 
-use super::PdfMutation;
 use crate::standards::v1_7::subsets::base::schema::diff::{self, PdfDiff};
 use crate::standards::v1_7::subsets::base::schema::snapshot::*;
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
@@ -14,7 +13,10 @@ pub struct SetLanguage {
     pub language: Option<String>,
 }
 
-impl MutationKind<PdfSnapshot, PdfMutation> for SetLanguage {
+impl<Op> MutationKind<PdfSnapshot, Op> for SetLanguage
+where
+    Op: protocol::Mutation<PdfSnapshot, Diff = PdfDiff> + From<SetLanguage>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "language", kind: "set-language", record: "Set" };
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
@@ -22,10 +24,10 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetLanguage {
         MutationOutcome::new(diff::diff_set_language(base, self.language.clone()))
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
         let _ = base;
-        vec![PdfMutation::SetLanguage(SetLanguage { language: base.language.clone() })]
+        vec![Op::from(SetLanguage { language: base.language.clone() })]
     
     })())
 }
@@ -42,8 +44,6 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetLanguage {
 //#endregion 🔖️Mutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
 

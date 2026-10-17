@@ -1,6 +1,6 @@
 //! ⚡️ RewriteRule mutation text codec, registry, and external operation bridge.
 
-use crate::RewritingSnapshot;
+use crate::standards::v1::subsets::any::schema::snapshot::RewritingSnapshot;
 
 use crate::standards::v1::subsets::any::schema::mutations::RewriteRuleMutation;
 
@@ -83,29 +83,20 @@ impl protocol::OpText for RewriteRuleMutation {
 
 //#endregion 🔖️HandcraftedOpCodecs
 
-#[path = "📐️change-rule-layout/🦀️.rs"]
-pub mod change_rule_layout_point;
+pub use semio_s_artifact_trinity_rewriting_model::standards::v1::subsets::any::io::text::mutations::change_rule_layout_point;
 
-#[path = "🫳️drag-rule/🦀️.rs"]
-pub mod drag_rule_nodes;
+pub use semio_s_artifact_trinity_rewriting_model::standards::v1::subsets::any::io::text::mutations::drag_rule_nodes;
 
-#[path = "👉️edit-rhs/🦀️.rs"]
-pub mod edit_rhs;
+pub use semio_s_artifact_trinity_rewriting_model::standards::v1::subsets::any::io::text::mutations::edit_rhs;
 
-#[path = "🖼️edit-working-graph/🦀️.rs"]
-pub mod edit_working_graph;
+pub use semio_s_artifact_trinity_rewriting_model::standards::v1::subsets::any::io::text::mutations::edit_working_graph;
 
-#[path = "🗑️remove-rule-layout/🦀️.rs"]
-pub mod remove_rule_layout_point;
+pub use semio_s_artifact_trinity_rewriting_model::standards::v1::subsets::any::io::text::mutations::remove_rule_layout_point;
 
-#[path = "🔧️change-parameter/🦀️.rs"]
-pub mod change_parameter_binding;
+pub use semio_s_artifact_trinity_rewriting_model::standards::v1::subsets::any::io::text::mutations::change_parameter_binding;
 
-#[path = "👈️edit-lhs/🦀️.rs"]
-pub mod edit_lhs;
+pub use semio_s_artifact_trinity_rewriting_model::standards::v1::subsets::any::io::text::mutations::edit_lhs;
 
-#[path = "🧹️remove-parameter-binding/🦀️.rs"]
-pub mod remove_parameter_binding;
+pub use semio_s_artifact_trinity_rewriting_model::standards::v1::subsets::any::io::text::mutations::remove_parameter_binding;
 
-#[path = "📍️set-rule-layout/🦀️.rs"]
-pub mod set_rule_layout_points;
+pub use semio_s_artifact_trinity_rewriting_model::standards::v1::subsets::any::io::text::mutations::set_rule_layout_points;

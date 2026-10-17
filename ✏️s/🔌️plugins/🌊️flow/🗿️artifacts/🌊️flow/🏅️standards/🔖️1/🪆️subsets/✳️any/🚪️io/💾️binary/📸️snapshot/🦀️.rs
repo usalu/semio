@@ -20,9 +20,7 @@ pub fn decode(bytes: &[u8]) -> Result<FlowSnapshot, PackError> {
 }
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
 
 #[allow(unused_imports)]

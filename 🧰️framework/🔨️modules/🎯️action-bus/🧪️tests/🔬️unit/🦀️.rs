@@ -297,7 +297,6 @@ fn completed_job_retains_original_input_until_exact_granted_close() {
         assert!(step.progress().fits(grant));
     }
     assert!(job.terminal_is_empty());
-    println!("[DEBUG] ActionBus completed input retains original pointer/capacity64, one-below inert, exact close releases64 with full receipt");
 }
 
 struct RetainedNumberJob {
@@ -456,7 +455,6 @@ fn retained_wire_pages_are_admitted_sealed_transferred_and_closed_by_logical_byt
     assert_eq!(step.progress().retained_capacity_bytes, law["retainedCapacityBytes"].as_u64().unwrap() as usize);
     assert_eq!(step.progress().released_bytes, grant.maximum_release_bytes);
     assert!(step.progress().fits(grant));
-    println!("[DEBUG] ActionBus original short wire logical8 physical={} body8 denieditems/release/depth0 terminalComplete", grant.maximum_release_bytes);
     assert!(job.terminal_is_empty());
 }
 #[test]

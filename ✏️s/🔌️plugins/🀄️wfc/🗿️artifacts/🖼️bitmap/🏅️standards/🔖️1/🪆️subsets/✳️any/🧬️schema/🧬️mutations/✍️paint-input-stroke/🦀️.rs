@@ -5,7 +5,6 @@
 //! Bresenham line, so a fast drag that skips cells still paints a connected stroke.
 
 use crate::diff::BitmapDiff;
-use crate::mutations::BitmapMutation;
 use crate::schema::snapshot::BitmapSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -33,8 +32,11 @@ pub struct PaintInputStroke {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn paint_input_stroke(points: Vec<BitmapStrokePoint>, color: u32) -> BitmapMutation {
-    BitmapMutation::PaintInputStroke(PaintInputStroke { points, color })
+pub fn paint_input_stroke<Op>(points: Vec<BitmapStrokePoint>, color: u32) -> Op
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::paint_input_stroke::PaintInputStroke>,
+{
+    Op::from(PaintInputStroke { points, color })
 }
 
 /// 〰️ Every cell the stroke covers, each once, in drawing order: the first point, then an inclusive
@@ -85,13 +87,16 @@ pub fn stroke_extent(points: &[BitmapStrokePoint], width: u32, height: u32) -> O
     Some(((min_x, min_y, max_x - min_x + 1, max_y - min_y + 1), inside))
 }
 
-impl MutationKind<BitmapSnapshot, BitmapMutation> for PaintInputStroke {
+impl<Op> MutationKind<BitmapSnapshot, Op> for PaintInputStroke
+where
+    Op: protocol::Mutation<BitmapSnapshot, Diff = BitmapDiff> + From<PaintInputStroke> + From<crate::standards::v1::subsets::any::schema::mutations::set_input_pixels::SetInputPixels>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "paint", entity: "input-stroke", kind: "paint-input-stroke", record: "PaintedInputStroke" };
 
     fn diff(&self, base: &BitmapSnapshot) -> protocol::MutationOutcome<BitmapDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &BitmapSnapshot) -> Result<Vec<BitmapMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &BitmapSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

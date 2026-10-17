@@ -16,9 +16,13 @@ pub struct MeshTranslationInput {
     cancelled:bool,
 }
 
-impl HalfedgeMesh {
+pub trait MeshTranslationSource: Sized {
+    fn translation_input_owned(self,delta:Vec3)->MeshTranslationInput;
+}
+
+impl MeshTranslationSource for HalfedgeMesh {
     /// 🛫️ Moves the same original mesh into a cold typed input without creating a Work frame.
-    pub fn translation_input_owned(self,delta:Vec3)->MeshTranslationInput {MeshTranslationInput {source:Some(self),delta,cancelled:false}}
+    fn translation_input_owned(self,delta:Vec3)->MeshTranslationInput {MeshTranslationInput {source:Some(self),delta,cancelled:false}}
 }
 
 impl MeshTranslationInput {

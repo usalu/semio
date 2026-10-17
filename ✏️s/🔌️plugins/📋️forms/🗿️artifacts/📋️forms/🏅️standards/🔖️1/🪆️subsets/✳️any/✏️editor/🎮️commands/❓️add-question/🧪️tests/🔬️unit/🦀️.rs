@@ -1,4 +1,4 @@
-use super::*;
+use crate::editor::forms::commands::add_question::*;
 use crate::forms_steps;
 use crate::editor::forms::commands::drop_question_kind::DropQuestionKind;
 use crate::editor::forms::commands::move_question::MoveQuestion;

@@ -1,6 +1,5 @@
 //! 🧮 Note mutation — `EditBlockMath`: replaces a math block's authored TeX source.
 
-use crate::schema::mutations::NoteMutation;
 use crate::{NoteDiff, NoteSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -20,17 +19,23 @@ pub struct EditBlockMath {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn edit_block_math(id: String, new_tex: String) -> NoteMutation {
-    NoteMutation::EditBlockMath(EditBlockMath { id, new_tex })
+pub fn edit_block_math<Op>(id: String, new_tex: String) -> Op
+where
+    Op: From<crate::standards::v1::subsets::math::schema::mutations::edit_block_math::EditBlockMath>,
+{
+    Op::from(EditBlockMath { id, new_tex })
 }
 
-impl MutationKind<NoteSnapshot, NoteMutation> for EditBlockMath {
+impl<Op> MutationKind<NoteSnapshot, Op> for EditBlockMath
+where
+    Op: protocol::Mutation<NoteSnapshot, Diff = NoteDiff> + From<EditBlockMath>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "edit", entity: "block-math", kind: "edit-block-math", record: "EditedBlockMath" };
 
     fn diff(&self, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &NoteSnapshot) -> Result<Vec<NoteMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &NoteSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

@@ -132,5 +132,4 @@ async function testColdFlowDeclaration():Promise<void>{
   const syntax=compiler.createSourceFile(declaration,expected,compiler.ScriptTarget.Latest,true);
   assert.equal((syntax as unknown as {parseDiagnostics:readonly unknown[]}).parseDiagnostics.length,0);
   assert.ok(syntax.statements.some(node=>compiler.isInterfaceDeclaration(node)&&node.name.text==="FlowBrowserRuntime"));
-  console.log("[DEBUG] cold Flow declaration publication checked against TypeScript ABI admission");
 }

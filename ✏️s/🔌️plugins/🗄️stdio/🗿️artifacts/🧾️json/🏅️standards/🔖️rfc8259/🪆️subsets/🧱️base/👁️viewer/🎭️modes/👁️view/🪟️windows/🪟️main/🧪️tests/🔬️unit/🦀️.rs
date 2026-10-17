@@ -1,4 +1,7 @@
-use super::*;
+use crate::{schema::snapshot::JsonMember, schema::snapshot::JsonValue};
+use crate::JsonSnapshot;
+use semio_framework_plugin::TreeWindows;
+use crate::viewer::json_any::modes::view::windows::main::*;
 
 #[semio_framework_async_macros::async_test]
 async fn definition_declares_a_tree_window() {

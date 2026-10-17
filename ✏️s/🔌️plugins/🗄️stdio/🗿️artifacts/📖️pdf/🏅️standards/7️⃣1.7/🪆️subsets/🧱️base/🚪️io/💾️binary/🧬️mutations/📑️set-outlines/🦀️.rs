@@ -3,7 +3,7 @@
 pub const TAG: u8 = dsl::protocol_record::tag_u8(include_str!("../📡️.protocol.semio"), "set-outlines");
 pub const BINARY_TAG: u8 = TAG;
 
-use crate::standards::v1_7::subsets::base::schema::mutations::SetOutlines;
+use crate::standards::v1_7::subsets::base::schema::mutations::set_outlines::SetOutlines;
 
 /// 📤️ Encodes this direct payload as canonical schema JSON bytes.
 pub fn encode(payload: &SetOutlines) -> Result<Vec<u8>, String> {

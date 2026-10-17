@@ -8,8 +8,6 @@ include!("📥️mounts/🐚️wp4-shell-state/🦀️.rs");
 include!("📥️mounts/🎛️wp5-shell-views/🦀️.rs");
 #[cfg(target_arch = "wasm32")]
 extern crate semio_framework_async as wasm_bindgen_futures;
-#[cfg(test)]
-use semio_framework_ui_scene_mesh::Mesh3dItem;
 
 // 🧊️ Raw wgpu WASM renderer for declarative framework UiNode trees.
 //
@@ -32,44 +30,6 @@ extern crate semio_framework_os_kernel as store_sync;
 use semio_framework_os_renderer_camera as camera_storage;
 
 /// 🔎️ The whole renderer source tree as one text, for the source-text law tests that pin where the renderer calls what.
-#[cfg(test)]
-pub(crate) const RENDERER_SOURCE: &str = concat!(
-    include_str!("🦀️.rs"),
-    include_str!("📥️mounts/🌱️wp1-foundation/🦀️.rs"),
-    include_str!("📥️mounts/🎞️wp2-scenes/🦀️.rs"),
-    include_str!("📥️mounts/🧵️wp3-frame-core/🦀️.rs"),
-    include_str!("📥️mounts/🐚️wp4-shell-state/🦀️.rs"),
-    include_str!("📥️mounts/🎛️wp5-shell-views/🦀️.rs"),
-    include_str!("🗂️asset-authority/🦀️.rs"),
-    include_str!("🦴️glb-decode/🦀️.rs"),
-    include_str!("🔁️asset-decode-jobs/🦀️.rs"),
-    include_str!("../🏛️host-base/🦀️.rs"),
-    include_str!("../🏛️host-base/📥️lifted/🔁️asset-decode-jobs/🦀️.rs"),
-    include_str!("../🏛️host-base/📥️lifted/🏊️kernel-pool/🦀️.rs"),
-    include_str!("../🧠️kernel-runtime/🦀️.rs"),
-    include_str!("../📡️kernel-protocol/🦀️.rs"),
-    include_str!("../📡️kernel-protocol/📥️lifted/📬️kernel-replay-client/🦀️.rs"),
-    include_str!("../📡️kernel-protocol/📥️lifted/🏊️kernel-pool/🦀️.rs"),
-    include_str!("../📡️kernel-protocol/📥️lifted/📦️kernel-runtime/🦀️.rs"),
-    include_str!("../🏊️kernel-pool/📥️lifted/🗃️kernel-retained-state/🦀️.rs"),
-    include_str!("📦️kernel-runtime/🧮️kernel-core/🦀️.rs"),
-    include_str!("📦️kernel-runtime/📬️kernel-replay-client/🦀️.rs"),
-    include_str!("📦️kernel-runtime/🗃️kernel-retained-state/🦀️.rs"),
-    include_str!("📦️kernel-runtime/🏊️kernel-pool/🦀️.rs"),
-    include_str!("📊️scale-bench/🦀️.rs"),
-    include_str!("🛎️frame-actions/🦀️.rs"),
-    include_str!("🛎️frame-actions/🔁️runtime-apply/🦀️.rs"),
-    include_str!("🛎️frame-actions/🎮️interaction-state/🦀️.rs"),
-    include_str!("🎨️presentation-raster/🦀️.rs"),
-    include_str!("🎨️presentation-raster/🌐️native-asset-stream/🦀️.rs"),
-    include_str!("📮️mailbox-impl/🦀️.rs"),
-    include_str!("🧾️frame-build/🦀️.rs"),
-    include_str!("🧾️frame-build/🧮️frame-transaction/🦀️.rs"),
-    include_str!("🧾️frame-build/📋️frame-preparation/🦀️.rs"),
-    include_str!("🖥️frame-presentation/🦀️.rs"),
-    include_str!("🧠️app-runtime/🦀️.rs"),
-    include_str!("🔬️native-socket-probe/🦀️.rs")
-);
 
 use crate::scenes::AdmittedSurfaceToken;
 use infinite_world::world::world3d_asset_cancellation_requested;
@@ -124,7 +84,7 @@ pub use semio_framework_os_renderer_wgpu_host_base::{HostAppearance, HostAppeara
 pub(crate) use semio_framework_os_renderer_wgpu_host_base::KernelPoolFuture;
 pub(crate) use semio_framework_os_renderer_wgpu_host_base::{app_now_ms, appearance_is_dark, boot_axis, log_debug, log_debug_diagnostic, log_debug_diagnostic_once_per_transition, log_debug_once_per_transition, prefers_dark_scheme, renderer_worker_pool, resolve_environment_boot_descriptor, resolve_theme, spawn_app_task};
 #[cfg(not(target_arch = "wasm32"))]
-pub(crate) use semio_framework_os_renderer_wgpu_host_base::{RENDERER_IO_CHECKED_OUT, RENDERER_IO_EXHAUSTED, RENDERER_IO_LIVE, RENDERER_IO_PUMP_CURSOR, RENDERER_IO_SESSION_SLOTS, RENDERER_IO_SLOTS, RENDERER_IO_VACANT, RENDERER_IO_WAKE, RendererIoHandle, RendererIoNode, RendererIoSlot, actor_budget_from_turn_budget, drive_renderer_worker_task, pump_renderer_io_sessions, renderer_io_generation_live, renderer_io_with_node, run_renderer_io, submit_renderer_io};
+pub(crate) use semio_framework_os_renderer_wgpu_host_base::{RENDERER_IO_CHECKED_OUT, RENDERER_IO_EXHAUSTED, RENDERER_IO_LIVE, RENDERER_IO_PUMP_CURSOR, RENDERER_IO_SESSION_SLOTS, RENDERER_IO_SLOTS, RENDERER_IO_VACANT, RENDERER_IO_WAKE, RendererIoHandle, RendererIoNode, RendererIoSlot, actor_budget_from_turn_budget, drive_renderer_worker_task, pump_renderer_io_sessions, renderer_io_generation_live, renderer_io_sessions_pending, renderer_io_with_node, run_renderer_io, submit_renderer_io};
 
 //#region 🌓️HostAppearance
 /// 🌓️ wasm appearance hook — the browser twin of winit's `Window::theme()`. The frame Worker has no
@@ -194,7 +154,6 @@ pub fn semio_wgpu_set_boot_descriptor(descriptor_json: String) -> Result<(), JsV
     apply_boot_descriptor(descriptor).map_err(|error| JsValue::from_str(&error))
 }
 //#endregion 🧭️BootDescriptor
-
 
 #[cfg(target_arch="wasm32")]
 #[wasm_bindgen(js_name=semioWgpuSetPluginCatalog)]

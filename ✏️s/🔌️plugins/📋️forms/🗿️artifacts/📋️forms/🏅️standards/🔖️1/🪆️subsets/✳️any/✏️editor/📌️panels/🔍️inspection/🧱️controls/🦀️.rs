@@ -1,5 +1,5 @@
 //! 🎛️ Accessible semantic controls for editing Forms properties.
-use crate::editor::forms::{forms_action, ui_admit, ui_label, ui_text_value, ui_value_list, ui_value_map, ui_value_text};
+use crate::editor::forms::support::{forms_action, ui_admit, ui_label, ui_text_value, ui_value_list, ui_value_map, ui_value_text};
 use crate::editor::forms::terminology::FormsLabels;
 use crate::FormQuestion;
 use semio_framework_plugin::{tree_item_with_action, BuiltNode, UiAssemblyResult, UiValue};
@@ -82,8 +82,8 @@ pub fn scalar_row(question: &FormQuestion, ids: &[String], field: &str, view: &s
     let label = property_label(field, labels);
     let args = arguments(vec![("field", ui_value_text(field)?), ("questionIds", question_ids(ids)?)])?;
     if field == "kind" {
-        let contributions = crate::editor::forms::parse_contributions(config);
-        let kinds = crate::editor::forms::catalogue_kinds(&contributions, view);
+        let contributions = crate::editor::forms::contributions::parse_contributions(config);
+        let kinds = crate::editor::forms::contributions::catalogue_kinds(&contributions, view);
         let mut select = ui::select(ui_text_value(&question.kind)?);
         if !kinds.iter().any(|(kind, _, _)| kind == &question.kind) {
             select = ui_admit(select.try_item(ui_text_value(&question.kind)?, ui_label(&question.kind)?))?;

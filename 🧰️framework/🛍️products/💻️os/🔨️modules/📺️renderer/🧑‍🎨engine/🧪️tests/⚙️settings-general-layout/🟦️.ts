@@ -1,5 +1,6 @@
 /** ⚙️ Neutral and React oracle for General Tree projection and bottom-panel flow. */
 import { readFileSync } from "node:fs";
+import { readModuleTreeSource } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -296,7 +297,7 @@ describe("⚙️ General Settings Tree and bottom-panel flow", () => {
   });
 
   test("React authors the same Tree sections, row controls, and upward panel ownership", () => {
-    const panelSource = readFileSync(join(engineRoot, "🧱️elements", "📌️ChromePanels", "🟦️.tsx"), "utf8");
+    const panelSource = readModuleTreeSource(join(engineRoot, "🧱️elements", "📌️ChromePanels", "🟦️.tsx"));
     const panelHost = readFileSync(join(frameworkRoot, "🔨️modules", "🖱️ui", "🧱️elements", "🖼️Panel", "🟦️.tsx"), "utf8");
     const reactTarget = readFileSync(join(frameworkRoot, "🔨️modules", "🖱️ui", "🎯️targets", "⚛️react", "🟦️.tsx"), "utf8");
     for (const section of fixture.tree.sections) {

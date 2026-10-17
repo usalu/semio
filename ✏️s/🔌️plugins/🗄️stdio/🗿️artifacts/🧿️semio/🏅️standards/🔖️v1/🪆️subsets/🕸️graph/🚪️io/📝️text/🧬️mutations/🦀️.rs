@@ -256,7 +256,7 @@ impl protocol::OpText for SemioGraphMutation {
 //#region 🔖️DemoCases
 /// 🌱 One representative value per variant — single source of truth for `ops_grammar_conformance_
 /// law`/`protocol_walk_law` in `🚪️io/🦀️.rs` and this file's own round-trip test.
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_mutation_cases() -> Vec<SemioGraphMutation> {
     use crate::schema::snapshot::SemioGraphPortKind;
@@ -296,9 +296,6 @@ pub(crate) fn demo_mutation_cases() -> Vec<SemioGraphMutation> {
 //#endregion 🔖️DemoCases
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests
 
 #[allow(unused_imports)]

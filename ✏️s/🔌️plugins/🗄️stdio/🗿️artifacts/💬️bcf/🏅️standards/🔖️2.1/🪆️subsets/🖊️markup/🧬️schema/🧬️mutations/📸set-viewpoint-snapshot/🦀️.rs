@@ -8,9 +8,9 @@ use super::*;
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 pub struct SetViewpointSnapshot {
-    pub(crate) topic_guid: String,
-    pub(crate) guid: String,
-    pub(crate) snapshot: Option<Vec<u8>>,
+    pub topic_guid: String,
+    pub guid: String,
+    pub snapshot: Option<Vec<u8>>,
 }
 
 impl SetViewpointSnapshot {

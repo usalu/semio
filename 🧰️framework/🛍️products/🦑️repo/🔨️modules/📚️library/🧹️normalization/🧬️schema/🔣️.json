@@ -383,6 +383,27 @@
           }
         }
       }
+    },
+    "RegenerationCommand": {
+      "description": "🏗️ Neutral repository target selection used by generated taxonomy plans.",
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": [
+        {
+          "const": "bun"
+        },
+        {
+          "const": "repo"
+        },
+        {
+          "const": "run"
+        },
+        {
+          "type": "string"
+        }
+      ],
+      "additionalItems": false
     }
   }
 }

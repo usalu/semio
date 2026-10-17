@@ -37,7 +37,7 @@ import {
   reduceFem2dStoryAction,
   type Fem2dStoryState,
   type FemStoryLocale,
-} from "../../../../🧑‍💻dev/🏗️fem/📖️stories/🧭️coordination/🟦️.ts";
+} from "@semio-tech/s-fem-composition-tests/stories/coordination";
 
 //#region StoryHost
 const FEM2D_RESULTS_BODY_KEY = "fem2d.play.results";

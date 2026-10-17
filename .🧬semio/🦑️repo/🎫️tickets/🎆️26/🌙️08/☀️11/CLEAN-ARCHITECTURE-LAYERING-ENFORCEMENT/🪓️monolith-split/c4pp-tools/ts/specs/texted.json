@@ -1,0 +1,86 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/✏️TextEditor/🟦️.tsx",
+ "importers": "auto",
+ "children": [
+  {
+   "dir": "🏷️editor-types",
+   "doc": "/** 🏷️ Text editor types: the grammar token, diagnostic, session, span, completion, rename and pick shapes, the explicit draft settings, pending and state types and the retained draft records. */",
+   "lines": [
+    [
+     28,
+     67
+    ]
+   ]
+  },
+  {
+   "dir": "📌️retained-drafts",
+   "doc": "/** 📌️ Text editor retained drafts: the bounded retained draft store keyed by surface, its bucket, key, acquire, publish and count helpers. */",
+   "lines": [
+    [
+     70,
+     120
+    ]
+   ]
+  },
+  {
+   "dir": "🖍️buffer-and-edit-helpers",
+   "doc": "/** 🖍️ Text editor buffer and edit helpers: the token class colors, the highlighted buffer, the host label, the multi-span replace, the line range and identifier prefix helpers and the local echo reconciliation. */",
+   "lines": [
+    [
+     122,
+     206
+    ]
+   ]
+  },
+  {
+   "dir": "⏱️caret-cadence",
+   "doc": "/** ⏱️ Text editor caret cadence: the caret blink interval and the cadence installer that blinks, holds and resets the caret. */",
+   "lines": [
+    [
+     208,
+     278
+    ]
+   ]
+  },
+  {
+   "dir": "🚫️edit-refusals-and-keys",
+   "doc": "/** 🚫️ Text editor edit refusals and keys: the refusal of an edit, the applied and refusal outcomes, the read-only refusal reasons, the text editing key test and the document history chords. */",
+   "lines": [
+    [
+     280,
+     325
+    ]
+   ]
+  },
+  {
+   "dir": "📤️outbox-and-scene-packets",
+   "doc": "/** 📤️ Text editor outbox and scene packets: the edit outbox, the echoed lane, the scene without echoed text and the scene packet with its equality test. */",
+   "lines": [
+    [
+     327,
+     427
+    ]
+   ]
+  },
+  {
+   "dir": "✍️explicit-draft-state",
+   "doc": "/** ✍️ Text editor explicit draft state: the draft settings parser, the draft actions and the begin, change, reconcile, cancel and settle transitions with the failure reason. */",
+   "lines": [
+    [
+     429,
+     578
+    ]
+   ]
+  },
+  {
+   "dir": "🪞️session-selection-and-splice-view",
+   "doc": "/** 🪞️ Text editor session selection and splice view: the session selection read and the splice view display. */",
+   "lines": [
+    [
+     582,
+     594
+    ]
+   ]
+  }
+ ]
+}

@@ -25,5 +25,6 @@ semio-framework-async-macros = { workspace = true }
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 semio-framework-pack = { workspace = true }
 semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
+semio-framework-test-fixtures = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-s-artifact-lowpoly-lowpoly-inferences = { workspace = true }
 semio-s-artifact-lowpoly-lowpoly-model = { workspace = true }

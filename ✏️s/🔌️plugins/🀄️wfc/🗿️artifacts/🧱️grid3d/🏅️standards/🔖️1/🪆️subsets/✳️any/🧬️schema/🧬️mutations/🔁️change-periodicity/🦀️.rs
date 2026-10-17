@@ -2,7 +2,6 @@
 //! axis becomes `Boundary::Wrap` in the solve topology; a non-periodic one stays `Boundary::Open`.
 
 use crate::diff::Grid3dDiff;
-use crate::mutations::Grid3dMutation;
 use crate::schema::snapshot::*;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -19,17 +18,23 @@ pub struct ChangePeriodicity {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_periodicity(periodic_x: bool, periodic_y: bool, periodic_z: bool) -> Grid3dMutation {
-    Grid3dMutation::ChangePeriodicity(ChangePeriodicity { periodic_x, periodic_y, periodic_z })
+pub fn change_periodicity<Op>(periodic_x: bool, periodic_y: bool, periodic_z: bool) -> Op
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::change_periodicity::ChangePeriodicity>,
+{
+    Op::from(ChangePeriodicity { periodic_x, periodic_y, periodic_z })
 }
 
-impl MutationKind<Grid3dSnapshot, Grid3dMutation> for ChangePeriodicity {
+impl<Op> MutationKind<Grid3dSnapshot, Op> for ChangePeriodicity
+where
+    Op: protocol::Mutation<Grid3dSnapshot, Diff = Grid3dDiff> + From<ChangePeriodicity>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "periodicity", kind: "change-periodicity", record: "ChangedPeriodicity" };
 
     fn diff(&self, base: &Grid3dSnapshot) -> protocol::MutationOutcome<Grid3dDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Grid3dSnapshot) -> Result<Vec<Grid3dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Grid3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

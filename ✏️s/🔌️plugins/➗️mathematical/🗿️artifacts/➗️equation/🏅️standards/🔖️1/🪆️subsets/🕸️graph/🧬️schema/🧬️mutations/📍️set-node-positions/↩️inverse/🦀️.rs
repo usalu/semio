@@ -2,10 +2,13 @@
 //! nothing has no inverse.
 
 use super::{equation_targets_invariant, EquationNodePosition, SetNodePositions};
-use crate::{EquationMutation, EquationSnapshot};
+use crate::EquationSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &SetNodePositions, base: &EquationSnapshot) -> Result<Vec<EquationMutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op>(payload: &SetNodePositions, base: &EquationSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError>
+where
+    Op: From<crate::standards::v1::subsets::graph::schema::mutations::set_node_positions::SetNodePositions>,
+{
     Ok((|| {
     if equation_targets_invariant(&payload.ids()).is_err() || payload.positions.iter().any(|position| !position.x.is_finite() || !position.y.is_finite()) {
         return Vec::new();
@@ -16,7 +19,7 @@ pub fn inverse(payload: &SetNodePositions, base: &EquationSnapshot) -> Result<Ve
     if !placed.iter().any(|(_, moves)| *moves) {
         return Vec::new();
     }
-    vec![EquationMutation::SetNodePositions(SetNodePositions { positions: placed.into_iter().map(|(position, _)| position).collect() })]
+    vec![Op::from(SetNodePositions { positions: placed.into_iter().map(|(position, _)| position).collect() })]
 
     })())
 }

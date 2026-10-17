@@ -1,4 +1,53 @@
-use super::*;
+use crate::editor::puzzle2d::config::PUZZLE2D_PLAY_BODY_PROPERTIES;
+use crate::editor::puzzle2d::terminology::Puzzle2dLabels;
+use crate::editor::puzzle2d::snapshot::{Puzzle2dInteractionSnapshot, Puzzle2dScene, PUZZLE2D_BOARD_SNAPSHOT_SCHEMA};
+use semio_framework_plugin::BuiltNode;
+use semio_framework_plugin::TreeWindows;
+use semio_framework_pack_json::Value;
+#[allow(unused_imports)]
+use crate::editor::puzzle2d::{snapshot::board_snapshot_edges, snapshot::board_snapshot_nodes, snapshot::snapshot_target_regions, snapshot::puzzle_extension_id, interaction::ui_label, snapshot::PUZZLE2D_PLAY_CONTROLLER_ID};
+#[allow(unused_imports)]
+use semio_framework_plugin::plugin_app_close_prelude::{ActionBinding, Component, NumberStepperProps, Trigger};
+#[allow(unused_imports)]
+use semio_framework_plugin::tree_item_desc;
+#[allow(unused_imports)]
+use semio_framework_plugin::tree_item_with_action;
+#[allow(unused_imports)]
+use semio_framework_plugin::ui_node_list;
+#[allow(unused_imports)]
+use semio_framework_plugin::ActionFactory;
+#[allow(unused_imports)]
+use semio_framework_ui_locale::LocalizedLabel;
+#[allow(unused_imports)]
+use semio_framework_plugin::PanelGroup;
+#[allow(unused_imports)]
+use semio_framework_plugin::PanelTabDefinition;
+#[allow(unused_imports)]
+use semio_framework_plugin::PanelTabKind;
+#[allow(unused_imports)]
+use semio_framework_plugin::PanelTreeBuilder;
+#[allow(unused_imports)]
+use semio_framework_plugin::PluginAssemblyError;
+#[allow(unused_imports)]
+use semio_framework_plugin::UiAssemblyResult;
+#[allow(unused_imports)]
+use semio_framework_plugin::UiFixedList;
+#[allow(unused_imports)]
+use semio_framework_plugin::UiListBuilder;
+#[allow(unused_imports)]
+use semio_framework_plugin::UiMapBuilder;
+#[allow(unused_imports)]
+use semio_framework_plugin::UiText;
+#[allow(unused_imports)]
+use semio_framework_plugin::UiValue;
+#[allow(unused_imports)]
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_ID;
+#[allow(unused_imports)]
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_LABEL;
+#[allow(unused_imports)]
+use semio_framework_ui_contract as ui;
+use crate::editor::puzzle2d::panels::inspection::{IDS_SECTION};
+use crate::editor::puzzle2d::panels::inspection::*;
 
 //#region 🪟️WindowLaws
 const RETIREMENT_DRAIN_STEPS: usize = 4096;

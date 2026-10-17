@@ -248,7 +248,7 @@ impl<'de> Deserialize<'de> for VfsFileNodeKinds {
 }
 
 #[derive(Deserialize)]
-struct VfsSchema {
+pub struct VfsSchema {
     #[serde(rename = "descriptorColumnIds", default)]
     descriptor_column_ids: Vec<String>,
     #[serde(rename = "descriptorKinds", default)]
@@ -257,7 +257,7 @@ struct VfsSchema {
     file_node_kinds: VfsFileNodeKinds,
 }
 
-fn vfs_glyph_icon<'a>(schema: &'a VfsSchema, row: &Value) -> &'a str {
+pub fn vfs_glyph_icon<'a>(schema: &'a VfsSchema, row: &Value) -> &'a str {
     let kind_id = row.get("fileNodeKindId").and_then(|v| v.as_str()).unwrap_or("file");
     if let Some(icon) = schema.file_node_kinds.get(kind_id).and_then(|k| k.icon.as_deref()) {
         return icon;
@@ -269,7 +269,7 @@ fn vfs_glyph_icon<'a>(schema: &'a VfsSchema, row: &Value) -> &'a str {
     }
 }
 
-fn vfs_double_click_action(scene: &UiComponentSceneNode, row: &Value) -> Option<ActionDescriptor> {
+pub fn vfs_double_click_action(scene: &UiComponentSceneNode, row: &Value) -> Option<ActionDescriptor> {
     let uri = row.get("navigateUri").and_then(|v| v.as_str())?;
     if let Some(instance_id) = uri.strip_prefix("os://instance/").filter(|id| !id.is_empty()) {
         return Some(scene_action(
@@ -307,8 +307,8 @@ fn vfs_double_click_action(scene: &UiComponentSceneNode, row: &Value) -> Option<
 /// 🗂️ One row of the flattened, expansion-aware row list the virtual file system paints.
 #[derive(Clone)]
 struct VfsVisibleRow {
-    pub(crate) row: Value,
-    pub(crate) level: u32,
+    pub row: Value,
+    pub level: u32,
     has_children: bool,
     pub(crate) expanded: bool,
 }
@@ -375,18 +375,18 @@ fn vfs_descriptor_binding<'a>(schema: &'a VfsSchema, column_id: &str) -> Option<
     })
 }
 
-fn vfs_descriptor_label(schema: &VfsSchema, column_id: &str) -> String {
+pub fn vfs_descriptor_label(schema: &VfsSchema, column_id: &str) -> String {
     vfs_descriptor_binding(schema, column_id).map(|(column, kind)| if column.label.is_empty() { kind.name.clone() } else { column.label.clone() }).unwrap_or_default()
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum VfsDescriptorValue<'a> {
+pub enum VfsDescriptorValue<'a> {
     Text(&'a str),
     Time { iso: &'a str, format: &'a str },
     Avatar { name: &'a str, icon: Option<&'a str> },
 }
 
-fn vfs_descriptor_value<'a>(schema: &'a VfsSchema, row: &'a Value, column_id: &str) -> Option<VfsDescriptorValue<'a>> {
+pub fn vfs_descriptor_value<'a>(schema: &'a VfsSchema, row: &'a Value, column_id: &str) -> Option<VfsDescriptorValue<'a>> {
     let row_kind = schema.file_node_kinds.get(row.get("fileNodeKindId")?.as_str()?)?;
     if !row_kind.descriptors.iter().any(|column| column.id == column_id) {
         return None;
@@ -404,7 +404,7 @@ fn vfs_descriptor_value<'a>(schema: &'a VfsSchema, row: &'a Value, column_id: &s
     }
 }
 
-fn vfs_avatar_initials(name: &str) -> String {
+pub fn vfs_avatar_initials(name: &str) -> String {
     name.trim().split(' ').take(2).filter_map(|part| part.chars().next()).flat_map(char::to_uppercase).take(2).collect()
 }
 
@@ -431,7 +431,7 @@ fn vfs_time_label(host_id: &str, column_id: &str, iso: &str, format: &str) -> Op
     })
 }
 
-fn vfs_temporal_request(schema: &VfsSchema, visible_rows: &[VfsVisibleRow], descriptor_ids: &[String], body: Rect, row_h: f32, scroll: f32, now_ms: i64) -> Option<ui_contract::HostTemporalFormatRequestV1> {
+pub fn vfs_temporal_request(schema: &VfsSchema, visible_rows: &[VfsVisibleRow], descriptor_ids: &[String], body: Rect, row_h: f32, scroll: f32, now_ms: i64) -> Option<ui_contract::HostTemporalFormatRequestV1> {
     let mut values = Vec::new();
     for (row_index, entry) in visible_rows.iter().enumerate() {
         let y = body.y + row_index as f32 * row_h - scroll;
@@ -457,9 +457,9 @@ fn vfs_temporal_request(schema: &VfsSchema, visible_rows: &[VfsVisibleRow], desc
 /// 📐️ A virtual file system's fixed metrics — the ONE derivation the paint and the pointer path share.
 struct VfsMetrics {
     pub(crate) header_h: f32,
-    pub(crate) row_h: f32,
+    pub row_h: f32,
     pub(crate) pad: f32,
-    pub(crate) body: Rect,
+    pub body: Rect,
 }
 
 pub fn vfs_metrics(inner: Rect, theme: &Theme) -> VfsMetrics {
@@ -711,9 +711,3 @@ pub fn render_vfs(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Framewor
 }
 
 //#endregion VirtualFileSystem
-
-//#region VirtualFileSystemTests
-#[cfg(test)]
-#[path = "../../../🧪️tests/🔬️wgpu-virtual-file-system/🦀️.rs"]
-mod virtual_file_system_tests;
-//#endregion VirtualFileSystemTests

@@ -1,12 +1,14 @@
 //! ↩️ Inverse for `ChangeGridSubdivisions`.
 use super::ChangeGridSubdivisions;
-use crate::schema::mutations::NoteMutation;
 use crate::NoteSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(_payload: &ChangeGridSubdivisions, base: &NoteSnapshot) -> Result<Vec<NoteMutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op>(_payload: &ChangeGridSubdivisions, base: &NoteSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError>
+where
+    Op: From<crate::standards::v1::subsets::canvas::schema::mutations::change_grid_subdivisions::ChangeGridSubdivisions>,
+{
     Ok((|| {
-    vec![NoteMutation::ChangeGridSubdivisions(ChangeGridSubdivisions { new_subdivisions: base.grid_subdivisions })]
+    vec![Op::from(ChangeGridSubdivisions { new_subdivisions: base.grid_subdivisions })]
 
     })())
 }

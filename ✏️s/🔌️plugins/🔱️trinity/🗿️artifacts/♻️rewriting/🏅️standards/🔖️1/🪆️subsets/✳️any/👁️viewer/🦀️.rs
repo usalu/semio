@@ -8,7 +8,8 @@
 use crate::standards::v1::subsets::any::schema::mutations::RewriteRuleMutation;
 use crate::viewer::rewriting::modes::view;
 use crate::viewer::rewriting::modes::view::windows::rule;
-use crate::{RewritingSnapshot, REWRITE_RULE_SCHEMA, TRINITY_REWRITING_DIALECT};
+use crate::standards::v1::subsets::any::schema::snapshot::RewritingSnapshot;
+use crate::standards::v1::subsets::any::schema::model::{REWRITE_RULE_SCHEMA, TRINITY_REWRITING_DIALECT};
 use semio_framework_plugin::ArtifactView;
 use semio_framework_plugin::ArtifactViewer;
 use semio_framework_plugin::ConfigView;
@@ -68,14 +69,14 @@ impl ArtifactViewer for TrinityRewritingViewer {
     type Command = TrinityRewritingViewCommand;
 
     const DIALECT: Dialect = TRINITY_REWRITING_DIALECT;
-    /// 🧬️ The crate's one loaded-parent child projection (`crate::rewriting_child_restore_projection`).
+    /// 🧬️ The crate's one loaded-parent child projection (`crate::standards::v1::subsets::any::schema::snapshot::rewriting_child_restore_projection`).
     fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<semio_framework_composition_admission::ChildRestoreProjection<'_>, Fault> {
-        crate::rewriting_child_restore_projection(snapshot)
+        crate::standards::v1::subsets::any::schema::snapshot::rewriting_child_restore_projection(snapshot)
     }
     const DOCUMENT_SCHEMA: &'static str = REWRITE_RULE_SCHEMA;
 
     fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Result<Option<Vec<u8>>, semio_framework_value::ValueError> {
-        crate::content::genesis_working_child_pack(snapshot, slot, child_id)
+        crate::standards::v1::subsets::any::content::genesis_working_child_pack(snapshot, slot, child_id)
     }
 
     fn initial_snapshot() -> RewritingSnapshot {
@@ -120,7 +121,5 @@ pub fn create_trinity_rewriting_viewer() -> semio_framework_plugin::AppDefinitio
 //#endregion 🔖️Manifest
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

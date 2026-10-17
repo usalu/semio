@@ -51,6 +51,6 @@ export const stdioSemioV1ObjectDiffTextGuardConstant = <T extends string | numbe
 export function parseSemioObjectDiffDsl(value: unknown, at = "$"): SemioObjectDiffDsl {
   const row = stdioSemioV1ObjectDiffTextGuardObject(value, at);
   return {
-    line: row["line"] === undefined ? undefined : stdioSemioV1ObjectDiffTextGuardString(row["line"], `${at}.line`),
+    line: stdioSemioV1ObjectDiffTextGuardString(row["line"], `${at}.line`),
   };
 }

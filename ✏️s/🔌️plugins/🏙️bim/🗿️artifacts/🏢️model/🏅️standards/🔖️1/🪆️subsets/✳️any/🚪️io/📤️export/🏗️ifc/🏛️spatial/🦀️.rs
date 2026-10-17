@@ -1,8 +1,8 @@
 //! 🏛️ The spatial structure: `IfcProject` with units and context, `IfcSite` with its compound-angle position, `IfcBuilding`, `IfcBuildingStorey`
 //! and the `IfcRelAggregates` chain between them.
 
-use super::writer::{en, int, list, opt_text, real, refs, rf, typed, unset, V};
-use super::{BuildingRef, Export, Quantity, StoreyRef};
+use crate::standards::v1::subsets::any::io::export::ifc::writer::{en, int, list, opt_text, real, refs, rf, typed, unset, V};
+use crate::standards::v1::subsets::any::io::export::ifc::context::{BuildingRef, Export, Quantity, StoreyRef};
 
 /// 🧭️ `IfcCompoundPlaneAngleMeasure` of an angle in degrees: sign on every component, millionths of a second last.
 pub fn compound_angle(degrees: f64) -> V {

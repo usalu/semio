@@ -1,6 +1,6 @@
 //! 📡️ `set-proximity-radius` command.
 
-use {crate::editor::puzzle2d::snapshot::puzzle2d_window_and_measures_scope, crate::editor::puzzle2d::Puzzle2dActionCtx, crate::editor::puzzle2d::snapshot::PUZZLE2D_PROXIMITY_RADIUS_MAX};
+use {crate::editor::puzzle2d::snapshot::puzzle2d_window_and_measures_scope, crate::editor::puzzle2d::interaction::Puzzle2dActionCtx, crate::editor::puzzle2d::snapshot::PUZZLE2D_PROXIMITY_RADIUS_MAX};
 use semio_framework_pack_json::Value;
 
 /// 📡️ Retargets the board units within which a dropped node auto-connects. An absolute `value`

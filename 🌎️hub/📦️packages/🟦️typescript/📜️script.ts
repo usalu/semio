@@ -1,9 +1,9 @@
 #!/usr/bin/env bun
 import{createIssuedResourceControlV1}from"../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
-import {readHubDrillRequestV1} from "../../🧪️tests/💾️backup-restore/🎛️request/🟦️.ts";
+import {readHubDrillRequestV1} from "../../🧪️testing/💾️backup-restore/🎛️request/🟦️.ts";
 import {createRequestedIssuedResourceControlV1} from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {repositoryLeaseDirectoryV1} from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts";
-import {runHubVitestV1} from "../../🧪️tests/🎛️run/🟦️.ts";
+import {runHubVitestV1} from "../../🧪️testing/🎛️run/🟦️.ts";
 import {scriptCompilerAdmissionControlV1} from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import { typecheckRepositoryProjectV1 } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🟦️typescript/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -21,7 +21,7 @@ import { runBunxStatus, runCargo, runVitest, runRepositoryTestCommand } from "..
 import { BundleScript, ScriptRouter } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { withBuiltLocalHubHostV1,HUB_BACKEND_ENGINE, HUB_BACKENDS, claimHubBackend, ensureHubBackend, freeLoopbackPort, hubBackendEngineVersion, hubBackendIdentity, hubBackendName, hubBackendStatus, hubDevBinaryPath, stopHubBackend, type HubBackendName, type HubBackendProgress } from "../../🚀️local-bootstrap/🏃️execution/🟦️.ts";
-import { acceptanceCheckResult, publishAcceptanceCheckResult, withAcceptanceRecord } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/🟦️.ts";
+import { acceptanceCheckResult, publishAcceptanceCheckResult, withAcceptanceRecord } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/🎯️acceptance/📋️orchestration/🟦️.ts";
 
 const HUB_RUST_DIR = "🌎️hub/📦️packages/🦀️rust";
 
@@ -176,7 +176,7 @@ class BackupRestoreDrillScript extends BundleScript {
     if(segments.includes("--catalog-root")||segments.includes("--keep")||process.env.OS_HUB_BINARY!==undefined)throw Error("Drill executable, catalog and data are owned by actual Host callbacks; free path and retained scratch options are unsupported");
     const startedAt = new Date();
     const interrupt = interruptSignal();
-    const { runBackupRestoreDrill } = await import("../../🧪️tests/💾️backup-restore/🟦️.ts");
+    const { runBackupRestoreDrill } = await import("../../🧪️testing/💾️backup-restore/🟦️.ts");
     await withAcceptanceRecord(this.repoRoot, "hub-backup-restore", async () => {
       const request=readHubDrillRequestV1({version:1,kind:flagValue(segments,"--kind")??"note",edits:Number(flagValue(segments,"--edits")??20),rounds:Number(flagValue(segments,"--rounds")??1),heavyKinds:[]}),phase=createRequestedIssuedResourceControlV1(scriptCompilerAdmissionControlV1(this.invocation,"hub:backup-drill",0),0,interrupt.signal);
       const rounds=await withBuiltLocalHubHostV1(this.invocation,phase,(host,context)=>runBackupRestoreDrill(host,context.control,request,line=>console.log(`[backup-drill] ${line}`)));
@@ -209,7 +209,7 @@ class ShutdownDrillScript extends BundleScript {
     if(segments.includes("--catalog-root")||segments.includes("--keep")||process.env.OS_HUB_BINARY!==undefined)throw Error("Drill executable, catalog and data are owned by actual Host callbacks; free path and retained scratch options are unsupported");
     const startedAt = new Date();
     const interrupt = interruptSignal();
-    const { runShutdownDrill, SHUTDOWN_EXIT_BOUND_MS } = await import("../../🧪️tests/💾️backup-restore/🟦️.ts");
+    const { runShutdownDrill, SHUTDOWN_EXIT_BOUND_MS } = await import("../../🧪️testing/💾️backup-restore/🟦️.ts");
     await withAcceptanceRecord(this.repoRoot, "hub-graceful-shutdown", async () => {
       const request=readHubDrillRequestV1({version:1,kind:flagValue(segments,"--kind")??"note",edits:Number(flagValue(segments,"--edits")??20),rounds:Number(flagValue(segments,"--rounds")??1),heavyKinds:(flagValue(segments,"--heavy-kinds")??"2d.puzzle,3d.puzzle,5d.puzzle,s.gis.gismap").split(",").filter(Boolean)}),phase=createRequestedIssuedResourceControlV1(scriptCompilerAdmissionControlV1(this.invocation,"hub:shutdown-drill",0),0,interrupt.signal);
       const rounds=await withBuiltLocalHubHostV1(this.invocation,phase,(host,context)=>runShutdownDrill(host,context.control,request,line=>console.log(`[shutdown-drill] ${line}`)));

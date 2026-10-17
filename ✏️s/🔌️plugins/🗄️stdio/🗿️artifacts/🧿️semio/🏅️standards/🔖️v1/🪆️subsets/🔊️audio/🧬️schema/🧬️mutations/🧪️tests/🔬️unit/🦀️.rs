@@ -1,6 +1,7 @@
 use crate::io::binary::mutations::{wire_tag, COMPONENT_PROTOCOL_SEMIO as WIRE_PROTOCOL};
 use crate::io::text::mutations::print_audio_mutation;
 use super::*;
+use semio_framework_test_fixtures::fixture_text;
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn sample_channel(seed: f32) -> SemioAudioChannel {
@@ -98,7 +99,7 @@ fn kinds_match_the_enum_and_the_catalog() {
         assert_eq!(KINDS[ordinal], print_audio_mutation(&mutation).split(' ').next().unwrap_or_default(), "KINDS[{ordinal}] must be the keyword {mutation:?} prints");
     }
     assert!(seen.iter().all(|hit| *hit), "every declared variant must be represented in all_variants");
-    let manifest = include_str!("../../../../🔮️oracles/🔣️.json");
+    let manifest = fixture_text!("../../../../🔮️oracles/🔣️.json");
     for kind in KINDS {
         assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
     }

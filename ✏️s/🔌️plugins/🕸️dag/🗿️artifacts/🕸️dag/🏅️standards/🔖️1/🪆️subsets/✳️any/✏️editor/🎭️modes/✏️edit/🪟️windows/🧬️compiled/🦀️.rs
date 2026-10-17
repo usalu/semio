@@ -57,7 +57,5 @@ pub fn render(scene: &DagScene, camera: &DagCamera) -> UiAssemblyResult<BuiltNod
 //#endregion 🔖️Render
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

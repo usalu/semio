@@ -47,6 +47,8 @@ semio-s-artifact-cad-cad-model-diff = { workspace = true }
 semio-s-artifact-cad-cad-mutations = { workspace = true }
 
 [dev-dependencies]
+semio-framework-io-sqlite-snapshot-testing-backing = { path = "../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️testing/💰️backing/📦️packages/🦀️rust" }
+semio-framework-test-fixtures = { path = "../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-framework-ui-contract = { workspace = true }
 semio-s-artifact-cad-cad-picking = { workspace = true }
 machine = { workspace = true }

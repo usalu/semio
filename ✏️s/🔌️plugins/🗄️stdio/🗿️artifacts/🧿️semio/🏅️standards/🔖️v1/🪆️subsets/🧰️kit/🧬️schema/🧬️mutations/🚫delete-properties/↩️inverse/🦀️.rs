@@ -1,14 +1,17 @@
 //! ↩️ Inverse for `DeleteProperties`.
 
-use crate::schema::mutations::{create_properties, SemioKitMutation};
+use crate::schema::mutations::create_properties;
 use crate::schema::snapshot::SemioKitSnapshot;
 
 //#region 🔖️Inverse
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn inverse(_payload: &super::DeleteProperties, base: &SemioKitSnapshot) -> Result<Vec<SemioKitMutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op>(_payload: &super::DeleteProperties, base: &SemioKitSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError>
+where
+    Op: From<crate::schema::mutations::create_properties::CreateProperties>,
+{
     Ok((|| {
     match &base.properties {
-        Some(existing) => vec![SemioKitMutation::CreateProperties(create_properties::CreateProperties { child_id: existing.child_id.clone(), target: existing.target.clone() })],
+        Some(existing) => vec![Op::from(create_properties::CreateProperties { child_id: existing.child_id.clone(), target: existing.target.clone() })],
         None => Vec::new(),
     }
 

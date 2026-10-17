@@ -282,5 +282,4 @@ test("operation-capped replay counts folded mutations independently of structura
   expect(turns+1).toBe(law.maximumTurns);
   expect(law.zeroCapChangesProjection).toBe(false);
   expect(law.structuralDeadlineChecksRequired).toBe(true);
-  console.log(`[DEBUG] Independent operation authority ${law.mutationCount} folded mutations cap=${law.operationCap} lifecycle turns<=${law.maximumTurns}`);
 });

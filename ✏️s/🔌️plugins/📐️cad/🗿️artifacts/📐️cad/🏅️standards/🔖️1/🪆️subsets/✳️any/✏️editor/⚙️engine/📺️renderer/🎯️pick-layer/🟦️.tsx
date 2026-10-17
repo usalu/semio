@@ -11,54 +11,24 @@ import {
   type ThreeCamera,
   type Ray as ThreeRay
 } from "@semio-tech/framework/ui/targets/react";
-import { type Vec3 } from "../../../../../../../../../../⚙️engine/📔️registry/🟦️.ts";
-import { type ModelEntityKind } from "../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️.ts";
-import { resolveTypologyStyle } from "../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🎨️typology/🟦️.ts";
-import { type InteractionSpec } from "../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🎰️interaction-spec/🟦️.ts";
-import { defaultModelDefinitionId, type ResolvedTypologyStyle } from "../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/📥️definition-catalog/🟦️.ts";
-import { type SpatialEntityFlags } from "../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🗺️paths/🟦️.ts";
-import { objectPrimitiveEntries, resolvePrimitiveRefKind, Model } from "../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🧊️model/🟦️.ts";
-import { modelDefinitionUsesGeometryPicking, listModelObjectsForModelDefinition } from "../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🧭️definition-ownership/🟦️.ts";
-import { type InteractionEvent, type SelectionTarget } from "../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🪪️selection/🟦️.ts";
-import { mergeInteractionSpatial } from "../../🎬️actions/🟦️.ts";
-import { isInteractionSessionActive } from "../../🗿️artifact/🟦️.ts";
+import { type Vec3 } from "@semio-tech/cad-engine-ts/registry";
+import { type ModelEntityKind } from "@semio-tech/s-spatial-kernel-ts/geometry";
+import { resolveTypologyStyle } from "@semio-tech/s-spatial-kernel-ts/geometry/typology";
+import { type InteractionSpec } from "@semio-tech/s-spatial-kernel-ts/geometry/interaction-spec";
+import { defaultModelDefinitionId, type ResolvedTypologyStyle } from "@semio-tech/s-spatial-kernel-ts/geometry/definition-catalog";
+import { type SpatialEntityFlags } from "@semio-tech/s-spatial-kernel-ts/geometry/paths";
+import { objectPrimitiveEntries, resolvePrimitiveRefKind, Model } from "@semio-tech/s-spatial-kernel-ts/geometry/model";
+import { modelDefinitionUsesGeometryPicking, listModelObjectsForModelDefinition } from "@semio-tech/s-spatial-kernel-ts/geometry/definition-ownership";
+import { type InteractionEvent, type SelectionTarget } from "@semio-tech/s-spatial-kernel-ts/geometry/selection";
+import { mergeInteractionSpatial } from "../../🎬️actions/🎰️interaction-state/🟦️.ts";
+import { isInteractionSessionActive } from "../../🗿️artifact/🏃️interaction-runtime/🟦️.ts";
 import { Line, type SolidRef, THREE } from "../🔌️ports/🟦️.ts";
 import { spatialSceneColors } from "../🎨️style/🟦️.ts";
-import {
-  buildGeometryTypologyIndex,
-  collectGeometryEdgeSegments,
-  collectGeometryEdgeSegmentsForMembers,
-  collectSolidPrimitiveMemberIds,
-  createSpatialPickTargets,
-  filterSpatialPickTargets,
-  filterSpatialPickTargetsForActiveView,
-  filterSpatialPickTargetsForEntityFlags,
-  filterSpatialPickTargetsForVisibility,
-  GEOMETRY_KIND_TO_OBJECT_PICK,
-  geometryBuckets,
-  geometryEntityNurbsPoles,
-  geometryEntityWireSegments,
-  kernelGeometryKindForObjectPick,
-  pinnedPickTargetKeys,
-  raycastNone,
-  resolveSpatialEntityFlags,
-  selectionTargetHoverKey,
-  type SpatialDragSelectionState,
-  type SpatialGeometryPickTargetKind,
-  spatialHoverKeyAliases,
-  spatialHoverKeysMatch,
-  type SpatialPickGeometry,
-  type SpatialPickKindToggles,
-  type SpatialPickTarget,
-  spatialPickTargetKey,
-  type SpatialPickTargetKind,
-  type SpatialSelectionCoverage,
-  type SpatialSelectionMethod,
-  type SpatialSelectionMode,
-  type SpatialSelectionRequest,
-  spatialSelectionTargetKey,
-  targetStyle
-} from "../🧲️geometry-targets/🟦️.tsx";
+import { raycastNone } from "../🧲️geometry-targets/📐️preview-layout/🟦️.ts";
+import { filterSpatialPickTargetsForActiveView, filterSpatialPickTargetsForEntityFlags, filterSpatialPickTargetsForVisibility, GEOMETRY_KIND_TO_OBJECT_PICK, kernelGeometryKindForObjectPick, selectionTargetHoverKey, type SpatialDragSelectionState, type SpatialGeometryPickTargetKind, type SpatialPickGeometry, type SpatialPickKindToggles, type SpatialPickTarget, spatialPickTargetKey, type SpatialPickTargetKind, type SpatialSelectionCoverage, type SpatialSelectionMethod, type SpatialSelectionMode, type SpatialSelectionRequest, spatialSelectionTargetKey } from "../🧲️geometry-targets/🎯️pick-model/🟦️.ts";
+import { buildGeometryTypologyIndex, collectGeometryEdgeSegments, collectGeometryEdgeSegmentsForMembers, collectSolidPrimitiveMemberIds, createSpatialPickTargets, filterSpatialPickTargets, geometryBuckets, geometryEntityNurbsPoles, geometryEntityWireSegments } from "../🧲️geometry-targets/🧬️geometry-index/🟦️.ts";
+import { pinnedPickTargetKeys, spatialHoverKeyAliases, spatialHoverKeysMatch, targetStyle } from "../🧲️geometry-targets/🎨️pick-styling/🟦️.ts";
+import { resolveSpatialEntityFlags } from "../🧲️geometry-targets/🧊️mesh-transfers/🟦️.ts";
 
 // #region 🧲️GeometryInteraction
 function targetBounds(points: readonly Vec3[]): { readonly center: Vec3; readonly size: Vec3 } | null {

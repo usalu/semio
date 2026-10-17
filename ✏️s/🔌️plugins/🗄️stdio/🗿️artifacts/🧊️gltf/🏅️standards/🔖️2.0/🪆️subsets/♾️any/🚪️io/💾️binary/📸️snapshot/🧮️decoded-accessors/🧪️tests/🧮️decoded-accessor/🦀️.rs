@@ -1,8 +1,9 @@
 //! 🧮️ Neutral decoded geometry fixture verifies the physical-to-semantic inference boundary.
-use super::*;
+use crate::standards::v2_0::subsets::any::io::inference_projection::*;
+use semio_framework_test_fixtures::fixture_text;
 #[test]
 fn decoded_inference_projection_preserves_values_and_reprojects_mutations() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../🧪️tests/🧫️fixtures/📸️snapshot/🧮️decoded-accessor/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../../../../../../🧪️tests/🧫️fixtures/📸️snapshot/🧮️decoded-accessor/🔣️.json")).unwrap();
     let mut snapshot=semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::demo_gltf_snapshot();
     let bytes:Vec<u8>=fixture["bytes"].as_array().unwrap().iter().map(|value|value.as_u64().unwrap() as u8).collect();
     snapshot.buffers=vec![bytes];
@@ -20,5 +21,4 @@ fn decoded_inference_projection_preserves_values_and_reprojects_mutations() {
     let changed=project_gltf_inference(&snapshot,&mut |_,_|true).unwrap();
     assert_eq!(changed.accessor(0).unwrap().components[0],2.0);
     assert!(project_gltf_inference(&snapshot,&mut |_,_|false).is_err());
-    eprintln!("[DEBUG] glTF projection decoded {} values, reprojected changed bytes, and refused cancellation",expected.len());
 }

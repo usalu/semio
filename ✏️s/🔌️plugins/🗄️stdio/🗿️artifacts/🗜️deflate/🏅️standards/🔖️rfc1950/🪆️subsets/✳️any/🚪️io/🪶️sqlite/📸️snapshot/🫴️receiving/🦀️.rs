@@ -3,7 +3,7 @@ use super::{DeflateSnapshot,DeflateLevelHint};
 use semio_framework_os_kernel::{io::control::{NativeSnapshotBodyWallet,NativeSnapshotDecodeOwner,NativeSnapshotEncodeOwner},sqlite_snapshot::{SqliteDatabase,SqliteTable,SqliteValue,SqliteSnapshotControl,SqliteSnapshotReceivingControl,SqliteSnapshotPhase,artifact::receiving::{Port,Direction,Projection,Scalar,row,cell,text_cell,push_row,sort,integer,ordinal,validate_schema_sql,check_database,settle}}};
 use semio_framework_value::{ValueError,ValueRefusalKind};
 use std::{cell::{Cell,RefCell},mem::size_of};
-type Result<T>=std::result::Result<T,ValueError>;
+pub type Result<T>=std::result::Result<T,ValueError>;
 type Paid<'a,'b,'c>=Port<'a,'b,'c,NativeSnapshotBodyWallet>;
 const SQL:&str=include_str!("../🗄️.sql");
 const TABLES:[(&str,usize);2]=[("deflate_document",6),("deflate_payload_byte",4)];
@@ -13,7 +13,7 @@ fn empty()->DeflateSnapshot{DeflateSnapshot{schema:String::new(),compression_met
 #[derive(semio_framework_value::RetireOwned)]
 struct Frame{projection:Projection,snapshot:DeflateSnapshot,ids:Vec<usize>,ordered:Vec<usize>,status:Option<Result<()>>}
 impl Frame{fn new()->Self{Self{projection:Projection::new(),snapshot:empty(),ids:Vec::new(),ordered:Vec::new(),status:None}}}
-fn definition(index:usize)->&'static str{SQL.split(';').map(str::trim).filter(|text|!text.is_empty()).nth(index).unwrap()}
+pub fn definition(index:usize)->&'static str{SQL.split(';').map(str::trim).filter(|text|!text.is_empty()).nth(index).unwrap()}
 fn table(database:&SqliteDatabase,index:usize)->Result<&SqliteTable>{database.tables.iter().find(|table|table.name.eq_ignore_ascii_case(TABLES[index].0)).ok_or_else(invalid)}
 fn bounded(row:&semio_framework_os_kernel::sqlite_snapshot::SqliteRow,column:usize,maximum:i64)->Result<i64>{let value=integer(row,column)?;if !(0..=maximum).contains(&value){return Err(invalid())}Ok(value)}
 fn equal(left:&str,right:&str,port:&mut Paid<'_,'_,'_>)->Result<()>{port.work(2,0)?;if left.len()!=right.len(){return Err(invalid())}let total=left.len();port.control.checkpoint(port.phase(),0,total)?;for(index,(left,right))in left.as_bytes().chunks(256).zip(right.as_bytes().chunks(256)).enumerate(){port.work(2,0)?;if left!=right{return Err(invalid())}port.control.checkpoint(port.phase(),index*256+left.len(),total)?}Ok(())}
@@ -29,7 +29,7 @@ fn read(database:&SqliteDatabase,frame:&mut Frame,source:Option<&DeflateSnapshot
  if let Some(source)=source{if (method,window,hint,dictionary,rows.len())!=(source.compression_method,source.window_bits,source.compression_level_hint.to_bits(),source.dict_id,source.payload.len()){return Err(invalid())}equal(&source.schema,schema,port)?}else{port.control.admit_reconstruction_bytes(schema.len())?;port.text(schema,&mut frame.snapshot.schema,2)?;port.work(2,size_of::<DeflateSnapshot>())?;frame.snapshot.compression_method=method;frame.snapshot.window_bits=window;frame.snapshot.compression_level_hint=DeflateLevelHint::from_bits(hint);frame.snapshot.dict_id=dictionary;port.vector(rows.len(),&mut frame.snapshot.payload,2)?;}
  for(position,index)in frame.ordered.iter().copied().enumerate(){port.work(2,size_of::<u8>())?;let row=&rows[index];if integer(row,2)?!=ordinal(position)?{return Err(invalid())}let value=bounded(row,3,255)?as u8;if let Some(source)=source{if source.payload[position]!=value{return Err(invalid())}}else{frame.snapshot.payload.push(value)}if(position+1)%256==0{port.control.checkpoint(port.phase(),position+1,rows.len())?}}port.control.checkpoint(port.phase(),rows.len(),rows.len())
 }
-struct Settlement<'a,'b>{control:RefCell<SqliteSnapshotReceivingControl<'a,'b>>,before:usize,remaining:usize,phase:SqliteSnapshotPhase,post_body:Cell<bool>,cause:RefCell<Option<ValueError>>}
+pub struct Settlement<'a,'b>{control:RefCell<SqliteSnapshotReceivingControl<'a,'b>>,before:usize,remaining:usize,phase:SqliteSnapshotPhase,post_body:Cell<bool>,cause:RefCell<Option<ValueError>>}
 impl<'a,'b> Settlement<'a,'b>{
  fn new(control:&'a mut SqliteSnapshotControl<'b>,before:usize,phase:SqliteSnapshotPhase)->Self{let remaining=control.allocation_remaining_bytes();Self{control:RefCell::new(control.receiving_scope()),before,remaining,phase,post_body:Cell::new(false),cause:RefCell::new(None)}}
  fn settle(&self,owned:usize)->Result<()>{settle(&mut self.control.borrow_mut(),self.remaining,self.before,owned)}
@@ -48,6 +48,3 @@ receive!(project_receiving,NativeSnapshotDecodeOwner,semio_framework_value::nati
 receive!(reconstruct_receiving,NativeSnapshotEncodeOwner,semio_framework_value::native_encoding::NativeEncodeProgress,Encode,ReconstructSnapshot,DeflateSnapshot,|_:Option<&DeflateSnapshot>,database:Option<&SqliteDatabase>,frame:&mut Frame,port:&mut Paid<'_,'_,'_>|read(database.unwrap(),frame,None,port),|frame:&mut Frame|Ok(std::mem::replace(&mut frame.snapshot,empty())));
 receive!(validate_decoding,NativeSnapshotDecodeOwner,semio_framework_value::native_decoding::NativeDecodeProgress,Decode,ProjectSnapshot,(),|source:Option<&DeflateSnapshot>,database:Option<&SqliteDatabase>,frame:&mut Frame,port:&mut Paid<'_,'_,'_>|read(database.unwrap(),frame,source,port),|_:&mut Frame|Ok(()));
 receive!(validate_encoding,NativeSnapshotEncodeOwner,semio_framework_value::native_encoding::NativeEncodeProgress,Encode,ReconstructSnapshot,(),|source:Option<&DeflateSnapshot>,database:Option<&SqliteDatabase>,frame:&mut Frame,port:&mut Paid<'_,'_,'_>|read(database.unwrap(),frame,source,port),|_:&mut Frame|Ok(()));
-#[cfg(test)]
-#[path="🧪️tests/🦀️.rs"]
-mod tests;

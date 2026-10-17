@@ -103,8 +103,5 @@ pub fn compute_semio_cad_bounds(snapshot: &SemioCadSnapshot) -> SemioCadBounds {
 }
 //#endregion 🔖️Bounds
 
-#[cfg(test)]
-//#region 🧪️Tests
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

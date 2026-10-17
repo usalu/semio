@@ -1,7 +1,7 @@
 //! 🫧️ Real local-ephemeral publication snapshot fixture.
 
-use pack::snapshot::{ArtifactDsl,ArtifactPack};
-use crate::store::{PackDecodeOptions,PackEncodeOptions,PackError,TextError,TextSpan};
+use pack::snapshot::{ArtifactDsl, ArtifactPack};
+use semio_framework_os_kernel::{PackDecodeOptions, PackEncodeOptions, PackError, TextError, TextSpan};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, serde::Serialize, ToValue, serde::Deserialize, FromValue)]
@@ -66,4 +66,5 @@ impl protocol::MutationDiff<PublicationTransient> for PublicationTransientDiff {
 
 #[path = "../../🧪️testing/📢️publication-fixtures/🫧️transient/🧬️mutations/🦀️.rs"]
 pub mod mutations;
-pub use mutations::*;
+pub use crate::publication_fixture::transient::mutations::change_publication_transient::ChangePublicationTransient;
+pub use crate::publication_fixture::transient::mutations::{PublicationTransientMutation, change_publication_transient};

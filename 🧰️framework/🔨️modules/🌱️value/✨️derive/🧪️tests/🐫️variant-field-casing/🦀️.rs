@@ -16,6 +16,7 @@
 //!    that carrier instead of handing the whole object to a scalar `FromValue` that can never
 //!    accept it. serde refuses this shape at serialization time rather than defining a carrier, so
 //!    the oracle here is serde's own error — asserted, not asserted-about.
+use semio_framework_test_fixtures::fixture_text;
 use semio_framework_value::{DslValue, FromValue, ToValue};
 
 #[derive(Debug, Clone, PartialEq, ToValue, FromValue, serde::Serialize, serde::Deserialize)]
@@ -53,7 +54,7 @@ fn variant_level_field_casing_overrides_container_and_matches_neutral_serde_orac
         assert_eq!(T::from_value(expected.clone().into()).expect("native decoding"), value);
         assert_eq!(serde_json::from_value::<T>(expected.clone()).expect("serde decoding"), value);
     }
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🐫️variant-field-casing/🔣️.json")).expect("neutral field casing corpus");
+    let corpus: serde_json::Value = serde_json::from_str(fixture_text!("../../🧪️tests/🧫️fixtures/🐫️variant-field-casing/🔣️.json")).expect("neutral field casing corpus");
     verify(VariantOverrideInternal::Bar { material_id: "m1".into(), section_id: "s1".into() }, &corpus["internal"]);
     verify(VariantOverrideExternal::Bar { material_id: "m1".into(), section_id: "s1".into() }, &corpus["external"]);
     verify(VariantOverrideAdjacent::Bar { material_id: "m1".into(), section_id: "s1".into() }, &corpus["adjacent"]);

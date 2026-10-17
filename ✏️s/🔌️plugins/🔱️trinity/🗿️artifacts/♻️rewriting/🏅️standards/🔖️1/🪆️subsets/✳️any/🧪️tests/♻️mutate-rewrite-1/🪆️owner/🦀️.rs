@@ -6,7 +6,8 @@ use semio_s_artifact_trinity_rewriting::standards::v1::subsets::any::io::text::s
 use semio_s_artifact_trinity_rewriting::standards::v1::subsets::any::io::text::snapshot::{encode_rewriting_snapshot_json};
 use semio_s_artifact_stdio_semio_graph::io::text::snapshot::decode_semio_graph_snapshot_json;
 use semio_s_artifact_stdio_semio_graph::io::text::snapshot::encode_semio_graph_snapshot_json;
-use semio_s_artifact_trinity_jack::{jack_content_for_handle, materialize_jack_snapshot};
+use semio_s_artifact_trinity_jack_semio_content::{materialize_jack_snapshot, SemioJackContentOwner};
+use semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::content::jack_content_for_handle;
 
 pub fn declared_text(ctx: &Context, role: &str) -> Result<String, String> {
     let prefix = format!("{role} ");

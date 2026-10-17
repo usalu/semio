@@ -266,5 +266,39 @@
         "PATH": "/compiler"
       }
     }
-  ]
+  ],
+  "schemaMutations": [
+    {
+      "name": "version-contract",
+      "path": [
+        "properties",
+        "version",
+        "const"
+      ],
+      "value": 99
+    },
+    {
+      "name": "mode-contract",
+      "path": [
+        "properties",
+        "facts",
+        "properties",
+        "mode",
+        "enum"
+      ],
+      "value": [
+        "unavailable"
+      ]
+    },
+    {
+      "name": "digest-contract",
+      "path": [
+        "properties",
+        "digest",
+        "pattern"
+      ],
+      "value": "^never$"
+    }
+  ],
+  "preparationIterations": 128
 }

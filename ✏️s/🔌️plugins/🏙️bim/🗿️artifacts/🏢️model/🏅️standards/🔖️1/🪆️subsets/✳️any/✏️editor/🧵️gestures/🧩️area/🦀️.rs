@@ -5,7 +5,8 @@
 //! around the click close) hangs a ceiling over its outline and islands.
 
 use super::plane::{angle, counter_clockwise, dist, from_point2, loop_of, rectangle, same, signed_area, P};
-use super::session::{Mark, Pointer, Preview, Step, Style, Tool, ToolContext, ToolEvent, STOREY_MISSING, TYPE_MISSING};
+use super::session::{Pointer, Step, Tool, ToolContext, ToolEvent, STOREY_MISSING, TYPE_MISSING};
+use crate::editor::bim::marks::{Mark, Preview, Style};
 use crate::editor::bim::entities::ceilings::DEFAULT_DROP;
 use crate::standards::v1::subsets::any::schema::inferences::spaces::{SpaceRoom, SpaceStatus};
 use crate::standards::v1::subsets::any::schema::{snapshot::{Ceiling, Point2, Roof, RoofShape, Slab, Space, SpaceBoundary, Vertex}, mutations::ModelMutation};

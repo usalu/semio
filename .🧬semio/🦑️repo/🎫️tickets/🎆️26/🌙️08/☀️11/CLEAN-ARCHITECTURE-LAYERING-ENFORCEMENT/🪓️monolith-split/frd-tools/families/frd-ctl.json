@@ -1,0 +1,8 @@
+{
+ "name": "frd-ctl",
+ "crates": [
+  "semio-framework-test-fixtures",
+  "semio-s-artifact-stdio-svg"
+ ],
+ "note": "FRD negative control"
+}

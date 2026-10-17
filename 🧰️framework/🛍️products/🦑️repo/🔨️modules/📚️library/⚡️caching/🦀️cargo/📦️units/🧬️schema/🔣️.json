@@ -542,20 +542,20 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "cwd",
+        "root",
         "policy"
       ],
       "properties": {
-        "cwd": {
+        "policy": {
+          "enum": [
+            "compiler-context-v2",
+            "temporary-v1"
+          ]
+        },
+        "root": {
           "type": "string",
           "minLength": 1,
           "maxLength": 256
-        },
-        "policy": {
-          "enum": [
-            "compiler-state-v1",
-            "temporary-v1"
-          ]
         }
       }
     }

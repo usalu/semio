@@ -3,7 +3,7 @@
 #![allow(clippy::result_large_err)]
 
 use crate::editor::animate::config::{PresentationConfig, PresentationConfigMutation};
-use crate::editor::animate::{valid_tile_ids, PresentationDispatchCtx};
+use crate::editor::animate::support::{valid_tile_ids, PresentationDispatchCtx};
 use crate::mutations::rename_tile::RenameTile;
 use crate::standards::v1::subsets::any::schema::mutations::PresentationMutation;
 use crate::PresentationSnapshot;

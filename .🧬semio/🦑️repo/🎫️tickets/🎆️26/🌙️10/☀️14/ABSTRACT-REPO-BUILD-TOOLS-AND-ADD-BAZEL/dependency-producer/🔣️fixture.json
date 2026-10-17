@@ -1,0 +1,818 @@
+{
+  "version": 1,
+  "scope": "Prospective portable model DATA only; no capability or runtime acceptance",
+  "cases": [
+    {
+      "name": "Qualified active generation is preserved while a new exact recipe is produced",
+      "facts": {
+        "custody": "actual-private",
+        "row": "sole-committed-whole",
+        "bindings": "qualified-current",
+        "owners": "all-current",
+        "recipe": "shared-canonical",
+        "stage": "fresh",
+        "plannedPathUnits": 256,
+        "observedPathUnits": 256,
+        "observedCodePoints": 256,
+        "child": "zero",
+        "source": "stable",
+        "scopeReadiness": "all-ready",
+        "bindingCAS": "stable",
+        "stop": "none",
+        "bindingCount": 1
+      },
+      "expected": {
+        "status": "settled",
+        "installChildren": 1,
+        "receiptWrites": 1,
+        "bindingSwitches": 1,
+        "oldPayloadDeletes": 0,
+        "allocationRetired": false
+      }
+    },
+    {
+      "name": "Observed missing Source bindings receive only the complete ready new generation",
+      "facts": {
+        "custody": "actual-private",
+        "row": "sole-committed-whole",
+        "bindings": "all-missing",
+        "owners": "all-current",
+        "recipe": "shared-canonical",
+        "stage": "fresh",
+        "plannedPathUnits": 256,
+        "observedPathUnits": 256,
+        "observedCodePoints": 256,
+        "child": "zero",
+        "source": "stable",
+        "scopeReadiness": "all-ready",
+        "bindingCAS": "stable",
+        "stop": "none",
+        "bindingCount": 1
+      },
+      "expected": {
+        "status": "settled",
+        "installChildren": 1,
+        "receiptWrites": 1,
+        "bindingSwitches": 1,
+        "oldPayloadDeletes": 0,
+        "allocationRetired": false
+      }
+    },
+    {
+      "name": "Fresh explicit current symlink intent does not adopt or delete the unknown old target",
+      "facts": {
+        "custody": "actual-private",
+        "row": "sole-committed-whole",
+        "bindings": "unqualified-symlink-current-intent",
+        "owners": "all-current",
+        "recipe": "shared-canonical",
+        "stage": "fresh",
+        "plannedPathUnits": 256,
+        "observedPathUnits": 256,
+        "observedCodePoints": 256,
+        "child": "zero",
+        "source": "stable",
+        "scopeReadiness": "all-ready",
+        "bindingCAS": "stable",
+        "stop": "none",
+        "bindingCount": 1
+      },
+      "expected": {
+        "status": "settled",
+        "installChildren": 1,
+        "receiptWrites": 1,
+        "bindingSwitches": 1,
+        "oldPayloadDeletes": 0,
+        "allocationRetired": false
+      }
+    },
+    {
+      "name": "Refuse copied",
+      "facts": {
+        "custody": "copied",
+        "row": "sole-committed-whole",
+        "bindings": "qualified-current",
+        "owners": "all-current",
+        "recipe": "shared-canonical",
+        "stage": "fresh",
+        "plannedPathUnits": 256,
+        "observedPathUnits": 256,
+        "observedCodePoints": 256,
+        "child": "zero",
+        "source": "stable",
+        "scopeReadiness": "all-ready",
+        "bindingCAS": "stable",
+        "stop": "none",
+        "bindingCount": 1
+      },
+      "expected": {
+        "status": "refused",
+        "installChildren": 0,
+        "receiptWrites": 0,
+        "bindingSwitches": 0,
+        "oldPayloadDeletes": 0,
+        "allocationRetired": false
+      }
+    },
+    {
+      "name": "Refuse foreign-control",
+      "facts": {
+        "custody": "foreign-control",
+        "row": "sole-committed-whole",
+        "bindings": "qualified-current",
+        "owners": "all-current",
+        "recipe": "shared-canonical",
+        "stage": "fresh",
+        "plannedPathUnits": 256,
+        "observedPathUnits": 256,
+        "observedCodePoints": 256,
+        "child": "zero",
+        "source": "stable",
+        "scopeReadiness": "all-ready",
+        "bindingCAS": "stable",
+        "stop": "none",
+        "bindingCount": 1
+      },
+      "expected": {
+        "status": "refused",
+        "installChildren": 0,
+        "receiptWrites": 0,
+        "bindingSwitches": 0,
+        "oldPayloadDeletes": 0,
+        "allocationRetired": false
+      }
+    },
+    {
+      "name": "Refuse escaped",
+      "facts": {
+        "custody": "escaped",
+        "row": "sole-committed-whole",
+        "bindings": "qualified-current",
+        "owners": "all-current",
+        "recipe": "shared-canonical",
+        "stage": "fresh",
+        "plannedPathUnits": 256,
+        "observedPathUnits": 256,
+        "observedCodePoints": 256,
+        "child": "zero",
+        "source": "stable",
+        "scopeReadiness": "all-ready",
+        "bindingCAS": "stable",
+        "stop": "none",
+        "bindingCount": 1
+      },
+      "expected": {
+        "status": "refused",
+        "installChildren": 0,
+        "receiptWrites": 0,
+        "bindingSwitches": 0,
+        "oldPayloadDeletes": 0,
+        "allocationRetired": false
+      }
+    },
+    {
+      "name": "Refuse cancelled-incoming",
+      "facts": {
+        "custody": "cancelled-incoming",
+        "row": "sole-committed-whole",
+        "bindings": "qualified-current",
+        "owners": "all-current",
+        "recipe": "shared-canonical",
+        "stage": "fresh",
+        "plannedPathUnits": 256,
+        "observedPathUnits": 256,
+        "observedCodePoints": 256,
+        "child": "zero",
+        "source": "stable",
+        "scopeReadiness": "all-ready",
+        "bindingCAS": "stable",
+        "stop": "none",
+        "bindingCount": 1
+      },
+      "expected": {
+        "status": "refused",
+        "installChildren": 0,
+        "receiptWrites": 0,
+        "bindingSwitches": 0,
+        "oldPayloadDeletes": 0,
+        "allocationRetired": false
+      }
+    },
+    {
+      "name": "Refuse current whole row absent",
+      "facts": {
+        "custody": "actual-private",
+        "row": "absent",
+        "bindings": "qualified-current",
+        "owners": "all-current",
+        "recipe": "shared-canonical",
+        "stage": "fresh",
+        "plannedPathUnits": 256,
+        "observedPathUnits": 256,
+        "observedCodePoints": 256,
+        "child": "zero",
+        "source": "stable",
+        "scopeReadiness": "all-ready",
+        "bindingCAS": "stable",
+        "stop": "none",
+        "bindingCount": 1
+      },
+      "expected": {
+        "status": "refused",
+        "installChildren": 0,
+        "receiptWrites": 0,
+        "bindingSwitches": 0,
+        "oldPayloadDeletes": 0,
+        "allocationRetired": false
+      }
+    },
+    {
+      "name": "Refuse current whole row drift",
+      "facts": {
+        "custody": "actual-private",
+        "row": "drift",
+        "bindings": "qualified-current",
+        "owners": "all-current",
+        "recipe": "shared-canonical",
+        "stage": "fresh",
+        "plannedPathUnits": 256,
+        "observedPathUnits": 256,
+        "observedCodePoints": 256,
+        "child": "zero",
+        "source": "stable",
+        "scopeReadiness": "all-ready",
+        "bindingCAS": "stable",
+        "stop": "none",
+        "bindingCount": 1
+      },
+      "expected": {
+        "status": "refused",
+        "installChildren": 0,
+        "receiptWrites": 0,
+        "bindingSwitches": 0,
+        "oldPayloadDeletes": 0,
+        "allocationRetired": false
+      }
+    },
+    {
+      "name": "Refuse unknown physical Source directory without moving it",
+      "facts": {
+        "custody": "actual-private",
+        "row": "sole-committed-whole",
+        "bindings": "unknown-physical-directory",
+        "owners": "all-current",
+        "recipe": "shared-canonical",
+        "stage": "fresh",
+        "plannedPathUnits": 256,
+        "observedPathUnits": 256,
+        "observedCodePoints": 256,
+        "child": "zero",
+        "source": "stable",
+        "scopeReadiness": "all-ready",
+        "bindingCAS": "stable",
+        "stop": "none",
+        "bindingCount": 1
+      },
+      "expected": {
+        "status": "refused",
+        "installChildren": 0,
+        "receiptWrites": 0,
+        "bindingSwitches": 0,
+        "oldPayloadDeletes": 0,
+        "allocationRetired": false
+      }
+    },
+    {
+      "name": "Refuse foreign Source owner",
+      "facts": {
+        "custody": "actual-private",
+        "row": "sole-committed-whole",
+        "bindings": "foreign-owner",
+        "owners": "all-current",
+        "recipe": "shared-canonical",
+        "stage": "fresh",
+        "plannedPathUnits": 256,
+        "observedPathUnits": 256,
+        "observedCodePoints": 256,
+        "child": "zero",
+        "source": "stable",
+        "scopeReadiness": "all-ready",
+        "bindingCAS": "stable",
+        "stop": "none",
+        "bindingCount": 1
+      },
+      "expected": {
+        "status": "refused",
+        "installChildren": 0,
+        "receiptWrites": 0,
+        "bindingSwitches": 0,
+        "oldPayloadDeletes": 0,
+        "allocationRetired": false
+      }
+    },
+    {
+      "name": "Refuse argv-only-override recipe",
+      "facts": {
+        "custody": "actual-private",
+        "row": "sole-committed-whole",
+        "bindings": "qualified-current",
+        "owners": "all-current",
+        "recipe": "argv-only-override",
+        "stage": "fresh",
+        "plannedPathUnits": 256,
+        "observedPathUnits": 256,
+        "observedCodePoints": 256,
+        "child": "zero",
+        "source": "stable",
+        "scopeReadiness": "all-ready",
+        "bindingCAS": "stable",
+        "stop": "none",
+        "bindingCount": 1
+      },
+      "expected": {
+        "status": "refused",
+        "installChildren": 0,
+        "receiptWrites": 0,
+        "bindingSwitches": 0,
+        "oldPayloadDeletes": 0,
+        "allocationRetired": false
+      }
+    },
+    {
+      "name": "Refuse stale-reader recipe",
+      "facts": {
+        "custody": "actual-private",
+        "row": "sole-committed-whole",
+        "bindings": "qualified-current",
+        "owners": "all-current",
+        "recipe": "stale-reader",
+        "stage": "fresh",
+        "plannedPathUnits": 256,
+        "observedPathUnits": 256,
+        "observedCodePoints": 256,
+        "child": "zero",
+        "source": "stable",
+        "scopeReadiness": "all-ready",
+        "bindingCAS": "stable",
+        "stop": "none",
+        "bindingCount": 1
+      },
+      "expected": {
+        "status": "refused",
+        "installChildren": 0,
+        "receiptWrites": 0,
+        "bindingSwitches": 0,
+        "oldPayloadDeletes": 0,
+        "allocationRetired": false
+      }
+    },
+    {
+      "name": "Refuse prefix-collision output stage",
+      "facts": {
+        "custody": "actual-private",
+        "row": "sole-committed-whole",
+        "bindings": "qualified-current",
+        "owners": "all-current",
+        "recipe": "shared-canonical",
+        "stage": "prefix-collision",
+        "plannedPathUnits": 256,
+        "observedPathUnits": 256,
+        "observedCodePoints": 256,
+        "child": "zero",
+        "source": "stable",
+        "scopeReadiness": "all-ready",
+        "bindingCAS": "stable",
+        "stop": "none",
+        "bindingCount": 1
+      },
+      "expected": {
+        "status": "refused",
+        "installChildren": 0,
+        "receiptWrites": 0,
+        "bindingSwitches": 0,
+        "oldPayloadDeletes": 0,
+        "allocationRetired": false
+      }
+    },
+    {
+      "name": "Refuse unknown-content output stage",
+      "facts": {
+        "custody": "actual-private",
+        "row": "sole-committed-whole",
+        "bindings": "qualified-current",
+        "owners": "all-current",
+        "recipe": "shared-canonical",
+        "stage": "unknown-content",
+        "plannedPathUnits": 256,
+        "observedPathUnits": 256,
+        "observedCodePoints": 256,
+        "child": "zero",
+        "source": "stable",
+        "scopeReadiness": "all-ready",
+        "bindingCAS": "stable",
+        "stop": "none",
+        "bindingCount": 1
+      },
+      "expected": {
+        "status": "refused",
+        "installChildren": 0,
+        "receiptWrites": 0,
+        "bindingSwitches": 0,
+        "oldPayloadDeletes": 0,
+        "allocationRetired": false
+      }
+    },
+    {
+      "name": "Reject planned257 before installer writes",
+      "facts": {
+        "custody": "actual-private",
+        "row": "sole-committed-whole",
+        "bindings": "qualified-current",
+        "owners": "all-current",
+        "recipe": "shared-canonical",
+        "stage": "fresh",
+        "plannedPathUnits": 257,
+        "observedPathUnits": 256,
+        "observedCodePoints": 256,
+        "child": "zero",
+        "source": "stable",
+        "scopeReadiness": "all-ready",
+        "bindingCAS": "stable",
+        "stop": "none",
+        "bindingCount": 1
+      },
+      "expected": {
+        "status": "refused",
+        "installChildren": 0,
+        "receiptWrites": 0,
+        "bindingSwitches": 0,
+        "oldPayloadDeletes": 0,
+        "allocationRetired": false
+      }
+    },
+    {
+      "name": "Retain failed child output without new receipt or bindings",
+      "facts": {
+        "custody": "actual-private",
+        "row": "sole-committed-whole",
+        "bindings": "qualified-current",
+        "owners": "all-current",
+        "recipe": "shared-canonical",
+        "stage": "fresh",
+        "plannedPathUnits": 256,
+        "observedPathUnits": 256,
+        "observedCodePoints": 256,
+        "child": "nonzero",
+        "source": "stable",
+        "scopeReadiness": "all-ready",
+        "bindingCAS": "stable",
+        "stop": "none",
+        "bindingCount": 1
+      },
+      "expected": {
+        "status": "partial-staging",
+        "installChildren": 1,
+        "receiptWrites": 0,
+        "bindingSwitches": 0,
+        "oldPayloadDeletes": 0,
+        "allocationRetired": false
+      }
+    },
+    {
+      "name": "Do not publish while child has not terminated",
+      "facts": {
+        "custody": "actual-private",
+        "row": "sole-committed-whole",
+        "bindings": "qualified-current",
+        "owners": "all-current",
+        "recipe": "shared-canonical",
+        "stage": "fresh",
+        "plannedPathUnits": 256,
+        "observedPathUnits": 256,
+        "observedCodePoints": 256,
+        "child": "not-terminal",
+        "source": "stable",
+        "scopeReadiness": "all-ready",
+        "bindingCAS": "stable",
+        "stop": "none",
+        "bindingCount": 1
+      },
+      "expected": {
+        "status": "partial-staging",
+        "installChildren": 1,
+        "receiptWrites": 0,
+        "bindingSwitches": 0,
+        "oldPayloadDeletes": 0,
+        "allocationRetired": false
+      }
+    },
+    {
+      "name": "Reject actual257 before any new binding",
+      "facts": {
+        "custody": "actual-private",
+        "row": "sole-committed-whole",
+        "bindings": "qualified-current",
+        "owners": "all-current",
+        "recipe": "shared-canonical",
+        "stage": "fresh",
+        "plannedPathUnits": 256,
+        "observedPathUnits": 257,
+        "observedCodePoints": 257,
+        "child": "zero",
+        "source": "stable",
+        "scopeReadiness": "all-ready",
+        "bindingCAS": "stable",
+        "stop": "none",
+        "bindingCount": 1
+      },
+      "expected": {
+        "status": "partial-staging",
+        "installChildren": 1,
+        "receiptWrites": 0,
+        "bindingSwitches": 0,
+        "oldPayloadDeletes": 0,
+        "allocationRetired": false
+      }
+    },
+    {
+      "name": "Reject UTF16-only257 even when code points fit",
+      "facts": {
+        "custody": "actual-private",
+        "row": "sole-committed-whole",
+        "bindings": "qualified-current",
+        "owners": "all-current",
+        "recipe": "shared-canonical",
+        "stage": "fresh",
+        "plannedPathUnits": 256,
+        "observedPathUnits": 257,
+        "observedCodePoints": 240,
+        "child": "zero",
+        "source": "stable",
+        "scopeReadiness": "all-ready",
+        "bindingCAS": "stable",
+        "stop": "none",
+        "bindingCount": 1
+      },
+      "expected": {
+        "status": "partial-staging",
+        "installChildren": 1,
+        "receiptWrites": 0,
+        "bindingSwitches": 0,
+        "oldPayloadDeletes": 0,
+        "allocationRetired": false
+      }
+    },
+    {
+      "name": "Changed full Source bytes refuse after install",
+      "facts": {
+        "custody": "actual-private",
+        "row": "sole-committed-whole",
+        "bindings": "qualified-current",
+        "owners": "all-current",
+        "recipe": "shared-canonical",
+        "stage": "fresh",
+        "plannedPathUnits": 256,
+        "observedPathUnits": 256,
+        "observedCodePoints": 256,
+        "child": "zero",
+        "source": "changed-after-install",
+        "scopeReadiness": "all-ready",
+        "bindingCAS": "stable",
+        "stop": "none",
+        "bindingCount": 1
+      },
+      "expected": {
+        "status": "partial-staging",
+        "installChildren": 1,
+        "receiptWrites": 0,
+        "bindingSwitches": 0,
+        "oldPayloadDeletes": 0,
+        "allocationRetired": false
+      }
+    },
+    {
+      "name": "Changed ALL ownership refuses after install",
+      "facts": {
+        "custody": "actual-private",
+        "row": "sole-committed-whole",
+        "bindings": "qualified-current",
+        "owners": "changed",
+        "recipe": "shared-canonical",
+        "stage": "fresh",
+        "plannedPathUnits": 256,
+        "observedPathUnits": 256,
+        "observedCodePoints": 256,
+        "child": "zero",
+        "source": "stable",
+        "scopeReadiness": "all-ready",
+        "bindingCAS": "stable",
+        "stop": "none",
+        "bindingCount": 1
+      },
+      "expected": {
+        "status": "partial-staging",
+        "installChildren": 1,
+        "receiptWrites": 0,
+        "bindingSwitches": 0,
+        "oldPayloadDeletes": 0,
+        "allocationRetired": false
+      }
+    },
+    {
+      "name": "A failed second scope publishes no first-scope receipt or binding",
+      "facts": {
+        "custody": "actual-private",
+        "row": "sole-committed-whole",
+        "bindings": "qualified-current",
+        "owners": "all-current",
+        "recipe": "shared-canonical",
+        "stage": "fresh",
+        "plannedPathUnits": 256,
+        "observedPathUnits": 256,
+        "observedCodePoints": 256,
+        "child": "zero",
+        "source": "stable",
+        "scopeReadiness": "one-failed",
+        "bindingCAS": "stable",
+        "stop": "none",
+        "bindingCount": 2
+      },
+      "expected": {
+        "status": "partial-staging",
+        "installChildren": 2,
+        "receiptWrites": 0,
+        "bindingSwitches": 0,
+        "oldPayloadDeletes": 0,
+        "allocationRetired": false
+      }
+    },
+    {
+      "name": "Binding CAS drift refuses before any switch",
+      "facts": {
+        "custody": "actual-private",
+        "row": "sole-committed-whole",
+        "bindings": "qualified-current",
+        "owners": "all-current",
+        "recipe": "shared-canonical",
+        "stage": "fresh",
+        "plannedPathUnits": 256,
+        "observedPathUnits": 256,
+        "observedCodePoints": 256,
+        "child": "zero",
+        "source": "stable",
+        "scopeReadiness": "all-ready",
+        "bindingCAS": "drift",
+        "stop": "none",
+        "bindingCount": 1
+      },
+      "expected": {
+        "status": "partial-staging",
+        "installChildren": 1,
+        "receiptWrites": 1,
+        "bindingSwitches": 0,
+        "oldPayloadDeletes": 0,
+        "allocationRetired": false
+      }
+    },
+    {
+      "name": "Cancellation before installer leaves all output absent",
+      "facts": {
+        "custody": "actual-private",
+        "row": "sole-committed-whole",
+        "bindings": "qualified-current",
+        "owners": "all-current",
+        "recipe": "shared-canonical",
+        "stage": "fresh",
+        "plannedPathUnits": 256,
+        "observedPathUnits": 256,
+        "observedCodePoints": 256,
+        "child": "zero",
+        "source": "stable",
+        "scopeReadiness": "all-ready",
+        "bindingCAS": "stable",
+        "stop": "before-install",
+        "bindingCount": 1
+      },
+      "expected": {
+        "status": "refused",
+        "installChildren": 0,
+        "receiptWrites": 0,
+        "bindingSwitches": 0,
+        "oldPayloadDeletes": 0,
+        "allocationRetired": false
+      }
+    },
+    {
+      "name": "Cancellation before Source links preserves ready staged data only",
+      "facts": {
+        "custody": "actual-private",
+        "row": "sole-committed-whole",
+        "bindings": "qualified-current",
+        "owners": "all-current",
+        "recipe": "shared-canonical",
+        "stage": "fresh",
+        "plannedPathUnits": 256,
+        "observedPathUnits": 256,
+        "observedCodePoints": 256,
+        "child": "zero",
+        "source": "stable",
+        "scopeReadiness": "all-ready",
+        "bindingCAS": "stable",
+        "stop": "before-bindings",
+        "bindingCount": 1
+      },
+      "expected": {
+        "status": "partial-staging",
+        "installChildren": 1,
+        "receiptWrites": 1,
+        "bindingSwitches": 0,
+        "oldPayloadDeletes": 0,
+        "allocationRetired": false
+      }
+    },
+    {
+      "name": "Partial Source binding failure preserves true transition facts",
+      "facts": {
+        "custody": "actual-private",
+        "row": "sole-committed-whole",
+        "bindings": "qualified-current",
+        "owners": "all-current",
+        "recipe": "shared-canonical",
+        "stage": "fresh",
+        "plannedPathUnits": 256,
+        "observedPathUnits": 256,
+        "observedCodePoints": 256,
+        "child": "zero",
+        "source": "stable",
+        "scopeReadiness": "all-ready",
+        "bindingCAS": "stable",
+        "stop": "after-first-binding",
+        "bindingCount": 2
+      },
+      "expected": {
+        "status": "partial-binding",
+        "installChildren": 2,
+        "receiptWrites": 2,
+        "bindingSwitches": 1,
+        "oldPayloadDeletes": 0,
+        "allocationRetired": false
+      }
+    },
+    {
+      "name": "Ready current generation is requalified before reuse",
+      "facts": {
+        "custody": "actual-private",
+        "row": "sole-committed-whole",
+        "bindings": "qualified-current",
+        "owners": "all-current",
+        "recipe": "shared-canonical",
+        "stage": "ready-existing",
+        "plannedPathUnits": 256,
+        "observedPathUnits": 256,
+        "observedCodePoints": 256,
+        "child": "zero",
+        "source": "stable",
+        "scopeReadiness": "all-ready",
+        "bindingCAS": "stable",
+        "stop": "none",
+        "bindingCount": 1
+      },
+      "expected": {
+        "status": "settled",
+        "installChildren": 0,
+        "receiptWrites": 0,
+        "bindingSwitches": 1,
+        "oldPayloadDeletes": 0,
+        "allocationRetired": false
+      }
+    },
+    {
+      "name": "Ready existing257 generation cannot bypass installed preflight",
+      "facts": {
+        "custody": "actual-private",
+        "row": "sole-committed-whole",
+        "bindings": "qualified-current",
+        "owners": "all-current",
+        "recipe": "shared-canonical",
+        "stage": "ready-existing",
+        "plannedPathUnits": 256,
+        "observedPathUnits": 257,
+        "observedCodePoints": 256,
+        "child": "zero",
+        "source": "stable",
+        "scopeReadiness": "all-ready",
+        "bindingCAS": "stable",
+        "stop": "none",
+        "bindingCount": 1
+      },
+      "expected": {
+        "status": "refused",
+        "installChildren": 0,
+        "receiptWrites": 0,
+        "bindingSwitches": 0,
+        "oldPayloadDeletes": 0,
+        "allocationRetired": false
+      }
+    }
+  ]
+}

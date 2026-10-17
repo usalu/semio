@@ -21,6 +21,5 @@ for(const row of cases)test("retirement grants release "+row.name,()=>{
   while(!close.terminalIsEmpty()){const p=close.advance(grant);expect(validate(neutral(p))).toBe(true);expect(p.work-work).toBeGreaterThan(0);expect(p.work-work).toBeLessThanOrEqual(grant);expect(p.owners).toBeGreaterThanOrEqual(owners);expect(p.owners-p.work).toBeLessThanOrEqual(0);work=p.work;owners=p.owners;}
   expect(owners).toBe(row.owners);expect(work).toBe(row.work);expect(close.advance(1)).toEqual({phase:"complete",owners,work,done:true});expect(neutral(retained)).toEqual(expected.assets);
  }
- console.log("[DEBUG] Grant-bounded scene retirement reaches an empty shell: "+row.name);
 });
 test("retirement rejects invalid grants without consuming owners",()=>{const close=new ScenePlanCloseJob({assets:[],nodes:[]});for(const grant of [0,-1,.5,NaN,Infinity,Number.MAX_SAFE_INTEGER+1])expect(()=>close.advance(grant)).toThrow("grant");expect(validate({phase:"complete",owners:0,work:0,done:false})).toBe(false);expect(validate({phase:"closing",owners:0,work:0,done:true})).toBe(false);expect(close.terminalIsEmpty()).toBe(false);expect(close.advance(3)).toEqual({phase:"complete",owners:3,work:3,done:true});});

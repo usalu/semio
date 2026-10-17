@@ -1,8 +1,12 @@
 
 use super::{oracle_apply_mutation, oracle_round_trip, project_ifc_2x3_cobie};
+use semio_framework_test_fixtures::fixture_bytes;
 use semio_repo_test_host::Json;
 
-const FIXTURE: &[u8] = include_bytes!("../../../🧪️tests/🧫️fixtures/🏥️wellness-center-sama-street-level/🏥️wellness-center-sama-street-level.ifc");
+fn fixture() -> &'static [u8] {
+    static CELL: std::sync::OnceLock<Vec<u8>> = std::sync::OnceLock::new();
+    CELL.get_or_init(|| fixture_bytes!("../../../🏅️standards/🔖️2x3/🪆️subsets/🏢️cobie/🧪️tests/🧫️fixtures/🏥️wellness-center-sama-street-level/🏥️wellness-center-sama-street-level.ifc").to_vec()).as_slice()
+}
 
 fn obj(entries: Vec<(&str, Json)>) -> Json {
     Json::Object(entries.into_iter().map(|(key, value)| (key.to_string(), value)).collect())
@@ -37,7 +41,7 @@ fn real_type_assignment() -> Json {
 
 #[test]
 fn the_real_fixture_carries_real_facility_floor_and_type_sheets_and_an_empty_space_sheet() {
-    let projection = project_ifc_2x3_cobie(FIXTURE).expect("project the real fixture");
+    let projection = project_ifc_2x3_cobie(fixture()).expect("project the real fixture");
     assert_eq!(field(&projection, "viewDefinition"), &text("ViewDefinition [CoordinationView_V2.0]"));
     assert_eq!(field(&projection, "entityCount"), &num(3464.0));
     assert_eq!(row(&projection, "facilities", 130.0).get("name"), Some(&tagged("string", text(""))), "the real IFCBUILDING #130 has a blank Name");
@@ -49,68 +53,68 @@ fn the_real_fixture_carries_real_facility_floor_and_type_sheets_and_an_empty_spa
 
 #[test]
 fn the_round_trip_through_our_own_writer_does_not_pass_bytes_through() {
-    let output = oracle_round_trip(FIXTURE).expect("identity round trip");
-    assert_ne!(output, FIXTURE, "our own writer must not reproduce the source writer's exact bytes");
-    assert_eq!(project_ifc_2x3_cobie(&output).unwrap(), project_ifc_2x3_cobie(FIXTURE).unwrap());
+    let output = oracle_round_trip(fixture()).expect("identity round trip");
+    assert_ne!(output, fixture(), "our own writer must not reproduce the source writer's exact bytes");
+    assert_eq!(project_ifc_2x3_cobie(&output).unwrap(), project_ifc_2x3_cobie(fixture()).unwrap());
 }
 
 #[test]
 fn set_view_definition_stamps_the_handover_view_and_inverts() {
-    let mutated = oracle_apply_mutation(FIXTURE, &spec("set-view-definition", obj(vec![("view", text("FMHandOverView"))]))).expect("set-view-definition");
+    let mutated = oracle_apply_mutation(fixture(), &spec("set-view-definition", obj(vec![("view", text("FMHandOverView"))]))).expect("set-view-definition");
     assert_eq!(field(&project_ifc_2x3_cobie(&mutated).unwrap(), "viewDefinition"), &text("ViewDefinition [FMHandOverView]"));
     let restored = oracle_apply_mutation(&mutated, &spec("set-view-definition", obj(vec![("view", text("CoordinationView_V2.0"))]))).expect("inverse");
-    assert_eq!(project_ifc_2x3_cobie(&restored).unwrap(), project_ifc_2x3_cobie(FIXTURE).unwrap());
+    assert_eq!(project_ifc_2x3_cobie(&restored).unwrap(), project_ifc_2x3_cobie(fixture()).unwrap());
 }
 
 #[test]
 fn set_facility_name_fills_the_blank_facility_row_and_inverts() {
-    let mutated = oracle_apply_mutation(FIXTURE, &spec("set-facility-name", obj(vec![("building", num(130.0)), ("name", text("Wellness Center Sama"))]))).expect("set-facility-name");
+    let mutated = oracle_apply_mutation(fixture(), &spec("set-facility-name", obj(vec![("building", num(130.0)), ("name", text("Wellness Center Sama"))]))).expect("set-facility-name");
     assert_eq!(row(&project_ifc_2x3_cobie(&mutated).unwrap(), "facilities", 130.0).get("name"), Some(&tagged("string", text("Wellness Center Sama"))));
     let restored = oracle_apply_mutation(&mutated, &spec("set-facility-name", obj(vec![("building", num(130.0)), ("name", text(""))]))).expect("inverse");
-    assert_eq!(project_ifc_2x3_cobie(&restored).unwrap(), project_ifc_2x3_cobie(FIXTURE).unwrap());
+    assert_eq!(project_ifc_2x3_cobie(&restored).unwrap(), project_ifc_2x3_cobie(fixture()).unwrap());
 }
 
 #[test]
 fn set_floor_elevation_moves_the_real_street_level_and_inverts() {
-    let mutated = oracle_apply_mutation(FIXTURE, &spec("set-floor-elevation", obj(vec![("storey", num(139.0)), ("elevation", num(150.0))]))).expect("set-floor-elevation");
+    let mutated = oracle_apply_mutation(fixture(), &spec("set-floor-elevation", obj(vec![("storey", num(139.0)), ("elevation", num(150.0))]))).expect("set-floor-elevation");
     assert_eq!(row(&project_ifc_2x3_cobie(&mutated).unwrap(), "floors", 139.0).get("elevation"), Some(&tagged("real", num(150.0))));
     let restored = oracle_apply_mutation(&mutated, &spec("set-floor-elevation", obj(vec![("storey", num(139.0)), ("elevation", num(0.0))]))).expect("inverse");
-    assert_eq!(project_ifc_2x3_cobie(&restored).unwrap(), project_ifc_2x3_cobie(FIXTURE).unwrap());
+    assert_eq!(project_ifc_2x3_cobie(&restored).unwrap(), project_ifc_2x3_cobie(fixture()).unwrap());
 }
 
 #[test]
 fn set_space_opens_the_empty_space_sheet_and_inverts() {
-    let mutated = oracle_apply_mutation(FIXTURE, &spec("set-space", obj(vec![("id", num(9_100_001.0)), ("space", real_space())]))).expect("set-space");
+    let mutated = oracle_apply_mutation(fixture(), &spec("set-space", obj(vec![("id", num(9_100_001.0)), ("space", real_space())]))).expect("set-space");
     let projection = project_ifc_2x3_cobie(&mutated).unwrap();
     assert_eq!(row(&projection, "spaces", 9_100_001.0).get("name"), Some(&tagged("string", text("Street level lobby"))));
     assert_eq!(field(&projection, "entityCount"), &num(3465.0));
     let restored = oracle_apply_mutation(&mutated, &spec("set-space", obj(vec![("id", num(9_100_001.0)), ("space", Json::Null)]))).expect("inverse");
-    assert_eq!(project_ifc_2x3_cobie(&restored).unwrap(), project_ifc_2x3_cobie(FIXTURE).unwrap());
+    assert_eq!(project_ifc_2x3_cobie(&restored).unwrap(), project_ifc_2x3_cobie(fixture()).unwrap());
 }
 
 #[test]
 fn set_type_assignment_removes_a_real_type_sheet_row_and_inverts() {
-    let mutated = oracle_apply_mutation(FIXTURE, &spec("set-type-assignment", obj(vec![("id", num(712708.0)), ("assignment", Json::Null)]))).expect("set-type-assignment");
+    let mutated = oracle_apply_mutation(fixture(), &spec("set-type-assignment", obj(vec![("id", num(712708.0)), ("assignment", Json::Null)]))).expect("set-type-assignment");
     let projection = project_ifc_2x3_cobie(&mutated).unwrap();
     assert_eq!(field(&projection, "entityCount"), &num(3463.0));
     assert!(matches!(field(&projection, "typeAssignments"), Json::Array(items) if items.len() == 5), "one real IFCRELDEFINESBYTYPE row is gone");
     let restored = oracle_apply_mutation(&mutated, &spec("set-type-assignment", obj(vec![("id", num(712708.0)), ("assignment", real_type_assignment())]))).expect("inverse");
-    assert_eq!(project_ifc_2x3_cobie(&restored).unwrap(), project_ifc_2x3_cobie(FIXTURE).unwrap());
+    assert_eq!(project_ifc_2x3_cobie(&restored).unwrap(), project_ifc_2x3_cobie(fixture()).unwrap());
 }
 
 #[test]
 fn the_cobie_guards_are_real_errors_not_silent_no_ops() {
-    assert!(oracle_apply_mutation(FIXTURE, &spec("not-a-real-kind", obj(vec![]))).is_err(), "an unknown kind must be an error");
-    assert!(oracle_apply_mutation(FIXTURE, &spec("set-facility-name", obj(vec![("building", num(139.0)), ("name", text("x"))]))).is_err(), "#139 is an IFCBUILDINGSTOREY, not an IFCBUILDING");
-    assert!(oracle_apply_mutation(FIXTURE, &spec("set-floor-elevation", obj(vec![("storey", num(130.0)), ("elevation", num(1.0))]))).is_err(), "#130 is an IFCBUILDING, not a storey");
+    assert!(oracle_apply_mutation(fixture(), &spec("not-a-real-kind", obj(vec![]))).is_err(), "an unknown kind must be an error");
+    assert!(oracle_apply_mutation(fixture(), &spec("set-facility-name", obj(vec![("building", num(139.0)), ("name", text("x"))]))).is_err(), "#139 is an IFCBUILDINGSTOREY, not an IFCBUILDING");
+    assert!(oracle_apply_mutation(fixture(), &spec("set-floor-elevation", obj(vec![("storey", num(130.0)), ("elevation", num(1.0))]))).is_err(), "#130 is an IFCBUILDING, not a storey");
     assert!(
-        oracle_apply_mutation(FIXTURE, &spec("set-space", obj(vec![("id", num(9_100_002.0)), ("space", obj(vec![("globalId", text("x")), ("name", text("  ")), ("placement", num(137.0))]))]))).is_err(),
+        oracle_apply_mutation(fixture(), &spec("set-space", obj(vec![("id", num(9_100_002.0)), ("space", obj(vec![("globalId", text("x")), ("name", text("  ")), ("placement", num(137.0))]))]))).is_err(),
         "COBie's Space sheet is keyed by name -- a blank name is not a row"
     );
     assert!(
-        oracle_apply_mutation(FIXTURE, &spec("set-type-assignment", obj(vec![("id", num(9_100_003.0)), ("assignment", obj(vec![("globalId", text("x")), ("relatedObjects", Json::Array(vec![num(270549.0)])), ("relatingType", num(270549.0))]))])))
+        oracle_apply_mutation(fixture(), &spec("set-type-assignment", obj(vec![("id", num(9_100_003.0)), ("assignment", obj(vec![("globalId", text("x")), ("relatedObjects", Json::Array(vec![num(270549.0)])), ("relatingType", num(270549.0))]))])))
             .is_err(),
         "#270549 is a wall, not an IFC*TYPE"
     );
-    assert!(oracle_apply_mutation(FIXTURE, &spec("set-space", obj(vec![("id", num(270549.0)), ("space", Json::Null)]))).is_err(), "clearing a space must not delete a real wall");
+    assert!(oracle_apply_mutation(fixture(), &spec("set-space", obj(vec![("id", num(270549.0)), ("space", Json::Null)]))).is_err(), "clearing a space must not delete a real wall");
 }

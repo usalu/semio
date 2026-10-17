@@ -123,5 +123,4 @@ fn mesh_pack_preserves_lossless_analytic_component_references() {
     assert_eq!(retained,body);
     let encoded=semio_framework_pack_json::Value::from(mesh);
     assert_eq!(encoded["componentReferences"].to_string(),semio_framework_pack_json::parse(&fixture["expected"]["componentReferences"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap().to_string());
-    println!("[DEBUG] Analytic component references retained metadata field13 boundedTurns={turns}");
 }

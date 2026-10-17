@@ -1,0 +1,9 @@
+R=/Users/ueli/Documents/semio
+F="$R/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split"
+G="$F/🗑️generated"
+T="$F/c4p3-tools"
+P="$R/✏️s/🔌️plugins"
+STD="🏅️standards/🔖️1/🪆️subsets/✳️any"
+BIM="$P/🏙️bim/🗿️artifacts/🏢️model/$STD"
+ARC="$P/🏛️architect/🗿️artifacts/🏛️program/$STD"
+CAD="$P/📐️cad/🗿️artifacts/📐️cad/$STD"

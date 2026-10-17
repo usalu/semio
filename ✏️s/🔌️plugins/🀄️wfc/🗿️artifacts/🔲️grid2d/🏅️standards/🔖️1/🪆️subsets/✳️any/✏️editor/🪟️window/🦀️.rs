@@ -552,6 +552,4 @@ semio_framework_plugin::window_transient_transfer! {
     mutation: Grid2dWindowTransientMutation,
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

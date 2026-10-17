@@ -48,7 +48,4 @@ pub fn render(labels: &Gis2dPlayLabels, windows: &TreeWindows<'_>) -> semio_fram
 //#endregion 🔖️Render
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

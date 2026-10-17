@@ -1,11 +1,18 @@
+use crate::standards::v1_1::subsets::base::schema::snapshot::SvgSnapshot;
+use crate::{schema::snapshot::SvgDocument, schema::snapshot::SvgNode};
+use semio_framework_os_kernel::{sqlite_snapshot::SqliteDatabase, sqlite_snapshot::SqliteSnapshotControl};
+use semio_framework_os_kernel::{sqlite_snapshot::ValueError, sqlite_snapshot::ValueRefusalKind};
+use semio_framework_test_fixtures::fixture_text;
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_xml::{standards::v1_0::subsets::base::io::sqlite::snapshot::project_xml_document, standards::v1_0::subsets::base::io::sqlite::snapshot::reconstruct_xml_document, standards::v1_0::subsets::base::io::sqlite::snapshot::XmlSqliteTables};
 use ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot as _;
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v1_1::subsets::base::io::sqlite::snapshot::*;
 use semio_framework_os_kernel::{sqlite_snapshot::*, os_store::serialization::ArtifactSqliteSnapshotHost};
 
-fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap() }
+fn fixture() -> serde_json::Value { serde_json::from_str(fixture_text!("../../🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json")).unwrap() }
 
-fn native_control_fixture() -> serde_json::Value { serde_json::from_str(include_str!("🧫️fixtures/🛂️native.json")).unwrap() }
+fn native_control_fixture() -> serde_json::Value { serde_json::from_str(fixture_text!("../../🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🛂️native.json")).unwrap() }
 
 #[test]
 fn sqlite_snapshot_svg_literal_metadata_native_state_is_distinct_from_external_wire() {
@@ -138,7 +145,7 @@ async fn sqlite_snapshot_svg_tiny_and_basic_io_validators_recheck_reconstructed_
 }
 
 #[test]
-fn sqlite_snapshot_svg_owned_tiny_basic_guard_matches_all_existing_conformance_rules(){let f=fixture();for(subset,key)in [("tiny","tinyText"),("tiny","tinyBlockedText"),("basic","basicText"),("basic","basicBlockedText"),("basic","basicClippedText")]{let snapshot=SvgSnapshot::import_utf8(f[key].as_str().unwrap().as_bytes()).unwrap();let database=project(&snapshot);let mut callback=|_|true;let dialect=semio_framework_artifact_reference::ArtifactDialect{artifact_kind:"s.stdio.svg".into(),standard:"1.1".into(),subset:subset.into()};let actual=snapshot.validate_sqlite_snapshot_subset(&dialect,&database,&mut SqliteSnapshotControl::new(&mut callback,SqliteDatabaseLimits::default())).unwrap();let expected=if subset=="tiny"{crate::standards::v1_1::subsets::tiny::schema::conformance::check_svg_tiny_conformance(&snapshot)}else{crate::standards::v1_1::subsets::basic::schema::conformance::check_svg_basic_conformance(&snapshot)};assert_eq!(format!("{:?}",actual.diagnostics),format!("{:?}",expected));assert_eq!(actual.diagnostics.iter().any(|d|matches!(d.severity,semio_framework_diagnostic::Severity::Error|semio_framework_diagnostic::Severity::Fatal)),key.contains("Blocked")||key.contains("Clipped"));}let mut snapshot=SvgSnapshot::default();if let Some(SvgNode::Element{children,..})=&mut snapshot.doc.root{children.extend((0..1024).map(|_|SvgNode::Element{name:"g".into(),attrs:vec![],children:vec![]}));}let mut calls=0;let mut callback=|_|{calls+=1;calls<2};assert!(crate::standards::v1_1::subsets::tiny::io::check_svg_tiny_conformance_controlled(&snapshot,&mut SqliteSnapshotControl::new(&mut callback,SqliteDatabaseLimits::default())).is_err());}
+fn sqlite_snapshot_svg_owned_tiny_basic_guard_matches_all_existing_conformance_rules(){let f=fixture();for(subset,key)in [("tiny","tinyText"),("tiny","tinyBlockedText"),("basic","basicText"),("basic","basicBlockedText"),("basic","basicClippedText")]{let snapshot=SvgSnapshot::import_utf8(f[key].as_str().unwrap().as_bytes()).unwrap();let database=project(&snapshot);let mut callback=|_|true;let dialect=semio_framework_artifact_reference::ArtifactDialect{artifact_kind:"s.stdio.svg".into(),standard:"1.1".into(),subset:subset.into()};let actual=snapshot.validate_sqlite_snapshot_subset(&dialect,&database,&mut SqliteSnapshotControl::new(&mut callback,SqliteDatabaseLimits::default())).unwrap();let expected=if subset=="tiny"{crate::standards::v1_1::subsets::tiny::schema::conformance::check_svg_tiny_conformance(&snapshot)}else{crate::standards::v1_1::subsets::basic::schema::conformance::check_svg_basic_conformance(&snapshot)};assert_eq!(format!("{:?}",actual.diagnostics),format!("{:?}",expected));assert_eq!(actual.diagnostics.iter().any(|d|matches!(d.severity,semio_framework_diagnostic::Severity::Error|semio_framework_diagnostic::Severity::Fatal)),key.contains("Blocked")||key.contains("Clipped"));}let mut snapshot=SvgSnapshot::default();if let Some(SvgNode::Element{children,..})=&mut snapshot.doc.root{children.extend((0..1024).map(|_|SvgNode::Element{name:"g".into(),attrs:vec![],children:vec![]}));}let mut calls=0;let mut callback=|_|{calls+=1;calls<2};assert!(crate::standards::v1_1::subsets::tiny::schema::conformance::check_svg_tiny_conformance_controlled(&snapshot,&mut SqliteSnapshotControl::new(&mut callback,SqliteDatabaseLimits::default())).is_err());}
 
 #[test]
 fn sqlite_snapshot_svg_erased_native_preflight_admission_and_limits() {

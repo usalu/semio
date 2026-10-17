@@ -1,6 +1,6 @@
 /** 🕸️ Jack-owned queries retain literal identities without importing a child representation. */
 import type {JackArtifact} from "../../🟦️.ts";
-import type {ArtifactChild} from "./../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts";
+import type {ArtifactChild} from "@semio-tech/framework-os/modules/store/child/schema";
 import type {JackFlatPositionUv} from "../🟦️.ts";
 import {ValueError} from "@semio-tech/framework/value/refusal";
 export type {ArtifactChild};

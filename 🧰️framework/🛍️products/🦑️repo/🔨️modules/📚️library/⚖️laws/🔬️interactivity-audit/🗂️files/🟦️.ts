@@ -170,7 +170,7 @@ export const INTERACTIVITY_AUDIT_ALLOWLIST: readonly InteractivityAllowlistEntry
   },
   {
     file: "🧰️framework/🛍️products/💻️os/🖥️host/🔌️plugin-host/🦀️.rs",
-    lineHint: 1331,
+    lineHint: 62,
     pattern: "block_on",
     reason: "CORRECTED: verified test-only, not production. All block_on calls at this anchor (the `🧪️tests/🔬️host-unit` file `include!`d at the end of `pub mod host`) sit inside `#[cfg(test)] mod tests` — a local hygienic block_on helper the R4-clause-5 test-entry-point precedent already sanctions. The audit's test-mod exclusion filters these out on its own; this entry is kept for the record the master ticket asked for, not because the scanner would otherwise flag it.",
     phase: "PERMANENT (test-only)",

@@ -10,4 +10,4 @@ export function runStdioTypeScriptCompiler(source:string,invocation:ScriptInvoca
 export function buildStdioComposition(packageRoot:string,invocation:ScriptInvocation):Promise<void>{return buildArtifactTypeScriptPackageV1(packageRoot,COMPOSITION_TYPESCRIPT_NAME,invocation);}
 
 /** 🔎️ Checks composition sources through the independently installed TypeScript compiler. */
-export async function checkStdioComposition(packageRoot:string,invocation:ScriptInvocation):Promise<void>{await runStdioTypeScriptCompiler(resolve(packageRoot,"../../🟦️.ts"),invocation);console.log(`[DEBUG] Checked ${COMPOSITION_TYPESCRIPT_NAME} through retained dependency and diagnostic custody`);}
+export async function checkStdioComposition(packageRoot:string,invocation:ScriptInvocation):Promise<void>{await runStdioTypeScriptCompiler(resolve(packageRoot,"../../🟦️.ts"),invocation);}

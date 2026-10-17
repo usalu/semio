@@ -2,7 +2,6 @@
 //! the id; the display text is `change-node-label`). Edges are id-keyed entities whose `source`/`target` are data, so the
 //! cascade rewrites those fields and never deletes or re-creates an edge.
 
-use crate::schema::mutations::SemioGraphMutation;
 use crate::schema::snapshot::{GraphNodeId, SemioGraphSnapshot};
 
 //#region 🔖️Payload
@@ -15,13 +14,16 @@ pub struct RenameNode {
     pub new_id: GraphNodeId,
 }
 
-impl protocol::MutationKind<SemioGraphSnapshot, SemioGraphMutation> for RenameNode {
+impl<Op> protocol::MutationKind<SemioGraphSnapshot, Op> for RenameNode
+where
+    Op: protocol::Mutation<SemioGraphSnapshot, Diff = crate::schema::diff::SemioGraphDiff> + From<RenameNode>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "rename", entity: "node", kind: "rename-node", record: "RenamedNode" };
 
-    fn diff(&self, base: &SemioGraphSnapshot) -> protocol::MutationOutcome<<SemioGraphMutation as protocol::Mutation<SemioGraphSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioGraphSnapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<SemioGraphSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &SemioGraphSnapshot) -> Result<Vec<SemioGraphMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &SemioGraphSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         Ok(super::inverse::inverse(self, base))
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {

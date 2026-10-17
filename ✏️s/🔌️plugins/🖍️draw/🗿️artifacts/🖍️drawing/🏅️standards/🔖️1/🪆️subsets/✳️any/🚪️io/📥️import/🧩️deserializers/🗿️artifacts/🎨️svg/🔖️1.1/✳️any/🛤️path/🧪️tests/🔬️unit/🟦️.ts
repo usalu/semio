@@ -6,10 +6,11 @@ import Ajv from "ajv";
 import fixture from "../🧫️fixtures/🔣️.json";
 import schema from "../../🧬️schema/🔣️.json";
 import {parseEditableSvgPath} from "../../🟦️.ts";
+import {parsePathGeometrySegment} from "../../../../../../../../../../🧬️schema/🟦️.ts";
 import {readFileSync} from "node:fs";
 
 test("decoded native SVG path uses the same semantic command authority",()=>{
-  for(const row of fixture.filter(row=>row.after!==null))expect(parseEditableSvgPath(row.source)).toEqual(row.after);
+  for(const row of fixture.filter(row=>row.after!==null))expect(parseEditableSvgPath(row.source)).toEqual((row.after??[]).map(segment=>parsePathGeometrySegment(segment)));
   const native=readFileSync(new URL("../../🦀️.rs",import.meta.url),"utf8");
   expect(native.includes("pub fn editable_svg_path_commands")).toBe(true);
 });
@@ -17,7 +18,7 @@ test("decoded native SVG path uses the same semantic command authority",()=>{
 for(const row of fixture)test(`editable SVG path: ${row.name}`,()=>{
   expect(new Ajv({strict:true}).compile(schema)(row.source)).toBe(true);
   if(row.after===null){expect(()=>parseEditableSvgPath(row.source)).toThrow();return;}
-  const actual=parseEditableSvgPath(row.source);expect(actual).toEqual(row.after);
+  const actual=parseEditableSvgPath(row.source);expect(actual).toEqual(row.after.map(segment=>parsePathGeometrySegment(segment)));
   const canonical=actual.map(segment=>{
     switch(segment.kind){
       case "move":return `M${segment.to.join(" ")}`;

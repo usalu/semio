@@ -1,7 +1,7 @@
 /** 🎚️ The measures-rail controls that carry their own in-flight state.
  *
- * 🪟️ Split out of `🛠️ShellHelpers/🟦️.tsx` so a law can mount them without importing that module's
- * whole shell surface (which cycles through `🏛️ShellHost`/`🐚️Shell`).
+ * 🪟️ Split out of the `🛠️ShellHelpers` shell surface so a law can mount them without importing that surface
+ * (which cycles through `🏛️ShellHost`/`🐚️Shell`).
  */
 import { useEffect, useState } from "react";
 import type { ActionDescriptor, WindowMeasure } from "@semio-tech/framework";

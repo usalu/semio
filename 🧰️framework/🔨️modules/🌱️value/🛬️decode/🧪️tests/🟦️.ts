@@ -31,7 +31,6 @@ test("original shared actor lease authority preserves UTF8 and admits no replace
    expect(finalOwners).toBe(1);expect(db.query("SELECT leases,frames FROM actors").get()).toEqual({leases:0,frames:0});
   }finally{db.close();}
  }
- console.log("[DEBUG] original shared actor lease: strict independent authority, SQLite lease custody preserves NUL/Unicode, zero replacement frames and one final original owner");
 });
 
 
@@ -52,7 +51,6 @@ test("borrowed native scopes intersect retained turn capacity before every origi
    db.run("UPDATE ledger SET ceiling=?",[fixture.firstTurnCapacityBytes]);expect(outcome).toBe(row.outcome);expect(db.query("SELECT owned,ceiling FROM ledger").get()).toEqual({owned:row.ownedBytes,ceiling:fixture.restoredMaximumBytes});
   }finally{db.close();}
  }
- console.log("[DEBUG] native borrowed scope maximum: strict corpus, repeated and nested original turn admissions, SQLite pre-allocation refusal and receipt restoration agree");
 });
 
 
@@ -115,7 +113,6 @@ test("borrowed native observers preserve original cancellation, complete cumulat
       expect(database.query("SELECT owned FROM admission").get()).toEqual({owned:actual.ownedBytes});
     }finally{database.close();}
   }
-  console.log("[DEBUG] Five complete borrowed-observer vectors preserve scope identity, cancellation and unwind restoration with independent SQLite ownership admission");
 });
 
 
@@ -133,6 +130,5 @@ test("native_detached_receiving_preserves_original_cumulative_ledger", async () 
   db.run("UPDATE original_receipt SET owned=owned+? WHERE recipient=1 AND owned+?<=maximum",[fixture.secondOwnedBytes,fixture.secondOwnedBytes]);
   expect(db.query("SELECT maximum,owned,recipient FROM original_receipt").get()).toEqual({maximum:fixture.maximumBytes,owned:fixture.finalOwnedBytes,recipient:1});
   expect(JSON.parse(JSON.stringify(fixture))).toEqual(fixture);
-  console.error("[DEBUG] original detached native receipt retains ceiling, cumulative ownership and recipient through independent SQLite/JSON");
  }finally{db.close();}
 });

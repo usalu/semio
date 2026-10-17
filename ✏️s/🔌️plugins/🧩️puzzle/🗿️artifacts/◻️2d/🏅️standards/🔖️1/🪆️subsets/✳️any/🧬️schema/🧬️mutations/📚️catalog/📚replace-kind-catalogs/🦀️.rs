@@ -4,7 +4,7 @@
 
 
 use crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff;
-use {crate::standards::v1::subsets::any::schema::Puzzle2dKindCatalogs, crate::Puzzle2dSnapshot};
+use {crate::standards::v1::subsets::any::schema::records::Puzzle2dKindCatalogs, crate::Puzzle2dSnapshot};
 
 //#region 🔖️Mutation
 /// 📚 `replace-kind-catalogs` payload — `None` clears the catalogs.

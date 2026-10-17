@@ -105,7 +105,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         if (row.expected === null) expect(() => playE2eInvocationPid(environment)).toThrow();
         else expect(playE2eInvocationPid(environment)).toBe(row.expected);
       }
-      console.log("[DEBUG] Play E2E accepts shared build invocation IDs and refuses absent or malformed identities");
     });
     it("keeps Play and Pets development manifests independent of runner settings", () => {
       for (const path of fixture.developmentProjects) {

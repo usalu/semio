@@ -4,7 +4,8 @@
 //! writes nothing, ever.
 
 use super::plane::{axis_of, bulge_through, dist, flatten, point2, same, P};
-use super::session::{length_label, Mark, Pointer, Preview, Step, Style, Tool, ToolContext, ToolEvent, REJECTED, STOREY_MISSING, TYPE_MISSING};
+use super::session::{length_label, Pointer, Step, Tool, ToolContext, ToolEvent, REJECTED, STOREY_MISSING, TYPE_MISSING};
+use crate::editor::bim::marks::{Mark, Preview, Style};
 use crate::standards::v1::subsets::any::schema::snapshot::{Beam, CurtainWall, GridLine, LocationLine, Phase, Railing, Ramp, TopConstraint, Vertex, Wall};
 use crate::standards::v1::subsets::any::schema::mutations::ModelMutation;
 

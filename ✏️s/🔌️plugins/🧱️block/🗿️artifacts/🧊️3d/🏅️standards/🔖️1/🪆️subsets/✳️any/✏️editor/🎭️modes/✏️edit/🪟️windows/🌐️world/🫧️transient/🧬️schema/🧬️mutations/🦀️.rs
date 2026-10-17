@@ -3,7 +3,7 @@
 use crate::edit::windows::world::transient::{Block3dBrushPreviewSet, Block3dWorldWindowTransient, Block3dWorldWindowTransientDiff};
 
 #[path = "👁️set-brush-preview/🦀️.rs"]
-mod set_brush_preview;
+pub(crate) mod set_brush_preview;
 pub use crate::edit::windows::world::transient::mutations::set_brush_preview::SetBrushPreview;
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]

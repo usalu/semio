@@ -1,5 +1,7 @@
-use super::*;
-use crate::mesh::FaceId;
+use semio_framework_3d::mesh::*;
+use std::collections::{BTreeMap,HashMap,HashSet};
+use semio_framework_value::{ToValue,FromValue};
+use semio_framework_3d::mesh::FaceId;
 use parry3d::mass_properties::MassProperties;
 use parry3d::math::Point;
 use serde_json::Value;

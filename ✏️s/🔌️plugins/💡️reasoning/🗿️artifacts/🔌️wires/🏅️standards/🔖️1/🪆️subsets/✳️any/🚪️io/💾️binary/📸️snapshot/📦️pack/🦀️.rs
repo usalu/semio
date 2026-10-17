@@ -50,8 +50,8 @@ fn reconstruct(document:Document,control:&mut semio_framework_value::NativeDecod
 fn ordinary(document:Document)->Result<WiresSnapshot,ValueError>{let mut callback=|_:semio_framework_value::native_decoding::NativeDecodeProgress|true;let mut control=semio_framework_value::NativeDecodeControl::new(usize::MAX,&mut callback);reconstruct(document,&mut control)}
 pub(crate) fn record_spec()->semio_framework_dsl_record::RecordSpec{Document::__dsl_spec()}
 pub(crate) fn record_spec_producer()->semio_framework_dsl_record::RecordSpecProducer{Document::__dsl_spec_producer()}
-pub(crate) fn record(snapshot:&WiresSnapshot)->semio_framework_dsl_record::RecordValue{from_snapshot(snapshot).__dsl_to_record()}
-pub(crate) fn record_controlled(snapshot:&WiresSnapshot,control:&mut semio_framework_value::NativeEncodeControl<'_>,maximum_rows:usize)->Result<semio_framework_dsl_record::RecordValue,ValueError>{
+pub fn record(snapshot:&WiresSnapshot)->semio_framework_dsl_record::RecordValue{from_snapshot(snapshot).__dsl_to_record()}
+pub fn record_controlled(snapshot:&WiresSnapshot,control:&mut semio_framework_value::NativeEncodeControl<'_>,maximum_rows:usize)->Result<semio_framework_dsl_record::RecordValue,ValueError>{
  record_controlled_semantic(snapshot,control,maximum_rows,usize::MAX)
 }
 pub(crate) fn record_controlled_semantic(snapshot:&WiresSnapshot,control:&mut semio_framework_value::NativeEncodeControl<'_>,maximum_rows:usize,maximum_bytes:usize)->Result<semio_framework_dsl_record::RecordValue,ValueError>{
@@ -88,7 +88,7 @@ use semio_framework_dsl_record::native_encoding::retire_field;
  }
  build(snapshot,control,maximum_rows,maximum_bytes)
 }
-pub(crate) fn reconstruct_record(source:&semio_framework_dsl_record::RecordValue)->Result<WiresSnapshot,TextError>{ordinary(Document::__dsl_from_record(source)?).map_err(|error|TextError::from_value_error(error,TextSpan::at(1,1)))}
+pub fn reconstruct_record(source:&semio_framework_dsl_record::RecordValue)->Result<WiresSnapshot,TextError>{ordinary(Document::__dsl_from_record(source)?).map_err(|error|TextError::from_value_error(error,TextSpan::at(1,1)))}
 pub(crate) fn reconstruct_record_controlled(source:&semio_framework_dsl_record::RecordValue,control:&mut semio_framework_value::NativeDecodeControl<'_>,maximum_rows:usize,maximum_bytes:usize)->Result<WiresSnapshot,ValueError>{
  fn list(source:&semio_framework_dsl_record::RecordValue,key:u16)->Result<&[semio_framework_dsl_record::FieldValue],ValueError>{match source.fields.get(&key){Some(semio_framework_dsl_record::FieldValue::List(values))=>Ok(values),_=>Err(ValueError::new(ValueRefusalKind::InvalidValue,"Wires native relationship list differs"))}}
  let nodes=list(source,3)?;let mut rows=nodes.len().checked_mul(2).and_then(|count|count.checked_add(4)).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"Wires native row count overflow"))?;if rows>maximum_rows{return Err(ValueError::new(ValueRefusalKind::WorkLimit,"Wires native row limit exceeded"))}

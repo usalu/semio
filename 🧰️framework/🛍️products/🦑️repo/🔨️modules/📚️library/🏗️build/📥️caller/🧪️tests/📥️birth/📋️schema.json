@@ -4,7 +4,8 @@
     "version",
     "cases",
     "childArguments",
-    "ceilings"
+    "ceilings",
+    "defaultPolicy"
   ],
   "additionalProperties": false,
   "properties": {
@@ -83,6 +84,13 @@
         "network": {
           "offline": true
         }
+      }
+    },
+    "defaultPolicy": {
+      "const": {
+        "version": 1,
+        "owner": "repository:build",
+        "maximumElapsedMilliseconds": 0
       }
     }
   }

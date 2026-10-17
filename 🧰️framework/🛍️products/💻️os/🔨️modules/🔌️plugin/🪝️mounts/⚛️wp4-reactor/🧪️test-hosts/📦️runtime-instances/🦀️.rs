@@ -28,7 +28,7 @@ pub(crate) mod runtime_instances_unit_1 {
     use semio_framework_plugin_reactor_lifecycle::life_cleanup_vocabulary::runtime_cleanup_fault;
     use semio_framework_plugin_reactor_lifecycle::life_cleanup_vocabulary::runtime_cleanup_fault_is_instance_scoped;
     #[cfg(test)]
-    use semio_framework_plugin_ownership::bounded_ownership::runtime_lifecycle_step;
+use semio_framework_plugin_ownership::bounded_ownership::runtime_lifecycle_step;
     use semio_framework_plugin_decl_app::ArtifactApp;
     use semio_framework_plugin_extension::extension_runtime_lift::extension_retirement::ExtensionResourceOwner;
     use semio_framework::FaultFrom;

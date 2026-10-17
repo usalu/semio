@@ -135,7 +135,7 @@ impl<'ctx> PointerCtx<'ctx> {
         let parked = false;
         let armed_work = !self.settle.deferred_actions.is_empty() || self.opening.pending_shell_uri_apply || parked || host_window_blur_pending() || !self.opening.import_transfers.is_empty();
         let computing = self.surfaces.live_compute_surfaces().any(|(surface_id, _)| !self.settle.settle_pump.watches.get(&surface_id).is_some_and(|watch| watch.standing));
-        self.opening.icon_export.as_ref().is_some_and(icon_export::IconExportBatch::running) || semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::ui_document_close_pending() || settle_pump_owes(self.settle.settling, self.docs.session.is_some(), armed_work, &self.settle.owed_refresh_scope, self.settle.settle_pump.owed, computing)
+        self.opening.icon_export.as_ref().is_some_and(IconExportBatch::running) || semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::ui_document_close_pending() || settle_pump_owes(self.settle.settling, self.docs.session.is_some(), armed_work, &self.settle.owed_refresh_scope, self.settle.settle_pump.owed, computing)
     }
 
     /// 🫀️ ONE settle step, and the whole of what the frame loop asks of this shell per frame.

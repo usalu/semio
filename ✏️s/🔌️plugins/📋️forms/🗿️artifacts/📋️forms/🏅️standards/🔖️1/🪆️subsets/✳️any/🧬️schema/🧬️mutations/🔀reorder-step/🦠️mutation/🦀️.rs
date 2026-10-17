@@ -3,7 +3,7 @@
 //! wired by `🦀️.rs`) predates the semantic rename; the Rust module is still `move_step`, the
 //! type/variant/kind are `reorder-step`.
 
-use crate::{FormMutation, FormsDiff, FormsSnapshot};
+use crate::{FormsDiff, FormsSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 
 //#region 🔀️ReorderStep
@@ -17,15 +17,18 @@ pub struct ReorderStep {
     pub to_index: usize,
 }
 
-impl MutationKind<FormsSnapshot, FormMutation> for ReorderStep {
+impl<Op> MutationKind<FormsSnapshot, Op> for ReorderStep
+where
+    Op: protocol::Mutation<FormsSnapshot, Diff = FormsDiff> + From<ReorderStep>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "reorder", entity: "step", kind: "reorder-step", record: "ReorderedStep" };
 
     fn diff(&self, base: &FormsSnapshot) -> protocol::MutationOutcome<FormsDiff> {
-        super::diff::diff_reorder_step(self, base)
+        crate::standards::v1::subsets::any::schema::mutations::reorder_step::diff::diff_reorder_step(self, base)
     }
-    fn inverse(&self, base: &FormsSnapshot) -> Result<Vec<FormMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &FormsSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
-        super::inverse::inverse_reorder_step(self, base)?
+        crate::standards::v1::subsets::any::schema::mutations::reorder_step::inverse::inverse_reorder_step(self, base)?
     
     })
 }

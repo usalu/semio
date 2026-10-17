@@ -13,11 +13,12 @@ const catalog = composeSpecificOsCatalogV1("http://localhost/", { maxBytes: 2097
 import { hostProjection, installedScope } from "../🧩️scope/🟦️.ts";
 import { resolvePluginHostConfig } from "@semio-tech/framework";
 import { resolveFrameworkOsCatalogConfigurationV1 } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧩️catalog/🟦️.ts";
+import { admitPluginCatalogV1, pluginCatalogV1 } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🟦️.ts";
+const catalogAdmissionPort = { admit: admitPluginCatalogV1, catalogOf: pluginCatalogV1 };
 import { readGeneratedCatalogProjection } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📖️catalog-view/🟦️.ts";
 import { buildPlaygroundSession } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🎮️playground/🧭️session/🟦️.ts";
 
-const root = resolve(import.meta.dirname, "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry");
-const projection = readGeneratedCatalogProjection(join(root, "🤖️generated"));
+const projection = readGeneratedCatalogProjection(resolve(import.meta.dirname, "../../🤖️generated"));
 
 /** 🎬️ The kind → owner index the resolvers read, rebuilt here from the raw rows so the test never
  * shares the implementation it is checking. */
@@ -41,8 +42,8 @@ describe("host variant session", () => {
     expect(session.plugins.map((row) => row.pluginId).sort()).toEqual(hostProjection.entries.map((row) => row.pluginId).sort());
     expect(session.plugins.length).toBeGreaterThan(1);
     expect(resolvePluginHostConfig(catalog, installedScope.missingVariant)).toBeUndefined();
-    const operation = new AbortController(), composition = composeSpecificOsCatalogV1("http://localhost/", { maxBytes: 2097152, maxRows: 512, maxEdges: 4096, maxWork: 65536, deadlineMs: performance.now() + 30000, now: () => performance.now(), cancelled: () => operation.signal.aborted, progress: event => console.log(`[DEBUG] installed host ${event.completed}/${event.total}`) });
-    expect(() => resolveFrameworkOsCatalogConfigurationV1(composition.rows, installedScope.missingVariant, { maxBytes: 2097152, maxRows: 512, maxEdges: 4096, maxWork: 65536, deadlineMs: performance.now() + 30000, now: () => performance.now(), cancelled: () => operation.signal.aborted, progress: event => console.log(`[DEBUG] missing host ${event.completed}/${event.total}`) })).toThrow();
+    const operation = new AbortController(), composition = composeSpecificOsCatalogV1("http://localhost/", { maxBytes: 2097152, maxRows: 512, maxEdges: 4096, maxWork: 65536, deadlineMs: performance.now() + 30000, now: () => performance.now(), cancelled: () => operation.signal.aborted, progress: event => {} });
+    expect(() => resolveFrameworkOsCatalogConfigurationV1(catalogAdmissionPort, composition.rows, installedScope.missingVariant, { maxBytes: 2097152, maxRows: 512, maxEdges: 4096, maxWork: 65536, deadlineMs: performance.now() + 30000, now: () => performance.now(), cancelled: () => operation.signal.aborted, progress: event => {} })).toThrow();
   });
 
   test("a non-host variant stays filtered to its own closure", () => {

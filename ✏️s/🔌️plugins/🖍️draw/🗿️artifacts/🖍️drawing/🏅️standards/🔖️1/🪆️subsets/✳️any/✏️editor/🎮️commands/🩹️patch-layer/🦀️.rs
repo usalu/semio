@@ -33,6 +33,3 @@ pub fn changes_layer(document:&DrawingSnapshot,operation:&DrawingMutation)->Resu
     Ok(inverse.len()!=1||inverse[0]!=*operation)
 }
 
-#[cfg(test)]
-#[path="🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;

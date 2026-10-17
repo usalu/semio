@@ -6,7 +6,7 @@
  * `worker.onmessage`). The worker wire round trip is pinned for both producers: the TypeScript actor's numbers and the Rust
  * actor's exact-integer carriers, whose local batch ids count down from `u64::MAX`.
  * @see ../../🧬️schema/🔣️command-rejection/🔣️.json */
-import { loadKernelHistoryPatchSchema } from "../../../../../../../🔨️modules/🎠️kernel/🧪️tests/🧫️fixtures/🟦️.ts";
+import { loadKernelHistoryPatchSchema } from "@semio-tech/framework-kernel/testing/fixtures";
 
 
 type Rejection = { readonly kind: "rejected"; readonly code: string; readonly reason: string; readonly messages: readonly unknown[]; readonly detail?: Readonly<Record<string, number>> };

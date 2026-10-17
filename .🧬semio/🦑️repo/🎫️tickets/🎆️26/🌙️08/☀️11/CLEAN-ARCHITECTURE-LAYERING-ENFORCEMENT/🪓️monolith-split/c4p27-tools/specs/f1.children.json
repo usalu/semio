@@ -1,0 +1,4 @@
+[
+ {"dir":"🛤️tool-run-trace-lane","doc":"/** 🛤️ World3dHost tool-run trace lane: mounts the scene's `toolRunTrace` lane for one window as instanced meshes per mesh and verdict batch. */","names":["WorldToolRunTrace"]},
+ {"dir":"🖱️interaction-domain-args","doc":"/** 🖱️ World3dHost interaction domain arguments: the `interactionHover` and `interactionSelect` action arguments a world window sends for a framework interaction domain. */","names":["world3dHoverActionArgs","world3dSelectionActionArgs","world3dSelectionTargetsActionArgs"]}
+]

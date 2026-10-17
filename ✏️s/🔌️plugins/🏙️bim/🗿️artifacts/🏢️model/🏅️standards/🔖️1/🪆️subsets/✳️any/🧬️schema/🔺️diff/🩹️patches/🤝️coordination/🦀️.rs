@@ -26,11 +26,11 @@ impl Patch<ClashSet> for ClashSetPatch {
         Self { name: restore(&self.name, &base.name), a: restore(&self.a, &base.a), b: restore(&self.b, &base.b), tolerance: restore(&self.tolerance, &base.tolerance), clearance: restore(&self.clearance, &base.clearance) }
     }
     fn merge(&mut self, later: Self) {
-        merge_slot!(&mut self.name, later.name);
-        merge_slot!(&mut self.a, later.a);
-        merge_slot!(&mut self.b, later.b);
-        merge_slot!(&mut self.tolerance, later.tolerance);
-        merge_slot!(&mut self.clearance, later.clearance);
+        merge_slot(&mut self.name, later.name);
+        merge_slot(&mut self.a, later.a);
+        merge_slot(&mut self.b, later.b);
+        merge_slot(&mut self.tolerance, later.tolerance);
+        merge_slot(&mut self.clearance, later.clearance);
     }
     fn minimal(&self, base: &ClashSet) -> Self {
         Self { name: changed(&self.name, &base.name), a: changed(&self.a, &base.a), b: changed(&self.b, &base.b), tolerance: changed(&self.tolerance, &base.tolerance), clearance: changed(&self.clearance, &base.clearance) }
@@ -83,11 +83,11 @@ impl Patch<Rule> for RulePatch {
         Self { name: restore(&self.name, &base.name), kind: restore(&self.kind, &base.kind), limit: restore(&self.limit, &base.limit), severity: restore(&self.severity, &base.severity), scope: restore(&self.scope, &base.scope) }
     }
     fn merge(&mut self, later: Self) {
-        merge_slot!(&mut self.name, later.name);
-        merge_slot!(&mut self.kind, later.kind);
-        merge_slot!(&mut self.limit, later.limit);
-        merge_slot!(&mut self.severity, later.severity);
-        merge_slot!(&mut self.scope, later.scope);
+        merge_slot(&mut self.name, later.name);
+        merge_slot(&mut self.kind, later.kind);
+        merge_slot(&mut self.limit, later.limit);
+        merge_slot(&mut self.severity, later.severity);
+        merge_slot(&mut self.scope, later.scope);
     }
     fn minimal(&self, base: &Rule) -> Self {
         Self { name: changed(&self.name, &base.name), kind: changed(&self.kind, &base.kind), limit: changed(&self.limit, &base.limit), severity: changed(&self.severity, &base.severity), scope: changed(&self.scope, &base.scope) }
@@ -152,17 +152,17 @@ impl Patch<Issue> for IssuePatch {
         Self { title: restore(&self.title, &base.title), description: restore(&self.description, &base.description), status: restore(&self.status, &base.status), priority: restore(&self.priority, &base.priority), assignee: restore(&self.assignee, &base.assignee), author: restore(&self.author, &base.author), created: restore(&self.created, &base.created), labels: restore(&self.labels, &base.labels), elements: restore(&self.elements, &base.elements), clash: restore_assigned(&self.clash, &base.clash), viewpoint: restore_assigned(&self.viewpoint, &base.viewpoint) }
     }
     fn merge(&mut self, later: Self) {
-        merge_slot!(&mut self.title, later.title);
-        merge_slot!(&mut self.description, later.description);
-        merge_slot!(&mut self.status, later.status);
-        merge_slot!(&mut self.priority, later.priority);
-        merge_slot!(&mut self.assignee, later.assignee);
-        merge_slot!(&mut self.author, later.author);
-        merge_slot!(&mut self.created, later.created);
-        merge_slot!(&mut self.labels, later.labels);
-        merge_slot!(&mut self.elements, later.elements);
-        merge_slot!(&mut self.clash, later.clash);
-        merge_slot!(&mut self.viewpoint, later.viewpoint);
+        merge_slot(&mut self.title, later.title);
+        merge_slot(&mut self.description, later.description);
+        merge_slot(&mut self.status, later.status);
+        merge_slot(&mut self.priority, later.priority);
+        merge_slot(&mut self.assignee, later.assignee);
+        merge_slot(&mut self.author, later.author);
+        merge_slot(&mut self.created, later.created);
+        merge_slot(&mut self.labels, later.labels);
+        merge_slot(&mut self.elements, later.elements);
+        merge_slot(&mut self.clash, later.clash);
+        merge_slot(&mut self.viewpoint, later.viewpoint);
     }
     fn minimal(&self, base: &Issue) -> Self {
         Self { title: changed(&self.title, &base.title), description: changed(&self.description, &base.description), status: changed(&self.status, &base.status), priority: changed(&self.priority, &base.priority), assignee: changed(&self.assignee, &base.assignee), author: changed(&self.author, &base.author), created: changed(&self.created, &base.created), labels: changed(&self.labels, &base.labels), elements: changed(&self.elements, &base.elements), clash: changed_assigned(&self.clash, &base.clash), viewpoint: changed_assigned(&self.viewpoint, &base.viewpoint) }
@@ -231,10 +231,10 @@ impl Patch<IssueComment> for IssueCommentPatch {
         Self { issue: restore(&self.issue, &base.issue), author: restore(&self.author, &base.author), date: restore(&self.date, &base.date), text: restore(&self.text, &base.text) }
     }
     fn merge(&mut self, later: Self) {
-        merge_slot!(&mut self.issue, later.issue);
-        merge_slot!(&mut self.author, later.author);
-        merge_slot!(&mut self.date, later.date);
-        merge_slot!(&mut self.text, later.text);
+        merge_slot(&mut self.issue, later.issue);
+        merge_slot(&mut self.author, later.author);
+        merge_slot(&mut self.date, later.date);
+        merge_slot(&mut self.text, later.text);
     }
     fn minimal(&self, base: &IssueComment) -> Self {
         Self { issue: changed(&self.issue, &base.issue), author: changed(&self.author, &base.author), date: changed(&self.date, &base.date), text: changed(&self.text, &base.text) }

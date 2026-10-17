@@ -1,6 +1,17 @@
 //! 🔺️ Diff for `ApplyModel`.
 
-use super::super::*;
+#[allow(unused_imports)]
+use protocol::Mutation;
+#[allow(unused_imports)]
+use crate::schema::diff::SemioDiff;
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_semio_model::schema::mutations::SemioModelMutation;
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_semio_model::schema::snapshot::SemioModelSnapshot;
+#[allow(unused_imports)]
+use crate::schema::snapshot::SemioSnapshot;
+#[allow(unused_imports)]
+use crate::schema::snapshot::SemioSubsetSnapshot;
 
 //#region 🔖️Diff
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

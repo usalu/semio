@@ -1,5 +1,7 @@
-use crate::text::{apply_raster_mutation_json, undo_raster_mutation_json};
-use super::*;
+use semio_s_artifact_raster_raster_diff::RasterDiff;
+use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
+use semio_s_artifact_raster_raster_mutations::text::{apply_raster_mutation_json, undo_raster_mutation_json};
+use semio_s_artifact_raster_raster_mutations::*;
 use semio_s_artifact_raster_raster_model::{layer_name, layer_visible};
 use semio_s_artifact_raster_raster_model::io::text::snapshot::snapshot_wire_codec::empty_raster_snapshot;
 use semio_s_artifact_raster_raster_model::{RasterImageAsset, RasterLayerMask, RasterLayerNode, RasterOwnedMap, RasterTransform, RASTER_DOCUMENT_SCHEMA};
@@ -14,7 +16,7 @@ fn pixel_layer(id: &str, name: &str) -> RasterLayerNode {
 
 /// 🖼️ Real, decodable 1x1 RGBA PNGs (not arbitrary placeholder bytes) — `add-layer-asset` now
 /// routes through the real `s.stdio.semio/v1/image` png codec bridge
-/// (`crate::mint_raster_asset_child`), so `AddLayerAsset`'s inverse can only
+/// (`semio_s_artifact_raster_raster_mutations::mint_raster_asset_child`), so `AddLayerAsset`'s inverse can only
 /// recover a faithful prior asset from the working-scene cache if the payload actually decodes.
 const SEED_ASSET_PNG: &[u8] = &[
     137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 13, 73, 72, 68, 82, 0, 0, 0, 1, 0, 0, 0, 1, 8, 6, 0, 0, 0, 31, 21, 196, 137, 0, 0, 0, 13, 73, 68, 65, 84, 120, 218, 99, 224, 18, 145, 251, 15, 0, 1, 164, 1, 60, 76, 213, 28, 167, 0, 0, 0, 0, 73, 69, 78,
@@ -44,21 +46,21 @@ fn round_trip(snapshot: &RasterSnapshot, mutation: &RasterMutation) -> RasterSna
 /// iterate, mirroring `din16798`'s own `every_mutation()` fixture.
 fn every_mutation() -> Vec<RasterMutation> {
     vec![
-        RasterMutation::ChangeLayerAdjustmentParameter(semio_s_artifact_raster_raster_mutations_layers::change_layer_adjustment_parameter::ChangeLayerAdjustmentParameter {layer_id:"adjust-1".into(),parameter:"brightness".into(),expected:None,value:Some(semio_s_artifact_raster_raster_model::RasterAdjustmentNumber::decimal(0.25))}),
+        RasterMutation::ChangeLayerAdjustmentParameter(semio_s_artifact_raster_raster_mutations_layer_properties::change_layer_adjustment_parameter::ChangeLayerAdjustmentParameter {layer_id:"adjust-1".into(),parameter:"brightness".into(),expected:None,value:Some(semio_s_artifact_raster_raster_model::RasterAdjustmentNumber::decimal(0.25))}),
         RasterMutation::CreateLayer(semio_s_artifact_raster_raster_mutations_layers::create_layer::mutation::CreateLayer { parent_id: None, index: 0, layer: Box::new(pixel_layer("l1", "Base")) }),
         RasterMutation::DeleteLayer(semio_s_artifact_raster_raster_mutations_layers::delete_layer::mutation::DeleteLayer { layer_id: "l1".into() }),
         RasterMutation::ReorderLayers(semio_s_artifact_raster_raster_mutations_layers::reorder_layers::mutation::ReorderLayers { layer_id: "l1".into(), parent_id: None, index: 0 }),
         RasterMutation::RenameLayer(semio_s_artifact_raster_raster_mutations_layers::rename_layer::mutation::RenameLayer { layer_id: "l1".into(), new_name: "Renamed".into() }),
-        RasterMutation::ChangeLayerLocked(semio_s_artifact_raster_raster_mutations_layers::change_layer_locked::ChangeLayerLocked {layer_id:"l1".into(),expected:false,locked:true}),
-        RasterMutation::ChangeLayerVisible(semio_s_artifact_raster_raster_mutations_layers::change_layer_visible::mutation::ChangeLayerVisible { layer_id: "l1".into(), new_visible: false }),
-        RasterMutation::ChangeLayerOpacity(semio_s_artifact_raster_raster_mutations_layers::change_layer_opacity::mutation::ChangeLayerOpacity { layer_id: "l1".into(), new_opacity: 0.4 }),
-        RasterMutation::ChangeLayerBlendMode(semio_s_artifact_raster_raster_mutations_layers::change_layer_blend_mode::mutation::ChangeLayerBlendMode { layer_id: "l1".into(), new_blend_mode: "multiply".into() }),
+        RasterMutation::ChangeLayerLocked(semio_s_artifact_raster_raster_mutations_layer_properties::change_layer_locked::ChangeLayerLocked {layer_id:"l1".into(),expected:false,locked:true}),
+        RasterMutation::ChangeLayerVisible(semio_s_artifact_raster_raster_mutations_layer_properties::change_layer_visible::mutation::ChangeLayerVisible { layer_id: "l1".into(), new_visible: false }),
+        RasterMutation::ChangeLayerOpacity(semio_s_artifact_raster_raster_mutations_layer_properties::change_layer_opacity::mutation::ChangeLayerOpacity { layer_id: "l1".into(), new_opacity: 0.4 }),
+        RasterMutation::ChangeLayerBlendMode(semio_s_artifact_raster_raster_mutations_layer_properties::change_layer_blend_mode::mutation::ChangeLayerBlendMode { layer_id: "l1".into(), new_blend_mode: "multiply".into() }),
         RasterMutation::MoveLayer(semio_s_artifact_raster_raster_mutations_layers::move_layer::mutation::MoveLayer { layer_id: "l1".into(), new_x: 10.0, new_y: 20.0 }),
         RasterMutation::ResizeLayer(semio_s_artifact_raster_raster_mutations_layers::resize_layer::mutation::ResizeLayer { layer_id: "l1".into(), new_width: 256, new_height: 256 }),
-        RasterMutation::ChangeLayerAdjustmentKind(semio_s_artifact_raster_raster_mutations_layers::change_layer_adjustment_kind::mutation::ChangeLayerAdjustmentKind { layer_id: "adjust-1".into(), new_adjustment_kind: "curves".into() }),
+        RasterMutation::ChangeLayerAdjustmentKind(semio_s_artifact_raster_raster_mutations_layer_properties::change_layer_adjustment_kind::mutation::ChangeLayerAdjustmentKind { layer_id: "adjust-1".into(), new_adjustment_kind: "curves".into() }),
         RasterMutation::AddLayerAsset(semio_s_artifact_raster_raster_mutations_pixels::add_layer_asset::mutation::AddLayerAsset { asset_id: "asset-1".into(), asset: semio_s_artifact_raster_raster_io::semio_image_from_png_bytes(ABC_ASSET_PNG).expect("fixture image decodes") }),
         RasterMutation::RemoveLayerAsset(semio_s_artifact_raster_raster_mutations_pixels::remove_layer_asset::mutation::RemoveLayerAsset { asset_id: "asset-1".into() }),
-        RasterMutation::ChangeLayerTransform(semio_s_artifact_raster_raster_mutations_layers::change_layer_transform::ChangeLayerTransform {layer_id:"l1".into(),expected:RasterTransform::default(),transform:RasterTransform {x:3.0,y:-2.0,a:2.0,b:1.0,c:-2.0,d:1.0}}),
+        RasterMutation::ChangeLayerTransform(semio_s_artifact_raster_raster_mutations_layer_properties::change_layer_transform::ChangeLayerTransform {layer_id:"l1".into(),expected:RasterTransform::default(),transform:RasterTransform {x:3.0,y:-2.0,a:2.0,b:1.0,c:-2.0,d:1.0}}),
         RasterMutation::ChangeLayerMask(semio_s_artifact_raster_raster_mutations_pixels::change_layer_mask::ChangeLayerMask { layer_id: "l1".into(), expected: None, mask: Some(RasterLayerMask { enabled: true, linked: false, invert: true, width: None, height: None, image_key: None, transform: RasterTransform::default() }) }),
         RasterMutation::ChangeLayerPixels(semio_s_artifact_raster_raster_mutations_pixels::change_layer_pixels::ChangeLayerPixels { layer_id: "l1".into(), expected_image_key: None, content: semio_s_artifact_raster_raster_model::RasterPixelContent { image_key: None, width: Some(256), height: Some(256) }, transform: None }),
         semio_s_artifact_raster_raster_mutations_pixels::paint_stroke::paint_stroke("l1", "pixels", "brush", semio_s_artifact_raster_raster_mutations_pixels::paint_stroke::RasterBrush { size: 4.0, hardness: 0.5, opacity: 1.0, color: vec![1.0, 0.0, 0.0, 1.0] }, vec![semio_s_artifact_raster_raster_mutations_pixels::paint_stroke::RasterStrokePoint { x: 2.0, y: 2.0 }, semio_s_artifact_raster_raster_mutations_pixels::paint_stroke::RasterStrokePoint { x: 9.5, y: 6.0 }]),
@@ -136,7 +138,7 @@ async fn rename_and_change_layer_visible_round_trip() {
     let added = round_trip(&snapshot, &RasterMutation::CreateLayer(semio_s_artifact_raster_raster_mutations_layers::create_layer::mutation::CreateLayer { parent_id: None, index: 0, layer: Box::new(pixel_layer("l1", "Base")) }));
     let renamed = round_trip(&added, &RasterMutation::RenameLayer(semio_s_artifact_raster_raster_mutations_layers::rename_layer::mutation::RenameLayer { layer_id: "l1".into(), new_name: "Renamed".into() }));
     assert_eq!(layer_name(&renamed.layers[0]), "Renamed");
-    let hidden = round_trip(&renamed, &RasterMutation::ChangeLayerVisible(semio_s_artifact_raster_raster_mutations_layers::change_layer_visible::mutation::ChangeLayerVisible { layer_id: "l1".into(), new_visible: false }));
+    let hidden = round_trip(&renamed, &RasterMutation::ChangeLayerVisible(semio_s_artifact_raster_raster_mutations_layer_properties::change_layer_visible::mutation::ChangeLayerVisible { layer_id: "l1".into(), new_visible: false }));
     assert!(!layer_visible(&hidden.layers[0]));
 }
 
@@ -270,10 +272,10 @@ async fn create_layer_satisfies_the_inverse_and_absorb_laws() {
 async fn change_layer_opacity_satisfies_the_inverse_and_absorb_laws() {
     let mut base = empty_raster_snapshot();
     base.layers.push(pixel_layer("l1", "Base"));
-    let mutation = RasterMutation::ChangeLayerOpacity(semio_s_artifact_raster_raster_mutations_layers::change_layer_opacity::mutation::ChangeLayerOpacity { layer_id: "l1".into(), new_opacity: 0.4 });
+    let mutation = RasterMutation::ChangeLayerOpacity(semio_s_artifact_raster_raster_mutations_layer_properties::change_layer_opacity::mutation::ChangeLayerOpacity { layer_id: "l1".into(), new_opacity: 0.4 });
     protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &mutation).await;
     let d1 = mutation.diff(&base).diff().clone();
-    let d2 = RasterMutation::ChangeLayerVisible(semio_s_artifact_raster_raster_mutations_layers::change_layer_visible::mutation::ChangeLayerVisible { layer_id: "l1".into(), new_visible: false }).diff(&base).diff().clone();
+    let d2 = RasterMutation::ChangeLayerVisible(semio_s_artifact_raster_raster_mutations_layer_properties::change_layer_visible::mutation::ChangeLayerVisible { layer_id: "l1".into(), new_visible: false }).diff(&base).diff().clone();
     protocol::os_spr::protocol_laws::assert_mutation_diff_absorb_law(&base, d1, d2).await;
 }
 

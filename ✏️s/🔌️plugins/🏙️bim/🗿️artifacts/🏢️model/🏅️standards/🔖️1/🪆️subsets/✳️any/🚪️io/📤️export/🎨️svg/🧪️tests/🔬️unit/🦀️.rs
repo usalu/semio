@@ -2,7 +2,7 @@ use super::*;
 use crate::standards::v1::subsets::any::io::binary::snapshot as pack;
 use crate::standards::v1::subsets::any::io::export::svg::testkit::{house, read, svg, tags, HOUSE_DIR};
 use crate::standards::v1::subsets::any::io::io;
-use crate::standards::v1::subsets::any::schema::inferences::view_linework::compute_view_linework;
+use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_view_linework;
 use crate::standards::v1::subsets::any::schema::snapshot::ViewKind;
 use semio_framework_os_kernel::io::io_mechanism::IoEntryDirection;
 

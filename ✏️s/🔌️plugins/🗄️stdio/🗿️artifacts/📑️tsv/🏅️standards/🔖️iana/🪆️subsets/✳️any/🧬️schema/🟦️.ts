@@ -26,6 +26,10 @@ type stdioTsvIanaAnyArtifactGuardSizeBounds = { readonly minItems?: number; read
 
 export const stdioTsvIanaAnyArtifactGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : stdioTsvIanaAnyArtifactGuardReject(at, "value is not an object");
+export const stdioTsvIanaAnyArtifactGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) stdioTsvIanaAnyArtifactGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const stdioTsvIanaAnyArtifactGuardArray = (value: unknown, at: string, bounds: stdioTsvIanaAnyArtifactGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return stdioTsvIanaAnyArtifactGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) stdioTsvIanaAnyArtifactGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -56,10 +60,10 @@ export const stdioTsvIanaAnyArtifactGuardConstant = <T extends string | number |
 //#endregion 🚪️Parsers
 
 export function parseTsvArtifact(value: unknown, at = "$"): TsvArtifact {
-  const row = stdioTsvIanaAnyArtifactGuardObject(value, at);
+  const row = stdioTsvIanaAnyArtifactGuardClosed(stdioTsvIanaAnyArtifactGuardObject(value, at), at, ["schema", "records", "trailingNewline", "lineEnding"]);
   return {
     schema: stdioTsvIanaAnyArtifactGuardString(row["schema"], `${at}.schema`),
-    records: stdioTsvIanaAnyArtifactGuardArray(row["records"], `${at}.records`).map((item, index) => stdioTsvIanaAnyArtifactGuardArray(item, `${at}.records[${index}]`).map((item, index) => stdioTsvIanaAnyArtifactGuardString(item, `${at}.records[${index}][${index}]`))),
+    records: stdioTsvIanaAnyArtifactGuardArray(row["records"], `${at}.records`).map((item, index) => stdioTsvIanaAnyArtifactGuardArray(item, `${at}.records[${index}]`).map((item1, index1) => stdioTsvIanaAnyArtifactGuardString(item1, `${at}.records[${index}][${index1}]`))),
     trailingNewline: stdioTsvIanaAnyArtifactGuardBoolean(row["trailingNewline"], `${at}.trailingNewline`),
     lineEnding: stdioTsvIanaAnyArtifactGuardMember(row["lineEnding"], `${at}.lineEnding`, ["lf", "crlf"] as const),
   };

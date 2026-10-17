@@ -1,0 +1,6 @@
+/** 🎟️ Capacity: module exporting `rustCompilerCapacityRequestV1`. */
+import{validateJsonSchemaSubset}from"../../../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
+import type{CompilerCapacityRequestV1}from"../../../../../../../../../../🔨️modules/🏃️process/🏗️build/🎟️capacity/🟦️.ts";
+import schema from"./🧬️schema/🔣️.json"with{type:"json"};
+/** 🧮️ Funds explicit jobserver codegen slots while reserving the host for unbounded backend classes. */
+export function rustCompilerCapacityRequestV1(profile:Readonly<{codegen_backend:string|null;codegen_units:number|null;lto:string}>):Readonly<{resourceClass:string;request:CompilerCapacityRequestV1}>{const input={codegen_backend:profile.codegen_backend,codegen_units:profile.codegen_units,lto:profile.lto};if(validateJsonSchemaSubset(schema,input).length)throw Error("Closed Rust compiler capacity profile required");const policy=schema.definitions.Policy.const,bounded=input.codegen_backend===null&&input.codegen_units!==null&&input.codegen_units>1&&["false","off"].includes(input.lto);return Object.freeze({resourceClass:bounded?policy.boundedClass:policy.exclusiveClass,request:Object.freeze(bounded?{kind:"available" as const,maximumParallelism:input.codegen_units!}:{kind:"whole-host" as const})});}

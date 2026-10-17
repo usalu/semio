@@ -14,6 +14,3 @@ pub fn drawing_matrix_to_transform(matrix: [f64;6]) -> DrawingTransform {
     DrawingTransform { x,y,scale_x,scale_y:ux*d-uy*c,rotation:b.atan2(a),shear:ux*c+uy*d }
 }
 
-#[cfg(test)]
-#[path="🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;

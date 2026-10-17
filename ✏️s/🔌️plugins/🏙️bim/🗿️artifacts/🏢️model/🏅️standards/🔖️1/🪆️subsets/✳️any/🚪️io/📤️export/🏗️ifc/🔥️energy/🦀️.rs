@@ -8,10 +8,11 @@
 //! An authored property of that name (on the element, or on the type of a window or door) wins and is written as before; every derived row is listed in the `DerivedRows` row of the element so the importer does not read it back as an authored property.
 //! 📎 https://standards.buildingsmart.org/IFC/RELEASE/IFC4/ADD2_TC1/HTML/schema/ifckernel/pset/pset_spacethermalrequirements.htm
 
-use super::data::label;
-use super::projection::{json_cell, plain, quote, schema_of, Cell};
-use super::writer::{flag, real, typed, V};
-use super::{Export, Schema};
+use crate::standards::v1::subsets::any::io::export::ifc::writer::label;
+use crate::standards::v1::subsets::any::io::export::ifc::projection::{json_cell, plain, quote, schema_of, Cell};
+use crate::standards::v1::subsets::any::io::export::ifc::writer::{flag, real, typed, V};
+use crate::standards::v1::subsets::any::io::export::ifc::context::Export;
+use crate::standards::v1::subsets::any::io::export::ifc::Schema;
 use crate::standards::v1::subsets::any::io::export::holders::{holder_of, Holder};
 use crate::standards::v1::subsets::any::schema::inferences::energy_envelope::SurfaceKind;
 use crate::standards::v1::subsets::any::schema::snapshot::OpeningKind;
@@ -199,7 +200,7 @@ pub fn thermal_json(document: &Part21Document) -> String {
 
 /// 📊️ The thermal report of the export of `model` in `schema`.
 pub fn thermal_report(schema: Schema, model: &crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot) -> Result<String, String> {
-    super::model_to_part21(schema, model).map(|(document, _)| thermal_json(&document))
+    crate::standards::v1::subsets::any::io::export::ifc::model_to_part21(schema, model).map(|(document, _)| thermal_json(&document))
 }
 //#endregion 🔖️Report
 

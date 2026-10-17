@@ -179,7 +179,6 @@ fn actual_native_exchange_uses_the_injected_owner_route_and_preserves_origin_and
     assert_eq!(grant.agent_principal_id, "agent:fixture"); assert_eq!(grant.space_id, "space-a");
     assert!(!format!("{grant:?}").contains("session.v1."));
     server.join().unwrap();
-    eprintln!("[DEBUG] auth owner=hub route=/auth/agent-sessions grant-principal={} origin-and-scope-bound=true", grant.agent_principal_id);
 }
 
 #[test]

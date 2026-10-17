@@ -1,8 +1,10 @@
-use super::*;
+use semio_framework_pack_json::Value;
+use crate::editor::forms::commands::set_try_value::*;
+use semio_framework_test_fixtures::fixture_text;
 
 #[test]
 fn bounded_chunk_values_match_the_json_oracle() {
-    let vectors: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️chunks.json")).unwrap();
+    let vectors: serde_json::Value = serde_json::from_str(fixture_text!("../../🎮️commands/🎯️set-try-value/🧪️tests/🧫️fixtures/🔣️chunks.json")).unwrap();
     for vector in vectors.as_array().unwrap() {
         let value = vector.get("value").cloned().unwrap_or_else(|| serde_json::Value::String(vector["text"].as_str().unwrap().repeat(vector["repeat"].as_u64().unwrap() as usize)));
         let encoded = value.to_string();

@@ -1,4 +1,5 @@
 use super::*;
+use semio_framework_test_fixtures::fixture_text;
 
 fn observed(ledger: &ArtifactHistoryLedger<i32>) -> serde_json::Value {
     serde_json::from_str(&semio_framework_pack_json::to_json_string(ledger)).expect("independent parser sees the selected exact history")
@@ -6,7 +7,7 @@ fn observed(ledger: &ArtifactHistoryLedger<i32>) -> serde_json::Value {
 
 #[test]
 fn retained_group_history_switches_every_direct_reader_at_one_decision() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️group-history.json")).expect("group history fixture");
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../🧪️group-history.json")).expect("group history fixture");
     let mut first = ArtifactHistoryLedger::new();
     let mut second = ArtifactHistoryLedger::new();
     first.try_push(0).expect("first seed");
@@ -82,7 +83,7 @@ fn retained_group_history_abort_transfers_one_exact_owner_and_rejects_foreign_de
 #[test]
 fn original_history_ledger_retires_slot_visibility_before_whole_pages() {
     use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧬️schema/📸️paged-history-ledger/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../🧬️schema/📸️paged-history-ledger/🔣️.json")).unwrap();
     let count = fixture["pushes"].as_u64().unwrap() as usize;
     let mut publisher = ArtifactGroupVisibilityOwner::new();
     let view = publisher.view();
@@ -133,5 +134,4 @@ fn original_history_ledger_retires_slot_visibility_before_whole_pages() {
     assert_eq!(physical, born);
     let (_, allocated, released) = crate::test_allocation::observe_backing(|| drop(ledger));
     assert_eq!((allocated, released), (0, fixture["retirement"]["terminalDropBytes"].as_u64().unwrap() as usize));
-    eprintln!("[DEBUG] original ledger slots={count} same visibility pointers; System birth={born} exact pages={physical} serde_json rows equal; terminalDrop0heap");
 }

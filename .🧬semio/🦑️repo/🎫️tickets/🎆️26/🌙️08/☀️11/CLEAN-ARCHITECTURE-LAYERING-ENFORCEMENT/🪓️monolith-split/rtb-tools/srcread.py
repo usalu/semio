@@ -4,12 +4,14 @@ usage: srcread.py <file>... [--apply] [--mdir <manifest dir>]
  - include_str!/include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "…")) -> a file-relative literal (the text no longer depends on the manifest depth)
  - crate::RENDERER_SOURCE & co                           -> renderer_source() & co
  - a join("../../../..") engine-root idiom               -> engine_root()
+EMBED_LIMIT=<bytes>: any other include_str!/include_bytes! of a file at least that large (JSON fixtures, GLB) becomes repo_text / repo_bytes.
 Anything else that still names CARGO_MANIFEST_DIR is reported."""
 import os, re, sys
 from lib import *
 
 TS = "semio_framework_os_renderer_wgpu_test_support"
 TEXT_SUFFIXES = (".rs", ".toml")
+EMBED_LIMIT = int(os.environ.get("EMBED_LIMIT", "0"))
 TOP_MANIFEST = T + "/📦️packages/🦀️rust"
 SRC_FN = {"RENDERER_SOURCE": "renderer_source", "SHELL_SOURCE": "shell_source", "SCENES_SOURCE": "scenes_source", "ENGINE_CANVAS_SOURCE": "engine_canvas_source", "INTERPRETER_SOURCE": "interpreter_source"}
 SRC_PATHS = re.compile(r"(?<![A-Za-z0-9_$])(?:crate::(?:(?:shell|scenes|engine_canvas|interpreter)::)?|super::)(" + "|".join(SRC_FN) + r")\b")
@@ -99,6 +101,9 @@ def convert(file, text, mdir):
             continue
         if p.endswith(TEXT_SUFFIXES) and m.group(1) == "str":
             edits.append((m.start(), end, f'{TS}::repo_text("{os.path.relpath(p, REPO)}")'))
+        elif EMBED_LIMIT and os.path.getsize(p) >= EMBED_LIMIT:
+            fn = "repo_text" if m.group(1) == "str" else "repo_bytes"
+            edits.append((m.start(), end, f'{TS}::{fn}("{os.path.relpath(p, REPO)}")'))
         elif kind == "manifest":
             edits.append((m.start(), end, f'include_{m.group(1)}!("{relpath_from(file, p)}")'))
     # 3. *_SOURCE paths

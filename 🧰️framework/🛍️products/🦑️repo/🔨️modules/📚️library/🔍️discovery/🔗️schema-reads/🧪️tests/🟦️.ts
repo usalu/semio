@@ -16,13 +16,13 @@ for (const row of examples.cases) test(`schema read original binding provenance:
     expect(report.readerHash, row.id).toBe(sha(row.source));
     expect(report.reads.length, row.id).toBe(row.expected.reads);
     expect(report.unresolved.length > 0, row.id).toBe(row.expected.unresolved);
-    expect(report.completeSyntax, row.id).toBe("completeSyntax" in row.expected ? row.expected.completeSyntax : true);
+    expect(report.completeSyntax, row.id).toBe(row.expected.completeSyntax ?? true);
     const file = ts.createSourceFile("reader.ts", row.source, ts.ScriptTarget.Latest, true), callRanges: { start: number; end: number }[] = [];
     const visit = (node: ts.Node): void => { if (ts.isCallExpression(node)) callRanges.push({ start: node.getStart(file), end: node.end }); ts.forEachChild(node, visit); };
     visit(file);
     for (const read of report.reads) {
       expect(callRanges, row.id).toContainEqual({ start: read.callStart, end: read.callEnd });
-      expect(read.resolution, row.id).toBe(row.expected.resolution);
+      expect(row.expected.resolution, row.id).toBe(read.resolution);
       expect(read.schema.hash, row.id).toBe(sha(read.schema.path ? files.get(read.schema.path)! : row.source));
       if (read.value) expect(read.value.hash, row.id).toBe(sha(files.get(read.value.path!)!));
       if (row.id === "loop-row") expect(read.value!.selector).toEqual(["cases", "*", "value"]);
@@ -35,7 +35,6 @@ for (const row of examples.cases) test(`schema read original binding provenance:
       symbols(file);
       expect(checker.getSymbolAtLocation(constructors[0]!)).not.toBe(checker.getSymbolAtLocation(imports[0]!));
     }
-  console.log(`[DEBUG] original schema reader evidence verified: ${row.id}`);
 });
 
 test("schema read inspection honors cancellation without creating file copies", () => {
@@ -48,7 +47,6 @@ test("schema read inspection honors cancellation without creating file copies", 
 test("schema read production implementation and formats satisfy strict independent TypeScript", () => {
   const program = ts.createProgram([fileURLToPath(new URL("../🟦️.ts", import.meta.url))], { target: ts.ScriptTarget.ESNext, module: ts.ModuleKind.Preserve, moduleResolution: ts.ModuleResolutionKind.Bundler, strict: true, noUncheckedIndexedAccess: true, allowImportingTsExtensions: true, noEmit: true, skipLibCheck: true, types: ["bun"] });
   expect(ts.getPreEmitDiagnostics(program).map(row => ({ code: row.code, start: row.start, path: row.file?.fileName, message: ts.flattenDiagnosticMessageText(row.messageText, "\n") }))).toEqual([]);
-  console.log("[DEBUG] actual schema-read implementation and defining formats compile under strict independent TypeScript");
 });
 
 test("schema reader index inventories supplied original sources once with explicit unavailable evidence", async () => {
@@ -66,7 +64,6 @@ test("schema reader index inventories supplied original sources once with explic
   for (const row of progress) expect(row.total).toBe(3);
   const oracle = examples.index.paths.filter((path, index, paths) => /\.(?:[cm]?[jt]s|[jt]sx)$/u.test(path) && paths.indexOf(path) === index).sort((left, right) => Buffer.from(left).compare(Buffer.from(right)));
   expect(index.reports.map(row => row.readerPath)).toEqual(oracle);
-  console.log("[DEBUG] original source index preserves unique byte order, unavailable hashes, closed syntax and progressive inspection");
 });
 
 test("schema reader index cancels before the next source and propagates its original reason", async () => {
@@ -97,7 +94,6 @@ test("defining discovery adapter reads handcrafted specimens in their original w
     expect(index.reports[1]!.readerHash).toBeNull();
     expect(index.unavailablePaths).toEqual(["b.ts", "vanished"]);
     expect(progress).toContain("walk"); expect(progress).toContain("inspect");
-    console.log("[DEBUG] defining discovery adapter inspected original handed specimens and retained both vanished directory and source evidence");
   } finally { rmSync(root, { recursive: true, force: true }); }
 });
 
@@ -117,8 +113,7 @@ for (const row of examples.cases) if ("runtime" in row) test(`schema reader sema
     if (!documents.has(path)) throw new Error("Unexpected oracle module " + name);
     return { default: path === "examples.json" ? fixture : documents.get(path) };
   } }, { timeout: 1000 }); } catch { error = true; }
-  expect({ compileSchema: !schemaCalls.length ? "absent" : schemaCalls[0] === undefined ? "undefined" : schemaCalls[0] === documents.get("schema.json") ? "schema.json" : "other", validations: validations.length, mutationKeys, error }).toEqual(row.runtime);
-  console.log(`[DEBUG] independent TypeScript lowering, actual JavaScript effects and Ajv witness agree: ${row.id}`);
+  expect({ compileSchema: !schemaCalls.length ? "absent" : schemaCalls[0] === undefined ? "undefined" : schemaCalls[0] === documents.get("schema.json") ? "schema.json" : "other", validations: validations.length, mutationKeys, error }).toEqual(row.runtime!);
 });
 
 test("schema reader index yields to timer-driven cancellation before finishing expensive source inventories", async () => {

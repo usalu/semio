@@ -3,7 +3,7 @@ import {Database} from "bun:sqlite";
 import {existsSync,readFileSync} from "node:fs";
 import {fileURLToPath} from "node:url";
 import {join} from "node:path";
-import {importSqliteDatabase} from "../../../../../../../../../../../🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import {importSqliteDatabase} from "@semio-tech/framework-sqlite-snapshot-ts";
 test("full owned SQL reconstruction has a closed exact allocation contract and independent literal bytes",async()=>{
  const base=fileURLToPath(new URL("../../",import.meta.url));
  const path=join(base,"🧪️tests/🧫️fixtures/💰️reconstruction/🔣️.json");

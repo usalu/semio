@@ -45,7 +45,4 @@ pub fn handle(payload: &TransformImage, doc: &ArtifactView<'_, RasterSnapshot>, 
 }
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

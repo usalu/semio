@@ -20,6 +20,6 @@ fn original_budgeted_topology_preserves_tree_and_matches_graphlib_order_with_phy
   for turn in 0..1000000{if owner.terminal_is_empty(){break;}let demand=owner.next_close_demands(copy).unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};
    let (step,heap)=observe(||owner.close_step(grant).unwrap());assert!(step.progress().fits(grant));assert_eq!(step.progress(),owner.step_progress());assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));born+=heap.requested_bytes;released+=heap.released_bytes;if step.progress()==RetainedCloneProgress::default(){idle+=1;}else{idle=0;}assert!(idle<16,"original topology close stalled id={} copy={copy} turn={turn} demand={demand:?} grant={grant:?} born={born} released={released}",row["id"]);
   }
-  assert!(owner.terminal_is_empty());assert_eq!(released,original+born);let (_,heap)=observe(||drop(owner));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));eprintln!("[DEBUG] Original topology id={} copy={copy} original={original} born={born} released={released} terminalDrop=0",row["id"]);
+  assert!(owner.terminal_is_empty());assert_eq!(released,original+born);let (_,heap)=observe(||drop(owner));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
  }}
 }

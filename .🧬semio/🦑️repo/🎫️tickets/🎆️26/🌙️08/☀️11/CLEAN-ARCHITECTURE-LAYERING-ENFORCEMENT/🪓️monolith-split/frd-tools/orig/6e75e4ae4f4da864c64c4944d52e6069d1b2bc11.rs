@@ -1,0 +1,57 @@
+//! 🧪️ Writer partial updates retain unrelated fields and construct with one-byte copy grants.
+
+use crate::editor::writer::modes::edit::windows::main::transient::{publication};
+use crate::editor::writer::modes::edit::windows::main::transient::*;
+use semio_framework_plugin::WindowTransientOwner;
+
+#[test]
+fn writer_window_state_partial_construction_preserves_large_utf8_and_cancels() {
+    let fixture: serde_json::Value = serde_json::from_str(runtime_fixture_text("../../../../../../✏️editor/🎭️modes/✏️edit/🪟️windows/✒️main/🫧️transient/🧪️tests/🧫️fixtures/🧩️partial/🔣️.json")).unwrap();
+    let text = fixture["payload"]["text"].as_str().unwrap().repeat(fixture["payload"]["repeat"].as_u64().unwrap() as usize);
+    assert_eq!(text.len(), fixture["payload"]["utf8Bytes"].as_u64().unwrap() as usize);
+    let owners = WriterMainWindowTransientOwner::build_owners();
+    for row in fixture["cases"].as_array().unwrap() {
+        for cancel in [false, true] {
+            let mut before = fixture["base"].clone();
+            before["engagementInput"] = text.clone().into();
+            let base: WriterMainWindowTransient = semio_framework_pack_json::from_json_str(&before.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+            let mutation: WriterMainWindowTransientMutation = semio_framework_pack_json::from_json_str(&row["mutation"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+            let mut state = store::TransientStore::<_, WriterMainWindowTransientMutation>::new(base);
+            let mut publication = state.begin_publish_one_leased(semio_framework_job::OperationId(1), 0, mutation, owners.preparation.as_ref(), owners.state_retirement.clone()).unwrap();
+            let zero = store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: 0, maximum_copy_bytes: 4096, maximum_capacity_bytes: 1 << 20, maximum_release_bytes: 1 << 20, maximum_depth: 64 };
+            assert!(matches!(state.advance_publish_one(&mut publication, zero).unwrap(), store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::Blocked));
+            assert_eq!(publication.progress().completed_bytes, 0);
+            let grant = store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: 1, maximum_capacity_bytes: 1 << 20, maximum_release_bytes: 1 << 20, maximum_depth: 64 };
+            let close = store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: 1 << 16, maximum_capacity_bytes: 1 << 20, maximum_release_bytes: 1 << 20, maximum_depth: 64 };
+            for turn in 0..32_768 {
+                let previous = publication.progress();
+                let step = state.advance_publish_one(&mut publication, grant).unwrap();
+                let next = publication.progress();
+                assert!(next.completed_bytes - previous.completed_bytes <= 1);
+                assert!(next.completed_items - previous.completed_items <= 1);
+                if cancel && turn == 1 { assert!(state.cancel_publish_one(&mut publication)); break; }
+                if matches!(step, store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::Published(_)) { assert!(publication.acknowledge()); break; }
+            }
+            let expected = if cancel { before } else {
+                let mut expected = before;
+                for (key, value) in row["patch"].as_object().unwrap() { expected[key] = value.clone(); }
+                assert_eq!(publication.progress().completed_bytes, row["copiedBytes"].as_u64().unwrap());
+                expected
+            };
+            assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(state.current_root().as_ref())).unwrap(), expected);
+            assert_eq!(publication.close_step(zero).unwrap(), semio_framework_value::retained_clone::RetainedCloneStep::Progress(Default::default()));
+            for _ in 0..65_536 {
+                match publication.close_step(close).unwrap() {
+                    semio_framework_value::retained_clone::RetainedCloneStep::Complete(progress) => { assert!(progress.fits(close.retained_grant())); break; }
+                    semio_framework_value::retained_clone::RetainedCloneStep::Progress(progress) => assert!(progress.fits(close.retained_grant()) && progress.copied_items <= 1),
+                }
+            }
+            assert!(publication.terminal_is_empty());
+        }
+    }
+}
+
+fn runtime_fixture_text(relative: &str) -> &'static str {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative);
+    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display())).into_boxed_str())
+}

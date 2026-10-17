@@ -1,4 +1,5 @@
 
+use semio_framework_test_fixtures::fixture_path;
 use std::collections::HashMap;
 
 use protocol::value as dsl_core;
@@ -178,7 +179,7 @@ fn constructed_cases_match_committed_fixtures() {
         error: &'a ShellError,
     }
 
-    let dir: PathBuf = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("..").join("..").join("🧫️fixtures");
+    let dir: PathBuf = fixture_path!("..").join("..").join("🧫️fixtures");
     let mut fixtures = HashMap::new();
     for entry in fs::read_dir(&dir).expect("read fixtures dir") {
         let entry = entry.expect("dir entry");
@@ -376,7 +377,7 @@ fn fixtures_produce_expected_output() {
         expected: serde_json::Value,
     }
 
-    let dir: PathBuf = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("..").join("..").join("🧫️fixtures");
+    let dir: PathBuf = fixture_path!("..").join("..").join("🧫️fixtures");
     let entries: Vec<PathBuf> = fs::read_dir(&dir).expect("committed fixtures dir must exist").filter_map(|e| e.ok()).map(|e| e.path()).filter(|p| p.extension().and_then(|e| e.to_str()) == Some("json")).collect();
     assert!(!entries.is_empty(), "no fixtures found in {}", dir.display());
 

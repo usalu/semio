@@ -6,6 +6,7 @@
       "{projectRoot}/**/*",
       "{workspaceRoot}/🧰️framework/🛍️products/❓️quiz/🎯️targets/⚛️react/🟦️.tsx",
       "{workspaceRoot}/🧰️framework/🛍️products/❓️quiz/🎯️targets/⚛️react/🎨️.css",
+      "{workspaceRoot}/🧰️framework/🛍️products/❓️quiz/🎯️targets/⚛️react/🎨️styles/**/*",
       "{workspaceRoot}/🧰️framework/🛍️products/❓️quiz/🎯️targets/⚛️react/🔨️modules/**/*",
       "{workspaceRoot}/🧰️framework/🛍️products/❓️quiz/🎯️targets/⚛️react/🧪️tests/🎚️config/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/❓️quiz/🧬️schema/🟦️.ts",

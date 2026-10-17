@@ -1,4 +1,5 @@
 use super::{sqlite_schema_bytes, sqlite_schema_len, sqlite_schema_text};
+use semio_framework_test_fixtures::fixture_text;
 
 const SEGMENTS: &[&str] = &["CREATE TABLE a(x INTEGER);", "\n", "CREATE TABLE b(y TEXT);"];
 const BYTES: [u8; sqlite_schema_len(SEGMENTS)] = sqlite_schema_bytes(SEGMENTS);
@@ -11,7 +12,7 @@ fn const_composition_equals_the_ordered_concatenation() {
 
 #[test]
 fn composition_matches_the_language_neutral_corpus() {
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(fixture_text!("../../../../🧵️composition/🧫️fixtures/🔣️.json")).unwrap();
     for case in corpus["cases"].as_array().unwrap() {
         let segments: Vec<&str> = case["segments"].as_array().unwrap().iter().map(|segment| segment.as_str().unwrap()).collect();
         let total = sqlite_schema_len(&segments);

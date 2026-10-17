@@ -70,9 +70,9 @@ fn control_sequences_are_dropped_across_chunk_borders_and_text_is_kept() {
 #[test]
 fn a_running_task_is_the_launch_asked_for_when_command_words_and_chosen_parameters_agree() {
     let command = |args: &[&str], parameters: &[(&str, &str)]| SessionCommand { cmd: "bun".into(), args: args.iter().map(ToString::to_string).collect(), command_id: "hub:dev".into(), label: dashboard_launch::TaskLabel { parameters: parameters.iter().map(|(key, value)| (key.to_string(), value.to_string())).collect(), ..Default::default() }, cwd: "C:/canonical".into(), ..Default::default() };
-    assert!(same_launch(&command(&["nx"], &[("backend", "pg")]), &SessionCommand { cwd: "other".into(), env: vec![("TERM".into(), "x".into())], ..command(&["nx"], &[("backend", "pg")]) }));
-    assert!(!same_launch(&command(&["nx"], &[("backend", "pg")]), &command(&["nx"], &[])));
-    assert!(!same_launch(&command(&["nx"], &[]), &command(&["nx", "--"], &[])));
+    assert!(same_launch(&command(&["nx"], &[("backend", "pg")]), &SessionCommand { cwd: "other".into(), env: vec![("TERM".into(), "x".into())], ..command(&["nx"], &[("backend", "pg")]) }, Path::new("/workspace")));
+    assert!(!same_launch(&command(&["nx"], &[("backend", "pg")]), &command(&["nx"], &[]), Path::new("/workspace")));
+    assert!(!same_launch(&command(&["nx"], &[]), &command(&["nx", "--"], &[]), Path::new("/workspace")));
 }
 
 #[test]
@@ -120,4 +120,73 @@ fn a_handle_is_a_session_id_a_group_a_command_or_a_unique_part_and_never_a_posit
     let twice = vec![session("a.0", "x:dev", SessionStatus::Running, 1, None), session("b.0", "x:dev", SessionStatus::Running, 2, None)];
     assert!(pick(&twice, "x:dev").unwrap_err().contains("has 2 live tasks: a.0 (x:dev), b.0 (x:dev)"));
     assert!(only(&pick(&sessions, "group-c-3").unwrap(), "group-c-3").unwrap_err().contains("names 2 tasks of one launch"));
+}
+
+#[test]
+fn a_running_task_reuses_only_the_same_effective_build_tool() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/♻️reuse/🔣️.json")).unwrap();
+    let pairs = |value: &serde_json::Value| value.as_array().unwrap().iter().map(|pair| (pair[0].as_str().unwrap().to_string(), pair[1].as_str().unwrap().to_string())).collect::<Vec<_>>();
+    for row in fixture["cases"].as_array().unwrap() {
+        let root = std::path::absolute(std::env::var("SEMIO_TEST_ARTIFACT_DIR").expect("caller-owned policy artifacts")).unwrap().join(format!("rp-{}", std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos()));
+        let running = SessionCommand { cwd: row["cwd"].as_str().unwrap_or("/workspace").replace("/workspace", &root.to_string_lossy()), cmd: row["cmd"].as_str().unwrap_or("bun").into(), args: row["args"].as_array().unwrap().iter().map(|value| value.as_str().unwrap().replace("/workspace", &root.to_string_lossy())).collect(), command_id: "app:dev".into(), env: pairs(&row["running"]), ..Default::default() };
+        let mut asked = SessionCommand { env: pairs(&row["asked"]), ..running.clone() };
+        let client = pairs(&row["client"]);
+        let path = ipc::build_authority::build_policy_path(&root);
+        std::fs::create_dir_all(path.parent().unwrap()).unwrap();
+        std::fs::write(path, serde_json::json!({"version":1,"defaultTool":row["default"]}).to_string()).unwrap();
+        ipc::bind_build_tools(&root, ipc::build_tool_environment(&client), std::iter::once(&mut asked)).unwrap();
+        std::fs::remove_dir_all(&root).unwrap();
+        assert_eq!(asked.selected_build_tool(&root, None), row["tool"].as_str(), "{}", row["name"]);
+        assert_eq!(same_launch(&running, &asked, &root), row["same"].as_bool().unwrap(), "{}", row["name"]);
+    }
+}
+
+#[test]
+fn registry_requirements_reach_the_group_without_losing_selected_tools() {
+    use dashboard_registry::{Facts, ProjectFacts, TargetFacts};
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/♻️reuse/🔣️requirements.json")).unwrap();
+    for case in fixture["cases"].as_array().unwrap() {
+        let mut projects = Vec::new();
+        let mut compounds = Vec::new();
+        for entry in case["entries"].as_array().unwrap() {
+            let id = entry["id"].as_str().unwrap();
+            if let Some(id) = id.strip_prefix("compound:workspace/") { compounds.push(serde_json::json!({"id":id,"members":entry["members"]})); continue; }
+            let (project, target) = id.split_once(':').unwrap();
+            projects.push(ProjectFacts { name: project.into(), root: ".".into(), manifest: "📋️project.json".into(), dashboard: None, targets: vec![TargetFacts { name: target.into(), dashboard: Some(serde_json::json!({"env":entry["env"],"requires":entry["requires"]})), ..Default::default() }] });
+        }
+        projects.push(ProjectFacts { name:"workspace".into(),root:".".into(),manifest:"📋️project.json".into(),targets:vec![],dashboard:Some(serde_json::json!({"compounds":compounds})) });
+        let registry = Registry::build(Path::new("/workspace"), &Facts { projects, ..Default::default() });
+        assert!(registry.problems().is_empty(), "{}: {:?}", case["name"], registry.problems());
+        let launch = registry.resolve_with(case["root"].as_str().unwrap(), &Request::default(), RunPolicy::default()).unwrap();
+        let mut group = SpawnGroup::from_launch(&launch, &[]);
+        let mut ids = std::collections::HashSet::new();
+        let actual: Vec<String> = group.requires.iter_mut().map(|service| { assert!(ids.insert(service.session_id.clone())); ipc::bind_build_tools(Path::new("/unused"),case["inherited"].as_str(),std::iter::once(&mut service.command)).unwrap(); format!("{}={}", service.command.command_id, service.command.selected_build_tool(Path::new("/unused"), None).unwrap_or("")) }).collect();
+        let expected: Vec<&str> = case["required"].as_array().unwrap().iter().map(|value|value.as_str().unwrap()).collect();
+        assert_eq!(actual,expected,"{}",case["name"]);
+    }
+}
+
+#[test]
+fn workspace_policy_binding_matches_portable_refusals_and_pinned_defaults() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/♻️reuse/🔣️.json")).unwrap();
+    let pairs = |value: &serde_json::Value| value.as_array().unwrap().iter().map(|pair| (pair[0].as_str().unwrap().to_string(), pair[1].as_str().unwrap().to_string())).collect::<Vec<_>>();
+    for row in fixture["policyCases"].as_array().unwrap() {
+        let root = std::path::absolute(std::env::var("SEMIO_TEST_ARTIFACT_DIR").expect("caller-owned policy artifacts")).unwrap().join(format!("rp-{}",std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos()));
+        let path = ipc::build_authority::build_policy_path(&root);
+        std::fs::create_dir_all(path.parent().unwrap()).unwrap();
+        if let Some(policy) = row["policy"].as_str() { std::fs::write(&path,policy).unwrap(); }
+        let client = pairs(&row["client"]);
+        let mut command = SessionCommand { cmd:row["cmd"].as_str().unwrap().into(),args:row["args"].as_array().unwrap().iter().map(|value|value.as_str().unwrap().into()).collect(),env:pairs(&row["declared"]),..Default::default() };
+        let before = command.env.clone();
+        let mut other = command.clone();
+        let mut count = 0;
+        let commands = std::iter::once(&mut command).chain(row["duringBatchPolicy"].as_str().map(|_|&mut other)).inspect(|_| { count+=1; if count==2 { std::fs::write(&path,row["duringBatchPolicy"].as_str().unwrap()).unwrap(); } });
+        let mut result = ipc::bind_build_tools(&root,ipc::build_tool_environment(&client),commands);
+        if result.is_ok() { if let Some(policy) = row["rebindPolicy"].as_str() { std::fs::write(&path,policy).unwrap(); result=ipc::bind_build_tools(&root,ipc::build_tool_environment(&client),std::iter::once(&mut command)); } }
+        assert_eq!(result.is_err(),row["error"].as_bool().unwrap(),"{}",row["name"]);
+        if result.is_ok() { assert_eq!(command.selected_build_tool(&root, None),row["tool"].as_str(),"{}",row["name"]); }
+        if !command.uses_build_tool(&root) { assert_eq!(command.env,before); }
+        if row["duringBatchPolicy"].is_string() { assert_eq!(command.selected_build_tool(&root, None),other.selected_build_tool(&root, None)); }
+        std::fs::remove_dir_all(&root).unwrap();
+    }
 }

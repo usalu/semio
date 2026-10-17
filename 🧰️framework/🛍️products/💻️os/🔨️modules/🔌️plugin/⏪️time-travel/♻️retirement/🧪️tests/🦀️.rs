@@ -1,5 +1,27 @@
 //! 🕰️ The actual ledger transfers its original session inline and measures every child frontier.
-use super::*;
+use semio_framework::{ActionArgDef, ArgSchema, FaultFrom};
+use semio_framework_plugin_decl_app::ArtifactApp;
+#[cfg(test)]
+use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+#[cfg(test)]
+use semio_framework_plugin_decl_app::tool_contract::ArtifactOwnedToolJobFactory;
+use pack::snapshot::ArtifactPack;
+use semio_framework_value::retirement::controlled::ControlledRetirement;
+use semio_framework_value::{DslValue, RetirementDemand};
+use semio_framework_plugin_decl_emission::Emit;
+use semio_framework_value_derive::{FromValue, ToValue};
+use semio_framework_ui_locale::LocalizedLabel;
+use store::{Mutation, MutationDiff};
+use protocol::{OpBinary, OpText};
+use semio_framework_value::retained_clone::RetainedCloneGrant;
+use semio_framework_time_travel::{TimeTravelBase, TimeTravelEvent, TimeTravelSession, TimeTravelStage, TimeTravelTarget};
+use crate::{TimeTravelEditor, TimeTravelLedger, TimeTravelMemberMetadata, TimeTravelOwners};
+#[cfg(test)]
+use semio_framework_plugin_decl_views::tool_run_contract::ToolRunRetargetableJob;
+#[cfg(any(test, feature = "artifact-app-testing"))]
+use semio_framework_plugin_window_config::WindowConfigOwner;
+use crate::original_retirement::{permits, progress};
+use semio_framework_ui_contract::*;
 use semio_framework_trace::observe_heap_allocations_on_this_thread;
 
 #[test]
@@ -14,13 +36,15 @@ fn original_inactive_member_metadata_fields_retire_under_independent_grants(){
    for denied in [Some(RetainedCloneGrant{maximum_items:0,..grant}),Some(RetainedCloneGrant{maximum_depth:0,..grant}),(quote.copy_bytes>0).then_some(RetainedCloneGrant{maximum_copy_bytes:0,..grant}),(quote.capacity_bytes>0).then_some(RetainedCloneGrant{maximum_capacity_bytes:0,..grant}),(quote.release_bytes>0).then_some(RetainedCloneGrant{maximum_release_bytes:0,..grant})].into_iter().flatten(){let (step,heap)=observe_heap_allocations_on_this_thread(||owner.step(denied).unwrap());assert_eq!(step.progress(),Default::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0))}
    let (step,heap)=observe_heap_allocations_on_this_thread(||owner.step(grant).unwrap());let receipt=step.progress();assert!(receipt.fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(receipt.retained_capacity_bytes,receipt.released_bytes));births+=heap.requested_bytes;releases+=heap.released_bytes;turns+=1;assert!(turns<100000)
   }
-  assert_eq!(releases,held+births);let (_,heap)=observe_heap_allocations_on_this_thread(||drop(owner));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));eprintln!("[DEBUG] original member key/path/dialect native fields capacity={capacity} turns={turns} original={held} births={births} releases={releases} allDenied0heap terminalDrop0");
+  assert_eq!(releases,held+births);let (_,heap)=observe_heap_allocations_on_this_thread(||drop(owner));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
  }
 }
 
-pub(crate) fn native_original_actor_grant()->RetainedCloneGrant{let law:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();let policy=&law["discardPublicationGrant"];RetainedCloneGrant{maximum_items:policy["items"].as_u64().unwrap()as usize,maximum_copy_bytes:policy["copy"].as_u64().unwrap()as usize,maximum_capacity_bytes:policy["capacity"].as_u64().unwrap()as usize,maximum_release_bytes:policy["release"].as_u64().unwrap()as usize,maximum_depth:policy["depth"].as_u64().unwrap()as usize}}
+#[doc(hidden)]
+pub fn native_original_actor_grant()->RetainedCloneGrant{let law:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();let policy=&law["discardPublicationGrant"];RetainedCloneGrant{maximum_items:policy["items"].as_u64().unwrap()as usize,maximum_copy_bytes:policy["copy"].as_u64().unwrap()as usize,maximum_capacity_bytes:policy["capacity"].as_u64().unwrap()as usize,maximum_release_bytes:policy["release"].as_u64().unwrap()as usize,maximum_depth:policy["depth"].as_u64().unwrap()as usize}}
 
-pub(crate) fn assert_session_original<A:ArtifactApp>() {
+#[doc(hidden)]
+pub fn assert_session_original<A:ArtifactApp>() {
  let grant=native_original_actor_grant();
  for capacity in [0,8192,65536] { for body in [1,17,4096] {
   let(mut ledger,heap)=observe_heap_allocations_on_this_thread(TimeTravelLedger::<A>::default);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
@@ -31,7 +55,7 @@ pub(crate) fn assert_session_original<A:ArtifactApp>() {
    for denied in [Some(RetainedCloneGrant{maximum_items:0,..grant}),(demand.copy_bytes>0).then_some(RetainedCloneGrant{maximum_copy_bytes:demand.copy_bytes.saturating_sub(1),..grant}),(demand.capacity_bytes>0).then_some(RetainedCloneGrant{maximum_capacity_bytes:demand.capacity_bytes.saturating_sub(1),..grant}),(demand.release_bytes>0).then_some(RetainedCloneGrant{maximum_release_bytes:demand.release_bytes.saturating_sub(1),..grant}),(demand.depth>0).then_some(RetainedCloneGrant{maximum_depth:demand.depth.saturating_sub(1),..grant})].into_iter().flatten(){let(step,heap)=observe_heap_allocations_on_this_thread(||ledger.session_retirement_step(denied).unwrap().unwrap());assert_eq!(step.progress(),Default::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));if turns==0{assert_eq!(ledger.session.accepted[0].target.mutation.0.as_ptr(),pointer);}}
    let(step,heap)=observe_heap_allocations_on_this_thread(||ledger.session_retirement_step(grant).unwrap().unwrap());assert!(step.progress().fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));births+=heap.requested_bytes;releases+=heap.released_bytes;turns+=1;assert!(turns<100000);
   }
-  assert_eq!(releases,held+births);assert!(ledger.session_retirement.is_none());assert_eq!(ledger.session.accepted.capacity(),0);assert!(ledger.session.fault.is_none());let(_,heap)=observe_heap_allocations_on_this_thread(||drop(ledger));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));eprintln!("[DEBUG] Actual TimeTravel ledger session capacity={capacity} copy={body} turns={turns} original={held} births={births} release={releases} terminalDrop=0");
+  assert_eq!(releases,held+births);assert!(ledger.session_retirement.is_none());assert_eq!(ledger.session.accepted.capacity(),0);assert!(ledger.session.fault.is_none());let(_,heap)=observe_heap_allocations_on_this_thread(||drop(ledger));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
  }}
 }
 
@@ -39,7 +63,8 @@ fn original_drafts(capacity:usize)->semio_framework_value::list::PagedList<semio
  let mut owner=semio_framework_value::list::PagedList::default();if capacity>0{while owner.capacity()<8192{assert!(owner.reserve_exact_capacity_one(8192,native_original_actor_grant().maximum_capacity_bytes).unwrap().progressed)}}owner
 }
 
-pub(crate) fn assert_discard_publication_original<A:ArtifactApp>(app:&mut VcsArtifactApp<A>,make_mutation:fn()->A::Mutation){
+#[doc(hidden)]
+pub fn assert_discard_publication_original<A:ArtifactApp>(app:&mut VcsArtifactApp<A>,make_mutation:fn()->A::Mutation){
  let law:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();let policy=&law["discardPublicationGrant"];let grant=RetainedCloneGrant{maximum_items:policy["items"].as_u64().unwrap()as usize,maximum_copy_bytes:policy["copy"].as_u64().unwrap()as usize,maximum_capacity_bytes:policy["capacity"].as_u64().unwrap()as usize,maximum_release_bytes:policy["release"].as_u64().unwrap()as usize,maximum_depth:policy["depth"].as_u64().unwrap()as usize};
  let ((session,editor,mutation,preview,input),heap)=observe_heap_allocations_on_this_thread(||{let mut id=String::with_capacity(65536);id.push_str("original/α\0😀");let target=protocol::MutationId(id);let input=protocol::InputReplacement::Input{schema:String::with_capacity(8192),payload:Vec::with_capacity(65536)};let session=TimeTravelSession{id:37,generation:5,base:TimeTravelBase{content_revision:app.stores.store.content_revision_now()},stage:TimeTravelStage::Editing,pending:Some(semio_framework_time_travel::TimeTravelPending{target:TimeTravelTarget{mutation:target.clone(),position:0},original:protocol::InputReplacement::Withdrawn,replacement:protocol::InputReplacement::Withdrawn,return_stage:TimeTravelStage::Inactive}),..Default::default()};let editor=TimeTravelEditor{target,position:0,op_index:0,label:LocalizedLabel::native("Original","Original"),schema:Some("native.v1"),inputs:vec![ActionArgDef { schema:ArgSchema::Array{items:Box::new(ArgSchema::Object{fields:vec![ActionArgDef::text("leaf",LocalizedLabel::native("Leaf","Blatt"))]}),min_items:None,max_items:None},..ActionArgDef::text("original",LocalizedLabel::native("Original","Ursprünglich")) }],inputs_refused:None,validator:Ok(semio_framework_schema::OwnedJsonSchemaValidator::compile("{\"type\":\"string\",\"pattern\":\"^(a|[b-d]){1,4}$\"}").unwrap()),value:DslValue::String(String::with_capacity(65536)),outcome:Vec::new(),refused:None};(session,editor,make_mutation(),app.stores.store.derived_snapshot_head(),input)});let held=heap.requested_bytes-heap.released_bytes;let editor_pointer=app.time_travel.editor.as_ref().map(|editor|editor.target.0.as_ptr());assert!(editor_pointer.is_none());app.time_travel.session=session;app.time_travel.editor=Some(editor);app.time_travel.document.kind=Some(mutation);app.time_travel.document.preview=Some(preview);app.time_travel.document.preview_input=Some(input);let pointer=app.time_travel.editor.as_ref().unwrap().target.0.as_ptr();let mut original=Some(TimeTravelEvent::Discard{generation:5});let (receipt,heap)=observe_heap_allocations_on_this_thread(||app.time_travel.stage_time_travel_command(&mut original,grant).unwrap().unwrap());assert!(receipt.fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));let mut births=0;let mut releases=0;let mut committed=false;let mut turns=0;
  for _ in 0..100000{
@@ -52,16 +77,17 @@ pub(crate) fn assert_discard_publication_original<A:ArtifactApp>(app:&mut VcsArt
   let (receipt,heap)=observe_heap_allocations_on_this_thread(||{if app.time_travel_ctx().drive_original_discard_command(grant).unwrap(){let (original,receipt)=app.time_travel.take_command_receipt().unwrap();assert_eq!(original,grant);receipt}else{app.time_travel_ctx().time_travel_retire_step(grant).unwrap().expect("original Discard residue frontier").progress()}});assert!(receipt.fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(receipt.retained_capacity_bytes,receipt.released_bytes));births+=heap.requested_bytes;releases+=heap.released_bytes;turns+=1;
   if app.time_travel.session.stage==TimeTravelStage::Inactive{committed=true;assert!(app.time_travel.editor.is_none());assert!(app.time_travel.document.preview.is_none());assert!(app.time_travel.document.preview_input.is_none());assert!(app.time_travel.document.kind.is_none())}else{assert_eq!(app.time_travel.editor.as_ref().unwrap().target.0.as_ptr(),pointer)}
  }
- assert!(committed);assert!(app.time_travel.pending_command.is_none());assert!(app.time_travel.discard_cursor.is_none());assert!(app.time_travel.command_retirements.terminal_is_empty());assert!(app.time_travel.document.discard_effects.is_none());assert_eq!(releases,held+births);assert!(app.time_travel.document.terminal_is_empty());eprintln!("[DEBUG] actual Actor Discard original Session/editor/typedStore fields conserved before atomic publication turns={turns} original={held} births={births} releases={releases} independentDenial0heap allResidueEmpty=true");
+ assert!(committed);assert!(app.time_travel.pending_command.is_none());assert!(app.time_travel.discard_cursor.is_none());assert!(app.time_travel.command_retirements.terminal_is_empty());assert!(app.time_travel.document.discard_effects.is_none());assert_eq!(releases,held+births);assert!(app.time_travel.document.terminal_is_empty());
 }
 
-pub(crate) fn assert_pending_command_original<A:ArtifactApp>(){
+#[doc(hidden)]
+pub fn assert_pending_command_original<A:ArtifactApp>(){
  let grant=native_original_actor_grant();
  for capacity in [0,8192,65536]{for body in [1,17,4096]{
   let(mut ledger,heap)=observe_heap_allocations_on_this_thread(TimeTravelLedger::<A>::default);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));let(mut original,heap)=observe_heap_allocations_on_this_thread(||{let mut name=String::with_capacity(capacity);name.push_str("α\0😀");Some(TimeTravelEvent::Choose{generation:5,choice:semio_framework_time_travel::TimeTravelChoice::Alternative{name}})});let held=heap.requested_bytes-heap.released_bytes;let pointer=match original.as_ref().unwrap(){TimeTravelEvent::Choose{choice:semio_framework_time_travel::TimeTravelChoice::Alternative{name},..}=>name.as_ptr(),_=>unreachable!()};
   for grant in [RetainedCloneGrant::default(),RetainedCloneGrant{maximum_items:1,..Default::default()}]{let(receipt,heap)=observe_heap_allocations_on_this_thread(||ledger.stage_time_travel_command(&mut original,grant).unwrap());assert!(receipt.is_none());assert!(original.is_some());assert!(ledger.pending_command.is_none());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));}
   let(receipt,heap)=observe_heap_allocations_on_this_thread(||ledger.stage_time_travel_command(&mut original,grant).unwrap().unwrap());assert_eq!(receipt.copied_items,1);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert!(original.is_none());assert!(ledger.has_pending_work());assert!(matches!(ledger.pending_command.as_ref().unwrap().original(),Some(TimeTravelEvent::Choose{choice:semio_framework_time_travel::TimeTravelChoice::Alternative{name},..})if name.as_ptr()==pointer));let(_,heap)=observe_heap_allocations_on_this_thread(||ledger.begin_close());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));let mut births=0;let mut releases=0;let mut turns=0;
   while ledger.pending_command.is_some(){let(demand,heap)=observe_heap_allocations_on_this_thread(||ledger.pending_command_retirement_demands(grant.maximum_copy_bytes).unwrap());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert!(permits(grant,demand));for denied in [Some(RetainedCloneGrant{maximum_items:0,..grant}),(demand.copy_bytes>0).then_some(RetainedCloneGrant{maximum_copy_bytes:demand.copy_bytes.saturating_sub(1),..grant}),(demand.capacity_bytes>0).then_some(RetainedCloneGrant{maximum_capacity_bytes:demand.capacity_bytes.saturating_sub(1),..grant}),(demand.release_bytes>0).then_some(RetainedCloneGrant{maximum_release_bytes:demand.release_bytes.saturating_sub(1),..grant}),(demand.depth>0).then_some(RetainedCloneGrant{maximum_depth:demand.depth.saturating_sub(1),..grant})].into_iter().flatten(){let(step,heap)=observe_heap_allocations_on_this_thread(||ledger.pending_command_retirement_step(denied).unwrap().unwrap());assert_eq!(step.progress(),Default::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));if turns==0{assert!(matches!(ledger.pending_command.as_ref().unwrap().original(),Some(TimeTravelEvent::Choose{choice:semio_framework_time_travel::TimeTravelChoice::Alternative{name},..})if name.as_ptr()==pointer))}}let(step,heap)=observe_heap_allocations_on_this_thread(||ledger.pending_command_retirement_step(grant).unwrap().unwrap());assert!(step.progress().fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));births+=heap.requested_bytes;releases+=heap.released_bytes;turns+=1;assert!(turns<100000);}
-  assert_eq!(held+births,releases);while !ledger.session_retired{let demand=ledger.session_retirement_demands(grant.maximum_copy_bytes).unwrap();assert!(permits(grant,demand));ledger.session_retirement_step(grant).unwrap();}assert!(ledger.terminal_is_empty());let(_,heap)=observe_heap_allocations_on_this_thread(||drop(ledger));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));eprintln!("[DEBUG] Actor received original command cap={capacity} body={body} admission0heap originalPointer={pointer:p} held={held} birth={births} release={releases} terminalDrop=0");
+  assert_eq!(held+births,releases);while !ledger.session_retired{let demand=ledger.session_retirement_demands(grant.maximum_copy_bytes).unwrap();assert!(permits(grant,demand));ledger.session_retirement_step(grant).unwrap();}assert!(ledger.terminal_is_empty());let(_,heap)=observe_heap_allocations_on_this_thread(||drop(ledger));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
  }}
 }

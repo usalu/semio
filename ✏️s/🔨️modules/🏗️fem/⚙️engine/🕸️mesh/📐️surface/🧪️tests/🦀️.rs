@@ -47,7 +47,6 @@ fn complete_portable_region_surface_corpus() {
         }
         assert_eq!(regions.iter().map(|row| row["regionId"].clone()).collect::<Vec<_>>(), vector["expected"].as_array().unwrap().iter().map(|row| row["regionId"].clone()).collect::<Vec<_>>());
         observed.push(json!({"id":vector["id"],"neutral":{"regions":regions}}));
-        println!("[DEBUG] Real neutral region surface vector {} retained binary64 bounds and identities", vector["id"]);
     }
     let path = std::env::var_os("SEMIO_FEM_NEUTRAL_RESULTS").expect("owning neutral corpus command must declare its output path");
     let bytes = serde_json::to_vec(&observed).unwrap();
@@ -55,5 +54,4 @@ fn complete_portable_region_surface_corpus() {
     let path = std::path::Path::new(&path);
     std::fs::create_dir_all(path.parent().unwrap()).unwrap();
     std::fs::write(path, bytes).unwrap();
-    println!("[DEBUG] Complete nine-vector neutral receiver wrote its explicit bounded artifact");
 }

@@ -8,9 +8,7 @@ use crate::schema::snapshot::SemioObjectSnapshot;
 use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValueSnapshot;
 use framework_schema::ArtifactSchema;
 
-#[cfg(test)]
-#[path = "🧪️tests/🪪️document-contract/🦀️.rs"]
-mod document_contract;
+
 
 #[derive(Clone, Debug, PartialEq, ArtifactSchema)]
 #[artifact_schema(id = "s.stdio.semio.object")]

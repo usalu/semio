@@ -406,7 +406,6 @@ async function openTemplateSource(page: Page, renderer: Renderer): Promise<{ id:
         await page.mouse.wheel(0, delta);
         await page.waitForTimeout(200);
         controls = await visibleControls(page, renderer);
-        console.log(`[DEBUG] Display template wheel ${delta}: ${JSON.stringify(controls.filter(row => row.id.includes("framework.display.windows.")))}`);
         if (controls.some(row => exactSuffix(row.id, parallelId))) break;
       }
     }
@@ -717,7 +716,6 @@ async function run(renderer: Renderer, url: string, output: string, suite: "dock
       const result = { ...await runCase(browser, renderer, url, authored, destination, locale) as object, ...(locale ? { locale } : {}) };
       receipt.cases.push(result);
       writeFileSync(join(output, "receipt.json"), JSON.stringify(receipt, null, 2));
-      console.log(`[DEBUG] ${renderer} ${locale ?? "docking"} ${authored.id} ${(result as { status: string }).status}`);
     }
   } finally {
     await browser.close();

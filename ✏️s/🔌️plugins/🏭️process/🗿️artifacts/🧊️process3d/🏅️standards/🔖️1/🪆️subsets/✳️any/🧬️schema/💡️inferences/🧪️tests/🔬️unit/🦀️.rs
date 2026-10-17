@@ -146,7 +146,6 @@ async fn timber_document_replays_every_step_with_monotone_subtractive_volume() {
         }
         previous = volume;
     }
-    eprintln!("[DEBUG] Process timber native replay matched all five independent volume prefixes");
 }
 
 #[test]
@@ -170,5 +169,4 @@ fn semantic_memo_hashes_literal_words_without_transport() {
         assert!(hashes.insert(hash), "distinct literal {}", text("word"));
     }
     assert_eq!(hashes.len(), independent_keys.len());
-    eprintln!("[DEBUG] Process semantic memo matched {} exact neutral words and independent JSON keys", hashes.len());
 }

@@ -117,7 +117,7 @@ enum PresentationPackSnapshotState {
     Complete,
 }
 
-struct PresentationPackSnapshotAuthority {
+pub struct PresentationPackSnapshotAuthority {
     operation: semio_framework_job::OperationId,
     generation: semio_framework_job::Generation,
     path: store::os_store::owned_schema_decode::OwnedSchemaPath,
@@ -129,6 +129,14 @@ struct PresentationPackSnapshotAuthority {
 impl PresentationPackSnapshotAuthority {
     fn new(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Self {
         Self { operation, generation, path, state: PresentationPackSnapshotState::AwaitToken, value: std::mem::ManuallyDrop::new(None), retirement: std::mem::ManuallyDrop::new(None) }
+    }
+
+    /// 🧪️ An authority that already holds one live owned snapshot, for the drop-during-panic law.
+    #[cfg(any(test, feature = "testkit"))]
+    pub fn with_live_value(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::os_store::owned_schema_decode::OwnedSchemaPath, value: PresentationSnapshot) -> Self {
+        let mut authority = Self::new(operation, generation, path);
+        *authority.value = Some(value);
+        authority
     }
 
     fn diagnostic(&self, code: &'static str, offset: u64) -> store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic {
@@ -387,6 +395,4 @@ impl store::os_store::owned_schema_decode::ArtifactEnvelopeSprConflictAuthority 
 #[derive(semio_framework_value::FactoryPayloadRetirement)]
 pub struct PresentationEnvelopeOwnedFieldCatalog;
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

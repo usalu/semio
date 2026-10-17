@@ -4,7 +4,7 @@
 
 use semio_framework_value::{list::PagedList, paged::PagedUtf8};
 
-use {crate::standards::v1::subsets::any::schema::Puzzle2dCamera, crate::standards::v1::subsets::any::schema::Puzzle2dEdge, crate::standards::v1::subsets::any::schema::Puzzle2dMeta, crate::standards::v1::subsets::any::schema::Puzzle2dNode, crate::standards::v1::subsets::any::schema::Puzzle2dTargetRegion, crate::standards::v1::subsets::any::schema::PUZZLE_2D_SCHEMA};
+use {crate::standards::v1::subsets::any::schema::records::Puzzle2dCamera, crate::standards::v1::subsets::any::schema::records::Puzzle2dEdge, crate::standards::v1::subsets::any::schema::records::Puzzle2dMeta, crate::standards::v1::subsets::any::schema::records::Puzzle2dNode, crate::standards::v1::subsets::any::schema::records::Puzzle2dTargetRegion, crate::standards::v1::subsets::any::schema::records::PUZZLE_2D_SCHEMA};
 use ::semio_framework_schema::ArtifactSchema;
 
 
@@ -72,9 +72,5 @@ impl Default for Puzzle2dSnapshot {
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🧬️retained-clone/🦀️.rs"]
-mod retained_clone_tests;
 
-#[path = "🔎️lookup/🦀️.rs"]
-pub mod lookup;
+

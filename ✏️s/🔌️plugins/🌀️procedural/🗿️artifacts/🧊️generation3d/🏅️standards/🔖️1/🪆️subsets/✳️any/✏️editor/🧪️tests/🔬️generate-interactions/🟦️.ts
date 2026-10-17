@@ -22,7 +22,7 @@ type GenerateInteractionsFixture = {
 };
 
 /** 🎬️ Independent re-implementation of the framework's intent→args merge (`uiIntentPayload`,
- * `🛠️ShellHelpers/🟦️.tsx`): a node's AUTHORED args with the gesture's own payload merged over them, a
+ * `🛠️ShellHelpers/🌳️tree-windows/🟦️.tsx`): a node's AUTHORED args with the gesture's own payload merged over them, a
  * scalar payload NAMED by its trigger. Written here from the rule rather than imported, so the
  * fixture's `renameCommitArgument` row is validated against a second implementation. */
 function mergeIntentPayload(authored: Record<string, unknown>, trigger: string, input: unknown): Record<string, unknown> {

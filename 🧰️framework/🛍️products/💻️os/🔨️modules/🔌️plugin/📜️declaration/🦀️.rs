@@ -62,7 +62,8 @@ use crate::artifact_inference::ArtifactInferenceService;
 /// describe a declaration through the builder's methods but never read or hand-assemble one;
 /// only the transactional assembly plan ever walks it.
 pub struct ArtifactDeclaration {
-    kind: String,
+    #[doc(hidden)]
+    pub kind: String,
     pub schemas: Vec<::semio_framework_schema_registry::ArtifactSchemaDescriptor>,
     pub inferences: Vec<::semio_framework_schema_registry::ArtifactInferenceDescriptor>,
     pub inference_services: Vec<ArtifactInferenceService>,
@@ -81,12 +82,15 @@ pub struct ArtifactDeclaration {
     /// are captured here so the declaration is a complete, single-source manifest of the
     /// artifact's shape, not because `register_all` calls anything with them today.
     #[allow(dead_code, reason = "manifest-completeness capture, no reader yet — see comment above")]
-    child_slots: &'static [::semio_framework_schema_composition::ChildSlotSpec],
+    #[doc(hidden)]
+    pub child_slots: &'static [::semio_framework_schema_composition::ChildSlotSpec],
     #[allow(dead_code, reason = "manifest-completeness capture, no reader yet — see comment above")]
-    link_slots: &'static [::semio_framework_schema_composition::LinkSlotSpec],
+    #[doc(hidden)]
+    pub link_slots: &'static [::semio_framework_schema_composition::LinkSlotSpec],
     pub capabilities: Vec<CapabilityRequirement>,
     pub definition: ArtifactDefinition,
-    definition_error: Option<ArtifactDefinitionError>,
+    #[doc(hidden)]
+    pub definition_error: Option<ArtifactDefinitionError>,
 }
 
 /// 🧾️ One exact immutable capability claim-set required by a declared runtime facet.

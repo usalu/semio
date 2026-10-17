@@ -20,6 +20,14 @@ path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/�
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-s-artifact-dag-dag-inferences = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦️packages/🦀️rust" }
+semio-s-artifact-dag-dag-config = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/📦️packages/🦀️rust" }
+semio-s-artifact-dag-dag-diff = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/📦️packages/🦀️rust" }
+semio-s-artifact-dag-dag-tests = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧪️tests/🔬️unit/📦️packages/🦀️rust" }
+semio-s-artifact-dag-dag-schema = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust" }
+semio-s-artifact-dag-dag-document-behavior-tests = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🧩️document-behavior/📦️packages/🦀️rust" }
+semio-s-artifact-dag-dag-dag = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust" }
+semio-s-artifact-dag-dag-v1 = { path = "../../🏅️standards/🔖️1/📦️packages/🦀️rust" }
 semio-framework-composition-admission = { path = "../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧩️composition/📥️admission/📦️packages/🦀️rust" }
 semio-framework-os-infinite-directed-presentation = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🧬️schema/🖼️presentation/📦️packages/🦀️rust" }
 semio-framework-pack = { path = "../../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
@@ -49,6 +57,8 @@ semio-s-artifact-stdio-semio-value-model = { workspace = true }
 semio-s-artifact-stdio-svg = { workspace = true }
 semio-s-artifact-stdio-xml = { workspace = true }
 semio-framework = { path = "../../../../../../../🧰️framework/📦️packages/🦀️rust", package = "semio-framework" }
+semio-framework-action-bus = { path = "../../../../../../../🧰️framework/🔨️modules/🎯️action-bus/📦️packages/🦀️rust" }
+semio-framework-tool-run-actions = { path = "../../../../../../../🧰️framework/🔨️modules/⏯️tool-run/🕹️actions/📦️packages/🦀️rust" }
 semio-framework-job.workspace = true
 semio-framework-graph-layout-run.workspace = true
 semio-framework-tool-run.workspace = true

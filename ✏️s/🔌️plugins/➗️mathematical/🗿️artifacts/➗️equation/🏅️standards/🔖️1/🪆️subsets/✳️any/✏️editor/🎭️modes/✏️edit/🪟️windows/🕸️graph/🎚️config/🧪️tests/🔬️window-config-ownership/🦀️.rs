@@ -1,6 +1,6 @@
 //! 🧪️ Exact Equation graph-window configuration publication and persistence laws.
 
-use super::*;
+use crate::editor::equation::modes::edit::windows::graph::config::*;
 use protocol::{Mutation, OpBinary, OpText};
 use semio_framework_plugin::WindowConfigOwner;
 
@@ -40,7 +40,7 @@ fn equation_graph_window_config_retained_publications_isolate_and_reload_two_win
                     Ok(receipt.lanes.iter().filter(|lane| **lane == semio_framework_plugin::app::TypedOperationResultLane::WindowConfig).count())
                 }
 
-                let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔬️window-config-ownership/🔣️.json")).unwrap();
+                let fixture: serde_json::Value = serde_json::from_str(runtime_fixture_text("../../🎭️modes/✏️edit/🪟️windows/🕸️graph/🎚️config/🧪️tests/🧫️fixtures/🔬️window-config-ownership/🔣️.json")).unwrap();
                 let left_id = fixture["leftWindowId"].as_str().unwrap();
                 let right_id = fixture["rightWindowId"].as_str().unwrap();
                 let view = ViewModel { window_instances: [left_id, right_id].into_iter().map(|id| ViewWindowInstance { id: id.into(), window_kind_id: EquationGraphWindowConfigOwner::WINDOW_KIND_ID.into() }).collect(), ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
@@ -121,7 +121,7 @@ fn equation_graph_window_config_retained_publications_isolate_and_reload_two_win
 
 #[test]
 fn equation_graph_window_config_mutations_follow_the_neutral_trace_and_restore() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔬️window-config-ownership/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(runtime_fixture_text("../../🎭️modes/✏️edit/🪟️windows/🕸️graph/🎚️config/🧪️tests/🧫️fixtures/🔬️window-config-ownership/🔣️.json")).unwrap();
     let base: EquationGraphWindowConfig = semio_framework_pack_json::from_json_str(&fixture["base"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let mut windows = std::collections::BTreeMap::from([(fixture["leftWindowId"].as_str().unwrap().to_string(), base.clone()), (fixture["rightWindowId"].as_str().unwrap().to_string(), base)]);
     for row in fixture["cases"].as_array().unwrap() {
@@ -139,4 +139,9 @@ fn equation_graph_window_config_mutations_follow_the_neutral_trace_and_restore()
             assert_eq!(state, &expected);
         }
     }
+}
+
+fn runtime_fixture_text(relative: &str) -> &'static str {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative);
+    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display())).into_boxed_str())
 }

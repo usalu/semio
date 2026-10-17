@@ -139,14 +139,22 @@ pub mod derived_composition {
 pub use derived_composition::*;
 //#endregion 🎹️DerivedComposition
 
-#[path = "💾️binary/🦀️.rs"]
-pub mod binary;
+pub mod binary {
+    pub use semio_s_artifact_stdio_semio_animation_editor::io::binary::*;
+    pub use semio_s_artifact_stdio_semio_animation_examples::io::binary::diff;
+    pub use semio_s_artifact_stdio_semio_animation_examples::io::binary::inferences;
+    pub use semio_s_artifact_stdio_semio_animation_schema::io::binary::snapshot;
+}
 
-#[path = "📝️text/🦀️.rs"]
-pub mod text;
+pub mod text {
+    pub use semio_s_artifact_stdio_semio_animation_editor::io::text::*;
+    pub use semio_s_artifact_stdio_semio_animation_examples::io::text::inferences;
+}
 
-#[path = "🪶️sqlite/🦀️.rs"]
-pub mod sqlite;
+pub mod sqlite {
+    pub use semio_s_artifact_stdio_semio_animation_examples::io::sqlite::*;
+    pub use semio_s_artifact_stdio_semio_animation_schema::io::sqlite::snapshot;
+}
 
 pub mod derived_construction {
     use crate::schema::diff::SemioAnimationDiff;

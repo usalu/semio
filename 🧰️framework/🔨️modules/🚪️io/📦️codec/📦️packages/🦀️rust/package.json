@@ -9,6 +9,7 @@
     "test-native": "bun --cwd \"../../../../../..\" repo run @semio-tech/framework-io-codec-rs:test-native"
   },
   "devDependencies": {
+    "@semio-tech/framework-compiler-ts": "workspace:*",
     "@semio-tech/process": "workspace:*"
   }
 }

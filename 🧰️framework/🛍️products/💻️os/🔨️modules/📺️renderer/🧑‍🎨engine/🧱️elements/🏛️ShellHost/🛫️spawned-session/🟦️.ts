@@ -40,29 +40,28 @@ import {
   spawnedWindowInstanceIdV1
 } from "../🪟️spawned-program/🟦️.ts";
 import { type WindowLayoutNode } from "@semio-tech/ui-react";
-import {
-  type ActiveSession,
-  sessionProgramsV1,
-  type SpacePanelState,
-  type SpaceProgramEntry,
-  type SpawnedAppEntry
-} from "../../🐚️Shell/🟦️.tsx";
+import { type SpacePanelState, type SpawnedAppEntry } from "../../🐚️Shell/🟦️.tsx";
+import { type ActiveSession, sessionProgramsV1, type SpaceProgramEntry } from "../../🐚️Shell/📦️program-sessions/🟦️.ts";
 import type { ViewModel } from "../../🔌️PluginRuntime/🧷️handle-contract/🟦️.ts";
 import {
   applyFrameworkLayoutSeed,
-  applyUiRefreshResponseToCache,
-  buildSpacePanelState,
-  browserActorWindowConfigDispatchUiScopeV1,
-  buildUiRefreshRequest,
   flattenPanelTabLeaves,
-  mergeRecordPreservingIdentity,
-  panelJsonFromState,
-  parsePanelState,
   resolveCanvasBodyKey,
   resolveFrameworkLayoutSeed,
-  frameworkLayoutDeclaredInstances,
+  frameworkLayoutDeclaredInstances
+} from "../../🛠️ShellHelpers/🛣️route-and-chrome/🟦️.tsx";
+import {
+  applyUiRefreshResponseToCache,
+  browserActorWindowConfigDispatchUiScopeV1,
+  buildUiRefreshRequest,
+  mergeRecordPreservingIdentity
+} from "../../🛠️ShellHelpers/🔄️ui-refresh/🟦️.ts";
+import {
+  buildSpacePanelState,
+  panelJsonFromState,
+  parsePanelState,
   studioPanelFocusingSpawned
-} from "../../🛠️ShellHelpers/🟦️.tsx";
+} from "../../🛠️ShellHelpers/📌️panel/🟦️.ts";
 // #endregion 🔌️Adapters
 import { isPluginInstanceRetiredV1, type PluginWasmHandle } from "../../🔌️PluginRuntime/🟦️.tsx";
 import { BROWSER_ACTOR_ACTION_APP_CHANNEL_VERSION } from "@semio-tech/framework/browser-bundle/action-handoff";

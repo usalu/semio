@@ -1,7 +1,6 @@
 //! 🔄 Shooting mutation payload — `RotateAssets`. The bulk axis-angle rotation gesture. Composes an `(ax, ay, az, angle)` axis-angle quaternion onto every asset in `asset_ids`.
 
 use crate::diff::ShootingDiff;
-use crate::mutations::ShootingMutation;
 use crate::ShootingSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 
@@ -19,12 +18,15 @@ pub struct RotateAssets {
     pub angle: f64,
 }
 
-impl MutationKind<ShootingSnapshot, ShootingMutation> for RotateAssets {
+impl<Op> MutationKind<ShootingSnapshot, Op> for RotateAssets
+where
+    Op: protocol::Mutation<ShootingSnapshot, Diff = ShootingDiff> + From<RotateAssets>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "rotate", entity: "assets", kind: "rotate-assets", record: "RotatedAssets" };
     fn diff(&self, base: &ShootingSnapshot) -> protocol::MutationOutcome<ShootingDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &ShootingSnapshot) -> Result<Vec<ShootingMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &ShootingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

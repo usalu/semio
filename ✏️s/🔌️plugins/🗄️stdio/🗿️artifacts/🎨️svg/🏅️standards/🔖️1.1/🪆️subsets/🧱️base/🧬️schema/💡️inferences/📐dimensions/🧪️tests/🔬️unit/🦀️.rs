@@ -1,4 +1,5 @@
-use super::*;
+use crate::SvgSnapshot;
+use crate::standards::v1_1::subsets::base::schema::inferences::dimensions::*;
 use crate::schema::snapshot::{SvgAttr, SvgDocument, SvgNode};
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9

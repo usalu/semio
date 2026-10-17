@@ -1,4 +1,5 @@
 use crate::*;
+use semio_framework_test_fixtures::fixture_path;
 use semio_s_artifact_norm_en1990_inferences::En1990Inference;
 use semio_s_artifact_norm_en1990_mut_reliability::change_consequence_class::ChangeConsequenceClass;
 use crate::text::snapshot::{parse_dsl, EN1990_HIGH_CONSEQUENCE_OFFICE_EXAMPLE_TEXT};
@@ -64,7 +65,7 @@ impl SubsetRoundtripSpec for En1990AnyRoundtrip {
 
     async fn validate_payload(bytes: &[u8]) -> Result<(), Vec<String>> {
         let text = std::str::from_utf8(bytes).map_err(|e| vec![e.to_string()])?;
-        let schema = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json");
+        let schema = fixture_path!("../../../🧬️schema/📸️snapshot/🔣️.json");
         let tmp = std::env::temp_dir().join("en1990-validate-instance.json");
         std::fs::write(&tmp, text).map_err(|e| vec![e.to_string()])?;
         let out = std::process::Command::new("python3")
@@ -98,8 +99,7 @@ async fn high_consequence_office_example_parses() {
 
 #[semio_framework_async_macros::async_test]
 async fn parse_en1990_artifact_ts_rejects_malformed_snapshot() {
-    let script = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪parse-en1990-artifact.bun.ts");
+    let script = fixture_path!("../../../🧬️schema/🧪parse-en1990-artifact.bun.ts");
     assert!(script.exists(), "missing {}", script.display());
     let out = std::process::Command::new("bun")
         .arg(script.as_os_str())

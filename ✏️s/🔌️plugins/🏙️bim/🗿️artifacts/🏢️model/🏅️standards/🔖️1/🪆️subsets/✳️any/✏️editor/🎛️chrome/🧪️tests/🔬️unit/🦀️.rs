@@ -1,5 +1,5 @@
 use super::*;
-use crate::editor::bim::unit_tests::context::view;
+use crate::editor::bim::fixture::context::view;
 use semio_framework_plugin::WindowConfigOwner;
 use semio_framework_ui_locale::Locale;
 

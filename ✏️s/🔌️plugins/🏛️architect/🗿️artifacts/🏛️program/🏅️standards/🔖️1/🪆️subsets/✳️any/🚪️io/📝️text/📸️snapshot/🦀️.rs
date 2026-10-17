@@ -31,9 +31,7 @@ pub fn print(document: &ProgramSnapshot) -> String {
 }
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
 
 //#region 🚚️Carrier
@@ -92,8 +90,6 @@ pub use snapshot_codec::*;
 #[allow(unused_imports)]
 mod mutations_codec {
 use super::*;
-use crate::standards::v1::subsets::any::schema::mutations::*;
-use crate::standards::v1::subsets::any::schema::diff::ProgramDiff;
 use crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot;
 
 /// 📥️ Decodes a committed `📸️snapshot/{⬅️before,➡️after}/🔣️.json` vector.

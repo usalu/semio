@@ -2,7 +2,7 @@
 //! not loop (authored reads only); restating the current base slab is a no-op. The resolved base height follows by inference.
 
 use super::super::wall_depth::attach_flaw;
-use super::super::wall_geometry::Flaw;
+use crate::standards::v1::subsets::any::schema::mutations::wall_geometry::Flaw;
 use super::SetWallBaseSlab;
 use crate::standards::v1::subsets::any::schema::{diff::{Assigned, Entry, ModelDiff, patches::WallPatch}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};

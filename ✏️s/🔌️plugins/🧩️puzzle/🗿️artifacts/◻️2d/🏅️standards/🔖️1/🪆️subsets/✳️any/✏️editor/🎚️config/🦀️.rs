@@ -9,6 +9,13 @@ use std::collections::BTreeMap;
 
 //#region 🪟️WindowKinds
 /// 👁️ The overview window kind of the edit mode: the whole board at automatic level of detail.
+pub const PUZZLE2D_OVERVIEW_BODY_KEY: &str = "puzzle2d.play.overview";
+pub const PUZZLE2D_DETAIL_BODY_KEY: &str = "puzzle2d.play.detail";
+pub const PUZZLE2D_SELECTION_BODY_KEY: &str = "puzzle2d.play.selection";
+pub const PUZZLE2D_WINDOW_BODY_KEYS: [&str; 3] = [PUZZLE2D_OVERVIEW_BODY_KEY, PUZZLE2D_DETAIL_BODY_KEY, PUZZLE2D_SELECTION_BODY_KEY];
+pub const PUZZLE2D_SELECT_UTILITY_ID: &str = "select";
+pub const PUZZLE2D_PLAY_BODY_LAYERS: &str = "puzzle2d.play.layers";
+pub const PUZZLE2D_PLAY_BODY_PROPERTIES: &str = "puzzle2d.play.properties";
 pub const PUZZLE2D_OVERVIEW_WINDOW_KIND_ID: &str = "2d-overview";
 
 /// 🔍️ The detail window kind of the edit mode: a zoomed board at the fixed detail tier.
@@ -490,9 +497,7 @@ impl protocol::OpText for Puzzle2dConfigMutation {
 //#endregion 🔖️ConfigMutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
 
 pub const PUZZLE2D_LOD_MODE_AUTOMATIC: &str = "automatic";
@@ -500,3 +505,8 @@ pub const PUZZLE2D_LOD_MODE_AUTOMATIC: &str = "automatic";
 /// 🎯️ The count a fresh 2d document offers: a batch large enough to be worth watching, small enough
 /// that a first run finishes while the operator is still looking at it.
 pub const PUZZLE2D_DEFAULT_FILL_COUNT: u32 = 100;
+
+/// 🔭️ Zoom factor each triptych pane applies to the framed base zoom.
+pub const PUZZLE2D_OVERVIEW_ZOOM_SCALE: f64 = 0.68;
+pub const PUZZLE2D_DETAIL_ZOOM_SCALE: f64 = 2.15;
+pub const PUZZLE2D_SELECTION_ZOOM_SCALE: f64 = 0.36;

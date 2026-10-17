@@ -2,7 +2,7 @@
 //! running fill tool run observes the config change and resumes from its checkpoint with the new count (a raise
 //! continues, a lower retracts the provisional tail); the command itself never touches the document.
 
-use {crate::editor::puzzle2d::snapshot::puzzle2d_window_and_measures_scope, crate::editor::puzzle2d::Puzzle2dActionCtx};
+use {crate::editor::puzzle2d::snapshot::puzzle2d_window_and_measures_scope, crate::editor::puzzle2d::interaction::Puzzle2dActionCtx};
 use semio_framework_plugin::kernel::Effect;
 use semio_framework_pack_json::{Value};
 #[cfg(test)] use semio_framework_pack_json::{json};
@@ -28,7 +28,5 @@ pub fn set_fill_count(ctx: &mut Puzzle2dActionCtx<'_>, args: Option<&Value>) {
 }
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

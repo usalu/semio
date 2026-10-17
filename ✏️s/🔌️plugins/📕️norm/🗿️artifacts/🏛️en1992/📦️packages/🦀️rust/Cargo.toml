@@ -33,6 +33,7 @@ semio-framework-artifact-reference = { workspace = true }
 semio-framework-async-macros = { workspace = true }
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
+semio-framework-test-fixtures = { path = "../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-framework-value = { workspace = true }
 semio-s-artifact-norm-en1992-checks = { workspace = true }
 semio-s-artifact-norm-en1992-diff = { workspace = true }

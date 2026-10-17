@@ -36,6 +36,5 @@ export async function proveWireValueMaterializationFixture(repoRoot:string):Prom
             if(actual.result.outcome==="accepted"){assert(equal(actual.result.value,row.grammar.value),row.id+" independent output");assert.deepEqual(JSON.parse(JSON.stringify(actual.result.value)),row.grammar.value,row.id+" JSON oracle");}
             if(row.allowanceProbeHex){const probe=grammar(row.allowanceProbeHex,{...row.limits,maxFileLen:Buffer.from(row.allowanceProbeHex,"hex").length});assert.deepEqual(probe.result,{outcome:"accepted",value:null});assert.equal(probe.owned,actual.owned);}
         }
-        console.log(`[DEBUG] wire materialization: independent-grammar=${fixture.cases.length} SQLite-UTF8=${fixture.cases.length} JSON-roundtrip=1; product semantics and native backing require their owning executions`);
     }finally{database.close();}
 }

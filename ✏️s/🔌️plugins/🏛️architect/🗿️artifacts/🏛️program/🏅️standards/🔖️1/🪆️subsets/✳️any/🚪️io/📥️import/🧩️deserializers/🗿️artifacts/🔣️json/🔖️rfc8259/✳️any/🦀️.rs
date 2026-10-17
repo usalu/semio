@@ -4,7 +4,8 @@
 //! `JsonSnapshot.value: serde_json::Value` -> stdio's own `JsonValue`). Mirrors it with the
 //! reverse structural converter and stdio's own real `parse_json_text` for `deserialize_bytes`.
 use crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot;
-use crate::standards::v1::subsets::any::schema::ARCHITECT_PROGRAM_SCHEMA;
+use crate::standards::v1::subsets::any::schema::snapshot::ARCHITECT_PROGRAM_SCHEMA;
+use semio_framework_test_fixtures::fixture_path;
 use semio_s_artifact_stdio_json::standards::v_rfc8259::subsets::base::io::text::snapshot::parse_json_text;
 use semio_s_artifact_stdio_json::JsonSnapshot;
 
@@ -28,7 +29,7 @@ pub fn deserialize_bytes(bytes: &[u8]) -> Result<ProgramSnapshot, semio_framewor
 #[cfg(test)]
 #[test]
 fn sqlite_snapshot_program_declared_json_preserves_every_owned_ieee_word() {
-    let base=std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️1/🪆️subsets/✳️any");
+    let base=fixture_path!("../../../..");
     let laws:serde_json::Value=serde_json::from_slice(&std::fs::read(base.join("🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures/🔣️.json")).unwrap()).unwrap();
     let fixture=base.join(laws["unsigned32Fixtures"]["BenchmarkRecord"][0].as_str().unwrap());
     let mut expected:ProgramSnapshot=semio_framework_pack_json::from_json_str(&std::fs::read_to_string(fixture).unwrap(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
@@ -45,7 +46,7 @@ fn sqlite_snapshot_program_declared_json_preserves_every_owned_ieee_word() {
 #[cfg(test)]
 #[test]
 fn sqlite_snapshot_program_declared_json_preserves_full_unsigned64_transport(){
-    let base=std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️1/🪆️subsets/✳️any");
+    let base=fixture_path!("../../../..");
     let corpus:serde_json::Value=serde_json::from_slice(&std::fs::read(base.join("🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures/🔣️.json")).unwrap()).unwrap();
     for row in corpus["unsigned64Fields"].as_array().unwrap(){
         let entity=row[0].as_str().unwrap();let field=row[1].as_str().unwrap();let fixture=&corpus["unsigned64Fixtures"][entity];let slot=fixture[1].as_str().unwrap();let source=std::fs::read_to_string(base.join(fixture[0].as_str().unwrap())).unwrap();
@@ -62,7 +63,7 @@ fn sqlite_snapshot_program_declared_json_preserves_full_unsigned64_transport(){
 #[cfg(test)]
 #[test]
 fn sqlite_snapshot_program_declared_json_covers_all_authored_registers_and_optional_quantities(){
-    let base=std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️1/🪆️subsets/✳️any");let corpus:serde_json::Value=serde_json::from_slice(&std::fs::read(base.join("🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures/🔣️.json")).unwrap()).unwrap();
+    let base=fixture_path!("../../../..");let corpus:serde_json::Value=serde_json::from_slice(&std::fs::read(base.join("🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures/🔣️.json")).unwrap()).unwrap();
     let mut root:serde_json::Value=serde_json::from_slice(&std::fs::read(base.join("🧫️fixtures/🧬️mutations/📋️register-row/🌱️create/👥️stakeholder-creates-a/📸️snapshot/➡️after/🔣️.json")).unwrap()).unwrap();
     for row in corpus["registerFixtures"].as_array().unwrap(){let key=row[0].as_str().unwrap();let path=base.join("🧫️fixtures/🧬️mutations").join(row[1].as_str().unwrap()).join(row[2].as_str().unwrap()).join("📸️snapshot/➡️after/🔣️.json");let source:serde_json::Value=serde_json::from_slice(&std::fs::read(path).unwrap()).unwrap();root[key]=source[key].clone();}
     let expected:ProgramSnapshot=semio_framework_pack_json::from_json_str(&root.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();let wire=crate::standards::v1::subsets::any::io::export::serializers::artifacts::json::v_rfc8259::any::serialize(&expected).unwrap();let actual=deserialize(&wire).unwrap();assert_eq!(actual,expected);

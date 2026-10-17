@@ -1,5 +1,6 @@
 
 use super::*;
+use semio_framework_test_fixtures::fixture_text;
 use std::time::Instant;
 
 pub(super) fn caller_worker_close_policy(phase:WorkerJobClosePhase)->RetainedCloneGrant{
@@ -45,7 +46,7 @@ impl InteractiveJob for ShortGrantCloseJob {
 #[test]
 fn mounted_close_on_a_short_byte_grant_walks_every_named_phase_to_terminal() {
     let _slots = super::worker_session_slots_shared();
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/♻️mounted-close/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../🧪️tests/🧫️fixtures/♻️mounted-close/🔣️.json")).unwrap();
     let profile=fixture["profiles"].as_array().unwrap().iter().find(|profile|profile["wordBytes"].as_u64()==Some(size_of::<usize>()as u64)).expect("canonical physical layout profile for this native address space");
     let expected=profile["turns"].as_array().unwrap();
     let grant = 4_096;
@@ -77,7 +78,6 @@ fn mounted_close_on_a_short_byte_grant_walks_every_named_phase_to_terminal() {
         let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||issuer.close_owner(caller,&mut mounted).unwrap());assert_eq!((step.progress().retained_capacity_bytes,step.progress().released_bytes),(heap.requested_bytes,heap.released_bytes));
         let kind=if matches!(step,WorkerJobCloseStep::Complete{..}){"complete"}else{"pending"};
         let actual=serde_json::json!({"phase":format!("{phase:?}"),"next":format!("{:?}",mounted.close_phase()),"kind":kind,"receipt":step.progress()});
-        eprintln!("[DEBUG] original mounted actual turn{turns} {actual}");
         observed.push(actual);
         assert!(step.progress().fits(caller));
         match step {
@@ -480,5 +480,5 @@ fn hostile_retained_box_and_arc_require_complete_independent_physical_grants(){
 fn mounted_original_cancel_alias_returns_only_to_its_still_borrowed_matching_root(){
  let _slots=super::worker_session_slots_shared();let source=crate::component::TEST_RETAINED_POLICY;let mut issuer=OriginalJobFixtureCaller::admit(OperationId(90_031),Generation(23),WORKER_TEST_STOCK,logical_now_us,u64::MAX,20000);let mut mounted=admit_original_fixture_owner!(issuer,MountedWorkerJobSession,ShortGrantCloseJob{backing:Some(Box::new(51)),closing:false},params(OperationId(90_031),Generation(23),issuer.admit_alias(source))).unwrap_or_else(|_|panic!("original witnessed alias fixture admission"));mounted.begin_close();let mut handbacks=0;
  for _ in 0..64{let phase=mounted.close_phase();if phase==WorkerJobClosePhase::Empty{break;}let grant=caller_worker_close_policy(phase);if let Some(step)=issuer.turn(grant,|cx|{let step=mounted.return_original_cancel_alias_step(cx.original_cancel_token(),cx.retained_grant()).map_err(|error|match error{WorkerJobDemandError::Refused(error)=>OriginalTurnFailure::from(error),WorkerJobDemandError::Contention(_)=>OriginalTurnFailure::from(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original mounted witness remains checked out"))})?;if let Some(step)=step{cx.consume_retained(step.progress())?;cx.consume_fuel(1);}Ok(step)}).unwrap(){let observed=step.progress();assert!(observed.fits(grant));assert_eq!(observed,RetainedCloneProgress{copied_items:1,copied_bytes:0,..Default::default()});assert!(matches!(step,RetainedCloneStep::Complete(_)));handbacks+=1;}else{let step=issuer.turn(grant,|cx|mounted.close_step(cx)).unwrap();assert!(step.progress().fits(grant));assert!(!matches!(step,WorkerJobCloseStep::Blocked));}}
- assert!(mounted.terminal_is_empty());assert_eq!(handbacks,1);let released=issuer.retire(source);assert!(released>0);eprintln!("[DEBUG] actual mounted original cancellation alias returned once to borrowed caller root; mounted fullowner terminal before separate root Arc release");
+ assert!(mounted.terminal_is_empty());assert_eq!(handbacks,1);let released=issuer.retire(source);assert!(released>0);
 }

@@ -12,7 +12,7 @@ pub struct LoadDocumentJson {
     pub json: String,
 }
 
-pub fn handle(payload: &LoadDocumentJson, _doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, semio_framework_plugin::NoConfig>, _ctx: &mut crate::editor::note::NoteDispatchCtx) -> Result<Emit<NoteMutation, semio_framework_plugin::NoConfigMutation>, Fault> {
+pub fn handle(payload: &LoadDocumentJson, _doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, semio_framework_plugin::NoConfig>, _ctx: &mut crate::editor::note::dispatch_ctx::NoteDispatchCtx) -> Result<Emit<NoteMutation, semio_framework_plugin::NoConfigMutation>, Fault> {
     let next_document = if let Ok(document) = crate::standards::v1::subsets::any::io::text::snapshot::parse_dsl(&payload.json) {
         document
     } else {
@@ -27,5 +27,5 @@ pub fn handle(payload: &LoadDocumentJson, _doc: &ArtifactView<'_, NoteSnapshot>,
         };
         document
     };
-    Ok(Emit { effects: vec![crate::editor::note::reset_document_effect(&next_document)], ..Default::default() })
+    Ok(Emit { effects: vec![crate::editor::note::support::reset_document_effect(&next_document)], ..Default::default() })
 }

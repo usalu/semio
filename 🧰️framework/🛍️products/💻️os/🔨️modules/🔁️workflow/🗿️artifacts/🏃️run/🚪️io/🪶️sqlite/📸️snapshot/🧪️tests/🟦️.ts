@@ -7,8 +7,8 @@ import nativeSchema from"../../../../🧬️schema/📸️snapshot/🔣️.json"
 import type * as schema from"../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import * as owner from"../🟦️.ts";
 import {binary64} from "../../../../../../../../../../🔨️modules/🌱️value/📦️packages/🟦️typescript/🔢️ieee754/🟦️.ts";
-import{exportSqliteDatabase,importSqliteDatabase,sqliteOperation,type SqliteDatabase}from"../../../../../../../../../../🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
-import type{ArtifactSqliteOptions}from"../../../../../../../../../../🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
+import{exportSqliteDatabase,importSqliteDatabase,sqliteOperation,type SqliteDatabase}from"@semio-tech/framework-sqlite-snapshot-ts";
+import type{ArtifactSqliteOptions}from"@semio-tech/framework-sqlite-snapshot-ts/artifact";
 type Snapshot=schema.RunSnapshot;
 type Ports={runSnapshotToSqliteDatabase(value:Snapshot,options?:ArtifactSqliteOptions):Promise<SqliteDatabase>;runSnapshotFromSqliteDatabase(database:SqliteDatabase,options?:ArtifactSqliteOptions):Promise<Snapshot>};
 const ports=owner as unknown as Ports;
@@ -129,6 +129,6 @@ test("Run complete independent SQL cell extent preserves both trigger branches a
  const cases=await Bun.file(new URL("🧫️fixtures/📏️semantic-cells/🔣️.json",import.meta.url)).json();
  for(const item of cases.cases){const expected=snapshot();if(/^[0-9a-f]{16}$/.test(item.name)){for(const node of expected.nodeRecords)node.durationMs={bits:BigInt("0x"+item.name)}}else if(item.name!=="base"){const[kind,finished]=item.name.split("-");expected.trigger=structuredClone(fixture.triggers.find(trigger=>trigger.kind===kind))as schema.RunTrigger;if(finished==="absent")delete expected.finishedAt;else expected.finishedAt=finished==="empty"?"":"\0\u{1f600}";}
   const database=await ports.runSnapshotToSqliteDatabase(expected),db=Database.deserialize(await exportSqliteDatabase(database),{safeIntegers:true});try{expect(db.query("PRAGMA integrity_check").get()).toEqual({integrity_check:"ok"});expect(db.query("PRAGMA foreign_key_check").all()).toEqual([]);const names=db.query<{name:string},[]>("SELECT name FROM sqlite_schema WHERE type='table' ORDER BY name").all(),tables=names.map(({name})=>{const rows=db.query<Record<string,null|string|number|bigint>,[]>('SELECT * FROM "'+name+'" ORDER BY id').all();let bytes=0;for(const row of rows)for(const value of Object.values(row))bytes+=value===null?0:typeof value==="string"?Buffer.byteLength(value):8;return{table:name,rows:rows.length,bytes}});expect(tables).toEqual(item.tables);expect(tables.length).toBe(cases.tables);expect(tables.reduce((n,table)=>n+table.rows,0)).toBe(cases.rows);expect(tables.reduce((n,table)=>n+table.bytes,0)).toBe(item.bytes);}finally{db.close()}
-  await expect(ports.runSnapshotToSqliteDatabase(expected,{maxValueBytes:item.bytes})).resolves.toEqual(database);await expect(ports.runSnapshotToSqliteDatabase(expected,{maxValueBytes:item.bytes-1})).rejects.toThrow();await expect(ports.runSnapshotFromSqliteDatabase(database,{maxValueBytes:item.bytes})).resolves.toEqual(expected);await expect(ports.runSnapshotFromSqliteDatabase(database,{maxValueBytes:item.bytes-1})).rejects.toThrow();console.log("[DEBUG] Run complete SQL cell frontier case="+item.name+" bytes="+item.bytes+" tables=7 rows=13");
+  await expect(ports.runSnapshotToSqliteDatabase(expected,{maxValueBytes:item.bytes})).resolves.toEqual(database);await expect(ports.runSnapshotToSqliteDatabase(expected,{maxValueBytes:item.bytes-1})).rejects.toThrow();await expect(ports.runSnapshotFromSqliteDatabase(database,{maxValueBytes:item.bytes})).resolves.toEqual(expected);await expect(ports.runSnapshotFromSqliteDatabase(database,{maxValueBytes:item.bytes-1})).rejects.toThrow();
  }
 });

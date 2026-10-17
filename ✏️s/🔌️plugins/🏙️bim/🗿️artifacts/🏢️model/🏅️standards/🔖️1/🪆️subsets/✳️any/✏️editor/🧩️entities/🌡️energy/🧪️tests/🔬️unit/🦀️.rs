@@ -1,7 +1,10 @@
-use super::super::{kind_of, FieldRow};
-use super::*;
+use crate::editor::bim::entities::{kind_of, FieldRow};
+use super::{EnvelopeFacts, facts, summary};
+use crate::standards::v1::subsets::any::schema::inferences::energy_envelope::{Boundary, EnergyScope, EnergyTotals, EnvelopeSpace, SurfaceKind};
+use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
+use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, SpaceConditions};
 use crate::editor::bim::terminology::BimLabels;
-use crate::editor::bim::unit_tests::support::demo;
+use crate::editor::bim::fixture::support::demo;
 use crate::standards::v1::subsets::any::schema::inferences::energy_envelope::EnvelopeSurface;
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference;
 

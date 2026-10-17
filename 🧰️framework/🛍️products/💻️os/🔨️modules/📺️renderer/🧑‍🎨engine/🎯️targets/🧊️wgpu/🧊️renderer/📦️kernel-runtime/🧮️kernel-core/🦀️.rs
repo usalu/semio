@@ -304,6 +304,15 @@ pub fn decode_actor_turn_result(result: &semio_framework_actor::TurnResult, sess
 /// documents on the host side for jobs — this is its `reactor::poll` turn-budget twin).
 pub const TURN_BUDGET: TurnBudget = TurnBudget { fuel: 50_000_000, deadline_ms: 100, max_effects: 64, max_patch_bytes: 1 << 20, max_frames: 8 };
 
+/// 🎟️ The retained grant one job-replay-log step is funded with: the pages, copy, capacity and release of one operation's state and output payloads (the declared actor bridge grant), shared by the pool and the retained-state recovery close.
+pub const JOB_REPLAY_STEP_GRANT: RetainedCloneGrant = RetainedCloneGrant {
+    maximum_items: semio_framework_actor::JOB_REPLAY_PROCESS_PAGE_CAPACITY,
+    maximum_copy_bytes: 2 * semio_framework_job::JOB_PAYLOAD_OPERATION_BYTES,
+    maximum_capacity_bytes: 2 * semio_framework_job::JOB_PAYLOAD_OPERATION_BYTES,
+    maximum_release_bytes: 2 * semio_framework_job::JOB_PAYLOAD_OPERATION_BYTES,
+    maximum_depth: 64,
+};
+
 /// ⏳️ terra-kernel-loop: same tripwire shape as `scale_bench`'s own `PUMP_OUTCOME_TIMEOUT` —
 /// how long `run_turn`'s tick loop waits for a granted turn's `ShardOutcome` before giving up.
 pub const RUN_TURN_OUTCOME_TIMEOUT: Duration = Duration::from_secs(5);
@@ -768,7 +777,7 @@ impl KernelCloseSubmissionRegistry {
         true
     }
 
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testkit"))]
     pub fn contains(&self, instance: u32, generation: u64) -> bool {
         self.slots.try_lock().is_ok_and(|slots| matches!(&slots[Self::slot(instance)], Some((retained_instance, retained_generation, _)) if *retained_instance == instance && *retained_generation == generation))
     }

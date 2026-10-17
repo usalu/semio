@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { WORKSPACE_ROOT } from "../../../../../../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/📍️checkout-root/🟦️.ts";
-import { valueOrderedRetirementSchemaUrl } from "../../../../../../../../../../🔨️modules/🌱️value/🧪️tests/🧫️fixtures/🟦️.ts";
+import { valueOrderedRetirementSchemaUrl } from "@semio-tech/value-ts/testing/fixtures";
 import { jobSnapshotSchemaUrl } from "@semio-tech/framework/job/testing/fixtures";
 
 /** 🧪️ Executes flow selected copy policy assertions. */
@@ -68,6 +68,5 @@ export function flowSelectedCopySelfTests(): number {
     source.replaceAll("grant.maximum_capacity_bytes<demand.capacity_bytes", "false"),
   ];
   for (const value of mutants) if (exact(value)) throw new Error("Flow selected copy accepted hostile ownership source");
-  console.log("[DEBUG] original selected copy plain examples and canonical OwnedFields/Widget/Synapse with independent stable JSON; wholeCorpusSchema=false ticketRefusalProbes="+probes);
   return fixture.cases.length + mutants.length+probes;
 }

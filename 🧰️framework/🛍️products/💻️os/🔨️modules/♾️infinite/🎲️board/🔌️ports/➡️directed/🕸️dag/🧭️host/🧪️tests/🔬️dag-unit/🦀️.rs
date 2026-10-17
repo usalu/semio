@@ -10,12 +10,9 @@ use semio_framework_pack_json::{JsonMemberPolicy, Value};
 use semio_framework_canvas::{Point, Scene};
 use semio_framework_canvas as canvas;
 use semio_framework_os_infinite_directed_presentation::*;
+use semio_framework_test_fixtures::fixture_text;
 
 /// 📖️ Reads one test input at run time (relative to the package manifest) so it does not count as an embedded compile input.
-fn read_static(path_from_manifest: &str) -> &'static str {
-    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(path_from_manifest);
-    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("test input {}: {error}", path.display())).into_boxed_str())
-}
 
 fn cursor_grant() -> DagSelectionTextGrant {
     DagSelectionTextGrant { fuel: 1, now_milliseconds: 1, deadline_milliseconds: 8, cancelled: false, interrupted: false }
@@ -23,7 +20,7 @@ fn cursor_grant() -> DagSelectionTextGrant {
 
 #[test]
 fn selected_nodes_cursor_censuses_and_emits_one_byte_per_grant() {
-    let vectors: serde_json::Value = serde_json::from_str(read_static("../../../🧪️tests/🧫️fixtures/🎯️selected-json.json")).unwrap();
+    let vectors: serde_json::Value = serde_json::from_str(fixture_text!("../../../🧪️tests/🧫️fixtures/🎯️selected-json.json")).unwrap();
     for case in vectors["cases"].as_array().unwrap() {
         let ids: Vec<String> = case["ids"].as_array().unwrap().iter().map(|id|id.as_str().unwrap().into()).collect();
         let fixture = DagHostSnapshot { schema: "dag.hostDocument".into(), camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 }, nodes: ids.iter().map(|id|DagNodeSpec { id: id.clone(), ..Default::default() }).collect(), edges: vec![] };
@@ -408,7 +405,7 @@ fn dag_host_label_overlay_paint_state_json_includes_slider_name() {
 
 #[test]
 fn dag_host_slider_overlay_preserves_language_neutral_field_labels() {
-    let fixture: Value = semio_framework_pack_json::parse(read_static("../../../🧪️tests/🧫️fixtures/🎚️slider-overlay.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let fixture: Value = semio_framework_pack_json::parse(fixture_text!("../../../🧪️tests/🧫️fixtures/🎚️slider-overlay.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     for case in fixture["cases"].as_array().unwrap() {
         let row = &case["row"];
         let host = DagHost::from_host_snapshot_without_layout(DagHostSnapshot {

@@ -33,7 +33,7 @@ use semio_framework_plugin::app::declarations::{editor_surface, viewer_surface, 
 use semio_framework_plugin::ExampleSource;
 use std::sync::OnceLock;
 
-fn examples() -> &'static [ExampleSource] {
+pub fn examples() -> &'static [ExampleSource] {
     static EXAMPLES: OnceLock<Vec<ExampleSource>> = OnceLock::new();
     EXAMPLES.get_or_init(|| vec![crate::examples::puzzle5d::nakagin_capsule_tower::SOURCE.clone(), crate::examples::puzzle5d::capsule_dream::SOURCE.clone(), crate::examples::puzzle5d::concrete_forest::SOURCE.clone()]).as_slice()
 }
@@ -54,7 +54,7 @@ fn io_declaration() -> IoDeclaration {
             diff: LanguagePair { text: Some(&langs[2]), binary: None },
             mutations: LanguagePair { text: Some(&langs[1]), binary: Some(&langs[4]) },
             inferences: None,
-            codec: schema::snapshot::native_codec(),
+            codec: store::bare_artifact_codec::<crate::Puzzle5dSnapshot, crate::Puzzle5dMutation>(crate::PUZZLE_5D_SCHEMA),
         },
         entries: &[],
     }

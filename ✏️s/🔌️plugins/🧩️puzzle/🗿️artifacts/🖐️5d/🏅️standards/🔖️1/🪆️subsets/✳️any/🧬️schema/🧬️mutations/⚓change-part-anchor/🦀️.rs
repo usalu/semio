@@ -1,6 +1,5 @@
 //! Puzzle5d mutation — `ChangePartAnchor`: changes whether a part keeps its stored plane or resets to default XY.
 use crate::standards::v1::subsets::any::schema::diff::Puzzle5dDiff;
-use crate::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation;
 use crate::Puzzle5dSnapshot;
 
 //#region 🔖️Mutation
@@ -14,16 +13,19 @@ use crate::Puzzle5dSnapshot;
 #[dsl(keyword = "change-part-anchor")]
 pub struct ChangePartAnchor {
     pub id: String,
-    pub new_anchor: crate::Puzzle5dPartAnchor,
+    pub new_anchor: crate::standards::v1::subsets::any::schema::document_records::Puzzle5dPartAnchor,
 }
 
-impl protocol::MutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for ChangePartAnchor {
+impl<Op> protocol::MutationKind<Puzzle5dSnapshot, Op> for ChangePartAnchor
+where
+    Op: protocol::Mutation<Puzzle5dSnapshot, Diff = Puzzle5dDiff> + From<ChangePartAnchor>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "part", kind: "change-part-anchor", record: "ChangedPartAnchor" };
 
     fn diff(&self, base: &Puzzle5dSnapshot) -> protocol::MutationOutcome<Puzzle5dDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Puzzle5dSnapshot) -> Result<Vec<Puzzle5dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Puzzle5dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     
@@ -39,6 +41,9 @@ impl protocol::MutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for ChangePartAn
 //#endregion 🔖️Mutation
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_part_anchor(id: String, new_anchor: crate::Puzzle5dPartAnchor) -> Puzzle5dMutation {
-    Puzzle5dMutation::ChangePartAnchor(ChangePartAnchor { id, new_anchor })
+pub fn change_part_anchor<Op>(id: String, new_anchor: crate::standards::v1::subsets::any::schema::document_records::Puzzle5dPartAnchor) -> Op
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::change_part_anchor::ChangePartAnchor>,
+{
+    Op::from(ChangePartAnchor { id, new_anchor })
 }

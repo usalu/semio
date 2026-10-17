@@ -1,7 +1,7 @@
 //! 🎮️ Borrowed create semantics validate one native field before bounded duplicate lookup.
 
-use super::CreateNode;
-use crate::{Puzzle2dSnapshot, standards::v1::subsets::any::schema::snapshot::lookup::{Puzzle2dLookupCursor, Puzzle2dLookupScope, Puzzle2dLookupStep}};
+use crate::standards::v1::subsets::any::schema::mutations::create_node::CreateNode;
+use crate::{Puzzle2dSnapshot, standards::v1::subsets::any::schema::lookup::{Puzzle2dLookupCursor, Puzzle2dLookupScope, Puzzle2dLookupStep}};
 use semio_framework_value::{ValueError, ValueRefusalKind, retained_clone::{RetainedCloneBinding, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneRef, RetainedCloneStep}};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -94,12 +94,9 @@ impl Puzzle2dCreateNodePreparationCursor {
     pub fn terminal_is_empty(&self) -> bool { self.closing && self.output.is_none() && self.lookup.terminal_is_empty() && self.source.is_none() && self.mutation.is_none() }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;
 
-#[path = "↩️inverse/🦀️.rs"]
-pub mod inverse;
+
+
 
 #[path = "📸️candidate/🦀️.rs"]
 pub mod candidate;

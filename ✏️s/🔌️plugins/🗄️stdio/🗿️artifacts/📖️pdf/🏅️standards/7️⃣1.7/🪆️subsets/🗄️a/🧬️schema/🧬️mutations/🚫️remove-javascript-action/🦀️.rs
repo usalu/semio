@@ -1,7 +1,6 @@
 //! 🚫️ Authoritative PDF/A mutation for removing a matching JavaScript action.
 
-use super::insert_javascript_action::InsertJavascriptAction;
-use super::PdfAMutation;
+use crate::standards::v1_7::subsets::a::schema::mutations::insert_javascript_action::InsertJavascriptAction;
 use crate::standards::v1_7::subsets::base::schema::conformance_support as support;
 use crate::standards::v1_7::subsets::base::schema::diff::{self, PdfDiff};
 use crate::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot;
@@ -16,7 +15,10 @@ pub struct RemoveJavascriptAction {
     pub script: String,
 }
 
-impl MutationKind<PdfSnapshot, PdfAMutation> for RemoveJavascriptAction {
+impl<Op> MutationKind<PdfSnapshot, Op> for RemoveJavascriptAction
+where
+    Op: protocol::Mutation<PdfSnapshot, Diff = PdfDiff> + From<RemoveJavascriptAction> + From<crate::standards::v1_7::subsets::a::schema::mutations::insert_javascript_action::InsertJavascriptAction>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "remove", entity: "javascript-action", kind: "remove-javascript-action", record: "Remove" };
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
@@ -24,9 +26,9 @@ impl MutationKind<PdfSnapshot, PdfAMutation> for RemoveJavascriptAction {
         MutationOutcome::new(diff::graph_edit(rows))
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfAMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         Ok({
-            support::action_with(base, "JavaScript", "JS", &self.script).map(|id| PdfAMutation::InsertJavascriptAction(InsertJavascriptAction { script: self.script.clone(), placements: support::placements_of(base, &[id]) })).into_iter().collect()
+            support::action_with(base, "JavaScript", "JS", &self.script).map(|id| Op::from(InsertJavascriptAction { script: self.script.clone(), placements: support::placements_of(base, &[id]) })).into_iter().collect()
         })
     }
 
@@ -41,7 +43,5 @@ impl MutationKind<PdfSnapshot, PdfAMutation> for RemoveJavascriptAction {
 //#endregion 🔖️Mutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

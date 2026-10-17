@@ -1,25 +1,30 @@
 use semio_framework_expression::{evaluate, evaluate_all_declared, infer, parse, print, AngleUnit, AreaUnit, BinaryOp, CompareOp, Expr, ExprError, Function, Kind, LengthUnit, UnaryOp, Value, VolumeUnit};
+use semio_framework_test_fixtures::fixture_path;
 use serde_json::Value as Json;
 use std::collections::BTreeMap;
 
-fn fixture(text: &str) -> Json {
-    serde_json::from_str(text).unwrap()
+/// 📥️ Reads a committed language-agnostic fixture at run time, so the test closure stays inside the source gate instead of embedding 877 KB with `include_str!`.
+/// @see <https://doc.rust-lang.org/std/macro.include_str.html>
+fn fixture(relative: &str) -> Json {
+    let path = fixture_path!("../../🧪️tests/🧫️fixtures").join(relative);
+    let text = std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display()));
+    serde_json::from_str(&text).unwrap()
 }
 
 fn syntax() -> Json {
-    fixture(include_str!("../🧫️fixtures/🔤️syntax/🔣️.json"))
+    fixture("🔤️syntax/🔣️.json")
 }
 
 fn kinds() -> Json {
-    fixture(include_str!("../🧫️fixtures/📏️kinds/🔣️.json"))
+    fixture("📏️kinds/🔣️.json")
 }
 
 fn evaluation() -> Json {
-    fixture(include_str!("../🧫️fixtures/🧮️evaluation/🔣️.json"))
+    fixture("🧮️evaluation/🔣️.json")
 }
 
 fn parameters() -> Json {
-    fixture(include_str!("../🧫️fixtures/🕸️parameters/🔣️.json"))
+    fixture("🕸️parameters/🔣️.json")
 }
 
 fn text(v: &Json) -> &str {

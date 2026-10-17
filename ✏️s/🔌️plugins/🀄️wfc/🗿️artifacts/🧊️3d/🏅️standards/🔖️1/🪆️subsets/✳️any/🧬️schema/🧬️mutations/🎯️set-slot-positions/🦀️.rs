@@ -3,7 +3,6 @@
 //! multi-slot gesture stays ONE point-invertible row however many slots it moved.
 
 use crate::diff::Wfc3dDiff;
-use crate::mutations::Wfc3dMutation;
 use crate::schema::snapshot::Wfc3dSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -27,8 +26,11 @@ pub struct SetSlotPositions {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn set_slot_positions(positions: Vec<Wfc3dSlotPosition>) -> Wfc3dMutation {
-    Wfc3dMutation::SetSlotPositions(SetSlotPositions { positions })
+pub fn set_slot_positions<Op>(positions: Vec<Wfc3dSlotPosition>) -> Op
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::set_slot_positions::SetSlotPositions>,
+{
+    Op::from(SetSlotPositions { positions })
 }
 
 impl SetSlotPositions {
@@ -45,13 +47,16 @@ impl SetSlotPositions {
     }
 }
 
-impl MutationKind<Wfc3dSnapshot, Wfc3dMutation> for SetSlotPositions {
+impl<Op> MutationKind<Wfc3dSnapshot, Op> for SetSlotPositions
+where
+    Op: protocol::Mutation<Wfc3dSnapshot, Diff = Wfc3dDiff> + From<SetSlotPositions>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "slot-positions", kind: "set-slot-positions", record: "SetSlotPositions" };
 
     fn diff(&self, base: &Wfc3dSnapshot) -> protocol::MutationOutcome<Wfc3dDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Wfc3dSnapshot) -> Result<Vec<Wfc3dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Wfc3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

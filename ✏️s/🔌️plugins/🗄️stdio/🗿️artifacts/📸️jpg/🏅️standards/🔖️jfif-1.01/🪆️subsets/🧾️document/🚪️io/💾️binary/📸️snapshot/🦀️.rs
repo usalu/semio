@@ -3,12 +3,6 @@
 pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio");
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
 
-#[path = "🧮️decoded-components/🦀️.rs"]
-pub mod decoded_components;
-
-#[path = "🎛️encode-options/🦀️.rs"]
-pub mod encode_options;
-
 #[allow(unused_imports)]
 mod snapshot_codec {
 use super::*;

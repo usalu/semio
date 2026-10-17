@@ -96,7 +96,6 @@ fn original_canvas_path_retains_all_cancelled_backings_and_exact_native_receipts
             }
             assert!(slot.is_none());assert_eq!(freed,born);
             let (_,allocated,released)=observe_backing(||drop(slot));assert_eq!((allocated,released),(0,0));
-            println!("[DEBUG] Original Canvas path={} cancelledCut={} pointer/capacity/order/Kurbo=true exactSystemBirthFree={born} retainedEmptyCapacity=true terminalFrameSeparate=true terminalDrop0",row["id"],cut);
         }
     }
 }

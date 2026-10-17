@@ -1,0 +1,15 @@
+{
+"name": "pi2a",
+"crates": [
+"semio-framework-plugin",
+"semio-framework-plugin-tool-run",
+"semio-framework-plugin-time-travel",
+"semio-framework-plugin-instance-stores",
+"semio-framework-plugin-instance-history",
+"semio-framework-plugin-instance-children",
+"semio-framework-plugin-instance-jobs",
+"semio-framework-plugin-instance-docs"
+],
+"base": {"rev": "HEAD", "crates": ["semio-framework-plugin"]},
+"note": "PLUGIN-INTEGRATION-2 groups G11 and G12 against the pre-pi2 facade at HEAD"
+}

@@ -1,5 +1,6 @@
 use super::*;
 use ::semio_framework_os_kernel::os_store::document_store_owners::MemberStoreProducer as _;
+use semio_framework_test_fixtures::fixture_text;
 use {semio_framework_artifact_reference::ArtifactDialect,crate::dsl::ArtifactPack,crate::dsl::SpaceMember};
 use semio_s_artifact_stdio_semio_mesh::schema::snapshot::SemioMeshSnapshot;
 use semio_framework_value::retained_clone::RetainedCloneStep;
@@ -212,7 +213,7 @@ async fn supersession_and_prefix_owners_follow_the_exact_semio_close_cursor() {
     use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValue;
     use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValueSnapshot;
     use semio_s_artifact_stdio_semio_value_model::schema::snapshot::STDIO_SEMIOVALUE_DOCUMENT_SCHEMA;
-    let case: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/close-frontiers/🔣️.json")).expect("independent JSON close corpus");
+    let case: serde_json::Value = serde_json::from_str(fixture_text!("../../🧪️tests/🧫️fixtures/close-frontiers/🔣️.json")).expect("independent JSON close corpus");
     let document = case["document"].as_str().unwrap();
     let seed = SemioValueSnapshot::default();
     let mut envelope = dsl::os_store::document_materialize::create_document_envelope::<SemioValueSnapshot, SemioValueMutation>(STDIO_SEMIOVALUE_DOCUMENT_SCHEMA, document, seed, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
@@ -243,7 +244,6 @@ async fn supersession_and_prefix_owners_follow_the_exact_semio_close_cursor() {
                 assert!(store.close_owned_terminal_is_empty());
                 assert_eq!(store.close_owned_phase_witness(), case["terminal_phase_witness"].as_str().unwrap(), "Store removes only the completed terminal-empty disposer");
                 assert_eq!(reached, phases.len() - 1, "every literal owner phase precedes completion");
-                println!("[DEBUG] genuine supersession/prefix Semio close reached terminal under {max_items}/{max_bytes}");
                 return;
             }
         }

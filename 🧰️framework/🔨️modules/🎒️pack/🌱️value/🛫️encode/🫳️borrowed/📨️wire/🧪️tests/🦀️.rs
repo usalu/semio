@@ -33,7 +33,7 @@ fn original_owned_source_header_returns_without_payload_copy(){
   let((mut source,receipt),heap)=observe(||caller.turn(policy(copy),|cx|{let(source,receipt)=RetainedCloneSource::admit_owned(original.take().unwrap(),(),cx.retained_grant()).unwrap_or_else(|_|panic!("original source admission"));cx.consume_retained(receipt)?;cx.consume_fuel(1);Ok((source,receipt))}).unwrap());assert_eq!(heap,(receipt.retained_capacity_bytes,receipt.released_bytes));allocated+=heap.0;released+=heap.1;let mut returned=None;
   for _ in 0..100000{assert_eq!(source.original_authority().unwrap().title.as_ptr(),expected_title);assert_eq!(source.original_authority().unwrap().values.as_ptr(),expected_values);assert_eq!(source.next_take_copy_byte_demand().unwrap(),0,"owned authority donation must not copy a wide original header or payload");let(result,heap)=observe(||caller.turn(policy(copy),|cx|{let step=source.take_authority(cx.retained_grant())?;let receipt=match &step{RetainedCloneSourceTake::Pending(receipt)|RetainedCloneSourceTake::Ready(_,receipt)=>*receipt};cx.consume_retained(receipt)?;cx.consume_fuel(receipt.copied_items as u64);Ok(step)}));let step=result.unwrap();let receipt=caller.receipt();assert_eq!(heap,(receipt.retained_capacity_bytes,receipt.released_bytes));allocated+=heap.0;released+=heap.1;match step{RetainedCloneSourceTake::Pending(_)=>{},RetainedCloneSourceTake::Ready(original,_)=>{returned=Some(original);break}}}
   let original=returned.expect("original owned source must return under fixed body1/3/64");assert!(source.terminal_is_empty());assert_eq!(original.title.as_ptr(),expected_title);assert_eq!(original.values.as_ptr(),expected_values);assert_eq!(original.wide,[73;64]);assert_eq!(observe(||drop(source)).1,(0,0));close_physical(original,&mut caller,copy,&mut allocated,&mut released);released+=caller.retire(policy(copy));assert_eq!(allocated,released);
- }println!("[DEBUG] Actual original owned source title/vector addresses and wide512-byte header return under fixedcopy1/3/64 with copy0 ownership donation, finite caller and full System conservation/Drop0");
+ }
 }
 
 #[test]
@@ -44,7 +44,7 @@ fn original_owned_pack_wire_returns_same_source_and_matches_normal_decoder(){
    let(result,heap)=observe(||caller.turn(policy(copy),|cx|{let step=writer.advance(cx.retained_grant()).unwrap();cx.consume_retained(step.progress)?;cx.consume_fuel(step.progress.copied_items as u64);Ok(step)}));let step=result.unwrap();assert_eq!(heap,(step.progress.retained_capacity_bytes,step.progress.released_bytes));allocated+=heap.0;released+=heap.1;if let Some(original)=step.ready{ready=Some(original);break}assert!(turn<99999,"original owned Pack writer stalled")
   }
   let ready:OwnedProjectedPackWireReady<OriginalSource>=ready.unwrap();assert!(writer.terminal_is_empty());assert_eq!(ready.source.title.as_ptr(),title);assert_eq!(ready.source.values.as_ptr(),values);assert_eq!(ready.source.wide,[73;64]);let decoded=pack::record::decode_value_record_body_exact(&ready.wire,1,&pack::PackLimits::default()).unwrap();assert_eq!(decoded,semio_framework_value::DslValue::Object(vec![("nodeHash".into(),semio_framework_value::DslValue::Number(semio_framework_value::Number::UInt(u64::MAX-2))),("title".into(),semio_framework_value::DslValue::String("Original source 源".into())),("values".into(),semio_framework_value::DslValue::Array([-17,0,9].into_iter().map(|value|semio_framework_value::DslValue::Number(semio_framework_value::Number::Int(value))).collect()))]));assert_eq!(observe(||drop(writer)).1,(0,0));close_physical(ready,&mut caller,copy,&mut allocated,&mut released);released+=caller.retire(policy(copy));assert_eq!(allocated,released);
- }println!("[DEBUG] Actual normal Pack field1 decoder agrees with original intrinsic logical tree/exactUInt64; two codec passes return original source pointers after symbols/leases close, independent denials and fixedcopy1/3/64 conserve all physical backing/finite caller/Drop0");
+ }
 }
 
 #[test]
@@ -53,7 +53,7 @@ fn original_owned_pack_wire_cancellation_closes_all_original_backing(){
    semio_framework_async::poll::resolve_ready(caller.cancel().cancel());writer.begin_close();for turn in 0..100000{if writer.terminal_is_empty(){break}let demand=writer.next_demand(copy).unwrap();if demand.release_bytes>0{let(result,heap)=observe(||caller.turn(Grant{maximum_release_bytes:demand.release_bytes-1,..policy(copy)},|cx|{let step=writer.close_step(cx.retained_grant()).unwrap();assert_eq!(step.progress(),Default::default());Ok(())}));result.unwrap();assert_eq!(heap,(0,0));}
     let(step,heap)=observe(||caller.turn(policy(copy),|cx|{let step=writer.close_step(cx.retained_grant()).unwrap();cx.consume_retained(step.progress())?;cx.consume_fuel(step.progress().copied_items as u64);Ok(step)}).unwrap());assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));allocated+=heap.0;released+=heap.1;assert!(turn<99999,"original cancellation closure stalled");}
    assert!(writer.terminal_is_empty());assert_eq!(observe(||drop(writer)).1,(0,0));released+=caller.retire(policy(copy));assert_eq!(allocated,released);
-  }}println!("[DEBUG] Genuine original cancel at five native progress prefixes keeps and closes source/symbols/partial output under fixedcopy1/3/64, exact release denials, same finite caller and System conservation/Drop0");
+  }}
 }
 
 #[test]
@@ -61,5 +61,5 @@ fn original_owned_pack_wire_physical_retirement_closes_actual_native_fields(){
  for copy in [1,3,64]{for stop in [0,1,3,17,83]{let mut caller=caller();let(original,input)=observe(OriginalSource::new);let mut allocated=input.0+caller.born_bytes();let mut released=input.1;let mut writer=OwnedProjectedPackWireCursor::new(original,1);
   for _ in 0..stop{let(step,heap)=observe(||caller.turn(policy(copy),|cx|{let step=writer.advance(cx.retained_grant()).unwrap();assert!(step.ready.is_none());cx.consume_retained(step.progress)?;cx.consume_fuel(step.progress.copied_items as u64);Ok(step)}).unwrap());assert_eq!(heap,(step.progress.retained_capacity_bytes,step.progress.released_bytes));allocated+=heap.0;released+=heap.1;}
   semio_framework_async::poll::resolve_ready(caller.cancel().cancel());close_physical(writer,&mut caller,copy,&mut allocated,&mut released);released+=caller.retire(policy(copy));assert_eq!(allocated,released);
- }}println!("[DEBUG] Actual pure RetireOwned path closes the identical native source/symbol/partial-wire fields at five cancel prefixes under fixedcopy1/3/64; no semantic codec replay, complete finite caller System conservation and Drop0");
+ }}
 }

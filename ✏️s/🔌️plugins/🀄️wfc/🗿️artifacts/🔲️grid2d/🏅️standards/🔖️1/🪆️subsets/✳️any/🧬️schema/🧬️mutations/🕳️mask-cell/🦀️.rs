@@ -1,7 +1,6 @@
 //! 🕳 Cuts one cell out of the problem entirely. A masked cell carries no domain, draws no tile and cascades away any pin it held.
 
 use crate::diff::Grid2dDiff;
-use crate::mutations::Grid2dMutation;
 use crate::schema::snapshot::Grid2dSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -17,17 +16,23 @@ pub struct MaskCell {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn mask_cell(x: u32, y: u32) -> Grid2dMutation {
-    Grid2dMutation::MaskCell(MaskCell { x, y })
+pub fn mask_cell<Op>(x: u32, y: u32) -> Op
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::mask_cell::MaskCell>,
+{
+    Op::from(MaskCell { x, y })
 }
 
-impl MutationKind<Grid2dSnapshot, Grid2dMutation> for MaskCell {
+impl<Op> MutationKind<Grid2dSnapshot, Op> for MaskCell
+where
+    Op: protocol::Mutation<Grid2dSnapshot, Diff = Grid2dDiff> + From<MaskCell> + From<crate::standards::v1::subsets::any::schema::mutations::pin_cell::PinCell> + From<crate::standards::v1::subsets::any::schema::mutations::unmask_cell::UnmaskCell>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "remove", entity: "cell", kind: "mask-cell", record: "RemovedCell" };
 
     fn diff(&self, base: &Grid2dSnapshot) -> protocol::MutationOutcome<Grid2dDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Grid2dSnapshot) -> Result<Vec<Grid2dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Grid2dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

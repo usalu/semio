@@ -56,13 +56,6 @@ pub struct FrameBuffers {
     pub glass_instances: GrowBuffer,
 }
 
-#[repr(C)]
-#[derive(Clone, Copy, bytemuck::Pod, bytemuck::Zeroable)]
-struct WorldLineGpuVertex {
-    position: [f32; 3],
-    color: [f32; 4],
-}
-
 #[cfg(test)]
 struct WorldDrawRange {
     mesh_key: String,

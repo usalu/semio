@@ -29,7 +29,6 @@ const fails = (validate: ReturnType<typeof ajv.compile>, value: unknown): boolea
 test("the committed request validates against the published request schema and its snapshot against the snapshot schema", () => {
   if (!validateRequest(fixture.request)) throw new Error(JSON.stringify(validateRequest.errors));
   if (!validateSnapshot(fixture.request.snapshot)) throw new Error(JSON.stringify(validateSnapshot.errors));
-  console.log("[DEBUG] Host geometry request and typed snapshot agree with the independent JSON Schema oracle");
 });
 
 test("the request schema refuses both carriers at once, neither, unknown members and an empty generation", () => {

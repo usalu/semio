@@ -146,5 +146,4 @@ test("Every Discovered S Native Package Has Its Nearest Owner And Complete Depen
   assert.deepEqual(await audit(definitions, boundaries, available), []);
   const intrinsic = packages.filter(row => !row.path.split("/").some(part => ["🏅️standards", "👽️guest", "🔮️oracles", "🏭️bridge"].includes(part))).map(row => table(row.value.package).name);
   expect(new Set(intrinsic).size).toBe(intrinsic.length);
-  console.log("[DEBUG] S discovered manifests=" + definitions.length + " native owners=" + owners.length + " packages=" + packages.length + " intrinsic=" + intrinsic.length);
 });

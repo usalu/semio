@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/3d-brep-shape-value-rs",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

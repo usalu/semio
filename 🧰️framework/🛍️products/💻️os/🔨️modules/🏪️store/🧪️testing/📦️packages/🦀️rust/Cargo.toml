@@ -70,6 +70,7 @@ semio-framework-os-store-space = { path = "../../../📜️space-history/🏠️
 semio-framework-os-store-space-history = { path = "../../../📜️space-history/📦️packages/🦀️rust" }
 semio-framework-os-store-space-member = { path = "../../../🧩️composition/👥️space-member/📦️packages/🦀️rust" }
 semio-framework-os-store-space-schema = { path = "../../../🧬️schema/📦️packages/🦀️rust" }
+semio-framework-os-store-test-support = { path = "../../../🧰️test-support/📦️packages/🦀️rust" }
 semio-framework-os-store-text-io = { path = "../../../🚪️io/📦️packages/🦀️rust" }
 semio-framework-os-vcs = { path = "../../../../🌿️vcs/📦️packages/🦀️rust" }
 semio-framework-pack = { workspace = true }

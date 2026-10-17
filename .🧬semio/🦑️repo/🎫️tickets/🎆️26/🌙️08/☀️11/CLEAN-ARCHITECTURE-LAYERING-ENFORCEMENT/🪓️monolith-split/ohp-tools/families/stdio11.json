@@ -1,0 +1,1 @@
+{"name": "stdio11", "crates": ["semio-s-artifact-stdio-csv", "semio-s-artifact-stdio-csv-editor", "semio-s-artifact-stdio-csv-io-registry", "semio-s-artifact-stdio-csv-mutations", "semio-s-artifact-stdio-csv-schema", "semio-s-artifact-stdio-csv-snapshot", "semio-s-artifact-stdio-csv-test-oracle"], "note": "stdio 📊️csv"}

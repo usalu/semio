@@ -54,21 +54,17 @@ export function nxBuildEngineInputsV1(){
 }
 
 /** 📌️ Reads the exact portable graph pinned by this owned build invocation. */
-function graphPublication(workspaceRoot){
- nxBuildDependencyImplementationV1();
- const publication={path:process.env.SEMIO_BUILD_GRAPH_PATH,digest:process.env.SEMIO_BUILD_GRAPH_DIGEST};if(!conforms(publicationSchema,publication)||!isAbsolute(publication.path))throw Error("Original immutable build graph path and digest required");
- const source=readFileSync(publication.path,"utf8"),digest=createHash("sha256").update(source).digest("hex");
- if(digest!==publication.digest)throw Error("Pinned build graph source changed");
- const graph=JSON.parse(source);if(graph.version!==1||!graph.projects||!Array.isArray(graph.dependencies))throw Error("Prepared portable build graph required");
- return {graph,digest};
+async function graphPublication(workspaceRoot,environment,body){
+ const captured=Object.freeze({...environment}),pin={path:captured.SEMIO_BUILD_GRAPH_PATH,digest:captured.SEMIO_BUILD_GRAPH_DIGEST},check=()=>{nxBuildDependencyImplementationV1();if(process.env.SEMIO_BUILD_GRAPH_PATH!==pin.path||process.env.SEMIO_BUILD_GRAPH_DIGEST!==pin.digest)throw Error("Original private Nx graph binding changed");};check();const {withReceivedNxGraphTaskV1}=await import("./⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🟦️.ts"),{withRepositoryBuildGraphPublicationV1}=await import("./🏗️build/🕸️graph/🟦️.ts");check();
+ return withReceivedNxGraphTaskV1(workspaceRoot,captured,actual=>withRepositoryBuildGraphPublicationV1(workspaceRoot,actual,async(graph,digest)=>{check();const value=await body({graph,digest});check();return value;}));
 }
 
-/** 🔏️ Exposes only the digest-checked immutable private backend input. */
-export function readPrivateNxBuildGraphV1(workspaceRoot,environment){if(environment.SEMIO_BUILD_GRAPH_PATH!==process.env.SEMIO_BUILD_GRAPH_PATH||environment.SEMIO_BUILD_GRAPH_DIGEST!==process.env.SEMIO_BUILD_GRAPH_DIGEST)throw Error("Original private Nx graph binding changed");return graphPublication(workspaceRoot).graph;}
+/** 🔏️ Exposes only immutable private backend DATA read under its genuine received Graph task. */
+export function readPrivateNxBuildGraphV1(workspaceRoot,environment){if(environment.SEMIO_BUILD_GRAPH_PATH!==process.env.SEMIO_BUILD_GRAPH_PATH||environment.SEMIO_BUILD_GRAPH_DIGEST!==process.env.SEMIO_BUILD_GRAPH_DIGEST)throw Error("Original private Nx graph binding changed");return graphPublication(workspaceRoot,environment,async({graph})=>graph);}
 
 /** 🔌️ Projects only portable process execution onto Nx's internal executor contract. */
 export function projectBuildTargetForNxV1(target){
- const {execution,configurations,...properties}=target,{kind,ownerArguments,...options}=execution;
+ const {execution,configurations,...properties}=target,{kind,ownerArguments,program,...declared}=execution,options=program===undefined?declared:{...declared,command:"'"+program.replaceAll("'","'\\''")+"'"};
  const result={...properties,executor:kind==="noop"?"nx:noop":ownerArguments?"@semio-tech/repo-lib:owner-command":"@semio-tech/repo-lib:command",...(kind==="noop"?{}:{options,inputs:[...properties.inputs??["default","^default"],engineNamedInput]})};
  if(configurations)result.configurations=Object.fromEntries(Object.entries(configurations).map(([name,configuration])=>{const {execution,...properties}=configuration;return[name,{...properties,...execution,...(options.env||execution?.env?{env:{...options.env,...execution?.env}}:{})}];}));
  return result;
@@ -83,8 +79,7 @@ export function projectBuildGraphForNxV1(graph){
 
 /** 🧩️ Makes every backend consume the same complete project publication. */
 async function nodes(files,_options,context){
- const {graph}=graphPublication(context.workspaceRoot);
- return [[files.includes("📋️project.json")?"📋️project.json":files[0]??"📋️project.json",projectBuildGraphForNxV1(graph)]];
+ return graphPublication(context.workspaceRoot,process.env,async({graph})=>[[files.includes("📋️project.json")?"📋️project.json":files[0]??"📋️project.json",projectBuildGraphForNxV1(graph)]]);
 }
 
 /** 🪢️ Retains file-bound edges only where Nx owns their actual file-map provenance. */
@@ -100,13 +95,14 @@ export function projectBuildDependenciesForNxV1(graph,context){
 }
 
 /** 🪢️ Projects portable dependencies without reconstructing a second graph. */
-export function createDependencies(_options,context){const identity=nxBuildDependencyImplementationV1();if(process.env.SEMIO_NX_IMPLEMENTATION_IDENTITY!==identity)throw Error("Original private Nx dependency implementation differs");const result=projectBuildDependenciesForNxV1(graphPublication(context.workspaceRoot).graph,context);nxBuildDependencyImplementationV1();return result;}
+export async function createDependencies(_options,context){const identity=nxBuildDependencyImplementationV1();if(process.env.SEMIO_NX_IMPLEMENTATION_IDENTITY!==identity)throw Error("Original private Nx dependency implementation differs");return graphPublication(context.workspaceRoot,process.env,async({graph})=>{const result=projectBuildDependenciesForNxV1(graph,context);nxBuildDependencyImplementationV1();return result;});}
+
+/** 🧮️ Projects inert portable graph/owner/digest DATA without claiming retained snapshot custody. */
+export function projectBuildDependencyAuthorityV1(workspaceRoot,graph,digest,owners,identity){for(const[name,root]of owners)if(graph.projects[name]&&graph.projects[name].root!==root)throw Error(`Build project authority differs: ${name}`);return createHash("sha256").update(JSON.stringify([resolve(workspaceRoot),digest,owners,identity])).digest("hex");}
 
 /** 🧬️ Binds dependency reuse to the exact published portable project and edge authority. */
 export function dependencyResolutionAuthority(workspaceRoot,projects){
- const {graph,digest}=graphPublication(workspaceRoot),owners=Object.entries(projects).map(([name,project])=>[name,project.root]).sort(([a],[b])=>a.localeCompare(b));
- for(const[name,root]of owners)if(graph.projects[name]&&graph.projects[name].root!==root)throw Error(`Build project authority differs: ${name}`);
- return createHash("sha256").update(JSON.stringify([resolve(workspaceRoot),digest,owners,nxBuildDependencyImplementationV1()])).digest("hex");
+ const owners=Object.entries(projects).map(([name,project])=>[name,project.root]).sort(([a],[b])=>a.localeCompare(b));return graphPublication(workspaceRoot,process.env,async({graph,digest})=>projectBuildDependencyAuthorityV1(workspaceRoot,graph,digest,owners,nxBuildDependencyImplementationV1()));
 }
 
 export default {name:"@repo/emoji-project-json",createNodesV2:["📋️project.json",nodes],createDependencies};

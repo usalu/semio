@@ -1,7 +1,6 @@
 //! 🏷️ `create-properties` — sets the kit's `properties` CHILD slot to a new owned `value` tree
 //! handle (overwrite-aware — undo restores whichever handle was there before).
 
-use crate::schema::mutations::SemioKitMutation;
 use crate::schema::snapshot::SemioKitSnapshot;
 
 //#region 🔖️Payload
@@ -13,13 +12,16 @@ pub struct CreateProperties {
     pub target: semio_framework_artifact_reference::ArtifactRef,
 }
 
-impl protocol::MutationKind<SemioKitSnapshot, SemioKitMutation> for CreateProperties {
+impl<Op> protocol::MutationKind<SemioKitSnapshot, Op> for CreateProperties
+where
+    Op: protocol::Mutation<SemioKitSnapshot, Diff = crate::schema::diff::SemioKitDiff> + From<CreateProperties> + From<crate::schema::mutations::delete_properties::DeleteProperties>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "properties", kind: "create-properties", record: "CreatedProperties" };
 
-    fn diff(&self, base: &SemioKitSnapshot) -> protocol::MutationOutcome<<SemioKitMutation as protocol::Mutation<SemioKitSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioKitSnapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<SemioKitSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &SemioKitSnapshot) -> Result<Vec<SemioKitMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &SemioKitSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

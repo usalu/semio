@@ -12,6 +12,8 @@
   },
   "dependencies": {
     "@semio-tech/framework": "workspace:*",
+    "@semio-tech/framework-2d-js": "workspace:*",
+    "@semio-tech/framework-deflate-ts": "workspace:*",
     "@semio-tech/value-ts": "workspace:*"
   }
 }

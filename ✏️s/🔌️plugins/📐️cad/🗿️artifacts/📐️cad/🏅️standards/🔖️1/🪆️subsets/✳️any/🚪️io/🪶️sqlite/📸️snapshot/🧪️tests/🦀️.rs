@@ -1,4 +1,6 @@
 //! 📐️ Genuine CAD parent native baselines before semantic provider opt-in.
+use semio_framework_test_fixtures::fixture_path;
+
 extern crate semio_framework_os_kernel as store;
 use semio_framework_test_original_snapshot_owners as original_owners;
 pub(crate) use semio_framework_io_sqlite_snapshot_testing_backing as backing_observer;
@@ -29,7 +31,7 @@ fn sqlite_snapshot_cad_parent_all_fields_raw_words_and_cumulative_exact_backing(
 }
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use semio_s_artifact_cad_cad_model::standards::v1::subsets::any::io::sqlite::snapshot::CadSnapshot;
-fn laws()->serde_json::Value{serde_json::from_str(std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json")).expect("../../../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json").leak()).unwrap()}
+fn laws()->serde_json::Value{serde_json::from_str(std::fs::read_to_string(fixture_path!("../../../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json")).expect("../../../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json").leak()).unwrap()}
 fn fixture()->CadSnapshot{semio_framework_pack_json::from_json_str(&laws()["snapshot"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()}
 fn canonical_children(snapshot:&mut CadSnapshot){for child in[&mut snapshot.shape_model,&mut snapshot.building_model,&mut snapshot.energy_model,&mut snapshot.structure_classic_model].into_iter().flatten(){child.child_id=child.target.artifact_id.clone()}for child in &mut snapshot.drawings{child.child_id=child.target.artifact_id.clone()}for child in &mut snapshot.breps{child.child_id=child.target.artifact_id.clone()}}
 #[test]
@@ -107,7 +109,7 @@ async fn sqlite_snapshot_cad_parent_actual_native_declaration_routes_queryable_f
 
 #[test]
 fn sqlite_snapshot_cad_paged_text_census_uses_complete_utf8_bytes() {
-    let corpus: serde_json::Value = serde_json::from_str(std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🧵️paged-text.json")).expect("../../../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🧵️paged-text.json").leak()).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(std::fs::read_to_string(fixture_path!("../../../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🧵️paged-text.json")).expect("../../../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🧵️paged-text.json").leak()).unwrap();
     for case in corpus["cases"].as_array().unwrap() {
         let text = case["segments"].as_array().unwrap().iter().map(|value| value.as_str().unwrap()).collect::<String>().repeat(case["repeat"].as_u64().unwrap() as usize);
         let paged = semio_framework_value::paged::PagedUtf8::<{usize::MAX}>::try_from_str(&text).unwrap();
@@ -125,7 +127,6 @@ fn sqlite_snapshot_cad_paged_text_census_uses_complete_utf8_bytes() {
                 assert_eq!(census.bytes, if maximum == bytes { bytes } else { 0 });
             }
         }
-        println!("[DEBUG] CAD paged UTF-8 census {} bytes={bytes}", case["id"]);
     }
 }
 
@@ -139,5 +140,4 @@ fn sqlite_snapshot_cad_ordered_brep_children_match_independent_sqlite() {
  assert_eq!(actual,serde_json::json!(wanted));
  assert_eq!(restore(&database(&expected)).breps,expected.breps);
  for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let actual=original_owners::with_decoding(|native_owner|CadSnapshot::decode_sqlite_snapshot_native(&payload(&expected,encoding),&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default()), native_owner)).unwrap();assert_eq!(actual.breps,expected.breps);}
- println!("[DEBUG] CAD ordered brep SQLite/native oracle rows={}",expected.breps.len());
 }

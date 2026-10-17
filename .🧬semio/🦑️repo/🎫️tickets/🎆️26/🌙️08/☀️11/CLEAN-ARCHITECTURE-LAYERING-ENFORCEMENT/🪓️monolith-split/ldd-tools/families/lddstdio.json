@@ -1,0 +1,19 @@
+{
+ "name": "lddstdio",
+ "crates": [
+  "semio-s-artifact-stdio-semio-base",
+  "semio-s-artifact-stdio-semio-drawing",
+  "semio-s-artifact-stdio-semio-drawing-export",
+  "semio-s-artifact-stdio-semio-drawing-import"
+ ],
+ "base": {
+  "rev": "b84bf526c7b",
+  "crates": [
+   "semio-s-artifact-stdio-semio-base",
+   "semio-s-artifact-stdio-semio-drawing",
+   "semio-s-artifact-stdio-semio-drawing-export",
+   "semio-s-artifact-stdio-semio-drawing-import"
+  ]
+ },
+ "note": "LAYOUT-DRAWING-DECOUPLE: the stdio Semio drawing family the binding consumes (unchanged by this slice)"
+}

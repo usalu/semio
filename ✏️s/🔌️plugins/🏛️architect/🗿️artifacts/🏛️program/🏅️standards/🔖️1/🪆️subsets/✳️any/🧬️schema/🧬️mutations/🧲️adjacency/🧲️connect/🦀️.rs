@@ -4,7 +4,7 @@
 //! Phase 2). Behavior unchanged from the wave-2 pass — pure directory/module restructuring.
 
 use crate::standards::v1::subsets::any::schema::registers::Adjacency;
-use crate::standards::v1::subsets::any::schema::{diff::ProgramDiff, mutations::ProgramMutation, snapshot::ProgramSnapshot};
+use crate::standards::v1::subsets::any::schema::{diff::ProgramDiff, snapshot::ProgramSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 
 /// 🔌️ Upserts an adjacency edge between two elements: normalizes the endpoint pair, replaces the
@@ -21,12 +21,15 @@ pub struct ConnectAdjacency {
     #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     pub index: Option<usize>,
 }
-impl MutationKind<ProgramSnapshot, ProgramMutation> for ConnectAdjacency {
+impl<Op> MutationKind<ProgramSnapshot, Op> for ConnectAdjacency
+where
+    Op: protocol::Mutation<ProgramSnapshot, Diff = ProgramDiff> + From<ConnectAdjacency> + From<crate::standards::v1::subsets::any::schema::mutations::disconnect_adjacency::DisconnectAdjacency>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "connect", entity: "adjacency", kind: "connect-adjacency", record: "ConnectedAdjacency" };
     fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &ProgramSnapshot) -> Result<Vec<ProgramMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &ProgramSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

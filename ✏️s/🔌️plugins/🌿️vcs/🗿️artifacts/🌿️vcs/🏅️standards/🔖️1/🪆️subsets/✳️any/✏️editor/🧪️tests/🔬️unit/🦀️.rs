@@ -1,5 +1,17 @@
+use crate::editor::vcs::commands::edit as edit_command;
+use crate::editor::vcs::commands::example::set_active_example;
+use crate::{editor::vcs::commands::change_counter, editor::vcs::commands::change_notes, editor::vcs::commands::change_status, editor::vcs::commands::canvas_pointer_down, editor::vcs::commands::canvas_pointer_move, editor::vcs::commands::canvas_pointer_up, editor::vcs::commands::canvas_wheel, editor::vcs::commands::increment_counter, editor::vcs::commands::no_operation, editor::vcs::commands::rename_vcs, editor::vcs::commands::text_edit};
+use crate::{editor::vcs::config::VcsDemoConfig, editor::vcs::config::VcsDemoConfigMutation};
+use crate::editor::vcs::modes::edit;
+use crate::{editor::vcs::modes::edit::windows::editor, editor::vcs::modes::edit::windows::history};
+use crate::{op::VcsDemoMutation, VcsSnapshot};
+use semio_framework::ToolExecutionContract;
+use semio_framework_plugin::retained_command::ArtifactCommandWork;
+use semio_framework_plugin::ArtifactToolPublicationLane;
+use semio_framework_plugin::EditorApp;
+use semio_framework_plugin::HierarchyProvider;
 pub(crate) mod context {
-    use super::super::*;
+    use super::*;
     use semio_framework_plugin::artifact_app_laws::{meta, new_app_with_registry};
     use semio_framework_plugin::ActionMeta;
     use semio_framework_plugin::{EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
@@ -341,16 +353,16 @@ pub(crate) mod context {
     }
 }
 
-use super::*;
+use crate::editor::vcs::*;
 use crate::editor::vcs::unit_tests::context::{action_args, app, dispatch, no_args, seeded_envelope, settle_action, settle_reserved};
 use semio_framework_plugin::artifact_app_laws::meta;
 use semio_framework_plugin::PluginApp;
 use serde_json::{from_str as parse, Value};
 use store::HistoryColumn;
 
-const RETAINED_LIMITS: &str = include_str!("../🧫️fixtures/🧫️retained-command-limits/🔣️.json");
-const RETAINED_EDIT_LIMITS: &str = include_str!("../🧫️fixtures/✍️retained-edit-limits/🔣️.json");
-const RETAINED_ROUTES: &str = include_str!("../🧫️fixtures/🛣️retained-command-routes.json");
+static RETAINED_LIMITS: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../🧪️tests/🧫️fixtures/🧫️retained-command-limits/🔣️.json"));
+static RETAINED_EDIT_LIMITS: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../🧪️tests/🧫️fixtures/✍️retained-edit-limits/🔣️.json"));
+static RETAINED_ROUTES: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../🧪️tests/🧫️fixtures/🛣️retained-command-routes.json"));
 
 //#region 🔖️CommandSurface
 /// 🏷️ Every declared manifest action id must be reachable as exactly one command row, and every row's
@@ -398,7 +410,7 @@ async fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
 
 /// 🧾️ One representative value per row, in declaration (= binary ordinal) order. Matches the pilot's
 /// wire baseline dump byte-for-byte (ticket `🧪️wire-baseline-before.txt`).
-pub(super) fn every_command() -> Vec<VcsCommand> {
+pub(crate) fn every_command() -> Vec<VcsCommand> {
     vec![
         VcsCommand::IncrementCounter(increment_counter::IncrementCounter {}),
         VcsCommand::RenameVcs(rename_vcs::RenameVcs { title: "Renamed".into() }),
@@ -418,7 +430,7 @@ pub(super) fn every_command() -> Vec<VcsCommand> {
 
 #[test]
 fn bounded_command_factory_matches_the_language_neutral_maximum_oracle() {
-    let fixture: Value = parse(RETAINED_LIMITS).expect("VCS retained limits decode");
+    let fixture: Value = parse((*RETAINED_LIMITS)).expect("VCS retained limits decode");
     let maximum = fixture.get("maximumTextBytes").and_then(Value::as_u64).expect("maximumTextBytes") as usize;
     let additional = fixture.get("rejectedAdditionalBytes").and_then(Value::as_u64).expect("rejectedAdditionalBytes") as usize;
     let expected_items = fixture.get("expectedWorkItems").and_then(Value::as_u64).expect("expectedWorkItems") as usize;
@@ -440,7 +452,7 @@ fn bounded_command_factory_matches_the_language_neutral_maximum_oracle() {
 #[test]
 fn retained_factories_publish_only_their_exact_declared_lanes() {
     use semio_framework_plugin::ArtifactOwnedToolJobFactory;
-    let fixture: Value = parse(RETAINED_ROUTES).expect("VCS retained route fixture decodes");
+    let fixture: Value = parse((*RETAINED_ROUTES)).expect("VCS retained route fixture decodes");
     let routes = fixture.get("routes").and_then(Value::as_array).expect("routes");
     // 🛣️ The fixture is the language-neutral oracle of BOTH declared contract rosters — measured
     // against them rather than a frozen literal, so a tool added to either roster must be declared
@@ -537,7 +549,7 @@ fn canvas_pointer_wire_requires_samples_and_cancelled() {
 
 #[test]
 fn resumable_text_edit_matches_the_serde_json_batch_oracle() {
-    let fixture: Value = parse(RETAINED_EDIT_LIMITS).expect("VCS retained edit limits decode");
+    let fixture: Value = parse((*RETAINED_EDIT_LIMITS)).expect("VCS retained edit limits decode");
     assert_eq!(fixture.get("toolIds").and_then(Value::as_array).expect("toolIds").iter().map(|value| value.as_str().expect("tool id")).collect::<Vec<_>>(), VCS_RESUMABLE_TOOL_IDS);
     assert_eq!(fixture.get("maximumTextBytes").and_then(Value::as_u64), Some(VCS_BOUNDED_RAW_BYTES as u64));
     assert_eq!(fixture.get("maximumTags").and_then(Value::as_u64), Some(VCS_EDIT_MAXIMUM_TAGS as u64));
@@ -570,7 +582,7 @@ fn resumable_text_edit_matches_the_serde_json_batch_oracle() {
 #[test]
 fn resumable_text_edit_enforces_maximum_plus_one_and_retires_incrementally() {
     use semio_framework_plugin::retained_command::ArtifactCommandWork;
-    let fixture: Value = parse(RETAINED_EDIT_LIMITS).expect("VCS retained edit limits decode");
+    let fixture: Value = parse((*RETAINED_EDIT_LIMITS)).expect("VCS retained edit limits decode");
     let maximum = fixture.get("maximumTextBytes").and_then(Value::as_u64).expect("maximumTextBytes") as usize;
     let additional = fixture.get("rejectedAdditionalBytes").and_then(Value::as_u64).expect("rejectedAdditionalBytes") as usize;
     assert!(VcsPlayApp::command_from_action("textEdit", Some((action_args([("text", "x".repeat(maximum + additional))])).clone()), None).is_err());
@@ -805,3 +817,8 @@ async fn the_one_item_preflight_declares_room_for_a_point_inverse() {
     );
 }
 //#endregion 📬️StorePreparation
+
+fn runtime_fixture_text(relative: &str) -> &'static str {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative);
+    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display())).into_boxed_str())
+}

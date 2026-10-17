@@ -25,14 +25,14 @@ test("the actual error provider is independent of Replication and preserves an o
  expect(native.package.name).toBe(fixture.package);
  expect(native.lib).toEqual({name:"semio_framework_pack_error",path:"../../🦀️.rs"});
  expect(Object.keys(native.dependencies).sort()).toEqual([...fixture.dependencies].sort());
- expect(read("🦀️.rs")).toContain("ValueRefusal(ValueError)");
- for(const erased of ["Schema(String)","into_message()","semio_framework_replication::","pub use"])expect(read("🦀️.rs")).not.toContain(erased);
+ expect(read("🪶️refusal/🦀️.rs")).toContain("ValueRefusal(ValueError)");
+ for(const erased of ["Schema(String)","into_message()","semio_framework_replication::"])for(const module of ["🦀️.rs","🪶️refusal/🦀️.rs"])expect(read(module)).not.toContain(erased);
 });
 
 import {Database} from "bun:sqlite";
 import textFixture from "../../🧪️tests/🧫️fixtures/📍️text-refusal/🔣️.json";
 import {PackError} from "../../🟦️.ts";
-import {TextError} from "../../../../⚠️diagnostic/🚧️text-error/🟦️.ts";
+import {TextError} from "@semio-tech/framework-diagnostic-ts/text-error";
 const refusalKinds={InvalidValue:"invalidValue",Canceled:"canceled",OwnershipLimit:"ownershipLimit",AllocationFailed:"allocationFailed",WorkLimit:"workLimit",DepthLimit:"depthLimit",UnsupportedOwner:"unsupportedOwner",InvariantViolated:"invariantViolated"} as const;
 
 test("source-positioned refusal retains kind, span, expected syntax and original cause through Pack",()=>{

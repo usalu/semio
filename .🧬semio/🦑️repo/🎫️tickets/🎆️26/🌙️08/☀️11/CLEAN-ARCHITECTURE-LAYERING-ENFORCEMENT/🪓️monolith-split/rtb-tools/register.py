@@ -121,11 +121,11 @@ def add_routes(crates_projects):
 def add_taxonomy_members(names):
     """Appends crate folder names to the wgpu folder member list (after the last shell-tests bin)."""
     t = rd(TAX)
-    anchor = '        "🥣️shell-tests-docs-3"\n      ],'
-    assert t.count(anchor) == 1
     add = [n for n in names if f'"{n}"' not in t]
     if not add:
         return []
+    anchor = '        "🥣️shell-tests-docs-3"\n      ],'
+    assert t.count(anchor) == 1
     ins = ',\n'.join(f'        "{n}"' for n in add)
     out = t.replace(anchor, '        "🥣️shell-tests-docs-3",\n' + ins + "\n      ],")
     json.loads(out)

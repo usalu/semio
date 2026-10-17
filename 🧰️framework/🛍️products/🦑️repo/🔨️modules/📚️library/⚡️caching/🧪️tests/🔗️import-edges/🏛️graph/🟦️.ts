@@ -33,9 +33,8 @@ async function graphEpoch() {
   const actual = new Set<string>((Object.values(graph.dependencies).flat() as Edge[]).map(key)), expected = new Set<string>((Object.values(canonical.dependencies).flat() as Edge[]).map(key));
   const warmEdges = new Set<string>((Object.values(warm.projectGraph.dependencies).flat() as Edge[]).map(key));
   expect([...warmEdges].sort(), "unchanged-authority warm graph equals fresh source resolution").toEqual([...expected].sort());
-  console.log(`[DEBUG] unchanged-authority Nx warm graph: ${warmEdges.size} edges; admitted cache remains immutable under shared input aliasing`);
   const excess = [...actual].filter(edge => !expected.has(edge)).sort(), missing = [...expected].filter(edge => !actual.has(edge)).sort();
-  if (excess.length || missing.length) console.log(`[DEBUG] graph mismatch authority: ${JSON.stringify({ selectedManifest, pluginNames: [...plugins.specifiedPlugins, ...plugins.defaultPlugins].map(plugin => plugin.name), freshWs: fresh.filter(edge => edge.target === "npm:ws"), canonicalWs: Object.values(canonical.dependencies).flat().filter((edge: any) => edge.target === "npm:ws") })}`);
+  if (excess.length || missing.length) {}
   const selected = fixture.repository.sources.map(source => {
     const row: File | undefined = fileMap.projectFileMap[fixture.repository.owner]?.find((file: File) => file.file === source);
     if (!row) throw Error(`Current ordinary Nx file map is missing ${source}`);
@@ -53,12 +52,10 @@ const current = () => epoch ??= graphEpoch();
 
 test("ordinary Nx retained Process sources agree with canonical current dependency authority", async () => {
   const { selected } = await current();
-  console.log(`[DEBUG] ordinary retained Process source authority: ${JSON.stringify(selected)}`);
   for (const row of selected) expect(row.actual, row.source).toEqual(row.expected);
 }, 120000);
 
 test("ordinary Nx published dependency graph equals the full canonical current graph", async () => {
   const { excess, missing, actualEdges, canonicalEdges } = await current();
-  console.log(`[DEBUG] ordinary Nx canonical graph equality: actual ${actualEdges}, canonical ${canonicalEdges}, excess ${excess.length}, missing ${missing.length}`);
   expect({ excess, missing }).toEqual({ excess: [], missing: [] });
 }, 120000);

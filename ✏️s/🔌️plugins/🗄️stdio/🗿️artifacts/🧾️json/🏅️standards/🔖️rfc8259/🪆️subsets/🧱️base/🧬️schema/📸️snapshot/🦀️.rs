@@ -3,8 +3,7 @@
 //! the ORIGINAL NUMBER LEXEME verbatim (rfc8259 allows arbitrary precision — never round-tripped
 //! through `f64`). No `serde_json::Value` anywhere in this file.
 
-#[path="🔢️number/🦀️.rs"]
-pub mod number;
+pub use semio_s_artifact_stdio_json_number::standards::v_rfc8259::subsets::base::schema::snapshot::number;
 
 use crate::STDIO_JSON_DOCUMENT_SCHEMA;
 use framework_schema::ArtifactSchema;

@@ -9,6 +9,7 @@ use semio_framework_plugin_reactor_lifecycle::instance_lifetime;
 use semio_framework_plugin_reactor_wit_bridge::wit_bridge::poll;
 use semio_framework_plugin_reactor_turn as turn;
 
+#[doc(hidden)]
 #[cfg(test)]
 #[path="../../../../../⚛️reactor/🔄️turn/📥️receiving/🧪️tests/🦀️.rs"]
-mod tests;
+pub mod tests;

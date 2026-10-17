@@ -32,7 +32,6 @@ async function oracle(path: string, source: string): Promise<string[]> {
 test("module source and resolution examples have unique identities", () => {
   expect(new Ajv({strict:true}).compile(JSON.parse(readFileSync(join(caching,"🧬️schema/🔗️import-edges/🔁️context/🔣️.json"),"utf8")))(fixture)).toBe(true);
   for (const rows of [fixture.imports, fixture.contexts]) expect(new Set(rows.map(row => row.id)).size).toBe(rows.length);
-  console.log(`[DEBUG] import edge corpus: ${fixture.imports.length} source vectors, ${fixture.contexts.length} context replay laws`);
 });
 
 test("canonical module facts agree with independent runtime import oracles", async () => {
@@ -49,7 +48,6 @@ test("canonical module facts agree with independent runtime import oracles", asy
     expect(provider.moduleSourceImports(row.path, row.source)).toEqual(facts);
     expect(provider.moduleSourceImports(row.path, row.source)).not.toEqual(mutated);
   }
-  console.log(`[DEBUG] canonical module runtime import facts agree with esbuild and TypeScript: ${fixture.imports.length}`);
 });
 
 for (const vector of fixture.contexts) test(`immutable source facts resolve current context: ${vector.id}`, async () => {
@@ -90,10 +88,10 @@ for (const vector of fixture.contexts) test(`immutable source facts resolve curr
       expect(expected, `${vector.id}: installed Nx resolution`).toEqual(phase.targets);
       const projectFiles = { caller: [{ file: phase.file, hash }] }, byPackage = new Map(Object.entries(phase.packages)), locked = { resolveImport: resolver, externalNodes };
       for (const temperature of ["cold", "warm"]) {
-        expect(join(cacheInternals.moduleSourceRecordCacheRootV1(root),"0".repeat(64)+".json").length, `${vector.id}: cache output path admission`).toBeLessThanOrEqual(256);
+        expect(join(cacheInternals.moduleSourceRecordCacheRootV1(root)!,"0".repeat(64)+".json").length, `${vector.id}: cache output path admission`).toBeLessThanOrEqual(256);
         calls = [];
         const targets = new Set<string>();
-        await cacheInternals.collectImportEdges(root, projectFiles, projects, byPackage, locked, (_source: string, target: string) => { targets.add(target); });
+        await cacheInternals.collectImportEdges(root, projectFiles, projects, byPackage, locked, (_source: string, target: string | undefined) => { if (target !== undefined) targets.add(target); });
         expect([...targets].sort(), `${vector.id}: ${temperature}, ${phase.file}`).toEqual(expected);
         expect(calls.length, `${vector.id}: resolution callbacks run only for actual package imports`).toBe(imported.filter(value => !core.includes(value) && !value.startsWith(".") && !byPackage.has(value.startsWith("@") ? value.split("/").slice(0, 2).join("/") : value.split("/")[0])).length);
         expect(calls.every(call => call.file === phase.file)).toBe(true);
@@ -110,7 +108,6 @@ for (const vector of fixture.contexts) test(`immutable source facts resolve curr
       }
     }
     if (vector.id === "old-resolved-cache-isolation") expect(readFileSync(join(oldCache, `${hash}.json`), "utf8")).toBe(JSON.stringify(["obsolete-resolved-target"]));
-    console.log(`[DEBUG] current import context ${vector.id}: ${vector.phases.length} phases, cold/warm, installed Nx oracle; old resolved cache ignored`);
   } finally {
     if (previous === undefined) delete process.env.NX_WORKSPACE_DATA_DIRECTORY;
     else process.env.NX_WORKSPACE_DATA_DIRECTORY = previous;

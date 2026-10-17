@@ -6,34 +6,20 @@ use crate::standards::v1_7::subsets::base::schema::diff::PdfDiff;
 use crate::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot;
 
 //#region 🔖️Leaves
-#[path = "🔤️embed-font-file/🦀️.rs"]
-pub mod embed_font_file;
-#[path = "📎️insert-embedded-file/🦀️.rs"]
-pub mod insert_embedded_file;
-#[path = "🔒️insert-encryption-dictionary/🦀️.rs"]
-pub mod insert_encryption_dictionary;
-#[path = "📜️insert-javascript-action/🦀️.rs"]
-pub mod insert_javascript_action;
-#[path = "🚀️insert-launch-action/🦀️.rs"]
-pub mod insert_launch_action;
-#[path = "✂️remove-af-relationship/🦀️.rs"]
-pub mod remove_af_relationship;
-#[path = "🗑️remove-embedded-file/🦀️.rs"]
-pub mod remove_embedded_file;
-#[path = "🔓️remove-encryption-dictionary/🦀️.rs"]
-pub mod remove_encryption_dictionary;
-#[path = "🧺️remove-font-file/🦀️.rs"]
-pub mod remove_font_file;
-#[path = "🚫️remove-javascript-action/🦀️.rs"]
-pub mod remove_javascript_action;
-#[path = "🛬️remove-launch-action/🦀️.rs"]
-pub mod remove_launch_action;
-#[path = "🧽️remove-output-intent/🦀️.rs"]
-pub mod remove_output_intent;
-#[path = "🔗️set-af-relationship/🦀️.rs"]
-pub mod set_af_relationship;
-#[path = "🏳️set-output-intent/🦀️.rs"]
-pub mod set_output_intent;
+pub use semio_s_artifact_stdio_pdf_mut_family_2::standards::v1_7::subsets::a::schema::mutations::embed_font_file;
+pub use semio_s_artifact_stdio_pdf_mut_family_2::standards::v1_7::subsets::a::schema::mutations::insert_embedded_file;
+pub use semio_s_artifact_stdio_pdf_mut_family_2::standards::v1_7::subsets::a::schema::mutations::insert_encryption_dictionary;
+pub use semio_s_artifact_stdio_pdf_mut_family_2::standards::v1_7::subsets::a::schema::mutations::insert_javascript_action;
+pub use semio_s_artifact_stdio_pdf_mut_family_3::standards::v1_7::subsets::a::schema::mutations::insert_launch_action;
+pub use semio_s_artifact_stdio_pdf_mut_family_3::standards::v1_7::subsets::a::schema::mutations::remove_af_relationship;
+pub use semio_s_artifact_stdio_pdf_mut_family_2::standards::v1_7::subsets::a::schema::mutations::remove_embedded_file;
+pub use semio_s_artifact_stdio_pdf_mut_family_2::standards::v1_7::subsets::a::schema::mutations::remove_encryption_dictionary;
+pub use semio_s_artifact_stdio_pdf_mut_family_2::standards::v1_7::subsets::a::schema::mutations::remove_font_file;
+pub use semio_s_artifact_stdio_pdf_mut_family_2::standards::v1_7::subsets::a::schema::mutations::remove_javascript_action;
+pub use semio_s_artifact_stdio_pdf_mut_family_3::standards::v1_7::subsets::a::schema::mutations::remove_launch_action;
+pub use semio_s_artifact_stdio_pdf_mut_family_3::standards::v1_7::subsets::a::schema::mutations::remove_output_intent;
+pub use semio_s_artifact_stdio_pdf_mut_family_3::standards::v1_7::subsets::a::schema::mutations::set_af_relationship;
+pub use semio_s_artifact_stdio_pdf_mut_family_3::standards::v1_7::subsets::a::schema::mutations::set_output_intent;
 
 pub use embed_font_file::EmbedFontFile;
 pub use insert_embedded_file::InsertEmbeddedFile;
@@ -86,7 +72,5 @@ pub fn pdf_a_mutation_kinds() -> &'static [protocol::SemanticDescriptor] {
 //#endregion 🔖️Delegation
 
 //#region 🧪️CatalogParity
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️CatalogParity

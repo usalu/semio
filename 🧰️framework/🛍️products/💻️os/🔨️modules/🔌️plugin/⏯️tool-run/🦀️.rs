@@ -5,13 +5,16 @@
 //!
 //! Contract: `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️13/INTERACTIVE-TOOLS-VISIBLE-PROCESS/📋️tool-run-contract.md`
 //! §2.7, §2.8, §3.3, §4.1 (layers 1 and 3). Domain-neutral types: `semio_framework_tool_run`.
-use crate::tool_run_contract::FRAMEWORK_TOOL_RUN_BODY_KEY;
-use crate::tool_run_contract::ToolRunJobPurpose;
-use crate::tool_run_contract::ToolRunJob;
-use crate::tool_run_contract::ToolRunTraceKeys;
-use crate::tool_run_contract::ToolRunRetargetableJob;
-use crate::tool_run_contract::ToolRunJobPort;
-use crate::tool_run_contract::ToolRunView;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as pack;
+use semio_framework_plugin_decl_views::tool_run_contract::FRAMEWORK_TOOL_RUN_BODY_KEY;
+use semio_framework_plugin_decl_views::tool_run_contract::ToolRunJobPurpose;
+use semio_framework_plugin_decl_views::tool_run_contract::ToolRunJob;
+use semio_framework_plugin_decl_views::tool_run_contract::ToolRunTraceKeys;
+use semio_framework_plugin_decl_views::tool_run_contract::ToolRunRetargetableJob;
+use semio_framework_plugin_decl_views::tool_run_contract::ToolRunJobPort;
+use semio_framework_plugin_decl_views::tool_run_contract::ToolRunView;
 
 use semio_framework_plugin_decl_app::ArtifactApp;
 #[cfg(test)]
@@ -25,20 +28,16 @@ use semio_framework_value_derive::{FromValue, ToValue};
 use store::{Mutation, MutationDiff};
 use protocol::{OpBinary, OpText};
 #[cfg(test)]
-use crate::plugin_app::PluginApp;
+use semio_framework_plugin_reactor_app::PluginApp;
 #[cfg(any(test, feature = "artifact-app-testing"))]
 use semio_framework_plugin_window_config::WindowConfigOwner;
 use semio_framework_ui_contract::*;
-use semio_framework_tool_run::{
-    tool_run_format, ToolRunAction, ToolRunCounter, ToolRunDefinition, ToolRunEffect, ToolRunEvent, ToolRunId, ToolRunIdentity, ToolRunLabel, ToolRunLane, ToolRunMachine, ToolRunRebasePolicy,
-    ToolRunRejection, ToolRunSlot, ToolRunState, ToolRunStep, ToolRunStepArg, ToolRunStepKind, ToolRunStepRing, ToolRunTick, ToolRunTraceCursor, ToolRunTraceDelta, ToolRunTraceOp, ToolRunTraceStore, ToolRunVerdict,
-    TOOL_RUN_ACTION_IDS, TOOL_RUN_ARG_GENERATION, TOOL_RUN_ARG_RUN_ID, TOOL_RUN_ARG_TOOL_ID, TOOL_RUN_MEMBER_OPS_MAX, TOOL_RUN_PROVISIONAL_OPS_MAX, TOOL_RUN_REASON_PROVISIONAL_CAP,
-    TOOL_RUN_REASON_TRACE_TRUNCATED, TOOL_RUN_STATUS_ANNOUNCE_INTERVAL_MS,
-};
+use semio_framework_tool_run::{tool_run_format, ToolRunAction, ToolRunCounter, ToolRunDefinition, ToolRunEffect, ToolRunEvent, ToolRunId, ToolRunIdentity, ToolRunLabel, ToolRunLane, ToolRunMachine, ToolRunRebasePolicy, ToolRunRejection, ToolRunSlot, ToolRunState, ToolRunStep, ToolRunStepArg, ToolRunStepKind, ToolRunStepRing, ToolRunTick, ToolRunTraceCursor, ToolRunTraceDelta, ToolRunTraceOp, ToolRunTraceStore, ToolRunVerdict, TOOL_RUN_ARG_GENERATION, TOOL_RUN_ARG_RUN_ID, TOOL_RUN_ARG_TOOL_ID, TOOL_RUN_MEMBER_OPS_MAX, TOOL_RUN_PROVISIONAL_OPS_MAX, TOOL_RUN_REASON_PROVISIONAL_CAP, TOOL_RUN_REASON_TRACE_TRUNCATED, TOOL_RUN_STATUS_ANNOUNCE_INTERVAL_MS};
 use semio_framework_ui_scene::{scene_lane_hash, Board2dScene, Board2dSceneLane, Canvas2dScene, Canvas2dSceneLane, SceneDoc, SceneLaneRef, World3dScene, World3dSceneLane};
 use std::collections::BTreeMap;
 use std::sync::Arc;
-use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,admit_retained_clone_close}};
+use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind};
+use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, admit_retained_clone_close};
 //#region 🔖️Limits
 /// ⏱️ Wall budget of one driver turn; every job step inside it keeps its own interactive-lane slice.
 pub const TOOL_RUN_TURN_WALL_US: u64 = 4_000;
@@ -55,17 +54,20 @@ pub const TOOL_RUN_TRACE_DELTA_BYTES: usize = 262_144;
 /// 🔁️ Refreshes one window may re-request a trace backlog while its renderer's echoed cursor stands still;
 /// a renderer that never echoes therefore costs a bounded number of refreshes, never a refresh loop.
 pub const TOOL_RUN_TRACE_STALL_REFRESHES: u8 = 4;
-pub(crate) const TOOL_RUN_JOB_SITE: &str = "tool-run.step";
+#[doc(hidden)]
+pub const TOOL_RUN_JOB_SITE: &str = "tool-run.step";
 #[path="🎟️publication/🦀️.rs"]
 mod publication_ingress;
-use publication_ingress::ToolRunPublicationIngress;
+use crate::publication_ingress::ToolRunPublicationIngress;
 #[path="👷️job/🎟️receiving/🦀️.rs"]
 mod original_job_receiving;
-pub(crate) use original_job_receiving::OriginalToolRunPayload;
+pub(crate) use crate::original_job_receiving::OriginalToolRunPayload;
 //#endregion 🔖️Limits
 
 //#region 🔖️Selection
 /// 🎯️ The run the ledger currently operates on (`ToolRunLedger::selected`), borrowing only `entries`.
+#[macro_export]
+#[doc(hidden)]
 macro_rules! selected_entry {
     ($ledger:expr) => {
         $ledger.selected.and_then(|index| $ledger.entries.get(index)).map(|entry| &**entry)
@@ -73,6 +75,8 @@ macro_rules! selected_entry {
 }
 
 /// 🎯️ The run the ledger currently operates on, mutably, borrowing only `entries`.
+#[macro_export]
+#[doc(hidden)]
 macro_rules! selected_entry_mut {
     ($ledger:expr) => {
         match $ledger.selected {
@@ -81,12 +85,11 @@ macro_rules! selected_entry_mut {
         }
     };
 }
-pub(crate) use selected_entry;
-pub(crate) use selected_entry_mut;
 
 #[path="🎞️tick/📦️payload/🦀️.rs"]
 mod original_tick_payload;
-#[cfg(test)] pub(crate) use original_tick_payload::{advance_original_tick_payload,close_original_tick_payload};
+#[cfg(test)]
+pub use crate::original_tick_payload::{advance_original_tick_payload, close_original_tick_payload};
 
 #[cfg(test)]
 #[path="📮️port/♻️retirement/🧪️tests/🦀️.rs"]
@@ -95,40 +98,39 @@ mod original_port_retirement_tests;
 #[path="📮️port/🎟️admission/🧪️tests/🦀️.rs"]
 mod original_port_admission_tests;
 
-#[path="🧵️instance/🦀️.rs"]
-mod instance_turns;
-pub(crate) use instance_turns::ToolRunExtension;
 //#endregion 🔖️Selection
 
 //#region 🔖️Job
-pub(crate) enum ToolRunJobHandle<C> {
+#[doc(hidden)]
+pub enum ToolRunJobHandle<C> {
     Plain(ToolRunJob),
     Retargetable(Box<dyn ToolRunRetargetableJob<C>>),
 }
 
-pub(crate) struct ToolRunJobSlot<C> {
-    pub(crate) receiving: semio_framework_tool_run::ToolRunReceivingLimits,
-    pub(crate) job: ToolRunJobHandle<C>,
-    pub(crate) purpose: ToolRunJobPurpose,
-    pub(crate) operation: semio_framework_job::OperationId,
-    pub(crate) generation: semio_framework_job::Generation,
-    pub(crate) cancel: Option<semio_framework_job::CancelToken>,
-    cancel_retirement: Option<semio_framework_async::CancelTokenRetirement>,
-    pub(crate) preview_sequence: u64,
-    pub(crate) authority: Option<semio_framework_job::JobPayloadAuthority>,
-    pub(crate) outcome: Option<semio_framework_job::JobOutcomeDescriptor>,
-    pub(crate) outcome_received: bool,
-    pub(crate) original_failure: std::mem::ManuallyDrop<Option<semio_framework_job::OriginalTurnFailure>>,
+#[doc(hidden)]
+pub struct ToolRunJobSlot<C> {
+    pub receiving: semio_framework_tool_run::ToolRunReceivingLimits,
+    pub job: ToolRunJobHandle<C>,
+    pub purpose: ToolRunJobPurpose,
+    pub operation: semio_framework_job::OperationId,
+    pub generation: semio_framework_job::Generation,
+    pub cancel: Option<semio_framework_job::CancelToken>,
+    pub cancel_retirement: Option<semio_framework_async::CancelTokenRetirement>,
+    pub preview_sequence: u64,
+    pub authority: Option<semio_framework_job::JobPayloadAuthority>,
+    pub outcome: Option<semio_framework_job::JobOutcomeDescriptor>,
+    pub outcome_received: bool,
+    pub original_failure: std::mem::ManuallyDrop<Option<semio_framework_job::OriginalTurnFailure>>,
     failure_retirement: Option<Box<dyn semio_framework_value::ErasedSnapshotRetirement>>,
-    pub(crate) closing: bool,
+    pub closing: bool,
 }
 
 impl<C> ToolRunJobSlot<C> {
-    pub(crate) fn new(job: ToolRunJobHandle<C>, purpose: ToolRunJobPurpose, generation: u32, receiving: semio_framework_tool_run::ToolRunReceivingLimits) -> Self {
+    pub fn new(job: ToolRunJobHandle<C>, purpose: ToolRunJobPurpose, generation: u32, receiving: semio_framework_tool_run::ToolRunReceivingLimits) -> Self {
         Self { receiving, job, purpose, operation: semio_framework_job::allocate_operation_id(), generation: semio_framework_job::Generation(u64::from(generation)), cancel: None, cancel_retirement: None, preview_sequence: 0, authority: None, outcome:None, outcome_received:false, original_failure:std::mem::ManuallyDrop::new(None), failure_retirement:None, closing: false }
     }
 
-    fn interactive(&mut self) -> &mut dyn semio_framework_job::InteractiveJob {
+    pub fn interactive(&mut self) -> &mut dyn semio_framework_job::InteractiveJob {
         match &mut self.job {
             ToolRunJobHandle::Plain(job) => job.as_mut(),
             ToolRunJobHandle::Retargetable(job) => job.as_mut(),
@@ -142,7 +144,7 @@ impl<C> ToolRunJobSlot<C> {
         }
     }
 
-    pub(crate) fn terminal_is_empty(&self) -> bool {
+    pub fn terminal_is_empty(&self) -> bool {
         self.job_is_empty() && self.authority.is_none() && self.outcome.is_none() && self.original_failure.is_none() && self.failure_retirement.is_none() && self.cancel.is_none() && self.cancel_retirement.is_none()
     }
 
@@ -154,14 +156,14 @@ impl<C> ToolRunJobSlot<C> {
         }
     }
 
-    pub(crate) fn retargetable(&mut self) -> Option<&mut dyn ToolRunRetargetableJob<C>> {
+    pub fn retargetable(&mut self) -> Option<&mut dyn ToolRunRetargetableJob<C>> {
         match &mut self.job {
             ToolRunJobHandle::Retargetable(job) if !self.closing && self.outcome.is_none() => Some(job.as_mut()),
             _ => None,
         }
     }
 
-    pub(crate) fn begin_close(&mut self) {
+    pub fn begin_close(&mut self) {
         if !self.closing {
             if let Some(cancel) = self.cancel.as_ref() {
                 cancel.cancel_now();
@@ -171,13 +173,13 @@ impl<C> ToolRunJobSlot<C> {
         }
     }
 
-    pub(crate) fn borrow_outcome(&self)->Result<Option<semio_framework_job::JobOutcomeView<'_>>,ValueError>{
+    pub fn borrow_outcome(&self)->Result<Option<semio_framework_job::JobOutcomeView<'_>>,ValueError>{
         let Some(descriptor)=self.outcome.as_ref()else{return Ok(None)};
         let job:&dyn semio_framework_job::InteractiveJob=match &self.job{ToolRunJobHandle::Plain(job)=>job.as_ref(),ToolRunJobHandle::Retargetable(job)=>job.as_ref()};
         job.borrow_outcome(descriptor).map(Some)
     }
 
-    fn next_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
+    pub fn next_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
         if self.outcome.is_some(){return Ok(RetirementDemand{depth:1,..Default::default()})}
         if let Some(owner)=self.failure_retirement.as_ref(){return Ok(if owner.terminal_is_empty(){RetirementDemand{release_bytes:size_of_val(owner.as_ref()),depth:1,..Default::default()}}else{RetirementDemand{copy_bytes:owner.next_copy_byte_demand()?,capacity_bytes:owner.next_capacity_byte_demand(body)?,release_bytes:owner.next_release_byte_demand()?,depth:owner.next_depth_demand()?.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"original ToolRun failure depth overflow"))?}})}
         if self.original_failure.is_some(){return Ok(RetirementDemand{capacity_bytes:semio_framework_value::retirement::owned_retirement_birth_bytes::<semio_framework_job::OriginalTurnFailure>(),depth:2,..Default::default()})}
@@ -191,7 +193,7 @@ impl<C> ToolRunJobSlot<C> {
         Ok(RetirementDemand{copy_bytes:job.next_close_copy_byte_demand()?,capacity_bytes:job.next_close_capacity_byte_demand(body)?,release_bytes:job.next_close_release_byte_demand()?,depth:job.next_close_depth_demand()?.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"tool job close depth overflow"))?})
     }
 
-    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<RetainedCloneStep,semio_framework_job::OriginalTurnFailure>{
+    pub fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<RetainedCloneStep,semio_framework_job::OriginalTurnFailure>{
         let grant=cx.retained_grant();
         if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()))}
         let demand=self.next_demands(grant.maximum_copy_bytes)?;
@@ -224,7 +226,8 @@ fn tool_run_trace_lane_text(delta: &ToolRunTraceDelta) -> Option<String> {
 }
 
 /// 🔎️ The first World3d, Canvas2d or Board2d scene surface of a rendered body, depth first.
-pub(crate) fn tool_run_scene_surface(node: &mut BuiltNode) -> Option<&mut BuiltNode> {
+#[doc(hidden)]
+pub fn tool_run_scene_surface(node: &mut BuiltNode) -> Option<&mut BuiltNode> {
     let is_scene = matches!(&node.component, Component::Surface(props) if [World3dScene::SCHEMA, Canvas2dScene::SCHEMA, Board2dScene::SCHEMA].contains(&props.doc_schema.as_str()));
     if is_scene {
         return Some(node);
@@ -235,7 +238,8 @@ pub(crate) fn tool_run_scene_surface(node: &mut BuiltNode) -> Option<&mut BuiltN
 /// 📎️ Re-attaches `lane` to a scene surface: the spine's lane refs gain the `toolRunTrace` entry and the
 /// surface gains its paged carrier, exactly as `SceneDoc::split_lanes` plus `scene_surface` would emit it.
 /// A surface whose producer already carries the lane is left untouched.
-pub(crate) fn inject_tool_run_trace_lane_into(surface: &mut BuiltNode, lane: &str) -> UiAssemblyResult<()> {
+#[doc(hidden)]
+pub fn inject_tool_run_trace_lane_into(surface: &mut BuiltNode, lane: &str) -> UiAssemblyResult<()> {
     let Component::Surface(props) = &mut surface.component else { return Ok(()) };
     let (name, key) = match props.doc_schema.as_str() {
         World3dScene::SCHEMA => (World3dSceneLane::ToolRunTrace.name(), World3dSceneLane::ToolRunTrace.body_key()),
@@ -281,14 +285,15 @@ pub(crate) fn inject_tool_run_trace_lane_into(surface: &mut BuiltNode, lane: &st
 /// so a retract followed by re-appends spread over several ticks never renders a half re-appended overlay —
 /// the previous overlay stays rendered until then.
 pub(crate) struct ToolRunRefold<P> {
-    running: Option<P>,
-    cursor: usize,
-    boundary: bool,
+    pub running: Option<P>,
+    pub cursor: usize,
+    pub boundary: bool,
 }
 
 /// 🚦️ Where one refold turn left the overlay.
+#[doc(hidden)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum ToolRunRefoldTurn {
+pub enum ToolRunRefoldTurn {
     Pending,
     AwaitingBoundary,
     Swapped,
@@ -296,84 +301,88 @@ pub(crate) enum ToolRunRefoldTurn {
 
 /// 🎚️ The values a run's declared settings reads named when last observed: config pointers, then per declared
 /// window kind the `(window id, values)` of every partition it reads.
+#[doc(hidden)]
 #[derive(Clone, Debug, Default, PartialEq)]
-pub(crate) struct ToolRunSettingsValues {
-    pub(crate) config: Vec<Option<DslValue>>,
-    pub(crate) window_config: Vec<(String, String, Vec<Option<DslValue>>)>,
+pub struct ToolRunSettingsValues {
+    pub config: Vec<Option<DslValue>>,
+    pub window_config: Vec<(String, String, Vec<Option<DslValue>>)>,
 }
 
+#[doc(hidden)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum ToolRunFinalizePhase {
+pub enum ToolRunFinalizePhase {
     Pending,
     Revalidating,
     Publishing,
     Closing,
 }
 
-pub(crate) struct ToolRunFinalize<A: ArtifactApp> {
-    pub(crate) phase: ToolRunFinalizePhase,
-    pub(crate) publication: Option<store::os_store::one_item_publication::ArtifactStoreBatchPublication<A::Snapshot, A::Mutation>>,
-    pub(crate) ingress: ToolRunPublicationIngress,
-    pub(crate) rejected: bool,
-    pub(crate) retracted: u32,
-    pub(crate) published: bool,
+#[doc(hidden)]
+pub struct ToolRunFinalize<A: ArtifactApp> {
+    pub phase: ToolRunFinalizePhase,
+    pub publication: Option<store::os_store::one_item_publication::ArtifactStoreBatchPublication<A::Snapshot, A::Mutation>>,
+    pub ingress: ToolRunPublicationIngress,
+    pub rejected: bool,
+    pub retracted: u32,
+    pub published: bool,
 }
 
-pub(crate) struct ToolRunEntry<A: ArtifactApp> {
-    pub(crate) tool_id: String,
-    pub(crate) actor: semio_framework_value::SharedUtf8,
-    pub(crate) definition: ToolRunDefinition,
-    pub(crate) slot: ToolRunSlot,
-    pub(crate) identity: ToolRunIdentity,
-    pub(crate) base: Arc<A::Snapshot>,
-    pub(crate) base_generation: u64,
-    pub(crate) settings_generation: (u64, u64),
-    pub(crate) settings_values: ToolRunSettingsValues,
-    pub(crate) window: Option<(String, String)>,
-    pub(crate) window_bodies: Vec<String>,
-    pub(crate) payload: Option<Arc<Vec<u8>>>,
-    pub(crate) trace_keys: ToolRunTraceKeys,
-    pub(crate) provisional: Vec<A::Mutation>,
-    pub(crate) entity_marks: Vec<(u32, u64)>,
-    pub(crate) entities: Arc<BTreeSet<u64>>,
-    pub(crate) overlay: Arc<A::Snapshot>,
-    pub(crate) refold: Option<ToolRunRefold<A::Snapshot>>,
-    pub(crate) trace: ToolRunTraceStore,
-    pub(crate) recent_trace: std::collections::VecDeque<u64>,
-    pub(crate) stage: u16,
-    pub(crate) completed: u64,
-    pub(crate) total: Option<u64>,
-    pub(crate) counters: Vec<ToolRunCounter>,
-    pub(crate) steps: ToolRunStepRing,
-    pub(crate) step_sequence: u64,
-    pub(crate) sequence: u64,
-    pub(crate) conflicts: u32,
-    pub(crate) rate_origin: Option<(u64, u64)>,
-    pub(crate) units_per_second: f32,
-    pub(crate) job: Option<ToolRunJobSlot<A::Config>>,
-    pub(crate) checkpoint: Option<Vec<u8>>,
-    pub(crate) pending_step: bool,
-    pub(crate) finalize: Option<ToolRunFinalize<A>>,
-    pub(crate) announced: Option<(ToolRunState, u64, String)>,
-    pub(crate) port: ToolRunJobPort,
+#[doc(hidden)]
+pub struct ToolRunEntry<A: ArtifactApp> {
+    pub tool_id: String,
+    pub actor: semio_framework_value::SharedUtf8,
+    pub definition: ToolRunDefinition,
+    pub slot: ToolRunSlot,
+    pub identity: ToolRunIdentity,
+    pub base: Arc<A::Snapshot>,
+    pub base_generation: u64,
+    pub settings_generation: (u64, u64),
+    pub settings_values: ToolRunSettingsValues,
+    pub window: Option<(String, String)>,
+    pub window_bodies: Vec<String>,
+    pub payload: Option<Arc<Vec<u8>>>,
+    pub trace_keys: ToolRunTraceKeys,
+    pub provisional: Vec<A::Mutation>,
+    pub entity_marks: Vec<(u32, u64)>,
+    pub entities: Arc<BTreeSet<u64>>,
+    pub overlay: Arc<A::Snapshot>,
+    pub refold: Option<ToolRunRefold<A::Snapshot>>,
+    pub trace: ToolRunTraceStore,
+    pub recent_trace: std::collections::VecDeque<u64>,
+    pub stage: u16,
+    pub completed: u64,
+    pub total: Option<u64>,
+    pub counters: Vec<ToolRunCounter>,
+    pub steps: ToolRunStepRing,
+    pub step_sequence: u64,
+    pub sequence: u64,
+    pub conflicts: u32,
+    pub rate_origin: Option<(u64, u64)>,
+    pub units_per_second: f32,
+    pub job: Option<ToolRunJobSlot<A::Config>>,
+    pub checkpoint: Option<Vec<u8>>,
+    pub pending_step: bool,
+    pub finalize: Option<ToolRunFinalize<A>>,
+    pub announced: Option<(ToolRunState, u64, String)>,
+    pub port: ToolRunJobPort,
     /// ♻️ Snapshot aliases this run let go (a replaced base or overlay, a superseded fold result), owed to the store's
     /// alias retirement ([`ToolRunLedger::retire_step`]); never dropped plainly.
-    pub(crate) displaced: Vec<Arc<A::Snapshot>>,
+    pub displaced: Vec<Arc<A::Snapshot>>,
     /// 🧩️ The owned member a member run edits (`ToolRunDefinition::member`); `None` for a run on the document's store.
-    pub(crate) member: Option<ToolRunMemberRun>,
+    pub member: Option<ToolRunMemberRun>,
 }
 
 impl<A: ArtifactApp> ToolRunEntry<A> {
     /// 🛣️ The lane this run occupies: the mutating lane, or its tool on its starting window when read-only.
-    pub(crate) fn lane(&self) -> ToolRunLane {
+    pub fn lane(&self) -> ToolRunLane {
         ToolRunLane { mutating: self.definition.mutating, tool_id: self.tool_id.clone(), window_id: if self.definition.mutating { None } else { self.window.as_ref().map(|(window_id, _)| window_id.clone()) } }
     }
 
-    fn view(&self) -> ToolRunView {
+    pub fn view(&self) -> ToolRunView {
         ToolRunView { tool_id: self.tool_id.clone(), identity: self.identity, state: self.slot.state, provisional_entities: Arc::clone(&self.entities), progress: self.progress(), payload: self.payload.clone() }
     }
 
-    fn progress(&self) -> semio_framework_tool_run::ToolRunProgress {
+    pub fn progress(&self) -> semio_framework_tool_run::ToolRunProgress {
         semio_framework_tool_run::ToolRunProgress {
             identity: self.identity,
             sequence: self.sequence,
@@ -389,7 +398,7 @@ impl<A: ArtifactApp> ToolRunEntry<A> {
     }
 
     /// 🏃️ Whether a driver turn has work for this run; a job waiting on its port is not work.
-    pub(crate) fn has_pending_work(&self) -> bool {
+    pub fn has_pending_work(&self) -> bool {
         let stepping = self.job.is_none() || !self.port.is_waiting();
         self.port.has_effects()
             || self.refold_is_work()
@@ -404,31 +413,31 @@ impl<A: ArtifactApp> ToolRunEntry<A> {
             }
     }
 
-    pub(crate) fn framework_step(&mut self, kind: ToolRunStepKind, reason: u16, args: &[ToolRunStepArg]) {
+    pub fn framework_step(&mut self, kind: ToolRunStepKind, reason: u16, args: &[ToolRunStepArg]) {
         self.step_sequence = self.step_sequence.saturating_add(1);
         self.steps.push(ToolRunStep { sequence: self.step_sequence, kind, stage: self.stage, reason, subject: None, repeat: 1, args: args.to_vec() });
     }
 
-    pub(crate) fn begin_refold(&mut self, boundary: bool) {
+    pub fn begin_refold(&mut self, boundary: bool) {
         if let Some(running) = self.refold.replace(ToolRunRefold { running: None, cursor: 0, boundary }).and_then(|refold| refold.running) {
             self.displaced.push(Arc::new(running));
         }
     }
 
     /// ♻️ Replaces the overlay, owing the previous one to the store's alias retirement.
-    pub(crate) fn replace_overlay(&mut self, overlay: Arc<A::Snapshot>) {
+    pub fn replace_overlay(&mut self, overlay: Arc<A::Snapshot>) {
         let previous = std::mem::replace(&mut self.overlay, overlay);
         self.displaced.push(previous);
     }
 
     /// ♻️ Replaces the base, owing the previous one to the store's alias retirement.
-    pub(crate) fn replace_base(&mut self, base: Arc<A::Snapshot>) {
+    pub fn replace_base(&mut self, base: Arc<A::Snapshot>) {
         let previous = std::mem::replace(&mut self.base, base);
         self.displaced.push(previous);
     }
 
     /// 🏁️ The job reached a point where the refolded overlay is whole.
-    pub(crate) fn settle_refold(&mut self) {
+    pub fn settle_refold(&mut self) {
         if let Some(refold) = self.refold.as_mut() {
             refold.boundary = true;
         }
@@ -438,7 +447,7 @@ impl<A: ArtifactApp> ToolRunEntry<A> {
         self.refold.as_ref().is_some_and(|refold| refold.boundary || refold.cursor < self.provisional.len())
     }
 
-    fn rebind(&mut self) {
+    pub fn rebind(&mut self) {
         self.identity.generation = self.slot.generation;
         self.trace.rebind(self.identity);
     }
@@ -459,7 +468,7 @@ impl<A: ArtifactApp> ToolRunEntry<A> {
 
     /// 🔁️ Folds provisional ops from `base` until the wall deadline; the overlay is replaced once every op is
     /// folded and the refold reached its boundary.
-    pub(crate) fn refold_turn(&mut self, deadline_us: u64) -> ToolRunRefoldTurn {
+    pub fn refold_turn(&mut self, deadline_us: u64) -> ToolRunRefoldTurn {
         let Some(mut refold) = self.refold.take() else { return ToolRunRefoldTurn::Swapped };
         while refold.cursor < self.provisional.len() {
             let source = refold.running.as_ref().unwrap_or(&self.base);
@@ -487,7 +496,7 @@ impl<A: ArtifactApp> ToolRunEntry<A> {
     }
 
     /// 🧬️ Applies one tick of the current identity: retract, append (O(k) fold), entities, steps, progress, trace.
-    fn apply_tick(&mut self, mut tick: ToolRunTick, discarded: &mut Vec<A::Mutation>) -> Result<ToolRunTickReceipt, Fault> {
+    pub fn apply_tick(&mut self, mut tick: ToolRunTick, discarded: &mut Vec<A::Mutation>) -> Result<ToolRunTickReceipt, Fault> {
         let mut receipt = ToolRunTickReceipt::default();
         if tick.identity.id != self.identity.id || tick.identity.generation != self.identity.generation {
             receipt.stale = true;
@@ -611,7 +620,7 @@ pub struct ToolRunTickReceipt {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct ToolRunDriver {
     pub turn_wall_us: u64,
-    pub(crate) window_config_publications: u64,
+    pub window_config_publications: u64,
 }
 
 impl Default for ToolRunDriver {
@@ -628,33 +637,33 @@ impl Default for ToolRunDriver {
 /// non-terminal mutating run, else the most recent one — so the single-run accessors (`state`, `slot`, `view`, …)
 /// answer for it; [`ToolRunLedger::select_run`] addresses another.
 pub struct ToolRunLedger<A: ArtifactApp> {
-    pub(crate) next_run: u64,
-    pub(crate) driver_cursor: usize,
-    pub(crate) entries: Vec<Box<ToolRunEntry<A>>>,
-    pub(crate) selected: Option<usize>,
-    pub(crate) driver: ToolRunDriver,
-    pub(crate) retired_jobs: Vec<ToolRunJobSlot<A::Config>>,
-    pub(crate) retired_publications: Vec<store::os_store::one_item_publication::ArtifactStoreBatchPublication<A::Snapshot, A::Mutation>>,
+    pub next_run: u64,
+    pub driver_cursor: usize,
+    pub entries: Vec<Box<ToolRunEntry<A>>>,
+    pub selected: Option<usize>,
+    pub driver: ToolRunDriver,
+    pub retired_jobs: Vec<ToolRunJobSlot<A::Config>>,
+    pub retired_publications: Vec<store::os_store::one_item_publication::ArtifactStoreBatchPublication<A::Snapshot, A::Mutation>>,
     /// ♻️ Snapshot aliases owed to the store's alias retirement, and the one being retired now.
-    retired_snapshots: Vec<Arc<A::Snapshot>>,
-    pub(crate) snapshot_retirement: Option<Box<dyn store::ErasedSnapshotRetirement>>,
+    pub retired_snapshots: Vec<Arc<A::Snapshot>>,
+    pub snapshot_retirement: Option<Box<dyn store::ErasedSnapshotRetirement>>,
     pending_snapshot_alias: Option<Arc<A::Snapshot>>,
     pending_discarded: Option<A::Mutation>,
-    pub(crate) discarded: Vec<A::Mutation>,
+    pub discarded: Vec<A::Mutation>,
     /// 🧩️ Member runs that left their slot, whose typed owners and composed reads still retire against their member store.
-    pub(crate) retired_members: Vec<ToolRunMemberRun>,
-    pub(crate) closing: bool,
-    pub(crate) trace_windows: BTreeMap<String, ToolRunTraceWindow>,
-    pub(crate) ui_dirty: bool,
-    pub(crate) document_dirty: bool,
-    original_receipt: Option<(RetainedCloneGrant,RetainedCloneProgress)>,
+    pub retired_members: Vec<ToolRunMemberRun>,
+    pub closing: bool,
+    pub trace_windows: BTreeMap<String, ToolRunTraceWindow>,
+    pub ui_dirty: bool,
+    pub document_dirty: bool,
+    pub original_receipt: Option<(RetainedCloneGrant,RetainedCloneProgress)>,
 }
 
 /// 🪟️ One scene window the trace lane was delivered to: its body key and what its renderer last echoed.
 pub(crate) struct ToolRunTraceWindow {
-    pub(crate) body_key: String,
-    echoed: Option<ToolRunTraceCursor>,
-    answered: bool,
+    pub body_key: String,
+    pub echoed: Option<ToolRunTraceCursor>,
+    pub answered: bool,
     stalls: u8,
 }
 
@@ -688,7 +697,7 @@ impl<A: ArtifactApp> ToolRunLedger<A> {
     pub fn has_original_receipt(&self)->bool{self.original_receipt.is_some()}
     /// 🧾️ Transfers the actual caller grant and actual currencies without inventing another operation.
     pub fn take_original_receipt(&mut self)->Option<(RetainedCloneGrant,RetainedCloneProgress)>{self.original_receipt.take()}
-    pub(crate) fn retain_original_receipt(&mut self,grant:RetainedCloneGrant,progress:RetainedCloneProgress)->Result<(),Fault>{
+    pub fn retain_original_receipt(&mut self,grant:RetainedCloneGrant,progress:RetainedCloneProgress)->Result<(),Fault>{
         if progress==RetainedCloneProgress::default(){return Ok(());}
         if self.original_receipt.is_some()||!progress.fits(grant)||grant.maximum_depth==0{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"ToolRun original receipt has no unchanged granted transport slot").with_retained_progress(progress).into_fault());}
         self.original_receipt=Some((grant,progress));Ok(())
@@ -935,7 +944,7 @@ impl<A: ArtifactApp> ToolRunLedger<A> {
         self.ui_dirty || self.document_dirty
     }
 
-    pub(crate) fn apply_event(&mut self, event: ToolRunEvent) -> Result<ToolRunEffect, ToolRunRejection> {
+    pub fn apply_event(&mut self, event: ToolRunEvent) -> Result<ToolRunEffect, ToolRunRejection> {
         let transition = ToolRunMachine::apply(self.slot(), event)?;
         if transition.slot.is_none()&&selected_entry!(self).and_then(|entry|entry.finalize.as_ref()).is_some_and(|finalize|!finalize.ingress.terminal_is_empty()||finalize.publication.is_some()){return Err(ToolRunRejection::Busy);}
         match (self.selected, transition.slot) {
@@ -957,7 +966,7 @@ impl<A: ArtifactApp> ToolRunLedger<A> {
         Ok(transition.effect)
     }
 
-    pub(crate) fn retire_entry(&mut self, entry: ToolRunEntry<A>) {
+    pub fn retire_entry(&mut self, entry: ToolRunEntry<A>) {
         let ToolRunEntry { job, provisional, finalize, base, overlay, refold, mut displaced, member, .. } = entry;
         self.retired_members.extend(member);
         self.retired_snapshots.push(base);
@@ -969,7 +978,7 @@ impl<A: ArtifactApp> ToolRunLedger<A> {
         self.retire_owners(job, provisional, finalize);
     }
 
-    pub(crate) fn retire_owners(&mut self, job: Option<ToolRunJobSlot<A::Config>>, mut provisional: Vec<A::Mutation>, finalize: Option<ToolRunFinalize<A>>) {
+    pub fn retire_owners(&mut self, job: Option<ToolRunJobSlot<A::Config>>, mut provisional: Vec<A::Mutation>, finalize: Option<ToolRunFinalize<A>>) {
         assert!(finalize.as_ref().is_none_or(|finalize|finalize.ingress.terminal_is_empty()),"original ToolRun ingress remains in its entry until granted closure");
         if let Some(mut job) = job {
             job.begin_close();
@@ -981,7 +990,7 @@ impl<A: ArtifactApp> ToolRunLedger<A> {
         }
     }
 
-    pub(crate) fn close_current_job(&mut self) {
+    pub fn close_current_job(&mut self) {
         let Some(entry) = selected_entry_mut!(self) else { return };
         entry.settle_refold();
         if let Some(mut job) = entry.job.take() {
@@ -992,7 +1001,7 @@ impl<A: ArtifactApp> ToolRunLedger<A> {
 
     /// 🎯️ Hands the current job the entry's identity through `retarget`; a job that is not retargetable, or
     /// declines, is closed so the driver rebuilds it from its checkpoint.
-    pub(crate) fn retarget_current_job(&mut self, retarget: impl FnOnce(&mut dyn ToolRunRetargetableJob<A::Config>, ToolRunIdentity) -> bool) {
+    pub fn retarget_current_job(&mut self, retarget: impl FnOnce(&mut dyn ToolRunRetargetableJob<A::Config>, ToolRunIdentity) -> bool) {
         let Some(entry) = selected_entry_mut!(self) else { return };
         let identity = entry.identity;
         let Some(slot) = entry.job.as_mut() else { return };
@@ -1006,7 +1015,7 @@ impl<A: ArtifactApp> ToolRunLedger<A> {
     /// 🧹️ Throws the run's provisional work away, payload included: an abort, a fault, a rebase-restart
     /// or a reconfigure-restart invalidates the run's whole intermediate result, so the windows that
     /// read `ToolRunView::payload` must stop showing it.
-    pub(crate) fn discard_provisional(&mut self) {
+    pub fn discard_provisional(&mut self) {
         self.release_provisional(false);
     }
 
@@ -1016,7 +1025,7 @@ impl<A: ArtifactApp> ToolRunLedger<A> {
     /// `ToolRunView::payload`"), and a `mutating: false` run publishes nothing else at all, so clearing
     /// it on finalize is what made a finished read-only run's windows revert to their pre-run render the
     /// instant it reached `Finalized`. It is cleared on a genuine discard and when the entry retires.
-    pub(crate) fn release_provisional(&mut self, keep_payload: bool) {
+    pub fn release_provisional(&mut self, keep_payload: bool) {
         let Some(entry) = selected_entry_mut!(self) else { return };
         self.discarded.append(&mut entry.provisional);
         entry.entity_marks.clear();
@@ -1036,7 +1045,7 @@ impl<A: ArtifactApp> ToolRunLedger<A> {
     }
 
     /// 🧹️ Advances the owners that outlived their slot by one bounded unit; `None` when nothing is retiring.
-    pub(crate) fn retirement_demands(&self,store:&ArtifactStore<A::Snapshot,A::Mutation>,body:usize)->Result<RetirementDemand,ValueError>{
+    pub fn retirement_demands(&self,store:&ArtifactStore<A::Snapshot,A::Mutation>,body:usize)->Result<RetirementDemand,ValueError>{
         if self.closing&&!self.entries.is_empty(){return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original tool entries retain job cancellation and native metadata until granted entry retirement is available"));}
         if let Some(job)=self.retired_jobs.last(){
             if job.terminal_is_empty(){return Ok(RetirementDemand{copy_bytes:size_of::<ToolRunJobSlot<A::Config>>(),release_bytes:job.scaffold_release_bytes(),depth:1,..Default::default()});}
@@ -1057,7 +1066,7 @@ impl<A: ArtifactApp> ToolRunLedger<A> {
         if !self.retired_members.is_empty()||!self.trace_windows.is_empty(){return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original tool member and trace metadata retain their granted retirement authority"));}
         Ok(Default::default())
     }
-    pub(crate) fn retire_step(&mut self,store:&mut ArtifactStore<A::Snapshot,A::Mutation>,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<RetainedCloneStep>,semio_framework_job::OriginalTurnFailure>{
+    pub fn retire_step(&mut self,store:&mut ArtifactStore<A::Snapshot,A::Mutation>,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<RetainedCloneStep>,semio_framework_job::OriginalTurnFailure>{
         let grant=cx.retained_grant();if cx.should_yield(){return Ok(Some(RetainedCloneStep::Progress(Default::default())))}
         if self.has_original_receipt(){return Ok(Some(RetainedCloneStep::Progress(Default::default())));}
         if grant.maximum_items==0{return Ok(Some(RetainedCloneStep::Progress(Default::default())));}
@@ -1112,16 +1121,17 @@ impl<A: ArtifactApp> ToolRunLedger<A> {
 //#region 🔖️Member
 /// 🧬️ The typed owners of a member run (`ToolRunDefinition::member`): the member snapshot the run rests on, the overlay its
 /// provisional ops fold to, and every alias it let go — all owed to that member store's alias retirement, never dropped plainly.
-pub(crate) trait ToolRunMemberOwners: Send {
+#[doc(hidden)]
+pub trait ToolRunMemberOwners: Send {
     fn as_any_mut(&mut self) -> &mut dyn std::any::Any;
     fn has_displaced(&self) -> bool;
     fn is_empty(&self) -> bool;
 }
 
 struct ToolRunMemberState<P> {
-    base: Option<store::os_store::snapshot_read::ArtifactDerivedSnapshot<P>>,
-    overlay: Option<store::os_store::snapshot_read::ArtifactDerivedSnapshot<P>>,
-    displaced: Vec<Arc<P>>,
+    pub base: Option<store::os_store::snapshot_read::ArtifactDerivedSnapshot<P>>,
+    pub overlay: Option<store::os_store::snapshot_read::ArtifactDerivedSnapshot<P>>,
+    pub displaced: Vec<Arc<P>>,
     pending_alias: Option<Arc<P>>,
 }
 
@@ -1142,43 +1152,44 @@ impl<P: Send + Sync + 'static> ToolRunMemberOwners for ToolRunMemberState<P> {
 /// 🧩️ A run whose provisional ops are one owned member's ops (design §12, §20.15): where they land, the member generation
 /// they rest on, how many the overlay already shows, the typed owners they fold through, and the composed read — the live
 /// children with the overlay in the member's place — the render seams show while the run holds them.
-pub(crate) struct ToolRunMemberRun {
-    pub(crate) slot: String,
-    pub(crate) child_id: String,
-    pub(crate) dialect: ArtifactDialect,
-    pub(crate) base_generation: u64,
-    pub(crate) ops: Vec<Vec<u8>>,
-    pub(crate) shown: usize,
-    pub(crate) rebase: bool,
-    pub(crate) owners: Option<Box<dyn ToolRunMemberOwners>>,
-    pub(crate) children: Option<ChildContentView>,
-    pub(crate) stale: Vec<ChildContentView>,
-    pub(crate) emit:Option<ChildEmit>,
-    pub(crate) emission_owner:Option<Box<dyn ToolRunMemberEmissionOwner>>,
-    pub(crate) retired_emits:std::collections::VecDeque<ChildEmit>,
-    pub(crate) retired_emission_owners:std::collections::VecDeque<Box<dyn ToolRunMemberEmissionOwner>>,
-    pub(crate) retired_ops:std::collections::VecDeque<Vec<Vec<u8>>>,
+#[doc(hidden)]
+pub struct ToolRunMemberRun {
+    pub slot: String,
+    pub child_id: String,
+    pub dialect: ArtifactDialect,
+    pub base_generation: u64,
+    pub ops: Vec<Vec<u8>>,
+    pub shown: usize,
+    pub rebase: bool,
+    pub owners: Option<Box<dyn ToolRunMemberOwners>>,
+    pub children: Option<ChildContentView>,
+    pub stale: Vec<ChildContentView>,
+    pub emit:Option<ChildEmit>,
+    pub emission_owner:Option<Box<dyn ToolRunMemberEmissionOwner>>,
+    pub retired_emits:std::collections::VecDeque<ChildEmit>,
+    pub retired_emission_owners:std::collections::VecDeque<Box<dyn ToolRunMemberEmissionOwner>>,
+    pub retired_ops:std::collections::VecDeque<Vec<Vec<u8>>>,
 }
 
 impl ToolRunMemberRun {
     /// 🏃️ Owed work: ops the overlay does not show yet, a refold from the member head, or reads, aliases, released ops
     /// and published emissions to retire.
-    pub(crate) fn is_work(&self) -> bool {
+    pub fn is_work(&self) -> bool {
         self.rebase || self.shown != self.ops.len() || !self.stale.is_empty() || !self.retired_ops.is_empty() || !self.retired_emits.is_empty() || !self.retired_emission_owners.is_empty() || self.owners.as_deref().is_some_and(ToolRunMemberOwners::has_displaced)
     }
 
     /// 🏁️ Every typed owner, queued emission, operation and composed read of this member is returned; only its address metadata remains.
-    pub(crate) fn is_retired(&self) -> bool {
+    pub fn is_retired(&self) -> bool {
         self.ops.is_empty() && self.ops.capacity() == 0 && self.emit.is_none() && self.emission_owner.is_none() && self.retired_emits.is_empty() && self.retired_emission_owners.is_empty() && self.retired_ops.is_empty() && self.retired_emits.capacity() == 0 && self.retired_emission_owners.capacity() == 0 && self.retired_ops.capacity() == 0 && self.children.is_none() && self.stale.is_empty() && self.owners.as_deref().is_none_or(ToolRunMemberOwners::is_empty)
     }
 
     /// 📐️ Bytes of the address strings and the empty queues a retired member still holds.
-    pub(crate) fn address_backing_bytes(&self) -> usize {
+    pub fn address_backing_bytes(&self) -> usize {
         self.slot.capacity().saturating_add(self.child_id.capacity()).saturating_add(self.stale.capacity().saturating_mul(size_of::<ChildContentView>()))
     }
 
     /// 🧹️ Drops every provisional op: the composed read retires and the next refresh rests on the member head.
-    fn release(&mut self) {
+    pub fn release(&mut self) {
         if !self.ops.is_empty()||self.ops.capacity()!=0{self.retired_ops.push_back(std::mem::take(&mut self.ops));}
         self.shown = 0;
         self.rebase = true;
@@ -1191,18 +1202,19 @@ impl ToolRunMemberRun {
 /// 📏️ Where one member fold left the overlay: the ops it shows, the ops that did not apply, and — once every op is shown —
 /// the leased read of the overlay with the member's revision (`None`: no op, the render seams read the live member).
 pub(crate) struct ToolRunMemberFolded {
-    pub(crate) shown: usize,
-    pub(crate) conflicts: u32,
-    pub(crate) read: Option<(store::os_store::snapshot_read::ErasedSnapshotRead, [u8; 32])>,
+    pub shown: usize,
+    pub conflicts: u32,
+    pub read: Option<(store::os_store::snapshot_read::ErasedSnapshotRead, [u8; 32])>,
 }
 
 /// 🔁️ Folds a member run's ops onto its overlay within the turn wall budget: a rebase restarts from the member head.
-pub(crate) struct ToolRunMemberFold<'a> {
-    pub(crate) owners: &'a mut Option<Box<dyn ToolRunMemberOwners>>,
-    pub(crate) ops: &'a [Vec<u8>],
-    pub(crate) shown: usize,
-    pub(crate) rebase: bool,
-    pub(crate) deadline_us: u64,
+#[doc(hidden)]
+pub struct ToolRunMemberFold<'a> {
+    pub owners: &'a mut Option<Box<dyn ToolRunMemberOwners>>,
+    pub ops: &'a [Vec<u8>],
+    pub shown: usize,
+    pub rebase: bool,
+    pub deadline_us: u64,
 }
 
 impl store::MemberStoreVisitor for ToolRunMemberFold<'_> {
@@ -1260,7 +1272,8 @@ fn tool_erased_retirement_demand(owner:&Option<Box<dyn store::ErasedSnapshotReti
  if owner.terminal_is_empty(){return Ok(RetirementDemand{release_bytes:size_of_val(owner.as_ref()),copy_bytes:size_of::<Option<Box<dyn store::ErasedSnapshotRetirement>>>(),depth:1,..Default::default()});}
  Ok(RetirementDemand{copy_bytes:owner.next_copy_byte_demand()?,capacity_bytes:owner.next_capacity_byte_demand(body)?,release_bytes:owner.next_release_byte_demand()?,depth:owner.next_depth_demand()?.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"tool retained close depth overflow"))?})
 }
-pub(crate) fn tool_grant_funds(grant:RetainedCloneGrant,demand:RetirementDemand)->bool{
+#[doc(hidden)]
+pub fn tool_grant_funds(grant:RetainedCloneGrant,demand:RetirementDemand)->bool{
  grant.maximum_items!=0&&grant.maximum_copy_bytes>=demand.copy_bytes&&grant.maximum_capacity_bytes>=demand.capacity_bytes&&grant.maximum_release_bytes>=demand.release_bytes&&grant.maximum_depth>=demand.depth
 }
 fn close_tool_erased_retirement(owner:&mut Option<Box<dyn store::ErasedSnapshotRetirement>>,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
@@ -1274,18 +1287,19 @@ fn close_tool_erased_retirement(owner:&mut Option<Box<dyn store::ErasedSnapshotR
  let step=admit_retained_clone_close(child,step,current.terminal_is_empty(),"tool original retirement")?;
  Ok(RetainedCloneStep::Progress(step.progress()))
 }
-pub(crate) trait ToolRunMemberEmissionOwner:Send{
+#[doc(hidden)]
+pub trait ToolRunMemberEmissionOwner:Send{
     fn as_any_mut(&mut self)->&mut dyn std::any::Any;
     fn next_demands(&self,body:usize)->Result<RetirementDemand,ValueError>;
     fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,Fault>;
     fn is_empty(&self)->bool;
 }
 struct ToolRunMemberEmissionState<M>{
-    current:ManuallyDrop<Option<M>>,
-    retirement:ManuallyDrop<Option<Box<dyn store::ErasedSnapshotRetirement>>>,
-    schema:ManuallyDrop<Option<String>>,
-    refusal:ManuallyDrop<Option<::protocol::ProtocolError>>,
-    retirement_refusal:ManuallyDrop<Option<ValueError>>,
+    pub current:ManuallyDrop<Option<M>>,
+    pub retirement:ManuallyDrop<Option<Box<dyn store::ErasedSnapshotRetirement>>>,
+    pub schema:ManuallyDrop<Option<String>>,
+    pub refusal:ManuallyDrop<Option<::protocol::ProtocolError>>,
+    pub retirement_refusal:ManuallyDrop<Option<ValueError>>,
     retirement_refusal_close:ManuallyDrop<Option<ControlledRetirement<ValueError>>>,
 }
 impl<M> Default for ToolRunMemberEmissionState<M>{
@@ -1332,13 +1346,14 @@ impl<M> Drop for ToolRunMemberEmissionState<M>{
     }
 }
 
-pub(crate) struct ToolRunMemberEmit<'a>{
-    pub(crate) slot:&'a str,
-    pub(crate) child_id:&'a str,
-    pub(crate) ops:&'a [Vec<u8>],
-    pub(crate) emit:&'a mut Option<ChildEmit>,
-    pub(crate) owner:&'a mut Option<Box<dyn ToolRunMemberEmissionOwner>>,
-    pub(crate) grant:RetainedCloneGrant,
+#[doc(hidden)]
+pub struct ToolRunMemberEmit<'a>{
+    pub slot:&'a str,
+    pub child_id:&'a str,
+    pub ops:&'a [Vec<u8>],
+    pub emit:&'a mut Option<ChildEmit>,
+    pub owner:&'a mut Option<Box<dyn ToolRunMemberEmissionOwner>>,
+    pub grant:RetainedCloneGrant,
 }
 impl store::MemberStoreVisitor for ToolRunMemberEmit<'_>{
     type Output=Result<(bool,RetainedCloneProgress),Fault>;
@@ -1365,7 +1380,8 @@ impl store::MemberStoreVisitor for ToolRunMemberEmit<'_>{
         Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"tool member emission requires genuinely granted typed operation decoding and wire preparation").into_fault())
     }
 }
-pub(crate) struct ToolRunMemberEmissionRetire<'a>{pub(crate) owner:&'a mut(dyn ToolRunMemberEmissionOwner+'static),pub(crate) grant:RetainedCloneGrant}
+#[doc(hidden)]
+pub struct ToolRunMemberEmissionRetire<'a>{pub owner:&'a mut(dyn ToolRunMemberEmissionOwner+'static),pub grant:RetainedCloneGrant}
 impl store::MemberStoreVisitor for ToolRunMemberEmissionRetire<'_>{
     type Output=Result<RetainedCloneStep,Fault>;
     fn visit<P,Mu>(self,store:&ArtifactStore<P,Mu>)->Self::Output
@@ -1383,7 +1399,8 @@ impl store::MemberStoreVisitor for ToolRunMemberEmissionRetire<'_>{
 }
 
 /// 🔢️ The member store's generation, the base a member run watches instead of the document's.
-pub(crate) struct ToolRunMemberGeneration;
+#[doc(hidden)]
+pub struct ToolRunMemberGeneration;
 
 impl store::MemberStoreVisitor for ToolRunMemberGeneration {
     type Output = u64;
@@ -1399,7 +1416,8 @@ impl store::MemberStoreVisitor for ToolRunMemberGeneration {
 
 /// ♻️ Hands one alias of a member run's owners to the member store's bounded alias retirement: displaced aliases first,
 /// and with `everything` the base and overlay too (the run left its slot).
-pub(crate) struct ToolRunMemberRetire<'a>{pub(crate) owners:&'a mut(dyn ToolRunMemberOwners+'static),pub(crate) everything:bool,pub(crate) grant:RetainedCloneGrant}
+#[doc(hidden)]
+pub struct ToolRunMemberRetire<'a>{pub owners:&'a mut(dyn ToolRunMemberOwners+'static),pub everything:bool,pub grant:RetainedCloneGrant}
 impl store::MemberStoreVisitor for ToolRunMemberRetire<'_>{
     type Output=Result<(Option<Box<dyn store::ErasedSnapshotRetirement>>,RetainedCloneProgress),Fault>;
     fn visit<P,Mu>(self,store:&ArtifactStore<P,Mu>)->Self::Output
@@ -1440,7 +1458,8 @@ pub enum ToolRunActionOutcome {
 /// stayed there, and because a start against a live run is `ToolRunRejection::Busy`, no tool run could
 /// ever be started a second time. Measured on 6018 as a 3d preview that never re-evaluated after the
 /// first evaluation of a session (`📓️preview-rearm-after-inspector-edit-2026-09-14.md`).
-pub(crate) fn tool_run_arg_u64(args: Option<&DslValue>, key: &str) -> Option<u64> {
+#[doc(hidden)]
+pub fn tool_run_arg_u64(args: Option<&DslValue>, key: &str) -> Option<u64> {
     let value = args?.get(key)?;
     value
         .as_u64()
@@ -1696,3 +1715,6 @@ fn tool_run_panel_group<A: ArtifactApp>(entry: &mut ToolRunEntry<A>, controller_
 mod granted_ledger_retirement_tests;
 
 pub use semio_framework_plugin_job::lifted_job::*;
+
+#[path = "../🛠️tool-machine/🦀️.rs"]
+pub mod tool_jobs_tool_machine;

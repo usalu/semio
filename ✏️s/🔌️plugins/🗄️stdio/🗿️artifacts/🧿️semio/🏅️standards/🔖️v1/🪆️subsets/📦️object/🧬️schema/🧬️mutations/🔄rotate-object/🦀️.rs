@@ -1,7 +1,6 @@
 //! 🔄️ `rotate-object` — sets the object's `transform.rotation`, keeping translation/scale.
 
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioQuaternion;
-use crate::schema::mutations::SemioObjectMutation;
 use crate::schema::snapshot::SemioObjectSnapshot;
 
 //#region 🔖️Payload
@@ -13,13 +12,16 @@ pub struct RotateObject {
     pub rotation: SemioQuaternion,
 }
 
-impl protocol::MutationKind<SemioObjectSnapshot, SemioObjectMutation> for RotateObject {
+impl<Op> protocol::MutationKind<SemioObjectSnapshot, Op> for RotateObject
+where
+    Op: protocol::Mutation<SemioObjectSnapshot, Diff = crate::schema::diff::SemioObjectDiff> + From<RotateObject>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "rotate", entity: "object", kind: "rotate-object", record: "RotatedObject" };
 
-    fn diff(&self, base: &SemioObjectSnapshot) -> protocol::MutationOutcome<<SemioObjectMutation as protocol::Mutation<SemioObjectSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioObjectSnapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<SemioObjectSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &SemioObjectSnapshot) -> Result<Vec<SemioObjectMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &SemioObjectSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

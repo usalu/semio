@@ -1,9 +1,13 @@
+use crate::schema::{available_modules, filtered_stock};
 
-use super::*;
+use crate::{CurationSnapshot, ObjectKind};
+use crate::editor::sourcing::config::SourcingCurationConfig;
+use semio_framework_plugin::SurfaceKind;
+use crate::editor::sourcing::modes::edit::windows::pool::{SOURCING_CURATION_BODY_POOL, definition, filter_bar, pool_kinds, pool_row, render};
 use crate::editor::sourcing::SourcingCurationCommand;
 use crate::editor::sourcing::commands::{curation_add, set_contributions, set_filter_query, sort_table, stock_from_catalogue};
 use crate::editor::sourcing::modes::edit::windows::curated::SOURCING_CURATION_BODY_CURATED;
-use crate::editor::sourcing::unit_tests::context::{dispatch, new_app, row_ids, settle, table_of};
+use crate::editor_unit_tests::context::{dispatch, new_app, row_ids, settle, table_of};
 use crate::{Filters, SortDirection, TableSort};
 
 /// 🧩️ One fake host `sourcing.module` contribution carrying a single salvaged-oak kind under a
@@ -112,14 +116,14 @@ async fn pool_scene_names_columns_by_id_and_drops_onto_the_pool() {
     let node = render(&document, &SourcingCurationConfig::default(), crate::editor::sourcing::terminology::sourcing_curation_labels(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native))).expect("bounded pool");
     assert_eq!(node.children.len(), 2, "filter row above the table");
     let semio_framework_plugin::Component::Surface(props) = &node.children.get(1).expect("table surface").component else { panic!("expected a table surface") };
-    let scene = crate::editor::sourcing::unit_tests::context::table_scene_of(node.children.get(1).expect("table surface")).expect("complete retained table scene");
+    let scene = crate::editor_unit_tests::context::table_scene_of(node.children.get(1).expect("table surface")).expect("complete retained table scene");
     assert!(node.children.get(0).expect("filter row").children.len() >= 6, "query, three modules, typology, availability and restock controls");
     let columns: serde_json::Value = serde_json::from_str(&scene.columns_json).unwrap();
     assert_eq!(columns[0]["id"], "name");
     assert_eq!(columns[0]["sortable"], true, "the name header is clickable to sort");
     assert_eq!(columns[4]["id"], "curated");
     assert_eq!(columns.as_array().expect("column records").len(), 5, "pool columns end at curated — no duplicate actions column");
-    assert_eq!(scene.row_drag_mime.as_deref(), Some(crate::editor::sourcing::SOURCING_DRAG_MIME));
+    assert_eq!(scene.row_drag_mime.as_deref(), Some(crate::editor::sourcing::base::SOURCING_DRAG_MIME));
     assert!(scene.drop_action_json.expect("drop action").contains("dropOnPool"));
 }
 
@@ -229,13 +233,13 @@ async fn a_contributed_module_reaches_the_filter_bar_and_then_the_pool_rows() {
 #[semio_framework_async_macros::async_test]
 async fn the_real_sourcing_module_pack_installs_through_the_live_contributions_lane() {
     let json = demonstrator_contributions();
-    assert!(json.len() > crate::editor::sourcing::component::SOURCING_CURATION_CONFIG_TEXT_BYTES, "the real pack is {} bytes — past the {}-byte filter-text envelope", json.len(), crate::editor::sourcing::component::SOURCING_CURATION_CONFIG_TEXT_BYTES);
-    let installable = crate::standards::v1::subsets::any::io::text::snapshot::installable_contributions(&json, crate::editor::sourcing::component::SOURCING_CURATION_CONFIG_CONTRIBUTIONS_BYTES);
+    assert!(json.len() > crate::editor::sourcing::base::SOURCING_CURATION_CONFIG_TEXT_BYTES, "the real pack is {} bytes — past the {}-byte filter-text envelope", json.len(), crate::editor::sourcing::base::SOURCING_CURATION_CONFIG_TEXT_BYTES);
+    let installable = crate::standards::v1::subsets::any::io::text::snapshot::installable_contributions(&json, crate::editor::sourcing::base::SOURCING_CURATION_CONFIG_CONTRIBUTIONS_BYTES);
     assert_eq!(installable, "[]", "the shipped extensions re-contribute authored modules, so nothing new is installable");
     let installed: Vec<String> = crate::schema::available_modules(crate::standards::v1::subsets::any::io::text::snapshot::sourcing_modules(&json)).into_iter().map(|module| module.module_id).collect();
     assert_eq!(installed, vec!["beams".to_string(), "windows".to_string(), "slabs".to_string(), "reuse".to_string()], "a re-contributed module never duplicates the authored one");
     let mutation = crate::editor::sourcing::config::SourcingCurationConfigMutation::SetContributions(SetContributionsEdit { json: installable });
-    assert!(crate::editor::sourcing::component::sourcing_curation_config_mutation_retained_bytes(&mutation).is_ok(), "the retained config preparation must admit the installable roster");
+    assert!(crate::editor::sourcing::sourcing_curation_config_mutation_retained_bytes(&mutation).is_ok(), "the retained config preparation must admit the installable roster");
     let mut app = new_app().await;
     dispatch(&mut app, SourcingCurationCommand::SetContributions(set_contributions::SetContributions { json })).await;
     // 🧺️ EXACTLY the authored stock — asserted against the authored demo document itself rather
@@ -251,9 +255,9 @@ async fn the_real_sourcing_module_pack_installs_through_the_live_contributions_l
 /// store really kept the pushed roster — the whole path the demonstrator depends on.
 #[semio_framework_async_macros::async_test]
 async fn dispatching_set_contributions_installs_the_module_into_the_live_catalogue() {
-    let installable = crate::standards::v1::subsets::any::io::text::snapshot::installable_contributions(&fake_contribution(), crate::editor::sourcing::component::SOURCING_CURATION_CONFIG_CONTRIBUTIONS_BYTES);
+    let installable = crate::standards::v1::subsets::any::io::text::snapshot::installable_contributions(&fake_contribution(), crate::editor::sourcing::base::SOURCING_CURATION_CONFIG_CONTRIBUTIONS_BYTES);
     assert!(installable.contains("\"salvage\""), "a module id no authored module serves is installable: {installable}");
-    assert!(installable.len() <= crate::editor::sourcing::component::SOURCING_CURATION_CONFIG_CONTRIBUTIONS_BYTES, "the installable roster fits its retained lane");
+    assert!(installable.len() <= crate::editor::sourcing::base::SOURCING_CURATION_CONFIG_CONTRIBUTIONS_BYTES, "the installable roster fits its retained lane");
     let mut app = new_app().await;
     let before = row_ids(&mut app, SOURCING_CURATION_BODY_POOL).await;
     assert!(!before.iter().any(|id| id == CONTRIBUTED_KIND_ID), "the contributed kind is absent before the push");

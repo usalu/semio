@@ -1,0 +1,1 @@
+{"version":1,"original":{"document":9,"operation":71,"generation":3,"claim":17},"competing":{"document":1033,"operation":72,"generation":3,"claim":18},"slots":1024,"phases":["admitted","exclusive-before-commit","interrupted-before-commit","competing-refused"],"expected":{"active":1,"sameOriginal":true,"newAuthority":false,"receiptDelta":0,"fuelDelta":0}}

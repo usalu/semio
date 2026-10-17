@@ -1,4 +1,5 @@
 use crate::binary::snapshot::*;
+use semio_framework_test_fixtures::fixture_path;
 
 #[semio_framework_async_macros::async_test]
 async fn pack_round_trips_and_agrees_with_dsl() {
@@ -13,7 +14,7 @@ fn regen_example_pack_assets() {
     if std::env::var("EN1995_REGEN_PACKS").ok().as_deref() != Some("1") {
         return;
     }
-    let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🖼️assets");
+    let root = fixture_path!("../../../🖼️assets");
     let cases = [
         ("🏠️glulam-floor-beam", En1995Snapshot::compliant_building_beam()),
         ("🌉️glulam-footbridge", En1995Snapshot::compliant_bridge()),

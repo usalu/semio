@@ -4,6 +4,7 @@
 //! @see ../../../🧫️fixtures/📚️catalog/🔣️.json — the catalog played
 
 use super::*;
+use semio_framework_test_fixtures::fixture_path;
 
 //#region 🔖️Edge
 const EDGE_SITE: &str = "https://quizzes.example";
@@ -96,7 +97,7 @@ fn an_anonymous_caller_can_neither_read_nor_occupy_an_enrollment_key() {
     let (outcome, _) = command(&running.base, &named);
     assert_eq!(outcome["status"], "accepted", "{outcome}");
     let committed: EventRecord = serde_json::from_value(outcome["events"][0].clone()).expect("the committed event record");
-    let key = proctor::actors::enrollment(&committed).expect("a named sign-up is relayed to its learner").command_id.0;
+    let key = teaching_proctor_domain::actors::enrollment(&committed).expect("a named sign-up is relayed to its learner").command_id.0;
     assert_eq!(view(&running.base, &json!({ "type": "learner", "learner": ada }))["identity"]["handle"], "Ada Lovelace", "the relay ran under that key");
     for probe in probes(&key) {
         let (status, _, answer) = post_with(&running.base, "/commands", &probe, &[]);
@@ -145,7 +146,7 @@ fn a_command_for_an_id_no_actor_can_have_is_refused_before_it_costs_anything() {
 #[test]
 fn a_body_past_the_limit_is_refused_and_the_largest_real_command_is_far_below_it() {
     let limit = Limits::default().body_bytes.expect("the production limits cap the body");
-    for catalog in [fixtures().join("📚️catalog/🔣️.json"), Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../🏛️architecture/❓️quiz/🔣️.json")] {
+    for catalog in [fixtures().join("📚️catalog/🔣️.json"), fixture_path!("../../../🏛️architecture/❓️quiz/🔣️.json")] {
         let largest = largest_answer(&catalog);
         assert!(largest > 1000 && largest * 3 <= limit, "{}: the largest answer is {largest} bytes, the limit {limit}", catalog.display());
     }

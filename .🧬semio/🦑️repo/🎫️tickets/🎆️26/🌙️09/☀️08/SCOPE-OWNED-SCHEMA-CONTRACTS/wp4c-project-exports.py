@@ -13,7 +13,8 @@ never fabricated, because the Rust file is the crate's real code and not a proje
 Usage:
   python3 wp4c-project-exports.py report|apply [--under ✏️s/🔌️plugins/✒️writer] [--formats a,b]
 
-`--closing` limits the TypeScript pass to the parsers that existing code already calls but never declared (and the
+`--replace A,B` regenerates the named parsers that exist but are wrong (e.g. a typed map the earlier guard left untyped): each is
+dropped from its file and projected again from the schema. `--closing` limits the TypeScript pass to the parsers that existing code already calls but never declared (and the
 parsers and types those need), so a call can never dangle; without it every undeclared export is projected.
 A parser is emitted only when every parser it calls is declared on disk or emitted in the same pass.
 """
@@ -28,6 +29,7 @@ EXPORT_RE = re.compile(r"^[A-Z][A-Za-z0-9]*$")
 GRAPHQL_KEYWORDS = "type|input|enum|interface|union|scalar"
 IDENTIFIER_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
 PARSER_REGION = "//#region 🚪️Parsers"
+PROMISED: set[tuple[str, str]] = set()
 
 
 def snake(name: str) -> str:
@@ -42,7 +44,7 @@ def declares(fmt: str, source: str, name: str) -> bool:
         return re.search(rf"^\s*(?:{GRAPHQL_KEYWORDS})\s+{escaped}\b", source, re.M) is not None
     if fmt == "🦀️rust":
         return re.search(rf"^\s*pub\s+(?:struct|enum|type)\s+{escaped}\b", source, re.M) is not None
-    return re.search(rf"^\s*export\s+(?:interface|type|const|class)\s+{escaped}\b", source, re.M) is not None
+    return re.search(rf"^\s*(?:export\s+)?(?:declare\s+)?(?:interface|type|const|class)\s+{escaped}\b", source, re.M) is not None
 
 
 def declares_parser(source: str, name: str) -> bool:
@@ -221,12 +223,173 @@ class Owner:
 class Context:
     """What one parser rendering needs from its surroundings and what it learned about its callees."""
 
-    def __init__(self, helper: str, document_id: str | None, index: dict[str, Owner]) -> None:
+    def __init__(self, helper: str, document_id: str | None, index: dict[str, Owner], target: str = "", siblings: tuple[str, ...] = (), texts: dict[str, str] | None = None) -> None:
         self.helper = helper
         self.document_id = document_id
         self.index = index
+        self.target = target
+        self.siblings = siblings
+        self.texts = texts if texts is not None else {}
         self.local: set[str] = set()
         self.foreign: set[tuple[str, str]] = set()
+
+
+def scrub(text: str) -> str:
+    return re.sub(r"//[^\n]*", "", re.sub(r"/\*.*?\*/", "", text, flags=re.S))
+
+
+def declared_types(source: str, name: str) -> dict[str, str]:
+    """The TypeScript type text every field of an already-written `export interface <name>` declares, so a parser for a field the
+    JSON Schema leaves opaque (`{"type": "object"}`) follows the type that is already on disk instead of an untyped guard."""
+    match = re.search(rf"^export interface {re.escape(name)}\b[^{{]*{{", source, re.M)
+    if match is None:
+        return {}
+    depth, at = 1, match.end()
+    while at < len(source) and depth:
+        depth += {"{": 1, "}": -1}.get(source[at], 0)
+        at += 1
+    return member_types(source[match.end() : at - 1])
+
+
+def member_types(body: str) -> dict[str, str]:
+    """`field: type` members of an interface body or an inline object type."""
+    body, parts, current, nesting = scrub(body), [], "", 0
+    for char in body:
+        nesting += 1 if char in "{[(<" else -1 if char in "}])>" else 0
+        if char in ";,\n" and nesting == 0 and ":" in current:
+            parts.append(current)
+            current = ""
+        elif char in ";,\n" and nesting == 0:
+            current += " " if char == "\n" else ""
+        else:
+            current += char
+    parts.append(current)
+    found: dict[str, str] = {}
+    for part in parts:
+        field = re.match(r"\s*(?:readonly\s+)?([A-Za-z_$][A-Za-z0-9_$]*)\??\s*:\s*(.+?)\s*$", part, re.S)
+        if field:
+            found[field.group(1)] = normalize_type(field.group(2))
+    return found
+
+
+def alias_text(source: str, name: str) -> str | None:
+    """The right-hand side of a one-line `type <name> = …;` alias, normalised."""
+    match = re.search(rf"^\s*(?:export\s+)?type\s+{re.escape(name)}\s*=\s*([^;\n]+);?\s*$", source, re.M)
+    return normalize_type(match.group(1)) if match else None
+
+
+def alias_members(source: str, name: str) -> list[dict[str, str]]:
+    """For `export type <name> = | { … } | …`, the member types of every object variant, in order."""
+    match = re.search(rf"^\s*(?:export\s+)?type\s+{re.escape(name)}\s*=\s*", source, re.M)
+    if match is None:
+        return []
+    end = re.search(r";\s*$|\n(?=\S)", source[match.end() :], re.M)
+    text = scrub(source[match.end() : match.end() + (end.start() if end else len(source))])
+    found, nesting, start = [], 0, None
+    for index, char in enumerate(text):
+        if char == "{":
+            if nesting == 0:
+                start = index + 1
+            nesting += 1
+        elif char == "}":
+            nesting -= 1
+            if nesting == 0 and start is not None:
+                found.append(member_types(text[start:index]))
+    return found
+
+
+def alias_variants(source: str, name: str) -> dict[str, str]:
+    """For `export type <name> = | { key: Type } | …`, the declared type of each single-field variant, by key."""
+    match = re.search(rf"^export type {re.escape(name)}\s*=\s*", source, re.M)
+    if match is None:
+        return {}
+    end = re.search(r";\s*$|\n(?=\S)", source[match.end() :], re.M)
+    text = scrub(source[match.end() : match.end() + (end.start() if end else len(source))])
+    found: dict[str, str] = {}
+    nesting, start = 0, None
+    for index, char in enumerate(text):
+        if char == "{":
+            if nesting == 0:
+                start = index + 1
+            nesting += 1
+        elif char == "}":
+            nesting -= 1
+            if nesting == 0 and start is not None:
+                members = member_types(text[start:index])
+                if len(members) == 1:
+                    found.update(members)
+    return found
+
+
+def normalize_type(text: str) -> str:
+    text = re.sub(r"import\([^)]*\)\.", "", text.strip())
+    text = re.sub(r"\s*\|\s*undefined\s*$", "", text)
+    return re.sub(r"^readonly\s+", "", text).strip()
+
+
+def split_top(text: str) -> list[str]:
+    parts, current, nesting = [], "", 0
+    for char in text:
+        nesting += 1 if char in "[({<" else -1 if char in "])}>" else 0
+        if char == "," and nesting == 0:
+            parts.append(current.strip())
+            current = ""
+        else:
+            current += char
+    parts.append(current.strip())
+    return [part for part in parts if part]
+
+
+def locate_parser(name: str, context: Context) -> str | None:
+    """`parse<name>` as an in-scope call, preferring this file and then a sibling facet of the same module that defines it."""
+    own = context.texts.setdefault(context.target, read_text_quiet(context.target))
+    if defines_parser(own, name) or imports_parser(own, name) or (context.target, name) in PROMISED:
+        context.local.add(name)
+        return name
+    for sibling in context.siblings:
+        if sibling != context.target and (defines_parser(context.texts.setdefault(sibling, read_text_quiet(sibling)), name) or (sibling, name) in PROMISED):
+            context.foreign.add((sibling, name))
+            return name
+    return None
+
+
+def read_text_quiet(path: str) -> str:
+    try:
+        with open(path, encoding="utf-8") as handle:
+            return handle.read()
+    except OSError:
+        return ""
+
+
+def typed_expression(text: str, access: str, path: str, context: Context, depth: int) -> str | None:
+    """A parser for a field whose type is only known from the interface that declares it (scalars, tuples, arrays, named types)."""
+    helper, at = context.helper, f"`{path}`"
+    text = normalize_type(text)
+    if text == "number":
+        return f"{helper}Number({access}, {at})"
+    if text == "string":
+        return f"{helper}String({access}, {at})"
+    if text == "boolean":
+        return f"{helper}Boolean({access}, {at})"
+    if text.startswith("[") and text.endswith("]"):
+        members = split_top(text[1:-1])
+        items = f"items{depth}"
+        elements = [typed_expression(member, f"{items}[{index}]", f"{path}[{index}]", context, depth + 1) for index, member in enumerate(members)]
+        if not members or any(element is None for element in elements):
+            return None
+        return f"(({items}) => [{', '.join(elements)}])({helper}Array({access}, {at}, {{\"minItems\": {len(members)}, \"maxItems\": {len(members)}}}))"
+    if text.endswith("[]"):
+        item, index = (f"item{depth}", f"index{depth}") if depth else ("item", "index")
+        element = typed_expression(text[:-2], item, f"{path}[${{{index}}}]", context, depth + 1)
+        return None if element is None else f"{helper}Array({access}, {at}).map(({item}, {index}) => {element})"
+    if re.fullmatch(r"[A-Z][A-Za-z0-9]*", text):
+        return f"parse{text}({access}, {at})" if locate_parser(text, context) else None
+    return None
+
+
+def opaque(node: dict) -> bool:
+    """A schema node that states no structure (`{"type": "object"}` or an `array` without `items`)."""
+    return isinstance(node, dict) and "$ref" not in node and ((node.get("type") == "object" and not node.get("properties") and not isinstance(node.get("additionalProperties"), dict)) or (node.get("type") == "array" and not node.get("items")))
 
 
 def key_text(field: str) -> str:
@@ -249,14 +412,14 @@ def reference_call(reference: str, access: str, at: str, context: Context) -> st
     return f"parse{target}({access}, {at})"
 
 
-def object_fields(node: dict, row: str, path: str, context: Context, depth: int, declared: dict[str, bool] | None = None) -> list[str] | None:
+def object_fields(node: dict, row: str, path: str, context: Context, depth: int, declared: dict[str, bool] | None = None, types: dict[str, str] | None = None) -> list[str] | None:
     required = set(node.get("required") or [])
     if declared:
         required |= {field for field, optional in declared.items() if not optional}
     lines = []
     for field, shape in node["properties"].items():
         access = f"{row}[{json.dumps(field)}]"
-        expression = parser_expression(shape if isinstance(shape, dict) else {}, access, f"{path}.{field}", context, depth)
+        expression = parser_expression(shape if isinstance(shape, dict) else {}, access, f"{path}.{field}", context, depth, (types or {}).get(field))
         if expression is None:
             return None
         lines.append(f"{key_text(field)}: {expression}" if field in required else f"{key_text(field)}: {access} === undefined ? undefined : {expression}")
@@ -274,7 +437,7 @@ def tagged_discriminator(alternatives: list) -> str | None:
     return None
 
 
-def union_expression(alternatives: list, access: str, path: str, context: Context, depth: int) -> str | None:
+def union_expression(alternatives: list, access: str, path: str, context: Context, depth: int, declared: str | None = None) -> str | None:
     helper = context.helper
     at = f"`{path}`"
     row = f"row{depth}"
@@ -290,7 +453,8 @@ def union_expression(alternatives: list, access: str, path: str, context: Contex
                     return None
                 parts.append(f"...{call}")
             rest = {**alternative, "properties": {field: shape for field, shape in alternative["properties"].items() if field != key}}
-            fields = object_fields(rest, row, path, context, depth + 1) if rest["properties"] else []
+            variant = next((members for members in (alias_members(context.texts.setdefault(context.target, read_text_quiet(context.target)), declared) if declared is not None else []) if members.get(key, "").strip("'\"") == tag), None)
+            fields = object_fields(rest, row, path, context, depth + 1, None, variant) if rest["properties"] else []
             if fields is None:
                 return None
             cases.append(f"case {json.dumps(tag)}: return {{ {', '.join([f'{key_text(key)}: {json.dumps(tag)}', *parts, *fields])} }};")
@@ -300,7 +464,8 @@ def union_expression(alternatives: list, access: str, path: str, context: Contex
         branches = []
         for alternative in alternatives:
             field, shape = next(iter(alternative["properties"].items()))
-            expression = parser_expression(shape if isinstance(shape, dict) else {}, f"{row}[{json.dumps(field)}]", f"{path}.{field}", context, depth + 1)
+            variants = alias_variants(context.texts.setdefault(context.target, read_text_quiet(context.target)), declared) if declared is not None else {}
+            expression = parser_expression(shape if isinstance(shape, dict) else {}, f"{row}[{json.dumps(field)}]", f"{path}.{field}", context, depth + 1, variants.get(field))
             if expression is None:
                 return None
             branches.append(f"if ({row}[{json.dumps(field)}] !== undefined) return {{ {key_text(field)}: {expression} }};")
@@ -308,7 +473,7 @@ def union_expression(alternatives: list, access: str, path: str, context: Contex
     return None
 
 
-def parser_expression(node: dict, access: str, path: str, context: Context, depth: int = 0) -> str | None:
+def parser_expression(node: dict, access: str, path: str, context: Context, depth: int = 0, declared: str | None = None) -> str | None:
     """`path` is the INNER text of a template literal, e.g. `${at}.edits`, so an array element can
     extend it positionally without nesting one template literal inside another. `depth` names the
     row, item and index bindings of nested levels so an inner level never shadows the path of an outer one."""
@@ -316,9 +481,14 @@ def parser_expression(node: dict, access: str, path: str, context: Context, dept
     at = f"`{path}`"
     if "$ref" in node:
         return reference_call(node["$ref"], access, at, context)
+    if declared is not None and (opaque(node) or (node.get("type") == "array" and declared.startswith("[") and declared.endswith("]"))):
+        typed = typed_expression(declared, access, path, context, depth)
+        if typed is not None:
+            return typed
     nullable = nullable_of(node)
     if nullable is not None:
-        expression = parser_expression(nullable, access, path, context, depth)
+        inner = re.sub(r"\s*\|\s*null\s*$", "", declared) if declared is not None else None
+        expression = parser_expression(nullable, access, path, context, depth, inner)
         return None if expression is None else f"({access} === null ? null : {expression})"
     if isinstance(node.get("enum"), list) and all(isinstance(entry, str) for entry in node["enum"]):
         members = ", ".join(json.dumps(entry, ensure_ascii=False) for entry in node["enum"])
@@ -327,7 +497,7 @@ def parser_expression(node: dict, access: str, path: str, context: Context, dept
         return f"{helper}Constant({access}, {at}, {json.dumps(node['const'], ensure_ascii=False)})"
     for key in ("oneOf", "anyOf"):
         if isinstance(node.get(key), list):
-            return union_expression(node[key], access, path, context, depth)
+            return union_expression(node[key], access, path, context, depth, declared)
     if isinstance(node.get("allOf"), list) and len(node["allOf"]) == 1 and isinstance(node["allOf"][0], dict) and "properties" not in node:
         return parser_expression(node["allOf"][0], access, path, context, depth)
     kind = node.get("type")
@@ -351,7 +521,7 @@ def parser_expression(node: dict, access: str, path: str, context: Context, dept
             return f"(({names}) => [{', '.join(elements)}])({helper}Array({access}, {at}{exact}))"
         if isinstance(items, dict) and items:
             item, index = ("item", "index") if depth == 0 else (f"item{depth}", f"index{depth}")
-            element = parser_expression(items, item, f"{path}[${{{index}}}]", context, depth + 1)
+            element = parser_expression(items, item, f"{path}[${{{index}}}]", context, depth + 1, declared[:-2] if declared is not None and declared.endswith("[]") else None)
             if element is None:
                 return None
             return f"{helper}Array({access}, {at}{limits}).map(({item}, {index}) => {element})"
@@ -359,7 +529,9 @@ def parser_expression(node: dict, access: str, path: str, context: Context, dept
     if kind == "object":
         if isinstance(node.get("properties"), dict) and node["properties"]:
             row = f"row{depth}"
-            fields = object_fields(node, row, path, context, depth + 1)
+            named = declared if declared is not None and re.fullmatch(r"[A-Z][A-Za-z0-9]*", declared) else None
+            known = declared_types(context.texts.setdefault(context.target, read_text_quiet(context.target)), named) if named else member_types(declared[1:-1]) if declared is not None and declared.startswith("{") and declared.endswith("}") else None
+            fields = object_fields(node, row, path, context, depth + 1, None, known)
             return None if fields is None else f"(({row}) => ({{ {', '.join(fields)} }}))({helper}Object({access}, {at}))"
         extra = node.get("additionalProperties")
         if isinstance(extra, dict) and extra:
@@ -372,12 +544,14 @@ def parser_expression(node: dict, access: str, path: str, context: Context, dept
 
 def render_parser(name: str, definition: dict, context: Context, declared: dict[str, bool] | None = None) -> str | None:
     if definition.get("type") == "object" and isinstance(definition.get("properties"), dict) and definition["properties"]:
-        lines = object_fields(definition, "row", "${at}", context, 0, declared)
+        lines = object_fields(definition, "row", "${at}", context, 0, declared, declared_types(context.texts.setdefault(context.target, read_text_quiet(context.target)), name))
         if lines is None:
             return None
         body = "\n".join(f"    {line}," for line in lines)
         return f'export function parse{name}(value: unknown, at = "$"): {name} {{\n  const row = {context.helper}Object(value, at);\n  return {{\n{body}\n  }};\n}}\n'
-    expression = parser_expression(definition, "value", "${at}", context, 0)
+    alias = alias_text(context.texts.setdefault(context.target, read_text_quiet(context.target)), name)
+    expression = typed_expression(alias, "value", "${at}", context, 0) if alias is not None and alias.startswith("[") and definition.get("type") == "array" else None
+    expression = expression or parser_expression(definition, "value", "${at}", context, 0, name)
     return f'export function parse{name}(value: unknown, at = "$"): {name} {{\n  return {expression};\n}}\n' if expression else None
 
 
@@ -571,7 +745,7 @@ def with_imports(source: str, lines: str) -> str:
     return f"{lines}\n{source}"
 
 
-def settle(plans: dict[str, dict], closing: bool, texts: dict[str, str], refused: list[str]) -> set[tuple[str, str]]:
+def settle(plans: dict[str, dict], closing: bool, texts: dict[str, str], refused: list[str], replace: frozenset[str] = frozenset()) -> set[tuple[str, str]]:
     """Decide which parsers are emitted. A parser is emitted only when every parser it calls is declared on disk or emitted in the
     same pass, so a call can never dangle; `closing` narrows the set to the parsers that existing code already calls but never declared."""
     candidates = {(target, name): entry for target, plan in plans.items() for name, entry in plan["entries"].items() if entry["parser"] is not None and entry["typed"]}
@@ -581,8 +755,8 @@ def settle(plans: dict[str, dict], closing: bool, texts: dict[str, str], refused
         stack = []
         for target, plan in plans.items():
             source = read_text(target, texts)
-            for name in set(re.findall(r"\bparse([A-Z][A-Za-z0-9]*)\(", source)):
-                if name in plan["exports"] and not defines_parser(source, name) and not imports_parser(source, name):
+            for name in set(re.findall(r"\bparse([A-Z][A-Za-z0-9]*)\(", source)) | (replace & plan["exports"]):
+                if name in plan["exports"] and ((not defines_parser(source, name) and not imports_parser(source, name)) or name in replace):
                     stack.append((target, name))
         while stack:
             key = stack.pop()
@@ -622,6 +796,7 @@ def main() -> None:
     under = sys.argv[sys.argv.index("--under") + 1] if "--under" in sys.argv else "✏️s"
     wanted = set((sys.argv[sys.argv.index("--formats") + 1]).split(",")) if "--formats" in sys.argv else {"🔗️graphql", "🛰️protobuf", "🟦️typescript"}
     closing = "--closing" in sys.argv
+    replace = frozenset(sys.argv[sys.argv.index("--replace") + 1].split(",")) if "--replace" in sys.argv else frozenset()
     index = build_index()
     added = collections.Counter()
     refused: list[str] = []
@@ -629,64 +804,70 @@ def main() -> None:
     touched: set[str] = set()
     texts: dict[str, str] = {}
     plans: dict[str, dict] = {}
-    for module in modules(under):
-        provided = {fmt: leaf for fmt, leaf in LEAF.items() if os.path.exists(os.path.join(REPO, module, leaf))}
-        for path in documents(module):
-            try:
-                with open(os.path.join(REPO, path), encoding="utf-8") as handle:
-                    document = json.load(handle)
-            except Exception:  # noqa: BLE001
-                continue
-            facet = os.path.dirname(path[len(module) + 1 :])
-            exports = exports_of(document)
-            if not exports:
-                continue
-            for fmt in provided:
-                if fmt == "🔣️jsonschema":
+    for scan_pass in (0, 1):
+        dry = scan_pass == 0
+        plans.clear(); added.clear(); refused.clear(); rust_absent.clear(); touched.clear()
+        for module in modules(under):
+            provided = {fmt: leaf for fmt, leaf in LEAF.items() if os.path.exists(os.path.join(REPO, module, leaf))}
+            module_documents = documents(module)
+            siblings = tuple(os.path.join(REPO, module, os.path.dirname(other[len(module) + 1 :]), LEAF["🟦️typescript"]) for other in module_documents)
+            for path in module_documents:
+                try:
+                    with open(os.path.join(REPO, path), encoding="utf-8") as handle:
+                        document = json.load(handle)
+                except Exception:  # noqa: BLE001
                     continue
-                target = os.path.join(REPO, module, facet, LEAF[fmt]) if facet else os.path.join(REPO, module, LEAF[fmt])
-                if not os.path.exists(target):
+                facet = os.path.dirname(path[len(module) + 1 :])
+                exports = exports_of(document)
+                if not exports:
                     continue
-                relative = os.path.relpath(target, REPO)
-                source = read_text(target, texts)
-                appended: list[str] = []
-                helper = existing_helper(source) or helper_prefix(document.get("$id"))
-                plan = plans.setdefault(target, {"entries": {}, "exports": set(exports), "helper": helper}) if fmt == "🟦️typescript" else None
-                for name, definition in exports.items():
-                    restricted = definition.get("x-semio-formats")
-                    if isinstance(restricted, list) and fmt not in restricted:
+                for fmt in provided:
+                    if fmt == "🔣️jsonschema":
                         continue
-                    present = declares(fmt, source, name)
-                    type_text = None
-                    if not present and fmt in wanted and not (closing and fmt == "🟦️typescript"):
-                        rendered = {"🔗️graphql": lambda: render_graphql(name, definition, document.get("$defs") or {}), "🛰️protobuf": lambda: render_proto(name, definition), "🟦️typescript": lambda: render_ts_type(name, definition)}[fmt]()
-                        if rendered is None:
-                            refused.append(f"{fmt} {name} {relative}")
+                    target = os.path.join(REPO, module, facet, LEAF[fmt]) if facet else os.path.join(REPO, module, LEAF[fmt])
+                    if not os.path.exists(target):
+                        continue
+                    relative = os.path.relpath(target, REPO)
+                    source = read_text(target, texts)
+                    appended: list[str] = []
+                    helper = existing_helper(source) or helper_prefix(document.get("$id"))
+                    plan = plans.setdefault(target, {"entries": {}, "exports": set(exports), "helper": helper}) if fmt == "🟦️typescript" else None
+                    for name, definition in exports.items():
+                        restricted = definition.get("x-semio-formats")
+                        if isinstance(restricted, list) and fmt not in restricted:
                             continue
-                        type_text = rendered
-                        if fmt != "🟦️typescript":
-                            appended.append(rendered)
-                            added[fmt] += 1
-                        present = True
-                    elif not present and fmt == "🟦️typescript" and closing:
-                        type_text = render_ts_type(name, definition)
-                        present = type_text is not None
-                    elif not present and fmt == "🦀️rust":
-                        rust_absent.append(f"{name} {relative}")
+                        present = declares(fmt, source, name)
+                        type_text = None
+                        if not present and fmt in wanted and not (closing and fmt == "🟦️typescript"):
+                            rendered = {"🔗️graphql": lambda: render_graphql(name, definition, document.get("$defs") or {}), "🛰️protobuf": lambda: render_proto(name, definition), "🟦️typescript": lambda: render_ts_type(name, definition)}[fmt]()
+                            if rendered is None:
+                                refused.append(f"{fmt} {name} {relative}")
+                                continue
+                            type_text = rendered
+                            if fmt != "🟦️typescript":
+                                appended.append(rendered)
+                                added[fmt] += 1
+                            present = True
+                        elif not present and fmt == "🟦️typescript" and closing:
+                            type_text = render_ts_type(name, definition)
+                            present = type_text is not None
+                        elif not present and fmt == "🦀️rust":
+                            rust_absent.append(f"{name} {relative}")
+                            continue
+                        if fmt == "🟦️typescript" and (not declares_parser(source, name) or name in replace):
+                            context = Context(helper, document.get("$id"), index, target, siblings, texts)
+                            rendered = render_parser(name, definition, context, declared_optional_fields(source, name)) if present else None
+                            if rendered is None and present:
+                                refused.append(f"parser {name} {relative}")
+                            plan["entries"][name] = {"type": type_text, "typed": present, "parser": rendered, "local": context.local - {name}, "foreign": set(context.foreign)}
+                    if fmt == "🟦️typescript" or not appended or mode != "apply" or dry:
                         continue
-                    if fmt == "🟦️typescript" and not declares_parser(source, name):
-                        context = Context(helper, document.get("$id"), index)
-                        rendered = render_parser(name, definition, context, declared_optional_fields(source, name)) if present else None
-                        if rendered is None and present:
-                            refused.append(f"parser {name} {relative}")
-                        plan["entries"][name] = {"type": type_text, "typed": present, "parser": rendered, "local": context.local - {name}, "foreign": set(context.foreign)}
-                if fmt == "🟦️typescript" or not appended or mode != "apply":
-                    continue
-                block = "\n".join(appended)
-                with open(target, "w", encoding="utf-8") as handle:
-                    handle.write(f"{source.rstrip()}\n\n{block.rstrip()}\n")
-                touched.add(relative)
-    emit = settle(plans, closing, texts, refused)
+                    block = "\n".join(appended)
+                    with open(target, "w", encoding="utf-8") as handle:
+                        handle.write(f"{source.rstrip()}\n\n{block.rstrip()}\n")
+                    touched.add(relative)
+        PROMISED.update((owner, name) for owner, plan in plans.items() for name, entry in plan["entries"].items() if entry["parser"] is not None)
+    emit = settle(plans, closing or bool(replace), texts, refused, replace)
     for target, plan in plans.items():
         keep = sorted(name for owner, name in emit if owner == target)
         if not keep:
@@ -708,6 +889,12 @@ def main() -> None:
         touched.add(relative)
         if mode != "apply":
             continue
+        for name in keep:
+            if name in replace and defines_parser(source, name):
+                source, dropped = re.subn(rf"^export function parse{re.escape(name)}\(.*?^}}\n\n?", "", source, count=1, flags=re.M | re.S)
+                assert dropped == 1, f"parse{name} is not a projected function in {relative}"
+                if len(re.findall(rf"^\s*(?:export\s+)?(?:interface|type)\s+{re.escape(name)}\b", source, re.M)) > 1:
+                    source = re.sub(rf"^export type {re.escape(name)}\b[^\n]*;\n\n?", "", source, count=1, flags=re.M)
         block = "\n".join(blocks)
         if PARSER_REGION not in source:
             block = f"{helpers_block(plan['helper'])}\n{block}"

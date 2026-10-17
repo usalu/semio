@@ -1,5 +1,6 @@
 /** 💍️ Owns the unpublished original ring and displaced steps through yielded insertion and cancellation. */
-import {TOOL_RUN_STEP_ARGS_MAX,TOOL_RUN_STEP_RING_CAPACITY,type ToolRunStep,type ToolRunStepArg} from "../../../🟦️.ts";
+import { TOOL_RUN_STEP_ARGS_MAX, TOOL_RUN_STEP_RING_CAPACITY } from "../../../🟦️.ts";
+import { type ToolRunStep, type ToolRunStepArg } from "../../🟦️.ts";
 export class ToolRunStepRingInsert {
  private phase=0;
  private index=0;

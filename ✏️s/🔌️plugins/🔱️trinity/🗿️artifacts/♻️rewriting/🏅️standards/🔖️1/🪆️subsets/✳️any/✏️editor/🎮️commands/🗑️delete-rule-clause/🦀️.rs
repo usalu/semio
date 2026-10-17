@@ -1,9 +1,12 @@
 //! 📜️ Trinity Rewriting app command — `delete-rule-clause`.
 
 use crate::standards::v1::subsets::any::schema::mutations::RewriteRuleMutation;
-use crate::standards::v1::subsets::any::schema::mutations::{edit_lhs,edit_rhs,remove_parameter_binding,remove_rule_layout_point};
+use crate::standards::v1::subsets::any::schema::mutations::edit_lhs::edit_lhs;
+use crate::standards::v1::subsets::any::schema::mutations::edit_rhs::edit_rhs;
+use crate::standards::v1::subsets::any::schema::mutations::remove_parameter_binding::remove_parameter_binding;
+use crate::standards::v1::subsets::any::schema::mutations::remove_rule_layout_point::remove_rule_layout_point;
 
-use crate::RewritingSnapshot;
+use crate::standards::v1::subsets::any::schema::snapshot::RewritingSnapshot;
 
 /// 🧭️ One addressable rule-clause node in the LHS/RHS semantic graphs (`lhs-where`, `rhs-create-N`,
 /// `rhs-merge-N`, `rhs-set-N`, `rhs-delete-N`, `rhs-parameter-N`) — parsed back from its synthetic
@@ -42,7 +45,7 @@ fn remove_at<T>(items: &mut Vec<T>, index: usize) -> Option<T> {
 /// them, a `remove-parameter-binding` per dropped parameter clause that had a binding, and a `remove-rule-layout-point` per
 /// dropped clause that had a layout point. Clauses of one list are dropped from the highest index down, so every id names the
 /// clause it named in the committed rule; ids that name no clause, and an undecodable rule, drop nothing.
-pub(crate) fn delete_rule_clauses(state: &RewritingSnapshot, node_ids: &[String]) -> Vec<RewriteRuleMutation> {
+pub fn delete_rule_clauses(state: &RewritingSnapshot, node_ids: &[String]) -> Vec<RewriteRuleMutation> {
     let mut lhs=state.lhs.clone();
     let mut rhs=state.rhs.clone();
     let mut clauses: Vec<(RuleClauseRef, &String)> = node_ids.iter().filter_map(|id| parse_clause_ref(id).map(|clause| (clause, id))).collect();

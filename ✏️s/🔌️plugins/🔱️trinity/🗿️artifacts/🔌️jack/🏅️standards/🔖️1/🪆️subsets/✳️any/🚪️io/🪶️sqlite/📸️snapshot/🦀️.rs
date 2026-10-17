@@ -1,7 +1,10 @@
 //! 🔌️ Jack manifest entities, independently owned type chains and literal Graph child.
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v1::subsets::any::schema::snapshot::JackSnapshot;
-use crate::{Camera, EdgeKindDef, JackContentChild, Manifest, NodeKindDef, PortDirection, PortKindDef, PropertyDef, PropertyKind};
+use crate::standards::v1::subsets::any::schema::graph::Camera;
+use crate::standards::v1::subsets::any::schema::manifest::{EdgeKindDef, Manifest, NodeKindDef, PortKindDef};
+use crate::standards::v1::subsets::any::schema::content::JackContentChild;
+use semio_framework_graph_manifest::{PortDirection, PropertyDef, PropertyKind};
 use semio_framework_value::{ValueType, ValueError, ValueRefusalKind};
 use std::collections::{BTreeMap, BTreeSet};
 use store::sqlite_snapshot::{
@@ -403,7 +406,7 @@ pub(crate) fn validate(value: &JackSnapshot) -> Result<(), ValueError> {
     Ok(())
 }
 pub(crate) fn retire_snapshot(value: JackSnapshot) {
-    crate::retire_owned_to_terminal(value).expect("Jack explicit retirement");
+    crate::standards::v1::subsets::any::schema::content::retire_owned_to_terminal(value).expect("Jack explicit retirement");
 }
 impl store::os_store::serialization::ArtifactSqliteSnapshotHost for JackSnapshot {
     
@@ -466,6 +469,3 @@ fn from_sqlite_database(database: &SqliteDatabase, c: &mut SqliteSnapshotControl
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;

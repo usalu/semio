@@ -1,12 +1,14 @@
 //! ↩️ Inverse for `ChangePencilWidth`.
 use super::ChangePencilWidth;
-use crate::schema::mutations::NoteMutation;
 use crate::NoteSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(_payload: &ChangePencilWidth, base: &NoteSnapshot) -> Result<Vec<NoteMutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op>(_payload: &ChangePencilWidth, base: &NoteSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError>
+where
+    Op: From<crate::standards::v1::subsets::ink::schema::mutations::change_pencil_width::ChangePencilWidth>,
+{
     Ok((|| {
-    vec![NoteMutation::ChangePencilWidth(ChangePencilWidth { new_width: base.pencil_width })]
+    vec![Op::from(ChangePencilWidth { new_width: base.pencil_width })]
 
     })())
 }

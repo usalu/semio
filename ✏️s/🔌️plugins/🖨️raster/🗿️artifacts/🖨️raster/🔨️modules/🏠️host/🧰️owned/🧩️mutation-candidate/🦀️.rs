@@ -250,7 +250,7 @@ impl RasterMutationCandidateAuthority {
                     }
                     RasterMutation::ChangeLayerLocked(value)=>{
                         if !raster_reserve_unit(cx){return Ok(false);}
-                        semio_s_artifact_raster_raster_mutations_layers::change_layer_locked::validate(value,snapshot).map_err(|code| code.as_str())?;
+                        semio_s_artifact_raster_raster_mutations_layer_properties::change_layer_locked::validate(value,snapshot).map_err(|code| code.as_str())?;
                         let (RasterLayerNode::Pixel {locked,..}|RasterLayerNode::Group {locked,..}|RasterLayerNode::Adjustment {locked,..})=RasterLayerLocator::node_at_mut(snapshot,self.primary.ok_or("raster-store.mutation-address")?).ok_or("raster-store.mutation-target-lost")?;
                         *locked=value.locked;
                     }
@@ -307,7 +307,7 @@ impl RasterMutationCandidateAuthority {
                         *height = Some(value.new_height);
                     }
                     RasterMutation::ChangeLayerAdjustmentParameter(value) => {
-                        semio_s_artifact_raster_raster_mutations_layers::change_layer_adjustment_parameter::validate(value,snapshot).map_err(|code| code.as_str())?;
+                        semio_s_artifact_raster_raster_mutations_layer_properties::change_layer_adjustment_parameter::validate(value,snapshot).map_err(|code| code.as_str())?;
                         let RasterLayerNode::Adjustment {params,..}=RasterLayerLocator::node_at_mut(snapshot,self.primary.ok_or("raster-store.mutation-address")?).ok_or("raster-store.mutation-target-lost")? else {return Err("raster-store.mutation-adjustment-target");};
                         if value.value.is_some() && params.page_required_for_insert(&value.parameter) {
                             if !raster_reserve_unit(cx) {return Ok(false);}
@@ -323,7 +323,7 @@ impl RasterMutationCandidateAuthority {
                     }
                     RasterMutation::ChangeLayerTransform(value)=>{
                         if !raster_reserve_unit(cx){return Ok(false);}
-                        semio_s_artifact_raster_raster_mutations_layers::change_layer_transform::validate(value,snapshot).map_err(|code| code.as_str())?;
+                        semio_s_artifact_raster_raster_mutations_layer_properties::change_layer_transform::validate(value,snapshot).map_err(|code| code.as_str())?;
                         let (RasterLayerNode::Pixel {transform,..}|RasterLayerNode::Group {transform,..})=RasterLayerLocator::node_at_mut(snapshot,self.primary.ok_or("raster-store.mutation-address")?).ok_or("raster-store.mutation-target-lost")? else {return Err("raster-store.mutation-transform-target");};
                         *transform=value.transform.clone();
                     }

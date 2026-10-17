@@ -4,19 +4,21 @@
 //! show this text at these widths" and back.
 
 #[cfg(test)]
-use crate::standards::v1_7::subsets::base::io::{decode_text_string, encode_text_string};
+use crate::standards::v1_7::subsets::base::io::text_string::{decode_text_string, encode_text_string};
 use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfBaseEncoding, PdfCMap, PdfFont, PdfFontKind, PdfFontProgram, PdfSimpleEncoding, PdfToUnicode, PdfToUnicodeMapping};
 use std::collections::{BTreeMap, HashMap};
 use std::sync::OnceLock;
 
-#[path = "🅰️tables/🦀️.rs"]
-pub mod tables;
-#[path = "🔠️truetype/🦀️.rs"]
-pub mod truetype;
+pub use semio_s_artifact_stdio_pdf_model::standards::v1_7::subsets::base::modules::fonts::metrics;
+pub use semio_s_artifact_stdio_pdf_tables::standards::v1_7::subsets::base::modules::fonts::tables;
+pub use semio_s_artifact_stdio_pdf_glyph_list::standards::v1_7::subsets::base::modules::fonts::glyph_list;
+pub use semio_s_artifact_stdio_pdf_model::standards::v1_7::subsets::base::modules::fonts::truetype;
 #[path = "🗺️cmap/🦀️.rs"]
 pub mod cmap;
 
-pub use tables::{StandardFontMetrics, ADOBE_GLYPH_LIST, MAC_ROMAN_ENCODING, STANDARD_ENCODING, STANDARD_FONTS, WIN_ANSI_ENCODING};
+pub use metrics::StandardFontMetrics;
+pub use glyph_list::ADOBE_GLYPH_LIST;
+pub use tables::{MAC_ROMAN_ENCODING, STANDARD_ENCODING, STANDARD_FONTS, WIN_ANSI_ENCODING};
 pub use truetype::TrueTypeFont;
 
 //#region 🔖️GlyphList
@@ -183,32 +185,6 @@ pub fn standard_font(base_font: &str) -> Option<&'static StandardFontMetrics> {
     STANDARD_FONTS.iter().find(|font| font.name == name)
 }
 
-impl StandardFontMetrics {
-    /// 📏 Advance width of a glyph name (AFM units).
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn width(&self, glyph: &str) -> Option<f64> {
-        self.widths.binary_search_by(|(name, _)| (*name).cmp(glyph)).ok().map(|index| self.widths[index].1 as f64)
-    }
-    /// 🏳️ `/Flags` of a font descriptor for this face (§9.8.2).
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn flags(&self) -> u32 {
-        let mut flags = 0u32;
-        if self.fixed_pitch {
-            flags |= 1;
-        }
-        if self.family.starts_with("Times") {
-            flags |= 2;
-        }
-        flags |= if self.symbolic { 4 } else { 32 };
-        if self.italic_angle != 0.0 {
-            flags |= 64;
-        }
-        if self.bold {
-            flags |= 1 << 18;
-        }
-        flags
-    }
-}
 //#endregion 🔖️Standard14
 
 //#region 🔖️Type1
@@ -272,7 +248,7 @@ pub struct FontCodec {
 }
 
 use crate::standards::v1_7::subsets::base::io::foreign_artifacts::PdfArtifactResourcePort;
-use crate::standards::v1_7::subsets::base::io::{PResult, PdfEngineError};
+use crate::standards::v1_7::subsets::base::io::error::{PResult, PdfEngineError};
 
 fn program_data(program:&PdfFontProgram,resources:&dyn PdfArtifactResourcePort)->PResult<Vec<u8>> {crate::standards::v1_7::subsets::base::io::foreign_artifacts::require_font_artifact_kind(program)?;match resources.resolve(program.reference())? {crate::standards::v1_7::subsets::base::schema::snapshot::PdfObject::Stream {data,..}=>Ok(data),_=>Err(PdfEngineError::Unsupported("font artifact is not a native stream".into()))}}
 
@@ -599,7 +575,5 @@ pub fn truetype_simple_gid(font: &TrueTypeFont, code: u32, name: Option<&str>, s
 //#endregion 🔖️FontCodec
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

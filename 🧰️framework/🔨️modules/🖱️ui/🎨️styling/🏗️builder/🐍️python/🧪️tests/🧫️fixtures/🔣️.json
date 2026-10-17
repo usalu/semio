@@ -1,0 +1,7 @@
+{
+  "version":1,
+  "valid":[{"version":1,"operation":"deps","mode":"prototype"},{"version":1,"operation":"build","mode":"prototype"},{"version":1,"operation":"test","mode":"prototype"},{"version":1,"operation":"deps","mode":"release"},{"version":1,"operation":"build","mode":"release"},{"version":1,"operation":"test","mode":"release"}],
+  "invalid":[{"version":1,"operation":"build","mode":"debug"},{"version":1,"operation":"build","mode":"release","directory":"/tmp/free"},{"version":1,"operation":"build","mode":"release","parallelism":1}],
+  "wheels":[{"name":"semio_framework_ui_styling-0.1.0-py3-none-any.whl","accept":true},{"name":"../foreign.whl","accept":false},{"name":"dir/foreign.whl","accept":false},{"name":"foreign.zip","accept":false}],
+  "lifetime":{"version":1,"compileBusy":true,"consumerFree":true,"inputHeld":true,"outputHeld":true,"drained":true,"freeAfter":true}
+}

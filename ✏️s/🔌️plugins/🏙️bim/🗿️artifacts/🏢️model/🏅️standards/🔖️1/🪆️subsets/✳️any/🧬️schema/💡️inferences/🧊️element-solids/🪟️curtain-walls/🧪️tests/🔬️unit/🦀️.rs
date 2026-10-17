@@ -1,5 +1,6 @@
 use super::*;
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::{compute_element_solids, fixtures::case};
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::fixtures::case;
+use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_element_solids;
 use crate::standards::v1::subsets::any::schema::snapshot::{CurtainGrid, CurtainPanel, CurtainPanelOverride, ModelSnapshot, Opening, OpeningKind, Profile};
 
 fn close(left: f64, right: f64) -> bool {

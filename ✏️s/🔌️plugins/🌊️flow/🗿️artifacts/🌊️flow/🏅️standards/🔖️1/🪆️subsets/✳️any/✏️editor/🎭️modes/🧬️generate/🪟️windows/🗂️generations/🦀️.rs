@@ -1,7 +1,8 @@
 //! 🗂️ Generate-mode window — the generation list.
 
+use crate::editor::flow::base::FLOW_PLAY_WINDOW_GENERATIONS;
 use crate::editor::flow::modes::edit::windows::main::transient::FlowWindowTransient;
-use crate::editor::flow::{flow_action, ui_value_map, ui_value_text};
+use crate::editor::flow::base::{flow_action, ui_value_map, ui_value_text};
 use crate::playbook::FormGeneration;
 use semio_framework_ui_contract::Label;
 use semio_framework_plugin::activation_target;
@@ -28,7 +29,6 @@ use semio_framework_plugin::WindowOptions;
 use semio_framework_ui_contract as ui;
 
 //#region 🔖️Constants
-pub const FLOW_PLAY_WINDOW_GENERATIONS: &str = "flow-generations";
 pub const FLOW_PLAY_BODY_GENERATIONS: &str = "flow.play.generations";
 //#endregion 🔖️Constants
 
@@ -138,7 +138,5 @@ pub fn render(transient: &FlowWindowTransient, locale: Locale, terminology: Term
 //#endregion 🔖️Render
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

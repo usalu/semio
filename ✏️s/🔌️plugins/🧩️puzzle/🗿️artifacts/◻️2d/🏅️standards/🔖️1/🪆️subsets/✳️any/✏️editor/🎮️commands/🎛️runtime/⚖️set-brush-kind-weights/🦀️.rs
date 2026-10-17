@@ -1,6 +1,6 @@
 //! 🖌️ `set-brush-kind-weights` command.
 
-use {crate::editor::puzzle2d::snapshot::puzzle2d_kind_ids, crate::editor::puzzle2d::snapshot::puzzle2d_window_and_measures_scope, crate::editor::puzzle2d::Puzzle2dActionCtx};
+use {crate::editor::puzzle2d::snapshot::puzzle2d_kind_ids, crate::editor::puzzle2d::snapshot::puzzle2d_window_and_measures_scope, crate::editor::puzzle2d::interaction::Puzzle2dActionCtx};
 use semio_framework_pack_json::{json,Value};
 use std::collections::BTreeMap;
 
@@ -90,7 +90,5 @@ pub fn set_brush_kind_weights(ctx: &mut Puzzle2dActionCtx<'_>, args: Option<&Val
 }
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

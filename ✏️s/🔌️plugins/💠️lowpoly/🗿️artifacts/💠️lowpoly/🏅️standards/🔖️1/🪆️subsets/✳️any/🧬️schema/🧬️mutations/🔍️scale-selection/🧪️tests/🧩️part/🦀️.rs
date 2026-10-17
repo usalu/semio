@@ -6,12 +6,13 @@
 //! Vertices 3 and the absent 7 halve along z: vertex 3 moves, vertex 7 is skipped.
 
 use crate::laws;
+use semio_framework_test_fixtures::fixture_path;
 
-static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔍️scale-selection/🧩️part/📸️snapshot/⬅️before/🔣️.json")).expect("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔍️scale-selection/🧩️part/📸️snapshot/⬅️before/🔣️.json").leak());
-static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔍️scale-selection/🧩️part/📸️snapshot/➡️after/🔣️.json")).expect("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔍️scale-selection/🧩️part/📸️snapshot/➡️after/🔣️.json").leak());
-static MUTATION: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔍️scale-selection/🧩️part/🦠️mutation/🔣️.json")).expect("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔍️scale-selection/🧩️part/🦠️mutation/🔣️.json").leak());
-static DIFF: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔍️scale-selection/🧩️part/🔺️diff/🔣️.json")).expect("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔍️scale-selection/🧩️part/🔺️diff/🔣️.json").leak());
-static OUTCOME: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔍️scale-selection/🧩️part/🎯️outcome/🔣️.json")).expect("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔍️scale-selection/🧩️part/🎯️outcome/🔣️.json").leak());
+static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| std::fs::read_to_string(fixture_path!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔍️scale-selection/🧩️part/📸️snapshot/⬅️before/🔣️.json")).expect("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔍️scale-selection/🧩️part/📸️snapshot/⬅️before/🔣️.json").leak());
+static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| std::fs::read_to_string(fixture_path!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔍️scale-selection/🧩️part/📸️snapshot/➡️after/🔣️.json")).expect("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔍️scale-selection/🧩️part/📸️snapshot/➡️after/🔣️.json").leak());
+static MUTATION: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| std::fs::read_to_string(fixture_path!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔍️scale-selection/🧩️part/🦠️mutation/🔣️.json")).expect("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔍️scale-selection/🧩️part/🦠️mutation/🔣️.json").leak());
+static DIFF: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| std::fs::read_to_string(fixture_path!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔍️scale-selection/🧩️part/🔺️diff/🔣️.json")).expect("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔍️scale-selection/🧩️part/🔺️diff/🔣️.json").leak());
+static OUTCOME: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| std::fs::read_to_string(fixture_path!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔍️scale-selection/🧩️part/🎯️outcome/🔣️.json")).expect("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔍️scale-selection/🧩️part/🎯️outcome/🔣️.json").leak());
 
 /// ▶️ The motion carries `before` to exactly the committed `after` and produces exactly the committed delta.
 #[test]

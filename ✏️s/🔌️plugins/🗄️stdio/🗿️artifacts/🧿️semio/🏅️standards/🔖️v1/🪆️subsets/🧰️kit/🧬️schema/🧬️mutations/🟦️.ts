@@ -1,6 +1,6 @@
 import { parseSchemaRecord } from "@semio-tech/framework/schema/record";
 import { parseArtifactRef, type ArtifactRef } from "@semio-tech/framework/schema/artifact-reference";
-import { parseLinkPin, type LinkPin } from "../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️link/🧬️schema/🟦️.ts";
+import { parseLinkPin, type LinkPin } from "@semio-tech/framework-os/modules/store/link/schema";
 import { parseSemioChild } from "../../../✉️base/🧬️schema/🪆️child/🟦️.ts";
 import { parseSemioKitConnection, parseSemioKitPiece, type SemioKitConnection, type SemioKitPiece } from "../📸️snapshot/🟦️.ts";
 

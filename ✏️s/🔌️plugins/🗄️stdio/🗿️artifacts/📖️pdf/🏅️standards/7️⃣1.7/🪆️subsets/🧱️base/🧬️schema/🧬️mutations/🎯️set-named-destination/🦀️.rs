@@ -1,6 +1,5 @@
 //! 🎯️ Authoritative PDF mutation payload, diff, inverse, and tests for `set-named-destination`.
 
-use super::PdfMutation;
 use crate::standards::v1_7::subsets::base::schema::diff::{self, PdfDiff};
 use crate::standards::v1_7::subsets::base::schema::snapshot::*;
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
@@ -16,7 +15,10 @@ pub struct SetNamedDestination {
     pub index: Option<usize>,
 }
 
-impl MutationKind<PdfSnapshot, PdfMutation> for SetNamedDestination {
+impl<Op> MutationKind<PdfSnapshot, Op> for SetNamedDestination
+where
+    Op: protocol::Mutation<PdfSnapshot, Diff = PdfDiff> + From<SetNamedDestination> + From<crate::standards::v1_7::subsets::base::schema::mutations::remove_named_destination::RemoveNamedDestination>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "named-destination", kind: "set-named-destination", record: "Set" };
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
@@ -24,10 +26,10 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetNamedDestination {
         MutationOutcome::new(diff::diff_set_named_destination(base, self.destination.clone(), self.index))
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
         let _ = base;
-        match base.named_destinations.iter().find(|item| item.name == self.destination.name) { Some(previous) => vec![PdfMutation::SetNamedDestination(SetNamedDestination { destination: previous.clone(), index: None })], None => vec![PdfMutation::RemoveNamedDestination(super::remove_named_destination::RemoveNamedDestination { name: self.destination.name.clone() })] }
+        match base.named_destinations.iter().find(|item| item.name == self.destination.name) { Some(previous) => vec![Op::from(SetNamedDestination { destination: previous.clone(), index: None })], None => vec![Op::from(crate::standards::v1_7::subsets::base::schema::mutations::remove_named_destination::RemoveNamedDestination { name: self.destination.name.clone() })] }
     
     })())
 }
@@ -44,8 +46,6 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetNamedDestination {
 //#endregion 🔖️Mutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
 

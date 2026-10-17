@@ -29,6 +29,10 @@ type stdioZip20BaseInferenceGuardSizeBounds = { readonly minItems?: number; read
 
 export const stdioZip20BaseInferenceGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : stdioZip20BaseInferenceGuardReject(at, "value is not an object");
+export const stdioZip20BaseInferenceGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) stdioZip20BaseInferenceGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const stdioZip20BaseInferenceGuardArray = (value: unknown, at: string, bounds: stdioZip20BaseInferenceGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return stdioZip20BaseInferenceGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) stdioZip20BaseInferenceGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -59,14 +63,14 @@ export const stdioZip20BaseInferenceGuardConstant = <T extends string | number |
 //#endregion 🚪️Parsers
 
 export function parseZipInference(value: unknown, at = "$"): ZipInference {
-  const row = stdioZip20BaseInferenceGuardObject(value, at);
+  const row = stdioZip20BaseInferenceGuardClosed(stdioZip20BaseInferenceGuardObject(value, at), at, ["entries"]);
   return {
     entries: parseZipEntries(row["entries"], `${at}.entries`),
   };
 }
 
 export function parseZipEntries(value: unknown, at = "$"): ZipEntries {
-  const row = stdioZip20BaseInferenceGuardObject(value, at);
+  const row = stdioZip20BaseInferenceGuardClosed(stdioZip20BaseInferenceGuardObject(value, at), at, ["entryCount", "totalUncompressedSize", "contentDigest"]);
   return {
     entryCount: stdioZip20BaseInferenceGuardInteger(row["entryCount"], `${at}.entryCount`, {"minimum": 0}),
     totalUncompressedSize: stdioZip20BaseInferenceGuardInteger(row["totalUncompressedSize"], `${at}.totalUncompressedSize`, {"minimum": 0}),

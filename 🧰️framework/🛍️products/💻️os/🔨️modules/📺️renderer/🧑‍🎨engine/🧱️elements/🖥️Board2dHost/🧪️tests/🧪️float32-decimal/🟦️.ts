@@ -8,7 +8,7 @@
 
 import { describe, expect, it } from "vitest";
 import corpus from "../🧫️fixtures/🧫️float32-decimal/🔣️.json" with { type: "json" };
-import { board2dFloat32Decimal } from "../../🟦️.tsx";
+import { board2dFloat32Decimal } from "../../🔬️board-parsing/🟦️.ts";
 // #endregion 🔌️Adapters
 
 //#region 🧫️Corpus

@@ -21,6 +21,10 @@ type block2dConfigGuardSizeBounds = { readonly minItems?: number; readonly maxIt
 
 export const block2dConfigGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : block2dConfigGuardReject(at, "value is not an object");
+export const block2dConfigGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) block2dConfigGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const block2dConfigGuardArray = (value: unknown, at: string, bounds: block2dConfigGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return block2dConfigGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) block2dConfigGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -51,5 +55,5 @@ export const block2dConfigGuardConstant = <T extends string | number | boolean>(
 //#endregion 🚪️Parsers
 
 export function parseBlock2dConfig(value: unknown, at = "$"): Block2dConfig {
-  return block2dConfigGuardObject(value, `${at}`);
+  return block2dConfigGuardClosed(block2dConfigGuardObject(value, `${at}`), `${at}`, []);
 }

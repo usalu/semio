@@ -1,4 +1,4 @@
-import { parseSpaceArtifactCreationStatusJsonV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🚪️io/📝️text/🌱️space-artifact-creation-v1/🟦️.ts";
+import { parseSpaceArtifactCreationStatusJsonV1 } from "@semio-tech/framework-os/modules/directory/io/text/space-artifact-creation-v1";
 // #region Header
 /**
  * 🌱️ Third-party oracle (Ajv) for creation-status progress (`SpaceArtifactCreationProgress`): every status row of the
@@ -16,7 +16,7 @@ import { describe, expect, it } from "vitest";
 
 const schemaDir = join(dirname(fileURLToPath(import.meta.url)), "../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema");
 const module = JSON.parse(readFileSync(join(schemaDir, "🔣️.json"), "utf8"));
-const fixture = JSON.parse(readFileSync(join(schemaDir, "🌱️space-artifact-creation-v1", "🔣️.json"), "utf8"));
+const fixture = JSON.parse(readFileSync(join(schemaDir, "../🧪️tests/🧫️fixtures/🌱️space-artifact-creation-v1/🔣️.json"), "utf8"));
 
 describe("creation status progress oracle", () => {
   it("Ajv and the TypeScript twin judge every status row as the fixture does", () => {

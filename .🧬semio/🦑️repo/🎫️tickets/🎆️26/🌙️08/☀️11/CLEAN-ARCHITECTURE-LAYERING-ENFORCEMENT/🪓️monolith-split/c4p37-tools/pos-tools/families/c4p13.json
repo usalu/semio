@@ -1,0 +1,51 @@
+{
+ "name": "c4p13",
+ "crates": [
+  "semio-s-fem-elements2d",
+  "semio-s-fem-elements3d",
+  "semio-s-fem-sparse",
+  "semio-s-fem-sparse-ldlt",
+  "semio-s-fem-sparse-pcg",
+  "semio-s-fem-sparse-subspace",
+  "semio-s-fem-mesh",
+  "semio-s-fem-analyses-assembly",
+  "semio-s-fem-algebra",
+  "semio-s-fem-formulation",
+  "semio-s-fem-model",
+  "semio-s-fem-static",
+  "semio-s-fem-analyses",
+  "semio-s-fem-analyses-model",
+  "semio-s-fem-mesh-derived",
+  "semio-s-artifact-fem-2d-engine",
+  "semio-s-artifact-fem-3d-engine",
+  "semio-s-artifact-fem-2d-editor-session",
+  "semio-s-artifact-fem-3d-editor-session",
+  "semio-s-artifact-fem-3d-editor-visual-job"
+ ],
+ "base": {
+  "rev": "b84bf526c7b",
+  "crates": [
+   "semio-s-fem-elements2d",
+   "semio-s-fem-elements3d",
+   "semio-s-fem-sparse",
+   "semio-s-fem-sparse-ldlt",
+   "semio-s-fem-sparse-pcg",
+   "semio-s-fem-sparse-subspace",
+   "semio-s-fem-mesh",
+   "semio-s-fem-analyses-assembly",
+   "semio-s-fem-algebra",
+   "semio-s-fem-formulation",
+   "semio-s-fem-model",
+   "semio-s-fem-static",
+   "semio-s-fem-analyses",
+   "semio-s-fem-analyses-model",
+   "semio-s-fem-mesh-derived",
+   "semio-s-artifact-fem-2d-engine",
+   "semio-s-artifact-fem-3d-engine",
+   "semio-s-artifact-fem-2d-editor-session",
+   "semio-s-artifact-fem-3d-editor-session",
+   "semio-s-artifact-fem-3d-editor-visual-job"
+  ]
+ },
+ "note": "CENSUS4-PKG-13: fem engine crate roots (elements2d, elements3d, sparse, ldlt, pcg, subspace, mesh, assembly) split into children; union with the direct dependents"
+}

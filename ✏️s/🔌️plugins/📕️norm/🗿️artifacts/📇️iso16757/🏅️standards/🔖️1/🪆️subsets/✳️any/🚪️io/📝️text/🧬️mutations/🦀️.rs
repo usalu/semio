@@ -348,7 +348,7 @@ mod tests;
 
 #[allow(unused_imports)]
 mod mutations_codec {
-use crate::text::mutations::*;
+use crate::mutations::*;
 use semio_s_artifact_norm_iso16757_mutations::*;
 use semio_s_artifact_norm_iso16757_diff::Iso16757Diff;
 use semio_s_artifact_norm_iso16757_model::Iso16757Snapshot;
@@ -392,7 +392,7 @@ pub fn decode_iso16757_mutation_json(text: &str) -> Result<Iso16757Mutation, Str
     semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
 }
 }
-pub use crate::text::mutations::mutations_codec::*;
+pub use crate::mutations::mutations_codec::*;
 
 /// 📜️ Describes the artifact mutation dialect.
 pub const MUTATION_GRAMMAR_SEMIO: &str = include_str!("📖️mutations.grammar.semio");

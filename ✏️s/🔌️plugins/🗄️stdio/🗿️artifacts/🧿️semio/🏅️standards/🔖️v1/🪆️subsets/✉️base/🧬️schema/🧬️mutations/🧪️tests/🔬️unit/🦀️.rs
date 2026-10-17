@@ -1,4 +1,61 @@
-use super::*;
+use semio_framework_test_fixtures::fixture_path;
+use semio_s_artifact_stdio_semio_animation::schema::mutations::SemioAnimationMutation;
+use semio_s_artifact_stdio_semio_audio_mutations::schema::mutations::set_sample_rate;
+use semio_s_artifact_stdio_semio_audio_mutations::schema::mutations::SemioAudioMutation;
+use crate::schema::diff::SemioDiff;
+use crate::{schema::snapshot::SemioSnapshot, schema::snapshot::SemioSubsetSnapshot};
+use semio_s_artifact_stdio_semio_brep::schema::mutations::SemioBrepMutation;
+use semio_s_artifact_stdio_semio_cad::schema::mutations::SemioCadMutation;
+use semio_s_artifact_stdio_semio_document::schema::mutations::SemioDocumentMutation;
+use semio_s_artifact_stdio_semio_drawing::schema::mutations::SemioDrawingMutation;
+use semio_s_artifact_stdio_semio_flow::schema::mutations::SemioFlowMutation;
+use semio_s_artifact_stdio_semio_graph::schema::mutations::SemioGraphMutation;
+use semio_s_artifact_stdio_semio_image::schema::mutations::SemioImageMutation;
+use semio_s_artifact_stdio_semio_kit::schema::mutations::SemioKitMutation;
+use semio_s_artifact_stdio_semio_mesh::schema::mutations::SemioMeshMutation;
+use semio_s_artifact_stdio_semio_model::schema::mutations::SemioModelMutation;
+use semio_s_artifact_stdio_semio_object::schema::mutations::SemioObjectMutation;
+use semio_s_artifact_stdio_semio_presentation::schema::mutations::SemioPresentationMutation;
+use semio_s_artifact_stdio_semio_table_mutations::schema::mutations::SemioTableMutation;
+use semio_s_artifact_stdio_semio_text_mutations::schema::mutations::SemioTextMutation;
+use semio_s_artifact_stdio_semio_value_mutations::schema::mutations::SemioValueMutation;
+use semio_s_artifact_stdio_semio_video_mutations::schema::mutations::SemioVideoMutation;
+use protocol::Mutation;
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_semio_animation::schema::snapshot::SemioAnimationSnapshot;
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_semio_brep::schema::snapshot::SemioBrepSnapshot;
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_semio_cad::schema::snapshot::SemioCadSnapshot;
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_semio_document::schema::snapshot::SemioDocumentSnapshot;
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_semio_drawing::schema::snapshot::SemioDrawingSnapshot;
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_semio_graph::schema::snapshot::SemioGraphSnapshot;
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_semio_image::schema::snapshot::SemioImageSnapshot;
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_semio_kit::schema::snapshot::SemioKitSnapshot;
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_semio_mesh::schema::snapshot::SemioMeshSnapshot;
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_semio_model::schema::snapshot::SemioModelSnapshot;
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_semio_object::schema::snapshot::SemioObjectSnapshot;
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_semio_presentation::schema::snapshot::SemioPresentationSnapshot;
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_semio_table_model::schema::snapshot::SemioTableSnapshot;
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_semio_text_model::schema::snapshot::SemioTextSnapshot;
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValueSnapshot;
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_semio_video_model::schema::snapshot::SemioVideoSnapshot;
+#[allow(unused_imports)]
+use protocol::{OpBinary, OpText};
+use crate::schema::mutations::*;
 use semio_s_artifact_stdio_semio_audio_model::schema::snapshot::SemioAudioFormat;
 use semio_s_artifact_stdio_semio_audio_model::schema::snapshot::SemioAudioSnapshot;
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
@@ -395,7 +452,7 @@ fn kinds_match_the_enum_and_the_catalog() {
     for (kind, arm) in KINDS.iter().zip(arms) {
         assert_eq!(*kind, format!("apply-{}", semio_subset_tag(&enveloped(arm))), "KINDS must follow SemioSubsetSnapshot's own declaration order and wrap the envelope's own runtime subset tag");
     }
-    let manifest = &std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/🔖️v1/🪆️subsets/✉️base/🔮️oracles/🔣️.json")).expect("the committed fixture is readable");
+    let manifest = &std::fs::read_to_string(fixture_path!("../../../🔮️oracles/🔣️.json")).expect("the committed fixture is readable");
     for kind in KINDS {
         assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
     }

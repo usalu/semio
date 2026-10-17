@@ -3,16 +3,16 @@
 use super::*;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-struct Process3dPublicationLease {
+pub(super) struct Process3dPublicationLease {
     pub(super) operation: u64,
     pub(super) generation: u64,
     pub(super) base_revision: u64,
     pub(super) parent_revision: u64,
-    live_revision: u64,
+    pub(super) live_revision: u64,
     pub(super) maximum_items: usize,
-    maximum_output_pages: usize,
-    maximum_controls: usize,
-    closing: bool,
+    pub(super) maximum_output_pages: usize,
+    pub(super) maximum_controls: usize,
+    pub(super) closing: bool,
     pub(super) terminal: bool,
 }
 
@@ -82,7 +82,7 @@ pub fn process3d_admit_publication_authority(
             Process3dPublicationLease { operation: operation.0, generation: generation.0, base_revision, parent_revision, live_revision, maximum_items, maximum_output_pages, maximum_controls, closing: false, terminal: false },
         )
         .map_err(|_| "process3d-publication.saturated")?;
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testkit"))]
     process3d_publication_test_admissions().lock().unwrap_or_else(std::sync::PoisonError::into_inner).push(key);
     Ok(())
 }
@@ -156,7 +156,7 @@ pub fn process3d_admit_app_publication_authority(operation: semio_framework_job:
     Ok(())
 }
 
-fn process3d_validate_atomic_lease(lease: Process3dPublicationLease, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, live_generation: semio_framework_job::Generation) -> Result<(), &'static str> {
+pub(super) fn process3d_validate_atomic_lease(lease: Process3dPublicationLease, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, live_generation: semio_framework_job::Generation) -> Result<(), &'static str> {
     if lease.operation != operation.0 {
         return Err("process3d-publication.wrong-operation");
     }
@@ -193,7 +193,7 @@ fn process3d_publication_key(operation: semio_framework_job::OperationId, genera
 /// admission in this binary happens under this lane (`🔬️retained-laws`, the editor's production
 /// envelope fixture, the mounted registry laws), so draining here can never take a lease a
 /// concurrently running law still owns.
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 pub fn process3d_publication_authority_lane() -> std::sync::MutexGuard<'static, ()> {
     static LANE: std::sync::Mutex<()> = std::sync::Mutex::new(());
     let guard = LANE.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
@@ -211,7 +211,7 @@ pub fn process3d_publication_authority_lane() -> std::sync::MutexGuard<'static, 
 /// 🧾️ Every key this test binary admitted into the process-global host table and has not released —
 /// the enumeration `FixedOperationRegistry` does not offer, kept only so the lane above can drain a
 /// stranded lease.
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 fn process3d_publication_test_admissions() -> &'static std::sync::Mutex<Vec<semio_framework_job_registry::FixedOperationKey>> {
     static ADMITTED: std::sync::OnceLock<std::sync::Mutex<Vec<semio_framework_job_registry::FixedOperationKey>>> = std::sync::OnceLock::new();
     ADMITTED.get_or_init(|| std::sync::Mutex::new(Vec::new()))
@@ -259,7 +259,7 @@ pub fn process3d_validate_publication_authority(operation: semio_framework_job::
 /// 🔐️ Fail-closed Process3d authority used by the shared atomic replacement branch.
 pub fn process3d_validate_atomic_publication_authority(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, live_generation: semio_framework_job::Generation) -> Result<(), &'static str> {
     let lease = process3d_publication_lease_by_operation(operation)?.ok_or("process3d-publication.authority-missing")?;
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testkit"))]
     let lease = {
         let mut lease = lease;
         let mut hostiles = process3d_publication_hostiles().try_lock().map_err(|_| "process3d-publication.hostile-contended")?;
@@ -295,12 +295,12 @@ pub fn process3d_publication_item_credit(operation: semio_framework_job::Operati
 pub fn process3d_release_publication_authority(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation) -> bool {
     let Ok(mut leases) = process3d_publication_leases().try_lock() else { return false };
     let key = process3d_publication_key(operation, generation);
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testkit"))]
     process3d_publication_test_admissions().lock().unwrap_or_else(std::sync::PoisonError::into_inner).retain(|held| *held != key);
     leases.take(key).is_some()
 }
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Process3dPublicationHostile {
     Missing,
@@ -310,13 +310,13 @@ pub enum Process3dPublicationHostile {
     WrongParent,
 }
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 fn process3d_publication_hostiles() -> &'static std::sync::Mutex<[Option<Process3dPublicationHostileLease>; PROCESS3D_PUBLICATION_SLOTS]> {
     static HOSTILES: std::sync::OnceLock<std::sync::Mutex<[Option<Process3dPublicationHostileLease>; PROCESS3D_PUBLICATION_SLOTS]>> = std::sync::OnceLock::new();
     HOSTILES.get_or_init(|| std::sync::Mutex::new([None; PROCESS3D_PUBLICATION_SLOTS]))
 }
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 #[derive(Clone, Copy)]
 struct Process3dPublicationHostileLease {
     pub(super) operation: u64,
@@ -324,14 +324,14 @@ struct Process3dPublicationHostileLease {
     observed: Option<&'static str>,
 }
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 pub fn process3d_arm_publication_hostile(operation: semio_framework_job::OperationId, hostile: Process3dPublicationHostile) {
     let mut hostiles = process3d_publication_hostiles().try_lock().expect("Process3d hostile publication authority is uncontended");
     let slot = hostiles.iter_mut().find(|slot| slot.is_none()).expect("Process3d hostile publication authority has a fixed slot");
     *slot = Some(Process3dPublicationHostileLease { operation: operation.0, hostile, observed: None });
 }
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 pub fn process3d_take_publication_hostile_observed(operation: semio_framework_job::OperationId) -> Option<&'static str> {
     let mut hostiles = process3d_publication_hostiles().try_lock().expect("Process3d hostile publication authority is uncontended");
     let slot = hostiles.iter_mut().find(|slot| slot.is_some_and(|value| value.operation == operation.0))?;

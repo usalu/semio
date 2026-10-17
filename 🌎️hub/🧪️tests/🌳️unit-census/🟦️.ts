@@ -20,10 +20,10 @@ type FixtureV1 = {
   readonly target: string;
   readonly profiles: readonly string[];
   readonly featureVarianceAllowed: readonly { readonly package: string; readonly reason: string; readonly until: string }[];
-  readonly cases: readonly { readonly name: string; readonly graphs: readonly CargoPackageUnitGraphV1[]; readonly expected: readonly CargoUnitCensusRowV1[]; readonly drift: readonly string[] }[];
-  readonly crateTypeCases: readonly { readonly name: string; readonly graphs: readonly CargoPackageUnitGraphV1[]; readonly nonComponentCdylibs: readonly string[] }[];
+  readonly cases: readonly { readonly name: string; readonly graphs: readonly CargoPackageUnitGraphV1[]; readonly expected: CargoUnitCensusRowV1[]; readonly drift: string[] }[];
+  readonly crateTypeCases: readonly { readonly name: string; readonly graphs: readonly CargoPackageUnitGraphV1[]; readonly nonComponentCdylibs: string[] }[];
   readonly firstPartyFeaturesAllowed: readonly FirstPartyFeatureAllowanceV1[];
-  readonly featureCases: readonly { readonly name: string; readonly graphs: readonly CargoPackageUnitGraphV1[]; readonly allowed: readonly string[]; readonly violations: readonly string[] }[];
+  readonly featureCases: readonly { readonly name: string; readonly graphs: readonly CargoPackageUnitGraphV1[]; readonly allowed: readonly string[]; readonly violations: string[] }[];
 };
 
 /** 📜️ One documented exception to L2 (no consumer-dependent first-party features). The list is empty by default; every row names why the feature

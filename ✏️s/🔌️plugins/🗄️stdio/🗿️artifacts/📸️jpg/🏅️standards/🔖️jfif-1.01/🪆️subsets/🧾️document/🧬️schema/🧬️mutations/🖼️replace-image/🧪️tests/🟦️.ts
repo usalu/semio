@@ -9,5 +9,4 @@ test("JPEG image intent owns imported content and excludes native observations",
  const ajv=new Ajv({strict:false});ajv.addSchema(snapshotSchema);expect(ajv.validate(snapshotSchema,snapshot)).toBe(true);expect(ajv.validate(payloadSchema,{image})).toBe(true);
  for(const field of fixture.excludedNativeFields){expect(ajv.validate(snapshotSchema,{...snapshot,[field]:0})).toBe(false);expect(ajv.validate(payloadSchema,{image:{...image,[field]:0}})).toBe(false);}
  expect(snapshot.image.otherSegments.map(segment=>segment.marker)).toEqual([225,254,225]);
- console.info("[DEBUG] JPEG neutral imported image validated independently by Ajv");
 });

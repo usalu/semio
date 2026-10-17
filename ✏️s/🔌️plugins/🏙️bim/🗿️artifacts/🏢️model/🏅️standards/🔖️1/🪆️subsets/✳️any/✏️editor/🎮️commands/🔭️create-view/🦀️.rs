@@ -7,7 +7,7 @@ use crate::editor::bim::interaction::BIM_ELEMENT_DOMAIN;
 use crate::editor::bim::kit::{fault, select_effect, IdMint};
 use crate::editor::bim::modes::edit::windows::{plan, section};
 use crate::editor::bim::terminology::BimLabels;
-use crate::editor::bim::BimDispatchCtx;
+use crate::editor::bim::dispatch_context::BimDispatchCtx;
 use crate::standards::v1::subsets::any::schema::snapshot::{Axis, Point2, View, ViewCamera, ViewKind, ViewPlane};
 use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};

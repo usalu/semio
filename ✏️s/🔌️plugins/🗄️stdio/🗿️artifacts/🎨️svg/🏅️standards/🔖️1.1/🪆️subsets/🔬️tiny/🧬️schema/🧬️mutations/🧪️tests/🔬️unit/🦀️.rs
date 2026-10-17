@@ -1,4 +1,16 @@
-use super::*;
+use crate::{schema::snapshot::TransformOp, schema::snapshot::ViewBox};
+use crate::SvgSnapshot;
+use protocol::Mutation;
+use crate::{schema::snapshot::SvgNode, schema::snapshot::SvgAttributeValue};
+use semio_framework_test_fixtures::fixture_text;
+#[allow(unused_imports)]
+use crate::{schema::diff::diff_at_path, schema::diff::SvgChildAdded, schema::diff::SvgChildrenDiff, schema::diff::SvgDiff, schema::diff::SvgElementDiff, schema::diff::SvgNodeDiff};
+#[allow(unused_imports)]
+use crate::{schema::mutation_support::attributes_diff_at_path, schema::mutation_support::prior_attribute};
+#[allow(unused_imports)]
+use crate::{schema::snapshot::node_at, schema::snapshot::NodePath};
+use crate::standards::v1_1::subsets::tiny::schema::mutations::{BLOCKED_ELEMENTS, BLOCKED_ATTRS};
+use crate::standards::v1_1::subsets::tiny::schema::mutations::*;
 use crate::schema::snapshot::{element_attr, SvgAttr};
 
 fn elem(name: &str, attrs: Vec<(&str, SvgAttributeValue)>, children: Vec<SvgNode>) -> SvgNode {
@@ -30,7 +42,7 @@ fn kinds_matches_enum_variants_and_manifest() {
     let spelled: Vec<&'static str> = every.iter().map(kind_of).collect();
     assert_eq!(spelled, KINDS.to_vec(), "KINDS must spell every variant, in declaration order");
 
-    let manifest = include_str!("../../../../🔮️oracles/🔣️.json");
+    let manifest = fixture_text!("../../../../🔬️tiny/🔮️oracles/🔣️.json");
     for kind in KINDS {
         assert!(manifest.contains(&format!("\"{kind}\"")), "the oracle manifest's catalog does not declare {kind:?}");
     }

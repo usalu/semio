@@ -87,4 +87,4 @@ if (segments[0] === "home-host-panel-owner") {
   }
 }
 
-await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-space-home", { commands: { verify: OwnedVerifyScript }, snapshotSqliteTests:["../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"] });
+await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-space-home", { packages: ["semio-s-artifact-space-home", "semio-s-artifact-space-home-editor", "semio-s-artifact-space-home-examples", "semio-s-artifact-space-home-inferences", "semio-s-artifact-space-home-kinds-conformance", "semio-s-artifact-space-home-operations", "semio-s-artifact-space-home-schema", "semio-s-artifact-space-home-viewer"], commands: { verify: OwnedVerifyScript }, snapshotSqliteTests:["../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"] });

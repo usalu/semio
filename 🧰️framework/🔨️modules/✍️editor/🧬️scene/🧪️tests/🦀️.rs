@@ -24,7 +24,6 @@ fn canonical_scene_corpus_matches_the_independent_json_values_and_both_declared_
    drop(control);assert!(calls>0);
   }
  }
- eprintln!("[DEBUG] canonical Editor fourteen shared scene schedules agree with serde_json across Body and Document");
 }
 #[test]
 fn canonical_scene_refuses_mismatched_framing_trailing_input_and_caller_revocation(){
@@ -79,5 +78,4 @@ fn canonical_scene_settings_defaults_match_the_independent_serde_oracle_and_each
   let actual=from_json(&input.to_string(),&mut control);assert_eq!(actual.is_ok(),row["accepted"].as_bool().unwrap(),"{} JSON",row["id"]);drop(control);
   if row["accepted"].as_bool().unwrap() {for stop in 1..=calls {let mut observed=0;let mut cancel=|_|{observed+=1;observed!=stop};let mut control=NativeDecodeControl::new(16_777_216,&mut cancel);assert!(from_json(&input.to_string(),&mut control).is_err(),"{} cancellation {stop}",row["id"]);}}
  }
- eprintln!("[DEBUG] Editor eight controlled-default schedules agree with serde_json across JSON, Body and Document and every JSON cancellation boundary");
 }

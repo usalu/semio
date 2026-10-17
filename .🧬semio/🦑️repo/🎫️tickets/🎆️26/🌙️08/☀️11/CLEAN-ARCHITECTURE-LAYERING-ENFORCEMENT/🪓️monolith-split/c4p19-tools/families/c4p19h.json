@@ -1,0 +1,15 @@
+{
+ "name": "c4p19h",
+ "crates": [
+  "semio-s-plugin-playbook-procedural",
+  "semio-s-plugin-playbook-procedural-component"
+ ],
+ "note": "CENSUS4-PKG-19 semio-s-plugin-playbook-procedural plus direct dependents",
+ "base": {
+  "rev": "b84bf526c7b",
+  "crates": [
+   "semio-s-plugin-playbook-procedural",
+   "semio-s-plugin-playbook-procedural-component"
+  ]
+ }
+}

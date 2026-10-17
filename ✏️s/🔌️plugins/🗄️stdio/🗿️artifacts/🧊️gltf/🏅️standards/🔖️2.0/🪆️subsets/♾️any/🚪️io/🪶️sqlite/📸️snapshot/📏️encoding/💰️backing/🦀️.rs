@@ -2,10 +2,10 @@
 use super::*;
 use semio_framework_os_kernel::sqlite_snapshot::artifact::NativeEncodingBound;
 type Bound<'a,'p>=NativeEncodingBound<'a,'p>;
-fn text(bound:&mut Bound<'_,'_>,value:&str)->Result<(), ValueError>{bound.repeated(value.len(),6)}
+pub fn text(bound:&mut Bound<'_,'_>,value:&str)->Result<(), ValueError>{bound.repeated(value.len(),6)}
 fn optional_text(bound:&mut Bound<'_,'_>,value:&Option<String>)->Result<(), ValueError>{if let Some(value)=value{text(bound,value)?;}Ok(())}
-fn json(bound:&mut Bound<'_,'_>,value:&Option<GltfJson>)->Result<(), ValueError>{let Some(value)=value else{return Ok(())};let mut pending=bound.allocate_frontier(1)?;bound.push_frontier(&mut pending,value)?;while let Some(value)=pending.pop(){bound.add(128)?;match value{GltfJson::Null|GltfJson::Bool(_)=>{},GltfJson::Number(_)=>bound.add(1100)?,GltfJson::String(value)=>text(bound,value)?,GltfJson::Array(values)=>{bound.repeated(values.len(),128)?;for child in values{bound.push_frontier(&mut pending,child)?;}},GltfJson::Object(values)=>{bound.repeated(values.len(),128)?;for(name,value)in values{text(bound,name)?;pending.push(value);}}}}Ok(())}
-fn extras(bound:&mut Bound<'_,'_>,extensions:&Option<GltfJson>,extra:&Option<GltfJson>)->Result<(), ValueError>{json(bound,extensions)?;json(bound,extra)}
+pub fn json(bound:&mut Bound<'_,'_>,value:&Option<GltfJson>)->Result<(), ValueError>{let Some(value)=value else{return Ok(())};let mut pending=bound.allocate_frontier(1)?;bound.push_frontier(&mut pending,value)?;while let Some(value)=pending.pop(){bound.add(128)?;match value{GltfJson::Null|GltfJson::Bool(_)=>{},GltfJson::Number(_)=>bound.add(1100)?,GltfJson::String(value)=>text(bound,value)?,GltfJson::Array(values)=>{bound.repeated(values.len(),128)?;for child in values{bound.push_frontier(&mut pending,child)?;}},GltfJson::Object(values)=>{bound.repeated(values.len(),128)?;for(name,value)in values{text(bound,name)?;pending.push(value);}}}}Ok(())}
+pub fn extras(bound:&mut Bound<'_,'_>,extensions:&Option<GltfJson>,extra:&Option<GltfJson>)->Result<(), ValueError>{json(bound,extensions)?;json(bound,extra)}
 fn texture(bound:&mut Bound<'_,'_>,value:&Option<GltfTextureInfo>)->Result<(), ValueError>{if let Some(value)=value{bound.add(512)?;extras(bound,&value.extensions,&value.extras)?;}Ok(())}
 pub(super) fn native_footprint(snapshot:&GltfSnapshot,control:&mut SqliteSnapshotControl<'_>)->Result<(), ValueError>{
  let mut bound=NativeEncodingBound::new(control)?;bound.add(2048)?;text(&mut bound,&snapshot.schema)?;let document=&snapshot.document;

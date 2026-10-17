@@ -48,21 +48,6 @@ pub fn close_payload_authority(authority: &mut semio_framework_job::JobPayloadAu
     }
 }
 
-/// 🧪️ Test-only step context whose operation keeps one leaked payload authority across steps, as the worker does.
-#[cfg(test)]
-pub(crate) fn test_step_context<'a>(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, budget: StepBudget, cancel: semio_framework_job::CancelToken, sequence: &'a mut u64, receipt: &'a mut RetainedCloneProgress) -> semio_framework_job::StepContext<'a> {
-    use std::cell::RefCell;
-    use std::collections::HashMap;
-    thread_local! {
-        static AUTHORITIES: RefCell<HashMap<(u64, u64), &'static semio_framework_job::JobPayloadAuthority>> = RefCell::new(HashMap::new());
-    }
-    let authority = AUTHORITIES.with(|map| {
-        *map.borrow_mut().entry((operation.0, generation.0)).or_insert_with(|| Box::leak(Box::new(admit_payload_authority(Operation::new(operation, semio_framework_job::RevisionId(0), generation, 0)))))
-    });
-    let cancel: &'static semio_framework_job::CancelToken = Box::leak(Box::new(cancel));
-    semio_framework_job::StepContext::with_payload_authority(operation, generation, budget, cancel, || Some(0), sequence, receipt, authority).expect("test context admits its payload authority")
-}
-
 /// 🚪️ Runs a job's own close ladder to completion with grants it quotes itself — every job must be closed before it is dropped.
 pub fn close_job(job: &mut impl InteractiveJob) {
     job.begin_close();

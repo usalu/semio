@@ -494,8 +494,3 @@ pub fn divisor_sum(n: u64) -> u64 {
     factor_u64(n).into_iter().map(|(p, e)| (0..=e).map(|k| p.pow(k)).sum::<u64>()).product()
 }
 // #endregion 🔖️ArithmeticFns
-
-// #region 🔖️Tests
-#[cfg(test)]
-include!("../🧪️tests/🔬️primes-unit/🦀️.rs");
-// #endregion 🔖️Tests

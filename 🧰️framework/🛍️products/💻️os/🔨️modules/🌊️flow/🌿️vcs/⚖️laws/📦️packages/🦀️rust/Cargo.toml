@@ -28,6 +28,7 @@ semio-framework-artifact-flow-flow = { workspace = true }
 neural_engine = { path = "../../../../../🧠️neural/⚙️engine/📦️packages/🦀️rust", package = "semio-framework-os-kernel-neural-engine" }
 
 [dev-dependencies]
+semio-framework-test-fixtures = { path = "../../../../../../../../🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-framework-trace = { path = "../../../../../../../../🔨️modules/⏱️trace/📦️packages/🦀️rust" }
 semio-framework-os-kernel = { path = "../../../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["mutation-testing"] }
 semio-framework-artifact-flow-flow = { workspace = true, features = ["protocol-laws"] }

@@ -2,11 +2,7 @@
 //! storeys and grid lines → the views and schedules scoped to them → everything on a storey → panel overrides and openings of removed curtain walls and openings of removed walls → properties and classifications
 //! of every removed element), the sparse diff that deletes it, and its inverse of one concrete create (or data setter) per record.
 
-use super::super::set_component_override::SetComponentOverride;
-use super::super::set_element_classification::SetElementClassification;
-use super::super::set_element_property::SetElementProperty;
-use super::super::set_space_conditions::SetSpaceConditions;
-use crate::standards::v1::subsets::any::schema::{diff::{Entry, KeyedDelta, ModelDiff, Patch}, mutations::ModelMutation, snapshot::{ModelSnapshot, TopConstraint}};
+use crate::standards::v1::subsets::any::schema::{diff::{Entry, KeyedDelta, ModelDiff, Patch}, snapshot::{ModelSnapshot, TopConstraint}};
 use protocol::{MutationOutcome, OutcomeCode};
 use std::collections::BTreeSet;
 
@@ -23,7 +19,7 @@ fn deleted<T: Clone + PartialEq, P: Patch<T>>(ids: &BTreeSet<String>) -> Option<
 
 //#region 🔖️Removal
 macro_rules! removal {
-    ($($field:ident => $variant:ident($module:ident, $record:ident);)*) => {
+    ($($field:ident;)*) => {
         /// 🧺️ The ids to delete per collection, in creation order; properties and classifications hold the element ids whose entry goes.
         #[derive(Clone, Debug, Default, PartialEq)]
         pub struct Removal {
@@ -74,91 +70,49 @@ macro_rules! removal {
                 }
             }
 
-            /// ↩️ One concrete row per removed record in storage order: the store replays the vector reversed, so sites come last and are
-            /// recreated first, then buildings, storeys, grid lines, storey contents, openings, and finally the property and classification setters.
-            pub fn inverse(&self, base: &ModelSnapshot) -> Vec<ModelMutation> {
-                let mut rows = Vec::new();
-                $(
-                    for id in &self.$field {
-                        if let Some(record) = base.$field.get(id) {
-                            rows.push(ModelMutation::$variant(super::super::$module::$variant { id: id.clone(), $record: record.clone() }));
-                        }
-                    }
-                )*
-                for key in &self.component_overrides {
-                    if let Some(record) = base.component_overrides.get(key) {
-                        rows.push(ModelMutation::SetComponentOverride(SetComponentOverride { component: record.component.clone(), name: record.name.clone(), value: record.value.clone() }));
-                    }
-                }
-                for id in &self.properties {
-                    for (set, properties) in base.properties.get(id).into_iter().flatten() {
-                        for (property, value) in properties {
-                            rows.push(ModelMutation::SetElementProperty(SetElementProperty { id: id.clone(), pset: set.clone(), property: property.clone(), value: value.clone() }));
-                        }
-                    }
-                }
-                for id in &self.classifications {
-                    for (system, code) in base.classifications.get(id).into_iter().flatten() {
-                        rows.push(ModelMutation::SetElementClassification(SetElementClassification { id: id.clone(), system: system.clone(), code: code.clone() }));
-                    }
-                }
-                for id in &self.space_conditions {
-                    if let Some(record) = base.space_conditions.get(id) {
-                        rows.push(ModelMutation::SetSpaceConditions(SetSpaceConditions::stating(id, record)));
-                    }
-                }
-                for id in &self.element_options {
-                    if let Some(member) = base.element_options.get(id) { rows.push(ModelMutation::SetElementOption(super::super::set_element_option::SetElementOption { id: id.clone(), option: Some(member.target.clone()) })); }
-                }
-                for id in &self.element_worksets {
-                    if let Some(member) = base.element_worksets.get(id) { rows.push(ModelMutation::SetElementWorkset(super::super::set_element_workset::SetElementWorkset { id: id.clone(), workset: Some(member.target.clone()) })); }
-                }
-                rows.reverse();
-                rows
-            }
         }
     };
 }
 
 removal! {
-    sites => CreateSite(create_site, site);
-    buildings => CreateBuilding(create_building, building);
-    storeys => CreateStorey(create_storey, storey);
-    grids => CreateGridLine(create_grid_line, grid_line);
-    views => CreateView(create_view, view);
-    schedules => CreateSchedule(create_schedule, schedule);
-    sheets => CreateSheet(create_sheet, sheet);
-    viewports => CreateViewport(create_viewport, viewport);
-    sheet_revisions => CreateSheetRevision(create_sheet_revision, sheet_revision);
-    clash_sets => CreateClashSet(create_clash_set, clash_set);
-    rules => CreateRule(create_rule, rule);
-    issues => CreateIssue(create_issue, issue);
-    issue_comments => CreateIssueComment(create_issue_comment, issue_comment);
-    walls => CreateWall(create_wall, wall);
-    curtain_walls => CreateCurtainWall(create_curtain_wall, curtain_wall);
-    curtain_panel_overrides => CreateCurtainPanelOverride(create_curtain_panel_override, curtain_panel_override);
-    columns => CreateColumn(create_column, column);
-    beams => CreateBeam(create_beam, beam);
-    slabs => CreateSlab(create_slab, slab);
-    ceilings => CreateCeiling(create_ceiling, ceiling);
-    roofs => CreateRoof(create_roof, roof);
-    stairs => CreateStair(create_stair, stair);
-    ramps => CreateRamp(create_ramp, ramp);
-    railings => CreateRailing(create_railing, railing);
-    spaces => CreateSpace(create_space, space);
-    zones => CreateZone(create_zone, zone);
-    area_schemes => CreateAreaScheme(create_area_scheme, area_scheme);
-    openings => CreateOpening(create_opening, opening);
-    wall_sweeps => CreateWallSweep(create_wall_sweep, wall_sweep);
-    components => CreateComponent(create_component, component);
-    mep_elements => CreateMepElement(create_mep_element, mep);
-    dimensions => CreateDimension(create_dimension, dimension);
-    tags => CreateTag(create_tag, tag);
-    text_notes => CreateTextNote(create_text_note, text_note);
-    leaders => CreateLeader(create_leader, leader);
-    load_cases => CreateLoadCase(create_load_case, load_case);
-    supports => CreateSupport(create_support, support);
-    loads => CreateLoad(create_load, load);
+    sites;
+    buildings;
+    storeys;
+    grids;
+    views;
+    schedules;
+    sheets;
+    viewports;
+    sheet_revisions;
+    clash_sets;
+    rules;
+    issues;
+    issue_comments;
+    walls;
+    curtain_walls;
+    curtain_panel_overrides;
+    columns;
+    beams;
+    slabs;
+    ceilings;
+    roofs;
+    stairs;
+    ramps;
+    railings;
+    spaces;
+    zones;
+    area_schemes;
+    openings;
+    wall_sweeps;
+    components;
+    mep_elements;
+    dimensions;
+    tags;
+    text_notes;
+    leaders;
+    load_cases;
+    supports;
+    loads;
 }
 //#endregion 🔖️Removal
 
@@ -322,8 +276,23 @@ pub fn outcome(base: &ModelSnapshot, roots: &[String], noun: &str, anchor: Optio
     }
 }
 
+/// ↩️ An operation type that states the concrete creates and setters which give a removal back; the aggregate implements it (`cascade_restore`), so the delete leaves below it never name the leaves they restore.
+pub trait RemovalInverse: Sized {
+    /// 🧺️ One row per removed record and per removed property, classification, override and membership, in storage order.
+    fn removal_inverse(removal: &Removal, base: &ModelSnapshot) -> Vec<Self>;
+    /// 🏷️ One setter per property and per classification keyed by `id`.
+    fn data_inverse(base: &ModelSnapshot, id: &str) -> Vec<Self>;
+}
+
+impl Removal {
+    /// ↩️ The restoring rows of the removal as the operation type `Op` states them.
+    pub fn inverse<Op: RemovalInverse>(&self, base: &ModelSnapshot) -> Vec<Op> {
+        Op::removal_inverse(self, base)
+    }
+}
+
 /// ↩️ The inverse rows of a delete leaf: empty when a root is unknown, the removal is refused or it restores more than [`INVERSE_ROWS`] rows, else the removal's concrete rows.
-pub fn inverse(base: &ModelSnapshot, roots: &[String]) -> Vec<ModelMutation> {
+pub fn inverse<Op: RemovalInverse>(base: &ModelSnapshot, roots: &[String]) -> Vec<Op> {
     closure(base, roots).ok().filter(|removal| removal.rows(base) <= INVERSE_ROWS).map(|removal| removal.inverse(base)).unwrap_or_default()
 }
 
@@ -337,12 +306,8 @@ pub fn data_diff(base: &ModelSnapshot, id: &str) -> ModelDiff {
 }
 
 /// ↩️ One concrete setter per property and per classification keyed by `id`: the rows that give a deleted holder its data back once it is recreated.
-pub fn data_rows(base: &ModelSnapshot, id: &str) -> Vec<ModelMutation> {
-    let properties = base.properties.get(id).into_iter().flatten().flat_map(|(set, properties)| {
-        properties.iter().map(move |(property, value)| ModelMutation::SetElementProperty(SetElementProperty { id: id.to_string(), pset: set.clone(), property: property.clone(), value: value.clone() }))
-    });
-    let classifications = base.classifications.get(id).into_iter().flatten().map(|(system, code)| ModelMutation::SetElementClassification(SetElementClassification { id: id.to_string(), system: system.clone(), code: code.clone() }));
-    properties.chain(classifications).collect()
+pub fn data_rows<Op: RemovalInverse>(base: &ModelSnapshot, id: &str) -> Vec<Op> {
+    Op::data_inverse(base, id)
 }
 
 /// 🗂️ The holders (element or type id, code) classified in the classification system `system`, in id order.

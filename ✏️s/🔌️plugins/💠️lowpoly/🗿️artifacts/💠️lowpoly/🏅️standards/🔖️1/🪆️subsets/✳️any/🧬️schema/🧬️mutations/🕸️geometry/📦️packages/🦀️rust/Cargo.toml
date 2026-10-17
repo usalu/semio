@@ -34,6 +34,7 @@ serde = { workspace = true }
 [dev-dependencies]
 semio-framework-async-macros = { workspace = true }
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-framework-test-fixtures = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-s-artifact-lowpoly-lowpoly-mutations = { workspace = true }
 serde_json = { workspace = true }
 semio-s-artifact-lowpoly-lowpoly-mut-laws = { workspace = true }

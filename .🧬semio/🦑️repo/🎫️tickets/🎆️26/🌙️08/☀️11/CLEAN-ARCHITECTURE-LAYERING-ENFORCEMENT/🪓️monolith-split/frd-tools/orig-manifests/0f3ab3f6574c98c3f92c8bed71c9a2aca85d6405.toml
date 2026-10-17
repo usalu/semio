@@ -1,0 +1,57 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-s-artifact-draw-drawing-write"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Drawing export: the serializers that write a drawing as SVG, PDF, PNG, JSON, DWG and DXF, and the owned export job"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework = { workspace = true }
+semio-framework-2d = { workspace = true }
+semio-framework-artifact-reference = { workspace = true }
+semio-framework-dsl-record = { workspace = true }
+semio-framework-dsl-record-derive = { workspace = true }
+semio-framework-job = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-pack-json = { workspace = true }
+semio-framework-pixels = { workspace = true }
+semio-framework-plugin = { workspace = true }
+semio-framework-schema = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-framework-value-derive = { workspace = true }
+semio-s-artifact-draw-drawing-geometry = { workspace = true }
+semio-s-artifact-draw-drawing-host = { workspace = true }
+semio-s-artifact-draw-drawing-io = { workspace = true }
+semio-s-artifact-draw-drawing-model = { workspace = true }
+semio-s-artifact-draw-drawing-scene = { workspace = true }
+semio-s-artifact-stdio-deflate = { workspace = true }
+semio-s-artifact-stdio-json = { workspace = true }
+semio-s-artifact-stdio-semio-base = { workspace = true }
+semio-s-artifact-stdio-semio-drawing = { workspace = true }
+semio-s-artifact-stdio-semio-drawing-export = { workspace = true }
+semio-s-artifact-stdio-svg = { workspace = true }
+semio-s-artifact-stdio-xml = { workspace = true }
+
+[dev-dependencies]
+base64_codec = { workspace = true }
+png = { workspace = true }
+semio-framework-async-macros = { workspace = true }
+semio-framework-os-kernel = { workspace = true, features = ["mutation-testing", "protocol-laws"] }
+semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
+semio-framework-trace = { workspace = true }
+semio-s-artifact-draw-drawing-examples = { workspace = true }
+semio-s-artifact-draw-drawing-mutations = { workspace = true }
+semio-s-artifact-stdio-pdf = { workspace = true }
+serde_json = { workspace = true }
+semio-s-artifact-draw-drawing-io = { workspace = true, features = ["testkit"] }
+semio-s-artifact-draw-drawing-scene = { workspace = true, features = ["testkit"] }

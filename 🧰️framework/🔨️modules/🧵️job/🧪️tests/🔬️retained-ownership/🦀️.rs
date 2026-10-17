@@ -1,8 +1,9 @@
 use super::*;
+use semio_framework_test_fixtures::fixture_text;
 fn physical_close_grant(release:usize)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:32768,maximum_capacity_bytes:0,maximum_release_bytes:release,maximum_depth:64}}
 #[test]
 fn retained_writer_physical_close_preserves_staged_and_rejected_backing() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📦️physical-close/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../🧪️tests/🧫️fixtures/📦️physical-close/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap() {
         let operation = OperationId(90_020);
         let generation = Generation(21);
@@ -120,4 +121,3 @@ fn retained_writer_and_reader_advance_exactly_one_page_per_opportunity() {
     assert_eq!(payload.close_step(physical_close_grant(JOB_PAYLOAD_PAGE_BYTES)).unwrap(), RetainedCloneStep::Complete(Default::default()));
     assert!(payload.terminal_is_empty());
 }
-

@@ -1,0 +1,43 @@
+//! 🕸️ windows of `semio-s-artifact-reasoning-wires` — a path-preserving carve of the artifact root mounts.
+
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+
+pub mod schema {
+    pub use super::standards::v1::subsets::any::schema::*;
+}
+
+#[path = "."]
+pub mod standards {
+    #[path = "."]
+    pub mod v1 {
+        #[path = "."]
+        pub mod subsets {
+            #[path = "."]
+            pub mod any {
+                #[path = "."]
+                pub mod schema {
+                    pub use semio_s_artifact_reasoning_wires_schema::standards::v1::subsets::any::schema::*;
+                }
+            }
+        }
+    }
+}
+#[path = "."]
+pub mod editor {
+    #[path = "."]
+    pub mod wires {
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod edit {
+                #[path = "."]
+                pub mod windows {
+                    #[path = "../../🦀️.rs"]
+                    pub mod canvas;
+                }
+            }
+        }
+    }
+}

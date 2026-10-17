@@ -3,7 +3,7 @@
 
 use super::ConnectAdjacency;
 use crate::standards::v1::subsets::any::schema::diff::ProgramAdjacenciesDelta;
-use crate::standards::v1::subsets::any::schema::normalize_pair;
+use crate::standards::v1::subsets::any::schema::kernel::normalize_pair;
 use crate::standards::v1::subsets::any::schema::diff::ProgramDiff;
 use crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot;
 

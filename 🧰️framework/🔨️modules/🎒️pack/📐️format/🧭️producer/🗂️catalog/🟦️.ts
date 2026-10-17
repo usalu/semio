@@ -1,5 +1,5 @@
 /** 🗂️ Unmounted retained Catalog source metadata stays independent of contextual code. */
-import {PackError,type ValueRefusalKind,type PagedRefusalMetadata,type PagedAllocationMetadata} from "../../../⚠️error/🟦️.ts";
+import {PackError,type ValueRefusalKind,type PagedRefusalMetadata,type PagedAllocationMetadata} from "@semio-tech/framework-pack-error-ts";
 
 export type CatalogCause=Readonly<{type:"value";kind:ValueRefusalKind;reason:string}>|Readonly<{type:"paged";error:PagedRefusalMetadata}>|Readonly<{type:"allocation";error:PagedAllocationMetadata}>;
 export type CatalogFault=Readonly<{cause:CatalogCause;code:string;offset:bigint}>;

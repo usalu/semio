@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/dsl-syntax-rs",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

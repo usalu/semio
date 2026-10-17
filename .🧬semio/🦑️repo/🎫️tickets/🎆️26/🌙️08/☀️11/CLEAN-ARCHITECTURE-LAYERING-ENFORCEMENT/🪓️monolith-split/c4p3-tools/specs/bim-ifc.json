@@ -1,0 +1,9 @@
+{"file":"/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🏗️export-bim-1-ifc/🐍️.py","snapshot":"/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/🗑️generated/c4p3-snap/bim-ifc.orig.py","alias":"export_bim_ifc_","children":[
+ {"key":"kernel","dir":"📐️kernel-helpers","doc":"The tolerance, the line separator and the IfcOpenShell kernel helpers every audit shares: the placement, the volume and bounds measured by the kernel, the authored records and the comparison helpers.","nodes":[[13,15],38,39,40,56,58,59,61,90,91]},
+ {"key":"classification","dir":"🏷️classification-psets","doc":"The classification and user property set audits: the classification parents, the type and element reference rows, the effective references and the written property values.","nodes":[[44,54],[67,73]]},
+ {"key":"elements","dir":"🧱️element-checks","doc":"The element audits of the house, frame and annotation cases: the placement of products, the frame members, the authored phases and the annotations.","nodes":[57,60,[63,66]]},
+ {"key":"walldepth","dir":"🧗️wall-depth","doc":"The wall-depth audits: the attached walls, the envelope volumes, the sweeps and the opening reveals against the shapely-adjudicated tables.","nodes":[[74,87]]},
+ {"key":"ramps","dir":"🛝️ramps","doc":"The ramp audit: the ramp flights and landings, their base quantities and railings against the ramp-runs table.","nodes":[88,89,92]},
+ {"key":"components","dir":"🪑️components","doc":"The component audit: the family solids, the instance frames, the bounds and sections of components and their base quantities and overrides.","nodes":[[93,112]]},
+ {"key":"library","dir":"📚️template-library","doc":"The IFC4 template library table and its audit: the property set templates, the classification chain and the declarations.","nodes":[[114,127]]}
+]}

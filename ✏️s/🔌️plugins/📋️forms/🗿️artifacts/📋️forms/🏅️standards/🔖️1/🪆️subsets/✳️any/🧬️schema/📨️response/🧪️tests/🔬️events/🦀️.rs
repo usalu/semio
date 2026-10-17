@@ -1,9 +1,10 @@
 use crate::{FormMutation, FormsSnapshot};
 use protocol::Mutation;
+use semio_framework_test_fixtures::fixture_text;
 
 #[test]
 fn response_events_match_shared_vectors_and_undo() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/📨️response/🔣️events.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../🧪️tests/🧫️fixtures/📨️response/🔣️events.json")).unwrap();
     for case in fixture["cases"].as_array().unwrap() {
         let mut before = FormsSnapshot::default();
         before.responses = semio_framework_pack_json::from_json_str(&case["before"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
@@ -26,11 +27,11 @@ fn response_events_match_shared_vectors_and_undo() {
 
 #[test]
 fn submission_checks_every_step_and_keeps_visible_answers() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/📨️response/🔣️submission.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../🧪️tests/🧫️fixtures/📨️response/🔣️submission.json")).unwrap();
     let definition = semio_framework_pack_json::from_json_str(&fixture["definition"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     for case in fixture["cases"].as_array().unwrap() {
         let values = semio_framework_pack_json::from_json_str(&case["values"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
-        let result = super::prepare_response(&definition, &values, "response-a".into(), 1790545740000, "revision-a".into());
+        let result = crate::standards::v1::subsets::any::schema::response::prepare_response(&definition, &values, "response-a".into(), 1790545740000, "revision-a".into());
         let actual = match result {
             Ok(response) => serde_json::json!({ "response": serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&response)).unwrap(), "errors": [] }),
             Err(errors) => serde_json::json!({ "response": null, "errors": serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&errors)).unwrap() }),
@@ -42,10 +43,10 @@ fn submission_checks_every_step_and_keeps_visible_answers() {
 /// 🕰️ Every accepted timestamp survives JavaScript and native JSON decoding exactly.
 #[test]
 fn response_timestamps_match_portable_integer_vectors() {
-    let vectors: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/📨️response/🔣️timestamps.json")).unwrap();
+    let vectors: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../🧪️tests/🧫️fixtures/📨️response/🔣️timestamps.json")).unwrap();
     for case in vectors["cases"].as_array().unwrap() {
         let value = serde_json::json!({ "id": "response-a", "submittedAt": case["submittedAt"], "definitionVersion": "revision-a", "answers": [] });
-        let decoded: Result<super::FormsResponse, _> = semio_framework_pack_json::from_json_str(&value.to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject);
+        let decoded: Result<crate::standards::v1::subsets::any::schema::response::FormsResponse, _> = semio_framework_pack_json::from_json_str(&value.to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject);
         let valid = decoded.is_ok_and(|response| response.validate().is_ok());
         let oracle = case["submittedAt"].as_u64().is_some_and(|timestamp| timestamp <= 9_007_199_254_740_991);
         assert_eq!(valid, case["valid"].as_bool().unwrap(), "{}", case["name"]);

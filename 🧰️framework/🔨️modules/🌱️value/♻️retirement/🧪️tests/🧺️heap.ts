@@ -6,5 +6,4 @@ test("original heap preserves the neutral priority and custody corpus",async()=>
  const fixture=await Bun.file(new URL("🧫️fixtures/🧺️heap.json",import.meta.url)).json();
  expect(stableStringify(sortBy(fixture.keys))).toBe(stableStringify(fixture.expected));
  expect(fixture.capacityBytes).toBeGreaterThan(Math.max(...fixture.keys.map((key:string)=>Buffer.byteLength(key))));
- console.log("[DEBUG] Original BinaryHeap/Reverse priorities agree with independent Lodash and canonical JSON");
 });

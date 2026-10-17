@@ -9,10 +9,10 @@ import {
   type ShardBudget,
   type ShardCapabilityGrant,
   type ShardEventEnvelope
-} from "../../🎭️actor/📮️shard-client/🟦️.ts";
+} from "@semio-tech/framework-actor/shard-client";
 import { fetchPackageAssets, type PackageAssetDeclaration } from "../📦️package-assets/🟦️.ts";
 import { OwnedResidentLedger } from "@semio-tech/value-ts/resident";
-import { TurnScheduler, type Backpressure, type CoalesceKey, type Lane } from "../../🎭️actor/🧵️turn-scheduler/🟦️.ts";
+import { TurnScheduler, type Backpressure, type CoalesceKey, type Lane } from "@semio-tech/framework-actor/turn-scheduler";
 import { ON_EXTENSION_REQUEST_ACTIVATION_PREFIX, type PluginCatalog } from "../📚️plugin-catalog/🟦️.ts";
 import { activationEventEnvelope, type ActivationReason } from "../🚦️activation-reason/🟦️.ts";
 import { DEFAULT_MAX_RESIDENT_ACTORS, defaultMemoryProbe, type MemoryProbe, residentActorCapFromMemory } from "../🧯️memory-pressure/🟦️.ts";

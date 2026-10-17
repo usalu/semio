@@ -3,7 +3,7 @@
 
 use crate::standards::v1::subsets::any::schema::mutations::delete_node::DeleteNode;
 use crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff;
-use {crate::standards::v1::subsets::any::schema::Puzzle2dNode, crate::Puzzle2dSnapshot};
+use {crate::standards::v1::subsets::any::schema::records::Puzzle2dNode, crate::Puzzle2dSnapshot};
 
 //#region 🔖️Mutation
 /// 🌱 `create-node` payload — full initial payload at an optional FINAL-state `index` (`None`
@@ -50,5 +50,3 @@ where
 }
 //#endregion 🔖️Mutation
 
-#[path = "🎮️prepare/🦀️.rs"]
-pub mod preparation;

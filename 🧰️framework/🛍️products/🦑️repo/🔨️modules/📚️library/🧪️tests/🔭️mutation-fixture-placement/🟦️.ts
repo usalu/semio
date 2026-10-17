@@ -17,5 +17,4 @@ for (const row of examples.cases) test("mutation fixture closure: " + row.scope,
   const expected = selected === undefined ? posix.normalize(source) : posix.dirname(selected.endsWith("/" + taxonomy.testFixturesDirName) ? posix.dirname(selected) : selected);
   expect(expected).toBe(row.expected);
   expect(actual).toBe(row.expected);
-  console.log("[DEBUG] mutation fixture closure " + JSON.stringify({ scope: row.scope, actual, oracle: expected }));
 });

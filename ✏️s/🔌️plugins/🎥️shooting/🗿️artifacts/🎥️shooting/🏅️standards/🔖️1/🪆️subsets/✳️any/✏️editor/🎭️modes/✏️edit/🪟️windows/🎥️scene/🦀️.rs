@@ -3,7 +3,7 @@
 use crate::editor::shooting::config::ShootingConfig;
 use crate::editor::shooting::modes::edit::windows::scene::options;
 use crate::editor::shooting::terminology::ShootingLabels;
-use crate::standards::v1::subsets::any::schema::is_transparent_shooting_background;
+use crate::is_transparent_shooting_background;
 use crate::{shooting_asset_scale, ShootingAsset, ShootingShot, ShootingSnapshot};
 use semio_framework_pack_json::json;
 use semio_framework_pack_json::{parse, Value};
@@ -89,7 +89,7 @@ pub fn engagement(snapshot: &ShootingSnapshot, labels: &ShootingLabels) -> Windo
             placeholder: Some(labels.camera_label_placeholder.into()),
             disabled: None,
             on_change: None,
-            on_submit: Some(crate::editor::shooting::shooting_window_action("saveCamera", None)),
+            on_submit: Some(crate::editor::shooting::ui_helpers_and_io::shooting_window_action("saveCamera", None)),
             on_repeat_last: None,
             on_abort: None,
         }),
@@ -104,7 +104,7 @@ pub fn engagement(snapshot: &ShootingSnapshot, labels: &ShootingLabels) -> Windo
                     id: format!("shooting.camera.{}", saved.id),
                     label: saved.label.clone(),
                     detail: Some(labels.load_camera.into()),
-                    action: Some(crate::editor::shooting::shooting_window_action("loadSavedCamera", Some(semio_framework_value::DslValue::object([("id".into(), semio_framework_value::DslValue::String(saved.id.clone()))])))),
+                    action: Some(crate::editor::shooting::ui_helpers_and_io::shooting_window_action("loadSavedCamera", Some(semio_framework_value::DslValue::object([("id".into(), semio_framework_value::DslValue::String(saved.id.clone()))])))),
                 })
                 .collect(),
         ),
@@ -230,7 +230,7 @@ pub fn render(snapshot: &ShootingSnapshot, cfg: &ShootingConfig, active_utility:
         semio_framework_ui_contract::SurfaceKind::World3d,
         &World3dScene {
             environment_json: Some(shooting_environment_json(snapshot)),
-            frame_json: crate::standards::v1::subsets::any::schema::active_shot(snapshot).map(shooting_frame_json),
+            frame_json: crate::active_shot(snapshot).map(shooting_frame_json),
             fit_json: Some(shooting_fit_json(cfg)),
             ..world3d_scene(camera_json(&cfg.camera), world_meshes_json(snapshot), world_instances_json(snapshot), world_selection_json(snapshot, active_utility), &WorldSunConfig::default())
         },
@@ -239,7 +239,5 @@ pub fn render(snapshot: &ShootingSnapshot, cfg: &ShootingConfig, active_utility:
 //#endregion 🔖️Render
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

@@ -5,7 +5,7 @@
  * @see ../../../🖋️latex/semio-viz-scale.sty
  */
 import { vizInterpolateColor, type VizColorSpace, vizPalette, vizSchemeInterpolator } from "../🎨theme/🟦️.ts";
-import type { VizScaleKind, VizScaleOptions, VizScaleSpec, VizOptionValue } from "../../📸️snapshot/📊️chart/🟦️.ts";
+import type { VizScaleKind, VizScaleOptions, VizScaleSpec, VizOptionValue } from "@semio-tech/print/schema/snapshot/chart";
 
 //#region 🔖️Ticks
 const E10 = Math.sqrt(50);

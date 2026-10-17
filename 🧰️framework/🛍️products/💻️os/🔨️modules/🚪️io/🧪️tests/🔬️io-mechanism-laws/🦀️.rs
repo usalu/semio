@@ -249,6 +249,5 @@ mod laws {
         let expected:serde_json::Value=serde_json::from_str(include_str!("../../📤️serialization/📦️owned/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();assert_eq!(expected["cases"].as_array().unwrap().len(),21);
         assert!(same_io_entry(&ORIGINAL,&IDENTICAL));assert_eq!(build_proposed(&[&ORIGINAL,&IDENTICAL]).unwrap().len(),1);
         for changed in [&DIFFERENT_DEMAND,&DIFFERENT_ADMISSION,&MISSING]{assert!(!same_io_entry(&ORIGINAL,changed));assert!(matches!(build_proposed(&[&ORIGINAL,changed]),Err(IoRegistryError::Duplicate{..})));}
-        eprintln!("[DEBUG] Registered owned serializer identity retains demand/admission function custody; differing factories refused atomically");
     }
 }

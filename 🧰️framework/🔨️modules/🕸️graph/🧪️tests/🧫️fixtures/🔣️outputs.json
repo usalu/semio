@@ -123,6 +123,24 @@
       "schemaInvalid": false
     },
     {
+      "name": "rust-owner-not-a-module-path",
+      "path": ["manifests", 0, "rustOwner"],
+      "value": "not a path",
+      "schemaInvalid": true
+    },
+    {
+      "name": "rust-owner-names-another-module",
+      "path": ["manifests", 0, "rustOwner"],
+      "value": "lower_crate::standards::graph_manifest::measurement",
+      "schemaInvalid": false
+    },
+    {
+      "name": "rust-owner-without-crate",
+      "path": ["manifests", 0, "rustOwner"],
+      "value": "chronology",
+      "schemaInvalid": true
+    },
+    {
       "name": "unrecognized-field",
       "path": [
         "manifests",

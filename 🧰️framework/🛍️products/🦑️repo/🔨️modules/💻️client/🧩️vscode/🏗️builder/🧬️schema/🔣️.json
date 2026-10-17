@@ -1,0 +1,362 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mode",
+    "kind"
+  ],
+  "properties": {
+    "mode": {
+      "enum": [
+        "prototype",
+        "release"
+      ]
+    },
+    "kind": {
+      "enum": [
+        "extension",
+        "vsix"
+      ]
+    }
+  },
+  "definitions": {
+    "Policy": {
+      "const": {
+        "packageName": "repo-vscode",
+        "maximumSourceFiles": 512,
+        "maximumSourceBytes": 8388608,
+        "maximumSourceFileBytes": 4194304,
+        "maximumOutputBytes": 536870912,
+        "maximumOutputFiles": 16384,
+        "maximumEventPathUnits": 256,
+        "vsix": "🧩️repo.vsix",
+        "sourceFiles": [
+          "package.json",
+          "LICENSE.md",
+          ".vscodeignore",
+          "🔣️compose_codeicon.svg"
+        ]
+      }
+    },
+    "Census": {
+      "const": {
+        "scriptCpuOwners": 0,
+        "publicationArity": 3
+      }
+    },
+    "WorkerRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "root",
+        "dependencies",
+        "packageRoot",
+        "directory",
+        "state",
+        "version",
+        "mode",
+        "images"
+      ],
+      "properties": {
+        "root": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "dependencies": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "packageRoot": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "directory": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "state": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "version": {
+          "const": 1
+        },
+        "mode": {
+          "enum": [
+            "prototype",
+            "release"
+          ]
+        },
+        "images": {
+          "type": "array",
+          "maxItems": 512,
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "path",
+              "base64",
+              "sha256"
+            ],
+            "properties": {
+              "path": {
+                "type": "string",
+                "maxLength": 256
+              },
+              "base64": {
+                "type": "string",
+                "maxLength": 5592408
+              },
+              "sha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              }
+            }
+          }
+        }
+      }
+    },
+    "WorkerResponse": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "version",
+            "files",
+            "mode"
+          ],
+          "properties": {
+            "version": {
+              "const": 1
+            },
+            "files": {
+              "type": "array",
+              "minItems": 4,
+              "maxItems": 4,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "name",
+                  "base64",
+                  "sha256"
+                ],
+                "properties": {
+                  "name": {
+                    "enum": [
+                      "extension.js",
+                      "test/extension.test.js",
+                      "extension.js.map",
+                      "test/extension.test.js.map"
+                    ]
+                  },
+                  "base64": {
+                    "type": "string"
+                  },
+                  "sha256": {
+                    "type": "string",
+                    "pattern": "^[a-f0-9]{64}$"
+                  }
+                }
+              },
+              "allOf": [
+                {
+                  "contains": {
+                    "type": "object",
+                    "required": [
+                      "name"
+                    ],
+                    "properties": {
+                      "name": {
+                        "const": "extension.js"
+                      }
+                    }
+                  }
+                },
+                {
+                  "contains": {
+                    "type": "object",
+                    "required": [
+                      "name"
+                    ],
+                    "properties": {
+                      "name": {
+                        "const": "test/extension.test.js"
+                      }
+                    }
+                  }
+                },
+                {
+                  "contains": {
+                    "type": "object",
+                    "required": [
+                      "name"
+                    ],
+                    "properties": {
+                      "name": {
+                        "const": "extension.js.map"
+                      }
+                    }
+                  }
+                },
+                {
+                  "contains": {
+                    "type": "object",
+                    "required": [
+                      "name"
+                    ],
+                    "properties": {
+                      "name": {
+                        "const": "test/extension.test.js.map"
+                      }
+                    }
+                  }
+                }
+              ]
+            },
+            "mode": {
+              "const": "prototype"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "version",
+            "files",
+            "mode"
+          ],
+          "properties": {
+            "version": {
+              "const": 1
+            },
+            "files": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "name",
+                  "base64",
+                  "sha256"
+                ],
+                "properties": {
+                  "name": {
+                    "enum": [
+                      "extension.js",
+                      "test/extension.test.js"
+                    ]
+                  },
+                  "base64": {
+                    "type": "string"
+                  },
+                  "sha256": {
+                    "type": "string",
+                    "pattern": "^[a-f0-9]{64}$"
+                  }
+                }
+              },
+              "allOf": [
+                {
+                  "contains": {
+                    "type": "object",
+                    "required": [
+                      "name"
+                    ],
+                    "properties": {
+                      "name": {
+                        "const": "extension.js"
+                      }
+                    }
+                  }
+                },
+                {
+                  "contains": {
+                    "type": "object",
+                    "required": [
+                      "name"
+                    ],
+                    "properties": {
+                      "name": {
+                        "const": "test/extension.test.js"
+                      }
+                    }
+                  }
+                }
+              ]
+            },
+            "mode": {
+              "const": "release"
+            }
+          }
+        }
+      ]
+    },
+    "SourceFailure": {
+      "enum": [
+        "error",
+        "undefined",
+        "tamper"
+      ]
+    },
+    "OutputModeCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode",
+        "responseMode",
+        "names",
+        "accepted"
+      ],
+      "properties": {
+        "mode": {
+          "enum": [
+            "prototype",
+            "release"
+          ]
+        },
+        "responseMode": {
+          "enum": [
+            "prototype",
+            "release"
+          ]
+        },
+        "names": {
+          "type": "array",
+          "maxItems": 5,
+          "items": {
+            "enum": [
+              "extension.js",
+              "test/extension.test.js",
+              "extension.js.map",
+              "test/extension.test.js.map"
+            ]
+          }
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "ModeOutputNames": {
+      "const": {
+        "prototype": [
+          "extension.js",
+          "test/extension.test.js",
+          "extension.js.map",
+          "test/extension.test.js.map"
+        ],
+        "release": [
+          "extension.js",
+          "test/extension.test.js"
+        ]
+      }
+    }
+  }
+}

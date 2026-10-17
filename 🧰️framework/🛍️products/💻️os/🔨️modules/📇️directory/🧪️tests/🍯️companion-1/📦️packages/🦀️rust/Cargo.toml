@@ -4,7 +4,7 @@ name = "semio-framework-os-directory-tests-1"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
-description = "Companion tests of os-directory (1 of 2): schema unit tests and access policy tests"
+description = "Companion tests of os-directory (1 of 2): schema unit tests"
 publish = false
 
 [package.metadata.semio]
@@ -29,3 +29,6 @@ semio-framework-hash = { path = "../../../../../../../../🔨️modules/🔏️h
 semio-framework-pack-json = { path = "../../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-value-derive = { path = "../../../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust" }
 serde_json = "1.0.140"
+
+[dev-dependencies]
+semio-framework-test-fixtures = { path = "../../../../../../../../🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }

@@ -1,4 +1,4 @@
-use super::*;
+use crate::schema::snapshot::*;
 
 /// 🌱 Reuses `demo_image_snapshot()` (single source of truth, also feeds the shipped fixtures
 /// and `🎹️composer/🦀️.rs`'s conformance-law tests) rather than an independent copy.

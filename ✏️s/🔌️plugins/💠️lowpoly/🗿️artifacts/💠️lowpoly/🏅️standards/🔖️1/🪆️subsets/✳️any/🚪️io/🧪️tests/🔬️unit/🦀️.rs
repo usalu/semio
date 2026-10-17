@@ -1,3 +1,4 @@
+use semio_framework_3d::mesh::{MeshModelingOps};
 use semio_s_artifact_lowpoly_lowpoly_model::{snapshot::mesh_child_handle, snapshot::LowpolyObject, snapshot::LowpolyPaintLayer, snapshot::LowpolySnapshot, snapshot::LowpolyTransform, snapshot::LOWPOLY_DOCUMENT_SCHEMA};
 
 /// 🧪️ A small (deliberately NOT the real `LOWPOLY_PAINT_TEXTURE_SIZE`-scoped canvas) but

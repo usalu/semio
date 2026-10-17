@@ -4,6 +4,7 @@
 //! @see ../../../🧫️fixtures/📚️catalog/🔣️.json — the catalog played
 
 use super::*;
+use semio_framework_test_fixtures::fixture_path;
 
 pub(super) const TENANT: &str = "proctor-fixture";
 
@@ -25,7 +26,7 @@ pub(super) fn scratch(label: &str) -> Scratch {
 }
 
 pub(super) fn fixtures() -> PathBuf {
-    Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🧫️fixtures")
+    fixture_path!("../../🧫️fixtures")
 }
 
 pub(super) fn id(seed: u32) -> String {

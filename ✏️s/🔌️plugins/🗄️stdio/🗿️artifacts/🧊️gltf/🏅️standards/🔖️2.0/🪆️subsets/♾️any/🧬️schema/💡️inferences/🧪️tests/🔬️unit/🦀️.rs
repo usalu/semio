@@ -1,4 +1,4 @@
-use super::*;
+use crate::standards::v2_0::subsets::any::schema::inferences::*;
 
 #[semio_framework_async_macros::async_test]
 async fn manifest_requires_exactly_one_fully_faceted_service_per_leaf() {

@@ -1,7 +1,6 @@
 //! ↕️ Shooting mutation payload — `ScaleAssets`. The bulk multiplicative-scale gesture. Multiplies every asset in `asset_ids`' current per-axis scale by `(sx, sy, sz)`.
 
 use crate::diff::ShootingDiff;
-use crate::mutations::ShootingMutation;
 use crate::ShootingSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 
@@ -18,12 +17,15 @@ pub struct ScaleAssets {
     pub sz: f64,
 }
 
-impl MutationKind<ShootingSnapshot, ShootingMutation> for ScaleAssets {
+impl<Op> MutationKind<ShootingSnapshot, Op> for ScaleAssets
+where
+    Op: protocol::Mutation<ShootingSnapshot, Diff = ShootingDiff> + From<ScaleAssets>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "scale", entity: "assets", kind: "scale-assets", record: "ScaledAssets" };
     fn diff(&self, base: &ShootingSnapshot) -> protocol::MutationOutcome<ShootingDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &ShootingSnapshot) -> Result<Vec<ShootingMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &ShootingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

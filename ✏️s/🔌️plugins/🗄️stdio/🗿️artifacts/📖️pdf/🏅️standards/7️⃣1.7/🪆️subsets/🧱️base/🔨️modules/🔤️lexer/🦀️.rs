@@ -3,7 +3,7 @@
 //! canonical object writer every emitted byte goes through. Shared by both standards of the
 //! artifact (PDF 1.4 and 1.7 have the same lexical grammar).
 
-use crate::standards::v1_7::subsets::base::io::{malformed, PResult, PdfEngineError};
+use crate::standards::v1_7::subsets::base::io::error::{malformed, PResult, PdfEngineError};
 use crate::standards::v1_7::subsets::base::schema::snapshot::{ObjRef, PdfDecimal, PdfDictEntry, PdfObject};
 use std::collections::HashMap;
 
@@ -614,7 +614,7 @@ pub fn write_object(out: &mut Vec<u8>, object: &PdfObject) {
         PdfObject::Int(value) => out.extend_from_slice(value.to_string().as_bytes()),
         PdfObject::Real(value) => out.extend_from_slice(number_text(value.to_f64().unwrap_or(0.0)).as_bytes()),
         PdfObject::Str(bytes) => write_string(out, bytes),
-        PdfObject::Text(text) => write_string(out,&crate::standards::v1_7::subsets::base::io::encode_text_string(text)),
+        PdfObject::Text(text) => write_string(out,&crate::standards::v1_7::subsets::base::io::text_string::encode_text_string(text)),
         PdfObject::Date(date) => write_string(out,crate::standards::v1_7::subsets::base::io::text::snapshot::date::print_pdf_date(date).as_bytes()),
         PdfObject::Name(name) => write_name(out, name),
         PdfObject::Array(items) => {
@@ -696,7 +696,5 @@ pub fn dict_name<'a>(entries: &'a [PdfDictEntry], key: &str) -> Option<&'a str> 
 //#endregion 🔖️DictHelpers
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

@@ -1,6 +1,5 @@
 //! 🌅️ Authoritative PDF mutation payload, diff, inverse, and tests for `set-shading`.
 
-use super::PdfMutation;
 use crate::standards::v1_7::subsets::base::schema::diff::{self, PdfDiff};
 use crate::standards::v1_7::subsets::base::schema::snapshot::*;
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
@@ -16,7 +15,10 @@ pub struct SetShading {
     pub index: Option<usize>,
 }
 
-impl MutationKind<PdfSnapshot, PdfMutation> for SetShading {
+impl<Op> MutationKind<PdfSnapshot, Op> for SetShading
+where
+    Op: protocol::Mutation<PdfSnapshot, Diff = PdfDiff> + From<SetShading> + From<crate::standards::v1_7::subsets::base::schema::mutations::remove_shading::RemoveShading>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "shading", kind: "set-shading", record: "Set" };
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
@@ -24,10 +26,10 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetShading {
         MutationOutcome::new(diff::diff_set_shading(base, self.shading.clone(), self.index))
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
         let _ = base;
-        match base.shadings.iter().find(|item| item.id == self.shading.id) { Some(previous) => vec![PdfMutation::SetShading(SetShading { shading: previous.clone(), index: None })], None => vec![PdfMutation::RemoveShading(super::remove_shading::RemoveShading { id: self.shading.id.clone() })] }
+        match base.shadings.iter().find(|item| item.id == self.shading.id) { Some(previous) => vec![Op::from(SetShading { shading: previous.clone(), index: None })], None => vec![Op::from(crate::standards::v1_7::subsets::base::schema::mutations::remove_shading::RemoveShading { id: self.shading.id.clone() })] }
     
     })())
 }
@@ -44,8 +46,6 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetShading {
 //#endregion 🔖️Mutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
 

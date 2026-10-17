@@ -3,7 +3,7 @@
 pub const OPCODE: &str = "set-page-content";
 pub const TEXT_OPCODE: &str = OPCODE;
 
-use crate::standards::v1_7::subsets::base::schema::mutations::SetPageContent;
+use crate::standards::v1_7::subsets::base::schema::mutations::set_page_content::SetPageContent;
 
 /// 🖨️ Prints this direct payload through its schema-derived JSON representation.
 pub fn print(payload: &SetPageContent) -> Result<String, String> {

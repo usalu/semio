@@ -31,6 +31,8 @@ use semio_framework_os_renderer_wgpu_media_slots as media_slots;
 pub mod os_host;
 #[path = "../🪟️winit-app/🦀️.rs"]
 pub mod winit_app;
+#[cfg(not(target_arch = "wasm32"))]
+pub use winit_app::run_native;
 
 #[cfg(test)]
 #[path = "🧪️tests/🦀️.rs"]

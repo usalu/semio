@@ -2,27 +2,36 @@
 //!
 //! ⏯️ The mounted instance's tool-run turns (ledger driving, tick folding and finalize publication) and the
 //! [`ToolRunExtension`] that registers them with the instance through [`InstanceExtension`].
-use super::*;
-use crate::tool_jobs::tool_run::*;
-use semio_framework_tool_run::{
-    tool_run_pointer_value, ToolRunAction, ToolRunEffect, ToolRunEvent, ToolRunId, ToolRunIdentity, ToolRunLane, ToolRunMachine, ToolRunRebasePolicy, ToolRunReconfigurePolicy,
-    ToolRunRejection, ToolRunSettingsReads, ToolRunState, ToolRunStepArg, ToolRunStepKind, ToolRunStepRing, ToolRunTick, ToolRunTraceStore, TOOL_RUN_ARG_GENERATION, TOOL_RUN_ARG_RUN_ID, TOOL_RUN_ARG_TOOL_ID, TOOL_RUN_ARG_WINDOW_ID, TOOL_RUN_REASON_CONFLICT, TOOL_RUN_REASON_REBASING, TOOL_RUN_TICK_BYTES_MAX,
-};
+use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_framework_plugin_tool_run::ToolRunEntry;
+use semio_framework_plugin_tool_run::ToolRunJobHandle;
+use semio_framework_plugin_tool_run::ToolRunJobSlot;
+use semio_framework_os_kernel as protocol;
+use semio_framework_os_kernel as store;
+use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use pack::snapshot::ArtifactPack;
+use semio_framework_plugin_decl_emission::Emit;
+use semio_framework::FaultFrom;
+use store::Mutation;
+use protocol::OpText;
+use semio_framework_plugin_reactor_app::PluginApp;
+use semio_framework_plugin_instance_children::children_components::ChildComposition;
+use semio_framework_plugin_decl_views::child_view::ChildContentView;
+use semio_framework::Fault;
+use std::future::Future;
+use semio_framework_plugin_instance_stores::stores_components::InstanceStores;
+use semio_framework_ui_locale::LocalizedLabel;
+use crate::jobs_components::ToolOperations;
+use semio_framework_ui_contract::*;
+use semio_framework_plugin_tool_run::*;
 use std::sync::Arc;
-use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,admit_retained_clone_close}};
-use crate::artifact_instance::InstanceExtension;
-use crate::artifact_instance::VcsArtifactApp;
-use crate::app_emission::ActionMeta;
-use crate::child_view::MemberKeyRef;
-use crate::tool_run_contract::ToolRunJobRequest;
-use semio_framework::{ActionKind, ViewModel};
-use store::{os_store::store_schema::HistoryLane, MemberFactory, SpaceMember};
-use semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority;
-use crate::tool_run_contract::ToolRunJobPurpose;
+use semio_framework_plugin_decl_app::tool_run_contract::ToolRunJobRequest;
+use semio_framework_os_kernel::{MemberFactory, SpaceMember};
+use semio_framework_plugin_decl_views::tool_run_contract::ToolRunJobPurpose;
 
 impl<A: ArtifactApp> ToolOperations<A> {
     /// 🧵️ Builds the run's job for `purpose`: the app's retargetable job when it builds one, else its plain job.
-    pub(crate) fn build_tool_run_job_slot<M: SpaceMember + MemberFactory + 'static>(&self, stores: &InstanceStores<A>, child_composition: &ChildComposition<M>, entry: &ToolRunEntry<A>, purpose: ToolRunJobPurpose) -> Result<Option<ToolRunJobSlot<A::Config>>, Fault> {
+    pub fn build_tool_run_job_slot<M: SpaceMember + MemberFactory + 'static>(&self, stores: &InstanceStores<A>, child_composition: &ChildComposition<M>, entry: &ToolRunEntry<A>, purpose: ToolRunJobPurpose) -> Result<Option<ToolRunJobSlot<A::Config>>, Fault> {
         let request = || ToolRunJobRequest::<A> {
             receiving: &entry.definition.receiving,
             tool_id: &entry.tool_id,

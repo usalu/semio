@@ -25,6 +25,7 @@ doctest = false
 [dependencies]
 framework_hash = { path = "../../../../../../../🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
 semio-framework = { workspace = true }
+semio-framework-onboarding = { path = "../../../../../../../🔨️modules/🎓️onboarding/📦️packages/🦀️rust" }
 semio-framework-os-kernel = { path = "../../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["sync", "ureq"] }
 semio-framework-pack-json = { path = "../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-schema = { path = "../../../../../../../🔨️modules/🧬️schema/📦️packages/🦀️rust", package = "semio-framework-schema" }

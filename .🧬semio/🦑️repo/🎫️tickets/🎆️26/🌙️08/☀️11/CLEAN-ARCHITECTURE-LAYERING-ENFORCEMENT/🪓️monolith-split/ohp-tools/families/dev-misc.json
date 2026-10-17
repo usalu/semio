@@ -1,0 +1,10 @@
+{
+ "name": "dev-misc",
+ "crates": [
+  "semio-s-composition-laws",
+  "semio-s-dev-gis-services",
+  "semio-s-dev-services",
+  "semio-s-fixture-sweep"
+ ],
+ "note": "ORACLE-HARVEST-PLUGINS: ✏️s/🧑‍💻dev/🎭️variants, ✏️s/🧑‍💻dev/💡️services, ✏️s/🧑‍💻dev/🧩️composition, ✏️s/🧑‍💻dev/🧹️fixture-sweep, ✏️s/🧑‍💻dev/🧩️service-composition, ✏️s/🧑‍💻dev/🧬️schema, ✏️s/🧑‍💻dev/🧩️catalog, ✏️s/🧑‍💻dev/🚀️entry, ✏️s/🧑‍💻dev/🏗️builder, ✏️s/🧑‍💻dev/🔁️rebuild, ✏️s/🧑‍💻dev/📖️stories, ✏️s/🧑‍💻dev/🤝️mcp-client-e2e"
+}

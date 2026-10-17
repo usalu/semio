@@ -11,5 +11,5 @@ test("native MutationApplyError retirement conserves every original message and 
   db.exec("DELETE FROM owners");row.capacities.forEach((capacity,index)=>db.query("INSERT INTO owners VALUES(?,?,1)").run(index,capacity));const original=row.capacities.reduce((a,b)=>a+b,0);expect((db.query("SELECT SUM(capacity) AS bytes FROM owners").get() as {bytes:number}).bytes).toBe(original);
   let released=0;for(let index=0;index<row.capacities.length;index++){const capacity=row.capacities[index];for(const grant of [0,capacity-1]){expect(grant<capacity).toBe(true);expect((db.query("SELECT SUM(capacity) AS bytes FROM owners WHERE live=1").get() as {bytes:number}).bytes).toBe(original-released);}db.query("UPDATE owners SET live=0 WHERE ordinal=?").run(index);released+=capacity;}expect(released).toBe(original);
  }}finally{db.close();}
- const source=readFileSync(new URL("../🦀️.rs",import.meta.url),"utf8");expect(source).toContain("artifact_retire_struct!(super::MutationApplyError");expect(source).toContain("code, message, target");console.log("[DEBUG] MutationApplyError SQLite per-field original capacity and semantic JSON output agree with independent Ajv");
+ const source=readFileSync(new URL("../🦀️.rs",import.meta.url),"utf8");expect(source).toContain("artifact_retire_struct!(super::MutationApplyError");expect(source).toContain("code, message, target");
 });

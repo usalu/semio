@@ -207,7 +207,6 @@ fn cooperative_history_operation_obeys_the_neutral_law() {
         }
     }
     assert!(admit_replay_preparation_step(ArtifactReplayPreparationStep::Pending(RetainedCloneProgress { copied_items: 2, ..Default::default() }), ArtifactStoreOneItemGrant { maximum_items: 7, maximum_copy_bytes: 4096, maximum_capacity_bytes: 0, maximum_release_bytes: 0, maximum_depth: 64 }).is_err());
-    println!("[DEBUG] cooperative operation neutral UTF-8, freshness, deadline, inverse/apply refusal and terminal cancellation laws complete");
 }
 
 struct EmptyPreparation { pub payload: [u8; 513], pub closing: bool }
@@ -236,7 +235,6 @@ fn cooperative_history_preparation_receipts_keep_each_physical_currency() {
         let progress = RetainedCloneProgress { copied_items: amount("items"), copied_bytes: amount("copy"), retained_capacity_bytes: amount("capacity"), released_bytes: amount("release") };
         let grant = ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: amount("copyGrant"), maximum_capacity_bytes: amount("capacityGrant"), maximum_release_bytes: amount("releaseGrant"), maximum_depth: 1 };
         assert_eq!(admit_replay_preparation_step(ArtifactReplayPreparationStep::Pending(progress), grant).is_ok(), row["accepted"].as_bool().unwrap());
-        println!("[DEBUG] operation admitted actual receipt={progress:?} grant={grant:?} expected={}", row["accepted"]);
     }
     let context = ArtifactReplayPreparationContext { mode: ArtifactReplayPreparationMode::Report, operation_index: 0, generation: 7, base_revision: [9; 32] };
     let calls = Arc::new(AtomicUsize::new(0));
@@ -281,5 +279,4 @@ fn cooperative_history_preparation_retirement_releases_the_actual_cursor_frame()
     assert!(step.progress().fits(full) && owner.terminal_is_empty());
     let (_, heap) = observe_heap_allocations_on_this_thread(|| drop(owner));
     assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
-    println!("[DEBUG] preparation original erased frame exact release={bytes} zero/one-below/depth pause retained");
 }

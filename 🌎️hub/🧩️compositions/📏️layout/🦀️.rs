@@ -16,7 +16,8 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 }
 //#endregion 🗃️Apps
 
-/// 🔌️ Builds the plugin surface for host registration. `.artifact(…)` (ticket
+/// 🔌️ Builds the plugin surface for host registration. The first act binds the Semio drawing codec to the layout background drawing slot: the layout artifact
+/// reads its SQLite DDL, decodes and renders its background child only through that slot, so the declaration below must find it bound. `.artifact(…)` (ticket
 /// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE M1) replaces the old `.setup(engine::register)`
 /// escape hatch; `.setup()` itself is gone (W1c) — `LayoutPlayApp::app_schema()` now answers the
 /// one thing it used to survive for, registered automatically by `.editor(…)` below. `.editor(…)` +
@@ -35,6 +36,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 /// fonts as package assets the host preloads into `Event::InstanceOpen.assets` (see `LayoutPlayApp::default`, which installs
 /// them into the layout engine when an instance opens).
 pub fn plugin() -> Result<Plugin<LayoutApps>, PluginAssemblyError> {
+    semio_hub_layout_drawing::bind_layout_background_drawing().map_err(|error| PluginAssemblyError::new("layout.background-drawing", error.to_string()))?;
     let mut builder = PluginBuilder::<_, LayoutApps>::new("layout")
         .label("Layout")
         .version("0.1.0")

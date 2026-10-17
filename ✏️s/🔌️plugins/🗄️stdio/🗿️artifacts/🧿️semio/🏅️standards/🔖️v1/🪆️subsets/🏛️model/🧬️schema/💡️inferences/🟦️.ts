@@ -35,6 +35,10 @@ type stdioSemioV1ModelInferenceGuardSizeBounds = { readonly minItems?: number; r
 
 export const stdioSemioV1ModelInferenceGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : stdioSemioV1ModelInferenceGuardReject(at, "value is not an object");
+export const stdioSemioV1ModelInferenceGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) stdioSemioV1ModelInferenceGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const stdioSemioV1ModelInferenceGuardArray = (value: unknown, at: string, bounds: stdioSemioV1ModelInferenceGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return stdioSemioV1ModelInferenceGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) stdioSemioV1ModelInferenceGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -65,14 +69,14 @@ export const stdioSemioV1ModelInferenceGuardConstant = <T extends string | numbe
 //#endregion 🚪️Parsers
 
 export function parseSemioModelInference(value: unknown, at = "$"): SemioModelInference {
-  const row = stdioSemioV1ModelInferenceGuardObject(value, at);
+  const row = stdioSemioV1ModelInferenceGuardClosed(stdioSemioV1ModelInferenceGuardObject(value, at), at, ["bounds"]);
   return {
     bounds: parseSemioModelBounds(row["bounds"], `${at}.bounds`),
   };
 }
 
 export function parseSemioModelBounds(value: unknown, at = "$"): SemioModelBounds {
-  const row = stdioSemioV1ModelInferenceGuardObject(value, at);
+  const row = stdioSemioV1ModelInferenceGuardClosed(stdioSemioV1ModelInferenceGuardObject(value, at), at, ["min", "max", "entityCount"]);
   return {
     min: parseSemioPoint3(row["min"], `${at}.min`),
     max: parseSemioPoint3(row["max"], `${at}.max`),
@@ -81,7 +85,7 @@ export function parseSemioModelBounds(value: unknown, at = "$"): SemioModelBound
 }
 
 export function parseSemioPoint3(value: unknown, at = "$"): SemioPoint3 {
-  const row = stdioSemioV1ModelInferenceGuardObject(value, at);
+  const row = stdioSemioV1ModelInferenceGuardClosed(stdioSemioV1ModelInferenceGuardObject(value, at), at, ["x", "y", "z"]);
   return {
     x: stdioSemioV1ModelInferenceGuardNumber(row["x"], `${at}.x`),
     y: stdioSemioV1ModelInferenceGuardNumber(row["y"], `${at}.y`),

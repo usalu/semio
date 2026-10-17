@@ -148,7 +148,7 @@ test("owned public source API typechecks and has no product or foreign runtime i
   const source = readFileSync(path, "utf8");
   const parsed = ts.createSourceFile(path, source, ts.ScriptTarget.Latest, true);
   const imports = parsed.statements.filter(ts.isImportDeclaration).map(statement => (statement.moduleSpecifier as ts.StringLiteral).text);
-  expect(imports.every(specifier => specifier.startsWith(".") && !specifier.includes("🛍️products") && !specifier.includes("🖥️s") && !specifier.includes("🌎️hub"))).toBe(true);
+  expect(imports.every(specifier => (specifier.startsWith(".") || specifier.startsWith("@semio-tech/")) && !specifier.includes("🛍️products") && !specifier.includes("🖥️s") && !specifier.includes("🌎️hub"))).toBe(true);
   const program = ts.createProgram([path], { noEmit: true, strict: true, skipLibCheck: true, types: [], target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext, moduleResolution: ts.ModuleResolutionKind.Bundler, allowImportingTsExtensions: true, lib: ["lib.es2022.d.ts", "lib.dom.d.ts"] });
   expect(ts.getPreEmitDiagnostics(program).map(diagnostic => ts.flattenDiagnosticMessageText(diagnostic.messageText, "\n"))).toEqual([]);
 });

@@ -1,7 +1,6 @@
 //! 🚪️ IO s.program (1/✳️any) — the artifact declaration owns this composer table.
 
-#[path="🔣️json/🦀️.rs"]
-pub(crate) mod program_json;
+pub(crate) use semio_s_artifact_architect_program_inferences::standards::v1::subsets::any::io::program_json;
 
 pub fn import_stdio_kinds() -> &'static [&'static str] {
     &["stdio.csv", "stdio.json", "stdio.txt"]
@@ -319,14 +318,15 @@ pub mod io_registry {
 mod tests;
 //#endregion 🧪️Tests
 
-#[path = "💾️binary/🦀️.rs"]
-pub mod binary;
 
-#[path = "📝️text/🦀️.rs"]
-pub mod text;
 
-#[path = "🪶️sqlite/🦀️.rs"]
-pub mod sqlite;
+pub mod text {
+    pub use semio_s_artifact_architect_program_tests_3::standards::v1::subsets::any::io::text::*;
+    pub use semio_s_artifact_architect_program_catalog::standards::v1::subsets::any::io::text::diff;
+    pub use semio_s_artifact_architect_program_mutations::standards::v1::subsets::any::io::text::mutations;
+}
+
+
 
 pub mod derived_construction {
     use crate::standards::v1::subsets::any::schema::diff::ProgramDiff;
@@ -438,8 +438,7 @@ semio_framework_plugin::derive_artifact_facets!(
     composer: ProgramComposer,
 );
 
-#[path = "📊️tables/🦀️.rs"]
-pub(crate) mod tables;
+pub use semio_s_artifact_architect_program_mutations::standards::v1::subsets::any::io::tables;
 
 //#region 🔖️MutationBridge
 /// 🌉️ The conformance-host seam that applies a program mutation: io code is infrastructure and may call the central applier.

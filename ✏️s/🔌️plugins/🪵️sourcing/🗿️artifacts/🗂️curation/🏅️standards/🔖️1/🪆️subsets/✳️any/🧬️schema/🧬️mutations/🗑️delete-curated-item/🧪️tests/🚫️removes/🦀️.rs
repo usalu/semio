@@ -11,21 +11,22 @@
 use crate::diff::CurationDiff;
 use crate::mutations::SourcingMutation;
 use crate::CurationSnapshot;
+use semio_framework_test_fixtures::fixture_text;
 
-const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗑️delete-curated-item/🚫️removes/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗑️delete-curated-item/🚫️removes/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗑️delete-curated-item/🚫️removes/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗑️delete-curated-item/🚫️removes/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗑️delete-curated-item/🚫️removes/🎯️outcome/🔣️.json");
+static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🗑️delete-curated-item/🚫️removes/📸️snapshot/⬅️before/🔣️.json"));
+static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🗑️delete-curated-item/🚫️removes/📸️snapshot/➡️after/🔣️.json"));
+static MUTATION: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🗑️delete-curated-item/🚫️removes/🦠️mutation/🔣️.json"));
+static DIFF: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🗑️delete-curated-item/🚫️removes/🔺️diff/🔣️.json"));
+static OUTCOME: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🗑️delete-curated-item/🚫️removes/🎯️outcome/🔣️.json"));
 
 fn before() -> CurationSnapshot {
-    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before curation document decodes")
+    semio_framework_pack_json::from_json_str((*BEFORE), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before curation document decodes")
 }
 fn expected_after() -> CurationSnapshot {
-    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after curation document decodes")
+    semio_framework_pack_json::from_json_str((*AFTER), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after curation document decodes")
 }
 fn mutation() -> SourcingMutation {
-    semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("delete-curated-item mutation decodes")
+    semio_framework_pack_json::from_json_str((*MUTATION), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("delete-curated-item mutation decodes")
 }
 fn built_outcome() -> protocol::MutationOutcome<CurationDiff> {
     <SourcingMutation as protocol::Mutation<CurationSnapshot>>::diff(&mutation(), &before())
@@ -58,14 +59,14 @@ async fn recreating_the_removed_pick_restores_its_count() {
 /// the bare `objectId`, with no count riding along.
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
-    for (label, text) in [("before", BEFORE), ("after", AFTER)] {
+    for (label, text) in [("before", (*BEFORE)), ("after", (*AFTER))] {
         let decoded: CurationSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("curation document decodes");
         let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("curation document encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("curation document reparses");
         assert_eq!(reencoded, original, "delete-curated-item/removes-the-clt-panel-from-the-curation: committed {label} document JSON is not canonical");
     }
     let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&mutation())).expect("deleteCuratedItem payload encodes");
-    let original: serde_json::Value = serde_json::from_str(MUTATION).expect("deleteCuratedItem payload reparses");
+    let original: serde_json::Value = serde_json::from_str((*MUTATION)).expect("deleteCuratedItem payload reparses");
     assert_eq!(reencoded, original, "delete-curated-item/removes-the-clt-panel-from-the-curation: committed deleteCuratedItem JSON is not canonical");
 }
 
@@ -73,7 +74,7 @@ async fn committed_json_is_canonical() {
 /// guard does not fire and the declared `applied` outcome must be message-free.
 #[semio_framework_async_macros::async_test]
 async fn declared_outcome_holds() {
-    let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
+    let declared: serde_json::Value = serde_json::from_str((*OUTCOME)).expect("outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "delete-curated-item/removes-the-clt-panel-from-the-curation: this fixture declares an applied outcome");
     let produced = built_outcome();
     assert_eq!(produced.worst_level(), None, "delete-curated-item/removes-the-clt-panel-from-the-curation: un-curating a curated object must raise no mutation.target-missing fault");
@@ -85,26 +86,26 @@ async fn declared_outcome_holds() {
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(built_outcome().diff())).expect("produced delete-curated-item diff encodes");
-    let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
+    let committed: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff decodes");
     assert_eq!(produced, committed, "delete-curated-item/removes-the-clt-panel-from-the-curation: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
 
 /// 🔣️ The committed diff decodes to `CurationDiff` and re-encodes unchanged.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
-    let decoded: CurationDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed delete-curated-item diff decodes");
+    let decoded: CurationDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed delete-curated-item diff decodes");
     let delta = decoded.curated.as_ref().expect("the committed delete diff carries a curated delta");
     assert_eq!(delta.removed.iter().map(|row| (row.id.as_str(), row.index)).collect::<Vec<_>>(), vec![("panel-clt-3000", 1)], "delete-curated-item/removes-the-clt-panel-from-the-curation: the committed diff must remove exactly the addressed id");
     assert!(delta.inserted.is_empty() && delta.moved.is_empty() && delta.modified.is_empty(), "delete-curated-item/removes-the-clt-panel-from-the-curation: a removal must not smuggle additions or patches alongside");
     let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("committed diff re-encodes");
-    let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
+    let original: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff reparses");
     assert_eq!(reencoded, original, "delete-curated-item/removes-the-clt-panel-from-the-curation: committed diff JSON is not canonical");
 }
 
 /// 🩹 The committed diff alone carries the before-document to the after-document.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: CurationDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed delete-curated-item diff decodes");
+    let decoded: CurationDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed delete-curated-item diff decodes");
     let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-document");
     assert_eq!(produced, expected_after(), "delete-curated-item/removes-the-clt-panel-from-the-curation: committed diff did not carry before to after");
 }

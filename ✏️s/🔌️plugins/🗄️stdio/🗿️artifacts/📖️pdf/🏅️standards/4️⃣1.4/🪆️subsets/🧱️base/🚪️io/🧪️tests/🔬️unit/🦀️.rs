@@ -1,9 +1,20 @@
-use super::*;
-use crate::standards::v1_4::subsets::base::io::text::snapshot::demo_pdf_snapshot;
+use crate::standards::v1_4::subsets::base::schema::snapshot::{PageDoc, PdfSnapshot};
+use crate::standards::v1_4::subsets::base::schema::snapshot::STDIO_PDF_DOCUMENT_SCHEMA;
+use semio_framework_test_fixtures::{fixture_bytes, fixture_path, fixture_text};
+#[allow(unused_imports)]
+use std::collections::{HashMap, HashSet};
+#[allow(unused_imports)]
+use crate::standards::v1_7::subsets::base::modules::filters::decode_stream;
+#[allow(unused_imports)]
+use crate::standards::v1_7::subsets::base::modules::lexer::Lexer;
+#[allow(unused_imports)]
+use crate::standards::v1_7::subsets::base::schema::snapshot::{ObjRef, PdfDictEntry, PdfObject};
+use crate::standards::v1_4::subsets::base::io::*;
+use crate::standards::v1_4::subsets::base::io::demo_pdf_snapshot;
 
 /// 🧫️ The real committed document every 1.4 test case runs on — 65 pages, a classic
 /// cross-reference table, page 1 typeset at A4.
-static THESIS: std::sync::LazyLock<&'static [u8]> = std::sync::LazyLock::new(|| Box::leak(std::fs::read(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🖼️assets/🎓️bachelor-thesis/🎓️bachelor-thesis.pdf")).expect("the committed fixture is readable").into_boxed_slice()));
+static THESIS: std::sync::LazyLock<&'static [u8]> = std::sync::LazyLock::new(|| Box::leak(std::fs::read(fixture_path!("../../../../../../../4️⃣1.4/🪆️subsets/🧱️base/🖼️assets/🎓️bachelor-thesis/🎓️bachelor-thesis.pdf")).expect("the committed fixture is readable").into_boxed_slice()));
 
 /// 🧪️ `codec_retention_law`: decode→encode→decode is stable on everything this standard's
 /// snapshot carries — every page, its extent and its shown text.
@@ -177,18 +188,18 @@ mod conformance_laws {
     /// `print_dsl`/`encode_pack` output of `demo_pdf_snapshot()`.
     #[semio_framework_async_macros::async_test]
     async fn fixture_honesty_law() {
-        const FIXTURE_DSL: &str = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio");
-        const FIXTURE_PACK: &[u8] = include_bytes!("../../../📚️examples/🎬️demo/🖼️assets/🎒️.pack.semio");
+        static FIXTURE_DSL: std::sync::LazyLock<&str> = std::sync::LazyLock::new(|| super::fixture_text!("../../../../../../../4️⃣1.4/🪆️subsets/🧱️base/📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio"));
+        static FIXTURE_PACK: std::sync::LazyLock<&[u8]> = std::sync::LazyLock::new(|| super::fixture_bytes!("../../../../../../../4️⃣1.4/🪆️subsets/🧱️base/📚️examples/🎬️demo/🖼️assets/🎒️.pack.semio"));
 
         let demo = demo_pdf_snapshot();
 
-        let parsed = <PdfSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(FIXTURE_DSL).expect("parse shipped .dsl.semio fixture");
+        let parsed = <PdfSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl((*FIXTURE_DSL)).expect("parse shipped .dsl.semio fixture");
         assert_eq!(parsed, demo, "shipped .dsl.semio fixture does not parse back to demo_pdf_snapshot()");
-        assert_eq!(pack::snapshot::ArtifactDsl::print_dsl(&demo), FIXTURE_DSL, "print_dsl(demo_pdf_snapshot()) drifted from the shipped .dsl.semio fixture");
+        assert_eq!(pack::snapshot::ArtifactDsl::print_dsl(&demo), (*FIXTURE_DSL), "print_dsl(demo_pdf_snapshot()) drifted from the shipped .dsl.semio fixture");
 
-        let decoded = <PdfSnapshot as pack::snapshot::ArtifactPack>::decode_pack(FIXTURE_PACK).expect("decode shipped .pack.semio fixture");
+        let decoded = <PdfSnapshot as pack::snapshot::ArtifactPack>::decode_pack((*FIXTURE_PACK)).expect("decode shipped .pack.semio fixture");
         assert_eq!(decoded, demo, "shipped .pack.semio fixture does not decode back to demo_pdf_snapshot()");
-        assert_eq!(pack::snapshot::ArtifactPack::encode_pack(&demo), FIXTURE_PACK, "encode_pack(demo_pdf_snapshot()) drifted from the shipped .pack.semio fixture");
+        assert_eq!(pack::snapshot::ArtifactPack::encode_pack(&demo), (*FIXTURE_PACK), "encode_pack(demo_pdf_snapshot()) drifted from the shipped .pack.semio fixture");
     }
 }
 //#endregion 🔖️ConformanceLaws

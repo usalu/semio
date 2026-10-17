@@ -26,4 +26,4 @@ if (segments[0] === "dag-document-contract") {
   }
 }
 
-await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-dag-dag", { snapshotSqliteTests: ["../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/📋️contract/🟦️.ts"], commands: { verify: OwnedVerifyScript } });
+await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-dag-dag", { packages: ["semio-s-artifact-dag-dag", "semio-s-artifact-dag-dag-config", "semio-s-artifact-dag-dag-dag", "semio-s-artifact-dag-dag-diff", "semio-s-artifact-dag-dag-document-behavior-tests", "semio-s-artifact-dag-dag-inferences", "semio-s-artifact-dag-dag-schema", "semio-s-artifact-dag-dag-tests", "semio-s-artifact-dag-dag-v1"], snapshotSqliteTests: ["../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/📋️contract/🟦️.ts"], commands: { verify: OwnedVerifyScript } });

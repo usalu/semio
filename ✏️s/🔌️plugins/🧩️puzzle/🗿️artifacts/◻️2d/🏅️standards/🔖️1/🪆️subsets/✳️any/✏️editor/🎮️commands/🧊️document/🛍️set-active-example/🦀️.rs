@@ -10,7 +10,7 @@ static EMPTY: LazyLock<Puzzle2dSnapshot> = LazyLock::new(Puzzle2dSnapshot::defau
 static CONCRETE_FOREST: LazyLock<Puzzle2dSnapshot> = LazyLock::new(|| semio_framework_pack_json::from_json_str(&crate::examples::puzzle2d::concrete_forest::SOURCE.document_json(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("concrete forest example json must match Puzzle2dSnapshot"));
 static NAKAGIN: LazyLock<Puzzle2dSnapshot> = LazyLock::new(|| semio_framework_pack_json::from_json_str(&crate::examples::puzzle2d::nakagin_capsule_tower::SOURCE.document_json(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("nakagin example json must match Puzzle2dSnapshot"));
 
-pub(crate) fn canonical_example_id(example_id: &str) -> &'static str {
+pub fn canonical_example_id(example_id: &str) -> &'static str {
     match example_id {
         PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID | "concrete" => PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID,
         PUZZLE2D_PLAY_EXAMPLE_NAKAGIN_ID | "nakagin" => PUZZLE2D_PLAY_EXAMPLE_NAKAGIN_ID,
@@ -18,7 +18,7 @@ pub(crate) fn canonical_example_id(example_id: &str) -> &'static str {
     }
 }
 
-pub(crate) fn target(example_id: &str) -> &'static Puzzle2dSnapshot {
+pub fn target(example_id: &str) -> &'static Puzzle2dSnapshot {
     match example_id {
         PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID => &CONCRETE_FOREST,
         PUZZLE2D_PLAY_EXAMPLE_NAKAGIN_ID => &NAKAGIN,

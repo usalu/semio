@@ -34,7 +34,6 @@ test("one common decision publishes three retained member roots together", () =>
   const group = resolve(import.meta.dir, "../../🦀️.rs");
   const source = readFileSync(resolve(import.meta.dir, "../../../../../🦀️.rs"), "utf8") + (existsSync(group) ? readFileSync(group, "utf8") : "");
   for (const method of ["stage_apply_batch_group", "adopt_apply_batch_group", "stage_one_item_publication", "adopt_one_item_publication"]) expect(source.includes(`fn ${method}(`)).toBe(true);
-  console.log("[DEBUG] four neutral histories x commit/abort: SQLite readers observe all three roots at one common decision");
 });
 
 test("private prepared roots can be read before one common decision", () => {
@@ -52,7 +51,6 @@ test("private prepared roots can be read before one common decision", () => {
     }
   } finally { database.close(); }
   expect(readFileSync(resolve(import.meta.dir, "../../../../../🦀️.rs"), "utf8").includes("fn snapshot_read_erased_for_publication(")).toBe(true);
-  console.log("[DEBUG] four neutral private roots: prepared reads precede common commit without publishing live authority");
 });
 
 test("private prepared read cancellation returns to the exact authority before rollback", () => {
@@ -73,7 +71,6 @@ test("private prepared read cancellation returns to the exact authority before r
     }
   } finally { database.close(); }
   expect(readFileSync(resolve(import.meta.dir, "../../../../../🦀️.rs"), "utf8").includes("fn return_prepared_snapshot_read_erased(")).toBe(true);
-  console.log("[DEBUG] four private roots: exact candidate leases return before rollback without publishing future authority");
 });
 
 test("private child projections borrow only their exact member read authority",()=>{
@@ -86,5 +83,4 @@ test("private child projections borrow only their exact member read authority",(
  const source=readFileSync(resolve(import.meta.dir,"../../../../../🦀️.rs"),"utf8");
  expect(source.includes("fn child_restore_projection_for_read<")).toBe(true);
  expect(law.allocatedBytes).toBe(0);expect(law.liveAuthorityChanged).toBe(false);
- console.log("[DEBUG] private projection SQLite independent exactmember+typed read corpus forbids foreign aliases with equal scalar values");
 });

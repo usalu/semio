@@ -1,4 +1,16 @@
-use super::*;
+#[allow(unused_imports)]
+use crate::standards::v1_7::subsets::base::schema::snapshot::PdfPage;
+#[allow(unused_imports)]
+use crate::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot;
+#[allow(unused_imports)]
+use semio_framework_plugin::app::{DocumentPage, DocumentView, DocumentWindowKit, WindowKit};
+#[allow(unused_imports)]
+use semio_framework_ui_locale::LocalizedLabel;
+#[allow(unused_imports)]
+use semio_framework_plugin::WindowKindDefinition;
+#[allow(unused_imports)]
+use semio_framework_ui_contract::BuiltNode;
+use crate::viewer::pdf17ua::modes::view::windows::main::*;
 use crate::standards::v1_7::subsets::base::io::export::demo_pdf17_snapshot;
 
 #[test]

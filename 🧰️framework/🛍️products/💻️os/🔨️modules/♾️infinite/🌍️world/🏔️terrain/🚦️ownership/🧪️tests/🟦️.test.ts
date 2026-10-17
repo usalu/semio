@@ -21,8 +21,8 @@ test("actual receiver contract preserves typed semantic faults until presentatio
  for(const row of fixture.receiving){
   const original={fault:{kind:row.kind,code:row.code},owner:"retained"};
   const result={...original,receiver:"IconExportBatch"};
-  const external=applyPatch(structuredClone(original),[{op:"add",path:"/receiver",value:"IconExportBatch"}],true,false).newDocument;
-  expect(result).toEqual(external);expect(result.fault).toBe(original.fault);
+  const external=applyPatch<typeof original&{receiver?:string}>(structuredClone(original),[{op:"add",path:"/receiver",value:"IconExportBatch"}],true,false).newDocument;
+  expect<typeof external>(result).toEqual(external);expect(result.fault).toBe(original.fault);
   
  }
 });
@@ -30,7 +30,7 @@ test("actual receiver contract preserves typed semantic faults until presentatio
 test("component authority forwards all caller currencies and retains undeclared residual owners",()=>{
  const source={grant:fixture.grant,owner:{pointer:"original",capacity:65536},refusal:"UnsupportedOwner"};
  const receiving={...source,control:fixture.control.componentClose};
- const external=applyPatch(structuredClone(source),[{op:"add",path:"/control",value:fixture.control.componentClose}],true,false).newDocument;
- expect(receiving).toEqual(external);expect(receiving.grant).toBe(source.grant);expect(receiving.owner).toBe(source.owner);
+ const external=applyPatch<typeof source&{control?:typeof fixture.control.componentClose}>(structuredClone(source),[{op:"add",path:"/control",value:fixture.control.componentClose}],true,false).newDocument;
+ expect<typeof external>(receiving).toEqual(external);expect(receiving.grant).toBe(source.grant);expect(receiving.owner).toBe(source.owner);
  expect(receiving.control.residual).toBe("UnsupportedOwnerRetainsExactPayload");
 });

@@ -1,0 +1,210 @@
+# Current Testing Owner Recursive Manifest Lock Frontier
+
+Actual TOML traversal: 362 local runtime/build/target dependency packages. All target and optional dependencies retained, dependency-package dev edges excluded. Paths/workspace aliases resolve at actual declaring workspace; identities and hashes come from actual referenced manifests. Existing semver oracle maps Cargo bare numeric requirements to caret ranges (initial bare exact Node interpretation was corrected before any pin mutation); candidate audit is not Cargo resolution.
+
+- Cargo.lock: missing local entries=24, unresolved registry candidate edges=0
+- ✏️s/Cargo.lock: missing local entries=54, unresolved registry candidate edges=4
+- ✏️s/🔌️plugins/✒️writer/🏭️bridge/Cargo.lock: missing local entries=85, unresolved registry candidate edges=12
+- ✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/Cargo.lock: missing local entries=83, unresolved registry candidate edges=12
+- ✏️s/🔌️plugins/➗️mathematical/🏭️bridge/Cargo.lock: missing local entries=89, unresolved registry candidate edges=24
+- ✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/Cargo.lock: missing local entries=88, unresolved registry candidate edges=24
+- ✏️s/🔌️plugins/🀄️wfc/🏭️bridge/Cargo.lock: missing local entries=54, unresolved registry candidate edges=4
+- ✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/Cargo.lock: missing local entries=53, unresolved registry candidate edges=4
+- ✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/Cargo.lock: missing local entries=88, unresolved registry candidate edges=24
+- ✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/Cargo.lock: missing local entries=88, unresolved registry candidate edges=24
+- ✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/Cargo.lock: missing local entries=88, unresolved registry candidate edges=24
+- ✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/Cargo.lock: missing local entries=53, unresolved registry candidate edges=4
+- ✏️s/🔌️plugins/🌀️procedural/🏭️bridge/Cargo.lock: missing local entries=54, unresolved registry candidate edges=4
+- ✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/Cargo.lock: missing local entries=53, unresolved registry candidate edges=4
+- ✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/Cargo.lock: missing local entries=52, unresolved registry candidate edges=4
+- ✏️s/🔌️plugins/🌀️procedural/🫀️foundation/Cargo.lock: missing local entries=54, unresolved registry candidate edges=4
+- ✏️s/🔌️plugins/🌊️flow/🏭️bridge/Cargo.lock: missing local entries=54, unresolved registry candidate edges=4
+- ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/Cargo.lock: missing local entries=53, unresolved registry candidate edges=4
+- ✏️s/🔌️plugins/🌊️flow/🧩️extensions/🏗️bim/Cargo.lock: missing local entries=53, unresolved registry candidate edges=4
+- ✏️s/🔌️plugins/🌊️flow/🧩️extensions/📃️list/Cargo.lock: missing local entries=53, unresolved registry candidate edges=4
+- ✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/Cargo.lock: missing local entries=53, unresolved registry candidate edges=4
+- ✏️s/🔌️plugins/🌊️flow/🧩️extensions/📖️dictionary/Cargo.lock: missing local entries=53, unresolved registry candidate edges=4
+- ✏️s/🔌️plugins/🌊️flow/🧩️extensions/📝️text/Cargo.lock: missing local entries=53, unresolved registry candidate edges=4
+- ✏️s/🔌️plugins/🌊️flow/🧩️extensions/🔤️primitive/Cargo.lock: missing local entries=53, unresolved registry candidate edges=4
+- ✏️s/🔌️plugins/🌊️flow/🧩️extensions/🖍️draw/Cargo.lock: missing local entries=49, unresolved registry candidate edges=4
+- ✏️s/🔌️plugins/🌊️flow/🧩️extensions/🧠️logic/Cargo.lock: missing local entries=49, unresolved registry candidate edges=4
+- ✏️s/🔌️plugins/🌊️flow/🧩️extensions/🧮️math/Cargo.lock: missing local entries=49, unresolved registry candidate edges=4
+- ✏️s/🔌️plugins/🌍️gis/🏭️bridge/Cargo.lock: missing local entries=79, unresolved registry candidate edges=12
+- ✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/Cargo.lock: missing local entries=78, unresolved registry candidate edges=12
+- ✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/Cargo.lock: missing local entries=77, unresolved registry candidate edges=8
+- ✏️s/🔌️plugins/🌿️vcs/🏭️bridge/Cargo.lock: missing local entries=85, unresolved registry candidate edges=24
+- ✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/Cargo.lock: missing local entries=84, unresolved registry candidate edges=24
+- ✏️s/🔌️plugins/🎞️animate/🏭️bridge/Cargo.lock: missing local entries=217, unresolved registry candidate edges=9
+- ✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/Cargo.lock: missing local entries=81, unresolved registry candidate edges=9
+- ✏️s/🔌️plugins/🎥️shooting/🏭️bridge/Cargo.lock: missing local entries=266, unresolved registry candidate edges=18
+- ✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/Cargo.lock: missing local entries=81, unresolved registry candidate edges=18
+- ✏️s/🔌️plugins/🎪️demonstrator/🏭️bridge/Cargo.lock: missing local entries=85, unresolved registry candidate edges=24
+- ✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/Cargo.lock: missing local entries=84, unresolved registry candidate edges=24
+- ✏️s/🔌️plugins/🎬️sequence/🏭️bridge/Cargo.lock: missing local entries=50, unresolved registry candidate edges=4
+- ✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/Cargo.lock: missing local entries=49, unresolved registry candidate edges=4
+- ✏️s/🔌️plugins/🏗️fem/Cargo.lock: missing local entries=85, unresolved registry candidate edges=24
+- ✏️s/🔌️plugins/🏗️fem/🏭️bridge/Cargo.lock: missing local entries=85, unresolved registry candidate edges=24
+- ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/Cargo.lock: missing local entries=84, unresolved registry candidate edges=24
+- ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/Cargo.lock: missing local entries=84, unresolved registry candidate edges=24
+- ✏️s/🔌️plugins/🏙️bim/🏭️bridge/Cargo.lock: missing local entries=85, unresolved registry candidate edges=24
+- ✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/Cargo.lock: missing local entries=84, unresolved registry candidate edges=24
+- ✏️s/🔌️plugins/🏛️architect/🏭️bridge/Cargo.lock: missing local entries=85, unresolved registry candidate edges=24
+- ✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/Cargo.lock: missing local entries=84, unresolved registry candidate edges=24
+- ✏️s/🔌️plugins/🏭️process/🏭️bridge/Cargo.lock: missing local entries=85, unresolved registry candidate edges=24
+- ✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/Cargo.lock: missing local entries=84, unresolved registry candidate edges=24
+- ✏️s/🔌️plugins/🏭️process/🧩️extensions/🔩️metal/Cargo.lock: missing local entries=84, unresolved registry candidate edges=24
+- ✏️s/🔌️plugins/🏭️process/🧩️extensions/🤖️robotic/Cargo.lock: missing local entries=84, unresolved registry candidate edges=24
+- ✏️s/🔌️plugins/🏭️process/🧩️extensions/🧱️concrete/Cargo.lock: missing local entries=84, unresolved registry candidate edges=24
+- ✏️s/🔌️plugins/🏭️process/🧩️extensions/🪵️wood/Cargo.lock: missing local entries=84, unresolved registry candidate edges=24
+- ✏️s/🔌️plugins/💠️lowpoly/🏭️bridge/Cargo.lock: missing local entries=85, unresolved registry candidate edges=24
+- ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/Cargo.lock: missing local entries=82, unresolved registry candidate edges=23
+- ✏️s/🔌️plugins/💡️reasoning/🏭️bridge/Cargo.lock: missing local entries=50, unresolved registry candidate edges=4
+- ✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/Cargo.lock: missing local entries=49, unresolved registry candidate edges=4
+- ✏️s/🔌️plugins/📋️forms/🏭️bridge/Cargo.lock: missing local entries=50, unresolved registry candidate edges=4
+- ✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/Cargo.lock: missing local entries=49, unresolved registry candidate edges=4
+- ✏️s/🔌️plugins/📏️layout/🏭️bridge/Cargo.lock: missing local entries=80, unresolved registry candidate edges=9
+- ✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/Cargo.lock: missing local entries=49, unresolved registry candidate edges=4
+- ✏️s/🔌️plugins/📐️cad/🏭️bridge/Cargo.lock: missing local entries=85, unresolved registry candidate edges=24
+- ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/Cargo.lock: missing local entries=84, unresolved registry candidate edges=24
+- ✏️s/🔌️plugins/📐️cad/🧩️extensions/🏛️aec-building-structure/Cargo.lock: missing local entries=84, unresolved registry candidate edges=24
+- ✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building/Cargo.lock: missing local entries=84, unresolved registry candidate edges=24
+- ✏️s/🔌️plugins/📐️cad/🧩️extensions/📐️spatial-shape/Cargo.lock: missing local entries=84, unresolved registry candidate edges=24
+- ✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/Cargo.lock: missing local entries=84, unresolved registry candidate edges=24
+- ✏️s/🔌️plugins/📕️norm/Cargo.lock: missing local entries=84, unresolved registry candidate edges=24
+- ✏️s/🔌️plugins/📕️norm/🏭️bridge/Cargo.lock: missing local entries=85, unresolved registry candidate edges=24
+- ✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/Cargo.lock: missing local entries=84, unresolved registry candidate edges=24
+- ✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/Cargo.lock: missing local entries=84, unresolved registry candidate edges=24
+- ✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/Cargo.lock: missing local entries=84, unresolved registry candidate edges=24
+- ✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/Cargo.lock: missing local entries=84, unresolved registry candidate edges=24
+- ✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏋️en1991/Cargo.lock: missing local entries=84, unresolved registry candidate edges=24
+- ✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/Cargo.lock: missing local entries=84, unresolved registry candidate edges=24
+- ✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/Cargo.lock: missing local entries=84, unresolved registry candidate edges=24
+- ✏️s/🔌️plugins/📕️norm/🗿️artifacts/📇️iso16757/Cargo.lock: missing local entries=84, unresolved registry candidate edges=24
+- ✏️s/🔌️plugins/📕️norm/🗿️artifacts/🔩️en1993/Cargo.lock: missing local entries=84, unresolved registry candidate edges=24
+- ✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994/Cargo.lock: missing local entries=84, unresolved registry candidate edges=24
+- ✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧱️din4108/Cargo.lock: missing local entries=84, unresolved registry candidate edges=24
+- ✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/Cargo.lock: missing local entries=84, unresolved registry candidate edges=24
+- ✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995/Cargo.lock: missing local entries=84, unresolved registry candidate edges=24
+- ✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/Cargo.lock: missing local entries=84, unresolved registry candidate edges=24
+- ✏️s/🔌️plugins/📕️norm/🗿️artifacts/🫨️en1998/Cargo.lock: missing local entries=84, unresolved registry candidate edges=24
+- ✏️s/🔌️plugins/📖️playbook/🏭️bridge/Cargo.lock: missing local entries=50, unresolved registry candidate edges=4
+- ✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/Cargo.lock: missing local entries=49, unresolved registry candidate edges=4
+- ✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/Cargo.lock: missing local entries=49, unresolved registry candidate edges=4
+- ✏️s/🔌️plugins/📜️imperative/🏭️bridge/Cargo.lock: missing local entries=85, unresolved registry candidate edges=24
+- ✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/Cargo.lock: missing local entries=84, unresolved registry candidate edges=24
+- ✏️s/🔌️plugins/📜️imperative/🧩️extensions/🎮️control/Cargo.lock: missing local entries=84, unresolved registry candidate edges=24
+- ✏️s/🔌️plugins/📜️imperative/🧩️extensions/📝️text/Cargo.lock: missing local entries=84, unresolved registry candidate edges=24
+- ✏️s/🔌️plugins/📜️imperative/🧩️extensions/📣️effect/Cargo.lock: missing local entries=84, unresolved registry candidate edges=24
+- ✏️s/🔌️plugins/📜️imperative/🧩️extensions/🧠️logic/Cargo.lock: missing local entries=84, unresolved registry candidate edges=24
+- ✏️s/🔌️plugins/📜️imperative/🧩️extensions/🧮️math/Cargo.lock: missing local entries=84, unresolved registry candidate edges=24
+- ✏️s/🔌️plugins/📸️remodel/🏭️bridge/Cargo.lock: missing local entries=85, unresolved registry candidate edges=24
+- ✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/Cargo.lock: missing local entries=81, unresolved registry candidate edges=18
+- ✏️s/🔌️plugins/🔋️energy/Cargo.lock: missing local entries=85, unresolved registry candidate edges=24
+- ✏️s/🔌️plugins/🔋️energy/🏭️bridge/Cargo.lock: missing local entries=85, unresolved registry candidate edges=24
+- ✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/Cargo.lock: missing local entries=84, unresolved registry candidate edges=24
+- ✏️s/🔌️plugins/🔱️trinity/🏭️bridge/Cargo.lock: missing local entries=50, unresolved registry candidate edges=4
+- ✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/Cargo.lock: missing local entries=49, unresolved registry candidate edges=4
+- ✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/Cargo.lock: missing local entries=80, unresolved registry candidate edges=12
+- ✏️s/🔌️plugins/🕸️dag/🏭️bridge/Cargo.lock: missing local entries=50, unresolved registry candidate edges=4
+- ✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/Cargo.lock: missing local entries=49, unresolved registry candidate edges=4
+- ✏️s/🔌️plugins/🖍️draw/🏭️bridge/Cargo.lock: missing local entries=83, unresolved registry candidate edges=24
+- ✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/Cargo.lock: missing local entries=82, unresolved registry candidate edges=23
+- ✏️s/🔌️plugins/🖨️raster/🏭️bridge/Cargo.lock: missing local entries=217, unresolved registry candidate edges=18
+- ✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/Cargo.lock: missing local entries=81, unresolved registry candidate edges=18
+- ✏️s/🔌️plugins/🗄️stdio/Cargo.lock: missing local entries=85, unresolved registry candidate edges=23
+- ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/Cargo.lock: missing local entries=84, unresolved registry candidate edges=24
+- ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/Cargo.lock: missing local entries=83, unresolved registry candidate edges=24
+- ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/Cargo.lock: missing local entries=84, unresolved registry candidate edges=24
+- ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/Cargo.lock: missing local entries=84, unresolved registry candidate edges=24
+- ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/Cargo.lock: missing local entries=84, unresolved registry candidate edges=24
+- ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/Cargo.lock: missing local entries=83, unresolved registry candidate edges=24
+- ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/Cargo.lock: missing local entries=83, unresolved registry candidate edges=24
+- ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/Cargo.lock: missing local entries=83, unresolved registry candidate edges=24
+- ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/Cargo.lock: missing local entries=84, unresolved registry candidate edges=24
+- ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/Cargo.lock: missing local entries=84, unresolved registry candidate edges=24
+- ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/Cargo.lock: missing local entries=84, unresolved registry candidate edges=24
+- ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/Cargo.lock: missing local entries=84, unresolved registry candidate edges=24
+- ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/Cargo.lock: missing local entries=84, unresolved registry candidate edges=24
+- ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/Cargo.lock: missing local entries=84, unresolved registry candidate edges=24
+- ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/Cargo.lock: missing local entries=84, unresolved registry candidate edges=24
+- ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/Cargo.lock: missing local entries=83, unresolved registry candidate edges=24
+- ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/Cargo.lock: missing local entries=84, unresolved registry candidate edges=24
+- ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/Cargo.lock: missing local entries=83, unresolved registry candidate edges=24
+- ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/Cargo.lock: missing local entries=84, unresolved registry candidate edges=24
+- ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/Cargo.lock: missing local entries=84, unresolved registry candidate edges=24
+- ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/Cargo.lock: missing local entries=83, unresolved registry candidate edges=24
+- ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/Cargo.lock: missing local entries=83, unresolved registry candidate edges=24
+- ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/Cargo.lock: missing local entries=84, unresolved registry candidate edges=24
+- ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/Cargo.lock: missing local entries=83, unresolved registry candidate edges=24
+- ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/Cargo.lock: missing local entries=83, unresolved registry candidate edges=24
+- ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/Cargo.lock: missing local entries=84, unresolved registry candidate edges=24
+- ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/Cargo.lock: missing local entries=84, unresolved registry candidate edges=24
+- ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/Cargo.lock: missing local entries=84, unresolved registry candidate edges=24
+- ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/Cargo.lock: missing local entries=82, unresolved registry candidate edges=24
+- ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/Cargo.lock: missing local entries=84, unresolved registry candidate edges=24
+- ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/Cargo.lock: missing local entries=84, unresolved registry candidate edges=24
+- ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/Cargo.lock: missing local entries=84, unresolved registry candidate edges=24
+- ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧱️ply/Cargo.lock: missing local entries=84, unresolved registry candidate edges=24
+- ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/Cargo.lock: missing local entries=84, unresolved registry candidate edges=24
+- ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/Cargo.lock: missing local entries=82, unresolved registry candidate edges=22
+- ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🏭️bridge/Cargo.lock: missing local entries=85, unresolved registry candidate edges=24
+- ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/Cargo.lock: missing local entries=286, unresolved registry candidate edges=24
+- ✏️s/🔌️plugins/🗒️note/🏭️bridge/Cargo.lock: missing local entries=266, unresolved registry candidate edges=18
+- ✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/Cargo.lock: missing local entries=266, unresolved registry candidate edges=18
+- ✏️s/🔌️plugins/🧩️puzzle/Cargo.lock: missing local entries=166, unresolved registry candidate edges=24
+- ✏️s/🔌️plugins/🧩️puzzle/🏭️bridge/Cargo.lock: missing local entries=210, unresolved registry candidate edges=4
+- ✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/Cargo.lock: missing local entries=155, unresolved registry candidate edges=4
+- ✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/Cargo.lock: missing local entries=210, unresolved registry candidate edges=4
+- ✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/Cargo.lock: missing local entries=182, unresolved registry candidate edges=24
+- ✏️s/🔌️plugins/🧱️block/🏭️bridge/Cargo.lock: missing local entries=269, unresolved registry candidate edges=24
+- ✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/Cargo.lock: missing local entries=220, unresolved registry candidate edges=24
+- ✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/Cargo.lock: missing local entries=220, unresolved registry candidate edges=24
+- ✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/Cargo.lock: missing local entries=220, unresolved registry candidate edges=24
+- ✏️s/🔌️plugins/🪐️space/🏭️bridge/Cargo.lock: missing local entries=210, unresolved registry candidate edges=0
+- ✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/Cargo.lock: missing local entries=210, unresolved registry candidate edges=0
+- ✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/Cargo.lock: missing local entries=210, unresolved registry candidate edges=0
+- ✏️s/🔌️plugins/🪐️space/🫀️core/Cargo.lock: missing local entries=81, unresolved registry candidate edges=18
+- ✏️s/🔌️plugins/🪵️sourcing/🏭️bridge/Cargo.lock: missing local entries=220, unresolved registry candidate edges=24
+- ✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/Cargo.lock: missing local entries=220, unresolved registry candidate edges=24
+- ✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🧱️slabs/Cargo.lock: missing local entries=220, unresolved registry candidate edges=24
+- ✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪟️windows/Cargo.lock: missing local entries=220, unresolved registry candidate edges=24
+- ✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪵️beams/Cargo.lock: missing local entries=220, unresolved registry candidate edges=24
+- ✏️s/🧑‍💻dev/🌊️flow/Cargo.lock: missing local entries=221, unresolved registry candidate edges=4
+- ✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/Cargo.lock: missing local entries=209, unresolved registry candidate edges=0
+- ✏️s/🧑‍💻dev/💡️services/Cargo.lock: missing local entries=153, unresolved registry candidate edges=0
+- ✏️s/🧑‍💻dev/📐️cad/Cargo.lock: missing local entries=221, unresolved registry candidate edges=4
+- ✏️s/🧑‍💻dev/🧩️composition/Cargo.lock: missing local entries=210, unresolved registry candidate edges=4
+- ✏️s/🧑‍💻dev/🧹️fixture-sweep/Cargo.lock: missing local entries=208, unresolved registry candidate edges=0
+- 🌎️hub/Cargo.lock: missing local entries=51, unresolved registry candidate edges=0
+
+## Exact Unresolved Pin Edges
+
+- {"owner":"semio-framework-os-kernel","dependency":"ureq","version":"2","requirement":"^2","source":"registry","candidates":[]}
+- {"owner":"semio-framework-os-directory-client","dependency":"ureq","version":"2","requirement":"^2","source":"registry","candidates":[]}
+- {"owner":"semio-framework-os-directory-client","dependency":"tokio-tungstenite","version":"0.26","requirement":"^0.26","source":"registry","candidates":[]}
+- {"owner":"semio-framework-os-store-sync-native","dependency":"tokio-tungstenite","version":"0.26","requirement":"^0.26","source":"registry","candidates":[]}
+- {"owner":"semio-framework-ui","dependency":"taffy","version":"0.9","requirement":"^0.9","source":"registry","candidates":[]}
+- {"owner":"semio-framework-ui","dependency":"winit","version":"0.30.12","requirement":"^0.30.12","source":"registry","candidates":[]}
+- {"owner":"semio-framework-ui","dependency":"arboard","version":"3","requirement":"^3","source":"registry","candidates":[]}
+- {"owner":"semio-framework-ui-wgpu-device","dependency":"winit","version":"0.30.12","requirement":"^0.30.12","source":"registry","candidates":[]}
+- {"owner":"semio-framework-ui-text","dependency":"parley","version":"0.5.0","requirement":"^0.5.0","source":"registry","candidates":[]}
+- {"owner":"semio-framework-ui-text","dependency":"swash","version":"0.2.6","requirement":"^0.2.6","source":"registry","candidates":[]}
+- {"owner":"semio-framework-ui","dependency":"wgpu","version":"29.0.4","requirement":"^29.0.4","source":"registry","candidates":[]}
+- {"owner":"semio-framework-ui-wgpu-device","dependency":"wgpu","version":"29.0.4","requirement":"^29.0.4","source":"registry","candidates":[]}
+- {"owner":"semio-framework-canvas-scene","dependency":"vello","version":"0.9.0","requirement":"^0.9.0","source":"registry","candidates":[]}
+- {"owner":"semio-framework-canvas-scene","dependency":"vello_svg","version":"0.10.0","requirement":"^0.10.0","source":"registry","candidates":[]}
+- {"owner":"semio-framework-canvas-scene","dependency":"kurbo","version":"0.13.1","requirement":"^0.13.1","source":"registry","candidates":[]}
+- {"owner":"semio-framework-canvas-scene","dependency":"peniko","version":"0.6.1","requirement":"^0.6.1","source":"registry","candidates":[]}
+- {"owner":"semio-framework-compiler","dependency":"rustybuzz","version":"0.20.1","requirement":"^0.20.1","source":"registry","candidates":[]}
+- {"owner":"semio-framework-compiler","dependency":"base64","version":"0.22.1","requirement":"^0.22.1","source":"registry","candidates":[]}
+
+## Additional Consumed Framework Workspace Lock
+
+The174 exact-facade predicate missed tracked Framework/Cargo.lock because that current lock contains no facade entry. It is still consumed by actual new package.workspace and workspace.members. Full consumed inputs are175, this workspace lock is untouched and explicitly blocked. Missing local closure entries=159, unresolved registry candidate edges=6.
+
+- {"owner":"semio-framework-os-kernel","dependency":"futures","version":"0.3","requirement":"^0.3","source":"registry","candidates":[]}
+- {"owner":"semio-framework-os-kernel","dependency":"ureq","version":"2","requirement":"^2","source":"registry","candidates":[]}
+- {"owner":"semio-framework-os-directory-client","dependency":"ureq","version":"2","requirement":"^2","source":"registry","candidates":[]}
+- {"owner":"semio-framework-os-directory-client","dependency":"tokio-tungstenite","version":"0.26","requirement":"^0.26","source":"registry","candidates":[]}
+- {"owner":"semio-framework-os-store-sync-native","dependency":"futures","version":"0.3","requirement":"^0.3","source":"registry","candidates":[]}
+- {"owner":"semio-framework-os-store-sync-native","dependency":"tokio-tungstenite","version":"0.26","requirement":"^0.26","source":"registry","candidates":[]}

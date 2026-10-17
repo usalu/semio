@@ -4,7 +4,7 @@ use crate::standards::v1::subsets::any::schema::snapshot::WriterSnapshot;
 use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase,SnapshotEncoding,validate_sqlite_database_schema,artifact::{Projection,Cell,NativeEncodingBound,Reconstruction}}};
 use semio_framework_value::ValueError;
 fn invalid(message:impl Into<String>)->ValueError{ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,message)}
-#[path="🛂️native/🦀️.rs"]mod native;
+#[path="🛂️native/🦀️.rs"]pub mod native;
 fn document_cells(value:&WriterSnapshot)->[Cell<'_>;5]{[Cell::Text(&value.schema),Cell::Text(&value.id),Cell::Text(&value.language_id),Cell::Text(&value.uri),Cell::Text(&value.text)]}
 fn child_cells(value:&WriterSnapshot)->[Cell<'_>;6]{let child=&value.document;[Cell::Integer(1),Cell::Text(&child.child_id),Cell::Text(&child.target.artifact_id),Cell::Text(&child.target.dialect.artifact_kind),Cell::Text(&child.target.dialect.standard),Cell::Text(&child.target.dialect.subset)]}
 
@@ -45,7 +45,4 @@ fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotCont
  }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;
 

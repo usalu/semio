@@ -1,6 +1,6 @@
 //! 🏷️ Direct binary codec for `set-mark-info`.
 
-use crate::standards::v1_7::subsets::ua::schema::mutations::SetMarkInfo;
+use crate::standards::v1_7::subsets::ua::schema::mutations::set_mark_info::SetMarkInfo;
 
 //#region 🔖️Identity
 pub const TAG: u8 = 0;
@@ -21,7 +21,5 @@ pub fn decode(bytes: &[u8]) -> Result<SetMarkInfo, String> {
 //#endregion 🔖️Codec
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

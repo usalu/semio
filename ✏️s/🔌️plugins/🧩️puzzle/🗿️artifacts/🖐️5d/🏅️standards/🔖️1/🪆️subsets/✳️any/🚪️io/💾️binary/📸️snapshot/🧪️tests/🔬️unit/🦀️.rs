@@ -1,3 +1,5 @@
+#[allow(unused_imports)]
+use store::PackError;
 use crate::Puzzle5dSnapshot;
 
 use crate::standards::v1::subsets::any::io::binary::snapshot::*;
@@ -19,7 +21,7 @@ fn pack_round_trips_representative_document() {
 async fn command_envelope_round_trip_holds_for_an_applied_operation() {
     use crate::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation;
     use crate::host::owned::{close_puzzle5d_store,puzzle5d_store};
-    use crate::{Puzzle5dPart, Puzzle5dPart2d, Puzzle5dPart3d, Puzzle5dPartAnchor};
+    use crate::standards::v1::subsets::any::schema::document_records::{Puzzle5dPart, Puzzle5dPart2d, Puzzle5dPart3d, Puzzle5dPartAnchor};
     use protocol::{ArtifactId, Edit, SchemaId};
     use store::{os_store::store_schema::ArtifactCommand, os_store::document_materialize::create_document_envelope};
 

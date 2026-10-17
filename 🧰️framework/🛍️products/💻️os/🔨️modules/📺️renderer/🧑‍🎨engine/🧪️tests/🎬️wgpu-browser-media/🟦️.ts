@@ -80,7 +80,6 @@ describe("accepted browser media authority", () => {
     }
     await registry.close();
     expect(calls).toEqual(vector.expected);
-    console.debug(`[DEBUG] browser-media ${vector.name} ${calls.join(" -> ")}`);
   });
   it("refuses candidate, retired, forged owner and foreign operation handles", async () => {
     const calls: string[] = [];
@@ -158,7 +157,7 @@ class Worker implements BrowserFrameWorkerPort {
   reply(message: BrowserFrameWorkerMessage): void { this.onmessage?.({ data: message } as MessageEvent<BrowserFrameWorkerMessage>); }
 }
 function transport(worker: Worker): BrowserFrameTransport {
-  return new BrowserFrameTransport({ originalWorkStock: fixtureOriginalWorkStock(), worker, boot: { bindingsModuleUrl: "test.js", bindingsWasmUrl: "test.wasm", canvas: {} as OffscreenCanvas, width: 800, height: 600, dpr: 1, locale: "en", descriptor: resolveWgpuBootDescriptor({ defaultVariant: "s" }), appearance: { preference: "", systemDark: false }, platform: "MacIntel", storage: {} }, setTimer: () => 1, clearTimer: () => {} });
+  return new BrowserFrameTransport({ originalWorkStock: fixtureOriginalWorkStock(), worker, boot: { bindingsModuleUrl: "test.js", bindingsWasmUrl: "test.wasm", canvas: {} as OffscreenCanvas, width: 800, height: 600, dpr: 1, locale: "en", descriptor: resolveWgpuBootDescriptor({ defaultVariant: "s" }), appearance: { preference: "", systemDark: false }, platform: "MacIntel", storage: {}, catalog: { version: 1 as const, targets: [], hosts: [], playgrounds: [] } }, setTimer: () => 1, clearTimer: () => {} });
 }
 function frame(worker: Worker, slots: readonly PresentedMediaSlot[], frameSequence = 1, generation = 0): void {
   worker.reply({ kind: "frame", mediaSlots: slots, lifecycle: 1, frameSequence, generation, cursor: "default", fullscreen: null, requestFrame: false, nextDeadlineDelayMs: null, progress: 1, workerDurationMs: 1, workerExecutingMs: 1, workerStepVerdict: "admitted" });
@@ -236,7 +235,6 @@ describe("imperative media DOM host", () => {
     overlay.accept([slot()]); expect(host.style.visibility).toBe("visible"); expect(host.hasAttribute("aria-hidden")).toBe(false);
     overlay.accept([]); overlay.dispose();
     expect(revoke).toHaveBeenCalledExactlyOnceWith("blob:media");
-    console.debug("[DEBUG] browser-media DOM audio bounds/control/input/URL runtime assertions passed");
   });
   it("preserves a video player after an interrupted play request and releases an actual decode fault", async () => {
     vi.spyOn(HTMLMediaElement.prototype, "pause").mockImplementation(() => {});
@@ -319,7 +317,6 @@ describe("trusted app document identity", () => {
         else await expect(pending).rejects.toThrow(variant === "foreign" ? "foreign instance" : "missing or ambiguous");
       } finally { client.dispose(); }
     }
-    console.debug("[DEBUG] browser-media trusted document identity used exact guest/channel receipts");
   });
 });
 
@@ -351,7 +348,7 @@ for (const kind of ["audio", "video"] as const) it(`runs the production browser 
     }, { accepted: { ...slot(), props: { ...slot().props, kind, mediaType: kind === "video" ? "video/mp4" : "audio/wav" } }, wav: fixture.wav, video });
     await page.waitForSelector('[data-media-state="ready"] audio,[data-media-state="ready"] video', { state: "attached" });
     await page.waitForFunction(() => document.querySelector<HTMLMediaElement>("audio,video")!.readyState >= 1);
-    const state = await page.evaluate(() => { const audio = document.querySelector<HTMLMediaElement>("audio,video")!; const host = document.querySelector<HTMLElement>("[data-media-slot]")!; console.debug(`[DEBUG] browser-media Chromium decoded ${audio.duration}s ${host.style.left}/${host.style.top}`); return { paused: audio.paused, autoplay: audio.autoplay, positionMs: Math.round(audio.currentTime * 1000), durationMs: Math.round(audio.duration * 1000), left: host.style.left, top: host.style.top, selectionLabels: Array.from(host.querySelectorAll('input[type="range"]')).map((input) => input.getAttribute("aria-label")) }; });
+    const state = await page.evaluate(() => { const audio = document.querySelector<HTMLMediaElement>("audio,video")!; const host = document.querySelector<HTMLElement>("[data-media-slot]")!;  return { paused: audio.paused, autoplay: audio.autoplay, positionMs: Math.round(audio.currentTime * 1000), durationMs: Math.round(audio.duration * 1000), left: host.style.left, top: host.style.top, selectionLabels: Array.from(host.querySelectorAll('input[type="range"]')).map((input) => input.getAttribute("aria-label")) }; });
     expect(state.durationMs).toBeGreaterThan(0);
     if (kind === "video") expect(await page.evaluate(() => { const video = document.querySelector("video")!; return video.videoWidth > 0 && video.videoHeight > 0; })).toBe(true);
     expect(state).toEqual({ paused: true, autoplay: false, positionMs: 250, durationMs: kind === "audio" ? fixture.wav.durationMs : expect.any(Number), left: "20px", top: "30px", selectionLabels: ["Seek", "Selection start", "Selection end"] });
@@ -364,7 +361,6 @@ for (const kind of ["audio", "video"] as const) it(`runs the production browser 
       const hidden = document.querySelector<HTMLElement>("[data-media-slot]")!;
       const concealed = hidden.style.visibility === "hidden" && hidden.inert && hidden.getAttribute("aria-hidden") === "true";
       oracle.host.accept([oracle.accepted]);
-      console.debug(`[DEBUG] browser-media Chromium conceal/reveal playing=${!player.paused} same-player=${player === document.querySelector<HTMLMediaElement>("audio,video")} revoke=${oracle.revoked()}`);
       return { concealed, playing: !player.paused, samePlayer: player === document.querySelector<HTMLMediaElement>("audio,video"), sameTime: player.currentTime >= time, revoked: oracle.revoked(), calls: oracle.calls };
     });
     expect(concealed).toEqual({ concealed: true, playing: true, samePlayer: true, sameTime: true, revoked: 0, calls: ["submit", "poll", ...Array.from({ length: Math.ceil((video ? Buffer.from(video, "base64").byteLength : 8044) / 4096) }, () => "take")] });
@@ -374,7 +370,7 @@ for (const kind of ["audio", "video"] as const) it(`runs the production browser 
     expect(await page.evaluate(() => document.querySelector<HTMLMediaElement>("audio,video")!.currentTime)).toBeCloseTo(0.5, 2);
     await page.getByRole("slider", { name: "Selection start", exact: true }).evaluate((input) => { (input as HTMLInputElement).value = "200"; input.dispatchEvent(new Event("input", { bubbles: true })); });
     expect(await page.getByRole("slider", { name: "Selection end", exact: true }).getAttribute("min")).toBe("201");
-    const cleanup = await page.evaluate(() => { const oracle = (window as unknown as { mediaOracle: { host: ReturnType<typeof createBrowserMediaOverlay>; calls: string[]; revoked: () => number } }).mediaOracle; oracle.host.accept([]); oracle.host.dispose(); console.debug(`[DEBUG] browser-media Chromium retired ${oracle.calls.join(" -> ")} revoke=${oracle.revoked()}`); return { revoked: oracle.revoked(), calls: oracle.calls, audio: document.querySelector<HTMLMediaElement>("audio,video") !== null }; });
+    const cleanup = await page.evaluate(() => { const oracle = (window as unknown as { mediaOracle: { host: ReturnType<typeof createBrowserMediaOverlay>; calls: string[]; revoked: () => number } }).mediaOracle; oracle.host.accept([]); oracle.host.dispose();  return { revoked: oracle.revoked(), calls: oracle.calls, audio: document.querySelector<HTMLMediaElement>("audio,video") !== null }; });
     expect(cleanup).toEqual({ revoked: 1, calls: ["submit", "poll", ...Array.from({ length: Math.ceil((video ? Buffer.from(video, "base64").byteLength : 8044) / 4096) }, () => "take")], audio: false });
     expect(logs).toHaveLength(3);
     for (const log of logs) console.debug(log);

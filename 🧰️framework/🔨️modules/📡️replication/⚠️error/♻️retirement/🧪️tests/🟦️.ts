@@ -26,7 +26,7 @@ test("protocol cause retirement preserves refused original storage and separatel
    expect(released).toBe(original.bytes??0);
   }
  }
- db.close();console.log("[DEBUG] SQLite original cause slot capacity conserved across pause/refusal; JSON preserves Unicode/NUL and diagnostic text pairs");
+ db.close();
  const path=new URL("../🦀️.rs",import.meta.url);expect(existsSync(path)).toBe(true);const source=readFileSync(path,"utf8");
  expect(source).toContain("pub fn protocol_error_retirement_demand");expect(source).toContain("pub fn close_protocol_error_one");expect(source).toContain("maximum_release_bytes");expect(source).toContain("maximum_copy_bytes");expect(source).toContain("UnsupportedOwner");expect(source).not.toContain("maximum_bytes:");
  expect(source).not.toContain("copy_bytes:2*std::mem::size_of::<String>()");expect(source).not.toContain("copy_bytes:std::mem::size_of::<Option<ProtocolError>>()");

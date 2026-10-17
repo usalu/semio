@@ -25,6 +25,5 @@ for (const item of vector.cases) test(item.id, async () => {
     const actual = [...schemaDocumentIndex(root).keys()].sort();
     assert.deepEqual(actual, oracle, item.id);
     assert.deepEqual(actual, item.expected.ids, item.id);
-    console.log("[DEBUG] schema document index " + JSON.stringify({ case: item.id, indexed: actual.length }));
   } finally { rmSync(base, { recursive: true, force: true }); }
 });

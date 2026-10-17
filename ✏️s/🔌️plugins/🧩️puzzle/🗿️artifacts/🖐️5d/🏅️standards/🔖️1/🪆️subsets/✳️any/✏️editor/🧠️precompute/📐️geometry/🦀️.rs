@@ -86,7 +86,5 @@ pub fn distance_squared(first: [f64; 3], second: [f64; 3]) -> f64 {
 }
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

@@ -40,7 +40,6 @@ fn projected_checkpoint_serializes_actual_postcharge_receipt_and_keeps_every_can
         assert!(!recipient.has_owner());
         cancellation+=1;
     }
-    println!("[DEBUG] projected checkpoint serializes the actual uniquely retained postcharge receipt; every original cancellation retains physical backing until funded close");
 }
 fn backing<T>(operation:impl FnOnce()->T)->(T,usize,usize){let(result,physical)=semio_framework_trace::observe_heap_allocations_on_this_thread(operation);assert!(!physical.overflowed);(result,physical.requested_bytes,physical.released_bytes)}
 #[test]

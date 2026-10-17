@@ -1,17 +1,20 @@
 //! ↩️ Inverse for `AddNodeProperty`.
 
-use {crate::schema::mutations::remove_node_property::RemoveNodeProperty, crate::schema::mutations::SemioGraphMutation};
+use crate::schema::mutations::remove_node_property::RemoveNodeProperty;
 use crate::schema::snapshot::SemioGraphSnapshot;
 
 //#region 🔖️Inverse
 /// ↩️ The exact undo: one `remove-node-property` of the attached key; nothing when the add would not apply (no node, or
 /// the key already present — undoing that no-op must never detach the pre-existing entry).
-pub fn inverse(payload: &super::AddNodeProperty, base: &SemioGraphSnapshot) -> Result<Vec<SemioGraphMutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op>(payload: &super::AddNodeProperty, base: &SemioGraphSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError>
+where
+    Op: From<crate::schema::mutations::remove_node_property::RemoveNodeProperty>,
+{
     Ok(base
         .nodes
         .iter()
         .find(|node| node.id == payload.node_id && !node.properties.iter().any(|property| property.key == payload.property.key))
-        .map(|_| SemioGraphMutation::RemoveNodeProperty(RemoveNodeProperty { node_id: payload.node_id.clone(), key: payload.property.key.clone() }))
+        .map(|_| Op::from(RemoveNodeProperty { node_id: payload.node_id.clone(), key: payload.property.key.clone() }))
         .into_iter()
         .collect())
 }

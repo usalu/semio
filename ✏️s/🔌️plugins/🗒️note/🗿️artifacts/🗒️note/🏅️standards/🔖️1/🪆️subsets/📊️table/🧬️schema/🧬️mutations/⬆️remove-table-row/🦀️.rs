@@ -1,6 +1,5 @@
 //! ⬆️ Note mutation — `RemoveTableRow`: removes a table block's last row (a table always keeps at least one row).
 
-use crate::schema::mutations::NoteMutation;
 use crate::{NoteDiff, NoteSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -19,17 +18,23 @@ pub struct RemoveTableRow {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn remove_table_row(id: String) -> NoteMutation {
-    NoteMutation::RemoveTableRow(RemoveTableRow { id })
+pub fn remove_table_row<Op>(id: String) -> Op
+where
+    Op: From<crate::standards::v1::subsets::table::schema::mutations::remove_table_row::RemoveTableRow>,
+{
+    Op::from(RemoveTableRow { id })
 }
 
-impl MutationKind<NoteSnapshot, NoteMutation> for RemoveTableRow {
+impl<Op> MutationKind<NoteSnapshot, Op> for RemoveTableRow
+where
+    Op: protocol::Mutation<NoteSnapshot, Diff = NoteDiff> + From<RemoveTableRow> + From<crate::standards::v1::subsets::table::schema::mutations::insert_table_row::InsertTableRow>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "remove", entity: "table-row", kind: "remove-table-row", record: "RemovedTableRow" };
 
     fn diff(&self, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &NoteSnapshot) -> Result<Vec<NoteMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &NoteSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

@@ -1,0 +1,200 @@
+/* 👻️ The figure crop morph keyframes, the target and source ghosts, the overlay frames and the pdf documents. */
+
+@keyframes presentation-figure-crop-morph-grid-to-focus {
+	from {
+		background-size: var(--presentation-figure-bg-grid-size, var(--presentation-figure-bg-size, cover));
+		background-position: var(--presentation-figure-bg-grid-position, var(--presentation-figure-bg-position));
+	}
+	to {
+		background-size: var(--presentation-figure-bg-size, cover);
+		background-position: var(--presentation-figure-bg-position);
+	}
+}
+
+.reveal
+	.slides
+	section.presentation-arrangement--many-to-one-morph[data-auto-animate="running"]
+	.presentation-morph-crop-to.presentation-morph-slot--figure[data-auto-animate-target],
+.reveal
+	.slides
+	section.presentation-arrangement--many-to-one-morph[data-auto-animate="running"]
+	.presentation-morph-crop-to
+	.presentation-morph-slot--figure[data-auto-animate-target] {
+	animation: presentation-figure-crop-morph-from-rest var(--presentation-auto-animate-duration, 1s) ease forwards;
+}
+
+@keyframes presentation-figure-crop-morph-to-rest {
+	from {
+		background-size: var(--presentation-figure-bg-size-morph, cover);
+		background-position: var(--presentation-figure-bg-position-morph);
+	}
+	to {
+		background-size: var(--presentation-figure-bg-size, cover);
+		background-position: var(--presentation-figure-bg-position);
+	}
+}
+
+@keyframes presentation-figure-crop-morph-from-rest {
+	from {
+		background-size: var(--presentation-figure-bg-size, cover);
+		background-position: var(--presentation-figure-bg-position);
+	}
+	to {
+		background-size: var(--presentation-figure-bg-size-morph, cover);
+		background-position: var(--presentation-figure-bg-position-morph);
+	}
+}
+
+@keyframes presentation-target-ghost-frame {
+	from {
+		left: var(--presentation-morph-frame-left);
+		top: var(--presentation-morph-frame-top);
+		width: var(--presentation-morph-frame-width);
+		height: var(--presentation-morph-frame-height);
+	}
+	to {
+		left: var(--presentation-frame-left);
+		top: var(--presentation-frame-top);
+		width: var(--presentation-frame-width);
+		height: var(--presentation-frame-height);
+	}
+}
+
+.reveal .presentation-figure-crop-frame,
+.reveal .presentation-morph-slot {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	overflow: hidden;
+	background-repeat: no-repeat;
+	box-sizing: border-box;
+	z-index: 1;
+}
+
+.reveal .presentation-morph-slot h2 {
+	margin: 0;
+	width: 100%;
+	text-align: center;
+}
+
+.reveal .presentation-morph-slot-placeholder {
+	opacity: 0;
+}
+
+@keyframes presentation-target-ghost-fade-out {
+	from {
+		opacity: 1;
+	}
+	to {
+		opacity: 0;
+	}
+}
+
+@keyframes presentation-morph-one-fade-out {
+	from {
+		opacity: 1;
+	}
+	to {
+		opacity: 0;
+	}
+}
+
+.reveal .presentation-target-ghost {
+	opacity: 0;
+	visibility: visible;
+	z-index: 0;
+	pointer-events: none !important;
+}
+
+.reveal .presentation-morph-target:not(.opacity-20) {
+	opacity: 1;
+	visibility: visible;
+}
+
+.reveal .presentation-morph-target.opacity-20 {
+	opacity: 0.2;
+	visibility: visible;
+}
+
+.reveal .presentation-source-ghost {
+	opacity: 0 !important;
+	visibility: hidden !important;
+	z-index: 0;
+	pointer-events: none !important;
+}
+
+.reveal .presentation-morph-one {
+	opacity: 1;
+	visibility: visible;
+}
+
+.reveal .slides section[data-auto-animate="pending"] .presentation-target-ghost {
+	opacity: 1 !important;
+	visibility: visible !important;
+	pointer-events: none !important;
+	animation: none !important;
+}
+
+.reveal .slides section[data-auto-animate="running"] .presentation-target-ghost {
+	visibility: visible !important;
+	pointer-events: none;
+	animation: presentation-target-ghost-fade-out var(--presentation-auto-animate-duration, 1s) ease forwards !important;
+}
+
+.reveal .slides section[data-auto-animate="pending"] .presentation-source-ghost {
+	opacity: 1 !important;
+	visibility: visible !important;
+	pointer-events: none;
+	animation: none !important;
+}
+
+.reveal .slides section[data-auto-animate="running"] .presentation-source-ghost {
+	opacity: 1 !important;
+	visibility: visible !important;
+	pointer-events: none;
+}
+
+.reveal .slides section[data-auto-animate="pending"] .presentation-morph-one[data-auto-animate-target],
+.reveal .slides section[data-auto-animate="running"] .presentation-morph-one[data-auto-animate-target] {
+	animation: presentation-morph-one-fade-out var(--presentation-auto-animate-duration, 1s) ease forwards !important;
+	pointer-events: none !important;
+}
+
+.reveal .presentation-disposition-frame--overlay {
+	z-index: 1;
+	background-color: var(--base);
+}
+
+.reveal .presentation-disposition-frame:has(.presentation-media-pdf-document:not(.presentation-media-pdf-document--scroll)) {
+	overflow: hidden;
+}
+
+.reveal .presentation-media-pdf-document {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 100%;
+	height: 100%;
+	min-height: 0;
+	min-width: 0;
+	overflow: hidden;
+}
+
+.reveal .presentation-media-pdf-document--scroll {
+	display: block;
+	flex-shrink: 0;
+	overflow: visible;
+}
+
+.reveal .presentation-media-pdf {
+	display: block;
+	flex-shrink: 0;
+	background: #fff;
+	line-height: 0;
+}
+
+.reveal .presentation-media-pdf canvas {
+	display: block;
+	width: auto;
+	height: auto;
+}

@@ -1,10 +1,11 @@
 //! 🔬️ `delete-material` implementation case `🔬️middle-row`: the committed fixture bundle
 //! `♾️any/🧫️fixtures/🧬️mutations/💎️material/🗑️delete/🔬️middle-row/` deletes a MIDDLE row, so the law checks that the concrete inverse restores
 //! the row at its original index and that the inverse diffs sum to the negative of the forward diff.
-use super::*;
+use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfSnapshot;
+use crate::standards::v2_0::subsets::any::schema::mutations::delete_material::*;
 
 #[test]
 fn committed_case_holds_the_corpus_law() {
-    assert_eq!(<DeleteMaterialMutation as protocol::MutationKind<GltfSnapshot, super::super::GltfMutation>>::SEMANTICS.kind, "delete-material");
-    super::super::component::fixture_corpus_tests::assert_case("💎️material/🗑️delete/🔬️middle-row");
+    assert_eq!(<DeleteMaterialMutation as protocol::MutationKind<GltfSnapshot, crate::standards::v2_0::subsets::any::schema::mutations::GltfMutation>>::SEMANTICS.kind, "delete-material");
+    crate::standards::v2_0::subsets::any::schema::mutations::fixture_corpus_tests::assert_case("💎️material/🗑️delete/🔬️middle-row");
 }

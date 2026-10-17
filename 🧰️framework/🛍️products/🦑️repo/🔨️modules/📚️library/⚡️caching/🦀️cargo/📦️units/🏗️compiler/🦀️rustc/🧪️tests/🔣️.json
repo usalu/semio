@@ -1,0 +1,59 @@
+{
+  "version": 1,
+  "source": {
+    "consumer": "withCompilerCapacityConsumptionV1",
+    "policy": "rustCompilerCapacityRequestV1",
+    "jobserver": "createJobserverV1",
+    "compile": "compileCpu",
+    "consume": "consumeCompleted",
+    "cfg": "cfgText"
+  },
+  "profiles": [
+    {
+      "codegen_backend": null,
+      "codegen_units": 256,
+      "lto": "false",
+      "resourceClass": "jobserver-codegen",
+      "request": {
+        "kind": "available",
+        "maximumParallelism": 256
+      }
+    },
+    {
+      "codegen_backend": null,
+      "codegen_units": 1,
+      "lto": "false",
+      "resourceClass": "whole-host-backend",
+      "request": {
+        "kind": "whole-host"
+      }
+    },
+    {
+      "codegen_backend": "unknown",
+      "codegen_units": 256,
+      "lto": "off",
+      "resourceClass": "whole-host-backend",
+      "request": {
+        "kind": "whole-host"
+      }
+    },
+    {
+      "codegen_backend": null,
+      "codegen_units": null,
+      "lto": "false",
+      "resourceClass": "whole-host-backend",
+      "request": {
+        "kind": "whole-host"
+      }
+    },
+    {
+      "codegen_backend": null,
+      "codegen_units": 256,
+      "lto": "thin",
+      "resourceClass": "whole-host-backend",
+      "request": {
+        "kind": "whole-host"
+      }
+    }
+  ]
+}

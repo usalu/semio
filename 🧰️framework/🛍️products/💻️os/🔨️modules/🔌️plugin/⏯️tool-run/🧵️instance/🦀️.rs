@@ -1,25 +1,43 @@
 //! ⏯️ The mounted instance's tool-run turns (ledger driving, tick folding and finalize publication) and the
 //! [`ToolRunExtension`] that registers them with the instance through [`InstanceExtension`].
-use semio_framework_tool_run::{
-    tool_run_pointer_value, ToolRunAction, ToolRunEffect, ToolRunEvent, ToolRunId, ToolRunIdentity, ToolRunLane, ToolRunMachine, ToolRunRebasePolicy, ToolRunReconfigurePolicy,
-    ToolRunRejection, ToolRunSettingsReads, ToolRunState, ToolRunStepArg, ToolRunStepKind, ToolRunStepRing, ToolRunTick, ToolRunTraceStore, TOOL_RUN_ARG_GENERATION, TOOL_RUN_ARG_RUN_ID, TOOL_RUN_ARG_TOOL_ID, TOOL_RUN_ARG_WINDOW_ID, TOOL_RUN_REASON_CONFLICT, TOOL_RUN_REASON_REBASING, TOOL_RUN_TICK_BYTES_MAX,
-};
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as pack;
+use semio_framework_tool_run::{ToolRunAction, ToolRunEffect, ToolRunEvent, ToolRunId, ToolRunIdentity, ToolRunLane, ToolRunMachine, ToolRunRebasePolicy, ToolRunReconfigurePolicy, ToolRunRejection, ToolRunState, ToolRunStepArg, ToolRunStepKind, ToolRunStepRing, ToolRunTraceStore, TOOL_RUN_ARG_GENERATION, TOOL_RUN_ARG_RUN_ID, TOOL_RUN_ARG_TOOL_ID, TOOL_RUN_ARG_WINDOW_ID, TOOL_RUN_REASON_CONFLICT, TOOL_RUN_REASON_REBASING};
 use std::sync::Arc;
-use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,admit_retained_clone_close}};
-use super::*;
-use crate::artifact_instance::InstanceExtension;
-use crate::artifact_instance::VcsArtifactApp;
-use crate::app_emission::ActionMeta;
-use crate::child_view::MemberKeyRef;
-use crate::tool_run_contract::ToolRunJobRequest;
+use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind};
+use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, admit_retained_clone_close};
+use semio_framework_plugin_decl_app::ArtifactApp;
+#[cfg(test)]
+use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+#[cfg(test)]
+use semio_framework_plugin_decl_app::tool_contract::ArtifactOwnedToolJobFactory;
+use pack::snapshot::ArtifactPack;
+use semio_framework_plugin_decl_emission::Emit;
+use semio_framework_plugin_decl_views::tool_run_contract::{FRAMEWORK_TOOL_RUN_BODY_KEY, ToolRunJobPort, ToolRunJobPurpose, ToolRunRetargetableJob, ToolRunTraceKeys};
+use semio_framework::FaultFrom;
+use semio_framework_value_derive::{FromValue, ToValue};
+use store::{Mutation, MutationDiff};
+use protocol::{OpBinary, OpText};
+#[cfg(test)]
+use semio_framework_plugin_reactor_app::PluginApp;
+use semio_framework_ui_scene::SceneDoc;
+use semio_framework_plugin_tool_run::{TOOL_RUN_JOB_SITE, TOOL_RUN_PANEL_TRACE_ROWS, TOOL_RUN_TRACE_DELTA_BYTES, ToolRunActionOutcome, ToolRunEntry, ToolRunFinalize, ToolRunFinalizePhase, ToolRunJobHandle, ToolRunLedger, ToolRunMemberEmissionOwner, ToolRunMemberEmissionRetire, ToolRunMemberEmit, ToolRunMemberGeneration, ToolRunMemberOwners, ToolRunMemberRetire, ToolRunMemberRun, ToolRunRefoldTurn, inject_tool_run_trace_lane_into, selected_entry, selected_entry_mut, tool_grant_funds, tool_run_arg_u64, tool_run_scene_surface};
+#[cfg(any(test, feature = "artifact-app-testing"))]
+use semio_framework_plugin_window_config::WindowConfigOwner;
+use semio_framework_plugin_job::is_tool_run_action_id;
+use semio_framework_ui_contract::*;
+use semio_framework_plugin_instance_extension::InstanceExtension;
+use semio_framework_plugin_decl_emission::ActionMeta;
 use semio_framework::{ActionKind, ViewModel};
-use store::{os_store::store_schema::HistoryLane, MemberFactory, SpaceMember};
+use store::os_store::store_schema::HistoryLane;
+use store::{MemberFactory, SpaceMember};
 use semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority;
 
-use crate::artifact_instance::item;
-use crate::artifact_instance::{ToolOperations};
-use crate::artifact_instance::{ExtensionCtx, ExtensionRef, ToolRunCtx, ToolRunRef};
-use crate::tool_jobs::TimeTravelLedger;
+use semio_framework_plugin_instance_jobs::jobs_components::ToolOperations;
+use semio_framework_plugin_instance_extension::{ExtensionCtx, ExtensionRef};
+use crate::tool_run_bundle::{ToolRunCtx, ToolRunRef};
+use semio_framework_plugin_time_travel::TimeTravelLedger;
 
 impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceExtension> ToolRunCtx<'ctx, A, M, X> {
     /// ⏯️ Host-driven routing of the §2.5 actions: applied to the ledger now, never queued behind the run.
@@ -235,7 +253,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
 
     /// 📮️ Hands the owed scope to the typed UI outbox once it has room; until then the flags stay set, so a
     /// queued unrelated scope never swallows a run change.
-    pub(crate) fn flush_tool_run_ui_dirty(&mut self) {
+    pub fn flush_tool_run_ui_dirty(&mut self) {
         if !self.tool_runs.is_ui_dirty() || self.tools.typed_ui_outbox.len() != 0 {
             return;
         }
@@ -919,7 +937,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
         Ok(None)
     }
 
-    pub(crate) fn tool_run_retire_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<RetainedCloneStep>,semio_framework_job::OriginalTurnFailure>{
+    pub fn tool_run_retire_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<RetainedCloneStep>,semio_framework_job::OriginalTurnFailure>{
         let grant=cx.retained_grant();if cx.should_yield(){return Ok(Some(RetainedCloneStep::Progress(Default::default())))}
         for entry in [false,true]{
             let step=if entry{self.tool_run_entry_close_step(grant)}else{self.tool_run_member_retire_step(grant)}.map_err(|fault|semio_framework_job::OriginalTurnFailure::debit_original(fault,cx))?;
@@ -951,7 +969,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
     }
 
     /// 🎟️ Forwards the original full grant and retains every unsupported cleanup frontier in place.
-    pub(crate) fn tool_run_close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<RetainedCloneStep,semio_framework_job::OriginalTurnFailure>{
+    pub fn tool_run_close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<RetainedCloneStep,semio_framework_job::OriginalTurnFailure>{
         if !self.tool_runs.closing{return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"ToolRun close requires genuine granted entry cancellation admission").into())}
         Ok(self.tool_run_retire_step(cx)?.unwrap_or_else(||if self.tool_runs.terminal_is_empty(){RetainedCloneStep::Complete(Default::default())}else{RetainedCloneStep::Progress(Default::default())}))
     }
@@ -959,7 +977,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
 
 impl<'v, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceExtension> ToolRunRef<'v, A, M, X> {
     /// 🏃️ Ledger work plus an unobserved store or settings generation change the watch still owes.
-    pub(crate) fn tool_run_has_pending_work(&self) -> bool {
+    pub fn tool_run_has_pending_work(&self) -> bool {
         self.tool_runs.has_pending_work()
             || self.tool_runs.is_ui_dirty()
             || self.tool_runs.entries.iter().any(|entry| {
@@ -981,7 +999,7 @@ impl<'v, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceEx
         self.child_composition.children.get(&(member.slot.clone(), member.child_id.clone())).map(|child| child.member.visit_member(ToolRunMemberGeneration))
     }
 
-    pub(crate) fn tool_run_retirement_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{
+    pub fn tool_run_retirement_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{
         if self.tool_runs.entries.iter().any(|entry|entry.member.as_ref().is_some_and(ToolRunMemberRun::is_work))||!self.tool_runs.retired_members.is_empty(){return Ok(RetirementDemand{depth:1,..Default::default()});}
         if let Some(demand)=self.tool_run_entry_close_demand(body)?{return Ok(demand);}
         self.tool_runs.retirement_demands(&self.stores.store,body)
@@ -1011,7 +1029,8 @@ fn tool_run_busy_fault(verb: &str) -> Fault {
 
 /// 🎛️ Tool runs as an instance extension: the `toolRun*` verbs, the mutation hold a freezing run keeps, the run's
 /// maintenance turn, its panel body and the trace lane it adds to the app's own scene.
-pub(crate) struct ToolRunExtension;
+#[doc(hidden)]
+pub struct ToolRunExtension;
 
 impl InstanceExtension for ToolRunExtension {
     fn claims_action(action: &str) -> bool {
@@ -1042,7 +1061,7 @@ impl InstanceExtension for ToolRunExtension {
         tool_runs.terminal_is_empty()
     }
 
-    async fn drive_turn<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceExtension>(ctx: &mut ExtensionCtx<'_, A, M, X>, retained: &mut RetainedCloneGrant, identity: &mut EntityIdentityAuthority<'_>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, crate::PluginLifecycleFailure> {
+    async fn drive_turn<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceExtension>(ctx: &mut ExtensionCtx<'_, A, M, X>, retained: &mut RetainedCloneGrant, identity: &mut EntityIdentityAuthority<'_>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
         let mut ctx = ToolRunCtx::of_extension(ctx);
         if !ctx.shared().tool_run_has_pending_work() {
             return Ok(false);
@@ -1073,6 +1092,5 @@ impl InstanceExtension for ToolRunExtension {
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod extension_tests;
+#[path = "📥️staging/🧺️bundle/🦀️.rs"]
+pub mod tool_run_bundle;

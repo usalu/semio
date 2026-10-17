@@ -3,7 +3,7 @@
 pub const OPCODE: &str = "set-optional-content";
 pub const TEXT_OPCODE: &str = OPCODE;
 
-use crate::standards::v1_7::subsets::base::schema::mutations::SetOptionalContent;
+use crate::standards::v1_7::subsets::base::schema::mutations::set_optional_content::SetOptionalContent;
 
 /// 🖨️ Prints this direct payload through its schema-derived JSON representation.
 pub fn print(payload: &SetOptionalContent) -> Result<String, String> {

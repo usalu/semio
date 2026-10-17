@@ -3,8 +3,7 @@
 #[allow(unused_imports)]
 mod mutations_codec {
 use super::*;
-use crate::editor::animate::presence::component::mutations::*;
-use crate::editor::animate::presence::component::*;
+use crate::editor::animate::presence::*;
 use crate::editor::animate::presence::ReplacePresence;
 
 impl protocol::OpText for PresentationPresenceMutation {
@@ -29,8 +28,7 @@ impl protocol::OpText for PresentationPresenceMutation {
 #[allow(unused_imports)]
 mod mutations_wire_codec {
 use super::*;
-use crate::editor::animate::presence::component::mutations::*;
-use crate::editor::animate::presence::component::*;
+use crate::editor::animate::presence::*;
 use crate::editor::animate::presence::ReplacePresence;
 
 /// 🌉️ The committed-vector report of this state lane for the language-neutral case adapter, which links only this

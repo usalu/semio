@@ -2,9 +2,10 @@
 //!
 //! The laws mount the exact catalog an app supplies (`build_*_store_owners`) on a store minted the way the runtime mints it, so a mutation
 //! vocabulary that cannot author through its real store fails here instead of at the first undo, genesis or interaction in the browser.
-use super::ArtifactApp;
+use semio_framework_plugin_decl_app::ArtifactApp;
 use semio_framework_value::retained_clone::{RetainedCloneBirthDemand, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
-use store::{os_store::store_schema::ArtifactCommand, ArtifactStore, SpaceMember};
+use store::os_store::store_schema::ArtifactCommand;
+use store::{ArtifactStore, SpaceMember};
 
 /// ⚖️ What one mutation published through a real store: its authored operation rows and the snapshot after apply, undo and redo.
 pub struct StoreAuthoringLaw<P> {

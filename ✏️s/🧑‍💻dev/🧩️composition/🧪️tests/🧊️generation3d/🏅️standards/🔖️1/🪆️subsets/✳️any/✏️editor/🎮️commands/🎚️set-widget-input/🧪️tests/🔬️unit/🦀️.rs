@@ -1,4 +1,5 @@
 use super::*;
+use semio_framework_test_fixtures::repo_text;
 use semio_framework_value::ToValue;
 
 #[semio_framework_async_macros::async_test]
@@ -10,7 +11,7 @@ async fn widget_input_graph_selection_projects_the_same_retained_inspector() {
     use semio_s_artifact_procedural_3d_editor_panels::inspection::GENERATION_3D_PLAY_BODY_INSPECTION;
     let _serial = crate::editor_domain::editor_laws::serial_execution::lock();
     let _unlinked = crate::flow_operators::UnlinkedFlowExtensions::contributed();
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(repo_text!("✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let case = &fixture["selectionPublication"];
     let mut app = context::app().await;
     let mut snapshot = semio_s_artifact_procedural_3d_model::empty_generation3d_snapshot();
@@ -44,7 +45,6 @@ async fn widget_input_graph_selection_projects_the_same_retained_inspector() {
             binding = input["bindings"][0].clone();
             assert_eq!(context::snapshot(&app), before);
         }
-        println!("[DEBUG] {} retained graph selection projected the selected input into both inspector locales", action);
     }
     let mut args = binding["args"].clone(); args["value"] = case["committedValue"].clone();
     context::act_with_view(&mut app, binding["action"]["name"].as_str().unwrap(), args, context::preview_views("selection", "second").0).await.unwrap();
@@ -54,7 +54,6 @@ async fn widget_input_graph_selection_projects_the_same_retained_inspector() {
     assert_eq!(after.host_snapshot.synapses, before.host_snapshot.synapses);
     settle_history_verb(&mut *app, "undo", meta("local").instance_id).await; assert_eq!(context::snapshot(&app), before);
     settle_history_verb(&mut *app, "redo", meta("local").instance_id).await; assert_eq!(context::snapshot(&app), after);
-    println!("[DEBUG] selected slider emitted commit binding published its absolute mutation and exact undo/redo");
     close_registered_fixture_app(&mut *app);
 }
 
@@ -66,7 +65,7 @@ async fn widget_input_mesh_source_actions_publish_evaluate_and_restore_history()
     use semio_s_artifact_procedural_3d_mode_edit::windows::flow::GENERATION_3D_PLAY_BODY_MAIN;
     let _serial = crate::editor_domain::editor_laws::serial_execution::lock();
     let _unlinked = crate::flow_operators::UnlinkedFlowExtensions::contributed();
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎚️set-widget-input/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(repo_text!("✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎚️set-widget-input/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     for group in ["meshSource", "meshAssets"] {
     for case in fixture[group]["cases"].as_array().unwrap().iter().filter(|case| case["error"] != true) {
         let mut app = context::app().await;
@@ -94,14 +93,12 @@ async fn widget_input_mesh_source_actions_publish_evaluate_and_restore_history()
         assert_eq!(serde_json::from_str::<serde_json::Value>(text).unwrap(), expected, "{}", case["id"]);
         assert_eq!(after.host_snapshot.synapses, before.host_snapshot.synapses);
         let receipt = context::drive_preview_run(&mut app, &view, &change.effects).await;
-        eprintln!("[DEBUG] input preview hops={} answered={} state={:?}", receipt.hops, receipt.answered, receipt.state);
         assert!(receipt.answered > 0, "contributed geometry must cross the actual extension transport");
         let graph = context::render_with_view(&mut app, GENERATION_3D_PLAY_BODY_MAIN, &view).await;
         let scene = decode_fixture_scene_with_lanes::<semio_framework_plugin::NodeGraphScene>(&graph).unwrap();
         assert_eq!(crate::editor_domain::editor_laws::node_eval_status(scene.status_json.as_ref().unwrap(), "construct"), "ok", "{}", case["id"]);
         settle_history_verb(&mut *app, "undo", meta("local").instance_id).await; assert_eq!(context::snapshot(&app), before);
         settle_history_verb(&mut *app, "redo", meta("local").instance_id).await; assert_eq!(context::snapshot(&app), after);
-        println!("[DEBUG] structured mesh {} used its retained source note, canonical geometry inference and exact undo/redo", case["id"]);
         close_registered_fixture_app(&mut *app);
     }
     }
@@ -129,12 +126,10 @@ async fn widget_input_publication_supports_scalar_events_and_undo_redo() {
     let after = context::snapshot(&app);
     let params = after.host_snapshot.widgets.iter().find_map(|widget| match widget { Widget::Neuron { id: candidate, params, .. } if candidate == &id => Some(params.to_value()), _ => None }).unwrap();
     assert_eq!(params.get("width").and_then(|value| value.get("value")).and_then(semio_framework_value::DslValue::as_f64), Some(2.5));
-    eprintln!("[DEBUG] inspector input {id}.width published 2.5");
     semio_framework_plugin::artifact_app_laws::settle_history_verb(&mut *app, "undo", 1).await;
     assert_eq!(context::snapshot(&app), before);
     semio_framework_plugin::artifact_app_laws::settle_history_verb(&mut *app, "redo", 1).await;
     assert_eq!(context::snapshot(&app), after);
-    eprintln!("[DEBUG] inspector input {id}.width undo/redo restored typed parameters");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -145,7 +140,7 @@ async fn widget_input_collection_actions_publish_evaluate_and_restore_history() 
     use semio_s_artifact_procedural_3d_mode_edit::windows::flow::GENERATION_3D_PLAY_BODY_MAIN;
     let _serial = crate::editor_domain::editor_laws::serial_execution::lock();
     let _unlinked = crate::flow_operators::UnlinkedFlowExtensions::contributed();
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎚️set-widget-input/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(repo_text!("✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎚️set-widget-input/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     for case in fixture["runtimeCollections"].as_array().unwrap() {
         let mut app = context::app().await;
         let mut snapshot = semio_s_artifact_procedural_3d_model::empty_generation3d_snapshot();
@@ -176,7 +171,6 @@ async fn widget_input_collection_actions_publish_evaluate_and_restore_history() 
             for (axis, name) in ["x", "y", "z"].iter().enumerate() { assert_eq!(actual.get(name).unwrap().as_f64(), point[axis].as_f64()); }
         }
         let receipt = context::drive_preview_run(&mut app, &view, &change.effects).await;
-        eprintln!("[DEBUG] input preview hops={} answered={} state={:?}", receipt.hops, receipt.answered, receipt.state);
         assert!(receipt.answered > 0, "contributed geometry must cross the actual extension transport");
         let graph = context::render_with_view(&mut app, GENERATION_3D_PLAY_BODY_MAIN, &view).await;
         let scene = decode_fixture_scene_with_lanes::<semio_framework_plugin::NodeGraphScene>(&graph).unwrap();
@@ -187,7 +181,6 @@ async fn widget_input_collection_actions_publish_evaluate_and_restore_history() 
         settle_history_verb(&mut *app, "redo", meta("local").instance_id).await;
         assert_eq!(context::snapshot(&app), after);
         context::drain_flow_eval_ticks_with_view(&mut app, &view).await;
-        println!("[DEBUG] retained point-list {} action evaluated through the registered geometry gateway and undo/redo restored its exact document", case["id"]);
         close_registered_fixture_app(&mut *app);
     }
 }
@@ -224,7 +217,6 @@ async fn widget_input_metadata_actions_preserve_live_connections_and_history() {
     assert!(after.host_snapshot.synapses.iter().any(|wire| wire.to == "parameter" && wire.to_port == "Width"));
     assert!(after.host_snapshot.synapses.iter().any(|wire| wire.from == "parameter" && wire.from_port == "Width"));
     let receipt = context::drive_preview_run(&mut app, &view, &change.effects).await;
-        eprintln!("[DEBUG] input preview hops={} answered={} state={:?}", receipt.hops, receipt.answered, receipt.state);
     let graph = context::render_with_view(&mut app, GENERATION_3D_PLAY_BODY_MAIN, &view).await;
     let scene = decode_fixture_scene_with_lanes::<semio_framework_plugin::NodeGraphScene>(&graph).unwrap();
     assert_eq!(crate::editor_domain::editor_laws::node_eval_status(scene.status_json.as_ref().unwrap(), "parameter"), "ok", "status={:?} evaluation={:?}",scene.status_json,scene.eval_json);
@@ -242,7 +234,6 @@ async fn widget_input_metadata_actions_preserve_live_connections_and_history() {
     assert_eq!(context::snapshot(&app), before_export);
     settle_history_verb(&mut *app, "redo", meta("local").instance_id).await;
     assert_eq!(context::snapshot(&app), after_export);
-    println!("[DEBUG] variable rename preserved evaluated input/output channels; default glTF export changed through its own facet; undo/redo restored both documents");
     close_registered_fixture_app(&mut *app);
 }
 
@@ -255,7 +246,7 @@ async fn widget_input_texture_picker_retains_source_scope_and_restores_history()
     use semio_s_artifact_procedural_3d_editor_commands::import_document_request;
     let _serial = crate::editor_domain::editor_laws::serial_execution::lock();
     let _unlinked = crate::flow_operators::UnlinkedFlowExtensions::contributed();
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎚️set-widget-input/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(repo_text!("✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎚️set-widget-input/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let mut app = context::app().await;
     let mut snapshot = semio_s_artifact_procedural_3d_model::empty_generation3d_snapshot();
     let projected = with_host(&snapshot.host_snapshot, |host| {
@@ -286,7 +277,6 @@ async fn widget_input_texture_picker_retains_source_scope_and_restores_history()
     assert_eq!(source["materials"], fixture["meshAssets"]["mesh"]["materials"]); assert_eq!(after.host_snapshot.synapses, before.host_snapshot.synapses);
     settle_history_verb(&mut *app, "undo", meta("local").instance_id).await; assert_eq!(context::snapshot(&app), original);
     settle_history_verb(&mut *app, "redo", meta("local").instance_id).await; assert_eq!(context::snapshot(&app), after);
-    println!("[DEBUG] {key}: texture file picker retained source scope, one canonical source-text mutation, and exact undo/redo");
     }
     close_registered_fixture_app(&mut *app);
 }

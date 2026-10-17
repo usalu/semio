@@ -1,6 +1,8 @@
 //! 🧭️ `set-spatial-node` — authored as its own mutation leaf; its diff and inverse live in `🔺️diff` and `↩️inverse`.
 
-use super::*;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
+use crate::{schema::snapshot::SemioModelSnapshot, schema::snapshot::SpatialKind};
+use protocol::Mutation;
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
@@ -19,13 +21,16 @@ pub struct SetSpatialNode {
     pub placement: Option<SemioTransform>,
 }
 
-impl protocol::MutationKind<SemioModelSnapshot, SemioModelMutation> for SetSpatialNode {
+impl<Op> protocol::MutationKind<SemioModelSnapshot, Op> for SetSpatialNode
+where
+    Op: protocol::Mutation<SemioModelSnapshot, Diff = crate::schema::diff::SemioModelDiff> + From<SetSpatialNode>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "spatial-node", kind: "set-spatial-node", record: "SetSpatialNode" };
 
-    fn diff(&self, base: &SemioModelSnapshot) -> protocol::MutationOutcome<<SemioModelMutation as Mutation<SemioModelSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioModelSnapshot) -> protocol::MutationOutcome<<Op as Mutation<SemioModelSnapshot>>::Diff> {
         diff::diff(self, base)
     }
-    fn inverse(&self, base: &SemioModelSnapshot) -> Result<Vec<SemioModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &SemioModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         inverse::inverse(self, base)?
     

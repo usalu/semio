@@ -36,6 +36,10 @@ type gisGismapInferenceGuardSizeBounds = { readonly minItems?: number; readonly 
 
 export const gisGismapInferenceGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : gisGismapInferenceGuardReject(at, "value is not an object");
+export const gisGismapInferenceGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) gisGismapInferenceGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const gisGismapInferenceGuardArray = (value: unknown, at: string, bounds: gisGismapInferenceGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return gisGismapInferenceGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) gisGismapInferenceGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -66,7 +70,7 @@ export const gisGismapInferenceGuardConstant = <T extends string | number | bool
 //#endregion 🚪️Parsers
 
 export function parseGisMapBounds(value: unknown, at = "$"): GisMapBounds {
-  const row = gisGismapInferenceGuardObject(value, at);
+  const row = gisGismapInferenceGuardClosed(gisGismapInferenceGuardObject(value, at), at, ["lonMin", "lonMax", "latMin", "latMax"]);
   return {
     lonMin: gisGismapInferenceGuardNumber(row["lonMin"], `${at}.lonMin`),
     lonMax: gisGismapInferenceGuardNumber(row["lonMax"], `${at}.lonMax`),

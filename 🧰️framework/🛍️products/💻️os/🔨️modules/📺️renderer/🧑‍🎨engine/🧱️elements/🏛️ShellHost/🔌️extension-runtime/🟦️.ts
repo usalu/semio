@@ -5,8 +5,10 @@
 
 import { SemioFaultError, type Effect, type Fault, type InvocationResponse } from "@semio-tech/framework";
 import { encodePackValue } from "@semio-tech/framework/packs";
-import { type ActiveSession, type LoadedProgramState, type SpawnedAppEntry } from "../../🐚️Shell/🟦️.tsx";
-import { resolveManifestLabel, beginCancellableExtensionRequest } from "../../🛠️ShellHelpers/🟦️.tsx";
+import { type SpawnedAppEntry } from "../../🐚️Shell/🟦️.tsx";
+import { type ActiveSession, type LoadedProgramState } from "../../🐚️Shell/📦️program-sessions/🟦️.ts";
+import { resolveManifestLabel } from "../../🛠️ShellHelpers/🏷️labels/🟦️.tsx";
+import { beginCancellableExtensionRequest } from "../../🛠️ShellHelpers/🛑️extension-io/🟦️.ts";
 import { type PluginExtensionCompletion, serializePerActor } from "../../🔌️PluginRuntime/🟦️.tsx";
 import { isShardLostError } from "../../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
 import { hopTrace, type HopTraceDetail } from "@semio-tech/framework/trace";

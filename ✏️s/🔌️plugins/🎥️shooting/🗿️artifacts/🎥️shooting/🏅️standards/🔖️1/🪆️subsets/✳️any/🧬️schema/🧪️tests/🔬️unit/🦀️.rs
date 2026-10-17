@@ -1,5 +1,10 @@
+#[allow(unused_imports)]
+use crate::{ShootingEmblemChild, ShootingSnapshot};
+#[allow(unused_imports)]
+use schema::ArtifactSchema;
 use crate::standards::v1::subsets::any::io::text::snapshot::{default_snapshot,shooting_scene_svg,shooting_document_json_to_svg,shooting_icon_render_request_json};
-use super::*;
+use crate::standards::v1::subsets::any::schema::*;
+use crate::{active_asset, active_shot, is_transparent_shooting_background};
 use crate::SHOOTING_DOCUMENT_SCHEMA;
 
 #[semio_framework_async_macros::async_test]

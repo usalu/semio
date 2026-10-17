@@ -10,7 +10,6 @@
 use semio_s_artifact_raster_raster_diff::{canvas, painted_diff, reshaped, Painted, Refusal, Reshape};
 use crate::paint_stroke::{painted_inverse, refused};
 use semio_s_artifact_raster_raster_diff::RasterDiff;
-#[cfg(test)] use semio_s_artifact_raster_raster_mutations::RasterMutation;
 use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
 use semio_s_artifact_raster_raster_model::RasterTransform;
 use semio_framework_pixels::editing::{validate_extent, PixelEditJob, PixelOperation};
@@ -182,7 +181,4 @@ impl<Op> protocol::MutationKind<RasterSnapshot, Op> for TransformImage where Op:
 //#endregion 🔖️Kind
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

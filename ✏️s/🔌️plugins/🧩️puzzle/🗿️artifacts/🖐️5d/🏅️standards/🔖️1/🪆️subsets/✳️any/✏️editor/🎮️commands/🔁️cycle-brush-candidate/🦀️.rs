@@ -1,7 +1,7 @@
 //! 🔁️ `cycle-brush-candidate` command.
-
 use crate::editor::puzzle5d::commands::add_brush_part::puzzle5d_brush_source_grip;
-use crate::editor::puzzle5d::Puzzle5dActionCtx;
+
+use crate::editor::puzzle5d::interaction::Puzzle5dActionCtx;
 
 /// 🔁️ Advances the candidate index, wrapping around the free candidates the brush run resolved for the current
 /// target grip (or just incrementing when there is no target yet).

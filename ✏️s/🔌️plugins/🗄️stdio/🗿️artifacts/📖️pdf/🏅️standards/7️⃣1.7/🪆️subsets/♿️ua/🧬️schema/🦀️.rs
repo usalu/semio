@@ -15,8 +15,7 @@ pub use crate::standards::v1_7::subsets::base::schema::*;
 // glob re-export of 🧱️base's `mutations` above, which is what puts this subset's own vocabulary at
 // `subsets::<name>::schema::mutations` while 🧱️base's document vocabulary stays reachable at its own
 // address.
-#[path = "🧬️mutations/🦀️.rs"]
-pub mod mutations;
+pub use semio_s_artifact_stdio_pdf_mut_family_9::standards::v1_7::subsets::ua::schema::mutations;
 //#endregion 🧬️Mutations
 
 //#region 🏗️DerivedConstruction

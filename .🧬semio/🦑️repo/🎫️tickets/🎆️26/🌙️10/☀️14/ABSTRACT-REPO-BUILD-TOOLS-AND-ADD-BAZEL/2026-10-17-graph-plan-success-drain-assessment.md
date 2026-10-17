@@ -1,0 +1,9 @@
+# Graph Plan Success Drain Assessment
+
+Root observed PID45498 emit its newly observed ready publication command, then remain CPU-busy for over five minutes. No command was dispatched. The saved macOS sample contains native/JIT frames without JavaScript Source locations; it does not identify one particular loop.
+
+The exact helper body emits this DEBUG only after awaiting planGraphMaintenanceV1, which in turn awaits the actual Core parent/container scopes, accepted borrower cleanup, domain gate close and lease-infrastructure close. The command is written/fsynced/closed/reread before logging. Thus the remaining outer issued-control/Original settlement path is a candidate, while an in-progress planner observation or publisher is not established. A normal genuinely unresolved open-lifetime gate would await pending work; CPU spin alone cannot establish that explanation. No internal pending set is exposed by current APIs, so a retained promise, stale settled entry, independent recurring continuation or runtime scheduling issue remains unattributed.
+
+Recommended next contained evidence is a bounded Source-only current routing drain diagnostic: owner command, bounded pending count, exact privately tracked operation identity and independently observed settled status. It must not clear, skip, replace or resolve pending work. Reproduce with genuine default Root0, actual open-lifetime/borrower/lease registries on own Generated files and an independently finite owned worker. Preserve Original capabilities, cleanup reserve, arbitrary primary and finite-child constraints. A future physical probe needs current Source qualification and Root serial execution. Existing ready command DATA remains unconsumed and makes no full-process closure claim.
+
+This assessment performed only Source and saved Generated sample reads, no process signal, Native/protected payload read, or physical dispatch. Root owns the live PID and terminal decision.

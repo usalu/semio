@@ -1,0 +1,117 @@
+//! 🧪️ `insert-frame` fixture — `🆕️appends`.
+//!
+//! Transcribed from `../../🔺️diff/🦀️.rs`: the index is CLAMPED to `frames.len()` and a
+//! clamp raises Warning `mutation.clamped`. Index 1 against a one-frame base is exactly at the
+//! boundary — `min(1, 1) == 1` — so the clamp does not fire and the diff is a pure
+//! `frames.added[{index, item}]` triple entry, with `removed`/`modified` omitted because
+//! `IndexedTripleDiff` skips empty vectors.
+use crate::schema::diff::SemioImageDiff;
+use crate::schema::mutations::remove_frame;
+use crate::schema::mutations::SemioImageMutation;
+use crate::schema::snapshot::SemioImageSnapshot;
+use protocol::Mutation;
+
+static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../../🧪️tests/🧫️fixtures/🧬️mutations/➕️insert-frame/🆕️appends/📸️snapshot/⬅️before/🔣️.json"));
+static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../../🧪️tests/🧫️fixtures/🧬️mutations/➕️insert-frame/🆕️appends/📸️snapshot/➡️after/🔣️.json"));
+static MUTATION: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../../🧪️tests/🧫️fixtures/🧬️mutations/➕️insert-frame/🆕️appends/🦠️mutation/🔣️.json"));
+static DIFF: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../../🧪️tests/🧫️fixtures/🧬️mutations/➕️insert-frame/🆕️appends/🔺️diff/🔣️.json"));
+static OUTCOME: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../../🧪️tests/🧫️fixtures/🧬️mutations/➕️insert-frame/🆕️appends/🎯️outcome/🔣️.json"));
+
+fn before() -> SemioImageSnapshot {
+    semio_framework_pack_json::from_json_str((*BEFORE),semio_framework_pack_json::JsonMemberPolicy::Reject).expect("insert-frame before snapshot decodes")
+}
+fn expected_after() -> SemioImageSnapshot {
+    semio_framework_pack_json::from_json_str((*AFTER),semio_framework_pack_json::JsonMemberPolicy::Reject).expect("insert-frame after snapshot decodes")
+}
+fn mutation() -> SemioImageMutation {
+    semio_framework_pack_json::from_json_str((*MUTATION),semio_framework_pack_json::JsonMemberPolicy::Reject).expect("insert-frame mutation decodes")
+}
+fn leaf_outcome() -> protocol::MutationOutcome<SemioImageDiff> {
+    <SemioImageMutation as Mutation<SemioImageSnapshot>>::diff(&mutation(), &before())
+}
+
+/// ▶️ The second frame lands at index 1, keeping its own delay and pixel buffer.
+#[semio_framework_async_macros::async_test]
+async fn appends_the_second_frame_with_its_own_delay_and_pixels() {
+    let base = before();
+    let produced = protocol::apply_diff(leaf_outcome().diff(), &base).expect("insert-frame applies to its committed before-snapshot");
+    assert_eq!(produced, expected_after(), "insert-frame/appends-a-second-frame-at-the-end: applied state differs from the committed after-snapshot");
+    assert_eq!(produced.frames.len(), base.frames.len() + 1, "insert-frame lengthens the frame sequence by exactly one");
+    assert_eq!(produced.frames[0], base.frames[0], "the pre-existing frame must be byte-identical and keep index 0");
+    assert_eq!(produced.frames[1].delay_ms, 80, "the inserted frame carries its own animation delay");
+    assert_eq!(produced.frames[1].rgba8.len(), produced.width as usize * produced.height as usize * 4, "the inserted frame's buffer must match width*height*4");
+    let mut in_place = before();
+    in_place = semio_s_artifact_stdio_semio_base::applied(&in_place, &mutation()).0;
+    assert_eq!(in_place, expected_after(), "the subset's own apply entry point must reach the same state as the leaf diff");
+}
+
+/// ↩️ The undo is a `remove-frame` at the index the frame landed at.
+#[semio_framework_async_macros::async_test]
+async fn the_undo_remove_frame_takes_the_second_frame_back_out() {
+    let base = before();
+    let mutation = mutation();
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
+    let undo = <SemioImageMutation as Mutation<SemioImageSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture");
+    assert_eq!(undo, vec![SemioImageMutation::RemoveFrame(remove_frame::RemoveFrame { index: 1 })], "insert-frame at #1 must undo as remove-frame at #1");
+    let mut current = before();
+    current = semio_s_artifact_stdio_semio_base::applied(&current, &mutation).0;
+    for step in undo.iter().rev() {
+        current = semio_s_artifact_stdio_semio_base::applied(&current, step).0;
+    }
+    assert_eq!(current, base, "insert-frame/appends-a-second-frame-at-the-end: the undo did not restore the before-snapshot");
+}
+
+/// 🔣️ Snapshots and the `{"mutation":"insertFrame","index":1,"frame":{…}}` payload are canonical — `SemioImageFrame` is `rename_all = "camelCase"`, so the frame's delay is `delayMs` even inside the snake_case-fielded mutation payload.
+#[semio_framework_async_macros::async_test]
+async fn committed_json_is_canonical() {
+    for (label, text) in [("before", (*BEFORE)), ("after", (*AFTER))] {
+        let decoded: SemioImageSnapshot = semio_framework_pack_json::from_json_str(text,semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("snapshot encodes");
+        let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
+        assert_eq!(reencoded, original, "insert-frame/appends-a-second-frame-at-the-end: committed {label} JSON is not canonical");
+    }
+    let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&(mutation()))).expect("insert-frame mutation encodes");
+    let original: serde_json::Value = serde_json::from_str((*MUTATION)).expect("insert-frame mutation reparses");
+    assert_eq!(reencoded, original, "insert-frame/appends-a-second-frame-at-the-end: committed mutation JSON is not canonical");
+}
+
+/// 🎯️ Declared `applied`: index 1 is exactly frames.len(), so the clamp is a no-op and mutation.clamped must not fire
+#[semio_framework_async_macros::async_test]
+async fn declared_outcome_holds_with_no_guard_branch_firing() {
+    let outcome: serde_json::Value = serde_json::from_str((*OUTCOME)).expect("outcome decodes");
+    assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("applied"), "insert-frame/appends-a-second-frame-at-the-end: this case is declared applied");
+    assert!(leaf_outcome().messages().is_empty(), "index 1 is exactly frames.len(), so the clamp is a no-op and mutation.clamped must not fire");
+}
+
+/// 🔺️ The delta the leaf's own diff builder produces equals the committed diff. Only `added` may be present inside the triple.
+#[semio_framework_async_macros::async_test]
+async fn produces_committed_diff() {
+    let outcome = leaf_outcome();
+    let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
+    let committed: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff decodes");
+    assert_eq!(produced, committed, "insert-frame/appends-a-second-frame-at-the-end: produced diff differs from the committed 🔺️diff/🔣️.json");
+}
+
+/// 🔣️ The committed diff is a decode→encode fixed point and touches only the `frames` slot.
+#[semio_framework_async_macros::async_test]
+async fn committed_diff_is_canonical_and_touches_only_frames() {
+    let decoded: SemioImageDiff = semio_framework_pack_json::from_json_str((*DIFF),semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed insert-frame diff decodes");
+    assert!(decoded.frames.is_some(), "insert-frame must write the frames slot");
+    assert!(decoded.width.is_none() && decoded.height.is_none() && decoded.colorspace.is_none() && decoded.bit_depth.is_none() && decoded.icc.is_none() && decoded.metadata.is_none(), "insert-frame must touch no scalar field and no metadata");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("diff re-encodes");
+    let original: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff reparses");
+    assert_eq!(reencoded, original, "insert-frame/appends-a-second-frame-at-the-end: committed diff JSON is not canonical");
+}
+
+/// 🩹 Applying the committed diff to `before` yields `after`.
+#[semio_framework_async_macros::async_test]
+async fn committed_diff_applies_to_after() {
+    let decoded: SemioImageDiff = semio_framework_pack_json::from_json_str((*DIFF),semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed insert-frame diff decodes");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed insert-frame diff applies to the before-snapshot");
+    assert_eq!(produced, expected_after(), "insert-frame/appends-a-second-frame-at-the-end: committed diff did not carry before to after");
+}
+
+fn runtime_fixture_text(relative: &str) -> &'static str {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative);
+    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display())).into_boxed_str())
+}

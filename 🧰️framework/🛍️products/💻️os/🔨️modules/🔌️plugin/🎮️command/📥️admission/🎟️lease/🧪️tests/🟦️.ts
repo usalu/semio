@@ -15,6 +15,5 @@ test("Mounted command retains operation before phased original lease admission",
   expect(source).toContain("fn admit_original_lease(");
   const start=source.indexOf("fn admit_original_lease(");const body=source.slice(start,source.indexOf("fn key_demands(",start));
   expect(body).toContain("self.operation.operation");expect(body).toContain("self.source_identity");expect(body).toContain("issuer.begin_keyed(&key,cx)");expect(body).not.toContain("allocate_operation_id");
-  console.log("[DEBUG] mountedCommandSQLite4=true originalOperationHeldBeforeLease=true noRetryMint=true nativeRuntimePending=true");
  }finally{database.close();}
 });

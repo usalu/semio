@@ -308,7 +308,7 @@ struct ArtifactMailboxAuthority {
 
 #[derive(Clone)]
 pub struct ArtifactMailboxSender {
-    authority: std::sync::Arc<ArtifactMailboxAuthority>,
+    pub authority: std::sync::Arc<ArtifactMailboxAuthority>,
     generation: u64,
 }
 

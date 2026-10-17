@@ -1,7 +1,8 @@
 use super::*;
+use semio_framework_test_fixtures::fixture_text;
 
 fn renderer_camera_command() -> set_camera::SetCamera {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🧪️tests/🧫️fixtures/🖱️pointer-gestures.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🧪️tests/🧫️fixtures/🖱️pointer-gestures.json")).unwrap();
     let gesture = fixture["gestures"].as_array().unwrap().iter().find(|row| row["id"] == "orbit-completes-into-one-setcamera").unwrap();
     let payload = serde_json::json!({ "windowId": fixture["scene"]["windowInstanceId"], "camera": gesture["expect"]["camera"] });
     semio_framework_pack_json::from_json_str(&payload.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("native FEM command decodes the renderer gesture envelope")
@@ -24,7 +25,7 @@ fn fem3d_window_config_camera_uses_the_shared_renderer_pose_contract() {
 
 #[test]
 fn fem3d_window_config_document_admission_rejects_window_and_os_fields() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../🧪️tests/🧫️fixtures/🧬️document-admission/🔣️.json")).expect("document admission fixture");
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../../../../🧪️tests/🧫️fixtures/🧬️document-admission/🔣️.json")).expect("document admission fixture");
     let row = fixture["cases"].as_array().expect("document cases").iter().find(|row| row["dimension"] == "3d").expect("dimension");
     let base = row["document"].to_string();
     let _ = semio_framework_pack_json::from_json_str::<semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::Fem3dArtifact>(&base, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("neutral FEM artifact admission");

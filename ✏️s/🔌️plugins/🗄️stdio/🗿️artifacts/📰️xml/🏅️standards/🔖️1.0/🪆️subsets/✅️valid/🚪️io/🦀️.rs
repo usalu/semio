@@ -182,14 +182,6 @@ use semio_framework_diagnostic::Severity;
     pub const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.xml", standard: StandardId("1.0"), subset: SubsetId("valid") };
 
     use crate::standards::v1_0::subsets::valid::schema::check_valid_conformance;
-    //#region 🔖️Conformance
-    /// ⏱️ Checks owned validity with cancellation inside the literal boundary collections.
-    pub fn check_valid_conformance_controlled(snapshot: &XmlSnapshot, control: &mut semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<Vec<Diagnostic>, semio_framework_os_kernel::sqlite_snapshot::ValueError> {
-        crate::standards::v1_0::subsets::valid::schema::conformance::check_conformance(snapshot, &mut |completed, total| control.checkpoint(semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotPhase::ProjectSnapshot, completed, total))
-    }
-
-    //#endregion 🔖️Conformance
-
     //#region 🔖️Analyzer
     /// 🧐️ Analyzes `stdio.xml` (1.0/✳️valid): delegates the real parse to the ✳️any subset's
     /// analyzer (same `XmlSnapshot`), then folds real XML validity conformance diagnostics on top.

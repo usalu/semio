@@ -14,6 +14,5 @@ test("Cargo compiler target custody is required across every active caller",asyn
         for(const owner of ["🧰️framework","🌎️hub","✏️s"])await visit(join(workspace,owner));
         expect(files.length).toBeGreaterThan(20);
         await captureOwnedCommandV1(process.execPath,[Bun.resolveSync("typescript/bin/tsc",import.meta.dir),"--noEmit","--allowJs","--strict","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",...files],workspace,{control});
-        console.log("[DEBUG] CargoRequiredTargetCallerStrictTypes=true activeSources="+files.length+" originalDeadline=true nativeCrossPlatformRuntimeUnqualified=true");
     });
 },90000);

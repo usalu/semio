@@ -1,4 +1,5 @@
-use super::*;
+use crate::standards::v1_7::subsets::x::schema::mutations::set_output_intent::SetOutputIntent;
+use crate::standards::v1_7::subsets::x::io::text::mutations::set_output_intent::*;
 
 #[test]
 fn owned_payload_round_trips() {

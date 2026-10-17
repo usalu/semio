@@ -1,12 +1,14 @@
 //! ↩️ Inverse for `ChangeSnapEnabled`.
 use super::ChangeSnapEnabled;
-use crate::schema::mutations::NoteMutation;
 use crate::NoteSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(_payload: &ChangeSnapEnabled, base: &NoteSnapshot) -> Result<Vec<NoteMutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op>(_payload: &ChangeSnapEnabled, base: &NoteSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError>
+where
+    Op: From<crate::standards::v1::subsets::canvas::schema::mutations::change_snap_enabled::ChangeSnapEnabled>,
+{
     Ok((|| {
-    vec![NoteMutation::ChangeSnapEnabled(ChangeSnapEnabled { new_enabled: base.snap_enabled })]
+    vec![Op::from(ChangeSnapEnabled { new_enabled: base.snap_enabled })]
 
     })())
 }

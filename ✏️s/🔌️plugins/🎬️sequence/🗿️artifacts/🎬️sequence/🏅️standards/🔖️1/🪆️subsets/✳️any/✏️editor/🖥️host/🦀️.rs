@@ -1,6 +1,17 @@
 //! 🖥️ Sequence editing host: the UI-editing engine shared by commands, windows, panels and the wasm bridge.
 
-use super::*;
+use neural_engine::Value as NeuralValue;
+use imperative_engine::compile_to_text as imperative_compile_to_text;
+use std::collections::{BTreeMap, HashMap};
+use neural_engine::{ChannelSpec, Dictionary, Registry};
+use semio_framework_os_infinite_directed_presentation::{DagCamera, DagHostSnapshot, DagHostSnapshotEdge, DagNodeSpec, EdgeRouteStyle, IoPortSpec, PortShape, dag_host_snapshot_to_wire_literal};
+use infinite_board_port_directed_dag::{DagHost, would_create_cycle};
+use semio_framework_os_infinite::board::schema::layout::DagLayoutOptions;
+use semio_framework_plugin::DslValue;
+use imperative_engine::{Executor, Path, RunResult, Step, imperative_catalogue_json, imperative_module_registry};
+use semio_framework_graph_manifest::PropertyBag;
+use crate::{SequenceCamera, SequenceEdge, SequenceHostSnapshot, SequenceStep, SlotRef, StepParams};
+use crate::editor::sequence::base::{SequenceCoreError, dag_camera_from_sequence, sequence_camera_from_dag};
 
 //#region 🔖️Host
 const SEQUENCE_DAG_COMPONENT_WIDTH: f64 = 200.0;
@@ -34,7 +45,7 @@ fn parse_serial_suffix(prefix: &str, id: &str) -> Option<u64> {
     id.strip_prefix(prefix)?.parse().ok()
 }
 
-pub(super) fn max_serial_in_snapshot(snapshot: &SequenceHostSnapshot) -> u64 {
+pub fn max_serial_in_snapshot(snapshot: &SequenceHostSnapshot) -> u64 {
     let mut max = 0u64;
     for step in &snapshot.steps {
         if let Some(serial) = parse_serial_suffix("step-", &step.id) {
@@ -148,7 +159,7 @@ pub struct SequenceHost {
     /// this is what the rebuilt `dag`'s camera gets reseeded from).
     pub camera: SequenceCamera,
     pub dag: DagHost,
-    pub(super) registry: Registry,
+    pub registry: Registry,
     next_serial: u64,
 }
 
@@ -491,7 +502,7 @@ impl SequenceHost {
         dag_host_snapshot_to_wire_literal(&self.build_dag_host_snapshot())
     }
 
-    pub(super) fn rebuild_dag(&mut self) {
+    pub fn rebuild_dag(&mut self) {
         let selected = self.dag.graph.selected_node_ids();
         let dag_fixture = self.build_dag_host_snapshot();
         self.dag = DagHost::from_host_snapshot_without_layout(dag_fixture);
@@ -501,7 +512,7 @@ impl SequenceHost {
         }
     }
 
-    pub(super) fn build_dag_host_snapshot(&self) -> DagHostSnapshot {
+    pub fn build_dag_host_snapshot(&self) -> DagHostSnapshot {
         let nodes: Vec<DagNodeSpec> = self.snapshot.steps.iter().filter(|step| self.is_step_visible(step)).map(|step| self.step_to_dag_node(step)).collect();
         let visible_ids: std::collections::HashSet<String> = nodes.iter().map(|node| node.id.clone()).collect();
         let existing: Vec<(String, String)> = self.snapshot.edges.iter().map(|edge| (edge.from.clone(), edge.to.clone())).collect();
@@ -516,7 +527,7 @@ impl SequenceHost {
         DagHostSnapshot { schema: "dag.host_snapshot".into(), camera: dag_camera_from_sequence(&self.camera), nodes, edges }
     }
 
-    pub(super) fn step_to_dag_node(&self, step: &SequenceStep) -> DagNodeSpec {
+    pub fn step_to_dag_node(&self, step: &SequenceStep) -> DagNodeSpec {
         let info = self.registry.operator_info(&step.kind);
         let (name, mut abbreviation, icon) = info.as_ref().map_or_else(|| (step.kind.clone(), step.kind.clone(), "emoji:⚡️".into()), |entry| (entry.name.clone(), entry.abbreviation.clone(), entry.icon.clone()));
         if is_control_kind(&step.kind) {

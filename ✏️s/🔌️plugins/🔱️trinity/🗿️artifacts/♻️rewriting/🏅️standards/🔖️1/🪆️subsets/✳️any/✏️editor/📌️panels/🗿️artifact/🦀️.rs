@@ -1,7 +1,7 @@
 //! 📄️ Trinity Rewriting app — Document panel (working-graph node tree).
 
 use crate::editor::rewriting::terminology::TrinityRewritingLabels;
-use crate::RewritingSnapshot;
+use crate::standards::v1::subsets::any::schema::snapshot::RewritingSnapshot;
 use semio_framework_plugin::NoConfig;
 use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase};
 use semio_framework_plugin::{PanelTreeBuilder, TreeWindows};
@@ -13,8 +13,8 @@ use semio_framework_ui_contract as ui;
 /// the graph canvas land in the same selection) and marked with the domain's `"node"` granularity. The
 /// tree-level `.interaction_domain(...)` binding carries the dispatch, so the row binds no action and
 /// spends no `UiValue` arena.
-fn node_row(node: &semio_s_artifact_trinity_jack::Node) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    let label = crate::editor::rewriting::ui_label(if node.name.is_empty() { node.id.as_str() } else { node.name.as_str() })?;
+fn node_row(node: &semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::graph::Node) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    let label = crate::editor::rewriting::ui::ui_label(if node.name.is_empty() { node.id.as_str() } else { node.name.as_str() })?;
     let granularity = semio_framework_plugin::UiText::try_from_str("node").ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("trinity.document.granularity", "the fixed pick granularity exceeds its UI bound"))?;
     let mut builder = ui::tree_item(label)
         .try_id(node.id.clone())
@@ -26,17 +26,15 @@ fn node_row(node: &semio_s_artifact_trinity_jack::Node) -> semio_framework_plugi
     builder.try_build().map_err(|_| semio_framework_plugin::PluginAssemblyError::new("trinity.document.node", "the node row exceeds its UI bound"))
 }
 
-pub(crate) fn render(state: &RewritingSnapshot, _cfg: &NoConfig, labels: &TrinityRewritingLabels, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(state: &RewritingSnapshot, _cfg: &NoConfig, labels: &TrinityRewritingLabels, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let nodes = state.working_graph.nodes().map_err(|error|semio_framework_plugin::PluginAssemblyError::new("trinity.graph.invalid",error.into_message()))?;
     PanelTreeBuilder::new("trinity-document")?
-        .window_section(windows, "trinity-document.nodes", Some(crate::editor::rewriting::ui_label(labels.pieces.as_str())?), true, &nodes, node_row)?
-        .interaction_domain(crate::editor::rewriting::TRINITY_REWRITING_PLAY_CONTROLLER_ID, "graph")?
+        .window_section(windows, "trinity-document.nodes", Some(crate::editor::rewriting::ui::ui_label(labels.pieces.as_str())?), true, &nodes, node_row)?
+        .interaction_domain(crate::editor::rewriting::ids::TRINITY_REWRITING_PLAY_CONTROLLER_ID, "graph")?
         .build()
 }
 //#endregion 🔖️Render
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

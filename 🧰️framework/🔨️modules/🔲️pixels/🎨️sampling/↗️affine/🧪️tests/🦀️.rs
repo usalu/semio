@@ -16,7 +16,6 @@ fn affine_retirement_preserves_real_private_owners_and_transfers_complete_pixels
   for _ in 0..2000000{let p=retired.advance(grant).unwrap();assert!(p.work>=work&&p.work-work<=grant as u64);work=p.work;if let Some(state)=retired.owner.original(){if state.coverage_retirement.as_ref().is_some_and(|v|!v.terminal_is_empty()){assert!(Arc::ptr_eq(&state.source.as_ref().unwrap().0,&shared));}}if p.done{done=true;break;}}
   assert!(done&&retired.terminal_is_empty());assert!(retired.owner.original().is_none());let terminal=retired.advance(1).unwrap();assert_eq!(terminal.phase,"complete");assert_eq!(terminal.work,work);assert!(terminal.done);assert_eq!(shared.pixels,before);assert_eq!(Arc::strong_count(&shared),1);
   if let Some(image)=output{let expected:Vec<u8>=serde_json::from_value(source["expected"].clone()).unwrap();assert_eq!(image.pixels,expected);}if let Some(pixels)=published{let expected:Vec<u8>=serde_json::from_value(source["expected"].clone()).unwrap();assert_eq!(pixels,expected);}
-  eprintln!("[DEBUG] Actual native affine retirement {}: grant={grant} work={work} terminal_empty=true child_adopted={}",row["name"],active||closing);
  }}
 }
 #[test]
@@ -24,14 +23,12 @@ fn affine_sampling_retains_real_coverage_owners_until_publication_and_caller_clo
  let sources:serde_json::Value=serde_json::from_str(crate::text("🎨️sampling/↗️affine/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let mut job=AffineImageJob::new(input(&sources[9]["input"])).unwrap();let mut reached=false;
  for _ in 0..2000000{job.advance(1).unwrap();if job.phase=="coverageCleanup"{reached=true;break;}}assert!(reached);assert!(job.coverage.is_none());let mask=job.mask.as_ref().unwrap().coverage.as_ptr();assert!(!job.coverage_retirement.as_ref().unwrap().terminal_is_empty());
  job.advance(1).unwrap();assert_eq!(job.phase,"sampling");assert_eq!(job.at,0);assert_eq!(job.mask.as_ref().unwrap().coverage.as_ptr(),mask);while !job.advance(4096).unwrap().done{}let expected:Vec<u8>=serde_json::from_value(sources[9]["expected"].clone()).unwrap();assert_eq!(job.result().unwrap().pixels,expected);assert!(!job.coverage_retirement.as_ref().unwrap().terminal_is_empty());let(retired,output)=job.into_retirement();assert_eq!(output.unwrap().pixels,expected);crate::retirement::tests::drain(retired);
- eprintln!("[DEBUG] Native affine retained coverage backing through completed publication and caller-funded physical close");
 }
 fn input(v:&serde_json::Value)->AffineImageInput{let source=&v["source"];AffineImageInput{source:Arc::new(RasterImage{width:source["width"].as_u64().unwrap()as u32,height:source["height"].as_u64().unwrap()as u32,pixels:serde_json::from_value(source["pixels"].clone()).unwrap()}),width:v["width"].as_u64().unwrap()as u32,height:v["height"].as_u64().unwrap()as u32,origin:serde_json::from_value(v["origin"].clone()).unwrap(),transform:serde_json::from_value(v["transform"].clone()).unwrap(),sampling:match v["sampling"].as_str().unwrap(){"nearest"=>AffineSampling::Nearest,"bilinear"=>AffineSampling::Bilinear,"area"=>AffineSampling::Area,"auto"=>AffineSampling::Auto,_=>panic!("unknown fixture filter")}}}
 #[test]
 fn affine_image_samples_match_every_shared_rgba_under_bounded_grants(){
  let cases:serde_json::Value=serde_json::from_str(crate::text("🎨️sampling/↗️affine/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
  for row in cases.as_array().unwrap(){for grant in [1,7,4096]{let mut job=AffineImageJob::new(input(&row["input"])).unwrap();let mut work=0;let mut done=false;for _ in 0..2000000{let p=job.advance(grant).unwrap();assert!(p.work-work<=grant as u64);work=p.work;if p.done{done=true;break;}}assert!(done);let expected:Vec<u8>=serde_json::from_value(row["expected"].clone()).unwrap();assert_eq!(job.result().unwrap().pixels,expected,"{} grant {grant}",row["name"]);crate::retirement::tests::drain(job.into_retirement().0);}}
- eprintln!("[DEBUG] All twenty-one native affine samples matched neutral RGBA under grants 1, 7 and 4096");
 }
 #[test]
 fn affine_image_samples_refuse_partial_cancelled_and_failed_candidates(){

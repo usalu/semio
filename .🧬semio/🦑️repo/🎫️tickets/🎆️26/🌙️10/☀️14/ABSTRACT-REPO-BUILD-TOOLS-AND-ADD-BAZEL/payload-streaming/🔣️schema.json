@@ -1,0 +1,144 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Prospective Complete Current Payload Streaming Design",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "purpose",
+    "cases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "purpose": {
+      "const": "prospective-payload-stream-model"
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 64,
+      "items": {
+        "$ref": "#/definitions/Case"
+      }
+    }
+  },
+  "definitions": {
+    "Protocol": {
+      "const": {
+        "version": 1,
+        "purpose": "current-bounded-complete-payload-stream",
+        "defaultPurpose": "strict-current-payload",
+        "defaultReadWork": 32,
+        "maximumEntries": 64,
+        "maximumDepth": 64,
+        "maximumPathUnits": 256,
+        "maximumDescriptorOwners": 32,
+        "chunkBytes": 65536,
+        "quantumReadAttempts": 32,
+        "maximumSuccessfulPositiveReads": "authenticatedMaximumLogicalBytes",
+        "maximumEofReads": "fileCount<=maximumEntries",
+        "maximumReadAttempts": "BigInt(authenticatedMaximumLogicalBytes)+BigInt(maximumEntries)",
+        "fundedBound": "min(actualScopeFilesystemBytes,actualSoleCommittedAllocationBytes)",
+        "independentBound": "actualScopeFilesystemBytes-under-exact-current-independent-policy",
+        "noHistoricalFundingFromAbsence": true,
+        "sameOriginal": true,
+        "callerBudget": false,
+        "writerGrant": false,
+        "partialInventory": false,
+        "sameCaptureAndRetirePurpose": true
+      }
+    },
+    "Case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "purpose",
+        "authority",
+        "scopeBytes",
+        "allocationBytes",
+        "files",
+        "style",
+        "expected"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$"
+        },
+        "purpose": {
+          "enum": [
+            "strict-current-payload",
+            "current-bounded-complete-payload-stream"
+          ]
+        },
+        "authority": {
+          "enum": [
+            "actual-committed-allocation",
+            "actual-independent-leaf"
+          ]
+        },
+        "scopeBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "allocationBytes": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "files": {
+          "type": "array",
+          "maxItems": 64,
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          }
+        },
+        "style": {
+          "enum": [
+            "full",
+            "one-byte"
+          ]
+        },
+        "expected": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "decision",
+            "logicalBytes",
+            "readAttempts",
+            "quanta"
+          ],
+          "properties": {
+            "decision": {
+              "enum": [
+                "accept-model",
+                "refuse-bound"
+              ]
+            },
+            "logicalBytes": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "readAttempts": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "quanta": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        }
+      }
+    }
+  }
+}

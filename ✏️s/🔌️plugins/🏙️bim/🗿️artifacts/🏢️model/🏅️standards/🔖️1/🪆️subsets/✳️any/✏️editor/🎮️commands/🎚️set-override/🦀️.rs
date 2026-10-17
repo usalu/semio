@@ -3,7 +3,7 @@
 //! `set-component-override` mutation, not here. One call is one undoable step.
 
 use crate::editor::bim::kit::fault;
-use crate::editor::bim::BimDispatchCtx;
+use crate::editor::bim::dispatch_context::BimDispatchCtx;
 use crate::standards::v1::subsets::any::schema::mutations::remove_component_override::RemoveComponentOverride;
 use crate::standards::v1::subsets::any::schema::mutations::set_component_override::SetComponentOverride;
 use crate::standards::v1::subsets::any::schema::authored::formula;

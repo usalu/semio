@@ -42,7 +42,7 @@ pub fn deserialize_bytes(bytes: &[u8]) -> Result<Puzzle5dSnapshot, semio_framewo
 fn sqlite_snapshot_puzzle5d_declared_json_exact_words() {
     for raw in [0_u64, 0x8000000000000000, 0x3ff0000000000000, 0x7ff0000000000000, 0xfff0000000000000, 0x7ff0000000000001, 0x7ff8000000000042, 0xfff0000000000042] {
         let mut snapshot = Puzzle5dSnapshot::default();
-        let mut part = crate::Puzzle5dPart::default();
+        let mut part = crate::standards::v1::subsets::any::schema::document_records::Puzzle5dPart::default();
         part.id = "literal".into();
         part.part_2d.x = f64::from_bits(raw);
         snapshot.parts.push(part);

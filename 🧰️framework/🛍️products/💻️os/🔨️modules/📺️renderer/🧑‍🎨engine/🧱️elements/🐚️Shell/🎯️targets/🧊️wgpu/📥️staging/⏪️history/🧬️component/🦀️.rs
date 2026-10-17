@@ -25,7 +25,7 @@ pub struct HistoryState {
     pub history_reprojection: Option<semio_framework::kernel::HistoryReprojection>,
     /// 🎯️ Where keyboard focus goes once the session edge that named it reaches the screen, and until when its target
     /// may take before the band fallback (`⏪️time-travel` `TimeTravelFocus`).
-    pub time_travel_focus: Option<(time_travel::TimeTravelFocus, f64)>,
+    pub time_travel_focus: Option<(TimeTravelFocus, f64)>,
     /// ⏱️ When the native shell last re-read the history for replay progress (`TIME_TRAVEL_POLL_MS` apart).
     #[cfg(not(target_arch = "wasm32"))]
     pub time_travel_polled_at_ms: f64,
@@ -38,6 +38,5 @@ pub struct HistoryState {
     /// (browser) — `📎️local-folders`'s `LOCAL_FOLDER_DIRECT_REATTACH`.
     pub local_folder_direct_reattach: bool,
     /// 🌐️ The folder- or file-bound document the browser build keeps through the dev host's backbone route.
-    #[cfg(any(target_arch = "wasm32", any(test, feature = "testkit")))]
-    pub host_route_folder: Option<local_folders::HostRouteFolder>,
+    pub host_route_folder: Option<HostRouteFolder>,
 }

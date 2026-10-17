@@ -25,5 +25,4 @@ test("member constructor admission retains neutral original owners before any un
   expect(begin.indexOf("grant.maximum_capacity_bytes < required.capacity_bytes")).toBeLessThan(begin.indexOf("request.take()"));
   expect(begin.includes("dialect.clone()")).toBe(false);
   expect(begin.includes("*request = Some(rejected.request)")).toBe(true);
-  console.log("[DEBUG] Node Buffer + JSON Patch original identities remain untouched on denied constructor work/capacity; exact frame extents remain native architecture dependent");
 });

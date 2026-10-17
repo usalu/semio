@@ -115,7 +115,6 @@ fn retained_fixed_list_depth_quotes_original_tail_and_whole_release_frontiers() 
         let released=list.release_empty_page(bytes).unwrap();assert!(released.progressed);assert_eq!(released.released_allocation_bytes,bytes);
     }
     assert_eq!(list.next_release_depth_demand().unwrap(),0);
-    println!("[DEBUG] original600 PagedList tail order equals VecDeque; actual retained branch/leaf depth and separate whole backing refusals preserved");
 }
 
 #[test]
@@ -126,5 +125,4 @@ fn retained_fixed_list_reservation_copy_quotes_actual_original_metadata_and_heap
   assert_eq!(owner.next_reserve_copy_byte_demand().unwrap(),0);owner.push_reserved(value).unwrap();oracle.push_back(value);
  }
  assert!(metadata>0&&payload>0);assert_eq!(promotions,fixture["promotionPages"].as_array().unwrap().len());assert_eq!(owner.iter().copied().collect::<Vec<_>>(),oracle.iter().copied().collect::<Vec<_>>());while !oracle.is_empty(){assert_eq!(owner.pop(),oracle.pop_back());}let mut released=0;while !owner.terminal_is_empty(){let exact=owner.next_release_allocation_bytes().unwrap();let(result,physical)=crate::observe_retirement_allocations(||owner.release_empty_page(exact).unwrap());assert_eq!(physical,(0,result.released_allocation_bytes));released+=physical.1;}assert_eq!(born,released);
- println!("[DEBUG] PagedList original reservation metadata/payload/root promotions {metadata}/{payload}/{promotions}; allocator capacity/release exact; ordered values matched VecDeque");
 }

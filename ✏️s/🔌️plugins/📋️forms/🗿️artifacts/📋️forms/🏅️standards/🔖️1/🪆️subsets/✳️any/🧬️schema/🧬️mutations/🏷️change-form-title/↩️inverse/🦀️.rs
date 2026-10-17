@@ -1,13 +1,16 @@
 //! ↩️ `change-form-title` — undo restores the BASE-state title. Always has an inverse (the document
 //! always has a `title` field, even when `None`).
 
-use super::mutation::ChangeFormTitle;
-use crate::{FormMutation, FormsSnapshot};
+use crate::standards::v1::subsets::any::schema::mutations::change_form_title::mutation::ChangeFormTitle;
+use crate::FormsSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse_change_form_title(_payload: &ChangeFormTitle, base: &FormsSnapshot) -> Result<Vec<FormMutation>, semio_framework_value::ValueError> {
+pub fn inverse_change_form_title<Op>(_payload: &ChangeFormTitle, base: &FormsSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError>
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::change_form_title::mutation::ChangeFormTitle>,
+{
     Ok((|| {
-    vec![FormMutation::ChangeFormTitle(ChangeFormTitle { new_title: base.title.clone() })]
+    vec![Op::from(ChangeFormTitle { new_title: base.title.clone() })]
 
     })())
 }

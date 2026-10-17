@@ -1,0 +1,9 @@
+/** 🧫️ Fixture: test support exporting `PreparedFixtureRustProjectsV1`, `withFixtureRustProjectsV1`. */
+import{prepareSelectedRustUnitProjectsV3,withSelectedRustUnitDescriptorSetV1}from"../../🟦️.ts";
+import{withRustUnitDescriptorWorkingSetV2}from"../../../💾️cache/🧺️set/🟦️.ts";
+import{withIssuedResourceControlV1}from"../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import type{ResourceLeaseControl}from"../../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+/** 🎫️ Carries prepared fixture DATA only; namespace custody belongs to the retained callback. */
+export type PreparedFixtureRustProjectsV1=Extract<Awaited<ReturnType<typeof prepareSelectedRustUnitProjectsV3>>,{kind:"prepared"}>;
+/** 🧪️ Prepares each phase once and keeps actual fixture consumers and accepted children inside publication custody. */
+export async function withFixtureRustProjectsV1<T>(options:Parameters<typeof prepareSelectedRustUnitProjectsV3>[0],body:(prepared:PreparedFixtureRustProjectsV1,control:ResourceLeaseControl)=>Promise<T>):Promise<T>{if(typeof body!=="function")throw Error("Actual fixture consumer required");const prepared=await prepareSelectedRustUnitProjectsV3(options);if(prepared.kind!=="prepared")throw Error("Actual prepared Rust fixture required");if(!options.selected.length)return withIssuedResourceControlV1(options.invocation,"rust:fixture-empty-consumer",0,control=>body(prepared,control));const admission=options.admission;if(!admission)throw Error("Actual Native fixture admission required");return withRustUnitDescriptorWorkingSetV2(prepared.workingSets,options.selected[0]!.mode,admission.control,(set,control)=>withSelectedRustUnitDescriptorSetV1({workspace:options.workspace,invocation:options.invocation,store:admission.store,control,workingSet:set},async()=>prepared,body));}

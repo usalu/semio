@@ -1,5 +1,6 @@
 /** 🗃️ Borrows the published root while its original pending tick and completed children remain owned. */
-import {type ToolRunIdentity,type ToolRunState} from "../../../🟦️.ts";
+import { type ToolRunIdentity } from "../../../🟦️.ts";
+import { type ToolRunState } from "../../../🚦️lifecycle/🟦️.ts";
 import {ToolRunPresentation,ToolRunCapturedView} from "../🟦️.ts";
 import {ToolRunPresentationSeed} from "../🌱️seed/🟦️.ts";
 import {ToolRunPresentationUpdate,type ToolRunPresentationFields,type ToolRunPresentationDelta} from "../🧬️update/🟦️.ts";

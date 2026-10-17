@@ -468,14 +468,14 @@ fn absorb_relation_diff(mut a: ModelRelationDiff, b: ModelRelationDiff) -> Model
 /// exercises the opposite transition (None -> Some). Module-scope (not nested in `mod tests`) so
 /// `between_demo_cases` below and the composer's `conformance_laws` can both reuse it — single source
 /// of truth, same convention `stdio.semio.flow`'s own diff facet demo cases use.
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn moved_transform(x: f64) -> SemioTransform {
+pub fn moved_transform(x: f64) -> SemioTransform {
     SemioTransform { translation: SemioPoint3 { x, y: 0.0, z: 0.0 }, rotation: SemioQuaternion::default(), scale: SemioPoint3 { x: 1.0, y: 1.0, z: 1.0 } }
 }
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn sweep_a() -> SemioModelSnapshot {
+pub fn sweep_a() -> SemioModelSnapshot {
     SemioModelSnapshot {
         schema: SemioModelSnapshot::default().schema,
         spatial: vec![
@@ -496,9 +496,9 @@ pub(crate) fn sweep_a() -> SemioModelSnapshot {
         relations: vec![ModelRelation { id: "keep-relation".into(), kind: RelationKind::Aggregates, from: "a".into(), to: "b".into() }, ModelRelation { id: "gone-relation".into(), kind: RelationKind::ConnectsTo, from: "x".into(), to: "y".into() }],
     }
 }
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn sweep_b() -> SemioModelSnapshot {
+pub fn sweep_b() -> SemioModelSnapshot {
     SemioModelSnapshot {
         schema: SemioModelSnapshot::default().schema,
         spatial: vec![
@@ -522,9 +522,9 @@ pub(crate) fn sweep_b() -> SemioModelSnapshot {
 
 /// 🌱 Representative `SemioModelDiff` cases built declaratively (empty/no-op, a bare spatial-node insert, a bare element insert, a bare relation insert) — single source of truth for `diff_grammar_conformance_law`/`protocol_walk_law` in
 /// `🎹️composer/🦀️.rs`.
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn demo_diff_cases() -> Vec<SemioModelDiff> {
+pub fn demo_diff_cases() -> Vec<SemioModelDiff> {
     vec![
         SemioModelDiff::default(),
         SemioModelDiff {

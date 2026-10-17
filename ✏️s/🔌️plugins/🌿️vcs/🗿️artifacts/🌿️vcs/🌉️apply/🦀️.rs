@@ -1,7 +1,7 @@
 //! 🌉️ Central apply entry points: the only code of this artifact that turns a mutation's diff into the next snapshot with `protocol::apply_diff`; the schema and mutation leaves only build diffs and inverses.
 #![allow(unused_imports)]
 
-use crate::mutations::VcsDemoMutation;
+use super::VcsDemoMutation;
 use crate::VcsSnapshot;
 
 /// ▶️ Applies `mutation` to `snapshot` through its own diff — the artifact's single apply entry

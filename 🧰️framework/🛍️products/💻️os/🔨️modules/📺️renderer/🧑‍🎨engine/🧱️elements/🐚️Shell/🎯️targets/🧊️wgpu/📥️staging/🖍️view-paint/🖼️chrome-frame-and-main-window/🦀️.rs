@@ -6,7 +6,7 @@ use super::*;
 /// 🧭️ Fixed 64-deep footer-utility tree cursor path. A newtype rather than a bare `[u16; 64]`
 /// field because std implements `Default` for arrays only up to length 32, and
 /// `ShellChromeChildCursor` must stay derivable — the bound is on the array, not on the cursor.
-pub struct ShellUtilityPath([u16; 64]);
+pub struct ShellUtilityPath(pub [u16; 64]);
 
 impl Default for ShellUtilityPath {
     fn default() -> Self {

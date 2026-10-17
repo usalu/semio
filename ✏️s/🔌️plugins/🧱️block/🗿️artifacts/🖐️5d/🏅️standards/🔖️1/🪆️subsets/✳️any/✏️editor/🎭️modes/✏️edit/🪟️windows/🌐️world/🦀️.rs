@@ -62,8 +62,3 @@ pub fn render(definition: &Block5dSnapshot, labels: &Block5dLabels) -> UiAssembl
 }
 //#endregion 🔖️Render
 
-//#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests

@@ -1,18 +1,19 @@
 //! 🧪️ Neutral Rewriting window configuration mutation and routing laws.
 
-use super::*;
+use crate::editor::rewriting::window_config::{schema};
+use crate::editor::rewriting::window_config::*;
 use protocol::{Mutation, MutationDiff, OpBinary, OpText};
 use semio_framework_plugin::WindowConfigOwner;
 
 /// 🧾️ The committed wire witnesses a fixture case names by its leaf folder (`"witness"`).
-const WITNESSES: [(&str, &str); 2] = [
-    ("🎥️set-camera", include_str!("../🧫️fixtures/🧬️mutations/🎥️set-camera/🧾️wire-witness/🦠️mutation/🔣️.json")),
-    ("🔍️set-lod-mode", include_str!("../🧫️fixtures/🧬️mutations/🔍️set-lod-mode/🧾️wire-witness/🦠️mutation/🔣️.json")),
-];
+static WITNESSES: std::sync::LazyLock<[(&str, &str); 2]> = std::sync::LazyLock::new(|| [
+    ("🎥️set-camera", runtime_fixture_text("../../🪆️subsets/✳️any/✏️editor/🪟️window/🎚️config/🧪️tests/🧫️fixtures/🧬️mutations/🎥️set-camera/🧾️wire-witness/🦠️mutation/🔣️.json")),
+    ("🔍️set-lod-mode", runtime_fixture_text("../../🪆️subsets/✳️any/✏️editor/🪟️window/🎚️config/🧪️tests/🧫️fixtures/🧬️mutations/🔍️set-lod-mode/🧾️wire-witness/🦠️mutation/🔣️.json")),
+]);
 
 /// 🧾️ The committed wire witness of one fixture case, decoded as the canonical Rust wire of its mutation.
 fn witness(row: &serde_json::Value) -> (serde_json::Value, RewritingWindowConfigMutation) {
-    let text = WITNESSES.iter().find(|(leaf, _)| row["witness"] == *leaf).map(|(_, text)| *text).expect("case names a committed wire witness");
+    let text = (*WITNESSES).iter().find(|(leaf, _)| row["witness"] == *leaf).map(|(_, text)| *text).expect("case names a committed wire witness");
     (serde_json::from_str(text).unwrap(), store::os_store::test_support::assert_wire_witness(text))
 }
 
@@ -28,7 +29,8 @@ fn scene_field(value: &serde_json::Value, field: &str) -> Option<serde_json::Val
 
 #[semio_framework_async_macros::async_test]
 async fn rewriting_window_config_retained_publication_renders_and_reloads_two_concrete_windows() {
-    use crate::editor::rewriting::{create_rewriting_app, TrinityRewritingCommand, TrinityRewritingPlayApp, TRINITY_REWRITING_PLAY_BODY_BEFORE};
+    use crate::editor::rewriting::{create_rewriting_app, TrinityRewritingCommand, TrinityRewritingPlayApp};
+use crate::editor::rewriting::ids::TRINITY_REWRITING_PLAY_BODY_BEFORE;
     use semio_framework_plugin::{artifact_app_laws, ActionMeta, App, EditorApp, PluginApp, VcsArtifactApp, ViewModel, ViewWindowInstance};
     fn manifest() -> App {
         App { definition: create_rewriting_app(), examples: Vec::new() }
@@ -39,7 +41,7 @@ async fn rewriting_window_config_retained_publication_renders_and_reloads_two_co
         let scene = artifact_app_laws::decode_fixture_scene::<semio_framework_plugin::NodeGraphScene>(&text).map_err(str::to_string)?;
         serde_json::to_value(scene).map_err(|error| error.to_string())
     }
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔬️window-config-ownership/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(runtime_fixture_text("../../🪆️subsets/✳️any/✏️editor/🪟️window/🎚️config/🧪️tests/🧫️fixtures/🔬️window-config-ownership/🔣️.json")).unwrap();
     let view = ViewModel {
         window_instances: ["leftWindowId", "rightWindowId"].into_iter().map(|key| ViewWindowInstance { id: fixture[key].as_str().unwrap().into(), window_kind_id: BeforeWindowConfigOwner::WINDOW_KIND_ID.into() }).collect(),
         ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
@@ -149,14 +151,14 @@ async fn rewriting_window_config_retained_publication_renders_and_reloads_two_co
     if let Err(error) = &outcome {
         eprintln!("Rewriting window configuration runtime failure before close: {error}");
     }
-    artifact_app_laws::close_registered_fixture_app(&mut reopened, semio_s_artifact_trinity_jack::trinity_mounted_owner_policy());
-    artifact_app_laws::close_registered_fixture_app(&mut app, semio_s_artifact_trinity_jack::trinity_mounted_owner_policy());
+    artifact_app_laws::close_registered_fixture_app(&mut reopened, semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::content::trinity_mounted_owner_policy());
+    artifact_app_laws::close_registered_fixture_app(&mut app, semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::content::trinity_mounted_owner_policy());
     outcome.expect("retained Rewriting window configuration isolation and persistence");
 }
 
 #[test]
 fn rewriting_window_config_mutations_match_the_independent_patch_trace() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔬️window-config-ownership/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(runtime_fixture_text("../../🪆️subsets/✳️any/✏️editor/🪟️window/🎚️config/🧪️tests/🧫️fixtures/🔬️window-config-ownership/🔣️.json")).unwrap();
     let base: RewritingWindowConfig = semio_framework_pack_json::from_json_str(&fixture["base"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let mut windows = std::collections::BTreeMap::from([(fixture["leftWindowId"].as_str().unwrap().to_string(), base.clone()), (fixture["rightWindowId"].as_str().unwrap().to_string(), base)]);
     for row in fixture["cases"].as_array().unwrap() {
@@ -189,7 +191,7 @@ fn rewriting_window_config_commands_use_the_trusted_concrete_window() {
     use semio_framework_ui_locale::Terminology;
     use semio_framework_plugin::ViewModel;
     use semio_framework_plugin::ViewWindowInstance;
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔬️window-config-ownership/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(runtime_fixture_text("../../🪆️subsets/✳️any/✏️editor/🪟️window/🎚️config/🧪️tests/🧫️fixtures/🔬️window-config-ownership/🔣️.json")).unwrap();
     let left = fixture["leftWindowId"].as_str().unwrap();
     let right = fixture["rightWindowId"].as_str().unwrap();
     let view = ViewModel {
@@ -199,20 +201,20 @@ fn rewriting_window_config_commands_use_the_trusted_concrete_window() {
         window_instances: vec![ViewWindowInstance { id: left.into(), window_kind_id: BeforeWindowConfigOwner::WINDOW_KIND_ID.into() }, ViewWindowInstance { id: right.into(), window_kind_id: BeforeWindowConfigOwner::WINDOW_KIND_ID.into() }],
         ..ViewModel::new(Locale::En, Terminology::Native)
     };
-    let emit = crate::editor::rewriting::commands::set_lod_mode("compact", Some(&view)).unwrap();
+    let emit = crate::editor::rewriting::commands::set_lod_mode::set_lod_mode("compact", Some(&view)).unwrap();
     assert!(emit.artifact_mutations.is_empty());
     assert!(emit.config_mutations.is_empty());
     assert_eq!(emit.window_config_mutations.len(), 1);
     assert_eq!(emit.window_config_mutations[0].window_id(), right);
     assert_eq!(emit.window_config_mutations[0].window_kind_id(), BeforeWindowConfigOwner::WINDOW_KIND_ID);
-    assert!(crate::editor::rewriting::commands::set_lod_mode("compact", None).is_err());
-    assert!(crate::editor::rewriting::commands::set_lod_mode(&"x".repeat(65), Some(&view)).is_err());
+    assert!(crate::editor::rewriting::commands::set_lod_mode::set_lod_mode("compact", None).is_err());
+    assert!(crate::editor::rewriting::commands::set_lod_mode::set_lod_mode(&"x".repeat(65), Some(&view)).is_err());
 }
 
 /// ➕️ Every committed window-config mutation's concrete inverse rows sum to the negative of its diff (law L3).
 #[semio_framework_async_macros::async_test]
 async fn rewriting_window_config_inverses_sum_to_the_negative_diff() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔬️window-config-ownership/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(runtime_fixture_text("../../🪆️subsets/✳️any/✏️editor/🪟️window/🎚️config/🧪️tests/🧫️fixtures/🔬️window-config-ownership/🔣️.json")).unwrap();
     let base: RewritingWindowConfig = semio_framework_pack_json::from_json_str(&fixture["base"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let mut windows = std::collections::BTreeMap::from([(fixture["leftWindowId"].as_str().unwrap().to_string(), base.clone()), (fixture["rightWindowId"].as_str().unwrap().to_string(), base)]);
     for row in fixture["cases"].as_array().unwrap() {
@@ -222,4 +224,9 @@ async fn rewriting_window_config_inverses_sum_to_the_negative_diff() {
         protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &before).await;
         windows.insert(id.into(), protocol::apply_diff(mutation.diff(&before).diff(), &before).unwrap());
     }
+}
+
+fn runtime_fixture_text(relative: &str) -> &'static str {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative);
+    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display())).into_boxed_str())
 }

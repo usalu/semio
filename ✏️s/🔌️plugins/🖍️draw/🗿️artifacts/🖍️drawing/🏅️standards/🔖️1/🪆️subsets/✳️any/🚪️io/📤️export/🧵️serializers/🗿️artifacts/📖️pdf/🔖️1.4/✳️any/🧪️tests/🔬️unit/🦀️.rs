@@ -3,6 +3,7 @@
 //! document's outlines, fills, strokes, shadings, text and images as real painting operators.
 
 use super::*;
+use semio_framework_test_fixtures::fixture_text;
 use semio_s_artifact_draw_drawing_model::{create_drawing_image_layer, create_drawing_shape_layer_rect, create_drawing_text_layer, layer_base_mut};
 use semio_s_artifact_draw_drawing_model::default_drawing_document;
 use semio_s_artifact_draw_drawing_model::create_drawing_path_layer;
@@ -178,7 +179,7 @@ fn text_export_preserves_lines_origin_and_paint_modes() {
 
 #[test]
 fn pdf_isolates_the_shared_compositing_fixtures() {
-    let cases:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../../🧪️tests/🧫️fixtures/🎬️scene/🧩️compositing/🔣️.json")).unwrap();
+    let cases:serde_json::Value=serde_json::from_str(fixture_text!("../../../../🧪️tests/🧫️fixtures/🎬️scene/🧩️compositing/🔣️.json")).unwrap();
     for case in cases.as_array().unwrap() {
         let nodes:Vec<DrawingSceneNode>=semio_framework_pack_json::from_json_str(&case["nodes"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         let pdf=drawing_scene_to_pdf(&DrawingSnapshot::default(),&nodes,24.0,16.0).unwrap();
@@ -199,7 +200,7 @@ fn pdf_isolates_the_shared_compositing_fixtures() {
 
 #[test]
 fn pdf_rejects_invalid_and_reopened_compositing_scopes() {
-    let cases:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../../🧪️tests/🧫️fixtures/🎬️scene/🧩️compositing/🔣️.json")).unwrap();
+    let cases:serde_json::Value=serde_json::from_str(fixture_text!("../../../../🧪️tests/🧫️fixtures/🎬️scene/🧩️compositing/🔣️.json")).unwrap();
     let nodes:Vec<DrawingSceneNode>=semio_framework_pack_json::from_json_str(&cases[0]["nodes"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let mut reopened=nodes.clone();
     let mut plain=nodes[0].clone();plain.groups.clear();

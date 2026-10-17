@@ -50,6 +50,3 @@ fn extent_record(v:&semio_framework_dsl_record::FieldValue)->Result<&semio_frame
 fn extent_text(v:&semio_framework_dsl_record::FieldValue)->Result<&str,ValueError>{match v{semio_framework_dsl_record::FieldValue::Text(v)=>Ok(v),_=>Err(ValueError::new(ValueRefusalKind::InvalidValue,"Sequence semantic text differs"))}}
 fn semantic_borrowed(r:&semio_framework_dsl_record::RecordValue,maximum:usize,native:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<(),ValueError>{native.scoped_stage(|native|{native.begin_stage(0)?;let mut bytes=0;extent_add(&mut bytes,24,maximum)?;let child=extent_record(extent_field(r,1)?)?;let target=extent_record(extent_field(child,1)?)?;for text in[extent_text(extent_field(r,0)?)?,extent_text(extent_field(child,0)?)?,extent_text(extent_field(target,0)?)?,extent_text(extent_field(target,1)?)?,extent_text(extent_field(target,2)?)?,extent_text(extent_field(target,3)?)?]{extent_add(&mut bytes,text.len(),maximum)?;native.step()?;}Ok(())})}
 
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;

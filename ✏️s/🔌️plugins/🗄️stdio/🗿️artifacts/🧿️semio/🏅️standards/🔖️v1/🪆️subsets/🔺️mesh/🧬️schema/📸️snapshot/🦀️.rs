@@ -253,9 +253,7 @@ pub fn demo_mesh_snapshot() -> SemioMeshSnapshot {
 //#endregion 🔖️Wire
 
 //#region 🔖️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🔖️Tests
 
 

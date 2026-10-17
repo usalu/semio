@@ -181,7 +181,6 @@ test("Nx producers and watchers inherit the pinned Bun runtime on every host", a
   expect(status,stderr).toBe(0);
   const observed=rows.map((row:any)=>bootstrap.pinnedNxRuntimeEnvironment(row.environment,row.bun,row.platform));expect(observed).toEqual(rows.map((row:any)=>row.expected));expect(JSON.parse(stdout)).toEqual(observed);
   for(const platform of ["win32","linux","darwin"] as const)expect(()=>bootstrap.pinnedNxRuntimeEnvironment({},"relative/bun",platform)).toThrow("absolute");
-  console.log("[DEBUG] pinned Nx Bun environment checked against esbuild/Node on three hosts");
 });
 
 

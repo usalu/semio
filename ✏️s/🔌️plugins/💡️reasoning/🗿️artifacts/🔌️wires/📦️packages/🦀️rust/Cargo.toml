@@ -20,6 +20,15 @@ name = "retirement_law"
 path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🕸️canvas/🫧️transient/🧪️tests/⚖️retirement-law/🦀️.rs"
 
 [dependencies]
+semio-s-artifact-reasoning-wires-inferences = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦️packages/🦀️rust" }
+semio-s-artifact-reasoning-wires-snapshot = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️packages/🦀️rust" }
+semio-s-artifact-reasoning-wires-snapshot-2 = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗣️terminology/🧪️tests/🔬️unit/📦️packages/🦀️rust" }
+semio-s-artifact-reasoning-wires-schema = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust" }
+semio-s-artifact-reasoning-wires-viewer = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/📦️packages/🦀️rust" }
+semio-s-artifact-reasoning-wires-windows = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🕸️canvas/📦️packages/🦀️rust" }
+semio-s-artifact-reasoning-wires-window-transient = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🕸️canvas/🫧️transient/📦️packages/🦀️rust" }
+semio-s-artifact-reasoning-wires-wires = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust" }
+semio-s-artifact-reasoning-wires-v1 = { path = "../../🏅️standards/🔖️1/📦️packages/🦀️rust" }
 semio-framework-composition-admission = { path = "../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧩️composition/📥️admission/📦️packages/🦀️rust" }
 semio-framework-pack = { path = "../../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 semio-framework-artifact-reference = { workspace = true }
@@ -49,6 +58,8 @@ semio-s-artifact-stdio-semio-base = { workspace = true }
 semio-s-artifact-stdio-semio-graph = { workspace = true }
 semio-s-artifact-stdio-semio-value-model = { workspace = true }
 semio-framework = { path = "../../../../../../../🧰️framework/📦️packages/🦀️rust", package = "semio-framework" }
+semio-framework-action-bus = { path = "../../../../../../../🧰️framework/🔨️modules/🎯️action-bus/📦️packages/🦀️rust" }
+semio-framework-tool-run-actions = { path = "../../../../../../../🧰️framework/🔨️modules/⏯️tool-run/🕹️actions/📦️packages/🦀️rust" }
 semio-framework-os-kernel = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
 semio-framework-canvas = { path = "../../../../../../../🧰️framework/🔨️modules/🖼️canvas/📦️packages/🦀️rust", package = "semio-framework-canvas" }
 infinite_canvas = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust", package = "semio-framework-os-infinite" }

@@ -1,7 +1,7 @@
 /** 🧩️ Specific Semio/Jack composition laws retain full typed children and independent SQLite witnesses. */
 import {expect,test} from "bun:test";
 import {Database} from "bun:sqlite";
-import * as owner from "./../../../../🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🟦️.ts";
+import * as owner from "@semio-tech/trinity-jack/source";
 import {bindSemioJackGraph} from "../🟦️.ts";
 test("Jack published inference propagates retained child refusal and reads full raw graph",async()=>{
  const contract=await Bun.file(new URL("./🧫️fixtures/🧭️topology.json",import.meta.url)).json();

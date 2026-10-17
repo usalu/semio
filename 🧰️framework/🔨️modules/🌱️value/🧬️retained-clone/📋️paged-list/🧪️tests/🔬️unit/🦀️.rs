@@ -314,7 +314,6 @@ fn paged_native_typed_field_close_exposes_exact_scaffold_demand() {
     assert_eq!(allocation,(0,128));assert_eq!(exact.progress().released_bytes,128);assert_eq!(exact.progress().copied_bytes,0);
     for _ in 0..16 { if cursor.terminal_is_empty() { break; } close_fixture(&mut cursor, 1, 4096).unwrap(); }assert!(cursor.terminal_is_empty());
     assert_eq!(observe_retirement_allocations(||drop(cursor)).1,(0,0));
-    println!("[DEBUG] Typed child exact demand observation0heap; metadata preserves128-byte backing, below127 retains, release-only128 frees exactly once");
 }
 
 #[test]
@@ -345,7 +344,6 @@ fn retained_paged_list_release_authority_is_distinct_from_copy_and_admits_exact_
     assert_eq!(RELEASE_PROBE_DROPS.load(Ordering::SeqCst),1);
     for _ in 0..16 { if cursor.terminal_is_empty() { break; } close_fixture(&mut cursor, 1, 4096).unwrap(); }
     assert!(cursor.terminal_is_empty());
-    println!("[DEBUG] Independent retained authority copy64/release4096 preserves128-byte owner below127, exact128 releases once without copying");
 }
 
 #[derive(Clone, Copy, Debug)]

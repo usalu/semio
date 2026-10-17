@@ -1,6 +1,6 @@
 //! ✂️ `disconnect-nodes` — removes an edge relationship between two graph nodes.
 
-use crate::{EquationMutation, EquationSnapshot};
+use crate::EquationSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Payload
@@ -12,13 +12,16 @@ pub struct DisconnectNodes {
     pub id: String,
 }
 
-impl protocol::MutationKind<EquationSnapshot, EquationMutation> for DisconnectNodes {
+impl<Op> protocol::MutationKind<EquationSnapshot, Op> for DisconnectNodes
+where
+    Op: protocol::Mutation<EquationSnapshot, Diff = crate::EquationDiff> + From<DisconnectNodes> + From<crate::standards::v1::subsets::graph::schema::mutations::connect_nodes::ConnectNodes>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "disconnect", entity: "node", kind: "disconnect-nodes", record: "DisconnectedNodes" };
 
-    fn diff(&self, base: &EquationSnapshot) -> protocol::MutationOutcome<<EquationMutation as protocol::Mutation<EquationSnapshot>>::Diff> {
+    fn diff(&self, base: &EquationSnapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<EquationSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &EquationSnapshot) -> Result<Vec<EquationMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EquationSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

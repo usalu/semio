@@ -1,0 +1,9 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/❓️quiz/🎯️targets/⚛️react/🔨️modules/👥️presence/🟦️.tsx",
+ "importers": "auto",
+ "children": [
+  {"dir": "🔌️socket", "doc": "/** 🔌️ The presence socket of the quiz client: the frame rates and timings, the browser socket behind a port, and the room that joins, rejoins and leaves with jittered backoff. */", "lines": [[55, 383]]},
+  {"dir": "🧭️rooms", "doc": "/** 🧭️ The presence rooms of the quiz client: who stands where and what they draft, per page and task, and the watch over the rooms of the home pages. */", "lines": [[385, 618]]},
+  {"dir": "👁️view", "doc": "/** 👁️ The presence view of the quiz client: the peers seen on a page as cursors, their places in words and the anchors they point at. */", "lines": [[620, 751]]}
+ ]
+}

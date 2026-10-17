@@ -20,9 +20,16 @@
     ".": {
       "types": "./dist/🟦️.d.ts",
       "import": "./dist/🟦️.js"
-    }
+    },
+    "./standards/1/subsets/any/schema": "./🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts",
+    "./standards/1/subsets/any/schema/snapshot": "./🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🟦️.ts",
+    "./examples/hexagonal-cut-concrete-forest-left/assets/hexagonal-cut-concrete-forest": "./📚️examples/🌲️hexagonal-cut-concrete-forest-left/🖼️assets/🌲️hexagonal-cut-concrete-forest/🟦️.ts",
+    "./examples/nakagin-capsule/assets/nakagin-capsule": "./📚️examples/🏢️nakagin-capsule/🖼️assets/🏢️nakagin-capsule/🟦️.ts"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@semio-tech/block-js": "workspace:*",
+    "@semio-tech/framework-os": "workspace:*"
+  },
   "license": "LGPL-3.0-or-later",
   "repository": {
     "type": "git",

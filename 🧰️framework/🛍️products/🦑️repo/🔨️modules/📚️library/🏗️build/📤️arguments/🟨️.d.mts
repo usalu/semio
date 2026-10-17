@@ -16,3 +16,6 @@ export function declaredNativeOwnerCommandV1(manifest:string,workingDirectory:st
 export function encodeOwnerArgumentsV1(arguments_:readonly string[]):string;
 /** 📥️ Consumes only the private original argument transport. */
 export function consumeOwnerArgumentsV1(environment:Readonly<Record<string,string|undefined>>):{arguments:string[];environment:Record<string,string|undefined>};
+
+/** 🔏️ Binds the evaluated first-party argument implementation to current Source. */
+export function ownerArgumentsSourceIdentityV1():string;

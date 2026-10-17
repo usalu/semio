@@ -1,0 +1,10 @@
+{
+  "name": "@semio-tech/framework-tool-run-ts",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./🟦️.ts",
+    "./actions": "./🕹️actions/🟦️.ts",
+    "./testing/fixtures": "./🧪️testing/🧫️fixtures/🟦️.ts"
+  }
+}

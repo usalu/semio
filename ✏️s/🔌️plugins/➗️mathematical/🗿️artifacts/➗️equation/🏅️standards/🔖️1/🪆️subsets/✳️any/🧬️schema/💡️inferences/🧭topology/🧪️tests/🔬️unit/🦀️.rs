@@ -1,4 +1,5 @@
-use super::*;
+use crate::EquationGraph;
+use crate::standards::v1::subsets::any::schema::inferences::topology::*;
 use crate::{EquationEdge, EquationNode};
 
 fn node(id: &str) -> EquationNode {

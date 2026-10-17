@@ -2,7 +2,7 @@
  * curated-item inverse. */
 import type { DeleteCuratedItem } from "../🟦️.ts";
 import type { CreateCuratedItem } from "../../🌱create-curated-item/🟦️.ts";
-import type { CuratedItem } from "../../../📸️snapshot/🟦️.ts";
+import type { CuratedItem } from "../../../🟦️.ts";
 
 export function inverse(_payload: DeleteCuratedItem, baseItem: CuratedItem | undefined): CreateCuratedItem[] {
   return baseItem ? [{ item: baseItem }] : [];

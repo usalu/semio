@@ -73,9 +73,9 @@ fn engine_packet_close_retains_opaque_scene_until_exact_terminal_release() {
     }
     context.publish_reserved(reservation, scene, Color::new([0.0, 0.0, 0.0, 1.0]), 640, 480);
     let mut packet = context.take_packet_step().unwrap_or_else(|_| panic!("ready packet destination")).expect("published packet");
-    assert!(!packet.close_step());
+    assert!(!close_engine_canvas_packet_step(&mut packet));
     let mut turns = 1usize;
-    while !packet.close_step() {
+    while !close_engine_canvas_packet_step(&mut packet) {
         turns += 1;
         assert!(turns < 512, "packet-retained scene reaches exact terminal release");
     }
@@ -105,13 +105,25 @@ fn raster_lifecycle_packet(scene_revision: u64, metrics_generation: u64) -> Engi
         document_generation: 5,
         scene_revision,
         metrics_generation,
-        scene: canvas::Scene::new(),
-        scene_retirement: None,
-        scene_retirement_faulted: false,
+        scene: ManuallyDrop::new(canvas::Scene::new()),
+        scene_retirement: ManuallyDrop::new(canvas::CanvasSceneRetirement::default()),
         clear: Color::new([0.0, 0.0, 0.0, 1.0]),
         width: 64,
         height: 48,
     }
+}
+
+#[cfg(test)]
+#[test]
+fn engine_packet_retirement_is_the_scene_cursor_and_terminal_only_after_the_identity_closes() {
+    let mut packet = raster_lifecycle_packet(3, 5);
+    assert!(!packet.terminal_is_empty());
+    let open = packet.next_close_demands(4096).expect("open identity demands one retirement step");
+    assert_eq!(open.depth, 1);
+    packet.surface.id.close_step();
+    assert!(packet.terminal_is_empty());
+    let settled = packet.next_close_demands(4096).expect("terminal packet demands nothing");
+    assert_eq!((settled.depth, settled.copy_bytes, settled.release_bytes), (0, 0, 0));
 }
 
 #[cfg(test)]
@@ -288,28 +300,28 @@ fn populated_flow_surface_closes_history_and_cache_before_slot_reuse() {
 pub fn node_graph_wheel(surface_id: &str, controller_id: &str, inner: Rect, x: f32, y: f32, delta: f32, ctrl: bool) -> Vec<ActionDescriptor> {
     let mut input = ui_wgpu::wgpu::InputState::default();
     let _ = node_graph_wheel_into(surface_id, controller_id, inner, x, y, delta, ctrl, &mut input);
-    crate::collect_fixture_actions(&mut input)
+    semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input)
 }
 
 #[cfg(test)]
 pub fn node_graph_pointer_down(surface_id: &str, controller_id: &str, inner: Rect, x: f32, y: f32, button: i16, shift: bool, ctrl: bool, alt: bool, space_pressed: bool) -> Vec<ActionDescriptor> {
     let mut input = ui_wgpu::wgpu::InputState::default();
     let _ = node_graph_pointer_down_into(surface_id, controller_id, inner, x, y, button, shift, ctrl, alt, space_pressed, &mut input);
-    crate::collect_fixture_actions(&mut input)
+    semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input)
 }
 
 #[cfg(test)]
 pub fn node_graph_pointer_move(surface_id: &str, controller_id: &str, inner: Rect, x: f32, y: f32, shift: bool, ctrl: bool, alt: bool) -> Vec<ActionDescriptor> {
     let mut input = ui_wgpu::wgpu::InputState::default();
     let _ = node_graph_pointer_move_into(surface_id, controller_id, inner, x, y, shift, ctrl, alt, &mut input);
-    crate::collect_fixture_actions(&mut input)
+    semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input)
 }
 
 #[cfg(test)]
 pub fn node_graph_pointer_up(surface_id: &str, controller_id: &str, inner: Rect, x: f32, y: f32, shift: bool, ctrl: bool, alt: bool) -> Vec<ActionDescriptor> {
     let mut input = ui_wgpu::wgpu::InputState::default();
     let _ = node_graph_pointer_up_into(surface_id, controller_id, inner, x, y, shift, ctrl, alt, &mut input);
-    crate::collect_fixture_actions(&mut input)
+    semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input)
 }
 
 #[cfg(test)]
@@ -326,7 +338,7 @@ pub fn map_interaction_actions(surface_id: &str, controller_id: &str, host: &Map
 pub fn tiled_map_wheel(surface_id: &str, controller_id: &str, inner: Rect, x: f32, y: f32, delta: f32, ctrl: bool) -> Vec<ActionDescriptor> {
     let mut input = ui_wgpu::wgpu::InputState::default();
     let _ = tiled_map_wheel_into(surface_id, controller_id, inner, x, y, delta, ctrl, &mut input);
-    crate::collect_fixture_actions(&mut input)
+    semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input)
 }
 
 #[cfg(test)]

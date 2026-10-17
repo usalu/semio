@@ -163,8 +163,8 @@ path = "../../🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/📦️pac
 [workspace.dependencies.semio-s-artifact-puzzle-5d]
 path = "../../🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/📦️packages/🦀️rust"
 
-[workspace.dependencies.semio-s-artifact-raster-raster]
-path = "../../🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/📦️packages/🦀️rust"
+[workspace.dependencies.semio-s-artifact-raster-raster-model]
+path = "../../🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-s-artifact-reasoning-wires]
 path = "../../🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/📦️packages/🦀️rust"

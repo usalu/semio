@@ -3,13 +3,13 @@
 //! @see ../../🦀️.rs — the schema twin the kit decodes with
 //! @see ../../../🧪️tests/🧫️fixtures — the committed vectors
 
+use semio_framework_test_fixtures::fixture_path;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 use serde_json::Value;
-use std::path::PathBuf;
 
 pub fn fixture(case: &str) -> Value {
-    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../../🧪️tests/🧫️fixtures");
+    let root = fixture_path!("../../../../🧪️tests/🧫️fixtures");
     let directory = std::fs::read_dir(&root).into_iter().flatten().flatten().map(|entry| entry.path()).find(|path| path.file_name().and_then(|name| name.to_str()).is_some_and(|name| name.ends_with(case)));
     let path = directory.unwrap_or_else(|| panic!("no fixture case {case} under {}", root.display())).join("🔣️.json");
     let text = std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("{}: {error}", path.display()));
@@ -17,7 +17,7 @@ pub fn fixture(case: &str) -> Value {
 }
 
 pub fn normative() -> Value {
-    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../../🧬️schema/🔣️.json");
+    let path = fixture_path!("../../../../🧬️schema/🔣️.json");
     let text = std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("{}: {error}", path.display()));
     serde_json::from_str(&text).unwrap_or_else(|error| panic!("{}: {error}", path.display()))
 }

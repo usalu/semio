@@ -1,0 +1,32 @@
+{
+ "parent": "semio-s-artifact-draw-drawing-transform",
+ "name": "semio-s-artifact-draw-drawing-transform-tests",
+ "dir": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧪️tests/🥣️companion",
+ "files": [
+  "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧬️schema/🧬️mutations/✋️drag-layers/🧪️tests/✋️drags-a-child/🦀️.rs",
+  "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧬️schema/🧬️mutations/✏️update-path-geometry/🧪️tests/🔬️unit/🦀️.rs",
+  "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧬️schema/🧬️mutations/📍️drag-path-points/🧪️tests/📍️drags/🦀️.rs",
+  "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧬️schema/🧬️mutations/📐️scale-layers/🧪️tests/📐️doubles/🦀️.rs",
+  "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧬️schema/🧬️mutations/🔀set-layer-boolean/🧪️tests/➖️union/🦀️.rs",
+  "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧬️schema/🧬️mutations/🔄️update-layer/🧪️tests/📐️translates/🦀️.rs",
+  "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧬️schema/🧬️mutations/🔍️update-layer/🧪️tests/🔍️sharpens/🦀️.rs",
+  "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧬️schema/🧬️mutations/🔷️shape-coordinate/🧪️tests/🔬️unit/🦀️.rs",
+  "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧬️schema/🧬️mutations/🧭️rotate-layers/🧪️tests/🧭️quarter-turn/🦀️.rs"
+ ],
+ "testkit": [
+  "semio-s-artifact-draw-drawing-model",
+  "semio-s-artifact-draw-drawing-diff",
+  "semio-s-artifact-draw-drawing-geometry",
+  "semio-s-artifact-draw-drawing-mutations",
+  "semio-s-artifact-draw-drawing-transform",
+  "semio-s-artifact-draw-drawing-style",
+  "semio-s-artifact-draw-drawing-structure",
+  "semio-s-artifact-draw-drawing-metadata",
+  "semio-s-artifact-draw-drawing-scene",
+  "semio-s-artifact-draw-drawing-editor-interaction",
+  "semio-s-artifact-draw-drawing-editor"
+ ],
+ "emoji": "🥣️",
+ "summary": "the nine mutation fixture laws of the transform leaves.",
+ "description": "Companion test crate of semio-s-artifact-draw-drawing-transform: the nine mutation fixture laws of the transform leaves"
+}

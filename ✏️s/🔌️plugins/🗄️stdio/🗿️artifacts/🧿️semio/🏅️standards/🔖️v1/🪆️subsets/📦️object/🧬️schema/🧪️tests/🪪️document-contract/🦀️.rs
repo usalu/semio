@@ -1,10 +1,11 @@
+use semio_framework_test_fixtures::{fixture_bytes, fixture_text};
 use {crate::schema::SemioObjectArtifact, crate::schema::diff::SemioObjectDiff, crate::schema::snapshot::SemioObjectSnapshot};
 use protocol::{DiffBinary,DiffText};
 use store::{pack::snapshot::ArtifactDsl, pack::snapshot::ArtifactPack};
 
 #[semio_framework_async_macros::async_test]
 async fn stdio_document_contract_object_round_trips_exact_children() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🪪️document-contract/🔣️.json")).expect("neutral Object vectors");
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../🧪️tests/🧫️fixtures/🪪️document-contract/🔣️.json")).expect("neutral Object vectors");
     for case in fixture["snapshotCases"].as_array().expect("snapshot vectors") {
         let input = &case["input"];
         let text = input.to_string();
@@ -45,8 +46,8 @@ async fn stdio_document_contract_object_round_trips_exact_children() {
         let expected: SemioObjectSnapshot = semio_framework_pack_json::from_json_str(&case["after"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("independent expected edit");
         assert_eq!(protocol::apply_diff(&diff, &before).expect("edit applies"), expected);
     }
-    let text = include_str!("../../../🖼️assets/📦️crate/🗣️.dsl.semio");
-    let pack = include_bytes!("../../../🖼️assets/📦️crate/🎒️.pack.semio");
+    let text = fixture_text!("../../../🖼️assets/📦️crate/🗣️.dsl.semio");
+    let pack = fixture_bytes!("../../../🖼️assets/📦️crate/🎒️.pack.semio");
     assert_eq!(SemioObjectSnapshot::parse_dsl(text).expect("authored text asset"), SemioObjectSnapshot::decode_pack(pack).expect("authored Pack asset"));
 }
 

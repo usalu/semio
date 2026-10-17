@@ -150,6 +150,18 @@
           "maxLength": 65536
         }
       }
+    },
+    "FractionalSample": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "number",
+          "minimum": 0,
+          "exclusiveMaximum": 1
+        }
+      ]
     }
   }
 }

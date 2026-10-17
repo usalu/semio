@@ -1,4 +1,24 @@
-use super::*;
+use semio_framework_plugin::NodeGraphScene;
+use semio_framework_plugin::SurfaceKind;
+#[allow(unused_imports)]
+use crate::{SequenceStep, SequenceWorkingScene};
+#[allow(unused_imports)]
+use semio_framework_plugin::BuiltNode;
+#[allow(unused_imports)]
+use semio_framework_ui_locale::LocalizedLabel;
+#[allow(unused_imports)]
+use semio_framework_plugin::NodeGraphEdgeRecord;
+#[allow(unused_imports)]
+use semio_framework_plugin::NodeGraphNodeRecord;
+#[allow(unused_imports)]
+use semio_framework_plugin::UiAssemblyResult;
+#[allow(unused_imports)]
+use semio_framework_plugin::WindowKindDefinition;
+#[allow(unused_imports)]
+use semio_framework_plugin::WindowOptions;
+#[allow(unused_imports)]
+use semio_framework_os_kernel::Viewport2d;
+use crate::viewer::sequence::modes::view::windows::main::*;
 
 #[semio_framework_async_macros::async_test]
 async fn definition_declares_the_node_graph_surface_and_body_key() {

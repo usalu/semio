@@ -1,7 +1,6 @@
 //! 🎥 Shooting mutation payload — `CreateSavedCamera`. Brings a new saved camera into existence (append-only apply).
 
 use crate::diff::ShootingDiff;
-use crate::mutations::ShootingMutation;
 use crate::{ShootingSavedCamera, ShootingSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 
@@ -16,12 +15,15 @@ pub struct CreateSavedCamera {
     pub index: Option<usize>,
 }
 
-impl MutationKind<ShootingSnapshot, ShootingMutation> for CreateSavedCamera {
+impl<Op> MutationKind<ShootingSnapshot, Op> for CreateSavedCamera
+where
+    Op: protocol::Mutation<ShootingSnapshot, Diff = ShootingDiff> + From<CreateSavedCamera> + From<crate::standards::v1::subsets::any::schema::mutations::delete_saved_camera::DeleteSavedCamera>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "saved-camera", kind: "create-saved-camera", record: "CreatedSavedCamera" };
     fn diff(&self, base: &ShootingSnapshot) -> protocol::MutationOutcome<ShootingDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &ShootingSnapshot) -> Result<Vec<ShootingMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &ShootingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

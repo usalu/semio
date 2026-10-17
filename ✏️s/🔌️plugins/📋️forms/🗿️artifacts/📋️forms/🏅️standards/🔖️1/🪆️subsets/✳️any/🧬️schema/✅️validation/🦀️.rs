@@ -72,13 +72,11 @@ pub fn answer_error(question: &FormQuestion, value: &DslValue) -> Option<&'stati
 }
 
 pub fn step_errors(step: &FormStep, values: &PlaybookValues) -> Vec<FormsAnswerError> {
-    crate::schema::visible_questions(step, values).into_iter().filter_map(|question| answer_error(question, values.get(&question.id).unwrap_or(&DslValue::Null)).map(|code| FormsAnswerError { question_id: question.id.clone(), code: code.into() })).collect()
+    crate::playbook::visible_blocks(step, values).into_iter().filter_map(|question| answer_error(question, values.get(&question.id).unwrap_or(&DslValue::Null)).map(|code| FormsAnswerError { question_id: question.id.clone(), code: code.into() })).collect()
 }
 
 pub fn can_advance(step: &FormStep, values: &PlaybookValues) -> bool {
     step_errors(step, values).is_empty()
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;
+

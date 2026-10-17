@@ -4,8 +4,12 @@
 //! at `[1,2,3]` with a `derived` child fastened through one z-facing grip pair, fastener `x: 0.5`,
 //! `y: 0.25` — the child must land at world x ≈ 1 and diagram x ≈ `1.5 × 48`.
 
-use super::*;
-use crate::{Puzzle5dGrip2d, Puzzle5dGrip3d, Puzzle5dPart2d, Puzzle5dPart3d};
+use crate::Puzzle5dSnapshot;
+use crate::standards::v1::subsets::any::schema::document_records::{Puzzle5dFastener, Puzzle5dGrip, Puzzle5dPart, Puzzle5dPartAnchor};
+#[allow(unused_imports)]
+use std::collections::{HashMap, HashSet, VecDeque};
+use crate::standards::v1::subsets::any::geometry::*;
+use crate::standards::v1::subsets::any::schema::document_records::{Puzzle5dGrip2d, Puzzle5dGrip3d, Puzzle5dPart2d, Puzzle5dPart3d};
 
 fn grip(id: &str, position: [f64; 3], direction: [f64; 3], angle: f64) -> Puzzle5dGrip {
     Puzzle5dGrip { id: id.to_string(), grip_kind: None, grip_2d: Puzzle5dGrip2d { angle, grip_kind: None, radius: None }, grip_3d: Puzzle5dGrip3d { position, direction: Some(direction), radius: None, label: None } }

@@ -1,0 +1,109 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "roots",
+    "dependencies"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "roots": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^rust-unit-[a-z][a-z0-9_-]{0,79}$"
+      },
+      "maxItems": 65536
+    },
+    "dependencies": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "source",
+          "target",
+          "type"
+        ],
+        "properties": {
+          "source": {
+            "type": "string",
+            "minLength": 1
+          },
+          "target": {
+            "type": "string",
+            "pattern": "^rust-unit-[a-z][a-z0-9_-]{0,79}$"
+          },
+          "type": {
+            "const": "implicit"
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "Policy": {
+      "const": {
+        "maximumProjects": 65536,
+        "maximumDependencies": 4096,
+        "operationsPerYield": 256,
+        "textUnitsPerYield": 65536,
+        "progressMilliseconds": 250,
+        "maximumReaderSourceBytes": 8388608,
+        "maximumReaderPolicyBytes": 65536
+      }
+    },
+    "SeedEdge": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source",
+        "target"
+      ],
+      "properties": {
+        "source": {
+          "type": "string"
+        },
+        "target": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        },
+        "sourceFile": {
+          "type": "string"
+        }
+      }
+    },
+    "Project": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "dependencies"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^rust-unit-[a-z][a-z0-9_-]{0,79}$"
+        },
+        "dependencies": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^rust-unit-[a-z][a-z0-9_-]{0,79}:compile$"
+          },
+          "maxItems": 4096
+        }
+      }
+    },
+    "Limit": {
+      "type": "integer",
+      "minimum": 2
+    }
+  }
+}

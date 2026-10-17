@@ -1,0 +1,3 @@
+# Products47406 Captured Diagnostic Failure Proof
+
+Bound two saved log/terminal files with nofollow descriptors, stable descriptor/name seven-field metadata, bytes and SHA-256. Receipt: `🗑️generated/products47406-independent-failure-hold.json`. Terminal1/null after3231.939ms. Same actual application/journal/service preservation refusal; no accepted publication. Saved renderer output does not expose the bounded before/after cause, so no specific hash, content, metadata or identity difference is inferred. A separate hook-safe cached-cause reporter requires fresh Source gates/hold. No Native/protected observation performed.

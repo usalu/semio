@@ -1,6 +1,5 @@
 //! 🏗️ `create-solid` — brings a new id-keyed solid into existence with its full initial `shells` membership list (each flagged void/non-void, referencing already-existing shells). A duplicate `id` already present in `base` is a no-op.
 
-use crate::schema::mutations::SemioBrepMutation;
 use crate::schema::snapshot::{BrepSolidShell, SemioBrepSnapshot};
 
 //#region 🔖️Payload
@@ -15,13 +14,16 @@ pub struct CreateSolid {
     pub at: Option<usize>,
 }
 
-impl protocol::MutationKind<SemioBrepSnapshot, SemioBrepMutation> for CreateSolid {
+impl<Op> protocol::MutationKind<SemioBrepSnapshot, Op> for CreateSolid
+where
+    Op: protocol::Mutation<SemioBrepSnapshot, Diff = crate::schema::diff::SemioBrepDiff> + From<CreateSolid> + From<crate::schema::mutations::delete_solid::DeleteSolid>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "solid", kind: "create-solid", record: "CreatedSolid" };
 
-    fn diff(&self, base: &SemioBrepSnapshot) -> protocol::MutationOutcome<<SemioBrepMutation as protocol::Mutation<SemioBrepSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioBrepSnapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<SemioBrepSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &SemioBrepSnapshot) -> Result<Vec<SemioBrepMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &SemioBrepSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

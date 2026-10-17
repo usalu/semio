@@ -1,0 +1,59 @@
+use crate::standards::v6_0::subsets::baseline::schema::mutations::TiffBaselineMutation;
+use crate::standards::v6_0::subsets::baseline::schema::snapshot::TiffSnapshot;
+use crate::TIFF_BASELINE_DIALECT;
+use semio_framework_plugin::ArtifactEditor;
+use semio_framework_plugin::Editor;
+use semio_s_artifact_stdio_contract::editing;
+use crate::editor::tiff_baseline::*;
+
+/// 🧬️ Registers the document schema tiff's declaration contributes — the contract every snapshot edit validates against;
+/// a fixture editor runs without the plugin assembly that publishes it.
+fn register_document_schema() {
+    semio_framework_schema_registry::register_artifact_schema_descriptors(vec![crate::standards::v6_0::subsets::document::schema::tiff_artifact_schema_descriptor()]).expect("the tiff document schema registers");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn create_editor_builds_a_definition_for_the_editor_role() {
+    let def = create_tiff_baseline_editor();
+    assert_eq!(def.role, semio_framework::AppRole::Editor);
+    assert_eq!(def.dialect, TIFF_BASELINE_DIALECT.into());
+}
+
+#[semio_framework_async_macros::async_test]
+async fn editor_dialect_matches_the_artifact_coordinate() {
+    assert_eq!(<TiffBaselineEditor as ArtifactEditor>::DIALECT, TIFF_BASELINE_DIALECT);
+}
+
+#[test]
+fn payload_detail_edits_publish_the_exact_requested_value() {
+    register_document_schema();
+    let fixture: serde_json::Value = serde_json::from_str(runtime_fixture_text("../../../../../../../../../../📇️registry/🧬️contract/✏️editing/🩹️patch/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+    let mut snapshot = crate::schema::blank_tiff_snapshot();
+    snapshot.ifds[0].blocks.clear();
+    let bits=snapshot.ifds[0].entries.iter().position(|entry|entry.tag==258).unwrap();
+    snapshot.ifds[0].entries[bits].values=crate::schema::snapshot::TiffValues::Short(vec![7,9]);
+    let path=format!("/ifds/0/entries/{bits}/values/value");
+    let base: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&semio_framework_value::ToValue::to_value(&snapshot))).unwrap();
+    for row in fixture["payload"]["cases"].as_array().unwrap() {
+        let mut event = row["event"].clone();
+        event["path"] = format!("{path}{}", event["path"].as_str().unwrap()).into();
+        if let Some(from) = event.get_mut("from") { *from = format!("{path}{}", from.as_str().unwrap()).into(); }
+        let event: editing::SnapshotEditEvent = semio_framework_pack_json::from_json_str(&event.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+        let emitted = <TiffBaselineEditor as editing::SnapshotEditingEditor>::snapshot_edit_emit(&event, &snapshot).unwrap_or_else(|error| panic!("{}: {error:?}", row["id"]));
+        let mut next = snapshot.clone();
+        for mutation in emitted.artifact_mutations {
+            next = protocol::apply_diff(<TiffBaselineMutation as protocol::Mutation<TiffSnapshot>>::diff(&mutation, &next).diff(), &next).unwrap();
+        }
+        let mut expected = base.clone();
+        *expected.pointer_mut(&path).unwrap() = row["expected"].clone();
+        let actual: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&semio_framework_value::ToValue::to_value(&next))).unwrap();
+        assert_eq!(actual, expected, "{}", row["id"]);
+    }
+}
+
+semio_framework_plugin::history_edit_acceptance_law!("stdio", crate::editor::tiff_baseline::TiffBaselineEditor, || semio_framework_plugin::App { definition: crate::editor::tiff_baseline::create_tiff_baseline_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️6.0/🪆️subsets/🧱️baseline");
+
+fn runtime_fixture_text(relative: &str) -> &'static str {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative);
+    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display())).into_boxed_str())
+}

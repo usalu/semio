@@ -34,5 +34,16 @@
         "release"
       ]
     }
+  },
+  "$defs": {
+    "DataPolicy": {
+      "const": {
+        "maximumSelections": 65536,
+        "maximumArguments": 4096,
+        "maximumArgumentBytes": 1048576,
+        "maximumEnvironmentEntries": 4096,
+        "maximumEnvironmentBytes": 1048576
+      }
+    }
   }
 }

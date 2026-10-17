@@ -2,7 +2,7 @@
 import { strict as assert } from "node:assert";
 import stableStringify from "fast-json-stable-stringify";
 import { semioSchemaAjvV1 } from "@semio-tech/schema-ts/oracles/validator";
-import { valueOrderedRetirementSchemaUrl, valueTypeSchemaUrl } from "../../../../../../../../🔨️modules/🌱️value/🧪️tests/🧫️fixtures/🟦️.ts";
+import { valueOrderedRetirementSchemaUrl, valueTypeSchemaUrl } from "@semio-tech/value-ts/testing/fixtures";
 
 const ownerSchema=await Bun.file(new URL("../../🧬️schema/🔣️.json",import.meta.url)).json();
 const grantSchema=await Bun.file(valueOrderedRetirementSchemaUrl).json();
@@ -156,4 +156,3 @@ for(const page of fixture.grants) {
   for(const demand of physicalDemands) {const grant=Math.max(page,demand);assert(validateGrant({maximumItems:1,maximumCopyBytes:grant,maximumCapacityBytes:0,maximumReleaseBytes:grant,maximumDepth:1}));assert(demand<=grant);freed+=demand;}
   assert.equal(freed,born);assert(physicalDemands.length<domainClosure.maximumTurns);
 }
-console.log("[DEBUG] independent UTF8 content, current physical grants and aggregate ownership closure laws passed");

@@ -5,8 +5,8 @@ use super::*;
 use store::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{SqliteSnapshotControl,SqliteDatabaseLimits,SnapshotEncoding,SqliteValue}};
 #[test]
 fn sqlite_snapshot_wires_native_exact_semantic_cells_both_directions(){
- let contract:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🧮️census/🔣️.json")).unwrap();assert_eq!(contract["scalarBytes"],8);
- for word in serde_json::from_str::<serde_json::Value>(include_str!("../🧫️fixtures/🔣️.json")).unwrap()["floatWords"].as_array().unwrap().iter().map(|value|u64::from_str_radix(value.as_str().unwrap(),16).unwrap()).collect::<Vec<_>>(){
+ let contract:serde_json::Value=serde_json::from_str(runtime_fixture_text("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🧮️census/🔣️.json")).unwrap();assert_eq!(contract["scalarBytes"],8);
+ for word in serde_json::from_str::<serde_json::Value>(runtime_fixture_text("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json")).unwrap()["floatWords"].as_array().unwrap().iter().map(|value|u64::from_str_radix(value.as_str().unwrap(),16).unwrap()).collect::<Vec<_>>(){
   let mut expected=native_fixture();if let semio_framework_value::DslValue::Array(values)=&mut expected.meta{values.push(semio_framework_value::DslValue::Number(semio_framework_value::Number::Float(f64::from_bits(word))));}else{panic!("complete fixture meta array")}
   let database=original_owners::with_sqlite_recipient(SqliteDatabaseLimits::default(),&mut |_|true,|sqlite_control|expected.to_sqlite_database(sqlite_control)).unwrap();
   let bytes=database.tables.iter().flat_map(|table|&table.rows).flat_map(|row|&row.values).try_fold(0usize,|sum,value|sum.checked_add(match value{SqliteValue::Null=>0,SqliteValue::Integer(_)|SqliteValue::Real(_)=>8,SqliteValue::Text(text)=>text.len(),SqliteValue::Blob(blob)=>blob.len()})).unwrap();assert!(bytes>1);
@@ -25,4 +25,9 @@ fn sqlite_snapshot_wires_native_exact_semantic_cells_both_directions(){
    }
   }
  }
+}
+
+fn runtime_fixture_text(relative: &str) -> &'static str {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative);
+    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display())).into_boxed_str())
 }

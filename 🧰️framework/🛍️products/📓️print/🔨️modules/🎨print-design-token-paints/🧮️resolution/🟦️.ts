@@ -1,6 +1,6 @@
 /** 🎨️ Pure canonical print paints shared by browsers, workers and LaTeX generation. */
-import authoredTokens from "../../../../../🔨️modules/🖱️ui/🎨️styling/🔣️.json";
-import { oklabMix } from "../../../../../🔨️modules/🖱️ui/🎨️styling/🌗️mixing/🟦️.ts";
+import { stylingSchema as authoredTokens } from "@semio-tech/ui-styling";
+import { oklabMix } from "@semio-tech/ui-styling/mixing";
 //#region 🎨️DesignTokenPaints
 const CHROME_PAINT_KEYS = ["base", "borderNormal", "borderEmphasized", "activeBase", "activeForeground", "foreground", "accent"] as const;
 const PRINT_LEVEL_SURFACE_KEYS = ["window", "pane", "panel", "dialog", "menu"] as const;

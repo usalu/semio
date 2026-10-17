@@ -1,5 +1,6 @@
 
 use super::*;
+use semio_framework_test_fixtures::fixture_text;
 
 #[test]
 fn serde_json_value_round_trips_through_dsl_value() {
@@ -103,7 +104,7 @@ fn dsl_value_literal_matches_serde_json_and_keeps_written_order() {
 /// in-range case equals `serde_json`'s parse of that text (third-party oracle); past the safe integer range an `f64` stays a float.
 #[test]
 fn a_json_number_reads_back_as_its_json_text() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️json-projection/🔣️.json")).expect("the json-projection fixture parses");
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../🧪️tests/🧫️fixtures/🔣️json-projection/🔣️.json")).expect("the json-projection fixture parses");
     let numbers = fixture["numbers"].as_array().expect("numbers");
     assert!(!numbers.is_empty());
     for case in numbers {

@@ -119,7 +119,4 @@ impl protocol::OpBinary for SemioGraphMutation {
 //#endregion 🔖️OpBinary
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

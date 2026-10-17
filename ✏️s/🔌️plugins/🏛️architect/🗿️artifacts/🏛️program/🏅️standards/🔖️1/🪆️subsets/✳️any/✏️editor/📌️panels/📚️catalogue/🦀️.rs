@@ -6,8 +6,8 @@
 //! fixed-children cap.
 
 use crate::editor::architect::catalog::REGISTER_IDS;
-use crate::editor::architect::ui_label;
-use crate::editor::architect::{architect_action, ui_value_map, ui_value_text};
+use crate::editor::architect::base::ui_label;
+use crate::editor::architect::base::{architect_action, ui_value_map, ui_value_text};
 use semio_framework_plugin::tree_item_with_action;
 use semio_framework_plugin::BuiltNode;
 use semio_framework_ui_locale::LocalizedLabel;
@@ -55,7 +55,7 @@ struct Shortcut {
     args: &'static [(&'static str, ShortcutArg)],
 }
 
-const SHORTCUTS: &[Shortcut] = &[
+pub const SHORTCUTS: &[Shortcut] = &[
     Shortcut { id: "architect-catalogue.add-item", label: "Add Register Item", action: "addRegisterItem", args: &[("registerId", ShortcutArg::Text("elements")), ("template", ShortcutArg::Null)] },
     Shortcut { id: "architect-catalogue.validate", label: "Run Validation", action: "runValidation", args: &[] },
     Shortcut { id: "architect-catalogue.analysis", label: "Run Analysis", action: "runAnalysis", args: &[("analysisKind", ShortcutArg::Text("gap"))] },

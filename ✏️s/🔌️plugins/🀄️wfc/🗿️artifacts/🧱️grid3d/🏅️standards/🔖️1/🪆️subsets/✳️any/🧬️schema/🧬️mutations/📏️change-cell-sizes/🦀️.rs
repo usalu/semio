@@ -3,7 +3,6 @@
 //! so a size array can never drift out of step with `width`/`height`/`depth`.
 
 use crate::diff::Grid3dDiff;
-use crate::mutations::Grid3dMutation;
 use crate::schema::snapshot::*;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -19,17 +18,23 @@ pub struct ChangeCellSizes {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_cell_sizes(axis: Grid3dAxis, sizes: Vec<f64>) -> Grid3dMutation {
-    Grid3dMutation::ChangeCellSizes(ChangeCellSizes { axis, sizes })
+pub fn change_cell_sizes<Op>(axis: Grid3dAxis, sizes: Vec<f64>) -> Op
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::change_cell_sizes::ChangeCellSizes>,
+{
+    Op::from(ChangeCellSizes { axis, sizes })
 }
 
-impl MutationKind<Grid3dSnapshot, Grid3dMutation> for ChangeCellSizes {
+impl<Op> MutationKind<Grid3dSnapshot, Op> for ChangeCellSizes
+where
+    Op: protocol::Mutation<Grid3dSnapshot, Diff = Grid3dDiff> + From<ChangeCellSizes>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "cell-sizes", kind: "change-cell-sizes", record: "ChangedCellSizes" };
 
     fn diff(&self, base: &Grid3dSnapshot) -> protocol::MutationOutcome<Grid3dDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Grid3dSnapshot) -> Result<Vec<Grid3dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Grid3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

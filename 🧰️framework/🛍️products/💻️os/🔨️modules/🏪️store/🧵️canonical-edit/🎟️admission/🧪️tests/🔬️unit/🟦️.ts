@@ -12,12 +12,11 @@ test("canonical sealer constructor admits the exact edit frame and identity buff
     const original = { actor: row.actor, id: row.id, inverse: [7, 3] };
     const accepted = row.items > 0 && row.depth > 0 && row.capacity >= capacity;
     expect(accepted).toBe(row.accepted);
-    const moved = applyPatch({ edit: original, identities: [] }, accepted ? [{ op: "replace", path: "/identities", value: [row.actor, row.id, row.id] }] : [], true, false).newDocument;
+    const moved = applyPatch<{ edit: typeof original; identities: string[] }>({ edit: original, identities: [] }, accepted ? [{ op: "replace", path: "/identities", value: [row.actor, row.id, row.id] }] : [], true, false).newDocument;
     expect(moved.edit).toEqual(original);
     expect(moved.identities).toEqual(accepted ? [row.actor, row.id, row.id] : []);
     for (const [index, text] of moved.identities.entries()) expect(new TextEncoder().encode(text).byteLength).toBeLessThanOrEqual(law.identityCapacityBytes[index]);
   }
-  console.log("[DEBUG] canonical sealer independent RFC6902/UTF8 preserves original owners before admitted frame and identity birth");
   const native = readFileSync(new URL("../../../🦀️.rs", import.meta.url), "utf8");
   expect(native.includes("pub fn constructor_demand(")).toBe(true);
   expect(native.includes("pub fn admit(")).toBe(true);
@@ -41,7 +40,6 @@ test("canonical sealer retirement separates tiny copy work from exact constructo
     }
     expect(state.remaining).toEqual([]);
   }
-  console.log("[DEBUG] canonical retirement RFC6902 owner conservation keeps 1/2/7-byte copy independent of exact physical backing release");
   const native = readFileSync(new URL("../../../🦀️.rs", import.meta.url), "utf8");
   const fixtures = readFileSync(new URL("../../../🧪️tests/🔬️unit/🦀️.rs", import.meta.url), "utf8");
   expect(native.includes("grant.maximum_bytes")).toBe(false);

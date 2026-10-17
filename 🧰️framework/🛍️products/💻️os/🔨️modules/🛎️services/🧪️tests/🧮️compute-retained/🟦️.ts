@@ -8,19 +8,18 @@ import {Database} from "bun:sqlite";
 const base=new URL("../../",import.meta.url),read=(path:string)=>readFileSync(new URL(path,base),"utf8"),law=JSON.parse(read("🧪️tests/🧫️fixtures/🧮️compute-retained/🔣️.json"));
 test("original completion close denies zero work before borrowing the cancellation alias",()=>{
  const db=new Database(":memory:");try{expect(db.query("SELECT ?=0 AS originalRetained, 0 AS copiedItems, 0 AS copiedBytes, 0 AS retainedCapacityBytes, 0 AS releasedBytes").get(law.zeroWorkClose.work)).toEqual({originalRetained:Number(law.zeroWorkClose.originalRetained),...law.zeroWorkClose.progress});}finally{db.close()}
- const source=read("🦀️.rs"),start=source.indexOf("pub fn close_step(&mut self,cx:"),end=source.indexOf("impl<J:InteractiveJob+'static> Drop",start),close=source.slice(start,end);expect(close.indexOf("cx.should_yield()")).toBeGreaterThan(0);expect(close.indexOf("has_original_cancel_alias_witness")).toBeGreaterThan(close.indexOf("cx.should_yield()"));console.log("[DEBUG] Original Services close zero work SQL receipt0 and unchanged source before alias custody");
+ const source=read("🦀️.rs"),start=source.indexOf("pub fn close_step(&mut self,cx:"),end=source.indexOf("impl<J:InteractiveJob+'static> Drop",start),close=source.slice(start,end);expect(close.indexOf("cx.should_yield()")).toBeGreaterThan(0);expect(close.indexOf("has_original_cancel_alias_witness")).toBeGreaterThan(close.indexOf("cx.should_yield()"));
 });
 test("original Compute invocation preserves the caller receipt identity and refusal custody",()=>{
  const ajv=new Ajv2020({strict:false}).addMetaSchema(draft7).addSchema(JSON.parse(read("../../../../🔨️modules/🌱️value/🧬️retained-clone/🌐️wire/🧬️schema/🔣️.json")),"semio:retained-grant").addSchema(JSON.parse(read("../../../../🔨️modules/🌱️value/🧬️retained-clone/🌐️wire/🧬️schema/🧾️progress.json")),"semio:retained-progress"),validate=ajv.compile(JSON.parse(read("🧮️compute/🎟️invocation/🧬️schema/🔣️.json"))),zero={copiedItems:0,copiedBytes:0,retainedCapacityBytes:0,releasedBytes:0},input={operation:71,generation:3,completion:null,grant:law.callerGrant,recipient:{operation:71,generation:3,progress:zero,remaining:law.callerGrant}};
  expect(validate(input)).toBe(true);expect(validate({...input,defaultGrant:law.callerGrant})).toBe(false);expect(validate({...input,grant:{...input.grant,maximumCopyBytes:-1}})).toBe(false);
  const db=new Database(":memory:");try{for(const row of[{operation:71,generation:3,open:true,items:1,copy:128,capacity:4096,depth:2,expected:true},{operation:72,generation:3,open:true,items:1,copy:128,capacity:4096,depth:2,expected:false},{operation:71,generation:4,open:true,items:1,copy:128,capacity:4096,depth:2,expected:false},{operation:71,generation:3,open:false,items:1,copy:128,capacity:4096,depth:2,expected:false},{operation:71,generation:3,open:true,items:0,copy:128,capacity:4096,depth:2,expected:false},{operation:71,generation:3,open:true,items:1,copy:0,capacity:4096,depth:2,expected:false},{operation:71,generation:3,open:true,items:1,copy:128,capacity:0,depth:2,expected:false},{operation:71,generation:3,open:true,items:1,copy:128,capacity:4096,depth:0,expected:false}]){const admitted=Boolean((db.query("SELECT (?1=71 AND ?2=3 AND ?3 AND ?4>=1 AND ?5>=128 AND ?6>=4096 AND ?7>=2) AS admitted").get(row.operation,row.generation,Number(row.open),row.items,row.copy,row.capacity,row.depth)as{admitted:number}).admitted);expect(admitted).toBe(row.expected);expect(admitted?{copiedItems:1,copiedBytes:128,retainedCapacityBytes:4096,releasedBytes:0}:zero).toEqual(row.expected?{copiedItems:1,copiedBytes:128,retainedCapacityBytes:4096,releasedBytes:0}:input.recipient.progress);}}finally{db.close()}
- console.log("[DEBUG] original Services compute invocation canonical Grant/Progress Ajv and SQLite identity/cancellation/eight independent source-retention cases");
  const source=read("🦀️.rs"),start=source.indexOf("pub async fn run_job<"),end=source.indexOf("/// 🌐️ Runs a blocking platform-I/O",start),receiver=source.slice(start,end);
  expect(receiver).toContain("job: &mut Option<J>");expect(receiver).toContain("params: &mut Option<semio_framework_job::BatchJobParams>");expect(receiver).toContain("control: &mut impl semio_framework_job::WorkerJobAdmissionControl");expect(receiver).toContain("try_admit_owned(job, params, control)");expect(receiver).not.toContain("MountedWorkerJobSession::try_new");expect(receiver).toContain("retained_recipient");
 });
 test("original Compute session survives dropping only its borrowed async driver",()=>{
  const db=new Database(":memory:");try{db.run("CREATE TABLE custody(phase TEXT,caller INTEGER,driver INTEGER)");for(const[phase,caller,driver]of[["source",1,0],["admitted",1,1],["driver-cancelled",1,0],["paid-close",0,0]])db.query("INSERT INTO custody VALUES(?,?,?)").run(phase,caller,driver);expect(db.query("SELECT caller,driver FROM custody WHERE phase='driver-cancelled'").get()).toEqual({caller:1,driver:0});expect(db.query("SELECT count(*) AS n FROM custody WHERE caller=0 AND driver=1").get()).toEqual({n:0});}finally{db.close()}
- const source=read("🦀️.rs"),start=source.indexOf("pub async fn run_job<"),end=source.indexOf("/// 🌐️ Runs a blocking platform-I/O",start);expect(source.slice(start,end)).toContain("completion: &mut Option<ComputeJobCompletion<J>>");console.log("[DEBUG] SQLite original caller custody remains after driver cancellation; actual receiving slot required");
+ const source=read("🦀️.rs"),start=source.indexOf("pub async fn run_job<"),end=source.indexOf("/// 🌐️ Runs a blocking platform-I/O",start);expect(source.slice(start,end)).toContain("completion: &mut Option<ComputeJobCompletion<J>>");
 });
 test("Services mandatory retained contract validates every neutral axis and an independent SQLite receipt",()=>{
  const ajv=new Ajv2020({strict:false}).addMetaSchema(draft7),grant=ajv.compile(JSON.parse(read("../../../../🔨️modules/🌱️value/🧬️retained-clone/🌐️wire/🧬️schema/🔣️.json"))),progress=ajv.compile(JSON.parse(read("../../../../🔨️modules/🌱️value/🧬️retained-clone/🌐️wire/🧬️schema/🧾️progress.json")));
@@ -33,8 +32,8 @@ test("Services and both original router callers preserve caller authority withou
 });
 
 test("canonical Native I/O denials retain original owners with zero progress on each axis",()=>{
- const db=new Database(":memory:");try{db.run("CREATE TABLE denials(axis TEXT,items INTEGER,copy INTEGER,capacity INTEGER,release INTEGER)");for(const axis of ["items","release","depth"]){const grant={items:1,release:128,depth:1,[axis]:0};const denied=db.query("SELECT ?<1 OR ?<1 OR ?<128 AS denied").get(grant.items,grant.depth,grant.release)as{denied:number};expect(denied.denied).toBe(1);db.run("INSERT INTO denials VALUES(?,0,0,0,0)",axis);}expect(db.query("SELECT axis,json_object('copiedItems',items,'copiedBytes',copy,'retainedCapacityBytes',capacity,'releasedBytes',release) AS progress FROM denials ORDER BY rowid").all().map((row:any)=>({...row,progress:JSON.parse(row.progress)}))).toEqual(law.nativeIoDenials);}finally{db.close();}
- const source=read("🦀️.rs");expect(source).toContain("pub fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::WorkerJobCloseStep,semio_framework_job::OriginalTurnFailure>");expect(source).toContain("cx.consume_retained(step.progress())?");expect(source).not.toContain("let step=self.session.close_step(grant)");console.log("[DEBUG] original service close SQLite denial0 sameBorrowedContext nestedReceiptOnce wholeFailure");
+ const db=new Database(":memory:");try{db.run("CREATE TABLE denials(axis TEXT,items INTEGER,copy INTEGER,capacity INTEGER,release INTEGER)");for(const axis of ["items","release","depth"]){const grant={items:1,release:128,depth:1,[axis]:0};const denied=db.query("SELECT ?<1 OR ?<1 OR ?<128 AS denied").get(grant.items,grant.depth,grant.release)as{denied:number};expect(denied.denied).toBe(1);db.run("INSERT INTO denials VALUES(?,0,0,0,0)",[axis]);}expect(db.query("SELECT axis,json_object('copiedItems',items,'copiedBytes',copy,'retainedCapacityBytes',capacity,'releasedBytes',release) AS progress FROM denials ORDER BY rowid").all().map((row:any)=>({...row,progress:JSON.parse(row.progress)}))).toEqual(law.nativeIoDenials);}finally{db.close();}
+ const source=read("🦀️.rs");expect(source).toContain("pub fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::WorkerJobCloseStep,semio_framework_job::OriginalTurnFailure>");expect(source).toContain("cx.consume_retained(step.progress())?");expect(source).not.toContain("let step=self.session.close_step(grant)");
 });
 
 test("Services original outcome loan never reconstructs owned worker payloads",()=>{
@@ -43,19 +42,18 @@ test("Services original outcome loan never reconstructs owned worker payloads",(
  const io=read("🚪️native-io/🦀️.rs"),services=read("🦀️.rs"),effects=read("../🔌️plugin/🖥️host/⚡️effects/🦀️.rs");
  expect(io).toContain("Result<Option<JobOutcomeBorrow<'a>>, ValueError>");expect(io).toContain("fn borrow_outcome<'a>");expect(io).toContain("JobOutcomeBorrow::admit_fault(cx,");expect(io).not.toContain("-> StepOutcome");
  expect(services).not.toContain("take_checked_out_outcome");expect(services).toContain("recipient: impl for<'a> FnOnce(semio_framework_job::JobOutcomeView<'a>)");expect(services).toContain("acknowledge_checked_out_outcome(retained)");expect(effects).toContain("JobOutcomeView::Complete");
- console.log("[DEBUG] Services borrowed original complete/cancel/fault SQLite lifecycle",original.outcomeLoans.length);
 });
 
-test("original Services borrowed recipient Rust grammar remains valid",()=>{for(const name of ["🦀️.rs","🚪️native-io/🦀️.rs","../🔌️plugin/🖥️host/⚡️effects/🦀️.rs"]){const result=spawnSync("rustfmt",["--edition","2021","--emit","stdout",fileURLToPath(new URL(name,base))],{stdio:["ignore","ignore","pipe"],timeout:5000});expect(result.error).toBeUndefined();expect(result.status).toBe(0);}console.log("[DEBUG] Services original borrowed recipient grammar",3);});
+test("original Services borrowed recipient Rust grammar remains valid",()=>{for(const name of ["🦀️.rs","🚪️native-io/🦀️.rs","../🔌️plugin/🖥️host/⚡️effects/🦀️.rs"]){const result=spawnSync("rustfmt",["--edition","2021","--emit","stdout",fileURLToPath(new URL(name,base))],{stdio:["ignore","ignore","pipe"],timeout:5000});expect(result.error).toBeUndefined();expect(result.status).toBe(0);}});
 
-test("Services compute examples have no exclusive testing-law wrapper",()=>{expect(existsSync(new URL("🧬️schema/🧮️compute-retained/🔣️.json",base))).toBe(false);console.log("[DEBUG] Services example authority absence",1);});
+test("Services compute examples have no exclusive testing-law wrapper",()=>{expect(existsSync(new URL("🧬️schema/🧮️compute-retained/🔣️.json",base))).toBe(false);});
 
 
 test("Compute mounted step receives the original supplied five-axis policy",()=>{
  const services=read("🦀️.rs"),job=read("../../../../🔨️modules/🧵️job/🦀️.rs");
  expect(job.includes("lane: Lane,retained:RetainedCloneGrant")).toBe(true);expect(services).toContain("completion.session.pump_one(&self.pool, lane, retained)");expect(services).toContain("take_checked_out_retained_step_receipt()");expect(services).toContain("retained_recipient.record_progress(progress)");expect(services).toContain("let retained=retained_recipient.remaining_grant()?;");
  const db=new Database(":memory:");try{const row=db.query("SELECT ? AS maximumItems, ? AS maximumCopyBytes, ? AS maximumCapacityBytes, ? AS maximumReleaseBytes, ? AS maximumDepth").get(law.callerGrant.maximumItems,law.callerGrant.maximumCopyBytes,law.callerGrant.maximumCapacityBytes,law.callerGrant.maximumReleaseBytes,law.callerGrant.maximumDepth);expect(row).toEqual(law.callerGrant);}finally{db.close();}
- expect(services).not.toContain("pump_one(&next_pool, lane)");console.log("[DEBUG] Compute mounted turn forwards original caller five-axis authority");
+ expect(services).not.toContain("pump_one(&next_pool, lane)");
 });
 
 test("original Compute recipient conserves its one issued grant across successive transitions",()=>{
@@ -67,7 +65,6 @@ test("original Compute recipient conserves its one issued grant across successiv
  expect(db.query("SELECT items>=? AND copy>=? AND capacity>=? AND release>=? AS admitted FROM wallet").get(original.maximumItems,0,0,0)).toEqual({admitted:0});
  }finally{db.close()}
  const source=read("🦀️.rs");expect(source).toContain("pub trait ComputeRetainedRecipient");expect(source).toContain("retained_recipient: &mut impl ComputeRetainedRecipient");expect(source).toContain("retained_recipient.remaining_grant()?");expect(source).toContain("retained_recipient.record_progress(progress)");expect(source).not.toContain("fn receive_compute_turn(recipient:&mut semio_framework_job::RetainedCloneProgress");
- console.log("[DEBUG] original Compute wallet independent SQLite conservation; actual borrowed original recipient required at each admission/pump/ACK");
 });
 
 test("original compute admission reserves its receiving header before native child birth",()=>{
@@ -75,5 +72,5 @@ test("original compute admission reserves its receiving header before native chi
  const paid=db.query("SELECT ?-? >= ? AND ?-? >= ? AS admitted").get(original.copy,header.copy,child.copy,original.items,header.items,child.items);expect(paid).toEqual({admitted:0});
  expect(original).toEqual({copy:700,items:3});
  }finally{db.close()}
- const source=read("🦀️.rs");expect(source).toContain("WorkerJobSession::<J>::owned_admission_demand()?");expect(source).toContain("child.copy_bytes.checked_add(header)");console.log("[DEBUG] original remaining wallet funds receiving header and complete child demand before birth");
+ const source=read("🦀️.rs");expect(source).toContain("WorkerJobSession::<J>::owned_admission_demand()?");expect(source).toContain("child.copy_bytes.checked_add(header)");
 });

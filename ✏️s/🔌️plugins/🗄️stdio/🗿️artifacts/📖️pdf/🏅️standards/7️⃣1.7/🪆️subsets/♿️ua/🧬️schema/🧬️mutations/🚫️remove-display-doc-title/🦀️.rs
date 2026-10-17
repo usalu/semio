@@ -1,7 +1,6 @@
 //! 🚫️ Authoritative PDF/UA mutation for remove display doc title.
 
-use super::set_display_doc_title::SetDisplayDocTitle;
-use super::PdfUaMutation;
+use crate::standards::v1_7::subsets::ua::schema::mutations::set_display_doc_title::SetDisplayDocTitle;
 use crate::standards::v1_7::subsets::base::schema::conformance_support as support;
 use crate::standards::v1_7::subsets::base::schema::diff::{self, PdfDiff};
 use crate::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot;
@@ -14,16 +13,19 @@ use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 #[value(rename_all = "camelCase")]
 pub struct RemoveDisplayDocTitle {}
 
-impl MutationKind<PdfSnapshot, PdfUaMutation> for RemoveDisplayDocTitle {
+impl<Op> MutationKind<PdfSnapshot, Op> for RemoveDisplayDocTitle
+where
+    Op: protocol::Mutation<PdfSnapshot, Diff = PdfDiff> + From<RemoveDisplayDocTitle> + From<crate::standards::v1_7::subsets::ua::schema::mutations::set_display_doc_title::SetDisplayDocTitle>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "remove", entity: "display-doc-title", kind: "remove-display-doc-title", record: "Remove" };
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
         MutationOutcome::new(diff::graph_edit(support::remove_catalog_entry_rows(base, "ViewerPreferences")))
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfUaMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         Ok({
-            support::catalog_flag(base, "ViewerPreferences", "DisplayDocTitle").map(|display| PdfUaMutation::SetDisplayDocTitle(SetDisplayDocTitle { display, entry_index: support::catalog_entry_position(base, "ViewerPreferences") })).into_iter().collect()
+            support::catalog_flag(base, "ViewerPreferences", "DisplayDocTitle").map(|display| Op::from(SetDisplayDocTitle { display, entry_index: support::catalog_entry_position(base, "ViewerPreferences") })).into_iter().collect()
         })
     }
 
@@ -38,9 +40,7 @@ impl MutationKind<PdfSnapshot, PdfUaMutation> for RemoveDisplayDocTitle {
 //#endregion 🔖️Mutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
 
 //#region 🔖️Facets

@@ -1,6 +1,6 @@
 import fc from "fast-check";
 import examples from "../🧫️fixtures/🧫️cold-pair-loading/🔣️.json";
-import type { ColdDocumentPairCursor, ColdPairIngressStatus } from "../../../../../../../🔨️modules/🎭️actor/📥️cold-pair/🟦️.ts";
+import type { ColdDocumentPairCursor, ColdPairIngressStatus } from "@semio-tech/framework-actor/cold-pair";
 import type { ActorInstanceLifetime } from "../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🟦️.ts";
 
 type Answer = "loading" | "loading-other-page" | "loading-other-transfer" | "applied" | "fault" | "cancel";

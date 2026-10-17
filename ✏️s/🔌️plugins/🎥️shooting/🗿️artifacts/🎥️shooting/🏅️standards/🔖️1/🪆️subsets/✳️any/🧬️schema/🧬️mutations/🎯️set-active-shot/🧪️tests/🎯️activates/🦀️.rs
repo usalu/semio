@@ -8,21 +8,22 @@
 use crate::mutations::ShootingMutation;
 use crate::{ShootingDiff, ShootingSnapshot};
 use protocol::Mutation;
+use semio_framework_test_fixtures::fixture_text;
 
-const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎯️set-active-shot/🎯️activates/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎯️set-active-shot/🎯️activates/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎯️set-active-shot/🎯️activates/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎯️set-active-shot/🎯️activates/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎯️set-active-shot/🎯️activates/🎯️outcome/🔣️.json");
+static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎯️set-active-shot/🎯️activates/📸️snapshot/⬅️before/🔣️.json"));
+static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎯️set-active-shot/🎯️activates/📸️snapshot/➡️after/🔣️.json"));
+static MUTATION: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎯️set-active-shot/🎯️activates/🦠️mutation/🔣️.json"));
+static DIFF: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎯️set-active-shot/🎯️activates/🔺️diff/🔣️.json"));
+static OUTCOME: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎯️set-active-shot/🎯️activates/🎯️outcome/🔣️.json"));
 
 fn before() -> ShootingSnapshot {
-    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes")
+    semio_framework_pack_json::from_json_str((*BEFORE), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes")
 }
 fn expected_after() -> ShootingSnapshot {
-    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after snapshot decodes")
+    semio_framework_pack_json::from_json_str((*AFTER), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after snapshot decodes")
 }
 fn mutation() -> ShootingMutation {
-    serde_json::from_str(MUTATION).expect("mutation decodes")
+    serde_json::from_str((*MUTATION)).expect("mutation decodes")
 }
 fn apply(base: &ShootingSnapshot, step: &ShootingMutation) -> ShootingSnapshot {
     protocol::apply_diff(&step.diff(base).into_parts().0, base).expect("set-active-shot diff applies")
@@ -57,14 +58,14 @@ async fn inverse_restores_the_previous_cursor() {
 /// 🔣️ Both committed snapshots and the payload are already canonical: decode→encode is a fixed point.
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
-    for (label, text) in [("before", BEFORE), ("after", AFTER)] {
+    for (label, text) in [("before", (*BEFORE)), ("after", (*AFTER))] {
         let decoded: ShootingSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
         let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "set-active-shot/activates-shot-close: committed {label} JSON is not canonical");
     }
     let reencoded = serde_json::to_value(mutation()).expect("mutation encodes");
-    let original: serde_json::Value = serde_json::from_str(MUTATION).expect("mutation reparses");
+    let original: serde_json::Value = serde_json::from_str((*MUTATION)).expect("mutation reparses");
     assert_eq!(reencoded, original, "set-active-shot/activates-shot-close: committed mutation JSON is not canonical");
 }
 
@@ -72,7 +73,7 @@ async fn committed_json_is_canonical() {
 /// id is `mutation.target-missing`, while a `null` `shot_id` is legal and CLEARS the cursor to `""`.
 #[semio_framework_async_macros::async_test]
 async fn declared_outcome_holds_and_a_null_shot_id_clears_the_cursor() {
-    let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
+    let outcome: serde_json::Value = serde_json::from_str((*OUTCOME)).expect("outcome decodes");
     assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("applied"), "set-active-shot/activates-shot-close: this fixture declares `applied`");
     assert!(mutation().diff(&before()).messages().is_empty(), "set-active-shot/activates-shot-close: activating a real shot must raise no diagnostic");
 
@@ -93,7 +94,7 @@ async fn declared_outcome_holds_and_a_null_shot_id_clears_the_cursor() {
 async fn produces_committed_diff() {
     let outcome = mutation().diff(&before());
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
-    let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
+    let committed: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff decodes");
     assert_eq!(produced, committed, "set-active-shot/activates-shot-close: produced diff differs from the committed 🔺️diff/🔣️.json");
     assert_eq!(committed["activeShotId"], "shot-close", "set-active-shot/activates-shot-close: the scalar slot carries the new cursor");
     assert!(committed["assets"].is_null() && committed["shots"].is_null() && committed["savedCameras"].is_null(), "set-active-shot/activates-shot-close: no collection delta is opened at all");
@@ -103,16 +104,16 @@ async fn produces_committed_diff() {
 /// 🔣️ The committed diff is itself canonical and decodes to `ShootingDiff` — the committed scalar delta round-trips through `ShootingDiff` unchanged.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
-    let decoded: ShootingDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
+    let decoded: ShootingDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
     let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("diff re-encodes");
-    let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
+    let original: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff reparses");
     assert_eq!(reencoded, original, "set-active-shot/activates-shot-close: committed diff JSON is not canonical");
 }
 
 /// 🩹 Applying the committed diff straight to `before` yields `after` — the single scalar is enough to rebuild the after-snapshot.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: ShootingDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
+    let decoded: ShootingDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
     let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "set-active-shot/activates-shot-close: committed diff did not carry before to after");
 }

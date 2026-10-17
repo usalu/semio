@@ -36,7 +36,7 @@ if (segments[0] === "test" && segments[1] === "io-descriptor-parity") {
     const { runCargo } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
     await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-sequence-sequence", "--lib", "artifact_io_", "--", "--nocapture"], resolve(import.meta.dir, "../../../../../../.."));
   }
-} else await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-sequence-sequence", { ...{
+} else await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-sequence-sequence", { packages: ["semio-s-artifact-sequence-sequence", "semio-s-artifact-sequence-sequence-editor", "semio-s-artifact-sequence-sequence-inferences", "semio-s-artifact-sequence-sequence-schema", "semio-s-artifact-sequence-sequence-tests", "semio-s-artifact-sequence-sequence-v1"], ...{
   twins: [{ name: "sequence-snapshot-fixture-asset", run: sequenceSnapshotFixtureAssetSelfTests }, { name: "artifact-io-descriptor-parity", run: testArtifactIoDescriptorParity }],
   snapshotSqliteTests:["../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"],
 }, commands: { verify: OwnedVerifyScript } });

@@ -1,0 +1,40 @@
+// 🎬️ One-off: moves the 243 KB gismap demo DSL document into its own asset crate and points its three consumers at it.
+import {existsSync, mkdirSync, readFileSync, writeFileSync} from "node:fs";
+import {dirname, join} from "node:path";
+import {addWorkspaceMembers, insertBuildOwnerRows, patchRouterPackages} from "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️authoring/📦️crate-tree/📝️render/🟦️.ts";
+const ROOT = "/Users/ueli/Documents/semio";
+const ART = "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap";
+const ANY = `${ART}/🏅️standards/🔖️1/🪆️subsets/✳️any`;
+const NAME = "semio-s-artifact-gis-gismap-demo-asset";
+const PKG = `${ANY}/🖼️assets/🎬️demo/📦️packages/🦀️rust`;
+const backupDir = process.argv[2]!;
+const abs = (p: string) => join(ROOT, p);
+const save = (p: string, text: string) => {
+  const b = join(ROOT, backupDir, p);
+  if (existsSync(abs(p)) && !existsSync(b)) { mkdirSync(dirname(b), {recursive: true}); writeFileSync(b, readFileSync(abs(p))); }
+  mkdirSync(dirname(abs(p)), {recursive: true}); writeFileSync(abs(p), text); console.log("wrote", p);
+};
+const sub = (p: string, a: string, b: string, all = false) => { const s = readFileSync(abs(p), "utf8"); const n = s.split(a).length - 1; if (n < 1 || (!all && n !== 1)) throw new Error(`${p}: ${n} x ${a}`); save(p, s.split(a).join(b)); };
+save(`${PKG}/Cargo.toml`, `[package]\nworkspace = "../../../../../../../.."\nname = "${NAME}"\nversion.workspace = true\nedition.workspace = true\nrust-version.workspace = true\ndescription = "Bundled demo DSL document of the gismap artifact, kept in its own crate so no logic crate embeds it"\n\n[package.metadata.semio]\nrole = "library"\n\n[lints]\nworkspace = true\n\n[lib]\npath = "🦀️.rs"\n\n[dependencies]\n`);
+save(`${PKG}/🦀️.rs`, `//! 🎬️ The bundled "reuse map" document of the gismap artifact, handcrafted in the \`.gismap\` DSL. It lives in its own crate so that the example and the text snapshot facet share one embedded copy instead of each logic crate carrying 243 KB.\n\n/// 🗺️ The complete document text.\npub const DEMO_DSL: &str = include_str!("../../🗣️.dsl.semio");\n`);
+const C = `${NAME.replaceAll("-", "_")}::DEMO_DSL`;
+sub(`${ANY}/📚️examples/🎬️demo/🦀️.rs`, 'include_str!("../../🖼️assets/🎬️demo/🗣️.dsl.semio")', C);
+sub(`${ANY}/🚪️io/📝️text/📸️snapshot/🦀️.rs`, 'include_str!("../../../🖼️assets/🎬️demo/🗣️.dsl.semio")', C);
+sub(`${ANY}/📚️examples/🎬️demo/🧪️tests/🧩️example/🦀️.rs`, 'include_str!("../../../../🖼️assets/🎬️demo/🗣️.dsl.semio")', C, true);
+const facadeToml = `${ART}/📦️packages/🦀️rust/Cargo.toml`;
+sub(facadeToml, "[dependencies]\n", `[dependencies]\n${NAME} = { path = "../../${"🏅️standards/🔖️1/🪆️subsets/✳️any/🖼️assets/🎬️demo/📦️packages/🦀️rust"}" }\n`);
+save(`${ART}/Cargo.toml`, addWorkspaceMembers(readFileSync(abs(`${ART}/Cargo.toml`), "utf8"), ["🏅️standards/🔖️1/🪆️subsets/✳️any/🖼️assets/🎬️demo/📦️packages/🦀️rust"]));
+const router = `${ART}/📦️packages/🦀️rust/📜️script.ts`;
+save(router, patchRouterPackages(readFileSync(abs(router), "utf8"), "semio-s-artifact-gis-gismap", [NAME]));
+const lockPath = `${ART}/Cargo.lock`;
+let lock = readFileSync(abs(lockPath), "utf8");
+const blocks = lock.split(/\n(?=\[\[package\]\]\n)/u);
+const header = blocks[0]!.startsWith("[[package]]") ? "" : blocks.shift()!;
+const nameOf = (b: string) => /name = "([^"]+)"/u.exec(b)![1]!;
+const out = blocks.map((b) => (nameOf(b) === "semio-s-artifact-gis-gismap" && !/^source = /mu.test(b) ? b.replace(/(dependencies = \[\n)([\s\S]*?)(\n\])/u, (_, h, body, t) => `${h}${[...body.split("\n"), ` "${NAME}",`].sort().join("\n")}${t}`) : b).trimEnd());
+const at = out.findIndex((b) => Buffer.compare(Buffer.from(nameOf(b)), Buffer.from(NAME)) > 0);
+out.splice(at < 0 ? out.length : at, 0, `[[package]]\nname = "${NAME}"\nversion = "0.1.0"`);
+save(lockPath, `${header ? header + "\n" : ""}${out.join("\n\n")}\n`);
+const ownersFile = abs("📋️build-owners.json");
+const {text, added} = insertBuildOwnerRows(readFileSync(ownersFile, "utf8"), [{name: NAME, root: PKG}]);
+writeFileSync(ownersFile, text); console.log("owner rows", added);

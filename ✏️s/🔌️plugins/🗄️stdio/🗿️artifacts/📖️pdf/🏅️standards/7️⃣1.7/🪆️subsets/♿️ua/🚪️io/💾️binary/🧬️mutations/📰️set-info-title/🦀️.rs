@@ -1,6 +1,6 @@
 //! 🏷️ Direct binary codec for `set-info-title`.
 
-use crate::standards::v1_7::subsets::ua::schema::mutations::SetInfoTitle;
+use crate::standards::v1_7::subsets::ua::schema::mutations::set_info_title::SetInfoTitle;
 
 //#region 🔖️Identity
 pub const TAG: u8 = 8;
@@ -21,7 +21,5 @@ pub fn decode(bytes: &[u8]) -> Result<SetInfoTitle, String> {
 //#endregion 🔖️Codec
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

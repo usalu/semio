@@ -2,11 +2,12 @@
 
 use crate::{ProcedureDiff, ProcedureSnapshot};
 use crate::schema::ProcedureArtifact;
+use semio_framework_test_fixtures::fixture_text;
 use store::{pack::snapshot::ArtifactDsl, pack::snapshot::ArtifactPack};
 
 #[test]
 fn procedure_document_contract_round_trips_children_and_rejects_foreign_owners() {
-    let fixture: serde_json::Value = serde_json::from_str(runtime_fixture_text("../../../../🧪️tests/🧫️fixtures/🔬️contract/🪪️document-contract/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../🧪️tests/🧫️fixtures/🔬️contract/🪪️document-contract/🔣️.json")).unwrap();
     let source = fixture["document"].to_string();
     let artifact: ProcedureArtifact = semio_framework_pack_json::from_json_str(&source, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let snapshot: ProcedureSnapshot = semio_framework_pack_json::from_json_str(&source, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
@@ -26,9 +27,4 @@ fn procedure_document_contract_round_trips_children_and_rejects_foreign_owners()
     for row in fixture["invalidDiffs"].as_array().unwrap() {
         assert!(semio_framework_pack_json::from_json_str::<ProcedureDiff>(&row.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).is_err());
     }
-}
-
-fn runtime_fixture_text(relative: &str) -> &'static str {
-    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative);
-    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display())).into_boxed_str())
 }

@@ -36,3 +36,4 @@ semio-framework-trace = { workspace = true }
 
 [dev-dependencies]
 semio-framework-os-kernel = { path = "../../../../../../📦️packages/🦀️rust", features = ["durable-group-testing", "mutation-testing"] }
+semio-framework-test-fixtures = { path = "../../../../../../../../🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }

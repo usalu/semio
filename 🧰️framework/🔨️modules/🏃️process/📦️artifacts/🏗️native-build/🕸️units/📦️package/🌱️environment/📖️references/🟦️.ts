@@ -1,8 +1,8 @@
-import {rustTokens,rustTokenPairs,rustTokenSegments,rustStringValue} from "../../../../../../../📚️compiler/📖️syntax/🦀️rust/🟦️.ts";
+import {rustTokens,rustTokenPairs,rustTokenSegments,rustStringValue} from "@semio-tech/compiler-syntax-rust-ts";
 import {selectRustSourceV1} from "../../../../📥️source/🟦️.ts";
 import {validateJsonSchemaSubset} from "../../../../../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json";
-import policy from "./🔣️policy.json";
+const policy=schema.definitions.Policy.const;
 /** 🌱️ Admits only literal compiler environment observations whose presence and value are represented before artifact hashing. */
 export function rustCompileEnvironmentReferencesV1(value:unknown):Readonly<Record<string,string|null>>{
  if(validateJsonSchemaSubset(schema,value).length)throw Error("Closed Rust compiler environment Source request required");const request=value as {source:string;cfg:string[];environment:Record<string,string|null>},tokens=rustTokens(selectRustSourceV1(request.source,request.cfg)),pairs=rustTokenPairs(tokens),result:Record<string,string|null>={},aliases=new Map([["env","env"],["option_env","option_env"]]);let changed=true;while(changed){changed=false;for(let index=0;index<tokens.length;index++){const name=tokens[index]!.text.replace(/^r#/u,""),macro=aliases.get(name),alias=tokens[index+2]?.text.replace(/^r#/u,"");if(macro&&tokens[index+1]?.text==="as"&&tokens[index+2]?.kind==="identifier"&&alias&&!aliases.has(alias)){aliases.set(alias,macro);changed=true;}}}

@@ -1,6 +1,6 @@
 use crate::editor::bim::commands::{arm_utility, canvas_double_click, canvas_escape, canvas_pointer_down, canvas_pointer_move, canvas_pointer_up, world_pointer_down};
 use crate::editor::bim::modes::edit::windows::{plan, world};
-use crate::editor::bim::unit_tests::context::{bim_app, canvas_scene, dispatch_in, history_verb, view, world_scene};
+use crate::editor::bim::fixture::context::{bim_app, canvas_scene, dispatch_in, history_verb, view, world_scene};
 use crate::editor::bim::BimCommand;
 use semio_framework_plugin::app::TypedOperationResultLane;
 use semio_framework_plugin::{Effect, PluginApp, ViewModel};
@@ -14,7 +14,6 @@ fn on_a_big_stack<F: std::future::Future<Output = ()>>(test: impl FnOnce() -> F 
         .stack_size(std::env::var("BIM_STACK_MB").ok().and_then(|v| v.parse::<usize>().ok()).unwrap_or(8) * 1024 * 1024)
         .spawn(move || {
             let mut future = std::pin::pin!(test());
-            eprintln!("[DEBUG] future bytes {} app {} bimapp {}", std::mem::size_of_val(&future), std::mem::size_of_val(&crate::editor::bim::unit_tests::context::bim_app()), std::mem::size_of::<crate::editor::bim::unit_tests::context::BimApp>());
             let mut context = std::task::Context::from_waker(std::task::Waker::noop());
             while future.as_mut().poll(&mut context).is_pending() {
                 std::thread::yield_now();
@@ -231,7 +230,6 @@ fn an_offset_previews_in_the_window_transient_and_its_closing_click_writes_one_u
 fn debug_stack_probe() {
     let phase: usize = std::env::var("BIM_PHASE").ok().and_then(|v| v.parse().ok()).unwrap_or(99);
     let mb: usize = std::env::var("BIM_STACK_MB").ok().and_then(|v| v.parse().ok()).unwrap_or(2);
-    eprintln!("[DEBUG] sizes ActionDefinition {} AppDefinition {}", std::mem::size_of::<semio_framework_plugin::ActionDefinition>(), std::mem::size_of::<semio_framework_plugin::AppDefinition>());
     std::thread::Builder::new().name("probe".into()).stack_size(mb * 1024 * 1024).spawn(move || {
         use crate::editor::bim as b;
         match phase {
@@ -243,5 +241,4 @@ fn debug_stack_probe() {
             _ => {}
         }
     }).unwrap().join().unwrap();
-    eprintln!("[DEBUG] phase {phase} ok at {mb} MB");
 }

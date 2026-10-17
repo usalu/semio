@@ -1,27 +1,21 @@
 
 use super::{build_document, independent_pages, oracle_apply_mutation, oracle_inverse_spec, oracle_round_trip, page, project_pdf_1_4, spec, KINDS};
+use semio_framework_test_fixtures::{fixture_bytes, fixture_text};
 use semio_repo_test_host::parse_json;
 
 #[test]
 fn direct_language_neutral_vectors_match_lopdf_and_concrete_inverse() {
-    macro_rules! vector {
-        ($mutation:literal) => {
-            (
-                include_str!(concat!("../../../🧪️tests/🧫️fixtures/🧬️mutations", $mutation, "/🔄️round/🎯️outcome/🔣️.json")),
-                include_str!(concat!("../../../🧪️tests/🧫️fixtures/🧬️mutations", $mutation, "/🔄️round/📸️snapshot/⬅️before/🔣️.json")),
-                include_str!(concat!("../../../🧪️tests/🧫️fixtures/🧬️mutations", $mutation, "/🔄️round/📸️snapshot/➡️after/🔣️.json")),
-                include_str!(concat!("../../../🧪️tests/🧫️fixtures/🧬️mutations", $mutation, "/🔄️round/🔺️diff/🔣️.json")),
-                include_str!(concat!("../../../🧪️tests/🧫️fixtures/🧬️mutations", $mutation, "/🔄️round/🦠️mutation/🔣️.json")),
-            )
-        };
-    }
-    let vectors = [vector!("📥️insert-page"), vector!("🗑️remove-page"), vector!("🔀️move-page"), vector!("📐️resize-page"), vector!("♻️replace-page-text")];
+    let vector = |mutation: &str| {
+        let read = |leaf: &str| fixture_text!(&format!("../../../{}", &format!("🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/🧬️mutations/{mutation}/🔄️round/{leaf}"))).to_owned();
+        (read("🎯️outcome/🔣️.json"), read("📸️snapshot/⬅️before/🔣️.json"), read("📸️snapshot/➡️after/🔣️.json"), read("🔺️diff/🔣️.json"), read("🦠️mutation/🔣️.json"))
+    };
+    let vectors = [vector("📥️insert-page"), vector("🗑️remove-page"), vector("🔀️move-page"), vector("📐️resize-page"), vector("♻️replace-page-text")];
     for (outcome, before, after, diff, mutation) in vectors {
-        assert_eq!(parse_json(outcome).unwrap().str("status"), "applied");
-        let _ = parse_json(diff).unwrap();
-        let base = parse_json(before).unwrap();
-        let mutation = parse_json(mutation).unwrap();
-        let expected = parse_json(after).unwrap();
+        assert_eq!(parse_json(&outcome).unwrap().str("status"), "applied");
+        let _ = parse_json(&diff).unwrap();
+        let base = parse_json(&before).unwrap();
+        let mutation = parse_json(&mutation).unwrap();
+        let expected = parse_json(&after).unwrap();
         let pages = base.array("pages").iter().map(page).collect::<Result<Vec<_>, _>>().unwrap();
         let base = build_document(&pages).unwrap();
         let forward = spec(&mutation.str("mutation"), mutation.get("payload").unwrap().clone());
@@ -41,10 +35,10 @@ fn direct_language_neutral_vectors_match_lopdf_and_concrete_inverse() {
 
 #[test]
 fn every_real_document_feature_row_is_observable_and_invertible() {
-    let base = include_bytes!("../../../🖼️assets/🎓️bachelor-thesis/🎓️bachelor-thesis.pdf").to_vec();
+    let base = fixture_bytes!("../../../🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🖼️assets/🎓️bachelor-thesis/🎓️bachelor-thesis.pdf").to_vec();
     assert_eq!(independent_pages(&base).unwrap().len(), 65);
-    let feature = include_str!("../../../🧪️tests/📑️mutate-pdf-1-4/🥒️.feature");
-    let rows = semio_repo_test_host::law::feature_rows(feature);
+    let feature = fixture_text!("../../../🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🧪️tests/📑️mutate-pdf-1-4/🥒️.feature").to_owned();
+    let rows = semio_repo_test_host::law::feature_rows(&feature);
     assert_eq!(rows.len(), KINDS.len());
     for (kind, params) in rows {
         assert!(KINDS.contains(&kind.as_str()));

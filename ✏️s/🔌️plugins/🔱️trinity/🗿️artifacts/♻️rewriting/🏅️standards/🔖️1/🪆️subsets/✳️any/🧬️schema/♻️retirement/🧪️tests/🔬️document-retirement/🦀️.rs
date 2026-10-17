@@ -1,7 +1,10 @@
-use super::*;
+use crate::standards::v1::subsets::any::schema::model::LayoutPoint;
+use crate::standards::v1::subsets::any::schema::mutations::set_rule_layout_points::RuleLayoutPlacement;
+use crate::standards::v1::subsets::any::schema::rule::*;
+use crate::standards::v1::subsets::any::schema::snapshot::*;
 use semio_framework_value::retained_clone::{RetainedCloneProgress, RetainedCloneStep};
 use semio_framework_value::retirement::{admit_owned_retirement, owned_retirement_birth_bytes};
-use semio_s_artifact_trinity_jack::{jack_self_funded_grant, JACK_SELF_FUNDED_BODY_BYTES};
+use semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::content::{jack_self_funded_grant, JACK_SELF_FUNDED_BODY_BYTES};
 
 fn admit<T: semio_framework_value::RetireOwned>(value: T) -> Box<dyn semio_framework_value::ErasedSnapshotRetirement> {
     let birth = jack_self_funded_grant(semio_framework_value::RetirementDemand { capacity_bytes: owned_retirement_birth_bytes::<T>(), ..Default::default() });
@@ -30,7 +33,7 @@ fn drain(mut owner: Box<dyn semio_framework_value::ErasedSnapshotRetirement>, it
 
 #[test]
 fn rewriting_window_config_document_retirement_respects_exact_grants() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/♻️retirement/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(runtime_fixture_text("../../../../🧪️tests/🧫️fixtures/♻️retirement/🔣️.json")).unwrap();
     for budget in fixture["budgets"].as_array().unwrap() {
         let items = budget["items"].as_u64().unwrap() as usize;
         for row in fixture["snapshots"].as_array().unwrap() {
@@ -48,4 +51,9 @@ fn rewriting_window_config_document_retirement_respects_exact_grants() {
             assert!(drain(admit(value), items) > 0);
         }
     }
+}
+
+fn runtime_fixture_text(relative: &str) -> &'static str {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative);
+    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display())).into_boxed_str())
 }

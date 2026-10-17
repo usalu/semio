@@ -37,6 +37,10 @@ type rasterRasterPresenceGuardSizeBounds = { readonly minItems?: number; readonl
 
 export const rasterRasterPresenceGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : rasterRasterPresenceGuardReject(at, "value is not an object");
+export const rasterRasterPresenceGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) rasterRasterPresenceGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const rasterRasterPresenceGuardArray = (value: unknown, at: string, bounds: rasterRasterPresenceGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return rasterRasterPresenceGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) rasterRasterPresenceGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -67,7 +71,7 @@ export const rasterRasterPresenceGuardConstant = <T extends string | number | bo
 //#endregion 🚪️Parsers
 
 export function parseRasterPresence(value: unknown, at = "$"): RasterPresence {
-  const row = rasterRasterPresenceGuardObject(value, at);
+  const row = rasterRasterPresenceGuardClosed(rasterRasterPresenceGuardObject(value, at), at, ["brushSize", "brushOpacity", "camera", "activeUtilityId"]);
   return {
     brushSize: rasterRasterPresenceGuardNumber(row["brushSize"], `${at}.brushSize`),
     brushOpacity: rasterRasterPresenceGuardNumber(row["brushOpacity"], `${at}.brushOpacity`),
@@ -83,7 +87,7 @@ export interface RasterCamera {
 }
 
 export function parseRasterCamera(value: unknown, at = "$"): RasterCamera {
-  const row = rasterRasterPresenceGuardObject(value, at);
+  const row = rasterRasterPresenceGuardClosed(rasterRasterPresenceGuardObject(value, at), at, ["x", "y", "zoom"]);
   return {
     x: rasterRasterPresenceGuardNumber(row["x"], `${at}.x`),
     y: rasterRasterPresenceGuardNumber(row["y"], `${at}.y`),

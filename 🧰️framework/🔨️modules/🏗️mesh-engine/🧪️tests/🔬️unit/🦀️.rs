@@ -375,5 +375,4 @@ fn original_mesh_metadata_owns_controlled_birth_and_exact_physical_retirement() 
     assert!(owner.terminal_is_empty());
     assert!(refusals > 0);
     assert_eq!(original + born, physical);
-    eprintln!("[DEBUG] original mesh metadata original={original} born={born} physical={physical} eightByteRefusals={refusals}");
 }

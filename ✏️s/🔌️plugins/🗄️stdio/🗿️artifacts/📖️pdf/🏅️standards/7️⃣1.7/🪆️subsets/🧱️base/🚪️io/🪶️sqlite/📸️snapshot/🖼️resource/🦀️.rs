@@ -1,8 +1,15 @@
 //! 🖼️ PDF image, form, graphics state, shading and pattern resource entities.
 use semio_framework_value::{ValueError,ValueRefusalKind};
-use crate::standards::v1_7::subsets::base::io::sqlite::snapshot::*;
+use crate::standards::v1_7::subsets::base::schema::snapshot::model::*;
+use crate::standards::v1_7::subsets::base::io::sqlite::snapshot::reader::{integer, boolean, optional_integer, optional_typed_integer, optional_real, optional_boolean, real_cell, integer_cell, boolean_cell, text_cell, optional_array, array_cells, write_sequence, read_sequence, null_except, Reader};
+use store::sqlite_snapshot::{artifact::{Cell as C}};
+use crate::standards::v1_7::subsets::base::io::sqlite::snapshot::number::{Projection};
+use crate::standards::v1_7::subsets::base::io::sqlite::snapshot::artifact_reference;
+use crate::standards::v1_7::subsets::base::io::sqlite::snapshot::cos;
+use crate::standards::v1_7::subsets::base::io::sqlite::snapshot::color;
+use crate::standards::v1_7::subsets::base::io::sqlite::snapshot::content;
 
-pub(super) fn write_image(out: &mut Projection<'_, '_>, image: &PdfImage) -> Result<i64,ValueError> {
+pub fn write_image(out: &mut Projection<'_, '_>, image: &PdfImage) -> Result<i64,ValueError> {
     let color = image.color_space.as_ref().map(|value|color::write_color(out,value)).transpose()?; let reference=match &image.body {PdfImageBody::Artifact {reference}=>Some(artifact_reference::write(out,reference)?),PdfImageBody::Samples {..}=>None}; let extra = cos::write_dictionary(out,&image.extra)?;
     let (mask,stencil) = match &image.mask { None => (C::Null,C::Null), Some(PdfImageMask::Stencil { image }) => (C::Text("stencil"),C::Text(image)), Some(PdfImageMask::ColorKey { .. }) => (C::Text("colorKey"),C::Null) };
     let key = out.insert("pdf_image",&[C::Text(&image.id),C::Integer(i64::from(image.width)),C::Integer(i64::from(image.height)),color.map_or(C::Null,C::Integer),C::Integer(i64::from(image.bits_per_component)),C::Integer(i64::from(image.image_mask)),C::Integer(i64::from(image.interpolate)),C::Text(match image.body {PdfImageBody::Samples {..}=>"samples",PdfImageBody::Artifact {..}=>"artifact"}),reference.map_or(C::Null,C::Integer),text_cell(&image.soft_mask),integer_cell(image.soft_mask_in_data),mask,stencil,C::Integer(i64::from(image.matte.is_some())),text_cell(&image.intent),text_cell(&image.optional_content),integer_cell(image.struct_parent),C::Integer(extra)])?;
@@ -11,19 +18,19 @@ pub(super) fn write_image(out: &mut Projection<'_, '_>, image: &PdfImage) -> Res
     if let Some(PdfImageMask::ColorKey { ranges }) = &image.mask { for (ordinal,value) in ranges.iter().enumerate() { out.insert("pdf_image_color_key",&[C::Integer(key),C::Integer(ordinal as i64),C::Integer(i64::from(*value))])?; } }
     Ok(key)
 }
-pub(super) fn read_image(reader: &mut Reader<'_, '_, '_>, key: i64) -> Result<PdfImage,ValueError> {
+pub fn read_image(reader: &mut Reader<'_, '_, '_>, key: i64) -> Result<PdfImage,ValueError> {
     let row = reader.take("pdf_image",key,19)?;
     let body=match row.text(8)? {"samples"=>{null_except(row,9..10,&[])?;let mut values=Vec::new();for child in reader.children("pdf_image_sample",1,2,key)? {let child=reader.take("pdf_image_sample",child.rowid,4)?;values.push(integer(child,3)?);}PdfImageBody::Samples {values}},"artifact"=>PdfImageBody::Artifact {reference:artifact_reference::read(reader,row.integer(9)?)?},_=>return Err(ValueError::new(ValueRefusalKind::InvalidValue,"unknown PDF image body"))};
     let mask = match row.optional_text(12)? { None => { null_except(row,13..14,&[])?; None }, Some("stencil") => Some(PdfImageMask::Stencil { image:reader.text(row,13)? }), Some("colorKey") => { null_except(row,13..14,&[])?; let mut ranges = Vec::new(); for value in reader.children("pdf_image_color_key",1,2,key)? { let value = reader.take("pdf_image_color_key",value.rowid,4)?; ranges.push(integer(value,3)?); } Some(PdfImageMask::ColorKey { ranges }) }, _ => return Err(ValueError::new(ValueRefusalKind::InvalidValue,"unknown PDF image mask kind")) };
     Ok(PdfImage { id:reader.text(row,1)?,width:integer(row,2)?,height:integer(row,3)?,color_space:optional_integer(row,4)?.map(|value|color::read_color(reader,value)).transpose()?,bits_per_component:integer(row,5)?,image_mask:boolean(row,6)?,decode:color::read_reals(reader,"pdf_image_real",key,"decode")?,interpolate:boolean(row,7)?,body,soft_mask:reader.optional_text(row,10)?,soft_mask_in_data:optional_typed_integer(row,11)?,mask,matte:if boolean(row,14)? { Some(color::read_reals(reader,"pdf_image_real",key,"matte")?) } else { None },intent:reader.optional_text(row,15)?,optional_content:reader.optional_text(row,16)?,struct_parent:optional_typed_integer(row,17)?,extra:cos::read_dictionary(reader,row.integer(18)?)? })
 }
 
-pub(super) fn write_group(out: &mut Projection<'_, '_>, group: &PdfTransparencyGroup) -> Result<i64,ValueError> { let color = group.color_space.as_ref().map(|value|color::write_color(out,value)).transpose()?; out.insert("pdf_transparency_group",&[color.map_or(C::Null,C::Integer),C::Integer(i64::from(group.isolated)),C::Integer(i64::from(group.knockout))]) }
-pub(super) fn read_group(reader: &mut Reader<'_, '_, '_>, key: i64) -> Result<PdfTransparencyGroup,ValueError> { let row = reader.take("pdf_transparency_group",key,4)?; Ok(PdfTransparencyGroup { color_space:optional_integer(row,1)?.map(|value|color::read_color(reader,value)).transpose()?,isolated:boolean(row,2)?,knockout:boolean(row,3)? }) }
-pub(super) fn write_form(out: &mut Projection<'_, '_>, form: &PdfFormXObject) -> Result<i64,ValueError> { let content = content::write_ops(out,&form.content)?; let group = form.group.as_ref().map(|value|write_group(out,value)).transpose()?; let extra = cos::write_dictionary(out,&form.extra)?; let mut cells = vec![C::Text(&form.id)]; cells.extend(form.bbox.iter().chain(&form.matrix).copied().map(C::Real)); cells.extend([C::Integer(content),group.map_or(C::Null,C::Integer),text_cell(&form.optional_content),integer_cell(form.struct_parent),C::Integer(extra)]); out.insert("pdf_form_xobject",&cells) }
-pub(super) fn read_form(reader: &mut Reader<'_, '_, '_>, key: i64) -> Result<PdfFormXObject,ValueError> { let row = reader.take("pdf_form_xobject",key,17)?; Ok(PdfFormXObject { id:reader.text(row,1)?,bbox:[row.real(2)?,row.real(3)?,row.real(4)?,row.real(5)?],matrix:[row.real(6)?,row.real(7)?,row.real(8)?,row.real(9)?,row.real(10)?,row.real(11)?],content:content::read_ops(reader,row.integer(12)?)?,group:optional_integer(row,13)?.map(|value|read_group(reader,value)).transpose()?,optional_content:reader.optional_text(row,14)?,struct_parent:optional_typed_integer(row,15)?,extra:cos::read_dictionary(reader,row.integer(16)?)? }) }
+pub fn write_group(out: &mut Projection<'_, '_>, group: &PdfTransparencyGroup) -> Result<i64,ValueError> { let color = group.color_space.as_ref().map(|value|color::write_color(out,value)).transpose()?; out.insert("pdf_transparency_group",&[color.map_or(C::Null,C::Integer),C::Integer(i64::from(group.isolated)),C::Integer(i64::from(group.knockout))]) }
+pub fn read_group(reader: &mut Reader<'_, '_, '_>, key: i64) -> Result<PdfTransparencyGroup,ValueError> { let row = reader.take("pdf_transparency_group",key,4)?; Ok(PdfTransparencyGroup { color_space:optional_integer(row,1)?.map(|value|color::read_color(reader,value)).transpose()?,isolated:boolean(row,2)?,knockout:boolean(row,3)? }) }
+pub fn write_form(out: &mut Projection<'_, '_>, form: &PdfFormXObject) -> Result<i64,ValueError> { let content = content::write_ops(out,&form.content)?; let group = form.group.as_ref().map(|value|write_group(out,value)).transpose()?; let extra = cos::write_dictionary(out,&form.extra)?; let mut cells = vec![C::Text(&form.id)]; cells.extend(form.bbox.iter().chain(&form.matrix).copied().map(C::Real)); cells.extend([C::Integer(content),group.map_or(C::Null,C::Integer),text_cell(&form.optional_content),integer_cell(form.struct_parent),C::Integer(extra)]); out.insert("pdf_form_xobject",&cells) }
+pub fn read_form(reader: &mut Reader<'_, '_, '_>, key: i64) -> Result<PdfFormXObject,ValueError> { let row = reader.take("pdf_form_xobject",key,17)?; Ok(PdfFormXObject { id:reader.text(row,1)?,bbox:[row.real(2)?,row.real(3)?,row.real(4)?,row.real(5)?],matrix:[row.real(6)?,row.real(7)?,row.real(8)?,row.real(9)?,row.real(10)?,row.real(11)?],content:content::read_ops(reader,row.integer(12)?)?,group:optional_integer(row,13)?.map(|value|read_group(reader,value)).transpose()?,optional_content:reader.optional_text(row,14)?,struct_parent:optional_typed_integer(row,15)?,extra:cos::read_dictionary(reader,row.integer(16)?)? }) }
 
-pub(super) fn write_state(out: &mut Projection<'_, '_>, state: &PdfExtGState) -> Result<i64,ValueError> {
+pub fn write_state(out: &mut Projection<'_, '_>, state: &PdfExtGState) -> Result<i64,ValueError> {
     let cap = state.line_cap.as_ref().map(|value|match value { PdfLineCap::Butt => "butt", PdfLineCap::Round => "round", PdfLineCap::Square => "square" }); let join = state.line_join.as_ref().map(|value|match value { PdfLineJoin::Miter => "miter", PdfLineJoin::Round => "round", PdfLineJoin::Bevel => "bevel" });
     let (mask,group,backdrop,transfer) = match &state.soft_mask { None => (C::Null,C::Null,C::Null,None), Some(PdfSoftMask::None) => (C::Text("none"),C::Null,C::Null,None), Some(PdfSoftMask::Alpha { group, transfer }) => (C::Text("alpha"),C::Text(group),C::Null,transfer.as_ref()), Some(PdfSoftMask::Luminosity { group, backdrop, transfer }) => (C::Text("luminosity"),C::Text(group),C::Integer(i64::from(backdrop.is_some())),transfer.as_ref()) };
     let transfer = transfer.map(|value|color::write_function(out,value)).transpose()?; let extra = cos::write_dictionary(out,&state.extra)?;
@@ -33,7 +40,7 @@ pub(super) fn write_state(out: &mut Projection<'_, '_>, state: &PdfExtGState) ->
     if let Some(values) = &state.blend_mode { for (ordinal,value) in values.iter().enumerate() { out.insert("pdf_blend_mode",&[C::Integer(key),C::Integer(ordinal as i64),C::Text(value)])?; } }
     Ok(key)
 }
-pub(super) fn read_state(reader: &mut Reader<'_, '_, '_>, key: i64) -> Result<PdfExtGState,ValueError> {
+pub fn read_state(reader: &mut Reader<'_, '_, '_>, key: i64) -> Result<PdfExtGState,ValueError> {
     let row = reader.take("pdf_ext_g_state",key,26)?;
     let line_cap = row.optional_text(3)?.map(|value|match value { "butt" => Ok(PdfLineCap::Butt),"round" => Ok(PdfLineCap::Round),"square" => Ok(PdfLineCap::Square),_ => Err(ValueError::new(ValueRefusalKind::InvalidValue,"unknown PDF line cap")) }).transpose()?;
     let line_join = row.optional_text(4)?.map(|value|match value { "miter" => Ok(PdfLineJoin::Miter),"round" => Ok(PdfLineJoin::Round),"bevel" => Ok(PdfLineJoin::Bevel),_ => Err(ValueError::new(ValueRefusalKind::InvalidValue,"unknown PDF line join")) }).transpose()?;
@@ -47,7 +54,7 @@ pub(super) fn read_state(reader: &mut Reader<'_, '_, '_>, key: i64) -> Result<Pd
     Ok(PdfExtGState { id:reader.text(row,1)?,line_width:optional_real(row,2)?,line_cap,line_join,miter_limit:optional_real(row,5)?,dash:optional_real(row,6)?.map(|phase|color::read_reals(reader,"pdf_g_state_real",key,"dash").map(|values|(values,phase))).transpose()?,rendering_intent:reader.optional_text(row,7)?,overprint_stroke:optional_boolean(row,8)?,overprint_fill:optional_boolean(row,9)?,overprint_mode:optional_typed_integer(row,10)?,font,blend_mode,soft_mask,stroke_alpha:optional_real(row,18)?,fill_alpha:optional_real(row,19)?,alpha_is_shape:optional_boolean(row,20)?,stroke_adjust:optional_boolean(row,21)?,flatness:optional_real(row,22)?,smoothness:optional_real(row,23)?,text_knockout:optional_boolean(row,24)?,extra:cos::read_dictionary(reader,row.integer(25)?)? })
 }
 
-pub(super) fn write_shading(out: &mut Projection<'_, '_>, shading: &PdfShading) -> Result<i64,ValueError> {
+pub fn write_shading(out: &mut Projection<'_, '_>, shading: &PdfShading) -> Result<i64,ValueError> {
     let color = color::write_color(out,&shading.color_space)?; let extra = cos::write_dictionary(out,&shading.extra)?;
     let kind = match shading.kind { PdfShadingKind::FunctionBased { .. } => "functionBased", PdfShadingKind::Axial { .. } => "axial", PdfShadingKind::Radial { .. } => "radial", PdfShadingKind::Mesh { .. } => "mesh" };
     let mut cells = vec![C::Text(&shading.id),C::Integer(color),C::Text(kind),C::Integer(i64::from(shading.background.is_some()))]; cells.extend(array_cells(&shading.bbox)); cells.extend([C::Integer(i64::from(shading.anti_alias)),C::Integer(extra)]); let key = out.insert("pdf_shading",&cells)?;
@@ -60,7 +67,7 @@ pub(super) fn write_shading(out: &mut Projection<'_, '_>, shading: &PdfShading) 
     }
     Ok(key)
 }
-pub(super) fn read_shading(reader: &mut Reader<'_, '_, '_>, key: i64) -> Result<PdfShading,ValueError> {
+pub fn read_shading(reader: &mut Reader<'_, '_, '_>, key: i64) -> Result<PdfShading,ValueError> {
     let row = reader.take("pdf_shading",key,11)?;
     let kind = match row.text(3)? {
         "functionBased" => { let value = reader.take("pdf_function_shading",key,12)?; PdfShadingKind::FunctionBased { domain:optional_array(value,1)?,matrix:optional_array(value,5)?,function:color::read_function(reader,value.integer(11)?)? } },
@@ -71,12 +78,12 @@ pub(super) fn read_shading(reader: &mut Reader<'_, '_, '_>, key: i64) -> Result<
     Ok(PdfShading { id:reader.text(row,1)?,color_space:color::read_color(reader,row.integer(2)?)?,kind,background:if boolean(row,4)? { Some(read_sequence(reader,"pdf_shading_background",key)?) } else { None },bbox:optional_array(row,5)?,anti_alias:boolean(row,9)?,extra:cos::read_dictionary(reader,row.integer(10)?)? })
 }
 
-pub(super) fn write_pattern(out: &mut Projection<'_, '_>, pattern: &PdfPattern) -> Result<i64,ValueError> {
+pub fn write_pattern(out: &mut Projection<'_, '_>, pattern: &PdfPattern) -> Result<i64,ValueError> {
     let extra = cos::write_dictionary(out,&pattern.extra)?; let kind = match pattern.kind { PdfPatternKind::Tiling { .. } => "tiling", PdfPatternKind::Shading { .. } => "shading" }; let mut cells = vec![C::Text(&pattern.id),C::Text(kind)]; cells.extend(pattern.matrix.iter().copied().map(C::Real)); cells.push(C::Integer(extra)); let key = out.insert("pdf_pattern",&cells)?;
     match &pattern.kind { PdfPatternKind::Tiling { paint_type,tiling_type,bbox,x_step,y_step,content } => { let content = content::write_ops(out,content)?; let mut cells = vec![C::Integer(i64::from(*paint_type)),C::Integer(i64::from(*tiling_type))]; cells.extend(bbox.iter().copied().map(C::Real)); cells.extend([C::Real(*x_step),C::Real(*y_step),C::Integer(content)]); out.insert_key("pdf_tiling_pattern",key,&cells)?; }, PdfPatternKind::Shading { shading,ext_g_state } => { out.insert_key("pdf_shading_pattern",key,&[C::Text(shading),text_cell(ext_g_state)])?; } }
     Ok(key)
 }
-pub(super) fn read_pattern(reader: &mut Reader<'_, '_, '_>, key: i64) -> Result<PdfPattern,ValueError> {
+pub fn read_pattern(reader: &mut Reader<'_, '_, '_>, key: i64) -> Result<PdfPattern,ValueError> {
     let row = reader.take("pdf_pattern",key,10)?; let kind = match row.text(2)? { "tiling" => { let value = reader.take("pdf_tiling_pattern",key,10)?; PdfPatternKind::Tiling { paint_type:integer(value,1)?,tiling_type:integer(value,2)?,bbox:[value.real(3)?,value.real(4)?,value.real(5)?,value.real(6)?],x_step:value.real(7)?,y_step:value.real(8)?,content:content::read_ops(reader,value.integer(9)?)? } }, "shading" => { let value = reader.take("pdf_shading_pattern",key,3)?; PdfPatternKind::Shading { shading:reader.text(value,1)?,ext_g_state:reader.optional_text(value,2)? } }, _ => return Err(ValueError::new(ValueRefusalKind::InvalidValue,"unknown PDF pattern kind")) };
     Ok(PdfPattern { id:reader.text(row,1)?,matrix:[row.real(3)?,row.real(4)?,row.real(5)?,row.real(6)?,row.real(7)?,row.real(8)?],kind,extra:cos::read_dictionary(reader,row.integer(9)?)? })
 }

@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
-import { inspectRustCompileReferences, rustAttributes, rustFindTopLevel, rustStringValue, rustTokenPairs, rustTokenSegments, rustTokens, rustVisibility, type RustGeneratedTokenOutput, type RustToken } from "../../../../📚️compiler/📖️syntax/🦀️rust/🟦️.ts";
+import { inspectRustCompileReferences, rustAttributes, rustFindTopLevel, rustStringValue, rustTokenPairs, rustTokenSegments, rustTokens, rustVisibility, type RustGeneratedTokenOutput, type RustToken } from "@semio-tech/compiler-syntax-rust-ts";
 
 /** 📎️ Cfg-selected authored input; compiler dep-info must still qualify generated ownership. */
 export interface RustSourceInputV1 { readonly path: string; readonly digest: string; readonly bytes: number; readonly activeBytes: number; readonly activeLines: number; readonly kind: "source" | "embedded"; }
@@ -29,7 +29,8 @@ export async function readRustSourceClosureV1(entries: readonly string[], root: 
     for (const reference of inspectRustCompileReferences(selected, owner ? (output) => owner.generated(name, output) : undefined)) {
       if (reference.kind === "path") continue;
       if (reference.expansion || reference.base === "generated" || reference.base === "manifest" && !owner) throw Error("Generated Rust input requires compiler ownership: " + name);
-      await visit(reference.base === "manifest" ? join(owner!.manifestDirectory, reference.path) : resolve(dirname(path), reference.path), dirname(path), reference.kind !== "include");
+      const target = reference.base === "manifest" ? join(owner!.manifestDirectory, reference.path) : resolve(dirname(path), reference.path);
+      await visit(target, dirname(target), reference.kind !== "include");
     }
     const tokens = rustTokens(selected), pairs = rustTokenPairs(tokens);
     const scope = async (start: number, end: number, moduleBase: string, fileScope: boolean): Promise<void> => {

@@ -6,6 +6,7 @@ use crate::os_store::store_schema::ArtifactCommand;
 use protocol::{MutationLeaf, OpBinary, OpText, SemanticMutation};
 use semio_framework_graph_manifest::{PropertyBag, PropertyValue};
 use semio_framework_pack_json::Value;
+use semio_framework_test_fixtures::fixture_path;
 
 fn fixture() -> Value {
     semio_framework_pack_json::parse(include_str!("../🧫️fixtures/🔣️mutations.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("neutral Dag mutation fixture")
@@ -31,7 +32,7 @@ const WITNESS_LEAVES: [&str; 14] = [
 
 /// 📖️ Reads one committed fixture below `🌿️vcs` at run time, so the test closure counts none of them as source inputs.
 pub(crate) fn read_vcs_fixture(relative: &str) -> String {
-    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🌿️vcs").join(relative);
+    let path = fixture_path!("../../🌿️vcs").join(relative);
     std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("committed fixture {}: {error}", path.display()))
 }
 

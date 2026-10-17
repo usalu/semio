@@ -35,6 +35,10 @@ type stdioSemioV1CadInferenceGuardSizeBounds = { readonly minItems?: number; rea
 
 export const stdioSemioV1CadInferenceGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : stdioSemioV1CadInferenceGuardReject(at, "value is not an object");
+export const stdioSemioV1CadInferenceGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) stdioSemioV1CadInferenceGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const stdioSemioV1CadInferenceGuardArray = (value: unknown, at: string, bounds: stdioSemioV1CadInferenceGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return stdioSemioV1CadInferenceGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) stdioSemioV1CadInferenceGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -65,14 +69,14 @@ export const stdioSemioV1CadInferenceGuardConstant = <T extends string | number 
 //#endregion 🚪️Parsers
 
 export function parseSemioCadInference(value: unknown, at = "$"): SemioCadInference {
-  const row = stdioSemioV1CadInferenceGuardObject(value, at);
+  const row = stdioSemioV1CadInferenceGuardClosed(stdioSemioV1CadInferenceGuardObject(value, at), at, ["bounds"]);
   return {
     bounds: parseSemioCadBounds(row["bounds"], `${at}.bounds`),
   };
 }
 
 export function parseSemioPoint2(value: unknown, at = "$"): SemioPoint2 {
-  const row = stdioSemioV1CadInferenceGuardObject(value, at);
+  const row = stdioSemioV1CadInferenceGuardClosed(stdioSemioV1CadInferenceGuardObject(value, at), at, ["x", "y"]);
   return {
     x: stdioSemioV1CadInferenceGuardNumber(row["x"], `${at}.x`),
     y: stdioSemioV1CadInferenceGuardNumber(row["y"], `${at}.y`),
@@ -80,7 +84,7 @@ export function parseSemioPoint2(value: unknown, at = "$"): SemioPoint2 {
 }
 
 export function parseSemioCadBounds(value: unknown, at = "$"): SemioCadBounds {
-  const row = stdioSemioV1CadInferenceGuardObject(value, at);
+  const row = stdioSemioV1CadInferenceGuardClosed(stdioSemioV1CadInferenceGuardObject(value, at), at, ["min", "max", "entityCount"]);
   return {
     min: parseSemioPoint2(row["min"], `${at}.min`),
     max: parseSemioPoint2(row["max"], `${at}.max`),

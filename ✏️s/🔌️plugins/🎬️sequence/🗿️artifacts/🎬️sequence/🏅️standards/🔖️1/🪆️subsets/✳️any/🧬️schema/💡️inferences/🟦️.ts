@@ -31,6 +31,10 @@ type sequenceSequenceInferenceGuardSizeBounds = { readonly minItems?: number; re
 
 export const sequenceSequenceInferenceGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : sequenceSequenceInferenceGuardReject(at, "value is not an object");
+export const sequenceSequenceInferenceGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) sequenceSequenceInferenceGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const sequenceSequenceInferenceGuardArray = (value: unknown, at: string, bounds: sequenceSequenceInferenceGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return sequenceSequenceInferenceGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) sequenceSequenceInferenceGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -61,17 +65,17 @@ export const sequenceSequenceInferenceGuardConstant = <T extends string | number
 //#endregion 🚪️Parsers
 
 export function parseSequenceInference(value: unknown, at = "$"): SequenceInference {
-  const row = sequenceSequenceInferenceGuardObject(value, at);
+  const row = sequenceSequenceInferenceGuardClosed(sequenceSequenceInferenceGuardObject(value, at), at, ["topology"]);
   return {
     topology: parseSequenceTopology(row["topology"], `${at}.topology`),
   };
 }
 
 export function parseSequenceTopology(value: unknown, at = "$"): SequenceTopology {
-  const row = sequenceSequenceInferenceGuardObject(value, at);
+  const row = sequenceSequenceInferenceGuardClosed(sequenceSequenceInferenceGuardObject(value, at), at, ["topoOrder", "depth", "cycleFree", "nodeCount"]);
   return {
     topoOrder: sequenceSequenceInferenceGuardArray(row["topoOrder"], `${at}.topoOrder`).map((item, index) => sequenceSequenceInferenceGuardString(item, `${at}.topoOrder[${index}]`)),
-    depth: sequenceSequenceInferenceGuardObject(row["depth"], `${at}.depth`),
+    depth: Object.fromEntries(Object.entries(sequenceSequenceInferenceGuardObject(row["depth"], `${at}.depth`)).map(([key0, value0]) => [key0, sequenceSequenceInferenceGuardInteger(value0, `${at}.depth.${key0}`)])),
     cycleFree: sequenceSequenceInferenceGuardBoolean(row["cycleFree"], `${at}.cycleFree`),
     nodeCount: sequenceSequenceInferenceGuardInteger(row["nodeCount"], `${at}.nodeCount`),
   };

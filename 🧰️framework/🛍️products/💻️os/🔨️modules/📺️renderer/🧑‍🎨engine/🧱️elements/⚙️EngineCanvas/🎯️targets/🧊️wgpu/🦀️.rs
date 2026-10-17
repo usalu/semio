@@ -11,70 +11,24 @@
 //! `crate::engine_canvas::...` are unchanged because the children are re-exported below. The shared contracts
 //! (`WorkerCell`, `FrameworkWidgetContext`, `ScenePointerTarget`) live in `crate::element_contracts`.
 
-#[cfg(test)]
-use canvas::Color;
-#[cfg(test)]
-use flow::FlowHost;
-#[cfg(test)]
-use framework_editor::EditorHost;
-#[cfg(test)]
-use semio_framework_canvas as canvas;
-#[cfg(test)]
-use semio_framework_os_node_graph::GraphHost;
-#[cfg(test)]
-use semio_framework_surface::tiled_map::{tiles as map_tiles, MapHost};
-#[cfg(test)]
-use semio_framework_ui_declaration::ui::{SurfaceKind, UiComponentSceneNode};
-#[cfg(test)]
-use semio_framework_ui_layout::layout::ActionDescriptor;
-#[cfg(test)]
-use semio_framework_ui_text::FontAtlas;
-#[cfg(test)]
-use semio_framework_ui_theme::{geometry::Rect, Theme};
-#[cfg(test)]
-use serde_json::{json, Value};
-#[cfg(test)]
-use std::collections::HashMap;
-#[cfg(test)]
-use std::mem::ManuallyDrop;
-#[cfg(test)]
-use ui_wgpu::wgpu::{KeyAction, PointerModifiers};
-
 use semio_framework_os_renderer_wgpu_engine_registry::engine_surface_registry;
 pub(crate) use engine_surface_registry::{
     begin_engine_surface_close_token, close_engine_surface_step,
     engine_surface_terminal_nonopaque_is_empty, engine_surface_token, engine_surface_token_at,
     EngineSurfaceToken, ENGINE_SURFACE_CAPACITY,
 };
-#[cfg(test)]
-use engine_surface_registry::{
-    empty_engine_surface, engine_surface_wire_id, ensure_engine_surface, EngineSurfaceId,
-    EngineSurfaceIdentity, EngineSurfaceLiveFreshness, EngineSurfaceRegistry, EngineSurfaceSlot,
-    EngineSurfaceSnapshot, NodeGraphEngine, PublishedGraphInteraction, TextEditorDeliverySnapshot,
-    TextEditorDeliveryState, ENGINE_SURFACES, ENGINE_SURFACE_ID_BYTE_CAPACITY,
-};
 pub use engine_surface_registry::TextEditorTypingEnd;
 
 use semio_framework_os_renderer_wgpu_engine_registry::prepared_engine_canvas;
-#[cfg(test)]
-use prepared_engine_canvas::{
-    engine_gpu_freshness_matches, EngineCanvasPacketDestination, EngineGpuBuildPhase,
-    EngineGpuCandidate, EngineGpuSlot, StagedEngineScene, StagedEngineScenes,
-    ENGINE_CANVAS_FRAME_PACKET_CAPACITY, STAGED_ENGINE_SCENES,
-};
 pub(crate) use prepared_engine_canvas::{
     stage_engine_packet_step, EngineCanvasBuildContext, EngineCanvasPacket, EngineCanvasPresenter,
 };
 
 use semio_framework_os_renderer_wgpu_engine_registry::tutorial_surface_geometry;
 pub use tutorial_surface_geometry::resolve_tutorial_surface_point;
-#[cfg(test)]
-use tutorial_surface_geometry::tutorial_graph_world_to_screen;
 pub(crate) use tutorial_surface_geometry::tutorial_polyline_point;
 
 use semio_framework_os_renderer_wgpu_engine_attach::engine_surface_attach;
-#[cfg(test)]
-pub(crate) use engine_surface_attach::board2d_tool_run_trace_state;
 pub(crate) use engine_surface_attach::{advance_raster_composite, register_engine_surface};
 pub use engine_surface_attach::{
     board2d_tool_run_trace_cursors, engine_raster_key, stage_engine_scene_paint,
@@ -84,8 +38,6 @@ pub use engine_surface_attach::{
 };
 
 use semio_framework_os_renderer_wgpu_engine_graph::node_graph;
-#[cfg(test)]
-pub(crate) use node_graph::component_scene_begin_note_edit_fixture;
 pub use node_graph::{
     catalogue_ghost_descriptor_json, component_scene_apply_note_edit_key,
     component_scene_has_editable_caret, component_scene_set_caret_visible,
@@ -97,15 +49,8 @@ pub use node_graph::{
     paint_node_graph_labels, paint_node_graph_overlays, paint_paint2d_overlays,
     puzzle3d_catalogue_drag_payload, puzzle3d_catalogue_drag_payload_json,
 };
-#[cfg(test)]
-use node_graph::{
-    graph_interaction_dispatch, graph_projection_snapshot, node_graph_domain_targets_json,
-    GraphInteractionSnapshot,
-};
 
 use semio_framework_os_renderer_wgpu_engine_board::tiled_map;
-#[cfg(test)]
-use tiled_map::map_tile_url;
 pub use tiled_map::{
     apply_map_tile_bytes, board_local_pointer, map_local_pointer, map_marquee_crossing,
     map_marquee_mode, parse_map_feature_hit, parse_map_hover,
@@ -126,20 +71,14 @@ pub use board2d::{
     settle_board_pointer_authority_into, with_board_host, with_board_host_mut,
     CoalescedBoardEvents,
 };
-#[cfg(test)]
-use board2d::{board_drain_into_buffer, board_set_pointer_inside, coalesce_owned_board_events};
 
 use semio_framework_os_renderer_wgpu_engine_board::paint2d;
-#[cfg(test)]
-use paint2d::paint2d_pick_layer;
 pub use paint2d::{
     board2d_context_menu_target, node_graph_context_menu_target, paint2d_context_menu_target,
     paint2d_marquee_overlay, paint2d_navigator_overlay_rect, paint2d_pointer_button_into,
     paint2d_pointer_cancel_into, paint2d_pointer_move_into, paint2d_wheel_into,
     text_editor_context_menu_target, with_raster_host_mut,
 };
-#[cfg(test)]
-pub use paint2d::{pick_target_hits_for_test, selection_domains_for_test};
 
 use semio_framework_os_renderer_wgpu_engine_text::text_editor;
 #[cfg(target_arch = "wasm32")]
@@ -162,58 +101,4 @@ pub use text_editor::{
     text_editor_select_span_into, text_editor_selection_text, text_editor_set_selection_into,
     text_editor_wheel_into,
 };
-#[cfg(test)]
-use text_editor::{
-    synchronize_text_editor_host, text_editor_scene_document, TEXT_EDITOR_SCENE_OWNED_BYTES,
-};
 
-#[cfg(test)]
-/// 🔎️ The whole EngineCanvas module as the one text the unsplit file held: this file and every child, for the source-text laws.
-pub(crate) const ENGINE_CANVAS_SOURCE: &str = concat!(
-    include_str!("🦀️.rs"),
-    include_str!("🗂️engine-surface-registry/🦀️.rs"),
-    include_str!("📦️prepared-engine-canvas/🦀️.rs"),
-    include_str!("🎓️tutorial-surface-geometry/🦀️.rs"),
-    include_str!("🧩️engine-surface-attach/🦀️.rs"),
-    include_str!("🕸️node-graph/🦀️.rs"),
-    include_str!("🗺️tiled-map/🦀️.rs"),
-    include_str!("🎲️board2d/🦀️.rs"),
-    include_str!("🖌️paint2d/🦀️.rs"),
-    include_str!("✍️text-editor/🦀️.rs"),
-);
-
-#[cfg(test)]
-include!("../../🧪️tests/🧊️wgpu-standalone/🦀️.rs");
-
-#[cfg(test)]
-use engine_surface_attach::sync_board_engine;
-#[cfg(test)]
-use engine_surface_registry::BoardSyncCache;
-
-#[cfg(test)]
-#[path = "../../🧪️tests/🔬️wgpu-board2d-engine/🦀️.rs"]
-mod board2d_engine_tests;
-
-#[cfg(test)]
-#[path = "../../🧪️tests/🔬️wgpu-catalogue-workflow-drop/🦀️.rs"]
-mod catalogue_workflow_drop_tests;
-
-#[cfg(test)]
-#[path = "../../🧪️tests/🩺️metrics-invalidation-drain/🦀️.rs"]
-mod metrics_invalidation_drain_tests;
-
-#[cfg(test)]
-#[path = "../../🧪️tests/🧩️wgpu-engine-surfaces/🦀️.rs"]
-mod engine_surface_attach_tests;
-
-#[cfg(test)]
-#[path = "../../🧪️tests/🕸️wgpu-node-graph/🦀️.rs"]
-mod node_graph_attach_tests;
-
-#[cfg(test)]
-#[path = "../../🧪️tests/🫳️node-graph-gestures/🦀️.rs"]
-mod node_graph_gesture_tests;
-
-#[cfg(test)]
-#[path = "../../🧪️tests/🖌️wgpu-paint2d-engine/🦀️.rs"]
-mod paint2d_engine_tests;

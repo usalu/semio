@@ -1,6 +1,8 @@
+use semio_framework_test_fixtures::fixture_path;
+
 #[semio_framework_async_macros::async_test]
 async fn primary_asset_is_nonempty() {
-    let text = &std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🖼️assets/🏛️bestest-900ff/🗣️.dsl.semio")).expect("committed example asset");
+    let text = &std::fs::read_to_string(fixture_path!("../../../🖼️assets/🏛️bestest-900ff/🗣️.dsl.semio")).expect("committed example asset");
     assert!(text.len() > 8);
 }
 
@@ -8,7 +10,7 @@ async fn primary_asset_is_nonempty() {
 /// the engine's own case catalogue cannot drift apart silently.
 #[semio_framework_async_macros::async_test]
 async fn asset_carries_the_registered_case_model() {
-    let text = &std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🖼️assets/🏛️bestest-900ff/🗣️.dsl.semio")).expect("committed example asset");
+    let text = &std::fs::read_to_string(fixture_path!("../../../🖼️assets/🏛️bestest-900ff/🗣️.dsl.semio")).expect("committed example asset");
     let snapshot = <crate::snapshot::EnergyModelSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text).expect("bestest 900FF example parses");
     assert_eq!(snapshot.model, super::model());
 }

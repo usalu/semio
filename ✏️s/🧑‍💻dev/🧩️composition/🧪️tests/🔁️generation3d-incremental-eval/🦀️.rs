@@ -29,6 +29,9 @@ use semio_s_artifact_procedural_3d_io_text::snapshot::parse_dsl;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 use serde::Deserialize;
 
+/// 🎟️ Unbounded retained grant: the pre-migration step budget carried no retained limit.
+const UNBOUNDED_STEP_GRANT: semio_framework_job::RetainedCloneGrant = semio_framework_job::RetainedCloneGrant { maximum_items: usize::MAX, maximum_copy_bytes: usize::MAX, maximum_capacity_bytes: usize::MAX, maximum_release_bytes: usize::MAX, maximum_depth: usize::MAX };
+
 //#region 🔖️Fixture
 const FIXTURE_JSON: &str = include_str!("../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🔁️incremental-eval.json");
 const HEX_COLUMN_DSL: &str = include_str!("../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🍄️hexagonal-mushroom-column/🖼️assets/🍄️hexagonal-mushroom/🗣️.dsl.semio");
@@ -140,7 +143,8 @@ fn retire_host(host: FlowHost) {
     let mut sequence = 0;
     let mut retirement = FlowHostRetirement::new(host);
     for _ in 0..1_000_000 {
-        let mut context = StepContext::new(allocate_operation_id(), Generation(0), StepBudget::new(u64::MAX, u64::MAX), CancelToken::root_now(), frozen_now, &mut sequence);
+        let mut context_retained = semio_framework_job::RetainedCloneProgress::default();
+        let mut context = StepContext::new(allocate_operation_id(), Generation(0), StepBudget::new(u64::MAX, u64::MAX, UNBOUNDED_STEP_GRANT), CancelToken::root_now(), frozen_now, &mut sequence, &mut context_retained);
         if retirement.close_step(&mut context) {
             return;
         }

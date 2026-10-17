@@ -1,10 +1,14 @@
-use super::*;
+use crate::editor::forms::config::FormsConfig;
+use crate::FormsSnapshot;
+use semio_framework_plugin::{ArtifactView, ConfigView};
+use crate::editor::forms::commands::set_spec_json::*;
 use crate::forms_steps;
 use crate::editor::forms::commands::set_active_example::SetActiveExample;
 use crate::editor::forms::unit_tests::context::{dispatch, forms_app};
 use crate::editor::forms::FormsCommand;
 use crate::standards::v1::subsets::any::io::text::snapshot::onboarding_example_spec;
 use SetSpecJson;
+use semio_framework_test_fixtures::fixture_text;
 
 #[semio_framework_async_macros::async_test]
 async fn set_active_example_switches_to_the_onboarding_fixture() {
@@ -50,8 +54,8 @@ async fn set_spec_json_with_invalid_json_reports_a_fault() {
 #[test]
 fn canonical_import_vectors_preserve_document_identity_and_answers() {
     use protocol::Mutation;
-    let vectors: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/🔬️contract/📥️import/🔣️.json")).unwrap();
-    let current: FormsSnapshot = semio_framework_pack_json::from_json_str(include_str!("../../../../../🧪️tests/🧫️fixtures/🔬️contract/💾️persistence/🔣️.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let vectors: serde_json::Value = serde_json::from_str(fixture_text!("../../../🧪️tests/🧫️fixtures/🔬️contract/📥️import/🔣️.json")).unwrap();
+    let current: FormsSnapshot = semio_framework_pack_json::from_json_str(fixture_text!("../../../🧪️tests/🧫️fixtures/🔬️contract/💾️persistence/🔣️.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let history = semio_framework_plugin::HistoryView::empty();
     let config = FormsConfig::default();
     for case in vectors["cases"].as_array().unwrap() {

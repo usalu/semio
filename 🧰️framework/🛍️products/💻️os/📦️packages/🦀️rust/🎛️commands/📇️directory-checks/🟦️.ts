@@ -12,7 +12,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { runRepositoryCargoTests, runRepositoryTestCommand, runRepositoryExactCargoLaws, configuredRepositoryCargoPreparationPolicyV1 } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { readModuleTreeSource, sliceModuleTreeSource } from "../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
+import { readModuleTreeSource, sliceModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 import { semioSchemaAjvV1 } from "@semio-tech/schema-ts/oracles/validator";
 import { type SchemaCheck, exactCargoStageEnvironments } from "../🧱️script-bases/🟦️.ts";
 
@@ -147,7 +147,7 @@ export async function directoryEventPageContractOracle(repoRoot: string): Promis
   const canonical = JSON.stringify(fixture.valid);
   await assert.rejects(() => contract.parseDirectoryEventPageV1(`${canonical} `), "trailing-byte");
   await assert.rejects(() => contract.parseDirectoryEventPageV1(canonical.replace('{"schema":', '{"schema":"duplicate","schema":')), "duplicate-key");
-  const rust = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🦀️.rs"), "utf8");
+  const rust = readModuleTreeSource(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🦀️.rs"));
   const pageIo = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🚪️io/📝️text/🦀️.rs"), "utf8");
   assert(rust.includes("pub struct DirectoryEventPageV1") && pageIo.includes("pub fn receipt_matches(&self) -> bool"), "Rust event-page contract missing");
   return 5 + fixture.hostileMutations.length + fixture.rawHostiles.length;

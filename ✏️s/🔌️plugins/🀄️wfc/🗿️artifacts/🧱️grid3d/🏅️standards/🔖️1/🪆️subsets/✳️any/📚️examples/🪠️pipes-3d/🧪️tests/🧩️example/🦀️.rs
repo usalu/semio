@@ -7,7 +7,7 @@ use pack::snapshot::ArtifactPack;
 
 #[test]
 fn the_example_round_trips_through_dsl_and_pack() {
-    let snapshot = super::snapshot();
+    let snapshot = crate::standards::v1::subsets::any::examples::pipes_3d::snapshot();
     let text = crate::standards::v1::subsets::any::io::text::snapshot::print_dsl(&snapshot);
     assert!(!text.trim().is_empty());
     assert_eq!(crate::standards::v1::subsets::any::io::text::snapshot::parse_dsl(&text).expect("dsl"), snapshot);
@@ -17,7 +17,7 @@ fn the_example_round_trips_through_dsl_and_pack() {
 
 #[test]
 fn every_rule_and_pin_names_a_declared_tile() {
-    let snapshot = super::snapshot();
+    let snapshot = crate::standards::v1::subsets::any::examples::pipes_3d::snapshot();
     let tiles: Vec<&str> = snapshot.tiles.iter().map(|tile| tile.id.as_str()).collect();
     for rule in &snapshot.rules {
         assert!(tiles.contains(&rule.tile_a_id.as_str()), "rule {} names an undeclared tile", rule.id);
@@ -30,7 +30,7 @@ fn every_rule_and_pin_names_a_declared_tile() {
 
 #[test]
 fn the_geometry_is_internally_consistent() {
-    let snapshot = super::snapshot();
+    let snapshot = crate::standards::v1::subsets::any::examples::pipes_3d::snapshot();
     assert_eq!(snapshot.cell_sizes_x.len(), snapshot.width as usize);
     assert_eq!(snapshot.cell_sizes_y.len(), snapshot.height as usize);
     assert_eq!(snapshot.cell_sizes_z.len(), snapshot.depth as usize);
@@ -46,14 +46,14 @@ fn the_geometry_is_internally_consistent() {
 
 #[test]
 fn the_collections_are_in_canonical_order() {
-    let snapshot = super::snapshot();
+    let snapshot = crate::standards::v1::subsets::any::examples::pipes_3d::snapshot();
     assert!(snapshot.tiles.windows(2).all(|pair| pair[0].id < pair[1].id), "tiles must be sorted by id");
     assert!(snapshot.rules.windows(2).all(|pair| pair[0].id < pair[1].id), "rules must be sorted by id");
 }
 
 #[test]
 fn the_example_source_carries_its_own_printed_text() {
-    let source = super::source();
-    assert_eq!(source.id(), super::ID);
-    assert_eq!(super::snapshot().seed, super::SEED);
+    let source = crate::standards::v1::subsets::any::examples::pipes_3d::source();
+    assert_eq!(source.id(), crate::standards::v1::subsets::any::examples::pipes_3d::ID);
+    assert_eq!(crate::standards::v1::subsets::any::examples::pipes_3d::snapshot().seed, crate::standards::v1::subsets::any::examples::pipes_3d::SEED);
 }

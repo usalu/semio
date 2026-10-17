@@ -1,4 +1,5 @@
-use super::*;
+use super::scene_has_bespoke_pointer_dispatch;
+use ui_wgpu::wgpu::SurfaceKind;
 
 #[test]
 fn bespoke_surfaces_are_excluded_from_generic_dispatch() {

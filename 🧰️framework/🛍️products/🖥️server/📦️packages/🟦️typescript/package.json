@@ -14,7 +14,8 @@
   "devDependencies": {
     "typescript": "^5.9.3",
     "vitest": "^4.0.17",
-    "@semio-tech/process": "workspace:*"
+    "@semio-tech/process": "workspace:*",
+    "@semio-tech/framework-compiler-ts": "workspace:*"
   },
   "license": "LGPL-3.0-or-later",
   "repository": {

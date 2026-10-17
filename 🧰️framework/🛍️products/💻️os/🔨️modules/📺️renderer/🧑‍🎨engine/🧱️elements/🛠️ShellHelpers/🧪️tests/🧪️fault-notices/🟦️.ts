@@ -10,7 +10,8 @@
 import { afterAll, describe, expect, it } from "vitest";
 import Ajv2020 from "ajv/dist/2020.js";
 import type { FaultNoticeDefinition } from "@semio-tech/framework";
-import { appFaultNoticeV1, historyInputDraftDispositionV1, syncShellLabelLocale } from "../../🟦️.tsx";
+import { appFaultNoticeV1, historyInputDraftDispositionV1 } from "../../🛣️route-and-chrome/🟦️.tsx";
+import { syncShellLabelLocale } from "../../🏷️labels/🟦️.tsx";
 import { manifestFaultNoticesFixture as corpus } from "../../../../../../../../../🔨️modules/🛂️manifest/🧪️tests/🧫️fixtures/🟦️.ts";
 import { diagnosticControlledSchema as faultSchema } from "../../../../../../../../../🔨️modules/⚠️diagnostic/🧪️tests/🧫️fixtures/🟦️.ts";
 import { valueRefusalSchema as valueSchema } from "../../../../../../../../../🔨️modules/🌱️value/🧪️tests/🧫️fixtures/🟦️.ts";

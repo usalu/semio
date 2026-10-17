@@ -1,6 +1,5 @@
 //! 📉️ Direct collapse-page-size payload, sparse diff, concrete inverse, and laws.
 
-use super::PdfX1Mutation;
 use crate::standards::v1_4::subsets::base::schema::diff::{PdfDiff, PdfPageDiff, PdfPageModified, PdfPagesDiff};
 use crate::standards::v1_4::subsets::base::schema::snapshot::PdfSnapshot;
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
@@ -20,7 +19,10 @@ impl CollapsePageSize {
     }
 }
 
-impl MutationKind<PdfSnapshot, PdfX1Mutation> for CollapsePageSize {
+impl<Op> MutationKind<PdfSnapshot, Op> for CollapsePageSize
+where
+    Op: protocol::Mutation<PdfSnapshot, Diff = PdfDiff> + From<CollapsePageSize> + From<crate::standards::v1_4::subsets::x::schema::mutations::set_page_size::SetPageSize>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "resize", entity: "page", kind: "collapse-page-size", record: "ResizedPage" };
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
@@ -30,12 +32,12 @@ impl MutationKind<PdfSnapshot, PdfX1Mutation> for CollapsePageSize {
         MutationOutcome::new(PdfDiff { pages: Some(PdfPagesDiff { modified: vec![PdfPageModified { index: 0, diff: PdfPageDiff { width: Some(0.0), ..Default::default() } }], ..Default::default() }) })
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfX1Mutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
         if !self.valid(base) {
             return Vec::new();
         }
-        vec![PdfX1Mutation::SetPageSize(super::SetPageSize { width: base.pages[0].width, height: base.pages[0].height })]
+        vec![Op::from(crate::standards::v1_4::subsets::x::schema::mutations::SetPageSize { width: base.pages[0].width, height: base.pages[0].height })]
     
     })())
 }
@@ -51,7 +53,5 @@ impl MutationKind<PdfSnapshot, PdfX1Mutation> for CollapsePageSize {
 //#endregion 🔖️Behavior
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

@@ -142,7 +142,4 @@ pub fn render(scene: &DagScene, selected: &[String], labels: &DagPlayLabels) -> 
 //#endregion 🔖️Render
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

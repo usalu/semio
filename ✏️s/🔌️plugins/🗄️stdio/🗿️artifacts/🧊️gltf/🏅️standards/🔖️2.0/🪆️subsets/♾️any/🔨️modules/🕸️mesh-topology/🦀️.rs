@@ -2,13 +2,13 @@
 
 //#region 🕸️Topology
 #[derive(Clone, Copy)]
-pub(crate) struct Topology {
-    pub(crate) components: u64,
-    pub(crate) boundary_loops: u64,
-    pub(crate) chi: i64,
-    pub(crate) genus: Option<u64>,
-    pub(crate) manifold: bool,
-    pub(crate) watertight: bool,
-    pub(crate) oriented: bool,
+pub struct Topology {
+    pub components: u64,
+    pub boundary_loops: u64,
+    pub chi: i64,
+    pub genus: Option<u64>,
+    pub manifold: bool,
+    pub watertight: bool,
+    pub oriented: bool,
 }
 //#endregion 🕸️Topology

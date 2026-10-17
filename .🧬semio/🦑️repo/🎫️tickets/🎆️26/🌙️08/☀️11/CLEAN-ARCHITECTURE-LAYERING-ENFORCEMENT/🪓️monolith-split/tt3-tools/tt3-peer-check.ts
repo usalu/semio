@@ -1,0 +1,12 @@
+import Ajv from "ajv";
+import { readFileSync } from "node:fs";
+const base = "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/";
+const schema = JSON.parse(readFileSync(base + "🧬️schema/🔣️.json", "utf8"));
+const corpus = JSON.parse(readFileSync(base + "🧪️tests/🧫️fixtures/🗺️gis-map-peer-rebootstrap-v1/🔣️.json", "utf8"));
+const ajv = new Ajv({ strict: false });
+ajv.addSchema(schema);
+console.log(ajv.validate(`${schema.$id}#/$defs/GisMapPeerRebootstrapScope`, corpus.scope), ajv.validate(`${schema.$id}#/$defs/GisMapPeerRebootstrapFrontier`, corpus.published.frontier), ajv.validate(`${schema.$id}#/$defs/GisMapPeerRebootstrapHash`, corpus.published.checkpointId));
+const ref = (name: string) => ({ $ref: `${schema.$id}#/$defs/${name}` });
+const strings = { type: "array", items: { type: "string" } };
+const admit = ajv.compile({ type: "object", required: ["schema", "scope", "clients", "published", "order", "sourceHostiles", "nonclaims"], properties: { schema: { const: "semio.os.gis-map-peer-rebootstrap/v1" }, scope: ref("GisMapPeerRebootstrapScope"), clients: { type: "array", items: { type: "object", required: ["clientInstanceId"], properties: { clientInstanceId: { type: "string" } } } }, published: { type: "object", required: ["checkpointId", "descriptorDigestV1", "aggregateSha256", "frontier", "scene"], properties: { checkpointId: ref("GisMapPeerRebootstrapHash"), descriptorDigestV1: ref("GisMapPeerRebootstrapHash"), aggregateSha256: ref("GisMapPeerRebootstrapHash"), frontier: ref("GisMapPeerRebootstrapFrontier"), scene: { type: "object", required: ["revision", "nodeKind", "region"], properties: { revision: { type: "integer" }, nodeKind: { const: "tiled-map" }, region: { type: "object", required: ["id", "kind"], properties: { id: { type: "string" }, kind: { const: "inference-bounds" } } } } } } }, order: strings, sourceHostiles: strings, nonclaims: strings } });
+console.log("full", admit(corpus));

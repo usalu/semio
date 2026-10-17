@@ -9,7 +9,8 @@
 use crate::editor::jack::commands;
 use crate::editor::jack::transient::{JackEditorWindowTransientOwner, JackResultsWindowTransientOwner};
 use crate::standards::v1::subsets::any::schema::mutations::TrinityGraphMutation;
-use crate::{JackSnapshot, TRINITY_GRAPH_SCHEMA, TRINITY_JACK_DIALECT};
+use crate::standards::v1::subsets::any::schema::snapshot::JackSnapshot;
+use crate::standards::v1::subsets::any::schema::graph::{TRINITY_GRAPH_SCHEMA, TRINITY_JACK_DIALECT};
 use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
 use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework_plugin::ActionArgDef;
@@ -85,26 +86,25 @@ use semio_framework_2d::compute::EngineHandles;
 use pack::snapshot::{ArtifactDsl,ArtifactPack};
 
 //#region 🔖️Constants
-pub(crate) const TRINITY_JACK_PLAY_CONTROLLER_ID: &str = "trinity-jack-play";
+pub const TRINITY_JACK_PLAY_CONTROLLER_ID: &str = "trinity-jack-play";
 const TRINITY_JACK_PLAY_SURFACE_GRAPH: &str = "trinity.jack.play";
 const TRINITY_JACK_PLAY_SURFACE_EDITOR: &str = "trinity.jack.editor";
 const TRINITY_JACK_PLAY_SURFACE_RESULTS: &str = "trinity.jack.results";
 const TRINITY_JACK_PLAY_BODY_GRAPH: &str = "trinity.jack.play.main";
 const TRINITY_JACK_PLAY_BODY_EDITOR: &str = "trinity.jack.play.editor";
 const TRINITY_JACK_PLAY_BODY_RESULTS: &str = "trinity.jack.play.results";
-pub(crate) const TRINITY_JACK_PLAY_BODY_ARTIFACT: &str = "trinity.jack.play.artifact";
+pub const TRINITY_JACK_PLAY_BODY_ARTIFACT: &str = "trinity.jack.play.artifact";
 const TRINITY_JACK_PLAY_BODY_CATALOGUE: &str = "trinity.jack.play.catalogue";
 const TRINITY_JACK_PLAY_BODY_INSPECTION: &str = "trinity.jack.play.inspection";
-pub(crate) const TRINITY_JACK_PLAY_WINDOW_GRAPH: &str = "trinity-jack-graph";
-pub(crate) const TRINITY_JACK_PLAY_WINDOW_EDITOR: &str = crate::editor::jack::transient::JACK_EDITOR_WINDOW_KIND_ID;
-pub(crate) const TRINITY_JACK_PLAY_WINDOW_RESULTS: &str = "trinity-jack-results";
-
+pub const TRINITY_JACK_PLAY_WINDOW_GRAPH: &str = crate::editor::jack::window_config::WINDOW_KIND_ID;
+pub const TRINITY_JACK_PLAY_WINDOW_EDITOR: &str = crate::editor::jack::transient::JACK_EDITOR_WINDOW_KIND_ID;
+pub const TRINITY_JACK_PLAY_WINDOW_RESULTS: &str = crate::editor::jack::transient::results_window::WINDOW_KIND_ID;
 
 //#endregion 🔖️Constants
 
 //#region 🔖️DocumentHelpers
 /// 📦️ The default trinity graph snapshot (Nakagin capsule tower) — the initial document projection.
-pub(crate) fn default_snapshot<C:crate::JackComposition>() -> JackSnapshot {
+pub fn default_snapshot<C:crate::standards::v1::subsets::any::schema::composition::JackComposition>() -> JackSnapshot {
     C::initial_snapshot()
 }
 
@@ -113,18 +113,18 @@ pub(crate) fn default_snapshot<C:crate::JackComposition>() -> JackSnapshot {
 /// `Effect::LoadDocument` (outside undo history) instead of an `artifact_mutations` entry. The spr is a
 /// fresh, edit-free op-log (`store::os_store::text_format::empty_document_spr`): a live `ArtifactEnvelope` minted only to print
 /// it owns a bounded retirement authority whose Drop traps the guest.
-pub(crate) fn reset_document_effect(snapshot: &JackSnapshot) -> Effect {
+pub fn reset_document_effect(snapshot: &JackSnapshot) -> Effect {
     let pack = <JackSnapshot as ArtifactPack>::encode_pack(snapshot);
     let spr = ::semio_framework_async::poll::resolve_ready(store::os_store::text_format::empty_document_spr("jack", TRINITY_GRAPH_SCHEMA));
     Effect::LoadDocument { pack, spr }
 }
 
-pub(crate) fn jack_action(action: &str, args: Option<semio_framework_plugin::UiValue>) -> semio_framework_plugin::UiAssemblyResult<(semio_framework_plugin::ActionId, Option<semio_framework_plugin::UiValue>)> {
+pub fn jack_action(action: &str, args: Option<semio_framework_plugin::UiValue>) -> semio_framework_plugin::UiAssemblyResult<(semio_framework_plugin::ActionId, Option<semio_framework_plugin::UiValue>)> {
     semio_framework_plugin::ActionFactory::new(TRINITY_JACK_PLAY_CONTROLLER_ID).action(action, args)
 }
 
 /// 🪟️ Binds window chrome through its retained renderer action descriptor.
-pub(crate) fn jack_window_action(action: &str, args: Option<semio_framework_pack_json::Value>) -> ActionDescriptor {
+pub fn jack_window_action(action: &str, args: Option<semio_framework_pack_json::Value>) -> ActionDescriptor {
     ActionDescriptor { controller_id: TRINITY_JACK_PLAY_CONTROLLER_ID.into(), action: action.into(), args: args.map(|value| semio_framework_pack_json::to_dsl_value(&value)) }
 }
 
@@ -167,27 +167,27 @@ pub fn ui_value_map(values: impl IntoIterator<Item = (&'static str, semio_framew
 }
 
 /// 🧠️ The language editor reads its query workspace from the exact published child.
-pub(crate) fn graph_from_document<C:crate::JackComposition>(snapshot:&JackSnapshot,children:&semio_framework_plugin::app::ChildContentView)->semio_framework_plugin::UiAssemblyResult<crate::Graph>{let scene=crate::jack_scene_from_children::<C>(snapshot,children).map_err(|fault|semio_framework_plugin::PluginAssemblyError::new("trinity.jack.content-unreadable",fault.message))?;crate::Graph::with_scene(snapshot.clone(),scene).map_err(|error|semio_framework_plugin::PluginAssemblyError::new("trinity.jack.content-unreadable",error.to_string()))}
+pub fn graph_from_document<C:crate::standards::v1::subsets::any::schema::composition::JackComposition>(snapshot:&JackSnapshot,children:&semio_framework_plugin::app::ChildContentView)->semio_framework_plugin::UiAssemblyResult<crate::standards::v1::subsets::any::schema::memory::Graph>{let scene=crate::standards::v1::subsets::any::schema::composition::jack_scene_from_children::<C>(snapshot,children).map_err(|fault|semio_framework_plugin::PluginAssemblyError::new("trinity.jack.content-unreadable",fault.message))?;crate::standards::v1::subsets::any::schema::memory::Graph::with_scene(snapshot.clone(),scene).map_err(|error|semio_framework_plugin::PluginAssemblyError::new("trinity.jack.content-unreadable",error.to_string()))}
 
-/// 🩹️ Delegates to `crate::parse_port_key` (the one place the `nodeId@portId`
+/// 🩹️ Delegates to `crate::standards::v1::subsets::any::schema::graph::parse_port_key` (the one place the `nodeId@portId`
 /// convention is owned) instead of hand-rolling a second splitter here.
-pub(crate) fn split_endpoint(endpoint: &str) -> (String, String) {
-    crate::parse_port_key(endpoint).map_or_else(|| (endpoint.to_string(), "in".into()), |(n, p)| (n.to_string(), p.to_string()))
+pub fn split_endpoint(endpoint: &str) -> (String, String) {
+    crate::standards::v1::subsets::any::schema::graph::parse_port_key(endpoint).map_or_else(|| (endpoint.to_string(), "in".into()), |(n, p)| (n.to_string(), p.to_string()))
 }
 
 /// ♻️ Projects a standalone Jack snapshot (its retained content owner) into the shared node-graph view consumed by Rewriting
 /// and the results window.
 pub fn snapshot_to_workflow(snapshot: &JackSnapshot) -> Result<(Vec<NodeGraphNodeRecord>, Vec<NodeGraphEdgeRecord>, Viewport2d), semio_framework_value::ValueError> {
-    let owner = crate::jack_content_for_handle(&snapshot.content)?;
+    let owner = crate::standards::v1::subsets::any::schema::content::jack_content_for_handle(&snapshot.content)?;
     Ok(content_to_workflow(&snapshot.camera, owner.read()))
 }
 
 /// 🕸️ Projects rich borrowed content under the document camera.
-pub fn content_to_workflow(camera:&crate::Camera,content:&dyn crate::JackContentVisual)->(Vec<NodeGraphNodeRecord>,Vec<NodeGraphEdgeRecord>,Viewport2d){
+pub fn content_to_workflow(camera:&crate::standards::v1::subsets::any::schema::graph::Camera,content:&dyn semio_s_artifact_trinity_jack_graph_query::JackContentVisual)->(Vec<NodeGraphNodeRecord>,Vec<NodeGraphEdgeRecord>,Viewport2d){
  let(count_nodes,count_edges)=content.visual_counts();
  let nodes=(0..count_nodes).filter_map(|index|{
   let node=content.node_view(index)?;
-  let ports=|inbound:bool|{(0..node.port_count).filter_map(|port_index|content.port_view(index,port_index)).filter(|port|if inbound{port.inbound}else{port.outbound}).map(|port|NodeGraphPortRecord{id:crate::port_key(node.id,port.id),label:Some(port.label.into()),..Default::default()}).collect()};
+  let ports=|inbound:bool|{(0..node.port_count).filter_map(|port_index|content.port_view(index,port_index)).filter(|port|if inbound{port.inbound}else{port.outbound}).map(|port|NodeGraphPortRecord{id:crate::standards::v1::subsets::any::schema::graph::port_key(node.id,port.id),label:Some(port.label.into()),..Default::default()}).collect()};
   let(width,height)=node.presented_extent();
   Some(NodeGraphNodeRecord{id:node.id.into(),label:Some(node.presented_label().into()),x:node.x,y:node.y,width,height,inputs:ports(true),outputs:ports(false),..Default::default()})
  }).collect();
@@ -202,7 +202,7 @@ pub fn content_to_workflow(camera:&crate::Camera,content:&dyn crate::JackContent
 /// `trinity.graph` document) plus one extra fan-out output port, `graph:out`, so a jack window can
 /// feed its live query-graph projection into other graph-consuming workflow nodes (e.g. `rewriting`'s
 /// `graph:in`).
-pub(crate) fn jack_io() -> semio_framework_plugin::AppIo {
+pub fn jack_io() -> semio_framework_plugin::AppIo {
     semio_framework_plugin::AppIo {
         artifact_schema: TRINITY_GRAPH_SCHEMA.into(),
         artifact_media_type: MediaType { class: MediaClass::Graph, form: MediaForm::Trinity },
@@ -322,901 +322,38 @@ impl protocol::OpBinary for TrinityJackCommand {
 //#endregion 🔖️TrinityJackCommand
 
 //#region 🔖️ActionBridge
+
 /// 🎯️ Folds the host's `{action, args}` vocabulary (camelCase keys, JSON floats, control `value`s) into
 /// `TrinityJackCommand` — the trait default refuses every app action, which left every panel, catalogue
 /// and window verb dead in the shell (ticket 26/09/17/TRINITY-PLUGIN-END-TO-END).
-mod args_bridge {
-    use super::TrinityJackCommand;
-    use semio_framework_os_kernel::Viewport2d;
-    use semio_framework_plugin::{DslValue, Fault, FaultCode, FaultOrigin};
+#[path = "🌉️args-bridge/🦀️.rs"]
+mod args_bridge;
 
-    fn invalid(action: &str, detail: impl std::fmt::Display) -> Fault {
-        Fault::new(FaultOrigin::App, FaultCode::new("app.command.invalid-args"), format!("jack action '{action}' arguments do not decode: {detail}"))
-    }
-
-    fn field<'a>(args: Option<&'a DslValue>, keys: &[&str]) -> Option<&'a DslValue> {
-        keys.iter().find_map(|key| args.and_then(|args| args.get(key))).filter(|value| !matches!(value, DslValue::Null))
-    }
-
-    /// 📝️ Prints a host control value into the `String` field a verb carries (`"512"`, `"true"`, or the text itself).
-    fn text(args: Option<&DslValue>, keys: &[&str]) -> Option<String> {
-        field(args, keys).map(|value| match value {
-            DslValue::String(text) => text.clone(),
-            DslValue::Number(number) => {
-                let float = number.as_f64();
-                if float.is_finite() && float.fract() == 0.0 { format!("{}", float as i64) } else { format!("{float}") }
-            }
-            DslValue::Bool(flag) => flag.to_string(),
-            other => semio_framework_pack_json::to_json_string(other),
-        })
-    }
-
-    fn required(action: &str, args: Option<&DslValue>, keys: &[&str]) -> Result<String, Fault> {
-        text(args, keys).ok_or_else(|| invalid(action, format!("missing {}", keys[0])))
-    }
-
-    fn offset(action: &str, args: Option<&DslValue>, key: &str) -> Result<u64, Fault> {
-        match field(args, &[key]) {
-            Some(DslValue::Number(number)) if number.as_f64().is_finite() && number.as_f64() >= 0.0 && number.as_f64().fract() == 0.0 => Ok(number.as_f64() as u64),
-            Some(DslValue::String(text)) => text.parse().map_err(|error| invalid(action, format!("{key}: {error}"))),
-            _ => Err(invalid(action, format!("missing {key}"))),
-        }
-    }
-
-    /// 🔡️ `nodeIds` arrives as a list, a JSON-array string, or the rail's text field listing ids
-    /// separated by commas or whitespace. An empty field means "the current node selection".
-    fn ids(args: Option<&DslValue>) -> Vec<String> {
-        match field(args, &["nodeIds", "node_ids", "ids"]) {
-            Some(DslValue::Array(items)) => items.iter().filter_map(|item| item.as_str().map(str::to_string)).collect(),
-            Some(DslValue::String(text)) if text.trim_start().starts_with('[') => semio_framework_pack_json::from_json_str::<Vec<String>>(text, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_default(),
-            Some(DslValue::String(text)) => text.split(|character: char| character == ',' || character.is_whitespace()).filter(|id| !id.is_empty()).map(str::to_string).collect(),
-            _ => Vec::new(),
-        }
-    }
-
-    /// 📷️ The node-graph host nests its pose under `viewport`; a flat `{x, y, zoom}` payload is the pose itself.
-    fn viewport(action: &str, args: Option<&DslValue>) -> Result<Viewport2d, Fault> {
-        let coordinate = |value: Option<&DslValue>, fallback: f64| value.and_then(DslValue::as_f64).unwrap_or(fallback);
-        let pose = field(args, &["viewport"]).or(args).ok_or_else(|| invalid(action, "missing viewport"))?;
-        let viewport = Viewport2d { x: coordinate(pose.get("x"), 0.0), y: coordinate(pose.get("y"), 0.0), zoom: coordinate(pose.get("zoom"), 1.0) };
-        viewport.validate().map_err(|error| invalid(action, format!("{error:?}")))?;
-        Ok(viewport)
-    }
-
-    pub fn command_from_action(action: &str, args: Option<&DslValue>) -> Result<TrinityJackCommand, Fault> {
-        const RESULTS: &[&str] = &["resultsWindowId", "results_window_id"];
-        Ok(match action {
-            "loadDocumentJson" => TrinityJackCommand::LoadDocumentJson { json: required(action, args, &["json", "value"])? },
-            "deleteSelection" => TrinityJackCommand::DeleteSelection,
-            "patchNodes" => TrinityJackCommand::PatchNodes { node_ids: ids(args), field: text(args, &["field"]).unwrap_or_else(|| "name".into()), value: required(action, args, &["value"])? },
-            "runQuery" => TrinityJackCommand::RunQuery { query: text(args, &["query"]).filter(|query| !query.trim().is_empty()), results_window_id: text(args, RESULTS).unwrap_or_default() },
-            "loadExampleQuery" => TrinityJackCommand::LoadExampleQuery { query: required(action, args, &["query", "value"])?, results_window_id: text(args, RESULTS).unwrap_or_default() },
-            "setActiveExample" => TrinityJackCommand::SetActiveExample { example_id: required(action, args, &["exampleId", "example_id", "value", "id"])? },
-            "nodeGraphViewport" => TrinityJackCommand::SetViewport { surface_id: text(args, &["surfaceId", "surface_id"]), viewport: viewport(action, args)? },
-            "textEdit" => TrinityJackCommand::TextEdit { text: text(args, &["text", "value"]).unwrap_or_default() },
-            "textSelect" => TrinityJackCommand::TextSelect { start: offset(action, args, "start")?, end: offset(action, args, "end")? },
-            "formatDocument" => TrinityJackCommand::FormatDocument,
-            "setLodMode" => TrinityJackCommand::SetLodMode { value: required(action, args, &["value", "mode"])? },
-            _ => return Err(Fault::new(FaultOrigin::App, FaultCode::new("app.command.unsupported"), format!("the trinity jack editor has no command for action '{action}'"))),
-        })
-    }
-}
 //#endregion 🔖️ActionBridge
 
 //#region 🔖️TrinityJackPlayApp
-/// 🔱️ Trinity Jack play app — a jack-query editor over a live {@link JackSnapshot} projection.
-#[derive(Default)]
-pub struct TrinityJackPlayApp<C:crate::JackComposition>(std::marker::PhantomData<C>);
+
+#[path = "🕹️play-app/🦀️.rs"]
+mod play_app;
+pub use play_app::*;
 
 //#region 🧵️RetainedConfigCommands
-const JACK_RETAINED_WINDOW_CONFIG_TOOL_IDS: &[&str] = &["nodeGraphViewport", "setLodMode"];
-const JACK_RETAINED_TRANSIENT_TOOL_IDS: &[&str] = &["textSelect"];
-const JACK_RETAINED_PAYLOAD_SCHEMA: &str = "trinity.graph.config-command.v1";
-const JACK_RETAINED_RAW_BYTES: usize = 8_192;
-const JACK_RETAINED_WORK_ITEMS: usize = 64;
-const JACK_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
-    ArtifactToolPublicationContract { tool_id: "nodeGraphViewport", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
-    ArtifactToolPublicationContract { tool_id: "setLodMode", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
-];
-const JACK_RETAINED_TRANSIENT_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[ArtifactToolPublicationContract { tool_id: "textSelect", lanes: &[ArtifactToolPublicationLane::WindowTransient] }];
 
-fn jack_retained_config_contract() -> ToolExecutionContract {
-    ToolExecutionContract::bounded_first_step(JACK_RETAINED_RAW_BYTES, 64, JACK_RETAINED_WORK_ITEMS as u64, 16_384, 7_500)
-}
+#[path = "🧵️retained-commands/🦀️.rs"]
+pub mod retained_commands;
+use retained_commands::*;
 
-fn jack_retained_window_config_extent(command: &TrinityJackCommand, _snapshot: &JackSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
-    let bytes = match command {
-        TrinityJackCommand::SetViewport { viewport, .. } if viewport.validate().is_ok() => 1,
-        TrinityJackCommand::SetViewport { .. } => return None,
-        TrinityJackCommand::SetLodMode { value } => value.len(),
-        _ => return None,
-    };
-    (bytes <= JACK_RETAINED_RAW_BYTES).then_some(1)
-}
-
-#[expect(clippy::too_many_arguments, reason = "The retained command reducer implements the framework's eight-argument callback contract.")]
-fn jack_retained_window_config_reduce<C:crate::JackComposition>(
-    command: &TrinityJackCommand,
-    _snapshot: &JackSnapshot,
-    _config: &NoConfig,
-    _history: &semio_framework_plugin::HistoryView,
-    _interaction: &protocol::InteractionState,
-    _hover: &semio_framework_plugin::app::InteractionHoverState,
-    context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<TrinityJackPlayApp<C>>>>,
-    _operation: &AppOperationContext,
-) -> Result<Emit<TrinityGraphMutation, NoConfigMutation, NoDraftMutation>, Fault> {
-    match command {
-        TrinityJackCommand::SetViewport { viewport, .. } => commands::set_viewport(viewport, context.and_then(|context| context.view_state.as_ref())),
-        TrinityJackCommand::SetLodMode { value } => commands::set_lod_mode(value, context.and_then(|context| context.view_state.as_ref())),
-        _ => Err(Fault::from("jack-retained-config-route-mismatch")),
-    }
-}
-
-struct JackRetainedWindowConfigJobFactory<C:crate::JackComposition> {
-    composition:std::marker::PhantomData<C>,
-    keys: Vec<ToolFactoryKey>,
-}
-
-impl<C:crate::JackComposition> JackRetainedWindowConfigJobFactory<C> {
-    fn new(controller: &str) -> Self {
-        Self { composition:std::marker::PhantomData,keys: JACK_RETAINED_WINDOW_CONFIG_TOOL_IDS.iter().map(|tool| ToolFactoryKey::new(controller, *tool)).collect() }
-    }
-}
-
-impl<C:crate::JackComposition> ToolJobFactory for JackRetainedWindowConfigJobFactory<C> {
-    type Payload = ArtifactRetainedCommandPayload<EditorApp<TrinityJackPlayApp<C>>>;
-    type Job = ArtifactRetainedCommandJob<EditorApp<TrinityJackPlayApp<C>>>;
-    fn keys(&self) -> &[ToolFactoryKey] {
-        &self.keys
-    }
-    fn payload_schema_id(&self) -> &str {
-        JACK_RETAINED_PAYLOAD_SCHEMA
-    }
-    fn classification(&self) -> InteractiveJobClassification {
-        InteractiveJobClassification::Migrated
-    }
-    fn execution_contract(&self) -> ToolExecutionContract {
-        jack_retained_config_contract()
-    }
-    fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> {
-        Ok(ArtifactRetainedCommandJob::new(payload))
-    }
-    fn create_job_from_wire_pages_with_payload(
-        &mut self,
-        _operation: semio_framework_job::Operation,
-        payload: Self::Payload,
-        input: semio_framework::action_bus::RetainedToolWireInput,
-        checkpoint: Option<semio_framework::action_bus::RetainedToolWireInput>,
-    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework::action_bus::RetainedToolWireInput, Option<semio_framework::action_bus::RetainedToolWireInput>)> {
-        if input.declared_bytes() > JACK_RETAINED_RAW_BYTES || checkpoint.is_some() {
-            return Err((ToolJobFactoryError::new("Jack retained config command rejects oversized wire or checkpoint owner"), input, checkpoint));
-        }
-        Ok(ArtifactRetainedCommandJob::from_wire(payload, input))
-    }
-}
-
-impl<C:crate::JackComposition> ArtifactOwnedToolJobFactory for JackRetainedWindowConfigJobFactory<C> {
-    type Owner = EditorApp<TrinityJackPlayApp<C>>;
-    const TOOL_IDS: &'static [&'static str] = JACK_RETAINED_WINDOW_CONFIG_TOOL_IDS;
-    const DOCUMENT_SCHEMA: &'static str = TRINITY_GRAPH_SCHEMA;
-    const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = JACK_RETAINED_PUBLICATION_CONTRACTS;
-}
-
-struct JackRetainedTransientJobFactory<C:crate::JackComposition> {
-    composition:std::marker::PhantomData<C>,
-    keys: Vec<ToolFactoryKey>,
-}
-
-impl<C:crate::JackComposition> JackRetainedTransientJobFactory<C> {
-    fn new(controller: &str) -> Self {
-        Self { composition:std::marker::PhantomData,keys: JACK_RETAINED_TRANSIENT_TOOL_IDS.iter().map(|tool| ToolFactoryKey::new(controller, *tool)).collect() }
-    }
-}
-
-impl<C:crate::JackComposition> ToolJobFactory for JackRetainedTransientJobFactory<C> {
-    type Payload = ArtifactRetainedCommandPayload<EditorApp<TrinityJackPlayApp<C>>>;
-    type Job = ArtifactRetainedCommandJob<EditorApp<TrinityJackPlayApp<C>>>;
-
-    fn keys(&self) -> &[ToolFactoryKey] {
-        &self.keys
-    }
-    fn payload_schema_id(&self) -> &str {
-        JACK_RETAINED_PAYLOAD_SCHEMA
-    }
-    fn classification(&self) -> InteractiveJobClassification {
-        InteractiveJobClassification::Migrated
-    }
-    fn execution_contract(&self) -> ToolExecutionContract {
-        jack_retained_config_contract()
-    }
-    fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> {
-        Ok(ArtifactRetainedCommandJob::new(payload))
-    }
-    fn create_job_from_wire_pages_with_payload(
-        &mut self,
-        _operation: semio_framework_job::Operation,
-        payload: Self::Payload,
-        input: semio_framework::action_bus::RetainedToolWireInput,
-        checkpoint: Option<semio_framework::action_bus::RetainedToolWireInput>,
-    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework::action_bus::RetainedToolWireInput, Option<semio_framework::action_bus::RetainedToolWireInput>)> {
-        if input.declared_bytes() > JACK_RETAINED_RAW_BYTES || checkpoint.is_some() {
-            return Err((ToolJobFactoryError::new("Jack retained transient command rejects oversized wire or checkpoint owner"), input, checkpoint));
-        }
-        Ok(ArtifactRetainedCommandJob::from_wire(payload, input))
-    }
-}
-
-impl<C:crate::JackComposition> ArtifactOwnedToolJobFactory for JackRetainedTransientJobFactory<C> {
-    type Owner = EditorApp<TrinityJackPlayApp<C>>;
-    const TOOL_IDS: &'static [&'static str] = JACK_RETAINED_TRANSIENT_TOOL_IDS;
-    const DOCUMENT_SCHEMA: &'static str = TRINITY_GRAPH_SCHEMA;
-    const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = JACK_RETAINED_TRANSIENT_PUBLICATION_CONTRACTS;
-}
-
-struct JackEditorWindowTransientCommandWork {
-    consumed: bool,
-}
-
-impl<C:crate::JackComposition> ArtifactCommandWork<EditorApp<TrinityJackPlayApp<C>>> for JackEditorWindowTransientCommandWork {
-    fn tool_id(&self) -> &'static str {
-        "textSelect"
-    }
-
-    fn extent(&self, command: &TrinityJackCommand, _snapshot: &JackSnapshot, _interaction: &protocol::InteractionState, context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<TrinityJackPlayApp<C>>>>) -> Option<usize> {
-        matches!(command, TrinityJackCommand::TextSelect { .. }).then_some(()).and(context.and_then(|context| context.view_state.as_ref()).and_then(|view| view.window_id.as_ref()).filter(|window_id| !window_id.is_empty()).map(|_| ())).map(|_| 1)
-    }
-
-    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<TrinityJackPlayApp<C>>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<TrinityJackPlayApp<C>>>, semio_framework_job::OriginalTurnFailure> {
-        let original:Result<_,Fault>=(||{
-        if self.consumed {
-            return Err(Fault::from("jack-retained-transient-work-repeated"));
-        }
-        self.consumed = true;
-        let TrinityJackCommand::TextSelect { start, end } = input.command else {
-            return Err(Fault::from("jack-retained-transient-route-mismatch"));
-        };
-        let window_id =
-            input.context.and_then(|context| context.view_state.as_ref()).and_then(|view| view.window_id.as_ref()).filter(|window_id| !window_id.is_empty()).cloned().ok_or_else(|| Fault::from("jack-text-selection-requires-concrete-window"))?;
-        let mutation = semio_framework_plugin::WindowTransientMutation::of::<JackEditorWindowTransientOwner>(
-            window_id,
-            crate::editor::jack::transient::SetEditorSelection { selection: Some(crate::editor::jack::transient::JackEditorSelection { start: *start, end: *end }) }.into(),
-        );
-        Ok(semio_framework_plugin::retained_command::ArtifactCommandWorkStep::CompleteWithEphemeral { emit: Emit::default(), ephemeral: EphemeralEmit { presence: Vec::new(), transient: Vec::new(), window_transient: vec![mutation] } })
-        })();
-        original.map_err(semio_framework_job::OriginalTurnFailure::from)
-    }
-}
-
-/// 🧾️ Document verbs as bounded first-step tools (ticket 26/09/17/TRINITY-PLUGIN-END-TO-END): the framework
-/// refuses UI dispatch of every command not classified `Migrated`, which left the whole document surface
-/// dead in the shell. `patchNodes`/`deleteSelection` publish granular graph mutations; the example and
-/// fixture loaders publish a host-applied `Effect::LoadDocument`.
-const JACK_RETAINED_DOCUMENT_TOOL_IDS: &[&str] = &["patchNodes", "deleteSelection", "setActiveExample", "loadDocumentJson", "textEdit", "formatDocument"];
-const JACK_RETAINED_DOCUMENT_PAYLOAD_SCHEMA: &str = "trinity.graph.document-command.v1";
-const JACK_RETAINED_DOCUMENT_RAW_BYTES: usize = 32_768;
-const JACK_RETAINED_DOCUMENT_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
-    ArtifactToolPublicationContract { tool_id: "patchNodes", lanes: &[ArtifactToolPublicationLane::Child] },
-    ArtifactToolPublicationContract { tool_id: "deleteSelection", lanes: &[ArtifactToolPublicationLane::Child] },
-    ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[ArtifactToolPublicationLane::HostOnly] },
-    ArtifactToolPublicationContract { tool_id: "loadDocumentJson", lanes: &[ArtifactToolPublicationLane::HostOnly] },
-    ArtifactToolPublicationContract { tool_id: "textEdit", lanes: &[ArtifactToolPublicationLane::Artifact] },
-    ArtifactToolPublicationContract { tool_id: "formatDocument", lanes: &[ArtifactToolPublicationLane::Artifact] },
-];
-
-fn jack_retained_document_contract() -> ToolExecutionContract {
-    ToolExecutionContract::bounded_first_step(JACK_RETAINED_DOCUMENT_RAW_BYTES, 64, JACK_RETAINED_WORK_ITEMS as u64, 262_144, 7_500)
-}
-
-fn jack_retained_document_extent(command: &TrinityJackCommand, _snapshot: &JackSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
-    let bytes = match command {
-        TrinityJackCommand::PatchNodes { node_ids, field, value } => node_ids.iter().map(String::len).try_fold(field.len().checked_add(value.len())?, usize::checked_add)?,
-        TrinityJackCommand::DeleteSelection => 1,
-        TrinityJackCommand::SetActiveExample { example_id } => example_id.len(),
-        TrinityJackCommand::LoadDocumentJson { json } => json.len(),
-        TrinityJackCommand::TextEdit { text } if text.len() <= crate::JACK_QUERY_MAXIMUM_BYTES => text.len(),
-        TrinityJackCommand::FormatDocument => 1,
-        _ => return None,
-    };
-    (bytes <= JACK_RETAINED_DOCUMENT_RAW_BYTES).then_some(1)
-}
-
-#[expect(clippy::too_many_arguments, reason = "The retained command reducer implements the framework's eight-argument callback contract.")]
-fn jack_retained_document_reduce<C:crate::JackComposition>(
-    command: &TrinityJackCommand,
-    snapshot: &JackSnapshot,
-    _config: &NoConfig,
-    _history: &semio_framework_plugin::HistoryView,
-    interaction: &protocol::InteractionState,
-    _hover: &semio_framework_plugin::app::InteractionHoverState,
-    context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<TrinityJackPlayApp<C>>>>,
-    _operation: &AppOperationContext,
-) -> Result<Emit<TrinityGraphMutation, NoConfigMutation, NoDraftMutation>, Fault> {
-    let children = || context.map(|context| context.children.as_ref()).ok_or_else(|| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("trinity.jack.content-missing"), "the retained document command carries no child view"));
-    Ok(match command {
-        TrinityJackCommand::PatchNodes { node_ids, field, value } => commands::patch_nodes::<C>(snapshot, children()?, node_ids, interaction.selection.get("ast").map_or(&[][..], |selection| selection.ids.as_slice()), field, value)?,
-        TrinityJackCommand::DeleteSelection => commands::delete_selection::<C>(snapshot, children()?, interaction.selection.get("ast").map_or(&[][..], |selection| selection.ids.as_slice()))?,
-        TrinityJackCommand::SetActiveExample { example_id } => commands::set_active_example::<C>(example_id),
-        TrinityJackCommand::LoadDocumentJson { json } => commands::load_document_json(json),
-        TrinityJackCommand::TextEdit { text } => commands::text_edit(text)?,
-        TrinityJackCommand::FormatDocument => commands::format_document(&snapshot.query),
-        _ => return Err(Fault::from("jack-retained-document-route-mismatch")),
-    })
-}
-
-struct JackRetainedDocumentJobFactory<C:crate::JackComposition> {
-    composition:std::marker::PhantomData<C>,
-    keys: Vec<ToolFactoryKey>,
-}
-
-impl<C:crate::JackComposition> JackRetainedDocumentJobFactory<C> {
-    fn new(controller: &str) -> Self {
-        Self { composition:std::marker::PhantomData,keys: JACK_RETAINED_DOCUMENT_TOOL_IDS.iter().map(|tool| ToolFactoryKey::new(controller, *tool)).collect() }
-    }
-}
-
-impl<C:crate::JackComposition> ToolJobFactory for JackRetainedDocumentJobFactory<C> {
-    type Payload = ArtifactRetainedCommandPayload<EditorApp<TrinityJackPlayApp<C>>>;
-    type Job = ArtifactRetainedCommandJob<EditorApp<TrinityJackPlayApp<C>>>;
-    fn keys(&self) -> &[ToolFactoryKey] {
-        &self.keys
-    }
-    fn payload_schema_id(&self) -> &str {
-        JACK_RETAINED_DOCUMENT_PAYLOAD_SCHEMA
-    }
-    fn classification(&self) -> InteractiveJobClassification {
-        InteractiveJobClassification::Migrated
-    }
-    fn execution_contract(&self) -> ToolExecutionContract {
-        jack_retained_document_contract()
-    }
-    fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> {
-        Ok(ArtifactRetainedCommandJob::new(payload))
-    }
-    fn create_job_from_wire_pages_with_payload(
-        &mut self,
-        _operation: semio_framework_job::Operation,
-        payload: Self::Payload,
-        input: semio_framework::action_bus::RetainedToolWireInput,
-        checkpoint: Option<semio_framework::action_bus::RetainedToolWireInput>,
-    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework::action_bus::RetainedToolWireInput, Option<semio_framework::action_bus::RetainedToolWireInput>)> {
-        if input.declared_bytes() > JACK_RETAINED_DOCUMENT_RAW_BYTES || checkpoint.is_some() {
-            return Err((ToolJobFactoryError::new("Jack retained document command rejects oversized wire or checkpoint owner"), input, checkpoint));
-        }
-        Ok(ArtifactRetainedCommandJob::from_wire(payload, input))
-    }
-}
-
-impl<C:crate::JackComposition> ArtifactOwnedToolJobFactory for JackRetainedDocumentJobFactory<C> {
-    type Owner = EditorApp<TrinityJackPlayApp<C>>;
-    const TOOL_IDS: &'static [&'static str] = JACK_RETAINED_DOCUMENT_TOOL_IDS;
-    const DOCUMENT_SCHEMA: &'static str = TRINITY_GRAPH_SCHEMA;
-    const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = JACK_RETAINED_DOCUMENT_PUBLICATION_CONTRACTS;
-}
 //#endregion 🧵️RetainedConfigCommands
 
-impl<C:crate::JackComposition> ArtifactEditor for TrinityJackPlayApp<C> {
-    /// 🧩️ The authored composition supplies the actual roster for its selected content behavior.
-    type Members = C::Members;
-    type Snapshot = JackSnapshot;
-    type Mutation = TrinityGraphMutation;
-    type Config = NoConfig;
-    type ConfigMutation = NoConfigMutation;
-    type Draft = NoDraft;
-    type DraftMutation = NoDraftMutation;
-    type Presence = semio_framework_plugin::NoPresence;
-    type PresenceMutation = semio_framework_plugin::NoPresenceMutation;
-    type Transient = NoTransient;
-    type TransientMutation = NoTransientMutation;
-
-    type Command = TrinityJackCommand;
-
-    const DIALECT: Dialect = TRINITY_JACK_DIALECT;
-    /// 🧬️ The crate's one loaded-parent child projection (`crate::jack_child_restore_projection`).
-    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<semio_framework_composition_admission::ChildRestoreProjection<'_>, Fault> {
-        crate::jack_child_restore_projection(snapshot)
-    }
-    const DOCUMENT_SCHEMA: &'static str = TRINITY_GRAPH_SCHEMA;
-
-    fn build_config_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
-        Some(semio_framework_plugin::no_config_store_disposer())
-    }
-
-    fn build_draft_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
-        Some(semio_framework_plugin::no_draft_store_disposer())
-    }
-    fn build_presence_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
-        Some(semio_framework_plugin::no_presence_store_disposer())
-    }
-    fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(semio_framework_plugin::no_presence_local_root_retirement_factory())
-    }
-    fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(semio_framework_plugin::no_presence_peer_retirement_factory())
-    }
-
-    fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> {
-        Some(semio_framework_plugin::no_transient_local_root_retirement_factory())
-    }
-
-    fn build_transient_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
-        Some(semio_framework_plugin::no_transient_store_disposer())
-    }
-
-    fn register_window_transient_owners(registry: &mut semio_framework_plugin::WindowTransientOwnerRegistry) -> Result<(), Fault> {
-        registry.register::<JackEditorWindowTransientOwner>()?;
-        crate::editor::jack::transient::register_results_window(registry)
-    }
-
-    fn register_window_config_owners(registry: &mut semio_framework_plugin::WindowConfigOwnerRegistry) -> Result<(), Fault> {
-        crate::editor::jack::window_config::register(registry)
-    }
-
-    fn retained_window_transient_target(command: &Self::Command) -> Option<(&str, &'static str)> {
-        match command {
-            TrinityJackCommand::RunQuery { results_window_id, .. } | TrinityJackCommand::LoadExampleQuery { results_window_id, .. } => Some((results_window_id, TRINITY_JACK_PLAY_WINDOW_RESULTS)),
-            _ => None,
-        }
-    }
-
-    fn bounded_first_step_tool_proofs() -> Vec<semio_framework_plugin::ArtifactBoundedFirstStepProof> {
-        const OWNER_FILE: &str = "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs";
-        const CONTROLLER: &str = "s.trinity.jack@1/*#editor";
-        let config_contract = ToolExecutionContract::bounded_first_step(8_192, 64, 64, 16_384, 7_500);
-        let query_contract = ToolExecutionContract::resumable(16_384, 64, 1, 1_048_576, 7_500, 1, 1);
-        let mut proofs = Vec::new();
-        for tool in JACK_RETAINED_WINDOW_CONFIG_TOOL_IDS {
-            proofs.push(
-                semio_framework_plugin::ArtifactBoundedFirstStepProof::new::<EditorApp<Self>>(OWNER_FILE, CONTROLLER, "JackRetainedWindowConfigJobFactory", tool, TRINITY_GRAPH_SCHEMA, config_contract)
-                    .with_factory_type::<EditorApp<Self>, JackRetainedWindowConfigJobFactory<C>>(),
-            );
-        }
-        for tool in JACK_RETAINED_DOCUMENT_TOOL_IDS {
-            proofs.push(
-                semio_framework_plugin::ArtifactBoundedFirstStepProof::new::<EditorApp<Self>>(OWNER_FILE, CONTROLLER, "JackRetainedDocumentJobFactory", tool, TRINITY_GRAPH_SCHEMA, ToolExecutionContract::bounded_first_step(32_768, 64, 64, 262_144, 7_500))
-                    .with_factory_type::<EditorApp<Self>, JackRetainedDocumentJobFactory<C>>(),
-            );
-        }
-        proofs.push(
-            semio_framework_plugin::ArtifactBoundedFirstStepProof::new::<EditorApp<Self>>(OWNER_FILE, CONTROLLER, "JackRetainedTransientJobFactory", "textSelect", TRINITY_GRAPH_SCHEMA, config_contract)
-                .with_factory_type::<EditorApp<Self>, JackRetainedTransientJobFactory<C>>(),
-        );
-        for tool in commands::query::job::JACK_QUERY_TOOL_IDS {
-            proofs.push(
-                semio_framework_plugin::ArtifactBoundedFirstStepProof::new::<EditorApp<Self>>(OWNER_FILE, CONTROLLER, "JackQueryJobFactory", tool, TRINITY_GRAPH_SCHEMA, query_contract)
-                    .with_factory_type::<EditorApp<Self>, commands::query::job::JackQueryJobFactory<C>>(),
-            );
-        }
-        proofs
-    }
-
-    fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
-        let controller = registry.controller_id().to_string();
-        registry.register(JackRetainedWindowConfigJobFactory::<C>::new(&controller))?;
-        registry.register(JackRetainedTransientJobFactory::<C>::new(&controller))?;
-        registry.register(JackRetainedDocumentJobFactory::<C>::new(&controller))?;
-        registry.register(commands::query::job::JackQueryJobFactory::<C>::new(&controller))
-    }
-
-    fn build_tool_job(request: ArtifactOwnedToolJobRequest<EditorApp<Self>>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
-        if commands::query::job::JACK_QUERY_TOOL_IDS.contains(&request.tool_id.as_str()) {
-            return commands::query::job::build_job::<C>(request).map(Some);
-        }
-        if JACK_RETAINED_TRANSIENT_TOOL_IDS.contains(&request.tool_id.as_str()) {
-            if Self::command_id(&request.command) != request.tool_id {
-                return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "Jack command does not match its exact registered tool"));
-            }
-            let work: Box<dyn ArtifactCommandWork<EditorApp<Self>>> = Box::new(JackEditorWindowTransientCommandWork { consumed: false });
-            let operation = AppOperationContext {
-                app_instance_id: request.app_instance_id,
-                parent_document_id: request.parent_document_id.clone(),
-                operation_id: request.operation.operation.0,
-                generation: request.operation.generation.0,
-                canonical_base_revision: request.canonical_base_revision,
-                retained: request.retained,
-                authoring_seed: request.authoring_seed.clone(),
-            };
-            let payload = ArtifactRetainedCommandPayload::new(
-                semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {
-                    command: *request.command,
-                    snapshot: request.snapshot,
-                    snapshot_read: request.snapshot_read,
-                    config: request.config,
-                    history: request.history,
-                    interaction_state: request.interaction_state,
-                    interaction_hover: request.interaction_hover,
-                    context: Some(request.context),
-                    operation,
-                    completion: request.completion,
-                },
-                TrinityJackPlayApp::<C>::command_id,
-                JACK_RETAINED_RAW_BYTES,
-                JACK_RETAINED_WORK_ITEMS,
-                work,
-            );
-            return Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)));
-        }
-        let tool_id = Self::command_id(&request.command);
-        let (work, raw_bytes): (Box<dyn ArtifactCommandWork<EditorApp<Self>>>, usize) = if JACK_RETAINED_DOCUMENT_TOOL_IDS.contains(&request.tool_id.as_str()) {
-            if tool_id != request.tool_id {
-                return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "Jack command does not match its exact registered tool"));
-            }
-            if jack_retained_document_extent(&request.command, &request.snapshot, &request.interaction_state) != Some(1) {
-                return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("trinity.jack.retained-capacity"), "the jack command exceeds the capacity of one bounded edit"));
-            }
-            (Box::new(BoundedArtifactCommandWork::new(tool_id, jack_retained_document_reduce, jack_retained_document_extent)), JACK_RETAINED_DOCUMENT_RAW_BYTES)
-        } else if JACK_RETAINED_WINDOW_CONFIG_TOOL_IDS.contains(&request.tool_id.as_str()) {
-            if tool_id != request.tool_id {
-                return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "Jack command does not match its exact registered tool"));
-            }
-            if jack_retained_window_config_extent(&request.command, &request.snapshot, &request.interaction_state) != Some(1) {
-                return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("trinity.jack.retained-capacity"), "the jack command exceeds the capacity of one bounded edit"));
-            }
-            (Box::new(BoundedArtifactCommandWork::new(tool_id, jack_retained_window_config_reduce, jack_retained_window_config_extent)), JACK_RETAINED_RAW_BYTES)
-        } else {
-            return Ok(None);
-        };
-        let operation = AppOperationContext {
-            app_instance_id: request.app_instance_id,
-            parent_document_id: request.parent_document_id.clone(),
-            operation_id: request.operation.operation.0,
-            generation: request.operation.generation.0,
-            canonical_base_revision: request.canonical_base_revision,
-            retained: request.retained,
-            authoring_seed: request.authoring_seed.clone(),
-        };
-        let payload = ArtifactRetainedCommandPayload::new(
-            semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {
-                command: *request.command,
-                snapshot: request.snapshot,
-                snapshot_read: request.snapshot_read,
-                config: request.config,
-                history: request.history,
-                interaction_state: request.interaction_state,
-                interaction_hover: request.interaction_hover,
-                context: Some(request.context),
-                operation,
-                completion: request.completion,
-            },
-            TrinityJackPlayApp::<C>::command_id,
-            raw_bytes,
-            JACK_RETAINED_WORK_ITEMS,
-            work,
-        );
-        Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
-    }
-
-    fn build_envelope_decode_owner_bundle() -> Option<store::os_store::owned_schema_decode::ArtifactEnvelopeDecodeOwnerBundle<Self::Snapshot, Self::Mutation>> {
-        Some(crate::host::jack_envelope_decode_owner_bundle())
-    }
-
-    fn build_document_store_initialization_job(
-        envelope: store::os_store::store_schema::ArtifactEnvelope<Self::Snapshot, Self::Mutation>,
-        operation: semio_framework_job::OperationId,
-        generation: semio_framework_job::Generation,
-        actor: protocol::ActorId,
-    ) -> Result<semio_framework_plugin::ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, store::os_store::store_schema::ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
-        Ok(crate::host::jack_document_store_initialization_job(envelope, operation, generation, actor))
-    }
-
-    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
-        Some(store::mutation_apply_preparation_factory::<Self::Snapshot, Self::Mutation>())
-    }
-
-    /// ⏯️ Builds the reorganize tool's layout run over the run's base (`ToolRunDefinition.runJob`); resumed from the
-    /// ledger's checkpoint and provisional moves on a settings change.
-    fn build_tool_run_job(request: semio_framework_plugin::ToolRunJobRequest<'_, EditorApp<Self>>) -> Result<Option<semio_framework_plugin::ToolRunJob>, Fault> {
-        if request.tool_id != edit::tools::reorganize::TOOL_ID || request.purpose != semio_framework_plugin::ToolRunJobPurpose::Run {
-            return Ok(None);
-        }
-        let content = C::bind(&request.snapshot, &request.children)?;
-        edit::tools::reorganize::build_job(request.identity, &content, request.checkpoint, request.member_ops).map(Some)
-    }
-
-    /// 📢️ The localized notices of the editor's own refusal codes (design §20.12).
-    fn fault_notices() -> &'static [(&'static str, LocalizedLabel)] {
-        crate::jack_fault_notices()
-    }
-
-    fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Result<Option<Vec<u8>>,semio_framework_value::ValueError> {
-        C::genesis_child_pack(snapshot, slot, child_id)
-    }
-
-    fn initial_snapshot() -> JackSnapshot {
-        C::initial_snapshot()
-    }
-
-    fn io() -> Option<semio_framework_plugin::AppIo> {
-        Some(jack_io())
-    }
-
-    // 🧬️ Whole-document replace is banned from the `Mutation` enum outright (`SetFixture` — see
-    // `📓️taxonomy.md`'s forbidden vocabulary), so this intentionally falls back to the trait
-    // default (`None`) rather than overriding — the `"artifact:in"` media port therefore reports
-    // `MediaError::NotImplemented`; a real whole-snapshot load goes through `reset_document_effect`
-    // (`Effect::LoadDocument`, outside undo history), see `editor::jack::commands::set_active_example`
-    // and `editor::jack::commands::load_document_json`.
-
-    /// 🔌️ `"graph:out"` fans the live query-graph projection out to other graph-consuming workflow
-    /// nodes, in addition to the implicit `"artifact:out"` — both encode the same `JackSnapshot` pack.
-    fn export_media(port: &str, doc: &ArtifactView<'_, JackSnapshot>) -> Result<Media, MediaError> {
-        match port {
-            "graph:out" | "artifact:out" => {
-                let bytes = doc.snapshot.encode_pack();
-                Ok(Media { media_type: MediaType { class: MediaClass::Graph, form: MediaForm::Trinity }, payload: MediaPayload::Structured { schema: TRINITY_GRAPH_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
-            }
-            _ => Err(MediaError::NotImplemented),
-        }
-    }
-
-    /// 🏷️ Maps each `TrinityJackCommand` variant back to the action id it was declared under in
-    /// `create_trinity_jack_app`.
-    /// 🎯️ Host-action bridge into the closed `TrinityJackCommand` enum — see `args_bridge`.
-    fn command_from_action(action: &str, args: &mut Option<semio_framework_plugin::DslValue>, original_fault:&mut Option<Fault>) -> Result<Self::Command, Fault> {
-        if let Some(fault)=original_fault.take(){return Err(fault)}
-        args_bridge::command_from_action(action, args.as_ref())
-    }
-
-    fn command_id(command: &TrinityJackCommand) -> &'static str {
-        match command {
-            TrinityJackCommand::LoadDocumentJson { .. } => "loadDocumentJson",
-            TrinityJackCommand::DeleteSelection => "deleteSelection",
-            TrinityJackCommand::PatchNodes { .. } => "patchNodes",
-            TrinityJackCommand::RunQuery { .. } => "runQuery",
-            TrinityJackCommand::LoadExampleQuery { .. } => "loadExampleQuery",
-            TrinityJackCommand::SetActiveExample { .. } => "setActiveExample",
-            TrinityJackCommand::SetViewport { .. } => "nodeGraphViewport",
-            TrinityJackCommand::TextEdit { .. } => "textEdit",
-            TrinityJackCommand::TextSelect { .. } => "textSelect",
-            TrinityJackCommand::FormatDocument => "formatDocument",
-            TrinityJackCommand::SetLodMode { .. } => "setLodMode",
-        }
-    }
-
-    fn handle(
-        command: &TrinityJackCommand,
-        doc: &ArtifactView<'_, JackSnapshot>,
-        _cfg: &ConfigView<'_, NoConfig>,
-        interaction: &InteractionView<'_>,
-        view_state: Option<&semio_framework_plugin::ViewModel>,
-        _draft: &DraftView<'_, Self::Draft>,
-        _engines: &EngineHandles,
-    ) -> Result<Emit<TrinityGraphMutation, NoConfigMutation, Self::DraftMutation>, Fault> {
-        let snapshot = doc.snapshot;
-        Ok(match command {
-            TrinityJackCommand::LoadDocumentJson { json } => commands::load_document_json(json),
-            TrinityJackCommand::DeleteSelection => commands::delete_selection::<C>(snapshot, &doc.children, &interaction.selection("ast").ids)?,
-            TrinityJackCommand::PatchNodes { node_ids, field, value } => commands::patch_nodes::<C>(snapshot, &doc.children, node_ids, &interaction.selection("ast").ids, field, value)?,
-            TrinityJackCommand::RunQuery { .. } | TrinityJackCommand::LoadExampleQuery { .. } => return Err(Fault::from("query execution requires its retained operation owner")),
-            TrinityJackCommand::SetActiveExample { example_id } => commands::set_active_example::<C>(example_id),
-            TrinityJackCommand::SetViewport { viewport, .. } => return commands::set_viewport(viewport, view_state),
-            TrinityJackCommand::TextEdit { text } => commands::text_edit(text)?,
-            TrinityJackCommand::TextSelect { .. } => return Err(Fault::from("text selection requires its retained transient operation owner")),
-            TrinityJackCommand::FormatDocument => commands::format_document(&snapshot.query),
-            TrinityJackCommand::SetLodMode { value } => return commands::set_lod_mode(value, view_state),
-        })
-    }
-
-    fn render(body_key: &str, doc: &ArtifactView<'_, JackSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
-        let snapshot = doc.snapshot;
-        let labels = semio_framework_plugin::resolve_labels::<crate::editor::jack::terminology::TrinityJackLabels>(view_state);
-        let content = || C::bind(snapshot, &doc.children).map_err(|fault| semio_framework_plugin::PluginAssemblyError::new("trinity.jack.content", fault.message));
-        let root = match body_key {
-            TRINITY_JACK_PLAY_BODY_GRAPH => edit::windows::graph::render(TRINITY_JACK_PLAY_SURFACE_GRAPH, TRINITY_JACK_PLAY_CONTROLLER_ID, snapshot, &content()?, crate::editor::jack::window_config::current(cfg)),
-            TRINITY_JACK_PLAY_BODY_EDITOR => edit::windows::editor::render(TRINITY_JACK_PLAY_SURFACE_EDITOR, TRINITY_JACK_PLAY_CONTROLLER_ID, snapshot, &graph_from_document::<C>(snapshot,&doc.children)?, None),
-            TRINITY_JACK_PLAY_BODY_RESULTS => edit::windows::results::render(TRINITY_JACK_PLAY_SURFACE_RESULTS, TRINITY_JACK_PLAY_CONTROLLER_ID, None, None),
-            TRINITY_JACK_PLAY_BODY_ARTIFACT => crate::editor::jack::panels::document::render(&content()?, cfg.snapshot, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, TRINITY_JACK_PLAY_BODY_ARTIFACT)),
-            TRINITY_JACK_PLAY_BODY_CATALOGUE => crate::editor::jack::panels::catalogue::render(labels, &semio_framework_plugin::TreeWindows::for_body(view_state, TRINITY_JACK_PLAY_BODY_CATALOGUE)),
-            TRINITY_JACK_PLAY_BODY_INSPECTION => crate::editor::jack::panels::inspection::render(),
-            _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("trinity.body.label", "the fixed Trinity body label exceeds its UI bound")),
-        }?;
-        Ok(semio_framework_plugin::built_to_component_tree(root))
-    }
-
-    fn render_with_request_context(
-        _owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
-        body_key: &str,
-        doc: &ArtifactView<'_, JackSnapshot>,
-        cfg: &ConfigView<'_, NoConfig>,
-        view_state: &semio_framework_plugin::ViewModel,
-        transient: &semio_framework_plugin::TransientView<'_, Self::Transient>,
-        _interaction: &InteractionView<'_>,
-        cx:&mut semio_framework_plugin::StepContext<'_>,
-    ) -> semio_framework_plugin::OriginalRenderResult<semio_framework_plugin::ComponentTree> {
-        let rendered:semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree>=(||{
-        if body_key == TRINITY_JACK_PLAY_BODY_RESULTS {
-            let result = transient.window::<JackResultsWindowTransientOwner>();
-            let root = edit::windows::results::render(TRINITY_JACK_PLAY_SURFACE_RESULTS, TRINITY_JACK_PLAY_CONTROLLER_ID, result.and_then(|state| state.result.as_ref()), result.and_then(|state| state.query_error.as_deref()))?;
-            return Ok(semio_framework_plugin::built_to_component_tree(root));
-        }
-        if body_key == TRINITY_JACK_PLAY_BODY_EDITOR {
-            let selection = transient.window::<JackEditorWindowTransientOwner>().and_then(|window| window.selection.as_ref());
-            let root = edit::windows::editor::render(TRINITY_JACK_PLAY_SURFACE_EDITOR, TRINITY_JACK_PLAY_CONTROLLER_ID, doc.snapshot, &graph_from_document::<C>(doc.snapshot,&doc.children)?, selection)?;
-            return Ok(semio_framework_plugin::built_to_component_tree(root));
-        }
-        Self::render(body_key, doc, cfg, view_state)
-
-        })();
-        rendered.map(Some).map_err(Into::into)
-        }
-
-    fn window_measures(_doc: &ArtifactView<'_, JackSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
-        let Some(window_id) = view_state.window_id.as_deref() else { return HashMap::new() };
-        let Some(window) = crate::editor::jack::window_config::current(cfg) else { return HashMap::new() };
-        HashMap::from([(window_id.to_string(), vec![edit::windows::graph::trinity_lod_measure(window_id, &window.lod_mode, jack_window_action)])])
-    }
-
-    fn context_menu(request: &ContextMenuRequest, _doc: &ArtifactView<'_, JackSnapshot>, _cfg: &ConfigView<'_, NoConfig>, view_state: &semio_framework_plugin::ViewModel, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
-        use semio_framework_plugin::{node_graph_delete_selection_spec, selection_domains_from_surface, Menu, NodeGraphDeleteDispatch};
-
-        // 🕹️ Selection is framework-owned now (domain "ast") — `context_menu` has no `InteractionView`,
-        // so the request's own surface-carried selection groups are the only source; no config fallback.
-        let (nodes, edges) = selection_domains_from_surface(request.surface.as_ref(), &[], &[]);
-        let menu = Menu::of(registry, view_state).action("runQuery").action("formatDocument").group("mode", |m| m.action("setActiveExample")).group("open", |m| m.action("loadExampleQuery"));
-        // 🩹️ `Direct`, not `ViaNodeGraphEdit`: jack's own `TrinityJackCommand::DeleteSelection` is a
-        // real standalone command (no `nodeGraphEdit`-style JSON-operations envelope exists for jack),
-        // so the context-menu row must dispatch the `deleteSelection` action id directly.
-        menu.item(node_graph_delete_selection_spec(semio_framework_plugin::delete_selection().resolve(view_state.terminology, view_state.locale), view_state, &nodes, &edges, NodeGraphDeleteDispatch::Direct)).build()
-    }
-
-    /// 🕹️ Domain "ast" topology: every snapshot node is a `TopologyNode`, parented by the source node
-    /// of its first incoming connection (roots — nodes with no incoming edge — get `parent: None`).
-    /// `MergeMode::Range` is not declared for this domain, so `ordered`'s sequence need not be a strict
-    /// pre-order — `descendant_closure`/`ancestors` only need the (id, parent) pairs, not list order.
-    fn interaction_topology(doc: &ArtifactView<'_, JackSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<InteractionTopology, semio_framework_value::ValueError> {
- let raw=C::bind(doc.snapshot,&doc.children).map_err(|fault|semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,fault.message))?;
- let mut parent_of=std::collections::BTreeMap::new();
- for index in 0..crate::JackGraphQuery::edge_count(&raw){if let Some(edge)=crate::JackGraphQuery::edge(&raw,index){parent_of.entry(edge.target.to_string()).or_insert_with(||edge.source.to_string());}}
- let ordered=(0..crate::JackGraphQuery::node_count(&raw)).filter_map(|index|crate::JackGraphQuery::node_id(&raw,index)).map(|id|TopologyNode{id:id.to_string(),granularity:"node".into(),parent:parent_of.get(id).cloned()}).collect();
- let mut domains=std::collections::BTreeMap::new();domains.insert("ast".into(),DomainTopology{ordered});Ok(InteractionTopology{domains})
- }
-}
 //#endregion 🔖️TrinityJackPlayApp
 
 //#region 🔖️Manifest
 use crate::editor::jack::modes::edit;
 
-/// 🎯️ `create_trinity_jack_app` → `Editor::builder(TRINITY_JACK_DIALECT)…build_definition()`
-/// (contract §2.4). The old `.example("nakagin", …)`/`.workflow("trinity", …)` calls are DROPPED,
-/// not ported — `EditorBuilder::build_definition()` returns a bare `AppDefinition`, discarding
-/// `App.examples` entirely (SDK gap, see this packet's notes file; the subset's own
-/// `📚️examples/🎬️demo` facet is the likely intended replacement mechanism).
-///
-/// ⌨️ `textEdit`/`textSelect` are the query editor's own gesture verbs — the text host sends each
-/// keystroke's buffer and caret range — so they stay out of the palette and the Actions rail, where a
-/// press carries neither (`textSelect` was refused `missing start`, `textEdit` would have emptied the
-/// query). `patchNodes`' `nodeIds` is optional: left empty, the verb renames the selected nodes.
-pub fn create_trinity_jack_app() -> semio_framework_plugin::AppDefinition {
-    Editor::builder(TRINITY_JACK_DIALECT).document(["semio", "trinity", "jack"])
-            .artifact_kind(ArtifactKindSpec {
-                id: "graph.trinity".into(),
-                label: LocalizedLabel::native("Trinity Graph", "Trinity-Graph"),
-                source_format: "trinity.graph".into(),
-                component_kind: "trinity".into(),
-                dimension: "graph".into(),
-                media_capability: semio_framework_plugin::OsMediaCapability::MeshOnly,
-                media_type: MediaType { class: MediaClass::Graph, form: MediaForm::Trinity },
-                schema: "trinity.graph".into(),
-                export_formats: vec![],
-                import_formats: vec![],
-                    export_stdio_kinds: vec![],
-        import_stdio_kinds: vec![],
-    })
-            .icon_id("trinity")
-            .mode_def(edit::definition())
-            .tool(edit::tools::reorganize::definition())
-            .default_mode_id(edit::TRINITY_JACK_MODE_EDIT)
-            .window_kind(TRINITY_JACK_PLAY_WINDOW_GRAPH, LocalizedLabel::native("Nakagin Graph", "Nakagin-Graph"), TRINITY_JACK_PLAY_BODY_GRAPH, SemanticSurfaceKind::NodeGraph, "graph-dag")
-            .window_kind(TRINITY_JACK_PLAY_WINDOW_EDITOR, LocalizedLabel::native("Jack Query", "Jack-Abfrage"), TRINITY_JACK_PLAY_BODY_EDITOR, SemanticSurfaceKind::TextEditor, "document-jack")
-            .window_kind(TRINITY_JACK_PLAY_WINDOW_RESULTS, LocalizedLabel::native("Results", "Ergebnisse"), TRINITY_JACK_PLAY_BODY_RESULTS, SemanticSurfaceKind::Table, "table-2")
-            .default_layout(edit::layout())
-            .panel_tab(
-                FRAMEWORK_PANEL_TAB_ARTIFACT_ID,
-                LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Artefakt"),
-                PanelGroup::Workbench,
-                TRINITY_JACK_PLAY_BODY_ARTIFACT,
-            )
-            .panel_tab(
-                FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
-                LocalizedLabel::native(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "Katalog"),
-                PanelGroup::Workbench,
-                TRINITY_JACK_PLAY_BODY_CATALOGUE,
-            )
-            .panel_tab(
-                FRAMEWORK_PANEL_TAB_INSPECTION_ID,
-                LocalizedLabel::native(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, "Inspektion"),
-                PanelGroup::Details,
-                TRINITY_JACK_PLAY_BODY_INSPECTION,
-            )
-            .action_with(semio_framework_plugin::ActionDefinition::bounded_catalog("deleteSelection", LocalizedLabel::native("Delete Selection", "Auswahl löschen"), ActionKind::Mutation).with_category("selection"))
-            .action_destructive("deleteSelection")
-            .mutation("patchNodes", LocalizedLabel::native("Patch Nodes", "Knoten aktualisieren"))
-            .action_with(semio_framework_plugin::ActionDefinition::bounded_catalog("runQuery", LocalizedLabel::native("Run Jack Query", "Jack-Abfrage ausführen"), ActionKind::Mutation).with_category("methods"))
-            .action_with(semio_framework_plugin::ActionDefinition::bounded_catalog("loadExampleQuery", LocalizedLabel::native("Load Example Query", "Beispielabfrage laden"), ActionKind::Mutation).with_category("open"))
-            .action_with(semio_framework_plugin::ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), ActionKind::Mutation, "panel-left").with_category("mode"))
-            .action_destructive("setActiveExample")
-            // 🛠️ Dev-only whole-snapshot import — kept out of the command palette.
-            .action_with(semio_framework_plugin::ActionDefinition { in_palette: false, ..semio_framework_plugin::ActionDefinition::bounded_catalog("loadDocumentJson", LocalizedLabel::native("Load Document JSON", "Dokument-JSON laden"), ActionKind::Mutation) })
-            .action_destructive("loadDocumentJson")
-            .view_action("nodeGraphViewport", LocalizedLabel::native("Set Graph Viewport", "Graph-Ansicht festlegen"))
-            .action_with(semio_framework_plugin::ActionDefinition { in_palette: false, ..semio_framework_plugin::ActionDefinition::new("textEdit", LocalizedLabel::native("Edit Jack Query", "Jack-Abfrage bearbeiten"), ActionKind::Mutation, "typography") })
-            .action_with(semio_framework_plugin::ActionDefinition { in_palette: false, ..semio_framework_plugin::ActionDefinition::new("textSelect", LocalizedLabel::native("Select Jack Query Text", "Jack-Abfragetext auswählen"), ActionKind::View, "text-cursor") })
-            .action_with(semio_framework_plugin::ActionDefinition::new("formatDocument", LocalizedLabel::native("Format Jack Query", "Jack-Abfrage formatieren"), ActionKind::Mutation, "typography").with_category("utilities"))
-            .action_with(semio_framework_plugin::ActionDefinition::new("setLodMode", LocalizedLabel::native("Set LOD Mode", "LOD-Modus festlegen"), ActionKind::View, "layers"))
-            .action_interactive_job("runQuery", InteractiveJobClassification::Migrated)
-            .action_interactive_job("loadExampleQuery", InteractiveJobClassification::Migrated)
-            .action_interactive_job("nodeGraphViewport", InteractiveJobClassification::Migrated)
-            .action_interactive_job("textEdit", InteractiveJobClassification::Migrated)
-            .action_interactive_job("textSelect", InteractiveJobClassification::Migrated)
-            .action_interactive_job("setLodMode", InteractiveJobClassification::Migrated)
-            .action_interactive_job("patchNodes", InteractiveJobClassification::Migrated)
-            .action_interactive_job("deleteSelection", InteractiveJobClassification::Migrated)
-            .action_interactive_job("setActiveExample", InteractiveJobClassification::Migrated)
-            .action_interactive_job("loadDocumentJson", InteractiveJobClassification::Migrated)
-            .action_interactive_job("formatDocument", InteractiveJobClassification::Migrated)
-            // 🕹️ Domain "ast": jack's document nodes, transitive over each node's first incoming
-            // connection (see `interaction_topology`). Selection/hover, marquee, modes and merges are
-            // ALL framework-injected now — no app-declared setSelection/graphPointerDown verbs.
-            .interaction(InteractionDefinition {
-                id: "ast".into(),
-                label: LocalizedLabel::native("Nodes", "Knoten"),
-                granularities: vec![GranularityDefinition { id: "node".into(), label: LocalizedLabel::native("Node", "Knoten"), icon_id: "circle".into() }],
-                hierarchy: HierarchyProvider::Topology,
-                hover: HoverSpec { transitive: true, ..HoverSpec::default() },
-                selection: SelectionSpec { modes: vec![SelectionMode::Multiple, SelectionMode::Single], methods: vec![SelectionMethod::Pick], merges: vec![MergeMode::Replace], transitive: true, broadcast: true },
-            })
-            .window_kind_interactions(TRINITY_JACK_PLAY_WINDOW_GRAPH, vec![InteractionRef::new("ast")])
-            // 📇️ Per-window action scoping: `build_definition` copies an unowned action onto EVERY window
-            // kind. Viewport/LOD read the config of the graph window they were dispatched from, so they
-            // belong to the graph; the text verbs edit the document's query where it is typed, so they
-            // belong to the query editor. Document verbs, selection, history and the example picker stay
-            // unscoped on purpose — they read the document, not a pane.
-            .window_kind_action_refs(TRINITY_JACK_PLAY_WINDOW_EDITOR, vec!["textEdit".into(), "textSelect".into(), "formatDocument".into()])
-            .window_kind_action_refs(TRINITY_JACK_PLAY_WINDOW_GRAPH, vec!["nodeGraphViewport".into(), "setLodMode".into()])
-            // 📝️ Staged argument forms for the panel-visible preset loaders. The option list IS the
-            // subset's registered example set — the navbar picker only ever dispatches a registered id.
-            .action_args("setActiveExample", vec![
-                ActionArgDef::select("exampleId", LocalizedLabel::native("Fixture", "Fixtur"), vec![
-                    ActionArgOption::new(crate::examples::demo::ID, crate::examples::demo::label()),
-                ]).required(),
-            ])
-            .action_args("patchNodes", vec![
-                ActionArgDef::entity_ids("nodeIds", LocalizedLabel::native("Nodes (empty: selection)", "Knoten (leer: Auswahl)"), "ast", "node"),
-                ActionArgDef::select("field", LocalizedLabel::native("Field", "Feld"), vec![ActionArgOption::new("name", LocalizedLabel::native("Name", "Name"))]).required(),
-                ActionArgDef::text("value", LocalizedLabel::native("Value", "Wert")).required(),
-            ])
-            .action_args("runQuery", vec![
-                ActionArgDef::text("query", LocalizedLabel::native("Query", "Abfrage")),
-                ActionArgDef::text("resultsWindowId", LocalizedLabel::native("Results window", "Ergebnisfenster")).required(),
-            ])
-            .action_args("loadExampleQuery", vec![
-                ActionArgDef::select("query", LocalizedLabel::native("Example", "Beispiel"), vec![
-                    ActionArgOption::new("MATCH (a:Piece) WHERE a.name = 't_f0_b_c0' OR a.name = 't_f0_b_c1' RETURN a.name", LocalizedLabel::native("Where Or", "Wo-Oder")),
-                    ActionArgOption::new("MATCH (a:Piece)-[r:Connection]->(b:Piece) WHERE a.name = 'b' RETURN a, r, b", LocalizedLabel::native("Return Graph", "Graph zurückgeben")),
-                    ActionArgOption::new("MATCH (a:Piece) WHERE a.name = 'b' SET a.label = 'demo-label'", LocalizedLabel::native("Set Label", "Label setzen")),
-                    ActionArgOption::new("MATCH (a:Piece) WHERE a.name = 'b' SET a.x = 300, a.y = 120", LocalizedLabel::native("Set Position", "Position setzen")),
-                    ActionArgOption::new("CREATE (n:Piece)", LocalizedLabel::native("Create Node", "Knoten erstellen")),
-                    ActionArgOption::new("MATCH (a:Piece), (b:Piece) WHERE a.name = 'b' AND b.name != 'b' CREATE (a)-[:Connection]->(b)", LocalizedLabel::native("Create Edge", "Kante erstellen")),
-                    ActionArgOption::new("MATCH (n:Piece) WHERE n.name = 'b' DELETE n", LocalizedLabel::native("Delete Leaf", "Blatt löschen")),
-                    ActionArgOption::new("MERGE (x:Piece)-[:Connection]->(y:Piece)", LocalizedLabel::native("Merge Edge", "Kante zusammenführen")),
-                ]).required(),
-                ActionArgDef::text("resultsWindowId", LocalizedLabel::native("Results window", "Ergebnisfenster")).required(),
-            ])
-            .keybinding("mod+z", "undo")
-            .keybinding("mod+shift+z", "redo")
-            .keybinding("mod+alt+s", "commitCheckpoint")
-            .io(jack_io())
-            .action_describe("setLodMode", LocalizedLabel::native("Sets the level of detail the graph window draws the component graph with; only that window's view changes.", "Legt die Detailstufe fest, mit der das Graphfenster den Bauteilgraphen zeichnet; nur die Ansicht dieses Fensters ändert sich."))
-            .action_describe("formatDocument", LocalizedLabel::native("Reformats the document's Jack query as one undoable edit; the graph is not changed, and a query that does not parse is left as it is.", "Formatiert die Jack-Abfrage des Dokuments als ein rückgängig machbarer Schritt neu; der Graph ändert sich nicht, eine nicht lesbare Abfrage bleibt wie sie ist."))
-            .action_describe("deleteSelection", LocalizedLabel::native("Deletes every selected node of the component graph together with every edge attached to them.", "Löscht alle ausgewählten Knoten des Bauteilgraphen samt aller daran angeschlossenen Kanten."))
-            .action_describe("patchNodes", LocalizedLabel::native("Renames the given nodes, or the selected ones when no ids are given; name is the only field a Jack node allows.", "Benennt die angegebenen Knoten um, ohne Ids die ausgewählten; der Name ist das einzige Feld, das ein Jack-Knoten erlaubt."))
-            .action_describe("runQuery", LocalizedLabel::native("Runs a Jack graph query (or the document's own query) against the component graph and shows the matches in the given results window; CREATE, SET or DELETE clauses change the graph.", "Führt eine Jack-Graphabfrage (oder die eigene Abfrage des Dokuments) auf dem Bauteilgraphen aus und zeigt die Treffer im angegebenen Ergebnisfenster; CREATE-, SET- oder DELETE-Klauseln ändern den Graphen."))
-            .action_describe("loadExampleQuery", LocalizedLabel::native("Makes one of the bundled example queries the document's query, runs it and shows its matches in the given results window.", "Macht eine der mitgelieferten Beispielabfragen zur Abfrage des Dokuments, führt sie aus und zeigt ihre Treffer im angegebenen Ergebnisfenster."))
-            .action_describe("setActiveExample", LocalizedLabel::native("Replaces the whole document with a bundled fixture (the Nakagin capsule tower or the branch chain) and its example query, by example id.", "Ersetzt das gesamte Dokument durch eine mitgelieferte Fixture (den Nakagin Capsule Tower oder die Astkette) samt Beispielabfrage, anhand der Beispiel-Id."))
-            .action_describe("loadDocumentJson", LocalizedLabel::native("Replaces the whole component graph with one parsed from the given document JSON; invalid JSON changes nothing.", "Ersetzt den gesamten Bauteilgraphen durch einen, der aus dem angegebenen Dokument-JSON gelesen wird; ungültiges JSON ändert nichts."))
-            .action_audience("nodeGraphViewport", semio_framework_plugin::CapabilityAudience::Chrome)
-            .action_destructive("runQuery")
-            .build_definition()
-}
+#[path = "📋️manifest/🦀️.rs"]
+mod manifest;
+pub use manifest::*;
+
 //#endregion 🔖️Manifest
 
 //#region 🧪️Tests

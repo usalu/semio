@@ -6,6 +6,10 @@
   "description": "🀄️ WFC authored artifact examples and portable schema oracle tests.",
   "type": "module",
   "private": true,
+  "exports": {
+    "./sqlite/bitmap": "./🪶️sqlite/🎨️bitmap/🟦️.ts",
+    "./sqlite/bitmap/testing": "./🪶️sqlite/🎨️bitmap/🧪️testing/🟦️.ts"
+  },
   "scripts": {
     "test": "bun --cwd \"../../../../..\" repo run @semio-tech/wfc-js:test"
   },

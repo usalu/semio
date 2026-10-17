@@ -48,7 +48,7 @@ fn registry_physical_shells_retire_only_under_exact_allocator_byte_grants() {
         }
         let (step,a,r)=observe_ownership(||retirement.close_step(grant).unwrap());assert!(step.progress().fits(grant));assert_eq!((step.progress().retained_capacity_bytes,step.progress().released_bytes),(a,r));charged+=r;
     }
-    let physical=SHELL_OBSERVATION.with(|state|state.get().released);assert!(retirement.terminal_is_empty());assert_eq!(original.count,law["allocations"].as_u64().unwrap()as usize);assert!(denied>=2);assert_eq!(physical,original.sizes[..original.count].iter().sum::<usize>());assert!(charged>=physical);eprintln!("[DEBUG] Original registry shells={physical}, full physical closure={charged}, short whole releases denied={denied}");
+    let physical=SHELL_OBSERVATION.with(|state|state.get().released);assert!(retirement.terminal_is_empty());assert_eq!(original.count,law["allocations"].as_u64().unwrap()as usize);assert!(denied>=2);assert_eq!(physical,original.sizes[..original.count].iter().sum::<usize>());assert!(charged>=physical);
 }
 #[test]
 fn registry_execution_owner_identity_survives_the_original_source_reader() {
@@ -58,7 +58,6 @@ fn registry_execution_owner_identity_survives_the_original_source_reader() {
     let mut a_lease=a.into_retirement();let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:0,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:1};let (step,born,freed)=observe_ownership(||a_lease.close_step(grant).unwrap());assert!(matches!(step,RetainedCloneStep::Complete(_)));assert_eq!((born,freed),(0,0));assert_eq!(a_source.owner_identity(),identity);assert_eq!(serde_json::to_value(a_source.schema("sample").unwrap()).unwrap(),fixture["schema"]);
     let grant=registry_grant(&a_retirement,copy).unwrap();assert_eq!(a_retirement.close_step(grant).unwrap().progress(),Default::default());drop(a_source);drain_registry(&mut a_retirement,copy,law["maximumRetirementTurns"].as_u64().unwrap()as usize);
     assert_eq!(b.owner_identity(),b_source.owner_identity());assert_eq!(serde_json::to_value(b_source.schema("sample").unwrap()).unwrap(),fixture["schema"]);drop(b);drop(b_source);drain_registry(&mut b_retirement,copy,law["maximumRetirementTurns"].as_u64().unwrap()as usize);
-    eprintln!("[DEBUG] Original registry identity/reader lease retained through exact final source authority");
 }
 struct OwnedOperator {text:String,drops:Arc<AtomicUsize>}
 impl Operator for OwnedOperator {

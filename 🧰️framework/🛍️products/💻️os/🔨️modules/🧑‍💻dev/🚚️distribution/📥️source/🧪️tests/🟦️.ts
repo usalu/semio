@@ -41,7 +41,6 @@ test("distribution source closure excludes inline tests and refuses actual fixtu
       expect(paths, row.id).toEqual([...row.paths].sort((a: string, b: string) => Buffer.compare(Buffer.from(a), Buffer.from(b))));
       expect(paths, row.id).toEqual(oraclePaths);
     }
-    console.log("[DEBUG] actual production source closure compared with esbuild; physical fixture aliases refused");
   } finally { rmSync(work, { recursive: true, force: true }); }
 });
 
@@ -53,7 +52,6 @@ test("distribution actual static producer inventory contains no testing collecti
   const validate = new Ajv({ strict: true }).addSchema(schema).getSchema(`${schema.$id}#/$defs/DistributionSourceCoordinate`)!;
   expect(paths.length).toBeGreaterThan(authority.moduleEntries.length);
   for (const path of paths) expect(validate(path), path).toBe(true);
-  console.log(`[DEBUG] actual distribution static producer inventory: ${paths.length} source/package inputs, zero testing collection inputs`);
 });
 
 test("distribution genuine source contract has canonical addressable scope", () => {
@@ -65,5 +63,4 @@ test("distribution genuine source contract has canonical addressable scope", () 
   const validate = new Ajv({ strict: true }).addSchema(schema).getSchema(`${example.id}#/$defs/${example.leaf}`);
   expect(validate).toBeDefined();
   expect(validate!(examples.coordinates.find((row: { refused: boolean }) => !row.refused).path)).toBe(true);
-  console.log("[DEBUG] actual genuine distribution coordinate contract resolves through owned taxonomy, URL and Ajv");
 });

@@ -11,25 +11,13 @@ extern crate semio_framework_schema as schema;
 use protocol::{Identified, Patchable};
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 use semio_framework_value_derive::{FromValue, ToValue};
-use semio_s_artifact_stdio_semio_drawing::schema::snapshot::SemioDrawingSnapshot;
 use crate::snapshot::LayoutSnapshot;
 use semio_framework_value::DslValue as Value;
 use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
-use semio_s_artifact_stdio_dwg_geometry::standards::v_ac1024::subsets::any::schema::geometry::DwgColor;
-use semio_s_artifact_stdio_dwg_geometry::standards::v_ac1024::subsets::any::schema::geometry::DwgEntity;
-use semio_s_artifact_stdio_dwg_geometry::standards::v_ac1024::subsets::any::schema::geometry::DwgDrawing;
-use semio_s_artifact_stdio_dwg_geometry::standards::v_ac1024::subsets::any::schema::geometry::DwgGeometry;
-use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3;
-use semio_s_artifact_stdio_semio_base::schema::geometry::SemioRgba;
-use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
-use semio_s_artifact_stdio_semio_drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, DrawStyle, PathSegment, SemioDrawingSnapshot, STDIO_SEMIODRAWING_DOCUMENT_SCHEMA};
-use semio_s_artifact_stdio_svg::schema::snapshot::SvgSnapshot;
-use semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::io::text::snapshot::write_svg_xml;
+use semio_framework_io_ports::{EmbeddedChildSlotV1, VectorScene};
 use protocol::{MutationKind, SemanticDescriptor};
-use semio_s_artifact_stdio_semio_drawing::schema::snapshot::DrawNode;
 use schema::ArtifactSchema;
-use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️Artifact
 /// 🧬️ layout document artifact state.
 #[derive(Clone, Debug, PartialEq, ArtifactSchema, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
@@ -288,31 +276,28 @@ pub const LAYOUT_DOCUMENT_SCHEMA: &str = "layout.layout";
 /// this artifact's own surface identity) — this is the SDK's compile-time `Dialect`.
 pub const LAYOUT_DIALECT: Dialect = Dialect { artifact_kind: "s.layout.layout", standard: StandardId("1"), subset: SubsetId::ANY };
 
-/// 🌉️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 4 (design map row `layout | C:drawing
-/// R:model`): layout composes stdio's real `s.stdio.semio/v1/drawing` subset as a genuine persisted
-/// child (`LayoutSnapshot::background_drawing`) instead of only ever computing one ephemerally at
-/// SVG-export time (`io::layout_snapshot_to_semio_drawing`, unchanged, still the authored-frames→
-/// drawing direction) — DWG/DXF/SVG import used to discard everything but page-boundary rectangles
-/// (`io::dwg_drawing_to_semio_drawing`/`layout_document_json_from_dwg` only ever read `path_bounds`
-/// back out of the drawing they built, then threw it away); it now mints a real content-addressed
-/// child from the FULL decoded drawing instead — see `io::background_drawing_child_from_import`.
-/// `LayoutSnapshot::referenced_model` is a forward `ArtifactLink` reference slot for the same design
-/// map row's `R:model` half — layout pages can reference an architecture `model` artifact (e.g. a
-/// floor plan a sheet is traced from) without owning/duplicating its content. This is genuinely new
-/// capability (no prior inline `model`-shaped duplication existed anywhere in this plugin to remove —
-/// confirmed by grep before this migration started); left schema/codec-complete but otherwise inert
-/// (no `LinkResolver` seam, no mutation dispatch) — same documented-gap posture the migration recipe
-/// sanctions for any composed slot a plugin agent can't wire a live resolver into yet.
+/// 🌉️ Layout carries one persisted background child (`LayoutSnapshot::background_drawing`), the imported plan a sheet is laid out on.
+/// The content is an opaque [`Value`]: layout never names the owner of the child's standard. Everything layout needs from it, validating, reading as a
+/// [`VectorScene`], writing one back, its SQLite DDL and its external formats, goes through the codec the composition root binds to
+/// [`LAYOUT_BACKGROUND_DRAWING`]. `LayoutSnapshot::referenced_model` is the forward `ArtifactLink` slot for a referenced `model` artifact, schema and codec
+/// complete but otherwise inert (no `LinkResolver` seam, no mutation dispatch).
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase", deny_unknown_fields, retire_with="crate::standards::v1::subsets::any::schema::snapshot::drawing_child::retire")]
 pub struct LayoutDrawingChild {
-    pub handle: store::os_store::artifact_child::ArtifactChild<SemioDrawingSnapshot>,
-    pub content: SemioDrawingSnapshot,
+    pub handle: store::os_store::artifact_child::ArtifactChild<LayoutBackgroundDrawing>,
+    #[value(deserialize_with = "validated_drawing_content")]
+    pub content: Value,
 }
+
+/// 🧸️ Compile-time-only name of the child `LayoutDrawingChild::handle` points at; it never appears on the wire.
+pub struct LayoutBackgroundDrawing;
+
+/// 🧩️ The position the composition root fills with the codec of the background drawing's owner.
+pub static LAYOUT_BACKGROUND_DRAWING: EmbeddedChildSlotV1 = EmbeddedChildSlotV1::new("layout.background-drawing");
 
 impl semio_framework_dsl_record::BorrowedDslRecord for LayoutDrawingChild {
     const RECORD: semio_framework_dsl_record::BorrowedRecordSpec = semio_framework_dsl_record::BorrowedRecordSpec { keyword: None, layout: semio_framework_dsl_record::RecordLayout::Inline, fields: &[
-        semio_framework_dsl_record::BorrowedFieldSpec { id: 0, key: "handle", position: None, shape: <store::os_store::artifact_child::ArtifactChild<SemioDrawingSnapshot> as semio_framework_dsl_record::BorrowedDslField>::SHAPE, optional: false, flatten: false, defines: None, is_call_name: false },
+        semio_framework_dsl_record::BorrowedFieldSpec { id: 0, key: "handle", position: None, shape: <store::os_store::artifact_child::ArtifactChild<LayoutBackgroundDrawing> as semio_framework_dsl_record::BorrowedDslField>::SHAPE, optional: false, flatten: false, defines: None, is_call_name: false },
         semio_framework_dsl_record::BorrowedFieldSpec { id: 1, key: "content", position: None, shape: semio_framework_dsl_record::BorrowedShape::Value, optional: false, flatten: false, defines: None, is_call_name: false },
     ] };
 }
@@ -330,14 +315,12 @@ impl semio_framework_schema_composition::ChildFieldRefs for LayoutDrawingChild {
 }
 
 fn layout_drawing_child_spec() -> semio_framework_dsl_record::RecordSpec {
-    semio_framework_dsl_record::RecordSpec::new(None, semio_framework_dsl_record::RecordLayout::Inline, vec![semio_framework_dsl_record::FieldSpec::new(0, "handle", <store::os_store::artifact_child::ArtifactChild<SemioDrawingSnapshot> as semio_framework_dsl_record::DslField>::shape()), semio_framework_dsl_record::FieldSpec::new(1, "content", semio_framework_dsl_record::Shape::Value)])
+    semio_framework_dsl_record::RecordSpec::new(None, semio_framework_dsl_record::RecordLayout::Inline, vec![semio_framework_dsl_record::FieldSpec::new(0, "handle", <store::os_store::artifact_child::ArtifactChild<LayoutBackgroundDrawing> as semio_framework_dsl_record::DslField>::shape()), semio_framework_dsl_record::FieldSpec::new(1, "content", semio_framework_dsl_record::Shape::Value)])
 }
 
 fn layout_drawing_child_spec_producer()->semio_framework_dsl_record::RecordSpecProducer{crate::snapshot::drawing_child::producer()}
 
-/// 🧬️ Record binding for the derived `LayoutSnapshot` pack: the child handle through the framework's
-/// own `ArtifactChild` record, the stdio drawing content as its first-party value (the stdio drawing
-/// subset declares no `dsl::DslField` of its own).
+/// 🧬️ Record binding for the derived `LayoutSnapshot` pack: the child handle through the framework's own `ArtifactChild` record, the content as its first-party value, admitted by the bound codec.
 impl semio_framework_dsl_record::DslField for LayoutDrawingChild {
     fn shape_controlled<C:semio_framework_dsl_record::NativeSchemaControl>(control:&mut C)->Result<semio_framework_dsl_record::Shape,semio_framework_value::ValueError>{control.checkpoint()?;Ok(semio_framework_dsl_record::Shape::Record(layout_drawing_child_spec_producer()))}
     fn from_value_controlled(value:&semio_framework_dsl_record::FieldValue,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,semio_framework_value::ValueError>{crate::snapshot::drawing_child::decode(value,control)}
@@ -349,19 +332,39 @@ impl semio_framework_dsl_record::DslField for LayoutDrawingChild {
     fn to_value(&self) -> semio_framework_dsl_record::FieldValue {
         let mut record = semio_framework_dsl_record::RecordValue::default();
         record.fields.insert(0, semio_framework_dsl_record::DslField::to_value(&self.handle));
-        record.fields.insert(1, semio_framework_dsl_record::FieldValue::Value(semio_framework_value::ToValue::to_value(&self.content)));
+        record.fields.insert(1, semio_framework_dsl_record::FieldValue::Value(self.content.clone()));
         semio_framework_dsl_record::FieldValue::Record(record)
     }
     fn from_value(value: &semio_framework_dsl_record::FieldValue) -> Result<Self, String> {
         let semio_framework_dsl_record::FieldValue::Record(record) = value else { return Err(format!("expected Record, found {value:?}")) };
-        let handle = <store::os_store::artifact_child::ArtifactChild<SemioDrawingSnapshot> as semio_framework_dsl_record::DslField>::from_value(record.get(0).ok_or("missing handle")?)?;
+        let handle = <store::os_store::artifact_child::ArtifactChild<LayoutBackgroundDrawing> as semio_framework_dsl_record::DslField>::from_value(record.get(0).ok_or("missing handle")?)?;
         let Some(semio_framework_dsl_record::FieldValue::Value(content)) = record.get(1) else { return Err("expected content value".into()) };
-        Ok(Self { handle, content: semio_framework_value::FromValue::from_value(content.clone()).map_err(|error| error.to_string())? })
+        let content = content.clone();
+        let content = validated_drawing_content(content).map_err(|error| error.to_string())?;
+        Ok(Self { handle, content })
     }
 }
 
+/// 🧮️ The decode budget of a validation that no caller controls; a controlled decode validates under its own budget.
+const UNCONTROLLED_VALIDATION_BYTES: usize = 64 << 20;
+
+/// 🔎️ The codec bound to [`LAYOUT_BACKGROUND_DRAWING`], or a refusal naming the unbound slot.
+pub fn drawing_codec() -> Result<&'static dyn semio_framework_io_ports::EmbeddedChildCodecV1, semio_framework_io_ports::EmbeddedChildSlotError> {
+    LAYOUT_BACKGROUND_DRAWING.codec()
+}
+
+fn drawing_error(error: impl std::fmt::Display) -> semio_framework_value::ValueError {
+    semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("background drawing: {error}"))
+}
+
+/// ✅️ The wire reader of the child content: the bound codec admits the value, or the child is refused.
+fn validated_drawing_content(value: Value) -> Result<Value, semio_framework_value::ValueError> {
+    drawing_codec().map_err(drawing_error)?.validate(&value, &mut semio_framework_value::NativeDecodeControl::new(UNCONTROLLED_VALIDATION_BYTES, &mut |_| true))?;
+    Ok(value)
+}
+
 /// 🪪️ Mints one source-independent identity from the canonical drawing payload.
-pub fn background_drawing_child_handle(_source_tag: &str, content: &SemioDrawingSnapshot) -> LayoutDrawingChild {
+pub fn background_drawing_child_handle(_source_tag: &str, content: &Value) -> LayoutDrawingChild {
     let content_json = semio_framework_pack_json::to_json_string(content);
     let child_id = store::content_id("background-drawing", content_json.as_bytes());
     let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "drawing".into() };
@@ -371,35 +374,31 @@ pub fn background_drawing_child_handle(_source_tag: &str, content: &SemioDrawing
 
 /// 🔎️ The one accessor every render/export call site funnels through; `None` only when the
 /// document has no snapshot-owned `background_drawing` record.
-pub fn background_drawing_content(snapshot: &LayoutSnapshot) -> Option<SemioDrawingSnapshot> {
+pub fn background_drawing_content(snapshot: &LayoutSnapshot) -> Option<Value> {
     snapshot.background_drawing.as_ref().map(|child| child.content.clone())
 }
 
+/// 🔽️ The background drawing read as a neutral vector scene: `Ok(None)` when the document has no background drawing, a refusal when the slot is unbound or the content is not admitted.
+pub fn background_drawing_scene(snapshot: &LayoutSnapshot) -> Result<Option<VectorScene>, semio_framework_value::ValueError> {
+    let Some(child) = snapshot.background_drawing.as_ref() else { return Ok(None) };
+    drawing_codec().map_err(drawing_error)?.lower(&child.content).map(Some)
+}
+
 /// ✏️ The central apply of one plan-text edit: the text node at `index` (depth-first over the layers) now reads `text`; `false` when the plan has no such node.
-pub fn set_drawing_text(content: &mut SemioDrawingSnapshot, index: u32, text: &str) -> bool {
-    use semio_s_artifact_stdio_semio_drawing::schema::snapshot::DrawNode;
-    fn replace(node: &mut DrawNode, index: &mut u32, text: &str) -> bool {
-        match node {
-            DrawNode::Text { value, .. } => {
-                if *index == 0 {
-                    *value = text.to_string();
-                    return true;
-                }
-                *index -= 1;
-                false
-            }
-            DrawNode::Group { children, .. } => children.iter_mut().any(|child| replace(child, index, text)),
-            DrawNode::Path { .. } | DrawNode::Image { .. } => false,
-        }
+pub fn set_drawing_text(content: &mut Value, index: u32, text: &str) -> Result<bool, semio_framework_value::ValueError> {
+    let codec = drawing_codec().map_err(drawing_error)?;
+    let mut scene = codec.lower(content)?;
+    if !scene.set_text(index, text) {
+        return Ok(false);
     }
-    let mut cursor = index;
-    content.layers.iter_mut().any(|layer| replace(&mut layer.root, &mut cursor, text))
+    *content = codec.lift(&scene)?;
+    Ok(true)
 }
 
 /// 👻️ Ephemeral catalogue drag-ghost state (layout app config / artifact local-ui).
 #[derive(Clone, Debug, Default, PartialEq, semio_framework_dsl_record_derive::DslRecord, ToValue, FromValue, semio_framework_value::RetireOwned)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
+#[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default)]
 pub struct LayoutDropPreviewState {
     pub kind: String,
@@ -424,30 +423,30 @@ impl Default for LayoutCamera {
 
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
 #[value(deny_unknown_fields)]
 pub struct LayoutRect {
     pub x: f64,
     pub y: f64,
-    #[cfg_attr(test, serde(rename = "w"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(rename = "w"))]
     #[value(rename = "w")]
     pub width: f64,
-    #[cfg_attr(test, serde(rename = "h"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(rename = "h"))]
     #[value(rename = "h")]
     pub height: f64,
 }
 
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
 #[value(deny_unknown_fields)]
 pub struct LayoutBounds {
     pub x: f64,
     pub y: f64,
-    #[cfg_attr(test, serde(rename = "w"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(rename = "w"))]
     #[value(rename = "w")]
     pub width: f64,
-    #[cfg_attr(test, serde(rename = "h"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(rename = "h"))]
     #[value(rename = "h")]
     pub height: f64,
     pub rotation: f64,
@@ -455,7 +454,7 @@ pub struct LayoutBounds {
 
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
 #[value(deny_unknown_fields)]
 pub struct PageMargins {
     pub top: f64,
@@ -466,7 +465,7 @@ pub struct PageMargins {
 
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
 #[value(deny_unknown_fields)]
 pub struct PageColumns {
     pub count: u32,
@@ -475,7 +474,7 @@ pub struct PageColumns {
 
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
 #[value(deny_unknown_fields)]
 pub struct Layer {
     #[dsl(defines = "layer")]
@@ -483,23 +482,23 @@ pub struct Layer {
     pub name: String,
     pub visible: bool,
     pub locked: bool,
-    #[cfg_attr(test, serde(rename = "objectIds"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(rename = "objectIds"))]
     #[value(rename = "objectIds")]
     pub object_ids: Vec<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslEnum, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(tag = "kind"))]
+#[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), serde(tag = "kind"))]
 #[value(tag = "kind", deny_unknown_fields)]
 pub enum Frame {
-    #[cfg_attr(test, serde(rename = "rect"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(rename = "rect"))]
     #[value(rename = "rect")]
     Rect {
         #[dsl(defines = "frame")]
         id: String,
-        #[cfg_attr(test, serde(rename = "layerId"))]
+        #[cfg_attr(any(test, feature = "testkit"), serde(rename = "layerId"))]
         #[value(rename = "layerId")]
         #[dsl(refs = "layer")]
         layer_id: String,
@@ -510,12 +509,12 @@ pub enum Frame {
         fill: Option<[f32; 4]>,
         stroke: Option<[f32; 4]>,
     },
-    #[cfg_attr(test, serde(rename = "text"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(rename = "text"))]
     #[value(rename = "text")]
     Text {
         #[dsl(defines = "frame")]
         id: String,
-        #[cfg_attr(test, serde(rename = "layerId"))]
+        #[cfg_attr(any(test, feature = "testkit"), serde(rename = "layerId"))]
         #[value(rename = "layerId")]
         #[dsl(refs = "layer")]
         layer_id: String,
@@ -523,27 +522,27 @@ pub enum Frame {
         bounds: LayoutBounds,
         locked: Option<bool>,
         visible: Option<bool>,
-        #[cfg_attr(test, serde(rename = "storyId"))]
+        #[cfg_attr(any(test, feature = "testkit"), serde(rename = "storyId"))]
         #[value(rename = "storyId")]
         #[dsl(refs = "story")]
         story_id: String,
-        #[cfg_attr(test, serde(rename = "threadNext"))]
+        #[cfg_attr(any(test, feature = "testkit"), serde(rename = "threadNext"))]
         #[value(rename = "threadNext")]
         #[dsl(refs = "frame")]
         thread_next: Option<String>,
         columns: u32,
         #[dsl(block)]
         inset: LayoutRect,
-        #[cfg_attr(test, serde(rename = "wrapMode"))]
+        #[cfg_attr(any(test, feature = "testkit"), serde(rename = "wrapMode"))]
         #[value(rename = "wrapMode")]
         wrap_mode: String,
     },
-    #[cfg_attr(test, serde(rename = "image"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(rename = "image"))]
     #[value(rename = "image")]
     Image {
         #[dsl(defines = "frame")]
         id: String,
-        #[cfg_attr(test, serde(rename = "layerId"))]
+        #[cfg_attr(any(test, feature = "testkit"), serde(rename = "layerId"))]
         #[value(rename = "layerId")]
         #[dsl(refs = "layer")]
         layer_id: String,
@@ -551,7 +550,7 @@ pub enum Frame {
         bounds: LayoutBounds,
         locked: Option<bool>,
         visible: Option<bool>,
-        #[cfg_attr(test, serde(rename = "linkId"))]
+        #[cfg_attr(any(test, feature = "testkit"), serde(rename = "linkId"))]
         #[value(rename = "linkId")]
         #[dsl(refs = "link")]
         link_id: String,
@@ -613,16 +612,16 @@ pub fn layer_locked(document: &LayoutSnapshot, page: &Page, layer_id: &str) -> b
 
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
 #[value(deny_unknown_fields)]
 pub struct TextStyleRun {
     pub start: u64,
     pub end: u64,
-    #[cfg_attr(test, serde(rename = "paragraphStyleId"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(rename = "paragraphStyleId"))]
     #[value(rename = "paragraphStyleId")]
     #[dsl(refs = "paragraph-style")]
     pub paragraph_style_id: Option<String>,
-    #[cfg_attr(test, serde(rename = "characterStyleId"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(rename = "characterStyleId"))]
     #[value(rename = "characterStyleId")]
     #[dsl(refs = "character-style")]
     pub character_style_id: Option<String>,
@@ -630,32 +629,32 @@ pub struct TextStyleRun {
 
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
 #[value(deny_unknown_fields)]
 pub struct TextStory {
     #[dsl(defines = "story")]
     pub id: String,
     pub content: String,
-    #[cfg_attr(test, serde(rename = "styleRuns"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(rename = "styleRuns"))]
     #[value(rename = "styleRuns")]
     #[dsl(table)]
     pub style_runs: Vec<TextStyleRun>,
 }
 
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
 #[value(deny_unknown_fields)]
 pub struct ParagraphStyle {
     #[dsl(defines = "paragraph-style")]
     pub id: String,
     pub name: String,
-    #[cfg_attr(test, serde(rename = "fontFamily"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(rename = "fontFamily"))]
     #[value(rename = "fontFamily")]
     pub font_family: String,
-    #[cfg_attr(test, serde(rename = "fontSize"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(rename = "fontSize"))]
     #[value(rename = "fontSize")]
     pub font_size: f64,
-    #[cfg_attr(test, serde(rename = "fontWeight"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(rename = "fontWeight"))]
     #[value(rename = "fontWeight")]
     pub font_weight: u32,
     pub leading: f64,
@@ -668,19 +667,19 @@ pub struct ParagraphStyle {
 /// every field besides `id` is optional: a character style typically overrides only one or two
 /// attributes and inherits the rest from the paragraph it's layered onto.
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
 #[value(deny_unknown_fields)]
 pub struct CharacterStyle {
     #[dsl(defines = "character-style")]
     pub id: String,
     pub name: Option<String>,
-    #[cfg_attr(test, serde(rename = "fontFamily"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(rename = "fontFamily"))]
     #[value(rename = "fontFamily")]
     pub font_family: Option<String>,
-    #[cfg_attr(test, serde(rename = "fontSize"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(rename = "fontSize"))]
     #[value(rename = "fontSize")]
     pub font_size: Option<f64>,
-    #[cfg_attr(test, serde(rename = "fontWeight"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(rename = "fontWeight"))]
     #[value(rename = "fontWeight")]
     pub font_weight: Option<u32>,
     pub italic: Option<bool>,
@@ -690,7 +689,7 @@ pub struct CharacterStyle {
 
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
 #[value(deny_unknown_fields)]
 pub struct ImageLink {
     #[dsl(defines = "link")]
@@ -700,27 +699,27 @@ pub struct ImageLink {
     pub width: u32,
     pub height: u32,
     pub dpi: u32,
-    #[cfg_attr(test, serde(rename = "colorProfile"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(rename = "colorProfile"))]
     #[value(rename = "colorProfile")]
     pub color_profile: Option<String>,
     pub state: Option<String>,
-    #[cfg_attr(test, serde(rename = "proxyDataUrl"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(rename = "proxyDataUrl"))]
     #[value(rename = "proxyDataUrl")]
     pub proxy_data_url: Option<String>,
-    #[cfg_attr(test, serde(rename = "artifactKind", default))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(rename = "artifactKind", default))]
     #[value(rename = "artifactKind", default, skip_serializing_if = "String::is_empty")]
     pub artifact_kind: String,
-    #[cfg_attr(test, serde(rename = "artifactRef", default))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(rename = "artifactRef", default))]
     #[value(rename = "artifactRef", default, skip_serializing_if = "String::is_empty")]
     pub artifact_ref: String,
 }
 
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
 #[value(deny_unknown_fields)]
 pub struct PageOverride {
-    #[cfg_attr(test, serde(rename = "objectId"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(rename = "objectId"))]
     #[value(rename = "objectId")]
     #[dsl(refs = "frame")]
     pub object_id: String,
@@ -731,7 +730,7 @@ pub struct PageOverride {
 }
 
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
 #[value(deny_unknown_fields)]
 pub struct ParentPage {
     #[dsl(defines = "parent-page")]
@@ -739,7 +738,7 @@ pub struct ParentPage {
     pub name: String,
     pub width: f64,
     pub height: f64,
-    #[cfg_attr(test, serde(rename = "layerIds"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(rename = "layerIds"))]
     #[value(rename = "layerIds")]
     pub layer_ids: Vec<String>,
     #[dsl(table)]
@@ -750,16 +749,16 @@ pub struct ParentPage {
 
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
 #[value(deny_unknown_fields)]
 pub struct Page {
     pub id: String,
     pub name: String,
-    #[cfg_attr(test, serde(rename = "spreadId"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(rename = "spreadId"))]
     #[value(rename = "spreadId")]
     #[dsl(refs = "spread")]
     pub spread_id: String,
-    #[cfg_attr(test, serde(rename = "parentPageId"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(rename = "parentPageId"))]
     #[value(rename = "parentPageId")]
     #[dsl(refs = "parent-page")]
     pub parent_page_id: Option<String>,
@@ -771,7 +770,7 @@ pub struct Page {
     pub columns: PageColumns,
     #[dsl(table)]
     pub guides: Vec<LayoutRect>,
-    #[cfg_attr(test, serde(rename = "layerIds"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(rename = "layerIds"))]
     #[value(rename = "layerIds")]
     pub layer_ids: Vec<String>,
     #[dsl(table)]
@@ -783,28 +782,28 @@ pub struct Page {
 }
 
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
 #[value(deny_unknown_fields)]
 pub struct Spread {
     #[dsl(defines = "spread")]
     pub id: String,
     pub name: String,
-    #[cfg_attr(test, serde(rename = "pageIds"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(rename = "pageIds"))]
     #[value(rename = "pageIds")]
     pub page_ids: Vec<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
 #[value(deny_unknown_fields)]
 pub struct GridSettings {
-    #[cfg_attr(test, serde(rename = "baselineGrid"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(rename = "baselineGrid"))]
     #[value(rename = "baselineGrid")]
     pub baseline_grid: f64,
-    #[cfg_attr(test, serde(rename = "baselineOffset"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(rename = "baselineOffset"))]
     #[value(rename = "baselineOffset")]
     pub baseline_offset: f64,
-    #[cfg_attr(test, serde(rename = "snapToBaseline"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(rename = "snapToBaseline"))]
     #[value(rename = "snapToBaseline")]
     pub snap_to_baseline: bool,
 }
@@ -957,23 +956,9 @@ impl From<std::io::Error> for LayoutError {
 }
 
 pub fn drawing_labels(snapshot: &LayoutSnapshot) -> Vec<String> {
-    let Some(drawing) = snapshot.background_drawing.as_ref() else { return Vec::new() };
-    let mut labels = Vec::new();
-    for layer in &drawing.content.layers {
-        collect_text(&layer.root, &mut labels);
-    }
-    labels
-}
-
-fn collect_text(node: &DrawNode, out: &mut Vec<String>) {
-    match node {
-        DrawNode::Text { value, .. } => out.push(value.clone()),
-        DrawNode::Group { children, .. } => {
-            for child in children {
-                collect_text(child, out);
-            }
-        }
-        DrawNode::Path { .. } | DrawNode::Image { .. } => {}
+    match background_drawing_scene(snapshot) {
+        Ok(Some(scene)) => scene.texts().into_iter().map(str::to_string).collect(),
+        Ok(None) | Err(_) => Vec::new(),
     }
 }
 

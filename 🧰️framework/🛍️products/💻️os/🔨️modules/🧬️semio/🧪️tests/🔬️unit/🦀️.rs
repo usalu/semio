@@ -54,7 +54,6 @@ fn retained_text_envelope_preserves_original_body_and_bounds_resume_cancel_and_r
     let mut cursor=RetainedTextEnvelope::new(id.into(),Component::Dsl,version,body,caller);let pointer=cursor.source_body().unwrap().as_ptr();let mut accept=|_|true; let mut control=NativeEncodeControl::new(fixture["retained"]["nativeMaximum"].as_u64().unwrap()as usize,&mut accept);assert_eq!(control.scoped_maximum(1,|control|cursor.step(1,grant,control)).unwrap_err().kind,ValueRefusalKind::OwnershipLimit);assert_eq!(cursor.source_body().unwrap().as_ptr(),pointer);let mut total=cursor.progress();retire_original_semio_owner(cursor,grant,caller,&mut total,&mut control);
     let script="const x=JSON.parse(await Bun.stdin.text());const bytes=new TextEncoder().encode('semio '+x.id+'.dsl v'+x.version+'\\n'+x.textBody.repeat(x.retained.textRepeats));await Bun.write(Bun.stdout,bytes)";
     use std::{io::Write,process::{Command,Stdio}}; let mut child=Command::new("bun").args(["-e",script]).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap(); child.stdin.take().unwrap().write_all(fixture.to_string().as_bytes()).unwrap(); let result=child.wait_with_output().unwrap(); assert!(result.status.success()); assert_eq!(result.stdout,expected.as_bytes());
-    eprintln!("[DEBUG] Original declared Text body pointer retained; budgets1/8/256 zero/cancel/ownership refusal and3byte payload work; independent5axisPolicy=true narrowed256WorkRefusal=true finalCancelRetainsOutputPointer=true sameOriginalNativeWallet=true exactSystemBirthRelease=true independentTextEncoder=true");
 }
 
 #[test]
@@ -117,5 +116,4 @@ fn original_controlled_binary_refusal_keeps_borrowed_wire_and_zero_system_alloca
         let error:ValueError=result.unwrap_err();assert_eq!(error.kind,ValueRefusalKind::InvalidValue);assert_eq!(error.to_string(),row["message"].as_str().unwrap());assert_eq!((allocated,released),(0,0));assert_eq!(error.retained_progress(),Default::default());assert_eq!(bytes.as_ptr(),pointer);assert_eq!(control.owned_bytes(),0);
     }
     let mut canceled=|_|false;let mut control=NativeDecodeControl::new(0,&mut canceled);let(result,allocated,released)=semio_framework_trace_memory_testing::observe_backing(||unwrap_binary_controlled(&wire,id,Component::Pack,version,&mut control));assert_eq!(result.unwrap_err().kind,ValueRefusalKind::Canceled);assert_eq!((allocated,released),(0,0));
-    eprintln!("[DEBUG] Original controlled binary malformed and canceled refusals retain caller wire with zero System backing allocation");
 }

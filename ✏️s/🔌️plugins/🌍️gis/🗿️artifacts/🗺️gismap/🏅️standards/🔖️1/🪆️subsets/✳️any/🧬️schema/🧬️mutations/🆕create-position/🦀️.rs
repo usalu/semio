@@ -1,7 +1,6 @@
 //! 🆕️ `create-position` mutation payload — adds a new position feature to `positions`.
 
 use crate::diff::GisMapDiff;
-use crate::mutations::GisMapMutation;
 use crate::{GisMapSnapshot, MapFeature};
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -24,14 +23,17 @@ pub struct CreatePosition {
     pub item: MapFeature,
 }
 
-impl MutationKind<GisMapSnapshot, GisMapMutation> for CreatePosition {
+impl<Op> MutationKind<GisMapSnapshot, Op> for CreatePosition
+where
+    Op: protocol::Mutation<GisMapSnapshot, Diff = GisMapDiff> + From<CreatePosition> + From<crate::standards::v1::subsets::any::schema::mutations::delete_position::DeletePosition>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "position", kind: "create-position", record: "CreatedPosition" };
 
     fn diff(&self, base: &GisMapSnapshot) -> protocol::MutationOutcome<GisMapDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &GisMapSnapshot) -> Result<Vec<GisMapMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &GisMapSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         super::inverse::inverse(self, base)
     }
 

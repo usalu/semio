@@ -2,6 +2,7 @@
 // Rust (the engine is Rust-only); this leaf states the wire contract a client decodes, plus the
 // prior-entropy math, which is pure and therefore twinnable.
 
+import { binary64Value } from "@semio-tech/framework/value/ieee754";
 import type { Wfc2dSlot, Wfc2dSnapshot } from "../📸️snapshot/🟦️.ts";
 
 export const WFC_2D_INFERENCE_TOOL_ID = "s.wfc.wfc2d.solve";
@@ -21,7 +22,10 @@ export type Wfc2dInferenceCommit = {
 /** 🎲 One slot's pre-propagation Shannon entropy over the tile weights — `0` for a pinned slot. */
 export function slotEntropy(snapshot: Wfc2dSnapshot, slot: Wfc2dSlot): number {
   if (slot.pinnedTileId !== undefined) return 0;
-  const weights = snapshot.tiles.map((tile) => (Number.isFinite(tile.weight) && tile.weight > 0 ? tile.weight : 1));
+  const weights = snapshot.tiles.map((tile) => {
+    const weight = binary64Value(tile.weight);
+    return Number.isFinite(weight) && weight > 0 ? weight : 1;
+  });
   const total = weights.reduce((sum, weight) => sum + weight, 0);
   if (weights.length === 0 || total <= 0) return 0;
   return -weights

@@ -1,3 +1,4 @@
+use semio_framework_test_fixtures::fixture_path;
 use semio_s_artifact_stdio_ifc_2x3_base_mutations::standards::v2x3::subsets::base::schema::mutations::*;
 use protocol::os_spr::command::DiffAlgebra;
 use protocol::{DiffBinary,DiffCodec,DiffText, MutationDiff, OpBinary, OpText};
@@ -13,7 +14,7 @@ async fn inst(id: u64, name: &str) -> Part21Instance {
 fn exact_fixture_bytes() -> &'static [u8] {
     static BYTES: OnceLock<Vec<u8>> = OnceLock::new();
     BYTES.get_or_init(|| {
-        let committed = std::fs::read(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧫️fixtures/🏥️wellness-center-sama-street-level/🏥️wellness-center-sama-street-level.ifc")).expect("read the street-level IFC2X3 fixture");
+        let committed = std::fs::read(fixture_path!("../../🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/🏥️wellness-center-sama-street-level/🏥️wellness-center-sama-street-level.ifc")).expect("read the street-level IFC2X3 fixture");
         let canonical = semio_s_artifact_stdio_ifc_2x3_base::standards::v2x3::subsets::base::io::encode_ifc2x3(&semio_s_artifact_stdio_ifc_2x3_base::standards::v2x3::subsets::base::io::decode_ifc2x3(&committed).expect("import IFC2X3 fixture")).expect("export IFC2X3 fixture");
         let again = semio_s_artifact_stdio_ifc_2x3_base::standards::v2x3::subsets::base::io::encode_ifc2x3(&semio_s_artifact_stdio_ifc_2x3_base::standards::v2x3::subsets::base::io::decode_ifc2x3(&canonical).expect("import canonical IFC2X3")).expect("export canonical IFC2X3");
         assert!(again == canonical, "the canonical IFC2X3 layout must be a fixed point of decode then encode");

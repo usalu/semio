@@ -1,7 +1,6 @@
 //! 🏷️ Authoritative PDF/UA mutation for set mark info.
 
-use super::remove_mark_info::RemoveMarkInfo;
-use super::PdfUaMutation;
+use crate::standards::v1_7::subsets::ua::schema::mutations::remove_mark_info::RemoveMarkInfo;
 use crate::standards::v1_7::subsets::base::schema::conformance_support as support;
 use crate::standards::v1_7::subsets::base::schema::diff::{self, PdfDiff};
 use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfObject, PdfSnapshot};
@@ -18,18 +17,21 @@ pub struct SetMarkInfo {
     pub entry_index: Option<usize>,
 }
 
-impl MutationKind<PdfSnapshot, PdfUaMutation> for SetMarkInfo {
+impl<Op> MutationKind<PdfSnapshot, Op> for SetMarkInfo
+where
+    Op: protocol::Mutation<PdfSnapshot, Diff = PdfDiff> + From<SetMarkInfo> + From<crate::standards::v1_7::subsets::ua::schema::mutations::remove_mark_info::RemoveMarkInfo>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "mark-info", kind: "set-mark-info", record: "Set" };
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
         MutationOutcome::new(diff::graph_edit(support::set_catalog_entry_rows(base, "MarkInfo", support::single_entry_dict("Marked", PdfObject::Bool(self.marked)), self.entry_index)))
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfUaMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         Ok({
             match support::catalog_flag(base, "MarkInfo", "Marked") {
-                Some(marked) => vec![PdfUaMutation::SetMarkInfo(SetMarkInfo { marked, entry_index: None })],
-                None => vec![PdfUaMutation::RemoveMarkInfo(RemoveMarkInfo {})],
+                Some(marked) => vec![Op::from(SetMarkInfo { marked, entry_index: None })],
+                None => vec![Op::from(RemoveMarkInfo {})],
             }
         })
     }
@@ -45,9 +47,7 @@ impl MutationKind<PdfSnapshot, PdfUaMutation> for SetMarkInfo {
 //#endregion 🔖️Mutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
 
 //#region 🔖️Facets

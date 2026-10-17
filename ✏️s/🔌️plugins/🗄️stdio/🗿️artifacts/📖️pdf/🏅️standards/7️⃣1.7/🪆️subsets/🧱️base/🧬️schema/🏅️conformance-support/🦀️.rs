@@ -11,8 +11,6 @@
 //#region 🏅️ConformanceSupport
 use crate::standards::v1_7::subsets::base::schema::diff::{self, PdfDictAdded, PdfDictDiff, PdfDictModified, PdfDiff, PdfObjectAdded, PdfObjectsDiff};
 use crate::standards::v1_7::subsets::base::schema::snapshot::{ObjRef, PdfDictEntry, PdfObject, PdfSnapshot};
-#[cfg(test)]
-use crate::standards::v1_7::subsets::base::schema::snapshot::PdfIndirectObject;
 
 //#region 🔖️Objects
 /// 🆕️ The lowest object number no retained object uses — where a fresh indirect object lands.
@@ -613,85 +611,7 @@ pub fn dpart_root_creation_ids(base: &PdfSnapshot) -> Vec<ObjRef> {
     dpart_root_node(base).into_iter().chain([root]).collect()
 }
 //#endregion 🔖️CompositeRows
-//#region 🧪️Fixtures
-/// 🧪️ A document holding exactly `values` as the indirect objects `1 0 R`, `2 0 R`, … in order, with no typed lane and no trailer.
-#[cfg(test)]
-pub fn document_of(values: Vec<PdfObject>) -> PdfSnapshot {
-    PdfSnapshot { objects: values.into_iter().enumerate().map(|(index, value)| PdfIndirectObject { id: ObjRef { num: index as u32 + 1, gen: 0 }, value }).collect(), ..PdfSnapshot::default() }
-}
-
-/// 🧪️ A real one-page document read back from its own encoding, so its typed lanes and its retained graph agree.
-#[cfg(test)]
-pub fn document() -> PdfSnapshot {
-    use crate::standards::v1_7::subsets::base::io::import::decode_pdf;
-    use crate::standards::v1_7::subsets::base::io::export::encode_pdf;
-    use crate::standards::v1_7::subsets::base::schema::snapshot::PdfPage;
-    let typed = PdfSnapshot { pages: vec![PdfPage::new(612.0, 792.0)], ..PdfSnapshot::default() };
-    decode_pdf(&encode_pdf(&typed).expect("the fixture document encodes")).expect("the fixture document decodes")
-}
-
-/// 🧪️ A committed `lopdf` pair read through this subset's reader: `(before, after)`.
-#[cfg(test)]
-pub fn snapshots(before: &[u8], after: &[u8]) -> (PdfSnapshot, PdfSnapshot) {
-    use crate::standards::v1_7::subsets::base::io::import::decode_pdf;
-    (decode_pdf(before).expect("the committed before-document decodes"), decode_pdf(after).expect("the committed after-document decodes"))
-}
-
-/// 🧪️ The item `after` holds and `before` lacks.
-#[cfg(test)]
-pub fn added<T: Clone + PartialEq>(before: &[T], after: &[T]) -> T {
-    after.iter().find(|item| !before.contains(item)).cloned().expect("the committed edit adds exactly this item")
-}
-
-/// 🧪️ The item `before` holds and `after` lacks.
-#[cfg(test)]
-pub fn removed<T: Clone + PartialEq>(before: &[T], after: &[T]) -> T {
-    before.iter().find(|item| !after.contains(item)).cloned().expect("the committed edit removes exactly this item")
-}
-
-/// 🧪️ The first page's operator edit as `(at, removed, inserted)`: the common prefix, the operators dropped after it, and the
-/// operators written in their place.
-#[cfg(test)]
-pub fn content_edit(before: &PdfSnapshot, after: &PdfSnapshot) -> (usize, usize, Vec<crate::standards::v1_7::subsets::base::schema::snapshot::PdfOp>) {
-    let (old, new) = (&before.pages[0].content, &after.pages[0].content);
-    let at = old.iter().zip(new).take_while(|(left, right)| left == right).count();
-    let tail = old[at..].iter().rev().zip(new[at..].iter().rev()).take_while(|(left, right)| left == right).count();
-    (at, old.len() - at - tail, new[at..new.len() - tail].to_vec())
-}
-
-/// 🧪️ The smallest document a catalog entry can hang off: one `/Type /Catalog` root.
-#[cfg(test)]
-pub fn catalog_object() -> PdfObject {
-    dict(vec![("Type", PdfObject::Name("Catalog".to_string()))])
-}
-
-/// 🧪️ `base` with one `/Type /Tail` object appended and, when the document has a catalog, one `/Tail` catalog entry appended —
-/// the rows that make everything created before them a MIDDLE row.
-#[cfg(test)]
-pub fn with_tail(base: &PdfSnapshot) -> PdfSnapshot {
-    let (_, rows) = insert_object_rows(base, dict(vec![("Type", PdfObject::Name("Tail".to_string()))]), &[]);
-    let base = crate::standards::v1_7::subsets::base::io::mutation_bridge::after_rows(base, rows);
-    match catalog_id(&base) {
-        Some(_) => crate::standards::v1_7::subsets::base::io::mutation_bridge::after_rows(&base, set_catalog_entry_rows(&base, "Tail", PdfObject::Int(1), None)),
-        None => base,
-    }
-}
-
-/// 🧪️ `base` with a `/Tail` entry appended to object `id`'s own dictionary, so every entry before it becomes a MIDDLE entry.
-#[cfg(test)]
-pub fn with_trailing_entry(base: &PdfSnapshot, id: ObjRef) -> PdfSnapshot {
-    crate::standards::v1_7::subsets::base::io::mutation_bridge::after_rows(base, set_entry_rows(base, id, "Tail", PdfObject::Int(1), None))
-}
-
-/// 🧪️ The placement of object number `num` at list position `index`.
-#[cfg(test)]
-pub fn placed(num: u32, index: usize) -> ObjectPlacement {
-    ObjectPlacement { id: ObjRef { num, gen: 0 }, index }
-}
-//#endregion 🧪️Fixtures
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
 //#endregion 🏅️ConformanceSupport

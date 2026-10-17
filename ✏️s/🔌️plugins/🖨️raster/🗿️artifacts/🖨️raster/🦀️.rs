@@ -7,9 +7,6 @@ extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
 
-//#region 📚️Examples
-//#endregion 📚️Examples
-
 #[cfg(test)]
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🧪️tests/🧩️example/🦀️.rs"]
 mod app_raster_demo_session_tests;
@@ -17,19 +14,6 @@ mod app_raster_demo_session_tests;
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🧩️example/🦀️.rs"]
 mod art_raster_demo_tests;
 extern crate semio_framework_schema as schema;
-
-//#region 🔖️Constants
-//#endregion 🔖️Constants
-
-//#region 🗂️OwnedMap
-
-
-//#endregion 🗂️OwnedMap
-
-//#region 🔖️Types
-
-
-//#endregion 🔖️Types
 
 //#region 🧩️Composition
 /// 🧩️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` (design map §4: "raster→C:image layers
@@ -46,23 +30,9 @@ extern crate semio_framework_schema as schema;
 /// content but doesn't own it" — no `ArtifactLink` was needed because there was no persisted/duplicated
 /// drawing field to convert.
 
-
 //#endregion 🧩️Composition
 
-//#region 🔖️Operations
-
-
-//#endregion 🔖️Operations
-
-
 /// 📸️ Persisted raster snapshot — defined in `📸️snapshot/🧬️schema`, re-exported here.
-
-
-//#region 🔖️Dialect
-//#endregion 🔖️Dialect
-
-//#region 🔖️ArtifactKind
-//#endregion 🔖️ArtifactKind
 
 //#region 🔖️Register
 /// 🔖️ This artifact's declaration (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W1b) —
@@ -117,9 +87,11 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
     Ok(definition)
 }
 
+pub use semio_s_artifact_raster_raster_io::artifact_kind;
+
 pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
     semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
-        .schema(semio_s_artifact_raster_raster_model::raster_artifact_schema_descriptor())
+        .schema(semio_s_artifact_raster_raster_descriptor::raster_artifact_schema_descriptor())
         .inferences([semio_s_artifact_raster_raster_model::inferences::raster_artifact_inference_descriptor()])
         .composers(semio_s_artifact_raster_raster_io::io_registry::entries())
         .languages(pilot_languages())
@@ -197,7 +169,5 @@ fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
 mod tests;
 //#endregion 🧪️Tests
 
-
 // ---- Shims: keep pre-migration module paths resolving for external callers ----
-
 

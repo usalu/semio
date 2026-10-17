@@ -275,11 +275,12 @@ impl ComponentSurfaceCloseOwner {
             }
             ComponentSurfaceClosePhase::World => {
                 let grant=semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:65536,maximum_release_bytes:16*1024*1024,maximum_depth:64};
-                let Some(budget)=semio_framework_job::default_now_us().and_then(|now|semio_framework_job::StepBudget::from_duration(1,now,semio_framework_job::MAINTENANCE_LANE_WALL_US)) else {
+                let Some(budget)=semio_framework_job::default_now_us().and_then(|now|semio_framework_job::StepBudget::from_duration(1,now,semio_framework_job::MAINTENANCE_LANE_WALL_US,grant)) else {
                     self.world_fault=Some(infinite_world::world::WorldDynamicFault::Ownership(semio_framework_value::ValueRefusalKind::WorkLimit));
                     self.faulted=true;return;
                 };
-                let mut context=semio_framework_job::StepContext::new(self.operation,semio_framework_job::Generation(1),budget,semio_framework_job::root_cancel_token(),semio_framework_job::default_now_us,&mut self.sequence);
+                let mut recipient=semio_framework_value::retained_clone::RetainedCloneProgress::default();
+                let mut context=semio_framework_job::StepContext::new(self.operation,semio_framework_job::Generation(1),budget,semio_framework_job::root_cancel_token(),semio_framework_job::default_now_us,&mut self.sequence,&mut recipient);
                 match runtime.close_component_world_step(&self.request.owner,grant,&mut context) {
                     Ok(step) if step.progress().fits(grant)=>{
                         self.world_progress=Some(step);
@@ -293,7 +294,7 @@ impl ComponentSurfaceCloseOwner {
         }
     }
 
-    fn close_step(&mut self, runtime: &AppMailbox, presenter: &mut AppPresenter) -> bool {
+    fn close_step(&mut self, runtime: &AppMailbox, presenter: &mut AppPresenter, retained: semio_framework_job::RetainedCloneGrant) -> bool {
         if self.faulted {
             return false;
         }
@@ -341,7 +342,7 @@ impl ComponentSurfaceCloseOwner {
                 self.phase = ComponentSurfaceClosePhase::Cpu;
             }
             ComponentSurfaceClosePhase::Cpu => {
-                if self.cpu_present && !runtime.close_engine_surface_step(engine_token, self.operation, &mut self.sequence) {
+                if self.cpu_present && !runtime.close_engine_surface_step(engine_token, self.operation, &mut self.sequence, retained) {
                     return false;
                 }
                 self.phase = ComponentSurfaceClosePhase::Gpu;
@@ -405,7 +406,7 @@ impl PairedEngineSurfaceClose {
         Self { operation: semio_framework_trace::allocate_operation_id(), sequence: 0, scan: 0, token: None, cpu_present: false, gpu_present: false, phase: PairedEngineSurfaceClosePhase::Scan, faulted: false }
     }
 
-    fn close_step(&mut self, runtime: &AppMailbox, presenter: &mut AppPresenter) -> bool {
+    fn close_step(&mut self, runtime: &AppMailbox, presenter: &mut AppPresenter, retained: semio_framework_job::RetainedCloneGrant) -> bool {
         if self.faulted {
             return false;
         }
@@ -461,7 +462,7 @@ impl PairedEngineSurfaceClose {
                     self.faulted = true;
                     return false;
                 };
-                if self.cpu_present && !runtime.close_engine_surface_step(token, self.operation, &mut self.sequence) {
+                if self.cpu_present && !runtime.close_engine_surface_step(token, self.operation, &mut self.sequence, retained) {
                     return false;
                 }
                 self.phase = PairedEngineSurfaceClosePhase::Gpu;
@@ -640,7 +641,7 @@ impl OsHost {
             self.component_surface_close = take_component_surface_close_request().map(ComponentSurfaceCloseOwner::new);
         }
         let Some(owner) = self.component_surface_close.as_mut() else { return false };
-        if !owner.close_step(&self.runtime, &mut self.presenter) {
+        if !owner.close_step(&self.runtime, &mut self.presenter, self.retained) {
             return true;
         }
         if !owner.terminal_is_empty() {
@@ -729,7 +730,7 @@ impl OsHostRetirementState {
             let (Some(runtime), Some(presenter)) = (self.runtime.as_ref(), self.presenter.as_mut()) else {
                 return Ok(false);
             };
-            if !self.engine_surfaces.close_step(runtime, presenter) {
+            if !self.engine_surfaces.close_step(runtime, presenter, cx.retained_grant()) {
                 return Ok(false);
             }
             if !self.engine_surfaces.terminal_is_empty() {

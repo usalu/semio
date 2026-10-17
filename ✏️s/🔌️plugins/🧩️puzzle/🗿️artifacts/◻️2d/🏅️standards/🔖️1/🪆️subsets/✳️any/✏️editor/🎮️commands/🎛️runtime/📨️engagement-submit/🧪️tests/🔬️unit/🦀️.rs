@@ -1,6 +1,6 @@
 use crate::editor::puzzle2d::modes::edit::tools::fill;
 use crate::editor::puzzle2d::modes::edit::windows::overview;
-use crate::editor::puzzle2d::unit_tests::context::*;
+use crate::editor::puzzle2d::testkit::*;
 use {crate::editor::puzzle2d::snapshot::board_snapshot_nodes, crate::editor::puzzle2d::snapshot::PUZZLE2D_GRANULARITY_NODE, crate::editor::puzzle2d::snapshot::PUZZLE2D_INTERACTION_DOMAIN, crate::editor::puzzle2d::snapshot::PUZZLE2D_PLAY_EXAMPLE_NAKAGIN_ID};
 use semio_framework_plugin::InteractionTarget;
 use semio_framework_plugin::kernel::Effect;

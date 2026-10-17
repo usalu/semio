@@ -1822,7 +1822,7 @@ async function runAuthoredSurfaceOracle(repoRoot: string, output: string): Promi
     const page = await browser.newPage({ viewport: { width: 64, height: 64 }, deviceScaleFactor: 1 });
     const errors: string[] = [];
     page.on("pageerror", (error) => errors.push(String(error)));
-    page.on("console", (message) => console.log("[DEBUG] surface-browser " + message.text()));
+    page.on("console", (message) => {});
     await page.route("https://semio-parity.invalid/**", (route) => route.fulfill({ contentType: "text/html", body: "<!doctype html><html><body></body></html>" }));
     await page.goto("https://semio-parity.invalid/");
     const bundle=build.outputs[0];
@@ -1836,7 +1836,6 @@ async function runAuthoredSurfaceOracle(repoRoot: string, output: string): Promi
     const differences = native.rows.map((row: any) => { const expected = reference.rows.find((value: any) => value.id === row.id)?.rgba8; return { id: row.id, actual: row.rgba8, expected, delta: oraclePixelDeltaV1(row.rgba8,expected) }; });
     await writeFile(join(output, "pixels.json"), JSON.stringify({ reference, native, differences, shaderSha256: createHash("sha256").update(shader).digest("hex") }, null, 2));
     await writeFile(join(output, "report.md"), "# Authored Surface Pixels\n\nActual production native WGSL and production React material constructor against installed Three.\n\n| Case | Native RGBA8 | Three RGBA8 | Delta |\n| --- | --- | --- | --- |\n" + differences.map((row: any) => `| ${row.id} | ${row.actual} | ${row.expected} | ${row.delta} |`).join("\n") + "\n");
-    console.log("[DEBUG] authored-surface actual pixels " + JSON.stringify(differences));
     if (differences.some((row: any) => row.delta.some((value: number, index: number) => Math.abs(value) > (index < 3 ? 2 : 1)))) throw new Error("Authored surface pixels differ from installed Three; see retained artifacts");
   } finally { await browser.close(); }
 }

@@ -1,7 +1,7 @@
 //! ↩️ Inverse of `FlipWall`: the concrete `FlipWall` of the same wall (flipping twice restores the axis exactly), none when the wall is
 //! absent or has no direction to flip.
 
-use super::super::wall_geometry::flipped;
+use crate::standards::v1::subsets::any::schema::mutations::wall_geometry::flipped;
 use super::FlipWall;
 use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
 

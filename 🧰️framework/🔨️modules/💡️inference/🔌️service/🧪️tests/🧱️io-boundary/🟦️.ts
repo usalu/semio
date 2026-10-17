@@ -16,12 +16,10 @@ test("intrinsic service laws bundle with every specific owner unavailable",async
   const result=await build({entryPoints:[join(workspace,ownership.owner,ownership.entry)],bundle:true,platform:"node",format:"esm",external:["bun:test"],write:false,metafile:true,logLevel:"silent",plugins:[{name:"removed-service-consumer",setup(builder){builder.onLoad({filter:/.*/},input=>refused.some(prefix=>input.path.replaceAll("\\","/").startsWith(prefix))?{errors:[{text:"Intrinsic service law requires removed owner: "+input.path}]}:undefined);}}]});
   const specificSources=Object.keys(result.metafile!.inputs).filter(path=>ownership.removedOwners.some(owner=>path.replaceAll("\\","/").startsWith(owner+"/")));
   expect(result.outputFiles).toHaveLength(1);expect(specificSources).toHaveLength(ownership.expectedSpecificSources);
-  console.log("[DEBUG] Intrinsic installed service removal proof",{sourceCount:Object.keys(result.metafile!.inputs).length,specificSources:specificSources.length});
 },15_000);
 
 test("existing neutral service operations, lifecycle and independent Ajv laws replay",()=>{
   const counts=verifyInstalledServiceLawsV1();expect(counts.envelopeVectors).toBe(4);
-  console.log("[DEBUG] Neutral installed service lifecycle/envelopes and independent Ajv replay",counts);
 });
 
 test("service semantic owner retains no physical JSON schema or request body",()=>{
@@ -29,7 +27,6 @@ test("service semantic owner retains no physical JSON schema or request body",()
   const source=readFileSync(new URL("../../🟦️.ts",import.meta.url),"utf8");
   expect(source).not.toContain("JSON.parse(");expect(source).not.toContain("JSON.stringify(");
   expect(source).not.toContain("inputSchema: string");expect(source).not.toContain("function documentServiceRequestV1(");
-  console.log("[DEBUG] Pure installed service value admission/declaration has explicit physical IO separation");
 });
 
 const declaration=()=>admitDocumentServiceDeclarationV1("neutral",{schema:"semio.os.document-http-port/v1",owner:"neutral",serviceId:"neutral.service",operations:[{action:"run",method:"POST",route:["run"],sendBody:true,cursorField:null,requestMaxBytes:16384,responseMaxBytes:16384,inputSchema:{$id:"neutral:request",type:"object",required:["value"],additionalProperties:false,properties:{value:{type:"string"}}},outputSchema:{$id:"neutral:reply",type:"object",required:["value"],additionalProperties:false,properties:{value:{type:"string"}}}}]});
@@ -44,7 +41,6 @@ test("semantic value ownership preserves signed zero and independently cloned va
   let read=0;const getter={get value(){read++;return 7;}};expect(()=>boundedServicePayloadV1(getter)).toThrow();expect(read).toBe(0);
   const cyclic:Record<string,unknown>={};cyclic.self=cyclic;expect(()=>boundedServicePayloadV1(cyclic)).toThrow();
   expect(()=>boundedServicePayloadV1([,])).toThrow();expect(()=>boundedServicePayloadV1(Object.assign([1],{foreign:1}))).toThrow();
-  console.log("[DEBUG] Direct semantic ownership agrees with structuredClone while preserving signed zero/frozen copies and refusing getter/cycle payloads");
 });
 
 test("semantic node depth capacity and physical UTF8 byte budgets have distinct neutral laws",()=>{
@@ -54,7 +50,6 @@ test("semantic node depth capacity and physical UTF8 byte budgets have distinct 
   expect(()=>boundedServicePayloadV1("x".repeat(fixture.limits.capacity-1))).not.toThrow();expect(()=>boundedServicePayloadV1("x".repeat(fixture.limits.capacity))).toThrow();
   const payload={value:fixture.unicode.value.repeat(fixture.unicode.count)};
   expect(()=>boundedServicePayloadV1(payload)).not.toThrow();expect(()=>documentServiceRequestV1(declaration(),{spaceId:"space",documentId:"document"},"run",payload)).toThrow("installed-service.bounds");
-  console.log("[DEBUG] Neutral semantic4096node/depth32/capacity16384 and independent UTF8 wire byte refusal are distinct");
 });
 
 test("semantic dispatch and schema compilation execute with JSON codecs disabled",()=>{
@@ -66,7 +61,7 @@ test("semantic dispatch and schema compilation execute with JSON codecs disabled
     const operation=parseInstalledServiceOperationV1({kind:"service-operation",owner:"neutral",serviceId:"neutral.service",action:"run",operationEpoch:1,payload:{value:"test"}});
     expect(registry.dispatch(operation)).toBe(true);expect(parseInstalledServiceStatusV1({owner:"neutral",serviceId:"neutral.service",payload:{value:"test"}}).payload).toEqual({value:"test"});
   }finally{JSON.parse=originalParse;JSON.stringify=originalStringify;}
-  expect(calls).toBe(1);console.log("[DEBUG] Pure installed service declaration/admission/dispatch/status executed with all JSON codecs disabled");
+  expect(calls).toBe(1);
 });
 
 test("raw native declaration strings are admitted only through owned IO",()=>{
@@ -77,12 +72,10 @@ test("raw native declaration strings are admitted only through owned IO",()=>{
   for(const operation of wire.operations)new Ajv({strict:true}).compile(JSON.parse(operation.inputSchema));
   const model=declaration();const body=JSON.stringify({value:"reply"});expect(admitDocumentServiceResponseV1(model,"run",body)).toEqual(JSON.parse(body));expect(()=>admitDocumentServiceResponseV1(model,"run",'{"value":7}')).toThrow();
   expect(()=>decodeDocumentServiceSchemaV1('{"format":"unknown"}')).toThrow();expect(decodeDocumentServiceSchemaV1('{\n"$id":"neutral:pretty","type":"string"\n}')).toEqual({$id:"neutral:pretty",type:"string"});
-  console.log("[DEBUG] Neutral native declarations roundtrip explicit IO; semantic record-only admission and independent Ajv hold");
 });
 
 test("owned semantic value/compiler sources have explicit ownership and TS syntax",()=>{
   for(const path of ["../../🧬️schema/🧺️value/🟦️.ts","../../🌐️document-http/🧬️schema/🟦️.ts"]){const source=readFileSync(new URL(path,import.meta.url),"utf8");expect(source).not.toContain("JSON.parse(");expect(source).not.toContain("JSON.stringify(");}
   for(const path of ["../../🟦️.ts","../../🚪️io/🟦️.ts","../../🌐️document-http/🧬️schema/🟦️.ts","../../🧬️schema/🧺️value/🟦️.ts"]){const source=ts.createSourceFile(path,readFileSync(new URL(path,import.meta.url),"utf8"),ts.ScriptTarget.Latest,true);expect((source as unknown as {parseDiagnostics:readonly unknown[]}).parseDiagnostics.length).toBe(0);}
-  console.log("[DEBUG] Current semantic value/schema compiler bodies contain no JSON codec; service, io, compiler and value syntax accepted");
 });
 

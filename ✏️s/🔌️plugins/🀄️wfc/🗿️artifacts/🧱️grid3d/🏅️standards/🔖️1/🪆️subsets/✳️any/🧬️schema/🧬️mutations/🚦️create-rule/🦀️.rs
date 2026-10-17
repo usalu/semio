@@ -3,7 +3,6 @@
 //! closed allow-list, never a deny-list.
 
 use crate::diff::Grid3dDiff;
-use crate::mutations::Grid3dMutation;
 use crate::schema::snapshot::*;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -18,17 +17,23 @@ pub struct CreateRule {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn create_rule(rule: Grid3dRule) -> Grid3dMutation {
-    Grid3dMutation::CreateRule(CreateRule { rule })
+pub fn create_rule<Op>(rule: Grid3dRule) -> Op
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::create_rule::CreateRule>,
+{
+    Op::from(CreateRule { rule })
 }
 
-impl MutationKind<Grid3dSnapshot, Grid3dMutation> for CreateRule {
+impl<Op> MutationKind<Grid3dSnapshot, Op> for CreateRule
+where
+    Op: protocol::Mutation<Grid3dSnapshot, Diff = Grid3dDiff> + From<CreateRule> + From<crate::standards::v1::subsets::any::schema::mutations::delete_rule::DeleteRule>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "rule", kind: "create-rule", record: "CreatedRule" };
 
     fn diff(&self, base: &Grid3dSnapshot) -> protocol::MutationOutcome<Grid3dDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Grid3dSnapshot) -> Result<Vec<Grid3dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Grid3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

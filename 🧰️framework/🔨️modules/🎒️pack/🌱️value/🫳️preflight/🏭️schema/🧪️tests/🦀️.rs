@@ -17,10 +17,8 @@ fn text(out:&mut Vec<u8>,s:&str){integer(out,s.len());out.extend_from_slice(s.as
 fn record_borrowed_preflight_long_schema_metadata_hash_parity_and_paged_ordering(){
  let f=fixture();let mut bytes=vec![1,1,0];text(&mut bytes,"label");bytes.extend_from_slice(&[0,7,2]);for index in [1,0]{integer(&mut bytes,0);text(&mut bytes,&texts()[index]);}let expected=*blake3::hash(&bytes).as_bytes();let hex:String=expected.iter().map(|byte|format!("{byte:02x}")).collect();assert_eq!(hex,f["longSchemaMetadata"]["schemaHash"]);
  let mut allow=|_|true;let mut control=NativeEncodeControl::new(0,&mut allow);let(actual,requests,releases)=semio_framework_trace_memory_testing::observe_backing(||hash(enum_spec(),&mut control));assert_eq!(actual.unwrap(),expected);assert_eq!((requests,releases,control.owned_bytes()),(0,0,0));canceled(|control|hash(enum_spec(),control).map(|_|()));
- println!("[DEBUG] actual borrowed long enum hash matches independent BLAKE3, zero heap scratch and caller interior cancellation");
 }
 #[test]
 fn record_borrowed_preflight_long_schema_metadata_equivalence_is_cancellable(){
  let graph=graph();let f=fixture();for case in f["longSchemaMetadata"]["comparisonCases"].as_array().unwrap(){let case=case.as_str().unwrap();let operation=|control:&mut NativeEncodeControl<'_>|match case{"field"=>equal_record(&graph,0,1,None,control),"enum"=>equal_shape(&graph,H::Enum(labels(false)),H::Enum(labels(true)),None,0,control),"statement"=>equal_shape(&graph,H::Statements(variants(false)),H::Statements(variants(true)),None,0,control),"reference"=>equal_shape(&graph,H::Ref(&texts()[0]),H::Ref(&texts()[2]),None,0,control),_=>panic!("closed metadata comparison")};let mut allow=|_|true;let mut control=NativeEncodeControl::new(0,&mut allow);assert!(operation(&mut control).unwrap());canceled(|control|operation(control).map(|_|()));}
- println!("[DEBUG] actual borrowed field, enum, statement and reference equivalence consults same caller in long byte comparisons");
 }

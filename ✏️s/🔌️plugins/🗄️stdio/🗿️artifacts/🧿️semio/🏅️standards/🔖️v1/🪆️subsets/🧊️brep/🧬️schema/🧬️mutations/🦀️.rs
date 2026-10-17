@@ -51,19 +51,19 @@ use crate::schema::snapshot::SemioBrepSnapshot;
 
 
 //#region 🔖️Leaves
-use super::create_edge;
-use super::create_face;
-use super::create_shell;
-use super::create_solid;
-use super::create_vertex;
-use super::delete_edge;
-use super::delete_face;
-use super::delete_shell;
-use super::delete_solid;
-use super::delete_vertex;
-use super::move_vertex;
-use super::replace_curve;
-use super::replace_surface;
+use crate::schema::mutations::create_edge;
+use crate::schema::mutations::create_face;
+use crate::schema::mutations::create_shell;
+use crate::schema::mutations::create_solid;
+use crate::schema::mutations::create_vertex;
+use crate::schema::mutations::delete_edge;
+use crate::schema::mutations::delete_face;
+use crate::schema::mutations::delete_shell;
+use crate::schema::mutations::delete_solid;
+use crate::schema::mutations::delete_vertex;
+use crate::schema::mutations::move_vertex;
+use crate::schema::mutations::replace_curve;
+use crate::schema::mutations::replace_surface;
 //#endregion 🔖️Leaves
 
 //#region 🔖️Mutations
@@ -149,9 +149,9 @@ pub fn inverse_semio_brep_mutation(mutation: &SemioBrepMutation, base: &SemioBre
 /// 🌱 Shared fixture + representative `SemioBrepMutation` cases (one per variant) — single source
 /// of truth for this facet's own tests AND `ops_grammar_conformance_law`/`protocol_walk_law` in
 /// `🎹️composer/🦀️.rs` (`🧊️brep/🚪️io/🦀️.rs`, another session's file, read-only).
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn fixture() -> SemioBrepSnapshot {
+pub fn fixture() -> SemioBrepSnapshot {
     use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3;
     use crate::schema::snapshot::{BrepCurve, BrepEdge, BrepFace, BrepLoop, BrepLoopEdge, BrepShell, BrepShellFace, BrepSolid, BrepSolidShell, BrepSurface, BrepVertex};
     let mut s = SemioBrepSnapshot::default();
@@ -164,9 +164,9 @@ pub(crate) fn fixture() -> SemioBrepSnapshot {
     s
 }
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn demo_mutation_cases() -> Vec<SemioBrepMutation> {
+pub fn demo_mutation_cases() -> Vec<SemioBrepMutation> {
     use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3;
     use crate::schema::snapshot::{BrepCurve, BrepShellFace, BrepSolidShell, BrepSurface};
     vec![
@@ -207,13 +207,7 @@ mod tests;
 //#endregion 🧪️Tests
 
 //#region 🧪️FixtureTests
-/// 🧪️ Handcrafted mutation fixtures (contract D1, ticket `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`)
-/// — one case per triad leaf, self-wired here rather than in `🦀️.rs` so this subset owns its
-/// own test surface. `#[path = "."]` re-roots the nested `#[path]`s at THIS file's directory (the
-/// `🧬️mutations` root) instead of the implicit `🦀️component/` child directory.
-#[cfg(test)]
-#[path = "🧪️tests/🔬️fixture/🦀️.rs"]
-mod fixture_tests;
+
 //#endregion 🧪️FixtureTests
 
 #[cfg(test)]

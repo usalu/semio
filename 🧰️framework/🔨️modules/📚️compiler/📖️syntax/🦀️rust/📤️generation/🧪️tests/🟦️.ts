@@ -18,7 +18,6 @@ test("quote token output retains every generated input and every outside authore
     expect(references.map(reference => reference.path)).toEqual(row.authored ? [row.authored] : []);
     expect(row.source.slice(outputs[0]!.start, outputs[0]!.end)).toContain(row.macro + "!");
     expect(() => inspectRustCompileReferences(row.source)).toThrow("explicit generated-input observer");
-    console.error("[DEBUG] owned generated token input " + row.id);
   }
 });
 

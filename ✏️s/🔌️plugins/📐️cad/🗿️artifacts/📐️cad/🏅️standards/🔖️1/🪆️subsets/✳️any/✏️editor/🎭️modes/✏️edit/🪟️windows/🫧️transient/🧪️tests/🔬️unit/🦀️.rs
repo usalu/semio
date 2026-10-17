@@ -3,8 +3,9 @@
 
 use super::*;
 use pack::snapshot::ArtifactPack;
+use semio_framework_test_fixtures::fixture_path;
 
-static SCHEMA_JSON: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🧬️schema/🔣️.json")).expect("../../🧬️schema/🔣️.json").leak());
+static SCHEMA_JSON: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| std::fs::read_to_string(fixture_path!("../../🧬️schema/🔣️.json")).expect("../../🧬️schema/🔣️.json").leak());
 
 fn wire(transient: &CadWorldWindowTransient) -> serde_json::Value {
     semio_framework_value::ToValue::to_value(transient).into()
@@ -40,7 +41,7 @@ fn a_live_engagement_round_trips_through_the_pack() {
 /// to a transient whose wire form is that row.
 #[test]
 fn every_valid_fixture_row_is_its_own_wire_form() {
-    let fixture: serde_json::Value = serde_json::from_str(std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🧪️tests/🧫️fixtures/🔬️contract/🪪️document/🔣️.json")).expect("../../🧪️tests/🧫️fixtures/🔬️contract/🪪️document/🔣️.json").leak()).expect("fixture parses");
+    let fixture: serde_json::Value = serde_json::from_str(std::fs::read_to_string(fixture_path!("../../🧪️tests/🧫️fixtures/🔬️contract/🪪️document/🔣️.json")).expect("../../🧪️tests/🧫️fixtures/🔬️contract/🪪️document/🔣️.json").leak()).expect("fixture parses");
     for row in fixture["valid"].as_array().expect("valid rows") {
         let decoded: CadWorldWindowTransient = semio_framework_value::FromValue::from_value(row.clone().into()).expect("a valid row decodes");
         assert_eq!(&wire(&decoded), row);

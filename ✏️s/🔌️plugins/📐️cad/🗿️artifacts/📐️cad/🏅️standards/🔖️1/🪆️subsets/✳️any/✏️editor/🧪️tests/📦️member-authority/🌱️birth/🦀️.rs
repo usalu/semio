@@ -32,7 +32,6 @@ fn cad_imported_geometry_catalog_virtual_birth_matches_original_system_allocatio
             assert!(owners.uninstalled_owners_terminal_is_empty());
             assert_eq!(actual_birth,birth,"pure {} catalog query must price original constructor",$kind);
             assert_eq!(released,birth);
-            println!("[DEBUG] {} member virtual catalog birth={birth} query heap0 original constructor={actual_birth} exact close={released}",$kind);
         }};
     }
     catalog!(SemioModelSnapshot,SemioModelMutation,"model");

@@ -1,0 +1,20 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-s-artifact-raster-raster-descriptor"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Raster schema descriptor: the handcrafted facet leaves of the artifact, snapshot and mutation schemas"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-schema-registry = { workspace = true }
+semio-s-artifact-raster-raster-descriptor-diff = { workspace = true }

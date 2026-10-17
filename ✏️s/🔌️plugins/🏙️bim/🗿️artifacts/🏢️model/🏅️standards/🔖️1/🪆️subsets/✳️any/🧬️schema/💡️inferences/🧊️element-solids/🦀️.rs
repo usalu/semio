@@ -288,18 +288,10 @@ pub fn placement_of(snapshot: &ModelSnapshot, storey: &str, own: Option<&StoreyL
 pub const READS: &[&str] = &["walls", "wall_sweeps", "wall_types", "curtain_walls", "curtain_wall_types", "curtain_panel_overrides", "openings", "window_types", "door_types", "columns", "column_types", "beams", "beam_types", "slabs", "slab_types", "ceilings", "ceiling_types", "roofs", "roof_types", "stairs", "ramps", "railings", "components", "component_overrides", "mep_elements", "storeys", "buildings", "sites"];
 //#endregion 🔖️Families
 
-//#region 🔖️Projection
-/// 🧊️ The solid of every element that has geometry, keyed by element id (the `Solid` nodes of the model graph).
-#[cfg(test)]
-pub fn compute_element_solids(snapshot: &ModelSnapshot) -> BTreeMap<String, ElementSolid> {
-    std::mem::take(&mut super::super::model_graph::infer_selected::<{ super::super::model_graph::kinds::SOLIDS }>(snapshot).element_solids)
-}
-//#endregion 🔖️Projection
-
 //#region 🔖️Fixtures
 /// 🧫️ The committed fixture cases `🧫️fixtures/💡️inferences/🧊️element-solids/<case>/🔣️.json`: an authored `snapshot`, the oracle-written `expected` table and the blessed `meshes`.
-#[cfg(test)]
-pub(crate) mod fixtures {
+#[cfg(any(test, feature = "testkit"))]
+pub mod fixtures {
     use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
     use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 
@@ -329,77 +321,3 @@ pub(crate) mod fixtures {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 
-//#region 🧩️Modules
-#[path = "."]
-pub mod plan_kit {
-    #[path = "📐️plan-kit/🦀️.rs"]
-    mod component;
-    pub use component::*;
-}
-#[path = "."]
-pub mod columns {
-    #[path = "🏛️columns/🦀️.rs"]
-    mod component;
-    pub use component::*;
-}
-#[path = "."]
-pub mod beams {
-    #[path = "➖️beams/🦀️.rs"]
-    mod component;
-    pub use component::*;
-}
-#[path = "."]
-pub mod slabs {
-    #[path = "⬜️slabs/🦀️.rs"]
-    mod component;
-    pub use component::*;
-}
-#[path = "."]
-pub mod ceilings {
-    #[path = "🔲️ceilings/🦀️.rs"]
-    mod component;
-    pub use component::*;
-}
-#[path = "."]
-pub mod roofs {
-    #[path = "🏠️roofs/🦀️.rs"]
-    mod component;
-    pub use component::*;
-}
-#[path = "."]
-pub mod stairs {
-    #[path = "🪜️stairs/🦀️.rs"]
-    mod component;
-    pub use component::*;
-}
-#[path = "."]
-pub mod railings {
-    #[path = "🛤️railings/🦀️.rs"]
-    mod component;
-    pub use component::*;
-}
-#[path = "."]
-pub mod ramps {
-    #[path = "🛝️ramps/🦀️.rs"]
-    mod component;
-    pub use component::*;
-}
-#[path = "."]
-pub mod components {
-    #[path = "🪑️components/🦀️.rs"]
-    mod component;
-    pub use component::*;
-}
-#[path = "."]
-pub mod mep {
-    #[path = "🌀️mep/🦀️.rs"]
-    mod component;
-    pub use component::*;
-}
-#[path = "."]
-pub mod rail_hosts {
-    #[path = "🪝️rail-hosts/🦀️.rs"]
-    mod component;
-    pub use component::*;
-}
-//#endregion 🧩️Modules

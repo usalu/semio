@@ -1,7 +1,15 @@
-use super::*;
-use crate::editor::bim::entities::components::tests::furnished;
-use crate::editor::bim::gestures::session::{Modifiers, Shape};
-use crate::editor::bim::gestures::tests::fixture::Rig;
+use super::{FAMILY_MISSING, Frame, UTILITY, fit, length, next_system, normalized, system_word};
+use crate::editor::bim::gestures::session::{GestureKey, STOREY_MISSING, Step, ToolEvent};
+use crate::editor::bim::gestures::typed::INVALID;
+use crate::editor::bim::gestures::plane::point2;
+use crate::standards::v1::subsets::any::schema::snapshot::{Axis, Component, MepSystem};
+use crate::standards::v1::subsets::any::schema::mutations::ModelMutation;
+use crate::editor::bim::entities::components::SYSTEMS;
+use crate::standards::v1::subsets::any::schema::inferences::wall_layout::thickness_of;
+use crate::editor::bim::fixture::furnished;
+use crate::editor::bim::gestures::session::Modifiers;
+use crate::editor::bim::marks::Shape;
+use crate::editor::bim::fixture::Rig;
 use crate::standards::v1::subsets::any::schema::snapshot::Point2;
 use std::f64::consts::{FRAC_PI_2, PI};
 

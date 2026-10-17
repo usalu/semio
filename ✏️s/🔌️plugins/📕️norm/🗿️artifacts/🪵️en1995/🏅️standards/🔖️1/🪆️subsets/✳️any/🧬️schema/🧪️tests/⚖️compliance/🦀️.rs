@@ -1,4 +1,5 @@
 use crate::*;
+use semio_framework_test_fixtures::fixture_path;
 use semio_s_plugin_norm_app_surface::{apply_remedy_edit, get_value_at_path, parse_path};
 use semio_s_plugin_norm_compliance::{CheckReport, CheckStatus};
 use std::collections::BTreeSet;
@@ -282,7 +283,7 @@ async fn steel_plate_changes_capacity_and_can_make_the_check_fail() {
 }
 
 fn family_any_dir() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️1/🪆️subsets/✳️any")
+    fixture_path!("../../../../..")
 }
 
 fn oracle_script() -> PathBuf {

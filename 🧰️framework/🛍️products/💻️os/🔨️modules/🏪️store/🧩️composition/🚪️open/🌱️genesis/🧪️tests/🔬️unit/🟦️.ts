@@ -76,13 +76,11 @@ test("retained genesis framing has an independent neutral byte and identity orac
   expect(existsSync(path)).toBe(true);
   const source = readFileSync(path, "utf8");
   for (const method of ["MemberGenesisEnvelopeEncoder", "encode_step", "next_capacity_byte_demand", "close_granted"]) expect(source.includes(method)).toBe(true);
-  console.log("[DEBUG] Node Buffer/TextEncoder: neutral exact original packs, UUID aliases and UTF-8 owner URI for retained genesis framing");
 });
 
 test("retained native genesis bytes match the independent complete SPR framing and hash oracle", () => {
   for (const row of fixture.cases) {
     const bytes = genesisOracle(row);
     expect(createHash("sha256").update(bytes).digest("hex")).toBe(row.expectedSha256);
-    console.log(`[DEBUG] independent Node Buffer + noble BLAKE3 canonical genesis case=${row.id} complete-bytes=${bytes.length} SHA256=${row.expectedSha256}`);
   }
 });

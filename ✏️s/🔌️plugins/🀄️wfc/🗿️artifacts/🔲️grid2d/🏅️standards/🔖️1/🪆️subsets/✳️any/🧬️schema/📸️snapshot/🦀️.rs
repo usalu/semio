@@ -275,9 +275,7 @@ pub fn cell_rect(snapshot: &Grid2dSnapshot, x: u32, y: u32) -> (f64, f64, f64, f
 //#endregion 🔖️PaletteStream
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
 
 

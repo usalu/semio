@@ -189,7 +189,5 @@ fn rejected(message: String) -> protocol::MutationOutcome<XmlDiff> {
 //#endregion 🔖️Helpers
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

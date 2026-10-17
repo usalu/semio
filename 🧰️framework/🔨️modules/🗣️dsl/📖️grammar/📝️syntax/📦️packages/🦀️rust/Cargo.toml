@@ -1,0 +1,30 @@
+[package]
+workspace = "../../../../../.."
+name = "semio-framework-dsl-syntax"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Syntax layer of the self-hosted grammar format - the grammar and protocol model, the grammar lexer and the grammar and protocol parsers"
+
+[package.metadata.semio]
+role = "framework"
+id = "dsl-syntax"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-diagnostic = { path = "../../../../../⚠️diagnostic/📦️packages/🦀️rust" }
+semio-framework-dsl-lexical = { path = "../../../../🔍️lexer/📦️packages/🦀️rust" }
+semio-framework-dsl-token = { path = "../../../../🔤️token/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../🌱️value/📦️packages/🦀️rust" }
+
+[dev-dependencies]

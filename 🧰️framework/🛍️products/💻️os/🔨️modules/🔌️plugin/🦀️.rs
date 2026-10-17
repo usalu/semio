@@ -2,18 +2,8 @@
 
 pub use semio_framework_os_kernel::io;
 
-/// 🪪️ Runs one test body with a local native authoring identity: `with_authoring_identity!(|identity| body)` binds `identity` as a mutable
-/// [`EntityIdentityAuthority`](semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority) for `body`, an expression that may await.
 #[cfg(any(test, feature = "artifact-app-testing"))]
-#[macro_export]
-macro_rules! with_authoring_identity {
-    (|$identity:ident| $body:expr) => {{
-        let mut __observer = |_: $crate::__value::native_encoding::NativeEncodeProgress| true;
-        let __observer: &mut $crate::__kernel::os_vcs::io::binary::entity_identity::control::Observer<'_> = &mut __observer;
-        let mut $identity = $crate::__kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1usize << 24, __observer).expect("test authoring identity admission");
-        $body
-    }};
-}
+pub use semio_framework_plugin_testing_laws::with_authoring_identity;
 //#region 📣️FacadeMacroMounts
 #[macro_use]
 #[path = "📣️macros/🌱️wp1-window/🦀️.rs"]
@@ -109,15 +99,10 @@ pub mod plugin_runtime;
 
 //#endregion 🏛️OwnershipFacet
 //#region 👷️JobsFacet
-#[cfg(feature="media-turn-testing")]
-pub use document_media_test_hosts::document_media_unit_1::tests as media_turn_laws;
 #[cfg(feature="reserved-producer-testing")]
 pub use tool_contract::original_reserved_producer_laws;
 //#endregion 👷️JobsFacet
 //#region 🧵️InstanceFacet
-/// 🪝️ The instance extensions every mounted instance consults, in route, refusal and maintenance order (see
-/// [`artifact_instance::InstanceExtension`]).
-pub(crate) type InstanceExtensions = (tool_jobs::tool_run::ToolRunExtension, (tool_jobs::time_travel::TimeTravelExtension, ()));
 //#endregion 🧵️InstanceFacet
 
 pub mod app {

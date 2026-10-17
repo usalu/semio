@@ -2,7 +2,11 @@
 //! 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING design §12, §17.6, §20.15): every element's BASE scale is multiplied, so editing the
 //! factors in history re-derives every scale from whatever base it replays on.
 
-use super::*;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
+use crate::schema::diff::SemioModelDiff;
+use crate::schema::snapshot::SemioModelSnapshot;
+use crate::schema::mutations::{element_count_label, relative_placement_diff, relative_placement_inverse, vector_label};
 
 //#region 🔖️Payload
 /// 🔍️ `scale-elements` payload — the element ids it scales and the factor per axis each scale is multiplied by.
@@ -27,7 +31,10 @@ impl ScaleElements {
     }
 }
 
-impl protocol::MutationKind<SemioModelSnapshot, SemioModelMutation> for ScaleElements {
+impl<Op> protocol::MutationKind<SemioModelSnapshot, Op> for ScaleElements
+where
+    Op: protocol::Mutation<SemioModelSnapshot, Diff = SemioModelDiff> + From<ScaleElements>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "scale", entity: "elements", kind: "scale-elements", record: "ScaledElements" };
 
     fn diff(&self, base: &SemioModelSnapshot) -> protocol::MutationOutcome<SemioModelDiff> {
@@ -37,7 +44,7 @@ impl protocol::MutationKind<SemioModelSnapshot, SemioModelMutation> for ScaleEle
         let [fx, fy, fz] = self.factors;
         relative_placement_diff(&self.targets, self.identity(), base, |placement| SemioTransform { scale: SemioPoint3 { x: placement.scale.x * fx, y: placement.scale.y * fy, z: placement.scale.z * fz }, ..placement })
     }
-    fn inverse(&self, base: &SemioModelSnapshot) -> Result<Vec<SemioModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &SemioModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         Ok(relative_placement_inverse(&self.targets, self.identity() || !self.admissible(), base))
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {

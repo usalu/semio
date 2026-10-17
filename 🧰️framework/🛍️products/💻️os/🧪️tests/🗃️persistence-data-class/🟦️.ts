@@ -13,13 +13,14 @@ import {
   type PersistenceDataClass,
 } from "../../🟦️.ts";
 import { semioSchemaAjvV1 } from "@semio-tech/schema-ts/oracles/validator";
+import { dataClassV1FixtureUrl, persistenceDataClassSchemaUrl } from "../../🔨️modules/🏪️store/🧪️tests/🧫️fixtures/🟦️.ts";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const fixture = JSON.parse(
-  readFileSync(join(here, "../../🔨️modules/🏪️store/🧪️tests/🧫️fixtures/persistence-data-class-v1/🔣️.json"), "utf8"),
+  readFileSync(dataClassV1FixtureUrl, "utf8"),
 );
 const schema = JSON.parse(
-  readFileSync(join(here, "../../🔨️modules/🏪️store/🔄️sync/🧬️schema/persistence-data-class/🔣️.json"), "utf8"),
+  readFileSync(persistenceDataClassSchemaUrl, "utf8"),
 );
 
 describe("persistence data class routing", () => {

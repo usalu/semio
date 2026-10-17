@@ -1,4 +1,3 @@
 //! 🚪️ Artifact representation module ownership.
 
-#[path = "📸️snapshot/🦀️.rs"]
-pub mod snapshot;
+pub use semio_s_artifact_gis_gismap_snapshot::standards::v1::subsets::any::io::sqlite::snapshot;

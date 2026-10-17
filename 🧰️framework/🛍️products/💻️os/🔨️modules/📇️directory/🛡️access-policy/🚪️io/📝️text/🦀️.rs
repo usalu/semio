@@ -1,6 +1,6 @@
 //! 🚪️ Physical Directory wire admission, canonical emission and bounded receipts.
 
-use super::super::super::access_policy::*;
+use super::schema::*;
 use std::sync::OnceLock;
 
 /// ⚖️ The one hub authority: the declared policy's decision.

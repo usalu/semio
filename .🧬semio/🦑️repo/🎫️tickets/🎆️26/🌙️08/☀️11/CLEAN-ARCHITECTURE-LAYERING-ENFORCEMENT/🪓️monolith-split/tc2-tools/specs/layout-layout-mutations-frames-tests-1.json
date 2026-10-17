@@ -1,0 +1,32 @@
+{
+ "parent": "semio-s-artifact-layout-layout-mutations-frames",
+ "name": "semio-s-artifact-layout-layout-mutations-frames-tests-1",
+ "dir": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️frames/🧪️tests/🍯️companion-1",
+ "files": [
+  "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️drag-frames/🧪️tests/⏸️keeps-a-zero-offset/🦀️.rs",
+  "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️drag-frames/🧪️tests/⚠️skips/🦀️.rs",
+  "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️drag-frames/🧪️tests/✋️drags-both-frames/🦀️.rs",
+  "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️drag-frames/🧪️tests/🔁️refuses/🦀️.rs",
+  "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️drag-frames/🧪️tests/🚫️rejects/🦀️.rs",
+  "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕create-frame/🧪️tests/🔲️inserts/🦀️.rs",
+  "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖delete-frame/🧪️tests/📍️removes-a-middle-row/🦀️.rs",
+  "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖delete-frame/🧪️tests/🚫️removes/🦀️.rs",
+  "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨change-frame-fill/🧪️tests/🎨️repaints/🦀️.rs",
+  "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏resize-frame/🧪️tests/📐️resizes-the-rect-frame/🦀️.rs",
+  "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐update-grid/🧪️tests/📐️sets/🦀️.rs",
+  "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔃️rotate-frames/🧪️tests/⏸️keeps-a-zero-angle/🦀️.rs",
+  "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔃️rotate-frames/🧪️tests/⚠️skips/🦀️.rs",
+  "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔃️rotate-frames/🧪️tests/🌀️turns/🦀️.rs",
+  "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔃️rotate-frames/🧪️tests/🔁️refuses/🦀️.rs"
+ ],
+ "testkit": [
+  "semio-s-artifact-layout-layout-model",
+  "semio-s-artifact-layout-layout-diff",
+  "semio-s-artifact-layout-layout-mutations",
+  "semio-s-artifact-layout-layout-mutations-frames",
+  "semio-s-artifact-layout-layout-mutations-content"
+ ],
+ "emoji": "🍯️",
+ "summary": "the mutation fixture laws of the frame leaves, part one.",
+ "description": "Companion test crate of semio-s-artifact-layout-layout-mutations-frames: the mutation fixture laws of the frame leaves, part one"
+}

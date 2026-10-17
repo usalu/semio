@@ -1,14 +1,14 @@
 //! 📊️ Register table projection shared by native exchange codecs.
 use crate::standards::v1::subsets::any::schema::{snapshot::ProgramSnapshot, kernel::{EntityHeader, EntityId, PluginError}};
 use crate::standards::v1::subsets::any::schema::mutations::{self as leaves, ProgramMutation};
-use crate::standards::v1::subsets::any::schema::registers::{RegisterKey, RegisterRow};
+use crate::standards::v1::subsets::any::schema::registers::catalog::{RegisterKey, RegisterRow};
 use crate::standards::v1::subsets::any::schema::registers::*;
 use crate::standards::v1::subsets::any::schema::kernel::*;
 use semio_s_artifact_stdio_csv as stdio_csv;
 use semio_s_artifact_stdio_tsv as stdio_tsv;
 
 /// 🏷️ Fixed 7-column header shared by the CSV and TSV register exchange shape.
-pub(crate) const REGISTER_ROW_COLUMNS: [&str; 7] = ["register", "id", "name", "status", "priority", "tags", "source"];
+pub const REGISTER_ROW_COLUMNS: [&str; 7] = ["register", "id", "name", "status", "priority", "tags", "source"];
 
 /// 📊️ One CSV/TSV row representing a register entity for spreadsheet round-trip.
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
@@ -27,12 +27,12 @@ pub struct RegisterCsvRow {
 
 impl RegisterCsvRow {
     /// 🧵️ This row's 7 columns in `REGISTER_ROW_COLUMNS` order.
-    pub(crate) fn columns(&self) -> [String; 7] {
+    pub fn columns(&self) -> [String; 7] {
         [self.register.clone(), self.id.to_string(), self.name.clone(), self.status.clone(), self.priority.clone(), self.tags.clone(), self.source.clone()]
     }
 
     /// 🧵️ Rebuilds a row from 7 ordered column values (inverse of `columns`).
-    pub(crate) fn from_columns(fields: &[String]) -> Result<Self, PluginError> {
+    pub fn from_columns(fields: &[String]) -> Result<Self, PluginError> {
         if fields.len() < 7 {
             return Err(PluginError::Csv(format!("malformed row: expected 7 columns, got {}", fields.len())));
         }
@@ -40,7 +40,7 @@ impl RegisterCsvRow {
     }
 }
 
-pub(crate) fn collect_rows(program: &ProgramSnapshot) -> Vec<RegisterCsvRow> {
+pub fn collect_rows(program: &ProgramSnapshot) -> Vec<RegisterCsvRow> {
     let mut rows = Vec::new();
     macro_rules! push_rows {
         ($register:literal, $collection:expr) => {

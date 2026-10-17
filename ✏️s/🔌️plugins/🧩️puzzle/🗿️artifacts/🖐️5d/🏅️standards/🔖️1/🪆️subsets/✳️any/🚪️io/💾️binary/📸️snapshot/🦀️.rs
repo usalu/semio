@@ -21,20 +21,18 @@ pub fn decode(bytes: &[u8]) -> Result<Puzzle5dSnapshot, PackError> {
 }
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests
 
 #[allow(unused_imports)]
 mod snapshot_codec {
 use super::*;
 use crate::standards::v1::subsets::any::schema::snapshot::*;
-use crate::{Puzzle5dFastener, Puzzle5dKindCompatibility, Puzzle5dMeta, Puzzle5dPart, Puzzle5dTargetVolume, PUZZLE_5D_SCHEMA};
+use crate::{PUZZLE_5D_SCHEMA};
+use crate::standards::v1::subsets::any::schema::document_records::{Puzzle5dFastener, Puzzle5dKindCompatibility, Puzzle5dMeta, Puzzle5dPart, Puzzle5dTargetVolume};
 use ::semio_framework_schema::ArtifactSchema;
 use semio_s_artifact_stdio_semio_kit::schema::snapshot::SemioKitSnapshot;
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
-use crate::Puzzle5dKindCatalogsExtra;
+use crate::standards::v1::subsets::any::schema::kind_catalogs::Puzzle5dKindCatalogsExtra;
 
 impl pack::snapshot::ArtifactPack for Puzzle5dSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
@@ -62,3 +60,8 @@ fn sqlite_snapshot_codec() -> Option<store::os_store::serialization::ArtifactSql
 }
 }
 #[cfg(test)] pub use snapshot_codec::*;
+//#region 🧩️ArtifactItems2
+pub mod artifact_items_2 {
+pub const PUZZLE_5D_SCHEMA: &str = "puzzle.5d";
+}
+//#endregion 🧩️ArtifactItems2

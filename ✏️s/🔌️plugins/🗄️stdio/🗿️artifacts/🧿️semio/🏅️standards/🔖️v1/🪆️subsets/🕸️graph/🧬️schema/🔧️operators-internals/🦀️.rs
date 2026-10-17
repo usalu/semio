@@ -1,6 +1,7 @@
 //! ➕️ Graph combination and transformation operators: union, products, complement, contractions, line graphs — NetworkX `operators` module parity, built generically over `graph_core::Storage<P, D>`.
 
-use graph_core::{AttrView, Directed, Directedness, EdgeId, GraphError, GraphView, HandleId, NodeId, Normal, PortModel, PropertyBag, Storage};
+use graph_core::{AttrView, Directed, Directedness, EdgeId, GraphError, GraphView, HandleId, NodeId, Normal, PortModel, Storage};
+use graph_manifest::{PropertyBag};
 use std::collections::{BTreeMap, BTreeSet};
 
 // #region 🔖️Internal
@@ -407,7 +408,7 @@ where
             if let Some(v_attrs) = g.node_attrs(v) {
                 let mut merged = v_attrs.clone();
                 for (key,value) in attrs {
-                if let Some(previous)=merged.insert(key,value){<graph_core::PropertyValue as semio_framework_value::FromValue>::retire_decoded(previous);}
+                if let Some(previous)=merged.insert(key,value){<graph_manifest::PropertyValue as semio_framework_value::FromValue>::retire_decoded(previous);}
             }
                 attrs = merged;
             }
@@ -538,7 +539,5 @@ pub fn mycielskian<D: Directedness>(g: &Storage<Normal, D>) -> Storage<Normal, D
 // #endregion 🔖️Mycielski
 
 // #region 🔖️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 // #endregion 🔖️Tests

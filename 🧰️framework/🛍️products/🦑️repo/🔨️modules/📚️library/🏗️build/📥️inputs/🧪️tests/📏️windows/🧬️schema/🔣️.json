@@ -1,0 +1,111 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "Cap": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "limit",
+        "cached",
+        "accepted"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "limit": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "enum": [
+                "default",
+                "nan"
+              ]
+            }
+          ]
+        },
+        "cached": {
+          "type": "boolean"
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "Race": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "fdStable",
+        "namespaceStable",
+        "completed",
+        "accepted"
+      ],
+      "properties": {
+        "id": {
+          "enum": [
+            "stable",
+            "parent-transient",
+            "parent-permanent",
+            "leaf-permanent",
+            "write",
+            "truncate",
+            "grow",
+            "cancel",
+            "error",
+            "undefined",
+            "empty",
+            "leaf-transient",
+            "grow-eof"
+          ]
+        },
+        "fdStable": {
+          "type": "boolean"
+        },
+        "namespaceStable": {
+          "type": "boolean"
+        },
+        "completed": {
+          "type": "boolean"
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "Cost": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "parents",
+        "chunks",
+        "fullChunkOperations",
+        "fdChunkOperations"
+      ],
+      "properties": {
+        "parents": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 64
+        },
+        "chunks": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 8192
+        },
+        "fullChunkOperations": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "fdChunkOperations": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    }
+  }
+}

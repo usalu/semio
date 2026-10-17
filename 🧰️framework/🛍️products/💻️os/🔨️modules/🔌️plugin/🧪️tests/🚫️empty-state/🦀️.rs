@@ -26,8 +26,8 @@ where
 
 #[test]
 fn framework_empty_state_contract_rejects_foreign_fields_and_bytes() {
-    verify_empty_state::<crate::NoConfig>();
-    verify_empty_state::<crate::NoDraft>();
-    verify_empty_state::<crate::NoPresence>();
-    verify_empty_state::<crate::NoTransient>();
+    verify_empty_state::<semio_framework_plugin_decl_views::NoConfig>();
+    verify_empty_state::<semio_framework_plugin_decl_views::NoDraft>();
+    verify_empty_state::<semio_framework_plugin_decl_views::NoPresence>();
+    verify_empty_state::<semio_framework_plugin_decl_views::NoTransient>();
 }

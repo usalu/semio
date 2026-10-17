@@ -1,4 +1,8 @@
-use super::*;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3;
+use semio_s_artifact_stdio_semio_base::schema::triples::NamedModified;
+use semio_s_artifact_stdio_semio_base::schema::triples::NamedAdded;
+use crate::{schema::snapshot::BrepCurve, schema::snapshot::BrepEdge, schema::snapshot::BrepFace, schema::snapshot::BrepLoop, schema::snapshot::BrepLoopEdge, schema::snapshot::BrepShell, schema::snapshot::BrepShellFace, schema::snapshot::BrepSolid, schema::snapshot::BrepSolidShell, schema::snapshot::BrepSurface, schema::snapshot::BrepVertex, schema::snapshot::SemioBrepSnapshot};
+use crate::schema::diff::*;
 
 //#region 🔖️Fixtures
 /// 🧱️ Every collection carries: one "keep" item touched in EVERY sub-field, one item present

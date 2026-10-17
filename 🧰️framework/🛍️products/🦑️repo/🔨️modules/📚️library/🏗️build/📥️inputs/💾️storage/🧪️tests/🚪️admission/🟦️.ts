@@ -12,8 +12,9 @@ import {withBuildTestInvocationV1} from "../../../../🧪️tests/📥️invocat
 import {checkScriptInvocation,withScriptInvocationSignalV1,acknowledgeScriptInvocationSignalStopV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {scriptCompilerAdmissionControlV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import * as api from "../../🟨️.mjs";
-import quota from "../../🧬️schema/💾️quota.json";
-import schema from "../../🧬️schema/📒️ledger.json";
+import componentSchema from "../../🧬️schema/🔣️.json";
+const quota=componentSchema.definitions.OptionalQuota;
+const schema=componentSchema.definitions.OptionalLedger;
 import corpus from "./🔣️.json";
 
 test("graph writer admission reconciles exactly once before pressure-free work",async()=>withBuildTestInvocationV1(async parent=>{
@@ -43,5 +44,4 @@ test("graph writer admission reconciles exactly once before pressure-free work",
    expect(bodyEntered).toBe(!["cancel","cancel-after-census","undefined","close"].includes(row.interrupt));if(row.maintenance&&row.opens===2){expect(events.indexOf("ledger-close")).toBeLessThan(events.indexOf("maintenance"));expect(events.indexOf("store-close")).toBeLessThan(events.indexOf("maintenance"));}if(row.interrupt==="none")expect(db.query("select used,dirty from usage").get()).toEqual({used:row.maintenance?12:row.physicalBytes,dirty:0});
   });
  }}finally{db.close();}
- console.log("[DEBUG] Actual writer function AST retains one canonical census for funded work; independent SQLite confirms dirty repair, physical pressure, closed-before-maintenance order and exact primary/cancellation outcomes");
 }),60000);

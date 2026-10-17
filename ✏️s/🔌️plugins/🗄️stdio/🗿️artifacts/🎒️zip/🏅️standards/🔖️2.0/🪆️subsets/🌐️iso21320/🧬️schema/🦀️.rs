@@ -7,13 +7,15 @@
 
 pub use crate::standards::v2_0::subsets::base::schema::*;
 
+pub use semio_s_artifact_stdio_zip_inferences::standards::v2_0::subsets::iso21320::schema::conformance;
+pub use conformance::*;
+
 //#region 🧬️Mutations
 /// 🧬️ THIS subset's own mutation vocabulary — `ZipIso21320Mutation`, not the `🧱️base` subset's
 /// `ZipMutation` the glob re-export above would otherwise supply. Declared here rather than in the
 /// crate's module glue so the vocabulary lives with the subset that owns it; the explicit item wins
 /// over the glob import, which is exactly the intent.
-#[path = "🧬️mutations/🦀️.rs"]
-pub mod mutations;
+pub use semio_s_artifact_stdio_zip_mutations::standards::v2_0::subsets::iso21320::schema::mutations;
 pub use mutations::{ZipIso21320Method, ZipIso21320Mutation, KINDS as ISO21320_MUTATION_KINDS};
 //#endregion 🧬️Mutations
 //#region 🏗️DerivedConstruction

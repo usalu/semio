@@ -3,7 +3,8 @@
 
 use super::opening::nearest_host;
 use super::plane::{axis_point_at, axis_tangent_at, P};
-use super::session::{Mark, Pointer, Preview, Step, Style, Tool, ToolContext, ToolEvent, PICK_PIXELS, REJECTED};
+use super::session::{Pointer, Step, Tool, ToolContext, ToolEvent, PICK_PIXELS, REJECTED};
+use crate::editor::bim::marks::{Mark, Preview, Style};
 use crate::standards::v1::subsets::any::schema::mutations::ModelMutation;
 
 /// 📏️ How far past the face of the wall the cut mark reaches, in metres.

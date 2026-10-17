@@ -1,6 +1,5 @@
 //! Puzzle5d mutation — `MovePart2d`: absolute reposition of a part's 2D-projection anchor point.
 use crate::standards::v1::subsets::any::schema::diff::Puzzle5dDiff;
-use crate::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation;
 use crate::Puzzle5dSnapshot;
 
 //#region 🔖️Mutation
@@ -18,13 +17,16 @@ pub struct MovePart2d {
     pub new_y: f64,
 }
 
-impl protocol::MutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for MovePart2d {
+impl<Op> protocol::MutationKind<Puzzle5dSnapshot, Op> for MovePart2d
+where
+    Op: protocol::Mutation<Puzzle5dSnapshot, Diff = Puzzle5dDiff> + From<MovePart2d>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "move", entity: "part", kind: "move-part2d", record: "MovedPart2d" };
 
     fn diff(&self, base: &Puzzle5dSnapshot) -> protocol::MutationOutcome<Puzzle5dDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Puzzle5dSnapshot) -> Result<Vec<Puzzle5dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Puzzle5dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     
@@ -40,6 +42,9 @@ impl protocol::MutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for MovePart2d {
 //#endregion 🔖️Mutation
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn move_part_2d(id: String, new_x: f64, new_y: f64) -> Puzzle5dMutation {
-    Puzzle5dMutation::MovePart2d(MovePart2d { id, new_x, new_y })
+pub fn move_part_2d<Op>(id: String, new_x: f64, new_y: f64) -> Op
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::move_part_2d::MovePart2d>,
+{
+    Op::from(MovePart2d { id, new_x, new_y })
 }

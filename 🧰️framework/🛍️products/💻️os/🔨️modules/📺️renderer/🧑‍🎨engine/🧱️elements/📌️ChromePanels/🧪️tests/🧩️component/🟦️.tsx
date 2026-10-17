@@ -1,6 +1,11 @@
 import { cleanup, fireEvent, render } from "@semio-tech/ui-react/test";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { createFrameworkDisplayPanelTabs, createFrameworkSettingsPanelTab, keybindingCaptureStepV1, type DisplayHostApi, type KeybindingCaptureKeyV1, type SettingsHostApi, themeAlphaInput, themeContrastBadgeText, themeContrastRatioFormatter, themeNumberInputRow, themeTextInputRow, type ConflictsHostApi } from "../../🟦️.tsx";
+import { createFrameworkSettingsPanelTab } from "../../🟦️.tsx";
+import { createFrameworkDisplayPanelTabs, type DisplayHostApi } from "../../🖥️display-panel/🟦️.tsx";
+import { type SettingsHostApi } from "../../⚙️settings-general/🟦️.tsx";
+import { themeAlphaInput, themeContrastBadgeText, themeContrastRatioFormatter, themeNumberInputRow, themeTextInputRow } from "../../🎨️settings-theme/🟦️.tsx";
+import { keybindingCaptureStepV1, type KeybindingCaptureKeyV1 } from "../../⌨️settings-keybindings/🟦️.tsx";
+import { type ConflictsHostApi } from "../../📱️settings-defaults-and-conflicts/🟦️.tsx";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -159,7 +164,7 @@ describe("Display window taxonomy order", () => {
  * records the completed chord in the dispatcher's spelling and ends only on Escape or a chord. Oracle: `user-event`
  * types the same chords on a real focused button, modifiers first, exactly as a hand does (ticket 26/09/23 U5). */
 describe("keybinding capture", () => {
-  const fixture = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../🧫️fixtures/⌨️keybinding-capture/🔣️.json"), "utf8")) as {
+  const fixture = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../🧫️fixtures/⌨️keybinding-capture/🔣️.json"), "utf8")) as {
     readonly rows: readonly { readonly id: string; readonly keys: readonly Partial<KeybindingCaptureKeyV1>[]; readonly expected: readonly string[] }[];
   };
   const outcome = (step: ReturnType<typeof keybindingCaptureStepV1>): string => (step.kind === "chord" ? `chord:${step.chord}` : step.kind);

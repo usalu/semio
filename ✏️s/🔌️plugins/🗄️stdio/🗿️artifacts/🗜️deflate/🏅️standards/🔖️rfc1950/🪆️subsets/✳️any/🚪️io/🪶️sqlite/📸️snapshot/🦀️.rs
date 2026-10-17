@@ -35,9 +35,6 @@ pub(super)fn admit_values(snapshot:&DeflateSnapshot,phase:SqliteSnapshotPhase,co
 /// 🫧️ Bounds measured RFC1950 expansion before the final payload allocation.
 pub(super)fn native_payload_capacity(limits:SqliteDatabaseLimits)->Result<usize,ValueError>{admit_layout(limits)?;let header=32usize.checked_add(crate::STDIO_DEFLATE_DOCUMENT_SCHEMA.len()).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"Deflate document cell extent overflow"))?;let payload=limits.max_value_bytes.checked_sub(header).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"Deflate document values exceed caller limit"))?;Ok(payload/32)}
 
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;
 
 
 #[path = "🚦️native/🦀️.rs"]

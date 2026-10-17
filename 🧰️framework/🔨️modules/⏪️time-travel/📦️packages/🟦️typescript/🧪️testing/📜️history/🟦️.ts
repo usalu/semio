@@ -1,0 +1,3 @@
+/** 📜️ Public entry `@semio-tech/framework-time-travel-ts/testing/history`: the explicit surface that importers outside the module use. */
+export { allHistoryRows, documentEditIds, documentEntries, expandEntry, findMutationRow, historyCommandsTotal, historyInventory, isShellChromeRow, newMutation, newestEntrySeq, openHistory, pageHistory, pressAuthored, pressRowAction, reachWindowEnd, readHistory, readsAsOpText, rowActionState, scrollHistory, scrollHistoryBy, tapRevealsReason, treeWindow } from "../../../../🧪️testing/📜️history/🟦️.ts";
+export type { HistoryRow, TreeWindowRead } from "../../../../🧪️testing/📜️history/🟦️.ts";

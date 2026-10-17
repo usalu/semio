@@ -23,5 +23,4 @@ test("mounted original group identity has bounded SHA256 input and independently
   expect(await source.exists()).toBe(true);
   const text = await source.text();
   for (const name of ["MountedChildGroupIdentityIssuer", "next_capacity_byte_demand", "maximum_capacity_bytes", "maximum_copy_bytes", "next_close_byte_demand"]) expect(text.includes(name)).toBe(true);
-  console.log("[DEBUG] Node SHA256 + Buffer: three exact length-framed Unicode group IDs, copy64, whole70-byte output denial, original optional transaction untouched");
 });

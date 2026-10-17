@@ -40,7 +40,6 @@ test("DWG complete owned snapshot keeps all body families exact through independ
     expect(await dwgSnapshotFromSqliteDatabase(await importSqliteDatabase(native.serialize()))).toEqual(snapshot);
     native.run("UPDATE dwg_annotation_scale SET name='edited independently'");const edited=await dwgSnapshotFromSqliteDatabase(await importSqliteDatabase(native.serialize()));
     const annotation=edited.drawing.objects.find(object=>object.body?.kind==="annotationScale")!.body!;if(annotation.kind!=="annotationScale")throw new Error("kind");expect(annotation.value.name).toBe("edited independently");
-    console.log("[DEBUG] DWG complete277-table typed snapshot roundtrip and independent relational edit verified");
   }finally{native.close();}
 },60000);
 
@@ -51,7 +50,6 @@ test("DWG complete provider cancels during expensive projection and reconstructi
   await expect(dwgSnapshotFromSqliteDatabase(database,{signal:reconstruct.signal,onProgress:progress=>{if(progress.phase==="reconstructSnapshot"&&progress.completed>=256){reconstructed=progress.completed;reconstruct.abort();}}})).rejects.toThrow();
   expect(projected).toBeGreaterThanOrEqual(256);expect(reconstructed).toBeGreaterThanOrEqual(256);
   await expect(dwgSnapshotToSqliteDatabase(snapshot,{maxValueBytes:1})).rejects.toThrow();await expect(dwgSnapshotFromSqliteDatabase(database,{maxValueBytes:1})).rejects.toThrow();
-  console.log("[DEBUG] DWG actual mid-operation progress cancellation and aggregate data bounds verified");
 },60000);
 
 test("DWG exact AC1018/AC1024 guards, identity, budgets and cancellation are observable",async()=>{
@@ -61,5 +59,4 @@ test("DWG exact AC1018/AC1024 guards, identity, budgets and cancellation are obs
   await expect(dwgSnapshotValidateSqliteSubset({...snapshot,version:"different"},{artifactKind:"s.stdio.dwg",standard:"ac1024",subset:"*"},database)).rejects.toThrow();
   await expect(dwgSnapshotToSqliteDatabase(snapshot,{maxRows:1})).rejects.toThrow();await expect(dwgSnapshotFromSqliteDatabase(database,{maxRows:1})).rejects.toThrow();
   const controller=new AbortController();controller.abort();await expect(dwgSnapshotToSqliteDatabase(snapshot,{signal:controller.signal})).rejects.toThrow();await expect(dwgSnapshotFromSqliteDatabase(database,{signal:controller.signal})).rejects.toThrow();await expect(dwgSnapshotValidateSqliteSubset(snapshot,{artifactKind:"s.stdio.dwg",standard:"ac1024",subset:"*"},database,{signal:controller.signal})).rejects.toThrow();
-  console.log("[DEBUG] DWG exact two-version guard plus identity, resource and cancellation refusals verified");
 },60000);

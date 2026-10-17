@@ -54,7 +54,7 @@ fn index(value: i64) -> Result<usize, ValueError> { usize::try_from(value).map_e
 fn add(value: &mut usize, amount: usize) -> Result<(), ValueError> { *value = value.checked_add(amount).ok_or_else(|| ValueError::new(ValueRefusalKind::WorkLimit, "XML relational size overflow"))?; Ok(()) }
 fn add_bytes(value: &mut usize, amount: usize) -> Result<(), ValueError> { *value = value.checked_add(amount).ok_or_else(|| ValueError::new(ValueRefusalKind::OwnershipLimit, "XML relational size overflow"))?; Ok(()) }
 fn kind(node: &XmlNode) -> &'static str { match node { XmlNode::Element { .. } => "element", XmlNode::Text { .. } => "text", XmlNode::CData { .. } => "cdata", XmlNode::Comment { .. } => "comment", XmlNode::ProcessingInstruction { .. } => "processing_instruction" } }
-fn restored(value: &str, control: &mut SqliteSnapshotControl<'_>) -> Result<String, ValueError> { semio_framework_os_kernel::sqlite_snapshot::artifact::reconstruct_text(control, value) }
+pub fn restored(value: &str, control: &mut SqliteSnapshotControl<'_>) -> Result<String, ValueError> { semio_framework_os_kernel::sqlite_snapshot::artifact::reconstruct_text(control, value) }
 fn restored_optional(value: Option<&str>, control: &mut SqliteSnapshotControl<'_>) -> Result<Option<String>, ValueError> { value.map(|value| restored(value, control)).transpose() }
 fn boundaries(doc: XmlDocumentView<'_>, control: &mut SqliteSnapshotControl<'_>, phase: SqliteSnapshotPhase) -> Result<(), ValueError> {
     let total = doc.prolog.len().checked_add(doc.epilog.len()).ok_or_else(|| ValueError::new(ValueRefusalKind::WorkLimit, "XML boundary count overflow"))?; control.check_rows(total.checked_add(1).ok_or_else(|| ValueError::new(ValueRefusalKind::WorkLimit, "XML boundary count overflow"))?)?;
@@ -150,7 +150,7 @@ impl ArtifactSqliteSnapshotHost for XmlSnapshot {
         control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,0).map_err(semio_framework_os_kernel::io_schema::IoError::from_value_error)?;
         if dialect.artifact_kind!="s.stdio.xml"||dialect.standard!="1.0"{return Err(semio_framework_os_kernel::io_schema::IoError::from_value_error(ValueError::new(ValueRefusalKind::UnsupportedOwner,"owned xml snapshot dialect differs from its semantic standard")));}
         let row=database.table("xml_document").map_err(semio_framework_os_kernel::io_schema::IoError::from_value_error)?.single_row().map_err(semio_framework_os_kernel::io_schema::IoError::from_value_error)?;if row.rowid!=1||row.text(1).map_err(semio_framework_os_kernel::io_schema::IoError::from_value_error)?!=self.schema{return Err(semio_framework_os_kernel::io_schema::IoError::from_value_error(ValueError::new(ValueRefusalKind::InvalidValue,"owned xml document identity differs from semantic projection")));}
-        let diagnostics=match dialect.subset.as_str(){"*"=>Vec::new(),"valid"=>crate::standards::v1_0::subsets::valid::io::check_valid_conformance_controlled(self,control).map_err(semio_framework_os_kernel::io_schema::IoError::from_value_error)?,_=>return Err(semio_framework_os_kernel::io_schema::IoError::from_value_error(ValueError::new(ValueRefusalKind::UnsupportedOwner,"named xml subset has no owned semantic validator")))};
+        let diagnostics=match dialect.subset.as_str(){"*"=>Vec::new(),"valid"=>crate::standards::v1_0::subsets::valid::schema::conformance::check_valid_conformance_controlled(self,control).map_err(semio_framework_os_kernel::io_schema::IoError::from_value_error)?,_=>return Err(semio_framework_os_kernel::io_schema::IoError::from_value_error(ValueError::new(ValueRefusalKind::UnsupportedOwner,"named xml subset has no owned semantic validator")))};
         control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,1,1).map_err(semio_framework_os_kernel::io_schema::IoError::from_value_error)?;Ok(semio_framework_os_kernel::io_schema::IoOutcome{value:(),diagnostics})
     }
 
@@ -164,9 +164,6 @@ fn to_sqlite_database(&self, control: &mut SqliteSnapshotControl<'_>) -> Result<
 fn from_sqlite_database(database: &SqliteDatabase, control: &mut SqliteSnapshotControl<'_>) -> Result<Self,ValueError> { let (schema, doc) = reconstruct_xml_document(database, Self::SQLITE_SCHEMA, XML_SQLITE_TABLES, control)?; Ok(Self { schema, doc }) }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;
 
 
 #[path = "🛫️native/🦀️.rs"]

@@ -1,0 +1,585 @@
+{
+ "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟦️.ts",
+ "importers": [],
+ "children": [
+  {
+   "dir": "⏯️run",
+   "doc": "/** ⏯️ Energy-model mutation payloads of the `run` group: the TypeScript twin of the Rust leaves below `./`, one interface per leaf, wire-tagged by the camelCase variant name. */",
+   "names": [
+    "ChangeRunEndDay",
+    "ChangeRunStartDay",
+    "ChangeRunYear",
+    "ChangeRunStartMonth",
+    "ChangeRunEndMonth"
+   ]
+  },
+  {
+   "dir": "☀️pv-system",
+   "doc": "/** ☀️ Energy-model mutation payloads of the `pv-system` group: the TypeScript twin of the Rust leaves below `./`, one interface per leaf, wire-tagged by the camelCase variant name. */",
+   "names": [
+    "ChangePvSystemInverterEfficiency",
+    "ChangePvSystemDcCapacity",
+    "CreatePvSystem",
+    "DeletePvSystem",
+    "ChangePvSystemModuleEfficiency",
+    "ChangePvSystemTilt",
+    "ChangePvSystemArea",
+    "ChangePvSystemAzimuth"
+   ]
+  },
+  {
+   "dir": "⚠️fault",
+   "doc": "/** ⚠️ Energy-model mutation payloads of the `fault` group: the TypeScript twin of the Rust leaves below `./`, one interface per leaf, wire-tagged by the camelCase variant name. */",
+   "names": [
+    "CreateFault",
+    "ChangeFaultSeverity",
+    "ChangeFaultTargetEquipment",
+    "ChangeFaultType",
+    "ChangeFaultStartSchedule",
+    "DeleteFault"
+   ]
+  },
+  {
+   "dir": "⛱️shading-device",
+   "doc": "/** ⛱️ Energy-model mutation payloads of the `shading-device` group: the TypeScript twin of the Rust leaves below `./`, one interface per leaf, wire-tagged by the camelCase variant name. */",
+   "names": [
+    "ChangeFenestrationOverhangOffset",
+    "ChangeFenestrationFinOffset",
+    "ChangeFenestrationFinDepth",
+    "ChangeFenestrationOverhangDepth"
+   ]
+  },
+  {
+   "dir": "❄️refrigeration",
+   "doc": "/** ❄️ Energy-model mutation payloads of the `refrigeration` group: the TypeScript twin of the Rust leaves below `./`, one interface per leaf, wire-tagged by the camelCase variant name. */",
+   "names": [
+    "CreateRefrigerationSystem",
+    "ChangeRefrigerationSystemDesignLoad",
+    "ChangeRefrigerationSystemDefrostSchedule",
+    "ChangeRefrigerationSystemCaseCount",
+    "DeleteRefrigerationSystem"
+   ]
+  },
+  {
+   "dir": "🌞️daylight-zone",
+   "doc": "/** 🌞️ Energy-model mutation payloads of the `daylight-zone` group: the TypeScript twin of the Rust leaves below `./`, one interface per leaf, wire-tagged by the camelCase variant name. */",
+   "names": [
+    "DeleteDaylightZone",
+    "ChangeDaylightZoneZone",
+    "CreateDaylightZone",
+    "ChangeDaylightZoneGlareLimit",
+    "ChangeDaylightZoneWindowTransmittance",
+    "ChangeDaylightZoneIlluminanceTarget"
+   ]
+  },
+  {
+   "dir": "🌡️thermostat",
+   "doc": "/** 🌡️ Energy-model mutation payloads of the `thermostat` group: the TypeScript twin of the Rust leaves below `./`, one interface per leaf, wire-tagged by the camelCase variant name. */",
+   "names": [
+    "ChangeThermostatHeatingThrottleRange",
+    "ChangeThermostatCoolingThrottleRange",
+    "ChangeThermostatCoolingSetpointSchedule",
+    "DeleteThermostat",
+    "ChangeThermostatZone",
+    "ChangeThermostatHeatingSetpointSchedule",
+    "CreateThermostat"
+   ]
+  },
+  {
+   "dir": "🌪️ventilation",
+   "doc": "/** 🌪️ Energy-model mutation payloads of the `ventilation` group: the TypeScript twin of the Rust leaves below `./`, one interface per leaf, wire-tagged by the camelCase variant name. */",
+   "names": [
+    "CreateMechanicalVentilation",
+    "ChangeMechanicalVentilationFanDeltaPressure",
+    "ChangeMechanicalVentilationFanTotalEfficiency",
+    "ChangeMechanicalVentilationSchedule",
+    "DeleteMechanicalVentilation",
+    "ChangeMechanicalVentilationDesignFlow",
+    "ChangeMechanicalVentilationZone"
+   ]
+  },
+  {
+   "dir": "🌬️air-loop",
+   "doc": "/** 🌬️ Energy-model mutation payloads of the `air-loop` group: the TypeScript twin of the Rust leaves below `./`, one interface per leaf, wire-tagged by the camelCase variant name. */",
+   "names": [
+    "ChangeAirLoopSupplyNode",
+    "ChangeAirLoopReturnNode",
+    "ChangeAirLoopDesignSupplyAirFlow",
+    "RenameAirLoop",
+    "CreateAirLoop",
+    "DeleteAirLoop",
+    "RemoveAirLoopTerminalZone",
+    "AddAirLoopTerminalZone"
+   ]
+  },
+  {
+   "dir": "🌳️shading",
+   "doc": "/** 🌳️ Energy-model mutation payloads of the `shading` group: the TypeScript twin of the Rust leaves below `./`, one interface per leaf, wire-tagged by the camelCase variant name. */",
+   "names": [
+    "ChangeShadingSurfaceTransmittanceSchedule",
+    "CreateShadingSurface",
+    "RenameShadingSurface",
+    "ReplaceShadingSurfaceVertices",
+    "DeleteShadingSurface"
+   ]
+  },
+  {
+   "dir": "🍃️outdoor-air",
+   "doc": "/** 🍃️ Energy-model mutation payloads of the `outdoor-air` group: the TypeScript twin of the Rust leaves below `./`, one interface per leaf, wire-tagged by the camelCase variant name. */",
+   "names": [
+    "ChangeOutdoorAirSystemAirLoop",
+    "CreateOutdoorAirSystem",
+    "DeleteOutdoorAirSystem",
+    "ChangeOutdoorAirSystemEconomizerEnabled",
+    "ChangeOutdoorAirSystemMinOaFlow"
+   ]
+  },
+  {
+   "dir": "🎚️setpoint",
+   "doc": "/** 🎚️ Energy-model mutation payloads of the `setpoint` group: the TypeScript twin of the Rust leaves below `./`, one interface per leaf, wire-tagged by the camelCase variant name. */",
+   "names": [
+    "DeleteSetpointManager",
+    "ChangeSetpointManagerSchedule",
+    "CreateSetpointManager",
+    "ReplaceSetpointManagerKind",
+    "RenameSetpointManager"
+   ]
+  },
+  {
+   "dir": "🎨️finish",
+   "doc": "/** 🎨️ Energy-model mutation payloads of the `finish` group: the TypeScript twin of the Rust leaves below `./`, one interface per leaf, wire-tagged by the camelCase variant name. */",
+   "names": [
+    "ChangeMaterialSolarAbsorptance",
+    "ChangeMaterialVisibleAbsorptance",
+    "ChangeMaterialThermalAbsorptance",
+    "ChangeMaterialRoughness"
+   ]
+  },
+  {
+   "dir": "🏗️construction",
+   "doc": "/** 🏗️ Energy-model mutation payloads of the `construction` group: the TypeScript twin of the Rust leaves below `./`, one interface per leaf, wire-tagged by the camelCase variant name. */",
+   "names": [
+    "AddConstructionLayer",
+    "RemoveConstructionLayer",
+    "CreateConstruction",
+    "ReorderConstructionLayers",
+    "DeleteConstruction",
+    "RenameConstruction"
+   ]
+  },
+  {
+   "dir": "🏡️zone",
+   "doc": "/** 🏡️ Energy-model mutation payloads of the `zone` group: the TypeScript twin of the Rust leaves below `./`, one interface per leaf, wire-tagged by the camelCase variant name. */",
+   "names": [
+    "ChangeZoneMultiplier",
+    "ChangeZoneConditioned",
+    "CreateZone",
+    "DeleteZone",
+    "RenameZone",
+    "ChangeZoneFloorAreaParticipation",
+    "ChangeZoneVolume"
+   ]
+  },
+  {
+   "dir": "🏭️plant-loop",
+   "doc": "/** 🏭️ Energy-model mutation payloads of the `plant-loop` group: the TypeScript twin of the Rust leaves below `./`, one interface per leaf, wire-tagged by the camelCase variant name. */",
+   "names": [
+    "ChangePlantLoopSupplyTemperature",
+    "ChangePlantLoopType",
+    "CreatePlantLoop",
+    "RemovePlantLoopEquipment",
+    "DeletePlantLoop",
+    "RenamePlantLoop",
+    "AddPlantLoopEquipment",
+    "ChangePlantLoopDesignFlow",
+    "ChangePlantLoopReturnTemperature"
+   ]
+  },
+  {
+   "dir": "👥️people-gain",
+   "doc": "/** 👥️ Energy-model mutation payloads of the `people-gain` group: the TypeScript twin of the Rust leaves below `./`, one interface per leaf, wire-tagged by the camelCase variant name. */",
+   "names": [
+    "ChangePeopleGainSchedule",
+    "ChangePeopleGainSensibleFraction",
+    "ChangePeopleGainActivitySchedule",
+    "CreatePeopleGain",
+    "ChangePeopleGainPeoplePerArea",
+    "ChangePeopleGainLatentFraction",
+    "ChangePeopleGainRadiantFraction",
+    "ChangePeopleGainZone",
+    "DeletePeopleGain"
+   ]
+  },
+  {
+   "dir": "💡️lighting-gain",
+   "doc": "/** 💡️ Energy-model mutation payloads of the `lighting-gain` group: the TypeScript twin of the Rust leaves below `./`, one interface per leaf, wire-tagged by the camelCase variant name. */",
+   "names": [
+    "ChangeLightingGainSchedule",
+    "ChangeLightingGainRadiantFraction",
+    "ChangeLightingGainReturnAirFraction",
+    "CreateLightingGain",
+    "ChangeLightingGainVisibleFraction",
+    "ChangeLightingGainWattsPerArea",
+    "ChangeLightingGainZone",
+    "DeleteLightingGain"
+   ]
+  },
+  {
+   "dir": "💧️humidistat",
+   "doc": "/** 💧️ Energy-model mutation payloads of the `humidistat` group: the TypeScript twin of the Rust leaves below `./`, one interface per leaf, wire-tagged by the camelCase variant name. */",
+   "names": [
+    "ChangeHumidistatHumidifyingSetpointSchedule",
+    "CreateHumidistat",
+    "ChangeHumidistatHumidifyingThrottleRange",
+    "ChangeHumidistatZone",
+    "DeleteHumidistat",
+    "ChangeHumidistatDehumidifyingSetpointSchedule",
+    "ChangeHumidistatDehumidifyingThrottleRange"
+   ]
+  },
+  {
+   "dir": "💨️infiltration",
+   "doc": "/** 💨️ Energy-model mutation payloads of the `infiltration` group: the TypeScript twin of the Rust leaves below `./`, one interface per leaf, wire-tagged by the camelCase variant name. */",
+   "names": [
+    "ChangeInfiltrationSchedule",
+    "ChangeInfiltrationZone",
+    "ChangeInfiltrationFlowPerExteriorArea",
+    "CreateInfiltration",
+    "ChangeInfiltrationDesignFlowAch",
+    "ChangeInfiltrationMethod",
+    "DeleteInfiltration"
+   ]
+  },
+  {
+   "dir": "💯️ideal-loads",
+   "doc": "/** 💯️ Energy-model mutation payloads of the `ideal-loads` group: the TypeScript twin of the Rust leaves below `./`, one interface per leaf, wire-tagged by the camelCase variant name. */",
+   "names": [
+    "ChangeIdealLoadsSystemMaxHeatingCapacity",
+    "ChangeIdealLoadsSystemZone",
+    "ChangeIdealLoadsSystemOutdoorAirPerArea",
+    "ChangeIdealLoadsSystemMaxHeatingSupplyAirTemp",
+    "ChangeIdealLoadsSystemMinCoolingSupplyAirTemp",
+    "ChangeIdealLoadsSystemMaxCoolingCapacity",
+    "ChangeIdealLoadsSystemOutdoorAirPerPerson",
+    "CreateIdealLoadsSystem",
+    "DeleteIdealLoadsSystem"
+   ]
+  },
+  {
+   "dir": "📆️year-schedule",
+   "doc": "/** 📆️ Energy-model mutation payloads of the `year-schedule` group: the TypeScript twin of the Rust leaves below `./`, one interface per leaf, wire-tagged by the camelCase variant name. */",
+   "names": [
+    "ChangeAnnualScheduleHolidayDailySchedule",
+    "AddAnnualScheduleHoliday",
+    "RemoveAnnualScheduleHoliday",
+    "ChangeAnnualScheduleDefaultDailySchedule",
+    "DeleteAnnualSchedule",
+    "InsertAnnualScheduleRule",
+    "RemoveAnnualScheduleRule",
+    "CreateAnnualSchedule",
+    "ReorderAnnualScheduleRules"
+   ]
+  },
+  {
+   "dir": "📈️time-series",
+   "doc": "/** 📈️ Energy-model mutation payloads of the `time-series` group: the TypeScript twin of the Rust leaves below `./`, one interface per leaf, wire-tagged by the camelCase variant name. */",
+   "names": [
+    "DeleteTimeSeriesSchedule",
+    "ReplaceTimeSeriesScheduleValues",
+    "ChangeTimeSeriesScheduleTimestep",
+    "CreateTimeSeriesSchedule"
+   ]
+  },
+  {
+   "dir": "📋️space-list",
+   "doc": "/** 📋️ Energy-model mutation payloads of the `space-list` group: the TypeScript twin of the Rust leaves below `./`, one interface per leaf, wire-tagged by the camelCase variant name. */",
+   "names": [
+    "AddSpaceListMember",
+    "CreateSpaceList",
+    "DeleteSpaceList",
+    "RemoveSpaceListMember",
+    "RenameSpaceList"
+   ]
+  },
+  {
+   "dir": "📍️site",
+   "doc": "/** 📍️ Energy-model mutation payloads of the `site` group: the TypeScript twin of the Rust leaves below `./`, one interface per leaf, wire-tagged by the camelCase variant name. */",
+   "names": [
+    "ChangeGroundDeep",
+    "ChangeSiteElevation",
+    "ChangeSiteLatitude",
+    "ChangeSiteLongitude",
+    "ChangeGroundBuilding",
+    "ChangeGroundShallow",
+    "ChangeSiteNorthAxis",
+    "ChangeSiteTimeZone"
+   ]
+  },
+  {
+   "dir": "📏️sizing",
+   "doc": "/** 📏️ Energy-model mutation payloads of the `sizing` group: the TypeScript twin of the Rust leaves below `./`, one interface per leaf, wire-tagged by the camelCase variant name. */",
+   "names": [
+    "ChangeSizingObjectDesignDayType",
+    "ChangeSizingObjectZone",
+    "CreateSizingObject",
+    "ChangeSizingObjectSizingType",
+    "DeleteSizingObject"
+   ]
+  },
+  {
+   "dir": "🔋️model",
+   "doc": "/** 🔋️ Energy-model mutation payloads of the `model` group: the TypeScript twin of the Rust leaves below `./`, one interface per leaf, wire-tagged by the camelCase variant name. */",
+   "names": [
+    "DisconnectReferencedModel",
+    "UnbindWeatherFile",
+    "BindWeatherFile",
+    "RenameModel",
+    "RemoveOutputVariable",
+    "AddOutputVariable",
+    "ChangeModelVersion",
+    "ConnectReferencedModel",
+    "ReplaceAirflowNetwork"
+   ]
+  },
+  {
+   "dir": "🔌️load-center",
+   "doc": "/** 🔌️ Energy-model mutation payloads of the `load-center` group: the TypeScript twin of the Rust leaves below `./`, one interface per leaf, wire-tagged by the camelCase variant name. */",
+   "names": [
+    "AddElectricalLoadCenterPv",
+    "RemoveElectricalLoadCenterPv",
+    "CreateElectricalLoadCenter",
+    "AddElectricalLoadCenterBattery",
+    "DeleteElectricalLoadCenter",
+    "RenameElectricalLoadCenter",
+    "RemoveElectricalLoadCenterBattery"
+   ]
+  },
+  {
+   "dir": "🔍️glazing",
+   "doc": "/** 🔍️ Energy-model mutation payloads of the `glazing` group: the TypeScript twin of the Rust leaves below `./`, one interface per leaf, wire-tagged by the camelCase variant name. */",
+   "names": [
+    "ChangeFenestrationShgc",
+    "ChangeFenestrationVlt",
+    "ChangeFenestrationUValue",
+    "ChangeFenestrationFrameConductance",
+    "BindFenestrationGlazingConstruction",
+    "ChangeFenestrationDividerConductance",
+    "ClearFenestrationGlazingConstruction"
+   ]
+  },
+  {
+   "dir": "🔒️enclosure",
+   "doc": "/** 🔒️ Energy-model mutation payloads of the `enclosure` group: the TypeScript twin of the Rust leaves below `./`, one interface per leaf, wire-tagged by the camelCase variant name. */",
+   "names": [
+    "CreateThermalEnclosure",
+    "DeleteThermalEnclosure",
+    "AddThermalEnclosureZone",
+    "RemoveThermalEnclosureZone",
+    "RenameThermalEnclosure"
+   ]
+  },
+  {
+   "dir": "🔥️solar-thermal",
+   "doc": "/** 🔥️ Energy-model mutation payloads of the `solar-thermal` group: the TypeScript twin of the Rust leaves below `./`, one interface per leaf, wire-tagged by the camelCase variant name. */",
+   "names": [
+    "ChangeSolarThermalSystemAzimuth",
+    "CreateSolarThermalSystem",
+    "DeleteSolarThermalSystem",
+    "ChangeSolarThermalSystemEfficiency",
+    "ChangeSolarThermalSystemTilt",
+    "ChangeSolarThermalSystemCollectorArea",
+    "ChangeSolarThermalSystemStorageVolume"
+   ]
+  },
+  {
+   "dir": "🔧️zone-equipment",
+   "doc": "/** 🔧️ Energy-model mutation payloads of the `zone-equipment` group: the TypeScript twin of the Rust leaves below `./`, one interface per leaf, wire-tagged by the camelCase variant name. */",
+   "names": [
+    "ChangeZoneEquipmentCoolingCapacity",
+    "ChangeZoneEquipmentPriority",
+    "ChangeZoneEquipmentZone",
+    "ChangeZoneEquipmentType",
+    "DeleteZoneEquipment",
+    "CreateZoneEquipment",
+    "ChangeZoneEquipmentHeatingCapacity"
+   ]
+  },
+  {
+   "dir": "🔲️boundary",
+   "doc": "/** 🔲️ Energy-model mutation payloads of the `boundary` group: the TypeScript twin of the Rust leaves below `./`, one interface per leaf, wire-tagged by the camelCase variant name. */",
+   "names": [
+    "ChangeSurfaceSunExposed",
+    "ChangeSurfaceWindExposed",
+    "DisconnectSurfaces",
+    "ChangeSurfaceBoundaryCondition",
+    "ConnectSurfaces"
+   ]
+  },
+  {
+   "dir": "🕐️fixed-schedule",
+   "doc": "/** 🕐️ Energy-model mutation payloads of the `fixed-schedule` group: the TypeScript twin of the Rust leaves below `./`, one interface per leaf, wire-tagged by the camelCase variant name. */",
+   "names": [
+    "DeleteConstantSchedule",
+    "CreateConstantSchedule",
+    "ChangeConstantScheduleValue"
+   ]
+  },
+  {
+   "dir": "🕒️day-schedule",
+   "doc": "/** 🕒️ Energy-model mutation payloads of the `day-schedule` group: the TypeScript twin of the Rust leaves below `./`, one interface per leaf, wire-tagged by the camelCase variant name. */",
+   "names": [
+    "DeleteDailySchedule",
+    "ReplaceDailyScheduleHourlyValues",
+    "ChangeDailyScheduleInterpolation",
+    "CreateDailySchedule",
+    "ChangeDailyScheduleLimits"
+   ]
+  },
+  {
+   "dir": "🕳️leakage",
+   "doc": "/** 🕳️ Energy-model mutation payloads of the `leakage` group: the TypeScript twin of the Rust leaves below `./`, one interface per leaf, wire-tagged by the camelCase variant name. */",
+   "names": [
+    "ChangeInfiltrationConstantTermCoefficient",
+    "ChangeInfiltrationTemperatureTermCoefficient",
+    "ChangeInfiltrationVelocityTermCoefficient",
+    "ChangeInfiltrationVelocitySquaredTermCoefficient",
+    "ChangeInfiltrationStackHeight",
+    "ChangeInfiltrationEffectiveLeakageArea",
+    "ChangeInfiltrationDischargeCoefficient"
+   ]
+  },
+  {
+   "dir": "🖥️equipment-gain",
+   "doc": "/** 🖥️ Energy-model mutation payloads of the `equipment-gain` group: the TypeScript twin of the Rust leaves below `./`, one interface per leaf, wire-tagged by the camelCase variant name. */",
+   "names": [
+    "ChangeEquipmentGainSchedule",
+    "ChangeEquipmentGainWattsPerArea",
+    "ChangeEquipmentGainRadiantFraction",
+    "ChangeEquipmentGainLatentFraction",
+    "CreateEquipmentGain",
+    "ChangeEquipmentGainZone",
+    "DeleteEquipmentGain"
+   ]
+  },
+  {
+   "dir": "🗓️week-schedule",
+   "doc": "/** 🗓️ Energy-model mutation payloads of the `week-schedule` group: the TypeScript twin of the Rust leaves below `./`, one interface per leaf, wire-tagged by the camelCase variant name. */",
+   "names": [
+    "DeleteWeeklySchedule",
+    "ChangeWeeklyScheduleDay",
+    "CreateWeeklySchedule"
+   ]
+  },
+  {
+   "dir": "🚰️water-system",
+   "doc": "/** 🚰️ Energy-model mutation payloads of the `water-system` group: the TypeScript twin of the Rust leaves below `./`, one interface per leaf, wire-tagged by the camelCase variant name. */",
+   "names": [
+    "ChangeWaterSystemSchedule",
+    "CreateWaterSystem",
+    "ChangeWaterSystemPeakFlow",
+    "DeleteWaterSystem",
+    "ChangeWaterSystemFixtureCount"
+   ]
+  },
+  {
+   "dir": "🚿️shw-system",
+   "doc": "/** 🚿️ Energy-model mutation payloads of the `shw-system` group: the TypeScript twin of the Rust leaves below `./`, one interface per leaf, wire-tagged by the camelCase variant name. */",
+   "names": [
+    "ChangeShwSystemHeaterCapacity",
+    "ChangeShwSystemSetpoint",
+    "ChangeShwSystemSchedule",
+    "DeleteShwSystem",
+    "CreateShwSystem",
+    "ChangeShwSystemStorageVolume"
+   ]
+  },
+  {
+   "dir": "🛋️space",
+   "doc": "/** 🛋️ Energy-model mutation payloads of the `space` group: the TypeScript twin of the Rust leaves below `./`, one interface per leaf, wire-tagged by the camelCase variant name. */",
+   "names": [
+    "RenameSpace",
+    "ChangeSpaceZone",
+    "ChangeSpaceFloorArea",
+    "DeleteSpace",
+    "CreateSpace"
+   ]
+  },
+  {
+   "dir": "🛏️room-air",
+   "doc": "/** 🛏️ Energy-model mutation payloads of the `room-air` group: the TypeScript twin of the Rust leaves below `./`, one interface per leaf, wire-tagged by the camelCase variant name. */",
+   "names": [
+    "CreateRoomAirModelAssignment",
+    "DeleteRoomAirModelAssignment",
+    "ChangeRoomAirModel"
+   ]
+  },
+  {
+   "dir": "🥂️window-layer",
+   "doc": "/** 🥂️ Energy-model mutation payloads of the `window-layer` group: the TypeScript twin of the Rust leaves below `./`, one interface per leaf, wire-tagged by the camelCase variant name. */",
+   "names": [
+    "RenameGasMaterial",
+    "ChangeGlazingMaterialThickness",
+    "ChangeGlazingMaterialConductivity",
+    "ChangeGlazingMaterialSolarTransmittance",
+    "RenameGlazingMaterial",
+    "ChangeGasMaterialThickness",
+    "ChangeGasMaterialGas",
+    "ChangeGlazingMaterialVisibleTransmittance",
+    "ChangeGlazingMaterialInfraredEmissivity"
+   ]
+  },
+  {
+   "dir": "🧱️surface",
+   "doc": "/** 🧱️ Energy-model mutation payloads of the `surface` group: the TypeScript twin of the Rust leaves below `./`, one interface per leaf, wire-tagged by the camelCase variant name. */",
+   "names": [
+    "RenameSurface",
+    "ChangeSurfaceMultiplier",
+    "ReplaceSurfaceVertices",
+    "ChangeSurfaceZone",
+    "CreateSurface",
+    "ChangeSurfaceClass",
+    "ChangeSurfaceConstruction",
+    "DeleteSurface"
+   ]
+  },
+  {
+   "dir": "🪟️fenestration",
+   "doc": "/** 🪟️ Energy-model mutation payloads of the `fenestration` group: the TypeScript twin of the Rust leaves below `./`, one interface per leaf, wire-tagged by the camelCase variant name. */",
+   "names": [
+    "ChangeFenestrationHeight",
+    "ChangeFenestrationSillHeight",
+    "RenameFenestration",
+    "ReplaceFenestrationVertices",
+    "DeleteFenestration",
+    "ChangeFenestrationArea",
+    "ChangeFenestrationSurface",
+    "CreateFenestration"
+   ]
+  },
+  {
+   "dir": "🪨️material",
+   "doc": "/** 🪨️ Energy-model mutation payloads of the `material` group: the TypeScript twin of the Rust leaves below `./`, one interface per leaf, wire-tagged by the camelCase variant name. */",
+   "names": [
+    "ChangeMaterialSpecificHeat",
+    "ChangeMaterialDensity",
+    "ChangeMaterialThickness",
+    "ChangeMaterialConductivity",
+    "CreateMaterial",
+    "RenameMaterial",
+    "DeleteMaterial"
+   ]
+  },
+  {
+   "dir": "🪫️battery",
+   "doc": "/** 🪫️ Energy-model mutation payloads of the `battery` group: the TypeScript twin of the Rust leaves below `./`, one interface per leaf, wire-tagged by the camelCase variant name. */",
+   "names": [
+    "ChangeBatteryMaxCharge",
+    "ChangeBatteryMaxDischarge",
+    "DeleteBattery",
+    "ChangeBatteryRoundTripEfficiency",
+    "ChangeBatteryCapacity",
+    "CreateBattery"
+   ]
+  }
+ ]
+}

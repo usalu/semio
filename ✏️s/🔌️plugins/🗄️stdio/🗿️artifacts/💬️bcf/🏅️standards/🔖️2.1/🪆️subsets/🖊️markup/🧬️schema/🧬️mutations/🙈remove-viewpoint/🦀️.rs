@@ -8,8 +8,8 @@ use super::*;
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 pub struct RemoveViewpoint {
-    pub(crate) topic_guid: String,
-    pub(crate) guid: String,
+    pub topic_guid: String,
+    pub guid: String,
 }
 
 impl protocol::MutationKind<BcfSnapshot, BcfMutation> for RemoveViewpoint {

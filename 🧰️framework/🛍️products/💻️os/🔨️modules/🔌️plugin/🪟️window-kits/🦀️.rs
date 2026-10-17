@@ -533,7 +533,7 @@ pub fn validate_ui_dispatch_classification(owner: &str, id: &str, classification
 }
 
 impl AppActionRegistry {
-    #[cfg(test)]
+    #[cfg(any(test, feature = "artifact-app-testing"))]
     #[doc(hidden)]
     pub fn test_with_controller_id(controller_id: String) -> Self {
         Self { controller_id, ..Self::default() }
@@ -759,13 +759,13 @@ impl AppActionRegistry {
         &self.controller_id
     }
 
-    #[cfg(test)]
+    #[cfg(any(test, feature = "artifact-app-testing"))]
     #[doc(hidden)]
     pub fn test_set_action_classification(&mut self, id: &str, classification: semio_framework::InteractiveJobClassification) {
         self.actions.get_mut(id).expect("test action declaration").semantics.execution.interactive_job = classification;
     }
 
-    #[cfg(test)]
+    #[cfg(any(test, feature = "artifact-app-testing"))]
     #[doc(hidden)]
     pub fn test_set_app_command_classification(&mut self, id: &str, classification: semio_framework::InteractiveJobClassification) {
         self.app_commands.get_mut(id).expect("test app command declaration").semantics.execution.interactive_job = classification;

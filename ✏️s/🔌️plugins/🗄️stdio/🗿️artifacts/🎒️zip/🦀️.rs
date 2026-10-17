@@ -11,8 +11,6 @@ extern crate semio_framework_value_derive as value_derive;
 
 pub use semio_s_artifact_stdio_contract::{apply_mutation, apply_mutation_checked, mutation_from_payload_json, mutation_inverse, mutation_payload_json, MutationRefusal};
 
-use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
-
 pub use schema::diff::ZipDiff;
 pub use schema::mutations::ZipMutation;
 pub use schema::snapshot::ZipSnapshot;
@@ -20,196 +18,27 @@ pub use schema::ZipArtifact;
 /// 🧬️ The wire contract a native test host decodes `🥒️.feature` witnesses through and inverts them with
 /// (`Mutation::from_payload_value`/`Mutation::inverse`), re-exported because such a host links this crate alone.
 
-/// 🏷️ Document schema / DSL envelope id.
-pub const STDIO_ZIP_DOCUMENT_SCHEMA: &str = "stdio.zip";
+pub use semio_s_artifact_stdio_zip_inferences::{STDIO_ZIP_DOCUMENT_SCHEMA};
 
-/// 🧬️ Artifact schema descriptor id.
-pub const ZIP_ARTIFACT_SCHEMA_ID: &str = "s.stdio.zip";
+pub use semio_s_artifact_stdio_zip_inferences::{ZIP_ARTIFACT_SCHEMA_ID};
 
-/// 📜 Schema-owned package definition.
-pub const ARTIFACT_DEFINITION_SCHEMA: &str = include_str!("📜️artifact-definition.json");
+pub use semio_s_artifact_stdio_zip_inferences::{ARTIFACT_DEFINITION_SCHEMA};
 
-pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::PluginAssemblyError> {
-    let factories = native_codecs();
-    let executables = semio_s_artifact_stdio_contract::native_codec_executables(ARTIFACT_DEFINITION_SCHEMA, &factories)?;
-    semio_s_artifact_stdio_contract::definition_from_schema_with_executables(ARTIFACT_DEFINITION_SCHEMA, executables)
-}
+pub use semio_s_artifact_stdio_zip_schema::{definition};
 
-pub fn formats() -> Result<Vec<semio_framework_plugin::io::FormatDescriptor>, semio_framework_plugin::ArtifactDefinitionError> {
-    semio_s_artifact_stdio_contract::format_descriptors(ARTIFACT_DEFINITION_SCHEMA)
-}
+pub use semio_s_artifact_stdio_zip_inferences::{formats};
 
-fn native_codec()->store::os_store::serialization::ArtifactCodec{store::artifact_codec::<ZipSnapshot,ZipMutation>(STDIO_ZIP_DOCUMENT_SCHEMA)}
+pub use semio_s_artifact_stdio_zip_schema::{native_codec};
 
-pub fn native_codecs() -> Vec<semio_s_artifact_stdio_contract::NativeCodecFactory> {
-    vec![semio_s_artifact_stdio_contract::NativeCodecFactory { id: "stdio.native.zip.v1", artifact: "zip", kind: artifact_kind, codec: native_codec }]
-}
+pub use semio_s_artifact_stdio_zip_schema::{native_codecs};
 
-pub fn contribution() -> semio_s_artifact_stdio_contract::ArtifactContribution {
-    semio_s_artifact_stdio_contract::ArtifactContribution { definition_constraint: None, identity: "zip", schema: ARTIFACT_DEFINITION_SCHEMA, definition, assembly, formats, native_codecs }
-}
+pub use semio_s_artifact_stdio_zip_editor::{contribution};
 
-//#region 🔖️Declaration
-/// 🔖️ This artifact's declaration (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W6, g2) —
-/// replaces the old side-effecting `crate::engine::register()`. Mirrors `🔋️energy`'s
-/// `s.model` exemplar: headless library artifact, zero `ArtifactApp`s, so `.document_codec_bare`
-/// stands in for the old `store::os_store::codec_registry::register_document_codec(store::artifact_codec::<ZipSnapshot,
-/// ZipMutation>(...))` call. `.composers(...)` reaches the subset IO module's own `io_registry`
-/// (the former `⚙️engine`'s `io_registry`, dissolved into `standards::v2_0::subsets::any::io` per
-/// ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES), whose `entries()` already
-/// aggregates BOTH the `🧱️base` and `🌐️iso21320` `ComposerEntry` rows — NOT this file's own
-/// shadowing `io_registry` below, whose `entries()` returns `&'static [&'static ComposerEntry]`
-/// (references) and would silently rebind under a bare call (this ticket's "SILENT REBIND" hazard).
-/// `.subset_validators(...)` is new here: the old `register()`'s
-/// `crate::standards::v2_0::subsets::iso21320::io::register()` call
-/// (`register_subset_validator(validator_entry())`) is expressed as data by re-deriving the same
-/// `SubsetValidatorEntry` via `subset_validator_entry_of::<ZipIso21320Validator>()` — the identical
-/// side-effect-free constructor that file's own (module-private) `validator_entry()` calls, so no
-/// visibility widening into `🚪️io/` was needed.
-///
-/// **NOT covered by any field**: nothing — zip's `register()` never called `register_schema_spec`
-/// in the first place (`ZipSnapshot`/`ZipDiff` are hand-rolled, no derivable `RecordSpec` — see
-/// the deleted `register_pilot_languages`' own doc comment), so this artifact converts cleanly with
-/// zero residual `.setup()` calls.
-/// 🧩️ Binds this executable root to its sole schema-owned definition.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn assembly() -> Result<semio_s_artifact_stdio_contract::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
-    semio_s_artifact_stdio_contract::runtime_assembly("zip", definition()?, declaration)
-}
+pub use semio_s_artifact_stdio_zip_editor::{assembly, declaration, pilot_languages, zip_subset_validators};
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
-    let formats = formats()?;
-    semio_framework_plugin::ArtifactDeclaration::builder(definition)
-        .schema(schema::zip_artifact_schema_descriptor())
-        .formats(formats)
-        .inferences([schema::inferences::zip_artifact_inference_descriptor()])
-        .composers(standards::v2_0::subsets::iso21320::io::io_registry::entries())
-        .subset_validators(zip_subset_validators())
-        .languages(pilot_languages())
-        .document_codec_bare::<ZipSnapshot, ZipMutation>(STDIO_ZIP_DOCUMENT_SCHEMA, semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.zip", standard: semio_framework_artifact_reference::StandardId("2.0"), subset: semio_framework_artifact_reference::SubsetId("*") })
-        .document_codec_bare::<ZipSnapshot, ZipMutation>(STDIO_ZIP_DOCUMENT_SCHEMA, semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.zip", standard: semio_framework_artifact_reference::StandardId("2.0"), subset: semio_framework_artifact_reference::SubsetId("iso21320") })
-        .try_build()
-}
-
-/// 🛡️ The `🌐️iso21320` subset's `SubsetValidatorEntry`, re-derived (not moved) from the same
-/// side-effect-free `subset_validator_entry_of::<ZipIso21320Validator>()` constructor
-/// `🚪️io/🦀️.rs`'s own (module-private) `validator_entry()` calls.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn zip_subset_validators() -> &'static [semio_framework_plugin::io::SubsetValidatorEntry] {
-    static ENTRIES: std::sync::OnceLock<Vec<semio_framework_plugin::io::SubsetValidatorEntry>> = std::sync::OnceLock::new();
-    ENTRIES.get_or_init(|| vec![semio_framework_plugin::io::subset_validator_entry_of::<standards::v2_0::subsets::iso21320::io::ZipIso21320Validator>()]).as_slice()
-}
-
-/// 📌️ Handcrafted facet grammars (text) and protocols (binary), copied verbatim (five
-/// `LanguageSpec` rows) from the former `crate::engine::register_pilot_languages`'s
-/// own `dsl::register_language(...)` call bodies.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
-    static LANGUAGES: std::sync::OnceLock<Vec<semio_framework_dsl::LanguageSpec>> = std::sync::OnceLock::new();
-    LANGUAGES
-        .get_or_init(|| {
-            vec![
-                semio_framework_dsl::LanguageSpec {
-                    id: "stdio.zip",
-                    extension: Some("zip"),
-                    role: semio_framework_dsl::LanguageRole::Document,
-                    grammar: Some(standards::v2_0::subsets::base::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(standards::v2_0::subsets::base::io::text::snapshot::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(standards::v2_0::subsets::base::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(standards::v2_0::subsets::base::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
-                    hooks: semio_framework_dsl::passthrough_hooks("stdio.zip"),
-                },
-                semio_framework_dsl::LanguageSpec {
-                    id: "stdio.zip.op",
-                    extension: None,
-                    role: semio_framework_dsl::LanguageRole::Ops,
-                    grammar: Some(standards::v2_0::subsets::base::io::text::mutations::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(standards::v2_0::subsets::base::io::text::mutations::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(standards::v2_0::subsets::base::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(standards::v2_0::subsets::base::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
-                    hooks: semio_framework_dsl::passthrough_hooks("stdio.zip.op"),
-                },
-                semio_framework_dsl::LanguageSpec {
-                    id: "stdio.zip.diff",
-                    extension: None,
-                    role: semio_framework_dsl::LanguageRole::Diff,
-                    grammar: Some(standards::v2_0::subsets::base::io::text::diff::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(standards::v2_0::subsets::base::io::text::diff::COMPONENT_GRAMMAR_PATH),
-                    protocol: None,
-                    protocol_path: None,
-                    hooks: semio_framework_dsl::passthrough_hooks("stdio.zip.diff"),
-                },
-                semio_framework_dsl::LanguageSpec {
-                    id: "stdio.zip.pack",
-                    extension: None,
-                    role: semio_framework_dsl::LanguageRole::Pack,
-                    grammar: None,
-                    grammar_path: None,
-                    protocol: Some(standards::v2_0::subsets::base::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(standards::v2_0::subsets::base::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
-                    hooks: semio_framework_dsl::passthrough_hooks("stdio.zip.pack"),
-                },
-                semio_framework_dsl::LanguageSpec {
-                    id: "stdio.zip.spr",
-                    extension: None,
-                    role: semio_framework_dsl::LanguageRole::Spr,
-                    grammar: None,
-                    grammar_path: None,
-                    protocol: Some(standards::v2_0::subsets::base::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(standards::v2_0::subsets::base::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
-                    hooks: semio_framework_dsl::passthrough_hooks("stdio.zip.spr"),
-                },
-            ]
-        })
-        .as_slice()
-}
-//#endregion 🔖️Declaration
-
-//#region 🔖️ArtifactKind
-/// 🗂️ This artifact's `ArtifactKindSpec`.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn artifact_kind() -> ArtifactKindSpec {
-    ArtifactKindSpec {
-        id: "s.stdio.zip".into(),
-        label: semio_framework_ui_locale::LocalizedLabel::native("Zip", "Zip"),
-        source_format: STDIO_ZIP_DOCUMENT_SCHEMA.into(),
-        component_kind: "stdio".into(),
-        dimension: "data".into(),
-        media_capability: OsMediaCapability::MeshOnly,
-        media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
-        schema: STDIO_ZIP_DOCUMENT_SCHEMA.into(),
-        export_formats: vec![],
-        import_formats: vec![],
-        export_stdio_kinds: vec![],
-        import_stdio_kinds: vec![],
-    }
-}
-//#endregion 🔖️ArtifactKind
+pub use semio_s_artifact_stdio_zip_inferences::{artifact_kind};
 //#region 🚪️DerivedIoRegistry
-pub mod io_registry {
-    use crate::standards::v2_0::subsets::iso21320::io::io_registry as v2_0;
-    use {semio_framework_plugin::io::register_composer_entries,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposedArtifact,semio_framework_plugin::io::ComposerEntry,semio_framework_artifact_reference::Dialect,semio_framework_plugin::io::ErasedComposeSource};
-    use std::sync::OnceLock;
-
-    static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
-
-    // 🚫️async: E1 pure table accessor consumed by OnceLock::get_or_init's sync closure — see R9
-    pub fn entries() -> &'static [&'static ComposerEntry] {
-        ENTRIES.get_or_init(|| v2_0::entries().iter().collect()).as_slice()
-    }
-
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
-        let entry = entries().iter().find(|e| e.writes == target).ok_or_else(|| ComposeError { message: format!("ZipComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
-        ::semio_framework_async::poll::resolve_ready((entry.compose)(sources))
-    }
-
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn register() {
-        register_composer_entries(v2_0::entries()).expect("static Stdio registration must be available and conflict-free");
-    }
-}
+pub use semio_s_artifact_stdio_zip_opc::io_registry;
 //#endregion 🚪️DerivedIoRegistry
 
 #[path = "."]
@@ -234,75 +63,37 @@ pub mod standards {
             pub mod base {
                 #[path = "."]
                 pub mod schema {
-                    #[path = "🏅️standards/🔖️2.0/🪆️subsets/🧱️base/🧬️schema/🦀️.rs"]
-                    mod component;
-                    pub use component::*;
-                    #[path = "."]
-                    pub mod snapshot {
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                    #[path = "."]
-                    pub mod inferences {
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/🧱️base/🧬️schema/💡️inferences/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                        #[path = "."]
-                        pub mod entries {
-                            #[path = "🏅️standards/🔖️2.0/🪆️subsets/🧱️base/🧬️schema/💡️inferences/🗃️entries/🦀️.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                    }
-                    #[path = "."]
-                    pub mod diff {
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/🧱️base/🧬️schema/🔺️diff/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                    #[path = "."]
-                    pub mod mutations {
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
+                    pub use semio_s_artifact_stdio_zip_schema_2::standards::v2_0::subsets::base::schema::*;
+
+                    pub use semio_s_artifact_stdio_zip_inferences::standards::v2_0::subsets::base::schema::snapshot;
+                    pub use semio_s_artifact_stdio_zip_inferences::standards::v2_0::subsets::base::schema::inferences;
+                    pub use semio_s_artifact_stdio_zip_mutations::standards::v2_0::subsets::base::schema::diff;
+                    pub use semio_s_artifact_stdio_zip_mutations::standards::v2_0::subsets::base::schema::mutations;
                 }
                 #[path = "."]
                 pub mod io {
-                    #[path = "🏅️standards/🔖️2.0/🪆️subsets/🧱️base/🚪️io/🦀️.rs"]
-                    mod component;
-                    pub use component::*;
+                    pub use semio_s_artifact_stdio_zip_schema::standards::v2_0::subsets::base::io::*;
+pub mod binary {
+    pub use semio_s_artifact_stdio_zip_schema::standards::v2_0::subsets::base::io::binary::*;
+    pub use semio_s_artifact_stdio_zip_inferences::standards::v2_0::subsets::base::io::binary::inferences;
+}
+pub mod sqlite {
+    pub use semio_s_artifact_stdio_zip_schema::standards::v2_0::subsets::base::io::sqlite::*;
+    pub use semio_s_artifact_stdio_zip_inferences::standards::v2_0::subsets::base::io::sqlite::snapshot;
+}
+pub mod text {
+    pub use semio_s_artifact_stdio_zip_schema::standards::v2_0::subsets::base::io::text::*;
+    pub use semio_s_artifact_stdio_zip_inferences::standards::v2_0::subsets::base::io::text::inferences;
+}
+
                     #[path = "."]
                     pub mod import {
                         #[path = "."]
                         pub mod deserializers {
                             #[path = "."]
                             pub mod artifacts {
-                                #[path = "."]
-                                pub mod binary {
-                                    #[path = "."]
-                                    pub mod v_raw {
-                                        #[path = "."]
-                                        pub mod base {
-                                            #[path = "🏅️standards/🔖️2.0/🪆️subsets/🧱️base/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/💾️binary/🔖️raw/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
-                                #[path = "."]
-                                pub mod deflate {
-                                    #[path = "."]
-                                    pub mod v_rfc1950 {
-                                        #[path = "."]
-                                        pub mod base {
-                                            #[path = "🏅️standards/🔖️2.0/🪆️subsets/🧱️base/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🗜️deflate/🔖️rfc1950/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
+                                pub use semio_s_artifact_stdio_zip_schema::standards::v2_0::subsets::base::io::import::deserializers::artifacts::binary;
+                                pub use semio_s_artifact_stdio_zip_opc::standards::v2_0::subsets::base::io::import::deserializers::artifacts::deflate;
                             }
                         }
                     }
@@ -312,30 +103,8 @@ pub mod standards {
                         pub mod serializers {
                             #[path = "."]
                             pub mod artifacts {
-                                #[path = "."]
-                                pub mod binary {
-                                    #[path = "."]
-                                    pub mod v_raw {
-                                        #[path = "."]
-                                        pub mod base {
-                                            #[path = "🏅️standards/🔖️2.0/🪆️subsets/🧱️base/🚪️io/📤️export/🧵️serializers/🗿️artifacts/💾️binary/🔖️raw/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
-                                #[path = "."]
-                                pub mod deflate {
-                                    #[path = "."]
-                                    pub mod v_rfc1950 {
-                                        #[path = "."]
-                                        pub mod base {
-                                            #[path = "🏅️standards/🔖️2.0/🪆️subsets/🧱️base/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🗜️deflate/🔖️rfc1950/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
+                                pub use semio_s_artifact_stdio_zip_opc::standards::v2_0::subsets::base::io::export::serializers::artifacts::binary;
+                                pub use semio_s_artifact_stdio_zip_opc::standards::v2_0::subsets::base::io::export::serializers::artifacts::deflate;
                             }
                         }
                     }
@@ -343,18 +112,8 @@ pub mod standards {
             }
             #[path = "."]
             pub mod iso21320 {
-                #[path = "."]
-                pub mod schema {
-                    #[path = "🏅️standards/🔖️2.0/🪆️subsets/🌐️iso21320/🧬️schema/🦀️.rs"]
-                    mod component;
-                    pub use component::*;
-                }
-                #[path = "."]
-                pub mod io {
-                    #[path = "🏅️standards/🔖️2.0/🪆️subsets/🌐️iso21320/🚪️io/🦀️.rs"]
-                    mod component;
-                    pub use component::*;
-                }
+                pub use semio_s_artifact_stdio_zip_schema::standards::v2_0::subsets::iso21320::schema;
+                pub use semio_s_artifact_stdio_zip_opc::standards::v2_0::subsets::iso21320::io;
             }
         }
     }
@@ -365,101 +124,48 @@ pub mod schema {
     pub use super::standards::v2_0::subsets::base::schema::*;
 }
 
-
 /// 📦️ Shared OPC (Open Packaging Conventions) layer — zip-and-XML container plumbing
 /// that `docx`/`xlsx`/`pptx` import cross-artifact (`crate::opc::*`).
-#[path = "."]
-pub mod opc {
-    #[path = "📦️opc/🦀️.rs"]
-    mod component;
-    pub use component::*;
-}
+pub use semio_s_artifact_stdio_zip_opc::opc;
 
-#[path = "."]
-pub mod examples {
-    #[path = "."]
-    pub mod demo {
-        #[path = "🏅️standards/🔖️2.0/🪆️subsets/🧱️base/📚️examples/🎬️demo/🦀️.rs"]
-        mod component;
-        pub use component::*;
-    }
-}
+pub use semio_s_artifact_stdio_zip_schema::examples;
 
 #[path = "."]
 pub mod editor {
-    #[path = "✏️editor/🦀️.rs"]
-    pub(crate) mod editing;
+    pub(crate) use semio_s_artifact_stdio_zip_editor::editor::editing;
     #[path = "."]
     pub mod zip {
         #[path = "."]
         pub mod base {
-            #[path = "🏅️standards/🔖️2.0/🪆️subsets/🧱️base/✏️editor/🦀️.rs"]
-            mod component;
-            pub use component::*;
-            #[path = "🏅️standards/🔖️2.0/🪆️subsets/🧱️base/✏️editor/🧭️edit-rules/🦀️.rs"]
-            pub mod edit_rules;
-            #[path = "."]
-            pub mod presence {
-                #[path = "🏅️standards/🔖️2.0/🪆️subsets/🧱️base/✏️editor/👥️presence/🧬️schema/🦀️.rs"]
-                pub mod schema;
-            }
-            #[path = "."]
-            pub mod config {
-                #[path = "🏅️standards/🔖️2.0/🪆️subsets/🧱️base/✏️editor/🎚️config/🧬️schema/🦀️.rs"]
-                pub mod schema;
-            }
+            pub use semio_s_artifact_stdio_zip_editor::editor::zip::base::*;
+
+            pub use semio_s_artifact_stdio_zip_schema::editor::zip::base::edit_rules;
+            pub use semio_s_artifact_stdio_zip_schema::editor::zip::base::presence;
+            pub use semio_s_artifact_stdio_zip_schema::editor::zip::base::config;
             #[path = "."]
             pub mod modes {
                 #[path = "."]
                 pub mod edit {
-                    #[path = "🏅️standards/🔖️2.0/🪆️subsets/🧱️base/✏️editor/🎭️modes/✏️edit/🦀️.rs"]
-                    mod component;
-                    pub use component::*;
-                    #[path = "."]
-                    pub mod windows {
-                        #[path = "."]
-                        pub mod main {
-                            #[path = "🏅️standards/🔖️2.0/🪆️subsets/🧱️base/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                    }
+                    pub use semio_s_artifact_stdio_zip_editor::editor::zip::base::modes::edit::*;
+
+                    pub use semio_s_artifact_stdio_zip_editor::editor::zip::base::modes::edit::windows;
                 }
             }
         }
         #[path = "."]
         pub mod iso21320 {
-            #[path = "🏅️standards/🔖️2.0/🪆️subsets/🌐️iso21320/✏️editor/🦀️.rs"]
-            mod component;
-            pub use component::*;
-            #[path = "🏅️standards/🔖️2.0/🪆️subsets/🌐️iso21320/✏️editor/🧭️edit-rules/🦀️.rs"]
-            pub mod edit_rules;
-            #[path = "."]
-            pub mod presence {
-                #[path = "🏅️standards/🔖️2.0/🪆️subsets/🌐️iso21320/✏️editor/👥️presence/🧬️schema/🦀️.rs"]
-                pub mod schema;
-            }
-            #[path = "."]
-            pub mod config {
-                #[path = "🏅️standards/🔖️2.0/🪆️subsets/🌐️iso21320/✏️editor/🎚️config/🧬️schema/🦀️.rs"]
-                pub mod schema;
-            }
+            pub use semio_s_artifact_stdio_zip_editor::editor::zip::iso21320::*;
+
+            pub use semio_s_artifact_stdio_zip_schema::editor::zip::iso21320::edit_rules;
+            pub use semio_s_artifact_stdio_zip_schema::editor::zip::iso21320::presence;
+            pub use semio_s_artifact_stdio_zip_schema::editor::zip::iso21320::config;
             #[path = "."]
             pub mod modes {
                 #[path = "."]
                 pub mod edit {
-                    #[path = "🏅️standards/🔖️2.0/🪆️subsets/🌐️iso21320/✏️editor/🎭️modes/✏️edit/🦀️.rs"]
-                    mod component;
-                    pub use component::*;
-                    #[path = "."]
-                    pub mod windows {
-                        #[path = "."]
-                        pub mod main {
-                            #[path = "🏅️standards/🔖️2.0/🪆️subsets/🌐️iso21320/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                    }
+                    pub use semio_s_artifact_stdio_zip_editor::editor::zip::iso21320::modes::edit::*;
+
+                    pub use semio_s_artifact_stdio_zip_editor::editor::zip::iso21320::modes::edit::windows;
                 }
             }
         }
@@ -472,69 +178,33 @@ pub mod viewer {
     pub mod zip {
         #[path = "."]
         pub mod base {
-            #[path = "🏅️standards/🔖️2.0/🪆️subsets/🧱️base/👁️viewer/🦀️.rs"]
-            mod component;
-            pub use component::*;
-            #[path = "."]
-            pub mod presence {
-                #[path = "🏅️standards/🔖️2.0/🪆️subsets/🧱️base/👁️viewer/👥️presence/🧬️schema/🦀️.rs"]
-                pub mod schema;
-            }
-            #[path = "."]
-            pub mod config {
-                #[path = "🏅️standards/🔖️2.0/🪆️subsets/🧱️base/👁️viewer/🎚️config/🧬️schema/🦀️.rs"]
-                pub mod schema;
-            }
+            pub use semio_s_artifact_stdio_zip_schema::viewer::zip::base::*;
+
+            pub use semio_s_artifact_stdio_zip_schema::viewer::zip::base::presence;
+            pub use semio_s_artifact_stdio_zip_schema::viewer::zip::base::config;
             #[path = "."]
             pub mod modes {
                 #[path = "."]
                 pub mod view {
-                    #[path = "🏅️standards/🔖️2.0/🪆️subsets/🧱️base/👁️viewer/🎭️modes/👁️view/🦀️.rs"]
-                    mod component;
-                    pub use component::*;
-                    #[path = "."]
-                    pub mod windows {
-                        #[path = "."]
-                        pub mod main {
-                            #[path = "🏅️standards/🔖️2.0/🪆️subsets/🧱️base/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                    }
+                    pub use semio_s_artifact_stdio_zip_inferences::viewer::zip::base::modes::view::*;
+
+                    pub use semio_s_artifact_stdio_zip_inferences::viewer::zip::base::modes::view::windows;
                 }
             }
         }
         #[path = "."]
         pub mod iso21320 {
-            #[path = "🏅️standards/🔖️2.0/🪆️subsets/🌐️iso21320/👁️viewer/🦀️.rs"]
-            mod component;
-            pub use component::*;
-            #[path = "."]
-            pub mod presence {
-                #[path = "🏅️standards/🔖️2.0/🪆️subsets/🌐️iso21320/👁️viewer/👥️presence/🧬️schema/🦀️.rs"]
-                pub mod schema;
-            }
-            #[path = "."]
-            pub mod config {
-                #[path = "🏅️standards/🔖️2.0/🪆️subsets/🌐️iso21320/👁️viewer/🎚️config/🧬️schema/🦀️.rs"]
-                pub mod schema;
-            }
+            pub use semio_s_artifact_stdio_zip_schema::viewer::zip::iso21320::*;
+
+            pub use semio_s_artifact_stdio_zip_schema::viewer::zip::iso21320::presence;
+            pub use semio_s_artifact_stdio_zip_schema::viewer::zip::iso21320::config;
             #[path = "."]
             pub mod modes {
                 #[path = "."]
                 pub mod view {
-                    #[path = "🏅️standards/🔖️2.0/🪆️subsets/🌐️iso21320/👁️viewer/🎭️modes/👁️view/🦀️.rs"]
-                    mod component;
-                    pub use component::*;
-                    #[path = "."]
-                    pub mod windows {
-                        #[path = "."]
-                        pub mod main {
-                            #[path = "🏅️standards/🔖️2.0/🪆️subsets/🌐️iso21320/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                    }
+                    pub use semio_s_artifact_stdio_zip_inferences::viewer::zip::iso21320::modes::view::*;
+
+                    pub use semio_s_artifact_stdio_zip_inferences::viewer::zip::iso21320::modes::view::windows;
                 }
             }
         }
@@ -544,3 +214,7 @@ pub mod viewer {
 pub use crate::standards::v2_0::subsets::iso21320::io::{ZipIso21320BuilderConstruction, ZipIso21320AnalyzerAnalysis, ZipIso21320BuilderFacets, ZipIso21320Builder, ZipIso21320Analyzer, ZipIso21320Composer};
 
 pub use crate::standards::v2_0::subsets::base::io::{ZipBuilderConstruction, ZipParts, ZipAnalyzerAnalysis, ZipBuilderFacets, ZipBuilder, ZipAnalyzer, ZipComposer};
+
+#[cfg(test)]
+#[path = "🏅️standards/🔖️2.0/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs"]
+mod hoisted_snapshot_0;

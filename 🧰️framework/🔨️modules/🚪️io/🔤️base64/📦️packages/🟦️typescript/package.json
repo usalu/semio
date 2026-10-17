@@ -1,0 +1,9 @@
+{
+  "name": "@semio-tech/framework-io-base64-ts",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./🟦️.ts",
+    "./testing/fixtures": "./🧪️testing/🧫️fixtures/🟦️.ts"
+  }
+}

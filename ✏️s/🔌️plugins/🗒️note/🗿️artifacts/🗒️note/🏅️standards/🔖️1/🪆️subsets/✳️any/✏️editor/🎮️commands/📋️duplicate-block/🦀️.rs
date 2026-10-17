@@ -41,7 +41,7 @@ pub struct DuplicateBlock {
     pub block_id: String,
 }
 
-pub fn handle(payload: &DuplicateBlock, doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, semio_framework_plugin::NoConfig>, ctx: &mut crate::editor::note::NoteDispatchCtx) -> Result<Emit<NoteMutation, semio_framework_plugin::NoConfigMutation>, Fault> {
+pub fn handle(payload: &DuplicateBlock, doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, semio_framework_plugin::NoConfig>, ctx: &mut crate::editor::note::dispatch_ctx::NoteDispatchCtx) -> Result<Emit<NoteMutation, semio_framework_plugin::NoConfigMutation>, Fault> {
     if find_block(&doc.snapshot.blocks, &payload.block_id).is_none() {
         return Err(Fault::new(FaultOrigin::App, FaultCode::new("mutation.target-missing"), format!("the note has no block {}", payload.block_id)));
     }

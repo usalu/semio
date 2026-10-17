@@ -1,0 +1,7 @@
+🌉️json-value-bridges	item	mod	json_value_bridge
+🌉️json-value-bridges	item	mod	json_value_option_bridge
+🌉️json-value-bridges	item	mod	staged_command_args_bridge
+🌉️json-value-bridges	item	mod	staged_action_args_bridge
+🛰️capabilities	field	CommandMeta	id
+🛰️capabilities	field	CommandMeta	title
+🛰️capabilities	field	CommandMeta	description

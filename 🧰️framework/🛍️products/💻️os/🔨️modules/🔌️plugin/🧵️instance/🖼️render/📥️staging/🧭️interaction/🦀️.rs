@@ -1,8 +1,31 @@
 //! 🎶️ Staged `interaction` members of the `instance-render` use cases, as methods of the borrowed bundle (WP7 of the instance family).
 //!
 //! 🧭️ Interaction state: topology resolution, selection persistence, inline interaction verbs and the interaction action.
-use super::*;
-use super::jobs_instance_root::OriginalRenderInteractionStamp;
+use semio_framework::{ActionKind, Fault, FaultCode, FaultFrom, FaultOrigin, InteractionDefinition, InteractionVerb};
+use semio_framework_plugin_decl_emission::{ActionMeta, Emit, InteractionWrite};
+use semio_framework_plugin_interaction::interaction_topology::{AppliedInteractionVerb, INLINE_INTERACTION_VERB_DIAGNOSTIC_CODE, InlineInteractionFold, InteractionRevalidateOrigin, derive_path_delimited_topology, interaction_after_document_change_v1, interaction_domain_id_arg, interaction_selection_loss_v1, leftover_after_app_selection_write_v1, leftover_gumball_active_v1, leftover_selected_ids_of, parse_interaction_targets, parse_merge_mode, parse_selection_mode, report_interaction_selection_loss};
+use semio_framework_plugin_decl_app::ArtifactApp;
+use store::os_store::store_schema::{ArtifactCommand, HistoryLane};
+use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use pack::snapshot::ArtifactPack;
+use semio_framework_plugin_decl_views::{ArtifactView, ConfigView, InteractionHoverState};
+use std::collections::{BTreeMap, HashSet};
+use semio_framework_plugin_decl_views::child_view::ChildContentView;
+use semio_framework_value::DslValue;
+use semio_framework_plugin_job::reserved_jobs::FrameworkReservedCommitPermit;
+use std::future::Future;
+use semio_framework_plugin_instance_extension::InstanceExtension;
+use semio_framework_plugin_interaction::mutations::InteractionConfigMutation;
+use semio_framework::kernel::{InvocationResult, UiDirtyScope};
+use store::{MemberFactory, Mutation, SpaceMember};
+use protocol::OpText;
+use semio_framework_plugin_reactor_app::PluginApp;
+use crate::render_bundle::RenderCtx;
+use semio_framework_plugin_instance_jobs::jobs_components::ToolOperations;
+use semio_framework_plugin_interaction::{UiAssemblyResult, ui_assembly_error};
+use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
+use semio_framework_ui_contract::*;
+use semio_framework_plugin_instance_jobs::jobs_instance_root::OriginalRenderInteractionStamp;
 
 /// 🧾️ `domain=granularity:id,id` for one `InteractionState`'s selection half — the compact witness
 /// the persist round-trip check below compares, so a lost selection names its own domain instead of
@@ -180,7 +203,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
     /// ([`interaction_after_document_change_v1`]), so a whole-document replacement cannot leave the
     /// replaced document's pick standing in `interaction.selection(..)` — which is what every app
     /// command that reads a selection (`deleteSelection`, the transform verbs) would then act on.
-    pub(crate) async fn revalidate_interaction_on_document_change(&mut self, meta: &ActionMeta, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), Fault> {
+    pub async fn revalidate_interaction_on_document_change(&mut self, meta: &ActionMeta, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), Fault> {
         if self.tools.registry.interactions().await.next().is_none() {
             return Ok(());
         }
@@ -196,7 +219,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
     /// the triggering action's own mutations landed, so a just-created id is already in topology.
     /// An undeclared domain is a plugin bug, not a client input, so it faults rather than
     /// silently dropping the write.
-    pub(super) async fn apply_interaction_writes(&mut self, writes: &[InteractionWrite], meta: &ActionMeta, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), Fault> {
+    pub async fn apply_interaction_writes(&mut self, writes: &[InteractionWrite], meta: &ActionMeta, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), Fault> {
         if writes.is_empty() {
             return Ok(());
         }
@@ -242,7 +265,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
     /// [`Self::apply_interaction_verb`], shared with the in-reactor fold of a GUEST-emitted verb
     /// ([`Self::fold_inline_interaction_verbs`]); this wrapper is the HOST-dispatched half, which
     /// alone owns a reserved-commit permit and shapes the result as its own `InvocationResult`.
-    pub(super) async fn dispatch_interaction_action(&mut self, action: &str, args: Option<&DslValue>, meta: &ActionMeta, permit: &FrameworkReservedCommitPermit, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<InvocationResult, Fault> {
+    pub async fn dispatch_interaction_action(&mut self, action: &str, args: Option<&DslValue>, meta: &ActionMeta, permit: &FrameworkReservedCommitPermit, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<InvocationResult, Fault> {
         self.stores.validate_framework_reserved_commit(X::reserved_action_refusal(&*self.time_travel, &*self.tool_runs, action), action, permit).await?;
         let applied = self.apply_interaction_verb(action, args, meta, Some(permit), identity).await?;
         let mut result = ToolOperations::<A>::empty_result(action, meta, Vec::new(), Vec::new(), applied.scope).await;
@@ -433,7 +456,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
     /// the app command that carried it — its mutations already landed and the pick already
     /// happened — so the fault becomes a `dsl::Diagnostic` the caller attaches to its result and
     /// the remaining verbs still apply. Infallible by construction for that reason.
-    pub(super) async fn fold_inline_interaction_verbs(&mut self, carrier: &str, folded: Vec<(String, Option<DslValue>)>, meta: &ActionMeta, scope: UiDirtyScope, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> InlineInteractionFold {
+    pub async fn fold_inline_interaction_verbs(&mut self, carrier: &str, folded: Vec<(String, Option<DslValue>)>, meta: &ActionMeta, scope: UiDirtyScope, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> InlineInteractionFold {
         let mut fold = InlineInteractionFold { scope, leftover: None, diagnostics: Vec::new() };
         for (action, args) in folded {
             match self.apply_interaction_verb(&action, args.as_ref(), meta, None, identity).await {
@@ -453,7 +476,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
         fold
     }
 
-    pub(super) async fn stamp_pending_render_interaction_ui(&mut self, state: &protocol::InteractionState, body_key: &str) -> UiAssemblyResult<()> {
+    pub async fn stamp_pending_render_interaction_ui(&mut self, state: &protocol::InteractionState, body_key: &str) -> UiAssemblyResult<()> {
         let tree = self.pending.pending_render_tree.as_ref().ok_or_else(||ui_assembly_error("render.source-absent"))?;
         OriginalRenderInteractionStamp { registry: &self.tools.registry, interaction_hover: &self.interaction.interaction_hover, peer_presence: &self.roster.peer_presence, own_color: self.roster.own_color, local_interaction_authority: &mut self.interaction.local_interaction_authority, interaction_ui_topology: &mut self.interaction.interaction_ui_topology, pending_presence: &mut self.roster.pending_presence, presence_marked_keys: &mut self.roster.presence_marked_keys }.stamp_and_cache_interaction_ui(tree,state,body_key).await
     }

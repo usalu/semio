@@ -1,5 +1,5 @@
 use super::*;
-use crate::catalog::tests::fixture;
+use crate::catalog::fixtures::fixture;
 use serde_json::json;
 
 fn rooms() -> Rooms {

@@ -1,0 +1,9 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🎤️presentation/🎯️targets/⚛️react/🔨️modules/🫳️interaction/🟦️.tsx",
+ "importers": "auto",
+ "children": [
+  {"dir": "🎛️interaction-hook", "doc": "/** 🎛️ The presentation interaction hook: per-slide selection, transforms and enlarge flags, cleared only through reset controls. */", "lines": [[78,328]]},
+  {"dir": "🗂️disposition-registry", "doc": "/** 🗂️ The slide disposition registry: the measured natural rects of dispositions, its context, provider and the effective rect of a disposition. */", "lines": [[330,393]]},
+  {"dir": "🧲️interactive-disposition", "doc": "/** 🧲️ The interactive disposition and row band: measuring, selecting, dragging, resizing and enlarging one disposition of a mounted slide. */", "lines": [[395,950]]}
+ ]
+}

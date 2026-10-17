@@ -1,4 +1,31 @@
-use super::*;
+use semio_framework_plugin::ActionKind;
+use semio_framework_plugin::InteractiveJobClassification;
+use semio_framework_plugin::SurfaceKind;
+use semio_framework_plugin::TiledMapScene;
+#[allow(unused_imports)]
+use crate::tile_coordinates::gis_policy::gis_map_scene_descriptor_json;
+#[allow(unused_imports)]
+use crate::GisMapSnapshot;
+#[allow(unused_imports)]
+use semio_framework_plugin::plugin_app_close_prelude::SurfaceKind as ContractSurfaceKind;
+#[allow(unused_imports)]
+use semio_framework_plugin::scene_surface;
+#[allow(unused_imports)]
+use semio_framework_plugin::ActionArgDef;
+#[allow(unused_imports)]
+use semio_framework_plugin::ActionDefinition;
+#[allow(unused_imports)]
+use semio_framework_plugin::BuiltNode;
+#[allow(unused_imports)]
+use semio_framework_ui_locale::LocalizedLabel;
+#[allow(unused_imports)]
+use semio_framework_plugin::UiAssemblyResult;
+#[allow(unused_imports)]
+use semio_framework_plugin::WindowKindDefinition;
+#[allow(unused_imports)]
+use semio_framework_plugin::WindowOptions;
+use crate::viewer::gismap::modes::view::windows::map::{GIS_MAP_VIEW_DEFAULT_CAMERA_JSON};
+use crate::viewer::gismap::modes::view::windows::map::*;
 
 #[semio_framework_async_macros::async_test]
 async fn definition_declares_a_tiled_map_window() {

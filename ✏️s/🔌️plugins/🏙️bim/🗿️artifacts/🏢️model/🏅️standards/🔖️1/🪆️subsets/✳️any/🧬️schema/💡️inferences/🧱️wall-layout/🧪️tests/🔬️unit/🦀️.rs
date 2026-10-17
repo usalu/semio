@@ -1,8 +1,10 @@
 use super::*;
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::{kinds, plan, ModelNode};
-use crate::standards::v1::subsets::any::schema::inferences::storey_levels::{compute_storey_levels, target_of};
+use crate::standards::v1::subsets::any::schema::inferences::storey_levels::target_of;
+use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_storey_levels;
 use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff, patches::{StoreyPatch, WallPatch}}, snapshot::TopConstraint};
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
+use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_wall_layout;
 
 const HOUSE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🏠️house/📸️snapshot/🔣️.json");
 const JOINS: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🔗️wall-joins/📸️snapshot/🔣️.json");
@@ -108,7 +110,7 @@ async fn changing_a_storey_height_re_infers_exactly_what_depends_on_it() {
 }
 
 fn compute_storey_levels_for_test(snapshot: &ModelSnapshot) -> BTreeMap<String, (f64, f64)> {
-    crate::standards::v1::subsets::any::schema::inferences::storey_levels::compute_storey_levels(snapshot).into_iter().map(|(id, level)| (id, (level.elevation, level.top_elevation))).collect()
+    crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_storey_levels(snapshot).into_iter().map(|(id, level)| (id, (level.elevation, level.top_elevation))).collect()
 }
 
 #[semio_framework_async_macros::async_test]

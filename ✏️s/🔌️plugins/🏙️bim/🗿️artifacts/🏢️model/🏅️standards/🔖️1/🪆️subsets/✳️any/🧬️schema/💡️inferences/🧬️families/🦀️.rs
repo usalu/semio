@@ -196,6 +196,6 @@ pub fn family_of_profile(profile: &Profile) -> Option<&str> {
 }
 //#endregion 🔖️Profiles
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+pub mod tests;

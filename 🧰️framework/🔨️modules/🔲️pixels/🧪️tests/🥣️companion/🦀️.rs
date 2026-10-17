@@ -3,6 +3,8 @@
 //! 🧭️ The root laws are mounted flat; each module's laws sit below a wrapper of the same name that restates the module's imports, so the laws that share witnesses through `crate::retirement::tests` keep their paths.
 #![cfg(test)]
 
+use semio_framework_test_fixtures::fixture_path;
+
 pub use semio_framework_pixels::*;
 pub use semio_framework_pixels::testkit::deflate;
 
@@ -10,7 +12,7 @@ use std::{collections::HashMap, path::{Path, PathBuf}, sync::{Mutex, OnceLock}};
 
 pub fn product_directory() -> &'static Path {
     static DIRECTORY: OnceLock<PathBuf> = OnceLock::new();
-    DIRECTORY.get_or_init(|| Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../.."))
+    DIRECTORY.get_or_init(|| fixture_path!("../../../.."))
 }
 
 fn leaked(relative: &str) -> &'static [u8] {

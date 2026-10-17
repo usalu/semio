@@ -24,6 +24,6 @@ test("DWG dynamic block parameters, grips and four action topologies survive ind
     expect(n.query("PRAGMA integrity_check").get()).toEqual({integrity_check:"ok"});expect(n.query("PRAGMA foreign_key_check").all()).toEqual([]);expect(await read()).toEqual(bodies);
     expect(n.query("SELECT count(*) AS count FROM dwg_stretch_selection_vertex_index").get()).toEqual({count:2});expect(n.query("SELECT count(*) AS count FROM dwg_block_parameter_connection").get()).toEqual({count:14});
     n.run("UPDATE dwg_block_stretch_action SET distance_multiplier_class='finite',distance_multiplier=9.25,distance_multiplier_ieee754_bits=4621396905123905536");const edited=await read();const stretch=edited[12]!;if(stretch.kind!=="blockStretchAction")throw new Error("kind");expect(stretch.value.distanceMultiplier).toEqual({bits:4621396905123905536n});expect(fixture.editedStretchDistance).toBe(9.25);
-    n.run("UPDATE dwg_block_linear_constraint_parameter SET direction='horizontal' WHERE id=10");expect(n.query("PRAGMA integrity_check").get()).toEqual({integrity_check:"ok"});await expect(read()).rejects.toThrow();console.log("[DEBUG] DWG explicit block/action rows, nested orders and signed IEEE/u64 identities verified");
+    n.run("UPDATE dwg_block_linear_constraint_parameter SET direction='horizontal' WHERE id=10");expect(n.query("PRAGMA integrity_check").get()).toEqual({integrity_check:"ok"});await expect(read()).rejects.toThrow();
   }finally{n.close();}
 },20000);

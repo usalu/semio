@@ -13,7 +13,7 @@ test("stroke dashes accept editable patterns and reject invalid input", () => {
   for (const entry of cases) {
     
     if (entry.error) expect(() => decodeDashText(entry.value,{maximumBytes:4096,onProgress:()=>true})).toThrow();
-    else expect<unknown>(decodeDashText(entry.value,{maximumBytes:4096,onProgress:()=>true})).toEqual(entry.dash);
+    else expect<typeof entry.dash>(decodeDashText(entry.value,{maximumBytes:4096,onProgress:()=>true})).toEqual(entry.dash);
   }
 });
 
@@ -23,7 +23,7 @@ test("stroke caps and joins match the schema and reject unsupported values", () 
     const stroke = {color:[0,0,0,1],width:1,cap:"butt",join:"miter",[entry.kind]:entry.value};
     expect(validate(stroke)).toBe(entry.valid);
     const parse = entry.kind === "cap" ? parseStrokeCap : parseStrokeJoin;
-    if (entry.valid) expect<unknown>(parse(entry.value)).toBe(entry.value);
+    if (entry.valid) expect<typeof entry.value>(parse(entry.value)).toBe(entry.value);
     else expect(() => parse(entry.value)).toThrow();
   }
 });

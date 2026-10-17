@@ -7,7 +7,7 @@ export type { ArcPlaneFrame, EdgeCurve, EdgeGroup, EdgeInfo, FaceGroup, FaceInfo
 export { emptyMeshTransfer, kernelGeometry, solidRef };
 // #endregion 🧲️Header
 
-import type { TypologyRef } from "../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️.ts";
+import type { TypologyRef } from "@semio-tech/s-spatial-kernel-ts/geometry";
 
 
 

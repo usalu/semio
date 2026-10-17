@@ -7,7 +7,7 @@ use super::*;
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct RemoveSlide {
-    pub(crate) address: PptxSlideAddress,
+    pub address: PptxSlideAddress,
 }
 
 impl protocol::MutationKind<PptxSnapshot, PptxMutation> for RemoveSlide {

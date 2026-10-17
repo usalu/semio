@@ -20,7 +20,11 @@
     ".": {
       "types": "./dist/🟦️.d.ts",
       "import": "./dist/🟦️.js"
-    }
+    },
+    "./opc": "./📦️opc/🟦️.ts",
+    "./opc/native/testing/fixtures": "./📦️opc/🧩️native/🧪️testing/🧫️fixtures/🟦️.ts",
+    "./opc/retained": "./📦️opc/🧬️retained/🟦️.ts",
+    "./opc/sqlite": "./📦️opc/🪶️sqlite/🟦️.ts"
   },
   "dependencies": {},
   "license": "LGPL-3.0-or-later",

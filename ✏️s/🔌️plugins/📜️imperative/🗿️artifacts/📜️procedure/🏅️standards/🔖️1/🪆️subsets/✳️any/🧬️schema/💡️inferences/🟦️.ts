@@ -30,6 +30,10 @@ type imperativeImperativeInferenceGuardSizeBounds = { readonly minItems?: number
 
 export const imperativeImperativeInferenceGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : imperativeImperativeInferenceGuardReject(at, "value is not an object");
+export const imperativeImperativeInferenceGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) imperativeImperativeInferenceGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const imperativeImperativeInferenceGuardArray = (value: unknown, at: string, bounds: imperativeImperativeInferenceGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return imperativeImperativeInferenceGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) imperativeImperativeInferenceGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -60,17 +64,17 @@ export const imperativeImperativeInferenceGuardConstant = <T extends string | nu
 //#endregion 🚪️Parsers
 
 export function parseProcedureInference(value: unknown, at = "$"): ProcedureInference {
-  const row = imperativeImperativeInferenceGuardObject(value, at);
+  const row = imperativeImperativeInferenceGuardClosed(imperativeImperativeInferenceGuardObject(value, at), at, ["topology"]);
   return {
     topology: parseProcedureTopology(row["topology"], `${at}.topology`),
   };
 }
 
 export function parseProcedureTopology(value: unknown, at = "$"): ProcedureTopology {
-  const row = imperativeImperativeInferenceGuardObject(value, at);
+  const row = imperativeImperativeInferenceGuardClosed(imperativeImperativeInferenceGuardObject(value, at), at, ["topoOrder", "depth", "cycleFree", "nodeCount"]);
   return {
     topoOrder: imperativeImperativeInferenceGuardArray(row["topoOrder"], `${at}.topoOrder`).map((item, index) => imperativeImperativeInferenceGuardString(item, `${at}.topoOrder[${index}]`)),
-    depth: imperativeImperativeInferenceGuardObject(row["depth"], `${at}.depth`),
+    depth: Object.fromEntries(Object.entries(imperativeImperativeInferenceGuardObject(row["depth"], `${at}.depth`)).map(([key0, value0]) => [key0, imperativeImperativeInferenceGuardInteger(value0, `${at}.depth.${key0}`, {"minimum": 0})])),
     cycleFree: imperativeImperativeInferenceGuardBoolean(row["cycleFree"], `${at}.cycleFree`),
     nodeCount: imperativeImperativeInferenceGuardInteger(row["nodeCount"], `${at}.nodeCount`, {"minimum": 0}),
   };

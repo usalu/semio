@@ -22,10 +22,11 @@ workspace = true
 path = "../../🦀️.rs"
 
 [features]
-protocol-laws = ["semio-framework-os-pack/record-codec-laws"]
+protocol-laws = ["semio-framework-os-pack/record-codec-laws", "dep:semio-framework-async"]
 mutation-testing = ["semio-framework-os-command/mutation-testing"]
 
 [dependencies]
+semio-framework-async = { workspace = true, features = ["entrypoint"], optional = true }
 dsl_derive = { path = "../../../🗣️dsl/✨️derive/📦️packages/🦀️rust", package = "semio-framework-os-kernel-dsl-derive" }
 semio-framework-diagnostic = { path = "../../../../../../🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
 semio-framework-os-channel = { path = "../../🧵️channel/📦️packages/🦀️rust" }

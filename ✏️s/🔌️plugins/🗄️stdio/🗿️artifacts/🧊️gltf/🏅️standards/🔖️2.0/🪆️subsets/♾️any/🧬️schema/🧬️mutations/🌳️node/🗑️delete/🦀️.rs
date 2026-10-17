@@ -29,19 +29,22 @@ pub fn plan(p: &GltfDeleteNodePayload, base: &GltfSnapshot) -> Result<GltfDiff, 
     Ok(diff)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn inverse(p: &GltfDeleteNodePayload, base: &GltfSnapshot) -> Vec<super::GltfMutation> {
+pub fn inverse<Op>(p: &GltfDeleteNodePayload, base: &GltfSnapshot) -> Vec<Op>
+where
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::remove_used_extension::RemoveUsedExtensionMutation>,
+{
     if validate(p, base).is_err() {
         return Vec::new();
     }
-    let mut rows = vec![super::create_node::mutation(super::create_node::GltfCreateNodePayload { position: p.index, node: Some(Box::new(base.document.nodes[p.index].clone())) })];
+    let mut rows = vec![crate::standards::v2_0::subsets::any::schema::mutations::create_node::mutation(crate::standards::v2_0::subsets::any::schema::mutations::create_node::GltfCreateNodePayload { position: p.index, node: Some(Box::new(base.document.nodes[p.index].clone())) })];
     for (scene, entry) in base.document.scenes.iter().enumerate() {
         if let Some(position) = entry.nodes.iter().position(|node| *node == p.index) {
-            rows.push(super::bind_scene_root_node::mutation(super::bind_scene_root_node::GltfBindSceneRootNodePayload { scene, node: p.index, position }));
+            rows.push(crate::standards::v2_0::subsets::any::schema::mutations::bind_scene_root_node::mutation(crate::standards::v2_0::subsets::any::schema::mutations::bind_scene_root_node::GltfBindSceneRootNodePayload { scene, node: p.index, position }));
         }
     }
     for (parent, entry) in base.document.nodes.iter().enumerate() {
         if let Some(position) = entry.children.iter().position(|child| *child == p.index) {
-            rows.push(super::bind_node_child::mutation(super::bind_node_child::GltfBindNodeChildPayload { parent, child: p.index, position }));
+            rows.push(crate::standards::v2_0::subsets::any::schema::mutations::bind_node_child::mutation(crate::standards::v2_0::subsets::any::schema::mutations::bind_node_child::GltfBindNodeChildPayload { parent, child: p.index, position }));
         }
     }
     rows.reverse();
@@ -58,11 +61,17 @@ pub enum DeleteNodeMutation {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn mutation(payload: GltfDeleteNodePayload) -> super::GltfMutation {
-    super::GltfMutation::DeleteNode(DeleteNodeMutation::Apply(payload))
+pub fn mutation<Op>(payload: GltfDeleteNodePayload) -> Op
+where
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::delete_node::DeleteNodeMutation>,
+{
+    Op::from(DeleteNodeMutation::Apply(payload))
 }
 
-impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for DeleteNodeMutation {
+impl<Op> protocol::MutationKind<GltfSnapshot, Op> for DeleteNodeMutation
+where
+    Op: protocol::Mutation<GltfSnapshot, Diff = GltfDiff> + From<DeleteNodeMutation>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "node", kind: "delete-node", record: "DeletedNode" };
 
     fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<GltfDiff> {
@@ -74,7 +83,7 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for DeleteNodeMut
         }
     }
 
-    fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<super::GltfMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         match self {
             Self::Apply(payload) => Ok(inverse(payload, base)),
         }
@@ -91,10 +100,6 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for DeleteNodeMut
 //#endregion 🧬️DirectMutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🚫️removes-the-root-516263/🦀️.rs"]
-mod case_removes_the_root_516263;
-#[cfg(test)]
-#[path = "🧪️tests/🔬️middle-row/🦀️.rs"]
-mod case_middle_row;
+
+
 //#endregion 🧪️Tests

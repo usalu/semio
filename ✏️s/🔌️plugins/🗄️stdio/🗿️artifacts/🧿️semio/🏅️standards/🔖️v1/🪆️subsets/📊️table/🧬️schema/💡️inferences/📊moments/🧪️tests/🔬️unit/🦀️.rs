@@ -106,5 +106,4 @@ fn owned_dependency_matches_neutral_fixture_and_serde_oracle() {
     let oracle=serde_json::to_value(&values).unwrap();
     assert_eq!(actual,oracle);
     assert_eq!(actual,fixture["expected"]);
-    eprintln!("[DEBUG] Typed inference dependency matches authored values and independent serde_json output");
 }

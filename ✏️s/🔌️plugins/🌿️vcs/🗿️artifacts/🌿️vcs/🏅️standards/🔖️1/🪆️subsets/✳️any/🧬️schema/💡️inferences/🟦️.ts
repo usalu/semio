@@ -29,6 +29,10 @@ type vcsVcsInferenceGuardSizeBounds = { readonly minItems?: number; readonly max
 
 export const vcsVcsInferenceGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : vcsVcsInferenceGuardReject(at, "value is not an object");
+export const vcsVcsInferenceGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) vcsVcsInferenceGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const vcsVcsInferenceGuardArray = (value: unknown, at: string, bounds: vcsVcsInferenceGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return vcsVcsInferenceGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) vcsVcsInferenceGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -59,14 +63,14 @@ export const vcsVcsInferenceGuardConstant = <T extends string | number | boolean
 //#endregion 🚪️Parsers
 
 export function parseVcsInference(value: unknown, at = "$"): VcsInference {
-  const row = vcsVcsInferenceGuardObject(value, at);
+  const row = vcsVcsInferenceGuardClosed(vcsVcsInferenceGuardObject(value, at), at, ["summary"]);
   return {
     summary: parseVcsSummary(row["summary"], `${at}.summary`),
   };
 }
 
 export function parseVcsSummary(value: unknown, at = "$"): VcsSummary {
-  const row = vcsVcsInferenceGuardObject(value, at);
+  const row = vcsVcsInferenceGuardClosed(vcsVcsInferenceGuardObject(value, at), at, ["tagCount", "notesWordCount", "hasNotes"]);
   return {
     tagCount: vcsVcsInferenceGuardInteger(row["tagCount"], `${at}.tagCount`),
     notesWordCount: vcsVcsInferenceGuardInteger(row["notesWordCount"], `${at}.notesWordCount`),

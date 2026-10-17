@@ -24,6 +24,7 @@ name = "sequence-runtime"
 path = "../../🧪️tests/🎬️sequence-runtime/🦀️.rs"
 
 [dev-dependencies]
+semio-framework-test-fixtures = { path = "../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-s-artifact-procedural-3d-testkit = { workspace = true }
 semio-s-artifact-procedural-3d-mut-widgets = { workspace = true }
 semio-s-artifact-procedural-2d-io-text = { workspace = true }
@@ -105,8 +106,28 @@ path = "../../🧪️tests/🔁️generation3d-incremental-eval/🦀️.rs"
 
 
 [[test]]
-name = "generation3d-app-laws"
-path = "../../🧪️tests/🧊️generation3d/🦀️.rs"
+name = "generation3d-app-laws-viewer"
+path = "../../🧪️tests/🧊️generation3d/🔭️viewer-laws/🦀️.rs"
+
+[[test]]
+name = "generation3d-app-laws-editor-modes"
+path = "../../🧪️tests/🧊️generation3d/🪟️editor-mode-laws/🦀️.rs"
+
+[[test]]
+name = "generation3d-app-laws-editor-structure"
+path = "../../🧪️tests/🧊️generation3d/🧭️editor-structure-laws/🦀️.rs"
+
+[[test]]
+name = "generation3d-app-laws-editor-commands"
+path = "../../🧪️tests/🧊️generation3d/🎮️editor-command-laws/🦀️.rs"
+
+[[test]]
+name = "generation3d-app-laws-editor-unit"
+path = "../../🧪️tests/🧊️generation3d/🧮️editor-unit-laws/🦀️.rs"
+
+[[test]]
+name = "generation3d-app-laws-editor-surface"
+path = "../../🧪️tests/🧊️generation3d/🕹️editor-surface-laws/🦀️.rs"
 
 [dependencies]
 semio-framework-os-infinite-directed-presentation = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🧬️schema/🖼️presentation/📦️packages/🦀️rust" }

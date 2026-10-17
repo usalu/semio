@@ -75,7 +75,6 @@ pub(super) fn retire(owner: &mut dyn RequestRetirementCensus, payload_grant: usi
                 assert!(owner.terminal_is_empty());
                 if before.is_some() { assert_eq!((events.requested_bytes, events.released_bytes), (0, 0)); }
                 assert_eq!(progress.released_bytes, 0);
-                println!("[DEBUG] retained member logical-ownership={logical} physical-page-backing={frames} reported-physical-release={released}");
                 return logical;
             }
         }

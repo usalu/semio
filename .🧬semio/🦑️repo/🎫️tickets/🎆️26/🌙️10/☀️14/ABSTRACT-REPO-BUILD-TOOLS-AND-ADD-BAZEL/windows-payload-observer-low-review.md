@@ -1,0 +1,7 @@
+# Windows Payload Observer Source Review
+
+Independent four-path FD/named stamp/SHA comparison matches final held Source in `🗑️generated/windows-observer-low-independent.json`. Acquired handles/libraries are retained before fallible checks; uncertain native operations retain buffers/handles and prevent library close. Exact128-bit file identity, expected GUID root, physical ancestors, no-reparse descendants, disk-only type, single stream/security metadata and issued immutable facts are explicit. One pending public observation prevents overlap; integration must close cursors before descent and avoid nested public named observations while a file/directory scope is active.
+
+Own snapshots use null prototype and reject accessor/unknown keys including __proto__; actual work debit covers calls/metadata hashing. Final post-close observer checks occur outside descriptor custody so a known successful close is not misclassified uncertain, while still refusing body continuation on stop. Body and pending reads drain before scopes close; ambiguous close never gets retried as though safe.
+
+Owner final actual Source2784 reports3laws/8746 assertions and strict39209 two-root success. Win32/NT/phase ports and real descriptor owner are modeled, not actual Windows system ABI, u64 handle return, NTFS, privilege or ARM64 qualification. Leaf remains unimported pending Root shared integration. Narrow Source verdict clean; no physical Windows claim.

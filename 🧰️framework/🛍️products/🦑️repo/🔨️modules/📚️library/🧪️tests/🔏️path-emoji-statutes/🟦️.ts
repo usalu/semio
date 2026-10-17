@@ -16,6 +16,7 @@ import { jsonDocumentDuplicateKeys, mutationPayloadSchemaProblems, mutationPaylo
 import { mutationCatalogSourceOwner, mutationCatalogSourceOwnersProblems } from "../../🔍️discovery/🟦️.ts";
 import type { SemanticDescendantDirectoryNode, SemanticDescendantKindFileNode, SemanticDescendantNode, SemanticExactDescendantContract } from "../../🔍️discovery/🟦️.ts";
 import { mutationCatalogProblems } from "../../../🧪️test/📦️packages/🟦️typescript/🟦️.ts";
+import { readModuleTreeSource } from "../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
 
 const root = import.meta.dir;
 
@@ -145,7 +146,7 @@ test("normalization reads explicit catalogs and canonicalizes both mutation pair
 
 test("glTF generator follows exact fixture-manifest roles and handpicked file coordinates", () => {
   const contract = fixture.gltfFixtureCoordinates, repoRoot = resolve(root, "../../../../../../..");
-  const source = readFileSync(join(repoRoot, contract.owner, "🏭️generator/📜️script.ts"), "utf8");
+  const source = readModuleTreeSource(join(repoRoot, contract.owner, "🏭️generator/📜️script.ts"));
   const syntax = ts.createSourceFile("script.ts", source, ts.ScriptTarget.Latest, true);
   const definition = syntax.statements.filter(ts.isFunctionDeclaration).find((node) => node.name?.text === "gltfFixtureOutputPaths");
   expect(definition).toBeDefined();
@@ -497,7 +498,7 @@ test("mutation projection catalog lookup uses the one canonical oracle collectio
 test("subset directory overrides preserve logical ids while giving every sibling a semantic identity", () => {
   const vector = fixture.subsetDirectoryOverrides;
   const taxonomy = { ...loadCatalogTaxonomy(), subsetDirectoryOverrides: { [vector.owner]: vector.directories } };
-  {
+  for (const row of vector.cases) {
     expect(subsetDirectoryNameForId(vector.owner, row.id, taxonomy), row.id).toBe(row.directory);
     expect(subsetIdForDirectoryName(vector.owner, row.directory, taxonomy), row.directory).toBe(row.id);
   }

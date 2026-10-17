@@ -25,6 +25,5 @@ export async function proveCargoTargetStoreBindingV1(root:string,directory:strin
         assert.ok(failure,"an admitted Cargo target must refuse a different compiler store before any output writer starts");
         const receipt=JSON.parse(readFileSync(join(targetDirectory,schema.definitions.Protocol.const.receipt),"utf8"));
         const validate=new Ajv({strict:true}).compile(schema);assert.ok(validate(receipt),JSON.stringify(validate.errors));assert.equal(receipt.buildDirectory,buildDirectory);assert.equal(receipt.targetDirectory,targetDirectory);
-        console.log("[DEBUG] CargoTargetStoreBindingSQLite3=true actualForeignStoreRefused=true originalReceipt=true");
     }finally{foreign?.release();first.release();}
 }

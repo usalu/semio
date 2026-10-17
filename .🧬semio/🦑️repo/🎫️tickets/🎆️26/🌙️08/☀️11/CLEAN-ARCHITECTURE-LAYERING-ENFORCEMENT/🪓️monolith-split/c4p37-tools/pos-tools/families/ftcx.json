@@ -1,0 +1,14 @@
+{
+ "name": "ftcx",
+ "crates": [
+  "semio-framework-pixels",
+  "semio-framework-pixels-tests"
+ ],
+ "base": {
+  "rev": "1bae6115bc5",
+  "crates": [
+   "semio-framework-pixels"
+  ]
+ },
+ "note": "FTC pixels"
+}

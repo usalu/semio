@@ -30,6 +30,10 @@ type drawingDrawingInferenceGuardSizeBounds = { readonly minItems?: number; read
 
 export const drawingDrawingInferenceGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : drawingDrawingInferenceGuardReject(at, "value is not an object");
+export const drawingDrawingInferenceGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) drawingDrawingInferenceGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const drawingDrawingInferenceGuardArray = (value: unknown, at: string, bounds: drawingDrawingInferenceGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return drawingDrawingInferenceGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) drawingDrawingInferenceGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -60,17 +64,17 @@ export const drawingDrawingInferenceGuardConstant = <T extends string | number |
 //#endregion 🚪️Parsers
 
 export function parseDrawingInference(value: unknown, at = "$"): DrawingInference {
-  const row = drawingDrawingInferenceGuardObject(value, at);
+  const row = drawingDrawingInferenceGuardClosed(drawingDrawingInferenceGuardObject(value, at), at, ["topology"]);
   return {
     topology: parseDrawingTopology(row["topology"], `${at}.topology`),
   };
 }
 
 export function parseDrawingTopology(value: unknown, at = "$"): DrawingTopology {
-  const row = drawingDrawingInferenceGuardObject(value, at);
+  const row = drawingDrawingInferenceGuardClosed(drawingDrawingInferenceGuardObject(value, at), at, ["topoOrder", "depth", "cycleFree", "nodeCount"]);
   return {
     topoOrder: drawingDrawingInferenceGuardArray(row["topoOrder"], `${at}.topoOrder`).map((item, index) => drawingDrawingInferenceGuardString(item, `${at}.topoOrder[${index}]`)),
-    depth: drawingDrawingInferenceGuardObject(row["depth"], `${at}.depth`),
+    depth: Object.fromEntries(Object.entries(drawingDrawingInferenceGuardObject(row["depth"], `${at}.depth`)).map(([key0, value0]) => [key0, drawingDrawingInferenceGuardInteger(value0, `${at}.depth.${key0}`)])),
     cycleFree: drawingDrawingInferenceGuardBoolean(row["cycleFree"], `${at}.cycleFree`),
     nodeCount: drawingDrawingInferenceGuardInteger(row["nodeCount"], `${at}.nodeCount`),
   };

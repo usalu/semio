@@ -1,0 +1,49 @@
+[package]
+workspace = "../../../../../../../../../.."
+name = "semio-s-artifact-stdio-gltf-inferences-inferences"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Component crate of semio-s-artifact-stdio-gltf-inferences: inferences"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "🦀️.rs"
+
+[dependencies]
+pack = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-pack-json = { workspace = true }
+semio-framework-schema = { workspace = true }
+semio-framework-schema-composition = { workspace = true }
+semio-framework-schema-registry = { workspace = true }
+semio-framework-schema-state = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-framework-value-derive = { workspace = true }
+semio-s-artifact-stdio-gltf-inferences-adjacency = { path = "../../../../../../🧬️schema/💡️inferences/🤝️adjacency/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-gltf-inferences-centroid = { path = "../../../../../../🧬️schema/💡️inferences/⚖️mass-distribution/🎯️centroid/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-gltf-inferences-clearance = { path = "../../../../../../🧬️schema/💡️inferences/↔️clearance/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-gltf-inferences-compactness = { path = "../../../../../../🧬️schema/💡️inferences/🗜️compactness/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-gltf-inferences-concavity = { path = "../../../../../../🧬️schema/💡️inferences/🕳️concavity/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-gltf-inferences-connected-components = { path = "../../../../../../🧬️schema/💡️inferences/🤝️adjacency/🧩️connected-components/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-gltf-inferences-curvature = { path = "../../../../../../🧬️schema/💡️inferences/🌀️curvature/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-gltf-inferences-geometry-core = { path = "../../../../../../🧬️schema/💡️inferences/🔨️geometry-kernel/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-gltf-inferences-modules = { path = "../../../../../../🔨️modules/💡️inference-measures/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-gltf-inferences-roughness = { path = "../../../../../../🧬️schema/💡️inferences/🌊️roughness/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-gltf-inferences-symmetry = { path = "../../../../../../🧬️schema/💡️inferences/🪞️symmetry/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-gltf-inferences-thickness = { path = "../../../../../../🧬️schema/💡️inferences/↕️thickness/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-gltf-inferences-topology = { path = "../../../../../../🧬️schema/💡️inferences/🕸️topology/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-gltf-inferences-volume = { path = "../../../../../../🧬️schema/💡️inferences/🧱️area-volume/📦️volume/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-gltf-model = { workspace = true }
+serde_json = { workspace = true }
+
+[dev-dependencies]
+semio-framework-async-macros = { workspace = true }
+semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-framework-pack-json = { workspace = true }
+semio-framework-test-fixtures = { path = "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }

@@ -1,0 +1,14 @@
+{
+  "name": "@semio-tech/layout-layout-ts",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./standards/1/subsets/any/io/sqlite/snapshot": "./🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🟦️.ts",
+    "./standards/1/subsets/any/io/text/diff/native-json": "./🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/🔺️diff/🪪️native-json/🟦️.ts",
+    "./standards/1/subsets/any/io/text/snapshot/native-json": "./🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/📸️snapshot/🪪️native-json/🟦️.ts",
+    "./standards/1/subsets/any/schema": "./🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts",
+    "./standards/1/subsets/any/schema/diff": "./🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts",
+    "./standards/1/subsets/any/schema/snapshot": "./🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🟦️.ts",
+    "./standards/1/subsets/any/testing/fixtures/contract/document": "./🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️testing/🧫️fixtures/🔬️contract/🪪️document/🟦️.ts"
+  }
+}

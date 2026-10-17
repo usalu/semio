@@ -508,7 +508,7 @@ fn native_clipboard_original_string_close_requires_whole_capacity_and_depth(){
   }
   recipient=Default::default();let mut cx=owner.context(StepBudget::new(1,10,exact),&mut sequence,&mut recipient).unwrap();let progress=Progress{copied_items:1,released_bytes:capacity,..Progress::default()};
   let(step,born,freed)=measured(||job.close_step(&mut cx).unwrap());assert_eq!(step,Close::Complete{progress});assert_eq!(cx.retained_progress(),progress);assert_eq!((born,freed),(0,capacity));assert!(progress.fits(exact));assert!(job.terminal_is_empty());assert_eq!(job.close_step(&mut cx).unwrap(),Close::Complete{progress:Progress::default()});drop(cx);
-  owner.finish();eprintln!("[DEBUG] original clipboard close sameString=true empty={} wholeCapacity={} exactRelease={} depth=1 originalCallerReceivedOnce=true",text.as_str().unwrap().is_empty(),capacity,progress.released_bytes);
+  owner.finish();
  }
 }
 
@@ -566,7 +566,6 @@ fn cancelled_clipboard_outcome_preserves_original_input_until_descriptor_ack_and
     assert_eq!(closed.progress(), RetainedCloneProgress { copied_items: 1, released_bytes: capacity, ..Default::default() });
     assert!(job.terminal_is_empty());
     owner.finish();
-    eprintln!("[DEBUG] clipboard cancelled descriptor original input pointer/capacity preserved; denied outcome0heap, borrowed admission0heap, original ACK and exact native release funded separately");
 }
 
 #[cfg(not(target_arch="wasm32"))]
@@ -589,7 +588,6 @@ fn cancelled_clipboard_driver_binds_the_original_producer_witness(){
     assert_eq!(descriptor.acknowledge(grant).progress().copied_items,1);drop(descriptor);
     job.begin_close();let close_grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:0,maximum_capacity_bytes:0,maximum_release_bytes:capacity,maximum_depth:1};let mut close_receipt=Default::default();let mut cx=owner.context(StepBudget::new(1,10,close_grant),&mut sequence,&mut close_receipt).unwrap();let closed=job.close_step(&mut cx).unwrap();assert_eq!(closed.progress(),RetainedCloneProgress{copied_items:1,released_bytes:capacity,..Default::default()});assert_eq!(closed.progress(),cx.retained_progress());assert!(job.terminal_is_empty());drop(cx);
     owner.finish();
-    eprintln!("[DEBUG] actual clipboard drive_step original cancelled producer witness borrowed until funded ACK and physical input close");
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -657,5 +655,4 @@ use semio_framework_job_worker::{WorkerJobSession};use semio_framework_job_worke
     let mut cancelled_job=cancelled_job.take().unwrap();cancelled_job.begin_close();let mut receipt=Default::default();let mut cx=owner.context(StepBudget::new(1,10,supplied),&mut sequence,&mut receipt).unwrap();let step=cancelled_job.close_step(&mut cx).unwrap();assert_eq!(step.progress(),RetainedCloneProgress{copied_items:1,released_bytes:capacity,..Default::default()});assert_eq!(step.progress(),cx.retained_progress());assert!(cancelled_job.terminal_is_empty());drop(cx);
     let params=cancelled_params.take().unwrap();let mut alias=semio_framework_async::CancelTokenRetirement::from_token(params.cancel);while !alias.terminal_is_empty(){assert!(alias.return_alias_step(&owner.cancel,supplied).unwrap().progress().fits(supplied));}
     owner.finish();
-    eprintln!("[DEBUG] original clipboard session source/params pointer preserved by prebirth denial; admission uses caller context, ignores config policy, returns exact native heap receipt before exposing session");
 }

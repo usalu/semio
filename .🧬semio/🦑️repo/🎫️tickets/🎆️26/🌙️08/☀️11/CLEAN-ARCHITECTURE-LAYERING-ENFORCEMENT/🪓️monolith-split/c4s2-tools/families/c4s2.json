@@ -1,0 +1,7 @@
+{
+ "name": "c4s2",
+ "crates": [
+  "semio-framework-server-tests"
+ ],
+ "note": "CENSUS4-SMALL-2 package 62: the server companion test crate that mounts the gateway unit test file"
+}

@@ -1,0 +1,37 @@
+from specs.lib import *
+
+SPEC = dict(
+    orig='repair.rs.txt',
+    file=EN + '/🥽️mesh/🩹️repair/🦀️.rs',
+    nest=False,
+    external=[],
+    vis_edits=[
+        ('⏱️bounded-preparations', 58, '    pub(super) fn new(mesh: &TriMesh, minimum_component_faces: usize, minimum_component_bbox_fraction: f64, keep_largest_component: bool) -> Self {', '    pub fn new(mesh: &TriMesh, minimum_component_faces: usize, minimum_component_bbox_fraction: f64, keep_largest_component: bool) -> Self {'),
+        ('⏱️bounded-preparations', 96, '    fn advance(&mut self, mesh: &TriMesh, item_budget: usize) -> bool {', '    pub fn advance(&mut self, mesh: &TriMesh, item_budget: usize) -> bool {'),
+        ('⏱️bounded-preparations', 242, '    fn finish(self) -> TriMesh {', '    pub fn finish(self) -> TriMesh {'),
+        ('⏱️bounded-preparations', 248, 'struct BoundedEdgeRecord {', 'pub struct BoundedEdgeRecord {'),
+        ('⏱️bounded-preparations', 249, '    directed: [u32; 2],', '    pub directed: [u32; 2],'),
+        ('⏱️bounded-preparations', 250, '    pub(super) faces: Vec<u32>,', '    pub faces: Vec<u32>,'),
+        ('⏱️bounded-preparations', 256, '    records: BTreeMap<(u32, u32), BoundedEdgeRecord>,', '    pub records: BTreeMap<(u32, u32), BoundedEdgeRecord>,'),
+        ('⏱️bounded-preparations', 260, '    pub(super) fn new() -> Self {', '    pub fn new() -> Self {'),
+        ('⏱️bounded-preparations', 264, '    fn advance(&mut self, mesh: &TriMesh, triangle_budget: usize) -> bool {', '    pub fn advance(&mut self, mesh: &TriMesh, triangle_budget: usize) -> bool {'),
+        ('⏱️bounded-preparations', 312, '    pub(super) fn new(mesh: &TriMesh) -> Self {', '    pub fn new(mesh: &TriMesh) -> Self {'),
+        ('⏱️bounded-preparations', 316, '    fn advance(&mut self, mesh: &TriMesh, item_budget: usize) -> bool {', '    pub fn advance(&mut self, mesh: &TriMesh, item_budget: usize) -> bool {'),
+        ('⏱️bounded-preparations', 397, '    fn finish(self, mesh: &mut TriMesh) {', '    pub fn finish(self, mesh: &mut TriMesh) {'),
+        ('⏱️bounded-preparations', 421, '    pub(super) fn new() -> Self {', '    pub fn new() -> Self {'),
+        ('⏱️bounded-preparations', 425, '    fn advance(&mut self, mesh: &mut TriMesh, item_budget: usize) -> bool {', '    pub fn advance(&mut self, mesh: &mut TriMesh, item_budget: usize) -> bool {'),
+        ('⏱️bounded-preparations', 511, '    pub(super) fn new(max_boundary_verts: usize) -> Self {', '    pub fn new(max_boundary_verts: usize) -> Self {'),
+        ('⏱️bounded-preparations', 515, '    fn advance(&mut self, mesh: &mut TriMesh, item_budget: usize) -> bool {', '    pub fn advance(&mut self, mesh: &mut TriMesh, item_budget: usize) -> bool {'),
+        ('⏱️bounded-preparations', 629, '    fn exceeded(&self) -> bool {', '    pub fn exceeded(&self) -> bool {'),
+    ],
+    children=[
+        ch('⏱', 'bounded-preparations', 'bounded_preparations', [(25, 651)],
+           'Bounded preparations of the mesh repair: the resumable cleaning, non-manifold edge repair, orientation and hole filling preparations with their phases and statistics.'),
+        ch('🧼', 'clean-and-repair', 'clean_and_repair', [(653, 1071)],
+           'Cleaning and repair of the mesh: the vertex welding, degenerate and small component removal, Taubin smoothing, non-manifold repair and consistent outward orientation.'),
+        ch('🕳', 'hole-filling', 'hole_filling', [(1077, 1496)],
+           'Hole filling of the mesh repair: the boundary loop triangulation by ear clipping, minimum weight and advancing front, with fairing and patch validation.'),
+        ch('🧊', 'voxel-close-and-validate', 'voxel_close_and_validate', [(1502, 1849)],
+           'Voxel closing and validation of the mesh repair: the by-construction closed fallback surface and the watertightness report with its self-intersection and manifold checks.'),
+    ],
+)

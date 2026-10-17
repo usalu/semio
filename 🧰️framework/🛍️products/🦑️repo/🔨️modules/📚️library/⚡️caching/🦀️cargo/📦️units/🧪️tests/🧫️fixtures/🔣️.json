@@ -92,8 +92,8 @@
         "compilation": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
       },
       "execution": {
-        "cwd": "/repo/.🧬semio/🦑️repo/⚡️cache/rust/fixed/m/cs/v/m/w",
-        "policy": "compiler-state-v1"
+        "policy": "compiler-context-v2",
+        "root": "/repo/.\ud83e\uddecsemio/\ud83e\udd91\ufe0frepo/\u26a1\ufe0fcache/rust/fixed/m/cs/v/m"
       }
     },
     {
@@ -196,8 +196,8 @@
         "compilation": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
       },
       "execution": {
-        "cwd": "/repo/.🧬semio/🦑️repo/⚡️cache/rust/fixed/m/cs/v/m/w",
-        "policy": "compiler-state-v1"
+        "policy": "compiler-context-v2",
+        "root": "/repo/.\ud83e\uddecsemio/\ud83e\udd91\ufe0frepo/\u26a1\ufe0fcache/rust/fixed/m/cs/v/m"
       }
     },
     {
@@ -292,8 +292,8 @@
         "compilation": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
       },
       "execution": {
-        "cwd": "/repo/.🧬semio/🦑️repo/⚡️cache/rust/fixed/m/cs/v/m/w",
-        "policy": "compiler-state-v1"
+        "policy": "compiler-context-v2",
+        "root": "/repo/.\ud83e\uddecsemio/\ud83e\udd91\ufe0frepo/\u26a1\ufe0fcache/rust/fixed/m/cs/v/m"
       }
     }
   ],
@@ -444,7 +444,7 @@
   ],
   "dataCapture": {
     "repetitions": 32768,
-    "symbol": "🦀",
+    "symbol": "\ud83e\udd80",
     "maximumBytes": 131073,
     "maximumLines": 1
   },
@@ -493,15 +493,15 @@
     "changed": "export const value=2;"
   },
   "producerAuthority": {
-    "entry": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🏗️compiler/📥️entry/📜️script.ts",
+    "entry": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83e\udd91\ufe0frepo/\ud83d\udd28\ufe0fmodules/\ud83d\udcda\ufe0flibrary/\u26a1\ufe0fcaching/\ud83e\udd80\ufe0fcargo/\ud83d\udce6\ufe0funits/\ud83c\udfd7\ufe0fcompiler/\ud83d\udce5\ufe0fentry/\ud83d\udcdc\ufe0fscript.ts",
     "required": [
-      "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🏗️compiler/🦀️rustc/🟦️.ts",
-      "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🧬️schema/🔣️.json",
-      "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🏗️compiler/📥️entry/📜️script.ts"
+      "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83e\udd91\ufe0frepo/\ud83d\udd28\ufe0fmodules/\ud83d\udcda\ufe0flibrary/\u26a1\ufe0fcaching/\ud83e\udd80\ufe0fcargo/\ud83d\udce6\ufe0funits/\ud83c\udfd7\ufe0fcompiler/\ud83e\udd80\ufe0frustc/\ud83d\udfe6\ufe0f.ts",
+      "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83e\udd91\ufe0frepo/\ud83d\udd28\ufe0fmodules/\ud83d\udcda\ufe0flibrary/\u26a1\ufe0fcaching/\ud83d\udcbe\ufe0fstorage/\ud83d\udd12\ufe0fenforcement/\ud83c\udfd7\ufe0fcompiler/\ud83e\uddec\ufe0fschema/\ud83d\udd23\ufe0f.json",
+      "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83e\udd91\ufe0frepo/\ud83d\udd28\ufe0fmodules/\ud83d\udcda\ufe0flibrary/\u26a1\ufe0fcaching/\ud83e\udd80\ufe0fcargo/\ud83d\udce6\ufe0funits/\ud83c\udfd7\ufe0fcompiler/\ud83d\udce5\ufe0fentry/\ud83d\udcdc\ufe0fscript.ts"
     ],
     "excluded": [
-      "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🟦️.ts",
-      "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️bun/🟦️.ts"
+      "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83e\udd91\ufe0frepo/\ud83d\udd28\ufe0fmodules/\ud83d\udcda\ufe0flibrary/\u26a1\ufe0fcaching/\ud83d\ude80\ufe0fbootstrap/\ud83d\udce6\ufe0fdependencies/\ud83d\udfe6\ufe0f.ts",
+      "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83e\udd91\ufe0frepo/\ud83d\udd28\ufe0fmodules/\ud83d\udcda\ufe0flibrary/\ud83d\uddc2\ufe0fworkspaces/\ud83d\udfe6\ufe0fbun/\ud83d\udfe6\ufe0f.ts"
     ],
     "cache": true,
     "projectRoot": "descriptor-directory"

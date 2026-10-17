@@ -5,7 +5,7 @@
 
 use crate::cas::expr::{Constant, Expr, Kind, RelationalOperator};
 use crate::cas::fnkind::FnKind;
-use crate::polynomial::PolyU;
+use crate::polynomial::univariate::PolyU;
 use number::{Integer, Natural, Rational};
 
 // #region 🔖️SolutionSet
@@ -279,8 +279,8 @@ pub fn solve_inequality(e: &Expr, operator: RelationalOperator, x: &Expr) -> Sol
     }
     let num_i = clear_denominators(&num);
     let den_i = clear_denominators(&den);
-    let num_roots = if num_i.degree().unwrap_or(0) > 0 { crate::polynomial::isolate_real_roots(&num_i) } else { Vec::new() };
-    let den_roots = if den_i.degree().unwrap_or(0) > 0 { crate::polynomial::isolate_real_roots(&den_i) } else { Vec::new() };
+    let num_roots = if num_i.degree().unwrap_or(0) > 0 { crate::polynomial::roots::isolate_real_roots(&num_i) } else { Vec::new() };
+    let den_roots = if den_i.degree().unwrap_or(0) > 0 { crate::polynomial::roots::isolate_real_roots(&den_i) } else { Vec::new() };
 
     let mut points: Vec<f64> = num_roots.iter().chain(den_roots.iter()).map(|(lo, hi)| (lo.to_f64() + hi.to_f64()) / 2.0).collect();
     points.sort_by(|a, b| a.partial_cmp(b).unwrap());

@@ -1,6 +1,5 @@
 //! 🖊️ Note mutation — `ChangeBlockInkWidth`: sets an ink block's stroke width.
 
-use crate::schema::mutations::NoteMutation;
 use crate::{NoteDiff, NoteSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -20,17 +19,23 @@ pub struct ChangeBlockInkWidth {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_block_ink_width(id: String, new_stroke_width: f64) -> NoteMutation {
-    NoteMutation::ChangeBlockInkWidth(ChangeBlockInkWidth { id, new_stroke_width })
+pub fn change_block_ink_width<Op>(id: String, new_stroke_width: f64) -> Op
+where
+    Op: From<crate::standards::v1::subsets::ink::schema::mutations::change_block_ink_width::ChangeBlockInkWidth>,
+{
+    Op::from(ChangeBlockInkWidth { id, new_stroke_width })
 }
 
-impl MutationKind<NoteSnapshot, NoteMutation> for ChangeBlockInkWidth {
+impl<Op> MutationKind<NoteSnapshot, Op> for ChangeBlockInkWidth
+where
+    Op: protocol::Mutation<NoteSnapshot, Diff = NoteDiff> + From<ChangeBlockInkWidth>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "block-ink-width", kind: "change-block-ink-width", record: "ChangedBlockInkWidth" };
 
     fn diff(&self, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &NoteSnapshot) -> Result<Vec<NoteMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &NoteSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

@@ -1,0 +1,33 @@
+use crate::standards::v2_0::subsets::any::schema::mutations::contract_tests::{assert_laws, decode};
+use crate::standards::v2_0::subsets::any::schema::mutations::unbind_scene_root_node as mutation;
+use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfSnapshot;
+
+#[test]
+fn canonical_vectors_execute_direct_mutation_and_codec_laws() {
+    let contract: serde_json::Value = serde_json::from_str(runtime_fixture_text("../../../../../../🌲️scene-root/✂️unbind/📜️contract/🔣️.json")).unwrap();
+    assert_eq!(contract["id"], mutation::ID);
+    let vectors = contract["vectors"].as_array().unwrap();
+    assert!(!vectors.is_empty());
+    for vector in vectors {
+        let payload: mutation::GltfUnbindSceneRootNodePayload = decode(&vector["mutation"]);
+        let base: GltfSnapshot = decode(&vector["base"]);
+        let expected: GltfSnapshot = decode(&vector["after"]);
+        assert_eq!(protocol::apply_diff(&mutation::plan(&payload, &base).unwrap(), &base).unwrap(), expected);
+        assert_laws(&mutation::UnbindSceneRootNodeMutation::Apply(payload.clone()), &base, &expected);
+        let wire = &vector["wire"];
+        let encoded: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&payload)).unwrap();
+        assert_eq!(encoded, serde_json::from_str::<serde_json::Value>(wire["mutation"].as_str().unwrap()).unwrap());
+        let malformed = wire["malformedPayload"].as_str().unwrap();
+        assert!(semio_framework_pack_json::from_json_str::<mutation::GltfUnbindSceneRootNodePayload>(malformed, semio_framework_pack_json::JsonMemberPolicy::Reject).is_err());
+        assert!(serde_json::from_str::<serde_json::Value>(malformed).is_err());
+        for key in ["index", "reference"] {
+            let rejected = decode(&vector["rejected"][key]);
+            assert_eq!(mutation::validate(&rejected, &base).unwrap_err().code, "gltf.mutation.index-out-of-range");
+        }
+    }
+}
+
+fn runtime_fixture_text(relative: &str) -> &'static str {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative);
+    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display())).into_boxed_str())
+}

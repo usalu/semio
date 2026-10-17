@@ -1,0 +1,559 @@
+{
+  "version": 1,
+  "graph": {
+    "version": 1,
+    "projects": {
+      "app": {
+        "name": "app",
+        "root": "apps/app",
+        "tags": [
+          "app"
+        ],
+        "targets": {
+          "build": {
+            "execution": {
+              "kind": "noop"
+            }
+          }
+        }
+      },
+      "lib": {
+        "name": "lib",
+        "root": "packages/lib",
+        "tags": [
+          "lib"
+        ],
+        "targets": {
+          "build": {
+            "execution": {
+              "kind": "noop"
+            }
+          }
+        }
+      }
+    },
+    "dependencies": [
+      {
+        "source": "app",
+        "target": "lib",
+        "type": "static"
+      }
+    ]
+  },
+  "watch": [
+    {
+      "name": "absent-README.md",
+      "args": [
+        "watch",
+        "--projects=app",
+        "--",
+        "callback",
+        "--include-global-files",
+        "--tool=bazel"
+      ],
+      "path": "README.md",
+      "selected": false,
+      "global": false
+    },
+    {
+      "name": "absent-apps",
+      "args": [
+        "watch",
+        "--projects=app",
+        "--",
+        "callback",
+        "--include-global-files",
+        "--tool=bazel"
+      ],
+      "path": "apps/app/main.ts",
+      "selected": true,
+      "global": false
+    },
+    {
+      "name": "absent-packages",
+      "args": [
+        "watch",
+        "--projects=app",
+        "--",
+        "callback",
+        "--include-global-files",
+        "--tool=bazel"
+      ],
+      "path": "packages/lib/main.ts",
+      "selected": false,
+      "global": false
+    },
+    {
+      "name": "bare-README.md",
+      "args": [
+        "watch",
+        "--projects=app",
+        "--include-global-files",
+        "--",
+        "callback",
+        "--include-global-files",
+        "--tool=bazel"
+      ],
+      "path": "README.md",
+      "selected": false,
+      "global": true
+    },
+    {
+      "name": "bare-apps",
+      "args": [
+        "watch",
+        "--projects=app",
+        "--include-global-files",
+        "--",
+        "callback",
+        "--include-global-files",
+        "--tool=bazel"
+      ],
+      "path": "apps/app/main.ts",
+      "selected": true,
+      "global": false
+    },
+    {
+      "name": "bare-packages",
+      "args": [
+        "watch",
+        "--projects=app",
+        "--include-global-files",
+        "--",
+        "callback",
+        "--include-global-files",
+        "--tool=bazel"
+      ],
+      "path": "packages/lib/main.ts",
+      "selected": false,
+      "global": false
+    },
+    {
+      "name": "true-README.md",
+      "args": [
+        "watch",
+        "--projects=app",
+        "--include-global-files=true",
+        "--",
+        "callback",
+        "--include-global-files",
+        "--tool=bazel"
+      ],
+      "path": "README.md",
+      "selected": false,
+      "global": true
+    },
+    {
+      "name": "true-apps",
+      "args": [
+        "watch",
+        "--projects=app",
+        "--include-global-files=true",
+        "--",
+        "callback",
+        "--include-global-files",
+        "--tool=bazel"
+      ],
+      "path": "apps/app/main.ts",
+      "selected": true,
+      "global": false
+    },
+    {
+      "name": "true-packages",
+      "args": [
+        "watch",
+        "--projects=app",
+        "--include-global-files=true",
+        "--",
+        "callback",
+        "--include-global-files",
+        "--tool=bazel"
+      ],
+      "path": "packages/lib/main.ts",
+      "selected": false,
+      "global": false
+    },
+    {
+      "name": "false-README.md",
+      "args": [
+        "watch",
+        "--projects=app",
+        "--include-global-files=false",
+        "--",
+        "callback",
+        "--include-global-files",
+        "--tool=bazel"
+      ],
+      "path": "README.md",
+      "selected": false,
+      "global": false
+    },
+    {
+      "name": "false-apps",
+      "args": [
+        "watch",
+        "--projects=app",
+        "--include-global-files=false",
+        "--",
+        "callback",
+        "--include-global-files",
+        "--tool=bazel"
+      ],
+      "path": "apps/app/main.ts",
+      "selected": true,
+      "global": false
+    },
+    {
+      "name": "false-packages",
+      "args": [
+        "watch",
+        "--projects=app",
+        "--include-global-files=false",
+        "--",
+        "callback",
+        "--include-global-files",
+        "--tool=bazel"
+      ],
+      "path": "packages/lib/main.ts",
+      "selected": false,
+      "global": false
+    }
+  ],
+  "tasks": [
+    {
+      "name": "untracked-bare",
+      "args": [
+        "affected",
+        "--targets=build",
+        "--untracked"
+      ],
+      "git": [
+        [
+          "-c",
+          "core.fsmonitor=false",
+          "ls-files",
+          "--others",
+          "--exclude-standard",
+          "-z"
+        ]
+      ],
+      "tasks": [
+        "app:build",
+        "lib:build"
+      ],
+      "forwarded": []
+    },
+    {
+      "name": "untracked-true",
+      "args": [
+        "affected",
+        "--targets=build",
+        "--untracked=true"
+      ],
+      "git": [
+        [
+          "-c",
+          "core.fsmonitor=false",
+          "ls-files",
+          "--others",
+          "--exclude-standard",
+          "-z"
+        ]
+      ],
+      "tasks": [
+        "app:build",
+        "lib:build"
+      ],
+      "forwarded": []
+    },
+    {
+      "name": "uncommitted-bare",
+      "args": [
+        "affected",
+        "--targets=build",
+        "--uncommitted"
+      ],
+      "git": [
+        [
+          "-c",
+          "core.fsmonitor=false",
+          "diff",
+          "--name-only",
+          "-z",
+          "HEAD"
+        ]
+      ],
+      "tasks": [
+        "app:build",
+        "lib:build"
+      ],
+      "forwarded": []
+    },
+    {
+      "name": "uncommitted-true",
+      "args": [
+        "affected",
+        "--targets=build",
+        "--uncommitted=true"
+      ],
+      "git": [
+        [
+          "-c",
+          "core.fsmonitor=false",
+          "diff",
+          "--name-only",
+          "-z",
+          "HEAD"
+        ]
+      ],
+      "tasks": [
+        "app:build",
+        "lib:build"
+      ],
+      "forwarded": []
+    },
+    {
+      "name": "both-true",
+      "args": [
+        "affected",
+        "--targets=build",
+        "--uncommitted=true",
+        "--untracked=true"
+      ],
+      "git": [
+        [
+          "-c",
+          "core.fsmonitor=false",
+          "diff",
+          "--name-only",
+          "-z",
+          "HEAD"
+        ],
+        [
+          "-c",
+          "core.fsmonitor=false",
+          "ls-files",
+          "--others",
+          "--exclude-standard",
+          "-z"
+        ]
+      ],
+      "tasks": [
+        "app:build",
+        "lib:build"
+      ],
+      "forwarded": []
+    },
+    {
+      "name": "all-bare",
+      "args": [
+        "affected",
+        "--targets=build",
+        "--all"
+      ],
+      "git": [],
+      "tasks": [
+        "app:build",
+        "lib:build"
+      ],
+      "forwarded": []
+    },
+    {
+      "name": "all-true",
+      "args": [
+        "affected",
+        "--targets=build",
+        "--all=true"
+      ],
+      "git": [],
+      "tasks": [
+        "app:build",
+        "lib:build"
+      ],
+      "forwarded": []
+    },
+    {
+      "name": "false",
+      "args": [
+        "affected",
+        "--targets=build",
+        "--untracked=false",
+        "--uncommitted=false"
+      ],
+      "git": [
+        [
+          "-c",
+          "core.fsmonitor=false",
+          "diff",
+          "--name-only",
+          "-z",
+          "HEAD"
+        ],
+        [
+          "-c",
+          "core.fsmonitor=false",
+          "ls-files",
+          "--others",
+          "--exclude-standard",
+          "-z"
+        ]
+      ],
+      "tasks": [
+        "app:build",
+        "lib:build"
+      ],
+      "forwarded": []
+    },
+    {
+      "name": "affected-literal-tail",
+      "args": [
+        "affected",
+        "--targets=build",
+        "--files=apps/app/main.ts",
+        "--",
+        "--untracked=true",
+        "--tool=bazel",
+        "--include-global-files",
+        "literal'quoted",
+        "two words",
+        "$(literal)"
+      ],
+      "git": [],
+      "tasks": [
+        "app:build"
+      ],
+      "forwarded": [
+        "--untracked=true",
+        "--tool=bazel",
+        "--include-global-files",
+        "literal'quoted",
+        "two words",
+        "$(literal)"
+      ]
+    },
+    {
+      "name": "run-many-literal-tail",
+      "args": [
+        "run-many",
+        "--targets=build",
+        "--projects=app",
+        "--",
+        "--untracked=true",
+        "--tool=bazel",
+        "--include-global-files",
+        "literal'quoted",
+        "two words",
+        "$(literal)"
+      ],
+      "git": [],
+      "tasks": [
+        "app:build"
+      ],
+      "forwarded": [
+        "--untracked=true",
+        "--tool=bazel",
+        "--include-global-files",
+        "literal'quoted",
+        "two words",
+        "$(literal)"
+      ]
+    },
+    {
+      "name": "exec-literal-tail",
+      "args": [
+        "exec",
+        "--projects=app",
+        "--",
+        "bun",
+        "-e",
+        "console.log(7)",
+        "--tool=bazel",
+        "--include-global-files",
+        "$(literal)"
+      ],
+      "git": [],
+      "tasks": [
+        "app:repo-exec"
+      ],
+      "forwarded": []
+    }
+  ],
+  "bail": [
+    {
+      "args": [
+        "run",
+        "app:build"
+      ],
+      "expected": false
+    },
+    {
+      "args": [
+        "run",
+        "app:build",
+        "--bail"
+      ],
+      "expected": true
+    },
+    {
+      "args": [
+        "run",
+        "app:build",
+        "--bail=true"
+      ],
+      "expected": true
+    },
+    {
+      "args": [
+        "run",
+        "app:build",
+        "--bail=false"
+      ],
+      "expected": false
+    },
+    {
+      "args": [
+        "run",
+        "app:build",
+        "--bail",
+        "true"
+      ],
+      "expected": true
+    },
+    {
+      "args": [
+        "run",
+        "app:build",
+        "--bail",
+        "false"
+      ],
+      "expected": false
+    },
+    {
+      "args": [
+        "run",
+        "app:build",
+        "--bail=false",
+        "--bail"
+      ],
+      "expected": true
+    },
+    {
+      "args": [
+        "run",
+        "app:build",
+        "--bail",
+        "--bail=false"
+      ],
+      "expected": false
+    },
+    {
+      "args": [
+        "run",
+        "app:build",
+        "--",
+        "--bail"
+      ],
+      "expected": false
+    }
+  ]
+}

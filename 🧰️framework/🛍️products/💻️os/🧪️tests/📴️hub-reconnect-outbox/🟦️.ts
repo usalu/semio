@@ -1,11 +1,11 @@
 /** 📴️ The bounded lossless mutation outbox and the hub reconnect backoff: offline queueing, flush on Welcome and abort of the reconnect loop. */
 import type { BackboneWorkerTestDependencies } from "../../🔨️modules/🏪️store/👷️worker/🟦️.ts";
-import { workerLawFakesV1, FakeHubWebSocket, flushSocketGrantTurns } from "../🧰️worker-law-fakes/🟦️.ts";
+import { workerLawFakesV1, FakeHubWebSocket, flushSocketGrantTurns, WORKER_LAW_ACTOR_IDENTITY_GRANT } from "../🧰️worker-law-fakes/🟦️.ts";
 import type { TestSource } from "../🧰️worker-law-fakes/🟦️.ts";
 
 type ArtifactActorConfig = import("../../🟦️.ts").ArtifactActorConfig;
-type MutationEnvelope = import("../../../../🔨️modules/📡️replication/🟦️.ts").MutationEnvelope;
-type ServerFrame = import("../../../../🔨️modules/📡️replication/🟦️.ts").ServerFrame;
+type MutationEnvelope = import("@semio-tech/framework-replication").MutationEnvelope;
+type ServerFrame = import("@semio-tech/framework-replication").ServerFrame;
 type Vitest = NonNullable<ImportMeta["vitest"]>;
 
 export async function registerHubReconnectOutboxTests(vitest: Vitest, dependencies: BackboneWorkerTestDependencies, source: TestSource): Promise<void> {
@@ -22,7 +22,7 @@ export async function registerHubReconnectOutboxTests(vitest: Vitest, dependenci
     beforeEach(resetWorkerLaw);
 
     it("queue overflow rejects and reports rather than dropping silently", () => {
-      const config: ArtifactActorConfig = { documentId: "doc-overflow", schema: "demo/v1", bindings: [], actor: "actor-1" };
+      const config: ArtifactActorConfig = { documentId: "doc-overflow", schema: "demo/v1", bindings: [], actor: "actor-1", actorIdentityGrant: WORKER_LAW_ACTOR_IDENTITY_GRANT };
       openArtifact(config);
       const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
@@ -64,7 +64,7 @@ export async function registerHubReconnectOutboxTests(vitest: Vitest, dependenci
       (globalThis as unknown as { WebSocket: unknown }).WebSocket = FakeHubWebSocket;
 
       try {
-        const config: ArtifactActorConfig = { documentId: "doc-hub-flush", schema: "demo/v1", bindings: [{ kind: "hub", dataClass: "persistedShared", baseUrl: "http://hub.test", spaceId: "studio-1" }], actor: "actor-1" };
+        const config: ArtifactActorConfig = { documentId: "doc-hub-flush", schema: "demo/v1", bindings: [{ kind: "hub", dataClass: "persistedShared", baseUrl: "http://hub.test", spaceId: "studio-1" }], actor: "actor-1", actorIdentityGrant: WORKER_LAW_ACTOR_IDENTITY_GRANT };
         openArtifact(config);
         await flushSocketGrantTurns();
         const state = artifactState("doc-hub-flush")!;
@@ -135,7 +135,7 @@ export async function registerHubReconnectOutboxTests(vitest: Vitest, dependenci
       (globalThis as unknown as { WebSocket: unknown }).WebSocket = FakeHubWebSocket;
 
       try {
-        const config: ArtifactActorConfig = { documentId: "doc-hub-stranded", schema: "demo/v1", bindings: [{ kind: "hub", dataClass: "persistedShared", baseUrl: "http://hub.test", spaceId: "studio-1" }], actor: "actor-1" };
+        const config: ArtifactActorConfig = { documentId: "doc-hub-stranded", schema: "demo/v1", bindings: [{ kind: "hub", dataClass: "persistedShared", baseUrl: "http://hub.test", spaceId: "studio-1" }], actor: "actor-1", actorIdentityGrant: WORKER_LAW_ACTOR_IDENTITY_GRANT };
         openArtifact(config);
         await flushSocketGrantTurns();
         const state = artifactState("doc-hub-stranded")!;
@@ -188,7 +188,7 @@ export async function registerHubReconnectOutboxTests(vitest: Vitest, dependenci
       const randomSpy = vi.spyOn(Math, "random").mockReturnValue(0.5);
 
       try {
-        const config: ArtifactActorConfig = { documentId: "doc-hub-reset", schema: "demo/v1", bindings: [{ kind: "hub", dataClass: "persistedShared", baseUrl: "http://hub.test", spaceId: "studio-1" }], actor: "actor-1" };
+        const config: ArtifactActorConfig = { documentId: "doc-hub-reset", schema: "demo/v1", bindings: [{ kind: "hub", dataClass: "persistedShared", baseUrl: "http://hub.test", spaceId: "studio-1" }], actor: "actor-1", actorIdentityGrant: WORKER_LAW_ACTOR_IDENTITY_GRANT };
         openArtifact(config);
         await flushSocketGrantTurns();
 
@@ -234,7 +234,7 @@ export async function registerHubReconnectOutboxTests(vitest: Vitest, dependenci
       const randomSpy = vi.spyOn(Math, "random").mockReturnValue(0.5);
 
       try {
-        const config: ArtifactActorConfig = { documentId: "doc-hub-no-reset", schema: "demo/v1", bindings: [{ kind: "hub", dataClass: "persistedShared", baseUrl: "http://hub.test", spaceId: "studio-1" }], actor: "actor-1" };
+        const config: ArtifactActorConfig = { documentId: "doc-hub-no-reset", schema: "demo/v1", bindings: [{ kind: "hub", dataClass: "persistedShared", baseUrl: "http://hub.test", spaceId: "studio-1" }], actor: "actor-1", actorIdentityGrant: WORKER_LAW_ACTOR_IDENTITY_GRANT };
         openArtifact(config);
         await flushSocketGrantTurns();
 
@@ -270,7 +270,7 @@ export async function registerHubReconnectOutboxTests(vitest: Vitest, dependenci
       vi.useFakeTimers();
 
       try {
-        const config: ArtifactActorConfig = { documentId: "doc-hub-abort", schema: "demo/v1", bindings: [{ kind: "hub", dataClass: "persistedShared", baseUrl: "http://hub.test", spaceId: "studio-1" }], actor: "actor-1" };
+        const config: ArtifactActorConfig = { documentId: "doc-hub-abort", schema: "demo/v1", bindings: [{ kind: "hub", dataClass: "persistedShared", baseUrl: "http://hub.test", spaceId: "studio-1" }], actor: "actor-1", actorIdentityGrant: WORKER_LAW_ACTOR_IDENTITY_GRANT };
         openArtifact(config);
         await flushSocketGrantTurns();
         FakeHubWebSocket.instances[0]!.open(); // sustained-health timer now pending too.

@@ -16,6 +16,8 @@ workspace = true
 path = "🦀️.rs"
 
 [dependencies]
+semio-s-artifact-remodel-remodeling-mut-results-3 = { workspace = true }
+semio-s-artifact-remodel-remodeling-mut-results-2 = { workspace = true }
 semio-framework-dsl-record = { workspace = true }
 semio-framework-dsl-record-derive = { workspace = true }
 semio-framework-os-kernel = { workspace = true }

@@ -326,7 +326,7 @@ impl Process3dRetainedMutationReader {
         value
     }
 
-    fn take_rejected(&mut self) -> Option<Process3dMutation> {
+    pub(super) fn take_rejected(&mut self) -> Option<Process3dMutation> {
         if self.terminal_handoff {
             return None;
         }
@@ -572,7 +572,7 @@ fn process3d_retained_string_step(bytes: &[u8], offset: &mut usize, cursor: &mut
     process3d_retained_advance(bytes, offset, |reader| cursor.step(reader))
 }
 
-struct Process3dRetainedMutationReader {
+pub(super) struct Process3dRetainedMutationReader {
     pub(super) phase: Process3dRetainedMutationPhase,
     pub(super) offset: usize,
     pub(super) tag: u8,
@@ -595,7 +595,7 @@ struct Process3dRetainedMutationReader {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum Process3dMutationDecodeState {
+pub(super) enum Process3dMutationDecodeState {
     AwaitToken,
     Hex,
     Structural,

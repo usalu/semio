@@ -1,11 +1,24 @@
-use super::*;
+use crate::editor::puzzle2d::terminology::{puzzle2d_localized, Puzzle2dLabels};
+use semio_framework_ui_locale::LocalizedLabel;
+#[allow(unused_imports)]
+use crate::editor::puzzle2d::precompute::fill::{FillRunCounter, FillRunReason, FillRunStage};
+#[allow(unused_imports)]
+use crate::editor::puzzle2d::snapshot::{puzzle2d_action, Puzzle2dScene};
+#[allow(unused_imports)]
+use semio_framework_plugin::ToolDefinition;
+#[allow(unused_imports)]
+use semio_framework_plugin::WindowMeasure;
+#[allow(unused_imports)]
+use semio_framework_tool_run::{JobKindId, ToolRunCounterDefinition, ToolRunDefinition, ToolRunReasonDefinition, ToolRunRebasePolicy, ToolRunReconfigurePolicy, ToolRunSettingsReads, ToolRunStageDefinition, ToolRunTraceKind};
+use crate::editor::puzzle2d::modes::edit::tools::fill::*;
 use crate::editor::puzzle2d::config::Puzzle2dPlayRuntime;
 use crate::editor::puzzle2d::snapshot::empty_board_snapshot;
 use crate::editor::puzzle2d::engine::board_host::puzzle_board_host;
-use crate::editor::puzzle2d::modes::edit::puzzle2d_engagement;
+use crate::editor::puzzle2d::modes::edit::canvas::puzzle2d_engagement;
 use crate::editor::puzzle2d::modes::edit::windows::overview;
 use crate::editor::puzzle2d::terminology::puzzle2d_labels;
-use crate::editor::puzzle2d::unit_tests::context::*;
+use crate::editor::puzzle2d::testkit::*;
+use semio_framework_test_fixtures::fixture_text;
 use semio_framework_ui_locale::Locale;
 use semio_framework_ui_locale::Terminology;
 use semio_framework_pack_json::Value;
@@ -47,7 +60,7 @@ fn fill_count_is_the_only_unbounded_measure_and_defaults_to_one_hundred() {
 /// table: policies, trace kind, job kinds, stage/counter/reason ids and codes, verdicts and the EN/DE texts.
 #[test]
 fn fill_tool_declares_the_schema_tool_run_definition() {
-    let schema: Value = semio_framework_pack_json::from_json_str(include_str!("../../../../../../../🧬️schema/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("puzzle2d schema parses");
+    let schema: Value = semio_framework_pack_json::from_json_str(fixture_text!("../../../../../🧬️schema/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("puzzle2d schema parses");
     let table = &schema["$defs"]["Puzzle2dFillRun"]["x-semio-toolRun"];
     let definition = definition(puzzle2d_localized(|labels| labels.fill));
     let run = definition.run.as_ref().expect("the fill tool declares run");
@@ -79,7 +92,7 @@ fn fill_tool_declares_the_schema_tool_run_definition() {
 /// 🧰️ Declaring the run injects the framework tool run actions into the registered manifest; the plugin owns none.
 #[test]
 fn fill_run_declaration_injects_the_framework_tool_run_actions() {
-    let injected = semio_framework::tool_run::tool_run_action_definitions(&crate::editor::puzzle2d::create_puzzle2d_app());
+    let injected = semio_framework_tool_run_actions::tool_run_action_definitions(&crate::editor::puzzle2d::create_puzzle2d_app());
     let ids: Vec<&str> = injected.iter().map(|action| action.id.as_str()).collect();
     for action in semio_framework_tool_run::TOOL_RUN_ACTION_IDS {
         assert!(ids.contains(&action), "{action} is injected once the fill tool declares run");

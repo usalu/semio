@@ -1,6 +1,7 @@
-#[cfg(test)] use semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep;
-#[cfg(test)] use semio_framework::MediaForm;
-#[cfg(test)] use semio_framework::MediaClass;
+#[cfg(test)]
+use semio_framework::MediaForm;
+#[cfg(test)]
+use semio_framework::MediaClass;
 mod artifact_media_export_credit_tests {
     use super::*;
 
@@ -100,6 +101,6 @@ mod artifact_media_export_credit_tests {
     }
 
     #[test]
-    fn installed_snapshot_supplier_retains_exact_source_until_paid_close(){crate::media_operation_refusal::tests::media_original_installed_snapshot_source_and_paid_close()}
+    fn installed_snapshot_supplier_retains_exact_source_until_paid_close(){crate::document_media_test_hosts::document_media_unit_1::tests::media_original_installed_snapshot_source_and_paid_close()}
 
 }

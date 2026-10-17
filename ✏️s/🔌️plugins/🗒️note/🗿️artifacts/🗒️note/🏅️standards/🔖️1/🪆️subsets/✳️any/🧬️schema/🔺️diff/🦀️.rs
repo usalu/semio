@@ -744,6 +744,4 @@ impl DiffAlgebra<NoteSnapshot> for NoteDiff {
 pub use crate::schema::NoteArtifact;
 //#endregion 🔁️Re-exports
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️diff-apply/🦀️.rs"]
-mod diff_apply_tests;
+

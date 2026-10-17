@@ -41,7 +41,5 @@ pub fn render(document: &ZipSnapshot, windows: &TreeWindows<'_>, locale: semio_f
 //#endregion 🔖️Render
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 import { Box3, BufferGeometry, EdgesGeometry, Float32BufferAttribute, Group, LineBasicMaterial, LineSegments, Mesh, MeshBasicMaterial, OrthographicCamera, PerspectiveCamera, Quaternion, Vector3 } from "three";
 import { describe, expect, it } from "vitest";
 import { frameWorldProjectionPose, worldSceneContentBounds } from "../../../../♾️infinite/🌍️world/🎨️r3f/🟦️.tsx";
-import { world3dAutoFitKey, world3dAutoFitOwed, world3dBoundsRadius, world3dFrameCameraFromBounds } from "../../🧱️elements/🌐️World3dHost/🟦️.tsx";
+import { world3dAutoFitKey, world3dAutoFitOwed, world3dBoundsRadius, world3dFrameCameraFromBounds } from "../../🧱️elements/🌐️World3dHost/🔭️scene-schema/🟦️.ts";
 import { world3dCameraFramingFixtureUrl } from "../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🟦️.ts";
 
 const suiteRoot = dirname(fileURLToPath(import.meta.url));

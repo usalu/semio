@@ -23,7 +23,7 @@ import {
   decodeClientFrame,
   decodeServerFrame,
   encodeServerFrame,
-} from "../../../🧰️framework/🔨️modules/📡️replication/🟦️.ts";
+} from "@semio-tech/framework-replication";
 import { describe, expect, it } from "vitest";
 import { type HubHandle, findFreePort, getWorkspaceRoot, hubSchemaExport, resolveHubBinaryPath, startHub, waitForHttpReady } from "../../📦️packages/🟦️typescript/🟦️.ts";
 import { cargoTargetDirectory } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";

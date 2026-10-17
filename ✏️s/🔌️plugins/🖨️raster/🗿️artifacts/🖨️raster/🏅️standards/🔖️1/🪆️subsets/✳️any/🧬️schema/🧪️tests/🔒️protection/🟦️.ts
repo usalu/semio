@@ -11,12 +11,13 @@ import schema from "../../🔣️.json";
 import {layerProtection} from "../../🟦️.ts";
 import {rasterLayerNodeFromJson as parseRasterLayerNode} from "./../../../🚪️io/📝️text/📸️snapshot/🟦️.ts";
 import {printRasterLayerNode} from "./../../../🚪️io/📝️text/📸️snapshot/🟦️.ts";
+type LayerTree={readonly id:string;readonly locked:boolean;readonly children?:readonly LayerTree[]};
 for(const row of fixture.cases)test("Protection for "+row.id,()=>{
   const validate=semioSchemaAjvV1({allErrors:true}).addSchema(valueSchema).addSchema({$id:schema.$id,$defs:schema.$defs}).compile({$ref:schema.$id+"#/$defs/RasterLayerNode"});
   for(const layer of fixture.layers)expect(validate(layer)).toBe(true);
   const layers=fixture.layers.map(layer=>parseRasterLayerNode(layer));
   expect(layerProtection(layers,row.id)).toEqual(row.expected);
-  const tree=hierarchy({id:"root",locked:false,children:layers},node=>"children" in node?node.children:undefined),node=tree.descendants().find(node=>node.data.id===row.id)!;
+  const tree=hierarchy<LayerTree>({id:"root",locked:false,children:layers},node=>node.children),node=tree.descendants().find(node=>node.data.id===row.id)!;
   const locked=node.data.locked,inherited=node.ancestors().slice(1).some(node=>node.data.locked),descendant=node.descendants().slice(1).some(node=>node.data.locked),editable=!locked&&!inherited;
   expect(layerProtection(layers,row.id)).toEqual({locked,inherited,descendant,editable,structural:editable&&!descendant,canChangeLock:!inherited});
   expect(JSON.parse(JSON.stringify(layers.map(printRasterLayerNode)))).toEqual(fixture.layers);

@@ -28,7 +28,8 @@
 //! `stdio.pdf.{a,x}.schema-gap-unverifiable` — an honest statement about this schema, unchanged by
 //! this wave and not weakened by it.
 
-use crate::standards::v1_4::subsets::base::schema::STDIO_PDF_DOCUMENT_SCHEMA;
+/// 🏷️ Document schema / DSL envelope id of the PDF 1.4 standard.
+pub const STDIO_PDF_DOCUMENT_SCHEMA: &str = "stdio.pdf";
 use framework_schema::ArtifactSchema;
 
 //#region 🔖️Page

@@ -165,7 +165,7 @@ fn every_served_readiness_body_is_the_declared_readiness_schema() {
     let run = "00112233445566778899aabbccddeeff".to_string();
     let reason = "trusted-catalog-never-published-in-this-data-root";
     let starting = hub_starting_readiness(HubMode::Production, "network", "production".into(), true, true, true);
-    let progressed = HubReadinessV1 { startup: Some(HubStartupProgressV1 { stage: AuthorityProgressStage::GuestCodecExecuting.code(), completed_units: 25_000_000, total_units: 4_000_000_000, catalog: None }), ..starting.clone() };
+    let progressed = starting.clone().with_startup(Some(HubStartupProgressV1 { stage: AuthorityProgressStage::GuestCodecExecuting.code(), completed_units: 25_000_000, total_units: 4_000_000_000, catalog: None }));
     let cataloged = {
         let cell = StartupProgressCellV1::default();
         cell.observe(AuthorityProgress { stage: AuthorityProgressStage::CatalogLoading, completed_units: 3, total_units: 37 });
@@ -181,7 +181,7 @@ fn every_served_readiness_body_is_the_declared_readiness_schema() {
             rows_pinned: 2,
             rows_verified: 0,
         };
-        HubReadinessV1 { startup: Some(HubStartupProgressV1 { catalog: Some(catalog), ..cell.latest().expect("observed progress") }), ..starting.clone() }
+        starting.clone().with_startup(Some(HubStartupProgressV1 { catalog: Some(catalog), ..cell.latest().expect("observed progress") }))
     };
     let bodies = [
         ("ready", hub_readiness(HubMode::Development, "loopback", run.clone(), true, true, true, true, true, true, false, true, reason)),
@@ -198,7 +198,7 @@ fn every_served_readiness_body_is_the_declared_readiness_schema() {
     }
     assert_eq!(progressed.status, "not-ready");
     assert!(progressed.blocked_by.iter().any(|closed| closed.gate == "artifactAuthority" && closed.reason == "trusted-catalog-loading"));
-    let ready_with_startup = HubReadinessV1 { startup: progressed.startup, ..bodies[0].1.clone() };
+    let ready_with_startup = bodies[0].1.clone().with_startup(progressed.startup);
     assert!(!schema.is_valid_json(&serde_json::to_string(&ready_with_startup).expect("readiness json")), "a ready hub never reports startup progress");
 }
 
@@ -579,7 +579,7 @@ async fn check_in_process_fixture_emits_verified_gis_ledger_and_catalog() {
     std::fs::create_dir_all(&payload).expect("create process payload owner");
     std::fs::write(payload.join("envelopes.json"), &ledger_bytes).expect("write process ledger");
     let fixture = serde_json::json!({
-        "schema": "semio.hub.check-in-process-fixture/v1",
+        "schema": "semio.hub.check-in-process-seed/v1",
         "profileId": trusted_catalog_fixture::GIS_MAP_INTEGRATION_PROFILE_ID,
         "generationId": generation_id,
         "documentId": "mcp-cold-gis-map",

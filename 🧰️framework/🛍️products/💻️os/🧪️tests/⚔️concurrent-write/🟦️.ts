@@ -6,9 +6,11 @@
  * whatever the policy) and grades and conflicts like a write by its declared target; every other history transition never grades or
  * conflicts; `vigilant` refuses a conflict, `normal` reports it (ticket 26/09/23 LD item 2, ticket 26/09/30
  * NON-DESTRUCTIVE-HISTORY-EDITING `📋️design.md` §2, §9.1). */
+import { loadArtifactConcurrentWriteFixture } from "../../🔨️modules/🛢️db/🧪️tests/🧫️fixtures/🟦️.ts";
+
 export async function registerConcurrentWriteTests(vitest: NonNullable<ImportMeta["vitest"]>): Promise<void> {
   const { describe, it, expect } = vitest;
-  const { default: fixture } = await import("../../🔨️modules/🛢️db/🗿️artifact/🧪️tests/🧫️fixtures/⚔️concurrent-write/🔣️.json");
+  const fixture = await loadArtifactConcurrentWriteFixture();
   type Supersede = { readonly inputs: readonly { readonly target: string; readonly replacement: string }[]; readonly target: readonly string[] };
   type Writes = { readonly target?: readonly string[]; readonly paths?: readonly string[]; readonly transition?: boolean; readonly supersede?: Supersede };
   type Write = { readonly id: string; readonly actor: string; readonly observed: string | null; readonly writes: Writes };

@@ -474,9 +474,9 @@ impl Default for SemioBrepSnapshot {
 /// likely to expose an encoder/grammar mismatch). Single source of truth for
 /// `📚️examples/🧊️solid/🖼️assets/🗣️.dsl.semio`/`🎒️.pack.semio` and for the
 /// conformance-law tests in `🎹️composer/🦀️.rs`.
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn demo_brep_snapshot() -> SemioBrepSnapshot {
+pub fn demo_brep_snapshot() -> SemioBrepSnapshot {
     let mut s = SemioBrepSnapshot::default();
     s.vertices = vec![
         BrepVertex { id: "v1".into(), point: SemioPoint3 { x: 0.0, y: 0.0, z: 0.0 }, tol: 1e-7 },
@@ -537,9 +537,7 @@ pub(crate) fn demo_brep_snapshot() -> SemioBrepSnapshot {
 //#endregion 🔖️Demo
 
 //#region 🔖️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🔖️Tests
 
 

@@ -20,9 +20,18 @@
     ".": {
       "types": "./dist/🟦️.d.ts",
       "import": "./dist/🟦️.js"
-    }
+    },
+    "./ecma-376/subsets/strict/schema/mutations/insert-vml-part/schema": "./🔖️ecma-376/🪆️subsets/🔒️strict/🧬️schema/🧬️mutations/✒️insert-vml-part/🧬️schema/🟦️.ts",
+    "./standards/ecma-376/subsets/base/schema": "./🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🟦️.ts",
+    "./standards/ecma-376/subsets/base/schema/diff": "./🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🔺️diff/🟦️.ts",
+    "./standards/ecma-376/subsets/strict/schema": "./🏅️standards/🔖️ecma-376/🪆️subsets/🔒️strict/🧬️schema/🟦️.ts",
+    "./standards/ecma-376/subsets/strict/schema/mutations/insert-vml-part": "./🏅️standards/🔖️ecma-376/🪆️subsets/🔒️strict/🧬️schema/🧬️mutations/✒️insert-vml-part/🟦️.ts",
+    "./standards/ecma-376/subsets/transitional/schema": "./🏅️standards/🔖️ecma-376/🪆️subsets/🌉️transitional/🧬️schema/🟦️.ts"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@semio-tech/stdio-xml": "workspace:*",
+    "@semio-tech/stdio-zip": "workspace:*"
+  },
   "license": "LGPL-3.0-or-later",
   "repository": {
     "type": "git",

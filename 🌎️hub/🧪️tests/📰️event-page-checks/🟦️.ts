@@ -9,6 +9,7 @@ import { type ExactCargoLawGroup } from "../../../🧰️framework/🔨️module
 import { buildBudgetMs } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 import { isAbsolute, join } from "node:path";
 import { runRepositoryExactCargoLaws, runCmd, configuredRepositoryCargoPreparationPolicyV1 } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -189,7 +190,7 @@ async function proveDirectoryEventPageRouteV1(repoRoot: string): Promise<number>
   const sessionContract = hubSchemaExport(repoRoot, "schema://hub.directory/DirectorySessionBindingV1");
   if (sessionContract({ ...fixture.session, unknown: true }) || sessionContract({ ...fixture.session, bindingSha256: `${fixture.session.bindingSha256}00` }) || sessionContract({ ...fixture.session, authorizationGeneration: 0 }))
     throw new Error("directory event page route session contract admitted an unknown or concatenated binding");
-  const shared = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🦀️.rs"), "utf8");
+  const shared = readModuleTreeSource(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🦀️.rs"));
   const hub = readHubBinSource(repoRoot);
   const sqlite = readDirectoryBackendSource(repoRoot, "🪶️sqlite");
   const postgres = readDirectoryBackendSource(repoRoot, "🐘️postgres");

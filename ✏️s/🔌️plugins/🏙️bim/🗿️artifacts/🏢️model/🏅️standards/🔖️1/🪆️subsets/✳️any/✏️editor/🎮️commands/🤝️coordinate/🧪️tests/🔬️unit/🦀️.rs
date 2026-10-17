@@ -1,6 +1,6 @@
 use super::*;
-use crate::editor::bim::unit_tests::context::view;
-use crate::editor::bim::unit_tests::support::run;
+use crate::editor::bim::fixture::context::view;
+use crate::editor::bim::fixture::support::run;
 use protocol::Inference;
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 use semio_framework_ui_locale::Locale;

@@ -1030,9 +1030,23 @@ name = "teaching-proctor"
 version = "0.1.0"
 dependencies = [
  "axum",
+ "semio-framework-async",
+ "semio-framework-quiz",
+ "semio-framework-server",
+ "serde_json",
+ "teaching-proctor-base",
+ "teaching-proctor-domain",
+ "tokio",
+ "tungstenite 0.26.2",
+ "ureq",
+]
+
+[[package]]
+name = "teaching-proctor-base"
+version = "0.1.0"
+dependencies = [
  "rusqlite",
  "semio-framework-async",
- "semio-framework-dispatch-macros",
  "semio-framework-hash",
  "semio-framework-quiz",
  "semio-framework-replication",
@@ -1041,8 +1055,20 @@ dependencies = [
  "serde_json",
  "sha2",
  "tokio",
- "tungstenite 0.26.2",
- "ureq",
+]
+
+[[package]]
+name = "teaching-proctor-domain"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-async",
+ "semio-framework-dispatch-macros",
+ "semio-framework-quiz",
+ "semio-framework-server",
+ "serde",
+ "serde_json",
+ "teaching-proctor-base",
+ "tokio",
 ]
 
 [[package]]

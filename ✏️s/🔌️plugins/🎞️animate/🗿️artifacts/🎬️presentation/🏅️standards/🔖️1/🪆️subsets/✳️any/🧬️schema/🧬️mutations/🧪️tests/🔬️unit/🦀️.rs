@@ -1,4 +1,18 @@
-use super::*;
+use crate::PresentationSnapshot;
+use crate::standards::v1::subsets::any::schema::mutations::create_tile;
+use crate::standards::v1::subsets::any::schema::mutations::delete_tile;
+use crate::standards::v1::subsets::any::schema::mutations::delete_tiles;
+use crate::standards::v1::subsets::any::schema::mutations::rename_tile;
+use crate::standards::v1::subsets::any::schema::mutations::reorder_tiles;
+use crate::standards::v1::subsets::any::schema::mutations::replace_source;
+use crate::standards::v1::subsets::any::schema::mutations::resize_source_frame;
+use crate::standards::v1::subsets::any::schema::mutations::resize_tile_crop;
+use semio_framework_test_fixtures::fixture_text;
+#[allow(unused_imports)]
+use crate::diff::PresentationDiff;
+#[allow(unused_imports)]
+use protocol::Mutation;
+use crate::standards::v1::subsets::any::schema::mutations::*;
 use crate::{default_presentation_snapshot, presentation_snapshot_with_tiles, presentation_working_scene, FigureTileDraft, FigureTileFrame};
 use protocol::os_spr::protocol_laws::{assert_fatal_never_applies, assert_missing_target_is_error};
 use protocol::SemanticMutation;
@@ -195,7 +209,7 @@ async fn reorder_family_missing_target_is_error() {
 fn kinds_match_the_enum_and_the_catalog() {
     let declared: Vec<&str> = <PresentationMutation as SemanticMutation<PresentationSnapshot>>::kinds().iter().map(|descriptor| descriptor.kind).collect();
     assert_eq!(KINDS, declared.as_slice(), "KINDS must name every PresentationMutation variant, in declaration order, spelled as its own MutationKind::SEMANTICS.kind");
-    let manifest = include_str!("../../../../🔮️oracles/🔣️.json");
+    let manifest = fixture_text!("../../../../🔮️oracles/🔣️.json");
     for kind in KINDS {
         assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in this subset's committed oracle manifest catalog presentation-1-any");
     }

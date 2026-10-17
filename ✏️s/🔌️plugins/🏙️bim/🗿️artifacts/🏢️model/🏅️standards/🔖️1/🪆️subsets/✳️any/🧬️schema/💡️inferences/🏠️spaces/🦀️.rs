@@ -339,18 +339,6 @@ pub fn dependency(snapshot: &ModelSnapshot, storey: &str) -> DslValue {
 }
 //#endregion 🔖️Dependency
 
-//#region 🔖️Projection
-
-
-
-
-/// 🏠️ The room of every space (the `Room` nodes of the model graph, flattened).
-#[cfg(test)]
-pub fn compute_spaces(snapshot: &ModelSnapshot) -> BTreeMap<String, SpaceRoom> {
-    std::mem::take(&mut super::super::model_graph::infer_selected::<{ super::super::model_graph::kinds::ROOMS }>(snapshot).spaces)
-}
-//#endregion 🔖️Projection
-
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;

@@ -1,4 +1,5 @@
-use super::*;
+use crate::standards::v2_0::subsets::base::schema::snapshot::ZipSnapshot;
+use crate::standards::v2_0::subsets::base::schema::inferences::*;
 use crate::standards::v2_0::subsets::base::schema::demo_zip_snapshot;
 use protocol::Inference;
 

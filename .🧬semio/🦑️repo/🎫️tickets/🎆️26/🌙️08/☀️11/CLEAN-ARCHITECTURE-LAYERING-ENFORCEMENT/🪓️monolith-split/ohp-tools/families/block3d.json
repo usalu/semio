@@ -1,0 +1,29 @@
+{
+ "name": "block3d",
+ "crates": [
+  "semio-s-artifact-block-3d",
+  "semio-s-artifact-block-3d-diff",
+  "semio-s-artifact-block-3d-editor",
+  "semio-s-artifact-block-3d-editor-commands",
+  "semio-s-artifact-block-3d-editor-config",
+  "semio-s-artifact-block-3d-editor-modes",
+  "semio-s-artifact-block-3d-editor-presence",
+  "semio-s-artifact-block-3d-editor-terminology",
+  "semio-s-artifact-block-3d-examples",
+  "semio-s-artifact-block-3d-inferences",
+  "semio-s-artifact-block-3d-io",
+  "semio-s-artifact-block-3d-io-read",
+  "semio-s-artifact-block-3d-io-sqlite",
+  "semio-s-artifact-block-3d-io-write",
+  "semio-s-artifact-block-3d-model",
+  "semio-s-artifact-block-3d-mut-meta",
+  "semio-s-artifact-block-3d-mut-object-kind",
+  "semio-s-artifact-block-3d-mut-representations",
+  "semio-s-artifact-block-3d-mut-vortex-kinds",
+  "semio-s-artifact-block-3d-mut-vortices",
+  "semio-s-artifact-block-3d-mutations",
+  "semio-s-artifact-block-3d-schema",
+  "semio-s-artifact-block-3d-viewer"
+ ],
+ "note": "ORACLE-HARVEST-PLUGINS: ✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d, ✏️s/🧑‍💻dev/🧱️block"
+}

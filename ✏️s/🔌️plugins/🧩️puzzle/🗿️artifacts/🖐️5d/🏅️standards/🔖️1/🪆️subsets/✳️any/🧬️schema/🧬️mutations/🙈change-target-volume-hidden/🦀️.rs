@@ -1,6 +1,5 @@
 //! 🙈 Puzzle5d mutation — `ChangeTargetVolumeHidden`: changes a target volume's hidden flag.
 use crate::standards::v1::subsets::any::schema::diff::Puzzle5dDiff;
-use crate::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation;
 use crate::Puzzle5dSnapshot;
 
 //#region 🔖️Mutation
@@ -18,17 +17,23 @@ pub struct ChangeTargetVolumeHidden {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_target_volume_hidden(id: String, new_hidden: bool) -> Puzzle5dMutation {
-    Puzzle5dMutation::ChangeTargetVolumeHidden(ChangeTargetVolumeHidden { id, new_hidden })
+pub fn change_target_volume_hidden<Op>(id: String, new_hidden: bool) -> Op
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::change_target_volume_hidden::ChangeTargetVolumeHidden>,
+{
+    Op::from(ChangeTargetVolumeHidden { id, new_hidden })
 }
 
-impl protocol::MutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for ChangeTargetVolumeHidden {
+impl<Op> protocol::MutationKind<Puzzle5dSnapshot, Op> for ChangeTargetVolumeHidden
+where
+    Op: protocol::Mutation<Puzzle5dSnapshot, Diff = Puzzle5dDiff> + From<ChangeTargetVolumeHidden>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "target-volume", kind: "change-target-volume-hidden", record: "ChangedTargetVolumeHidden" };
 
     fn diff(&self, base: &Puzzle5dSnapshot) -> protocol::MutationOutcome<Puzzle5dDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Puzzle5dSnapshot) -> Result<Vec<Puzzle5dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Puzzle5dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

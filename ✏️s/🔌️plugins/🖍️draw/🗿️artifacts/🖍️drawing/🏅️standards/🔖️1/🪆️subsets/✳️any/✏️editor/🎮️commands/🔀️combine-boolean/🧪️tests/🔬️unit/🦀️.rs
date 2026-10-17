@@ -1,5 +1,12 @@
 //! 🧪️ Boolean selection fixtures prove admission, parent preservation and inverse restoration.
-use super::*;
+use semio_framework_test_fixtures::fixture_text;
+
+#[allow(unused_imports)] use semio_s_artifact_draw_drawing_mutations::DrawingMutation;
+#[allow(unused_imports)] use semio_s_artifact_draw_drawing_model::{create_drawing_boolean_layer, find_drawing_layer, find_drawing_layer_location, layer_base, layer_base_mut};
+#[allow(unused_imports)] use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
+#[allow(unused_imports)] use semio_s_artifact_draw_drawing_model::DrawingLayerNode;
+#[allow(unused_imports)] use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+#[allow(unused_imports)] use semio_s_artifact_draw_drawing_editor_commands::combine_boolean::*;
 fn document()->DrawingSnapshot {
     let mut a=semio_s_artifact_draw_drawing_model::create_drawing_shape_layer_rect(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("a")).to_string().into()).expect("nonempty authored identity"), "a");layer_base_mut(&mut a).id="a".into();
     let mut b=semio_s_artifact_draw_drawing_model::create_drawing_shape_layer_rect(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("b")).to_string().into()).expect("nonempty authored identity"), "b");layer_base_mut(&mut b).id="b".into();
@@ -8,7 +15,7 @@ fn document()->DrawingSnapshot {
 }
 #[test]
 fn drawing_boolean_command_fixtures() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../../🔀️combine-boolean/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let before=document();
     for case in fixture["cases"].as_array().unwrap() {
         let ids=serde_json::from_value::<Vec<String>>(case["ids"].clone()).unwrap();
@@ -26,7 +33,7 @@ fn drawing_boolean_command_fixtures() {
 }
 #[test]
 fn drawing_boolean_command_preserves_parent_and_checks_ancestor_admission() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../../🔀️combine-boolean/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     for case in fixture["parentCases"].as_array().unwrap() {
         let mut group=semio_s_artifact_draw_drawing_model::create_drawing_group_layer(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("parent")).to_string().into()).expect("nonempty authored identity"), "parent");layer_base_mut(&mut group).id="parent".into();
         layer_base_mut(&mut group).locked=case["locked"].as_bool().unwrap();layer_base_mut(&mut group).visible=case["visible"].as_bool().unwrap();
@@ -41,4 +48,4 @@ fn drawing_boolean_command_preserves_parent_and_checks_ancestor_admission() {
     }
 }
 
-fn admitted_plan(document:&semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot,ids:&[String],operation:&str)->Result<(Vec<semio_s_artifact_draw_drawing_mutations::DrawingMutation>,String),semio_framework_plugin::Fault>{let admission=semio_s_artifact_draw_drawing_editor::identity_test::operation();let mut observer=|_|true;let mut control=semio_framework_value::NativeEncodeControl::new(1024*1024,&mut observer);super::plan(document,ids,operation,&admission,&mut control)}
+fn admitted_plan(document:&semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot,ids:&[String],operation:&str)->Result<(Vec<semio_s_artifact_draw_drawing_mutations::DrawingMutation>,String),semio_framework_plugin::Fault>{let admission=semio_s_artifact_draw_drawing_editor::identity_test::operation();let mut observer=|_|true;let mut control=semio_framework_value::NativeEncodeControl::new(1024*1024,&mut observer);semio_s_artifact_draw_drawing_editor_commands::combine_boolean::plan(document,ids,operation,&admission,&mut control)}

@@ -20,3 +20,7 @@ message Filters {
   uint32 min_availability = 4;
   optional TableSort sort = 5;
 }
+
+message SortDirection {
+  string value = 1;
+}

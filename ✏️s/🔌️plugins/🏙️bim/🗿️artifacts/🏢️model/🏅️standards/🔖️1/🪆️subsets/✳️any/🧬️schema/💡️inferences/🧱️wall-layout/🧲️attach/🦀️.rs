@@ -471,7 +471,7 @@ fn strips_volume(axis: &Axis, layout: &WallLayout, grid: &[f64], heights: &[f64]
 
 //#region 🔖️Testing
 /// 🧪️ The builders of the small models the wall depth tests share: one building with a ground storey of 3 m, a wall type of one 0.3 m layer, door, window, slab and roof types and the materials `m` and `paint`.
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 pub mod testing {
     use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
     use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};

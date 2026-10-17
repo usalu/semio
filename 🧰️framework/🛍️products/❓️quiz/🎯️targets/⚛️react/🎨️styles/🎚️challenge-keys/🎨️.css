@@ -1,0 +1,130 @@
+/* 🎚 The keys and guesses of the challenges, with their forced-colours rules. */
+
+/* 🎚️ Challenges. The key of a sorting place stands where a guess would stand; a matching without cards gives its rows
+   the whole width of the task; a hint is a line of its own under its label, marked by a warning bar besides its symbol
+   and question, which wraps (a long factor too) rather than widen its row; the clock of a timed task is text over a bar of the time left, warning in its last 30 s and dashed once
+   the time is up. The bar shortens in whole-second steps, without any transition, so it neither moves smoothly nor
+   asks about reduced motion. A guess field that takes no more answers is dashed like its clock and drops its example.
+   A guess that lies far off is underlined besides its word and symbol. The four challenges
+   to choose from stand below each other in a narrow card, two by two from 44rem and four in a row from 64rem, never
+   three and one. */
+.quiz-sort-key {
+  grid-area: guess;
+}
+
+@container quiz-card (min-width: 44rem) {
+  .quiz-kinds[data-options="4"] {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@container quiz-card (min-width: 64rem) {
+  .quiz-kinds[data-options="4"] {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.quiz-slot > .quiz-guess {
+  grid-area: card;
+}
+
+@container quiz-task (min-width: 64rem) {
+  .quiz-match[data-keys="hidden"] > .quiz-slots {
+    grid-column: 1 / -1;
+  }
+}
+
+.quiz-hint {
+  display: flex;
+  align-items: baseline;
+  gap: var(--spacing-single);
+  margin-block-start: 0.125rem;
+  padding-inline-start: var(--spacing-single);
+  border-inline-start: 2px solid var(--color-warning);
+  font-weight: 600;
+}
+
+.quiz-hint-symbol {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  inline-size: 1.5em;
+  block-size: 1.5em;
+  border: var(--stroke-hairline) solid currentColor;
+  border-radius: 50%;
+  line-height: 1;
+}
+
+.quiz-hint-question {
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+  hyphens: auto;
+  text-wrap: pretty;
+}
+
+.quiz-clock:not([data-clock="closed"]) {
+  padding: var(--spacing-single) var(--spacing-double);
+  border: var(--stroke-hairline) solid var(--border-normal-color);
+}
+
+.quiz-clock[data-clock="thirty"],
+.quiz-clock[data-clock="ten"] {
+  border-inline-start: 4px solid var(--color-warning);
+  background: color-mix(in srgb, var(--color-warning) 12%, transparent);
+}
+
+.quiz-clock[data-clock="up"] {
+  border-style: dashed;
+}
+
+.quiz-clock-bar {
+  display: block;
+  inline-size: calc(var(--quiz-clock-share, 1) * 100%);
+  block-size: 3px;
+  background: var(--active-base);
+}
+
+.quiz-clock[data-clock="thirty"] > .quiz-clock-bar,
+.quiz-clock[data-clock="ten"] > .quiz-clock-bar {
+  background: var(--color-warning);
+}
+
+.quiz-miss {
+  text-decoration: underline wavy var(--color-warning);
+  text-underline-offset: 3px;
+}
+
+.quiz-guess > input:read-only {
+  border-style: dashed;
+  background: transparent;
+}
+
+.quiz-guess > input:read-only::placeholder {
+  color: transparent;
+}
+
+@media (forced-colors: active) {
+  .quiz-hint {
+    border-inline-start: 2px solid CanvasText;
+  }
+
+  .quiz-clock[data-clock="thirty"],
+  .quiz-clock[data-clock="ten"] {
+    outline: 2px solid CanvasText;
+    outline-offset: -2px;
+  }
+
+  .quiz-clock[data-clock="up"] {
+    outline: 2px dashed GrayText;
+    outline-offset: -2px;
+  }
+
+  .quiz-clock-bar {
+    forced-color-adjust: none;
+    background-color: CanvasText;
+  }
+
+  .quiz-miss {
+    text-decoration-color: CanvasText;
+  }
+}

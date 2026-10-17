@@ -1,6 +1,5 @@
 //! 🔧 `change-node-kind` — sets one node's `kind` scalar field, addressed by BASE-state id.
 
-use crate::schema::mutations::SemioGraphMutation;
 use crate::schema::snapshot::{GraphNodeId, SemioGraphSnapshot};
 
 //#region 🔖️Payload
@@ -12,13 +11,16 @@ pub struct ChangeNodeKind {
     pub new_kind: String,
 }
 
-impl protocol::MutationKind<SemioGraphSnapshot, SemioGraphMutation> for ChangeNodeKind {
+impl<Op> protocol::MutationKind<SemioGraphSnapshot, Op> for ChangeNodeKind
+where
+    Op: protocol::Mutation<SemioGraphSnapshot, Diff = crate::schema::diff::SemioGraphDiff> + From<ChangeNodeKind>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "node-kind", kind: "change-node-kind", record: "ChangedNodeKind" };
 
-    fn diff(&self, base: &SemioGraphSnapshot) -> protocol::MutationOutcome<<SemioGraphMutation as protocol::Mutation<SemioGraphSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioGraphSnapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<SemioGraphSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &SemioGraphSnapshot) -> Result<Vec<SemioGraphMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &SemioGraphSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

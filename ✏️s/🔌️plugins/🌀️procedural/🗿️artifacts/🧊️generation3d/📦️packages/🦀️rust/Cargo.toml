@@ -102,6 +102,7 @@ semio-s-artifact-procedural-3d-set-widget-input = { workspace = true }
 
 [dev-dependencies]
 semio-framework-job = { workspace = true, features = ["testkit"] }
+semio-framework-test-fixtures = { path = "../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 syn = { version = "=2.0.117", features = ["full", "visit"] }
 proc-macro2 = "1"
 semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
@@ -115,7 +116,7 @@ semio-s-artifact-procedural-3d-editor-config = { workspace = true }
 semio-s-artifact-procedural-3d-envelope = { workspace = true }
 semio-s-artifact-procedural-3d-geometry = { workspace = true }
 semio-s-artifact-procedural-3d-geometry-value = { workspace = true }
-semio-s-artifact-procedural-3d-host = { workspace = true }
+semio-s-artifact-procedural-3d-host = { workspace = true, features = ["testkit"] }
 semio-s-artifact-procedural-3d-initialization = { workspace = true }
 semio-s-artifact-procedural-3d-io-binary = { workspace = true }
 semio-s-artifact-procedural-3d-io-export = { workspace = true }
@@ -131,6 +132,7 @@ semio-s-artifact-procedural-3d-terminology = { workspace = true }
 semio-s-artifact-procedural-3d-testkit = { workspace = true }
 semio-s-artifact-procedural-3d-transforms = { workspace = true }
 semio-s-artifact-procedural-3d-viewer-commands = { workspace = true }
+semio-s-artifact-procedural-3d-model = { workspace = true, features = ["testkit"] }
 
 [[test]]
 name = "editor-routes"

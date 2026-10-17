@@ -29,6 +29,10 @@ type stdioStlAsciiAnyInferenceGuardSizeBounds = { readonly minItems?: number; re
 
 export const stdioStlAsciiAnyInferenceGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : stdioStlAsciiAnyInferenceGuardReject(at, "value is not an object");
+export const stdioStlAsciiAnyInferenceGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) stdioStlAsciiAnyInferenceGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const stdioStlAsciiAnyInferenceGuardArray = (value: unknown, at: string, bounds: stdioStlAsciiAnyInferenceGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return stdioStlAsciiAnyInferenceGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) stdioStlAsciiAnyInferenceGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -59,17 +63,17 @@ export const stdioStlAsciiAnyInferenceGuardConstant = <T extends string | number
 //#endregion 🚪️Parsers
 
 export function parseStlInference(value: unknown, at = "$"): StlInference {
-  const row = stdioStlAsciiAnyInferenceGuardObject(value, at);
+  const row = stdioStlAsciiAnyInferenceGuardClosed(stdioStlAsciiAnyInferenceGuardObject(value, at), at, ["bounds"]);
   return {
     bounds: parseStlBounds(row["bounds"], `${at}.bounds`),
   };
 }
 
 export function parseStlBounds(value: unknown, at = "$"): StlBounds {
-  const row = stdioStlAsciiAnyInferenceGuardObject(value, at);
+  const row = stdioStlAsciiAnyInferenceGuardClosed(stdioStlAsciiAnyInferenceGuardObject(value, at), at, ["min", "max", "triangleCount"]);
   return {
-    min: stdioStlAsciiAnyInferenceGuardArray(row["min"], `${at}.min`, {"minItems": 3, "maxItems": 3}).map((item, index) => stdioStlAsciiAnyInferenceGuardNumber(item, `${at}.min[${index}]`)),
-    max: stdioStlAsciiAnyInferenceGuardArray(row["max"], `${at}.max`, {"minItems": 3, "maxItems": 3}).map((item, index) => stdioStlAsciiAnyInferenceGuardNumber(item, `${at}.max[${index}]`)),
+    min: ((items0) => [stdioStlAsciiAnyInferenceGuardNumber(items0[0], `${at}.min[0]`), stdioStlAsciiAnyInferenceGuardNumber(items0[1], `${at}.min[1]`), stdioStlAsciiAnyInferenceGuardNumber(items0[2], `${at}.min[2]`)])(stdioStlAsciiAnyInferenceGuardArray(row["min"], `${at}.min`, {"minItems": 3, "maxItems": 3})),
+    max: ((items0) => [stdioStlAsciiAnyInferenceGuardNumber(items0[0], `${at}.max[0]`), stdioStlAsciiAnyInferenceGuardNumber(items0[1], `${at}.max[1]`), stdioStlAsciiAnyInferenceGuardNumber(items0[2], `${at}.max[2]`)])(stdioStlAsciiAnyInferenceGuardArray(row["max"], `${at}.max`, {"minItems": 3, "maxItems": 3})),
     triangleCount: stdioStlAsciiAnyInferenceGuardInteger(row["triangleCount"], `${at}.triangleCount`, {"minimum": 0}),
   };
 }

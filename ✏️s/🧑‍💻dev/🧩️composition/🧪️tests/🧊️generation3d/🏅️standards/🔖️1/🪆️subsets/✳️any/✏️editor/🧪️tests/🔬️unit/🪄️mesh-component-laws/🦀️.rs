@@ -1,9 +1,11 @@
+use semio_framework_test_fixtures::repo_text;
+
 /// 🪄️ Mesh component laws: the mesh gumball, component edits and quick actions.
 
 #[test]
 fn mesh_gumball_splices_typed_transforms_and_preserves_analysis_consumers() {
     let _serial = test_serial();
-    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../../../../🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🥽️mesh/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: Value = serde_json::from_str(repo_text!("🧰️framework/🔨️modules/🏗️mesh-engine/🥽️polygon/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     for case in fixture["gumball"].as_array().unwrap() {
         let snapshot = semio_s_artifact_procedural_3d_model::example_snapshot(semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_MESH_WORKBENCH).unwrap();
         semio_s_artifact_procedural_3d_model::with_host(&snapshot.host_snapshot, |host| {
@@ -42,7 +44,7 @@ fn mesh_selection_fixture_snapshot(operation: &str) -> Generation3dSnapshot {
 #[test]
 fn mesh_component_edits_insert_typed_widgets_and_update_downstream_analysis() {
     let _serial = test_serial();
-    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🥽️edit-mesh-selection/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: Value = serde_json::from_str(repo_text!("✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🥽️edit-mesh-selection/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     for case in fixture["valid"].as_array().unwrap() {
         let operation = case["name"].as_str().unwrap();
         let snapshot = mesh_selection_fixture_snapshot(operation);
@@ -85,7 +87,7 @@ fn mesh_component_edits_insert_typed_widgets_and_update_downstream_analysis() {
 fn mesh_component_gumball_pins_the_complete_component_set() {
     let _serial = test_serial();
     let snapshot = semio_s_artifact_procedural_3d_model::example_snapshot(semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_MESH_WORKBENCH).unwrap();
-    let fixtures: Value = serde_json::from_str(include_str!("../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧭️transforms/🧪️tests/🧫️fixtures/🧷️gesture/🔣️.json")).unwrap();
+    let fixtures: Value = serde_json::from_str(repo_text!("✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧭️transforms/🧪️tests/🧫️fixtures/🧷️gesture/🔣️.json")).unwrap();
     for case in fixtures["cases"].as_array().unwrap() {
         let pinned: Vec<String> = serde_json::from_value(case["pinned"].clone()).unwrap();
         let selected: Vec<String> = serde_json::from_value(case["selected"].clone()).unwrap();
@@ -208,7 +210,7 @@ fn mesh_component_gumball_projects_a_topology_pivot_and_live_dispatch() {
 async fn mesh_component_edit_undo_redo_restores_geometry_and_analysis_connections() {
     let _serial = test_serial();
     let _unlinked = crate::flow_operators::UnlinkedFlowExtensions::contributed();
-    let fixtures: Value = serde_json::from_str(include_str!("../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🥽️edit-mesh-selection/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+    let fixtures: Value = serde_json::from_str(repo_text!("✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🥽️edit-mesh-selection/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     for case in fixtures["valid"].as_array().unwrap() {
         let operation = case["name"].as_str().unwrap();
         let granularity = case["granularity"].as_str().unwrap();
@@ -273,7 +275,6 @@ async fn mesh_component_edit_undo_redo_restores_geometry_and_analysis_connection
             assert!(row.to_string().contains(&expected_area), "{operation}: selected analysis area reflects existing evaluation"); assert!(!row.to_string().contains("setWidgetInput"));
             assert_eq!(context::snapshot(&app), committed, "selected output inspection preserves the document");
         }
-        println!("[DEBUG] retained mesh edit {operation}: geometry and selected analysis evaluated, selection cleared, undo/redo restored graph");
         semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);
     }
 }
@@ -282,7 +283,7 @@ async fn mesh_component_edit_undo_redo_restores_geometry_and_analysis_connection
 async fn mesh_quick_actions_execute_through_the_registered_preview_app() {
     let _serial = test_serial();
     let _unlinked = crate::flow_operators::UnlinkedFlowExtensions::contributed();
-    let fixtures: Value = serde_json::from_str(include_str!("../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🥽️edit-mesh-selection/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+    let fixtures: Value = serde_json::from_str(repo_text!("✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🥽️edit-mesh-selection/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     for case in fixtures["valid"].as_array().unwrap() {
         let operation = case["name"].as_str().unwrap();
         let granularity = case["granularity"].as_str().unwrap();
@@ -324,7 +325,6 @@ async fn mesh_quick_actions_execute_through_the_registered_preview_app() {
             semio_framework_plugin::artifact_app_laws::settle_history_verb(&mut *app, "undo", semio_framework_plugin::artifact_app_laws::meta("local").instance_id).await;
             assert_eq!(context::snapshot(&app).host_snapshot.widgets.len(), before);
             context::drain_flow_eval_ticks(&mut app).await;
-            println!("[DEBUG] retained mesh quick action {operation}/{locale:?}: emitted args executed, viewport rendered, selection cleared, undo restored source");
         }
         semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);
     }

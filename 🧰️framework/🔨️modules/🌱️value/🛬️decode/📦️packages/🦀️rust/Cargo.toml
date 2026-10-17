@@ -26,5 +26,6 @@ semio-framework-value-retirement = { path="../../../♻️retirement/📦️pack
 semio-framework-value-native-encoding = { path="../../../🛫️encode/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-framework-test-fixtures = { path = "../../../../🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 serde_json = { workspace = true }
 semio-framework-value-testing-allocator = { path = "../../../🧪️testing/💾️allocator/📦️packages/🦀️rust" }

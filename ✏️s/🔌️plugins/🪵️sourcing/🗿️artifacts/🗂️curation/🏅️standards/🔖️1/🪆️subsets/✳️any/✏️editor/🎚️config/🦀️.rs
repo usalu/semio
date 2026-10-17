@@ -341,7 +341,55 @@ impl Mutation<SourcingCurationConfig> for SourcingCurationConfigMutation {
 //#endregion 🔖️ConfigOperations
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
+
+//#region 🧩️ArtifactItems5
+pub mod artifact_items_5 {
+//#region 🔖️Document
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslScalar, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[value(rename_all = "camelCase")]
+pub enum SortDirection {
+    Asc,
+    Desc,
+}
+
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[value(rename_all = "camelCase")]
+pub struct TableSort {
+    pub column_id: String,
+    pub direction: SortDirection,
+}
+
+/// 🔍️ The pool table's active filter set — narrows `CurationSnapshot::stock` down to `filtered_stock()`.
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[value(rename_all = "camelCase")]
+pub struct Filters {
+    #[value(default)]
+    pub query: String,
+    #[value(default)]
+    pub module_ids: Vec<String>,
+    #[value(default)]
+    pub typology_path: Vec<String>,
+    #[value(default)]
+    pub min_availability: u32,
+    #[value(default)]
+    #[dsl(block)]
+    pub sort: Option<TableSort>,
+}
+
+/// 🧺️ One curated object kind and how many units of it have been picked.
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
+pub struct CuratedItem {
+    #[dsl(refs = "object")]
+    pub object_id: String,
+    pub count: u32,
+}
+
+//#endregion 🔖️Document
+}
+//#endregion 🧩️ArtifactItems5

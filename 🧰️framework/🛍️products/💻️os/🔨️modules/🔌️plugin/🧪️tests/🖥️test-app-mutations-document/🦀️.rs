@@ -7,22 +7,26 @@ use serde::{Deserialize, Serialize};
 use pack::snapshot::ArtifactPack;
 
 //#region 🧫️Snapshot
-pub(crate) const MAXIMUM_CHILD_PROBE_BYTES: usize = 4 * 1024 * 1024;
-pub(crate) static MAXIMUM_CHILD_CLONES: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
-pub(crate) static MAXIMUM_CHILD_ENCODINGS: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
+#[doc(hidden)]
+pub const MAXIMUM_CHILD_PROBE_BYTES: usize = 4 * 1024 * 1024;
+#[doc(hidden)]
+pub static MAXIMUM_CHILD_CLONES: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
+#[doc(hidden)]
+pub static MAXIMUM_CHILD_ENCODINGS: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
 
+#[doc(hidden)]
 #[derive(semio_framework_dsl_record_derive::DslRecord, Debug, Default, PartialEq, Serialize, ToValue, Deserialize, FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetainedClone)]
 #[artifact(extension = "testkit-macro")]
-pub(crate) struct TestSnapshot {
-    pub(crate) count: i32,
-    pub(crate) label: String,
+pub struct TestSnapshot {
+    pub count: i32,
+    pub label: String,
     /// 🧒️ The members declared in this document's one owned-child slot, `"slot"` — the field a
     /// schema-derived snapshot spells `#[child(kind = "s.test.child")]`. `store::os_store::artifact_child::ArtifactChild`
     /// carries `ToValue`/`FromValue`/`DslField` but no serde impl, so the derived serde half skips
     /// it and the hand-written pack/DSL codecs below carry it as its member's canonical
     /// `ArtifactRef` uri.
     #[serde(skip)]
-    pub(crate) slot: Vec<store::os_store::artifact_child::ArtifactChild<TestSnapshot>>,
+    pub slot: Vec<store::os_store::artifact_child::ArtifactChild<TestSnapshot>>,
 }
 
 impl store::os_store::serialization::ArtifactSqliteSnapshotHost for TestSnapshot {
@@ -94,7 +98,6 @@ impl TestSnapshot {
     /// 🧩️ The JSON carriage both hand-written codecs share. An undeclared slot writes no key at
     /// all, so a document with no child encodes exactly the bytes it always did.
     fn to_json(&self) -> Result<serde_json::Value, String> {
-use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactReferenceText as _};
 
         let mut value = serde_json::to_value(self).map_err(|error| error.to_string())?;
         if !self.slot.is_empty() {
@@ -106,7 +109,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
 
     /// 🧩️ Inverse of {@link TestSnapshot::to_json}: every declared row is one `ArtifactRef` uri,
     /// and a child's id IS its artifact id (what `ChildRestoreProjection` admits).
-    fn from_json(mut value: serde_json::Value) -> Result<Self, String> {
+    pub fn from_json(mut value: serde_json::Value) -> Result<Self, String> {
         let declared = value.as_object_mut().and_then(|object| object.remove("slot"));
         let mut snapshot: Self = serde_json::from_value(value).map_err(|error| error.to_string())?;
         let Some(declared) = declared else { return Ok(snapshot) };
@@ -119,7 +122,6 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
 
 /// 🧒️ One declared owned-child handle from its canonical `ArtifactRef` uri.
 fn test_child_handle(uri: &str) -> Result<store::os_store::artifact_child::ArtifactChild<TestSnapshot>, String> {
-use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactReferenceText as _};
 
     let target = semio_framework_artifact_reference::ArtifactRef::parse_uri(uri)?;
     Ok(store::os_store::artifact_child::ArtifactChild::new(target.artifact_id.clone(), target))
@@ -193,11 +195,11 @@ fn sqlite_snapshot_codec() -> Option<store::os_store::serialization::ArtifactSql
 //#region 🔺️Diff
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 pub(crate) struct TestDiff {
-    pub(crate) count: Option<i32>,
-    pub(crate) label: Option<String>,
+    pub count: Option<i32>,
+    pub label: Option<String>,
     /// 🧒️ The whole declared membership of the `"slot"` child slot, as canonical `ArtifactRef`
     /// uris — a child declaration is replaced wholesale, never merged row by row.
-    pub(crate) slot: Option<Vec<String>>,
+    pub slot: Option<Vec<String>>,
 }
 
 fn test_slot_uris(snapshot: &TestSnapshot) -> Vec<String> {
@@ -240,6 +242,9 @@ impl protocol::MutationDiff<TestSnapshot> for TestDiff {
 //#region 🧬️Mutations
 #[path = "../../🧪️testing/🖥️test-app-mutations/🧬️document/🧬️mutations/🦀️.rs"]
 pub mod mutations;
-pub(crate) use mutations::{SetCount, SetLabel, SetSlotChildren, TestMutation};
+pub use crate::test_app_mutation_fixture::document::mutations::set_count::SetCount;
+pub use crate::test_app_mutation_fixture::document::mutations::set_label::SetLabel;
+pub use crate::test_app_mutation_fixture::document::mutations::set_slot_children::SetSlotChildren;
+pub use crate::test_app_mutation_fixture::document::mutations::TestMutation;
 //#endregion 🧬️Mutations
 //#endregion 🧬️TestDocumentMutationRoot

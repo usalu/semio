@@ -1,3 +1,4 @@
+use semio_framework_test_fixtures::manifest_dir;
 use std::path::{Path, PathBuf};
 
 const EXAMPLES_DIR_NAME: &str = "📚️examples";
@@ -10,7 +11,7 @@ const STANDARDS_DIR: &str = "🏅️standards";
 
 /// 🏠️ Ascends from `CARGO_MANIFEST_DIR` looking for `nx.json`.
 pub async fn repo_root() -> PathBuf {
-    let mut dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    let mut dir = manifest_dir!();
     loop {
         if dir.join("nx.json").is_file() {
             return dir;

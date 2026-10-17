@@ -30,3 +30,6 @@ semio-framework-os-kernel = { path = "../../../../../../📦️packages/🦀️r
 semio-framework-trace = { workspace = true }
 semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 serde_json = "1.0.140"
+
+[dev-dependencies]
+semio-framework-job = { path = "../../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust", package = "semio-framework-job", features = ["testkit"] }

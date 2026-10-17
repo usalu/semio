@@ -1,0 +1,53 @@
+//! 🧳️ snapshot-root of `semio-s-artifact-stdio-gltf-model` — a path-preserving carve of the artifact root mounts.
+
+#![allow(async_fn_in_trait)]
+#![allow(long_running_const_eval)]
+
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as framework_schema;
+extern crate semio_framework_value_derive as value_derive;
+
+#[path = "."]
+pub mod standards {
+    #[path = "."]
+    pub mod v2_0 {
+        #[path = "."]
+        pub mod subsets {
+            #[path = "."]
+            pub mod any {
+                #[path = "."]
+                pub mod schema {
+                    pub use semio_s_artifact_stdio_gltf_model_snapshot::standards::v2_0::subsets::any::schema::snapshot;
+                    #[path = "."]
+                    pub mod snapshot_root {
+                        #[path = "../../🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+                #[path = "."]
+                pub mod io {
+                    #[path = "."]
+                    pub mod sqlite {
+                        #[path = "../../../../../🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs"]
+                        pub mod snapshot;
+                    }
+                    #[path = "."]
+                    pub mod binary {
+                        #[path = "."]
+                        pub mod snapshot {
+                            pub use semio_s_artifact_stdio_gltf_model_snapshot::standards::v2_0::subsets::any::io::binary::snapshot::owned_pack;
+                        }
+                    }
+                    #[path = "."]
+                    pub mod snapshot_codecs {
+                        #[path = "../../../../../🚪️io/💾️binary/📸️snapshot/📦️pack/🧳️snapshot-pack/🦀️.rs"]
+                        pub mod pack_codec;
+                        #[path = "../../../../../🚪️io/📝️text/📸️snapshot/🧳️snapshot-dsl/🦀️.rs"]
+                        pub mod dsl_codec;
+                    }
+                }
+            }
+        }
+    }
+}

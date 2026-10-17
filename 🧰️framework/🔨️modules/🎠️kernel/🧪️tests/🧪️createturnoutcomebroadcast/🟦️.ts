@@ -2,9 +2,9 @@
 import * as vitest from "vitest";
 import { dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-import { fixtureOriginalWorkStock } from "../../../🎭️actor/🎟️retained-turn/🏛️bootstrap/🧪️tests/🧫️fixtures/🟦️.ts";
-import { ShardClient } from "../../../🎭️actor/📮️shard-client/🟦️.ts";
-import { dialectCoordinate } from "../../../🚪️io/🧬️schema/🟦️.ts";
+import { fixtureOriginalWorkStock } from "@semio-tech/framework-actor/retained-turn/bootstrap/testing/fixtures";
+import { ShardClient } from "@semio-tech/framework-actor/shard-client";
+import { dialectCoordinate } from "@semio-tech/framework-io-schema-ts";
 import { OwnedResidentLedger } from "@semio-tech/value-ts/resident";
 import { ActivationRegistry, intersectCapabilityGrants } from "../../🎛️activation-registry/🟦️.ts";
 import { AppRouter } from "../../🧭️app-router/🟦️.ts";
@@ -17,8 +17,8 @@ import { createTurnOutcomeBroadcast } from "../../📡️turn-outcome-broadcast/
 
 type Vitest = typeof import("vitest");
 type TestSource = { readonly directory: string; readonly url: string };
-type IoSchemaTestModule = typeof import("../../../🚪️io/🧬️schema/🟦️.ts");
-type ActorTestModule = typeof import("../../../🎭️actor/📮️shard-client/🟦️.ts");
+type IoSchemaTestModule = typeof import("@semio-tech/framework-io-schema-ts");
+type ActorTestModule = typeof import("@semio-tech/framework-actor/shard-client");
 type ResidentTestModule = typeof import("@semio-tech/value-ts/resident");
 
 async function registerTests1(vitest: Vitest, dependencies: Pick<typeof import("../../📡️turn-outcome-broadcast/🟦️.ts"), "createTurnOutcomeBroadcast">, source: TestSource): Promise<void> {
@@ -73,7 +73,7 @@ async function registerTests1(vitest: Vitest, dependencies: Pick<typeof import("
 
 }
 
-async function registerTests2(vitest: Vitest, dependencies: Pick<typeof import("../../../🚪️io/🧬️schema/🟦️.ts"), "dialectCoordinate"> & Pick<typeof import("../../🧭️app-router/🟦️.ts"), "AppRouter">, source: TestSource): Promise<void> {
+async function registerTests2(vitest: Vitest, dependencies: Pick<typeof import("@semio-tech/framework-io-schema-ts"), "dialectCoordinate"> & Pick<typeof import("../../🧭️app-router/🟦️.ts"), "AppRouter">, source: TestSource): Promise<void> {
   const { AppRouter, dialectCoordinate } = dependencies;
   type AppRef = import("@semio-tech/framework/manifest/schema").AppRef;
   type AppRole = import("@semio-tech/framework/manifest/schema").AppRole;
@@ -126,15 +126,15 @@ async function registerTests2(vitest: Vitest, dependencies: Pick<typeof import("
 
 }
 
-async function registerTests3(vitest: Vitest, dependencies: Pick<typeof import("@semio-tech/value-ts/resident"), "OwnedResidentLedger"> & Pick<typeof import("../../../🎭️actor/📮️shard-client/🟦️.ts"), "ShardClient"> & Pick<typeof import("../../🎛️activation-registry/🟦️.ts"), "ActivationRegistry" | "intersectCapabilityGrants"> & Pick<typeof import("../../🧯️memory-pressure/🟦️.ts"), "DEFAULT_MAX_RESIDENT_ACTORS" | "residentActorCapFromMemory"> & Pick<typeof import("../../⏱️runtime-metrics/🟦️.ts"), "RUNTIME_METRICS_PUBLISH_INTERVAL_MS" | "runtimeMetricsDue">, source: TestSource): Promise<void> {
+async function registerTests3(vitest: Vitest, dependencies: Pick<typeof import("@semio-tech/value-ts/resident"), "OwnedResidentLedger"> & Pick<typeof import("@semio-tech/framework-actor/shard-client"), "ShardClient"> & Pick<typeof import("../../🎛️activation-registry/🟦️.ts"), "ActivationRegistry" | "intersectCapabilityGrants"> & Pick<typeof import("../../🧯️memory-pressure/🟦️.ts"), "DEFAULT_MAX_RESIDENT_ACTORS" | "residentActorCapFromMemory"> & Pick<typeof import("../../⏱️runtime-metrics/🟦️.ts"), "RUNTIME_METRICS_PUBLISH_INTERVAL_MS" | "runtimeMetricsDue">, source: TestSource): Promise<void> {
   const { ActivationRegistry, DEFAULT_MAX_RESIDENT_ACTORS, OwnedResidentLedger, RUNTIME_METRICS_PUBLISH_INTERVAL_MS, ShardClient, intersectCapabilityGrants, residentActorCapFromMemory, runtimeMetricsDue } = dependencies;
   type MemoryProbe = import("../../🧯️memory-pressure/🟦️.ts").MemoryProbe;
   type PluginCatalog = import("../../📚️plugin-catalog/🟦️.ts").PluginCatalog;
   type RuntimeMetricsSnapshot = import("../../⏱️runtime-metrics/🟦️.ts").RuntimeMetricsSnapshot;
   type ActivationRegistry = import("../../🎛️activation-registry/🟦️.ts").ActivationRegistry;
-  type ShardBudget = import("../../../🎭️actor/📮️shard-client/🟦️.ts").ShardBudget;
-  type ShardCapabilityGrant = import("../../../🎭️actor/📮️shard-client/🟦️.ts").ShardCapabilityGrant;
-  type ShardClient = import("../../../🎭️actor/📮️shard-client/🟦️.ts").ShardClient;
+  type ShardBudget = import("@semio-tech/framework-actor/shard-client").ShardBudget;
+  type ShardCapabilityGrant = import("@semio-tech/framework-actor/shard-client").ShardCapabilityGrant;
+  type ShardClient = import("@semio-tech/framework-actor/shard-client").ShardClient;
   type OwnedResidentLedger = import("@semio-tech/value-ts/resident").OwnedResidentLedger;
 
   const { describe, expect, it, vi } = vitest;
@@ -619,7 +619,7 @@ async function registerTests4(vitest: Vitest, dependencies: Pick<typeof import("
 
 }
 
-async function registerTests5(vitest: Vitest, dependencies: Pick<typeof import("../../../🚪️io/🧬️schema/🟦️.ts"), "dialectCoordinate"> & Pick<typeof import("../../🚪️io-router/🟦️.ts"), "IoEntryGraph" | "ioIdentify" | "ioRun">, source: TestSource): Promise<void> {
+async function registerTests5(vitest: Vitest, dependencies: Pick<typeof import("@semio-tech/framework-io-schema-ts"), "dialectCoordinate"> & Pick<typeof import("../../🚪️io-router/🟦️.ts"), "IoEntryGraph" | "ioIdentify" | "ioRun">, source: TestSource): Promise<void> {
   const { IoEntryGraph, dialectCoordinate, ioIdentify, ioRun } = dependencies;
   type ArtifactDialect = import("@semio-tech/schema-ts/artifact-reference").ArtifactDialect;
   type IoEntryGraphPlugin = import("../../🚪️io-router/🟦️.ts").IoEntryGraphPlugin;

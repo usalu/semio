@@ -1,12 +1,12 @@
 import Ajv from "ajv";
 import constructFixture from "../🧫️fixtures/🔍️construct.json";
-import { preciseSpatialKernelMath } from "../../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🧮️preview/🟦️.ts";
-import type { FaceRef, ShellRef, SolidRef } from "../../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️.ts";
+import { preciseSpatialKernelMath } from "@semio-tech/s-spatial-kernel-ts/preview";
+import type { FaceRef, ShellRef, SolidRef } from "@semio-tech/s-spatial-kernel-ts/geometry";
 import type { InferencesTestDependencies } from "../../🟦️.ts";
-import type { ObjectRef, TypologyRef } from "../../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️.ts";
-import type { Model } from "../../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🧊️model/🟦️.ts";
-import type { SelectionTarget } from "../../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🪪️selection/🟦️.ts";
-import type { SpatialKernel } from "../../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️.ts";
+import type { ObjectRef, TypologyRef } from "@semio-tech/s-spatial-kernel-ts/geometry";
+import type { Model } from "@semio-tech/s-spatial-kernel-ts/geometry/model";
+import type { SelectionTarget } from "@semio-tech/s-spatial-kernel-ts/geometry/selection";
+import type { SpatialKernel } from "@semio-tech/s-spatial-kernel-ts/spatial";
 import type { Vec3 } from "@semio-tech/framework/3d";
 
 type TestSource = { readonly url: string };
@@ -61,13 +61,11 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         const ast = parseConstruct(row.text);
         expect(ast).toEqual(row.ast);
         expect(admitted(ast)).toBe(true);
-        console.debug(`[DEBUG] Construct first-party AST neutral Ajv vector ${row.id}`);
       }
       for (const text of constructFixture.refusals) expect(() => parseConstruct(text)).toThrow();
       const ast = parseConstruct(constructFixture.cases[0]!.text);
       const result = await dependencies.runConstructAst(ast, { model: new Model(), kernel: mkKernelStub(), actions: modelDefinitionActionRegistry() });
       expect(result.rows).toEqual([{ label: "line\nλ", count: 2.5 }]);
-      console.debug("[DEBUG] Construct typed semantic execution without physical text admission rows=1");
     });
     it("parses MATCH RETURN with property access", () => {
       const a = parseConstruct("MATCH (f:Object {typology: 'spatial.shape.kernel.face', id: 'f0'}) RETURN f.id");

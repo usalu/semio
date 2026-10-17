@@ -1,0 +1,46 @@
+[package]
+workspace = "../../../../../../.."
+name = "semio-s-artifact-norm-en1996-editor"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "EN 1996 editor"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework = { workspace = true }
+semio-framework-2d = { workspace = true }
+semio-framework-dsl-record-derive = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-plugin = { workspace = true }
+semio-framework-schema = { workspace = true }
+semio-framework-ui-locale = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-framework-value-derive = { workspace = true }
+semio-s-artifact-norm-en1996-examples = { workspace = true }
+semio-s-artifact-norm-en1996-inferences = { workspace = true }
+semio-s-artifact-norm-en1996-io = { workspace = true }
+semio-s-artifact-norm-en1996-model = { workspace = true }
+semio-s-artifact-norm-en1996-mutations = { workspace = true }
+semio-s-artifact-norm-en1996-schema = { workspace = true }
+semio-s-plugin-norm-app-surface = { workspace = true }
+semio-s-plugin-norm-compliance = { workspace = true }
+semio-s-plugin-norm-results-config = { workspace = true }
+
+[dev-dependencies]
+pack = { workspace = true }
+semio-framework-async-macros = { workspace = true }
+semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-framework-pack-json = { workspace = true }
+semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
+semio-s-plugin-norm-app-surface = { workspace = true, features = ["compliance-testing"] }
+semio-s-plugin-norm-compliance = { workspace = true, features = ["compliance-testing"] }
+serde_json = { workspace = true }

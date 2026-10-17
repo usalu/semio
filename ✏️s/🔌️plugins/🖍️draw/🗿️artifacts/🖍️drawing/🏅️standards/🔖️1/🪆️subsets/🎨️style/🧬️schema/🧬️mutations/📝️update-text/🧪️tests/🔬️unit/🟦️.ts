@@ -3,7 +3,10 @@ import { semioSchemaAjvV1 } from "@semio-tech/framework/schema/oracles/validator
 import { applyPatch } from "fast-json-patch";
 import fixture from "../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📝️update-text/🔣️.json";
 import schema from "../../🧬️schema/🔣️.json";
-import { applyTextEdit, textEditPatch } from "../../🦠️mutation/🟦️.ts";
+import { applyTextEdit, textEditPatch, type UpdateText } from "../../🦠️mutation/🟦️.ts";
+import { parseDrawingFontFamily } from "../../../../../../✳️any/🧬️schema/📝️text/🔤️family/🟦️.ts";
+
+const textFields = (fields: { readonly content: string; readonly size: number; readonly fontFamily: string }): Omit<UpdateText, "layerId"> => ({ ...fields, fontFamily: parseDrawingFontFamily(fields.fontFamily) });
 
 describe("semantic text editing", () => {
   const valid = semioSchemaAjvV1({allErrors: true}).compile(schema);
@@ -17,10 +20,11 @@ describe("semantic text editing", () => {
       {op: "replace", path: "/layers/0/children/0/size", value: edit.size},
       {op:"replace",path:"/layers/0/children/0/fontFamily",value:edit.fontFamily},
     ]).newDocument;
-    expect(textEditPatch(fixture.before as never,mutation as never)).toEqual(fixture.patches[fixture.edits.indexOf(edit)]);
+    const patch = textEditPatch(fixture.before as never,mutation as never), expectedPatch = fixture.patches[fixture.edits.indexOf(edit)]!;
+    expect(patch).toEqual<typeof expectedPatch>(expectedPatch);
     const edited = applyTextEdit(before, mutation as never);
     expect(edited).toEqual(oracle);
-    expect(applyTextEdit(edited, {layerId: "text", ...fixture.before})).toEqual(before);
+    expect(applyTextEdit(edited, {layerId: "text", ...textFields(fixture.before)})).toEqual(before);
     expect(before.layers[0].children[0]).toMatchObject(fixture.before);
   });
   it("rejects invalid sizes, missing targets and non-text targets without changes", () => {
@@ -30,8 +34,8 @@ describe("semantic text editing", () => {
       expect(valid({mutation: "updateText", ...mutation})).toBe(false);
       expect(() => applyTextEdit(before, mutation as never)).toThrow();
     }
-    expect(() => applyTextEdit(before, {layerId: "missing", ...fixture.before})).toThrow();
-    expect(() => applyTextEdit({layers: [{kind: "shape", id: "shape"}]}, {layerId: "shape", ...fixture.before})).toThrow();
+    expect(() => applyTextEdit(before, {layerId: "missing", ...textFields(fixture.before)})).toThrow();
+    expect(() => applyTextEdit({layers: [{kind: "shape", id: "shape"}]}, {layerId: "shape", ...textFields(fixture.before)})).toThrow();
     for(const fontFamily of fixture.invalidFamilies){expect(()=>applyTextEdit(before,{layerId:"text",content:"Family",size:24,fontFamily} as never)).toThrow(/family/);}
     expect(before.layers[0]).toMatchObject(fixture.before);
   });
@@ -42,7 +46,7 @@ import before from "../../../../../🧪️tests/🧫️fixtures/🧬️mutations
 import after from "../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📝️update-text/📝️edit-caption/📸️snapshot/➡️after/🔣️.json";
 import mutation from "../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📝️update-text/📝️edit-caption/🦠️mutation/🔣️.json";
 it("matches the canonical caption fixture and independent JSON Patch result", () => {
-  expect(applyTextEdit(before, mutation)).toEqual(after);
+  expect(applyTextEdit(before, {...mutation, fontFamily: parseDrawingFontFamily(mutation.fontFamily)})).toEqual(after);
   expect(applyPatch(structuredClone(before), [
     {op: "replace", path: "/layers/0/content", value: mutation.content},
     {op: "replace", path: "/layers/0/size", value: mutation.size},

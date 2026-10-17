@@ -118,9 +118,9 @@ impl Default for SemioCadSnapshot {
 /// plus a top-level `Arc`/`Circle`/`Ellipse`/`Polyline`/`Text`/`Insert`/`Solid`/`Dimension`). Single
 /// source of truth for `📚️examples/📐️drawing/🖼️assets/🗣️.dsl.semio`/`🎒️.pack.semio`
 /// and for the conformance-law tests in `🎹️composer/🦀️.rs`.
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn demo_cad_snapshot() -> SemioCadSnapshot {
+pub fn demo_cad_snapshot() -> SemioCadSnapshot {
     SemioCadSnapshot {
         schema: STDIO_SEMIOCAD_DOCUMENT_SCHEMA.into(),
         layers: vec![CadLayer { name: "0".into(), color_index: 7, line_type: "CONTINUOUS".into(), visible: true }, CadLayer { name: "dim".into(), color_index: 1, line_type: "DASHED".into(), visible: true }],
@@ -143,8 +143,6 @@ pub(crate) fn demo_cad_snapshot() -> SemioCadSnapshot {
 }
 //#endregion 🔖️Demo
 //#region 🔖️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🔖️Tests
                                                                 

@@ -28,5 +28,5 @@ if (process.argv[2] === "retained-opc-check") {
   assert.equal(oracle.parts[1].bytes.byteLength, 0);
   console.log(`retained-opc-check: parts=${oracle.parts.length} payload=${oracle.parts[0].bytes.byteLength} owners=${oracle.relationships.length}`);
 } else {
-  await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-stdio-zip", { snapshotSqliteTests: ["../../🏅️standards/🔖️2.0/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"] });
+  await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-stdio-zip", { packages: ["semio-s-artifact-stdio-zip", "semio-s-artifact-stdio-zip-editor", "semio-s-artifact-stdio-zip-inferences", "semio-s-artifact-stdio-zip-mutations", "semio-s-artifact-stdio-zip-opc", "semio-s-artifact-stdio-zip-schema", "semio-s-artifact-stdio-zip-schema-2", "semio-s-artifact-stdio-zip-tests"], snapshotSqliteTests: ["../../🏅️standards/🔖️2.0/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"] });
 }

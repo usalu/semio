@@ -5,5 +5,5 @@ export {
   uiDirtyScopeWantsPanelBody,
   uiDirtyScopeWantsSection,
   uiDirtyScopeWantsWindowBody
-} from "../../../🔨️modules/🎠️kernel/🎯️ui-dirty-scope/🟦️.ts";
-export type { UiDirtyScope } from "../../../🔨️modules/🎠️kernel/🎯️ui-dirty-scope/🟦️.ts";
+} from "@semio-tech/framework-kernel/ui-dirty-scope";
+export type { UiDirtyScope } from "@semio-tech/framework-kernel/ui-dirty-scope";

@@ -1,3 +1,4 @@
+use crate::editor::bim::modes::edit::windows::section::config::BimSectionWindowConfig;
 use super::*;
 use crate::standards::v1::subsets::any::schema::inferences::plan_linework::PlanKind;
 use crate::standards::v1::subsets::any::schema::snapshot::{Point2, View, ViewKind};

@@ -1,4 +1,4 @@
-use super::*;
+use crate::schema::diff::*;
 
 /// 🧪️ diff_codec_text_binary_roundtrip_law: hand-rolled `DiffCodec` text+binary round trip.
 #[semio_framework_async_macros::async_test]

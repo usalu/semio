@@ -127,7 +127,6 @@ async fn every_locally_authored_operation_is_announced_exactly_once() {
                 }
                 _ => panic!("{} step {index} names neither one gesture, an undo nor one remote operation", vector.id),
             }
-            eprintln!("[DEBUG] vector {} step {index} mirrors", vector.id);
             store.assert_mirrors_are_live();
             let (operations, transitions) = drain_announced(&remote);
             let observations: HashSet<Option<String>> = operations.iter().map(|operation| operation.observed.as_ref().map(|observed| observed.0.clone())).collect();

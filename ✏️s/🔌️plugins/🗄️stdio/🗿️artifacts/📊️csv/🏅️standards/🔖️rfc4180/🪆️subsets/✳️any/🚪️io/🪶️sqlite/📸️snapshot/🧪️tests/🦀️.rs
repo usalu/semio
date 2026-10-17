@@ -5,6 +5,7 @@ use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v_rfc4180::subsets::any::io::sqlite::snapshot::*;
 use crate::standards::v_rfc4180::subsets::any::io::{text::snapshot::read_csv_source_text,binary::snapshot::read_csv_source_binary};
 use semio_framework_os_kernel::{sqlite_snapshot::{export_sqlite_database, import_sqlite_database, SqliteDatabaseLimits, SqliteSnapshotControl, SqliteValue}, os_store::serialization::ArtifactSqliteSnapshotHost};
+use semio_framework_test_fixtures::fixture_text;
 
 #[test]
 fn sqlite_snapshot_csv_reconstruction_respects_value_budget() {
@@ -44,7 +45,7 @@ fn sqlite_snapshot_csv_wide_record_preflight_can_be_cancelled() {
 
 #[test]
 fn sqlite_snapshot_csv_records_fields_and_quoting_are_relational() {
-    let fixture: serde_json::Value = serde_json::from_str(runtime_fixture_text("../../../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let snapshot = CsvSnapshot {
         schema: fixture["schema"].as_str().unwrap().into(),
         has_header: fixture["hasHeader"].as_bool().unwrap(),
@@ -65,7 +66,7 @@ fn sqlite_snapshot_csv_records_fields_and_quoting_are_relational() {
     assert!(snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| false, SqliteDatabaseLimits::default())).is_err());
 }
 
-fn csv_native_control_fixture()->serde_json::Value{serde_json::from_str(runtime_fixture_text("../../../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🛬️native-control/🔣️.json")).unwrap()}
+fn csv_native_control_fixture()->serde_json::Value{serde_json::from_str(fixture_text!("../../../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🛬️native-control/🔣️.json")).unwrap()}
 fn csv_native_control_snapshot()->CsvSnapshot{let input=csv_native_control_fixture();let count=usize::try_from(input["workItems"].as_u64().unwrap()).unwrap();let pattern=input["bytePattern"].as_array().unwrap().iter().map(|v|u8::try_from(v.as_u64().unwrap()).unwrap()).collect::<Vec<_>>();CsvSnapshot{schema:input["ownedSchema"].as_str().unwrap().into(),has_header:false,records:vec![CsvRecord{fields:Vec::new()},CsvRecord{fields:(0..count).map(|_|CsvField{value:input["fieldText"].as_str().unwrap().into(),quoted:false}).collect()},CsvRecord{fields:vec![CsvField{value:String::new(),quoted:true}]},CsvRecord{fields:Vec::new()}]}}
 fn csv_native_payload(snapshot:&CsvSnapshot,encoding:store::sqlite_snapshot::SnapshotEncoding)->store::io_schema::IoPayload{match encoding{store::sqlite_snapshot::SnapshotEncoding::Binary=>store::io_schema::IoPayload::Binary(<CsvSnapshot as pack::snapshot::ArtifactPack>::encode_pack(snapshot)),store::sqlite_snapshot::SnapshotEncoding::Text=>store::io_schema::IoPayload::Text(<CsvSnapshot as pack::snapshot::ArtifactDsl>::print_dsl(snapshot))}}
 #[semio_framework_async_macros::async_test]
@@ -114,7 +115,6 @@ async fn sqlite_snapshot_csv_actual_typed_file_preserves_complete_literal_owned_
  let snapshot=csv_native_control_snapshot();let database=snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,Default::default())).unwrap();
  assert_eq!(database.tables.iter().map(|table|table.rows.len()).sum::<usize>(),usize::try_from(csv_native_control_fixture()["expectedRows"].as_u64().unwrap()).unwrap());
  for encoding in [SnapshotEncoding::Binary,SnapshotEncoding::Text]{let mut phases=Vec::new();let file=async{let original_file_dialect=&dialect;let original_file_input=&snapshot;let original_file_encoding=encoding;let original_file_limits=Default::default();let original_file_progress:&mut dyn FnMut(semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |event|{phases.push(event.phase);true};semio_framework_os_kernel::io::testing::with_snapshot_file_decoding(semio_framework_os_kernel::io::testing::SnapshotFileCaller{grant:semio_framework_value::RetainedCloneGrant{maximum_items:65536,maximum_copy_bytes:1048576,maximum_capacity_bytes:4194304,maximum_release_bytes:4194304,maximum_depth:128},native_maximum_bytes:16777216,close_grant:semio_framework_value::RetainedCloneGrant{maximum_items:4096,maximum_copy_bytes:1048576,maximum_capacity_bytes:4194304,maximum_release_bytes:4194304,maximum_depth:256},maximum_close_turns:65536},original_file_limits,original_file_progress,async|sqlite_control,native_owner|io_export_sqlite_snapshot(original_file_dialect,original_file_input,original_file_encoding,sqlite_control,native_owner).await).await}.await.unwrap().value;assert_eq!(&file[..16],b"SQLite format 3\0");let restored=async{let original_file_dialect=&dialect;let original_file_input=&file;let original_file_limits=Default::default();let original_file_progress:&mut dyn FnMut(semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |event|{phases.push(event.phase);true};semio_framework_os_kernel::io::testing::with_snapshot_file_encoding(semio_framework_os_kernel::io::testing::SnapshotFileCaller{grant:semio_framework_value::RetainedCloneGrant{maximum_items:65536,maximum_copy_bytes:1048576,maximum_capacity_bytes:4194304,maximum_release_bytes:4194304,maximum_depth:128},native_maximum_bytes:16777216,close_grant:semio_framework_value::RetainedCloneGrant{maximum_items:4096,maximum_copy_bytes:1048576,maximum_capacity_bytes:4194304,maximum_release_bytes:4194304,maximum_depth:256},maximum_close_turns:65536},original_file_limits,original_file_progress,async|sqlite_control,native_owner|io_import_sqlite_snapshot::<CsvSnapshot>(original_file_dialect,original_file_input,sqlite_control,native_owner).await).await}.await.unwrap().value;assert_eq!(restored,snapshot);assert!(!phases.iter().any(|phase|matches!(phase,SqliteSnapshotPhase::DecodeNative|SqliteSnapshotPhase::EncodeNative)));}
- println!("[DEBUG] Csv actual declaration typed SQLite files preserved complete literal fields in both metadata encodings without native lowering");
 }
 #[test]
 fn sqlite_snapshot_csv_logical_carrier_preserves_complete_owner(){
@@ -153,7 +153,7 @@ fn sqlite_snapshot_csv_literal_long_field_copies_cancel_at_paid_utf8_boundary() 
 async fn sqlite_snapshot_csv_complete_logical_owner_erased_factory_preserves_every_literal_field(){
  use {semio_framework_artifact_reference::ArtifactDialect};
  use store::sqlite_snapshot::SnapshotEncoding;
- let fixture:serde_json::Value=serde_json::from_str(runtime_fixture_text("../../../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🧠️logical-owner/🔣️.json")).unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🧠️logical-owner/🔣️.json")).unwrap();
  semio_framework_plugin::PluginBuilder::<_, semio_framework_plugin::app::NoPluginApp>::new("stdio").label("Csv complete logical owner").version("0.0.1").package_id("semio:stdio").artifact(crate::declaration(crate::definition().unwrap()).unwrap()).try_build().unwrap();
  let codec=store::os_store::codec_registry::document_codec(crate::STDIO_CSV_DOCUMENT_SCHEMA).await.unwrap().unwrap();let provider=codec.snapshot_sqlite.as_ref().unwrap();assert_eq!(provider.snapshot_type,Some(std::any::TypeId::of::<CsvSnapshot>()));
  let dialect=ArtifactDialect{artifact_kind:"s.stdio.csv".into(),standard:"rfc4180".into(),subset:"*".into()};
@@ -168,22 +168,20 @@ async fn sqlite_snapshot_csv_complete_logical_owner_erased_factory_preserves_eve
    let ordinary=match &output{store::io_schema::IoPayload::Binary(bytes)=><CsvSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&bytes).unwrap(),store::io_schema::IoPayload::Text(text)=><CsvSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(&text).unwrap()};assert_eq!(ordinary,snapshot);retire_original_output(output,&native_caller_policy());
   }
  }
- println!("[DEBUG] Csv actual erased factory preserved every complete logical owner in both native formats");
 }
 
 #[test]
 fn sqlite_snapshot_csv_canonical_owner_assets_match_actual_producers_and_natural_sources(){
  use store::{pack::snapshot::ArtifactDsl,pack::snapshot::ArtifactPack};
- for(text,binary)in[(runtime_fixture_text("../../../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🧠️logical-owner/🗣️0.dsl.semio"),include_bytes!("🧫️fixtures/🧠️logical-owner/🎒️0.pack.semio").as_slice()),(runtime_fixture_text("../../../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🧠️logical-owner/🗣️1.dsl.semio"),include_bytes!("🧫️fixtures/🧠️logical-owner/🎒️1.pack.semio").as_slice())]{let snapshot=CsvSnapshot::parse_dsl(text).unwrap();assert_eq!(snapshot.print_dsl(),text);assert_eq!(snapshot.encode_pack_with(&Default::default()).unwrap(),binary);assert_eq!(CsvSnapshot::decode_pack(binary).unwrap(),snapshot);}
+ for(text,binary)in[(fixture_text!("../../../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🧠️logical-owner/🗣️0.dsl.semio"),include_bytes!("🧫️fixtures/🧠️logical-owner/🎒️0.pack.semio").as_slice()),(fixture_text!("../../../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🧠️logical-owner/🗣️1.dsl.semio"),include_bytes!("🧫️fixtures/🧠️logical-owner/🎒️1.pack.semio").as_slice())]{let snapshot=CsvSnapshot::parse_dsl(text).unwrap();assert_eq!(snapshot.print_dsl(),text);assert_eq!(snapshot.encode_pack_with(&Default::default()).unwrap(),binary);assert_eq!(CsvSnapshot::decode_pack(binary).unwrap(),snapshot);}
  let demo=CsvSnapshot::parse_dsl(crate::examples::demo::PRIMARY_TEXT).unwrap();assert_eq!(demo.print_dsl(),crate::examples::demo::PRIMARY_TEXT);assert_eq!(demo.encode_pack_with(&Default::default()).unwrap(),crate::examples::demo::PACK_BYTES);let raw=crate::examples::demo::NATIVE_BYTES;let text=std::str::from_utf8(raw).unwrap();assert_eq!(read_csv_source_text(text).unwrap(),demo);assert_eq!(read_csv_source_binary(raw).unwrap(),demo);assert_eq!(read_csv_source_binary(crate::examples::demo::PACK_BYTES).unwrap(),demo);
- println!("[DEBUG] actual CSV owner producers matched every paired asset and authored natural file");
 }
 
 fn csv_semantic_corpus_snapshot(value:&serde_json::Value)->CsvSnapshot{CsvSnapshot{schema:value["schema"].as_str().unwrap().into(),has_header:value["hasHeader"].as_bool().unwrap(),records:value["records"].as_array().unwrap().iter().map(|r|CsvRecord{fields:r["fields"].as_array().unwrap().iter().map(|f|CsvField{value:f["value"].as_str().unwrap().into(),quoted:f["quoted"].as_bool().unwrap()}).collect()}).collect()}}
 #[test]
 fn sqlite_snapshot_csv_complete_native_semantic_cells_use_closed_independent_sql_authority(){
  use store::sqlite_snapshot::SnapshotEncoding;use std::io::Write;use std::process::{Command,Stdio};
- let plan:serde_json::Value=serde_json::from_str(runtime_fixture_text("../../../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🛂️semantic/🔣️.json")).unwrap();let defaults=SqliteDatabaseLimits::default();let columns=plan["tableWidths"].as_object().unwrap().values().map(|v|v.as_u64().unwrap()as usize).max().unwrap();let tables=plan["tableWidths"].as_object().unwrap().len();
+ let plan:serde_json::Value=serde_json::from_str(fixture_text!("../../../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🛂️semantic/🔣️.json")).unwrap();let defaults=SqliteDatabaseLimits::default();let columns=plan["tableWidths"].as_object().unwrap().values().map(|v|v.as_u64().unwrap()as usize).max().unwrap();let tables=plan["tableWidths"].as_object().unwrap().len();
  for sample in plan["cases"].as_array().unwrap(){let snapshot=csv_semantic_corpus_snapshot(&sample["snapshot"]);let database=snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,defaults)).unwrap();let file=export_sqlite_database(&database,defaults,&mut |_|true).unwrap();
   let mut child=Command::new("bun").args(["-e","import Ajv from \"ajv/dist/2020\";import{Database}from\"bun:sqlite\";const plan=JSON.parse(process.argv[1]),sample=JSON.parse(process.argv[2]);const db=Database.deserialize(new Uint8Array(await Bun.stdin.arrayBuffer())),quote=v=>'\"'+v.replaceAll('\"','\"\"')+'\"';try{if(db.query(\"PRAGMA integrity_check\").get().integrity_check!==\"ok\"||db.query(\"PRAGMA foreign_key_check\").all().length)throw Error(\"independent SQL integrity\");let rows=0,bytes=0;for(const[table,width]of Object.entries(plan.tableWidths)){const fields=db.query(\"PRAGMA table_info(\"+quote(table)+\")\").all().map(v=>v.name);if(fields.length!==width)throw Error(\"authored columns \"+table);const cells=fields.map(v=>{const f=quote(v);return \"CASE typeof(\"+f+\") WHEN 'integer' THEN 8 WHEN 'real' THEN 8 WHEN 'text' THEN length(CAST(\"+f+\" AS BLOB)) WHEN 'blob' THEN length(\"+f+\") ELSE 0 END\";}).join(\"+\");const extent=db.query(\"SELECT COUNT(*) AS rows,COALESCE(SUM(\"+cells+\"),0) AS bytes FROM \"+quote(table)).get();rows+=extent.rows;bytes+=extent.bytes;}if(rows!==sample.rows||bytes!==sample.bytes)throw Error(\"independent complete cells \"+JSON.stringify({rows,bytes,expected:sample}));}finally{db.close();}"]).arg(plan.to_string()).arg(sample.to_string()).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();child.stdin.take().unwrap().write_all(&file).unwrap();let result=child.wait_with_output().unwrap();assert!(result.status.success(),"{}: {}",sample["id"],String::from_utf8_lossy(&result.stderr));
   let rows=sample["rows"].as_u64().unwrap()as usize;let bytes=sample["bytes"].as_u64().unwrap()as usize;let authored=CsvSnapshot::SQLITE_SCHEMA.len();
@@ -200,7 +198,7 @@ fn sqlite_snapshot_csv_complete_native_semantic_cells_use_closed_independent_sql
 #[test]
 fn sqlite_snapshot_csv_complete_borrowed_gate_isolated_exact_and_one_short_before_typed_binding(){
  use store::sqlite_snapshot::SnapshotEncoding;
- let plan:serde_json::Value=serde_json::from_str(runtime_fixture_text("../../../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🛂️semantic/🔣️.json")).unwrap();
+ let plan:serde_json::Value=serde_json::from_str(fixture_text!("../../../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🛂️semantic/🔣️.json")).unwrap();
  let defaults=SqliteDatabaseLimits::default();let columns=plan["tableWidths"].as_object().unwrap().values().map(|v|v.as_u64().unwrap()as usize).max().unwrap();let tables=plan["tableWidths"].as_object().unwrap().len();
  for sample in plan["cases"].as_array().unwrap(){let snapshot=csv_semantic_corpus_snapshot(&sample["snapshot"]);let rows=sample["rows"].as_u64().unwrap()as usize;let bytes=sample["bytes"].as_u64().unwrap()as usize;
  for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let input=csv_native_payload(&snapshot,encoding);
@@ -209,7 +207,7 @@ fn sqlite_snapshot_csv_complete_borrowed_gate_isolated_exact_and_one_short_befor
 }
 
 /** 🫴️ Constructs one actual native caller from independently authored body and close authority. */
-fn native_caller_policy()->serde_json::Value{serde_json::from_str(runtime_fixture_text("../../../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🛬️native-control/🎟️original.json")).unwrap()}
+fn native_caller_policy()->serde_json::Value{serde_json::from_str(fixture_text!("../../../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🛬️native-control/🎟️original.json")).unwrap()}
 trait OriginalNativeRefusalReceipt{fn original_native_receipt(&self)->semio_framework_value::retained_clone::RetainedCloneProgress;}
 impl OriginalNativeRefusalReceipt for semio_framework_value::ValueError{fn original_native_receipt(&self)->semio_framework_value::retained_clone::RetainedCloneProgress{self.retained_progress()}}
 impl OriginalNativeRefusalReceipt for store::io_schema::IoError{fn original_native_receipt(&self)->semio_framework_value::retained_clone::RetainedCloneProgress{self.cause.retained_progress()}}
@@ -240,15 +238,9 @@ fn retire_original_output<T:semio_framework_value::retirement::RetireOwned>(sour
 fn sqlite_snapshot_csv_receiving_original_subset_validation_caller_continuation_keeps_canceled_typed_child(){
  use std::cell::Cell;
  use semio_framework_value::{ValueRefusalKind,native_decoding::NativeDecodeProgress};
- let law=native_caller_policy();let policy=&law["observerContinuation"];let binder:serde_json::Value=serde_json::from_str(runtime_fixture_text("../../../🚪️io/🪶️sqlite/📸️snapshot/🛂️admission/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let text=binder["source"]["unit"].as_str().unwrap().repeat(binder["source"]["repeat"].as_u64().unwrap()as usize);assert_eq!(text.len(),policy["copyExtentBytes"].as_u64().unwrap()as usize);
+ let law=native_caller_policy();let policy=&law["observerContinuation"];let binder:serde_json::Value=serde_json::from_str(fixture_text!("../../../🚪️io/🪶️sqlite/📸️snapshot/🛂️admission/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let text=binder["source"]["unit"].as_str().unwrap().repeat(binder["source"]["repeat"].as_u64().unwrap()as usize);assert_eq!(text.len(),policy["copyExtentBytes"].as_u64().unwrap()as usize);
  let source=CsvSnapshot{schema:text.clone(),has_header:true,records:vec![CsvRecord{fields:Vec::new()}]};let payload=csv_native_payload(&source,store::sqlite_snapshot::SnapshotEncoding::Text);let payload_pointer=match &payload{store::io_schema::IoPayload::Text(text)=>text.as_ptr(),_=>unreachable!()};let armed=Cell::new(false);let canceled=Cell::new(false);let observed_prefix=Cell::new(0usize);let observed_pointer=Cell::new(0usize);let observed_cause_pointer=Cell::new(0usize);let observed_cause_borrowed=Cell::new(false);let original_observations=Cell::new(0usize);let stop=policy["cancelAfterBytes"].as_u64().unwrap()as usize;
  let mut observer=|event:NativeDecodeProgress|{original_observations.set(original_observations.get()+1);if canceled.get(){return false}if armed.get()&&event.total==text.len()&&event.completed>=stop{canceled.set(true);return false}true};
  let limits=SqliteDatabaseLimits::default();let result=with_original_decode(&law,limits,&mut |_|true,&mut observer,|native|{assert!(canceled.get());assert!(native.has_retirement_owner());let owned=native.owned_bytes();let close=serde_json::from_value(law["closeGrant"].clone()).unwrap();let error=native.close_retirement_recipient(close).unwrap_err();assert_eq!(error.kind.as_str(),policy["canceledCloseKind"].as_str().unwrap());assert_eq!(error.message.as_ref(),policy["nativeCause"]["message"].as_str().unwrap());assert!(matches!(&error.message,std::borrow::Cow::Borrowed(_)));assert_eq!(native.owned_bytes(),owned);assert!(native.has_retirement_owner());armed.set(false);canceled.set(false);},|sql,original|store::decode_sqlite_snapshot_record_native(&payload,<CsvSnapshot as pack::snapshot::ArtifactDsl>::envelope_id(),CsvSnapshot::__dsl_spec_producer(),|record,slot,native,body|{crate::standards::v_rfc4180::subsets::any::io::sqlite::snapshot::admission::admit(record,native,limits)?;armed.set(true);let result=crate::standards::v_rfc4180::subsets::any::io::sqlite::snapshot::admission::bind(record,slot,native,body);let retained=slot.as_ref().unwrap();assert!(retained.has_header);assert!(text.starts_with(&retained.schema));assert!(text.is_char_boundary(retained.schema.len()));observed_prefix.set(retained.schema.len());observed_pointer.set(retained.schema.as_ptr()as usize);let cause=result.as_ref().unwrap_err();assert_eq!(cause.retained_progress(),body.progress());observed_cause_pointer.set(cause.message.as_ptr()as usize);observed_cause_borrowed.set(matches!(&cause.message,std::borrow::Cow::Borrowed(_)));result},sql,original));
  let cause=result.unwrap_err();assert_eq!(cause.kind,ValueRefusalKind::Canceled);assert_eq!(cause.kind.as_str(),policy["nativeCause"]["kind"].as_str().unwrap());assert_eq!(cause.message.as_ref(),policy["nativeCause"]["message"].as_str().unwrap());assert_eq!(cause.message.as_ptr()as usize,observed_cause_pointer.get());assert!(observed_cause_borrowed.get());assert!(matches!(&cause.message,std::borrow::Cow::Borrowed(_)));assert_eq!(policy["nativeCause"]["storage"],"borrowedLiteral");assert!(observed_prefix.get()>0);assert!(observed_prefix.get()<text.len());assert_ne!(observed_pointer.get(),0);assert!(!canceled.get());assert!(original_observations.get()>0);assert_eq!(match &payload{store::io_schema::IoPayload::Text(text)=>text.as_ptr(),_=>unreachable!()},payload_pointer);retire_original_output(payload,&law);retire_original_output(source,&law);
- eprintln!("[DEBUG] CSV original canceled typed prefix={} and original borrowed literal cause remain in original erased recipient through funded-close refusal, then same caller Cell observer rearmed for terminal; no aggregate heap receipt claimed",observed_prefix.get());
-}
-
-fn runtime_fixture_text(relative: &str) -> &'static str {
-    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative);
-    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display())).into_boxed_str())
 }

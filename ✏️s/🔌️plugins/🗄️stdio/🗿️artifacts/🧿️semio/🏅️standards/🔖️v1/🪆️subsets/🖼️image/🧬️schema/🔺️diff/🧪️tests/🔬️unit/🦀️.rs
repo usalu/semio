@@ -1,4 +1,8 @@
-use super::*;
+use semio_s_artifact_stdio_semio_base::schema::triples::IndexAdded;
+use semio_s_artifact_stdio_semio_base::schema::triples::IndexModified;
+use crate::schema::snapshot::SemioImageFrame;
+use crate::schema::diff::{frames_absorb};
+use crate::schema::diff::*;
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn frame(seed: u8, len: usize) -> SemioImageFrame {

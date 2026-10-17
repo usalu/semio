@@ -1,7 +1,6 @@
 //! 🗂️ Authoritative PDF/VT mutation for set dpart root.
 
-use super::remove_dpart_root::RemoveDpartRoot;
-use super::PdfVtMutation;
+use crate::standards::v1_7::subsets::vt::schema::mutations::remove_dpart_root::RemoveDpartRoot;
 use crate::standards::v1_7::subsets::base::schema::conformance_support as support;
 use crate::standards::v1_7::subsets::base::schema::diff::{self, PdfDiff};
 use crate::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot;
@@ -20,18 +19,21 @@ pub struct SetDpartRoot {
     pub entry_index: Option<usize>,
 }
 
-impl MutationKind<PdfSnapshot, PdfVtMutation> for SetDpartRoot {
+impl<Op> MutationKind<PdfSnapshot, Op> for SetDpartRoot
+where
+    Op: protocol::Mutation<PdfSnapshot, Diff = PdfDiff> + From<SetDpartRoot> + From<crate::standards::v1_7::subsets::vt::schema::mutations::remove_dpart_root::RemoveDpartRoot>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "dpart-root", kind: "set-dpart-root", record: "Set" };
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
         MutationOutcome::new(diff::graph_edit(support::dpart_root_rows(base, &self.job, &self.placements, self.entry_index)))
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfVtMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         Ok({
             match support::catalog_entry(base, "DPartRoot") {
-                Some(_) => vec![PdfVtMutation::SetDpartRoot(SetDpartRoot { job: support::dpart_job(base).unwrap_or_default(), placements: support::placements_of(base, &support::dpart_root_creation_ids(base)), entry_index: None })],
-                None => vec![PdfVtMutation::RemoveDpartRoot(RemoveDpartRoot {})],
+                Some(_) => vec![Op::from(SetDpartRoot { job: support::dpart_job(base).unwrap_or_default(), placements: support::placements_of(base, &support::dpart_root_creation_ids(base)), entry_index: None })],
+                None => vec![Op::from(RemoveDpartRoot {})],
             }
         })
     }
@@ -47,9 +49,7 @@ impl MutationKind<PdfSnapshot, PdfVtMutation> for SetDpartRoot {
 //#endregion 🔖️Mutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
 
 //#region 🔖️Facets

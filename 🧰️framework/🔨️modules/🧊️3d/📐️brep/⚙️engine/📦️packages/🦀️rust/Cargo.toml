@@ -16,7 +16,9 @@ role = "framework"
 path = "../../🦀️.rs"
 
 [dependencies]
-semio-framework-mesh-component-references = { path = "../../../../../🏗️mesh-engine/🎯️component-references/📦️packages/🦀️rust" }
+semio-framework-3d-brep-kernel-contract.workspace = true
+semio-framework-3d-brep-mesh-io.workspace = true
+semio-framework-3d-brep-shape-value.workspace = true
 semio-framework-3d-brep-vector.workspace = true
 semio-framework-3d-brep-tolerance.workspace = true
 semio-framework-3d-brep-surface.workspace = true
@@ -36,7 +38,6 @@ semio-framework-hash.workspace = true
 semio-framework-mesh-engine.workspace = true
 semio-framework-pack-json = { path = "../../../../../🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-value.workspace = true
-semio-framework-value-derive.workspace = true
 
 [dev-dependencies]
 semio-framework-async-macros.workspace = true

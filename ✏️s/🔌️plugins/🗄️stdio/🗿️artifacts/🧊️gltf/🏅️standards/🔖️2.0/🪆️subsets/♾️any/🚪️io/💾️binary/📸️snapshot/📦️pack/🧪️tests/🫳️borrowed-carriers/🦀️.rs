@@ -1,5 +1,12 @@
 //! 🫳️ Borrowed and owned GLTF field metadata share one portable six-carrier contract.
-use super::*;
+use semio_framework_dsl_record::DslField;
+use semio_framework_test_fixtures::fixture_text;
+#[allow(unused_imports)]
+use crate::standards::v2_0::subsets::any::schema::snapshot::*;
+#[allow(unused_imports)]
+use semio_framework_value::{ValueError, ValueRefusalKind};
+use crate::standards::v2_0::subsets::any::io::binary::snapshot::owned_pack::{json};
+use crate::standards::v2_0::subsets::any::io::binary::snapshot::owned_pack::*;
 use semio_framework_dsl_record::{BorrowedDslField,BorrowedShape,Shape};
 
 fn borrowed_kind(shape:BorrowedShape)->&'static str{match shape{BorrowedShape::List(_)=>"list",BorrowedShape::UInt=>"uint",BorrowedShape::Record(_)=>"record",BorrowedShape::Enum(_)=>"enum",BorrowedShape::Text=>"text",_=>panic!("unexpected borrowed GLTF carrier shape")}}
@@ -17,7 +24,7 @@ fn observed<T:DslField+BorrowedDslField>(owner:&str)->serde_json::Value{
 }
 #[test]
 fn borrowed_gltf_carriers_match_the_neutral_owned_metadata_and_serde_oracle(){
- let expected:serde_json::Value=serde_json::from_str(include_str!("🔣️.json")).unwrap();
+ let expected:serde_json::Value=serde_json::from_str(fixture_text!("../../../../../🚪️io/💾️binary/📸️snapshot/📦️pack/🧪️tests/🫳️borrowed-carriers/🔣️.json")).unwrap();
  let actual=serde_json::json!({"cases":[observed::<GltfJson>("json"),observed::<GltfMorphTarget>("morph-target"),observed::<GltfPrimitive>("primitive"),observed::<GltfCameraProjection>("camera-projection"),observed::<GltfImage>("image"),observed::<GltfTexture>("texture")]});
  assert_eq!(actual,expected);
  assert_eq!(serde_json::from_slice::<serde_json::Value>(&serde_json::to_vec(&actual).unwrap()).unwrap(),expected);

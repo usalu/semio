@@ -8,7 +8,6 @@ use semio_framework_graph_drawing::force::ForceLayoutOptions as CoreForceLayoutO
 use serde::{Deserialize, Serialize};
 use semio_framework_value::{DslValue, FromValue, NativeDecodeControl, NativeEncodeControl, Number, ToValue, ValueError, ValueRefusalKind};
 use graph::{EdgeId, HandleId, NodeId};
-use semio_framework_value_derive::{FromValue, ToValue};
 use semio_framework_pack_json::{JsonGrammarCursor, JsonMemberPolicy, JsonWriteNode, JsonWriteSource};
 use semio_framework_value::ordered::{OrderedMap, SharedOwner, UpdateCursor};
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};

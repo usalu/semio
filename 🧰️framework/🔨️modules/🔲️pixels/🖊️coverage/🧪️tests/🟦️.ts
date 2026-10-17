@@ -106,7 +106,6 @@ test("coverage retirement transfers actual masks and drains private sweep owners
   const output=retired.output??published;
   if(output){expect([...output.coverage]).toEqual(source.expected);const reference=await svgCoverage(input);for(let at=0;at<reference.length;at++)expect(Math.abs(output.coverage[at]-reference[at]!)).toBeLessThanOrEqual(2);}
  }
- process.stderr.write("[DEBUG] Actual coverage retirement: eighteen interruption cases at grants 1/7/4096; transferred/published masks match independent SVG\n");
 });
 
 test("async coverage retires unpublished completed masks on final abort and callback failure",async()=>{
@@ -114,6 +113,6 @@ test("async coverage retires unpublished completed masks on final abort and call
  for(const failure of ["abort","callback"]){const controller=new AbortController(),error=new Error("injected coverage callback failure"),observed:{owner:ReturnType<CoverageJob["intoRetirement"]>;pixels:number;work:number;maximumGrant:number}[]=[];
   const spy=spyOn(CoverageJob.prototype,"intoRetirement").mockImplementation(function(this:CoverageJob){const pixels=(this as any).mask.coverage.length,owner=original.call(this),record={owner,pixels,work:0,maximumGrant:0};observed.push(record);const advance=owner.job.advance.bind(owner.job);owner.job.advance=grant=>{const progress=advance(grant);record.work=progress.work;record.maximumGrant=Math.max(record.maximumGrant,grant);return progress;};return owner;});
   try{const result=polygonCoverage(input,{signal:controller.signal,workBudget:1,onProgress:progress=>{if(progress.done){if(failure==="abort")controller.abort();else throw error;}}});if(failure==="abort")await expect(result).rejects.toThrow(/cancelled/i);else await expect(result).rejects.toBe(error);}finally{spy.mockRestore();}
-  expect(observed).toHaveLength(1);const record=observed[0]!;expect(record.pixels).toBe(input.width*input.height);expect(record.owner.output).toBeNull();expect(record.owner.job.terminalIsEmpty()).toBe(true);expect(record.work).toBe(20);expect(record.maximumGrant).toBe(1);process.stderr.write(`[DEBUG] Actual async coverage ${failure} after completion retired ${record.pixels} unpublished mask bytes through ${record.work} one-unit structural cleanup steps\n`);
+  expect(observed).toHaveLength(1);const record=observed[0]!;expect(record.pixels).toBe(input.width*input.height);expect(record.owner.output).toBeNull();expect(record.owner.job.terminalIsEmpty()).toBe(true);expect(record.work).toBe(20);expect(record.maximumGrant).toBe(1);
  }
 });

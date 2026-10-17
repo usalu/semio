@@ -4,7 +4,7 @@
 
 // #region 🔌️Adapters
 import { describe, expect, it } from "vitest";
-import { board2dKindDomainById, board2dKindHoverFromElementId } from "../../🟦️.tsx";
+import { board2dKindDomainById, board2dKindHoverFromElementId } from "../../🔬️board-parsing/🟦️.ts";
 // #endregion 🔌️Adapters
 
 //#region 🖱️KindHover

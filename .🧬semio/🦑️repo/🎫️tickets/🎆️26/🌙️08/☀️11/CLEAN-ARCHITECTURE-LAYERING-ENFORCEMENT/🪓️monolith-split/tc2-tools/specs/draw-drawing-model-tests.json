@@ -1,0 +1,31 @@
+{
+ "parent": "semio-s-artifact-draw-drawing-model",
+ "name": "semio-s-artifact-draw-drawing-model-tests",
+ "dir": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🥣️companion",
+ "files": [
+  "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎨️fill/🌀️rule/🧪️tests/🔬️unit/🦀️.rs",
+  "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎨️fill/🎨️sampling/🧪️tests/🔬️unit/🦀️.rs",
+  "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧪️tests/🔬️unit/🦀️.rs",
+  "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧭topology/🧪️tests/🔬️unit/🦀️.rs",
+  "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔷️shape/✏️coordinates/🧪️tests/🔬️unit/🦀️.rs",
+  "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/↗️affine/🧪️tests/🔬️unit/🦀️.rs",
+  "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/📸️snapshot/🧪️tests/🔬️unit/🦀️.rs",
+  "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/📸️snapshot/🧪️tests/🔬️unit/🦀️.rs"
+ ],
+ "testkit": [
+  "semio-s-artifact-draw-drawing-model",
+  "semio-s-artifact-draw-drawing-diff",
+  "semio-s-artifact-draw-drawing-geometry",
+  "semio-s-artifact-draw-drawing-mutations",
+  "semio-s-artifact-draw-drawing-transform",
+  "semio-s-artifact-draw-drawing-style",
+  "semio-s-artifact-draw-drawing-structure",
+  "semio-s-artifact-draw-drawing-metadata",
+  "semio-s-artifact-draw-drawing-scene",
+  "semio-s-artifact-draw-drawing-editor-interaction",
+  "semio-s-artifact-draw-drawing-editor"
+ ],
+ "emoji": "🥣️",
+ "summary": "the unit laws of the drawing model's fill, shape, affine, inference and snapshot-codec modules.",
+ "description": "Companion test crate of semio-s-artifact-draw-drawing-model: the unit laws of the drawing model's fill, shape, affine, inference and snapshot-codec modules"
+}

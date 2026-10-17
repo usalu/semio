@@ -1,6 +1,12 @@
-use crate::JackWorkingScene;
-use super::*;
-use crate::{Edge, Node, Port, PortDirection, PropertyBag};
+use crate::standards::v1::subsets::any::schema::snapshot::JackSnapshot;
+#[allow(unused_imports)]
+use ::semio_framework_schema::ArtifactSchema;
+use crate::standards::v1::subsets::any::schema::content::JackWorkingScene;
+use crate::standards::v1::subsets::any::schema::inferences::*;
+use crate::standards::v1::subsets::any::schema::inferences::flat_position::compute_flat_position;
+use crate::standards::v1::subsets::any::schema::inferences::topology::compute_topology;
+use crate::standards::v1::subsets::any::schema::graph::{Edge, Node, Port};
+use semio_framework_graph_manifest::{PortDirection, PropertyBag};
 use protocol::Inference;
 
 //#region 🧸️Fixtures
@@ -36,7 +42,7 @@ async fn inference_determinism_law() {
 
 #[semio_framework_async_macros::async_test]
 async fn inference_default_law() {
-    assert_eq!(JackInference::infer(&<crate::test_support::FixtureComposition as crate::JackComposition>::initial_snapshot()).expect("valid materialized inference fixture"), JackInference::default());
+    assert_eq!(JackInference::infer(&<crate::test_support::FixtureComposition as crate::standards::v1::subsets::any::schema::composition::JackComposition>::initial_snapshot()).expect("valid materialized inference fixture"), JackInference::default());
 }
 
 #[semio_framework_async_macros::async_test]
@@ -53,3 +59,17 @@ async fn inference_matches_compute_flat_position_directly() {
     assert_eq!(inferred.flat_position, compute_flat_position(&snapshot).expect("valid retained child inference fixture"));
 }
 //#endregion 🧪️InferenceLaws
+
+#[test]
+fn inference_default_law(){
+ let projection=<crate::test_support::FixtureComposition as crate::standards::v1::subsets::any::schema::composition::JackComposition>::initial_snapshot();
+ assert_eq!(JackInference::infer(&projection).expect("retained fixture"),JackInference::default());
+ crate::standards::v1::subsets::any::schema::content::retire_owned_to_terminal(projection).expect("fixture close");
+}
+
+#[test]
+fn inference_determinism_law(){
+ let projection=<crate::test_support::FixtureComposition as crate::standards::v1::subsets::any::schema::composition::JackComposition>::initial_snapshot();
+ assert_eq!(JackInference::infer(&projection).expect("retained fixture"),JackInference::infer(&projection).expect("retained fixture"));
+ crate::standards::v1::subsets::any::schema::content::retire_owned_to_terminal(projection).expect("fixture close");
+}

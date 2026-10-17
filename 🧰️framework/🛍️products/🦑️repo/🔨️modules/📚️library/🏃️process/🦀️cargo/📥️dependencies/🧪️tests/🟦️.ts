@@ -10,5 +10,4 @@ test("neutral dependency acquisition preserves closed network grants and fetches
  const validate=new Ajv({strict:false}).compile(schema),manifest=resolve(process.cwd(),fixture.manifest);
  for(const row of fixture.cases){expect(validate(row.network)).toBe(true);expect(cargoDependencyFetchArgumentsV1(manifest,row.args,row.network)).toEqual(["fetch","--locked","--manifest-path",manifest,...row.suffix]);}
  for(const network of [undefined,{}, {offline:false,ambient:true}]){expect(validate(network)).toBe(false);expect(()=>cargoDependencyFetchArgumentsV1(manifest,[],network as any)).toThrow("network grant");}
- console.log("[DEBUG] Complete locked dependency fetches and original offline grants agree with neutral fixtures/Ajv");
 });

@@ -7,7 +7,7 @@ use semio_framework_os_flow_wasm_domain::flow_result;
 use semio_framework_os_flow_wasm_domain::protocol::{FlowFailure, FlowFeatureAdmission, FlowFeatureStep};
 use semio_framework_os_flow_wasm_domain::*;
 use semio_framework_value::{retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}, retirement::controlled::ControlledRetirement};
-use semio_framework::abi::{AbiErrorCode, AbiWorkBudget};
+use semio_framework_abi::{AbiErrorCode, AbiWorkBudget};
 use std::rc::Rc;
 
 pub struct FlowAction2561 {
@@ -1573,7 +1573,7 @@ pub struct FlowAction2599 {
     pub work_units:usize,
     pub identity:Option<semio_framework_os_flow_geometry::GeometryWorkIdentity>,
     pub encoding:Option<semio_framework_pack_json::ArtifactCanonicalJsonTreeWireCursor<semio_framework::MeshData>>,
-    pub(super) output:Option<ControlledRetirement<Vec<u8>>>,
+    pub output:Option<ControlledRetirement<Vec<u8>>>,
     pub complete:bool,
 }
 

@@ -1,5 +1,6 @@
 use super::*;
 use crate::editor_domain::editor_laws::context::{self, app_with_registry};
+use semio_framework_test_fixtures::repo_text;
 use semio_s_artifact_procedural_3d_model::example_snapshot;
 use semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_BOX_FILLET;
 use semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_BOX_SHELL;
@@ -137,7 +138,7 @@ async fn set_active_example_starts_the_run_that_evaluates_every_attached_preview
 /// republish exactly that example's authored widget ids on the flow window, leak none of the
 /// previous example's, re-arm every attached preview window's chain from the gesture's own emit, and
 /// leave no preview holding the previous example's evaluation.
-const EXAMPLE_SWITCH_FIXTURE_JSON: &str = include_str!("../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🎨️example-switch.json");
+fn example_switch_fixture_json() -> &'static str { repo_text!("✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🎨️example-switch.json") }
 
 #[derive(serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -171,7 +172,7 @@ struct ExampleSwitchRow {
 }
 
 fn example_switch_fixture() -> ExampleSwitchFixture {
-    let fixture: ExampleSwitchFixture = serde_json::from_str(EXAMPLE_SWITCH_FIXTURE_JSON).expect("example switch fixture");
+    let fixture: ExampleSwitchFixture = serde_json::from_str(example_switch_fixture_json()).expect("example switch fixture");
     assert_eq!(fixture.format, "semio.generation3d.example-switch");
     assert_eq!(fixture.version, 1);
     fixture

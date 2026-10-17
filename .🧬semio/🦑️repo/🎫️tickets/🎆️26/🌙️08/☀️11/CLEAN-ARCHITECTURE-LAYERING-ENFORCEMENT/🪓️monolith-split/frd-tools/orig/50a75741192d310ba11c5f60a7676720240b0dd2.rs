@@ -1,0 +1,59 @@
+use crate::{FormMutation, FormsSnapshot};
+use protocol::Mutation;
+
+#[test]
+fn response_events_match_shared_vectors_and_undo() {
+    let fixture: serde_json::Value = serde_json::from_str(runtime_fixture_text("../../../../../../🧪️tests/🧫️fixtures/📨️response/🔣️events.json")).unwrap();
+    for case in fixture["cases"].as_array().unwrap() {
+        let mut before = FormsSnapshot::default();
+        before.responses = semio_framework_pack_json::from_json_str(&case["before"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+        let event: FormMutation = semio_framework_pack_json::from_json_str(&case["event"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+        assert_eq!(<FormMutation as protocol::OpText>::parse_op(&protocol::OpText::print_op(&event)).unwrap(), event);
+        assert_eq!(<FormMutation as protocol::OpBinary>::decode_op(&protocol::OpBinary::encode_op(&event).unwrap()).unwrap(), event);
+        let outcome = event.diff(&before);
+        if let Some(error) = case["error"].as_str() {
+            assert!(outcome.messages().iter().any(|message| message.code.0 == error), "{}", case["name"]);
+        } else {
+            let after = protocol::apply_diff(outcome.diff(), &before).unwrap();
+            let actual: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&after.responses)).unwrap();
+            assert_eq!(actual, case["after"], "{}", case["name"]);
+            let mut undone = after;
+            for inverse in event.inverse(&before).expect("valid retained mutation inverse fixture") { undone = protocol::apply_diff(inverse.diff(&undone).diff(), &undone).unwrap(); }
+            assert_eq!(undone.responses, before.responses, "{}", case["name"]);
+        }
+    }
+}
+
+#[test]
+fn submission_checks_every_step_and_keeps_visible_answers() {
+    let fixture: serde_json::Value = serde_json::from_str(runtime_fixture_text("../../../../../../🧪️tests/🧫️fixtures/📨️response/🔣️submission.json")).unwrap();
+    let definition = semio_framework_pack_json::from_json_str(&fixture["definition"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    for case in fixture["cases"].as_array().unwrap() {
+        let values = semio_framework_pack_json::from_json_str(&case["values"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+        let result = crate::standards::v1::subsets::any::schema::response::prepare_response(&definition, &values, "response-a".into(), 1790545740000, "revision-a".into());
+        let actual = match result {
+            Ok(response) => serde_json::json!({ "response": serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&response)).unwrap(), "errors": [] }),
+            Err(errors) => serde_json::json!({ "response": null, "errors": serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&errors)).unwrap() }),
+        };
+        assert_eq!(actual, case["expected"], "{}", case["name"]);
+    }
+}
+
+/// 🕰️ Every accepted timestamp survives JavaScript and native JSON decoding exactly.
+#[test]
+fn response_timestamps_match_portable_integer_vectors() {
+    let vectors: serde_json::Value = serde_json::from_str(runtime_fixture_text("../../../../../../🧪️tests/🧫️fixtures/📨️response/🔣️timestamps.json")).unwrap();
+    for case in vectors["cases"].as_array().unwrap() {
+        let value = serde_json::json!({ "id": "response-a", "submittedAt": case["submittedAt"], "definitionVersion": "revision-a", "answers": [] });
+        let decoded: Result<crate::standards::v1::subsets::any::schema::response::FormsResponse, _> = semio_framework_pack_json::from_json_str(&value.to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject);
+        let valid = decoded.is_ok_and(|response| response.validate().is_ok());
+        let oracle = case["submittedAt"].as_u64().is_some_and(|timestamp| timestamp <= 9_007_199_254_740_991);
+        assert_eq!(valid, case["valid"].as_bool().unwrap(), "{}", case["name"]);
+        assert_eq!(valid, oracle, "independent JSON integer projection");
+    }
+}
+
+fn runtime_fixture_text(relative: &str) -> &'static str {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative);
+    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display())).into_boxed_str())
+}

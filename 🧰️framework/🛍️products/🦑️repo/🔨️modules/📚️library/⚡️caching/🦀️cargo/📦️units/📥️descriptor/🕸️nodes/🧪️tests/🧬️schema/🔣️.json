@@ -1,0 +1,219 @@
+{
+ "$schema": "http://json-schema.org/draft-07/schema#",
+ "type": "object",
+ "additionalProperties": false,
+ "required": [
+  "version",
+  "graphs",
+  "mutations",
+  "growth",
+  "refusals",
+  "graphRefusals",
+  "scopedCounts",
+  "scopeFailures",
+  "namespace"
+ ],
+ "properties": {
+  "version": {
+   "const": 2
+  },
+  "graphs": {
+   "type": "array",
+   "minItems": 1,
+   "maxItems": 16,
+   "items": {
+    "$ref": "#/definitions/GraphCase"
+   }
+  },
+  "mutations": {
+   "type": "array",
+   "minItems": 1,
+   "maxItems": 16,
+   "items": {
+    "$ref": "#/definitions/MutationCase"
+   }
+  },
+  "growth": {
+   "type": "array",
+   "minItems": 1,
+   "maxItems": 8,
+   "items": {
+    "type": "integer",
+    "minimum": 1,
+    "maximum": 128
+   }
+  },
+  "refusals": {
+   "type": "array",
+   "minItems": 1,
+   "maxItems": 32,
+   "items": {
+    "$ref": "#/definitions/Refusal"
+   }
+  },
+  "graphRefusals": {
+   "type": "array",
+   "minItems": 1,
+   "maxItems": 16,
+   "items": {
+    "$ref": "#/definitions/GraphRefusal"
+   }
+  },
+  "scopedCounts": {
+   "type": "array",
+   "minItems": 1,
+   "maxItems": 4,
+   "items": {
+    "type": "integer",
+    "minimum": 1,
+    "maximum": 65536
+   }
+  },
+  "scopeFailures": {
+   "type": "array",
+   "minItems": 1,
+   "maxItems": 8,
+   "items": {
+    "enum": [
+     "cancel",
+     "cycle",
+     "graph-limit",
+     "input-copy"
+    ]
+   }
+  },
+  "namespace": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "held",
+    "released",
+    "detached"
+   ],
+   "properties": {
+    "held": {
+     "const": "busy"
+    },
+    "released": {
+     "const": "free"
+    },
+    "detached": {
+     "const": "busy"
+    }
+   }
+  }
+ },
+ "definitions": {
+  "GraphCase": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "name",
+    "selected",
+    "units",
+    "closure"
+   ],
+   "properties": {
+    "name": {
+     "type": "string"
+    },
+    "selected": {
+     "type": "string",
+     "pattern": "^[a-z][a-z0-9_-]{0,79}$"
+    },
+    "units": {
+     "type": "array",
+     "minItems": 1,
+     "maxItems": 4096,
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "id",
+       "dependencies"
+      ],
+      "properties": {
+       "id": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9_-]{0,79}$"
+       },
+       "dependencies": {
+        "type": "array",
+        "maxItems": 4096,
+        "items": {
+         "type": "string",
+         "pattern": "^[a-z][a-z0-9_-]{0,79}$"
+        }
+       }
+      }
+     }
+    },
+    "closure": {
+     "type": "array",
+     "minItems": 1,
+     "maxItems": 4096,
+     "uniqueItems": true,
+     "items": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_-]{0,79}$"
+     }
+    }
+   }
+  },
+  "MutationCase": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "name",
+    "unit",
+    "kind"
+   ],
+   "properties": {
+    "name": {
+     "type": "string"
+    },
+    "unit": {
+     "anyOf": [
+      {
+       "type": "string",
+       "pattern": "^[a-z][a-z0-9_-]{0,79}$"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "kind": {
+     "enum": [
+      "source",
+      "compiler-code"
+     ]
+    }
+   }
+  },
+  "Refusal": {
+   "type": "string",
+   "enum": [
+    "version",
+    "extra",
+    "ref-unit",
+    "duplicate-ref",
+    "sparse",
+    "array-accessor",
+    "array-proxy",
+    "plan-proxy",
+    "plan-altered",
+    "node-ref-shape",
+    "node-ref-accessor"
+   ]
+  },
+  "GraphRefusal": {
+   "type": "string",
+   "enum": [
+    "missing",
+    "duplicate",
+    "cycle"
+   ]
+  }
+ }
+}

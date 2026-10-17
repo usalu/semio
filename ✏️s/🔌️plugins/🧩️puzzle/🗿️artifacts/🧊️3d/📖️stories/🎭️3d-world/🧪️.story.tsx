@@ -15,8 +15,8 @@ import type { ActionDescriptor, UiComponentSceneNode } from "../../../../../../.
 import concreteForestFixtureDsl from "../../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🌲️concrete-forest/🖼️assets/🌲️forest/🗣️.dsl.semio?raw";
 import nakaginCapsuleTowerFixtureDsl from "../../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏗️nakagin-capsule-tower/🖼️assets/🏢️tower/🗣️.dsl.semio?raw";
 
-import abbauAufbauReferenceUrl from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️assets/🏘️abbau-aufbau-masterarbeit-grundriss/🖼️.jpg";
-import rathausAhlenReferenceUrl from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️assets/🏛️rathaus-ahlen-grundriss/🖼️.png";
+import { abbauAufbauMasterarbeitGrundrissUrl as abbauAufbauReferenceUrl } from "@semio-tech/framework-os/modules/infinite/assets/abbau-aufbau-masterarbeit-grundriss";
+import { rathausAhlenGrundrissUrl as rathausAhlenReferenceUrl } from "@semio-tech/framework-os/modules/infinite/assets/rathaus-ahlen-grundriss";
 
 //#region StoryTypes
 type Vec3 = readonly [number, number, number];
@@ -148,6 +148,10 @@ function applyStoryWorldMerge(current: readonly string[], id: string, merge: str
 }
 
 /** 🧩️ Story-local mirror of a subset of `d3::Puzzle3dPlayApp::handle_action` (`puzzle/plugin/rs/lib.rs`) — enough for the story to click/hover/orbit/delete/duplicate against the real fixtures. */
+function storyActionArguments(value: unknown): Record<string, unknown> | undefined {
+  return typeof value === "object" && value !== null && !Array.isArray(value) ? Object.fromEntries(Object.entries(value)) : undefined;
+}
+
 function reduceStoryWorld3dAction(state: StoryWorld3dState, action: string, args: Record<string, unknown> | undefined): StoryWorld3dState {
   const { fixture, runtime } = state;
   switch (action) {
@@ -288,7 +292,7 @@ function World3dStoryHost({ fixtureDsl }: { readonly fixtureDsl: string }): Reac
   }, [fixtureDsl]);
 
   const onAction = useCallback((descriptor: ActionDescriptor): void => {
-    setState((current) => (current ? reduceStoryWorld3dAction(current, descriptor.action, descriptor.args) : current));
+    setState((current) => (current ? reduceStoryWorld3dAction(current, descriptor.action, storyActionArguments(descriptor.args)) : current));
   }, []);
 
   const node = useMemo(() => (state ? buildStoryWorld3dSceneNode(state) : null), [state]);

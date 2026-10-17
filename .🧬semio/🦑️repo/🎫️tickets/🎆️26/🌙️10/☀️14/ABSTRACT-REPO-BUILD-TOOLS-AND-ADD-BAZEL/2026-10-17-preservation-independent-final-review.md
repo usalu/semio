@@ -1,0 +1,7 @@
+# Generic Preservation Independent Final Review
+
+Five current inputs match supplied bytes/SHA via nofollow descriptors and stable descriptor/name seven-field metadata. Receipt: `🗑️generated/preservation-five-independent-hold.json`. Sequential Source hold only.
+
+Actual new private region consumes a same-root/frame one-use ordinary REG/DIR expectation under shared32 cap, creates an absent capsule, holds original nofollow inode descriptor, durably records intent/prepared link, then atomically exchanges. Both resulting identities/rosters and held old inode are checked; unknown displacement remains retained without unlink/rollback. Capsule payload is never deleted. Receipt plus both actual directory barriers precede final retained/name/record verification; result escapes only after outer Generic create drain/close. Path arithmetic ensures retained basename does not increase original path length. No domain qualification or privileged Core authority is inferred from Generic capability.
+
+Peer reports98493 three-rootstrict0/fourlaws589/52closed cases including real Generated partial/zero writes,4096intent/path257, foreign displacement and close/barrier faults; old relative/binding/create regressions green and19old method hashes exact. Not rerun here. Windows new methods refuse before effect; actual NTFS preservation is unqualified. Relocated opaque bytes are retained custody, not runnable validity. No Native/installer/existing Source payload operation performed. No material Source blocker identified.

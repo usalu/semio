@@ -1,7 +1,8 @@
 //! 🌱️ Native CreateNode inverse uses the shared typed literal-ID owner.
 
-use super::CreateNode;
-use crate::standards::v1::subsets::any::schema::mutations::{Puzzle2dMutation, literal_id_inverse::{Puzzle2dLiteralIdInverse, Puzzle2dLiteralIdInverseCursor}};
+use crate::standards::v1::subsets::any::schema::mutations::{CreateNode};
+use crate::standards::v1::subsets::any::schema::mutations::{Puzzle2dMutation};
+use crate::standards::v1::subsets::any::schema::preparation::literal_id_inverse::{Puzzle2dLiteralIdInverse, Puzzle2dLiteralIdInverseCursor};
 use semio_framework_value::paged::PagedUtf8;
 
 #[cfg(test)]
@@ -16,6 +17,4 @@ impl Puzzle2dLiteralIdInverse for CreateNode {
 
 pub type Puzzle2dCreateNodeInverseCursor = Puzzle2dLiteralIdInverseCursor<CreateNode>;
 
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;
+

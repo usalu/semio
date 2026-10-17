@@ -1,12 +1,12 @@
 import type { GeometryTestDependencies } from "../../🟦️.ts";
-import { applyModelDiff } from "../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️.ts";
-import { CAD_GUMBALL_HIDDEN, cadGumballConfigVisible, collectGeometrySelectionTargets, modelDefinitionActionRegistry, runRegisteredAction } from "../../../../../../../🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎬️actions/🟦️.ts";
-import { preciseSpatialKernelMath } from "../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🧮️preview/🟦️.ts";
-import type { EdgeRecord, EdgeRef, ObjectRef, TypologyRef, VertexRef } from "../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️.ts";
-import type { ModelSpaceJson } from "../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🌌️model-space/🟦️.ts";
-import type { Expr } from "../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🧮️expressions/🟦️.ts";
-import type { SelectionEvent, SelectionSpec } from "../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🪪️selection/🟦️.ts";
-import type { SpatialKernel, SpatialPreviewKernel } from "../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️.ts";
+import { applyModelDiff } from "@semio-tech/s-spatial-kernel-ts/spatial";
+import { CAD_GUMBALL_HIDDEN, cadGumballConfigVisible, collectGeometrySelectionTargets, modelDefinitionActionRegistry, runRegisteredAction } from "@semio-tech/cad-cad-ts/standards/1/subsets/any/editor/engine/actions";
+import { preciseSpatialKernelMath } from "@semio-tech/s-spatial-kernel-ts/preview";
+import type { EdgeRecord, EdgeRef, ObjectRef, TypologyRef, VertexRef } from "@semio-tech/s-spatial-kernel-ts/geometry";
+import type { ModelSpaceJson } from "@semio-tech/s-spatial-kernel-ts/geometry/model-space";
+import type { Expr } from "@semio-tech/s-spatial-kernel-ts/geometry/expressions";
+import type { SelectionEvent, SelectionSpec } from "@semio-tech/s-spatial-kernel-ts/geometry/selection";
+import type { SpatialKernel, SpatialPreviewKernel } from "@semio-tech/s-spatial-kernel-ts/spatial";
 import type { Vec3 } from "@semio-tech/framework-3d-js";
 
 type TestSource = { readonly url: string };

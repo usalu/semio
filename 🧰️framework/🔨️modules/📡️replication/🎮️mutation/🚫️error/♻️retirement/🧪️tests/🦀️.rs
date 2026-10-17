@@ -15,7 +15,7 @@ fn close<T:RetireOwned>(original:T,held:usize,copy:usize,cut:usize){
   if turns==cut{let (same,heap)=observe_retirement_allocations(||owner);owner=same;assert_eq!(heap,(0,0));}
   assert!(turns<100000,"original error retirement exceeded native law");assert!(step.progress().copied_items!=0||matches!(step,RetainedCloneStep::Complete(_)),"fully admitted original error turn stalled");
  }
- assert_eq!(releases,held+births);let (_,heap)=observe_retirement_allocations(||drop(owner));assert_eq!(heap,(0,0));eprintln!("[DEBUG] Declared error retirement original={held} copy={copy} cancel={cut} turns={turns} births={births} physical={releases} terminalDrop=0");
+ assert_eq!(releases,held+births);let (_,heap)=observe_retirement_allocations(||drop(owner));assert_eq!(heap,(0,0));
 }
 #[test]
 fn error_retirement_value_error_preserves_borrowed_and_owned_cow_original_backing(){

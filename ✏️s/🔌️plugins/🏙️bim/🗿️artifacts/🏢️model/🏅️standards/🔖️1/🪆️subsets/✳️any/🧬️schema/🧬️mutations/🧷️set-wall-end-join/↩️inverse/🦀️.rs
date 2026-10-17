@@ -1,7 +1,7 @@
 //! ↩️ Inverse of `SetWallEndJoin`: an absolute `SetWallEndJoin` back to the base preference of that end (absent when the end joined
 //! automatically), none when the wall is absent.
 
-use super::super::modify::WallEnd;
+use crate::standards::v1::subsets::any::schema::mutations::modify::WallEnd;
 use super::SetWallEndJoin;
 use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
 

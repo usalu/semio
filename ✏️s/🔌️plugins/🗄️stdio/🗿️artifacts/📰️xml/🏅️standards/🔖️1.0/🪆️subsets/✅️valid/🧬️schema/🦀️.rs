@@ -41,6 +41,5 @@ pub fn blank_valid_xml_snapshot() -> crate::XmlSnapshot {
 
 //#endregion 🧬️DerivedArtifactFacets
 
-#[path="🏅️conformance/🦀️.rs"]
-pub mod conformance;
+pub use semio_s_artifact_stdio_xml_snapshot::standards::v1_0::subsets::valid::schema::conformance;
 pub use conformance::*;

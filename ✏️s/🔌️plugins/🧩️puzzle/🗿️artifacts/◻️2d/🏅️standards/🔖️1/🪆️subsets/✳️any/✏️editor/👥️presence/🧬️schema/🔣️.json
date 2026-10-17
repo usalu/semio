@@ -9,7 +9,8 @@
     "cameraX",
     "cameraY",
     "cameraZoom",
-    "selectionMethod"
+    "selectionMethod",
+    "activeUtilityId"
   ],
   "properties": {
     "selectedIds": {
@@ -32,6 +33,10 @@
       "x-semio-state": "presence"
     },
     "selectionMethod": {
+      "type": "string",
+      "x-semio-state": "presence"
+    },
+    "activeUtilityId": {
       "type": "string",
       "x-semio-state": "presence"
     }

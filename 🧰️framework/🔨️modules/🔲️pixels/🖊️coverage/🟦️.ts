@@ -1,6 +1,6 @@
 /** 🖊️ Exact transformed polygon coverage for https://www.w3.org/TR/SVG11/painting.html#FillProperties. */
 import {validateExtent} from "../✍️editing/🟦️.ts";
-import {UnitRetirement,type WorkRetirement} from "../../◻️2d/🧹️retire/🟦️.ts";
+import {UnitRetirement,type WorkRetirement} from "@semio-tech/framework-2d-js/retire";
 export type CoverageInput={width:number;height:number;transform:readonly number[];rule:"nonzero"|"evenodd";contours:readonly (readonly (readonly number[])[])[]};
 export type CoverageMask={width:number;height:number;coverage:Uint8Array};
 export type CoverageProgress={phase:"preparing"|"sorting"|"rasterizing"|"complete";completed:number;total:number;work:number;done:boolean};

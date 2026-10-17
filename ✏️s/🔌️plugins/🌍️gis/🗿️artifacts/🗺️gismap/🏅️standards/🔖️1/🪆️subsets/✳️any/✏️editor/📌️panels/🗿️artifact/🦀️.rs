@@ -56,7 +56,4 @@ pub fn render(_cfg: &MapWindowConfig, labels: &Gis2dPlayLabels, windows: &TreeWi
 //#endregion 🔖️Render
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

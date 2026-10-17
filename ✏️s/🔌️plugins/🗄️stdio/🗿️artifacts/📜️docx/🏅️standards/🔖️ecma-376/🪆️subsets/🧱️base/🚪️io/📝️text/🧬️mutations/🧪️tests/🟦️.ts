@@ -1,16 +1,16 @@
-import {parseInsertVmlPart as xlsxVml} from "../../../../../../../../../📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🔒️strict/🧬️schema/🧬️mutations/✒️insert-vml-part/🟦️.ts";
-import xlsxVmlSchema from "../../../../../../../../../📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🔒️strict/🧬️schema/🧬️mutations/✒️insert-vml-part/🧬️schema/🔣️.json";
-import {parseInsertVmlPart as pptxVml} from "../../../../../../../../../📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🔒️strict/🧬️schema/🧬️mutations/🖼️insert-vml-part/🟦️.ts";
-import pptxVmlSchema from "../../../../../../../../../📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🔒️strict/🧬️schema/🧬️mutations/🖼️insert-vml-part/🧬️schema/🔣️.json";
+import {parseInsertVmlPart as xlsxVml} from "@semio-tech/stdio-xlsx/standards/ecma-376/subsets/strict/schema/mutations/insert-vml-part";
+import { mutationsInsertVmlPartSchema as xlsxVmlSchema } from "@semio-tech/stdio-xlsx/ecma-376/subsets/strict/schema/mutations/insert-vml-part/schema";
+import {parseInsertVmlPart as pptxVml} from "@semio-tech/stdio-pptx/standards/ecma-376/subsets/strict/schema/mutations/insert-vml-part";
+import { mutationsInsertVmlPartSchema as pptxVmlSchema } from "@semio-tech/stdio-pptx/ecma-376/subsets/strict/schema/mutations/insert-vml-part/schema";
 import {parseInsertVmlPart as docxVml} from "../../../../../📏️strict/🧬️schema/🧬️mutations/✒️insert-vml-part/🟦️.ts";
 import docxVmlSchema from "../../../../../📏️strict/🧬️schema/🧬️mutations/✒️insert-vml-part/🧬️schema/🔣️.json";
-import {parseXmlDocumentJson} from "../../../../../../../../../📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🚪️io/📝️text/📸️snapshot/🔣️json/🟦️.ts";
+import {parseXmlDocumentJson} from "@semio-tech/stdio-xml/standards/1.0/subsets/base/io/text/snapshot/json";
 /** 🧪️ Neutral SetPart content and native framing agree with independent schema and UTF-8 oracles. */
 import {expect,test} from "bun:test";
 import Ajv from "ajv";
 import vectors from "../../../../🧪️tests/🧫️fixtures/🧬️mutations/📦set-part/🔣️.json";
 import schema from "../../../../🧬️schema/🧬️mutations/📦set-part/🧬️schema/🔣️.json";
-import xmlSchema from "../../../../../../../../../📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🔣️.json";
+import { baseSnapshotSchema as xmlSchema } from "@semio-tech/stdio-xml/standards/1.0/subsets/base/schema/snapshot";
 import {parseDocxSetPart} from "../../../../🧬️schema/🧬️mutations/📦set-part/🟦️.ts";
 import {encodeDocxSetPartText,decodeDocxSetPartText} from "../🟦️.ts";
 import {encodeDocxSetPartBinary,decodeDocxSetPartBinary} from "../../../💾️binary/🧬️mutations/🟦️.ts";

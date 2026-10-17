@@ -7,22 +7,22 @@
 
 use crate::mutations::{inverse_vcs_mutation, VcsDemoMutation};
 use crate::VcsSnapshot;
-use crate::central_apply::{apply_vcs_mutation};
+use crate::mutations::central_apply::{apply_vcs_mutation};
 
-const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📝change-notes/🧪️rewrites-the-notes/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📝change-notes/🧪️rewrites-the-notes/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📝change-notes/🧪️rewrites-the-notes/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📝change-notes/🧪️rewrites-the-notes/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📝change-notes/🧪️rewrites-the-notes/🎯️outcome/🔣️.json");
+static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../../🧪️tests/🧫️fixtures/🧬️mutations/📝change-notes/🧪️rewrites-the-notes/📸️snapshot/⬅️before/🔣️.json"));
+static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../../🧪️tests/🧫️fixtures/🧬️mutations/📝change-notes/🧪️rewrites-the-notes/📸️snapshot/➡️after/🔣️.json"));
+static MUTATION: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../../🧪️tests/🧫️fixtures/🧬️mutations/📝change-notes/🧪️rewrites-the-notes/🦠️mutation/🔣️.json"));
+static DIFF: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../../🧪️tests/🧫️fixtures/🧬️mutations/📝change-notes/🧪️rewrites-the-notes/🔺️diff/🔣️.json"));
+static OUTCOME: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../../🧪️tests/🧫️fixtures/🧬️mutations/📝change-notes/🧪️rewrites-the-notes/🎯️outcome/🔣️.json"));
 
 fn before() -> VcsSnapshot {
-    serde_json::from_str(BEFORE).expect("before snapshot decodes")
+    serde_json::from_str((*BEFORE)).expect("before snapshot decodes")
 }
 fn expected_after() -> VcsSnapshot {
-    serde_json::from_str(AFTER).expect("after snapshot decodes")
+    serde_json::from_str((*AFTER)).expect("after snapshot decodes")
 }
 fn mutation() -> VcsDemoMutation {
-    serde_json::from_str(MUTATION).expect("mutation decodes")
+    serde_json::from_str((*MUTATION)).expect("mutation decodes")
 }
 
 /// ▶️ The mutation carries `before` to exactly the committed `after`.
@@ -66,14 +66,14 @@ async fn inverse_restores_the_previous_notes() {
 /// 🔣️ Both committed snapshots are already canonical: decode→encode is a fixed point.
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
-    for (label, text) in [("before", BEFORE), ("after", AFTER)] {
+    for (label, text) in [("before", (*BEFORE)), ("after", (*AFTER))] {
         let decoded: VcsSnapshot = serde_json::from_str(text).expect("snapshot decodes");
         let reencoded = serde_json::to_value(&decoded).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "change-notes/rewrites-the-notes: committed {label} JSON is not canonical");
     }
     let reencoded = serde_json::to_value(mutation()).expect("mutation encodes");
-    let original: serde_json::Value = serde_json::from_str(MUTATION).expect("mutation reparses");
+    let original: serde_json::Value = serde_json::from_str((*MUTATION)).expect("mutation reparses");
     assert_eq!(reencoded, original, "change-notes/rewrites-the-notes: committed mutation JSON is not canonical");
 }
 
@@ -81,7 +81,7 @@ async fn committed_json_is_canonical() {
 /// pinned in the sparse diff.
 #[semio_framework_async_macros::async_test]
 async fn declared_outcome_holds() {
-    let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
+    let outcome: serde_json::Value = serde_json::from_str((*OUTCOME)).expect("outcome decodes");
     assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("applied"), "change-notes/rewrites-the-notes declares an applied outcome");
     let produced = <VcsDemoMutation as protocol::Mutation<VcsSnapshot>>::diff(&mutation(), &before());
     assert!(produced.messages().is_empty(), "change-notes/rewrites-the-notes: the prose really changes, so no no-op warning is expected, got {:?}", produced.messages());
@@ -94,7 +94,7 @@ async fn declared_outcome_holds() {
 async fn produces_committed_diff() {
     let outcome = <VcsDemoMutation as protocol::Mutation<VcsSnapshot>>::diff(&mutation(), &before());
     let produced = serde_json::to_value(outcome.diff()).expect("produced diff encodes");
-    let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
+    let committed: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff decodes");
     assert_eq!(produced, committed, "change-notes/rewrites-the-notes: produced diff differs from the committed 🔺️diff/🔣️.json");
     let diff = outcome.diff();
     assert_eq!(diff.notes.as_deref(), Some("Reviewed and ready to publish."), "the notes lane carries the whole replacement string");
@@ -105,9 +105,9 @@ async fn produces_committed_diff() {
 /// re-encodes byte-for-byte, so the file is a faithful `VcsDiff`, not prose that merely resembles one.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
-    let decoded: crate::VcsDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
+    let decoded: crate::VcsDiff = serde_json::from_str((*DIFF)).expect("committed diff decodes");
     let reencoded = serde_json::to_value(&decoded).expect("diff re-encodes");
-    let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
+    let original: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff reparses");
     assert_eq!(reencoded, original, "change-notes/rewrites-the-notes: committed diff JSON is not canonical");
 }
 
@@ -115,7 +115,7 @@ async fn committed_diff_is_canonical() {
 /// complete description of the change, not a summary of it.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: crate::VcsDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
+    let decoded: crate::VcsDiff = serde_json::from_str((*DIFF)).expect("committed diff decodes");
     let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-notes/rewrites-the-notes: committed diff did not carry before to after");
 }
@@ -124,4 +124,9 @@ async fn committed_diff_applies_to_after() {
 #[semio_framework_async_macros::async_test]
 async fn inverse_diffs_sum_to_the_negative_diff() {
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation(), &before()).await;
+}
+
+fn runtime_fixture_text(relative: &str) -> &'static str {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative);
+    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display())).into_boxed_str())
 }

@@ -34,6 +34,10 @@ type stdioSemioV1DocumentInferenceGuardSizeBounds = { readonly minItems?: number
 
 export const stdioSemioV1DocumentInferenceGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : stdioSemioV1DocumentInferenceGuardReject(at, "value is not an object");
+export const stdioSemioV1DocumentInferenceGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) stdioSemioV1DocumentInferenceGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const stdioSemioV1DocumentInferenceGuardArray = (value: unknown, at: string, bounds: stdioSemioV1DocumentInferenceGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return stdioSemioV1DocumentInferenceGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) stdioSemioV1DocumentInferenceGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -64,14 +68,14 @@ export const stdioSemioV1DocumentInferenceGuardConstant = <T extends string | nu
 //#endregion 🚪️Parsers
 
 export function parseSemioDocumentInference(value: unknown, at = "$"): SemioDocumentInference {
-  const row = stdioSemioV1DocumentInferenceGuardObject(value, at);
+  const row = stdioSemioV1DocumentInferenceGuardClosed(stdioSemioV1DocumentInferenceGuardObject(value, at), at, ["outline"]);
   return {
     outline: parseSemioDocumentOutline(row["outline"], `${at}.outline`),
   };
 }
 
 export function parseSemioDocumentHeadingEntry(value: unknown, at = "$"): SemioDocumentHeadingEntry {
-  const row = stdioSemioV1DocumentInferenceGuardObject(value, at);
+  const row = stdioSemioV1DocumentInferenceGuardClosed(stdioSemioV1DocumentInferenceGuardObject(value, at), at, ["level", "text"]);
   return {
     level: stdioSemioV1DocumentInferenceGuardInteger(row["level"], `${at}.level`, {"minimum": 0}),
     text: stdioSemioV1DocumentInferenceGuardString(row["text"], `${at}.text`),
@@ -79,7 +83,7 @@ export function parseSemioDocumentHeadingEntry(value: unknown, at = "$"): SemioD
 }
 
 export function parseSemioDocumentOutline(value: unknown, at = "$"): SemioDocumentOutline {
-  const row = stdioSemioV1DocumentInferenceGuardObject(value, at);
+  const row = stdioSemioV1DocumentInferenceGuardClosed(stdioSemioV1DocumentInferenceGuardObject(value, at), at, ["sectionOutline", "blockCount", "wordCount"]);
   return {
     sectionOutline: stdioSemioV1DocumentInferenceGuardArray(row["sectionOutline"], `${at}.sectionOutline`).map((item, index) => parseSemioDocumentHeadingEntry(item, `${at}.sectionOutline[${index}]`)),
     blockCount: stdioSemioV1DocumentInferenceGuardInteger(row["blockCount"], `${at}.blockCount`, {"minimum": 0}),

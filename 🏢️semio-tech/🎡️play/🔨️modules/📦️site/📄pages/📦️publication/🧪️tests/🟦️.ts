@@ -30,7 +30,7 @@ test("neutral Play cohort readers reject duplicate, mixed, wrong-mode and undecl
 
 test("neutral browser production paths carry selected mode inside canonical products and count the actual Pages reader cohort",async()=>{
  const {builtPluginModulesRootIn}=await import("../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🟦️.ts"),{playRuntimeAssetSources}=await import("../../../../🧩️runtime/📦️assets/🟦️.ts");
- for(const mode of["prototype","release"]as const){const rows=playRuntimeAssetSources(workspace,mode),browser=rows.filter(row=>row.owner!=="infinite:fonts"&&!row.owner.startsWith("canvas:"));console.log("[DEBUG] Pages actual "+mode+" browser readers="+browser.length+" plus font/Canvas="+(rows.length-browser.length));expect(new Set(browser.map(row=>row.root)).size).toBe(browser.length);expect(builtPluginModulesRootIn(workspace,mode)).toBe(join(repositoryCachePartitionRootDataV1(workspace,"products"),"browser",mode,"modules"));}
+ for(const mode of["prototype","release"]as const){const rows=playRuntimeAssetSources(workspace,mode),browser=rows.filter(row=>row.owner!=="infinite:fonts"&&!row.owner.startsWith("canvas:"));expect(new Set(browser.map(row=>row.root)).size).toBe(browser.length);expect(builtPluginModulesRootIn(workspace,mode)).toBe(join(repositoryCachePartitionRootDataV1(workspace,"products"),"browser",mode,"modules"));}
 });
 
 

@@ -17,9 +17,6 @@ pub mod drag_layers {
     pub mod inverse;
     #[path = "🧬️schema/🧬️mutations/✋️drag-layers/🦠️mutation/🦀️.rs"]
     pub mod mutation;
-    #[cfg(test)]
-    #[path = "🧬️schema/🧬️mutations/✋️drag-layers/🧪️tests/✋️drags-a-child/🦀️.rs"]
-    mod tests_drags_a_child;
 }
 #[path = "."]
 pub mod drag_path_points {
@@ -29,9 +26,6 @@ pub mod drag_path_points {
     pub mod inverse;
     #[path = "🧬️schema/🧬️mutations/📍️drag-path-points/🦠️mutation/🦀️.rs"]
     pub mod mutation;
-    #[cfg(test)]
-    #[path = "🧬️schema/🧬️mutations/📍️drag-path-points/🧪️tests/📍️drags/🦀️.rs"]
-    mod tests_drags_two_anchors;
 }
 #[path = "."]
 pub mod rotate_layers {
@@ -41,9 +35,6 @@ pub mod rotate_layers {
     pub mod inverse;
     #[path = "🧬️schema/🧬️mutations/🧭️rotate-layers/🦠️mutation/🦀️.rs"]
     pub mod mutation;
-    #[cfg(test)]
-    #[path = "🧬️schema/🧬️mutations/🧭️rotate-layers/🧪️tests/🧭️quarter-turn/🦀️.rs"]
-    mod tests_quarter_turn;
 }
 #[path = "."]
 pub mod scale_layers {
@@ -53,9 +44,6 @@ pub mod scale_layers {
     pub mod inverse;
     #[path = "🧬️schema/🧬️mutations/📐️scale-layers/🦠️mutation/🦀️.rs"]
     pub mod mutation;
-    #[cfg(test)]
-    #[path = "🧬️schema/🧬️mutations/📐️scale-layers/🧪️tests/📐️doubles/🦀️.rs"]
-    mod tests_doubles_a_rect;
 }
 #[path = "."]
 pub mod set_layer_boolean_operation {
@@ -65,9 +53,6 @@ pub mod set_layer_boolean_operation {
     pub mod inverse;
     #[path = "🧬️schema/🧬️mutations/🔀set-layer-boolean/🦠️mutation/🦀️.rs"]
     pub mod mutation;
-    #[cfg(test)]
-    #[path = "🧬️schema/🧬️mutations/🔀set-layer-boolean/🧪️tests/➖️union/🦀️.rs"]
-    mod tests_union_to_subtract;
 }
 #[path = "."]
 pub mod shape_coordinate {
@@ -77,9 +62,6 @@ pub mod shape_coordinate {
     pub mod inverse;
     #[path = "🧬️schema/🧬️mutations/🔷️shape-coordinate/🦠️mutation/🦀️.rs"]
     pub mod mutation;
-    #[cfg(test)]
-    #[path = "🧬️schema/🧬️mutations/🔷️shape-coordinate/🧪️tests/🔬️unit/🦀️.rs"]
-    mod tests;
 }
 #[path = "."]
 pub mod update_layer_trace_params {
@@ -89,9 +71,6 @@ pub mod update_layer_trace_params {
     pub mod inverse;
     #[path = "🧬️schema/🧬️mutations/🔍️update-layer/🦠️mutation/🦀️.rs"]
     pub mod mutation;
-    #[cfg(test)]
-    #[path = "🧬️schema/🧬️mutations/🔍️update-layer/🧪️tests/🔍️sharpens/🦀️.rs"]
-    mod tests_sharpens_the_trace;
 }
 #[path = "."]
 pub mod update_layer_transform {
@@ -101,9 +80,6 @@ pub mod update_layer_transform {
     pub mod inverse;
     #[path = "🧬️schema/🧬️mutations/🔄️update-layer/🦠️mutation/🦀️.rs"]
     pub mod mutation;
-    #[cfg(test)]
-    #[path = "🧬️schema/🧬️mutations/🔄️update-layer/🧪️tests/📐️translates/🦀️.rs"]
-    mod tests_translates_and_scales_shape_a;
 }
 #[path = "."]
 pub mod update_path_geometry {
@@ -113,8 +89,5 @@ pub mod update_path_geometry {
     pub mod inverse;
     #[path = "🧬️schema/🧬️mutations/✏️update-path-geometry/🦠️mutation/🦀️.rs"]
     pub mod mutation;
-    #[cfg(test)]
-    #[path = "🧬️schema/🧬️mutations/✏️update-path-geometry/🧪️tests/🔬️unit/🦀️.rs"]
-    mod tests;
 }
 //#endregion 🪢️TaxonomyMounts

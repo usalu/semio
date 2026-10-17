@@ -5,7 +5,6 @@
 //! `node_at` already establish for every node-addressed mutation in this facet.
 
 use crate::schema::diff::NodePath;
-use crate::schema::mutations::SemioDrawingMutation;
 use crate::schema::snapshot::{DrawNode, SemioDrawingSnapshot};
 
 //#region 🔖️Payload
@@ -18,13 +17,16 @@ pub struct CreateNode {
     pub node: DrawNode,
 }
 
-impl protocol::MutationKind<SemioDrawingSnapshot, SemioDrawingMutation> for CreateNode {
+impl<Op> protocol::MutationKind<SemioDrawingSnapshot, Op> for CreateNode
+where
+    Op: protocol::Mutation<SemioDrawingSnapshot, Diff = crate::schema::diff::SemioDrawingDiff> + From<CreateNode> + From<crate::schema::mutations::delete_node::DeleteNode>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "node", kind: "create-node", record: "CreatedNode" };
 
-    fn diff(&self, base: &SemioDrawingSnapshot) -> protocol::MutationOutcome<<SemioDrawingMutation as protocol::Mutation<SemioDrawingSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioDrawingSnapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<SemioDrawingSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &SemioDrawingSnapshot) -> Result<Vec<SemioDrawingMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &SemioDrawingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

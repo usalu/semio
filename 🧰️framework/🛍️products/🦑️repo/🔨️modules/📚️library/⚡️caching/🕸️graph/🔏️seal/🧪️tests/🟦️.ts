@@ -85,5 +85,4 @@ test("verified immutable whole graph readers preserve the portable custody corpu
   const mutation=scenario.mutation;if(mutation.kind==="write"){const path=mutationPath(root,data,mutation.path);mkdirSync(dirname(path),{recursive:true});writeFileSync(path,mutation.content);}else if(mutation.kind==="directory")mkdirSync(mutationPath(root,data,mutation.path),{recursive:true});else if(mutation.kind==="delete")rmSync(mutationPath(root,data,mutation.path));else if(mutation.kind==="rename")renameSync(mutationPath(root,data,mutation.path),mutationPath(root,data,mutation.destination));
   const actual=await frozen.authorizers.nxGraphSealHolds(root,data,signal);expect(actual,scenario.id).toBe(scenario.holds);expect(actual).toBe(await nxGraphSealHolds(root,data,signal));
  });
- console.log("[DEBUG] Actual Source-owned seal and immutable SDK readers agree with Ajv, Git and the portable custody corpus; foreign frozen writer refuses");
 },100000);

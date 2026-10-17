@@ -47,7 +47,6 @@ fn retained_paged_list_owner_page_ceiling_preserves_order_and_exact_retirement()
     let mut default = PagedList::<u64, 600>::default();
     assert!(default.reserve_one(ceiling).unwrap().progressed);
     assert_eq!(default.next_allocation_bytes().unwrap(), fixture["defaultPayloadPageBytes"].as_u64().unwrap() as usize);
-    println!("[DEBUG] Paged list owner ceiling={} boundary cases={} exact ordered rows={}", ceiling, fixture["boundaryCounts"].as_array().unwrap().len(), owner.len());
 }
 
 #[test]
@@ -167,7 +166,6 @@ fn paged_child_source_returns_genuine8194_backing_to_parent_without_physical_cre
         }
     }
     assert!(source.terminal_is_empty()&&parent.terminal_is_empty());assert_eq!(returned,initial);assert_eq!(released,initial);
-    eprintln!("[DEBUG] original8194 paged child backing transfers actual payload/metadata allocations under preadmitted one-slot parent; zero/live/full/small refusal unchanged, child zero physical credit, parent actual1/4096 deallocation");
 }
 
 
@@ -187,6 +185,5 @@ fn paged_actual_height_preserves_maximum_authority_pointer_and_parent_handoff(){
         assert_eq!(owner.len(),length);for(index,byte)in owner.iter().enumerate(){assert_eq!(*byte,(index%251)as u8)}let allocated=owner.allocated_bytes();while owner.pop().is_some(){}let mut parent=ParentAllocationReturn::<512>::try_new(4096,allocated).unwrap();let mut returned=0;
         while !owner.terminal_is_empty(){let before=owner.allocated_bytes();let step=owner.return_empty_page(&mut parent,1).unwrap();assert!(step.progressed);assert_eq!(before-owner.allocated_bytes(),step.returned_allocation_bytes);returned+=step.returned_allocation_bytes;}assert_eq!(returned,allocated);assert_eq!(owner.allocated_bytes(),0);assert_eq!(parent.retained_bytes(),allocated);let mut physical=0;for _ in 0..512+128{match parent.close_step(1,4096){AllocationReturnStep::Complete=>break,AllocationReturnStep::Pending{released_items,released_bytes}=>{assert!(released_items<=1);assert!(released_bytes<=4096);physical+=released_bytes;}}}assert!(parent.terminal_is_empty());assert_eq!(physical,allocated);
     }
-    println!("[DEBUG] actual-height paged owners preserve maximum logical authority and seven-word owner-ceiling layout, singleton only leaf+payload allocations,8194/65537 exact source and original pointer, denied growth unchanged and real parent handoff with zero child physical disposal1/4096");
 }
 

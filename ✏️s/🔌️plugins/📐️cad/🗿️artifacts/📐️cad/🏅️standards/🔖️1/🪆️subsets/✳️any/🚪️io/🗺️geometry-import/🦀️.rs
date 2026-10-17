@@ -137,13 +137,13 @@ pub fn cad_genesis_child_pack(snapshot: &CadSnapshot, slot: &str, child_id: &str
 /// field for, and the `Arc` whose identity keys the pane's tessellation cache.
 #[derive(Clone, Debug, Default)]
 pub(crate) struct CadComposedPane {
-    pub(crate) objects: Vec<semio_s_artifact_cad_cad_model::geometry::CadObject>,
+    pub objects: Vec<semio_s_artifact_cad_cad_model::geometry::CadObject>,
     pub(crate) owned_geometry: Option<semio_s_artifact_cad_cad_model::geometry::CadGeometry>,
-    pub(crate) genesis: Option<std::sync::Arc<CadWorkingScene>>,
+    pub genesis: Option<std::sync::Arc<CadWorkingScene>>,
 }
 impl CadComposedPane {
     /// 📐️ The pane's raw genesis geometry, when its child id names a bundled scene.
-    pub(crate) fn geometry(&self, pane: CadPaneId) -> Option<&semio_s_artifact_cad_cad_model::geometry::CadGeometry> {
+    pub fn geometry(&self, pane: CadPaneId) -> Option<&semio_s_artifact_cad_cad_model::geometry::CadGeometry> {
         self.owned_geometry.as_ref().or_else(|| self.genesis.as_deref().and_then(|scene| cad_scene_pane_geometry(scene, pane)))
     }
 }
@@ -182,7 +182,7 @@ impl CadComposedPanes {
     }
 
     /// 🔎️ `pane` as composed.
-    pub(crate) fn pane(&self, pane: CadPaneId) -> &CadComposedPane {
+    pub fn pane(&self, pane: CadPaneId) -> &CadComposedPane {
         &self.0[pane.index()]
     }
 }

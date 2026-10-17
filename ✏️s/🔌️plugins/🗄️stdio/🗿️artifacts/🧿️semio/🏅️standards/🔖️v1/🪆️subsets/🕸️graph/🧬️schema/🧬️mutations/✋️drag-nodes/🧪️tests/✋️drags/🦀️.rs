@@ -8,21 +8,22 @@ use crate::schema::diff::SemioGraphDiff;
 use crate::schema::mutations::SemioGraphMutation;
 use crate::schema::snapshot::SemioGraphSnapshot;
 use protocol::Mutation;
+use semio_framework_test_fixtures::fixture_text;
 
-const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✋️drag-nodes/✋️drags/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✋️drag-nodes/✋️drags/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✋️drag-nodes/✋️drags/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✋️drag-nodes/✋️drags/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✋️drag-nodes/✋️drags/🎯️outcome/🔣️.json");
+static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✋️drag-nodes/✋️drags/📸️snapshot/⬅️before/🔣️.json"));
+static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✋️drag-nodes/✋️drags/📸️snapshot/➡️after/🔣️.json"));
+static MUTATION: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✋️drag-nodes/✋️drags/🦠️mutation/🔣️.json"));
+static DIFF: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✋️drag-nodes/✋️drags/🔺️diff/🔣️.json"));
+static OUTCOME: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✋️drag-nodes/✋️drags/🎯️outcome/🔣️.json"));
 
 fn before() -> SemioGraphSnapshot {
-    crate::io::text::snapshot::decode_semio_graph_snapshot_json(BEFORE).expect("drag-nodes before snapshot decodes")
+    crate::io::text::snapshot::decode_semio_graph_snapshot_json((*BEFORE)).expect("drag-nodes before snapshot decodes")
 }
 fn expected_after() -> SemioGraphSnapshot {
-    crate::io::text::snapshot::decode_semio_graph_snapshot_json(AFTER).expect("drag-nodes after snapshot decodes")
+    crate::io::text::snapshot::decode_semio_graph_snapshot_json((*AFTER)).expect("drag-nodes after snapshot decodes")
 }
 fn mutation() -> SemioGraphMutation {
-    semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("drag-nodes mutation decodes")
+    semio_framework_pack_json::from_json_str((*MUTATION), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("drag-nodes mutation decodes")
 }
 
 /// ▶️ Every dragged node moves by the offset from its base position; kinds, labels and edges do not change.
@@ -53,19 +54,19 @@ async fn the_undo_moves_every_node_back_to_its_base_position() {
 /// 🔣️ Snapshots and the committed payload are canonical fixed points.
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
-    for (label, text) in [("before", BEFORE), ("after", AFTER)] {
+    for (label, text) in [("before", (*BEFORE)), ("after", (*AFTER))] {
         let decoded: SemioGraphSnapshot = crate::io::text::snapshot::decode_semio_graph_snapshot_json(text).expect("snapshot decodes");
         let reencoded = serde_json::from_str::<serde_json::Value>(&crate::io::text::snapshot::encode_semio_graph_snapshot_json(&decoded).expect("snapshot encodes")).expect("snapshot reparses");
         assert_eq!(reencoded, serde_json::from_str::<serde_json::Value>(text).expect("snapshot reparses"), "drag-nodes/drags: committed {label} JSON is not canonical");
     }
     let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&mutation())).expect("drag-nodes mutation encodes");
-    assert_eq!(reencoded, serde_json::from_str::<serde_json::Value>(MUTATION).expect("drag-nodes mutation reparses"), "drag-nodes/drags: committed mutation JSON is not canonical");
+    assert_eq!(reencoded, serde_json::from_str::<serde_json::Value>((*MUTATION)).expect("drag-nodes mutation reparses"), "drag-nodes/drags: committed mutation JSON is not canonical");
 }
 
 /// 🎯️ Declared `applied`: both targets exist and the offset is finite and non-zero, so no guard fires.
 #[semio_framework_async_macros::async_test]
 async fn declared_outcome_holds_with_no_guard_branch_firing() {
-    let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
+    let outcome: serde_json::Value = serde_json::from_str((*OUTCOME)).expect("outcome decodes");
     assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("applied"));
     assert!(mutation().diff(&before()).messages().is_empty(), "both targets exist and the offset is finite and non-zero");
 }
@@ -76,8 +77,8 @@ async fn produces_and_applies_the_committed_diff() {
     let base = before();
     let outcome = <SemioGraphMutation as Mutation<SemioGraphSnapshot>>::diff(&mutation(), &base);
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
-    assert_eq!(produced, serde_json::from_str::<serde_json::Value>(DIFF).expect("committed diff decodes"), "drag-nodes/drags: produced diff differs from the committed 🔺️diff/🔣️.json");
-    let decoded: SemioGraphDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed drag-nodes diff decodes");
+    assert_eq!(produced, serde_json::from_str::<serde_json::Value>((*DIFF)).expect("committed diff decodes"), "drag-nodes/drags: produced diff differs from the committed 🔺️diff/🔣️.json");
+    let decoded: SemioGraphDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed drag-nodes diff decodes");
     assert!(decoded.edges.is_none(), "drag-nodes must leave the edges slot untouched");
     assert_eq!(protocol::apply_diff(&decoded, &base).expect("committed drag-nodes diff applies"), expected_after(), "drag-nodes/drags: committed diff did not carry before to after");
 }

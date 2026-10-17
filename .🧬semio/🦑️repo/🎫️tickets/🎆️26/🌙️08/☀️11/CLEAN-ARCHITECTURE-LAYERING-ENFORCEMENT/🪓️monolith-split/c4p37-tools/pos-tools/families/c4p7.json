@@ -1,0 +1,17 @@
+{
+ "name": "c4p7",
+ "crates": [
+  "semio-s-artifact-lowpoly-lowpoly-editor",
+  "semio-s-artifact-lowpoly-lowpoly",
+  "semio-s-artifact-lowpoly-lowpoly-modes",
+  "semio-s-artifact-lowpoly-lowpoly-commands",
+  "semio-s-artifact-lowpoly-lowpoly-panels",
+  "semio-s-artifact-lowpoly-lowpoly-options",
+  "semio-s-artifact-process-process3d-editor",
+  "semio-s-artifact-process-process3d",
+  "semio-s-artifact-process-process3d-modes",
+  "semio-s-artifact-process-process3d-panels",
+  "semio-s-artifact-forms-forms"
+ ],
+ "note": "CENSUS4-PKG-7: lowpoly editor root, forms editor module, process3d editor unit tests; absolute run, the baseline is the pre-split run of the same tree (c4p7pre)"
+}

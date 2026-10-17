@@ -34,6 +34,10 @@ type stdioSemioV1KitInferenceGuardSizeBounds = { readonly minItems?: number; rea
 
 export const stdioSemioV1KitInferenceGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : stdioSemioV1KitInferenceGuardReject(at, "value is not an object");
+export const stdioSemioV1KitInferenceGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) stdioSemioV1KitInferenceGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const stdioSemioV1KitInferenceGuardArray = (value: unknown, at: string, bounds: stdioSemioV1KitInferenceGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return stdioSemioV1KitInferenceGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) stdioSemioV1KitInferenceGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -64,14 +68,14 @@ export const stdioSemioV1KitInferenceGuardConstant = <T extends string | number 
 //#endregion 🚪️Parsers
 
 export function parseSemioKitInference(value: unknown, at = "$"): SemioKitInference {
-  const row = stdioSemioV1KitInferenceGuardObject(value, at);
+  const row = stdioSemioV1KitInferenceGuardClosed(stdioSemioV1KitInferenceGuardObject(value, at), at, ["entries"]);
   return {
     entries: parseSemioKitEntries(row["entries"], `${at}.entries`),
   };
 }
 
 export function parseSemioKitEntries(value: unknown, at = "$"): SemioKitEntries {
-  const row = stdioSemioV1KitInferenceGuardObject(value, at);
+  const row = stdioSemioV1KitInferenceGuardClosed(stdioSemioV1KitInferenceGuardObject(value, at), at, ["typeCount", "designCount", "pieceCount", "connectionCount", "objectCount", "modelCount", "hasProperties", "representationCount"]);
   return {
     typeCount: stdioSemioV1KitInferenceGuardInteger(row["typeCount"], `${at}.typeCount`, {"minimum": 0}),
     designCount: stdioSemioV1KitInferenceGuardInteger(row["designCount"], `${at}.designCount`, {"minimum": 0}),

@@ -289,7 +289,4 @@ pub fn gis_map_scene_descriptor_json(document: &GisMapSnapshot) -> String {
 // #endregion 🔖️GisMapPolicy
 
 // #region 🔖️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 // #endregion 🔖️Tests

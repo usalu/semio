@@ -155,13 +155,10 @@ pub mod mutations;
 pub use mutations::*;
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
 
-#[path = "🧬️schema/🦀️.rs"]
-pub mod schema;
+
 
 #[path = "🚪️io/🦀️.rs"]
 pub mod io;

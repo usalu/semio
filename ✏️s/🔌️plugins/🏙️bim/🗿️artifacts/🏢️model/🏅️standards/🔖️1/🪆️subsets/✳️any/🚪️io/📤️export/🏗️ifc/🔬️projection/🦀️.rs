@@ -1,8 +1,8 @@
 //! 🔬️ The subject's report of an IFC export, in the shape the IfcOpenShell oracle measures from the file: entity counts per class, the products contained in each storey and the
 //! written net volume of every element the kernel measures exactly. Built from the generated Part-21 document and its base quantities only.
 
-use super::data::PARENTS_SET;
-use super::{model_to_part21, Schema};
+use crate::standards::v1::subsets::any::io::export::ifc::data::PARENTS_SET;
+use crate::standards::v1::subsets::any::io::export::ifc::{model_to_part21, Schema};
 use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_s_artifact_stdio_contract::part21::{Part21Document, Part21Instance, Part21Value};
 use std::collections::BTreeMap;

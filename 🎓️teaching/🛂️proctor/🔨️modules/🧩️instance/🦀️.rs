@@ -74,13 +74,13 @@ use server::gateway::{undelayed, ClientAddressing, GatewayRouter, InstanceDisclo
 use server::policy::{Credential, PrincipalResolver, Resolved};
 use server::storage::{AuthorityStore, StorageError, StorageProfile};
 
-use crate::actors::{deciders, unrelayed, Admission, EnrollmentSaga, ProctorDeciders, ENROLL, HANDLE, IDENTIFY, LEARNER, PROCTOR_SERVICE};
-use crate::catalog::LoadedCatalog;
-use crate::config::{CrossOriginPolicy, Forwarding, Gate, SIGN_UP};
-use crate::presence::Rooms;
-use crate::projections::{CatchUp, Progress, Projector, CROWDS, HANDLES, LEADERBOARD, LEARNERS, META, RUNS, STATES, TALLIES};
-use crate::queries::{wall_clock, QueryKind, QuizQuery};
-use crate::storage::{Database, SqliteAuthorityStore, SqliteBlobStore, SqliteProjectionStore, SqliteSessionStore};
+use teaching_proctor_domain::actors::{deciders, unrelayed, Admission, EnrollmentSaga, ProctorDeciders, ENROLL, HANDLE, IDENTIFY, LEARNER, PROCTOR_SERVICE};
+use teaching_proctor_base::catalog::LoadedCatalog;
+use teaching_proctor_base::config::{CrossOriginPolicy, Forwarding, Gate, SIGN_UP};
+use teaching_proctor_base::presence::Rooms;
+use teaching_proctor_domain::projections::{CatchUp, Progress, Projector, CROWDS, HANDLES, LEADERBOARD, LEARNERS, META, RUNS, STATES, TALLIES};
+use teaching_proctor_domain::queries::{wall_clock, QueryKind, QuizQuery};
+use teaching_proctor_base::storage::{Database, SqliteAuthorityStore, SqliteBlobStore, SqliteProjectionStore, SqliteSessionStore};
 
 /// 🏷️ The instance id `GET /instance` reports.
 pub const INSTANCE_ID: &str = "teaching-proctor";

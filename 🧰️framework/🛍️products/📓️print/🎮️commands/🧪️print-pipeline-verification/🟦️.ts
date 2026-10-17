@@ -3,11 +3,16 @@ import{withPrintExecutionV1}from"../../📦️artifacts/🎛️operation/🟦️
 import { resolveTestLevel } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { TEST_LEVELS } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 
-import { verifyVizChartInferences } from "../../🧬️schema/💡️inferences/📦️packages/🟦️typescript/📜️script.ts";
+import { verifyVizChartInferences } from "@semio-tech/print-viz-inference/script";
 import { BundleScript } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { verifyVisualizationCoverage } from "../../🔨️modules/📊️visualization-gallery/🟦️.ts";
+import { verifyVisualizationCoverage } from "../../🔨️modules/📊️visualization-gallery/🩺️coverage-verification/🟦️.ts";
 import { writePrintGalleryEvidence } from "../../🔨️modules/📊️visualization-gallery/🧪️testing/📏️measurement/🟦️.ts";
-import { withPrintPipelineVerificationV1, verifyPrintKindPaintFixtures, verifyPrintGalleryCarrier, verifyPrintApiTitleRendering, verifyPrintApiPublication, verifyPrintCommandBoundaries, verifyPrintMacroStagingNative, verifyPrintPipelineLong, verifyPrintPipelineQuick, verifyPrintVisualizationBuild } from "./🧪️tests/🖨️pipeline/🟦️.ts";
+import { withPrintPipelineVerificationV1 } from "./🧪️tests/🖨️pipeline/🟦️.ts";
+import { verifyPrintPipelineQuick } from "./🧪️tests/🖨️pipeline/⚡️quick-pipeline-verification/🟦️.ts";
+import { verifyPrintApiTitleRendering } from "./🧪️tests/🖨️pipeline/🧾️api-freshness-and-titles/🟦️.ts";
+import { verifyPrintKindPaintFixtures, verifyPrintGalleryCarrier } from "./🧪️tests/🖨️pipeline/🖼️gallery-carrier-and-kind-paint/🟦️.ts";
+import { verifyPrintMacroStagingNative, verifyPrintPipelineLong } from "./🧪️tests/🖨️pipeline/📄️macro-and-pdf-verification/🟦️.ts";
+import { verifyPrintApiPublication, verifyPrintCommandBoundaries, verifyPrintVisualizationBuild } from "./🧪️tests/🖨️pipeline/🛡️command-and-publication-verification/🟦️.ts";
 
 //#region 🧪️PrintPipelineVerification
 /** 🧪️ Verifies pure print transformations and, from `long` upward, every template PDF; `viz` adds the

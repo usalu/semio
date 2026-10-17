@@ -2,7 +2,7 @@
 import * as React from "react";
 import { UI_MOBILE_MEDIA_QUERY } from "../../📱️device/🟦️.ts";
 import { reactHostPort } from "../../🧱️elements/🔌️Ports/🟦️.tsx";
-import { useMediaQuery } from "../../🎯️targets/⚛️react/🌓️appearance/🟦️.ts";
+import { useMediaQuery } from "@semio-tech/ui-react/appearance";
 
 export const UiMobileContext = reactHostPort.createContext<boolean | undefined>(undefined);
 

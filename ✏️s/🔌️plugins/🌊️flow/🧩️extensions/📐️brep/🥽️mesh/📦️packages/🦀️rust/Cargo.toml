@@ -1,0 +1,34 @@
+[package]
+workspace = "../../.."
+name = "semio-s-plugin-flow-brep-mesh"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Flow Brep extension mesh operators — indexed polygon mesh widgets with B-Rep preview conversion"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-3d-brep-tessellation = { path = "../../../../../../../../🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🧩tessellation/📦️packages/🦀️rust" }
+semio-framework-pack-json = { path = "../../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-framework-job = { path = "../../../../../../../../🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-s-spatial-kernel-semio-session.workspace = true
+semio-framework-mesh-engine.workspace = true
+semio-framework-3d = { path = "../../../../../../../../🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust" }
+semio-framework-3d-brep-engine = { path = "../../../../../../../../🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/📦️packages/🦀️rust" }
+semio-framework-3d-brep-representation = { path = "../../../../../../../../🧰️framework/🔨️modules/🧊️3d/📐️brep/📸️representation/📦️packages/🦀️rust" }
+flow_extension_sdk = { path = "../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust", package = "semio-framework-os-flow" }
+neural_engine = { path = "../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📦️packages/🦀️rust", package = "semio-framework-os-kernel-neural-engine" }
+semio-framework-plugin = { path = "../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", package = "semio-framework-plugin" }
+
+[dev-dependencies]
+serde_json.workspace = true
+semio-framework-async-macros = { path = "../../../../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }

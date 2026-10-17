@@ -34,7 +34,6 @@ fn cold_clone_terminal_frame_denies_partial_funding_and_reports_actual_same_turn
             let retained = close.retirement.as_ref().is_some_and(|owner| std::ptr::addr_eq(pointer, owner.as_ref() as *const dyn crate::ErasedSnapshotRetirement));
             if step != (RetainedCloneStep::Progress(Default::default())) || events != (0, 0) || !retained {
                 mismatches += 1;
-                println!("[DEBUG] cold terminal denied items={items} bytes={bytes} query={physical} born={} actual-free={} retained={retained}", events.0, events.1);
             }
             if close.is_empty() { break; }
         }
@@ -44,7 +43,6 @@ fn cold_clone_terminal_frame_denies_partial_funding_and_reports_actual_same_turn
         }
         assert!(close.is_empty());
         assert_eq!(close.step_granted(Default::default()).unwrap(), RetainedCloneStep::Complete(Default::default()));
-        println!("[DEBUG] cold terminal original case={} exact-frame={physical} original-admission={admission}", row["id"]);
     }
     assert_eq!(mismatches, 0, "cold terminal retirement Box requires its complete same-turn physical grant");
 }

@@ -1,6 +1,12 @@
 //! 🔤️ Font descriptors, programs, ordered encodings, CID metrics and CMaps.
 use semio_framework_value::{ValueError,ValueRefusalKind};
-use crate::standards::v1_7::subsets::base::io::sqlite::snapshot::*;
+use crate::standards::v1_7::subsets::base::schema::snapshot::model::*;
+use crate::standards::v1_7::subsets::base::io::sqlite::snapshot::reader::{integer, boolean, optional_integer, optional_real, real_cell, text_cell, null_except, Reader};
+use store::sqlite_snapshot::{artifact::{Cell as C}};
+use crate::standards::v1_7::subsets::base::io::sqlite::snapshot::number::{Projection};
+use crate::standards::v1_7::subsets::base::io::sqlite::snapshot::artifact_reference;
+use crate::standards::v1_7::subsets::base::io::sqlite::snapshot::cos;
+use crate::standards::v1_7::subsets::base::io::sqlite::snapshot::content;
 
 fn write_encoding(out: &mut Projection<'_, '_>, encoding: &PdfSimpleEncoding) -> Result<i64,ValueError> {
     let base = encoding.base.as_ref().map(|base| match base { PdfBaseEncoding::Standard => "standard", PdfBaseEncoding::WinAnsi => "winAnsi", PdfBaseEncoding::MacRoman => "macRoman", PdfBaseEncoding::MacExpert => "macExpert" });
@@ -29,10 +35,10 @@ fn read_descriptor(reader: &mut Reader<'_, '_, '_>, key: i64) -> Result<PdfFontD
     Ok(PdfFontDescriptor { font_name: reader.text(row,1)?, flags: integer(row, 2)?, font_bbox: [row.real(3)?, row.real(4)?, row.real(5)?, row.real(6)?], italic_angle: row.real(7)?, ascent: row.real(8)?, descent: row.real(9)?, cap_height: row.real(10)?, stem_v: row.real(11)?, stem_h: optional_real(row, 12)?, x_height: optional_real(row, 13)?, leading: optional_real(row, 14)?, avg_width: optional_real(row, 15)?, max_width: optional_real(row, 16)?, missing_width: optional_real(row, 17)?, font_family: reader.optional_text(row,18)?, font_stretch: reader.optional_text(row,19)?, font_weight: optional_real(row, 20)?, char_set: reader.optional_text(row,21)?, extra: cos::read_dictionary(reader, row.integer(22)?)? })
 }
 
-pub(super) fn write_program(out:&mut Projection<'_, '_>,program:&PdfFontProgram)->Result<i64,ValueError>{let kind=match program {PdfFontProgram::Type1 {..}=>"type1",PdfFontProgram::TrueType {..}=>"trueType",PdfFontProgram::Cff {..}=>"cff",PdfFontProgram::CidCff {..}=>"cidCff",PdfFontProgram::OpenType {..}=>"openType"};let reference=artifact_reference::write(out,program.reference())?;out.insert("pdf_font_program",&[C::Text(kind),C::Integer(reference)])}
-pub(super) fn read_program(reader:&mut Reader<'_, '_, '_>,key:i64)->Result<PdfFontProgram,ValueError>{let row=reader.take("pdf_font_program",key,3)?;let reference=artifact_reference::read(reader,row.integer(2)?)?;Ok(match row.text(1)? {"type1"=>PdfFontProgram::Type1 {reference},"trueType"=>PdfFontProgram::TrueType {reference},"cff"=>PdfFontProgram::Cff {reference},"cidCff"=>PdfFontProgram::CidCff {reference},"openType"=>PdfFontProgram::OpenType {reference},_=>return Err(ValueError::new(ValueRefusalKind::InvalidValue,"unknown PDF font program kind"))})}
+pub fn write_program(out:&mut Projection<'_, '_>,program:&PdfFontProgram)->Result<i64,ValueError>{let kind=match program {PdfFontProgram::Type1 {..}=>"type1",PdfFontProgram::TrueType {..}=>"trueType",PdfFontProgram::Cff {..}=>"cff",PdfFontProgram::CidCff {..}=>"cidCff",PdfFontProgram::OpenType {..}=>"openType"};let reference=artifact_reference::write(out,program.reference())?;out.insert("pdf_font_program",&[C::Text(kind),C::Integer(reference)])}
+pub fn read_program(reader:&mut Reader<'_, '_, '_>,key:i64)->Result<PdfFontProgram,ValueError>{let row=reader.take("pdf_font_program",key,3)?;let reference=artifact_reference::read(reader,row.integer(2)?)?;Ok(match row.text(1)? {"type1"=>PdfFontProgram::Type1 {reference},"trueType"=>PdfFontProgram::TrueType {reference},"cff"=>PdfFontProgram::Cff {reference},"cidCff"=>PdfFontProgram::CidCff {reference},"openType"=>PdfFontProgram::OpenType {reference},_=>return Err(ValueError::new(ValueRefusalKind::InvalidValue,"unknown PDF font program kind"))})}
 
-pub(super) fn write_unicode(out: &mut Projection<'_, '_>, cmap: &PdfToUnicode) -> Result<i64,ValueError> {
+pub fn write_unicode(out: &mut Projection<'_, '_>, cmap: &PdfToUnicode) -> Result<i64,ValueError> {
     let key = out.insert("pdf_to_unicode", &[C::Integer(i64::from(cmap.byte_width))])?;
     for (ordinal, mapping) in cmap.mappings.iter().enumerate() {
         let (kind, code, low, high, text) = match mapping { PdfToUnicodeMapping::Char { code, text } => ("char", C::Integer(i64::from(*code)), C::Null, C::Null, text), PdfToUnicodeMapping::Range { low, high, text } => ("range", C::Null, C::Integer(i64::from(*low)), C::Integer(i64::from(*high)), text) };
@@ -41,13 +47,13 @@ pub(super) fn write_unicode(out: &mut Projection<'_, '_>, cmap: &PdfToUnicode) -
     Ok(key)
 }
 
-pub(super) fn read_unicode(reader: &mut Reader<'_, '_, '_>, key: i64) -> Result<PdfToUnicode,ValueError> {
+pub fn read_unicode(reader: &mut Reader<'_, '_, '_>, key: i64) -> Result<PdfToUnicode,ValueError> {
     let row = reader.take("pdf_to_unicode", key, 2)?; let mut mappings = Vec::new();
     for value in reader.children("pdf_unicode_mapping", 1, 2, key)? { let value = reader.take("pdf_unicode_mapping", value.rowid, 8)?; let text = reader.text(value,7)?; mappings.push(match value.text(3)? { "char" => { null_except(value, 4..7, &[4])?; PdfToUnicodeMapping::Char { code: integer(value, 4)?, text } }, "range" => { null_except(value, 4..7, &[5, 6])?; PdfToUnicodeMapping::Range { low: integer(value, 5)?, high: integer(value, 6)?, text } }, _ => return Err(ValueError::new(ValueRefusalKind::InvalidValue,"unknown PDF Unicode mapping kind")) }); }
     Ok(PdfToUnicode { byte_width: integer(row, 1)?, mappings })
 }
 
-pub(super) fn write_cmap(out: &mut Projection<'_, '_>, cmap: &PdfCMap) -> Result<i64,ValueError> {
+pub fn write_cmap(out: &mut Projection<'_, '_>, cmap: &PdfCMap) -> Result<i64,ValueError> {
     match cmap {
         PdfCMap::Predefined { name } => out.insert("pdf_cmap", &[C::Text("predefined"), C::Text(name), C::Null, C::Null]),
         PdfCMap::Embedded { cmap } => {
@@ -59,7 +65,7 @@ pub(super) fn write_cmap(out: &mut Projection<'_, '_>, cmap: &PdfCMap) -> Result
     }
 }
 
-pub(super) fn read_cmap(reader: &mut Reader<'_, '_, '_>, key: i64) -> Result<PdfCMap,ValueError> {
+pub fn read_cmap(reader: &mut Reader<'_, '_, '_>, key: i64) -> Result<PdfCMap,ValueError> {
     let row = reader.take("pdf_cmap", key, 5)?; let name = reader.text(row,2)?;
     match row.text(1)? {
         "predefined" => { null_except(row, 3..5, &[])?; Ok(PdfCMap::Predefined { name }) },
@@ -90,7 +96,7 @@ fn read_cid_font(reader: &mut Reader<'_, '_, '_>, key: i64) -> Result<PdfCidFont
     Ok(PdfCidFont { true_type: boolean(row, 1)?, base_font: reader.text(row,2)?, system_info: PdfCidSystemInfo { registry: reader.text(row,3)?, ordering: reader.text(row,4)?, supplement: integer(row, 5)? }, descriptor: read_descriptor(reader, row.integer(6)?)?, default_width: row.real(7)?, widths, default_vertical, vertical_metrics, cid_to_gid, program: optional_integer(row, 12)?.map(|value| read_program(reader, value)).transpose()?, extra: cos::read_dictionary(reader, row.integer(13)?)? })
 }
 
-pub(super) fn write_font(out: &mut Projection<'_, '_>, font: &PdfFont) -> Result<i64,ValueError> {
+pub fn write_font(out: &mut Projection<'_, '_>, font: &PdfFont) -> Result<i64,ValueError> {
     let mut fields = [C::Null; 17];
     let kind = match &font.kind {
         PdfFontKind::Type1 { base_font, encoding, first_char, descriptor, program, .. } | PdfFontKind::TrueType { base_font, encoding, first_char, descriptor, program, .. } => { fields[0] = C::Text(base_font); fields[1] = C::Integer(write_encoding(out, encoding)?); fields[2] = C::Integer(i64::from(*first_char)); if let Some(descriptor) = descriptor { fields[3] = C::Integer(write_descriptor(out, descriptor)?); } if let Some(program) = program { fields[4] = C::Integer(write_program(out, program)?); } if matches!(font.kind, PdfFontKind::Type1 { .. }) { "type1" } else { "trueType" } },
@@ -107,7 +113,7 @@ pub(super) fn write_font(out: &mut Projection<'_, '_>, font: &PdfFont) -> Result
     Ok(key)
 }
 
-pub(super) fn read_font(reader: &mut Reader<'_, '_, '_>, key: i64) -> Result<PdfFont,ValueError> {
+pub fn read_font(reader: &mut Reader<'_, '_, '_>, key: i64) -> Result<PdfFont,ValueError> {
     let row = reader.take("pdf_font", key, 22)?; let kind = row.text(2)?;
     let present: &[usize] = match kind { "type1" | "trueType" => &[3,4,5,6,7], "type3" => &[4,5,6,8,9,10,11,12,13,14,15,16,17], "type0" => &[3,18,19], _ => return Err(ValueError::new(ValueRefusalKind::InvalidValue,"unknown PDF font kind")) };
     null_except(row, 3..20, present)?;

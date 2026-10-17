@@ -1,0 +1,2034 @@
+{
+  "description": "Language-agnostic corpus of the schema parser projection: each case lists schema documents (with the hand-written TypeScript a leaf already declares), and per export the instances every implementation must accept (valid), refuse (invalid), the ones the normative schema accepts but a projection may refuse because it follows a declared type or a safe-integer rule (stricter), and the ones both admit although they carry a property the schema does not declare (tolerated: only where the schema leaves the object open, because the parser drops that property). An object states additionalProperties: false exactly where the projection must refuse an unknown property, so every verdict equals the verdict of an independent validator. A property with a default that the declared type requires is filled with that default when it is absent (defaulted: input and the value the parser returns), and a property the declared type marks optional is left absent.",
+  "cases": [
+    {
+      "name": "scalars",
+      "documents": [
+        {
+          "name": "scalars",
+          "seed": "",
+          "schema": {
+            "$schema": "http://json-schema.org/draft-07/schema#",
+            "$id": "https://json.schemas.assets.semio-tech.com/s/oracle/scalars.json",
+            "title": "scalars",
+            "$defs": {
+              "Label": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4,
+                "pattern": "^[a-z]+$"
+              },
+              "Count": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 10
+              },
+              "Whole": {
+                "type": "integer"
+              },
+              "Ratio": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "Flag": {
+                "type": "boolean"
+              },
+              "Mode": {
+                "enum": [
+                  "fast",
+                  "slow"
+                ]
+              },
+              "Fixed": {
+                "const": "v1"
+              }
+            }
+          }
+        }
+      ],
+      "probes": [
+        {
+          "document": "scalars",
+          "export": "Label",
+          "valid": [
+            "abc",
+            "a",
+            "abcd"
+          ],
+          "invalid": [
+            "",
+            "abcde",
+            "ABC",
+            "a1",
+            1,
+            null,
+            true,
+            [],
+            {}
+          ]
+        },
+        {
+          "document": "scalars",
+          "export": "Count",
+          "valid": [
+            0,
+            10,
+            5
+          ],
+          "invalid": [
+            -1,
+            11,
+            1.5,
+            "1",
+            null,
+            true,
+            [],
+            {}
+          ]
+        },
+        {
+          "document": "scalars",
+          "export": "Whole",
+          "valid": [
+            0,
+            -5,
+            9007199254740991
+          ],
+          "invalid": [
+            1.5,
+            "1",
+            null,
+            false
+          ],
+          "stricter": [
+            1e+300
+          ]
+        },
+        {
+          "document": "scalars",
+          "export": "Ratio",
+          "valid": [
+            0,
+            0.5,
+            1
+          ],
+          "invalid": [
+            -0.1,
+            1.1,
+            "0",
+            null,
+            true
+          ]
+        },
+        {
+          "document": "scalars",
+          "export": "Flag",
+          "valid": [
+            true,
+            false
+          ],
+          "invalid": [
+            0,
+            1,
+            "true",
+            null,
+            []
+          ]
+        },
+        {
+          "document": "scalars",
+          "export": "Mode",
+          "valid": [
+            "fast",
+            "slow"
+          ],
+          "invalid": [
+            "other",
+            "",
+            1,
+            null,
+            []
+          ]
+        },
+        {
+          "document": "scalars",
+          "export": "Fixed",
+          "valid": [
+            "v1"
+          ],
+          "invalid": [
+            "v2",
+            "",
+            1,
+            null
+          ]
+        }
+      ]
+    },
+    {
+      "name": "objects",
+      "documents": [
+        {
+          "name": "objects",
+          "seed": "",
+          "schema": {
+            "$schema": "http://json-schema.org/draft-07/schema#",
+            "$id": "https://json.schemas.assets.semio-tech.com/s/oracle/objects.json",
+            "title": "objects",
+            "$defs": {
+              "Point": {
+                "title": "Point",
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "x",
+                  "y"
+                ],
+                "properties": {
+                  "x": {
+                    "type": "number"
+                  },
+                  "y": {
+                    "type": "number"
+                  }
+                }
+              },
+              "Shape": {
+                "title": "Shape",
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "name",
+                  "points"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "points": {
+                    "type": "array",
+                    "minItems": 1,
+                    "maxItems": 3,
+                    "items": {
+                      "$ref": "#/$defs/Point"
+                    }
+                  },
+                  "tags": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "origin": {
+                    "$ref": "#/$defs/Point"
+                  }
+                }
+              }
+            }
+          }
+        }
+      ],
+      "probes": [
+        {
+          "document": "objects",
+          "export": "Point",
+          "valid": [
+            {
+              "x": 0,
+              "y": 0
+            },
+            {
+              "x": -1.5,
+              "y": 2
+            }
+          ],
+          "invalid": [
+            {},
+            {
+              "x": 0
+            },
+            {
+              "x": "0",
+              "y": 0
+            },
+            {
+              "x": 0,
+              "y": null
+            },
+            [],
+            null,
+            1,
+            {
+              "x": 0,
+              "y": 0,
+              "z": 1
+            }
+          ]
+        },
+        {
+          "document": "objects",
+          "export": "Shape",
+          "valid": [
+            {
+              "name": "a",
+              "points": [
+                {
+                  "x": 0,
+                  "y": 0
+                }
+              ]
+            },
+            {
+              "name": "b",
+              "points": [
+                {
+                  "x": 0,
+                  "y": 0
+                },
+                {
+                  "x": 1,
+                  "y": 1
+                },
+                {
+                  "x": 2,
+                  "y": 2
+                }
+              ],
+              "tags": [
+                "t",
+                "u"
+              ],
+              "origin": {
+                "x": 9,
+                "y": 9
+              }
+            }
+          ],
+          "invalid": [
+            {},
+            {
+              "name": "a"
+            },
+            {
+              "name": 1,
+              "points": [
+                {
+                  "x": 0,
+                  "y": 0
+                }
+              ]
+            },
+            {
+              "name": "a",
+              "points": []
+            },
+            {
+              "name": "a",
+              "points": [
+                {
+                  "x": 0,
+                  "y": 0
+                },
+                {
+                  "x": 0,
+                  "y": 0
+                },
+                {
+                  "x": 0,
+                  "y": 0
+                },
+                {
+                  "x": 0,
+                  "y": 0
+                }
+              ]
+            },
+            {
+              "name": "a",
+              "points": [
+                {
+                  "x": 0
+                }
+              ]
+            },
+            {
+              "name": "a",
+              "points": [
+                {
+                  "x": 0,
+                  "y": "1"
+                }
+              ]
+            },
+            {
+              "name": "a",
+              "points": [
+                {
+                  "x": 0,
+                  "y": 0
+                }
+              ],
+              "tags": [
+                1
+              ]
+            },
+            {
+              "name": "a",
+              "points": [
+                {
+                  "x": 0,
+                  "y": 0
+                }
+              ],
+              "origin": {}
+            },
+            null,
+            1,
+            "x",
+            {
+              "name": "a",
+              "points": [
+                {
+                  "x": 0,
+                  "y": 0
+                }
+              ],
+              "extra": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "nullable",
+      "documents": [
+        {
+          "name": "nullable",
+          "seed": "",
+          "schema": {
+            "$schema": "http://json-schema.org/draft-07/schema#",
+            "$id": "https://json.schemas.assets.semio-tech.com/s/oracle/nullable.json",
+            "title": "nullable",
+            "$defs": {
+              "MaybeText": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "maxLength": 3
+              },
+              "MaybeCount": {
+                "anyOf": [
+                  {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "Holder": {
+                "title": "Holder",
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "text"
+                ],
+                "properties": {
+                  "text": {
+                    "$ref": "#/$defs/MaybeText"
+                  },
+                  "count": {
+                    "$ref": "#/$defs/MaybeCount"
+                  }
+                }
+              }
+            }
+          }
+        }
+      ],
+      "probes": [
+        {
+          "document": "nullable",
+          "export": "MaybeText",
+          "valid": [
+            "a",
+            null,
+            "abc",
+            ""
+          ],
+          "invalid": [
+            "abcd",
+            1,
+            true,
+            [],
+            {}
+          ]
+        },
+        {
+          "document": "nullable",
+          "export": "MaybeCount",
+          "valid": [
+            0,
+            null,
+            3
+          ],
+          "invalid": [
+            -1,
+            "1",
+            1.5,
+            true,
+            []
+          ]
+        },
+        {
+          "document": "nullable",
+          "export": "Holder",
+          "valid": [
+            {
+              "text": null
+            },
+            {
+              "text": "a",
+              "count": 2
+            },
+            {
+              "text": "a",
+              "count": null
+            }
+          ],
+          "invalid": [
+            {},
+            {
+              "text": 1
+            },
+            {
+              "text": "abcd"
+            },
+            {
+              "text": "a",
+              "count": -1
+            },
+            null
+          ]
+        }
+      ]
+    },
+    {
+      "name": "unions",
+      "documents": [
+        {
+          "name": "unions",
+          "seed": "export type Shape2 = { readonly kind: \"circle\"; readonly radius: number } | { readonly kind: \"square\"; readonly side: number };\nexport type Edit = { readonly insert: string } | { readonly remove: number };\n",
+          "schema": {
+            "$schema": "http://json-schema.org/draft-07/schema#",
+            "$id": "https://json.schemas.assets.semio-tech.com/s/oracle/unions.json",
+            "title": "unions",
+            "$defs": {
+              "Shape2": {
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "kind",
+                      "radius"
+                    ],
+                    "properties": {
+                      "kind": {
+                        "const": "circle"
+                      },
+                      "radius": {
+                        "type": "number"
+                      }
+                    }
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "kind",
+                      "side"
+                    ],
+                    "properties": {
+                      "kind": {
+                        "const": "square"
+                      },
+                      "side": {
+                        "type": "number"
+                      }
+                    }
+                  }
+                ]
+              },
+              "Edit": {
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "insert"
+                    ],
+                    "properties": {
+                      "insert": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "remove"
+                    ],
+                    "properties": {
+                      "remove": {
+                        "type": "integer",
+                        "minimum": 0
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ],
+      "probes": [
+        {
+          "document": "unions",
+          "export": "Shape2",
+          "valid": [
+            {
+              "kind": "circle",
+              "radius": 1
+            },
+            {
+              "kind": "square",
+              "side": 2
+            }
+          ],
+          "invalid": [
+            {
+              "kind": "triangle"
+            },
+            {
+              "kind": "circle"
+            },
+            {
+              "kind": "circle",
+              "radius": "1"
+            },
+            {
+              "kind": "square",
+              "radius": 1
+            },
+            {},
+            null,
+            3,
+            "circle",
+            {
+              "kind": "circle",
+              "radius": 1,
+              "extra": true
+            }
+          ]
+        },
+        {
+          "document": "unions",
+          "export": "Edit",
+          "valid": [
+            {
+              "insert": "a"
+            },
+            {
+              "remove": 0
+            }
+          ],
+          "invalid": [
+            {},
+            {
+              "insert": 1
+            },
+            {
+              "remove": -1
+            },
+            {
+              "other": 1
+            },
+            null,
+            "x",
+            [],
+            {
+              "insert": "a",
+              "remove": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "tuples",
+      "documents": [
+        {
+          "name": "tuples",
+          "seed": "export type Pair = [number, number];\nexport type Triple = [string, number, boolean];\n",
+          "schema": {
+            "$schema": "http://json-schema.org/draft-07/schema#",
+            "$id": "https://json.schemas.assets.semio-tech.com/s/oracle/tuples.json",
+            "title": "tuples",
+            "$defs": {
+              "Pair": {
+                "type": "array",
+                "items": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ],
+                "minItems": 2,
+                "maxItems": 2
+              },
+              "Triple": {
+                "type": "array",
+                "items": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "boolean"
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ],
+      "probes": [
+        {
+          "document": "tuples",
+          "export": "Pair",
+          "valid": [
+            [
+              1,
+              2
+            ],
+            [
+              0.5,
+              -1
+            ]
+          ],
+          "invalid": [
+            [
+              1
+            ],
+            [
+              1,
+              2,
+              3
+            ],
+            [
+              1,
+              "2"
+            ],
+            [
+              "1",
+              2
+            ],
+            "ab",
+            null,
+            {},
+            []
+          ]
+        },
+        {
+          "document": "tuples",
+          "export": "Triple",
+          "valid": [
+            [
+              "a",
+              1,
+              true
+            ]
+          ],
+          "invalid": [
+            [
+              "a",
+              "1",
+              true
+            ],
+            [
+              1,
+              1,
+              true
+            ],
+            "abc",
+            null
+          ],
+          "stricter": [
+            [
+              "a",
+              1
+            ],
+            [
+              "a",
+              1,
+              true,
+              false
+            ],
+            []
+          ]
+        }
+      ]
+    },
+    {
+      "name": "maps",
+      "documents": [
+        {
+          "name": "maps",
+          "seed": "",
+          "schema": {
+            "$schema": "http://json-schema.org/draft-07/schema#",
+            "$id": "https://json.schemas.assets.semio-tech.com/s/oracle/maps.json",
+            "title": "maps",
+            "$defs": {
+              "Point": {
+                "title": "Point",
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "x",
+                  "y"
+                ],
+                "properties": {
+                  "x": {
+                    "type": "number"
+                  },
+                  "y": {
+                    "type": "number"
+                  }
+                }
+              },
+              "Weights": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "number",
+                  "minimum": 0
+                }
+              },
+              "Index": {
+                "type": "object",
+                "additionalProperties": {
+                  "$ref": "#/$defs/Point"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "probes": [
+        {
+          "document": "maps",
+          "export": "Weights",
+          "valid": [
+            {},
+            {
+              "a": 1
+            },
+            {
+              "a": 0,
+              "b": 2.5
+            }
+          ],
+          "invalid": [
+            {
+              "a": -1
+            },
+            {
+              "a": "x"
+            },
+            {
+              "a": null
+            },
+            [],
+            null,
+            1
+          ]
+        },
+        {
+          "document": "maps",
+          "export": "Index",
+          "valid": [
+            {},
+            {
+              "p": {
+                "x": 1,
+                "y": 2
+              }
+            }
+          ],
+          "invalid": [
+            {
+              "p": {
+                "x": 1
+              }
+            },
+            {
+              "p": 1
+            },
+            {
+              "p": {
+                "x": 1,
+                "y": "2"
+              }
+            },
+            [],
+            null
+          ]
+        }
+      ],
+      "rawProbes": [
+        {
+          "document": "maps",
+          "export": "Weights",
+          "text": "{\"__proto__\": 1, \"constructor\": 2}",
+          "valid": true
+        },
+        {
+          "document": "maps",
+          "export": "Weights",
+          "text": "{\"__proto__\": -1}",
+          "valid": false
+        }
+      ]
+    },
+    {
+      "name": "opaque",
+      "documents": [
+        {
+          "name": "opaque",
+          "seed": "export type Anything = readonly unknown[];\n",
+          "schema": {
+            "$schema": "http://json-schema.org/draft-07/schema#",
+            "$id": "https://json.schemas.assets.semio-tech.com/s/oracle/opaque.json",
+            "title": "opaque",
+            "$defs": {
+              "Bag": {
+                "type": "object"
+              },
+              "Anything": {
+                "type": "array"
+              }
+            }
+          }
+        }
+      ],
+      "probes": [
+        {
+          "document": "opaque",
+          "export": "Bag",
+          "valid": [
+            {},
+            {
+              "a": 1
+            },
+            {
+              "a": {
+                "b": [
+                  1,
+                  null
+                ]
+              }
+            }
+          ],
+          "invalid": [
+            [],
+            null,
+            1,
+            "x",
+            true
+          ]
+        },
+        {
+          "document": "opaque",
+          "export": "Anything",
+          "valid": [
+            [],
+            [
+              1,
+              "a",
+              null,
+              {
+                "k": 1
+              }
+            ]
+          ],
+          "invalid": [
+            {},
+            null,
+            1,
+            "x"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "references",
+      "documents": [
+        {
+          "name": "other",
+          "seed": "",
+          "schema": {
+            "$schema": "http://json-schema.org/draft-07/schema#",
+            "$id": "https://json.schemas.assets.semio-tech.com/s/oracle/other.json",
+            "title": "other",
+            "$defs": {
+              "Pt": {
+                "title": "Pt",
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "x"
+                ],
+                "properties": {
+                  "x": {
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "holder",
+          "seed": "import type { Pt } from \"../../other/🧬️schema/🟦️.ts\";\n\nexport interface Holder {\n  readonly p: Pt;\n}\n\nexport type Wrapped = Pt;\n",
+          "schema": {
+            "$schema": "http://json-schema.org/draft-07/schema#",
+            "$id": "https://json.schemas.assets.semio-tech.com/s/oracle/holder.json",
+            "title": "holder",
+            "$defs": {
+              "Holder": {
+                "title": "Holder",
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "p"
+                ],
+                "properties": {
+                  "p": {
+                    "$ref": "https://json.schemas.assets.semio-tech.com/s/oracle/other.json#/$defs/Pt"
+                  }
+                }
+              },
+              "Wrapped": {
+                "allOf": [
+                  {
+                    "$ref": "https://json.schemas.assets.semio-tech.com/s/oracle/other.json#/$defs/Pt"
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ],
+      "probes": [
+        {
+          "document": "holder",
+          "export": "Holder",
+          "valid": [
+            {
+              "p": {
+                "x": 1
+              }
+            }
+          ],
+          "invalid": [
+            {},
+            {
+              "p": {}
+            },
+            {
+              "p": 1
+            },
+            {
+              "p": {
+                "x": 1.5
+              }
+            },
+            null
+          ]
+        },
+        {
+          "document": "holder",
+          "export": "Wrapped",
+          "valid": [
+            {
+              "x": 3
+            }
+          ],
+          "invalid": [
+            {},
+            {
+              "x": "3"
+            },
+            null,
+            []
+          ]
+        }
+      ]
+    },
+    {
+      "name": "declared-types",
+      "documents": [
+        {
+          "name": "declared",
+          "seed": "export interface Payload {\n  readonly count: number;\n}\n\nexport interface Record3 {\n  readonly id: string;\n  readonly payload: Payload;\n  readonly tags: string[];\n}\n",
+          "schema": {
+            "$schema": "http://json-schema.org/draft-07/schema#",
+            "$id": "https://json.schemas.assets.semio-tech.com/s/oracle/declared.json",
+            "title": "declared",
+            "$defs": {
+              "Payload": {
+                "title": "Payload",
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "count"
+                ],
+                "properties": {
+                  "count": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                }
+              },
+              "Record3": {
+                "title": "Record3",
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "id",
+                  "payload",
+                  "tags"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "payload": {
+                    "type": "object"
+                  },
+                  "tags": {
+                    "type": "array"
+                  }
+                }
+              }
+            }
+          }
+        }
+      ],
+      "probes": [
+        {
+          "document": "declared",
+          "export": "Record3",
+          "valid": [
+            {
+              "id": "a",
+              "payload": {
+                "count": 1
+              },
+              "tags": [
+                "x"
+              ]
+            },
+            {
+              "id": "b",
+              "payload": {
+                "count": 0
+              },
+              "tags": []
+            }
+          ],
+          "invalid": [
+            {},
+            {
+              "id": 1,
+              "payload": {
+                "count": 1
+              },
+              "tags": []
+            },
+            {
+              "id": "a",
+              "payload": [],
+              "tags": []
+            },
+            {
+              "id": "a",
+              "payload": {
+                "count": 1
+              }
+            }
+          ],
+          "stricter": [
+            {
+              "id": "a",
+              "payload": {},
+              "tags": []
+            },
+            {
+              "id": "a",
+              "payload": {
+                "count": 1
+              },
+              "tags": [
+                1
+              ]
+            },
+            {
+              "id": "a",
+              "payload": {
+                "count": -1
+              },
+              "tags": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "closed",
+      "documents": [
+        {
+          "name": "closed",
+          "seed": "export interface Nest {\n  inner: { n: number };\n  list?: { k?: string }[];\n  loose?: { z?: string };\n}\n\nexport type MaybeInline = { q?: string } | null;\n\nexport type Pair = [{ a: string }, string];\n\nexport type Tagged = { kind: \"n\"; n: number } | { kind: \"s\"; s?: string };\n\nexport type External = { A: number } | { B: string };\n\nexport interface Defaulted {\n  id: string;\n  tags: string[];\n  mode: string;\n  note?: string;\n  flag: boolean;\n}\n",
+          "schema": {
+            "$schema": "http://json-schema.org/draft-07/schema#",
+            "$id": "https://json.schemas.assets.semio-tech.com/s/oracle/closed.json",
+            "title": "closed",
+            "$defs": {
+              "Strict": {
+                "title": "Strict",
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "a"
+                ],
+                "properties": {
+                  "a": {
+                    "type": "string"
+                  },
+                  "b": {
+                    "type": "integer"
+                  }
+                }
+              },
+              "Loose": {
+                "title": "Loose",
+                "type": "object",
+                "required": [
+                  "a"
+                ],
+                "properties": {
+                  "a": {
+                    "type": "string"
+                  }
+                }
+              },
+              "Free": {
+                "title": "Free",
+                "type": "object",
+                "required": [
+                  "a"
+                ],
+                "properties": {
+                  "a": {
+                    "type": "string"
+                  }
+                },
+                "additionalProperties": true
+              },
+              "Empty": {
+                "title": "Empty",
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {}
+              },
+              "Nest": {
+                "title": "Nest",
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "inner"
+                ],
+                "properties": {
+                  "inner": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "n"
+                    ],
+                    "properties": {
+                      "n": {
+                        "type": "integer"
+                      }
+                    }
+                  },
+                  "list": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "properties": {
+                        "k": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  },
+                  "loose": {
+                    "type": "object",
+                    "properties": {
+                      "z": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              },
+              "MaybeRef": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Strict"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "MaybeInline": {
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "q": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "Dict": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "v"
+                  ],
+                  "properties": {
+                    "v": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              },
+              "Pair": {
+                "type": "array",
+                "items": [
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "a"
+                    ],
+                    "properties": {
+                      "a": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  {
+                    "type": "string"
+                  }
+                ],
+                "minItems": 2,
+                "maxItems": 2
+              },
+              "Tagged": {
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "kind",
+                      "n"
+                    ],
+                    "properties": {
+                      "kind": {
+                        "const": "n"
+                      },
+                      "n": {
+                        "type": "integer"
+                      }
+                    }
+                  },
+                  {
+                    "type": "object",
+                    "required": [
+                      "kind"
+                    ],
+                    "properties": {
+                      "kind": {
+                        "const": "s"
+                      },
+                      "s": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                ]
+              },
+              "External": {
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "A"
+                    ],
+                    "properties": {
+                      "A": {
+                        "type": "integer"
+                      }
+                    }
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "B"
+                    ],
+                    "properties": {
+                      "B": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                ]
+              },
+              "Holder": {
+                "title": "Holder",
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "strict",
+                  "loose"
+                ],
+                "properties": {
+                  "strict": {
+                    "$ref": "#/$defs/Strict"
+                  },
+                  "loose": {
+                    "$ref": "#/$defs/Loose"
+                  }
+                }
+              },
+              "Defaulted": {
+                "title": "Defaulted",
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "id"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "tags": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "default": []
+                  },
+                  "mode": {
+                    "type": "string",
+                    "default": "auto"
+                  },
+                  "note": {
+                    "type": "string",
+                    "default": "kept"
+                  },
+                  "flag": {
+                    "type": "boolean",
+                    "default": false
+                  }
+                }
+              }
+            }
+          }
+        }
+      ],
+      "probes": [
+        {
+          "document": "closed",
+          "export": "Strict",
+          "valid": [
+            {
+              "a": "x"
+            },
+            {
+              "a": "x",
+              "b": 1
+            },
+            {
+              "a": "",
+              "b": -3
+            }
+          ],
+          "invalid": [
+            {},
+            {
+              "b": 1
+            },
+            {
+              "a": "x",
+              "b": "1"
+            },
+            {
+              "a": "x",
+              "extra": 1
+            },
+            {
+              "a": "x",
+              "b": 1,
+              "extra": null
+            },
+            {
+              "a": "x",
+              "A": "y"
+            },
+            [],
+            null,
+            1
+          ]
+        },
+        {
+          "document": "closed",
+          "export": "Loose",
+          "valid": [
+            {
+              "a": "x"
+            }
+          ],
+          "invalid": [
+            {},
+            {
+              "a": 1
+            },
+            null
+          ],
+          "tolerated": [
+            {
+              "a": "x",
+              "extra": 1
+            },
+            {
+              "a": "x",
+              "extra": {
+                "deep": [
+                  1
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "document": "closed",
+          "export": "Free",
+          "valid": [
+            {
+              "a": "x"
+            }
+          ],
+          "invalid": [
+            {},
+            {
+              "a": 1
+            }
+          ],
+          "tolerated": [
+            {
+              "a": "x",
+              "extra": 1
+            }
+          ]
+        },
+        {
+          "document": "closed",
+          "export": "Empty",
+          "valid": [
+            {}
+          ],
+          "invalid": [
+            {
+              "x": 1
+            },
+            {
+              "a": null
+            },
+            [],
+            null,
+            "x"
+          ]
+        },
+        {
+          "document": "closed",
+          "export": "Nest",
+          "valid": [
+            {
+              "inner": {
+                "n": 1
+              }
+            },
+            {
+              "inner": {
+                "n": 1
+              },
+              "list": [
+                {
+                  "k": "a"
+                },
+                {}
+              ],
+              "loose": {
+                "z": "y"
+              }
+            }
+          ],
+          "invalid": [
+            {
+              "inner": {
+                "n": 1,
+                "extra": 1
+              }
+            },
+            {
+              "inner": {
+                "n": 1
+              },
+              "extra": 1
+            },
+            {
+              "inner": {
+                "n": 1
+              },
+              "list": [
+                {
+                  "k": "a",
+                  "extra": 1
+                }
+              ]
+            },
+            {
+              "inner": {
+                "n": 1
+              },
+              "list": [
+                {
+                  "extra": 1
+                }
+              ]
+            },
+            {
+              "inner": {
+                "n": 1
+              },
+              "loose": {
+                "z": 1
+              }
+            },
+            {
+              "inner": {}
+            }
+          ],
+          "tolerated": [
+            {
+              "inner": {
+                "n": 1
+              },
+              "loose": {
+                "z": "y",
+                "extra": 1
+              }
+            },
+            {
+              "inner": {
+                "n": 1
+              },
+              "loose": {
+                "extra": 1
+              }
+            }
+          ]
+        },
+        {
+          "document": "closed",
+          "export": "MaybeRef",
+          "valid": [
+            null,
+            {
+              "a": "x"
+            }
+          ],
+          "invalid": [
+            {
+              "a": "x",
+              "extra": 1
+            },
+            {},
+            "x"
+          ]
+        },
+        {
+          "document": "closed",
+          "export": "MaybeInline",
+          "valid": [
+            null,
+            {},
+            {
+              "q": "x"
+            }
+          ],
+          "invalid": [
+            {
+              "q": "x",
+              "extra": 1
+            },
+            {
+              "extra": 1
+            },
+            {
+              "q": 1
+            },
+            "x"
+          ]
+        },
+        {
+          "document": "closed",
+          "export": "Dict",
+          "valid": [
+            {},
+            {
+              "k": {
+                "v": 1
+              }
+            },
+            {
+              "k": {
+                "v": 1
+              },
+              "other": {
+                "v": 2
+              }
+            }
+          ],
+          "invalid": [
+            {
+              "k": {
+                "v": 1,
+                "extra": 1
+              }
+            },
+            {
+              "k": {}
+            },
+            {
+              "k": 1
+            },
+            {
+              "k": null
+            }
+          ]
+        },
+        {
+          "document": "closed",
+          "export": "Pair",
+          "valid": [
+            [
+              {
+                "a": "x"
+              },
+              "y"
+            ]
+          ],
+          "invalid": [
+            [
+              {
+                "a": "x",
+                "extra": 1
+              },
+              "y"
+            ],
+            [
+              {},
+              "y"
+            ],
+            [
+              {
+                "a": "x"
+              }
+            ],
+            [
+              {
+                "a": "x"
+              },
+              "y",
+              "z"
+            ],
+            [
+              {
+                "a": "x"
+              },
+              1
+            ]
+          ]
+        },
+        {
+          "document": "closed",
+          "export": "Tagged",
+          "valid": [
+            {
+              "kind": "n",
+              "n": 1
+            },
+            {
+              "kind": "s"
+            },
+            {
+              "kind": "s",
+              "s": "x"
+            }
+          ],
+          "invalid": [
+            {
+              "kind": "n",
+              "n": 1,
+              "extra": 1
+            },
+            {
+              "kind": "n"
+            },
+            {
+              "kind": "n",
+              "n": "1"
+            },
+            {
+              "kind": "x"
+            },
+            {
+              "n": 1
+            },
+            {
+              "kind": "s",
+              "s": 1
+            }
+          ],
+          "tolerated": [
+            {
+              "kind": "s",
+              "s": "x",
+              "extra": 1
+            }
+          ]
+        },
+        {
+          "document": "closed",
+          "export": "External",
+          "valid": [
+            {
+              "A": 1
+            },
+            {
+              "B": "x"
+            }
+          ],
+          "invalid": [
+            {
+              "A": 1,
+              "B": "x"
+            },
+            {
+              "A": 1,
+              "extra": 1
+            },
+            {
+              "B": "x",
+              "extra": 1
+            },
+            {},
+            {
+              "C": 1
+            },
+            {
+              "A": "1"
+            },
+            {
+              "B": 1
+            }
+          ]
+        },
+        {
+          "document": "closed",
+          "export": "Holder",
+          "valid": [
+            {
+              "strict": {
+                "a": "x"
+              },
+              "loose": {
+                "a": "y"
+              }
+            }
+          ],
+          "invalid": [
+            {
+              "strict": {
+                "a": "x",
+                "extra": 1
+              },
+              "loose": {
+                "a": "y"
+              }
+            },
+            {
+              "strict": {
+                "a": "x"
+              },
+              "loose": {
+                "a": "y"
+              },
+              "extra": 1
+            },
+            {
+              "strict": {
+                "a": "x"
+              }
+            }
+          ],
+          "tolerated": [
+            {
+              "strict": {
+                "a": "x"
+              },
+              "loose": {
+                "a": "y",
+                "extra": 1
+              }
+            }
+          ]
+        },
+        {
+          "document": "closed",
+          "export": "Defaulted",
+          "valid": [
+            {
+              "id": "a",
+              "tags": [
+                "x"
+              ],
+              "mode": "m",
+              "note": "n",
+              "flag": true
+            }
+          ],
+          "invalid": [
+            {},
+            {
+              "id": "a",
+              "tags": [
+                1
+              ]
+            },
+            {
+              "id": "a",
+              "mode": 1
+            },
+            {
+              "id": "a",
+              "flag": "no"
+            },
+            {
+              "id": "a",
+              "extra": 1
+            }
+          ],
+          "defaulted": [
+            {
+              "input": {
+                "id": "a"
+              },
+              "output": {
+                "id": "a",
+                "tags": [],
+                "mode": "auto",
+                "flag": false
+              }
+            },
+            {
+              "input": {
+                "id": "a",
+                "mode": "m"
+              },
+              "output": {
+                "id": "a",
+                "tags": [],
+                "mode": "m",
+                "flag": false
+              }
+            }
+          ]
+        }
+      ],
+      "rawProbes": [
+        {
+          "document": "closed",
+          "export": "Strict",
+          "text": "{\"a\": \"x\", \"__proto__\": {}}",
+          "valid": false
+        },
+        {
+          "document": "closed",
+          "export": "Strict",
+          "text": "{\"__proto__\": 1, \"a\": \"x\"}",
+          "valid": false
+        },
+        {
+          "document": "closed",
+          "export": "Loose",
+          "text": "{\"a\": \"x\", \"__proto__\": {}}",
+          "valid": true,
+          "dropsKeys": true
+        },
+        {
+          "document": "closed",
+          "export": "Empty",
+          "text": "{\"__proto__\": {}}",
+          "valid": false
+        }
+      ]
+    }
+  ]
+}

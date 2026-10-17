@@ -1,8 +1,51 @@
-use super::*;
+use crate::editor::puzzle5d::terminology::Puzzle5dLabels;
+use crate::editor::puzzle5d::view::{Puzzle5dInteractionSnapshot, Puzzle5dScene};
+use crate::editor::puzzle5d::entities::{puzzle5d_grip_full_id, Puzzle5dFastener, PUZZLE5D_GRANULARITY_FASTENER, PUZZLE5D_GRANULARITY_GRIP, PUZZLE5D_GRANULARITY_PART};
+use semio_framework_plugin::BuiltNode;
+use semio_framework_plugin::TreeWindows;
+#[allow(unused_imports)]
+use crate::editor::puzzle5d::interaction::ui_label;
+#[allow(unused_imports)]
+use crate::editor::puzzle5d::catalog::puzzle5d_part_display_label;
+#[allow(unused_imports)]
+use crate::editor::puzzle5d::view::engine_grip_kind;
+#[allow(unused_imports)]
+use crate::editor::puzzle5d::entities::{part_scale_json, target_volume_flat_rect, target_volume_scale_json, Puzzle5dDocument, Puzzle5dTargetVolume, PUZZLE5D_GRANULARITY_TARGET_VOLUME, PUZZLE5D_PLAY_CONTROLLER_ID};
+#[allow(unused_imports)]
+use semio_framework_plugin::tree_item_desc;
+#[allow(unused_imports)]
+use semio_framework_plugin::tree_item_with_action;
+#[allow(unused_imports)]
+use semio_framework_plugin::ui_node_list;
+#[allow(unused_imports)]
+use semio_framework_plugin::ActionFactory;
+#[allow(unused_imports)]
+use semio_framework_ui_locale::LocalizedLabel;
+#[allow(unused_imports)]
+use semio_framework_plugin::PanelGroup;
+#[allow(unused_imports)]
+use semio_framework_plugin::PanelTabDefinition;
+#[allow(unused_imports)]
+use semio_framework_plugin::PanelTabKind;
+#[allow(unused_imports)]
+use semio_framework_plugin::PanelTreeBuilder;
+#[allow(unused_imports)]
+use semio_framework_plugin::PluginAssemblyError;
+#[allow(unused_imports)]
+use semio_framework_plugin::UiAssemblyResult;
+#[allow(unused_imports)]
+use semio_framework_plugin::UiFixedList;
+#[allow(unused_imports)]
+use semio_framework_plugin::UiValue;
+#[allow(unused_imports)]
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_ID;
+#[allow(unused_imports)]
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_LABEL;
+use crate::editor::puzzle5d::panels::inspection::*;
 use crate::editor::puzzle5d::config::Puzzle5dRuntime;
 use crate::editor::puzzle5d::terminology::puzzle5d_labels;
-use crate::editor::puzzle5d::{empty_document, Puzzle5dGrip, Puzzle5dPart, Puzzle5dPart2d, Puzzle5dPart3d};
-use crate::editor::puzzle5d::unit_tests::context::*;
+use crate::editor::puzzle5d::entities::{empty_document, Puzzle5dGrip, Puzzle5dPart, Puzzle5dPart2d, Puzzle5dPart3d};
+use crate::editor::puzzle5d::testkit::*;
 use semio_framework_plugin::{TreeWindowRequest, ViewModel};
 
 fn labels() -> &'static Puzzle5dLabels {

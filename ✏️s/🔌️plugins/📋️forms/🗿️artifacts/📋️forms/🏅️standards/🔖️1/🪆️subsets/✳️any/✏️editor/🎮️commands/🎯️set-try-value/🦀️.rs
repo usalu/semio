@@ -19,7 +19,7 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex, OnceLock};
 
 pub const SET_TRY_VALUE_STEP_ACTION_ID: &str = "setTryValueStep";
-pub(crate) const MAX_TRY_VALUE_BYTES_PER_STEP: usize = 4_096;
+pub const MAX_TRY_VALUE_BYTES_PER_STEP: usize = 4_096;
 const MAX_COMMAND_INPUT_BYTES: usize = 16_384;
 const MAX_COMMAND_INPUT_CHUNKS: u64 = 16_384;
 const MAX_LIVE_TRY_VALUE_SESSIONS: usize = 64;
@@ -29,7 +29,7 @@ static NEXT_TRY_VALUE_REQUEST: AtomicU64 = AtomicU64::new(20_000);
 pub struct ChunkAddressableJson(SharedUtf8);
 
 impl ChunkAddressableJson {
-    pub(crate) fn owner(&self) -> Arc<str> { Arc::from(self.0.as_str()) }
+    pub fn owner(&self) -> Arc<str> { Arc::from(self.0.as_str()) }
 }
 
 impl std::ops::Deref for ChunkAddressableJson {
@@ -153,21 +153,21 @@ struct FormsInputBuffer {
 }
 
 #[derive(Default)]
-pub(crate) struct FormsInputRegistry {
+pub struct FormsInputRegistry {
     buffers: BTreeMap<FormsInputKey, FormsInputBuffer>,
 }
 
 static INPUT_REGISTRY: OnceLock<Mutex<FormsInputRegistry>> = OnceLock::new();
 
-pub(crate) fn input_registry() -> &'static Mutex<FormsInputRegistry> { INPUT_REGISTRY.get_or_init(|| Mutex::new(FormsInputRegistry::default())) }
+pub fn input_registry() -> &'static Mutex<FormsInputRegistry> { INPUT_REGISTRY.get_or_init(|| Mutex::new(FormsInputRegistry::default())) }
 
 #[derive(Clone)]
-pub(crate) struct StagedCommandInput {
+pub struct StagedCommandInput {
     pub operation: semio_framework_plugin::AppOperationContext,
     pub source: Arc<str>,
 }
 
-pub(crate) fn stage_command_input(
+pub fn stage_command_input(
     operation: &semio_framework_plugin::AppOperationContext,
     lease: &FormsTryWindowLease,
     semantic_id: &str,
@@ -257,7 +257,7 @@ static SESSIONS: OnceLock<Mutex<BTreeMap<FormsJobKey, TryValueSession>>> = OnceL
 
 fn sessions() -> &'static Mutex<BTreeMap<FormsJobKey, TryValueSession>> { SESSIONS.get_or_init(|| Mutex::new(BTreeMap::new())) }
 
-pub(crate) fn cancel_pending_generations(operation: &semio_framework_plugin::AppOperationContext, lease: &FormsTryWindowLease) {
+pub fn cancel_pending_generations(operation: &semio_framework_plugin::AppOperationContext, lease: &FormsTryWindowLease) {
     cancel_inputs(operation, lease);
     sessions().lock().expect("forms Try sessions lock").retain(|key, _| {
         key.app_id != operation.app_instance_id.to_string()
@@ -315,7 +315,7 @@ fn queue(payload: &SetTryValueStep) -> Effect {
     Effect::DispatchAction { req: RequestId(NEXT_TRY_VALUE_REQUEST.fetch_add(1, Ordering::Relaxed)), action: SET_TRY_VALUE_STEP_ACTION_ID.into(), args: Some(semio_framework_value::ToValue::to_value(payload)), delay_ms: 0 }
 }
 
-pub(crate) struct TryWindowCommandOutput {
+pub struct TryWindowCommandOutput {
     pub emit: Emit<FormMutation, FormsConfigMutation>,
     pub transient: Option<FormsTryWindowTransient>,
 }
@@ -357,7 +357,7 @@ fn start(
     Ok(TryWindowCommandOutput::emit(Emit { effects: vec![queue(&next)], ui_scope: UiDirtyScope::None, ..Default::default() }))
 }
 
-pub(crate) fn start_window(
+pub fn start_window(
     payload: &SetTryValue,
     operation: &semio_framework_plugin::AppOperationContext,
     transient: &FormsTryWindowTransient,
@@ -376,7 +376,7 @@ pub(crate) fn start_window(
     start(&input.operation, lease, transient, TryValueWork::Single { payload: payload.clone(), source: input.source })
 }
 
-pub(crate) fn start_bulk_window(
+pub fn start_bulk_window(
     source: Arc<str>,
     operation: &semio_framework_plugin::AppOperationContext,
     transient: &FormsTryWindowTransient,
@@ -456,7 +456,7 @@ fn validate_continuation(payload: &SetTryValueStep, operation: &semio_framework_
     Ok(())
 }
 
-pub(crate) fn advance_window(
+pub fn advance_window(
     payload: &SetTryValueStep,
     operation: &semio_framework_plugin::AppOperationContext,
     transient: &FormsTryWindowTransient,
@@ -485,6 +485,4 @@ pub fn handle_step(_payload: &SetTryValueStep, _doc: &ArtifactView<'_, FormsSnap
 
 fn fault(code: &'static str, message: &'static str) -> Fault { Fault::new(FaultOrigin::App, FaultCode::new(code), message) }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️chunk-value-vectors/🦀️.rs"]
-mod chunk_value_vectors;
+

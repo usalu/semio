@@ -1,6 +1,6 @@
-use super::*;
+use crate::editor::sequence::panels::inspection::{SEQUENCE_PLAY_BODY_INSPECTOR, render};
 use crate::editor::sequence::terminology::sequence_play_labels;
-use crate::editor::sequence::unit_tests::context::{live_host_snapshot, new_app, render as render_body};
+use crate::editor_unit_tests::context::{live_host_snapshot, new_app, render as render_body};
 
 #[semio_framework_async_macros::async_test]
 async fn inspection_shows_prompt_when_nothing_selected() {

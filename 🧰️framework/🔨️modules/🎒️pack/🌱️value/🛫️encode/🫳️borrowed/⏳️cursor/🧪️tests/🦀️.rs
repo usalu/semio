@@ -89,7 +89,6 @@ fn borrowed_projected_pack_cursor_matches_neutral_buffer_oracle_and_exact_physic
             for _ in 0..stop { let demand=cursor.next_capacity_byte_demand().unwrap();let step=cursor.advance(&source,spec,&mut output,grant(demand,0)).unwrap();actual.extend_from_slice(&output[..step.written_bytes]);if step.complete{break} }
             assert!(bytes.starts_with(&actual));close(&mut cursor);
         }
-        eprintln!("[DEBUG] original borrowed Pack case{index} exact{}bytes five output grants/cancellation stops; copy<=64 one item, actual births/releases equal queried whole symbol owners",bytes.len());
     }
 }
 
@@ -130,7 +129,6 @@ fn borrowed_projected_pack_cursor_intrinsic_order_duplicates_and_exact_grants() 
             }
         }
         for stop in corpus["cancelStops"].as_array().unwrap().iter().map(|value|value.as_u64().unwrap()as usize){let mut cursor=BorrowedProjectedPackCursor::default();let mut output=[0;64];let mut actual=Vec::new();for _ in 0..stop{let demand=cursor.next_capacity_byte_demand().unwrap();let step=cursor.advance_intrinsic(&source,field,&mut output,grant(demand,0)).unwrap();actual.extend_from_slice(&output[..step.written_bytes]);if step.complete{break;}}assert!(bytes.starts_with(&actual));close(&mut cursor);}
-        eprintln!("[DEBUG] intrinsic Pack {} {} bytes; original ordered source, 15 finite copy/output controls and five explicit cancellation-close positions",row["name"].as_str().unwrap(),bytes.len());
     }
 }
 
@@ -164,7 +162,6 @@ fn borrowed_pack_failure_preserves_real_comparison_and_original_symbol_backing()
         if step.complete {break;}
     }
     assert!(cursor.terminal_is_empty());assert_eq!(released,retained);
-    eprintln!("[DEBUG] Pack post-comparison refusal retained original UTF8/source and every System symbol backing; sole Value receipt {} copy bytes",receipt.copied_bytes);
 }
 
 
@@ -184,5 +181,4 @@ fn borrowed_pack_flat_intrinsic_uses_only_original_actual_depth_and_receipts(){
     assert!(cursor.is_complete());assert_eq!(actual,expected(row["expectedHex"].as_str().unwrap()));
     let(step,event)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cursor.close(policy).unwrap());
     assert!(step.complete);assert!(step.progress.fits(policy));assert_eq!((event.requested_bytes,event.released_bytes),(step.progress.retained_capacity_bytes,step.progress.released_bytes));
-    eprintln!("[DEBUG] original flat intrinsic Pack byte oracle and System receipts use depth1, unchanged64 inline bound and fixed currencies");
 }

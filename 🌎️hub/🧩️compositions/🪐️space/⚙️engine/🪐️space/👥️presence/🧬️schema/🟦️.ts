@@ -36,6 +36,10 @@ type spaceSpacePresenceGuardSizeBounds = { readonly minItems?: number; readonly 
 
 export const spaceSpacePresenceGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : spaceSpacePresenceGuardReject(at, "value is not an object");
+export const spaceSpacePresenceGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) spaceSpacePresenceGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const spaceSpacePresenceGuardArray = (value: unknown, at: string, bounds: spaceSpacePresenceGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return spaceSpacePresenceGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) spaceSpacePresenceGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -65,22 +69,22 @@ export const spaceSpacePresenceGuardConstant = <T extends string | number | bool
   value === expected ? expected : spaceSpacePresenceGuardReject(at, `value is not ${String(expected)}`);
 //#endregion 🚪️Parsers
 
-export function parseSpacePresence(value: unknown, at = "$"): SpacePresence {
-  const row = spaceSpacePresenceGuardObject(value, at);
-  return {
-    camera: spaceSpacePresenceGuardObject(row["camera"], `${at}.camera`),
-    activeNodeId: row["activeNodeId"] === undefined ? undefined : spaceSpacePresenceGuardString(row["activeNodeId"], `${at}.activeNodeId`),
-    focusedNodeId: row["focusedNodeId"] === undefined ? undefined : spaceSpacePresenceGuardString(row["focusedNodeId"], `${at}.focusedNodeId`),
-    collapsedNodeIds: spaceSpacePresenceGuardArray(row["collapsedNodeIds"], `${at}.collapsedNodeIds`).map((item, index) => spaceSpacePresenceGuardString(item, `${at}.collapsedNodeIds[${index}]`)),
-    previewOffNodeIds: spaceSpacePresenceGuardArray(row["previewOffNodeIds"], `${at}.previewOffNodeIds`).map((item, index) => spaceSpacePresenceGuardString(item, `${at}.previewOffNodeIds[${index}]`)),
-  };
-}
-
 export function parseSpaceWindowCamera(value: unknown, at = "$"): SpaceWindowCamera {
-  const row = spaceSpacePresenceGuardObject(value, at);
+  const row = spaceSpacePresenceGuardClosed(spaceSpacePresenceGuardObject(value, at), at, ["x", "y", "zoom"]);
   return {
     x: spaceSpacePresenceGuardNumber(row["x"], `${at}.x`),
     y: spaceSpacePresenceGuardNumber(row["y"], `${at}.y`),
     zoom: spaceSpacePresenceGuardNumber(row["zoom"], `${at}.zoom`),
+  };
+}
+
+export function parseSpacePresence(value: unknown, at = "$"): SpacePresence {
+  const row = spaceSpacePresenceGuardClosed(spaceSpacePresenceGuardObject(value, at), at, ["camera", "activeNodeId", "focusedNodeId", "collapsedNodeIds", "previewOffNodeIds"]);
+  return {
+    camera: Object.fromEntries(Object.entries(spaceSpacePresenceGuardObject(row["camera"], `${at}.camera`)).map(([key0, value0]) => [key0, parseSpaceWindowCamera(value0, `${at}.camera.${key0}`)])),
+    activeNodeId: row["activeNodeId"] === undefined ? undefined : spaceSpacePresenceGuardString(row["activeNodeId"], `${at}.activeNodeId`),
+    focusedNodeId: row["focusedNodeId"] === undefined ? undefined : spaceSpacePresenceGuardString(row["focusedNodeId"], `${at}.focusedNodeId`),
+    collapsedNodeIds: spaceSpacePresenceGuardArray(row["collapsedNodeIds"], `${at}.collapsedNodeIds`).map((item, index) => spaceSpacePresenceGuardString(item, `${at}.collapsedNodeIds[${index}]`)),
+    previewOffNodeIds: spaceSpacePresenceGuardArray(row["previewOffNodeIds"], `${at}.previewOffNodeIds`).map((item, index) => spaceSpacePresenceGuardString(item, `${at}.previewOffNodeIds[${index}]`)),
   };
 }

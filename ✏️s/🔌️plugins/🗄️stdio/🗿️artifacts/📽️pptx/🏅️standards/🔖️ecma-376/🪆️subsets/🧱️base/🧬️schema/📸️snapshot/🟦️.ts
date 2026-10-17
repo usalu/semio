@@ -1,9 +1,9 @@
-import type{XmlDocument,XmlNode,XmlAttr,XmlDoctype,XmlDeclaration,XmlExternalId,XmlDtdDeclaration,XmlQuote}from"../../../../../../../📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🟦️.ts";
-import{parseXmlDocument,parseXmlNode}from"../../../../../../../📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🟦️.ts";
-export{parseXmlDocument,parseXmlNode}from"../../../../../../../📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🟦️.ts";
-export type{XmlDocument,XmlNode,XmlAttr,XmlDoctype,XmlDeclaration,XmlExternalId,XmlDtdDeclaration,XmlQuote}from"../../../../../../../📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🟦️.ts";
-import type{OpcPackage,OpcPart,OpcRelationship}from"../../../../../../../🎒️zip/📦️opc/🟦️.ts";
-export type{OpcPackage,OpcPart,OpcRelationship}from"../../../../../../../🎒️zip/📦️opc/🟦️.ts";
+import type{XmlDocument,XmlNode,XmlAttr,XmlDoctype,XmlDeclaration,XmlExternalId,XmlDtdDeclaration,XmlQuote}from"@semio-tech/stdio-xml/standards/1.0/subsets/base/schema/snapshot";
+import{parseXmlDocument,parseXmlNode}from"@semio-tech/stdio-xml/standards/1.0/subsets/base/schema/snapshot";
+export{parseXmlDocument,parseXmlNode}from"@semio-tech/stdio-xml/standards/1.0/subsets/base/schema/snapshot";
+export type{XmlDocument,XmlNode,XmlAttr,XmlDoctype,XmlDeclaration,XmlExternalId,XmlDtdDeclaration,XmlQuote}from"@semio-tech/stdio-xml/standards/1.0/subsets/base/schema/snapshot";
+import type{OpcPackage,OpcPart,OpcRelationship}from"@semio-tech/stdio-zip/opc";
+export type{OpcPackage,OpcPart,OpcRelationship}from"@semio-tech/stdio-zip/opc";
 /** 📄️ One authoritative XML-bearing OPC part. */
 export interface PptxXmlPart { path: string; contentType: string; document: XmlDocument }
 /** 📐️ Shape position and size in EMUs. */

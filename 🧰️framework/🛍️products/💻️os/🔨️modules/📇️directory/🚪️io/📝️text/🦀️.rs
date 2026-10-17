@@ -1,6 +1,6 @@
 //! 🚪️ Physical Directory wire admission, canonical emission and bounded receipts.
 
-use super::super::schema::*;
+use crate::*;
 use semio_framework_value_derive::ToValue;
 
 #[derive(Clone, Debug, PartialEq, ToValue)]
@@ -73,7 +73,7 @@ struct DirectoryEventPageReceiptV1 {
     schema_ok
         && mutation.len() >= 2
         && mutation.len() <= USER_PREFERENCE_MUTATION_MAX_BYTES
-        && matches!(semio_framework_pack_json::from_json_str::<crate::DslValue>(mutation, semio_framework_pack_json::JsonMemberPolicy::Reject), Ok(crate::DslValue::Object(_)))
+        && matches!(semio_framework_pack_json::from_json_str::<semio_framework_value::DslValue>(mutation, semio_framework_pack_json::JsonMemberPolicy::Reject), Ok(semio_framework_value::DslValue::Object(_)))
 }
 
 /// 🛡️ Admits one fully assigned event into the durable directory log and bounded page protocol.
@@ -90,7 +90,7 @@ struct DirectoryEventPageReceiptV1 {
             return Err(DirectoryEventPageErrorV1::Invalid);
         }
     }
-    if event.seq == 0 || event.seq > DOCUMENT_OPEN_MAX_SAFE_INTEGER || encoded.len() > DIRECTORY_EVENT_PAGE_MAX_EVENT_BYTES || directory_event_page_has_control(&crate::ToValue::to_value(event)) {
+    if event.seq == 0 || event.seq > DOCUMENT_OPEN_MAX_SAFE_INTEGER || encoded.len() > DIRECTORY_EVENT_PAGE_MAX_EVENT_BYTES || directory_event_page_has_control(&semio_framework_value::ToValue::to_value(event)) {
         Err(DirectoryEventPageErrorV1::Invalid)
     } else {
         Ok(())
@@ -390,9 +390,3 @@ pub mod session_authority;
 
 #[path = "🌱️space-artifact-creation-v1/🦀️.rs"]
 pub mod space_artifact_creation;
-
-#[path = "📌️document-check-in-v1/🦀️.rs"]
-pub mod document_check_in;
-
-#[path = "../../🛡️access-policy/🚪️io/📝️text/🦀️.rs"]
-pub mod access_policy;

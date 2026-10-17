@@ -197,7 +197,7 @@ fn flow_selected_copy_close_refuses_subexact_capacity_and_release_without_false_
         if grant.maximum_release_bytes>0 {saw_release=true;assert_eq!(cursor.close_step(RetainedCloneGrant {maximum_release_bytes:grant.maximum_release_bytes-1,..grant}).unwrap().progress(),RetainedCloneProgress::default());}
         let progress=cursor.close_step(grant).unwrap().progress();assert!(progress.fits(grant));assert_ne!(progress.copied_items,0);total=total.checked_add(progress).unwrap();
     }
-    assert!(cursor.terminal_is_empty()&&saw_capacity&&saw_release);assert_eq!(drops.load(Ordering::SeqCst),1);println!("[DEBUG] Flow selected copy independent close copied={} born={} released={}",total.copied_bytes,total.retained_capacity_bytes,total.released_bytes);
+    assert!(cursor.terminal_is_empty()&&saw_capacity&&saw_release);assert_eq!(drops.load(Ordering::SeqCst),1);
 }
 //#endregion 🧪️CanonicalCopy
 
@@ -214,7 +214,7 @@ fn flow_selected_copy_preserves_original_factory_through_erased_handoff(){
    let before=cursor.owned.root_retirement.as_ref().map(|factory|Arc::as_ptr(factory)as *const());let(step,heap)=observe(||cursor.close_step(grant).unwrap());assert!(step.progress().fits(grant));assert_eq!((heap.0,heap.1),(step.progress().retained_capacity_bytes,step.progress().released_bytes));
    if before==Some(address)&&cursor.owned.factory_source.is_some(){let held=Arc::as_ptr(cursor.owned.factory_source.as_ref().unwrap())as *const();assert_eq!(held,address);assert!(fixture["factoryCustody"]["sameOriginalSource"].as_bool().unwrap());assert_eq!(heap.0,fixture["factoryCustody"]["handoffCapacityBytes"].as_u64().unwrap()as usize);assert_eq!(heap.1,fixture["factoryCustody"]["handoffReleaseBytes"].as_u64().unwrap()as usize);handoff=true;}
   }
-  assert!(handoff);assert!(cursor.terminal_is_empty());assert_eq!(drops.load(Ordering::SeqCst),1);let(_,heap)=observe(||drop(cursor));assert_eq!((heap.0,heap.1),(0,fixture["factoryCustody"]["terminalDropBytes"].as_u64().unwrap()as usize));eprintln!("[DEBUG] original selected-copy factory fixedcopy={copy} sameArc=true handoff0/0 terminalDrop0");
+  assert!(handoff);assert!(cursor.terminal_is_empty());assert_eq!(drops.load(Ordering::SeqCst),1);let(_,heap)=observe(||drop(cursor));assert_eq!((heap.0,heap.1),(0,fixture["factoryCustody"]["terminalDropBytes"].as_u64().unwrap()as usize));
  }
 }
 
@@ -263,7 +263,7 @@ fn flow_selected_copy_retains_actual_failed_factory_ticket_and_receipt(){
   for turn in 0..1_048_576{
    if cursor.terminal_is_empty(){break}assert!(turn<1_048_575,"original failed factory ticket must close");let grant=paid(&cursor,copy);let(result,born,freed)=crate::retained_laws::field_tests::observe(||cursor.close_step(grant));let progress=match result{Ok(step)=>step.progress(),Err(error)=>{assert!(!refused);refused=true;assert_eq!(error.kind,ValueRefusalKind::AllocationFailed);assert_eq!(Arc::as_ptr(cursor.owned.factory_source.as_ref().unwrap())as*const(),address);assert!(cursor.owned.factory_close.is_some());assert!(fixture["factoryCustody"]["partialTicketPreserved"].as_bool().unwrap());assert!(fixture["factoryCustody"]["refusedOriginalPreserved"].as_bool().unwrap());error.retained_progress()}};assert!(progress.fits(grant));assert_eq!((born,freed),(progress.retained_capacity_bytes,progress.released_bytes));
   }
-  assert!(refused&&cursor.terminal_is_empty());assert_eq!(drops.load(Ordering::SeqCst),1);let(_,born,freed)=crate::retained_laws::field_tests::observe(||drop(cursor));assert_eq!((born,freed),(0,0));eprintln!("[DEBUG] original selected-copy failed factory copy={copy} actualPartialTicket=true sameArc=true exactReceipt=true terminalDrop0");
+  assert!(refused&&cursor.terminal_is_empty());assert_eq!(drops.load(Ordering::SeqCst),1);let(_,born,freed)=crate::retained_laws::field_tests::observe(||drop(cursor));assert_eq!((born,freed),(0,0));
  }
 }
 
@@ -289,7 +289,6 @@ fn flow_selected_copy_normal_frames_and_cancel_match_physical_receipts(){
         for _ in 0..200000{if cursor.terminal_is_empty(){break}let grant=paid(&cursor.cursor,body);let(result,heap)=observe(||cursor.close_step(grant));let p=result.unwrap().progress();assert_eq!((heap.requested_bytes,heap.released_bytes),(p.retained_capacity_bytes,p.released_bytes));}
         assert!(cursor.terminal_is_empty());assert_eq!(drops.load(Ordering::SeqCst),1);assert_eq!(observe(||drop(cursor)).1.released_bytes,0);
         caller.close_step(RetainedCloneGrant{maximum_items:1,maximum_release_bytes:semio_framework_job::StepContextOwner::birth_bytes(),maximum_depth:1,..Default::default()});assert!(caller.terminal_is_empty());drop(caller);
-        eprintln!("[DEBUG] Original selected normal copy body{body}: exact source and initiating context, denied currencies/under-atomic bodies System0, all task/buffer/result releases matched, full cancel and terminal Drop0");
     }
 }
 

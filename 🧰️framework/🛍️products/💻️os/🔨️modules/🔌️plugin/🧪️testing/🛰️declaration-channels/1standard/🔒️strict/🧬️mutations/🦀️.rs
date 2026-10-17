@@ -1,12 +1,12 @@
 //#region 🧬️Std1StrictMutationRoster
 //! 🧬️ Std1Strict declaration-channel direct mutation roster.
-use crate::declarations::fixture::{Std1StrictDiff, Std1StrictSnapshot};
+use crate::declarations_fixture_tests::fixture::{Std1StrictDiff, Std1StrictSnapshot};
 use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 
 #[path = "📝️set-value/🦀️.rs"]
 pub(crate) mod set_value;
-pub(crate) use set_value::SetValue;
+pub(crate) use crate::declaration_fixture_mutations::std1_strict::set_value::SetValue;
 
 #[derive(semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::Mutations)]
 #[canonical_json(owner = semio_framework_pack_json)]

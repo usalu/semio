@@ -1,9 +1,11 @@
 //! ✏️ `change-node-name` implementation case `✏️renames`: the committed fixture bundle
 //! `♾️any/🧫️fixtures/🧬️mutations/🌳️node/🏷️rename/✏️renames/` holds every corpus law, and the leaf keeps its
 //! language-neutral semantic identity, its concrete inverse, and its facade decoders.
+use semio_framework_test_fixtures::fixture_text;
+use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfSnapshot;
 use crate::standards::v2_0::subsets::any::io::binary::mutations::decode_gltf_change_node_name_protobuf;
 use crate::standards::v2_0::subsets::any::io::text::mutations::{decode_gltf_change_node_name_graphql,decode_gltf_change_node_name_proto};
-use super::*;
+use crate::standards::v2_0::subsets::any::schema::mutations::change_node_name::*;
 use semio_framework_value::DslValue;
 use protocol::{Mutation, MutationKind, MutationLeaf, OpBinary, OpText};
 
@@ -16,15 +18,15 @@ fn snapshot(name: Option<&str>) -> GltfSnapshot {
     serde_json::from_str(&format!(r#"{{"schema":"stdio.gltf","document":{{"asset":{{"version":"2.0"}},"nodes":[{{{}}}]}},"buffers":[],"sourceForm":"json"}}"#, name)).expect("minimal glTF snapshot decodes")
 }
 
-fn apply_mutation(base: &GltfSnapshot, mutation: &super::super::GltfMutation) -> GltfSnapshot {
-    let outcome = <super::super::GltfMutation as Mutation<GltfSnapshot>>::diff(mutation, base);
+fn apply_mutation(base: &GltfSnapshot, mutation: &crate::standards::v2_0::subsets::any::schema::mutations::GltfMutation) -> GltfSnapshot {
+    let outcome = <crate::standards::v2_0::subsets::any::schema::mutations::GltfMutation as Mutation<GltfSnapshot>>::diff(mutation, base);
     assert!(outcome.messages().is_empty(), "mutation must apply: {:?}", outcome.messages());
     protocol::apply_diff(outcome.diff(), base).expect("aggregate diff applies")
 }
 
 #[test]
 fn canonical_leaf_metadata_matches_descriptor_and_provenance() {
-    let expected: serde_json::Value = serde_json::from_str(include_str!("../../🔣️.json")).expect("valid canonical node-name descriptor");
+    let expected: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../🌳️node/🏷️rename/🔣️.json")).expect("valid canonical node-name descriptor");
     assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&(<ChangeNodeNameMutation as MutationLeaf>::DESCRIPTOR))).expect("serializable descriptor"), expected);
     let provenance = <ChangeNodeNameMutation as MutationLeaf>::PROVENANCE;
     assert_eq!(provenance.mutation_root, "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations");
@@ -35,7 +37,7 @@ fn canonical_leaf_metadata_matches_descriptor_and_provenance() {
     assert!(provenance.workspace_token.iter().any(|byte| *byte != 0));
 }
 
-fn rename(value: Option<&str>) -> super::super::GltfMutation {
+fn rename(value: Option<&str>) -> crate::standards::v2_0::subsets::any::schema::mutations::GltfMutation {
     mutation(GltfChangeNodeNamePayload { node: 0, value: value.map(Into::into) })
 }
 
@@ -43,20 +45,20 @@ fn rename(value: Option<&str>) -> super::super::GltfMutation {
 fn concrete_inverse_round_trips_names_and_actual_aggregate_codecs() {
     let base = snapshot(Some("Root"));
     let forward = rename(Some("Pivot"));
-    let inverse = <super::super::GltfMutation as Mutation<GltfSnapshot>>::inverse(&forward, &base).expect("valid retained mutation inverse fixture");
+    let inverse = <crate::standards::v2_0::subsets::any::schema::mutations::GltfMutation as Mutation<GltfSnapshot>>::inverse(&forward, &base).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse, vec![rename(Some("Root"))]);
     let mut current = apply_mutation(&base, &forward);
     assert_eq!(current.document.nodes[0].name.as_deref(), Some("Pivot"));
-    assert_eq!(super::super::GltfMutation::parse_op(&forward.print_op()).expect("text codec decodes"), forward);
-    assert_eq!(super::super::GltfMutation::decode_op(&forward.encode_op().expect("binary codec encodes")).expect("binary codec decodes"), forward);
-    assert_eq!(super::super::GltfMutation::parse_op(&inverse[0].print_op()).expect("inverse text codec decodes"), inverse[0]);
-    assert_eq!(super::super::GltfMutation::decode_op(&inverse[0].encode_op().expect("inverse binary codec encodes")).expect("inverse binary codec decodes"), inverse[0]);
-    let redo = <super::super::GltfMutation as Mutation<GltfSnapshot>>::inverse(&inverse[0], &current).expect("valid retained mutation inverse fixture");
+    assert_eq!(crate::standards::v2_0::subsets::any::schema::mutations::GltfMutation::parse_op(&forward.print_op()).expect("text codec decodes"), forward);
+    assert_eq!(crate::standards::v2_0::subsets::any::schema::mutations::GltfMutation::decode_op(&forward.encode_op().expect("binary codec encodes")).expect("binary codec decodes"), forward);
+    assert_eq!(crate::standards::v2_0::subsets::any::schema::mutations::GltfMutation::parse_op(&inverse[0].print_op()).expect("inverse text codec decodes"), inverse[0]);
+    assert_eq!(crate::standards::v2_0::subsets::any::schema::mutations::GltfMutation::decode_op(&inverse[0].encode_op().expect("inverse binary codec encodes")).expect("inverse binary codec decodes"), inverse[0]);
+    let redo = <crate::standards::v2_0::subsets::any::schema::mutations::GltfMutation as Mutation<GltfSnapshot>>::inverse(&inverse[0], &current).expect("valid retained mutation inverse fixture");
     assert_eq!(redo, vec![rename(Some("Pivot"))]);
     current = apply_mutation(&current, &inverse[0]);
     assert_eq!(current, base);
     assert_eq!(apply_mutation(&current, &redo[0]), snapshot(Some("Pivot")));
-    let stale = <super::super::GltfMutation as Mutation<GltfSnapshot>>::diff(&redo[0], &snapshot(Some("Pivot")));
+    let stale = <crate::standards::v2_0::subsets::any::schema::mutations::GltfMutation as Mutation<GltfSnapshot>>::diff(&redo[0], &snapshot(Some("Pivot")));
     assert_eq!(stale.messages()[0].code, semio_framework_diagnostic::FaultCode::new("mutation.no-op"));
 }
 
@@ -66,9 +68,9 @@ fn none_normalization_and_noops_emit_no_inverse() {
     assert_eq!(absent.document.nodes[0].name, None);
     let restored = apply_mutation(&absent, &rename(Some("Root")));
     assert_eq!(restored.document.nodes[0].name.as_deref(), Some("Root"));
-    assert_eq!(<super::super::GltfMutation as Mutation<GltfSnapshot>>::inverse(&rename(Some("Root")), &absent).expect("valid retained mutation inverse fixture"), vec![rename(None)]);
-    assert!(<super::super::GltfMutation as Mutation<GltfSnapshot>>::inverse(&rename(None), &absent).expect("valid retained mutation inverse fixture").is_empty());
-    let missing = <ChangeNodeNameMutation as MutationKind<GltfSnapshot, super::super::GltfMutation>>::diff(&ChangeNodeNameMutation::Apply(GltfChangeNodeNamePayload { node: 1, value: Some("Pivot".into()) }), &snapshot(Some("Root")));
+    assert_eq!(<crate::standards::v2_0::subsets::any::schema::mutations::GltfMutation as Mutation<GltfSnapshot>>::inverse(&rename(Some("Root")), &absent).expect("valid retained mutation inverse fixture"), vec![rename(None)]);
+    assert!(<crate::standards::v2_0::subsets::any::schema::mutations::GltfMutation as Mutation<GltfSnapshot>>::inverse(&rename(None), &absent).expect("valid retained mutation inverse fixture").is_empty());
+    let missing = <ChangeNodeNameMutation as MutationKind<GltfSnapshot, crate::standards::v2_0::subsets::any::schema::mutations::GltfMutation>>::diff(&ChangeNodeNameMutation::Apply(GltfChangeNodeNamePayload { node: 1, value: Some("Pivot".into()) }), &snapshot(Some("Root")));
     assert_eq!(missing.messages()[0].code, semio_framework_diagnostic::FaultCode::new("mutation.target-missing"));
 }
 
@@ -103,12 +105,12 @@ fn facade_decoders_construct_canonical_mutations_and_reject_malformed_boundaries
 
 #[test]
 fn semantic_identity_matches_the_language_neutral_descriptor() {
-    assert_eq!(<ChangeNodeNameMutation as MutationKind<GltfSnapshot, super::super::GltfMutation>>::SEMANTICS.kind, "change-node-name");
+    assert_eq!(<ChangeNodeNameMutation as MutationKind<GltfSnapshot, crate::standards::v2_0::subsets::any::schema::mutations::GltfMutation>>::SEMANTICS.kind, "change-node-name");
     let mutation = ChangeNodeNameMutation::Apply(GltfChangeNodeNamePayload { node: 7, value: Some("Pivot".into()) });
     assert_eq!(mutation.target(), vec!["document/nodes/7/name"]);
 }
 
 #[test]
 fn committed_case_holds_the_corpus_law() {
-    super::super::component::fixture_corpus_tests::assert_case("🌳️node/🏷️rename/✏️renames");
+    crate::standards::v2_0::subsets::any::schema::mutations::fixture_corpus_tests::assert_case("🌳️node/🏷️rename/✏️renames");
 }

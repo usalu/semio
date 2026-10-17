@@ -26,12 +26,15 @@ pub fn plan(p: &GltfUnbindNodeSkinPayload, base: &GltfSnapshot) -> Result<GltfDi
     Ok(GltfDiff { nodes: patch(p.node, GltfNodeDiff { skin: Some(None), ..Default::default() }), ..Default::default() })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn inverse(p: &GltfUnbindNodeSkinPayload, base: &GltfSnapshot) -> Vec<super::GltfMutation> {
+pub fn inverse<Op>(p: &GltfUnbindNodeSkinPayload, base: &GltfSnapshot) -> Vec<Op>
+where
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::remove_used_extension::RemoveUsedExtensionMutation>,
+{
     if validate(p, base).is_err() {
         return Vec::new();
     }
     match base.document.nodes[p.node].skin {
-        Some(current) => vec![super::bind_node_skin::mutation(super::bind_node_skin::GltfBindNodeSkinPayload { node: p.node, skin: current })],
+        Some(current) => vec![crate::standards::v2_0::subsets::any::schema::mutations::bind_node_skin::mutation(crate::standards::v2_0::subsets::any::schema::mutations::bind_node_skin::GltfBindNodeSkinPayload { node: p.node, skin: current })],
         None => Vec::new(),
     }
 }
@@ -46,11 +49,17 @@ pub enum UnbindNodeSkinMutation {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn mutation(payload: GltfUnbindNodeSkinPayload) -> super::GltfMutation {
-    super::GltfMutation::UnbindNodeSkin(UnbindNodeSkinMutation::Apply(payload))
+pub fn mutation<Op>(payload: GltfUnbindNodeSkinPayload) -> Op
+where
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::unbind_node_skin::UnbindNodeSkinMutation>,
+{
+    Op::from(UnbindNodeSkinMutation::Apply(payload))
 }
 
-impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for UnbindNodeSkinMutation {
+impl<Op> protocol::MutationKind<GltfSnapshot, Op> for UnbindNodeSkinMutation
+where
+    Op: protocol::Mutation<GltfSnapshot, Diff = GltfDiff> + From<UnbindNodeSkinMutation>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "unbind", entity: "node-skin", kind: "unbind-node-skin", record: "UnboundNodeSkin" };
 
     fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<GltfDiff> {
@@ -62,7 +71,7 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for UnbindNodeSki
         }
     }
 
-    fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<super::GltfMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         match self {
             Self::Apply(payload) => Ok(inverse(payload, base)),
         }
@@ -79,7 +88,5 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for UnbindNodeSki
 //#endregion 🧬️DirectMutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔗️clears-the-skin-f3dcd3/🦀️.rs"]
-mod case_clears_the_skin_f3dcd3;
+
 //#endregion 🧪️Tests

@@ -1,10 +1,11 @@
 use super::*;
+use semio_framework_test_fixtures::fixture_path;
 use semio_framework_value::{FromValue, ToValue};
 
 /// 🧫️ Intrinsic octets and physical base64 agree with the independent JSON/base64 oracle.
 #[test]
 fn lowpoly_intrinsic_bytes_have_one_semantic_owner_and_physical_json_codec() {
-    let fixture: serde_json::Value = serde_json::from_str(std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🚪️io/📝️text/🧪️tests/🧫️fixtures/🔬️bytes/🔣️.json")).expect("../../../🚪️io/📝️text/🧪️tests/🧫️fixtures/🔬️bytes/🔣️.json").leak()).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(std::fs::read_to_string(fixture_path!("../../../🚪️io/📝️text/🧪️tests/🧫️fixtures/🔬️bytes/🔣️.json")).expect("../../../🚪️io/📝️text/🧪️tests/🧫️fixtures/🔬️bytes/🔣️.json").leak()).unwrap();
     for case in fixture["cases"].as_array().unwrap() {
         let run = crate::PixelRun { offset: case["offset"].as_u64().unwrap() as u32, bytes: case["octets"].as_array().unwrap().iter().map(|value| value.as_u64().unwrap() as u8).collect() };
         let value = run.to_value();
@@ -17,5 +18,4 @@ fn lowpoly_intrinsic_bytes_have_one_semantic_owner_and_physical_json_codec() {
         assert_eq!(lowpoly_json_decode::<crate::PixelRun>(&text).unwrap(), run);
     }
     assert!(lowpoly_json_decode::<crate::PixelRun>("{\"offset\":0,\"bytes\":\"?\"}").is_err());
-    eprintln!("[DEBUG] lowpoly-intrinsic-bytes semantic=octets physical=base64 oracle=serde_json+base64");
 }

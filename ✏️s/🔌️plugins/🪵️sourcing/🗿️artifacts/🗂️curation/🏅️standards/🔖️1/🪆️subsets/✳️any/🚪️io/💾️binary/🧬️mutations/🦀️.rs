@@ -25,23 +25,17 @@ pub fn decode_op(bytes: &[u8]) -> Result<SourcingMutation, protocol::ProtocolErr
 }
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests
 
 
 pub const BINARY_TAGS: &[(&str, u8)] =
     &[("CreateCuratedItem", create_curated_item::BINARY_TAG), ("DeleteCuratedItem", delete_curated_item::BINARY_TAG), ("ChangeCuratedItemCount", change_curated_item_count::BINARY_TAG)];
 
-#[path = "🗑️delete-curated-item/🦀️.rs"]
-pub mod delete_curated_item;
+pub use semio_s_artifact_sourcing_curation_examples::standards::v1::subsets::any::io::binary::mutations::delete_curated_item;
 
-#[path = "🌱create-curated-item/🦀️.rs"]
-pub mod create_curated_item;
+pub use semio_s_artifact_sourcing_curation_examples::standards::v1::subsets::any::io::binary::mutations::create_curated_item;
 
-#[path = "🔢change-curated-item/🦀️.rs"]
-pub mod change_curated_item_count;
+pub use semio_s_artifact_sourcing_curation_examples::standards::v1::subsets::any::io::binary::mutations::change_curated_item_count;
 
 mod native_codec {
 use super::*;

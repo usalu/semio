@@ -12,9 +12,11 @@ test("Draw SVG export uses the typed SVG serializer directly", async () => {
 import { DOMParser } from "@xmldom/xmldom";
 import { drawingSceneToSvg, type DrawingSvgNode } from "../../🟦️.ts";
 import fixture from "../🧫️fixtures/🔣️.json";
+import {drawingAssetsFixture,fillStyleFixture,svgNodesFixture} from "../../../../../../../../../🧪️tests/🧫️fixtures/🟦️.ts";
+const sceneNodes=svgNodesFixture(fixture.nodes),sceneAssets=drawingAssetsFixture(fixture.assets);
 
 test("SVG fixture preserves gradients, affine matrices, text, image opacity and disabled paint", () => {
-  const output = drawingSceneToSvg(fixture.nodes as DrawingSvgNode[], fixture.viewBox as [number,number,number,number],fixture.assets);
+  const output = drawingSceneToSvg(sceneNodes, fixture.viewBox as [number,number,number,number],sceneAssets);
   const doc = new DOMParser().parseFromString(output, "image/svg+xml");
   const root = doc.documentElement!;
   expect(root.namespaceURI).toBe("http://www.w3.org/2000/svg");
@@ -44,8 +46,8 @@ test("SVG fixture preserves gradients, affine matrices, text, image opacity and 
   expect(lines.map(line => line.textContent)).toEqual(["A<&>", "Ü 🌍"]);
   expect(lines.map(line => line.getAttribute("y"))).toEqual(["20", "44"]);
   const image = doc.getElementsByTagName("image")[0]!;
-  expect(image.getAttribute("href")).toBe(drawingImageDataUri(fixture.assets["admitted-svg-image"]));
-  expect(image.getAttributeNS("http://www.w3.org/1999/xlink", "href")).toBe(drawingImageDataUri(fixture.assets["admitted-svg-image"]));
+  expect(image.getAttribute("href")).toBe(drawingImageDataUri(sceneAssets["admitted-svg-image"]!));
+  expect(image.getAttributeNS("http://www.w3.org/1999/xlink", "href")).toBe(drawingImageDataUri(sceneAssets["admitted-svg-image"]!));
   expect(groups[2]!.getAttribute("opacity")).toBe("0.5");
   expect(doc.getElementsByTagName("path")[1]!.getAttribute("fill")).toBe("none");
   expect(doc.getElementsByTagName("path")[1]!.getAttribute("stroke")).toBe("none");
@@ -54,14 +56,14 @@ test("SVG fixture preserves gradients, affine matrices, text, image opacity and 
 test("SVG rejects invalid dimensions and affine coefficients", () => {
   expect(() => drawingSceneToSvg([], [0,0,0,10],{})).toThrow();
   expect(() => drawingSceneToSvg([], [NaN,0,10,10],{})).toThrow();
-  const nodes = fixture.nodes as DrawingSvgNode[];
+  const nodes = sceneNodes;
   expect(() => drawingSceneToSvg([{...nodes[0]!, transform:[1,0,0,1,Infinity,0]}],[0,0,10,10],{})).toThrow();
 });
 
 
 test("SVG refuses nonfinite geometry and paint instead of downloading corrupt artwork", () => {
   for (const sample of fixture.invalidNumbers) {
-    const nodes = structuredClone(fixture.nodes) as DrawingSvgNode[];
+    const nodes = structuredClone(sceneNodes);
     const node = nodes[sample.node]!;
     const value = Number(sample.value);
     const replacement = sample.field === "opacity" ? {...node, opacity:value}
@@ -79,22 +81,25 @@ import compositeCases from "../../../../../../../../../🧪️tests/🧫️fixtu
 import compositeSchema from "../../../../../../../../../🧬️schema/🎬️scene/🧩️compositing/🧬️schema/🔣️.json";
 import Ajv from "ajv";
 import sharp from "sharp";
-import {createCanvas,Path2D as NativePath} from "@napi-rs/canvas";
-import {paintCompositedLayers,drawSceneNode} from "../../../../../../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📐️Canvas2dHost/🎨️paint/🟦️.ts";
+import {createCanvas,Path2D as NativePath,type Canvas} from "@napi-rs/canvas";
+import {paintCompositedLayers,drawSceneNode,type CanvasSceneNode} from "../../../../../../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📐️Canvas2dHost/🎨️paint/🟦️.ts";
+/** 🖼️ Canvas paint selects a font for text where the SVG scene leaves the family to the document. */
+const canvasNode=(node:DrawingSvgNode):CanvasSceneNode=>{const {text,...rest}=node;return text===undefined?rest:{...rest,text:{...text,fontFamily:"Anta"}};};
 
-for(const row of compositeCases) test(`isolated group paint agrees with SVG raster: ${row.name}`,async()=>{
+const composite=compositeCases.map(row=>({...row,nodes:svgNodesFixture(row.nodes)}));
+for(const row of composite) test(`isolated group paint agrees with SVG raster: ${row.name}`,async()=>{
   const validate=new Ajv({strict:true}).compile(compositeSchema);
   for(const node of row.nodes) expect(validate(node.groups)).toBe(true);
   const reference=`<svg xmlns="http://www.w3.org/2000/svg" width="24" height="16">${row.svg}</svg>`;
   const expected=await sharp(Buffer.from(reference)).ensureAlpha().raw().toBuffer();
-  const exported=drawingSceneToSvg(row.nodes as DrawingSvgNode[],[0,0,24,16],{});
+  const exported=drawingSceneToSvg(row.nodes,[0,0,24,16],{});
   const actual=await sharp(Buffer.from(exported)).ensureAlpha().raw().toBuffer();
   expect(actual.length).toBe(expected.length);
   for(let i=0;i<actual.length;i++) expect(Math.abs(actual[i]!-expected[i]!)).toBeLessThanOrEqual(2);
   const original=globalThis.Path2D;globalThis.Path2D=NativePath as unknown as typeof Path2D;
   try {
     const canvas=createCanvas(24,16),ctx=canvas.getContext("2d");
-    paintCompositedLayers(ctx as unknown as CanvasRenderingContext2D,row.nodes,(target,node)=>drawSceneNode(target,node,new Map()),(_depth,width,height)=>createCanvas(width,height).getContext("2d") as unknown as CanvasRenderingContext2D);
+    paintCompositedLayers(ctx as unknown as CanvasRenderingContext2D,row.nodes.map(canvasNode),(target,node)=>drawSceneNode(target,node,new Map()),(_depth,width,height)=>createCanvas(width,height).getContext("2d") as unknown as CanvasRenderingContext2D);
     const pixels=ctx.getImageData(0,0,24,16).data;
     for(let i=0;i<pixels.length;i++) expect(Math.abs(pixels[i]!-expected[i]!)).toBeLessThanOrEqual(2);
     for(const sample of row.samples) {const index=(sample.point[1]!*24+sample.point[0]!)*4;sample.rgba.forEach((v,c)=>expect(Math.abs(pixels[index+c]!-v)).toBeLessThanOrEqual(2));}
@@ -102,11 +107,11 @@ for(const row of compositeCases) test(`isolated group paint agrees with SVG rast
 });
 
 test("scene compositing rejects noncontiguous and conflicting groups before canvas paint",()=>{
-  const first=compositeCases[0]!.nodes[0]!,second=compositeCases[0]!.nodes[1]!;
-  for(const nodes of [[first,{...first,id:"outside",groups:[]},second],[first,{...second,groups:[{...second.groups[0]!,opacity:.2}]}],[{...first,groups:[{...first.groups[0]!,blendMode:"constructor"}]}]]) {
-    expect(()=>drawingSceneToSvg(nodes as DrawingSvgNode[],[0,0,24,16],{})).toThrow();
+  const first=composite[0]!.nodes[0]!,second=composite[0]!.nodes[1]!;
+  for(const nodes of [[first,{...first,id:"outside",groups:[]},second],[first,{...second,groups:[{...second.groups![0]!,opacity:.2}]}],[{...first,groups:[{...first.groups![0]!,blendMode:"constructor"}]}]]) {
+    expect(()=>drawingSceneToSvg(nodes,[0,0,24,16],{})).toThrow();
     let painted=0;
-    expect(()=>paintCompositedLayers({} as CanvasRenderingContext2D,nodes,()=>painted++,()=>({} as CanvasRenderingContext2D))).toThrow();
+    expect(()=>paintCompositedLayers({} as CanvasRenderingContext2D,nodes.map(canvasNode),()=>painted++,()=>({} as CanvasRenderingContext2D))).toThrow();
     expect(painted).toBe(0);
   }
 });
@@ -114,12 +119,12 @@ test("scene compositing rejects noncontiguous and conflicting groups before canv
 test("compositing surfaces preserve the camera and clear reused pixels between frames",async()=>{
   const original=globalThis.Path2D;globalThis.Path2D=NativePath as unknown as typeof Path2D;
   try {
-    const canvas=createCanvas(48,32),ctx=canvas.getContext("2d"),pool:ReturnType<typeof createCanvas>[]=[];
+    const canvas=createCanvas(48,32),ctx=canvas.getContext("2d"),pool:Canvas[]=[];
     ctx.setTransform(2,0,0,2,0,0);
     for(const opacity of [.5,.25]) {
       ctx.clearRect(0,0,24,16);
-      const nodes=compositeCases[0]!.nodes.map(node=>({...node,groups:node.groups.map(group=>({...group,opacity}))}));
-      paintCompositedLayers(ctx as unknown as CanvasRenderingContext2D,nodes,(target,node)=>drawSceneNode(target,node,new Map()),(depth,width,height)=>(pool[depth]??=createCanvas(width,height)).getContext("2d") as unknown as CanvasRenderingContext2D);
+      const nodes=composite[0]!.nodes.map(node=>({...node,groups:node.groups!.map(group=>({...group,opacity}))}));
+      paintCompositedLayers(ctx as unknown as CanvasRenderingContext2D,nodes.map(canvasNode),(target,node)=>drawSceneNode(target,node,new Map()),(depth,width,height)=>(pool[depth]??=createCanvas(width,height)).getContext("2d") as unknown as CanvasRenderingContext2D);
       const reference=`<svg xmlns="http://www.w3.org/2000/svg" width="48" height="32" viewBox="0 0 24 16"><g opacity="${opacity}"><rect width="12" height="12" fill="red"/><rect x="6" width="12" height="12" fill="blue"/></g></svg>`;
       const expected=await sharp(Buffer.from(reference)).ensureAlpha().raw().toBuffer(),actual=ctx.getImageData(0,0,48,32).data;
       for(let i=0;i<actual.length;i++) expect(Math.abs(actual[i]!-expected[i]!)).toBeLessThanOrEqual(2);
@@ -133,7 +138,7 @@ import paintCases from "../../../../../../../../../🧪️tests/🧫️fixtures/
 
 test("SVG emits constant gradients as solid paint and rejects invalid authored paint",async()=>{
   for(const entry of paintCases) {
-    const fill=entry.fill as NonNullable<DrawingSvgNode["fill"]>;
+    const fill=fillStyleFixture(entry.fill);
     const node:DrawingSvgNode={id:entry.name,transform:[1,0,0,1,0,0],segments:[{kind:"move",to:[0,0]},{kind:"line",to:[16,0]},{kind:"line",to:[16,16]},{kind:"line",to:[0,16]},{kind:"close"}],fill,opacity:1,blendMode:"normal",visible:true};
     if(entry.error) {expect(()=>drawingSceneToSvg([node],[0,0,16,16],{}),entry.name).toThrow();continue;}
     const constant=fill.kind==="solid"||fill.stops.length<=1||(fill.kind==="linearGradient" ? fill.x1===fill.x2&&fill.y1===fill.y2 : fill.r===0);
@@ -158,14 +163,14 @@ test("canvas and raster scene paint agree with constant SVG paint",async()=>{
   try {
     for(const entry of paintCases) for(const opacity of [1,.35]) {
       if(entry.error) continue;
-      const fill=entry.fill as NonNullable<DrawingSvgNode["fill"]>;
+      const fill=fillStyleFixture(entry.fill);
       const constant=fill.kind==="solid"||fill.stops.length<=1||(fill.kind==="linearGradient" ? fill.x1===fill.x2&&fill.y1===fill.y2 : fill.r===0);
       if(!constant) continue;
       const node:DrawingSvgNode={id:entry.name,transform:[1,0,0,1,0,0],segments:[{kind:"move",to:[0,0]},{kind:"line",to:[16,0]},{kind:"line",to:[16,16]},{kind:"line",to:[0,16]},{kind:"close"}],fill,opacity,blendMode:"normal",visible:true};
       const expected=await sharp(Buffer.from(drawingSceneToSvg([node],[0,0,16,16],{}))).ensureAlpha().raw().toBuffer();
       for(const renderer of ["canvas","raster"] as const) {
         const canvas=createCanvas(16,16),ctx=canvas.getContext("2d");
-        if(renderer==="canvas") drawSceneNode(ctx as unknown as CanvasRenderingContext2D,node,new Map());
+        if(renderer==="canvas") drawSceneNode(ctx as unknown as CanvasRenderingContext2D,canvasNode(node),new Map());
         else paintDrawingScene(ctx as unknown as CanvasRenderingContext2D,{width:16,height:16,nodes:[{transform:[1,0,0,1,0,0],node:{kind:"path",segments:node.segments},fill,opacity}]});
         const actual=ctx.getImageData(0,0,16,16).data;
         let error=0;

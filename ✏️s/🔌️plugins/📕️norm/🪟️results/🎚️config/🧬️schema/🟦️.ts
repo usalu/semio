@@ -22,6 +22,10 @@ type normNormResultsWindowConfigGuardSizeBounds = { readonly minItems?: number; 
 
 export const normNormResultsWindowConfigGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : normNormResultsWindowConfigGuardReject(at, "value is not an object");
+export const normNormResultsWindowConfigGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) normNormResultsWindowConfigGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const normNormResultsWindowConfigGuardArray = (value: unknown, at: string, bounds: normNormResultsWindowConfigGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return normNormResultsWindowConfigGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) normNormResultsWindowConfigGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -52,9 +56,8 @@ export const normNormResultsWindowConfigGuardConstant = <T extends string | numb
 //#endregion 🚪️Parsers
 
 export function parseNormResultsWindowConfig(value: unknown, at = "$"): NormResultsWindowConfig {
-  const row = normNormResultsWindowConfigGuardObject(value, at);
-  for (const key of Object.keys(row)) if (key !== "selectedCheckIndex") normNormResultsWindowConfigGuardReject(`${at}.${key}`, "field is not declared");
+  const row = normNormResultsWindowConfigGuardClosed(normNormResultsWindowConfigGuardObject(value, at), at, ["selectedCheckIndex"]);
   return {
-    selectedCheckIndex: row["selectedCheckIndex"] === undefined ? undefined : normNormResultsWindowConfigGuardInteger(row["selectedCheckIndex"], `${at}.selectedCheckIndex`, {"minimum": 0,"maximum": 4294967295}),
+    selectedCheckIndex: row["selectedCheckIndex"] === undefined ? undefined : normNormResultsWindowConfigGuardInteger(row["selectedCheckIndex"], `${at}.selectedCheckIndex`, {"minimum": 0, "maximum": 4294967295}),
   };
 }

@@ -102,9 +102,12 @@ export function parseStlTriangleDiff(value: unknown, at = "$"): StlTriangleDiff 
 }
 
 /** ➕️ Parse one authored triangle insertion with its exact coordinate words. */
-export function parseStlTriangleAdded(value:unknown,at="$"):StlTriangleAdded{
-  const row=stdioStlAsciiAnyDiffGuardObject(value,at);
-  return{index:stdioStlAsciiAnyDiffGuardInteger(row["index"],`${at}.index`),triangle:parseStlTriangle(row["triangle"],`${at}.triangle`)};
+export function parseStlTriangleAdded(value: unknown, at = "$"): StlTriangleAdded {
+  const row = stdioStlAsciiAnyDiffGuardObject(value, at);
+  return {
+    index: stdioStlAsciiAnyDiffGuardInteger(row["index"], `${at}.index`),
+    triangle: parseStlTriangle(row["triangle"], `${at}.triangle`),
+  };
 }
 
 export function parseStlTriangleModified(value: unknown, at = "$"): StlTriangleModified {

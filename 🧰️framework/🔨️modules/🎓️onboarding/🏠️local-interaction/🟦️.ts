@@ -1,5 +1,5 @@
 //#region 🏠️AuthoredLocalInteraction
-import type { LocalInteractionDomainPatch, LocalInteractionState } from "../../📡️replication/📡️wire/🏠️local-interaction/🟦️.ts";
+import type { LocalInteractionDomainPatch, LocalInteractionState } from "@semio-tech/framework-replication/wire/local-interaction";
 
 export type TutorialLocalInteractionChange = { readonly kind: "localInteractionDomain"; readonly domainId: string; readonly patch: LocalInteractionDomainPatch };
 

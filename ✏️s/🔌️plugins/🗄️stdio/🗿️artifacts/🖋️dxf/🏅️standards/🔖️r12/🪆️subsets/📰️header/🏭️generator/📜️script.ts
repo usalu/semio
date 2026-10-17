@@ -150,7 +150,7 @@ function ensureBuilt(): void {
 }
 
 async function sha256(bytes: Buffer): Promise<string> {
-  const digest = await crypto.subtle.digest("SHA-256", bytes);
+  const digest = await crypto.subtle.digest("SHA-256", Uint8Array.from(bytes));
   return `sha256:${[...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, "0")).join("")}`;
 }
 

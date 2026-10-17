@@ -1,0 +1,7 @@
+# Private Batch and Canonical-Schema Publication Proof
+
+Stable bounded nofollow FD reads independently bind the complete log and both retained host-side traces in `🗑️generated/native-publication-batch-schema-private-low-independent.json`. Log SHA256 `6c9d4e559cee5d07286fd4ec6f3c00d320752188b957ad1bfc19d2cfd223b20f`, 6258 bytes. Root separately confirms actual terminal44757=0; EOF is not substituted for that evidence.
+
+The log reaches verified and settled, requires mounted-application-preserved, witnesses exactly one socket, and records exact socket metadata, Node payload SHA, raw journal preservation, ordinary reopen, child absence and healthy parent. It then records canonical parent retirement. Before/after traces have 9/13 records; only four new FSEvents log files and that service directory’s size differ. All application records, including socket and raw journal content SHA, are identical. Independent Node payload SHA is `62973580cb0d8f44b830898e019c50399ddc804352fbade1f66ee187e9617871` before and after.
+
+This accepts only the executed private macOS fixture under current batch/component schema integration. Socket proof is durable inode metadata, not kernel connection/service state. Mutable authenticated volume service bytes remain fully current-censused in their separate service witness. Global leases8009 remains its prior deadline failure with updated receipt and pending marker; this private result does not qualify global admission, Windows, Linux, SDK or any other assets. Private external lease/base artifacts remain retained Generated evidence.

@@ -1,0 +1,64 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "Protocol": {
+      "const": {
+        "prefix": "[DATA] Native dependency fixture receipt ",
+        "maximumReceiptBytes": 65536,
+        "maximumWireCharacters": 32768,
+        "maximumFailures": 256
+      }
+    },
+    "Receipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "complete",
+        "purpose",
+        "id",
+        "calls",
+        "reason",
+        "wire",
+        "wireSha256"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "complete": {
+          "const": true
+        },
+        "purpose": {
+          "enum": [
+            "mutation",
+            "changed"
+          ]
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "calls": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2
+        },
+        "reason": {
+          "type": "string",
+          "maxLength": 4096
+        },
+        "wire": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 32768
+        },
+        "wireSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    }
+  }
+}

@@ -1,4 +1,23 @@
-use super::*;
+use crate::editor::shooting::terminology::ShootingLabels;
+#[allow(unused_imports)]
+use crate::editor::shooting::ui_helpers_and_io::SHOOTING_INTERACTION_DOMAIN;
+#[allow(unused_imports)]
+use semio_framework_ui_locale::Label;
+#[allow(unused_imports)]
+use semio_framework_ui_locale::LocalizedLabel;
+#[allow(unused_imports)]
+use semio_framework_plugin::PanelGroup;
+#[allow(unused_imports)]
+use semio_framework_plugin::PanelTabDefinition;
+#[allow(unused_imports)]
+use semio_framework_plugin::PanelTabKind;
+#[allow(unused_imports)]
+use semio_framework_plugin::PanelTreeBuilder;
+#[allow(unused_imports)]
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
+#[allow(unused_imports)]
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL;
+use crate::editor::shooting::panels::document::*;
 use crate::editor::shooting::unit_tests::context::{render as render_body, shooting_app};
 
 #[semio_framework_async_macros::async_test]

@@ -1,7 +1,7 @@
 //! 🔺️ Diff constructor for `SetCurtainWall`: a sparse curtain wall patch of exactly the named fields that differ from the base. Only the named fields are validated (axis, top,
 //! base offset); a payload that changes nothing is a no-op. The type is set by `set-curtain-wall-type-of` and the grid by `set-curtain-wall-grid`.
 
-use super::super::wall_geometry::{flaw, top_flaw, Flaw};
+use crate::standards::v1::subsets::any::schema::mutations::wall_geometry::{flaw, top_flaw, Flaw};
 use super::SetCurtainWall;
 use crate::standards::v1::subsets::any::schema::{snapshot::{CurtainWall, ModelSnapshot}, diff::{Entry, ModelDiff, Patch}};
 use protocol::{MutationOutcome, OutcomeCode};

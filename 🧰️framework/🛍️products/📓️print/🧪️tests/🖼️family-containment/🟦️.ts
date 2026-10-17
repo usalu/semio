@@ -436,7 +436,6 @@ function verifyCanonicalOptionSyntaxContract():void{
  const family=ajv.compile({$ref:`${document.$id}#/$defs/FamilyOptions`});
  const failures:string[]=[];for(const[name,options]of Object.entries(document["x-semio-family-options"])){const owned=validateJsonSchemaSubset(document.$defs.FamilyOptions,options,document),accepted=family(options);if(owned.length||!accepted)failures.push(`Family syntax metadata ${name}: owned ${JSON.stringify(owned)}, AJV ${JSON.stringify(family.errors)}`);}if(failures.length)throw Error(failures.join("\n"));
  let count=0;for(const[owner,options]of Object.entries(document["x-semio-option-syntax"])){for(const[key,value]of Object.entries(options)){if(validateJsonSchemaSubset(contract,value,document).length||!external(value))throw Error(`Generic syntax metadata ${owner}/${key}`);count++;}}
- console.log(`[DEBUG] Canonical syntax: ${optionFixture.optionSyntax.descriptors.length} neutral policy cases, ${Object.keys(document["x-semio-family-options"]).length} families and ${count} generic descriptors compared with independent AJV PASS`);
 }
 
 /** 🪄️ Compiles actual canonical mutation output and compares its numerical paths with independent D3. */
@@ -482,9 +481,8 @@ async function compileNativeCanonicalOptions(execution:PrintExecutionV1):Promise
     if(matches.length!==1||matches[0]!.delta.some((value,axis)=>Math.abs(value-expected[axis]!)>=.002))failures.push(`${implementation}/${theme}/${entry.id}: exact owned painted PDF segment differs from independent D3 (${JSON.stringify(matches)})`);projections+=2;
    }
   });}
-  console.log(`[DEBUG] Canonical options ${implementation}/${theme}: ${optionFixture.optionSyntax.cases.length} actual emitted cases consumed`);
  });}
- if(failures.length)throw Error(failures.join("\n"));console.log(`[DEBUG] Canonical ${implementation} mutations/inference/native compiler: ${projections} independent D3 values and ${pages} PDF.js pages PASS`);
+ if(failures.length)throw Error(failures.join("\n"));
 });}
 type CanonicalPaintShape={paint:string,fill:string,kind:"line"|"circle",delta:number[],centre:number[]};
 /** 🔭️ Resolves actual painted PDF spans through the independent graphics-state interpreter. */
@@ -520,12 +518,11 @@ async function compileNativeCanonicalAdmission(execution:PrintExecutionV1):Promi
   if(entry.valid&&result.complete){if(implementation==="rust"){const root=process.env.PRINT_NATIVE_OPTION_TIKZ;if(!root)throw Error("Rust admission emitted input required");sources.set(entry.id,readFileSync(join(root,"admission",`${entry.id}.tex`),"utf8"));}else if(implementation==="typescript")sources.set(entry.id,result.tikz);else throw Error(`Unknown admission implementation ${implementation}`);}
  }
  if(failures.length)throw Error(failures.join("\n"));
- console.log(`[DEBUG] Typed canonical admission: ${optionFixture.optionSyntax.admission.length} neutral en/de mutation/replay/inference cases compared with independent AJV PASS`);
  let pages=0,projections=0;
  for(const theme of ["light","dark"]){const root=join(workDir,implementation,theme),body=[...sources].map(([id,source])=>({raw:`\\clearpage\\SemioVizProbeBegin{canonical-admission}{${id}}${source}\\SemioVizProbeValues{admission/compiled}{1}`}));
  await withCompiledVizProbeDocumentV1({case:"canonical-admission",scenario:"values",documentClass:"semio",documentClassOptions:`type=paper,language=en,theme=${theme}`,packages:["semio-viz"],geometry:true,preamble:["\\title{Canonical Option Admission}","\\author{Semio}","\\date{}"],body},{execution,scenario:undefined},async({records:records,probe})=>{
  for(const entry of optionFixture.optionSyntax.admission.filter(entry=>entry.valid)){if(!records.some(record=>record.scenario===entry.id&&record.key==="admission/compiled"&&Number(record.values[0])===1))failures.push(`${theme}/${entry.id}: compiler owner marker absent`);if(entry.owner==="sci-function"&&entry.key==="samples"){const actual=records.find(record=>record.scenario===entry.id&&record.key==="geometry/path")?.values,x=scaleLinear([-2,2],[0,60]),y=scaleLinear([0,4],[0,40]),domain=scaleLinear([0,4],[-2,2]),expected=Array.from({length:5},(_,index)=>[x(domain(index)),y(0)]).flat();if(actual?.length!==expected.length||expected.some((value,index)=>Math.abs(Number(actual?.[index])-value)>1e-5))failures.push(`${theme}/${entry.id}: declared samples and D3 path differ`);projections+=expected.length;}}
  const out=join(root,"🧪️probe-out"),pdf=await probe.inspect();{for(let page=1;page<=pdf.pages.length;page++){const text=(await(printPdfPageV1(pdf,page))).items.flatMap(item=>"str"in item?[item.str]:[]).join(" ");if(/[\uFFFD\uFFFF]/u.test(text))failures.push(`${theme}/page${page}: invalid glyph`);pages++;}}
  });}
- if(failures.length)throw Error(failures.join("\n"));console.log(`[DEBUG] Typed canonical ${implementation}: ${sources.size} actual valid emitted controls, ${projections} independent D3 path values, ${pages} PDF.js pages PASS`);
+ if(failures.length)throw Error(failures.join("\n"));
 });}

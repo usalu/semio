@@ -29,10 +29,10 @@ import {
   type RadarLayout,
   type TextMeasure,
 } from "@semio-tech/quiz-react";
-import antaLatin from "../../../../🔨️modules/🖼️assets/🔤️fonts/🚀️anta/🏛️latin/📖️regular/🔤️outline.ttf?inline";
-import antaExtended from "../../../../🔨️modules/🖼️assets/🔤️fonts/🚀️anta/➕️latin-ext/📖️regular/🔤️outline.ttf?inline";
-import antaMath from "../../../../🔨️modules/🖼️assets/🔤️fonts/🚀️anta/🧮️math/📖️regular/🔤️outline.ttf?inline";
-import antaSymbols from "../../../../🔨️modules/🖼️assets/🔤️fonts/🚀️anta/🔣️symbols/📖️regular/🔤️outline.ttf?inline";
+import { antaLatinOutlineFontDataUrl as antaLatin } from "@semio-tech/assets/fonts/anta/latin/regular/outline";
+import { antaLatinExtOutlineFontDataUrl as antaExtended } from "@semio-tech/assets/fonts/anta/latin-ext/regular/outline";
+import { antaMathOutlineFontDataUrl as antaMath } from "@semio-tech/assets/fonts/anta/math/regular/outline";
+import { antaSymbolsOutlineFontDataUrl as antaSymbols } from "@semio-tech/assets/fonts/anta/symbols/regular/outline";
 import geometry from "../🧫️fixtures/🕷️radar-geometry/🔣️.json";
 
 interface Fixture {

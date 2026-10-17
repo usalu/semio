@@ -79,9 +79,9 @@ pub struct FlowVcsResourceFingerprint {
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct FlowVcsCensus {
-    items: usize,
-    bytes: usize,
-    depth: usize,
+    pub items: usize,
+    pub bytes: usize,
+    pub depth: usize,
 }
 
 impl FlowVcsCensus {
@@ -98,7 +98,7 @@ impl FlowVcsCensus {
 
 #[derive(Debug)]
 pub struct FlowVcsSource<T> {
-    value: Option<T>,
+    pub value: Option<T>,
 }
 
 impl<T> FlowVcsSource<T> {

@@ -50,13 +50,14 @@ pub mod route;
 #[path = "🖼️viewports/🦀️.rs"]
 pub mod viewports;
 
-use self::plane::P;
-use self::session::{GestureKey, Modifiers, Pointer, Preview, Step, Surface, Tool, ToolContext, ToolEvent};
+use crate::editor::bim::gestures::plane::P;
+use crate::editor::bim::gestures::session::{GestureKey, Modifiers, Pointer, Step, Surface, Tool, ToolContext, ToolEvent};
+use crate::editor::bim::marks::Preview;
 use crate::editor::bim::interaction::BIM_ELEMENT_DOMAIN;
 use crate::editor::bim::kit::{fault, select_effect};
 use crate::editor::bim::modes::edit::windows::{plan, section, sheet, world};
 use crate::editor::bim::transient::BimWindowTransient;
-use crate::editor::bim::BimDispatchCtx;
+use crate::editor::bim::dispatch_context::BimDispatchCtx;
 use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
 use semio_framework_plugin::{ArtifactInstanceOperationOwner, ArtifactView, Effect, Emit, Fault, NoConfigMutation, PluginLifecycleStep};
 use std::collections::BTreeMap;
@@ -285,15 +286,6 @@ pub struct Raw {
 /// 📐️ The metres one pixel spans in the world window, whose ray-cast gives no zoom.
 const WORLD_PIXEL_METRES: f64 = 0.02;
 
-fn lowest_storey(snapshot: &ModelSnapshot) -> Option<String> {
-    snapshot.buildings.keys().find_map(|building| crate::editor::bim::entities::ordered_storeys(snapshot, building).into_iter().next())
-}
-
-/// 🧊️ The storey the world window draws and picks on: the isolated one when it exists, else the lowest.
-pub fn world_storey(snapshot: &ModelSnapshot, isolated: &str) -> String {
-    Some(isolated.to_string()).filter(|storey| snapshot.storeys.contains_key(storey)).or_else(|| lowest_storey(snapshot)).unwrap_or_default()
-}
-
 /// 🪟️ The surface the addressed window shows and the pixels-to-metres reach there; none for a window without gestures.
 pub fn surface_of(ctx: &BimDispatchCtx, snapshot: &ModelSnapshot) -> Option<(Surface, f64)> {
     match ctx.window_kind.as_str() {
@@ -302,7 +294,7 @@ pub fn surface_of(ctx: &BimDispatchCtx, snapshot: &ModelSnapshot) -> Option<(Sur
             let (start, end) = section::plane_of(snapshot, &ctx.section).map_or(([0.0, 0.0], [0.0, 0.0]), |plane| ([plane.start.x, plane.start.y], [plane.end.x, plane.end.y]));
             Some((Surface::Section { start, end }, 1.0 / ctx.section.viewport.zoom.max(0.01)))
         }
-        world::WINDOW_KIND_ID => Some((Surface::World { storey: world_storey(snapshot, &ctx.world.isolated_storey) }, WORLD_PIXEL_METRES)),
+        world::WINDOW_KIND_ID => Some((Surface::World { storey: world::world_storey(snapshot, &ctx.world.isolated_storey) }, WORLD_PIXEL_METRES)),
         sheet::WINDOW_KIND_ID => Some((Surface::Sheet { sheet: sheet::active_sheet(snapshot, &ctx.sheet).unwrap_or_default() }, 1.0 / ctx.sheet.viewport.zoom.max(0.01))),
         _ => None,
     }
@@ -328,34 +320,6 @@ pub fn pointer_of(ctx: &BimDispatchCtx, surface: &Surface, reach: f64, raw: &Raw
     Pointer { at, modifiers: raw.modifiers, tolerance: reach }
 }
 //#endregion 🔖️Surface
-
-/// 🖱️ Declares the payload of a canvas pointer command: the pixel position, the canvas size, the modifiers and any extra fields, with `raw()` for the gesture entry.
-macro_rules! canvas_pointer {
-    ($(#[$meta:meta])* $name:ident, $keyword:literal $(, $extra:ident : $ty:ty)*) => {
-        $(#[$meta])*
-        #[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-        #[value(default)]
-        #[dsl(keyword = $keyword)]
-        pub struct $name {
-            pub x: f64,
-            pub y: f64,
-            pub width: f64,
-            pub height: f64,
-            pub shift: bool,
-            pub ctrl: bool,
-            pub meta: bool,
-            $(pub $extra: $ty,)*
-        }
-
-        impl $name {
-            pub fn raw(&self) -> $crate::editor::bim::gestures::Raw {
-                $crate::editor::bim::gestures::Raw { x: self.x, y: self.y, width: self.width, height: self.height, modifiers: $crate::editor::bim::gestures::session::Modifiers { shift: self.shift, ctrl: self.ctrl, meta: self.meta }, ground: None }
-            }
-        }
-    };
-}
-
-pub(crate) use canvas_pointer;
 
 //#region 🔖️Run
 /// 🚫️ The refusal of a gesture command dispatched outside its retained route (no session owner).
@@ -494,7 +458,7 @@ pub fn run_keyed(ctx: &mut BimDispatchCtx, doc: &ArtifactView<'_, ModelSnapshot>
 
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
-pub(crate) mod tests;
+mod tests;
 
 #[cfg(test)]
 #[path = "🧪️tests/🧷️app/🦀️.rs"]

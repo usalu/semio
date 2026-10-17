@@ -23,3 +23,20 @@ pub const EDIT_RULES: EditRules = EditRules {
     inserts: &[InsertRule::new("/image/otherSegments", "insert-other-segment", "segment").at("index")],
     removes: &[RemoveRule::by_index("/image/otherSegments", "remove-other-segment", "index")],
 };
+
+//#region 🧩️ArtifactItems3
+pub mod artifact_items_3 {
+/// 📜 Schema-owned package definition.
+pub const ARTIFACT_DEFINITION_SCHEMA: &str = include_str!("../../../../../../📜️artifact-definition.json");
+}
+//#endregion 🧩️ArtifactItems3
+
+//#region 🧩️ArtifactItems8
+pub mod artifact_items_8 {
+use crate::{ARTIFACT_DEFINITION_SCHEMA};
+
+pub fn formats() -> Result<Vec<semio_framework_plugin::io::FormatDescriptor>, semio_framework_plugin::ArtifactDefinitionError> {
+    semio_s_artifact_stdio_contract::format_descriptors(ARTIFACT_DEFINITION_SCHEMA)
+}
+}
+//#endregion 🧩️ArtifactItems8

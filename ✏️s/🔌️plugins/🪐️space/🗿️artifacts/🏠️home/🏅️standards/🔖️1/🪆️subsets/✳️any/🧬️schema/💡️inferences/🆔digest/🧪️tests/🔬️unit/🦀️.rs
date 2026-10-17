@@ -1,5 +1,6 @@
+use crate::SHomeSnapshot;
 
-use super::*;
+use crate::standards::v1::subsets::any::schema::inferences::digest::*;
 
 #[semio_framework_async_macros::async_test]
 async fn same_snapshot_yields_same_digest() {

@@ -18,7 +18,6 @@ test("owned member batch retains exact ordered source across refusal and cancell
  let typed={n:0};for(const value of source)typed=applyPatch(typed,[{op:"replace",path:"/n",value}],true,false).newDocument;
  const wire=JSON.parse(JSON.stringify(source));let preview={n:0};for(const value of wire)preview=applyPatch(preview,[{op:"replace",path:"/n",value}],true,false).newDocument;
  expect(typed).toEqual(preview);expect(typed.n).toBe(fixture.expectedAfter);
- console.log("[DEBUG] Owned member batch JSON Patch oracle preserves ordered original source through four admission/cancellation positions");
 });
 
 test("owned source census advances one exact ordered row and preserves cancellation prefix",()=>{
@@ -29,7 +28,6 @@ test("owned source census advances one exact ordered row and preserves cancellat
   for(const value of rows){state=applyPatch(state,[{op:"replace",path:"/n",value}],true,false).newDocument;visited+=fixture.census.maximumPreflightsPerTurn;expect(visited).toBeLessThanOrEqual(count);}
   expect(state.n).toBe(rows.at(-1));expect(JSON.parse(JSON.stringify(rows))).toEqual(rows);expect(visited).toBe(count);
  }
- console.log("[DEBUG] owned source JSON Patch census oracle: 1/3/257 exact forward rows, one row per turn and every serialized source retained");
 });
 
 test("owned scalar source declares copy work independently from physical release",()=>{
@@ -43,14 +41,13 @@ test("owned scalar source declares copy work independently from physical release
   expect(fixture.copyDemand.zeroCopyReleasesBytes).toBe(0);
  }
  expect(readFileSync(resolve(import.meta.dir,"../🦀️.rs"),"utf8").includes("pub fn next_copy_byte_demand")).toBe(true);
- console.log("[DEBUG] independent Int32Array 0/1/65/257 ordered typed sources require4 bytes of logical work per scalar and zero physical release during that work");
 });
 
 import Ajv from "ajv";
 import { Database } from "bun:sqlite";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
-import { readModuleTreeSource } from "../../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 
 test("owned member batch retains canonical fallible grant axes and denied original vectors", () => {
   const owner = resolve(import.meta.dir, "..");
@@ -79,7 +76,6 @@ test("owned member batch retains canonical fallible grant axes and denied origin
   expect(source).toContain("next_depth_demand()");
   expect(source).toContain("grant.maximum_depth == 0");
   expect(source).toContain("admit_typed_controlled_retirement");
-  console.log("[DEBUG] canonical production demand/Ajv, independent SQLite denied axes and ordered scalar bytes; native allocator and original pointer proof separately required");
 });
 
 test("rejected presence retains admitted ownership and separate physical retirement axes", () => {
@@ -98,12 +94,12 @@ test("rejected presence retains admitted ownership and separate physical retirem
   expect(source).toContain("FactoryAuthority");
   expect(source).not.toContain("actor.truncate");
   expect(source).not.toContain("maximum_items: usize, maximum_bytes: usize");
-  console.log("[DEBUG] independent Ajv Demand and UTF8 octets; source-only full-grant rejection boundary, native original/frame accounting still required");
 });
 
 import { spawnSync } from "node:child_process";
-import { valueRetirementSchemaUrl, valueOrderedRetirementSchemaUrl, valueRetirementFactoryFixtureUrl } from "../../../../../../../../🔨️modules/🌱️value/🧪️tests/🧫️fixtures/🟦️.ts";
+import { valueRetirementSchemaUrl, valueOrderedRetirementSchemaUrl, valueRetirementFactoryFixtureUrl } from "@semio-tech/value-ts/testing/fixtures";
 import { jobCloseDemandFixtureUrl } from "@semio-tech/framework/job/testing/fixtures";
+import { readStoreSourceText } from "@semio-tech/framework/test/source-text";
 test("owned durable and presence Rust sources parse under the installed independent Rust grammar", () => {
   let root = import.meta.dir;
   while (!existsSync(join(root, "bun.lock"))) root = resolve(root, "..");
@@ -116,27 +112,25 @@ test("owned durable and presence Rust sources parse under the installed independ
     if (result.status !== 0) throw Error(`${relative}: ${result.stderr}`);
     expect(result.stdout.length).toBeGreaterThan(0);
   }
-  console.log(`[DEBUG] ${version.stdout.trim()}: owned source syntax only; type, allocator, pointer and runtime custody proofs remain separately native`);
 });
 
 
 test("installed store and composed member publish full fallible retirement demand", () => {
   let root = import.meta.dir;
   while (!existsSync(join(root, "bun.lock"))) root = resolve(root, "..");
-  const source = readFileSync(join(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs"), "utf8");
+  const source = readStoreSourceText();
   expect(source).toContain("fn close_owned_demands(&self, maximum_body_bytes: usize) -> Result<semio_framework_value::RetirementDemand, ValueError>");
   expect(source).toContain("fn close_owned_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError>");
   const start = source.indexOf("pub trait ArtifactStoreOwnedDisposer");
   const end = source.indexOf("#[derive(Clone, Copy, Debug, PartialEq, Eq)]", start);
   const trait = source.slice(start, end);
-  expect(trait).toContain("fn demands(&self, store: &ArtifactStore<P, Mutation>, maximum_body_bytes: usize)");
+  expect(trait).toContain("fn demands(&self, store: &dyn ArtifactStoreCloseHost<P, Mutation>, maximum_body_bytes: usize)");
   expect(trait).toContain("grant: RetainedCloneGrant");
   expect(trait).not.toContain("maximum_bytes: usize");
   const semio = readFileSync(join(root, "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🦀️.rs"), "utf8");
   expect(semio.includes("SemioStoreOwnedDisposer")).toBe(false);
   expect(semio.includes("enum SemioStoreClosePhase")).toBe(false);
   expect(semio).toContain("dsl::ArtifactStoreCursorDisposer::<Self, subsets::$module::schema::mutations::$mutation>::new()");
-  console.log("[DEBUG] installed Store/SpaceMember and exact Stdio Semio catalog source contract; independent Demand oracle above, native custody proof pending");
 });
 
 
@@ -162,7 +156,6 @@ test("current original Plugin and Stdio close sources parse under independent Ru
     if (result.status !== 0) throw Error(`${relative}: ${result.stderr}`);
     expect(result.stdout.length).toBeGreaterThan(0);
   }
-  console.log("[DEBUG] independent Rust grammar7 current Plugin/Stdio/native-law sources; no native compiler or runtime proof");
 });
 
 
@@ -188,7 +181,6 @@ test("mounted original publication keeps independent retirement currencies and c
   expect(demand.copyBytes).toBe(Buffer.from(new Int32Array([1]).buffer).length);
   const grammar = spawnSync("rustfmt", ["--edition","2024","--emit","stdout","--config","skip_children=true"], {input:source,encoding:"utf8",maxBuffer:8*1024*1024,timeout:2000});
   if(grammar.status!==0)throw Error(grammar.stderr);
-  console.log("[DEBUG] mounted source full currencies plus canonical Demand/Ajv/Int32 bytes and independent Rust grammar; native originals/accounting proof pending");
 });
 
 
@@ -208,7 +200,6 @@ test("mounted actual codec, fixed causal owners and original native laws parse u
     if(result.status!==0)throw Error(`${path}: ${result.error?.message??result.stderr}`);
     expect(result.stdout.length).toBeGreaterThan(0);
   }
-  console.log("[DEBUG]12 actual codec/page/receipt/native-law sources parsed by independent Rust grammar; native type, blocked ledger and exact physical allocator proof pending");
 });
 
 
@@ -224,7 +215,6 @@ test("Services original backing and five-axis retirement use genuine Job contrac
  const pool=readModuleTreeSource(join(base,"🦀️.rs"),{crates:false});expect(pool).toContain("schedule_rejected_compute_job");expect(pool).not.toContain("while !rejected.terminal_is_empty()");expect(pool).toContain("close_step_outcome_slot(&mut state.retained_outcome");expect(pool).not.toContain("outcome.close_step(1,");
  for(const path of ["🚪️native-io/🦀️.rs","🦀️.rs","🧪️tests/🔬️native-io-unit/🦀️.rs","🧪️tests/🔬️component-unit/🦀️.rs"]){const grammar=spawnSync("rustfmt",["--edition","2024","--emit","stdout","--config","skip_children=true"],{input:readFileSync(join(base,path),"utf8"),encoding:"utf8",maxBuffer:8*1024*1024,timeout:2000});expect(grammar.status,`${path}: ${grammar.stderr}`).toBe(0);}
 
- console.log("[DEBUG] Services plain physical-capacity cases agree with independent Buffer and canonical Ajv Demand; native original identity and allocator receipts remain separate");
 });
 
 
@@ -236,30 +226,27 @@ test("private actual member publication forwards five supplied OneItem axes",()=
  const native=readFileSync(join(base,"🪟️mounted/📦️owner/🦀️.rs"),"utf8");expect(native).toContain("next_open_retirement_demands");
  const schema=JSON.parse(readFileSync(valueRetirementSchemaUrl,"utf8"));const valid=new Ajv({strict:false}).compile({...schema,$ref:"#/$defs/Demand"});
  const demand={copyBytes:Int32Array.BYTES_PER_ELEMENT,capacityBytes:Buffer.alloc(128).byteLength,releaseBytes:Buffer.alloc(256).byteLength,depth:3};expect(valid(demand)).toBe(true);expect(Object.values(demand)).toEqual([4,128,256,3]);
- console.log("[DEBUG] independent Ajv/Int32/Buffer discriminate member copy, birth, release and depth; actual OneItem field forwarding and canonical open demand source law, native credit separate");
 });
 
 
 test("Store returned-read ingress consumes the supplied grant before original custody transfer",()=>{
  let root=import.meta.dir;while(!existsSync(join(root,"bun.lock")))root=resolve(root,"..");
- const source=readFileSync(join(root,"🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs"),"utf8");
+ const source=readStoreSourceText();
  const ingress=source.slice(source.indexOf("    pub fn take_returned_snapshot_read_retirement("),source.indexOf("    fn close_cursor_demands("));
  expect(ingress).toContain("grant: RetainedCloneGrant");expect(ingress).toContain("try_admit_one_returned::<P, _>(grant");expect(ingress).not.toContain("try_take_one_returned");expect(ingress).not.toContain("for _ in");expect(ingress).not.toContain("Box::new");
  const schema=JSON.parse(readFileSync(valueRetirementSchemaUrl,"utf8"));const valid=new Ajv({strict:false}).compile({...schema,$ref:"#/$defs/Demand"});
  const demand={copyBytes:0,capacityBytes:Buffer.alloc(128).byteLength,releaseBytes:0,depth:1};expect(valid(demand)).toBe(true);expect(valid({...demand,capacityBytes:-1})).toBe(false);
  const database=new Database(":memory:");try{database.exec("CREATE TABLE leases(id INTEGER PRIMARY KEY, original TEXT)");database.query("INSERT INTO leases VALUES(?,?)").run(1,"same-original");database.exec("BEGIN");database.query("DELETE FROM leases WHERE id=?").run(1);database.exec("ROLLBACK");expect(database.query("SELECT original FROM leases WHERE id=1").get()).toEqual({original:"same-original"});}finally{database.close();}
- console.log("[DEBUG] canonical Demand/Ajv and independent SQLite refusal restoration; actual Store granted ingress remains subject to native original-pointer and allocator law");
 });
 
 
 test("ephemeral publication retires original preparation frames and capabilities under independent axes",()=>{
  let root=import.meta.dir;while(!existsSync(join(root,"bun.lock")))root=resolve(root,"..");
- const source=readFileSync(join(root,"🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs"),"utf8");
+ const source=readStoreSourceText();
  const start=source.indexOf("impl<P, Mutation> ArtifactEphemeralOneItemPublication<P, Mutation>");const end=source.indexOf("impl<P, Mutation> Drop for ArtifactEphemeralOneItemPublication",start);const owner=source.slice(start,end);
  expect(owner).toContain("pub fn retirement_demands(&self");expect(owner).toContain("Result<RetainedCloneStep, ValueError>");expect(owner).not.toContain("SnapshotRetirementStep");expect(owner).not.toContain("fault.pop()");expect(owner).toContain("fault.capacity()");expect(owner).toContain("size_of_val(owner.as_ref())");expect(owner).toContain("factory_retirement");expect(owner).toContain("grant.maximum_depth - 1");
  const schema=JSON.parse(readFileSync(valueRetirementSchemaUrl,"utf8"));const valid=new Ajv({strict:false}).compile({...schema,$ref:"#/$defs/Demand"});
  for(const releaseBytes of [0,128,16384]){const backing=Buffer.alloc(releaseBytes);const demand={copyBytes:0,capacityBytes:0,releaseBytes:backing.byteLength,depth:1};expect(valid(demand)).toBe(true);expect(demand.releaseBytes).toBe(releaseBytes);expect(valid({...demand,depth:-1})).toBe(false);}
- console.log("[DEBUG] independent Buffer and canonical Ajv Demand preserve whole release independent of copy/birth; ephemeral actual native physical owners remain required");
 });
 
 
@@ -272,15 +259,13 @@ test("actual Plugin member birth retains nested source depth before original req
  const cases=JSON.parse(readFileSync(resolve(import.meta.dir,"🧫️fixtures/🔣️.json"),"utf8"));
  const schema=JSON.parse(readFileSync(valueRetirementSchemaUrl,"utf8"));const valid=new Ajv({strict:false}).compile({...schema,$ref:"#/$defs/Demand"});
  for(const parents of [0,1,2]){const demand={copyBytes:0,capacityBytes:Buffer.alloc(cases.grant.maximumCapacityBytes).byteLength,releaseBytes:0,depth:parents+1};expect(valid(demand)).toBe(true);expect(demand.capacityBytes).toBe(cases.grant.maximumCapacityBytes);expect(demand.depth).toBe(parents+1);expect(cases.grant.maximumDepth-demand.depth).toBeGreaterThanOrEqual(0);}
- console.log("[DEBUG] original plain grant and canonical Demand agree with independent Buffer/Ajv; member source depth propagation is source proof, native ownership and advancement receipts pending");
 });
 
 
 test("Store live read admission restores the same generation slot before any failed ownership transfer",()=>{
- let root=import.meta.dir;while(!existsSync(join(root,"bun.lock")))root=resolve(root,"..");const source=readFileSync(join(root,"🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs"),"utf8");const read=readFileSync(join(root,"🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/🦀️.rs"),"utf8");
+ let root=import.meta.dir;while(!existsSync(join(root,"bun.lock")))root=resolve(root,"..");const source=readStoreSourceText();const read=readFileSync(join(root,"🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/🦀️.rs"),"utf8");
  expect(read.includes("fn admit_retirement<T: Send + Sync + 'static>")).toBe(true);expect(read.includes("self.owner = Some(original)")).toBe(true);expect(source.includes("snapshot: &mut Option<ErasedSnapshotRead>")).toBe(true);expect(source.includes("SnapshotRetirementRejected")||read.includes("SnapshotRetirementRejected")).toBe(false);
  const fixture=JSON.parse(readFileSync(resolve(import.meta.dir,"🧫️fixtures/🔣️.json"),"utf8"));const database=new Database(":memory:");try{database.exec("CREATE TABLE slots(id INTEGER PRIMARY KEY,generation INTEGER,owner TEXT)");database.query("INSERT INTO slots VALUES(?,?,?)").run(1,17,JSON.stringify(fixture.values));database.exec("BEGIN");database.query("DELETE FROM slots WHERE id=1 AND generation=17").run();database.exec("ROLLBACK");expect(database.query("SELECT generation,owner FROM slots WHERE id=1").get()).toEqual({generation:17,owner:JSON.stringify(fixture.values)});}finally{database.close();}
- console.log("[DEBUG] SQLite transactional original/generation rollback agrees with plain ordered source; actual native pointer/allocator read-admission law remains required");
 });
 
 
@@ -291,7 +276,6 @@ test("Store counted originals consume an explicit independent physical test poli
  const fixture=JSON.parse(readFileSync(resolve(import.meta.dir,"🧫️fixtures/🔣️.json"),"utf8"));const grant=fixture.physicalCloseGrant;expect(grant.maximumItems).toBe(1);expect(grant.maximumDepth).toBe(64);expect(Buffer.alloc(grant.maximumCapacityBytes).byteLength).toBe(1048576);expect(Buffer.alloc(grant.maximumReleaseBytes).byteLength).toBe(1048576);expect(grant.maximumCopyBytes).toBe(4096);
  const close=source.slice(source.indexOf("fn close_test_store<"),source.indexOf("impl<P, Mutation> Drop",source.indexOf("fn close_test_store<")));const driver=source.slice(source.indexOf("fn drive_retirement_terminal("),source.indexOf("\n}\n",source.indexOf("fn drive_retirement_terminal(")));const readerStart=source.indexOf("fn close_stalls_at_reader_boundary(");const reader=source.slice(readerStart,source.indexOf("\n}\n",readerStart));for(const helper of [close,driver,reader]){expect(helper.includes("maximum_capacity_bytes: demand.capacity_bytes")).toBe(false);expect(helper.includes("physical_test_close_grant()")).toBe(true);}
  const inverseStart=source.indexOf("impl DemoRetainedCloneEditCursor");const inverse=source.slice(inverseStart,source.indexOf("struct ProbedRetainedClonePreparationFactory",inverseStart));expect(inverse.includes("release_bytes: inverse.capacity()")).toBe(true);expect(inverse.includes("drop(self.inverse.take())")).toBe(true);const probeStart=source.indexOf("impl ArtifactStoreOneItemPreparationFactory<DemoSnapshot, DemoMutation> for ProbedRetainedClonePreparationFactory");const probe=source.slice(probeStart,source.indexOf("impl ArtifactCanonicalJson for DemoMutation",probeStart));expect(probe.includes("checked_add(std::mem::size_of::<ProbedRetainedClonePreparation>())")).toBe(true);expect(probe.includes("demand.admit(grant.retained_grant())")).toBe(true);expect(probe.includes("drop(self.inner.take())")).toBe(true);expect(probe.includes("counter.step(child)")).toBe(true);expect(probe.includes("impl Drop for ProbedRetainedClonePreparation")).toBe(false);
- console.log("[DEBUG] independently allocated Buffer extents match separately authored plain test currencies; counted pointer/physical native law remains unrun");
 });
 
 
@@ -300,7 +284,6 @@ test("actual Store lifecycle caller grants have five declared currencies without
  expect(source.includes("uniform_one_item_grant")).toBe(false);const start=source.indexOf("fn close_retained_clone_preparation_publication");const owner=source.slice(start,source.indexOf("#[semio_framework_async_macros::async_test]",start));expect(owner.includes("grant: RetainedCloneGrant")).toBe(true);expect(owner.includes("let grant = RetainedCloneGrant")).toBe(false);
  const schema=JSON.parse(readFileSync(valueOrderedRetirementSchemaUrl,"utf8"));const valid=new Ajv({strict:false}).compile({...schema,$ref:"#/$defs/Grant"});const lifecycle=JSON.parse(readFileSync(join(base,"🧬️snapshot-clone/🧪️tests/🧫️fixtures/📦️lifecycle/🔣️.json"),"utf8"));const latest=JSON.parse(readFileSync(join(root,"🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧫️fixtures/🔗️tool-latest-wins-integration.json"),"utf8"));
  for(const row of [lifecycle.grant,lifecycle.handoff.closeGrant,latest]){const grant=Object.fromEntries(["maximumItems","maximumCopyBytes","maximumCapacityBytes","maximumReleaseBytes","maximumDepth"].map(key=>[key,row[key]]));expect(valid(grant)).toBe(true);expect(valid({...grant,maximumDepth:-1})).toBe(false);for(const key of ["maximumCopyBytes","maximumCapacityBytes","maximumReleaseBytes"]){expect(Buffer.alloc(grant[key]).byteLength).toBe(grant[key]);}expect(grant.maximumItems).toBe(1);}
- console.log("[DEBUG] actual plain five-field lifecycle Grant projections pass canonical production schema plus independent Ajv/Buffer; no corpus validation, self-priced authority or native runtime credit");
 });
 
 
@@ -327,7 +310,6 @@ test("initialization runtime callers preserve independent physical grant fields 
   expect(owner.includes("SnapshotRetirementStep")).toBe(false);
   expect(owner.includes("next_close_byte_demand")).toBe(false);
   const vcsStart=source.indexOf("fn vcs_retirement_propagates_nested_physical_allocation_demand()");const vcs=source.slice(vcsStart,source.indexOf("fn fresh_field_release_propagates",vcsStart));expect(vcs.includes("next_close_byte_demand")).toBe(false);expect(vcs.includes("SnapshotRetirementStep")).toBe(false);expect(vcs.includes("maximum_release_bytes: caller")).toBe(true);expect(vcs.includes("closing_factories: std::mem::ManuallyDrop::new([None,None])")).toBe(true);const genesisStart=source.indexOf("fn envelope_and_genesis_preserve_terminal_cursor_physical_grants()");const genesis=source.slice(genesisStart,source.indexOf("fn displaced_store_owner_preserves",genesisStart));expect(genesis.includes("admit_verified_pack")).toBe(true);expect(genesis.includes("next_close_byte_demand")).toBe(false);expect(genesis.includes("SnapshotRetirementStep")).toBe(false);expect(genesis.includes("maximum_release_bytes: caller")).toBe(true);expect(genesis.includes("original")).toBe(true);
-  console.log("[DEBUG] authored release frontier rows match independent Buffer/canonical Ajv Grant; actual runtime caller separate currencies/allocator law still requires native execution");
 });
 
 
@@ -342,7 +324,6 @@ test("decode retirement separates inline page work from original fixed directory
  expect(pages.includes("self.slots.is_empty()")).toBe(true);expect(pages.includes("fn close_backing_step")).toBe(true);
  const token=source.slice(source.indexOf("impl OwnedSchemaTokenCursor"),source.indexOf("pub struct OwnedSchemaRecordCursor"));
  expect(token.includes("self.pages.close_backing_step(grant)")).toBe(true);expect(pages.includes("grant.maximum_release_bytes<bytes")).toBe(true);
- console.log("[DEBUG] independent Buffer/u16 layout distinguishes inline16KiB copy from fixed directory release; original directory terminal and native allocator assertions remain separate");
 });
 
 
@@ -353,7 +334,6 @@ test("unit factory closure retains inline original witness without ungranted chi
  const source=readStoreUnit(root);
  const start=source.indexOf("impl semio_framework_value::FactoryPayloadRetirement for DemoOneItemPreparationFactory");const end=source.indexOf("impl DemoOneItemPreparationFactory",start);const owner=source.slice(start,end);
  expect(owner.includes("DemoOneItemFactoryClose")).toBe(true);expect(owner.includes("fn close_state_birth_bytes(&self) -> usize { 0 }")).toBe(true);expect(owner.includes("preborn_factory_retirement")).toBe(false);expect(owner.includes("fn close_state_demands")).toBe(true);expect(owner.includes("grant: RetainedCloneGrant")).toBe(true);expect(owner.includes("state.published=Some(published_root)")).toBe(true);
- console.log("[DEBUG] independent Buffer frame cases and current unit factory supplied-grant/inline owner contract; native sole-Weak pointer/allocator law remains required");
 });
 
 
@@ -366,7 +346,6 @@ test("durable preparation factories admit original request before actual frame b
  const source=readStoreUnit(root);
  for(const [start,end] of [["impl ArtifactStoreOneItemPreparationFactory<DemoSnapshot, DemoMutation> for CountingOwnedPreparationFactory","#[semio_framework_async_macros::async_test]"],["impl MemberStoreOneItemWirePreparationFactory<DemoSnapshot, DemoMutation> for DemoMemberWirePreparationFactory","impl DemoMemberWirePreparation"],["impl ArtifactStoreOneItemPreparationFactory<DemoSnapshot, DemoMutation> for DemoOneItemPreparationFactory","impl ArtifactStoreOneItemPreparation<DemoSnapshot, DemoMutation> for DemoOneItemPreparation"]]){const from=source.indexOf(start);const owner=source.slice(from,source.indexOf(end,from));expect(owner.includes("fn begin_demand")).toBe(true);expect(owner.includes("grant: ArtifactStoreOneItemGrant")).toBe(true);expect(owner.includes("RetainedCloneProgress")).toBe(true);expect(owner.includes("(ValueError, ArtifactStoreOneItemPreparationRequest")).toBe(true);}
  const from=source.indexOf("impl ArtifactStoreOneItemPreparationFactory<DemoSnapshot, DemoMutation> for DemoOneItemPreparationFactory");const owner=source.slice(from,source.indexOf("impl ArtifactStoreOneItemPreparation<DemoSnapshot, DemoMutation> for DemoOneItemPreparation",from));expect(owner.indexOf("demand.admit(grant.retained_grant())")).toBeLessThan(owner.indexOf("Box::new"));expect(owner.includes("grant.maximum_copy_bytes < copied_bytes")).toBe(true);expect(owner.includes("retained_capacity_bytes")).toBe(true);
- console.log("[DEBUG] original UTF8 identity bytes agree with independent Buffer/TextEncoder and canonical Ajv Grant; source factory birth/refusal order, actual allocator/identity native law unrun");
 });
 
 
@@ -377,7 +356,6 @@ test("durable preparation cancellation retains original candidate and captured i
  for(const value of fixture.values){const buffer=Buffer.alloc(Int32Array.BYTES_PER_ELEMENT);buffer.writeInt32LE(value);const view=new DataView(buffer.buffer,buffer.byteOffset,buffer.byteLength);expect(view.getInt32(0,true)).toBe(value);expect(valid({copyBytes:0,capacityBytes:buffer.byteLength,releaseBytes:0,depth:2})).toBe(true);}
  const source=readStoreUnit(root);const start=source.indexOf("impl ArtifactStoreOneItemPreparation<DemoSnapshot, DemoMutation> for DemoOneItemPreparation");const owner=source.slice(start,source.indexOf("struct DemoEphemeralPreparationFactory",start));expect(owner.includes("SnapshotRetirementStep")).toBe(false);expect(owner.includes("prepared.admit_retirement")).toBe(true);expect(owner.includes("try_return_to_registry_witness")).toBe(true);expect(owner.includes("fn next_close_capacity_byte_demand")).toBe(true);expect(owner.includes("self.prepared = Some(original)")).toBe(true);expect(owner.includes("authority.retire(child)")).toBe(true);expect(owner.includes("artifact_retirement_box_close_step")).toBe(true);
  const ephemeralStart=source.indexOf("impl ArtifactEphemeralOneItemPreparation<DemoSnapshot, DemoMutation> for DemoEphemeralPreparation");const ephemeral=source.slice(ephemeralStart,source.indexOf("fn close_durable_publication",ephemeralStart));expect(ephemeral.includes("SnapshotRetirementStep")).toBe(false);expect(ephemeral.includes("fn next_close_depth_demand")).toBe(true);expect(ephemeral.includes("ArtifactEphemeralBaseOwner::Transient(original)")).toBe(true);expect(ephemeral.includes("ArtifactEphemeralBaseOwner::Presence(original)")).toBe(true);expect(ephemeral.includes("ArtifactEphemeralBaseOwner::TransientRead(original)")).toBe(true);expect(ephemeral.includes("artifact_retirement_box_close_step")).toBe(true);expect(ephemeral.includes("self.request.take().is_some()")).toBe(false);
- console.log("[DEBUG] original ordered i32 values agree with independent Buffer/DataView and canonical Ajv Demand; current candidate/captured issuer/registry refusal source law, native physical original custody still unrun");
 });
 
 
@@ -387,7 +365,6 @@ test("wire preparation preserves original buffers and captured typed issuer thro
  const schema=JSON.parse(readFileSync(valueRetirementSchemaUrl,"utf8"));const valid=new Ajv({strict:false}).compile({...schema,$ref:"#/$defs/Demand"});expect(valid({copyBytes:0,capacityBytes:0,releaseBytes:bytes.byteLength,depth:1})).toBe(true);
  const source=readStoreUnit(root);const from=source.indexOf("struct DemoMemberWirePreparationFactory");const owner=source.slice(from,source.indexOf("async fn retained_member_publication",from));
  expect(owner.includes("SnapshotRetirementStep")).toBe(false);expect(owner.includes("grant.maximum_bytes")).toBe(false);expect(owner.includes("wire.bytes.pop()")).toBe(false);expect(owner.includes("wire.schema.pop()")).toBe(false);expect(owner.includes("wire.bytes.capacity()")).toBe(true);expect(owner.includes("wire.schema.capacity()")).toBe(true);expect(owner.includes("typed_request: Option<")).toBe(true);expect(owner.includes("typed_request = Some(original)")).toBe(true);expect(owner.includes("try_return_to_registry_witness")).toBe(true);expect(owner.includes("DemoOneItemPreparationFactory::admissible().begin")).toBe(false);expect(owner.includes("fn next_close_depth_demand")).toBe(true);
- console.log("[DEBUG] plain UTF8 bytes match independent Buffer/TextEncoder and canonical Ajv Demand; wire original backing and granted typed ingress source law, native receipt still required");
 });
 
 
@@ -397,5 +374,4 @@ test("shared Store coverage admits only every independently supplied axis",()=>{
  const schema=JSON.parse(readFileSync(valueRetirementSchemaUrl,"utf8"));const valid=new Ajv({strict:false}).compile({...schema,$ref:"#/$defs/Demand"});expect(valid(demand)).toBe(true);
  const database=new Database(":memory:");try{for(const row of [{axis:null,value:null},...denials]){const g={...policy,...(row.axis?{[row.axis]:row.value}:{})};const own=g.maximumItems>0&&g.maximumCopyBytes>=demand.copyBytes&&g.maximumCapacityBytes>=demand.capacityBytes&&g.maximumReleaseBytes>=demand.releaseBytes&&g.maximumDepth>=demand.depth;const oracle=database.query("SELECT (? > 0 AND ? >= ? AND ? >= ? AND ? >= ? AND ? >= ?) AS covered").get(g.maximumItems,g.maximumCopyBytes,demand.copyBytes,g.maximumCapacityBytes,demand.capacityBytes,g.maximumReleaseBytes,demand.releaseBytes,g.maximumDepth,demand.depth) as {covered:number};expect(own).toBe(Boolean(oracle.covered));expect(own).toBe(row.axis===null);}}finally{database.close();}
  const source=readFileSync(join(root,"🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🧬️owned-schema/🧱️fields/📥️lifted/🧬️owned-schema/🦀️.rs"),"utf8");const start=source.indexOf("fn artifact_retirement_grant_covers(");const owner=source.slice(start,source.indexOf("\n}",start));expect(owner).toContain("grant.maximum_depth >= demand.depth");
- console.log("[DEBUG] plain five-axis grant denial boundaries agree with independent SQLite/canonical Ajv; actual shared helper native law remains separately required");
 });

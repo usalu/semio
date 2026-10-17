@@ -17,12 +17,6 @@ pub(crate) mod child_content {
     pub use semio_framework_plugin_publication_mounted::{command_mounted::*, owner::*, mounted_child_group_identity, mounted_child_group_receipt, mounted_child_group_receipt_group};
     pub use semio_framework_plugin_publication_mounted::mounted_child_group_identity::{MountedChildGroupIdentityIssuer, MountedChildGroupIdentitySource};
     pub use semio_framework_plugin_publication_mounted::mounted_child_group_receipt_group::command::PagedCommandLog;
-    #[cfg(test)]
-    pub(crate) use super::child_test_hosts::child_unit_2::{test_mounted_command_history_pages, test_mounted_command_history_replacement};
-    #[cfg(test)]
-    pub(crate) use super::publication_mounted_test_hosts::publication_mounted_unit_1::test_mounted_private_child_frame;
-    #[cfg(test)]
-    pub(crate) use super::publication_mounted_test_hosts::publication_mounted_unit_2::test_mounted_original_owned_publication;
 }
 pub(crate) extern crate semio_framework_plugin_document_media as document_ingress;
 pub(crate) extern crate semio_framework_plugin_peer as peer_roster;
@@ -47,17 +41,10 @@ pub(crate) mod reserved_jobs {
     pub use super::reserved_route_capacity_lift::*;
 }
 pub extern crate semio_framework_plugin_retained_command as retained_command;
-#[path = "../../⏳️operation-progress/🦀️.rs"]
-pub(crate) mod tool_jobs_operation_progress;
-#[path = "../../⏯️tool-run/🦀️.rs"]
-pub(crate) mod tool_jobs_tool_run;
-#[path = "../../🛠️tool-machine/🦀️.rs"]
-pub(crate) mod tool_jobs_tool_machine;
-#[path = "../../⏪️time-travel/🦀️.rs"]
-pub(crate) mod tool_jobs_time_travel;
-#[cfg(test)]
-#[path = "../../🧪️tests/🔬️tool-run/🦀️.rs"]
-mod tool_run_tests;
+pub(crate) use semio_framework_plugin_reactor_app::operation_progress as tool_jobs_operation_progress;
+pub(crate) extern crate semio_framework_plugin_tool_run as tool_jobs_tool_run;
+pub(crate) use semio_framework_plugin_tool_run::tool_jobs_tool_machine as tool_jobs_tool_machine;
+pub(crate) extern crate semio_framework_plugin_time_travel as tool_jobs_time_travel;
 pub(crate) mod tool_jobs {
     pub use semio_framework_plugin_job::*;
     pub(crate) use super::tool_jobs_operation_progress as operation_progress;
@@ -70,8 +57,6 @@ pub(crate) mod tool_jobs {
 }
 pub(crate) mod typed_operation {
     pub use semio_framework_plugin_retained_command::typed_operation::*;
-    #[cfg(test)]
-    pub(crate) use super::retained_command_test_hosts::retained_command_unit_1::{test_retained_keyed_dispatch, test_typed_operation_slot_preadmission, test_typed_operation_slot_retirement_under_storm, test_typed_operation_slot_release_on_every_outcome, test_typed_operation_never_parks_a_turn_that_reports_no_runnable_work, test_typed_operation_completes_under_a_status_only_host_call, test_typed_operation_lands_its_edit_inside_the_admitting_call, test_retained_cancellation_publication_boundaries, test_retained_latest_wins_slot_and_publication_fairness, test_retained_document_cancellation};
 }
 //#endregion 👷️JobsFacet
 //#region ⚛️ReactorFacet
@@ -79,18 +64,11 @@ pub use semio_framework_plugin_extension::describe as describe;
 pub(crate) use semio_framework_plugin_extension::inference_gateway as inference_gateway;
 pub use inference_gateway::{cancel_artifact_inference,wire_artifact_infer_cold,ArtifactInferenceGateway,ArtifactInferenceGatewayStep,wire_artifact_infer,original_inference_gateway_demands};
 //#endregion ⚛️ReactorFacet
-#[cfg(test)]
-#[path = "🧪️test-hosts/🪆️child/🦀️.rs"]
-pub(crate) mod child_test_hosts;
-#[cfg(test)]
-#[path = "🧪️test-hosts/🏇️publication-mounted/🦀️.rs"]
-pub(crate) mod publication_mounted_test_hosts;
-#[cfg(any(test, feature = "media-turn-testing"))]
-#[path = "🧪️test-hosts/🎞️document-media/🦀️.rs"]
-pub(crate) mod document_media_test_hosts;
-#[cfg(test)]
-#[path = "🧪️test-hosts/👷️job/🦀️.rs"]
-pub(crate) mod job_test_hosts;
-#[cfg(test)]
-#[path = "🧪️test-hosts/🧵️retained-command/🦀️.rs"]
-pub(crate) mod retained_command_test_hosts;
+
+
+
+
+
+
+
+

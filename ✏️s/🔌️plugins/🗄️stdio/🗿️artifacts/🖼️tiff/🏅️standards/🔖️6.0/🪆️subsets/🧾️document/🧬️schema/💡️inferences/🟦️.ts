@@ -31,6 +31,10 @@ type stdioTiff60DocumentInferenceGuardSizeBounds = { readonly minItems?: number;
 
 export const stdioTiff60DocumentInferenceGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : stdioTiff60DocumentInferenceGuardReject(at, "value is not an object");
+export const stdioTiff60DocumentInferenceGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) stdioTiff60DocumentInferenceGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const stdioTiff60DocumentInferenceGuardArray = (value: unknown, at: string, bounds: stdioTiff60DocumentInferenceGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return stdioTiff60DocumentInferenceGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) stdioTiff60DocumentInferenceGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -61,14 +65,14 @@ export const stdioTiff60DocumentInferenceGuardConstant = <T extends string | num
 //#endregion 🚪️Parsers
 
 export function parseTiffInference(value: unknown, at = "$"): TiffInference {
-  const row = stdioTiff60DocumentInferenceGuardObject(value, at);
+  const row = stdioTiff60DocumentInferenceGuardClosed(stdioTiff60DocumentInferenceGuardObject(value, at), at, ["dimensions"]);
   return {
     dimensions: parseTiffDimensions(row["dimensions"], `${at}.dimensions`),
   };
 }
 
 export function parseTiffDimensions(value: unknown, at = "$"): TiffDimensions {
-  const row = stdioTiff60DocumentInferenceGuardObject(value, at);
+  const row = stdioTiff60DocumentInferenceGuardClosed(stdioTiff60DocumentInferenceGuardObject(value, at), at, ["width", "height", "bitDepth", "hasAlpha", "pixelCount"]);
   return {
     width: stdioTiff60DocumentInferenceGuardInteger(row["width"], `${at}.width`, {"minimum": 0}),
     height: stdioTiff60DocumentInferenceGuardInteger(row["height"], `${at}.height`, {"minimum": 0}),

@@ -1,4 +1,5 @@
 use super::*;
+use semio_framework_test_fixtures::fixture_text;
 
 /// 📋️ A typed list's emptied backing retires one page per turn as an ITEM: the byte grant meters payload, so a
 /// one-byte grant still finishes the list, every page release reports zero bytes, and a zero grant touches nothing.
@@ -30,7 +31,7 @@ fn retained_fixed_list_pages_typed_retirement_meters_backing_as_items() {
 
 //#region 🧪️PagedStorageLaws
 fn fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../../../📋️list/🧪️tests/🧫️fixtures/🔣️.json")).unwrap()
+    serde_json::from_str(fixture_text!("../../../📋️list/🧪️tests/🧫️fixtures/🔣️.json")).unwrap()
 }
 
 #[test]

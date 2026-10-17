@@ -4,7 +4,8 @@
   "additionalProperties": false,
   "required": [
     "version",
-    "cases"
+    "cases",
+    "wireProjection"
   ],
   "properties": {
     "version": {
@@ -85,6 +86,15 @@
             }
           }
         }
+      }
+    },
+    "wireProjection": {
+      "const": {
+        "maximumElapsedMilliseconds": 10000,
+        "maximumDeadlineIncreaseMilliseconds": 0,
+        "originalOwnerPreserved": true,
+        "capabilitiesPreserved": true,
+        "actualWireSha256": true
       }
     }
   }

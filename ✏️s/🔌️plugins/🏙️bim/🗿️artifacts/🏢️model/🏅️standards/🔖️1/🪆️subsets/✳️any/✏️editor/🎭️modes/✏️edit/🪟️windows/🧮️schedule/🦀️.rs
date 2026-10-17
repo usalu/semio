@@ -10,7 +10,6 @@ pub mod edit;
 #[path = "🏷️vocabulary/🦀️.rs"]
 pub mod vocabulary;
 
-use self::config::BimScheduleWindowConfig;
 use crate::editor::bim::interaction::BIM_ELEMENT_DOMAIN;
 use crate::editor::bim::kit::bim_window_action;
 use crate::editor::bim::terminology::BimLabels;
@@ -194,7 +193,7 @@ pub fn row_kind(snapshot: &ModelSnapshot, inference: &ModelInference, id: &str) 
     crate::editor::bim::entities::kind_holding(snapshot, element).filter(|row| !row.library).map(|row| row.kind.to_string())
 }
 
-fn table_surface(snapshot: &ModelSnapshot, inference: &ModelInference, config: &BimScheduleWindowConfig, labels: &BimLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+fn table_surface(snapshot: &ModelSnapshot, inference: &ModelInference, config: &config::BimScheduleWindowConfig, labels: &BimLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let Some(schedule) = snapshot.schedules.get(&config.schedule) else { return list_surface(snapshot, inference, labels) };
     let (columns, rows) = table_parts(schedule, inference, &config.schedule, labels);
     table(columns, rows, row_kind(snapshot, inference, &config.schedule).as_deref())
@@ -302,7 +301,7 @@ pub fn editor_rows(snapshot: &ModelSnapshot, id: &str, labels: &BimLabels) -> Ve
     rows
 }
 
-fn editor_surface(snapshot: &ModelSnapshot, config: &BimScheduleWindowConfig, labels: &BimLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+fn editor_surface(snapshot: &ModelSnapshot, config: &config::BimScheduleWindowConfig, labels: &BimLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let columns = vec![column_value("part", labels.sch_part.as_str()), column_value("item", labels.sch_item.as_str()), column_value("value", labels.sch_value.as_str()), column_value("actions", labels.sch_actions.as_str())];
     table(columns, editor_rows(snapshot, &config.schedule, labels), None)
 }
@@ -310,7 +309,7 @@ fn editor_surface(snapshot: &ModelSnapshot, config: &BimScheduleWindowConfig, la
 
 //#region 🔖️Render
 /// 🧮️ Renders the schedule window: the list without a chosen schedule, else its table or its definition editor.
-pub fn render(snapshot: &ModelSnapshot, inference: &ModelInference, config: &BimScheduleWindowConfig, labels: &BimLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(snapshot: &ModelSnapshot, inference: &ModelInference, config: &config::BimScheduleWindowConfig, labels: &BimLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     if !snapshot.schedules.contains_key(&config.schedule) {
         return list_surface(snapshot, inference, labels);
     }

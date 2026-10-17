@@ -2,6 +2,10 @@
   "name": "@semio-tech/2d-compute",
   "private": true,
   "type": "module",
+  "exports": {
+    "./testing/consumer": "./🧪️testing/📍️consumer/🟦️.ts",
+    "./testing/consumer/host": "./🧪️testing/📍️consumer/🏃️host/🟦️.ts"
+  },
   "scripts": {
     "test-neutral-ownership": "bun --cwd \"../../../..\" repo run @semio-tech/2d-compute:test-neutral-ownership",
     "test-schema": "bun --cwd \"../../../..\" repo run @semio-tech/2d-compute:test-schema",

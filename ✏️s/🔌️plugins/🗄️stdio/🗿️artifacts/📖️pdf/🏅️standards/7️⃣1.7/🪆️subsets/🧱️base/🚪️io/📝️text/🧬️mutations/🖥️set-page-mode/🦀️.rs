@@ -3,7 +3,7 @@
 pub const OPCODE: &str = "set-page-mode";
 pub const TEXT_OPCODE: &str = OPCODE;
 
-use crate::standards::v1_7::subsets::base::schema::mutations::SetPageMode;
+use crate::standards::v1_7::subsets::base::schema::mutations::set_page_mode::SetPageMode;
 
 /// 🖨️ Prints this direct payload through its schema-derived JSON representation.
 pub fn print(payload: &SetPageMode) -> Result<String, String> {

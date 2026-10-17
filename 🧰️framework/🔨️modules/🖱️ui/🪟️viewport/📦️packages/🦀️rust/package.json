@@ -8,6 +8,7 @@
     "test:binding": "bun --cwd \"../../../../../..\" repo run @semio-tech/framework-ui-viewport-rs:test-binding"
   },
   "devDependencies": {
+    "@semio-tech/framework-dsl-record-ts": "workspace:*",
     "@semio-tech/process": "workspace:*"
   }
 }

@@ -1,0 +1,96 @@
+{
+ "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🧪️tests/🔬️unit/🦀️.rs",
+ "original": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/c4p47-tools/orig/neu.rs",
+ "stage": "/Users/ueli/.cache/c4p47/stage-frag",
+ "base_depth": 0,
+ "chunks": [
+  {
+   "name": "🔁️dictionary-and-registry-laws",
+   "folder": "🔁️dictionary-and-registry-laws",
+   "doc": "🔁️ Dictionary and registry laws: the observed system, the dictionary cursor, the echo and double operators, schema round trips, registry dispatch and the custom dispatch pipelines.",
+   "ranges": [
+    [
+     4,
+     161
+    ]
+   ]
+  },
+  {
+   "name": "🔀️wire-channel-and-collect-laws",
+   "folder": "🔀️wire-channel-and-collect-laws",
+   "doc": "🔀️ Wire, channel and collect laws: wire precedence over recorded literals, resolved channels per neuron and fixed and variadic port routing.",
+   "ranges": [
+    [
+     163,
+     258
+    ]
+   ]
+  },
+  {
+   "name": "🧵️cluster-and-top-level-laws",
+   "folder": "🧵️cluster-and-top-level-laws",
+   "doc": "🧵️ Cluster and top-level laws: the add operator, boundary neurons, cluster contracts and inner trees, top-level evaluation and shakability.",
+   "ranges": [
+    [
+     260,
+     389
+    ]
+   ]
+  },
+  {
+   "name": "🗂️cached-evaluation-laws",
+   "folder": "🗂️cached-evaluation-laws",
+   "doc": "🗂️ Cached evaluation laws: declared defaults, stable node hashes, cache hits, per-node errors and branch recomputation.",
+   "ranges": [
+    [
+     391,
+     499
+    ]
+   ]
+  },
+  {
+   "name": "⏱️budgeted-walk-laws",
+   "folder": "⏱️budgeted-walk-laws",
+   "doc": "⏱️ Budgeted walk laws: remaining and probe walks, resumption across calls, failed dispatch service from the cache, the wall clock and node count caps and the cache epoch refresh before sweep.",
+   "ranges": [
+    [
+     501,
+     780
+    ]
+   ]
+  },
+  {
+   "name": "📚️cardinality-and-schema-component-laws",
+   "folder": "📚️cardinality-and-schema-component-laws",
+   "doc": "📚️ Cardinality and schema component laws: cardinality symbols and counts, heterogeneous list refusal, null atoms and the tri-modal schema component.",
+   "ranges": [
+    [
+     782,
+     912
+    ]
+   ]
+  },
+  {
+   "name": "🌊️dirty-set-and-wave-laws",
+   "folder": "🌊️dirty-set-and-wave-laws",
+   "doc": "🌊️ Dirty set and wave laws: the dirty set for unchanged snapshots, descendants, removals and seeds, and the budgeted wave walks over contributed graphs.",
+   "ranges": [
+    [
+     914,
+     1092
+    ]
+   ]
+  },
+  {
+   "name": "🚦️owned-control-laws",
+   "folder": "🚦️owned-control-laws",
+   "doc": "🚦️ Owned control laws: the compact pending extension and the dictionary writer source retirement and original text laws.",
+   "ranges": [
+    [
+     1094,
+     1136
+    ]
+   ]
+  }
+ ]
+}

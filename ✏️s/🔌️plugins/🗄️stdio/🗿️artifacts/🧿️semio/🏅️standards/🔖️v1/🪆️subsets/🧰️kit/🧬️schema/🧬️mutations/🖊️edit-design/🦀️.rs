@@ -3,7 +3,6 @@
 //! replaces an authored content body per `📓️taxonomy.md`, the same shape `🔤️text`'s `edit-run`
 //! uses one level down for a run's `content`.
 
-use crate::schema::mutations::SemioKitMutation;
 use crate::schema::snapshot::{SemioKitConnection, SemioKitPiece, SemioKitSnapshot};
 
 //#region 🔖️Payload
@@ -16,13 +15,16 @@ pub struct EditDesign {
     pub connections: Vec<SemioKitConnection>,
 }
 
-impl protocol::MutationKind<SemioKitSnapshot, SemioKitMutation> for EditDesign {
+impl<Op> protocol::MutationKind<SemioKitSnapshot, Op> for EditDesign
+where
+    Op: protocol::Mutation<SemioKitSnapshot, Diff = crate::schema::diff::SemioKitDiff> + From<EditDesign>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "edit", entity: "design", kind: "edit-design", record: "EditedDesign" };
 
-    fn diff(&self, base: &SemioKitSnapshot) -> protocol::MutationOutcome<<SemioKitMutation as protocol::Mutation<SemioKitSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioKitSnapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<SemioKitSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &SemioKitSnapshot) -> Result<Vec<SemioKitMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &SemioKitSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

@@ -4,7 +4,7 @@
 
 use crate::cas::expr::{Expr, Kind};
 use crate::cas::polybridge;
-use crate::polynomial::PolyU;
+use crate::polynomial::univariate::PolyU;
 use number::Rational;
 
 // #region 🔖️Expand

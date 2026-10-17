@@ -5,7 +5,7 @@ use crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff;
 use crate::Puzzle2dSnapshot;
 use {semio_framework_value::list::PagedList, semio_framework_value::paged::PagedUtf8};
 use crate::standards::v1::subsets::any::schema::snapshot::Puzzle2dSnapshot;
-use crate::standards::v1::subsets::any::schema::puzzle2d_targets_invariant;
+use crate::standards::v1::subsets::any::schema::records::puzzle2d_targets_invariant;
 
 /// 🧭️ The members of a parametric selection leaf's target set the transform acts on, in document order, with the
 /// `mutation.partial` warnings of the ones it skips. `targets` is classified by document membership against `base`: a
@@ -14,8 +14,8 @@ use crate::standards::v1::subsets::any::schema::puzzle2d_targets_invariant;
 /// `minItems`/`uniqueItems` forbid. Absent ids, locked members and inapplicable regions are skipped with one warning
 /// per reason (in that order, ids in payload order); nothing left is `mutation.target-missing`.
 pub struct Puzzle2dSelection<'a> {
-    pub nodes: Vec<&'a crate::standards::v1::subsets::any::schema::Puzzle2dNode>,
-    pub regions: Vec<&'a crate::standards::v1::subsets::any::schema::Puzzle2dTargetRegion>,
+    pub nodes: Vec<&'a crate::standards::v1::subsets::any::schema::records::Puzzle2dNode>,
+    pub regions: Vec<&'a crate::standards::v1::subsets::any::schema::records::Puzzle2dTargetRegion>,
     pub warnings: Vec<protocol::MutationMessage>,
 }
 

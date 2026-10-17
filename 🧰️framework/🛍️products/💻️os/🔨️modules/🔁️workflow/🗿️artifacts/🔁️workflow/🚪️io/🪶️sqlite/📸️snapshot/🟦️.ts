@@ -1,10 +1,10 @@
 /// <reference path="./🗄️.d.ts" />
 import sql from"./🗄️.sql"with{type:"text"};
 import type { WorkflowSnapshot, WorkflowNode, WorkflowPort, WorkflowContract, WorkflowParameter } from "../../../🧬️schema/📸️snapshot/🟦️.ts";
-import {encodeIeee754Cells,readBinary64,ieee754IsNull,type Ieee754Column} from "../../../../../../../../../🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+import {encodeIeee754Cells,readBinary64,ieee754IsNull,type Ieee754Column} from "@semio-tech/framework-sqlite-snapshot-ts/ieee754";
 import {parseBinary64,type Binary64} from "../../../../../../../../../🔨️modules/🌱️value/📦️packages/🟦️typescript/🔢️ieee754/🟦️.ts";
-import{ArtifactSqliteProjection,ArtifactSqliteRowIndex,artifactSqliteTables,artifactSqliteCheckpoint,artifactSqliteInteger,artifactSqliteText,artifactSqliteDocument,artifactSqliteOrderedRowsControlled,type ArtifactSqliteOptions}from"../../../../../../../../../🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
-import{sqliteOperation,type SqliteDatabase,type SqliteRow,type SqliteValue}from"../../../../../../../../../🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import{ArtifactSqliteProjection,ArtifactSqliteRowIndex,artifactSqliteTables,artifactSqliteCheckpoint,artifactSqliteInteger,artifactSqliteText,artifactSqliteDocument,artifactSqliteOrderedRowsControlled,type ArtifactSqliteOptions}from"@semio-tech/framework-sqlite-snapshot-ts/artifact";
+import{sqliteOperation,type SqliteDatabase,type SqliteRow,type SqliteValue}from"@semio-tech/framework-sqlite-snapshot-ts";
 
 const CLASSES=["twoD","threeD","text","data","graph","kit","computation","presentation"]as const;
 const FORMS=["any","vector","raster","brep","mesh","document","value","dag","trinity","type","design","kit","flow","sequence","procedure","deck"]as const;

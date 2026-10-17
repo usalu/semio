@@ -18,7 +18,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { TrustedCatalogLoadProgressV1 } from "../../📊️observability/🟦️.ts";
 import { findFreePort, hubSeedTrustedCatalog, startHub, type HubHandle } from "../../🤝️integration-harness/🟦️.ts";
-import { hubProbeCall, hubProbeSignIn } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧪️testkit/📡️client-probe/🟦️.ts";
+import { hubProbeCall, hubProbeSignIn } from "@semio-tech/framework-os/modules/directory/testkit/client-probe";
 
 /** 🎛️ One watch. */
 export type BootWatchOptions = Readonly<{

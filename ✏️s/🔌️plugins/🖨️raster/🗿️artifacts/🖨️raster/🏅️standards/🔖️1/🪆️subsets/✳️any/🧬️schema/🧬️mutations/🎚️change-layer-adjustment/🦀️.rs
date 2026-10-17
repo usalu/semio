@@ -46,7 +46,4 @@ pub use mutation::ChangeLayerAdjustmentKind;
 pub mod diff;
 #[path = "↩️inverse/🦀️.rs"]
 pub mod inverse;
-#[cfg(test)]
-#[path = "🧪️tests/📈️switches/🦀️.rs"]
-mod tests_switches_the_tone_layer_from_levels_to_curves;
 //#endregion 🪢️TaxonomyMounts

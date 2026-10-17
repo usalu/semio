@@ -28,6 +28,7 @@ pack = { workspace = true }
 semio-framework-async-macros = { workspace = true }
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 semio-framework-pack-json = { workspace = true }
+semio-framework-test-fixtures = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-s-artifact-energy-model-inferences = { workspace = true }
 semio-s-artifact-energy-model-snapshot = { workspace = true }
 semio-s-plugin-energy-epw = { workspace = true }

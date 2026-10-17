@@ -1,6 +1,7 @@
 //! 🪢️ `insert-relation` — authored as its own mutation leaf; its diff and inverse live in `🔺️diff` and `↩️inverse`.
 
-use super::*;
+use crate::{schema::snapshot::ModelRelation, schema::snapshot::SemioModelSnapshot};
+use protocol::Mutation;
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
@@ -12,13 +13,16 @@ pub struct InsertRelation {
     pub at: Option<usize>,
 }
 
-impl protocol::MutationKind<SemioModelSnapshot, SemioModelMutation> for InsertRelation {
+impl<Op> protocol::MutationKind<SemioModelSnapshot, Op> for InsertRelation
+where
+    Op: protocol::Mutation<SemioModelSnapshot, Diff = crate::schema::diff::SemioModelDiff> + From<InsertRelation> + From<crate::schema::mutations::remove_relation::RemoveRelation>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "relation", kind: "insert-relation", record: "InsertRelation" };
 
-    fn diff(&self, base: &SemioModelSnapshot) -> protocol::MutationOutcome<<SemioModelMutation as Mutation<SemioModelSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioModelSnapshot) -> protocol::MutationOutcome<<Op as Mutation<SemioModelSnapshot>>::Diff> {
         diff::diff(self, base)
     }
-    fn inverse(&self, base: &SemioModelSnapshot) -> Result<Vec<SemioModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &SemioModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         inverse::inverse(self, base)?
     

@@ -1,6 +1,8 @@
-use super::{ASSET_DIR, PRIMARY_TEXT, SNAPSHOT_JSON};
+use super::{ASSET_DIR, PRIMARY_TEXT};
 use crate::examples::checks::Asset;
 use crate::standards::v1::subsets::any::schema::snapshot::{Axis, ModelSnapshot, OpeningKind, SpaceBoundary};
+const SNAPSHOT_JSON: &str = include_str!("../../../../🖼️assets/🏡️house/📸️snapshot.json");
+const DERIVATIONS: &str = include_str!("../../../../🖼️assets/🏡️house/🧬️derivations.json");
 
 const ASSET: Asset = Asset { dir: ASSET_DIR, text: PRIMARY_TEXT, json: SNAPSHOT_JSON };
 
@@ -120,13 +122,13 @@ async fn the_house_quantities_and_rooms_match_the_hand_calculation() {
 
 #[semio_framework_async_macros::async_test]
 async fn the_house_is_reachable_through_the_mutation_api() {
-    crate::examples::checks::assert_replay_derived("house", &ASSET.model(), super::DERIVATIONS);
+    crate::examples::checks::assert_replay_derived("house", &ASSET.model(), DERIVATIONS);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn the_attic_north_and_west_walls_are_the_mirror_images_of_the_south_and_east_walls() {
     let model = ASSET.model();
-    let derived: serde_json::Value = serde_json::from_str(super::DERIVATIONS).expect("the derivations are JSON");
+    let derived: serde_json::Value = serde_json::from_str(DERIVATIONS).expect("the derivations are JSON");
     assert_eq!(derived["derived"].as_array().map(Vec::len), Some(2));
     for (made, source) in [("w-a-north-1-0", "w-a-south"), ("w-a-west-1-0", "w-a-east")] {
         assert!(model.walls.contains_key(made) && !model.walls.contains_key(&made.replace("-1-0", "")), "{made} carries the id its mirror mints");
@@ -153,10 +155,10 @@ async fn the_basement_is_existing_the_wc_partition_demolished_and_the_rest_new()
 #[semio_framework_async_macros::async_test]
 async fn the_bathroom_east_wall_replays_as_a_move_from_the_ground_to_the_upper_floor() {
     let model = ASSET.model();
-    let derived: serde_json::Value = serde_json::from_str(super::DERIVATIONS).expect("the derivations are JSON");
+    let derived: serde_json::Value = serde_json::from_str(DERIVATIONS).expect("the derivations are JSON");
     assert_eq!(derived["moved"], serde_json::json!([{ "id": "w-u-bath-east", "from": "st-ground", "to": "st-upper" }]));
     assert_eq!(model.walls["w-u-bath-east"].storey, "st-upper");
-    assert!(crate::examples::checks::replay_derived(&model, super::DERIVATIONS).applied > model.walls.len(), "the move is one mutation more than the creates");
+    assert!(crate::examples::checks::replay_derived(&model, DERIVATIONS).applied > model.walls.len(), "the move is one mutation more than the creates");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -298,10 +300,7 @@ async fn debug_stages() {
     let model = ASSET.model();
     macro_rules! stage {
         ($name:expr, $mask:expr) => {{
-            eprintln!("[DEBUG] start {}", $name);
-            let started = std::time::Instant::now();
             let _ = infer_selected::<{ $mask }>(&model);
-            eprintln!("[DEBUG] {} in {:?}", $name, started.elapsed());
         }};
     }
     stage!("levels", kinds::LEVELS);

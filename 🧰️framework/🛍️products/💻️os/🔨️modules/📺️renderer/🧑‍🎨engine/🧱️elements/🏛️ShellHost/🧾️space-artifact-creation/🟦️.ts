@@ -30,7 +30,7 @@ import {
 } from "@semio-tech/framework/directory/schema";
 // #endregion 🔌️Adapters
 import { type IconName } from "@semio-tech/ui-react";
-import { type ActiveSession, type LoadedProgramState } from "../../🐚️Shell/🟦️.tsx";
+import { type ActiveSession, type LoadedProgramState } from "../../🐚️Shell/📦️program-sessions/🟦️.ts";
 import { type ArtifactCreationProgressOwnerV1 } from "../🌱️artifact-creation/🟦️.tsx";
 
 /** 🪪️ ticket §C4 — the space's own artifact-index document: its id is always the literal `"index"`

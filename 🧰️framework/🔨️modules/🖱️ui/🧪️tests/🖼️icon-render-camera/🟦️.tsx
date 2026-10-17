@@ -1,5 +1,5 @@
 import type { IconRenderRequest } from "@semio-tech/ui-styling";
-import * as ui from "../../🎯️targets/⚛️react/🟦️.tsx";
+import * as ui from "@semio-tech/ui-react/source";
 import Ajv from "ajv";
 import fixture from "../🧫️fixtures/🖼️icon-render-camera/🔣️.json";
 /** 📐️ three.js itself, the oracle the icon camera is measured against (a test of the ui module, the library's interface owner). */
@@ -7,7 +7,7 @@ import * as THREE from "three";
 
 /** 🖼️ The icon renderer's camera and SVG finishing: an orthographic shot keeps its zoom, a fitted shot recomputes it from the
  * model bounds, and a transparent shot drops the three.js SVGRenderer clear colour. */
-export async function registerIconRenderCameraTests(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../🎯️targets/⚛️react/🟦️.tsx"), "buildIconCamera" | "finalizeIconSvgMarkup" | "iconRenderCameraPose">): Promise<void> {
+export async function registerIconRenderCameraTests(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("@semio-tech/ui-react/source"), "buildIconCamera" | "finalizeIconSvgMarkup" | "iconRenderCameraPose">): Promise<void> {
   const { buildIconCamera, finalizeIconSvgMarkup, iconRenderCameraPose } = dependencies;
   const { describe, expect, it } = vitest;
   describe("icon camera projection contract", () => {

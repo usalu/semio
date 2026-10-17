@@ -21,7 +21,4 @@ pub fn handle(payload: &SetFilterMinAvailability, _doc: &ArtifactView<'_, Curati
 }
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

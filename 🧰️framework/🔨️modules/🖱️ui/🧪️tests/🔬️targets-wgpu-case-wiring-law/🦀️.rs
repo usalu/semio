@@ -14,13 +14,14 @@
 //!
 //! Both are structural, so they are checked here instead of being rediscovered by a wedged build.
 
+use semio_framework_test_fixtures::manifest_dir;
 use std::fs;
 use std::path::{Path, PathBuf};
 
 /// 📂️ Repo root, five levels above `semio-framework-ui`'s manifest
 /// (`🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust`).
 fn repo_root() -> PathBuf {
-    let mut root = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    let mut root = manifest_dir!();
     for _ in 0..5 {
         root = root.parent().expect("manifest dir has five ancestors up to the repo root").to_path_buf();
     }

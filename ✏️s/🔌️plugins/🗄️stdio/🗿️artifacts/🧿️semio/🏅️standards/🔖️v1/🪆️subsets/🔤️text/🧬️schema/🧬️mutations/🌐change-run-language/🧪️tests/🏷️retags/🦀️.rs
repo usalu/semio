@@ -5,25 +5,26 @@
 //! otherwise ONLY `runs[index].language` is assigned on a clone of `base.runs`. The before-snapshot
 //! deliberately mis-tags a German word (`Welt`) as `en` so the retag is semantically real.
 
+use semio_framework_test_fixtures::fixture_text;
 use semio_s_artifact_stdio_semio_text_model::schema::diff::SemioTextDiff;
 use semio_s_artifact_stdio_semio_text_mutations::schema::mutations::SemioTextMutation;
 use semio_s_artifact_stdio_semio_text_model::schema::snapshot::SemioTextSnapshot;
 use protocol::Mutation;
 
-const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌐change-run-language/🏷️retags/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌐change-run-language/🏷️retags/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌐change-run-language/🏷️retags/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌐change-run-language/🏷️retags/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌐change-run-language/🏷️retags/🎯️outcome/🔣️.json");
+static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌐change-run-language/🏷️retags/📸️snapshot/⬅️before/🔣️.json"));
+static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌐change-run-language/🏷️retags/📸️snapshot/➡️after/🔣️.json"));
+static MUTATION: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌐change-run-language/🏷️retags/🦠️mutation/🔣️.json"));
+static DIFF: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌐change-run-language/🏷️retags/🔺️diff/🔣️.json"));
+static OUTCOME: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌐change-run-language/🏷️retags/🎯️outcome/🔣️.json"));
 
 fn before() -> SemioTextSnapshot {
-    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("change-run-language before snapshot decodes")
+    semio_framework_pack_json::from_json_str((*BEFORE), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("change-run-language before snapshot decodes")
 }
 fn expected_after() -> SemioTextSnapshot {
-    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("change-run-language after snapshot decodes")
+    semio_framework_pack_json::from_json_str((*AFTER), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("change-run-language after snapshot decodes")
 }
 fn change_run_language() -> SemioTextMutation {
-    semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("change-run-language mutation decodes")
+    semio_framework_pack_json::from_json_str((*MUTATION), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("change-run-language mutation decodes")
 }
 
 /// ▶️ Only the BCP-47 tag of run #1 flips from `en` to `de`; its body is untouched.
@@ -56,14 +57,14 @@ async fn the_undo_change_run_language_restores_the_english_tag() {
 /// canonical fixed points.
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
-    for (label, text) in [("before", BEFORE), ("after", AFTER)] {
+    for (label, text) in [("before", (*BEFORE)), ("after", (*AFTER))] {
         let decoded: SemioTextSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
         let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "change-run-language/retags-the-second-run-as-german: committed {label} JSON is not canonical");
     }
     let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&(change_run_language()))).expect("change-run-language mutation encodes");
-    let original: serde_json::Value = serde_json::from_str(MUTATION).expect("change-run-language mutation reparses");
+    let original: serde_json::Value = serde_json::from_str((*MUTATION)).expect("change-run-language mutation reparses");
     assert_eq!(reencoded, original, "change-run-language/retags-the-second-run-as-german: committed mutation JSON is not canonical");
 }
 
@@ -71,7 +72,7 @@ async fn committed_json_is_canonical() {
 /// fire.
 #[semio_framework_async_macros::async_test]
 async fn declared_outcome_holds_without_a_no_op_warning() {
-    let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
+    let outcome: serde_json::Value = serde_json::from_str((*OUTCOME)).expect("outcome decodes");
     assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("applied"), "change-run-language/retags-the-second-run-as-german: this case is declared applied");
     let produced = change_run_language().diff(&before());
     assert!(produced.messages().is_empty(), "retagging to a genuinely different language must not raise mutation.no-op");
@@ -83,24 +84,24 @@ async fn produces_committed_diff() {
     let base = before();
     let outcome = <SemioTextMutation as Mutation<SemioTextSnapshot>>::diff(&change_run_language(), &base);
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
-    let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
+    let committed: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff decodes");
     assert_eq!(produced, committed, "change-run-language/retags-the-second-run-as-german: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
 
 /// 🔣️ The committed diff is canonical and its second value already carries the German tag.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
-    let decoded: SemioTextDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed change-run-language diff decodes");
+    let decoded: SemioTextDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed change-run-language diff decodes");
     let _list = decoded.runs.as_ref().expect("an applied change-run-language diff carries a runs list");
     let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("diff re-encodes");
-    let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
+    let original: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff reparses");
     assert_eq!(reencoded, original, "change-run-language/retags-the-second-run-as-german: committed diff JSON is not canonical");
 }
 
 /// 🩹 Applying the committed diff to `before` yields `after`.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: SemioTextDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed change-run-language diff decodes");
+    let decoded: SemioTextDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed change-run-language diff decodes");
     let produced = protocol::apply_diff(&decoded, &before()).expect("committed change-run-language diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-run-language/retags-the-second-run-as-german: committed diff did not carry before to after");
 }

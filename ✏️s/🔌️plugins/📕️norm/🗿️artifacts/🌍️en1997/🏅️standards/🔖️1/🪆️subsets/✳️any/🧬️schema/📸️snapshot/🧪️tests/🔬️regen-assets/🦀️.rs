@@ -1,4 +1,5 @@
 //! 🧪️ `regen_assets` — moved out of `📸️snapshot/🦀️.rs` into its canonical test implementation.
+use semio_framework_test_fixtures::fixture_path;
 use semio_s_artifact_norm_en1997_model::{compliant_demo, noncompliant_demo};
 use semio_s_artifact_norm_en1997_io::binary::snapshot::encode_en1997_pack;
 use semio_s_artifact_norm_en1997_io::text::snapshot::encode_en1997_dsl;
@@ -8,8 +9,7 @@ fn regen_example_assets_when_env_set() {
     if std::env::var("SEMIO_REGEN_EN1997_ASSETS").ok().as_deref() != Some("1") {
         return;
     }
-    let assets = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🖼️assets");
+    let assets = fixture_path!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🖼️assets");
     assert!(assets.is_dir(), "assets dir missing: {}", assets.display());
     for (name, snap) in [
         ("🎬️demo", compliant_demo()),

@@ -19,7 +19,7 @@ maxActiveLines = 4000
 workspace = true
 
 [lib]
-path = "🦀️.rs"
+path = "../../🦀️.rs"
 
 [features]
 artifact-app-testing = []
@@ -44,7 +44,14 @@ semio-framework-tool-run = { workspace = true }
 semio-framework-value = { path = "../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-value-derive = { path = "../../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
 semio_framework_ui_scene = { path = "../../../../../../../🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust", package = "semio-framework-ui-scene" }
+semio-framework = { path = "../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
+semio-framework-plugin-job = { path = "../../../👷️job/📦️packages/🦀️rust" }
+semio-framework-plugin-ownership = { path = "../../../🏛️ownership/🧱️owner/📦️packages/🦀️rust" }
+semio_framework_ui_contract = { path = "../../../../../../../🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
+serde_json = "1.0.140"
 
 [dev-dependencies]
 semio-framework-job = { path = "../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust", features = ["testkit"], package = "semio-framework-job" }
 semio-framework-os-kernel = { path = "../../../../../📦️packages/🦀️rust", features = ["mutation-testing"], package = "semio-framework-os-kernel" }
+semio-framework-plugin-reactor-app = { path = "../../../⚛️reactor/🔌️app/📦️packages/🦀️rust" }
+semio-framework-trace = { workspace = true }

@@ -1,6 +1,5 @@
 //! 📝 Puzzle5d mutation — `ChangeDescription`: changes the document's free-text scene description.
 use crate::standards::v1::subsets::any::schema::diff::Puzzle5dDiff;
-use crate::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation;
 use crate::Puzzle5dSnapshot;
 
 //#region 🔖️Mutation
@@ -17,17 +16,23 @@ pub struct ChangeDescription {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_description(new_description: String) -> Puzzle5dMutation {
-    Puzzle5dMutation::ChangeDescription(ChangeDescription { new_description })
+pub fn change_description<Op>(new_description: String) -> Op
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::change_description::ChangeDescription>,
+{
+    Op::from(ChangeDescription { new_description })
 }
 
-impl protocol::MutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for ChangeDescription {
+impl<Op> protocol::MutationKind<Puzzle5dSnapshot, Op> for ChangeDescription
+where
+    Op: protocol::Mutation<Puzzle5dSnapshot, Diff = Puzzle5dDiff> + From<ChangeDescription>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "description", kind: "change-description", record: "ChangedDescription" };
 
     fn diff(&self, base: &Puzzle5dSnapshot) -> protocol::MutationOutcome<Puzzle5dDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Puzzle5dSnapshot) -> Result<Vec<Puzzle5dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Puzzle5dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

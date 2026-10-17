@@ -2,7 +2,6 @@
 //! its parent's `children` at its own position, in their existing relative order.
 
 use crate::schema::diff::NodePath;
-use crate::schema::mutations::SemioDrawingMutation;
 use crate::schema::snapshot::SemioDrawingSnapshot;
 
 //#region 🔖️Payload
@@ -13,13 +12,16 @@ pub struct UngroupNode {
     pub at: NodePath,
 }
 
-impl protocol::MutationKind<SemioDrawingSnapshot, SemioDrawingMutation> for UngroupNode {
+impl<Op> protocol::MutationKind<SemioDrawingSnapshot, Op> for UngroupNode
+where
+    Op: protocol::Mutation<SemioDrawingSnapshot, Diff = crate::schema::diff::SemioDrawingDiff> + From<UngroupNode> + From<crate::schema::mutations::group_nodes::GroupNodes>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "ungroup", entity: "node", kind: "ungroup-node", record: "UngroupedNode" };
 
-    fn diff(&self, base: &SemioDrawingSnapshot) -> protocol::MutationOutcome<<SemioDrawingMutation as protocol::Mutation<SemioDrawingSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioDrawingSnapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<SemioDrawingSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &SemioDrawingSnapshot) -> Result<Vec<SemioDrawingMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &SemioDrawingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

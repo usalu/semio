@@ -1,3 +1,4 @@
+import authoritySchema from "../../../🧬️schema/📜️ticket.json" with {type:"json"};
 import assert from "node:assert/strict";
 import {Database} from "bun:sqlite";
 import {openSync,closeSync,writeSync,fsyncSync,ftruncateSync,fstatSync,lstatSync,statfsSync,unlinkSync,mkdirSync,type Stats} from "node:fs";
@@ -13,10 +14,8 @@ function change(db:Database,sql:string,value:Buffer):void{const statement=db.pre
 /** 🧪️ Measures two real rollback journals after full-filesystem refusal and exact same-inode reserve recovery. */
 export async function proveFiniteResourceReserveV1(directory:string,control:ResourceLeaseControl,environment:NodeJS.ProcessEnv):Promise<Record<string,boolean>>{
  return withNativeImageStorageV1({...{directory,filesystemBytes:33554432,maximumPhysicalBytes:34603008,control},leaseDirectory:join(directory,"..","leases")},async(image,control)=>{const root=image.root,data=join(root,"data");mkdirSync(data);
- console.log("[DEBUG] Isolated reserve image ready for catalog");
- const guard=await acquireResourceLease({directory:data,resource:"queue-claim-catalog",mode:"exclusive",signal:control.signal,control,maximumDatabaseBytes:16384}),reservePath=join(data,"metadata-headroom.bin"),filler=join(root,"filler"),paths=[join(data,"catalog.sqlite"),join(data,"guard.sqlite")],databases:Database[]=[];
- console.log("[DEBUG] Isolated reserve catalog acquired");
- const free=()=>{const fs=statfsSync(root);return fs.bavail*fs.bsize;},extent=(size:number)=>{requireResourceLeaseCustodyV1(guard,data,"queue-claim-catalog",control);const fd=openSync(reservePath,"r+");try{assert.equal(fstatSync(fd).ino,reserveIdentity.ino);ftruncateSync(fd,size);fsyncSync(fd);}finally{closeSync(fd);}};
+ const guard=await acquireResourceLease({directory:data,resource:authoritySchema.definitions.ClaimRetentionPolicy.properties.resource.const,mode:"exclusive",signal:control.signal,control,maximumDatabaseBytes:16384}),reservePath=join(data,"metadata-headroom.bin"),filler=join(root,"filler"),paths=[join(data,"catalog.sqlite"),join(data,"guard.sqlite")],databases:Database[]=[];
+ const free=()=>{const fs=statfsSync(root);return fs.bavail*fs.bsize;},extent=(size:number)=>{requireResourceLeaseCustodyV1(guard,data,authoritySchema.definitions.ClaimRetentionPolicy.properties.resource.const,control);const fd=openSync(reservePath,"r+");try{assert.equal(fstatSync(fd).ino,reserveIdentity.ino);ftruncateSync(fd,size);fsyncSync(fd);}finally{closeSync(fd);}};
  let reserveIdentity!:Stats,fillFd:number|undefined;
  try{
   retainResourceQueueMetadataHeadroomV1(data,guard,control);reserveIdentity=lstatSync(reservePath);assert.equal(reserveIdentity.size,4194304);assert.equal(reserveIdentity.blocks*512,4194304);extent(131072);assert.equal(lstatSync(reservePath).blocks*512,131072);
@@ -30,9 +29,9 @@ export async function proveFiniteResourceReserveV1(directory:string,control:Reso
   const fd=openSync(reservePath,"r+");try{for(let offset=0;offset<131072;offset+=bytes.length)writeSync(fd,bytes,0,bytes.length,offset);fsyncSync(fd);}finally{closeSync(fd);}const restored=lstatSync(reservePath);assert.equal(restored.size,131072);assert.equal(restored.blocks*512,131072);assert.equal(free(),0);
   const oracle="import sqlite3,sys,json;print(json.dumps([sqlite3.connect('file:'+p+'?mode=ro',uri=True).execute('select hex(substr(bytes,1,1)),length(bytes) from payload where id=1').fetchone() for p in sys.argv[1:]]))";assert.deepEqual(JSON.parse((await captureOwnedCommandV1("python3",["-c",oracle,...paths],root,{control,env:environment,output:{maximumBytes:4096,maximumLines:32}})).trim()),[["22",10000],["22",10000]]);
   const result={actualFullRefusedMutation,originalRowsPreserved,sameReserveInode:restored.dev===reserveIdentity.dev&&restored.ino===reserveIdentity.ino,twoJournalsWithinBound:journalBytes<=49152,commitAfterRecovery:databases.every(db=>!db.inTransaction),reserveRestoredAtFull:free()===0,sameGuardInodes:paths.every((path,index)=>{const now=lstatSync(path),old=identities[index]!;return now.dev===old.dev&&now.ino===old.ino;}),independentRowsConfirmed:true};
-  await image.recheck();console.log("[DEBUG] Actual bounded image FULL refusal and two16KiB metadata rollback journals after same-inode128KiB reserve recovery "+JSON.stringify({...result,filledBytes:filled,recoveredBytes:recovered,journalAllocatedPeak:journalBytes,availableAtPeak:peakAvailable,reserveBytes:131072,filesystemBytes:image.filesystemBytes}));return result;
- }catch(error){console.error("[DEBUG] Isolated reserve primary failure",error);throw error;}finally{
-  const errors:unknown[]=[],step=(name:string,run:()=>void)=>{try{run();}catch(error){console.error("[DEBUG] Isolated reserve cleanup step failed "+name,error);errors.push(error);}};
+  await image.recheck();return result;
+ }catch(error){throw error;}finally{
+  const errors:unknown[]=[],step=(name:string,run:()=>void)=>{try{run();}catch(error){errors.push(error);}};
   if(fillFd!==undefined)step("filler close",()=>closeSync(fillFd!));step("filler unlink",()=>{try{unlinkSync(filler);}catch(error){if((error as NodeJS.ErrnoException).code!=="ENOENT")throw error;}});
   for(const db of databases){step("rollback",()=>{if(db.inTransaction)db.exec("ROLLBACK");});step("connection finalize",()=>db.close(true));}
   step("catalog release",()=>guard.release());if(errors.length)throw errors[0];

@@ -1,0 +1,136 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️vite-plugins/🟦️.ts",
+ "importers": "auto",
+ "children": [
+  {
+   "dir": "🧭️repo-root",
+   "doc": "/** 🧭️ The repository root of the dev server's Vite plugins. */",
+   "names": [
+    "REPO_ROOT"
+   ]
+  },
+  {
+   "dir": "🗃️sqlite-constructor",
+   "doc": "/** 🗃️ The lazily imported `bun:sqlite` constructor of the dev server's Vite plugins: the Bun builtin assembled at runtime so no bundler can fold it into a static specifier, and the handle type. */",
+   "lines": [
+    [
+     100,
+     118
+    ]
+   ]
+  },
+  {
+   "dir": "📇️bootstrap-folder-mirror",
+   "doc": "/** 📇️ The canonical bootstrap folder mirror of the dev server's backbone: the frontier, reserve and owner shapes, their validation, and the reserve, stage, publish and retire steps over the per-folder sqlite store. */",
+   "lines": [
+    [
+     119,
+     146
+    ],
+    [
+     152,
+     279
+    ]
+   ]
+  },
+  {
+   "dir": "🗄️backbone-storage",
+   "doc": "/** 🗄️ The backbone document storage of the dev server: the per-path sqlite handle cache, the backbone payload reads and writes, and the folder change watch. */",
+   "lines": [
+    [
+     148,
+     150
+    ],
+    [
+     281,
+     390
+    ]
+   ]
+  },
+  {
+   "dir": "🔀️stream-mux-server",
+   "doc": "/** 🔀️ The dev server's stream multiplexer: the upgrade-server shapes, the runtime websocket module and the per-server stream mux. */",
+   "lines": [
+    [
+     392,
+     466
+    ]
+   ]
+  },
+  {
+   "dir": "🚧️production-test-boundary",
+   "doc": "/** 🚧️ The production test boundary of the dev server's Vite build: strips the in-source test branches from production output. */",
+   "names": [
+    "semioProductionTestBoundaryVitePlugin"
+   ]
+  },
+  {
+   "dir": "🧱️backbone-vite-plugin",
+   "doc": "/** 🧱️ The backbone Vite plugin of the dev server: the request and response shapes, the canonical bootstrap mirror header helpers and the plugin that serves backbone document IO. */",
+   "lines": [
+    [
+     468,
+     644
+    ]
+   ]
+  },
+  {
+   "dir": "🚀️activation-vite-plugin",
+   "doc": "/** 🚀️ The plugin activation Vite plugin of the dev server: the component specs, the freshness report and the plugin that rebuilds and hot-swaps activated plugins. */",
+   "lines": [
+    [
+     30,
+     32
+    ],
+    [
+     647,
+     869
+    ]
+   ]
+  },
+  {
+   "dir": "🫧️blob-vite-plugin",
+   "doc": "/** 🫧️ The content-addressed blob endpoint of the dev server: the blob database and the Vite plugin that serves it. */",
+   "lines": [
+    [
+     871,
+     955
+    ]
+   ]
+  },
+  {
+   "dir": "🔖️source-freshness",
+   "doc": "/** 🔖️ The source freshness Vite plugins of the dev server: the unwatched segments, the react refresh coherence plugin, the freshness registry and the source watch and transform freshness plugins. */",
+   "lines": [
+    [
+     957,
+     1244
+    ]
+   ]
+  },
+  {
+   "dir": "🛰️agent-bridge-rendezvous",
+   "doc": "/** 🛰️ The agent bridge rendezvous of the dev server: the rendezvous directory, the live offer lookup and the Vite plugin that answers offers. */",
+   "lines": [
+    [
+     1246,
+     1330
+    ]
+   ]
+  },
+  {
+   "dir": "🔐️agent-credential-install",
+   "doc": "/** 🔐️ The agent credential install endpoint of the dev server: the credentials directory, the well-formedness check and the Vite plugin that installs a credential. */",
+   "lines": [
+    [
+     1332,
+     1434
+    ]
+   ]
+  }
+ ],
+ "allowManual": [
+  "authored-extension-installation-identity",
+  "ticket-owned-browser-host-staging"
+ ]
+}

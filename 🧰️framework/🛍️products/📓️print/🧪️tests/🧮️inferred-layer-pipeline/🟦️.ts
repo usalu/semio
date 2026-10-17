@@ -1,5 +1,5 @@
 /** 🧮️ Language-neutral inferred layer fixtures executed by the print differential runner. */
-import { inferVizLayerTable } from "../../🧬️schema/💡️inferences/🧮transform/🟦️.ts";
+import { inferVizLayerTable } from "@semio-tech/print-viz-inference/transform";
 import type { VizChartSpecification, VizLayerSpec, VizRow, VizTable } from "../../🧬️schema/📸️snapshot/📊️chart/🟦️.ts";
 
 export type InferredLayerScenario = { readonly name: string; readonly rows: readonly VizRow[]; readonly layer: VizLayerSpec };

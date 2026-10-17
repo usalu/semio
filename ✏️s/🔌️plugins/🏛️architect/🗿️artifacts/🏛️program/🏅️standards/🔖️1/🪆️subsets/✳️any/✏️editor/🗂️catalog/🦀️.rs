@@ -8,12 +8,12 @@
 
 use crate::editor::architect::chrome::{element_label, entity_to_json};
 use crate::standards::v1::subsets::any::schema::mutations::ProgramMutation;
-use crate::standards::v1::subsets::any::schema::registers::{RegisterKey, RegisterRow};
+use crate::standards::v1::subsets::any::schema::registers::catalog::{RegisterKey, RegisterRow};
 use crate::standards::v1::subsets::any::schema::registers::{Adjacency, AdjacencyKind, AnalysisKind, AnalysisRecord, ConnectionKind, EngagementLevel, Function, FunctionKind, InfluenceLevel, Issue, IssueSeverity, ProgramElement, ProgramElementKind, ReportKind, ReportRecord, Requirement, RequirementKind, Risk, RiskLevel, Stakeholder, UserCategory, UserProfile, ValidationStatus};
 use crate::standards::v1::subsets::any::schema::mutations as leaves;
 use crate::standards::v1::subsets::any::schema::inferences::AnalysisResult;
 use crate::standards::v1::subsets::any::schema::inferences::ProgramReport;
-use crate::standards::v1::subsets::any::schema::normalize_pair;
+use crate::standards::v1::subsets::any::schema::kernel::normalize_pair;
 use crate::standards::v1::subsets::any::schema::{kernel::{EntityHeader, EntityId, TextField, TraceKind, TraceLink}, snapshot::ProgramSnapshot};
 use semio_framework_value::DslValue as Value;
 use semio_framework_plugin::ActionArgOption;

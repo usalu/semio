@@ -1,6 +1,17 @@
 //! 🔺️ Diff for `InsertChannel`.
 
-use super::super::*;
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_semio_base::schema::triples::IndexAdded;
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_semio_base::schema::triples::IndexedTripleDiff;
+#[allow(unused_imports)]
+use crate::schema::diff::SemioAnimationDiff;
+#[allow(unused_imports)]
+use crate::schema::snapshot::SemioAnimationSnapshot;
+#[allow(unused_imports)]
+use crate::schema::mutations::support::diff_channel_collection;
+#[allow(unused_imports)]
+use crate::schema::mutations::support::timeline_at;
 
 //#region 🔖️Diff
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

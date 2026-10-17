@@ -48,7 +48,6 @@ fn retained_step_context_owner_turns_use_original_ledger_without_heap_birth() {
         assert!(owner.terminal_is_empty());
         assert_eq!(owner.close_step(RetainedCloneGrant{maximum_items:1,maximum_release_bytes:0,maximum_depth:64,..RetainedCloneGrant::default()}), InteractiveJobCloseStep::Complete {progress:RetainedCloneProgress::default()});
         assert_eq!(observe(|| drop(owner)).1.released_bytes, 0);
-        println!("[DEBUG] retained context original ledger op={} turns={} exact birth/release={extent} turn heap=0/0", operation.0, sequence);
     }
 }
 
@@ -89,6 +88,5 @@ fn retained_step_context_owner_preserves_original_ledger_until_context_and_write
         assert_eq!(step, InteractiveJobCloseStep::Complete {progress:RetainedCloneProgress{copied_items:1,released_bytes:extent,..RetainedCloneProgress::default()}});
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, extent));
         assert!(owner.terminal_is_empty());
-        println!("[DEBUG] retained context ledger alias kind={kind} blocked then exact frame release={extent}");
     }
 }

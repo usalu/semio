@@ -1,0 +1,53 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/hub/testing/backup-restore/schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "kind",
+    "edits",
+    "rounds",
+    "heavyKinds"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "kind": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    },
+    "edits": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 8192
+    },
+    "rounds": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 16
+    },
+    "heavyKinds": {
+      "type": "array",
+      "maxItems": 16,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 256
+      }
+    }
+  },
+  "definitions": {
+    "Policy": {
+      "const": {
+        "maximumEntries": 65536,
+        "maximumDepth": 64,
+        "maximumPathUnits": 256,
+        "maximumSnapshotBytes": 536870912
+      }
+    }
+  }
+}

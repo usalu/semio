@@ -128,7 +128,7 @@ impl SymMatrix {
 
     /// 🧮️ Coefficients of the characteristic polynomial `det(A - lambda*I)` in the fresh symbol
     /// `lambda`, low-degree-first, via `as_poly_uni` on the cofactor-expansion determinant.
-    pub fn charpoly(&self, lambda: &Expr) -> Option<crate::polynomial::PolyU<Rational>> {
+    pub fn charpoly(&self, lambda: &Expr) -> Option<crate::polynomial::univariate::PolyU<Rational>> {
         assert_eq!(self.rows, self.cols, "SymMatrix::charpoly requires a square matrix");
         let n = self.rows;
         let mut shifted = self.clone();

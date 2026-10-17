@@ -429,9 +429,7 @@ test("finite macro scopes require every live manifest and incoming module origin
         expect(report.violations, row.id).toEqual([]);
         expect(report.problems.map((problem) => ({ from: problem.from, code: problem.code })), row.id).toEqual(row.problem ? [{ from: row.source, code: row.problem }] : []);
         if (row.problem === "unresolved-template-scope") expect(report.references, row.id).toBeGreaterThanOrEqual(2);
-        console.log("[DEBUG] macro scope oracle; id=" + row.id + "; native=" + status + "; problems=" + report.problems.length);
         } catch (error) {
-          console.error("[DEBUG] macro scope failure; id=" + row.id + "; " + String(error));
           failures.push(error);
         }
       }
@@ -473,8 +471,7 @@ test("module graph authority requires every exact physical source read", async (
         expect([...graph.invalidManifests].sort(), row.id).toEqual([...row.invalidManifests]);
         const participations = participationProjection(graph);
         expect<readonly ParticipationProjection[]>(participations, row.id).toEqual(row.participations);
-        console.log("[DEBUG] graph authority oracle; id=" + row.id + "; native=" + status + "; contexts=" + [...graph.contexts.values()].flat().length);
-      } catch (error) { console.error("[DEBUG] graph authority failure; id=" + row.id + "; " + String(error)); failures.push(error); }
+      } catch (error) {  failures.push(error); }
     }
     if (failures.length) throw new AggregateError(failures, "Rust graph authority laws failed");
   } finally { rmSync(root, { recursive: true, force: true }); }

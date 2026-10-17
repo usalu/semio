@@ -29,6 +29,7 @@ import { join } from "node:path";
 import { repoToolCacheEnv } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🌿️environment/🟦️.ts";
 import { terminateOwnedChildTree } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { runRepositoryCommand as runOwnedCommand } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts";
+import type { ScriptInvocation } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { startNativeProgress } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { LAUNCHER_SIGNALS, PROCTOR_DEV_CATALOG, buildProctor, launchProctor, proctorReady, type ProctorProcess } from "../../../🛂️proctor/🏗️bootstrap/🟦️.ts";
 import { siteArtifactProblems } from "../🚀️deploy/🟦️.ts";
@@ -177,7 +178,7 @@ async function bootStack(topology: QuizTopology, run: Run): Promise<Stack> {
     await start();
     say(`${topology}: proctor ready at ${proctor} (${env.PROCTOR_MODE})`);
     if (topology === "dev") {
-      const server = launchOwned(process.execPath, [run.script, "dev-site"], run.bundleRoot, { ...process.env, [run.portEnv]: String(ports.site), PROCTOR_PORT: String(ports.proctor), TEACHING_ARCHITECTURE_QUIZ_CACHE: join(directory, "node_modules", ".vite"), TEACHING_ARCHITECTURE_QUIZ_WATCH: "off" }, join(directory, "site.log"));
+      const server = launchOwned(process.execPath, [run.script, "dev-site"], run.bundleRoot, { ...process.env, [run.portEnv]: String(ports.site), PROCTOR_PORT: String(ports.proctor), TEACHING_ARCHITECTURE_QUIZ_WATCH: "off" }, join(directory, "site.log"));
       closing.push(() => server.stop());
       await awaitReady({ label: `the dev site at ${site}`, probe: () => httpAnswers(site, SITE_FIRST_ANSWER_MS), exited: server.exited, signal: run.signal, say });
       say(`dev: site ready at ${site}, proxying to ${proctor}`);
@@ -211,12 +212,12 @@ async function bootStack(topology: QuizTopology, run: Run): Promise<Stack> {
 
 //#region 🎬️Specs
 /** 🌐️ Makes sure the Chromium builds this Playwright version drives exist in `browsers`, downloading them once. */
-async function ensureBrowser(repoRoot: string, browsers: string): Promise<void> {
+async function ensureBrowser(invocation: ScriptInvocation, repoRoot: string, browsers: string): Promise<void> {
   const manifest = JSON.parse(readFileSync(join(repoRoot, "node_modules", "playwright-core", "browsers.json"), "utf8")) as { readonly browsers: readonly { readonly name: string; readonly revision: string }[] };
   const installed = ["chromium", "chromium-headless-shell"].every((name) => existsSync(join(browsers, `${name.replaceAll("-", "_")}-${manifest.browsers.find((browser) => browser.name === name)?.revision}`, "INSTALLATION_COMPLETE")));
   if (installed) return;
   say(`installing Chromium for Playwright into ${browsers}`);
-  await runOwnedCommand(process.execPath, [join(repoRoot, ...PLAYWRIGHT_CLI), "install", "chromium"], repoRoot, "architecture-quiz:test-e2e browser", undefined, { env: { ...process.env, PLAYWRIGHT_BROWSERS_PATH: browsers } });
+  await runOwnedCommand(invocation, process.execPath, [join(repoRoot, ...PLAYWRIGHT_CLI), "install", "chromium"], repoRoot, "architecture-quiz:test-e2e browser", { version: 1, maximumElapsedMilliseconds: 0, output: null }, { env: { ...process.env, PLAYWRIGHT_BROWSERS_PATH: browsers } });
 }
 
 /** 🎬️ Runs the specs against one stack, every output line prefixed with its topology; resolves with the exit status. */
@@ -248,7 +249,7 @@ function runSpecs(stack: Stack, run: Run, browsers: string, output: string, forw
 
 /** 🎭️ `test-e2e` — builds the proctor once, boots the topologies of `segments`, runs the specs against each, and stops
  * and deletes everything again. It fails when a stack does not boot or any spec fails. */
-export async function runQuizEndToEnd(repoRoot: string, bundleRoot: string, script: string, portEnv: string, segments: readonly string[]): Promise<void> {
+export async function runQuizEndToEnd(invocation: ScriptInvocation, repoRoot: string, bundleRoot: string, script: string, portEnv: string, segments: readonly string[]): Promise<void> {
   const plan = endToEndPlan(segments);
   const work = join(repoRoot, ...QUIZ_E2E_DIRECTORY, `${new Date().toISOString().replace(/[-:]|\.\d+Z$/gu, "")}-${process.pid}`);
   const browsers = repoToolCacheEnv(repoRoot).PLAYWRIGHT_BROWSERS_PATH!;
@@ -265,7 +266,7 @@ export async function runQuizEndToEnd(repoRoot: string, bundleRoot: string, scri
   try {
     mkdirSync(work, { recursive: true });
     say(`topologies ${plan.topologies.join(", ")}${plan.serial ? " (one after the other)" : ""}; run directory ${work}`);
-    await ensureBrowser(repoRoot, browsers);
+    await ensureBrowser(invocation, repoRoot, browsers);
     say(plan.proctor === undefined ? "building the proctor (a first build takes minutes)" : `running the proctor ${plan.proctor} as it is`);
     const run: Run = { repoRoot, bundleRoot, script, portEnv, work, proctor: plan.proctor ?? (await buildProctor(repoRoot, process.env, interruption.signal)), signal: interruption.signal };
     const statuses: number[] = [];

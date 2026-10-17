@@ -9,6 +9,7 @@
     "test-native": "bun --cwd \"../../../../../..\" repo run @semio-tech/framework-dsl-record-rs:test-native"
   },
   "devDependencies": {
+    "@semio-tech/framework-dsl-ts": "workspace:*",
     "@semio-tech/process": "workspace:*"
   }
 }

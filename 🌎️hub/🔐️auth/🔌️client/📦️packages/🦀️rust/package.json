@@ -7,6 +7,7 @@
     "test-source": "bun --cwd \"../../../../..\" repo run @semio-tech/hub-auth-client-rs:test-source"
   },
   "devDependencies": {
+    "@semio-tech/framework-compiler-ts": "workspace:*",
     "@semio-tech/process": "workspace:*"
   }
 }

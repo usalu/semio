@@ -1,6 +1,12 @@
 /** 🧩️ Program mutation payloads use the same canonical typed register entities. */
 export * from "../🟦️.ts";
-import type { Adjacency, Governance, ProgramMeta, ProjectDefinition, TraceLink } from "../🟦️.ts";
+export * from "../🪪️entity-foundation/🟦️.ts";
+export * from "../🏗️program-structure/🟦️.ts";
+export * from "../📋️requirements/🟦️.ts";
+export * from "../🗃️decision-records/🟦️.ts";
+import type { ProgramMeta, ProjectDefinition, TraceLink } from "../🪪️entity-foundation/🟦️.ts";
+import type { Adjacency } from "../🏗️program-structure/🟦️.ts";
+import type { Governance } from "../🗃️decision-records/🟦️.ts";
 import type { RegisterKey, RegisterRow } from "../🗄️registers/🗂️catalog/🟦️.ts";
 
 export interface CreateRegisterRow { row: RegisterRow; index?: number; }

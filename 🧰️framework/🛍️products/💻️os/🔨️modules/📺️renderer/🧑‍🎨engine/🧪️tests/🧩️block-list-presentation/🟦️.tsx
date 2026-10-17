@@ -27,7 +27,6 @@ describe("BlockList presentation parity", () => {
       });
       view.unmount();
     }
-    console.log(`[DEBUG] Mounted block-list selection: targets=${fixture.selectionCases.length} accessibleControls=true directTypedRecords=true`);
   });
 
   it("renders only the shared localized chrome and exposes palette keyboard activation", async () => {
@@ -74,7 +73,6 @@ describe("BlockList presentation parity", () => {
     } finally {
       await uiI18n.changeLanguage(previousLocale);
     }
-    console.log(`[DEBUG] Mounted block-list localization: locales=${fixture.locales.length} keyboardActivation=true paletteDrag=true deletionTargets=true`);
   });
 
   it("targets the selected step, selected block parent, or first current step and disables an empty palette", () => {
@@ -114,6 +112,5 @@ describe("BlockList presentation parity", () => {
       }
       view.unmount();
     }
-    console.log(`[DEBUG] Mounted block-list targeting: cases=${fixture.targetCases.length} emptyPaletteDisabled=true selectedParentRetained=true`);
   });
 });

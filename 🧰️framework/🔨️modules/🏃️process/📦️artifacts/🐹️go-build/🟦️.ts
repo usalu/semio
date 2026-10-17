@@ -26,10 +26,9 @@ export async function buildGoArtifactsV1(input:readonly string[],policy:GoArtifa
  const configured=goBuildArgumentsV1(policy.mode,args),control=requestedCompilerAdmissionControlV1(options.control,policy.budgetMs),signal=control.signal;
  mkdirSync(policy.captureDirectory,{recursive:true});const staging=mkdtempSync(join(policy.captureDirectory,"go-")),artifact=output?join(staging,basename(output)):undefined;
  try{
-  await withCompilerCapacityScopeV1({directory:policy.leaseDirectory,control,environment:options.environment},async(capacity,control)=>{const environment={...(options.environment??process.env),SEMIO_COMPILER_PARALLELISM:String(capacity.parallelism),GOMAXPROCS:String(capacity.parallelism),GOTMPDIR:staging};
+  await withCompilerCapacityScopeV1({request:{kind:"whole-host"},directory:policy.leaseDirectory,control,environment:options.environment},async(capacity,control)=>{const environment={...(options.environment??process.env),SEMIO_COMPILER_PARALLELISM:String(capacity.parallelism),GOMAXPROCS:String(capacity.parallelism),GOTMPDIR:staging};
   await runOwnedCommand("go",["build",`-p=${capacity.parallelism}`,...(artifact?["-o",artifact]:[]),...configured],policy.cwd,"go:build",compilerAdmissionBudgetV1(control),{env:environment,signal:control.signal});
   });
   if(output&&artifact)await stageArtifacts(dirname(output),`${resolve(policy.cwd)}:go:${policy.mode}`,new Map([[basename(output),artifact]]),{signal,leaseDirectory:policy.leaseDirectory});
-  console.log(`[DEBUG] Go compiler mode=${policy.mode} output=${output??"shared compiler intermediates"}`);
  }finally{rmSync(staging,{recursive:true,force:true});}
 }

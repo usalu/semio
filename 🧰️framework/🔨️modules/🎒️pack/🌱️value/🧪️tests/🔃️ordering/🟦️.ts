@@ -16,5 +16,4 @@ test("closed schema maps sort byte keys while intrinsic occurrences retain dupli
    expect(reopened.query("SELECT COUNT(*) AS n FROM literal_occurrence WHERE entry_key=?").get(Buffer.from("z"))).toEqual({n:2});
   }finally{reopened.close();}
  }finally{database.close();}
- console.log("[DEBUG] independent SQLite schema map ordering and duplicate intrinsic occurrence contract");
 });

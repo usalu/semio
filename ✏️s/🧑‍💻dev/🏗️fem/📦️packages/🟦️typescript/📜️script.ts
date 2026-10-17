@@ -11,8 +11,8 @@ import { dirname, extname, join, relative, resolve } from "node:path";
 import { policyReadFileSafe } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/📖️source-access/🟦️.ts";
 import { toolJobFemLiveVisualPublicationExact } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/🏗️fem-visual/🟦️.ts";
 import { toolJobFemNumericalMicrocursorExact } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/🔁️live-replay/🟦️.ts";
-import { toolJobFemNumericalMicrocursorSelfTests } from "../../../../🔌️plugins/🏗️fem/🧪️tests/🔬️tool-job-fem-numerical-microcursor/🟦️.ts";
-import { toolJobFemLiveVisualPublicationSelfTests } from "../../../../🔌️plugins/🏗️fem/🧪️tests/🔬️tool-job-fem-live-visual-publication/🟦️.ts";
+import { toolJobFemNumericalMicrocursorSelfTests } from "../../../../🔌️plugins/🏗️fem/📦️packages/🟦️typescript/🧪️testing/🔬️tool-job-fem-numerical-microcursor/🟦️.ts";
+import { toolJobFemLiveVisualPublicationSelfTests } from "../../../../🔌️plugins/🏗️fem/📦️packages/🟦️typescript/🧪️testing/🔬️tool-job-fem-live-visual-publication/🟦️.ts";
 class OwnedVerifyScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const args = segments.slice(1);
@@ -27,14 +27,14 @@ if (segments[0] === "fem-live-visual-publication") {
       const fem3dViewerModel = policyReadFileSafe(this.repoRoot, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🧱️model/🦀️.rs");
       const femPluginRoot = policyReadFileSafe(this.repoRoot, "🌎️hub/🧩️compositions/🏗️fem/🦀️.rs");
       const femGlue = policyReadFileSafe(this.repoRoot, "🌎️hub/🧩️compositions/🏗️fem/📦️packages/🦀️rust/🦀️.rs");
-      const femSparse = policyReadFileSafe(this.repoRoot, "✏️s/🔨️modules/🏗️fem/⚙️engine/🔢️sparse/🦀️.rs");
+      const femSparse = policyReadModuleTreeSource(this.repoRoot, "✏️s/🔨️modules/🏗️fem/⚙️engine/🔢️sparse/🦀️.rs");
       const frameworkPlugin = policyReadFileSafe(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs");
       const frameworkWorld = ["🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🗃️model/🦀️.rs", "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧩️components/🦀️.rs", "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧲️cursors/🦀️.rs", "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧱️scene/🦀️.rs", "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🌉️bridge/🦀️.rs", "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧵️interaction/🦀️.rs", "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎛️host/🦀️.rs"].map(root => policyReadModuleTreeSource(this.repoRoot, root)).join("\n");
       const worldSnapshot = policyReadFileSafe(this.repoRoot, "🧰️framework/🔨️modules/🖱️ui/🎬️scene/🌍️world3d-snapshot/🦀️.rs");
       const canvasSnapshot = policyReadFileSafe(this.repoRoot, "🧰️framework/🔨️modules/🖱️ui/🎬️scene/🖼️canvas2d-snapshot/🦀️.rs");
       const canvasRenderer = policyReadModuleTreeSource(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🎞️Scenes/🎯️targets/🧊️wgpu/🦀️.rs");
       const femAnalyses = policyReadFileSafe(this.repoRoot, "✏️s/🔨️modules/🏗️fem/⚙️engine/🧮️analyses/🦀️.rs");
-      const femMesh = policyReadFileSafe(this.repoRoot, "✏️s/🔨️modules/🏗️fem/⚙️engine/🕸️mesh/🦀️.rs");
+      const femMesh = policyReadModuleTreeSource(this.repoRoot, "✏️s/🔨️modules/🏗️fem/⚙️engine/🕸️mesh/🦀️.rs");
       const mutations = args.includes("--self-test")
         ? toolJobFemLiveVisualPublicationSelfTests(fem2dModel, fem2dSession, fem3dSession, fem3dEditor, fem3dModel, fem3dResults, fem3dViewer, fem3dViewerModel, femPluginRoot, femGlue, femSparse, frameworkPlugin, frameworkWorld, worldSnapshot, canvasSnapshot, canvasRenderer, femAnalyses, femMesh)
         : 0;
@@ -45,11 +45,11 @@ if (segments[0] === "fem-live-visual-publication") {
     }
 if (segments[0] === "fem-numerical-microcursor") {
       const session = policyReadFileSafe(this.repoRoot, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🧵️session/🦀️.rs");
-      const sparse = policyReadFileSafe(this.repoRoot, "✏️s/🔨️modules/🏗️fem/⚙️engine/🔢️sparse/🦀️.rs");
-      const mesh = policyReadFileSafe(this.repoRoot, "✏️s/🔨️modules/🏗️fem/⚙️engine/🕸️mesh/🦀️.rs");
+      const sparse = policyReadModuleTreeSource(this.repoRoot, "✏️s/🔨️modules/🏗️fem/⚙️engine/🔢️sparse/🦀️.rs");
+      const mesh = policyReadModuleTreeSource(this.repoRoot, "✏️s/🔨️modules/🏗️fem/⚙️engine/🕸️mesh/🦀️.rs");
       const analyses = policyReadFileSafe(this.repoRoot, "✏️s/🔨️modules/🏗️fem/⚙️engine/🧮️analyses/🦀️.rs");
       const model = policyReadFileSafe(this.repoRoot, "✏️s/🔨️modules/🏗️fem/⚙️engine/🏗️model/🦀️.rs");
-      const elements = policyReadFileSafe(this.repoRoot, "✏️s/🔨️modules/🏗️fem/⚙️engine/📏️elements2d/🦀️.rs");
+      const elements = policyReadModuleTreeSource(this.repoRoot, "✏️s/🔨️modules/🏗️fem/⚙️engine/📏️elements2d/🦀️.rs");
       const runtime = policyReadFileSafe(this.repoRoot, "🧰️framework/🔨️modules/🧵️job/🦀️.rs");
       const mutations = args.includes("--self-test") ? toolJobFemNumericalMicrocursorSelfTests(sparse, mesh, analyses, model, elements, session, runtime) : 0;
       if (!toolJobFemNumericalMicrocursorExact(sparse, mesh, analyses, model, elements, session, runtime)) throw new Error("[verify interactivity tool-jobs p6h] live FEM numerical microcursor contract failed.");

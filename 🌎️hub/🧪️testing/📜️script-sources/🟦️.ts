@@ -28,6 +28,10 @@ export const HUB_SCRIPT_MODULES: readonly string[] = [
   "🏗️bootstrap/🧾️provenance/🌍️gis-browser-proof",
   "🏗️bootstrap/🧾️provenance/🧮️bootstrap-claims",
   "🏗️bootstrap/🧾️provenance/🗃️bootstrap-bundle",
+  "🏗️bootstrap/🧾️provenance/🚚️bootstrap-publication/🧱️materialized-bundle",
+  "🏗️bootstrap/🧾️provenance/🚚️bootstrap-publication/🗺️gis-proofs-and-staging",
+  "🏗️bootstrap/🧾️provenance/🚚️bootstrap-publication/🔄️rotation-and-current-pointer",
+  "🏗️bootstrap/🧾️provenance/🚚️bootstrap-publication/📮️receipts-and-publication-child",
   "🏗️bootstrap/🧾️provenance/🚚️bootstrap-publication",
   "🧪️tests/🎮️gis-map-process-support",
   "🧪️tests/🕹️gis-map-process",
@@ -44,9 +48,10 @@ export const HUB_SCRIPT_MODULES: readonly string[] = [
   "🧪️tests/🧭️space-journey-checks",
 ];
 
-/** 📖️ Reads one hub script module with the `export` keyword stripped from its top-level declarations, so source markers stay stable when a declaration is shared. */
+/** 📖️ Reads one hub script module with the `export` keyword stripped from its top-level declarations, so source markers stay stable when a declaration is shared. A module split into child folders reads as the children listed under it in {@link HUB_SCRIPT_MODULES} followed by the module itself, which keeps the declarations in the order the unsplit module held them. */
 export function readHubScriptModule(repoRoot: string, directory: string): string {
-  return readFileSync(join(repoRoot, "🌎️hub", directory, "🟦️.ts"), "utf8").replace(/\nexport /gu, "\n");
+  const parts = [...HUB_SCRIPT_MODULES.filter((module) => module.startsWith(`${directory}/`)), directory];
+  return parts.map((module) => readFileSync(join(repoRoot, "🌎️hub", module, "🟦️.ts"), "utf8")).join("\n").replace(/\nexport /gu, "\n");
 }
 
 /** 📚️ The absolute paths of the hub script entry and of all its modules. */

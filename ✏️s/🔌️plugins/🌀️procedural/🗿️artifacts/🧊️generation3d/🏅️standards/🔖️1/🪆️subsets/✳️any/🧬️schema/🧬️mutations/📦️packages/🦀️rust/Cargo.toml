@@ -34,9 +34,11 @@ semio-s-artifact-procedural-3d-mut-transforms = { workspace = true }
 semio-s-artifact-procedural-3d-mut-widgets = { workspace = true }
 
 [dev-dependencies]
+semio-framework-test-fixtures = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-framework-async-macros = { workspace = true }
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 serde_json = { workspace = true }
+semio-s-artifact-procedural-3d-model = { workspace = true, features = ["testkit"] }
 
 [[test]]
 name = "widget-kinds"

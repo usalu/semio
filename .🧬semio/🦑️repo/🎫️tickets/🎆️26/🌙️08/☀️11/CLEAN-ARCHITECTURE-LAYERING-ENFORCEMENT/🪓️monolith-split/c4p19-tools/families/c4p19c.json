@@ -1,0 +1,19 @@
+{
+ "name": "c4p19c",
+ "crates": [
+  "semio-s-artifact-norm-din4108-checks",
+  "semio-s-artifact-norm-din4108-editor",
+  "semio-s-artifact-norm-din4108-inferences",
+  "semio-s-artifact-norm-din4108"
+ ],
+ "note": "CENSUS4-PKG-19 semio-s-artifact-norm-din4108-checks plus direct dependents",
+ "base": {
+  "rev": "b84bf526c7b",
+  "crates": [
+   "semio-s-artifact-norm-din4108-checks",
+   "semio-s-artifact-norm-din4108-editor",
+   "semio-s-artifact-norm-din4108-inferences",
+   "semio-s-artifact-norm-din4108"
+  ]
+ }
+}

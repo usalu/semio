@@ -8,7 +8,7 @@ pub struct NativeSocketProbeSnapshot(pub String);
 
 #[cfg(not(target_arch = "wasm32"))]
 #[path="../🪶️sqlite/🦀️.rs"]
-mod native_socket_sqlite;
+pub mod native_socket_sqlite;
 
 #[cfg(not(target_arch = "wasm32"))]
 impl pack::snapshot::ArtifactDsl for NativeSocketProbeSnapshot {
@@ -311,17 +311,6 @@ pub async fn run_socket_grant_probe() -> i32 {
     }
     host.close_key(&channels.document_key);
     1
-}
-
-#[cfg(not(target_arch = "wasm32"))]
-pub fn run_native(plugin_filter: &str, plugin_modules_root: std::path::PathBuf, services:Vec<semio_framework_os_kernel::os_directory::client::InstalledServiceContributionV1>) {
-    runtime_assets::install_native_runtime_assets();
-    semio_framework_os_renderer_wgpu_native_platform::install_native_host_temporal_formatter(std::sync::Arc::new(native_temporal::SystemTemporalFormatter::default()));
-    let event_loop = EventLoop::<winit_app::HostUserEvent>::with_user_event().build().expect("event loop");
-    let proxy = event_loop.create_proxy();
-    let caller=native_caller::NativeFrameEventIssuer::new(semio_framework_job::default_now_us,native_caller::NativeFrameRootPolicyV1::initiating_event()).expect("native initiating event policy");
-    let mut app = winit_app::WinitApp::new(proxy, plugin_filter.to_string(), plugin_modules_root,services,caller);
-    let _ = event_loop.run_app(&mut app);
 }
 
 /// 🧪️ ticket 26/08/17/FINISH-HUB-SPACES-COLLABORATION-END-TO-END — headless smoke mode: boots

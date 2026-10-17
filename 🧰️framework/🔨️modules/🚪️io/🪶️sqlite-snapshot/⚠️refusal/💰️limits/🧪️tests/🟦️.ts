@@ -33,7 +33,6 @@ test("original SQLite fixed ceilings are independently constrained",()=>{
   }
  }finally{database.close();}
  for(const profile of fixture.overflowProfiles)expect(BigInt(profile.maximum)+1n).toBe(1n<<BigInt(profile.pointerBits));
- console.log("[DEBUG] Original SQLite fixed limits closed "+fixture.cases.length+" numeric/borrowed database cases, independent SQLite UTF8 extent and cumulative/narrowed decisions, actual TypeScript allocation boundaries, two authored pointer profiles; Native literal and allocator custody remain separate");
 });
 
 import {existsSync} from "node:fs";
@@ -53,5 +52,4 @@ test("original receiving allocations require their own port despite unrelated na
  expect(source).toContain("pub fn receiving_scope(");
  expect(source).toContain("pub struct SqliteSnapshotReceivingControl");
  expect(source).toContain(authority.message);
- console.log("[DEBUG] Independent SQLite original allocation authority decisions include a refused unbound allocation below already paid native slack; Native scope propagation and zero-heap causes remain separate");
 });

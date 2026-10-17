@@ -26,3 +26,10 @@ impl XmlNodePath {
 
 
 
+
+//#region 🧩️ArtifactItems
+pub mod artifact_items {
+/// 🏷️ Document schema / DSL envelope id.
+pub const STDIO_XML_DOCUMENT_SCHEMA: &str = "stdio.xml";
+}
+//#endregion 🧩️ArtifactItems

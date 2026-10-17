@@ -20,7 +20,9 @@
     ".": {
       "types": "./dist/🟦️.d.ts",
       "import": "./dist/🟦️.js"
-    }
+    },
+    "./standards/rfc8259/subsets/base/io/sqlite/snapshot": "./🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🟦️.ts",
+    "./standards/rfc8259/subsets/base/schema/snapshot": "./🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🟦️.ts"
   },
   "dependencies": {},
   "license": "LGPL-3.0-or-later",

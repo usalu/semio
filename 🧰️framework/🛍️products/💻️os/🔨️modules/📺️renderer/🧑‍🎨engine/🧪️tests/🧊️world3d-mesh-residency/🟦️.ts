@@ -9,7 +9,8 @@
  */
 import { describe, expect, it } from "vitest";
 import fixture from "../../🧱️elements/🌐️World3dHost/🧪️tests/🧫️fixtures/🧊️mesh-residency.json" with { type: "json" };
-import { advanceWorldMeshResidency, buildMeshVisuals, disposeMeshVisuals, splitJsonArrayElements, type WorldMeshResidencyV1 } from "../../🧱️elements/🌐️World3dHost/🟦️.tsx";
+import { advanceWorldMeshResidency, splitJsonArrayElements, type WorldMeshResidencyV1 } from "../../🧱️elements/🌐️World3dHost/🎨️mesh-render/🧱️mesh-parsing-and-residency/🟦️.ts";
+import { buildMeshVisuals, disposeMeshVisuals } from "../../🧱️elements/🌐️World3dHost/🎨️mesh-render/🔺️mesh-geometry-and-appearance/🟦️.ts";
 
 /** 🧾️ The retained set a case starts from, built the way a cold consumer builds it. */
 const residencyOf = (meshesJson: string | null): WorldMeshResidencyV1 | null => (meshesJson === null ? null : advanceWorldMeshResidency(null, meshesJson));

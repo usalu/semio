@@ -1,4 +1,6 @@
 use super::*;
+use crate::standards::v1::subsets::any::schema::snapshot::ARCHITECT_PROGRAM_SCHEMA;
+use semio_framework_test_fixtures::fixture_text;
 
 trait ProgramChildOwnerOracle {
     fn expected() -> serde_json::Value;
@@ -8,7 +10,7 @@ struct SerdeJsonProgramChildOwnerOracle;
 
 impl ProgramChildOwnerOracle for SerdeJsonProgramChildOwnerOracle {
     fn expected() -> serde_json::Value {
-        serde_json::from_str(include_str!("../🧫️fixtures/🧫️child-owner-isolation/🔣️.json")).expect("language-neutral Architect child-owner fixture")
+        serde_json::from_str(fixture_text!("../../🧪️tests/🧫️fixtures/🧫️child-owner-isolation/🔣️.json")).expect("language-neutral Architect child-owner fixture")
     }
 }
 
@@ -33,7 +35,7 @@ async fn sample_plugin_round_trips_json() {
 
 #[test]
 fn program_document_contract_json_text_pack_and_projection() {
-    let source = include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🔬️contract/🔬️document-contract/🔣️.json");
+    let source = fixture_text!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🔬️contract/🔬️document-contract/🔣️.json");
     let oracle: serde_json::Value = serde_json::from_str(source).expect("language-neutral Program document fixture");
     assert!(oracle.get("documents").is_none(), "obsolete documents alias must be rejected from the final fixture");
     assert!(oracle.get("artifacts").is_some(), "native artifacts register must be present");

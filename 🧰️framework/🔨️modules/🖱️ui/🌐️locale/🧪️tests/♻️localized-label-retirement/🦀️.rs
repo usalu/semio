@@ -36,7 +36,6 @@ fn localized_label_original_backing_retirement_obeys_all_physical_grants(){
    let(step,physical)=observed(||owner.step(funding).unwrap());let receipt=step.progress();assert!(receipt.fits(funding));assert_eq!(physical,(receipt.retained_capacity_bytes,receipt.released_bytes));born+=physical.0;released+=physical.1;
   }
   assert!(owner.terminal_is_empty());assert_eq!(released,original_bytes+born);let(_,physical)=observed(||drop(owner));assert_eq!(physical,(0,law["required"]["terminalDropBytes"].as_u64().unwrap()as usize));assert!(denials>0);
-  eprintln!("[DEBUG] Localized label {} cells={} original={} born={} released={} terminalDrop=0",row["name"],pointers.len(),original_bytes,born,released);
  }
 }
 

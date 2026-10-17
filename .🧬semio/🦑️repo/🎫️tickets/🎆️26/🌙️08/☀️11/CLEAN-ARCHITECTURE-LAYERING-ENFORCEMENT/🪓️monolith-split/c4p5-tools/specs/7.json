@@ -1,0 +1,73 @@
+{
+ "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️panels/🦀️.rs",
+ "original": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/🗑️generated/c4p5-orig/7.rs",
+ "stage": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/🗑️generated/c4p5-stage",
+ "chunks": [
+  {
+   "name": "🪟️window-option-laws",
+   "folder": "🪟️window-option-laws",
+   "doc": "🪟️ Window option laws: grid, level of detail and vortex options per window instance, the settings steppers, the camera actions and the worker session admission.",
+   "ranges": [
+    [
+     112,
+     539
+    ]
+   ]
+  },
+  {
+   "name": "🪣️fill-and-distribution-laws",
+   "folder": "🪣️fill-and-distribution-laws",
+   "doc": "🪣️ Fill and distribution laws: the fill tool run, the fill count and the kind weight distribution sliders.",
+   "ranges": [
+    [
+     541,
+     1017
+    ]
+   ]
+  },
+  {
+   "name": "🎯️scope-and-utility-laws",
+   "folder": "🎯️scope-and-utility-laws",
+   "doc": "🎯️ Scope and utility laws: the UI dirty scopes of commands and interaction verbs and the add, target volume and transform utilities.",
+   "ranges": [
+    [
+     1019,
+     1398
+    ]
+   ]
+  },
+  {
+   "name": "🖱️world-selection-laws",
+   "folder": "🖱️world-selection-laws",
+   "doc": "🖱️ World selection laws: pick, vortex and same-kind selection, the scoped command refusals and the selection after add, duplicate and delete.",
+   "ranges": [
+    [
+     1400,
+     1782
+    ]
+   ]
+  },
+  {
+   "name": "🎛️gumball-laws",
+   "folder": "🎛️gumball-laws",
+   "doc": "🎛️ Gumball laws: the gumball arming, the transform utility per window and the gumball gesture transactions.",
+   "ranges": [
+    [
+     1784,
+     2053
+    ]
+   ]
+  },
+  {
+   "name": "🧾️history-kit-close-laws",
+   "folder": "🧾️history-kit-close-laws",
+   "doc": "🧾️ History, kit and close laws: the history edit reference chips, the kit in-port, the backbone convergence and the terminal close witness.",
+   "ranges": [
+    [
+     2055,
+     2233
+    ]
+   ]
+  }
+ ]
+}

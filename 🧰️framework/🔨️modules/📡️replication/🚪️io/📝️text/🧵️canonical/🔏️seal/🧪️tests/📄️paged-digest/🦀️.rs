@@ -45,7 +45,6 @@ fn paged_seal_digests_equal_the_one_event_seal_and_the_independent_framed_oracle
   assert_eq!(paged_length,fixture["rows"][index]["canonicalLength"].as_u64().unwrap());
   assert_eq!(hex(paged_digest),fixture["rows"][index]["digest"].as_str().unwrap());
   assert!(paged_turns*4<exact_turns,"case {index}: {paged_turns} paged vs {exact_turns} one-event turns");
-  println!("[DEBUG] seal fixture case={index} paged={paged_turns} oneEvent={exact_turns} digest {}",hex(paged_digest));
  }
  for count in [0usize,1,9,700,3000]{
   let samples:Vec<u16>=(0..count).map(|index|((index*40503+12345)%65536)as u16).collect();
@@ -59,6 +58,5 @@ fn paged_seal_digests_equal_the_one_event_seal_and_the_independent_framed_oracle
   assert_eq!(paged_length,canonical.len()as u64);
   assert_eq!(paged_digest,framed_digest("heavy",canonical.as_bytes()),"count {count}: independent framed digest");
   if count>=700{assert!(paged_turns*40<exact_turns,"count {count}: {paged_turns} paged vs {exact_turns} one-event turns");}
-  println!("[DEBUG] seal Vec<u16> samples={count} bytes={paged_length} paged={paged_turns} oneEvent={exact_turns}");
  }
 }

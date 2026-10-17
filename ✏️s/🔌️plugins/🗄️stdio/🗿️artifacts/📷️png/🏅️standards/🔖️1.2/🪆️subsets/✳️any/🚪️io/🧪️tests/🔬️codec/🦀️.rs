@@ -1,8 +1,9 @@
+use semio_framework_test_fixtures::fixture_text;
 use semio_framework_value::NativeDecodeControl;
 use crate::schema::snapshot::PngColorType;
 use crate::standards::v1_2::subsets::any::io::{PNG_SIGNATURE, write_chunk, read_chunks, samples_per_pixel, packed_row_bytes, ADAM7, adam7_pass_dims, chunk_addresses, write_native_sample};
 use crate::standards::v1_2::subsets::any::io::*;
-use crate::schema::operations::*;
+use semio_s_artifact_stdio_png_diff::standards::v1_2::subsets::any::schema::operations::*;
 use crate::schema::snapshot::{PngRegion,PngNativePaint};
 use protocol::{Mutation, MutationDiff};
 use std::{io::Write, process::{Command, Stdio}};
@@ -12,8 +13,8 @@ const INDEXED_2: &[u8] = include_bytes!("../../../../../../../🧪️tests/🧫�
 const MULTI_IDAT: &[u8] = include_bytes!("../../../../../../../🧪️tests/🧫️fixtures/🧬️canonical-source/rgba8-multi-idat-private.png");
 const ADAM7_RGBA8: &[u8] = include_bytes!("../../../../../../../🧪️tests/🧫️fixtures/🧬️canonical-source/rgba8-adam7.png");
 const GRAYSCALE_1: &[u8] = include_bytes!("../../../../../../../🧪️tests/🧫️fixtures/🧬️canonical-source/grayscale-1bit.png");
-static CONTROLLED_PAINT: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../../../../../../../../../🧪️tests/🧫️fixtures/🧬️native-paint-controlled/🔣️.json"));
-static STRUCTURE_CORPUS: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../../../../../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🚦️audit/🔣️.json"));
+static CONTROLLED_PAINT: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../../../../🧪️tests/🧫️fixtures/🧬️native-paint-controlled/🔣️.json"));
+static STRUCTURE_CORPUS: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🚦️audit/🔣️.json"));
 
 fn hex(text: &str) -> Vec<u8> {
     text.as_bytes().chunks_exact(2).map(|pair| u8::from_str_radix(std::str::from_utf8(pair).unwrap(), 16).unwrap()).collect()
@@ -216,7 +217,7 @@ fn region_paint_is_exactly_profile_scoped_and_revision_guarded() {
 
 #[test]
 fn native_paint_preserves_index_identity_packing_and_non_idat_bytes() {
-    let fixture: serde_json::Value = serde_json::from_str(runtime_fixture_text("../../../../../../✏️editor/🎭️modes/✏️edit/🎮️commands/🎨️paint-native-region/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../✏️editor/🎭️modes/✏️edit/🎮️commands/🎨️paint-native-region/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     assert_eq!(fixture["cases"][0]["id"], "indexed-duplicate-identity");
     let snapshot = decode_png(INDEXED_2).unwrap();
     let before_non_idat = non_idat_chunks(&encode_png(&snapshot).unwrap());
@@ -323,7 +324,6 @@ fn controlled_owned_paint_yields_and_cancels_during_copy_and_paint() {
  let mut operation=PngNativePaintWorkOperation::try_new(&snapshot,&png_revision(&snapshot),region,paint,MAXIMUM_NATIVE_PAINT_OWNED_BYTES).unwrap();let mut copies=0;let mut paints=0;
  for _ in 0..100000 {let mut sequence=0;let mut step_progress = semio_framework_value::retained_clone::RetainedCloneProgress::default(); let mut context=semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(),semio_framework_job::Generation(1),semio_framework_job::StepBudget::new(1,u64::MAX, semio_s_artifact_stdio_contract::testing::unbounded_grant()),semio_framework_job::root_cancel_token(),||Some(0),&mut sequence, &mut step_progress);match operation.advance(&mut context).unwrap(){PngNativePaintWorkStep::Yield(p)=>match p.phase{PngNativePaintPhase::Copy=>copies+=1,PngNativePaintPhase::Paint=>paints+=1},PngNativePaintWorkStep::Complete=>break,PngNativePaintWorkStep::Cancelled=>panic!("uncancelled operation")}}
  let edited=operation.take_result().unwrap();assert!(copies>1&&paints>=1);assert_eq!(edited.image.samples,vec![9,8,7,6,9,8,7,6]);assert!(snapshot.image.same_metadata(&edited.image));assert_eq!(independent_native_samples(&encode_png(&edited).unwrap()).2,vec![9,8,7,6,9,8,7,6]);operation.begin_close();for _ in 0..100000{if operation.terminal_is_empty(){break;}operation.close_step(4096,1024*1024);}assert!(operation.terminal_is_empty());assert_eq!(snapshot,decode_png(MULTI_IDAT).unwrap());
- println!("[DEBUG] PNG owned copy and painting yielded, cancelled and retired within explicit close bounds");
 }
 
 #[test]
@@ -386,7 +386,7 @@ fn every_mutation_kind_has_a_direct_binary_and_text_owner_that_roundtrips() {
 
 #[test]
 fn preview_publishes_precise_owned_model_and_keeps_source_unchanged() {
- for (id,source,_) in fixture_cases(){let snapshot=decode_png(source).unwrap();let before=snapshot.clone();let preview=png_preview(&snapshot).unwrap();assert_eq!(decode_png(&preview.bytes).unwrap(),snapshot);assert_eq!(snapshot,before);assert_eq!((preview.width,preview.height),(snapshot.image.width,snapshot.image.height));assert_eq!(independent_native_samples(&preview.bytes).2,independent_native_samples(source).2);println!("[DEBUG] PNG preview {id} retained precise owned model");}
+ for (id,source,_) in fixture_cases(){let snapshot=decode_png(source).unwrap();let before=snapshot.clone();let preview=png_preview(&snapshot).unwrap();assert_eq!(decode_png(&preview.bytes).unwrap(),snapshot);assert_eq!(snapshot,before);assert_eq!((preview.width,preview.height),(snapshot.image.width,snapshot.image.height));assert_eq!(independent_native_samples(&preview.bytes).2,independent_native_samples(source).2);}
 }
 
 #[test]
@@ -395,9 +395,4 @@ fn corrupt_crc_and_non_png_sources_are_refused() {
     bytes[20] ^= 0x80;
     assert!(decode_png(&bytes).unwrap_err().contains("CRC"));
     assert!(decode_png(b"not a png").unwrap_err().contains("signature"));
-}
-
-fn runtime_fixture_text(relative: &str) -> &'static str {
-    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative);
-    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display())).into_boxed_str())
 }

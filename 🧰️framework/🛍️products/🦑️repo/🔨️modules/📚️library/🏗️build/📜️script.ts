@@ -4,14 +4,14 @@ import{createIssuedResourceControlV1,requireIssuedResourceControlInvocationV1,wi
 import { scriptCompilerAdmissionControlV1, compilerAdmissionBudgetV1 } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import { join, resolve, dirname } from "node:path";
 import {createBuildBootstrapCapabilitiesV1} from "./📥️caller/📤️child/🟦️.ts";
-import { Script, ScriptRouter, findWorkspaceRoot, scriptInvocationBudget, scriptInvocationEnvironment,checkScriptInvocation,advanceScriptInvocation } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { readScriptPolicy,Script, ScriptRouter, findWorkspaceRoot, scriptInvocationBudget, scriptInvocationEnvironment,checkScriptInvocation,advanceScriptInvocation } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runOwnedCommand } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { readBuildMode } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 import { buildBudgetMs } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 
-import bazelTestSchema from "./🔧️tools/🏗️bazel/🧬️schema/🧪️tests.json";
+import bazelTestSchema from "./🔧️tools/🏗️bazel/🧪️tests/🧬️schema/📋️dispatch.json";
 import {compileJsonSchemaSubset} from "../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
 const bazelTestContract=compileJsonSchemaSubset(bazelTestSchema);
 
@@ -196,12 +196,15 @@ async function runOwnedBuildInLeasesV1(root:string,args:readonly string[],parent
   } finally {for(const[key,value]of Object.entries(previous))if(value===undefined)delete process.env[key];else process.env[key]=value;}
 }
 
+/** 🏛️ Returns the single authored ordinary policy used before a fresh build CLI birth. */
+export function readDefaultBuildCliPolicyV1(){return readScriptPolicy(Object.freeze({version:1,owner:"repository:build",maximumElapsedMilliseconds:0}));}
+
 /** 🚪️ Admits the original authored CLI policy and resources before any backend or installed application launch. */
 export async function runBuildCliV1(root:string,args:readonly string[],environment:NodeJS.ProcessEnv=process.env):Promise<void> {
   const {createScriptProcessEnvelope,readScriptProcessEnvelope,readScriptPolicy,withScriptProcessEnvelope,SCRIPT_PROCESS_INVOCATION_ENV}=await import("../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts");
   const wire=environment[SCRIPT_PROCESS_INVOCATION_ENV];
   const incoming=wire===undefined?undefined:readScriptProcessEnvelope(JSON.parse(wire),Date.now());
-  const policy=environment.SEMIO_SCRIPT_POLICY===undefined?incoming?.policy??readScriptPolicy({version:1,owner:"repository:build",maximumElapsedMilliseconds:0}):readScriptPolicy(JSON.parse(environment.SEMIO_SCRIPT_POLICY));
+  const policy=environment.SEMIO_SCRIPT_POLICY===undefined?incoming?.policy??readDefaultBuildCliPolicyV1():readScriptPolicy(JSON.parse(environment.SEMIO_SCRIPT_POLICY));
   if(incoming&&(incoming.policy.owner!==policy.owner||incoming.policy.version!==policy.version||incoming.policy.maximumElapsedMilliseconds!==policy.maximumElapsedMilliseconds))throw Error("Original build policy changed across handoff");
   const capabilities=incoming?.capabilities??await createBuildBootstrapCapabilitiesV1(root,args,environment),envelope=incoming??createScriptProcessEnvelope(policy,capabilities,Date.now());
   await withScriptProcessEnvelope(envelope,original=>runScriptMain(new ScriptRouter(root,root).register("repo",RepoScript).register("build",BuildScript).register("test",TestScript),{invocation:original,argv:[...args]}));

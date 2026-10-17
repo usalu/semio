@@ -1,11 +1,11 @@
 /** 🚪️ Geometry conversion shares the existing editable polygon contract. */
 import { parsePolygonMesh, type MeshAttribute, type PolygonMesh } from "@semio-tech/framework/mesh/polygon";
-import type { ObjSnapshot } from "../../../🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🧬️schema/📸️snapshot/🟦️.ts";
-import type { PlySnapshot, PlyValue } from "../../../🔌️plugins/🗄️stdio/🗿️artifacts/🧱️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🟦️.ts";
+import type { ObjSnapshot } from "@semio-tech/stdio-obj/standards/3.0/subsets/geometry/schema/snapshot";
+import type { PlySnapshot, PlyValue } from "@semio-tech/stdio-ply/standards/1.0/subsets/any/schema/snapshot";
 import {binary32Value,binary64,binary64Value} from "../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
-import type { GltfDocument, GltfNode, GltfPrimitive, GltfJson } from "../../../🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/📸️snapshot/🟦️.ts";
-import { parseGltfPbrMetallicRoughness, parseGltfMaterial, parseGltfSampler } from "../../../🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/📸️snapshot/🟦️.ts";
-import type { FlowHostSnapshot, NeuralDictionary, Widget } from "../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🟦️.ts";
+import type { GltfDocument, GltfNode, GltfPrimitive, GltfJson } from "@semio-tech/stdio-gltf/standards/2.0/subsets/any/schema/snapshot";
+import { parseGltfPbrMetallicRoughness, parseGltfMaterial, parseGltfSampler } from "@semio-tech/stdio-gltf/standards/2.0/subsets/any/schema/snapshot";
+import type { FlowHostSnapshot, NeuralDictionary, Widget } from "@semio-tech/procedural-generation3d/standards/1/subsets/any/schema/snapshot";
 const old = new URL("../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/", import.meta.url);
 
 /** 🧩️ Restores editable authored palettes through the exported primitive source domains. */

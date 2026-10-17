@@ -389,19 +389,20 @@ mod open_tests {
 
     #[test]
     fn patch_frame_renames_drawing_text() {
-        use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
-        use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
-        use semio_s_artifact_stdio_semio_drawing::schema::snapshot::{DrawLayer, DrawNode, SemioDrawingSnapshot};
-        let point = |x: f64, y: f64| SemioPoint2 { x, y };
-        let content = SemioDrawingSnapshot {
-            schema: "stdio.semio.drawing".into(),
+        semio_framework_io_ports::testkit::bind(&semio_s_artifact_layout_layout_model::LAYOUT_BACKGROUND_DRAWING);
+        use semio_framework_io_ports::VectorPoint2;
+        use semio_framework_io_ports::VectorTransform;
+        use semio_framework_io_ports::{VectorLayer, VectorNode, VectorScene};
+        let point = |x: f64, y: f64| VectorPoint2 { x, y };
+        let content = VectorScene {
+            schema: "test.scene".into(),
             canvas: Default::default(),
             styles: Vec::new(),
-            layers: vec![DrawLayer { id: "imported".into(), name: "Imported".into(), visible: true, root: DrawNode::Group { transform: SemioTransform::identity(), children: vec![DrawNode::Text { value: "Plan".into(), at: point(0.0, 0.0), style: None }] } }],
+            layers: vec![VectorLayer { id: "imported".into(), name: "Imported".into(), visible: true, root: VectorNode::Group { transform: VectorTransform::identity(), children: vec![VectorNode::Text { value: "Plan".into(), at: point(0.0, 0.0), style: None }] } }],
         };
         let mut document = semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document();
         document.links[0].artifact_kind = "s.draw.drawing".into();
-        document.background_drawing = Some(semio_s_artifact_layout_layout_model::background_drawing_child_handle("dwg", &content));
+        document.background_drawing = Some(semio_s_artifact_layout_layout_model::background_drawing_child_handle("dwg", &semio_framework_io_ports::testkit::scene_content(&content)));
         let config = NoConfig::default();
         let history = HistoryView::empty();
         let doc = ArtifactView::new(&document, &history);

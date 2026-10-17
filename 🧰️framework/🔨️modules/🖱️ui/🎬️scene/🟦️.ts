@@ -4,7 +4,7 @@
 import type { IconName } from "@semio-tech/assets";
 
 import type { ActionDescriptor, PluginContextMenuRequest } from "../../🛂️manifest/🟦️.ts";
-import type { Viewport2d } from "../🪟️viewport/◻️2d/🧬️schema/🟦️.ts";
+import type { Viewport2d } from "@semio-tech/framework-ui-viewport-ts/2d/schema";
 export * from "./✂️text-splice/🟦️.ts";
 import type { World3dAnnotationLayer, World3dModellingOptions, World3dScalarField } from "./📏️world3d-modelling/🟦️.ts";
 export * from "./📏️world3d-modelling/🟦️.ts";

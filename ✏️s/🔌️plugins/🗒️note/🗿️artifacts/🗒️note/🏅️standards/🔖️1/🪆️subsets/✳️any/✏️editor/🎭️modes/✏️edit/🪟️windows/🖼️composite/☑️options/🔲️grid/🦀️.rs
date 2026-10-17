@@ -27,7 +27,7 @@ pub fn measure(document: &NoteSnapshot, labels: &NotePlayLabels) -> WindowMeasur
                 label: Some(labels.measure_show_grid.into()),
                 pressed: document.grid_visible.unwrap_or(true),
                 text: None,
-                on_change: crate::editor::note::note_action("setGridVisible", None),
+                on_change: crate::editor::note::support::note_action("setGridVisible", None),
             },
             WindowMeasure::Slider {
                 id: "note-measures.grid-spacing".into(),
@@ -40,7 +40,7 @@ pub fn measure(document: &NoteSnapshot, labels: &NotePlayLabels) -> WindowMeasur
                 loading: None,
                 waiting: None,
                 disabled: None,
-                on_change: crate::editor::note::note_action("setGridSpacing", None),
+                on_change: crate::editor::note::support::note_action("setGridSpacing", None),
             },
             WindowMeasure::Slider {
                 id: "note-measures.grid-subdivisions".into(),
@@ -53,7 +53,7 @@ pub fn measure(document: &NoteSnapshot, labels: &NotePlayLabels) -> WindowMeasur
                 loading: None,
                 waiting: None,
                 disabled: None,
-                on_change: crate::editor::note::note_action("setGridSubdivisions", None),
+                on_change: crate::editor::note::support::note_action("setGridSubdivisions", None),
             },
             WindowMeasure::Slider {
                 id: "note-measures.grid-opacity".into(),
@@ -66,7 +66,7 @@ pub fn measure(document: &NoteSnapshot, labels: &NotePlayLabels) -> WindowMeasur
                 loading: None,
                 waiting: None,
                 disabled: None,
-                on_change: crate::editor::note::note_action("setGridOpacity", None),
+                on_change: crate::editor::note::support::note_action("setGridOpacity", None),
             },
         ],
     }

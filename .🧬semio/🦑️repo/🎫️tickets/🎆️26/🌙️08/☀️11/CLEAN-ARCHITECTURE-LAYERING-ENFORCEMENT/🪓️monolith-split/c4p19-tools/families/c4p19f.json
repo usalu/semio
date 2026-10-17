@@ -1,0 +1,19 @@
+{
+ "name": "c4p19f",
+ "crates": [
+  "semio-s-artifact-norm-en1999-schema",
+  "semio-s-artifact-norm-en1999",
+  "semio-s-fixture-sweep",
+  "semio-hub-norm"
+ ],
+ "note": "CENSUS4-PKG-19 semio-s-artifact-norm-en1999-schema,semio-s-artifact-norm-en1999 plus direct dependents",
+ "base": {
+  "rev": "b84bf526c7b",
+  "crates": [
+   "semio-s-artifact-norm-en1999-schema",
+   "semio-s-artifact-norm-en1999",
+   "semio-s-fixture-sweep",
+   "semio-hub-norm"
+  ]
+ }
+}

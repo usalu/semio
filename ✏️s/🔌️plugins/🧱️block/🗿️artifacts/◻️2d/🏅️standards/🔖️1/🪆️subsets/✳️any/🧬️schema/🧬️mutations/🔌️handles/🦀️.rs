@@ -11,22 +11,14 @@ extern crate semio_framework_value_derive as value_derive;
 //#region 🪢️Mounts
 #[path = "../🧷️change-handle-handle-kind/🦀️.rs"]
 pub mod change_handle_handle_kind;
-#[path = "../🎨️change-handle-kind-color/🦀️.rs"]
-pub mod change_handle_kind_color;
 #[path = "../🔌️change-handle-kind-default-wire/🦀️.rs"]
 pub mod change_handle_kind_default_wire_kind;
-#[path = "../🔖️change-handle-kind-label/🦀️.rs"]
-pub mod change_handle_kind_label;
 #[path = "../🌿️create-handle/🦀️.rs"]
 pub mod create_handle;
-#[path = "../🌱️create-handle-kind/🦀️.rs"]
-pub mod create_handle_kind;
 #[path = "../❌️delete-handle/🦀️.rs"]
 pub mod delete_handle;
-#[path = "../🗑️delete-handle-kind/🦀️.rs"]
-pub mod delete_handle_kind;
 #[path = "../📍️move-handle/🦀️.rs"]
 pub mod move_handle;
-#[path = "../✒️rename-handle-kind/🦀️.rs"]
-pub mod rename_handle_kind;
 //#endregion 🪢️Mounts
+
+pub use semio_s_artifact_block_2d_mut_handles_2::{change_handle_kind_color, change_handle_kind_label, create_handle_kind, delete_handle_kind, rename_handle_kind};

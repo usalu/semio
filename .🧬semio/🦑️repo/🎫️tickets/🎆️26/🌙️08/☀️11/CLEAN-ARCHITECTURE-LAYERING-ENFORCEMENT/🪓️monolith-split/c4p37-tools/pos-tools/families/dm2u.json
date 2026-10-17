@@ -1,0 +1,21 @@
+{
+ "name": "dm2u",
+ "crates": [
+  "semio-framework-ui-testing-paint-policy",
+  "semio-framework-ui",
+  "semio-framework-ui-text",
+  "semio-framework-ui-viewport",
+  "semio-framework-artifact-reference",
+  "semio-framework-dsl-record-ownership-oracle"
+ ],
+ "base": {
+  "rev": "1bae6115bc5",
+  "crates": [
+   "semio-framework-ui",
+   "semio-framework-ui-text",
+   "semio-framework-ui-viewport",
+   "semio-framework-artifact-reference"
+  ]
+ },
+ "note": "DM2 ui paint-policy / ownership-oracle owners with consumers"
+}

@@ -1,6 +1,6 @@
 //! 🧬️ Semantic `Wfc2dConfig` mutation vocabulary and codecs.
 
-use super::{Wfc2dConfig, Wfc2dConfigDiff};
+use crate::editor::wfc2d::config::{Wfc2dConfig, Wfc2dConfigDiff};
 
 #[path = "🔄️replace-config/🦀️.rs"]
 mod replace_config;

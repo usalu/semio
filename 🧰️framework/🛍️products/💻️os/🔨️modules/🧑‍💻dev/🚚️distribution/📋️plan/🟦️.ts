@@ -17,7 +17,7 @@ import { DISTRIBUTION_LAYOUT, distributionOutputOwner, parseDistributionManifest
 
 import { distributionFileWitness, distributionNode, distributionPathOrder, distributionStaticSourcePaths } from "../📥️source/🟦️.ts";
 
-import type { OwnedBuildConfig } from "../../../../../../🔨️modules/🖱️ui/🎯️targets/⚛️react/🛠️build-tooling/🟦️.ts";
+import type { OwnedBuildConfig } from "@semio-tech/ui-react/build-tooling";
 
 import type { InlineConfig } from "vite";
 

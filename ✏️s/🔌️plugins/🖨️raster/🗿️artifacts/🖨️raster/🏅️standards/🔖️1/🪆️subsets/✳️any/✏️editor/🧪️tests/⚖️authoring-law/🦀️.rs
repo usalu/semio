@@ -1,9 +1,10 @@
 //! ⚖️ Real-store authoring: a raster document edit authors, applies, undoes and redoes through the raster editor's own catalog and the runtime's canonical operation wire.
 use semio_framework_plugin::{authoring_law::author_through_document_store, EditorApp};
 use semio_framework_value::ToValue;
-use semio_s_artifact_raster_raster::editor::raster::RasterPlayApp;
-use semio_s_artifact_raster_raster::standards::v1::subsets::any::schema::mutations::create_layer::CreateLayer;
-use semio_s_artifact_raster_raster::{RasterLayerNode, RasterMutation, RasterTransform};
+use semio_s_artifact_raster_raster_editor::RasterPlayApp;
+use semio_s_artifact_raster_raster_model::{RasterLayerNode, RasterTransform};
+use semio_s_artifact_raster_raster_mutations::RasterMutation;
+use semio_s_artifact_raster_raster_mutations_layers::create_layer::CreateLayer;
 
 fn assert_row_is_the_serde_document(row: &[u8], mutation: &RasterMutation) {
     assert!(row.starts_with(b"op"), "the canonical wire carries its operation header");

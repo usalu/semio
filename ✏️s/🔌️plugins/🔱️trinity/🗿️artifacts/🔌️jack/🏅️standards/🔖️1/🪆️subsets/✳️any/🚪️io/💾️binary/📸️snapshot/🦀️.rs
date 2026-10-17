@@ -10,7 +10,7 @@ pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio"
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
 //#endregion 📡️SemioProtocol
 
-use crate::JackSnapshot;
+use crate::standards::v1::subsets::any::schema::snapshot::JackSnapshot;
 use pack::snapshot::ArtifactPack;
 use store::PackError;
 
@@ -25,14 +25,11 @@ pub fn decode(bytes: &[u8]) -> Result<JackSnapshot, PackError> {
 }
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests
 
 mod native_codec {
 #[cfg(test)] use super::*;
-use crate::JackSnapshot;
+use crate::standards::v1::subsets::any::schema::snapshot::JackSnapshot;
 #[cfg(test)] use semio_framework_diagnostic::TextError;
 #[cfg(test)] use semio_framework_diagnostic::TextSpan;
 use pack::snapshot::ArtifactDsl;

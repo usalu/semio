@@ -1,7 +1,7 @@
 //! 🔺️ Sparse declarative set-element-option diff.
 use super::SetElementOption;
 use crate::*;
-use super::super::option_rules;
+use crate::standards::v1::subsets::any::schema::authored::option_rules;
 use protocol::{MutationOutcome, OutcomeCode};
 pub fn diff(payload: &SetElementOption, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {
     if !option_rules::element_ids(base).contains(&payload.id) { return MutationOutcome::refuse(OutcomeCode::TargetMissing, "Physical element is missing.", [payload.id.clone()]); }

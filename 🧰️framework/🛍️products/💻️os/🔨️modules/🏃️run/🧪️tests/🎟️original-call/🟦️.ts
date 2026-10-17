@@ -1,7 +1,7 @@
 /** 🎟️ Independent raw-call receipt precedes every headless semantic failure or continuation. */
 import {test,expect} from "bun:test";
 import {Database} from "bun:sqlite";
-import { readModuleTreeSource } from "../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 import Ajv from "ajv";
 import law from "./🧫️fixtures/🔣️.json";
 
@@ -13,5 +13,4 @@ test("headless Run receives original call spending before semantic failure or co
  expect(start).toBeGreaterThanOrEqual(0);expect(arm).toContain("receive_original_call");expect(arm.indexOf("receive_original_call")).toBeLessThan(arm.indexOf("original.kind"));
  expect(arm).toContain("RunError::Kernel");expect(arm).toContain("RunError::ActorCall");expect(arm).not.toContain("TurnResult {");expect(arm).not.toContain("Event::Wake");
  expect(source).toContain("Kernel(semio_framework_actor::KernelError)");expect(source).toContain("ActorCall(semio_framework_plugin_host::original_actor_context::OriginalActorFixedCall)");
- console.log("[DEBUG] Ajv/SQLite original Run raw2/11/96/97 receipt leaves6/40/65440/262047/depth64 before typed failure; continuation never replaces the event or fabricates a semantic receipt");
 });

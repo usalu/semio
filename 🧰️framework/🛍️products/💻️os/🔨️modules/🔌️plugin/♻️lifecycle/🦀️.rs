@@ -102,7 +102,6 @@ fn original_bounded_config_factory_retains_source_until_exact_physical_retiremen
     assert_eq!(released, source_bytes + born);
     let (_, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| drop(owner));
     assert_eq!((heap.requested_bytes, heap.released_bytes), (0, law["terminalDropBytes"].as_u64().unwrap() as usize));
-    eprintln!("[DEBUG] original bounded config factory actual source={source_bytes} born={born} whole physical={released} turns={turns} terminalDrop0");
 }
 
 /// 🎛️ Exact one-page retirement catalog for explicitly bounded app configuration stores.

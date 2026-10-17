@@ -7,7 +7,7 @@
 import { ascending, descending } from "d3-array";
 import { chord as d3Chord } from "d3-chord";
 import { defineTestAdapter, type AdapterContext } from "@semio-tech/framework/test/adapter";
-import { compileVizProbeDocument, probeProjection, roundProbeNumbers, type ProbeProjection, type VizProbeStatement } from "../../🔨️modules/🧪️viz-probe/🟦️.ts";
+import { compileVizProbeDocumentInContext, probeProjection, roundProbeNumbers, type ProbeProjection, type VizProbeStatement } from "../../🔨️modules/🧪️viz-probe/🟦️.ts";
 // #endregion 🔌️Adapters
 
 // #region 🧫️Vectors
@@ -65,7 +65,7 @@ function comparator(name: string): ((a: number, b: number) => number) | null {
 }
 
 /** 🔮️ d3-chord itself, over the same matrix and the same padding and sorting. */
-function d3Projection(ctx: AdapterContext): { projection: ProbeProjection } {
+function d3Projection(ctx: AdapterContext): ProbeProjection {
   const config = options(ctx);
   let layout = d3Chord().padAngle(config.padAngle);
   const groups = comparator(config.sortGroups);
@@ -102,9 +102,8 @@ function statements(ctx: AdapterContext): VizProbeStatement[] {
 }
 
 async function subject(ctx: AdapterContext): Promise<{ projection: ProbeProjection }> {
-  const records = await compileVizProbeDocument(
-    { case: CASE, scenario: ctx.scenario.id, packages: ["semio-viz-network"], body: statements(ctx) },
-    { workDir: ctx.workDir },
+  const records = await compileVizProbeDocumentInContext(ctx,
+    { case: CASE, scenario: ctx.scenario.id, packages: ["semio-viz-network"], body: statements(ctx) }
   );
   return { projection: probeProjection(roundProbeNumbers(records, DECIMALS)) };
 }

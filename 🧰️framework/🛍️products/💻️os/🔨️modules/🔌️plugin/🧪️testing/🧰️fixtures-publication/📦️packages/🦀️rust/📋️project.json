@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/plugin-testing-fixtures-publication-rs",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

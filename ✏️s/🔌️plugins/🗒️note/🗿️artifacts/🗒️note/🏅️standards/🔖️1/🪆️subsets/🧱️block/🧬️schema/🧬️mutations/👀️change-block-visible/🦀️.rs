@@ -1,6 +1,5 @@
 //! 👀 Note mutation — `ChangeBlockVisible`: sets a block's visibility.
 
-use crate::schema::mutations::NoteMutation;
 use crate::{NoteDiff, NoteSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -20,17 +19,23 @@ pub struct ChangeBlockVisible {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_block_visible(id: String, new_visible: bool) -> NoteMutation {
-    NoteMutation::ChangeBlockVisible(ChangeBlockVisible { id, new_visible })
+pub fn change_block_visible<Op>(id: String, new_visible: bool) -> Op
+where
+    Op: From<crate::standards::v1::subsets::block::schema::mutations::change_block_visible::ChangeBlockVisible>,
+{
+    Op::from(ChangeBlockVisible { id, new_visible })
 }
 
-impl MutationKind<NoteSnapshot, NoteMutation> for ChangeBlockVisible {
+impl<Op> MutationKind<NoteSnapshot, Op> for ChangeBlockVisible
+where
+    Op: protocol::Mutation<NoteSnapshot, Diff = NoteDiff> + From<ChangeBlockVisible>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "block-visible", kind: "change-block-visible", record: "ChangedBlockVisible" };
 
     fn diff(&self, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &NoteSnapshot) -> Result<Vec<NoteMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &NoteSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

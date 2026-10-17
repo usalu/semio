@@ -20,13 +20,14 @@
       "manifest": "🎯️targets/🧊️wgpu/🎟️prepared/📦️packages/🦀️rust/Cargo.toml",
       "entry": "🎯️targets/🧊️wgpu/🎟️prepared/🦀️.rs",
       "dependencies": [
-        "semio-framework-ui-draw-contract",
-        "semio-framework-ui-scene",
-        "semio-framework-ui-prepared-staging",
-        "semio-framework-job",
-        "semio-framework-value",
         "js-sys",
-        "semio-framework-ui-contract"
+        "semio-framework-job",
+        "semio-framework-ui-contract",
+        "semio-framework-ui-draw-contract",
+        "semio-framework-ui-prepared-staging",
+        "semio-framework-ui-scene-mesh",
+        "semio-framework-ui-scene-pass",
+        "semio-framework-value"
       ],
       "forbiddenDependencies": [
         "semio-framework-ui",
@@ -44,9 +45,9 @@
       "manifest": "🎯️targets/🧊️wgpu/🎟️prepared/📤️staging/📦️packages/🦀️rust/Cargo.toml",
       "entry": "🎯️targets/🧊️wgpu/🎟️prepared/📤️staging/🦀️.rs",
       "dependencies": [
-        "semio-framework-ui-scene",
-        "semio-framework-ui-raster-owner",
         "semio-framework-job",
+        "semio-framework-ui-raster-owner",
+        "semio-framework-ui-scene-mesh",
         "semio-framework-value"
       ],
       "forbiddenDependencies": [
@@ -65,12 +66,15 @@
       "manifest": "🎯️targets/🧊️wgpu/🖍️draw/🏷️types/📦️packages/🦀️rust/Cargo.toml",
       "entry": "🎯️targets/🧊️wgpu/🖍️draw/🏷️types/🦀️.rs",
       "dependencies": [
-        "semio-framework-ui-scene",
-        "semio-framework-ui-theme",
-        "semio-framework-ui-styling",
+        "bytemuck",
         "semio-framework-job",
-        "semio-framework-value",
-        "bytemuck"
+        "semio-framework-ui-scene-algebra",
+        "semio-framework-ui-scene-camera",
+        "semio-framework-ui-scene-mesh",
+        "semio-framework-ui-scene-pass",
+        "semio-framework-ui-styling",
+        "semio-framework-ui-theme",
+        "semio-framework-value"
       ],
       "forbiddenDependencies": [
         "semio-framework-ui",
@@ -124,16 +128,17 @@
       "manifest": "🌳️retained/🌳️tree/📦️packages/🦀️rust/Cargo.toml",
       "entry": "🌳️retained/🌳️tree/🦀️.rs",
       "dependencies": [
-        "semio-framework-ui-arena",
         "semio-framework-ui-action",
+        "semio-framework-ui-arena",
+        "semio-framework-ui-contract",
         "semio-framework-ui-declaration",
         "semio-framework-ui-layout",
-        "semio-framework-ui-contract",
         "semio-framework-ui-locale",
+        "semio-framework-ui-retained-tree-tree",
+        "semio-framework-ui-scene",
         "semio-framework-ui-select-behavior",
         "semio-framework-ui-theme",
         "semio-framework-value",
-        "semio-framework-ui-scene",
         "serde",
         "serde_json"
       ],
@@ -622,10 +627,10 @@
       "manifest": "🎬️scene/📐️math/🕸️mesh/📦️packages/🦀️rust/Cargo.toml",
       "entry": "🎬️scene/📐️math/🕸️mesh/🦀️.rs",
       "dependencies": [
-        "semio-framework-replication",
         "semio-framework-geometry",
-        "semio-framework-mesh-engine",
-        "semio-framework-ui-scene-algebra"
+        "semio-framework-mesh-component-references",
+        "semio-framework-ui-scene-algebra",
+        "semio-framework-value"
       ],
       "forbiddenDependencies": [
         "semio-framework-ui",
@@ -888,6 +893,7 @@
       "dependencies": [
         "semio-framework-job",
         "semio-framework-ui-contract",
+        "semio-framework-ui-contract-validation",
         "semio-framework-ui-runtime-presentation",
         "semio-framework-ui-runtime-reconcile-primitives"
       ],

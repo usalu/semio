@@ -1,0 +1,4 @@
+const fs=require("fs"),path=require("path");const ts=require("/Users/ueli/Documents/semio/node_modules/typescript");
+const root=process.argv[2];const out=[];
+const walk=(d)=>{for(const e of fs.readdirSync(d,{withFileTypes:true})){const p=path.join(d,e.name);if(e.isDirectory()){if(!/node_modules|🗑️generated/.test(e.name))walk(p)}else if(/\.tsx?$/.test(e.name)){const t=fs.readFileSync(p,"utf8");if(!/export[^;]*from/s.test(t))continue;const sf=ts.createSourceFile(p,t,ts.ScriptTarget.Latest,true);for(const s of sf.statements)if(ts.isExportDeclaration(s)&&s.moduleSpecifier){out.push(p.replace(root,"")+" :"+(sf.getLineAndCharacterOfPosition(s.getStart(sf)).line+1)+" "+(s.exportClause?s.exportClause.elements?.length??"ns":"*")+" from "+s.moduleSpecifier.text.slice(-60))}}}};
+walk(root);console.log(out.join("\n"));

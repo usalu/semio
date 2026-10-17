@@ -1,6 +1,5 @@
 //! ⬅️ Note mutation — `RemoveTableColumn`: removes a table block's last column (a table always keeps at least one column).
 
-use crate::schema::mutations::NoteMutation;
 use crate::{NoteDiff, NoteSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -19,17 +18,23 @@ pub struct RemoveTableColumn {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn remove_table_column(id: String) -> NoteMutation {
-    NoteMutation::RemoveTableColumn(RemoveTableColumn { id })
+pub fn remove_table_column<Op>(id: String) -> Op
+where
+    Op: From<crate::standards::v1::subsets::table::schema::mutations::remove_table_column::RemoveTableColumn>,
+{
+    Op::from(RemoveTableColumn { id })
 }
 
-impl MutationKind<NoteSnapshot, NoteMutation> for RemoveTableColumn {
+impl<Op> MutationKind<NoteSnapshot, Op> for RemoveTableColumn
+where
+    Op: protocol::Mutation<NoteSnapshot, Diff = NoteDiff> + From<RemoveTableColumn> + From<crate::standards::v1::subsets::table::schema::mutations::insert_table_column::InsertTableColumn>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "remove", entity: "table-column", kind: "remove-table-column", record: "RemovedTableColumn" };
 
     fn diff(&self, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &NoteSnapshot) -> Result<Vec<NoteMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &NoteSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

@@ -304,7 +304,7 @@ pub const GENERATION2D_FORBIDDEN_3D_DISCRIMINATOR: [u8; 4] = *b"P3D3";
 
 
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 pub fn generation2d_all_retained_mutation_fixtures_for_test() -> Vec<Generation2dMutation> {
     use semio_s_artifact_procedural_2d_mutations::*;
     let synapse = semio_framework_artifact_flow_flow::SynapseSpec { id: "retained-synapse".into(), from: "retained-a".into(), to: "retained-b".into(), from_port: "out".into(), to_port: "in".into() };

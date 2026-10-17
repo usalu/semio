@@ -13,7 +13,8 @@ import { createBrowserStoragePort } from "@semio-tech/framework";
 
 import type { PluginBuildTarget } from "../../🔨️modules/🔌️plugin/📇️registry/📖️catalog-view/🟦️.ts";
 import type {pluginCatalogV1} from "../../🔨️modules/🔌️plugin/📇️registry/🟦️.ts";
-export type StoryCatalogV1={readonly nativeCatalog?:NativeCatalogV1;readonly targets:readonly PluginBuildTarget[];readonly moduleUrl:(id:string)=>string;readonly catalog:ReturnType<typeof pluginCatalogV1>};
+import type {PluginCatalogRowsV1} from "@semio-tech/framework/plugin-catalog";
+export type StoryCatalogV1={readonly nativeCatalog?:NativeCatalogV1;readonly targets:readonly PluginBuildTarget[];readonly moduleUrl:(id:string)=>string;readonly catalog:ReturnType<typeof pluginCatalogV1>;readonly rows:PluginCatalogRowsV1};
 
 // #region 🔖️ArtifactProbe
 /** 🔍️ HEAD-probes a plugin's module URL; `undefined` while probing, then true/false. Never blocks on a cargo build — a missing artifact just renders an instruction panel. */
@@ -151,7 +152,7 @@ export function WgpuBootHost({ plugin, inventory }: WgpuBootHostProps) {
       }
       const [{ bootFrameworkOsWgpu }, rendererModuleUrl] = await Promise.all([import("@semio-tech/framework-renderer-wgpu"), resolveWgpuRendererModuleUrl()]);
       if (cancelled) return;
-      dispose = await bootFrameworkOsWgpu({ catalog:inventory.catalog,nativeCatalog:inventory.nativeCatalog, plugin: target.pluginId, plugins: [{ pluginId: target.pluginId, moduleUrl }], rendererModuleUrl });
+      dispose = await bootFrameworkOsWgpu({ catalog:inventory.rows,nativeCatalog:inventory.nativeCatalog, plugin: target.pluginId, plugins: [{ pluginId: target.pluginId, moduleUrl }], rendererModuleUrl });
       if (cancelled) {
         dispose();
         return;

@@ -32,7 +32,7 @@ export async function testArtifactFiles(outputDirectory: string): Promise<void> 
       const actual = await collectArtifactFiles(root);
       const oracle = (await require("fast-glob")("**/*", { cwd: root, dot: true, onlyFiles: true, followSymbolicLinks: false })).sort();
       assert.deepEqual([...actual.keys()], row.ordered, row.name); assert.deepEqual([...actual.keys()], oracle, row.name);
-      for (const [file, path] of actual) assert.deepEqual(readFileSync(path), Buffer.from(row.files[file]));
+      for (const [file, path] of actual) { const expected=row.files[file];if(expected===undefined)throw Error("Actual artifact fixture key required");assert.deepEqual(readFileSync(path),Buffer.from(expected)); }
     }
     const root = join(temporary, "regular"); mkdirSync(root);
     const file = join(root, "file.txt"); writeFileSync(file, "bytes");

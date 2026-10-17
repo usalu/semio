@@ -14,7 +14,8 @@ import { Tree, catalogueTreeDragController, getActiveCataloguePointerDragData } 
 
 
 import { mountedHost, canvasInputSessions, settle, bounds, type HostAction } from "../../🔮️oracles/🖱️mounted-input/🟦️.tsx";
-import { Canvas2dHost, wheelCameraAtScreen } from "../../🟦️.tsx";
+import { Canvas2dHost } from "../../🟦️.tsx";
+import { wheelCameraAtScreen } from "../../📷️camera-math/🟦️.ts";
 
 describe("🖱️ Canvas2d mounted input contract", () => {
   beforeEach(() => {
@@ -597,7 +598,7 @@ it("publishes initial framing once and keeps navigation through same-window refr
 
 });
 
-import {keyboardEventMatchesChord} from "../../../🛠️ShellHelpers/🟦️.tsx";
+import { keyboardEventMatchesChord } from "../../../🛠️ShellHelpers/🪟️window-panes/⌨️keyboard-chords/🟦️.ts";
 
 it("matches neutral arrow chords against independently dispatched DOM events",()=>{
   const target=document.createElement("div");

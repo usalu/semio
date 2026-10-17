@@ -1,5 +1,6 @@
-use crate::editor::bim::gestures::session::{Shape, TYPE_MISSING};
-use crate::editor::bim::gestures::tests::fixture::{model, Rig};
+use crate::editor::bim::gestures::session::TYPE_MISSING;
+use crate::editor::bim::marks::Shape;
+use crate::editor::bim::fixture::{model, Rig};
 use crate::standards::v1::subsets::any::schema::{snapshot::{Axis, Point2, TopConstraint}, mutations::ModelMutation};
 
 fn line(start: (f64, f64), end: (f64, f64)) -> Axis {

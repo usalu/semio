@@ -2,8 +2,8 @@
 //! whole-snapshot capture). No-op when the id already exists in `base`. A payload that states a `tolerance` connects
 //! on any base and warns `mutation.precondition-drifted` where its two handles are no longer within it.
 use crate::standards::v1::subsets::any::schema::diff::{Puzzle2dDiff, Puzzle2dEdgesDelta};
-use {crate::standards::v1::subsets::any::schema::Puzzle2dEdge, crate::Puzzle2dSnapshot};
-use {crate::standards::v1::subsets::any::schema::puzzle2d_finite, crate::standards::v1::subsets::any::schema::puzzle2d_handle_distance};
+use {crate::standards::v1::subsets::any::schema::records::Puzzle2dEdge, crate::Puzzle2dSnapshot};
+use {crate::standards::v1::subsets::any::schema::records::puzzle2d_finite, crate::standards::v1::subsets::any::schema::puzzle2d_handle_distance};
 
 
 //#region 🔖️Diff

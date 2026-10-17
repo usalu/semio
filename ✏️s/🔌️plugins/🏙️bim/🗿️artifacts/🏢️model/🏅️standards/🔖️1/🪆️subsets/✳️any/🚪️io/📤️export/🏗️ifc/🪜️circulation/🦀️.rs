@@ -2,11 +2,11 @@
 //! an `IfcRailing` carries the faceted brep of its posts and rail. IFC 2x3 has no stringer, baluster or infill: the stringer boards of a stair are an `IfcMember` (tag `<id>:stringer`) aggregated by the `IfcStair` next to its flights, the balusters
 //! of a railing an `IfcMember` (`<id>:baluster`) and its infill an `IfcPlate` (`<id>:infill`) aggregated by the `IfcRailing`; the flights and the railing keep only their own parts.
 
-use super::brep::{brep_definition, mesh_where};
-use super::data::label;
+use crate::standards::v1::subsets::any::io::export::ifc::brep::{brep_definition, mesh_where};
+use crate::standards::v1::subsets::any::io::export::ifc::writer::label;
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::{parts, ElementSolid};
-use super::writer::{en, int, real};
-use super::{Export, Quantity};
+use crate::standards::v1::subsets::any::io::export::ifc::writer::{en, int, real};
+use crate::standards::v1::subsets::any::io::export::ifc::context::{Export, Quantity};
 use crate::standards::v1::subsets::any::schema::inferences::stair_runs::{StairFlightRun, StairRun};
 use crate::standards::v1::subsets::any::schema::snapshot::{Stair, StairFlight};
 
@@ -43,7 +43,7 @@ fn material_of(x: &Export<'_>, solid: &ElementSolid, part: &str) -> Option<u64> 
 }
 
 /// 🧩️ Writes the triangles of one part of a solid as a product of `class` aggregated by its parent; nothing when the solid has none.
-fn part_of(x: &mut Export<'_>, solid: &ElementSolid, storey: super::StoreyRef, id: &str, name: &str, class: &str, part: &str) -> Option<u64> {
+fn part_of(x: &mut Export<'_>, solid: &ElementSolid, storey: crate::standards::v1::subsets::any::io::export::ifc::context::StoreyRef, id: &str, name: &str, class: &str, part: &str) -> Option<u64> {
     let shape = brep_definition(&mut x.ifc, &mesh_where(solid, storey.elevation, |group, _| group.part == part))?;
     let placement = x.ifc.place(Some(storey.placement), x.ifc.origin);
     let tail = x.by(Vec::new(), vec![en(match part { parts::STRINGER => "STRINGER", parts::BALUSTER => "POST", _ => "SHEET" })]);

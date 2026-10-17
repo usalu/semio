@@ -1,5 +1,4 @@
 //! ✂️ Direct Writer mutation — `SpliceText` replaces one range of the authored text body as its author saw it.
-use crate::schema::mutations::WriterMutation;
 use crate::WriterDiff;
 use crate::WriterSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
@@ -33,18 +32,24 @@ impl SpliceText {
 }
 
 /// 🏗️ Builder — wraps a splice in its dispatch variant.
-pub fn splice_text(splice: TextSplice) -> WriterMutation {
-    WriterMutation::SpliceText(SpliceText { start: splice.start, deleted: splice.deleted, insert: splice.insert, before: splice.before, after: splice.after })
+pub fn splice_text<Op>(splice: TextSplice) -> Op
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::splice_text::SpliceText>,
+{
+    Op::from(SpliceText { start: splice.start, deleted: splice.deleted, insert: splice.insert, before: splice.before, after: splice.after })
 }
 
-impl MutationKind<WriterSnapshot, WriterMutation> for SpliceText {
+impl<Op> MutationKind<WriterSnapshot, Op> for SpliceText
+where
+    Op: protocol::Mutation<WriterSnapshot, Diff = WriterDiff> + From<SpliceText>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "edit", entity: "text-range", kind: "splice-text", record: "SplicedText" };
 
     fn diff(&self, base: &WriterSnapshot) -> protocol::MutationOutcome<WriterDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &WriterSnapshot) -> Result<Vec<WriterMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &WriterSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

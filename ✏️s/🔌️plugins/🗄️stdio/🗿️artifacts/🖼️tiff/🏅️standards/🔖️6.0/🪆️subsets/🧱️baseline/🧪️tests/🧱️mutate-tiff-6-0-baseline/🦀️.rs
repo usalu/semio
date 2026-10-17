@@ -12,7 +12,6 @@ fn reference(ctx:&Context)->Result<Outcome,String>{
  let next=profile(&base,&row.str("kind"),&row.get("params").cloned().unwrap_or(Json::Null))?;
  let result=project(&next);
  if result==project(&base){return Err("native profile did not move its observation".into())}
- eprintln!("[DEBUG] independent TIFF native profile {} {}",row.str("kind"),result.to_string());
  Ok(Outcome::with_raw(result.to_string().into_bytes(),result))
 }
 #[cfg(feature="sut")]
@@ -53,7 +52,6 @@ mod subject{
   if codes!=expected{return Err(format!("native conformance profile exact codes {codes:?}, expected {expected:?}"))}
   let result=projection(&next);
   semio_repo_test_host::law::mutation_is_observable(&row.str("kind"),&result,&projection(&base),&[])?;
-  eprintln!("[DEBUG] TIFF native profile {} {}",row.str("kind"),result.to_string());
   Ok(Outcome::with_raw(result.to_string().into_bytes(),result))
  }
 }

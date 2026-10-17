@@ -16,7 +16,7 @@ import{independentSqliteExtent as completeIndependentExtent}from "@semio-tech/fr
 test("Semio Graph Native matched full and metadata empty independently preserve all complete cells",async()=>{
  for(const item of completeSemanticContract.cases){const source=structuredClone(item.sourceSnapshot)as unknown as SemioGraphSnapshot;const hydrate=(value:unknown):unknown=>Array.isArray(value)?value.map(hydrate):value!==null&&typeof value==="object"?("bits"in value?{bits:BigInt("0x"+String((value as {bits:string}).bits))}:Object.fromEntries(Object.entries(value).map(([key,item])=>[key,hydrate(item)]))):value;Object.assign(source,hydrate(source));const database=await semioGraphSnapshotToSqliteDatabase(source),bytes=await exportSqliteDatabase(database);expect(completeIndependentExtent(bytes)).toEqual({rows:item.rows,valueBytes:item.valueBytes,schemaBytes:completeSemanticContract.schemaBytes,tableWidths:completeSemanticContract.tableWidths});const limits={maxRows:item.rows,maxValueBytes:item.valueBytes,maxSchemaBytes:completeSemanticContract.schemaBytes,maxTables:10,maxColumns:18};expect(await semioGraphSnapshotToSqliteDatabase(source,limits)).toEqual(database);expect(await semioGraphSnapshotFromSqliteDatabase(await importSqliteDatabase(bytes),limits)).toEqual(source);
  for(const short of[{...limits,maxRows:item.rows-1},{...limits,maxValueBytes:item.valueBytes-1},{...limits,maxSchemaBytes:limits.maxSchemaBytes-1},{...limits,maxTables:9},{...limits,maxColumns:17}]){await expect(semioGraphSnapshotToSqliteDatabase(source,short)).rejects.toThrow();await expect(semioGraphSnapshotFromSqliteDatabase(database,short)).rejects.toThrow();}
- }console.log("[DEBUG] Semio Graph independently measured Native matched full and empty roles through all5 copied limits");
+ }
 });
 
 import hexFloatContract from "./🧫️fixtures/🎚️hex-float.json";
@@ -30,6 +30,6 @@ test("Semio Graph original hex f64 class corpus independently preserves midpoint
    const source=structuredClone(completeSemanticContract.cases[0]!.sourceSnapshot)as unknown as SemioGraphSnapshot;
    for(const node of source.nodes){node.position.x={bits:BigInt("0x"+(node.position.x as unknown as {bits:string}).bits)};node.position.y={bits:BigInt("0x"+(node.position.y as unknown as {bits:string}).bits)};node.width={bits:BigInt("0x"+(node.width as unknown as {bits:string}).bits)};node.height={bits:BigInt("0x"+(node.height as unknown as {bits:string}).bits)};}
    source.nodes[0]!.position.x=word;const bytesSqlite=await exportSqliteDatabase(await semioGraphSnapshotToSqliteDatabase(source));expect(completeIndependentExtent(bytesSqlite).valueBytes).toBe(item.graphValueBytes);
-  }console.log("[DEBUG] Semio Graph independently measured every hex f64 midpoint/long-token class without a lexical cap");
+  }
  }finally{db.close();}
 });

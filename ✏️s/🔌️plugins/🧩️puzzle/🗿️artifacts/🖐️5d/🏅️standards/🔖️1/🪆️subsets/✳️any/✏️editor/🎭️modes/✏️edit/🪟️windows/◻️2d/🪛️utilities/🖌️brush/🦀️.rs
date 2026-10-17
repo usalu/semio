@@ -14,7 +14,7 @@ use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::UtilityDefinition;
 use semio_framework_tool_run::{JobKindId, ToolRunDefinition, ToolRunRebasePolicy, ToolRunReconfigurePolicy, ToolRunSettingsReads, ToolRunTraceKind};
 
-pub const UTILITY_ID: &str = "brush";
+pub const UTILITY_ID: &str = crate::editor::puzzle5d::entities::PUZZLE5D_BRUSH_UTILITY_ID;
 /// 🧵️ `ToolRunDefinition.runJob` of the brush suggestions run.
 pub const RUN_JOB_KIND: &str = "s.puzzle.puzzle5d.brush.suggestions";
 

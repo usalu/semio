@@ -68,6 +68,3 @@ pub fn handle(_payload:&DeleteSelection,doc:&ArtifactView<'_,DrawingSnapshot>,_c
     plan(doc.snapshot,&session.active_utility_id,&session.interaction.ids,&session.interaction.points)
 }
 
-#[cfg(test)]
-#[path="🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;

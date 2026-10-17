@@ -28,7 +28,6 @@ fn retained_physical_raster_children_obey_allocator_grants(){
   let source=Arc::new(RasterImage{width:2,height:2,pixels:vec![255;16]});let mut sample=AffineImageJob::new(AffineImageInput{source:source.clone(),width:8,height:8,origin:[0.,0.],transform:[4.,0.,0.,4.,0.,0.],sampling:AffineSampling::Area}).unwrap();if stop>0{sample.advance(stop).unwrap();}sample.cancel();let(a,r)=drain(sample.into_retirement().0);assert!(r>a);assert_eq!(source.pixels,vec![255;16]);assert_eq!(Arc::strong_count(&source),1);
   let mut compositor=CompositeJob::new_owned(8,8,[0.,0.],vec![("image".into(),RasterLease(source.clone()))],vec![CompositeLayer{opacity:1.,blend:CompositeBlend::Normal,visible:true,transform:[4.,0.,0.,4.,0.,0.],mask:None,content:CompositeContent::Pixels("image".into())}]).unwrap();if stop>0{compositor.advance(stop).unwrap();}compositor.cancel();let(a,r)=drain(compositor.into_retirement().0);assert!(r>a);assert_eq!(Arc::strong_count(&source),1);
  }
- eprintln!("[DEBUG] Physical raster leaves: 15 interrupted owners; every allocator allocation/release matched its exact receipt; terminal destruction released zero backing");
 }
 #[test]
 fn retained_physical_geometry_children_obey_allocator_grants(){
@@ -38,7 +37,6 @@ fn retained_physical_geometry_children_obey_allocator_grants(){
   let mut flatten=PathFlattenJob::new(PathFlattenInput{segments:vec![PathSegment::Move{to:[0.,0.]},PathSegment::Cubic{ctrl1:[0.,8.],ctrl2:[8.,8.],to:[8.,0.]},PathSegment::Close],transform:[1.,0.,0.,1.,0.,0.],tolerance:0.1}).unwrap();if stop>0{flatten.advance(stop).unwrap();}flatten.cancel();let(a,r)=drain(flatten.into_retirement().0);assert!(r>a);
   let mut stroke=StrokeOutlineJob::new(StrokeOutlineInput{contours:vec![StrokeContour{points:vec![[0.,0.],[8.,0.],[8.,8.]],closed:false}],transform:[1.,0.,0.,1.,0.,0.],tolerance:0.1,style:StrokeGeometryStyle{width:2.,cap:StrokeGeometryCap::Round,join:StrokeGeometryJoin::Round,miter_limit:4.,dash:vec![1.,1.],dash_offset:0.}}).unwrap();if stop>0{stroke.advance(stop).unwrap();}stroke.cancel();let(a,r)=drain(stroke.into_retirement().0);assert!(r>a);
  }
- eprintln!("[DEBUG] Physical geometry leaves: 10 interrupted owners; exact allocator receipts and empty terminal destructors");
 }
 #[test]
 fn retained_physical_numeric_scratch_matches_reference_and_allocator(){
@@ -46,7 +44,6 @@ fn retained_physical_numeric_scratch_matches_reference_and_allocator(){
  let fixture:serde_json::Value=serde_json::from_str(crate::text("../🌱️value/🗂️ordered/🔢️numeric/🧮️scratch/🧪️tests/📜️fixtures/🔣️.json")).unwrap();let mut index=NumericIndex::<i64,i64>::new();let mut oracle=BTreeMap::new();let mut output=Vec::new();
  for row in fixture["operations"].as_array().unwrap(){let key=row["key"].as_i64().unwrap_or(0);let result=match row["kind"].as_str().unwrap(){"set"=>{let value=row["value"].as_i64().unwrap();let actual=index.insert(key,value);assert_eq!(actual,oracle.insert(key,value));serde_json::json!(actual)},"remove"=>{let actual=index.remove(&key);assert_eq!(actual,oracle.remove(&key));serde_json::json!(actual)},"get"=>{let actual=index.get(&key).copied();assert_eq!(actual,oracle.get(&key).copied());serde_json::json!(actual)},"first"=>{let actual=index.pop_first();assert_eq!(actual,oracle.pop_first());serde_json::json!(actual.map(|(key,value)|[key,value]))},"reset"=>{index.reset();oracle.clear();serde_json::Value::Null},_=>unreachable!()};assert_eq!(index.len(),oracle.len());output.push(result);}
  assert_eq!(serde_json::json!(output),fixture["expected"]);for key in 0..4096{index.insert(key,key);}let stored=index.stored_keys();index.reset();for key in (0..4096).rev(){index.insert(key,key);}assert_eq!(index.stored_keys(),stored);for key in 0..4096{assert_eq!(index.pop_first(),Some((key,key)));}assert!(index.is_empty());let(a,r)=drain(index);assert!(r>a);
- eprintln!("[DEBUG] Numeric scratch AVL shared fixture/BTreeMap oracle and4096 reused slots; exact paged allocator receipts");
 }
 #[test]
 fn retained_physical_boolean_and_trace_children_obey_allocator_grants(){
@@ -57,7 +54,6 @@ fn retained_physical_boolean_and_trace_children_obey_allocator_grants(){
   let mut job=BooleanJob::new(source).unwrap();while !job.advance(4096).unwrap().done{}let(retired,operands,output)=job.into_retirement();let output=output.unwrap();let mut first=[0.;2];let mut previous=[0.;2];let mut area=0.;let mut contours=0;for segment in &output{match segment{PathSegment::Move{to}=>{first=*to;previous=*to;contours+=1;},PathSegment::Line{to}=>{area+=previous[0]*to[1]-to[0]*previous[1];previous=*to;},PathSegment::Close=>area+=previous[0]*first[1]-first[0]*previous[1],_=>unreachable!()}}assert_eq!(contours,row["expected"]["contours"].as_u64().unwrap());assert!((area/2.-row["expected"]["area"].as_f64().unwrap()).abs()<1e-5);drain(retired);drain(operands);drain(output);
  }
  for row in trace_rows.as_array().unwrap(){let input=&row["input"];let source=BitmapTraceInput{width:input["width"].as_u64().unwrap()as u32,height:input["height"].as_u64().unwrap()as u32,mask:input["mask"].as_array().unwrap().iter().map(|p|p.as_u64().unwrap()as u8).collect::<Vec<_>>(),threshold:input["threshold"].as_f64().unwrap(),simplify_epsilon:input["simplifyEpsilon"].as_f64().unwrap(),max_pixels:input["maxPixels"].as_u64().unwrap()as usize,max_edges:input["maxEdges"].as_u64().unwrap()as usize,max_segments:input["maxSegments"].as_u64().unwrap()as usize,max_work:input["maxWork"].as_u64().unwrap()};for stop in [0,1,10,100,4096]{let mut job=BitmapTraceJob::new(source.clone()).unwrap();if stop>0{job.advance(stop).unwrap();}job.cancel();let(retired,mask)=job.into_retirement();assert_eq!(mask.as_ref(),Some(&source.mask));drain(retired);drain(mask);}let mut job=BitmapTraceJob::new(source).unwrap();while !job.advance(4096).unwrap().done{}assert_eq!(job.result().unwrap().iter().filter(|s|matches!(s,PathSegment::Move{..})).count(),row["expected"]["contours"].as_u64().unwrap()as usize);let(retired,mask)=job.into_retirement();drain(retired);drain(mask);}
- eprintln!("[DEBUG] Physical Boolean/Trace: shared neutral outputs plus five interrupted native owners per fixture; allocator receipts and terminal destruction matched");
 }
 #[test]
 fn retained_physical_png_encoder_obeys_allocator_grants(){
@@ -66,7 +62,6 @@ fn retained_physical_png_encoder_obeys_allocator_grants(){
  let expected=vec![127;256];let mut job=PngEncodeJob::new(RasterImage{width:8,height:8,pixels:expected.clone()}).unwrap();while !job.advance().unwrap().done{}let output=job.take_result().unwrap();let(a,r)=drain(job);assert!(r>a);
  let mut decoder=png::Decoder::new(std::io::Cursor::new(&output.data)).read_info().unwrap();let mut pixels=vec![0;decoder.output_buffer_size()];let info=decoder.next_frame(&mut pixels).unwrap();assert_eq!((info.width,info.height),(8,8));assert_eq!(pixels[..info.buffer_size()],expected);
  drain(output);
- eprintln!("[DEBUG] Physical PNG encoder: three cancellations and completed publication; exact allocator receipts; independent PNG decoder preserved pixels");
 }
 #[test]
 fn retained_physical_mask_leases_require_actual_backing_grants(){
@@ -91,5 +86,4 @@ fn retained_physical_curved_boolean_children_obey_allocator_grants(){
   for stop in [0,1,10,100,4096]{let mut job=PathBooleanJob::new(source.clone()).unwrap();if stop>0{job.advance(stop).unwrap();}job.cancel();let(retired,output)=job.into_retirement();assert!(output.is_none());drain(retired);}
   let mut job=PathBooleanJob::new(source).unwrap();while !job.advance(4096).unwrap().done{}let(retired,output)=job.into_retirement();let output=output.unwrap();assert_eq!(output.iter().filter(|s|matches!(s,PathSegment::Move{..})).count(),row["contours"].as_u64().unwrap()as usize);drain(retired);drain(output);
  }
- eprintln!("[DEBUG] Physical curved Boolean: shared transforms/curves, five interruption stops and sealed output; real queue and child backing receipts matched");
 }

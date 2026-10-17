@@ -17,7 +17,7 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 
 import { hubForwardingProxy, hubSeedTrustedCatalog } from "../../🤝️integration-harness/🟦️.ts";
-import { hubProbeCall, hubProbeCreateArtifact, hubProbeCreateSpace, hubProbeCreationCatalog, hubProbeOpenDocument, hubProbeSignIn } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧪️testkit/📡️client-probe/🟦️.ts";
+import { hubProbeCall, hubProbeCreateArtifact, hubProbeCreateSpace, hubProbeCreationCatalog, hubProbeOpenDocument, hubProbeSignIn } from "@semio-tech/framework-os/modules/directory/testkit/client-probe";
 
 /** 🏷️ The image repository every tag of this harness lives under. */
 export const HUB_IMAGE_REPOSITORY = "semio/os-hub";

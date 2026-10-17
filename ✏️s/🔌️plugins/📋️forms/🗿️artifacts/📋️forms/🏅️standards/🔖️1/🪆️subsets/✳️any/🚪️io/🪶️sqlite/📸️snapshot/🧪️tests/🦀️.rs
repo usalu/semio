@@ -1,4 +1,13 @@
 //! 🧫️ Forms exact owner capability precedes semantic and independently edited SQLite I/O.
+use semio_framework_test_fixtures::fixture_text;
+use semio_framework_value::{ValueError, ValueRefusalKind};
+use crate::standards::v1::subsets::any::schema::snapshot::FormsSnapshot;
+use crate::{FormExpr, FormQuestion};
+use semio_framework_value::DslValue;
+use store::{sqlite_snapshot::SqliteDatabase, sqlite_snapshot::SqliteSnapshotControl, sqlite_snapshot::SqliteSnapshotPhase};
+#[allow(unused_imports)]
+use store::{sqlite_snapshot::artifact::Projection, sqlite_snapshot::artifact::Cell};
+use crate::standards::v1::subsets::any::io::sqlite::snapshot::{text, float};
 use semio_framework_test_original_snapshot_owners as original_owners;
 use ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot as _;
 use crate::standards::v1::subsets::any::io::sqlite::snapshot::*;
@@ -8,13 +17,13 @@ mod backing;
 
 #[test]
 fn sqlite_snapshot_forms_declared_native_owner_has_semantic_sqlite_capability(){
- let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
  assert_eq!(fixture["schema"],crate::FORMS_DOCUMENT_SCHEMA);
  assert!(<FormsSnapshot as pack::snapshot::ArtifactPack>::sqlite_snapshot_codec().is_some(),"the actual owning Forms native declaration must expose its semantic SQLite snapshot codec");
 }
 
 
-fn fixture()->serde_json::Value{serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap()}
+fn fixture()->serde_json::Value{serde_json::from_str(fixture_text!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json")).unwrap()}
 fn string(value:&serde_json::Value,key:&str)->String{value[key].as_str().unwrap().into()}
 fn primitive(value:&serde_json::Value)->semio_framework_value::DslValue{
  match value["kind"].as_str().unwrap(){

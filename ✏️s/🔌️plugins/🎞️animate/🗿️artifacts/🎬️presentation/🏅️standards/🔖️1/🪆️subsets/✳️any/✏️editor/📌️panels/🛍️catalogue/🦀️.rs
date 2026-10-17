@@ -1,7 +1,7 @@
 //! 🛍️ Animate presentation app panel — the catalogue: tile-seeding templates and the active figure source.
 
 use crate::editor::animate::terminology::AnimatePresentationLabels;
-use crate::editor::animate::{animate_presentation_action, ui_capacity_error, ui_children, ui_label, ui_map, ui_node, ui_text};
+use crate::editor::animate::support::{animate_presentation_action, ui_capacity_error, ui_children, ui_label, ui_map, ui_node, ui_text};
 use crate::PresentationSnapshot;
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::PanelGroup;

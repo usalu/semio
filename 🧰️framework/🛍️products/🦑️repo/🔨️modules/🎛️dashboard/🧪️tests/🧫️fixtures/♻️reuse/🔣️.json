@@ -1,0 +1,994 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "explicit-nx-to-bazel",
+      "running": [
+        [
+          "SEMIO_BUILD_TOOL",
+          "nx"
+        ]
+      ],
+      "asked": [
+        [
+          "SEMIO_BUILD_TOOL",
+          "bazel"
+        ]
+      ],
+      "client": [],
+      "args": [
+        "repo",
+        "run",
+        "app:dev"
+      ],
+      "same": false,
+      "tool": "bazel",
+      "default": "nx"
+    },
+    {
+      "name": "explicit-bazel-to-nx",
+      "running": [
+        [
+          "SEMIO_BUILD_TOOL",
+          "bazel"
+        ]
+      ],
+      "asked": [
+        [
+          "SEMIO_BUILD_TOOL",
+          "nx"
+        ]
+      ],
+      "client": [],
+      "args": [
+        "repo",
+        "run",
+        "app:dev"
+      ],
+      "same": false,
+      "tool": "nx",
+      "default": "nx"
+    },
+    {
+      "name": "default-to-explicit-nx",
+      "running": [
+        [
+          "SEMIO_BUILD_TOOL",
+          "nx"
+        ]
+      ],
+      "asked": [
+        [
+          "SEMIO_BUILD_TOOL",
+          "nx"
+        ]
+      ],
+      "client": [],
+      "args": [
+        "repo",
+        "run",
+        "app:dev"
+      ],
+      "same": true,
+      "tool": "nx",
+      "default": "nx"
+    },
+    {
+      "name": "same-default",
+      "running": [
+        [
+          "SEMIO_BUILD_TOOL",
+          "nx"
+        ]
+      ],
+      "asked": [],
+      "client": [],
+      "args": [
+        "repo",
+        "run",
+        "app:dev"
+      ],
+      "same": true,
+      "tool": "nx",
+      "default": "nx"
+    },
+    {
+      "name": "inherited-bazel",
+      "running": [
+        [
+          "SEMIO_BUILD_TOOL",
+          "nx"
+        ]
+      ],
+      "asked": [],
+      "client": [
+        [
+          "SEMIO_BUILD_TOOL",
+          "bazel"
+        ]
+      ],
+      "args": [
+        "repo",
+        "run",
+        "app:dev"
+      ],
+      "same": false,
+      "tool": "bazel",
+      "default": "nx"
+    },
+    {
+      "name": "same-inherited-bazel",
+      "running": [
+        [
+          "SEMIO_BUILD_TOOL",
+          "bazel"
+        ]
+      ],
+      "asked": [],
+      "client": [
+        [
+          "SEMIO_BUILD_TOOL",
+          "bazel"
+        ]
+      ],
+      "args": [
+        "repo",
+        "run",
+        "app:dev"
+      ],
+      "same": true,
+      "tool": "bazel",
+      "default": "nx"
+    },
+    {
+      "name": "declared-nx-beats-inherited-bazel",
+      "running": [
+        [
+          "SEMIO_BUILD_TOOL",
+          "nx"
+        ]
+      ],
+      "asked": [
+        [
+          "SEMIO_BUILD_TOOL",
+          "nx"
+        ]
+      ],
+      "client": [
+        [
+          "SEMIO_BUILD_TOOL",
+          "bazel"
+        ]
+      ],
+      "args": [
+        "repo",
+        "run",
+        "app:dev"
+      ],
+      "same": true,
+      "tool": "nx",
+      "default": "nx"
+    },
+    {
+      "name": "declared-bazel-beats-inherited-nx",
+      "running": [
+        [
+          "SEMIO_BUILD_TOOL",
+          "bazel"
+        ]
+      ],
+      "asked": [
+        [
+          "SEMIO_BUILD_TOOL",
+          "bazel"
+        ]
+      ],
+      "client": [
+        [
+          "SEMIO_BUILD_TOOL",
+          "nx"
+        ]
+      ],
+      "args": [
+        "repo",
+        "run",
+        "app:dev"
+      ],
+      "same": true,
+      "tool": "bazel",
+      "default": "nx"
+    },
+    {
+      "name": "argv-tool-beats-environment",
+      "running": [
+        [
+          "SEMIO_BUILD_TOOL",
+          "nx"
+        ]
+      ],
+      "asked": [
+        [
+          "SEMIO_BUILD_TOOL",
+          "bazel"
+        ]
+      ],
+      "client": [],
+      "args": [
+        "repo",
+        "--tool=bazel",
+        "run",
+        "app:dev"
+      ],
+      "same": true,
+      "tool": "bazel",
+      "default": "nx"
+    },
+    {
+      "name": "literal-tail-tool-is-not-selection",
+      "running": [
+        [
+          "SEMIO_BUILD_TOOL",
+          "bazel"
+        ]
+      ],
+      "asked": [
+        [
+          "SEMIO_BUILD_TOOL",
+          "nx"
+        ]
+      ],
+      "client": [],
+      "args": [
+        "repo",
+        "run",
+        "app:dev",
+        "--",
+        "--tool=bazel"
+      ],
+      "same": false,
+      "tool": "nx",
+      "default": "nx"
+    },
+    {
+      "name": "last-declared-tool-wins",
+      "running": [
+        [
+          "SEMIO_BUILD_TOOL",
+          "bazel"
+        ]
+      ],
+      "asked": [
+        [
+          "SEMIO_BUILD_TOOL",
+          "nx"
+        ],
+        [
+          "SEMIO_BUILD_TOOL",
+          "bazel"
+        ]
+      ],
+      "client": [],
+      "args": [
+        "repo",
+        "run",
+        "app:dev"
+      ],
+      "same": true,
+      "tool": "bazel",
+      "default": "nx"
+    },
+    {
+      "name": "unrelated-environment-does-not-change-reuse",
+      "running": [
+        [
+          "TERM",
+          "xterm"
+        ],
+        [
+          "SEMIO_BUILD_TOOL",
+          "nx"
+        ]
+      ],
+      "asked": [
+        [
+          "TERM",
+          "vt100"
+        ]
+      ],
+      "client": [],
+      "args": [
+        "repo",
+        "run",
+        "app:dev"
+      ],
+      "same": true,
+      "tool": "nx",
+      "default": "nx"
+    },
+    {
+      "name": "separated-outer-tool",
+      "running": [
+        [
+          "SEMIO_BUILD_TOOL",
+          "nx"
+        ]
+      ],
+      "asked": [
+        [
+          "SEMIO_BUILD_TOOL",
+          "nx"
+        ]
+      ],
+      "client": [],
+      "args": [
+        "repo",
+        "--tool",
+        "bazel",
+        "run",
+        "app:dev"
+      ],
+      "same": true,
+      "tool": "bazel",
+      "default": "nx"
+    },
+    {
+      "name": "absolute-windows-bun-lexical-route",
+      "cmd": "C:\\tools\\bun.exe",
+      "running": [
+        [
+          "SEMIO_BUILD_TOOL",
+          "nx"
+        ]
+      ],
+      "asked": [
+        [
+          "SEMIO_BUILD_TOOL",
+          "nx"
+        ]
+      ],
+      "client": [],
+      "args": [
+        "repo",
+        "--tool=bazel",
+        "run",
+        "app:dev"
+      ],
+      "same": true,
+      "tool": "bazel",
+      "default": "nx"
+    },
+    {
+      "name": "owned-script-route",
+      "running": [
+        [
+          "SEMIO_BUILD_TOOL",
+          "nx"
+        ]
+      ],
+      "asked": [
+        [
+          "SEMIO_BUILD_TOOL",
+          "nx"
+        ]
+      ],
+      "client": [],
+      "args": [
+        "/workspace/📜️script.ts",
+        "repo",
+        "--tool=bazel",
+        "run",
+        "app:dev"
+      ],
+      "same": true,
+      "tool": "bazel",
+      "default": "nx"
+    },
+    {
+      "name": "other-program-tool-argument-is-literal",
+      "cmd": "fixture",
+      "running": [
+        [
+          "SEMIO_BUILD_TOOL",
+          "nx"
+        ]
+      ],
+      "asked": [
+        [
+          "SEMIO_BUILD_TOOL",
+          "nx"
+        ]
+      ],
+      "client": [],
+      "args": [
+        "repo",
+        "--tool=bazel",
+        "run",
+        "app:dev"
+      ],
+      "same": true,
+      "tool": null,
+      "default": "nx"
+    },
+    {
+      "name": "configured Bazel default without overrides",
+      "running": [
+        [
+          "SEMIO_BUILD_TOOL",
+          "nx"
+        ]
+      ],
+      "asked": [],
+      "client": [],
+      "args": [
+        "repo",
+        "run",
+        "app:dev"
+      ],
+      "same": false,
+      "tool": "bazel",
+      "default": "bazel"
+    },
+    {
+      "name": "configured Nx default without overrides",
+      "running": [
+        [
+          "SEMIO_BUILD_TOOL",
+          "nx"
+        ]
+      ],
+      "asked": [],
+      "client": [],
+      "args": [
+        "repo",
+        "run",
+        "app:dev"
+      ],
+      "same": true,
+      "tool": "nx",
+      "default": "nx"
+    },
+    {
+      "name": "argv overrides configured Bazel default",
+      "running": [
+        [
+          "SEMIO_BUILD_TOOL",
+          "nx"
+        ]
+      ],
+      "asked": [],
+      "client": [],
+      "args": [
+        "repo",
+        "run",
+        "app:dev",
+        "--tool=nx"
+      ],
+      "same": true,
+      "tool": "nx",
+      "default": "bazel"
+    },
+    {
+      "name": "declared env overrides configured Bazel default",
+      "running": [
+        [
+          "SEMIO_BUILD_TOOL",
+          "nx"
+        ]
+      ],
+      "asked": [
+        [
+          "SEMIO_BUILD_TOOL",
+          "nx"
+        ]
+      ],
+      "client": [],
+      "args": [
+        "repo",
+        "run",
+        "app:dev"
+      ],
+      "same": true,
+      "tool": "nx",
+      "default": "bazel"
+    },
+    {
+      "name": "inherited env overrides configured Bazel default",
+      "running": [
+        [
+          "SEMIO_BUILD_TOOL",
+          "nx"
+        ]
+      ],
+      "asked": [],
+      "client": [
+        [
+          "SEMIO_BUILD_TOOL",
+          "nx"
+        ]
+      ],
+      "args": [
+        "repo",
+        "run",
+        "app:dev"
+      ],
+      "same": true,
+      "tool": "nx",
+      "default": "bazel"
+    },
+    {
+      "name": "unresolved running build identity never reuses",
+      "running": [],
+      "asked": [],
+      "client": [],
+      "args": [
+        "repo",
+        "run",
+        "app:dev"
+      ],
+      "same": false,
+      "tool": "nx",
+      "default": "nx"
+    },
+    {
+      "name": "unowned-same-basename",
+      "running": [
+        [
+          "SEMIO_BUILD_TOOL",
+          "bazel"
+        ]
+      ],
+      "asked": [],
+      "client": [],
+      "args": [
+        "/elsewhere/📜️script.ts",
+        "repo",
+        "run",
+        "app:dev"
+      ],
+      "same": true,
+      "tool": null,
+      "default": "bazel",
+      "cwd": "/workspace"
+    },
+    {
+      "name": "unowned-nested-script",
+      "running": [
+        [
+          "SEMIO_BUILD_TOOL",
+          "bazel"
+        ]
+      ],
+      "asked": [],
+      "client": [],
+      "args": [
+        "./tools/📜️script.ts",
+        "repo",
+        "run",
+        "app:dev"
+      ],
+      "same": true,
+      "tool": null,
+      "default": "bazel",
+      "cwd": "/workspace"
+    },
+    {
+      "name": "owned-relative-parent",
+      "running": [
+        [
+          "SEMIO_BUILD_TOOL",
+          "bazel"
+        ]
+      ],
+      "asked": [],
+      "client": [],
+      "args": [
+        "../📜️script.ts",
+        "repo",
+        "run",
+        "app:dev"
+      ],
+      "same": true,
+      "tool": "bazel",
+      "default": "bazel",
+      "cwd": "/workspace/sub"
+    },
+    {
+      "name": "owned-normalized-root",
+      "running": [
+        [
+          "SEMIO_BUILD_TOOL",
+          "bazel"
+        ]
+      ],
+      "asked": [],
+      "client": [],
+      "args": [
+        "./sub/../📜️script.ts",
+        "repo",
+        "run",
+        "app:dev"
+      ],
+      "same": true,
+      "tool": "bazel",
+      "default": "bazel",
+      "cwd": "/workspace"
+    },
+    {
+      "name": "owned-declared-build-launcher",
+      "running": [
+        [
+          "SEMIO_BUILD_TOOL",
+          "bazel"
+        ]
+      ],
+      "asked": [],
+      "client": [],
+      "args": [
+        "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts",
+        "repo",
+        "run",
+        "app:dev"
+      ],
+      "same": true,
+      "tool": "bazel",
+      "default": "bazel",
+      "cwd": "/workspace"
+    }
+  ],
+  "policyCases": [
+    {
+      "name": "actual workspace Nx policy",
+      "policy": "{\"version\":1,\"defaultTool\":\"nx\"}",
+      "cmd": "bun",
+      "args": [
+        "repo",
+        "run",
+        "app:dev"
+      ],
+      "declared": [],
+      "client": [],
+      "tool": "nx",
+      "error": false
+    },
+    {
+      "name": "actual moved Unicode workspace Bazel policy",
+      "policy": "{\"version\":1,\"defaultTool\":\"bazel\"}",
+      "cmd": "bun",
+      "args": [
+        "repo",
+        "run",
+        "app:dev"
+      ],
+      "declared": [],
+      "client": [],
+      "tool": "bazel",
+      "error": false
+    },
+    {
+      "name": "missing policy refuses default",
+      "policy": null,
+      "cmd": "bun",
+      "args": [
+        "repo",
+        "run",
+        "app:dev"
+      ],
+      "declared": [],
+      "client": [],
+      "tool": null,
+      "error": true
+    },
+    {
+      "name": "malformed policy refuses default",
+      "policy": "{",
+      "cmd": "bun",
+      "args": [
+        "repo",
+        "run",
+        "app:dev"
+      ],
+      "declared": [],
+      "client": [],
+      "tool": null,
+      "error": true
+    },
+    {
+      "name": "unsupported policy tool refuses",
+      "policy": "{\"version\":1,\"defaultTool\":\"other\"}",
+      "cmd": "bun",
+      "args": [
+        "repo",
+        "run",
+        "app:dev"
+      ],
+      "declared": [],
+      "client": [],
+      "tool": null,
+      "error": true
+    },
+    {
+      "name": "missing policy default refuses",
+      "policy": "{\"version\":1}",
+      "cmd": "bun",
+      "args": [
+        "repo",
+        "run",
+        "app:dev"
+      ],
+      "declared": [],
+      "client": [],
+      "tool": null,
+      "error": true
+    },
+    {
+      "name": "wrong policy version refuses",
+      "policy": "{\"version\":2,\"defaultTool\":\"nx\"}",
+      "cmd": "bun",
+      "args": [
+        "repo",
+        "run",
+        "app:dev"
+      ],
+      "declared": [],
+      "client": [],
+      "tool": null,
+      "error": true
+    },
+    {
+      "name": "argv skips absent policy",
+      "policy": null,
+      "cmd": "bun",
+      "args": [
+        "repo",
+        "run",
+        "app:dev",
+        "--tool=nx"
+      ],
+      "declared": [],
+      "client": [],
+      "tool": "nx",
+      "error": false
+    },
+    {
+      "name": "declared skips malformed policy",
+      "policy": "{",
+      "cmd": "bun",
+      "args": [
+        "repo",
+        "run",
+        "app:dev"
+      ],
+      "declared": [
+        [
+          "SEMIO_BUILD_TOOL",
+          "bazel"
+        ]
+      ],
+      "client": [],
+      "tool": "bazel",
+      "error": false
+    },
+    {
+      "name": "hello skips absent policy",
+      "policy": null,
+      "cmd": "bun",
+      "args": [
+        "repo",
+        "run",
+        "app:dev"
+      ],
+      "declared": [],
+      "client": [
+        [
+          "SEMIO_BUILD_TOOL",
+          "nx"
+        ]
+      ],
+      "tool": "nx",
+      "error": false
+    },
+    {
+      "name": "literal callback cannot supply default",
+      "policy": null,
+      "cmd": "bun",
+      "args": [
+        "repo",
+        "run",
+        "app:dev",
+        "--",
+        "--tool=nx"
+      ],
+      "declared": [],
+      "client": [],
+      "tool": null,
+      "error": true
+    },
+    {
+      "name": "nonbuild skips policy and preserves environment",
+      "policy": null,
+      "cmd": "node",
+      "args": [
+        "repo",
+        "run",
+        "app:dev"
+      ],
+      "declared": [
+        [
+          "SEMIO_BUILD_TOOL",
+          "custom"
+        ],
+        [
+          "CUSTOM",
+          "value"
+        ]
+      ],
+      "client": [],
+      "tool": null,
+      "error": false
+    },
+    {
+      "name": "invalid override refuses before default",
+      "policy": null,
+      "cmd": "bun",
+      "args": [
+        "repo",
+        "run",
+        "app:dev",
+        "--tool=other"
+      ],
+      "declared": [],
+      "client": [],
+      "tool": null,
+      "error": true
+    },
+    {
+      "name": "missing override value refuses before default",
+      "policy": null,
+      "cmd": "bun",
+      "args": [
+        "repo",
+        "run",
+        "app:dev",
+        "--tool"
+      ],
+      "declared": [],
+      "client": [],
+      "tool": null,
+      "error": true
+    },
+    {
+      "name": "pinned CLI identity survives changed daemon policy",
+      "policy": "{\"version\":1,\"defaultTool\":\"bazel\"}",
+      "cmd": "bun",
+      "args": [
+        "repo",
+        "run",
+        "app:dev"
+      ],
+      "declared": [],
+      "client": [],
+      "tool": "bazel",
+      "error": false,
+      "rebindPolicy": "{"
+    },
+    {
+      "name": "one default read for full group",
+      "policy": "{\"version\":1,\"defaultTool\":\"nx\"}",
+      "cmd": "bun",
+      "args": [
+        "repo",
+        "run",
+        "app:dev"
+      ],
+      "declared": [],
+      "client": [],
+      "tool": "nx",
+      "error": false,
+      "duringBatchPolicy": "{\"version\":1,\"defaultTool\":\"bazel\"}"
+    },
+    {
+      "name": "schema numeric version equivalence",
+      "policy": "{\"version\":1.0,\"defaultTool\":\"bazel\"}",
+      "cmd": "bun",
+      "args": [
+        "repo",
+        "run",
+        "app:dev"
+      ],
+      "declared": [],
+      "client": [],
+      "tool": "bazel",
+      "error": false
+    },
+    {
+      "name": "unowned-script-skips-malformed-policy",
+      "policy": "not json",
+      "cmd": "bun",
+      "args": [
+        "./tool/📜️script.ts",
+        "repo",
+        "run",
+        "app:dev"
+      ],
+      "declared": [],
+      "client": [],
+      "tool": null,
+      "error": false
+    },
+    {
+      "name": "outside-script-skips-missing-policy",
+      "policy": null,
+      "cmd": "bun",
+      "args": [
+        "/other/📜️script.ts",
+        "repo",
+        "run",
+        "app:dev"
+      ],
+      "declared": [],
+      "client": [],
+      "tool": null,
+      "error": false
+    },
+    {
+      "name": "owned-root-script-reads-policy",
+      "policy": "{\"version\":1,\"defaultTool\":\"bazel\"}",
+      "cmd": "bun",
+      "args": [
+        "./📜️script.ts",
+        "repo",
+        "run",
+        "app:dev"
+      ],
+      "declared": [],
+      "client": [],
+      "tool": "bazel",
+      "error": false
+    },
+    {
+      "name": "owned-build-script-reads-policy",
+      "policy": "{\"version\":1,\"defaultTool\":\"nx\"}",
+      "cmd": "bun",
+      "args": [
+        "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts",
+        "repo",
+        "run",
+        "app:dev"
+      ],
+      "declared": [],
+      "client": [],
+      "tool": "nx",
+      "error": false
+    }
+  ],
+  "windowsPolicyCases": [
+    {
+      "attributes": 0,
+      "refused": false
+    },
+    {
+      "attributes": 1,
+      "refused": false
+    },
+    {
+      "attributes": 32,
+      "refused": false
+    },
+    {
+      "attributes": 1024,
+      "refused": true
+    },
+    {
+      "attributes": 1025,
+      "refused": true
+    },
+    {
+      "attributes": 2048,
+      "refused": false
+    },
+    {
+      "attributes": 3072,
+      "refused": true
+    }
+  ]
+}

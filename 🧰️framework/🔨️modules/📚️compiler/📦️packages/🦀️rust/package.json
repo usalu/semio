@@ -9,5 +9,9 @@
   "bundleKind": "library",
   "devDependencies": {
     "@semio-tech/process": "workspace:*"
+  },
+  "dependencies": {
+    "@semio-tech/compiler-syntax-ecma-ts": "workspace:*",
+    "@semio-tech/compiler-syntax-rust-ts": "workspace:*"
   }
 }

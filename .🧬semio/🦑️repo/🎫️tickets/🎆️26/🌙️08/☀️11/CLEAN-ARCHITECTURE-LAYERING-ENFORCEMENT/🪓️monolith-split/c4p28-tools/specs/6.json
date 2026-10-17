@@ -1,0 +1,64 @@
+{
+ "file": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+ "original": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/🗑️generated/c4p28-orig/6.rs",
+ "stage": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/🗑️generated/c4p28-stage",
+ "descendants": [
+  "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs",
+  "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🗿️artifact/🦀️.rs",
+  "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🦀️.rs"
+ ],
+ "chunks": [
+  {
+   "name": "retained_commands",
+   "folder": "🧰️retained-commands",
+   "doc": "🧰️ Retained commands: the tool id catalog, the publication contracts, the bounded reducer and the retained command job factory of the block 3d editor.",
+   "segments": [
+    {
+     "lines": [
+      216,
+      433
+     ]
+    }
+   ]
+  },
+  {
+   "name": "store_preparation",
+   "folder": "📬️store-preparation",
+   "doc": "📬️ Store preparation: the one-item publication preparation of the Artifact lane and of the Config lane.",
+   "segments": [
+    {
+     "lines": [
+      435,
+      646
+     ]
+    }
+   ]
+  },
+  {
+   "name": "play_app",
+   "folder": "🧩️play-app",
+   "doc": "🧩️ Play app: `Block3dPlayApp`, the `ArtifactEditor` the framework mounts, with its dispatch, render and media bodies.",
+   "segments": [
+    {
+     "lines": [
+      648,
+      980
+     ]
+    }
+   ]
+  },
+  {
+   "name": "manifest",
+   "folder": "📋️manifest",
+   "doc": "📋️ Manifest: `create_block3d_app` and the manifest stitch.",
+   "segments": [
+    {
+     "lines": [
+      982,
+      1108
+     ]
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,47 @@
+{
+ "name": "rsl3",
+ "crates": [
+  "semio-s-artifact-energy-model-editor",
+  "semio-s-artifact-energy-model-viewer",
+  "semio-s-artifact-trinity-rewriting",
+  "semio-s-artifact-trinity-jack",
+  "semio-s-artifact-dag-dag",
+  "semio-s-artifact-draw-drawing-editor",
+  "semio-s-artifact-draw-drawing-viewer",
+  "semio-s-artifact-stdio-contract-editing",
+  "semio-s-artifact-stdio-las-mutations",
+  "semio-s-artifact-stdio-html-mutations",
+  "semio-s-artifact-stdio-zip",
+  "semio-s-artifact-stdio-gif-editor",
+  "semio-s-artifact-stdio-mp4-tests",
+  "semio-s-artifact-stdio-svg",
+  "semio-s-artifact-stdio-mp3-inferences",
+  "semio-s-artifact-stdio-ifc-4",
+  "semio-s-artifact-stdio-ifc-2x3-cobie",
+  "semio-s-artifact-stdio-ifc-2x3-cv20"
+ ],
+ "base": {
+  "rev": "b84bf526c7ba",
+  "crates": [
+   "semio-s-artifact-energy-model-editor",
+   "semio-s-artifact-energy-model-viewer",
+   "semio-s-artifact-trinity-rewriting",
+   "semio-s-artifact-trinity-jack",
+   "semio-s-artifact-dag-dag",
+   "semio-s-artifact-draw-drawing-editor",
+   "semio-s-artifact-draw-drawing-viewer",
+   "semio-s-artifact-stdio-contract-editing",
+   "semio-s-artifact-stdio-las-mutations",
+   "semio-s-artifact-stdio-html-mutations",
+   "semio-s-artifact-stdio-zip",
+   "semio-s-artifact-stdio-gif-editor",
+   "semio-s-artifact-stdio-mp4-tests",
+   "semio-s-artifact-stdio-svg",
+   "semio-s-artifact-stdio-mp3-inferences",
+   "semio-s-artifact-stdio-ifc-4",
+   "semio-s-artifact-stdio-ifc-2x3-cobie",
+   "semio-s-artifact-stdio-ifc-2x3-cv20"
+  ]
+ },
+ "note": "RUST-LEFTOVERS F-04(a): consumers re-pointed from facade alias paths"
+}

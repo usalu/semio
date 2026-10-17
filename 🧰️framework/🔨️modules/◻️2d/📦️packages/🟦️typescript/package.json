@@ -6,7 +6,23 @@
   "type": "module",
   "private": true,
   "exports": {
-    ".": "./🟦️.ts"
+    ".": "./🟦️.ts",
+    "./booleans": "./🔀️booleans/🟦️.ts",
+    "./booleans/paths": "./🔀️booleans/🛤️paths/🟦️.ts",
+    "./booleans/paths/schema": "./🔀️booleans/🛤️paths/🧬️schema/🟦️.ts",
+    "./booleans/schema": "./🔀️booleans/🧬️schema/🟦️.ts",
+    "./path/flatten": "./🛤️path/📏️flatten/🟦️.ts",
+    "./path/flatten/schema": "./🛤️path/📏️flatten/🧬️schema/🟦️.ts",
+    "./path/stroke": "./🛤️path/🖊️stroke/🟦️.ts",
+    "./retire": "./🧹️retire/🟦️.ts",
+    "./retire/schema": "./🧹️retire/🧬️schema/🟦️.ts",
+    "./text": "./📝️text/🟦️.ts",
+    "./text/font": "./📝️text/🔤️font/🟦️.ts",
+    "./text/font/catalog": "./📝️text/🔤️font/📇️catalog/🟦️.ts",
+    "./text/font/run": "./📝️text/🔤️font/🧵️run/🟦️.ts",
+    "./text/font/shape/unicode": "./📝️text/🔤️font/🧵️shape/🌐️unicode/🟦️.ts",
+    "./trace": "./🔍️trace/🟦️.ts",
+    "./trace/schema": "./🔍️trace/🧬️schema/🟦️.ts"
   },
   "scripts": {
     "test": "bun --cwd \"../../../../..\" repo run @semio-tech/framework-2d-js:test"
@@ -18,6 +34,7 @@
     "directory": "🧰️framework/🔨️modules/◻️2d/📦️packages/🟦️typescript"
   },
   "devDependencies": {
+    "@semio-tech/framework-pixels-ts": "workspace:*",
     "@semio-tech/process": "workspace:*"
   }
 }

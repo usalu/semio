@@ -1,6 +1,6 @@
 //! 💡️ `cycle-candidate` command.
 
-use {crate::editor::puzzle2d::snapshot::puzzle2d_restore_brush_slot, crate::editor::puzzle2d::snapshot::puzzle2d_window_and_measures_scope, crate::editor::puzzle2d::Puzzle2dActionCtx};
+use {crate::editor::puzzle2d::interaction::puzzle2d_restore_brush_slot, crate::editor::puzzle2d::snapshot::puzzle2d_window_and_measures_scope, crate::editor::puzzle2d::interaction::Puzzle2dActionCtx};
 
 /// 🔁️ Walks the open slot's candidate page one step — `tab` forward, `shift+tab` back — over the
 /// SAME slot the suggestions popup and the armed brush share. The host wraps the index and re-emits

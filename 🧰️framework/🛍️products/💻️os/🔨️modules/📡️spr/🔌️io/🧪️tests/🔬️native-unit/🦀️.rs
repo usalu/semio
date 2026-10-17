@@ -311,7 +311,7 @@ mod tests {
         let before=observed.load(Ordering::Relaxed);drop(context);token.cancel_now();
         let error=follower.poll().await.unwrap_err();let ProtocolError::Pack(semio_framework_os_pack::PackError::Refusal(refusal))=error else{panic!("retained caller cancellation")};assert_eq!(refusal.kind(),semio_framework_value::ValueRefusalKind::Canceled);
         let error=file.appender().await.append_edit(&sample_edit("denied-edit").await).await.unwrap_err();let ProtocolError::Pack(semio_framework_os_pack::PackError::Refusal(refusal))=error else{panic!("retained writer cancellation")};assert_eq!(refusal.kind(),semio_framework_value::ValueRefusalKind::Canceled);
-        assert!(before>0);println!("[DEBUG] retained HistoryFile and TailFollower observed original caller cancellation after command handle Drop");
+        assert!(before>0);
     }
 
 }

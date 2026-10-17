@@ -7,7 +7,7 @@ import { Tree, uiI18n } from "@semio-tech/ui-react";
 import Ajv from "ajv";
 import { createElement as h } from "react";
 import { afterEach, describe, expect, it } from "vitest";
-import { shellLabel } from "../../🧱️elements/🛠️ShellHelpers/🟦️.tsx";
+import { shellLabel } from "../../🧱️elements/🛠️ShellHelpers/🏷️labels/🟦️.tsx";
 
 const engineRoot = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const fixture = JSON.parse(readFileSync(join(engineRoot, "🧪️tests/🧫️fixtures", "🌐️settings-locale-panel-refresh", "🔣️.json"), "utf8"));

@@ -36,7 +36,12 @@ use semio_framework_diagnostic::{Diagnostic,FaultCode,FaultScope,Severity,TextSp
         check_conformance(snapshot, &mut |_, _| Ok(())).expect("uncontrolled validity callback cannot refuse")
     }
 
-    pub(crate) fn check_conformance(snapshot: &XmlSnapshot, progress: &mut dyn FnMut(usize, usize) -> Result<(), semio_framework_value::ValueError>) -> Result<Vec<Diagnostic>, semio_framework_value::ValueError> {
+    /// ⏱️ Checks owned validity with cancellation inside the literal boundary collections.
+    pub fn check_valid_conformance_controlled(snapshot: &XmlSnapshot, control: &mut semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<Vec<Diagnostic>, semio_framework_os_kernel::sqlite_snapshot::ValueError> {
+        check_conformance(snapshot, &mut |completed, total| control.checkpoint(semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotPhase::ProjectSnapshot, completed, total))
+    }
+
+    pub fn check_conformance(snapshot: &XmlSnapshot, progress: &mut dyn FnMut(usize, usize) -> Result<(), semio_framework_value::ValueError>) -> Result<Vec<Diagnostic>, semio_framework_value::ValueError> {
         let mut out = Vec::new();
         let total = snapshot.doc.prolog.len().checked_add(snapshot.doc.epilog.len()).ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::WorkLimit,"XML validity boundary count overflow"))?; progress(0, total)?;
         if root_element_name(snapshot).is_none() { out.push(hard("stdio.xml.valid.document-element-missing", "XML validity requires a document element".into())); }

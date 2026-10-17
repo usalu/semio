@@ -8,8 +8,8 @@ import {checkResourceLeaseControl,type ResourceLeaseControl} from "@semio-tech/p
 import {readScriptProcessJsonV1} from "@semio-tech/process/routing/invocation/process/json";
 import {readPhysicalCargoSourceV1} from "@semio-tech/process/artifacts/native-build/source/admission/read";
 import {withRepositoryDevelopmentStateV1,withRepositoryDevelopmentStateTaskV1} from "../../../../../🦑️repo/🔨️modules/📚️library/💾️development/🟦️.ts";
-import {requestLocalBrokerSession} from "../../../📇️directory/🎫️local-session/🗄️broker/🟦️.ts";
-import {LOCAL_SESSION_BROKER_FILE,type LocalSessionV1} from "../../../📇️directory/🎫️local-session/🗄️broker/🧬️schema/🟦️.ts";
+import {requestLocalBrokerSession} from "@semio-tech/framework-os/modules/directory/local-session/broker";
+import {LOCAL_SESSION_BROKER_FILE,type LocalSessionV1} from "@semio-tech/framework-os/modules/directory/local-session/broker/schema";
 import {parseDevLocalHubProviderV1,type DevLocalHubProviderV1} from "../🧬️schema/🟦️.ts";
 import {devLocalHubSessionPolicyV1,devLocalHubJoinDecisionV1,type DevLocalHubProxyV1} from "./📋️data/🟦️.ts";
 export type DevLocalHubSessionV1=Readonly<{hubUrl:string;profileId:string;runtimeChannels:readonly ViteRuntimeChannelV1[];environment:Readonly<Record<string,string|undefined>>}>;

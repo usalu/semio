@@ -1,7 +1,17 @@
 //! 🧪️ Native edge assembly preserves exact words, optional ownership and interior cancellation.
 
-use super::*;
-use crate::test_source_custody;
+use crate::standards::v1::subsets::any::schema::mutations::ConnectHandles;
+use crate::standards::v1::subsets::any::schema::records::Puzzle2dEdge;
+use semio_framework_value::{ValueError, retirement::controlled::ControlledRetirement, retained_clone::RetainedCloneGrant, retained_clone::RetainedCloneProgress, retained_clone::RetainedCloneStep};
+use std::mem::size_of;
+#[allow(unused_imports)]
+use semio_framework_value::{ValueRefusalKind, paged::PagedUtf8, retained_clone::RetainedClone, retained_clone::RetainedCloneBinding, retained_clone::RetainedCloneCursor, retained_clone::RetainedCloneRef};
+#[allow(unused_imports)]
+use std::{mem::ManuallyDrop, ops::Deref, ops::DerefMut};
+use crate::standards::v1::subsets::any::schema::preparation::connect_handles_preparation::edge::{Text, copy};
+use crate::standards::v1::subsets::any::schema::preparation::connect_handles_preparation::edge::*;
+use crate::standards::v1::subsets::any::schema::testkit as test_source_custody;
+use semio_framework_test_fixtures::fixture_text;
 
 fn grant(turn: usize) -> RetainedCloneGrant { match turn % 3 { 0 => RetainedCloneGrant::one_capacity_turn(4096, 64), 1 => RetainedCloneGrant::one_payload_turn(4096, 64), _ => RetainedCloneGrant::one_release_turn(4096, 64) } }
 fn observed(permit: RetainedCloneGrant, action: impl FnOnce() -> Result<RetainedCloneStep, ValueError>) -> RetainedCloneStep {
@@ -49,7 +59,7 @@ fn retire(edge: Puzzle2dEdge) {
 #[test]
 fn history_edit_puzzle2d_owned_connect_edge_assembly_preserves_native_fields_exact_words_and_granted_cancellation() {
     assert!(size_of::<Puzzle2dConnectEdgeCursor>() <= 4096);
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🪢️connect-handles/🎮️prepare/🪢️edge/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🪢️connect-handles/🎮️prepare/🪢️edge/🔣️.json")).unwrap();
     let text = |value: &serde_json::Value| { let value = value.as_str().unwrap(); match value.strip_prefix("$large:") { Some(suffix) => Text::from(format!("{}{suffix}", corpus["control"]["largePrefix"].as_str().unwrap().repeat(corpus["control"]["largeRepeats"].as_u64().unwrap() as usize))), None => value.into() } };
     let optional = |value: &serde_json::Value| (!value.is_null()).then(|| text(value));
     let mut count = 0;
@@ -101,7 +111,6 @@ fn history_edit_puzzle2d_owned_connect_edge_assembly_preserves_native_fields_exa
         }
         test_source_custody::close(&mut authority);
         count += 1;
-        eprintln!("[DEBUG] Puzzle2d ConnectHandles native edge {} preserves exact scalar words, optional empty text, zero-birth ownership and every granted copy/capacity/release cancellation turn", case["name"].as_str().unwrap());
     }
     assert_eq!(count, 4);
 }

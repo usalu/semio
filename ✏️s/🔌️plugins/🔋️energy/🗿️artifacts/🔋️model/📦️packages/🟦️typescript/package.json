@@ -20,7 +20,9 @@
     "check": "bun --cwd \"../../../../../../..\" repo run @semio-tech/energy-model:check",
     "test": "bun --cwd \"../../../../../../..\" repo run @semio-tech/energy-model:test"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@semio-tech/framework-os": "workspace:*"
+  },
   "license": "LGPL-3.0-or-later",
   "bundleKind": "library"
 }

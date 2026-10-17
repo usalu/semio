@@ -1,1 +1,671 @@
-{"version":1,"maximumMilliseconds":2000,"valid":[{"version":1,"wait":false},{"version":1,"wait":true}],"invalid":[{"version":2,"wait":false},{"version":1},{"version":1,"wait":0},{"version":1,"wait":false,"path":"foreign"}],"deferred":{"acquired":false},"complete":{"acquired":true},"graph":{"version":1,"projects":{},"dependencies":[]}}
+{
+  "version": 1,
+  "maximumMilliseconds": 2000,
+  "valid": [
+    {
+      "version": 1,
+      "wait": false
+    },
+    {
+      "version": 1,
+      "wait": true
+    }
+  ],
+  "invalid": [
+    {
+      "version": 2,
+      "wait": false
+    },
+    {
+      "version": 1
+    },
+    {
+      "version": 1,
+      "wait": 0
+    },
+    {
+      "version": 1,
+      "wait": false,
+      "path": "foreign"
+    }
+  ],
+  "deferred": {
+    "acquired": false
+  },
+  "complete": {
+    "acquired": true
+  },
+  "graph": {
+    "version": 1,
+    "projects": {},
+    "dependencies": []
+  },
+  "schemaOwnershipCase": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "id",
+      "pointer",
+      "value",
+      "accepted"
+    ],
+    "properties": {
+      "id": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 64
+      },
+      "pointer": {
+        "enum": [
+          "#",
+          "#/definitions/OptionalQuota",
+          "#/definitions/OptionalQuota/definitions/Headroom",
+          "#/definitions/OptionalQuota/definitions/WriterFacts",
+          "#/definitions/OptionalLedger",
+          "#/definitions/OptionalLedger/definitions/Publication",
+          "#/definitions/OptionalLedger/definitions/WriterScope",
+          "#/definitions/OptionalLedger/definitions/WriterDirectory",
+          "#/definitions/OptionalLedger/definitions/Maintenance",
+          "#/definitions/InferenceDataset"
+        ]
+      },
+      "value": {},
+      "accepted": {
+        "type": "boolean"
+      }
+    }
+  },
+  "schemaOwnership": [
+    {
+      "id": "namespace-build-input-closures",
+      "pointer": "#",
+      "value": "build-input-closures",
+      "accepted": true
+    },
+    {
+      "id": "namespace-build-lock-closures",
+      "pointer": "#",
+      "value": "build-lock-closures",
+      "accepted": true
+    },
+    {
+      "id": "namespace-inference",
+      "pointer": "#",
+      "value": "inference",
+      "accepted": true
+    },
+    {
+      "id": "namespace-admission",
+      "pointer": "#",
+      "value": "admission",
+      "accepted": true
+    },
+    {
+      "id": "namespace-invalid-4",
+      "pointer": "#",
+      "value": "foreign",
+      "accepted": false
+    },
+    {
+      "id": "namespace-invalid-5",
+      "pointer": "#",
+      "value": null,
+      "accepted": false
+    },
+    {
+      "id": "namespace-invalid-6",
+      "pointer": "#",
+      "value": {},
+      "accepted": false
+    },
+    {
+      "id": "namespace-invalid-7",
+      "pointer": "#",
+      "value": 1,
+      "accepted": false
+    },
+    {
+      "id": "quota-zero",
+      "pointer": "#/definitions/OptionalQuota",
+      "value": {
+        "maximumBytes": 0,
+        "usedBytes": 0,
+        "availableBytes": 0,
+        "minimumAvailableBytes": 0
+      },
+      "accepted": true
+    },
+    {
+      "id": "quota-safe",
+      "pointer": "#/definitions/OptionalQuota",
+      "value": {
+        "maximumBytes": 9007199254740991,
+        "usedBytes": 9007199254740991,
+        "availableBytes": 9007199254740991,
+        "minimumAvailableBytes": 9007199254740991
+      },
+      "accepted": true
+    },
+    {
+      "id": "quota-ordinary",
+      "pointer": "#/definitions/OptionalQuota",
+      "value": {
+        "maximumBytes": 100,
+        "usedBytes": 20,
+        "availableBytes": 80,
+        "minimumAvailableBytes": 10
+      },
+      "accepted": true
+    },
+    {
+      "id": "quota-fraction",
+      "pointer": "#/definitions/OptionalQuota",
+      "value": {
+        "maximumBytes": 0.5,
+        "usedBytes": 20,
+        "availableBytes": 80,
+        "minimumAvailableBytes": 10
+      },
+      "accepted": false
+    },
+    {
+      "id": "quota-negative",
+      "pointer": "#/definitions/OptionalQuota",
+      "value": {
+        "maximumBytes": 100,
+        "usedBytes": -1,
+        "availableBytes": 80,
+        "minimumAvailableBytes": 10
+      },
+      "accepted": false
+    },
+    {
+      "id": "quota-unsafe",
+      "pointer": "#/definitions/OptionalQuota",
+      "value": {
+        "maximumBytes": 100,
+        "usedBytes": 20,
+        "availableBytes": 9007199254740992,
+        "minimumAvailableBytes": 10
+      },
+      "accepted": false
+    },
+    {
+      "id": "quota-extra",
+      "pointer": "#/definitions/OptionalQuota",
+      "value": {
+        "maximumBytes": 100,
+        "usedBytes": 20,
+        "availableBytes": 80,
+        "minimumAvailableBytes": 10,
+        "extra": 1
+      },
+      "accepted": false
+    },
+    {
+      "id": "quota-missing",
+      "pointer": "#/definitions/OptionalQuota",
+      "value": {
+        "maximumBytes": 100,
+        "availableBytes": 80,
+        "minimumAvailableBytes": 10
+      },
+      "accepted": false
+    },
+    {
+      "id": "headroom-1073741824",
+      "pointer": "#/definitions/OptionalQuota/definitions/Headroom",
+      "value": {
+        "minimumAvailableBytes": 1073741824
+      },
+      "accepted": true
+    },
+    {
+      "id": "headroom-2684354560",
+      "pointer": "#/definitions/OptionalQuota/definitions/Headroom",
+      "value": {
+        "minimumAvailableBytes": 2684354560
+      },
+      "accepted": true
+    },
+    {
+      "id": "headroom-1073741823",
+      "pointer": "#/definitions/OptionalQuota/definitions/Headroom",
+      "value": {
+        "minimumAvailableBytes": 1073741823
+      },
+      "accepted": false
+    },
+    {
+      "id": "headroom-2684354561",
+      "pointer": "#/definitions/OptionalQuota/definitions/Headroom",
+      "value": {
+        "minimumAvailableBytes": 2684354561
+      },
+      "accepted": false
+    },
+    {
+      "id": "headroom-1.5",
+      "pointer": "#/definitions/OptionalQuota/definitions/Headroom",
+      "value": {
+        "minimumAvailableBytes": 1.5
+      },
+      "accepted": false
+    },
+    {
+      "id": "writer-facts-21",
+      "pointer": "#/definitions/OptionalQuota/definitions/WriterFacts",
+      "value": {
+        "version": 1,
+        "usedBytes": 0,
+        "pendingBytes": 0
+      },
+      "accepted": true
+    },
+    {
+      "id": "writer-facts-22",
+      "pointer": "#/definitions/OptionalQuota/definitions/WriterFacts",
+      "value": {
+        "version": 2,
+        "usedBytes": 0,
+        "pendingBytes": 0
+      },
+      "accepted": false
+    },
+    {
+      "id": "writer-facts-23",
+      "pointer": "#/definitions/OptionalQuota/definitions/WriterFacts",
+      "value": {
+        "version": 1,
+        "usedBytes": 0,
+        "pendingBytes": -1
+      },
+      "accepted": false
+    },
+    {
+      "id": "ledger-ordinary",
+      "pointer": "#/definitions/OptionalLedger",
+      "value": {
+        "version": 1,
+        "root": "r",
+        "maximumBytes": 100,
+        "usedBytes": 0,
+        "dirty": false
+      },
+      "accepted": true
+    },
+    {
+      "id": "ledger-dirty",
+      "pointer": "#/definitions/OptionalLedger",
+      "value": {
+        "version": 1,
+        "root": "r",
+        "maximumBytes": 100,
+        "usedBytes": 0,
+        "dirty": true
+      },
+      "accepted": true
+    },
+    {
+      "id": "ledger-version",
+      "pointer": "#/definitions/OptionalLedger",
+      "value": {
+        "version": 2,
+        "root": "r",
+        "maximumBytes": 100,
+        "usedBytes": 0,
+        "dirty": false
+      },
+      "accepted": false
+    },
+    {
+      "id": "ledger-root",
+      "pointer": "#/definitions/OptionalLedger",
+      "value": {
+        "version": 1,
+        "root": "",
+        "maximumBytes": 100,
+        "usedBytes": 0,
+        "dirty": false
+      },
+      "accepted": false
+    },
+    {
+      "id": "ledger-root-limit",
+      "pointer": "#/definitions/OptionalLedger",
+      "value": {
+        "version": 1,
+        "root": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "maximumBytes": 100,
+        "usedBytes": 0,
+        "dirty": false
+      },
+      "accepted": false
+    },
+    {
+      "id": "ledger-extra",
+      "pointer": "#/definitions/OptionalLedger",
+      "value": {
+        "version": 1,
+        "root": "r",
+        "maximumBytes": 100,
+        "usedBytes": 0,
+        "dirty": false,
+        "other": 0
+      },
+      "accepted": false
+    },
+    {
+      "id": "ledger-fraction",
+      "pointer": "#/definitions/OptionalLedger",
+      "value": {
+        "version": 1,
+        "root": "r",
+        "maximumBytes": 100,
+        "usedBytes": 0.5,
+        "dirty": false
+      },
+      "accepted": false
+    },
+    {
+      "id": "publication-31",
+      "pointer": "#/definitions/OptionalLedger/definitions/Publication",
+      "value": {
+        "peakBytes": 0,
+        "retainedDeltaBytes": 0
+      },
+      "accepted": true
+    },
+    {
+      "id": "publication-32",
+      "pointer": "#/definitions/OptionalLedger/definitions/Publication",
+      "value": {
+        "peakBytes": 10,
+        "retainedDeltaBytes": -10
+      },
+      "accepted": true
+    },
+    {
+      "id": "publication-33",
+      "pointer": "#/definitions/OptionalLedger/definitions/Publication",
+      "value": {
+        "peakBytes": -1,
+        "retainedDeltaBytes": 0
+      },
+      "accepted": false
+    },
+    {
+      "id": "publication-34",
+      "pointer": "#/definitions/OptionalLedger/definitions/Publication",
+      "value": {
+        "peakBytes": 0,
+        "retainedDeltaBytes": -9007199254740992
+      },
+      "accepted": false
+    },
+    {
+      "id": "scope-35",
+      "pointer": "#/definitions/OptionalLedger/definitions/WriterScope",
+      "value": {
+        "kind": "selection",
+        "identity": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      "accepted": true
+    },
+    {
+      "id": "scope-36",
+      "pointer": "#/definitions/OptionalLedger/definitions/WriterScope",
+      "value": {
+        "kind": "dataset",
+        "identity": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      "accepted": true
+    },
+    {
+      "id": "scope-37",
+      "pointer": "#/definitions/OptionalLedger/definitions/WriterScope",
+      "value": {
+        "kind": "full",
+        "identity": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      "accepted": false
+    },
+    {
+      "id": "scope-38",
+      "pointer": "#/definitions/OptionalLedger/definitions/WriterScope",
+      "value": {
+        "kind": "selection",
+        "identity": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+      },
+      "accepted": false
+    },
+    {
+      "id": "scope-39",
+      "pointer": "#/definitions/OptionalLedger/definitions/WriterScope",
+      "value": {
+        "kind": "selection",
+        "identity": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      "accepted": false
+    },
+    {
+      "id": "directory-build-input-closures",
+      "pointer": "#/definitions/OptionalLedger/definitions/WriterDirectory",
+      "value": {
+        "scope": {
+          "kind": "selection",
+          "identity": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        "namespace": "build-input-closures"
+      },
+      "accepted": true
+    },
+    {
+      "id": "directory-build-lock-closures",
+      "pointer": "#/definitions/OptionalLedger/definitions/WriterDirectory",
+      "value": {
+        "scope": {
+          "kind": "selection",
+          "identity": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        "namespace": "build-lock-closures"
+      },
+      "accepted": true
+    },
+    {
+      "id": "directory-inference",
+      "pointer": "#/definitions/OptionalLedger/definitions/WriterDirectory",
+      "value": {
+        "scope": {
+          "kind": "selection",
+          "identity": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        "namespace": "inference"
+      },
+      "accepted": true
+    },
+    {
+      "id": "directory-admission",
+      "pointer": "#/definitions/OptionalLedger/definitions/WriterDirectory",
+      "value": {
+        "scope": {
+          "kind": "selection",
+          "identity": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        "namespace": "admission"
+      },
+      "accepted": true
+    },
+    {
+      "id": "directory-foreign",
+      "pointer": "#/definitions/OptionalLedger/definitions/WriterDirectory",
+      "value": {
+        "scope": {
+          "kind": "selection",
+          "identity": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        "namespace": "foreign"
+      },
+      "accepted": false
+    },
+    {
+      "id": "directory-ref-negative",
+      "pointer": "#/definitions/OptionalLedger/definitions/WriterDirectory",
+      "value": {
+        "scope": {
+          "kind": "selection",
+          "identity": "notsha"
+        },
+        "namespace": "inference"
+      },
+      "accepted": false
+    },
+    {
+      "id": "maintenance-full",
+      "pointer": "#/definitions/OptionalLedger/definitions/Maintenance",
+      "value": {
+        "kind": "full",
+        "usedBytes": 0,
+        "availableBytes": 0
+      },
+      "accepted": true
+    },
+    {
+      "id": "maintenance-selection",
+      "pointer": "#/definitions/OptionalLedger/definitions/Maintenance",
+      "value": {
+        "kind": "selection",
+        "usedBytes": 0,
+        "availableBytes": 0
+      },
+      "accepted": true
+    },
+    {
+      "id": "maintenance-dataset",
+      "pointer": "#/definitions/OptionalLedger/definitions/Maintenance",
+      "value": {
+        "kind": "dataset",
+        "usedBytes": 0,
+        "availableBytes": 0
+      },
+      "accepted": true
+    },
+    {
+      "id": "maintenance-foreign",
+      "pointer": "#/definitions/OptionalLedger/definitions/Maintenance",
+      "value": {
+        "kind": "foreign",
+        "usedBytes": 0,
+        "availableBytes": 0
+      },
+      "accepted": false
+    },
+    {
+      "id": "dataset-ordinary",
+      "pointer": "#/definitions/InferenceDataset",
+      "value": {
+        "version": 1,
+        "identity": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "sourceRoot": "src"
+      },
+      "accepted": true
+    },
+    {
+      "id": "dataset-path-51",
+      "pointer": "#/definitions/InferenceDataset",
+      "value": {
+        "version": 1,
+        "identity": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "sourceRoot": "/absolute"
+      },
+      "accepted": false
+    },
+    {
+      "id": "dataset-path-52",
+      "pointer": "#/definitions/InferenceDataset",
+      "value": {
+        "version": 1,
+        "identity": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "sourceRoot": "C:relative"
+      },
+      "accepted": false
+    },
+    {
+      "id": "dataset-path-53",
+      "pointer": "#/definitions/InferenceDataset",
+      "value": {
+        "version": 1,
+        "identity": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "sourceRoot": "a//b"
+      },
+      "accepted": false
+    },
+    {
+      "id": "dataset-path-54",
+      "pointer": "#/definitions/InferenceDataset",
+      "value": {
+        "version": 1,
+        "identity": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "sourceRoot": "a/"
+      },
+      "accepted": false
+    },
+    {
+      "id": "dataset-path-55",
+      "pointer": "#/definitions/InferenceDataset",
+      "value": {
+        "version": 1,
+        "identity": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "sourceRoot": "a\\b"
+      },
+      "accepted": false
+    },
+    {
+      "id": "dataset-path-56",
+      "pointer": "#/definitions/InferenceDataset",
+      "value": {
+        "version": 1,
+        "identity": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "sourceRoot": "\u0000"
+      },
+      "accepted": false
+    },
+    {
+      "id": "dataset-path-57",
+      "pointer": "#/definitions/InferenceDataset",
+      "value": {
+        "version": 1,
+        "identity": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "sourceRoot": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      "accepted": false
+    },
+    {
+      "id": "dataset-extra",
+      "pointer": "#/definitions/InferenceDataset",
+      "value": {
+        "version": 1,
+        "identity": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "sourceRoot": "src",
+        "extra": true
+      },
+      "accepted": false
+    },
+    {
+      "id": "dataset-id",
+      "pointer": "#/definitions/InferenceDataset",
+      "value": {
+        "version": 1,
+        "identity": "ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+        "sourceRoot": "src"
+      },
+      "accepted": false
+    }
+  ],
+  "schemaOwnershipHashes": {
+    "Namespace": "17b8534c734b5849c45e792a252eec6bf5df83d79105473928b9eb647282a1f9",
+    "OptionalQuota": "3f15b17a572786ee5bdf900de318d21add59d8d3b4177b1c4a2a1602f4e583f9",
+    "OptionalLedger": "c51f4436ba05952d4db3a3380c38b42706911ea8bd3265005caeac3575f54557",
+    "InferenceDataset": "477f73f937aed0f6a951b14f1ea96502f1f5fba50c4de983b830a71c118bb0e1"
+  }
+}

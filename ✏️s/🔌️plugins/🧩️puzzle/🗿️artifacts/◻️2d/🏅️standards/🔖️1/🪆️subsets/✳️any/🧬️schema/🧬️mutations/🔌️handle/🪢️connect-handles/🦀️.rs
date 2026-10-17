@@ -79,7 +79,7 @@ pub fn connect_handles_in_proximity<Op: From<ConnectHandles>>(id: PagedUtf8<{ us
 }
 
 /// 🧩️ Captures a cold inverse edge with its exact original ordinal and optional flags.
-pub fn restore_edge<Op: From<ConnectHandles> + From<ChangeEdgeVisible> + From<ChangeEdgeLocked>>(edge: &crate::standards::v1::subsets::any::schema::Puzzle2dEdge, index: usize) -> Vec<Op> {
+pub fn restore_edge<Op: From<ConnectHandles> + From<ChangeEdgeVisible> + From<ChangeEdgeLocked>>(edge: &crate::standards::v1::subsets::any::schema::records::Puzzle2dEdge, index: usize) -> Vec<Op> {
     let visible = edge.visible.is_some().then(|| crate::standards::v1::subsets::any::schema::mutations::change_edge_visible::change_edge_visible(edge.id.clone(), edge.visible));
     let locked = edge.locked.is_some().then(|| crate::standards::v1::subsets::any::schema::mutations::change_edge_locked::change_edge_locked(edge.id.clone(), edge.locked));
     std::iter::once(connect_handles(edge.id.clone(), edge.source.clone(), edge.target.clone(), edge.edge_kind.clone(), edge.gap, edge.shift, edge.rise, edge.rotation, edge.turn, edge.tilt, edge.x, edge.y, edge.source_tip.clone(), edge.target_tip.clone(), Some(index))).chain(visible).chain(locked).collect()
@@ -109,9 +109,5 @@ where
 }
 //#endregion 🔖️Mutation
 
-#[cfg(test)]
-#[path = "↩️inverse/📑️ordered-restoration/🧪️tests/🦀️.rs"]
-mod ordered_restoration_tests;
 
-#[path = "🎮️prepare/🦀️.rs"]
-pub mod prepare;
+

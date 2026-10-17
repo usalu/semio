@@ -1,0 +1,806 @@
+{
+  "version": 1,
+  "authority": false,
+  "executed": false,
+  "owners": [
+    {
+      "name": "shared-framework-owner-root",
+      "scopes": [
+        {
+          "manifest": "package.json",
+          "packages": [
+            "framework/lib"
+          ]
+        },
+        {
+          "manifest": "hub/package.json",
+          "packages": [
+            "framework/lib",
+            "hub/app"
+          ]
+        }
+      ],
+      "requested": [
+        "hub"
+      ],
+      "accepted": true,
+      "owners": [
+        [
+          ".",
+          "."
+        ],
+        [
+          "framework/lib",
+          "."
+        ],
+        [
+          "hub",
+          "hub"
+        ],
+        [
+          "hub/app",
+          "hub"
+        ]
+      ],
+      "memberships": 5,
+      "groups": [
+        [
+          "."
+        ],
+        [
+          "hub"
+        ]
+      ],
+      "required": [
+        ".",
+        "hub"
+      ]
+    },
+    {
+      "name": "deepest-owner",
+      "scopes": [
+        {
+          "manifest": "package.json",
+          "packages": [
+            "s/pkg"
+          ]
+        },
+        {
+          "manifest": "s/package.json",
+          "packages": [
+            "s/pkg"
+          ]
+        },
+        {
+          "manifest": "hub/package.json",
+          "packages": [
+            "s/pkg"
+          ]
+        }
+      ],
+      "requested": [
+        "hub"
+      ],
+      "accepted": true,
+      "owners": [
+        [
+          ".",
+          "."
+        ],
+        [
+          "hub",
+          "hub"
+        ],
+        [
+          "s",
+          "s"
+        ],
+        [
+          "s/pkg",
+          "s"
+        ]
+      ],
+      "memberships": 6,
+      "groups": [
+        [
+          "."
+        ],
+        [
+          "hub"
+        ],
+        [
+          "s"
+        ]
+      ],
+      "required": [
+        "hub",
+        "s"
+      ]
+    },
+    {
+      "name": "ancestor-missing-membership",
+      "scopes": [
+        {
+          "manifest": "package.json",
+          "packages": [
+            "s/pkg"
+          ]
+        },
+        {
+          "manifest": "s/package.json",
+          "packages": []
+        }
+      ],
+      "requested": [
+        "."
+      ],
+      "accepted": false
+    },
+    {
+      "name": "component-boundary",
+      "scopes": [
+        {
+          "manifest": "package.json",
+          "packages": [
+            "scope-two/pkg"
+          ]
+        },
+        {
+          "manifest": "scope/package.json",
+          "packages": []
+        }
+      ],
+      "requested": [
+        "."
+      ],
+      "accepted": true,
+      "owners": [
+        [
+          ".",
+          "."
+        ],
+        [
+          "scope",
+          "scope"
+        ],
+        [
+          "scope-two/pkg",
+          "."
+        ]
+      ],
+      "memberships": 3,
+      "groups": [
+        [
+          "."
+        ],
+        [
+          "scope"
+        ]
+      ],
+      "required": [
+        "."
+      ]
+    },
+    {
+      "name": "scope-root-special",
+      "scopes": [
+        {
+          "manifest": "package.json",
+          "packages": [
+            "s"
+          ]
+        },
+        {
+          "manifest": "s/package.json",
+          "packages": []
+        }
+      ],
+      "requested": [
+        "."
+      ],
+      "accepted": true,
+      "owners": [
+        [
+          ".",
+          "."
+        ],
+        [
+          "s",
+          "s"
+        ]
+      ],
+      "memberships": 3,
+      "groups": [
+        [
+          "."
+        ],
+        [
+          "s"
+        ]
+      ],
+      "required": [
+        ".",
+        "s"
+      ]
+    },
+    {
+      "name": "cyclic-owner-group",
+      "scopes": [
+        {
+          "manifest": "package.json",
+          "packages": [
+            "s/a"
+          ]
+        },
+        {
+          "manifest": "s/package.json",
+          "packages": [
+            "s/a",
+            "framework/lib"
+          ]
+        },
+        {
+          "manifest": "hub/package.json",
+          "packages": [
+            "framework/lib"
+          ]
+        }
+      ],
+      "requested": [
+        "hub"
+      ],
+      "accepted": false
+    },
+    {
+      "name": "cycle-complete-membership",
+      "scopes": [
+        {
+          "manifest": "package.json",
+          "packages": [
+            "s/a",
+            "framework/lib"
+          ]
+        },
+        {
+          "manifest": "s/package.json",
+          "packages": [
+            "s/a",
+            "framework/lib"
+          ]
+        },
+        {
+          "manifest": "hub/package.json",
+          "packages": [
+            "framework/lib"
+          ]
+        }
+      ],
+      "requested": [
+        "hub"
+      ],
+      "accepted": true,
+      "owners": [
+        [
+          ".",
+          "."
+        ],
+        [
+          "framework/lib",
+          "."
+        ],
+        [
+          "hub",
+          "hub"
+        ],
+        [
+          "s",
+          "s"
+        ],
+        [
+          "s/a",
+          "s"
+        ]
+      ],
+      "memberships": 8,
+      "groups": [
+        [
+          ".",
+          "s"
+        ],
+        [
+          "hub"
+        ]
+      ],
+      "required": [
+        ".",
+        "hub",
+        "s"
+      ]
+    },
+    {
+      "name": "reordered-input",
+      "scopes": [
+        {
+          "manifest": "hub/package.json",
+          "packages": [
+            "hub/app",
+            "framework/lib"
+          ]
+        },
+        {
+          "manifest": "package.json",
+          "packages": [
+            "framework/lib"
+          ]
+        }
+      ],
+      "requested": [
+        "hub"
+      ],
+      "accepted": true,
+      "owners": [
+        [
+          ".",
+          "."
+        ],
+        [
+          "framework/lib",
+          "."
+        ],
+        [
+          "hub",
+          "hub"
+        ],
+        [
+          "hub/app",
+          "hub"
+        ]
+      ],
+      "memberships": 5,
+      "groups": [
+        [
+          "."
+        ],
+        [
+          "hub"
+        ]
+      ],
+      "required": [
+        ".",
+        "hub"
+      ]
+    },
+    {
+      "name": "duplicate-scope",
+      "scopes": [
+        {
+          "manifest": "package.json",
+          "packages": []
+        },
+        {
+          "manifest": "package.json",
+          "packages": []
+        }
+      ],
+      "requested": [
+        "."
+      ],
+      "accepted": false
+    },
+    {
+      "name": "duplicate-local-member",
+      "scopes": [
+        {
+          "manifest": "package.json",
+          "packages": [
+            "p",
+            "p"
+          ]
+        }
+      ],
+      "requested": [
+        "."
+      ],
+      "accepted": false
+    },
+    {
+      "name": "escape",
+      "scopes": [
+        {
+          "manifest": "package.json",
+          "packages": [
+            "../foreign"
+          ]
+        }
+      ],
+      "requested": [
+        "."
+      ],
+      "accepted": false
+    },
+    {
+      "name": "noncanonical",
+      "scopes": [
+        {
+          "manifest": "package.json",
+          "packages": [
+            "p/./q"
+          ]
+        }
+      ],
+      "requested": [
+        "."
+      ],
+      "accepted": false
+    },
+    {
+      "name": "missing-root-scope",
+      "scopes": [
+        {
+          "manifest": "s/package.json",
+          "packages": [
+            "s/p"
+          ]
+        }
+      ],
+      "requested": [
+        "s"
+      ],
+      "accepted": false
+    },
+    {
+      "name": "undeclared-request",
+      "scopes": [
+        {
+          "manifest": "package.json",
+          "packages": []
+        }
+      ],
+      "requested": [
+        "foreign"
+      ],
+      "accepted": false
+    },
+    {
+      "name": "empty-request",
+      "scopes": [
+        {
+          "manifest": "package.json",
+          "packages": []
+        }
+      ],
+      "requested": [],
+      "accepted": false
+    },
+    {
+      "name": "unicode-byte-order",
+      "scopes": [
+        {
+          "manifest": "package.json",
+          "packages": [
+            "ä/p",
+            "z/p"
+          ]
+        },
+        {
+          "manifest": "ä/package.json",
+          "packages": [
+            "ä/p"
+          ]
+        },
+        {
+          "manifest": "z/package.json",
+          "packages": [
+            "z/p"
+          ]
+        }
+      ],
+      "requested": [
+        "."
+      ],
+      "accepted": true,
+      "owners": [
+        [
+          ".",
+          "."
+        ],
+        [
+          "z",
+          "z"
+        ],
+        [
+          "z/p",
+          "z"
+        ],
+        [
+          "ä",
+          "ä"
+        ],
+        [
+          "ä/p",
+          "ä"
+        ]
+      ],
+      "memberships": 7,
+      "groups": [
+        [
+          "."
+        ],
+        [
+          "z"
+        ],
+        [
+          "ä"
+        ]
+      ],
+      "required": [
+        ".",
+        "z",
+        "ä"
+      ]
+    }
+  ],
+  "identity": [
+    {
+      "name": "unrelated-source-change",
+      "changedScopes": [
+        "c"
+      ],
+      "stable": [
+        ".",
+        "b"
+      ],
+      "changed": [
+        "c"
+      ]
+    },
+    {
+      "name": "referenced-owner-change",
+      "changedScopes": [
+        "."
+      ],
+      "stable": [
+        "c"
+      ],
+      "changed": [
+        ".",
+        "b"
+      ]
+    },
+    {
+      "name": "borrower-only-change",
+      "changedScopes": [
+        "b"
+      ],
+      "stable": [
+        ".",
+        "c"
+      ],
+      "changed": [
+        "b"
+      ]
+    },
+    {
+      "name": "cycle-member-change",
+      "changedScopes": [
+        "s"
+      ],
+      "stable": [
+        "c"
+      ],
+      "changed": [
+        ".",
+        "s",
+        "b"
+      ]
+    },
+    {
+      "name": "permuted-order",
+      "changedScopes": [],
+      "stable": [
+        ".",
+        "b",
+        "c"
+      ],
+      "changed": []
+    },
+    {
+      "name": "new-unrelated-component",
+      "changedScopes": [
+        "d"
+      ],
+      "stable": [
+        ".",
+        "b",
+        "c"
+      ],
+      "changed": [
+        "d"
+      ]
+    }
+  ],
+  "semantics": [
+    {
+      "name": "ordinary-equivalent-graphs",
+      "accepted": false
+    },
+    {
+      "name": "ordinary-version-mismatch",
+      "accepted": false
+    },
+    {
+      "name": "ordinary-transitive-mismatch",
+      "accepted": false
+    },
+    {
+      "name": "ordinary-integrity-mismatch",
+      "accepted": false
+    },
+    {
+      "name": "conditional-exports-mismatch",
+      "accepted": false
+    },
+    {
+      "name": "peer-same-instance",
+      "accepted": true
+    },
+    {
+      "name": "peer-same-version-distinct-instance",
+      "accepted": false
+    },
+    {
+      "name": "peer-version-mismatch",
+      "accepted": false
+    },
+    {
+      "name": "optional-peer-both-absent",
+      "accepted": true
+    },
+    {
+      "name": "optional-peer-one-sided",
+      "accepted": false
+    },
+    {
+      "name": "workspace-shared-owner",
+      "accepted": true
+    },
+    {
+      "name": "workspace-wrong-owner",
+      "accepted": false
+    },
+    {
+      "name": "unknown-locked-identity",
+      "accepted": false
+    },
+    {
+      "name": "foreign-link",
+      "accepted": false
+    },
+    {
+      "name": "missing-required-dependency",
+      "accepted": false
+    },
+    {
+      "name": "graph-cycle-equivalent",
+      "accepted": false
+    },
+    {
+      "name": "scope-private-execution-not-source",
+      "accepted": false
+    },
+    {
+      "name": "ordinary-same-canonical-instance",
+      "accepted": true
+    },
+    {
+      "name": "graph-cycle-same-provider-identities",
+      "accepted": true
+    },
+    {
+      "name": "unknown-exports-condition",
+      "accepted": false
+    },
+    {
+      "name": "dynamic-runtime-path",
+      "accepted": false
+    },
+    {
+      "name": "undeclared-resolution",
+      "accepted": false
+    }
+  ],
+  "orchestration": [
+    {
+      "name": "subset-external-owner-ready",
+      "accepted": true
+    },
+    {
+      "name": "subset-external-owner-missing",
+      "accepted": false
+    },
+    {
+      "name": "subset-external-owner-stale",
+      "accepted": false
+    },
+    {
+      "name": "all-owner-group-ready-barrier",
+      "accepted": true
+    },
+    {
+      "name": "selected-before-external-ready",
+      "accepted": false
+    },
+    {
+      "name": "all-source-members-staged",
+      "accepted": true
+    },
+    {
+      "name": "borrowed-member-omitted",
+      "accepted": false
+    },
+    {
+      "name": "old-receipt-format",
+      "accepted": false
+    },
+    {
+      "name": "unknown-reference",
+      "accepted": false
+    },
+    {
+      "name": "retire-referenced-owner",
+      "accepted": false
+    },
+    {
+      "name": "unready-direct-reference",
+      "accepted": false
+    },
+    {
+      "name": "preserve-exact-current-leaf",
+      "accepted": true
+    },
+    {
+      "name": "partial-publication-retained",
+      "accepted": false
+    },
+    {
+      "name": "cancel-before-first-effect",
+      "accepted": false
+    },
+    {
+      "name": "undefined-primary-close-distinct",
+      "accepted": false
+    },
+    {
+      "name": "per-batch-512-files",
+      "accepted": true
+    },
+    {
+      "name": "per-batch-513-files",
+      "accepted": false
+    },
+    {
+      "name": "group-total-64mib",
+      "accepted": true
+    },
+    {
+      "name": "group-total-64mib-plus-one",
+      "accepted": false
+    },
+    {
+      "name": "later-root-collision-before-first-effect",
+      "accepted": false
+    },
+    {
+      "name": "same-original-all-batches",
+      "accepted": true
+    },
+    {
+      "name": "new-original-between-batches",
+      "accepted": false
+    },
+    {
+      "name": "windows-effects-unqualified",
+      "accepted": false
+    }
+  ]
+}

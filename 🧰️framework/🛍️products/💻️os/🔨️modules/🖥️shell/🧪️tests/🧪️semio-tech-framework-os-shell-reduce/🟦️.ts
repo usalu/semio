@@ -1,10 +1,10 @@
-import * as ModuleUnderTest from "../../🟦️.ts";
+import * as ModuleUnderTest from "../../../../../../🔨️modules/🐚️shell/🟦️.ts";
 import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 
 type TestSource = { readonly directory: string; readonly url: string };
 
-export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../🟦️.ts"), "reduce" | "defaultShellState">, source: TestSource): Promise<void> {
+export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../../../../../🔨️modules/🐚️shell/🟦️.ts"), "reduce" | "defaultShellState">, source: TestSource): Promise<void> {
   const { reduce, defaultShellState } = dependencies;
 
   const { describe, expect, it } = vitest;

@@ -1,0 +1,28 @@
+{
+ "created": [
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🧪️tests/🔬️unit/🧱️dsl-field-and-derived-document-laws/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🧪️tests/🔬️unit/🌳️scene-and-shape-laws/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🧪️tests/🔬️unit/🖌️paint-self-ref-and-table-laws/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🧪️tests/🔬️unit/📦️paged-operation-laws/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🖥️host/🧪️tests/🔬️host-unit/🔌️plugin-registry-and-hot-swap/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🖥️host/🧪️tests/🔬️host-unit/🛟️rollback-contributions-and-recovery/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🖥️host/🧪️tests/🔬️host-unit/🧰️host-fixtures/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🖥️host/🧪️tests/🔬️host-unit/🎭️actor-context-and-store-laws/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🖥️host/🧪️tests/🔬️host-unit/🌱️instances-parameters-and-catalog/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🖥️host/🧪️tests/🔬️host-unit/📝️dsl-and-op-text-laws/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🖥️host/🧪️tests/🔬️host-unit/🧩️extension-install-laws/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🧪️tests/🔬️unit/🔁️dictionary-and-registry-laws/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🧪️tests/🔬️unit/🔀️wire-channel-and-collect-laws/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🧪️tests/🔬️unit/🧵️cluster-and-top-level-laws/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🧪️tests/🔬️unit/🗂️cached-evaluation-laws/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🧪️tests/🔬️unit/⏱️budgeted-walk-laws/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🧪️tests/🔬️unit/📚️cardinality-and-schema-component-laws/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🧪️tests/🔬️unit/🌊️dirty-set-and-wave-laws/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🧪️tests/🔬️unit/🚦️owned-control-laws/🦀️.rs"
+ ],
+ "rewritten": [
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🧪️tests/🔬️unit/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🖥️host/🧪️tests/🔬️host-unit/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🧪️tests/🔬️unit/🦀️.rs"
+ ]
+}

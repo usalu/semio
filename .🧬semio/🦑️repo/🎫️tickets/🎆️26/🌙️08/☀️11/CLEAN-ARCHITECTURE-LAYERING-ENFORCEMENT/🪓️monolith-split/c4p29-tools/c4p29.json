@@ -1,0 +1,8 @@
+{
+ "name": "c4p29",
+ "crates": [
+  "semio-s-artifact-stdio-pdf",
+  "semio-s-artifact-stdio-docx-test-oracle"
+ ],
+ "note": "CENSUS4-PKG-29: stdio pdf artifact crate (lower, lift, export, graph-projection, diff, lib root) + docx test oracle crate (absolute classification against the pre-edit working tree)"
+}

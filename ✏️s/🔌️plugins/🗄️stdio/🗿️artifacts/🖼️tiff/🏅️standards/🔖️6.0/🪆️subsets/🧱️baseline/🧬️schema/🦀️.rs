@@ -37,6 +37,5 @@ pub mod mutations;
 
 //#endregion 🧬️DerivedArtifactFacets
 
-#[path="🏅️conformance/🦀️.rs"]
-pub mod conformance;
+pub use semio_s_artifact_stdio_tiff_snapshot::standards::v6_0::subsets::baseline::schema::conformance;
 pub use conformance::*;

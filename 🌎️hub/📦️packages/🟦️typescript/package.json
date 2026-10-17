@@ -6,7 +6,10 @@
   "type": "module",
   "private": true,
   "exports": {
-    ".": "./🟦️.ts"
+    ".": "./🟦️.ts",
+    "./observability": "./📊️observability/🟦️.ts",
+    "./testing/fixtures/observability-v1": "./🧪️testing/🧫️fixtures/📊️observability-v1/🟦️.ts",
+    "./testing/script-sources": "./🧪️testing/📜️script-sources/🟦️.ts"
   },
   "scripts": {
     "test": "bun --cwd \"../../..\" repo run os-hub-ts:test"
@@ -14,6 +17,12 @@
   "dependencies": {
     "@semio-tech/framework": "workspace:*",
     "@semio-tech/framework-os": "workspace:*",
+    "@semio-tech/framework-os-dev": "workspace:*",
+    "@semio-tech/framework-os-mcp": "workspace:*",
+    "@semio-tech/framework-replication": "workspace:*",
+    "@semio-tech/gis-gismap-js": "workspace:*",
+    "@semio-tech/repo-test": "workspace:*",
+    "@semio-tech/s-dev-catalog-ts": "workspace:*",
     "@semio-tech/schema-validator-ts": "workspace:*"
   },
   "devDependencies": {
@@ -21,7 +30,10 @@
     "typescript": "^5.9.3",
     "vitest": "^4.0.17",
     "@semio-tech/process": "workspace:*",
-    "@semio-tech/schema-ts": "workspace:*"
+    "@semio-tech/schema-ts": "workspace:*",
+    "@semio-tech/framework-compiler-ts": "workspace:*",
+    "@semio-tech/framework-pack-record-ts": "workspace:*",
+    "@semio-tech/framework-pack-ts": "workspace:*"
   },
   "license": "LGPL-3.0-or-later",
   "repository": {

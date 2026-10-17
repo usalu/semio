@@ -21,6 +21,9 @@ workspace = true
 [lib]
 path = "../../🦀️.rs"
 
+[features]
+testkit = []
+
 [dependencies]
 semio-hub-artifact-authority = { workspace = true }
 semio-hub-artifact-creation = { workspace = true }

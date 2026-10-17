@@ -104,7 +104,7 @@
         "retainedOwner": "self.emit = rejected.emit.ok();",
         "bindings": [
           {
-            "source": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+            "source": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧰️retained-commands/🦀️.rs",
             "tokens": [
               "type Job = semio_framework_plugin::retained_command::ArtifactRetainedCommandJob<EditorApp<Puzzle3dPlayApp>>;",
               "ArtifactRetainedCommandJob::from_wire(payload, input)"
@@ -122,7 +122,7 @@
       },
       {
         "family": "draw",
-        "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+        "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️gesture-jobs/🦀️.rs",
         "terminalGuard": "if self.pending_completion_rejection.is_some()",
         "legacyLossToken": "payload.completion.complete(emit, semio_framework_plugin::EphemeralEmit::default()).is_err()",
         "incrementalClose": "emit.close_child_one(grant)",
@@ -178,9 +178,9 @@
     "reservedCallers": [
       {
         "family": "puzzle5d-copy",
-        "source": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🖌️session/🦀️.rs",
+        "source": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🖌️session/📋️clipboard/🦀️.rs",
         "sourceStart": "struct Puzzle5dClipboardJob {",
-        "sourceEnd": "enum Puzzle5dPasteStage {",
+        "sourceEnd": "\n//#endregion 🧵️ReservedJobs",
         "terminalGuard": "if self.rejection.is_some()",
         "retainedOwner": "self.rejection = Some(rejected)",
         "incrementalClose": "crate::puzzle_job::job_close_step(&mut self.outbox, &mut self.owners, grant)",
@@ -195,9 +195,9 @@
       },
       {
         "family": "puzzle5d-cut",
-        "source": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🖌️session/🦀️.rs",
+        "source": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🖌️session/📋️clipboard/🦀️.rs",
         "sourceStart": "struct Puzzle5dClipboardJob {",
-        "sourceEnd": "enum Puzzle5dPasteStage {",
+        "sourceEnd": "\n//#endregion 🧵️ReservedJobs",
         "terminalGuard": "if self.rejection.is_some()",
         "retainedOwner": "self.rejection = Some(rejected)",
         "incrementalClose": "crate::puzzle_job::job_close_step(&mut self.outbox, &mut self.owners, grant)",
@@ -212,9 +212,9 @@
       },
       {
         "family": "puzzle5d-paste",
-        "source": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🖌️session/🦀️.rs",
-        "sourceStart": "\npub(super) struct Puzzle5dPasteJob {",
-        "sourceEnd": "\nenum Puzzle5dImportStage {",
+        "source": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🖌️session/📌️paste/🦀️.rs",
+        "sourceStart": "\npub(in super::super) struct Puzzle5dPasteJob {",
+        "sourceEnd": "\n//#endregion 🧵️ReservedJobs",
         "terminalGuard": "puzzle5d paste completion remains rejected",
         "retainedOwner": "self.pending_completion_rejection = Some(rejected)",
         "incrementalClose": "crate::puzzle_job::job_close_step(&mut self.outbox, &mut self.owners, grant)",
@@ -229,8 +229,8 @@
       },
       {
         "family": "puzzle5d-import",
-        "source": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🖌️session/🦀️.rs",
-        "sourceStart": "\npub(super) struct Puzzle5dImportJob {",
+        "source": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🖌️session/📥️snapshot-import/🦀️.rs",
+        "sourceStart": "\npub(in super::super) struct Puzzle5dImportJob {",
         "sourceEnd": "\n//#endregion 🧵️ReservedJobs",
         "terminalGuard": "puzzle5d import completion remains rejected",
         "retainedOwner": "self.pending_completion_rejection = Some(rejected)",

@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "type": "module",
   "private": true,
+  "exports": {
+    "./stories/coordination": "./📖️stories/🧭️coordination/🟦️.ts"
+  },
   "scripts": {
     "verify-fem-pcg-publication-owners": "bun --cwd \"../../../../..\" repo run @semio-tech/s-fem-composition-tests:verify-fem-pcg-publication-owners",
     "verify-fem-assembly-physical-owners": "bun --cwd \"../../../../..\" repo run @semio-tech/s-fem-composition-tests:verify-fem-assembly-physical-owners",
@@ -19,6 +22,11 @@
     "id": "@semio-tech/s-fem-composition-tests"
   },
   "devDependencies": {
+    "@semio-tech/fem-2d": "workspace:*",
+    "@semio-tech/fem-3d": "workspace:*",
     "@semio-tech/process": "workspace:*"
+  },
+  "dependencies": {
+    "@semio-tech/framework-ui-viewport-ts": "workspace:*"
   }
 }

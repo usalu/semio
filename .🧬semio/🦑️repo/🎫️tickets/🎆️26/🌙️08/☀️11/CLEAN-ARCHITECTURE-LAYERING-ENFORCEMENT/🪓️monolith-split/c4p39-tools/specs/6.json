@@ -1,0 +1,95 @@
+{
+ "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️tests/🧪️wgpu-time-travel/🦀️.rs",
+ "original": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/c4p39-tools/orig/6.rs",
+ "stage": "/Users/ueli/.cache/c4p39/stage",
+ "chunks": [
+  {
+   "name": "🧰️harness-and-recorders",
+   "folder": "🧰️harness-and-recorders",
+   "doc": "🧰️ Harness and recorders: the corpus and session builders, verb and refusal names, chords, the session shell, the band painter, the action recorder and the retained body painter.",
+   "ranges": [
+    [
+     23,
+     173
+    ]
+   ]
+  },
+  {
+   "name": "⏪️band-law-and-chords",
+   "folder": "⏪️band-law-and-chords",
+   "doc": "⏪️ Band law and chords: the shared band corpus, the polite announcement, control captions and reserved actions, and the remappable time-travel chords.",
+   "ranges": [
+    [
+     175,
+     373
+    ]
+   ]
+  },
+  {
+   "name": "📐️band-layout-and-focus",
+   "folder": "📐️band-layout-and-focus",
+   "doc": "📐️ Band layout and focus: the band above the footer, the subfooter reserve, control registration, shared transitions, the editor target and keyboard focus.",
+   "ranges": [
+    [
+     375,
+     659
+    ]
+   ]
+  },
+  {
+   "name": "🪟️reveal-indicator-and-refusals",
+   "folder": "🪟️reveal-indicator-and-refusals",
+   "doc": "🪟️ Reveal, indicator and refusals: History tab reveal, phone panel, reply status, operation publications, localized history refusals and lane refusals.",
+   "ranges": [
+    [
+     661,
+     944
+    ]
+   ]
+  },
+  {
+   "name": "👥️notices-peer-edits-and-finalize",
+   "folder": "👥️notices-peer-edits-and-finalize",
+   "doc": "👥️ Notices, peer edits and finalize: transient notice projection, the shared peer edit corpus, the roster badge and the keyboard-only finalize prompt.",
+   "ranges": [
+    [
+     946,
+     1155
+    ]
+   ]
+  },
+  {
+   "name": "🎛️staged-editors",
+   "folder": "🎛️staged-editors",
+   "doc": "🎛️ Staged editors: every editor kind in the Actions form and in a chrome dialog, axis splicing, number facets and keyboard and pointer staging.",
+   "ranges": [
+    [
+     1157,
+     1458
+    ]
+   ]
+  },
+  {
+   "name": "📚️history-body",
+   "folder": "📚️history-body",
+   "doc": "📚️ History body: the guest's real producer, paged transaction rows, refused edits, list and chip editors, replay progress and the single scroll region.",
+   "ranges": [
+    [
+     1460,
+     1817
+    ]
+   ]
+  },
+  {
+   "name": "📡️reprojection-blur-import-and-context-menu",
+   "folder": "📡️reprojection-blur-import-and-context-menu",
+   "doc": "📡️ Reprojection, blur, import and context menu: reprojection announcements, host window blur, cancellable import tasks and disabled context menu reasons.",
+   "ranges": [
+    [
+     1819,
+     2037
+    ]
+   ]
+  }
+ ]
+}

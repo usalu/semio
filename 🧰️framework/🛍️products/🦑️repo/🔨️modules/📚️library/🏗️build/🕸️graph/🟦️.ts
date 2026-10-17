@@ -1,10 +1,18 @@
+import type graphSnapshotPolicy from"../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/🔣️policy.json";
+import type exactReadSchema from"../📥️inputs/🧮️digest/📥️read/🧬️schema/🔣️.json";
+import{captureBoundedSourceRevisionV1}from"../📥️inputs/🔏️revision/🟨️.mjs";
+import{fileURLToPath}from"node:url";
+import*as observationV1 from"../👁️observation/🟨️.mjs";
+import{withManagedGraphSourceReadBatchV1,readExactSourceInventoryV1}from"../📥️inputs/🧮️digest/📥️read/🟨️.mjs";
+import{captureInferenceInventoryReferencesV1,admitInferenceInventoryCohortV1}from"../👁️observation/📥️reuse/🟨️.mjs";
+import{requireCurrentSourceInventoryV1,captureSourceInputInventoryV1,captureCargoLockInventoryV1,admitExactSourceExtentV1}from"../📥️inputs/📋️data/📥️load/🟨️.mjs";
 import {checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
-import {repositoryBuildGraphDataDirectoryV1,withRepositoryBuildGraphFactStoreV1,withRepositoryBuildGraphSelectionV1,buildGraphWriterResourceV1} from "../📥️inputs/💾️storage/🟨️.mjs";
+import {withRepositoryBuildGraphConsumerV1,withRepositoryBuildGraphFactStoreV1,withRepositoryBuildGraphSelectionV1,buildGraphWriterResourceV1} from "../📥️inputs/💾️storage/🟨️.mjs";
 import {readBuildOwnerRegistryV1,readBuildGraphSelectionV1,closeBuildOwnerAdmissionV1,buildGraphScopeKeyV1,type BuildGraphSelectionV1,type BuildOwnerRegistryV1,type BuildOwnerAdmissionV1} from "./🚪️admission/🟦️.ts";
-import { readdir, readFile, mkdir, writeFile, rename, lstat, rm } from "node:fs/promises";
-import {readFileSync} from "node:fs";
+import { readdir, readFile, open, mkdir, writeFile, rename, lstat, rm } from "node:fs/promises";
+import {constants} from "node:fs";
+import{withArtifactDescriptorV1}from"../../../../../../🔨️modules/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts";
 import { join, dirname, relative, isAbsolute } from "node:path";
-import {createRequire} from "node:module";
 import { randomUUID, randomBytes, createHash } from "node:crypto";
 import { validateJsonSchemaSubset } from "../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
 import { checkScriptInvocation, advanceScriptInvocation, requireIssuedResourceControlInvocationV1, type ScriptInvocation } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -13,12 +21,16 @@ import {acquireQueuedResourceLease} from "../../../../../../🔨️modules/🏃�
 import type {RepositoryCacheStoreV1} from "../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
 import {requireNativeStoragePathV1} from "../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
 
+const graphSnapshotPolicyURLV1=new URL("../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/🔣️policy.json",import.meta.url),exactReadPolicyURLV1=new URL("../📥️inputs/🧮️digest/📥️read/🧬️schema/🔣️.json",import.meta.url),graphSnapshotPolicyCaptureV1=captureBoundedSourceRevisionV1(fileURLToPath(graphSnapshotPolicyURLV1),65536,true),exactReadPolicyCaptureV1=captureBoundedSourceRevisionV1(fileURLToPath(exactReadPolicyURLV1),65536,true);
+const graphSnapshotPolicyV1:typeof graphSnapshotPolicy=Object.freeze(JSON.parse(graphSnapshotPolicyCaptureV1.text??"")),exactSourceReadPolicyV1:typeof exactReadSchema.definitions.Policy.const=Object.freeze(JSON.parse(exactReadPolicyCaptureV1.text??"").definitions.Policy.const);
+function requireCurrentGraphReadPoliciesV1():void{if(captureBoundedSourceRevisionV1(fileURLToPath(graphSnapshotPolicyURLV1),65536).sha256!==graphSnapshotPolicyCaptureV1.sha256||captureBoundedSourceRevisionV1(fileURLToPath(exactReadPolicyURLV1),65536).sha256!==exactReadPolicyCaptureV1.sha256)throw Error("Stale loaded Graph reader policy; restart required");}
+
 /** 📖️ Reads each declaration through the same exact source fact boundary as inference. */
-function graphDeclarationV1(path:string):any{return JSON.parse(createRequire(import.meta.url)("../👁️observation/🟨️.mjs").observedFs.readFileSync(new URL(path,import.meta.url),"utf8"));}
+function graphDeclarationV1(path:string):any{return JSON.parse(observationV1.observedFs.readFileSync(new URL(path,import.meta.url),"utf8"));}
 
 /** 🧾️ Binds loaded graph behavior and its publication declaration to their original bytes. */
 export interface BuildGraphModuleAuthorityV1{implementation:string;publication:string}
-const graphModuleAuthorityV1=():BuildGraphModuleAuthorityV1=>{const implementation=createHash("sha256");for(const path of[new URL(import.meta.url),new URL("./🚪️admission/🟦️.ts",import.meta.url),new URL("../🧬️schema/🚪️selection.json",import.meta.url),new URL("../🧬️schema/📋️owners.json",import.meta.url),new URL("../🧬️schema/🚪️admission.json",import.meta.url),new URL("../📥️inputs/💾️storage/🟨️.mjs",import.meta.url),new URL("../📥️inputs/💾️storage/🧬️schema/💾️quota.json",import.meta.url),new URL("../📥️inputs/💾️storage/📒️ledger/🟨️.mjs",import.meta.url),new URL("../📥️inputs/💾️storage/🧬️schema/📒️ledger.json",import.meta.url)])implementation.update(readFileSync(path));return {implementation:implementation.digest("hex"),publication:createHash("sha256").update(readFileSync(new URL("../🧬️schema/📣️publication.json",import.meta.url))).digest("hex")};};
+const graphModuleAuthorityV1=():BuildGraphModuleAuthorityV1=>{requireCurrentSourceInventoryV1();requireCurrentGraphReadPoliciesV1();const observation=observationV1;if(typeof observation.requireCurrentObservationV1!=="function")throw Error("Loaded observation current-instance guard required");observation.requireCurrentObservationV1();const implementation=createHash("sha256");for(const path of[new URL(import.meta.url),new URL("../👁️observation/🟨️.mjs",import.meta.url),new URL("../👁️observation/🧬️schema/🔣️.json",import.meta.url),new URL("../📥️inputs/🧮️digest/📥️read/🟨️.mjs",import.meta.url),new URL("../👁️observation/📥️reuse/🟨️.mjs",import.meta.url),new URL("../👁️observation/📥️reuse/🧬️schema/🔣️.json",import.meta.url),new URL("../📥️inputs/📋️data/🟨️.mjs",import.meta.url),new URL("../📥️inputs/📋️data/📥️load/🟨️.mjs",import.meta.url),new URL("../📥️inputs/📋️data/🧬️schema/🔣️.json",import.meta.url),new URL("../📥️inputs/🧮️digest/📥️read/🧬️schema/🔣️.json",import.meta.url),new URL("./🚪️admission/🟦️.ts",import.meta.url),new URL("../🧬️schema/🚪️selection.json",import.meta.url),new URL("../🧬️schema/📋️owners.json",import.meta.url),new URL("../🧬️schema/🚪️admission.json",import.meta.url),new URL("../📥️inputs/💾️storage/🟨️.mjs",import.meta.url),new URL("../📥️inputs/💾️storage/🧬️schema/🔣️.json",import.meta.url),new URL("../📥️inputs/💾️storage/📒️ledger/🟨️.mjs",import.meta.url),new URL("../📥️inputs/🔏️revision/🟨️.mjs",import.meta.url),new URL("../📥️inputs/🔏️revision/🧬️schema/🔣️.json",import.meta.url),graphSnapshotPolicyURLV1])implementation.update(captureBoundedSourceRevisionV1(fileURLToPath(path),8388608).sha256);return {implementation:implementation.digest("hex"),publication:captureBoundedSourceRevisionV1(fileURLToPath(new URL("../🧬️schema/📣️publication.json",import.meta.url)),65536).sha256};};
 const loadedGraphModuleAuthorityV1=graphModuleAuthorityV1();
 
 /** 🔒️ Refuses a loaded implementation or declaration superseded while an original invocation waited. */
@@ -28,6 +40,9 @@ export function requireBuildGraphModuleAuthorityV1(original:BuildGraphModuleAuth
 }
 const requireCurrentGraphModuleV1=():void=>requireBuildGraphModuleAuthorityV1(loadedGraphModuleAuthorityV1,graphModuleAuthorityV1());
 
+/** 🔏️ Reads immutable defining authority after checking that the loaded graph is still current. */
+export function readBuildGraphModuleAuthorityV1():Readonly<BuildGraphModuleAuthorityV1>{requireCurrentGraphModuleV1();return Object.freeze({...loadedGraphModuleAuthorityV1});}
+
 /** 🧷️ Admits only source receipts issued by the exact loaded producer protocol. */
 export function buildGraphProducerAuthorityV1(receipt:unknown,module:BuildGraphModuleAuthorityV1):boolean{
  if(validateJsonSchemaSubset(graphDeclarationV1("../🧬️schema/📥️authority.json"),receipt).length)return false;
@@ -35,7 +50,7 @@ export function buildGraphProducerAuthorityV1(receipt:unknown,module:BuildGraphM
 }
 
 /** ⚙️ Describes portable process execution independently of any build implementation. */
-export interface BuildExecutionV1 { kind: "command" | "noop"; command?: string; commands?: (string | {command:string;forwardAllArgs?:boolean})[]; args?:string[]; cwd?:string; env?:Record<string,string>; parallel?:boolean; forwardAllArgs?:boolean; [key:string]:unknown }
+export interface BuildExecutionV1 { kind: "command" | "noop"; program?:string; command?: string; commands?: (string | {command:string;forwardAllArgs?:boolean})[]; args?:string[]; cwd?:string; env?:Record<string,string>; parallel?:boolean; forwardAllArgs?:boolean; [key:string]:unknown }
 /** 🎯️ Declares one build operation and its configuration, inputs and products. */
 export interface BuildTargetV1 { execution:BuildExecutionV1; configurations?:Record<string,Record<string,unknown>>; dependsOn?: (string | {target:string;projects?:string[]|string;dependencies?:boolean;params?:string})[]; inputs?:unknown[]; outputs?:string[]; cache?:boolean; continuous?:boolean; [key:string]:unknown }
 /** 🧩️ Describes an owned project with its complete inferred operations. */
@@ -74,13 +89,14 @@ function requireBuildConfigurationV1(base:Record<string,unknown>,configuration:R
   if(!configuration||typeof configuration!=="object"||Array.isArray(configuration))throw Error("Build configuration execution options required");
   if(configuration.env!==undefined&&(!configuration.env||typeof configuration.env!=="object"||Array.isArray(configuration.env)||Object.values(configuration.env).some(value=>typeof value!=="string")))throw Error("Build configuration environment strings required");
   requireBuildArgumentsV1(configuration,identity);
-  const fixed=["kind","ownerArguments","nativeOwnerCommand","executor","inputs","outputs","dependsOn","cache","continuous","parallelism","metadata","defaultConfiguration","configurations","options"];
+  const fixed=["kind","program","ownerArguments","nativeOwnerCommand","executor","inputs","outputs","dependsOn","cache","continuous","parallelism","metadata","defaultConfiguration","configurations","options"];
   if(Object.keys(configuration).some(key=>fixed.includes(key)))throw Error("Build configuration cannot change task identity");
-  if(configuration.command!==undefined&&(configuration.commands!==undefined||base.commands!==undefined)||configuration.commands!==undefined&&base.command!==undefined)throw Error("Build configuration cannot change command form");
+  if(base.program!==undefined&&(configuration.command!==undefined||configuration.commands!==undefined)||configuration.command!==undefined&&(configuration.commands!==undefined||base.commands!==undefined)||configuration.commands!==undefined&&base.command!==undefined)throw Error("Build configuration cannot change command form");
 }
 
 /** 🔡️ Keeps authored argument boundaries literal through every backend's execution protocol. */
 function requireBuildArgumentsV1(options:Record<string,unknown>,identity?:string):void {
+  if(options.program!==undefined&&(typeof options.program!=="string"||!options.program||options.command!==undefined||options.commands!==undefined))throw Error("Literal build program requires one exclusive nonempty executable");
   if(options.args!==undefined&&(!Array.isArray(options.args)||options.args.some(value=>typeof value!=="string")))throw Error(`Build execution arguments must be literal string arrays${identity?` for ${identity}`:""}`);
 }
 
@@ -153,13 +169,14 @@ export async function workspaceBuildFilesV1(root:string,invocation?:ScriptInvoca
 }
 
 /** 📥️ Expands private input compaction into portable source declarations. */
-function portableInputs(root:string,value:unknown,invocation?:ScriptInvocation):unknown|Promise<unknown> {
+function portableInputs(root:string,value:unknown,invocation:ScriptInvocation,control:ResourceLeaseControl):unknown|Promise<unknown> {
   const token=(item:unknown)=>{
     if(!item||typeof item!=="object"||Array.isArray(item))return undefined;
     const object=item as Record<string,unknown>;if(Object.keys(object).length!==1||typeof object.env!=="string")return undefined;
     const match=/^SEMIO_(SOURCE_CLOSURE|CARGO_LOCK)_([a-f0-9]{64})$/u.exec(object.env);
     return match?{key:object.env,digest:match[2]!,directory:match[1]==="SOURCE_CLOSURE"?"build-input-closures":"build-lock-closures"}:undefined;
   };
+  captureInferenceInventoryReferencesV1(value);
   const pending:unknown[]=[value],seen=new WeakSet<object>(),tokens=new Map<string,NonNullable<ReturnType<typeof token>>>();let visited=0;
   while(pending.length){
     if(invocation&&visited++%1024===0)checkScriptInvocation(invocation);
@@ -168,17 +185,17 @@ function portableInputs(root:string,value:unknown,invocation?:ScriptInvocation):
   }
   if(!tokens.size)return value;
   const expand=async()=>{
-    const entries=[...tokens.values()],expanded=new Map<string,string[]>(),read=createRequire(import.meta.url)("../👁️observation/🟨️.mjs").observedFs.readFile;let cursor=0,stopped=false;
-    const workers=Array.from({length:Math.min(16,entries.length)},async()=>{
-      while(!stopped&&cursor<entries.length){
-        if(invocation)checkScriptInvocation(invocation);
-        const compact=entries[cursor++]!,bytes=await read(join(repositoryBuildGraphDataDirectoryV1(root,compact.directory as "build-input-closures"|"build-lock-closures"),compact.digest+".json"),"utf8");
-        if(invocation)checkScriptInvocation(invocation);
-        if(createHash("sha256").update(bytes).digest("hex")!==compact.digest)throw Error(`Build input closure content differs: ${compact.key}`);
-        const contract=JSON.parse(bytes);expanded.set(compact.key,compact.directory==="build-input-closures"?contract.files.map((file:string)=>"{workspaceRoot}/"+file):["{workspaceRoot}/Cargo.lock","{workspaceRoot}/"+contract.manifest]);
-      }
-    });
-    await Promise.all(workers).catch(async error=>{stopped=true;await Promise.allSettled(workers);throw error;});
+    const entries=[...tokens.values()],expanded=new Map<string,string[]>(),policy=exactSourceReadPolicyV1,width=Math.min(policy.maximumInventories,Math.floor(policy.maximumMetadataBytes/policy.maximumClosureBytes));let bytes=0;
+    for(let offset=0;offset<entries.length;offset+=width){
+      const cohort=entries.slice(offset,offset+width);admitInferenceInventoryCohortV1(bytes,cohort.length);
+      await withManagedGraphSourceReadBatchV1(root,control,async batch=>{for(const compact of cohort){
+        checkScriptInvocation(invocation);checkResourceLeaseControl(control);
+        const file=await readExactSourceInventoryV1(batch,compact.directory as "build-input-closures"|"build-lock-closures",compact.digest);
+        checkScriptInvocation(invocation);checkResourceLeaseControl(control);
+        if(!file||file.sha256!==compact.digest)throw Error(`Build input closure content differs: ${compact.key}`);
+        bytes+=file.byteLength;const contract=file.value;expanded.set(compact.key,compact.directory==="build-input-closures"?captureSourceInputInventoryV1(contract,root).value.files.map(file=>"{workspaceRoot}/"+file):["{workspaceRoot}/Cargo.lock","{workspaceRoot}/"+captureCargoLockInventoryV1(contract,root).value.manifest]);
+      }});
+    }
     const copies=new WeakMap<object,unknown>();visited=0;
     const transform=(item:unknown):unknown=>{
       if(invocation&&visited++%1024===0)checkScriptInvocation(invocation);
@@ -207,10 +224,10 @@ export function requireBuildOwnerRegistryAuthorityV1(original:unknown,current:un
 /** 📚️ Assembles all owned inference contributions without installing or invoking Nx. */
 export async function discoverBuildGraphV1(root:string,selection:BuildGraphSelectionV1,registry:BuildOwnerRegistryV1,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,suppliedFiles?:string[],admission?:BuildOwnerAdmissionV1):Promise<BuildGraphV1> {
   requireIssuedResourceControlInvocationV1(phaseControl,invocation);checkResourceLeaseControl(phaseControl);selection=readBuildGraphSelectionV1(selection);registry=readBuildOwnerRegistryV1(registry);
-  requireBuildOwnerRegistryAuthorityV1(registry,JSON.parse(createRequire(import.meta.url)("../👁️observation/🟨️.mjs").observedFs.readFileSync(join(root,"📋️build-owners.json"),"utf8")));
+  requireBuildOwnerRegistryAuthorityV1(registry,JSON.parse(observationV1.observedFs.readFileSync(join(root,"📋️build-owners.json"),"utf8")));
   if(selection.kind==="tasks"&&!admission)throw Error("Closed selected owner admission required");
   const files=suppliedFiles??(selection.kind==="all"?buildGraphMembersV1(await workspaceBuildFilesV1(root,invocation)):admission!.files);
-  const require=createRequire(import.meta.url),owner=require("./📥️inference/🟨️.mjs"),tests=require("../../../🧪️test/🟨️.mjs"),policies=require("./📥️inference/🛡️policy/🟨️.mjs");
+  const [owner,tests,policies]=await Promise.all([import("./📥️inference/🟨️.mjs"),import("../../../🧪️test/🟨️.mjs"),import("./📥️inference/🛡️policy/🟨️.mjs")]);checkResourceLeaseControl(phaseControl);requireCurrentGraphModuleV1();
   const policy=graphDeclarationV1("../🔣️policy.json"),options={analyzeLockfile:true,catalogProviders:selection.kind==="all"?registry.catalogProviders.map(({ownerRoot,sourcePath})=>({ownerRoot,sourcePath})):admission!.catalogProviders,...(selection.kind==="tasks"?{ownerAdmission:admission}:{})};
   const primary=await owner.discoverBuildProjectsV1(files.filter(file=>file.endsWith("📋️project.json")||file.endsWith("Cargo.toml")||file==="bun.lock"||file.endsWith(".patch")),options,{workspaceRoot:root,invocation,phaseControl,registry});
   if(invocation)await advanceScriptInvocation(invocation,"build:infer","running");
@@ -230,13 +247,14 @@ export async function discoverBuildGraphV1(root:string,selection:BuildGraphSelec
   const withheld=[...unavailable.keys()];
   for(const file of files){const match=ordered.find(([,project])=>project.root==="."||file.startsWith(project.root+"/"));if(match&&!withheld.some(root=>file.startsWith(root+"/")&&root.length>match[1].root.length)){const entries=projectFileMap[match[0]];if(!entries)throw Error("Discovered project file owner is missing");entries.push({file});}}
   const context={workspaceRoot:root,projects,fileMap:{projectFileMap},invocation,phaseControl,selection,registry,completeSourceImports:selection.kind==="tasks"};
-  const edges=[...await owner.discoverBuildDependenciesV1(options,context),...await tests.discoverTestBuildDependenciesV1({},context)];
+  const testEdges:unknown=await tests.discoverTestBuildDependenciesV1({},context);if(!Array.isArray(testEdges))throw Error("Test dependency DATA array required");const edges=[...await owner.discoverBuildDependenciesV1(options,context),...testEdges];
   const metadata=await owner.createMetadata({nodes:Object.fromEntries(Object.entries(projects).map(([name,data])=>[name,{name,type:"lib",data}]))},options,context);
-  for(const[name,value]of Object.entries(metadata) as [string,any][])projects[name].metadata={...projects[name].metadata,...value.metadata,semio:{...projects[name].metadata?.semio,...value.metadata?.semio}};
+  if(!metadata||typeof metadata!=="object"||Array.isArray(metadata))throw Error("Graph metadata DATA object required");
+  for(const[name,value]of Object.entries(metadata)){if(!value||typeof value!=="object"||!("metadata"in value)||!value.metadata||typeof value.metadata!=="object"||Array.isArray(value.metadata))throw Error("Project metadata DATA object required");if("semio"in value.metadata&&value.metadata.semio!==undefined&&(!value.metadata.semio||typeof value.metadata.semio!=="object"||Array.isArray(value.metadata.semio)))throw Error("Project semio metadata DATA object required");projects[name].metadata={...projects[name].metadata,...value.metadata,semio:{...projects[name].metadata?.semio,...("semio"in value.metadata&&value.metadata.semio&&typeof value.metadata.semio==="object"?value.metadata.semio:{})}};}
   const neutral=Object.fromEntries(Object.entries(projects).map(([name,project])=>[name,{...project,targets:Object.fromEntries(Object.entries(project.targets??{}).map(([target,value])=>[target,neutralBuildTargetV1(value as Record<string,any>,`${name}:${target}`)]))}]));
   const dependencies=[...new Map(edges.map(edge=>[JSON.stringify(edge),edge])).values()].sort((a,b)=>JSON.stringify(a).localeCompare(JSON.stringify(b)));
   if(invocation)await advanceScriptInvocation(invocation,"build:graph","complete");
-  return readBuildGraphV1({version:1,projects:await portableInputs(root,neutral,invocation),dependencies,namedInputs:policy.namedInputs,externalNodes,...(unavailable.size?{unavailable:[...unavailable.values()].sort((a,b)=>a.root<b.root?-1:a.root>b.root?1:0)}:{}),admission:{selection,registry:createHash("sha256").update(JSON.stringify(registry)).digest("hex"),closure:createHash("sha256").update(JSON.stringify(admission??files)).digest("hex")}});
+  return readBuildGraphV1({version:1,projects:await portableInputs(root,neutral,invocation,phaseControl),dependencies,namedInputs:policy.namedInputs,externalNodes,...(unavailable.size?{unavailable:[...unavailable.values()].sort((a,b)=>a.root<b.root?-1:a.root>b.root?1:0)}:{}),admission:{selection,registry:createHash("sha256").update(JSON.stringify(registry)).digest("hex"),closure:createHash("sha256").update(JSON.stringify(admission??files)).digest("hex")}});
 }
 
 /** 🧺️ Keeps exactly the discovered files whose presence the portable graph consumes, as declared by the build policy. */
@@ -256,27 +274,35 @@ export async function buildGraphMembershipV1(root:string,files:string[],invocati
 }
 
 /** 🔏️ Admits content-aware observations through the same owned inference mechanism. */
-export async function buildGraphSourceFactsHoldV1(observations:unknown[],invocation?:ScriptInvocation,onStale?:(row:{kind:string;path:string;fact:unknown})=>void):Promise<boolean>{return createRequire(import.meta.url)("../👁️observation/🟨️.mjs").observationsHold(observations,64,new Set(),new Set(),invocation?.control.signal,onStale);}
+export async function buildGraphSourceFactsHoldV1(observations:readonly unknown[],invocation?:ScriptInvocation,onStale?:(row:{kind:string;path:string;fact:unknown})=>void):Promise<boolean>{return observationV1.observationsHold(observations,64,new Set(),new Set(),invocation?.control.signal,onStale);}
 
 type OwnerRegistryInvalidationV1={readonly kind:"invalidated";readonly reason:"owner-registry"};
 const ownerRegistryInvalidationV1:OwnerRegistryInvalidationV1=Object.freeze({kind:"invalidated",reason:"owner-registry"});
 const buildGraphErrorCodeV1=(error:unknown):unknown=>error!==null&&typeof error==="object"&&"code" in error?error.code:undefined;
 const isOwnerRegistryInvalidationV1=(value:unknown):value is OwnerRegistryInvalidationV1=>value===ownerRegistryInvalidationV1;
 
+/** 📌️ Reads immutable snapshot bytes while the existing original Graph store and exact content reader lease remain held. */
+async function withRetainedGraphSnapshotV1<T>(workspace:string,store:RepositoryCacheStoreV1,path:string,control:ResourceLeaseControl,run:(source:string)=>Promise<T>):Promise<T>{
+ const policy=graphSnapshotPolicyV1,lease=await acquireQueuedResourceLease({directory:join(workspace,".cache/b/l/m/data"),resource:"build-graph:"+path,mode:"shared",owner:randomBytes(16).toString("base64url"),control,signal:control.signal});let failed=false;
+ try{await store.recheck();checkResourceLeaseControl(control);const directory=dirname(path),parent=await lstat(directory,{bigint:true}),before=await lstat(path,{bigint:true});checkResourceLeaseControl(control);if(!parent.isDirectory()||parent.isSymbolicLink()||!before.isFile()||before.isSymbolicLink()||before.nlink!==1n||before.size<0n||before.size>BigInt(policy.maximumSnapshotBytes))throw Error("Original bounded Graph snapshot required");
+ return await withArtifactDescriptorV1(()=>open(path,constants.O_RDONLY|(constants.O_NOFOLLOW??0)|(constants.O_NONBLOCK??0)),async file=>{const verify=async()=>{await store.recheck();checkResourceLeaseControl(control);requireNativeStoragePathV1(store.root,path);const linked=await lstat(path,{bigint:true}),opened=await file.stat({bigint:true}),actualParent=await lstat(directory,{bigint:true});checkResourceLeaseControl(control);if(!actualParent.isDirectory()||actualParent.isSymbolicLink()||actualParent.dev!==parent.dev||actualParent.ino!==parent.ino||[linked,opened].some(row=>!row.isFile()||row.isSymbolicLink()||["dev","ino","size","nlink","mtimeNs","ctimeNs"].some(key=>row[key as keyof typeof row]!==before[key as keyof typeof before])))throw Error("Retained Graph snapshot descriptor changed");};await verify();const bytes=Buffer.alloc(Number(before.size));try{let offset=0;while(offset<bytes.length){await verify();const row=await file.read(bytes,offset,Math.min(65536,bytes.length-offset),offset);checkResourceLeaseControl(control);if(!row.bytesRead)throw Error("Retained Graph snapshot shortened");offset+=row.bytesRead;await control.yieldContinuation();}if((await file.read(Buffer.alloc(1),0,1,bytes.length)).bytesRead)throw Error("Retained Graph snapshot grew");await verify();const value=await run(new TextDecoder("utf-8",{fatal:true}).decode(bytes));await verify();return value;}finally{bytes.fill(0);}});
+ }catch(error){failed=true;throw error;}finally{try{lease.release();}catch(error){if(!failed)throw error;}}
+}
+
+/** 🏪️ Delivers the pinned reusable graph only through its existing private Store consumer and retained exact content descriptor. */
+export function withRepositoryBuildGraphPublicationV1<T>(root:string,control:ResourceLeaseControl,body:(graph:BuildGraphV1,digest:string,actual:ResourceLeaseControl)=>Promise<T>):Promise<T>{
+ requireCurrentGraphModuleV1();const pin={path:process.env.SEMIO_BUILD_GRAPH_PATH,digest:process.env.SEMIO_BUILD_GRAPH_DIGEST};if(validateJsonSchemaSubset(graphDeclarationV1("../🧬️schema/📥️pin.json"),pin).length||!isAbsolute(pin.path!))throw Error("Original immutable build graph path and digest required");
+ return withRepositoryBuildGraphConsumerV1(root,control,async(store,actual)=>{await store.recheck();checkResourceLeaseControl(actual);const expected=requireNativeStoragePathV1(store.root,join(store.root,"snapshots",pin.digest+".json"));if(pin.path!==expected)throw Error("Original retained Graph snapshot identity required");return withRetainedGraphSnapshotV1(root,store,expected,actual,async source=>{if(createHash("sha256").update(source).digest("hex")!==pin.digest)throw Error("Pinned build graph digest differs from original authority");const graph=readBuildGraphV1(await portableInputs(root,JSON.parse(source),store.invocation,actual));requireCurrentGraphModuleV1();checkResourceLeaseControl(actual);const value=await body(graph,pin.digest!,actual);await store.recheck();checkResourceLeaseControl(actual);requireCurrentGraphModuleV1();return value;});});
+}
+
 /** 📥️ Resolves one candidate while keeping every candidate's memory within its own finite attempt. */
 async function loadBuildGraphAttemptV1(root:string,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,options:{selection:BuildGraphSelectionV1;reuse?:boolean},registry?:BuildOwnerRegistryV1,scope?:string):Promise<BuildGraphV1|OwnerRegistryInvalidationV1|undefined> {
   requireIssuedResourceControlInvocationV1(phaseControl,invocation);checkResourceLeaseControl(phaseControl);requireCurrentGraphModuleV1();
-  const profile=process.env.SEMIO_BUILD_PROFILE_INPUTS==="1",timing=(phase:string,started:number,details:Record<string,unknown>={})=>{if(profile)console.log("[DEBUG] Build graph Source phase "+JSON.stringify({phase,milliseconds:performance.now()-started,...details}));};
-  const image=async(source:string)=>{let started=performance.now();const decoded=JSON.parse(source);timing("graph-json-parse",started,{bytes:Buffer.byteLength(source)});started=performance.now();const expanded=await portableInputs(root,decoded,invocation);timing("graph-input-expand",started);started=performance.now();const graph=readBuildGraphV1(expanded);timing("graph-schema-validation",started,{projects:Object.keys(graph.projects).length,dependencies:graph.dependencies.length});return graph;};
-  if(options.reuse){
-    const pin={path:process.env.SEMIO_BUILD_GRAPH_PATH,digest:process.env.SEMIO_BUILD_GRAPH_DIGEST};if(validateJsonSchemaSubset(graphDeclarationV1("../🧬️schema/📥️pin.json"),pin).length||!isAbsolute(pin.path!))throw Error("Original immutable build graph path and digest required");
-    const source=await readFile(pin.path!,"utf8");checkResourceLeaseControl(phaseControl);checkScriptInvocation(invocation);const digest=createHash("sha256").update(source).digest("hex");
-    if(digest!==pin.digest)throw Error("Pinned build graph digest differs from original authority");
-    const graph=await image(source);checkResourceLeaseControl(phaseControl);checkScriptInvocation(invocation);if(!graph.admission||JSON.stringify(readBuildGraphSelectionV1(graph.admission.selection))!==JSON.stringify(readBuildGraphSelectionV1(options.selection)))throw Error("Original selected build graph admission required");return graph;
-  }
+  const profile=process.env.SEMIO_BUILD_PROFILE_INPUTS==="1",timing=(phase:string,started:number,details:Record<string,unknown>={})=>{if(profile){}};
+  const image=async(source:string)=>{let started=performance.now();const decoded=JSON.parse(source);timing("graph-json-parse",started,{bytes:Buffer.byteLength(source)});started=performance.now();const expanded=await portableInputs(root,decoded,invocation,phaseControl);timing("graph-input-expand",started);started=performance.now();const graph=readBuildGraphV1(expanded);timing("graph-schema-validation",started,{projects:Object.keys(graph.projects).length,dependencies:graph.dependencies.length});return graph;};
   if(!registry)throw Error("Original canonical graph owner registry required");
   const selected=options.selection.kind==="tasks",path=scope?join(dirname(buildGraphPathV1(root)),"selected",scope+".json"):buildGraphPathV1(root),authorityPath=scope?join(dirname(path),scope+".authority.json"):join(dirname(path),graphDeclarationV1("../🧬️schema/📣️publication.json").properties.authority.const);
-  const observation=createRequire(import.meta.url)("../👁️observation/🟨️.mjs"),producer=createRequire(import.meta.url)("./📥️inference/🟨️.mjs");createRequire(import.meta.url)("../../../🧪️test/🟨️.mjs");createRequire(import.meta.url)("./📥️inference/🛡️policy/🟨️.mjs");
+  const observation=observationV1,[producer]=await Promise.all([import("./📥️inference/🟨️.mjs"),import("../../../🧪️test/🟨️.mjs"),import("./📥️inference/🛡️policy/🟨️.mjs")]);checkResourceLeaseControl(phaseControl);requireCurrentGraphModuleV1();
   const inventory=async()=>{let started=performance.now();const captured=selected?await observation.captureObservedSourceInputsV1(()=>observation.settleObservedComputationV1(async()=>{const current=readBuildOwnerRegistryV1(JSON.parse(producer.readBuildOwnerRegistrySourceV1(root)));if(buildGraphScopeKeyV1(options.selection,current)!==scope)return ownerRegistryInvalidationV1;const nativeCache=new Map(),nativeClosures=new Map();return closeBuildOwnerAdmissionV1(options.selection,registry!,async(owner,targets,inputs)=>{if(invocation)checkScriptInvocation(invocation);return producer.discoverBuildOwnerAdmissionFactsV1(owner,targets,registry,{workspaceRoot:root,invocation,phaseControl,selection:options.selection,nativeCache,nativeClosures},inputs);});},{signal:invocation?.control.signal})):undefined,candidate=captured?.value;if(isOwnerRegistryInvalidationV1(candidate))return candidate;const admission=candidate as BuildOwnerAdmissionV1|undefined,files=admission?.files??buildGraphMembersV1(await workspaceBuildFilesV1(root,invocation));timing("workspace-catalog-lookup",started,{files:files.length,directories:inventoryDirectoriesV1.get(files)?.length??0});started=performance.now();const digest=await buildGraphMembershipV1(root,files,invocation);timing("workspace-membership-hash",started);return {files,digest,admission,observations:captured?.observations??[]};};
   let initial:Awaited<ReturnType<typeof inventory>>;try{initial=await inventory();}catch(error){if(buildGraphErrorCodeV1(error)==="BUILD_MEMBERSHIP_CHANGED")return undefined;throw error;}
   if(isOwnerRegistryInvalidationV1(initial))return initial;
@@ -291,7 +317,7 @@ async function loadBuildGraphAttemptV1(root:string,invocation:ScriptInvocation,p
       phaseStarted=performance.now();const source=await readFile(path,"utf8");timing("graph-file-read",phaseStarted,{bytes:Buffer.byteLength(source)});phaseStarted=performance.now();const digest=createHash("sha256").update(source).digest("hex");timing("graph-content-hash",phaseStarted);if(digest===cachedReceipt.graph){const graph=await image(source);requireCurrentGraphModuleV1();if(selected&&JSON.stringify(graph.admission?.selection)!==JSON.stringify(options.selection))throw Error("Original selected publication scope differs");if(await buildGraphSourceFactsHoldV1([...initial.observations,...cachedReceipt.observations],invocation))return graph;return undefined;}
     }
   }catch(error){if((error as NodeJS.ErrnoException).code!=="ENOENT")throw error;}
-  let captured:{value:BuildGraphV1|OwnerRegistryInvalidationV1;observations:unknown[]},failedFacts:unknown[]=[],failedAuthority:unknown[]=[];
+  let captured:{value:BuildGraphV1|OwnerRegistryInvalidationV1;observations:readonly unknown[]},failedFacts:unknown[]=[],failedAuthority:unknown[]=[];
   phaseStarted=performance.now();
   try{captured=await observation.captureObservedSourceInputsV1(async()=>{
     for(const source of [new URL(import.meta.url),new URL("../🧬️schema/📣️publication.json",import.meta.url),new URL("../🧬️schema/🔣️.json",import.meta.url),new URL("../🧬️schema/📥️authority.json",import.meta.url),new URL("../🔣️policy.json",import.meta.url),new URL("../../⚡️caching/🔣️policy.json",import.meta.url),new URL("../../🗂️workspaces/🔣️policy.json",import.meta.url),new URL("../📤️arguments/🧬️schema/🔣️.json",import.meta.url),new URL("../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🧬️schema/🔣️.json",import.meta.url),new URL("../../../../../../🔨️modules/🏃️process/🏗️build/🎚️mode/🧬️schema/🔣️.json",import.meta.url)])observation.observedFs.readFileSync(source);
@@ -299,7 +325,7 @@ async function loadBuildGraphAttemptV1(root:string,invocation:ScriptInvocation,p
     for(const source of [new URL("../🧬️schema/🚪️selection.json",import.meta.url),new URL("../🧬️schema/📋️owners.json",import.meta.url),new URL("../🧬️schema/🚪️admission.json",import.meta.url),new URL("./🚪️admission/🟦️.ts",import.meta.url)])observation.observedFs.readFileSync(source);
     return discoverBuildGraphV1(root,options.selection,registry!,invocation,phaseControl,files,initial.admission);
   },(rows:unknown[],authority:unknown[])=>{failedFacts=rows;failedAuthority=authority;});}
-  catch(error){if(process.env.SEMIO_BUILD_TRACE_AUTHORITY==="true")console.error("[DEBUG] original graph inference failure "+String(error));if(invocation)checkScriptInvocation(invocation);if(buildGraphErrorCodeV1(error)==="BUILD_AUTHORITY_CHANGED")throw error;let current;try{current=await inventory();}catch(recheck){if(buildGraphErrorCodeV1(recheck)==="BUILD_MEMBERSHIP_CHANGED")return undefined;throw recheck;}if(isOwnerRegistryInvalidationV1(current))throw error;const stale:{kind:string;path:string;fact:unknown}[]=[],holds=await buildGraphSourceFactsHoldV1(failedFacts,invocation,row=>{if(stale.length<8)stale.push(row);});if(current.digest===before&&holds)throw error;if(process.env.SEMIO_BUILD_TRACE_AUTHORITY==="true")console.error("[DEBUG] invalidated graph inference "+JSON.stringify({error:String(error),membershipChanged:current.digest!==before,stale:stale.map(row=>({kind:row.kind,path:row.path,observed:failedFacts.filter((original:any)=>original.kind===row.kind&&original.path===row.path).slice(0,4).map((original:any)=>({fact:original.fact,moduleLoad:failedAuthority.some((loaded:any)=>loaded.kind===original.kind&&loaded.path===original.path&&JSON.stringify(loaded.fact)===JSON.stringify(original.fact))}))}))}));return undefined;}
+  catch(error){if(process.env.SEMIO_BUILD_TRACE_AUTHORITY==="true"){}if(invocation)checkScriptInvocation(invocation);if(buildGraphErrorCodeV1(error)==="BUILD_AUTHORITY_CHANGED")throw error;let current;try{current=await inventory();}catch(recheck){if(buildGraphErrorCodeV1(recheck)==="BUILD_MEMBERSHIP_CHANGED")return undefined;throw recheck;}if(isOwnerRegistryInvalidationV1(current))throw error;const stale:{kind:string;path:string;fact:unknown}[]=[],holds=await buildGraphSourceFactsHoldV1(failedFacts,invocation,row=>{if(stale.length<8)stale.push(row);});if(current.digest===before&&holds)throw error;if(process.env.SEMIO_BUILD_TRACE_AUTHORITY==="true"){}return undefined;}
   if(isOwnerRegistryInvalidationV1(captured.value))return captured.value;
   timing("graph-original-inference",phaseStarted,{observations:captured.observations.length});
   let final:Awaited<ReturnType<typeof inventory>>;try{final=await inventory();}catch(error){if(buildGraphErrorCodeV1(error)==="BUILD_MEMBERSHIP_CHANGED")return undefined;throw error;}
@@ -308,20 +334,20 @@ async function loadBuildGraphAttemptV1(root:string,invocation:ScriptInvocation,p
   captured.observations=[...initial.observations,...captured.observations];
   const stale:{kind:string;path:string;fact:unknown}[]=[],holds=await buildGraphSourceFactsHoldV1(captured.observations,invocation,row=>{if(stale.length<8)stale.push(row);});
   if(selected&&JSON.stringify(initial.admission)!==JSON.stringify(final.admission))return undefined;
-  if(before!==after||!holds){if(process.env.SEMIO_BUILD_TRACE_AUTHORITY==="true"){const oldFiles=new Set(files),newFiles=new Set(final.files);console.error("[DEBUG] invalidated completed graph "+JSON.stringify({membershipChanged:before!==after,added:final.files.filter(path=>!oldFiles.has(path)).slice(0,8),removed:files.filter(path=>!newFiles.has(path)).slice(0,8),stale}));}return undefined;}
+  if(before!==after||!holds){if(process.env.SEMIO_BUILD_TRACE_AUTHORITY==="true"){const oldFiles=new Set(files),newFiles=new Set(final.files);}return undefined;}
   const graph=captured.value,source=JSON.stringify(graph),digest=createHash("sha256").update(source).digest("hex"),authority=JSON.stringify({version:3,module:loadedGraphModuleAuthorityV1,membership:after,graph:digest,observations:captured.observations});if(Buffer.byteLength(source)>536870912||Buffer.byteLength(authority)>536870912)throw Error("Build graph cache exceeds its finite publication limit");await mkdir(dirname(path),{recursive:true});
   const temporary=path+"."+randomUUID(),receipt=authorityPath+"."+randomUUID();try{await writeFile(temporary,source,{flag:"wx"});await writeFile(receipt,authority,{flag:"wx"});if(invocation)checkScriptInvocation(invocation);requireCurrentGraphModuleV1();if(!await buildGraphSourceFactsHoldV1(captured.observations,invocation))return undefined;await rename(temporary,path);await rename(receipt,authorityPath);}finally{await Promise.all([rm(temporary,{force:true}),rm(receipt,{force:true})]);}
   return graph;
 }
 /** 💾️ Publishes only a current graph and releases each invalidated candidate before retrying. */
 export async function loadBuildGraphV1(root:string,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,options:{selection:BuildGraphSelectionV1;reuse?:boolean}):Promise<BuildGraphV1> {
-  requireIssuedResourceControlInvocationV1(phaseControl,invocation);checkResourceLeaseControl(phaseControl);checkScriptInvocation(invocation);
+  requireIssuedResourceControlInvocationV1(phaseControl,invocation);checkResourceLeaseControl(phaseControl);checkScriptInvocation(invocation);requireCurrentGraphModuleV1();
   options={...options,selection:readBuildGraphSelectionV1(options.selection)};
-  if(options.reuse){const graph=await loadBuildGraphAttemptV1(root,invocation,phaseControl,options);checkResourceLeaseControl(phaseControl);checkScriptInvocation(invocation);if(!graph||isOwnerRegistryInvalidationV1(graph))throw Error("Reusable build graph unavailable");return graph;}
+  if(options.reuse)return withRepositoryBuildGraphPublicationV1(root,phaseControl,async graph=>{checkScriptInvocation(invocation);if(!graph.admission||JSON.stringify(readBuildGraphSelectionV1(graph.admission.selection))!==JSON.stringify(readBuildGraphSelectionV1(options.selection)))throw Error("Original selected build graph admission required");return graph;});
   if(!invocation)throw Error("Original build graph producer invocation required");
   for(let attempt=0;attempt<=8;attempt++){
     checkScriptInvocation(invocation);checkResourceLeaseControl(phaseControl);requireCurrentGraphModuleV1();
-    const registry=readBuildOwnerRegistryV1(JSON.parse(createRequire(import.meta.url)("./📥️inference/🟨️.mjs").readBuildOwnerRegistrySourceV1(root))),scope=options.selection.kind==="tasks"?buildGraphScopeKeyV1(options.selection,registry):undefined;
+    const producer=await import("./📥️inference/🟨️.mjs");checkResourceLeaseControl(phaseControl);requireCurrentGraphModuleV1();const registry=readBuildOwnerRegistryV1(JSON.parse(producer.readBuildOwnerRegistrySourceV1(root))),scope=options.selection.kind==="tasks"?buildGraphScopeKeyV1(options.selection,registry):undefined;
     const graph=await withBuildGraphStateV1(root,invocation,phaseControl,async(store,actualControl)=>{
       const staging=scope?join(store.root,"selected"):store.root;await store.recheck();checkResourceLeaseControl(actualControl);requireNativeStoragePathV1(store.root,staging);await mkdir(staging,{recursive:true});checkResourceLeaseControl(actualControl);const selectedStage=scope?new RegExp("^"+scope+"(?:\\.authority)?\\.json\\.[a-f0-9-]{36}$","u"):undefined;
       const staged=await readdir(staging);checkResourceLeaseControl(actualControl);for(const name of staged){if(!(selectedStage?.test(name)??/^(?:canonical|authority)\.json\.[a-f0-9-]{36}$/u.test(name)))continue;await store.recheck();checkResourceLeaseControl(actualControl);const path=join(staging,name),status=await lstat(path);checkResourceLeaseControl(actualControl);if(!status.isFile()||status.isSymbolicLink()||status.nlink!==1||status.size>536870912)throw Error("Owned bounded graph staging file required");await rm(path);checkResourceLeaseControl(actualControl);}

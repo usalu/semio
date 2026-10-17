@@ -24,5 +24,8 @@
   },
   "devDependencies": {
     "@semio-tech/framework": "workspace:*"
+  },
+  "dependencies": {
+    "@semio-tech/puzzle-js": "workspace:*"
   }
 }

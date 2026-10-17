@@ -88,7 +88,7 @@ export async function registerCheckpointPairDecoderTests(vitest: Vitest, depende
     });
 
     it("accepts a genesis applied receipt from the guest, which the host twin used to refuse", async () => {
-      const { parseColdDocumentPairFrontier } = await import("../../../../🔨️modules/🎭️actor/📥️cold-pair/🟦️.ts");
+      const { parseColdDocumentPairFrontier } = await import("@semio-tech/framework-actor/cold-pair");
       const genesis = { documentId: "artifact-c7", headEditOrdinal: 0n, headEditId: "", lastCommitSeq: 0n, chainSha256: new Uint8Array(32) };
       expect(parseColdDocumentPairFrontier(genesis).headEditId).toBe("");
       expect(() => parseColdDocumentPairFrontier({ ...genesis, headEditOrdinal: 9n })).toThrow("cold-pair.frontier");

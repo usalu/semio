@@ -1,0 +1,47 @@
+{
+ "name": "rsl4",
+ "crates": [
+  "semio-s-artifact-stdio-ifc-2x3-sav",
+  "semio-s-artifact-stdio-ifc-2x3-base",
+  "semio-s-artifact-stdio-bcf-io-registry",
+  "semio-s-artifact-stdio-binary-mutations",
+  "semio-s-artifact-stdio-csv-io-registry",
+  "semio-s-artifact-stdio-step-cc1-editor",
+  "semio-s-artifact-stdio-step-cc2-editor",
+  "semio-s-artifact-stdio-step-cc3-editor",
+  "semio-s-artifact-stdio-step-cc4-editor",
+  "semio-s-artifact-stdio-step-cc5-editor",
+  "semio-s-artifact-stdio-step-cc6-editor",
+  "semio-s-artifact-stdio-step-base-editor",
+  "semio-s-artifact-stdio-tsv-mutations",
+  "semio-s-artifact-stdio-md-tests",
+  "semio-s-artifact-stdio-xml",
+  "semio-s-artifact-stdio-png-tests",
+  "semio-s-artifact-stdio-jpg",
+  "semio-s-artifact-stdio-avi-tests"
+ ],
+ "base": {
+  "rev": "b84bf526c7ba",
+  "crates": [
+   "semio-s-artifact-stdio-ifc-2x3-sav",
+   "semio-s-artifact-stdio-ifc-2x3-base",
+   "semio-s-artifact-stdio-bcf-io-registry",
+   "semio-s-artifact-stdio-binary-mutations",
+   "semio-s-artifact-stdio-csv-io-registry",
+   "semio-s-artifact-stdio-step-cc1-editor",
+   "semio-s-artifact-stdio-step-cc2-editor",
+   "semio-s-artifact-stdio-step-cc3-editor",
+   "semio-s-artifact-stdio-step-cc4-editor",
+   "semio-s-artifact-stdio-step-cc5-editor",
+   "semio-s-artifact-stdio-step-cc6-editor",
+   "semio-s-artifact-stdio-step-base-editor",
+   "semio-s-artifact-stdio-tsv-mutations",
+   "semio-s-artifact-stdio-md-tests",
+   "semio-s-artifact-stdio-xml",
+   "semio-s-artifact-stdio-png-tests",
+   "semio-s-artifact-stdio-jpg",
+   "semio-s-artifact-stdio-avi-tests"
+  ]
+ },
+ "note": "RUST-LEFTOVERS F-04(a): consumers re-pointed from facade alias paths"
+}

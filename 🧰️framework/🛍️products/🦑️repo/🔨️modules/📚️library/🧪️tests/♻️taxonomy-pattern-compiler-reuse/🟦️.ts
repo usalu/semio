@@ -8,11 +8,12 @@ import { parse, type ParseError } from "jsonc-parser";
 import ts from "typescript";
 import { taxonomyPathPatternMatches } from "../../🔍️discovery/🟦️.ts";
 import * as discovery from "../../🔍️discovery/🟦️.ts";
+import { parseGeneratorPreviewProgressPolicyV1 } from "../../🏭️generator/👁️preview/📈️progress/🟦️.ts";
 import { normalizationSourceDeclarations, normalizationSourceFiles } from "../../🧹️normalization/🧪️support/🏗️source-services/🟦️.ts";
 
 type Matcher = Readonly<{ matches(path: string, pattern: string): boolean }>;
 type Row = Readonly<{ id: string; path: string; pattern: string; expected: boolean }>;
-type Vector = Readonly<{ schemaVersion: number; contractId: string; factory: string; rounds: number; uniqueNormalizedPatterns: number; cases: Row[]; invalidPatterns: string[]; oracle: { library: string; options: Record<string, string | boolean> }; integration: { loadedField: string; normalizerOwners: Record<string, number>; loadOwners: string[]; fixedContractCallCount: number; changedInput: { pointer: string; suffix: string }; freshProbe: { path: string; pattern: string }; sessionContract: { equalBytes: Counts; changedBytes: Counts; invalid: Counts; lossy: Counts; syntax: Counts; callerMutationSuffix: string; restoredSuffix: string } } }>;
+type Vector = Readonly<{ schemaVersion: number; contractId: string; factory: string; rounds: number; uniqueNormalizedPatterns: number; normalization: { paths: string; patterns: string }; cases: Row[]; invalidPatterns: string[]; oracle: { library: string; options: Record<string, string | boolean> }; integration: { loadedField: string; normalizerOwners: Record<string, number>; loadOwners: string[]; fixedContractCallCount: number; changedInput: { pointer: string; suffix: string }; freshProbe: { path: string; pattern: string }; sessionContract: { equalBytes: Counts; changedBytes: Counts; invalid: Counts; lossy: Counts; syntax: Counts; callerMutationSuffix: string; restoredSuffix: string; cacheAuthority: string; physicalInputs: string; sessionSchema: string; matcher: string } } }>;
 type Counts = Readonly<{ reads: number; parses: number; validations: number }>;
 const library = resolve(import.meta.dir, "../.."), sourcePath = join(library, "🔍️discovery/🟦️.ts");
 const bytes = readFileSync(join(import.meta.dir, "../🧫️fixtures/♻️taxonomy-pattern-compiler-reuse/🔣️.json"), "utf8"), vector: Vector = JSON.parse(bytes);
@@ -61,7 +62,7 @@ function compiled(compiler: typeof compilers[number], factory: boolean): { oneOf
 
 test("pattern compilation reuse has a closed language-neutral schema and independent JSON parser", () => {
   
-  expect(vector["schemaVersion"]).toEqual(1);expect(vector["contractId"]).toEqual("taxonomy-pattern-compiler-reuse-v1");expect(vector["factory"]).toEqual("createTaxonomyPathMatcher");expect(vector["rounds"]).toEqual(4);expect(vector["uniqueNormalizedPatterns"]).toEqual(14);expect(vector["normalization"]).toEqual({"paths":"windows-separators-leading-dot-nfc","patterns":"nfc-only"});expect(vector["integration"]).toEqual({"loadedField":"pathMatcher","normalizerOwners":{"validatedContractPattern":1,"parseTaxonomy":2,"resolveFileKind":2,"explicitTicketRows":1,"matchingFixedContracts":1,"renderCatalogGlob":1,"projectNestedCargoPackages":1,"historicalDocumentEvidence":2,"generatorInputPaths":1,"generatorPlanning":1,"assertRegenerationContract":1,"assertTicketImportantRemovalAuthority":2,"sourceAdmissionStructuralDirectories":1,"sourceAdmissionWalk":1},"loadOwners":["inventoryTaxonomyWithSourceParentPruning","planTaxonomy","applyTaxonomyPlan","inventoryTaxonomySources"],"fixedContractCallCount":6,"changedInput":{"pointer":"/fixedFilenameContracts/cargo-manifest/reason","suffix":" - fresh invocation"},"freshProbe":{"path":"🔣️fresh-session.json","pattern":"🔣️fresh-session*.json"},"sessionContract":{"equalBytes":{"reads":2,"parses":1,"validations":1},"changedBytes":{"reads":3,"parses":2,"validations":2},"invalid":{"reads":4,"parses":3,"validations":3},"lossy":{"reads":5,"parses":3,"validations":3},"syntax":{"reads":6,"parses":4,"validations":3},"callerMutationSuffix":" caller-only mutation","restoredSuffix":"","cacheAuthority":"captured-content-hash","physicalInputs":"fresh","sessionSchema":"detached","matcher":"fresh"}});expect(vector["oracle"]).toEqual({"library":"picomatch","options":{"dot":true,"nocase":false,"nonegate":true,"noext":true,"nobrace":true,"strictSlashes":true,"flags":"u","fastpaths":false}});expect(vector["invalidPatterns"]).toEqual(["[","🧪️root/[a","[z-a]","🧪️root/[z-a]"]);
+  expect(vector["schemaVersion"]).toEqual(1);expect(vector["contractId"]).toEqual("taxonomy-pattern-compiler-reuse-v1");expect(vector["factory"]).toEqual("createTaxonomyPathMatcher");expect(vector["rounds"]).toEqual(4);expect(vector["uniqueNormalizedPatterns"]).toEqual(14);expect(vector["normalization"]).toEqual({"paths":"windows-separators-leading-dot-nfc","patterns":"nfc-only"});expect(vector["integration"]).toEqual({"loadedField":"pathMatcher","normalizerOwners":{"validatedContractPattern":1,"parseTaxonomy":2,"resolveFileKind":2,"explicitTicketRows":1,"matchingFixedContracts":1,"renderCatalogGlob":1,"projectNestedCargoPackages":1,"historicalDocumentEvidence":2,"generatorInputPaths":1,"generatorPlanning":1,"assertRegenerationContract":1,"assertTicketImportantRemovalAuthority":2,"sourceAdmissionStructuralDirectories":1,"sourceAdmissionWalk":1},"loadOwners":["inventoryTaxonomyWithSourceParentPruning","planTaxonomy","verifyTaxonomyScopes","verifyTaxonomyScopesClosed","applyTaxonomyPlan","inventoryTaxonomySources"],"fixedContractCallCount":6,"changedInput":{"pointer":"/fixedFilenameContracts/cargo-manifest/reason","suffix":" - fresh invocation"},"freshProbe":{"path":"🔣️fresh-session.json","pattern":"🔣️fresh-session*.json"},"sessionContract":{"equalBytes":{"reads":2,"parses":1,"validations":1},"changedBytes":{"reads":3,"parses":2,"validations":2},"invalid":{"reads":4,"parses":3,"validations":3},"lossy":{"reads":5,"parses":3,"validations":3},"syntax":{"reads":6,"parses":4,"validations":3},"callerMutationSuffix":" caller-only mutation","restoredSuffix":"","cacheAuthority":"captured-content-hash","physicalInputs":"fresh","sessionSchema":"detached","matcher":"fresh"}});expect(vector["oracle"]).toEqual({"library":"picomatch","options":{"dot":true,"nocase":false,"nonegate":true,"noext":true,"nobrace":true,"strictSlashes":true,"flags":"u","fastpaths":false}});expect(vector["invalidPatterns"]).toEqual(["[","🧪️root/[a","[z-a]","🧪️root/[z-a]"]);
   
   const errors: ParseError[] = [];
   expect(parse(bytes, errors, { disallowComments: true, allowTrailingComma: false })).toEqual(vector);
@@ -74,10 +75,12 @@ test("actual current pattern semantics agree with both compilers and the indepen
   for (const compiler of compilers) {
     const actual = compiled(compiler, false);
     for (let round = 0; round < vector.rounds; round++) {
-      const oracle = picomatch(row.pattern.normalize("NFC"), vector.oracle.options)(pathForOracle(row.path));
-      expect(oracle, row.id).toBe(row.expected);
-      expect(taxonomyPathPatternMatches(row.path, row.pattern), row.id).toBe(row.expected);
-      expect(actual.oneOff(row.path, row.pattern), row.id).toBe(row.expected);
+      for (const row of vector.cases) {
+        const oracle = picomatch(row.pattern.normalize("NFC"), vector.oracle.options)(pathForOracle(row.path));
+        expect(oracle, row.id).toBe(row.expected);
+        expect(taxonomyPathPatternMatches(row.path, row.pattern), row.id).toBe(row.expected);
+        expect(actual.oneOff(row.path, row.pattern), row.id).toBe(row.expected);
+      }
     }
     expect(actual.expressions).toHaveLength(vector.cases.length * vector.rounds);
     expect(actual.tests()).toBe(vector.cases.length * vector.rounds);
@@ -149,11 +152,11 @@ test("every normalizer pattern query has a required invocation-owned matcher and
   expect(field?.questionToken).toBeUndefined();
   const calls = nodes(normalizer, ts.isCallExpression), owners: Record<string, number> = {};
   expect(calls.filter((node) => node.expression.getText(normalizer) === "taxonomyPathPatternMatches")).toEqual([]);
-  for (const call of calls.filter((node) => /(?:^|\.)pathMatcher\.matches$/u.test(node.expression.getText(normalizer)))) {
-    expect(call.questionDotToken).toBeUndefined();
-    expect(call.expression.getText(normalizer)).not.toContain("?");
-    const name = owner(call);
-    expect(call.expression.getText(normalizer)).toBe(["validatedContractPattern", "parseTaxonomy", "renderCatalogGlob"].includes(name) ? "pathMatcher.matches" : "taxonomy.pathMatcher.matches");
+  for (const use of nodes(normalizer, ts.isPropertyAccessExpression).filter((node) => /(?:^|\.)pathMatcher\.matches$/u.test(node.getText(normalizer)))) {
+    expect(use.questionDotToken).toBeUndefined();
+    expect(use.getText(normalizer)).not.toContain("?");
+    const name = owner(use);
+    expect(use.getText(normalizer)).toBe(["validatedContractPattern", "parseTaxonomy", "renderCatalogGlob"].includes(name) ? "pathMatcher.matches" : "taxonomy.pathMatcher.matches");
     owners[name] = (owners[name] ?? 0) + 1;
   }
   expect(owners).toEqual(vector.integration.normalizerOwners);
@@ -173,7 +176,7 @@ test("every normalizer pattern query has a required invocation-owned matcher and
   expect(nodes(parser, ts.isShorthandPropertyAssignment).some((node) => node.name.text === "pathMatcher")).toBe(false);
   const loader = declaration(normalizer, "loadTaxonomy"), loaderCalls = nodes(loader, ts.isCallExpression).map((node) => node.expression.getText(normalizer));
   expect(nodes(loader, ts.isPropertyAssignment).some((node) => node.name.getText(normalizer) === "pathMatcher" && ts.isCallExpression(node.initializer) && node.initializer.expression.getText(normalizer) === "createTaxonomyPathMatcher")).toBe(true);
-  for (const name of ["assertLexicalInputOutsideOpaque", "semanticOwnedInputFileSnapshot", "parseTaxonomy", "JSON.parse", "lexicalInputOutsideOpaque", "noFollowAncestors"]) expect(loaderCalls.filter((entry) => entry === name)).toHaveLength(1);
+  for (const name of ["assertLexicalInputOutsideOpaque", "semanticOwnedInputFileSnapshot", "parseTaxonomy", "JSON.parse", "noFollowDirectoryChain", "verifyNoFollowDirectoryChain"]) expect(loaderCalls.filter((entry) => entry === name)).toHaveLength(1);
   expect(loader.getText(normalizer)).toContain('if (!Buffer.from(text).equals(bytes)) throw new Error("Taxonomy schema has lossy UTF-8: " + path)');
   const validator = declaration(source, "validateTaxonomy"), validationCalls = nodes(validator, ts.isCallExpression);
   expect(validationCalls.filter((node) => node.expression.getText(source) === "createTaxonomyPathMatcher")).toHaveLength(1);
@@ -214,7 +217,7 @@ for (const compiler of compilers) test("actual load caches content facts while c
       else if (variant === "syntax") bytes = Buffer.from("{");
       return { ...input, bytes, size: bytes.byteLength, contentHash: createHash("sha256").update(bytes).digest("hex") };
     };
-    const environment = { ...discovery, basename, isAbsolute, join, parse: nativePathParts, posix, relative, resolve, sep, lstatSync, Buffer, createTaxonomyPathMatcher: actual.create, semanticOwnedInputFileSnapshot: snapshot, validateTaxonomy: (document: discovery.Taxonomy): string[] => { validations++; return discovery.validateTaxonomy(document); }, JSON: { stringify: JSON.stringify, parse: (text: string): unknown => { parses++; return JSON.parse(text); } } };
+    const environment = { ...discovery, parseGeneratorPreviewProgressPolicyV1, basename, isAbsolute, join, parse: nativePathParts, posix, relative, resolve, sep, lstatSync, Buffer, createTaxonomyPathMatcher: actual.create, semanticOwnedInputFileSnapshot: snapshot, validateTaxonomy: (document: discovery.Taxonomy): string[] => { validations++; return discovery.validateTaxonomy(document); }, JSON: { stringify: JSON.stringify, parse: (text: string): unknown => { parses++; return JSON.parse(text); } } };
     const javascript = compiler.compile([...constants, ancestry[0]!.getText(normalizer).replace(/^export\s+/u, ""), ...functions].join("\n"));
     const load = new Function(...Object.keys(environment), `${javascript}\nreturn loadTaxonomy;`)(...Object.values(environment)) as (options: { repoRoot: string; taxonomyPath: string }) => Loaded;
     const options = { repoRoot, taxonomyPath: schemaPath }, left = load(options), firstCount = actual.expressions.length, right = load(options);
@@ -303,9 +306,9 @@ test("registers pattern compiler reuse through its closed canonical route", asyn
   expect(join(repoRoot, registration.source)).toBe(import.meta.filename);
   const project = JSON.parse(readFileSync(join(packageRoot, "📋️project.json"), "utf8"));
   expect(project.targets[registration.target]).toBeDefined();
-  expect(project.targets[registration.target]).toEqual({ executor: "nx:run-commands", options: { cwd: packageRelative, command: `bun ./📜️script.ts test ${registration.command}` } });
+  expect(project.targets[registration.target]).toEqual({ executor: "repo:script", options: { cwd: packageRelative, command: `bun ./📜️script.ts test ${registration.command}` } });
   const manifest = JSON.parse(readFileSync(join(packageRoot, "package.json"), "utf8"));
-  expect(manifest.scripts[registration.target]).toBe(`nx run @semio-tech/repo-lib:${registration.target}`);
+  expect(manifest.scripts[registration.target]).toBe(`bun --cwd "${relative(packageRoot, repoRoot).replaceAll("\\", "/")}" repo run @semio-tech/repo-lib:${registration.target}`);
   const path = join(packageRoot, "📜️script.ts"), syntax = ts.createSourceFile(path, readFileSync(path, "utf8"), ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
   const declarations = syntax.statements.filter((node) => ts.isClassDeclaration(node) && node.name?.text === "TestScript");
   expect(declarations.length).toBe(1);

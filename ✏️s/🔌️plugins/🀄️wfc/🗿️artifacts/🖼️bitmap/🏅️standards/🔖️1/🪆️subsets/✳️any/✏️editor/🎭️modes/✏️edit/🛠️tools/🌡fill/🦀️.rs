@@ -67,8 +67,8 @@ impl BitmapFillPayload {
     pub fn encode_json(&self) -> String {
         format!(
             "{{\"pixels\":{},\"decided\":{},\"width\":{},\"height\":{},\"contradiction\":{},\"done\":{},\"trace\":{}}}",
-            crate::standards::v1::subsets::any::io::text::bitmap_json_encode(&self.pixels),
-            crate::standards::v1::subsets::any::io::text::bitmap_json_encode(&self.decided),
+            crate::standards::v1::subsets::any::io::text::snapshot::bitmap_json_encode(&self.pixels),
+            crate::standards::v1::subsets::any::io::text::snapshot::bitmap_json_encode(&self.decided),
             self.width,
             self.height,
             if self.contradiction { "true" } else { "false" },
@@ -79,7 +79,7 @@ impl BitmapFillPayload {
 
     /// 📥 Decode the normative JSON object.
     pub fn decode_json(text: &str) -> Option<Self> {
-        let value: semio_framework_pack_json::Value = crate::standards::v1::subsets::any::io::text::bitmap_json_decode(text).ok()?;
+        let value: semio_framework_pack_json::Value = crate::standards::v1::subsets::any::io::text::snapshot::bitmap_json_decode(text).ok()?;
         let object = value.as_object()?;
         Some(Self {
             pixels: object.get("pixels")?.as_str()?.to_owned(),
@@ -754,6 +754,4 @@ impl InteractiveJob for BitmapFillRunJob {
 }
 //#endregion 🧵️Job
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

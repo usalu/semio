@@ -1,0 +1,11 @@
+{
+ "name": "c4p5",
+ "crates": [
+  "semio-s-artifact-puzzle-3d-precompute",
+  "semio-s-artifact-puzzle-3d-precompute-fill",
+  "semio-s-artifact-puzzle-3d-editor-session",
+  "semio-s-artifact-puzzle-3d-editor",
+  "semio-s-artifact-puzzle-3d"
+ ],
+ "note": "CENSUS4-PKG-5: puzzle 3d editor split family (absolute classification against the pre-edit working tree)"
+}

@@ -1,14 +1,40 @@
-use super::*;
+use crate::editor::architect::catalog::REGISTER_IDS;
+use semio_framework_plugin::BuiltNode;
+use semio_framework_plugin::PanelGroup;
+use semio_framework_plugin::TreeWindows;
+use semio_framework_plugin::UiAssemblyResult;
+#[allow(unused_imports)]
+use crate::editor::architect::base::ui_label;
+#[allow(unused_imports)]
+use crate::{editor::architect::base::architect_action, editor::architect::base::ui_value_map, editor::architect::base::ui_value_text};
+#[allow(unused_imports)]
+use semio_framework_plugin::tree_item_with_action;
+#[allow(unused_imports)]
+use semio_framework_ui_locale::LocalizedLabel;
+#[allow(unused_imports)]
+use semio_framework_plugin::PanelTabDefinition;
+#[allow(unused_imports)]
+use semio_framework_plugin::PanelTabKind;
+#[allow(unused_imports)]
+use semio_framework_plugin::PanelTreeBuilder;
+#[allow(unused_imports)]
+use semio_framework_plugin::UiValue;
+#[allow(unused_imports)]
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
+#[allow(unused_imports)]
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL;
+use crate::editor::architect::panels::catalogue::{SHORTCUTS};
+use crate::editor::architect::panels::catalogue::*;
 use semio_framework_plugin::{TreeWindowRequest, ViewModel, TREE_WINDOW_DEFAULT_ROWS};
 
 fn unhosted() -> String {
-    crate::editor::architect::unit_tests::context::project_render(render(&TreeWindows::unhosted()))
+    project_render(render(&TreeWindows::unhosted()))
 }
 
 /// 🪟️ The catalogue body exactly as the host reads it, for the host-known windows in `requests`.
 fn window_body(requests: Vec<TreeWindowRequest>) -> String {
     let view = ViewModel { tree_windows: requests, ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
-    crate::editor::architect::unit_tests::context::project_render(render(&TreeWindows::for_body(&view, ARCHITECT_BODY_CATALOGUE)))
+    project_render(render(&TreeWindows::for_body(&view, ARCHITECT_BODY_CATALOGUE)))
 }
 
 fn request(node_key: &str, open: Option<bool>, offset: u32, rows: u32) -> TreeWindowRequest {
@@ -81,3 +107,7 @@ fn the_catalogue_tree_binds_no_domain_and_every_row_keeps_its_own_action() {
     assert!(json.contains("runValidation"), "shortcut rows keep their own action: {json}");
 }
 //#endregion 🪟️WindowLaws
+
+fn project_render(node: semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode>) -> String {
+    semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node.expect("render"))).expect("retire semantic tree")
+}

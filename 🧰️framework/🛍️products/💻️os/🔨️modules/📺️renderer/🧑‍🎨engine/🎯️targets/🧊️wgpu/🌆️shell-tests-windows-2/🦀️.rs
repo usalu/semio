@@ -5,12 +5,10 @@
 #![cfg(test)]
 
 extern crate infinite_canvas as infinite_world;
-use semio_framework_os_renderer_wgpu_dock as dock;
 use semio_framework::{AppDefinition, ViewModel};
 use semio_framework_os_renderer_wgpu_contracts::{AdmittedSurfaceMap, ui_document_close_pending_for};
-use semio_framework_os_renderer_wgpu_dock::{DockNode, DockRenderContext, DockState};
-#[cfg(test)]
-use semio_framework_os_renderer_wgpu_dock::DockStackTab;
+use semio_framework_os_renderer_wgpu_dock as dock;
+use semio_framework_os_renderer_wgpu_dock::{DockNode, DockRenderContext, DockStackTab, DockState};
 use semio_framework_os_renderer_wgpu_engine_attach::engine_surface_attach;
 use semio_framework_os_renderer_wgpu_engine_registry::engine_surface_law_guard;
 use semio_framework_os_renderer_wgpu_fixtures::shell::{actions_shell, paint_component_pointer_documents, split_pane_shell, test_app, tree_pointer_record};
@@ -35,11 +33,12 @@ use semio_framework_os_renderer_wgpu_shell_surfaces::{TutorialCameraConverge, Tu
 use semio_framework_os_renderer_wgpu_shell_view_chrome::{ChromeViewCtx, ShellChromeChildCursor};
 use semio_framework_os_renderer_wgpu_shell_view_paint::{SHELL_WINDOW_PAINT_OPPORTUNITIES, tutorial_scrub_progress, tutorial_scrub_target_ms};
 use semio_framework_os_renderer_wgpu_shell_view_panels::{PanelsViewCtx, ShellChromeFrameCursor};
-use semio_framework_os_renderer_wgpu_shell_window_actions::{FRAMEWORK_RESERVED_ACTION_IDS, KEYBINDING_UNOWNED_CODE, WindowActionsCtx, scope_action_to_window, tutorial_advance_playhead, tutorial_apply_ui_change_to_shell, tutorial_apply_ui_snapshot, tutorial_camera_pose_close, tutorial_capture_ui_snapshot};
+use semio_framework_os_renderer_wgpu_shell_window_actions::{
+    FRAMEWORK_RESERVED_ACTION_IDS, KEYBINDING_UNOWNED_CODE, WindowActionsCtx, scope_action_to_window, tutorial_advance_playhead, tutorial_apply_ui_change_to_shell, tutorial_apply_ui_snapshot, tutorial_camera_pose_close, tutorial_capture_ui_snapshot,
+};
 use semio_framework_os_renderer_wgpu_shell_windows::{PanelAnchor, WindowPaneChip, panel_ui_scroll_records, section_fixtures, window_measures_overlay_records};
 use semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine;
 use semio_framework_os_renderer_wgpu_ui_engine_dump::chrome_ledger;
-#[cfg(test)]
 use semio_framework_os_renderer_wgpu_ui_engine_tests::fixture_original_turn;
 use semio_framework_ui_layout::layout::ActionDescriptor;
 use semio_framework_ui_locale::{Locale, LocalizedLabel, Terminology};
@@ -47,8 +46,8 @@ use semio_framework_ui_theme::geometry::Rect;
 use semio_framework_value::DslValue;
 use serde_json::Value;
 use std::collections::HashMap;
-use ui_wgpu::wgpu::{DrawList, FontAtlas, HitKind, HitTarget, IconAtlas, InputState, KeyAction, PointerModifiers, Theme, UiNode, WindowEngagement, WindowMeasure, WindowStackCorner};
 use ui_wgpu::wgpu::tree_window::TreeWindowRequest;
+use ui_wgpu::wgpu::{DrawList, FontAtlas, HitKind, HitTarget, IconAtlas, InputState, KeyAction, PointerModifiers, Theme, UiNode, WindowEngagement, WindowMeasure, WindowStackCorner};
 use winit::window::Window;
 
 #[cfg(all(test, not(target_arch = "wasm32")))]

@@ -1,0 +1,288 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "kind": "source",
+      "input": {
+        "version": 1,
+        "files": [
+          "b.rs",
+          "a.rs"
+        ]
+      },
+      "accepted": true,
+      "text": "{\"version\":1,\"files\":[\"a.rs\",\"b.rs\"]}",
+      "utf8Bytes": 37,
+      "sha256": "47b3a2e9a27aa925f9525fe271e1730d55074ac180189ae2b3e4fd3397f0ee28"
+    },
+    {
+      "kind": "source",
+      "input": {
+        "version": 1,
+        "files": []
+      },
+      "accepted": true,
+      "text": "{\"version\":1,\"files\":[]}",
+      "utf8Bytes": 24,
+      "sha256": "ad301433f67ec7108b54797ac5d7a61df8c92f62fa52ae631da3f49731576ac3"
+    },
+    {
+      "kind": "source",
+      "input": {
+        "version": 1,
+        "files": [
+          "dir/q\".ts",
+          "line\n\t.ts",
+          "emoji/🧬.ts"
+        ]
+      },
+      "accepted": true,
+      "text": "{\"version\":1,\"files\":[\"dir/q\\\".ts\",\"emoji/🧬.ts\",\"line\\n\\t.ts\"]}",
+      "utf8Bytes": 66,
+      "sha256": "6ea9dc1380540281b6e1f10defe8b67590baa8a75d56750c78f6186ace099a24"
+    },
+    {
+      "kind": "lock",
+      "input": {
+        "version": 1,
+        "manifest": "dir/Cargo.toml"
+      },
+      "accepted": true,
+      "text": "{\"version\":1,\"manifest\":\"dir/Cargo.toml\"}",
+      "utf8Bytes": 41,
+      "sha256": "175eb4980ffcb8ed7c72bc1a1f7609030a26e701efd3db6307ebd66765b7bd56"
+    },
+    {
+      "kind": "lock",
+      "input": {
+        "version": 1,
+        "manifest": "q\"/Cargo.toml"
+      },
+      "accepted": true,
+      "text": "{\"version\":1,\"manifest\":\"q\\\"/Cargo.toml\"}",
+      "utf8Bytes": 41,
+      "sha256": "1e0c171222bff7d2e5dd90f2a2015c60011f61b0ccc7b09c6436f33a8b532fda"
+    },
+    {
+      "kind": "source",
+      "input": {
+        "version": 1,
+        "files": [
+          "a",
+          "a"
+        ]
+      },
+      "accepted": false
+    },
+    {
+      "kind": "source",
+      "input": {
+        "version": 2,
+        "files": [
+          "a"
+        ]
+      },
+      "accepted": false
+    },
+    {
+      "kind": "source",
+      "input": {
+        "version": 1,
+        "files": [
+          "../escape"
+        ]
+      },
+      "accepted": false
+    },
+    {
+      "kind": "source",
+      "input": {
+        "version": 1,
+        "files": [
+          "a\\b"
+        ]
+      },
+      "accepted": false
+    },
+    {
+      "kind": "source",
+      "input": {
+        "version": 1,
+        "files": [
+          "a",
+          "b"
+        ],
+        "extra": 1
+      },
+      "accepted": false
+    },
+    {
+      "kind": "lock",
+      "input": {
+        "version": 1,
+        "manifest": "a:b"
+      },
+      "accepted": false
+    },
+    {
+      "kind": "lock",
+      "input": {
+        "version": 1,
+        "manifest": "../Cargo.toml"
+      },
+      "accepted": false
+    },
+    {
+      "kind": "lock",
+      "input": {
+        "version": 1,
+        "manifest": [
+          "Cargo.toml"
+        ]
+      },
+      "accepted": false
+    },
+    {
+      "kind": "lock",
+      "input": {
+        "version": 1,
+        "manifest": "Cargo.toml",
+        "extra": true
+      },
+      "accepted": false
+    }
+  ],
+  "paths": [
+    {
+      "value": "a",
+      "accepted": true
+    },
+    {
+      "value": "dir/quote\"\n",
+      "accepted": true
+    },
+    {
+      "value": "/absolute",
+      "accepted": false
+    },
+    {
+      "value": "C:drive",
+      "accepted": false
+    },
+    {
+      "value": "a//b",
+      "accepted": false
+    },
+    {
+      "value": "a/./b",
+      "accepted": false
+    },
+    {
+      "value": "a/../b",
+      "accepted": false
+    },
+    {
+      "value": "a\\b",
+      "accepted": false
+    },
+    {
+      "value": "",
+      "accepted": false
+    },
+    {
+      "value": "a\u0000b",
+      "accepted": false
+    },
+    {
+      "value": "🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬",
+      "accepted": true
+    },
+    {
+      "value": "🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬🧬",
+      "accepted": false
+    },
+    {
+      "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "accepted": true
+    },
+    {
+      "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "accepted": false
+    }
+  ],
+  "hostile": [
+    "proxy",
+    "getter",
+    "sparse",
+    "array-getter",
+    "extra",
+    "null-prototype",
+    "symbol"
+  ],
+  "extents": [
+    {
+      "role": "json",
+      "bytes": 0,
+      "sourceBytes": 0,
+      "metadataBytes": 0,
+      "inventories": 0,
+      "accepted": true
+    },
+    {
+      "role": "json",
+      "bytes": 134217728,
+      "sourceBytes": 0,
+      "metadataBytes": 0,
+      "inventories": 0,
+      "accepted": true
+    },
+    {
+      "role": "json",
+      "bytes": 134217729,
+      "sourceBytes": 0,
+      "metadataBytes": 0,
+      "inventories": 0,
+      "accepted": false
+    }
+  ],
+  "ancestors": [
+    {
+      "count": 64,
+      "accepted": true
+    },
+    {
+      "count": 65,
+      "accepted": false
+    }
+  ],
+  "epochs": [
+    {
+      "loadedSource": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "loadedPolicy": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "currentSource": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "currentPolicy": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "accepted": true
+    },
+    {
+      "loadedSource": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "loadedPolicy": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "currentSource": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "currentPolicy": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "accepted": false
+    },
+    {
+      "loadedSource": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "loadedPolicy": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "currentSource": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "currentPolicy": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "accepted": false
+    },
+    {
+      "loadedSource": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "loadedPolicy": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "currentSource": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "currentPolicy": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "accepted": false
+    }
+  ]
+}

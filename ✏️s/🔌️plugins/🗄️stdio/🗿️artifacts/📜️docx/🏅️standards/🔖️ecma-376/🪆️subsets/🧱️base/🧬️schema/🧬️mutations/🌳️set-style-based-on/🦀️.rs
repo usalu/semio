@@ -7,8 +7,8 @@ use super::*;
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetStyleBasedOn {
-    pub(crate) id: String,
-    pub(crate) based_on: Option<String>,
+    pub id: String,
+    pub based_on: Option<String>,
 }
 
 impl protocol::MutationKind<DocxSnapshot, DocxMutation> for SetStyleBasedOn {

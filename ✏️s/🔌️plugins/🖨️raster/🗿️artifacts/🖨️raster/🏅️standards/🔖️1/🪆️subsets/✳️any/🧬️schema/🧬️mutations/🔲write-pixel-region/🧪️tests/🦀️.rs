@@ -1,9 +1,11 @@
 //! 🧪️ `write-pixel-region` laws: it writes exactly its rectangle, inverts to itself with the base samples of that rectangle,
 //! and is a diagnosed no-op when the rectangle already holds the samples.
 
-use super::*;
+use semio_s_artifact_raster_raster_mutations::RasterMutation;
+use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
+use semio_s_artifact_raster_raster_mutations_pixels::write_pixel_region::*;
 use semio_s_artifact_raster_raster_model::flatten_raster_layers;
-use semio_s_artifact_raster_raster_model::testing::raster_image_test_snapshot;
+use semio_s_artifact_raster_raster_io::testing::raster_image_test_snapshot;
 use semio_s_artifact_raster_raster_model::RasterLayerNode;
 use protocol::Mutation;
 

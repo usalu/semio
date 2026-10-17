@@ -101,7 +101,7 @@ export function loadFirstPartyStdioNativeCodecReceipts(repoRoot = getWorkspaceRo
     if (typeof row.artifact_kind !== "string" || typeof row.artifact_schema !== "string" || typeof row.pack_schema_hash !== "string" || typeof row.factory_id !== "string" || typeof row.extension !== "string" || typeof row.protocol_path !== "string" || typeof row.protocol_source_sha256 !== "string" || typeof row.definition_path !== "string") {
       throw new Error("stdio native codec receipt is incomplete");
     }
-    if (!/^✏️s\/🔌️plugins\/🗄️stdio\/🗿️artifacts\/[^/]+\/📜️artifact-definition\.json$/u.test(row.definition_path) || !row.protocol_path.startsWith(`${row.definition_path.slice(0, row.definition_path.lastIndexOf("/"))}/`) || !row.protocol_path.endsWith("/📡️.protocol.semio") || row.protocol_path.split("/").some((segment) => segment === "." || segment === "..")) throw new Error("stdio native codec receipt source ownership is invalid");
+    if (!/^✏️s\/🔌️plugins\/🗄️stdio\/🗿️artifacts\/[^/]+\/📜️artifact-definition\.json$/u.test(row.definition_path) || !row.protocol_path.startsWith(`${row.definition_path.slice(0, row.definition_path.lastIndexOf("/"))}/`) || !row.protocol_path.endsWith("/📡️.protocol.semio") || row.protocol_path.split("/").some((segment: string) => segment === "." || segment === "..")) throw new Error("stdio native codec receipt source ownership is invalid");
     receipts.push({
       artifactKind: row.artifact_kind,
       artifactSchema: row.artifact_schema,

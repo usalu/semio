@@ -36,6 +36,10 @@ type stdioCsvRfc4180AnySnapshotGuardSizeBounds = { readonly minItems?: number; r
 
 export const stdioCsvRfc4180AnySnapshotGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : stdioCsvRfc4180AnySnapshotGuardReject(at, "value is not an object");
+export const stdioCsvRfc4180AnySnapshotGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) stdioCsvRfc4180AnySnapshotGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const stdioCsvRfc4180AnySnapshotGuardArray = (value: unknown, at: string, bounds: stdioCsvRfc4180AnySnapshotGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return stdioCsvRfc4180AnySnapshotGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) stdioCsvRfc4180AnySnapshotGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -66,7 +70,7 @@ export const stdioCsvRfc4180AnySnapshotGuardConstant = <T extends string | numbe
 //#endregion 🚪️Parsers
 
 export function parseCsvSnapshot(value: unknown, at = "$"): CsvSnapshot {
-  const row = stdioCsvRfc4180AnySnapshotGuardObject(value, at);
+  const row = stdioCsvRfc4180AnySnapshotGuardClosed(stdioCsvRfc4180AnySnapshotGuardObject(value, at), at, ["schema", "hasHeader", "records"]);
   return {
     schema: stdioCsvRfc4180AnySnapshotGuardString(row["schema"], `${at}.schema`),
     hasHeader: stdioCsvRfc4180AnySnapshotGuardBoolean(row["hasHeader"], `${at}.hasHeader`),
@@ -75,7 +79,7 @@ export function parseCsvSnapshot(value: unknown, at = "$"): CsvSnapshot {
 }
 
 export function parseCsvField(value: unknown, at = "$"): CsvField {
-  const row = stdioCsvRfc4180AnySnapshotGuardObject(value, at);
+  const row = stdioCsvRfc4180AnySnapshotGuardClosed(stdioCsvRfc4180AnySnapshotGuardObject(value, at), at, ["value", "quoted"]);
   return {
     value: stdioCsvRfc4180AnySnapshotGuardString(row["value"], `${at}.value`),
     quoted: stdioCsvRfc4180AnySnapshotGuardBoolean(row["quoted"], `${at}.quoted`),
@@ -83,7 +87,7 @@ export function parseCsvField(value: unknown, at = "$"): CsvField {
 }
 
 export function parseCsvRecord(value: unknown, at = "$"): CsvRecord {
-  const row = stdioCsvRfc4180AnySnapshotGuardObject(value, at);
+  const row = stdioCsvRfc4180AnySnapshotGuardClosed(stdioCsvRfc4180AnySnapshotGuardObject(value, at), at, ["fields"]);
   return {
     fields: stdioCsvRfc4180AnySnapshotGuardArray(row["fields"], `${at}.fields`).map((item, index) => parseCsvField(item, `${at}.fields[${index}]`)),
   };

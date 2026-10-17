@@ -3,7 +3,7 @@
 pub const OPCODE: &str = "set-page-user-unit";
 pub const TEXT_OPCODE: &str = OPCODE;
 
-use crate::standards::v1_7::subsets::base::schema::mutations::SetPageUserUnit;
+use crate::standards::v1_7::subsets::base::schema::mutations::set_page_user_unit::SetPageUserUnit;
 
 /// 🖨️ Prints this direct payload through its schema-derived JSON representation.
 pub fn print(payload: &SetPageUserUnit) -> Result<String, String> {

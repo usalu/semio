@@ -1,4 +1,34 @@
-use super::*;
+use crate::editor::gis2d::modes::edit::windows::map::config::MapWindowConfig;
+use semio_framework_plugin::SurfaceKind;
+#[allow(unused_imports)]
+use crate::editor::gis2d::terminology::Gis2dPlayLabels;
+#[allow(unused_imports)]
+use crate::{editor::gis2d::constants_and_io::Gis2dInteractionSnapshot, editor::gis2d::constants_and_io::GIS_MAP_LAYER_IDS};
+#[allow(unused_imports)]
+use crate::tile_coordinates::gis_policy::gis_map_scene_descriptor_json;
+#[allow(unused_imports)]
+use semio_framework_plugin::plugin_app_close_prelude::SurfaceKind as ContractSurfaceKind;
+#[allow(unused_imports)]
+use semio_framework_plugin::scene_surface;
+#[allow(unused_imports)]
+use semio_framework_plugin::BuiltNode;
+#[allow(unused_imports)]
+use semio_framework_ui_locale::LocalizedLabel;
+#[allow(unused_imports)]
+use semio_framework_plugin::TiledMapScene;
+#[allow(unused_imports)]
+use semio_framework_plugin::UiAssemblyResult;
+#[allow(unused_imports)]
+use semio_framework_plugin::WindowKindDefinition;
+#[allow(unused_imports)]
+use semio_framework_plugin::WindowMeasure;
+#[allow(unused_imports)]
+use semio_framework_plugin::WindowOptions;
+#[allow(unused_imports)]
+use semio_framework_surface::tiled_map::clamp_map_layer_weight;
+#[allow(unused_imports)]
+use std::collections::HashMap;
+use crate::editor::gis2d::modes::edit::windows::map::*;
 use crate::editor::gis2d::terminology::gis2d_labels;
 use crate::editor::gis2d::unit_tests::context::{app, close, main_window_measures, render as render_body, render_tiled_map_scene, Gis2dApp};
 use crate::editor::gis2d::{GIS2D_FEATURE_GRANULARITY, GIS2D_INTERACTION_DOMAIN};

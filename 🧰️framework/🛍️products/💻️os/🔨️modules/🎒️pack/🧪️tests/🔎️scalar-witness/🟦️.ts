@@ -2,8 +2,8 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
-import { encodeScalarRecordFixture, type ScalarRecordFixtureCase as Case, type ScalarRecordFixtureField as Field } from "../../../../../../🔨️modules/🎒️pack/🌱️value/🔎️scalar-witness/🧪️testing/🟦️.ts";
-import { valueScalarWitnessFixtureUrl } from "../../../../../../🔨️modules/🎒️pack/🧪️tests/🧫️fixtures/🟦️.ts";
+import { encodeScalarRecordFixture, type ScalarRecordFixtureCase as Case, type ScalarRecordFixtureField as Field } from "@semio-tech/framework-pack-record-ts/scalar-witness/testing";
+import { valueScalarWitnessFixtureUrl } from "@semio-tech/framework-pack-ts/testing/fixtures";
 
 //#region 🔣️Fixture
 type Fixture = {version:number;grants:number[];cancelAfterSteps:number[];terminalEmpty:boolean;capture:{ordinal:number;value:number;laterOrdinal:number;laterValue:number;projections:number;wire:number[]};cases:Case[]};

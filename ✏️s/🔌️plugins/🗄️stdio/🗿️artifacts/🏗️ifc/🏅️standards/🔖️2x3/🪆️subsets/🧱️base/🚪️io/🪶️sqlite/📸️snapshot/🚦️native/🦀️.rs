@@ -3,6 +3,10 @@
 mod binding;
 #[path="🔎️census/🦀️.rs"]
 mod census;
+
+#[cfg(test)]
+#[path="🧪️tests/💰️backing/🦀️.rs"]
+mod backing_tests;
 use crate::standards::v2x3::subsets::base::schema::snapshot::{Ifc2x3EdmPreamble, Ifc2x3Snapshot, STDIO_IFC2X3_DOCUMENT_SCHEMA};
 use semio_s_artifact_stdio_contract::part21::{Part21Decimal, Part21Document, Part21Header, Part21Instance, Part21Value};
 use semio_framework_value::{NativeDecodeControl, NativeEncodeControl, ValueError, ValueRefusalKind};

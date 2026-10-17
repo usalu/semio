@@ -49,7 +49,5 @@ pub fn inverse_sourcing_mutation_steps(mutation: &SourcingMutation, base: &Curat
 //#endregion 🌉️ExternalCodecBridge
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

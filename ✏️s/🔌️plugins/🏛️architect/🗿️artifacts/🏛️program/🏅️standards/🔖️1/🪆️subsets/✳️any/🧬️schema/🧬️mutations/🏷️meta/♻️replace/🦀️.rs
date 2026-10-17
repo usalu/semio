@@ -4,7 +4,7 @@
 //! Phase 2). Behavior unchanged from the wave-2 pass — pure directory/module restructuring.
 
 use crate::standards::v1::subsets::any::schema::registers::ProgramMeta;
-use crate::standards::v1::subsets::any::schema::{diff::ProgramDiff, mutations::ProgramMutation, snapshot::ProgramSnapshot};
+use crate::standards::v1::subsets::any::schema::{diff::ProgramDiff, snapshot::ProgramSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 
 /// 🔁️ Whole-value swap of `program.meta`.
@@ -17,12 +17,15 @@ use protocol::{MutationKind, SemanticDescriptor};
 pub struct ReplaceMeta {
     pub new_meta: ProgramMeta,
 }
-impl MutationKind<ProgramSnapshot, ProgramMutation> for ReplaceMeta {
+impl<Op> MutationKind<ProgramSnapshot, Op> for ReplaceMeta
+where
+    Op: protocol::Mutation<ProgramSnapshot, Diff = ProgramDiff> + From<ReplaceMeta>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "replace", entity: "meta", kind: "replace-meta", record: "ReplacedMeta" };
     fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &ProgramSnapshot) -> Result<Vec<ProgramMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &ProgramSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

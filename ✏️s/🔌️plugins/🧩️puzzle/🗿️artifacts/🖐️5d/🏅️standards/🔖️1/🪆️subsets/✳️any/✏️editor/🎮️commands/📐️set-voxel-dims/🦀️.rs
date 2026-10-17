@@ -1,6 +1,7 @@
 //! 📐️ `set-voxel-dims` command.
 
-use crate::editor::puzzle5d::{Puzzle5dActionCtx, PUZZLE5D_VOXEL_DIM_MAX, PUZZLE5D_VOXEL_DIM_MIN};
+use crate::editor::puzzle5d::interaction::Puzzle5dActionCtx;
+use crate::editor::puzzle5d::entities::{PUZZLE5D_VOXEL_DIM_MAX, PUZZLE5D_VOXEL_DIM_MIN};
 use semio_framework_pack_json::Value;
 
 /// 🧊️ One axis of the Volume Brush's voxel extent, in grid-spacing units, clamped into the declared

@@ -46,7 +46,4 @@ pub use mutation::CreateLayer;
 pub mod diff;
 #[path = "↩️inverse/🦀️.rs"]
 pub mod inverse;
-#[cfg(test)]
-#[path = "🧪️tests/🖋️creates-an-ink-8a1bf9/🦀️.rs"]
-mod tests_creates_an_ink_layer_inside_the_artwork_group;
 //#endregion 🪢️TaxonomyMounts

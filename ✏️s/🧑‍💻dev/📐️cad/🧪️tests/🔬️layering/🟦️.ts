@@ -92,10 +92,14 @@ describe("spatial and CAD ownership", () => {
       write: false,
       format: "esm",
       platform: "browser",
-      packages: "external",
       external: ["node:*", "*.wasm"],
       define: { "import.meta.vitest": "undefined" },
       plugins: [{
+        name: "external-third-party-packages",
+        setup(builder) {
+          builder.onResolve({ filter: /^[^./]/ }, (args) => args.path.startsWith("@semio-tech/") ? undefined : { path: args.path, external: true });
+        },
+      }, {
         name: "hide-specific-owners",
         setup(builder) {
           builder.onLoad({ filter: /./ }, (args) => args.path.includes("🗿️artifacts") || args.path.includes("🧪️tests") ? { errors: [{ text: `Deleted owner: ${args.path}` }] } : undefined);

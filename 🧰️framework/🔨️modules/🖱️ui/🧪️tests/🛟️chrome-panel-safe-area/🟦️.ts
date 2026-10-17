@@ -47,5 +47,4 @@ it("clears cascaded panels inside the actual host at every authored anchor",()=>
    checks++;
   }
  }
- process.stderr.write(`[DEBUG] Chrome safe area accepted ${checks} ordered placements across ${fixture.length} neutral rows with independent Three intersections\n`);
 });

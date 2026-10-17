@@ -57,9 +57,10 @@ import {
 // #endregion 🔌️Adapters
 import React, { type ReactNode } from "react";
 import { faultNotice, historyNotice } from "@semio-tech/framework";
-import { registerPendingWorldProjection } from "../../🌐️World3dHost/🟦️.tsx";
+import { registerPendingWorldProjection } from "../../🌐️World3dHost/🪟️window-view-store/🟦️.tsx";
 import { type InputDraftDispositionV1 } from "../../🏛️ShellHost/🎯️input-ledger/🟦️.ts";
-import { type ExtraWindowInstance, type LoadedProgramState } from "../../🐚️Shell/🟦️.tsx";
+import { type LoadedProgramState } from "../../🐚️Shell/📦️program-sessions/🟦️.ts";
+import { type ExtraWindowInstance } from "../../🐚️Shell/🗃️state-shapes/🟦️.ts";
 import { UiDocumentStore } from "../../📃️UiDocumentStore/🟦️.tsx";
 import type { BrowserActorUiPatchVerdictV1 } from "@semio-tech/framework/browser-bundle/patch-handoff";
 import {
@@ -89,7 +90,7 @@ import {
   type PanelTreeConfigCacheV1,
   type TreeWindowHostV1
 } from "../🌳️tree-windows/🟦️.tsx";
-import { windowMeasuresChrome } from "../🪟️window-panes/🟦️.tsx";
+import { windowMeasuresChrome } from "../🪟️window-panes/🎚️window-measures/🟦️.tsx";
 
 //#region ShellHelpers
 function isStudioMode(catalog: PluginCatalog, pluginFilter?: string): boolean {

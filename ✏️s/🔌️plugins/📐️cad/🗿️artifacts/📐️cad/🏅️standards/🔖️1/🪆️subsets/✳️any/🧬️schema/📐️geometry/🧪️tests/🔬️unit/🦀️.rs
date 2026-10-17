@@ -1,5 +1,6 @@
 use super::*;
 use semio_framework_3d_brep_engine::Brep;
+use semio_framework_test_fixtures::fixture_path;
 
 fn mesh_triangle_area(mesh: &MeshData, triangle_index: usize) -> f32 {
     let i0 = mesh.indices[triangle_index * 3] as usize;
@@ -16,7 +17,7 @@ fn mesh_triangle_area(mesh: &MeshData, triangle_index: usize) -> f32 {
 
 #[semio_framework_async_macros::async_test]
 async fn forest_wire_chains_reversed_edges_by_vertex_id() {
-    let source = std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../📚️examples/🖼️assets/🎮️play/🔣️.json")).expect("../../../📚️examples/🖼️assets/🎮️play/🔣️.json").leak();
+    let source = std::fs::read_to_string(fixture_path!("../../../📚️examples/🖼️assets/🎮️play/🔣️.json")).expect("../../../📚️examples/🖼️assets/🎮️play/🔣️.json").leak();
     let root: semio_framework_pack_json::Value = semio_framework_pack_json::parse(source, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("fixture");
     let geometry_value = root.pointer("/models/0/model/geometry").map(semio_framework_pack_json::to_dsl_value);
     let geometry = parse_geometry(geometry_value.as_ref());
@@ -37,7 +38,7 @@ async fn forest_wire_chains_reversed_edges_by_vertex_id() {
 
 #[semio_framework_async_macros::async_test]
 async fn forest_shape_geometry_imports_solid_handle() {
-    let source = std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../📚️examples/🖼️assets/🎮️play/🔣️.json")).expect("../../../📚️examples/🖼️assets/🎮️play/🔣️.json").leak();
+    let source = std::fs::read_to_string(fixture_path!("../../../📚️examples/🖼️assets/🎮️play/🔣️.json")).expect("../../../📚️examples/🖼️assets/🎮️play/🔣️.json").leak();
     let root: semio_framework_pack_json::Value = semio_framework_pack_json::parse(source, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("fixture");
     let geometry_value = root.pointer("/models/0/model/geometry").map(semio_framework_pack_json::to_dsl_value);
     let geometry = parse_geometry(geometry_value.as_ref());
@@ -57,7 +58,7 @@ async fn forest_shape_geometry_imports_solid_handle() {
 
 #[semio_framework_async_macros::async_test]
 async fn forest_energy_surface_tessellates_at_authored_height() {
-    let source = std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../📚️examples/🖼️assets/🎮️play/🔣️.json")).expect("../../../📚️examples/🖼️assets/🎮️play/🔣️.json").leak();
+    let source = std::fs::read_to_string(fixture_path!("../../../📚️examples/🖼️assets/🎮️play/🔣️.json")).expect("../../../📚️examples/🖼️assets/🎮️play/🔣️.json").leak();
     let root: semio_framework_pack_json::Value = semio_framework_pack_json::parse(source, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("fixture");
     let geometry_value = root.pointer("/models/2/model/geometry").map(semio_framework_pack_json::to_dsl_value);
     let geometry = parse_geometry(geometry_value.as_ref());
@@ -76,7 +77,7 @@ async fn forest_energy_surface_tessellates_at_authored_height() {
 
 #[semio_framework_async_macros::async_test]
 async fn forest_structure_surface_tessellates_at_authored_height() {
-    let source = std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../📚️examples/🖼️assets/🎮️play/🔣️.json")).expect("../../../📚️examples/🖼️assets/🎮️play/🔣️.json").leak();
+    let source = std::fs::read_to_string(fixture_path!("../../../📚️examples/🖼️assets/🎮️play/🔣️.json")).expect("../../../📚️examples/🖼️assets/🎮️play/🔣️.json").leak();
     let root: semio_framework_pack_json::Value = semio_framework_pack_json::parse(source, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("fixture");
     let geometry_value = root.pointer("/models/3/model/geometry").map(semio_framework_pack_json::to_dsl_value);
     let geometry = parse_geometry(geometry_value.as_ref());
@@ -91,7 +92,7 @@ async fn forest_structure_surface_tessellates_at_authored_height() {
 
 #[semio_framework_async_macros::async_test]
 async fn forest_structure_curve_wires_tessellate_as_centerlines() {
-    let source = std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../📚️examples/🖼️assets/🎮️play/🔣️.json")).expect("../../../📚️examples/🖼️assets/🎮️play/🔣️.json").leak();
+    let source = std::fs::read_to_string(fixture_path!("../../../📚️examples/🖼️assets/🎮️play/🔣️.json")).expect("../../../📚️examples/🖼️assets/🎮️play/🔣️.json").leak();
     let root: semio_framework_pack_json::Value = semio_framework_pack_json::parse(source, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("fixture");
     let geometry_value = root.pointer("/models/3/model/geometry").map(semio_framework_pack_json::to_dsl_value);
     let geometry = parse_geometry(geometry_value.as_ref());

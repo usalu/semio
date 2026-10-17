@@ -7,9 +7,9 @@ use std::sync::Arc;
 use semio_framework_value::retirement::{deferred, deferred_birth_bytes, deferred_birth_bytes_for, sequence, sequence_birth_bytes, shared::SharedControlledRetirement, RetireOwned, RetirementCursor};
 use semio_framework_value::SharedUtf8;
 
-pub(crate) const MAX_TRY_VALUE_ENTRIES: usize = 64;
+pub const MAX_TRY_VALUE_ENTRIES: usize = 64;
 
-pub(crate) fn try_value_content_id(chunks: &[SharedUtf8]) -> String {
+pub fn try_value_content_id(chunks: &[SharedUtf8]) -> String {
     let mut digest = [0x6c62272e07bb0142u64, 0x62b821756295c58d, 0x9e3779b185ebca87, 0xc2b2ae3d27d4eb4f];
     let mut len = 0u64;
     for byte in chunks.iter().flat_map(|chunk| chunk.as_bytes()) {
@@ -23,7 +23,7 @@ pub(crate) fn try_value_content_id(chunks: &[SharedUtf8]) -> String {
 }
 
 #[cfg(test)]
-pub(crate) fn split_try_value_chunks(raw: &str, max_bytes: usize) -> Vec<SharedUtf8> {
+pub fn split_try_value_chunks(raw: &str, max_bytes: usize) -> Vec<SharedUtf8> {
     let mut chunks = Vec::new();
     let mut start = 0;
     while start < raw.len() {
@@ -55,14 +55,14 @@ impl FormsTryValues {
     pub fn root_token(&self) -> usize { Arc::as_ptr(&self.root) as usize }
     pub fn revision(&self) -> u64 { self.revision }
     pub fn get_json(&self, key: &str) -> Option<&str> { self.root.get(key).map(|value| value.id.as_str()) }
-    pub(crate) fn with_chunks(&self, key: &str, content_id: String, chunks: Arc<Vec<SharedUtf8>>) -> Self {
+    pub fn with_chunks(&self, key: &str, content_id: String, chunks: Arc<Vec<SharedUtf8>>) -> Self {
         let mut root = self.root.as_ref().clone();
         root.insert(key.into(), TryValueContent { id: SharedUtf8::from(content_id), chunks });
         Self { root: Arc::new(root), revision: self.revision.wrapping_add(1) }
     }
     #[cfg(test)]
-    pub(crate) fn content_chunks(&self, key: &str) -> Option<&[SharedUtf8]> { self.root.get(key).map(|value| value.chunks.as_slice()) }
-    pub(crate) fn content_chunk_by_id(&self, content_id: &str, index: u64) -> Option<SharedUtf8> {
+    pub fn content_chunks(&self, key: &str) -> Option<&[SharedUtf8]> { self.root.get(key).map(|value| value.chunks.as_slice()) }
+    pub fn content_chunk_by_id(&self, content_id: &str, index: u64) -> Option<SharedUtf8> {
         self.root.values().find(|value| value.id.as_str() == content_id).and_then(|value| value.chunks.get(index as usize).cloned())
     }
     pub fn content_chunk_count_by_id(&self, content_id: &str) -> u64 {
@@ -75,8 +75,8 @@ impl FormsTryValues {
         root.remove(key);
         Self { root: Arc::new(root), revision: self.revision.wrapping_add(1) }
     }
-    pub(crate) fn iter_json(&self) -> Vec<(String, SharedUtf8)> { self.root.iter().map(|(key, value)| (key.clone(), value.id.clone())).collect() }
-    pub(crate) fn iter_chunks(&self) -> Vec<(String, Arc<Vec<SharedUtf8>>)> { self.root.iter().map(|(key, value)| (key.clone(), value.chunks.clone())).collect() }
+    pub fn iter_json(&self) -> Vec<(String, SharedUtf8)> { self.root.iter().map(|(key, value)| (key.clone(), value.id.clone())).collect() }
+    pub fn iter_chunks(&self) -> Vec<(String, Arc<Vec<SharedUtf8>>)> { self.root.iter().map(|(key, value)| (key.clone(), value.chunks.clone())).collect() }
     fn retained_bytes(&self) -> usize {
         self.root.iter().fold(0usize, |total, (key, value)| total.saturating_add(key.len()).saturating_add(value.id.len()).saturating_add(value.chunks.iter().map(|chunk| chunk.len()).sum::<usize>()))
     }
@@ -190,8 +190,7 @@ impl FormsTryWindowLease {
 }
 
 //#region 🪢️TaxonomyMounts
-#[path = "🧬️schema/🦀️.rs"]
-pub mod schema;
+
 //#endregion 🪢️TaxonomyMounts
 
 //#region 🔖️Owner

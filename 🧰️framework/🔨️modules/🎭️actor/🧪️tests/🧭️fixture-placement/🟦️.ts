@@ -19,10 +19,8 @@ test("Actor and Job examples belong strictly to neutral tests",()=>{
  for(const path of actual){expect(path.length).toBeLessThanOrEqual(256);expect(Array.from(path).length).toBeLessThanOrEqual(256);}
  const oracle=new Set(independent.map(path=>resolve(path)));let includes=0;
  for(const path of all.filter(path=>path.endsWith(".rs")))for(const match of readFileSync(path,"utf8").matchAll(/include_(?:str|bytes)!\(\s*"([^"]*🧫️fixtures[^"]*)"/g)){const target=resolve(dirname(path),match[1]!);if(owners.includes(relative(modules,target).split(/[\\/]/)[0]!)){expect(oracle.has(target)).toBe(true);includes++;}}
- console.log(`[DEBUG] Node and independent fast-glob agree on ${actual.length} Actor/Job examples and ${includes} native fixture includes`);
 });
 
 test("neutral fixture ancestry vectors agree with independent minimatch",()=>{
  for(const row of ancestry.cases){const oracle=minimatch(row.path,"**/🧪️tests/**/🧫️fixtures/**")&&!["📦️packages","🎯️targets","🧩️implementations"].some(owner=>minimatch(row.path,`**/${owner}/**/🧫️fixtures/**`));expect(oracle,row.id).toBe(row.accepted);expect(belongsToTests(row.path),row.id).toBe(oracle);}
- console.log(`[DEBUG] ${ancestry.cases.length} language-neutral ancestry examples match independent minimatch`);
 });

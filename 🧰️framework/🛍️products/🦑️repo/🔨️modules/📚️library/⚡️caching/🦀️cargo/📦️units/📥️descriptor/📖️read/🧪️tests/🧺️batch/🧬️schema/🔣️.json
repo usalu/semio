@@ -1,0 +1,141 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "nodes",
+    "batches",
+    "publication",
+    "invalid",
+    "faults",
+    "epochs"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "nodes": {
+      "const": 35
+    },
+    "batches": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "nodes",
+          "accepted"
+        ],
+        "properties": {
+          "nodes": {
+            "enum": [
+              0,
+              1,
+              16,
+              17
+            ]
+          },
+          "accepted": {
+            "type": "boolean"
+          }
+        }
+      },
+      "minItems": 4
+    },
+    "publication": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "phase",
+          "written",
+          "reused",
+          "batches",
+          "opens",
+          "directories"
+        ],
+        "properties": {
+          "phase": {
+            "enum": [
+              "cold",
+              "warm",
+              "partial"
+            ]
+          },
+          "written": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "reused": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "batches": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "opens": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "directories": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      },
+      "minItems": 3
+    },
+    "invalid": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "proxy",
+          "copied",
+          "duplicate",
+          "sparse",
+          "accessor",
+          "extra",
+          "node-proxy",
+          "array-subclass"
+        ]
+      }
+    },
+    "faults": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "corrupt",
+          "close"
+        ]
+      }
+    },
+    "epochs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "target",
+          "stage"
+        ],
+        "properties": {
+          "target": {
+            "enum": [
+              "source",
+              "policy"
+            ]
+          },
+          "stage": {
+            "enum": [
+              "entry",
+              "delivery"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

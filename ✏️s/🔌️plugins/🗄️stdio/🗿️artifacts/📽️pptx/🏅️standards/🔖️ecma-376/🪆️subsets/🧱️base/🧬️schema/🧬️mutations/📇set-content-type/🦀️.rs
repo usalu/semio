@@ -11,11 +11,11 @@ use super::*;
 #[value(rename_all = "camelCase")]
 pub struct SetContentType {
     #[value(default)]
-    pub(crate) is_override: bool,
-    pub(crate) name: String,
-    pub(crate) content_type: String,
+    pub is_override: bool,
+    pub name: String,
+    pub content_type: String,
     #[value(default, skip_serializing_if = "Option::is_none")]
-    pub(crate) index: Option<usize>,
+    pub index: Option<usize>,
 }
 
 impl protocol::MutationKind<PptxSnapshot, PptxMutation> for SetContentType {

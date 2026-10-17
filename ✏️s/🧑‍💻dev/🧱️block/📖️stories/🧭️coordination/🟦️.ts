@@ -34,16 +34,16 @@
 // #endregion 🧲️Header
 
 import type { UiComponentSceneNode } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx";
-import { resolveMeshAsset } from "../../../../../🧰️framework/🔨️modules/🖼️assets/🥽️mesh/🟦️.ts";
-import { MESH_DELIVERY_CATALOG } from "../../../../../🧰️framework/🔨️modules/🖼️assets/🥽️mesh/📇️catalog/🟦️.ts";
-import block2dLeftDsl from "../../../../🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🌲️hexagonal-cut-concrete-forest-left/🖼️assets/🌲️hexagonal-cut-concrete-forest/🗣️.dsl.semio?raw";
-import block2dRightDsl from "../../../../🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/➡️hexagonal-cut-concrete-forest-right/🖼️assets/➡️hexagonal-cut-concrete-forest/🗣️.dsl.semio?raw";
-import block3dLeftDsl from "../../../../🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🌲️hexagonal-cut-concrete-forest-left/🖼️assets/🌲️hexagonal-cut-concrete-forest/🗣️.dsl.semio?raw";
-import block3dNakaginDsl from "../../../../🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏢️nakagin-capsule/🖼️assets/🏢️nakagin-capsule/🗣️.dsl.semio?raw";
-import block5dLeftDsl from "../../../../🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🌲️hexagonal-cut-concrete-forest-left/🖼️assets/🌲️hexagonal-cut-concrete-forest/🗣️.dsl.semio?raw";
-import block5dNakaginDsl from "../../../../🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏢️nakagin-capsule/🖼️assets/🏢️nakagin-capsule/🗣️.dsl.semio?raw";
+import { resolveMeshAsset } from "@semio-tech/assets/mesh";
+import { MESH_DELIVERY_CATALOG } from "@semio-tech/assets/mesh/catalog";
+import { block2dConcreteForestLeftDsl as block2dLeftDsl } from "@semio-tech/block-2d/examples/hexagonal-cut-concrete-forest-left/assets/hexagonal-cut-concrete-forest";
+import { block2dConcreteForestRightDsl as block2dRightDsl } from "@semio-tech/block-2d/examples/hexagonal-cut-concrete-forest-right/assets/hexagonal-cut-concrete-forest";
+import { block3dConcreteForestLeftDsl as block3dLeftDsl } from "@semio-tech/block-3d/examples/hexagonal-cut-concrete-forest-left/assets/hexagonal-cut-concrete-forest";
+import { block3dNakaginCapsuleDsl as block3dNakaginDsl } from "@semio-tech/block-3d/examples/nakagin-capsule/assets/nakagin-capsule";
+import { block5dConcreteForestLeftDsl as block5dLeftDsl } from "@semio-tech/block-5d/examples/hexagonal-cut-concrete-forest-left/assets/hexagonal-cut-concrete-forest";
+import { block5dNakaginCapsuleDsl as block5dNakaginDsl } from "@semio-tech/block-5d/examples/nakagin-capsule/assets/nakagin-capsule";
 import hexagonalCutLeftGlbUrl from "../../../../../♻️mit-bestand/🖼️asset/🏚️abbau-aufbau/◀️hexagonal-cut-concrete-forest-left.glb?url";
-import capsuleJGlbUrl from "../../../../../🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🎨️representation/💊️capsules/🪝️j/🧊️capsule_J.glb?url";
+import { capsuleJGlbUrl } from "@semio-tech/assets/metabolism/representation/capsules/j/capsule-j";
 
 //#region 🔖️Model
 /** 🗂️ One parsed DSL document: the banner dialect/version, top-level scalars, `name { … }` blocks and `name [cols] { rows }` tables. */

@@ -4,8 +4,8 @@
 //! guest can emit a page per step without holding the document; [`serialize_document`] is the
 //! whole-document convenience over it. Every byte is deterministic for the same input.
 
-use super::encryption::{seal_standard_security, sha256, Decryptor};
-use super::filters::{encode_stream, flate_encode};
+use crate::standards::v1_7::subsets::base::modules::encryption::{seal_standard_security, sha256, Decryptor};
+use crate::standards::v1_7::subsets::base::modules::filters::{encode_stream, flate_encode};
 use crate::standards::v1_7::subsets::base::modules::lexer::{object_bytes, write_dict, write_object};
 use crate::standards::v1_7::subsets::base::modules::xref::WRITER_TRAILER_KEYS;
 use crate::standards::v1_7::subsets::base::schema::snapshot::{ObjRef, PdfDictEntry, PdfEncryption, PdfIndirectObject, PdfObject};
@@ -259,7 +259,5 @@ pub fn serialize_document(version: &str, objects: &[PdfIndirectObject], trailer:
 //#endregion 🔖️WholeDocument
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

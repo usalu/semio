@@ -35,7 +35,7 @@ export type StoryScope = {
   readonly aliases?: Readonly<Record<string, string>>;
   /** Extra `optimizeDeps.exclude` entries beyond the workspace-package scan. */
   readonly optimizeDepsExclude?: readonly string[];
-  /** Static-dir / tile-proxy / mesh-collection assets served via the existing `playgroundAssetVitePlugins` dispatcher. */
+  /** Static-dir / tile-proxy / mesh-collection assets served via the existing `createAssetBuildPluginsV1` dispatcher. */
   readonly assets?: readonly AssetDeliveryDeclarationV1[];
   /** Lazy scope-gated Vite plugins (only imported when this scope is active). */
   readonly vitePlugins?: () => Promise<OwnedBuildPlugin[]>;
@@ -297,6 +297,13 @@ export function buildScopeAliases(activeScopes: readonly StoryScope[], workspace
     }
   }
   return alias;
+}
+
+/** 📐️ Vite alias entries in which every record key matches its whole specifier: `@semio-tech/x` never rewrites `@semio-tech/x/sub`, so subpaths keep resolving through the package's own `exports`. A plain string `find` substitutes by prefix and turns `@semio-tech/x/sub` into `<replacement>/sub`. `existing` (an array or a record, as Vite and Storybook leave it) follows the exact entries. */
+export function buildExactAliasEntries(record: Readonly<Record<string, string>>, existing?: unknown): Array<{ readonly find: string | RegExp; readonly replacement: string }> {
+  const exact = Object.entries(record).map(([key, replacement]) => ({ find: new RegExp(`^${key.replace(/[.*+?^${}()|[\]\\/]/gu, "\\$&")}$`, "u"), replacement }));
+  const kept = Array.isArray(existing) ? existing : Object.entries((existing ?? {}) as Record<string, string>).map(([find, replacement]) => ({ find, replacement }));
+  return [...exact, ...kept];
 }
 
 /** 👁️ Watch-ignore inversion: ignore every source root NOT owned by an active scope, so adding a scope automatically shrinks/grows everyone's ignore set correctly. */

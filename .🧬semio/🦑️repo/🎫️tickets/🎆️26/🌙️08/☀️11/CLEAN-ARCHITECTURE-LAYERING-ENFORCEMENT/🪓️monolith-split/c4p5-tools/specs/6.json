@@ -1,0 +1,108 @@
+{
+ "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️budgets/🦀️.rs",
+ "original": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/🗑️generated/c4p5-orig/6.rs",
+ "stage": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/🗑️generated/c4p5-stage",
+ "chunks": [
+  {
+   "name": "🎟️session-and-step-budget-laws",
+   "folder": "🎟️session-and-step-budget-laws",
+   "doc": "🎟️ Session and step budget laws: the session geometry cache, the worker hop, the stale lease, the process byte ceiling and the interactive step budgets of the retained commands.",
+   "ranges": [
+    [
+     111,
+     493
+    ]
+   ]
+  },
+  {
+   "name": "🖱️menu-and-engagement-laws",
+   "folder": "🖱️menu-and-engagement-laws",
+   "doc": "🖱️ Menu and engagement laws: the context menu rows, the Add Object dialog, the engagement verbs, the fill and brush arming and the refused placement notice.",
+   "ranges": [
+    [
+     495,
+     834
+    ]
+   ],
+   "post": [
+    "//#endregion 🩹️CheckedDefects"
+   ]
+  },
+  {
+   "name": "🗂️outliner-and-relocate-laws",
+   "folder": "🗂️outliner-and-relocate-laws",
+   "doc": "🗂️ Outliner and relocate laws: the inspection flag rows, the outliner verbs, the target volume and object relocation undo and redo.",
+   "ranges": [
+    [
+     835,
+     1135
+    ]
+   ],
+   "pre": [
+    "//#region 🩹️CheckedDefects"
+   ],
+   "post": [
+    "//#endregion 🩹️CheckedDefects"
+   ]
+  },
+  {
+   "name": "📥️snapshot-exchange-laws",
+   "folder": "📥️snapshot-exchange-laws",
+   "doc": "📥️ Snapshot exchange laws: copy, cut, export and import of the document, the segmented download budget and the leftover routes.",
+   "ranges": [
+    [
+     1136,
+     1673
+    ]
+   ],
+   "pre": [
+    "//#region 🩹️CheckedDefects"
+   ],
+   "post": [
+    "//#endregion 🩹️CheckedDefects"
+   ],
+   "replace": [
+    [
+     "&std::fs::read_to_string(concat!(env!(\"CARGO_MANIFEST_DIR\"), \"/../../🦀️.rs\")).expect(\"committed test data reads\")",
+     "&editor_source()"
+    ]
+   ]
+  },
+  {
+   "name": "🧲️leftover-selection-laws",
+   "folder": "🧲️leftover-selection-laws",
+   "doc": "🧲️ Leftover selection laws: the object context menu, the locked volume scale refusal, the clipboard clones and the leftover translate routes.",
+   "ranges": [
+    [
+     1675,
+     1848
+    ]
+   ],
+   "pre": [
+    "//#region 🩹️CheckedDefects"
+   ]
+  },
+  {
+   "name": "📷️camera-and-settings-laws",
+   "folder": "📷️camera-and-settings-laws",
+   "doc": "📷️ Camera and settings laws: the brush mesh page budget, the id-only announcement, the opening camera and the settings panel scope.",
+   "ranges": [
+    [
+     1850,
+     2135
+    ]
+   ]
+  },
+  {
+   "name": "🔬️document-laws",
+   "folder": "🔬️document-laws",
+   "doc": "🔬️ Document laws: the rendered versus the mutated document, the shipped kind catalog, the initial snapshot cost and the host twin.",
+   "ranges": [
+    [
+     2137,
+     2248
+    ]
+   ]
+  }
+ ]
+}

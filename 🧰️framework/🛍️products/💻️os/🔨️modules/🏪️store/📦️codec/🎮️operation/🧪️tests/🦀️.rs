@@ -1,10 +1,11 @@
 use super::*;
 use crate::os_store::document_store_owners::bounded_artifact_store_owners;
 use semio_framework_os_store_testing_fixtures::{DemoSnapshot, demo::DemoMutation};
+use semio_framework_test_fixtures::fixture_text;
 
 #[test]
 fn original_retained_codec_catalog_preserves_input_receipt_and_cancellation_heap() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../🔨️modules/🏪️store/📦️codec/🎮️operation/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let policy = &fixture["grant"];
     let n = |axis: &str| policy[axis].as_u64().unwrap() as usize;
     let grant = RetainedCloneGrant { maximum_items: n("items"), maximum_copy_bytes: n("copy"), maximum_capacity_bytes: n("capacity"), maximum_release_bytes: n("release"), maximum_depth: n("depth") };
@@ -101,6 +102,5 @@ fn original_retained_codec_catalog_preserves_input_receipt_and_cancellation_heap
         let (_, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| drop(owner));
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
         assert_eq!(births, releases);
-        println!("[DEBUG] original retained codec catalog preparedTurns={prepared_turns} closeTurns={turns} births={births} releases={releases} terminalDrop=0 originalInputPointers=unchanged fixedGrant={grant:?}");
     }
 }

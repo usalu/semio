@@ -20,7 +20,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const { readFileSync } = await import("node:fs");
       const { fileURLToPath } = await import("node:url");
       const { dirname, join } = await import("node:path");
-      const mirror = readFileSync(join(dirname(fileURLToPath(source.url)), "..", "🤖️generated", "🟦️.ts"), "utf8");
+      const mirror = readFileSync(join(dirname(fileURLToPath(source.url)), "..", "..", "..", "..", "..", "🔨️modules", "🐚️shell", "🤖️generated", "🟦️.ts"), "utf8");
       const rendered = [...mirror.matchAll(/^export type ([A-Za-z0-9_]+)/gmu)].map((match) => match[1]).sort();
       expect([...OS_SHELL_SCHEMA_EXPORT_IDS].sort()).toEqual(rendered);
     });

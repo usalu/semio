@@ -214,7 +214,6 @@ fn member_open_constructor_requires_borrowed_birth_before_moving_original_reques
         paid_births += events.requested_bytes;
         let(_,_,turns)=retire_original_member_open(&mut open,&mut caller);
         let(_,allocated,released)=semio_framework_trace_memory_testing::observe_backing(||drop(open));assert_eq!((allocated,released),(0,0));assert!(turns>0);caller.close();
-        println!("[DEBUG] member constructor case={} actual-paid-birth={} borrowed-query={required} zero/one-below-births=0 original-identities-retained=true dialect-clones=0 history-page4096=true original-admission262144", row["id"], events.requested_bytes);
     }
     assert_eq!(denied_births, 0);
     assert!(paid_births >= 8192);

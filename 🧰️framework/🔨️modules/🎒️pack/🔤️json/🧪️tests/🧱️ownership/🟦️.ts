@@ -103,7 +103,7 @@ test("independent JSON parser validates retained admission large candidates", ()
 
 test("neutral borrowed-read fixture retains original Source syntax and independent jsonc-parser lexemes", async () => {
   const fixture = JSON.parse(read("🧪️tests/🧫️fixtures/🫳️read-source.json")) as {source: string; duplicate: string; invalidUtf8: number[]; largeStringBytes: number; decodeAllocationBytes: number; stepUnits: number};
-  const {decodeJsonSyntax} = await import("../../📥️decode/🟦️.ts");
+  const {decodeJsonSyntax} = await import("@semio-tech/pack-json-decode-ts");
   const operation = () => ({maximumBytes: fixture.decodeAllocationBytes, maximumNodes: 4096, maximumDepth: 128, chunk: 256, cancelled: () => false, progress: (_: unknown) => {}, yield: async () => {}});
   const syntax = (node: Node, text: string): Awaited<ReturnType<typeof decodeJsonSyntax>> => {
     if (node.type === "number") return {kind: "number", text: text.slice(node.offset, node.offset + node.length)};
@@ -119,7 +119,6 @@ test("neutral borrowed-read fixture retains original Source syntax and independe
   expect(() => new TextDecoder("utf-8", {fatal: true}).decode(Uint8Array.from(fixture.invalidUtf8))).toThrow();
   const large = JSON.stringify("x".repeat(fixture.largeStringBytes));
   expect(await decodeJsonSyntax(large, JsonMemberPolicy.Reject, operation())).toEqual({kind: "string", value: JSON.parse(large)});
-  console.log("[DEBUG] neutral original8194 source and exact numeric lexemes match first-party Source syntax, jsonc-parser and host JSON; Native paged retention remains a separate owning receipt");
 });
 
 
@@ -135,5 +134,4 @@ test("original normal JSON frontiers require independent physical admission", ()
   expect(native).toContain("normal_step_progress");
   expect(native).not.toContain("release_empty_page(usize::MAX)");
   expect(native).not.toContain("maximum_release_bytes:retirement.release_demand()");
-  console.log("[DEBUG] independent jsonc-parser and native JSON oracle preserve same semantic source under normal five-axis policy");
 });

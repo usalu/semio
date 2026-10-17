@@ -459,19 +459,19 @@ fn absorb_texture_diff(mut a: SemioTextureDiff, b: SemioTextureDiff) -> SemioTex
 /// triad leaf's `diff`/`inverse` (17 of them) can reuse one copy instead of re-deriving the same
 /// four one-line finders (`if code is repeated it must be close together`).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn mesh_at<'a>(base: &'a SemioMeshSnapshot, mesh_id: &str) -> Option<&'a SemioMesh> {
+pub fn mesh_at<'a>(base: &'a SemioMeshSnapshot, mesh_id: &str) -> Option<&'a SemioMesh> {
     base.meshes.iter().find(|m| m.id == mesh_id)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn primitive_at<'a>(base: &'a SemioMeshSnapshot, mesh_id: &str, primitive_id: &str) -> Option<&'a SemioPrimitive> {
+pub fn primitive_at<'a>(base: &'a SemioMeshSnapshot, mesh_id: &str, primitive_id: &str) -> Option<&'a SemioPrimitive> {
     mesh_at(base, mesh_id)?.primitives.iter().find(|p| p.id == primitive_id)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn material_at<'a>(base: &'a SemioMeshSnapshot, id: &str) -> Option<&'a SemioMaterial> {
+pub fn material_at<'a>(base: &'a SemioMeshSnapshot, id: &str) -> Option<&'a SemioMaterial> {
     base.materials.iter().find(|m| m.id == id)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn texture_at<'a>(base: &'a SemioMeshSnapshot, id: &str) -> Option<&'a SemioTexture> {
+pub fn texture_at<'a>(base: &'a SemioMeshSnapshot, id: &str) -> Option<&'a SemioTexture> {
     base.textures.iter().find(|t| t.id == id)
 }
 //#endregion 🔖️EntityLookup
@@ -755,7 +755,7 @@ pub fn diff_replace_texture_bytes(base: &SemioMeshSnapshot, id: &str, new_bytes:
 /// `🎹️composer/🦀️.rs`. Local snapshot fixtures (not imported from `schema::mutations`,
 /// which itself depends ON `schema::diff` — see this file's own module doc comment on why
 /// `diff`/`snapshot`/`mutations` avoid reverse dependencies on each other).
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn demo_snapshot_a() -> SemioMeshSnapshot {
     SemioMeshSnapshot {
@@ -771,7 +771,7 @@ fn demo_snapshot_a() -> SemioMeshSnapshot {
         ..Default::default()
     }
 }
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn demo_snapshot_b() -> SemioMeshSnapshot {
     SemioMeshSnapshot {
@@ -789,9 +789,9 @@ fn demo_snapshot_b() -> SemioMeshSnapshot {
 }
 /// 🌱 Representative `SemioMeshDiff` cases built declaratively (empty/no-op, removed mesh and material rows, a bare mesh insert, a bare texture insert) — single source of truth for `diff_grammar_conformance_law`/`protocol_walk_law` in
 /// `🎹️composer/🦀️.rs`.
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn demo_diff_cases() -> Vec<SemioMeshDiff> {
+pub fn demo_diff_cases() -> Vec<SemioMeshDiff> {
     let base = demo_snapshot_a();
     vec![
         SemioMeshDiff::default(),

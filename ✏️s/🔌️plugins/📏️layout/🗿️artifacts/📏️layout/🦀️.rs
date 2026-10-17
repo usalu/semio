@@ -16,7 +16,6 @@ use protocol::{Identified, Patchable};
 use {semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 use semio_framework_value_derive::{FromValue, ToValue};
-use semio_s_artifact_stdio_semio_drawing::schema::snapshot::SemioDrawingSnapshot;
 
 //#region 🔖️Constants
 

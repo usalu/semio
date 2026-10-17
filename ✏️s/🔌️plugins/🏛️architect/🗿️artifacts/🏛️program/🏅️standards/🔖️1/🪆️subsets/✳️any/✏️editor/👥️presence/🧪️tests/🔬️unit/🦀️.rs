@@ -1,4 +1,7 @@
-use super::*;
+use crate::standards::v1::subsets::any::schema::registers::AdjacencyKind;
+#[allow(unused_imports)]
+use pack::snapshot::ArtifactPack;
+use crate::editor::architect::presence::*;
 use protocol::Mutation;
 
 #[semio_framework_async_macros::async_test]

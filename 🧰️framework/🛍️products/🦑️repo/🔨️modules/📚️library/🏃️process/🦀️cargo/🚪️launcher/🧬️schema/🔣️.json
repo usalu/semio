@@ -416,6 +416,61 @@
           "maximum": 16777216
         }
       }
+    },
+    "Configuration": {
+      "const": {
+        "version": 1,
+        "command": "cargo",
+        "options": {
+          "store": "--store",
+          "configuration": "--configuration",
+          "parallelism": "--parallelism"
+        },
+        "delimiter": "--",
+        "stores": [
+          "shared",
+          "isolated"
+        ],
+        "configurations": [
+          "prototype",
+          "release"
+        ],
+        "maximumArguments": 512,
+        "maximumArgumentLength": 4096,
+        "parallelism": "available",
+        "subcommands": {
+          "compile": [
+            "build",
+            "check",
+            "test",
+            "bench",
+            "run",
+            "doc",
+            "clippy",
+            "rustc",
+            "rustdoc"
+          ],
+          "resolve": [
+            "metadata",
+            "tree",
+            "fetch",
+            "pkgid",
+            "locate-project",
+            "verify-project",
+            "read-manifest"
+          ],
+          "lock": [
+            "generate-lockfile",
+            "update"
+          ]
+        },
+        "isolatedDirectory": "isolated",
+        "isolatedNoncePattern": "^[a-f0-9]{12}$",
+        "jobserverDirectoryPrefix": "jobserver-",
+        "pass": "repo-cargo",
+        "swapSampleMilliseconds": 1000,
+        "progressMilliseconds": 1000
+      }
     }
   }
 }

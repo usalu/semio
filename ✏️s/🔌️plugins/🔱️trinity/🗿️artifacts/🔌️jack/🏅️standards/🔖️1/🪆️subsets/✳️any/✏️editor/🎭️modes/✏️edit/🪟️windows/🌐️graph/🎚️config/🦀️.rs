@@ -1,5 +1,7 @@
 //! 🎚️ Persisted-local configuration contract for one concrete Jack graph window.
 
+pub const WINDOW_KIND_ID: &str = "trinity-jack-graph";
+
 #[path = "🧬️schema/🦀️.rs"]
 mod schema;
 pub use schema::{JackGraphWindowConfig, JackGraphWindowConfigDiff};
@@ -67,7 +69,7 @@ impl semio_framework_plugin::app::WindowConfigApplyMutation<JackGraphWindowConfi
 pub struct JackGraphWindowConfigOwner;
 
 impl semio_framework_plugin::WindowConfigOwner for JackGraphWindowConfigOwner {
-    const WINDOW_KIND_ID: &'static str = super::TRINITY_JACK_PLAY_WINDOW_GRAPH;
+    const WINDOW_KIND_ID: &'static str = WINDOW_KIND_ID;
     const SCHEMA: &'static str = "trinity.jackgraphwindowcfg";
     const MAXIMUM_PUBLICATION_BYTES: usize = 4096;
     type State = JackGraphWindowConfig;
@@ -104,15 +106,13 @@ pub fn addressed(view: &semio_framework_plugin::ViewModel, mutation: JackGraphWi
     use semio_framework_plugin::{Fault, FaultCode, FaultOrigin, WindowConfigMutation};
     let window_id = view.window_id.as_deref().ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("jack.graph-window-required"), "Jack graph view changes require a concrete window"))?;
     let kind = view.window_instances.iter().find(|window| window.id == window_id).map(|window| window.window_kind_id.as_str());
-    if kind != Some(super::TRINITY_JACK_PLAY_WINDOW_GRAPH) {
+    if kind != Some(WINDOW_KIND_ID) {
         return Err(Fault::new(FaultOrigin::App, FaultCode::new("jack.graph-window-required"), "Jack graph view changes require a graph window"));
     }
     Ok(WindowConfigMutation::of::<JackGraphWindowConfigOwner>(window_id, mutation))
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️window/🦀️.rs"]
-mod tests;
+
 
 #[path = "🚪️io/🦀️.rs"]
 pub mod io;

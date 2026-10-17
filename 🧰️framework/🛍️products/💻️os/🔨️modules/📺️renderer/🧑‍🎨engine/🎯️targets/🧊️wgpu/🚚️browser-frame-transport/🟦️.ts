@@ -1,7 +1,7 @@
 import {emptyNativeCatalogV1,readNativeCatalogV1,type NativeCatalogV1} from "../../../../../🔌️plugin/📇️registry/📥️runtime/🟦️.ts";
 import { OriginalBootstrapRootPort, type OriginalBootstrapRequest, type OriginalBootstrapResponse } from "../../../../../../../../🔨️modules/🎭️actor/🎟️retained-turn/🏛️bootstrap/📮️port/🟦️.ts";
 import type { OriginalBootstrapOwner } from "../../../../../../../../🔨️modules/🎭️actor/🎟️retained-turn/🏛️bootstrap/🟦️.ts";
-import type { PluginCatalogRowsV1 } from "../../../../../🔌️plugin/📇️registry/🟦️.ts";
+import type { PluginCatalogRowsV1 } from "@semio-tech/framework/plugin-catalog";
 import type { WgpuPluginModule, WgpuPluginRegistrySelection } from "../🧩️plugin-modules/🛂️admission/🟦️.ts";
 import { BROWSER_MEDIA_CAPACITY, mediaSlotAuthorityKey, parsePresentedMediaSlots, type BrowserMediaCommand, type BrowserMediaOperation, type BrowserMediaResult, type BrowserMediaRelease, type BrowserMediaValue, type PresentedMediaSlot } from "../../../🎬️media/🌐️browser/🟦️.ts";
 import type { MediaTransportPort } from "../../../🎬️media/🚚️lifecycle/🟦️.ts";

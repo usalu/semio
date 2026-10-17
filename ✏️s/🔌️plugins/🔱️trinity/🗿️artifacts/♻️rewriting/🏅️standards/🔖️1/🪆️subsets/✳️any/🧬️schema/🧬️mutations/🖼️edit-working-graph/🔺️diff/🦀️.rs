@@ -1,8 +1,9 @@
 //! 🔺️ Sparse diff builder for `EditWorkingGraph` — names only the working-graph document fields the new graph changes.
 use crate::standards::v1::subsets::any::schema::diff::RewritingDiff;
-use crate::RewritingSnapshot;
+use crate::standards::v1::subsets::any::schema::snapshot::RewritingSnapshot;
 use protocol::DiffAlgebra;
-use semio_s_artifact_trinity_jack::{JackDiff, JackSnapshot};
+use semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::diff::JackDiff;
+use semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::snapshot::JackSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::EditWorkingGraph, base: &RewritingSnapshot) -> protocol::MutationOutcome<RewritingDiff> {

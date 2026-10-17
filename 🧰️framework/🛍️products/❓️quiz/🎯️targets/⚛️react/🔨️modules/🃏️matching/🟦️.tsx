@@ -27,7 +27,7 @@ import type { CompareHint, Hint, MatchingAnswer, SheetDimension, SheetMatchingTa
 import { localized } from "../🌐️i18n/🟦️.ts";
 import { formatQuantity } from "../📏️quantity/🟦️.ts";
 import { DragGrip, GuessField, HintNote, ICON_BUTTON_CLASS, LockedNote, SELECT_ANNOUNCEMENT_DELAY_MS, SELECT_CLASS, compareText, describedBy, elementId, hintName, useHintAnnouncement, type TaskViewProps } from "../🧩️task/🟦️.tsx";
-import { PRESENCE_ANCHORS } from "../👥️presence/🟦️.tsx";
+import { PRESENCE_ANCHORS } from "../👥️presence/👁️view/🟦️.ts";
 import { IconLabel, LiveRegion, useAnnouncement } from "../🪟️chrome/🟦️.tsx";
 import { petProp, usePetTopic } from "../🐾️pets/🟦️.tsx";
 

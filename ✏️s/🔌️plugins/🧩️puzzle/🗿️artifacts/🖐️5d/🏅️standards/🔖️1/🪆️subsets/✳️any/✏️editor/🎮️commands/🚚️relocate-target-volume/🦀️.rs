@@ -1,7 +1,7 @@
 //! 🚚️ `relocate-target-volume` command.
 
 use crate::editor::puzzle5d::modes::edit::windows::world3d::utilities::transform::Puzzle5dSelectionRecord;
-use crate::editor::puzzle5d::Puzzle5dActionCtx;
+use crate::editor::puzzle5d::interaction::Puzzle5dActionCtx;
 use semio_framework_pack_json::Value;
 use semio_s_artifact_puzzle_3d_editor_transform::Puzzle3dSelectionRecord;
 

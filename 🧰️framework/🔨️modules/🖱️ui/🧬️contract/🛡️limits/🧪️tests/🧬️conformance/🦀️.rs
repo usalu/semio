@@ -1,4 +1,6 @@
 mod tests {
+    use semio_framework_test_fixtures::fixture_path;
+
     use std::collections::{BTreeMap, BTreeSet};
     use std::fs;
     use std::path::{Path, PathBuf};
@@ -16,7 +18,7 @@ mod tests {
     /// works regardless of the caller's working directory.
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn corpus_dir() -> PathBuf {
-        Path::new(env!("CARGO_MANIFEST_DIR")).join("../🧫️fixtures/🧪️conformance")
+        fixture_path!("../../../🧪️tests/🧫️fixtures/🧪️conformance")
     }
 
     const GROUPS_WITHOUT_PATCH: &[&str] = &["🧩️component", "🖥️composite", "📐️layout", "♿️accessibility"];

@@ -1,4 +1,4 @@
-use crate::text::snapshot::*;
+use crate::snapshot::*;
 use semio_s_plugin_norm_compliance::{AnnexChoice, DesignSituation};
 
 #[semio_framework_async_macros::async_test]

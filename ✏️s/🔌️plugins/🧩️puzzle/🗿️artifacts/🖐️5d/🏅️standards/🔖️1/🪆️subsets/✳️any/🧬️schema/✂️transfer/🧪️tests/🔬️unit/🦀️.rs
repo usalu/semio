@@ -1,6 +1,13 @@
+use crate::Puzzle5dSnapshot;
+use crate::standards::v1::subsets::any::schema::document_records::{Puzzle5dFastener, Puzzle5dPart};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::next_id;
+#[allow(unused_imports)]
+use std::collections::{HashMap, HashSet};
+use crate::standards::v1::subsets::any::schema::transfer::{owning_part_id};
 
-use super::*;
-use crate::{Puzzle5dCatalogPartKind, Puzzle5dCompatSpecificity, Puzzle5dGrip, Puzzle5dGripTemplate, Puzzle5dKindCatalogs, Puzzle5dKindCompatibility, Puzzle5dPart2d, Puzzle5dPart3d, Puzzle5dPartAnchor};
+use crate::standards::v1::subsets::any::schema::transfer::*;
+use crate::standards::v1::subsets::any::schema::document_records::{Puzzle5dCatalogPartKind, Puzzle5dCompatSpecificity, Puzzle5dGrip, Puzzle5dGripTemplate, Puzzle5dKindCatalogs, Puzzle5dKindCompatibility, Puzzle5dPart2d, Puzzle5dPart3d, Puzzle5dPartAnchor};
 
 fn part_at(id: &str, x: f64, y: f64) -> Puzzle5dPart {
     Puzzle5dPart {
@@ -84,7 +91,7 @@ fn find_replaceable_kinds_walks_kind_compatibility() {
     let mut projection = three_part_projection();
     projection.parts[0].part_kind = Some("kind-a".into());
     projection.kind_compatibility.push(Puzzle5dKindCompatibility { source: "k".into(), target: "k2".into(), bidirectional: false, important: false, specificity: Puzzle5dCompatSpecificity::General });
-    let (kind_catalogs, kind_catalogs_extra) = crate::split_and_seed_kind_catalogs(Some(Puzzle5dKindCatalogs {
+    let (kind_catalogs, kind_catalogs_extra) = crate::standards::v1::subsets::any::schema::kind_catalogs::split_and_seed_kind_catalogs(Some(Puzzle5dKindCatalogs {
         parts: vec![
             Puzzle5dCatalogPartKind { id: "kind-a".into(), name: "A".into(), label: "A".into(), grips: vec![], ..Default::default() },
             Puzzle5dCatalogPartKind { id: "kind-b".into(), name: "B".into(), label: "B".into(), grips: vec![Puzzle5dGripTemplate { grip_kind: Some("k2".into()), ..Default::default() }], ..Default::default() },

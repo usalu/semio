@@ -6,6 +6,7 @@ use crate::standards::v_rfc4180::subsets::any::io::text::snapshot::encode_csv;
 use crate::standards::v_rfc4180::subsets::any::io::text::snapshot::decode_csv_with;
 use crate::standards::v_rfc4180::subsets::any::schema::snapshot::*;
 use crate::CsvMutation;
+use semio_framework_test_fixtures::manifest_dir;
 
 #[semio_framework_async_macros::async_test]
 async fn empty_snapshot_matches_schema() {
@@ -112,7 +113,7 @@ async fn codec_retention_law() {
 #[ignore]
 async fn zzz_generate_p2p1_fixtures() {
     let repo_root = {
-        let mut dir = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        let mut dir = manifest_dir!();
         loop {
             let mut marker = dir.clone();
             marker.push("nx.json");

@@ -1,6 +1,6 @@
 //! 🤐️ Direct text codec for `remove-lang`.
 
-use crate::standards::v1_7::subsets::ua::schema::mutations::RemoveLang;
+use crate::standards::v1_7::subsets::ua::schema::mutations::remove_lang::RemoveLang;
 
 //#region 🔖️Identity
 pub const OPCODE: &str = "remove-lang";
@@ -20,7 +20,5 @@ pub fn parse(text: &str) -> Result<RemoveLang, String> {
 //#endregion 🔖️Codec
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

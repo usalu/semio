@@ -57,67 +57,47 @@ import {
   useUiDevice,
   useShellScope
 } from "@semio-tech/ui-react";
-import { readUiPreferences, resolveUiPreferences, subscribeUiPreferences } from "../../../🎚️UiPreferences/🟦️.ts";
+import { readUiPreferences, resolveUiPreferences, subscribeUiPreferences } from "../../🎚️UiPreferences/🟦️.ts";
 import { type TreeWindowContextValue } from "../../🗣️Interpreter/🪟️tree-windows/🟦️.ts";
 import { LocalDocumentOwnerRegistryV1 } from "../../🗣️Interpreter/🧭️local-document-owner/🟦️.ts";
 import { UiDocumentStore } from "../../📃️UiDocumentStore/🟦️.tsx";
 import { type AppSurfaceSessionFactory } from "../../🪪️WasmSessionLoader/🟦️.tsx";
-import {
-  type ActiveSession,
-  createLocalInteractionStoreV1,
-  EMPTY_SHELL_DEFAULTS,
-  EMPTY_SHELL_LOCKS,
-  type ExtraWindowInstance,
-  type FrameworkOsDefaults,
-  initialShellState,
-  isEphemeralShellBrand,
-  type LoadedProgramState,
-  resolveBootExampleId,
-  type ResolvedShellLocks,
-  shellReducer,
-  localProgramsV1,
-  type SpaceProgramEntry,
-  type SpawnedAppEntry
-} from "../../🐚️Shell/🟦️.tsx";
+import { type SpawnedAppEntry } from "../../🐚️Shell/🟦️.tsx";
+import { type ActiveSession, type LoadedProgramState, localProgramsV1, type SpaceProgramEntry } from "../../🐚️Shell/📦️program-sessions/🟦️.ts";
+import { EMPTY_SHELL_DEFAULTS, EMPTY_SHELL_LOCKS, type FrameworkOsDefaults, isEphemeralShellBrand, resolveBootExampleId, type ResolvedShellLocks } from "../../🐚️Shell/🔒️boot-and-locks/🟦️.ts";
+import { type ExtraWindowInstance } from "../../🐚️Shell/🗃️state-shapes/🟦️.ts";
+import { createLocalInteractionStoreV1, initialShellState, shellReducer } from "../../🐚️Shell/🕹️shell-store/🟦️.ts";
 import type { ViewModel } from "../../🔌️PluginRuntime/🧷️handle-contract/🟦️.ts";
+import { leftoverOverlayCarryingSelectionV1, leftoverOverlayCarryingUtilityV1, leftoverWorldArmedWindowOverlayV1, leftoverWorldSelectionOverlayV1, leftoverWorldWindowOverlayV1, publishLeftoverWorldSelectionV1 } from "../../🌐️World3dHost/🔗️instance-selection/🟦️.ts";
+import { clearPendingWorldProjections, World3dWindowViewRegistryV1 } from "../../🌐️World3dHost/🪟️window-view-store/🟦️.tsx";
+import { navbarExampleIdFromHistoryUpserts } from "../../🛠️ShellHelpers/🔩️plumbing/🔀️example-switching/🟦️.ts";
+import { interactionViewFromLeftoverOutput, leftoverInteractionStateV1 } from "../../🛠️ShellHelpers/🔩️plumbing/🎮️leftover-views/🟦️.ts";
+import { type DocumentTransferNoticeV1 } from "../../🛠️ShellHelpers/🧾️transfer-checkin-tutorial/🟦️.ts";
 import {
-  clearPendingWorldProjections,
-  leftoverOverlayCarryingSelectionV1,
-  leftoverOverlayCarryingUtilityV1,
-  leftoverWorldArmedWindowOverlayV1,
-  leftoverWorldSelectionOverlayV1,
-  leftoverWorldWindowOverlayV1,
-  publishLeftoverWorldSelectionV1,
-  World3dWindowViewRegistryV1
-} from "../../🌐️World3dHost/🟦️.tsx";
-import {
-  navbarExampleIdFromHistoryUpserts,
-  interactionViewFromLeftoverOutput,
-  leftoverInteractionStateV1,
-  type DocumentTransferNoticeV1,
   createTreeWindowSchedulerV1,
   createTreeWindowContextV1,
   type PanelTreeConfigCacheV1,
+  type TreeWindowHostV1,
+  type TreeWindowSchedulerV1
+} from "../../🛠️ShellHelpers/🌳️tree-windows/🟦️.tsx";
+import {
   EMPTY_SHELL_HISTORY_PROJECTION_V1,
   shellHistoryProjectionAfterPatchV1,
   type ShellHistoryProjectionV1,
-  type TreeWindowHostV1,
-  type TreeWindowSchedulerV1,
-  resolveManifestLabel,
-  historyPatchShouldApplyV1,
-  shellLabelLocale,
-  syncShellLabelLocale,
-  type UiRefreshCache
-} from "../../🛠️ShellHelpers/🟦️.tsx";
+  historyPatchShouldApplyV1
+} from "../../🛠️ShellHelpers/🔩️plumbing/🟦️.ts";
+import { resolveManifestLabel, shellLabelLocale, syncShellLabelLocale } from "../../🛠️ShellHelpers/🏷️labels/🟦️.tsx";
+import { type UiRefreshCache } from "../../🛠️ShellHelpers/🔄️ui-refresh/🟦️.ts";
 import { isPluginInstanceRetiredV1, leftoverInspectionPanelHash, type PluginWasmHandle, type PluginOperationCompletion } from "../../🔌️PluginRuntime/🟦️.tsx";
 import { createShellRouteLedgerV1 } from "../🧭️route-ledger/🟦️.ts";
 import type { PluginCatalog } from "@semio-tech/framework";
 // #endregion 🔌️Adapters
 import { resolveRequiredHostApps, type InstalledServicePresentationV1 } from "../🪪️host-bootstrap/🟦️.tsx";
+import type { ShellHostPortsV1 } from "../🪝️host-ports/🟦️.ts";
 import { OPERATION_SETTLE_RING_SLOTS, OPERATION_SETTLE_WAITER_SLOTS, OPERATION_SETTLE_WATCHDOG_MS, operationSettleKeyV1 } from "../🏁️operation-settle/🟦️.ts";
 import { createBuiltNodeStoreCacheV1, logUnlessRetiredV1, requiredHostPanelLeafId, type SpawnedRefreshSlotV1 } from "../🧱️built-node-stores/🟦️.ts";
 import type { Dispatch, RefObject, SetStateAction } from "react";
-import type { ShellState } from "../../🐚️Shell/🟦️.tsx";
+import type { ShellState } from "../../🐚️Shell/🗃️state-shapes/🟦️.ts";
 import type { SpaceArtifactCreationCatalogAuthorityV1 } from "../🧾️space-artifact-creation/🟦️.ts";
 
 type ShellEffectOwnerForward = {
@@ -172,6 +152,7 @@ export type FrameworkOsShellInnerProps = {
   readonly surfaceSessionFactories?: readonly AppSurfaceSessionFactory[];
   readonly backboneWorkerFactory?: () => Worker;
   readonly documentServices?: readonly InstalledServicePresentationV1[];
+  readonly hostPorts?: ShellHostPortsV1;
   readonly appId?: string;
   readonly appRole?: AppRole;
   readonly locks?: ResolvedShellLocks;
@@ -190,6 +171,7 @@ export function useShellCoreState({
   surfaceSessionFactories,
   backboneWorkerFactory,
   documentServices = [],
+  hostPorts,
   appId,
   appRole,
   locks: locksProp,
@@ -695,7 +677,7 @@ export function useShellCoreState({
   //#endregion 🔖️BuiltNodeStores
 
   return {
-    catalog, pluginFilter, plugins, surfaceSessionFactories, backboneWorkerFactory, documentServices, appId, appRole,
+    catalog, pluginFilter, plugins, surfaceSessionFactories, backboneWorkerFactory, documentServices, hostPorts, appId, appRole,
     brand, suppressAutoIntroduction, scope, localDocumentOwnerRegistry, shellContextMenuTitleLabel, hostConfig, hostMode,
     measuredDevice, mobile, locks, defaults, ephemeral, shellState, dispatch, localInteraction, historyStore,
     historyOrderRef, historyOrderByProgramRef, exampleOptionsRef, lastDispatchedExampleIdRef, localHistoryOrderRef,

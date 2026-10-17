@@ -1,6 +1,13 @@
 //! 🪄 `remove-master` — authored as its own mutation leaf; its diff and inverse live in `🔺️diff` and `↩️inverse`.
 
-use super::*;
+#[allow(unused_imports)]
+use protocol::Mutation;
+#[allow(unused_imports)]
+use crate::schema::diff::SemioPresentationDiff;
+#[allow(unused_imports)]
+use crate::schema::snapshot::SemioPresentationSnapshot;
+#[allow(unused_imports)]
+use crate::schema::mutations::insert_master;
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
@@ -10,13 +17,16 @@ pub struct RemoveMaster {
     pub id: String,
 }
 
-impl protocol::MutationKind<SemioPresentationSnapshot, SemioPresentationMutation> for RemoveMaster {
+impl<Op> protocol::MutationKind<SemioPresentationSnapshot, Op> for RemoveMaster
+where
+    Op: protocol::Mutation<SemioPresentationSnapshot, Diff = crate::schema::diff::SemioPresentationDiff> + From<RemoveMaster> + From<crate::schema::mutations::insert_master::InsertMaster>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "master", kind: "remove-master", record: "RemoveMaster" };
 
-    fn diff(&self, base: &SemioPresentationSnapshot) -> protocol::MutationOutcome<<SemioPresentationMutation as Mutation<SemioPresentationSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioPresentationSnapshot) -> protocol::MutationOutcome<<Op as Mutation<SemioPresentationSnapshot>>::Diff> {
         diff::diff(self, base)
     }
-    fn inverse(&self, base: &SemioPresentationSnapshot) -> Result<Vec<SemioPresentationMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &SemioPresentationSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         inverse::inverse(self, base)?
     

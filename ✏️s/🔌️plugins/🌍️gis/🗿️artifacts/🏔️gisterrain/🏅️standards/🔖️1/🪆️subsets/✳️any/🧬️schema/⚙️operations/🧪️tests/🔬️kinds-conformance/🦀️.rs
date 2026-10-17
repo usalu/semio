@@ -1,4 +1,11 @@
-use super::*;
+use crate::schema::mutations::GisTerrainMutation;
+use crate::GisTerrainSnapshot;
+use semio_framework_test_fixtures::fixture_text;
+#[allow(unused_imports)]
+use protocol::Mutation;
+#[allow(unused_imports)]
+use store::{os_store::store_schema::ArtifactEnvelope, ArtifactStore};
+use crate::standards::v1::subsets::any::schema::operations::*;
 
 /// 🏷️ [`KINDS`] must name every declared variant, in the exact order and spelling
 /// `#[derive(dsl::Mutations)]` assigns, and every one of them must appear in the committed oracle
@@ -11,7 +18,7 @@ fn kinds_match_the_enum_and_the_catalog() {
     for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
         assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
     }
-    let manifest = include_str!("../../../../🔮️oracles/🔣️.json");
+    let manifest = fixture_text!("../../../../../🔮️oracles/🔣️.json");
     for kind in KINDS {
         assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
     }

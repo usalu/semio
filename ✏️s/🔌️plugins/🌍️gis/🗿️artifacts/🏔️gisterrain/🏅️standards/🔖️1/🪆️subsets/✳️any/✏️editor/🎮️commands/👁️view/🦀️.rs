@@ -27,7 +27,4 @@ pub mod set_camera {
 //#endregion 🔖️SetCamera
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

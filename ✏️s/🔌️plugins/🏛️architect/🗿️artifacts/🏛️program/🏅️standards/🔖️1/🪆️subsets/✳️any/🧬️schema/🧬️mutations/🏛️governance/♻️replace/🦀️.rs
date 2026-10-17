@@ -4,7 +4,7 @@
 //! Phase 2). Behavior unchanged from the wave-2 pass — pure directory/module restructuring.
 
 use crate::standards::v1::subsets::any::schema::registers::Governance;
-use crate::standards::v1::subsets::any::schema::{diff::ProgramDiff, mutations::ProgramMutation, snapshot::ProgramSnapshot};
+use crate::standards::v1::subsets::any::schema::{diff::ProgramDiff, snapshot::ProgramSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 
 /// 🔁️ Whole-value swap of `program.governance`.
@@ -17,12 +17,15 @@ use protocol::{MutationKind, SemanticDescriptor};
 pub struct ReplaceGovernance {
     pub new_governance: Governance,
 }
-impl MutationKind<ProgramSnapshot, ProgramMutation> for ReplaceGovernance {
+impl<Op> MutationKind<ProgramSnapshot, Op> for ReplaceGovernance
+where
+    Op: protocol::Mutation<ProgramSnapshot, Diff = ProgramDiff> + From<ReplaceGovernance>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "replace", entity: "governance", kind: "replace-governance", record: "ReplacedGovernance" };
     fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &ProgramSnapshot) -> Result<Vec<ProgramMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &ProgramSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

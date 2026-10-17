@@ -92,8 +92,5 @@ pub fn compute_semio_document_outline(snapshot: &SemioDocumentSnapshot) -> Semio
 }
 //#endregion 🔖️Outline
 
-#[cfg(test)]
-//#region 🧪️Tests
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

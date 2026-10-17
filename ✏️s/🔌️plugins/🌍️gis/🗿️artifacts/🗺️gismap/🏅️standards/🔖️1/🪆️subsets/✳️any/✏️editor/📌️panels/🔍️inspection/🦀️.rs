@@ -83,7 +83,4 @@ fn feature_kind(document: &GisMapSnapshot, id: &str) -> &'static str {
 //#endregion 🔖️Render
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

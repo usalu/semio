@@ -9,7 +9,8 @@ import { join } from "node:path";
 import { buildRepositoryCargoArtifacts } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts";
 import { BundleScript } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { withPublishedDevelopmentLocalHubHostV1 } from "../../🚀️local-bootstrap/🏃️execution/🟦️.ts";
-import { validateAndPublishTrustedStdioGisCandidate, withMaterializedTrustedCatalogBundleV1 } from "../../🏗️bootstrap/🧾️provenance/🚚️bootstrap-publication/🟦️.ts";
+import { validateAndPublishTrustedStdioGisCandidate } from "../../🏗️bootstrap/🧾️provenance/🚚️bootstrap-publication/🟦️.ts";
+import { withMaterializedTrustedCatalogBundleV1 } from "../../🏗️bootstrap/🧾️provenance/🚚️bootstrap-publication/🧱️materialized-bundle/🟦️.ts";
 import { TRUSTED_BOOTSTRAP_DEFAULT_PACKAGES, type TrustedBootstrapPackageSpecV1, trustedBootstrapPreflightComponentsV1, trustedBootstrapPreflightDescriptorsV1, trustedBootstrapPreflightSelectionV1, trustedBootstrapSelectPackages } from "../../🏗️bootstrap/🧾️provenance/🧭️bootstrap-selection/🟦️.ts";
 
 /** 🧾️ Parses the one `[--packages <plugin,plugin,…|all>]` argument the trusted catalog verbs take. */

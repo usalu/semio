@@ -1,7 +1,8 @@
 //! 🕸️ Sequence play app commands — bulk node-graph edits and viewport pan/zoom.
 
 use semio_framework_plugin::{NoConfig, NoConfigMutation};
-use crate::editor::sequence::{edit_rules, sequence_child_leaves_emit, sequence_scene_edit, SEQUENCE_PLAY_APP_ID};
+use crate::editor::sequence::edit_rules;
+use crate::editor::sequence::base::{sequence_child_leaves_emit, sequence_scene_edit, SEQUENCE_PLAY_APP_ID};
 use crate::mutations::SequenceMutation;
 use crate::{SequenceCamera, SequenceSnapshot};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
@@ -26,9 +27,9 @@ pub mod node_graph_edit {
 
     /// 🧾️ Decodes one host row through the ONE shared node-graph row decoder of `🛠️tool-machine`; the `setSlider` and
     /// `insertPort` rows a sequence has no widget for are refused by name, so the whole batch is refused.
-    pub(crate) fn sequence_node_graph_row(row: &semio_framework_value::DslValue) -> Result<NodeGraphEditRow, Fault> {
-        match NodeGraphEditRow::from_row(row).map_err(|reason| crate::editor::sequence::sequence_fault("sequence.node-graph.malformed", format!("sequence nodeGraphEdit refusal: {reason}")))? {
-            NodeGraphEditRow::SetSlider { .. } | NodeGraphEditRow::InsertPort { .. } => Err(crate::editor::sequence::sequence_fault("sequence.node-graph.unsupported", "sequence nodeGraphEdit refusal: a sequence has no sliders and no variadic ports")),
+    pub fn sequence_node_graph_row(row: &semio_framework_value::DslValue) -> Result<NodeGraphEditRow, Fault> {
+        match NodeGraphEditRow::from_row(row).map_err(|reason| crate::editor::sequence::base::sequence_fault("sequence.node-graph.malformed", format!("sequence nodeGraphEdit refusal: {reason}")))? {
+            NodeGraphEditRow::SetSlider { .. } | NodeGraphEditRow::InsertPort { .. } => Err(crate::editor::sequence::base::sequence_fault("sequence.node-graph.unsupported", "sequence nodeGraphEdit refusal: a sequence has no sliders and no variadic ports")),
             row => Ok(row),
         }
     }
@@ -41,7 +42,7 @@ pub mod node_graph_edit {
     pub fn handle(payload: &NodeGraphEdit, doc: &ArtifactView<'_, SequenceSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<SequenceMutation, NoConfigMutation>, Fault> {
         let rows: Vec<NodeGraphEditRow> = match json::parse(&payload.operations_json, json::JsonMemberPolicy::Reject) {
             Ok(Value::Array(rows)) => rows.iter().map(|row| sequence_node_graph_row(&json::to_dsl_value(row))).collect::<Result<_, _>>()?,
-            _ => return Err(crate::editor::sequence::sequence_fault("sequence.node-graph.malformed", "sequence nodeGraphEdit operations must be a JSON array")),
+            _ => return Err(crate::editor::sequence::base::sequence_fault("sequence.node-graph.malformed", "sequence nodeGraphEdit operations must be a JSON array")),
         };
         let records: Vec<NodeDragRecord> = rows.iter().filter_map(|row| if let NodeGraphEditRow::Move(record) = row { Some(record.clone()) } else { None }).filter(NodeDragRecord::moves).collect();
         let mut edit = sequence_scene_edit(doc)?;
@@ -97,11 +98,5 @@ pub mod set_viewport {
 //#endregion 🔖️SetViewport
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 
-#[cfg(test)]
-#[path = "🧪️tests/🧪️history/🦀️.rs"]
-mod history_tests;
 //#endregion 🧪️Tests

@@ -109,7 +109,7 @@ pub use mutations::*;
 pub struct WriterMainWindowTransientOwner;
 
 #[path = "📢️publication/🦀️.rs"]
-mod publication;
+pub mod publication;
 
 impl semio_framework_plugin::WindowTransientOwner for WriterMainWindowTransientOwner {
     const WINDOW_KIND_ID: &'static str = super::WRITER_PLAY_WINDOW_KIND;
@@ -121,9 +121,7 @@ impl semio_framework_plugin::WindowTransientOwner for WriterMainWindowTransientO
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🧩️partial/🦀️.rs"]
-mod preparation_tests;
+
 
 pub fn current<'a, T>(view: &'a semio_framework_plugin::TransientView<'_, T>) -> Option<&'a WriterMainWindowTransient> {
     view.window::<WriterMainWindowTransientOwner>()

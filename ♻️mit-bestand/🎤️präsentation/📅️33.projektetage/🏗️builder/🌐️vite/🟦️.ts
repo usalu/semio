@@ -1,11 +1,11 @@
-import {defineOwnedBuildConfig,uiReactBuildPlugin,uiTailwindBuildPlugins} from "../../../../../🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🛠️build-tooling/🟦️.ts";
+import {defineOwnedBuildConfig,uiReactBuildPlugin,uiTailwindBuildPlugins} from "../../../../../🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/🛠️build-tooling/🟦️.ts";
 import { viteCacheDirectory } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/📂️paths/🟦️.ts";
 import { readBuildMode } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
-import { semioViteBuild } from "../../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🎚️mode/🟦️.ts";
+import { semioViteBuild } from "../../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/🏗️builder/🌐️vite/🎚️mode/🟦️.ts";
 // #region 🔌️Adapters
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { semioAssetsVitePlugin, semioEmojiIndexHtmlVitePlugin, semioHostHtmlVitePlugin, playgroundStaticSiteBuildOptions, semioServeCloseVitePlugin } from "../../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts";
+import { semioAssetsVitePlugin, semioEmojiIndexHtmlVitePlugin, semioHostHtmlVitePlugin, playgroundStaticSiteBuildOptions, semioServeCloseVitePlugin } from "../../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/🏗️builder/🌐️vite/🟦️.ts";
 // #endregion 🔌️Adapters
 
 const dir = dirname(fileURLToPath(import.meta.url));
@@ -37,11 +37,11 @@ export default defineOwnedBuildConfig({
   },
   resolve: {
     alias: [
-      { find: "@semio-tech/presentation", replacement: resolve(repoRoot, "🧰️framework/🛍️products/🎤️presentation/📦️packages/🟦️typescript/🟦️.ts") },
-      { find: "@semio-tech/presentation-react", replacement: resolve(repoRoot, "🧰️framework/🛍️products/🎤️presentation/📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️.tsx") },
-      { find: "@semio-tech/ui-react", replacement: resolve(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx") },
+      { find: /^@semio-tech\/presentation$/u, replacement: resolve(repoRoot, "🧰️framework/🛍️products/🎤️presentation/📦️packages/🟦️typescript/🟦️.ts") },
+      { find: /^@semio-tech\/presentation-react$/u, replacement: resolve(repoRoot, "🧰️framework/🛍️products/🎤️presentation/📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️.tsx") },
+      { find: /^@semio-tech\/ui-react$/u, replacement: resolve(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx") },
       { find: /^@semio-tech\/framework$/u, replacement: resolve(repoRoot, "🧰️framework/📦️packages/🟦️typescript/🟦️.ts") },
-      { find: "@semio-tech/mit-bestand-praesentation-projektetage/spec", replacement: resolve(bundleRoot, "🔖️spec.ts") },
+      { find: /^@semio-tech\/mit-bestand-praesentation-projektetage\/spec$/u, replacement: resolve(bundleRoot, "🔖️spec.ts") },
     ],
   },
 });

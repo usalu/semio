@@ -1,5 +1,9 @@
+use crate::{standards::v_rfc8259::subsets::base::schema::mutations::InsertArrayElementPayload, standards::v_rfc8259::subsets::base::schema::mutations::JsonMutation, standards::v_rfc8259::subsets::base::schema::mutations::JsonPath, standards::v_rfc8259::subsets::base::schema::mutations::JsonPathSegment, standards::v_rfc8259::subsets::base::schema::mutations::RemoveArrayElementPayload, standards::v_rfc8259::subsets::base::schema::mutations::RemoveMemberPayload, standards::v_rfc8259::subsets::base::schema::mutations::SetMemberPayload};
+use crate::{standards::v_rfc8259::subsets::base::schema::snapshot::JsonMember, standards::v_rfc8259::subsets::base::schema::snapshot::JsonSnapshot, standards::v_rfc8259::subsets::base::schema::snapshot::JsonValue};
+use protocol::Mutation;
+use crate::standards::v_rfc8259::subsets::i_json::schema::mutations::{CODE_INVARIANT, resolve};
 use crate::apply_mutation;
-use super::*;
+use crate::standards::v_rfc8259::subsets::i_json::schema::mutations::*;
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn member(key: &str, value: JsonValue) -> JsonMember {

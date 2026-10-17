@@ -18,7 +18,6 @@ test("original Tick entity bytes preserve declared scalars, final cells and cumu
   expect(Array.from({length:bytes.byteLength/8},(_,at)=>Number(view.getBigUint64(at*8,true)))).toEqual(row.entities);
   for(const cut of row.interruptAfter){expect(db.query("SELECT ? / 8 AS complete, ? % 8 AS retained").get(cut,cut)).toEqual({complete:Math.floor(cut/8),retained:cut%8})}
  }}finally{db.close()}
- console.log("[DEBUG] independent Ajv/SQLite/DataView original field7 little-endian8, unchanged full5 and retained partial scalar cuts; native acceptance remains separate");
  const path=new URL("../🦀️.rs",import.meta.url);
  expect(existsSync(path)).toBe(true);
  const source=readFileSync(path,"utf8");

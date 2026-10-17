@@ -1,4 +1,10 @@
-use super::*;
+use semio_framework_os_renderer_wgpu_contracts::framework_widget_context;
+use semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions;
+use semio_framework_os_renderer_wgpu_scene_feeds::{EventFeedEntryJson, acknowledge_event_feed_accessibility_candidates, event_feed_accessibility_activate, event_feed_accessibility_controls, event_feed_accessibility_label, event_feed_hit, event_feed_layout, event_feed_row_height, event_feed_time_id, event_feed_time_request, event_feed_tone_color, publish_host_temporal_reply, render_event_feed, seal_event_feed_accessibility_candidates, stage_event_feed_accessibility_controls};
+use semio_framework_os_renderer_wgpu_scene_state::{HostTemporalPresentation, SCENE_STATE, SceneSurfaceState, set_scroll_offset};
+use serde_json::{Value, json};
+use std::collections::HashMap;
+use ui_wgpu::wgpu::{ActionDescriptor, Rect, Rgba, SurfaceKind, Theme, UiComponentSceneNode, UiPresence};
 
 #[test]
 fn entries_json_tolerates_missing_optional_fields() {
@@ -232,7 +238,7 @@ fn neutral_visual_contract_drives_card_paint_hit_ax_and_semantic_tones() {
     let mut collapsed = HashMap::new();
     let mut selects = HashMap::new();
     {
-        let mut ctx = crate::interpreter::framework_widget_context(&mut draw, None, &mut atlas, None, &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None, 0.0);
+        let mut ctx = framework_widget_context(&mut draw, None, &mut atlas, None, &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None, 0.0);
         render_event_feed(&scene, bounds, &mut ctx);
     }
     let painted_cards: Vec<Rect> = input.staged_hits().iter().filter(|target| target.event.is_some()).map(|target| target.rect).collect();
@@ -249,7 +255,7 @@ fn neutral_visual_contract_drives_card_paint_hit_ax_and_semantic_tones() {
     let mut clipped_atlas = semio_framework_ui_text::FontAtlas::builtin();
     let mut clipped_input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
     {
-        let mut ctx = crate::interpreter::framework_widget_context(&mut clipped_draw, None, &mut clipped_atlas, None, &mut clipped_input, &theme, &mut scroll, &mut collapsed, &mut selects, None, 0.0);
+        let mut ctx = framework_widget_context(&mut clipped_draw, None, &mut clipped_atlas, None, &mut clipped_input, &theme, &mut scroll, &mut collapsed, &mut selects, None, 0.0);
         render_event_feed(&scene, bounds, &mut ctx);
     }
     let clipped_hits: Vec<Rect> = clipped_input.staged_hits().iter().filter(|target| target.event.is_some()).map(|target| target.rect).collect();
@@ -297,7 +303,7 @@ fn render_feed_entry(tone: Option<&str>) -> (semio_framework_ui_draw_contract::D
     let mut collapsed = HashMap::new();
     let mut selects = HashMap::new();
     {
-        let mut ctx = crate::interpreter::framework_widget_context(&mut draw, None, &mut atlas, None, &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None, 0.0);
+        let mut ctx = framework_widget_context(&mut draw, None, &mut atlas, None, &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None, 0.0);
         render_event_feed(&scene, Rect::new(0.0, 0.0, 400.0, 200.0), &mut ctx);
     }
     (draw, theme)
@@ -459,7 +465,7 @@ fn neutral_accessible_entries_stage_clipped_labels_and_exact_actions() {
         if let Some(expected) = row["expected"]["action"].as_object() {
             let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
             event_feed_accessibility_activate(&scene, row["expected"]["key"].as_str().unwrap(), &mut input).expect("accepted control").expect("bounded action");
-            let actions = crate::collect_fixture_actions(&mut input);
+            let actions = collect_fixture_actions(&mut input);
             assert_eq!(actions.len(), 1);
             assert_eq!(actions[0].controller_id, expected["controllerId"].as_str().unwrap());
             assert_eq!(actions[0].action, expected["action"].as_str().unwrap());
@@ -469,7 +475,7 @@ fn neutral_accessible_entries_stage_clipped_labels_and_exact_actions() {
         } else {
             let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
             assert!(event_feed_accessibility_activate(&scene, row["expected"]["key"].as_str().unwrap(), &mut input).is_none());
-            assert!(crate::collect_fixture_actions(&mut input).is_empty());
+            assert!(collect_fixture_actions(&mut input).is_empty());
         }
     }
 }

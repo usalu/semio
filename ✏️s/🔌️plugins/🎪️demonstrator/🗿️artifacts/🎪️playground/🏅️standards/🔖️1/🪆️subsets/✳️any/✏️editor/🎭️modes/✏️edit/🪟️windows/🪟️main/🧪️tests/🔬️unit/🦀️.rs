@@ -1,4 +1,7 @@
-use super::*;
+use crate::standards::v1::subsets::any::schema::snapshot::PlaygroundSnapshot;
+use semio_framework_plugin::app::TextWindowKit;
+use semio_framework_ui_locale::Locale;
+use crate::editor::playground::modes::edit::windows::main::*;
 
 #[test]
 fn definition_declares_an_editable_text_window() {

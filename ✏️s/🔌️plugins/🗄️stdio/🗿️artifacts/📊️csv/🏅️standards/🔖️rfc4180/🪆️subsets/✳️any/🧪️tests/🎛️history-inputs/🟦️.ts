@@ -18,6 +18,5 @@ test("CSV committed header and ordinal field intents match independent RFC6902",
   expect(ajv.compile(read(`🧬️schema/🧬️mutations/${row.leaf}/🧬️schema/🔣️.json`))(row.mutation)).toBe(true);
   expect(after.records[1]).toEqual(before.records[1]);
   const path=resolve(root,`🧪️tests/🧫️fixtures/🧬️history-edits/${row.id}/🦠️mutation/🔣️.json`);expect(existsSync(path)).toBe(true);expect(JSON.parse(readFileSync(path,"utf8"))).toEqual({mutation:row.mutation,before,after});
-  console.log("[DEBUG] CSV committed native intent agrees with RFC6902",row.id);
  }
 });

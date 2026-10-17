@@ -88,10 +88,3 @@ pub fn inverse_semio_table_mutation(mutation: &SemioTableMutation, base: &SemioT
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
-
-//#region 🧪️FixtureTests
-/// 🧪️ Handcrafted mutation fixtures (contract D1, ticket `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`)
-/// — one case per triad leaf, self-wired here rather than in `🦀️.rs` so this subset owns its
-/// own test surface. `#[path = "."]` re-roots the nested `#[path]`s at THIS file's directory (the
-/// `🧬️mutations` root) instead of the implicit `🦀️component/` child directory.
-//#endregion 🧪️FixtureTests

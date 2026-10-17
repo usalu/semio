@@ -35,7 +35,6 @@ fn recursive_dictionary_owns_typed_retirement_under_independent_grants() {
                 assert!(progress.copied_items!=0 || matches!(step,RetainedCloneStep::Complete(_)),"exact Neural owner grant blocked on turn {turn}");
             }
             assert!(owner.terminal_is_empty());assert_eq!(copied,"nestedvalue".len()+row["text"].as_str().unwrap().len());assert_eq!(released,original_born-original_freed+born);
-            eprintln!("[DEBUG] Recursive Neural original-pointer typed owner copied={copied} born={born} physical={released}");
         }
     }
 }
@@ -54,7 +53,6 @@ fn finite_schema_operator_fields_preserve_typed_work_and_physical_custody() {
             let (step,a,r)=observe_ownership(||owner.step(grant).unwrap());let progress=step.progress();assert_eq!((progress.retained_capacity_bytes,progress.released_bytes),(a,r));assert!(progress.copied_items<=1);assert!(progress.copied_bytes<=copy);assert!(a<=grant.maximum_capacity_bytes);assert!(r<=grant.maximum_release_bytes);births+=a;released+=r;copied+=progress.copied_bytes;assert!(progress.copied_items!=0,"exact finite Neural field grant blocked on turn {turn}");
         }
         assert!(owner.terminal_is_empty());assert_eq!(copied,expected);assert_eq!(released,original+births);
-        eprintln!("[DEBUG] Actual Neural finite fields copy={copy} work={copied} original={original} scaffolds={births} physical={released}");
     }
     for copy in fixture["copyGrants"].as_array().unwrap() {
         let (schema,a,r)=observe_ownership(||serde_json::from_value::<Schema>(fixture["schema"].clone()).unwrap());assert_eq!(serde_json::to_value(&schema).unwrap(),fixture["schema"]);close(schema,a-r,copy.as_u64().unwrap() as usize,fixture["expected"]["schemaStringBytes"].as_u64().unwrap() as usize);
@@ -98,7 +96,6 @@ fn original_typed_owner_demands_propagate_without_false_fixed_page_progress() {
     assert!(progress.fits(grant));assert_eq!((progress.retained_capacity_bytes,progress.released_bytes),(born,freed));assert_eq!(born,birth);
     let released=close(owner,fixture["logicalPage"].as_u64().unwrap()as usize);
     assert!(released>=fixture["reservedCapacity"].as_u64().unwrap()as usize);
-    eprintln!("[DEBUG] Original Neural typed owner full independent grants physical release={released}");
 }
 
 /// 🧭️ The original Neural source handoff retains its pointer without an unadmitted frontier node.
@@ -114,7 +111,6 @@ fn original_neural_value_frontier_stages_without_hidden_birth() {
         let original_pointer=owner.original_value().unwrap().as_atom().unwrap().as_str().unwrap().as_ptr();
         assert_eq!(original_pointer,pointer);
         retire_value_cold(owner);
-        eprintln!("[DEBUG] original Neural staged source={} originalPointer=true hiddenBirth={births} hiddenFree={frees}",source_births);
         assert_eq!((births,frees),(fixture["frontier"]["sourceBirthBytes"].as_u64().unwrap() as usize,fixture["frontier"]["sourceReleaseBytes"].as_u64().unwrap() as usize),"source custody must remain inline before an admitted retirement step");
     }
 }
@@ -150,7 +146,7 @@ fn neural_physical_retirement_direct_vector_backings_require_whole_release_grant
 fn neural_physical_retirement_admits_the_current_nested_ordered_key_demand() {
     use crate::testkit::observe_ownership;
     let (released,born,freed)=observe_ownership(||{let mut key=String::with_capacity(8193);key.push_str("nested-key");close(ValueRetirement::from_dictionary(Dictionary::new().insert(key,Value::null())),1)});
-    assert_eq!(born,freed);assert!(released>=8193);eprintln!("[DEBUG] Neural nested key original and frontier physical allocations={freed}");
+    assert_eq!(born,freed);assert!(released>=8193);
 }
 fn close(mut owner:ValueRetirement,copy:usize)->usize {
     use crate::testkit::observe_ownership;
@@ -184,7 +180,6 @@ fn nested_fixture_preserves_payload_and_closes_all_actual_allocations() {
         for page in [1,64,4096] {
             let (_,born,freed)=observe_ownership(|| {let dictionary:Dictionary=serde_json::from_str(&json).unwrap();assert_eq!(serde_json::to_value(&dictionary).unwrap(),oracle);close(dictionary.into_retirement(),page)});
             assert_eq!(born,freed,"original and frontier allocations must all close at page {page}");
-            println!("[DEBUG] Neural fixture {} page={page} payload oracle preserved, allocator closed={freed}",row["id"]);
         }
     }
 }
@@ -238,7 +233,6 @@ fn partial_nested_retirement_transfers_workers_without_allocation_loss() {
     });
     let (remainder,worker_born,worker_freed)=std::thread::spawn(move ||observe_ownership(||close(owner,64))).join().unwrap();
     assert_eq!(born+worker_born,freed+worker_freed);assert!(initial_charge+remainder>=18005);
-    println!("[DEBUG] Neural original worker ownership closed allocations={}",freed+worker_freed);
 }
 //#endregion 🔣️FixtureLaws
 
@@ -258,7 +252,7 @@ fn evaluation_snapshot_and_channel_owners_preserve_payload_and_close_all_allocat
             let channels=EvalChannels {outputs:HistoryFoldIndex::from([("node".into(),Dictionary::new().insert("label",Value::Atom(Atom::String(payload.clone()))))]),inputs:HistoryFoldIndex::new()};
             assert_eq!(serde_json::to_value(channels.outputs.get("node").unwrap()).unwrap(),serde_json::json!({"label":payload}));
             close(ValueRetirement::from_snapshot(snapshot),page);close(ValueRetirement::from_channels(channels),page)
-        });assert_eq!(born,freed);println!("[DEBUG] Neural evaluation page={page} UTF8 payload preserved, allocator closed={freed}");
+        });assert_eq!(born,freed);
     }
 }
 //#endregion 📸️EvaluationRetirement
@@ -300,7 +294,7 @@ fn body_dependent_birth_uses_the_same_borrowed_body_and_finite_progress() {
     admit_external(&mut owner,BodyOwner {overhead:law["overhead"].as_u64().unwrap()as usize});
     let mut turns=0;let mut released=0;
     while !owner.terminal_is_empty() {turns+=1;assert!(turns<law["maximumTurns"].as_u64().unwrap());let grant=original_grant(&owner,law["logicalPage"].as_u64().unwrap()as usize);let (step,born,freed)=crate::testkit::observe_ownership(||owner.close_step(grant).unwrap());assert!(step.progress().fits(grant));assert_eq!((step.progress().retained_capacity_bytes,step.progress().released_bytes),(born,freed));released+=freed;}
-    assert!(released>birth);println!("[DEBUG] Neural body-dependent allocation closed with exact admission, turns={turns}, released={released}");
+    assert!(released>birth);
 }
 
 #[test]
@@ -313,5 +307,5 @@ fn retained_entry_storage_preserves_original_vector_allocation_and_order() {
     let first=entries.pop_front().unwrap();let second=entries.pop_front().unwrap();assert_eq!(first.0,"first");assert_eq!(second.0,"second");
     close(ValueRetirement::from_owner(Owner::Input(protocol::value::DslValue::Object(vec![first,second]))),3);
     let mut owner=ValueRetirement::default();admit_external(&mut owner,entries);let released=close(owner,3);
-    assert!(released>=capacity*size_of::<(String,protocol::value::DslValue)>());eprintln!("[DEBUG] Neural original entry storage kept its backing and front order, physical release={released}");
+    assert!(released>=capacity*size_of::<(String,protocol::value::DslValue)>());
 }

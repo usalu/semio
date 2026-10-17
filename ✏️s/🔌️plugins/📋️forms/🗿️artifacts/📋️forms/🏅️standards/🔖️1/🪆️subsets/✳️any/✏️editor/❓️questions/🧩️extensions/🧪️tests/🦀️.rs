@@ -1,8 +1,11 @@
-use super::*;
+use crate::FormQuestion;
+use semio_framework_pack_json::Value;
+use crate::editor::forms::questions::extensions::*;
+use semio_framework_test_fixtures::fixture_text;
 
 #[test]
 fn extension_render_inputs_match_shared_vectors() {
-    let vectors: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
+    let vectors: serde_json::Value = serde_json::from_str(fixture_text!("../../../✏️editor/❓️questions/🧩️extensions/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     for item in vectors["cases"].as_array().unwrap() {
         let question: FormQuestion = semio_framework_pack_json::from_json_str(&item["question"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         let values = semio_framework_pack_json::parse(&item["values"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();

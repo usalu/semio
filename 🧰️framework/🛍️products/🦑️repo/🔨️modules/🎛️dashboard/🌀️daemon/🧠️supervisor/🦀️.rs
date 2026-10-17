@@ -428,6 +428,7 @@ impl Supervisor {
 
     /// ▶️ Starts the process of a session: a new one, or an ended one that runs again with its output continued.
     fn start(&mut self, session_id: &str, mut command: SessionCommand, base: &[(String, String)], requester: Option<u64>) -> Outcome {
+        if let Err(error) = ipc::bind_build_tools(&self.root, ipc::build_tool_environment(base), std::iter::once(&mut command)) { return failed_for(code::INVALID, error.to_string(), session_id); }
         let cwd = ipc::canonical_path(&self.root.join(&command.cwd));
         command.cwd = cwd.display().to_string();
         let running = |live: &Live| matches!(live.info.status, SessionStatus::Running | SessionStatus::Stopping);
@@ -706,7 +707,8 @@ impl Supervisor {
     fn spawn_group(&mut self, id: u64, group_id: &str, stop: GroupStop, members: Vec<GroupMember>, requires: Vec<GroupMember>) -> Outcome {
         let environment = self.environment_of(id)?;
         if self.groups.contains_key(group_id) { return fail(code::ALREADY_RUNNING, "a group of this identifier is already running"); }
-        let steps: Vec<Step> = requires.into_iter().map(|member| (member, true)).chain(members.into_iter().map(|member| (member, false))).map(|(member, service)| Step { session_id: member.session_id, command: member.command, service }).collect();
+        let mut steps: Vec<Step> = requires.into_iter().map(|member| (member, true)).chain(members.into_iter().map(|member| (member, false))).map(|(member, service)| Step { session_id: member.session_id, command: member.command, service }).collect();
+        if let Err(error) = ipc::bind_build_tools(&self.root, ipc::build_tool_environment(&environment), steps.iter_mut().map(|step| &mut step.command)) { return fail(code::INVALID, error.to_string()); }
         for step in steps.iter().filter(|step| !step.service) {
             if self.sessions.get(&step.session_id).is_some_and(|live| live.info.status.live()) { return failed_for(code::ALREADY_RUNNING, "session is already running", &step.session_id); }
         }
@@ -776,7 +778,7 @@ impl Supervisor {
     }
 
     fn reusable(&self, command: &SessionCommand) -> Option<String> {
-        self.sessions.values().find(|live| live.info.status == SessionStatus::Running && ((!command.command_id.is_empty() && live.info.command.command_id == command.command_id) || live.info.command.same_task(command))).map(|live| live.info.session_id.clone())
+        self.sessions.values().find(|live| live.info.status == SessionStatus::Running && live.info.command.same_build_tool(command, &self.root) && ((!command.command_id.is_empty() && live.info.command.command_id == command.command_id) || live.info.command.same_task(command))).map(|live| live.info.session_id.clone())
     }
 
     fn fail_group(&mut self, group_id: &str, failure: Fail) {

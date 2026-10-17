@@ -1,3 +1,16 @@
-//! 🍇️ Companion test crate tests-07 of the plugin SDK partition (hosts: reactor-turn, time-travel).
+//! 🍇️ Companion test crate tests-07 of the plugin SDK partition: hosts the test roots `natural_file_lifecycle_tests`, `tool_run_turns_test_hosts`, `testing_laws_unit_3`.
 //!
-//! 🧭️ WP4 hosting (`RESULT-PLUGIN-WP4.md`): this crate hosts the 15 test sources of `reactor-turn` and of the reactor driver tests that the root of `⚛️reactor` mounts today: `⚛️reactor/🔄️turn/🧪️tests/*` (execution, invocation failure, future size, wire effect round trip, inbound request, deferred render drain), `🔄️turn/📥️receiving/🧪️tests`, `🔄️turn/📥️receiving/📦️completed/🧪️tests`, `🔄️turn/🎟️receipt/🧪️tests` and `⚛️reactor/🧪️tests/{⚛️reactor-driver, 🔬️m1-m2-reactor, 🔬️reconcile-budget, 🔬️reconcile-spin, 🚚️more-work-drive, 🧺️turn-patch-batch}` with their fixtures (a closure of 27 files, 2,653 lines, 192,799 bytes). The files stay where they are and are mounted by their present parents until the carve flips; at the flip they are mounted here with `#[cfg(test)] #[path]`, `use super::*` becomes explicit imports of the production crates, and the private names they use become `#[doc(hidden)] pub` (decision D4).
+//! 🧭️ The test sources stay where they are and are mounted here with `#[path]`; every name they use from the former facade root is spelled with the crate that owns it.
+
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as pack;
+
+#[cfg(test)]
+
+#[path = "../../🧪️tests/📄️natural-file-lifecycle/🦀️.rs"]
+pub mod natural_file_lifecycle_tests;
+#[cfg(test)]
+#[path = "../../🪝️mounts/🧵️wp7-instance-tier2/🧪️test-hosts/⏩️tool-run-turns/🦀️.rs"]
+pub mod tool_run_turns_test_hosts;
+

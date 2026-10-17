@@ -1,12 +1,13 @@
 use super::*;
+use semio_framework_test_fixtures::fixture_text;
 use semio_framework_tool_run::{ToolRunId, ToolRunIdentity, ToolRunTraceStore};
 use serde_json::Value;
 use std::collections::BTreeMap;
 
-const TRACE_PAGES: &str = include_str!("../../../../../../../../../🔨️modules/⏯️tool-run/🧪️tests/🧫️fixtures/📼️trace-pages.json");
+static TRACE_PAGES: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../../🔨️modules/⏯️tool-run/🧪️tests/🧫️fixtures/📼️trace-pages.json"));
 
 fn fixture() -> Value {
-    serde_json::from_str(TRACE_PAGES).expect("📼️ trace-pages fixture parses")
+    serde_json::from_str((*TRACE_PAGES)).expect("📼️ trace-pages fixture parses")
 }
 
 fn identity_from(value: &Value) -> ToolRunIdentity {
@@ -221,14 +222,14 @@ fn fade_starts_opaque_and_bottoms_out_at_the_floor_token() {
 }
 
 /// 🎲️ The board-2d lane contract: its `traceShapes` footprints and its round-trip lane text.
-const BOARD2D_SCENE_LANES: &str = include_str!("../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧪️tests/🧫️fixtures/🚚️board2d-scene-lanes/🔣️.json");
+static BOARD2D_SCENE_LANES: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧪️tests/🧫️fixtures/🚚️board2d-scene-lanes/🔣️.json"));
 
 /// ⚖️ LAW: a board's placement2d footprints are exactly the `traceShapes` rows of the board-2d lane contract, a malformed
 /// catalog has none, and every placement2d record of the contract's lane becomes one footprint draw with its record's
 /// verdict color, the newest `testing` record flagged.
 #[test]
 fn board2d_placement_draws_follow_the_board_lane_contract() {
-    let contract: Value = serde_json::from_str(BOARD2D_SCENE_LANES).expect("board-2d lane contract parses");
+    let contract: Value = serde_json::from_str((*BOARD2D_SCENE_LANES)).expect("board-2d lane contract parses");
     let shapes = &contract["traceShapes"];
     assert_eq!(shapes["kindSize"].as_f64(), Some(BOARD2D_TOOL_RUN_TRACE_KIND_SIZE));
     let expected: Vec<ToolRunTraceShape2d> = shapes["shapes"]

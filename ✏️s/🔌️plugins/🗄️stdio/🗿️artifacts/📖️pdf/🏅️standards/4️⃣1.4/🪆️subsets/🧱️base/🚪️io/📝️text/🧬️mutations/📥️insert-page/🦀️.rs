@@ -1,8 +1,8 @@
 //! 📝️ insert-page text payload owner.
 
 use crate::standards::v1_4::subsets::base::schema::mutations::PdfMutation;
-use crate::standards::v1_4::subsets::base::io::text::mutations::{hex, unhex};
-use crate::standards::v1_4::subsets::base::schema::mutations::InsertPage;
+use crate::standards::v1_4::subsets::base::io::text::mutations::wire::{hex, unhex};
+use crate::standards::v1_4::subsets::base::schema::mutations::insert_page::InsertPage;
 
 //#region 🔖️Codec
 pub const OPCODE: &str = "insert-page";

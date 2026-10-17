@@ -1,0 +1,21 @@
+{
+ "name": "dm2e",
+ "crates": [
+  "semio-framework-plugin-host-engine",
+  "semio-framework-plugin-host-wake",
+  "semio-framework-plugin-host-operation",
+  "semio-framework-plugin-interpreter",
+  "semio-framework-plugin-interpreter-runtime"
+ ],
+ "base": {
+  "rev": "1bae6115bc5",
+  "crates": [
+   "semio-framework-plugin-host-engine",
+   "semio-framework-plugin-host-wake",
+   "semio-framework-plugin-host-operation",
+   "semio-framework-plugin-interpreter",
+   "semio-framework-plugin-interpreter-runtime"
+  ]
+ },
+ "note": "DM2 plugin host deadline/root moves"
+}

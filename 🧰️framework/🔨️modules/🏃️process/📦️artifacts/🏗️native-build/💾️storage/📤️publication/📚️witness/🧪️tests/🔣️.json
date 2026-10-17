@@ -1,5 +1,70 @@
 {
   "version": 1,
+  "directoryBatches": [
+    {
+      "fault": "none",
+      "accepted": true
+    },
+    {
+      "fault": "root",
+      "accepted": false
+    },
+    {
+      "fault": "backing",
+      "accepted": false
+    },
+    {
+      "fault": "ancestor",
+      "accepted": false
+    },
+    {
+      "fault": "cancel",
+      "accepted": false
+    },
+    {
+      "fault": "expired",
+      "accepted": false
+    },
+    {
+      "fault": "undefined-read",
+      "accepted": false
+    }
+  ],
+  "sockets": [
+    {
+      "links": 1,
+      "bytes": 0,
+      "accepted": true
+    },
+    {
+      "links": 2,
+      "bytes": 0,
+      "accepted": false
+    },
+    {
+      "links": 1,
+      "bytes": 1,
+      "accepted": false
+    }
+  ],
+  "unsupported": [
+    {
+      "kind": "fifo",
+      "mode": 4480
+    },
+    {
+      "kind": "block",
+      "mode": 24960
+    },
+    {
+      "kind": "character",
+      "mode": 8576
+    },
+    {
+      "kind": "unknown",
+      "mode": 384
+    }
+  ],
   "cases": [
     {
       "name": "ordinary",
@@ -14,7 +79,7 @@
     {
       "name": "hardlink",
       "effect": "hardlink",
-      "accepted": false
+      "accepted": true
     },
     {
       "name": "changed-journal",
@@ -145,6 +210,16 @@
       "name": "body-frozen-directory-close",
       "effect": "body-frozen-directory-close",
       "accepted": false
+    },
+    {
+      "name": "unrelated ancestor directory sibling change",
+      "effect": "ancestor-sibling",
+      "accepted": true
+    },
+    {
+      "name": "actual ancestor identity replacement",
+      "effect": "ancestor-replacement",
+      "accepted": false
     }
   ],
   "payload": {
@@ -244,5 +319,1936 @@
         "count": 131073
       }
     ]
-  }
+  },
+  "services": [
+    {
+      "effect": "ordinary",
+      "result": "service"
+    },
+    {
+      "effect": "host",
+      "result": "payload"
+    },
+    {
+      "effect": "uuid",
+      "result": "refused"
+    },
+    {
+      "effect": "uuid-link",
+      "result": "refused"
+    },
+    {
+      "effect": "directory-mode",
+      "result": "refused"
+    },
+    {
+      "effect": "file-mode",
+      "result": "refused"
+    },
+    {
+      "effect": "null-api",
+      "result": "refused"
+    },
+    {
+      "effect": "malformed-api",
+      "result": "refused"
+    },
+    {
+      "effect": "unterminated-api",
+      "result": "refused"
+    },
+    {
+      "effect": "changed-file",
+      "result": "refused"
+    },
+    {
+      "effect": "cancel-api",
+      "result": "refused"
+    },
+    {
+      "effect": "release",
+      "result": "refused"
+    },
+    {
+      "effect": "close",
+      "result": "refused"
+    },
+    {
+      "effect": "ancestor-sibling",
+      "result": "service"
+    }
+  ],
+  "preservation": [
+    {
+      "effect": "ordinary",
+      "preserved": true
+    },
+    {
+      "effect": "service-content",
+      "preserved": true
+    },
+    {
+      "effect": "application",
+      "preserved": false
+    },
+    {
+      "effect": "journal",
+      "preserved": false
+    },
+    {
+      "effect": "service-uuid",
+      "preserved": false
+    },
+    {
+      "effect": "service-mode",
+      "preserved": false
+    }
+  ],
+  "servicePaths": [
+    {
+      "path": ".fseventsd",
+      "admit": false
+    },
+    {
+      "path": ".fseventsd/0000000000000001",
+      "admit": false
+    },
+    {
+      "path": "sub/../.fseventsd/fseventsd-uuid",
+      "admit": false
+    },
+    {
+      "path": "payload",
+      "admit": true
+    },
+    {
+      "path": ".fseventsd-copy/payload",
+      "admit": true
+    },
+    {
+      "path": "sub/.fseventsd/payload",
+      "admit": true
+    },
+    {
+      "path": "storage-events.jsonl",
+      "admit": true
+    },
+    {
+      "path": ".",
+      "admit": true
+    },
+    {
+      "path": ".FSEVENTSD/file",
+      "admit": false
+    },
+    {
+      "path": ".FsEvEnTsD/file",
+      "admit": false
+    }
+  ],
+  "progress": [
+    {
+      "kind": "chunks",
+      "fault": "none",
+      "admit": true
+    },
+    {
+      "kind": "pages",
+      "fault": "none",
+      "admit": true
+    },
+    {
+      "kind": "chunks",
+      "fault": "cancel",
+      "admit": false
+    },
+    {
+      "kind": "chunks",
+      "fault": "undefined",
+      "admit": false
+    },
+    {
+      "kind": "pages",
+      "fault": "frozen",
+      "admit": false
+    }
+  ],
+  "ancestryBatches": [
+    {
+      "fault": "none",
+      "position": "first",
+      "contents": false,
+      "rows": 128,
+      "accepted": true
+    },
+    {
+      "fault": "none",
+      "position": "first",
+      "contents": true,
+      "rows": 1,
+      "accepted": true
+    },
+    {
+      "fault": "inode",
+      "position": "first",
+      "contents": true,
+      "rows": 128,
+      "accepted": false
+    },
+    {
+      "fault": "root",
+      "position": "first",
+      "contents": true,
+      "rows": 128,
+      "accepted": false
+    },
+    {
+      "fault": "backing",
+      "position": "first",
+      "contents": true,
+      "rows": 128,
+      "accepted": false
+    },
+    {
+      "fault": "ancestor",
+      "position": "first",
+      "contents": true,
+      "rows": 128,
+      "accepted": false
+    },
+    {
+      "fault": "cancel",
+      "position": "first",
+      "contents": true,
+      "rows": 128,
+      "accepted": false
+    },
+    {
+      "fault": "expired",
+      "position": "first",
+      "contents": true,
+      "rows": 128,
+      "accepted": false
+    },
+    {
+      "fault": "undefined",
+      "position": "first",
+      "contents": true,
+      "rows": 128,
+      "accepted": false
+    },
+    {
+      "fault": "frozen",
+      "position": "first",
+      "contents": true,
+      "rows": 128,
+      "accepted": false
+    },
+    {
+      "fault": "inode",
+      "position": "middle",
+      "contents": true,
+      "rows": 128,
+      "accepted": false
+    },
+    {
+      "fault": "root",
+      "position": "middle",
+      "contents": true,
+      "rows": 128,
+      "accepted": false
+    },
+    {
+      "fault": "backing",
+      "position": "middle",
+      "contents": true,
+      "rows": 128,
+      "accepted": false
+    },
+    {
+      "fault": "ancestor",
+      "position": "middle",
+      "contents": true,
+      "rows": 128,
+      "accepted": false
+    },
+    {
+      "fault": "cancel",
+      "position": "middle",
+      "contents": true,
+      "rows": 128,
+      "accepted": false
+    },
+    {
+      "fault": "expired",
+      "position": "middle",
+      "contents": true,
+      "rows": 128,
+      "accepted": false
+    },
+    {
+      "fault": "undefined",
+      "position": "middle",
+      "contents": true,
+      "rows": 128,
+      "accepted": false
+    },
+    {
+      "fault": "frozen",
+      "position": "middle",
+      "contents": true,
+      "rows": 128,
+      "accepted": false
+    },
+    {
+      "fault": "inode",
+      "position": "last",
+      "contents": true,
+      "rows": 128,
+      "accepted": false
+    },
+    {
+      "fault": "root",
+      "position": "last",
+      "contents": true,
+      "rows": 128,
+      "accepted": false
+    },
+    {
+      "fault": "backing",
+      "position": "last",
+      "contents": true,
+      "rows": 128,
+      "accepted": false
+    },
+    {
+      "fault": "ancestor",
+      "position": "last",
+      "contents": true,
+      "rows": 128,
+      "accepted": false
+    },
+    {
+      "fault": "cancel",
+      "position": "last",
+      "contents": true,
+      "rows": 128,
+      "accepted": false
+    },
+    {
+      "fault": "expired",
+      "position": "last",
+      "contents": true,
+      "rows": 128,
+      "accepted": false
+    },
+    {
+      "fault": "undefined",
+      "position": "last",
+      "contents": true,
+      "rows": 128,
+      "accepted": false
+    },
+    {
+      "fault": "frozen",
+      "position": "last",
+      "contents": true,
+      "rows": 128,
+      "accepted": false
+    },
+    {
+      "fault": "mtime",
+      "position": "first",
+      "contents": false,
+      "rows": 128,
+      "accepted": true
+    },
+    {
+      "fault": "mtime",
+      "position": "middle",
+      "contents": false,
+      "rows": 128,
+      "accepted": true
+    },
+    {
+      "fault": "mtime",
+      "position": "last",
+      "contents": false,
+      "rows": 128,
+      "accepted": true
+    },
+    {
+      "fault": "mtime",
+      "position": "first",
+      "contents": true,
+      "rows": 128,
+      "accepted": false
+    },
+    {
+      "fault": "mtime",
+      "position": "middle",
+      "contents": true,
+      "rows": 128,
+      "accepted": false
+    },
+    {
+      "fault": "mtime",
+      "position": "last",
+      "contents": true,
+      "rows": 128,
+      "accepted": false
+    }
+  ],
+  "ioGroups": [
+    {
+      "chunks": 0,
+      "fault": "none",
+      "position": "first",
+      "accepted": true
+    },
+    {
+      "chunks": 1,
+      "fault": "none",
+      "position": "first",
+      "accepted": true
+    },
+    {
+      "chunks": 64,
+      "fault": "none",
+      "position": "first",
+      "accepted": true
+    },
+    {
+      "chunks": 65,
+      "fault": "none",
+      "position": "first",
+      "accepted": true
+    },
+    {
+      "chunks": 1,
+      "fault": "partial",
+      "position": "first",
+      "accepted": true
+    },
+    {
+      "chunks": 65,
+      "fault": "short",
+      "position": "first",
+      "accepted": false
+    },
+    {
+      "chunks": 65,
+      "fault": "short",
+      "position": "middle",
+      "accepted": false
+    },
+    {
+      "chunks": 65,
+      "fault": "short",
+      "position": "last",
+      "accepted": false
+    },
+    {
+      "chunks": 65,
+      "fault": "growth",
+      "position": "first",
+      "accepted": false
+    },
+    {
+      "chunks": 65,
+      "fault": "growth",
+      "position": "middle",
+      "accepted": false
+    },
+    {
+      "chunks": 65,
+      "fault": "growth",
+      "position": "last",
+      "accepted": false
+    },
+    {
+      "chunks": 65,
+      "fault": "fd",
+      "position": "first",
+      "accepted": false
+    },
+    {
+      "chunks": 65,
+      "fault": "fd",
+      "position": "middle",
+      "accepted": false
+    },
+    {
+      "chunks": 65,
+      "fault": "fd",
+      "position": "last",
+      "accepted": false
+    },
+    {
+      "chunks": 65,
+      "fault": "path",
+      "position": "first",
+      "accepted": false
+    },
+    {
+      "chunks": 65,
+      "fault": "path",
+      "position": "middle",
+      "accepted": false
+    },
+    {
+      "chunks": 65,
+      "fault": "path",
+      "position": "last",
+      "accepted": false
+    },
+    {
+      "chunks": 65,
+      "fault": "root",
+      "position": "first",
+      "accepted": false
+    },
+    {
+      "chunks": 65,
+      "fault": "root",
+      "position": "middle",
+      "accepted": false
+    },
+    {
+      "chunks": 65,
+      "fault": "root",
+      "position": "last",
+      "accepted": false
+    },
+    {
+      "chunks": 65,
+      "fault": "backing",
+      "position": "first",
+      "accepted": false
+    },
+    {
+      "chunks": 65,
+      "fault": "backing",
+      "position": "middle",
+      "accepted": false
+    },
+    {
+      "chunks": 65,
+      "fault": "backing",
+      "position": "last",
+      "accepted": false
+    },
+    {
+      "chunks": 65,
+      "fault": "ancestor",
+      "position": "first",
+      "accepted": false
+    },
+    {
+      "chunks": 65,
+      "fault": "ancestor",
+      "position": "middle",
+      "accepted": false
+    },
+    {
+      "chunks": 65,
+      "fault": "ancestor",
+      "position": "last",
+      "accepted": false
+    },
+    {
+      "chunks": 65,
+      "fault": "cancel",
+      "position": "first",
+      "accepted": false
+    },
+    {
+      "chunks": 65,
+      "fault": "cancel",
+      "position": "middle",
+      "accepted": false
+    },
+    {
+      "chunks": 65,
+      "fault": "cancel",
+      "position": "last",
+      "accepted": false
+    },
+    {
+      "chunks": 65,
+      "fault": "expired",
+      "position": "first",
+      "accepted": false
+    },
+    {
+      "chunks": 65,
+      "fault": "expired",
+      "position": "middle",
+      "accepted": false
+    },
+    {
+      "chunks": 65,
+      "fault": "expired",
+      "position": "last",
+      "accepted": false
+    },
+    {
+      "chunks": 65,
+      "fault": "undefined",
+      "position": "first",
+      "accepted": false
+    },
+    {
+      "chunks": 65,
+      "fault": "undefined",
+      "position": "middle",
+      "accepted": false
+    },
+    {
+      "chunks": 65,
+      "fault": "undefined",
+      "position": "last",
+      "accepted": false
+    },
+    {
+      "chunks": 65,
+      "fault": "frozen",
+      "position": "first",
+      "accepted": false
+    },
+    {
+      "chunks": 65,
+      "fault": "frozen",
+      "position": "middle",
+      "accepted": false
+    },
+    {
+      "chunks": 65,
+      "fault": "frozen",
+      "position": "last",
+      "accepted": false
+    },
+    {
+      "chunks": 65,
+      "fault": "close",
+      "position": "first",
+      "accepted": false
+    },
+    {
+      "chunks": 65,
+      "fault": "body-undefined-close",
+      "position": "first",
+      "accepted": false
+    },
+    {
+      "chunks": 65,
+      "fault": "body-frozen-close",
+      "position": "first",
+      "accepted": false
+    },
+    {
+      "chunks": 65,
+      "fault": "yield-cancel",
+      "position": "first",
+      "accepted": false
+    },
+    {
+      "chunks": 1,
+      "fault": "close-getter",
+      "position": "first",
+      "accepted": false
+    },
+    {
+      "chunks": 1,
+      "fault": "close-undefined",
+      "position": "first",
+      "accepted": false
+    },
+    {
+      "chunks": 1,
+      "fault": "close-frozen",
+      "position": "first",
+      "accepted": false
+    }
+  ],
+  "fileRefusals": [
+    {
+      "links": 0,
+      "ino": 1,
+      "bytes": 0,
+      "reason": "links"
+    },
+    {
+      "links": 0,
+      "ino": 0,
+      "bytes": -1,
+      "reason": "links"
+    },
+    {
+      "links": 2,
+      "ino": 0,
+      "bytes": 0,
+      "reason": "identity"
+    },
+    {
+      "links": 2,
+      "ino": 0,
+      "bytes": 65537,
+      "reason": "identity"
+    },
+    {
+      "links": 1,
+      "ino": 1,
+      "bytes": -1,
+      "reason": "size"
+    },
+    {
+      "links": 2,
+      "ino": 1,
+      "bytes": -1,
+      "reason": "size"
+    },
+    {
+      "links": 1,
+      "ino": 1,
+      "bytes": 65537,
+      "reason": "capacity"
+    },
+    {
+      "links": 2,
+      "ino": 1,
+      "bytes": 65537,
+      "reason": "capacity"
+    }
+  ],
+  "hardlinks": [
+    {
+      "effect": "stable",
+      "position": "first",
+      "accepted": true
+    },
+    {
+      "effect": "stable",
+      "position": "middle",
+      "accepted": true
+    },
+    {
+      "effect": "stable",
+      "position": "last",
+      "accepted": true
+    },
+    {
+      "effect": "count",
+      "position": "first",
+      "accepted": false
+    },
+    {
+      "effect": "count",
+      "position": "middle",
+      "accepted": false
+    },
+    {
+      "effect": "count",
+      "position": "last",
+      "accepted": false
+    },
+    {
+      "effect": "inode",
+      "position": "first",
+      "accepted": false
+    },
+    {
+      "effect": "inode",
+      "position": "middle",
+      "accepted": false
+    },
+    {
+      "effect": "inode",
+      "position": "last",
+      "accepted": false
+    },
+    {
+      "effect": "content",
+      "position": "first",
+      "accepted": false
+    },
+    {
+      "effect": "content",
+      "position": "middle",
+      "accepted": false
+    },
+    {
+      "effect": "content",
+      "position": "last",
+      "accepted": false
+    },
+    {
+      "effect": "undefined",
+      "position": "first",
+      "accepted": false
+    },
+    {
+      "effect": "undefined",
+      "position": "middle",
+      "accepted": false
+    },
+    {
+      "effect": "undefined",
+      "position": "last",
+      "accepted": false
+    },
+    {
+      "effect": "frozen",
+      "position": "first",
+      "accepted": false
+    },
+    {
+      "effect": "frozen",
+      "position": "middle",
+      "accepted": false
+    },
+    {
+      "effect": "frozen",
+      "position": "last",
+      "accepted": false
+    },
+    {
+      "effect": "cancel",
+      "position": "first",
+      "accepted": false
+    },
+    {
+      "effect": "cancel",
+      "position": "middle",
+      "accepted": false
+    },
+    {
+      "effect": "cancel",
+      "position": "last",
+      "accepted": false
+    },
+    {
+      "effect": "expired",
+      "position": "first",
+      "accepted": false
+    },
+    {
+      "effect": "expired",
+      "position": "middle",
+      "accepted": false
+    },
+    {
+      "effect": "expired",
+      "position": "last",
+      "accepted": false
+    },
+    {
+      "effect": "close",
+      "position": "first",
+      "accepted": false
+    },
+    {
+      "effect": "close",
+      "position": "middle",
+      "accepted": false
+    },
+    {
+      "effect": "close",
+      "position": "last",
+      "accepted": false
+    },
+    {
+      "effect": "close-undefined",
+      "position": "first",
+      "accepted": false
+    },
+    {
+      "effect": "close-undefined",
+      "position": "middle",
+      "accepted": false
+    },
+    {
+      "effect": "close-undefined",
+      "position": "last",
+      "accepted": false
+    },
+    {
+      "effect": "close-frozen",
+      "position": "first",
+      "accepted": false
+    },
+    {
+      "effect": "close-frozen",
+      "position": "middle",
+      "accepted": false
+    },
+    {
+      "effect": "close-frozen",
+      "position": "last",
+      "accepted": false
+    }
+  ],
+  "hardlinkFrames": [
+    {
+      "ino": "17",
+      "links": "2",
+      "accepted": true
+    },
+    {
+      "ino": "17",
+      "links": "23",
+      "accepted": true
+    },
+    {
+      "ino": "18446744073709551615",
+      "links": "18446744073709551615",
+      "accepted": true
+    },
+    {
+      "ino": null,
+      "links": "2",
+      "accepted": false
+    },
+    {
+      "ino": "17",
+      "links": null,
+      "accepted": false
+    },
+    {
+      "ino": "0",
+      "links": "2",
+      "accepted": false
+    },
+    {
+      "ino": "17",
+      "links": "1",
+      "accepted": false
+    },
+    {
+      "ino": "17",
+      "links": "0",
+      "accepted": false
+    },
+    {
+      "ino": "017",
+      "links": "2",
+      "accepted": false
+    },
+    {
+      "ino": "17",
+      "links": "02",
+      "accepted": false
+    }
+  ],
+  "synchronousDescriptors": [
+    {
+      "name": "file",
+      "effect": "file",
+      "primary": "value",
+      "unresolved": 0
+    },
+    {
+      "name": "directory",
+      "effect": "directory",
+      "primary": "value",
+      "unresolved": 0
+    },
+    {
+      "name": "file-missing",
+      "effect": "file-missing",
+      "primary": "acquire",
+      "unresolved": 0
+    },
+    {
+      "name": "copied-file",
+      "effect": "copied-file",
+      "primary": "refused",
+      "unresolved": 0
+    },
+    {
+      "name": "escaped-file",
+      "effect": "escaped-file",
+      "primary": "refused",
+      "unresolved": 0
+    },
+    {
+      "name": "copied-directory",
+      "effect": "copied-directory",
+      "primary": "refused",
+      "unresolved": 0
+    },
+    {
+      "name": "escaped-directory",
+      "effect": "escaped-directory",
+      "primary": "refused",
+      "unresolved": 0
+    },
+    {
+      "name": "fd-zero",
+      "effect": "fd-zero",
+      "primary": "value",
+      "unresolved": 0
+    },
+    {
+      "name": "capacity",
+      "effect": "capacity",
+      "primary": "refused",
+      "unresolved": 0
+    },
+    {
+      "name": "acquire-error",
+      "effect": "acquire-error",
+      "primary": "acquire",
+      "unresolved": 0
+    },
+    {
+      "name": "file-body-undefined",
+      "effect": "file-body-undefined",
+      "primary": "body",
+      "unresolved": 0
+    },
+    {
+      "name": "file-body-frozen",
+      "effect": "file-body-frozen",
+      "primary": "body",
+      "unresolved": 0
+    },
+    {
+      "name": "file-body-aggregate",
+      "effect": "file-body-aggregate",
+      "primary": "body",
+      "unresolved": 0
+    },
+    {
+      "name": "file-close-undefined",
+      "effect": "file-close-undefined",
+      "primary": "close",
+      "unresolved": 1
+    },
+    {
+      "name": "file-close-frozen",
+      "effect": "file-close-frozen",
+      "primary": "close",
+      "unresolved": 1
+    },
+    {
+      "name": "file-body-close",
+      "effect": "file-body-close",
+      "primary": "body",
+      "unresolved": 1
+    },
+    {
+      "name": "directory-close-undefined",
+      "effect": "directory-close-undefined",
+      "primary": "close",
+      "unresolved": 1
+    },
+    {
+      "name": "directory-body-close",
+      "effect": "directory-body-close",
+      "primary": "body",
+      "unresolved": 1
+    },
+    {
+      "name": "known-close-posterror",
+      "effect": "known-close-posterror",
+      "primary": "body",
+      "unresolved": 0
+    },
+    {
+      "name": "cancel-after-acquire",
+      "effect": "cancel-after-acquire",
+      "primary": "body",
+      "unresolved": 0
+    },
+    {
+      "name": "observer-after-acquire",
+      "effect": "observer-after-acquire",
+      "primary": "body",
+      "unresolved": 0
+    },
+    {
+      "name": "read-bound",
+      "effect": "read-bound",
+      "primary": "refused",
+      "unresolved": 0
+    },
+    {
+      "name": "read-position-overflow",
+      "effect": "read-position-overflow",
+      "primary": "refused",
+      "unresolved": 0
+    },
+    {
+      "name": "fifo",
+      "effect": "fifo",
+      "primary": "refused",
+      "unresolved": 0
+    }
+  ],
+  "descriptorBenchmark": {
+    "directories": 32,
+    "filesPerDirectory": 64,
+    "payload": "descriptor bytes\n"
+  },
+  "observerBenchmark": {
+    "version": 1,
+    "modes": [
+      "noop",
+      "publisher-source"
+    ],
+    "authority": "source-only-model",
+    "realWriterProof": true,
+    "maximumPhaseMilliseconds": 55000,
+    "nativeEffects": 0
+  },
+  "observerBenchmarkCases": [
+    {
+      "name": "source",
+      "value": {
+        "version": 1,
+        "modes": [
+          "noop",
+          "publisher-source"
+        ],
+        "authority": "source-only-model",
+        "realWriterProof": true,
+        "maximumPhaseMilliseconds": 55000,
+        "nativeEffects": 0
+      },
+      "admitted": true
+    },
+    {
+      "name": "one-mode",
+      "value": {
+        "version": 1,
+        "modes": [
+          "noop"
+        ],
+        "authority": "source-only-model",
+        "realWriterProof": true,
+        "maximumPhaseMilliseconds": 55000,
+        "nativeEffects": 0
+      },
+      "admitted": false
+    },
+    {
+      "name": "native-authority",
+      "value": {
+        "version": 1,
+        "modes": [
+          "noop",
+          "publisher-source"
+        ],
+        "authority": "native",
+        "realWriterProof": true,
+        "maximumPhaseMilliseconds": 55000,
+        "nativeEffects": 0
+      },
+      "admitted": false
+    },
+    {
+      "name": "false-proof",
+      "value": {
+        "version": 1,
+        "modes": [
+          "noop",
+          "publisher-source"
+        ],
+        "authority": "source-only-model",
+        "realWriterProof": false,
+        "maximumPhaseMilliseconds": 55000,
+        "nativeEffects": 0
+      },
+      "admitted": false
+    },
+    {
+      "name": "native-effect",
+      "value": {
+        "version": 1,
+        "modes": [
+          "noop",
+          "publisher-source"
+        ],
+        "authority": "source-only-model",
+        "realWriterProof": true,
+        "maximumPhaseMilliseconds": 55000,
+        "nativeEffects": 1
+      },
+      "admitted": false
+    },
+    {
+      "name": "phase-widen",
+      "value": {
+        "version": 1,
+        "modes": [
+          "noop",
+          "publisher-source"
+        ],
+        "authority": "source-only-model",
+        "realWriterProof": true,
+        "maximumPhaseMilliseconds": 55001,
+        "nativeEffects": 0
+      },
+      "admitted": false
+    },
+    {
+      "name": "unknown",
+      "value": {
+        "version": 1,
+        "modes": [
+          "noop",
+          "publisher-source"
+        ],
+        "authority": "source-only-model",
+        "realWriterProof": true,
+        "maximumPhaseMilliseconds": 55000,
+        "nativeEffects": 0,
+        "adopt": true
+      },
+      "admitted": false
+    }
+  ],
+  "descriptorBoundaryCases": [
+    {
+      "kind": "file",
+      "fault": "none",
+      "opens": 1,
+      "unresolved": 0,
+      "primary": "value",
+      "directPhaseChecks": 7,
+      "work": 5,
+      "issuedChecks": 7
+    },
+    {
+      "kind": "file",
+      "fault": "body-undefined",
+      "opens": 1,
+      "unresolved": 0,
+      "primary": "body",
+      "directPhaseChecks": 7,
+      "work": 5,
+      "issuedChecks": 7
+    },
+    {
+      "kind": "file",
+      "fault": "body-frozen",
+      "opens": 1,
+      "unresolved": 0,
+      "primary": "body",
+      "directPhaseChecks": 7,
+      "work": 5,
+      "issuedChecks": 7
+    },
+    {
+      "kind": "file",
+      "fault": "acquire-undefined",
+      "opens": 0,
+      "unresolved": 0,
+      "primary": "acquire",
+      "directPhaseChecks": 3,
+      "work": 2,
+      "issuedChecks": 3
+    },
+    {
+      "kind": "file",
+      "fault": "acquire-frozen",
+      "opens": 0,
+      "unresolved": 0,
+      "primary": "acquire",
+      "directPhaseChecks": 3,
+      "work": 2,
+      "issuedChecks": 3
+    },
+    {
+      "kind": "file",
+      "fault": "close-undefined",
+      "opens": 1,
+      "unresolved": 1,
+      "primary": "close",
+      "directPhaseChecks": 7,
+      "work": 5,
+      "issuedChecks": 7
+    },
+    {
+      "kind": "file",
+      "fault": "close-frozen",
+      "opens": 1,
+      "unresolved": 1,
+      "primary": "close",
+      "directPhaseChecks": 7,
+      "work": 5,
+      "issuedChecks": 7
+    },
+    {
+      "kind": "file",
+      "fault": "body-undefined-close",
+      "opens": 1,
+      "unresolved": 1,
+      "primary": "body",
+      "directPhaseChecks": 7,
+      "work": 5,
+      "issuedChecks": 7
+    },
+    {
+      "kind": "file",
+      "fault": "body-frozen-close",
+      "opens": 1,
+      "unresolved": 1,
+      "primary": "body",
+      "directPhaseChecks": 7,
+      "work": 5,
+      "issuedChecks": 7
+    },
+    {
+      "kind": "file",
+      "fault": "cancel-before-acquire",
+      "opens": 0,
+      "unresolved": 0,
+      "primary": "cancel",
+      "directPhaseChecks": 1,
+      "work": 1,
+      "issuedChecks": 3
+    },
+    {
+      "kind": "directory",
+      "fault": "none",
+      "opens": 1,
+      "unresolved": 0,
+      "primary": "value",
+      "directPhaseChecks": 6,
+      "work": 4,
+      "issuedChecks": 6
+    },
+    {
+      "kind": "directory",
+      "fault": "body-undefined",
+      "opens": 1,
+      "unresolved": 0,
+      "primary": "body",
+      "directPhaseChecks": 6,
+      "work": 4,
+      "issuedChecks": 6
+    },
+    {
+      "kind": "directory",
+      "fault": "body-frozen",
+      "opens": 1,
+      "unresolved": 0,
+      "primary": "body",
+      "directPhaseChecks": 6,
+      "work": 4,
+      "issuedChecks": 6
+    },
+    {
+      "kind": "directory",
+      "fault": "acquire-undefined",
+      "opens": 0,
+      "unresolved": 0,
+      "primary": "acquire",
+      "directPhaseChecks": 3,
+      "work": 2,
+      "issuedChecks": 3
+    },
+    {
+      "kind": "directory",
+      "fault": "acquire-frozen",
+      "opens": 0,
+      "unresolved": 0,
+      "primary": "acquire",
+      "directPhaseChecks": 3,
+      "work": 2,
+      "issuedChecks": 3
+    },
+    {
+      "kind": "directory",
+      "fault": "close-undefined",
+      "opens": 1,
+      "unresolved": 1,
+      "primary": "close",
+      "directPhaseChecks": 6,
+      "work": 4,
+      "issuedChecks": 6
+    },
+    {
+      "kind": "directory",
+      "fault": "close-frozen",
+      "opens": 1,
+      "unresolved": 1,
+      "primary": "close",
+      "directPhaseChecks": 6,
+      "work": 4,
+      "issuedChecks": 6
+    },
+    {
+      "kind": "directory",
+      "fault": "body-undefined-close",
+      "opens": 1,
+      "unresolved": 1,
+      "primary": "body",
+      "directPhaseChecks": 6,
+      "work": 4,
+      "issuedChecks": 6
+    },
+    {
+      "kind": "directory",
+      "fault": "body-frozen-close",
+      "opens": 1,
+      "unresolved": 1,
+      "primary": "body",
+      "directPhaseChecks": 6,
+      "work": 4,
+      "issuedChecks": 6
+    },
+    {
+      "kind": "directory",
+      "fault": "cancel-before-acquire",
+      "opens": 0,
+      "unresolved": 0,
+      "primary": "cancel",
+      "directPhaseChecks": 1,
+      "work": 1,
+      "issuedChecks": 3
+    }
+  ],
+  "topologyBenchmarkCases": [
+    {
+      "width": 64,
+      "directories": 32,
+      "files": 2048,
+      "bytes": 34816,
+      "leafDirectoryOpens": 4,
+      "leafCursorReads": 260,
+      "directoryOpens": 132,
+      "cursorReads": 8452
+    },
+    {
+      "width": 128,
+      "directories": 16,
+      "files": 2048,
+      "bytes": 34816,
+      "leafDirectoryOpens": 6,
+      "leafCursorReads": 774,
+      "directoryOpens": 100,
+      "cursorReads": 12452
+    },
+    {
+      "width": 256,
+      "directories": 8,
+      "files": 2048,
+      "bytes": 34816,
+      "leafDirectoryOpens": 10,
+      "leafCursorReads": 2570,
+      "directoryOpens": 84,
+      "cursorReads": 20596
+    },
+    {
+      "width": 512,
+      "directories": 4,
+      "files": 2048,
+      "bytes": 34816,
+      "leafDirectoryOpens": 18,
+      "leafCursorReads": 9234,
+      "directoryOpens": 76,
+      "cursorReads": 36956
+    },
+    {
+      "width": 2048,
+      "directories": 1,
+      "files": 2048,
+      "bytes": 34816,
+      "leafDirectoryOpens": 66,
+      "leafCursorReads": 135234,
+      "directoryOpens": 70,
+      "cursorReads": 135242
+    }
+  ],
+  "exactServicePayload": [
+    {
+      "effect": "stable",
+      "preserved": true,
+      "difference": "equal"
+    },
+    {
+      "effect": "content",
+      "preserved": false,
+      "difference": "payload"
+    },
+    {
+      "effect": "added",
+      "preserved": false,
+      "difference": "payload"
+    },
+    {
+      "effect": "directory-mode",
+      "preserved": false,
+      "difference": "payload"
+    },
+    {
+      "effect": "file-mode",
+      "preserved": false,
+      "difference": "payload"
+    },
+    {
+      "effect": "ctime",
+      "preserved": false,
+      "difference": "metadata-only"
+    },
+    {
+      "effect": "mtime",
+      "preserved": false,
+      "difference": "metadata-only"
+    },
+    {
+      "effect": "uid",
+      "preserved": false,
+      "difference": "metadata-only"
+    },
+    {
+      "effect": "gid",
+      "preserved": false,
+      "difference": "metadata-only"
+    },
+    {
+      "effect": "inode",
+      "preserved": false,
+      "difference": "metadata-only"
+    },
+    {
+      "effect": "links",
+      "preserved": false,
+      "difference": "payload"
+    },
+    {
+      "effect": "nested-content",
+      "preserved": false,
+      "difference": "payload"
+    },
+    {
+      "effect": "outside-content",
+      "preserved": true,
+      "difference": "equal"
+    }
+  ],
+  "exactServicePublication": [
+    {
+      "purpose": "current-publication",
+      "accepted": true,
+      "binding": "authenticated"
+    },
+    {
+      "purpose": "current-exact-publication",
+      "accepted": true,
+      "binding": "exact-payload"
+    },
+    {
+      "purpose": "current-prepared-publication",
+      "accepted": true,
+      "binding": "authenticated"
+    },
+    {
+      "purpose": "current-publication-exact",
+      "accepted": false,
+      "binding": null
+    },
+    {
+      "purpose": "current-unqualified-publication",
+      "accepted": false,
+      "binding": null
+    }
+  ],
+  "exactServiceSelection": [
+    {
+      "count": 3,
+      "selector": null,
+      "accepted": true
+    },
+    {
+      "count": 4,
+      "selector": null,
+      "accepted": true
+    },
+    {
+      "count": 5,
+      "selector": "exact-payload",
+      "accepted": true
+    },
+    {
+      "count": 5,
+      "selector": "unknown",
+      "accepted": false
+    },
+    {
+      "count": 5,
+      "selector": null,
+      "accepted": false
+    },
+    {
+      "count": 6,
+      "selector": "exact-payload",
+      "accepted": false
+    },
+    {
+      "count": 2,
+      "selector": null,
+      "accepted": false
+    }
+  ],
+  "preservationDiagnosticDelivery": [
+    {
+      "effect": "valid",
+      "reported": true
+    },
+    {
+      "effect": "error-proxy",
+      "reported": false
+    },
+    {
+      "effect": "cause-accessor",
+      "reported": false
+    },
+    {
+      "effect": "cause-proxy",
+      "reported": false
+    },
+    {
+      "effect": "nested-proxy",
+      "reported": false
+    },
+    {
+      "effect": "nested-accessor",
+      "reported": false
+    },
+    {
+      "effect": "symbol",
+      "reported": false
+    },
+    {
+      "effect": "inherited",
+      "reported": false
+    },
+    {
+      "effect": "unknown-field",
+      "reported": false
+    },
+    {
+      "effect": "overbounds",
+      "reported": false
+    },
+    {
+      "effect": "sink-failure",
+      "reported": false
+    },
+    {
+      "effect": "undefined-primary",
+      "reported": false
+    }
+  ],
+  "servicePreparation": [
+    {
+      "effect": "ordinary",
+      "success": true,
+      "cleanup": [
+        "stop",
+        "invalidate",
+        "release-stream",
+        "release-13",
+        "release-12",
+        "release-11",
+        "close-callback",
+        "close-foundation",
+        "close-core"
+      ]
+    },
+    {
+      "effect": "create-null",
+      "success": false,
+      "cleanup": [
+        "release-13",
+        "release-12",
+        "release-11",
+        "close-callback",
+        "close-foundation",
+        "close-core"
+      ]
+    },
+    {
+      "effect": "start-false",
+      "success": false,
+      "cleanup": [
+        "invalidate",
+        "release-stream",
+        "release-13",
+        "release-12",
+        "release-11",
+        "close-callback",
+        "close-foundation",
+        "close-core"
+      ]
+    },
+    {
+      "effect": "schedule-throw",
+      "success": false,
+      "cleanup": []
+    },
+    {
+      "effect": "start-throw",
+      "success": false,
+      "cleanup": []
+    },
+    {
+      "effect": "run-throw",
+      "success": false,
+      "cleanup": []
+    },
+    {
+      "effect": "callback-count",
+      "success": false,
+      "cleanup": [
+        "stop",
+        "invalidate",
+        "release-stream",
+        "release-13",
+        "release-12",
+        "release-11",
+        "close-callback",
+        "close-foundation",
+        "close-core"
+      ]
+    },
+    {
+      "effect": "event-count",
+      "success": false,
+      "cleanup": [
+        "stop",
+        "invalidate",
+        "release-stream",
+        "release-13",
+        "release-12",
+        "release-11",
+        "close-callback",
+        "close-foundation",
+        "close-core"
+      ]
+    },
+    {
+      "effect": "bad-event-count",
+      "success": false,
+      "cleanup": [
+        "stop",
+        "invalidate",
+        "release-stream",
+        "release-13",
+        "release-12",
+        "release-11",
+        "close-callback",
+        "close-foundation",
+        "close-core"
+      ]
+    },
+    {
+      "effect": "stop-throw",
+      "success": false,
+      "cleanup": [
+        "stop"
+      ]
+    },
+    {
+      "effect": "invalidate-throw",
+      "success": false,
+      "cleanup": [
+        "stop",
+        "invalidate"
+      ]
+    },
+    {
+      "effect": "release-stream-throw",
+      "success": false,
+      "cleanup": [
+        "stop",
+        "invalidate",
+        "release-stream"
+      ]
+    },
+    {
+      "effect": "close-callback-throw",
+      "success": false,
+      "cleanup": [
+        "stop",
+        "invalidate",
+        "release-stream",
+        "release-13",
+        "release-12",
+        "release-11",
+        "close-callback"
+      ]
+    },
+    {
+      "effect": "path-null",
+      "success": false,
+      "cleanup": [
+        "close-callback",
+        "close-foundation",
+        "close-core"
+      ]
+    },
+    {
+      "effect": "mode-null",
+      "success": false,
+      "cleanup": [
+        "release-11",
+        "close-callback",
+        "close-foundation",
+        "close-core"
+      ]
+    },
+    {
+      "effect": "array-null",
+      "success": false,
+      "cleanup": [
+        "release-12",
+        "release-11",
+        "close-callback",
+        "close-foundation",
+        "close-core"
+      ]
+    },
+    {
+      "effect": "open-core-throw",
+      "success": false,
+      "cleanup": []
+    },
+    {
+      "effect": "open-foundation-throw",
+      "success": false,
+      "cleanup": [
+        "close-core"
+      ]
+    },
+    {
+      "effect": "release-13-throw",
+      "success": false,
+      "cleanup": [
+        "stop",
+        "invalidate",
+        "release-stream",
+        "release-13"
+      ]
+    },
+    {
+      "effect": "late-callback",
+      "success": false,
+      "cleanup": [
+        "stop",
+        "invalidate"
+      ]
+    },
+    {
+      "effect": "invalid-run-status",
+      "success": false,
+      "cleanup": [
+        "stop",
+        "invalidate",
+        "release-stream",
+        "release-13",
+        "release-12",
+        "release-11",
+        "close-callback",
+        "close-foundation",
+        "close-core"
+      ]
+    }
+  ],
+  "preparedServiceParent": [
+    {
+      "effect": "before",
+      "accepted": true,
+      "children": 1
+    },
+    {
+      "effect": "after",
+      "accepted": true,
+      "children": 1
+    },
+    {
+      "effect": "current",
+      "accepted": true,
+      "children": 1
+    },
+    {
+      "effect": "linux",
+      "accepted": false,
+      "children": 0
+    },
+    {
+      "effect": "ordinary-purpose",
+      "accepted": false,
+      "children": 0
+    },
+    {
+      "effect": "wrong-stage",
+      "accepted": false,
+      "children": 0
+    },
+    {
+      "effect": "inactive-mapping",
+      "accepted": false,
+      "children": 0
+    },
+    {
+      "effect": "pending",
+      "accepted": false,
+      "children": 0
+    },
+    {
+      "effect": "root-changed",
+      "accepted": false,
+      "children": 0
+    },
+    {
+      "effect": "worker-status",
+      "accepted": false,
+      "children": 1
+    },
+    {
+      "effect": "worker-signal",
+      "accepted": false,
+      "children": 1
+    },
+    {
+      "effect": "worker-json",
+      "accepted": false,
+      "children": 1
+    },
+    {
+      "effect": "worker-open",
+      "accepted": false,
+      "children": 1
+    },
+    {
+      "effect": "worker-stderr",
+      "accepted": false,
+      "children": 1
+    },
+    {
+      "effect": "worker-undefined",
+      "accepted": false,
+      "children": 1
+    },
+    {
+      "effect": "worker-frozen",
+      "accepted": false,
+      "children": 1
+    }
+  ],
+  "preparedParentFailure": [
+    {
+      "mode": "undefined",
+      "entry": "--service-parent-undefined-worker"
+    },
+    {
+      "mode": "frozen",
+      "entry": "--service-parent-frozen-worker"
+    }
+  ]
 }

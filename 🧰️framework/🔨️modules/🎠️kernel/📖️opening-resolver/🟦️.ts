@@ -4,7 +4,7 @@
  */
 
 import { type ArtifactDialect } from "@semio-tech/schema-ts/artifact-reference";
-import { dialectCoordinate } from "../../🚪️io/🧬️schema/🟦️.ts";
+import { dialectCoordinate } from "@semio-tech/framework-io-schema-ts";
 import { type AppRole, type AppRef } from "@semio-tech/framework/manifest/schema";
 import { appRefEquals, dialectEquals } from "../🔀️dialect-equality/🟦️.ts";
 import { AppRouter, SURFACE_FAULT_CODES, surfaceFault } from "../🧭️app-router/🟦️.ts";

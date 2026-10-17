@@ -187,6 +187,6 @@ pub const COMPONENT_OVERRIDE: EntityKind = kind!("component-override", "sliders-
     delete: Some(delete_override), rename: None, create: None, fields: COMPONENT_OVERRIDE_FIELDS, inferred: COMPONENT_OVERRIDE_INFERRED);
 //#endregion 🔖️Kinds
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
-pub(crate) mod tests;
+pub mod tests;

@@ -1,6 +1,17 @@
 //! 🔺️ Diff for `RemoveBlockEntity`.
 
-use super::super::*;
+#[allow(unused_imports)]
+use crate::schema::diff::CadBlockDiff;
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_semio_base::schema::triples::NamedTripleDiff;
+#[allow(unused_imports)]
+use crate::schema::diff::SemioCadDiff;
+#[allow(unused_imports)]
+use crate::schema::snapshot::SemioCadSnapshot;
+#[allow(unused_imports)]
+use crate::schema::mutations::support::find_block_entity;
+#[allow(unused_imports)]
+use crate::schema::diff::wrap_block_diff;
 
 //#region 🔖️Diff
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

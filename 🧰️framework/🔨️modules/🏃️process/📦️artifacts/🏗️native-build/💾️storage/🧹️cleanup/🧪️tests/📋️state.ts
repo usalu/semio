@@ -21,7 +21,6 @@ function relationalTrace(schedule:readonly string[]):unknown{
 test("cleanup continuation fixture admission agrees with independent Ajv",()=>{expect(new Ajv({strict:true}).compile(schema)(corpus)).toBe(true);});
 for(const row of corpus.cases)test(row.id,()=>{
  const independent=relationalTrace(row.schedule);expect(independent).toEqual(row.expected);expect(independent).toEqual(nativeImageCleanupTraceV1(row.schedule));
- console.log("[DEBUG] Actual first-party cleanup transition agrees with independent SQLite "+JSON.stringify({id:row.id,result:independent}));
 });
 
 test("cleanup funding subtracts its reserve from the same finite absolute operation",()=>{
@@ -29,7 +28,7 @@ test("cleanup funding subtracts its reserve from the same finite absolute operat
  try{
   expect(new Ajv({strict:true}).compile(fundingSchema)(value)).toBe(true);
   const independent=database.query("SELECT ? AS version,? AS acceptedAtMilliseconds,? AS wholeDeadlineMilliseconds,?-? AS bodyDeadlineMilliseconds,? AS reserveMilliseconds").get(1,1000,61000,61000,10000,10000);
-  expect(independent).toEqual(nativeImageCleanupFundingV1(value));console.log("[DEBUG] Actual first-party cleanup funding agrees with independent SQLite "+JSON.stringify(independent));
+  expect(independent).toEqual(nativeImageCleanupFundingV1(value));
  }finally{database.close();}
 });
 

@@ -2,7 +2,7 @@
 import {parsePropertyValue,propertyText,type PropertyValue} from "@semio-tech/framework/graph/manifest/value";
 import {type Binary64,parseBinary64} from "@semio-tech/framework/value/ieee754";
 export {parsePropertyValue};export type{PropertyValue,Binary64};
-import {parseJackSnapshot,type JackSnapshot} from "./../../../../../../🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🟦️.ts";
+import {parseJackSnapshot,type JackSnapshot} from "@semio-tech/trinity-jack/standards/1/subsets/any/schema/snapshot";
 export type {JackSnapshot};
 export interface RewritingArtifact{workingGraph:JackSnapshot;lhs:Lhs;rhs:Rhs;parameterBindings:Record<string,PropertyValue>;ruleLayout:Record<string,LayoutPoint>}
 export interface Pattern{leftVar:string;leftKind:string;edgeVar?:string;edgeKind?:string;rightVar?:string;rightKind?:string}

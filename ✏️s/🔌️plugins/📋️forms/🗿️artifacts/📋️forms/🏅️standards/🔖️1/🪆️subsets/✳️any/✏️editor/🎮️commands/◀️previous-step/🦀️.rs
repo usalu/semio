@@ -14,8 +14,8 @@ pub struct PreviousStep {
     pub window_kind_id: String,
 }
 
-pub(crate) fn handle_window(payload: &PreviousStep, config: &FormsTryWindowConfig) -> Result<FormsTryWindowConfig, Fault> {
-    if payload.window_id.is_empty() || payload.window_kind_id != crate::editor::forms::modes::blueprint::windows::try_wizard::FORMS_PLAY_WINDOW_TRY {
+pub fn handle_window(payload: &PreviousStep, config: &FormsTryWindowConfig) -> Result<FormsTryWindowConfig, Fault> {
+    if payload.window_id.is_empty() || payload.window_kind_id != crate::editor::forms::support::FORMS_PLAY_WINDOW_TRY {
         return Err(Fault::from("forms-previous-step-window-required"));
     }
     Ok(FormsTryWindowConfig { current_step_index: config.current_step_index.saturating_sub(1), ..config.clone() })

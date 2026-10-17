@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 import Ajv from "ajv";
 import schema from "../../🧬️schema/🔣️.json";
 import fixtures from "../🧫️fixtures/🔣️.json";
-import { parseComponentTarget, componentGroup, selectedMeshVertices, selectedAnalyticLabels, validateAnalyticSource } from "../../🟦️.ts";
+import { parseComponentTarget, componentGroup, type ComponentTarget, selectedMeshVertices, selectedAnalyticLabels, validateAnalyticSource } from "../../🟦️.ts";
 import topology from "../🧫️fixtures/🥽️topology/🔣️.json";
 import editSchema from "../../../🎮️commands/🥽️edit-mesh-selection/🧬️schema/🔣️.json";
 import knifeSchema from "../../../🎮️commands/🔪️knife-mesh-selection/🧬️schema/🔣️.json";
@@ -11,13 +11,25 @@ import { knifeSelectionParameters } from "../../../🎮️commands/🔪️knife-
 import { Vector3 } from "three";
 import { generation3dMeshSelectionSelfTests } from "../../../🎮️commands/🥽️edit-mesh-selection/🧪️tests/🔬️unit/🟦️.ts";
 
+function granularity(value: string): ComponentTarget["granularity"] {
+  if (value === "vertex" || value === "edge" || value === "face") return value;
+  throw new Error(`Unknown component granularity ${JSON.stringify(value)}`);
+}
+
+function referenceLists(row: { readonly edge?: readonly string[]; readonly face?: readonly string[] }): Record<string, readonly string[]> {
+  const lists: Record<string, readonly string[]> = {};
+  if (row.edge !== undefined) lists.edge = row.edge;
+  if (row.face !== undefined) lists.face = row.face;
+  return lists;
+}
+
 describe("evaluated mesh component selection", () => {
   for (const fixture of topology.valid) test(`resolves topology ${fixture.ids.join(",")}`, () => {
     const vertices = selectedMeshVertices(fixture.ids, JSON.stringify(topology.mesh));
     expect(vertices).toEqual(fixture.vertices);
     const points = vertices.map(id => new Vector3(...topology.mesh.vertices[id]));
     const center = points.reduce((sum, point) => sum.add(point), new Vector3()).divideScalar(points.length);
-    expect(center.toArray()).toEqual(fixture.pivot);
+    expect([...center.toArray()]).toEqual(fixture.pivot);
   });
   for (const ids of topology.invalid) test(`rejects stale topology ${ids.join(",")}`, () => {
     expect(() => selectedMeshVertices(ids, JSON.stringify(topology.mesh))).toThrow();
@@ -29,7 +41,7 @@ describe("selected-face knife contract", () => {
   for (const fixture of knifeFixtures.valid) test(`knife face target: ${fixture.ids.join(",")}`, () => {
     expect(validate(knifeFixtures.payload)).toBe(true);
     const result = knifeSelectionParameters(fixture.ids, knifeFixtures.payload);
-    expect(result).toEqual({ face: fixture.face, ...knifeFixtures.payload });
+    expect({ ...result, start: [...result.start], end: [...result.end] }).toEqual({ face: fixture.face, ...knifeFixtures.payload });
     expect(new Vector3(...result.start).distanceTo(new Vector3(...result.end))).toBe(2);
   });
   for (const ids of knifeFixtures.invalidSelections) test(`rejects knife selection: ${ids.join(",")}`, () => {
@@ -53,7 +65,7 @@ describe("mesh component selection contract", () => {
   });
   for (const target of fixtures.valid) test(target.id, () => {
     expect(validate(target.id)).toBe(true);
-    expect(parseComponentTarget(target.id)).toEqual(target);
+    expect(parseComponentTarget(target.id)).toEqual({ ...target, granularity: granularity(target.granularity) });
   });
   for (const id of fixtures.invalid) test(`rejects ${JSON.stringify(id)}`, () => {
     expect(validate(id)).toBe(false);
@@ -61,7 +73,7 @@ describe("mesh component selection contract", () => {
   });
   for (const group of fixtures.groups) test(`groups ${JSON.stringify(group.ids)}`, () => {
     if ("error" in group) expect(() => componentGroup(group.ids)).toThrow();
-    else expect(componentGroup(group.ids)).toEqual({ instance: group.instance, granularity: group.granularity, components: group.components });
+    else expect(componentGroup(group.ids)).toEqual({ instance: group.instance, granularity: granularity(group.granularity), components: group.components });
   });
 });
 
@@ -76,7 +88,7 @@ describe("exact analytic component labels", () => {
 
 describe("analytic selection source admission", () => {
   for (const [index, fixture] of fixtures.analyticAdmission.entries()) test(`exact source membership ${index}`, () => {
-    const validate = () => validateAnalyticSource(fixture.ids, fixture.revision, fixture.handle, fixture.references);
+    const validate = () => validateAnalyticSource(fixture.ids, fixture.revision, fixture.handle, referenceLists(fixture.references));
     if (fixture.accepted) expect(validate()).toEqual(fixtures.analyticGroups[0].labels);
     else expect(validate).toThrow();
   });

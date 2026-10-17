@@ -7,8 +7,9 @@ pub mod transient;
 
 use crate::editor::forms::config::FormsConfig;
 use crate::editor::forms::terminology::FormsLabels;
-use crate::editor::forms::{effective_try_values, forms_action, parse_contributions, render_extension_question, ProgramContributionEntry};
-use crate::editor::forms::{ui_admit, ui_label, ui_text_value, ui_value_map, ui_value_number, ui_value_text};
+use crate::editor::forms::contributions::{parse_contributions, render_extension_question};
+use crate::editor::forms::support::{forms_action, FORMS_PLAY_WINDOW_TRY, ui_admit, ui_label, ui_text_value, ui_value_map, ui_value_number, ui_value_text};
+use semio_framework::ProgramContributionEntry;
 use crate::standards::v1::subsets::any::io::text::snapshot::{json_f64_value,json_string_value};
 use crate::schema::{can_advance,default_value_for_question,is_extension_question_kind,step_errors,visible_questions};
 use crate::FormQuestion;
@@ -24,10 +25,31 @@ use std::collections::HashSet;
 use ui::{Buildable, HasBase, HasChildren};
 
 //#region 🔖️Constants
-pub const FORMS_PLAY_WINDOW_TRY: &str = "forms-try";
 pub const FORMS_PLAY_BODY_TRY: &str = "forms.play.try";
 const AVATAR_PLACEHOLDER_PNG_BASE64: &str = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==";
 //#endregion 🔖️Constants
+
+//#region 🔖️Values
+/// 🔠️ Materializes the independently stored answer leaves for rendering and validation.
+pub fn try_values_map(transient: &transient::FormsTryWindowTransient) -> Object {
+    transient
+        .try_values
+        .iter_chunks()
+        .into_iter()
+        .map(|(key, chunks)| {
+            let raw = chunks.iter().fold(String::new(), |mut raw, chunk| {
+                raw.push_str(chunk);
+                raw
+            });
+            (key, semio_framework_pack_json::parse(&raw, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or(Value::Null))
+        })
+        .collect()
+}
+
+pub fn effective_try_values(spec: &crate::FormsSnapshot, transient: &transient::FormsTryWindowTransient) -> Object {
+    crate::standards::v1::subsets::any::io::text::snapshot::initial_try_values(spec, &try_values_map(transient))
+}
+//#endregion 🔖️Values
 
 //#region 🔖️Definition
 pub fn definition() -> WindowKindDefinition {
@@ -79,7 +101,7 @@ fn stack(axis: ui::Axis, children: Vec<ui::BuiltNode>) -> UiAssemblyResult<ui::B
     ui_admit(ui_admit(ui::stack(axis).try_children(children))?.try_build())
 }
 
-fn control(builder: impl Into<ui::BuiltNode>, id: &str, label: &str, args: ui::UiValue) -> UiAssemblyResult<ui::BuiltNode> {
+pub fn control(builder: impl Into<ui::BuiltNode>, id: &str, label: &str, args: ui::UiValue) -> UiAssemblyResult<ui::BuiltNode> {
     let mut node = builder.into();
     node.key = ui_text_value(id)?;
     node.accessibility.label = Some(ui_label(label)?);
@@ -110,7 +132,7 @@ fn try_field(question: &FormQuestion, error: Option<&str>, child: ui::BuiltNode)
     ui_admit(ui_admit(field.try_child(child))?.try_build())
 }
 
-fn render_try_question(question: &FormQuestion, values: &Object, contributions: &[ProgramContributionEntry], error: Option<&str>, labels: &FormsLabels, view: &semio_framework_plugin::ViewModel) -> UiAssemblyResult<ui::BuiltNode> {
+pub fn render_try_question(question: &FormQuestion, values: &Object, contributions: &[ProgramContributionEntry], error: Option<&str>, labels: &FormsLabels, view: &semio_framework_plugin::ViewModel) -> UiAssemblyResult<ui::BuiltNode> {
     let value = values.get(&question.id).cloned().unwrap_or_else(|| json_value_from_dsl(question));
     let key = question.id.as_str();
     let label = question.label.as_str();
@@ -258,11 +280,7 @@ pub fn render(
 //#endregion 🔖️Render
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️control-vectors/🦀️.rs"]
-mod control_vectors;
+

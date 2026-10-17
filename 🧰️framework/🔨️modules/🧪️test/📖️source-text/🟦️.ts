@@ -2,11 +2,11 @@
  * Pure resolution plus `node:fs`; never imports the sources it reads.
  * @see ./🧪️tests/🟦️.ts
  * @see https://nodejs.org/api/path.html#pathrelativefrom-to */
-import { readFileSync } from "node:fs";
-import { isAbsolute, relative, resolve, sep } from "node:path";
+import { readdirSync, readFileSync } from "node:fs";
+import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
-const FRAMEWORK_ROOT = resolve(fileURLToPath(new URL("../../..", import.meta.url)));
+const FRAMEWORK_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
 
 /** 🧭️ Resolves a framework-relative path (`🔨️modules/…`, `🛍️products/…`, `📦️packages/…`) to the absolute path inside the framework tree; refuses absolute paths, empty paths, `.` or `..` segments, backslashes and NUL. */
 export function frameworkSourcePath(path: string): string {
@@ -30,4 +30,34 @@ export function readFrameworkSourceText(path: string): string {
 /** 🧾️ Reads one framework source as JSON. */
 export function readFrameworkSourceJson<Value = unknown>(path: string): Value {
   return JSON.parse(readFrameworkSourceText(path)) as Value;
+}
+
+/** 🧫️ The file URL of a fixture beside `base` (pass `import.meta.url`), resolved by path arithmetic into a native `URL` so that bundlers which rewrite a literal `new URL(path, import.meta.url)` into an asset URL (vite under jsdom) and jsdom's own `URL` class never reach `node:fs`. */
+export function fixtureUrl(base: string, path: string): URL {
+  return pathToFileURL(resolve(dirname(fileURLToPath(base)), path));
+}
+
+const STORE_ROOT = "🛍️products/💻️os/🔨️modules/🏪️store";
+const STORE_CARVED_DIRECTORIES = ["⚙️engine", "🏗️initialization", "🧰️test-support", "🧩️composition", "🧾️document", "🎚️config", "📜️space-history/🏠️space", "📦️codec/🏭️factory"] as const;
+const STORE_EXCLUDED_SEGMENTS = new Set(["🧪️tests", "🧪️testing", "📦️packages", "node_modules"]);
+const STORE_SOURCE_FILE = "🦀️.rs";
+
+/** 🏪️ The OS store as one Rust source text: the store facade root, then the module files of every crate carved out of it (`⚙️engine`, `🏗️initialization`, `🧩️composition`, `🧾️document`, `🎚️config`, `🧰️test-support`, `📜️space-history/🏠️space`, `📦️codec/🏭️factory`, and every `📥️lifted` directory of the store tree) in byte order of their paths, tests and packaging folders left out. A source-text law that pins an item of the store reads this text and keeps working while the item moves between the crates of the store family.
+ * @see ./🧪️tests/🟦️.ts */
+export function readStoreSourceText(): string {
+  const base = frameworkSourcePath(STORE_ROOT);
+  const root = join(base, STORE_SOURCE_FILE);
+  const carvedRoots = STORE_CARVED_DIRECTORIES.map(directory => join(base, directory) + sep);
+  const found: string[] = [];
+  const walk = (directory: string): void => {
+    for (const entry of readdirSync(directory, { withFileTypes: true })) {
+      const path = join(directory, entry.name);
+      if (entry.isDirectory()) {
+        if (!STORE_EXCLUDED_SEGMENTS.has(entry.name)) walk(path);
+      } else if (entry.name === STORE_SOURCE_FILE && path !== root && (carvedRoots.some(carved => path.startsWith(carved)) || path.includes(sep + "📥️lifted" + sep))) found.push(path);
+    }
+  };
+  walk(base);
+  found.sort((left, right) => Buffer.compare(Buffer.from(left), Buffer.from(right)));
+  return [root, ...found].map(file => readFileSync(file, "utf8")).join("\n");
 }

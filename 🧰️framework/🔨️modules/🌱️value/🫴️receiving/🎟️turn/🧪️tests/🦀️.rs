@@ -22,7 +22,6 @@ macro_rules! turn_authority_law{
    let actual=serde_json::json!({"outcome":outcome,"maximumDuringBytes":during,"maximumAfterBytes":native.maximum_bytes(),"heapBornBytes":born,"heapReleasedBytes":released,"observerCalls":calls});
    let mut expected=row["expected"].clone();for field in ["maximumDuringBytes","maximumAfterBytes"]{expected[field]=serde_json::json!(amount(&expected[field]));}
    assert_eq!(actual,expected,"{id}: original native authority and physical preflight receipt");
-   println!("[DEBUG] native turn {} control={} outcome={} owned={} during={} restored={} heapBorn={} heapReleased={} observerCalls={} independentSerde=true",id,stringify!($control),outcome,owned,during,native.maximum_bytes(),born,released,calls);
   }
  }
  };

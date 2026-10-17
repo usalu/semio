@@ -1,8 +1,14 @@
 //! 🪆️ full typed parent reconstruction; the composed Semio child remains a literal handle.
 use super::{indexes::{Rows,invalid},properties::{Reader,retire}};
-use crate::{RewritingSnapshot,LayoutPoint};
-use crate::standards::v1::subsets::any::schema::{Pattern,Lhs,Rhs,Assignment,ParameterSpec,ParameterKind,RuleLayout};
-use semio_s_artifact_trinity_jack::{JackSnapshot,JackContentChild,Manifest,NodeKindDef,EdgeKindDef,PortKindDef,PropertyDef,PropertyKind,PortDirection,Camera};
+use crate::standards::v1::subsets::any::schema::snapshot::RewritingSnapshot;
+use crate::standards::v1::subsets::any::schema::model::LayoutPoint;
+use crate::standards::v1::subsets::any::schema::rule::{Pattern, Lhs, Rhs, Assignment, ParameterSpec, ParameterKind};
+use crate::standards::v1::subsets::any::schema::layout::RuleLayout;
+use semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::snapshot::JackSnapshot;
+use semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::content::JackContentChild;
+use semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::manifest::{Manifest, NodeKindDef, EdgeKindDef, PortKindDef};
+use semio_framework_graph_manifest::{PropertyDef, PropertyKind, PortDirection};
+use semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::graph::Camera;
 use semio_framework_graph_manifest::PropertyBag;
 use semio_framework_value::{ValueError,ValueRefusalKind,ValueType,DecodedValue};
 use semio_framework_os_kernel::sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase,transfer,artifact::{FloatColumn,read_binary64}};

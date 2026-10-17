@@ -2,6 +2,7 @@ use super::*;
 use crate::standards::v1::subsets::any::io::text::inferences::ramp_runs::table_json;
 use crate::standards::v1::subsets::any::schema::snapshot::{TopConstraint, Vertex};
 use semio_framework_geometry::loops;
+use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_ramp_runs;
 
 const EPS: f64 = 1e-9;
 

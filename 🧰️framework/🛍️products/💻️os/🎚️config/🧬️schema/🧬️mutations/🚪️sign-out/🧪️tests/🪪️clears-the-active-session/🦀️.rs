@@ -14,12 +14,13 @@
 
 use super::super::sign_in::{Identity, IdentityDiff, IdentitySetting};
 use super::super::IdentityConfigMutation;
+use semio_framework_test_fixtures::fixture_path;
 
-static BEFORE: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🧫️fixtures/🧬️mutations/🚪️sign-out/🪪️clears-the-active-session/📸️snapshot/⬅️before/🔣️.json")).expect("fixture"));
-static AFTER: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🧫️fixtures/🧬️mutations/🚪️sign-out/🪪️clears-the-active-session/📸️snapshot/➡️after/🔣️.json")).expect("fixture"));
-static MUTATION: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🧫️fixtures/🧬️mutations/🚪️sign-out/🪪️clears-the-active-session/🦠️mutation/🔣️.json")).expect("fixture"));
-static DIFF: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🧫️fixtures/🧬️mutations/🚪️sign-out/🪪️clears-the-active-session/🔺️diff/🔣️.json")).expect("fixture"));
-static OUTCOME: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🧫️fixtures/🧬️mutations/🚪️sign-out/🪪️clears-the-active-session/🎯️outcome/🔣️.json")).expect("fixture"));
+static BEFORE: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(fixture_path!("../../../🧫️fixtures/🧬️mutations/🚪️sign-out/🪪️clears-the-active-session/📸️snapshot/⬅️before/🔣️.json")).expect("fixture"));
+static AFTER: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(fixture_path!("../../../🧫️fixtures/🧬️mutations/🚪️sign-out/🪪️clears-the-active-session/📸️snapshot/➡️after/🔣️.json")).expect("fixture"));
+static MUTATION: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(fixture_path!("../../../🧫️fixtures/🧬️mutations/🚪️sign-out/🪪️clears-the-active-session/🦠️mutation/🔣️.json")).expect("fixture"));
+static DIFF: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(fixture_path!("../../../🧫️fixtures/🧬️mutations/🚪️sign-out/🪪️clears-the-active-session/🔺️diff/🔣️.json")).expect("fixture"));
+static OUTCOME: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(fixture_path!("../../../🧫️fixtures/🧬️mutations/🚪️sign-out/🪪️clears-the-active-session/🎯️outcome/🔣️.json")).expect("fixture"));
 
 fn json_value<T: semio_framework_value::ToValue>(value: &T) -> serde_json::Value {
     serde_json::from_str(&semio_framework_pack_json::to_json_string(value)).expect("canonical JSON parses in the independent serde_json oracle")

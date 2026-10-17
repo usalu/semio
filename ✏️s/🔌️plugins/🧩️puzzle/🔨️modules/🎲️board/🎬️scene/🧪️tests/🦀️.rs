@@ -61,7 +61,6 @@ fn puzzle_scene_projection_matches_language_neutral_cases_and_sqlite_oracle() {
     let result = child.wait_with_output().unwrap();
     assert!(result.status.success(), "{}", String::from_utf8_lossy(&result.stderr));
     assert_eq!(results, serde_json::from_slice::<Vec<serde_json::Value>>(&result.stdout).unwrap());
-    println!("[DEBUG] Puzzle projection: {} complete native cases match SQLite JSON1", results.len());
 }
 
 #[test]
@@ -93,5 +92,4 @@ fn puzzle_scene_projection_retains_partial_owners_at_every_cancellation_boundary
         drain(refused.take_retirement(unbounded_grant()).unwrap().0);
         drain(retire_value(value));
     }
-    println!("[DEBUG] Puzzle projection: every observed callback cancellation retains a drainable owner");
 }

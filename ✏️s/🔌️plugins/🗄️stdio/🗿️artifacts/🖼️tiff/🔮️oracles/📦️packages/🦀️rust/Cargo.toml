@@ -27,3 +27,4 @@ path = "../../🦀️.rs"
 [dev-dependencies]
 "image" = { version = "0.25", default-features = false, features = ["bmp", "tiff", "jpeg"] }
 "png" = { version = "0.18" }
+semio-framework-test-fixtures = { path = "../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }

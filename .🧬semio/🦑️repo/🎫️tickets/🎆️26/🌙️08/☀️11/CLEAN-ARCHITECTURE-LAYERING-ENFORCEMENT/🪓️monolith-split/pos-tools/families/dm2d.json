@@ -1,0 +1,34 @@
+{
+ "name": "dm2d",
+ "crates": [
+  "semio-framework-3d",
+  "semio-framework-3d-brep-boolean",
+  "semio-framework-3d-brep-construction",
+  "semio-framework-3d-brep-engine",
+  "semio-framework-3d-brep-offset",
+  "semio-framework-3d-brep-representation",
+  "semio-framework-3d-brep-sweep",
+  "semio-framework-3d-brep-tessellation",
+  "semio-framework-3d-brep-validation",
+  "semio-framework-3d-testing-support",
+  "semio-framework-3d-mesh-contract",
+  "semio-framework-3d-mesh-clipping",
+  "semio-framework-3d-mesh-document",
+  "semio-framework-3d-mesh-reconstruction"
+ ],
+ "base": {
+  "rev": "1bae6115bc5",
+  "crates": [
+   "semio-framework-3d",
+   "semio-framework-3d-brep-boolean",
+   "semio-framework-3d-brep-construction",
+   "semio-framework-3d-brep-engine",
+   "semio-framework-3d-brep-offset",
+   "semio-framework-3d-brep-representation",
+   "semio-framework-3d-brep-sweep",
+   "semio-framework-3d-brep-tessellation",
+   "semio-framework-3d-brep-validation"
+  ]
+ },
+ "note": "DM2 3d tessellation observer owner and the nine consumers"
+}

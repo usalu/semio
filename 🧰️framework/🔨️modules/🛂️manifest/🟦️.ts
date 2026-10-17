@@ -1,5 +1,5 @@
 import { type ArtifactDialect } from "@semio-tech/schema-ts/artifact-reference";
-import { dialectCoordinate, parseDialectCoordinate } from "../🚪️io/🧬️schema/🟦️.ts";
+import { dialectCoordinate, parseDialectCoordinate } from "@semio-tech/framework-io-schema-ts";
 import type { AppRole, AppRef } from "./🧬️schema/🟦️.ts";
 import type { IntroductionDefinition, TutorialDefinition } from "../🎓️onboarding/🟦️.ts";
 import type { WindowLayout } from "./🗺️window-layout/🟦️.ts";
@@ -22,7 +22,7 @@ export type { ShellLocale, ShellTerminology, LocalizedLabel };
 import type { ContextMenuItemSpec } from "../🖱️ui/🎬️scene/🟦️.ts";
 import inputLabelGlossaryDocument from "./🔣️input-labels.json" with { type: "json" };
 import { valueSchema as numericTransportSchemaDocument } from "@semio-tech/value-ts/schema";
-import type { Effect } from "../🎠️kernel/⚡️effect/🟦️.ts";
+import type { Effect } from "@semio-tech/framework-kernel/effect";
 import { UI_NUMBER_PRECISION_MAX, uiNumberCrossedBound, uiNumberDisplayText } from "../🖱️ui/🧬️contract/🧩️component/🟦️.ts";
 
 // #region 🧬️GeneratedMirror
@@ -1990,7 +1990,7 @@ export function decodeSurfaceAppChoice(value: string): SurfaceAppChoice {
 
 /** 🗺️ Resolves an app's manifest `label` field's native (terminology-invariant) cell — the wire shape
  * is `{ native: { en, de }, reuse: { en, de } }` (Rust `LocalizedLabel`'s `Serialize`, see
- * `ShellHelpers/🟦️.tsx`'s `resolveManifestLabel` for the full terminology-aware resolver
+ * `🛠️ShellHelpers/🏷️labels/🟦️.tsx`'s `resolveManifestLabel` for the full terminology-aware resolver
  * used at render time). `artifactKindChoices` only ever needs the native cell, matching Rust
  * `encode_artifact_kind_choice` resolving under `Terminology::Native`. Takes `unknown` because
  * `AppDefinition.label` is `unknown` on the generated type (no owned schema mirror for `LocalizedLabel` yet). */

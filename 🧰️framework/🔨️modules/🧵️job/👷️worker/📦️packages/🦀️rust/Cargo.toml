@@ -26,6 +26,7 @@ semio-framework-value = { workspace = true }
 semio-framework-trace = { workspace = true }
 
 [dev-dependencies]
+semio-framework-test-fixtures = { path = "../../../../🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 serde_json = { workspace = true }
 semio-framework-job = { workspace = true, features = ["testkit"] }
 semio-framework-job-conformance = { workspace = true }

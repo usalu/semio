@@ -1,0 +1,134 @@
+[package]
+workspace = "../../../.."
+name = "semio-framework-job"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Resumable interactive job protocol, original caller authority, funded payload results and paid physical retirement."
+
+[package.metadata.semio]
+role = "framework"
+id = "job"
+
+[lints]
+workspace = true
+
+[lib]
+name = "semio_framework_job"
+path = "🦀️.rs"
+
+[features]
+testkit = ["semio-framework-async/testkit"]
+
+[dependencies]
+semio-framework-trace = { workspace = true }
+semio-framework-async = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-framework-value-shared-issuance = { path = "../../../🌱️value/♻️retirement/🔗️shared/🔒️sealed/📦️packages/🦀️rust" }
+semio-framework-dsl-record = { path = "../../../🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
+semio-framework-diagnostic = { path = "../../../⚠️diagnostic/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+semio-framework-async = { workspace = true, features = ["testkit"] }
+serde_json = { workspace = true }
+
+[[test]]
+name = "original-turn-failure"
+required-features = ["testkit"]
+path = "../../⚠️failure/🧪️tests/🦀️.rs"
+
+[[test]]
+name = "original-close-context"
+path = "../../♻️retirement/🎟️context/🧪️tests/🦀️.rs"
+
+[[test]]
+name = "original-weak-return"
+path = "../../⏱️context/📦️return/🪶️weak/🧪️tests/🦀️.rs"
+
+[[test]]
+name = "original-fixture-caller"
+required-features = ["testkit"]
+path = "../../⏱️context/🧪️testing/🎟️caller/🧪️tests/🦀️.rs"
+
+[[test]]
+name = "original-caller-capture"
+path = "../../⏱️context/📸️capture/🧪️tests/🦀️.rs"
+
+[[test]]
+name = "original-caller-source"
+required-features = ["testkit"]
+path = "../../⏱️context/🎟️source/🧪️tests/🦀️.rs"
+
+[[test]]
+name = "original-child-source"
+required-features = ["testkit"]
+path = "../../⏱️context/🎟️source/👶️child/🧪️tests/🦀️.rs"
+
+[[test]]
+name = "original-paged-source"
+path = "../../📬️outcome/📖️source/🧪️tests/🦀️.rs"
+
+[[test]]
+name = "original-work-grant"
+path = "../../🏃️work/🎟️grant/🧪️tests/🦀️.rs"
+
+
+[[test]]
+name = "original-reconcile"
+path = "../../🔎️reconcile/🧪️tests/🔬️contract/🦀️.rs"
+
+[[test]]
+name = "original-core-budget"
+required-features = ["testkit"]
+path = "../../⏱️budget/🧪️tests/⏱️budget/🦀️.rs"
+
+[[test]]
+name = "original-clock-stride"
+path = "../../🧪️tests/🔬️clock-stride/🦀️.rs"
+
+[[test]]
+name = "original-payload-builder"
+path = "../../📬️outcome/📦️builder/🧪️tests/🌍️public/🦀️.rs"
+
+[[test]]
+name = "original-fault-binding"
+required-features = ["testkit"]
+path = "../../📬️outcome/⚠️fault-binding/🧪️tests/🦀️.rs"
+
+[[test]]
+name = "original-outcome-descriptor"
+required-features = ["testkit"]
+path = "../../📬️outcome/🎟️descriptor/🧪️tests/🦀️.rs"
+
+[[test]]
+name = "original-retained-loan"
+path = "../../🎟️context/🪙️loan/🧪️tests/🦀️.rs"
+
+[[test]]
+name = "original-context-owner"
+path = "../../⏱️context/📦️owner/🧪️tests/🦀️.rs"
+
+[[test]]
+name = "original-semantic-loan"
+required-features = ["testkit"]
+path = "../../📬️outcome/🤝️loan/🧪️tests/🦀️.rs"
+
+[[test]]
+name = "original-physical-page-close"
+required-features = ["testkit"]
+path = "../../♻️retirement/📄️payload/🧪️tests/📦️physical/🦀️.rs"
+
+[[test]]
+name = "original-header-initialization"
+required-features = ["testkit"]
+path = "../../📬️outcome/📦️builder/🧪️tests/🏗️initialization/🦀️.rs"
+
+[[test]]
+name = "original-borrowed-authority"
+required-features = ["testkit"]
+path = "../../📬️outcome/📦️builder/🧪️tests/🎟️authority/🦀️.rs"
+
+[[test]]
+name = "original-page-limit"
+required-features = ["testkit"]
+path = "../../📬️outcome/📦️builder/📏️limit/🧪️tests/🦀️.rs"

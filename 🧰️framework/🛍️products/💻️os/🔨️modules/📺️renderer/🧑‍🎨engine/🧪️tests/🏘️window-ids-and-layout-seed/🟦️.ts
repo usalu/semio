@@ -3,14 +3,18 @@ import { createElement, type ReactElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { childElementId, isElementId } from "@semio-tech/ui-react";
 import { createWorldProjectionTemplates, worldProjectionSwitchTreeItems } from "@semio-tech/infinite-world-r3f";
-import { windowMeasuresChrome, windowMeasureDomId, qualifyWindowMeasureIds } from "../../🧱️elements/🛠️ShellHelpers/🟦️.tsx";
+import {
+  windowMeasuresChrome,
+  windowMeasureDomId,
+  qualifyWindowMeasureIds
+} from "../../🧱️elements/🛠️ShellHelpers/🪟️window-panes/🎚️window-measures/🟦️.tsx";
 import { createInstance as createTranslationOracle } from "i18next";
 import labelResolutionFixture from "../../🧱️elements/🛠️ShellHelpers/🧪️tests/🧫️fixtures/🔣️label-resolution.json";
 import { cleanup, fireEvent, render } from "@semio-tech/ui-react/test";
 import { describe, expect, it, vi } from "vitest";
 import { type WindowMeasure } from "@semio-tech/framework";
 import { uiDataLabel } from "@semio-tech/ui-react";
-import { WorldOrbitProjectionSwitchPane, world3dProjectionPaneElementId } from "../../🧱️elements/🌐️World3dHost/🟦️.tsx";
+import { WorldOrbitProjectionSwitchPane, world3dProjectionPaneElementId } from "../../🧱️elements/🌐️World3dHost/🪟️window-view-store/🟦️.tsx";
 import { buildUiRefreshRequest, dispatchOsCommand, classifyWindowLayoutChange, buildNoteShellCommandAction, isShellOwnedCommandId, TUTORIAL_RECORDING_EXCLUDED_ACTION_IDS, resolveFrameworkLayoutSeed, retitleWindowLayoutNode, windowMeasureTreeContainsId, FrameworkOsShell, TutorialRecorder, synthesizeLocalizedLabel, resolveManifestLabel } from "../../🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx";
 import { encodeWorldProjectionTemplateId } from "@semio-tech/infinite-world-r3f";
 import { rendererExport } from "../🧰️engine-contract-helpers/🟦️.ts";

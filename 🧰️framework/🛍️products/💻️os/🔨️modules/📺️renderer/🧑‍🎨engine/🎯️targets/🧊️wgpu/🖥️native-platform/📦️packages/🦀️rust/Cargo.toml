@@ -37,3 +37,4 @@ winit = { version = "0.30.12", default-features = false, features = ["rwh_06", "
 
 [dev-dependencies]
 accesskit_consumer = "0.39.1"
+semio-framework-test-fixtures = { path = "../../../../../../../../../../🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }

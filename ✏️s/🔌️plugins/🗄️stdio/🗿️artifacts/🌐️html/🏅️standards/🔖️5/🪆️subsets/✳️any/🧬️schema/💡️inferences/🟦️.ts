@@ -29,6 +29,10 @@ type stdioHtml5AnyInferenceGuardSizeBounds = { readonly minItems?: number; reado
 
 export const stdioHtml5AnyInferenceGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : stdioHtml5AnyInferenceGuardReject(at, "value is not an object");
+export const stdioHtml5AnyInferenceGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) stdioHtml5AnyInferenceGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const stdioHtml5AnyInferenceGuardArray = (value: unknown, at: string, bounds: stdioHtml5AnyInferenceGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return stdioHtml5AnyInferenceGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) stdioHtml5AnyInferenceGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -59,14 +63,14 @@ export const stdioHtml5AnyInferenceGuardConstant = <T extends string | number | 
 //#endregion 🚪️Parsers
 
 export function parseHtmlInference(value: unknown, at = "$"): HtmlInference {
-  const row = stdioHtml5AnyInferenceGuardObject(value, at);
+  const row = stdioHtml5AnyInferenceGuardClosed(stdioHtml5AnyInferenceGuardObject(value, at), at, ["outline"]);
   return {
     outline: parseHtmlOutline(row["outline"], `${at}.outline`),
   };
 }
 
 export function parseHtmlOutline(value: unknown, at = "$"): HtmlOutline {
-  const row = stdioHtml5AnyInferenceGuardObject(value, at);
+  const row = stdioHtml5AnyInferenceGuardClosed(stdioHtml5AnyInferenceGuardObject(value, at), at, ["elementCount", "maxDepth", "textLength"]);
   return {
     elementCount: stdioHtml5AnyInferenceGuardInteger(row["elementCount"], `${at}.elementCount`),
     maxDepth: stdioHtml5AnyInferenceGuardInteger(row["maxDepth"], `${at}.maxDepth`),

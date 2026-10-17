@@ -1,0 +1,3 @@
+/** 🧭️ Public entry `@semio-tech/s-dev-block-ts/stories/coordination`: the explicit surface that importers outside the module use. */
+export { BLOCK2D_STORY_EXAMPLE_IDS, BLOCK5D_STORY_EXAMPLE_IDS, admitBlockStoryRepresentations, block2dBoardRenderLines, block2dStoryStateFor, block3dStorySnapshotFor, block5dBoardRenderLines, block5dStoryStateFor, block5dWorldRenderLines, blockStoryActionArgs, buildBlock2dSceneNode, buildBlock3dWorldSceneNode, buildBlock5dBoardSceneNode, buildBlock5dWorldSceneNode, reduceBlock2dStoryAction, reduceBlock5dStoryAction } from "../../../../📖️stories/🧭️coordination/🟦️.ts";
+export type { Block2dStoryState, Block5dStoryState } from "../../../../📖️stories/🧭️coordination/🟦️.ts";

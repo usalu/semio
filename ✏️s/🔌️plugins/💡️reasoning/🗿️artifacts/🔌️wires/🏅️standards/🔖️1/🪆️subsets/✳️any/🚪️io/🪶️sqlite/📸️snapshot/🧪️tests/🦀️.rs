@@ -1,3 +1,13 @@
+use semio_framework_value::ValueRefusalKind;
+use store::{os_store::serialization::ArtifactSqliteSnapshotHost, sqlite_snapshot::SqliteDatabase, sqlite_snapshot::SqliteSnapshotControl, sqlite_snapshot::SqliteSnapshotPhase, sqlite_snapshot::SnapshotEncoding};
+#[allow(unused_imports)]
+use semio_framework_value::ValueError;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::snapshot::*;
+#[allow(unused_imports)]
+use store::{sqlite_snapshot::SqliteTable, sqlite_snapshot::SqliteRow, sqlite_snapshot::validate_sqlite_database_schema, sqlite_snapshot::artifact::Cell, sqlite_snapshot::artifact::Projection, sqlite_snapshot::artifact::FloatColumn, sqlite_snapshot::artifact::FloatRow, sqlite_snapshot::artifact::insert_key_ieee754, sqlite_snapshot::artifact::NativeEncodingBound};
+#[allow(unused_imports)]
+use std::{collections::BTreeMap, collections::BTreeSet, collections::VecDeque};
 use semio_framework_test_original_snapshot_owners as original_owners;
 use ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot as _;
 use crate::standards::v1::subsets::any::io::sqlite::snapshot::*;
@@ -5,7 +15,7 @@ use semio_framework_value::Number;
 #[path="🧬️semantic/🦀️.rs"]
 mod semantic;
 fn native_fixture()->WiresSnapshot{
- let f:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
+ let f:serde_json::Value=serde_json::from_str(runtime_fixture_text("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
  let child=&f["content"];let target=&child["target"];let dialect=&target["dialect"];
  WiresSnapshot{content:store::os_store::artifact_child::ArtifactChild::new(child["childId"].as_str().unwrap().into(),semio_framework_artifact_reference::ArtifactRef{artifact_id:target["artifactId"].as_str().unwrap().into(),dialect:semio_framework_artifact_reference::ArtifactDialect{artifact_kind:dialect["artifactKind"].as_str().unwrap().into(),standard:dialect["standard"].as_str().unwrap().into(),subset:dialect["subset"].as_str().unwrap().into()}}),
  wires_snapshot:semio_framework_value::DslValue::Object(vec![
@@ -41,7 +51,7 @@ fn sqlite_snapshot_wires_exact_native_records_preserve_complete_intrinsic_and_ha
 }
 #[test]
 fn sqlite_snapshot_wires_deep_complete_native_records_preserve_allowed_intrinsic_depth(){
- let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(runtime_fixture_text("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
  let mut snapshot=native_fixture();snapshot.wires_snapshot=semio_framework_value::DslValue::Null;snapshot.meta=semio_framework_value::DslValue::Null;
  let mut expected=semio_framework_dsl_record::__rt::DecodedFieldOwner::new(snapshot,<WiresSnapshot as semio_framework_value::FromValue>::retire_decoded);
  for _ in 0..fixture["deepLevels"].as_u64().unwrap(){let old=std::mem::replace(&mut expected.as_mut().meta,semio_framework_value::DslValue::Null);expected.as_mut().meta=semio_framework_value::DslValue::Array(vec![old]);}
@@ -56,7 +66,7 @@ fn sqlite_snapshot_wires_deep_complete_native_records_preserve_allowed_intrinsic
 fn sqlite_snapshot_wires_deep_actual_erased_native_records_have_no_syntax_depth_quota(){
  use store::sqlite_snapshot::{SqliteDatabaseLimits,SqliteSnapshotControl,SnapshotEncoding};
  let codec=<WiresSnapshot as pack::snapshot::ArtifactPack>::sqlite_snapshot_codec().expect("Wires owning native pack must declare its actual SQLite capability");
- let f:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
+ let f:serde_json::Value=serde_json::from_str(runtime_fixture_text("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
  let mut expected=semio_framework_dsl_record::__rt::DecodedFieldOwner::new(native_fixture(),<WiresSnapshot as semio_framework_value::FromValue>::retire_decoded);
  for _ in 0..f["deepLevels"].as_u64().unwrap(){let old=std::mem::replace(&mut expected.as_mut().meta,semio_framework_value::DslValue::Null);expected.as_mut().meta=semio_framework_value::DslValue::Array(vec![old]);}
  let dialect=semio_framework_artifact_reference::ArtifactDialect{artifact_kind:"s.reasoning.wires".into(),standard:"1".into(),subset:"*".into()};let limits=SqliteDatabaseLimits::default();let mut reference=None;
@@ -71,3 +81,8 @@ fn sqlite_snapshot_wires_deep_actual_erased_native_records_have_no_syntax_depth_
 
 #[path="🧮️census/🦀️.rs"]
 mod native_semantic_census;
+
+fn runtime_fixture_text(relative: &str) -> &'static str {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative);
+    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display())).into_boxed_str())
+}

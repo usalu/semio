@@ -209,9 +209,7 @@ pub fn print_dsl(document: &Wfc3dSnapshot) -> String {
 }
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
 
 //#region 🚚️Carrier
@@ -226,28 +224,7 @@ pub(crate)use controlled_native::{decode_sqlite_snapshot_native,encode_sqlite_sn
 #[allow(unused_imports)]
 mod mutations_codec {
 use super::*;
-use crate::standards::v1::subsets::any::schema::mutations::*;
-use crate::diff::Wfc3dDiff;
 use crate::schema::snapshot::Wfc3dSnapshot;
-use protocol::Mutation;
-use semio_framework_value_derive::{FromValue, ToValue};
-use crate::standards::v1::subsets::any::schema::mutations::change_seed::change_seed;
-use crate::standards::v1::subsets::any::schema::mutations::change_tile_media::change_tile_media;
-use crate::standards::v1::subsets::any::schema::mutations::change_tile_weight::change_tile_weight;
-use crate::standards::v1::subsets::any::schema::mutations::connect_slots::connect_slots;
-use crate::standards::v1::subsets::any::schema::mutations::create_rule::create_rule;
-use crate::standards::v1::subsets::any::schema::mutations::create_slot::create_slot;
-use crate::standards::v1::subsets::any::schema::mutations::create_tile::create_tile;
-use crate::standards::v1::subsets::any::schema::mutations::delete_rule::delete_rule;
-use crate::standards::v1::subsets::any::schema::mutations::delete_slot::delete_slot;
-use crate::standards::v1::subsets::any::schema::mutations::delete_tile::delete_tile;
-use crate::standards::v1::subsets::any::schema::mutations::disconnect_slots::disconnect_slots;
-use crate::standards::v1::subsets::any::schema::mutations::drag_slots::drag_slots;
-use crate::standards::v1::subsets::any::schema::mutations::move_slot::move_slot;
-use crate::standards::v1::subsets::any::schema::mutations::pin_slot::pin_slot;
-use crate::standards::v1::subsets::any::schema::mutations::resize_slot::resize_slot;
-use crate::standards::v1::subsets::any::schema::mutations::set_slot_positions::{set_slot_positions, Wfc3dSlotPosition};
-use crate::standards::v1::subsets::any::schema::mutations::unpin_slot::unpin_slot;
 
 /// 🔁️ Decodes one snapshot through this subset's production JSON codec and re-encodes it — the subject half of the
 /// case's `identity-round-trip` scenario.

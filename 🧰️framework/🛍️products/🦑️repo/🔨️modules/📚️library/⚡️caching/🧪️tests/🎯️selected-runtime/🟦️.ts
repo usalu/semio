@@ -1,3 +1,4 @@
+import{testMethodV1,testStringsV1,testRecordV1}from"../📋️values/🟦️.ts";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
@@ -32,7 +33,7 @@ export async function testSelectedFontDependencies(workspace: string): Promise<v
   const crates = [...new Set(result.trim().split("\n").map(line => line.split(" ")[0]))].sort();
   assert.deepEqual(crates, fixture.crates);
   const { cacheInternals } = await import("../../../🏗️build/🕸️graph/📥️inference/🟨️.mjs");
-  const inputs = await cacheInternals.relativeScriptInputs(fixture.commands.map((path: string) => join(workspace, path)), workspace);
+  const inputs = testStringsV1(await testMethodV1(cacheInternals,"relativeScriptInputs",fixture.commands.map((path: string) => join(workspace, path)), workspace));
   const { build } = require("esbuild");
   const bundled = await build({ entryPoints: fixture.commands, absWorkingDir: workspace, outdir: "dist", bundle: true, packages: "external", platform: "node", format: "esm", write: false, metafile: true, logLevel: "silent" });
   const oracle = Object.keys(bundled.metafile.inputs);

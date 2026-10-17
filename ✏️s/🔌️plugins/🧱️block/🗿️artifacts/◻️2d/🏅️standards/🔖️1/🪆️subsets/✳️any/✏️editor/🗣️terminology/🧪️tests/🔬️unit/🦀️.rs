@@ -1,4 +1,4 @@
-use crate::terminology::*;
+#[allow(unused_imports)] use semio_s_artifact_block_2d_editor::terminology::*;
 
 #[semio_framework_async_macros::async_test]
 async fn labels_resolve_native_english_and_german_from_the_shared_view_state() {

@@ -12,8 +12,7 @@ pub use crate::standards::v1_1::subsets::base::schema::*;
 /// `SvgMutation` the glob re-export above would otherwise supply. Declared here rather than in the
 /// crate's module glue so the vocabulary lives with the subset that owns it; the explicit item wins
 /// over the glob import, which is exactly the intent.
-#[path = "🧬️mutations/🦀️.rs"]
-pub mod mutations;
+pub use semio_s_artifact_stdio_svg_mutations_2::standards::v1_1::subsets::tiny::schema::mutations;
 #[cfg(test)]
 pub use mutations::{apply_svg_tiny_mutation};
 pub use mutations::{SvgTinyMutation, KINDS as TINY_MUTATION_KINDS};
@@ -30,5 +29,4 @@ pub use mutations::{SvgTinyMutation, KINDS as TINY_MUTATION_KINDS};
 
 //#endregion 🧬️DerivedArtifactFacets
 
-#[path="🏅️conformance/🦀️.rs"]
-pub mod conformance;
+pub use semio_s_artifact_stdio_svg_snapshot::standards::v1_1::subsets::tiny::schema::conformance;

@@ -1,7 +1,10 @@
 //! 🧪️ `setActiveExample` — the load laws: an example switch is one `LoadDocument` effect and no mutation, and nothing at all
 //! when the document already IS the requested example.
 
-use super::*;
+use crate::schema::snapshot::BitmapSnapshot;
+use crate::BitmapMutation;
+use semio_framework_plugin::{ArtifactView, Emit};
+use crate::editor::bitmap::commands::set_active_example::*;
 use semio_framework_plugin::HistoryView;
 
 fn answer(current: &BitmapSnapshot, example_id: &str) -> Emit<BitmapMutation> {

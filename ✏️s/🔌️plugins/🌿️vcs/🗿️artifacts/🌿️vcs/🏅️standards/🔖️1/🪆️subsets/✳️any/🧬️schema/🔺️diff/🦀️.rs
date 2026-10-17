@@ -101,6 +101,4 @@ impl protocol::DiffAlgebra<VcsSnapshot> for VcsDiff {
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

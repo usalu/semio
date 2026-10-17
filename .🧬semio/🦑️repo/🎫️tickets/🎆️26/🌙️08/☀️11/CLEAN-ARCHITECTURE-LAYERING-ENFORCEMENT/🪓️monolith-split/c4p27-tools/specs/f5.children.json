@@ -1,0 +1,6 @@
+[
+ {"dir":"📷️camera-math","doc":"/** 📷️ Canvas2dHost camera math: the zoom bounds and wheel factors, the pinch step, the clamp and the world and screen conversions shared with `Paint2dHost`. */","lines":[[26,79]]},
+ {"dir":"🖍️layer-paint","doc":"/** 🖍️ Canvas2dHost layer paint: the JSON layer record, the layer colours and bounds, the rounded and bounds layer drawing, the board colour reader and the infinite grid. */","lines":[[83,241]]},
+ {"dir":"👆️pointer-lane","doc":"/** 👆️ Canvas2dHost pointer lane: the pointer sample and extras, the dispatch contract and the gesture sample lane that coalesces canvas pointer moves. */","lines":[[243,312]]},
+ {"dir":"🗂️layers-session","doc":"/** 🗂️ Canvas2dHost JSON layers session: the class that interprets a `layersJson` scene into the retained canvas, its hit testing, selection and drawing. */","lines":[[315,632]]}
+]

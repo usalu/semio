@@ -12,7 +12,7 @@ test("all original portable Cargo work and ownership vectors agree with independ
   const operation:CargoControl={signal:signal.signal,...fixture.limits,remainingMilliseconds:()=>deadline-performance.now(),onProgress:()=>{progress++;},yieldContinuation:async()=>{yields++;await new Promise<void>(done=>setImmediate(done));}},control=new CargoController(operation,accounting);let accepted=true;
   try{await control.step("portable",row.id,row.units,row.bytes);}catch{accepted=false;}
   expect(oracle({units:row.units,bytes:row.bytes})).toBe(row.accepted);expect(accepted).toBe(row.accepted);expect(accounting).toEqual(row.accepted?{completed:row.units,ownedBytes:row.bytes}:{completed:0,ownedBytes:0});
-  if(row.units===0&&row.accepted){expect(progress).toBe(1);expect(yields).toBe(1);}console.log("[DEBUG] Cargo finite control "+row.id+" admitted="+accepted);
+  if(row.units===0&&row.accepted){expect(progress).toBe(1);expect(yields).toBe(1);}
  }
 });
 

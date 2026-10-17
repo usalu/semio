@@ -2,9 +2,9 @@ import type {TiffNativeObservations} from "./👁️observations/🟦️.ts";
 /** 💾️ Native TIFF admission and emission of exact owned sample words. */
 import {NativeDecodeControl} from "@semio-tech/framework/value/decode";
 import {validateTiffSnapshot,tiffIntegers,type TiffSnapshot,type TiffTag,type TiffValues,type TiffWord64,type TiffFieldType,type TiffIfd} from "../../../🧬️schema/📸️snapshot/🟦️.ts";
-import {parseCompression,adler} from "../../../../../../../../🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🚪️io/💾️binary/📸️snapshot/🗜️compression/🟦️.ts";
+import {parseCompression,adler} from "@semio-tech/stdio-deflate/standards/rfc1950/subsets/any/io/binary/snapshot/compression";
 import {decodeFax,encodeFax} from "./📠️fax/🟦️.ts";
-import {decodeJpgComponents} from "../../../../../../../../📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🚪️io/💾️binary/📸️snapshot/🧮️decoded-components/🟦️.ts";
+import {decodeJpgComponents} from "@semio-tech/stdio-jpg/jfif-1.01/subsets/document/io/binary/snapshot/decoded-components";
 export type TiffSnapshotTiff=Uint8Array;
 export interface TiffNativeOptions{byteOrder:'littleEndian'|'bigEndian';compression:'none'|'packBits'|'lzw'|'deflate'|'modifiedHuffman'|'group3'|'group4';layout:{kind:'singleStrip'}|{kind:'strips';rows:number}|{kind:'tiles';width:number;height:number}}
 const kinds:TiffFieldType[]=['byte','ascii','short','long','rational','sByte','undefined','sShort','sLong','sRational','float','double'],widths=[1,1,2,4,8,1,1,2,4,8,4,8];

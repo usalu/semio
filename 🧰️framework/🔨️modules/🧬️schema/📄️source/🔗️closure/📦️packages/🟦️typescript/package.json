@@ -7,5 +7,9 @@
   },
   "devDependencies": {
     "@semio-tech/process": "workspace:*"
+  },
+  "dependencies": {
+    "@semio-tech/framework-pack-json-ts": "workspace:*",
+    "@semio-tech/pack-json-decode-ts": "workspace:*"
   }
 }

@@ -3,7 +3,6 @@
 //! only, never the whole payload (`replace-route-data` stays the whole-payload gesture).
 
 use crate::diff::GisMapDiff;
-use crate::mutations::GisMapMutation;
 use crate::GisMapSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -24,14 +23,17 @@ pub struct RemoveRouteProperty {
     pub key: String,
 }
 
-impl MutationKind<GisMapSnapshot, GisMapMutation> for RemoveRouteProperty {
+impl<Op> MutationKind<GisMapSnapshot, Op> for RemoveRouteProperty
+where
+    Op: protocol::Mutation<GisMapSnapshot, Diff = GisMapDiff> + From<RemoveRouteProperty> + From<crate::standards::v1::subsets::any::schema::mutations::set_route_property::SetRouteProperty>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "remove", entity: "route-property", kind: "remove-route-property", record: "RoutePropertyRemoved" };
 
     fn diff(&self, base: &GisMapSnapshot) -> protocol::MutationOutcome<GisMapDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &GisMapSnapshot) -> Result<Vec<GisMapMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &GisMapSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         super::inverse::inverse(self, base)
     }
 

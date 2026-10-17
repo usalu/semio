@@ -166,13 +166,15 @@ function entryText(owner: string): string {
           ? `export { default as ${name} } from "${rel(target)}" with { type: "json" };`
           : mode === "lazy"
             ? `export const ${exportNames(name, mode)} = () => import("${rel(target)}").then(module => module.default);`
-            : `export const ${exportNames(name, mode)} = new URL("${rel(target)}", import.meta.url);`,
+            : `export const ${exportNames(name, mode)} = fixtureUrl(import.meta.url, "${rel(target)}");`,
       );
     }
   }
   const moduleName = basename(owner).replace(/^[^A-Za-z0-9]+/u, "");
   const docstring = header ?? `/** 🧫 The ${moduleName} module's public fixture entry: the language-neutral corpora its consumers read, exposed by name under one import so no consumer spells the owner's internal folders. */`;
-  return [docstring, ...kept, ...body].join("\n") + "\n";
+  const helper = relative(dirname(entryPath), join(ROOT, "🧰️framework/🔨️modules/🧪️test/📖️source-text/🟦️.ts"));
+  const needsHelper = [...kept, ...body].some(line => line.includes("fixtureUrl(")) && !kept.some(line => line.startsWith("import { fixtureUrl }"));
+  return [docstring, ...(needsHelper ? [`import { fixtureUrl } from "${helper}";`] : []), ...kept, ...body].join("\n") + "\n";
 }
 
 function insertAfterImports(text: string, statement: string): string {

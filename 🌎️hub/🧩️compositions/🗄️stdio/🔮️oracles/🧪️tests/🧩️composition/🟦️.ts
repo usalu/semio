@@ -6,8 +6,8 @@ import Ajv from "ajv";
 import * as toml from "@iarna/toml";
 import { validateJsonSchemaSubset } from "@semio-tech/schema-validator-ts";
 import { inspectRustCargoManifest, inspectRustModuleGraphFacts, inspectRustStructure } from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts";
-import { inspectRustCompileReferences, rustTokenPairs, rustTokens } from "../../../../../../🧰️framework/🔨️modules/📚️compiler/📖️syntax/🦀️rust/🟦️.ts";
-import { packagesForOwner } from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🕸️dependencies/🟨️.mjs";
+import { inspectRustCompileReferences, rustTokenPairs, rustTokens } from "@semio-tech/compiler-syntax-rust-ts";
+import { packagesForOwner } from "@semio-tech/repo-test/dependencies";
 import contract from "../🧫️fixtures/🧩️composition/🔣️.json";
 import selection from "../🧫️fixtures/🌳️contribution-selection/🔣️.json";
 
@@ -20,7 +20,12 @@ import { originalDrawingSource } from "../🖊️drawing-reader/🧩️preservat
 
 
 const root = resolve(import.meta.dir, "../../../../../..");
-const externalDependencies: Record<string, unknown> = contract.dependencies;
+const externalDependencies: Readonly<Record<string, toml.AnyJson>> = contract.dependencies;
+type OracleHost = { readonly implementation: string; readonly package: string } & ({ readonly path: string } | { readonly version: string; readonly module: string });
+const tomlTable = (value: toml.AnyJson | undefined, what: string): toml.JsonMap => {
+  if (typeof value === "object" && !Array.isArray(value) && !(value instanceof Date)) return value;
+  throw new Error(`${what} must be a TOML table`);
+};
 const read = (path: string) => readFileSync(resolve(root, path), "utf8");
 const parsed = (path: string): Record<string, unknown> => JSON.parse(read(path));
 const digest = (value: string) => createHash("sha256").update(value).digest("hex");
@@ -92,12 +97,12 @@ const contributions = () => {
 };
 
 /** 🌳️ Follows all authored path-package dependencies and compile inputs. */
-function removedOracleInputs(hosts: { path: string }[], removedOwner: string): string[] {
+function removedOracleInputs(hosts: { package?: string; path?: string }[], removedOwner: string): string[] {
   const removed = resolve(root, removedOwner), inputs = new Set<string>(), packages = new Set<string>(), sources = new Set<string>();
   const visitSource = (path: string, manifest: string) => {
     if (sources.has(path) || !existsSync(path)) return;
     sources.add(path);
-    const references = inspectRustCompileReferences(readFileSync(path, "utf8")).filter(({ base }) => base !== "generated");
+    const references = inspectRustCompileReferences(readFileSync(path, "utf8"), () => undefined).filter(({ base }) => base !== "generated");
     const targets: string[] = [];
     for (const reference of references) {
       const target = resolve(reference.base === "manifest" ? manifest : resolve(path, "..", reference.inlineBase ?? "."), reference.path);
@@ -113,7 +118,10 @@ function removedOracleInputs(hosts: { path: string }[], removedOwner: string): s
     visitSource(resolve(root, path, cargo.lib.path), resolve(root, path));
     for (const dependency of Object.values(cargo.dependencies ?? {})) if (typeof dependency === "object" && dependency.path) visitPackage(resolve(root, path, dependency.path));
   };
-  for (const host of hosts) visitPackage(host.path);
+  for (const host of hosts) {
+    if (host.path === undefined) throw new Error(`oracle host ${host.package ?? "(unnamed)"} declares no path`);
+    visitPackage(host.path);
+  }
   return [...inputs].sort();
 }
 
@@ -126,7 +134,7 @@ describe("canonical complete Stdio oracle ownership", () => {
   });
 
   test("explicit selection preserves generic ancestor and Python semantics", () => {
-    for (const row of selection.cases) expect(packagesForOwner(row.contributions, row.owner, row.implementation), row.id).toEqual(row.expected);
+    for (const row of selection.cases) expect(packagesForOwner<OracleHost>(row.contributions, row.owner, row.implementation), row.id).toEqual(row.expected);
   });
 
   test("owned deletion vectors require complete execution and select no Cargo feature", () => {
@@ -180,23 +188,23 @@ describe("canonical complete Stdio oracle ownership", () => {
       const manifest = read(`${owner!.package.path}/Cargo.toml`);
       const independent = Bun.TOML.parse(manifest);
       const cargo = toml.parse(manifest);
-      expect(cargo).toEqual(independent);
+      expect<typeof independent>(cargo).toEqual(independent);
       expect(digest(row.originalManifest.source)).toBe(row.originalManifest.sha256);
       const before = toml.parse(row.originalManifest.source);
-      expect(before).toEqual(Bun.TOML.parse(row.originalManifest.source));
+      const expectedAt194x30 = Bun.TOML.parse(row.originalManifest.source); expect<typeof expectedAt194x30>(before).toEqual(expectedAt194x30);
       expect(before["dev-dependencies"]).toBeUndefined();
-      const originalDependencies = { ...cargo.dependencies };
+      const originalDependencies = { ...tomlTable(cargo.dependencies, "dependencies") };
       if (row.package === "semio-s-artifact-note-note-test-oracle") {
         expect(originalDependencies[drawing.package]).toBeDefined();
         delete originalDependencies[drawing.package];
         originalDependencies.dxf = drawing.externalDependency;
       }
-      for (const name of Object.keys(before.dependencies)) expect(originalDependencies[name], name).toBeDefined();
-      const dependencies = cargo["dev-dependencies"] as Record<string, Record<string, unknown>>;
+      for (const name of Object.keys(tomlTable(before.dependencies, "original dependencies"))) expect(originalDependencies[name], name).toBeDefined();
+      const dependencies = tomlTable(cargo["dev-dependencies"], "dev-dependencies");
       expect(dependencies, row.package).toBeDefined();
       expect(Object.keys(dependencies).sort()).toEqual([...row.references].sort());
       for (const name of row.references) {
-        expect(dependencies[name], name).toEqual(externalDependencies[name]);
+        expect(externalDependencies[name], name).toEqual(dependencies[name]);
       }
       expect(rustTokens(read(row.source)).some((token, index, tokens) => token.text === "fn" && tokens[index + 1]?.kind === "identifier"), row.source).toBe(true);
       expect(read(row.source).includes("#[ignore]"), row.source).toBe(row.ignored);
@@ -317,7 +325,7 @@ describe("canonical complete Stdio oracle ownership", () => {
     const source = read(deletion.lowerPlugin.manifest), cargo = toml.parse(source) as { lib: { path: string }; test: { name: string; path: string }[]; dependencies: Record<string, unknown> };
     expect(cargo.test.map(({ name }) => name)).toContain("authored_assembly");
     expect(cargo.lib.path).toBe("../../🦀️.rs");
-    expect(Object.keys(cargo.dependencies).sort()).toEqual(["semio-framework-plugin", "semio-s-artifact-stdio-contract"]);
+    expect(Object.keys(cargo.dependencies).sort()).toEqual(["semio-framework-artifact-reference", "semio-framework-pack", "semio-framework-plugin", "semio-s-artifact-stdio-contract"]);
     expect(removedOracleInputs([{ path: deletion.lowerPlugin.manifest.slice(0, -"/Cargo.toml".length) }], deletion.lowerPlugin.removedOwner)).toEqual([]);
   });
 });

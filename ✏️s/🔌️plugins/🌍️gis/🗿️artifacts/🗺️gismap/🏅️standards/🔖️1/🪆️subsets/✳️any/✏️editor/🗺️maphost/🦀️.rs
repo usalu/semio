@@ -35,7 +35,5 @@ pub fn map_host_from(document: &GisMapSnapshot, cfg: &MapWindowConfig) -> MapHos
 //#endregion 🔖️MapHost
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

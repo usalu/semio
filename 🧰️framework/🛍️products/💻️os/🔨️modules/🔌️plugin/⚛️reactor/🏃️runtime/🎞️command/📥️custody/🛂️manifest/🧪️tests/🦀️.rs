@@ -9,8 +9,7 @@ use semio_framework_plugin_plugin_program::PluginProgram;
 use semio_framework_value::retained_clone::RetainedCloneGrant;
 use serde_json::Value;
 #[doc(hidden)]
-#[path="../../../../../../🧪️testing/🎟️caller/🦀️.rs"]
-pub mod original_caller;
+pub use semio_framework_plugin_testing_caller as original_caller;
 
 #[cfg_attr(test,test)]
 pub fn original_manifest_fields_keep_paid_source_and_denied_transfer(){
@@ -25,5 +24,5 @@ pub fn original_manifest_fields_keep_paid_source_and_denied_transfer(){
  }
  assert!(transferred);let(address,args,_)=owner.dispatch_parts();assert_eq!(address.command_id,"setValue");assert!(matches!(&address.owner,ManifestCommandOwnerAddress::Mode{plugin_id,app_id,mode_id}if plugin_id=="fixture"&&app_id=="editor"&&mode_id=="author"));assert_eq!(serde_json::Value::from(args.as_ref().unwrap()),corpus["invocation"]["arguments"]);
  for _ in 0..original_caller::OriginalFixtureCaller::maximum_turns(){if owner.terminal_is_empty(){break}let before=cx.retained_progress();let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cx.with_retained_loan(loan,|same|owner.close_step(same)));result.unwrap();let after=cx.retained_progress();assert_eq!((heap.requested_bytes,heap.released_bytes),(after.retained_capacity_bytes-before.retained_capacity_bytes,after.released_bytes-before.released_bytes));}
- assert!(owner.terminal_is_empty());drop(owner);let fuel=cx.fuel_remaining();drop(cx);caller.retire(fuel).unwrap();eprintln!("[DEBUG] actual manifest Pack source pointer held,copy23 denies String transfer,one-item4096 phases,Unicode/serde_json oracle,actualheap receipts+paid Root closure=true");
+ assert!(owner.terminal_is_empty());drop(owner);let fuel=cx.fuel_remaining();drop(cx);caller.retire(fuel).unwrap();
 }

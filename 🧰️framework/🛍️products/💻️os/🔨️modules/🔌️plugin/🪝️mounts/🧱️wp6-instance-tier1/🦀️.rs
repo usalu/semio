@@ -4,6 +4,5 @@
 // Carving a crate removes its unit here and puts `extern crate <crate> as <old module name>;` in its place (PLAN-PLUGIN-CRATES.md, section 12.5).
 
 //#region 🏛️OwnershipFacet
-#[path="../../🧵️instance/🏪️stores/📥️staging/📮️action-ingress/🦀️.rs"]
-pub mod action_ingress;
+pub use semio_framework_plugin_instance_stores::action_ingress as action_ingress;
 //#endregion 🏛️OwnershipFacet

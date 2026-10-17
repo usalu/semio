@@ -1,0 +1,273 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "Protocol": {
+      "const": {
+        "version": 1,
+        "resource": "native-cache-producer",
+        "catalogueResource": "native-cache-catalogue",
+        "creationResource": "native-cache-creation",
+        "maximumOperations": 32,
+        "minimumMetadataBytes": 65536,
+        "stages": [
+          "context-ex",
+          "admitted",
+          "body-joined",
+          "descriptors-closed",
+          "committed",
+          "released"
+        ]
+      }
+    },
+    "Case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "contexts",
+        "outcome",
+        "overlap"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "contexts": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          }
+        },
+        "outcome": {
+          "enum": [
+            "value",
+            "error",
+            "undefined",
+            "cancel",
+            "late",
+            "first-failure"
+          ]
+        },
+        "overlap": {
+          "type": "boolean"
+        }
+      }
+    },
+    "EnforcingCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "capacityBytes",
+        "floorBytes",
+        "metadataBytes",
+        "producerBackingBytes",
+        "producerMetadataBytes",
+        "committedBytes",
+        "pendingBytes",
+        "availableBytes",
+        "admitted",
+        "edges",
+        "acyclic"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "capacityBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4226809856
+        },
+        "floorBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1073741824
+        },
+        "metadataBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 67108864
+        },
+        "producerBackingBytes": {
+          "type": "integer",
+          "minimum": 34603008,
+          "maximum": 4227858432
+        },
+        "producerMetadataBytes": {
+          "type": "integer",
+          "minimum": 65536,
+          "maximum": 67108864
+        },
+        "committedBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4226809856
+        },
+        "pendingBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4226809856
+        },
+        "availableBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4226809856
+        },
+        "admitted": {
+          "type": "boolean"
+        },
+        "edges": {
+          "type": "array",
+          "maxItems": 16,
+          "items": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "enum": [
+                "context",
+                "catalogue",
+                "child-kernel",
+                "parent-mutation",
+                "parent-journal"
+              ]
+            }
+          }
+        },
+        "acyclic": {
+          "type": "boolean"
+        }
+      }
+    },
+    "MappingCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "modes",
+        "outcome",
+        "overlap"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "modes": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "enum": [
+              "shared",
+              "exclusive"
+            ]
+          }
+        },
+        "outcome": {
+          "enum": [
+            "value",
+            "error",
+            "undefined",
+            "cancel",
+            "late",
+            "first-failure",
+            "upgrade",
+            "identity"
+          ]
+        },
+        "overlap": {
+          "type": "boolean"
+        }
+      }
+    },
+    "MappingIdentityCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "platform",
+        "dev",
+        "ino",
+        "size",
+        "device",
+        "mapping",
+        "identity"
+      ],
+      "properties": {
+        "platform": {
+          "enum": [
+            "darwin",
+            "linux",
+            "win32"
+          ]
+        },
+        "dev": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "ino": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "size": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "device": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "mapping": {
+          "type": "string",
+          "maxLength": 4096
+        },
+        "identity": {
+          "type": "string",
+          "maxLength": 8192
+        }
+      }
+    },
+    "VictimCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "sameContext",
+        "held",
+        "acquired",
+        "reused"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "sameContext": {
+          "type": "boolean"
+        },
+        "held": {
+          "type": "boolean"
+        },
+        "acquired": {
+          "type": "boolean"
+        },
+        "reused": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

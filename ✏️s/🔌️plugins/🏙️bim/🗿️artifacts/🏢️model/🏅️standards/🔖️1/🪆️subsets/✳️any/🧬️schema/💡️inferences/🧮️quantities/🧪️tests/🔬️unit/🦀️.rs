@@ -1,8 +1,10 @@
 use crate::standards::v1::subsets::any::io::text::inferences::quantities::table_json;
-use super::*;
+use super::{ElementQuantity, ModelQuantities, QuantityKind, group_volumes, solid_rows, upward_area};
+use crate::standards::v1::subsets::any::schema::snapshot::{Layer, ModelSnapshot, OpeningKind, Ramp, Slab, Vertex};
 use crate::standards::v1::subsets::any::schema::snapshot::TopConstraint;
 use crate::standards::v1::subsets::any::schema::snapshot::{Axis, Beam, BeamType, Building, Column, ColumnType, DoorLeaves, DoorType, LayerFunction, LocationLine, Material, MaterialCategory, Opening, Phase, Point2, Profile, Railing, Rgb, Site, SlabType, Slope, SpaceBoundary, Stair, StairFlight, Storey, Swing, Wall, WallType, WindowType};
 use protocol::Inference;
+use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_quantities;
 
 fn close(left: f64, right: f64) -> bool {
     (left - right).abs() <= 1e-9 * right.abs().max(1.0)

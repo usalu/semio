@@ -1,4 +1,5 @@
-use super::*;
+use protocol::Mutation;
+use crate::editor::vcs::config::*;
 
 /// 🧮️ Round-trip law (WORKFLOWS-END-TO-END-TYPED-PORTS-REAL-SCHEMA-FLOW-CONFIG-ON-NODE): a
 /// non-default fixture must survive `ArtifactDsl`/`ArtifactPack` byte-for-byte.

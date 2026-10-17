@@ -2,7 +2,7 @@ import { expect, test } from "bun:test";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { resolve } from "node:path";
 import TOML from "@iarna/toml";
-import { rustTokens, rustTokenPairs } from "../../../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/🟦️.ts";
+import { rustTokens, rustTokenPairs } from "@semio-tech/compiler-syntax-rust-ts";
 
 type Mapping = Readonly<{ role: string; source: string; destination: string }>;
 type Corpus = Readonly<{
@@ -42,7 +42,7 @@ test("all seven current family assets stay at their actual specific owners", () 
   }
 });
 
-test.each(corpus.consumers)("the actual $owner language binding directly selects the general provider", (consumer) => {
+test.each([...corpus.consumers])("the actual $owner language binding directly selects the general provider", (consumer) => {
     const text = read(consumer.manifest), native = Bun.TOML.parse(text) as { dependencies?: Record<string, string | { package?: string; path?: string }> }, thirdParty = TOML.parse(text) as typeof native;
     expect(native).toEqual(thirdParty);
     const dependencies = Object.entries(native.dependencies ?? {}), kernel = dependencies.filter(([name, row]) => name === "semio-framework-os-kernel" || typeof row === "object" && row.package === "semio-framework-os-kernel");

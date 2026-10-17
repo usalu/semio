@@ -386,7 +386,7 @@ impl ArtifactCasMaintenanceSupervisor {
         Arc::new(Self { cancelled, healthy, wake, task: Mutex::new(Some(task)) })
     }
 
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testkit"))]
     pub fn disabled() -> Arc<Self> {
         Arc::new(Self { cancelled: Arc::new(std::sync::atomic::AtomicBool::new(false)), healthy: Arc::new(std::sync::atomic::AtomicBool::new(true)), wake: Arc::new(tokio::sync::Notify::new()), task: std::sync::Mutex::new(None) })
     }

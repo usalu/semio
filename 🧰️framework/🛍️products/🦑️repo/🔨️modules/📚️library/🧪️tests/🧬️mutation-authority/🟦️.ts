@@ -202,7 +202,6 @@ describe("direct mutation ownership", () => {
           const compiled = spawnSync("rustc", ["--edition=2021", "--crate-name", "reachability_probe", "--crate-type", "lib", "--out-dir", out, join(mutations, rust)], { encoding: "utf8", timeout: 30_000 });
           writeFileSync(join(out, "compiler.log"), `${compiled.stdout}\n${compiled.stderr}`);
           if (compiled.status !== 0) throw new Error(`${vector.name}: ${compiled.stderr || compiled.error}`);
-          console.log("[DEBUG] reachability native oracle; id=" + vector.name + "; status=" + compiled.status);
         }
         const relativeRoot = relative(caseRoot, mutations).replaceAll("\\", "/");
         const reaches = policyMutationStructuralBreaches(caseRoot, [relativeRoot]).some(({ kind, scope }) => (kind === "mutation/reachability" && scope === `${relativeRoot}/➕️insert-page/${rust}`) || kind === "mutation/folder-variant-bijection");
@@ -253,7 +252,6 @@ describe("direct mutation ownership", () => {
           const compiled = spawnSync("rustc", ["--edition=2021", "--crate-name", "wrapped_type_origin_probe", "--crate-type", "lib", "--out-dir", out, join(mutations, rust)], { encoding: "utf8", timeout: 30_000 });
           writeFileSync(join(out, "📓️compiler.md"), `# Rustc ${vector.id}\n\n\`\`\`text\n${compiled.stdout}${compiled.stderr}\n\`\`\`\n`);
           expect(compiled.status, vector.id).toBe(0);
-          console.log("[DEBUG] type-origin native oracle; id=" + vector.id + "; status=" + compiled.status);
         }
         const relativeMutations = mutationRoot;
         const proof = inspectMutationRootReachability(caseRoot, relativeMutations, vector.rootSource.replaceAll("🦀️.rs", rust), [leafName], rust);

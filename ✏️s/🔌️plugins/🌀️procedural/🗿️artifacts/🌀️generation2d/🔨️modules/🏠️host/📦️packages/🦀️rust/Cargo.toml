@@ -15,6 +15,9 @@ workspace = true
 [lib]
 path = "../../🦀️.rs"
 
+[features]
+testkit = ["semio-s-artifact-procedural-2d-mutations/testkit"]
+
 [dependencies]
 semio-framework-job-publication = { path = "../../../../../../../../../🧰️framework/🔨️modules/🧵️job/📬️outcome/📤️publication/📦️packages/🦀️rust" }
 semio-framework-job-registry = { path = "../../../../../../../../../🧰️framework/🔨️modules/🧵️job/🗄️registry/📦️packages/🦀️rust" }
@@ -34,4 +37,5 @@ semio-s-artifact-procedural-2d-mutations = { workspace = true }
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
 semio-s-artifact-procedural-2d-testkit = { workspace = true }
+semio-s-artifact-procedural-2d-io-binary = { workspace = true, features = ["testkit"] }
 

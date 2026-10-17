@@ -1,7 +1,6 @@
 //! 🚫️ `delete-properties` — clears the kit's `properties` CHILD slot. Idempotent; inverse
 //! escrows from BASE.
 
-use crate::schema::mutations::SemioKitMutation;
 use crate::schema::snapshot::SemioKitSnapshot;
 
 //#region 🔖️Payload
@@ -10,13 +9,16 @@ use crate::schema::snapshot::SemioKitSnapshot;
 #[mutation_leaf(contract = ::protocol)]
 pub struct DeleteProperties {}
 
-impl protocol::MutationKind<SemioKitSnapshot, SemioKitMutation> for DeleteProperties {
+impl<Op> protocol::MutationKind<SemioKitSnapshot, Op> for DeleteProperties
+where
+    Op: protocol::Mutation<SemioKitSnapshot, Diff = crate::schema::diff::SemioKitDiff> + From<DeleteProperties> + From<crate::schema::mutations::create_properties::CreateProperties>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "properties", kind: "delete-properties", record: "DeletedProperties" };
 
-    fn diff(&self, base: &SemioKitSnapshot) -> protocol::MutationOutcome<<SemioKitMutation as protocol::Mutation<SemioKitSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioKitSnapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<SemioKitSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &SemioKitSnapshot) -> Result<Vec<SemioKitMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &SemioKitSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

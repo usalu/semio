@@ -179,7 +179,7 @@ pub fn reset_document_effect(document: &Grid3dSnapshot) -> semio_framework::kern
 /// and only the crate's own typed tests can drive the editor.
 /// 🖱️ Both pick lanes land on the same verb: `pickCell` carries the cell key directly, while the
 /// host's plugin-private `worldSelect` wraps it in a one-entry `ids` array.
-fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Grid3dEditorCommand, Fault> {
+pub fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Grid3dEditorCommand, Fault> {
     let field = |key: &str| args.and_then(|value| value.get(key));
     let text = |key: &str| field(key).and_then(semio_framework_value::DslValue::as_str).map(str::to_string);
     let float = |key: &str| field(key).and_then(semio_framework_value::DslValue::as_f64).filter(|number| number.is_finite());
@@ -384,7 +384,7 @@ const fn window_config_route(tool_id: &'static str) -> semio_framework_plugin::A
 /// 🛣️ One lane per route, read off each arm of `grid3d_command_emit`. The example picker is
 /// `HostOnly`: it answers a whole-document `Effect::LoadDocument`, which is not an edit, so
 /// re-picking the open example mints no phantom undo entry.
-const GRID3D_PUBLICATION_CONTRACTS: &[semio_framework_plugin::ArtifactToolPublicationContract] = &[
+pub const GRID3D_PUBLICATION_CONTRACTS: &[semio_framework_plugin::ArtifactToolPublicationContract] = &[
     artifact_route("changeSeed"),
     artifact_route("resizeGrid"),
     artifact_route("changeCellSizes"),
@@ -464,7 +464,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framewo
 /// 🏭️ The app-owned retained command job factory — `factory_type:` in the proof block binds this exact
 /// Rust type to `EditorApp<Grid3dEditor>`, which is what turns a bare (and therefore dispatch-dead)
 /// bounded proof into an exact-owner proof.
-struct Grid3dRetainedCommandJobFactory {
+pub struct Grid3dRetainedCommandJobFactory {
     keys: Vec<semio_framework::ToolFactoryKey>,
 }
 
@@ -502,9 +502,9 @@ impl semio_framework::ToolJobFactory for Grid3dRetainedCommandJobFactory {
         &mut self,
         _operation: semio_framework_job::Operation,
         payload: Self::Payload,
-        input: semio_framework::action_bus::RetainedToolWireInput,
-        checkpoint: Option<semio_framework::action_bus::RetainedToolWireInput>,
-    ) -> Result<Self::Job, (semio_framework::ToolJobFactoryError, semio_framework::action_bus::RetainedToolWireInput, Option<semio_framework::action_bus::RetainedToolWireInput>)> {
+        input: semio_framework_action_bus::RetainedToolWireInput,
+        checkpoint: Option<semio_framework_action_bus::RetainedToolWireInput>,
+    ) -> Result<Self::Job, (semio_framework::ToolJobFactoryError, semio_framework_action_bus::RetainedToolWireInput, Option<semio_framework_action_bus::RetainedToolWireInput>)> {
         if input.declared_bytes() > GRID3D_RETAINED_RAW_BYTES || checkpoint.is_some() {
             return Err((semio_framework::ToolJobFactoryError::new("bounded WFC 3D grid command rejects oversized wire or checkpoint owner"), input, checkpoint));
         }
@@ -790,3 +790,47 @@ pub fn create_grid3d_editor() -> semio_framework_plugin::AppDefinition {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🧩️ArtifactItems
+pub mod artifact_items {
+pub use crate::schema::snapshot::WFC_GRID3D_DOCUMENT_SCHEMA;
+use semio_framework_artifact_reference::{Dialect, StandardId, SubsetId};
+
+//#region 🔖️Dialect
+/// 🪪️ The canonical surface-id coordinate for this artifact's ONE subset (`✳️any`) —
+/// `s.wfc.grid3d@1/*`. Lives at the ARTIFACT root (not under `✏️editor`/`👁️viewer`) so a viewer file
+/// reads it without importing through the sibling editor module (`policyViewerPurityBreaches`).
+/// NOT [`artifact_kind`]'s OS-level `"3d.wfcgrid3d"` kind id, which is a different namespace.
+pub const WFC_GRID3D_DIALECT: Dialect = Dialect { artifact_kind: WFC_GRID3D_DOCUMENT_SCHEMA, standard: StandardId("1"), subset: SubsetId::ANY };
+//#endregion 🔖️Dialect
+}
+//#endregion 🧩️ArtifactItems
+
+//#region 🧩️ArtifactItems2
+pub mod artifact_items_2 {
+pub use crate::schema::snapshot::WFC_GRID3D_DOCUMENT_SCHEMA;
+use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
+
+//#region 🔖️ArtifactKind
+/// 🗂️ This artifact's `ArtifactKindSpec` — a 3D document: its tiles are meshes and its preview is a
+/// real instanced `World3d` scene, so `dimension`/`media_class`/`media_form` follow the
+/// `puzzle.3d`/`remodeling` mesh precedent rather than assembly's headless `data` one.
+pub fn artifact_kind() -> ArtifactKindSpec {
+    ArtifactKindSpec {
+        id: "3d.wfcgrid3d".into(),
+        label: semio_framework_ui_locale::LocalizedLabel::native("3D Grid", "3D-Gitter"),
+        source_format: WFC_GRID3D_DOCUMENT_SCHEMA.into(),
+        component_kind: "wfcgrid3d".into(),
+        dimension: "3d".into(),
+        media_capability: OsMediaCapability::MeshOnly,
+        media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh },
+        schema: WFC_GRID3D_DOCUMENT_SCHEMA.into(),
+        export_formats: vec![],
+        import_formats: vec![],
+        export_stdio_kinds: vec!["stdio.txt".into()],
+        import_stdio_kinds: vec!["stdio.txt".into()],
+    }
+}
+//#endregion 🔖️ArtifactKind
+}
+//#endregion 🧩️ArtifactItems2

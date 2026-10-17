@@ -1,6 +1,17 @@
 //! 🕹️ Interaction of the puzzle 2d editor: the action context every command arm reads and writes and the context menu. See [`super`].
 
-use super::*;
+use crate::{editor::puzzle2d::snapshot::puzzle2d_addresses_locked_entity, editor::puzzle2d::snapshot::puzzle2d_entity_hidden, editor::puzzle2d::snapshot::puzzle2d_handle_kind, editor::puzzle2d::snapshot::puzzle2d_kinds_compatible, editor::puzzle2d::snapshot::puzzle2d_occupied_handles};
+use crate::editor::puzzle2d::engine::BoardHost;
+pub use crate::{editor::puzzle2d::modes::edit::windows::overview::utilities::select::Puzzle2dSelectionRecord, editor::puzzle2d::modes::edit::windows::overview::utilities::select::SelectToolRequest};
+use semio_framework_tool_machine::{ChartGesture, GesturePhase};
+use crate::editor::puzzle2d::modes::edit::windows::overview::utilities::select as select_utility;
+use crate::editor::puzzle2d::snapshot::Puzzle2dPlaySnapshot;
+use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
+use semio_framework::kernel::UiDirtyScope;
+use semio_framework_plugin::kernel::Effect;
+use semio_framework_pack_json::Value;
+use std::cell::RefCell;
+use std::collections::HashSet;
 
 //#region 🔖️ActionContext
 /// 🎬️ Everything one `🎮️commands/*` arm may read or write. The prologue/epilogue around the dispatch
@@ -86,28 +97,11 @@ impl<'a> Puzzle2dActionCtx<'a> {
 
     /// 🧾️ Publishes one committed tool transaction of this action: its leaves join the action's ONE edit, which the
     /// first transaction the action commits stamps.
-    fn publish_transaction(&mut self, transaction: protocol::TransactionRef, mutations: Vec<Puzzle2dMutation>) {
+    pub fn publish_transaction(&mut self, transaction: protocol::TransactionRef, mutations: Vec<Puzzle2dMutation>) {
         if self.transaction.is_none() && !self.authoring_seed.is_empty() {
             *self.transaction = Some(transaction);
         }
         self.artifact_mutations.extend(mutations);
-    }
-
-    /// 🧱️ Commits the board-tool rows of ONE flush (`rows`: kind and payload, in board order): every run of one kind is
-    /// one release of that tool — ONE `ToolTransaction` of `<appId>#<kind>` on the window's gesture slot, folded on the
-    /// document the runs before it left. Answers the document after every release, `None` when no row changed it.
-    pub fn release_board(&mut self, rows: &[(&'static str, Value)]) -> Option<std::sync::Arc<crate::Puzzle2dSnapshot>> {
-        let mut after: Option<std::sync::Arc<crate::Puzzle2dSnapshot>> = None;
-        for run in rows.chunk_by(|left, right| left.0 == right.0) {
-            let base = after.clone().unwrap_or_else(|| self.base.shared_typed());
-            let release = apply_board_events::BoardToolRelease::new(base, run[0].0, run.iter().map(|row| row.1.clone()).collect());
-            let committed = self.gesture.drive::<ChartGesture<apply_board_events::board_tool::BoardTool>>(None, run[0].0, GesturePhase::Once, Some(release.clone()), self.authoring_seed).ok().flatten();
-            if let Some((transaction, mutations)) = committed {
-                self.publish_transaction(transaction, mutations);
-                after = Some(std::sync::Arc::clone(&release.outcome().after));
-            }
-        }
-        after
     }
 
     /// 🎯️ The selected ids a selection transform may move: nodes and target regions of the base, in first-seen
@@ -158,7 +152,7 @@ pub fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyRes
 /// destructive tail. `organize_context_menu` (applied automatically at the
 /// `VcsArtifactApp::context_menu` funnel) sorts groups into `RIBBON_PARENT_CATEGORIES` order and
 /// inserts the pre-destructive separator itself, so no manual `.separator()` calls are needed here.
-pub(super) async fn puzzle2d_context_menu_items(registry: &semio_framework_plugin::AppActionRegistry, snapshot: &Value, selected: &[String], view_state: &semio_framework_plugin::ViewModel) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
+pub async fn puzzle2d_context_menu_items(registry: &semio_framework_plugin::AppActionRegistry, snapshot: &Value, selected: &[String], view_state: &semio_framework_plugin::ViewModel) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
     use semio_framework_plugin::{selection_count_phrase, ContextMenuItemSpec, Menu, SelectionKind};
     let is_de = view_state.locale == semio_framework_ui_locale::Locale::De;
     // 🧩️ Bespoke-row helper (dynamic label/icon/args/disabled per selection state — not a plain
@@ -262,3 +256,25 @@ pub(super) async fn puzzle2d_context_menu_items(registry: &semio_framework_plugi
         .build()
 }
 //#endregion 🔖️ContextMenu
+
+/// 🖌️ Re-enters the board host's brush slot on the handle this window transient remembers. The guest
+/// host is rebuilt from the document on EVERY dispatch (`puzzle2d_dispatch_emit`), so the slot
+/// `openHandleSuggestions` opened is gone by the next verb — every candidate verb after it restores the
+/// slot before it reads an index. The rebuild is deterministic (same snapshot, same kind catalogs, same
+/// weights), so the candidate page is the one the client painted and the index the popup names is the
+/// candidate that gets placed. An open popup claims the slot's hover; the armed brush only targets it.
+/// `requested` is the handle the CALLER named — the popup's own rows carry it, so a client that still
+/// has the menu on screen never depends on the transient having round-tripped back to the guest yet.
+pub fn puzzle2d_restore_brush_slot(ctx: &mut Puzzle2dActionCtx<'_>, requested: Option<&str>) -> Option<String> {
+    let popup = ctx.scene.runtime.suggestion_menu.as_ref().map(|menu| menu.handle_id.clone()).filter(|handle_id| !handle_id.is_empty());
+    let named = requested.filter(|handle_id| !handle_id.is_empty()).map(str::to_string);
+    let opened = named.clone().or_else(|| popup.clone());
+    let handle_id = opened.clone().or_else(|| Some(ctx.scene.runtime.brush_candidate_source_handle_id.clone()).filter(|handle_id| !handle_id.is_empty()))?;
+    let mut host = ctx.host.borrow_mut();
+    if named.is_some() || popup.is_some() {
+        host.brush_open_slot(&handle_id);
+    } else {
+        host.brush_target_slot(Some(&handle_id));
+    }
+    Some(handle_id)
+}

@@ -1,6 +1,5 @@
 //! 🗃️ Authoritative PDF mutation payload, diff, inverse, and tests for `remove-embedded-file`.
 
-use super::PdfMutation;
 use crate::standards::v1_7::subsets::base::schema::diff::{self, PdfDiff};
 use crate::standards::v1_7::subsets::base::schema::snapshot::*;
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
@@ -14,7 +13,10 @@ pub struct RemoveEmbeddedFile {
     pub id: String,
 }
 
-impl MutationKind<PdfSnapshot, PdfMutation> for RemoveEmbeddedFile {
+impl<Op> MutationKind<PdfSnapshot, Op> for RemoveEmbeddedFile
+where
+    Op: protocol::Mutation<PdfSnapshot, Diff = PdfDiff> + From<RemoveEmbeddedFile> + From<crate::standards::v1_7::subsets::base::schema::mutations::set_embedded_file::SetEmbeddedFile>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "remove", entity: "embedded-file", kind: "remove-embedded-file", record: "Remove" };
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
@@ -22,10 +24,10 @@ impl MutationKind<PdfSnapshot, PdfMutation> for RemoveEmbeddedFile {
         MutationOutcome::new(diff::diff_remove_embedded_file(base, &self.id))
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
         let _ = base;
-        base.embedded_files.iter().position(|item| item.id == self.id).map(|index| PdfMutation::SetEmbeddedFile(super::set_embedded_file::SetEmbeddedFile { file: base.embedded_files[index].clone(), index: Some(index) })).into_iter().collect()
+        base.embedded_files.iter().position(|item| item.id == self.id).map(|index| Op::from(crate::standards::v1_7::subsets::base::schema::mutations::set_embedded_file::SetEmbeddedFile { file: base.embedded_files[index].clone(), index: Some(index) })).into_iter().collect()
     
     })())
 }
@@ -42,8 +44,6 @@ impl MutationKind<PdfSnapshot, PdfMutation> for RemoveEmbeddedFile {
 //#endregion 🔖️Mutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
 

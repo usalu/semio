@@ -30,7 +30,6 @@ export async function registerTests5(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(Array.from(mesh.faceIds)).toEqual(fixture.expected.faceIds);
       expect(Array.from(mesh.edgeIds)).toEqual(fixture.expected.edgeIds);
       expect((mesh as unknown as { componentReferences: unknown }).componentReferences).toEqual(fixture.expected.componentReferences);
-      console.log("[DEBUG] Shared preview record retains four full analytic labels and segment pick ranges");
     });
     it("decodes owned indexed channels, seam values and texture bytes from the portable record", () => {
       const fixture = JSON.parse(readFileSync(new URL("🧪️tests/🧫️fixtures/🧊️mesh/mesh-pack-attributes.json", source.url), "utf8"));

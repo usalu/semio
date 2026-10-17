@@ -10,8 +10,8 @@ use super::*;
 #[dsl(keyword = "set-frame-delay")]
 #[value(rename_all = "camelCase")]
 pub struct SetFrameDelay {
-    pub(crate) index: usize,
-    pub(crate) delay_cs: u16,
+    pub index: usize,
+    pub delay_cs: u16,
 }
 
 impl protocol::MutationKind<GifSnapshot, GifMutation> for SetFrameDelay {

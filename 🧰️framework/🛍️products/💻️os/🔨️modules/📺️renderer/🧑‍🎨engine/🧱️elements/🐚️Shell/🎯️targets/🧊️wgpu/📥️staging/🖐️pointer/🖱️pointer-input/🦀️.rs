@@ -351,7 +351,7 @@ impl<'ctx> PointerCtx<'ctx> {
         if self.input.handle_chrome_dialog_accessibility_event(&target.node_key, event, &mut self.chrome, &mut self.settle) {
             return Ok(true);
         }
-        if target.node_key == icon_export::CONTROL_ID {
+        if target.node_key == CONTROL_ID {
             match event {
                 ui_render::AccessibilityEvent::Activate => self.opening.cancel_icon_export(),
                 ui_render::AccessibilityEvent::Focus => {

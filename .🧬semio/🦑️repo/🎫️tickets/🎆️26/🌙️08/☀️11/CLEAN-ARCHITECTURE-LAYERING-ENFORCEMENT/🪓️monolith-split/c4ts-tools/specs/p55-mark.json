@@ -1,0 +1,13 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/📓️print/🧬️schema/💡️inferences/✒️mark/🟦️.ts",
+ "importers": "auto",
+ "childrenImportParent": true,
+ "allowManual": ["export * from parent"],
+ "children": [
+  {"dir": "🪜️curves-linear-and-step", "doc": "/** 🪜️ The linear, closed linear and step curve interpolators of `\\SemioVizPath`, numerically identical to d3-shape. */", "lines": [[79,176]]},
+  {"dir": "🌀️curves-basis-and-bundle", "doc": "/** 🌀️ The basis, closed basis, open basis and bundle curve interpolators of `\\SemioVizPath`, numerically identical to d3-shape. */", "lines": [[180,369]]},
+  {"dir": "🎢️curves-cardinal-and-catmull-rom", "doc": "/** 🎢️ The cardinal and Catmull–Rom curve interpolators (open, closed and alpha forms) of `\\SemioVizPath`, numerically identical to d3-shape. */", "lines": [[373,720]]},
+  {"dir": "🏔️curves-monotone-natural-and-bump", "doc": "/** 🏔️ The monotone, natural and bump curve interpolators of `\\SemioVizPath`, numerically identical to d3-shape. */", "lines": [[724,928]]},
+  {"dir": "💠️curve-registry-and-symbols", "doc": "/** 💠️ The curve registry (`vizCurve`) that names every interpolator and the area-sized symbol glyphs of `\\SemioVizSymbol`. */", "lines": [[932,1148]]}
+ ]
+}

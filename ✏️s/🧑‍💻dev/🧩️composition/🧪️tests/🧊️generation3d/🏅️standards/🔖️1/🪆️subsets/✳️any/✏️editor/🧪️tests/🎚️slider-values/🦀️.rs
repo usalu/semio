@@ -18,13 +18,14 @@
 use super::*;
 use crate::SnapshotRead;
 use crate::editor_domain::editor_laws::context::{self, app_with_registry};
+use semio_framework_test_fixtures::repo_text;
 use semio_s_artifact_procedural_3d_model::example_snapshot;
 use semio_s_artifact_procedural_3d_model::with_host;
 use semio_framework_plugin::PluginApp;
 use serde::Deserialize;
 use std::collections::BTreeMap;
 
-const SLIDER_VALUES_FIXTURE_JSON: &str = include_str!("../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🎚️slider-values.json");
+fn slider_values_fixture_json() -> &'static str { repo_text!("✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🎚️slider-values.json") }
 
 //#region 📇️Fixture
 #[derive(Debug, Deserialize)]
@@ -58,7 +59,7 @@ struct SliderGestureRow {
 }
 
 fn slider_values_fixture() -> SliderValuesFixture {
-    let mut fixture: SliderValuesFixture = serde_json::from_str(SLIDER_VALUES_FIXTURE_JSON).expect("the slider-values fixture parses");
+    let mut fixture: SliderValuesFixture = serde_json::from_str(slider_values_fixture_json()).expect("the slider-values fixture parses");
     assert_eq!(fixture.schema, "s.procedural.generation3d.slider-values/v1", "the slider-values fixture declares its own schema");
     // 🔬️ `SEMIO_SLIDER_EXAMPLES=a,b` narrows a DIAGNOSTIC run to those examples. The kernel's shape
     // store is process-wide, so "does this row still fail when nothing else is in the store?" is a

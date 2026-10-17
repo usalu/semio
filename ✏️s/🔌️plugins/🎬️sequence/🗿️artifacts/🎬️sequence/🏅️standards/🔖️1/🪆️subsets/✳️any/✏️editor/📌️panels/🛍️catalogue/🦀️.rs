@@ -2,8 +2,8 @@
 //! expanded control-flow steps.
 
 use crate::editor::sequence::terminology::SequenceLabels;
-use crate::editor::sequence::{control_slots, is_control_kind};
-use crate::editor::sequence::{sequence_action, ui_label};
+use crate::editor::sequence::host::{control_slots, is_control_kind};
+use crate::editor::sequence::base::{sequence_action, ui_label};
 use crate::SequenceHostSnapshot;
 use semio_framework_plugin::tree_item_with_action;
 use semio_framework_ui_locale::LocalizedLabel;
@@ -39,7 +39,7 @@ pub fn render(host_snapshot: &SequenceHostSnapshot, labels: &SequenceLabels, win
     let actions = [("state.set", labels.action_set_state), ("log.print", labels.action_log_print), ("control.if", labels.action_if), ("control.while", labels.action_while), ("math.add", labels.action_add)];
     let mut items = semio_framework_plugin::UiFixedList::default();
     for (kind, label) in actions {
-        let args = crate::editor::sequence::ui_value_map([("kind", crate::editor::sequence::ui_value_text(kind)?)])?;
+        let args = crate::editor::sequence::base::ui_value_map([("kind", crate::editor::sequence::base::ui_value_text(kind)?)])?;
         let item = tree_item_with_action(format!("sequence-play-catalogue.action.{kind}"), label.as_str(), Some(kind.into()), sequence_action("addStep", Some(args))?)?;
         items.try_push(item).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.catalogue.items", "fixed catalogue admission failed"))?;
     }
@@ -47,7 +47,7 @@ pub fn render(host_snapshot: &SequenceHostSnapshot, labels: &SequenceLabels, win
     PanelTreeBuilder::new("sequence-play-catalogue")?
         .section("sequence-play-catalogue.actions", Some(ui_label(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL)?), true, items)?
         .window_section(windows, "sequence-play-catalogue.slots", Some(ui_label(labels.add_to.as_str())?), true, &slots, |(owner_id, slot_name)| {
-            let args = crate::editor::sequence::ui_value_map([("kind", crate::editor::sequence::ui_value_text("log.print")?), ("owner", crate::editor::sequence::ui_value_text(owner_id)?), ("slotName", crate::editor::sequence::ui_value_text(slot_name)?)])?;
+            let args = crate::editor::sequence::base::ui_value_map([("kind", crate::editor::sequence::base::ui_value_text("log.print")?), ("owner", crate::editor::sequence::base::ui_value_text(owner_id)?), ("slotName", crate::editor::sequence::base::ui_value_text(slot_name)?)])?;
             tree_item_with_action(
                 format!("sequence-play-catalogue.slot.{owner_id}.{slot_name}"),
                 format!("{} {owner_id} → {slot_name}", labels.add_to.as_str()),
@@ -61,7 +61,4 @@ pub fn render(host_snapshot: &SequenceHostSnapshot, labels: &SequenceLabels, win
 //#endregion 🔖️Render
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

@@ -1,11 +1,12 @@
 //! 🧪️ A fresh original static gate admits one exclusive native borrow without physical lock backing.
 use super::*;
+use semio_framework_test_fixtures::fixture_text;
 #[global_allocator]
 static ORIGINAL_GATE_HEAP: crate::HeapWitness = crate::HeapWitness;
 
 #[test]
 fn original_static_telemetry_recording_cold_backings_preserve_zero_native_birth(){
- let law:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
+ let law:serde_json::Value=serde_json::from_str(fixture_text!("../../📈️percentile/🔐️gate/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
  for owner in law["backingOwners"].as_array().unwrap(){
   let owner=owner.as_str().unwrap();
   let ((),heap)=crate::observe_heap_allocations_on_this_thread(||match owner{
@@ -15,10 +16,9 @@ fn original_static_telemetry_recording_cold_backings_preserve_zero_native_birth(
    _=>panic!("unknown original static telemetry owner")
   });
   assert_eq!((heap.requested_bytes,heap.released_bytes),(law["heapBirthBytes"].as_u64().unwrap()as usize,0),"{owner}");
-  eprintln!("[DEBUG] actual original cold telemetry owner={owner} nativeBirth0 nativeRelease0 sameCallerVerdict");
  }
 }
 #[test]
 fn original_static_telemetry_gate_preserves_exclusive_custody_and_zero_native_birth(){
- let original=StaticTryGate::new(17u64);let mut guard=original.try_lock().unwrap();assert_eq!(*guard,17);assert!(original.try_lock().is_none());*guard=19;drop(guard);let guard=original.try_lock().unwrap();assert_eq!(*guard,19);assert!(original.try_lock().is_none());drop(guard);assert!(original.try_lock().is_some());eprintln!("[DEBUG] actual original static telemetry gate nativeInlineBacking exclusiveAcquire deniedSameOwner releaseAcquire metadataCopy0");
+ let original=StaticTryGate::new(17u64);let mut guard=original.try_lock().unwrap();assert_eq!(*guard,17);assert!(original.try_lock().is_none());*guard=19;drop(guard);let guard=original.try_lock().unwrap();assert_eq!(*guard,19);assert!(original.try_lock().is_none());drop(guard);assert!(original.try_lock().is_some());
 }

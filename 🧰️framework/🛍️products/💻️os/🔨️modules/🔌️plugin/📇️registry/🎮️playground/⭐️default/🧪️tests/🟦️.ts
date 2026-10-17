@@ -29,17 +29,18 @@ async function executeCatalogV1(source: string, directory: string, assertion: st
 export async function provePlaygroundDefaultContractV1(): Promise<number> {
   const ajv = new Ajv({ strict: true }).addSchema(schema);
   
-  const validate = ajv.getSchema(`${schema.$id}#/$defs/SelectionV1`)!;
+  type Owner = { readonly variant: string; readonly catalogDefault?: boolean };
+  const validate = ajv.compile<readonly Owner[]>({ $ref: `${schema.$id}#/$defs/SelectionV1` });
   const failures: string[] = [];
   for (const row of corpus.cases) {
-    const accepted = validate(row.input), chosen = row.input.find(input => input.catalogDefault === true);
+    const admitted = validate(row.input) ? row.input : undefined, accepted = admitted !== undefined, owners = admitted ?? [], chosen = owners.find(input => input.catalogDefault === true);
     assert.deepEqual({ accepted, variant: accepted ? chosen?.variant ?? null : null }, row.expected, `${row.id}: AJV oracle`);
     let actual: typeof row.expected;
     try { actual = { accepted: true, variant: defaultPlaygroundVariant(row.input) ?? null }; }
     catch { actual = { accepted: false, variant: null }; }
     if (JSON.stringify(actual) !== JSON.stringify(row.expected)) failures.push(row.id);
     if (accepted) {
-      const entries = row.input.map((owner, index) => parsePlaygroundBlock(`variant = ${JSON.stringify(owner.variant)}\nports = { react = ${6001 + index * 2}, wgpu = ${6002 + index * 2} }\n${owner.catalogDefault === undefined ? "" : `catalog-default = ${owner.catalogDefault}`}`, `owner-${index}`, `future/owner-${index}`)!);
+      const entries = owners.map((owner, index) => parsePlaygroundBlock(`variant = ${JSON.stringify(owner.variant)}\nports = { react = ${6001 + index * 2}, wgpu = ${6002 + index * 2} }\n${owner.catalogDefault === undefined ? "" : `catalog-default = ${owner.catalogDefault}`}`, `owner-${index}`, `future/owner-${index}`)!);
       const assertion = `if(DEFAULT_PLAYGROUND_VARIANT!==${row.expected.variant === null ? "undefined" : JSON.stringify(row.expected.variant)}||JSON.stringify(PLAYGROUND_BUILD_TARGETS.map(row=>row.variant))!==${JSON.stringify(JSON.stringify(row.input.map(owner => owner.variant)))})throw Error('Owner selection drift');`;
       await executeCatalogV1(emitPlaygroundsTypeScript(entries), "🎮️playgrounds", assertion);
     }

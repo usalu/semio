@@ -34,29 +34,57 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.bim.model`: the artifact, snapshot, diff and mutation facets, five leaves each.
 pub fn bim_model_artifact_schema_descriptor() -> semio_framework_schema_registry::ArtifactSchemaDescriptor {
+    ::semio_framework_schema_registry::register_schema_leaf_documents(&[
+        ::semio_framework_schema_registry::SchemaLeafDocument { scope: "s.bim.model", export: "artifact", format: ::semio_framework_schema_registry::SchemaFormat::Typescript, path: "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts" },
+        ::semio_framework_schema_registry::SchemaLeafDocument { scope: "s.bim.model", export: "artifact", format: ::semio_framework_schema_registry::SchemaFormat::Graphql, path: "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔗️.graphql" },
+        ::semio_framework_schema_registry::SchemaLeafDocument { scope: "s.bim.model", export: "artifact", format: ::semio_framework_schema_registry::SchemaFormat::JsonSchema, path: "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json" },
+        ::semio_framework_schema_registry::SchemaLeafDocument { scope: "s.bim.model", export: "artifact", format: ::semio_framework_schema_registry::SchemaFormat::Protobuf, path: "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🛰️.proto" },
+        ::semio_framework_schema_registry::SchemaLeafDocument { scope: "s.bim.model", export: "snapshot", format: ::semio_framework_schema_registry::SchemaFormat::Typescript, path: "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🟦️.ts" },
+        ::semio_framework_schema_registry::SchemaLeafDocument { scope: "s.bim.model", export: "snapshot", format: ::semio_framework_schema_registry::SchemaFormat::Graphql, path: "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔗️.graphql" },
+        ::semio_framework_schema_registry::SchemaLeafDocument { scope: "s.bim.model", export: "snapshot", format: ::semio_framework_schema_registry::SchemaFormat::JsonSchema, path: "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json" },
+        ::semio_framework_schema_registry::SchemaLeafDocument { scope: "s.bim.model", export: "snapshot", format: ::semio_framework_schema_registry::SchemaFormat::Protobuf, path: "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🛰️.proto" },
+        ::semio_framework_schema_registry::SchemaLeafDocument { scope: "s.bim.model", export: "diff", format: ::semio_framework_schema_registry::SchemaFormat::Typescript, path: "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts" },
+        ::semio_framework_schema_registry::SchemaLeafDocument { scope: "s.bim.model", export: "diff", format: ::semio_framework_schema_registry::SchemaFormat::Graphql, path: "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🔗️.graphql" },
+        ::semio_framework_schema_registry::SchemaLeafDocument { scope: "s.bim.model", export: "diff", format: ::semio_framework_schema_registry::SchemaFormat::JsonSchema, path: "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🔣️.json" },
+        ::semio_framework_schema_registry::SchemaLeafDocument { scope: "s.bim.model", export: "diff", format: ::semio_framework_schema_registry::SchemaFormat::Protobuf, path: "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🛰️.proto" },
+        ::semio_framework_schema_registry::SchemaLeafDocument { scope: "s.bim.model", export: "mutations", format: ::semio_framework_schema_registry::SchemaFormat::Typescript, path: "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟦️.ts" },
+        ::semio_framework_schema_registry::SchemaLeafDocument { scope: "s.bim.model", export: "mutations", format: ::semio_framework_schema_registry::SchemaFormat::Typescript, path: "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌐️spatial-structure/🟦️.ts" },
+        ::semio_framework_schema_registry::SchemaLeafDocument { scope: "s.bim.model", export: "mutations", format: ::semio_framework_schema_registry::SchemaFormat::Typescript, path: "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏯️building-elements/🟦️.ts" },
+        ::semio_framework_schema_registry::SchemaLeafDocument { scope: "s.bim.model", export: "mutations", format: ::semio_framework_schema_registry::SchemaFormat::Typescript, path: "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💎️types-and-materials/🟦️.ts" },
+        ::semio_framework_schema_registry::SchemaLeafDocument { scope: "s.bim.model", export: "mutations", format: ::semio_framework_schema_registry::SchemaFormat::Typescript, path: "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️element-operations/🟦️.ts" },
+        ::semio_framework_schema_registry::SchemaLeafDocument { scope: "s.bim.model", export: "mutations", format: ::semio_framework_schema_registry::SchemaFormat::Typescript, path: "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📜️annotation-and-sheets/🟦️.ts" },
+        ::semio_framework_schema_registry::SchemaLeafDocument { scope: "s.bim.model", export: "mutations", format: ::semio_framework_schema_registry::SchemaFormat::Typescript, path: "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🤝️components-and-coordination/🟦️.ts" },
+        ::semio_framework_schema_registry::SchemaLeafDocument { scope: "s.bim.model", export: "mutations", format: ::semio_framework_schema_registry::SchemaFormat::Graphql, path: "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗️.graphql" },
+        ::semio_framework_schema_registry::SchemaLeafDocument { scope: "s.bim.model", export: "mutations", format: ::semio_framework_schema_registry::SchemaFormat::JsonSchema, path: "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔣️.json" },
+        ::semio_framework_schema_registry::SchemaLeafDocument { scope: "s.bim.model", export: "mutations", format: ::semio_framework_schema_registry::SchemaFormat::Protobuf, path: "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛰️.proto" },
+    ]);
+    #[cfg(target_arch = "wasm32")]
+    semio_framework_schema_registry::install_default_schema_leaf_reader(semio_framework_plugin::reactor::package_asset, "");
+    #[cfg(not(target_arch = "wasm32"))]
+    semio_framework_schema_registry::install_default_schema_leaf_reader(semio_framework_plugin::reactor::package_asset, env!("CARGO_MANIFEST_DIR"));
     semio_framework_schema_registry::ArtifactSchemaDescriptor {
         id: "s.bim.model",
-        artifact: semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
+        artifact: semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: "", graphql: "", json_schema: "", proto: "" },
         snapshot: semio_framework_schema_registry::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
-            typescript: include_str!("📸️snapshot/🟦️.ts"),
-            graphql: include_str!("📸️snapshot/🔗️.graphql"),
-            json_schema: include_str!("📸️snapshot/🔣️.json"),
-            proto: include_str!("📸️snapshot/🛰️.proto"),
+            typescript: "",
+            graphql: "",
+            json_schema: "",
+            proto: "",
         },
         diff: semio_framework_schema_registry::FacetLeaves {
             rust: include_str!("🔺️diff/🦀️.rs"),
-            typescript: include_str!("🔺️diff/🟦️.ts"),
-            graphql: include_str!("🔺️diff/🔗️.graphql"),
-            json_schema: include_str!("🔺️diff/🔣️.json"),
-            proto: include_str!("🔺️diff/🛰️.proto"),
+            typescript: "",
+            graphql: "",
+            json_schema: "",
+            proto: "",
         },
         mutations: semio_framework_schema_registry::FacetLeaves {
             rust: include_str!("🧬️mutations/🦀️.rs"),
-            typescript: include_str!("🧬️mutations/🟦️.ts"),
-            graphql: include_str!("🧬️mutations/🔗️.graphql"),
-            json_schema: include_str!("🧬️mutations/🔣️.json"),
-            proto: include_str!("🧬️mutations/🛰️.proto"),
+            typescript: "",
+            graphql: "",
+            json_schema: "",
+            proto: "",
         },
     }
 }
@@ -66,35 +94,3 @@ pub fn bim_model_artifact_schema_descriptor() -> semio_framework_schema_registry
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 
-//#region 🧩️Modules
-#[path = "."]
-pub mod snapshot {
-    #[path = "📸️snapshot/🦀️.rs"]
-    mod component;
-    pub use component::*;
-}
-#[path = "."]
-pub mod authored {
-    #[path = "📏️authored/🦀️.rs"]
-    mod component;
-    pub use component::*;
-}
-#[path = "."]
-pub mod diff {
-    #[path = "🔺️diff/🦀️.rs"]
-    mod component;
-    pub use component::*;
-}
-#[path = "."]
-pub mod inferences {
-    #[path = "💡️inferences/🦀️.rs"]
-    mod component;
-    pub use component::*;
-}
-#[path = "."]
-pub mod mutations {
-    #[path = "🧬️mutations/🦀️.rs"]
-    mod component;
-    pub use component::*;
-}
-//#endregion 🧩️Modules

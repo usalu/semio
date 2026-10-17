@@ -1,7 +1,6 @@
 //! 🔧️ Direct rewriting mutation — `ChangeParameterBinding`: upserts one key on the `parameter_bindings` map.
 use crate::standards::v1::subsets::any::schema::diff::RewritingDiff;
-use crate::standards::v1::subsets::any::schema::mutations::RewriteRuleMutation;
-use crate::RewritingSnapshot;
+use crate::standards::v1::subsets::any::schema::snapshot::RewritingSnapshot;
 use semio_framework_graph_manifest::PropertyValue;
 
 //#region 🔖️Mutation
@@ -17,17 +16,23 @@ pub struct ChangeParameterBinding {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_parameter_binding(key: String, new_value: PropertyValue) -> RewriteRuleMutation {
-    RewriteRuleMutation::ChangeParameterBinding(ChangeParameterBinding { key, new_value })
+pub fn change_parameter_binding<Op>(key: String, new_value: PropertyValue) -> Op
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::change_parameter_binding::ChangeParameterBinding>,
+{
+    Op::from(ChangeParameterBinding { key, new_value })
 }
 
-impl protocol::MutationKind<RewritingSnapshot, RewriteRuleMutation> for ChangeParameterBinding {
+impl<Op> protocol::MutationKind<RewritingSnapshot, Op> for ChangeParameterBinding
+where
+    Op: protocol::Mutation<RewritingSnapshot, Diff = RewritingDiff> + From<ChangeParameterBinding> + From<crate::standards::v1::subsets::any::schema::mutations::remove_parameter_binding::RemoveParameterBinding>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "parameter-binding", kind: "change-parameter-binding", record: "ChangedParameterBinding" };
 
     fn diff(&self, base: &RewritingSnapshot) -> protocol::MutationOutcome<RewritingDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &RewritingSnapshot) -> Result<Vec<RewriteRuleMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &RewritingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

@@ -18,7 +18,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { composeControlKeybindings, Footer, Layout, Navbar, UiKeybindingsProvider } from "@semio-tech/ui-react";
 import type { HistoryPatch, HistoryTimeTravel } from "@semio-tech/framework";
-import { syncShellLabelLocale } from "../../../🟦️.tsx";
+import { syncShellLabelLocale } from "../../../🏷️labels/🟦️.tsx";
 import { HistoryReprojectionStatus, TimeTravelBand } from "../../🟦️.tsx";
 import { readModuleTreeSource } from "@semio-tech/framework/compiler/syntax/module-tree";
 

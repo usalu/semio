@@ -14,7 +14,6 @@ fn json_failed_original_frontier_retains_only_actual_dsl_effects(){
         if allocation{let JsonError::Native(error)=error else{unreachable!()};assert_eq!(error.kind,ValueRefusalKind::AllocationFailed);assert_eq!(error.retained_progress(),expected);let Some(JsonLexeme::String(scan))=&cursor.lexeme else{unreachable!()};assert_eq!((scan.output.len(),scan.output.capacity()),(0,0));}else{assert!(matches!(error,JsonError::TrailingData(_)));let Some(DslValue::String(value))=&cursor.result else{unreachable!()};assert_eq!(value.as_bytes(),serde_json::from_str::<String>(law["sources"][0].as_str().unwrap()).unwrap().as_bytes());}
         close(JsonSourceCursor::from_grammar(source,cursor),closing,maximum_turns);
     }
-    eprintln!("[DEBUG] Original DslValue JSON allocation and syntax refusals preserve actual frontier work with no forecast backing or copy receipt");
 }
 
 #[test]
@@ -32,7 +31,6 @@ fn json_dsl_original_receipt_conserves_prefix_backing_release_and_depth(){
         }
         let output=output.expect("original DslValue parser finishes under authored turns");assert_eq!(serde_json::from_str::<serde_json::Value>(&to_json_string(&output)).unwrap(),expected);if source.starts_with('[')||source.starts_with('{'){assert!(page_depth);assert!(canceled);assert!(cumulative.released_bytes>0);}assert!(cumulative.copied_bytes>=4);close(JsonSourceCursor::from_grammar(source,cursor),closing,maximum_turns);
     }
-    eprintln!("[DEBUG] Original DslValue JSON prefixes and physical candidate births match actual allocator receipts; exact page depth refuses before effects and page release cancellation settles once");
 }
 
 #[test]
@@ -42,7 +40,6 @@ fn json_original_error_retirement_keeps_actual_duplicate_name_and_native_diagnos
     let pointer=pointer.unwrap();let(result,born,released)=semio_framework_trace_memory_testing::observe_backing(||parser.step(source,1,&mut native,grant));assert_eq!((born,released),(0,0));let error=result.unwrap_err();let JsonError::DuplicateMember{name,..}=&error else{unreachable!()};assert_eq!(name.as_ptr(),pointer);assert_eq!(name,serde_json::from_str::<serde_json::Value>(source).unwrap().as_object().unwrap().keys().next().unwrap());let held=name.capacity();close(JsonSourceCursor::from_grammar(source,parser),grant,maximum_turns);
     let diagnostics=[(error,held),(JsonError::Native(ValueError::new(ValueRefusalKind::InvalidValue,source)),source.len()),(JsonError::UnexpectedEof,0),(JsonError::InvalidUtf8,0),(JsonError::UnexpectedByte{found:b'x',offset:7},0),(JsonError::InvalidEscape(3),0),(JsonError::MaxDepthExceeded(1),0)];
     for(error,held)in diagnostics{let mut owner=Some(semio_framework_value::admit_owned_retirement(error,grant).map_err(|(error,_)|error).unwrap().0);let mut allocated=0;let mut released=0;for _ in 0..maximum_turns{if owner.is_none(){break;}let(result,born,freed)=semio_framework_trace_memory_testing::observe_backing(||semio_framework_value::close_factory_ticket(&mut owner,grant));let step=result.unwrap();assert!(step.progress().fits(grant));assert_eq!((step.progress().retained_capacity_bytes,step.progress().released_bytes),(born,freed));allocated+=born;released+=freed;}assert!(owner.is_none());assert_eq!(released,held+allocated+semio_framework_value::owned_retirement_birth_bytes::<JsonError>());}
-    eprintln!("[DEBUG] Original duplicate name pointer and Native diagnostic retire without formatting or clones; actual scalar diagnostic fields use their genuine primitive leaf owners");
 }
 
 fn grant(value:&serde_json::Value)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:value["maximumItems"].as_u64().unwrap()as usize,maximum_copy_bytes:value["maximumCopyBytes"].as_u64().unwrap()as usize,maximum_capacity_bytes:value["maximumCapacityBytes"].as_u64().unwrap()as usize,maximum_release_bytes:value["maximumReleaseBytes"].as_u64().unwrap()as usize,maximum_depth:value["maximumDepth"].as_u64().unwrap()as usize}}
@@ -77,5 +74,4 @@ fn json_refusal_receipt_preserves_actual_work_before_cancellation(){
         if frontier=="stringCapacity"{let Some(JsonLexeme::String(scan))=&grammar.lexeme else{unreachable!()};assert_eq!(scan.output.capacity(),expected.retained_capacity_bytes);assert!(scan.output.is_empty());}
         close(JsonSourceCursor::from_grammar(source,grammar),closing,maximum_turns);
     }
-    eprintln!("[DEBUG] JSON real scan, capacity birth and UTF8 copy remain in original caller receipt after post-effect cancellation; actual allocator diagnostic body is counted separately and remains an unpriced Native-control frontier");
 }

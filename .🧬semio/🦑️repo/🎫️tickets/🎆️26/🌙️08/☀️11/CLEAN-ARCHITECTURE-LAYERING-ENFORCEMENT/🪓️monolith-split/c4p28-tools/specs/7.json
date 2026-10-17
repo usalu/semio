@@ -1,0 +1,77 @@
+{
+ "file": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+ "original": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/🗑️generated/c4p28-orig/7.rs",
+ "stage": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/🗑️generated/c4p28-stage",
+ "descendants": [
+  "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs",
+  "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🦀️.rs",
+  "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🧪️tests/🧩️example/🦀️.rs"
+ ],
+ "chunks": [
+  {
+   "name": "retained_commands",
+   "folder": "🧰️retained-commands",
+   "doc": "🧰️ Retained commands: the tool id catalog, the bounded contract, the retained reducer, the bounded command job factory and the finish emit.",
+   "segments": [
+    {
+     "lines": [
+      292,
+      462
+     ]
+    }
+   ]
+  },
+  {
+   "name": "config_store_preparation",
+   "folder": "📬️config-store-preparation",
+   "doc": "📬️ Config store preparation: the byte bounds, the admission and the one-item publication preparation of the Config lane.",
+   "segments": [
+    {
+     "lines": [
+      464,
+      655
+     ]
+    }
+   ]
+  },
+  {
+   "name": "artifact_store_preparation",
+   "folder": "🗄️artifact-store-preparation",
+   "doc": "🗄️ Artifact store preparation: the document bounds, the admission and the one-item publication preparation of the Artifact lane.",
+   "segments": [
+    {
+     "lines": [
+      657,
+      811
+     ]
+    }
+   ]
+  },
+  {
+   "name": "sourcing_app",
+   "folder": "🧩️sourcing-app",
+   "doc": "🧩️ Sourcing app: the `ArtifactEditor` implementation of `SourcingCurationApp` with its dispatch, render, media and composition bodies.",
+   "segments": [
+    {
+     "lines": [
+      815,
+      1034
+     ]
+    }
+   ]
+  },
+  {
+   "name": "manifest",
+   "folder": "📋️manifest",
+   "doc": "📋️ Manifest: the hidden operation and view action builders and `create_sourcing_curation_app`.",
+   "segments": [
+    {
+     "lines": [
+      1053,
+      1232
+     ]
+    }
+   ]
+  }
+ ]
+}

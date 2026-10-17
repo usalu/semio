@@ -2,7 +2,6 @@
 //! index (`layers` is real id-keyed per `DrawLayer.id`, positioned per `taxonomy.md`'s "create:
 //! full initial payload (+ optional index)").
 
-use crate::schema::mutations::SemioDrawingMutation;
 use crate::schema::snapshot::{DrawLayer, SemioDrawingSnapshot};
 
 //#region 🔖️Payload
@@ -14,13 +13,16 @@ pub struct CreateLayer {
     pub layer: DrawLayer,
 }
 
-impl protocol::MutationKind<SemioDrawingSnapshot, SemioDrawingMutation> for CreateLayer {
+impl<Op> protocol::MutationKind<SemioDrawingSnapshot, Op> for CreateLayer
+where
+    Op: protocol::Mutation<SemioDrawingSnapshot, Diff = crate::schema::diff::SemioDrawingDiff> + From<CreateLayer> + From<crate::schema::mutations::delete_layer::DeleteLayer>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "layer", kind: "create-layer", record: "CreatedLayer" };
 
-    fn diff(&self, base: &SemioDrawingSnapshot) -> protocol::MutationOutcome<<SemioDrawingMutation as protocol::Mutation<SemioDrawingSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioDrawingSnapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<SemioDrawingSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &SemioDrawingSnapshot) -> Result<Vec<SemioDrawingMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &SemioDrawingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

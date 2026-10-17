@@ -1,4 +1,4 @@
-use super::*;
+use crate::standards::v1::subsets::any::schema::diff::*;
 use crate::default_snapshot;
 
 #[semio_framework_async_macros::async_test]

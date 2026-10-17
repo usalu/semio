@@ -1,4 +1,12 @@
-use super::*;
+use crate::standards::v1_7::subsets::base::schema::diff;
+use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfPage, PdfSnapshot};
+use protocol::MutationKind;
+use crate::standards::v1_7::subsets::base::schema::mutations::PdfMutation;
+#[allow(unused_imports)]
+use crate::standards::v1_7::subsets::base::schema::diff::PdfDiff;
+#[allow(unused_imports)]
+use protocol::{MutationOutcome, SemanticDescriptor};
+use crate::standards::v1_7::subsets::base::schema::mutations::replace_page::*;
 use crate::standards::v1_7::subsets::base::schema::snapshot::*;
 use protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law;
 

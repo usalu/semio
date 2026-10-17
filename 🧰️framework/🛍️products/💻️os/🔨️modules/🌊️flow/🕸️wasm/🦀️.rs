@@ -1,6 +1,8 @@
 //! 🌉️ Flow editor owned byte/message bridge and primitive linear-memory exports.
 
-use semio_framework::abi::{
+use semio_framework_test_fixtures::fixture_path;
+
+use semio_framework_abi::{
     AbiBytes, AbiControl, AbiCursorStep, AbiError, AbiErrorCode, AbiEvent, AbiEventCode, AbiHandle, AbiHandleTable, AbiMessage, AbiMessageBytes, AbiPage, AbiPageReader, AbiPort, AbiPortPoll, AbiPortRejection, AbiReply, AbiReplyLedger,
     AbiRequest, AbiRequestId, AbiStatus, AbiStatusCode, AbiWorkBudget, decode_abi_message, encode_abi_message,
 };
@@ -47,14 +49,14 @@ pub use linear_memory::*;
 #[cfg(test)] use protocol::{FlowBridge, FlowDomain, FlowFailure, FlowFeature, FlowFeatureAdmission, FlowFeatureStep, FlowPayloadReader, FlowPayloadWriter};
 #[cfg(test)] use semio_framework_value::retained_clone::{RetainedCloneStep, RetainedCloneProgress, RetainedCloneGrant};
 #[cfg(test)] use semio_framework_value::retirement::controlled::ControlledRetirement;
-#[cfg(test)] use semio_framework::abi::{decode_abi_message, AbiErrorCode, AbiMessage, AbiPortPoll, AbiWorkBudget};
+#[cfg(test)] use semio_framework_abi::{decode_abi_message, AbiErrorCode, AbiMessage, AbiPortPoll, AbiWorkBudget};
 #[cfg(test)] use serde_json::json;
 #[cfg(test)] use serde_json::Value;
 #[cfg(test)] use ui_webgpu::{CanvasMetrics, SurfaceGeneration, SurfaceId};
 /// 🧾️ Reads one source or schema document below the wasm session node at test time instead of compiling it into the crate.
 #[cfg(test)]
 fn read_source(path: &str) -> String {
-    std::fs::read_to_string(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(path)).unwrap_or_else(|error| panic!("{path}: {error}"))
+    std::fs::read_to_string(fixture_path!(path)).unwrap_or_else(|error| panic!("{path}: {error}"))
 }
 
 /// 🧾️ The concatenated production source of the listed files below the wasm session node.

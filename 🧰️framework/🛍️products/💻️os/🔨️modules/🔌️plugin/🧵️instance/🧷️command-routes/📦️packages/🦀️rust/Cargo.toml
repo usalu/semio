@@ -19,7 +19,7 @@ maxActiveLines = 4000
 workspace = true
 
 [lib]
-path = "🦀️.rs"
+path = "../../🦀️.rs"
 
 [features]
 artifact-app-testing = []
@@ -60,5 +60,9 @@ semio-framework-plugin-instance-typed-ops = { path = "../../../🧾️typed-oper
 semio-framework-plugin-time-travel-turns = { path = "../../../../⏪️time-travel/🧵️instance/📦️packages/🦀️rust" }
 semio-framework-plugin-time-travel = { path = "../../../../⏪️time-travel/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-plugin-mounted-owner = { path = "../../../../🏇️mounted-owner/📦️packages/🦀️rust" }
+semio_framework_ui_contract = { path = "../../../../../../../../🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
+semio-framework-ui-layout = { path = "../../../../../../../../🔨️modules/🖱️ui/📜️declaration/📐️layout/📦️packages/🦀️rust" }
+semio-framework-ui-locale = { path = "../../../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 
 [dev-dependencies]

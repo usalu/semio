@@ -935,6 +935,3 @@ impl store::InferredField<Wfc2dSnapshot> for Wfc2dEntropy {
         snapshot.slots.iter().find(|slot| &slot.id == key).map_or(0.0, |slot| slot_entropy(snapshot, slot))
     }
 }
-#[cfg(test)]
-#[path="🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;

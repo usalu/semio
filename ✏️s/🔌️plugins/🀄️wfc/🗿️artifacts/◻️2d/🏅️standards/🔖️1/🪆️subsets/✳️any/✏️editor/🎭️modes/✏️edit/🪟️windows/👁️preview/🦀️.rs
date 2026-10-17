@@ -226,7 +226,5 @@ pub fn render(document: &Wfc2dSnapshot, transient: &Wfc2dTransient, tool_run: Op
 //#endregion 🔖️Render
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

@@ -24,7 +24,6 @@ fn graph_cold_property_retirement_drains_original_nested_owners_on_a_finite_stac
         PropertyValue::retire_decoded(value);
     }
     assert_eq!(nodes,fixture["expectedNodes"].as_u64().unwrap());
-    eprintln!("[DEBUG] cold-graph-property native-schema-nodes={nodes} original-owners-drained=true");
     for profile in fixture["deepProfiles"].as_array().unwrap(){
         let depth=profile["depth"].as_u64().unwrap() as usize;
         let alternating=profile["alternating"].as_bool().unwrap();
@@ -32,7 +31,6 @@ fn graph_cold_property_retirement_drains_original_nested_owners_on_a_finite_stac
             let mut value=PropertyValue::String("original\0文字".to_owned());
             for index in 0..depth{value=if alternating&&index%2==1{PropertyValue::Object(PropertyBag::from([("original".to_owned(),value)]))}else{PropertyValue::Array(vec![value])};}
             PropertyValue::retire_decoded(value);
-            eprintln!("[DEBUG] cold-graph-property native-depth={depth} alternating={alternating} original-owners-drained=true");
         }).unwrap().join().unwrap();
     }
 }

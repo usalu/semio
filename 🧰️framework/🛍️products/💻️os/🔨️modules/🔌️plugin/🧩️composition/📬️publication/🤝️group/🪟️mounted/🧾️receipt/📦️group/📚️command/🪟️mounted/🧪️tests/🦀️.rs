@@ -1,5 +1,6 @@
 /// 🧪️ Exercises the real mounted history consumer through its public application close ladder.
-pub(crate) fn test_mounted_command_history_pages<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static>(app: &mut VcsArtifactApp<A, M>) {
+#[doc(hidden)]
+pub fn test_mounted_command_history_pages<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static>(app: &mut VcsArtifactApp<A, M>) {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let rows = fixture["cases"].as_array().unwrap().last().unwrap()["sequences"].as_array().unwrap();
     assert!(app.history.command_log.terminal_is_empty());
@@ -47,11 +48,11 @@ pub(crate) fn test_mounted_command_history_pages<A: ArtifactApp, M: SpaceMember 
     assert!(app.history.command_log.terminal_is_empty());
     assert!(physical_turns > 17);
     assert_eq!(retained_empty_backings, 17);
-    eprintln!("[DEBUG] mounted original history17 records exactseq/childIDs/fullLocale/nestedInverse; public selected command retirement {} turns paid original whole allocations; zero/onebelow preserves; terminal empty", physical_turns);
 }
 
 /// 🧪️ Verifies actual held document IDs, shell retention and funded discarded owners through app maintenance.
-pub(crate) fn test_mounted_command_history_replacement<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static>(app: &mut VcsArtifactApp<A, M>) {
+#[doc(hidden)]
+pub fn test_mounted_command_history_replacement<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static>(app: &mut VcsArtifactApp<A, M>) {
     let law: serde_json::Value = serde_json::from_str(include_str!("../../🧹️pruning/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let row = &law["cases"][1];
     let held = app.stores.store.envelope().vcs.edits.last().unwrap().id.clone();
@@ -108,7 +109,6 @@ pub(crate) fn test_mounted_command_history_replacement<A: ArtifactApp, M: SpaceM
     assert_eq!(step, PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() }));
     assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
     assert!(app.history.pending_command_prune.is_none() && !app.history.command_prune_requested());
-    crate::app_testing::artifact_app_laws::close_registered_fixture_app(app, crate::app_testing::artifact_app_laws::fixture_mounted_policy());
+    semio_framework_plugin_testing_laws::artifact_app_laws::close_registered_fixture_app(app, semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy());
     assert!(app.close_terminal_is_empty());
-    eprintln!("[DEBUG] actual mounted replacement preserves held document and pure shell rows; eachpredecisionturn originalpointers/heap0/0; selected65536 physicalextent exact; underfundretains; pendingvisibilitycancelledbeforeappclose");
 }

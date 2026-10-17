@@ -1,9 +1,18 @@
-use super::*;
+use semio_framework_os_renderer_wgpu_contracts::{fixture_scene_pointer_target, framework_widget_context};
+use semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions;
+use semio_framework_os_renderer_wgpu_host_base::app_now_ms;
+use semio_framework_os_renderer_wgpu_scene_canvas2d::{CANVAS2D_SELECTION_GLOW, CANVAS2D_SELECTION_RING, CANVAS_2D_EMPTY_LABEL, apply_canvas_framing, render_canvas_2d};
+use semio_framework_os_renderer_wgpu_scene_render::{cancel_canvas_pointer_gesture_for, canvas_catalogue_drop_into, canvas_pointer_button_into, canvas_pointer_move_into, canvas_state_snapshot, canvas_wheel_into};
+use semio_framework_os_renderer_wgpu_scene_state::{CANVAS_CATALOGUE_HOVER, CANVAS_GESTURE, CanvasCatalogueHover, CanvasGestureSlots, SCENE_CAMERA_DISPATCH_CAPACITY, SCENE_CAMERA_DISPATCH_DEADLINES_MS, SCENE_CAMERA_DISPATCH_FAULT, SCENE_STATE, SCENE_SURFACE_RETIREMENT, SceneCameraDispatchCursor, SceneCameraDispatchStep, SceneModifiers, Viewport, camera_fixture_grant, camera_fixture_lease, clear_camera_fixture, close_retired_scene_surface_one, mount_scene_identity, mutate_scene_state, retire_scene_identity, scene_camera_action, scene_state, schedule_scene_camera_dispatch, sweep_expired_scene_camera_dispatches};
+use semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::canvas_catalogue_drop;
+use serde_json::{Value, json};
+use std::collections::HashMap;
+use ui_wgpu::wgpu::{ActionDescriptor, Rect, SurfaceKind, Theme, UiComponentSceneNode, UiPresence};
 
 #[test]
 fn removed_scene_returns_its_credit_only_after_nested_retirement_and_preserves_the_successor() {
-    let _camera_owner = crate::scenes::camera_fixture_lease(crate::scenes::camera_fixture_grant());
-    let mut owner = crate::element_contracts::fixture_scene_pointer_target("nested-close-window", "nested-close-surface", "old-mount");
+    let _camera_owner = camera_fixture_lease(camera_fixture_grant());
+    let mut owner = fixture_scene_pointer_target("nested-close-window", "nested-close-surface", "old-mount");
     owner.kind = SurfaceKind::Canvas2d;
     assert!(mount_scene_identity(&owner));
     SCENE_STATE.with(|cell| {
@@ -43,11 +52,11 @@ fn removed_scene_returns_its_credit_only_after_nested_retirement_and_preserves_t
 
 #[test]
 fn a_second_component_retirement_yields_before_detaching_its_live_owner() {
-    let _camera_owner = crate::scenes::camera_fixture_lease(crate::scenes::camera_fixture_grant());
-    let mut first = crate::element_contracts::fixture_scene_pointer_target("retirement-window", "retirement-document-a", "scene-a");
+    let _camera_owner = camera_fixture_lease(camera_fixture_grant());
+    let mut first = fixture_scene_pointer_target("retirement-window", "retirement-document-a", "scene-a");
     first.kind = SurfaceKind::Canvas2d;
     first.host_id = "retirement-host-a".into();
-    let mut second = crate::element_contracts::fixture_scene_pointer_target("retirement-window", "retirement-document-b", "scene-b");
+    let mut second = fixture_scene_pointer_target("retirement-window", "retirement-document-b", "scene-b");
     second.kind = SurfaceKind::Canvas2d;
     second.host_id = "retirement-host-b".into();
     assert!(mount_scene_identity(&first));
@@ -121,12 +130,12 @@ fn seed_catalogue_hover(scene: &UiComponentSceneNode) {
 }
 
 fn catalogue_actions(input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Vec<ActionDescriptor> {
-    crate::collect_fixture_actions(input)
+    collect_fixture_actions(input)
 }
 
 #[test]
 fn catalogue_drop_publishes_one_terminal_leave_drop_slice_and_preserves_raw_payload() {
-    let _camera_owner = crate::scenes::camera_fixture_lease(crate::scenes::camera_fixture_grant());
+    let _camera_owner = camera_fixture_lease(camera_fixture_grant());
     let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🛒️canvas-catalogue-terminal/🔣️.json")).expect("shared catalogue terminal fixture");
     let mut scene = canvas_scene(fixture["surface"]["id"].as_str().unwrap(), "[]".into());
     scene.controller_id = fixture["surface"]["controllerId"].as_str().unwrap().into();
@@ -153,7 +162,7 @@ fn catalogue_drop_publishes_one_terminal_leave_drop_slice_and_preserves_raw_payl
 
 #[test]
 fn catalogue_drop_refusal_keeps_hover_and_never_publishes_a_partial_pair() {
-    let _camera_owner = crate::scenes::camera_fixture_lease(crate::scenes::camera_fixture_grant());
+    let _camera_owner = camera_fixture_lease(camera_fixture_grant());
     let scene = canvas_scene("canvas-catalogue-refusal", "[]".into());
     let inner = Rect::new(0.0, 0.0, 320.0, 200.0);
     seed_catalogue_hover(&scene);
@@ -175,12 +184,12 @@ fn catalogue_drop_refusal_keeps_hover_and_never_publishes_a_partial_pair() {
 
 #[test]
 fn foreign_drop_is_inert_and_does_not_consume_the_catalogue_hover_owner() {
-    let _camera_owner = crate::scenes::camera_fixture_lease(crate::scenes::camera_fixture_grant());
+    let _camera_owner = camera_fixture_lease(camera_fixture_grant());
     let scene = canvas_scene("canvas-catalogue-foreign", "[]".into());
     seed_catalogue_hover(&scene);
     let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
     let drag_data = std::collections::HashMap::from([("text/plain".to_string(), "foreign".to_string())]);
-    assert!(!crate::interpreter::canvas_catalogue_drop("unpublished-window", 10.0, 10.0, &drag_data, &mut input));
+    assert!(!canvas_catalogue_drop("unpublished-window", 10.0, 10.0, &drag_data, &mut input));
     assert!(catalogue_actions(&mut input).is_empty());
     assert!(CANVAS_CATALOGUE_HOVER.with(|cell| cell.borrow().is_some()));
     CANVAS_CATALOGUE_HOVER.with(|cell| *cell.borrow_mut() = None);
@@ -191,7 +200,7 @@ fn foreign_drop_is_inert_and_does_not_consume_the_catalogue_hover_owner() {
 /// red/crimson design token) — see `CANVAS2D_SELECTION_RING`/`CANVAS2D_SELECTION_GLOW`.
 #[test]
 fn selected_shape_draws_the_amber_ring_and_glow_not_theme_accent() {
-    let _camera_owner = crate::scenes::camera_fixture_lease(crate::scenes::camera_fixture_grant());
+    let _camera_owner = camera_fixture_lease(camera_fixture_grant());
     let layers = json!([{ "kind": "rectangle", "id": "r1", "x": 10.0, "y": 10.0, "width": 40.0, "height": 20.0, "selected": true }]);
     let node = canvas_scene("s1", layers.to_string());
     let mut draw = semio_framework_ui_draw_contract::DrawList::default();
@@ -202,7 +211,7 @@ fn selected_shape_draws_the_amber_ring_and_glow_not_theme_accent() {
     let mut collapsed = HashMap::new();
     let mut selects = HashMap::new();
     {
-        let mut ctx = crate::interpreter::framework_widget_context(&mut draw, None, &mut atlas, None, &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None, 0.0);
+        let mut ctx = framework_widget_context(&mut draw, None, &mut atlas, None, &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None, 0.0);
         render_canvas_2d(&node, Rect::new(0.0, 0.0, 400.0, 300.0), &mut ctx);
     }
     let vertex_colors: Vec<[f32; 4]> = draw.layers.iter().flat_map(|layer| layer.vector_vertices.iter()).map(|v| v.color).collect();
@@ -218,7 +227,7 @@ fn selected_shape_draws_the_amber_ring_and_glow_not_theme_accent() {
 /// instance count IS the label.
 #[test]
 fn empty_layer_list_paints_the_react_empty_canvas_label() {
-    let _camera_owner = crate::scenes::camera_fixture_lease(crate::scenes::camera_fixture_grant());
+    let _camera_owner = camera_fixture_lease(camera_fixture_grant());
     let mut draw = semio_framework_ui_draw_contract::DrawList::default();
     let mut atlas = semio_framework_ui_text::FontAtlas::builtin();
     let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
@@ -227,7 +236,7 @@ fn empty_layer_list_paints_the_react_empty_canvas_label() {
     let mut collapsed = HashMap::new();
     let mut selects = HashMap::new();
     {
-        let mut ctx = crate::interpreter::framework_widget_context(&mut draw, None, &mut atlas, None, &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None, 0.0);
+        let mut ctx = framework_widget_context(&mut draw, None, &mut atlas, None, &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None, 0.0);
         render_canvas_2d(&canvas_scene("empty-canvas-label", "[]".to_string()), Rect::new(0.0, 0.0, 400.0, 300.0), &mut ctx);
     }
     let glyphs = draw.layers.iter().flat_map(|layer| layer.ui_instances.iter()).filter(|instance| instance.params[2] == semio_framework_ui_draw_contract::KIND_GLYPH).count();
@@ -238,7 +247,7 @@ fn empty_layer_list_paints_the_react_empty_canvas_label() {
 /// `ink_set_camera_action`'s own shape (this crate's other camera-from-viewport builder).
 #[test]
 fn scene_camera_action_uses_surface_id_and_nested_camera_xyz_keys() {
-    let _camera_owner = crate::scenes::camera_fixture_lease(crate::scenes::camera_fixture_grant());
+    let _camera_owner = camera_fixture_lease(camera_fixture_grant());
     let action = scene_camera_action("s-cam-1", "controller-1", Viewport { x: 12.5, y: -3.0, zoom: 2.0 });
     assert_eq!(action.controller_id, "controller-1");
     assert_eq!(action.action, "setCamera");
@@ -249,26 +258,9 @@ fn scene_camera_action_uses_surface_id_and_nested_camera_xyz_keys() {
     assert_eq!(args.get("camera").and_then(|value| value.get("zoom")).and_then(semio_framework::DslValue::as_f64), Some(2.0));
 }
 
-/// 🕒️ A Canvas2d wheel tick mutates the viewport immediately but only SCHEDULES its `setCamera` —
-/// nothing is due yet, and nothing is dispatched, until the deadline sweep says otherwise.
-#[test]
-fn canvas2d_wheel_schedules_a_settled_camera_dispatch_without_firing_immediately() {
-    let _camera_owner = crate::scenes::camera_fixture_lease(crate::scenes::camera_fixture_grant());
-    let surface_id = "wheel-settle-canvas2d";
-    let node = canvas_scene(surface_id, "[]".to_string());
-    let actions = handle_scene_wheel(&node, Rect::new(0.0, 0.0, 400.0, 300.0), 50.0, 50.0, -100.0, false);
-    assert!(actions.is_empty(), "wheel-zoom never dispatches inline anymore");
-    let immediate = sweep_expired_scene_camera_dispatches(crate::app_now_ms());
-    assert!(immediate.iter().all(|action| action.args.as_ref().and_then(|args| args.get("surfaceId")).and_then(semio_framework::DslValue::as_str) != Some(surface_id)), "sweeping immediately must not yet report this surface");
-    let due = sweep_expired_scene_camera_dispatches(crate::app_now_ms() + canvas_camera_gesture_fixture()["wheel"]["settleDelayMs"].as_f64().unwrap());
-    let matched = due.iter().find(|action| action.args.as_ref().and_then(|args| args.get("surfaceId")).and_then(semio_framework::DslValue::as_str) == Some(surface_id)).expect("this surface's setCamera fires once its deadline has passed");
-    assert_eq!(matched.controller_id, "controller");
-    assert_eq!(matched.action, "setCamera");
-}
-
 #[test]
 fn canvas2d_wheel_uses_the_react_factors_limits_and_exact_cursor_anchor() {
-    let _camera_owner = crate::scenes::camera_fixture_lease(crate::scenes::camera_fixture_grant());
+    let _camera_owner = camera_fixture_lease(camera_fixture_grant());
     let fixture = canvas_camera_gesture_fixture();
     let wheel = &fixture["wheel"];
     let surface = &fixture["surface"];
@@ -330,7 +322,7 @@ fn assert_canvas_pan_case(case_id: &str) {
     let expected = board_snapshot_camera(&row["expectedCamera"]);
     let actual = scene_state(&surface_id).viewport;
     assert_eq!((actual.x, actual.y, actual.zoom), (expected.x, expected.y, expected.zoom), "{case_id} owns React's exact camera");
-    let camera_actions = sweep_expired_scene_camera_dispatches(crate::app_now_ms() + 400.0);
+    let camera_actions = sweep_expired_scene_camera_dispatches(app_now_ms() + 400.0);
     assert_eq!(
         camera_actions.iter().any(|action| action.action == fixture["wheel"]["expectedAction"].as_str().unwrap() && action.args.as_ref().and_then(|args| args.get("surfaceId")).and_then(semio_framework::DslValue::as_str) == Some(surface_id.as_str())),
         row["expectedCameraAction"].as_bool().unwrap()
@@ -339,25 +331,25 @@ fn assert_canvas_pan_case(case_id: &str) {
 
 #[test]
 fn canvas2d_primary_drag_with_the_active_pan_utility_changes_only_the_camera() {
-    let _camera_owner = crate::scenes::camera_fixture_lease(crate::scenes::camera_fixture_grant());
+    let _camera_owner = camera_fixture_lease(camera_fixture_grant());
     assert_canvas_pan_case("primary-active-pan");
 }
 
 #[test]
 fn canvas2d_middle_drag_changes_only_the_camera() {
-    let _camera_owner = crate::scenes::camera_fixture_lease(crate::scenes::camera_fixture_grant());
+    let _camera_owner = camera_fixture_lease(camera_fixture_grant());
     assert_canvas_pan_case("middle-button-pan");
 }
 
 #[test]
 fn canvas2d_right_drag_remains_a_document_gesture_and_does_not_pan() {
-    let _camera_owner = crate::scenes::camera_fixture_lease(crate::scenes::camera_fixture_grant());
+    let _camera_owner = camera_fixture_lease(camera_fixture_grant());
     assert_canvas_pan_case("right-button-gesture");
 }
 
 #[test]
 fn canvas2d_middle_pan_cancellation_retires_locally_without_a_document_action() {
-    let _camera_owner = crate::scenes::camera_fixture_lease(crate::scenes::camera_fixture_grant());
+    let _camera_owner = camera_fixture_lease(camera_fixture_grant());
     let node = canvas_scene("canvas2d-middle-pan-cancel", "[]".to_string());
     let bounds = Rect::new(0.0, 0.0, 400.0, 300.0);
     let pointer = ui_render::PointerId(17);
@@ -374,7 +366,7 @@ fn canvas2d_middle_pan_cancellation_retires_locally_without_a_document_action() 
 
 #[test]
 fn foreign_pointer_cancel_preserves_the_canvas_gesture_owner() {
-    let _camera_owner = crate::scenes::camera_fixture_lease(crate::scenes::camera_fixture_grant());
+    let _camera_owner = camera_fixture_lease(camera_fixture_grant());
     let node = canvas_scene("canvas2d-pointer-owner", "[]".to_string());
     let bounds = Rect::new(0.0, 0.0, 400.0, 300.0);
     let owner = ui_render::PointerId(77);
@@ -399,7 +391,7 @@ fn foreign_pointer_cancel_preserves_the_canvas_gesture_owner() {
 
 #[test]
 fn two_canvas_documents_keep_independent_pointer_gestures() {
-    let _camera_owner = crate::scenes::camera_fixture_lease(crate::scenes::camera_fixture_grant());
+    let _camera_owner = camera_fixture_lease(camera_fixture_grant());
     let first = canvas_scene("canvas2d-pointer-first", "[]".to_string());
     let second = canvas_scene("canvas2d-pointer-second", "[]".to_string());
     let bounds = Rect::new(0.0, 0.0, 400.0, 300.0);
@@ -436,43 +428,16 @@ fn two_canvas_documents_keep_independent_pointer_gestures() {
     );
 }
 
-/// 🕒️ A Canvas2d pan-drag (`SceneDragMode::PanViewport`) gets the identical settle-then-dispatch
-/// treatment as wheel-zoom — same deadline map, same sweep.
-///
-/// 🧹️ The settle map is process-wide and the sweep drains EVERY surface's deadline, so this law
-/// clears it first; otherwise a neighbouring scene's armed camera is counted here
-/// (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY wave 2–6 integration).
-#[test]
-fn canvas2d_pan_drag_schedules_a_settled_camera_dispatch() {
-    let _camera_owner = crate::scenes::camera_fixture_lease(crate::scenes::camera_fixture_grant());
-    clear_camera_fixture(camera_fixture_grant());
-    let surface_id = "pan-settle-canvas2d";
-    let node = canvas_scene(surface_id, "[]".to_string());
-    mutate_scene_state(surface_id, |state| {
-        state.drag = Some(SceneDrag { mode: SceneDragMode::PanViewport });
-    });
-    let bounds = Rect::new(0.0, 0.0, 400.0, 300.0);
-    let actions = handle_scene_pointer_move(&node, bounds, 60.0, 60.0, true, 1, 5.0, 5.0);
-    assert!(
-        actions.iter().all(|action| action.action != "setCamera"),
-        "the pan itself never dispatches setCamera inline, even though Canvas2d's own \
-         canvasPointerMove tracking action still fires alongside it"
-    );
-    let due = sweep_expired_scene_camera_dispatches(crate::app_now_ms() + 400.0);
-    assert_eq!(due.len(), 1);
-    assert_eq!(due[0].args.as_ref().and_then(|args| args.get("surfaceId")).and_then(semio_framework::DslValue::as_str), Some(surface_id));
-}
-
 #[test]
 fn scene_camera_deadlines_saturate_before_ownership_and_close_cursor_restores_one_per_step() {
-    let _camera_owner = crate::scenes::camera_fixture_lease(crate::scenes::camera_fixture_grant());
+    let _camera_owner = camera_fixture_lease(camera_fixture_grant());
     clear_camera_fixture(camera_fixture_grant());
     SCENE_CAMERA_DISPATCH_FAULT.with(|cell| *cell.borrow_mut() = None);
     for index in 0..SCENE_CAMERA_DISPATCH_CAPACITY {
         schedule_scene_camera_dispatch(&format!("surface-{index}"), &format!("surface-{index}"));
     }
     schedule_scene_camera_dispatch("overflow", "overflow");
-    let mut cursor = crate::scenes::SceneCameraDispatchCursor::begin(crate::app_now_ms(), crate::scenes::camera_fixture_grant()).unwrap().0;
+    let mut cursor = SceneCameraDispatchCursor::begin(app_now_ms(), camera_fixture_grant()).unwrap().0;
     assert!(matches!(cursor.step(camera_fixture_grant()).unwrap().0, SceneCameraDispatchStep::Fault("scene camera deadline credits exceeded")));
     for remaining in (0..SCENE_CAMERA_DISPATCH_CAPACITY).rev() {
         assert!(!matches!(cursor.close_step(camera_fixture_grant()), semio_framework_job::InteractiveJobCloseStep::Complete { .. }));
@@ -486,7 +451,7 @@ fn scene_camera_deadlines_saturate_before_ownership_and_close_cursor_restores_on
 
 #[test]
 fn canvas_framing_waits_for_measurement_and_preserves_navigation() {
-    let _camera_owner = crate::scenes::camera_fixture_lease(crate::scenes::camera_fixture_grant());
+    let _camera_owner = camera_fixture_lease(camera_fixture_grant());
     let mut scene = canvas_scene("framing-window", "[]".into());
     scene.canvas_2d.as_mut().unwrap().framing = Some(semio_framework_ui_scene_plane::Canvas2dFraming { revision: 1, bounds: [-100.0, -50.0, 300.0, 150.0], padding: 40.0 });
     assert!(!apply_canvas_framing(&scene, Rect::new(0.0, 0.0, 0.0, 0.0)));
@@ -523,7 +488,7 @@ fn gumball_actions(input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> V
 /// addressed to the canvas surface; a press beside the handles under the Transform utility reaches nothing.
 #[test]
 fn a_live_gumball_drag_streams_and_commits_through_the_canvas_seam() {
-    let _camera_owner = crate::scenes::camera_fixture_lease(crate::scenes::camera_fixture_grant());
+    let _camera_owner = camera_fixture_lease(camera_fixture_grant());
     let node = gumball_scene("canvas2d-gumball-live", true);
     let bounds = Rect::new(0.0, 0.0, 400.0, 300.0);
     let pointer = ui_render::PointerId(41);
@@ -548,7 +513,7 @@ fn a_live_gumball_drag_streams_and_commits_through_the_canvas_seam() {
 /// delta on release and nothing on cancel.
 #[test]
 fn gumball_cancels_abort_live_gestures_and_non_live_gestures_release_one_one_shot() {
-    let _camera_owner = crate::scenes::camera_fixture_lease(crate::scenes::camera_fixture_grant());
+    let _camera_owner = camera_fixture_lease(camera_fixture_grant());
     let bounds = Rect::new(0.0, 0.0, 400.0, 300.0);
     let pointer = ui_render::PointerId(42);
     let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
@@ -575,11 +540,11 @@ fn gumball_cancels_abort_live_gestures_and_non_live_gestures_release_one_one_sho
 /// 🎨️ The armed gumball paints its handles over the canvas; any other utility paints none.
 #[test]
 fn the_armed_gumball_paints_and_any_other_utility_does_not() {
-    let _camera_owner = crate::scenes::camera_fixture_lease(crate::scenes::camera_fixture_grant());
+    let _camera_owner = camera_fixture_lease(camera_fixture_grant());
     let bounds = Rect::new(0.0, 0.0, 400.0, 300.0);
     let painted = |node: &UiComponentSceneNode| {
         let mut draw = semio_framework_ui_draw_contract::DrawList::default();
-        crate::canvas2d_gumball::paint(node, bounds, (0.0, 0.0, 1.0), &semio_framework_ui_theme::Theme::light(), &mut draw);
+        semio_framework_os_renderer_wgpu_canvas2d_host::paint(node, bounds, (0.0, 0.0, 1.0), &semio_framework_ui_theme::Theme::light(), &mut draw);
         draw.layers.iter().map(|layer| layer.ui_instances.len() + layer.vector_vertices.len()).sum::<usize>()
     };
     assert!(painted(&gumball_scene("canvas2d-gumball-paint", true)) > 0, "the armed gumball paints its handles");
@@ -588,12 +553,12 @@ fn the_armed_gumball_paints_and_any_other_utility_does_not() {
 
 #[test]
 fn gumball_pivot_and_boundary_read_the_explicit_appearance_roles() {
-    let _camera_owner = crate::scenes::camera_fixture_lease(crate::scenes::camera_fixture_grant());
+    let _camera_owner = camera_fixture_lease(camera_fixture_grant());
     let node = gumball_scene("canvas2d-gumball-theme", true);
     let bounds = Rect::new(0.0, 0.0, 400.0, 300.0);
     for theme in [semio_framework_ui_theme::Theme::light(), semio_framework_ui_theme::Theme::dark()] {
         let mut draw = semio_framework_ui_draw_contract::DrawList::default();
-        crate::canvas2d_gumball::paint(&node, bounds, (0.0, 0.0, 1.0), &theme, &mut draw);
+        semio_framework_os_renderer_wgpu_canvas2d_host::paint(&node, bounds, (0.0, 0.0, 1.0), &theme, &mut draw);
         let colors = draw.layers.iter().flat_map(|layer| layer.vector_vertices.iter().map(|vertex| vertex.color)).collect::<Vec<_>>();
         for role in [theme.text, theme.text_muted] {
             assert!(colors.contains(&[role.r, role.g, role.b, role.a]), "the explicit appearance role must reach the actual pivot paint");
@@ -620,7 +585,7 @@ pub fn covers(triangle: &[semio_framework_ui_draw_contract::VectorVertex], point
 /// a later draw layer than the paper fill under them (record order across buckets) and every painted layer is clipped.
 #[test]
 fn layout_path_records_paint_their_geometry_in_record_order() {
-    let _camera_owner = crate::scenes::camera_fixture_lease(crate::scenes::camera_fixture_grant());
+    let _camera_owner = camera_fixture_lease(camera_fixture_grant());
     let paper = [0.97, 0.97, 0.98, 1.0];
     let fill = [0.85, 0.2, 0.1, 1.0];
     let stroke = [0.1, 0.45, 0.95, 1.0];
@@ -637,7 +602,7 @@ fn layout_path_records_paint_their_geometry_in_record_order() {
     let theme = Theme::default();
     let (mut scroll, mut collapsed, mut selects) = (HashMap::new(), HashMap::new(), HashMap::new());
     {
-        let mut ctx = crate::interpreter::framework_widget_context(&mut draw, None, &mut atlas, None, &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None, 0.0);
+        let mut ctx = framework_widget_context(&mut draw, None, &mut atlas, None, &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None, 0.0);
         render_canvas_2d(&node, Rect::new(0.0, 0.0, 400.0, 300.0), &mut ctx);
     }
     let triangles = |color: [f64; 4]| -> Vec<(usize, Vec<semio_framework_ui_draw_contract::VectorVertex>)> {

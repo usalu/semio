@@ -1,0 +1,1650 @@
+{
+  "version": 1,
+  "scope": "portable proposed laws; no maintenance implementation or Native authority",
+  "baseline": {
+    "parentRequest": {
+      "version": 1,
+      "purpose": "mounted-parent-maintenance",
+      "wait": false,
+      "receiptSha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "directory": {
+        "dev": 1,
+        "ino": 7,
+        "mode": 16832
+      },
+      "backing": {
+        "dev": 1,
+        "ino": 2,
+        "size": 134217728,
+        "allocatedBytes": 134217728
+      },
+      "root": {
+        "dev": 3,
+        "ino": 4,
+        "mode": 16832
+      }
+    },
+    "policy": {
+      "version": 1,
+      "root": "/fixture/p/m",
+      "leaseDirectory": "/fixture/leases",
+      "capacityBytes": 135266304,
+      "maximumWorkspaceBytes": 134217728,
+      "maximumArtifactBytes": 134217728
+    },
+    "allocation": {
+      "id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "owner": "fixture:protected-child-maintenance",
+      "kind": "compiler-state",
+      "bytes": 34734080,
+      "phase": "committed",
+      "child": {
+        "version": 1,
+        "allocation": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "parentIdentity": "[1,2,135266304,3]",
+        "directory": "/fixture/p/m/n/c",
+        "filesystemBytes": 33554432,
+        "maximumPhysicalBytes": 34603008,
+        "policySha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      },
+      "namespace": {
+        "directory": "/fixture/p/m/n",
+        "bytes": 65536,
+        "parent": {
+          "dev": "3",
+          "ino": "4",
+          "mode": 16832
+        },
+        "entry": {
+          "dev": "3",
+          "ino": "5",
+          "mode": 16832
+        }
+      }
+    },
+    "parentBackingIdentity": "[1,2,135266304,3]",
+    "journalSha256": "4eec7c381a94eaed5f9308e720712d96cd366d8aa6f95e76440b8b2f3072cd54",
+    "journalBytes": 734
+  },
+  "admission": [
+    {
+      "id": "none",
+      "fault": "none",
+      "expectedBoundary": "admit-model",
+      "childEffects": 0,
+      "journalMutations": 0
+    },
+    {
+      "id": "read-token",
+      "fault": "read-token",
+      "expectedBoundary": "parent-authority",
+      "childEffects": 0,
+      "journalMutations": 0
+    },
+    {
+      "id": "copied-token",
+      "fault": "copied-token",
+      "expectedBoundary": "parent-authority",
+      "childEffects": 0,
+      "journalMutations": 0
+    },
+    {
+      "id": "foreign-token",
+      "fault": "foreign-token",
+      "expectedBoundary": "parent-authority",
+      "childEffects": 0,
+      "journalMutations": 0
+    },
+    {
+      "id": "escaped-token",
+      "fault": "escaped-token",
+      "expectedBoundary": "parent-authority",
+      "childEffects": 0,
+      "journalMutations": 0
+    },
+    {
+      "id": "parent-not-exclusive",
+      "fault": "parent-not-exclusive",
+      "expectedBoundary": "parent-authority",
+      "childEffects": 0,
+      "journalMutations": 0
+    },
+    {
+      "id": "foreign-control",
+      "fault": "foreign-control",
+      "expectedBoundary": "control",
+      "childEffects": 0,
+      "journalMutations": 0
+    },
+    {
+      "id": "sibling-control",
+      "fault": "sibling-control",
+      "expectedBoundary": "control",
+      "childEffects": 0,
+      "journalMutations": 0
+    },
+    {
+      "id": "expired-control",
+      "fault": "expired-control",
+      "expectedBoundary": "control",
+      "childEffects": 0,
+      "journalMutations": 0
+    },
+    {
+      "id": "cancelled-control",
+      "fault": "cancelled-control",
+      "expectedBoundary": "control",
+      "childEffects": 0,
+      "journalMutations": 0
+    },
+    {
+      "id": "parent-receipt-cas",
+      "fault": "parent-receipt-cas",
+      "expectedBoundary": "parent-facts",
+      "childEffects": 0,
+      "journalMutations": 0
+    },
+    {
+      "id": "parent-backing-cas",
+      "fault": "parent-backing-cas",
+      "expectedBoundary": "parent-facts",
+      "childEffects": 0,
+      "journalMutations": 0
+    },
+    {
+      "id": "parent-root-cas",
+      "fault": "parent-root-cas",
+      "expectedBoundary": "parent-facts",
+      "childEffects": 0,
+      "journalMutations": 0
+    },
+    {
+      "id": "parent-kernel-association",
+      "fault": "parent-kernel-association",
+      "expectedBoundary": "parent-facts",
+      "childEffects": 0,
+      "journalMutations": 0
+    },
+    {
+      "id": "missing-journal",
+      "fault": "missing-journal",
+      "expectedBoundary": "journal",
+      "childEffects": 0,
+      "journalMutations": 0
+    },
+    {
+      "id": "short-journal",
+      "fault": "short-journal",
+      "expectedBoundary": "journal",
+      "childEffects": 0,
+      "journalMutations": 0
+    },
+    {
+      "id": "unknown-checkpoint",
+      "fault": "unknown-checkpoint",
+      "expectedBoundary": "journal",
+      "childEffects": 0,
+      "journalMutations": 0
+    },
+    {
+      "id": "journal-cas",
+      "fault": "journal-cas",
+      "expectedBoundary": "journal",
+      "childEffects": 0,
+      "journalMutations": 0
+    },
+    {
+      "id": "allocation-missing",
+      "fault": "allocation-missing",
+      "expectedBoundary": "allocation",
+      "childEffects": 0,
+      "journalMutations": 0
+    },
+    {
+      "id": "allocation-duplicate",
+      "fault": "allocation-duplicate",
+      "expectedBoundary": "allocation",
+      "childEffects": 0,
+      "journalMutations": 0
+    },
+    {
+      "id": "allocation-owner",
+      "fault": "allocation-owner",
+      "expectedBoundary": "allocation",
+      "childEffects": 0,
+      "journalMutations": 0
+    },
+    {
+      "id": "allocation-kind",
+      "fault": "allocation-kind",
+      "expectedBoundary": "allocation",
+      "childEffects": 0,
+      "journalMutations": 0
+    },
+    {
+      "id": "allocation-phase",
+      "fault": "allocation-phase",
+      "expectedBoundary": "allocation",
+      "childEffects": 0,
+      "journalMutations": 0
+    },
+    {
+      "id": "allocation-bytes",
+      "fault": "allocation-bytes",
+      "expectedBoundary": "allocation",
+      "childEffects": 0,
+      "journalMutations": 0
+    },
+    {
+      "id": "child-request-allocation",
+      "fault": "child-request-allocation",
+      "expectedBoundary": "allocation",
+      "childEffects": 0,
+      "journalMutations": 0
+    },
+    {
+      "id": "child-request-parent-backing",
+      "fault": "child-request-parent-backing",
+      "expectedBoundary": "allocation",
+      "childEffects": 0,
+      "journalMutations": 0
+    },
+    {
+      "id": "child-request-policy-sha",
+      "fault": "child-request-policy-sha",
+      "expectedBoundary": "allocation",
+      "childEffects": 0,
+      "journalMutations": 0
+    },
+    {
+      "id": "child-request-envelope",
+      "fault": "child-request-envelope",
+      "expectedBoundary": "allocation",
+      "childEffects": 0,
+      "journalMutations": 0
+    },
+    {
+      "id": "namespace-missing",
+      "fault": "namespace-missing",
+      "expectedBoundary": "namespace",
+      "childEffects": 0,
+      "journalMutations": 0
+    },
+    {
+      "id": "namespace-parent-inode",
+      "fault": "namespace-parent-inode",
+      "expectedBoundary": "namespace",
+      "childEffects": 0,
+      "journalMutations": 0
+    },
+    {
+      "id": "namespace-entry-inode",
+      "fault": "namespace-entry-inode",
+      "expectedBoundary": "namespace",
+      "childEffects": 0,
+      "journalMutations": 0
+    },
+    {
+      "id": "namespace-too-deep",
+      "fault": "namespace-too-deep",
+      "expectedBoundary": "namespace",
+      "childEffects": 0,
+      "journalMutations": 0
+    },
+    {
+      "id": "namespace-extra-entry",
+      "fault": "namespace-extra-entry",
+      "expectedBoundary": "namespace",
+      "childEffects": 0,
+      "journalMutations": 0
+    },
+    {
+      "id": "creator-claim-missing",
+      "fault": "creator-claim-missing",
+      "expectedBoundary": "creator",
+      "childEffects": 0,
+      "journalMutations": 0
+    },
+    {
+      "id": "creator-claim-incomplete",
+      "fault": "creator-claim-incomplete",
+      "expectedBoundary": "creator",
+      "childEffects": 0,
+      "journalMutations": 0
+    },
+    {
+      "id": "creator-parent-identity",
+      "fault": "creator-parent-identity",
+      "expectedBoundary": "creator",
+      "childEffects": 0,
+      "journalMutations": 0
+    },
+    {
+      "id": "creator-directory-identity",
+      "fault": "creator-directory-identity",
+      "expectedBoundary": "creator",
+      "childEffects": 0,
+      "journalMutations": 0
+    },
+    {
+      "id": "creator-underlying-root",
+      "fault": "creator-underlying-root",
+      "expectedBoundary": "creator",
+      "childEffects": 0,
+      "journalMutations": 0
+    },
+    {
+      "id": "creator-claim-cas",
+      "fault": "creator-claim-cas",
+      "expectedBoundary": "creator",
+      "childEffects": 0,
+      "journalMutations": 0
+    },
+    {
+      "id": "child-backing-cas",
+      "fault": "child-backing-cas",
+      "expectedBoundary": "child-facts",
+      "childEffects": 0,
+      "journalMutations": 0
+    },
+    {
+      "id": "child-receipt-cas",
+      "fault": "child-receipt-cas",
+      "expectedBoundary": "child-facts",
+      "childEffects": 0,
+      "journalMutations": 0
+    },
+    {
+      "id": "child-receipt-not-current",
+      "fault": "child-receipt-not-current",
+      "expectedBoundary": "child-facts",
+      "childEffects": 0,
+      "journalMutations": 0
+    },
+    {
+      "id": "child-symlink",
+      "fault": "child-symlink",
+      "expectedBoundary": "child-facts",
+      "childEffects": 0,
+      "journalMutations": 0
+    },
+    {
+      "id": "child-alias",
+      "fault": "child-alias",
+      "expectedBoundary": "child-facts",
+      "childEffects": 0,
+      "journalMutations": 0
+    },
+    {
+      "id": "unknown-child-pending",
+      "fault": "unknown-child-pending",
+      "expectedBoundary": "child-facts",
+      "childEffects": 0,
+      "journalMutations": 0
+    },
+    {
+      "id": "child-kernel-association",
+      "fault": "child-kernel-association",
+      "expectedBoundary": "child-facts",
+      "childEffects": 0,
+      "journalMutations": 0
+    },
+    {
+      "id": "child-has-descendant",
+      "fault": "child-has-descendant",
+      "expectedBoundary": "child-facts",
+      "childEffects": 0,
+      "journalMutations": 0
+    },
+    {
+      "id": "child-sh-busy",
+      "fault": "child-sh-busy",
+      "expectedBoundary": "child-ex",
+      "childEffects": 0,
+      "journalMutations": 0
+    },
+    {
+      "id": "child-ex-busy",
+      "fault": "child-ex-busy",
+      "expectedBoundary": "child-ex",
+      "childEffects": 0,
+      "journalMutations": 0
+    },
+    {
+      "id": "mapping-sh-upgrade",
+      "fault": "mapping-sh-upgrade",
+      "expectedBoundary": "mapping-ex",
+      "childEffects": 0,
+      "journalMutations": 0
+    },
+    {
+      "id": "mapping-ex-busy",
+      "fault": "mapping-ex-busy",
+      "expectedBoundary": "mapping-ex",
+      "childEffects": 0,
+      "journalMutations": 0
+    },
+    {
+      "id": "late-journal-change",
+      "fault": "late-journal-change",
+      "expectedBoundary": "final-journal",
+      "childEffects": 0,
+      "journalMutations": 0
+    },
+    {
+      "id": "late-claim-change",
+      "fault": "late-claim-change",
+      "expectedBoundary": "final-journal",
+      "childEffects": 0,
+      "journalMutations": 0
+    },
+    {
+      "id": "late-roster-change",
+      "fault": "late-roster-change",
+      "expectedBoundary": "final-journal",
+      "childEffects": 0,
+      "journalMutations": 0
+    }
+  ],
+  "rosters": [
+    {
+      "id": "retire-exact-one-removal",
+      "action": "retire",
+      "parentAssociation": "same",
+      "before": [
+        {
+          "root": "/fixture/p/m/n/c/m",
+          "image": "/fixture/p/m/n/c/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/n/c/m",
+          "kernelIdentity": "device:3"
+        },
+        {
+          "root": "/fixture/p/m/s/c/m",
+          "image": "/fixture/p/m/s/c/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/s/c/m",
+          "kernelIdentity": "device:3"
+        }
+      ],
+      "after": [
+        {
+          "root": "/fixture/p/m/s/c/m",
+          "image": "/fixture/p/m/s/c/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/s/c/m",
+          "kernelIdentity": "device:3"
+        }
+      ],
+      "selectedRoot": "/fixture/p/m/n/c/m",
+      "selectedAssociation": "same",
+      "siblingAssociations": "same",
+      "expected": true,
+      "publicationTerminalKernel": "device:9"
+    },
+    {
+      "id": "retire-selected-still-mounted",
+      "action": "retire",
+      "parentAssociation": "same",
+      "before": [
+        {
+          "root": "/fixture/p/m/n/c/m",
+          "image": "/fixture/p/m/n/c/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/n/c/m",
+          "kernelIdentity": "device:3"
+        },
+        {
+          "root": "/fixture/p/m/s/c/m",
+          "image": "/fixture/p/m/s/c/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/s/c/m",
+          "kernelIdentity": "device:3"
+        }
+      ],
+      "after": [
+        {
+          "root": "/fixture/p/m/n/c/m",
+          "image": "/fixture/p/m/n/c/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/n/c/m",
+          "kernelIdentity": "device:3"
+        },
+        {
+          "root": "/fixture/p/m/s/c/m",
+          "image": "/fixture/p/m/s/c/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/s/c/m",
+          "kernelIdentity": "device:3"
+        }
+      ],
+      "selectedRoot": "/fixture/p/m/n/c/m",
+      "selectedAssociation": "same",
+      "siblingAssociations": "same",
+      "expected": false,
+      "publicationTerminalKernel": "device:9"
+    },
+    {
+      "id": "retire-sibling-also-removed",
+      "action": "retire",
+      "parentAssociation": "same",
+      "before": [
+        {
+          "root": "/fixture/p/m/n/c/m",
+          "image": "/fixture/p/m/n/c/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/n/c/m",
+          "kernelIdentity": "device:3"
+        },
+        {
+          "root": "/fixture/p/m/s/c/m",
+          "image": "/fixture/p/m/s/c/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/s/c/m",
+          "kernelIdentity": "device:3"
+        }
+      ],
+      "after": [],
+      "selectedRoot": "/fixture/p/m/n/c/m",
+      "selectedAssociation": "same",
+      "siblingAssociations": "same",
+      "expected": false,
+      "publicationTerminalKernel": "device:9"
+    },
+    {
+      "id": "retire-new-sibling",
+      "action": "retire",
+      "parentAssociation": "same",
+      "before": [
+        {
+          "root": "/fixture/p/m/n/c/m",
+          "image": "/fixture/p/m/n/c/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/n/c/m",
+          "kernelIdentity": "device:3"
+        },
+        {
+          "root": "/fixture/p/m/s/c/m",
+          "image": "/fixture/p/m/s/c/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/s/c/m",
+          "kernelIdentity": "device:3"
+        }
+      ],
+      "after": [
+        {
+          "root": "/fixture/p/m/s/c/m",
+          "image": "/fixture/p/m/s/c/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/s/c/m",
+          "kernelIdentity": "device:3"
+        },
+        {
+          "root": "/fixture/p/m/new/m",
+          "image": "/fixture/p/m/new/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/new/m",
+          "kernelIdentity": "device:3"
+        }
+      ],
+      "selectedRoot": "/fixture/p/m/n/c/m",
+      "selectedAssociation": "same",
+      "siblingAssociations": "same",
+      "expected": false,
+      "publicationTerminalKernel": "device:9"
+    },
+    {
+      "id": "retire-parent-association-drift",
+      "action": "retire",
+      "parentAssociation": "changed",
+      "before": [
+        {
+          "root": "/fixture/p/m/n/c/m",
+          "image": "/fixture/p/m/n/c/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/n/c/m",
+          "kernelIdentity": "device:3"
+        },
+        {
+          "root": "/fixture/p/m/s/c/m",
+          "image": "/fixture/p/m/s/c/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/s/c/m",
+          "kernelIdentity": "device:3"
+        }
+      ],
+      "after": [
+        {
+          "root": "/fixture/p/m/s/c/m",
+          "image": "/fixture/p/m/s/c/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/s/c/m",
+          "kernelIdentity": "device:3"
+        }
+      ],
+      "selectedRoot": "/fixture/p/m/n/c/m",
+      "selectedAssociation": "same",
+      "siblingAssociations": "same",
+      "expected": false,
+      "publicationTerminalKernel": "device:9"
+    },
+    {
+      "id": "retire-sibling-association-drift",
+      "action": "retire",
+      "parentAssociation": "same",
+      "before": [
+        {
+          "root": "/fixture/p/m/n/c/m",
+          "image": "/fixture/p/m/n/c/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/n/c/m",
+          "kernelIdentity": "device:3"
+        },
+        {
+          "root": "/fixture/p/m/s/c/m",
+          "image": "/fixture/p/m/s/c/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/s/c/m",
+          "kernelIdentity": "device:3"
+        }
+      ],
+      "after": [
+        {
+          "root": "/fixture/p/m/s/c/m",
+          "image": "/fixture/p/m/s/c/fixed.dmg",
+          "backingIdentity": "backing:foreign",
+          "kernelIdentity": "device:3"
+        }
+      ],
+      "selectedRoot": "/fixture/p/m/n/c/m",
+      "selectedAssociation": "same",
+      "siblingAssociations": "changed",
+      "expected": false,
+      "publicationTerminalKernel": "device:9"
+    },
+    {
+      "id": "retire-selected-has-descendant",
+      "action": "retire",
+      "parentAssociation": "same",
+      "before": [
+        {
+          "root": "/fixture/p/m/n/c/m",
+          "image": "/fixture/p/m/n/c/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/n/c/m",
+          "kernelIdentity": "device:3"
+        },
+        {
+          "root": "/fixture/p/m/n/c/m/nested/m",
+          "image": "/fixture/p/m/n/c/m/nested/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/n/c/m/nested/m",
+          "kernelIdentity": "device:3"
+        },
+        {
+          "root": "/fixture/p/m/s/c/m",
+          "image": "/fixture/p/m/s/c/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/s/c/m",
+          "kernelIdentity": "device:3"
+        }
+      ],
+      "after": [
+        {
+          "root": "/fixture/p/m/s/c/m",
+          "image": "/fixture/p/m/s/c/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/s/c/m",
+          "kernelIdentity": "device:3"
+        }
+      ],
+      "selectedRoot": "/fixture/p/m/n/c/m",
+      "selectedAssociation": "same",
+      "siblingAssociations": "same",
+      "expected": false,
+      "publicationTerminalKernel": "device:9"
+    },
+    {
+      "id": "publish-canonical-terminal-roster",
+      "action": "publish",
+      "parentAssociation": "same",
+      "before": [
+        {
+          "root": "/fixture/p/m/n/c/m",
+          "image": "/fixture/p/m/n/c/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/n/c/m",
+          "kernelIdentity": "device:3"
+        },
+        {
+          "root": "/fixture/p/m/s/c/m",
+          "image": "/fixture/p/m/s/c/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/s/c/m",
+          "kernelIdentity": "device:3"
+        }
+      ],
+      "after": [
+        {
+          "root": "/fixture/p/m/n/c/m",
+          "image": "/fixture/p/m/n/c/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/n/c/m",
+          "kernelIdentity": "device:9"
+        },
+        {
+          "root": "/fixture/p/m/s/c/m",
+          "image": "/fixture/p/m/s/c/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/s/c/m",
+          "kernelIdentity": "device:3"
+        }
+      ],
+      "selectedRoot": "/fixture/p/m/n/c/m",
+      "selectedAssociation": "canonical-publication-terminal",
+      "siblingAssociations": "same",
+      "expected": true,
+      "publicationTerminalKernel": "device:9"
+    },
+    {
+      "id": "publish-arbitrary-new-device",
+      "action": "publish",
+      "parentAssociation": "same",
+      "before": [
+        {
+          "root": "/fixture/p/m/n/c/m",
+          "image": "/fixture/p/m/n/c/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/n/c/m",
+          "kernelIdentity": "device:3"
+        },
+        {
+          "root": "/fixture/p/m/s/c/m",
+          "image": "/fixture/p/m/s/c/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/s/c/m",
+          "kernelIdentity": "device:3"
+        }
+      ],
+      "after": [
+        {
+          "root": "/fixture/p/m/n/c/m",
+          "image": "/fixture/p/m/n/c/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/n/c/m",
+          "kernelIdentity": "device:foreign"
+        },
+        {
+          "root": "/fixture/p/m/s/c/m",
+          "image": "/fixture/p/m/s/c/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/s/c/m",
+          "kernelIdentity": "device:3"
+        }
+      ],
+      "selectedRoot": "/fixture/p/m/n/c/m",
+      "selectedAssociation": "foreign",
+      "siblingAssociations": "same",
+      "expected": false,
+      "publicationTerminalKernel": "device:9"
+    },
+    {
+      "id": "publish-selected-disappeared",
+      "action": "publish",
+      "parentAssociation": "same",
+      "before": [
+        {
+          "root": "/fixture/p/m/n/c/m",
+          "image": "/fixture/p/m/n/c/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/n/c/m",
+          "kernelIdentity": "device:3"
+        },
+        {
+          "root": "/fixture/p/m/s/c/m",
+          "image": "/fixture/p/m/s/c/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/s/c/m",
+          "kernelIdentity": "device:3"
+        }
+      ],
+      "after": [
+        {
+          "root": "/fixture/p/m/s/c/m",
+          "image": "/fixture/p/m/s/c/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/s/c/m",
+          "kernelIdentity": "device:3"
+        }
+      ],
+      "selectedRoot": "/fixture/p/m/n/c/m",
+      "selectedAssociation": "canonical-publication-terminal",
+      "siblingAssociations": "same",
+      "expected": false,
+      "publicationTerminalKernel": "device:9"
+    },
+    {
+      "id": "publish-parent-association-drift",
+      "action": "publish",
+      "parentAssociation": "changed",
+      "before": [
+        {
+          "root": "/fixture/p/m/n/c/m",
+          "image": "/fixture/p/m/n/c/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/n/c/m",
+          "kernelIdentity": "device:3"
+        },
+        {
+          "root": "/fixture/p/m/s/c/m",
+          "image": "/fixture/p/m/s/c/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/s/c/m",
+          "kernelIdentity": "device:3"
+        }
+      ],
+      "after": [
+        {
+          "root": "/fixture/p/m/n/c/m",
+          "image": "/fixture/p/m/n/c/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/n/c/m",
+          "kernelIdentity": "device:9"
+        },
+        {
+          "root": "/fixture/p/m/s/c/m",
+          "image": "/fixture/p/m/s/c/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/s/c/m",
+          "kernelIdentity": "device:3"
+        }
+      ],
+      "selectedRoot": "/fixture/p/m/n/c/m",
+      "selectedAssociation": "canonical-publication-terminal",
+      "siblingAssociations": "same",
+      "expected": false,
+      "publicationTerminalKernel": "device:9"
+    },
+    {
+      "id": "publish-sibling-association-drift",
+      "action": "publish",
+      "parentAssociation": "same",
+      "before": [
+        {
+          "root": "/fixture/p/m/n/c/m",
+          "image": "/fixture/p/m/n/c/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/n/c/m",
+          "kernelIdentity": "device:3"
+        },
+        {
+          "root": "/fixture/p/m/s/c/m",
+          "image": "/fixture/p/m/s/c/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/s/c/m",
+          "kernelIdentity": "device:3"
+        }
+      ],
+      "after": [
+        {
+          "root": "/fixture/p/m/n/c/m",
+          "image": "/fixture/p/m/n/c/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/n/c/m",
+          "kernelIdentity": "device:9"
+        },
+        {
+          "root": "/fixture/p/m/s/c/m",
+          "image": "/fixture/p/m/s/c/fixed.dmg",
+          "backingIdentity": "backing:foreign",
+          "kernelIdentity": "device:3"
+        }
+      ],
+      "selectedRoot": "/fixture/p/m/n/c/m",
+      "selectedAssociation": "canonical-publication-terminal",
+      "siblingAssociations": "changed",
+      "expected": false,
+      "publicationTerminalKernel": "device:9"
+    },
+    {
+      "id": "retire-duplicate-before-root",
+      "action": "retire",
+      "parentAssociation": "same",
+      "before": [
+        {
+          "root": "/fixture/p/m/n/c/m",
+          "image": "/fixture/p/m/n/c/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/n/c/m",
+          "kernelIdentity": "device:3"
+        },
+        {
+          "root": "/fixture/p/m/s/c/m",
+          "image": "/fixture/p/m/s/c/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/s/c/m",
+          "kernelIdentity": "device:3"
+        },
+        {
+          "root": "/fixture/p/m/n/c/m",
+          "image": "/fixture/p/m/n/c/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/n/c/m",
+          "kernelIdentity": "device:3"
+        }
+      ],
+      "after": [
+        {
+          "root": "/fixture/p/m/s/c/m",
+          "image": "/fixture/p/m/s/c/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/s/c/m",
+          "kernelIdentity": "device:3"
+        }
+      ],
+      "selectedRoot": "/fixture/p/m/n/c/m",
+      "selectedAssociation": "same",
+      "siblingAssociations": "same",
+      "expected": false,
+      "publicationTerminalKernel": "device:9"
+    },
+    {
+      "id": "retire-duplicate-after-root",
+      "action": "retire",
+      "parentAssociation": "same",
+      "before": [
+        {
+          "root": "/fixture/p/m/n/c/m",
+          "image": "/fixture/p/m/n/c/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/n/c/m",
+          "kernelIdentity": "device:3"
+        },
+        {
+          "root": "/fixture/p/m/s/c/m",
+          "image": "/fixture/p/m/s/c/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/s/c/m",
+          "kernelIdentity": "device:3"
+        }
+      ],
+      "after": [
+        {
+          "root": "/fixture/p/m/s/c/m",
+          "image": "/fixture/p/m/s/c/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/s/c/m",
+          "kernelIdentity": "device:3"
+        },
+        {
+          "root": "/fixture/p/m/s/c/m",
+          "image": "/fixture/p/m/s/c/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/s/c/m",
+          "kernelIdentity": "device:3"
+        }
+      ],
+      "selectedRoot": "/fixture/p/m/n/c/m",
+      "selectedAssociation": "same",
+      "siblingAssociations": "same",
+      "expected": false,
+      "publicationTerminalKernel": "device:9"
+    },
+    {
+      "id": "retire-selected-absent-before",
+      "action": "retire",
+      "parentAssociation": "same",
+      "before": [
+        {
+          "root": "/fixture/p/m/s/c/m",
+          "image": "/fixture/p/m/s/c/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/s/c/m",
+          "kernelIdentity": "device:3"
+        }
+      ],
+      "after": [
+        {
+          "root": "/fixture/p/m/s/c/m",
+          "image": "/fixture/p/m/s/c/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/s/c/m",
+          "kernelIdentity": "device:3"
+        }
+      ],
+      "selectedRoot": "/fixture/p/m/n/c/m",
+      "selectedAssociation": "same",
+      "siblingAssociations": "same",
+      "expected": false,
+      "publicationTerminalKernel": "device:9"
+    },
+    {
+      "id": "retire-same-root-different-before-backing",
+      "action": "retire",
+      "parentAssociation": "same",
+      "before": [
+        {
+          "root": "/fixture/p/m/n/c/m",
+          "image": "/fixture/p/m/n/c/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/n/c/m",
+          "kernelIdentity": "device:3"
+        },
+        {
+          "root": "/fixture/p/m/s/c/m",
+          "image": "/fixture/p/m/s/c/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/s/c/m",
+          "kernelIdentity": "device:3"
+        },
+        {
+          "root": "/fixture/p/m/n/c/m",
+          "image": "/fixture/p/m/n/c/fixed.dmg",
+          "backingIdentity": "backing:substitute",
+          "kernelIdentity": "device:3"
+        }
+      ],
+      "after": [
+        {
+          "root": "/fixture/p/m/s/c/m",
+          "image": "/fixture/p/m/s/c/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/s/c/m",
+          "kernelIdentity": "device:3"
+        }
+      ],
+      "selectedRoot": "/fixture/p/m/n/c/m",
+      "selectedAssociation": "same",
+      "siblingAssociations": "same",
+      "expected": false,
+      "publicationTerminalKernel": "device:9"
+    },
+    {
+      "id": "retire-same-sibling-root-different-after-backing",
+      "action": "retire",
+      "parentAssociation": "same",
+      "before": [
+        {
+          "root": "/fixture/p/m/n/c/m",
+          "image": "/fixture/p/m/n/c/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/n/c/m",
+          "kernelIdentity": "device:3"
+        },
+        {
+          "root": "/fixture/p/m/s/c/m",
+          "image": "/fixture/p/m/s/c/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/s/c/m",
+          "kernelIdentity": "device:3"
+        }
+      ],
+      "after": [
+        {
+          "root": "/fixture/p/m/s/c/m",
+          "image": "/fixture/p/m/s/c/fixed.dmg",
+          "backingIdentity": "backing:substitute",
+          "kernelIdentity": "device:3"
+        }
+      ],
+      "selectedRoot": "/fixture/p/m/n/c/m",
+      "selectedAssociation": "same",
+      "siblingAssociations": "same",
+      "expected": false,
+      "publicationTerminalKernel": "device:9"
+    },
+    {
+      "id": "retire-prefix-peer-is-not-descendant",
+      "action": "retire",
+      "parentAssociation": "same",
+      "before": [
+        {
+          "root": "/fixture/p/m/n/c/m",
+          "image": "/fixture/p/m/n/c/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/n/c/m",
+          "kernelIdentity": "device:3"
+        },
+        {
+          "root": "/fixture/p/m/s/c/m",
+          "image": "/fixture/p/m/s/c/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/s/c/m",
+          "kernelIdentity": "device:3"
+        },
+        {
+          "root": "/fixture/p/m/n/c/m-peer",
+          "image": "/fixture/p/m/n/peer/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/n/c/m-peer",
+          "kernelIdentity": "device:3"
+        }
+      ],
+      "after": [
+        {
+          "root": "/fixture/p/m/s/c/m",
+          "image": "/fixture/p/m/s/c/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/s/c/m",
+          "kernelIdentity": "device:3"
+        },
+        {
+          "root": "/fixture/p/m/n/c/m-peer",
+          "image": "/fixture/p/m/n/peer/fixed.dmg",
+          "backingIdentity": "backing:/fixture/p/m/n/c/m-peer",
+          "kernelIdentity": "device:3"
+        }
+      ],
+      "selectedRoot": "/fixture/p/m/n/c/m",
+      "selectedAssociation": "same",
+      "siblingAssociations": "same",
+      "expected": true,
+      "publicationTerminalKernel": "device:9"
+    }
+  ],
+  "settlement": [
+    {
+      "id": "retire-all-terminal-obligations",
+      "action": "retire",
+      "obligations": {
+        "parentRetained": true,
+        "childExclusive": true,
+        "admissionClosed": true,
+        "workDrained": true,
+        "physicalRemoved": true,
+        "claimRemoved": true,
+        "claimMetadataSynced": true,
+        "kernelClosed": true,
+        "readerClosed": true,
+        "namespaceRemoved": true,
+        "namespaceMetadataSynced": true
+      },
+      "journalDurability": "succeeded",
+      "expectedCharge": "settled",
+      "settlementDispatch": true
+    },
+    {
+      "id": "retire-refuses-parentretained",
+      "action": "retire",
+      "obligations": {
+        "parentRetained": false,
+        "childExclusive": true,
+        "admissionClosed": true,
+        "workDrained": true,
+        "physicalRemoved": true,
+        "claimRemoved": true,
+        "claimMetadataSynced": true,
+        "kernelClosed": true,
+        "readerClosed": true,
+        "namespaceRemoved": true,
+        "namespaceMetadataSynced": true
+      },
+      "journalDurability": "not-attempted",
+      "expectedCharge": "retained",
+      "settlementDispatch": false
+    },
+    {
+      "id": "retire-refuses-childexclusive",
+      "action": "retire",
+      "obligations": {
+        "parentRetained": true,
+        "childExclusive": false,
+        "admissionClosed": true,
+        "workDrained": true,
+        "physicalRemoved": true,
+        "claimRemoved": true,
+        "claimMetadataSynced": true,
+        "kernelClosed": true,
+        "readerClosed": true,
+        "namespaceRemoved": true,
+        "namespaceMetadataSynced": true
+      },
+      "journalDurability": "not-attempted",
+      "expectedCharge": "retained",
+      "settlementDispatch": false
+    },
+    {
+      "id": "retire-refuses-admissionclosed",
+      "action": "retire",
+      "obligations": {
+        "parentRetained": true,
+        "childExclusive": true,
+        "admissionClosed": false,
+        "workDrained": true,
+        "physicalRemoved": true,
+        "claimRemoved": true,
+        "claimMetadataSynced": true,
+        "kernelClosed": true,
+        "readerClosed": true,
+        "namespaceRemoved": true,
+        "namespaceMetadataSynced": true
+      },
+      "journalDurability": "not-attempted",
+      "expectedCharge": "retained",
+      "settlementDispatch": false
+    },
+    {
+      "id": "retire-refuses-workdrained",
+      "action": "retire",
+      "obligations": {
+        "parentRetained": true,
+        "childExclusive": true,
+        "admissionClosed": true,
+        "workDrained": false,
+        "physicalRemoved": true,
+        "claimRemoved": true,
+        "claimMetadataSynced": true,
+        "kernelClosed": true,
+        "readerClosed": true,
+        "namespaceRemoved": true,
+        "namespaceMetadataSynced": true
+      },
+      "journalDurability": "not-attempted",
+      "expectedCharge": "retained",
+      "settlementDispatch": false
+    },
+    {
+      "id": "retire-refuses-physicalremoved",
+      "action": "retire",
+      "obligations": {
+        "parentRetained": true,
+        "childExclusive": true,
+        "admissionClosed": true,
+        "workDrained": true,
+        "physicalRemoved": false,
+        "claimRemoved": true,
+        "claimMetadataSynced": true,
+        "kernelClosed": true,
+        "readerClosed": true,
+        "namespaceRemoved": true,
+        "namespaceMetadataSynced": true
+      },
+      "journalDurability": "not-attempted",
+      "expectedCharge": "retained",
+      "settlementDispatch": false
+    },
+    {
+      "id": "retire-refuses-claimremoved",
+      "action": "retire",
+      "obligations": {
+        "parentRetained": true,
+        "childExclusive": true,
+        "admissionClosed": true,
+        "workDrained": true,
+        "physicalRemoved": true,
+        "claimRemoved": false,
+        "claimMetadataSynced": true,
+        "kernelClosed": true,
+        "readerClosed": true,
+        "namespaceRemoved": true,
+        "namespaceMetadataSynced": true
+      },
+      "journalDurability": "not-attempted",
+      "expectedCharge": "retained",
+      "settlementDispatch": false
+    },
+    {
+      "id": "retire-refuses-claimmetadatasynced",
+      "action": "retire",
+      "obligations": {
+        "parentRetained": true,
+        "childExclusive": true,
+        "admissionClosed": true,
+        "workDrained": true,
+        "physicalRemoved": true,
+        "claimRemoved": true,
+        "claimMetadataSynced": false,
+        "kernelClosed": true,
+        "readerClosed": true,
+        "namespaceRemoved": true,
+        "namespaceMetadataSynced": true
+      },
+      "journalDurability": "not-attempted",
+      "expectedCharge": "retained",
+      "settlementDispatch": false
+    },
+    {
+      "id": "retire-refuses-kernelclosed",
+      "action": "retire",
+      "obligations": {
+        "parentRetained": true,
+        "childExclusive": true,
+        "admissionClosed": true,
+        "workDrained": true,
+        "physicalRemoved": true,
+        "claimRemoved": true,
+        "claimMetadataSynced": true,
+        "kernelClosed": false,
+        "readerClosed": true,
+        "namespaceRemoved": true,
+        "namespaceMetadataSynced": true
+      },
+      "journalDurability": "not-attempted",
+      "expectedCharge": "retained",
+      "settlementDispatch": false
+    },
+    {
+      "id": "retire-refuses-readerclosed",
+      "action": "retire",
+      "obligations": {
+        "parentRetained": true,
+        "childExclusive": true,
+        "admissionClosed": true,
+        "workDrained": true,
+        "physicalRemoved": true,
+        "claimRemoved": true,
+        "claimMetadataSynced": true,
+        "kernelClosed": true,
+        "readerClosed": false,
+        "namespaceRemoved": true,
+        "namespaceMetadataSynced": true
+      },
+      "journalDurability": "not-attempted",
+      "expectedCharge": "retained",
+      "settlementDispatch": false
+    },
+    {
+      "id": "retire-refuses-namespaceremoved",
+      "action": "retire",
+      "obligations": {
+        "parentRetained": true,
+        "childExclusive": true,
+        "admissionClosed": true,
+        "workDrained": true,
+        "physicalRemoved": true,
+        "claimRemoved": true,
+        "claimMetadataSynced": true,
+        "kernelClosed": true,
+        "readerClosed": true,
+        "namespaceRemoved": false,
+        "namespaceMetadataSynced": true
+      },
+      "journalDurability": "not-attempted",
+      "expectedCharge": "retained",
+      "settlementDispatch": false
+    },
+    {
+      "id": "retire-refuses-namespacemetadatasynced",
+      "action": "retire",
+      "obligations": {
+        "parentRetained": true,
+        "childExclusive": true,
+        "admissionClosed": true,
+        "workDrained": true,
+        "physicalRemoved": true,
+        "claimRemoved": true,
+        "claimMetadataSynced": true,
+        "kernelClosed": true,
+        "readerClosed": true,
+        "namespaceRemoved": true,
+        "namespaceMetadataSynced": false
+      },
+      "journalDurability": "not-attempted",
+      "expectedCharge": "retained",
+      "settlementDispatch": false
+    },
+    {
+      "id": "retire-fsync-uncertain-after-write",
+      "action": "retire",
+      "obligations": {
+        "parentRetained": true,
+        "childExclusive": true,
+        "admissionClosed": true,
+        "workDrained": true,
+        "physicalRemoved": true,
+        "claimRemoved": true,
+        "claimMetadataSynced": true,
+        "kernelClosed": true,
+        "readerClosed": true,
+        "namespaceRemoved": true,
+        "namespaceMetadataSynced": true
+      },
+      "journalDurability": "failed-after-write",
+      "expectedCharge": "uncertain-durability",
+      "settlementDispatch": true
+    },
+    {
+      "id": "publish-always-keeps-original-charge",
+      "action": "publish",
+      "obligations": {
+        "parentRetained": true,
+        "childExclusive": true,
+        "admissionClosed": true,
+        "workDrained": true,
+        "physicalRemoved": true,
+        "claimRemoved": true,
+        "claimMetadataSynced": true,
+        "kernelClosed": true,
+        "readerClosed": true,
+        "namespaceRemoved": true,
+        "namespaceMetadataSynced": true
+      },
+      "journalDurability": "not-attempted",
+      "expectedCharge": "retained",
+      "settlementDispatch": false
+    }
+  ],
+  "lifetime": [
+    {
+      "id": "actual-refining-control",
+      "cause": "none",
+      "acceptedBeforeClose": true,
+      "afterCloseAttempt": false,
+      "expected": "success",
+      "primaryIdentity": "none"
+    },
+    {
+      "id": "accepted-work-drains",
+      "cause": "none",
+      "acceptedBeforeClose": true,
+      "afterCloseAttempt": true,
+      "expected": "late-admission-refused-and-drained",
+      "primaryIdentity": "none"
+    },
+    {
+      "id": "undefined-primary",
+      "cause": "undefined",
+      "acceptedBeforeClose": true,
+      "afterCloseAttempt": false,
+      "expected": "primary-preserved",
+      "primaryIdentity": "undefined"
+    },
+    {
+      "id": "frozen-primary",
+      "cause": "frozen",
+      "acceptedBeforeClose": true,
+      "afterCloseAttempt": false,
+      "expected": "primary-preserved",
+      "primaryIdentity": "frozen"
+    },
+    {
+      "id": "cancelled-after-enrollment",
+      "cause": "cancelled",
+      "acceptedBeforeClose": true,
+      "afterCloseAttempt": false,
+      "expected": "cleanup-only-no-new-effects",
+      "primaryIdentity": "cancelled"
+    },
+    {
+      "id": "expired-after-enrollment",
+      "cause": "expired",
+      "acceptedBeforeClose": true,
+      "afterCloseAttempt": false,
+      "expected": "cleanup-only-no-new-effects",
+      "primaryIdentity": "expired"
+    },
+    {
+      "id": "distinct-cleanup-failure",
+      "cause": "body-plus-cleanup",
+      "acceptedBeforeClose": true,
+      "afterCloseAttempt": false,
+      "expected": "ordered-distinct-aggregate",
+      "primaryIdentity": "body-first"
+    },
+    {
+      "id": "duplicate-cleanup-failure",
+      "cause": "duplicate-primary",
+      "acceptedBeforeClose": true,
+      "afterCloseAttempt": false,
+      "expected": "primary-preserved",
+      "primaryIdentity": "same-object"
+    },
+    {
+      "id": "cleanup-expired",
+      "cause": "cleanup-expired",
+      "acceptedBeforeClose": true,
+      "afterCloseAttempt": false,
+      "expected": "retain-unresolved-owner",
+      "primaryIdentity": "cleanup-expired"
+    },
+    {
+      "id": "escaped-child-token",
+      "cause": "escaped-child",
+      "acceptedBeforeClose": false,
+      "afterCloseAttempt": true,
+      "expected": "zero-effects-refusal",
+      "primaryIdentity": "none"
+    },
+    {
+      "id": "unawaited-child-failure",
+      "cause": "unawaited-child",
+      "acceptedBeforeClose": true,
+      "afterCloseAttempt": false,
+      "expected": "failure-joined-before-parent-close",
+      "primaryIdentity": "child"
+    }
+  ],
+  "retirementOrder": [
+    "parent-ex",
+    "parent-cleanup-enrolled",
+    "parent-facts",
+    "kernel-before",
+    "journal-snapshot-close",
+    "namespace-and-creator",
+    "child-ex",
+    "mapping-ex",
+    "journal-final-recheck",
+    "child-owner",
+    "admission-close",
+    "accepted-work-drain",
+    "physical-removal",
+    "claim-removal-sync",
+    "child-kernel-close",
+    "child-reader-close",
+    "namespace-remove-sync",
+    "journal-retiring-retired-sync",
+    "kernel-after",
+    "parent-borrower-close"
+  ],
+  "classification": [
+    {
+      "id": "funded-complete-original-association",
+      "classification": "funded-child",
+      "completeFundedAssociation": true,
+      "typedDomainEnrollment": false,
+      "completeCurrentDomainFacts": false,
+      "leafJournalZero": false,
+      "nonRecomputableScope": false,
+      "knownFixtureOnly": false,
+      "requestedScope": "exact-created-child",
+      "expected": "funded-child-only",
+      "dedicatedParentChildCharge": true,
+      "command": "retire"
+    },
+    {
+      "id": "independent-exact-declared-leaf",
+      "classification": "independent-domain-leaf",
+      "completeFundedAssociation": false,
+      "typedDomainEnrollment": true,
+      "completeCurrentDomainFacts": true,
+      "leafJournalZero": true,
+      "nonRecomputableScope": false,
+      "knownFixtureOnly": false,
+      "requestedScope": "exact-declared-domain-leaf",
+      "expected": "independent-leaf-no-parent-charge-settlement",
+      "dedicatedParentChildCharge": false,
+      "command": "retire"
+    },
+    {
+      "id": "independent-no-typed-domain-owner",
+      "classification": "independent-domain-leaf",
+      "completeFundedAssociation": false,
+      "typedDomainEnrollment": false,
+      "completeCurrentDomainFacts": true,
+      "leafJournalZero": true,
+      "nonRecomputableScope": false,
+      "knownFixtureOnly": false,
+      "requestedScope": "exact-declared-domain-leaf",
+      "expected": "refuse",
+      "dedicatedParentChildCharge": false,
+      "command": "retire"
+    },
+    {
+      "id": "independent-incomplete-domain-facts",
+      "classification": "independent-domain-leaf",
+      "completeFundedAssociation": false,
+      "typedDomainEnrollment": true,
+      "completeCurrentDomainFacts": false,
+      "leafJournalZero": true,
+      "nonRecomputableScope": false,
+      "knownFixtureOnly": false,
+      "requestedScope": "exact-declared-domain-leaf",
+      "expected": "refuse",
+      "dedicatedParentChildCharge": false,
+      "command": "retire"
+    },
+    {
+      "id": "independent-nonzero-child-ledger",
+      "classification": "independent-domain-leaf",
+      "completeFundedAssociation": false,
+      "typedDomainEnrollment": true,
+      "completeCurrentDomainFacts": true,
+      "leafJournalZero": false,
+      "nonRecomputableScope": false,
+      "knownFixtureOnly": false,
+      "requestedScope": "exact-declared-domain-leaf",
+      "expected": "refuse",
+      "dedicatedParentChildCharge": false,
+      "command": "retire"
+    },
+    {
+      "id": "independent-must-not-erase-parent-charge",
+      "classification": "independent-domain-leaf",
+      "completeFundedAssociation": false,
+      "typedDomainEnrollment": true,
+      "completeCurrentDomainFacts": true,
+      "leafJournalZero": true,
+      "nonRecomputableScope": false,
+      "knownFixtureOnly": false,
+      "requestedScope": "exact-declared-domain-leaf",
+      "expected": "refuse",
+      "dedicatedParentChildCharge": true,
+      "command": "retire"
+    },
+    {
+      "id": "independent-persistent-state-scope",
+      "classification": "independent-domain-leaf",
+      "completeFundedAssociation": false,
+      "typedDomainEnrollment": true,
+      "completeCurrentDomainFacts": true,
+      "leafJournalZero": true,
+      "nonRecomputableScope": true,
+      "knownFixtureOnly": false,
+      "requestedScope": "exact-declared-domain-leaf",
+      "expected": "refuse",
+      "dedicatedParentChildCharge": false,
+      "command": "retire"
+    },
+    {
+      "id": "independent-unknown-history-not-name-adoption",
+      "classification": "independent-domain-leaf",
+      "completeFundedAssociation": false,
+      "typedDomainEnrollment": true,
+      "completeCurrentDomainFacts": false,
+      "leafJournalZero": true,
+      "nonRecomputableScope": false,
+      "knownFixtureOnly": false,
+      "requestedScope": "unknown-named-subtree",
+      "expected": "refuse",
+      "dedicatedParentChildCharge": false,
+      "command": "retire"
+    },
+    {
+      "id": "fresh-fixture-proof-cannot-authorize-global-tree",
+      "classification": "funded-child",
+      "completeFundedAssociation": true,
+      "typedDomainEnrollment": false,
+      "completeCurrentDomainFacts": false,
+      "leafJournalZero": false,
+      "nonRecomputableScope": false,
+      "knownFixtureOnly": true,
+      "requestedScope": "historical-global-tree",
+      "expected": "refuse",
+      "dedicatedParentChildCharge": true,
+      "command": "retire"
+    },
+    {
+      "id": "funded-incomplete-original-association",
+      "classification": "funded-child",
+      "completeFundedAssociation": false,
+      "typedDomainEnrollment": false,
+      "completeCurrentDomainFacts": false,
+      "leafJournalZero": false,
+      "nonRecomputableScope": false,
+      "knownFixtureOnly": false,
+      "requestedScope": "exact-created-child",
+      "expected": "refuse",
+      "dedicatedParentChildCharge": true,
+      "command": "retire"
+    },
+    {
+      "id": "exact-known-fixture-fresh-current-maintenance-intent",
+      "classification": "independent-domain-leaf",
+      "completeFundedAssociation": false,
+      "typedDomainEnrollment": true,
+      "completeCurrentDomainFacts": true,
+      "leafJournalZero": true,
+      "nonRecomputableScope": false,
+      "knownFixtureOnly": true,
+      "requestedScope": "exact-selected-current-fixture",
+      "expected": "independent-leaf-no-parent-charge-settlement",
+      "dedicatedParentChildCharge": false,
+      "command": "retire"
+    },
+    {
+      "id": "independent-publication-preserves-nonzero-domain-ledger",
+      "classification": "independent-domain-leaf",
+      "completeFundedAssociation": false,
+      "typedDomainEnrollment": true,
+      "completeCurrentDomainFacts": true,
+      "leafJournalZero": false,
+      "nonRecomputableScope": false,
+      "knownFixtureOnly": false,
+      "requestedScope": "exact-declared-domain-leaf",
+      "expected": "independent-leaf-no-parent-charge-settlement",
+      "dedicatedParentChildCharge": false,
+      "command": "publish"
+    }
+  ]
+}

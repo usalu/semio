@@ -3,7 +3,8 @@
 //! document they were recorded on, then their inverse rows last-to-first, and demands the document back; every row also
 //! passes the framework's inverse-sum law on the state it was applied to.
 
-use super::Puzzle2dRecorder;
+use crate::editor::puzzle2d::snapshot;
+use crate::editor::puzzle2d::recorder::Puzzle2dRecorder;
 use {crate::editor::puzzle2d::snapshot::board_snapshot_edges, crate::editor::puzzle2d::snapshot::board_snapshot_nodes, crate::editor::puzzle2d::snapshot::snapshot_target_regions};
 use crate::standards::v1::subsets::any::schema::mutations::{delete_node, Puzzle2dMutation};
 use crate::Puzzle2dSnapshot;

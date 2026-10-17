@@ -12,11 +12,11 @@ use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
 
 //#region 🔖️Leaves
 use semio_s_artifact_raster_raster_mutations_pixels::add_layer_asset;
-use semio_s_artifact_raster_raster_mutations_layers::change_layer_adjustment_kind;
-use semio_s_artifact_raster_raster_mutations_layers::change_layer_blend_mode;
-use semio_s_artifact_raster_raster_mutations_layers::change_layer_opacity;
-use semio_s_artifact_raster_raster_mutations_layers::change_layer_visible;
-use semio_s_artifact_raster_raster_mutations_layers::change_layer_locked;
+use semio_s_artifact_raster_raster_mutations_layer_properties::change_layer_adjustment_kind;
+use semio_s_artifact_raster_raster_mutations_layer_properties::change_layer_blend_mode;
+use semio_s_artifact_raster_raster_mutations_layer_properties::change_layer_opacity;
+use semio_s_artifact_raster_raster_mutations_layer_properties::change_layer_visible;
+use semio_s_artifact_raster_raster_mutations_layer_properties::change_layer_locked;
 use semio_s_artifact_raster_raster_mutations_layers::create_layer;
 use semio_s_artifact_raster_raster_mutations_layers::delete_layer;
 use semio_s_artifact_raster_raster_mutations_layers::move_layer;
@@ -26,8 +26,8 @@ use semio_s_artifact_raster_raster_mutations_layers::reorder_layers;
 use semio_s_artifact_raster_raster_mutations_layers::resize_layer;
 use semio_s_artifact_raster_raster_mutations_pixels::change_layer_pixels;
 use semio_s_artifact_raster_raster_mutations_pixels::change_layer_mask;
-use semio_s_artifact_raster_raster_mutations_layers::change_layer_transform;
-use semio_s_artifact_raster_raster_mutations_layers::change_layer_adjustment_parameter;
+use semio_s_artifact_raster_raster_mutations_layer_properties::change_layer_transform;
+use semio_s_artifact_raster_raster_mutations_layer_properties::change_layer_adjustment_parameter;
 use semio_s_artifact_raster_raster_mutations_pixels::paint_stroke;
 use semio_s_artifact_raster_raster_mutations_pixels::fill_region;
 use semio_s_artifact_raster_raster_mutations_pixels::apply_filter;
@@ -95,24 +95,11 @@ pub type RasterStore = store::ArtifactStore<RasterSnapshot, RasterMutation>;
 
 //#region 🧪️Tests
 #[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-#[cfg(test)]
 #[path = "🎭️change-layer-mask/🧪️tests/🦀️.rs"]
 mod mask_tests;
 //#endregion 🧪️Tests
 
 //#region 🌉️ExternalCodecBridge
-
-
-/// 🧹️ Cold-retires a batch of operations nobody will apply — a `create-layer` inverse can carry a
-/// whole subtree whose adjustment layers own populated `params` maps.
-pub fn retire_bridge_mutations(mutations: Vec<RasterMutation>) {
-    for mutation in mutations {
-        protocol::Mutation::retire_cold(mutation);
-    }
-}
-
 
 /// 🌉️ Applies one committed mutation payload to one committed before-document and answers
 /// `{"snapshot": …, "messages": [ … ]}`.
@@ -123,24 +110,14 @@ pub fn retire_bridge_mutations(mutations: Vec<RasterMutation>) {
 /// reason as `🗄️stdio`'s `decode_semio_mesh_mutation_json`/`apply_semio_mesh_mutation` pair.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 
-
 /// ↩️ Applies one committed mutation payload and then EVERY step of its own computed inverse,
 /// answering in the same shape — the metamorphic half of what `🖨️mutate-raster-1` compares against its
 /// Python second implementation. The inverse is computed against the PRE-mutation document, which is
 /// the only state that carries what a delete removed.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 
-
 //#endregion 🌉️ExternalCodecBridge
 
-//#region 🔖️Kinds
-/// 🏷️ Kebab-case spelling of every `RasterMutation` variant, in declaration order — the vocabulary
-/// the `raster-1-any` catalog (`../../🔣️oracle.json`) declares and the
-/// `🖨️mutate-raster-1` exhaustive case measures itself against. 
-/// `kinds_match_the_enum_and_the_catalog` below is what keeps this list honest against the enum,
-/// since the framework never parses Rust.
-pub const KINDS: &[&str] =
-    &["create-layer", "delete-layer", "reorder-layers", "rename-layer", "change-layer-visible", "change-layer-locked", "change-layer-opacity", "change-layer-blend-mode", "move-layer", "resize-layer", "change-layer-adjustment-kind", "add-layer-asset", "remove-layer-asset", "change-layer-pixels", "change-layer-mask", "change-layer-transform", "change-layer-adjustment-parameter", "paint-stroke", "fill-region", "apply-filter", "transform-image", "fill-selection", "write-pixel-region"];
 //#endregion 🔖️Kinds
 
 //#region 🧪️KindsCatalog
@@ -155,3 +132,7 @@ pub mod binary;
 #[path = "../../🚪️io/📝️text/🧬️mutations/🦀️.rs"]
 pub mod text;
 //#endregion 🪢️TaxonomyMounts
+
+#[path = "🌉️codec-bridge/🦀️.rs"]
+mod codec_bridge;
+pub use codec_bridge::*;

@@ -1,0 +1,137 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/repo/build/rust/selected-lifetime/v1",
+  "definitions": {
+    "Request": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "mode",
+        "configurations"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "mode": {
+          "enum": [
+            "prototype",
+            "release"
+          ]
+        },
+        "configurations": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 65536,
+          "items": {
+            "enum": [
+              "prototype",
+              "release"
+            ]
+          }
+        }
+      },
+      "oneOf": [
+        {
+          "properties": {
+            "mode": {
+              "const": "prototype"
+            },
+            "configurations": {
+              "items": {
+                "const": "prototype"
+              },
+              "type": "array"
+            }
+          }
+        },
+        {
+          "properties": {
+            "mode": {
+              "const": "release"
+            },
+            "configurations": {
+              "items": {
+                "const": "release"
+              },
+              "type": "array"
+            }
+          }
+        }
+      ]
+    },
+    "Lifetime": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "compilerReaders",
+        "selectedRows",
+        "backendHeld",
+        "detachedHeld",
+        "readerFree",
+        "closedRefused"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "compilerReaders": {
+          "const": 1
+        },
+        "selectedRows": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65536
+        },
+        "backendHeld": {
+          "const": true
+        },
+        "detachedHeld": {
+          "const": true
+        },
+        "readerFree": {
+          "const": true
+        },
+        "closedRefused": {
+          "const": true
+        }
+      }
+    },
+    "Failure": {
+      "enum": [
+        "error",
+        "undefined"
+      ]
+    },
+    "FailureObservation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "kind",
+        "exact",
+        "detached",
+        "readerFree"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "kind": {
+          "$ref": "#/definitions/Failure"
+        },
+        "exact": {
+          "const": true
+        },
+        "detached": {
+          "const": true
+        },
+        "readerFree": {
+          "const": true
+        }
+      }
+    }
+  }
+}

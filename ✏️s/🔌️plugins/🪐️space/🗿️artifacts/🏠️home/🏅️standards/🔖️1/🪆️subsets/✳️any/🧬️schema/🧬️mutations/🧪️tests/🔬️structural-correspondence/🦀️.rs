@@ -1,9 +1,11 @@
+use crate::SHomeSnapshot;
+use semio_framework_test_fixtures::fixture_path;
 
-use super::*;
+use crate::standards::v1::subsets::any::schema::mutations::*;
 
 #[test]
 fn direct_owner_descriptor_surfaces_and_catalog_correspond() {
-    let mutation_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations");
+    let mutation_root = fixture_path!("../../../🧬️mutations");
     let owner = mutation_root.join("🔢️change-catalog-generation");
     let source = std::fs::read_to_string(owner.join("🦀️.rs")).expect("direct Rust owner");
     let descriptor: semio_framework_pack_json::Value = semio_framework_pack_json::parse(&std::fs::read_to_string(owner.join("🔣️.json")).expect("direct descriptor"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("valid descriptor");

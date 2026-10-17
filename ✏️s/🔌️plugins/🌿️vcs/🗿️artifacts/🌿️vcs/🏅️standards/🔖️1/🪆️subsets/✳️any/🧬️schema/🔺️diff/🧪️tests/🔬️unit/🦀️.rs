@@ -1,4 +1,4 @@
-use super::*;
+use crate::standards::v1::subsets::any::schema::diff::*;
 
 #[semio_framework_async_macros::async_test]
 async fn empty_diff_is_a_no_operation() {

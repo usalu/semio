@@ -6,8 +6,9 @@ import Ajv from "ajv";
 import { decodeRegistryDescriptorV1, REGISTRY_HOST_APP_CHANNEL_VERSION } from "../../🧬️schema/🟦️.ts";
 
 const contract = JSON.parse(readFileSync(join(import.meta.dir, "../🧬️schema/🔣️.json"), "utf8"));
-const cases = JSON.parse(readFileSync(join(import.meta.dir, "🧪️tests/🧫️fixtures/🔣️.json"), "utf8")) as { id: string; valid: boolean; value: unknown }[];
+const cases = JSON.parse(readFileSync(join(import.meta.dir, "🧫️fixtures/🔣️.json"), "utf8")) as { id: string; valid: boolean; value: unknown }[];
 const validate = new Ajv({ strict: true }).compile(contract);
+const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === "object" && value !== null && !Array.isArray(value);
 
 describe("current package descriptor admission", () => {
   it("uses the installed locked independent oracle and current producer channel", () => {
@@ -30,13 +31,14 @@ describe("current package descriptor admission", () => {
     expect(scope.exports.PackageDescriptorV1).toBeDefined();
     const diagnostics = inventory.diagnostics.filter((row: { path: string }) => row.path.includes("📇️registry/🛂️descriptor-verification"));
     expect(diagnostics).toEqual([]);
-    console.log("[DEBUG] Current genuine descriptor scope admitted", id, "exports", Object.keys(scope.exports).length, "owned diagnostics", diagnostics.length);
   });
   for (const row of cases) it(row.id, () => {
     expect(Boolean(validate(row.value))).toBe(row.valid);
     const bytes = new TextEncoder().encode(JSON.stringify(row.value));
-    if (row.valid) expect(decodeRegistryDescriptorV1(bytes)).toEqual(row.value);
-    else expect(() => decodeRegistryDescriptorV1(bytes)).toThrow();
+    if (row.valid) {
+      if (!isRecord(row.value)) throw new Error(`${row.id}: a valid descriptor is an object`);
+      expect(decodeRegistryDescriptorV1(bytes)).toEqual(row.value);
+    } else expect(() => decodeRegistryDescriptorV1(bytes)).toThrow();
   });
   it("refuses duplicate decoded members and malformed UTF-8 independently of value admission", () => {
     const source = JSON.stringify(cases[0]!.value).replace('"role":"plugin"', '"role":"plugin","\\u0072ole":"plugin"');

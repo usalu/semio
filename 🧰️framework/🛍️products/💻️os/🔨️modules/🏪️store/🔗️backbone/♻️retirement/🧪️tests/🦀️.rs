@@ -43,5 +43,4 @@ fn backbone_retirement_preserves_original_empty_capacities_and_exact_release() {
     let (_, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| drop(owner));
     assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
     assert!(physical_release > 65536 + 8192 * size_of::<BackboneMessage>());
-    eprintln!("[DEBUG] backbone original empty String/Vec/queue capacities retired turns={turns} released={physical_release}");
 }

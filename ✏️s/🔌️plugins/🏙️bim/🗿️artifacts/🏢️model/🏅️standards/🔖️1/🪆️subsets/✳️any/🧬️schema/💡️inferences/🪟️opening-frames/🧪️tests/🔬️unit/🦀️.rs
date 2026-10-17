@@ -2,6 +2,7 @@ use super::*;
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::{kinds, plan, ModelNode};
 use crate::standards::v1::subsets::any::schema::diff::{Entry, ModelDiff, patches::{OpeningPatch, StoreyPatch, WallPatch}};
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
+use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_opening_frames;
 
 const PLACED: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🪟️opening-frames/🏡️placed/📸️snapshot/🔣️.json");
 const INVALID: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🪟️opening-frames/⚠️invalid/📸️snapshot/🔣️.json");
@@ -192,7 +193,7 @@ async fn a_moved_opening_slides_along_its_host_and_overlap_follows_the_offsets()
 #[semio_framework_async_macros::async_test]
 async fn the_host_extent_agrees_with_the_wall_layout_of_the_same_wall() {
     let snapshot = placed();
-    let layouts = crate::standards::v1::subsets::any::schema::inferences::wall_layout::compute_wall_layout(&snapshot);
+    let layouts = crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_wall_layout(&snapshot);
     let frames = compute_opening_frames(&snapshot);
     for (opening, wall) in [("o-win-south", "w-south"), ("o-door-east", "w-east"), ("o-win-arc", "w-arc"), ("o-void-first", "w-first")] {
         assert!(close(frames[opening].host_height, layouts[wall].height), "{wall} height");

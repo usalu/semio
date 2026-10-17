@@ -4,25 +4,43 @@
 //! transaction also landed, else one row per transaction (or per edit without one), in moment order, labelled from its
 //! declared intent or first leaf.
 
-use super::*;
+#[cfg(test)]
+use semio_framework_plugin_decl_app::ArtifactApp;
+use pack::snapshot::ArtifactPack;
+use store::{ArtifactStoreInitializationAuthority, MemberFactory, Mutation, SpaceMember};
+use std::future::Future;
+use semio_framework::kernel::HybridLogicalTimestamp;
+use semio_framework_ui_locale::{Locale, Terminology};
+#[cfg(test)]
+use semio_framework_plugin_decl_views::history_view::MutationView;
+#[cfg(test)]
+use semio_framework_plugin_window_config::WindowConfigOwner;
+#[cfg(test)]
+use semio_framework_plugin_window_transient::window_transient::WindowTransientOwner;
+use semio_framework_plugin_time_travel as time_travel;
+use semio_framework_ui_contract::*;
 use std::collections::{HashMap, HashSet};
 
 const COMPOSED_CHILD_HISTORY_FIXTURE_JSON: &str = include_str!("../🧫️fixtures/🧫️composed-child-history/🔣️.json");
 
-fn text(value: &Value) -> &str {
+#[doc(hidden)]
+pub fn text(value: &Value) -> &str {
     value.as_str().unwrap_or_else(|| panic!("fixture text expected, got {value}"))
 }
 
-fn label(value: &Value) -> LocalizedLabel {
+#[doc(hidden)]
+pub fn label(value: &Value) -> LocalizedLabel {
     LocalizedLabel::native(text(&value["en"]), text(&value["de"]))
 }
 
-fn resolved(label: &LocalizedLabel) -> (String, String) {
+#[doc(hidden)]
+pub fn resolved(label: &LocalizedLabel) -> (String, String) {
     (label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En).to_string(), label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::De).to_string())
 }
 
 /// 🧩️ One fixture history as the member history visitor reads it.
-fn history(value: &Value) -> time_travel::MemberEditHistory {
+#[doc(hidden)]
+pub fn history(value: &Value) -> time_travel::MemberEditHistory {
     let store = text(&value["store"]).to_string();
     let mutations = value.get("firstLabel").map(|first| MutationView {
         mutation_id: format!("{}:0", text(&value["editId"])),
@@ -73,6 +91,5 @@ fn member_backfill_answers_every_fixture_case() {
             assert_eq!(resolved(&group.label), resolved(&label(&expected["label"])), "{id}: label");
             assert_eq!(group.started_at, text(&expected["startedAt"]), "{id}: start");
         }
-        eprintln!("[DEBUG] composed-child-history neutral case={id} bilingual-labels=true");
     }
 }

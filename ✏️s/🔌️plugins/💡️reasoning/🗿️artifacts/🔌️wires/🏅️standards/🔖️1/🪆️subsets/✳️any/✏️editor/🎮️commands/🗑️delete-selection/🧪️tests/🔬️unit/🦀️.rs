@@ -1,4 +1,5 @@
-use super::*;
+use crate::editor::wires::commands::delete_selection::{delete_selected};
+use crate::editor::wires::commands::delete_selection::*;
 use crate::editor::wires::commands::add_node;
 use crate::editor::wires::unit_tests::context::{dispatch, new_app};
 use crate::editor::wires::WiresCommand;

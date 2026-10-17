@@ -7,6 +7,8 @@ import { fileURLToPath } from "node:url";
 
 type SchemaModule = { readonly $id: string; readonly $defs: Readonly<Record<string, unknown>>; readonly definitions?: Readonly<Record<string, unknown>> };
 type ExampleTarget = { readonly schema: string; readonly fixture: string };
+/** 🧪️ The fields the hostile variants of a retained-command value rewrite; every other field stays as authored. */
+type HostileCandidate = { rawBytes?: number; bounded?: { maxRawBytes: number }; lanes?: string[]; unexpected?: boolean };
 
 const OWNER_ID = "https://json.schemas.assets.semio-tech.com/os/plugin/retained-command/component.json";
 const UI_ID = "https://json.schemas.assets.semio-tech.com/framework/ui/schema.json";
@@ -79,13 +81,13 @@ export function testRetainedCommandSchemaOwnership(): { readonly fixtures: numbe
   jsonSchema.addSchema(draft7Owner, owner.$id);
   const validateValue = (definition: string, value: any): void => {
     const reference = `${OWNER_ID}#/$defs/${definition}`;
-    const independent = ajv.compile({ $ref: reference });
+    const independent = ajv.compile<HostileCandidate>({ $ref: reference });
     assert(independent(value), ajv.errorsText(independent.errors));
     assert.equal(jsonSchema.validate(value, { $ref: reference.replace("#/$defs/", "#/definitions/") } as any).valid, true);
     const hostile = structuredClone(value);
     if (definition === "RetainedCommandBudget") {
       if ("rawBytes" in hostile) hostile.rawBytes = -1;
-      else hostile.bounded.maxRawBytes = -1;
+      else hostile.bounded!.maxRawBytes = -1;
     } else if (Array.isArray(hostile.lanes) && hostile.lanes.length) hostile.lanes[0] = "host-only";
     else hostile.unexpected = true;
     assert.equal(independent(hostile), false);

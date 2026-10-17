@@ -16,6 +16,5 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         std::fs::create_dir_all(parent)?;
     }
     std::fs::write(output, dump.to_json())?;
-    println!("[DEBUG] production schema registry entries={}", dump.entries.len());
     Ok(())
 }

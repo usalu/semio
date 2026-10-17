@@ -239,11 +239,5 @@ impl WiresExtension for DefaultWiresExtension {
 //#endregion 🔖️WiresExtension
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️semantic-contract/🦀️.rs"]
-mod semantic_contract;

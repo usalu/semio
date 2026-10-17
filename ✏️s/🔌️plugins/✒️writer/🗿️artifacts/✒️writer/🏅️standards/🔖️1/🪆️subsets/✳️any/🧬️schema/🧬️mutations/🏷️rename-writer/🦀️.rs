@@ -1,5 +1,4 @@
 //! 🏷️ Direct Writer mutation — `RenameWriter` renames the document's identity `id`.
-use crate::schema::mutations::WriterMutation;
 use crate::WriterDiff;
 use crate::WriterSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
@@ -20,18 +19,24 @@ pub struct RenameWriter {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn rename_writer(new_id: String) -> WriterMutation {
-    WriterMutation::RenameWriter(RenameWriter { new_id })
+pub fn rename_writer<Op>(new_id: String) -> Op
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::rename_writer::RenameWriter>,
+{
+    Op::from(RenameWriter { new_id })
 }
 
-impl MutationKind<WriterSnapshot, WriterMutation> for RenameWriter {
+impl<Op> MutationKind<WriterSnapshot, Op> for RenameWriter
+where
+    Op: protocol::Mutation<WriterSnapshot, Diff = WriterDiff> + From<RenameWriter>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "rename", entity: "writer", kind: "rename-writer", record: "RenamedWriter" };
 
     fn diff(&self, base: &WriterSnapshot) -> protocol::MutationOutcome<WriterDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &WriterSnapshot) -> Result<Vec<WriterMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &WriterSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

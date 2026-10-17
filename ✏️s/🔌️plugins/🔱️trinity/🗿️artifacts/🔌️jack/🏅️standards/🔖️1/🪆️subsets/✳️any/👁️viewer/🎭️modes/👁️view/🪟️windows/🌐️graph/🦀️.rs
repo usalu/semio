@@ -5,7 +5,7 @@
 //! outright). No selection, no LOD toggle, no engagement: a viewer has no utilities that mutate
 //! and emits no mutations by construction (`ViewEmit`).
 
-use crate::JackSnapshot;
+use crate::standards::v1::subsets::any::schema::snapshot::JackSnapshot;
 
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::NodeGraphEdgeRecord;
@@ -51,7 +51,7 @@ pub fn definition() -> WindowKindDefinition {
 
 //#region 🔖️Render
 /// 👁️ Renders the original rich published child through its visual behavior.
-pub fn render(document:&JackSnapshot,child:&dyn crate::JackContentVisual)->semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode>{
+pub fn render(document:&JackSnapshot,child:&dyn semio_s_artifact_trinity_jack_graph_query::JackContentVisual)->semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode>{
  let(count_nodes,count_edges)=child.visual_counts();
  let nodes=(0..count_nodes).filter_map(|index|{
   let node=child.node_view(index)?;
@@ -68,7 +68,4 @@ pub fn render(document:&JackSnapshot,child:&dyn crate::JackContentVisual)->semio
 //#endregion 🔖️Render
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

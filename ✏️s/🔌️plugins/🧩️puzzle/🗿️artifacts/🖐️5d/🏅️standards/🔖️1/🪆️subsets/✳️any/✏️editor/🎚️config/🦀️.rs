@@ -19,11 +19,11 @@ fn default_contact_tolerance() -> f64 {
 }
 
 fn default_lod_mode() -> String {
-    crate::editor::puzzle5d::PUZZLE5D_LOD_MODE_AUTOMATIC.into()
+    crate::editor::puzzle5d::entities::PUZZLE5D_LOD_MODE_AUTOMATIC.into()
 }
 
 fn default_suggestion_offset() -> f64 {
-    crate::editor::puzzle5d::PUZZLE5D_DEFAULT_SUGGESTION_OFFSET
+    crate::editor::puzzle5d::entities::PUZZLE5D_DEFAULT_SUGGESTION_OFFSET
 }
 
 fn default_true() -> bool {
@@ -37,7 +37,7 @@ fn default_grid_spacing() -> f64 {
 
 /// 📡️ How near (m) two open grips must come before a drop auto-connects them.
 fn default_proximity_radius() -> f64 {
-    crate::editor::puzzle5d::PUZZLE5D_PROXIMITY_RADIUS
+    crate::editor::puzzle5d::entities::PUZZLE5D_PROXIMITY_RADIUS
 }
 
 /// 🧱️ The edge length (m) of one broad-phase chunk the placement search buckets parts into.
@@ -54,21 +54,21 @@ fn default_lod_manual() -> f64 {
 /// 🤏️ Grips are chrome, not content: the world pane only marks the ones the pointer or the selection
 /// is actually on until the operator asks for all of them.
 fn default_grip_show() -> String {
-    crate::editor::puzzle5d::PUZZLE5D_GRIP_SHOW_SELECTED.into()
+    crate::editor::puzzle5d::entities::PUZZLE5D_GRIP_SHOW_SELECTED.into()
 }
 
 fn default_grip_direction() -> String {
-    crate::editor::puzzle5d::PUZZLE5D_GRIP_DIRECTION_OUTWARDS.into()
+    crate::editor::puzzle5d::entities::PUZZLE5D_GRIP_DIRECTION_OUTWARDS.into()
 }
 
-/// 🪣️ The fill count a fresh 5d document offers — see `crate::editor::puzzle5d::PUZZLE5D_DEFAULT_FILL_COUNT`.
+/// 🪣️ The fill count a fresh 5d document offers — see `crate::editor::puzzle5d::entities::PUZZLE5D_DEFAULT_FILL_COUNT`.
 fn default_fill_count() -> u32 {
-    crate::editor::puzzle5d::PUZZLE5D_DEFAULT_FILL_COUNT
+    crate::editor::puzzle5d::entities::PUZZLE5D_DEFAULT_FILL_COUNT
 }
 
 /// 🧊️ The voxel extent one Alt+click of the Volume Brush paints before the operator moves a slider.
 fn default_voxel_dims() -> [u32; 3] {
-    crate::editor::puzzle5d::PUZZLE5D_DEFAULT_VOXEL_DIMS
+    crate::editor::puzzle5d::entities::PUZZLE5D_DEFAULT_VOXEL_DIMS
 }
 
 //#endregion 🔖️Defaults
@@ -164,7 +164,7 @@ pub struct Puzzle5dRuntime {
     pub brush_candidate_index: usize,
     /// 🎣️ The grip suggestion menu this window has open (window-transient, never persisted).
     #[value(default)]
-    pub suggestion_menu: Option<crate::editor::puzzle5d::window::Puzzle5dSuggestionMenu>,
+    pub suggestion_menu: Option<semio_s_artifact_puzzle_3d_editor_config::Puzzle3dSuggestionMenu>,
     #[value(default = "default_contact_tolerance")]
     pub contact_tolerance: f64,
     /// 📡️ How near (m) two open grips must come before a drop auto-connects them (`setProximityRadius`).

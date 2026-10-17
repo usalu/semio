@@ -61,7 +61,7 @@ semio-s-artifact-procedural-generation3d = { workspace = true }
 semio-s-artifact-puzzle-2d = { workspace = true }
 semio-s-artifact-puzzle-3d = { workspace = true }
 semio-s-artifact-puzzle-5d = { workspace = true }
-semio-s-artifact-raster-raster = { workspace = true }
+semio-s-artifact-raster-raster-model = { workspace = true }
 semio-s-artifact-reasoning-wires = { workspace = true }
 semio-s-artifact-remodel-remodeling = { workspace = true }
 semio-s-artifact-sequence-sequence = { workspace = true }
@@ -75,6 +75,7 @@ semio-s-artifact-writer-writer = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
 
 [dev-dependencies]
+semio-framework-test-fixtures = { path = "../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-s-artifact-procedural-2d-model = { workspace = true }
 semio-s-artifact-block-2d-model = { workspace = true }
 semio-s-artifact-block-5d-model = { workspace = true }

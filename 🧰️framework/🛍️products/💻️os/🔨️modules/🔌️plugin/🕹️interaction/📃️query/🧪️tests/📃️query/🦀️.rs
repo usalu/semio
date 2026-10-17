@@ -4,6 +4,7 @@ use super::*;
 use crate::retirement::interaction_store_owners;
 use crate::mutations::InteractionConfigMutation;
 use protocol::InteractionState;
+use semio_framework_test_fixtures::fixture_path;
 use semio_framework_value::retained_clone::RetainedCloneBirthDemand;
 use store::{ArtifactStore, ErasedSnapshotRetirement, SpaceMember};
 
@@ -18,7 +19,7 @@ async fn original_query_output_width_does_not_price_or_renew_its_caller_receivin
    let grant=ArtifactStoreOneItemGrant::from_retained(recipient.remaining_grant());let(step,physical)=semio_framework_trace::observe_heap_allocations_on_this_thread(||query.advance(grant,width).unwrap());let progress=step.progress();recipient.record_progress(progress).unwrap();assert_eq!((physical.requested_bytes,physical.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));assert!(recipient.progress().fits(original));if let LocalInteractionQueryStep::Advanced{emitted_bytes:0,retired_bytes:0,..}=step{zero|=progress!=Default::default()}
    if let Some(page)=query.page(){assert!(page.bytes.len()<=width.min(LOCAL_INTERACTION_QUERY_PAGE_BYTES));output.extend_from_slice(page.bytes);terminal=page.terminal;let token=page.token.clone();assert!(query.acknowledge(&token));if terminal{break}}
   }
-  assert!(terminal);assert_eq!(output,expected);assert_eq!(serde_json::to_value(zero).unwrap(),law["zeroByteProgressRetained"]);close_original_query(&mut store,&mut query,&mut recipient,law["maximumTurns"].as_u64().unwrap());assert!(recipient.progress().fits(original));eprintln!("[DEBUG] Original query outputWidth={width} distinctCallerGrant=true cumulativeRecipient=true zeroByteOwnership=true originalReadReturned=true physicalReceipts=true independentSerde=true");
+  assert!(terminal);assert_eq!(output,expected);assert_eq!(serde_json::to_value(zero).unwrap(),law["zeroByteProgressRetained"]);close_original_query(&mut store,&mut query,&mut recipient,law["maximumTurns"].as_u64().unwrap());assert!(recipient.progress().fits(original));
  }
 }
 fn close_original_query(store:&mut InteractionStore,query:&mut LocalInteractionQuery,recipient:&mut crate::io::control::NativeSnapshotBodyWallet,turns:u64){
@@ -47,11 +48,10 @@ async fn original_local_interaction_copy_one_refuses_metadata_close_and_preserve
     let(step,physical)=semio_framework_trace::observe_heap_allocations_on_this_thread(||query.close_step(original).unwrap());
     assert_eq!(step.progress(),Default::default());assert_eq!((physical.requested_bytes,physical.released_bytes),(0,0));assert!(!query.terminal_is_empty());assert_eq!(query.token(),&token);assert_eq!(query.retirement_demands(original.maximum_copy_bytes).unwrap(),demand);assert!(!store.snapshot_read_leases_terminal_is_empty());
     close_original_query(&mut store,&mut query,&mut recipient,law["maximumTurns"].as_u64().unwrap());
-    eprintln!("[DEBUG] Original query copy1 metadata close genuinely refused heap0 same captured owner/token/demand/read; separate caller whole-operation authority closes actual physical owner");
 }
 
 async fn fixture(source_case: &str) -> (InteractionStore, LocalInteractionQuery, Vec<u8>, crate::io::control::NativeSnapshotBodyWallet) {
-    let fixture: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧪️tests/🧫️fixtures/🏠️local-interaction/🔣️.json")).expect("fixture read at run time")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(fixture_path!("../../../../../../../🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧪️tests/🧫️fixtures/🏠️local-interaction/🔣️.json")).expect("fixture read at run time")).unwrap();
     let row = fixture["cases"].as_array().unwrap().iter().find(|row| row["id"] == source_case).unwrap();
     let mut state = row["expected"].clone();
     state["hover"] = serde_json::json!({"private": {"channel": "pointer", "ids": ["not-captured"]}});

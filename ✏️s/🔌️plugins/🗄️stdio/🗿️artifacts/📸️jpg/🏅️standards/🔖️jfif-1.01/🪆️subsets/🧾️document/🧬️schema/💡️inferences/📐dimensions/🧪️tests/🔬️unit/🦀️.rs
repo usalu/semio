@@ -1,4 +1,5 @@
-use super::*;
+use crate::JpgSnapshot;
+use crate::standards::v_jfif_1_01::subsets::document::schema::inferences::dimensions::*;
 
 #[semio_framework_async_macros::async_test]
 async fn falls_back_to_canonical_8bit_precision_without_a_decoded_frame() {

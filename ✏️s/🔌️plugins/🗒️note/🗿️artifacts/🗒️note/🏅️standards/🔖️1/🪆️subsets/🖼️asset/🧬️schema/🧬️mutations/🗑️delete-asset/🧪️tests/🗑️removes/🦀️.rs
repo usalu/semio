@@ -8,21 +8,22 @@
 use crate::schema::mutations::{apply_note_mutation, inverse_note_mutation, NoteMutation};
 use crate::{NoteDiff, NoteSnapshot};
 use protocol::Mutation;
+use semio_framework_test_fixtures::fixture_text;
 
-const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗑️delete-asset/🗑️removes/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗑️delete-asset/🗑️removes/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗑️delete-asset/🗑️removes/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗑️delete-asset/🗑️removes/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗑️delete-asset/🗑️removes/🎯️outcome/🔣️.json");
+static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../../🖼️asset/🧪️tests/🧫️fixtures/🧬️mutations/🗑️delete-asset/🗑️removes/📸️snapshot/⬅️before/🔣️.json"));
+static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../../🖼️asset/🧪️tests/🧫️fixtures/🧬️mutations/🗑️delete-asset/🗑️removes/📸️snapshot/➡️after/🔣️.json"));
+static MUTATION: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../../🖼️asset/🧪️tests/🧫️fixtures/🧬️mutations/🗑️delete-asset/🗑️removes/🦠️mutation/🔣️.json"));
+static DIFF: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../../🖼️asset/🧪️tests/🧫️fixtures/🧬️mutations/🗑️delete-asset/🗑️removes/🔺️diff/🔣️.json"));
+static OUTCOME: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../../🖼️asset/🧪️tests/🧫️fixtures/🧬️mutations/🗑️delete-asset/🗑️removes/🎯️outcome/🔣️.json"));
 
 fn before() -> NoteSnapshot {
-    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes")
+    semio_framework_pack_json::from_json_str((*BEFORE), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes")
 }
 fn expected_after() -> NoteSnapshot {
-    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after snapshot decodes")
+    semio_framework_pack_json::from_json_str((*AFTER), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after snapshot decodes")
 }
 fn mutation() -> NoteMutation {
-    semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation decodes")
+    semio_framework_pack_json::from_json_str((*MUTATION), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation decodes")
 }
 
 /// ▶️ `delete-asset` emits a single-key asset REMOVAL entry (`None` value) for the addressed key.
@@ -49,21 +50,21 @@ async fn inverse_restores_before() {
 /// 🔣️ Both committed snapshots and the committed mutation are already canonical: decode→encode is a fixed point.
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
-    for (label, text) in [("before", BEFORE), ("after", AFTER)] {
+    for (label, text) in [("before", (*BEFORE)), ("after", (*AFTER))] {
         let decoded: NoteSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
         let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "delete-asset/removes-the-logo-asset: committed {label} JSON is not canonical");
     }
     let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&mutation())).expect("mutation encodes");
-    let original: serde_json::Value = serde_json::from_str(MUTATION).expect("mutation reparses");
+    let original: serde_json::Value = serde_json::from_str((*MUTATION)).expect("mutation reparses");
     assert_eq!(reencoded, original, "delete-asset/removes-the-logo-asset: committed mutation JSON is not canonical");
 }
 
 /// 🎯️ `asset-logo` exists in the base, so the `mutation.target-missing` error guard does not fire.
 #[semio_framework_async_macros::async_test]
 async fn declared_outcome_holds() {
-    let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
+    let outcome: serde_json::Value = serde_json::from_str((*OUTCOME)).expect("outcome decodes");
     let status = outcome.get("status").and_then(serde_json::Value::as_str).expect("outcome carries a status");
     assert_eq!(status, "applied", "delete-asset/removes-the-logo-asset: this fixture declares an applied outcome");
     let produced = mutation().diff(&before());
@@ -80,7 +81,7 @@ async fn declared_outcome_holds() {
 async fn produces_committed_diff() {
     let outcome = <NoteMutation as Mutation<NoteSnapshot>>::diff(&mutation(), &before());
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
-    let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
+    let committed: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff decodes");
     assert_eq!(produced, committed, "delete-asset/removes-the-logo-asset: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
 
@@ -89,16 +90,16 @@ async fn produces_committed_diff() {
 /// every slot `delete-asset` leaves alone.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
-    let decoded: NoteDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
+    let decoded: NoteDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
     let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("diff re-encodes");
-    let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
+    let original: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff reparses");
     assert_eq!(reencoded, original, "delete-asset/removes-the-logo-asset: committed diff JSON is not canonical");
 }
 
 /// 🩹 The committed single-key asset removal carries `before` to `after` on its own.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: NoteDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
+    let decoded: NoteDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
     let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "delete-asset/removes-the-logo-asset: committed diff did not carry before to after");
 }
@@ -111,7 +112,7 @@ async fn asset_map_empties_and_referencing_blocks_are_left_dangling() {
     assert!(base.assets.contains_key("asset-logo"), "delete-asset/removes-the-logo-asset: the base must carry the key being deleted");
     assert!(applied.assets.is_empty(), "delete-asset/removes-the-logo-asset: the asset map must end up empty");
     assert_eq!(applied.blocks, base.blocks, "delete-asset has NO block cascade — the image blocks keep their now-dangling imageKey");
-    assert!(!AFTER.contains("assets"), "an empty asset map is skipped by serde, so the committed after-snapshot must carry no \"assets\" key");
+    assert!(!(*AFTER).contains("assets"), "an empty asset map is skipped by serde, so the committed after-snapshot must carry no \"assets\" key");
 }
 
 /// ⚖️ The inverse rows' diffs sum (`MutationDiff::absorb`) to the negative of this mutation's diff, and replaying them restores the before-snapshot.

@@ -38,7 +38,7 @@ describe("runtime asset delivery to the wgpu renderer", () => {
     const installed = await installRuntimeAssets(bindings, page, async url => {
       requested.push(url);
       const file = decodeURIComponent(url.slice(url.lastIndexOf("/") + 1));
-      return new Response(payload(file));
+      return new Response(new Uint8Array(payload(file)));
     });
     expect(installed).toBe(true);
     expect([...requested].sort()).toEqual(RUNTIME_ASSET_FILES.map(({ route, file }) => urlOf(route, file)).sort());

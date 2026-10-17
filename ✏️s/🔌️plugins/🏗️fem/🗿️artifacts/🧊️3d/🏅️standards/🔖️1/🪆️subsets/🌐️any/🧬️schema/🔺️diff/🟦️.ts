@@ -308,6 +308,10 @@ type femFem3dDiffGuardSizeBounds = { readonly minItems?: number; readonly maxIte
 
 export const femFem3dDiffGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : femFem3dDiffGuardReject(at, "value is not an object");
+export const femFem3dDiffGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) femFem3dDiffGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const femFem3dDiffGuardArray = (value: unknown, at: string, bounds: femFem3dDiffGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return femFem3dDiffGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) femFem3dDiffGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -345,109 +349,406 @@ const parseFemInsertions=<T>(value:unknown,at:string,parse:(value:unknown,at:str
 const parseFemModifications=<T>(value:unknown,at:string,parse:(value:unknown,at:string)=>T)=>parseFemRows(value,at,["id","patch"],(row,here)=>({id:femFem3dDiffGuardString(row.id,`${here}.id`),patch:parse(row.patch,`${here}.patch`)}));
 
 export function parseFem3dNodesDelta(value: unknown, at = "$"): Fem3dNodesDelta {
-  const row = femFem3dDiffGuardObject(value, at);
+  const row = femFem3dDiffGuardClosed(femFem3dDiffGuardObject(value, at), at, ["removed", "inserted", "moved", "modified"]);
   return {
-    removed: parseFemRemovals(row["removed"], `${at}.removed`),
-    inserted: parseFemInsertions(row["inserted"], `${at}.inserted`, parseFemNode),
-    moved: parseFemRelocations(row["moved"], `${at}.moved`),
-    modified: parseFemModifications(row["modified"], `${at}.modified`, parseFemNode),
+    removed: femFem3dDiffGuardArray(row["removed"], `${at}.removed`).map((item, index) => parseFem3dNodeRemoval(item, `${at}.removed[${index}]`)),
+    inserted: femFem3dDiffGuardArray(row["inserted"], `${at}.inserted`).map((item, index) => parseFem3dNodeInsertion(item, `${at}.inserted[${index}]`)),
+    moved: femFem3dDiffGuardArray(row["moved"], `${at}.moved`).map((item, index) => parseFem3dNodeRelocation(item, `${at}.moved[${index}]`)),
+    modified: femFem3dDiffGuardArray(row["modified"], `${at}.modified`).map((item, index) => parseFem3dNodesModification(item, `${at}.modified[${index}]`)),
   };
 }
 
 export function parseFem3dElementsDelta(value: unknown, at = "$"): Fem3dElementsDelta {
-  const row = femFem3dDiffGuardObject(value, at);
+  const row = femFem3dDiffGuardClosed(femFem3dDiffGuardObject(value, at), at, ["removed", "inserted", "moved", "modified"]);
   return {
-    removed: parseFemRemovals(row["removed"], `${at}.removed`),
-    inserted: parseFemInsertions(row["inserted"], `${at}.inserted`, parseFemElement),
-    moved: parseFemRelocations(row["moved"], `${at}.moved`),
-    modified: parseFemModifications(row["modified"], `${at}.modified`, parseFemElement),
+    removed: femFem3dDiffGuardArray(row["removed"], `${at}.removed`).map((item, index) => parseFem3dElementRemoval(item, `${at}.removed[${index}]`)),
+    inserted: femFem3dDiffGuardArray(row["inserted"], `${at}.inserted`).map((item, index) => parseFem3dElementInsertion(item, `${at}.inserted[${index}]`)),
+    moved: femFem3dDiffGuardArray(row["moved"], `${at}.moved`).map((item, index) => parseFem3dElementRelocation(item, `${at}.moved[${index}]`)),
+    modified: femFem3dDiffGuardArray(row["modified"], `${at}.modified`).map((item, index) => parseFem3dElementsModification(item, `${at}.modified[${index}]`)),
   };
 }
 
 export function parseFem3dMaterialsDelta(value: unknown, at = "$"): Fem3dMaterialsDelta {
-  const row = femFem3dDiffGuardObject(value, at);
+  const row = femFem3dDiffGuardClosed(femFem3dDiffGuardObject(value, at), at, ["removed", "inserted", "moved", "modified"]);
   return {
-    removed: parseFemRemovals(row["removed"], `${at}.removed`),
-    inserted: parseFemInsertions(row["inserted"], `${at}.inserted`, parseFemMaterial),
-    moved: parseFemRelocations(row["moved"], `${at}.moved`),
-    modified: parseFemModifications(row["modified"], `${at}.modified`, parseFemMaterial),
+    removed: femFem3dDiffGuardArray(row["removed"], `${at}.removed`).map((item, index) => parseFem3dMaterialRemoval(item, `${at}.removed[${index}]`)),
+    inserted: femFem3dDiffGuardArray(row["inserted"], `${at}.inserted`).map((item, index) => parseFem3dMaterialInsertion(item, `${at}.inserted[${index}]`)),
+    moved: femFem3dDiffGuardArray(row["moved"], `${at}.moved`).map((item, index) => parseFem3dMaterialRelocation(item, `${at}.moved[${index}]`)),
+    modified: femFem3dDiffGuardArray(row["modified"], `${at}.modified`).map((item, index) => parseFem3dMaterialsModification(item, `${at}.modified[${index}]`)),
   };
 }
 
 export function parseFem3dSectionsDelta(value: unknown, at = "$"): Fem3dSectionsDelta {
-  const row = femFem3dDiffGuardObject(value, at);
+  const row = femFem3dDiffGuardClosed(femFem3dDiffGuardObject(value, at), at, ["removed", "inserted", "moved", "modified"]);
   return {
-    removed: parseFemRemovals(row["removed"], `${at}.removed`),
-    inserted: parseFemInsertions(row["inserted"], `${at}.inserted`, parseFemSection),
-    moved: parseFemRelocations(row["moved"], `${at}.moved`),
-    modified: parseFemModifications(row["modified"], `${at}.modified`, parseFemSection),
+    removed: femFem3dDiffGuardArray(row["removed"], `${at}.removed`).map((item, index) => parseFem3dSectionRemoval(item, `${at}.removed[${index}]`)),
+    inserted: femFem3dDiffGuardArray(row["inserted"], `${at}.inserted`).map((item, index) => parseFem3dSectionInsertion(item, `${at}.inserted[${index}]`)),
+    moved: femFem3dDiffGuardArray(row["moved"], `${at}.moved`).map((item, index) => parseFem3dSectionRelocation(item, `${at}.moved[${index}]`)),
+    modified: femFem3dDiffGuardArray(row["modified"], `${at}.modified`).map((item, index) => parseFem3dSectionsModification(item, `${at}.modified[${index}]`)),
   };
 }
 
 export function parseFem3dSolidsDelta(value: unknown, at = "$"): Fem3dSolidsDelta {
-  const row = femFem3dDiffGuardObject(value, at);
+  const row = femFem3dDiffGuardClosed(femFem3dDiffGuardObject(value, at), at, ["removed", "inserted", "moved", "modified"]);
   return {
-    removed: parseFemRemovals(row["removed"], `${at}.removed`),
-    inserted: parseFemInsertions(row["inserted"], `${at}.inserted`, parseFemSolid),
-    moved: parseFemRelocations(row["moved"], `${at}.moved`),
-    modified: parseFemModifications(row["modified"], `${at}.modified`, parseFemSolid),
+    removed: femFem3dDiffGuardArray(row["removed"], `${at}.removed`).map((item, index) => parseFem3dSolidRemoval(item, `${at}.removed[${index}]`)),
+    inserted: femFem3dDiffGuardArray(row["inserted"], `${at}.inserted`).map((item, index) => parseFem3dSolidInsertion(item, `${at}.inserted[${index}]`)),
+    moved: femFem3dDiffGuardArray(row["moved"], `${at}.moved`).map((item, index) => parseFem3dSolidRelocation(item, `${at}.moved[${index}]`)),
+    modified: femFem3dDiffGuardArray(row["modified"], `${at}.modified`).map((item, index) => parseFem3dSolidsModification(item, `${at}.modified[${index}]`)),
   };
 }
 
 export function parseFem3dSupportsDelta(value: unknown, at = "$"): Fem3dSupportsDelta {
-  const row = femFem3dDiffGuardObject(value, at);
+  const row = femFem3dDiffGuardClosed(femFem3dDiffGuardObject(value, at), at, ["removed", "inserted", "moved", "modified"]);
   return {
-    removed: parseFemRemovals(row["removed"], `${at}.removed`),
-    inserted: parseFemInsertions(row["inserted"], `${at}.inserted`, parseFemSupport),
-    moved: parseFemRelocations(row["moved"], `${at}.moved`),
-    modified: parseFemModifications(row["modified"], `${at}.modified`, parseFemSupport),
+    removed: femFem3dDiffGuardArray(row["removed"], `${at}.removed`).map((item, index) => parseFem3dSupportRemoval(item, `${at}.removed[${index}]`)),
+    inserted: femFem3dDiffGuardArray(row["inserted"], `${at}.inserted`).map((item, index) => parseFem3dSupportInsertion(item, `${at}.inserted[${index}]`)),
+    moved: femFem3dDiffGuardArray(row["moved"], `${at}.moved`).map((item, index) => parseFem3dSupportRelocation(item, `${at}.moved[${index}]`)),
+    modified: femFem3dDiffGuardArray(row["modified"], `${at}.modified`).map((item, index) => parseFem3dSupportsModification(item, `${at}.modified[${index}]`)),
   };
 }
 
 export function parseFem3dLoadCasesDelta(value: unknown, at = "$"): Fem3dLoadCasesDelta {
-  const row = femFem3dDiffGuardObject(value, at);
+  const row = femFem3dDiffGuardClosed(femFem3dDiffGuardObject(value, at), at, ["removed", "inserted", "moved", "modified"]);
   return {
-    removed: parseFemRemovals(row["removed"], `${at}.removed`),
-    inserted: parseFemInsertions(row["inserted"], `${at}.inserted`, parseFemLoadCase),
-    moved: parseFemRelocations(row["moved"], `${at}.moved`),
-    modified: parseFemModifications(row["modified"], `${at}.modified`, parseFem3dLoadCasePatch),
+    removed: femFem3dDiffGuardArray(row["removed"], `${at}.removed`).map((item, index) => parseFem3dLoadCaseRemoval(item, `${at}.removed[${index}]`)),
+    inserted: femFem3dDiffGuardArray(row["inserted"], `${at}.inserted`).map((item, index) => parseFem3dLoadCaseInsertion(item, `${at}.inserted[${index}]`)),
+    moved: femFem3dDiffGuardArray(row["moved"], `${at}.moved`).map((item, index) => parseFem3dLoadCaseRelocation(item, `${at}.moved[${index}]`)),
+    modified: femFem3dDiffGuardArray(row["modified"], `${at}.modified`).map((item, index) => parseFem3dLoadCasesModification(item, `${at}.modified[${index}]`)),
   };
 }
 
 export function parseFem3dCombinationsDelta(value: unknown, at = "$"): Fem3dCombinationsDelta {
-  const row = femFem3dDiffGuardObject(value, at);
+  const row = femFem3dDiffGuardClosed(femFem3dDiffGuardObject(value, at), at, ["removed", "inserted", "moved", "modified"]);
   return {
-    removed: parseFemRemovals(row["removed"], `${at}.removed`),
-    inserted: parseFemInsertions(row["inserted"], `${at}.inserted`, parseFemCombination),
-    moved: parseFemRelocations(row["moved"], `${at}.moved`),
-    modified: parseFemModifications(row["modified"], `${at}.modified`, parseFemCombination),
+    removed: femFem3dDiffGuardArray(row["removed"], `${at}.removed`).map((item, index) => parseFem3dCombinationRemoval(item, `${at}.removed[${index}]`)),
+    inserted: femFem3dDiffGuardArray(row["inserted"], `${at}.inserted`).map((item, index) => parseFem3dCombinationInsertion(item, `${at}.inserted[${index}]`)),
+    moved: femFem3dDiffGuardArray(row["moved"], `${at}.moved`).map((item, index) => parseFem3dCombinationRelocation(item, `${at}.moved[${index}]`)),
+    modified: femFem3dDiffGuardArray(row["modified"], `${at}.modified`).map((item, index) => parseFem3dCombinationsModification(item, `${at}.modified[${index}]`)),
   };
 }
 
 export function parseFem3dLoadCasePatch(value: unknown, at = "$"): Fem3dLoadCasePatch {
-  const row = femFem3dDiffGuardObject(value, at);
+  const row = femFem3dDiffGuardClosed(femFem3dDiffGuardObject(value, at), at, ["name", "selfWeight", "loads"]);
   return {
-    name: row["name"] === undefined || row["name"] === null ? undefined : femFem3dDiffGuardString(row["name"], `${at}.name`),
-    selfWeight: row["selfWeight"] === undefined || row["selfWeight"] === null ? undefined : femFem3dDiffGuardBoolean(row["selfWeight"], `${at}.selfWeight`),
-    loads: row["loads"] === undefined || row["loads"] === null ? undefined : parseFem3dLoadsDelta(row["loads"], `${at}.loads`),
+    name: row["name"] === undefined ? undefined : femFem3dDiffGuardString(row["name"], `${at}.name`),
+    selfWeight: row["selfWeight"] === undefined ? undefined : femFem3dDiffGuardBoolean(row["selfWeight"], `${at}.selfWeight`),
+    loads: row["loads"] === undefined ? undefined : parseFem3dLoadsDelta(row["loads"], `${at}.loads`),
   };
 }
 
 export function parseFem3dLoadsDelta(value: unknown, at = "$"): Fem3dLoadsDelta {
-  const row = femFem3dDiffGuardObject(value, at);
+  const row = femFem3dDiffGuardClosed(femFem3dDiffGuardObject(value, at), at, ["removed", "inserted", "moved", "modified"]);
   return {
-    removed: parseFemRemovals(row["removed"], `${at}.removed`),
-    inserted: parseFemInsertions(row["inserted"], `${at}.inserted`, parseFemLoad),
-    moved: parseFemRelocations(row["moved"], `${at}.moved`),
-    modified: parseFemModifications(row["modified"], `${at}.modified`, parseFemLoad),
+    removed: femFem3dDiffGuardArray(row["removed"], `${at}.removed`).map((item, index) => parseFem3dLoadRemoval(item, `${at}.removed[${index}]`)),
+    inserted: femFem3dDiffGuardArray(row["inserted"], `${at}.inserted`).map((item, index) => parseFem3dLoadInsertion(item, `${at}.inserted[${index}]`)),
+    moved: femFem3dDiffGuardArray(row["moved"], `${at}.moved`).map((item, index) => parseFem3dLoadRelocation(item, `${at}.moved[${index}]`)),
+    modified: femFem3dDiffGuardArray(row["modified"], `${at}.modified`).map((item, index) => parseFem3dLoadsModification(item, `${at}.modified[${index}]`)),
   };
 }
 
 export function parseFem3dAnalysisPatch(value: unknown, at = "$"): Fem3dAnalysisPatch {
-  const row = femFem3dDiffGuardObject(value, at);
+  const row = femFem3dDiffGuardClosed(femFem3dDiffGuardObject(value, at), at, ["modalCount", "bucklingCount", "deformationScale"]);
   return {
-    modalCount: row["modalCount"] === undefined || row["modalCount"] === null ? undefined : femFem3dDiffGuardInteger(row["modalCount"], `${at}.modalCount`, { minimum: 1 }),
-    bucklingCount: row["bucklingCount"] === undefined || row["bucklingCount"] === null ? undefined : femFem3dDiffGuardInteger(row["bucklingCount"], `${at}.bucklingCount`, { minimum: 1 }),
-    deformationScale: row["deformationScale"] === undefined || row["deformationScale"] === null ? undefined : femFem3dDiffGuardNumber(row["deformationScale"], `${at}.deformationScale`),
+    modalCount: row["modalCount"] === undefined ? undefined : femFem3dDiffGuardInteger(row["modalCount"], `${at}.modalCount`, {"minimum": 1}),
+    bucklingCount: row["bucklingCount"] === undefined ? undefined : femFem3dDiffGuardInteger(row["bucklingCount"], `${at}.bucklingCount`, {"minimum": 1}),
+    deformationScale: row["deformationScale"] === undefined ? undefined : femFem3dDiffGuardNumber(row["deformationScale"], `${at}.deformationScale`),
+  };
+}
+
+export function parseFem3dCombinationInsertion(value: unknown, at = "$"): Fem3dCombinationInsertion {
+  const row = femFem3dDiffGuardClosed(femFem3dDiffGuardObject(value, at), at, ["index", "row"]);
+  return {
+    index: femFem3dDiffGuardInteger(row["index"], `${at}.index`, {"minimum": 0}),
+    row: parseFemCombination(row["row"], `${at}.row`),
+  };
+}
+
+export function parseFem3dCombinationRelocation(value: unknown, at = "$"): Fem3dCombinationRelocation {
+  const row = femFem3dDiffGuardClosed(femFem3dDiffGuardObject(value, at), at, ["id", "from", "to"]);
+  return {
+    id: femFem3dDiffGuardString(row["id"], `${at}.id`),
+    from: femFem3dDiffGuardInteger(row["from"], `${at}.from`, {"minimum": 0}),
+    to: femFem3dDiffGuardInteger(row["to"], `${at}.to`, {"minimum": 0}),
+  };
+}
+
+export function parseFem3dCombinationRemoval(value: unknown, at = "$"): Fem3dCombinationRemoval {
+  const row = femFem3dDiffGuardClosed(femFem3dDiffGuardObject(value, at), at, ["id", "index"]);
+  return {
+    id: femFem3dDiffGuardString(row["id"], `${at}.id`),
+    index: femFem3dDiffGuardInteger(row["index"], `${at}.index`, {"minimum": 0}),
+  };
+}
+
+export function parseFem3dCombinationsModification(value: unknown, at = "$"): Fem3dCombinationsModification {
+  const row = femFem3dDiffGuardClosed(femFem3dDiffGuardObject(value, at), at, ["id", "patch"]);
+  return {
+    id: femFem3dDiffGuardString(row["id"], `${at}.id`),
+    patch: parseFemCombination(row["patch"], `${at}.patch`),
+  };
+}
+
+export function parseFem3dElementInsertion(value: unknown, at = "$"): Fem3dElementInsertion {
+  const row = femFem3dDiffGuardClosed(femFem3dDiffGuardObject(value, at), at, ["index", "row"]);
+  return {
+    index: femFem3dDiffGuardInteger(row["index"], `${at}.index`, {"minimum": 0}),
+    row: parseFemElement(row["row"], `${at}.row`),
+  };
+}
+
+export function parseFem3dElementRelocation(value: unknown, at = "$"): Fem3dElementRelocation {
+  const row = femFem3dDiffGuardClosed(femFem3dDiffGuardObject(value, at), at, ["id", "from", "to"]);
+  return {
+    id: femFem3dDiffGuardString(row["id"], `${at}.id`),
+    from: femFem3dDiffGuardInteger(row["from"], `${at}.from`, {"minimum": 0}),
+    to: femFem3dDiffGuardInteger(row["to"], `${at}.to`, {"minimum": 0}),
+  };
+}
+
+export function parseFem3dElementRemoval(value: unknown, at = "$"): Fem3dElementRemoval {
+  const row = femFem3dDiffGuardClosed(femFem3dDiffGuardObject(value, at), at, ["id", "index"]);
+  return {
+    id: femFem3dDiffGuardString(row["id"], `${at}.id`),
+    index: femFem3dDiffGuardInteger(row["index"], `${at}.index`, {"minimum": 0}),
+  };
+}
+
+export function parseFem3dElementsModification(value: unknown, at = "$"): Fem3dElementsModification {
+  const row = femFem3dDiffGuardClosed(femFem3dDiffGuardObject(value, at), at, ["id", "patch"]);
+  return {
+    id: femFem3dDiffGuardString(row["id"], `${at}.id`),
+    patch: parseFemElement(row["patch"], `${at}.patch`),
+  };
+}
+
+export function parseFem3dLoadCaseInsertion(value: unknown, at = "$"): Fem3dLoadCaseInsertion {
+  const row = femFem3dDiffGuardClosed(femFem3dDiffGuardObject(value, at), at, ["index", "row"]);
+  return {
+    index: femFem3dDiffGuardInteger(row["index"], `${at}.index`, {"minimum": 0}),
+    row: parseFemLoadCase(row["row"], `${at}.row`),
+  };
+}
+
+export function parseFem3dLoadCaseRelocation(value: unknown, at = "$"): Fem3dLoadCaseRelocation {
+  const row = femFem3dDiffGuardClosed(femFem3dDiffGuardObject(value, at), at, ["id", "from", "to"]);
+  return {
+    id: femFem3dDiffGuardString(row["id"], `${at}.id`),
+    from: femFem3dDiffGuardInteger(row["from"], `${at}.from`, {"minimum": 0}),
+    to: femFem3dDiffGuardInteger(row["to"], `${at}.to`, {"minimum": 0}),
+  };
+}
+
+export function parseFem3dLoadCaseRemoval(value: unknown, at = "$"): Fem3dLoadCaseRemoval {
+  const row = femFem3dDiffGuardClosed(femFem3dDiffGuardObject(value, at), at, ["id", "index"]);
+  return {
+    id: femFem3dDiffGuardString(row["id"], `${at}.id`),
+    index: femFem3dDiffGuardInteger(row["index"], `${at}.index`, {"minimum": 0}),
+  };
+}
+
+export function parseFem3dLoadCasesModification(value: unknown, at = "$"): Fem3dLoadCasesModification {
+  const row = femFem3dDiffGuardClosed(femFem3dDiffGuardObject(value, at), at, ["id", "patch"]);
+  return {
+    id: femFem3dDiffGuardString(row["id"], `${at}.id`),
+    patch: parseFem3dLoadCasePatch(row["patch"], `${at}.patch`),
+  };
+}
+
+export function parseFem3dLoadInsertion(value: unknown, at = "$"): Fem3dLoadInsertion {
+  const row = femFem3dDiffGuardClosed(femFem3dDiffGuardObject(value, at), at, ["index", "row"]);
+  return {
+    index: femFem3dDiffGuardInteger(row["index"], `${at}.index`, {"minimum": 0}),
+    row: parseFemLoad(row["row"], `${at}.row`),
+  };
+}
+
+export function parseFem3dLoadRelocation(value: unknown, at = "$"): Fem3dLoadRelocation {
+  const row = femFem3dDiffGuardClosed(femFem3dDiffGuardObject(value, at), at, ["id", "from", "to"]);
+  return {
+    id: femFem3dDiffGuardString(row["id"], `${at}.id`),
+    from: femFem3dDiffGuardInteger(row["from"], `${at}.from`, {"minimum": 0}),
+    to: femFem3dDiffGuardInteger(row["to"], `${at}.to`, {"minimum": 0}),
+  };
+}
+
+export function parseFem3dLoadRemoval(value: unknown, at = "$"): Fem3dLoadRemoval {
+  const row = femFem3dDiffGuardClosed(femFem3dDiffGuardObject(value, at), at, ["id", "index"]);
+  return {
+    id: femFem3dDiffGuardString(row["id"], `${at}.id`),
+    index: femFem3dDiffGuardInteger(row["index"], `${at}.index`, {"minimum": 0}),
+  };
+}
+
+export function parseFem3dLoadsModification(value: unknown, at = "$"): Fem3dLoadsModification {
+  const row = femFem3dDiffGuardClosed(femFem3dDiffGuardObject(value, at), at, ["id", "patch"]);
+  return {
+    id: femFem3dDiffGuardString(row["id"], `${at}.id`),
+    patch: parseFemLoad(row["patch"], `${at}.patch`),
+  };
+}
+
+export function parseFem3dMaterialInsertion(value: unknown, at = "$"): Fem3dMaterialInsertion {
+  const row = femFem3dDiffGuardClosed(femFem3dDiffGuardObject(value, at), at, ["index", "row"]);
+  return {
+    index: femFem3dDiffGuardInteger(row["index"], `${at}.index`, {"minimum": 0}),
+    row: parseFemMaterial(row["row"], `${at}.row`),
+  };
+}
+
+export function parseFem3dMaterialRelocation(value: unknown, at = "$"): Fem3dMaterialRelocation {
+  const row = femFem3dDiffGuardClosed(femFem3dDiffGuardObject(value, at), at, ["id", "from", "to"]);
+  return {
+    id: femFem3dDiffGuardString(row["id"], `${at}.id`),
+    from: femFem3dDiffGuardInteger(row["from"], `${at}.from`, {"minimum": 0}),
+    to: femFem3dDiffGuardInteger(row["to"], `${at}.to`, {"minimum": 0}),
+  };
+}
+
+export function parseFem3dMaterialRemoval(value: unknown, at = "$"): Fem3dMaterialRemoval {
+  const row = femFem3dDiffGuardClosed(femFem3dDiffGuardObject(value, at), at, ["id", "index"]);
+  return {
+    id: femFem3dDiffGuardString(row["id"], `${at}.id`),
+    index: femFem3dDiffGuardInteger(row["index"], `${at}.index`, {"minimum": 0}),
+  };
+}
+
+export function parseFem3dMaterialsModification(value: unknown, at = "$"): Fem3dMaterialsModification {
+  const row = femFem3dDiffGuardClosed(femFem3dDiffGuardObject(value, at), at, ["id", "patch"]);
+  return {
+    id: femFem3dDiffGuardString(row["id"], `${at}.id`),
+    patch: parseFemMaterial(row["patch"], `${at}.patch`),
+  };
+}
+
+export function parseFem3dNodeInsertion(value: unknown, at = "$"): Fem3dNodeInsertion {
+  const row = femFem3dDiffGuardClosed(femFem3dDiffGuardObject(value, at), at, ["index", "row"]);
+  return {
+    index: femFem3dDiffGuardInteger(row["index"], `${at}.index`, {"minimum": 0}),
+    row: parseFemNode(row["row"], `${at}.row`),
+  };
+}
+
+export function parseFem3dNodeRelocation(value: unknown, at = "$"): Fem3dNodeRelocation {
+  const row = femFem3dDiffGuardClosed(femFem3dDiffGuardObject(value, at), at, ["id", "from", "to"]);
+  return {
+    id: femFem3dDiffGuardString(row["id"], `${at}.id`),
+    from: femFem3dDiffGuardInteger(row["from"], `${at}.from`, {"minimum": 0}),
+    to: femFem3dDiffGuardInteger(row["to"], `${at}.to`, {"minimum": 0}),
+  };
+}
+
+export function parseFem3dNodeRemoval(value: unknown, at = "$"): Fem3dNodeRemoval {
+  const row = femFem3dDiffGuardClosed(femFem3dDiffGuardObject(value, at), at, ["id", "index"]);
+  return {
+    id: femFem3dDiffGuardString(row["id"], `${at}.id`),
+    index: femFem3dDiffGuardInteger(row["index"], `${at}.index`, {"minimum": 0}),
+  };
+}
+
+export function parseFem3dNodesModification(value: unknown, at = "$"): Fem3dNodesModification {
+  const row = femFem3dDiffGuardClosed(femFem3dDiffGuardObject(value, at), at, ["id", "patch"]);
+  return {
+    id: femFem3dDiffGuardString(row["id"], `${at}.id`),
+    patch: parseFemNode(row["patch"], `${at}.patch`),
+  };
+}
+
+export function parseFem3dSectionInsertion(value: unknown, at = "$"): Fem3dSectionInsertion {
+  const row = femFem3dDiffGuardClosed(femFem3dDiffGuardObject(value, at), at, ["index", "row"]);
+  return {
+    index: femFem3dDiffGuardInteger(row["index"], `${at}.index`, {"minimum": 0}),
+    row: parseFemSection(row["row"], `${at}.row`),
+  };
+}
+
+export function parseFem3dSectionRelocation(value: unknown, at = "$"): Fem3dSectionRelocation {
+  const row = femFem3dDiffGuardClosed(femFem3dDiffGuardObject(value, at), at, ["id", "from", "to"]);
+  return {
+    id: femFem3dDiffGuardString(row["id"], `${at}.id`),
+    from: femFem3dDiffGuardInteger(row["from"], `${at}.from`, {"minimum": 0}),
+    to: femFem3dDiffGuardInteger(row["to"], `${at}.to`, {"minimum": 0}),
+  };
+}
+
+export function parseFem3dSectionRemoval(value: unknown, at = "$"): Fem3dSectionRemoval {
+  const row = femFem3dDiffGuardClosed(femFem3dDiffGuardObject(value, at), at, ["id", "index"]);
+  return {
+    id: femFem3dDiffGuardString(row["id"], `${at}.id`),
+    index: femFem3dDiffGuardInteger(row["index"], `${at}.index`, {"minimum": 0}),
+  };
+}
+
+export function parseFem3dSectionsModification(value: unknown, at = "$"): Fem3dSectionsModification {
+  const row = femFem3dDiffGuardClosed(femFem3dDiffGuardObject(value, at), at, ["id", "patch"]);
+  return {
+    id: femFem3dDiffGuardString(row["id"], `${at}.id`),
+    patch: parseFemSection(row["patch"], `${at}.patch`),
+  };
+}
+
+export function parseFem3dSolidInsertion(value: unknown, at = "$"): Fem3dSolidInsertion {
+  const row = femFem3dDiffGuardClosed(femFem3dDiffGuardObject(value, at), at, ["index", "row"]);
+  return {
+    index: femFem3dDiffGuardInteger(row["index"], `${at}.index`, {"minimum": 0}),
+    row: parseFemSolid(row["row"], `${at}.row`),
+  };
+}
+
+export function parseFem3dSolidRelocation(value: unknown, at = "$"): Fem3dSolidRelocation {
+  const row = femFem3dDiffGuardClosed(femFem3dDiffGuardObject(value, at), at, ["id", "from", "to"]);
+  return {
+    id: femFem3dDiffGuardString(row["id"], `${at}.id`),
+    from: femFem3dDiffGuardInteger(row["from"], `${at}.from`, {"minimum": 0}),
+    to: femFem3dDiffGuardInteger(row["to"], `${at}.to`, {"minimum": 0}),
+  };
+}
+
+export function parseFem3dSolidRemoval(value: unknown, at = "$"): Fem3dSolidRemoval {
+  const row = femFem3dDiffGuardClosed(femFem3dDiffGuardObject(value, at), at, ["id", "index"]);
+  return {
+    id: femFem3dDiffGuardString(row["id"], `${at}.id`),
+    index: femFem3dDiffGuardInteger(row["index"], `${at}.index`, {"minimum": 0}),
+  };
+}
+
+export function parseFem3dSolidsModification(value: unknown, at = "$"): Fem3dSolidsModification {
+  const row = femFem3dDiffGuardClosed(femFem3dDiffGuardObject(value, at), at, ["id", "patch"]);
+  return {
+    id: femFem3dDiffGuardString(row["id"], `${at}.id`),
+    patch: parseFemSolid(row["patch"], `${at}.patch`),
+  };
+}
+
+export function parseFem3dSupportInsertion(value: unknown, at = "$"): Fem3dSupportInsertion {
+  const row = femFem3dDiffGuardClosed(femFem3dDiffGuardObject(value, at), at, ["index", "row"]);
+  return {
+    index: femFem3dDiffGuardInteger(row["index"], `${at}.index`, {"minimum": 0}),
+    row: parseFemSupport(row["row"], `${at}.row`),
+  };
+}
+
+export function parseFem3dSupportRelocation(value: unknown, at = "$"): Fem3dSupportRelocation {
+  const row = femFem3dDiffGuardClosed(femFem3dDiffGuardObject(value, at), at, ["id", "from", "to"]);
+  return {
+    id: femFem3dDiffGuardString(row["id"], `${at}.id`),
+    from: femFem3dDiffGuardInteger(row["from"], `${at}.from`, {"minimum": 0}),
+    to: femFem3dDiffGuardInteger(row["to"], `${at}.to`, {"minimum": 0}),
+  };
+}
+
+export function parseFem3dSupportRemoval(value: unknown, at = "$"): Fem3dSupportRemoval {
+  const row = femFem3dDiffGuardClosed(femFem3dDiffGuardObject(value, at), at, ["id", "index"]);
+  return {
+    id: femFem3dDiffGuardString(row["id"], `${at}.id`),
+    index: femFem3dDiffGuardInteger(row["index"], `${at}.index`, {"minimum": 0}),
+  };
+}
+
+export function parseFem3dSupportsModification(value: unknown, at = "$"): Fem3dSupportsModification {
+  const row = femFem3dDiffGuardClosed(femFem3dDiffGuardObject(value, at), at, ["id", "patch"]);
+  return {
+    id: femFem3dDiffGuardString(row["id"], `${at}.id`),
+    patch: parseFemSupport(row["patch"], `${at}.patch`),
   };
 }

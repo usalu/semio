@@ -102,11 +102,12 @@ pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 
-#[path = "💾️binary/🦀️.rs"]
-pub mod binary;
+pub mod binary {
+    pub use semio_s_artifact_wfc_2d_inferences::standards::v1::subsets::any::io::binary::*;
+    pub use semio_s_artifact_wfc_2d_diff::standards::v1::subsets::any::io::binary::diff;
+}
 
 #[path = "📝️text/🦀️.rs"]
 pub mod text;
 
-#[path = "🪶️sqlite/🦀️.rs"]
-pub mod sqlite;
+

@@ -2,17 +2,14 @@
 
 use semio_framework_os_infinite_board_schema::field;
 use semio_framework_os_infinite_board_dag_model::{dag_graph_edit_row_strings, dag_graph_edit_rows_json, DagGraphEdit, DagPortSide};
+use semio_framework_test_fixtures::fixture_text;
 use serde_json::Value;
 use semio_framework_os_infinite_directed_presentation::*;
 
 /// 📖️ Reads one test input at run time (relative to the package manifest) so it does not count as an embedded compile input.
-fn read_static(path_from_manifest: &str) -> &'static str {
-    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(path_from_manifest);
-    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("test input {}: {error}", path.display())).into_boxed_str())
-}
 
 fn fixture() -> Value {
-    serde_json::from_str(read_static("../../../../../../../../../../../🔨️modules/🛠️tool-machine/🧪️tests/🧫️fixtures/🧫️node-graph-edit-rows/🔣️.json")).expect("node-graph edit rows fixture")
+    serde_json::from_str(fixture_text!("../../../../../../../../../../../🔨️modules/🛠️tool-machine/🧪️tests/🧫️fixtures/🧫️node-graph-edit-rows/🔣️.json")).expect("node-graph edit rows fixture")
 }
 
 /// 🔢️ `value` with every number as `f64`, so an integral JSON number and its float spelling compare equal.

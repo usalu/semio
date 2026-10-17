@@ -1,6 +1,6 @@
 //! 🔺️ `replace-block` — sparse diff construction: the question's differing fields as one field patch.
 
-use super::mutation::ReplaceBlock;
+use crate::standards::v1::subsets::any::schema::mutations::replace_block::mutation::ReplaceBlock;
 use crate::schema::diff::{FormsQuestionPatch, FormsQuestionsDelta, FormsStepPatch, FormsStepsDelta};
 use crate::schema::mutations::change_block_field::mutation::BlockField;
 use crate::{forms_steps, FormsDiff, FormsSnapshot};

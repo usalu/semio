@@ -1,6 +1,5 @@
 //! 🏞️ Authoritative PDF mutation payload, diff, inverse, and tests for `set-image`.
 
-use super::PdfMutation;
 use crate::standards::v1_7::subsets::base::schema::diff::{self, PdfDiff};
 use crate::standards::v1_7::subsets::base::schema::snapshot::*;
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
@@ -16,7 +15,10 @@ pub struct SetImage {
     pub index: Option<usize>,
 }
 
-impl MutationKind<PdfSnapshot, PdfMutation> for SetImage {
+impl<Op> MutationKind<PdfSnapshot, Op> for SetImage
+where
+    Op: protocol::Mutation<PdfSnapshot, Diff = PdfDiff> + From<SetImage> + From<crate::standards::v1_7::subsets::base::schema::mutations::remove_image::RemoveImage>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "image", kind: "set-image", record: "Set" };
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
@@ -24,10 +26,10 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetImage {
         MutationOutcome::new(diff::diff_set_image(base, self.image.clone(), self.index))
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
         let _ = base;
-        match base.images.iter().find(|item| item.id == self.image.id) { Some(previous) => vec![PdfMutation::SetImage(SetImage { image: previous.clone(), index: None })], None => vec![PdfMutation::RemoveImage(super::remove_image::RemoveImage { id: self.image.id.clone() })] }
+        match base.images.iter().find(|item| item.id == self.image.id) { Some(previous) => vec![Op::from(SetImage { image: previous.clone(), index: None })], None => vec![Op::from(crate::standards::v1_7::subsets::base::schema::mutations::remove_image::RemoveImage { id: self.image.id.clone() })] }
     
     })())
 }
@@ -44,8 +46,6 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetImage {
 //#endregion 🔖️Mutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
 

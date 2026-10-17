@@ -1,5 +1,5 @@
 /** 📦️ Typed DOCX package content admission. */
-import {parseXmlDocument} from "../../../../../../../../📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🟦️.ts";
+import {parseXmlDocument} from "@semio-tech/stdio-xml/standards/1.0/subsets/base/schema/snapshot";
 import type {DocxPartContent,DocxSetPart} from "../🟦️.ts";
 function record(value:unknown,keys:readonly string[]):Record<string,unknown>{if(value===null||typeof value!=="object"||Array.isArray(value)||Object.keys(value).some(key=>!keys.includes(key)))throw Error("DOCX part content requires a closed record");return value as Record<string,unknown>;}
 /** 🧩️ Validates intrinsic XML trees or binary octets without interpreting an encoding. */

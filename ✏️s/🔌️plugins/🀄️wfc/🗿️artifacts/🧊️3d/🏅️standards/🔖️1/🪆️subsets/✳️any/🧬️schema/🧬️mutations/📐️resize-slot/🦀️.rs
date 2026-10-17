@@ -2,7 +2,6 @@
 //! tile's unit-box media into exactly this extent, so a zero or negative dimension is refused.
 
 use crate::diff::Wfc3dDiff;
-use crate::mutations::Wfc3dMutation;
 use crate::schema::snapshot::Wfc3dSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -18,17 +17,23 @@ pub struct ResizeSlot {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn resize_slot(id: String, width: f64, height: f64, depth: f64) -> Wfc3dMutation {
-    Wfc3dMutation::ResizeSlot(ResizeSlot { id, width, height, depth })
+pub fn resize_slot<Op>(id: String, width: f64, height: f64, depth: f64) -> Op
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::resize_slot::ResizeSlot>,
+{
+    Op::from(ResizeSlot { id, width, height, depth })
 }
 
-impl MutationKind<Wfc3dSnapshot, Wfc3dMutation> for ResizeSlot {
+impl<Op> MutationKind<Wfc3dSnapshot, Op> for ResizeSlot
+where
+    Op: protocol::Mutation<Wfc3dSnapshot, Diff = Wfc3dDiff> + From<ResizeSlot>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "resize", entity: "slot", kind: "resize-slot", record: "ResizedSlot" };
 
     fn diff(&self, base: &Wfc3dSnapshot) -> protocol::MutationOutcome<Wfc3dDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Wfc3dSnapshot) -> Result<Vec<Wfc3dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Wfc3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

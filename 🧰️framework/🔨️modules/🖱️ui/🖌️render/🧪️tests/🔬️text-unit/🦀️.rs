@@ -1,4 +1,5 @@
 use super::*;
+use semio_framework_test_fixtures::fixture_path;
 use semio_framework_ui_render_packet::ResourceOp;
 use std::path::{Path, PathBuf};
 use std::sync::OnceLock;
@@ -6,7 +7,7 @@ use std::sync::OnceLock;
 const FONT_FIXTURE: &str = include_str!("../🧫️fixtures/🔤️text-fonts/🔣️.json");
 
 fn fonts_root() -> PathBuf {
-    Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../🖼️assets/🔤️fonts")
+    fixture_path!("../../../../../🖼️assets/🔤️fonts")
 }
 
 fn font_files() -> &'static TextFontFiles {

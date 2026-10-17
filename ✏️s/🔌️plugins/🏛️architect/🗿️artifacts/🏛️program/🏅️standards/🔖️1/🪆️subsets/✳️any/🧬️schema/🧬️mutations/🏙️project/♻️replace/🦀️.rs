@@ -4,7 +4,7 @@
 //! Phase 2). Behavior unchanged from the wave-2 pass — pure directory/module restructuring.
 
 use crate::standards::v1::subsets::any::schema::registers::ProjectDefinition;
-use crate::standards::v1::subsets::any::schema::{diff::ProgramDiff, mutations::ProgramMutation, snapshot::ProgramSnapshot};
+use crate::standards::v1::subsets::any::schema::{diff::ProgramDiff, snapshot::ProgramSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 
 /// 🔁️ Whole-value swap of `program.project`.
@@ -17,12 +17,15 @@ use protocol::{MutationKind, SemanticDescriptor};
 pub struct ReplaceProject {
     pub new_project: ProjectDefinition,
 }
-impl MutationKind<ProgramSnapshot, ProgramMutation> for ReplaceProject {
+impl<Op> MutationKind<ProgramSnapshot, Op> for ReplaceProject
+where
+    Op: protocol::Mutation<ProgramSnapshot, Diff = ProgramDiff> + From<ReplaceProject>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "replace", entity: "project", kind: "replace-project", record: "ReplacedProject" };
     fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &ProgramSnapshot) -> Result<Vec<ProgramMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &ProgramSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

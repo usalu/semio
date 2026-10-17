@@ -1,7 +1,7 @@
 //! 🔗️ `delete-curtain-wall` / `follows-by-inference`: the deletion is one structural `curtain_walls/<id>` region and the `wall-layout`
 //! of every wall is untouched.
 
-use crate::standards::v1::subsets::any::schema::inferences::wall_layout::compute_wall_layout;
+use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_wall_layout;
 use crate::standards::v1::subsets::any::schema::mutations::delete_curtain_wall::DeleteCurtainWall;
 use crate::standards::v1::subsets::any::schema::mutations::wall_geometry::testing::decode;
 use crate::standards::v1::subsets::any::schema::mutations::ModelMutation;

@@ -3,7 +3,7 @@
 pub const TAG: u8 = 10;
 pub const BINARY_TAG: u8 = TAG;
 
-use crate::standards::v1_7::subsets::e::schema::mutations::EmbedFontFile;
+use crate::standards::v1_7::subsets::e::schema::mutations::embed_font_file::EmbedFontFile;
 
 /// 📤️ Encodes this direct payload as canonical schema JSON bytes.
 pub fn encode(payload: &EmbedFontFile) -> Result<Vec<u8>, String> {

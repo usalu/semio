@@ -1,5 +1,6 @@
 
 use super::*;
+use semio_framework_test_fixtures::fixture_path;
 
 /// 🧬️ The gate of this module: `🔣️.json`'s `$defs` key set and the Rust registry's exported
 /// type set are the SAME set. `bun repo run @semio-tech/framework-os-shell-rs:schema-check` runs
@@ -19,7 +20,7 @@ fn owned_json_schema_defs_match_registry() {
 }
 
 /// 🟦️ Renders the owned TypeScript mirror. With `SEMIO_TYPEGEN_OUT` set (the `typegen` nx
-/// target) it WRITES `../🤖️generated/🟦️.ts`; without it, it asserts the committed mirror is
+/// target) it WRITES `🧰️framework/🔨️modules/🐚️shell/🤖️generated/🟦️.ts`; without it, it asserts the committed mirror is
 /// exactly what this registry renders today.
 #[cfg(test)]
 #[test]
@@ -29,6 +30,8 @@ fn exports_typescript_bindings() {
     if let Some(path) = std::env::var_os("SEMIO_TYPEGEN_OUT") {
         std::fs::write(path, &rendered).unwrap();
     } else {
-        assert_eq!(rendered, include_str!("../../../🤖️generated/🟦️.ts"));
+        let mirror = fixture_path!("../../../../../../🔨️modules/🐚️shell/🤖️generated/🟦️.ts");
+        let committed = std::fs::read_to_string(&mirror).unwrap_or_else(|error| panic!("generated mirror {} (run the `typegen` target first): {error}", mirror.display()));
+        assert_eq!(rendered, committed);
     }
 }

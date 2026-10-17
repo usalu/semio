@@ -318,18 +318,16 @@ pub const CHUNK_TYPE_JSON: &[u8; 4] = b"JSON";
 pub const CHUNK_TYPE_BIN: &[u8; 4] = b"BIN\0";
 //#endregion 🔖️GlbContainer
 //#region 🪢️TaxonomyMounts
-#[path = "📤️export/🧵️serializers/🗿️artifacts/🔣️json/🦀️.rs"]
-pub mod serializers_artifacts_json;
-#[path = "📤️export/🧵️serializers/🗿️artifacts/🦀️.rs"]
-pub mod export_serializers_artifacts;
-#[path = "📥️import/🧩️deserializers/🗿️artifacts/🔣️json/🦀️.rs"]
-pub mod deserializers_artifacts_json;
-#[path = "📥️import/🧩️deserializers/🗿️artifacts/🦀️.rs"]
-pub mod import_deserializers_artifacts;
+
+
+
+
 //#endregion 🪢️TaxonomyMounts
 #[path = "💾️binary/🦀️.rs"]
 pub mod binary;
-#[path = "📝️text/🦀️.rs"]
-pub mod text;
-#[path = "🪶️sqlite/🦀️.rs"]
-pub mod sqlite;
+pub mod text {
+    pub use semio_s_artifact_stdio_gltf_model_v2_0::standards::v2_0::subsets::any::io::text::*;
+    pub use semio_s_artifact_stdio_gltf_model_diff_aggregate::standards::v2_0::subsets::any::io::text::diff;
+    pub use semio_s_artifact_stdio_gltf_model_diff_aggregate::standards::v2_0::subsets::any::io::text::snapshot;
+}
+

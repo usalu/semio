@@ -25,7 +25,6 @@ export async function registerUiCloseAndJobAdmissionTests(vitest: PluginRuntimeV
         expect([...current.values()].sort()).toEqual(step.accepted);
       }
     }
-    console.info("[DEBUG] Job ownership oracle: five independent histories preserve all terminals and latest repaint");
   });
 
   /** 🚪️ The whole-instance UI close ladder's own budget, priced off what a close RETIRES.

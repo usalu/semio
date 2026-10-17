@@ -28,14 +28,17 @@ pub fn plan(p: &GltfDeleteSkinPayload, base: &GltfSnapshot) -> Result<GltfDiff, 
     Ok(diff)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn inverse(p: &GltfDeleteSkinPayload, base: &GltfSnapshot) -> Vec<super::GltfMutation> {
+pub fn inverse<Op>(p: &GltfDeleteSkinPayload, base: &GltfSnapshot) -> Vec<Op>
+where
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::remove_used_extension::RemoveUsedExtensionMutation>,
+{
     if validate(p, base).is_err() {
         return Vec::new();
     }
-    let mut rows = vec![super::create_skin::mutation(super::create_skin::GltfCreateSkinPayload { position: p.index, skin: Some(Box::new(base.document.skins[p.index].clone())) })];
+    let mut rows = vec![crate::standards::v2_0::subsets::any::schema::mutations::create_skin::mutation(crate::standards::v2_0::subsets::any::schema::mutations::create_skin::GltfCreateSkinPayload { position: p.index, skin: Some(Box::new(base.document.skins[p.index].clone())) })];
     for (node, entry) in base.document.nodes.iter().enumerate() {
         if entry.skin == Some(p.index) {
-            rows.push(super::bind_node_skin::mutation(super::bind_node_skin::GltfBindNodeSkinPayload { node, skin: p.index }));
+            rows.push(crate::standards::v2_0::subsets::any::schema::mutations::bind_node_skin::mutation(crate::standards::v2_0::subsets::any::schema::mutations::bind_node_skin::GltfBindNodeSkinPayload { node, skin: p.index }));
         }
     }
     rows.reverse();
@@ -52,11 +55,17 @@ pub enum DeleteSkinMutation {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn mutation(payload: GltfDeleteSkinPayload) -> super::GltfMutation {
-    super::GltfMutation::DeleteSkin(DeleteSkinMutation::Apply(payload))
+pub fn mutation<Op>(payload: GltfDeleteSkinPayload) -> Op
+where
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::delete_skin::DeleteSkinMutation>,
+{
+    Op::from(DeleteSkinMutation::Apply(payload))
 }
 
-impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for DeleteSkinMutation {
+impl<Op> protocol::MutationKind<GltfSnapshot, Op> for DeleteSkinMutation
+where
+    Op: protocol::Mutation<GltfSnapshot, Diff = GltfDiff> + From<DeleteSkinMutation>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "skin", kind: "delete-skin", record: "DeletedSkin" };
 
     fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<GltfDiff> {
@@ -68,7 +77,7 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for DeleteSkinMut
         }
     }
 
-    fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<super::GltfMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         match self {
             Self::Apply(payload) => Ok(inverse(payload, base)),
         }
@@ -85,10 +94,6 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for DeleteSkinMut
 //#endregion 🧬️DirectMutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🚫️removes-the-first-10a35c/🦀️.rs"]
-mod case_removes_the_first_10a35c;
-#[cfg(test)]
-#[path = "🧪️tests/🔬️middle-row/🦀️.rs"]
-mod case_middle_row;
+
+
 //#endregion 🧪️Tests

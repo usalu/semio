@@ -2,9 +2,9 @@
 import sql from "./🗄️.sql" with {type:"text"};
 import type {EnergyModelSnapshot} from "../../../🧬️schema/📸️snapshot/🟦️.ts";
 import type {EnergyModel,EnergyVertex,EnergyFloat} from "../../../🧬️schema/📸️snapshot/⚡️model/🟦️.ts";
-import type {ArtifactLink} from "../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️link/🧬️schema/🟦️.ts";
+import type {ArtifactLink} from "@semio-tech/framework-os/modules/store/link/schema";
 import type { ArtifactRef } from "@semio-tech/framework/schema/artifact-reference";
-import {parseArtifactLink} from "../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️link/🧬️schema/🟦️.ts";
+import {parseArtifactLink} from "@semio-tech/framework-os/modules/store/link/schema";
 import {ArtifactSqliteProjection,artifactSqliteTables,artifactSqliteCheckpoint,artifactSqliteInteger,artifactSqliteText,artifactSqliteOrderedRowsControlled,type ArtifactSqliteOptions} from "@semio-tech/framework/io/sqlite-snapshot/artifact";
 import {encodeIeee754Cells,readBinary64,ieee754IsNull,type Ieee754Column,type Ieee754Cell} from "@semio-tech/framework/io/sqlite-snapshot/ieee754";
 import type {SqliteDatabase,SqliteRow,SqliteTable,SqliteValue} from "@semio-tech/framework/io/sqlite-snapshot";

@@ -25,7 +25,7 @@ pub(crate) mod extension_unit_4 {
     use serde_json::Value;
     use semio_framework_plugin_runtime_instances::inst_opening::runtime_lifecycle_grant;
     #[cfg(test)]
-    use std::mem::size_of;
+use std::mem::size_of;
     use semio_framework_plugin_decl_app::ArtifactApp;
     use semio_framework_value::FromValue;
     use semio_framework_plugin_reactor_app::PluginApp;

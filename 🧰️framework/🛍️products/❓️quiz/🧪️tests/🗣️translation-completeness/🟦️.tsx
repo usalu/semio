@@ -5,6 +5,7 @@
 
 import { describe, expect, it } from "vitest";
 import { REJECTIONS, TASK_KINDS } from "@semio-tech/quiz";
+import { quizStylesheet } from "@semio-tech/quiz-react/stylesheet";
 import { resolveUiLabel, uiI18n } from "@semio-tech/ui-react/i18n";
 import { QUIZ_BUNDLE_DE, QUIZ_BUNDLE_EN, QUIZ_LOCALES, REJECTION_LABELS, TASK_KIND_LABELS, preferredLocale, quizText, type QuizLabelKey } from "@semio-tech/quiz-react";
 
@@ -26,7 +27,7 @@ function placeholders(label: string): string[] {
 }
 
 const SOURCES = import.meta.glob<string>(["../../🎯️targets/⚛️react/🟦️.tsx", "../../🎯️targets/⚛️react/🔨️modules/**/🟦️.ts", "../../🎯️targets/⚛️react/🔨️modules/**/🟦️.tsx"], { query: "?raw", import: "default", eager: true });
-const STYLES = Object.values(import.meta.glob<string>("../../🎯️targets/⚛️react/🎨️.css", { query: "?raw", import: "default", eager: true })).join("\n");
+const STYLES = quizStylesheet;
 const english = leaves(QUIZ_BUNDLE_EN);
 const german = leaves(QUIZ_BUNDLE_DE);
 

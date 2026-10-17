@@ -21,11 +21,6 @@ pub fn layout() -> WindowLayout {
 }
 //#endregion 🔖️Definition
 
-//#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests
 
 //#region 🪢️Mounts
 #[path = "."]

@@ -1,0 +1,43 @@
+{
+ "$schema": "http://json-schema.org/draft-07/schema#",
+ "definitions": {
+  "Protocol": {
+   "const": {
+    "version": 2,
+    "maximumSources": 65536,
+    "nodesPerYield": 256
+   }
+  },
+  "WorkingSet": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "version",
+    "mode",
+    "nodes",
+    "bytes"
+   ],
+   "properties": {
+    "version": {
+     "const": 2
+    },
+    "mode": {
+     "enum": [
+      "prototype",
+      "release"
+     ]
+    },
+    "nodes": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 65536
+    },
+    "bytes": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 1073741824
+    }
+   }
+  }
+ }
+}

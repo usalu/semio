@@ -43,6 +43,3 @@ pub fn contribute(base: &TiffSnapshot, index: usize) -> TiffDiff {
 //#endregion Semantics
 
 
-#[cfg(test)]
-#[path = "🧪️tests/🎯️direct-behavior/🦀️.rs"]
-mod tests_direct_behavior;

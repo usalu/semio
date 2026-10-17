@@ -11,7 +11,7 @@
 use super::{kinds, ModelInferenceSession, RunProgress, SessionRun, UpdateReport};
 use crate::standards::v1::subsets::any::schema::inferences::diagnostics::{ordered, Diagnostic, DiagnosticCode, DiagnosticIndex};
 use crate::standards::v1::subsets::any::schema::inferences::spaces::SpaceRoom;
-use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, inferences::ModelInference, mutations::ModelMutation, snapshot::ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, inferences::ModelInference, snapshot::ModelSnapshot};
 use protocol::{InferenceWorkFailure,InferenceError, Mutation, MutationDiff};
 use semio_framework_plugin::ArtifactInstanceOperationOwnerHandle;
 use std::borrow::Cow;
@@ -72,7 +72,7 @@ pub fn try_with_inference<R>(instance: Instance<'_>, snapshot: &ModelSnapshot, r
 
 /// 📝️ Records the concrete diffs of `mutations` the editor emits against `snapshot`, in order, for the instance's next sync. Each mutation's diff is read against the state the ones
 /// before it leave; a mutation whose diff does not apply records nothing and the next sync walks the plan.
-pub fn record_mutations(instance: Instance<'_>, snapshot: &ModelSnapshot, mutations: &[ModelMutation]) {
+pub fn record_mutations<Op: Mutation<ModelSnapshot, Diff = ModelDiff>>(instance: Instance<'_>, snapshot: &ModelSnapshot, mutations: &[Op]) {
     let Some(handle) = instance else { return };
     let mut sum = ModelDiff::default();
     let mut state: Option<ModelSnapshot> = None;

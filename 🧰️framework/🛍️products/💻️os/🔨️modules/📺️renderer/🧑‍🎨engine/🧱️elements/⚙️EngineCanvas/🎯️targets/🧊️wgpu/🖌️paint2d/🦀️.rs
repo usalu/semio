@@ -51,7 +51,7 @@ pub fn paint2d_pick_layer(surface_id: &str, sx: f64, sy: f64) -> Option<String> 
 /// carries — the wgpu twin of each React host's `JSON.parse(session.pickTargetsAtScreenJson(sx, sy))
 /// .map(target => ({ domain, id, label }))`. Order is the host's own most-general-last order, which
 /// is what React sends and what a plugin's `hits[0]` reads as "the thing under the pointer".
-fn pick_target_hits(json: &str) -> Vec<ui_wgpu::wgpu::ContextMenuHit> {
+pub fn pick_target_hits(json: &str) -> Vec<ui_wgpu::wgpu::ContextMenuHit> {
     serde_json::from_str::<Vec<Value>>(json)
         .unwrap_or_default()
         .into_iter()
@@ -66,7 +66,7 @@ fn pick_target_hits(json: &str) -> Vec<ui_wgpu::wgpu::ContextMenuHit> {
 /// 🖱️ `nodes`/`edges`/`handles` off a node-graph host's own selection read, tolerating both the
 /// object form and the bare id array — port of `parseSelectionDomainsFromSession`
 /// (`🧱️elements/🌐️World3dHost/🟦️.tsx:1801`).
-fn selection_domains(json: &str) -> (Vec<String>, Vec<String>, Vec<String>) {
+pub fn selection_domains(json: &str) -> (Vec<String>, Vec<String>, Vec<String>) {
     let Ok(parsed) = serde_json::from_str::<Value>(json) else {
         return (Vec::new(), Vec::new(), Vec::new());
     };
@@ -147,18 +147,6 @@ pub fn text_editor_context_menu_target(scene: &UiComponentSceneNode, inner: Rect
             Some((pick_target_hits(&host.pick_targets_at_screen_json(sx, sy)), Some(text)))
         })
         .unwrap_or_default()
-}
-/// 🧪️ `pick_target_hits`, for the surface-context-menu law (this module's own tests never construct
-/// a live engine host, and the JSON shape is the contract that drifts).
-#[cfg(test)]
-pub fn pick_target_hits_for_test(json: &str) -> Vec<semio_framework_ui_layout::layout::ContextMenuHit> {
-    pick_target_hits(json)
-}
-
-/// 🧪️ `selection_domains`, for the surface-context-menu law.
-#[cfg(test)]
-pub fn selection_domains_for_test(json: &str) -> (Vec<String>, Vec<String>, Vec<String>) {
-    selection_domains(json)
 }
 //#endregion 🖱️ContextMenuTargets
 

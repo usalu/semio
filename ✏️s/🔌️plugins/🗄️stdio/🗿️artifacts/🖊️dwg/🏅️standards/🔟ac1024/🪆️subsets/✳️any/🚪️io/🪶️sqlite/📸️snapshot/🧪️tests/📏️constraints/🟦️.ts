@@ -15,6 +15,6 @@ test("DWG fourteen typed constraint nodes preserve presence, IEEE geometry and g
   try{
     expect(n.query("PRAGMA integrity_check").get()).toEqual({integrity_check:"ok"});expect(n.query("PRAGMA foreign_key_check").all()).toEqual([]);expect(await read()).toEqual(group);expect(n.query("SELECT kind FROM dwg_constraint_node ORDER BY ordinal").all()).toEqual(fixture.constraintKinds.map(kind=>({kind})));
     n.run("UPDATE dwg_constrained_implicit_point SET point_present=0; UPDATE dwg_distance_constraint SET direction_present=0");const edited=await read();expect(edited.nodes[0]).toEqual({kind:"constrainedImplicitPoint",value:{geometry,point:undefined,pointKind:255,pointIndex:-2147483648,curveNodeId:2147483647}});expect(edited.nodes[4]).toEqual({kind:"distanceConstraint",value:{explicit:{geometric,valueDependencyHandle:max,dimensionDependencyHandle:0n},directionKind:255,direction:undefined}});
-    n.run("UPDATE dwg_constraint_coordinate SET vector='point' WHERE id=1");expect(n.query("PRAGMA integrity_check").get()).toEqual({integrity_check:"ok"});await expect(read()).rejects.toThrow();console.log("[DEBUG] DWG all fourteen constraint tags, absent/empty points and explicit dependencies independently verified");
+    n.run("UPDATE dwg_constraint_coordinate SET vector='point' WHERE id=1");expect(n.query("PRAGMA integrity_check").get()).toEqual({integrity_check:"ok"});await expect(read()).rejects.toThrow();
   }finally{n.close();}
 },20000);

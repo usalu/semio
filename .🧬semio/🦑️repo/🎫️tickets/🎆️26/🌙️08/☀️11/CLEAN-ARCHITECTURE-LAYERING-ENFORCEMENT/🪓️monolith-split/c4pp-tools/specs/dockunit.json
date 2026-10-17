@@ -1,0 +1,115 @@
+{
+ "tag": "dockunit",
+ "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛰️Dock/🧪️tests/🔬️wgpu-unit/🦀️.rs",
+ "original": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/c4pp-tools/orig/dockunit.rs",
+ "stage": "/Users/ueli/.cache/c4pp/stage/dockunit",
+ "chunks": [
+  {
+   "folder": "🧰️dock-fixtures-and-sample-app",
+   "depth": 0,
+   "start": 10,
+   "end": 74,
+   "lines": 67,
+   "reopen": 0,
+   "close": 0,
+   "rebased": 0,
+   "marker": "///",
+   "first": [
+    "fn",
+    "tabs"
+   ]
+  },
+  {
+   "folder": "🪟️window-instances-geometry-and-silhouette",
+   "depth": 0,
+   "start": 76,
+   "end": 262,
+   "lines": 189,
+   "reopen": 0,
+   "close": 0,
+   "rebased": 0,
+   "marker": "///",
+   "first": [
+    "fn",
+    "concrete_window_instances_round_trip_without_kind_collapse"
+   ]
+  },
+  {
+   "folder": "🧲️drops-and-drop-zones",
+   "depth": 0,
+   "start": 264,
+   "end": 483,
+   "lines": 222,
+   "reopen": 0,
+   "close": 0,
+   "rebased": 0,
+   "marker": "///",
+   "first": [
+    "fn",
+    "apply_drop_tab_moves_window_to_target_corner"
+   ]
+  },
+  {
+   "folder": "🔁️layout-diffs-and-even-layouts",
+   "depth": 0,
+   "start": 485,
+   "end": 658,
+   "lines": 176,
+   "reopen": 0,
+   "close": 0,
+   "rebased": 0,
+   "marker": "///",
+   "first": [
+    "fn",
+    "apply_layout_diff_keeps_current_tab_focused_over_stale_persisted_active"
+   ]
+  },
+  {
+   "folder": "🛠️actions-utilities-and-tab-actions",
+   "depth": 0,
+   "start": 660,
+   "end": 854,
+   "lines": 197,
+   "reopen": 0,
+   "close": 0,
+   "rebased": 0,
+   "marker": "///",
+   "first": [
+    "fn",
+    "actions_utilities_app"
+   ]
+  },
+  {
+   "folder": "🗜️closing-collapse-and-split-resize",
+   "depth": 0,
+   "start": 856,
+   "end": 1001,
+   "lines": 148,
+   "reopen": 0,
+   "close": 0,
+   "rebased": 0,
+   "marker": "///",
+   "first": [
+    "fn",
+    "dock_tab_label_truncates_at_reacts_twelve_rem_cap"
+   ]
+  },
+  {
+   "folder": "🧭️drag-merge-mobile-and-focus",
+   "depth": 0,
+   "start": 1003,
+   "end": 1207,
+   "lines": 207,
+   "reopen": 0,
+   "close": 0,
+   "rebased": 0,
+   "marker": "///",
+   "first": [
+    "fn",
+    "drag_to_split_commits_an_even_two_child_axis"
+   ]
+  }
+ ],
+ "root_lines": 23,
+ "root_synth_closers": 1
+}

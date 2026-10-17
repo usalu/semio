@@ -1,15 +1,19 @@
 //! 🧪️ Original registry pages refuse independently and release their physical backing exactly.
 
-use super::*;
+use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
+use semio_framework_value::{RetirementDemand, ValueRefusalKind};
+use semio_framework_plugin_window_config::registry::{WindowRegistry, fits};
 
 #[test]
 fn window_config_paged_registry_actual_window_partition_custody() {
-    use super::super::{WindowConfigOwner, WindowConfigOwnerRegistry, PluginLifecycleStep, pack_identity_tests::IdentityWindowOwner};
+    use semio_framework_plugin_window_config::{WindowConfigOwner, WindowConfigOwnerRegistry};
+    use semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep;
+    use crate::window_config_tests::pack_identity_tests::IdentityWindowOwner;
     let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     let copies = fixture["owningCopies"].as_u64().unwrap() as usize;
     let repeat = fixture["addressRepeat"].as_u64().unwrap() as usize;
     let (mut registry, birth) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| semio_framework_async::block_on(async {
-        let mut registry = WindowConfigOwnerRegistry::new(crate::protocol::ActorId("original-registry-actor/λ".to_owned().into()));
+        let mut registry = WindowConfigOwnerRegistry::new(semio_framework_os_kernel::ActorId("original-registry-actor/λ".to_owned().into()));
         registry.register::<IdentityWindowOwner>().unwrap();
         for address in fixture["addresses"].as_array().unwrap() {
             for ordinal in 0..copies {
@@ -51,7 +55,6 @@ fn window_config_paged_registry_actual_window_partition_custody() {
     assert_eq!(allocated, released);
     let (_, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| drop(registry));
     assert_eq!((heap.requested_bytes, heap.released_bytes), (0, fixture["terminalDropBytes"].as_u64().unwrap() as usize));
-    eprintln!("[DEBUG] actual original window partitions={} physical birth={allocated} release={released} turns={turns} terminalDrop0", copies * 4);
 }
 
 #[test]
@@ -150,5 +153,4 @@ fn window_config_paged_registry_original_order_and_physical_backing() {
     assert_eq!(released, allocated);
     let (_, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| drop(registry));
     assert_eq!((heap.requested_bytes, heap.released_bytes), (0, fixture["terminalDropBytes"].as_u64().unwrap() as usize));
-    eprintln!("[DEBUG] original window registry lexical order entries={} pages={released_pages} physical birth={allocated} release={released} terminalDrop0", copies * 4);
 }

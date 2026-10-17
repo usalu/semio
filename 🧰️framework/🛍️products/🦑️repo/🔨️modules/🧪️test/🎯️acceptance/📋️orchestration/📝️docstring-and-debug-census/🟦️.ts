@@ -1,0 +1,188 @@
+/** 📝️ The docstring censuses (openers, emoji reuse) and the debug-tag census of the tracked sources. */
+import { spawnSync } from "node:child_process";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+
+//#region 🧮️SourceCensus
+/** 🏷️ One docstring line that breaks AGENTS.md's emoji-first rule: the `@emoji` residue token in front of the emoji, or
+ * an opener with no emoji at all (a symbol glyph such as `⊕` or `√` counts as the marker). */
+export type DocstringHit = Readonly<{ path: string; line: number; rule: "at-emoji" | "no-emoji"; text: string }>;
+
+const DOCSTRING_MARKER = /^(?:\p{Extended_Pictographic}|\p{So}|\p{Sm}|\p{Regional_Indicator}|[0-9#*]️?⃣)/u;
+const AT_EMOJI_LINE = /(?:\/\/\/|\/\/!|\/\*\*)\s*@emoji|^\s*\*\s*@emoji/u;
+const RUST_LINE_DOC = /^\/\/[/!](?!\/)/u;
+
+/** 🧷️ Every docstring opener of one source, by 1-based line with its trimmed content: a Rust `///` or `//!` run's first non-empty
+ * line (a run ends where its doc kind changes) and a `/** … *\/` block's first non-empty content line (Rust and TypeScript; `/**\/` and `/***` are no docstrings, and a `/**`
+ * behind `//` or a quote is text), in line order. */
+export function docstringOpenersOfText(path: string, text: string): { readonly line: number; readonly content: string }[] {
+  const lines = text.split("\n");
+  const openers: { readonly line: number; readonly content: string }[] = [];
+  const opener = (index: number, content: string): void => {
+    openers.push({ line: index + 1, content: content.trim() });
+  };
+  if (path.endsWith(".rs")) {
+    let run: string | null = null;
+    let opened = false;
+    lines.forEach((raw, index) => {
+      const line = raw.trimStart();
+      if (!RUST_LINE_DOC.test(line)) {
+        run = null;
+        return;
+      }
+      if (run !== line.slice(0, 3)) opened = false;
+      run = line.slice(0, 3);
+      if (opened || line.slice(3).trim().length === 0) return;
+      opened = true;
+      opener(index, line.slice(3));
+    });
+  }
+  let open = false;
+  lines.forEach((raw, index) => {
+    if (!open) {
+      const start = raw.indexOf("/**");
+      if (start < 0 || raw[start + 3] === "/" || raw[start + 3] === "*" || /\/\/|["'`]/u.test(raw.slice(0, start))) return;
+      const rest = raw.slice(start + 3);
+      const closeAt = rest.indexOf("*/");
+      const content = closeAt >= 0 ? rest.slice(0, closeAt) : rest;
+      if (content.trim().length > 0) {
+        opener(index, content);
+        return;
+      }
+      open = closeAt < 0;
+      return;
+    }
+    const closeAt = raw.indexOf("*/");
+    const content = (closeAt >= 0 ? raw.slice(0, closeAt) : raw).replace(/^\s*\*?/u, "");
+    if (content.trim().length > 0) {
+      open = false;
+      opener(index, content);
+      return;
+    }
+    if (closeAt >= 0) open = false;
+  });
+  return openers.sort((left, right) => left.line - right.line);
+}
+
+/** 🔖️ Every docstring finding of one source. `at-emoji`: each line where a doc opener (`///`, `//!`, `/**`) or a block
+ * continuation (` * `) is followed by the `@emoji` token — wherever it stands, so an `@emoji` paragraph inside a run and a
+ * generator's emitted doc line count too. `no-emoji`: each docstring opener ({@link docstringOpenersOfText}) that starts with
+ * neither an emoji nor a symbol glyph. */
+export function docstringHitsOfText(path: string, text: string): DocstringHit[] {
+  const hits: DocstringHit[] = [];
+  text.split("\n").forEach((raw, index) => {
+    if (AT_EMOJI_LINE.test(raw)) hits.push({ path, line: index + 1, rule: "at-emoji", text: raw.trim().slice(0, 80) });
+  });
+  const flagged = new Set(hits.map((hit) => hit.line));
+  for (const { line, content } of docstringOpenersOfText(path, text)) {
+    if (!flagged.has(line) && !content.startsWith("@emoji") && !DOCSTRING_MARKER.test(content)) hits.push({ path, line, rule: "no-emoji", text: content.slice(0, 80) });
+  }
+  return hits.sort((left, right) => left.line - right.line);
+}
+
+/** 🪞️ One marker that opens more than one docstring of a source (AGENTS.md: every docstring starts with a unique emoji; design
+ * §21.2 holds that per file): the marker's grapheme without its variation selector, and every opener line it starts. */
+export type DocstringEmojiReuse = Readonly<{ path: string; emoji: string; lines: readonly number[] }>;
+
+const DOCSTRING_GRAPHEMES = new Intl.Segmenter("en", { granularity: "grapheme" });
+
+/** 🔁️ Every marker of one source that opens more than one docstring ({@link docstringOpenersOfText}; an opener without a marker or
+ * behind the `@emoji` residue is the `docstrings` census's own finding), in the order of each marker's first opener. */
+export function docstringEmojiReuseOfText(path: string, text: string): DocstringEmojiReuse[] {
+  const openers = new Map<string, number[]>();
+  for (const { line, content } of docstringOpenersOfText(path, text)) {
+    if (!DOCSTRING_MARKER.test(content)) continue;
+    const emoji = DOCSTRING_GRAPHEMES.segment(content)[Symbol.iterator]().next().value!.segment.replaceAll("\uFE0F", "");
+    openers.set(emoji, [...(openers.get(emoji) ?? []), line]);
+  }
+  return [...openers].filter(([, lines]) => lines.length > 1).map(([emoji, lines]) => ({ path, emoji, lines }));
+}
+
+/** 📚️ Every tracked Rust / TypeScript source the docstring censuses read: outside the ticket tree, generated trees and declaration files. */
+function docstringSources(repoRoot: string): string[] {
+  const listed = spawnSync("git", ["ls-files", "-z", "--", "*.rs", "*.ts", "*.tsx", ":!.🧬semio", ":!*.d.ts", ":!**/🤖️generated/**"], { cwd: repoRoot, encoding: "utf8", maxBuffer: 1 << 30 });
+  if (listed.status !== 0) throw new Error(`git ls-files failed: ${listed.stderr}`);
+  return listed.stdout.split("\0").filter(Boolean);
+}
+
+/** 🗳️ The docstring census over every source {@link docstringSources} lists, with its `@emoji` findings cross-checked line for line
+ * against `git grep` (the oracle). */
+export function runDocstringCensus(repoRoot: string, signal: AbortSignal, onProgress: (line: string) => void) {
+  const sources = docstringSources(repoRoot);
+  const hits: DocstringHit[] = [];
+  for (const [index, path] of sources.entries()) {
+    if (signal.aborted) throw new Error("docstring census cancelled");
+    if (index % 5000 === 0) onProgress(`${index}/${sources.length} sources scanned`);
+    let text: string;
+    try {
+      text = readFileSync(join(repoRoot, path), "utf8");
+    } catch {
+      continue;
+    }
+    hits.push(...docstringHitsOfText(path, text));
+  }
+  const grep = (pattern: string): string[] => spawnSync("git", ["grep", "-n", "-E", pattern, "--", "*.rs", "*.ts", "*.tsx", ":!.🧬semio", ":!*.d.ts", ":!**/🤖️generated/**"], { cwd: repoRoot, encoding: "utf8", maxBuffer: 1 << 30 }).stdout.split("\n").filter(Boolean).map((row) => row.split(":").slice(0, 2).join(":"));
+  const oracle = new Set([...grep("(///|//!|/\\*\\*)[[:space:]]*@emoji"), ...grep("^[[:space:]]*\\*[[:space:]]*@emoji")]);
+  const scanned = new Set(hits.filter((hit) => hit.rule === "at-emoji").map((hit) => `${hit.path}:${hit.line}`));
+  const disagreements = [...oracle].filter((key) => !scanned.has(key)).concat([...scanned].filter((key) => !oracle.has(key)));
+  onProgress(`${sources.length}/${sources.length} sources scanned`);
+  return { files: sources.length, hits, disagreements };
+}
+
+/** 🧮️ The per-file docstring-emoji census over `paths` (repository-relative Rust / TypeScript sources; every source
+ * {@link docstringSources} lists when absent): each marker reused within one file, see {@link docstringEmojiReuseOfText}. */
+export function runDocstringEmojiCensus(repoRoot: string, signal: AbortSignal, onProgress: (line: string) => void, paths?: readonly string[]) {
+  const sources = (paths ?? docstringSources(repoRoot)).filter((path) => /\.(?:rs|tsx?)$/u.test(path) && !path.endsWith(".d.ts"));
+  const reuse: DocstringEmojiReuse[] = [];
+  for (const [index, path] of sources.entries()) {
+    if (signal.aborted) throw new Error("docstring emoji census cancelled");
+    if (index % 5000 === 0) onProgress(`${index}/${sources.length} sources scanned`);
+    let text: string;
+    try {
+      text = readFileSync(join(repoRoot, path), "utf8");
+    } catch {
+      continue;
+    }
+    reuse.push(...docstringEmojiReuseOfText(path, text));
+  }
+  onProgress(`${sources.length}/${sources.length} sources scanned`);
+  return { files: sources.length, reuse };
+}
+/** 🐞️ One line carrying the `[DEBUG]` tag, which AGENTS.md reserves for temporary logs removed before a change lands. */
+export type DebugTagHit = Readonly<{ path: string; line: number; text: string }>;
+
+/** 🐞️ Every line of one source that carries the `[DEBUG]` tag. */
+export function debugTagHitsOfText(path: string, text: string): DebugTagHit[] {
+  return text.split("\n").flatMap((line, index) => (line.includes("[DEBUG]") ? [{ path, line: index + 1, text: line.trim().slice(0, 120) }] : []));
+}
+
+/** 🐞️ The census's own rule vocabulary — this module and the source-census fixture name the tag they look for. */
+export const DEBUG_TAG_CENSUS_EXEMPT: readonly string[] = ["🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/📝️docstring-and-debug-census/🟦️.ts", "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🎯️acceptance/🧪️tests/🧫️fixtures/🧮️source-census/🔣️.json"];
+
+/** 🐞️ The `[DEBUG]` census over every tracked text source outside the ticket tree, Markdown prose and
+ * {@link DEBUG_TAG_CENSUS_EXEMPT}, cross-checked file by file against `git grep -c` (the oracle). Progress every 5000
+ * files; the signal stops the walk. */
+export function runDebugTagCensus(repoRoot: string, signal: AbortSignal, onProgress: (line: string) => void) {
+  const scope = ["--", ":!.🧬semio", ":!*.md", ":!.cursor", ...DEBUG_TAG_CENSUS_EXEMPT.map((path) => `:!${path}`)];
+  const listed = spawnSync("git", ["grep", "-l", "-z", "-I", "-F", "[DEBUG]", ...scope], { cwd: repoRoot, encoding: "utf8", maxBuffer: 1 << 30 });
+  const sources = listed.stdout.split("\0").filter(Boolean);
+  const hits: DebugTagHit[] = [];
+  for (const [index, path] of sources.entries()) {
+    if (signal.aborted) throw new Error("debug-tag census cancelled");
+    if (index % 5000 === 0) onProgress(`${index}/${sources.length} tagged sources scanned`);
+    let text: string;
+    try {
+      text = readFileSync(join(repoRoot, path), "utf8");
+    } catch {
+      continue;
+    }
+    hits.push(...debugTagHitsOfText(path, text));
+  }
+  const oracle = new Map(spawnSync("git", ["grep", "-c", "-I", "-F", "[DEBUG]", ...scope], { cwd: repoRoot, encoding: "utf8", maxBuffer: 1 << 30 }).stdout.split("\n").filter(Boolean).map((row) => [row.slice(0, row.lastIndexOf(":")), Number(row.slice(row.lastIndexOf(":") + 1))] as const));
+  const scanned = new Map<string, number>();
+  for (const hit of hits) scanned.set(hit.path, (scanned.get(hit.path) ?? 0) + 1);
+  const disagreements = [...new Set([...oracle.keys(), ...scanned.keys()])].filter((path) => (oracle.get(path) ?? 0) !== (scanned.get(path) ?? 0));
+  onProgress(`${sources.length}/${sources.length} tagged sources scanned`);
+  return { files: sources.length, hits, disagreements };
+}
+//#endregion 🧮️SourceCensus

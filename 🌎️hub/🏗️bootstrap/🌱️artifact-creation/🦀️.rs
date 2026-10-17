@@ -2,7 +2,7 @@
 //!
 //! Carved out of `🏗️bootstrap/🦀️.rs`; mounted from its root with `#[path]`.
 
-use directory::os_directory::io::text::access_policy::directory_access_permits;
+use directory::os_directory::access_policy::directory_access_permits;
 use axum::body::Bytes;
 use axum::extract::{OriginalUri, Path, State};
 use axum::http::{HeaderMap, StatusCode};
@@ -367,7 +367,7 @@ impl ArtifactCreationHttpTaskOwnerV1 {
         }
     }
 
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testkit"))]
     pub fn task_count(&self) -> usize {
         let state = self.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         state.reservations.len().saturating_add(state.tasks.values().filter(|task| !task.task.is_finished()).count())

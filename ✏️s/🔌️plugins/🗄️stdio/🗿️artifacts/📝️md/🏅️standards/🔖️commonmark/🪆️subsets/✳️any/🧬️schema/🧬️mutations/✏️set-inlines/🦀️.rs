@@ -7,9 +7,9 @@ use super::*;
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetInlines {
-    pub(crate) path: Vec<MdPathStep>,
-    pub(crate) index: usize,
-    pub(crate) inlines: Vec<MdInline>,
+    pub path: Vec<MdPathStep>,
+    pub index: usize,
+    pub inlines: Vec<MdInline>,
 }
 
 impl protocol::MutationKind<MdSnapshot, MdMutation> for SetInlines {

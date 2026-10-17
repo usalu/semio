@@ -1,6 +1,6 @@
 //! 🗄️ Db facade: the stable `db` surface the hub consumes, re-exported explicitly from the crates that define it.
-extern crate semio_framework_os_kernel as pack;
 #![cfg(not(target_arch = "wasm32"))]
+extern crate semio_framework_os_kernel as pack;
 
 pub use semio_framework_async;
 pub use db_durability::{DurabilityClass};

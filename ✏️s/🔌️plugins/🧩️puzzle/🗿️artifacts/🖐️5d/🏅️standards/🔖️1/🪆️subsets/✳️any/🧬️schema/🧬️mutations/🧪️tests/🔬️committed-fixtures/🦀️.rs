@@ -7,13 +7,14 @@
 //! `SEMIO_PUZZLE5D_WRITE_FIXTURES=1`, an ordinary run only asserts that every committed file
 //! already equals its regenerated form.
 
-use super::{Puzzle5dMutation};
+use protocol::Mutation;
+use crate::standards::v1::subsets::any::schema::mutations::{Puzzle5dMutation};
 use crate::apply_puzzle5d_mutation;
 use crate::standards::v1::subsets::any::schema::diff::Puzzle5dDiff;
 use crate::Puzzle5dSnapshot;
 use semio_framework_value::ToValue;
 
-const FIXTURE_ROOT: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧬️mutations");
+const FIXTURE_ROOT: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations");
 
 fn canonical<T: ToValue>(value: &T) -> String {
     format!("{}\n", semio_framework_pack_json::to_string_pretty(&semio_framework_pack_json::from_dsl_value(&value.to_value())))

@@ -1,6 +1,5 @@
 //! 🧱️ Creates an exact brep child reference in a vacant Object slot.
 
-use crate::schema::mutations::SemioObjectMutation;
 use crate::schema::snapshot::SemioObjectSnapshot;
 
 //#region 🔖️Payload
@@ -13,13 +12,16 @@ pub struct CreateBrep {
     pub target: semio_framework_artifact_reference::ArtifactRef,
 }
 
-impl protocol::MutationKind<SemioObjectSnapshot, SemioObjectMutation> for CreateBrep {
+impl<Op> protocol::MutationKind<SemioObjectSnapshot, Op> for CreateBrep
+where
+    Op: protocol::Mutation<SemioObjectSnapshot, Diff = crate::schema::diff::SemioObjectDiff> + From<CreateBrep> + From<crate::schema::mutations::delete_brep::DeleteBrep>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "brep", kind: "create-brep", record: "CreatedBrep" };
 
-    fn diff(&self, base: &SemioObjectSnapshot) -> protocol::MutationOutcome<<SemioObjectMutation as protocol::Mutation<SemioObjectSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioObjectSnapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<SemioObjectSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &SemioObjectSnapshot) -> Result<Vec<SemioObjectMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &SemioObjectSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

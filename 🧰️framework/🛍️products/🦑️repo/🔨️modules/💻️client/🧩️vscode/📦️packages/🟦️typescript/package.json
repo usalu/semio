@@ -23,14 +23,14 @@
     "onView:compose.filter",
     "onView:compose.sections"
   ],
-  "main": "./out/extension.js",
+  "main": "./dist/extension.js",
   "contributes": {
     "viewsContainers": {
       "activitybar": [
         {
           "id": "repo",
           "title": "repo",
-          "icon": "./🖼️icon/🔣️.svg"
+          "icon": "./🔣️compose_codeicon.svg"
         }
       ]
     },

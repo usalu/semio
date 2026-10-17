@@ -1,0 +1,11 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🎤️presentation/🧪️tests/🖼️deck-rendering/🟦️.tsx",
+ "describeLine": 13,
+ "shared": [[14,14],[30,33],[35,38]],
+ "children": [
+  {"dir": "🎥️media-and-tile-rendering", "doc": "/** 🎥️ The presentation react deck, rendering of media and tiles: video and pdf embodiments, teaser veils, absolute positions, split figure tiles, catalogue morph anchors and listed dispositions. */", "lines": [[225,534]]},
+  {"dir": "✂️cropped-figure-and-sheet-rules", "doc": "/** ✂️ The presentation react deck, rendering of cropped figure dispositions and the auto-animate style sheet rules: uniform scale, ghost opacity, anisotropic scale and run slides. */", "lines": [[536,673]]},
+  {"dir": "🔍️figure-scroll-and-zoom-rendering", "doc": "/** 🔍️ The presentation react deck, rendering of the figure scroll, cover and zoom math, pdf page subsets, crop sizing and mosaic windows. */", "lines": [[675,1013]]},
+  {"dir": "👻️morph-ghost-and-auto-animate-rendering", "doc": "/** 👻️ The presentation react deck, rendering of auto-animate targets, settled state, many-to-one ghost frames, one-to-many source ghosts and slot labels. */", "lines": [[1015,1329]]}
+ ]
+}

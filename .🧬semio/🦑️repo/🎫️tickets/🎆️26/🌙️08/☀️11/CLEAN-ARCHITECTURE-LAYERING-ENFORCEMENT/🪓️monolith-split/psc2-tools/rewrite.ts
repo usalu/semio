@@ -6,7 +6,7 @@ import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
 import { ROOT, scanSource } from "../sdkb-tools/lib.ts";
 import { nfc, isTestPath, loadPolicy, groupsOf, type Group } from "./model.ts";
-import { skipReason } from "./skip.ts";
+import { skipReason, crossScope } from "./skip.ts";
 
 const args = process.argv.slice(2);
 const [planPath, scanPath, policyPath] = args;
@@ -56,7 +56,7 @@ for (const f of files) {
   const why = args.includes("--ignore-skip") ? null : skipReason(f);
   let text: string;
   try { text = readFileSync(join(ROOT, f), "utf8"); } catch { continue; }
-  const recs = scanSource(f, text).filter(r => r.resolved && targetMap[nfc(r.resolved)] && flagged(f, nfc(r.resolved)));
+  const recs = scanSource(f, text).filter(r => r.resolved && targetMap[nfc(r.resolved)] && flagged(f, nfc(r.resolved)) && !crossScope(f, nfc(r.resolved)));
   if (!recs.length) continue;
   if (why) { for (const r of recs) report.skippedEdges.push({ file: f, line: r.line, target: nfc(r.resolved!), slice: why }); continue; }
   const bootstrap = BOOTSTRAP.test(f);
@@ -91,11 +91,24 @@ for (const f of files) {
     if (isJson && r.kind === "dynamic") {
       if (!m.jsonExport) { report.unhandled.push({ file: f, line: r.line, why: "json without export name", spec: r.spec }); continue; }
       const before = text.slice(Math.max(0, r.stmtStart - 80), r.stmtStart);
+      const after = text.slice(r.stmtEnd, r.stmtEnd + 160);
+      const callText = `import(${quote}${spec}${quote})`;
       const mm = /\bdefault(\s*:\s*([A-Za-z_$][\w$]*))(\s*\}\s*=\s*await\s*)$/u.exec(before);
-      if (!mm || !(r.members?.length === 1 && r.members[0] === "default")) { report.unhandled.push({ file: f, line: r.line, why: "dynamic json shape", spec: r.spec }); continue; }
-      const defStart = r.stmtStart - mm[0].length;
-      patches.push({ start: defStart, end: defStart + "default".length + mm[1].length, text: mm[2] === m.jsonExport ? mm[2] : `${m.jsonExport}${mm[1]}` });
-      patches.push({ start: r.litStart, end: r.litEnd, text: `${quote}${spec}${quote}` });
+      const b2 = /^\s*\)\s*\.(default)\b/u.exec(after);
+      const c2 = /^\s*\.then\(\s*([A-Za-z_$][\w$]*)\s*=>\s*\1\.(default)\s*\)/u.exec(after);
+      if (mm && r.members?.length === 1 && r.members[0] === "default") {
+        const defStart = r.stmtStart - mm[0].length;
+        patches.push({ start: defStart, end: defStart + "default".length + mm[1].length, text: mm[2] === m.jsonExport ? mm[2] : `${m.jsonExport}${mm[1]}` });
+        patches.push({ start: r.stmtStart, end: r.stmtEnd, text: callText });
+      } else if (b2) {
+        const at = r.stmtEnd + b2[0].lastIndexOf("default");
+        patches.push({ start: r.stmtStart, end: r.stmtEnd, text: callText });
+        patches.push({ start: at, end: at + "default".length, text: m.jsonExport });
+      } else if (c2) {
+        const at = r.stmtEnd + c2[0].lastIndexOf("default");
+        patches.push({ start: r.stmtStart, end: r.stmtEnd, text: callText });
+        patches.push({ start: at, end: at + "default".length, text: m.jsonExport });
+      } else { report.unhandled.push({ file: f, line: r.line, why: "dynamic json shape", spec: r.spec }); continue; }
       used.add(m.pkg); report.specifiers[spec] = (report.specifiers[spec] ?? 0) + 1; continue;
     }
     if (isJson) { report.unhandled.push({ file: f, line: r.line, why: `json ${r.kind} shape`, spec: r.spec }); continue; }

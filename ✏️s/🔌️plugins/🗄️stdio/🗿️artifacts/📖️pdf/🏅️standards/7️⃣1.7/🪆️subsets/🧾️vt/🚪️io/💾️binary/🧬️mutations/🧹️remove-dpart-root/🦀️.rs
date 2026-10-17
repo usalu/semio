@@ -1,6 +1,6 @@
 //! 🧹️ Direct binary codec for `remove-dpart-root`.
 
-use crate::standards::v1_7::subsets::vt::schema::mutations::RemoveDpartRoot;
+use crate::standards::v1_7::subsets::vt::schema::mutations::remove_dpart_root::RemoveDpartRoot;
 
 //#region 🔖️Identity
 pub const TAG: u8 = 15;
@@ -21,7 +21,5 @@ pub fn decode(bytes: &[u8]) -> Result<RemoveDpartRoot, String> {
 //#endregion 🔖️Codec
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

@@ -42,7 +42,6 @@ fn part21_original_decoder_returns_every_success_and_cancelled_prefix_to_actual_
   }
   let mut allow=|_|true;let mut control=NativeDecodeControl::new(1048576,&mut allow);let(result,heap)=observe_heap_allocations_on_this_thread(||decode(kind,&wire,&mut control));assert_eq!(result.err().unwrap().kind,ValueRefusalKind::OwnershipLimit);assert_eq!(heap,Default::default());
  }
- println!("[DEBUG] shared Part21 input success and every native cancellation checkpoint preserve actual original owner, exact four-axis allocator events and third-party serde_json output");
 }
 
 #[test]
@@ -51,7 +50,6 @@ fn part21_rejected_nested_child_preserves_owned_parent_text_and_siblings(){
  let mut row=fixture["cases"][0]["value"].clone();row["values"][1]["value"]["coefficient"]=serde_json::json!(1);
  let wire=semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse(&row.to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap());let mut allow=|_|true;let mut recipient=NativeDecodeRetirementRecipient::new();let mut control=NativeDecodeControl::new(1048576,&mut allow);control.install_retirement_recipient(&mut recipient).unwrap();
  let(result,heap)=observe_heap_allocations_on_this_thread(||Part21Value::from_value_controlled(&wire,&mut control));assert_eq!(result.err().unwrap().kind,ValueRefusalKind::InvalidValue);assert!(heap.requested_bytes>0);assert_eq!(heap.released_bytes,0);assert_eq!(control.owned_bytes(),heap.requested_bytes);drop(control);let(c,r)=drain(&mut recipient);assert_eq!(r,heap.requested_bytes+c);
- println!("[DEBUG] malformed nested decimal retains original typed-name and completed sibling until funded physical retirement");
 }
 
 #[test]
@@ -61,6 +59,5 @@ fn part21_cohort_retirement_releases_original_capacity_without_literal_byte_cred
  let literal=row["name"].as_str().unwrap().len()+row["typedName"].as_str().unwrap().len()+row["value"].as_str().unwrap().len();assert_eq!(literal,row["expectedTextBytes"].as_u64().unwrap()as usize);
  let name=original.entities[0].0.capacity();let Part21Value::Typed{name:typed,items}= &original.entities[0].1[0]else{panic!("typed fixture")};let Part21Value::Str(text)=&items[0]else{panic!("text fixture")};
  let backing=name+typed.capacity()+text.capacity()+original.entities.capacity()*std::mem::size_of::<(String,Vec<Part21Value>)>()+original.entities[0].1.capacity()*std::mem::size_of::<Part21Value>()+items.capacity()*std::mem::size_of::<Part21Value>();let(c,r)=dispose(original);assert_eq!(r,backing+c);
- println!("[DEBUG] literal text length does not stand in for original String, Vec or retirement-frame release capacity");
 }
 

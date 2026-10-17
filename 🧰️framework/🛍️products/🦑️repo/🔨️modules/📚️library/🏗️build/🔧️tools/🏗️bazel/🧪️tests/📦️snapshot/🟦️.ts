@@ -8,7 +8,7 @@ import*as fs from"node:fs/promises";
 import{join}from"node:path";
 import{Database}from"bun:sqlite";
 import fixture from"./🔣️.json";
-import schema from"../../🧬️schema/📦️snapshot.json";
+import schemaComponent from"../../🧬️schema/🔣️.json";const schema=schemaComponent.definitions.OutputSnapshot;
 import{withBuildTestInvocationV1}from"../../../../🧪️tests/📥️invocation/🟦️.ts";
 
 test("Bazel snapshot link metadata agrees with an independent closed schema oracle",async()=>{
@@ -30,7 +30,6 @@ test.skipIf(!process.env.SEMIO_TEST_ARTIFACT_DIR)("Bazel restores explicit direc
   expect(await fs.readFile(join(root,"out/b"))).toEqual(data);expect((await fs.lstat(directory)).mode&0o777).toBe(mode);expect((await glob("out/**/*",{cwd:root,onlyFiles:false,followSymbolicLinks:false})).sort()).toEqual(fixture.expectedPaths);
   const before=types.length;await restoreBazelSnapshotV1(root,snapshot,original,createIssuedResourceControlV1(original,"bazel:snapshot-fixture",0));expect(types.length).toBe(before);
   await fs.writeFile(join(directory,"value.txt"),"changed");await restoreBazelSnapshotV1(root,snapshot,original,createIssuedResourceControlV1(original,"bazel:snapshot-fixture",0));expect(await fs.readFile(join(root,"out/b"))).toEqual(data);expect((await fs.lstat(directory)).mode&0o777).toBe(mode);
-  console.log("[DEBUG] Actual capture/restore retains explicit link types, bytes, modes, idempotence and replacement of readonly outputs; independent fast-glob agrees");
  }finally{observer?.mockRestore();await fs.chmod(directory,0o755).catch(error=>{if((error as NodeJS.ErrnoException).code!=="ENOENT")throw error;});await fs.rm(root,{recursive:true,force:true});}
 }));
 

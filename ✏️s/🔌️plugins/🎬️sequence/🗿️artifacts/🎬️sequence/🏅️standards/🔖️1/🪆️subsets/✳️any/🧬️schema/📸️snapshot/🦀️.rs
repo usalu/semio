@@ -113,7 +113,7 @@ impl SequenceSnapshot {
     }
 
     /// 🌱 Converts a snapshot a test minted with its scene into its fixture shape.
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testkit"))]
     pub fn to_host_snapshot(&self) -> SequenceHostSnapshot {
         self.try_to_host_snapshot().expect("sequence child scene must be materialized before fixture projection")
     }

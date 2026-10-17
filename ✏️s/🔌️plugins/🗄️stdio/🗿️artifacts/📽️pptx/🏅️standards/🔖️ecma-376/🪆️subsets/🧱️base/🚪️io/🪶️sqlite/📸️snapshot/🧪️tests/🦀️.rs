@@ -534,7 +534,6 @@ async fn sqlite_snapshot_pptx_strict_initial_has_independent_complete_package_an
     let native = semio_s_artifact_stdio_pptx_base::standards::v_ecma_376::subsets::base::io::export::serializers::encode_pptx(&owner).unwrap();
     assert_eq!(independent_package(&native),contract["projection"]);
     assert_eq!(independent_relationships(&native),expected_edges);
-    eprintln!("[DEBUG] strict PPTX initial independent ZIP/QuickXML parts=9 resolved_relationships=5");
     semio_framework_plugin::PluginBuilder::<_, semio_framework_plugin::app::NoPluginApp>::new("stdio").label("PPTX SQLite").version("0.0.1").package_id("semio:stdio").artifact(semio_s_artifact_stdio_pptx::declaration(semio_s_artifact_stdio_pptx::definition().unwrap()).unwrap()).try_build().unwrap();
     let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind:"s.stdio.pptx".into(),standard:"ecma-376".into(),subset:"strict".into() };
     for encoding in [SnapshotEncoding::Binary,SnapshotEncoding::Text] {
@@ -545,7 +544,6 @@ async fn sqlite_snapshot_pptx_strict_initial_has_independent_complete_package_an
         let native_back=semio_s_artifact_stdio_pptx_base::standards::v_ecma_376::subsets::base::io::export::serializers::encode_pptx(&restored).unwrap();
         assert_eq!(independent_package(&native_back),contract["projection"]);
         assert_eq!(independent_relationships(&native_back),expected_edges);
-        eprintln!("[DEBUG] strict PPTX initial public SQLite native={encoding:?} full_owner_equal=true independent_relationships=5");
         restored.retire_sqlite_snapshot();
     }
     owner.retire_sqlite_snapshot();

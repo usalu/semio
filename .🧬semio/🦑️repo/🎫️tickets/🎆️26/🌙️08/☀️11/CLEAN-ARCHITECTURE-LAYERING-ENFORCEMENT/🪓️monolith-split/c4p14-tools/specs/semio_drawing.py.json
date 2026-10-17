@@ -1,0 +1,35 @@
+{
+ "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧪️tests/🖊️mutate-semio-drawing/🐍️.py",
+ "snapshot": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/🗑️generated/c4p14-snap/semio_drawing.py",
+ "alias": "mutate_semio_drawing_",
+ "children": [
+  {
+   "key": "text",
+   "dir": "📝️text-carrier",
+   "doc": "`stdio.semio.drawing` text carrier: the envelope constants, the grammar vocabularies with their ordinals and the DSL reader and printer, written from the committed grammar alone.",
+   "regions": [
+    "🔖️Carrier",
+    "🔖️Text primitives",
+    "🔖️Nodes",
+    "🔖️Dsl"
+   ]
+  },
+  {
+   "key": "pack",
+   "dir": "📦️pack-carrier",
+   "doc": "`stdio.semio.drawing` pack carrier: the LEB128 frame and the pack reader and writer, with every enum ordinal taken from the order the DSL grammar declares its alternatives in.",
+   "regions": [
+    "🔖️Pack"
+   ]
+  },
+  {
+   "key": "verbs",
+   "dir": "🧬️mutation-verbs",
+   "doc": "`stdio.semio.drawing` mutation verbs: how each verb is applied to the parsed document and the undo steps it owes, read off the committed specification vectors.",
+   "regions": [
+    "🔖️Mutations"
+   ],
+   "openMissing": []
+  }
+ ]
+}

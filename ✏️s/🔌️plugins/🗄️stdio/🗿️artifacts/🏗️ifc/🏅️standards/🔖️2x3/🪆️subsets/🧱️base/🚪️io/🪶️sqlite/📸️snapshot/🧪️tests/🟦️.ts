@@ -13,7 +13,7 @@ test("IFC2x3 independent corrupt ownership decimal width and optional EDM reject
 test("IFC2x3 cancellation and budgets bound exact decimal validation and deep graphs",async()=>{const input=fixture(),database=await ifc2x3SnapshotToSqliteDatabase(input);await expect(ifc2x3SnapshotToSqliteDatabase(input,{maxRows:1})).rejects.toThrow();await expect(ifc2x3SnapshotFromSqliteDatabase(database,{maxValueBytes:1})).rejects.toThrow();input.document.instances[0]!.entities[0]!.arguments=[{kind:"real",value:{negative:false,coefficient:"1".repeat(100000),scale:4294967295}}];const cancel=new AbortController();let large=false;await expect(ifc2x3SnapshotToSqliteDatabase(input,{signal:cancel.signal,onProgress:p=>{if(p.phase==="projectSnapshot"&&p.total===100000){large=true;cancel.abort();}}})).rejects.toThrow();expect(large).toBe(true);let value:Part21Value={kind:"unset"};for(let i=0;i<1200;i++)value={kind:"list",values:[value]};input.document.instances[0]!.entities[0]!.arguments=[value];const restored=await ifc2x3SnapshotFromSqliteDatabase(await ifc2x3SnapshotToSqliteDatabase(input));let cursor=restored.document.instances[0]!.entities[0]!.arguments[0]!,depth=0;while(cursor.kind==="list"){depth++;cursor=cursor.values[0]!;}expect(depth).toBe(1200);const cycle:Part21Value={kind:"list",values:[]};cycle.values.push(cycle);input.document.instances[0]!.entities[0]!.arguments=[cycle];await expect(ifc2x3SnapshotToSqliteDatabase(input)).rejects.toThrow(/cyclic/);});
 
 import Ajv from "ajv";
-import cohort from "../../../../../../../../../../📇️registry/🧬️contract/📐️part21/🧪️tests/🧫️fixtures/🚦️sqlite-cohort/🔣️.json";
+import { part21SqliteCohortFixture as cohort } from "@semio-tech/stdio-registry-ts/contract/part21/testing/fixtures/sqlite-cohort";
 
 
 test("Part21 full header and retirement-name neutral fields remain independently interpretable",async()=>{
@@ -24,8 +24,8 @@ test("Part21 full header and retirement-name neutral fields remain independently
   expect(physical.query("PRAGMA integrity_check").get()).toEqual({integrity_check:"ok"});
   expect(await ifc2x3SnapshotFromSqliteDatabase(await importSqliteDatabase(physical.serialize()))).toEqual(input);
   const row=cohort.retirementCase;
-  const counts=physical.query("SELECT length(CAST(? AS BLOB))+length(CAST(? AS BLOB))+length(CAST(? AS BLOB))+8 AS bytes").get(row.name,row.typedName,row.value)as{bytes:number};
-  expect(counts.bytes).toBe(row.expectedReleasedBytes);
+  const counts=physical.query("SELECT length(CAST(? AS BLOB))+length(CAST(? AS BLOB))+length(CAST(? AS BLOB)) AS bytes").get(row.name,row.typedName,row.value)as{bytes:number};
+  expect(counts.bytes).toBe(row.expectedTextBytes);
   expect(cohort.unsignedWords.map(BigInt)).toEqual([0n,18446744073709551615n]);
   expect(cohort.binary64Words.map(word=>{const view=new DataView(new ArrayBuffer(8));view.setBigUint64(0,BigInt(`0x${word}`),true);return view.getBigUint64(0,true).toString(16).padStart(16,"0");})).toEqual(cohort.binary64Words);
  }finally{physical.close();}
@@ -125,7 +125,6 @@ test("IFC2x3 removal-result references preserve full owner through independently
    function edit(value:Part21Value){if(value.kind==="ref"&&value.value===BigInt(case_.removedId))value.value=BigInt(corpus.editReference);else if(value.kind==="list"||value.kind==="typed")value.values.forEach(edit);}
    [...input.document.header.fileDescription,...input.document.header.fileName,...input.document.header.fileSchema,...input.document.instances.flatMap(instance=>instance.entities.flatMap(entity=>entity.arguments))].forEach(edit);
    expect(await ifc2x3SnapshotFromSqliteDatabase(await importSqliteDatabase(physical.serialize()))).toEqual(input);
-   console.log("[DEBUG] IFC2x3 full intermediate reference owner",case_.removedId);
   }finally{physical.close();}
  }
 });
@@ -139,7 +138,7 @@ test("IFC2x3 complete positive SQL surrogates preserve literal native identities
    physical.exec("UPDATE "+name+" SET "+[key+"="+key+"+"+corpus.surrogateOffset,...links.filter(link=>link.from!==key).map(link=>link.from+"="+link.from+"+"+corpus.surrogateOffset)].join(","));
   }
   expect(physical.query("PRAGMA integrity_check").get()).toEqual({integrity_check:"ok"});expect(physical.query("PRAGMA foreign_key_check").all()).toEqual([]);
-  expect(await ifc2x3SnapshotFromSqliteDatabase(await importSqliteDatabase(physical.serialize()))).toEqual(input);console.log("[DEBUG] IFC2x3 full shifted-surrogate owner",corpus.surrogateOffset);
+  expect(await ifc2x3SnapshotFromSqliteDatabase(await importSqliteDatabase(physical.serialize()))).toEqual(input);
  }finally{physical.close();}
 });
 
@@ -160,5 +159,5 @@ test("IFC2X3 complete independent cells preserve copied limits and required empt
  expect(normSemanticContract["schemaBytes"]).toEqual(4006);expect(normSemanticContract["tableWidths"]).toEqual({"ifc2x3_document":4,"ifc2x3_edm_preamble":17,"ifc2x3_entity_argument":4,"ifc2x3_entity_type":4,"ifc2x3_file_description_argument":4,"ifc2x3_file_name_argument":4,"ifc2x3_file_schema_argument":4,"ifc2x3_header":1,"ifc2x3_instance":4,"ifc2x3_list_element":4,"ifc2x3_typed_argument":4,"ifc2x3_value":12});expect(normSemanticContract["cases"]).toEqual([{"id":"originalSourceFull","rows":58,"valueBytes":1847},{"id":"emptyEntitiesRetainHeader","rows":17,"valueBytes":587}]);
  for(const item of normSemanticContract.cases){const source=fixture();if(item.id==="emptyEntitiesRetainHeader"){source.document.instances=[];}const database=await normSemanticProject(source),bytes=await normSemanticExport(database);expect(normIndependentExtent(bytes)).toEqual({rows:item.rows,valueBytes:item.valueBytes,schemaBytes:normSemanticContract.schemaBytes,tableWidths:normSemanticContract.tableWidths});const limits={maxRows:item.rows,maxValueBytes:item.valueBytes,maxSchemaBytes:normSemanticContract.schemaBytes,maxTables:12,maxColumns:17};expect(await normSemanticProject(source,limits)).toEqual(database);expect(await normSemanticRestore(await normSemanticImport(bytes),limits)).toEqual(source);
   for(const short of[{...limits,maxRows:item.rows-1},{...limits,maxValueBytes:item.valueBytes-1},{...limits,maxSchemaBytes:limits.maxSchemaBytes-1},{...limits,maxTables:11},{...limits,maxColumns:16}]){await expect(normSemanticProject(source,short)).rejects.toThrow();await expect(normSemanticRestore(database,short)).rejects.toThrow();}
- }console.log("[DEBUG] IFC2X3 complete independent SQLite cells and metadata preserve full and empty semantic limits");
+ }
 });

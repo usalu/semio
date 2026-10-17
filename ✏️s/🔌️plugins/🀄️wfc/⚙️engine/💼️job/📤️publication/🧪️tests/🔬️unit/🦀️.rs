@@ -61,7 +61,7 @@ fn publication_operation(publication: &Publication) -> semio_framework_job::Oper
 fn poll_once(publication: &mut Publication, fuel: u64, sequence: &mut u64) -> Option<Delivered> {
     let operation = Operation::new(publication_operation(publication), RevisionId(1), Generation(1), 1);
     let mut receipt = RetainedCloneProgress::default();
-    let mut context = crate::job::test_step_context(operation.operation, operation.generation, StepBudget::new(fuel, u64::MAX, GRANT), root_cancel_token(), sequence, &mut receipt);
+    let mut context = semio_s_plugin_wfc_engine_oracle::step_context::test_step_context(operation.operation, operation.generation, StepBudget::new(fuel, u64::MAX, GRANT), root_cancel_token(), sequence, &mut receipt);
     match publication.poll(&mut context).expect("one publication step")? {
         JobOutcomeBorrow::PreviewReady { payload, .. } => Some(("preview", received(payload), None, None)),
         JobOutcomeBorrow::CheckpointReady { state, applied_progress, .. } => Some(("checkpoint", received(state), None, Some(applied_progress))),

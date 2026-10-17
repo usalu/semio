@@ -1,4 +1,17 @@
-/// 🔭️ Viewer laws: the preview-eval and viewer law wrappers, each mounting its unit test file.
+//! 🔭️ Viewer laws: the preview-eval and viewer law wrappers and the serial-lock discipline.
+#![allow(dead_code, unused_imports)]
+
+include!("../🦀️.rs");
+
+#[path = "../🧪️tests/🔒️serial-lock-discipline/🦀️.rs"]
+pub(crate) mod serial_lock_discipline;
+
+#[path = ".."]
+mod editor_domain {
+include!("../📥️editor-imports/🦀️.rs");
+#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs"]
+pub(crate) mod editor_laws;
+}
 
 #[path = ".."]
 mod preview_eval_tests_laws {

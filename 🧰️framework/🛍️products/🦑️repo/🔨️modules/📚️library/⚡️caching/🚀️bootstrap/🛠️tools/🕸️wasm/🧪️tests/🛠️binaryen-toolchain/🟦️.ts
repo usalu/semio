@@ -1,3 +1,4 @@
+import{testMethodV1,testRecordV1}from"../../../../../🧪️tests/📋️values/🟦️.ts";
 import assert from "node:assert/strict";
 import { readFileSync, mkdirSync, mkdtempSync, readdirSync, rmSync } from "node:fs";
 import { createRequire } from "node:module";
@@ -6,7 +7,7 @@ import { join } from "node:path";
 /** 🧪️ Verifies portable optimizer selection against a language-neutral archive contract. */
 export async function testBinaryenToolchain(workspace: string, output?: string): Promise<void> {
   const root = join(import.meta.dir, "../.."), require = createRequire(import.meta.url);
-  const manifest = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8")), schema = JSON.parse(readFileSync(join(root, "🧬️schema/🔣️.json"), "utf8"));
+  const schema = JSON.parse(readFileSync(join(root, "🧬️schema/🔣️.json"), "utf8")), manifest=schema.definitions.Release.const;
   const fixture = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🛠️binaryen-toolchain/🔣️.json"), "utf8"));
   assert.equal(new (require("ajv"))().compile(schema)(manifest), true);
   const { binaryenDistribution, binaryenMembers, binaryenIdentity, prepareBinaryen, binaryenDirectory } = await import("../../📜️script.ts");
@@ -27,8 +28,8 @@ export async function testBinaryenToolchain(workspace: string, output?: string):
   assert.ok(project.targets["deps-wasm"].dependsOn.includes(fixture.target));
   const { cacheInternals } = await import("../../../../../../🏗️build/🕸️graph/📥️inference/🟨️.mjs");
   const targets = { wasm: { cache: true, dependsOn: ["declarations"] } };
-  assert.deepEqual(cacheInternals.withWasmTooling(targets, true).wasm.dependsOn, ["declarations", `workspace:${fixture.target}`]);
-  assert.deepEqual(cacheInternals.withWasmTooling(targets, false), targets);
+  assert.deepEqual(testRecordV1(testMethodV1(cacheInternals,"withWasmTooling",targets,true),"wasm").dependsOn, ["declarations", `workspace:${fixture.target}`]);
+  assert.deepEqual(testMethodV1(cacheInternals,"withWasmTooling",targets,false), targets);
   if (output) {
     mkdirSync(output, { recursive: true });
     const temporary = mkdtempSync(join(output, "binaryen-rejection-")), previous = globalThis.fetch;

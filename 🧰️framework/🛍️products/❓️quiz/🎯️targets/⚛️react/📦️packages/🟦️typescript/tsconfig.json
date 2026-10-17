@@ -51,7 +51,10 @@
     "../../../../🧪️tests/🎪️pets-on-stage/🟦️.tsx",
     "../../../../🧪️tests/🎛️pet-allowances/🟦️.tsx",
     "../../../../🧪️tests/🚏️navigation/🟦️.tsx",
-    "../../../../🧪️tests/🪜️challenge-views/🟦️.tsx"
+    "../../../../🧪️tests/🪜️challenge-views/🟦️.tsx",
+    "../../../../🧪️tests/💬️challenge-hint-views/🟦️.tsx",
+    "../../../../🧪️tests/⏱️challenge-clock-views/🟦️.tsx",
+    "../../../../🧪️tests/🎨️stylesheet-tree/🟦️.tsx"
   ],
   "exclude": ["**/node_modules/**"]
 }

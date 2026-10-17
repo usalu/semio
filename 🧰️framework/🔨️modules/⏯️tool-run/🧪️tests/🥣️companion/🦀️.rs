@@ -3,6 +3,7 @@
 //! 🧭️ The tests read the run contract through its public API and the `testkit` hooks; every fixture is read at run time from the tool-run module directory, so no document is compiled into the test closure.
 #![cfg(test)]
 
+use semio_framework_test_fixtures::fixture_path;
 use std::{collections::HashMap, path::{Path, PathBuf}, sync::{Mutex, OnceLock}};
 
 pub use semio_framework_tool_run::testkit::*;
@@ -13,7 +14,7 @@ static TOOL_RUN_ORIGINAL_HEAP: semio_framework_trace::HeapWitness = semio_framew
 
 pub fn module_directory() -> &'static Path {
     static DIRECTORY: OnceLock<PathBuf> = OnceLock::new();
-    DIRECTORY.get_or_init(|| Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../.."))
+    DIRECTORY.get_or_init(|| fixture_path!("../../../.."))
 }
 
 fn leaked(relative: &str) -> &'static [u8] {

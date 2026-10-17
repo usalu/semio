@@ -3,7 +3,6 @@
 //! are the framework ToolRun panel and actions (`📋️tool-run-contract.md` §2.4–§2.6), and tested candidates are
 //! `placement2d` trace records.
 
-use crate::editor::puzzle2d::modes::edit::options::brush::puzzle2d_distribution_measures;
 use crate::editor::puzzle2d::precompute::fill::{FillRunCounter, FillRunReason, FillRunStage};
 use crate::editor::puzzle2d::terminology::{puzzle2d_localized, Puzzle2dLabels};
 use {crate::editor::puzzle2d::snapshot::puzzle2d_action, crate::editor::puzzle2d::snapshot::Puzzle2dScene};
@@ -94,7 +93,5 @@ pub fn measures(envelope: &Puzzle2dScene, labels: &Puzzle2dLabels) -> WindowMeas
 //#endregion 🔖️Definition
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

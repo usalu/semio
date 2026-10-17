@@ -44,13 +44,15 @@ ui_wgpu = { path = "../../../../../../../../🔨️modules/🖱️ui/📦️pack
 ui_wgpu = { path = "../../../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", package = "semio-framework-ui", features = ["wgpu"] }
 
 [dev-dependencies]
-semio-framework-os-infinite-world-interaction = { path = ".", features = ["testkit"] }
 semio-framework-job = { workspace = true, features = ["testkit"] }
+semio-framework-test-fixtures = { path = "../../../../../../../../🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 
 [[test]]
 name = "world_interaction_unit"
 path = "../../🧪️tests/🔬️unit/🦀️.rs"
+required-features = ["testkit"]
 
 [[test]]
 name = "world_interaction_pointer_gestures"
 path = "../../🧪️tests/🖱️pointer-gestures/🦀️.rs"
+required-features = ["testkit"]

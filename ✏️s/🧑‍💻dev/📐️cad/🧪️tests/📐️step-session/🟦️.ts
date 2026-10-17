@@ -18,6 +18,5 @@ export async function stepBrowserLaws():Promise<void> {
     let turns=0;
     await session.close({maximumItems:1,maximumCopyBytes:1_048_576,onProgress:receipt=>{ assert(receipt.items<=1); turns++; }});
     assert(turns>1);
-    console.log("[DEBUG] outward STEP browser: exact volume round-trip, prior handles, independent authority, cancelled close/resume and bounded retirement passed");
   } finally { await Promise.all([session.close(),isolated.close()]); }
 }

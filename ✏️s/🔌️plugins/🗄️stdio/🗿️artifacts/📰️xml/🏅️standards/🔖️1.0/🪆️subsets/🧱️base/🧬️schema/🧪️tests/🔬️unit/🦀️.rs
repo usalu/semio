@@ -1,5 +1,7 @@
-use super::*;
+use crate::XmlSnapshot;
+use crate::standards::v1_0::subsets::base::schema::*;
 use crate::schema::diff::{XmlChildAdded, XmlNodeDiff};
+use semio_framework_test_fixtures::fixture_text;
 use crate::schema::mutations::{
     InsertElementMutation, InsertElementPayload, RemoveElementMutation, RemoveElementPayload, SetAttributeMutation, SetAttributePayload, SetDeclarationMutation, SetDeclarationPayload, SetDoctypeMutation, SetDoctypePayload, SetTextMutation,
     SetTextPayload, XmlNodePath,
@@ -70,7 +72,7 @@ async fn snapshot_codecs_preserve_intermediate_boundaries_and_builder_refuses_in
 
 #[semio_framework_async_macros::async_test]
 async fn snapshot_codecs_preserve_declarations_and_xml_wire_ingress_refuses_unpublishable_declarations() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🧭️document-boundaries/🔣️.json")).expect("neutral XML document-boundary fixture");
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../🧪️tests/🧫️fixtures/🧭️document-boundaries/🔣️.json")).expect("neutral XML document-boundary fixture");
     for case in fixture["invalidAuthored"].as_array().expect("invalid authored cases").iter().skip(2) {
         let mut invalid = sample_snapshot();
         invalid.doc.root = Some(XmlNode::Element { name: "root".into(), attrs: Vec::new(), children: vec![XmlNode::Text { text: case["rootText"].as_str().expect("root text").into() }] });

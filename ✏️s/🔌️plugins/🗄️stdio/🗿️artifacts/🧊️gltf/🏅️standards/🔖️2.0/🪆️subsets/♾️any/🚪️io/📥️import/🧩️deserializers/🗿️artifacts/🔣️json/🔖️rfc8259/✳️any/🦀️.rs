@@ -1,5 +1,5 @@
 //! 📥️ Deserialize `stdio.gltf` from stdio.json.
-use crate::standards::v2_0::subsets::any::schema::snapshot::GltfSnapshot;
+use crate::standards::v2_0::subsets::any::schema::snapshot_root::GltfSnapshot;
 use semio_s_artifact_stdio_json::JsonSnapshot;
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn register() {}

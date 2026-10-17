@@ -241,8 +241,7 @@ impl Default for SemioGraphSnapshot {
 
 //#endregion 🔖️HandcraftedArtifactCodecs
 
-#[path="🔣️json/🦀️.rs"]
-mod declared_json;
+
 
 //#region 🌉️ExternalCodecBridge
 
@@ -265,7 +264,7 @@ mod declared_json;
 /// non-default position) and one edge connecting them, exercising every leaf/collection shape at
 /// least once. Single source of truth for `📚️examples/…/🖼️assets/🗣️.dsl.semio`/
 /// `🎒️.pack.semio` and for the conformance-law tests in `🚪️io/🦀️.rs`.
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_graph_snapshot() -> SemioGraphSnapshot {
     SemioGraphSnapshot {
@@ -296,9 +295,7 @@ pub(crate) fn demo_graph_snapshot() -> SemioGraphSnapshot {
 //#endregion 🔖️Demo
 
 //#region 🔖️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🔖️Tests
 
 

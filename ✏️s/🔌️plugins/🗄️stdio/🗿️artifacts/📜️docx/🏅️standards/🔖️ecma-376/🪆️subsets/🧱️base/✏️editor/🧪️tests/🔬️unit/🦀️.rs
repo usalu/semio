@@ -1,4 +1,5 @@
 use super::*;
+use semio_framework_test_fixtures::fixture_text;
 use semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::docx_top_level_run_at;
 use semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::insert_table_row;
 use semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::insert_xml_node;
@@ -37,7 +38,7 @@ async fn create_docx_editor_builds_a_definition_for_the_editor_role() {
 
 #[test]
 fn initial_document_matches_the_neutral_empty_paragraph_snapshot_and_renders_one_target() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🌱️initial-document/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../✏️editor/🧪️tests/🧫️fixtures/🌱️initial-document/🔣️.json")).unwrap();
     let snapshot = <DocxEditor as ArtifactEditor>::initial_snapshot();
     let targets = semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::docx_top_level_text_targets(&snapshot, 0).unwrap();
     assert_eq!(targets.len(), fixture["body"].as_array().unwrap().len());
@@ -94,7 +95,7 @@ fn parser_requires_the_complete_nested_address_and_empty_text_remains_valid() {
 fn formatting_parser_requires_all_schema_fields_and_preserves_the_canonical_address() {
     let snapshot = snapshot_with_blocks(vec![DocxBlock::paragraph("hello")]);
     let target = run(&snapshot);
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎨️run-formatting-action/🔣️.json")).expect("language-neutral formatting fixture");
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../✏️editor/🧪️tests/🧫️fixtures/🎨️run-formatting-action/🔣️.json")).expect("language-neutral formatting fixture");
     let before = &fixture["transition"]["before"];
     let command = <DocxEditor as ArtifactEditor>::command_from_action(
         fixture["action"].as_str().unwrap(),
@@ -129,7 +130,7 @@ fn inherited_bold_and_explicit_off_remain_distinct_through_saved_quick_xml_oracl
     use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapshot::xml_document_from_text;
     use std::io::Read;
 
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎨️direct-run-formatting/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../✏️editor/🧪️tests/🧫️fixtures/🎨️direct-run-formatting/🔣️.json")).unwrap();
     let mut snapshot = build_minimal_docx(DocxDocument { body: vec![DocxBlock::paragraph("placeholder")], styles: vec![DocxStyle { id: "InheritedBold".into(), name: "Inherited Bold".into(), based_on: None }] });
     snapshot.xml_part_mut("word/document.xml").unwrap().replace_document(xml_document_from_text(fixture["documentXml"].as_str().unwrap()).unwrap()).unwrap();
     snapshot.xml_part_mut("word/styles.xml").unwrap().replace_document(xml_document_from_text(fixture["stylesXml"].as_str().unwrap()).unwrap()).unwrap();
@@ -198,7 +199,7 @@ fn retained_work_refuses_an_unpaged_large_owner_without_publication() {
 
     let snapshot = snapshot_with_blocks(vec![DocxBlock::paragraph("before")]);
     let target = run(&snapshot);
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../📬️preparation/🧪️tests/🧫️fixtures/🧵️admission/🔣️.json")).expect("language-neutral admission fixture");
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../✏️editor/📬️preparation/🧪️tests/🧫️fixtures/🧵️admission/🔣️.json")).expect("language-neutral admission fixture");
     let command = semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native(DocxEditorCommand::SetPage { address: target.address, text: "x".repeat(fixture["refusedTextBytes"].as_u64().expect("refused text bytes") as usize) });
     let config = NoConfig::default();
     let history = semio_framework_plugin::HistoryView::empty();
@@ -235,7 +236,7 @@ fn canonical_preparation_recognizes_and_encodes_every_addressed_xml_mutation() {
     use semio_framework_plugin::plugin_app_close_prelude::store::{ArtifactCanonicalJsonNode, ArtifactCanonicalJsonTree};
     use semio_s_artifact_stdio_xml::schema::snapshot::XmlNode;
 
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../📬️preparation/🧪️tests/🧫️fixtures/🧵️admission/🔣️.json")).expect("language-neutral admission fixture");
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../✏️editor/📬️preparation/🧪️tests/🧫️fixtures/🧵️admission/🔣️.json")).expect("language-neutral admission fixture");
     let address = run(&snapshot_with_blocks(vec![DocxBlock::paragraph("before")])).address;
     let node = XmlNode::Text { text: "payload β".into() };
     let mutations = vec![
@@ -280,7 +281,7 @@ fn drain_publication(publication: &mut store::os_store::one_item_publication::Ar
 async fn retained_opc_and_xml_store_route_cancels_publishes_saves_and_retires_large_owners() {
     use std::io::Read;
 
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../📬️preparation/🧪️tests/🧫️fixtures/🧬️retained-opc-lifecycle/🔣️.json")).expect("language-neutral retained OPC lifecycle fixture");
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../✏️editor/📬️preparation/🧪️tests/🧫️fixtures/🧬️retained-opc-lifecycle/🔣️.json")).expect("language-neutral retained OPC lifecycle fixture");
     let part_path = fixture["partPath"].as_str().expect("retained OPC part path");
     let content_type = fixture["contentType"].as_str().expect("retained OPC content type");
     let part_bytes = fixture["partBytes"].as_u64().expect("retained OPC part bytes") as usize;

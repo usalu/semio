@@ -18,7 +18,6 @@ test("LAS all owned header/VLR/point fields and exact IEEE/presence states survi
     expect(native.query("PRAGMA integrity_check").get()).toEqual({integrity_check:"ok"});expect(native.query("PRAGMA foreign_key_check").all()).toEqual([]);expect(await lasSnapshotFromSqliteDatabase(await importSqliteDatabase(native.serialize()))).toEqual(snapshot);
     expect(native.query(fixture.independentQuery).all()).toEqual([{ordinal:0,intensity:65535,time_numeric_class:null,red:null},{ordinal:1,intensity:0,time_numeric_class:"nan",red:null},{ordinal:2,intensity:17,time_numeric_class:null,red:0},{ordinal:3,intensity:17,time_numeric_class:"finite",red:65535}]);
     native.run(fixture.independentEdit);const edited=await lasSnapshotFromSqliteDatabase(await importSqliteDatabase(native.serialize()));expect(edited.points[1]!.intensity).toBe(23);expect(edited.vlrs[0]!.data).toEqual([0,42,17,0]);expect(edited.points[3]!.gpsTime).toBeUndefined();expect(edited.header.numberOfPointRecords).toBe(4294967295);
-    console.log("[DEBUG] LAS complete typed header, histogram, proprietary VLR octets, point/GPS/RGB SQL joins and edited file verified");
   }finally{native.close();}
 },30000);
 
@@ -99,5 +98,5 @@ test("LAS complete independent cells preserve copied limits and required empty m
  expect(normSemanticContract["schemaBytes"]).toEqual(5875);expect(normSemanticContract["tableWidths"]).toEqual({"las_document":2,"las_header":50,"las_point":21,"las_point_gps":4,"las_point_rgb":4,"las_return_histogram":4,"las_vlr":6,"las_vlr_octet":4});expect(normSemanticContract["cases"]).toEqual([{"id":"full","rows":21,"valueBytes":1509},{"id":"metadataRetainingEmpty","rows":7,"valueBytes":520}]);
  for(const item of normSemanticContract.cases){const source=structuredClone(snapshot);if(item.id==="metadataRetainingEmpty"){source.vlrs=[];source.points=[];}const database=await normSemanticProject(source),bytes=await normSemanticExport(database);expect(normIndependentExtent(bytes)).toEqual({rows:item.rows,valueBytes:item.valueBytes,schemaBytes:normSemanticContract.schemaBytes,tableWidths:normSemanticContract.tableWidths});const limits={maxRows:item.rows,maxValueBytes:item.valueBytes,maxSchemaBytes:normSemanticContract.schemaBytes,maxTables:8,maxColumns:50};expect(await normSemanticProject(source,limits)).toEqual(database);expect(await normSemanticRestore(await normSemanticImport(bytes),limits)).toEqual(source);
   for(const short of[{...limits,maxRows:item.rows-1},{...limits,maxValueBytes:item.valueBytes-1},{...limits,maxSchemaBytes:limits.maxSchemaBytes-1},{...limits,maxTables:7},{...limits,maxColumns:49}]){await expect(normSemanticProject(source,short)).rejects.toThrow();await expect(normSemanticRestore(database,short)).rejects.toThrow();}
- }console.log("[DEBUG] LAS complete independent SQLite cells and metadata preserve full and empty semantic limits");
+ }
 });

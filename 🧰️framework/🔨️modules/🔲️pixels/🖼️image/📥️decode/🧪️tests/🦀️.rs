@@ -10,7 +10,6 @@ fn oracle(text:&str)->Vec<u8>{let bytes=if text.get(..5).is_some_and(|s|s.eq_ign
 #[test]
 fn image_sources_decode_shared_rfc_transport_and_all_png_forms(){
  let rows=rows();for row in rows.as_array().unwrap(){let expected:Vec<u8>=serde_json::from_value(row["expected"]["pixels"].clone()).unwrap();let source=input(&row["input"]);for items in [1,7,4096]{let mut job=ImageDecodeJob::new(source).unwrap();assert!(job.result().is_err());finish(&mut job,source.data,items).unwrap();let result=take(&mut job);assert_eq!(result.width,row["expected"]["width"].as_u64().unwrap()as u32);assert_eq!(result.height,row["expected"]["height"].as_u64().unwrap()as u32);assert_eq!(result.pixels,expected,"{} grant {items}",row["name"]);drain(job);drain(result);}assert_eq!(oracle(source.data),expected,"{} third-party oracle",row["name"]);}
- eprintln!("[DEBUG] Native encoded PNG sources matched independent base64/percent/png with independent grants");
 }
 #[test]
 fn image_sources_reject_shared_malformed_and_unsupported_sources(){
@@ -33,5 +32,4 @@ fn image_sources_original_funding_and_jpeg_allocator_custody(){
   let decoded=image::load_from_memory_with_format(&base64::engine::general_purpose::STANDARD.decode(row["base64"].as_str().unwrap()).unwrap(),image::ImageFormat::Jpeg).unwrap().into_rgba8();let output=job.result().unwrap();assert_eq!((output.width,output.height),(row["width"].as_u64().unwrap()as u32,row["height"].as_u64().unwrap()as u32));let maximum=output.pixels.iter().zip(decoded.as_raw()).map(|(left,right)|left.abs_diff(*right)).max().unwrap();assert!(maximum<=row["oracleTolerance"].as_u64().unwrap()as u8);let denied=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:size_of::<RasterImage>()-1,maximum_depth:1,..Default::default()};assert!(job.take_result(denied).unwrap().is_none());let output=take(&mut job);let(a,r)=drain(job);let(oa,or)=drain(output);assert_eq!(born+a+oa,r+or);
  }
  for phase in fixture["interruptionPhases"].as_array().unwrap().iter().filter(|phase|phase.as_str()!=Some("png")){assert!(phases.contains(phase.as_str().unwrap()));}
- eprintln!("[DEBUG] Original composed PNG/JPEG axes, cancellation child custody, seven independent decoders and actual allocator receipts passed");
 }

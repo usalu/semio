@@ -187,6 +187,7 @@
     "♻️mit-bestand/🎤️präsentation/📅️33.projektetage/📦️packages/🟦️typescript/📋️project.json",
     "♻️mit-bestand/🧺️demonstrator/🔨️modules/🧩️runtime/🧪️e2e/🟦️.ts",
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/🚦️goal-gate/🟦️.ts",
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔄️transactions/🧪️verification/🏃️shard-execution/🟦️.ts",
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🔵️.ps1",
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🐚️.sh"
@@ -218,6 +219,10 @@
     "🌎️hub/🏗️bootstrap/🧾️provenance/🌍️gis-browser-proof/🟦️.ts",
     "🌎️hub/🏗️bootstrap/🧾️provenance/🧮️bootstrap-claims/🟦️.ts",
     "🌎️hub/🏗️bootstrap/🧾️provenance/🗃️bootstrap-bundle/🟦️.ts",
+    "🌎️hub/🏗️bootstrap/🧾️provenance/🚚️bootstrap-publication/🧱️materialized-bundle/🟦️.ts",
+    "🌎️hub/🏗️bootstrap/🧾️provenance/🚚️bootstrap-publication/🗺️gis-proofs-and-staging/🟦️.ts",
+    "🌎️hub/🏗️bootstrap/🧾️provenance/🚚️bootstrap-publication/🔄️rotation-and-current-pointer/🟦️.ts",
+    "🌎️hub/🏗️bootstrap/🧾️provenance/🚚️bootstrap-publication/📮️receipts-and-publication-child/🟦️.ts",
     "🌎️hub/🏗️bootstrap/🧾️provenance/🚚️bootstrap-publication/🟦️.ts",
     "🌎️hub/🧪️tests/🎮️gis-map-process-support/🟦️.ts",
     "🌎️hub/🧪️tests/🕹️gis-map-process/🟦️.ts",
@@ -291,5 +296,55 @@
       "id": "root-bazel-module",
       "path": "MODULE.bazel"
     }
-  ]
+  ],
+  "ciDependencies": {
+    "path": ".github/workflows/architecture-quiz.yml",
+    "jobs": [
+      "site",
+      "proctor"
+    ],
+    "command": "bun repo dependencies sync --scope .",
+    "cases": [
+      {
+        "name": "root-scope",
+        "command": "bun repo dependencies sync --scope .",
+        "accepted": true
+      },
+      {
+        "name": "quoted-root",
+        "command": "bun repo dependencies sync --scope \".\"",
+        "accepted": true
+      },
+      {
+        "name": "raw-installer",
+        "command": "bun install --frozen-lockfile --ignore-scripts",
+        "accepted": false
+      },
+      {
+        "name": "direct-nx",
+        "command": "bun nx run workspace:setup",
+        "accepted": false
+      },
+      {
+        "name": "broader-all",
+        "command": "bun repo dependencies sync --all",
+        "accepted": false
+      },
+      {
+        "name": "lock-refresh",
+        "command": "bun repo dependencies lock --scope .",
+        "accepted": false
+      },
+      {
+        "name": "foreign-scope",
+        "command": "bun repo dependencies sync --scope other",
+        "accepted": false
+      },
+      {
+        "name": "extra-argument",
+        "command": "bun repo dependencies sync --scope . --ignore-scripts",
+        "accepted": false
+      }
+    ]
+  }
 }

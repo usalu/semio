@@ -2,10 +2,13 @@
 //! negated offset), so a multi-point drag stays one point-invertible row.
 
 use crate::standards::v1::subsets::geometry::schema::mutations::set_point_positions::{equation_point_targets_invariant, EquationPointPosition, SetPointPositions};
-use crate::{EquationMutation, EquationSnapshot};
+use crate::EquationSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &super::MovePoints, base: &EquationSnapshot) -> Vec<EquationMutation> {
+pub fn inverse<Op>(payload: &super::MovePoints, base: &EquationSnapshot) -> Vec<Op>
+where
+    Op: From<crate::standards::v1::subsets::geometry::schema::mutations::set_point_positions::SetPointPositions>,
+{
     if equation_point_targets_invariant(&payload.indices).is_err() || !payload.dx.is_finite() || !payload.dy.is_finite() || (payload.dx, payload.dy) == (0.0, 0.0) {
         return Vec::new();
     }
@@ -13,6 +16,6 @@ pub fn inverse(payload: &super::MovePoints, base: &EquationSnapshot) -> Vec<Equa
     if positions.is_empty() {
         return Vec::new();
     }
-    vec![EquationMutation::SetPointPositions(SetPointPositions { positions })]
+    vec![Op::from(SetPointPositions { positions })]
 }
 //#endregion 🔖️Inverse

@@ -6,6 +6,9 @@
     "test": "bun --cwd \"../../../../../../..\" repo run @semio-tech/compiler-syntax-ecma-ts:test"
   },
   "version": "0.0.0",
+  "exports": {
+    ".": "./🟦️.ts"
+  },
   "devDependencies": {
     "@semio-tech/process": "workspace:*"
   }

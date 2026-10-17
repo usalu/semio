@@ -13,8 +13,9 @@ use semio_framework_plugin_reactor_wit_bridge::wit_bridge::poll;
 use semio_framework_plugin_reactor_turn as turn;
 use semio_framework_ui_contract as ui_contract;
 
+#[doc(hidden)]
 #[cfg(test)]
-pub(super) fn charge_turn_execution_us(spent_us: u64) {
+pub fn charge_turn_execution_us(spent_us: u64) {
     TURN_EXECUTION.with(|execution| {
         let mut current = execution.get();
         current.accumulated_us = current.accumulated_us.saturating_add(spent_us);

@@ -1,13 +1,9 @@
 //! 🚪️ Artifact representation module ownership.
 
-#[path = "📸️snapshot/🦀️.rs"]
-pub mod snapshot;
+pub use semio_s_artifact_stdio_deflate_snapshot::standards::v_rfc1950::subsets::any::io::binary::snapshot;
 
-#[path = "🧬️mutations/🦀️.rs"]
-pub mod mutations;
+pub use semio_s_artifact_stdio_deflate_mutations::standards::v_rfc1950::subsets::any::io::binary::mutations;
 
-#[path = "🔺️diff/🦀️.rs"]
-pub mod diff;
+pub use semio_s_artifact_stdio_deflate_mutations::standards::v_rfc1950::subsets::any::io::binary::diff;
 
-#[path = "💡️inferences/🦀️.rs"]
-pub mod inferences;
+

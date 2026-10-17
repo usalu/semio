@@ -2,7 +2,6 @@
 //! FINAL-state insertion index.
 
 use crate::diff::Wfc3dDiff;
-use crate::mutations::Wfc3dMutation;
 use crate::schema::snapshot::{Tile, Wfc3dSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -16,17 +15,23 @@ pub struct CreateTile {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn create_tile(index: usize, tile: Tile) -> Wfc3dMutation {
-    Wfc3dMutation::CreateTile(CreateTile { index, tile })
+pub fn create_tile<Op>(index: usize, tile: Tile) -> Op
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::create_tile::CreateTile>,
+{
+    Op::from(CreateTile { index, tile })
 }
 
-impl MutationKind<Wfc3dSnapshot, Wfc3dMutation> for CreateTile {
+impl<Op> MutationKind<Wfc3dSnapshot, Op> for CreateTile
+where
+    Op: protocol::Mutation<Wfc3dSnapshot, Diff = Wfc3dDiff> + From<CreateTile> + From<crate::standards::v1::subsets::any::schema::mutations::delete_tile::DeleteTile>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "tile", kind: "create-tile", record: "CreatedTile" };
 
     fn diff(&self, base: &Wfc3dSnapshot) -> protocol::MutationOutcome<Wfc3dDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Wfc3dSnapshot) -> Result<Vec<Wfc3dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Wfc3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

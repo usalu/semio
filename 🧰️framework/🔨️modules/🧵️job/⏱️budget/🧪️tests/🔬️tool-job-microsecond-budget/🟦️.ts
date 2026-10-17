@@ -4,6 +4,7 @@ import { createRequire } from "node:module";
 import { microsecondsFromMilliseconds } from "../../🟨️.js";
 import { WORKSPACE_ROOT } from "../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/📍️checkout-root/🟦️.ts";
 import { toolJobMicrosecondWorkerExact } from "../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/🏭️factory/🟦️.ts";
+import { readModuleTreeSource } from "../../../../📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
 
 /** 🧪️ Executes tool job microsecond budget policy assertions. */
 export function toolJobMicrosecondBudgetSelfTests(): number {
@@ -46,7 +47,7 @@ export function toolJobMicrosecondBudgetSelfTests(): number {
   const binding = JSON.parse(readFileSync(join(base, "🪢️binding.json"), "utf8"));
   const plugin = readFileSync(join(WORKSPACE_ROOT, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs"), "utf8");
   const job = readFileSync(join(base, "../🦀️.rs"), "utf8");
-  const trace = readFileSync(join(base, "../../⏱️trace/🦀️.rs"), "utf8");
+  const trace = readModuleTreeSource(join(base, "../../⏱️trace/🦀️.rs"));
   const loan = readFileSync(join(base, "../📬️outcome/🤝️loan/🦀️.rs"), "utf8");
   const mutations: Record<string, [number, string, string]> = {
     none: [0, "", ""],

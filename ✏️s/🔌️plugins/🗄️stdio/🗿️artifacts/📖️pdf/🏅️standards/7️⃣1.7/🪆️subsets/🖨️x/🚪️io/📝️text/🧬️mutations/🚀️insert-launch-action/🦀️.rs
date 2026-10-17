@@ -1,6 +1,6 @@
 //! 🚀️ Direct text codec for `insert-launch-action`.
 
-use crate::standards::v1_7::subsets::x::schema::mutations::InsertLaunchAction;
+use crate::standards::v1_7::subsets::x::schema::mutations::insert_launch_action::InsertLaunchAction;
 
 //#region 🔖️Identity
 pub const OPCODE: &str = "insert-launch-action";
@@ -21,7 +21,5 @@ pub fn parse(text: &str) -> Result<InsertLaunchAction, String> {
 //#endregion 🔖️Codec
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

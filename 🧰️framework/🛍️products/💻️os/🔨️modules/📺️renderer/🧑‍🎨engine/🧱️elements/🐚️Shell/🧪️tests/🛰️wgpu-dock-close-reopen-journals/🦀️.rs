@@ -18,7 +18,6 @@
 //! `shell.windowMaximize` command React declares nowhere.
 
 use semio_framework_os_renderer_wgpu_fixtures::shell::test_app;
-use test_app;
 use super::*;
 use semio_framework::manifest::Keybinding;
 use semio_framework::{ActionDefinition, ActionKind, AppDefinition, WindowKinds};

@@ -3,7 +3,7 @@
 pub const OPCODE: &str = "set-info";
 pub const TEXT_OPCODE: &str = OPCODE;
 
-use crate::standards::v1_7::subsets::base::schema::mutations::SetInfo;
+use crate::standards::v1_7::subsets::base::schema::mutations::set_info::SetInfo;
 
 /// 🖨️ Prints this direct payload through its schema-derived JSON representation.
 pub fn print(payload: &SetInfo) -> Result<String, String> {

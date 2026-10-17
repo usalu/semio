@@ -10,9 +10,9 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.pro
 use crate::Process3dMutation;
 use semio_s_artifact_process_process3d_model::{snapshot::Capability, snapshot::CapabilityParameter, snapshot::CapabilityRule, snapshot::MeasureRecipe, snapshot::Pose, snapshot::ProcessMeasure, snapshot::ProcessStep, snapshot::StepOrigin, snapshot::StockQuantity, snapshot::WorkingSolid, snapshot::WorkshopMachine};
 
-pub(crate) const PROCESS3D_MUTATION_BINARY_FORMAT: u8 = 2;
+pub const PROCESS3D_MUTATION_BINARY_FORMAT: u8 = 2;
 
-pub(crate) fn process3d_protocol_error(detail: String) -> protocol::ProtocolError {
+pub fn process3d_protocol_error(detail: String) -> protocol::ProtocolError {
     protocol::ProtocolError::Malformed { what: "process3d mutation", offset: 0, detail }
 }
 
@@ -710,7 +710,7 @@ fn read_machine(reader: &mut store::ByteReader<'_>) -> Result<WorkshopMachine, S
 
 //#endregion 🔖️RetainedStoreInitialization
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 pub fn process3d_all_retained_mutation_fixtures_for_test() -> Vec<Process3dMutation> {
     use semio_s_artifact_process_process3d_mut_machines::{change_machine_icon::ChangeMachineIcon, create_machine::CreateMachine, delete_machine::DeleteMachine, rename_machine::RenameMachine, replace_machine_capabilities::ReplaceMachineCapabilities};
     use semio_s_artifact_process_process3d_mut_steps::{change_step_enabled::ChangeStepEnabled, change_step_origin::ChangeStepOrigin, create_step::CreateStep, delete_step::DeleteStep, rename_step::RenameStep, reorder_steps::ReorderSteps, replace_step_measure::ReplaceStepMeasure};

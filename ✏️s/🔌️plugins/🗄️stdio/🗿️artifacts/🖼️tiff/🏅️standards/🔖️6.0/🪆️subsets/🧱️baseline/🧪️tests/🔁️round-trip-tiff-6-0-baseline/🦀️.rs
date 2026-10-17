@@ -7,7 +7,6 @@ fn reference(ctx:&Context)->Result<Outcome,String>{
  let codes=verdict(&read_axes(&bytes)?);if !codes.is_empty(){return Err(format!("independent native TIFF baseline codes {codes:?}"))}
  let result=project_tiff(&bytes)?;
  semio_repo_test_host::law::round_trip_preserves(&result,&project_tiff(&input)?)?;
- eprintln!("[DEBUG] independent TIFF baseline export {}",result.to_string());
  Ok(Outcome::with_raw(bytes,result))
 }
 #[cfg(feature="sut")]
@@ -29,7 +28,6 @@ mod subject{
   if altered==bytes||project_tiff(&altered)?.get("samplesDigest")==result.get("samplesDigest"){return Err("an exact sample edit did not reach independently decoded native bytes".into())}
   let again=encode_tiff(&reparsed)?;
   semio_repo_test_host::law::round_trip_preserves(&project_tiff(&again)?,&result)?;
-  eprintln!("[DEBUG] TIFF baseline owned round trip independently reopened {}",result.to_string());
   Ok(Outcome::with_raw(bytes,result))
  }
 }

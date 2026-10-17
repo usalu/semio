@@ -24,11 +24,22 @@
     ".": "./🟦️.ts",
     "./🖌️ui.css": "./🖌️ui.css",
     "./🎨️palette.css": "./🎨️palette.css",
-    "./tokens": "./🔤️tokens/🟦️.ts"
+    "./tokens": "./🔤️tokens/🟦️.ts",
+    "./builder/vite": "./🏗️builder/🌐️vite/🟦️.ts",
+    "./builder/vite/mode": "./🏗️builder/🌐️vite/🎚️mode/🟦️.ts",
+    "./builder/vite/wasm/delivery": "./🏗️builder/🌐️vite/🕸️wasm/📦️delivery/🟦️.ts",
+    "./mixing": "./🌗️mixing/🟦️.ts",
+    "./verification/testing/color-oracle": "./🛡️verification/🧪️testing/⚖️color-oracle/🟦️.ts",
+    "./builder/python/contract": "./🏗️builder/🐍️python/📋️contract/🟦️.ts",
+    "./theme": "./🌓️theme/🟦️.ts",
+    "./theme/model": "./🌓️theme/🏛️model/🟦️.ts",
+    "./verification": "./🛡️verification/🟦️.ts"
   },
   "dependencies": {
+    "@semio-tech/assets": "workspace:*",
     "@semio-tech/framework": "workspace:*",
     "@semio-tech/schema-validator-ts": "workspace:*",
+    "@semio-tech/ui-react": "workspace:*",
     "@tailwindcss/typography": "^0.5.19",
     "tailwindcss": "^4.0.0"
   },

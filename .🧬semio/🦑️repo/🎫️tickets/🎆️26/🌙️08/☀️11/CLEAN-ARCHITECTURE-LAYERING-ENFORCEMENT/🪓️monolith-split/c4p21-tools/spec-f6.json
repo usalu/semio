@@ -1,0 +1,26 @@
+{
+ "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🏛️mutate-energy-model-1/📆️schedules-and-layers/🐍️.py",
+ "snapshot": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/🗑️generated/c4p21-snap/f6.py",
+ "alias": "mutate_energy_model_1_schedules",
+ "pieces": [
+  {
+   "key": "spaces",
+   "first": "create_space_list",
+   "last": "_invert_remove_thermal_enclosure_zone"
+  },
+  {
+   "key": "schedules",
+   "dir": "⏱️schedules",
+   "doc": "Schedule kinds: constant, daily, weekly, annual and time-series schedules.",
+   "first": "create_constant_schedule",
+   "last": "_invert_change_time_series_schedule_timestep"
+  },
+  {
+   "key": "glazing",
+   "dir": "🧊️glazing-and-materials",
+   "doc": "Fenestration vertices, glazing and gas material kinds and surface roughness.",
+   "first": "replace_fenestration_vertices",
+   "last": "_invert_change_material_roughness"
+  }
+ ]
+}

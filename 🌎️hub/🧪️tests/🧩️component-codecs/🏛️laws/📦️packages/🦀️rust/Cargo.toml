@@ -22,10 +22,11 @@ workspace = true
 path = "../../🦀️.rs"
 
 [features]
-integration-fixtures = []
+integration-fixtures = ["dep:semio-framework-test-fixtures"]
 
 [dependencies]
 semio-framework-pack-json = { path = "../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-framework-test-fixtures = { path = "../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust", optional = true }
 serde_json = { workspace = true }
 tokio = { workspace = true, features = ["full"] }
 semio-framework-job = { workspace = true }
@@ -36,3 +37,4 @@ semio-framework = { path = "../../../../../../🧰️framework/📦️packages/�
 directory = { path = "../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
 
 [dev-dependencies]
+semio-framework-test-fixtures = { path = "../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }

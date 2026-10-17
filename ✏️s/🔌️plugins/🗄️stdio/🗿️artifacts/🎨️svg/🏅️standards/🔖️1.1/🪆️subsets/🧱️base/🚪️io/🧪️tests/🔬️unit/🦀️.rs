@@ -1,6 +1,7 @@
-use super::*;
+use crate::standards::v1_1::subsets::base::io::*;
 use crate::schema::{demo_svg_snapshot, empty_svg_snapshot};
 use crate::{SvgSnapshot, STDIO_SVG_DOCUMENT_SCHEMA};
+use semio_framework_test_fixtures::{fixture_bytes, fixture_text};
 use {semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::io::ComposeSource,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
 const SVG_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.svg", standard: StandardId("1.1"), subset: SubsetId("*") };
@@ -8,7 +9,7 @@ const SVG_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.svg", standard: S
 /// 🧫️ This crate's OWN tracked stand-in for a third-party generator's output. It used to be
 /// `<repo>/temp/artifacts.svg` — a 423 KB dvisvgm file that git does not track, so a sweep of
 /// `temp/` turned both laws below into a "read temp/artifacts.svg" panic instead of a verdict.
-const NATIVE_THIRD_PARTY_SVG: &str = include_str!("../../../🧪️tests/🧫️fixtures/🎨️native-third-party-shape.svg");
+static NATIVE_THIRD_PARTY_SVG: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../🧱️base/🧪️tests/🧫️fixtures/🎨️native-third-party-shape.svg"));
 
 #[semio_framework_async_macros::async_test]
 async fn empty_snapshot_matches_schema() {
@@ -61,7 +62,7 @@ fn composer_snapshot(source: AnalyzeSource<'_>) -> SvgSnapshot {
 /// 🔁️ Asserts the three properties above for one route (`route` maps a source to a snapshot).
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn assert_native_routing_is_a_fixpoint(route: impl Fn(AnalyzeSource<'_>) -> SvgSnapshot, label: &str) {
-    let first = route(AnalyzeSource::Text(NATIVE_THIRD_PARTY_SVG));
+    let first = route(AnalyzeSource::Text((*NATIVE_THIRD_PARTY_SVG)));
     let printed = String::from_utf8(first.export_utf8().expect("export the analyzed snapshot")).expect("SVG export is UTF-8");
 
     let second = route(AnalyzeSource::Text(&printed));
@@ -192,18 +193,18 @@ mod conformance_laws {
     /// fixtures can never silently drift back to a fake again.
     #[semio_framework_async_macros::async_test]
     async fn fixture_honesty_law() {
-        const FIXTURE_DSL: &str = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio");
-        const FIXTURE_PACK: &[u8] = include_bytes!("../../../📚️examples/🎬️demo/🖼️assets/🎒️.pack.semio");
+        static FIXTURE_DSL: std::sync::LazyLock<&str> = std::sync::LazyLock::new(|| super::fixture_text!("../../../../../🧱️base/📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio"));
+        static FIXTURE_PACK: std::sync::LazyLock<&[u8]> = std::sync::LazyLock::new(|| super::fixture_bytes!("../../../../../🧱️base/📚️examples/🎬️demo/🖼️assets/🎒️.pack.semio"));
 
         let demo = demo_svg_snapshot();
 
-        let parsed = <SvgSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(FIXTURE_DSL).expect("parse shipped .dsl.semio fixture");
+        let parsed = <SvgSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl((*FIXTURE_DSL)).expect("parse shipped .dsl.semio fixture");
         assert_eq!(parsed, demo, "shipped .dsl.semio fixture does not parse back to demo_svg_snapshot()");
-        assert_eq!(pack::snapshot::ArtifactDsl::print_dsl(&demo), FIXTURE_DSL, "print_dsl(demo_svg_snapshot()) drifted from the shipped .dsl.semio fixture");
+        assert_eq!(pack::snapshot::ArtifactDsl::print_dsl(&demo), (*FIXTURE_DSL), "print_dsl(demo_svg_snapshot()) drifted from the shipped .dsl.semio fixture");
 
-        let decoded = <SvgSnapshot as pack::snapshot::ArtifactPack>::decode_pack(FIXTURE_PACK).expect("decode shipped .pack.semio fixture");
+        let decoded = <SvgSnapshot as pack::snapshot::ArtifactPack>::decode_pack((*FIXTURE_PACK)).expect("decode shipped .pack.semio fixture");
         assert_eq!(decoded, demo, "shipped .pack.semio fixture does not decode back to demo_svg_snapshot()");
-        assert_eq!(pack::snapshot::ArtifactPack::encode_pack(&demo), FIXTURE_PACK, "encode_pack(demo_svg_snapshot()) drifted from the shipped .pack.semio fixture");
+        assert_eq!(pack::snapshot::ArtifactPack::encode_pack(&demo), (*FIXTURE_PACK), "encode_pack(demo_svg_snapshot()) drifted from the shipped .pack.semio fixture");
     }
 
 

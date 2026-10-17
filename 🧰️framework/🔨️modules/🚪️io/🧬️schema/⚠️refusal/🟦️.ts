@@ -1,8 +1,8 @@
 import {ValueError} from "../../../🌱️value/📦️packages/🟦️typescript/⚠️refusal/🟦️.ts";
 import {encodeValueErrorControlled,decodeValueErrorControlled,type ValueRefusalCodecControl} from "@semio-tech/value-ts/refusal/codec";
 import type {IntrinsicValue,IntrinsicMember} from "@semio-tech/value-ts/schema/intrinsic";
-import type {TextError} from "../../../⚠️diagnostic/🚧️text-error/🟦️.ts";
-import {encodeDiagnosticControlled,decodeDiagnosticControlled,ownDiagnosticText,type Diagnostic} from "../../../⚠️diagnostic/🎛️controlled/🟦️.ts";
+import type {TextError} from "@semio-tech/framework-diagnostic-ts/text-error";
+import {encodeDiagnosticControlled,decodeDiagnosticControlled,ownDiagnosticText,type Diagnostic} from "@semio-tech/framework-diagnostic-ts/controlled";
 /** 🚪️ One canonical owned refusal retains every attached source diagnostic. */
 export class IoError {
  constructor(public readonly cause:ValueError,public readonly diagnostics:Diagnostic[]){}

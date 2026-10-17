@@ -1,6 +1,5 @@
 //! 🗞️ Authoritative PDF mutation payload, diff, inverse, and tests for `remove-form`.
 
-use super::PdfMutation;
 use crate::standards::v1_7::subsets::base::schema::diff::{self, PdfDiff};
 use crate::standards::v1_7::subsets::base::schema::snapshot::*;
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
@@ -14,7 +13,10 @@ pub struct RemoveForm {
     pub id: String,
 }
 
-impl MutationKind<PdfSnapshot, PdfMutation> for RemoveForm {
+impl<Op> MutationKind<PdfSnapshot, Op> for RemoveForm
+where
+    Op: protocol::Mutation<PdfSnapshot, Diff = PdfDiff> + From<RemoveForm> + From<crate::standards::v1_7::subsets::base::schema::mutations::set_form::SetForm>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "remove", entity: "form", kind: "remove-form", record: "Remove" };
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
@@ -22,10 +24,10 @@ impl MutationKind<PdfSnapshot, PdfMutation> for RemoveForm {
         MutationOutcome::new(diff::diff_remove_form(base, &self.id))
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
         let _ = base;
-        base.forms.iter().position(|item| item.id == self.id).map(|index| PdfMutation::SetForm(super::set_form::SetForm { form: base.forms[index].clone(), index: Some(index) })).into_iter().collect()
+        base.forms.iter().position(|item| item.id == self.id).map(|index| Op::from(crate::standards::v1_7::subsets::base::schema::mutations::set_form::SetForm { form: base.forms[index].clone(), index: Some(index) })).into_iter().collect()
     
     })())
 }
@@ -42,8 +44,6 @@ impl MutationKind<PdfSnapshot, PdfMutation> for RemoveForm {
 //#endregion 🔖️Mutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
 

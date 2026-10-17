@@ -35,7 +35,7 @@ semio-framework-os-renderer-wgpu-shell-async = { path = "../../../⏳️shell-as
 semio-framework-os-renderer-wgpu-shell-chrome-state = { path = "../../../🎚️shell-chrome-state/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-os-renderer-wgpu-shell-commands = { path = "../../../🎹️shell-commands/📦️packages/🦀️rust" }
 semio-framework-os-renderer-wgpu-shell-directory = { path = "../../../📒️shell-directory/📦️packages/🦀️rust" }
-semio-framework-os-renderer-wgpu-shell-doc-open = { path = "../../../📂️shell-doc-open/📦️packages/🦀️rust" }
+semio-framework-os-renderer-wgpu-shell-doc-open = { path = "../../../📂️shell-doc-open/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-os-renderer-wgpu-shell-dock = { path = "../../../⚓️shell-dock/📦️packages/🦀️rust" }
 semio-framework-os-renderer-wgpu-shell-docs = { path = "../../../📄️shell-docs/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-os-renderer-wgpu-shell-history = { path = "../../../⏪️shell-history/📦️packages/🦀️rust", features = ["testkit"] }

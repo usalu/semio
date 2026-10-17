@@ -9,7 +9,7 @@ fn write_row(schema:&str,generation:u64,writer:&mut RowWriter<'_,'_>)->Result<()
 fn semantic(value:&SHomeSnapshot,phase:SqliteSnapshotPhase,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{schema(control)?;let mut writer=RowWriter::borrowed(control,phase)?;write_row(&value.schema,value.catalog_generation,&mut writer)?;writer.finish_borrowed()}
 fn admit_record(record:&RecordValue,native:&mut semio_framework_value::NativeDecodeControl<'_>,limits:store::sqlite_snapshot::SqliteDatabaseLimits)->Result<(),ValueError>{let Some(FieldValue::Text(text))=record.get(0)else{return Err(invalid("Home native schema text is required"))};let Some(FieldValue::UInt(generation))=record.get(1)else{return Err(invalid("Home native generation is required"))};native.scoped_stage(|native|{native.begin_stage(1)?;let mut completed=0;let mut callback=|event:store::sqlite_snapshot::SqliteSnapshotProgress|{let delta=event.completed.saturating_sub(completed);completed=event.completed;native.advance(delta).is_ok()};let mut control=SqliteSnapshotControl::new(&mut callback,limits);let mut writer=RowWriter::borrowed(&mut control,SqliteSnapshotPhase::DecodeNative)?;write_row(text,*generation,&mut writer)?;writer.finish_borrowed()})}
 
-fn invalid(message:impl Into<String>)->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,message)}
+pub fn invalid(message:impl Into<String>)->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,message)}
 
 impl ArtifactSqliteSnapshotHost for SHomeSnapshot{
  
@@ -26,6 +26,3 @@ fn to_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<Sqli
 fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{control.check_database(database,SqliteSnapshotPhase::ReconstructSnapshot)?;validate_sqlite_database_schema(database,Self::SQLITE_SCHEMA,control.limits())?;if database.tables.len()!=1{return Err(invalid("Home requires its one literal table"))}let row=database.table("home_document")?.single_row()?;if row.values.len()!=4||row.integer(0)?!=row.rowid{return Err(invalid("Home document identity differs"))}let(high,low)=(row.integer(2)?,row.integer(3)?);if !(0..=u32::MAX as i64).contains(&high)||!(0..=u32::MAX as i64).contains(&low){return Err(invalid("Home generation word exceeds unsigned32"))}let mut owned=Reconstruction::new(control)?;owned.scalar()?;let schema=owned.text(row.text(1)?)?;owned.checkpoint()?;Ok(Self{schema,catalog_generation:((high as u64)<<32)|(low as u64)})}
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;

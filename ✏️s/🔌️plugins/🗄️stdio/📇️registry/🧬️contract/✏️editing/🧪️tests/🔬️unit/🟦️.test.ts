@@ -44,7 +44,7 @@ function oracle(base: SnapshotValue, operations: typeof fixture.accepted[number]
 const keys = ["schema", "title", "active", "count", "ratio", "optional", "choice", "labels", "items"];
 const codec: SnapshotEditCodec<SnapshotValue> = {
   validate: (value) => {
-    const fail = (): never => { throw new SnapshotEditError("snapshot-edit.schema-invalid", "", "fixture schema rejected edit"); };
+    function fail(): never { throw new SnapshotEditError("snapshot-edit.schema-invalid", "", "fixture schema rejected edit"); }
     if (value === null || Array.isArray(value) || typeof value !== "object" || Object.keys(value).some((key) => !keys.includes(key))) fail();
     if (typeof value.schema !== "string" || typeof value.title !== "string" || typeof value.active !== "boolean" || !Number.isInteger(value.count) || typeof value.ratio !== "number") fail();
     return value;
@@ -185,7 +185,6 @@ test("original editor preparation preserves canonical refusal receipts and origi
   try{for(const wire of law.wireCases){expect(valid(wire)).toBe(true);const error=new ValueError(wire.kind,wire.message).withRetainedProgress(wire.retainedProgress);expect(error.under("preparation").retainedProgress).toBe(error.retainedProgress);const oracle=db.query("SELECT json_object('kind',?, 'message',?, 'retainedProgress',json(?)) AS wire").get(error.kind,error.message,JSON.stringify(error.retainedProgress)) as {wire:string};expect(JSON.parse(oracle.wire)).toEqual(wire);expect(valid({...wire,retainedProgress:{...wire.retainedProgress,copiedBytes:-1}})).toBe(false);}}
   finally{db.close();}
   for(const path of law.producerPaths){const source=await Bun.file(new URL(path,root)).text();const start=source.indexOf("fn advance(&mut self, grant:");const end=source.indexOf("fn checkpoint(",start);const actual=source.slice(start,end);expect(actual).toContain("Result<store::os_store::one_item::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError>");expect(actual).not.toContain("ValueError::into_message");expect(actual).not.toContain("error.to_string()");expect(actual).toContain("self.mutation = Some(mutation)");}
-  console.log("[DEBUG] Editor preparation canonical refusal per-value Ajv/SQLite agrees; original mutation slots and receipt propagation Source verified; native provider conservation remains unrun");
 });
 
 test("original editor preparation closes retained refusal owners under independent policy",async()=>{
@@ -208,7 +207,6 @@ test("original editor preparation closes retained refusal owners under independe
     expect(actual).not.toContain("return_to_registry()");
     expect(actual).not.toContain("maximum_bytes");
   }
-  console.log("[DEBUG] Editor original independent full-axis close policy and genuine retained source boundaries verified; native extent laws unrun");
 });
 
 test("original unit preparation preserves typed semantic refusal custody",async()=>{
@@ -221,5 +219,4 @@ test("original unit preparation preserves typed semantic refusal custody",async(
     const start=source.indexOf(definition);expect(start).toBeGreaterThan(0);const stop=Math.min(...[source.indexOf("fn checkpoint",start),source.indexOf("fn take_inverse",start)].filter(index=>index>start));const actual=source.slice(start,stop);
     expect(actual).not.toContain("Result<ArtifactStoreOneItemPreparationStep, String>");expect(actual).not.toContain("Result<RetainedCloneEditStep, String>");expect(actual).not.toContain("error.to_string()");expect(actual).not.toContain("ValueError::into_message");expect(actual).toContain("self.semantic_refusal = Some(error)");
   }
-  console.log("[DEBUG] Original Unit typed semantic refusal custody Source and independent Buffer per-value receipt agree; native provider physical work remains unrun");
 });

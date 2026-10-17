@@ -12,7 +12,7 @@ if (process.platform === "linux") {
 }
 
 export default defineConfig({
-  files: path.resolve(packageRoot, "out/test/**/*.test.js"),
+  files: path.resolve(packageRoot, "dist/test/**/*.test.js"),
   launchArgs,
   workspaceFolder: path.resolve(packageRoot, "../.."),
 });

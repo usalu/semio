@@ -10,7 +10,7 @@
 // #endregion 🧲️Header
 // #region 🔌️Adapters
 import { defineTestAdapter, type AdapterContext, type AdapterOutcome } from "@semio-tech/framework/test/adapter";
-import { compileVizProbeDocument, probeProjection, roundProbeNumbers, type ProbeProjection, type VizProbeStatement } from "../../🔨️modules/🧪️viz-probe/🟦️.ts";
+import { compileVizProbeDocumentInContext, probeProjection, roundProbeNumbers, type ProbeProjection, type VizProbeStatement } from "../../🔨️modules/🧪️viz-probe/🟦️.ts";
 import { scaleLinear, scaleLog, vizConvexHull, vizGeoProjection } from "../../🧬️schema/💡️inferences/📦️packages/🟦️typescript/🟦️.ts";
 import chordLatex from "../🪢️network-chord/🟦️.ts";
 import chordTwin from "../🎗️network-chord-twin/🟦️.ts";
@@ -25,9 +25,12 @@ const CASE = "kernel-twin-parity";
 const DECIMALS = 6;
 
 /** 🔢️ Rounds the twin onto the emission grid the LaTeX probe writes on. */
-function grid(values: readonly number[]): number[] {
+function grid(values: readonly unknown[]): number[] {
   const factor = 10 ** DECIMALS;
-  return values.map((value) => (value === 0 ? 0 : Math.round(value * factor) / factor));
+  return values.map((value) => {
+    if (typeof value !== "number") throw new Error(`a scale mapped to ${String(value)}, not to a number`);
+    return value === 0 ? 0 : Math.round(value * factor) / factor;
+  });
 }
 
 function rows(ctx: AdapterContext): Record<string, string>[] {
@@ -39,9 +42,8 @@ function rows(ctx: AdapterContext): Record<string, string>[] {
 
 /** 🎯️ Compiles a probe document built here and projects its records. */
 async function probe(ctx: AdapterContext, packages: readonly string[], body: readonly VizProbeStatement[], preamble?: readonly string[]): Promise<{ projection: ProbeProjection }> {
-  const records = await compileVizProbeDocument(
-    { case: CASE, scenario: ctx.scenario.id, packages: [...packages], preamble: preamble === undefined ? undefined : [...preamble], body: [...body] },
-    { workDir: ctx.workDir },
+  const records = await compileVizProbeDocumentInContext(ctx,
+    { case: CASE, scenario: ctx.scenario.id, packages: [...packages], preamble: preamble === undefined ? undefined : [...preamble], body: [...body] }
   );
   return { projection: probeProjection(roundProbeNumbers(records, DECIMALS)) };
 }

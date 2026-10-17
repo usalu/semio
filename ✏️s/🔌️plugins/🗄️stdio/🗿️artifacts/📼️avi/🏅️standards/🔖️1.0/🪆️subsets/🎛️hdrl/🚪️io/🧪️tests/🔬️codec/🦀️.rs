@@ -1,5 +1,6 @@
 use crate::{standards::v1_0::subsets::any::schema::snapshot::AviChunk, standards::v1_0::subsets::any::schema::snapshot::AviMainHeader, standards::v1_0::subsets::any::schema::snapshot::AviSnapshot, standards::v1_0::subsets::any::schema::snapshot::AviStream, standards::v1_0::subsets::any::schema::snapshot::AviStreamFormat, standards::v1_0::subsets::any::schema::snapshot::AviStreamHeader, standards::v1_0::subsets::any::schema::snapshot::STDIO_AVI_DOCUMENT_SCHEMA};
 use crate::standards::v1_0::subsets::any::io::*;
+use semio_framework_test_fixtures::fixture_path;
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn synthetic_snapshot() -> AviSnapshot {
@@ -191,7 +192,7 @@ async fn incremental_cursor_yields_bounded_pages_matching_the_real_fixture() {
 /// (`♻️mit-bestand/.../🎥️bauen-mit-bestand.mp4`). Its own `strh` is 56 bytes (BUG 1: ffmpeg's
 /// AVI-1.0 muxer writes the classic form) and its `hdrl`/`strl` carry real `JUNK`/`vprp`
 /// auxiliary chunks (BUG 2) — confirmed by direct hex inspection, not assumed.
-static REAL_FFMPEG_AVI: std::sync::LazyLock<&'static [u8]> = std::sync::LazyLock::new(|| Box::leak(std::fs::read(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../🧪️tests/🧫️fixtures/🎬️.avi")).expect("the committed fixture is readable").into_boxed_slice()));
+static REAL_FFMPEG_AVI: std::sync::LazyLock<&'static [u8]> = std::sync::LazyLock::new(|| Box::leak(std::fs::read(fixture_path!("../../../../../🧪️tests/🧫️fixtures/🎬️.avi")).expect("the committed fixture is readable").into_boxed_slice()));
 
 #[semio_framework_async_macros::async_test]
 async fn decode_avi_accepts_the_real_ffmpeg_56_byte_strh() {

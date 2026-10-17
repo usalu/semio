@@ -13,7 +13,7 @@ async fn gis3d_terrain_document_dsl_round_trips_arbitrary_exaggeration() {
 
 #[semio_framework_async_macros::async_test]
 async fn gis3d_terrain_document_dsl_round_trips_imported_map() {
-    store::os_store::test_support::assert_dsl_round_trip(&GisTerrainSnapshot { exaggeration: 1.0, imported_map: Some(crate::schema::ImportedMap::from_json(r#"{"positions":[{"id":"p1","lon":1.0,"lat":2.0}],"routes":[],"regions":[]}"#).unwrap()), ..Default::default() });
+    store::os_store::test_support::assert_dsl_round_trip(&GisTerrainSnapshot { exaggeration: 1.0, imported_map: Some(crate::schema::imported_map::ImportedMap::from_json(r#"{"positions":[{"id":"p1","lon":1.0,"lat":2.0}],"routes":[],"regions":[]}"#).unwrap()), ..Default::default() });
 }
 
 #[semio_framework_async_macros::async_test]

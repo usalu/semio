@@ -1,0 +1,106 @@
+{
+ "$schema": "http://json-schema.org/draft-07/schema#",
+ "type": "object",
+ "additionalProperties": false,
+ "required": [
+  "residual",
+  "census",
+  "protocol",
+  "guards"
+ ],
+ "properties": {
+  "protocol": {
+   "const": {
+    "version": 1,
+    "fileName": "stage.json",
+    "maximumFiles": 1,
+    "maximumBytes": 16777216
+   }
+  },
+  "residual": {
+   "type": "array",
+   "minItems": 3,
+   "maxItems": 3,
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "name",
+     "observations",
+     "pending",
+     "limitNodes",
+     "keepOld"
+    ],
+    "properties": {
+     "name": {
+      "enum": [
+       "rename-error",
+       "rename-after-error",
+       "rename-pressure"
+      ]
+     },
+     "observations": {
+      "const": 3
+     },
+     "pending": {
+      "type": "boolean"
+     },
+     "limitNodes": {
+      "enum": [
+       3,
+       65536
+      ]
+     },
+     "keepOld": {
+      "enum": [
+       0,
+       3
+      ]
+     }
+    }
+   }
+  },
+  "census": {
+   "type": "array",
+   "minItems": 2,
+   "maxItems": 2,
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "name",
+     "body",
+     "extra"
+    ],
+    "properties": {
+     "name": {
+      "enum": [
+       "empty-node",
+       "extra-node-leaf"
+      ]
+     },
+     "body": {
+      "type": "boolean"
+     },
+     "extra": {
+      "type": "boolean"
+     }
+    }
+   }
+  },
+  "guards": {
+   "type": "array",
+   "minItems": 4,
+   "maxItems": 4,
+   "uniqueItems": true,
+   "items": {
+    "enum": [
+     "outside-writer",
+     "shared-retirement",
+     "oversize",
+     "linked"
+    ]
+   }
+  }
+ }
+}

@@ -32,6 +32,10 @@ type puzzlePuzzle2dInferenceGuardSizeBounds = { readonly minItems?: number; read
 
 export const puzzlePuzzle2dInferenceGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : puzzlePuzzle2dInferenceGuardReject(at, "value is not an object");
+export const puzzlePuzzle2dInferenceGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) puzzlePuzzle2dInferenceGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const puzzlePuzzle2dInferenceGuardArray = (value: unknown, at: string, bounds: puzzlePuzzle2dInferenceGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return puzzlePuzzle2dInferenceGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) puzzlePuzzle2dInferenceGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -62,14 +66,14 @@ export const puzzlePuzzle2dInferenceGuardConstant = <T extends string | number |
 //#endregion 🚪️Parsers
 
 export function parsePuzzle2dInference(value: unknown, at = "$"): Puzzle2dInference {
-  const row = puzzlePuzzle2dInferenceGuardObject(value, at);
+  const row = puzzlePuzzle2dInferenceGuardClosed(puzzlePuzzle2dInferenceGuardObject(value, at), at, ["flatPosition"]);
   return {
     flatPosition: parsePuzzle2dFlatPosition(row["flatPosition"], `${at}.flatPosition`),
   };
 }
 
 export function parsePuzzle2dFlatPositionXy(value: unknown, at = "$"): Puzzle2dFlatPositionXy {
-  const row = puzzlePuzzle2dInferenceGuardObject(value, at);
+  const row = puzzlePuzzle2dInferenceGuardClosed(puzzlePuzzle2dInferenceGuardObject(value, at), at, ["x", "y"]);
   return {
     x: puzzlePuzzle2dInferenceGuardNumber(row["x"], `${at}.x`),
     y: puzzlePuzzle2dInferenceGuardNumber(row["y"], `${at}.y`),
@@ -77,8 +81,8 @@ export function parsePuzzle2dFlatPositionXy(value: unknown, at = "$"): Puzzle2dF
 }
 
 export function parsePuzzle2dFlatPosition(value: unknown, at = "$"): Puzzle2dFlatPosition {
-  const row = puzzlePuzzle2dInferenceGuardObject(value, at);
+  const row = puzzlePuzzle2dInferenceGuardClosed(puzzlePuzzle2dInferenceGuardObject(value, at), at, ["positions"]);
   return {
-    positions: puzzlePuzzle2dInferenceGuardObject(row["positions"], `${at}.positions`),
+    positions: Object.fromEntries(Object.entries(puzzlePuzzle2dInferenceGuardObject(row["positions"], `${at}.positions`)).map(([key0, value0]) => [key0, parsePuzzle2dFlatPositionXy(value0, `${at}.positions.${key0}`)])),
   };
 }

@@ -1,4 +1,4 @@
-use crate::config::*;
+#[allow(unused_imports)] use semio_s_artifact_block_2d_editor::config::*;
 use protocol::DiffAlgebra;
 
 #[test]

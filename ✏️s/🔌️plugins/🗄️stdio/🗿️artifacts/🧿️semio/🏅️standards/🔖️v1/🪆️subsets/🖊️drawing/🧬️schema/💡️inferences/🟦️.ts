@@ -33,6 +33,10 @@ type stdioSemioV1DrawingInferenceGuardSizeBounds = { readonly minItems?: number;
 
 export const stdioSemioV1DrawingInferenceGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : stdioSemioV1DrawingInferenceGuardReject(at, "value is not an object");
+export const stdioSemioV1DrawingInferenceGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) stdioSemioV1DrawingInferenceGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const stdioSemioV1DrawingInferenceGuardArray = (value: unknown, at: string, bounds: stdioSemioV1DrawingInferenceGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return stdioSemioV1DrawingInferenceGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) stdioSemioV1DrawingInferenceGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -63,14 +67,14 @@ export const stdioSemioV1DrawingInferenceGuardConstant = <T extends string | num
 //#endregion 🚪️Parsers
 
 export function parseSemioDrawingInference(value: unknown, at = "$"): SemioDrawingInference {
-  const row = stdioSemioV1DrawingInferenceGuardObject(value, at);
+  const row = stdioSemioV1DrawingInferenceGuardClosed(stdioSemioV1DrawingInferenceGuardObject(value, at), at, ["flattenedScene"]);
   return {
-    flattenedScene: Object.fromEntries(Object.entries(stdioSemioV1DrawingInferenceGuardObject(row["flattenedScene"], `${at}.flattenedScene`)).map(([key,value])=>[key,parseFlattenedNode(value,`${at}.flattenedScene.${key}`)])),
+    flattenedScene: Object.fromEntries(Object.entries(stdioSemioV1DrawingInferenceGuardObject(row["flattenedScene"], `${at}.flattenedScene`)).map(([key0, value0]) => [key0, parseFlattenedNode(value0, `${at}.flattenedScene.${key0}`)])),
   };
 }
 
 export function parseFlattenedNode(value: unknown, at = "$"): FlattenedNode {
-  const row = stdioSemioV1DrawingInferenceGuardObject(value, at);
+  const row = stdioSemioV1DrawingInferenceGuardClosed(stdioSemioV1DrawingInferenceGuardObject(value, at), at, ["worldTransform", "resolvedStyle"]);
   return {
     worldTransform: parseTransform(row["worldTransform"], `${at}.worldTransform`),
     resolvedStyle: row["resolvedStyle"] === undefined ? undefined : parseDrawStyle(row["resolvedStyle"], `${at}.resolvedStyle`),

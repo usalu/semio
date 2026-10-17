@@ -1,42 +1,50 @@
 {
   "requests": [
     {
-      "value": {},
-      "accepted": true
-    },
-    {
       "value": {
-        "requestedParallelism": 1
+        "kind": "whole-host"
       },
       "accepted": true
     },
     {
       "value": {
-        "requestedParallelism": 0
-      },
-      "accepted": false
-    },
-    {
-      "value": {
-        "requestedParallelism": 2
+        "kind": "exact",
+        "parallelism": 1
       },
       "accepted": true
     },
     {
       "value": {
-        "requestedParallelism": "1"
+        "kind": "exact",
+        "parallelism": 0
       },
       "accepted": false
     },
     {
       "value": {
-        "requestedParallelism": null
+        "kind": "exact",
+        "parallelism": 2
+      },
+      "accepted": true
+    },
+    {
+      "value": {
+        "kind": "exact",
+        "parallelism": "1"
       },
       "accepted": false
     },
     {
       "value": {
-        "requestedParallelism": 1.5
+        "kind": "exact",
+        "parallelism": null
+      },
+      "accepted": false
+    },
+    {
+      "value": {
+        "kind": "exact",
+        "parallelism": 1.5
       },
       "accepted": false
     }

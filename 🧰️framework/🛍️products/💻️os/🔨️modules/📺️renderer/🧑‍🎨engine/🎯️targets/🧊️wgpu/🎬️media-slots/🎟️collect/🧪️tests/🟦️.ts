@@ -15,7 +15,6 @@ test("original roster source owns its typed grammar, paid coverage and original 
  expect(source.includes("serde_json::from_str")).toBe(false);expect(source.includes("serde_json::to_vec")).toBe(false);
  const publication=readFileSync(new URL("../../../📸️render-snapshot/🦀️.rs",import.meta.url),"utf8");expect(publication.includes("source:&mut Option<RenderSnapshot>")).toBe(true);expect(publication.includes("incoming.as_ref().unwrap().revision==0")).toBe(true);expect(publication.includes("close_shared(owner,cx)")).toBe(true);
  const presenter=readFileSync(new URL("../../../🪟️winit-app/🦀️.rs",import.meta.url),"utf8");expect(presenter.includes("self.original_snapshot=Some(")).toBe(true);expect(presenter.includes("retain_original_publication(&mut self.original_snapshot,cx)")).toBe(true);
- console.log("[DEBUG] original roster schema/crypto/SQLite source oracle; actual nonempty native fixture/paid physical receipts and full closure remain replay gates, GPU acceptance separate");
 });
 
 test("original native resource owner follows the full tree and same caller through publication",()=>{
@@ -27,7 +26,6 @@ test("original native resource owner follows the full tree and same caller throu
  const reconcile=read(`${ui}/⏭️cursor/🦀️.rs`);expect(reconcile.includes("native_resources: tree.native_resources")).toBe(true);expect(reconcile.includes("native_resources: self.native_resources.take()")).toBe(true);expect(reconcile.includes("close_native_resources_on_original")).toBe(true);
  const patches=read(`${plugin}/🩹️patches/🦀️.rs`);expect(patches.includes("commit_source(&mut self, source: &mut Option<ComponentTree>")).toBe(true);expect(patches.includes("pub fn drive_one(&self, cx:")).toBe(true);expect(patches.includes("StepContext::new(")).toBe(false);
  const turn=read(`${plugin}/🔄️turn/🦀️.rs`);expect(turn.includes("grant.commit_source(source,cx)")).toBe(true);expect(turn.includes("patches.drive_one(cx)")).toBe(true);
- console.log("[DEBUG] original resource custody schema/SQLite owner identity and source handoff law; physical native loans remain a separate runtime gate");
 });
 
 test("original render tree remains stationary across receiver denial and post-render failure",()=>{
@@ -37,7 +35,6 @@ test("original render tree remains stationary across receiver denial and post-re
  const app=read("⚛️reactor/🔌️app/🦀️.rs");expect(app.includes("fn original_render_tree_source")).toBe(true);
  const runtime=read("⚛️reactor/🏃️runtime/🦀️.rs");expect(runtime.includes("instance.app.original_render_tree_source(cx)")).toBe(true);
  const turn=read("⚛️reactor/🔄️turn/🦀️.rs");expect(turn.includes("grant.commit_source(tree).is_err()")).toBe(false);
- console.log("[DEBUG] stationary render source and independent SQLite denial identity law; native source donation/post-stamp failure/full closure unqualified until replay");
 });
 
 
@@ -47,7 +44,7 @@ test("original pending render retry copies its unchanged routing source in finit
  try{for(const copy of retry.copyGrants){const result:number[]=[];for(let at=0;at<bytes.length;at+=copy){const row=db.query("SELECT substr(?, ?, ?) AS body").get(bytes,at+1,copy)as{body:Uint8Array};result.push(...row.body);}expect(Buffer.from(result).toString()).toBe(retry.surface)}}finally{db.close()}
  const root=process.cwd(),text=readFileSync(`${root}/🧰️framework/🔨️modules/🖱️ui/🧬️contract/🎬️action/🦀️.rs`,"utf8"),patch=readFileSync(`${root}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🩹️patches/🦀️.rs`,"utf8");
  expect(text).toContain("pub struct UiTextOriginalCopy");expect(text).toContain("source.bytes[start..end]");expect(patch).toContain("pending_render_source: Option<ui_contract::UiTextOriginalCopy>");expect(patch).toContain("source.step(&slot.surface.0,grant)");
- expect(retry.headerCopyBytes).toBe(0);console.log("[DEBUG] strict schema Buffer/SQLite original pending routing UTF8 copies1/3/64; defining original cursor source before implementation, native source/clock/receipt qualification separate");
+ expect(retry.headerCopyBytes).toBe(0);
 });
 
 
@@ -55,7 +52,6 @@ test("original intrinsic parser donates its complete native cause once beside it
  expect(new Ajv({strict:true}).compile(schema)(law)).toBe(true);const cause=law.originalPackCause,db=new Database(":memory:");try{expect(db.query("SELECT ? AS variant,? AS original,? AS offset").get(cause.variant,cause.message,cause.offset)).toEqual({variant:cause.variant,original:cause.message,offset:cause.offset})}finally{db.close()}
  const source=readFileSync(`${process.cwd()}/🧰️framework/🔨️modules/🎒️pack/🌱️intrinsic/🎮️retained/🦀️.rs`,"utf8"),start=source.indexOf("pub fn advance_original_step(&mut self,grant:"),end=source.indexOf("/// ⏱️",start),original=source.slice(start,end);
  expect(original).toContain("self.fault.take()");expect(original).not.toContain("error.clone()");expect(original).toContain("original_failed");expect(cause.donationCopyBytes).toBe(0);
- console.log("[DEBUG] original raw Pack native cause schema/SQLite unicode/u64max custody law; physical parser source/error conservation requires native replay");
 });
 
 
@@ -63,5 +59,4 @@ test("original tree producer admits its exact shell and validates unchanged nati
  expect(new Ajv({strict:true}).compile(schema)(law)).toBe(true);const producer=law.originalTreeProducer,db=new Database(":memory:");try{db.exec("CREATE TABLE native_children(parent INTEGER,child INTEGER,address TEXT)");db.query("INSERT INTO native_children VALUES(0,0,?)").run("original-child");expect(db.query("SELECT address FROM native_children WHERE parent=0 AND child=0").get()).toEqual({address:"original-child"});}finally{db.close()}
  const root=process.cwd(),present=readFileSync(`${root}/🧰️framework/🔨️modules/🖱️ui/🧠️runtime/🎭️present/🦀️.rs`,"utf8"),patches=readFileSync(`${root}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🩹️patches/🦀️.rs`,"utf8");
  expect(present).toContain("source: Option<ComponentTree>");expect(present).toContain("ComponentTreeProducerFrame::EMPTY");expect(present).toContain("pub fn close_step_on_original");expect(present).not.toContain("parent.admitted.try_push");expect(present).not.toContain("frame.source.next()");expect(patches).toContain("ComponentTreeProducer::required_capacity_bytes()");expect(patches).toContain("maximum_capacity_bytes<capacity");expect(patches).toContain("authority.close_step_on_original(cx)");expect(patches).toContain("released_bytes:capacity");expect(producer.donationCopyBytes).toBe(0);
- console.log("[DEBUG] original tree producer strict schema SQLite child identity law; exact System source/child/shell/native retirement remains native replay gate");
 });

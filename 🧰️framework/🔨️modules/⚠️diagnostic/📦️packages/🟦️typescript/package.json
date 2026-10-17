@@ -1,0 +1,14 @@
+{
+  "name": "@semio-tech/framework-diagnostic-ts",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./controlled": "./🎛️controlled/🟦️.ts",
+    "./retained": "./🧾️retained/🟦️.ts",
+    "./testing/fixtures": "./🧪️testing/🧫️fixtures/🟦️.ts",
+    "./text-error": "./🚧️text-error/🟦️.ts"
+  },
+  "devDependencies": {
+    "@semio-tech/framework": "workspace:*"
+  }
+}

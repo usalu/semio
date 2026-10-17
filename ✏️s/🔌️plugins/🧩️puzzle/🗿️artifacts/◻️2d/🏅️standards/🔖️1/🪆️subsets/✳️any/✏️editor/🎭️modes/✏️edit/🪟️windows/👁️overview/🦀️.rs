@@ -7,12 +7,12 @@ use crate::editor::puzzle2d::modes::edit;
 use crate::editor::puzzle2d::modes::edit::options;
 use crate::editor::puzzle2d::modes::edit::windows::overview::utilities;
 use crate::editor::puzzle2d::terminology::Puzzle2dLabels;
-use {crate::editor::puzzle2d::puzzle2d_localized, crate::editor::puzzle2d::snapshot::Puzzle2dScene, crate::editor::puzzle2d::config::PUZZLE2D_LOD_MODE_AUTOMATIC};
+use {crate::editor::puzzle2d::terminology::puzzle2d_localized, crate::editor::puzzle2d::snapshot::Puzzle2dScene, crate::editor::puzzle2d::config::PUZZLE2D_LOD_MODE_AUTOMATIC};
 use semio_framework_plugin::{SurfaceKind, WindowEngagement, WindowEngagementSlot, WindowKindDefinition, WindowMeasure, WindowOptions};
 
 //#region 🔖️Constants
-pub const BODY_KEY: &str = "puzzle2d.play.overview";
-pub const ZOOM_SCALE: f64 = 0.68;
+pub const BODY_KEY: &str = crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_BODY_KEY;
+pub const ZOOM_SCALE: f64 = crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_ZOOM_SCALE;
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
@@ -46,16 +46,14 @@ pub fn window_measures(envelope: &Puzzle2dScene, labels: &Puzzle2dLabels) -> Vec
 
 //#region 🔖️Render
 pub fn render(document_json: &str, envelope: &Puzzle2dScene) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    edit::render_canvas(document_json, envelope, crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID)
+    edit::canvas::render_canvas(document_json, envelope, crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID)
 }
 
 pub fn engagement(envelope: &Puzzle2dScene, host: &BoardHost, labels: &Puzzle2dLabels) -> WindowEngagement {
-    edit::puzzle2d_engagement(envelope, host, crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID, labels)
+    edit::canvas::puzzle2d_engagement(envelope, host, crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID, labels)
 }
 //#endregion 🔖️Render
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

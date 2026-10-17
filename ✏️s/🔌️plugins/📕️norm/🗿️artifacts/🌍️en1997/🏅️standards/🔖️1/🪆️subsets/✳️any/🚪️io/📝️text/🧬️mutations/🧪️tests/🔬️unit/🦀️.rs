@@ -1,4 +1,4 @@
-use crate::text::mutations::*;
+use crate::mutations::*;
 use semio_s_artifact_norm_en1997_model::compliant_demo;
 
 #[semio_framework_async_macros::async_test]

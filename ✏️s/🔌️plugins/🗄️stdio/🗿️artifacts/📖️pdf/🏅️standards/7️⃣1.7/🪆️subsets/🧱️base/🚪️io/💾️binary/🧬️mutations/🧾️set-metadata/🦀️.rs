@@ -3,7 +3,7 @@
 pub const TAG: u8 = dsl::protocol_record::tag_u8(include_str!("../📡️.protocol.semio"), "set-metadata");
 pub const BINARY_TAG: u8 = TAG;
 
-use crate::standards::v1_7::subsets::base::schema::mutations::SetMetadata;
+use crate::standards::v1_7::subsets::base::schema::mutations::set_metadata::SetMetadata;
 
 /// 📤️ Encodes this direct payload as canonical schema JSON bytes.
 pub fn encode(payload: &SetMetadata) -> Result<Vec<u8>, String> {

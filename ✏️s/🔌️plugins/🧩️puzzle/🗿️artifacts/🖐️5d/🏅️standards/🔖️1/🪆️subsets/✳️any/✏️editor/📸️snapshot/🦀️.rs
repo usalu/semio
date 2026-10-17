@@ -3,6 +3,11 @@ use crate::{Puzzle5dSnapshot,Puzzle5dMutation};
 use crate::standards::v1::subsets::any::schema::diff::Puzzle5dDiff;
 use protocol::{DiffAlgebra,Mutation,MutationDiff};
 use semio_framework_value::DslValue;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_value::{FromValue, ToValue};
+
+#[path = "🌉️play-codecs/🦀️.rs"]
+pub mod play_codecs;
 
 //#region 🔖️PlaySnapshot
 /// 🌱️ Immutable typed puzzle authority and its deferred first-party intrinsic view.
@@ -19,7 +24,7 @@ impl Puzzle5dPlaySnapshot {
     }
 
     /// 🧬️ A root produced by typed mutation application; its `Value` projection is deferred.
-    pub(crate) fn from_typed(typed: Puzzle5dSnapshot) -> Self {
+    pub fn from_typed(typed: Puzzle5dSnapshot) -> Self {
         Self { typed: std::sync::Arc::new(typed), value: std::sync::OnceLock::new() }
     }
 

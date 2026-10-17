@@ -1,7 +1,6 @@
 //! ✏️ `rename-tile` mutation payload — sets a figure tile crop's display name.
 
 use crate::diff::PresentationDiff;
-use crate::mutations::PresentationMutation;
 use crate::PresentationSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 
@@ -18,14 +17,17 @@ pub struct RenameTile {
     pub new_name: String,
 }
 
-impl MutationKind<PresentationSnapshot, PresentationMutation> for RenameTile {
+impl<Op> MutationKind<PresentationSnapshot, Op> for RenameTile
+where
+    Op: protocol::Mutation<PresentationSnapshot, Diff = PresentationDiff> + From<RenameTile>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "rename", entity: "tile", kind: "rename-tile", record: "RenamedTile" };
 
     fn diff(&self, base: &PresentationSnapshot) -> protocol::MutationOutcome<PresentationDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &PresentationSnapshot) -> Result<Vec<PresentationMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &PresentationSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

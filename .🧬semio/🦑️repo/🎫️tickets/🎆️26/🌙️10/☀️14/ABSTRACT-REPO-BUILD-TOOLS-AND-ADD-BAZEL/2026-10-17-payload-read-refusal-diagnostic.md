@@ -1,0 +1,25 @@
+# Cached Complete Payload Read Refusal Diagnostic
+
+The existing strict `captureArtifactRetirementTreeV1` still refuses at exactly `++work > limits.maximumReadWork` with the unchanged message `Current artifact read work bound exceeded`. Its only production algorithm change is a frozen Error.cause assembled at that throw from values already present: root, current relative path, current named seven-field stamp/size, current offset, completed prior-file logical bytes, attempted work33, maximum work32, chunk65536 and authority:false. The guard still executes before the33rd physical read. No extra file, payload, service, journal, namespace, target or ownership observation occurs.
+
+The first-party NativeStorage schema closes that DATA and a4096-byte delivery limit. The existing graph helper's descriptor-only refusal reporter now recognizes this distinct closed cause in addition to its existing preservation refusal. It rejects proxies, accessor properties, foreign purpose, extras and malformed bounds, and catches output failure. It remains after actual local abort and before exact rethrow inside the issued scope; it cannot turn a primary failure into success, replacement error or renewed Original admission. It logs `[DEBUG] Current Graph payload read refusal` only for the bounded validated projection.
+
+## Actual Source Evidence
+
+The first test run failed at test receiver reuse, which was a harness error and is not counted as semantic RED. The corrected existing shared genuine test receiver then reached the real unchanged32-read refusal; its absent cause failed the new closed-schema assertion. That semantic RED is saved as `🗑️generated/bazel-planner/payload-work-semantic-red2.log` (the suite also retained its same primary in the receiver terminal hook).
+
+The actual private Core capture function AST runs genuine Generated3MiB file IO with actual descriptor owner and actual issued controls. It wraps only filesystem methods for counters and bounded one-byte short reads. Both normal and one-byte cases perform exactly32 actual reads and refuse attempted33. They perform exactly3lstats,1opendir,2name reads,1directory close,1file open,1file stat and1file close before refusal; the diagnostic adds no observation. Normal offset is2097152, one-byte offset32, named size3145728 and completedLogicalBytes0. Python `os.stat`/hashlib independently matches the unchanged full file size/hash, while SQLite independently sums actual read extents and calls. No physical Products failing path or size is inferred from this fixture.
+
+Separate Source branches retain exact frozen and undefined primaries during actual read17 and actual cancellation before reading or at read17; every real descriptor closes. Fourteen portable reporter cases use Ajv and SQLite against the actual helper AST. Getter/proxy traps are never invoked; output-failure is swallowed only by diagnostic delivery, and no primary is rewritten. Existing actual scope abort/rethrow sequence is explicitly preserved by the helper law.
+
+`payload-work-first-strict.log` completed naturally0 with strict zero diagnostics plus30 Source laws2112 assertions. After adding the exact IO counters, an interim strict run hit only a peer's temporary unready-retention missing import; that log remains `payload-work-final-strict.log` and no pass was claimed. Root0 `--maintenance-default-source` then completed naturally0 with31 laws2136 assertions, including the genuine default-policy/worker laws (`payload-work-root0-source.log`). Final strict result and exact six-input manifest are appended below after completion.
+
+## Scope and Next Step
+
+This implements only the cached diagnostic. Cleanup.maximumReadWork remains32; no new streamed capture is implemented or selected. Every old complete-tree, FD/name/roster/service fence and canonical retirement command is unchanged. The proposed distinct complete streaming contract and26 arithmetic-only model cases remain in `2026-10-17-complete-payload-stream-design.md` and `payload-streaming/` for further review after the parent binds actual failing context.
+
+All fixture operations were confined to this ticket's Generated directory. No Native, protected asset, actual workspace endpoint, installer, retirement or publisher operation was invoked by this agent. Only Root may run the next fresh protected diagnostic. New Source files/runtime dependencies were not added; full backend/SDK Source captures remain separate point-time work.
+
+## Final Checkpoint
+
+Final `--maintenance-strict` completed naturally0: three exact roots, zero TypeScript diagnostics,30 passing laws/2114 assertions, one explicitly isolated default-policy skip; log `payload-work-final-strict2.log`. Root0 default Source runs that additional law and passed31/2136. All six owned input paths/bytes/SHA and stable nofollow descriptor/name seven stamps are recorded in `🗑️generated/bazel-planner/payload-work-six-manifest.json`. These six inputs are frozen for Low independent review and the parent-controlled module load.

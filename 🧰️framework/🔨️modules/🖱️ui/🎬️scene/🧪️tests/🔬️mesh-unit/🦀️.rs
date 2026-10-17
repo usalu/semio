@@ -35,7 +35,7 @@ fn mesh3d_constructor_pages_and_directory_require_exact_physical_grants() {
         let mut directory_refused=false;
         for _ in 0..100000 {let demand=mesh_test_attempt(||mesh3d_abort_demands(token,work)).unwrap();let mut grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:work,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};if demand.release_bytes==birth&&!directory_refused{grant.maximum_release_bytes=birth-1;let(step,heap)=observe_retirement_allocations(||mesh_test_attempt(||mesh3d_abort_step(token,grant)).unwrap());assert!(!step.complete);assert_eq!(step.progress,RetainedCloneProgress::default());assert_eq!(heap,(0,0));directory_refused=true;grant.maximum_release_bytes=birth;}let(step,heap)=observe_retirement_allocations(||mesh_test_attempt(||mesh3d_abort_step(token,grant)).unwrap());assert!(step.progress.fits(grant));assert_eq!(heap,(step.progress.retained_capacity_bytes,step.progress.released_bytes));born+=heap.0;physical+=heap.1;if step.complete {break;}}
         assert!(directory_refused);
-        assert!(mesh_test_attempt(||mesh3d_authority().try_lock().map_err(|_|Mesh3dFault::Busy)).unwrap().slots[usize::from(token.slot)].is_none());assert_eq!(born,physical);println!("[DEBUG] Mesh3d work={work} constructor/page/directory born={born} physical={physical}");
+        assert!(mesh_test_attempt(||mesh3d_authority().try_lock().map_err(|_|Mesh3dFault::Busy)).unwrap().slots[usize::from(token.slot)].is_none());assert_eq!(born,physical);
     }
 }
 
@@ -46,7 +46,6 @@ fn mesh3d_system_mutex_physical_boundary_has_exact_terminal_release() {
     let (_,first)=observe_retirement_allocations(||drop(mutex.lock().unwrap()));
     let (_,repeat)=observe_retirement_allocations(||drop(mutex.lock().unwrap()));
     let (_,terminal)=observe_retirement_allocations(||drop(mutex));
-    eprintln!("[DEBUG] original System Mutex first={first:?} repeat={repeat:?} terminal={terminal:?}");
     assert_eq!(repeat,(0,0));
     assert_eq!(first.1,0);
     assert_eq!(terminal.0,0);
@@ -73,7 +72,6 @@ fn mesh3d_retained_owner_gate_matches_system_exclusion_without_heap_birth() {
     assert_eq!(*gate.try_lock().unwrap(),*system.try_lock().unwrap());
     let (_,heap)=observe_retirement_allocations(||drop(gate));
     assert_eq!(heap,(0,0));
-    eprintln!("[DEBUG] original retained-owner gate exactSystemExclusion=true firstUseBirth=0 firstUseFree=0 terminalFree=0 contentionRefused=true");
 }
 
 #[test]
@@ -87,7 +85,7 @@ fn mesh3d_original_component_backings_and_cancelled_hash_index_close_with_exact_
         let grant=ownership_test_grant(0,capacity,0,1);let(answer,heap)=observe_retirement_allocations(||mesh_test_attempt(||mesh3d_move_component_references(token,&mut table,grant)));let receipt=answer.unwrap();assert_eq!(heap,(receipt.retained_capacity_bytes,receipt.released_bytes));assert!(table.is_empty());born+=heap.0;physical+=heap.1;let authority=mesh_test_attempt(||mesh3d_authority().try_lock().map_err(|_|Mesh3dFault::Busy)).unwrap();assert_eq!(authority.writing_ref(token).unwrap().component_references.as_ref().unwrap().iter().map(|(_,labels)|labels.iter().map(|label|label.as_ptr()).collect::<Vec<_>>()).collect::<Vec<_>>(),pointers);drop(authority);
         for _ in 0..2 {let grant=ownership_test_grant(64,0,0,1);let(step,heap)=observe_retirement_allocations(||mesh_test_attempt(||mesh3d_component_admission_step(token,grant)).unwrap());assert!(step.ownership.fits(grant));assert_eq!(heap,(step.ownership.retained_capacity_bytes,step.ownership.released_bytes));born+=heap.0;physical+=heap.1;if step.complete{break;}}
         mesh_test_attempt(||mesh3d_abort(token)).unwrap();let mut closed=false;for _ in 0..100000 {let demand=mesh_test_attempt(||mesh3d_abort_demands(token,work)).unwrap();let grant=ownership_test_grant(work,demand.capacity_bytes,demand.release_bytes,demand.depth);let(step,heap)=observe_retirement_allocations(||mesh_test_attempt(||mesh3d_abort_step(token,grant)).unwrap());assert!(step.progress.fits(grant));assert_eq!(heap,(step.progress.retained_capacity_bytes,step.progress.released_bytes));born+=heap.0;physical+=heap.1;if step.complete{closed=true;break;}}
-        assert!(closed);assert_eq!(original+born,physical);println!("[DEBUG] Mesh3d original labels/hash cancellation work={work} original={original} born={born} physical={physical}");
+        assert!(closed);assert_eq!(original+born,physical);
     }}
 }
 
@@ -136,7 +134,6 @@ fn mesh3d_original_component_references_and_source_are_exact_and_retired() {
         assert_eq!(mesh_test_attempt(||lease.component_label(Mesh3dField::FaceIds, 0)), Err(Mesh3dFault::Schema));
         close(lease);
     }
-    eprintln!("[DEBUG] originalComponentSource labels=4 invalidLabels=5 originalPointers=true independentSerdeU64=true terminalEmpty=true");
 }
 
 fn component_admission_test_publish(original: &mut ComponentReferenceTable) -> Result<Mesh3dLease, Mesh3dFault> {
@@ -178,7 +175,6 @@ fn mesh3d_original_component_admission_marks_duplicate_and_invalid_u64_groups_in
     }
     close_component_admission_test_mesh(lease);
     for (actual, expected) in answers { assert_eq!(actual, expected.map_or(Err(Mesh3dFault::Schema), |label| Ok(Some(label)))); }
-    println!("[DEBUG] Original provenance admission matches independent Serde exact-u64 uniqueness and keeps typed domains separate");
 }
 
 #[test]
@@ -191,7 +187,6 @@ fn mesh3d_original_component_admission_refuses_oversized_owned_source_and_retire
     if let Ok(lease) = answer { close_component_admission_test_mesh(lease); }
     assert_eq!(answer, Err(Mesh3dFault::ByteCapacity));
     assert!(original.is_empty());
-    println!("[DEBUG] Original mesh provenance refuses and retires oversized source bytes={bytes}");
 }
 
 #[test]
@@ -222,7 +217,6 @@ fn mesh3d_original_zero_index_wire_and_point_domains_preserve_independent_buffer
         let schema = Mesh3dSchema { vertices: row["vertices"].as_u64().unwrap() as u32, indices: row["indices"].as_u64().unwrap() as u32, vertex_ids: row["vertexIds"].as_u64().unwrap() as u32, edges: row["edges"].as_u64().unwrap() as u32, edge_ids: row["edgeIds"].as_u64().unwrap() as u32, ..Mesh3dSchema::triangle_mesh(0, 0) };
         assert!(matches!(admit_mesh(80, 91, schema), Err(Mesh3dFault::Schema)));
     }
-    println!("[DEBUG] Original zero-index wire and point buffers match independent Serde source arrays, no fabricated triangles");
 }
 
 #[test]
@@ -250,7 +244,6 @@ fn mesh3d_original_component_admission_reserves_aggregate_authority_metadata_cre
     for token in tokens { authority.begin_close_write(token).unwrap(); while !authority_close(&mut authority,token.slot, token.epoch).unwrap() {} }
     assert!(original.is_empty());
     assert_eq!(authority.reserved_pages, 0);
-    println!("[DEBUG] Original metadata aggregate authority quota refuses before publication with independent Serde bytes={} available={} and all owners terminal-empty", independent_bytes, available);
 }
 
 #[test]
@@ -276,7 +269,6 @@ fn mesh3d_original_component_admission_refuses_sentinel_only_point_at_complete_s
         let result = mesh_test_attempt(||mesh3d_seal(token));
         if let Ok(lease) = result { for (group, id) in ids.iter().enumerate() { assert_eq!(mesh_test_attempt(||lease.u32(Mesh3dField::VertexIds, group as u32)).unwrap(), *id); } close_component_admission_test_mesh(lease); }
         else { mesh_test_attempt(||mesh3d_abort(token)).unwrap(); while !abort_mesh(token).unwrap() {} }
-        println!("[DEBUG] Original sentinel domain={} independentEligible={} actualSeal={:?} originalIds={:?}", row["kind"].as_str().unwrap(), independent, result, ids);
         answers.push((result.map(|_| ()), independent));
     }
     for (actual, eligible) in answers { assert_eq!(actual, if eligible { Ok(()) } else { Err(Mesh3dFault::Schema) }); }
@@ -321,7 +313,7 @@ fn mesh3d_original_component_admission_freezes_grants_and_cancels_its_owned_inde
     assert!(owner.component_credit > credit);
     assert!(authority.reserved_pages > 1);
     authority.begin_close_write(token).unwrap();
-    for _ in 0..law["maximumTurns"].as_u64().unwrap() { if authority_close(&mut authority,token.slot, token.epoch).unwrap() { assert_eq!(authority.reserved_pages, 0); assert!(authority.slots[usize::from(token.slot)].is_none()); println!("[DEBUG] Original admission zero/small grants freeze source pointers and scratch; partial cancellation retires source/index and releases all credits"); return; } }
+    for _ in 0..law["maximumTurns"].as_u64().unwrap() { if authority_close(&mut authority,token.slot, token.epoch).unwrap() { assert_eq!(authority.reserved_pages, 0); assert!(authority.slots[usize::from(token.slot)].is_none());  return; } }
     panic!("original cancelled admission failed to retire");
 }
 
@@ -351,7 +343,6 @@ fn mesh3d_original_component_admission_retires_typed_scratch_before_publication(
     authority.begin_close(lease).unwrap();
     while !authority_close(&mut authority,lease.slot, lease.epoch).unwrap() {}
     assert_eq!(authority.reserved_pages, 0);
-    println!("[DEBUG] Original typed admission retires scratch entries={} logicalBytes={} before original lease publication, independent Serde oracle", retired.0, retired.1);
 }
 
 #[test]
@@ -437,7 +428,6 @@ fn mesh3d_owner_contention_is_an_explicit_temporary_refusal(){
     let (result,heap)=observe_retirement_allocations(||mesh3d_begin(71,83,Mesh3dSchema::triangle_mesh(3,3),grant));
     assert_eq!(result,Err(Mesh3dFault::Busy));assert_eq!(heap,(0,0));
     drop(authority);
-    println!("[DEBUG] original mesh contention Busy is distinct from Closing with birth/free0 and retained finite caller authority");
 }
 #[test]
 fn mesh3d_original_busy_caller_has_finite_attempt_deadline_and_cancellation(){
@@ -454,5 +444,4 @@ fn mesh3d_original_busy_caller_has_finite_attempt_deadline_and_cancellation(){
     }
     calls=0;
     assert_eq!(mesh_test_attempt_controlled(3,deadline,&cancel,||{calls+=1;Err::<(),_>(Mesh3dFault::Closing)}),Err(Mesh3dFault::Closing));assert_eq!(calls,1);
-    println!("[DEBUG] mesh Busy attempts/deadline/cancel retain refusal; Closing is semantic and never retried");
 }

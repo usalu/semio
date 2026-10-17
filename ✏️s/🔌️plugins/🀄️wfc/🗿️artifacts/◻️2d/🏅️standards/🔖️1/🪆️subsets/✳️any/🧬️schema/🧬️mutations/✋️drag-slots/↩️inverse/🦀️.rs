@@ -1,10 +1,14 @@
 //! ↩️ Inverse for `DragSlots` — ONE absolute `set-slot-positions` putting every moved slot back at its BASE position
 //! (never a negated offset, which rounding would not restore exactly); nothing when the drag moves nothing.
 
-use crate::mutations::{set_slot_positions, Wfc2dMutation, Wfc2dSlotPosition};
+use crate::mutations::Wfc2dSlotPosition;
+use crate::standards::v1::subsets::any::schema::mutations::set_slot_positions::set_slot_positions;
 use crate::schema::snapshot::Wfc2dSnapshot;
 
-pub fn inverse(payload: &super::DragSlots, base: &Wfc2dSnapshot) -> Result<Vec<Wfc2dMutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op>(payload: &super::DragSlots, base: &Wfc2dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError>
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::set_slot_positions::SetSlotPositions>,
+{
     Ok((|| {
     if !payload.holds_invariants() || (payload.dx, payload.dy) == (0.0, 0.0) {
         return Vec::new();

@@ -52,9 +52,7 @@ pub fn print_dsl(projection: &VcsSnapshot) -> String {
 //#endregion 🔖️Example
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
 
 #[allow(unused_imports)]

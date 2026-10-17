@@ -45,14 +45,16 @@
     },
     "solidName": {
       "type": "string",
-      "x-semio-state": "artifact"
+      "x-semio-state": "artifact",
+      "default": ""
     },
     "triangles": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/StlTriangle"
       },
-      "x-semio-state": "artifact"
+      "x-semio-state": "artifact",
+      "default": []
     }
   }
 }

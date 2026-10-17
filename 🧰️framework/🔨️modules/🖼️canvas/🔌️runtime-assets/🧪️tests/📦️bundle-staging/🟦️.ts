@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import { join, relative, resolve } from "node:path";
 import { stageArtifacts } from "../../../../🏃️process/📦️packages/🟦️typescript/📦️artifacts/📤️publication/🟦️.ts";
 import { copyBrowserArtifacts } from "../../../../../🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/📦️distribution/🟦️.ts";
-import { PACKAGE_ASSET_ROUTE, packageAssetUrl } from "../../../../🎠️kernel/📦️package-assets/🟦️.ts";
+import { PACKAGE_ASSET_ROUTE, packageAssetUrl } from "@semio-tech/framework-kernel/package-assets";
 import { GUEST_RUNTIME_ASSET_FILES, RUNTIME_ASSET_CHANNELS, RUNTIME_ASSET_FILES } from "../../🟦️.ts";
 import { PACKAGE_ASSET_DESTINATION, PACKAGE_ASSET_STAGE_OWNER, RUNTIME_ASSET_STAGE_OWNER, canvasRuntimeAssetSources, runtimeAssetStageTrees } from "../../🚚️staging/🟦️.ts";
 

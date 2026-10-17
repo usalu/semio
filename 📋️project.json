@@ -1732,6 +1732,42 @@
       },
       "outputs": []
     },
+    "schema-parsers-report": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts schema parsers report",
+        "forwardAllArgs": true
+      },
+      "outputs": []
+    },
+    "schema-parsers-apply": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts schema parsers apply --closing --formats 🟦️typescript",
+        "forwardAllArgs": true
+      },
+      "outputs": []
+    },
+    "schema-parsers-restate": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts schema parsers apply --closing --formats 🟦️typescript --restate all",
+        "forwardAllArgs": true
+      },
+      "outputs": []
+    },
+    "schema-parsers-check": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts schema parsers check",
+        "forwardAllArgs": true
+      },
+      "outputs": []
+    },
     "lint": {
       "executor": "repo:script",
       "dependsOn": [
@@ -2218,6 +2254,22 @@
         "forwardAllArgs": true
       }
     },
+    "verify-typescript-project": {
+      "executor": "repo:script",
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts verify typescript project",
+        "forwardAllArgs": true
+      }
+    },
+    "verify-typescript": {
+      "executor": "repo:script",
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts verify typescript check",
+        "forwardAllArgs": true
+      }
+    },
     "verify-interactivity": {
       "executor": "repo:script",
       "dependsOn": [],
@@ -2632,7 +2684,7 @@
       "dependsOn": [
         "cpp-setup"
       ],
-      "cache": true,
+      "cache": false,
       "options": {
         "command": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🛠️cmake/📜️script.ts cpp configure",
         "forwardAllArgs": true
@@ -2647,7 +2699,7 @@
           "params": "forward"
         }
       ],
-      "cache": true,
+      "cache": false,
       "options": {
         "command": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🛠️cmake/📜️script.ts cpp build",
         "forwardAllArgs": true
@@ -2662,12 +2714,35 @@
           "params": "forward"
         }
       ],
-      "cache": true,
+      "cache": false,
       "options": {
         "command": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🛠️cmake/📜️script.ts cpp test",
         "forwardAllArgs": true
       },
       "outputs": []
+    },
+    "cpp-custody": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "outputs": [],
+      "options": {
+        "command": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🛠️cmake/📜️script.ts cpp custody",
+        "forwardAllArgs": true
+      },
+      "defaultConfiguration": "prototype",
+      "configurations": {
+        "prototype": {
+          "env": {
+            "SEMIO_BUILD_MODE": "prototype"
+          }
+        },
+        "release": {
+          "env": {
+            "SEMIO_BUILD_MODE": "release"
+          }
+        }
+      }
     },
     "setup-storybook": {
       "executor": "repo:script",

@@ -43,3 +43,4 @@ semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️
 serde = { version = "1.0.219", features = ["derive"] }
 
 [dev-dependencies]
+semio-framework-os-store-ledger = { path = "../../../../📒️ledger/📦️packages/🦀️rust", features = ["hot-path-census"] }

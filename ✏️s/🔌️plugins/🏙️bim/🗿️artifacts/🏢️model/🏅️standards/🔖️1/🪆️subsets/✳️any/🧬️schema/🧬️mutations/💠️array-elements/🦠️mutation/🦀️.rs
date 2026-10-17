@@ -9,7 +9,7 @@ use protocol::{MutationKind, SemanticDescriptor};
 pub struct ArrayElements {
     pub ids: Vec<String>,
     pub prefix: String,
-    pub pattern: super::super::modify::ArrayPattern,
+    pub pattern: crate::standards::v1::subsets::any::schema::mutations::modify::ArrayPattern,
 }
 
 impl MutationKind<ModelSnapshot, ModelMutation> for ArrayElements {

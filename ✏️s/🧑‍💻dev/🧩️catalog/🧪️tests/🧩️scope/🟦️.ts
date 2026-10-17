@@ -3,11 +3,12 @@ import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join, resolve } from "node:path";
 import Ajv from "ajv";
 import TOML from "@iarna/toml";
+import { parseGeneratedCatalogProjectionV1 } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📖️catalog-view/🟦️.ts";
 export const workspace = resolve(import.meta.dirname, "../../../../..");
-export const installedScope = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
+export const installedScope = JSON.parse(readFileSync(new URL("../🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
 const schema = JSON.parse(readFileSync(new URL("../../🧬️schema/🔣️.json", import.meta.url), "utf8"));
-assert(new Ajv({ strict: true }).compile(schema)(installedScope));
-export const hostProjection = JSON.parse(readFileSync(join(workspace, installedScope.hostFixturePath), "utf8"));
+assert(Boolean(new Ajv({ strict: true }).compile(schema)(installedScope)));
+export const hostProjection = parseGeneratedCatalogProjectionV1(JSON.parse(readFileSync(join(workspace, installedScope.hostFixturePath), "utf8")));
 /** 🧮️ Independently reads current authored source identities through the locked TOML oracle. */
 export async function sourceDeploymentOwnersV1(control: { signal: AbortSignal; progress(completed: number): void }): Promise<string[]> {
  const policy = installedScope.sourceCensus, pending = [...policy.roots], owners: string[] = [], started = Date.now(), excluded = new Set(["node_modules", "target", ".git", ".venv", "__pycache__", ".nx", "🗑️generated", "🤖️generated", "🔌️plugin-modules", "🧩️extension-modules", "⚡️cache", "dist"]); let files = 0, work = 0;

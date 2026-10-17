@@ -112,7 +112,20 @@ pub fn create_sourcing_viewer() -> semio_framework_plugin::AppDefinition {
 //#endregion 🔖️Manifest
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
+
+//#region 🧩️ArtifactItems2
+pub mod artifact_items_2 {
+use semio_framework_artifact_reference::{Dialect, StandardId, SubsetId};
+
+/// 🪪️ This artifact's canonical `Dialect` (ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET,
+/// contract §1/§7.4) — lives at the ARTIFACT level (not under `editor`/`viewer`) specifically so a
+/// viewer file can read it without ever importing through the sibling `editor` module. `artifact_kind
+/// = "s.sourcing.curation"` matches the id `definition()`'s own `"s.curation.schema.artifact"` capability
+/// row descriptor below; `standard`/`subset` match this file's own
+/// `🏅️standards/🔖️1/🪆️subsets/✳️any` location — the canonical surface id is
+/// `s.sourcing.curation@1/*#editor` / `s.sourcing.curation@1/*#viewer`, exactly the contract §1 grammar.
+pub const SOURCING_DIALECT: Dialect = Dialect { artifact_kind: "s.sourcing.curation", standard: StandardId("1"), subset: SubsetId::ANY };
+}
+//#endregion 🧩️ArtifactItems2

@@ -9,6 +9,5 @@ fn neutral_interaction_interfaces_agree_with_independent_serde_wires(){
     let hover=DomainHover{channel:"pointer".into(),ids:vec!["🧬".into()]};agree(&hover,&fixture["hover"]);
     for(method,expected)in[SelectionMethod::Pick,SelectionMethod::Rectangle,SelectionMethod::Lasso].iter().zip(fixture["methods"].as_array().unwrap()){agree(method,expected);}
     agree(&Viewport2d{x:-12.5,y:8.0,zoom:1.25},&fixture["viewport"]);
-    println!("[DEBUG] neutral Surface interaction and viewport ports preserve their defining package wire contracts against independent Serde");
 }
 

@@ -1,7 +1,7 @@
 /** 🚧 Scene mesh kind references and node-graph surface sizing, attachment and built-node store reloads. */
 import { createElement, useLayoutEffect } from "react";
 import { createBuiltNodeStoreCacheV1, publishBuiltNodesV1, publishPanelBodiesV1 } from "../../🧱️elements/🏛️ShellHost/🟦️.tsx";
-import { world3dMarqueeOverlayShape } from "../../🧱️elements/🛠️ShellHelpers/🟦️.tsx";
+import { world3dMarqueeOverlayShape } from "../../🧱️elements/🛠️ShellHelpers/🛑️extension-io/🟦️.ts";
 import { openSurfaceContextMenu } from "../../🧱️elements/🗣️Interpreter/🖱️surface-menu/🟦️.ts";
 import * as flowSessionLoader from "../../🧱️elements/🪪️WasmSessionLoader/🟦️.tsx";
 import { createFlowBrowserRuntime } from "@semio-tech/flow-core/🌐️flow-browser.js";
@@ -11,7 +11,7 @@ import { render, waitFor } from "@semio-tech/ui-react/test";
 import { describe, expect, it, test, vi } from "vitest";
 import { type BuiltNode, type NodeGraphScene, pendingPanelUiNode } from "@semio-tech/framework";
 import { FlowGraphCanvasHost, InterpretedUiNode, builtNodeToSnapshot, resizeCanvasBackingStore, panelTabDefinitionToNode } from "../../🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx";
-import { meshDataFromKind } from "../../🧱️elements/🌐️World3dHost/🟦️.tsx";
+import { meshDataFromKind } from "../../🧱️elements/🌐️World3dHost/🎨️mesh-render/🧱️mesh-parsing-and-residency/🟦️.ts";
 import { sceneMeshKindsFixture as sceneMeshKindFixture } from "../../../../../../../🔨️modules/🏗️mesh-engine/🧪️tests/🧫️fixtures/🟦️.ts";
 import { buildContractNode, noopAction } from "../🧰️engine-contract-helpers/🟦️.ts";
 import { surfaceHostRetentionFixture } from "../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🟦️.ts";

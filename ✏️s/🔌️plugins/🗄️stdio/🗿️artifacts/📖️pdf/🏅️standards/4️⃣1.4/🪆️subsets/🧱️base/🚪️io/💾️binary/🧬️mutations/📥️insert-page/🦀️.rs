@@ -1,8 +1,8 @@
 //! 💾️ insert-page native binary payload owner.
 
 use crate::standards::v1_4::subsets::base::schema::mutations::PdfMutation;
-use crate::standards::v1_4::subsets::base::io::binary::mutations::{put_index, put_text, Reader};
-use crate::standards::v1_4::subsets::base::schema::mutations::InsertPage;
+use crate::standards::v1_4::subsets::base::io::binary::mutations::wire::{put_index, put_text, Reader};
+use crate::standards::v1_4::subsets::base::schema::mutations::insert_page::InsertPage;
 
 //#region 🔖️Codec
 pub const TAG: u8 = dsl::protocol_record::tag_u8(include_str!("../📡️.protocol.semio"), "insert-page");

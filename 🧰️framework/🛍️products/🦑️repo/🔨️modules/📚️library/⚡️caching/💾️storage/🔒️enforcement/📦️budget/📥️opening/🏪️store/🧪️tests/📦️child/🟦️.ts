@@ -25,7 +25,6 @@ test("Repository child scopes authenticate private owners and carry actual phase
   try{const pending=run(row.authority==="copied"?{...store}:store,input,async(actual:unknown,phase:unknown)=>{called=true;expect(actual).toBe(child);expect(phase).toBe(actualPhase);trace.push("body");if(row.outcome!=="value")throw primary;return 73;});if(row.authority==="mutation")input.directory="/foreign";expect(await pending).toBe(73);accepted=true;}catch(error){failure={value:error};}
   const expected=db.query("select ? in ('actual','mutation') and ?='value' accepted").get(row.authority,row.outcome)as{accepted:number};expect(row.accepted).toBe(expected.accepted===1);expect(accepted).toBe(row.accepted);if(row.accepted||row.authority==="actual"&&row.outcome!=="value"){expect(called).toBe(true);expect(trace).toEqual([row.kind==="maintenance"?"maintenance":row.parent,"body","child-close"]);if(!row.accepted)expect(failure?.value).toBe(primary);}else expect(called).toBe(false);
  }}finally{db.close();}
- console.log("[DEBUG] Closed repository child owner laws exercised actual Source with genuine controls and explicit memory ports");
 }));
 
 test("Disposable partition bridge unwraps only its actual owner and preserves exact terminal owner",()=>withBuildTestInvocationV1(async original=>{

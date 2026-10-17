@@ -1,10 +1,22 @@
+use semio_framework_test_fixtures::fixture_text;
+
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_semio_brep::schema::snapshot::SemioBrepSnapshot;
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_semio_mesh::schema::snapshot::SemioMeshSnapshot;
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValueSnapshot;
+#[allow(unused_imports)]
+use framework_schema::ArtifactSchema;
 use crate::io::text::snapshot::decode_semio_object_snapshot_json;
 use semio_s_artifact_stdio_semio_base::io::text::codec::enc_str;
-use super::*;
+use crate::schema::snapshot::*;
 
 #[semio_framework_async_macros::async_test]
 async fn minimal_schema_valid_json_defaults_optional_children() {
-    let schema: serde_json::Value = serde_json::from_str(include_str!("../../../🔣️.json")).expect("committed JSON Schema");
+    let schema: serde_json::Value = serde_json::from_str(fixture_text!("../../🔣️.json")).expect("committed JSON Schema");
     assert_eq!(schema["required"], serde_json::json!(["schema", "transform"]));
     let minimal = serde_json::json!({
         "schema": STDIO_SEMIOOBJECT_DOCUMENT_SCHEMA,

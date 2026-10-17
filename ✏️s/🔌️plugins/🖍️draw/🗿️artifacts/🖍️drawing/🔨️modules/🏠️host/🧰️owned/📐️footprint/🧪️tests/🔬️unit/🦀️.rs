@@ -45,7 +45,6 @@ fn paged_native_drawing_snapshot_duplicate_close_preserves_physical_grant_axes()
             let (owners, allocation) = observe(|| rewrite.take_owners().expect("duplicate closure returns empty pool owners once"));
             assert_eq!((allocation.requested_bytes, allocation.released_bytes), (0, 0));assert!(rewrite.take_owners().is_none());assert!(rewrite.terminal_is_empty());
             let (_, allocation) = observe(|| { drop(owners);drop(rewrite); });assert_eq!((allocation.requested_bytes, allocation.released_bytes), (0, 0));
-            eprintln!("[DEBUG] Drawing duplicate cancellation partial={partial} held={held} turns={turns} actualReleased={released}; exact three-axis grant, zero constructor/pause/terminal drop");
         }
     }
 }
@@ -85,7 +84,6 @@ fn paged_native_drawing_snapshot_decoded_field_close_admits_actual_birth_and_rel
         }
         assert!(retirement.terminal_is_empty());assert!(released >= retained);
         let (_, allocation) = observe(|| drop(retirement));assert_eq!((allocation.requested_bytes, allocation.released_bytes), (0, 0));
-        eprintln!("[DEBUG] Drawing decoded native field close retained={retained} turns={turns} exact admitted scaffold extent={scaffold_extent} body4096; zero heap constructor/pause/undergrant/demand/terminal drop");
     }
 }
 
@@ -119,7 +117,6 @@ fn paged_native_drawing_snapshot_duplicate_identity_consumes_admitted_target() {
             let (done, allocation) = observe(|| cursor.close_step(0));assert!(!done);assert_eq!((allocation.requested_bytes, allocation.released_bytes), (0, 0));
             let (done, allocation) = observe(|| cursor.close_step(1));assert!(done);assert!(cursor.terminal_is_empty());assert_eq!((allocation.requested_bytes, allocation.released_bytes), (0, 0));
             let (_, allocation) = observe(|| drop(cursor));assert_eq!((allocation.requested_bytes, allocation.released_bytes), (0, 0));
-            eprintln!("[DEBUG] Drawing duplicate intrinsic UTF8/NUL admitted target cold authority {expected} bytes={total} grant={bytes}; zero heap birth/read/refusal/close/drop");
         }
         for turn in law["cancelAt"].as_array().unwrap() {
             let mut cursor = DrawingDuplicateIdentityCursor::default();
@@ -158,7 +155,6 @@ fn paged_native_drawing_snapshot_sparse_path_patch_preserves_semantics_and_nativ
     }
     assert!(retirement.terminal_is_empty());
     let (_, allocation) = observe(|| drop(retirement));assert_eq!((allocation.requested_bytes, allocation.released_bytes), (0, 0));
-    eprintln!("[DEBUG] Drawing native sparse path patch exact independent before/after semantic arrays and controlled path-owner three-axis retirement turns={turns}; cold whole diff/apply uncredited");
 }
 
 #[test]
@@ -199,7 +195,6 @@ fn paged_native_drawing_snapshot_identifier_equality_obeys_independent_unicode_l
             let (complete, allocation) = observe(|| cursor.close_step(1));assert!(complete);assert!(cursor.terminal_is_empty());
             assert_eq!((allocation.requested_bytes, allocation.released_bytes), (0, 0));
             let (_, allocation) = observe(|| drop(cursor));assert_eq!((allocation.requested_bytes, allocation.released_bytes), (0, 0));
-            eprintln!("[DEBUG] Drawing exact native ID equality grant={grant} expected={expected} observed={observed} zero heap birth/pause/compare/source-refusal/close/drop; Unicode/NUL/empty backing and independent chunk partitions");
         }
         for stage in law["cancelAt"].as_array().unwrap() {
             let mut cursor = DrawingTextEqualityCursor::default();
@@ -251,7 +246,6 @@ fn paged_native_drawing_snapshot_record_footprint_matches_actual_root_and_asset_
             assert_eq!((allocation.requested_bytes, allocation.released_bytes), (0, 0));
             let (_, allocation) = observe(|| drop(cursor));assert_eq!((allocation.requested_bytes, allocation.released_bytes), (0, 0));
         }
-        eprintln!("[DEBUG] Drawing direct native record footprint actualRetainedHeap={retained} exact zero heap birth/pause/read/source-refusal/partial-cancel/close/drop; inline and descendant owners counted separately");
     }
 }
 
@@ -304,7 +298,6 @@ fn paged_native_drawing_snapshot_direct_layer_footprint_matches_actual_retained_
             assert_eq!((allocation.requested_bytes, allocation.released_bytes), (0, 0));
             let (_, allocation) = observe(|| drop(cursor));assert_eq!((allocation.requested_bytes, allocation.released_bytes), (0, 0));
         }
-        eprintln!("[DEBUG] Drawing direct native layer footprint kind={kind} actualRetainedHeap={retained} exact zero heap birth/pause/read/source-refusal/partial-cancel/close/drop; descendants separately owned");
     }
 }
 
@@ -347,7 +340,6 @@ fn paged_native_drawing_snapshot_text_digest_matches_independent_chunked_sha256(
         let (complete, allocation) = observe(|| cursor.close_step(1));assert!(complete);assert!(cursor.terminal_is_empty());
         assert_eq!((allocation.requested_bytes, allocation.released_bytes), (0, 0));
         let (_, allocation) = observe(|| drop(cursor));assert_eq!((allocation.requested_bytes, allocation.released_bytes), (0, 0));
-        eprintln!("[DEBUG] Drawing native text digest byteGrant={maximum_bytes} observed={bytes} independentSha256={actual} zero-heap constructor/pauses/source refusal/body/close/drop");
     }
     for stage in law["cancelAt"].as_array().unwrap() {
         let mut cursor = DrawingTextDigestCursor::default();
@@ -416,5 +408,4 @@ fn paged_native_drawing_snapshot_text_footprint_counts_empty_spare_backing_exact
     assert!(retirement.terminal_is_empty());
     let (_, allocation) = observe(|| drop(retirement));
     assert_eq!((allocation.requested_bytes, allocation.released_bytes), (0, 0));
-    eprintln!("[DEBUG] Drawing native text footprint exactly counts actual empty/spare/full chunk backing with zero constructor/read/foreign refusal/close/drop heap; original source owns all storage until controlled retirement");
 }

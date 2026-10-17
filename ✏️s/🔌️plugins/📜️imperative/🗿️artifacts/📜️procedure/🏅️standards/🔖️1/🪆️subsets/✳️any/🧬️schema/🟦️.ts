@@ -1,6 +1,6 @@
 /** 🧬️ Procedure document with independently owned flow and text children. */
-import { parseArtifactChild, type ArtifactChild } from "../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts";
-export type { ArtifactChild } from "../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts";
+import { parseArtifactChild, type ArtifactChild } from "@semio-tech/framework-os/modules/store/child/schema";
+export type { ArtifactChild } from "@semio-tech/framework-os/modules/store/child/schema";
 
 export interface ProcedureArtifact {
   /** @state artifact */ schema: string;

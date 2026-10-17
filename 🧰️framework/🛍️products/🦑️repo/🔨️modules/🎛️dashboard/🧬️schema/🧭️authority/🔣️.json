@@ -1,19 +1,45 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://json.schemas.assets.semio-tech.coms/repo/dashboard/authority.json",
-  "title": "🧭️ Developer control plane authority",
+  "title": "🧭️ Neutral Developer Command Authority",
   "type": "object",
-  "required": ["scripts"],
+  "required": [
+    "scripts"
+  ],
   "properties": {
     "scripts": {
       "type": "object",
-      "required": ["repo", "setup", "dashboard", "dashboard:install"],
-      "additionalProperties": false,
+      "required": [
+        "repo",
+        "setup",
+        "dashboard",
+        "dashboard:install"
+      ],
+      "additionalProperties": {
+        "type": "string",
+        "pattern": "^bun repo run [@A-Za-z0-9][@A-Za-z0-9_./-]*:[A-Za-z0-9_./-]+(?::[A-Za-z0-9_./-]+)?(?: [A-Za-z0-9_./:@=,+-]+)*(?![\\s\\S])"
+      },
       "properties": {
-        "repo": {"const": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts repo"},
-        "setup": {"const": "bun repo run workspace:setup"},
-        "dashboard": {"const": "bun repo run @semio-tech/repo-dashboard-rs:run --output=stream"},
-        "dashboard:install": {"const": "bun repo run @semio-tech/repo-dashboard-rs:build --exclude-dependencies --skip-cache --output=stream"}
+        "repo": {
+          "const": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts repo"
+        },
+        "setup": {
+          "const": "bun repo run workspace:setup"
+        },
+        "dashboard": {
+          "const": "bun repo run @semio-tech/repo-dashboard-rs:run --output=stream"
+        },
+        "dashboard:install": {
+          "const": "bun repo run @semio-tech/repo-dashboard-rs:build --exclude-dependencies --skip-cache --output=stream"
+        }
+      }
+    }
+  },
+  "$defs": {
+    "LaunchCommand": {
+      "type": "string",
+      "not": {
+        "pattern": "(?:^|[;&|\\n]\\s*)(?:(?:bun(?:x)?|npx)\\s+)?(?:nx|bazel(?:isk)?(?:\\.exe)?)(?:\\s|$)|node_modules[/\\\\]+nx[/\\\\]"
       }
     }
   }

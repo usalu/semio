@@ -83,7 +83,7 @@ type SvgDoc = { declaration: RawDoc["declaration"]; doctype: RawDoc["doctype"]; 
 //#region 🔓️Read
 function projectNode(node: RawNode): ProjectedNode {
   if (node.kind !== "element") return node;
-  const attrs: [string, string][] = node.attrs.map((a) => [a.name, a.value]).sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0));
+  const attrs: [string, string][] = node.attrs.map((a): [string, string] => [a.name, a.value]).sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0));
   return { kind: "element", name: node.name, attrs, children: node.children.map(projectNode) };
 }
 

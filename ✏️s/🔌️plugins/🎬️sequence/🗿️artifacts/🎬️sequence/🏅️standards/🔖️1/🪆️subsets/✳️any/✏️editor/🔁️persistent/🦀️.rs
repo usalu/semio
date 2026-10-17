@@ -1,10 +1,28 @@
 //! 🔁️ Sequence persistent routes: reorganize, node-graph editing and the run order, driven step by step.
 
-use super::*;
+use neural_engine::Value as NeuralValue;
+use std::collections::{BTreeMap, VecDeque};
+use neural_engine::{Dictionary, RegistryRetirement, SharedRegistry, ValueRetirement};
+use semio_framework_plugin::{Emit, Fault, NoConfigMutation};
+use imperative_engine::{Executor, Path, RunResult, Step, imperative_module_registry};
+use semio_framework_tool_machine::{NodeDragEmit, NodeGraphEditRow, node_drag_emit};
+use crate::{SEQUENCE_DOCUMENT_SCHEMA, SequenceSnapshot, SequenceStep, SequenceWorkingScene};
+use semio_s_artifact_stdio_semio_flow::schema::mutations::SemioFlowMutation;
+use semio_s_artifact_stdio_semio_flow::schema::snapshot::SemioFlowSnapshot;
+use crate::editor::sequence::modes::edit::windows::main::config::SequenceMainWindowConfig;
+use crate::mutations::SequenceMutation;
+use crate::editor::sequence::modes::edit::windows::script::transient::SequenceScriptWindowTransient;
+use semio_framework_pack_json::{Value, json};
+use crate::editor::sequence::edit_rules;
+use crate::editor::sequence::modes::edit::windows::{main, script};
+use crate::editor::sequence::commands::node_graph::node_graph_edit;
+use crate::editor::sequence::base::{SEQUENCE_PLAY_APP_ID, sequence_child_leaves_emit, sequence_fault, sequence_working_scene_from_children};
+use crate::editor::sequence::retained::{SEQUENCE_RETAINED_RAW_BYTES, SEQUENCE_STORE_MAXIMUM_BYTES, SEQUENCE_STORE_MAXIMUM_SCENE_ITEMS, SequenceCommand, SequenceRetainedSceneOwner, sequence_bounded_child_emit_bytes};
+use crate::editor::sequence::app::SequencePlayApp;
 
 //#region 🧵️PersistentRemainingRoutes
-pub(super) const SEQUENCE_PERSISTENT_MAXIMUM_UNITS: usize = 66_049;
-pub(super) const SEQUENCE_PERSISTENT_TOOL_IDS: &[&str] = &["reorganize", "nodeGraphEdit", "run"];
+pub const SEQUENCE_PERSISTENT_MAXIMUM_UNITS: usize = 66_049;
+pub const SEQUENCE_PERSISTENT_TOOL_IDS: &[&str] = &["reorganize", "nodeGraphEdit", "run"];
 const SEQUENCE_PERSISTENT_PUBLICATION_CONTRACTS: &[semio_framework_plugin::ArtifactToolPublicationContract] = &[
     semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "reorganize", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Child] },
     semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "nodeGraphEdit", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Child] },
@@ -71,11 +89,11 @@ impl SequenceReorganizeState {
         Ok(SequencePersistentAdvance::Complete(edit.leaves))
     }
 
-    pub(super) fn release_one(&mut self) -> bool {
+    pub fn release_one(&mut self) -> bool {
         self.depths.pop().is_some() || self.moves.pop().is_some()
     }
 
-    pub(super) fn empty(&self) -> bool {
+    pub fn empty(&self) -> bool {
         self.depths.is_empty() && self.moves.is_empty()
     }
 }
@@ -222,7 +240,7 @@ impl SequenceNodeGraphState {
         }
     }
 
-    pub(super) fn release_one(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> {
+    pub fn release_one(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> {
         if grant.maximum_items == 0 {
             return Ok(semio_framework_value::retained_clone::RetainedCloneStep::Progress(Default::default()));
         }
@@ -258,12 +276,12 @@ impl SequenceNodeGraphState {
         Ok(semio_framework_value::retained_clone::RetainedCloneStep::Complete(Default::default()))
     }
 
-    pub(super) fn close_demand(&self) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+    pub fn close_demand(&self) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
         let admits = !self.discarded_steps.is_empty() || self.edit.as_ref().is_some_and(|edit| !edit.scene.steps.is_empty());
         let retains = !self.operations.is_empty() || self.gesture.is_some() || !self.delete_frontier.is_empty() || self.delete_current.is_some() || !self.delete_discovered.is_empty() || self.edit.is_some();
         sequence_owner_demand(&self.retirement, admits, retains)
     }
-    pub(super) fn empty(&self) -> bool {
+    pub fn empty(&self) -> bool {
         self.operations.is_empty()
             && self.gesture.is_none()
             && self.delete_frontier.is_empty()
@@ -302,11 +320,11 @@ struct SequenceRunOrder {
 }
 
 impl SequenceRunOrder {
-    pub(super) fn new(slot: Option<(&str, &str)>) -> Self {
+    pub fn new(slot: Option<(&str, &str)>) -> Self {
         Self { owner: slot.map(|value| value.0.into()), name: slot.map(|value| value.1.into()), ..Self::default() }
     }
 
-    pub(super) fn matches(&self, step: &SequenceStep) -> bool {
+    pub fn matches(&self, step: &SequenceStep) -> bool {
         match ((self.owner.as_deref(), self.name.as_deref()), step.slot.as_ref()) {
             ((None, None), None) => true,
             ((Some(owner), Some(name)), Some(slot)) => slot.owner == owner && slot.name == name,
@@ -398,10 +416,10 @@ impl SequenceRunOrder {
         }
     }
 
-    pub(super) fn complete(&self) -> bool {
+    pub fn complete(&self) -> bool {
         matches!(self.stage, SequenceRunOrderStage::Complete)
     }
-    pub(super) fn release_one(&mut self) -> bool {
+    pub fn release_one(&mut self) -> bool {
         self.scoped.pop().is_some()
             || self.incoming.pop().is_some()
             || self.outgoing.pop().is_some()
@@ -581,7 +599,7 @@ impl SequenceRunState {
         Ok(SequencePersistentAdvance::Progress("sequence-run-step", "{\"en\":\"Executed Sequence step\",\"de\":\"Sequenzschritt wurde ausgeführt\"}".as_bytes()))
     }
 
-    pub(super) fn release_one(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> {
+    pub fn release_one(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> {
         if grant.maximum_items == 0 {
             return Ok(semio_framework_value::retained_clone::RetainedCloneStep::Progress(Default::default()));
         }
@@ -625,7 +643,7 @@ impl SequenceRunState {
         Ok(semio_framework_value::retained_clone::RetainedCloneStep::Complete(Default::default()))
     }
 
-    pub(super) fn close_demand(&self) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+    pub fn close_demand(&self) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
         if let Some(retirement) = self.registry_retirement.as_ref().filter(|_| self.retirement.terminal_is_empty() && self.pending.is_empty() && self.effects.is_empty() && self.frames.is_empty() && self.registry.is_none()) {
             let copy_bytes = retirement.next_copy_byte_demand()?;
             return Ok(semio_framework_value::RetirementDemand { copy_bytes, capacity_bytes: retirement.next_capacity_byte_demand(copy_bytes)?, release_bytes: retirement.next_release_byte_demand()?, depth: retirement.next_depth_demand()?.max(1) });
@@ -634,7 +652,7 @@ impl SequenceRunState {
         let retains = self.initialized || self.registry.is_some() || self.registry_retirement.is_some() || !self.effects.is_empty() || !self.frames.is_empty();
         sequence_owner_demand(&self.retirement, admits, retains)
     }
-    pub(super) fn empty(&self) -> bool {
+    pub fn empty(&self) -> bool {
         !self.initialized && self.registry.is_none() && self.registry_retirement.is_none() && self.pending.is_empty() && self.retirement.terminal_is_empty() && self.effects.is_empty() && self.frames.is_empty()
     }
 }
@@ -646,7 +664,7 @@ fn sequence_retirement_demand(retirement: &ValueRetirement) -> Result<semio_fram
 }
 
 /// 📏️ Quotes one parked-dictionary admission or one structural drop.
-pub(super) fn sequence_owner_demand(retirement: &ValueRetirement, admits_dictionary: bool, retains_structure: bool) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+pub fn sequence_owner_demand(retirement: &ValueRetirement, admits_dictionary: bool, retains_structure: bool) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
     if !retirement.terminal_is_empty() {
         return sequence_retirement_demand(retirement);
     }
@@ -657,7 +675,7 @@ pub(super) fn sequence_owner_demand(retirement: &ValueRetirement, admits_diction
 }
 
 /// ♻️ Drains one turn of a non-empty neural value retirement; `None` once it is terminal-empty.
-pub(super) fn sequence_drain_retirement(retirement: &mut ValueRetirement, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Option<Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError>> {
+pub fn sequence_drain_retirement(retirement: &mut ValueRetirement, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Option<Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError>> {
     if retirement.terminal_is_empty() {
         return None;
     }
@@ -665,7 +683,7 @@ pub(super) fn sequence_drain_retirement(retirement: &mut ValueRetirement, grant:
 }
 
 /// 🅿️ Admits one parked dictionary under the grant and keeps it parked when refused.
-pub(super) fn sequence_push_pending(retirement: &mut ValueRetirement, pending: &mut Vec<Dictionary>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Option<Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError>> {
+pub fn sequence_push_pending(retirement: &mut ValueRetirement, pending: &mut Vec<Dictionary>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Option<Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError>> {
     let dictionary = pending.pop()?;
     Some(match retirement.push_dictionary(dictionary, grant) {
         Ok(progress) => Ok(semio_framework_value::retained_clone::RetainedCloneStep::Progress(progress)),
@@ -677,7 +695,7 @@ pub(super) fn sequence_push_pending(retirement: &mut ValueRetirement, pending: &
 }
 
 /// 🧳️ Admits one step's parameter dictionary and puts it back when refused.
-pub(super) fn sequence_push_params(retirement: &mut ValueRetirement, step: &mut SequenceStep, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneProgress, semio_framework_value::ValueError> {
+pub fn sequence_push_params(retirement: &mut ValueRetirement, step: &mut SequenceStep, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneProgress, semio_framework_value::ValueError> {
     let dictionary = std::mem::take(&mut step.params.0);
     retirement.push_dictionary(dictionary, grant).map_err(|(error, dictionary)| {
         step.params.0 = dictionary;
@@ -686,12 +704,12 @@ pub(super) fn sequence_push_params(retirement: &mut ValueRetirement, step: &mut 
 }
 
 /// 🧱️ One structural item released without a physical backing grant.
-pub(super) fn sequence_unit() -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> {
+pub fn sequence_unit() -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> {
     Ok(semio_framework_value::retained_clone::RetainedCloneStep::Progress(semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, ..Default::default() }))
 }
 
 /// 🗂️ Maps one release turn onto the interactive close contract.
-pub(super) fn sequence_close_step(step: Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError>) -> semio_framework_job::InteractiveJobCloseStep {
+pub fn sequence_close_step(step: Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError>) -> semio_framework_job::InteractiveJobCloseStep {
     match step {
         Ok(semio_framework_value::retained_clone::RetainedCloneStep::Progress(progress)) => semio_framework_job::InteractiveJobCloseStep::Pending { progress },
         Ok(semio_framework_value::retained_clone::RetainedCloneStep::Complete(progress)) => semio_framework_job::InteractiveJobCloseStep::Complete { progress },
@@ -705,7 +723,7 @@ enum SequencePersistentWorkspace {
     Run(SequenceRunState),
 }
 impl SequencePersistentWorkspace {
-    pub(super) fn new(tool_id: &str) -> Self {
+    pub fn new(tool_id: &str) -> Self {
         match tool_id {
             "reorganize" => Self::Reorganize(SequenceReorganizeState::default()),
             "nodeGraphEdit" => Self::NodeGraph(SequenceNodeGraphState::default()),
@@ -719,7 +737,7 @@ impl SequencePersistentWorkspace {
             Self::Run(state) => state.advance(scene),
         }
     }
-    pub(super) fn release_one(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> {
+    pub fn release_one(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> {
         match self {
             Self::Reorganize(state) => if state.release_one() { sequence_unit() } else { Ok(semio_framework_value::retained_clone::RetainedCloneStep::Complete(Default::default())) },
             Self::NodeGraph(state) => state.release_one(grant),
@@ -727,14 +745,14 @@ impl SequencePersistentWorkspace {
         }
     }
 
-    pub(super) fn close_demand(&self) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+    pub fn close_demand(&self) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
         match self {
             Self::Reorganize(state) => Ok(if state.empty() { Default::default() } else { semio_framework_value::RetirementDemand { depth: 1, ..Default::default() } }),
             Self::NodeGraph(state) => state.close_demand(),
             Self::Run(state) => state.close_demand(),
         }
     }
-    pub(super) fn empty(&self) -> bool {
+    pub fn empty(&self) -> bool {
         match self {
             Self::Reorganize(state) => state.empty(),
             Self::NodeGraph(state) => state.empty(),
@@ -743,18 +761,18 @@ impl SequencePersistentWorkspace {
     }
 }
 
-pub(super) struct SequencePersistentWork {
-    pub(super) tool_id: &'static str,
-    pub(super) workspace_identity: u64,
-    pub(super) progress: usize,
-    pub(super) replay_target: Option<usize>,
-    pub(super) scene_owner: SequenceRetainedSceneOwner,
+pub struct SequencePersistentWork {
+    pub tool_id: &'static str,
+    pub workspace_identity: u64,
+    pub progress: usize,
+    pub replay_target: Option<usize>,
+    pub scene_owner: SequenceRetainedSceneOwner,
     workspace: SequencePersistentWorkspace,
-    pub(super) completed: bool,
-    pub(super) closing: bool,
+    pub completed: bool,
+    pub closing: bool,
 }
 impl SequencePersistentWork {
-    pub(super) fn new(tool_id: &'static str, operation: &semio_framework_plugin::AppOperationContext) -> Self {
+    pub fn new(tool_id: &'static str, operation: &semio_framework_plugin::AppOperationContext) -> Self {
         let scope = format!("{}:{}:{}:{}", operation.app_instance_id, operation.parent_document_id, operation.operation_id, operation.generation);
         let identity = scope.as_bytes().iter().fold(0xcbf2_9ce4_8422_2325_u64, |state, byte| (state ^ u64::from(*byte)).wrapping_mul(0x100_0000_01b3));
         Self {
@@ -903,16 +921,16 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framewo
 }
 
 impl SequencePersistentWork {
-    pub(super) fn close_demand(&self) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+    pub fn close_demand(&self) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
         if !self.workspace.empty() { self.workspace.close_demand() } else { self.scene_owner.close_demand() }
     }
 }
 
-pub(super) struct SequencePersistentJobFactory {
-    pub(super) keys: Vec<semio_framework::ToolFactoryKey>,
+pub struct SequencePersistentJobFactory {
+    pub keys: Vec<semio_framework::ToolFactoryKey>,
 }
 impl SequencePersistentJobFactory {
-    pub(super) fn new(controller: &str) -> Self {
+    pub fn new(controller: &str) -> Self {
         Self { keys: SEQUENCE_PERSISTENT_TOOL_IDS.iter().map(|id| semio_framework::ToolFactoryKey::new(controller, *id)).collect() }
     }
 }
@@ -938,9 +956,9 @@ impl semio_framework::ToolJobFactory for SequencePersistentJobFactory {
         &mut self,
         _operation: semio_framework_job::Operation,
         payload: Self::Payload,
-        input: semio_framework::action_bus::RetainedToolWireInput,
-        checkpoint: Option<semio_framework::action_bus::RetainedToolWireInput>,
-    ) -> Result<Self::Job, (semio_framework::ToolJobFactoryError, semio_framework::action_bus::RetainedToolWireInput, Option<semio_framework::action_bus::RetainedToolWireInput>)> {
+        input: semio_framework_action_bus::RetainedToolWireInput,
+        checkpoint: Option<semio_framework_action_bus::RetainedToolWireInput>,
+    ) -> Result<Self::Job, (semio_framework::ToolJobFactoryError, semio_framework_action_bus::RetainedToolWireInput, Option<semio_framework_action_bus::RetainedToolWireInput>)> {
         if input.declared_bytes() > SEQUENCE_RETAINED_RAW_BYTES || checkpoint.as_ref().is_some_and(|value| value.declared_bytes() > semio_framework_plugin::retained_command::ARTIFACT_COMMAND_CHECKPOINT_MAXIMUM_BYTES) {
             return Err((semio_framework::ToolJobFactoryError::new("Sequence persistent command wire or checkpoint exceeds cap"), input, checkpoint));
         }

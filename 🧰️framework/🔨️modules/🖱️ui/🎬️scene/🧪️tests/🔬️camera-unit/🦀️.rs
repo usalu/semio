@@ -340,7 +340,6 @@ fn original_ray_segment_projection_clips_depth_with_independent_three_witnesses(
         if let Some(segment) = segment { for index in 0..2 { let expected = vector(&row["points"][index]); assert!(segment.points[index].sub_m(expected).length_m() < 2e-4, "{} endpoint {index}: {:?}", row["name"], segment.points[index]); let projected = [row["screen"][index][0].as_f64().unwrap() as f32, row["screen"][index][1].as_f64().unwrap() as f32]; assert!((segment.screen[index][0] - projected[0]).abs() < 1e-3 && (segment.screen[index][1] - projected[1]).abs() < 1e-3, "{} screen {index}", row["name"]); } }
     }
     assert!(projection_spec_project_segment(view_projection, spec, vec3_new_m(f32::NAN, 0.0, -1.0), vec3_new_m(0.0, 0.0, -1.0), width, height).is_none());
-    eprintln!("[DEBUG] originalProjectedSegment cases={} independentThreePlaneLine=true depthClipped=true authoredEndpoints=true finiteOnly=true", law["cases"].as_array().unwrap().len());
 }
 
 #[test]
@@ -356,7 +355,6 @@ fn original_ray_segment_closest_points_match_independent_three_witnesses() {
     }
     assert!(ray_segment_closest(Vec3::ZERO, Vec3::ZERO, vec3_new_m(0.0, 0.0, -1.0), vec3_new_m(1.0, 0.0, -1.0)).is_none());
     assert!(ray_segment_closest(Vec3::ZERO, vec3_new_m(0.0, 0.0, -1.0), Vec3::ZERO, Vec3::ZERO).is_none());
-    eprintln!("[DEBUG] originalRaySegmentClosest cases=6 independentThreeWitnesses=true finiteForwardRay=true nonUnitDirection=true");
 }
 
 #[test]
@@ -449,5 +447,4 @@ fn ray_segment_distance_matches_neutral_three_cases() {
         let distance = ray_segment_distance(vector("origin"), vector("direction").normalize_m(), vector("a"), vector("b")).expect("nondegenerate original segment");
         assert!((f64::from(distance) - row["distance"].as_f64().unwrap()).abs() < 1e-5, "{}: {distance}", row["name"]);
     }
-    println!("[DEBUG] originalRaySegment cases=8 finiteEndpoints=true forwardRay=true independentThree=true");
 }

@@ -2,7 +2,7 @@
 
 use crate::editor::sourcing::config::SourcingCurationConfig;
 use crate::editor::sourcing::terminology::SourcingLabels;
-use crate::editor::sourcing::{sourcing_table, sourcing_table_action, sourcing_table_row};
+use crate::editor::sourcing::base::{sourcing_table, sourcing_table_action, sourcing_table_row};
 use crate::{CuratedItem, CurationSnapshot, ObjectKind, SortDirection};
 use semio_framework_plugin::BuiltNode;
 use semio_framework_ui_locale::LocalizedLabel;
@@ -52,7 +52,7 @@ pub const SOURCING_CURATION_CURATED_SORT_COLUMNS: [&str; 3] = ["name", "availabi
 /// 🧺️ The curated rows paired with the stock kind each one resolves to, in the order the table shows
 /// them: document order, or [`SOURCING_CURATION_CURATED_SORT_COLUMNS`] order when the shared sort
 /// names one of this table's columns.
-pub(crate) fn curated_rows(document: &CurationSnapshot, cfg: &SourcingCurationConfig) -> Vec<(CuratedItem, ObjectKind)> {
+pub fn curated_rows(document: &CurationSnapshot, cfg: &SourcingCurationConfig) -> Vec<(CuratedItem, ObjectKind)> {
     let stock = crate::stock_of(document);
     let mut rows: Vec<(CuratedItem, ObjectKind)> = document.curated.iter().filter_map(|item| stock.iter().find(|kind| kind.id == item.object_id).map(|kind| (item.clone(), kind.clone()))).collect();
     let Some(sort) = cfg.filters.sort.as_ref().filter(|sort| SOURCING_CURATION_CURATED_SORT_COLUMNS.contains(&sort.column_id.as_str())) else { return rows };
@@ -69,7 +69,7 @@ pub(crate) fn curated_rows(document: &CurationSnapshot, cfg: &SourcingCurationCo
 
 /// 🧺️ The curated row's ≤2 actions: curate one more (`curationAdd`, bounded by availability) and
 /// uncurate the kind entirely (`curationRemove`).
-fn curated_row_actions(item: &CuratedItem, kind: &ObjectKind, labels: &SourcingLabels) -> Vec<UiTreeItemAction> {
+pub fn curated_row_actions(item: &CuratedItem, kind: &ObjectKind, labels: &SourcingLabels) -> Vec<UiTreeItemAction> {
     let mut actions = Vec::new();
     if item.count < kind.availability {
         actions.push(UiTreeItemAction { icon_id: "plus".into(), label: Some(labels.curate.into()), action: sourcing_table_action("curationAdd", Some(&kind.id)), placement: Some(UiTreeActionPlacement::Row), disabled: false, reason: None });
@@ -99,7 +99,4 @@ pub fn render(document: &CurationSnapshot, cfg: &SourcingCurationConfig, labels:
 //#endregion 🔖️Render
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

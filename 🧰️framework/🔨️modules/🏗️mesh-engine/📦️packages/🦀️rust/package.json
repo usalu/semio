@@ -8,6 +8,7 @@
     "test-native": "bun --cwd \"../../../../..\" repo run @semio-tech/framework-mesh-engine-rs:test-native"
   },
   "devDependencies": {
+    "@semio-tech/framework-3d-js": "workspace:*",
     "@semio-tech/process": "workspace:*"
   }
 }

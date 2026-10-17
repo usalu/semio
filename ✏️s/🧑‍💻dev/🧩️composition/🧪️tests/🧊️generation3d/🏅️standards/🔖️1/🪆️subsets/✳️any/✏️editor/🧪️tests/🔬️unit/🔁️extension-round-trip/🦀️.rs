@@ -1,11 +1,6 @@
 /// 🔁️ Extension round trip: hex column evaluation, contribution pages, the settled tick cycle and late installs.
 
 //#region 🔁️ExtensionRoundTripTests
-/// 🚦️ One widget's `NodeEvalStatus` discriminant as the flow window publishes it.
-pub(crate) fn node_eval_status(status_json: &str, widget_id: &str) -> String {
-    let status: serde_json::Value = serde_json::from_str(status_json).expect("flow status json");
-    status.get(widget_id).and_then(|entry| entry.get("status")).and_then(serde_json::Value::as_str).unwrap_or("<absent>").to_string()
-}
 
 /// ⚖️ LAW: the served boot fixture `hexagonal-mushroom-column` evaluates END TO END across the
 /// extension actor boundary. Every `brep`/`math` operator reaches this app as a CONTRIBUTED stub

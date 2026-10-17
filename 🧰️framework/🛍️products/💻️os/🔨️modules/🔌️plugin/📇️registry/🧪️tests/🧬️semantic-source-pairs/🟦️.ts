@@ -18,5 +18,4 @@ test("committed semantic source pairs agree with current schema and independent 
     expect(pair.packageId).toBe(source.packageId);
     expect(pair.role).toBe(source.role);
   }
-  console.log(`[DEBUG] Current semantic JSON/pack source pairs=${manifests.length} independently admitted`);
 }, 60_000);

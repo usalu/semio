@@ -101,7 +101,6 @@ fn borrowed_message_composition_matches_neutral_and_serde_json() {
             }
         }
     }
-    println!("[DEBUG] borrowed native diagnostic rows={} match neutral/Serde JSON and observed physical grant allocation",law["cases"].as_array().unwrap().len());
 }
 
 #[test]
@@ -127,5 +126,4 @@ fn borrowed_message_composition_cancels_every_partial_owner_and_rejects_source_s
         let (_,heap)=observe_heap_allocations_on_this_thread(||drop(cursor));
         assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
     }
-    println!("[DEBUG] borrowed diagnostics cancellation/source-swap preserve baseline and retire all exact partial output owners");
 }

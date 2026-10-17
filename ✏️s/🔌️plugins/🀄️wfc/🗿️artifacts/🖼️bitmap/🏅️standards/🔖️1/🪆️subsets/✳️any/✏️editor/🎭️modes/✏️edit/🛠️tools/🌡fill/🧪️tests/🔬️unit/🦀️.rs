@@ -1,6 +1,12 @@
 //! 🧪 Fill tool — payload shape, schema leaf, and interactive step progress.
 
-use super::*;
+use crate::editor::bitmap::modes::edit::windows::output;
+use crate::schema::snapshot::BitmapSnapshot;
+use crate::standards::v1::subsets::any::io::text::snapshot::decode_base64;
+use semio_framework_job::{JobOutcomeBorrow, RetainedCloneGrant, RetainedCloneProgress, StepContext};
+use semio_framework_plugin::Fault;
+use semio_framework_tool_run::{ToolRunIdentity, ToolRunRebasePolicy, ToolRunReconfigurePolicy, ToolRunTraceKind};
+use crate::editor::bitmap::modes::edit::tools::fill::*;
 use crate::schema::snapshot::{BitmapColor, BitmapInput, BitmapOutputSpec, BitmapOverlappingModel};
 use semio_framework_job::{Generation, InteractiveJob, InteractiveJobCloseStep, OperationId, StepBudget};
 use semio_framework_plugin::ToolRunJobPort;

@@ -16,7 +16,10 @@ import { runRepositoryCargoTests, runRepositoryExactCargoLaws, configuredReposit
 import { BundleScript } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { withCapturedLocalHubHostV1 } from "../../🚀️local-bootstrap/🏃️execution/🟦️.ts";
 import { readHubScriptModule } from "../../🧪️testing/📜️script-sources/🟦️.ts";
-import { materializeTrustedStdioGisRotation, proveTrustedGisClosedActorV1, proveTrustedPublicationCli, trustedBootstrapCurrent, validateAndPublishTrustedStdioGisCandidate, withMaterializedTrustedCatalogBundleV1 } from "../../🏗️bootstrap/🧾️provenance/🚚️bootstrap-publication/🟦️.ts";
+import { proveTrustedPublicationCli, validateAndPublishTrustedStdioGisCandidate } from "../../🏗️bootstrap/🧾️provenance/🚚️bootstrap-publication/🟦️.ts";
+import { withMaterializedTrustedCatalogBundleV1 } from "../../🏗️bootstrap/🧾️provenance/🚚️bootstrap-publication/🧱️materialized-bundle/🟦️.ts";
+import { proveTrustedGisClosedActorV1 } from "../../🏗️bootstrap/🧾️provenance/🚚️bootstrap-publication/🗺️gis-proofs-and-staging/🟦️.ts";
+import { materializeTrustedStdioGisRotation, trustedBootstrapCurrent } from "../../🏗️bootstrap/🧾️provenance/🚚️bootstrap-publication/🔄️rotation-and-current-pointer/🟦️.ts";
 import { TRUSTED_BOOTSTRAP_LINKED_PACKAGES, trustedBootstrapSelectPackages } from "../../🏗️bootstrap/🧾️provenance/🧭️bootstrap-selection/🟦️.ts";
 import { proveGisMapTwoAuthorCompositionFixture } from "../🌍️gis-map-fixtures/🟦️.ts";
 import { proveGisMapTwoAuthorShellProcess } from "../🕹️gis-map-process/🟦️.ts";
@@ -83,7 +86,7 @@ export class TrustedStdioGisBundleCheckScript extends BundleScript {
     const targetResolution = runtimeCompact.indexOf("catalog.resolve_document_open(&authority.descriptor", receiptResolution);
     if (
       !catalogSource.includes("bundle.schema_version != TRUSTED_BUNDLE_SCHEMA_VERSION") ||
-      !catalogSource.includes("record.receipt.binds(&record.plugin_id, &record.package_id, &record.component.sha256, &record.descriptor.sha256)") ||
+      !catalogSource.includes("record.receipt.binds(directory::os_component_receipt::ComponentProfileV1::Release, &record.plugin_id, &record.package_id, &record.component.sha256, &record.descriptor.sha256)") ||
       !catalogSource.includes("trusted_profile_generation(&bundle, &profile)") ||
       !catalogSource.includes("selected profile must resolve at least one document-open target") ||
       !catalogSource.includes("selected profile resolved a different number of document-open targets than it declares") ||
@@ -175,7 +178,7 @@ export class TrustedStdioGisBundleCheckScript extends BundleScript {
       const phaseControl=exactCargoCallerControlV1(this.invocation,"hub:trusted-native",0),hubEnv={...process.env};
       const targets=segments[0]==="--two-author-shell"?["-p","semio-hub","--bins","--features","semio-hub/integration-fixtures"]:["--bin","os-hub"];
       if(segments[0]==="--two-author-shell")await buildRepositoryCargoArtifacts(join(this.repoRoot,"🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust/Cargo.toml"),["--bins"],this.repoRoot,{producer:"artifact",invocation:this.invocation,control:phaseControl,network:repositoryCargoNetworkV1(this.invocation,this.repoRoot),consume:verifyCapturedCargoArtifactsV1});
-      if(segments[0]==="--two-author-shell")await runRepositoryExactCargoLaws({control:phaseControl,preparation:configuredRepositoryCargoPreparationPolicyV1(),invocation:this.invocation,policy:{...configuredExactCargoLawPolicyV1(),buildMilliseconds:buildBudgetMs(),listMilliseconds:60000,lawMilliseconds:120000},cwd:this.root,env:hubEnv,nativeEnv:{RUST_MIN_STACK:"268435456"},groups:[{package:"semio-hub-boot-laws",target:{kind:"lib"},cargoArgs:["--features","integration-fixtures"],laws:["check_in_process_fixture_emits_verified_gis_ledger_and_catalog"]}],progress(event){console.log(`[DEBUG] two-author Shell seed ${event.stage}: ${event.law??""} artifacts=${event.artifactDir}`);}});
+      if(segments[0]==="--two-author-shell")await runRepositoryExactCargoLaws({control:phaseControl,preparation:configuredRepositoryCargoPreparationPolicyV1(),invocation:this.invocation,policy:{...configuredExactCargoLawPolicyV1(),buildMilliseconds:buildBudgetMs(),listMilliseconds:60000,lawMilliseconds:120000},cwd:this.root,env:hubEnv,nativeEnv:{RUST_MIN_STACK:"268435456"},groups:[{package:"semio-hub-boot-laws",target:{kind:"lib"},cargoArgs:["--features","integration-fixtures"],laws:["check_in_process_fixture_emits_verified_gis_ledger_and_catalog"]}],progress(event){}});
       await buildRepositoryCargoArtifacts(join(this.root,"Cargo.toml"),targets,this.repoRoot,{producer:"artifact",invocation:this.invocation,control:phaseControl,network:repositoryCargoNetworkV1(this.invocation,this.repoRoot),consume:capture=>withCapturedLocalHubHostV1(this.invocation,phaseControl,capture,async(host,context)=>{
       const {dataRoot,binaryPath:binary}=context;
       return withMaterializedTrustedCatalogBundleV1(host,context.control,trustedBootstrapSelectPackages(TRUSTED_BOOTSTRAP_LINKED_PACKAGES),async(receipt,actualPhase)=>{

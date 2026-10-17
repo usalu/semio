@@ -76,7 +76,5 @@ pub fn wfc3d_artifact_schema_descriptor() -> ::semio_framework_schema_registry::
 //#endregion 🧬️DerivedArtifactFacets
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

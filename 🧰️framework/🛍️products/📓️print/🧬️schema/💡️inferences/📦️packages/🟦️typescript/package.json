@@ -17,7 +17,16 @@
   },
   "bundleKind": "asset",
   "exports": {
-    ".": "./🟦️.ts"
+    ".": "./🟦️.ts",
+    "./coordinate": "./🧭coordinate/🟦️.ts",
+    "./mark": "./✒️mark/🟦️.ts",
+    "./probes": "./🔬️probes/🟦️.ts",
+    "./render": "./🖼️render/🟦️.ts",
+    "./scale": "./📐scale/🟦️.ts",
+    "./script": "./📜️script.ts",
+    "./theme": "./🎨theme/🟦️.ts",
+    "./transform": "./🧮transform/🟦️.ts",
+    "./validation": "./✅️validation/🟦️.ts"
   },
   "devDependencies": {
     "d3-array": "3.2.4",
@@ -40,6 +49,9 @@
     "d3-color": "3.1.0"
   },
   "dependencies": {
-    "@semio-tech/schema-validator-ts": "workspace:*"
+    "@semio-tech/framework-2d-js": "workspace:*",
+    "@semio-tech/print": "workspace:*",
+    "@semio-tech/schema-validator-ts": "workspace:*",
+    "@semio-tech/ui-styling": "workspace:*"
   }
 }

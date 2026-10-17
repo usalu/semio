@@ -15,6 +15,4 @@ impl protocol::MutationKind<JpgSnapshot,JpgMutation> for ReplaceImage {
  fn target(&self)->Vec<String>{vec!["image".into()]}
 }
 
-#[cfg(test)]
-#[path="🧪️tests/🦀️.rs"]
-mod tests;
+

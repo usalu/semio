@@ -40,5 +40,4 @@ test("Canvas Stroke original dash custody uses supplied canonical control",()=>{
  expect(leaf.indexOf("grant.maximum_copy_bytes < copy")).toBeLessThan(leaf.indexOf("original.take_dash_pattern()"));
  expect(leaf.includes("maximum_depth: grant.maximum_depth - 1")).toBe(true);expect(leaf.includes("active.step(child)")).toBe(true);
  expect(leaf.includes("retirement_step()")).toBe(false);expect(leaf.includes("maximum_bytes")).toBe(false);
- console.log("[DEBUG] Canvas Stroke genuine Command/Grant Ajv per-value admission, Buffer IEEE754 original dash bytes and RFC6902 independent supplied-copy/release conservation; native Kurbo/System/pointer/cancel proof separate");
 });

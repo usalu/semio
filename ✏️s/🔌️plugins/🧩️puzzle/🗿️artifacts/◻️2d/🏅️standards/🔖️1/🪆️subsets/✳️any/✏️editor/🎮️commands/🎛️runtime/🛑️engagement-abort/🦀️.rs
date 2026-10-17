@@ -1,7 +1,7 @@
 //! 🤝️ `engagement-abort` command.
 
 use crate::editor::puzzle2d::modes::edit::windows::overview::utilities::select;
-use crate::editor::puzzle2d::Puzzle2dActionCtx;
+use crate::editor::puzzle2d::interaction::Puzzle2dActionCtx;
 use semio_framework_plugin::kernel::Effect;
 use semio_framework_pack_json::Value;
 

@@ -3,7 +3,7 @@
 pub const OPCODE: &str = "set-named-destination";
 pub const TEXT_OPCODE: &str = OPCODE;
 
-use crate::standards::v1_7::subsets::base::schema::mutations::SetNamedDestination;
+use crate::standards::v1_7::subsets::base::schema::mutations::set_named_destination::SetNamedDestination;
 
 /// 🖨️ Prints this direct payload through its schema-derived JSON representation.
 pub fn print(payload: &SetNamedDestination) -> Result<String, String> {

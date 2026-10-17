@@ -1,7 +1,7 @@
 /** 🖼️ Affine sampling with premultiplied bilinear and per-cell area filtering. */
 import {validateExtent,validateImage,type PixelImage} from "../../✍️editing/🟦️.ts";
 import {CoverageJob,type CoverageMask} from "../../🖊️coverage/🟦️.ts";
-import {UnitRetirement,type WorkRetirement} from "../../../◻️2d/🧹️retire/🟦️.ts";
+import {UnitRetirement,type WorkRetirement} from "@semio-tech/framework-2d-js/retire";
 export type AffineSampling="nearest"|"bilinear"|"area"|"auto";
 export type AffineImageInput={source:PixelImage;width:number;height:number;origin:readonly[number,number];transform:readonly number[];sampling:AffineSampling};
 export type AffineImageProgress={phase:"coverage"|"coverageCleanup"|"sampling"|"complete";completed:number;total:number;sampled:number;sampleTotal:number;work:number;done:boolean};

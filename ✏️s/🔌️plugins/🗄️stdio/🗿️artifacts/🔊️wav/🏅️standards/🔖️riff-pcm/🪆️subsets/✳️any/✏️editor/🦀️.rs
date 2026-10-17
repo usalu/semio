@@ -320,9 +320,9 @@ impl ToolJobFactory for WavEditorExampleFactory {
         &mut self,
         _operation: semio_framework_job::Operation,
         payload: Self::Payload,
-        input: semio_framework_plugin::action_bus::RetainedToolWireInput,
-        checkpoint: Option<semio_framework_plugin::action_bus::RetainedToolWireInput>,
-    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework_plugin::action_bus::RetainedToolWireInput, Option<semio_framework_plugin::action_bus::RetainedToolWireInput>)> {
+        input: semio_framework_action_bus::RetainedToolWireInput,
+        checkpoint: Option<semio_framework_action_bus::RetainedToolWireInput>,
+    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework_action_bus::RetainedToolWireInput, Option<semio_framework_action_bus::RetainedToolWireInput>)> {
         if input.declared_bytes() > STDIO_WAV_DOCUMENT_SCHEMA_EXAMPLE_BYTES || checkpoint.is_some() {
             return Err((ToolJobFactoryError::new("stdio example command rejects oversized wire"), input, checkpoint));
         }
@@ -379,9 +379,9 @@ impl ToolJobFactory for WavAudioFactory {
         &mut self,
         _operation: semio_framework_job::Operation,
         payload: Self::Payload,
-        input: semio_framework_plugin::action_bus::RetainedToolWireInput,
-        checkpoint: Option<semio_framework_plugin::action_bus::RetainedToolWireInput>,
-    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework_plugin::action_bus::RetainedToolWireInput, Option<semio_framework_plugin::action_bus::RetainedToolWireInput>)> {
+        input: semio_framework_action_bus::RetainedToolWireInput,
+        checkpoint: Option<semio_framework_action_bus::RetainedToolWireInput>,
+    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework_action_bus::RetainedToolWireInput, Option<semio_framework_action_bus::RetainedToolWireInput>)> {
         if input.declared_bytes() > edit_audio::MAXIMUM_RAW_BYTES || checkpoint.is_some() {
             return Err((ToolJobFactoryError::new("WAV audio edit rejects oversized wire or checkpoint owner"), input, checkpoint));
         }

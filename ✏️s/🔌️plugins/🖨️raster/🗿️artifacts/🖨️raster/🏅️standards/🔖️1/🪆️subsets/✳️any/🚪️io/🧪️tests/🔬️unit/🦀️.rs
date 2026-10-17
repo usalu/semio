@@ -35,7 +35,7 @@ fn document_with_solid_layer(red: u8, green: u8, blue: u8, alpha: u8, width: u32
 
 #[semio_framework_async_macros::async_test]
 async fn composite_applies_persisted_mask_assets_and_linked_transforms() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🔬️contract/🎭️mask/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(runtime_fixture_text("../../../🧪️tests/🧫️fixtures/🔬️contract/🎭️mask/🔣️.json")).unwrap();
     let pixels:Vec<u8>=fixture["maskImage"]["pixels"].as_array().unwrap().iter().map(|v|v.as_u64().unwrap() as u8).collect();
     let image=SemioImageSnapshot {schema:STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA.into(),width:3,height:1,colorspace:SemioColorspace::Rgba,bit_depth:8,frames:vec![SemioImageFrame {delay_ms:0,rgba8:pixels}],icc:None,metadata:Vec::new()};
     let bytes=png_bytes_from_semio_image(&image).unwrap();
@@ -180,7 +180,7 @@ async fn png_export_writes_a_real_png_signature() {
 /// codec, so a drift between this plugin's Rust path (composite → stdio `SemioImageToBmp` →
 /// stdio `encode_bmp`) and an independent second implementation fails in BOTH languages instead
 /// of going unnoticed.
-const BMP_PARITY_FIXTURES: &[&str] = &[include_str!("../🧫️fixtures/🪟️solid-3x2.json"), include_str!("../🧫️fixtures/🌈️gradient-5x3.json")];
+static BMP_PARITY_FIXTURES: std::sync::LazyLock<&[&str]> = std::sync::LazyLock::new(|| &*Box::leak(Box::new( [runtime_fixture_text("../../🧪️tests/🧫️fixtures/🪟️solid-3x2.json"), runtime_fixture_text("../../🧪️tests/🧫️fixtures/🌈️gradient-5x3.json")])));
 
 fn parity_fixture(text: &str) -> (u32, u32, Vec<u8>, String) {
     use semio_s_artifact_stdio_json::schema::snapshot::{JsonValue};
@@ -218,7 +218,7 @@ fn parity_document(width: u32, height: u32, rgba8: Vec<u8>) -> RasterSnapshot {
 /// 🧪️ The Rust bmp EXPORT must produce the exact bytes the TypeScript twin produces.
 #[semio_framework_async_macros::async_test]
 async fn bmp_export_matches_the_typescript_parity_fixture() {
-    for text in BMP_PARITY_FIXTURES {
+    for text in (*BMP_PARITY_FIXTURES) {
         let (width, height, rgba8, bmp_hex) = parity_fixture(text);
         let document = parity_document(width, height, rgba8);
         let bytes = crate::export::serializers::artifacts::bmp::v_v3::any::serialize_bytes(&document).expect("bmp export");
@@ -230,7 +230,7 @@ async fn bmp_export_matches_the_typescript_parity_fixture() {
 /// 🧪️ The Rust bmp IMPORT must recover the exact canvas the TypeScript twin recovers.
 #[semio_framework_async_macros::async_test]
 async fn bmp_import_matches_the_typescript_parity_fixture() {
-    for text in BMP_PARITY_FIXTURES {
+    for text in (*BMP_PARITY_FIXTURES) {
         let (width, height, rgba8, bmp_hex) = parity_fixture(text);
         let document = crate::import::deserializers::artifacts::bmp::v_v3::any::deserialize_bytes(&bytes_of(&bmp_hex)).expect("bmp import");
         let composite = raster_composite_image(&document).expect("composite of the imported document");
@@ -258,7 +258,7 @@ async fn advertised_stdio_kinds_exclude_every_declined_hop() {
 
 #[semio_framework_async_macros::async_test]
 async fn composite_source_preparation_copies_unique_images_in_bounded_grants() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🧱️preparation/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(runtime_fixture_text("../../🧪️tests/🧫️fixtures/🧱️preparation/🔣️.json")).unwrap();
     let pixel:Vec<u8>=fixture["pixel"].as_array().unwrap().iter().map(|v|v.as_u64().unwrap() as u8).collect();
     let width=fixture["width"].as_u64().unwrap() as u32;let height=fixture["height"].as_u64().unwrap() as u32;
     let mut document=document_with_solid_layer(pixel[0],pixel[1],pixel[2],pixel[3],width,height);
@@ -280,4 +280,9 @@ async fn composite_source_preparation_copies_unique_images_in_bounded_grants() {
     assert!(cancelled.advance(&document,1).is_err());assert!(cancelled.into_job().is_err());
     let incomplete=RasterStackPreparation::new(&document).unwrap();assert!(incomplete.into_job().is_err());
     retire(document);
+}
+
+fn runtime_fixture_text(relative: &str) -> &'static str {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative);
+    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display())).into_boxed_str())
 }

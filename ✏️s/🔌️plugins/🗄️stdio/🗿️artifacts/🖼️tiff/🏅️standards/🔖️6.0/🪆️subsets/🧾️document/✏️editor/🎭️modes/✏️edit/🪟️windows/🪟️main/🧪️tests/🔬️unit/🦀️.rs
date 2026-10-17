@@ -1,8 +1,13 @@
-use super::*;
+use crate::standards::v6_0::subsets::document::schema::snapshot::TiffSnapshot;
+use crate::{editor::tiff_any::config::selected_ifd, editor::tiff_any::config::TiffEditorConfig};
+use semio_framework_plugin::{BuiltNode, UiValue};
+use semio_framework_test_fixtures::fixture_text;
+use semio_framework_ui_locale::Locale;
+use crate::editor::tiff_any::modes::edit::windows::main::*;
 use semio_framework_plugin::{ActionBinding, Component};
 
 fn selection_fixture() -> (TiffSnapshot, TiffEditorConfig, Vec<u8>) {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧬️ifd-selection/🔣️.json")).expect("neutral IFD selection fixture");
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🧪️tests/🧫️fixtures/🧬️ifd-selection/🔣️.json")).expect("neutral IFD selection fixture");
     let mut snapshot = crate::schema::blank_tiff_snapshot();
     snapshot.ifds.clear();
     for page in fixture["pages"].as_array().expect("fixture pages") {

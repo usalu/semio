@@ -74,6 +74,288 @@
           "maximum": 8
         }
       }
+    },
+    "UnbornCleanup": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "known",
+        "entered",
+        "ordinaryJoined",
+        "phase"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "known": {
+          "type": "boolean"
+        },
+        "entered": {
+          "type": "boolean"
+        },
+        "ordinaryJoined": {
+          "type": "boolean"
+        },
+        "phase": {
+          "enum": [
+            "body",
+            "cleanup"
+          ]
+        }
+      }
+    },
+    "FundedFactoryProtocol": {
+      "const": {
+        "version": 1,
+        "minimumMetadataBytes": 65536,
+        "maximumMetadataBytes": 67108864,
+        "callerCharge": false,
+        "claimTransfer": "private-creator-before-backing",
+        "failedEnteredCharge": "retain",
+        "success": "persist"
+      }
+    },
+    "FundedCharge": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "maximumPhysicalBytes",
+        "metadataBytes"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "maximumPhysicalBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "metadataBytes": {
+          "type": "integer",
+          "minimum": 65536,
+          "maximum": 67108864
+        }
+      }
+    },
+    "FundedOptions": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "directory",
+        "leaseDirectory",
+        "filesystemBytes",
+        "maximumPhysicalBytes",
+        "control"
+      ],
+      "properties": {
+        "directory": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "leaseDirectory": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "filesystemBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "maximumPhysicalBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "control": {},
+        "maximumLeaseDatabaseBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        }
+      }
+    },
+    "Funding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "policy",
+        "invocation",
+        "owner",
+        "metadataBytes",
+        "policySha256"
+      ],
+      "properties": {
+        "policy": {
+          "$ref": "https://semio.tech/framework/process/native-storage/v1#/definitions/Policy"
+        },
+        "invocation": {},
+        "owner": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "metadataBytes": {
+          "type": "integer",
+          "minimum": 65536,
+          "maximum": 67108864
+        },
+        "policySha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "EnteredCleanup": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "known",
+        "entered",
+        "ordinaryJoined",
+        "failed",
+        "physicalRetired",
+        "phase",
+        "claimRetired"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "known": {
+          "type": "boolean"
+        },
+        "entered": {
+          "type": "boolean"
+        },
+        "ordinaryJoined": {
+          "type": "boolean"
+        },
+        "failed": {
+          "type": "boolean"
+        },
+        "physicalRetired": {
+          "type": "boolean"
+        },
+        "phase": {
+          "enum": [
+            "body",
+            "cleanup"
+          ]
+        },
+        "claimRetired": {
+          "type": "boolean"
+        }
+      }
+    },
+    "EnteredRetirementProtocol": {
+      "const": {
+        "version": 1,
+        "proof": "existing-private-physical-owner",
+        "originalRequest": true,
+        "originalEnrollment": true,
+        "descriptorClosure": true,
+        "retirementOrder": [
+          "ordinary-join",
+          "cleanup-begin",
+          "physical-inactive",
+          "original-removal",
+          "claim-retired",
+          "parent-metadata-sync",
+          "original-guard-release",
+          "parent-retiring",
+          "parent-retired"
+        ],
+        "unknown": "retain-refuse",
+        "renewal": false
+      }
+    },
+    "RequestIdentityCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "roles",
+        "expected"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "roles": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "funding",
+            "birth",
+            "claimIdentity",
+            "claimData",
+            "checker",
+            "journalData"
+          ],
+          "properties": {
+            "funding": {
+              "enum": [
+                "original",
+                "reservation-copy",
+                "claim-copy",
+                "changed-copy"
+              ]
+            },
+            "birth": {
+              "enum": [
+                "original",
+                "reservation-copy",
+                "claim-copy",
+                "changed-copy"
+              ]
+            },
+            "claimIdentity": {
+              "enum": [
+                "original",
+                "reservation-copy",
+                "claim-copy",
+                "changed-copy"
+              ]
+            },
+            "claimData": {
+              "enum": [
+                "original",
+                "reservation-copy",
+                "claim-copy",
+                "changed-copy"
+              ]
+            },
+            "checker": {
+              "enum": [
+                "original",
+                "reservation-copy",
+                "claim-copy",
+                "changed-copy"
+              ]
+            },
+            "journalData": {
+              "enum": [
+                "original",
+                "reservation-copy",
+                "claim-copy",
+                "changed-copy"
+              ]
+            }
+          }
+        },
+        "expected": {
+          "type": "boolean"
+        }
+      }
     }
   },
   "$ref": "#/definitions/State"

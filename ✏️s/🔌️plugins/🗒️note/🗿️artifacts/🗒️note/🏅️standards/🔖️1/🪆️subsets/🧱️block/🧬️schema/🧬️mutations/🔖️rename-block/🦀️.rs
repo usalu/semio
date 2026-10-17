@@ -1,6 +1,5 @@
 //! 🔖 Note mutation — `RenameBlock`: sets a block's display name.
 
-use crate::schema::mutations::NoteMutation;
 use crate::{NoteDiff, NoteSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -20,17 +19,23 @@ pub struct RenameBlock {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn rename_block(id: String, new_name: String) -> NoteMutation {
-    NoteMutation::RenameBlock(RenameBlock { id, new_name })
+pub fn rename_block<Op>(id: String, new_name: String) -> Op
+where
+    Op: From<crate::standards::v1::subsets::block::schema::mutations::rename_block::RenameBlock>,
+{
+    Op::from(RenameBlock { id, new_name })
 }
 
-impl MutationKind<NoteSnapshot, NoteMutation> for RenameBlock {
+impl<Op> MutationKind<NoteSnapshot, Op> for RenameBlock
+where
+    Op: protocol::Mutation<NoteSnapshot, Diff = NoteDiff> + From<RenameBlock>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "rename", entity: "block", kind: "rename-block", record: "RenamedBlock" };
 
     fn diff(&self, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &NoteSnapshot) -> Result<Vec<NoteMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &NoteSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

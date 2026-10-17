@@ -49,6 +49,5 @@ fn document_restoration_selection_preview_mutation_algebra_matches_neutral_oracl
         mutation.retire_cold();
         checks.push((case["id"].as_str().unwrap().to_owned(), codec_parity && sparse && no_op && publication && rejection && state_parity && inverse_parity));
     }
-    eprintln!("[DEBUG] original document restoration mutation algebra checks={checks:?}");
     assert!(checks.iter().all(|(_, agrees)| *agrees), "original selection/preview semantic mutation authority must satisfy every neutral algebra case");
 }

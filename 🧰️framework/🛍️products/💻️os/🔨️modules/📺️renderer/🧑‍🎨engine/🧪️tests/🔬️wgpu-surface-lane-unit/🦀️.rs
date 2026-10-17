@@ -1,5 +1,8 @@
 use super::*;
 
+/// 🎟️ Unbounded retained grant: the pre-migration step budget carried no retained limit.
+const UNBOUNDED_STEP_GRANT: semio_framework_job::RetainedCloneGrant = semio_framework_job::RetainedCloneGrant { maximum_items: usize::MAX, maximum_copy_bytes: usize::MAX, maximum_capacity_bytes: usize::MAX, maximum_release_bytes: usize::MAX, maximum_depth: usize::MAX };
+
 fn request(generation: u64, width: u32) -> SurfaceResizeRequest {
     SurfaceResizeRequest { token: SurfaceLaneToken { slot: 0, generation: 1 }, metrics_generation: generation, physical_width: width, physical_height: 720, scale_factor: 2.0 }
 }
@@ -10,7 +13,8 @@ fn resize_job_consumes_one_scalar_per_grant() {
     let operation = semio_framework_job::allocate_operation_id();
     let cancel = semio_framework_job::CancelToken::root_now();
     let mut preview_sequence = 0;
-    let mut cx = StepContext::new(operation, Generation(1), semio_framework_job::StepBudget::new(1, u64::MAX), cancel, semio_framework_job::default_now_us, &mut preview_sequence);
+    let mut cx_retained = semio_framework_job::RetainedCloneProgress::default();
+    let mut cx = StepContext::new(operation, Generation(1), semio_framework_job::StepBudget::new(1, u64::MAX, UNBOUNDED_STEP_GRANT), cancel, semio_framework_job::default_now_us, &mut preview_sequence, &mut cx_retained);
     assert_eq!(job.step(&mut cx), StepOutcome::Yield);
     assert_eq!(job.phase, ResizePhase::LogicalHeight);
     assert_eq!(job.logical_width, 640.0);

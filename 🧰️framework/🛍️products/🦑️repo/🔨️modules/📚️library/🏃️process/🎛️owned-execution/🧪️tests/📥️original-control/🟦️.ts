@@ -15,7 +15,7 @@ test("Explicit original ordinary zero and null output authority executes without
  const admit=new Ajv({strict:true}).compile(schema);expect(admit(corpus.ordinary.child)).toBe(true);
  const abort=new AbortController(),events:string[]=[],invocation:ScriptInvocation={policy:{version:1,owner:"ordinary-repository-law",maximumElapsedMilliseconds:0},capabilities:{artifactDirectory:process.env.SEMIO_TEST_ARTIFACT_DIR},control:{signal:abort.signal,remainingMilliseconds:()=>null,publish:async progress=>{events.push(progress.stage);await new Promise<void>(done=>setImmediate(done));},yieldContinuation:async()=>{events.push("yield");await new Promise<void>(done=>setImmediate(done));}}};
  await execute(invocation,"node",["-e",'console.log("ready")'],process.cwd(),"ordinary-repository-law",corpus.ordinary.child);
- expect(events).toEqual(["loading","yield","complete","yield"]);console.log("[DEBUG] repository-ordinary "+JSON.stringify({oracle:oracle.stdout,events,originalSignal:invocation.control.signal===abort.signal}));
+ expect(events).toEqual(["loading","yield","complete","yield"]);
 },15000);
 
 test("Live Repository cancellation uses original signal and awaits actual child close",async()=>{
@@ -23,5 +23,5 @@ test("Live Repository cancellation uses original signal and awaits actual child 
  expect(oracle.status).toBe(0);expect(JSON.parse(oracle.stdout)).toEqual({ready:true,reason:corpus.cancel.expected});
  const original=new AbortController(),reason=Error("original cancellation"),events:string[]=[],started=performance.now(),invocation:ScriptInvocation={policy:{version:1,owner:"repository-live-cancel",maximumElapsedMilliseconds:corpus.cancel.parentMilliseconds},capabilities:{artifactDirectory:process.env.SEMIO_TEST_ARTIFACT_DIR},control:{signal:original.signal,remainingMilliseconds:()=>corpus.cancel.parentMilliseconds-(performance.now()-started),publish:async progress=>{events.push(progress.stage);await new Promise<void>(done=>setImmediate(done));},yieldContinuation:async()=>{events.push("yield");await new Promise<void>(done=>setImmediate(done));}}};
  let ready=false,refusal:unknown;try{await execute(invocation,"node",["-e",'console.log("ready");setInterval(()=>{},1000)'],process.cwd(),"repository-live-cancel",corpus.cancel.child,{onLine:line=>{if(line==="ready"){ready=true;original.abort(reason);}}});}catch(error){refusal=error;}
- expect(ready).toBe(true);expect(refusal).toBe(reason);expect(events).toEqual(["loading","yield"]);expect(performance.now()-started).toBeLessThan(5000);console.log("[DEBUG] repository-live-original "+JSON.stringify({oracle:JSON.parse(oracle.stdout),ready,originalReason:refusal===reason,events}));
+ expect(ready).toBe(true);expect(refusal).toBe(reason);expect(events).toEqual(["loading","yield"]);expect(performance.now()-started).toBeLessThan(5000);
 },15000);

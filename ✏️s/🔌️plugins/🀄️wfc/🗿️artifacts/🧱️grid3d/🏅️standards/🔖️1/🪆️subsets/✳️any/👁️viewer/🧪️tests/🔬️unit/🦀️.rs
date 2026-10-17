@@ -1,7 +1,8 @@
 //! 🔬️ Viewer laws — the same dialect as the editor, one read-only window, and a command channel that
 //! structurally cannot author a mutation.
 
-use super::*;
+use semio_framework_plugin::ArtifactViewer;
+use crate::viewer::grid3d::*;
 
 #[test]
 fn the_manifest_declares_one_read_only_window() {

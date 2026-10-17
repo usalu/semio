@@ -12,7 +12,7 @@
 use semio_framework_job_publication::{RetainedJobPublication,JobPublicationKind};
 use semio_s_artifact_layout_layout_model::{Frame, GridSettings, LayoutBounds, Page, PageOverride};
 use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
-use semio_framework::action_bus::RetainedToolWireInput;
+use semio_framework_action_bus::RetainedToolWireInput;
 use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
 use semio_framework_job::{Generation, InteractiveStage, RevisionId};
 use semio_framework_job_worker_authority::{BatchDriveConfig,BatchJobParams};
@@ -20,12 +20,6 @@ use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep, JobOutcomeBor
 use semio_framework_plugin::app::{ArtifactDownloadOutput, ArtifactMediaExportCompletion, ArtifactMediaExportCredit, ArtifactMediaExportResult, ArtifactOutputChunks, ArtifactReservedToolJob, ArtifactSnapshotCloseLease, ArtifactToolCompletion};
 use semio_framework_plugin::{ArtifactReservedJob, ArtifactToolPublicationContract, ArtifactToolPublicationLane, EditorApp, EphemeralEmit, Fault, MediaClass, MediaForm, MediaType};
 use semio_framework_value_derive::{FromValue, ToValue};
-use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
-use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3;
-use semio_s_artifact_stdio_semio_base::schema::geometry::SemioQuaternion;
-use semio_s_artifact_stdio_semio_base::schema::geometry::SemioRgba;
-use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
-use semio_s_artifact_stdio_semio_drawing::schema::snapshot::{DrawNode, PathSegment};
 use std::sync::Arc;
 use semio_s_artifact_layout_layout_engine_export::LayoutExportRequest;
 use semio_s_artifact_layout_layout_engine_export::LayoutExportJob;
@@ -600,9 +594,9 @@ impl semio_framework::ToolJobFactory for LayoutRetainedCommandJobFactory {
         &mut self,
         _operation: semio_framework_job::Operation,
         payload: Self::Payload,
-        input: semio_framework::action_bus::RetainedToolWireInput,
-        checkpoint: Option<semio_framework::action_bus::RetainedToolWireInput>,
-    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework::action_bus::RetainedToolWireInput, Option<semio_framework::action_bus::RetainedToolWireInput>)> {
+        input: semio_framework_action_bus::RetainedToolWireInput,
+        checkpoint: Option<semio_framework_action_bus::RetainedToolWireInput>,
+    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework_action_bus::RetainedToolWireInput, Option<semio_framework_action_bus::RetainedToolWireInput>)> {
         if input.declared_bytes() > LAYOUT_RETAINED_RAW_BYTES || checkpoint.is_some() {
             return Err((ToolJobFactoryError::new("LAYOUT retained command rejects an oversized wire or checkpoint owner"), input, checkpoint));
         }
@@ -1569,7 +1563,7 @@ pub fn create_layout_app() -> semio_framework_plugin::AppDefinition {
 //#region 🧪️UnitTests
 /// 🧪️ Shared test scaffolding for every taxonomy node's own `🧪️Tests` region — a component file must be
 /// able to drive the whole app without re-deriving the harness.
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 pub mod unit_tests;
 #[cfg(test)]

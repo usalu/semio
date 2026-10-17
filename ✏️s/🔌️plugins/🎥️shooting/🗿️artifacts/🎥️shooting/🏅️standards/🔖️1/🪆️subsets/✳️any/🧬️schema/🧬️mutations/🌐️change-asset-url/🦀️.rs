@@ -1,7 +1,6 @@
 //! 🔗 Shooting mutation payload — `ChangeAssetUrl`. Sets an asset's mesh `url`.
 
 use crate::diff::ShootingDiff;
-use crate::mutations::ShootingMutation;
 use crate::ShootingSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 
@@ -16,12 +15,15 @@ pub struct ChangeAssetUrl {
     pub new_url: String,
 }
 
-impl MutationKind<ShootingSnapshot, ShootingMutation> for ChangeAssetUrl {
+impl<Op> MutationKind<ShootingSnapshot, Op> for ChangeAssetUrl
+where
+    Op: protocol::Mutation<ShootingSnapshot, Diff = ShootingDiff> + From<ChangeAssetUrl>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "asset-url", kind: "change-asset-url", record: "ChangedAssetUrl" };
     fn diff(&self, base: &ShootingSnapshot) -> protocol::MutationOutcome<ShootingDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &ShootingSnapshot) -> Result<Vec<ShootingMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &ShootingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

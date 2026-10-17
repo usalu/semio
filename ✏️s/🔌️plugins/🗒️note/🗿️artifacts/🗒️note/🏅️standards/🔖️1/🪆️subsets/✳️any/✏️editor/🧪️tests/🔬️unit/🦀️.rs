@@ -1,5 +1,106 @@
+use crate::editor::note::commands::ink_apply_events;
+use crate::editor::note::dispatch_ctx::NoteDispatchCtx;
+use crate::editor::note::support::NOTE_INTERACTION_BLOCKS;
+use crate::op::NoteMutation;
+use crate::standards::v1::subsets::any::io::text::snapshot::empty_note_snapshot;
+use crate::NoteSnapshot;
+use semio_framework_plugin::ActionKind;
+use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::ConfigView;
+use semio_framework_plugin::DslValue;
+use semio_framework_plugin::Emit;
+use semio_framework_plugin::Fault;
+use semio_framework_plugin::HierarchyProvider;
+use semio_framework_plugin::NoConfig;
+use semio_framework_plugin::NoConfigMutation;
+use semio_framework_plugin::UtilityCategory;
+#[allow(unused_imports)]
+use crate::editor::note::command_enum::args_bridge;
+#[allow(unused_imports)]
+use crate::editor::note::support::{note_active_utility, note_blocks_topology, note_internal_action, note_utility, NOTE_INTERACTION_GRANULARITY};
+#[allow(unused_imports)]
+use crate::editor::note::modes::edit;
+#[allow(unused_imports)]
+use crate::editor::note::modes::edit::windows::{composite, navigator};
+#[allow(unused_imports)]
+use crate::editor::note::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
+#[allow(unused_imports)]
+use crate::editor::note::presence::{NotePresence, NotePresenceMutation};
+#[allow(unused_imports)]
+use crate::editor::note::terminology::note_play_labels;
+#[allow(unused_imports)]
+use crate::NOTE_DOCUMENT_SCHEMA;
+#[allow(unused_imports)]
+use semio_framework_plugin::app::InteractionView;
+#[allow(unused_imports)]
+use semio_framework_plugin::ActionArgDef;
+#[allow(unused_imports)]
+use semio_framework_plugin::ActionArgOption;
+#[allow(unused_imports)]
+use semio_framework_plugin::ActionDefinition;
+#[allow(unused_imports)]
+use semio_framework_plugin::AppDefinition;
+#[allow(unused_imports)]
+use semio_framework_plugin::ArtifactEditor;
+#[allow(unused_imports)]
+use semio_framework_artifact_reference::Dialect;
+#[allow(unused_imports)]
+use semio_framework_plugin::DraftView;
+#[allow(unused_imports)]
+use semio_framework_plugin::Editor;
+#[allow(unused_imports)]
+use semio_framework_plugin::GranularityDefinition;
+#[allow(unused_imports)]
+use semio_framework_plugin::HoverSpec;
+#[allow(unused_imports)]
+use semio_framework_plugin::InteractionDefinition;
+#[allow(unused_imports)]
+use semio_framework_plugin::InteractionRef;
+#[allow(unused_imports)]
+use semio_framework_plugin::InteractionTopology;
+#[allow(unused_imports)]
+use semio_framework_ui_locale::Label;
+#[allow(unused_imports)]
+use semio_framework_ui_locale::LocalizedLabel;
+#[allow(unused_imports)]
+use semio_framework_plugin::MergeMode;
+#[allow(unused_imports)]
+use semio_framework_plugin::NoDraft;
+#[allow(unused_imports)]
+use semio_framework_plugin::NoDraftMutation;
+#[allow(unused_imports)]
+use semio_framework_plugin::SelectionMethod;
+#[allow(unused_imports)]
+use semio_framework_plugin::SelectionMode;
+#[allow(unused_imports)]
+use semio_framework_plugin::SelectionSpec;
+#[allow(unused_imports)]
+use semio_framework_plugin::WindowEngagement;
+#[allow(unused_imports)]
+use semio_framework_plugin::WindowMeasure;
+#[allow(unused_imports)]
+use std::collections::HashMap;
+#[allow(unused_imports)]
+use semio_framework_2d::compute::EngineHandles;
 pub(crate) mod context {
-    use super::super::*;
+    use crate::editor::note::*;
+use crate::editor::note::commands::ink_apply_events;
+use crate::editor::note::dispatch_ctx::NoteDispatchCtx;
+use crate::editor::note::support::NOTE_INTERACTION_BLOCKS;
+use crate::op::NoteMutation;
+use crate::standards::v1::subsets::any::io::text::snapshot::empty_note_snapshot;
+use crate::NoteSnapshot;
+use semio_framework_plugin::ActionKind;
+use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::ConfigView;
+use semio_framework_plugin::DslValue;
+use semio_framework_plugin::Emit;
+use semio_framework_plugin::Fault;
+use semio_framework_plugin::HierarchyProvider;
+use semio_framework_plugin::NoConfig;
+use semio_framework_plugin::NoConfigMutation;
+use semio_framework_plugin::UtilityCategory;
+    use crate::editor::note::command_enum::NoteCommand;
     use semio_framework_plugin::artifact_app_laws::{meta, new_app_with_registry};
     use semio_framework_plugin::{ActionMeta, App, EditorApp, Fault, InvocationResult, PluginApp, VcsArtifactApp, ViewModel, ViewWindowInstance};
 
@@ -169,7 +270,17 @@ pub(crate) mod context {
     }
 }
 
-use super::*;
+use crate::editor::note::*;
+use crate::editor::note::command_enum::NoteCommand;
+use crate::editor::note::commands::{add_block, delete_block, delete_selection, duplicate_block, duplicate_selection, move_block, patch_blocks};
+use crate::editor::note::commands::{engagement_input, engagement_submit, navigator_engagement_input};
+use crate::editor::note::commands::save_download;
+use crate::editor::note::commands::{nudge_selection, nudge_selection_down, nudge_selection_down_fast, nudge_selection_left, nudge_selection_left_fast, nudge_selection_right, nudge_selection_right_fast, nudge_selection_up, nudge_selection_up_fast};
+use crate::editor::note::commands::{set_active_example, load_document_json};
+use crate::editor::note::commands::{set_camera, set_camera_zoom};
+use crate::editor::note::commands::{set_eraser_radius, set_pencil_width};
+use crate::editor::note::commands::{set_grid_opacity, set_grid_spacing, set_grid_subdivisions, set_grid_visible};
+use crate::editor::note::commands::{set_snap_enabled, set_snap_grid_spacing};
 use crate::editor::note::unit_tests::context::note_app;
 use crate::editor::note::window;
 use semio_framework_plugin::{artifact_app_laws, ActionKind as Kind, PluginApp};
@@ -197,7 +308,7 @@ async fn every_command_round_trips_through_text_and_binary() {
 }
 
 /// 🧾️ One representative value per row, in declaration (= binary ordinal) order.
-pub(super) fn every_command() -> Vec<NoteCommand> {
+pub(crate) fn every_command() -> Vec<NoteCommand> {
     vec![
         NoteCommand::SetGridVisible(set_grid_visible::SetGridVisible { value: Some(true) }),
         NoteCommand::SetGridSpacing(set_grid_spacing::SetGridSpacing { value: 16.0 }),
@@ -383,7 +494,7 @@ async fn the_block_verbs_refuse_what_they_cannot_apply() {
     let config = semio_framework_plugin::NoConfig::default();
     let doc = semio_framework_plugin::ArtifactView::new(&document, &history);
     let cfg = semio_framework_plugin::ConfigView { snapshot: &config, window: None };
-    let mut ctx = crate::editor::note::NoteDispatchCtx { selected_block_ids: Vec::new(), id_owner: crate::schema::NoteIdOwner::new("block-verb-refusals", 1), view_state: None, window_transient: Default::default(), window_transient_owner: None };
+    let mut ctx = crate::editor::note::dispatch_ctx::NoteDispatchCtx { selected_block_ids: Vec::new(), id_owner: crate::schema::NoteIdOwner::new("block-verb-refusals", 1), view_state: None, window_transient: Default::default(), window_transient_owner: None };
     let patch = |ids: &[&str], field: &str, value: &str| patch_blocks::PatchBlocks { block_ids: ids.iter().map(|id| (*id).to_string()).collect(), field: field.into(), value: value.into() };
     let code = |result: Result<Emit<NoteMutation, semio_framework_plugin::NoConfigMutation>, Fault>| result.err().expect("refused").code.0;
     assert_eq!(code(patch_blocks::handle(&patch(&["no-such-block"], "name", "x"), &doc, &cfg, &mut ctx)), "mutation.target-missing");
@@ -486,7 +597,7 @@ async fn delete_selection_deletes_the_selected_blocks() {
     let target = crate::schema::block_id(&block).to_string();
     let document = NoteSnapshot { blocks: vec![block], ..crate::standards::v1::subsets::any::io::text::snapshot::empty_note_snapshot() };
     let history = semio_framework_plugin::HistoryView::empty();
-    let mut ctx = crate::editor::note::NoteDispatchCtx { selected_block_ids: vec![target.clone()], id_owner: crate::schema::NoteIdOwner::new("delete-selection-test", 1), view_state: None, window_transient: Default::default(), window_transient_owner: None };
+    let mut ctx = crate::editor::note::dispatch_ctx::NoteDispatchCtx { selected_block_ids: vec![target.clone()], id_owner: crate::schema::NoteIdOwner::new("delete-selection-test", 1), view_state: None, window_transient: Default::default(), window_transient_owner: None };
     let emit = delete_selection::handle(&delete_selection::DeleteSelection {}, &semio_framework_plugin::ArtifactView::new(&document, &history), &semio_framework_plugin::ConfigView { snapshot: &semio_framework_plugin::NoConfig::default(), window: None }, &mut ctx).expect("delete selection");
     let next = emit.artifact_mutations.iter().try_fold(document.clone(), |current, mutation| apply_note_mutation(&current, mutation)).expect("apply delete");
     assert!(next.blocks.is_empty(), "the selected block must be deleted");

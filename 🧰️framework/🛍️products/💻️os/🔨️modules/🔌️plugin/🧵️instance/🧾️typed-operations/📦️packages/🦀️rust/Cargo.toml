@@ -19,7 +19,7 @@ maxActiveLines = 4000
 workspace = true
 
 [lib]
-path = "🦀️.rs"
+path = "../../🦀️.rs"
 
 [features]
 artifact-app-testing = []
@@ -55,5 +55,11 @@ semio-framework-plugin-instance-render = { path = "../../../🖼️render/📦�
 semio-framework-plugin-instance-dispatch = { path = "../../../📨️dispatch/📦️packages/🦀️rust" }
 semio-framework-plugin-time-travel = { path = "../../../../⏪️time-travel/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-plugin-child = { path = "../../../../🪆️child/📦️packages/🦀️rust" }
+semio-framework-plugin-mounted-owner = { path = "../../../../🏇️mounted-owner/📦️packages/🦀️rust" }
+semio-framework-plugin-publication-mounted = { path = "../../../../🧩️composition/📬️publication/🤝️group/🪟️mounted/📦️packages/🦀️rust" }
+semio-framework-tool-machine = { workspace = true }
+semio_framework_ui_contract = { path = "../../../../../../../../🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
+semio-framework-value-derive = { path = "../../../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
 
 [dev-dependencies]

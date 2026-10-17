@@ -159,7 +159,7 @@ const preview: Preview = {
       description: "IconRenderRequest.format for IconRenderHost-family stories — read directly from context.globals.iconRenderer, not applied by a decorator",
       toolbar: {
         title: "Icon Format",
-        icon: "image",
+        icon: "photo",
         items: [
           { value: IconRenderer.WEBGL, title: "WebGL" },
           { value: IconRenderer.SVG, title: "SVG" },
@@ -317,7 +317,7 @@ export const withTheme: Decorator = (Story, context) => {
 
 /** 🎨️ Populates the `theme` toolbar's `items` from `builtinUiThemes()` — deferred to module-init time (not the `globalTypes` literal above) since it needs the ui-styling module graph loaded. */
 if (preview.globalTypes?.theme?.toolbar) {
-  preview.globalTypes.theme.toolbar.items = builtinUiThemes().map((t) => ({ value: t.id, title: t.name ?? t.id }));
+  preview.globalTypes.theme.toolbar.items = builtinUiThemes().map((t) => ({ value: t.id, title: t.label }));
 }
 //#endregion 🔖️withTheme
 
@@ -330,7 +330,7 @@ import { configureHostPorts, type HostPortOverrides } from "@semio-tech/ui-react
  * before render and restored to whatever was installed beforehand on cleanup, since ports are page-global.
  * Most stories set nothing here and render with the library's real default adapters. */
 export const withRenderer: Decorator = (Story, context) => {
-  const overridesParam = context.parameters.hostPortOverrides as HostPortOverrides | ((context: typeof context) => HostPortOverrides) | undefined;
+  const overridesParam = context.parameters.hostPortOverrides as HostPortOverrides | ((context: Parameters<Decorator>[1]) => HostPortOverrides) | undefined;
   if (!overridesParam) return <Story />;
   const overrides = typeof overridesParam === "function" ? overridesParam(context) : overridesParam;
   React.useLayoutEffect(() => {
@@ -352,7 +352,7 @@ export const withRenderer: Decorator = (Story, context) => {
  * live, but the cache also collapses concurrent first-call races and clears on failure so a later
  * story render can retry. Every module that links Canvas then receives its runtime assets (fonts, label face, icon pack). */
 const frameworkHostsWasmInitPromises = new Map<string, Promise<void>>();
-function singleFlightWasmInit(id: string, load: () => Promise<{ readonly default: (input?: unknown) => Promise<unknown> }>): () => Promise<void> {
+function singleFlightWasmInit(id: string, load: () => Promise<{ readonly default: () => Promise<unknown> }>): () => Promise<void> {
   return () => {
     let promise = frameworkHostsWasmInitPromises.get(id);
     if (!promise) {
@@ -381,6 +381,15 @@ const WASM_LOADERS: Record<string, () => Promise<void>> = {
   flow: singleFlightWasmInit("flow", () => import("@semio-tech/flow-core/flow_core.js")),
 };
 
+let hostWasmBindingsInstalled: Promise<void> | undefined;
+/** 🪝️ Installs the wasm bindings port the renderer's session loaders read, once per page: a story that mounts a host without the shell still reaches the engines. */
+function installHostWasmBindings(): Promise<void> {
+  hostWasmBindingsInstalled ??= Promise.all([import("@semio-tech/framework-renderer-react"), import("../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🪝️host-ports/🕸️wasm-bindings/🟦️.ts")]).then(([renderer, bindings]) => {
+    renderer.registerWasmBindingsV1(bindings.WASM_BINDINGS_V1);
+  });
+  return hostWasmBindingsInstalled;
+}
+
 type WasmGateState = "idle" | "loading" | "ready" | "error";
 
 const WasmGateHost: React.FC<{ children: React.ReactNode; ids: string[] }> = ({ children, ids }) => {
@@ -389,7 +398,7 @@ const WasmGateHost: React.FC<{ children: React.ReactNode; ids: string[] }> = ({ 
   React.useEffect(() => {
     let cancelled = false;
     setState("loading");
-    Promise.all(ids.map((id) => WASM_LOADERS[id]?.() ?? Promise.reject(new Error(`no wasm loader registered for ${JSON.stringify(id)}`))))
+    Promise.all([installHostWasmBindings(), ...ids.map((id) => WASM_LOADERS[id]?.() ?? Promise.reject(new Error(`no wasm loader registered for ${JSON.stringify(id)}`)))])
       .then(() => !cancelled && setState("ready"))
       .catch((error) => {
         if (cancelled) return;

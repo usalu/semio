@@ -1,12 +1,17 @@
 //! ♻️ Actual Rewriting parent fields and semantic SQL, before Native provider opt-in.
+use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshotHost, sqlite_snapshot::SqliteSnapshotControl, sqlite_snapshot::SnapshotEncoding};
+use crate::standards::v1::subsets::any::io::sqlite::snapshot::{encoding};
 use semio_framework_test_original_snapshot_owners as original_owners;
 use ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot as _;
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v1::subsets::any::io::sqlite::snapshot::PropertyValue;
-use crate::*;
+use crate::standards::v1::subsets::any::schema::rule::{Assignment, Lhs, ParameterKind, ParameterSpec, Pattern, Rhs};
+use crate::standards::v1::subsets::any::schema::model::LayoutPoint;
+use crate::standards::v1::subsets::any::schema::mutations::RewriteRuleMutation;
+use crate::standards::v1::subsets::any::schema::snapshot::RewritingSnapshot;
 use store::{pack::snapshot::ArtifactDsl, pack::snapshot::ArtifactPack};
 fn laws() -> serde_json::Value {
-    serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap()
+    serde_json::from_str(runtime_fixture_text("../../🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json")).unwrap()
 }
 fn words() -> Vec<u64> {
     laws()["binary64Bits"].as_array().unwrap().iter().map(|v| u64::from_str_radix(v.as_str().unwrap(), 16).unwrap()).collect()
@@ -50,8 +55,8 @@ fn tagged_property(value:&serde_json::Value,word:u64)->PropertyValue{
   _=>panic!("neutral tagged property variant"),
  }
 }
-fn rhs_graph_snapshot(value:&serde_json::Value,word:u64)->crate::standards::v1::subsets::any::schema::Rhs{
- use crate::standards::v1::subsets::any::schema::{Assignment,ParameterKind,ParameterSpec,Pattern,Rhs};
+fn rhs_graph_snapshot(value:&serde_json::Value,word:u64)->crate::standards::v1::subsets::any::schema::rule::Rhs{
+ use crate::standards::v1::subsets::any::schema::rule::{Assignment, ParameterKind, ParameterSpec, Pattern, Rhs};
  use semio_framework_value::FromValue;
  let pattern=|value:&serde_json::Value|Pattern::from_value(read_intrinsic(value)).unwrap();
  Rhs{
@@ -67,8 +72,8 @@ fn full(word:u64)->RewritingSnapshot{
  use semio_framework_value::FromValue;
  let l=laws();let c=&l["nativeCase"];
  RewritingSnapshot{
-  working_graph:semio_s_artifact_trinity_jack::JackSnapshot::from_value(read_intrinsic(&c["workingGraph"])).unwrap(),
-  lhs:crate::standards::v1::subsets::any::schema::Lhs::from_value(read_intrinsic(&c["lhs"])).unwrap(),
+  working_graph:semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::snapshot::JackSnapshot::from_value(read_intrinsic(&c["workingGraph"])).unwrap(),
+  lhs:crate::standards::v1::subsets::any::schema::rule::Lhs::from_value(read_intrinsic(&c["lhs"])).unwrap(),
   rhs:rhs_graph_snapshot(&c["rhs"],word),
   parameter_bindings:c["parameterBindings"].as_array().unwrap().iter().map(|v|(v["key"].as_str().unwrap().into(),property(&v["value"],word))).collect(),
   rule_layout:c["ruleLayout"].as_array().unwrap().iter().map(|v|(v["key"].as_str().unwrap().into(),LayoutPoint{x:f64::from_bits(word),y:f64::from_bits(word)})).collect(),
@@ -90,7 +95,7 @@ impl std::ops::Deref for Owned {
 impl Drop for Owned {
     fn drop(&mut self) {
         if let Some(v) = self.0.take() {
-            semio_s_artifact_trinity_jack::retire_owned_to_terminal(v).expect("rewriting fixture retirement");
+            semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::content::retire_owned_to_terminal(v).expect("rewriting fixture retirement");
         }
     }
 }
@@ -196,7 +201,7 @@ s.parameterBindings.forEach(value=>put('rewriting_binding',doc,value.key,propert
 if(d.query('SELECT left_var,edge_var,right_var FROM rewriting_pattern WHERE id=1').get().left_var!==s.lhs.pattern.leftVar)throw Error('typed pattern');if(d.query('SELECT query FROM jack_document').get().query!==jack.query)throw Error('literal query');if(d.query('SELECT count(*) AS n FROM rewriting_assignment').get().n!==BigInt(s.rhs.set.length))throw Error('assignments');
 for(const hex of l.binary64Bits){const word=BigInt('0x'+hex),v=num(hex);d.query('UPDATE rewriting_layout SET x=?,y=?,x_ieee754_bits=?,x_numeric_class=?,y_ieee754_bits=?,y_numeric_class=? WHERE id=1').run(v[0],v[0],v[1],v[2],v[1],v[2]);const row=d.query('SELECT x_ieee754_bits,x_numeric_class FROM rewriting_layout WHERE id=1').get();if(BigInt.asUintN(64,row.x_ieee754_bits).toString(16).padStart(16,'0')!==hex||row.x_numeric_class!==v[2])throw Error('word');}
 if(d.query('PRAGMA foreign_key_check').all().length)throw Error('fk');d.close();"#;
-    let out = std::process::Command::new("bun").args(["-e", script, include_str!("../🗄️.sql"), &laws().to_string()]).output().unwrap();
+    let out = std::process::Command::new("bun").args(["-e", script, runtime_fixture_text("../../🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"), &laws().to_string()]).output().unwrap();
     assert!(out.status.success(), "{}", String::from_utf8_lossy(&out.stderr));
 }
 #[test]
@@ -221,7 +226,7 @@ fn sqlite_snapshot_rewriting_real_large_authored_string_control_is_interior() {
 #[test]
 fn sqlite_snapshot_rewriting_actual_erased_parent_queries_independent_authored_strings() {
     use store::sqlite_snapshot::*;
-    let codec = store::bare_artifact_codec::<RewritingSnapshot, crate::RewriteRuleMutation>(crate::REWRITE_RULE_SCHEMA).snapshot_sqlite.expect("missing parent capability");
+    let codec = store::bare_artifact_codec::<RewritingSnapshot, crate::standards::v1::subsets::any::schema::mutations::RewriteRuleMutation>(crate::standards::v1::subsets::any::schema::model::REWRITE_RULE_SCHEMA).snapshot_sqlite.expect("missing parent capability");
     let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.trinity.rewriting".into(), standard: "1".into(), subset: "*".into() };
     let expected = Owned::new(full(0));
     for encoding in [SnapshotEncoding::Binary, SnapshotEncoding::Text] {
@@ -229,7 +234,7 @@ fn sqlite_snapshot_rewriting_actual_erased_parent_queries_independent_authored_s
             SnapshotEncoding::Binary => store::io_schema::IoPayload::Binary(expected.encode_pack_with(&store::PackEncodeOptions::default()).unwrap()),
             SnapshotEncoding::Text => store::io_schema::IoPayload::Text(expected.print_dsl()),
         };
-        let database = original_owners::with_decoding(|native_owner|(codec.export)(crate::REWRITE_RULE_SCHEMA, &dialect, &payload, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default()), native_owner)).unwrap().value;
+        let database = original_owners::with_decoding(|native_owner|(codec.export)(crate::standards::v1::subsets::any::schema::model::REWRITE_RULE_SCHEMA, &dialect, &payload, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default()), native_owner)).unwrap().value;
         assert_eq!(database.tables.len(), 30);
         let root = database.table("rewriting_document").unwrap().single_row().unwrap();
         let graph=database.table("jack_document").unwrap().single_row().unwrap();
@@ -238,7 +243,7 @@ fn sqlite_snapshot_rewriting_actual_erased_parent_queries_independent_authored_s
         assert_eq!(graph.text(5).unwrap(),expected.working_graph.query);
         let lhs=database.table("rewriting_lhs").unwrap().single_row().unwrap();
         assert_eq!(lhs.optional_text(3).unwrap(),expected.lhs.where_clause.as_deref());
-        let payload = original_owners::with_encoding(|native_owner|(codec.import)(crate::REWRITE_RULE_SCHEMA, &dialect, &mut Some(database), encoding, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default()), native_owner)).unwrap().value;
+        let payload = original_owners::with_encoding(|native_owner|(codec.import)(crate::standards::v1::subsets::any::schema::model::REWRITE_RULE_SCHEMA, &dialect, &mut Some(database), encoding, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default()), native_owner)).unwrap().value;
         let actual = Owned::new(match payload {
             store::io_schema::IoPayload::Text(text) => RewritingSnapshot::parse_dsl(&text).unwrap(),
             store::io_schema::IoPayload::Binary(bytes) => RewritingSnapshot::decode_pack(&bytes).unwrap(),
@@ -275,7 +280,7 @@ fn sqlite_snapshot_rewriting_composed_child_retains_actual_rich_graph_fields() {
             DslValue::Object(fields) => serde_json::Value::Object(fields.iter().map(|(key, value)| (key.clone(), view(value))).collect()),
         }
     }
-    let vector: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🌳️typed/🔣️.json")).unwrap();
+    let vector: serde_json::Value = serde_json::from_str(runtime_fixture_text("../../🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🌳️typed/🔣️.json")).unwrap();
     let expected = &vector["childSnapshot"];
     let snapshot = SemioGraphSnapshot::from_value(read(expected)).unwrap();
     assert_eq!(view(&ToValue::to_value(&snapshot)), *expected);
@@ -306,7 +311,7 @@ mod populated_public_owner {
     async fn sqlite_snapshot_rewriting_populated_actual_app_public_both_forms_independent_child_edit(){
         use {semio_framework_artifact_reference::ArtifactDialect,store::io::io_mechanism::io_export_sqlite_snapshot,store::io::io_mechanism::io_import_sqlite_snapshot,store::io::io_mechanism::io_route};
         use store::io_schema::{IoFidelity,SQLITE_SNAPSHOT};use store::sqlite_snapshot::*;use std::{io::Write,process::{Command,Stdio}};
-        let _plugin=semio_framework_plugin::PluginBuilder::<_, RewritingArtifactApps>::new("trinity").label("Rewriting SQLite owner").version("0.1.0").package_id("semio:trinity").declare_artifact(crate::artifact::<RewritingArtifactApps>()).try_build().unwrap();
+        let _plugin=semio_framework_plugin::PluginBuilder::<_, RewritingArtifactApps>::new("trinity").label("Rewriting SQLite owner").version("0.1.0").package_id("semio:trinity").declare_artifact(crate::standards::v1::subsets::any::registration::artifact::<RewritingArtifactApps>()).try_build().unwrap();
         let dialect=ArtifactDialect{artifact_kind:"s.trinity.rewriting".into(),standard:"1".into(),subset:"*".into()};let sqlite=ArtifactDialect::from(SQLITE_SNAPSHOT);
         for route in[io_route(&dialect,&sqlite,1).await.unwrap().value,io_route(&sqlite,&dialect,1).await.unwrap().value]{assert_eq!(route.hops.len(),1);assert_eq!(route.fidelity,IoFidelity::Exact);}
         for word in words(){let expected=Owned::new(full(word));for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{
@@ -315,6 +320,10 @@ mod populated_public_owner {
             let script=r#"import{Database}from'bun:sqlite';const c=JSON.parse(process.argv[1]);const d=Database.deserialize(await Bun.stdin.bytes(),{safeIntegers:true});if(d.query('PRAGMA integrity_check').get().integrity_check!=='ok'||d.query('PRAGMA foreign_key_check').all().length)throw Error('integrity');if(d.query('SELECT COUNT(*) AS n FROM sqlite_schema WHERE type=\'table\'').get().n!==31n)throw Error('all30domainTablesPlusMetadata');const row=d.query('SELECT g.name,g.query FROM rewriting_document r JOIN jack_document g ON g.id=r.working_graph_id').get();if(row.name!==c.workingGraph.name||row.query!==c.workingGraph.query)throw Error('literalRichChild');const m=d.query('SELECT * FROM semio_snapshot').get();if(JSON.stringify(Object.keys(m))!==JSON.stringify(['id','artifact_kind','standard','subset','schema_version','native_encoding'])||m.id!==1n||m.schema_version!==1n)throw Error('completePublicMetadata');if(m.artifact_kind!=='s.trinity.rewriting'||m.standard!=='1'||m.subset!=='*'||m.native_encoding!==process.argv[2])throw Error('metadata');d.query('UPDATE jack_document SET name=?').run('independent Ω\u0000graph');await Bun.write(Bun.stdout,d.serialize());d.close();"#;
             let mut child=Command::new("bun").args(["--eval",script,&laws()["nativeCase"].to_string(),encoding.as_str()]).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();child.stdin.take().unwrap().write_all(&bytes).unwrap();let output=child.wait_with_output().unwrap();assert!(output.status.success(),"{}",String::from_utf8_lossy(&output.stderr));let actual=Owned::new(async{let original_file_dialect=&dialect;let original_file_input=&output.stdout;let original_file_limits=SqliteDatabaseLimits::default();let original_file_progress:&mut dyn FnMut(store::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |_|true;store::io::testing::with_snapshot_file_encoding(store::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|io_import_sqlite_snapshot::<RewritingSnapshot>(original_file_dialect,original_file_input,sqlite_control,native_owner).await).await}.await.unwrap().value);let mut literal=full(word);literal.working_graph.name="independent Ω\0graph".into();let literal=Owned::new(literal);assert_full(&actual,&literal);assert_eq!(actual.encode_pack_with(&store::PackEncodeOptions::default()).unwrap(),literal.encode_pack_with(&store::PackEncodeOptions::default()).unwrap());assert_eq!(actual.print_dsl(),literal.print_dsl());
         }}
-        eprintln!("[DEBUG] Rewriting public complete owner words both forms independent composed child edit and retirement");
     }
+}
+
+fn runtime_fixture_text(relative: &str) -> &'static str {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative);
+    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display())).into_boxed_str())
 }

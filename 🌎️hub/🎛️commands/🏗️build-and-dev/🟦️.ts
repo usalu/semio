@@ -8,7 +8,7 @@ import { verifyCapturedCargoArtifactsV1 } from "@semio-tech/process/native-build
 import { scriptCompilerAdmissionControlV1 } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import { buildBudgetMs } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 import { terminateOwnedChildTree } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
-import { parseLocalSessionBrokerRecordV1, parseLocalSessionRequestV1, parseLocalSessionV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🎫️local-session/🗄️broker/🧬️schema/🟦️.ts";
+import { parseLocalSessionBrokerRecordV1, parseLocalSessionRequestV1, parseLocalSessionV1 } from "@semio-tech/framework-os/modules/directory/local-session/broker/schema";
 import { randomBytes } from "node:crypto";
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -24,7 +24,9 @@ import { issueLocalCredential, parseLocalAdminCapabilityV1, withLocalSessionBrok
 import { type LocalProfile } from "../../🚀️local-bootstrap/🛂authentication/🟦️.ts";
 import { ensureHubBackend, finishLocalHub, HUB_BINARY_SOURCES_FILE, HUB_DEV_BINARY_TARGET, hubBackendIdentity, hubBackendName, type HubBackendName, hubDevBinaryPath, LOCAL_HUB_ADMINISTRATOR_PROFILE, LOCAL_HUB_ADMINISTRATOR_SUBJECT, LOCAL_HUB_DEVELOPMENT_CATALOG_PACKAGES, LOCAL_HUB_DEVELOPMENT_PROFILES, stopLocalHubV1, waitForLocalHubExitV1, withPublishedDevelopmentLocalHubHostV1, startLocalHub, waitForReadiness } from "../../🚀️local-bootstrap/🏃️execution/🟦️.ts";
 import { trustedBootstrapBuildControl, UNLIMITED_TRUSTED_BUILD_DEADLINE_MS } from "../../🏗️bootstrap/🧾️provenance/🗃️bootstrap-bundle/🟦️.ts";
-import { trustedBootstrapCurrent, validateAndPublishTrustedStdioGisCandidate, withMaterializedTrustedCatalogBundleV1 } from "../../🏗️bootstrap/🧾️provenance/🚚️bootstrap-publication/🟦️.ts";
+import { validateAndPublishTrustedStdioGisCandidate } from "../../🏗️bootstrap/🧾️provenance/🚚️bootstrap-publication/🟦️.ts";
+import { withMaterializedTrustedCatalogBundleV1 } from "../../🏗️bootstrap/🧾️provenance/🚚️bootstrap-publication/🧱️materialized-bundle/🟦️.ts";
+import { trustedBootstrapCurrent } from "../../🏗️bootstrap/🧾️provenance/🚚️bootstrap-publication/🔄️rotation-and-current-pointer/🟦️.ts";
 import { trustedBootstrapSelectPackages } from "../../🏗️bootstrap/🧾️provenance/🧭️bootstrap-selection/🟦️.ts";
 import { buildAdminSpa, nativeWgpuExecutable, openExternalBrowser, startMcpWorkspaceChild, waitForUiReadiness } from "../../🚀️local-bootstrap/🧰️mcp-process-support/🟦️.ts";
 import { type LocalAdminRelay, type LocalBrowserRelay, startLocalAdminRelay, startLocalBrowserRelay } from "../../🚀️local-relay/🛰️servers/🟦️.ts";

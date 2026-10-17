@@ -6,7 +6,6 @@
 //! one absolute `set-slot-positions`.
 
 use crate::diff::Wfc3dDiff;
-use crate::mutations::Wfc3dMutation;
 use crate::schema::snapshot::Wfc3dSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -23,8 +22,11 @@ pub struct DragSlots {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn drag_slots(targets: Vec<String>, dx: f64, dy: f64, dz: f64) -> Wfc3dMutation {
-    Wfc3dMutation::DragSlots(DragSlots { targets, dx, dy, dz })
+pub fn drag_slots<Op>(targets: Vec<String>, dx: f64, dy: f64, dz: f64) -> Op
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::drag_slots::DragSlots>,
+{
+    Op::from(DragSlots { targets, dx, dy, dz })
 }
 
 impl DragSlots {
@@ -48,13 +50,16 @@ pub fn wfc3d_offset_text(value: f64) -> (String, String) {
     (en, de)
 }
 
-impl MutationKind<Wfc3dSnapshot, Wfc3dMutation> for DragSlots {
+impl<Op> MutationKind<Wfc3dSnapshot, Op> for DragSlots
+where
+    Op: protocol::Mutation<Wfc3dSnapshot, Diff = Wfc3dDiff> + From<DragSlots> + From<crate::standards::v1::subsets::any::schema::mutations::set_slot_positions::SetSlotPositions>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "drag", entity: "slots", kind: "drag-slots", record: "DraggedSlots" };
 
     fn diff(&self, base: &Wfc3dSnapshot) -> protocol::MutationOutcome<Wfc3dDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Wfc3dSnapshot) -> Result<Vec<Wfc3dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Wfc3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

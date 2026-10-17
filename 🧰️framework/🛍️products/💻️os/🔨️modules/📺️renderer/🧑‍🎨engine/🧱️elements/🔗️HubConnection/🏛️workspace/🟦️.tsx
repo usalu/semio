@@ -11,7 +11,9 @@
 // #region 🔌️Adapters
 import { useEffect, useState, type ReactElement } from "react";
 import { Button, useLabel } from "@semio-tech/ui-react";
-import { hubUiLabel, useHubConnection, type HubConnectionPortV1 } from "../🟦️.tsx";
+import { useHubConnection } from "../🟦️.tsx";
+import { hubUiLabel } from "../🌐️ui-labels/🟦️.ts";
+import { type HubConnectionPortV1 } from "../🔌️connection-contract/🟦️.ts";
 import { HubSignInPane } from "../../🔐️HubSignIn/🟦️.tsx";
 import { SpaceBrowser } from "../../🏘️SpaceBrowser/🟦️.tsx";
 import { HubFirstRun } from "../../🎓️HubFirstRun/🟦️.tsx";

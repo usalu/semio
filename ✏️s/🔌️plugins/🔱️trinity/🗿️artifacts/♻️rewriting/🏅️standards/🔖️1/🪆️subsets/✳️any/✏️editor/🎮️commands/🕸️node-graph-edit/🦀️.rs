@@ -10,11 +10,11 @@
 //! edit. The tool is never history; its leaves are. Inline sliders and variadic ports do not exist on these graphs, so those rows are
 //! refused by name, as is every row but a drag on a read-only canvas (a drag there moves nothing).
 
-use crate::apply_rewrite_rule_mutation;
-use crate::content::{admit, read, working_child_emit, WORKING_CHILD_SLOT};
-use crate::standards::v1::subsets::any::schema::mutations::drag_rule_nodes;
+use crate::standards::v1::subsets::any::schema::operations::apply_rewrite_rule_mutation;
+use crate::standards::v1::subsets::any::content::{admit, read, working_child_emit, WORKING_CHILD_SLOT};
+use crate::standards::v1::subsets::any::schema::mutations::drag_rule_nodes::drag_rule_nodes;
 use crate::standards::v1::subsets::any::schema::mutations::RewriteRuleMutation;
-use crate::RewritingSnapshot;
+use crate::standards::v1::subsets::any::schema::snapshot::RewritingSnapshot;
 use semio_framework_plugin::app::ChildContentView;
 use semio_framework_plugin::{Emit, Fault, FaultCode, FaultOrigin, NoConfigMutation};
 use semio_framework_tool_machine::{node_drag_emit, node_graph_edit_rows, NodeDragRecord, NodeGraphEditRow};
@@ -22,7 +22,7 @@ use {semio_s_artifact_stdio_semio_graph::schema::mutations::create_edge::CreateE
 use semio_s_artifact_stdio_semio_graph::schema::snapshot::{GraphEdgeId, GraphNodeId, SemioGraphSnapshot};
 
 /// 🪪️ The editor app id every drag transaction's `tool` is scoped by: `<appId>#nodeGraphEdit`.
-pub(crate) const TRINITY_REWRITING_EDITOR_APP_ID: &str = "s.trinity.rewriting@1/*#editor";
+pub const TRINITY_REWRITING_EDITOR_APP_ID: &str = "s.trinity.rewriting@1/*#editor";
 
 /// 🖼️ The canvas a row was drawn on: the editable working graph, an editable rule side, or a read-only view.
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -35,8 +35,8 @@ enum Canvas {
 impl Canvas {
     fn of(surface_id: &str) -> Self {
         match surface_id {
-            crate::editor::rewriting::TRINITY_REWRITING_PLAY_SURFACE_BEFORE => Self::Working,
-            crate::editor::rewriting::TRINITY_REWRITING_PLAY_SURFACE_LHS | crate::editor::rewriting::TRINITY_REWRITING_PLAY_SURFACE_RHS => Self::Rule,
+            crate::editor::rewriting::ids::TRINITY_REWRITING_PLAY_SURFACE_BEFORE => Self::Working,
+            crate::editor::rewriting::ids::TRINITY_REWRITING_PLAY_SURFACE_LHS | crate::editor::rewriting::ids::TRINITY_REWRITING_PLAY_SURFACE_RHS => Self::Rule,
             _ => Self::ReadOnly,
         }
     }
@@ -54,7 +54,7 @@ fn endpoint(node_id: &str, port_id: &str) -> (GraphNodeId, Option<String>) {
 
 /// 🔑️ The key an endpoint is written as in a wire's id: `node@port`, or the bare node.
 fn endpoint_key((node, port): &(GraphNodeId, Option<String>)) -> String {
-    port.as_ref().map_or_else(|| node.value.clone(), |port| semio_s_artifact_trinity_jack::port_key(&node.value, port))
+    port.as_ref().map_or_else(|| node.value.clone(), |port| semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::graph::port_key(&node.value, port))
 }
 
 /// 🏷️ The edge kind a wire drawn on the working graph carries: the first edge kind the rule's working-graph manifest declares, else
@@ -132,7 +132,7 @@ fn working_graph_edit(state: &RewritingSnapshot, children: &ChildContentView, ro
 /// refuses. A batch that released a drag is ONE tool transaction of all its leaves, the ref minted from the admission's
 /// `authoring_seed`, the host clock and `<appId>#nodeGraphEdit`, the press named by the first record; a view without command
 /// authority (no seed) publishes the leaves plainly; a batch without a drag is a plain edit.
-pub(crate) fn node_graph_edit(state: &RewritingSnapshot, children: &ChildContentView, surface_id: &str, operations_json: &str, authoring_seed: &str) -> Result<Emit<RewriteRuleMutation, NoConfigMutation>, Fault> {
+pub fn node_graph_edit(state: &RewritingSnapshot, children: &ChildContentView, surface_id: &str, operations_json: &str, authoring_seed: &str) -> Result<Emit<RewriteRuleMutation, NoConfigMutation>, Fault> {
     let operations = semio_framework_pack_json::parse(operations_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| refuse(format!("the operations are not JSON: {error}")))?;
     let rows = node_graph_edit_rows(&semio_framework_value::DslValue::object([("operations".into(), semio_framework_pack_json::to_dsl_value(&operations))])).map_err(refuse)?;
     let canvas = Canvas::of(surface_id);

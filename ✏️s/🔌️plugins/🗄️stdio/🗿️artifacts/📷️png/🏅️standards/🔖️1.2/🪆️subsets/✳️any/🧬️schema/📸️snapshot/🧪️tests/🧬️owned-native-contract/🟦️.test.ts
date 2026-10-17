@@ -53,7 +53,6 @@ test("native paint intent re-evaluates every neutral sample witness without a fr
   const expected=IndependentPng.sync.read(Buffer.from(await encodePngSnapshot({...source,image:{...source.image,samples:row.expectedSamples}})),{skipRescale:true});
   expect(Array.from(independent.data),row.name).toEqual(Array.from(expected.data));
   expect(source).toEqual(parsePngSnapshot(row.snapshot));
-  console.log(`[DEBUG] native PNG paint intent neutral=${row.name} authoredFields=${Object.keys(payload).join(",")} exactSamples=${actual.image.samples.length}`);
  }
 });
 
@@ -71,7 +70,6 @@ test("declared PNG diff mutations agree with neutral RFC6902 and native codec wi
   expect(Array.from(decoded.data),row.name).toEqual(Array.from(oracle.data));expect(decoded.gamma,row.name).toBe(oracle.gamma);
   expect(source).toEqual(parsePngSnapshot(fixture.cases.find(candidate=>candidate.name===row.source)!.snapshot));
   await expect(applyPngMutation(source,row.mutation as PngMutation,{progress:()=>false})).rejects.toThrow("cancelled");
-  console.log(`[DEBUG] PNG declared diff mutation=${row.name} matches independent patch and codec`);
  }
 });
 test("native PNG image replacement and inverse retain the exact sixteen-bit samples",async()=>{
@@ -86,7 +84,6 @@ test("native PNG image replacement and inverse retain the exact sixteen-bit samp
   const independent=IndependentPng.sync.read(Buffer.from(bytes),{skipRescale:true});
   const expected=IndependentPng.sync.read(Buffer.from(await encodePngSnapshot(target)),{skipRescale:true});
   expect(Array.from(independent.data)).toEqual(Array.from(expected.data));
-  console.log(`[DEBUG] PNG typed image replacement neutral=${row.name} nativeWordsExact=true inverseExact=true`);
  }
 });
 test("native PNG metadata diffs agree with literal neutral targets and RFC6902", () => {
@@ -100,7 +97,6 @@ test("native PNG metadata diffs agree with literal neutral targets and RFC6902",
   expect(actual,row.name).toEqual(expected);
   expect(applyPngDiff(actual,inversePngDiff(source,diff)),row.name).toEqual(source);
   expect(validate(independent),row.name).toBe(true);
-  console.log(`[DEBUG] native PNG metadata diff neutral=${row.name} path=${row.patch.path} exactMetadata=true inverseExact=true`);
  }
 });
 

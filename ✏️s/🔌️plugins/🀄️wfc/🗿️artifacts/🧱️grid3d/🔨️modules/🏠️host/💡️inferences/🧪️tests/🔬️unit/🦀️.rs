@@ -4,7 +4,8 @@
 //! 🚪️ Every job driven here goes through the engine's close ladder before it is dropped: a leaked
 //! retained payload page aborts the process rather than failing a test.
 
-use super::*;
+use crate::host::inferences::*;
+use crate::standards::v1::subsets::any::schema::inferences::{shannon_entropy_over_tiles, Grid3dContradiction, Grid3dEntropy, Grid3dSolve, Grid3dSolveResult};
 use semio_framework_job::InteractiveJob;
 use crate::schema::snapshot::{Grid3dCell, Grid3dDirection, Grid3dPinnedCell, Grid3dRule, Grid3dSnapshot, Grid3dTile};
 

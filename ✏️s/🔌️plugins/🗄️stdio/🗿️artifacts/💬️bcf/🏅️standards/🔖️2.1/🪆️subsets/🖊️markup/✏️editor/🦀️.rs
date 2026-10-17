@@ -217,9 +217,9 @@ impl ToolJobFactory for BcfRetainedCommandJobFactory {
         &mut self,
         _operation: semio_framework_job::Operation,
         payload: Self::Payload,
-        input: semio_framework_plugin::action_bus::RetainedToolWireInput,
-        checkpoint: Option<semio_framework_plugin::action_bus::RetainedToolWireInput>,
-    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework_plugin::action_bus::RetainedToolWireInput, Option<semio_framework_plugin::action_bus::RetainedToolWireInput>)> {
+        input: semio_framework_action_bus::RetainedToolWireInput,
+        checkpoint: Option<semio_framework_action_bus::RetainedToolWireInput>,
+    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework_action_bus::RetainedToolWireInput, Option<semio_framework_action_bus::RetainedToolWireInput>)> {
         if input.declared_bytes() > BCF_RETAINED_RAW_BYTES || checkpoint.is_some() {
             return Err((ToolJobFactoryError::new("stdio bcf retained command rejects oversized wire or checkpoint owner"), input, checkpoint));
         }

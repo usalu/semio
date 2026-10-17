@@ -1,7 +1,6 @@
 //! ✒️ Authoritative PDF/H mutation for inserting a named signature field.
 
-use super::remove_signature_field::RemoveSignatureField;
-use super::PdfHMutation;
+use crate::standards::v1_7::subsets::h::schema::mutations::remove_signature_field::RemoveSignatureField;
 use crate::standards::v1_7::subsets::base::schema::conformance_support as support;
 use crate::standards::v1_7::subsets::base::schema::diff::{self, PdfDiff};
 use crate::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot;
@@ -22,16 +21,19 @@ pub struct InsertSignatureField {
     pub entry_index: Option<usize>,
 }
 
-impl MutationKind<PdfSnapshot, PdfHMutation> for InsertSignatureField {
+impl<Op> MutationKind<PdfSnapshot, Op> for InsertSignatureField
+where
+    Op: protocol::Mutation<PdfSnapshot, Diff = PdfDiff> + From<InsertSignatureField> + From<crate::standards::v1_7::subsets::h::schema::mutations::remove_signature_field::RemoveSignatureField>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "insert", entity: "signature-field", kind: "insert-signature-field", record: "Insert" };
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
         MutationOutcome::new(diff::graph_edit(support::insert_signature_field_rows(base, &self.name, &self.placements, self.field_index, self.entry_index)))
     }
 
-    fn inverse(&self, _base: &PdfSnapshot) -> Result<Vec<PdfHMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, _base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
-        vec![PdfHMutation::RemoveSignatureField(RemoveSignatureField { name: self.name.clone() })]
+        vec![Op::from(RemoveSignatureField { name: self.name.clone() })]
     
     })())
 }
@@ -47,9 +49,7 @@ impl MutationKind<PdfSnapshot, PdfHMutation> for InsertSignatureField {
 //#endregion 🔖️Mutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
 
 //#region 🔖️Facets

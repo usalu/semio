@@ -1,0 +1,50 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "path",
+    "beforeSha256",
+    "afterSha256",
+    "thirdpartyPinsSha256",
+    "name",
+    "dependencies",
+    "missingDirectFirstparty"
+  ],
+  "properties": {
+    "path": {
+      "const": "🧰️framework/Cargo.lock"
+    },
+    "beforeSha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "afterSha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "thirdpartyPinsSha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "name": {
+      "const": "semio-framework-plugin-child-group-wire-laws"
+    },
+    "dependencies": {
+      "type": "array",
+      "minItems": 14,
+      "maxItems": 14,
+      "uniqueItems": true,
+      "items": {
+        "type": "string"
+      }
+    },
+    "missingDirectFirstparty": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

@@ -26,5 +26,4 @@ fn actual_http_retries_only_explicit_transport_disposition(){
   assert_eq!(attempts.load(Ordering::SeqCst),expected_attempts);
   assert!(matches!(refusal,PackError::Refusal(semio_framework_pack_error::PackRefusal::Io{retry:actual,..})if actual==retry));
  }
- eprintln!("[DEBUG] Pack HTTP identical cause/prose followed distinct explicit retry policy");
 }

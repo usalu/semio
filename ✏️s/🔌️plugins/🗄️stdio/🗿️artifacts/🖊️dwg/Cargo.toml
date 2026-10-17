@@ -13,6 +13,7 @@ members = [
     "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/📥️import/📦️packages/🦀️rust",
     "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/📥️import/🧱️records/📦️packages/🦀️rust",
     "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/✏️drawing/📦️packages/🦀️rust",
+    "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🪜️drawing-2/📦️packages/🦀️rust",
     "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/📦️objects/📦️packages/🦀️rust",
     "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦️packages/🦀️rust",
     "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📤️exports/🔗️graphql/📦️packages/🦀️rust",
@@ -167,6 +168,9 @@ path = "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/🪶️sq
 
 [workspace.dependencies.semio-s-artifact-stdio-dwg-sqlite-drawing]
 path = "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/✏️drawing/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-dwg-sqlite-drawing-2]
+path = "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🪜️drawing-2/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-s-artifact-stdio-dwg-snapshot]
 path = "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️packages/🦀️rust"

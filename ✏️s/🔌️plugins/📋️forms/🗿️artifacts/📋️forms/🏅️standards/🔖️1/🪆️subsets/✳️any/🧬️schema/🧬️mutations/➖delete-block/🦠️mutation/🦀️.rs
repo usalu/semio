@@ -2,7 +2,7 @@
 //! `delete` verb. Physical dir name (`➖remove-block`, wired by `🦀️.rs`) predates the semantic
 //! rename; the Rust module is still `remove_block`, the type/variant/kind are `delete-block`.
 
-use crate::{FormMutation, FormsDiff, FormsSnapshot};
+use crate::{FormsDiff, FormsSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 
 //#region ✂️DeleteBlock
@@ -17,15 +17,18 @@ pub struct DeleteBlock {
     pub id: String,
 }
 
-impl MutationKind<FormsSnapshot, FormMutation> for DeleteBlock {
+impl<Op> MutationKind<FormsSnapshot, Op> for DeleteBlock
+where
+    Op: protocol::Mutation<FormsSnapshot, Diff = FormsDiff> + From<DeleteBlock> + From<crate::standards::v1::subsets::any::schema::mutations::create_block::mutation::CreateBlock>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "block", kind: "delete-block", record: "DeletedBlock" };
 
     fn diff(&self, base: &FormsSnapshot) -> protocol::MutationOutcome<FormsDiff> {
-        super::diff::diff_delete_block(self, base)
+        crate::standards::v1::subsets::any::schema::mutations::delete_block::diff::diff_delete_block(self, base)
     }
-    fn inverse(&self, base: &FormsSnapshot) -> Result<Vec<FormMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &FormsSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
-        super::inverse::inverse_delete_block(self, base)?
+        crate::standards::v1::subsets::any::schema::mutations::delete_block::inverse::inverse_delete_block(self, base)?
     
     })
 }

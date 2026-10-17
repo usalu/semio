@@ -1,11 +1,18 @@
+use crate::GisTerrainSnapshot;
+#[allow(unused_imports)]
+use ::semio_framework_schema::ArtifactSchema;
+#[allow(unused_imports)]
+use crate::{standards::v1::subsets::any::schema::inferences::bounds::imported_lon_lat_positions, standards::v1::subsets::any::schema::inferences::bounds::lon_lat_bounds};
+#[allow(unused_imports)]
+use semio_framework_value_derive::{FromValue, ToValue};
 use crate::standards::v1::subsets::any::io::text::snapshot::fixture_descriptor;
-use super::*;
+use crate::standards::v1::subsets::any::schema::inferences::*;
 use protocol::Inference;
 
 //#region 🧪️InferenceLaws
 #[semio_framework_async_macros::async_test]
 async fn inference_determinism_law() {
-    let snapshot = GisTerrainSnapshot { exaggeration: 1.5, imported_map: Some(crate::schema::ImportedMap::from_json(&serde_json::json!({ "positions": [{ "id": "p1", "lon": 5.58, "lat": 50.60 }] }).to_string()).unwrap()), ..Default::default() };
+    let snapshot = GisTerrainSnapshot { exaggeration: 1.5, imported_map: Some(crate::schema::imported_map::ImportedMap::from_json(&serde_json::json!({ "positions": [{ "id": "p1", "lon": 5.58, "lat": 50.60 }] }).to_string()).unwrap()), ..Default::default() };
     assert_eq!(GisTerrainInference::infer(&snapshot).expect("valid materialized inference fixture"), GisTerrainInference::infer(&snapshot).expect("valid materialized inference fixture"));
 }
 
@@ -35,7 +42,7 @@ async fn terrain_fixture_text_recovers_bundled_scenery_data() {
 /// 🔌️ `map:in`'s overlay layer renders as extra pins alongside the fixture's own two.
 #[semio_framework_async_macros::async_test]
 async fn imported_map_features_render_as_extra_pins() {
-    let document = GisTerrainSnapshot { exaggeration: 1.5, imported_map: Some(crate::schema::ImportedMap::from_json(&serde_json::json!({ "positions": [{ "id": "imported-1", "lon": 5.58, "lat": 50.60 }] }).to_string()).unwrap()), ..Default::default() };
+    let document = GisTerrainSnapshot { exaggeration: 1.5, imported_map: Some(crate::schema::imported_map::ImportedMap::from_json(&serde_json::json!({ "positions": [{ "id": "imported-1", "lon": 5.58, "lat": 50.60 }] }).to_string()).unwrap()), ..Default::default() };
     let descriptor = fixture_descriptor(&document);
     assert_eq!(descriptor.positions.len(), 3, "2 fixture pins + 1 imported pin");
     assert!(descriptor.positions.iter().any(|position| position.id == "imported-1"));

@@ -96,7 +96,6 @@ export async function registerComponentCodecReplyTests(vitest: NonNullable<Impor
           }
         }
         expect(stock.liveSources).toBe(0);
-        console.log(`[DEBUG] shard-component-codec.bridge ${JSON.stringify(observed)}`);
       } finally {
         delete (globalThis as { __semioCodecFixture?: unknown }).__semioCodecFixture;
         rmSync(directory, { recursive: true, force: true });

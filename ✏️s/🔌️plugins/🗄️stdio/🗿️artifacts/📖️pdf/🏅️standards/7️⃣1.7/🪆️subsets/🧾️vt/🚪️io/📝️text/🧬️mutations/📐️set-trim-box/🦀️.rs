@@ -1,6 +1,6 @@
 //! 📐️ Direct text codec for `set-trim-box`.
 
-use crate::standards::v1_7::subsets::vt::schema::mutations::SetTrimBox;
+use crate::standards::v1_7::subsets::vt::schema::mutations::set_trim_box::SetTrimBox;
 
 //#region 🔖️Identity
 pub const OPCODE: &str = "set-trim-box";
@@ -21,7 +21,5 @@ pub fn parse(text: &str) -> Result<SetTrimBox, String> {
 //#endregion 🔖️Codec
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

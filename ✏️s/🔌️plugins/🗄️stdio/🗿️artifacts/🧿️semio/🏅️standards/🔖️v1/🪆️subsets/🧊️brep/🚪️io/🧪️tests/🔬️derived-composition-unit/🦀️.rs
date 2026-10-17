@@ -64,6 +64,8 @@ mod tests {
     /// `register()` calls (no test module of its own, and out of this ticket's `🧊️brep/`-only edit
     /// scope anyway).
     mod conformance_laws {
+    use semio_framework_test_fixtures::fixture_path;
+
 
         use crate::schema::{diff, mutations, snapshot};
         use protocol::{DiffBinary,DiffText, OpBinary, OpText};
@@ -185,7 +187,7 @@ mod tests {
             let demo = snapshot::demo_brep_snapshot();
             let text = pack::snapshot::ArtifactDsl::print_dsl(&demo);
             let pack: Vec<u8> = pack::snapshot::ArtifactPack::encode_pack(&demo);
-            let subsets = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../..");
+            let subsets = fixture_path!("../../../..");
             for assets in [subsets.join("✉️base/📚️examples/🧊️solid/🖼️assets"), subsets.join("🧊️brep/🖼️assets/🧊️solid")] {
                 std::fs::write(assets.join("🗣️.dsl.semio"), &text).unwrap_or_else(|e| panic!("write {}: {e}", assets.display()));
                 std::fs::write(assets.join("🎒️.pack.semio"), &pack).unwrap_or_else(|e| panic!("write {}: {e}", assets.display()));

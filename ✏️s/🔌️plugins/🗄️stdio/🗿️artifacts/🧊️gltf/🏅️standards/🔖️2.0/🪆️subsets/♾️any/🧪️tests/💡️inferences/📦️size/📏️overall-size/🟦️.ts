@@ -8,5 +8,4 @@ for (const vector of vectors.vectors) {
   const result = inferGltfOverallSize(context);
   if ((result.value ?? null) !== vector.value || result.availability !== vector.availability || inferGltfOverallSize(context).value !== result.value) throw new Error(vector.name);
 }
-  console.log("[DEBUG] Original GLTF 💡️inferences/📦️size/📏️overall-size vectors=" + vectors.vectors.length);
 });

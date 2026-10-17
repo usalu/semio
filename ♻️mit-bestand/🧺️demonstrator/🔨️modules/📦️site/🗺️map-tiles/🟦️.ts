@@ -4,7 +4,7 @@ import {
   GIS_MAP_DEFAULT_PREFETCH_BOUNDS,
   mapTileCacheRoots,
   prefetchMapTiles,
-} from "../../../../../✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🗺️tiles/🟦️.ts";
+} from "@semio-tech/gis-gismap-js/tiles";
 import { DEMONSTRATOR_STATIC_MAP_TILE_Z_MAX_RASTER, DEMONSTRATOR_STATIC_MAP_TILE_Z_MAX_VECTOR } from "../🗺️tile-serve-mode/🟦️.ts";
 
 /** ⬇️ Ensures Verfolgen's default Switzerland viewport has raster + vector tiles before `closeBundle` copies them. */

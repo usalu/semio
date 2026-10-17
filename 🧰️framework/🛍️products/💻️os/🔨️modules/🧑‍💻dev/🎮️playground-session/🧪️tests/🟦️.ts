@@ -39,7 +39,6 @@ test("actual session owner routes admit domain instances and never read test fix
     const project = JSON.parse(read(contract.ownerPath + "/📋️project.json")), target = project.targets[contract.previewTarget!.split(":").at(-1)!];
     expect(generatorPreviewExecution(contract, target).args).toEqual(["./📜️script.ts", "playground-session", "preview"]);
   }
-  console.log("[DEBUG] canonical publication request instances/ten plain cases agree with independent Ajv; strict actual taxonomy and both semantic previews have no fixture source dependencies");
 });
 
 test("actual General read-only preview preserves bytes and output override with independent esbuild semantics", async () => {
@@ -62,5 +61,4 @@ test("actual General read-only preview preserves bytes and output override with 
     expect(modules[0].PLAYGROUND_SESSION).toBeUndefined(); expect(existsSync(join(root, file.path))).toBe(output ? false : before !== undefined);
   }
   expect(existsSync(join(root, expectedPath)) ? read(expectedPath) : undefined).toBe(before);
-  console.log("[DEBUG] actual General two read-only previews preserve canonical/output-env paths and rendered bytes; Bun/esbuild module semantics agree; generated writes0/Cargo/server0");
 }, 40000);

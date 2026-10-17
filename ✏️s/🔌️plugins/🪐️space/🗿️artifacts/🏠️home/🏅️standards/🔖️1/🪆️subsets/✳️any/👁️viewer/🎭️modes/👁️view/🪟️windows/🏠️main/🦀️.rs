@@ -37,7 +37,7 @@ pub fn definition() -> WindowKindDefinition {
 /// test in this crate's test binary — a `DirectoryReadModel::default()` alone is NOT enough to reach an
 /// empty row list, since the local catalog half is unconditionally unioned in and never guaranteed
 /// empty once any other test has created a studio).
-fn render_rows(rows: &[semio_s_space_core::HomeSpaceRow], labels: &HomeTableLabels, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render_rows(rows: &[semio_s_space_core::HomeSpaceRow], labels: &HomeTableLabels, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     if rows.is_empty() {
         return semio_framework_plugin::built_text_node(semio_framework_ui_locale::Label::data(labels.empty_message.as_str().to_string()))
             .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.table.empty", "empty table text admission failed"));
@@ -68,7 +68,5 @@ pub fn render<'a>(hub_spaces: impl IntoIterator<Item = &'a store::os_directory::
 //#endregion 🔖️Render
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

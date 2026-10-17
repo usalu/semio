@@ -50,7 +50,8 @@ import {
   setTheme,
   type UiPreferencesConfigMutation
 } from "@semio-tech/framework/config/mutations";
-import { EMPTY_SHELL_LOCKS, type ResolvedShellLocks, type ShellAction } from "../../🐚️Shell/🟦️.tsx";
+import { EMPTY_SHELL_LOCKS, type ResolvedShellLocks } from "../../🐚️Shell/🔒️boot-and-locks/🟦️.ts";
+import { type ShellAction } from "../../🐚️Shell/🎛️shell-actions/🟦️.ts";
 import type { PluginManifest } from "../../🔌️PluginRuntime/🧷️handle-contract/🟦️.ts";
 import {
   EMPTY_APP_LABELS_OVERLAY,
@@ -68,7 +69,8 @@ import {
   shellTerminologyLabel
 } from "../🏷️labels/🟦️.tsx";
 import { FRAMEWORK_CATEGORY_TOOL_ID } from "../🔩️plumbing/🟦️.ts";
-import { renderStagedArgControl, windowMeasuresToTreeItems } from "../🪟️window-panes/🟦️.tsx";
+import { windowMeasuresToTreeItems } from "../🪟️window-panes/🎚️window-measures/🟦️.tsx";
+import { renderStagedArgControl } from "../🪟️window-panes/📝️staged-args/🟦️.tsx";
 
 //#region ShellHelpers
 //#region 🎛️CommandRegistry

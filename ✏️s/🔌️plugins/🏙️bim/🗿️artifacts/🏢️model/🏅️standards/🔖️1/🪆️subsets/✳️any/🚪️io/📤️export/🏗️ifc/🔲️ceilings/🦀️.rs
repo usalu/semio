@@ -3,11 +3,11 @@
 //! has no boundary to read back). The ceiling type is an `IfcCoveringType` (`CEILING`) with the same layer set, and the base quantities are the `Qto_CoveringBaseQuantities` of the take-off.
 //! 📎 <https://standards.buildingsmart.org/IFC/RELEASE/IFC2x3/TC1/HTML/ifcsharedbldgelements/lexical/ifccovering.htm>
 
-use super::brep::{brep_definition, mesh_where};
-use super::data::label;
-use super::frames::{ccw, cw};
-use super::writer::{en, real, rf, unset};
-use super::{Export, Quantity};
+use crate::standards::v1::subsets::any::io::export::ifc::brep::{brep_definition, mesh_where};
+use crate::standards::v1::subsets::any::io::export::ifc::writer::label;
+use crate::standards::v1::subsets::any::io::export::ifc::frames::{ccw, cw};
+use crate::standards::v1::subsets::any::io::export::ifc::writer::{en, real, rf, unset};
+use crate::standards::v1::subsets::any::io::export::ifc::context::{Export, Quantity};
 use crate::standards::v1::subsets::any::schema::snapshot::Ceiling;
 
 /// 🏷️ The `Semio_Authoring` row that holds the authored record of a sloped ceiling.

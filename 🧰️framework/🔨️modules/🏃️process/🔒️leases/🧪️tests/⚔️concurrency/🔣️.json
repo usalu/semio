@@ -109,5 +109,12 @@
         "cleanup": true
       }
     }
-  ]
+  ],
+  "wireProjection": {
+    "maximumElapsedMilliseconds": 10000,
+    "maximumDeadlineIncreaseMilliseconds": 0,
+    "originalOwnerPreserved": true,
+    "capabilitiesPreserved": true,
+    "actualWireSha256": true
+  }
 }

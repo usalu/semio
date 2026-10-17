@@ -1,6 +1,6 @@
 //! 🧪️ The viewer's read-only preview window renders every bundled example.
 
-use super::*;
+use crate::viewer::wfc3d::modes::view::windows::preview::*;
 
 #[test]
 fn the_window_kind_is_the_read_only_view_surface() {

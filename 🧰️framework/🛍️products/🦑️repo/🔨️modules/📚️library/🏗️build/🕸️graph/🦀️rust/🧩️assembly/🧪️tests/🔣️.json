@@ -1,0 +1,442 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "seeded-chain",
+      "seed": [
+        {
+          "source": "rust-unit-app",
+          "target": "rust-unit-base",
+          "type": "static",
+          "sourceFile": "é/😀\\\"\n.rs"
+        },
+        {
+          "source": "rust-unit-app",
+          "target": "rust-unit-base",
+          "type": "implicit"
+        }
+      ],
+      "batches": [
+        {
+          "owner": "build",
+          "projects": [
+            {
+              "name": "rust-unit-base",
+              "dependencies": []
+            },
+            {
+              "name": "rust-unit-app",
+              "dependencies": [
+                "rust-unit-base:compile"
+              ]
+            }
+          ],
+          "expected": {
+            "roots": [
+              "rust-unit-app"
+            ],
+            "dependencies": [
+              {
+                "source": "build",
+                "target": "rust-unit-app",
+                "type": "implicit"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "diamond",
+      "seed": [],
+      "batches": [
+        {
+          "owner": "build",
+          "projects": [
+            {
+              "name": "rust-unit-base",
+              "dependencies": []
+            },
+            {
+              "name": "rust-unit-left",
+              "dependencies": [
+                "rust-unit-base:compile"
+              ]
+            },
+            {
+              "name": "rust-unit-right",
+              "dependencies": [
+                "rust-unit-base:compile"
+              ]
+            },
+            {
+              "name": "rust-unit-app",
+              "dependencies": [
+                "rust-unit-left:compile",
+                "rust-unit-right:compile"
+              ]
+            }
+          ],
+          "expected": {
+            "roots": [
+              "rust-unit-app"
+            ],
+            "dependencies": [
+              {
+                "source": "rust-unit-left",
+                "target": "rust-unit-base",
+                "type": "implicit"
+              },
+              {
+                "source": "rust-unit-right",
+                "target": "rust-unit-base",
+                "type": "implicit"
+              },
+              {
+                "source": "rust-unit-app",
+                "target": "rust-unit-left",
+                "type": "implicit"
+              },
+              {
+                "source": "rust-unit-app",
+                "target": "rust-unit-right",
+                "type": "implicit"
+              },
+              {
+                "source": "build",
+                "target": "rust-unit-app",
+                "type": "implicit"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "disjoint-order",
+      "seed": [],
+      "batches": [
+        {
+          "owner": "build",
+          "projects": [
+            {
+              "name": "rust-unit-z",
+              "dependencies": [
+                "rust-unit-base:compile"
+              ]
+            },
+            {
+              "name": "rust-unit-a",
+              "dependencies": [
+                "rust-unit-base:compile"
+              ]
+            },
+            {
+              "name": "rust-unit-base",
+              "dependencies": []
+            }
+          ],
+          "expected": {
+            "roots": [
+              "rust-unit-z",
+              "rust-unit-a"
+            ],
+            "dependencies": [
+              {
+                "source": "rust-unit-z",
+                "target": "rust-unit-base",
+                "type": "implicit"
+              },
+              {
+                "source": "rust-unit-a",
+                "target": "rust-unit-base",
+                "type": "implicit"
+              },
+              {
+                "source": "build",
+                "target": "rust-unit-z",
+                "type": "implicit"
+              },
+              {
+                "source": "build",
+                "target": "rust-unit-a",
+                "type": "implicit"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "overlap",
+      "seed": [
+        {
+          "source": "external",
+          "target": "existing",
+          "type": "dynamic"
+        }
+      ],
+      "batches": [
+        {
+          "owner": "first",
+          "projects": [
+            {
+              "name": "rust-unit-app",
+              "dependencies": [
+                "rust-unit-base:compile"
+              ]
+            },
+            {
+              "name": "rust-unit-base",
+              "dependencies": []
+            }
+          ],
+          "expected": {
+            "roots": [
+              "rust-unit-app"
+            ],
+            "dependencies": [
+              {
+                "source": "rust-unit-app",
+                "target": "rust-unit-base",
+                "type": "implicit"
+              },
+              {
+                "source": "first",
+                "target": "rust-unit-app",
+                "type": "implicit"
+              }
+            ]
+          }
+        },
+        {
+          "owner": "zweite:😀",
+          "projects": [
+            {
+              "name": "rust-unit-sibling",
+              "dependencies": [
+                "rust-unit-base:compile"
+              ]
+            },
+            {
+              "name": "rust-unit-base",
+              "dependencies": []
+            },
+            {
+              "name": "rust-unit-app",
+              "dependencies": [
+                "rust-unit-base:compile"
+              ]
+            }
+          ],
+          "expected": {
+            "roots": [
+              "rust-unit-sibling",
+              "rust-unit-app"
+            ],
+            "dependencies": [
+              {
+                "source": "rust-unit-sibling",
+                "target": "rust-unit-base",
+                "type": "implicit"
+              },
+              {
+                "source": "zweite:😀",
+                "target": "rust-unit-sibling",
+                "type": "implicit"
+              },
+              {
+                "source": "zweite:😀",
+                "target": "rust-unit-app",
+                "type": "implicit"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "delimiter-and-duplicates",
+      "seed": [
+        {
+          "source": "owner",
+          "target": "rust-unit-x:rust-unit-a",
+          "type": "static"
+        }
+      ],
+      "batches": [
+        {
+          "owner": "owner:rust-unit-x",
+          "projects": [
+            {
+              "name": "rust-unit-a",
+              "dependencies": [
+                "rust-unit-base:compile",
+                "rust-unit-base:compile"
+              ]
+            },
+            {
+              "name": "rust-unit-base",
+              "dependencies": []
+            }
+          ],
+          "expected": {
+            "roots": [
+              "rust-unit-a"
+            ],
+            "dependencies": [
+              {
+                "source": "rust-unit-a",
+                "target": "rust-unit-base",
+                "type": "implicit"
+              },
+              {
+                "source": "owner:rust-unit-x",
+                "target": "rust-unit-a",
+                "type": "implicit"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "empty",
+      "seed": [],
+      "batches": [
+        {
+          "owner": "build",
+          "projects": [],
+          "expected": {
+            "roots": [],
+            "dependencies": []
+          }
+        }
+      ]
+    }
+  ],
+  "invalid": [
+    {
+      "name": "duplicate",
+      "projects": [
+        {
+          "name": "rust-unit-a",
+          "dependencies": []
+        },
+        {
+          "name": "rust-unit-a",
+          "dependencies": []
+        }
+      ],
+      "message": "Duplicate selected Rust project"
+    },
+    {
+      "name": "missing",
+      "projects": [
+        {
+          "name": "rust-unit-a",
+          "dependencies": [
+            "rust-unit-missing:compile"
+          ]
+        }
+      ],
+      "message": "Missing selected Rust project dependency"
+    },
+    {
+      "name": "cycle",
+      "projects": [
+        {
+          "name": "rust-unit-a",
+          "dependencies": [
+            "rust-unit-b:compile"
+          ]
+        },
+        {
+          "name": "rust-unit-b",
+          "dependencies": [
+            "rust-unit-a:compile"
+          ]
+        }
+      ],
+      "message": "Cyclic selected Rust graph"
+    },
+    {
+      "name": "reference",
+      "projects": [
+        {
+          "name": "rust-unit-a",
+          "dependencies": [
+            "rust-unit-a:build"
+          ]
+        }
+      ],
+      "message": "Canonical selected Rust project references required"
+    }
+  ],
+  "growth": [
+    {
+      "projects": 4097,
+      "roots": 4096,
+      "newEdges": 8192,
+      "references": 4096,
+      "membershipChecks": 8192
+    },
+    {
+      "projects": 65536,
+      "roots": 65535,
+      "newEdges": 131070,
+      "references": 65535,
+      "membershipChecks": 131070
+    }
+  ],
+  "hooks": [
+    "seed-proxy",
+    "project-getter",
+    "refs-proxy"
+  ],
+  "failures": [
+    "error",
+    "undefined"
+  ],
+  "epochs": [
+    {
+      "target": "source",
+      "stage": "entry"
+    },
+    {
+      "target": "source",
+      "stage": "delivery"
+    },
+    {
+      "target": "policy",
+      "stage": "entry"
+    },
+    {
+      "target": "policy",
+      "stage": "delivery"
+    },
+    {
+      "target": "budget",
+      "stage": "entry"
+    },
+    {
+      "target": "budget",
+      "stage": "delivery"
+    }
+  ],
+  "extents": [
+    {
+      "delta": 0,
+      "accepted": true
+    },
+    {
+      "delta": -1,
+      "accepted": false
+    }
+  ],
+  "invalidLimits": [
+    1,
+    536870913,
+    2.5
+  ]
+}

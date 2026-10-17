@@ -1,10 +1,10 @@
 //! 🧪️ The whole-record replace edit is admitted by its declared footprint, reaches Prepared through the real canonical sealer and closes under exact quoted grants.
-use super::{WindowConfigReplaceEdit,WindowConfigReplaceMutation};
-use super::retained_pack_load_tests::{RetainedLoadCameraConfig as State,RetainedLoadCameraConfigMutation as Mutation};
-use crate::store;
-use semio_framework_value::retirement::{OwnedValueRetirementFactory,SharedValueRetirementFactory};
+use semio_framework_plugin_window_config::{WindowConfigReplaceEdit, WindowConfigReplaceMutation};
+use crate::window_config_tests::retained_pack_load_tests::{RetainedLoadCameraConfig as State, RetainedLoadCameraConfigMutation as Mutation};
+use semio_framework_os_kernel as store;
+use semio_framework_value::retirement::{OwnedValueRetirementFactory, SharedValueRetirementFactory};
 use std::sync::Arc;
-use store::snapshot_clone_preparation::{drive_one_item_preparation_law,RetainedCloneEdit,CONFIG_EDIT_RETAINED_BASELINE_BYTES};
+use semio_framework_os_kernel::snapshot_clone_preparation::{drive_one_item_preparation_law, RetainedCloneEdit, CONFIG_EDIT_RETAINED_BASELINE_BYTES};
 
 impl WindowConfigReplaceMutation<State> for Mutation {
     fn replacement(&self) -> &State { let Self::Snapshot { config } = self; config }
@@ -26,5 +26,4 @@ fn window_config_replace_reaches_prepared_through_the_real_sealer_and_closes_und
     assert_eq!(*law.post, next);
     assert_eq!(law.inverse, vec![Mutation::Snapshot { config: Box::new(base) }]);
     assert!(law.peak_live_capacity_bytes <= footprint.retained_bytes, "sealed replace peaks at {} but declares {}", law.peak_live_capacity_bytes, footprint.retained_bytes);
-    eprintln!("[DEBUG] window config replace reached Prepared in {} turns, peak live {} of declared {}", law.turns, law.peak_live_capacity_bytes, footprint.retained_bytes);
 }

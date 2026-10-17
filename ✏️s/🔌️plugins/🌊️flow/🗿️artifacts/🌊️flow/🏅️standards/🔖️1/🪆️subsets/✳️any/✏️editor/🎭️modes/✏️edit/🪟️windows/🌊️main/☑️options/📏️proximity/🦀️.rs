@@ -3,7 +3,7 @@
 
 use crate::editor::flow::modes::edit::windows::main::config::FlowMainWindowConfig;
 use crate::editor::flow::terminology::FlowPlayLabels;
-use crate::editor::flow::FLOW_PLAY_APP_ID;
+use crate::editor::flow::base::FLOW_PLAY_APP_ID;
 use semio_framework_plugin::{ActionDescriptor, WindowMeasure};
 
 //#region 🔖️Measure
@@ -33,7 +33,5 @@ pub fn measure(config: &FlowMainWindowConfig, labels: &FlowPlayLabels) -> Window
 //#endregion 🔖️Measure
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

@@ -31,7 +31,6 @@ test("dashboard launch preserves unrelated entries and projects exact owned comm
  expect(projectDashboardLaunch(actual,commands,fixture.ticket)).toEqual(actual);
  const peerAfter={...actual,configurations:[...actual.configurations,{...fixture.unrelated,name:"Peer Appended Later"}]};
  expect(projectDashboardLaunch(peerAfter,commands,fixture.ticket)).toEqual(peerAfter);
- console.log(`[DEBUG] dashboard launch commands=${commands.length} locales=en,de peerPreserved=true idempotent=true`);
 });
 test("parameter values remain raw arguments and never enter shell command text",async()=>{
  const {projectDashboardLaunch,ticketLaunchCommands,launchParameterEnvironment,launchParameterArguments}=await owner();
@@ -43,7 +42,6 @@ test("parameter values remain raw arguments and never enter shell command text",
  expect(first.env[name]).toContain("${input:");
  expect(input.type).toBe("promptString");
  for(const id of fixture.unsafeIds)expect(()=>projectDashboardLaunch({version:"0.2.0",configurations:[],inputs:[]},[{...commands[0],id}],fixture.ticket)).toThrow();
- console.log(`[DEBUG] dashboard launch raw parameter vectors=${fixture.values.length} unsafeIds=${fixture.unsafeIds.length} shellInterpolation=false`);
 });
 
 test("current ticket declarations and generated launch routes are admitted by their actual owner schemas",async()=>{
@@ -63,12 +61,11 @@ test("current ticket declarations and generated launch routes are admitted by th
  for(const command of commands)expect(rows.filter((row:any)=>row.command==="bun repo run @semio-tech/repo-dashboard-rs:launch -- run "+command.id).length).toBe(2);
  const project=JSON.parse(readFileSync(resolve(dashboard,"📦️packages/🦀️rust/📋️project.json"),"utf8"));
  expect(project.targets.launch.options.command).toBe("bun ./📜️script.ts launch");
- console.log(`[DEBUG] dashboard current declaration schema=true tools=${commands.length} launchConfigurations=${rows.length} BuildRouting=true`);
 });
 
 /** 🧾️ Unrelated serialized data is preserved without interpreting backend-looking words. */
 test("launch publication preserves unrelated serialized values without backend compatibility rewrites",async()=>{
  const api=await owner(),actual=api.projectDashboardLaunch(structuredClone(fixture.unrelatedSerialized),[],fixture.ticket),expected=applyPatch(structuredClone(fixture.unrelatedSerialized),[],true).newDocument;
  expect(actual).toEqual(expected);expect(output(actual),JSON.stringify(output.errors)).toBe(true);const first=actual.configurations[0],input=actual.inputs?.[0];if(!first||!input)throw Error("Actual preserved command and input required");expect(first.env.SEMIO_PREVIEW_JSON).toBe(fixture.unrelatedSerialized.configurations[0].env.SEMIO_PREVIEW_JSON);expect(input.options).toEqual(["nx","bazel"]);
- const ts=await import("typescript"),source=readFileSync(resolve(dashboard,"🌳️command-tree/🚀️launch/🟦️.ts"),"utf8"),file=ts.createSourceFile("launch.ts",source,ts.ScriptTarget.Latest,true),exports=file.statements.filter(ts.isFunctionDeclaration).filter(node=>node.modifiers?.some(token=>token.kind===ts.SyntaxKind.ExportKeyword)).map(node=>node.name?.text);expect(exports).not.toContain("normalizeDashboardLaunchBuildV1");console.log("[DEBUG] Actual dashboard projection agrees with independent RFC6902 identity and leaves literal serialized backend labels/choices unchanged; AST has no compatibility normalizer");
+ const ts=await import("typescript"),source=readFileSync(resolve(dashboard,"🌳️command-tree/🚀️launch/🟦️.ts"),"utf8"),file=ts.createSourceFile("launch.ts",source,ts.ScriptTarget.Latest,true),exports=file.statements.filter(ts.isFunctionDeclaration).filter(node=>node.modifiers?.some(token=>token.kind===ts.SyntaxKind.ExportKeyword)).map(node=>node.name?.text);expect(exports).not.toContain("normalizeDashboardLaunchBuildV1");
 });

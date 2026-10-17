@@ -6,9 +6,11 @@
 //! 🪟️ Every stepper still tags the window instance the panel resolves to (the render's own, else the
 //! focused pane, else the first live pane) — and none when the host mounts no pane at all, since an
 //! empty `windowId` is refused as an unknown window instance while the commands never need one.
+use crate::editor::puzzle5d::interaction::ui_label;
 
 use crate::editor::puzzle5d::terminology::Puzzle5dLabels;
-use crate::editor::puzzle5d::{ui_label, Puzzle5dScene, PUZZLE5D_PLAY_CONTROLLER_ID};
+use crate::editor::puzzle5d::view::Puzzle5dScene;
+use crate::editor::puzzle5d::entities::PUZZLE5D_PLAY_CONTROLLER_ID;
 use semio_framework_plugin::plugin_app_close_prelude::{ActionBinding, Buildable, BuiltNode, Component, HasBase, HasChildren, NumberStepperProps, Trigger};
 use semio_framework_plugin::ui_node_list;
 use semio_framework_plugin::ActionFactory;
@@ -95,7 +97,5 @@ pub fn render(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels, window_id: Opti
 //#endregion 🔖️Render
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

@@ -1,6 +1,7 @@
 //#region ➕️AddValue
 //! ➕️ One real value addition shared by direct history and contribution planning.
-use super::super::{DependencyTestDiff, DependencyTestOp, DependencyTestSnapshot};
+use crate::builder_test_hosts::builder_unit_1::dependency_fixture::{DependencyTestDiff, DependencyTestSnapshot};
+use crate::builder_test_hosts::builder_unit_1::dependency_fixture::mutations::DependencyTestOp;
 use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 
@@ -50,7 +51,8 @@ impl protocol::CompositeMutationKind<DependencyTestSnapshot, DependencyTestOp> f
     }
 }
 
+#[doc(hidden)]
 #[cfg(test)]
 #[path = "../../../../🧪️tests/➕️dependency-contribution-add-value-unit/🦀️.rs"]
-mod tests;
+pub mod tests;
 //#endregion ➕️AddValue

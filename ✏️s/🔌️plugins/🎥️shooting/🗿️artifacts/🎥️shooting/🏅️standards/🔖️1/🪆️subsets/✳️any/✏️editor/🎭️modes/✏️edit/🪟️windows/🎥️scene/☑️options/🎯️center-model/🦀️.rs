@@ -14,13 +14,11 @@ pub fn measure(labels: &ShootingLabels) -> WindowMeasure {
         label: Some(labels.measure_center_model.into()),
         pressed: true,
         text: None,
-        on_change: crate::editor::shooting::shooting_window_action("setCenterModel", None),
+        on_change: crate::editor::shooting::ui_helpers_and_io::shooting_window_action("setCenterModel", None),
     }
 }
 //#endregion 🔖️Measure
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

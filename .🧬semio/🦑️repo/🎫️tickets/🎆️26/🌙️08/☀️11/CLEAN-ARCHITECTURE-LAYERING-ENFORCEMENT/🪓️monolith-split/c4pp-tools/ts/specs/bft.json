@@ -1,0 +1,124 @@
+{
+ "source": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/c4pp-tools/orig/bft.ts",
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/📨️browser-frame-transport/🟦️.ts",
+ "rootDoc": "/** 📨️ Browser frame worker transport: the aggregator of the transport test modules, which this file imports for their registrations so the test path, the runners that name it and every test id stay as they were. */",
+ "support": {
+  "dir": "🧰️transport-test-support",
+  "doc": "/** 🧰️ Browser frame transport test support: the resolved boot descriptor, the host appearance, platform and storage defaults, the fake Worker port and the transport factory the transport test modules share. */",
+  "ranges": [
+   [
+    36,
+    97
+   ]
+  ]
+ },
+ "children": [
+  {
+   "dir": "⏱️retained-clock-deadlines",
+   "doc": "/** ⏱️ Retained clock deadlines: the retained browser clock deadline laws for animation, control and input timers against the shared render deadline fixture. */",
+   "ranges": [
+    [
+     99,
+     246
+    ]
+   ]
+  },
+  {
+   "dir": "🚀️boot-and-lifecycle-posts",
+   "doc": "/** 🚀️ Worker boot and lifecycle posts: the transferable boot, the agent bridge offer, the hidden page and the window blur posts. */",
+   "ranges": [
+    [
+     249,
+     297
+    ]
+   ],
+   "wrapDescribe": "browser frame worker transport"
+  },
+  {
+   "dir": "🌊️input-batches-and-credits",
+   "doc": "/** 🌊️ Input batches and credits: the bounded input batches, the lease release, the Hub status and lossless credits, the accessibility events and the byte credit exhaustion. */",
+   "ranges": [
+    [
+     299,
+     442
+    ]
+   ],
+   "wrapDescribe": "browser frame worker transport"
+  },
+  {
+   "dir": "📋️ime-paste-and-text-streams",
+   "doc": "/** 📋️ IME, paste and text streams: oversized IME, the chunked paste, the image data url paste target, astral code points and the JSON escaping bound. */",
+   "ranges": [
+    [
+     444,
+     501
+    ]
+   ],
+   "wrapDescribe": "browser frame worker transport"
+  },
+  {
+   "dir": "🧱️generations-faults-and-hooks",
+   "doc": "/** 🧱️ Generations, faults and hooks: the pointer slot authority, stale generations, close, protocol faults, overruns, the external UI hooks and the structured clone budget. */",
+   "ranges": [
+    [
+     503,
+     639
+    ]
+   ],
+   "wrapDescribe": "browser frame worker transport"
+  },
+  {
+   "dir": "🔎️introspection-and-image-decode",
+   "doc": "/** 🔎️ Introspection and image decode: the introspection dump, the single page image decode, the retired component response and handback, the aborted stream continuation and the asset polling gate. */",
+   "ranges": [
+    [
+     641,
+     826
+    ]
+   ],
+   "wrapDescribe": "browser frame worker transport"
+  },
+  {
+   "dir": "🖼️frame-channel-and-asset-isolation",
+   "doc": "/** 🖼️ Frame channel and asset isolation: the accepted frame and diagnostic channels, the accessibility mirror refresh, the wake after an asset refusal, the asset isolation and the row-aligned strips. */",
+   "ranges": [
+    [
+     828,
+     931
+    ]
+   ],
+   "wrapDescribe": "browser frame worker transport"
+  },
+  {
+   "dir": "🧬️boot-publication-and-seams",
+   "doc": "/** 🧬️ Boot publication and seams: the introspection hooks after boot, the platform read across the boot seam, the shell brand row and the product discovery seam boundary. */",
+   "ranges": [
+    [
+     933,
+     1049
+    ]
+   ],
+   "wrapDescribe": "browser frame worker transport"
+  },
+  {
+   "dir": "🫀️boot-liveness-watchdog",
+   "doc": "/** 🫀️ Boot liveness watchdog: the virtual clock harness, the re-arm, the phase ceilings, the silence and heartbeat laws and the third-party clock replay. */",
+   "ranges": [
+    [
+     1052,
+     1223
+    ]
+   ]
+  },
+  {
+   "dir": "🗄️renderer-module-cache",
+   "doc": "/** 🗄️ Renderer module cache: the server asserted artifact identity and the fail-soft cache. */",
+   "ranges": [
+    [
+     1225,
+     1252
+    ]
+   ]
+  }
+ ]
+}

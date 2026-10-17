@@ -6,25 +6,26 @@
 //! Run #1 here carries a bold mark, which the edit must leave untouched — that is the point of
 //! this case.
 
+use semio_framework_test_fixtures::fixture_text;
 use semio_s_artifact_stdio_semio_text_model::schema::diff::SemioTextDiff;
 use semio_s_artifact_stdio_semio_text_mutations::schema::mutations::SemioTextMutation;
 use semio_s_artifact_stdio_semio_text_model::schema::snapshot::SemioTextSnapshot;
 use protocol::Mutation;
 
-const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✏️edit-run/✍️rewrites/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✏️edit-run/✍️rewrites/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✏️edit-run/✍️rewrites/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✏️edit-run/✍️rewrites/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✏️edit-run/✍️rewrites/🎯️outcome/🔣️.json");
+static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/✏️edit-run/✍️rewrites/📸️snapshot/⬅️before/🔣️.json"));
+static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/✏️edit-run/✍️rewrites/📸️snapshot/➡️after/🔣️.json"));
+static MUTATION: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/✏️edit-run/✍️rewrites/🦠️mutation/🔣️.json"));
+static DIFF: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/✏️edit-run/✍️rewrites/🔺️diff/🔣️.json"));
+static OUTCOME: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/✏️edit-run/✍️rewrites/🎯️outcome/🔣️.json"));
 
 fn before() -> SemioTextSnapshot {
-    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("edit-run before snapshot decodes")
+    semio_framework_pack_json::from_json_str((*BEFORE), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("edit-run before snapshot decodes")
 }
 fn expected_after() -> SemioTextSnapshot {
-    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("edit-run after snapshot decodes")
+    semio_framework_pack_json::from_json_str((*AFTER), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("edit-run after snapshot decodes")
 }
 fn edit_run() -> SemioTextMutation {
-    semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("edit-run mutation decodes")
+    semio_framework_pack_json::from_json_str((*MUTATION), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("edit-run mutation decodes")
 }
 
 /// ▶️ Only `content` changes — the run's language tag and its bold mark are left alone.
@@ -59,14 +60,14 @@ async fn the_undo_edit_run_restores_the_original_body() {
 /// `EditRun` carries no `rename_all`, so the field stays snake_case `new_text` on the wire.
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
-    for (label, text) in [("before", BEFORE), ("after", AFTER)] {
+    for (label, text) in [("before", (*BEFORE)), ("after", (*AFTER))] {
         let decoded: SemioTextSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
         let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "edit-run/rewrites-the-marked-runs-content: committed {label} JSON is not canonical");
     }
     let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&(edit_run()))).expect("edit-run mutation encodes");
-    let original: serde_json::Value = serde_json::from_str(MUTATION).expect("edit-run mutation reparses");
+    let original: serde_json::Value = serde_json::from_str((*MUTATION)).expect("edit-run mutation reparses");
     assert_eq!(reencoded, original, "edit-run/rewrites-the-marked-runs-content: committed mutation JSON is not canonical");
 }
 
@@ -74,7 +75,7 @@ async fn committed_json_is_canonical() {
 /// `mutation.target-missing` rejection nor the `mutation.no-op` warning may fire.
 #[semio_framework_async_macros::async_test]
 async fn declared_outcome_holds_without_a_no_op_warning() {
-    let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
+    let outcome: serde_json::Value = serde_json::from_str((*OUTCOME)).expect("outcome decodes");
     assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("applied"), "edit-run/rewrites-the-marked-runs-content: this case is declared applied");
     let produced = edit_run().diff(&before());
     assert!(produced.messages().is_empty(), "editing a run to a genuinely different body must not raise mutation.no-op");
@@ -86,24 +87,24 @@ async fn produces_committed_diff() {
     let base = before();
     let outcome = <SemioTextMutation as Mutation<SemioTextSnapshot>>::diff(&edit_run(), &base);
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
-    let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
+    let committed: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff decodes");
     assert_eq!(produced, committed, "edit-run/rewrites-the-marked-runs-content: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
 
 /// 🔣️ The committed diff is canonical and still carries the bold mark on the rewritten run.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
-    let decoded: SemioTextDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed edit-run diff decodes");
+    let decoded: SemioTextDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed edit-run diff decodes");
     let _list = decoded.runs.as_ref().expect("an applied edit-run diff carries a runs list");
     let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("diff re-encodes");
-    let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
+    let original: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff reparses");
     assert_eq!(reencoded, original, "edit-run/rewrites-the-marked-runs-content: committed diff JSON is not canonical");
 }
 
 /// 🩹 Applying the committed diff to `before` yields `after`.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: SemioTextDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed edit-run diff decodes");
+    let decoded: SemioTextDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed edit-run diff decodes");
     let produced = protocol::apply_diff(&decoded, &before()).expect("committed edit-run diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "edit-run/rewrites-the-marked-runs-content: committed diff did not carry before to after");
 }

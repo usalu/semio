@@ -4,7 +4,8 @@
 
 use crate::editor::puzzle5d::modes::edit::windows::board2d::utilities::brush::UTILITY_ID;
 use crate::editor::puzzle5d::precompute::{puzzle3d_config, puzzle3d_kind_catalogs, puzzle3d_snapshot, puzzle5d_authored_kind_catalogs, Puzzle5dPlannerBoard, Puzzle5dPlannerToolRunJob};
-use crate::editor::puzzle5d::{Puzzle5dDocument, Puzzle5dFastener, Puzzle5dPart, Puzzle5dPlayApp};
+use crate::editor::puzzle5d::interaction::Puzzle5dEditor;
+use crate::editor::puzzle5d::entities::{Puzzle5dDocument, Puzzle5dFastener, Puzzle5dPart};
 use crate::editor::puzzle5d::snapshot::Puzzle5dPlaySnapshot;
 use semio_framework_plugin::{EditorApp, Fault, ToolRunJob, ToolRunJobPurpose, ToolRunJobRequest};
 use semio_s_artifact_puzzle_3d_editor_modes::windows::main::utilities::brush as brush3d;
@@ -12,11 +13,11 @@ use semio_s_artifact_puzzle_3d_precompute_brush::BrushSuggestionsFound;
 use std::sync::Arc;
 
 /// 🧵️ Builds the brush suggestions run job for the framework ledger; `None` for any other tool.
-pub fn build_run_job(request: ToolRunJobRequest<'_, EditorApp<Puzzle5dPlayApp>>) -> Result<Option<ToolRunJob>, Fault> {
+pub fn build_run_job<A: Puzzle5dEditor>(request: ToolRunJobRequest<'_, EditorApp<A>>) -> Result<Option<ToolRunJob>, Fault> {
     if request.tool_id != UTILITY_ID || request.purpose != ToolRunJobPurpose::Run {
         return Ok(None);
     }
-    let document: Puzzle5dDocument = crate::editor::puzzle5d::puzzle5d_document_from_snapshot(request.snapshot.typed()).map_err(|error| Fault::from(format!("puzzle5d-brush-run-document: {error}")))?;
+    let document: Puzzle5dDocument = crate::editor::puzzle5d::entities::puzzle5d_document_from_snapshot(request.snapshot.typed()).map_err(|error| Fault::from(format!("puzzle5d-brush-run-document: {error}")))?;
     let board = Puzzle5dPlannerBoard::new(&document, &[])?;
     let snapshot = Arc::new(puzzle3d_snapshot(&document, puzzle5d_authored_kind_catalogs(&request.snapshot)?)?);
     let inner = brush3d::build_run_job(ToolRunJobRequest {
@@ -52,7 +53,5 @@ pub fn puzzle5d_brush_placement(snapshot: &Puzzle5dPlaySnapshot, document: &Puzz
 }
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

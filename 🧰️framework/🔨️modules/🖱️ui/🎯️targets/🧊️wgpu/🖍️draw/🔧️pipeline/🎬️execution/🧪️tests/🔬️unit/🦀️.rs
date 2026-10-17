@@ -317,7 +317,3 @@ fn rounded_avatar_rasters_keep_their_radius_through_the_draw_packet() {
     assert_eq!(draw.layers[0].raster_instances[0].1.uv_rect, uv);
     assert_eq!(draw.layers[0].raster_instances[1].1.params[0], 0.0);
 }
-
-/// 🎨️ LAW (ticket 26/09/23 session 14d, WG11): every edit that turns the lit mesh shader into the painted one finds its anchor
-/// EXACTLY once — the emissive anchor once lost its match when the lit shader gained `+ in.emissive_cutoff.rgb`, the
-/// `lit_color` declaration was silently dropped, and every GPU context refused `world3d_painted_shader`.

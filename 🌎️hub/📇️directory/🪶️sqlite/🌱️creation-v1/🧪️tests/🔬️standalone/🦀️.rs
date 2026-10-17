@@ -1,5 +1,6 @@
 //! 🧪️ Neutral genesis transaction cuts run against real SQLite writers and independent row reads.
 
+use semio_framework_test_fixtures::fixture_text;
 use semio_hub_artifact_creation::io::artifact_creation_command_digest_v1;
 
 use semio_hub_artifact_authority::chunk_cas::{ArtifactChunkBlobStore, ArtifactChunkCasStorage, FsArtifactChunkCasStorage, artifact_cas_manifest_locator_v1, prepare_artifact_cas_manifest_v1, prepare_artifact_cas_ownership_v1};
@@ -125,7 +126,7 @@ impl GenesisFixture {
             })
             .await
             .unwrap();
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🗿️artifact-authority/🌱️creation/🧪️tests/🧫️fixtures/📚️operation-v1/🔣️.json")).unwrap();
+        let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../🗿️artifact-authority/🌱️creation/🧪️tests/🧫️fixtures/📚️operation-v1/🔣️.json")).unwrap();
         let mut intent: ArtifactCreationIntentV1 = semio_framework_pack_json::from_json_str(&fixture["intent"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         let mut prepared: ArtifactCreationPreparedV1 = semio_framework_pack_json::from_json_str(&fixture["prepared"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         intent.actor = ArtifactCreationActorV1 { user_id: "seed".into(), session_id: issued.record.id, authorization_generation: issued.record.authorization_generation };
@@ -244,7 +245,7 @@ async fn genesis_physical_pair_and_sqlite_restart_preserve_exact_receipt() {
 async fn genesis_delivery_lease_serializes_invalidation_and_requires_replay() {
     use std::future::Future;
     use std::task::Poll;
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🗿️artifact-authority/🌱️creation/🧪️tests/🧫️fixtures/🧪️transaction-v1/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../🗿️artifact-authority/🌱️creation/🧪️tests/🧫️fixtures/🧪️transaction-v1/🔣️.json")).unwrap();
     assert_eq!(fixture["cases"].as_array().unwrap().iter().filter(|row| row["delivery"] == "reconnect").count(), 2);
     let f = GenesisFixture::create().await;
     let mut invalidations = f.service.subscribe_delivery_invalidations();
@@ -283,7 +284,7 @@ use semio_hub_directory_contract::now_ms;
 
     #[tokio::test]
     async fn genesis_neutral_transactions_are_atomic_replayable_and_authorized() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🗿️artifact-authority/🌱️creation/🧪️tests/🧫️fixtures/🧪️transaction-v1/🔣️.json")).unwrap();
+        let fixture: serde_json::Value = serde_json::from_str(super::fixture_text!("../../../../../🗿️artifact-authority/🌱️creation/🧪️tests/🧫️fixtures/🧪️transaction-v1/🔣️.json")).unwrap();
         for row in fixture["cases"].as_array().unwrap() {
             let kind = row["kind"].as_str().unwrap();
             let f = GenesisFixture::create().await;
@@ -428,7 +429,7 @@ use semio_hub_directory_contract::now_ms;
 
     #[tokio::test]
     async fn genesis_accepted_only_recovery_has_no_prepared_or_public_side_effects() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🗿️artifact-authority/🌱️creation/🧪️tests/🧫️fixtures/🧪️transaction-v1/🧯️accepted-recovery.json")).unwrap();
+        let fixture: serde_json::Value = serde_json::from_str(super::fixture_text!("../../../../../🗿️artifact-authority/🌱️creation/🧪️tests/🧫️fixtures/🧪️transaction-v1/🧯️accepted-recovery.json")).unwrap();
         for row in fixture["cases"].as_array().unwrap() {
             let (sqlite, intent, _) = GenesisFixture::accepted().await;
             let head = sqlite.head_seq().await.unwrap();

@@ -1,8 +1,21 @@
 //! 🏀️ Staged `host-events` members of the `instance-dispatch` use cases, as methods of the borrowed bundle (WP7 of the instance family).
 //!
 //! 📣️ Host events: the window facts delivered to the app as ordinary typed operations.
-use super::*;
-use crate::tool_jobs::time_travel;
+use semio_framework_plugin_decl_emission::{ActionMeta, Emit, HostEvent};
+use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use pack::snapshot::ArtifactPack;
+use crate::dispatch_bundle::DispatchCtx;
+use semio_framework_value::DslValue;
+use semio_framework::{Fault, FaultCode, FaultFrom, FaultOrigin, ViewModel};
+use std::future::Future;
+use semio_framework_plugin_instance_extension::InstanceExtension;
+use semio_framework::kernel::{InvocationResult, UiDirtyScope};
+use store::{MemberFactory, Mutation, SpaceMember};
+use protocol::OpText;
+use semio_framework_plugin_reactor_app::PluginApp;
+use semio_framework_plugin_instance_jobs::jobs_components::ToolOperations;
+use semio_framework_ui_contract::*;
 
 impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceExtension> DispatchCtx<'ctx, A, M, X> {
     /// 📨️ Ends the event's window's open gesture with the fact's reason (the runtime's ONE mapping, design §22.10), then
@@ -29,7 +42,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
     /// 🧰️ Delivers [`HostEvent::UtilityChanged`] for every window whose utility `meta`'s view moved since a dispatch
     /// last showed it — the targeted window reads the per-call overlay, every other one the view's map, and a window
     /// the view names no utility for is unknown, never a switch — and remembers the view's window roster.
-    pub(super) async fn deliver_utility_host_events(&mut self, meta: &ActionMeta, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<(), Fault> {
+    pub async fn deliver_utility_host_events(&mut self, meta: &ActionMeta, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<(), Fault> {
         let Some(view) = meta.view_state.as_ref().filter(|_| !self.host_events.delivering_host_event) else { return Ok(()) };
         if !view.window_instances.is_empty() && self.host_events.host_event_roster != view.window_instances {
             self.host_events.host_event_roster = view.window_instances.clone();
@@ -57,7 +70,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
     }
 
     /// 🌐️ Delivers one instance-wide event, built per window, to every window of `meta`'s view, else of the last roster.
-    pub(crate) async fn deliver_host_event_to_every_window(&mut self, event: impl Fn(String) -> HostEvent, meta: &ActionMeta, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<(), Fault> {
+    pub async fn deliver_host_event_to_every_window(&mut self, event: impl Fn(String) -> HostEvent, meta: &ActionMeta, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<(), Fault> {
         self.as_render().end_every_gesture(&event(String::new()));
         let roster = meta.view_state.as_ref().map(|view| view.window_instances.as_slice()).filter(|roster| !roster.is_empty()).unwrap_or(&self.host_events.host_event_roster);
         let windows: Vec<String> = roster.iter().map(|window| window.id.clone()).collect();
@@ -68,7 +81,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
     }
 
     /// 🌐️ Delivers [`HostEvent::BaseMoved`] to every window once a remote edit moved the base, as the local actor.
-    pub(crate) async fn deliver_base_moved(&mut self, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<(), Fault> {
+    pub async fn deliver_base_moved(&mut self, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<(), Fault> {
         let Some(instance_id) = self.tools.live_runtime_instance_id else { return Ok(()) };
         let meta = ActionMeta { actor: self.stores.store.local_actor_id().0.clone(), instance_id, view_state: None };
         self.deliver_host_event_to_every_window(|window_id| HostEvent::BaseMoved { window_id }, &meta, identity, cx).await
@@ -76,7 +89,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
 
     /// 📨️ `hostEvent{windowId, kind}`: the host-forwarded window fact, delivered at once; an unknown kind or a
     /// missing window is refused.
-    pub(super) async fn dispatch_host_event_action(&mut self, args: Option<&DslValue>, meta: &ActionMeta, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<InvocationResult, Fault> {
+    pub async fn dispatch_host_event_action(&mut self, args: Option<&DslValue>, meta: &ActionMeta, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<InvocationResult, Fault> {
         let text = |key: &str| args.and_then(|value| value.get(key)).and_then(DslValue::as_str);
         let event = text(semio_framework::HOST_EVENT_ARG_WINDOW_ID).zip(text(semio_framework::HOST_EVENT_ARG_KIND)).and_then(|(window_id, kind)| HostEvent::forwarded(window_id, kind));
         let Some(event) = event else {

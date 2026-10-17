@@ -51,10 +51,13 @@ impl protocol::MutationDiff<DependencyTestSnapshot> for DependencyTestDiff {
     }
 }
 
+#[doc(hidden)]
 #[path = "../../🧪️testing/🔗️dependency-contribution/🧬️mutations/🦀️.rs"]
-pub(crate) mod mutations;
-pub use mutations::{AddValue, DependencyTestOp};
+pub mod mutations;
+pub use crate::builder_test_hosts::builder_unit_1::dependency_fixture::mutations::add_value::AddValue;
+pub use crate::builder_test_hosts::builder_unit_1::dependency_fixture::mutations::DependencyTestOp;
 
+#[doc(hidden)]
 #[path = "../🔗️dependency-contribution-unit/🦀️.rs"]
-mod tests;
+pub mod tests;
 //#endregion 🔗️DependencyContributionFixture

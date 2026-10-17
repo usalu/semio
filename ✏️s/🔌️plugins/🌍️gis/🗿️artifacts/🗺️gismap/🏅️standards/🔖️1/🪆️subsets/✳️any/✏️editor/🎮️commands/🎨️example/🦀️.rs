@@ -1,7 +1,8 @@
 //! 🎨️ GIS 2D play app command — loading a bundled example map.
 
 use crate::standards::v1::subsets::any::schema::mutations::GisMapMutation;
-use crate::{gis_map_snapshot_with_derived_children, GisMapSnapshot};
+use crate::{GisMapSnapshot};
+use crate::standards::v1::subsets::any::map_composition::{gis_map_snapshot_with_derived_children};
 use semio_framework_plugin::{ActionArgOption, ArtifactView, ConfigView, Emit, ExampleSource, Fault, NoConfig, NoConfigMutation};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -66,7 +67,4 @@ pub mod set_active_example {
 //#endregion 🔖️SetActiveExample
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

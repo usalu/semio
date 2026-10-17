@@ -8,9 +8,8 @@ pub mod config;
 #[path = "🌡️envelope/🦀️.rs"]
 pub mod envelope;
 
-use self::config::BimWorldWindowConfig;
 use crate::editor::bim::entities::kind_holding;
-use crate::editor::bim::gestures::session::{Preview, Shape};
+use crate::editor::bim::marks::{Preview, Shape};
 use crate::editor::bim::interaction::BIM_ELEMENT_DOMAIN;
 use crate::editor::bim::terminology::BimLabels;
 use crate::render::world::{mesh_data, overview_orbit, world_bounds};
@@ -58,18 +57,18 @@ pub fn definition() -> WindowKindDefinition {
 
 //#region 🔖️Visibility
 /// 🎭️ The phase filter of the window: its `view_phase` key (`all`, `existing`, `new`, `demolished`, `temporary`), every phase for an empty or unknown key.
-pub fn view_phase(config: &BimWorldWindowConfig) -> ViewPhase {
+pub fn view_phase(config: &config::BimWorldWindowConfig) -> ViewPhase {
     ViewPhase::parse(&config.view_phase).unwrap_or_default()
 }
 
 /// 🔭️ Whether the world box of the solid meets the section box of the window (six values: the corner with the smallest coordinates, then the largest; none means no box).
-fn in_box(solid: &ElementSolid, config: &BimWorldWindowConfig) -> bool {
+fn in_box(solid: &ElementSolid, config: &config::BimWorldWindowConfig) -> bool {
     let [low_x, low_y, low_z, high_x, high_y, high_z] = config.section_box[..] else { return true };
     world_bounds([solid]).is_none_or(|(min, max)| min[0] <= high_x && max[0] >= low_x && min[1] <= high_y && max[1] >= low_y && min[2] <= high_z && max[2] >= low_z)
 }
 
 /// 👁️ Whether the solid of element `id` is drawn: not on a hidden storey, on the isolated storey when there is one, and not hidden by the phase filter (the `phase-visibility` of its storey decides).
-pub fn visible(id: &str, solid: &ElementSolid, inference: &ModelInference, config: &BimWorldWindowConfig) -> bool {
+pub fn visible(id: &str, solid: &ElementSolid, inference: &ModelInference, config: &config::BimWorldWindowConfig) -> bool {
     (config.isolated_elements.is_empty() || config.isolated_elements.iter().any(|isolated| isolated == id))
         && inference.option_scope.includes(id, &config.selected_options, &config.workset_visibility)
         && in_box(solid, config)
@@ -79,7 +78,7 @@ pub fn visible(id: &str, solid: &ElementSolid, inference: &ModelInference, confi
 }
 
 /// 🧊️ The solids the window draws, in element id order.
-pub fn visible_solids<'a>(inference: &'a ModelInference, config: &BimWorldWindowConfig) -> Vec<(&'a String, &'a ElementSolid)> {
+pub fn visible_solids<'a>(inference: &'a ModelInference, config: &config::BimWorldWindowConfig) -> Vec<(&'a String, &'a ElementSolid)> {
     inference.element_solids.iter().filter(|(id, solid)| visible(id, solid, inference, config)).collect()
 }
 //#endregion 🔖️Visibility
@@ -123,7 +122,7 @@ pub fn framing_camera(solids: &[(&String, &ElementSolid)]) -> store::Viewport3dO
 }
 
 /// ✂️ The section plane of the window: it removes everything beyond `offset` on `axis`, capped so the cut reads solid.
-pub fn section_options(config: &BimWorldWindowConfig) -> Option<semio_framework_plugin::World3dModellingOptions> {
+pub fn section_options(config: &config::BimWorldWindowConfig) -> Option<semio_framework_plugin::World3dModellingOptions> {
     if !config.section_enabled {
         return None;
     }
@@ -148,8 +147,8 @@ fn point_entry(at: [f64; 3]) -> DslValue {
 
 /// 🫧️ The marks of the gesture in progress as the world's engagement preview: every path becomes the segments between its points (a closed one gets its closing segment), every dot and snap
 /// marker a point cross, all at the floor of the storey the gesture draws on. Labels have no 3D form and stay in the plan.
-pub fn preview_items(snapshot: &ModelSnapshot, inference: &ModelInference, config: &BimWorldWindowConfig, preview: &Preview) -> Vec<DslValue> {
-    let storey = crate::editor::bim::gestures::world_storey(snapshot, &config.isolated_storey);
+pub fn preview_items(snapshot: &ModelSnapshot, inference: &ModelInference, config: &config::BimWorldWindowConfig, preview: &Preview) -> Vec<DslValue> {
+    let storey = world_storey(snapshot, &config.isolated_storey);
     let z = inference.storey_levels.get(&storey).map_or(0.0, |level| level.elevation) + PREVIEW_LIFT;
     let lift = |at: [f64; 2]| [at[0], at[1], z];
     let mut items = Vec::new();
@@ -170,12 +169,12 @@ pub fn preview_items(snapshot: &ModelSnapshot, inference: &ModelInference, confi
 }
 
 /// 🎬️ The world scene of the model: camera, meshes, instances, selection and the interaction domain the host dispatches picks into.
-pub fn scene(snapshot: &ModelSnapshot, inference: &ModelInference, config: &BimWorldWindowConfig, selection: &[String], hover: &[String], revision: u32) -> semio_framework_plugin::World3dScene {
+pub fn scene(snapshot: &ModelSnapshot, inference: &ModelInference, config: &config::BimWorldWindowConfig, selection: &[String], hover: &[String], revision: u32) -> semio_framework_plugin::World3dScene {
     scene_over(snapshot, inference, config, selection, hover, revision, &Preview::default())
 }
 
 /// 🎬️ [`scene`] with the marks of the gesture in progress painted over the model as the scene's engagement preview.
-pub fn scene_over(snapshot: &ModelSnapshot, inference: &ModelInference, config: &BimWorldWindowConfig, selection: &[String], hover: &[String], revision: u32, preview: &Preview) -> semio_framework_plugin::World3dScene {
+pub fn scene_over(snapshot: &ModelSnapshot, inference: &ModelInference, config: &config::BimWorldWindowConfig, selection: &[String], hover: &[String], revision: u32, preview: &Preview) -> semio_framework_plugin::World3dScene {
     let solids = visible_solids(inference, config);
     let mut meshes: Vec<DslValue> = solids.iter().map(|(id, solid)| mesh_entry(id, snapshot, solid)).collect();
     let mut instances: Vec<DslValue> = solids.iter().map(|(id, solid)| instance_entry(id, snapshot, solid, selection.contains(id), hover.contains(id))).collect();
@@ -213,12 +212,12 @@ pub fn scene_over(snapshot: &ModelSnapshot, inference: &ModelInference, config: 
 }
 
 /// 🧊️ Renders the world window.
-pub fn render(snapshot: &ModelSnapshot, inference: &ModelInference, config: &BimWorldWindowConfig, selection: &[String], hover: &[String], revision: u32) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(snapshot: &ModelSnapshot, inference: &ModelInference, config: &config::BimWorldWindowConfig, selection: &[String], hover: &[String], revision: u32) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     render_over(snapshot, inference, config, selection, hover, revision, &Preview::default())
 }
 
 /// 🧊️ [`render`] with the marks of the gesture in progress painted over the model.
-pub fn render_over(snapshot: &ModelSnapshot, inference: &ModelInference, config: &BimWorldWindowConfig, selection: &[String], hover: &[String], revision: u32, preview: &Preview) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render_over(snapshot: &ModelSnapshot, inference: &ModelInference, config: &config::BimWorldWindowConfig, selection: &[String], hover: &[String], revision: u32, preview: &Preview) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     semio_framework_plugin::scene_surface(SURFACE_ID, semio_framework_ui_contract::SurfaceKind::World3d, &scene_over(snapshot, inference, config, selection, hover, revision, preview))
 }
 //#endregion 🔖️Scene
@@ -226,3 +225,12 @@ pub fn render_over(snapshot: &ModelSnapshot, inference: &ModelInference, config:
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
+
+fn lowest_storey(snapshot: &ModelSnapshot) -> Option<String> {
+    snapshot.buildings.keys().find_map(|building| crate::editor::bim::entities::ordered_storeys(snapshot, building).into_iter().next())
+}
+
+/// 🧊️ The storey the world window draws and picks on: the isolated one when it exists, else the lowest.
+pub fn world_storey(snapshot: &ModelSnapshot, isolated: &str) -> String {
+    Some(isolated.to_string()).filter(|storey| snapshot.storeys.contains_key(storey)).or_else(|| lowest_storey(snapshot)).unwrap_or_default()
+}

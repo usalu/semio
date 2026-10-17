@@ -1,6 +1,9 @@
+use crate::editor::bim::entities::ceilings::DEFAULT_DROP;
+use crate::standards::v1::subsets::any::schema::snapshot::Vertex;
 use crate::editor::bim::gestures::plane::signed_area;
-use crate::editor::bim::gestures::session::{Shape, REJECTED, TYPE_MISSING};
-use crate::editor::bim::gestures::tests::fixture::{model, room, Rig};
+use crate::editor::bim::gestures::session::{REJECTED, TYPE_MISSING};
+use crate::editor::bim::marks::Shape;
+use crate::editor::bim::fixture::{model, room, Rig};
 use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::RoofShape};
 
 fn ring(vertices: &[crate::standards::v1::subsets::any::schema::snapshot::Vertex]) -> Vec<[f64; 2]> {

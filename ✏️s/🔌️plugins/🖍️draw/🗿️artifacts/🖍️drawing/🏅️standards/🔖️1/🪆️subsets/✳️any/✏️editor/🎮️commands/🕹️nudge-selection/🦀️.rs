@@ -61,6 +61,3 @@ nudge_command!(nudge_selection_right_fast,NudgeSelectionRightFast,"nudgeSelectio
 nudge_command!(nudge_selection_up_fast,NudgeSelectionUpFast,"nudgeSelectionUpFast","nudge-selection-up-fast",0.0,-10.0);
 nudge_command!(nudge_selection_down_fast,NudgeSelectionDownFast,"nudgeSelectionDownFast","nudge-selection-down-fast",0.0,10.0);
 
-#[cfg(test)]
-#[path="🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;

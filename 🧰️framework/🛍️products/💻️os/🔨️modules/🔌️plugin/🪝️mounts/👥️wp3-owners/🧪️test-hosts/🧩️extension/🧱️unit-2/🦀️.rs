@@ -6,9 +6,10 @@ use semio_framework::PackageDescriptor;
 use semio_framework::PluginManifest;
 use semio_framework_os_kernel::io;
 
+#[doc(hidden)]
 #[cfg(test)]
 #[path = "../../../../../🛂️describe/🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+pub mod tests;
 #[cfg(test)]
 #[path = "../../../../../🛂️describe/🧪️tests/🔬️example-assets/🦀️.rs"]
 mod example_asset_tests;

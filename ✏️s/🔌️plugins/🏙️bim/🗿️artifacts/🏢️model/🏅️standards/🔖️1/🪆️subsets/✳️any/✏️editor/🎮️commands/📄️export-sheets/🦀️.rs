@@ -9,7 +9,8 @@ use crate::editor::bim::commands::export_model::{stem, Output, INFER_PREVIEW, NO
 use crate::editor::bim::kit::fault;
 use crate::editor::bim::modes::edit::windows::sheet::title_labels;
 use crate::editor::bim::terminology::BimLabels;
-use crate::editor::bim::{BimCommand, BimDispatchCtx, BimModelApp};
+use crate::editor::bim::dispatch_context::BimDispatchCtx;
+use crate::editor::bim::{BimCommand, BimModelApp};
 use crate::standards::v1::subsets::any::io::export::sheets::{self, pdf::SheetsPdf, TitleLabels};
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::instance as inference;
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::Analysis;

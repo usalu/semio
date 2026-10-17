@@ -46,6 +46,4 @@ impl protocol::MutationKind<JsonSnapshot, super::JsonMutation> for RemoveMemberM
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

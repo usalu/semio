@@ -8,6 +8,7 @@ use semio_framework_os_infinite_board_normal_focus::{BoardPointerIntent, BoardPo
 use semio_framework_os_infinite_board_normal_gestures::{BoardAuthorityStep, BoardEntityRetirement, BoardPointerPlanRetirement, BoardRemovedEntity, event_authority_terminal_is_empty, pointer_lane_is_direct, quarantine_world_content_step, set_transform_flags, target_regions_json};
 use semio_framework_os_infinite_board_normal_fill::{BoardFillJob, BoardFillSnapshotIngress, NEUTRAL_BOARD_NAMING};
 use semio_framework_os_infinite_board_normal_host::{begin_pointer_commit, board_delete_selection, BoardHost, BoardHostRetirement};
+use semio_framework_test_fixtures::fixture_text;
 #[cfg(any(test, feature = "testkit"))]
 use semio_framework_os_infinite_board_normal_host::plan_delete_selection;
 use semio_framework_canvas::{Affine, Color, FillRule, Point, Scene, Vec2};
@@ -19,16 +20,12 @@ use semio_framework_graph_drawing::routing::handle_position_on_circle;
 use semio_framework_value::retirement::sequence;
 
 /// 📖️ Reads one test input at run time (relative to the package manifest) so it does not count as an embedded compile input.
-fn read_static(path_from_manifest: &str) -> &'static str {
-    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(path_from_manifest);
-    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("test input {}: {error}", path.display())).into_boxed_str())
-}
 
 #[cfg(test)]
     fn with_board_step_context<T>(fuel: u64, cancel: semio_framework_job::CancelToken, step: impl FnOnce(&mut semio_framework_job::StepContext<'_>) -> T) -> T {
         let mut sequence = 0;
         let mut receipt=semio_framework_value::RetainedCloneProgress::default();
-        let policy:serde_json::Value=serde_json::from_str(read_static("../../../🧪️tests/🔬️board-host-standalone/🧫️descriptor.json")).unwrap();
+        let policy:serde_json::Value=serde_json::from_str(fixture_text!("../../../🧪️tests/🔬️board-host-standalone/🧫️descriptor.json")).unwrap();
         let axis=|name:&str|policy["contextGrant"][name].as_u64().unwrap()as usize;
         let grant=semio_framework_value::RetainedCloneGrant{maximum_items:axis("items"),maximum_copy_bytes:axis("copyBytes"),maximum_capacity_bytes:axis("capacityBytes"),maximum_release_bytes:axis("releaseBytes"),maximum_depth:axis("depth")};
         let mut context =
@@ -270,7 +267,7 @@ fn read_static(path_from_manifest: &str) -> &'static str {
 #[cfg(test)]
     #[test]
     fn board_snapshot_json_vectors_match_the_json_oracle() {
-        let vectors: serde_json::Value = serde_json::from_str(read_static("../../../🧪️tests/🧫️fixtures/🔣️board-ingress.json")).unwrap();
+        let vectors: serde_json::Value = serde_json::from_str(fixture_text!("../../../🧪️tests/🧫️fixtures/🔣️board-ingress.json")).unwrap();
         for fixture in vectors.as_array().unwrap() {
             let mut host = BoardHost::default();
             assert!({let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(64*1024*1024,&mut accepted);load_board_snapshot_json(&mut host.scene, &mut host.focus, &mut host.style, &mut host.outbox,&fixture.to_string(),&mut control)});

@@ -1,11 +1,12 @@
 //! 🧪️ Map codecs and mutations preserve exact durable child identities.
 use crate::{GisMapSnapshot, MapFeature};
 use crate::schema::{GisMapArtifact, diff::{GisMapDiff, GisMapFeaturesDelta}};
+use semio_framework_test_fixtures::fixture_text;
 use store::{pack::snapshot::ArtifactDsl, pack::snapshot::ArtifactPack};
 
 #[test]
 fn map_document_contract_preserves_all_children_and_dynamic_feature_payloads() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🔬️contract/🪪️document/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🔬️contract/🪪️document/🔣️.json")).unwrap();
     let artifact: GisMapArtifact = semio_framework_pack_json::from_json_str(&fixture["document"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let snapshot: GisMapSnapshot = semio_framework_pack_json::from_json_str(&fixture["document"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     assert_eq!(artifact.to_snapshot(), snapshot);
@@ -42,7 +43,7 @@ fn default_document_boot_child_projection_and_genesis_packs_are_valid() {
     let snapshot = default_document();
     let projection = semio_framework_composition_admission::ChildRestoreProjection::from_snapshot(&snapshot).expect("reuse-map default document child refs");
     assert_eq!(projection.len(), 2, "drawing and value; image is absent on the default map");
-    assert!(crate::genesis_gis_map_child_pack(&snapshot, "drawing", &snapshot.drawing.child_id).is_some());
-    assert!(crate::genesis_gis_map_child_pack(&snapshot, "value", &snapshot.value.child_id).is_some());
-    assert!(crate::genesis_gis_map_child_pack(&snapshot, "drawing", "wrong-id").is_none());
+    assert!(crate::standards::v1::subsets::any::map_composition::genesis_gis_map_child_pack(&snapshot, "drawing", &snapshot.drawing.child_id).is_some());
+    assert!(crate::standards::v1::subsets::any::map_composition::genesis_gis_map_child_pack(&snapshot, "value", &snapshot.value.child_id).is_some());
+    assert!(crate::standards::v1::subsets::any::map_composition::genesis_gis_map_child_pack(&snapshot, "drawing", "wrong-id").is_none());
 }

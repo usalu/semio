@@ -17,7 +17,6 @@ test("Puzzle2d optional text diagnostics expose borrowed raw ID fragments and ex
   if(actual){const decoded=new TextDecoder().decode(new TextEncoder().encode(actual.body));expect(decoded).toBe(row.expected!.body);expect(JSON.parse(JSON.stringify(actual))).toEqual(row.expected);}
   if(row.target)expect((db.query("SELECT value FROM target WHERE ordinal=1").get()as {value:string}).value).toBe("untouched duplicate");
  }}finally{db.close()}
- console.log("[DEBUG] six SQLite first-owner diagnostics preserve raw quotes/NUL/Unicode, exact severity and untouched duplicate");
  const path=resolve(import.meta.dir,"../🦀️.rs");expect(existsSync(path)).toBe(true);
  const source=readFileSync(path,"utf8");
  for(const marker of["Puzzle2dTextDiagnosticSource","ArtifactMessageSource","ArtifactMessageFragment::Text","Puzzle2dTextDisposition::TargetMissing","operation_index"])expect(source).toContain(marker);

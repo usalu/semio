@@ -1,6 +1,15 @@
 //! 🧪️ Exact native host owners preserve retirement and store publication laws.
 
-use super::*;
+use crate::standards::v1::subsets::any::schema::empty_presentation_snapshot;
+use crate::PRESENTATION_DOCUMENT_SCHEMA;
+use store::ArtifactOwnedValueRetirementFactory as _;
+use store::os_store::document_materialize::create_document_envelope;
+#[allow(unused_imports)]
+use crate::PresentationSnapshot;
+#[allow(unused_imports)]
+use store::{os_store::store_schema::ArtifactEnvelope, ArtifactStore};
+use crate::host::owned::{PresentationPackSnapshotAuthority};
+use crate::host::owned::*;
 use crate::standards::v1::subsets::any::schema::mutations::PresentationMutation;
 use crate::standards::v1::subsets::any::schema::mutations::create_tile;
 
@@ -53,8 +62,7 @@ async fn document_text_round_trip_with_operation_applied() {
 /// instead of being caught here.
 #[test]
 fn a_live_owner_dropped_during_a_panic_unwinds_instead_of_aborting() {
-    let mut authority = PresentationPackSnapshotAuthority::new(semio_framework_job::OperationId(9_101), semio_framework_job::Generation(1), store::os_store::owned_schema_decode::OwnedSchemaPath::ROOT);
-    *authority.value = Some(empty_presentation_snapshot());
+    let authority = PresentationPackSnapshotAuthority::with_live_value(semio_framework_job::OperationId(9_101), semio_framework_job::Generation(1), store::os_store::owned_schema_decode::OwnedSchemaPath::ROOT, empty_presentation_snapshot());
     assert!(!store::os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldAuthority::terminal_is_empty(&authority), "the fixture must hold a LIVE owner, or this law proves nothing");
     let previous = std::panic::take_hook();
     std::panic::set_hook(Box::new(|_| {}));

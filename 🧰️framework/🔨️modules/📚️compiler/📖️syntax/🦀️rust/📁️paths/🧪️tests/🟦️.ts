@@ -44,7 +44,6 @@ test("own path arguments match the independent installed Rust grammar", async ()
         }).sort((a, b) => a.start - b.start);
         expect(independent).toEqual(row.expected);
         expect(module.inspectRustPathLiterals(row.source, fixture.roots)).toEqual(independent);
-        console.log("[DEBUG] Rust path literal " + JSON.stringify({ id: row.id, actual: independent }));
       } finally { tree.delete(); }
     }
   } finally { parser.delete(); }

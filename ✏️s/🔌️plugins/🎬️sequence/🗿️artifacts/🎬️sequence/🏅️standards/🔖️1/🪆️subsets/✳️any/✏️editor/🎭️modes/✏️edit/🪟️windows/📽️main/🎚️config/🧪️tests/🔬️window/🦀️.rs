@@ -1,10 +1,16 @@
-use super::*;
+use semio_framework_test_fixtures::fixture_text;
+use semio_framework_value_derive::ToValue;
+#[allow(unused_imports)]
+use crate::SequenceCamera;
+#[allow(unused_imports)]
+use semio_framework_value_derive::FromValue;
+use crate::editor::sequence::modes::edit::windows::main::config::*;
 use crate::editor::sequence::modes::edit::windows::script::transient::{SequenceScriptWindowTransient, SequenceScriptWindowTransientMutation, SequenceScriptWindowTransientOwner};
 use protocol::{Mutation, OpBinary, OpText};
 
 #[semio_framework_async_macros::async_test]
 async fn sequence_window_ownership_mutations_match_neutral_fixture_and_codecs() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔬️window-ownership/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../🎭️modes/✏️edit/🪟️windows/📽️main/🎚️config/🧪️tests/🧫️fixtures/🔬️window-ownership/🔣️.json")).unwrap();
     let base_config: SequenceMainWindowConfig = semio_framework_pack_json::from_json_str(&fixture["baseConfig"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let base_transient: SequenceScriptWindowTransient = semio_framework_pack_json::from_json_str(&fixture["baseTransient"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     for row in fixture["configMutations"].as_array().unwrap() {

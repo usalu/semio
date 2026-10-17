@@ -52,6 +52,10 @@ type stdioEpwEnergyplusAnyDiffGuardSizeBounds = { readonly minItems?: number; re
 
 export const stdioEpwEnergyplusAnyDiffGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : stdioEpwEnergyplusAnyDiffGuardReject(at, "value is not an object");
+export const stdioEpwEnergyplusAnyDiffGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) stdioEpwEnergyplusAnyDiffGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const stdioEpwEnergyplusAnyDiffGuardArray = (value: unknown, at: string, bounds: stdioEpwEnergyplusAnyDiffGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return stdioEpwEnergyplusAnyDiffGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) stdioEpwEnergyplusAnyDiffGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -82,7 +86,7 @@ export const stdioEpwEnergyplusAnyDiffGuardConstant = <T extends string | number
 //#endregion 🚪️Parsers
 
 export function parseEpwRecordDiff(value: unknown, at = "$"): EpwRecordDiff {
-  const row = stdioEpwEnergyplusAnyDiffGuardObject(value, at);
+  const row = stdioEpwEnergyplusAnyDiffGuardClosed(stdioEpwEnergyplusAnyDiffGuardObject(value, at), at, ["year", "month", "day", "hour", "minute", "dataSourceUncertainty", "dryBulbTemp", "dewPointTemp", "relativeHumidity", "atmosphericPressure", "extraterrestrialHorizontalRadiation", "extraterrestrialDirectNormalRadiation", "horizontalInfraredRadiation", "globalHorizontalRadiation", "directNormalRadiation", "diffuseHorizontalRadiation", "globalHorizontalIlluminance", "directNormalIlluminance", "diffuseHorizontalIlluminance", "zenithLuminance", "windDirection", "windSpeed", "totalSkyCover", "opaqueSkyCover", "visibility", "ceilingHeight", "presentWeatherObservation", "presentWeatherCodes", "precipitableWater", "aerosolOpticalDepth", "snowDepth", "daysSinceLastSnowfall", "albedo", "liquidPrecipDepth", "liquidPrecipQuantity"]);
   return {
     year: row["year"] === undefined ? undefined : stdioEpwEnergyplusAnyDiffGuardString(row["year"], `${at}.year`),
     month: row["month"] === undefined ? undefined : stdioEpwEnergyplusAnyDiffGuardString(row["month"], `${at}.month`),
@@ -123,7 +127,7 @@ export function parseEpwRecordDiff(value: unknown, at = "$"): EpwRecordDiff {
 }
 
 export function parseEpwRecordModified(value: unknown, at = "$"): EpwRecordModified {
-  const row = stdioEpwEnergyplusAnyDiffGuardObject(value, at);
+  const row = stdioEpwEnergyplusAnyDiffGuardClosed(stdioEpwEnergyplusAnyDiffGuardObject(value, at), at, ["index", "diff"]);
   return {
     index: stdioEpwEnergyplusAnyDiffGuardInteger(row["index"], `${at}.index`, {"minimum": 0}),
     diff: parseEpwRecordDiff(row["diff"], `${at}.diff`),
@@ -131,7 +135,7 @@ export function parseEpwRecordModified(value: unknown, at = "$"): EpwRecordModif
 }
 
 export function parseEpwRecordsDiff(value: unknown, at = "$"): EpwRecordsDiff {
-  const row = stdioEpwEnergyplusAnyDiffGuardObject(value, at);
+  const row = stdioEpwEnergyplusAnyDiffGuardClosed(stdioEpwEnergyplusAnyDiffGuardObject(value, at), at, ["removed", "modified", "added"]);
   return {
     removed: row["removed"] === undefined ? undefined : stdioEpwEnergyplusAnyDiffGuardArray(row["removed"], `${at}.removed`).map((item, index) => stdioEpwEnergyplusAnyDiffGuardInteger(item, `${at}.removed[${index}]`, {"minimum": 0})),
     modified: row["modified"] === undefined ? undefined : stdioEpwEnergyplusAnyDiffGuardArray(row["modified"], `${at}.modified`).map((item, index) => parseEpwRecordModified(item, `${at}.modified[${index}]`)),
@@ -140,7 +144,7 @@ export function parseEpwRecordsDiff(value: unknown, at = "$"): EpwRecordsDiff {
 }
 
 export function parseEpwRecordAdded(value: unknown, at = "$"): EpwRecordAdded {
-  const row = stdioEpwEnergyplusAnyDiffGuardObject(value, at);
+  const row = stdioEpwEnergyplusAnyDiffGuardClosed(stdioEpwEnergyplusAnyDiffGuardObject(value, at), at, ["index", "record"]);
   return {
     index: stdioEpwEnergyplusAnyDiffGuardInteger(row["index"], `${at}.index`, {"minimum": 0}),
     record: parseEpwRecord(row["record"], `${at}.record`),

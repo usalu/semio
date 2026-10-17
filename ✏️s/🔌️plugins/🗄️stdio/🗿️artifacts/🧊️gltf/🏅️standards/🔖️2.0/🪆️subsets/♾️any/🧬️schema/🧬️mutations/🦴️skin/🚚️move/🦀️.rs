@@ -32,7 +32,10 @@ pub fn plan(p: &GltfMoveSkinPayload, base: &GltfSnapshot) -> Result<GltfDiff, Gl
     Ok(diff)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn inverse(p: &GltfMoveSkinPayload, base: &GltfSnapshot) -> Vec<super::GltfMutation> {
+pub fn inverse<Op>(p: &GltfMoveSkinPayload, base: &GltfSnapshot) -> Vec<Op>
+where
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::remove_used_extension::RemoveUsedExtensionMutation>,
+{
     if validate(p, base).is_err() {
         return Vec::new();
     }
@@ -49,11 +52,17 @@ pub enum MoveSkinMutation {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn mutation(payload: GltfMoveSkinPayload) -> super::GltfMutation {
-    super::GltfMutation::MoveSkin(MoveSkinMutation::Apply(payload))
+pub fn mutation<Op>(payload: GltfMoveSkinPayload) -> Op
+where
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::move_skin::MoveSkinMutation>,
+{
+    Op::from(MoveSkinMutation::Apply(payload))
 }
 
-impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for MoveSkinMutation {
+impl<Op> protocol::MutationKind<GltfSnapshot, Op> for MoveSkinMutation
+where
+    Op: protocol::Mutation<GltfSnapshot, Diff = GltfDiff> + From<MoveSkinMutation>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "move", entity: "skin", kind: "move-skin", record: "MovedSkin" };
 
     fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<GltfDiff> {
@@ -65,7 +74,7 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for MoveSkinMutat
         }
     }
 
-    fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<super::GltfMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         match self {
             Self::Apply(payload) => Ok(inverse(payload, base)),
         }
@@ -82,7 +91,5 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for MoveSkinMutat
 //#endregion 🧬️DirectMutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🚚️swaps-the-two-skins-dddb3f/🦀️.rs"]
-mod case_swaps_the_two_skins_dddb3f;
+
 //#endregion 🧪️Tests

@@ -28,7 +28,6 @@ test("source preparation owns cancellation, malformed grants and output",()=>{
  for(const steps of [0,1,10,50,200,1000,3000]){const job=create(cases[45]!.input);for(let i=0;i<steps;i++){if(advance(job,1).done)break;}job.cancel();expect(()=>advance(job,1)).toThrow();expect(()=>job.result()).toThrow();}
  for(const grant of [-1,NaN,Infinity,0.5])expect(()=>advance(create(cases[0]!.input),grant)).toThrow();
  const job=create(cases[29]!.input),result=finish(job,4096);job.cancel();expect(Array.from(result.pixels)).toEqual(cases[29]!.expected.pixels);
- console.info("[DEBUG] Encoded image sources retained private candidates and owned published RGBA");
 });
 test("async source preparation yields and checks observers before publication",async()=>{
  const source=cases[0]!.input,control=new AbortController();let timer=false,calls=0;setTimeout(()=>{timer=true;},0);
@@ -38,7 +37,6 @@ test("async source preparation yields and checks observers before publication",a
  await expect(decodeImageSource(source,{workGrant:funded,onProgress:()=>{throw Error("observer");}})).rejects.toThrow("observer");
  const end=new AbortController();await expect(decodeImageSource(source,{workGrant:funded,signal:end.signal,onProgress:p=>{if(p.done)end.abort();}})).rejects.toMatchObject({name:"AbortError"});
  expect(Array.from((await decodeImageSource(source,{workGrant:funded})).pixels)).toEqual(cases[0]!.expected.pixels);
- console.info("[DEBUG] Encoded image source preparation yielded and aborted before publication");
 });
 test("source caps admit exact boundaries and cancellation covers each live phase",()=>{
  const row=cases[37]!,bytes=Buffer.from(row.input.data.slice(row.input.data.indexOf(",")+1),"base64").length;
@@ -49,7 +47,6 @@ test("source caps admit exact boundaries and cancellation covers each live phase
  const probe=create(limits);let steps=0;
  for(;;){const progress=advance(probe,1);steps++;if(!seen.has(progress.phase)&&!progress.done){seen.add(progress.phase);const cancelled=create(limits);for(let i=0;i<steps;i++)advance(cancelled,1);cancelled.cancel();expect(()=>cancelled.result()).toThrow(/cancel/);expect(()=>advance(cancelled,1)).toThrow(/cancel/);}if(progress.done)break;}
  expect([...seen]).toEqual(["header","validate","decode","source-handoff","decoder","png","image-handoff"]);
- console.info("[DEBUG] Exact source/binary/pixel caps and header/validation/decoding/PNG cancellation verified");
 });
 
 import funding from "./🧫️fixtures/🎟️funding.json";
@@ -61,5 +58,4 @@ test("Original PNG and JPEG composition denies independent axes and preserves ca
  const seen=new Set<string>();
  for(const index of funding.jpegCases){const row=jpegCases.cases[index]!,input={mime:"image/jpeg",data:"data:image/jpeg;base64,"+row.base64,maxSourceBytes:268439552,maxBytes:67108864,maxPixels:16777216,maxChunks:65536};expect(validate(input)).toBe(true);const job=create(input);while(!job.progress().done){const phase=job.progress().phase;if(!seen.has(phase)){seen.add(phase);const cancel=create(input);while(cancel.progress().phase!==phase)advance(cancel,1);cancel.cancel();expect(()=>advance(cancel,1)).toThrow(/cancel/);expect(()=>cancel.result()).toThrow(/cancel/);}advance(job,1);}const output=job.result(),oracle=await sharp(Buffer.from(row.base64,"base64")).ensureAlpha().raw().toBuffer();expect(output.width).toBe(row.width);expect(output.height).toBe(row.height);expect(output.pixels.length).toBe(oracle.length);let maximum=0;for(let at=0;at<oracle.length;at++){maximum=Math.max(maximum,Math.abs(output.pixels[at]!-oracle[at]!));expect(oracle[at]).toBe(row.pixels[at]);}expect(maximum).toBeLessThanOrEqual(row.oracleTolerance);expect(job.takeResult({...funded,maximumCopyBytes:funding.handoffBytes-1})).toBeUndefined();expect(job.result()).toBe(output);expect(job.takeResult({...funded,maximumCopyBytes:funding.handoffBytes})!.value).toBe(output);}
  for(const phase of funding.interruptionPhases.filter(value=>value!=="png"))expect(seen.has(phase)).toBe(true);
- console.info("[DEBUG] Original PNG/JPEG composition independent grants, cancelled child custody, seven sharp oracles and funded handoffs passed");
 },30000);

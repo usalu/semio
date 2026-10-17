@@ -8,7 +8,7 @@ use protocol::{MutationKind, SemanticDescriptor};
 #[mutation_leaf(contract = ::protocol)]
 pub struct TrimExtendWall {
     pub id: String,
-    pub end: super::super::modify::WallEnd,
+    pub end: crate::standards::v1::subsets::any::schema::mutations::modify::WallEnd,
     pub target: String,
 }
 

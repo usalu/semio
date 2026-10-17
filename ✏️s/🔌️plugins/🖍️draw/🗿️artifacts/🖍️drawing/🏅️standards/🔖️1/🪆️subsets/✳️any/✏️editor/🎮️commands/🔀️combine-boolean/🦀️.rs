@@ -49,6 +49,3 @@ pub fn handle(payload:&CombineBoolean,doc:&ArtifactView<'_,DrawingSnapshot>,_cfg
     Ok(emit)
 }
 
-#[cfg(test)]
-#[path="🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;

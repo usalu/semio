@@ -1,11 +1,21 @@
-use super::*;
+use semio_framework_plugin::WindowMeasure;
+use semio_framework_pack_json::json;
+#[allow(unused_imports)]
+use crate::editor::puzzle2d::terminology::Puzzle2dLabels;
+#[allow(unused_imports)]
+use crate::editor::puzzle2d::snapshot::{puzzle2d_action, puzzle2d_kind_ids, Puzzle2dScene};
+#[allow(unused_imports)]
+use semio_framework_plugin::MeasureSelectItem;
+#[allow(unused_imports)]
+use std::collections::BTreeMap;
+use crate::editor::puzzle2d::modes::edit::options::brush::*;
 use crate::editor::puzzle2d::config::Puzzle2dPlayRuntime;
 use crate::editor::puzzle2d::snapshot::empty_board_snapshot;
 use crate::editor::puzzle2d::engine::board_host::puzzle_board_host;
-use crate::editor::puzzle2d::modes::edit::puzzle2d_engagement;
+use crate::editor::puzzle2d::modes::edit::canvas::puzzle2d_engagement;
 use crate::editor::puzzle2d::modes::edit::windows::overview;
 use crate::editor::puzzle2d::terminology::puzzle2d_labels;
-use crate::editor::puzzle2d::unit_tests::context::*;
+use crate::editor::puzzle2d::testkit::*;
 
 #[test]
 fn brush_params_are_tagged_utility_options_not_engagement_controls() {

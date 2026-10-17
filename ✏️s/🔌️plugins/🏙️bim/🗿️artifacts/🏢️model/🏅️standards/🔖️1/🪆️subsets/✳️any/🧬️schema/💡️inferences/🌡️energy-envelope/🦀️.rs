@@ -32,7 +32,7 @@ use semio_framework_geometry::loops;
 use semio_framework_geometry::Point;
 use semio_framework_value::DslValue;
 use std::collections::{BTreeMap, BTreeSet};
-use thermal::{FarSide, HeatFlow};
+use crate::standards::v1::subsets::any::schema::inferences::energy_envelope::thermal::{FarSide, HeatFlow};
 
 #[path = "🧱️thermal/🦀️.rs"]
 pub mod thermal;
@@ -252,17 +252,6 @@ impl Climate {
     }
 }
 //#endregion 🔖️Values
-
-impl SpaceConditions {
-    /// 🌡️ Whether the space is heated or cooled: it states a set point.
-    pub fn conditioned(&self) -> bool {
-        self.heating_setpoint.is_some() || self.cooling_setpoint.is_some()
-    }
-
-    fn same_climate(&self, other: &SpaceConditions) -> bool {
-        self.heating_setpoint == other.heating_setpoint && self.cooling_setpoint == other.cooling_setpoint
-    }
-}
 
 //#region 🔖️Geometry
 fn ring_of(vertices: &[Vertex]) -> Vec<Vec2> {

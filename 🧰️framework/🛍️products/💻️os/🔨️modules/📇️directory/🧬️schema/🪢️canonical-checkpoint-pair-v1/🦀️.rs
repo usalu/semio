@@ -1,6 +1,6 @@
 //! 🪢️ Canonical checkpoint identity, named refusals and pure admission laws.
 
-use super::{ArtifactFrontier, ArtifactHash, CheckpointId, DocumentScope, PublishedArtifactBlob, RebootstrapRequired};
+use semio_framework_os_directory_schema::{ArtifactFrontier, ArtifactHash, CheckpointId, DocumentScope, PublishedArtifactBlob, RebootstrapRequired};
 
 /// 🚫️ Every way a pair body or its admission is refused, named exactly as the TypeScript twin throws it.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

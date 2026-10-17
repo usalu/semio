@@ -1,4 +1,5 @@
-use super::*;
+use crate::standards::v2_0::subsets::base::schema::snapshot::ZipSnapshot;
+use crate::standards::v2_0::subsets::base::schema::inferences::entries::*;
 use crate::standards::v2_0::subsets::base::schema::snapshot::ZipEntry;
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9

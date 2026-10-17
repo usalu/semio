@@ -1,0 +1,23 @@
+{
+"name": "rhsserver",
+"crates": [
+"semio-framework-server",
+"semio-framework-server-contract",
+"semio-framework-server-storage",
+"semio-framework-server-policy",
+"semio-framework-server-authority",
+"semio-framework-server-throttle"
+],
+"base": {
+"rev": "HEAD",
+"crates": [
+"semio-framework-server",
+"semio-framework-server-contract",
+"semio-framework-server-storage",
+"semio-framework-server-policy",
+"semio-framework-server-authority",
+"semio-framework-server-throttle"
+]
+},
+"note": "gateway of the server crate (REPO-HUB-RUST-FILE-SPLITS)"
+}

@@ -1,5 +1,6 @@
 //! ⚖️ Numeric worked examples + path/remedy/perturb laws for EN 1996 masonry checks.
 
+use semio_framework_test_fixtures::fixture_path;
 use semio_s_plugin_norm_app_surface::{get_value_at_path, parse_path, set_value_at_path};
 use semio_s_artifact_norm_en1996_schema::{evaluate_building, f_k_pa, fire_min_thickness_m, fk_factors, phi_m, phi_s, rho_n, slenderness};
 use semio_s_artifact_norm_en1996_io::text::snapshot::parse_dsl;
@@ -361,7 +362,7 @@ fn set_json_at_path(root: &mut serde_json::Value, path: &str, value: serde_json:
 #[test]
 fn committed_dsl_pack_assets_parse_and_assert_verdicts() {
     use std::path::PathBuf;
-    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🖼️assets");
+    let root = fixture_path!("../../../../../🖼️assets");
     for (folder, expect_pass) in [("🧱️loadbearing-wall", true), ("❌️multi-fail-masonry", false)] {
         let dir = root.join(folder).join(folder);
         let dsl = std::fs::read_to_string(dir.join("🗣️.dsl.semio"))
@@ -395,8 +396,7 @@ fn mutation_and_check_labels_differ_en_de() {
             panic!("identical en/de for {ctx}: {en:?}");
         }
     }
-    let mut_root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations");
+    let mut_root = fixture_path!("../../../../🧬️mutations");
     let needle = "LocalizedLabel::native(";
     for entry in std::fs::read_dir(&mut_root).expect("mutations dir") {
         let entry = entry.expect("entry");
@@ -436,7 +436,7 @@ fn mutation_and_check_labels_differ_en_de() {
 #[test]
 fn typed_diff_and_snapshot_facets_have_no_unknown() {
     use std::path::PathBuf;
-    let schema = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema");
+    let schema = fixture_path!("../../../..");
     let files = [
         "🔺️diff/🟦️.ts",
         "📸️snapshot/🟦️.ts",

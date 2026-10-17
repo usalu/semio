@@ -1,4 +1,10 @@
-use super::*;
+use semio_framework_test_fixtures::fixture_text;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioQuaternion;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
+use crate::{schema::snapshot::DrawNode, schema::snapshot::DrawStyle, schema::snapshot::SemioDrawingSnapshot};
+use crate::schema::inferences::flattened_scene::{rotate_point};
+use crate::schema::inferences::flattened_scene::*;
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
 use crate::schema::snapshot::{DrawCanvas, DrawLayer, PathSegment, STDIO_SEMIODRAWING_DOCUMENT_SCHEMA};
 use store::{InferenceCache, InferenceCacheConfig};
@@ -158,12 +164,11 @@ async fn quaternion_rotation_of_identity_is_a_no_op() {
 #[test]
 fn owned_dependency_matches_neutral_fixture_and_serde_oracle() {
     use store::InferredField;
-    let authored:serde_json::Value=serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🎛️flattened-scene/🌱️owned-dependency/🔣️.json")).expect("neutral dependency");
+    let authored:serde_json::Value=serde_json::from_str(fixture_text!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🎛️flattened-scene/🌱️owned-dependency/🔣️.json")).expect("neutral dependency");
     let snapshot=fixture();
     let dependency=DrawFlattenedScene::dep_input(&snapshot,&key_for(0,&[0]),&[]);
     let actual:serde_json::Value=serde_json::from_str(&semio_framework_pack_json::to_json_string(&dependency)).expect("owned dependency output");
     let oracle=serde_json::json!([authored["style"],{"name":"s1","fill":{"r":1.0,"g":0.0,"b":0.0,"a":1.0},"strokeWidth":2.0}]);
     assert_eq!(actual,oracle);
     assert_eq!(actual,authored["expected"]);
-    eprintln!("[DEBUG] Typed inference dependency matches authored values and independent serde_json output");
 }

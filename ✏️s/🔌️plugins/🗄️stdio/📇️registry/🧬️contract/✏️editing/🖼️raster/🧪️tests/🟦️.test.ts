@@ -33,7 +33,6 @@ for (const row of fixture.cases) test(`raster region ${row.id}`, () => {
   expect(() => rasterRegionPatch(plan, before, plan.patchCount)).toThrow("invalid-ordinal");
   expect(() => rasterRegionPatch(plan, new Uint8Array(0), 0)).toThrow("noncanonical-raster");
   if (row.id === "unchanged") expect(oracle).toHaveLength(0);
-  console.log(`[DEBUG] raster ${row.id}: ${plan.patchCount} bounded spans; independent patch and inverse agree`);
 });
 
 for (const row of fixture.rejected) test(`raster region refuses ${row.id}`, () => {
@@ -48,9 +47,10 @@ test("raster schema rejects unknown fields and invalid channels", () => {
 test("raster plans retain checked ownership across caller edits and refuse structural copies", () => {
   const contract = fixture.planOwnership;
   const row = fixture.cases.find((entry: { id: string }) => entry.id === contract.case);
-  const region = { ...row.region, color: [...row.region.color] } as RasterRegion;
+  const color: [number, number, number, number] = [row.region.color[0], row.region.color[1], row.region.color[2], row.region.color[3]];
+  const region: RasterRegion = { ...row.region, color };
   const plan = planRasterRegion(row.width, row.height, row.pixels.length, region, { maximumRasterBytes: 1024, maximumPatchBytes: row.patchBytes, maximumPatches: 8 });
-  (region.color as number[]).splice(0, 4, ...contract.replacementColor);
+  color.splice(0, 4, ...contract.replacementColor);
   const before = Uint8Array.from(row.pixels);
   const patch = rasterRegionPatch(plan, before, 0)!;
   const oracle: Operation[] = Array.from(patch.pixels, (value, offset) => ({ op: "replace", path: `/${patch.index + offset}`, value }));
@@ -59,5 +59,4 @@ test("raster plans retain checked ownership across caller edits and refuse struc
     expect(() => rasterRegionPatch(candidate as RasterRegionPlan, before, 0)).toThrow(contract.foreignPlanError);
     expect([...before]).toEqual(row.pixels);
   }
-  console.log("[DEBUG] raster plan ownership: copied caller input remains stable; four foreign plans refused atomically");
 });

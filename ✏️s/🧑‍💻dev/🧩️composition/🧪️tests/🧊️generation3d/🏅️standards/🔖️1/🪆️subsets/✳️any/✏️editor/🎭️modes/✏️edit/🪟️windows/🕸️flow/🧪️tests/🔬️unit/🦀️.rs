@@ -1,5 +1,6 @@
 use super::*;
 use crate::editor_domain::editor_laws::context::{app_with_registry, render as render_body};
+use semio_framework_test_fixtures::repo_text;
 
 #[semio_framework_async_macros::async_test]
 async fn renders_node_graph_scene() {
@@ -50,7 +51,7 @@ async fn the_app_catalogue_section_carries_the_registered_operators() {
 /// 🕸️ The law both implementations of this window answer to: one committed flow fixture in, the exact
 /// node/port/wire rows and the exact interaction bindings out. Language-agnostic on purpose — the row
 /// vocabulary is the `🟦️.ts` twin's too (`Generation3dFlowOutline`).
-const GRAPH_OUTLINE_LAW: &str = include_str!("../../../../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🕸️flow/🧪️tests/🧫️fixtures/🔬️unit/🔣️.json");
+fn graph_outline_law() -> &'static str { repo_text!("✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🕸️flow/🧪️tests/🧫️fixtures/🔬️unit/🔣️.json") }
 
 /// 🚦 A node row's description is the localized `NodeEvalStatus` the flow session reported for that
 /// widget — English and German, no default language.

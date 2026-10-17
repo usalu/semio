@@ -14,9 +14,8 @@ test("original invocation context survives retry and genuine pending forwarding"
   expect(nested.dependencyJson).toBe(row.source.dependencyJson);
   expect(nested.operatorVersion).toBe(row.source.operatorVersion);
  }
- console.log("[DEBUG] Original invocation plainOriginalCases=true independentJSONPatch=true independentDecimal=true retainedNative=unqualified");
 });
 
 import{existsSync}from"node:fs";
 import{join}from"node:path";
-test("original Host examples cannot declare whole-trial authorities",()=>{for(const relative of ["../🧬️schema/🔣️.json","../../🖼️display/🧬️schema/🔣️.json","../../../📥️evaluation-source/🧬️schema/🔣️.json","../../../📥️evaluation-source/🌱️seeds/🧬️schema/🔣️.json"])expect(existsSync(join(import.meta.dir,relative))).toBe(false);console.log("[DEBUG] original Host trial authority absence4 preserves plain cases and actual production payload contracts");});
+test("original Host examples cannot declare whole-trial authorities",()=>{for(const relative of ["../🧬️schema/🔣️.json","../../🖼️display/🧬️schema/🔣️.json","../../../📥️evaluation-source/🧬️schema/🔣️.json","../../../📥️evaluation-source/🌱️seeds/🧬️schema/🔣️.json"])expect(existsSync(join(import.meta.dir,relative))).toBe(false);});

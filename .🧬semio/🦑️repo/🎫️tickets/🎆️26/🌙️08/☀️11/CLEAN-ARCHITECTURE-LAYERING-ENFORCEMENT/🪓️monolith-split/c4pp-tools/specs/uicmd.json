@@ -1,0 +1,175 @@
+{
+ "tag": "uicmd",
+ "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗣️Interpreter/🧪️tests/🔬️wgpu-ui-command-wiring/🦀️.rs",
+ "original": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/c4pp-tools/orig/uicmd.rs",
+ "stage": "/Users/ueli/.cache/c4pp/stage/uicmd",
+ "chunks": [
+  {
+   "folder": "🗂️retained-document-queue-and-editor-fixtures",
+   "depth": 0,
+   "start": 3,
+   "end": 106,
+   "lines": 106,
+   "reopen": 0,
+   "close": 0,
+   "rebased": 0,
+   "marker": "///",
+   "first": [
+    "const",
+    "UNBOUNDED_STEP_GRANT"
+   ]
+  },
+  {
+   "folder": "🎬️window-action-drop-clipboard-and-noop-commands",
+   "depth": 0,
+   "start": 108,
+   "end": 316,
+   "lines": 211,
+   "reopen": 0,
+   "close": 0,
+   "rebased": 1,
+   "marker": "///",
+   "first": [
+    "fn",
+    "action"
+   ]
+  },
+  {
+   "folder": "🧪️scene-fixtures-and-focus-rebase-builders",
+   "depth": 0,
+   "start": 318,
+   "end": 737,
+   "lines": 423,
+   "reopen": 0,
+   "close": 1,
+   "rebased": 0,
+   "marker": "///",
+   "first": [
+    "fn",
+    "component_scene_ui"
+   ]
+  },
+  {
+   "folder": "🎯️canvas-pointer-and-ink-scroll-dispatch",
+   "depth": 0,
+   "start": 739,
+   "end": 899,
+   "lines": 166,
+   "reopen": 1,
+   "close": 1,
+   "rebased": 1,
+   "marker": "//",
+   "first": [
+    "fn",
+    "scene_command_dispatches_a_canvas2d_pointer_down_action"
+   ]
+  },
+  {
+   "folder": "✒️ink-gestures-and-closing-owners",
+   "depth": 0,
+   "start": 901,
+   "end": 1243,
+   "lines": 348,
+   "reopen": 1,
+   "close": 1,
+   "rebased": 2,
+   "marker": "//",
+   "first": [
+    "fn",
+    "ink_pointer_cancel_retires_only_the_exact_in_progress_owner_without_publishing"
+   ]
+  },
+  {
+   "folder": "⌨️text-editor-focus-and-clipboard",
+   "depth": 0,
+   "start": 1245,
+   "end": 1463,
+   "lines": 224,
+   "reopen": 1,
+   "close": 1,
+   "rebased": 0,
+   "marker": "//",
+   "first": [
+    "fn",
+    "stale_window_close_cannot_clear_a_successor_text_editor_focus"
+   ]
+  },
+  {
+   "folder": "📋️accepted-table-editable-text-and-stepper",
+   "depth": 0,
+   "start": 1465,
+   "end": 1679,
+   "lines": 220,
+   "reopen": 1,
+   "close": 1,
+   "rebased": 1,
+   "marker": "//",
+   "first": [
+    "fn",
+    "table_stepper_scene_node"
+   ]
+  },
+  {
+   "folder": "🧩️accepted-control-publications",
+   "depth": 0,
+   "start": 1681,
+   "end": 2032,
+   "lines": 357,
+   "reopen": 1,
+   "close": 1,
+   "rebased": 3,
+   "marker": "//",
+   "first": [
+    "fn",
+    "accepted_vfs_controls_publish_localized_buttons_and_reject_a_retired_row_action"
+   ]
+  },
+  {
+   "folder": "🪄️presented-focus-rebases-and-ink-intent",
+   "depth": 0,
+   "start": 2034,
+   "end": 2306,
+   "lines": 278,
+   "reopen": 1,
+   "close": 1,
+   "rebased": 5,
+   "marker": "//",
+   "first": [
+    "fn",
+    "presented_editor_text_focus_rebases_only_after_same_host_pixels_are_accepted"
+   ]
+  },
+  {
+   "folder": "🚪️window-close-gestures-and-generic-surfaces",
+   "depth": 0,
+   "start": 2308,
+   "end": 2509,
+   "lines": 206,
+   "reopen": 1,
+   "close": 0,
+   "rebased": 0,
+   "marker": "//",
+   "first": [
+    "fn",
+    "window_close_retires_queued_scene_and_capture_owners_before_slot_release"
+   ]
+  },
+  {
+   "folder": "📥️retained-input-commit-receipts",
+   "depth": 0,
+   "start": 2512,
+   "end": 2603,
+   "lines": 94,
+   "reopen": 0,
+   "close": 0,
+   "rebased": 2,
+   "marker": "///",
+   "first": [
+    "fn",
+    "retained_input_document"
+   ]
+  }
+ ],
+ "root_lines": 23,
+ "root_synth_closers": 0
+}

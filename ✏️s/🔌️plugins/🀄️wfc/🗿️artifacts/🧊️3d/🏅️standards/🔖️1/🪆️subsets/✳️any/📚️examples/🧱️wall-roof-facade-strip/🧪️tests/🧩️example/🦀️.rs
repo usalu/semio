@@ -1,6 +1,6 @@
 //! 🧪️ The committed asset IS the print of the authored spec, and nothing else.
 
-use super::{snapshot, PRIMARY_TEXT, SEED};
+use crate::standards::v1::subsets::any::examples::wall_roof_facade_strip::{snapshot, PRIMARY_TEXT, SEED};
 use crate::standards::v1::subsets::any::io::text::snapshot::{parse_dsl, print_dsl};
 
 #[test]

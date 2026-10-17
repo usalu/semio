@@ -1,0 +1,11 @@
+import { auditPluginCatalogSources } from "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/✅️catalog-verification/🟦️.ts";
+import { getWorkspaceRoot } from "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { sourceDeploymentOwnersV1 } from "/Users/ueli/Documents/semio/✏️s/🧑‍💻dev/🧩️catalog/🧪️tests/🧩️scope/🟦️.ts";
+const t0 = Date.now();
+const audit = auditPluginCatalogSources(getWorkspaceRoot(), {});
+const t1 = Date.now();
+const owners = await sourceDeploymentOwnersV1({ signal: new AbortController().signal, progress: () => {} });
+const t2 = Date.now();
+const missing = audit.issues.filter(({ code }) => code === "descriptor-pair-missing").map(({ pluginId }) => pluginId).sort();
+const ids = audit.entries.map(row => row.pluginId).sort();
+console.log(JSON.stringify({ auditMs: t1 - t0, censusMs: t2 - t1, manifestCount: audit.manifestCount, owners: owners.length, sameIds: JSON.stringify(ids) === JSON.stringify(owners), order: audit.order.length, missing, depInvalid: audit.issues.filter(({ code }) => code === "dependency-invalid").length, issues: audit.issues.length, seqDeps: audit.entries.find(r => r.pluginId === "sequence")?.dependsOn, rasterDeps: audit.entries.find(r => r.pluginId === "raster")?.dependsOn, cabDeps: audit.entries.find(r => r.pluginId === "cad-extension-aec-building")?.dependsOn }));

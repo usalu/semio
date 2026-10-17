@@ -73,5 +73,4 @@ test("the actual runtime package works with all specific and test owners unavail
   const bundle = await build({ stdin: { contents: source, resolveDir: root }, bundle: true, platform: "node", format: "esm", write: false, plugins: [{ name: "removed-async-owner", setup(builder) { builder.onLoad({ filter: /.*/ }, (input) => { const path = input.path.replaceAll("\\", "/"); return path.includes("/🧪️tests/") || refused.some((prefix) => path.startsWith(prefix)) ? { errors: [{ text: "Public async API loads an unavailable owner: " + path }] } : undefined; }); } }] });
   const actual = JSON.parse(execFileSync("node", ["--input-type=module"], { input: bundle.outputFiles![0]!.text, encoding: "utf8", timeout: 5_000 }));
   expect(actual).toEqual({ exports: fixture.exports.filter((row) => row.kind === "value").map((row) => row.name), calls: 0, pending: 0 });
-  console.log("[DEBUG] async-public-client " + JSON.stringify(actual));
 }, 15_000);

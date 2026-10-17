@@ -3,6 +3,7 @@ use crate::schema::mutations::PngMutation;
 use crate::{schema::snapshot::canonical::image, schema::snapshot::canonical::text};
 use crate::schema::diff::PngDiff;
 use crate::standards::v1_2::subsets::any::schema::mutations::top_level::canonical::*;
+use semio_framework_test_fixtures::fixture_text;
 use std::sync::Arc;
 use semio_framework_value::{FromValue,ToValue,retirement::{RetireOwned,SharedValueRetirementFactory},retained_clone::{RetainedCloneGrant,RetainedCloneStep}};
 
@@ -21,7 +22,6 @@ fn verify<T:store::ArtifactCanonicalJson+ToValue+RetireOwned+Sync>(value:T,expec
     assert_eq!(serde_json::from_slice::<serde_json::Value>(&bytes).unwrap(),expected);
     reader.begin_close();retire_reader(&mut reader);
     assert!(reader.terminal_is_empty());assert!(lifetime.upgrade().is_none());
-    eprintln!("[DEBUG] PNG schema canonical owner turns={turns} bytes={} retired=true",bytes.len());
 }
 
 fn verify_cancel<T:store::ArtifactCanonicalJson+RetireOwned+Sync>(value:T) {
@@ -31,12 +31,11 @@ fn verify_cancel<T:store::ArtifactCanonicalJson+RetireOwned+Sync>(value:T) {
     assert!(reader.encode_chunk(grant,&mut chunk).unwrap().written_bytes<=17);
     reader.cancel();reader.begin_close();retire_reader(&mut reader);
     assert!(reader.terminal_is_empty());assert!(lifetime.upgrade().is_none());
-    eprintln!("[DEBUG] PNG schema canonical cancellation retired=true");
 }
 
 #[test]
 fn schema_owned_png_canonical_sealing_preserves_neutral_snapshot_and_diff() {
-    let fixture:serde_json::Value=serde_json::from_str(runtime_fixture_text("../../../../🧪️tests/🧫️fixtures/🧬️owned-native-samples/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../../../🧪️tests/🧫️fixtures/🧬️owned-native-samples/🔣️.json")).unwrap();
     for case in fixture["cases"].as_array().unwrap(){
         let expected=case["snapshot"].clone();
         let snapshot=PngSnapshot::from_value(semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse_bytes(expected.to_string().as_bytes(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap())).unwrap();
@@ -49,7 +48,7 @@ fn schema_owned_png_canonical_sealing_preserves_neutral_snapshot_and_diff() {
 #[test]
 fn schema_owned_png_replacement_diff_and_inverse_preserve_neutral_native_words(){
     use protocol::Mutation;
-    let fixture:serde_json::Value=serde_json::from_str(runtime_fixture_text("../../../../🧪️tests/🧫️fixtures/🧬️owned-native-samples/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../../../🧪️tests/🧫️fixtures/🧬️owned-native-samples/🔣️.json")).unwrap();
     let base=PngSnapshot::default();
     for case in fixture["cases"].as_array().unwrap().iter(){
         let target=PngSnapshot::from_value(semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse_bytes(case["snapshot"].to_string().as_bytes(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap())).unwrap();
@@ -62,11 +61,5 @@ fn schema_owned_png_replacement_diff_and_inverse_preserve_neutral_native_words()
         let bytes=crate::standards::v1_2::subsets::any::io::encode_png(&actual).unwrap();assert_eq!(crate::standards::v1_2::subsets::any::io::decode_png(&bytes).unwrap(),actual);
         let mut independent=png::Decoder::new(std::io::Cursor::new(&bytes)).read_info().unwrap();let mut samples=vec![0;independent.output_buffer_size().unwrap()];let frame=independent.next_frame(&mut samples).unwrap();assert_eq!((frame.width,frame.height),(actual.image.width,actual.image.height));
         if actual.image.bit_depth==16{let words:Vec<u16>=samples[..frame.buffer_size()].chunks_exact(2).map(|word|u16::from_be_bytes([word[0],word[1]])).collect();assert_eq!(words,actual.image.samples);}
-        eprintln!("[DEBUG] Png typed replacement neutral={} nativeWordsExact=true inverseExact=true",case["name"]);
     }
-}
-
-fn runtime_fixture_text(relative: &str) -> &'static str {
-    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative);
-    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display())).into_boxed_str())
 }

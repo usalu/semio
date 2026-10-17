@@ -1,10 +1,11 @@
 //! 🧪️ The canonical nominal protocol error matches portable independent error messages.
 use crate::ProtocolError;
 use semio_framework_pack_error::{PackError,PackRefusal};
+use semio_framework_test_fixtures::fixture_text;
 use std::error::Error;
 #[test]
 fn nominal_protocol_error_display_matches_portable_sqlite_and_serde_contract(){
- let fixture:serde_json::Value=serde_json::from_str(include_str!("🔣️.json")).unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../🧪️tests/🔣️.json")).unwrap();
  for row in fixture["cases"].as_array().unwrap(){
   let first=row["first"].as_u64().unwrap();let second=row["second"].as_u64().unwrap();let text=row["text"].as_str().unwrap();
   let error=match row["kind"].as_str().unwrap(){
@@ -12,11 +13,9 @@ fn nominal_protocol_error_display_matches_portable_sqlite_and_serde_contract(){
   };
   let actual=error.to_string();assert_eq!(actual,row["message"].as_str().unwrap());assert_eq!(serde_json::from_str::<String>(&serde_json::to_string(&actual).unwrap()).unwrap(),actual);assert!(error.source().is_none());
  }
- println!("[DEBUG] Actual canonical ProtocolError matches eleven SQLite-qualified portable messages and independent Serde Unicode/NUL roundtrips");
 }
 #[test]
 fn pack_conversion_exposes_the_original_pack_refusal_as_system_source(){
  let refusal=PackRefusal::BadMagic;let error:ProtocolError=refusal.into();assert!(matches!(error,ProtocolError::Pack(PackError::Refusal(PackRefusal::BadMagic))));assert!(error.source().is_some());
  let original=PackError::Refusal(PackRefusal::Truncated(17));let expected=original.to_string();let error:ProtocolError=original.into();assert_eq!(error.to_string(),expected);assert_eq!(error.source().unwrap().to_string(),expected);
- println!("[DEBUG] ProtocolError owns the actual PackRefusal nominal cause and exposes its system Error source");
 }

@@ -1,6 +1,6 @@
 use super::*;
 use crate::editor::bim::entities::kind_of;
-use crate::editor::bim::unit_tests::support::{applied, ctx, demo, run};
+use crate::editor::bim::fixture::support::{applied, ctx, demo, run};
 use crate::standards::v1::subsets::any::schema::snapshot::SpaceConditions;
 
 fn with_space(snapshot: ModelSnapshot, id: &str) -> ModelSnapshot {

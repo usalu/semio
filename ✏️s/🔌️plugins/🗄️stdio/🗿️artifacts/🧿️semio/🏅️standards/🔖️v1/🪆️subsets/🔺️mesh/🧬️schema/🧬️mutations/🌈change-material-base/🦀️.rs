@@ -1,7 +1,6 @@
 //! 🌈 `change-material-base-color` — sets a material's PBR base color. SMO's stroke-color precedent: a color is treated as ONE cohesive value (never edited channel-by-channel from outside), so `change`, not `replace`.
 
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioRgba;
-use crate::schema::mutations::SemioMeshMutation;
 use crate::schema::snapshot::SemioMeshSnapshot;
 
 //#region 🔖️Payload
@@ -13,13 +12,16 @@ pub struct ChangeMaterialBaseColor {
     pub new_base_color: SemioRgba,
 }
 
-impl protocol::MutationKind<SemioMeshSnapshot, SemioMeshMutation> for ChangeMaterialBaseColor {
+impl<Op> protocol::MutationKind<SemioMeshSnapshot, Op> for ChangeMaterialBaseColor
+where
+    Op: protocol::Mutation<SemioMeshSnapshot, Diff = crate::schema::diff::SemioMeshDiff> + From<ChangeMaterialBaseColor>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "material-base-color", kind: "change-material-base-color", record: "ChangedMaterialBaseColor" };
 
-    fn diff(&self, base: &SemioMeshSnapshot) -> protocol::MutationOutcome<<SemioMeshMutation as protocol::Mutation<SemioMeshSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioMeshSnapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<SemioMeshSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &SemioMeshSnapshot) -> Result<Vec<SemioMeshMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &SemioMeshSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

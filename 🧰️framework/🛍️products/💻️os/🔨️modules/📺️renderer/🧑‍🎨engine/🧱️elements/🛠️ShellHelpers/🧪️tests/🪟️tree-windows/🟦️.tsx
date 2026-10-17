@@ -11,7 +11,13 @@ import { cleanup, fireEvent, render } from "@semio-tech/ui-react/test";
 import type { BuiltNode } from "@semio-tech/framework";
 import { TREE_WINDOW_PATH_SEPARATOR } from "@semio-tech/ui-react";
 import { parseResolvedPluginViewState } from "@semio-tech/framework";
-import { createTreeWindowContextV1, createTreeWindowSchedulerV1, TREE_WINDOW_DEFAULT_ROWS, uiNodeToTreePanelConfig, type TreeWindowHostV1 } from "../../🟦️.tsx";
+import {
+  createTreeWindowContextV1,
+  createTreeWindowSchedulerV1,
+  TREE_WINDOW_DEFAULT_ROWS,
+  uiNodeToTreePanelConfig,
+  type TreeWindowHostV1
+} from "../../🌳️tree-windows/🟦️.tsx";
 import { createTreeWindowReporterV1 } from "../../../🗣️Interpreter/🪟️tree-windows/🟦️.ts";
 import reportsFixture from "../../../../🧪️tests/🧫️fixtures/🪟️body-window-reports/🔣️.json";
 import Ajv2020 from "ajv/dist/2020";

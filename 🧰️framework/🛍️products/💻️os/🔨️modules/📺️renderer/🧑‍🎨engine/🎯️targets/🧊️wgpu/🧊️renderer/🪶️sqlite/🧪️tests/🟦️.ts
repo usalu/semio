@@ -29,7 +29,6 @@ test("native_socket_sqlite_snapshot_original_catalog_declarations_preserve_owner
  for(const malformed of [{...linked,extra:1},{...linked,artifact:{...linked.artifact,packSchemaHash:"0".repeat(64)}},{...hosted,target:{...hosted.target!,parentDialect:"invalid"}},{...linked,capability:{kind:"linked",nativeIdentity:{kind:"guest",pluginId:"foreign",packageHash:"0".repeat(64),schema:linked.artifact.schema},sqliteSchema:null,factory:null}}])expect(()=>proposeCatalogBindings(new Map(),[malformed as ArtifactCatalogBinding])).toThrow();
  const preserved=structuredClone(linked),owned=proposeCatalogBindings(new Map(),[preserved]);preserved.owner.pluginId="changed";expect(owned.get(catalogBindingKey(linked))).toEqual(linked);
  const oracle=new Database(":memory:");try{oracle.exec("CREATE TABLE catalog_binding(id TEXT PRIMARY KEY, contributor TEXT NOT NULL, owner TEXT NOT NULL, installed INTEGER NOT NULL CHECK(installed IN (0,1)), sql_schema TEXT); CREATE TABLE catalog_target(binding TEXT PRIMARY KEY REFERENCES catalog_binding(id), window_kind TEXT NOT NULL); PRAGMA foreign_keys=ON;");for(const row of [unlinked,hosted,otherWindow]){const key=catalogBindingKey(row);oracle.query("INSERT INTO catalog_binding VALUES(?,?,?,?,?)").run(key,row.contributor.pluginId,row.owner.pluginId,row.capability.kind==="linked"?1:0,row.capability.kind==="linked"?row.capability.sqliteSchema:null);if(row.target)oracle.query("INSERT INTO catalog_target VALUES(?,?)").run(key,row.target.surface.windowKindId);}expect(oracle.query("PRAGMA foreign_key_check").all()).toEqual([]);expect(oracle.query("SELECT installed,sql_schema FROM catalog_binding WHERE installed=0").all()).toEqual([{installed:0,sql_schema:null}]);expect(oracle.query("SELECT owner,contributor FROM catalog_binding WHERE installed=1 ORDER BY id").all()).toEqual([{owner:"owner",contributor:"host"},{owner:"owner",contributor:"host"}]);expect(oracle.query("SELECT window_kind FROM catalog_target ORDER BY window_kind").all()).toEqual([{window_kind:"main"},{window_kind:"secondary"}]);}finally{oracle.close();}
- console.error("[DEBUG] Original catalog neutral Source rows=4 unknownGuestRetained=true distinctWindows=true independentAjvSqlite=true");
 });
 test("native_socket_sqlite_snapshot_original_binding_descriptor_contract",()=>{
  const validate=new Ajv({strict:true,allErrors:true}).compile(bindingSchema);
@@ -49,7 +48,6 @@ test("native_socket_sqlite_snapshot_original_binding_descriptor_contract",()=>{
  for(const extra of [{apps:["viewer"]},{artifactKind:original.artifactKind},{dialect:original.dialect},{factory:"unjoined"}])expect(validate({...schemaOnly,...extra})).toBe(false);
  expect(validate({...original,channel:"foreignApp",artifactKind:null,apps:[]})).toBe(false);expect(validate({...original,apps:["viewer","viewer"]})).toBe(false);
  expect(bindingFixture.duplicateProposal).toBe("refuse");expect(bindingFixture.identicalInstalled).toBe("idempotent");expect(bindingFixture.aliasCoordinates).toBe("distinct");
- console.error("[DEBUG] independent Ajv closed binding rows preserve app-less and missing SQL descriptors; guessed joins and opaque owners refuse");
 });
 test("native_socket_sqlite_snapshot_closed_native_identity_policy",()=>{
  const validate=new Ajv({strict:true,allErrors:true}).compile(identitySchema);
@@ -70,7 +68,7 @@ test("native_socket_sqlite_snapshot_original_raw_values_and_independent_edit",as
   const database=await project(text),bytes=await exportSqliteDatabase(database);const independent=Database.deserialize(bytes);
   try{expect(independent.query("PRAGMA integrity_check").all()).toEqual([{integrity_check:"ok"}]);expect(independent.query("PRAGMA table_info(socket_probe)").all().map(row=>(row as {name:string;type:string}).type)).toEqual(["INTEGER","TEXT"]);expect(independent.query("SELECT id,text FROM socket_probe").all()).toEqual([{id:1,text}]);independent.query("UPDATE socket_probe SET text=? WHERE id=1").run(fixture.edit);expect(await restore(await importSqliteDatabase(new Uint8Array(independent.serialize())))).toBe(fixture.edit);}finally{independent.close();}
   expect(await restore(await importSqliteDatabase(bytes))).toBe(text);
- }console.error("[DEBUG] Socket original Source raw UTF8/null/nonJSON/full text independent SQLite edit/reimport");
+ }
 });
 test("native_socket_sqlite_snapshot_exact_semantic_limits_and_cancellation",async()=>{
  for(const row of [...fixture.cases,{id:"large",text:large,utf8Bytes:fixture.large.utf8Bytes,valueBytes:fixture.large.valueBytes}]){

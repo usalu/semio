@@ -156,7 +156,7 @@ fn canonical_json_string(value: &str) -> String {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn write_canonical_json(value: &semio_framework_value::DslValue, output: &mut String) -> Result<(), GltfInferenceTextError> {
+pub fn write_canonical_json(value: &semio_framework_value::DslValue, output: &mut String) -> Result<(), GltfInferenceTextError> {
     match value {
         semio_framework_value::DslValue::Null => output.push_str("null"),
         semio_framework_value::DslValue::Bool(value) => output.push_str(if *value { "true" } else { "false" }),

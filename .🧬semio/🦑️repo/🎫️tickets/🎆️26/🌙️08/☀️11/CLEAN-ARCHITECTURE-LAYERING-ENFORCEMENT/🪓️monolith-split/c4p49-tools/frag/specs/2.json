@@ -1,0 +1,84 @@
+{
+ "file": "🧰️framework/🔨️modules/🛠️tool-machine/🧪️tests/🔬️unit/🦀️.rs",
+ "original": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/c4p49-tools/orig/tmu.rs",
+ "stage": "/Users/ueli/.cache/c4p49/stage-frag",
+ "chunks": [
+  {
+   "name": "📄️fixture-readers",
+   "folder": "📄️fixture-readers",
+   "doc": "📄️ Transaction law fixture readers: the fixture text and its JSON accessors, the clock and reference decoding, the yield decoding and the transaction constructor.",
+   "ranges": [
+    [
+     16,
+     75
+    ]
+   ]
+  },
+  {
+   "name": "🧮️reducer-and-id-laws",
+   "folder": "🧮️reducer-and-id-laws",
+   "doc": "🧮️ Reducer and id laws: the state, yield and refusal kinds, the reducer matrix and cases, the resume order and the LEB128 and blake3 oracle of the minted ids.",
+   "ranges": [
+    [
+     77,
+     194
+    ]
+   ]
+  },
+  {
+   "name": "🌊️gesture-tool-laws",
+   "folder": "🌊️gesture-tool-laws",
+   "doc": "🌊️ Gesture tool laws: the example drag gesture statecharts, the gesture runner and its replay of every fixture scenario, the resume rows and the press, drag and release transaction.",
+   "ranges": [
+    [
+     196,
+     515
+    ]
+   ]
+  },
+  {
+   "name": "🏃️runner-laws",
+   "folder": "🏃️runner-laws",
+   "doc": "🏃️ Runner laws: the probe statecharts, the refused and unpublished yields and the timer, abort and rest behaviour of the runner.",
+   "ranges": [
+    [
+     517,
+     621
+    ]
+   ]
+  },
+  {
+   "name": "🫧️scrub-laws",
+   "folder": "🫧️scrub-laws",
+   "doc": "🫧️ Scrub laws: the scrub tool tables, chart and phases against the fixture, the ledger replay, the persisted scrubs and the late inputs.",
+   "ranges": [
+    [
+     623,
+     859
+    ]
+   ]
+  },
+  {
+   "name": "⌨️typing-laws",
+   "folder": "⌨️typing-laws",
+   "doc": "⌨️ Typing laws: the typing tool tables, chart and phases against the fixture, the algebra folds, the ledger replay and the persisted run.",
+   "ranges": [
+    [
+     861,
+     1097
+    ]
+   ]
+  },
+  {
+   "name": "🕸️node-drag-and-once-laws",
+   "folder": "🕸️node-drag-and-once-laws",
+   "doc": "🕸️ Node drag and once laws: the node drag rows and their commit as one transaction, the one-step tool and the independent dispatches.",
+   "ranges": [
+    [
+     1099,
+     1171
+    ]
+   ]
+  }
+ ]
+}

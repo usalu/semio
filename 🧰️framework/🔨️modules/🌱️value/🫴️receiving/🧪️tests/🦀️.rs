@@ -1,12 +1,13 @@
 //! 🧪️ Actual borrowed native controls retain original grants, cancellation and preallocation ports.
 use crate::{NativeDecodeControl,NativeEncodeControl,ValueError,ValueRefusalKind,native_encoding::{NativeEncodeAllocation,NativeEncodeProgress},native_decoding::NativeDecodeAllocation};
+use semio_framework_test_fixtures::fixture_text;
 use std::{cell::RefCell,sync::atomic::{AtomicBool,AtomicUsize,Ordering}};
-const ORIGINAL_RECEIVING_FIXTURE:&str=include_str!("🧫️fixtures/🔣️.json");
+static ORIGINAL_RECEIVING_FIXTURE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🫴️receiving/🧪️tests/🧫️fixtures/🔣️.json"));
 macro_rules! original_receiving_law {
  ($test:ident,$control:ident,$allocation:ident)=>{
   #[test]
   fn $test(){
-   let fixture:serde_json::Value=serde_json::from_str(ORIGINAL_RECEIVING_FIXTURE).unwrap();let initial=fixture["initialBytes"].as_u64().unwrap()as usize;let expected=fixture["expectedBytes"].as_u64().unwrap()as usize;let text=fixture["text"].as_str().unwrap();let maximum=fixture["maximumBytes"].as_u64().unwrap()as usize;
+   let fixture:serde_json::Value=serde_json::from_str((*ORIGINAL_RECEIVING_FIXTURE)).unwrap();let initial=fixture["initialBytes"].as_u64().unwrap()as usize;let expected=fixture["expectedBytes"].as_u64().unwrap()as usize;let text=fixture["text"].as_str().unwrap();let maximum=fixture["maximumBytes"].as_u64().unwrap()as usize;
    for case in fixture["cases"].as_array().unwrap(){let case=case.as_str().unwrap();let allowed=AtomicBool::new(true);let port_allowed=AtomicBool::new(true);let ledger=AtomicUsize::new(0);let requests=AtomicUsize::new(0);let events=RefCell::new(Vec::new());let mut callback=|event|{events.borrow_mut().push(event);allowed.load(Ordering::Relaxed)&&!(case=="cancelAfter"&&ledger.load(Ordering::Relaxed)==expected)};
     let mut port=|request:$allocation|{assert_eq!(request.owned_bytes,ledger.load(Ordering::Relaxed));assert_eq!(request.next_owned_bytes,request.owned_bytes+request.bytes);if !port_allowed.load(Ordering::Relaxed){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"actual original allocation port refused"))}ledger.store(request.next_owned_bytes,Ordering::Relaxed);requests.fetch_add(1,Ordering::Relaxed);Ok(())};
     let mut native=$control::new_forwarded(if case=="zeroRemaining"{initial}else{maximum},&mut callback,&mut port);native.charge(initial).unwrap();native.begin_stage(fixture["parentTotal"].as_u64().unwrap()as usize).unwrap();native.advance(fixture["parentCompleted"].as_u64().unwrap()as usize).unwrap();events.borrow_mut().clear();if case=="cancelBefore"{allowed.store(false,Ordering::Relaxed)}if case=="portRefused"{port_allowed.store(false,Ordering::Relaxed)}
@@ -15,7 +16,7 @@ macro_rules! original_receiving_law {
      match case{"full"=>{let output=result.unwrap().unwrap();assert_eq!(serde_json::to_value(&output).unwrap(),serde_json::to_value(text).unwrap());assert_eq!(native.owned_bytes(),expected);assert_eq!(requests.load(Ordering::Relaxed),2)},"cancelAfter"=>{assert_eq!(result.unwrap_err().kind,ValueRefusalKind::Canceled);assert_eq!(native.owned_bytes(),expected)},"cancelBefore"=>{assert_eq!(result.unwrap_err().kind,ValueRefusalKind::Canceled);assert_eq!(native.owned_bytes(),initial)},"portRefused"=>{let error=result.unwrap_err();assert_eq!(error.kind,ValueRefusalKind::OwnershipLimit);assert_eq!(error.message,"actual original allocation port refused");assert_eq!(native.owned_bytes(),initial)},"zeroRemaining"=>{assert_eq!(result.unwrap_err().kind,ValueRefusalKind::OwnershipLimit);assert_eq!(native.owned_bytes(),initial)},"invalidOffset"=>{assert_eq!(result.unwrap_err().kind,ValueRefusalKind::InvariantViolated);assert_eq!(native.owned_bytes(),initial)},_=>unreachable!()}
      allowed.store(true,Ordering::Relaxed);if case!="cancelAfter"{native.checkpoint().unwrap();let event=*events.borrow().last().unwrap();assert_eq!((event.completed,event.total),(2,5));}
     }
-    assert_eq!(native.owned_bytes(),ledger.load(Ordering::Relaxed));println!("[DEBUG] Original native receiving {} {} sameAbsoluteAllocationPort=true prefundedCeilingPreserved=true originalWorkRestored=true independentSerde=true",stringify!($control),case);
+    assert_eq!(native.owned_bytes(),ledger.load(Ordering::Relaxed));
    }
   }
  };

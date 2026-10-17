@@ -1,8 +1,9 @@
 //! 💰️ Actual JSON logical input settles caller-owned backing independently of SQL values.
 use super::*;
+use semio_framework_test_fixtures::fixture_text;
 #[test]
 fn sqlite_snapshot_json_owned_input_allocation_is_independent_exact_and_cumulative(){
- let neutral:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/💰️allocation/🔣️.json")).unwrap();
+ let neutral:serde_json::Value=serde_json::from_str(fixture_text!("../../🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/💰️allocation/🔣️.json")).unwrap();
  let (_,mut snapshot)=fixture();
  snapshot.schema=neutral["schema"].as_str().unwrap().repeat(neutral["schemaRepeat"].as_u64().unwrap()as usize);
  let literal=neutral["literal"].as_str().unwrap();

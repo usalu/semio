@@ -1,38 +1,14 @@
-use super::*;
+use super::{COMPONENT_INFERRED, COMPONENT_OVERRIDE_INFERRED, create_component, degrees_text, family_choices, host_choices, matching, placeable, system_choices, system_of, wall_mounted};
+use crate::editor::bim::entities::InferredRow;
+use crate::standards::v1::subsets::any::schema::diff::Assigned;
+use crate::standards::v1::subsets::any::schema::snapshot::{FamilyCategory, MepSystem, ModelSnapshot, Point2};
+use crate::standards::v1::subsets::any::schema::mutations::ModelMutation;
+use crate::editor::bim::fixture::{furnished, placed};
 use crate::editor::bim::entities::{kind_holding, kind_of};
 use crate::editor::bim::terminology::BimLabels;
 use crate::standards::v1::subsets::any::schema::{snapshot::{ExprPoint3, Family, FamilyParameter, FamilySolid, ParameterKind, SolidShape}, inferences::ModelInference};
 use protocol::Inference;
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
-
-const TABLE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧬️families/🪑️table/📸️snapshot/🔣️.json");
-
-/// 🛋️ The demo room (walls, storeys) with the families of the table fixture (a table, three profiles, a broken generic one) and a basin (plumbing, one parameter `width`, one cuboid).
-pub(crate) fn furnished() -> ModelSnapshot {
-    let mut snapshot = crate::editor::bim::gestures::tests::fixture::room();
-    let table: ModelSnapshot = from_json_str(TABLE, JsonMemberPolicy::Reject).expect("the table decodes");
-    snapshot.materials.extend(table.materials);
-    snapshot.families = table.families;
-    snapshot.family_parameters = table.family_parameters;
-    snapshot.family_solids = table.family_solids;
-    snapshot.families.insert("fam-basin".into(), Family { name: "Basin".into(), category: FamilyCategory::Plumbing });
-    snapshot.family_parameters.insert("fam-basin.width".into(), FamilyParameter { family: "fam-basin".into(), name: "width".into(), kind: ParameterKind::Length, value: "0.5 m".into() });
-    let offset = ExprPoint3 { x: "0 m".into(), y: "0 m".into(), z: "0 m".into() };
-    let shape = SolidShape::Cuboid { x: "-width / 2".into(), y: "0 m".into(), z: "0 m".into(), width: "width".into(), depth: "0.4 m".into(), height: "0.2 m".into() };
-    snapshot.family_solids.insert("s-basin".into(), FamilySolid { family: "fam-basin".into(), name: "Bowl".into(), shape, material: "\"m-steel\"".into(), visible: "true".into(), offset });
-    snapshot
-}
-
-/// 🪑️ [`furnished`] with a table `c-table` and a basin `c-basin` mounted on the first wall, on the ground storey.
-pub(crate) fn placed() -> ModelSnapshot {
-    let mut snapshot = furnished();
-    let wall = snapshot.walls.keys().next().cloned().expect("the room has walls");
-    let storey = snapshot.walls[&wall].storey.clone();
-    let component = |family: &str, host: Option<String>, name: &str| Component { storey: storey.clone(), family: family.into(), position: Point2 { x: 1.0, y: 1.0 }, elevation: 0.0, rotation: 0.0, mirrored: false, host, system: None, name: name.into() };
-    snapshot.components.insert("c-table".into(), component("fam-table", None, "Table 1"));
-    snapshot.components.insert("c-basin".into(), component("fam-basin", Some(wall), "Basin 1"));
-    snapshot
-}
 
 fn write(kind: &str, key: &str, snapshot: &ModelSnapshot, id: &str, value: &str) -> Option<ModelMutation> {
     let field = kind_of(kind).expect("kind").fields.iter().find(|field| field.key == key).expect("field");

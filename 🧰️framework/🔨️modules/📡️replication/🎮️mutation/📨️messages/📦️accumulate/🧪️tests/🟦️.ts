@@ -31,6 +31,5 @@ test("📦️ paged original rows preserve one final stable severity/omission au
     expect(state.worst).toBe(Math.max(...ranked.map(item => item.severity)));
     sql.close();
   }
-  console.log("[DEBUG] Original rows/full omitted counts/stable severity prefix agree with independent SQLite ORDER BY and RFC6902 before final clamp");
   expect(existsSync(new URL("../🦀️.rs", import.meta.url))).toBe(true);
 });

@@ -1,7 +1,8 @@
 //! 🔬️ Snapshot facet laws — the default document is a legal 1×1×1 grid, the addressing helpers agree
 //! with the collections they index, and the non-uniform axis maths is exact.
 
-use super::*;
+use semio_framework_value_derive::{FromValue, ToValue};
+use crate::standards::v1::subsets::any::schema::snapshot::*;
 
 #[test]
 fn the_default_document_is_a_legal_single_cell_grid() {

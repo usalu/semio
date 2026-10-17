@@ -1,5 +1,5 @@
 /** 🗂️ Retained preparation of centered raster layers for the shared compositor. */
-import type {WorkRetirement} from "../../../◻️2d/🧹️retire/🟦️.ts";
+import type {WorkRetirement} from "@semio-tech/framework-2d-js/retire";
 import {validateExtent,validateImage,type PixelImage,type PixelProgress} from "../../✍️editing/🟦️.ts";
 import {CompositeJob,inverse,multiply,type CompositeAffine,type CompositeBlend,type CompositeLayer,type CompositeMask} from "../🟦️.ts";
 

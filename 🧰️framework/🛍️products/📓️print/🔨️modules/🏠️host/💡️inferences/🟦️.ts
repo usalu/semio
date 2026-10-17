@@ -1,7 +1,7 @@
 import type { VizChartTextOutput } from "../../../🚪️io/📝️text/💡️inferences/🟦️.ts";
 /** 🏠️ Chart inference owns worker lifetime, cancellation and atomic publication. */
 import type {VizChartSnapshot} from "../../../🧬️schema/📸️snapshot/🟦️.ts";
-import type {VizChartInferenceProgress,VizChartInferenceControl} from "../../../🧬️schema/💡️inferences/🟦️.ts";
+import type {VizChartInferenceProgress,VizChartInferenceControl} from "@semio-tech/print-viz-inference";
 type WorkerMessage = { readonly kind: "progress"; readonly progress: VizChartInferenceProgress } | { readonly kind: "result"; readonly result: VizChartTextOutput };
 type InferenceWorker = { postMessage(snapshot: VizChartSnapshot): void; terminate(): void; listen(message: (value: WorkerMessage) => void, error: (value: unknown) => void): () => void };
 

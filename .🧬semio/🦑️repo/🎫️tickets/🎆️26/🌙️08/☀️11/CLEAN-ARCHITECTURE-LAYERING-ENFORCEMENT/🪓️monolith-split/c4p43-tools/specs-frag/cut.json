@@ -1,0 +1,57 @@
+{
+ "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧵️channel/🧪️tests/🔬️unit/🦀️.rs",
+ "original": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/c4p43-tools/orig/cut.rs",
+ "stage": "/Users/ueli/.cache/c4p43/stage-frag",
+ "chunks": [
+  {
+   "folder": "📨️app-command-laws",
+   "doc": "📨️ App command laws: the fixture helpers, the AppCommand round trips, the transaction forms, the paged route admission laws, the opening and the merge commands.",
+   "ranges": [
+    [
+     4,
+     316
+    ]
+   ]
+  },
+  {
+   "folder": "🎞️app-frame-laws",
+   "doc": "🎞️ App frame laws: the AppFrame round trips, the child pack and head commands and frames, the transaction frames, the merge report, conflicts and the UI patch and snapshot frames.",
+   "ranges": [
+    [
+     318,
+     557
+    ]
+   ]
+  },
+  {
+   "folder": "🚫️codec-refusal-laws",
+   "doc": "🚫️ Codec refusal laws: encoding determinism, the refusals of empty, unknown, truncated and trailing bytes, the presence roster limits and the paged generic decoder laws.",
+   "ranges": [
+    [
+     559,
+     855
+    ]
+   ]
+  },
+  {
+   "folder": "📚️fixture-corpus-laws",
+   "doc": "📚️ Fixture corpus laws: the golden command and frame corpus, the channel version pin and the shared cross-language vectors of the transaction, opening, merge, media export and document identity fixtures.",
+   "ranges": [
+    [
+     857,
+     1267
+    ]
+   ]
+  },
+  {
+   "folder": "🗃️archive-load-host-laws",
+   "doc": "🗃️ Archive load host laws: the scripted commands and the scripted outcome of the stepped whole-document load.",
+   "ranges": [
+    [
+     1269,
+     1388
+    ]
+   ]
+  }
+ ]
+}

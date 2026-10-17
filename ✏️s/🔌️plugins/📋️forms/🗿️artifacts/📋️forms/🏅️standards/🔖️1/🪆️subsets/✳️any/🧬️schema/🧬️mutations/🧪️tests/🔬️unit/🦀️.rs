@@ -1,10 +1,12 @@
-use super::*;
+use crate::FormsSnapshot;
+use crate::standards::v1::subsets::any::schema::mutations::*;
 use crate::mutations::change_block_field::mutation::{BlockField, ChangeBlockField};
 use crate::mutations::{change_form_title, change_step_description, create_block, create_step, delete_block, delete_step, move_block_to_step, rename_step, reorder_step, replace_block};
 use crate::{FormQuestion, FormStep, FORMS_DOCUMENT_SCHEMA};
 use protocol::os_spr::protocol_laws::{assert_fatal_never_applies, assert_missing_target_is_error};
 use protocol::SemanticMutation;
-use crate::central_apply::{apply_form_edit_mutation};
+use crate::mutations::apply::{apply_form_edit_mutation};
+use semio_framework_test_fixtures::fixture_text;
 
 fn sample_step(id: &str) -> FormStep {
     FormStep { id: id.into(), title: format!("Step {id}"), description: None, blocks: Vec::new() }
@@ -400,8 +402,8 @@ async fn create_family_missing_target_is_error() {
 /// `FromValue` and re-encodes to exactly the committed JSON.
 #[test]
 fn committed_wire_witnesses_are_the_canonical_wire() {
-    store::os_store::test_support::assert_wire_witness::<FormMutation>(include_str!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/➕create-block/🧾️wire-witness/🦠️mutation/🔣️.json"));
-    store::os_store::test_support::assert_wire_witness::<FormMutation>(include_str!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎛️change-block-field/🧾️wire-witness/🦠️mutation/🔣️.json"));
+    store::os_store::test_support::assert_wire_witness::<FormMutation>(fixture_text!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/➕create-block/🧾️wire-witness/🦠️mutation/🔣️.json"));
+    store::os_store::test_support::assert_wire_witness::<FormMutation>(fixture_text!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎛️change-block-field/🧾️wire-witness/🦠️mutation/🔣️.json"));
 }
 //#endregion 🧾️WireWitnesses
 

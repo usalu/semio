@@ -3,7 +3,6 @@
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3;
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioRgba;
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioUv;
-use crate::schema::mutations::SemioMeshMutation;
 use crate::schema::snapshot::SemioMeshSnapshot;
 
 //#region 🔖️Payload
@@ -20,13 +19,16 @@ pub struct ReplacePrimitiveGeometry {
     pub indices: Vec<u32>,
 }
 
-impl protocol::MutationKind<SemioMeshSnapshot, SemioMeshMutation> for ReplacePrimitiveGeometry {
+impl<Op> protocol::MutationKind<SemioMeshSnapshot, Op> for ReplacePrimitiveGeometry
+where
+    Op: protocol::Mutation<SemioMeshSnapshot, Diff = crate::schema::diff::SemioMeshDiff> + From<ReplacePrimitiveGeometry>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "primitive-geometry", kind: "replace-primitive-geometry", record: "ReplacedPrimitiveGeometry" };
 
-    fn diff(&self, base: &SemioMeshSnapshot) -> protocol::MutationOutcome<<SemioMeshMutation as protocol::Mutation<SemioMeshSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioMeshSnapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<SemioMeshSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &SemioMeshSnapshot) -> Result<Vec<SemioMeshMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &SemioMeshSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

@@ -36,7 +36,7 @@ describe("owner-authored rebuild composition", () => {
   it("matches an independent schema oracle on malformed plans and portable inputs", () => {
     const plan = fixtures.cases[0]!.plans[0]!;
     const valid = { target: "wasm32-wasip2", workspace: "Cargo.toml", packages: ["framework"], features: [] };
-    const cases = [plan, { ...plan, extra: true }, { ...plan, steps: [] }, { ...plan, steps: [{ ...plan.steps[0], id: "UPPER" }] }, { ...plan, steps: [{ ...plan.steps[0], command: ["cargo", "nx"] }] }, { ...plan, steps: [{ ...plan.steps[0], command: ["nx"] }] }, { ...plan, steps: [{ ...plan.steps[0], command: ["nx", ""] }] }, ...["Cargo.toml", "specific/Cargo.toml", "../Cargo.toml", "/tmp/Cargo.toml", "x\\Cargo.toml", "C:/Cargo.toml", "a//Cargo.toml", "a/../Cargo.toml"].map(workspace => ({ ...plan, guestFrameworkChecks: [{ ...valid, workspace }] }))];
+    const cases = [plan, { ...plan, extra: true }, { ...plan, steps: [] }, { ...plan, steps: [{ ...plan.steps[0], id: "UPPER" }] }, { ...plan, steps: [{ ...plan.steps[0], command: ["cargo", "repo"] }] }, { ...plan, steps: [{ ...plan.steps[0], command: ["repo"] }] }, { ...plan, steps: [{ ...plan.steps[0], command: ["repo", ""] }] }, ...["Cargo.toml", "specific/Cargo.toml", "../Cargo.toml", "/tmp/Cargo.toml", "x\\Cargo.toml", "C:/Cargo.toml", "a//Cargo.toml", "a/../Cargo.toml"].map(workspace => ({ ...plan, guestFrameworkChecks: [{ ...valid, workspace }] }))];
     for (const value of cases) {
       let accepted = true;
       try { parseRebuildPlanV1(value); } catch { accepted = false; }

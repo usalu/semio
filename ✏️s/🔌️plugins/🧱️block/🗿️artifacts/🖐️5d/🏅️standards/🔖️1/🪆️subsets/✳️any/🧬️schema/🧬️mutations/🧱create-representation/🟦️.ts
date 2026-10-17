@@ -1,6 +1,6 @@
 /** 🧱 `CreateRepresentation` mutation payload — mirrors `🦀️.rs`. */
 
-import type { BlockRepresentation } from "../../../../../../../../../🟦️";
+import type { BlockRepresentation } from "@semio-tech/block-js";
 
 export interface CreateRepresentation {
   representation: BlockRepresentation;

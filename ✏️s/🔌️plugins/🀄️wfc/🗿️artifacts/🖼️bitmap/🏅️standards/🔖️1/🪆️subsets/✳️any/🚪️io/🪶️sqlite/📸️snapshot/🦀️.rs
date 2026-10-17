@@ -4,7 +4,7 @@ use crate::standards::v1::subsets::any::schema::snapshot::{BitmapSnapshot,Bitmap
 use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{SqliteDatabase,SqliteRow,SqliteSnapshotControl,SqliteSnapshotPhase,SqliteValue,SnapshotEncoding,validate_sqlite_database_schema,artifact::{Cell,RowWriter,Reconstruction,NativeEncodingBound}}};
 use std::collections::BTreeSet;
 use semio_framework_value::{ValueError,ValueRefusalKind};
-fn invalid(message:impl Into<String>)->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,message)}
+pub fn invalid(message:impl Into<String>)->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,message)}
 fn index(n:usize)->Result<i64,ValueError>{i64::try_from(n).map_err(|_|ValueError::new(ValueRefusalKind::WorkLimit,"bitmap ordinal overflow"))}
 fn identity(r:&SqliteRow,n:usize)->Result<(),ValueError>{if r.values.len()!=n||r.integer(0)?!=r.rowid||r.rowid<=0{return Err(invalid("bitmap entity identity or field count differs"))}Ok(())}
 fn unsigned(r:&SqliteRow,i:usize)->Result<u32,ValueError>{u32::try_from(r.integer(i)?).map_err(|_|invalid("bitmap scalar exceeds unsigned32"))}
@@ -48,7 +48,4 @@ fn from_sqlite_database(d:&SqliteDatabase,c:&mut SqliteSnapshotControl<'_>)->Res
  }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;
 

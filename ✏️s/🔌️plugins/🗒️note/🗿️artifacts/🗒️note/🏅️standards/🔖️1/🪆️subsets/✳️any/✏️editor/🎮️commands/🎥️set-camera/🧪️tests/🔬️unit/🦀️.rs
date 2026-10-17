@@ -1,7 +1,16 @@
-use super::*;
+#[allow(unused_imports)]
+use crate::op::NoteMutation;
+#[allow(unused_imports)]
+use crate::NoteSnapshot;
+#[allow(unused_imports)]
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+#[allow(unused_imports)]
+use semio_framework_value_derive::{FromValue, ToValue};
+use crate::editor::note::commands::set_camera::*;
 use crate::editor::note::commands::set_camera_zoom;
 use crate::editor::note::unit_tests::context::{dispatch, note_app, render};
-use crate::editor::note::{NoteCommand, NOTE_PLAY_BODY_COMPOSITE};
+use crate::editor::note::command_enum::NoteCommand;
+use crate::editor::note::NOTE_PLAY_BODY_COMPOSITE;
 use crate::NoteCamera;
 use semio_framework_plugin::artifact_app_laws;
 

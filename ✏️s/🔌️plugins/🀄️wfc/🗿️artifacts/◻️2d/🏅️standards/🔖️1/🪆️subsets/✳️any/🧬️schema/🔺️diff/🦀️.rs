@@ -186,7 +186,5 @@ impl protocol::DiffAlgebra<Wfc2dSnapshot> for Wfc2dDiff {
 //#endregion 🔖️Apply
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

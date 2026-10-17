@@ -6,13 +6,14 @@ import mutation from "../../../../../🔀️transform/🧪️tests/🧫️fixtur
 import { parseDragLayers } from "../../../../../🔀️transform/🧬️schema/🧬️mutations/✋️drag-layers/🦠️mutation/🟦️.ts";
 
 test("the schema and the parser admit exactly the same dragLayers records", () => {
-  const validate = semioSchemaAjvV1({ allErrors: true }).compile(schema);
+  const validate = semioSchemaAjvV1({ allErrors: true }).compile<ReturnType<typeof parseDragLayers> & { mutation: string }>(schema);
   expect(validate(mutation)).toBe(true);
   const { mutation: _tag, ...payload } = mutation;
   expect(parseDragLayers(mutation)).toEqual(payload);
   for (const candidate of [{ ...mutation, targets: [] }, { ...mutation, targets: ["shape-a", "shape-a"] }, { ...mutation, targets: [7] }, { ...mutation, dx: "20" }, { ...mutation, dy: null }, { ...mutation, extra: true }, { ...mutation, mutation: "rotateLayers" }, { targets: mutation.targets, dx: 1, dy: 2 }, { ...mutation, dx: 0, dy: 0 }] as unknown[]) {
-    const accepted = validate(candidate);
-    if (accepted) expect<unknown>(parseDragLayers(candidate)).toEqual(Object.fromEntries(Object.entries(candidate as Record<string, unknown>).filter(([key]) => key !== "mutation")));
-    else expect(() => parseDragLayers(candidate), JSON.stringify(candidate)).toThrow();
+    if (validate(candidate)) {
+      const { mutation: _tag, ...expected } = candidate;
+      expect(parseDragLayers(candidate)).toEqual(expected);
+    } else expect(() => parseDragLayers(candidate), JSON.stringify(candidate)).toThrow();
   }
 });

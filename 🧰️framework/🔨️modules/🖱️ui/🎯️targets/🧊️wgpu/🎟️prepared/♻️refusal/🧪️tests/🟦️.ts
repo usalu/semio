@@ -9,5 +9,4 @@ test("portable raster refusal owns whole original backings until exact paid rele
  expect(source.byteLength+retained.byteLength+key.byteLength).toBe(fixture.expected.releasedBytes);
  expect(JSON.parse(JSON.stringify(fixture.grant))).toEqual(fixture.grant);
  expect(Buffer.from(key.toString("utf8"))).toEqual(key);
- console.log("[DEBUG] Raster refusal owned extents agree with independent Buffer UTF8 and Ajv oracle");
 });

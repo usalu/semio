@@ -1,0 +1,2676 @@
+{
+  "version": 1,
+  "directories": [
+    {
+      "id": "none",
+      "names": [
+        "alpha",
+        "Ω𐐀"
+      ],
+      "mutation": "none",
+      "accepted": true
+    },
+    {
+      "id": "literal-bom-name",
+      "names": [
+        "﻿alpha",
+        "Ω𐐀"
+      ],
+      "mutation": "none",
+      "accepted": true
+    },
+    {
+      "id": "short-header",
+      "names": [
+        "alpha",
+        "Ω𐐀"
+      ],
+      "mutation": "short-header",
+      "accepted": false
+    },
+    {
+      "id": "odd-name",
+      "names": [
+        "alpha",
+        "Ω𐐀"
+      ],
+      "mutation": "odd-name",
+      "accepted": false
+    },
+    {
+      "id": "partial-name",
+      "names": [
+        "alpha",
+        "Ω𐐀"
+      ],
+      "mutation": "partial-name",
+      "accepted": false
+    },
+    {
+      "id": "unaligned-next",
+      "names": [
+        "alpha",
+        "Ω𐐀"
+      ],
+      "mutation": "unaligned-next",
+      "accepted": false
+    },
+    {
+      "id": "past-next",
+      "names": [
+        "alpha",
+        "Ω𐐀"
+      ],
+      "mutation": "past-next",
+      "accepted": false
+    },
+    {
+      "id": "zero-info",
+      "names": [
+        "alpha",
+        "Ω𐐀"
+      ],
+      "mutation": "zero-info",
+      "accepted": false
+    },
+    {
+      "id": "invalid-utf16",
+      "names": [
+        "alpha",
+        "Ω𐐀"
+      ],
+      "mutation": "invalid-utf16",
+      "accepted": false
+    },
+    {
+      "id": "slash",
+      "names": [
+        "alpha",
+        "Ω𐐀"
+      ],
+      "mutation": "slash",
+      "accepted": false
+    },
+    {
+      "id": "negative-size",
+      "names": [
+        "alpha",
+        "Ω𐐀"
+      ],
+      "mutation": "negative-size",
+      "accepted": false
+    }
+  ],
+  "native": [
+    {
+      "id": "ordinary",
+      "effect": "ordinary",
+      "accepted": true,
+      "unresolved": false
+    },
+    {
+      "id": "device",
+      "effect": "device",
+      "accepted": false,
+      "unresolved": false
+    },
+    {
+      "id": "reparse",
+      "effect": "reparse",
+      "accepted": false,
+      "unresolved": false
+    },
+    {
+      "id": "hardlink",
+      "effect": "hardlink",
+      "accepted": false,
+      "unresolved": false
+    },
+    {
+      "id": "named-stream",
+      "effect": "named-stream",
+      "accepted": false,
+      "unresolved": false
+    },
+    {
+      "id": "foreign-volume",
+      "effect": "foreign-volume",
+      "accepted": false,
+      "unresolved": false
+    },
+    {
+      "id": "changed-id",
+      "effect": "changed-id",
+      "accepted": false,
+      "unresolved": false
+    },
+    {
+      "id": "changed-stamp",
+      "effect": "changed-stamp",
+      "accepted": false,
+      "unresolved": false
+    },
+    {
+      "id": "zero-information",
+      "effect": "zero-information",
+      "accepted": false,
+      "unresolved": false
+    },
+    {
+      "id": "pending",
+      "effect": "pending",
+      "accepted": false,
+      "unresolved": true
+    },
+    {
+      "id": "read-false",
+      "effect": "read-false",
+      "accepted": false,
+      "unresolved": false
+    },
+    {
+      "id": "read-overflow",
+      "effect": "read-overflow",
+      "accepted": false,
+      "unresolved": false
+    },
+    {
+      "id": "close-zero",
+      "effect": "close-zero",
+      "accepted": false,
+      "unresolved": true
+    },
+    {
+      "id": "close-throw",
+      "effect": "close-throw",
+      "accepted": false,
+      "unresolved": true
+    },
+    {
+      "id": "open-observer",
+      "effect": "open-observer",
+      "accepted": false,
+      "unresolved": false
+    },
+    {
+      "id": "open-cancel",
+      "effect": "open-cancel",
+      "accepted": false,
+      "unresolved": false
+    },
+    {
+      "id": "body-undefined",
+      "effect": "body-undefined",
+      "accepted": false,
+      "unresolved": false
+    },
+    {
+      "id": "body-frozen",
+      "effect": "body-frozen",
+      "accepted": false,
+      "unresolved": false
+    },
+    {
+      "id": "copied-facts",
+      "effect": "copied-facts",
+      "accepted": false,
+      "unresolved": false
+    },
+    {
+      "id": "escaped-receiver",
+      "effect": "escaped-receiver",
+      "accepted": false,
+      "unresolved": false
+    },
+    {
+      "id": "copied-control",
+      "effect": "copied-control",
+      "accepted": false,
+      "unresolved": false
+    },
+    {
+      "id": "pre-cancel",
+      "effect": "pre-cancel",
+      "accepted": false,
+      "unresolved": false
+    },
+    {
+      "id": "post-read-cancel",
+      "effect": "post-read-cancel",
+      "accepted": false,
+      "unresolved": false
+    },
+    {
+      "id": "query-throw",
+      "effect": "query-throw",
+      "accepted": false,
+      "unresolved": true
+    },
+    {
+      "id": "library-close",
+      "effect": "library-close",
+      "accepted": false,
+      "unresolved": true
+    },
+    {
+      "id": "same-body-drain",
+      "effect": "same-body-drain",
+      "accepted": true,
+      "unresolved": false
+    },
+    {
+      "id": "unawaited-reject",
+      "effect": "unawaited-reject",
+      "accepted": false,
+      "unresolved": false
+    },
+    {
+      "id": "directory-cancel",
+      "effect": "directory-cancel",
+      "accepted": false,
+      "unresolved": false
+    },
+    {
+      "id": "library-observer",
+      "effect": "library-observer",
+      "accepted": false,
+      "unresolved": false
+    },
+    {
+      "id": "parallel-admission",
+      "effect": "parallel-admission",
+      "accepted": false,
+      "unresolved": false
+    },
+    {
+      "id": "short-then-eof",
+      "effect": "short-then-eof",
+      "accepted": true,
+      "unresolved": false
+    },
+    {
+      "id": "root-changed",
+      "effect": "root-changed",
+      "accepted": false,
+      "unresolved": false
+    },
+    {
+      "id": "ancestor-changed",
+      "effect": "ancestor-changed",
+      "accepted": false,
+      "unresolved": false
+    },
+    {
+      "id": "directory-open-observer",
+      "effect": "directory-open-observer",
+      "accepted": false,
+      "unresolved": false
+    },
+    {
+      "id": "changed-high-id",
+      "effect": "changed-high-id",
+      "accepted": false,
+      "unresolved": false
+    },
+    {
+      "id": "closed-parent-read",
+      "effect": "closed-parent-read",
+      "accepted": false,
+      "unresolved": false
+    },
+    {
+      "id": "copied-reader",
+      "effect": "copied-reader",
+      "accepted": false,
+      "unresolved": false
+    },
+    {
+      "id": "growth",
+      "effect": "growth",
+      "accepted": false,
+      "unresolved": false
+    },
+    {
+      "id": "cancel-after-library",
+      "effect": "cancel-after-library",
+      "accepted": false,
+      "unresolved": false
+    },
+    {
+      "id": "library-close-observer",
+      "effect": "library-close-observer",
+      "accepted": false,
+      "unresolved": false
+    },
+    {
+      "id": "file-close-observer",
+      "effect": "file-close-observer",
+      "accepted": false,
+      "unresolved": false
+    },
+    {
+      "id": "stream-size",
+      "effect": "stream-size",
+      "accepted": false,
+      "unresolved": false
+    },
+    {
+      "id": "stream-allocation",
+      "effect": "stream-allocation",
+      "accepted": false,
+      "unresolved": false
+    },
+    {
+      "id": "stream-eof-information",
+      "effect": "stream-eof-information",
+      "accepted": false,
+      "unresolved": false
+    },
+    {
+      "id": "sparse",
+      "effect": "sparse",
+      "accepted": true,
+      "unresolved": false
+    },
+    {
+      "id": "standard-allocation",
+      "effect": "standard-allocation",
+      "accepted": false,
+      "unresolved": false
+    }
+  ],
+  "roots": [
+    {
+      "id": "ordinary",
+      "effect": "ordinary",
+      "accepted": true
+    },
+    {
+      "id": "copy-data",
+      "effect": "copy-data",
+      "accepted": true
+    },
+    {
+      "id": "accessor",
+      "effect": "accessor",
+      "accepted": false
+    },
+    {
+      "id": "symbol",
+      "effect": "symbol",
+      "accepted": false
+    },
+    {
+      "id": "extra",
+      "effect": "extra",
+      "accepted": false
+    },
+    {
+      "id": "foreign-volume",
+      "effect": "foreign-volume",
+      "accepted": false
+    },
+    {
+      "id": "mutate-after-birth",
+      "effect": "mutate-after-birth",
+      "accepted": true
+    },
+    {
+      "id": "relative",
+      "effect": "relative",
+      "accepted": false
+    },
+    {
+      "id": "alias",
+      "effect": "alias",
+      "accepted": false
+    },
+    {
+      "id": "long",
+      "effect": "long",
+      "accepted": false
+    },
+    {
+      "id": "extra-prototype",
+      "effect": "extra-prototype",
+      "accepted": false
+    }
+  ],
+  "host": [
+    {
+      "id": "fixed.vhd:ordinary",
+      "record": "fixed.vhd",
+      "effect": "ordinary",
+      "accepted": true
+    },
+    {
+      "id": "image.json:ordinary",
+      "record": "image.json",
+      "effect": "ordinary",
+      "accepted": true
+    },
+    {
+      "id": ".publication/intent.json:ordinary",
+      "record": ".publication/intent.json",
+      "effect": "ordinary",
+      "accepted": true
+    },
+    {
+      "id": ".publication/receipt.json:ordinary",
+      "record": ".publication/receipt.json",
+      "effect": "ordinary",
+      "accepted": true
+    },
+    {
+      "id": "unknown",
+      "record": "image.json",
+      "effect": "unknown",
+      "accepted": false
+    },
+    {
+      "id": "accessor",
+      "record": "image.json",
+      "effect": "accessor",
+      "accepted": false
+    },
+    {
+      "id": "extra-prototype",
+      "record": "image.json",
+      "effect": "extra-prototype",
+      "accepted": false
+    },
+    {
+      "id": "alias",
+      "record": "image.json",
+      "effect": "alias",
+      "accepted": false
+    },
+    {
+      "id": "directory-id",
+      "record": "image.json",
+      "effect": "directory-id",
+      "accepted": false
+    },
+    {
+      "id": "backing-id",
+      "record": "image.json",
+      "effect": "backing-id",
+      "accepted": false
+    },
+    {
+      "id": "high-id",
+      "record": "image.json",
+      "effect": "high-id",
+      "accepted": false
+    },
+    {
+      "id": "legacy-size",
+      "record": "image.json",
+      "effect": "legacy-size",
+      "accepted": false
+    },
+    {
+      "id": "large",
+      "record": "image.json",
+      "effect": "large",
+      "accepted": false
+    },
+    {
+      "id": "short",
+      "record": "image.json",
+      "effect": "short",
+      "accepted": false
+    },
+    {
+      "id": "growth",
+      "record": "image.json",
+      "effect": "growth",
+      "accepted": false
+    },
+    {
+      "id": "reparse-parent",
+      "record": "image.json",
+      "effect": "reparse-parent",
+      "accepted": false
+    },
+    {
+      "id": "copy-control",
+      "record": "image.json",
+      "effect": "copy-control",
+      "accepted": false
+    },
+    {
+      "id": "pre-cancel",
+      "record": "image.json",
+      "effect": "pre-cancel",
+      "accepted": false
+    },
+    {
+      "id": "post-open-cancel",
+      "record": "image.json",
+      "effect": "post-open-cancel",
+      "accepted": false
+    },
+    {
+      "id": "close-zero",
+      "record": "image.json",
+      "effect": "close-zero",
+      "accepted": false
+    },
+    {
+      "id": "close-observer",
+      "record": "image.json",
+      "effect": "close-observer",
+      "accepted": false
+    },
+    {
+      "id": "changed-options",
+      "record": "image.json",
+      "effect": "changed-options",
+      "accepted": true
+    },
+    {
+      "id": "zero-record",
+      "record": "image.json",
+      "effect": "zero-record",
+      "accepted": true
+    },
+    {
+      "id": "short-footer",
+      "record": "fixed.vhd",
+      "effect": "short-footer",
+      "accepted": false
+    },
+    {
+      "id": "changed-parent",
+      "record": "image.json",
+      "effect": "changed-parent",
+      "accepted": false
+    },
+    {
+      "id": "foreign-volume",
+      "record": "image.json",
+      "effect": "foreign-volume",
+      "accepted": false
+    },
+    {
+      "id": "native-legacy-inode",
+      "record": "image.json",
+      "effect": "native-legacy-inode",
+      "accepted": false
+    }
+  ],
+  "sessions": [
+    {
+      "id": "ordinary",
+      "effect": "ordinary",
+      "accepted": true
+    },
+    {
+      "id": "cancel-body",
+      "effect": "cancel-body",
+      "accepted": true
+    },
+    {
+      "id": "expired-body",
+      "effect": "expired-body",
+      "accepted": true
+    },
+    {
+      "id": "copied-enrollment",
+      "effect": "copied-enrollment",
+      "accepted": false
+    },
+    {
+      "id": "foreign-enrollment",
+      "effect": "foreign-enrollment",
+      "accepted": false
+    },
+    {
+      "id": "copied-writer",
+      "effect": "copied-writer",
+      "accepted": false
+    },
+    {
+      "id": "foreign-resource",
+      "effect": "foreign-resource",
+      "accepted": false
+    },
+    {
+      "id": "changed-writer",
+      "effect": "changed-writer",
+      "accepted": false
+    },
+    {
+      "id": "copied-receiver",
+      "effect": "copied-receiver",
+      "accepted": false
+    },
+    {
+      "id": "escaped-receiver",
+      "effect": "escaped-receiver",
+      "accepted": false
+    },
+    {
+      "id": "terminal-before-cleanup",
+      "effect": "terminal-before-cleanup",
+      "accepted": false
+    },
+    {
+      "id": "ordinary-after-cleanup",
+      "effect": "ordinary-after-cleanup",
+      "accepted": false
+    },
+    {
+      "id": "changed-options",
+      "effect": "changed-options",
+      "accepted": true
+    },
+    {
+      "id": "changed-parent",
+      "effect": "changed-parent",
+      "accepted": false
+    },
+    {
+      "id": "terminal-close",
+      "effect": "terminal-close",
+      "accepted": false
+    },
+    {
+      "id": "body-undefined",
+      "effect": "body-undefined",
+      "accepted": false
+    },
+    {
+      "id": "body-frozen",
+      "effect": "body-frozen",
+      "accepted": false
+    },
+    {
+      "id": "same-body-drain",
+      "effect": "same-body-drain",
+      "accepted": true
+    },
+    {
+      "id": "work-exhausted",
+      "effect": "work-exhausted",
+      "accepted": false
+    },
+    {
+      "id": "no-work-reset",
+      "effect": "no-work-reset",
+      "accepted": false
+    },
+    {
+      "id": "terminal-no-retry",
+      "effect": "terminal-no-retry",
+      "accepted": false
+    },
+    {
+      "id": "terminal-observer",
+      "effect": "terminal-observer",
+      "accepted": false
+    },
+    {
+      "id": "body-undefined-terminal-close",
+      "effect": "body-undefined-terminal-close",
+      "accepted": false
+    },
+    {
+      "id": "body-frozen-terminal-close",
+      "effect": "body-frozen-terminal-close",
+      "accepted": false
+    },
+    {
+      "id": "admission-sync",
+      "effect": "admission-sync",
+      "accepted": false
+    },
+    {
+      "id": "admission-sync-swallowed",
+      "effect": "admission-sync-swallowed",
+      "accepted": false
+    }
+  ],
+  "rootSessions": [
+    {
+      "id": "mapped-ordinary",
+      "effect": "ordinary",
+      "role": "mapped",
+      "accepted": true
+    },
+    {
+      "id": "mapped-wrong-root",
+      "effect": "wrong-root",
+      "role": "mapped",
+      "accepted": false
+    },
+    {
+      "id": "mapped-wrong-volume",
+      "effect": "wrong-volume",
+      "role": "mapped",
+      "accepted": false
+    },
+    {
+      "id": "mapped-copied-evidence",
+      "effect": "copied-evidence",
+      "role": "mapped",
+      "accepted": false
+    },
+    {
+      "id": "mapped-foreign-evidence",
+      "effect": "foreign-evidence",
+      "role": "mapped",
+      "accepted": false
+    },
+    {
+      "id": "mapped-changed-root-id",
+      "effect": "changed-root-id",
+      "role": "mapped",
+      "accepted": false
+    },
+    {
+      "id": "mapped-changed-root-high",
+      "effect": "changed-root-high",
+      "role": "mapped",
+      "accepted": false
+    },
+    {
+      "id": "mapped-changed-root-acl",
+      "effect": "changed-root-acl",
+      "role": "mapped",
+      "accepted": false
+    },
+    {
+      "id": "mapped-changed-ancestor",
+      "effect": "changed-ancestor",
+      "role": "mapped",
+      "accepted": false
+    },
+    {
+      "id": "mapped-cancel-body",
+      "effect": "cancel-body",
+      "role": "mapped",
+      "accepted": true
+    },
+    {
+      "id": "mapped-expired-body",
+      "effect": "expired-body",
+      "role": "mapped",
+      "accepted": true
+    },
+    {
+      "id": "mapped-read-drain",
+      "effect": "read-drain",
+      "role": "mapped",
+      "accepted": true
+    },
+    {
+      "id": "mapped-terminal-sync",
+      "effect": "terminal-sync",
+      "role": "mapped",
+      "accepted": false
+    },
+    {
+      "id": "mapped-terminal-async",
+      "effect": "terminal-async",
+      "role": "mapped",
+      "accepted": false
+    },
+    {
+      "id": "mapped-close-zero",
+      "effect": "close-zero",
+      "role": "mapped",
+      "accepted": false
+    },
+    {
+      "id": "mapped-body-undefined",
+      "effect": "body-undefined",
+      "role": "mapped",
+      "accepted": false
+    },
+    {
+      "id": "mapped-body-frozen",
+      "effect": "body-frozen",
+      "role": "mapped",
+      "accepted": false
+    },
+    {
+      "id": "mapped-combined-undefined",
+      "effect": "combined-undefined",
+      "role": "mapped",
+      "accepted": false
+    },
+    {
+      "id": "mapped-combined-frozen",
+      "effect": "combined-frozen",
+      "role": "mapped",
+      "accepted": false
+    },
+    {
+      "id": "mapped-work-exhausted",
+      "effect": "work-exhausted",
+      "role": "mapped",
+      "accepted": false
+    },
+    {
+      "id": "mapped-no-work-reset",
+      "effect": "no-work-reset",
+      "role": "mapped",
+      "accepted": false
+    },
+    {
+      "id": "mapped-changed-input",
+      "effect": "changed-input",
+      "role": "mapped",
+      "accepted": true
+    },
+    {
+      "id": "mapped-old-host-cannot-root",
+      "effect": "old-host-cannot-root",
+      "role": "mapped",
+      "accepted": false
+    },
+    {
+      "id": "underlying-ordinary",
+      "effect": "ordinary",
+      "role": "underlying",
+      "accepted": true
+    },
+    {
+      "id": "underlying-copied-evidence",
+      "effect": "copied-evidence",
+      "role": "underlying",
+      "accepted": false
+    },
+    {
+      "id": "underlying-foreign-evidence",
+      "effect": "foreign-evidence",
+      "role": "underlying",
+      "accepted": false
+    },
+    {
+      "id": "underlying-changed-root-id",
+      "effect": "changed-root-id",
+      "role": "underlying",
+      "accepted": false
+    },
+    {
+      "id": "underlying-changed-root-high",
+      "effect": "changed-root-high",
+      "role": "underlying",
+      "accepted": false
+    },
+    {
+      "id": "underlying-changed-root-acl",
+      "effect": "changed-root-acl",
+      "role": "underlying",
+      "accepted": false
+    },
+    {
+      "id": "underlying-changed-ancestor",
+      "effect": "changed-ancestor",
+      "role": "underlying",
+      "accepted": false
+    },
+    {
+      "id": "underlying-cross-volume",
+      "effect": "cross-volume",
+      "role": "underlying",
+      "accepted": false
+    },
+    {
+      "id": "underlying-reparse",
+      "effect": "reparse",
+      "role": "underlying",
+      "accepted": false
+    },
+    {
+      "id": "underlying-nonempty",
+      "effect": "nonempty",
+      "role": "underlying",
+      "accepted": false
+    },
+    {
+      "id": "underlying-dot-markers",
+      "effect": "dot-markers",
+      "role": "underlying",
+      "accepted": true
+    },
+    {
+      "id": "underlying-dot-id",
+      "effect": "dot-id",
+      "role": "underlying",
+      "accepted": false
+    },
+    {
+      "id": "underlying-partial-cursor",
+      "effect": "partial-cursor",
+      "role": "underlying",
+      "accepted": false
+    },
+    {
+      "id": "underlying-pending-cursor",
+      "effect": "pending-cursor",
+      "role": "underlying",
+      "accepted": false
+    },
+    {
+      "id": "underlying-zero-cursor-info",
+      "effect": "zero-cursor-info",
+      "role": "underlying",
+      "accepted": false
+    },
+    {
+      "id": "underlying-cancel-body",
+      "effect": "cancel-body",
+      "role": "underlying",
+      "accepted": true
+    },
+    {
+      "id": "underlying-expired-body",
+      "effect": "expired-body",
+      "role": "underlying",
+      "accepted": true
+    },
+    {
+      "id": "underlying-read-drain",
+      "effect": "read-drain",
+      "role": "underlying",
+      "accepted": true
+    },
+    {
+      "id": "underlying-terminal-sync",
+      "effect": "terminal-sync",
+      "role": "underlying",
+      "accepted": false
+    },
+    {
+      "id": "underlying-terminal-async",
+      "effect": "terminal-async",
+      "role": "underlying",
+      "accepted": false
+    },
+    {
+      "id": "underlying-close-zero",
+      "effect": "close-zero",
+      "role": "underlying",
+      "accepted": false
+    },
+    {
+      "id": "underlying-body-undefined",
+      "effect": "body-undefined",
+      "role": "underlying",
+      "accepted": false
+    },
+    {
+      "id": "underlying-body-frozen",
+      "effect": "body-frozen",
+      "role": "underlying",
+      "accepted": false
+    },
+    {
+      "id": "underlying-combined-undefined",
+      "effect": "combined-undefined",
+      "role": "underlying",
+      "accepted": false
+    },
+    {
+      "id": "underlying-combined-frozen",
+      "effect": "combined-frozen",
+      "role": "underlying",
+      "accepted": false
+    },
+    {
+      "id": "underlying-work-exhausted",
+      "effect": "work-exhausted",
+      "role": "underlying",
+      "accepted": false
+    },
+    {
+      "id": "underlying-no-work-reset",
+      "effect": "no-work-reset",
+      "role": "underlying",
+      "accepted": false
+    },
+    {
+      "id": "underlying-changed-input",
+      "effect": "changed-input",
+      "role": "underlying",
+      "accepted": true
+    },
+    {
+      "id": "underlying-old-host-cannot-root",
+      "effect": "old-host-cannot-root",
+      "role": "underlying",
+      "accepted": false
+    },
+    {
+      "id": "mapped-missing-evidence",
+      "effect": "missing-evidence",
+      "role": "mapped",
+      "accepted": false
+    },
+    {
+      "id": "underlying-missing-evidence",
+      "effect": "missing-evidence",
+      "role": "underlying",
+      "accepted": false
+    },
+    {
+      "id": "underlying-context-combined-undefined",
+      "effect": "context-combined-undefined",
+      "role": "underlying",
+      "accepted": false
+    },
+    {
+      "id": "underlying-context-combined-frozen",
+      "effect": "context-combined-frozen",
+      "role": "underlying",
+      "accepted": false
+    },
+    {
+      "id": "underlying-context-precheck-undefined",
+      "effect": "context-precheck-undefined",
+      "role": "underlying",
+      "accepted": false
+    },
+    {
+      "id": "underlying-context-precheck-frozen",
+      "effect": "context-precheck-frozen",
+      "role": "underlying",
+      "accepted": false
+    }
+  ],
+  "ownership": {
+    "schema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "witnessSha256",
+        "windowsSha256",
+        "definitions",
+        "references",
+        "witnessAdditions"
+      ],
+      "properties": {
+        "witnessSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "windowsSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "definitions": {
+          "type": "array",
+          "minItems": 17,
+          "maxItems": 17,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "references": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "path",
+              "value"
+            ],
+            "properties": {
+              "path": {
+                "type": "string"
+              },
+              "value": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "witnessAdditions": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "ObserverBenchmark",
+            "DescriptorBoundaryCase",
+            "TopologyBenchmarkProtocol",
+            "TopologyBenchmarkCase"
+          ],
+          "properties": {
+            "ObserverBenchmark": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "DescriptorBoundaryCase": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "TopologyBenchmarkProtocol": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "TopologyBenchmarkCase": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          }
+        }
+      }
+    },
+    "expected": {
+      "witnessSha256": "0e6f1670e079dcb43b9626d552f4c0247bb1185eebdd096fd7e3bdcb54a60e82",
+      "windowsSha256": "06f57b8737dbcb5cd3cdbab2c6a7e39f4b99865f0714344c52a79096ff555cea",
+      "definitions": [
+        "Protocol",
+        "DirectoryCase",
+        "NativeCase",
+        "Root",
+        "RootCase",
+        "Facts",
+        "HostIdentity",
+        "HostRequest",
+        "HostEvidence",
+        "HostCase",
+        "SessionProtocol",
+        "SessionCase",
+        "SessionData",
+        "SessionReceipt",
+        "RootObservationEvidence",
+        "RootObservationCase",
+        "RootObservationReceipt"
+      ],
+      "references": [
+        {
+          "path": "/definitions/HostRequest/properties/directoryIdentity/$ref",
+          "value": "#/definitions/HostIdentity"
+        },
+        {
+          "path": "/definitions/HostEvidence/properties/directory/$ref",
+          "value": "#/definitions/Facts"
+        },
+        {
+          "path": "/definitions/HostEvidence/properties/backing/$ref",
+          "value": "#/definitions/Facts"
+        },
+        {
+          "path": "/definitions/HostEvidence/properties/file/$ref",
+          "value": "#/definitions/Facts"
+        },
+        {
+          "path": "/definitions/RootObservationEvidence/properties/root/$ref",
+          "value": "#/definitions/Facts"
+        },
+        {
+          "path": "/definitions/RootObservationEvidence/properties/directory/$ref",
+          "value": "#/definitions/Facts"
+        },
+        {
+          "path": "/definitions/RootObservationEvidence/properties/backing/$ref",
+          "value": "#/definitions/Facts"
+        },
+        {
+          "path": "/definitions/RootObservationEvidence/properties/mapping/anyOf/0/$ref",
+          "value": "#/definitions/Root"
+        },
+        {
+          "path": "/definitions/RootObservationEvidence/oneOf/0/properties/mapping/$ref",
+          "value": "#/definitions/Root"
+        }
+      ],
+      "witnessAdditions": {
+        "ObserverBenchmark": "e7e19703bc6af2ce74a665a8ab41a486f016fe6ac171a2c834a8c75e4be5b71a",
+        "DescriptorBoundaryCase": "bb0638fce6af22b554a658af212de55c7cc0a0083fd702fea1589bbcd465e314",
+        "TopologyBenchmarkProtocol": "d5d17a0addf6d449d63979be30b70bc54430c759586e480d1f77817133c12172",
+        "TopologyBenchmarkCase": "2aa5a3675b7414879bc354dbccd2aa89150ca545b4c73a98faf5651bd6b574ac"
+      }
+    }
+  },
+  "payload": {
+    "protocol": {
+      "version": 1,
+      "bodyOnly": true,
+      "contextConsumers": 1,
+      "maximumPendingObservations": 1,
+      "maximumPendingHandles": 32,
+      "maximumReadBytes": 65536,
+      "sameOwnerSystemWork": true,
+      "hostBackingJournalLinks": 1,
+      "payloadMinimumLinks": 1,
+      "identity": "native-full128-and-volume-serial",
+      "cleanupOrder": [
+        "payload-return",
+        "cleanup-begin"
+      ],
+      "bufferedNameWorkUnits": 1,
+      "cachedEofWorkUnits": 1,
+      "yieldedContinuationWorkUnits": 1
+    },
+    "caseSchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "group",
+        "accepted"
+      ],
+      "properties": {
+        "id": {
+          "enum": [
+            "single-link",
+            "same-full128-two-paths",
+            "high128",
+            "maximum-positive-links",
+            "directory-close-before-file",
+            "same-owner-sequential",
+            "sparse-default-stream",
+            "canonical-journal",
+            "copied-evidence",
+            "foreign-evidence",
+            "underlying-evidence",
+            "missing-evidence",
+            "copied-context",
+            "foreign-context",
+            "escaped-context",
+            "double-consumer",
+            "terminal-no-payload",
+            "host-no-payload",
+            "cancel-before-birth",
+            "mapping-mutation",
+            "changed-high128",
+            "changed-serial",
+            "changed-root",
+            "changed-ancestor",
+            "descendant-reparse",
+            "named-stream",
+            "journal-links",
+            "host-links",
+            "backing-links",
+            "zero-links",
+            "cross-volume",
+            "nested-public-read",
+            "late-birth",
+            "unawaited-read",
+            "shared-work-exhausted",
+            "undefined-close",
+            "frozen-pending",
+            "swallowed-undefined-precheck",
+            "frozen-postclose-observer",
+            "birth-after-failure",
+            "journal-uppercase-alias",
+            "journal-directory",
+            "nested-journal-basename",
+            "short-name-alias",
+            "payload-return-before-cleanup"
+          ]
+        },
+        "group": {
+          "enum": [
+            "positive",
+            "authority",
+            "integrity",
+            "lifetime",
+            "journal",
+            "ordering"
+          ]
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "cases": [
+      {
+        "id": "single-link",
+        "group": "positive",
+        "accepted": true
+      },
+      {
+        "id": "same-full128-two-paths",
+        "group": "positive",
+        "accepted": true
+      },
+      {
+        "id": "high128",
+        "group": "positive",
+        "accepted": true
+      },
+      {
+        "id": "maximum-positive-links",
+        "group": "positive",
+        "accepted": true
+      },
+      {
+        "id": "directory-close-before-file",
+        "group": "positive",
+        "accepted": true
+      },
+      {
+        "id": "same-owner-sequential",
+        "group": "positive",
+        "accepted": true
+      },
+      {
+        "id": "sparse-default-stream",
+        "group": "positive",
+        "accepted": true
+      },
+      {
+        "id": "canonical-journal",
+        "group": "positive",
+        "accepted": true
+      },
+      {
+        "id": "copied-evidence",
+        "group": "authority",
+        "accepted": false
+      },
+      {
+        "id": "foreign-evidence",
+        "group": "authority",
+        "accepted": false
+      },
+      {
+        "id": "underlying-evidence",
+        "group": "authority",
+        "accepted": false
+      },
+      {
+        "id": "missing-evidence",
+        "group": "authority",
+        "accepted": false
+      },
+      {
+        "id": "copied-context",
+        "group": "authority",
+        "accepted": false
+      },
+      {
+        "id": "foreign-context",
+        "group": "authority",
+        "accepted": false
+      },
+      {
+        "id": "escaped-context",
+        "group": "authority",
+        "accepted": false
+      },
+      {
+        "id": "double-consumer",
+        "group": "authority",
+        "accepted": false
+      },
+      {
+        "id": "terminal-no-payload",
+        "group": "authority",
+        "accepted": false
+      },
+      {
+        "id": "host-no-payload",
+        "group": "authority",
+        "accepted": false
+      },
+      {
+        "id": "cancel-before-birth",
+        "group": "authority",
+        "accepted": false
+      },
+      {
+        "id": "mapping-mutation",
+        "group": "authority",
+        "accepted": true
+      },
+      {
+        "id": "changed-high128",
+        "group": "integrity",
+        "accepted": false
+      },
+      {
+        "id": "changed-serial",
+        "group": "integrity",
+        "accepted": false
+      },
+      {
+        "id": "changed-root",
+        "group": "integrity",
+        "accepted": false
+      },
+      {
+        "id": "changed-ancestor",
+        "group": "integrity",
+        "accepted": false
+      },
+      {
+        "id": "descendant-reparse",
+        "group": "integrity",
+        "accepted": false
+      },
+      {
+        "id": "named-stream",
+        "group": "integrity",
+        "accepted": false
+      },
+      {
+        "id": "journal-links",
+        "group": "integrity",
+        "accepted": false
+      },
+      {
+        "id": "host-links",
+        "group": "integrity",
+        "accepted": false
+      },
+      {
+        "id": "backing-links",
+        "group": "integrity",
+        "accepted": false
+      },
+      {
+        "id": "zero-links",
+        "group": "integrity",
+        "accepted": false
+      },
+      {
+        "id": "cross-volume",
+        "group": "integrity",
+        "accepted": false
+      },
+      {
+        "id": "nested-public-read",
+        "group": "lifetime",
+        "accepted": false
+      },
+      {
+        "id": "late-birth",
+        "group": "lifetime",
+        "accepted": false
+      },
+      {
+        "id": "unawaited-read",
+        "group": "lifetime",
+        "accepted": true
+      },
+      {
+        "id": "shared-work-exhausted",
+        "group": "lifetime",
+        "accepted": false
+      },
+      {
+        "id": "undefined-close",
+        "group": "lifetime",
+        "accepted": false
+      },
+      {
+        "id": "frozen-pending",
+        "group": "lifetime",
+        "accepted": false
+      },
+      {
+        "id": "swallowed-undefined-precheck",
+        "group": "lifetime",
+        "accepted": false
+      },
+      {
+        "id": "frozen-postclose-observer",
+        "group": "lifetime",
+        "accepted": false
+      },
+      {
+        "id": "birth-after-failure",
+        "group": "lifetime",
+        "accepted": false
+      },
+      {
+        "id": "journal-uppercase-alias",
+        "group": "journal",
+        "accepted": false
+      },
+      {
+        "id": "journal-directory",
+        "group": "journal",
+        "accepted": false
+      },
+      {
+        "id": "nested-journal-basename",
+        "group": "journal",
+        "accepted": true
+      },
+      {
+        "id": "short-name-alias",
+        "group": "journal",
+        "accepted": false
+      },
+      {
+        "id": "payload-return-before-cleanup",
+        "group": "ordering",
+        "accepted": true
+      }
+    ],
+    "nativeOracle": {
+      "fileIdLow": "99",
+      "fileIdHigh": "18446744073709551614",
+      "volumeSerial": "18446744073709551613",
+      "links": 4294967295,
+      "attributes": 32,
+      "bytes": [
+        112,
+        97,
+        121,
+        108,
+        111,
+        97,
+        100
+      ]
+    },
+    "definitions": [
+      "PayloadProtocol",
+      "PayloadCase",
+      "PayloadReceipt"
+    ]
+  },
+  "wireProjection": {
+    "version": 1,
+    "actualReceivedSha256": true,
+    "policyPreserved": true,
+    "capabilitiesPreserved": true,
+    "maximumDeadlineIncreaseMilliseconds": 0
+  },
+  "meter": {
+    "definitions": [
+      "PayloadMeterProtocol",
+      "PayloadMeterCase",
+      "PayloadMeterReceipt"
+    ],
+    "protocol": {
+      "version": 1,
+      "control": "same-private-reference",
+      "minimumUnits": 0,
+      "maximumUnits": 9007199254740991,
+      "pureAccounting": true,
+      "nativeBirth": false,
+      "workReset": false,
+      "pendingAdmission": false,
+      "bodyOnly": true,
+      "exactReceiver": true,
+      "firstFailureRetained": true,
+      "expectedRoot": "same-private-canonical-root-before-native"
+    },
+    "cases": [
+      {
+        "id": "zero",
+        "accepted": true
+      },
+      {
+        "id": "positive",
+        "accepted": true
+      },
+      {
+        "id": "inside-file",
+        "accepted": true
+      },
+      {
+        "id": "inside-cursor",
+        "accepted": true
+      },
+      {
+        "id": "same-account",
+        "accepted": true
+      },
+      {
+        "id": "copied-control",
+        "accepted": false
+      },
+      {
+        "id": "refining-control",
+        "accepted": false
+      },
+      {
+        "id": "sibling-control",
+        "accepted": false
+      },
+      {
+        "id": "copied-meter",
+        "accepted": false
+      },
+      {
+        "id": "escaped-meter",
+        "accepted": false
+      },
+      {
+        "id": "negative-units",
+        "accepted": false
+      },
+      {
+        "id": "fractional-units",
+        "accepted": false
+      },
+      {
+        "id": "unsafe-units",
+        "accepted": false
+      },
+      {
+        "id": "nan-units",
+        "accepted": false
+      },
+      {
+        "id": "infinite-units",
+        "accepted": false
+      },
+      {
+        "id": "work-exhausted",
+        "accepted": false
+      },
+      {
+        "id": "undefined-failure",
+        "accepted": false
+      },
+      {
+        "id": "frozen-failure",
+        "accepted": false
+      },
+      {
+        "id": "cancelled-file",
+        "accepted": false
+      },
+      {
+        "id": "body-meter-failure",
+        "accepted": false
+      },
+      {
+        "id": "aggregate-body-meter-failure",
+        "accepted": false
+      },
+      {
+        "id": "wrong-root",
+        "accepted": false
+      },
+      {
+        "id": "missing-root",
+        "accepted": false
+      }
+    ]
+  },
+  "strategy": {
+    "definitions": [
+      "WitnessStrategyProtocol",
+      "WitnessDirectoryFrame",
+      "WitnessFileFrame",
+      "WitnessFrameCase",
+      "WitnessWorkCase",
+      "WitnessLifetimeCase",
+      "WitnessStreamCase",
+      "WitnessStrategyReceipt"
+    ],
+    "protocol": {
+      "nameWindow": 64,
+      "chunkBytes": 65536,
+      "maximumDepth": 64,
+      "maximumPathUnits": 256,
+      "censuses": 2,
+      "pending": 1,
+      "bodyOnly": true,
+      "sameContextControl": true,
+      "sameSystem": true,
+      "workReset": false,
+      "journalNames": [
+        "storage-checkpoint.jsonl",
+        "storage-events.jsonl"
+      ],
+      "workUnits": {
+        "next": 1,
+        "cachedEof": 1,
+        "yieldedContinuation": 1,
+        "nativeQuery": 2,
+        "setOffset": 1,
+        "nativeRead": 2,
+        "scan": 1,
+        "frame": 1
+      },
+      "version": 1,
+      "bindingMembers": {
+        "posix": [
+          "platform"
+        ],
+        "win32": [
+          "platform",
+          "context"
+        ]
+      },
+      "context": "private-body-single-consume",
+      "minimumCheckpointUnits": 0,
+      "maximumCheckpointUnits": 9007199254740991,
+      "nativeChargeMinimum": 1,
+      "nativeWindowsRuntimeQualified": false,
+      "expectedRoot": "same-private-canonical-root-before-native",
+      "sourceExecutionCases": [
+        "exact-body-context",
+        "copied-token",
+        "genuine-foreign-phase",
+        "copied-control",
+        "escaped-after-body",
+        "single-consume",
+        "pending-one",
+        "payload-before-cleanup"
+      ],
+      "posixEof": {
+        "version": 1,
+        "originalBeforeChild": true,
+        "cases": [
+          {
+            "id": "ordinary",
+            "failure": "none",
+            "stopAtObserver": 0,
+            "accepted": true,
+            "trace": [
+              "observer",
+              "fd-stat",
+              "observer",
+              "observer",
+              "eof-read",
+              "fd-stat",
+              "observer",
+              "named-stat",
+              "observer",
+              "observer"
+            ],
+            "observers": 6,
+            "work": 4,
+            "phaseChecks": 14,
+            "eofReads": 1
+          },
+          {
+            "id": "frozen-before-eof",
+            "failure": "frozen",
+            "stopAtObserver": 3,
+            "accepted": false,
+            "trace": [
+              "observer",
+              "fd-stat",
+              "observer",
+              "observer"
+            ],
+            "observers": 3,
+            "work": 1,
+            "phaseChecks": 5,
+            "eofReads": 0
+          },
+          {
+            "id": "undefined-before-eof",
+            "failure": "undefined",
+            "stopAtObserver": 3,
+            "accepted": false,
+            "trace": [
+              "observer",
+              "fd-stat",
+              "observer",
+              "observer"
+            ],
+            "observers": 3,
+            "work": 1,
+            "phaseChecks": 5,
+            "eofReads": 0
+          }
+        ]
+      }
+    },
+    "frames": [
+      {
+        "id": "posix-default-directory",
+        "input": {
+          "platform": "posix",
+          "path": "",
+          "kind": "directory",
+          "mode": 448
+        },
+        "accepted": true
+      },
+      {
+        "id": "posix-default-file",
+        "input": {
+          "platform": "posix",
+          "path": "alpha",
+          "kind": "file",
+          "mode": 384,
+          "payload": "payload",
+          "links": 1,
+          "ino": "99"
+        },
+        "accepted": true
+      },
+      {
+        "id": "posix-hardlink",
+        "input": {
+          "platform": "posix",
+          "path": "alpha",
+          "kind": "file",
+          "mode": 384,
+          "payload": "payload",
+          "links": 2,
+          "ino": "99"
+        },
+        "accepted": true
+      },
+      {
+        "id": "native-root-directory",
+        "input": {
+          "platform": "win32",
+          "path": "",
+          "kind": "directory",
+          "attributes": 16,
+          "securitySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "accepted": true
+      },
+      {
+        "id": "native-single-link",
+        "input": {
+          "platform": "win32",
+          "path": "alpha",
+          "kind": "file",
+          "attributes": 32,
+          "securitySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "payload": "payload",
+          "links": 1,
+          "fileIdLow": "99",
+          "fileIdHigh": "18446744073709551614",
+          "volumeSerial": "7"
+        },
+        "accepted": true
+      },
+      {
+        "id": "native-hardlink",
+        "input": {
+          "platform": "win32",
+          "path": "alpha",
+          "kind": "file",
+          "attributes": 32,
+          "securitySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "payload": "payload",
+          "links": 2,
+          "fileIdLow": "99",
+          "fileIdHigh": "18446744073709551614",
+          "volumeSerial": "7"
+        },
+        "accepted": true
+      },
+      {
+        "id": "native-high-half-differs",
+        "input": {
+          "platform": "win32",
+          "path": "alpha",
+          "kind": "file",
+          "attributes": 32,
+          "securitySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "payload": "payload",
+          "links": 2,
+          "fileIdLow": "99",
+          "fileIdHigh": "18446744073709551613",
+          "volumeSerial": "7"
+        },
+        "accepted": true
+      },
+      {
+        "id": "native-serial-differs",
+        "input": {
+          "platform": "win32",
+          "path": "alpha",
+          "kind": "file",
+          "attributes": 32,
+          "securitySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "payload": "payload",
+          "links": 2,
+          "fileIdLow": "99",
+          "fileIdHigh": "18446744073709551614",
+          "volumeSerial": "8"
+        },
+        "accepted": true
+      },
+      {
+        "id": "native-full128-upper-bound",
+        "input": {
+          "platform": "win32",
+          "path": "alpha",
+          "kind": "file",
+          "attributes": 32,
+          "securitySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "payload": "payload",
+          "links": 4294967295,
+          "fileIdLow": "18446744073709551615",
+          "fileIdHigh": "18446744073709551615",
+          "volumeSerial": "18446744073709551615"
+        },
+        "accepted": true
+      },
+      {
+        "id": "native-unicode-stream",
+        "input": {
+          "platform": "win32",
+          "path": "alpha",
+          "kind": "file",
+          "attributes": 32,
+          "securitySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "payload": "Grüße/雪\n",
+          "links": 1,
+          "fileIdLow": "99",
+          "fileIdHigh": "18446744073709551614",
+          "volumeSerial": "7"
+        },
+        "accepted": true
+      },
+      {
+        "id": "native-zero-byte",
+        "input": {
+          "platform": "win32",
+          "path": "alpha",
+          "kind": "file",
+          "attributes": 32,
+          "securitySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "payload": "",
+          "links": 1,
+          "fileIdLow": "99",
+          "fileIdHigh": "18446744073709551614",
+          "volumeSerial": "7"
+        },
+        "accepted": true
+      },
+      {
+        "id": "native-zero-links",
+        "input": {
+          "platform": "win32",
+          "path": "alpha",
+          "kind": "file",
+          "attributes": 32,
+          "securitySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "payload": "payload",
+          "links": 0,
+          "fileIdLow": "99",
+          "fileIdHigh": "18446744073709551614",
+          "volumeSerial": "7"
+        },
+        "accepted": false
+      },
+      {
+        "id": "native-links-overflow",
+        "input": {
+          "platform": "win32",
+          "path": "alpha",
+          "kind": "file",
+          "attributes": 32,
+          "securitySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "payload": "payload",
+          "links": 4294967296,
+          "fileIdLow": "99",
+          "fileIdHigh": "18446744073709551614",
+          "volumeSerial": "7"
+        },
+        "accepted": false
+      },
+      {
+        "id": "native-file-id-overflow",
+        "input": {
+          "platform": "win32",
+          "path": "alpha",
+          "kind": "file",
+          "attributes": 32,
+          "securitySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "payload": "payload",
+          "links": 1,
+          "fileIdLow": "99",
+          "fileIdHigh": "18446744073709551616",
+          "volumeSerial": "7"
+        },
+        "accepted": false
+      },
+      {
+        "id": "native-canonical-journal",
+        "input": {
+          "platform": "win32",
+          "path": "storage-events.jsonl",
+          "kind": "file",
+          "attributes": 32,
+          "securitySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "payload": "payload",
+          "links": 1,
+          "fileIdLow": "99",
+          "fileIdHigh": "18446744073709551614",
+          "volumeSerial": "7"
+        },
+        "accepted": true
+      },
+      {
+        "id": "native-canonical-checkpoint",
+        "input": {
+          "platform": "win32",
+          "path": "storage-checkpoint.jsonl",
+          "kind": "file",
+          "attributes": 32,
+          "securitySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "payload": "{}\n",
+          "links": 1,
+          "fileIdLow": "99",
+          "fileIdHigh": "18446744073709551614",
+          "volumeSerial": "7"
+        },
+        "accepted": true
+      },
+      {
+        "id": "native-journal-uppercase",
+        "input": {
+          "platform": "win32",
+          "path": "STORAGE-EVENTS.JSONL",
+          "kind": "file",
+          "attributes": 32,
+          "securitySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "payload": "payload",
+          "links": 1,
+          "fileIdLow": "99",
+          "fileIdHigh": "18446744073709551614",
+          "volumeSerial": "7"
+        },
+        "accepted": false
+      },
+      {
+        "id": "native-journal-multilink",
+        "input": {
+          "platform": "win32",
+          "path": "storage-events.jsonl",
+          "kind": "file",
+          "attributes": 32,
+          "securitySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "payload": "payload",
+          "links": 2,
+          "fileIdLow": "99",
+          "fileIdHigh": "18446744073709551614",
+          "volumeSerial": "7"
+        },
+        "accepted": false
+      },
+      {
+        "id": "native-journal-directory",
+        "input": {
+          "platform": "win32",
+          "path": "storage-events.jsonl",
+          "kind": "directory",
+          "attributes": 16,
+          "securitySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "accepted": false
+      },
+      {
+        "id": "native-nested-journal-name",
+        "input": {
+          "platform": "win32",
+          "path": "nested/storage-events.jsonl",
+          "kind": "file",
+          "attributes": 32,
+          "securitySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "payload": "payload",
+          "links": 2,
+          "fileIdLow": "99",
+          "fileIdHigh": "18446744073709551614",
+          "volumeSerial": "7"
+        },
+        "accepted": true
+      },
+      {
+        "id": "native-short-final-name",
+        "input": {
+          "platform": "win32",
+          "path": "alpha",
+          "kind": "file",
+          "attributes": 32,
+          "securitySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "payload": "payload",
+          "links": 1,
+          "fileIdLow": "99",
+          "fileIdHigh": "18446744073709551614",
+          "volumeSerial": "7",
+          "finalName": "ALPHA~1"
+        },
+        "accepted": false
+      },
+      {
+        "id": "native-posix-mode-not-fact",
+        "input": {
+          "platform": "win32",
+          "path": "alpha",
+          "kind": "file",
+          "attributes": 32,
+          "securitySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "payload": "payload",
+          "links": 1,
+          "fileIdLow": "99",
+          "fileIdHigh": "18446744073709551614",
+          "volumeSerial": "7",
+          "mode": 384
+        },
+        "accepted": false
+      },
+      {
+        "id": "native-hardlink-beta",
+        "input": {
+          "platform": "win32",
+          "path": "beta",
+          "kind": "file",
+          "attributes": 32,
+          "securitySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "payload": "payload",
+          "links": 2,
+          "fileIdLow": "99",
+          "fileIdHigh": "18446744073709551614",
+          "volumeSerial": "7"
+        },
+        "accepted": true
+      }
+    ],
+    "work": [
+      {
+        "id": "buffered-name",
+        "limit": 16,
+        "spent": 0,
+        "units": [
+          2
+        ],
+        "expectedSpent": 2,
+        "accepted": true
+      },
+      {
+        "id": "fresh-directory-query-name",
+        "limit": 16,
+        "spent": 0,
+        "units": [
+          4
+        ],
+        "expectedSpent": 4,
+        "accepted": true
+      },
+      {
+        "id": "fresh-cursor-eof",
+        "limit": 16,
+        "spent": 0,
+        "units": [
+          3
+        ],
+        "expectedSpent": 3,
+        "accepted": true
+      },
+      {
+        "id": "cached-cursor-eof",
+        "limit": 16,
+        "spent": 0,
+        "units": [
+          1
+        ],
+        "expectedSpent": 1,
+        "accepted": true
+      },
+      {
+        "id": "read-and-real-yield",
+        "limit": 16,
+        "spent": 0,
+        "units": [
+          4
+        ],
+        "expectedSpent": 4,
+        "accepted": true
+      },
+      {
+        "id": "read-eof-and-real-yield",
+        "limit": 16,
+        "spent": 0,
+        "units": [
+          4
+        ],
+        "expectedSpent": 4,
+        "accepted": true
+      },
+      {
+        "id": "buffered-name-and-skipped-scan",
+        "limit": 16,
+        "spent": 0,
+        "units": [
+          2,
+          1
+        ],
+        "expectedSpent": 3,
+        "accepted": true
+      },
+      {
+        "id": "frame-after-read",
+        "limit": 16,
+        "spent": 0,
+        "units": [
+          4,
+          1
+        ],
+        "expectedSpent": 5,
+        "accepted": true
+      },
+      {
+        "id": "two-censuses-same-account",
+        "limit": 10,
+        "spent": 0,
+        "units": [
+          6,
+          6
+        ],
+        "expectedSpent": 6,
+        "accepted": false
+      },
+      {
+        "id": "host-work-is-not-reset",
+        "limit": 10,
+        "spent": 8,
+        "units": [
+          2,
+          1
+        ],
+        "expectedSpent": 10,
+        "accepted": false
+      },
+      {
+        "id": "cached-eof-tiny-work",
+        "limit": 3,
+        "spent": 0,
+        "units": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "expectedSpent": 3,
+        "accepted": false
+      },
+      {
+        "id": "refusal-closes-next-birth",
+        "limit": 5,
+        "spent": 4,
+        "units": [
+          2,
+          1
+        ],
+        "expectedSpent": 4,
+        "accepted": false
+      },
+      {
+        "id": "cancelled-continuation",
+        "limit": 16,
+        "spent": 0,
+        "units": [
+          4,
+          1
+        ],
+        "cancelAt": 1,
+        "expectedSpent": 4,
+        "accepted": false
+      },
+      {
+        "id": "cancelled-before-read",
+        "limit": 16,
+        "spent": 0,
+        "units": [
+          4
+        ],
+        "cancelAt": 0,
+        "expectedSpent": 0,
+        "accepted": false
+      },
+      {
+        "id": "unsafe-volume-bound",
+        "limit": 9007199254740992,
+        "spent": 0,
+        "units": [
+          1
+        ],
+        "expectedSpent": 0,
+        "accepted": false
+      },
+      {
+        "id": "unsafe-charge",
+        "limit": 16,
+        "spent": 0,
+        "units": [
+          9007199254740992
+        ],
+        "expectedSpent": 0,
+        "accepted": false
+      },
+      {
+        "id": "zero-checkpoint",
+        "limit": 16,
+        "spent": 0,
+        "units": [
+          0
+        ],
+        "expectedSpent": 0,
+        "accepted": true
+      }
+    ],
+    "lifetime": [
+      {
+        "id": "exact-body-context",
+        "input": {
+          "platform": "win32",
+          "context": "exact",
+          "control": "exact",
+          "owner": "same",
+          "role": "body",
+          "live": true,
+          "accepting": true,
+          "consumed": false,
+          "pending": false,
+          "mapped": true,
+          "payloadReturned": true,
+          "transition": false,
+          "system": "captured"
+        },
+        "accepted": true
+      },
+      {
+        "id": "copied-token",
+        "input": {
+          "platform": "win32",
+          "context": "copied",
+          "control": "exact",
+          "owner": "same",
+          "role": "body",
+          "live": true,
+          "accepting": true,
+          "consumed": false,
+          "pending": false,
+          "mapped": true,
+          "payloadReturned": true,
+          "transition": false,
+          "system": "captured"
+        },
+        "accepted": false
+      },
+      {
+        "id": "foreign-session",
+        "input": {
+          "platform": "win32",
+          "context": "exact",
+          "control": "exact",
+          "owner": "foreign",
+          "role": "body",
+          "live": true,
+          "accepting": true,
+          "consumed": false,
+          "pending": false,
+          "mapped": true,
+          "payloadReturned": true,
+          "transition": false,
+          "system": "captured"
+        },
+        "accepted": false
+      },
+      {
+        "id": "genuine-foreign-phase",
+        "input": {
+          "platform": "win32",
+          "context": "exact",
+          "control": "foreign",
+          "owner": "same",
+          "role": "body",
+          "live": true,
+          "accepting": true,
+          "consumed": false,
+          "pending": false,
+          "mapped": true,
+          "payloadReturned": true,
+          "transition": false,
+          "system": "captured"
+        },
+        "accepted": false
+      },
+      {
+        "id": "copied-control",
+        "input": {
+          "platform": "win32",
+          "context": "exact",
+          "control": "copied",
+          "owner": "same",
+          "role": "body",
+          "live": true,
+          "accepting": true,
+          "consumed": false,
+          "pending": false,
+          "mapped": true,
+          "payloadReturned": true,
+          "transition": false,
+          "system": "captured"
+        },
+        "accepted": false
+      },
+      {
+        "id": "escaped-after-body",
+        "input": {
+          "platform": "win32",
+          "context": "exact",
+          "control": "exact",
+          "owner": "same",
+          "role": "body",
+          "live": false,
+          "accepting": true,
+          "consumed": false,
+          "pending": false,
+          "mapped": true,
+          "payloadReturned": true,
+          "transition": false,
+          "system": "captured"
+        },
+        "accepted": false
+      },
+      {
+        "id": "closed-admission",
+        "input": {
+          "platform": "win32",
+          "context": "exact",
+          "control": "exact",
+          "owner": "same",
+          "role": "body",
+          "live": true,
+          "accepting": false,
+          "consumed": false,
+          "pending": false,
+          "mapped": true,
+          "payloadReturned": true,
+          "transition": false,
+          "system": "captured"
+        },
+        "accepted": false
+      },
+      {
+        "id": "single-consume",
+        "input": {
+          "platform": "win32",
+          "context": "exact",
+          "control": "exact",
+          "owner": "same",
+          "role": "body",
+          "live": true,
+          "accepting": true,
+          "consumed": true,
+          "pending": false,
+          "mapped": true,
+          "payloadReturned": true,
+          "transition": false,
+          "system": "captured"
+        },
+        "accepted": false
+      },
+      {
+        "id": "pending-one",
+        "input": {
+          "platform": "win32",
+          "context": "exact",
+          "control": "exact",
+          "owner": "same",
+          "role": "body",
+          "live": true,
+          "accepting": true,
+          "consumed": false,
+          "pending": true,
+          "mapped": true,
+          "payloadReturned": true,
+          "transition": false,
+          "system": "captured"
+        },
+        "accepted": false
+      },
+      {
+        "id": "terminal-has-no-payload",
+        "input": {
+          "platform": "win32",
+          "context": "exact",
+          "control": "exact",
+          "owner": "same",
+          "role": "terminal",
+          "live": true,
+          "accepting": true,
+          "consumed": false,
+          "pending": false,
+          "mapped": true,
+          "payloadReturned": true,
+          "transition": false,
+          "system": "captured"
+        },
+        "accepted": false
+      },
+      {
+        "id": "missing-mapped-evidence",
+        "input": {
+          "platform": "win32",
+          "context": "exact",
+          "control": "exact",
+          "owner": "same",
+          "role": "body",
+          "live": true,
+          "accepting": true,
+          "consumed": false,
+          "pending": false,
+          "mapped": false,
+          "payloadReturned": true,
+          "transition": false,
+          "system": "captured"
+        },
+        "accepted": false
+      },
+      {
+        "id": "payload-before-cleanup",
+        "input": {
+          "platform": "win32",
+          "context": "exact",
+          "control": "exact",
+          "owner": "same",
+          "role": "body",
+          "live": true,
+          "accepting": true,
+          "consumed": false,
+          "pending": false,
+          "mapped": true,
+          "payloadReturned": true,
+          "transition": true,
+          "system": "captured"
+        },
+        "accepted": true
+      },
+      {
+        "id": "cleanup-before-payload-return",
+        "input": {
+          "platform": "win32",
+          "context": "exact",
+          "control": "exact",
+          "owner": "same",
+          "role": "body",
+          "live": true,
+          "accepting": true,
+          "consumed": false,
+          "pending": false,
+          "mapped": true,
+          "payloadReturned": false,
+          "transition": true,
+          "system": "captured"
+        },
+        "accepted": false
+      },
+      {
+        "id": "forged-system-data",
+        "input": {
+          "platform": "win32",
+          "context": "exact",
+          "control": "exact",
+          "owner": "same",
+          "role": "body",
+          "live": true,
+          "accepting": true,
+          "consumed": false,
+          "pending": false,
+          "mapped": true,
+          "payloadReturned": true,
+          "transition": false,
+          "system": "caller-json"
+        },
+        "accepted": false
+      },
+      {
+        "id": "posix-default-no-native-context",
+        "input": {
+          "platform": "posix",
+          "context": "none",
+          "control": "exact",
+          "owner": "same",
+          "role": "body",
+          "live": true,
+          "accepting": true,
+          "consumed": false,
+          "pending": false,
+          "mapped": false,
+          "payloadReturned": true,
+          "transition": false,
+          "system": "none"
+        },
+        "accepted": true
+      }
+    ],
+    "streams": [
+      {
+        "id": "posix-default-tree",
+        "rows": [
+          "posix-default-directory",
+          "posix-default-file"
+        ]
+      },
+      {
+        "id": "windows-complete-journals",
+        "rows": [
+          "native-canonical-journal",
+          "native-root-directory",
+          "native-canonical-checkpoint",
+          "native-single-link"
+        ]
+      },
+      {
+        "id": "windows-reordered-same-tree",
+        "rows": [
+          "native-single-link",
+          "native-canonical-checkpoint",
+          "native-root-directory",
+          "native-canonical-journal"
+        ]
+      },
+      {
+        "id": "windows-full128-hardlink-members",
+        "rows": [
+          "native-root-directory",
+          "native-hardlink-beta",
+          "native-hardlink"
+        ]
+      }
+    ]
+  }
+}

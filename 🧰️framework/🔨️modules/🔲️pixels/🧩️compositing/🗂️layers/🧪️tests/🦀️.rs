@@ -67,6 +67,5 @@ fn raster_stack_actual_compositor_retirement_before_publication(){
         assert!(done);assert!(job.composite_retirement.is_none());assert!(job.composite.is_none());assert!(job.done);
         let pointer=job.output.as_ref().unwrap().pixels.as_ptr();let output=job.into_result().unwrap();assert_eq!(output.image.pixels.as_ptr(),pointer);if let Some(moved)=moved{assert_eq!(pointer,moved);}if grant==1{assert!(observed);}
         assert_eq!(output.image.pixels.chunks_exact(4).map(|p|p[3]).collect::<Vec<_>>(),row["alpha"].as_array().unwrap().iter().map(|n|n.as_u64().unwrap() as u8).collect::<Vec<_>>());
-        eprintln!("[DEBUG] Actual native raster stack compositor handoff {}: grant={grant} moved_pixel_pointer=true",row["name"]);
     }}
 }

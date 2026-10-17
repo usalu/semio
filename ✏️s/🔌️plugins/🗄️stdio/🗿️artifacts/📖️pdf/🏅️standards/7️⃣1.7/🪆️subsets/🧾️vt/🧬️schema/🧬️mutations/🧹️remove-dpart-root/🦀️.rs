@@ -1,7 +1,6 @@
 //! 🧹️ Authoritative PDF/VT mutation for remove dpart root.
 
-use super::set_dpart_root::SetDpartRoot;
-use super::PdfVtMutation;
+use crate::standards::v1_7::subsets::vt::schema::mutations::set_dpart_root::SetDpartRoot;
 use crate::standards::v1_7::subsets::base::schema::conformance_support as support;
 use crate::standards::v1_7::subsets::base::schema::diff::{self, PdfDiff};
 use crate::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot;
@@ -14,16 +13,19 @@ use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 #[value(rename_all = "camelCase")]
 pub struct RemoveDpartRoot {}
 
-impl MutationKind<PdfSnapshot, PdfVtMutation> for RemoveDpartRoot {
+impl<Op> MutationKind<PdfSnapshot, Op> for RemoveDpartRoot
+where
+    Op: protocol::Mutation<PdfSnapshot, Diff = PdfDiff> + From<RemoveDpartRoot> + From<crate::standards::v1_7::subsets::vt::schema::mutations::set_dpart_root::SetDpartRoot>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "remove", entity: "dpart-root", kind: "remove-dpart-root", record: "Remove" };
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
         MutationOutcome::new(diff::graph_edit(support::remove_catalog_entry_owned_rows(base, "DPartRoot")))
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfVtMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         Ok({
-            support::catalog_entry(base, "DPartRoot").map(|_| PdfVtMutation::SetDpartRoot(SetDpartRoot { job: support::dpart_job(base).unwrap_or_default(), placements: support::placements_of(base, &support::dpart_root_creation_ids(base)), entry_index: support::catalog_entry_position(base, "DPartRoot") })).into_iter().collect()
+            support::catalog_entry(base, "DPartRoot").map(|_| Op::from(SetDpartRoot { job: support::dpart_job(base).unwrap_or_default(), placements: support::placements_of(base, &support::dpart_root_creation_ids(base)), entry_index: support::catalog_entry_position(base, "DPartRoot") })).into_iter().collect()
         })
     }
 
@@ -38,9 +40,7 @@ impl MutationKind<PdfSnapshot, PdfVtMutation> for RemoveDpartRoot {
 //#endregion 🔖️Mutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
 
 //#region 🔖️Facets

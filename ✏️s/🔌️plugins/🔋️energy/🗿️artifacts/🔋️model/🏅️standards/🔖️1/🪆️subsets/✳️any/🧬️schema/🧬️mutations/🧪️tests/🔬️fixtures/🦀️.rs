@@ -1,9 +1,9 @@
 //! 🧰️ Energy mutation fixture laws: the committed-vector case shape and the eight laws every vector is held to, the
 //! roster the language-neutral adapter mirrors, and the codec probe corpus. Its `[[test]]` targets run them.
 
-#![allow(async_fn_in_trait)]
-#![allow(clippy::too_many_arguments)]
+#![allow(async_fn_in_trait, clippy::too_many_arguments)]
 
+use semio_framework_test_fixtures::fixture_path;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
 extern crate semio_s_plugin_energy_engine_air_exchange as air_exchange;
@@ -146,7 +146,7 @@ impl Case {
 
 /// 📁️ The committed `🧫️fixtures/🧬️mutations/<domain>/<operation>/<case>` tree, resolved from this crate's manifest.
 pub fn fixture_root() -> std::path::PathBuf {
-    std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations")
+    fixture_path!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations")
 }
 
 /// 🏠️ One conditioned zone with the BESTEST 600 envelope's own air volume.

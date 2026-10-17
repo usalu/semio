@@ -1,5 +1,6 @@
 //! 📝️ Framing and direct codec registry for TiffMutation.
 use crate::schema::mutations::TiffMutation;
+use semio_framework_test_fixtures::fixture_path;
 
 #[path = "🧾️entry/🦀️.rs"]
 pub mod entry;
@@ -59,7 +60,7 @@ use crate::schema::snapshot::*;
 
 #[cfg(test)]
 pub(crate) fn remove_ifd_test_case() -> TiffMutation {
-    semio_framework_pack_json::from_json_str(include_str!("../../../🧪️tests/🧫️fixtures/🧬️mutations/📤️remove-ifd/🎯️direct-behavior/🦠️mutation/🔣️.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed remove-ifd payload")
+    semio_framework_pack_json::from_json_str(&crate::standards::v6_0::subsets::document::io::text::mutations::fixture_text("🧬️mutations/📤️remove-ifd/🎯️direct-behavior/🦠️mutation/🔣️.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed remove-ifd payload")
 }
 }
 #[cfg(test)] pub use mutations_codec::*;
@@ -74,7 +75,7 @@ use crate::schema::snapshot::*;
 
 #[cfg(test)]
 pub(crate) fn replace_tag_test_case() -> TiffMutation {
-    semio_framework_pack_json::from_json_str(include_str!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🏷️replace-tag/🎯️direct-behavior/🦠️mutation/🔣️.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed replace-tag payload")
+    semio_framework_pack_json::from_json_str(&crate::standards::v6_0::subsets::document::io::text::mutations::fixture_text("🧬️mutations/🏷️replace-tag/🎯️direct-behavior/🦠️mutation/🔣️.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed replace-tag payload")
 }
 }
 #[cfg(test)] pub use mutations_wire_codec::*;
@@ -89,7 +90,7 @@ use crate::schema::snapshot::*;
 
 #[cfg(test)]
 pub(crate) fn insert_ifd_test_case() -> TiffMutation {
-    semio_framework_pack_json::from_json_str(include_str!("../../../🧪️tests/🧫️fixtures/🧬️mutations/📥️insert-ifd/🎯️direct-behavior/🦠️mutation/🔣️.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed insert-ifd payload")
+    semio_framework_pack_json::from_json_str(&crate::standards::v6_0::subsets::document::io::text::mutations::fixture_text("🧬️mutations/📥️insert-ifd/🎯️direct-behavior/🦠️mutation/🔣️.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed insert-ifd payload")
 }
 }
 #[cfg(test)] pub use mutations_wire2_codec::*;
@@ -104,15 +105,20 @@ use crate::schema::snapshot::*;
 
 #[cfg(test)]
 pub(crate) fn remove_tag_test_case() -> TiffMutation {
-    semio_framework_pack_json::from_json_str(include_str!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🗑️remove-tag/🎯️direct-behavior/🦠️mutation/🔣️.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed remove-tag payload")
+    semio_framework_pack_json::from_json_str(&crate::standards::v6_0::subsets::document::io::text::mutations::fixture_text("🧬️mutations/🗑️remove-tag/🎯️direct-behavior/🦠️mutation/🔣️.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed remove-tag payload")
 }
 }
 #[cfg(test)] pub use mutations_wire3_codec::*;
 
 
 #[cfg(test)]
+pub(crate) fn fixture_text(relative: &str) -> String {
+    std::fs::read_to_string(fixture_path!("../../../../🧪️tests/🧫️fixtures").join(relative)).expect("committed fixture")
+}
+
+#[cfg(test)]
 pub(crate) fn replace_samples_test_case() -> TiffMutation {
-    semio_framework_pack_json::from_json_str(include_str!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🧮️replace-samples/🎯️direct-behavior/🦠️mutation/🔣️.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed replace-samples payload")
+    semio_framework_pack_json::from_json_str(&crate::standards::v6_0::subsets::document::io::text::mutations::fixture_text("🧬️mutations/🧮️replace-samples/🎯️direct-behavior/🦠️mutation/🔣️.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed replace-samples payload")
 }
 
 #[cfg(test)]

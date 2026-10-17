@@ -8,9 +8,9 @@ use super::*;
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 pub struct SetViewpointCamera {
-    pub(crate) topic_guid: String,
-    pub(crate) guid: String,
-    pub(crate) camera: Option<BcfCamera>,
+    pub topic_guid: String,
+    pub guid: String,
+    pub camera: Option<BcfCamera>,
 }
 
 impl protocol::MutationKind<BcfSnapshot, BcfMutation> for SetViewpointCamera {

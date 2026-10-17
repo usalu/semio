@@ -195,5 +195,4 @@ fn file_open_import_retains_texture_target_without_overriding_chunk_envelope() {
         assert_ne!(retained.get("payload").and_then(DslValue::as_str), Some("invalid envelope override"));
     }
     assert!(file_open_import_actions("procedural", "importDocument", Vec::new(), false, Some(&args)).is_empty());
-    println!("[DEBUG] file-open target arguments retained in both bounded chunks and canceled picker emitted no import");
 }

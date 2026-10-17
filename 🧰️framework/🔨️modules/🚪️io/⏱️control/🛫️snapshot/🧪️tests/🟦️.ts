@@ -1,6 +1,6 @@
 import {existsSync} from "node:fs";
 import {resolve} from "node:path";
-import {sliceModuleTreeSource} from "../../../../📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
+import {sliceModuleTreeSource} from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 /** 🧾️ Checks original receiving publication and terminal child work against independent SQLite. */
 import {expect,test} from "bun:test";
 import {Database} from "bun:sqlite";
@@ -24,7 +24,6 @@ test("original receiving Native route selects the actual generic IO owner mounte
  const script=await read("🧰️framework/🔨️modules/🚪️io/⏱️control/📦️packages/🦀️rust/📜️script.ts");expect(script.includes('packages:["'+nativeOwner.package+'"]')).toBe(true);expect(script.includes('"'+nativeOwner.filter+'"')).toBe(true);
  const callerSchema=await Bun.file(resolve(root,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔌️nx-plugin/📤️arguments/🧬️schema/📥️native-caller.json")).json();const validateCaller=new Ajv({strict:true}).compile(callerSchema);
  for(const file of [".vscode/launch.json",".vscode/🧩️launch.seed.jsonc"]){const launch=await Bun.file(resolve(root,file)).json();const row=launch.configurations.find((row:{name:string})=>row.name==="⏱️ IO Control · Original Receiving Native");expect(row.command).toBe("bun repo run "+nativeOwner.project+":"+nativeOwner.target+" --skip-cache --exclude-dependencies");const authority=JSON.parse(row.env.SEMIO_SCRIPT_CAPABILITIES);expect(validateCaller(authority)).toBe(true);expect(validateJsonSchemaSubset(callerSchema,authority)).toEqual([]);expect(authority.arguments).toEqual(row.command.slice(4).split(" "));expect(authority.selection).toEqual(authority.arguments);expect(JSON.parse(row.env.SEMIO_SCRIPT_POLICY).maximumElapsedMilliseconds).toBe(nativeOwner.originalDeadlineMilliseconds);}
- console.error("[DEBUG] Original receiving plain native route and SQLite select six real mounted generic IO laws through exact GUI/seed argv; actual allocator behavior requires the Native run");
 });
 test("original receiving result and terminal child shell have closed independent authority",()=>{
  expect(existsSync(resolve(import.meta.dir,"./🧬️schema/🔣️.json"))).toBe(false);
@@ -41,7 +40,6 @@ expect(fixture.originalInput).toBe("callerSlotUntilAdmission");expect(fixture.or
  expect(fixture.terminalChild.denials).toEqual(["maximumItems","maximumCopyBytes","maximumReleaseBytes","maximumDepth"]);
  for(const axis of Object.keys(fixture.grant)){const missing:Record<string,unknown>={...fixture.grant};delete missing[axis];expect(validate(missing)).toBe(false);expect(validate({...fixture.grant,[axis]:-1})).toBe(false);}
  }finally{db.close();}
- console.error("[DEBUG] Original receiving plain law matches canonical per-grant Ajv and independent SQLite Buffer JSON; terminal shell quotes actual header work with no allocation frontier");
 });
 
 test("original typed decoder cursor preserves independently funded receiving custody",async()=>{
@@ -61,7 +59,6 @@ test("original typed decoder cursor preserves independently funded receiving cus
  const owner=source.slice(source.indexOf("impl<'owner,'control> NativeSnapshotDecodeOwner"),source.indexOf("impl Drop for NativeSnapshotDecodeOwner"));
  expect(owner.includes("pub fn drive_cursor")).toBe(true);
  expect(owner.includes("snapshot::drive_cursor")).toBe(true);
- console.log("[DEBUG] Typed decoder original plain policy and UTF8 Buffer/TextEncoder/SQLite oracle retain caller and recipient custody; actual cursor System/cancellation law remains native-unrun");
 });
 
 
@@ -69,7 +66,6 @@ test("original receiving final publication prices native header before original 
  expect(existsSync(resolve(import.meta.dir,"../🧬️schema/📤️publication.json"))).toBe(false);
  const db=new Database(":memory:");try{db.exec("CREATE TABLE publication(word INTEGER PRIMARY KEY,header INTEGER NOT NULL,intermediate INTEGER NOT NULL,denied INTEGER NOT NULL,accepted INTEGER NOT NULL)");for(const word of [4,8])db.query("INSERT INTO publication VALUES(?,?,?,?,?)").run(word,word*fixture.publicationHeader.nativeWords,fixture.publicationHeader.intermediateBytes,fixture.publicationHeader.intermediateBytes,fixture.publicationHeader.intermediateBytes+word*fixture.publicationHeader.nativeWords);expect(db.query("SELECT header,denied,accepted FROM publication ORDER BY word").all()).toEqual([{header:12,denied:1,accepted:13},{header:24,denied:1,accepted:25}]);expect(db.query("SELECT count(*) AS count FROM publication WHERE denied-intermediate<header AND accepted-intermediate=header").get()).toEqual({count:2});}finally{db.close();}
  const source=await Bun.file(new URL("../🦀️.rs",import.meta.url)).text();expect(source.includes("copied_bytes:std::mem::size_of::<Option<O>>()")).toBe(true);expect(source.includes("publication_progress::<O>(grant,frame_bytes)?")).toBe(true);expect(fixture.publicationHeader.entries).toEqual(["receive","cursor"]);expect(fixture.publicationHeader.cases).toEqual(["zero","oneShort","exact"]);for(const layout of fixture.publicationHeader.layouts){expect(layout.oneShortCopyBytes).toBe(layout.exactCopyBytes-1);expect(layout.exactCopyBytes).toBe(layout.headerBytes+fixture.publicationHeader.intermediateBytes);}expect(source.includes("publication_progress::<O>(remaining,frame_bytes)?")).toBe(true);expect(source.includes("*performed=receipt;Ok(frame.output.take_original()")).toBe(true);
- console.error("[DEBUG] Final original Option<String> publication matches independent SQLite 32/64-bit13/25-byte work with plain test rows; actual native pointer/copy-zero refusal remains a separate allocator law");
 });
 
 
@@ -88,7 +84,6 @@ test("original Pack receiving requires the caller owner and preserves Probe type
  const body=await Bun.file(resolve(root,"🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🚪️io/🔤️json/🦀️.rs")).text();const original=body.slice(body.indexOf("fn read_original"),body.indexOf("/// 🪶️ Borrows the unchanged tree"));
  expect(original.includes("owner.receive::<Receiving<T>,T>")).toBe(true);expect(original.includes("Option<T>")).toBe(true);expect(original.includes("admit_inline::<T>(body)?")).toBe(true);expect(original.includes("*typed=Some(construct(output.take().unwrap()))")).toBe(true);expect(original.indexOf("*typed=Some(construct(output.take().unwrap()))")).toBeLessThan(original.indexOf("record_inline::<T>(body)?"));expect(original.includes("body.remaining_grant()")).toBe(true);expect(original.includes("body.record_progress(performed)?")).toBe(true);
  expect(implementation.includes("NativeDecodeControl::new")).toBe(false);expect(implementation.includes("decode_pack(" )).toBe(false);expect(implementation.includes("PLAIN_GRANT")).toBe(false);
- console.error("[DEBUG] Required Pack receiving Source contract matches original per-grant Ajv and independent SQLite/JSON/UTF8; Probe physical native law remains separate");
 });
 
 
@@ -97,7 +92,6 @@ test("original Probe SQL native caller uses the paid typed receiving provider",a
  const source=await Bun.file(resolve(root,"🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🪶️sqlite/🦀️.rs")).text();
  const decoder=source.slice(source.indexOf("fn decode_sqlite_snapshot_native("),source.indexOf("fn encode_sqlite_snapshot_native("));
  expect(decoder.includes("owner.scoped_native(maximum,&mut observer")).toBe(true);expect(decoder.includes("<Self as store::ArtifactPackReceiving>::receive_pack(text.as_bytes(),owner)")).toBe(true);expect(decoder.includes("probe_json::read(text,owner).map(Self)")).toBe(false);expect(decoder.includes("control.allocation_remaining_bytes()")).toBe(true);expect(decoder.includes("control.admit_native_allocation_bytes")).toBe(true);expect(decoder.includes("NativeDecodeControl::new")).toBe(false);
- console.error("[DEBUG] Original SQL native caller preserves the same decoder, SQL callback, allocation ceiling and accepted wallet while requiring paid typed Probe receiving");
 });
 
 
@@ -120,5 +114,4 @@ test("original snapshot wallets retain actual overdrawn spans before refusal",as
   for(const [authority,receipt]of [["maximum_items","copied_items"],["maximum_copy_bytes","copied_bytes"],["maximum_capacity_bytes","retained_capacity_bytes"],["maximum_release_bytes","released_bytes"]])expect(block.includes("self.grant."+authority+".saturating_sub(self.progress."+receipt+")")).toBe(true);
  }
  expect(rows.originalGrant).toBe("unchanged");expect(rows.receipt).toBe("performedSpanRetainedBeforeRefusal");
- console.error("[DEBUG] Original snapshot overdraw receipt remains in the same wallet; independent SQLite authority subtraction exhausts each actual spent axis without inventing credit, native System refusal law remains separate");
 });

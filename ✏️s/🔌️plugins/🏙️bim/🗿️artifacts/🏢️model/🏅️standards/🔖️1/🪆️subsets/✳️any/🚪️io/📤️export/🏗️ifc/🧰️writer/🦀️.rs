@@ -371,6 +371,11 @@ impl Ifc {
 }
 //#endregion 🔖️Builder
 
+/// 🏷️ `IFCLABEL(value)`.
+pub fn label(value: &str) -> V {
+    typed("IFCLABEL", text(value))
+}
+
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;

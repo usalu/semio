@@ -1,6 +1,6 @@
 //! 🧬️ Flow snapshot schema — artifact-lane fields only.
 
-use crate::{flow_content_child_handle_and_cache, flow_working_scene, FlowContentChild};
+use crate::{flow_content_child_handle_and_cache, flow_working_scene_for_handle, FlowContentChild};
 use framework_schema::ArtifactSchema;
 
 //#region 🔹Snapshot
@@ -47,7 +47,7 @@ impl FlowSnapshot {
     /// codecs — reads the live widgets/synapses/layout off the working-scene cache (see
     /// `flow_working_scene`'s doc comment for the staleness gap this bridges).
     pub fn to_host_snapshot(&self) -> semio_framework_artifact_flow_flow::FlowHostSnapshot {
-        let (widgets, synapses, layout) = flow_working_scene(self).into_parts();
+        let (widgets, synapses, layout) = flow_working_scene_for_handle(&self.content).into_parts();
         semio_framework_artifact_flow_flow::FlowHostSnapshot { schema: self.schema.clone(), camera: default_window_camera(), widgets, synapses, layout }
     }
 }

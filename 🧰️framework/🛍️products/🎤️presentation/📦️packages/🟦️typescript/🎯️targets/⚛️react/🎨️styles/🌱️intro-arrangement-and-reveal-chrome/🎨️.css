@@ -1,0 +1,99 @@
+/* 🌱️ The goal heading, the intro arrangement rows and lines, the progress bar and the reveal chrome. */
+
+.reveal .slides section[data-auto-animate] [data-id^="goal"] h2 {
+	white-space: nowrap;
+}
+
+.reveal .slides > section > section.presentation-arrangement--intro {
+	--r-heading-margin: 0 0 0.12em 0;
+}
+
+.reveal .slides > section > section.presentation-arrangement--intro .presentation-text-morph-block {
+	width: fit-content;
+	max-width: 100%;
+	margin-inline: auto;
+}
+
+.reveal
+	.slides
+	> section
+	> section.presentation-arrangement--intro:not(.presentation-arrangement--positioned)
+	:is(h1, h2, h3, h4, p) {
+	display: block;
+	margin: 0;
+	line-height: 1.1;
+	width: auto;
+	max-width: 100%;
+	margin-inline: auto;
+	text-wrap: balance;
+}
+
+.reveal .slides > section > section.presentation-arrangement--intro .presentation-intro-rows {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	width: 100%;
+	row-gap: 0.15em;
+}
+
+.reveal .slides > section > section.presentation-arrangement--intro .presentation-intro-line {
+	display: flex;
+	flex-direction: row;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: center;
+	width: 100%;
+	column-gap: 0.35em;
+}
+
+.reveal .slides > section > section.presentation-arrangement--intro .presentation-intro-authors + .presentation-intro-affiliations {
+	margin-top: 0.35em;
+}
+
+.reveal .slides > section > section.presentation-arrangement--intro .presentation-intro-affiliations .presentation-affiliation-row {
+	width: fit-content;
+	max-width: 100%;
+}
+
+.reveal .progress span {
+	background: var(--color-primary);
+}
+
+/* #region 🔖️RevealChrome */
+.reveal-viewport {
+	background-color: var(--base);
+	color: var(--foreground);
+}
+
+.reveal .controls,
+.reveal.has-dark-background .controls,
+.reveal.has-light-background .controls {
+	color: var(--color-primary);
+}
+
+.reveal .progress {
+	background-color: color-mix(in srgb, var(--foreground) 18%, transparent);
+	color: var(--color-primary);
+}
+
+.reveal .slide-number,
+.reveal .slide-number a {
+	font-family: var(--font-sans);
+	font-size: var(--text-sm);
+	line-height: 1.2;
+	color: var(--foreground);
+	background-color: color-mix(in srgb, var(--panel) 88%, transparent);
+	padding: var(--spacing-single) var(--spacing-double);
+}
+
+.reveal .jump-to-slide-input {
+	font-family: var(--font-sans);
+	color: var(--foreground);
+}
+
+.reveal.has-dark-background .jump-to-slide-input,
+.reveal.has-light-background .jump-to-slide-input {
+	color: var(--foreground);
+}
+/* #endregion 🔖️RevealChrome */

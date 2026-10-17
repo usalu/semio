@@ -1,0 +1,1139 @@
+{
+  "requests": [
+    {
+      "id": "exact",
+      "value": {
+        "schema": "semio.hub.space-artifact-create/v1",
+        "requestId": "1234567890abcdef1234567890abcdef",
+        "expectedCatalogGenerationId": "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+        "kindId": "s.gis.map",
+        "name": "Collaborative Map"
+      },
+      "accepted": true
+    },
+    {
+      "id": "german",
+      "value": {
+        "schema": "semio.hub.space-artifact-create/v1",
+        "requestId": "1234567890abcdef1234567890abcdef",
+        "expectedCatalogGenerationId": "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+        "kindId": "s.gis.map",
+        "name": "Gemeinsame Karte"
+      },
+      "accepted": true
+    },
+    {
+      "id": "zero-request",
+      "value": {
+        "schema": "semio.hub.space-artifact-create/v1",
+        "requestId": "00000000000000000000000000000000",
+        "expectedCatalogGenerationId": "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+        "kindId": "s.gis.map",
+        "name": "Collaborative Map"
+      },
+      "accepted": false
+    },
+    {
+      "id": "uppercase-request",
+      "value": {
+        "schema": "semio.hub.space-artifact-create/v1",
+        "requestId": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+        "expectedCatalogGenerationId": "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+        "kindId": "s.gis.map",
+        "name": "Collaborative Map"
+      },
+      "accepted": false
+    },
+    {
+      "id": "unknown-kind",
+      "value": {
+        "schema": "semio.hub.space-artifact-create/v1",
+        "requestId": "1234567890abcdef1234567890abcdef",
+        "expectedCatalogGenerationId": "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+        "kindId": "",
+        "name": "Collaborative Map"
+      },
+      "accepted": false
+    },
+    {
+      "id": "empty-name",
+      "value": {
+        "schema": "semio.hub.space-artifact-create/v1",
+        "requestId": "1234567890abcdef1234567890abcdef",
+        "expectedCatalogGenerationId": "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+        "kindId": "s.gis.map",
+        "name": ""
+      },
+      "accepted": false
+    },
+    {
+      "id": "leading-space",
+      "value": {
+        "schema": "semio.hub.space-artifact-create/v1",
+        "requestId": "1234567890abcdef1234567890abcdef",
+        "expectedCatalogGenerationId": "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+        "kindId": "s.gis.map",
+        "name": " map"
+      },
+      "accepted": false
+    },
+    {
+      "id": "control-name",
+      "value": {
+        "schema": "semio.hub.space-artifact-create/v1",
+        "requestId": "1234567890abcdef1234567890abcdef",
+        "expectedCatalogGenerationId": "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+        "kindId": "s.gis.map",
+        "name": "map\n"
+      },
+      "accepted": false
+    },
+    {
+      "id": "oversized-name",
+      "value": {
+        "schema": "semio.hub.space-artifact-create/v1",
+        "requestId": "1234567890abcdef1234567890abcdef",
+        "expectedCatalogGenerationId": "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+        "kindId": "s.gis.map",
+        "name": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+      },
+      "accepted": false
+    },
+    {
+      "id": "injected-document",
+      "value": {
+        "schema": "semio.hub.space-artifact-create/v1",
+        "requestId": "1234567890abcdef1234567890abcdef",
+        "expectedCatalogGenerationId": "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+        "kindId": "s.gis.map",
+        "name": "Collaborative Map",
+        "artifactId": "chosen"
+      },
+      "accepted": false
+    },
+    {
+      "id": "injected-descriptor",
+      "value": {
+        "schema": "semio.hub.space-artifact-create/v1",
+        "requestId": "1234567890abcdef1234567890abcdef",
+        "expectedCatalogGenerationId": "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+        "kindId": "s.gis.map",
+        "name": "Collaborative Map",
+        "descriptor": {}
+      },
+      "accepted": false
+    },
+    {
+      "id": "injected-space",
+      "value": {
+        "schema": "semio.hub.space-artifact-create/v1",
+        "requestId": "1234567890abcdef1234567890abcdef",
+        "expectedCatalogGenerationId": "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+        "kindId": "s.gis.map",
+        "name": "Collaborative Map",
+        "spaceId": "caller-owned"
+      },
+      "accepted": false
+    },
+    {
+      "id": "injected-generation",
+      "value": {
+        "schema": "semio.hub.space-artifact-create/v1",
+        "requestId": "1234567890abcdef1234567890abcdef",
+        "expectedCatalogGenerationId": "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+        "kindId": "s.gis.map",
+        "name": "Collaborative Map",
+        "generationId": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+      },
+      "accepted": false
+    },
+    {
+      "id": "foreign-schema",
+      "value": {
+        "schema": "semio.hub.space-artifact-create/v2",
+        "requestId": "1234567890abcdef1234567890abcdef",
+        "expectedCatalogGenerationId": "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+        "kindId": "s.gis.map",
+        "name": "Collaborative Map"
+      },
+      "accepted": false
+    },
+    {
+      "id": "missing-catalog-generation",
+      "value": {
+        "schema": "semio.hub.space-artifact-create/v1",
+        "requestId": "1234567890abcdef1234567890abcdef",
+        "kindId": "s.gis.map",
+        "name": "Collaborative Map"
+      },
+      "accepted": false
+    },
+    {
+      "id": "zero-catalog-generation",
+      "value": {
+        "schema": "semio.hub.space-artifact-create/v1",
+        "requestId": "1234567890abcdef1234567890abcdef",
+        "expectedCatalogGenerationId": "0000000000000000000000000000000000000000000000000000000000000000",
+        "kindId": "s.gis.map",
+        "name": "Collaborative Map"
+      },
+      "accepted": false
+    },
+    {
+      "id": "uppercase-catalog-generation",
+      "value": {
+        "schema": "semio.hub.space-artifact-create/v1",
+        "requestId": "1234567890abcdef1234567890abcdef",
+        "expectedCatalogGenerationId": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+        "kindId": "s.gis.map",
+        "name": "Collaborative Map"
+      },
+      "accepted": false
+    },
+    {
+      "id": "number-catalog-generation",
+      "value": {
+        "schema": "semio.hub.space-artifact-create/v1",
+        "requestId": "1234567890abcdef1234567890abcdef",
+        "expectedCatalogGenerationId": 123,
+        "kindId": "s.gis.map",
+        "name": "Collaborative Map"
+      },
+      "accepted": false
+    },
+    {
+      "id": "null-catalog-generation",
+      "value": {
+        "schema": "semio.hub.space-artifact-create/v1",
+        "requestId": "1234567890abcdef1234567890abcdef",
+        "expectedCatalogGenerationId": null,
+        "kindId": "s.gis.map",
+        "name": "Collaborative Map"
+      },
+      "accepted": false
+    },
+    {
+      "id": "array-catalog-generation",
+      "value": {
+        "schema": "semio.hub.space-artifact-create/v1",
+        "requestId": "1234567890abcdef1234567890abcdef",
+        "expectedCatalogGenerationId": [
+          "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"
+        ],
+        "kindId": "s.gis.map",
+        "name": "Collaborative Map"
+      },
+      "accepted": false
+    }
+  ],
+  "statuses": [
+    {
+      "id": "ready",
+      "value": {
+        "schema": "semio.hub.space-artifact-creation-status/v1",
+        "requestId": "1234567890abcdef1234567890abcdef",
+        "spaceId": "space-fixture",
+        "catalogGenerationId": "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+        "phase": "ready",
+        "ready": {
+          "artifactId": "artifact-11223344556677889900aabbccddeeff",
+          "kindId": "s.gis.map",
+          "artifactSchema": "gis.map",
+          "parentDialect": {
+            "artifactKind": "s.gis.map",
+            "standard": "1",
+            "subset": "any"
+          }
+        }
+      },
+      "accepted": true
+    },
+    {
+      "id": "ready-two-space-dialect",
+      "value": {
+        "schema": "semio.hub.space-artifact-creation-status/v1",
+        "requestId": "1234567890abcdef1234567890abcdef",
+        "spaceId": "space-fixture",
+        "catalogGenerationId": "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+        "phase": "ready",
+        "ready": {
+          "artifactId": "artifact-11223344556677889900aabbccddeeff",
+          "kindId": "2d.note",
+          "artifactSchema": "note.document",
+          "parentDialect": {
+            "artifactKind": "s.note.note",
+            "standard": "1",
+            "subset": "*"
+          }
+        }
+      },
+      "accepted": true
+    },
+    {
+      "id": "ready-any-subset",
+      "value": {
+        "schema": "semio.hub.space-artifact-creation-status/v1",
+        "requestId": "1234567890abcdef1234567890abcdef",
+        "spaceId": "space-fixture",
+        "catalogGenerationId": "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+        "phase": "ready",
+        "ready": {
+          "artifactId": "artifact-11223344556677889900aabbccddeeff",
+          "kindId": "s.gis.map",
+          "artifactSchema": "gis.map",
+          "parentDialect": {
+            "artifactKind": "s.gis.map",
+            "standard": "1",
+            "subset": "*"
+          }
+        }
+      },
+      "accepted": true
+    },
+    {
+      "id": "ready-embedded-wildcard-subset",
+      "value": {
+        "schema": "semio.hub.space-artifact-creation-status/v1",
+        "requestId": "1234567890abcdef1234567890abcdef",
+        "spaceId": "space-fixture",
+        "catalogGenerationId": "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+        "phase": "ready",
+        "ready": {
+          "artifactId": "artifact-11223344556677889900aabbccddeeff",
+          "kindId": "s.gis.map",
+          "artifactSchema": "gis.map",
+          "parentDialect": {
+            "artifactKind": "s.gis.map",
+            "standard": "1",
+            "subset": "gis.*"
+          }
+        }
+      },
+      "accepted": false
+    },
+    {
+      "id": "ready-wildcard-prefixed-subset",
+      "value": {
+        "schema": "semio.hub.space-artifact-creation-status/v1",
+        "requestId": "1234567890abcdef1234567890abcdef",
+        "spaceId": "space-fixture",
+        "catalogGenerationId": "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+        "phase": "ready",
+        "ready": {
+          "artifactId": "artifact-11223344556677889900aabbccddeeff",
+          "kindId": "s.gis.map",
+          "artifactSchema": "gis.map",
+          "parentDialect": {
+            "artifactKind": "s.gis.map",
+            "standard": "1",
+            "subset": "*any"
+          }
+        }
+      },
+      "accepted": false
+    },
+    {
+      "id": "accepted",
+      "value": {
+        "schema": "semio.hub.space-artifact-creation-status/v1",
+        "requestId": "1234567890abcdef1234567890abcdef",
+        "spaceId": "space-fixture",
+        "catalogGenerationId": "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+        "phase": "accepted"
+      },
+      "accepted": true
+    },
+    {
+      "id": "accepted-leaks-ready",
+      "value": {
+        "schema": "semio.hub.space-artifact-creation-status/v1",
+        "requestId": "1234567890abcdef1234567890abcdef",
+        "spaceId": "space-fixture",
+        "catalogGenerationId": "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+        "phase": "accepted",
+        "ready": {
+          "artifactId": "artifact-11223344556677889900aabbccddeeff",
+          "kindId": "s.gis.map",
+          "artifactSchema": "gis.map",
+          "parentDialect": {
+            "artifactKind": "s.gis.map",
+            "standard": "1",
+            "subset": "any"
+          }
+        }
+      },
+      "accepted": false
+    },
+    {
+      "id": "preparing",
+      "value": {
+        "schema": "semio.hub.space-artifact-creation-status/v1",
+        "requestId": "1234567890abcdef1234567890abcdef",
+        "spaceId": "space-fixture",
+        "catalogGenerationId": "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+        "phase": "preparing"
+      },
+      "accepted": true
+    },
+    {
+      "id": "preparing-leaks-ready",
+      "value": {
+        "schema": "semio.hub.space-artifact-creation-status/v1",
+        "requestId": "1234567890abcdef1234567890abcdef",
+        "spaceId": "space-fixture",
+        "catalogGenerationId": "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+        "phase": "preparing",
+        "ready": {
+          "artifactId": "artifact-11223344556677889900aabbccddeeff",
+          "kindId": "s.gis.map",
+          "artifactSchema": "gis.map",
+          "parentDialect": {
+            "artifactKind": "s.gis.map",
+            "standard": "1",
+            "subset": "any"
+          }
+        }
+      },
+      "accepted": false
+    },
+    {
+      "id": "indeterminate",
+      "value": {
+        "schema": "semio.hub.space-artifact-creation-status/v1",
+        "requestId": "1234567890abcdef1234567890abcdef",
+        "spaceId": "space-fixture",
+        "catalogGenerationId": "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+        "phase": "indeterminate"
+      },
+      "accepted": true
+    },
+    {
+      "id": "indeterminate-leaks-ready",
+      "value": {
+        "schema": "semio.hub.space-artifact-creation-status/v1",
+        "requestId": "1234567890abcdef1234567890abcdef",
+        "spaceId": "space-fixture",
+        "catalogGenerationId": "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+        "phase": "indeterminate",
+        "ready": {
+          "artifactId": "artifact-11223344556677889900aabbccddeeff",
+          "kindId": "s.gis.map",
+          "artifactSchema": "gis.map",
+          "parentDialect": {
+            "artifactKind": "s.gis.map",
+            "standard": "1",
+            "subset": "any"
+          }
+        }
+      },
+      "accepted": false
+    },
+    {
+      "id": "failed",
+      "value": {
+        "schema": "semio.hub.space-artifact-creation-status/v1",
+        "requestId": "1234567890abcdef1234567890abcdef",
+        "spaceId": "space-fixture",
+        "catalogGenerationId": "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+        "phase": "failed"
+      },
+      "accepted": true
+    },
+    {
+      "id": "failed-leaks-ready",
+      "value": {
+        "schema": "semio.hub.space-artifact-creation-status/v1",
+        "requestId": "1234567890abcdef1234567890abcdef",
+        "spaceId": "space-fixture",
+        "catalogGenerationId": "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+        "phase": "failed",
+        "ready": {
+          "artifactId": "artifact-11223344556677889900aabbccddeeff",
+          "kindId": "s.gis.map",
+          "artifactSchema": "gis.map",
+          "parentDialect": {
+            "artifactKind": "s.gis.map",
+            "standard": "1",
+            "subset": "any"
+          }
+        }
+      },
+      "accepted": false
+    },
+    {
+      "id": "cancelled",
+      "value": {
+        "schema": "semio.hub.space-artifact-creation-status/v1",
+        "requestId": "1234567890abcdef1234567890abcdef",
+        "spaceId": "space-fixture",
+        "catalogGenerationId": "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+        "phase": "cancelled"
+      },
+      "accepted": true
+    },
+    {
+      "id": "cancelled-leaks-ready",
+      "value": {
+        "schema": "semio.hub.space-artifact-creation-status/v1",
+        "requestId": "1234567890abcdef1234567890abcdef",
+        "spaceId": "space-fixture",
+        "catalogGenerationId": "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+        "phase": "cancelled",
+        "ready": {
+          "artifactId": "artifact-11223344556677889900aabbccddeeff",
+          "kindId": "s.gis.map",
+          "artifactSchema": "gis.map",
+          "parentDialect": {
+            "artifactKind": "s.gis.map",
+            "standard": "1",
+            "subset": "any"
+          }
+        }
+      },
+      "accepted": false
+    },
+    {
+      "id": "ready-missing-tuple",
+      "value": {
+        "schema": "semio.hub.space-artifact-creation-status/v1",
+        "requestId": "1234567890abcdef1234567890abcdef",
+        "spaceId": "space-fixture",
+        "catalogGenerationId": "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+        "phase": "ready"
+      },
+      "accepted": false
+    },
+    {
+      "id": "ready-dialect-kind-unbounded",
+      "value": {
+        "schema": "semio.hub.space-artifact-creation-status/v1",
+        "requestId": "1234567890abcdef1234567890abcdef",
+        "spaceId": "space-fixture",
+        "catalogGenerationId": "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+        "phase": "ready",
+        "ready": {
+          "artifactId": "artifact-11223344556677889900aabbccddeeff",
+          "kindId": "s.gis.map",
+          "artifactSchema": "gis.map",
+          "parentDialect": {
+            "artifactKind": "",
+            "standard": "1",
+            "subset": "any"
+          }
+        }
+      },
+      "accepted": false
+    },
+    {
+      "id": "missing-catalog-generation",
+      "value": {
+        "schema": "semio.hub.space-artifact-creation-status/v1",
+        "requestId": "1234567890abcdef1234567890abcdef",
+        "spaceId": "space-fixture",
+        "phase": "ready",
+        "ready": {
+          "artifactId": "artifact-11223344556677889900aabbccddeeff",
+          "kindId": "s.gis.map",
+          "artifactSchema": "gis.map",
+          "parentDialect": {
+            "artifactKind": "s.gis.map",
+            "standard": "1",
+            "subset": "any"
+          }
+        }
+      },
+      "accepted": false
+    },
+    {
+      "id": "zero-catalog-generation",
+      "value": {
+        "schema": "semio.hub.space-artifact-creation-status/v1",
+        "requestId": "1234567890abcdef1234567890abcdef",
+        "spaceId": "space-fixture",
+        "catalogGenerationId": "0000000000000000000000000000000000000000000000000000000000000000",
+        "phase": "ready",
+        "ready": {
+          "artifactId": "artifact-11223344556677889900aabbccddeeff",
+          "kindId": "s.gis.map",
+          "artifactSchema": "gis.map",
+          "parentDialect": {
+            "artifactKind": "s.gis.map",
+            "standard": "1",
+            "subset": "any"
+          }
+        }
+      },
+      "accepted": false
+    },
+    {
+      "id": "uppercase-catalog-generation",
+      "value": {
+        "schema": "semio.hub.space-artifact-creation-status/v1",
+        "requestId": "1234567890abcdef1234567890abcdef",
+        "spaceId": "space-fixture",
+        "catalogGenerationId": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+        "phase": "ready",
+        "ready": {
+          "artifactId": "artifact-11223344556677889900aabbccddeeff",
+          "kindId": "s.gis.map",
+          "artifactSchema": "gis.map",
+          "parentDialect": {
+            "artifactKind": "s.gis.map",
+            "standard": "1",
+            "subset": "any"
+          }
+        }
+      },
+      "accepted": false
+    },
+    {
+      "id": "number-catalog-generation",
+      "value": {
+        "schema": "semio.hub.space-artifact-creation-status/v1",
+        "requestId": "1234567890abcdef1234567890abcdef",
+        "spaceId": "space-fixture",
+        "catalogGenerationId": 123,
+        "phase": "ready",
+        "ready": {
+          "artifactId": "artifact-11223344556677889900aabbccddeeff",
+          "kindId": "s.gis.map",
+          "artifactSchema": "gis.map",
+          "parentDialect": {
+            "artifactKind": "s.gis.map",
+            "standard": "1",
+            "subset": "any"
+          }
+        }
+      },
+      "accepted": false
+    },
+    {
+      "id": "null-catalog-generation",
+      "value": {
+        "schema": "semio.hub.space-artifact-creation-status/v1",
+        "requestId": "1234567890abcdef1234567890abcdef",
+        "spaceId": "space-fixture",
+        "catalogGenerationId": null,
+        "phase": "ready",
+        "ready": {
+          "artifactId": "artifact-11223344556677889900aabbccddeeff",
+          "kindId": "s.gis.map",
+          "artifactSchema": "gis.map",
+          "parentDialect": {
+            "artifactKind": "s.gis.map",
+            "standard": "1",
+            "subset": "any"
+          }
+        }
+      },
+      "accepted": false
+    },
+    {
+      "id": "array-catalog-generation",
+      "value": {
+        "schema": "semio.hub.space-artifact-creation-status/v1",
+        "requestId": "1234567890abcdef1234567890abcdef",
+        "spaceId": "space-fixture",
+        "catalogGenerationId": [
+          "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"
+        ],
+        "phase": "ready",
+        "ready": {
+          "artifactId": "artifact-11223344556677889900aabbccddeeff",
+          "kindId": "s.gis.map",
+          "artifactSchema": "gis.map",
+          "parentDialect": {
+            "artifactKind": "s.gis.map",
+            "standard": "1",
+            "subset": "any"
+          }
+        }
+      },
+      "accepted": false
+    },
+    {
+      "id": "accepted-queued",
+      "value": {
+        "schema": "semio.hub.space-artifact-creation-status/v1",
+        "requestId": "1234567890abcdef1234567890abcdef",
+        "spaceId": "space-fixture",
+        "catalogGenerationId": "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+        "phase": "accepted",
+        "progress": {
+          "stage": "queued",
+          "completedUnits": 0,
+          "totalUnits": 1
+        }
+      },
+      "accepted": true
+    },
+    {
+      "id": "preparing-compiling-guest",
+      "value": {
+        "schema": "semio.hub.space-artifact-creation-status/v1",
+        "requestId": "1234567890abcdef1234567890abcdef",
+        "spaceId": "space-fixture",
+        "catalogGenerationId": "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+        "phase": "preparing",
+        "progress": {
+          "stage": "compiling-guest",
+          "completedUnits": 0,
+          "totalUnits": 1
+        }
+      },
+      "accepted": true
+    },
+    {
+      "id": "preparing-genesis",
+      "value": {
+        "schema": "semio.hub.space-artifact-creation-status/v1",
+        "requestId": "1234567890abcdef1234567890abcdef",
+        "spaceId": "space-fixture",
+        "catalogGenerationId": "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+        "phase": "preparing",
+        "progress": {
+          "stage": "genesis",
+          "completedUnits": 25000000,
+          "totalUnits": 4000000000
+        }
+      },
+      "accepted": true
+    },
+    {
+      "id": "preparing-publishing",
+      "value": {
+        "schema": "semio.hub.space-artifact-creation-status/v1",
+        "requestId": "1234567890abcdef1234567890abcdef",
+        "spaceId": "space-fixture",
+        "catalogGenerationId": "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+        "phase": "preparing",
+        "progress": {
+          "stage": "publishing",
+          "completedUnits": 3,
+          "totalUnits": 7
+        }
+      },
+      "accepted": true
+    },
+    {
+      "id": "failed-leaks-progress",
+      "value": {
+        "schema": "semio.hub.space-artifact-creation-status/v1",
+        "requestId": "1234567890abcdef1234567890abcdef",
+        "spaceId": "space-fixture",
+        "catalogGenerationId": "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+        "phase": "failed",
+        "progress": {
+          "stage": "genesis",
+          "completedUnits": 1,
+          "totalUnits": 2
+        }
+      },
+      "accepted": false
+    },
+    {
+      "id": "cancelled-leaks-progress",
+      "value": {
+        "schema": "semio.hub.space-artifact-creation-status/v1",
+        "requestId": "1234567890abcdef1234567890abcdef",
+        "spaceId": "space-fixture",
+        "catalogGenerationId": "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+        "phase": "cancelled",
+        "progress": {
+          "stage": "queued",
+          "completedUnits": 0,
+          "totalUnits": 1
+        }
+      },
+      "accepted": false
+    },
+    {
+      "id": "preparing-unknown-stage",
+      "value": {
+        "schema": "semio.hub.space-artifact-creation-status/v1",
+        "requestId": "1234567890abcdef1234567890abcdef",
+        "spaceId": "space-fixture",
+        "catalogGenerationId": "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+        "phase": "preparing",
+        "progress": {
+          "stage": "thinking",
+          "completedUnits": 0,
+          "totalUnits": 1
+        }
+      },
+      "accepted": false
+    },
+    {
+      "id": "preparing-zero-total",
+      "value": {
+        "schema": "semio.hub.space-artifact-creation-status/v1",
+        "requestId": "1234567890abcdef1234567890abcdef",
+        "spaceId": "space-fixture",
+        "catalogGenerationId": "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+        "phase": "preparing",
+        "progress": {
+          "stage": "genesis",
+          "completedUnits": 0,
+          "totalUnits": 0
+        }
+      },
+      "accepted": false
+    },
+    {
+      "id": "preparing-completed-exceeds-total",
+      "value": {
+        "schema": "semio.hub.space-artifact-creation-status/v1",
+        "requestId": "1234567890abcdef1234567890abcdef",
+        "spaceId": "space-fixture",
+        "catalogGenerationId": "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+        "phase": "preparing",
+        "progress": {
+          "stage": "publishing",
+          "completedUnits": 8,
+          "totalUnits": 7
+        }
+      },
+      "accepted": false,
+      "schemaValid": true
+    }
+  ],
+  "catalogs": [
+    {
+      "id": "exact",
+      "value": {
+        "schema": "semio.hub.space-artifact-creation-catalog/v1",
+        "spaceId": "space-fixture",
+        "catalogGenerationId": "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+        "kinds": [
+          {
+            "kindId": "s.gis.map",
+            "schema": "gis.map",
+            "dialect": {
+              "artifactKind": "s.gis.map",
+              "standard": "1",
+              "subset": "any"
+            },
+            "label": {
+              "en": "GIS Map",
+              "de": "GIS-Karte"
+            }
+          }
+        ]
+      },
+      "accepted": true
+    },
+    {
+      "id": "two-space-dialect",
+      "value": {
+        "schema": "semio.hub.space-artifact-creation-catalog/v1",
+        "spaceId": "space-fixture",
+        "catalogGenerationId": "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+        "kinds": [
+          {
+            "kindId": "2d.note",
+            "schema": "note.document",
+            "dialect": {
+              "artifactKind": "s.note.note",
+              "standard": "1",
+              "subset": "*"
+            },
+            "label": {
+              "en": "2D Note",
+              "de": "2D-Notiz"
+            }
+          }
+        ]
+      },
+      "accepted": true
+    },
+    {
+      "id": "any-subset",
+      "value": {
+        "schema": "semio.hub.space-artifact-creation-catalog/v1",
+        "spaceId": "space-fixture",
+        "catalogGenerationId": "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+        "kinds": [
+          {
+            "kindId": "s.gis.map",
+            "schema": "gis.map",
+            "dialect": {
+              "artifactKind": "s.gis.map",
+              "standard": "1",
+              "subset": "*"
+            },
+            "label": {
+              "en": "GIS Map",
+              "de": "GIS-Karte"
+            }
+          }
+        ]
+      },
+      "accepted": true
+    },
+    {
+      "id": "embedded-wildcard-subset",
+      "value": {
+        "schema": "semio.hub.space-artifact-creation-catalog/v1",
+        "spaceId": "space-fixture",
+        "catalogGenerationId": "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+        "kinds": [
+          {
+            "kindId": "s.gis.map",
+            "schema": "gis.map",
+            "dialect": {
+              "artifactKind": "s.gis.map",
+              "standard": "1",
+              "subset": "any.*"
+            },
+            "label": {
+              "en": "GIS Map",
+              "de": "GIS-Karte"
+            }
+          }
+        ]
+      },
+      "accepted": false
+    },
+    {
+      "id": "empty",
+      "value": {
+        "schema": "semio.hub.space-artifact-creation-catalog/v1",
+        "spaceId": "space-fixture",
+        "catalogGenerationId": "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+        "kinds": []
+      },
+      "accepted": false
+    },
+    {
+      "id": "zero-generation",
+      "value": {
+        "schema": "semio.hub.space-artifact-creation-catalog/v1",
+        "spaceId": "space-fixture",
+        "catalogGenerationId": "0000000000000000000000000000000000000000000000000000000000000000",
+        "kinds": [
+          {
+            "kindId": "s.gis.map",
+            "schema": "gis.map",
+            "dialect": {
+              "artifactKind": "s.gis.map",
+              "standard": "1",
+              "subset": "any"
+            },
+            "label": {
+              "en": "GIS Map",
+              "de": "GIS-Karte"
+            }
+          }
+        ]
+      },
+      "accepted": false
+    },
+    {
+      "id": "kind-dialect-unbounded",
+      "value": {
+        "schema": "semio.hub.space-artifact-creation-catalog/v1",
+        "spaceId": "space-fixture",
+        "catalogGenerationId": "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+        "kinds": [
+          {
+            "kindId": "s.gis.map",
+            "schema": "gis.map",
+            "dialect": {
+              "artifactKind": "",
+              "standard": "1",
+              "subset": "any"
+            },
+            "label": {
+              "en": "GIS Map",
+              "de": "GIS-Karte"
+            }
+          }
+        ]
+      },
+      "accepted": false
+    },
+    {
+      "id": "missing-german",
+      "value": {
+        "schema": "semio.hub.space-artifact-creation-catalog/v1",
+        "spaceId": "space-fixture",
+        "catalogGenerationId": "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+        "kinds": [
+          {
+            "kindId": "s.gis.map",
+            "schema": "gis.map",
+            "dialect": {
+              "artifactKind": "s.gis.map",
+              "standard": "1",
+              "subset": "any"
+            },
+            "label": {
+              "en": "GIS Map"
+            }
+          }
+        ]
+      },
+      "accepted": false
+    },
+    {
+      "id": "unsorted",
+      "value": {
+        "schema": "semio.hub.space-artifact-creation-catalog/v1",
+        "spaceId": "space-fixture",
+        "catalogGenerationId": "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+        "kinds": [
+          {
+            "kindId": "s.gis.terrain",
+            "schema": "gis.terrain",
+            "dialect": {
+              "artifactKind": "s.gis.terrain",
+              "standard": "1",
+              "subset": "any"
+            },
+            "label": {
+              "en": "GIS Terrain",
+              "de": "GIS-Gelände"
+            }
+          },
+          {
+            "kindId": "s.gis.map",
+            "schema": "gis.map",
+            "dialect": {
+              "artifactKind": "s.gis.map",
+              "standard": "1",
+              "subset": "any"
+            },
+            "label": {
+              "en": "GIS Map",
+              "de": "GIS-Karte"
+            }
+          }
+        ]
+      },
+      "accepted": false
+    },
+    {
+      "id": "duplicate",
+      "value": {
+        "schema": "semio.hub.space-artifact-creation-catalog/v1",
+        "spaceId": "space-fixture",
+        "catalogGenerationId": "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+        "kinds": [
+          {
+            "kindId": "s.gis.map",
+            "schema": "gis.map",
+            "dialect": {
+              "artifactKind": "s.gis.map",
+              "standard": "1",
+              "subset": "any"
+            },
+            "label": {
+              "en": "GIS Map",
+              "de": "GIS-Karte"
+            }
+          },
+          {
+            "kindId": "s.gis.map",
+            "schema": "gis.map",
+            "dialect": {
+              "artifactKind": "s.gis.map",
+              "standard": "1",
+              "subset": "any"
+            },
+            "label": {
+              "en": "GIS Map",
+              "de": "GIS-Karte"
+            }
+          }
+        ]
+      },
+      "accepted": false
+    }
+  ],
+  "rawJson": [
+    {
+      "id": "exact-request",
+      "type": "request",
+      "source": "{\"schema\":\"semio.hub.space-artifact-create/v1\",\"requestId\":\"1234567890abcdef1234567890abcdef\",\"expectedCatalogGenerationId\":\"1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef\",\"kindId\":\"s.gis.map\",\"name\":\"Collaborative Map\"}",
+      "accepted": true
+    },
+    {
+      "id": "astral-request",
+      "type": "request",
+      "source": "{\"schema\":\"semio.hub.space-artifact-create/v1\",\"requestId\":\"1234567890abcdef1234567890abcdef\",\"expectedCatalogGenerationId\":\"1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef\",\"kindId\":\"s.gis.map\",\"name\":\"🗺️ Karte\"}",
+      "accepted": true
+    },
+    {
+      "id": "reordered-request",
+      "type": "request",
+      "source": "{\"requestId\":\"1234567890abcdef1234567890abcdef\",\"expectedCatalogGenerationId\":\"1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef\",\"schema\":\"semio.hub.space-artifact-create/v1\",\"kindId\":\"s.gis.map\",\"name\":\"Collaborative Map\"}",
+      "accepted": false
+    },
+    {
+      "id": "duplicate-request",
+      "type": "request",
+      "source": "{\"schema\":\"duplicate\",\"schema\":\"semio.hub.space-artifact-create/v1\",\"requestId\":\"1234567890abcdef1234567890abcdef\",\"expectedCatalogGenerationId\":\"1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef\",\"kindId\":\"s.gis.map\",\"name\":\"Collaborative Map\"}",
+      "accepted": false
+    },
+    {
+      "id": "padded-request",
+      "type": "request",
+      "source": "{\"schema\":\"semio.hub.space-artifact-create/v1\",\"requestId\":\"1234567890abcdef1234567890abcdef\",\"expectedCatalogGenerationId\":\"1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef\",\"kindId\":\"s.gis.map\",\"name\":\"Collaborative Map\"}\n",
+      "accepted": false
+    },
+    {
+      "id": "escaped-equivalent-request",
+      "type": "request",
+      "source": "{\"schema\":\"semio.hub.space-artifact-create/v1\",\"requestId\":\"1234567890abcdef1234567890abcdef\",\"expectedCatalogGenerationId\":\"1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef\",\"kindId\":\"s.gis.map\",\"name\":\"\\u0043ollaborative Map\"}",
+      "accepted": false
+    },
+    {
+      "id": "lone-high-surrogate-request",
+      "type": "request",
+      "source": "{\"schema\":\"semio.hub.space-artifact-create/v1\",\"requestId\":\"1234567890abcdef1234567890abcdef\",\"expectedCatalogGenerationId\":\"1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef\",\"kindId\":\"s.gis.map\",\"name\":\"\\ud800\"}",
+      "accepted": false
+    },
+    {
+      "id": "lone-low-surrogate-request",
+      "type": "request",
+      "source": "{\"schema\":\"semio.hub.space-artifact-create/v1\",\"requestId\":\"1234567890abcdef1234567890abcdef\",\"expectedCatalogGenerationId\":\"1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef\",\"kindId\":\"s.gis.map\",\"name\":\"\\udfff\"}",
+      "accepted": false
+    },
+    {
+      "id": "exact-status",
+      "type": "status",
+      "source": "{\"schema\":\"semio.hub.space-artifact-creation-status/v1\",\"requestId\":\"1234567890abcdef1234567890abcdef\",\"spaceId\":\"space-fixture\",\"catalogGenerationId\":\"1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef\",\"phase\":\"ready\",\"ready\":{\"artifactId\":\"artifact-11223344556677889900aabbccddeeff\",\"kindId\":\"s.gis.map\",\"artifactSchema\":\"gis.map\",\"parentDialect\":{\"artifactKind\":\"s.gis.map\",\"standard\":\"1\",\"subset\":\"any\"}}}",
+      "accepted": true
+    },
+    {
+      "id": "reordered-status",
+      "type": "status",
+      "source": "{\"requestId\":\"1234567890abcdef1234567890abcdef\",\"schema\":\"semio.hub.space-artifact-creation-status/v1\",\"spaceId\":\"space-fixture\",\"catalogGenerationId\":\"1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef\",\"phase\":\"ready\",\"ready\":{\"artifactId\":\"artifact-11223344556677889900aabbccddeeff\",\"kindId\":\"s.gis.map\",\"artifactSchema\":\"gis.map\",\"parentDialect\":{\"artifactKind\":\"s.gis.map\",\"standard\":\"1\",\"subset\":\"any\"}}}",
+      "accepted": false
+    },
+    {
+      "id": "duplicate-status",
+      "type": "status",
+      "source": "{\"phase\":\"ready\",\"schema\":\"semio.hub.space-artifact-creation-status/v1\",\"requestId\":\"1234567890abcdef1234567890abcdef\",\"spaceId\":\"space-fixture\",\"catalogGenerationId\":\"1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef\",\"phase\":\"ready\",\"ready\":{\"artifactId\":\"artifact-11223344556677889900aabbccddeeff\",\"kindId\":\"s.gis.map\",\"artifactSchema\":\"gis.map\",\"parentDialect\":{\"artifactKind\":\"s.gis.map\",\"standard\":\"1\",\"subset\":\"any\"}}}",
+      "accepted": false
+    },
+    {
+      "id": "padded-status",
+      "type": "status",
+      "source": "{\"schema\":\"semio.hub.space-artifact-creation-status/v1\",\"requestId\":\"1234567890abcdef1234567890abcdef\",\"spaceId\":\"space-fixture\",\"catalogGenerationId\":\"1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef\",\"phase\":\"ready\",\"ready\":{\"artifactId\":\"artifact-11223344556677889900aabbccddeeff\",\"kindId\":\"s.gis.map\",\"artifactSchema\":\"gis.map\",\"parentDialect\":{\"artifactKind\":\"s.gis.map\",\"standard\":\"1\",\"subset\":\"any\"}}} ",
+      "accepted": false
+    },
+    {
+      "id": "exact-catalog",
+      "type": "catalog",
+      "source": "{\"schema\":\"semio.hub.space-artifact-creation-catalog/v1\",\"spaceId\":\"space-fixture\",\"catalogGenerationId\":\"1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef\",\"kinds\":[{\"kindId\":\"s.gis.map\",\"schema\":\"gis.map\",\"dialect\":{\"artifactKind\":\"s.gis.map\",\"standard\":\"1\",\"subset\":\"any\"},\"label\":{\"en\":\"GIS Map\",\"de\":\"GIS-Karte\"}}]}",
+      "accepted": true
+    },
+    {
+      "id": "reordered-catalog",
+      "type": "catalog",
+      "source": "{\"spaceId\":\"space-fixture\",\"schema\":\"semio.hub.space-artifact-creation-catalog/v1\",\"catalogGenerationId\":\"1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef\",\"kinds\":[{\"kindId\":\"s.gis.map\",\"schema\":\"gis.map\",\"dialect\":{\"artifactKind\":\"s.gis.map\",\"standard\":\"1\",\"subset\":\"any\"},\"label\":{\"en\":\"GIS Map\",\"de\":\"GIS-Karte\"}}]}",
+      "accepted": false
+    }
+  ]
+}

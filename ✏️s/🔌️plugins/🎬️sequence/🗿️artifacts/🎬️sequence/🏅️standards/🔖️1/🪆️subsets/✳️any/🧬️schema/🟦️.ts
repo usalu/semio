@@ -1,5 +1,5 @@
 /** 🧬️ Sequence artifact schema — every field with its state class. */
-import { parseArtifactChild, type ArtifactChild } from "../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts";
+import { parseArtifactChild, type ArtifactChild } from "@semio-tech/framework-os/modules/store/child/schema";
 
 export interface SequenceArtifact {
   /** @state artifact */ schema: string;
@@ -28,6 +28,10 @@ type sequenceSequenceArtifactGuardSizeBounds = { readonly minItems?: number; rea
 
 export const sequenceSequenceArtifactGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : sequenceSequenceArtifactGuardReject(at, "value is not an object");
+export const sequenceSequenceArtifactGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) sequenceSequenceArtifactGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const sequenceSequenceArtifactGuardArray = (value: unknown, at: string, bounds: sequenceSequenceArtifactGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return sequenceSequenceArtifactGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) sequenceSequenceArtifactGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -66,7 +70,7 @@ export function parseSequenceArtifact(value: unknown, at = "$"): SequenceArtifac
 }
 
 export function parseSequenceStep(value: unknown, at = "$"): SequenceStep {
-  const row = sequenceSequenceArtifactGuardObject(value, at);
+  const row = sequenceSequenceArtifactGuardClosed(sequenceSequenceArtifactGuardObject(value, at), at, ["id", "kind", "params", "x", "y", "slot", "collapsed"]);
   return {
     id: sequenceSequenceArtifactGuardString(row["id"], `${at}.id`),
     kind: sequenceSequenceArtifactGuardString(row["kind"], `${at}.kind`),
@@ -79,7 +83,7 @@ export function parseSequenceStep(value: unknown, at = "$"): SequenceStep {
 }
 
 export function parseSequenceEdge(value: unknown, at = "$"): SequenceEdge {
-  const row = sequenceSequenceArtifactGuardObject(value, at);
+  const row = sequenceSequenceArtifactGuardClosed(sequenceSequenceArtifactGuardObject(value, at), at, ["id", "from", "to"]);
   return {
     id: sequenceSequenceArtifactGuardString(row["id"], `${at}.id`),
     from: sequenceSequenceArtifactGuardString(row["from"], `${at}.from`),
@@ -88,7 +92,7 @@ export function parseSequenceEdge(value: unknown, at = "$"): SequenceEdge {
 }
 
 export function parseSlotRef(value: unknown, at = "$"): SlotRef {
-  const row = sequenceSequenceArtifactGuardObject(value, at);
+  const row = sequenceSequenceArtifactGuardClosed(sequenceSequenceArtifactGuardObject(value, at), at, ["owner", "name"]);
   return {
     owner: sequenceSequenceArtifactGuardString(row["owner"], `${at}.owner`),
     name: sequenceSequenceArtifactGuardString(row["name"], `${at}.name`),
@@ -96,7 +100,7 @@ export function parseSlotRef(value: unknown, at = "$"): SlotRef {
 }
 
 export function parseSequenceCamera(value: unknown, at = "$"): SequenceCamera {
-  const row = sequenceSequenceArtifactGuardObject(value, at);
+  const row = sequenceSequenceArtifactGuardClosed(sequenceSequenceArtifactGuardObject(value, at), at, ["x", "y", "zoom"]);
   return {
     x: sequenceSequenceArtifactGuardNumber(row["x"], `${at}.x`),
     y: sequenceSequenceArtifactGuardNumber(row["y"], `${at}.y`),

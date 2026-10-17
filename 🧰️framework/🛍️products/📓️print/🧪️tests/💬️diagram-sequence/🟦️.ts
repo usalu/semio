@@ -10,7 +10,7 @@
 // #endregion 🧲️Header
 // #region 🔌️Adapters
 import { defineTestAdapter, type AdapterContext } from "@semio-tech/framework/test/adapter";
-import { compileVizProbeDocument, probeProjection, roundProbeNumbers, roundProjectionNumbers, type ProbeProjection, type VizProbeStatement } from "../../🔨️modules/🧪️viz-probe/🟦️.ts";
+import { compileVizProbeDocumentInContext, probeProjection, roundProbeNumbers, roundProjectionNumbers, type ProbeProjection, type VizProbeStatement } from "../../🔨️modules/🧪️viz-probe/🟦️.ts";
 import { DIAGRAM_PACKAGES, DIAGRAM_PREAMBLE, FRAME, rows } from "../🚦️diagram-routing/🟦️.ts";
 // #endregion 🔌️Adapters
 
@@ -36,9 +36,8 @@ async function subject(ctx: AdapterContext): Promise<{ projection: ProbeProjecti
   body.push({ raw: FRAME.open });
   body.push({ raw: "\\SemioVizRunFamily{uml-sequence}[data=t-parts,messages=t-msgs,width=80,height=48,head=6,step=0]" });
   body.push({ raw: FRAME.close });
-  const records = await compileVizProbeDocument(
-    { case: CASE, scenario: ctx.scenario.id, packages: DIAGRAM_PACKAGES, preamble: DIAGRAM_PREAMBLE, geometry: true, body },
-    { workDir: ctx.workDir },
+  const records = await compileVizProbeDocumentInContext(ctx,
+    { case: CASE, scenario: ctx.scenario.id, packages: DIAGRAM_PACKAGES, preamble: DIAGRAM_PREAMBLE, geometry: true, body }
   );
   const projection = probeProjection(roundProbeNumbers(records, DECIMALS));
   return { projection: { "geometry/diagram-message": projection["geometry/diagram-message"] ?? [] } };

@@ -16,6 +16,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import Ajv from "ajv";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 import { detectPort } from "detect-port";
 import { describe, expect, it } from "vitest";
 import {
@@ -279,7 +280,7 @@ describe("the development catalog", () => {
     expect(start).toBeGreaterThan(0);
     expect(body).toContain(`schemaVersion: ${declared.schemaVersion.const},`);
     for (const key of declared.packages.items.required) expect(body, key).toMatch(new RegExp(`\\n\\s+${key}[:,]`, "u"));
-    const loader = ["🦀️.rs", "📜️contract/🦀️.rs", "🧾️descriptor/🦀️.rs"].map((file) => readFileSync(join(REPO, "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog", file), "utf8")).join("\n");
+    const loader = ["🦀️.rs", "📜️contract/🦀️.rs", "🧾️descriptor/🦀️.rs"].map((file) => readModuleTreeSource(join(REPO, "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog", file))).join("\n");
     expect(loader).toContain("bundle.schema_version != TRUSTED_BUNDLE_SCHEMA_VERSION");
     expect(readFileSync(join(REPO, "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧬️schema/🦀️.rs"), "utf8")).toContain(`pub const TRUSTED_BUNDLE_SCHEMA_VERSION: u32 = ${declared.schemaVersion.const};`);
   });

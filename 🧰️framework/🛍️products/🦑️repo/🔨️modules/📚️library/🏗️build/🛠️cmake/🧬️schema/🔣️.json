@@ -1,0 +1,225 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mode",
+    "host",
+    "operation"
+  ],
+  "properties": {
+    "mode": {
+      "enum": [
+        "prototype",
+        "release"
+      ]
+    },
+    "host": {
+      "enum": [
+        "linux",
+        "macos",
+        "windows"
+      ]
+    },
+    "operation": {
+      "enum": [
+        "setup",
+        "configure",
+        "build",
+        "test"
+      ]
+    }
+  },
+  "definitions": {
+    "Policy": {
+      "const": {
+        "source": {
+          "CMakeLists.txt": "4d986d0836743aa21cfbe2fb9cd80a0bfb74f34dc98c88bc655813a886c484d7",
+          "CMakePresets.json": "dd0cc1f54aaf2a6313ce6ef751562bcc60cb69cd7062fc7ef0253e57ff4a374f"
+        },
+        "maximumInputFiles": 12,
+        "maximumInputBytes": 536870912,
+        "maximumSourceBytes": 1048576,
+        "configuration": {
+          "prototype": "Debug",
+          "release": "Release"
+        },
+        "generator": {
+          "linux": "Ninja",
+          "macos": "Ninja",
+          "windows": "Visual Studio 18 2026"
+        },
+        "materialized": [
+          "source",
+          "build",
+          "completion.json"
+        ],
+        "unsupportedEnvironment": [
+          "CC",
+          "CMAKE_TOOLCHAIN_FILE",
+          "CMAKE_PREFIX_PATH",
+          "CMAKE_MODULE_PATH",
+          "CMAKE_GENERATOR",
+          "CMAKE_GENERATOR_PLATFORM",
+          "CMAKE_GENERATOR_TOOLSET",
+          "CMAKE_PROJECT_INCLUDE",
+          "CMAKE_PROJECT_INCLUDE_BEFORE",
+          "CMAKE_USER_MAKE_RULES_OVERRIDE",
+          "CMAKE_ARGS",
+          "VCPKG_ROOT",
+          "CMAKE_MAKE_PROGRAM",
+          "CMAKE_CXX_COMPILER_LAUNCHER",
+          "CXXFLAGS",
+          "CFLAGS",
+          "LDFLAGS",
+          "CPATH",
+          "CPLUS_INCLUDE_PATH",
+          "LIBRARY_PATH"
+        ]
+      }
+    },
+    "Stage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "directory",
+        "commands"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "probe",
+            "configure",
+            "build",
+            "test"
+          ]
+        },
+        "directory": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "commands": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 4,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "program",
+              "arguments",
+              "cwd"
+            ],
+            "properties": {
+              "program": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "arguments": {
+                "type": "array",
+                "maxItems": 12,
+                "items": {
+                  "type": "string",
+                  "maxLength": 512
+                }
+              },
+              "cwd": {
+                "type": "string",
+                "maxLength": 256
+              }
+            }
+          }
+        }
+      }
+    },
+    "Failure": {
+      "enum": [
+        "error",
+        "undefined",
+        "cancel"
+      ]
+    },
+    "Completion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "mode",
+        "preset",
+        "phase",
+        "sourceDigest",
+        "toolDigest",
+        "sourceRoot"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "mode": {
+          "enum": [
+            "prototype",
+            "release"
+          ]
+        },
+        "preset": {
+          "type": "string",
+          "pattern": "^(linux|macos|windows)-(prototype|release)$"
+        },
+        "phase": {
+          "enum": [
+            "configured",
+            "built"
+          ]
+        },
+        "sourceDigest": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "toolDigest": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "sourceRoot": {
+          "type": "string",
+          "maxLength": 256
+        }
+      }
+    },
+    "CacheFacts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sourceRoot",
+        "compiler",
+        "configuration",
+        "generator"
+      ],
+      "properties": {
+        "sourceRoot": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "compiler": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "configuration": {
+          "enum": [
+            "Debug",
+            "Release"
+          ]
+        },
+        "generator": {
+          "enum": [
+            "Ninja",
+            "Visual Studio 18 2026"
+          ]
+        }
+      }
+    }
+  }
+}

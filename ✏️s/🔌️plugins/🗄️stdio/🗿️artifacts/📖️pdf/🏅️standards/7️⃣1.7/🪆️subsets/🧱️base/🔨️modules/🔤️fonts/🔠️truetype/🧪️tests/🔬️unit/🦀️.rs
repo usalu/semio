@@ -1,4 +1,7 @@
-use super::*;
+#[allow(unused_imports)]
+use std::collections::{BTreeMap, BTreeSet};
+use crate::standards::v1_7::subsets::base::modules::fonts::truetype::{table_checksum};
+use crate::standards::v1_7::subsets::base::modules::fonts::truetype::*;
 
 fn sample_font() -> Vec<u8> {
     let square = vec![vec![(50, 0), (50, 700), (550, 700), (550, 0)]];

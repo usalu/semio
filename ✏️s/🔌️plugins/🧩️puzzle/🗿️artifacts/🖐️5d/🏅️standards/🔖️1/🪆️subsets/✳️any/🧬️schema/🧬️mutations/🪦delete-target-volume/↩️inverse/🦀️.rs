@@ -1,10 +1,12 @@
 //! ↩️ Inverse for `DeleteTargetVolume` — reconstructs a `create-target-volume` of the captured BASE
 //! entry AT ITS OWN INDEX, so undoing a delete restores the order too. Missing target ⇒ `Vec::new()`.
-use crate::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation;
 use crate::Puzzle5dSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &super::DeleteTargetVolume, base: &Puzzle5dSnapshot) -> Result<Vec<Puzzle5dMutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op>(payload: &super::DeleteTargetVolume, base: &Puzzle5dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError>
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::create_target_volume::CreateTargetVolume>,
+{
     Ok((|| {
     let Some(index) = base.target_volumes.iter().position(|entry| entry.id == payload.id) else {
         return Vec::new();

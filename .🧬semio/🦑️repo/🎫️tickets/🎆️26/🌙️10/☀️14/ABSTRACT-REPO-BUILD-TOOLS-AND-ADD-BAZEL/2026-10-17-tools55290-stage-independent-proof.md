@@ -1,0 +1,9 @@
+# Tools Generation Names 55290 Independent Proof
+
+Three saved files match stable nofollow FD/name seven-field metadata, bytes and SHA256: actual diagnostic plan log, census49474 and ts-LFiUKZ request. Receipt: `🗑️generated/tools55290-independent-failure-hold.json`. Request census SHA matches saved bytes. Root reports natural1; original Unknown current Tools generation name retained refusal follows captured DATA. No completed plan, candidate commands or effects are recorded.
+
+The captured roster contains46 names:30 lowercase64hex names and16 names matching the bounded first-party staging syntax. Ten use .stage- plus six alphanumeric suffix characters; six are derivative fixture variants .stage-drv-a-, .stage-drv-b- or .stage-drv-drain-, each plus six alphanumerics. All counts derive only from saved DATA, not protected inventory. authority:false and dispatches:0 remain explicit.
+
+Source tools/📜️script.ts creates install staging with mkdtempSync(join(base,".stage-")); its authorizers private publisher explicitly requires the six-alphanumeric suffix. SDK capacity derivative tests create the three drv prefixes beneath actual store.root/nx under genuine managed publication custody. These are distinct production-stage and Source-fixture roles, not ready generations. Recognizing their syntax must preserve their names/current stamps in the complete roster CAS and never select them as installed64hex candidates, validate contents, infer inactivity, delete them or free charge. Unknown suffixes/kinds/device/links remain refusal.
+
+The next schema correction must bind the complete all-name roster before and after classification, even if candidate identities are filtered separately. A basename match alone grants no provenance or cleanup authority. No Native or protected reads were performed here.

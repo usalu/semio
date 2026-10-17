@@ -43,7 +43,7 @@ function deriveScope(role: InteractionScopeRole, verb: string, graphWindowBodies
 }
 
 /** 🐢️ What ONE batched `refresh-ui` pass would fetch for this scope — the same four predicates
- * `buildUiRefreshRequest` (`🛠️ShellHelpers/🟦️.tsx`) filters its request with, so the sections counted
+ * `buildUiRefreshRequest` (`🛠️ShellHelpers/🔄️ui-refresh/🟦️.ts`) filters its request with, so the sections counted
  * here are the sections the host actually asks the guest to render. */
 function refreshPass(scope: UiDirtyScope, role: InteractionScopeRole): { readonly windows: readonly string[]; readonly panels: readonly string[]; readonly sections: readonly string[]; readonly catalogue: boolean } {
   const resolved = resolveUiDirtyScope(scope);

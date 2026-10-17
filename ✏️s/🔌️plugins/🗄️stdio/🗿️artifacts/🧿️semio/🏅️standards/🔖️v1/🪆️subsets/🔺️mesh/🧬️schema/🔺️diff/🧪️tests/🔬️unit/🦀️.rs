@@ -1,4 +1,10 @@
-use super::*;
+use semio_framework_test_fixtures::fixture_text;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioRgba;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioUv;
+use semio_s_artifact_stdio_semio_base::schema::triples::NamedModified;
+use crate::{schema::snapshot::SemioMaterial, schema::snapshot::SemioMesh, schema::snapshot::SemioPrimitive, schema::snapshot::SemioTexture, schema::snapshot::SemioTopology};
+use crate::schema::diff::*;
 use crate::schema::snapshot::SemioMeshSnapshot;
 use protocol::{DiffBinary,DiffText};
 
@@ -66,7 +72,7 @@ async fn diff_codec_text_binary_roundtrip_law() {
 
 #[semio_framework_async_macros::async_test]
 async fn material_texture_refs_roundtrip_sparse_clear_inverse_and_absorb() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/📸️snapshot/🎨️material-textures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../🧪️tests/🧫️fixtures/📸️snapshot/🎨️material-textures/🔣️.json")).unwrap();
     let before = snapshot_a();
     let mut set = before.clone();
     set.materials[0].base_color_texture = Some(fixture["bindings"]["baseColorTexture"].as_str().unwrap().into());
@@ -98,5 +104,4 @@ async fn material_texture_refs_roundtrip_sparse_clear_inverse_and_absorb() {
     let mut combined = diff;
     combined.absorb(clear);
     assert_eq!(protocol::apply_diff(&combined, &before).unwrap(), cleared);
-    println!("[DEBUG] Five Semio material texture references survive sparse codecs, inverse and absorb");
 }

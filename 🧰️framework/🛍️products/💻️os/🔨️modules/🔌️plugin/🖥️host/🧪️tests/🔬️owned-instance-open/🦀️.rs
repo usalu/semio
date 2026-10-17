@@ -3,6 +3,7 @@ use semio_framework::kernel::{Budget, Event};
 use semio_framework_plugin_host_guest_runtime::{GuestRuntimes, PackageRef, WasmtimeRuntime};
 use semio_framework_plugin_interpreter_runtime::OwnedRuntime;
 use semio_framework_actor::{PackageHash, PackageId, ActorId as RuntimeActorId};
+use semio_framework_test_fixtures::manifest_dir;
 use std::path::PathBuf;
 use semio_framework_plugin_host_engine::SharedEngineConfig;
 use semio_framework_plugin_guest_contract::TurnFault;
@@ -13,7 +14,7 @@ mod count_component_tests;
 
 const FIXTURE_EDITOR_APP:&str="fixture.neutral-host-fixture.counter@1/*#editor";
 fn repo_root()->PathBuf {
-    let mut path=PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    let mut path=manifest_dir!();
     while !path.join("nx.json").is_file(){assert!(path.pop(),"repository root is required");}
     path
 }

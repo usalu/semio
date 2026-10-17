@@ -1,4 +1,10 @@
-use super::*;
+use crate::editor::flow::presence::{FlowPresence, FlowPresenceMutation};
+use semio_framework_test_fixtures::fixture_text;
+#[allow(unused_imports)]
+use std::sync::Arc;
+#[allow(unused_imports)]
+use semio_framework_value::{ValueError, RetainedCloneProgress};
+use crate::editor::flow::presence::retirement::*;
 use semio_framework_plugin::{ArtifactApp,EditorApp,PluginLifecycleStep};
 use semio_framework_value::retained_clone::RetainedCloneGrant;
 
@@ -9,7 +15,7 @@ fn decode<T>(grant:RetainedCloneGrant,operation:impl FnOnce(&mut store::NativeSn
 }
 #[test]
 fn flow_presence_store_owners_preserve_readers_and_retire_neutral_byte_grants(){
- type App=EditorApp<crate::editor::flow::FlowPlayApp>;let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/👥️presence-owners/🔣️.json")).unwrap();
+ type App=EditorApp<crate::editor::flow::FlowPlayApp>;let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../../../🧪️tests/🧫️fixtures/👥️presence-owners/🔣️.json")).unwrap();
  for row in fixture["cases"].as_array().unwrap(){for copy in [1,3,64]{let grant=original_grant(copy);let mut owner=store::PresenceStore::<FlowPresence,FlowPresenceMutation>::new(presence(&row["local"]));owner.install_local_retirement_factory(App::build_presence_local_root_retirement_factory().unwrap()).unwrap();owner.install_peer_retirement_factory(App::build_presence_peer_retirement_factory().unwrap()).unwrap();
  let(mut publication,receipt)=owner.begin_peer_publication(grant).unwrap();assert!(receipt.fits(grant));assert!(!publication.prune_one(|_|true,grant).unwrap().0);
  for peer in row["peers"].as_array().unwrap(){let mut actor=Some(peer["actor"].as_str().unwrap().to_owned());let mut source=Some(presence(peer));let step=decode(grant,|original|publication.adopt(&mut actor,&mut source,0,original)).unwrap();assert!(step.progress().fits(grant));assert!(actor.is_none()&&source.is_none());}
@@ -19,6 +25,6 @@ fn flow_presence_store_owners_preserve_readers_and_retire_neutral_byte_grants(){
  for _ in 0..100000{if disposer.terminal_is_empty(&owner){break}let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||disposer.close_step(&mut owner,grant).unwrap());if let Some(receipt)=step.progress(){assert!(receipt.fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(receipt.retained_capacity_bytes,receipt.released_bytes));if receipt==Default::default(){idle+=1}else{idle=0}}else{assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));idle+=1;}
  if idle>0&&reader.is_some(){let captured=reader.take().unwrap();let actual=captured.peers().map(|(actor,value)|(actor.to_owned(),value.clone())).collect::<Vec<_>>();let expected=row["peers"].as_array().unwrap().iter().map(|peer|(peer["actor"].as_str().unwrap().to_owned(),presence(peer))).collect::<Vec<_>>();assert_eq!(actual,expected);drop(captured);observed=true;idle=0;}
  assert!(idle<64,"original presence full-grant close stalled copy={copy}");}
- assert!(disposer.terminal_is_empty(&owner));assert_eq!(observed,shared);assert!(owner.begin_peer_publication(grant).is_err());assert_eq!(disposer.close_step(&mut owner,RetainedCloneGrant{maximum_items:0,..grant}).unwrap(),PluginLifecycleStep::Complete(Default::default()));eprintln!("[DEBUG] Original presence readersPreserved=true fullGrant=true copy={copy} physicalTurnReceipts=true");
+ assert!(disposer.terminal_is_empty(&owner));assert_eq!(observed,shared);assert!(owner.begin_peer_publication(grant).is_err());assert_eq!(disposer.close_step(&mut owner,RetainedCloneGrant{maximum_items:0,..grant}).unwrap(),PluginLifecycleStep::Complete(Default::default()));
  }}
 }

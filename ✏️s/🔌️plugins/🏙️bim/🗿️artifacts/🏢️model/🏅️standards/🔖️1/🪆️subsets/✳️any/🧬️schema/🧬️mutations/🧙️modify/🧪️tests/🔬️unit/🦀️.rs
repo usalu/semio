@@ -1,6 +1,6 @@
 use super::*;
 use crate::standards::v1::subsets::any::schema::mutations::modify::cut::{cut_loop, offset_axis, trim_extend, TrimFlaw};
-use crate::standards::v1::subsets::any::schema::inferences::wall_layout::compute_wall_layout;
+use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_wall_layout;
 use crate::standards::v1::subsets::any::schema::snapshot::{Axis, Layer, LayerFunction, ModelSnapshot, Vertex, WallType};
 use semio_framework_geometry::loops;
 use semio_framework_geometry::Point;

@@ -22,7 +22,6 @@ class TestScript extends BundleScript {
     const receivingPolicy = { ...policy, budgetMs: scriptInvocationBudget(this.invocation, testLevelBudgetMs("long")) };
     await runVitestV1(receivingPolicy, ["../../../../🧪️tests/🫀️plugin-load-progress/🟦️.ts", "--silent=false", "--reporter=verbose"], "../../🧪️tests/🎚️config/🟦️.ts", { ...environment, SEMIO_VITEST_POLICY: JSON.stringify(receivingPolicy) }, this.invocation.control.signal);
     await advanceScriptInvocation(this.invocation, "package-receipt:laws", "complete");
-    console.log("[DEBUG] Existing whole OS loader liveness and receipt refusal corpus completed");
   }
 }
 

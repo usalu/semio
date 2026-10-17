@@ -21,7 +21,7 @@ import type {
   SpaceView,
   UserView,
 } from "@semio-tech/framework-os";
-import type { HubObservabilityV1 } from "../../../../📊️observability/🟦️.ts";
+import type { HubObservabilityV1 } from "os-hub-ts/observability";
 import { useAdminT } from "../📚️I18n/🟦️.tsx";
 // #endregion 🔌️Adapters
 

@@ -1,4 +1,21 @@
-use super::*;
+use crate::viewer::gismap::modes::view;
+use crate::viewer::gismap::modes::view::windows::map;
+use crate::GISMAP_DIALECT;
+use semio_framework_plugin::{ArtifactToolPublicationLane, ArtifactViewer, Viewer, ViewerApp};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::io::text::snapshot::default_document;
+#[allow(unused_imports)]
+use crate::{GisMapSnapshot, GIS_MAP_SCHEMA};
+#[allow(unused_imports)]
+use semio_framework::kernel::UiDirtyScope;
+#[allow(unused_imports)]
+use semio_framework_plugin::{retained_command::ArtifactRetainedCommandJob, retained_command::ArtifactRetainedCommandPayload, retained_command::BoundedArtifactCommandWork};
+#[allow(unused_imports)]
+use {semio_framework_plugin::AppOperationContext, semio_framework_plugin::ArtifactOwnedToolJobRequest, semio_framework_plugin::ArtifactToolFactoryRegistry, semio_framework_plugin::ArtifactToolPublicationContract, semio_framework_plugin::ArtifactView, semio_framework_plugin::ConfigView, semio_framework_artifact_reference::Dialect, semio_framework_plugin::Emit, semio_framework_plugin::Fault, semio_framework_plugin::FaultCode, semio_framework_plugin::FaultOrigin, semio_framework_plugin::HistoryView, semio_framework_plugin::InteractiveJobClassification, semio_framework_plugin::NoConfig, semio_framework_plugin::NoConfigMutation, semio_framework_plugin::NoDraftMutation, semio_framework_plugin::NoPresence, semio_framework_plugin::NoPresenceMutation, semio_framework_plugin::NoTransient, semio_framework_plugin::NoTransientMutation, semio_framework_plugin::ToolExecutionContract, semio_framework_plugin::ToolFactoryKey, semio_framework_plugin::ToolJobFactoryError, semio_framework_plugin::ViewEmit};
+#[allow(unused_imports)]
+use semio_framework_2d::compute::EngineHandles;
+use crate::viewer::gismap::{GIS_MAP_VIEW_TOOL_IDS, camera_emit, command_from_action, GisMapViewCommandJobFactory};
+use crate::viewer::gismap::*;
 
 #[semio_framework_async_macros::async_test]
 async fn create_gismap_viewer_builds_a_definition_for_the_viewer_role() {

@@ -6,7 +6,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { assertDocumentContractOracle } from "@semio-tech/framework/schema/oracles/document";
 import { ioSchema as ioSchema } from "@semio-tech/framework/io/schema";
-import childSchema from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔣️.json" with { type: "json" };
+import { storeChildSchema as childSchema } from "@semio-tech/framework-os/modules/store/child/schema";
 import vectors from "../🧫️fixtures/🪪️document-contract/🔣️.json" with { type: "json" };
 
 function snapshotFiles(root: string): string[] {

@@ -1,7 +1,6 @@
 //! 🎞️ Shooting mutation payload — `ReplaceSavedCameraView`. Whole-value swap of a saved camera's `camera` pose — overwrites rather than merges, so this is a `replace`, not a `change`.
 
 use crate::diff::ShootingDiff;
-use crate::mutations::ShootingMutation;
 use crate::{ShootingCamera, ShootingSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 
@@ -16,12 +15,15 @@ pub struct ReplaceSavedCameraView {
     pub new_camera: ShootingCamera,
 }
 
-impl MutationKind<ShootingSnapshot, ShootingMutation> for ReplaceSavedCameraView {
+impl<Op> MutationKind<ShootingSnapshot, Op> for ReplaceSavedCameraView
+where
+    Op: protocol::Mutation<ShootingSnapshot, Diff = ShootingDiff> + From<ReplaceSavedCameraView>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "replace", entity: "saved-camera-view", kind: "replace-saved-camera-view", record: "ReplacedSavedCameraView" };
     fn diff(&self, base: &ShootingSnapshot) -> protocol::MutationOutcome<ShootingDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &ShootingSnapshot) -> Result<Vec<ShootingMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &ShootingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

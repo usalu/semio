@@ -23,5 +23,4 @@ fn authored_recipe_catalog_matches_neutral_contract() {
 #[test]
 fn independent_decoder_witnesses_exact_paint_and_sample_edits(){
  let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧪️tests/🧬️owned-recipes/🔣️.json")).unwrap();for(id,offset,expected)in[("paint-region-applied",15usize,&fixture["raster"]["paint"]["rgb"]),("replace-samples-applied",0usize,&fixture["raster"]["replacement"]["samples"]) ]{let(before,after)=recipe(id).unwrap();let read=|spec:&[IfdSpec]|{let mut decoder=Decoder::new(Cursor::new(write_doc(spec))).unwrap();let tiff::decoder::DecodingResult::U8(samples)=decoder.read_image().unwrap()else{panic!("independent RGB8 samples")};samples};let before=read(&before);let after=read(&after);let expected=expected.as_array().unwrap().iter().map(|value|value.as_u64().unwrap()as u8).collect::<Vec<_>>();assert_eq!(&after[offset..offset+3],expected);assert_eq!(&after[..offset],&before[..offset]);assert_eq!(&after[offset+3..],&before[offset+3..]);assert_ne!(before,after);}
- eprintln!("[DEBUG] independent tiff decoder validates exact authored PaintRegion and ReplaceSamples words");
 }

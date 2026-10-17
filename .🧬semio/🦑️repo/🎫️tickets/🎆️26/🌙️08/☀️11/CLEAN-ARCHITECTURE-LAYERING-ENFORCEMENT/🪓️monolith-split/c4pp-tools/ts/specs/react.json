@@ -1,0 +1,52 @@
+{
+ "source": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/c4pp-tools/orig/react.live1.tsx",
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🟦️.tsx",
+ "keep": [
+  [
+   1,
+   5
+  ]
+ ],
+ "children": [
+  {
+   "dir": "🗣️interpreter-and-shell",
+   "doc": "/** 🗣️ Interpreter and OS shell exports of the renderer entry: the UI interpreter and document store, the shell store, helpers, boot, error boundary, shell component, plugin runtime, host ports, wasm session loader, search, find, sync attach card, utility tree and chrome panels. */",
+   "ranges": [
+    [
+     567,
+     981
+    ]
+   ]
+  },
+  {
+   "dir": "🌍️scene-and-world-hosts",
+   "doc": "/** 🌍️ Scene and world host exports of the renderer entry: the terrain layer, the canvas 2d and world 3d hosts, the node graph host, the text editor, table, paint 2d and tiled map hosts. */",
+   "ranges": [
+    [
+     983,
+     1169
+    ]
+   ]
+  },
+  {
+   "dir": "🖥️board-ink-and-feed-hosts",
+   "doc": "/** 🖥️ Board, ink and feed host exports of the renderer entry: the board 2d host, the icon render host, the ink canvas host and the graph timeline, block list, diff view and event feed hosts. */",
+   "ranges": [
+    [
+     1171,
+     1297
+    ]
+   ]
+  },
+  {
+   "dir": "🔗️hub-connection-and-spaces",
+   "doc": "/** 🔗️ Hub connection and spaces exports of the renderer entry: the hub connection lane with its sign-in, space browser and delegation panes, the hub first run walkthrough and the spaces chrome labels. */",
+   "ranges": [
+    [
+     1299,
+     1397
+    ]
+   ]
+  }
+ ]
+}

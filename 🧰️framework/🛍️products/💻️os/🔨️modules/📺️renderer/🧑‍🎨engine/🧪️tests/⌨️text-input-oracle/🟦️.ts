@@ -8,7 +8,8 @@
 // #region 🔌️Adapters
 import { chromium, type Page } from "playwright";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { TEXT_EDITOR_READ_ONLY_REFUSALS, reconcileTextEditorEchoV1, refuseTextEditorEditV1, type TextEditorEchoStateV1 } from "../../🧱️elements/✏️TextEditor/🟦️.tsx";
+import { reconcileTextEditorEchoV1, type TextEditorEchoStateV1 } from "../../🧱️elements/✏️TextEditor/🖍️buffer-and-edit-helpers/🟦️.tsx";
+import { TEXT_EDITOR_READ_ONLY_REFUSALS, refuseTextEditorEditV1 } from "../../🧱️elements/✏️TextEditor/🚫️edit-refusals-and-keys/🟦️.ts";
 import localEcho from "../../🧱️elements/✏️TextEditor/🧪️tests/🧫️fixtures/🔁️local-echo/🔣️.json";
 import { editorTextInputFixture as fixture } from "../../../../../../../🔨️modules/✍️editor/🧪️tests/🧫️fixtures/🟦️.ts";
 // #endregion 🔌️Adapters

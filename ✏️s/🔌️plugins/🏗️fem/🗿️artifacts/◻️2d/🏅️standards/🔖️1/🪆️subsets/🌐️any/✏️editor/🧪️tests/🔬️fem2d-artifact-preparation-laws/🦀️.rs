@@ -41,5 +41,4 @@ fn admitted_document_mutations_make_bounded_progress_and_retire() {
     assert!(work.terminal_is_empty());
     assert_eq!(released, allocated + capacity);
     assert!(matches!(work.close_step(policy), Ok(RetainedCloneStep::Complete(progress)) if progress == Default::default()));
-    println!("[DEBUG] FEM original canceled mutation pointer retained through denied axes; fixed policy closed child frames {} and original String capacity {} with exact release {}", allocated, capacity, released);
 }

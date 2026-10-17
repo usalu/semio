@@ -1,7 +1,7 @@
 //! 💡️ `target-brush-suggestions` command.
 
 use crate::editor::puzzle2d::modes::edit::windows::overview::utilities::brush;
-use {crate::editor::puzzle2d::snapshot::puzzle2d_window_and_measures_scope, crate::editor::puzzle2d::Puzzle2dActionCtx};
+use {crate::editor::puzzle2d::snapshot::puzzle2d_window_and_measures_scope, crate::editor::puzzle2d::interaction::Puzzle2dActionCtx};
 use semio_framework_pack_json::Value;
 
 /// 🎣️ Points the candidate search at the handle the ARMED brush is over — or at nothing once the

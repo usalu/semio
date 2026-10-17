@@ -1,0 +1,118 @@
+//! 🧪️ `replace-project` fixture — `♻️definition`.
+//!
+//! Hand-authored source of truth is the JSON quintet beside this file (contract D1, ticket
+//! `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`). Every expectation below is transcribed from THIS
+//! leaf's own `🔺️diff/🦀️.rs`, which replaces the whole section through its section edit (`set`), the one case where a kind owns the entire record.
+//!
+//! That leaf's own contract line reads: 🔁️ Replaces the whole section. Root-scoped singleton — always present, so Warning `mutation.no-op` (empty diff) covers the only degenerate case: the value is unchanged.
+//!
+//! The `.op.semio`/`.spr.semio`/`.dsl.semio`/`.pack.semio`/`.patch.semio` encodings are derived
+//! from this JSON by `fixtures generate` and are asserted by the shared codec-matrix harness.
+
+use crate::standards::v1::subsets::any::schema::{diff::ProgramDiff, mutations::ProgramMutation, snapshot::ProgramSnapshot};
+use protocol::Mutation;
+
+static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏙️project/♻️replace/♻️definition/📸️snapshot/⬅️before/🔣️.json"));
+static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏙️project/♻️replace/♻️definition/📸️snapshot/➡️after/🔣️.json"));
+static MUTATION: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏙️project/♻️replace/♻️definition/🦠️mutation/🔣️.json"));
+static DIFF: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏙️project/♻️replace/♻️definition/🔺️diff/🔣️.json"));
+static OUTCOME: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏙️project/♻️replace/♻️definition/🎯️outcome/🔣️.json"));
+
+fn before() -> ProgramSnapshot {
+    semio_framework_pack_json::from_json_str((*BEFORE), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("replace-project/replaces-the-project-definition: before snapshot decodes")
+}
+
+fn expected_after() -> ProgramSnapshot {
+    semio_framework_pack_json::from_json_str((*AFTER), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("replace-project/replaces-the-project-definition: after snapshot decodes")
+}
+
+fn mutation() -> ProgramMutation {
+    serde_json::from_str((*MUTATION)).expect("replace-project/replaces-the-project-definition: mutation decodes")
+}
+
+/// ▶️ replace-project carries the committed before-snapshot to exactly the committed after-snapshot.
+#[semio_framework_async_macros::async_test]
+async fn replace_project_applies_to_committed_after() {
+    let base = before();
+    let outcome = mutation().diff(&base);
+    let applied = protocol::apply_diff(outcome.diff(), &base).expect("replace-project/replaces-the-project-definition: replace-project applies to its committed before-snapshot");
+    assert_eq!(applied, expected_after(), "replace-project/replaces-the-project-definition: applied state differs from the committed after-snapshot");
+}
+
+/// ↩️ Applying replace-project and then its own recorded inverse restores the before-snapshot exactly.
+#[semio_framework_async_macros::async_test]
+async fn replace_project_inverse_restores_before() {
+    let base = before();
+    let forward = mutation();
+    let mut undo = forward.inverse(&base).expect("valid retained mutation inverse fixture");
+    undo.reverse();
+    let mut state = protocol::apply_diff(forward.diff(&base).diff(), &base).expect("replace-project/replaces-the-project-definition: forward diff applies");
+    for step in &undo {
+        state = protocol::apply_diff(step.diff(&state).diff(), &state).expect("replace-project/replaces-the-project-definition: inverse step applies");
+    }
+    assert_eq!(state, base, "replace-project/replaces-the-project-definition: replace-project back to the captured prior value did not restore the before-snapshot");
+}
+
+/// 🔣️ Both committed snapshots and the committed replace-project payload are canonical: decode then encode
+/// is a fixed point.
+#[semio_framework_async_macros::async_test]
+async fn replace_project_committed_json_is_canonical() {
+    for (side, text) in [("before", (*BEFORE)), ("after", (*AFTER))] {
+        let decoded: ProgramSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("replace-project/replaces-the-project-definition: snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("replace-project/replaces-the-project-definition: snapshot re-encodes");
+        let original: serde_json::Value = serde_json::from_str(text).expect("replace-project/replaces-the-project-definition: snapshot reparses");
+        assert_eq!(reencoded, original, "replace-project/replaces-the-project-definition: committed {side} snapshot JSON is not canonical");
+    }
+    let reencoded = serde_json::to_value(mutation()).expect("replace-project/replaces-the-project-definition: replace-project payload re-encodes");
+    let original: serde_json::Value = serde_json::from_str((*MUTATION)).expect("replace-project/replaces-the-project-definition: replace-project payload reparses");
+    assert_eq!(reencoded, original, "replace-project/replaces-the-project-definition: committed replace-project payload JSON is not canonical");
+}
+
+/// 🎯️ The declared outcome holds: replace-project applies cleanly here and raises no diagnostic at all.
+#[semio_framework_async_macros::async_test]
+async fn replace_project_declared_outcome_holds() {
+    let declared: serde_json::Value = serde_json::from_str((*OUTCOME)).expect("replace-project/replaces-the-project-definition: outcome decodes");
+    assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "replace-project/replaces-the-project-definition: this fixture declares an applied outcome");
+    let base = before();
+    let outcome = mutation().diff(&base);
+    assert!(outcome.messages().is_empty(), "replace-project/replaces-the-project-definition: replace-project raised a diagnostic on a fixture that declares a clean apply");
+    assert!(protocol::apply_diff(outcome.diff(), &base).is_ok(), "replace-project/replaces-the-project-definition: replace-project was rejected by apply on its own before-snapshot");
+}
+
+/// 🔺️ The sparse delta replace-project produces is exactly the committed diff — this pins WHICH collection
+/// and which fields the mutation is allowed to touch, not merely that the end state matches.
+#[semio_framework_async_macros::async_test]
+async fn replace_project_produces_committed_diff() {
+    let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(mutation().diff(&before()).diff())).expect("replace-project/replaces-the-project-definition: produced diff encodes");
+    let committed: serde_json::Value = serde_json::from_str((*DIFF)).expect("replace-project/replaces-the-project-definition: committed diff decodes");
+    assert_eq!(produced, committed, "replace-project/replaces-the-project-definition: the diff replace-project builds differs from the committed 🔺️diff/🔣️.json");
+}
+
+/// 🔣️ The committed diff is itself canonical and decodes to ProgramDiff.
+#[semio_framework_async_macros::async_test]
+async fn replace_project_committed_diff_is_canonical() {
+    let decoded: ProgramDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("replace-project/replaces-the-project-definition: committed diff decodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("replace-project/replaces-the-project-definition: committed diff re-encodes");
+    let original: serde_json::Value = serde_json::from_str((*DIFF)).expect("replace-project/replaces-the-project-definition: committed diff reparses");
+    assert_eq!(reencoded, original, "replace-project/replaces-the-project-definition: committed diff JSON is not canonical");
+}
+
+/// 🩹 Applying the committed diff straight to the before-snapshot yields the committed
+/// after-snapshot — the diff is a complete description of what replace-project does, not a summary.
+#[semio_framework_async_macros::async_test]
+async fn replace_project_committed_diff_applies_to_after() {
+    let decoded: ProgramDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("replace-project/replaces-the-project-definition: committed diff decodes");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("replace-project/replaces-the-project-definition: committed diff applies to the before-snapshot");
+    assert_eq!(produced, expected_after(), "replace-project/replaces-the-project-definition: the committed diff did not carry before to after");
+}
+
+/// 🧮️ Law L3: the diffs of replace-project's inverse mutations, summed with `absorb`, equal the negative of its forward diff and carry the committed after-snapshot back to the before-snapshot.
+#[semio_framework_async_macros::async_test]
+async fn replace_project_inverse_diffs_sum_to_the_negative_diff() {
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation(), &before()).await;
+}
+
+fn runtime_fixture_text(relative: &str) -> &'static str {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative);
+    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display())).into_boxed_str())
+}

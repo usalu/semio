@@ -18,7 +18,9 @@ import { useCallback, useMemo, useState, type ReactElement } from "react";
 import { World3dHost } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx";
 import type { ActionDescriptor } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx";
 
-import { REMODEL_DEFAULT_CONFIG, REMODEL_EMPTY_SCENE, REMODEL_POPULATED_SCENE, type RemodelScene, remodelViewerWorldScene, remodelWindowNode } from "../🧭️coordination/🟦️.ts";
+import { REMODEL_DEFAULT_CONFIG, type RemodelScene } from "../🧭️coordination/📐️scene-model/🟦️.ts";
+import { REMODEL_EMPTY_SCENE, REMODEL_POPULATED_SCENE } from "../🧭️coordination/🗂️documents/🟦️.ts";
+import { remodelViewerWorldScene, remodelWindowNode } from "../🧭️coordination/🪟️window-scenes/🟦️.ts";
 
 //#region StoryHost
 function RemodelViewerStoryHost({ document }: { readonly document: RemodelScene }): ReactElement {

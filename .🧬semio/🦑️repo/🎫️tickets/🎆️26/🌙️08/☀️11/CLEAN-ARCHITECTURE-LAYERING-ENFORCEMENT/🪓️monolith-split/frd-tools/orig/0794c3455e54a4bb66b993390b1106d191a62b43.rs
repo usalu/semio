@@ -1,0 +1,138 @@
+//! 🧪️ `create-structure-classic-model` fixture — `🏛️rehandles`.
+//!
+//! Proves `create-structure-classic-model` OVERWRITES an already-occupied fixed slot and that undo restores the displaced handle — it is not an insert-if-absent.
+//!
+//! Source of truth is the committed JSON quartet beside this file (contract D1, ticket
+//! `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`). The `.op.semio`/`.spr.semio`/`.dsl.semio`/
+//! `.pack.semio`/`.patch.semio` encodings are derived from it by `fixtures generate` and are
+//! asserted by the shared codec-matrix harness, not here.
+
+extern crate semio_framework_os_kernel as protocol;
+use semio_s_artifact_cad_cad_mutations::CadMutation;
+use semio_s_artifact_cad_cad_model::snapshot::CadSnapshot;
+use protocol::Mutation;
+
+static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏛️create-structure-classic/🏛️rehandles/📸️snapshot/⬅️before/🔣️.json")).expect("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏛️create-structure-classic/🏛️rehandles/📸️snapshot/⬅️before/🔣️.json").leak());
+static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏛️create-structure-classic/🏛️rehandles/📸️snapshot/➡️after/🔣️.json")).expect("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏛️create-structure-classic/🏛️rehandles/📸️snapshot/➡️after/🔣️.json").leak());
+static MUTATION: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏛️create-structure-classic/🏛️rehandles/🦠️mutation/🔣️.json")).expect("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏛️create-structure-classic/🏛️rehandles/🦠️mutation/🔣️.json").leak());
+static DIFF: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏛️create-structure-classic/🏛️rehandles/🔺️diff/🔣️.json")).expect("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏛️create-structure-classic/🏛️rehandles/🔺️diff/🔣️.json").leak());
+static OUTCOME: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏛️create-structure-classic/🏛️rehandles/🎯️outcome/🔣️.json")).expect("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏛️create-structure-classic/🏛️rehandles/🎯️outcome/🔣️.json").leak());
+
+fn before() -> CadSnapshot {
+    semio_framework_pack_json::from_json_str(*BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("create-structure-classic-model/rehandles-the-occupied-structure-classic-slot: before snapshot decodes")
+}
+fn expected_after() -> CadSnapshot {
+    semio_framework_pack_json::from_json_str(*AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("create-structure-classic-model/rehandles-the-occupied-structure-classic-slot: after snapshot decodes")
+}
+fn mutation() -> CadMutation {
+    semio_framework_pack_json::from_json_str(*MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("create-structure-classic-model/rehandles-the-occupied-structure-classic-slot: mutation decodes")
+}
+fn applied() -> CadSnapshot {
+    let base = before();
+    protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("create-structure-classic-model applies to its committed before-snapshot")
+}
+
+/// ▶️ `create-structure-classic-model` writes the fixed `structure_classic_model` slot even when it is already occupied; the other three slots never move.
+#[semio_framework_async_macros::async_test]
+async fn replaces_the_structure_classic_handle_in_place() {
+use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactReferenceText as _};
+
+    let after = applied();
+    let handle = after.structure_classic_model.as_ref().expect("create-structure-classic-model leaves the slot occupied");
+    assert_eq!(handle.child_id, "cad-structure-2", "create-structure-classic-model must install the payload's child id");
+    assert_eq!(handle.target.to_uri(), "cad-structure-2!s.stdio.semio@v1/model", "create-structure-classic-model must parse the payload target URI back into a real ArtifactRef");
+    assert!(
+        after.shape_model.as_ref().map(|c| c.child_id.as_str()) == Some("cad-shape-1")
+            && after.building_model.as_ref().map(|c| c.child_id.as_str()) == Some("cad-building-1")
+            && after.energy_model.as_ref().map(|c| c.child_id.as_str()) == Some("cad-energy-1"),
+        "create-structure-classic-model must leave the other three fixed model slots untouched"
+    );
+    assert_eq!(after.drawings.len(), 1, "create-structure-classic-model must not touch the drawings child collection");
+    assert_eq!(after, expected_after(), "create-structure-classic-model/rehandles-the-occupied-structure-classic-slot: applied state differs from the committed after-snapshot");
+}
+
+/// ↩️ Because BASE's slot was occupied, the inverse is another `create-structure-classic-model` carrying the DISPLACED handle — never a bare delete.
+#[semio_framework_async_macros::async_test]
+async fn inverse_reinstalls_the_displaced_structure_classic_handle() {
+    let base = before();
+    let inverse = mutation().inverse(&base).expect("valid retained mutation inverse fixture");
+    assert_eq!(inverse.len(), 1, "create-structure-classic-model inverts to exactly one step");
+    match &inverse[0] {
+        CadMutation::CreateStructureClassicModel(step) => {
+            assert_eq!(step.child_id, "cad-structure-1", "the inverse must reinstall the handle create-structure-classic-model displaced");
+            assert_eq!(step.target, semio_framework_artifact_reference::ArtifactRef { artifact_id: "cad-structure-1".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "model".into() } }, "the inverse must carry the displaced handle's target URI");
+        }
+        other => panic!("create-structure-classic-model over an OCCUPIED slot must invert to create-structure-classic-model, got {other:?}"),
+    }
+    let mut snapshot = applied();
+    for step in &inverse {
+        snapshot = protocol::apply_diff(step.diff(&snapshot).diff(), &snapshot).expect("create-structure-classic-model/rehandles-the-occupied-structure-classic-slot: inverse step applies");
+    }
+    assert_eq!(snapshot, base, "create-structure-classic-model/rehandles-the-occupied-structure-classic-slot: inverse did not restore the before-snapshot");
+}
+
+/// 🔣️ Both committed snapshots and the committed mutation are canonical: decode→encode is a fixed point.
+#[semio_framework_async_macros::async_test]
+async fn committed_json_is_canonical() {
+    for (label, text) in [("before", *BEFORE), ("after", *AFTER)] {
+        let decoded: CadSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("snapshot encodes");
+        let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
+        assert_eq!(reencoded, original, "create-structure-classic-model/rehandles-the-occupied-structure-classic-slot: committed {label} JSON is not canonical");
+    }
+    let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&(mutation()))).expect("mutation encodes");
+    let original: serde_json::Value = serde_json::from_str(*MUTATION).expect("mutation reparses");
+    assert_eq!(reencoded, original, "create-structure-classic-model/rehandles-the-occupied-structure-classic-slot: committed mutation JSON is not canonical");
+}
+
+/// 🎯️ The declared outcome matches what `create-structure-classic-model`'s own diff builder actually produces.
+#[semio_framework_async_macros::async_test]
+async fn declared_outcome_holds() {
+    let declared: serde_json::Value = serde_json::from_str(*OUTCOME).expect("outcome decodes");
+    assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "create-structure-classic-model/rehandles-the-occupied-structure-classic-slot: this fixture declares an applied outcome");
+    let base = before();
+    let produced = mutation().diff(&base);
+    assert!(produced.messages().is_empty(), "create-structure-classic-model/rehandles-the-occupied-structure-classic-slot: declared clean-applied but the diff builder reported {:?}", produced.messages());
+    let slot = produced.diff().structure_classic_model.as_ref().expect("create-structure-classic-model fills the `structure_classic_model` slot diff");
+    let handle = slot.as_ref().expect("create-structure-classic-model's diff sets the slot to the occupied arm");
+    assert_eq!(handle.child_id, "cad-structure-2", "the slot diff carries the payload child id");
+    assert!(produced.diff().drawings.is_none() && produced.diff().nodes.is_none(), "create-structure-classic-model emits nothing but its own slot field");
+}
+
+/// 🔺️ The sparse delta `create-structure-classic-model` produces is exactly the committed diff — the most load-bearing
+/// assertion in the fixture, because it pins WHICH fields the mutation may touch, not merely that the
+/// end state matches. Here the ONLY populated field is `structureClassicModel`, carrying the occupied arm — the other three fixed slots stay null even though this create overwrites one of them.
+#[semio_framework_async_macros::async_test]
+async fn produces_committed_diff() {
+    let base = before();
+    let outcome = mutation().diff(&base);
+    let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
+    let committed: serde_json::Value = serde_json::from_str(*DIFF).expect("committed diff decodes");
+    assert_eq!(produced, committed, "create-structure-classic-model/rehandles-the-occupied-structure-classic-slot: create-structure-classic-model must emit a diff whose sole populated field is `structureClassicModel`");
+}
+
+/// 🔣️ The committed diff decodes into `CadDiff` and re-encodes byte-for-byte: `CadDiff` has
+/// `#[serde(rename_all = "camelCase", default)]` with no `skip_serializing_if`, so EVERY field is on
+/// the wire and the untouched ones must be committed as explicit `null`.
+#[semio_framework_async_macros::async_test]
+async fn committed_diff_is_canonical() {
+    let decoded: semio_s_artifact_cad_cad_model_diff::CadDiff = semio_framework_pack_json::from_json_str(*DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes into the artifact's diff type");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("committed diff re-encodes");
+    let original: serde_json::Value = serde_json::from_str(*DIFF).expect("committed diff reparses");
+    assert_eq!(reencoded, original, "create-structure-classic-model/rehandles-the-occupied-structure-classic-slot: committed diff JSON is not canonical");
+}
+
+/// 🩹 Applying the committed diff directly to `before` yields `after` — the diff is a complete
+/// description of the change `create-structure-classic-model` makes, not a summary of it.
+#[semio_framework_async_macros::async_test]
+async fn committed_diff_applies_to_after() {
+    let decoded: semio_s_artifact_cad_cad_model_diff::CadDiff = semio_framework_pack_json::from_json_str(*DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes into the artifact's diff type");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    assert_eq!(produced, expected_after(), "create-structure-classic-model/rehandles-the-occupied-structure-classic-slot: committed diff did not carry before to after");
+}
+
+/// ⚖️ The concrete inverse's diffs sum to exactly the negative of the forward diff, restoring the committed before-snapshot.
+#[semio_framework_async_macros::async_test]
+async fn inverse_sums_to_the_negative_diff() {
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation(), &before()).await;
+}

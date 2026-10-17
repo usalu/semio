@@ -1,4 +1,5 @@
 
+use semio_framework_test_fixtures::manifest_dir;
 use std::sync::Arc;
 use semio_hub_artifact_creation::ArtifactCreationActorV1;
 use directory::os_directory::DocumentScope;
@@ -28,7 +29,7 @@ async fn real_count_component_lease_uses_authenticated_hub_authority_and_erased_
  use semio_framework::sqlite_snapshot::{SqliteDatabaseLimits,SqliteSnapshotPhase,SqliteValue};
  use semio_framework_value::ValueRefusalKind;
  let output=semio_hub_testing::test_artifact_root().join("real-count-workspace-lease");std::fs::create_dir_all(&output).unwrap();
- let mut repo=PathBuf::from(env!("CARGO_MANIFEST_DIR"));while !repo.join("nx.json").is_file(){assert!(repo.pop())}
+ let mut repo=manifest_dir!();while !repo.join("nx.json").is_file(){assert!(repo.pop())}
  let component=std::fs::read(repo.join("🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️testing/🧩️component/📦️packages/🦀️rust/dist/components/semio_framework_plugin_host_test_component.wasm")).expect("actual Count component prerequisite");
  let document_id=artifact_document_id_for_test("real-count-workspace-lease");
  let profile=count_trusted_catalog_fixture::verified_count_profile(&output.join("verified-profile"),&component,&document_id).await.expect("production trusted loader accepts actual Count descriptor/component");

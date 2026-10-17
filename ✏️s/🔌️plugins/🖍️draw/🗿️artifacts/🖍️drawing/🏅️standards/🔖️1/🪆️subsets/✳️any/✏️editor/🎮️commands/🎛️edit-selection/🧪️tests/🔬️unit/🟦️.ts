@@ -8,13 +8,14 @@ import schema from "../../🧬️schema/🔣️.json";
 import conversions from "../🧫️fixtures/🛤️to-path/🔣️.json";
 import {arcGeometry,arcPoint} from "../../../../../🧬️schema/🧮️geometry/🟦️.ts";
 import { shapePath } from "../../../../../🧬️schema/🧮️geometry/🔀️conversion/🟦️.ts";
+import { parsePathGeometrySegment } from "../../../../../🧬️schema/🟦️.ts";
 
 test("shape conversion preserves primitive outlines and independent ellipse geometry", () => {
   const validate=new Ajv({strict:true}).compile(schema);
   expect(validate({operation:"toPath",ids:["shape"]})).toBe(true);
   for(const item of conversions) {
     const result=shapePath(item.kind,item.geometry),saved=structuredClone(item.geometry);
-    expect<unknown>(result).toEqual(item.segments);
+    expect(result).toEqual(item.segments.map((segment) => parsePathGeometrySegment(segment)));
     expect(item.geometry).toEqual(saved);
     let from=new Vector2(),quarter=0;
     for(const segment of result) {
@@ -63,9 +64,9 @@ test("selection fixture outcomes agree with Three.js and Immer", () => {
         if (item.operation === "distributeHorizontal") { layer.x = cursor; cursor += layer.width+gap; }
       }
     });
-    if ("bounds" in item) expect<unknown>(output.map(layer => [layer.x,layer.y,layer.width,layer.height])).toEqual(item.bounds);
-    if ("rootCount" in item) expect<unknown>(output.length).toBe(item.rootCount);
-    if ("order" in item) expect<unknown>(output.map(layer => layer.id)).toEqual(item.order);
+    if (item.bounds !== undefined) expect(output.map(layer => [layer.x,layer.y,layer.width,layer.height])).toEqual(item.bounds);
+    if (item.rootCount !== undefined) expect(output.length).toBe(item.rootCount);
+    if (item.order !== undefined) expect(output.map(layer => layer.id)).toEqual(item.order);
   }
 });
 
@@ -87,7 +88,7 @@ test("canvas nudge shortcuts have explicit argument-free input contracts",async(
   const bindings=new Ajv({strict:true}).compile(nudgeBindingsSchema);
   expect(bindings(nudges)).toBe(true);
   expect(bindings(nudges.map(row=>({...row,keys:row.keys.replace("arrow","")})))).toBe(false);
-  const source=await Bun.file(new URL("../../../../🦀️.rs",import.meta.url)).text();
+  const source=await Bun.file(new URL("../../../../🛂️manifest/🦀️.rs",import.meta.url)).text();
   for(const row of nudges) {
     expect(source.includes(`.keybinding("${row.keys}", "${row.action}")`)).toBe(true);
     expect(source.includes(`.action_audience("${row.action}", semio_framework_plugin::CapabilityAudience::Input)`)).toBe(true);
@@ -103,7 +104,7 @@ test("world arrangement matches neutral outcomes and independent Three.js boxes"
   for(const row of arrangements) {
     expect(validate({operation:row.operation,bounds:row.bounds})).toBe(true);
     const saved=structuredClone(row.bounds),actual=arrange(row.bounds,row.operation);
-    expect<unknown>(actual).toEqual(row.deltas);expect(row.bounds).toEqual(saved);
+    expect<typeof row.deltas>(actual).toEqual(row.deltas);expect(row.bounds).toEqual(saved);
     if(!actual) continue;
     const horizontal=["alignLeft","alignCenter","alignRight","distributeHorizontal"].includes(row.operation),axis=horizontal?"x":"y";
     const boxes=row.bounds.map(([x,y,w,h])=>new Box2(new Vector2(x,y),new Vector2(x!+w!,y!+h!)));

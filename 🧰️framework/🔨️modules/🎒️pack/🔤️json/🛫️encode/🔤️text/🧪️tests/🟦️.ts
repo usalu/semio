@@ -34,7 +34,6 @@ test("canonical native UTF8 scalar and key roles preserve exact JSON across chun
       expect(new Uint8Array(output)).toEqual(oracle);
     }
   }
-  console.log("[DEBUG] JSON.stringify native text/key parity preserves Unicode/NUL/escaping across 1/2/7-byte grants and physical text chunks");
   const native = readFileSync(new URL("../🦀️.rs", import.meta.url), "utf8");
   expect(native.includes("pub enum ArtifactCanonicalJsonText")).toBe(true);
   expect(native.includes("text.text_chunk(")).toBe(true);

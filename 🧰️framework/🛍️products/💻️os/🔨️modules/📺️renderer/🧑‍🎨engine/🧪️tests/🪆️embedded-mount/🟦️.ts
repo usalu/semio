@@ -1,5 +1,6 @@
 const authoredReceiptSource={async read(){throw Error("Descriptor oracle did not request a package receipt");}};
-import type { PluginCatalogRowsV1 } from "../../../../🔌️plugin/📇️registry/🟦️.ts";
+import type { PluginCatalogRowsV1 } from "@semio-tech/framework/plugin-catalog";
+import { admitPluginCatalogV1, pluginCatalogV1 } from "../../../../🔌️plugin/📇️registry/🟦️.ts";
 const emptyCatalogRows: PluginCatalogRowsV1 = { version: 1, targets: [], hosts: [], playgrounds: [] };
 import { shouldStartIntroduction } from "../../../../../../../🔨️modules/🖱️ui/🎓️introduction/🟦️.ts";
 import bootLifecycle from "../🧫️fixtures/⏳️boot-lifecycle/🔣️.json";
@@ -24,7 +25,9 @@ import wgpuBootSource from "../../🎯️targets/🧊️wgpu/🎬️renderer-boo
 import bootExecutionFixture from "../🧫️fixtures/🎬️boot-execution/🔣️.json";
 import serviceStatusFixture from "../🧫️fixtures/⏳️owned-service-status/🔣️.json";
 import serviceStatusSchema from "../../🧬️schema/⏳️owned-service-status/🔣️.json";
-import { bootFrameworkOs, initialShellState, shellReducer } from "../../🧱️elements/🐚️Shell/🟦️.tsx";
+import { bootFrameworkOs } from "../../🧱️elements/🐚️Shell/🟦️.tsx";
+import { initialShellState, shellReducer } from "../../🧱️elements/🐚️Shell/🕹️shell-store/🟦️.ts";
+import { createEditorSession, createRasterSession, type WasmBindingsV1 } from "../../🧱️elements/🪪️WasmSessionLoader/🟦️.tsx";
 import { parseInstalledServiceStatusV1 } from "@semio-tech/framework-os";
 import { parse as parseJsonc } from "jsonc-parser";
 
@@ -389,8 +392,9 @@ describe("explicit embedded plugin registry admission", () => {
 
   it("selects only supplied custom modules with the React registry and graphlib dependency oracles", async () => {
     for (const row of pluginModulesFixture.selection) {
+      const rows: readonly { readonly pluginId: string; readonly dependencies?: readonly { readonly pluginId: string; readonly version?: string }[] }[] = row.rows;
       const modules = admitWgpuPluginModules(row.rows.map(({ pluginId, moduleUrl }) => ({ pluginId, moduleUrl })), pluginModulesFixture.baseUrl);
-      const prepared = await prepareWgpuPluginModules(emptyPluginCatalog, modules, authoredReceiptSource, { readDescriptor: async id => describedModule(id, row.rows.find(module => module.pluginId === id)?.dependencies ?? []) });
+      const prepared = await prepareWgpuPluginModules(emptyPluginCatalog, modules, authoredReceiptSource, { readDescriptor: async id => describedModule(id, rows.find(module => module.pluginId === id)?.dependencies ?? []) });
       const planner = new PlaygroundBootPlanner(prepared.catalog, row.variant, undefined, "selection" in row ? row.selection as "all" : "variant");
       while (planner.step()) {}
       const plan = planner.finish();
@@ -625,7 +629,7 @@ describe("admitted General empty React mounts", () => {
     const roots = mountRoots();
     const mounts = [];
     for (const [index, root] of roots.entries()) {
-      const mounted = await bootFrameworkOs({ catalog: emptyCatalogRows, rootId: root.id, locks: { locale: index === 0 ? "en" : "de" } }, { backboneWorkerFactory: () => new MountWorker("https://example.test/backbone.js", { type: "module" }) as unknown as Worker });
+      const mounted = await bootFrameworkOs({ catalog: emptyCatalogRows, rootId: root.id, locks: { locale: index === 0 ? "en" : "de" } }, { backboneWorkerFactory: () => new MountWorker("https://example.test/backbone.js", { type: "module" }) as unknown as Worker, hostPorts: { catalogAdmission: { admit: admitPluginCatalogV1, catalogOf: pluginCatalogV1 } } });
       mounts.push(mounted);
       cleanups.push(() => mounted.dispose());
     }
@@ -633,7 +637,31 @@ describe("admitted General empty React mounts", () => {
     mounts[0]!.dispose();
     expect(roots[0]!.childElementCount).toBe(0);
     expect(roots[1]!.querySelector("[data-shell-ready]")).not.toBeNull();
-    console.log("[DEBUG] real General React idle ShellHost two roots independently ready and owner-only retirement");
+  });
+
+  it("installs the wasm bindings port for the shell's lifetime and the session loaders read exactly that port", async () => {
+    installBrowserRuntime();
+    await expect(createEditorSession()).rejects.toThrow("wasm-bindings-absent");
+    const surface = vi.fn(async () => ({ default: async () => undefined, RasterSession: class RasterStub {}, MapSession: class MapStub {}, TerrainSession: class TerrainStub {} }));
+    const bindings = { surface, flow: vi.fn(), editor: vi.fn(), nodeGraph: vi.fn() } as unknown as WasmBindingsV1;
+    const root = mountRoots()[0]!;
+    const mounted = await bootFrameworkOs({ catalog: emptyCatalogRows, rootId: root.id, locks: { locale: "en" } }, { backboneWorkerFactory: () => new MountWorker("https://example.test/backbone.js", { type: "module" }) as unknown as Worker, hostPorts: { catalogAdmission: { admit: admitPluginCatalogV1, catalogOf: pluginCatalogV1 }, wasmBindings: bindings } });
+    cleanups.push(() => mounted.dispose());
+    await vi.waitFor(() => expect(root.querySelector("[data-shell-ready]")).not.toBeNull());
+    await expect(createRasterSession()).resolves.toBeInstanceOf(Object);
+    expect(surface).toHaveBeenCalledTimes(1);
+    mounted.dispose();
+    await expect(createEditorSession()).rejects.toThrow("wasm-bindings-absent");
+  });
+
+  it("never asks the plugin distribution port for a hub source while no hub is configured", async () => {
+    installBrowserRuntime();
+    const hubPluginSource = vi.fn(() => null);
+    const root = mountRoots()[0]!;
+    const mounted = await bootFrameworkOs({ catalog: emptyCatalogRows, rootId: root.id, locks: { locale: "en" } }, { backboneWorkerFactory: () => new MountWorker("https://example.test/backbone.js", { type: "module" }) as unknown as Worker, hostPorts: { catalogAdmission: { admit: admitPluginCatalogV1, catalogOf: pluginCatalogV1 }, pluginDistribution: { extensionRoute: "/rhu3-extension-modules", hubPluginSource } } });
+    cleanups.push(() => mounted.dispose());
+    await vi.waitFor(() => expect(root.querySelector("[data-shell-ready]")).not.toBeNull());
+    expect(hubPluginSource).not.toHaveBeenCalled();
   });
 });
 
@@ -658,7 +686,6 @@ describe("actual admitted General Dev receiving", () => {
       mounted.dispose();
       await vi.waitFor(() => expect(MountWorker.owners[0]!.terminated).toBe(true));
       expect(root.childElementCount).toBe(0);
-      console.log("[DEBUG] actual General Dev explicit empty book reaches real WGPU boot and missing selection refuses");
     } finally { vi.unstubAllEnvs(); }
   });
 });

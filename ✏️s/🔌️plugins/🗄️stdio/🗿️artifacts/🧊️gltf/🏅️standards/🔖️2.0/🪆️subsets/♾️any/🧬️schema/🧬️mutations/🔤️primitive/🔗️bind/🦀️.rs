@@ -33,11 +33,14 @@ pub fn plan(p: &GltfBindPrimitiveAttributePayload, base: &GltfSnapshot) -> Resul
     Ok(GltfDiff { meshes: primitive_patch(p.mesh, p.primitive, GltfPrimitiveDiff { attributes: Some(rows), ..Default::default() }), ..Default::default() })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn inverse(p: &GltfBindPrimitiveAttributePayload, base: &GltfSnapshot) -> Vec<super::GltfMutation> {
+pub fn inverse<Op>(p: &GltfBindPrimitiveAttributePayload, base: &GltfSnapshot) -> Vec<Op>
+where
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::remove_used_extension::RemoveUsedExtensionMutation>,
+{
     if validate(p, base).is_err() {
         return Vec::new();
     }
-    vec![super::unbind_primitive_attribute::mutation(super::unbind_primitive_attribute::GltfUnbindPrimitiveAttributePayload { mesh: p.mesh, primitive: p.primitive, semantic: p.semantic.clone() })]
+    vec![crate::standards::v2_0::subsets::any::schema::mutations::unbind_primitive_attribute::mutation(crate::standards::v2_0::subsets::any::schema::mutations::unbind_primitive_attribute::GltfUnbindPrimitiveAttributePayload { mesh: p.mesh, primitive: p.primitive, semantic: p.semantic.clone() })]
 }
 
 //#region 🧬️DirectMutation
@@ -50,11 +53,17 @@ pub enum BindPrimitiveAttributeMutation {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn mutation(payload: GltfBindPrimitiveAttributePayload) -> super::GltfMutation {
-    super::GltfMutation::BindPrimitiveAttribute(BindPrimitiveAttributeMutation::Apply(payload))
+pub fn mutation<Op>(payload: GltfBindPrimitiveAttributePayload) -> Op
+where
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::bind_primitive_attribute::BindPrimitiveAttributeMutation>,
+{
+    Op::from(BindPrimitiveAttributeMutation::Apply(payload))
 }
 
-impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for BindPrimitiveAttributeMutation {
+impl<Op> protocol::MutationKind<GltfSnapshot, Op> for BindPrimitiveAttributeMutation
+where
+    Op: protocol::Mutation<GltfSnapshot, Diff = GltfDiff> + From<BindPrimitiveAttributeMutation>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "bind", entity: "primitive-attribute", kind: "bind-primitive-attribute", record: "BoundPrimitiveAttribute" };
 
     fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<GltfDiff> {
@@ -66,7 +75,7 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for BindPrimitive
         }
     }
 
-    fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<super::GltfMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         match self {
             Self::Apply(payload) => Ok(inverse(payload, base)),
         }
@@ -83,7 +92,5 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for BindPrimitive
 //#endregion 🧬️DirectMutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/📍️binds/🦀️.rs"]
-mod case_binds_texcoord_0_fc0e9a;
+
 //#endregion 🧪️Tests

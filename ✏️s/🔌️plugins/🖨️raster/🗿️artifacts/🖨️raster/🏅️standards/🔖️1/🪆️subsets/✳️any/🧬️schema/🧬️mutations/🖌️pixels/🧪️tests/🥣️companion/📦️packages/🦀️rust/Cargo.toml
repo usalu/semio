@@ -1,0 +1,37 @@
+[package]
+workspace = "../../../../../../../../../../.."
+name = "semio-s-artifact-raster-raster-mutations-pixels-tests"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Companion test crate of the raster pixel mutations: the pixel leaf laws that run through the owned-document host"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+
+[dev-dependencies]
+semio-framework-async-macros = { workspace = true }
+semio-framework-diagnostic = { workspace = true }
+semio-framework-os-kernel = { workspace = true, features = ["mutation-testing", "protocol-laws"] }
+semio-framework-pack-json = { workspace = true }
+semio-framework-pixels = { workspace = true }
+semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
+semio-framework-ui-locale = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-s-artifact-raster-raster-diff = { workspace = true }
+semio-s-artifact-raster-raster-host = { workspace = true }
+semio-s-artifact-raster-raster-io = { workspace = true, features = ["testkit"] }
+semio-s-artifact-raster-raster-model = { workspace = true }
+semio-s-artifact-raster-raster-mutations = { workspace = true }
+semio-s-artifact-raster-raster-mutations-layers = { workspace = true }
+semio-s-artifact-raster-raster-mutations-pixels = { workspace = true }
+semio-s-artifact-stdio-semio-image = { workspace = true }
+serde_json = { workspace = true }

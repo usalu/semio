@@ -32,6 +32,10 @@ type puzzlePuzzle2dPresenceGuardSizeBounds = { readonly minItems?: number; reado
 
 export const puzzlePuzzle2dPresenceGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : puzzlePuzzle2dPresenceGuardReject(at, "value is not an object");
+export const puzzlePuzzle2dPresenceGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) puzzlePuzzle2dPresenceGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const puzzlePuzzle2dPresenceGuardArray = (value: unknown, at: string, bounds: puzzlePuzzle2dPresenceGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return puzzlePuzzle2dPresenceGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) puzzlePuzzle2dPresenceGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -62,7 +66,7 @@ export const puzzlePuzzle2dPresenceGuardConstant = <T extends string | number | 
 //#endregion 🚪️Parsers
 
 export function parsePuzzle2dPresence(value: unknown, at = "$"): Puzzle2dPresence {
-  const row = puzzlePuzzle2dPresenceGuardObject(value, at);
+  const row = puzzlePuzzle2dPresenceGuardClosed(puzzlePuzzle2dPresenceGuardObject(value, at), at, ["selectedIds", "cameraX", "cameraY", "cameraZoom", "selectionMethod", "activeUtilityId"]);
   return {
     selectedIds: puzzlePuzzle2dPresenceGuardArray(row["selectedIds"], `${at}.selectedIds`).map((item, index) => puzzlePuzzle2dPresenceGuardString(item, `${at}.selectedIds[${index}]`)),
     cameraX: puzzlePuzzle2dPresenceGuardNumber(row["cameraX"], `${at}.cameraX`),

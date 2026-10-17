@@ -4,6 +4,7 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, 
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import Ajv from "ajv";
+import { parseInstallationDirectoryV1 } from "../../../../../../../🔨️modules/🪪️identity/📁️installation/🟦️.ts";
 import { parseModuleDirectories, moduleDirectoryName, moduleIdForDirectoryName } from "../../📦️deployment/🟦️.ts";
 import { registryModuleDirectories, readGeneratedCatalogProjection } from "../../📖️catalog-view/🟦️.ts";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -71,7 +72,7 @@ describe("explicit module deployment directories", () => {
   it("matches the schema and independent emoji oracle without changing public identities", async () => {
     const emojiRegex = (await import("emoji-regex")).default;
     const portable = JSON.parse(readFileSync(join(import.meta.dirname, "../🧫️fixtures/📦️deployment/🧪️cases.json"), "utf8"));
-    const entries = portable.modules.map((row: { pluginId: string; directoryName: string }) => ({ pluginId: row.pluginId, directoryName: row.directoryName }));
+    const entries = portable.modules.map((row: { pluginId: string; directoryName: string }) => ({ pluginId: row.pluginId, directoryName: parseInstallationDirectoryV1(row.directoryName) }));
     const catalog = { version: 1, modules: registryModuleDirectories(entries) };
     const schema = JSON.parse(readFileSync(join(import.meta.dirname, "../../📦️deployment/🧬️schema/🔣️.json"), "utf8"));
     const cases = JSON.parse(readFileSync(join(import.meta.dirname, "../🧫️fixtures/📦️deployment/🧪️cases.json"), "utf8"));
@@ -79,7 +80,7 @@ describe("explicit module deployment directories", () => {
     const validate = registrySchemas.getSchema(`${schema.$id}#/$defs/DeploymentCatalogV1`)!;
     expect(validate(catalog)).toBe(true);
     expect(parseModuleDirectories(catalog)).toEqual(catalog.modules);
-    const ids = entries.map((entry) => entry.pluginId);
+    const ids = entries.map((entry: { pluginId: string }) => entry.pluginId);
     expect(catalog.modules.map((entry: { pluginId: string }) => entry.pluginId)).toEqual(ids);
     const identities = new Set<string>();
     for (const row of catalog.modules) {
@@ -100,7 +101,7 @@ describe("explicit module deployment directories", () => {
     expect(() => moduleDirectoryName("unknown-public-id", catalog.modules)).toThrow();
     expect(moduleIdForDirectoryName("unknown-directory", catalog.modules)).toBeUndefined();
     for (const attack of cases.hostileCatalogs) {
-      const candidate = structuredClone(catalog);
+      const candidate: { version: number; modules: Record<string, unknown>[] } = JSON.parse(JSON.stringify(catalog));
       if (attack === "duplicate-id") candidate.modules[1].pluginId = candidate.modules[0].pluginId;
       if (attack === "duplicate-emoji") candidate.modules[1].directoryName = candidate.modules[0].directoryName;
       if (attack === "missing-name") delete candidate.modules[0].directoryName;

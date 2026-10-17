@@ -1,5 +1,15 @@
 //! 🧪️ The instance extension list honours every registered entry, in registration order, and an empty list routes nothing.
-use super::*;
+use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use pack::snapshot::ArtifactPack;
+use semio_framework_plugin_decl_emission::Emit;
+use semio_framework::FaultFrom;
+use std::future::Future;
+use crate::InstanceExtension;
+use store::{MemberFactory, Mutation, SpaceMember};
+use protocol::OpText;
+use semio_framework_plugin_reactor_app::PluginApp;
+use semio_framework_ui_contract::*;
 
 /// 🅰️ A probe extension that owns `probe.alpha` and admits it while the document loads.
 struct ProbeAlpha;

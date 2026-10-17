@@ -1,7 +1,7 @@
 //! 🗃️ Shooting play app commands — whole-document load/reset/save/import shell effects.
 
 use crate::editor::shooting::config::{ShootingConfig, ShootingConfigMutation};
-use crate::editor::shooting::ShootingDispatchCtx;
+use crate::editor::shooting::ui_helpers_and_io::ShootingDispatchCtx;
 use crate::standards::v1::subsets::any::schema::mutations::ShootingMutation;
 use crate::ShootingSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault};
@@ -24,7 +24,7 @@ pub mod import_snapshot_json {
             semio_framework_value::FromValue::from_value(dsl_value).map_err(|_: semio_framework_value::ValueError| ())
         });
         match parsed {
-            Ok(snapshot) => Ok(Emit { effects: vec![crate::editor::shooting::reset_document_effect(&snapshot)], ..Default::default() }),
+            Ok(snapshot) => Ok(Emit { effects: vec![crate::editor::shooting::ui_helpers_and_io::reset_document_effect(&snapshot)], ..Default::default() }),
             Err(_) => Ok(Emit::default()),
         }
     }
@@ -57,7 +57,7 @@ pub mod set_active_example {
             None
         };
         match next {
-            Some(snapshot) => Ok(Emit { effects: vec![crate::editor::shooting::reset_document_effect(&snapshot)], ..Default::default() }),
+            Some(snapshot) => Ok(Emit { effects: vec![crate::editor::shooting::ui_helpers_and_io::reset_document_effect(&snapshot)], ..Default::default() }),
             None => Ok(Emit::default()),
         }
     }
@@ -73,7 +73,7 @@ pub mod reset_snapshot {
     pub struct ResetSnapshot {}
 
     pub fn handle(_payload: &ResetSnapshot, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
-        Ok(Emit { effects: vec![crate::editor::shooting::reset_document_effect(&crate::standards::v1::subsets::any::io::text::snapshot::default_snapshot())], ..Default::default() })
+        Ok(Emit { effects: vec![crate::editor::shooting::ui_helpers_and_io::reset_document_effect(&crate::standards::v1::subsets::any::io::text::snapshot::default_snapshot())], ..Default::default() })
     }
 }
 //#endregion 🔖️ResetSnapshot
@@ -95,7 +95,5 @@ pub mod save_download {
 //#endregion 🔖️SaveDownload
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

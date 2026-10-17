@@ -1,0 +1,14 @@
+{
+ "name": "otcpch",
+ "crates": [
+  "semio-framework-os-channel",
+  "semio-framework-os-channel-tests"
+ ],
+ "base": {
+  "rev": "1bae6115bc5",
+  "crates": [
+   "semio-framework-os-channel"
+  ]
+ },
+ "note": "OTCP channel"
+}

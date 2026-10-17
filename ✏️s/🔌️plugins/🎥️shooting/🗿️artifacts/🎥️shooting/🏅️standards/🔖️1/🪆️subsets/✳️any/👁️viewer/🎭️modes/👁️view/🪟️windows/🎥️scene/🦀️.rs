@@ -7,7 +7,7 @@
 //! persisted per-session camera (`Config = NoConfig`), an intentional first-pass simplification, not a
 //! bug (mirrors the cad pilot's identical viewer-window simplification).
 
-use crate::standards::v1::subsets::any::schema::{active_shot, is_transparent_shooting_background};
+use crate::{active_shot, is_transparent_shooting_background};
 use crate::{shooting_asset_scale, ShootingAsset, ShootingCamera, ShootingShot, ShootingSnapshot};
 use semio_framework_pack_json::json;
 use semio_framework_pack_json::Value;

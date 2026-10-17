@@ -1,2 +1,2 @@
 /** 🖊️ SDK entry `@semio-tech/framework/time-travel/testing/editor`: explicit public surface of the framework module that plugins build on. */
-export { editor, editorRevealed, focusIsOnAnEditorInput, focusRead, keyEditorNumber, pressUseSelection, readEditor, readNumberControl, revealHistory, typeEditorNumber, typeEditorText, typeSliderText } from "../../../../../🔨️modules/⏪️time-travel/🧪️testing/🖊️editor/🟦️.ts";
+export { editor, editorRevealed, focusIsOnAnEditorInput, focusRead, keyEditorNumber, pressUseSelection, readEditor, readNumberControl, revealHistory, typeEditorNumber, typeEditorText, typeSliderText } from "@semio-tech/framework-time-travel-ts/testing/editor";

@@ -7,6 +7,7 @@
 
 use crate::standards::v1::subsets::any::schema::{diff::ProgramDiff, mutations::ProgramMutation, snapshot::ProgramSnapshot};
 use protocol::Mutation;
+use semio_framework_test_fixtures::fixture_path;
 use std::path::{Path, PathBuf};
 
 const CORPUS: &str = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧬️mutations/📋️register-row";
@@ -56,7 +57,7 @@ fn directories(path: &Path) -> Vec<PathBuf> {
 
 /// 📂️ Every committed case, in path order.
 fn cases() -> Vec<Case> {
-    let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..").join(CORPUS);
+    let root = fixture_path!("../../../../../../../../..").join(CORPUS);
     let cases: Vec<Case> = directories(&root)
         .iter()
         .flat_map(|op| directories(op))

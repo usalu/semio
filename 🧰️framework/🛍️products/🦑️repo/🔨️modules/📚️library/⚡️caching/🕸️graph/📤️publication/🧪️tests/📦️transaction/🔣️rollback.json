@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "undefined-distinct",
+      "primary": "undefined",
+      "rollback": "distinct",
+      "body": "failed",
+      "errors": 2
+    },
+    {
+      "id": "frozen-distinct",
+      "primary": "frozen",
+      "rollback": "distinct",
+      "body": "failed",
+      "errors": 2
+    },
+    {
+      "id": "error-distinct",
+      "primary": "error",
+      "rollback": "distinct",
+      "body": "failed",
+      "errors": 2
+    },
+    {
+      "id": "undefined-same",
+      "primary": "undefined",
+      "rollback": "same",
+      "body": "failed",
+      "errors": 1
+    },
+    {
+      "id": "frozen-same",
+      "primary": "frozen",
+      "rollback": "same",
+      "body": "failed",
+      "errors": 1
+    },
+    {
+      "id": "success-cleanup",
+      "primary": "undefined",
+      "rollback": "distinct",
+      "body": "success",
+      "errors": 1
+    }
+  ]
+}

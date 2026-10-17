@@ -32,7 +32,7 @@ fn run<T:RetireOwned>(value:T,name:&str,law:&serde_json::Value){
         for denied in[(copy!=0).then_some(RetainedCloneGrant{maximum_copy_bytes:copy.saturating_sub(1),..grant}),(capacity!=0).then_some(RetainedCloneGrant{maximum_capacity_bytes:capacity.saturating_sub(1),..grant}),(release!=0).then_some(RetainedCloneGrant{maximum_release_bytes:release.saturating_sub(1),..grant})].into_iter().flatten(){let(step,heap)=observe(||owner.step(denied).unwrap());assert_eq!(step.progress(),Default::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(demands(&owner),(copy,capacity,release));}
         let(step,heap)=observe(||owner.step(grant).unwrap());assert!(!heap.overflowed);assert!(step.progress().fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes),"physical receipts: {name}");born+=heap.requested_bytes;released+=heap.released_bytes;if matches!(step,RetainedCloneStep::Complete(_)){break;}
     }
-    assert!(owner.terminal_is_empty(),"finite Record exact grants must terminate: {name}");assert!(released>=born);let(_,heap)=observe(||drop(owner));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));println!("[DEBUG] Record retirement {name} birth={born} release={released}; exact heap receipts and zero/below nonmovement");
+    assert!(owner.terminal_is_empty(),"finite Record exact grants must terminate: {name}");assert!(released>=born);let(_,heap)=observe(||drop(owner));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
 }
 
 #[test]
@@ -84,7 +84,6 @@ fn original_optional_custody_native_record_wire_source_identity_and_paid_retirem
   let (mut owner,birth)=observe(||ControlledRetirement::new(source).unwrap_or_else(|_|panic!("original custody declares native retirement")));let mut born=birth.requested_bytes;let mut released=birth.released_bytes;
   for _ in 0..fixture["maximumTurns"].as_u64().unwrap(){if owner.terminal_is_empty(){break;}let(step,heap)=observe(||owner.step(grant).unwrap());assert!(step.progress().fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));born+=heap.requested_bytes;released+=heap.released_bytes;}
   assert!(owner.terminal_is_empty());assert_eq!(released,held.requested_bytes+born);let((),heap)=observe(||drop(owner));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,fixture["terminalDropBytes"].as_u64().unwrap()as usize));
-  eprintln!("[DEBUG] originalOptionalCustodyRecord=wire2,native3 sourcePointer=unchanged absentDecode=true independentSerde=equal held={} born={} released={} terminalDrop=0",held.requested_bytes,born,released);
  }
 }
 
@@ -104,5 +103,4 @@ fn original_empty_enum_native_projection_and_receiving_compile_without_values() 
  assert_eq!(result.err().unwrap().kind,semio_framework_value::ValueRefusalKind::InvalidValue);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
  assert!(OriginalEmptyTagged::from_named_record(law["missingKeyword"].as_str().unwrap(),&RecordValue::default()).is_err());
  assert_eq!(serde_json::json!([]).as_array().unwrap().len(),expected);
- println!("[DEBUG] Original empty tagged/scalar/owned receiver compiled variants=0 impossibleValues=0 missingKeywordRefused=true System0=true");
 }

@@ -1,6 +1,6 @@
 //! 🌐️ `set-grid-visible` command — toggles whether the target pane draws its grid at all.
 
-use crate::editor::puzzle5d::Puzzle5dActionCtx;
+use crate::editor::puzzle5d::interaction::Puzzle5dActionCtx;
 use semio_framework_pack_json::Value;
 
 pub fn set_grid_visible(ctx: &mut Puzzle5dActionCtx<'_>, args: Option<&Value>) {

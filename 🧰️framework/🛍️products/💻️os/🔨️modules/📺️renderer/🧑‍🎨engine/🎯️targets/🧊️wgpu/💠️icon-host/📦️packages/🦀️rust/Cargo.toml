@@ -51,9 +51,10 @@ serde = { version = "1.0.219", features = ["derive"] }
 ui_gpu = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/📦️packages/🦀️rust", package = "semio-framework-ui-wgpu-render", features = ["canvas-raster"] }
 
 [dev-dependencies]
+semio-framework-os-renderer-wgpu-thread-isolation = { path = "../../../🔒️thread-isolation/📦️packages/🦀️rust", features = ["isolated"] }
 semio-framework-job = { workspace = true, features = ["testkit"] }
 semio-framework-ui-draw-contract = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🏷️types/📦️packages/🦀️rust" }
-semio-framework-ui-prepared = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🎟️prepared/📦️packages/🦀️rust" }
+semio-framework-ui-prepared = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🎟️prepared/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-ui-scene-camera = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/📐️math/🎥️camera/📦️packages/🦀️rust" }
 semio-framework-ui-scene-mesh = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/📐️math/🕸️mesh/📦️packages/🦀️rust" }
 semio-framework-ui-scene-pass = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/📐️math/🎞️pass/📦️packages/🦀️rust" }

@@ -23,6 +23,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-framework-test-fixtures = { path = "../../../../../🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-framework-tool-machine = { path = "../../../../📦️packages/🦀️rust", features = ["testkit"] }
 
 [dev-dependencies]

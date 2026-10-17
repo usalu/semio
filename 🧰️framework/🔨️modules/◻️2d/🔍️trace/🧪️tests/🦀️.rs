@@ -26,7 +26,6 @@ fn trace_neutral_vectors_and_work_grants() {
    if let Some(expected)=row["expected"]["segments"].as_array() {let actual=segments.iter().map(|s|match s {PathSegment::Move{to}=>json!({"kind":"move","to":to}),PathSegment::Line{to}=>json!({"kind":"line","to":to}),PathSegment::Close=>json!({"kind":"close"}),_=>panic!("Unexpected trace segment")}).collect::<Vec<_>>();for (a,b) in actual.iter().zip(expected) {assert_eq!(a["kind"],b["kind"]);if a["kind"]!="close" {for axis in 0..2 {assert_eq!(a["to"][axis].as_f64(),b["to"][axis].as_f64());}}}assert_eq!(actual.len(),expected.len());}
    if let Some(previous)=&previous {assert_eq!(&segments,previous);}previous=Some(segments);
   }
-  println!("[DEBUG] trace fixture {} completed with identical paths at grants 1, 7 and 4096",row["name"]);
  }
 }
 #[test]
@@ -46,7 +45,6 @@ fn trace_cancels_every_phase_without_exposing_private_geometry() {
 fn trace_returns_empty_geometry_and_exact_resource_limits() {
  let valid:BitmapTraceInput<&[u8]>=BitmapTraceInput {width:1,height:1,mask:&[255],threshold:0.5,simplify_epsilon:0.0,max_pixels:1,max_edges:4,max_segments:5,max_work:10000};let (output,_)=complete(valid,1);assert_eq!(output.len(),5);let mut job=BitmapTraceJob::new(valid).unwrap();let p=job.advance(4096).unwrap();let (exact,_)=complete(BitmapTraceInput {max_work:p.work,..valid},7);assert_eq!(output,exact);
  let mut cancelled=BitmapTraceJob::new(valid).unwrap();cancelled.advance(4096).unwrap();let published=cancelled.result().unwrap().to_vec();cancelled.cancel();assert_eq!(published,output);assert!(complete(BitmapTraceInput {mask:&[0][..],..valid},1).0.is_empty());
- println!("[DEBUG] trace exact limits published {} segments in {} granted operations",output.len(),p.work);
 }
 #[test]
 fn trace_progress_matches_portable_field_taxonomy() {
@@ -57,7 +55,7 @@ fn trace_progress_matches_portable_field_taxonomy() {
 fn trace_all_three_by_three_masks_and_blank_linear_work() {
  let mut simplified=0;for bits in 0..512u16 {let mask=(0..9).map(|at|if bits&(1<<at)==0 {0u8} else {255u8}).collect::<Vec<_>>();let expected=mask.iter().map(|value|u8::from(*value!=0)).collect::<Vec<_>>();
   for epsilon in [0.0,0.55,8192.0] {let input=BitmapTraceInput {width:3,height:3,mask:&mask,threshold:0.5,simplify_epsilon:epsilon,max_pixels:9,max_edges:36,max_segments:45,max_work:10000};let mut job=BitmapTraceJob::new(input).unwrap();let p=job.advance(10000).unwrap();assert!(p.done);simplified+=usize::from(p.simplified);assert_eq!(foreground(job.result().unwrap(),input),expected);}
- }assert!(simplified>0);let mask=vec![0u8;8192];let mut job=BitmapTraceJob::new(BitmapTraceInput {width:8192,height:1,mask:&mask,threshold:0.5,simplify_epsilon:0.0,max_pixels:8192,max_edges:1,max_segments:1,max_work:8196}).unwrap();let p=job.advance(8196).unwrap();assert!(p.done);assert_eq!(p.work,8196);assert!(job.result().unwrap().is_empty());println!("[DEBUG] trace retained 512 masks at three tolerances and completed a wide blank in linear work");
+ }assert!(simplified>0);let mask=vec![0u8;8192];let mut job=BitmapTraceJob::new(BitmapTraceInput {width:8192,height:1,mask:&mask,threshold:0.5,simplify_epsilon:0.0,max_pixels:8192,max_edges:1,max_segments:1,max_work:8196}).unwrap();let p=job.advance(8196).unwrap();assert!(p.done);assert_eq!(p.work,8196);assert!(job.result().unwrap().is_empty());
 }
 #[test]
 fn trace_owned_masks_match_neutral_vectors_and_release_at_every_cancel_phase(){
@@ -67,7 +65,6 @@ fn trace_owned_masks_match_neutral_vectors_and_release_at_every_cancel_phase(){
  impl Drop for Tracked{fn drop(&mut self){self.drops.set(self.drops.get()+1);}}
  let row=&rows()[13];let mask=row["input"]["mask"].as_array().unwrap().iter().map(|v|v.as_u64().unwrap()as u8).collect::<Vec<_>>();let mut probe=BitmapTraceJob::new(input(row,&mask)).unwrap();let mut seen=BTreeSet::new();
  loop{let p=probe.advance(1).unwrap();if seen.insert(p.phase.as_str()){let drops=std::rc::Rc::new(std::cell::Cell::new(0));let mut job=BitmapTraceJob::new(input(row,Tracked{bytes:mask.clone(),drops:drops.clone()})).unwrap();job.advance(p.work as usize).unwrap();assert_eq!(drops.get(),0);job.cancel();assert_eq!(drops.get(),0);assert_eq!(job.result().unwrap_err(),BitmapTraceError::Cancelled);assert_eq!(job.advance(1).unwrap_err(),BitmapTraceError::Cancelled);drop(job);assert_eq!(drops.get(),1);}if p.done{break;}}
- println!("[DEBUG] Native moved trace masks match neutral fixtures and release storage at every cancellation phase");
 }
 
 #[test]
@@ -76,6 +73,6 @@ fn trace_retirement_transfers_masks_and_drains_every_actual_phase_under_exact_gr
  for row in close_rows{for grant in [1,7,4096]{let source=rows().into_iter().find(|v|v["name"]==row["source"]).unwrap();let mask=source["input"]["mask"].as_array().unwrap().iter().map(|v|v.as_u64().unwrap()as u8).collect::<Vec<_>>();let ptr=mask.as_ptr();let mut contract=input(&source,mask);if let Some(cap)=row["maxEdges"].as_u64(){contract.max_edges=cap as usize;}let mut job=BitmapTraceJob::new(contract).unwrap();
   let phase=row["phase"].as_str().unwrap();if phase=="cancelled"{job.cancel();}else if phase=="failure"{assert!(job.advance(4096).is_err());assert!(job.result().is_err());}else if phase!="fresh"{let mut found=false;for _ in 0..job.input.max_work{let p=job.advance(1).unwrap();if p.phase.as_str()==phase{found=true;break;}if p.done{break;}}assert!(found,"{}",row);}
   let(mut close,returned)=job.into_retirement();assert_eq!(returned.as_ref().unwrap().as_ptr(),ptr);assert!(close.advance(0).is_err());let mut work=0;loop{let p=close.advance(grant).unwrap();assert!(p.work>=work&&p.work-work<=grant as u64);work=p.work;if p.done{break;}}
-  if grant==1{println!("[DEBUG] Native trace retirement {} work={work}",phase);}assert!(work>0);assert!(close.terminal_is_empty());let p=close.advance(1).unwrap();assert_eq!((p.work,p.done,p.phase),(work,true,"complete"));assert!(close.owner.original().is_none());if let Some(mask)=returned{assert_eq!(mask,source["input"]["mask"].as_array().unwrap().iter().map(|v|v.as_u64().unwrap()as u8).collect::<Vec<_>>());}
- }println!("[DEBUG] Native active trace ownership retired its exact JSON inventory: {}",row["phase"]);}
+  if grant==1{}assert!(work>0);assert!(close.terminal_is_empty());let p=close.advance(1).unwrap();assert_eq!((p.work,p.done,p.phase),(work,true,"complete"));assert!(close.owner.original().is_none());if let Some(mask)=returned{assert_eq!(mask,source["input"]["mask"].as_array().unwrap().iter().map(|v|v.as_u64().unwrap()as u8).collect::<Vec<_>>());}
+ }}
 }

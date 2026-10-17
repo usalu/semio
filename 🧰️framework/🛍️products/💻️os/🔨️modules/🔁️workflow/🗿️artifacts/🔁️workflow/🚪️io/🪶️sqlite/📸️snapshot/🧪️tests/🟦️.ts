@@ -7,8 +7,8 @@ import nativeSchema from"../../../../🧬️schema/📸️snapshot/🔣️.json"
 import type * as schema from"../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import * as owner from"../🟦️.ts";
 import {binary64} from "../../../../../../../../../../🔨️modules/🌱️value/📦️packages/🟦️typescript/🔢️ieee754/🟦️.ts";
-import{exportSqliteDatabase,importSqliteDatabase,type SqliteDatabase}from"../../../../../../../../../../🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
-import type{ArtifactSqliteOptions}from"../../../../../../../../../../🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
+import{exportSqliteDatabase,importSqliteDatabase,type SqliteDatabase}from"@semio-tech/framework-sqlite-snapshot-ts";
+import type{ArtifactSqliteOptions}from"@semio-tech/framework-sqlite-snapshot-ts/artifact";
 type Snapshot=schema.WorkflowSnapshot;
 function numeric(value:unknown){if(typeof value!=="number")throw Error("Neutral fixture requires a numeric field");return binary64(value)}
 function optionalNumeric(value:unknown){return value===null?null:numeric(value)}
@@ -44,6 +44,6 @@ test("Workflow complete independent SQL cell extent admits equality and refuses 
    expect(db.query("PRAGMA integrity_check").get()).toEqual({integrity_check:"ok"});expect(db.query("PRAGMA foreign_key_check").all()).toEqual([]);
    const names=db.query("SELECT name FROM sqlite_schema WHERE type='table' ORDER BY name").all()as{name:string}[],tables=names.map(({name})=>{const rows=db.query<Record<string,null|string|number|bigint>,[]>('SELECT * FROM "'+name+'" ORDER BY id').all();let bytes=0;for(const row of rows)for(const value of Object.values(row))bytes+=value===null?0:typeof value==="string"?Buffer.byteLength(value):8;return{table:name,rows:rows.length,bytes}});expect(tables).toEqual(item.tables);expect(tables.length).toBe(cases.tables);expect(tables.reduce((n,table)=>n+table.rows,0)).toBe(cases.rows);expect(tables.reduce((n,table)=>n+table.bytes,0)).toBe(item.bytes);
   }finally{db.close()}
-  const database=await ports.workflowSnapshotToSqliteDatabase(expected);await expect(ports.workflowSnapshotToSqliteDatabase(expected,{maxValueBytes:item.bytes})).resolves.toEqual(database);await expect(ports.workflowSnapshotToSqliteDatabase(expected,{maxValueBytes:item.bytes-1})).rejects.toThrow();await expect(ports.workflowSnapshotFromSqliteDatabase(database,{maxValueBytes:item.bytes})).resolves.toEqual(expected);await expect(ports.workflowSnapshotFromSqliteDatabase(database,{maxValueBytes:item.bytes-1})).rejects.toThrow();console.log("[DEBUG] Workflow exact complete SQL semantic boundary case="+item.name+" bytes="+item.bytes+" tables=16 rows=30");
+  const database=await ports.workflowSnapshotToSqliteDatabase(expected);await expect(ports.workflowSnapshotToSqliteDatabase(expected,{maxValueBytes:item.bytes})).resolves.toEqual(database);await expect(ports.workflowSnapshotToSqliteDatabase(expected,{maxValueBytes:item.bytes-1})).rejects.toThrow();await expect(ports.workflowSnapshotFromSqliteDatabase(database,{maxValueBytes:item.bytes})).resolves.toEqual(expected);await expect(ports.workflowSnapshotFromSqliteDatabase(database,{maxValueBytes:item.bytes-1})).rejects.toThrow();
  }
 });

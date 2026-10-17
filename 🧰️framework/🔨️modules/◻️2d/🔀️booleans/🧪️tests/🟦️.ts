@@ -8,7 +8,7 @@ import endpointRows from "./🧫️fixtures/🔗️endpoints/🔣️.json";
 import schema from "../🧬️schema/🔣️.json";
 import {BooleanJob,booleanRegions,type BooleanInput,type BooleanProgress} from "../🟦️.ts";
 import {pathSegmentsToSvgD,type PathSegment,type Vec2} from "../../🟦️.ts";
-const ajv=new Ajv({strict:true}),valid=ajv.compile(schema),progressValid=ajv.compile({$ref:schema.$id+"#/definitions/progress"}),resultValid=ajv.compile({$ref:schema.$id+"#/definitions/result"});
+const ajv=new Ajv({strict:true}),valid=ajv.compile<BooleanInput>(schema),progressValid=ajv.compile({$ref:schema.$id+"#/definitions/progress"}),resultValid=ajv.compile({$ref:schema.$id+"#/definitions/result"});
 function finish(input:BooleanInput,grant:number,observer?:(p:BooleanProgress)=>void):PathSegment[]{
  const job=new BooleanJob(input);expect(()=>job.result()).toThrow(/incomplete/);let work=0;
  for(let at=0;at<input.maxWork;at++){const p=job.advance(grant);expect(progressValid(p)).toBe(true);expect(p.work-work).toBeLessThanOrEqual(grant);work=p.work;observer?.(p);if(p.done){const result=job.result();expect(resultValid(result)).toBe(true);return result;}expect(()=>job.result()).toThrow(/incomplete/);}throw Error("Boolean did not terminate");
@@ -21,8 +21,7 @@ const apply=(operation:string,a:boolean,b:boolean)=>operation==="union"?a||b:ope
 test("translated stroke junctions preserve endpoint incidence and independent SVG coverage",async()=>{
  for(const row of endpointRows){const input=row.input as unknown as BooleanInput;let previous:PathSegment[]|undefined;
   for(const grant of [1,7,4096]){const output=finish(input,grant),rings=contours(output);expect(rings).toHaveLength(1);expect(rings.reduce((sum,c)=>sum+area(c),0)).toBeGreaterThan(0);if(previous)expect(output).toEqual(previous);previous=output;const points=input.operands[0]!.contours.flat(),origin:[number,number]=[Math.min(...points.map(p=>p[0])),Math.min(...points.map(p=>p[1]))],svg=(c:readonly(readonly Vec2[])[])=>'<svg xmlns="http://www.w3.org/2000/svg" width="128" height="256" viewBox="-0.1 -0.1 1.1 2.3"><path d="'+c.map(r=>'M'+r.map(p=>[p[0]-origin[0],p[1]-origin[1]].join(" ")).join(" L")+" Z").join(" ")+'" fill="black"/></svg>';
-   const actual=await sharp(Buffer.from(svg(rings))).ensureAlpha().raw().toBuffer(),reference=await sharp(Buffer.from(svg(input.operands[0]!.contours))).ensureAlpha().raw().toBuffer();let maximum=0,different=0;for(let at=3;at<actual.length;at+=4){const delta=Math.abs(actual[at]!-reference[at]!);maximum=Math.max(maximum,delta);if(delta)different++;if(reference[at]===0||reference[at]===255)expect(delta).toBeLessThanOrEqual(1);}console.log("[DEBUG] Endpoint stroke SVG",row.name,"maximum_alpha_delta",maximum,"changed_pixels",different);expect(maximum).toBeLessThanOrEqual(row.raster.maxAlphaDelta);expect(different).toBeLessThanOrEqual(row.raster.maxChangedPixels);
-   console.log("[DEBUG] Endpoint-preserving translated stroke union",row.name,"grant",grant,"independent_SVG_within_bounds",true);
+   const actual=await sharp(Buffer.from(svg(rings))).ensureAlpha().raw().toBuffer(),reference=await sharp(Buffer.from(svg(input.operands[0]!.contours))).ensureAlpha().raw().toBuffer();let maximum=0,different=0;for(let at=3;at<actual.length;at+=4){const delta=Math.abs(actual[at]!-reference[at]!);maximum=Math.max(maximum,delta);if(delta)different++;if(reference[at]===0||reference[at]===255)expect(delta).toBeLessThanOrEqual(1);}expect(maximum).toBeLessThanOrEqual(row.raster.maxAlphaDelta);expect(different).toBeLessThanOrEqual(row.raster.maxChangedPixels);
   }
  }
 });
@@ -34,7 +33,7 @@ for(const row of rows)test(row.name,()=>{
 });
 test("rectangular operations match independent polygon clipping and SVG pixels",async()=>{
  const input=rows[0]!.input as unknown as BooleanInput;
- const closed=(ring:readonly Vec2[])=>[...ring,ring[0]!];
+ const closed=(ring:readonly Vec2[]):[number,number][]=>[...ring,ring[0]!].map((point):[number,number]=>[point[0],point[1]]);
  for(const operation of ["union","difference","intersection","xor"] as const){const rings=contours(finish({...input,operation},4096)),a=input.operands[0]!.contours.map(closed),b=input.operands[1]!.contours.map(closed),reference=pc[operation](a,b);
   const oracleArea=reference.reduce((sum,polygon)=>sum+polygon.reduce((sum,ring)=>sum+area(ring as Vec2[]),0),0);expect(rings.reduce((sum,ring)=>sum+area(ring),0)).toBe(oracleArea);
   const actualSvg='<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"><path d="'+pathSegmentsToSvgD(finish({...input,operation},4096))+'" fill="red"/></svg>',oracleSvg='<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"><path d="'+reference.flatMap(p=>p.map(r=>'M'+r.map(q=>q.join(" ")).join(" L")+" Z")).join(" ")+'" fill="red"/></svg>';
@@ -48,7 +47,7 @@ test("all authored fill rules independently agree with SVG engine pixels",async(
   const operandPixels=await Promise.all(input.operands.map(async o=>{const d=o.contours.filter(r=>r.length).map(r=>'M'+r.map(p=>[p[0]-originX,p[1]-originY].join(" ")).join(" L")+" Z").join(" ");return sharp(Buffer.from(svg(d,o.fillRule))).ensureAlpha().raw().toBuffer();}));
   const local=segments.map(s=>s.kind==="move"||s.kind==="line"?{...s,to:[s.to[0]-originX,s.to[1]-originY]}:s),actual=await sharp(Buffer.from(svg(pathSegmentsToSvgD(local as PathSegment[]),"nonzero"))).ensureAlpha().raw().toBuffer();let checked=0;
   for(let at=0;at<72*64;at++){const alpha=operandPixels.map(p=>p[at*4+3]!);if(alpha.some(n=>n!==0&&n!==255))continue;const expected=alpha.slice(1).reduce((a,b)=>apply(input.operation,a,b===255),alpha[0]===255);expect(Math.abs(actual[at*4+3]!-(expected?255:0))).toBeLessThanOrEqual(1);checked++;}expect(checked).toBeGreaterThan(72*64/2);
- }console.log("[DEBUG] Every authored boolean fill-rule fixture matched independent Sharp SVG pixels");
+ }
 });
 test("exact caps admit the same complete output",()=>{
  const input=rows[0]!.input as unknown as BooleanInput;let last!:BooleanProgress;const expected=finish(input,1,p=>last=p);expect(finish({...input,maxEdges:last.vertices,maxParameters:last.parameters,maxAtomicEdges:last.atomicEdges,maxSegments:last.segments,maxWork:last.work},7)).toEqual(expected);
@@ -94,10 +93,9 @@ test("boolean retirement hands off original operands and completed paths while d
   for(const field of ["grid","atomicIds","outgoing","positions","indexHeap","splitHeap","ringHeap"])expect(state[field].size).toBe(0);
   expect(state.splitValues).toBe(null);expect(state.splitRing).toBe(null);expect(state.emitting).toBe(null);expect(state.input.operands).toHaveLength(0);expect(source).toEqual(before);
   if(published){expect(resultValid(published)).toBe(true);expect(contours(published).reduce((sum,r)=>sum+area(r),0)).toBe(fixture.expected.area);}
-  console.log(`[DEBUG] Boolean retirement ${row.source} ${row.phase}: ${expected} structural steps at grant ${grant}`);
  }
 });
 
 import admissionRows from "../../🧹️retire/🧪️tests/🧫️fixtures/📥️admission/🔣️.json";
 import admissionSchema from "../../🧹️retire/🧬️schema/📥️admission/🔣️.json";
-test("retained Boolean admission preserves refused input until close",()=>{expect(new Ajv({strict:true}).compile(admissionSchema)(admissionRows)).toBe(true);for(const row of admissionRows.cases){if(row.kind!=="boolean")continue;const input:BooleanInput={...rows[0]!.input as BooleanInput,maxEdges:row.maxEdges!},operands=input.operands;expect(valid(input)).toBe(false);expect(()=>new BooleanJob(input)).toThrow(/contract/);const job=BooleanJob.admit(input);expect((job as unknown as {input:BooleanInput}).input.operands).toBe(operands);expect(()=>job.advance(1)).toThrow(/contract/);expect(()=>job.result()).toThrow(/contract/);const retired=job.intoRetirement();expect(retired.operands).toBe(operands);expect(retired.output).toBe(null);while(!retired.job.advance(1).done){}expect(retired.job.terminalIsEmpty()).toBe(true);console.log("[DEBUG] Refused Boolean admission retained actual operands until explicit close");}});
+test("retained Boolean admission preserves refused input until close",()=>{expect(new Ajv({strict:true}).compile(admissionSchema)(admissionRows)).toBe(true);for(const row of admissionRows.cases){if(row.kind!=="boolean")continue;const base=rows[0]!.input;if(!valid(base))throw new Error("The first boolean row must satisfy the contract");const input:BooleanInput={...base,maxEdges:row.maxEdges!},operands=input.operands;expect(valid(input)).toBe(false);expect(()=>new BooleanJob(input)).toThrow(/contract/);const job=BooleanJob.admit(input);expect((job as unknown as {input:BooleanInput}).input.operands).toBe(operands);expect(()=>job.advance(1)).toThrow(/contract/);expect(()=>job.result()).toThrow(/contract/);const retired=job.intoRetirement();expect(retired.operands).toBe(operands);expect(retired.output).toBe(null);while(!retired.job.advance(1).done){}expect(retired.job.terminalIsEmpty()).toBe(true);}});

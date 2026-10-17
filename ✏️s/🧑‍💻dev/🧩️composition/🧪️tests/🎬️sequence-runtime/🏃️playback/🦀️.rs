@@ -1,5 +1,5 @@
 use super::context::{dispatch_in_script, new_app, render_in, script_window_meta, SequenceApp};
-use semio_s_artifact_sequence_sequence::editor::sequence::SequenceCommand;
+use semio_s_artifact_sequence_sequence::editor::sequence::retained::SequenceCommand;
 
 use semio_s_artifact_sequence_sequence::editor::sequence::commands::playback::run_command::Run;
 use semio_s_artifact_sequence_sequence::editor::sequence::commands::playback::stop_command::Stop;

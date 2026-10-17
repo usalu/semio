@@ -1,8 +1,9 @@
 //! 📄️ Sequence play app panel — the document tree: steps (with control-flow slot nesting) and edges.
 
 use crate::editor::sequence::terminology::SequenceLabels;
-use crate::editor::sequence::{control_slots, is_control_kind, SEQUENCE_INTERACTION_STEPS};
-use crate::editor::sequence::{sequence_action, ui_label, ui_value_map, ui_value_text, SEQUENCE_INTERACTION_GRANULARITY, SEQUENCE_PLAY_APP_ID};
+use crate::editor::sequence::host::{control_slots, is_control_kind};
+use crate::editor::sequence::base::SEQUENCE_INTERACTION_STEPS;
+use crate::editor::sequence::base::{sequence_action, ui_label, ui_value_map, ui_value_text, SEQUENCE_INTERACTION_GRANULARITY, SEQUENCE_PLAY_APP_ID};
 use crate::{SequenceHostSnapshot, SequenceStep};
 use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase, HasChildren, Trigger};
 use semio_framework_plugin::tree_item_desc;
@@ -128,7 +129,4 @@ pub fn render(host_snapshot: &SequenceHostSnapshot, labels: &SequenceLabels, win
 //#endregion 🔖️Render
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

@@ -33,6 +33,7 @@ R_CRATE = re.compile(r"(?<![A-Za-z0-9_$])(?<!::)crate::")
 R_PUBCRATE = re.compile(r"\bpub\(crate\)")
 R_EXT = re.compile(r"(?<![A-Za-z0-9_])(?<!::)" + PREFIX + r"([A-Za-z0-9_]+)(?=::)")
 R_EXTERN = re.compile(r"(pub\s+)?extern\s+crate\s+(" + PREFIX + r"[A-Za-z0-9_]+)\s+as\s+([A-Za-z0-9_]+)\s*;")
+R_USE_AS = re.compile(r"(?<![A-Za-z0-9_])use\s+(" + PREFIX + r"[A-Za-z0-9_]+)\s+as\s+([A-Za-z0-9_]+)\s*;")
 R_EXTERN_BARE = re.compile(r"(pub\s+)?extern\s+crate\s+(" + PREFIX + r"[A-Za-z0-9_]+)\s*;")
 
 
@@ -44,6 +45,7 @@ def rewrite_owned(path, libname, names):
     new = sub_outside_strings(new, R_EXT, lambda m: "crate::" + PREFIX + m.group(1) if PREFIX + m.group(1) in names else m.group(0))
     new = sub_outside_strings(new, R_EXTERN, lambda m: f"{m.group(1) or ''}use crate::{m.group(2)} as {m.group(3)};" if m.group(2) in names else m.group(0))
     new = sub_outside_strings(new, R_EXTERN_BARE, lambda m: f"{m.group(1) or ''}use crate::{m.group(2)};" if m.group(2) in names else m.group(0))
+    new = sub_outside_strings(new, R_USE_AS, lambda m: f"use crate::{m.group(1)} as {m.group(2)};" if m.group(1) in names else m.group(0))
     if new != text:
         open(path, "w", encoding="utf8").write(new)
 
@@ -151,6 +153,8 @@ def noise(key):
     code, msg, text, label, file = key
     if "--all" not in sys.argv and code not in RES and not msg.startswith(("couldn't read", "couldn't find file")):
         return True
+    if PREFIX in msg and code in RES:
+        return False
     if code == "E0432" and "crate::" + PREFIX in msg:
         return False
     return bool(EXT_NOISE.search(label)) or bool(EXT_NOISE.search(msg))

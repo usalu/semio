@@ -9,6 +9,7 @@ use crate::schema::diff::{LasPointsDiff, LasVlrsDiff};
 use protocol::command::DiffAlgebra;
 use protocol::MutationDiff;
 use protocol::{OpBinary, OpText};
+use semio_framework_test_fixtures::fixture_path;
 
 //#region 🔖️mutation_diff_law
 fn assert_mutation_diff_law(base: &LasSnapshot, mutation: LasMutation) {
@@ -151,7 +152,7 @@ fn absorb_law_associativity() {
 //#region 🔖️codec_retention_law
 #[test]
 fn codec_retention_law() {
-    let bytes = std::fs::read(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../📚️examples/🎬️demo/🖼️assets/🧊️.las")).expect("read committed LAS fixture");
+    let bytes = std::fs::read(fixture_path!("../../../../../../📚️examples/🎬️demo/🖼️assets/🧊️.las")).expect("read committed LAS fixture");
     let snap = crate::engine::decode_las(&bytes).expect("decode fixture");
     let reencoded = crate::engine::encode_las(&snap).expect("re-encode fixture");
     let redecoded = crate::engine::decode_las(&reencoded).expect("re-decode fixture");

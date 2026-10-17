@@ -4,7 +4,8 @@
 //! poses of a part never drift apart.
 use crate::standards::v1::subsets::any::schema::diff::{Puzzle5dDiff, Puzzle5dPart2dPatch, Puzzle5dPart3dPatch, Puzzle5dPartPatch, Puzzle5dPartModification, Puzzle5dTargetVolumePatch, Puzzle5dTargetVolumeModification};
 use protocol::list_delta::RowPatch;
-use crate::standards::v1::subsets::any::schema::mutations::{puzzle5d_selection, puzzle5d_selection_outcome, PUZZLE5D_FLAT_TO_WORLD};
+use crate::standards::v1::subsets::any::schema::mutations::{PUZZLE5D_FLAT_TO_WORLD};
+use crate::standards::v1::subsets::any::schema::diff::{puzzle5d_selection, puzzle5d_selection_outcome};
 use crate::Puzzle5dSnapshot;
 
 //#region 🔖️Diff

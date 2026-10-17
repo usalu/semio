@@ -342,6 +342,12 @@ pub struct CanonicalDirectoryEventPageV1 {
 }
 
 impl CanonicalDirectoryEventPageV1 {
+    /// 🧪️ Builds a page from explicit header values so ordering laws can present pages the authenticated decoder never produced.
+    #[cfg(any(test, feature = "testkit"))]
+    pub fn from_header_parts(canonical_json: String, session_binding_sha256: String, authorization_generation: u64, after_seq_exclusive: u64, through_seq_inclusive: u64, has_more: bool, receipt_sha256: String) -> Self {
+        Self { canonical_json, session_binding_sha256, authorization_generation, after_seq_exclusive, through_seq_inclusive, has_more, receipt_sha256 }
+    }
+
     pub fn canonical_json(&self) -> &str {
         &self.canonical_json
     }
@@ -1769,6 +1775,13 @@ pub mod native {
         ctx: OperationContext,
     }
 
+    impl UreqStreamingHttpBody {
+        /// 🌊️ Wraps one owned response reader with the cancellation, compute lane and operation context of its stream.
+        #[doc(hidden)] pub fn new(reader: Arc<Mutex<Option<UreqBodyReader>>>, cancellation: HttpBodyCancellationHandle, compute: Arc<ComputePool>, runtime: Arc<TokioHostRuntime>, scope: ScopeHandle, ctx: OperationContext) -> Self {
+            Self { reader, cancellation, compute, runtime, scope, ctx }
+        }
+    }
+
     impl HttpBody for UreqStreamingHttpBody {
         fn cancellation_handle(&self) -> HttpBodyCancellationHandle {
             self.cancellation.clone()
@@ -1826,7 +1839,7 @@ pub mod native {
                     })
                     .await
                     .map_err(HttpPoolError::Compute)??;
-                let body: Box<dyn HttpBody> = Box::new(UreqStreamingHttpBody { reader: Arc::new(Mutex::new(Some(reader))), cancellation, compute, runtime, scope, ctx: body_ctx });
+                let body: Box<dyn HttpBody> = Box::new(UreqStreamingHttpBody::new(Arc::new(Mutex::new(Some(reader))), cancellation, compute, runtime, scope, body_ctx));
                 Ok((head, body))
             });
             HttpTransportStart::new(body_cancellation, terminal, response)

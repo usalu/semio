@@ -1,10 +1,11 @@
+use store::{sqlite_snapshot::SnapshotEncoding, sqlite_snapshot::SqliteDatabaseLimits, sqlite_snapshot::SqliteSnapshotControl, sqlite_snapshot::SqliteSnapshotPhase, os_store::serialization::ArtifactSqliteSnapshotHost};
 use semio_framework_test_original_snapshot_owners as original_owners;
 use ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot as _;
 use pack::snapshot::ArtifactSqliteSnapshot as _;
-use crate::standards::v1::subsets::any::io::sqlite::snapshot::PlaygroundSnapshot;
+use crate::standards::v1::subsets::any::schema::snapshot::PlaygroundSnapshot;
 use store::{pack::snapshot::ArtifactDsl, pack::snapshot::ArtifactPack};
 fn fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap()
+    serde_json::from_str(runtime_fixture_text("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json")).unwrap()
 }
 #[test]
 fn sqlite_snapshot_playground_actual_bare_owner_has_capability() {
@@ -47,7 +48,7 @@ fn sqlite_snapshot_playground_ordinary_native_formats_keep_every_literal_field()
 #[test]
 fn sqlite_snapshot_playground_authored_single_table_is_independently_queryable() {
     use std::process::Command;
-    let sql = include_str!("../🗄️.sql");
+    let sql = runtime_fixture_text("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql");
     let script="import{Database}from'bun:sqlite';const db=new Database(':memory:');try{db.exec(process.env.SEMIO_PLAYGROUND_SQL);if(db.query(\"SELECT name FROM sqlite_schema WHERE type='table'\").all().length!==1||db.query('PRAGMA table_info(playground_document)').all().length!==2)throw Error('hand schema');db.query('INSERT INTO playground_document VALUES(1001,?)').run('literal 日本');if(db.query('SELECT schema FROM playground_document').get().schema!=='literal 日本')throw Error('literal schema');console.log('[DEBUG] independent Playground SQL schema and literal row confirmed');}finally{db.close()}";
     let output = Command::new("bun").args(["-e", script]).env("SEMIO_PLAYGROUND_SQL", sql).output().unwrap();
     assert!(output.status.success(), "{}", String::from_utf8_lossy(&output.stderr));
@@ -113,7 +114,6 @@ fn sqlite_snapshot_playground_owned_rows_are_literal_and_refuse_hostile_shapes()
         let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: kind.into(), standard: standard.into(), subset: subset.into() };
         assert!(source.validate_sqlite_snapshot_subset(&dialect, &database, &mut SqliteSnapshotControl::new(&mut |_| true, limits)).is_err());
     }
-    println!("[DEBUG] Playground literal identity, closed rows and exact dialect refusals confirmed");
 }
 
 #[test]
@@ -175,7 +175,6 @@ fn sqlite_snapshot_playground_controlled_copies_refuse_inside_all_four_phases() 
         , native_owner))
         .is_err());
     }
-    println!("[DEBUG] Playground all four copy phases cancel inside the literal text; exact native file ceilings confirmed");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -217,7 +216,6 @@ async fn sqlite_snapshot_playground_typed_io_and_independent_edit_use_final_meta
         assert!(edited.status.success(), "{}", String::from_utf8_lossy(&edited.stderr));
         assert_eq!(async{let original_file_dialect=&dialect;let original_file_input=&edited.stdout;let original_file_limits=limits;let original_file_progress:&mut dyn FnMut(store::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |_| true;store::io::testing::with_snapshot_file_encoding(store::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|io_import_sqlite_snapshot::<PlaygroundSnapshot>(original_file_dialect,original_file_input,sqlite_control,native_owner).await).await}.await.unwrap().value.schema, "independent 日本\0");
     }
-    println!("[DEBUG] Playground typed I/O and independent Bun mutation preserve literal schema at identity1001");
 }
 
 /// 📏️ Uses SQLite's actual UTF8 storage to demand every field at its exact native semantic ceiling.
@@ -225,7 +223,7 @@ async fn sqlite_snapshot_playground_typed_io_and_independent_edit_use_final_meta
 fn sqlite_snapshot_playground_independent_exact_semantic_native_limits(){
  use store::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{SqliteSnapshotControl,SqliteDatabaseLimits,SnapshotEncoding,export_sqlite_database}};
  use std::{io::Write,process::{Command,Stdio}};
- let corpus:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();let sources=corpus["nativeCases"].as_array().unwrap().iter().map(|case|PlaygroundSnapshot{schema:case["schema"].as_str().unwrap().into()}).chain(std::iter::once(PlaygroundSnapshot{schema:corpus["largeTextUnit"].as_str().unwrap().repeat(corpus["largeTextRepeats"].as_u64().unwrap()as usize)}));
+ let corpus:serde_json::Value=serde_json::from_str(runtime_fixture_text("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let sources=corpus["nativeCases"].as_array().unwrap().iter().map(|case|PlaygroundSnapshot{schema:case["schema"].as_str().unwrap().into()}).chain(std::iter::once(PlaygroundSnapshot{schema:corpus["largeTextUnit"].as_str().unwrap().repeat(corpus["largeTextRepeats"].as_u64().unwrap()as usize)}));
  for source in sources{
   let database=original_owners::with_sqlite_recipient(SqliteDatabaseLimits::default(),&mut |_|true,|sqlite_control|source.to_sqlite_database(sqlite_control)).unwrap();
   let bytes=export_sqlite_database(&database,SqliteDatabaseLimits::default(),&mut |_|true).unwrap();
@@ -241,4 +239,9 @@ fn sqlite_snapshot_playground_independent_exact_semantic_native_limits(){
    assert!(original_owners::with_decoding(|native_owner|PlaygroundSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,refused), native_owner)).is_err());
   }
  }
+}
+
+fn runtime_fixture_text(relative: &str) -> &'static str {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative);
+    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display())).into_boxed_str())
 }

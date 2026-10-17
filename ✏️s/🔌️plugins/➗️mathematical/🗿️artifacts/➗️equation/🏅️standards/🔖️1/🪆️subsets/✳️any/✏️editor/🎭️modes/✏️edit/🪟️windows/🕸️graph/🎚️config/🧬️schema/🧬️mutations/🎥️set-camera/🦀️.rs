@@ -1,6 +1,6 @@
 //! 🎥️ SetCamera changes only the addressed configuration field.
 
-use super::{EquationCamera, EquationGraphWindowConfig, EquationGraphWindowConfigDiff, EquationGraphWindowConfigMutation};
+use crate::editor::equation::modes::edit::windows::graph::config::mutations::{EquationCamera, EquationGraphWindowConfig, EquationGraphWindowConfigDiff};
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
@@ -12,7 +12,10 @@ pub struct SetCamera {
     pub camera: EquationCamera,
 }
 
-impl protocol::MutationKind<EquationGraphWindowConfig, EquationGraphWindowConfigMutation> for SetCamera {
+impl<Op> protocol::MutationKind<EquationGraphWindowConfig, Op> for SetCamera
+where
+    Op: protocol::Mutation<EquationGraphWindowConfig, Diff = EquationGraphWindowConfigDiff> + From<SetCamera>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "camera", kind: "set-camera", record: "SetCamera" };
     fn diff(&self, base: &EquationGraphWindowConfig) -> protocol::MutationOutcome<EquationGraphWindowConfigDiff> {
         if base.camera == self.camera {
@@ -20,12 +23,12 @@ impl protocol::MutationKind<EquationGraphWindowConfig, EquationGraphWindowConfig
         }
         protocol::MutationOutcome::new(EquationGraphWindowConfigDiff { camera: Some(self.camera.clone()) })
     }
-    fn inverse(&self, base: &EquationGraphWindowConfig) -> Result<Vec<EquationGraphWindowConfigMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EquationGraphWindowConfig) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
         if base.camera == self.camera {
             Vec::new()
         } else {
-            vec![EquationGraphWindowConfigMutation::SetCamera(SetCamera { camera: base.camera.clone() })]
+            vec![Op::from(SetCamera { camera: base.camera.clone() })]
         }
     
     })())

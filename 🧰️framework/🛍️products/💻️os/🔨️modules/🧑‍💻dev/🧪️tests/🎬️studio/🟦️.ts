@@ -6,8 +6,9 @@ import type { Page } from "playwright";
 import { PLAYWRIGHT_MODULE_SPECIFIER } from "../../../🔌️plugin/🏗️build/📋️plan/🟦️.ts";
 import { ensureParityPlaywrightBrowsersPath } from "../../⚖️parity/🏃️execution/🟦️.ts";
 import { withDevServe } from "../🧮️program-matrix/🟦️.ts";
-import { activate, boot, clickRowAction, dialog, faultsSince, openSessions, pageWindowedTables, settleHome, signIn, submitDialog, waitNamedRow, type Human, type Session } from "../👥️two-human/🟦️.ts";
-import { acceptanceCheckResult, publishAcceptanceCheckResult, withAcceptanceRecord } from "../../../../../🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/🟦️.ts";
+import { activate, boot, clickRowAction, dialog, faultsSince, openSessions, pageWindowedTables, signIn, submitDialog, waitNamedRow, type Human, type Session } from "../👥️two-human/🔑️sessions/🟦️.ts";
+import { settleHome } from "../👥️two-human/🏠️space-creation-and-edits/🟦️.ts";
+import { acceptanceCheckResult, publishAcceptanceCheckResult, withAcceptanceRecord } from "@semio-tech/repo-test/acceptance/orchestration";
 
 
 

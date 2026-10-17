@@ -4,7 +4,7 @@
  */
 
 import { parseSurfaceAppId } from "@semio-tech/framework/manifest/schema";
-import { type ShardEventEnvelope } from "../../🎭️actor/📮️shard-client/🟦️.ts";
+import { type ShardEventEnvelope } from "@semio-tech/framework-actor/shard-client";
 import { ON_ARTIFACT_KIND_ACTIVATION_PREFIX } from "../📚️plugin-catalog/🟦️.ts";
 
 // #region 🎠️Kernel

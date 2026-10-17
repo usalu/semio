@@ -23,3 +23,6 @@ path = "../../🦀️.rs"
 [dependencies]
 "image" = { version = "0.25", default-features = false, features = ["bmp", "tiff", "jpeg"] }
 "semio-repo-test-host" = { path = "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🦀️rust", default-features = false }
+
+[dev-dependencies]
+semio-framework-test-fixtures = { path = "../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }

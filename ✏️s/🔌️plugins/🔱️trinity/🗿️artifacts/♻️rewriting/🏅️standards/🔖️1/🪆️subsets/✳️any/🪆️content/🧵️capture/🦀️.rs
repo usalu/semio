@@ -1,18 +1,18 @@
 //! 🧵️ Unmounted paid parent factory binds the exact host child read after complete field construction.
-use crate::RewritingSnapshot;
+use crate::standards::v1::subsets::any::schema::snapshot::RewritingSnapshot;
 use store::ArtifactChildRead;
 use semio_framework_plugin::ChildContentView;
 use semio_framework_os_kernel::sqlite_snapshot::{SqliteSnapshotControl,SqliteSnapshotPhase};
 use semio_framework_value::{DecodedValue,NativeDecodeControl,NativeEncodeControl,ValueError,ValueRefusalKind};
 use semio_s_artifact_stdio_semio_graph::schema::snapshot::{SemioGraphSnapshot, STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA};
 
-pub(crate) const WORKING_CHILD_SLOT:&str="workingGraph";
+pub const WORKING_CHILD_SLOT:&str="workingGraph";
 
 fn retire_parent(value:RewritingSnapshot){
  <RewritingSnapshot as semio_framework_dsl_record::DslField>::retire_decoded(value);
 }
 
-pub(crate) fn capture(parent:&RewritingSnapshot,children:&ChildContentView)->Result<ArtifactChildRead<SemioGraphSnapshot>,ValueError>{
+pub fn capture(parent:&RewritingSnapshot,children:&ChildContentView)->Result<ArtifactChildRead<SemioGraphSnapshot>,ValueError>{
  let handle=&parent.working_graph.content;
  let read=children.capture_read::<SemioGraphSnapshot>(WORKING_CHILD_SLOT,&handle.target.artifact_id,&handle.target.dialect)?;
  read.check_identity(WORKING_CHILD_SLOT,&handle.target)?;
@@ -20,7 +20,7 @@ pub(crate) fn capture(parent:&RewritingSnapshot,children:&ChildContentView)->Res
  Ok(read)
 }
 
-pub(crate) fn owned_parent(parent:&RewritingSnapshot,read:ArtifactChildRead<SemioGraphSnapshot>,control:&mut SqliteSnapshotControl<'_>)->Result<RewritingSnapshot,ValueError>{
+pub fn owned_parent(parent:&RewritingSnapshot,read:ArtifactChildRead<SemioGraphSnapshot>,control:&mut SqliteSnapshotControl<'_>)->Result<RewritingSnapshot,ValueError>{
  read.check_identity(WORKING_CHILD_SLOT,&parent.working_graph.content.target)?;
  let record=control.allocation_stage(SqliteSnapshotPhase::ReconstructSnapshot,|remaining,checkpoint,allocation|{
   let mut callback=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|checkpoint(progress.completed,progress.total);

@@ -1,4 +1,22 @@
-use super::*;
+use crate::schema::snapshot::SemioDrawingSnapshot;
+use crate::schema::mutations::change_stroke_color;
+use crate::schema::mutations::change_stroke_width;
+use crate::schema::mutations::create_layer;
+use crate::schema::mutations::create_node;
+use crate::schema::mutations::delete_layer;
+use crate::schema::mutations::delete_node;
+use crate::schema::mutations::drag_nodes;
+use crate::schema::mutations::flatten_node;
+use crate::schema::mutations::group_nodes;
+use crate::schema::mutations::move_node;
+use crate::schema::mutations::reorder_nodes;
+use crate::schema::mutations::replace_fill;
+use crate::schema::mutations::replace_path;
+use crate::schema::mutations::rotate_node;
+use crate::schema::mutations::scale_node;
+use crate::schema::mutations::ungroup_node;
+use crate::schema::mutations::*;
+use semio_framework_test_fixtures::fixture_text;
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
 use crate::schema::diff::NodePath;
@@ -233,7 +251,7 @@ fn kinds_match_the_enum_and_the_catalog() {
 #[test]
 fn drawing_geometry_is_owned_by_schema_and_matches_tiny_skia() {
     use crate::schema::geometry::{compose_affine, transform_point};
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/📐️intrinsic-geometry/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../🧪️tests/🧫️fixtures/📐️intrinsic-geometry/🔣️.json")).unwrap();
     let matrix=|key:&str|-> [f64;6]{std::array::from_fn(|at|fixture[key][at].as_f64().unwrap())};
     let (outer,inner)=(matrix("outer"),matrix("inner"));
     let actual=compose_affine(&outer,&inner);
@@ -246,5 +264,4 @@ fn drawing_geometry_is_owned_by_schema_and_matches_tiny_skia() {
     assert_eq!(actual,[oracle.sx as f64,oracle.ky as f64,oracle.kx as f64,oracle.sy as f64,oracle.tx as f64,oracle.ty as f64]);
     let mut point=resvg::tiny_skia::Point::from_xy(point[0] as f32,point[1] as f32);oracle.map_point(&mut point);
     assert_eq!(expected,[point.x as f64,point.y as f64]);
-    eprintln!("[DEBUG] Drawing owned geometry composition and vertices oracle=tiny-skia");
 }

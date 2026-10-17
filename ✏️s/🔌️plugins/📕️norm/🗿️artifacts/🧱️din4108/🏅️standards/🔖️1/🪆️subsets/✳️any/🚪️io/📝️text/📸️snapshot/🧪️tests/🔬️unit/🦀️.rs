@@ -1,4 +1,5 @@
 use crate::text::snapshot::*;
+use semio_framework_test_fixtures::fixture_path;
 
 #[semio_framework_async_macros::async_test]
 async fn document_dsl_round_trips() {
@@ -11,7 +12,7 @@ async fn bundled_example_fixture_parses_and_round_trips() {
     let document = parse_dsl(&text).expect("parse encoded default");
     store::os_store::test_support::assert_dsl_round_trip(&document);
     // Persist for assets / include_str consumers.
-    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🖼️assets");
+    let root = fixture_path!("../../../🖼️assets");
     let _ = std::fs::create_dir_all(root.join("🎬️demo"));
     let _ = std::fs::create_dir_all(root.join("🎬️failing-thin-insulation"));
     let _ = std::fs::write(root.join("🎬️demo/🗣️.dsl.semio"), &text);

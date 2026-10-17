@@ -1,8 +1,8 @@
 /** ✅️ Chart validity is inferred with the framework's owned schema validator. */
 import resultDocument from "../🔣️.json";
-import document from "../../🔣️.json";
-import type { VizAuthoredChartSpecification } from "../../📸️snapshot/🟦️.ts";
-import type { VizChartSpecification } from "../../📸️snapshot/📊️chart/🟦️.ts";
+import { printSchema as document } from "@semio-tech/print/schema";
+import type { VizAuthoredChartSpecification } from "@semio-tech/print/schema/snapshot";
+import type { VizChartSpecification } from "@semio-tech/print/schema/snapshot/chart";
 import { validateJsonSchemaSubset } from "@semio-tech/schema-validator-ts";
 export type VizChartDiagnostic = { readonly code: string; readonly path: string; readonly message: string };
 export function validateVizChartSpecification(chart: unknown): readonly VizChartDiagnostic[] {

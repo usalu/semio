@@ -17,7 +17,6 @@ test("native test profiles belong to their selected workspace or repository conf
  }
  const root=mkdtempSync(join(output,"nextest-profile-escaped-"));expect(()=>cargoNextestConfiguration(root,"../outside")).toThrow("escapes repository");
  for(const row of fixture.nativePackages){const repository=process.cwd(),policy=repositoryCargoTestPolicyV1(join(repository,row.manifest),repository,{...process.env,SEMIO_TEST_LEVEL:"quick"});expect(policy.configPath).toBe(join(repository,row.configuration));const independent=TOML.parse(readFileSync(policy.configPath,"utf8")) as any;expect(independent.profile.quick["slow-timeout"].period).toBe(fixture.periods.quick);}
- console.log("[DEBUG] Native Nextest selection agrees with independent TOML for selected workspace and repository scope");
 });
 
 test("isolated artifact Nextest executes a real law without unrelated product filters",()=>{
@@ -26,5 +25,5 @@ test("isolated artifact Nextest executes a real law without unrelated product fi
  for(const configured of [".","product"]){mkdirSync(join(root,configured,".config"),{recursive:true});writeFileSync(join(root,configured,".config/nextest.toml"),readFileSync(join(repository,configured==="."?".config/nextest.toml":"✏️s/.config/nextest.toml"),"utf8"));}
  mkdirSync(native,{recursive:true});writeFileSync(manifest,'[package]\nname="owned-profile-witness"\nversion="0.1.0"\nedition="2021"\n[lib]\npath="🦀️.rs"\n[workspace]\nmembers=["."]\n');writeFileSync(join(native,"🦀️.rs"),'#[test]\nfn native_profile_witness(){println!("[DEBUG] Isolated native profile law executed");assert_eq!(2+2,4);}\n');
  const selected=cargoNextestConfiguration(root,directory),result=Bun.spawnSync(["cargo","nextest","run","--offline","--manifest-path",manifest,"--config-file",selected,"--profile","quick","--no-tests","fail","--success-output","immediate","--target-dir",join(root,"target")],{cwd:native,stdout:"pipe",stderr:"pipe",env:{...process.env,CARGO_TARGET_DIR:join(root,"target"),CARGO_BUILD_BUILD_DIR:join(root,"target"),NEXTEST_PROFILE:"quick"}});
-  const transcript=(result.stdout.toString()+result.stderr.toString()).replace(/\u001b\[[0-9;]*m/g,"");if(result.exitCode!==0)throw Error(transcript);expect(transcript).toContain("[DEBUG] Isolated native profile law executed");expect(transcript).toContain("1 test run");console.log("[DEBUG] Actual Nextest compiled and executed the isolated native profile law");
+  const transcript=(result.stdout.toString()+result.stderr.toString()).replace(/\u001b\[[0-9;]*m/g,"");if(result.exitCode!==0)throw Error(transcript);expect(transcript).toContain("[DEBUG] Isolated native profile law executed");expect(transcript).toContain("1 test run");
 },120000);

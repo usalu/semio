@@ -2,7 +2,6 @@
 //! restriction the solver reads, never an assignment the solver writes.
 
 use crate::diff::Wfc3dDiff;
-use crate::mutations::Wfc3dMutation;
 use crate::schema::snapshot::Wfc3dSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -17,17 +16,23 @@ pub struct PinSlot {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn pin_slot(id: String, tile_id: String) -> Wfc3dMutation {
-    Wfc3dMutation::PinSlot(PinSlot { id, tile_id })
+pub fn pin_slot<Op>(id: String, tile_id: String) -> Op
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::pin_slot::PinSlot>,
+{
+    Op::from(PinSlot { id, tile_id })
 }
 
-impl MutationKind<Wfc3dSnapshot, Wfc3dMutation> for PinSlot {
+impl<Op> MutationKind<Wfc3dSnapshot, Op> for PinSlot
+where
+    Op: protocol::Mutation<Wfc3dSnapshot, Diff = Wfc3dDiff> + From<PinSlot> + From<crate::standards::v1::subsets::any::schema::mutations::unpin_slot::UnpinSlot>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "fix", entity: "slot", kind: "pin-slot", record: "Fixed" };
 
     fn diff(&self, base: &Wfc3dSnapshot) -> protocol::MutationOutcome<Wfc3dDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Wfc3dSnapshot) -> Result<Vec<Wfc3dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Wfc3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

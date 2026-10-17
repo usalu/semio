@@ -13,5 +13,5 @@ test("native ValueError retirement preserves original prose backing and separate
   const grant={items:1,copy,capacity:0,release:row.capacity,depth:1};for(const release of [0,Math.max(0,row.capacity-1),row.capacity]){const accepted=grant.items>0&&release>=row.capacity;expect((db.query("SELECT CASE WHEN ? THEN capacity ELSE 0 END AS released FROM owners").get(accepted) as {released:number}).released).toBe(accepted?row.capacity:0);}
   db.query("UPDATE owners SET live=0 WHERE id=?").run(row.id);expect((db.query("SELECT COALESCE(SUM(capacity),0) AS bytes FROM owners WHERE live=1").get() as {bytes:number}).bytes).toBe(0);
  }} }finally{db.close();}
- const source=readFileSync(new URL("../🦀️.rs",import.meta.url),"utf8");expect(source).toContain("impl RetireOwned for ValueError");expect(source).toContain("Cow::Borrowed");expect(source).toContain("Cow::Owned");expect(source).not.toContain("artifact_retire_leaf!");console.log("[DEBUG] ValueError SQLite original Cow backing conservation and independent Ajv semantic refusal output agree");
+ const source=readFileSync(new URL("../🦀️.rs",import.meta.url),"utf8");expect(source).toContain("impl RetireOwned for ValueError");expect(source).toContain("Cow::Borrowed");expect(source).toContain("Cow::Owned");expect(source).not.toContain("artifact_retire_leaf!");
 });

@@ -1,0 +1,82 @@
+[
+  {
+    "name": "triangle",
+    "positions": [
+      [
+        0,
+        0,
+        0
+      ],
+      [
+        1,
+        0,
+        0
+      ],
+      [
+        0,
+        1,
+        0
+      ]
+    ],
+    "indices": [
+      0,
+      1,
+      2
+    ],
+    "expected": {
+      "vertices": 3,
+      "faces": 1,
+      "halfedges": 3,
+      "edges": 3,
+      "normal": [
+        0,
+        0,
+        1
+      ]
+    }
+  },
+  {
+    "name": "shared-diagonal",
+    "positions": [
+      [
+        0,
+        0,
+        0
+      ],
+      [
+        1,
+        0,
+        0
+      ],
+      [
+        1,
+        1,
+        0
+      ],
+      [
+        0,
+        1,
+        0
+      ]
+    ],
+    "indices": [
+      0,
+      1,
+      2,
+      0,
+      2,
+      3
+    ],
+    "expected": {
+      "vertices": 4,
+      "faces": 2,
+      "halfedges": 6,
+      "edges": 5,
+      "normal": [
+        0,
+        0,
+        1
+      ]
+    }
+  }
+]

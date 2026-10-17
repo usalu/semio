@@ -1,7 +1,6 @@
 //! 🆕️ `add-design` — appends a new, empty DESIGN (no pieces/connections yet — populate via
 //! `edit-design`) to the kit's catalog.
 
-use crate::schema::mutations::SemioKitMutation;
 use crate::schema::snapshot::SemioKitSnapshot;
 
 //#region 🔖️Payload
@@ -15,13 +14,16 @@ pub struct AddDesign {
     pub at: Option<usize>,
 }
 
-impl protocol::MutationKind<SemioKitSnapshot, SemioKitMutation> for AddDesign {
+impl<Op> protocol::MutationKind<SemioKitSnapshot, Op> for AddDesign
+where
+    Op: protocol::Mutation<SemioKitSnapshot, Diff = crate::schema::diff::SemioKitDiff> + From<AddDesign> + From<crate::schema::mutations::remove_design::RemoveDesign>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "design", kind: "add-design", record: "AddedDesign" };
 
-    fn diff(&self, base: &SemioKitSnapshot) -> protocol::MutationOutcome<<SemioKitMutation as protocol::Mutation<SemioKitSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioKitSnapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<SemioKitSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &SemioKitSnapshot) -> Result<Vec<SemioKitMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &SemioKitSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

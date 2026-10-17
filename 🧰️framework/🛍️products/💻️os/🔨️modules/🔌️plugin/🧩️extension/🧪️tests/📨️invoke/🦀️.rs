@@ -1,8 +1,13 @@
 //! 🧪️ The real registered invocation lends the original context and keeps pending caller bytes intact.
-use super::*;
-use std::sync::atomic::{AtomicUsize,Ordering};
+use semio_framework_plugin_extension::extension_runtime_lift::ExtensionBundle;
+use semio_framework_plugin_extension::extension_runtime_lift::extension_retirement::{ExtensionResourceOwner, MetadataOwner};
+use semio_framework::Fault;
+use semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep;
+use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
+use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind};
+use std::sync::atomic::{AtomicUsize, Ordering};
 
-struct OriginalResourceCloseProbe{failure:Option<semio_framework_job::OriginalTurnFailure>,closed:bool}
+struct OriginalResourceCloseProbe{pub failure:Option<semio_framework_job::OriginalTurnFailure>,pub closed:bool}
 impl ExtensionResourceOwner for OriginalResourceCloseProbe{
  fn invoke(&mut self,_:&str,_:&[u8],_:&mut semio_framework_job::StepContext<'_>)->Result<ExtensionInvokeStep,Fault>{unreachable!("resource close probe has no invocation")}
  fn begin_close(&mut self){}
@@ -39,10 +44,9 @@ fn original_extension_resource_close_preserves_three_causes_same_caller_and_sing
    assert!(bundle.terminal_is_empty());assert_eq!(born,freed);assert_eq!((cx.operation(),cx.generation(),cx.original_recipient_identity(),cx.clock_source()as usize,cx.deadline_us()),identity);Ok(())
   }).unwrap();let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(bundle));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));let(_,close)=semio_framework_trace::observe_heap_allocations_on_this_thread(||caller.retire(stock));assert_eq!(caller_birth.requested_bytes+close.requested_bytes,caller_birth.released_bytes+close.released_bytes);
  }
- println!("[DEBUG] Actual original resource three cause pointers, same immutable caller/clock/recipient, denied System0, source one-debit, complete copies1/3/64 failure close, bundle/root conservation and Drop0; native law requires replay");
 }
 
-struct OriginalInvocationProbe{pointer:usize,operation:u64,generation:u64,calls:AtomicUsize}
+struct OriginalInvocationProbe{pub pointer:usize,pub operation:u64,pub generation:u64,pub calls:AtomicUsize}
 impl ExtensionResourceOwner for OriginalInvocationProbe{
  fn invoke(&mut self,_:&str,request:&[u8],cx:&mut semio_framework_job::StepContext<'_>)->Result<ExtensionInvokeStep,Fault>{
   assert_eq!(request.as_ptr()as usize,self.pointer);assert_eq!(cx.operation().0,self.operation);assert_eq!(cx.generation().0,self.generation);
@@ -59,7 +63,7 @@ impl ExtensionResourceOwner for OriginalInvocationProbe{
 /// 🤝️ Normal registered handlers receive the same caller identity, source and independently debited receipt.
 #[test]
 fn original_extension_invoke_lends_caller_context_and_retains_pending_source(){
- let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().unwrap();let mut cx=original_caller.context();
+ let mut original_caller=semio_framework_plugin_testing_laws::OriginalFixtureCaller::admit().unwrap();let mut cx=original_caller.context();
  let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/📨️invoke/🔣️.json")).unwrap();
  let request=fixture["text"].as_str().unwrap().repeat(fixture["repeat"].as_u64().unwrap()as usize).into_bytes();let pointer=request.as_ptr();assert_eq!(request.len(),fixture["utf8Bytes"].as_u64().unwrap()as usize);
  let operation=cx.operation().0;let generation=cx.generation().0;
@@ -68,7 +72,6 @@ fn original_extension_invoke_lends_caller_context_and_retains_pending_source(){
  for denied in [RetainedCloneGrant{maximum_items:0,..grant},RetainedCloneGrant{maximum_depth:0,..grant}]{let before=cx.retained_progress();let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cx.with_retained_loan(denied,|same|{let reply=bundle.invoke("probe",&request,same)?;assert!(reply.payload.is_none());assert_eq!(reply.retained_progress,Default::default());Ok(())}));result.unwrap();assert_eq!(cx.retained_progress(),before);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(request.as_ptr(),pointer);}
  for complete in [false,true]{let before=cx.retained_progress();let fuel=cx.fuel_remaining();let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cx.with_retained_loan(grant,|same|{let reply=bundle.invoke("probe",&request,same)?;assert_eq!(reply.payload.is_some(),complete);assert_eq!(reply.retained_progress,RetainedCloneProgress{copied_items:1,..Default::default()});Ok(())}));result.unwrap();assert_eq!(cx.retained_progress(),before.checked_add(RetainedCloneProgress{copied_items:1,..Default::default()}).unwrap());assert_eq!(fuel-cx.fuel_remaining(),1);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(request.as_ptr(),pointer);}
  bundle.dispose_cold(&mut cx).unwrap();let fuel=cx.fuel_remaining();drop(cx);original_caller.retire(fuel).unwrap();
- eprintln!("[DEBUG] original registered invocation sameFiniteCaller=true sameRequest=true pendingNone=true receiptOnce=true actualSystem0 paidBundleAndParentClose=true");
 }
 
 /// 🛡️ Admission preserves the exact refused payload and typed cause without spending another wallet.
@@ -78,7 +81,6 @@ fn original_extension_invoke_refusal_preserves_owned_payload_and_actual_receipt(
  let answer=ExtensionInvokeStep{payload:Some(payload),retained_progress:RetainedCloneProgress{copied_items:1,..Default::default()},refusal:None};
  let(answer,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||answer.admit(RetainedCloneGrant{maximum_items:1,maximum_depth:1,..Default::default()},Default::default(),Default::default()));
  assert_eq!(answer.payload.as_ref().unwrap().as_ptr(),pointer);let cause=answer.refusal.as_ref().unwrap();assert_eq!(cause.primary_value().unwrap().kind,ValueRefusalKind::InvariantViolated);assert_eq!(cause.primary.retained_progress(),Default::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
- eprintln!("[DEBUG] original refused reply samePayload=true sameTypedCause=true actualSystem0; original payload cold disposal outside admission scope");
 }
 
 /// 🧳️ A second admission retains both original causes and the same output until paid full retirement.
@@ -94,5 +96,4 @@ fn original_extension_admit_keeps_whole_failure_pair_and_paid_output_close(){
   for turn in 0..100000{if close.terminal_is_empty(){break}let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:close.next_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:close.next_release_byte_demand().unwrap(),maximum_depth:close.next_depth_demand().unwrap()};let(denied,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||close.step(RetainedCloneGrant{maximum_items:0,..grant}));assert_eq!(denied.unwrap().progress(),Default::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||close.step(grant));let receipt=step.unwrap().progress();assert!(receipt.fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(receipt.retained_capacity_bytes,receipt.released_bytes));born+=heap.requested_bytes;freed+=heap.released_bytes;assert!(turn<99999,"original invocation pair closure stalled");}
   assert_eq!(born,freed);let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(close));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
  }
- println!("[DEBUG] Original Extension admit preserves exact primary/receipt/output pointers, denied System0 and paid full copies1/3/64 Drop0; current native law requires replay");
 }

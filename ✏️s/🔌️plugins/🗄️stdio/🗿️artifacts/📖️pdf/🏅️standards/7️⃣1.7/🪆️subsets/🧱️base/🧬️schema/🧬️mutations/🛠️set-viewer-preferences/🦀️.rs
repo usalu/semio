@@ -1,6 +1,5 @@
 //! 🛠️ Authoritative PDF mutation payload, diff, inverse, and tests for `set-viewer-preferences`.
 
-use super::PdfMutation;
 use crate::standards::v1_7::subsets::base::schema::diff::{self, PdfDiff};
 use crate::standards::v1_7::subsets::base::schema::snapshot::*;
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
@@ -14,7 +13,10 @@ pub struct SetViewerPreferences {
     pub preferences: Option<PdfViewerPreferences>,
 }
 
-impl MutationKind<PdfSnapshot, PdfMutation> for SetViewerPreferences {
+impl<Op> MutationKind<PdfSnapshot, Op> for SetViewerPreferences
+where
+    Op: protocol::Mutation<PdfSnapshot, Diff = PdfDiff> + From<SetViewerPreferences>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "viewer-preferences", kind: "set-viewer-preferences", record: "Set" };
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
@@ -22,10 +24,10 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetViewerPreferences {
         MutationOutcome::new(diff::diff_set_viewer_preferences(base, self.preferences.clone()))
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
         let _ = base;
-        vec![PdfMutation::SetViewerPreferences(SetViewerPreferences { preferences: base.viewer_preferences.clone() })]
+        vec![Op::from(SetViewerPreferences { preferences: base.viewer_preferences.clone() })]
     
     })())
 }
@@ -42,8 +44,6 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetViewerPreferences {
 //#endregion 🔖️Mutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
 

@@ -1,28 +1,8 @@
 //! ⚓️ The vocabulary of what an annotation is attached to: which element an anchor names, the element a tag reads, and the free points an annotation carries.
 //! Pure and base-free: whether the named elements exist is decided by the leaves and by the diagnostics, never here.
 
-use super::{AnnotationAnchor, Dimension, Leader, Point2, TextNote};
-
-impl AnnotationAnchor {
-    /// 🔗️ The id of the element the anchor follows, `None` for a free point.
-    pub fn element(&self) -> Option<&str> {
-        match self {
-            Self::Point { .. } => None,
-            Self::WallFace { wall, .. } | Self::WallAxis { wall } | Self::WallEnd { wall, .. } => Some(wall),
-            Self::OpeningCentre { opening } => Some(opening),
-            Self::Grid { grid } => Some(grid),
-            Self::ColumnCentre { column } => Some(column),
-        }
-    }
-
-    /// 📍️ The free point of the anchor, `None` when it follows an element.
-    pub fn free_point(&self) -> Option<Point2> {
-        match self {
-            Self::Point { point } => Some(*point),
-            _ => None,
-        }
-    }
-}
+use super::values::{AnnotationAnchor, Point2};
+use super::entities::{Dimension, Leader, TextNote};
 
 impl Dimension {
     /// 🔗️ The ids of the elements the anchors of the dimension follow, in anchor order.

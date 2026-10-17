@@ -30,6 +30,10 @@ type animatePresentationInferenceGuardSizeBounds = { readonly minItems?: number;
 
 export const animatePresentationInferenceGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : animatePresentationInferenceGuardReject(at, "value is not an object");
+export const animatePresentationInferenceGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) animatePresentationInferenceGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const animatePresentationInferenceGuardArray = (value: unknown, at: string, bounds: animatePresentationInferenceGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return animatePresentationInferenceGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) animatePresentationInferenceGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -60,17 +64,17 @@ export const animatePresentationInferenceGuardConstant = <T extends string | num
 //#endregion 🚪️Parsers
 
 export function parsePresentationInference(value: unknown, at = "$"): PresentationInference {
-  const row = animatePresentationInferenceGuardObject(value, at);
+  const row = animatePresentationInferenceGuardClosed(animatePresentationInferenceGuardObject(value, at), at, ["topology"]);
   return {
     topology: parsePresentationTopology(row["topology"], `${at}.topology`),
   };
 }
 
 export function parsePresentationTopology(value: unknown, at = "$"): PresentationTopology {
-  const row = animatePresentationInferenceGuardObject(value, at);
+  const row = animatePresentationInferenceGuardClosed(animatePresentationInferenceGuardObject(value, at), at, ["topoOrder", "depth", "cycleFree", "nodeCount"]);
   return {
     topoOrder: animatePresentationInferenceGuardArray(row["topoOrder"], `${at}.topoOrder`).map((item, index) => animatePresentationInferenceGuardString(item, `${at}.topoOrder[${index}]`)),
-    depth: animatePresentationInferenceGuardObject(row["depth"], `${at}.depth`),
+    depth: Object.fromEntries(Object.entries(animatePresentationInferenceGuardObject(row["depth"], `${at}.depth`)).map(([key0, value0]) => [key0, animatePresentationInferenceGuardInteger(value0, `${at}.depth.${key0}`)])),
     cycleFree: animatePresentationInferenceGuardBoolean(row["cycleFree"], `${at}.cycleFree`),
     nodeCount: animatePresentationInferenceGuardInteger(row["nodeCount"], `${at}.nodeCount`),
   };

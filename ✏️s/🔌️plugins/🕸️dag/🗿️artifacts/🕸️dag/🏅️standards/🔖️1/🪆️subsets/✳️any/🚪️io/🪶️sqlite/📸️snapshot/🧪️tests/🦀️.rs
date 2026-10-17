@@ -1,4 +1,6 @@
 //! 🕸️ Actual two-field DAG parent baselines before semantic SQLite opt-in.
+use crate::standards::v1::subsets::any::schema::snapshot::DagSnapshot;
+use store::{sqlite_snapshot::SnapshotEncoding, sqlite_snapshot::SqliteSnapshotControl, sqlite_snapshot::SqliteSnapshotPhase};
 use semio_framework_test_original_snapshot_owners as original_owners;
 use ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot as _;
 use pack::snapshot::ArtifactSqliteSnapshot as _;
@@ -7,7 +9,7 @@ use semio_framework_value::{FromValue, ToValue};
 use store::{pack::snapshot::ArtifactDsl, pack::snapshot::ArtifactPack};
 
 fn laws() -> serde_json::Value {
-    serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap()
+    serde_json::from_str(runtime_fixture_text("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json")).unwrap()
 }
 fn full(index: usize) -> DagSnapshot {
     let l = laws();
@@ -216,7 +218,7 @@ fn sqlite_snapshot_dag_independent_sqlite_edits_reconstruct_literal_parent() {
 }
 
 mod public_owned {
-    use crate::standards::v1::subsets::any::io::sqlite::snapshot::tests::*;
+    use crate::hoisted_snapshot_0::*;
     use semio_framework_plugin::__semio_dispatch_PluginApp;
     use semio_framework_plugin::plugin_app_close_prelude::*;
     semio_framework_dispatch_macros::dyn_enum_close! {
@@ -232,7 +234,7 @@ mod public_owned {
         use store::io_schema::{IoPayload,IoFidelity,SQLITE_SNAPSHOT};
         use store::sqlite_snapshot::{SqliteDatabaseLimits,SnapshotEncoding};
         use std::{io::Write,process::{Command,Stdio}};
-        let contract=serde_json::from_str::<serde_json::Value>(include_str!("🧫️fixtures/🚦️public/🔣️.json")).unwrap();
+        let contract=serde_json::from_str::<serde_json::Value>(runtime_fixture_text("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🚦️public/🔣️.json")).unwrap();
         let _plugin=semio_framework_plugin::PluginBuilder::<_, DagSqliteApps>::new("dag").label("DAG owning SQLite").version("0.1.0").package_id("semio:dag").declare_artifact(crate::artifact::<DagSqliteApps>()).try_build().unwrap();
         let dialect=ArtifactDialect{artifact_kind:"s.dag.dag".into(),standard:"1".into(),subset:"*".into()};
         let sqlite=ArtifactDialect::from(SQLITE_SNAPSHOT);
@@ -262,4 +264,9 @@ mod public_owned {
             let actual=Owned::new(match native{IoPayload::Binary(bytes)=>DagSnapshot::decode_pack(&bytes).unwrap(),IoPayload::Text(text)=>DagSnapshot::parse_dsl(&text).unwrap()});assert_full(&actual,&edited);
         }
     }
+}
+
+fn runtime_fixture_text(relative: &str) -> &'static str {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative);
+    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display())).into_boxed_str())
 }

@@ -45,5 +45,4 @@ fn canonical_native_paged_text_cursor_matches_serde_and_exact_granted_cancellati
             }
         }
     }
-    println!("[DEBUG] borrowed Pack native key/scalar text matches Serde Unicode/NUL/escaping; zero grants/admission below/exact/cancel return zero heap with original chunks retained");
 }

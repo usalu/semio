@@ -103,5 +103,4 @@ fn replication_value_refusals_keep_kind_through_owned_paths_and_terminal_message
     let mut control = semio_framework_value::NativeEncodeControl::new(0, &mut allow);
     let error = control.charge(1).unwrap_err().under("snapshot");
     assert_eq!(error.kind, ValueRefusalKind::OwnershipLimit);
-    eprintln!("[DEBUG] Independent serde refused all four malformed replication owners; typed control categories survive ownership paths");
 }

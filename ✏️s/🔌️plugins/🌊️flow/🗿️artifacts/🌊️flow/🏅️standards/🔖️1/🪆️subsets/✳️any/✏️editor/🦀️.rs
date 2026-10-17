@@ -24,6 +24,12 @@ use crate::editor::flow::modes::{edit, generate};
 use crate::editor::flow::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
 use crate::editor::flow::presence::{FlowPresence, FlowPresenceMutation};
 use crate::editor::flow::terminology::{flow_play_labels, FlowPlayLabels};
+use crate::editor::flow::base::{flow_graph_edge_target_id, flow_graph_node_target_id, flow_graph_selection_domains, FLOW_GRAPH_EDGE_TARGET_PREFIX, FLOW_GRAPH_NODE_TARGET_PREFIX, FLOW_GRAPH_OPERATION_RAW_BYTES, FLOW_INTERACTION_GRAPH, FLOW_PLAY_APP_ID, FLOW_PLAY_WINDOW_MAIN, FLOW_STORE_MAX_MUTATION_ITEMS, FLOW_STORE_MAX_SCENE_ITEMS, FLOW_STORE_MAX_TEXT_BYTES};
+#[cfg(test)]
+use crate::editor::flow::base::{FLOW_PLAY_WINDOW_GENERATIONS, FLOW_PLAY_WINDOW_GENERATE_FORM, FLOW_PLAY_WINDOW_GENERATE_PREVIEW};
+use crate::editor::flow::host::{cold_grant, flow_content_leaves_emit, flow_removal_leaves, focus_selection_camera, seed_host_catalogue, value_fault};
+#[cfg(test)]
+use crate::editor::flow::host::{host_from_snapshot, sync_host_selection_domains};
 use crate::{FlowMutation, FlowSnapshot, FlowWorkingScene, FLOW_DOCUMENT_SCHEMA};
 use flow::{flow_host_with_session, FlowEvalSession, FlowHost, FLOW_LOD_MODE_AUTOMATIC};
 use semio_framework_artifact_flow_flow::{CameraJson, Widget};
@@ -79,18 +85,15 @@ use std::sync::Arc;
 use semio_framework_2d::compute::EngineHandles;
 
 #[path = "🧵️retained/🦀️.rs"]
-mod retained;
+pub mod retained;
 
-#[cfg(test)]
-#[path = "🎮️commands/♻️retirement/🧪️tests/🦀️.rs"]
-mod original_command_retirement_tests;
+
 
 #[cfg(test)]
 #[path = "🫧️transient/🧪️tests/🫧️transient/🦀️.rs"]
 mod transient_retirement_tests;
 
 //#region 🔖️Constants
-pub const FLOW_PLAY_APP_ID: &str = "flow-play";
 pub use catalogue_panel::FLOW_PLAY_BODY_CATALOGUE;
 pub use compiled::FLOW_PLAY_BODY_COMPILED;
 pub use document_panel::FLOW_PLAY_BODY_ARTIFACT;
@@ -100,105 +103,11 @@ pub use inspection_panel::FLOW_PLAY_BODY_INSPECTOR;
 pub use main::FLOW_PLAY_BODY_MAIN;
 pub use preview::FLOW_PLAY_BODY_GENERATE_PREVIEW;
 
-/// 🎯️ An `ActionDescriptor` addressed at this app — the single factory every taxonomy node's chrome
-/// (`☑️options/*`, `📌️panels/*`) builds its `on_change`/item actions with.
-pub fn flow_action(action: &str, args: Option<semio_framework_plugin::UiValue>) -> semio_framework_plugin::UiAssemblyResult<(semio_framework_plugin::ActionId, Option<semio_framework_plugin::UiValue>)> {
-    semio_framework_plugin::ActionFactory::new(FLOW_PLAY_APP_ID).action(action, args)
-}
-
-/// 🧱️ Admits one fixed UI text action value without JSON staging.
-pub fn ui_value_text(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
-    semio_framework_plugin::UiText::try_from_str(value.as_ref()).map(semio_framework_plugin::UiValue::Text).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI text admission failed"))
-}
-
-/// 🔘️ Admits one boolean UI action value.
-pub fn ui_value_bool(value: bool) -> semio_framework_plugin::UiValue {
-    semio_framework_plugin::UiValue::Bool(value)
-}
-
-/// 🔢️ Admits one numeric UI action value.
-pub fn ui_value_number(value: impl Into<f64>) -> semio_framework_plugin::UiValue {
-    semio_framework_plugin::UiValue::Number(value.into())
-}
-
-/// 📚️ Admits one fixed UI list action value without dynamic staging.
-pub fn ui_value_list(values: impl IntoIterator<Item = semio_framework_plugin::UiValue>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
-    let mut builder = semio_framework_plugin::UiListBuilder::try_new().ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list admission failed"))?;
-    for value in values {
-        builder.push(value).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list item admission failed"))?;
-    }
-    Ok(semio_framework_plugin::UiValue::List(builder.finish()))
-}
-
-/// 🗺️ Admits one ordered fixed UI map action value without JSON staging.
-pub fn ui_value_map(values: impl IntoIterator<Item = (&'static str, semio_framework_plugin::UiValue)>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
-    let mut builder = semio_framework_plugin::UiMapBuilder::try_new().ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map admission failed"))?;
-    for (key, value) in values {
-        builder.push(key.to_owned(), value).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map entry admission failed"))?;
-    }
-    Ok(semio_framework_plugin::UiValue::Map(builder.finish()))
-}
-
-/// 🌳️ The framework's one node-list admission — the crate-local copy is gone (ticket
-/// 26/09/16/ARTIFACT-TREE-VIRTUALISED-STREAMING §8.3).
-pub use semio_framework_plugin::ui_node_list;
-
-/// 🕹️ A domain pick row: [`semio_framework_plugin::tree_item_desc`] plus the granularity that marks
-/// the row a pick target of the panel tree's `.interaction_domain(..)`, so no per-row
-/// `interactionSelect` argument map is ever built.
-pub fn pick_item<I: AsRef<str>, L: TryInto<semio_framework_ui_contract::Label>>(
-    id: I,
-    label: L,
-    description: Option<String>,
-    granularity: &str,
-) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    let mut node = semio_framework_plugin::tree_item_desc(id, label, description)?;
-    if let semio_framework_plugin::Component::TreeItem(props) = &mut node.component {
-        props.granularity = Some(semio_framework_plugin::UiText::try_from_str(granularity).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "interaction granularity admission failed"))?);
-    }
-    Ok(node)
-}
-
 /// 🙈️ An action that exists for dispatch but never appears in the command palette.
 fn flow_internal_action(id: &str, label: LocalizedLabel, kind: ActionKind) -> ActionDefinition {
     ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog(id, label, kind) }
 }
 //#endregion 🔖️Constants
-
-//#region 🔖️Interaction
-/// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the single "graph" interaction
-/// domain this app declares — node/edge/handle granularities over the node-graph canvas.
-pub const FLOW_INTERACTION_GRAPH: &str = "graph";
-
-/// 🕹️ The document panel tree's own row id prefix for "node"-granularity targets (widgets) — see
-/// `document_panel::render`'s doc comment; `interaction_topology` registers the SAME ids.
-pub const FLOW_GRAPH_NODE_TARGET_PREFIX: &str = "flow-play-document.widget.";
-/// 🕹️ Same as `FLOW_GRAPH_NODE_TARGET_PREFIX`, for "edge"-granularity targets (synapses).
-pub const FLOW_GRAPH_EDGE_TARGET_PREFIX: &str = "flow-play-document.synapse.";
-/// 🕹️ The scoped prefix for transient graph handle targets published by the canvas.
-pub const FLOW_GRAPH_HANDLE_TARGET_PREFIX: &str = "flow-play-document.handle.";
-
-/// 🕹️ The "graph" domain's row id for a widget (node granularity).
-pub fn flow_graph_node_target_id(widget_id: &str) -> String {
-    format!("{FLOW_GRAPH_NODE_TARGET_PREFIX}{widget_id}")
-}
-
-/// 🕹️ The "graph" domain's row id for a synapse (edge granularity).
-pub fn flow_graph_edge_target_id(synapse_id: &str) -> String {
-    format!("{FLOW_GRAPH_EDGE_TARGET_PREFIX}{synapse_id}")
-}
-
-/// 🕹️ Splits the "graph" domain's live `InteractionTarget` ids into (widget ids, synapse ids) — the
-/// reverse of `flow_graph_node_target_id`/`flow_graph_edge_target_id`, mirroring note's
-/// `block_id_from_tree_row_id`. "handle" targets have no persisted document data to resolve against —
-/// no live UI populates them yet (the shared `NodeGraph` canvas renderer that would is framework layer,
-/// unmigrated this wave) — so they never appear in either returned list.
-pub fn flow_graph_selection_domains(selected: &[String]) -> (Vec<String>, Vec<String>) {
-    let nodes = selected.iter().filter_map(|id| id.strip_prefix(FLOW_GRAPH_NODE_TARGET_PREFIX).map(str::to_string)).collect();
-    let edges = selected.iter().filter_map(|id| id.strip_prefix(FLOW_GRAPH_EDGE_TARGET_PREFIX).map(str::to_string)).collect();
-    (nodes, edges)
-}
-//#endregion 🔖️Interaction
 
 //#region 🔖️Commands
 semio_framework_plugin::app_commands! {
@@ -341,12 +250,6 @@ fn flow_context_menu_items(registry: &AppActionRegistry, snapshot: &FlowSnapshot
 }
 //#endregion 🔖️ContextMenu
 
-//#region 📏️StoreCapacity
-const FLOW_STORE_MAX_SCENE_ITEMS: usize = 256;
-const FLOW_STORE_MAX_TEXT_BYTES: usize = 16_384;
-pub(crate) const FLOW_STORE_MAX_MUTATION_ITEMS: usize = 256;
-//#endregion 📏️StoreCapacity
-
 /// 🧮️ The composed content child this document names, read in place for a bounded scan — `None` unless it is
 /// composed as `s.stdio.semio@v1/flow`. Every retained scan reads it, never the parent's working-scene owner
 /// (see [`crate::flow_composed_snapshot`]).
@@ -360,7 +263,7 @@ fn flow_content_child<'a>(snapshot: &FlowSnapshot, children: &'a semio_framework
 }
 
 //#region 🧵️DirectStoreLaneRoutes
-const FLOW_DIRECT_STORE_TOOL_IDS: &[&str] = &[
+pub const FLOW_DIRECT_STORE_TOOL_IDS: &[&str] = &[
     "removeWidget",
     "deleteSelection",
     "disconnect",
@@ -487,13 +390,13 @@ fn generation_window_transient(
     main::transient::addressed(view, transient).map(Some)
 }
 
-struct FlowDirectStoreWork {
+pub struct FlowDirectStoreWork {
     tool_id: &'static str,
     cursor: usize,
     scan_cursor: usize,
     replay_target: usize,
     replay_scan_target: usize,
-    preview_off: Option<Vec<String>>,
+    pub preview_off: Option<Vec<String>>,
     preview_next: Option<Vec<String>>,
     preview_found: bool,
     edge_ids: Option<Vec<String>>,
@@ -507,7 +410,7 @@ struct FlowDirectStoreWork {
 }
 
 impl FlowDirectStoreWork {
-    fn new(tool_id: &'static str) -> Self {
+    pub fn new(tool_id: &'static str) -> Self {
         Self {
             tool_id,
             cursor: 0,
@@ -968,7 +871,7 @@ fn flow_direct_store_contract() -> semio_framework::ToolExecutionContract {
     semio_framework::ToolExecutionContract::resumable(FLOW_DIRECT_STORE_RAW_BYTES, 256, FLOW_STORE_MAX_MUTATION_ITEMS as u64, 16_384, 7_500, 1, 1)
 }
 
-struct FlowDirectStoreJobFactory {
+pub struct FlowDirectStoreJobFactory {
     keys: Vec<semio_framework::ToolFactoryKey>,
 }
 
@@ -1006,9 +909,9 @@ impl semio_framework::ToolJobFactory for FlowDirectStoreJobFactory {
         &mut self,
         _operation: semio_framework_job::Operation,
         payload: Self::Payload,
-        input: semio_framework::action_bus::RetainedToolWireInput,
-        checkpoint: Option<semio_framework::action_bus::RetainedToolWireInput>,
-    ) -> Result<Self::Job, (semio_framework::ToolJobFactoryError, semio_framework::action_bus::RetainedToolWireInput, Option<semio_framework::action_bus::RetainedToolWireInput>)> {
+        input: semio_framework_action_bus::RetainedToolWireInput,
+        checkpoint: Option<semio_framework_action_bus::RetainedToolWireInput>,
+    ) -> Result<Self::Job, (semio_framework::ToolJobFactoryError, semio_framework_action_bus::RetainedToolWireInput, Option<semio_framework_action_bus::RetainedToolWireInput>)> {
         if input.declared_bytes() > FLOW_DIRECT_STORE_RAW_BYTES {
             return Err((semio_framework::ToolJobFactoryError::new("Flow direct Store job rejects oversized wire owner"), input, checkpoint));
         }
@@ -1050,24 +953,24 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for FlowDirectStoreJobF
 //#endregion 🧵️DirectStoreLaneRoutes
 
 //#region 🧵️ChildGroupRetainedRoute
-const FLOW_CHILD_GROUP_TOOL_IDS: &[&str] = &["addWidget", "moveMediaNode", "nodeGraphEdit", "spotlightCommit"];
+pub const FLOW_CHILD_GROUP_TOOL_IDS: &[&str] = &["addWidget", "moveMediaNode", "nodeGraphEdit", "spotlightCommit"];
 const FLOW_CHILD_GROUP_RAW_BYTES: usize = 16_384;
 
-struct FlowChildGroupWork {
+pub struct FlowChildGroupWork {
     tool_id: &'static str,
     instance_owner: Option<semio_framework_plugin::ArtifactInstanceOperationOwnerHandle>,
-    output: Option<Emit<FlowMutation, NoConfigMutation, NoDraftMutation>>,
+    pub output: Option<Emit<FlowMutation, NoConfigMutation, NoDraftMutation>>,
     output_retirement: Option<semio_framework_value::retirement::controlled::ControlledRetirement<Emit<FlowMutation, NoConfigMutation, NoDraftMutation>>>,
-    completed: bool,
-    closing: bool,
+    pub completed: bool,
+    pub closing: bool,
 }
 
 impl FlowChildGroupWork {
-    fn new(tool_id: &'static str, instance_owner: semio_framework_plugin::ArtifactInstanceOperationOwnerHandle) -> Self {
+    pub fn new(tool_id: &'static str, instance_owner: semio_framework_plugin::ArtifactInstanceOperationOwnerHandle) -> Self {
         Self { tool_id, instance_owner: Some(instance_owner), output: None, output_retirement: None, completed: false, closing: false }
     }
 
-    fn accept_output(&mut self,emit:Emit<FlowMutation,NoConfigMutation,NoDraftMutation>,child_id:&str)->Result<ArtifactCommandWorkStep<semio_framework_plugin::EditorApp<FlowPlayApp>>,Fault>{
+    pub fn accept_output(&mut self,emit:Emit<FlowMutation,NoConfigMutation,NoDraftMutation>,child_id:&str)->Result<ArtifactCommandWorkStep<semio_framework_plugin::EditorApp<FlowPlayApp>>,Fault>{
         assert!(self.output.is_none(),"one Flow work unit retains at most one original output");
         self.output=Some(emit);
         let emit=self.output.as_ref().expect("original output retained before validation");
@@ -1246,7 +1149,7 @@ impl ArtifactCommandWork<semio_framework_plugin::EditorApp<FlowPlayApp>> for Flo
     }
 }
 
-struct FlowChildGroupJobFactory {
+pub struct FlowChildGroupJobFactory {
     keys: Vec<semio_framework::ToolFactoryKey>,
 }
 
@@ -1284,9 +1187,9 @@ impl semio_framework::ToolJobFactory for FlowChildGroupJobFactory {
         &mut self,
         _operation: semio_framework_job::Operation,
         payload: Self::Payload,
-        input: semio_framework::action_bus::RetainedToolWireInput,
-        checkpoint: Option<semio_framework::action_bus::RetainedToolWireInput>,
-    ) -> Result<Self::Job, (semio_framework::ToolJobFactoryError, semio_framework::action_bus::RetainedToolWireInput, Option<semio_framework::action_bus::RetainedToolWireInput>)> {
+        input: semio_framework_action_bus::RetainedToolWireInput,
+        checkpoint: Option<semio_framework_action_bus::RetainedToolWireInput>,
+    ) -> Result<Self::Job, (semio_framework::ToolJobFactoryError, semio_framework_action_bus::RetainedToolWireInput, Option<semio_framework_action_bus::RetainedToolWireInput>)> {
         if input.declared_bytes() > FLOW_CHILD_GROUP_RAW_BYTES || checkpoint.as_ref().is_some_and(|checkpoint| checkpoint.declared_bytes() > semio_framework_plugin::retained_command::ARTIFACT_COMMAND_CHECKPOINT_MAXIMUM_BYTES) {
             return Err((semio_framework::ToolJobFactoryError::new("Flow child-group job rejects oversized wire or checkpoint owner"), input, checkpoint));
         }
@@ -1311,7 +1214,7 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for FlowChildGroupJobFa
 //#endregion 🧵️ChildGroupRetainedRoute
 
 //#region 🧵️HostOnlyRetainedRoutes
-const FLOW_HOST_ONLY_TOOL_IDS: &[&str] = &["evaluate", "contextMenuAt", "openSpotlight", "replaceImage", "flowEvalTick", "flowEvalResolve"];
+pub const FLOW_HOST_ONLY_TOOL_IDS: &[&str] = &["evaluate", "contextMenuAt", "openSpotlight", "replaceImage", "flowEvalTick", "flowEvalResolve"];
 const FLOW_HOST_ONLY_RAW_BYTES: usize = 16_384;
 
 struct FlowHostEffectPayload {
@@ -1327,7 +1230,7 @@ struct FlowHostEffectPayload {
 #[path = "🧵️retained/📤️effect/🦀️.rs"]
 mod original_host_effect;
 
-fn flow_scalar_command_view(command: &FlowCommand) -> Result<store::os_pack::record::scalar_witness::ScalarRecordView<'_>, &'static str> {
+pub fn flow_scalar_command_view(command: &FlowCommand) -> Result<store::os_pack::record::scalar_witness::ScalarRecordView<'_>, &'static str> {
     use store::os_pack::record::scalar_witness::{ScalarRecordField as Field, ScalarRecordView};
     let ordinal = FlowCommand::TOOL_JOB_IDS.iter().position(|id| *id == command.command_id()).ok_or("Flow scalar command ordinal missing")? as u64;
     let fields = match command {
@@ -1348,16 +1251,14 @@ fn flow_host_wire_view(payload: &FlowHostEffectPayload) -> Result<store::os_pack
     flow_scalar_command_view(&payload.command)
 }
 
-#[cfg(test)]
-#[path = "🧵️retained/🔎️wire/🧪️tests/🔎️wire/🦀️.rs"]
-mod scalar_host_wire_tests;
+
 
 struct FlowHostEffectJob {
     payload: Option<Arc<FlowHostEffectPayload>>,
     payload_close: Option<semio_framework_value::retirement::shared::SharedControlledRetirement<FlowHostEffectPayload>>,
     decoder_close: Option<semio_framework_value::retirement::shared::SharedControlledRetirement<FlowHostEffectPayload>>,
     completion_refusal: Option<semio_framework_value::retirement::controlled::ControlledRetirement<semio_framework_plugin::ArtifactToolCompletionRejection<semio_framework_plugin::EditorApp<FlowPlayApp>>>>,
-    input: Option<semio_framework::action_bus::RetainedToolWireInput>,
+    input: Option<semio_framework_action_bus::RetainedToolWireInput>,
     decoder: Option<store::os_pack::record::scalar_witness::ScalarRecordWireWitness<FlowHostEffectPayload>>,
     page: usize,
     byte: usize,
@@ -1412,7 +1313,7 @@ impl semio_framework_job::InteractiveJob for FlowHostEffectJob {
             let view = ArtifactView::with_children(payload.snapshot.as_ref(), &payload.history, (*payload.children).clone());
             let emit = payload.instance_owner.with_mut::<FlowInstanceOperationOwner, _>(|owner| {
                 owner.with_session(|session| match &payload.command {
-                    FlowCommand::Evaluate(_) => crate::flow_composed_snapshot(&payload.snapshot, &payload.children).map(|composed| evaluate::evaluate_result(&composed, &payload.config, session, main::FLOW_PLAY_WINDOW_MAIN, main::FLOW_PLAY_WINDOW_MAIN)),
+                    FlowCommand::Evaluate(_) => crate::flow_composed_snapshot(&payload.snapshot, &payload.children).map(|composed| evaluate::evaluate_result(&composed, &payload.config, session, FLOW_PLAY_WINDOW_MAIN, FLOW_PLAY_WINDOW_MAIN)),
                     FlowCommand::FlowEvalTick(command) => crate::flow_composed_snapshot(&payload.snapshot, &payload.children).map(|composed| flow_eval_tick::tick_result(&composed, &payload.config, session, &command.window_id, &command.window_kind_id)),
                     FlowCommand::FlowEvalResolve(command) => flow_eval_resolve::handle(command, &view, &ConfigView { snapshot: &NoConfig {}, window: None }, session),
                     FlowCommand::ContextMenuAt(_) | FlowCommand::OpenSpotlight(_) | FlowCommand::ReplaceImage(_) => Ok(Emit::default()),
@@ -1462,7 +1363,7 @@ impl semio_framework_job::InteractiveJob for FlowHostEffectJob {
     }
 }
 
-struct FlowHostEffectJobFactory {
+pub struct FlowHostEffectJobFactory {
     keys: Vec<semio_framework::ToolFactoryKey>,
 }
 
@@ -1500,9 +1401,9 @@ impl semio_framework::ToolJobFactory for FlowHostEffectJobFactory {
         &mut self,
         operation: semio_framework_job::Operation,
         payload: Self::Payload,
-        input: semio_framework::action_bus::RetainedToolWireInput,
-        checkpoint: Option<semio_framework::action_bus::RetainedToolWireInput>,
-    ) -> Result<Self::Job, (semio_framework::ToolJobFactoryError, semio_framework::action_bus::RetainedToolWireInput, Option<semio_framework::action_bus::RetainedToolWireInput>)> {
+        input: semio_framework_action_bus::RetainedToolWireInput,
+        checkpoint: Option<semio_framework_action_bus::RetainedToolWireInput>,
+    ) -> Result<Self::Job, (semio_framework::ToolJobFactoryError, semio_framework_action_bus::RetainedToolWireInput, Option<semio_framework_action_bus::RetainedToolWireInput>)> {
         if checkpoint.is_some() || input.declared_bytes() > FLOW_HOST_ONLY_RAW_BYTES {
             return Err((semio_framework::ToolJobFactoryError::new("Flow host-only job rejects checkpoint or oversized wire owner"), input, checkpoint));
         }
@@ -1538,11 +1439,10 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for FlowHostEffectJobFa
 /// than batch-dispatched, because a `BatchOnlyPendingRewrite` classification on these six is what
 /// faulted the entire app at construction with `interactive-job.catalog-authority` on every host
 /// that instantiates the flow editor (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-const FLOW_GRAPH_OPERATION_TOOL_IDS: &[&str] = &["connectMediaPorts", "reorganize", "renameFlowWidget", "runExtensionAction", "setActiveExample"];
-pub(crate) const FLOW_GRAPH_OPERATION_RAW_BYTES: usize = 16_384;
+pub const FLOW_GRAPH_OPERATION_TOOL_IDS: &[&str] = &["connectMediaPorts", "reorganize", "renameFlowWidget", "runExtensionAction", "setActiveExample"];
 /// 🧮️ The ONE capacity this route declares — its survey walks at most every widget of an admitted
 /// scene, plus the single apply step (`📓️work-capacity-2026-09-10.md`).
-const FLOW_GRAPH_OPERATION_CAPACITY: semio_framework_plugin::retained_command::ArtifactRetainedWorkCapacity =
+pub const FLOW_GRAPH_OPERATION_CAPACITY: semio_framework_plugin::retained_command::ArtifactRetainedWorkCapacity =
     semio_framework_plugin::retained_command::ArtifactRetainedWorkCapacity::for_invertible_items(FLOW_STORE_MAX_SCENE_ITEMS + 1);
 
 /// 🕸️ The widget ids one graph operation references, resolved by the survey walk before the host
@@ -1709,7 +1609,7 @@ impl ArtifactCommandWork<semio_framework_plugin::EditorApp<FlowPlayApp>> for Flo
     }
 }
 
-struct FlowGraphOperationJobFactory {
+pub struct FlowGraphOperationJobFactory {
     keys: Vec<semio_framework::ToolFactoryKey>,
 }
 
@@ -1719,7 +1619,7 @@ impl FlowGraphOperationJobFactory {
     }
 }
 
-fn flow_graph_operation_contract() -> semio_framework::ToolExecutionContract {
+pub fn flow_graph_operation_contract() -> semio_framework::ToolExecutionContract {
     semio_framework::ToolExecutionContract::resumable(FLOW_GRAPH_OPERATION_RAW_BYTES, 256, FLOW_GRAPH_OPERATION_CAPACITY.work_items() as u64, 16_384, 7_500, 1, 1)
 }
 
@@ -1751,9 +1651,9 @@ impl semio_framework::ToolJobFactory for FlowGraphOperationJobFactory {
         &mut self,
         _operation: semio_framework_job::Operation,
         payload: Self::Payload,
-        input: semio_framework::action_bus::RetainedToolWireInput,
-        checkpoint: Option<semio_framework::action_bus::RetainedToolWireInput>,
-    ) -> Result<Self::Job, (semio_framework::ToolJobFactoryError, semio_framework::action_bus::RetainedToolWireInput, Option<semio_framework::action_bus::RetainedToolWireInput>)> {
+        input: semio_framework_action_bus::RetainedToolWireInput,
+        checkpoint: Option<semio_framework_action_bus::RetainedToolWireInput>,
+    ) -> Result<Self::Job, (semio_framework::ToolJobFactoryError, semio_framework_action_bus::RetainedToolWireInput, Option<semio_framework_action_bus::RetainedToolWireInput>)> {
         if input.declared_bytes() > FLOW_GRAPH_OPERATION_RAW_BYTES || checkpoint.as_ref().is_some_and(|checkpoint| checkpoint.declared_bytes() > semio_framework_plugin::retained_command::ARTIFACT_COMMAND_CHECKPOINT_MAXIMUM_BYTES) {
             return Err((semio_framework::ToolJobFactoryError::new("Flow graph operation job rejects oversized wire or checkpoint owner"), input, checkpoint));
         }
@@ -1873,7 +1773,7 @@ impl FlowChildGroupJobFactoryProofs {
 /// 🧩️ The host→guest contributions route — the flow twin of generation2d's: the shell's `flow.extension`
 /// closure is what makes this app's extension operators exist at all (`install_builtin_flow_extensions`
 /// installs none).
-const FLOW_CONTRIBUTIONS_TOOL_IDS: &[&str] = &["setContributions"];
+pub const FLOW_CONTRIBUTIONS_TOOL_IDS: &[&str] = &["setContributions"];
 const FLOW_CONTRIBUTIONS_PAYLOAD_SCHEMA: &str = "flow.contributions-command.v1";
 /// 📐️ The real wire ceiling of one contributions push: the paged command ingress's assembled-command bound,
 /// exactly as generation2d/generation3d declare it — the unscoped nine-extension closure (293 642 characters,
@@ -1885,25 +1785,22 @@ fn flow_contributions_contract() -> semio_framework::ToolExecutionContract {
 }
 
 /// 🧩️ Installs one contributions page against the app instance's retained evaluation session.
-struct FlowContributionsWork {
-    instance_owner: Option<semio_framework_plugin::ArtifactInstanceOperationOwnerHandle>,
-    instance_retirement: Option<semio_framework_plugin::ArtifactInstanceOperationOwnerAliasRetirement>,
-    completed: bool,
-    closing: bool,
+pub struct FlowContributionsWork {
+    pub instance_owner: Option<semio_framework_plugin::ArtifactInstanceOperationOwnerHandle>,
+    pub instance_retirement: Option<semio_framework_plugin::ArtifactInstanceOperationOwnerAliasRetirement>,
+    pub completed: bool,
+    pub closing: bool,
 }
 
 /// 🧾️ The original registry turn reaches the external receipt before yielding or refusing.
-/// 🧯️ Surfaces a retained-ownership refusal as an app fault carrying its message.
-pub(crate) fn value_fault(error: semio_framework_value::ValueError) -> Fault { Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("flow.retained"), error.into_message()) }
-
-fn flow_contributions_registry_receipt(cx:&mut semio_framework_job::StepContext<'_>,result:Result<semio_framework_value::RetainedCloneStep,semio_framework_value::ValueError>)->Result<bool,Fault>{
+pub fn flow_contributions_registry_receipt(cx:&mut semio_framework_job::StepContext<'_>,result:Result<semio_framework_value::RetainedCloneStep,semio_framework_value::ValueError>)->Result<bool,Fault>{
     let progress=match &result{Ok(step)=>step.progress(),Err(error)=>error.retained_progress()};
     cx.consume_retained(progress).map_err(value_fault)?;
     match result{Ok(semio_framework_value::RetainedCloneStep::Complete(progress))=>Ok(progress==Default::default()),Ok(_)=>Ok(false),Err(error)=>Err(value_fault(error))}
 }
 
 impl FlowContributionsWork {
-    fn new(instance_owner: semio_framework_plugin::ArtifactInstanceOperationOwnerHandle) -> Self {
+    pub fn new(instance_owner: semio_framework_plugin::ArtifactInstanceOperationOwnerHandle) -> Self {
         Self { instance_owner: Some(instance_owner), instance_retirement: None, completed: false, closing: false }
     }
 
@@ -1983,7 +1880,7 @@ impl ArtifactCommandWork<semio_framework_plugin::EditorApp<FlowPlayApp>> for Flo
     }
 }
 
-struct FlowContributionsJobFactory {
+pub struct FlowContributionsJobFactory {
     keys: Vec<semio_framework::ToolFactoryKey>,
 }
 
@@ -2021,9 +1918,9 @@ impl semio_framework::ToolJobFactory for FlowContributionsJobFactory {
         &mut self,
         _operation: semio_framework_job::Operation,
         payload: Self::Payload,
-        input: semio_framework::action_bus::RetainedToolWireInput,
-        checkpoint: Option<semio_framework::action_bus::RetainedToolWireInput>,
-    ) -> Result<Self::Job, (semio_framework::ToolJobFactoryError, semio_framework::action_bus::RetainedToolWireInput, Option<semio_framework::action_bus::RetainedToolWireInput>)> {
+        input: semio_framework_action_bus::RetainedToolWireInput,
+        checkpoint: Option<semio_framework_action_bus::RetainedToolWireInput>,
+    ) -> Result<Self::Job, (semio_framework::ToolJobFactoryError, semio_framework_action_bus::RetainedToolWireInput, Option<semio_framework_action_bus::RetainedToolWireInput>)> {
         if input.declared_bytes() > FLOW_CONTRIBUTIONS_RAW_BYTES || checkpoint.is_some() {
             return Err((semio_framework::ToolJobFactoryError::new("Flow contributions command rejects oversized wire or unsupported checkpoint owner"), input, checkpoint));
         }
@@ -2056,13 +1953,13 @@ impl FlowContributionsJobFactoryProofs {
 //#endregion 🧩️ContributionsRoute
 
 //#region 🔖️FlowPlayApp
-struct FlowInstanceOperationOwner {
+pub struct FlowInstanceOperationOwner {
     eval_session: Option<FlowEvalSession>,
     closing: bool,
 }
 
 impl FlowInstanceOperationOwner {
-    fn new() -> Self {
+    pub fn new() -> Self {
         Self { eval_session: Some(FlowEvalSession::new()), closing: false }
     }
 
@@ -2146,11 +2043,11 @@ impl ArtifactEditor for FlowPlayApp {
     }
 
     fn document_store_owners_source_demands() -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-        crate::retirement::store_owners_source_demands()
+        crate::schema::retirement::store_owners_source_demands()
     }
 
     fn build_document_store_owners(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Option<Result<(store::os_store::document_store_owners::DocumentStoreOwners<Self::Snapshot, Self::Mutation>, semio_framework_value::retained_clone::RetainedCloneProgress), store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self::Snapshot, Self::Mutation>>> {
-        Some(crate::retirement::store_owners(grant))
+        Some(crate::schema::retirement::store_owners(grant))
     }
 
     fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
@@ -2405,11 +2302,11 @@ impl ArtifactEditor for FlowPlayApp {
             // onto the answer by `reactor::extension_response_args`, so a hop discharges the latch of
             // the window it evaluated instead of whichever window happened to be current.
             "flowEvalTick" => Ok(FlowCommand::FlowEvalTick(flow_eval_tick::FlowEvalTick {
-                window_id: str_arg(&["windowId", "window_id"]).unwrap_or_else(|| main::FLOW_PLAY_WINDOW_MAIN.into()),
-                window_kind_id: str_arg(&["windowKindId", "window_kind_id"]).unwrap_or_else(|| main::FLOW_PLAY_WINDOW_MAIN.into()),
+                window_id: str_arg(&["windowId", "window_id"]).unwrap_or_else(|| FLOW_PLAY_WINDOW_MAIN.into()),
+                window_kind_id: str_arg(&["windowKindId", "window_kind_id"]).unwrap_or_else(|| FLOW_PLAY_WINDOW_MAIN.into()),
             })),
             "flowEvalResolve" => Ok(FlowCommand::FlowEvalResolve(flow_eval_resolve::FlowEvalResolve {
-                window_id: str_arg(&["windowId", "window_id"]).unwrap_or_else(|| main::FLOW_PLAY_WINDOW_MAIN.into()),
+                window_id: str_arg(&["windowId", "window_id"]).unwrap_or_else(|| FLOW_PLAY_WINDOW_MAIN.into()),
                 node_hash: u64_arg(&["nodeHash", "node_hash"]).unwrap_or_default(),
                 output_json: str_arg(&["outputJson"]),
             })),
@@ -2494,7 +2391,7 @@ impl ArtifactEditor for FlowPlayApp {
     /// because a detached window's latch can never be discharged by a hop.
     fn pending_effects(owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, NoConfig>, view: Option<&semio_framework_plugin::ViewModel>) -> Vec<Effect> {
         let windows: Vec<(String, String)> = view
-            .map(|view| view.window_instances.iter().filter(|window| window.window_kind_id == main::FLOW_PLAY_WINDOW_MAIN).map(|window| (window.id.clone(), window.window_kind_id.clone())).collect())
+            .map(|view| view.window_instances.iter().filter(|window| window.window_kind_id == FLOW_PLAY_WINDOW_MAIN).map(|window| (window.id.clone(), window.window_kind_id.clone())).collect())
             .unwrap_or_default();
         if windows.is_empty() {
             return Vec::new();
@@ -2579,7 +2476,7 @@ impl ArtifactEditor for FlowPlayApp {
 
     fn window_measures(_doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
         let Some(window_id) = view_state.window_id.clone() else { return HashMap::new() };
-        let is_main = view_state.window_instances.iter().any(|window| window.id == window_id && window.window_kind_id == main::FLOW_PLAY_WINDOW_MAIN);
+        let is_main = view_state.window_instances.iter().any(|window| window.id == window_id && window.window_kind_id == FLOW_PLAY_WINDOW_MAIN);
         if !is_main {
             return HashMap::new();
         }
@@ -2594,125 +2491,6 @@ impl ArtifactEditor for FlowPlayApp {
     }
 }
 //#endregion 🔖️FlowPlayApp
-
-//#region 🔖️Host
-pub fn seed_host_catalogue(host: &mut FlowHost, extra_sections_json: &str) {
-    let mut sections = flow::flow_catalogue_sections();
-    if let Ok(extra) = serde_json::from_str::<Vec<flow::CatalogueSection>>(extra_sections_json) {
-        sections.extend(extra);
-    }
-    host.set_host_catalogue_json(&serde_json::to_string(&sections).unwrap_or_else(|_| "[]".into()));
-}
-
-/// 🎚️ Pushes the view-state canvas options (LOD mode, proximity distance, grid) onto a freshly built host.
-pub fn apply_canvas_options(host: &mut FlowHost, config: &FlowMainWindowConfig) {
-    if config.lod_mode != FLOW_LOD_MODE_AUTOMATIC && DagDrawLod::from_id(&config.lod_mode).is_some() {
-        host.dag.set_automatic_lod(false);
-        host.dag.set_forced_draw_lod_label(&config.lod_mode);
-    } else {
-        host.dag.set_automatic_lod(true);
-    }
-    host.dag.set_proximity_distance(config.proximity_distance);
-    host.set_grid_visible(config.grid_visible);
-    host.set_grid_snap_enabled(config.grid_snap_enabled);
-    let _ = host.set_grid_factor(config.grid_factor);
-}
-
-/// 🏗️ Rebuilds the stateful `FlowHost` from the document projection + view config + eval session — the
-/// single entry point every command handler and every window renderer goes through.
-/// 🎟️ The generous grant every synchronous cold session path debits: those paths run to completion inside one command turn.
-pub(crate) fn cold_grant() -> semio_framework_value::RetainedCloneGrant {
-    semio_framework_value::RetainedCloneGrant { maximum_items: 1 << 20, maximum_copy_bytes: 1 << 26, maximum_capacity_bytes: 1 << 28, maximum_release_bytes: 1 << 28, maximum_depth: 4096 }
-}
-
-/// 🏠️ Seeds a host from `live` and installs `session`'s converged baseline under the cold grant.
-pub fn host_with_session(live: semio_framework_artifact_flow_flow::FlowHostSnapshot, session: &FlowEvalSession) -> FlowHost {
-    match flow_host_with_session(FlowHost::from_host_snapshot(live).with_history_store_factory(::semio_framework_artifact_flow_flow::FLOW_HISTORY_STORE_FACTORY), session, cold_grant()) {
-        Ok((host, _)) => host,
-        Err((error, host)) => {
-            host.retire_cold();
-            panic!("flow cold host baseline refused: {error}")
-        }
-    }
-}
-
-pub fn host_from_snapshot(snapshot: &FlowSnapshot, config: &FlowMainWindowConfig, session: &FlowEvalSession) -> FlowHost {
-    let mut host = host_with_session(snapshot.to_host_snapshot(), session);
-    seed_host_catalogue(&mut host, &config.catalogue_sections_json);
-    apply_canvas_options(&mut host, config);
-    host
-}
-
-/// 🏠️ Runs `body` against a host rebuilt by [`host_from_snapshot`], then retires that host — the ONE
-/// shape every render, probe and evaluation step that only needs a host for the length of a call must
-/// use. A `FlowHost` owns a `FlowHostSnapshot` whose `layout: OrderedMap<WidgetLayout>` aborts the
-/// guest on a bare drop, so a host is closed, never dropped (the twin of `FlowHost::with_host_snapshot`).
-pub fn with_host_from_snapshot<R>(snapshot: &FlowSnapshot, config: &FlowMainWindowConfig, session: &FlowEvalSession, body: impl FnOnce(&mut FlowHost) -> R) -> R {
-    let mut host = host_from_snapshot(snapshot, config, session);
-    let result = body(&mut host);
-    host.retire_cold();
-    result
-}
-
-/// 📸️ Runs `body` against the live host projection of `snapshot`, then retires that projection — a
-/// `FlowHostSnapshot` owns an `OrderedMap` layout root and widget payloads that refuse a bare drop.
-pub fn with_live_host_snapshot<R>(snapshot: &FlowSnapshot, body: impl FnOnce(&semio_framework_artifact_flow_flow::FlowHostSnapshot) -> R) -> R {
-    let live = snapshot.to_host_snapshot();
-    let result = body(&live);
-    live.retire_cold();
-    result
-}
-
-/// 🪆️ The content child `composed` names, as the exact scene its working-scene owner carries.
-pub fn flow_composed_content(composed: &FlowSnapshot) -> Result<SemioFlowSnapshot, Fault> {
-    let scene = composed.content.local_owner::<FlowWorkingScene>().ok_or_else(|| Fault::from("flow-edit-scene-owner-missing"))?;
-    Ok(crate::flow_content_snapshot_from_working(&scene.widgets, &scene.synapses, &scene.layout))
-}
-
-/// 📮️ `leaves` as ONE group on the content child `child_id`; nothing when there are none.
-pub fn flow_content_leaves_emit(child_id: &str, leaves: Vec<SemioFlowMutation>) -> Emit<FlowMutation, NoConfigMutation> {
-    match leaves.is_empty() {
-        true => Emit::default(),
-        false => Emit { child_preparations: std::collections::VecDeque::from([ChildEmitPreparation::of::<SemioFlowSnapshot, _>("content", child_id, leaves)]), ui_scope: UiDirtyScope::Full, ..Default::default() },
-    }
-}
-
-/// 🗑️ The child leaves that delete `node_ids` and `edge_ids` from `child`: every named edge and every edge touching a named
-/// node first (child order, so no edge ever dangles), then every named node.
-pub fn flow_removal_leaves(child: &SemioFlowSnapshot, node_ids: &[String], edge_ids: &[String]) -> Vec<SemioFlowMutation> {
-    let mut edit = crate::editor::flow::edit_rules::ContentEdit::new(child.clone());
-    edit.remove(node_ids, edge_ids);
-    edit.leaves
-}
-//#endregion 🔖️Host
-
-//#region 🔖️Selection
-pub fn sync_host_selection(host: &mut FlowHost, selected: &[String]) {
-    sync_host_selection_domains(host, selected, &[], &[]);
-}
-
-pub fn sync_host_selection_domains(host: &mut FlowHost, nodes: &[String], edges: &[String], handles: &[String]) {
-    if nodes.is_empty() && edges.is_empty() && handles.is_empty() {
-        let _ = host.dag.cancel_area_select();
-        return;
-    }
-    host.dag.set_selection_domains(&infinite_canvas::board::schema::dag_input::DagSelectionDomains {nodes:nodes.to_vec(),edges:edges.to_vec(),handles:handles.to_vec()});
-}
-
-/// 🔍️ The camera that frames the given node selection (the "graph" domain's live selection, read by
-/// the caller via `InteractionView` — ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM), or
-/// `None` when nothing is selected.
-pub fn focus_selection_camera(snapshot: &FlowSnapshot, config: &FlowMainWindowConfig, session: &FlowEvalSession, selected_node_ids: &[String]) -> Option<CameraJson> {
-    if selected_node_ids.is_empty() {
-        return None;
-    }
-    with_host_from_snapshot(snapshot, config, session, |host| {
-        host.dag.set_viewport(1280, 800, 1.0);
-        host.dag.set_selection(selected_node_ids);
-        host.focus_selection_camera(1.2)
-    })
-}
-//#endregion 🔖️Selection
 
 //#region 🔖️Manifest
 /// 🧱️ The manifest stitch: one call per taxonomy node, each sourced from that node's own `definition()`.
@@ -2887,7 +2665,7 @@ pub fn create_flow_app() -> AppDefinition {
                 broadcast: true,
             },
         })
-        .window_kind_interactions(main::FLOW_PLAY_WINDOW_MAIN, vec![InteractionRef::new(FLOW_INTERACTION_GRAPH)])
+        .window_kind_interactions(FLOW_PLAY_WINDOW_MAIN, vec![InteractionRef::new(FLOW_INTERACTION_GRAPH)])
         // 🎯️ Flow has no user-visible config defaults to expose, so `config_spec()` stays the trait
         // default `ConfigSpec::empty()`; declaring it explicitly keeps the typed channel surface
         // consistent with the sibling apps' convention.
@@ -2923,36 +2701,49 @@ pub fn create_flow_app() -> AppDefinition {
 //#endregion 🔖️Manifest
 
 //#region 🧪️UnitTests
-/// 🧪️ Shared test scaffolding for every taxonomy node's own `🧪️Tests` region — a component file must be
-/// able to drive the whole app without re-deriving the harness.
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-pub(crate) mod unit_tests;
+
 //#endregion 🧪️UnitTests
 
 //#region 🧪️Tests
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️interactive-job/🦀️.rs"]
-mod interactive_job_tests;
 
-#[cfg(test)]
-#[path = "🧪️tests/⚖️declared-verbs/🦀️.rs"]
-mod declared_verb_laws;
+
+
 //#endregion 🧪️Tests
 
 //#region 🪢️TaxonomyMounts
-#[path = "📚️examples/🎬️demo-session/🦀️.rs"]
-pub mod demo_session;
-#[cfg(test)]
-#[path = "📚️examples/🎬️demo-session/🧪️tests/🧩️example/🦀️.rs"]
-mod example;
+
+
 //#endregion 🪢️TaxonomyMounts
 
-#[cfg(test)]
-#[path="🧪️tests/📨️child-preparation/🦀️.rs"]
-mod child_preparation_owner_tests;
 
-#[cfg(test)]
-#[path="🧪️tests/🎟️contributions/🦀️.rs"]
-mod contributions_receiving_tests;
+
+
+
+//#region 🧩️ArtifactItems5
+pub mod artifact_items_5 {
+use crate::{FLOW_DOCUMENT_SCHEMA};
+use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
+
+//#region 🔖️ArtifactKind
+/// 🗂️ This artifact's `ArtifactKindSpec` — stitched into the app manifest by
+/// `crate::editor::flow::create_flow_app`'s `🔖️Manifest` region.
+pub fn artifact_kind() -> ArtifactKindSpec {
+    ArtifactKindSpec {
+        id: "computation.flow".into(),
+        label: semio_framework_ui_locale::LocalizedLabel::native("Flow", "Fluss"),
+        source_format: "flow.artifact".into(),
+        component_kind: "flow".into(),
+        dimension: "graph".into(),
+        media_capability: OsMediaCapability::MeshOnly,
+        media_type: MediaType { class: MediaClass::Computation, form: MediaForm::Flow },
+        schema: FLOW_DOCUMENT_SCHEMA.into(),
+        export_formats: vec![],
+        import_formats: vec![],
+        export_stdio_kinds: vec![],
+        import_stdio_kinds: vec![],
+    }
+}
+//#endregion 🔖️ArtifactKind
+}
+//#endregion 🧩️ArtifactItems5

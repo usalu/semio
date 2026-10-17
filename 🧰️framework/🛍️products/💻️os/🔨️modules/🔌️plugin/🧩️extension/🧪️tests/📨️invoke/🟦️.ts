@@ -66,6 +66,5 @@ export function extensionInvokeCallerOracle(repoRoot:string):number{
  assert(failure.includes("fn new_terminal_cancellation")&&jobs.includes("new_terminal_cancellation(cause)"),"the terminal job cancellation reply keeps the actual canceled caller context");assertions++;
  for(const cut of fixture.cancelCuts){const prefix=fixture.replies.slice(0,Math.min(cut,fixture.replies.length));const retired=applyPatch({owned:prefix},[{op:"replace" as const,path:"/owned",value:[]}],true,false).newDocument;assert.deepEqual(retired.owned,[]);assert.deepEqual(prefix,fixture.replies.slice(0,prefix.length));assertions+=2;}
  assert(failure.includes("pub(crate) fn begin_close")&&failure.includes("output_close"),"cancellation retains the actual diagnostic/output until their complete funded close");assertions++;
- console.log("[DEBUG] original raw invoke wholeCorpusSchema=true independentJSONPatch=true UTF8=true checks="+assertions);
  return assertions;
 }

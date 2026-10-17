@@ -90,10 +90,7 @@ pub fn print_forms_dsl(snapshot: &FormsSnapshot) -> String {
 
 #[allow(unused_imports)]
 mod mutations_codec {
-use super::*;
-use crate::standards::v1::subsets::any::schema::mutations::*;
-use crate::{FormsDiff, FormsSnapshot};
-use protocol::Mutation;
+use crate::FormsSnapshot;
 
 /// 📥️ Decodes a committed `📸️snapshot/{⬅️before,➡️after}/🔣️.json` vector.
 // 🚫️async: E1 pure codec helper (file verified I/O-free) — see R9
@@ -112,24 +109,8 @@ pub use mutations_codec::*;
 
 #[allow(unused_imports)]
 mod snapshot_codec {
-use super::*;
-use crate::standards::v1::subsets::any::schema::*;
-use crate::op::FormMutation;
 use crate::standards::v1::subsets::any::io::text::snapshot as forms_dsl;
-use crate::{forms_snapshot_with_state, forms_steps, FormsResultsChild, FormsSnapshot, FormsStructureChild, FORMS_DOCUMENT_SCHEMA};
-use semio_framework_pack_json::{Object, Value};
-use framework_schema::ArtifactSchema;
-use validation::{can_advance, step_errors};
-/// 🌿️ Pure compute over the shared `playbook` kernel crate's step/block domain, re-exported here under
-/// forms' historical names (relocated from the deleted `⚙️engine`, ticket
-/// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES).
-use crate::playbook::{
-    default_value_for_block as default_value_for_question, eval_playbook_expr as eval_form_expr, find_block_location as find_question_location, flatten_playbook_blocks as flatten_form_questions, is_block_visible as is_question_visible,
-    is_extension_block_kind as is_extension_question_kind, visible_blocks as visible_questions,
-};
-use crate::FormQuestion;
-/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
-use crate::FormStep;
+use crate::FormsSnapshot;
 
 /// 📇️ Loads the canonical Contact template.
 pub fn default_example_spec() -> FormsSnapshot {
@@ -157,23 +138,8 @@ pub use snapshot_codec::*;
 
 #[allow(unused_imports)]
 mod snapshot_wire_codec {
-use crate::standards::v1::subsets::any::schema::*;
-use crate::op::FormMutation;
 use crate::standards::v1::subsets::any::io::text::snapshot as forms_dsl;
-use crate::{forms_snapshot_with_state, forms_steps, FormsResultsChild, FormsSnapshot, FormsStructureChild, FORMS_DOCUMENT_SCHEMA};
-use semio_framework_pack_json::{Object, Value};
-use framework_schema::ArtifactSchema;
-use validation::{can_advance, step_errors};
-/// 🌿️ Pure compute over the shared `playbook` kernel crate's step/block domain, re-exported here under
-/// forms' historical names (relocated from the deleted `⚙️engine`, ticket
-/// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES).
-use crate::playbook::{
-    default_value_for_block as default_value_for_question, eval_playbook_expr as eval_form_expr, find_block_location as find_question_location, flatten_playbook_blocks as flatten_form_questions, is_block_visible as is_question_visible,
-    is_extension_block_kind as is_extension_question_kind, visible_blocks as visible_questions,
-};
-use crate::FormQuestion;
-/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
-use crate::FormStep;
+use crate::FormsSnapshot;
 
 /// 🌱️ The forms app's default document — the building-component fixture, seeded from its derive-
 /// generated `.forms` DSL text.
@@ -186,15 +152,14 @@ pub use snapshot_wire_codec::*;
 
 
 
-#[path="📨️response/🦀️.rs"]
-pub mod response;
+pub use semio_s_artifact_forms_forms_terminology_tests::standards::v1::subsets::any::io::text::snapshot::response;
 
 mod field_native_codec {
 use crate::FormsSnapshot;
 use semio_framework_pack_json::{Object,Value};
 pub fn initial_try_values(spec: &FormsSnapshot, overrides: &Object) -> Object {
     let overrides_map: crate::playbook::PlaybookValues = overrides.iter().map(|(key, value)| (key.to_string(), semio_framework_pack_json::to_dsl_value(value))).collect();
-    let result = crate::playbook::initial_values(&crate::mutations::as_playbook_spec(spec), &overrides_map);
+    let result = crate::playbook::initial_values(&crate::as_playbook_spec(spec), &overrides_map);
     result.iter().map(|(key, value)| (key.clone(), semio_framework_pack_json::from_dsl_value(value))).collect()
 }
 

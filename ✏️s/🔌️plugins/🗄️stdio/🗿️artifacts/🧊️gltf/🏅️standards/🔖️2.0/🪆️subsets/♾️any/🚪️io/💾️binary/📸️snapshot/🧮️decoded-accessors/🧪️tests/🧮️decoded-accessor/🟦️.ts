@@ -8,5 +8,4 @@ test("decoded accessor neutral bytes agree with independent binary32 reads and w
  const encoded=Buffer.alloc(fixture.components.length*4);
  fixture.components.forEach((value,index)=>encoded.writeFloatLE(value,index*4));
  expect([...encoded]).toEqual(fixture.bytes);
- console.log(`[DEBUG] Node Buffer independently verified ${fixture.components.length} decoded glTF values`);
 });

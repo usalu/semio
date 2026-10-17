@@ -1,0 +1,467 @@
+[
+  {
+    "mode": "all-scopes",
+    "accepted": true,
+    "scopes": 2,
+    "sourceTransitions": 2,
+    "events": [
+      "capture",
+      "stage-all",
+      "install:0",
+      "qualified:0",
+      "install:1",
+      "qualified:1",
+      "all-qualified",
+      "ready:0",
+      "ready:1",
+      "all-ready",
+      "bind:0",
+      "bind:1",
+      "final",
+      "settled"
+    ]
+  },
+  {
+    "mode": "single-scope",
+    "accepted": true,
+    "scopes": 1,
+    "sourceTransitions": 1,
+    "events": [
+      "capture",
+      "stage-all",
+      "install:0",
+      "qualified:0",
+      "all-qualified",
+      "ready:0",
+      "all-ready",
+      "bind:0",
+      "final",
+      "settled"
+    ]
+  },
+  {
+    "mode": "copied-core-completion",
+    "accepted": false,
+    "scopes": 2,
+    "sourceTransitions": 0,
+    "events": [
+      "capture",
+      "refused"
+    ]
+  },
+  {
+    "mode": "serialized-core-completion",
+    "accepted": false,
+    "scopes": 2,
+    "sourceTransitions": 0,
+    "events": [
+      "capture",
+      "refused"
+    ]
+  },
+  {
+    "mode": "old-probe-root",
+    "accepted": false,
+    "scopes": 2,
+    "sourceTransitions": 0,
+    "events": [
+      "capture",
+      "refused"
+    ]
+  },
+  {
+    "mode": "wrong-original",
+    "accepted": false,
+    "scopes": 2,
+    "sourceTransitions": 0,
+    "events": [
+      "capture",
+      "refused"
+    ]
+  },
+  {
+    "mode": "sibling-control",
+    "accepted": false,
+    "scopes": 2,
+    "sourceTransitions": 0,
+    "events": [
+      "capture",
+      "refused"
+    ]
+  },
+  {
+    "mode": "closed-input-scope",
+    "accepted": false,
+    "scopes": 2,
+    "sourceTransitions": 0,
+    "events": [
+      "capture",
+      "refused"
+    ]
+  },
+  {
+    "mode": "pending-native-reader",
+    "accepted": false,
+    "scopes": 2,
+    "sourceTransitions": 0,
+    "events": [
+      "capture",
+      "refused"
+    ]
+  },
+  {
+    "mode": "raw-journal-drift",
+    "accepted": false,
+    "scopes": 2,
+    "sourceTransitions": 0,
+    "events": [
+      "capture",
+      "refused"
+    ]
+  },
+  {
+    "mode": "whole-row-mismatch",
+    "accepted": false,
+    "scopes": 2,
+    "sourceTransitions": 0,
+    "events": [
+      "capture",
+      "refused"
+    ]
+  },
+  {
+    "mode": "one-root-existing",
+    "accepted": false,
+    "scopes": 2,
+    "sourceTransitions": 0,
+    "events": [
+      "capture",
+      "refused"
+    ]
+  },
+  {
+    "mode": "input-file-drift",
+    "accepted": false,
+    "scopes": 2,
+    "sourceTransitions": 0,
+    "events": [
+      "capture",
+      "refused"
+    ]
+  },
+  {
+    "mode": "recipe-drift",
+    "accepted": false,
+    "scopes": 2,
+    "sourceTransitions": 0,
+    "events": [
+      "capture",
+      "refused"
+    ]
+  },
+  {
+    "mode": "source-leaf-drift",
+    "accepted": false,
+    "scopes": 2,
+    "sourceTransitions": 0,
+    "events": [
+      "capture",
+      "refused"
+    ]
+  },
+  {
+    "mode": "ancestor-drift",
+    "accepted": false,
+    "scopes": 2,
+    "sourceTransitions": 0,
+    "events": [
+      "capture",
+      "refused"
+    ]
+  },
+  {
+    "mode": "unprepared-scope",
+    "accepted": false,
+    "scopes": 2,
+    "sourceTransitions": 0,
+    "events": [
+      "capture",
+      "refused"
+    ]
+  },
+  {
+    "mode": "path-257",
+    "accepted": false,
+    "scopes": 2,
+    "sourceTransitions": 0,
+    "events": [
+      "capture",
+      "refused"
+    ]
+  },
+  {
+    "mode": "directory-source-without-preserve-intent",
+    "accepted": false,
+    "scopes": 2,
+    "sourceTransitions": 0,
+    "events": [
+      "capture",
+      "refused"
+    ]
+  },
+  {
+    "mode": "unknown-export-target",
+    "accepted": false,
+    "scopes": 2,
+    "sourceTransitions": 0,
+    "events": [
+      "capture",
+      "refused"
+    ]
+  },
+  {
+    "mode": "workspace-export-unqualified",
+    "accepted": false,
+    "scopes": 2,
+    "sourceTransitions": 0,
+    "events": [
+      "capture",
+      "refused"
+    ]
+  },
+  {
+    "mode": "external-installer-environment",
+    "accepted": false,
+    "scopes": 2,
+    "sourceTransitions": 0,
+    "events": [
+      "capture",
+      "refused"
+    ]
+  },
+  {
+    "mode": "windows-native-root-unqualified",
+    "accepted": false,
+    "scopes": 2,
+    "sourceTransitions": 0,
+    "events": [
+      "capture",
+      "refused"
+    ]
+  },
+  {
+    "mode": "late-installer-failure",
+    "accepted": false,
+    "scopes": 2,
+    "sourceTransitions": 0,
+    "events": [
+      "capture",
+      "stage-all",
+      "install:0",
+      "qualified:0",
+      "refused"
+    ]
+  },
+  {
+    "mode": "second-scope-path-refusal",
+    "accepted": false,
+    "scopes": 2,
+    "sourceTransitions": 0,
+    "events": [
+      "capture",
+      "stage-all",
+      "install:0",
+      "qualified:0",
+      "install:1",
+      "refused"
+    ]
+  },
+  {
+    "mode": "ready-first-failure",
+    "accepted": false,
+    "scopes": 2,
+    "sourceTransitions": 0,
+    "events": [
+      "capture",
+      "stage-all",
+      "install:0",
+      "qualified:0",
+      "install:1",
+      "qualified:1",
+      "all-qualified",
+      "refused"
+    ]
+  },
+  {
+    "mode": "ready-second-failure",
+    "accepted": false,
+    "scopes": 2,
+    "sourceTransitions": 0,
+    "events": [
+      "capture",
+      "stage-all",
+      "install:0",
+      "qualified:0",
+      "install:1",
+      "qualified:1",
+      "all-qualified",
+      "ready:0",
+      "refused"
+    ]
+  },
+  {
+    "mode": "source-before-first-bind",
+    "accepted": false,
+    "scopes": 2,
+    "sourceTransitions": 0,
+    "events": [
+      "capture",
+      "stage-all",
+      "install:0",
+      "qualified:0",
+      "install:1",
+      "qualified:1",
+      "all-qualified",
+      "ready:0",
+      "ready:1",
+      "all-ready",
+      "refused"
+    ]
+  },
+  {
+    "mode": "source-after-first-bind",
+    "accepted": false,
+    "scopes": 2,
+    "sourceTransitions": 1,
+    "events": [
+      "capture",
+      "stage-all",
+      "install:0",
+      "qualified:0",
+      "install:1",
+      "qualified:1",
+      "all-qualified",
+      "ready:0",
+      "ready:1",
+      "all-ready",
+      "bind:0",
+      "refused"
+    ]
+  },
+  {
+    "mode": "final-cas-failure",
+    "accepted": false,
+    "scopes": 2,
+    "sourceTransitions": 2,
+    "events": [
+      "capture",
+      "stage-all",
+      "install:0",
+      "qualified:0",
+      "install:1",
+      "qualified:1",
+      "all-qualified",
+      "ready:0",
+      "ready:1",
+      "all-ready",
+      "bind:0",
+      "bind:1",
+      "refused"
+    ]
+  },
+  {
+    "mode": "undefined-primary-close-failure",
+    "accepted": false,
+    "scopes": 2,
+    "sourceTransitions": 0,
+    "events": [
+      "capture",
+      "stage-all",
+      "install:0",
+      "qualified:0",
+      "install:1",
+      "qualified:1",
+      "all-qualified",
+      "ready:0",
+      "ready:1",
+      "refused"
+    ]
+  },
+  {
+    "mode": "frozen-primary-close-failure",
+    "accepted": false,
+    "scopes": 2,
+    "sourceTransitions": 1,
+    "events": [
+      "capture",
+      "stage-all",
+      "install:0",
+      "qualified:0",
+      "install:1",
+      "qualified:1",
+      "all-qualified",
+      "ready:0",
+      "ready:1",
+      "all-ready",
+      "bind:0",
+      "refused"
+    ]
+  },
+  {
+    "mode": "cancel-before-first-binding",
+    "accepted": false,
+    "scopes": 2,
+    "sourceTransitions": 0,
+    "events": [
+      "capture",
+      "stage-all",
+      "install:0",
+      "qualified:0",
+      "install:1",
+      "qualified:1",
+      "all-qualified",
+      "ready:0",
+      "ready:1",
+      "all-ready",
+      "refused"
+    ]
+  },
+  {
+    "mode": "shared-32-refusal",
+    "accepted": false,
+    "scopes": 2,
+    "sourceTransitions": 0,
+    "events": [
+      "capture",
+      "stage-all",
+      "install:0",
+      "qualified:0",
+      "install:1",
+      "qualified:1",
+      "all-qualified",
+      "refused"
+    ]
+  },
+  {
+    "mode": "unawaited-accepted-child-drained",
+    "accepted": true,
+    "scopes": 2,
+    "sourceTransitions": 2,
+    "events": [
+      "capture",
+      "stage-all",
+      "install:0",
+      "qualified:0",
+      "install:1",
+      "qualified:1",
+      "all-qualified",
+      "ready:0",
+      "ready:1",
+      "all-ready",
+      "bind:0",
+      "bind:1",
+      "final",
+      "settled"
+    ]
+  }
+]

@@ -1,5 +1,5 @@
 use super::*;
-use crate::catalog::tests::fixture;
+use teaching_proctor_base::catalog::fixtures::fixture;
 use server::contract::{ActorKey, CommandId, HybridLogicalClock, IdempotencyKey, Principal, Scope, TenantId, TraceContext};
 use server::policy::PolicyRequest;
 use server::throttle::{Allowance, Limits, Rate};
@@ -80,8 +80,8 @@ async fn every_caller_may_share_presence_inside_the_catalog_rooms_only() {
     let module = ProctorModule::new(Arc::new(fixture()), Arc::clone(proctor.admission()));
     let state = serde_json::json!({ "tag": "0a1b2c3d", "cursor": { "anchor": "card:power", "x": 0.5, "y": 0.5 } });
     assert_eq!(module.presence_admission(&Scope("proctor-fixture/home".into()), &state), Ok(()));
-    assert_eq!(module.presence_admission(&Scope("proctor-fixture".into()), &state), Err(crate::presence::STATE_INVALID.to_string()));
-    assert_eq!(module.presence_admission(&Scope("other-catalog/home".into()), &state), Err(crate::presence::SCOPE_UNKNOWN.to_string()));
+    assert_eq!(module.presence_admission(&Scope("proctor-fixture".into()), &state), Err(teaching_proctor_base::presence::STATE_INVALID.to_string()));
+    assert_eq!(module.presence_admission(&Scope("other-catalog/home".into()), &state), Err(teaching_proctor_base::presence::SCOPE_UNKNOWN.to_string()));
 }
 
 fn site() -> CrossOriginPolicy {

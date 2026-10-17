@@ -5,7 +5,7 @@
 
 use crate::editor::puzzle5d::config::Puzzle5dRuntime;
 use crate::editor::puzzle5d::terminology::Puzzle5dLabels;
-use crate::editor::puzzle5d::{puzzle5d_action, PUZZLE5D_LOD_SLIDER_MAX, PUZZLE5D_LOD_SLIDER_MIN, PUZZLE5D_PLAY_CONTROLLER_ID};
+use crate::editor::puzzle5d::entities::{puzzle5d_action, PUZZLE5D_LOD_SLIDER_MAX, PUZZLE5D_LOD_SLIDER_MIN, PUZZLE5D_PLAY_CONTROLLER_ID};
 use semio_framework_plugin::WindowMeasure;
 
 /// 🔭️ `puzzle5d-play-world-lod` — auto / depth-variable / manual value.

@@ -11,7 +11,7 @@ export function proveTileProxyAssetCorpusV1(): number {
     const independent = JSON.parse(JSON.stringify(row.value));
     assert.equal(validate(independent), row.accepted, row.id);
     if (row.accepted) assert.deepEqual(parseTileProxyAssetSpecV1(independent), row.value, row.id);
-    else assert.throws(() => parseTileProxyAssetSpecV1(independent), undefined, row.id);
+    else assert.throws(() => parseTileProxyAssetSpecV1(independent), row.id);
   }
   return corpus.cases.length;
 }
@@ -33,7 +33,7 @@ export async function proveTileAssetMetadataV1(artifactRoot: string): Promise<vo
       assert.equal(validate(oracle.package.metadata.semio.assets[0]), row.accepted, row.id);
       writeFileSync(path, text);
       if (row.accepted) assert.deepEqual(parseAssetsForCrate(path, root), [row.value], row.id);
-      else assert.throws(() => parseAssetsForCrate(path, root), undefined, row.id);
+      else assert.throws(() => parseAssetsForCrate(path, root), row.id);
     }
   } finally { rmSync(root, { recursive: true, force: true }); }
 }
@@ -41,7 +41,7 @@ export async function proveTileAssetMetadataV1(artifactRoot: string): Promise<vo
 /** 🌐️ Exercises exact owner headers, cache bytes and bundle refusal through the production HTTP proxy. */
 export async function proveTileProxyTransportV1(artifactRoot: string): Promise<void> {
   const { createServer } = await import("node:http");
-  const { once } = await import("node:events");
+  const { once } = (await import("node:events")).default;
   const { mkdtempSync, mkdirSync, rmSync, readFileSync, existsSync } = await import("node:fs");
   const { join } = await import("node:path");
   const { createAssetHttpServerV1 } = await import("../../../../../../../../🔨️modules/🖼️assets/🔍️resolver/🧭️dispatch/🟦️.ts");

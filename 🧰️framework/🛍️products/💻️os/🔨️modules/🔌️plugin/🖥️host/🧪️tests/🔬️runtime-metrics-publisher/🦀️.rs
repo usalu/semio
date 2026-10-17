@@ -1,5 +1,6 @@
 use super::RuntimeMetricsPublisher;
 use semio_framework_actor::{ActivationEvent, ActorKind, Envelope, Kernel, Lane, Origin, PackageId, Payload, ShardId, ShardKind, TurnResult, TurnStatus, Usage};
+use semio_framework_test_fixtures::fixture_path;
 use std::collections::HashMap;
 
 async fn env(to: semio_framework_actor::ActorId, lane: Lane, seq: u64) -> Envelope {
@@ -53,7 +54,7 @@ async fn maybe_sample_gates_at_2hz_and_overlays_heartbeat_age_from_the_host() {
 /// 2550 records, 7 `scaleFixture.profile` behaviour profiles) — see this module's own doc comment
 /// for why the registry is read when the law runs and not embedded: its 1.7 MB would count against the crate's source boundary.
 fn scale_fixture_registry_json() -> String {
-    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../🧪️testing/⚖️scale/🤖️generated/📇️registry/🔣️.json");
+    let path = fixture_path!("../../../../../🧪️testing/⚖️scale/🤖️generated/📇️registry/🔣️.json");
     std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("scale fixture registry {} is not readable: {error}", path.display()))
 }
 

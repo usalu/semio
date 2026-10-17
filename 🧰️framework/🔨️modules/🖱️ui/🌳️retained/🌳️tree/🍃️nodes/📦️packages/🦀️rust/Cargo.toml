@@ -1,0 +1,34 @@
+[package]
+workspace = "../../../../../../.."
+name = "semio-framework-ui-retained-tree-tree"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "semio-framework-ui-retained-tree - the tree module"
+
+[package.metadata.semio]
+role = "framework"
+id = "ui-retained-tree-tree"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-ui-arena = { path = "../../../../🏟️arena/📦️packages/🦀️rust" }
+semio-framework-ui-action = { path = "../../../../../🎬️action/📦️packages/🦀️rust" }
+semio-framework-ui-declaration = { path = "../../../../../📜️declaration/📦️packages/🦀️rust" }
+ui_contract = { path = "../../../../../🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
+semio-framework-ui-locale = { path = "../../../../../🌐️locale/📦️packages/🦀️rust" }
+semio-framework-ui-select-behavior = { path = "../../../../../🧱️elements/🔽️Select/🧭️behavior/📦️packages/🦀️rust" }
+semio-framework-ui-theme = { path = "../../../../../🎨️styling/🎭️theme/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../🌱️value/📦️packages/🦀️rust" }
+
+[dev-dependencies]

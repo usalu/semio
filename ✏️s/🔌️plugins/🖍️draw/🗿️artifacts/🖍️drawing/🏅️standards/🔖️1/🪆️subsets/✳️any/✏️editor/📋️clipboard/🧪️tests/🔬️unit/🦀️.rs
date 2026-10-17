@@ -1,5 +1,13 @@
 //! 🧪️ Clipboard fixtures preserve world placement, complete identities and atomic inverse restoration.
-use super::*;
+use semio_framework_test_fixtures::fixture_text;
+
+#[allow(unused_imports)] use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
+#[allow(unused_imports)] use semio_s_artifact_draw_drawing_model::{DrawingLayerNode, DrawingImageAsset};
+#[allow(unused_imports)] use semio_s_artifact_draw_drawing_model::{layer_base, layer_base_mut, find_drawing_layer, find_drawing_layer_location};
+#[allow(unused_imports)] use semio_s_artifact_draw_drawing_mutations::DrawingMutation;
+#[allow(unused_imports)] use semio_framework_plugin::kernel::{ClipboardFragment,ClipboardError,PastePlacement,PasteAnchor};
+#[allow(unused_imports)] use std::collections::{BTreeMap,BTreeSet};
+#[allow(unused_imports)] use semio_s_artifact_draw_drawing_editor_interaction::clipboard::*;
 fn shape(id:&str)->DrawingLayerNode {let mut shape=semio_s_artifact_draw_drawing_model::create_drawing_shape_layer_rect(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit(((id)).to_string().into()).expect("nonempty authored identity"), id);layer_base_mut(&mut shape).id=id.into();shape}
 fn apply(document:&mut DrawingSnapshot,mutations:&[DrawingMutation])->Vec<Vec<DrawingMutation>> {let mut inverses=Vec::new();for mutation in mutations {inverses.push(semio_s_artifact_draw_drawing_mutations::inverse_drawing_mutation(document,mutation).unwrap());semio_s_artifact_draw_drawing_mutations::text::apply_drawing_mutation(document,mutation).unwrap();}inverses}
 #[test]
@@ -15,18 +23,17 @@ fn drawing_clipboard_dependency_fixture_and_repeated_identity_are_complete() {
 #[test]
 fn drawing_clipboard_asset_entry_admission_preserves_original_samples_and_backing(){
  use semio_framework_value::{NativeDecodeControl,ToValue};
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../🧱️structure/🧪️tests/🧫️fixtures/🧬️mutations/📥️import-image-asset/➕️adds/📸️snapshot/➡️after/🔣️.json")).unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../../../../../🧱️structure/🧪️tests/🧫️fixtures/🧬️mutations/📥️import-image-asset/➕️adds/📸️snapshot/➡️after/🔣️.json")).unwrap();
  let asset:DrawingImageAsset=serde_json::from_value(fixture["assets"]["bitmap"].clone()).unwrap();let mut candidate=Some(("bitmap".to_owned(),asset));let mut assets=DrawingClipboardAssets::default();let mut accepted=|_|true;
  let mut denied=NativeDecodeControl::new(0,&mut accepted);let(result,event)=semio_framework_trace::observe_heap_allocations_on_this_thread(||assets.append_candidate(&mut candidate,&mut denied));assert!(result.is_err());assert_eq!((event.requested_bytes,event.released_bytes),(0,0));assert!(assets.is_empty());assert!(candidate.is_some());
  let mut admitted=NativeDecodeControl::new(job::MAX_NATIVE_BYTES,&mut accepted);let(result,event)=semio_framework_trace::observe_heap_allocations_on_this_thread(||assets.append_candidate(&mut candidate,&mut admitted));result.unwrap();assert_eq!(event.requested_bytes,admitted.owned_bytes());assert_eq!(event.released_bytes,0);assert!(candidate.is_none());assert_eq!(semio_framework_pack_json::to_json_string(&assets.to_value()),serde_json::to_string(&fixture["assets"]).unwrap());
  let original=assets.entry_at(0).unwrap().1.clone();let mut duplicate=Some(("bitmap".to_owned(),original));let mut ordinal=0;let(result,event)=semio_framework_trace::observe_heap_allocations_on_this_thread(||assets.append_candidate_step(&mut duplicate,&mut ordinal,&mut admitted));assert!(result.is_err());assert!(duplicate.is_some());assert_eq!((event.requested_bytes,event.released_bytes),(0,0));retire(duplicate);
  let mut second=Some(("second".to_owned(),assets.entry_at(0).unwrap().1.clone()));let mut ordinal=0;let(result,event)=semio_framework_trace::observe_heap_allocations_on_this_thread(||assets.append_candidate_step(&mut second,&mut ordinal,&mut admitted));assert!(!result.unwrap());assert_eq!(ordinal,1);assert!(second.is_some());assert_eq!((event.requested_bytes,event.released_bytes),(0,0));let(result,event)=semio_framework_trace::observe_heap_allocations_on_this_thread(||assets.append_candidate_step(&mut second,&mut ordinal,&mut admitted));assert!(result.unwrap());assert!(second.is_none());assert_eq!(event.released_bytes,0);assert_eq!(ordinal,0);
  let key=assets.entry_at(0).unwrap().0.as_ptr();let(actual,event)=semio_framework_trace::observe_heap_allocations_on_this_thread(||std::mem::replace(assets.entry_at_mut(0).unwrap().1,DrawingImageAsset{width:0,height:0,samples:Default::default()}));assert_eq!((event.requested_bytes,event.released_bytes),(0,0));assert_eq!(assets.entry_at(0).unwrap().0.as_ptr(),key);assert_eq!(actual.samples[0],[13,27,89,255]);assert_eq!(assets.len(),2);retire(actual);retire(assets);
- eprintln!("[DEBUG] Native packet asset entry retains original samples on zero admission and retains actual key/page backing during mutation transfer");
 }
 #[test]
 fn drawing_clipboard_world_placement_matches_neutral_fixtures() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../../../📋️clipboard/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let mut child=shape("child");layer_base_mut(&mut child).transform.x=10.0;layer_base_mut(&mut child).transform.y=10.0;
     let mut group=semio_s_artifact_draw_drawing_model::create_drawing_group_layer(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("parent")).to_string().into()).expect("nonempty authored identity"), "parent");layer_base_mut(&mut group).id="parent".into();layer_base_mut(&mut group).transform.x=10.0;layer_base_mut(&mut group).transform.y=10.0;layer_base_mut(&mut group).transform.scale_x=2.0;layer_base_mut(&mut group).transform.scale_y=3.0;
     let DrawingLayerNode::Group(body)=&mut group else {unreachable!()};body.children.push(child);
@@ -36,7 +43,7 @@ fn drawing_clipboard_world_placement_matches_neutral_fixtures() {
 }
 #[test]
 fn drawing_clipboard_assets_and_cut_inverse_are_atomic() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();let asset:DrawingImageAsset=serde_json::from_value(fixture["asset"].clone()).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../../../📋️clipboard/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let asset:DrawingImageAsset=serde_json::from_value(fixture["asset"].clone()).unwrap();
     let mut image=semio_s_artifact_draw_drawing_model::create_drawing_image_layer(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("image")).to_string().into()).expect("nonempty authored identity"), "image","bitmap");layer_base_mut(&mut image).id="image".into();
     let mut source=DrawingSnapshot {layers:vec![image].into(),assets:[("bitmap".into(),asset.clone())].into_iter().collect(),..Default::default()};let before=source.clone();let fragment=copy(&source,&["image".into()]).unwrap();let operations=cut(&source,&["image".into()]).unwrap();let inverses=apply(&mut source,&operations);assert!(source.layers.is_empty());for inverse in inverses.into_iter().rev().flatten(){semio_s_artifact_draw_drawing_mutations::text::apply_drawing_mutation(&mut source,&inverse).unwrap();}assert_eq!(before,source);
     let mut target=DrawingSnapshot::default();let original=target.clone();let (operations,selection)=admitted_paste(&target,decode(&fragment).unwrap(),&PastePlacement::default(),None).unwrap();assert_eq!(operations.len(),2);let inverses=apply(&mut target,&operations);let DrawingLayerNode::Image(image)=find_drawing_layer(&target,selection[0].as_str()).unwrap() else {unreachable!()};assert_eq!(target.assets.get(&image.image_key),Some(&asset));for inverse in inverses.into_iter().rev().flatten(){semio_s_artifact_draw_drawing_mutations::text::apply_drawing_mutation(&mut target,&inverse).unwrap();}assert_eq!(target,original);
@@ -64,7 +71,7 @@ fn drawing_clipboard_native_codec_matches_serde_and_resumes_large_text(){
 }
 #[test]
 fn drawing_clipboard_boolean_operand_displacement_survives_parent_change(){
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();let expected=&fixture["booleanPlacements"][0];
+    let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../../../📋️clipboard/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let expected=&fixture["booleanPlacements"][0];
     let mut a=shape("a");layer_base_mut(&mut a).transform.x=3.0;
     let mut b=shape("b");layer_base_mut(&mut b).transform.x=5.0;
     let mut result=semio_s_artifact_draw_drawing_model::create_drawing_boolean_layer(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("result")).to_string().into()).expect("nonempty authored identity"), "result","union",vec!["a".into(),"b".into()].into());layer_base_mut(&mut result).id="result".into();layer_base_mut(&mut result).transform.x=7.0;
@@ -80,12 +87,11 @@ fn drawing_clipboard_boolean_operand_displacement_survives_parent_change(){
 #[test]
 fn drawing_clipboard_hydration_preserves_admitted_identity_and_depth_refusal_owners(){
     use semio_framework_value::{ToValue,NativeDecodeControl};
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();let cases=fixture["codecCases"].as_array().unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../../../📋️clipboard/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let cases=fixture["codecCases"].as_array().unwrap();
     let identity="a".repeat(cases[0]["identityBytes"].as_u64().unwrap()as usize);let a=shape(&identity);let b=shape("b");let mut boolean=semio_s_artifact_draw_drawing_model::create_drawing_boolean_layer(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Result")).to_string().into()).expect("nonempty authored identity"), "Result","union",vec![identity.clone().into(),"b".into()].into());layer_base_mut(&mut boolean).id="result".into();
     let packet=DrawingClipboard{schema:SCHEMA.into(),roots:vec![a,b,boolean],selected:vec!["result".into()],assets:Default::default()};let mut accepted=|_|true;let mut control=NativeDecodeControl::new(job::MAX_NATIVE_BYTES,&mut accepted);let mut hydration=decode::ClipboardHydration::new(packet.to_value());while !hydration.step(&mut control).unwrap(){}assert_eq!(hydration.packet,packet);retire(hydration);
     let mut node=shape("leaf");for index in 0..cases[1]["depth"].as_u64().unwrap(){let mut group=semio_s_artifact_draw_drawing_model::create_drawing_group_layer(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit(((&format!("Group {index}"))).to_string().into()).expect("nonempty authored identity"), &format!("Group {index}"));layer_base_mut(&mut group).id=format!("group-{index}").into();let DrawingLayerNode::Group(body)=&mut group else{unreachable!()};body.children.push(node);node=group;}
     let selected=layer_base(&node).id.to_string_owner();let packet=DrawingClipboard{schema:SCHEMA.into(),roots:vec![node],selected:vec![selected],assets:Default::default()};let mut hydration=decode::ClipboardHydration::new(packet.to_value());let error=loop{match hydration.step(&mut control){Ok(false)=>{},Ok(true)=>panic!("Deep clipboard tree must be refused"),Err(error)=>break error}};assert_eq!(error.kind,semio_framework_value::ValueRefusalKind::InvalidValue);retire(hydration);
-    eprintln!("[DEBUG] Native clipboard long identity {} bytes retained; depth {} refused with original partial owner; no publication",identity.len(),cases[1]["depth"]);
 }
 fn graph_layer(id:&str,nodes:&[serde_json::Value])->DrawingLayerNode{
     let row=nodes.iter().find(|row|row["id"]==id).unwrap();let edges=row["edges"].as_array().unwrap();
@@ -97,15 +103,13 @@ fn graph_layer(id:&str,nodes:&[serde_json::Value])->DrawingLayerNode{
 }
 #[test]
 fn drawing_clipboard_dependency_admission_replays_independent_graph_fixtures(){
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../../../📋️clipboard/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     for row in fixture["dependencyCases"].as_array().unwrap(){let nodes=row["nodes"].as_array().unwrap();let packet=DrawingClipboard{schema:SCHEMA.into(),roots:row["roots"].as_array().unwrap().iter().map(|id|graph_layer(id.as_str().unwrap(),nodes)).collect(),selected:serde_json::from_value(row["selected"].clone()).unwrap(),assets:Default::default()};let before=packet.clone();assert_eq!(validate(&packet).is_ok(),row["accepted"].as_bool().unwrap(),"{}",row["name"]);assert_eq!(packet,before);}
-    eprintln!("[DEBUG] Native clipboard graph admission replays neutral graphlib dependency/cycle witness rows");
 }
 #[test]
 fn drawing_clipboard_maximum_body_roundtrips_shared_wire_envelope(){
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../../../📋️clipboard/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     for row in fixture["envelopeCases"].as_array().unwrap(){let scalar=row["scalar"].as_str().unwrap();let text=scalar.repeat(row["bodyBytes"].as_u64().unwrap()as usize/scalar.len());assert_eq!(text.len(),semio_framework_plugin::kernel::CLIPBOARD_TEXT_MAX_BYTES);let actual=semio_framework_pack_json::to_json_string(&semio_framework_value::DslValue::String(text.clone()));assert_eq!(actual,serde_json::to_string(&text).unwrap());assert!(actual.len()+1024<=semio_framework_plugin::kernel::CLIPBOARD_FRAGMENT_MAX_WIRE_BYTES);let roundtrip:String=serde_json::from_str(&actual).unwrap();assert_eq!(roundtrip,text);}
-    eprintln!("[DEBUG] Native maximum clipboard body JSON escape witness fits the shared producer/consumer wire envelope");
 }
 
-fn admitted_paste(document:&DrawingSnapshot,packet:DrawingClipboard,placement:&PastePlacement,parent:Option<&str>)->Result<(Vec<DrawingMutation>,Vec<String>),ClipboardError>{let mut observer=|_|true;let mut control=semio_framework_value::NativeEncodeControl::new(1024*1024,&mut observer);super::paste(document,packet,placement,parent,&mut control)}
+fn admitted_paste(document:&DrawingSnapshot,packet:DrawingClipboard,placement:&PastePlacement,parent:Option<&str>)->Result<(Vec<DrawingMutation>,Vec<String>),ClipboardError>{let mut observer=|_|true;let mut control=semio_framework_value::NativeEncodeControl::new(1024*1024,&mut observer);semio_s_artifact_draw_drawing_editor_interaction::clipboard::paste(document,packet,placement,parent,&mut control)}

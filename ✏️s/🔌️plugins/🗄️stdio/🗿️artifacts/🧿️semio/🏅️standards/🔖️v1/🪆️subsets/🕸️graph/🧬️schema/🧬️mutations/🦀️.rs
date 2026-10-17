@@ -23,24 +23,24 @@ use crate::schema::diff::SemioGraphDiff;
 use crate::schema::snapshot::SemioGraphSnapshot;
 
 //#region 🔖️Leaves
-use super::add_edge_property;
-use super::add_node_port;
-use super::add_node_property;
-use super::change_node_kind;
-use super::change_node_label;
-use super::create_edge;
-use super::create_node;
-use super::delete_edge;
-use super::delete_node;
-use super::drag_nodes;
-use super::move_node;
-use super::remove_node_port;
-use super::remove_edge_property;
-use super::remove_node_property;
-use super::rename_node;
-use super::resize_node;
-use super::set_edge_property;
-use super::set_node_property;
+use crate::schema::mutations::add_edge_property;
+use crate::schema::mutations::add_node_port;
+use crate::schema::mutations::add_node_property;
+use crate::schema::mutations::change_node_kind;
+use crate::schema::mutations::change_node_label;
+use crate::schema::mutations::create_edge;
+use crate::schema::mutations::create_node;
+use crate::schema::mutations::delete_edge;
+use crate::schema::mutations::delete_node;
+use crate::schema::mutations::drag_nodes;
+use crate::schema::mutations::move_node;
+use crate::schema::mutations::remove_node_port;
+use crate::schema::mutations::remove_edge_property;
+use crate::schema::mutations::remove_node_property;
+use crate::schema::mutations::rename_node;
+use crate::schema::mutations::resize_node;
+use crate::schema::mutations::set_edge_property;
+use crate::schema::mutations::set_node_property;
 //#endregion 🔖️Leaves
 
 //#region 🔖️Mutations
@@ -115,11 +115,5 @@ mod tests;
 //#endregion 🧪️Tests
 
 //#region 🧪️FixtureTests
-/// 🧪️ Handcrafted mutation fixtures (contract D1, ticket `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`)
-/// — one case per triad leaf, self-wired here rather than in `🦀️.rs` so this subset owns its
-/// own test surface. `#[path = "."]` re-roots the nested `#[path]`s at THIS file's directory (the
-/// `🧬️mutations` root) instead of the implicit `🦀️component/` child directory.
-#[cfg(test)]
-#[path = "🧪️tests/🔬️fixture/🦀️.rs"]
-mod fixture_tests;
+
 //#endregion 🧪️FixtureTests

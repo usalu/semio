@@ -29,11 +29,11 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import type { Download, FileChooser, Page } from "playwright";
 import { PLAYWRIGHT_MODULE_SPECIFIER } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/📋️plan/🟦️.ts";
-import { ensureParityPlaywrightBrowsersPath } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/⚖️parity/🏃️execution/🟦️.ts";
-import { FAULT, NOISE, awaitBeacon, click, clickUncovered, dismissIntroduction, driveRenderedEdit, fillStagedArgument, keyOf, readMatrixPins, readShell, roleOf, seatLocale, unfoldActionsRail, windowIds, withDevServe, witness, type MatrixPins, type MatrixProgram, type MatrixRenderedEdit } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧮️program-matrix/🟦️.ts";
+import { ensureParityPlaywrightBrowsersPath } from "@semio-tech/framework-os-dev/parity/execution";
+import { FAULT, NOISE, awaitBeacon, click, clickUncovered, dismissIntroduction, driveRenderedEdit, fillStagedArgument, keyOf, readMatrixPins, readShell, roleOf, seatLocale, unfoldActionsRail, windowIds, withDevServe, witness, type MatrixPins, type MatrixProgram, type MatrixRenderedEdit } from "@semio-tech/framework-os-dev/testing/program-matrix";
 import { createKind, openSweepSpace, stagedKinds, type HubDocumentSweepOptions, type HubSweepRow } from "../🗂️document-sweep/🟦️.ts";
-import { acceptanceCheckResult, publishAcceptanceCheckResult, withAcceptanceRecord } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/🟦️.ts";
-import { decodeDocumentArchiveBytes } from "../../../🧰️framework/🛍️products/💻️os/🟦️.ts";
+import { acceptanceCheckResult, publishAcceptanceCheckResult, withAcceptanceRecord } from "@semio-tech/repo-test/acceptance/orchestration";
+import { decodeDocumentArchiveBytes } from "@semio-tech/framework-os";
 import { EXPORT_ARTIFACT_DOCUMENT_ACTION_ID, IMPORT_ARTIFACT_DOCUMENT_ACTION_ID } from "@semio-tech/framework/manifest";
 
 //#region 🔖️Pins

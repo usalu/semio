@@ -1,0 +1,15 @@
+{
+ "name": "ftcq",
+ "crates": [
+  "semio-framework-quiz",
+  "semio-framework-quiz-tests",
+  "semio-framework-quiz-primitives-tests"
+ ],
+ "base": {
+  "rev": "1bae6115bc5",
+  "crates": [
+   "semio-framework-quiz"
+  ]
+ },
+ "note": "FTC quiz (2 companions)"
+}

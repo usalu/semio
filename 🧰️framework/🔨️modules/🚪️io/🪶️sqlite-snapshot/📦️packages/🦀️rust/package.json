@@ -11,11 +11,13 @@
     "test-ownership": "bun --cwd \"../../../../../..\" repo run @semio-tech/framework-sqlite-snapshot-rs:test-ownership"
   },
   "devDependencies": {
+    "@semio-tech/compiler-syntax-rust-ts": "workspace:*",
     "@semio-tech/framework": "workspace:*",
     "@semio-tech/process": "workspace:*",
     "@semio-tech/schema-validator-ts": "workspace:*"
   },
   "dependencies": {
+    "@semio-tech/framework-async": "workspace:*",
     "@semio-tech/value-ts": "workspace:*"
   }
 }

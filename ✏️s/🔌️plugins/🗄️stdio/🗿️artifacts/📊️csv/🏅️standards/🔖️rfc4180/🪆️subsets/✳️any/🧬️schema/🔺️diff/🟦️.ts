@@ -51,6 +51,10 @@ type stdioCsvRfc4180AnyDiffGuardSizeBounds = { readonly minItems?: number; reado
 
 export const stdioCsvRfc4180AnyDiffGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : stdioCsvRfc4180AnyDiffGuardReject(at, "value is not an object");
+export const stdioCsvRfc4180AnyDiffGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) stdioCsvRfc4180AnyDiffGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const stdioCsvRfc4180AnyDiffGuardArray = (value: unknown, at: string, bounds: stdioCsvRfc4180AnyDiffGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return stdioCsvRfc4180AnyDiffGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) stdioCsvRfc4180AnyDiffGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -81,7 +85,7 @@ export const stdioCsvRfc4180AnyDiffGuardConstant = <T extends string | number | 
 //#endregion 🚪️Parsers
 
 export function parseCsvDiff(value: unknown, at = "$"): CsvDiff {
-  const row = stdioCsvRfc4180AnyDiffGuardObject(value, at);
+  const row = stdioCsvRfc4180AnyDiffGuardClosed(stdioCsvRfc4180AnyDiffGuardObject(value, at), at, ["hasHeader", "records"]);
   return {
     hasHeader: row["hasHeader"] === undefined ? undefined : stdioCsvRfc4180AnyDiffGuardBoolean(row["hasHeader"], `${at}.hasHeader`),
     records: row["records"] === undefined ? undefined : parseCsvRecordsDiff(row["records"], `${at}.records`),
@@ -89,7 +93,7 @@ export function parseCsvDiff(value: unknown, at = "$"): CsvDiff {
 }
 
 export function parseCsvFieldDiff(value: unknown, at = "$"): CsvFieldDiff {
-  const row = stdioCsvRfc4180AnyDiffGuardObject(value, at);
+  const row = stdioCsvRfc4180AnyDiffGuardClosed(stdioCsvRfc4180AnyDiffGuardObject(value, at), at, ["value", "quoted"]);
   return {
     value: row["value"] === undefined ? undefined : stdioCsvRfc4180AnyDiffGuardString(row["value"], `${at}.value`),
     quoted: row["quoted"] === undefined ? undefined : stdioCsvRfc4180AnyDiffGuardBoolean(row["quoted"], `${at}.quoted`),
@@ -97,7 +101,7 @@ export function parseCsvFieldDiff(value: unknown, at = "$"): CsvFieldDiff {
 }
 
 export function parseCsvRecordModified(value: unknown, at = "$"): CsvRecordModified {
-  const row = stdioCsvRfc4180AnyDiffGuardObject(value, at);
+  const row = stdioCsvRfc4180AnyDiffGuardClosed(stdioCsvRfc4180AnyDiffGuardObject(value, at), at, ["index", "diff"]);
   return {
     index: stdioCsvRfc4180AnyDiffGuardInteger(row["index"], `${at}.index`, {"minimum": 0}),
     diff: parseCsvRecordDiff(row["diff"], `${at}.diff`),
@@ -105,7 +109,7 @@ export function parseCsvRecordModified(value: unknown, at = "$"): CsvRecordModif
 }
 
 export function parseCsvRecordsDiff(value: unknown, at = "$"): CsvRecordsDiff {
-  const row = stdioCsvRfc4180AnyDiffGuardObject(value, at);
+  const row = stdioCsvRfc4180AnyDiffGuardClosed(stdioCsvRfc4180AnyDiffGuardObject(value, at), at, ["removed", "modified", "added"]);
   return {
     removed: row["removed"] === undefined ? undefined : stdioCsvRfc4180AnyDiffGuardArray(row["removed"], `${at}.removed`).map((item, index) => stdioCsvRfc4180AnyDiffGuardInteger(item, `${at}.removed[${index}]`, {"minimum": 0})),
     modified: row["modified"] === undefined ? undefined : stdioCsvRfc4180AnyDiffGuardArray(row["modified"], `${at}.modified`).map((item, index) => parseCsvRecordModified(item, `${at}.modified[${index}]`)),
@@ -114,7 +118,7 @@ export function parseCsvRecordsDiff(value: unknown, at = "$"): CsvRecordsDiff {
 }
 
 export function parseCsvRecordAdded(value: unknown, at = "$"): CsvRecordAdded {
-  const row = stdioCsvRfc4180AnyDiffGuardObject(value, at);
+  const row = stdioCsvRfc4180AnyDiffGuardClosed(stdioCsvRfc4180AnyDiffGuardObject(value, at), at, ["index", "record"]);
   return {
     index: stdioCsvRfc4180AnyDiffGuardInteger(row["index"], `${at}.index`, {"minimum": 0}),
     record: parseCsvRecord(row["record"], `${at}.record`),
@@ -122,7 +126,7 @@ export function parseCsvRecordAdded(value: unknown, at = "$"): CsvRecordAdded {
 }
 
 export function parseCsvRecordDiff(value: unknown, at = "$"): CsvRecordDiff {
-  const row = stdioCsvRfc4180AnyDiffGuardObject(value, at);
+  const row = stdioCsvRfc4180AnyDiffGuardClosed(stdioCsvRfc4180AnyDiffGuardObject(value, at), at, ["fields"]);
   return {
     fields: row["fields"] === undefined ? undefined : stdioCsvRfc4180AnyDiffGuardArray(row["fields"], `${at}.fields`).map((item, index) => (item === null ? null : parseCsvFieldDiff(item, `${at}.fields[${index}]`))),
   };

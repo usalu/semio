@@ -5,7 +5,6 @@
 use semio_s_artifact_raster_raster_diff::{RasterDiff, RasterPixelRegion};
 use semio_s_artifact_raster_raster_diff::{canvas, inverse_pixel_region, rect_samples};
 use crate::paint_stroke::{refused, RASTER_PAINT_TARGETS};
-#[cfg(test)] use semio_s_artifact_raster_raster_mutations::RasterMutation;
 use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
 
 //#region 🔖️Payload
@@ -97,7 +96,4 @@ impl<Op> protocol::MutationKind<RasterSnapshot, Op> for WritePixelRegion where O
 //#endregion 🔖️Kind
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

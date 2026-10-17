@@ -25,7 +25,7 @@ pub struct ArtifactStoreOneItemAuthorityRetirement {
 }
 
 impl ArtifactStoreOneItemAuthorityRetirement {
-    pub(super) fn new(authority: Arc<ArtifactStoreOneItemLiveAuthority>) -> Self {
+    pub fn new(authority: Arc<ArtifactStoreOneItemLiveAuthority>) -> Self {
         Self { owner: semio_framework_value::retirement::shared::SharedControlledRetirement::lease(authority) }
     }
 }

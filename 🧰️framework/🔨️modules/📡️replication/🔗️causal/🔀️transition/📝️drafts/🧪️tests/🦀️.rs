@@ -43,5 +43,4 @@ fn history_drafts_preserve_original_replaced_input_rows_and_every_arena_on_cance
         assert!(!owner.terminal_is_empty());assert_eq!(owner.rows.allocated_bytes(),row_backing);for(index,pointer)in original.iter().enumerate(){if let Some(current)=owner.rows.get(index).unwrap(){if let InputReplacement::Input {schema,payload}=current {assert_eq!(Some((schema.as_ptr(),payload.as_ptr(),schema.capacity(),payload.capacity())),*pointer);}}}
         close((owner,taken),held+taken_capacity,copy.as_u64().unwrap()as usize);
     }}
-    println!("[DEBUG] native draft sorted replacement agrees with independent JSON; displaced inputs and empty/unused schema-payload capacities remain original; ordered pop0heap; five-axis refusal0effects; every birth/release physical; terminal Drop0heap");
 }

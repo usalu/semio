@@ -1,0 +1,1 @@
+{"name": "ftcvmin", "crates": ["semio-framework-value-retained-clone", "semio-framework-value-tests", "semio-framework-value-clone-source-testing"], "note": "e51 reduced ftcv: the crates this slice touched plus the helper, everything else stubbed (the full ftcv run needs more than 50 minutes at machine load 70)"}

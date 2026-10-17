@@ -1,36 +1,5 @@
-use crate::standards::v1::subsets::any::io::export::ifc::testkit::{count, document, house, quantity, rows, string, tags, target};
+use crate::standards::v1::subsets::any::io::export::ifc::testkit::{count, document, house, quantity, rows, string, tags, target, vertex, with_ramp};
 use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, Point2, Ramp, TopConstraint, Vertex};
-
-fn vertex(x: f64, y: f64, bulge: f64) -> Vertex {
-    Vertex { point: Point2 { x, y }, bulge }
-}
-
-/// 🛝️ The house with a 10 m ramp on its first storey: 1.5 m landings at both ends, 0.5 m of rise.
-pub fn with_ramp(left: bool) -> ModelSnapshot {
-    let mut model = house();
-    let storey = model.storeys.iter().min_by_key(|(_, storey)| storey.level).map(|(id, _)| id.clone()).expect("a storey");
-    let material = model.materials.keys().next().cloned().expect("a material");
-    model.ramps.insert(
-        "rp-1".into(),
-        Ramp {
-            storey,
-            path: vec![vertex(0.0, -3.0, 0.0), vertex(10.0, -3.0, 0.0)],
-            width: 1.2,
-            landing_start: 1.5,
-            landing_end: 1.5,
-            landing_turn: 1.5,
-            max_slope: 1.0 / 12.0,
-            thickness: 0.2,
-            material,
-            base_offset: 0.0,
-            top: TopConstraint::Unconnected { height: 0.5 },
-            railing_left: left,
-            railing_right: false,
-            name: "Entrance Ramp".into(),
-        },
-    );
-    model
-}
 
 #[test]
 fn a_ramp_aggregates_a_flight_per_slope_and_a_landing_slab_per_landing() {

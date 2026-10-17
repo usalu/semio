@@ -8,7 +8,7 @@ use protocol::{MutationKind, SemanticDescriptor};
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetWallEndJoin {
     pub id: String,
-    pub end: super::super::modify::WallEnd,
+    pub end: crate::standards::v1::subsets::any::schema::mutations::modify::WallEnd,
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub join: Option<crate::standards::v1::subsets::any::schema::snapshot::EndJoin>,
 }

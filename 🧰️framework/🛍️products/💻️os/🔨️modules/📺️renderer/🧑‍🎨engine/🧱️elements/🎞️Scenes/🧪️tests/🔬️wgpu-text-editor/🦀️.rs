@@ -1,5 +1,9 @@
-use super::*;
-use crate::interpreter::framework_widget_context;
+use semio_framework_os_renderer_wgpu_contracts::{FrameworkWidgetContext, framework_widget_context};
+use semio_framework_os_renderer_wgpu_scene_state::text_editor_ui;
+use std::collections::HashMap;
+use super::{cursor_from_click, identifier_prefix_start, line_col_at, multi_span_replace, render_text_editor_overlays, text_editor_cancel_rename, text_editor_close_completions, text_editor_completions, text_editor_completions_open, text_editor_line_range, text_editor_local_menu_action, text_editor_move_completion, text_editor_open_completions, text_editor_popup_key, text_editor_popup_pointer, text_editor_queue_menu_action, text_editor_rename_active, text_editor_rename_info, text_editor_start_rename};
+use ui_wgpu::wgpu::{ActionDescriptor, Rect, SurfaceKind, Theme, UiComponentSceneNode};
+use ui_wgpu::wgpu::input::KeyAction;
 use semio_framework_ui_layout::layout::UiPresence;
 
 fn test_scene(surface_id: &str, kind: SurfaceKind) -> UiComponentSceneNode {

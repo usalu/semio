@@ -1,4 +1,11 @@
-use super::*;
+use crate::{schema::snapshot::DxfBlock, schema::snapshot::DxfEntity, schema::snapshot::DxfHeaderVar, schema::snapshot::DxfOtherTable, schema::snapshot::DxfTables};
+use crate::{schema::snapshot::DxfCircle, schema::snapshot::DxfLine, schema::snapshot::DxfOther};
+use crate::DxfSnapshot;
+use crate::STDIO_DXF_DOCUMENT_SCHEMA;
+use semio_framework_test_fixtures::fixture_text;
+#[allow(unused_imports)]
+use framework_schema::ArtifactSchema;
+use crate::standards::v_r12::subsets::any::schema::*;
 
 #[semio_framework_async_macros::async_test]
 async fn empty_snapshot_matches_schema() {
@@ -128,18 +135,18 @@ mod conformance_laws {
 
     #[semio_framework_async_macros::async_test]
     async fn fixture_honesty_law() {
-        const FIXTURE_DSL: &str = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio");
+        static FIXTURE_DSL: std::sync::LazyLock<&str> = std::sync::LazyLock::new(|| super::fixture_text!("../../../../../📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio"));
         const FIXTURE_PACK: &[u8] = include_bytes!("../../../📚️examples/🎬️demo/🖼️assets/🎒️.pack.semio");
 
         let demo = demo_dxf_snapshot();
         let canonical=pack::snapshot::ArtifactDsl::print_dsl(&demo);
-        assert_eq!(canonical,FIXTURE_DSL,"shipped owned DXF DSL must match canonical fields: {canonical}");
+        assert_eq!(canonical,(*FIXTURE_DSL),"shipped owned DXF DSL must match canonical fields: {canonical}");
         let canonical_pack=pack::snapshot::ArtifactPack::encode_pack(&demo);
         assert_eq!(canonical_pack,FIXTURE_PACK,"canonical owned DXF pack bytes: {}",canonical_pack.iter().map(|byte|format!("{byte:02x}")).collect::<String>());
 
-        let parsed = <DxfSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(FIXTURE_DSL).expect("parse shipped .dsl.semio fixture");
+        let parsed = <DxfSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl((*FIXTURE_DSL)).expect("parse shipped .dsl.semio fixture");
         assert_eq!(parsed, demo, "shipped .dsl.semio fixture does not parse back to demo_dxf_snapshot()");
-        assert_eq!(pack::snapshot::ArtifactDsl::print_dsl(&demo), FIXTURE_DSL, "print_dsl(demo_dxf_snapshot()) drifted from the shipped .dsl.semio fixture");
+        assert_eq!(pack::snapshot::ArtifactDsl::print_dsl(&demo), (*FIXTURE_DSL), "print_dsl(demo_dxf_snapshot()) drifted from the shipped .dsl.semio fixture");
 
         let decoded = <DxfSnapshot as pack::snapshot::ArtifactPack>::decode_pack(FIXTURE_PACK).expect("decode shipped .pack.semio fixture");
         assert_eq!(decoded, demo, "shipped .pack.semio fixture does not decode back to demo_dxf_snapshot()");
@@ -154,7 +161,7 @@ mod conformance_laws {
 #[test]
 fn dxf_entity_wire_is_byte_identical_to_the_neutral_fixture() {
     use crate::schema::snapshot::DxfEntity;
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🧬️entity-wire/🔣️.json")).expect("neutral entity wire fixture");
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../🧪️tests/🧫️fixtures/🧬️entity-wire/🔣️.json")).expect("neutral entity wire fixture");
     for case in fixture["cases"].as_array().expect("entity wire cases") {
         let wire = case["wire"].as_str().expect("wire text");
         let entity: DxfEntity = semio_framework_pack_json::from_json_str(wire, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_else(|error| panic!("{} decodes: {error:?}", case["id"]));

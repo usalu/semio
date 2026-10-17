@@ -29,6 +29,10 @@ type stdioAvi10HdrlInferenceGuardSizeBounds = { readonly minItems?: number; read
 
 export const stdioAvi10HdrlInferenceGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : stdioAvi10HdrlInferenceGuardReject(at, "value is not an object");
+export const stdioAvi10HdrlInferenceGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) stdioAvi10HdrlInferenceGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const stdioAvi10HdrlInferenceGuardArray = (value: unknown, at: string, bounds: stdioAvi10HdrlInferenceGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return stdioAvi10HdrlInferenceGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) stdioAvi10HdrlInferenceGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -59,14 +63,14 @@ export const stdioAvi10HdrlInferenceGuardConstant = <T extends string | number |
 //#endregion 🚪️Parsers
 
 export function parseAviInference(value: unknown, at = "$"): AviInference {
-  const row = stdioAvi10HdrlInferenceGuardObject(value, at);
+  const row = stdioAvi10HdrlInferenceGuardClosed(stdioAvi10HdrlInferenceGuardObject(value, at), at, ["duration"]);
   return {
     duration: parseAviDuration(row["duration"], `${at}.duration`),
   };
 }
 
 export function parseAviDuration(value: unknown, at = "$"): AviDuration {
-  const row = stdioAvi10HdrlInferenceGuardObject(value, at);
+  const row = stdioAvi10HdrlInferenceGuardClosed(stdioAvi10HdrlInferenceGuardObject(value, at), at, ["durationSeconds", "streamCount", "totalFrames"]);
   return {
     durationSeconds: stdioAvi10HdrlInferenceGuardNumber(row["durationSeconds"], `${at}.durationSeconds`, {"minimum": 0}),
     streamCount: stdioAvi10HdrlInferenceGuardInteger(row["streamCount"], `${at}.streamCount`, {"minimum": 0}),

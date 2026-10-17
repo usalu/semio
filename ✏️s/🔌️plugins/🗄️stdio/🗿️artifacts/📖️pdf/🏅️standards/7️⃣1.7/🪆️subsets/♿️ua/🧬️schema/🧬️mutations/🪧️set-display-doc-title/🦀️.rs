@@ -1,7 +1,6 @@
 //! 🪧️ Authoritative PDF/UA mutation for set display doc title.
 
-use super::remove_display_doc_title::RemoveDisplayDocTitle;
-use super::PdfUaMutation;
+use crate::standards::v1_7::subsets::ua::schema::mutations::remove_display_doc_title::RemoveDisplayDocTitle;
 use crate::standards::v1_7::subsets::base::schema::conformance_support as support;
 use crate::standards::v1_7::subsets::base::schema::diff::{self, PdfDiff};
 use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfObject, PdfSnapshot};
@@ -18,18 +17,21 @@ pub struct SetDisplayDocTitle {
     pub entry_index: Option<usize>,
 }
 
-impl MutationKind<PdfSnapshot, PdfUaMutation> for SetDisplayDocTitle {
+impl<Op> MutationKind<PdfSnapshot, Op> for SetDisplayDocTitle
+where
+    Op: protocol::Mutation<PdfSnapshot, Diff = PdfDiff> + From<SetDisplayDocTitle> + From<crate::standards::v1_7::subsets::ua::schema::mutations::remove_display_doc_title::RemoveDisplayDocTitle>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "display-doc-title", kind: "set-display-doc-title", record: "Set" };
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
         MutationOutcome::new(diff::graph_edit(support::set_catalog_entry_rows(base, "ViewerPreferences", support::single_entry_dict("DisplayDocTitle", PdfObject::Bool(self.display)), self.entry_index)))
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfUaMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         Ok({
             match support::catalog_flag(base, "ViewerPreferences", "DisplayDocTitle") {
-                Some(display) => vec![PdfUaMutation::SetDisplayDocTitle(SetDisplayDocTitle { display, entry_index: None })],
-                None => vec![PdfUaMutation::RemoveDisplayDocTitle(RemoveDisplayDocTitle {})],
+                Some(display) => vec![Op::from(SetDisplayDocTitle { display, entry_index: None })],
+                None => vec![Op::from(RemoveDisplayDocTitle {})],
             }
         })
     }
@@ -45,9 +47,7 @@ impl MutationKind<PdfSnapshot, PdfUaMutation> for SetDisplayDocTitle {
 //#endregion 🔖️Mutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
 
 //#region 🔖️Facets

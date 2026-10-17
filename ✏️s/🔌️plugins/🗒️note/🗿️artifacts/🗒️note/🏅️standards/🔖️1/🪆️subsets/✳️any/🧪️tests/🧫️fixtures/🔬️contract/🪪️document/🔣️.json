@@ -217,28 +217,62 @@
   ],
   "validDiffs": [
     {
+      "schema": null,
+      "id": null,
+      "title": null,
+      "blocks": null,
+      "gridVisible": null,
+      "gridSpacing": null,
+      "gridSubdivisions": null,
+      "gridOpacity": null,
+      "snapEnabled": null,
+      "snapGridSpacing": null,
+      "pencilWidth": null,
+      "eraserRadius": null,
+      "assets": null,
       "linkedArtifact": {
-        "target": {
-          "artifactId": "linked-a",
-          "dialect": {
-            "artifactKind": "s.stdio.semio",
-            "standard": "v1",
-            "subset": "text"
-          }
-        },
-        "pin": {
-          "kind": "head"
-        },
-        "role": "reference"
+        "value": {
+          "target": {
+            "artifactId": "linked-a",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "text"
+            }
+          },
+          "pin": {
+            "kind": "head"
+          },
+          "role": "reference"
+        }
       }
     },
     {
-      "linkedArtifact": null
+      "schema": null,
+      "id": null,
+      "title": null,
+      "blocks": null,
+      "gridVisible": null,
+      "gridSpacing": null,
+      "gridSubdivisions": null,
+      "gridOpacity": null,
+      "snapEnabled": null,
+      "snapGridSpacing": null,
+      "pencilWidth": null,
+      "eraserRadius": null,
+      "assets": null,
+      "linkedArtifact": {
+        "value": null
+      }
     },
     {
+      "schema": null,
+      "id": null,
+      "title": null,
       "blocks": {
-        "added": [
+        "rows": [
           {
+            "row": "add",
             "parentId": null,
             "index": 0,
             "block": {
@@ -255,11 +289,18 @@
               "imageKey": "image-a"
             }
           }
-        ],
-        "removed": [],
-        "patched": [],
-        "reordered": null
-      }
+        ]
+      },
+      "gridVisible": null,
+      "gridSpacing": null,
+      "gridSubdivisions": null,
+      "gridOpacity": null,
+      "snapEnabled": null,
+      "snapGridSpacing": null,
+      "pencilWidth": null,
+      "eraserRadius": null,
+      "assets": null,
+      "linkedArtifact": null
     }
   ],
   "committed": {

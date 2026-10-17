@@ -1,4 +1,7 @@
 use super::*;
+/// 🎨️ LAW (ticket 26/09/23 session 14d, WG11): every edit that turns the lit mesh shader into the painted one finds its anchor
+/// EXACTLY once — the emissive anchor once lost its match when the lit shader gained `+ in.emissive_cutoff.rgb`, the
+/// `lit_color` declaration was silently dropped, and every GPU context refused `world3d_painted_shader`.
 #[test]
 fn every_painted_shader_edit_finds_its_anchor_in_the_lit_shader_once() {
     for (anchor, _) in WORLD3D_PAINTED_SHADER_EDITS {

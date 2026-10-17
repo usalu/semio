@@ -1,0 +1,93 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "a",
+    "b",
+    "normal",
+    "distance",
+    "epsilon",
+    "expected"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "a": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "number",
+        "minimum": -3.4028234663852886e+38,
+        "maximum": 3.4028234663852886e+38
+      }
+    },
+    "b": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "number",
+        "minimum": -3.4028234663852886e+38,
+        "maximum": 3.4028234663852886e+38
+      }
+    },
+    "normal": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "number",
+        "minimum": -3.4028234663852886e+38,
+        "maximum": 3.4028234663852886e+38
+      }
+    },
+    "distance": {
+      "type": "number"
+    },
+    "epsilon": {
+      "type": "number",
+      "minimum": 0
+    },
+    "expected": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "retained",
+        "parameter",
+        "position"
+      ],
+      "properties": {
+        "retained": {
+          "type": "boolean"
+        },
+        "parameter": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "position": {
+          "anyOf": [
+            {
+              "type": "array",
+              "minItems": 3,
+              "maxItems": 3,
+              "items": {
+                "type": "number",
+                "minimum": -3.4028234663852886e+38,
+                "maximum": 3.4028234663852886e+38
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    }
+  }
+}

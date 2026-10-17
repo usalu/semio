@@ -1,0 +1,22 @@
+# Native Volume Service Witness Implementation
+
+The earlier private macOS publication runs16382 and31510 remain failed. Both reached exact detach/current receipt publication/reattach, then refused the full before/after witness. The second run's bounded adjacent trace identified four newly present FSEvents log files; application, link, zero-file and raw Native journal records matched in that diagnostic. Those observations never retroactively qualified either operation. Both private pending fixtures remain retained.
+
+The bounded protected service diagnostic completed0 at16:43UTC under genuine60-second Original, actual child resource EX, owned Bun child0/null, exact UUID FD/named/root/service-directory stamps and canonical parent recheck/close. Its service/stored UUID matched4BD31285-00F8-4C61-802A-7F2DF72FCF27 on observed dev16777314/ino2. Result explicitly says observed-volume-only. Installed Apple SDK declarations supplied dev_t/CFIndex/CFStringEncoding signatures and Copy ownership. No service directory or logging setting was changed.
+
+The implemented schema reserves the Native volume service domain. The observer uses the actual installed CoreServices/CoreFoundation interface behind local types, genuine issued control and the private caller observer. It recognizes only an actual mount root (root inode2, parent device differs), exact stable0700 service directory and0600 single-link36-byte UUID file, and a canonical service API UUID association. It closes every Copy-owned object/library and preserves arbitrary primary/cleanup outcomes. Caller DATA does not grant publication authority or attest authorship of individual log files.
+
+The generic witness still enumerates, reads, hashes, counts and charges every entry through two complete current censuses. All existing depth/path/work/chunk/descriptor bounds remain. Reserved members are only the exact UUID file and sixteen-character lowercase hexadecimal regular single-link0600 log files with the recorded service uid/gid; unknown names, nested directories, links, hardlinks or identity/byte changes refuse. The full current digest/counts and separate service digest/counts remain returned. applicationSha256 hashes every application entry plus the stable authenticated service marker; raw Native journal SHA remains separately compared. The private publisher accepts only actual captured witnesses, compares application/journal/service identity and returns mounted-application-preserved. Inactive-current remains a current observation scope.
+
+Native application writers now reject the reserved top-level service directory, including ASCII case variants, through the existing schema-owned Native path boundary. Nested ordinary application names and generic host-directory witnesses remain available; a host folder merely named .fseventsd is fully included as application payload.
+
+Actual Source evidence:
+- Required Witness fields exposed the old output contract (retained contract RED).
+- Writer reservation RED expectedfalse/gottrue for .fseventsd; casefold counterlaw independently exposed .FSEVENTSD. Both are retained and corrected.
+- Concurrent Generated sibling creation exposed overstrict ancestor content timestamps. A closed Source sibling counterlaw reproduced refusal. Outside-payload ancestors now retain dev/ino/mode/uid/gid identity checks; payload root/all descended entries retain full content stamps. Independent ancestor replacement still refuses. No peer work is paused or removed.
+- Initial service system/filesystem-port law passed1/115/1.95s. Actual Generated full/application streams agree with independent Python, and portable shape/decision cases use Ajv/SQLite.
+- Current final aggregate98691 passed21 laws/2,342 assertions/37.83s. Log 🗑️generated/native-volume-service-identity-final-aggregate.log.
+- Current six-root strict51917 passed; log 🗑️generated/native-volume-service-identity-final-strict.log. This includes the new observer transitively and permanent registration.
+- Narrow Low Source reads found the service ownership/stream/compare and ancestor/casefold boundaries coherent. Final independent file hold and fresh helper strict precede the next private physical attempt.
+
+No current publisher physical pass, global publication, SDK qualification, Windows/Linux physical run or public build result is established by these Source results. All prior Source/runtime receipts keep their original scope.

@@ -49,6 +49,6 @@ export default defineConfig({
     { name: "shortage", dependencies: ["presence"], testMatch: ["🔌️connection-shortage/🟦️.ts"] },
     { name: "away", dependencies: ["shortage"], testMatch: ["📴️proctor-away/🟦️.ts"] },
     { name: "faults", dependencies: ["away"], testMatch: ["🛟️proctor-faults/🟦️.ts"] },
-    { name: "pets", dependencies: ["faults"], fullyParallel: true, testMatch: ["🐕️pet-walk/🟦️.ts"] },
+    { name: "pets", dependencies: ["faults"], fullyParallel: true, testMatch: ["🐕️pet-walk/🟦️.ts", "🐕️pet-walk/🧭️cast-and-choices/🟦️.ts", "🐕️pet-walk/🪜️mischief-ladder-and-phone/🟦️.ts"] },
   ],
 });

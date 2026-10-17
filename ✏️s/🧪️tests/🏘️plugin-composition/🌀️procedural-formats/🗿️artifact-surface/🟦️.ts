@@ -8,9 +8,9 @@ import { dirname, join } from "node:path";
 import { BufferGeometry, Float32BufferAttribute, Int8BufferAttribute, Uint8BufferAttribute, Uint16BufferAttribute, Matrix4, Quaternion, ShapeUtils, Vector2, Vector3 } from "three";
 import { toTrianglesDrawMode } from "three/addons/utils/BufferGeometryUtils.js";
 import { polygonMeshFromPrepared, polygonMeshFromObj, polygonMeshFromPly, mergePreparedMeshes, meshFormatDiagnostics, exportSourceChannels, applyGltfSceneToHost, materialFieldsForExport, gltfMaterialSurface, preparedGltfChannels, gltfImportAdmission, restoreGltfAuthoredAttributes } from "../🟦️.ts";
-import { parseGltfDocument } from "../../../../🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/📝️text/📸️snapshot/🔣️json/🟦️.ts";
+import { parseGltfDocument } from "@semio-tech/stdio-gltf/standards/2.0/subsets/any/io/text/snapshot/json";
 import {binary64,binary64Value} from "../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
-import type { FlowHostSnapshot, NeuralDictionary } from "../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🟦️.ts";
+import type { FlowHostSnapshot, NeuralDictionary } from "@semio-tech/procedural-generation3d/standards/1/subsets/any/schema/snapshot";
 import type { MeshAttribute } from "@semio-tech/framework/mesh/polygon";
 const old = new URL("../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧪️tests/🗿️artifact-surface/", import.meta.url);
 
@@ -237,7 +237,6 @@ export function testGeneration3dDocumentCapacity(): number {
     assert.deepEqual(changed.generation.generations, snapshot.generation.generations);
     assert.deepEqual(applyPatch(changed, compare(changed, snapshot), true, false).newDocument, snapshot);
     assert.deepEqual(compare(snapshot, JSON.parse(wire)), []);
-    console.log(`[DEBUG] document capacity recipe=${row.id} widgets=${row.widgets} generations=${row.generations} sourceJsonBytes=${bytes} exactUtf8=true schema=true inverse=true`);
   }
   for (const row of demand.admissionCases) {
     const source = BigInt(row.sourceBytes);
@@ -385,7 +384,6 @@ export function testGeneration3dMeshSurface(): number {
     assert.equal(gltfImportAdmission(parseGltfDocument(document)).triangles,row.triangles);
     if (row.mode >= 4) { const geometry = new BufferGeometry().setAttribute("position",new Float32BufferAttribute(new Array(row.count * 3).fill(0),3)).setIndex(Array.from({length:row.count},(_,index) => index));const oracle = row.mode === 4 ? geometry : toTrianglesDrawMode(geometry,row.mode === 5 ? 1 : 2);assert.equal(oracle.getIndex()!.count / 3,row.triangles); }
   }
-  console.log(`[DEBUG] glTF admission portable refusals=${admission.refusals.length} modes=${admission.modes.length} independentGltfTransformAndThreeCounts=true`);
 
   const authoredImport = JSON.parse(readFileSync(new URL("../🧫️fixtures/🔁️authored-attributes/🔣️.json", old), "utf8")), preparedImport = fixture.gltfExport.prepared;
   for (const row of authoredImport.cases) {
@@ -418,7 +416,6 @@ export function testGeneration3dMeshSurface(): number {
       assert.throws(() => restoreGltfAuthoredAttributes(parseGltfDocument(invalid).meshes[0].primitives[0],polygon,authoredImport.materialIds),Error,refusal.id);
     }
   }
-  console.log(`[DEBUG] glTF authored palette import cases=2 refusals=${authoredImport.refusals.length} fallbackNormals=true independentGltfTransformMetadata=true`);
 
   for (const row of fixture.gltfSurfaceAuthoring.cases) {
     const document = parseGltfDocument(row.document), primitive = document.meshes[0].primitives[0];
@@ -507,7 +504,6 @@ export function testGeneration3dMeshSurface(): number {
     geometry.dispose();
   }
   for (const parts of fixture.mergeSurface.refusals) assert.throws(() => mergePreparedMeshes(parts.map((index: number) => fixture.cases[index].prepared)), Error, "incompatible attribute domains require separate surfaces");
-  console.log(`[DEBUG] generation3d surface bridge cases=${fixture.cases.length} refusals=${fixture.refusals.length} independentThree=true`);
   return fixture.cases.length + fixture.refusals.length;
 }
 
@@ -561,7 +557,6 @@ export function testGeneration3dGltfSceneImport(): void {
     const document = parseGltfDocument({ asset: { version: "2.0" }, meshes: [{ primitives: [{ attributes: {} }] }], ...source });
     assert.throws(() => applyGltfSceneToHost(hostFor(1), document), Error, row.id);
   }
-  process.stdout.write(`[DEBUG] generation3d glTF scene cases=${fixture.cases.length} refusals=${fixture.refusals.length} independentThree=true\n`);
 }
 
 export function testGeneration3dPolygonImport(): number {
@@ -598,7 +593,6 @@ export function testGeneration3dPolygonImport(): number {
     const area = triangles.reduce((sum, triangle) => sum + Math.abs(ShapeUtils.area(triangle.map(index => contour[index]))), 0);
     assert.equal(area, row.area, `${row.id}: independent concave area`);
   }
-  console.log(`[DEBUG] generation3d polygon import cases=${fixture.cases.length} refusals=2 independentThreeEarcut=true`);
   return fixture.cases.length + 2;
 }
 
@@ -637,5 +631,4 @@ export async function verifyPreparedGltfExportOracle(path: string): Promise<void
   assert.deepEqual(edgeAttributes.edgeUv, fixture.edgeUvAttribute);
   assert.equal((edgePrimitive.getExtras().semioAttributeStreams as Record<string, string>).edgeUv, undefined);
   for (const semantic of ["TEXCOORD_0", "TEXCOORD_63"]) assert.deepEqual(Array.from(edgePrimitive.getAttribute(semantic)!.getArray()!), fixture.expanded[semantic]);
-  console.log("[DEBUG] independent glTF Transform native byte oracle: richChannels=8 images=1 roleSamplers=5 materials=true edgeUvPalette=true");
 }

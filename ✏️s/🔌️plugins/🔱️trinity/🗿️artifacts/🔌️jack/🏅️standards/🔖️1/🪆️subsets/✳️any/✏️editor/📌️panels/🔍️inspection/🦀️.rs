@@ -12,7 +12,7 @@
 use crate::editor::jack::ui_label;
 use semio_framework_plugin::{tree_item_desc, ui_node_list, BuiltNode, PanelTreeBuilder, UiAssemblyResult};
 
-pub(crate) fn render() -> UiAssemblyResult<BuiltNode> {
+pub fn render() -> UiAssemblyResult<BuiltNode> {
     let prompt = ui_label("Select one or more pieces")?;
     let section_label = ui_label("Inspection")?;
     let items = ui_node_list([tree_item_desc("trinity-inspector.prompt", prompt, None)])?;

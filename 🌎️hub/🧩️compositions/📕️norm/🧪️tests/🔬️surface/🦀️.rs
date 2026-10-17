@@ -3,6 +3,7 @@
 //! handoff, the canonical `semio_framework_plugin::artifact_app_laws` versions exist
 //! (`👁️✏️SurfaceUnitTests` region) and are used directly here rather than re-invented.
 use semio_framework_plugin::artifact_app_laws::{assert_editor_and_viewer_share_dialect, assert_viewer_never_mutates};
+use semio_framework_test_fixtures::fixture_path;
 
 macro_rules! surface_law {
     ($name:ident, $editor:ty, $viewer:ty) => {
@@ -254,7 +255,7 @@ macro_rules! roster_examples_case {
 
 /// 📚️ The `pub const ID` of every `📚️examples/*/🦀️.rs` example module of one norm family.
 fn example_ids_on_disk(family_dir: &str) -> Vec<String> {
-    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../✏️s/🔌️plugins/📕️norm/🗿️artifacts").join(family_dir).join("🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples");
+    let root = fixture_path!("../../../../../✏️s/🔌️plugins/📕️norm/🗿️artifacts").join(family_dir).join("🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples");
     std::fs::read_dir(&root)
         .unwrap_or_else(|error| panic!("{}: {error}", root.display()))
         .filter_map(|entry| std::fs::read_to_string(entry.ok()?.path().join("🦀️.rs")).ok())

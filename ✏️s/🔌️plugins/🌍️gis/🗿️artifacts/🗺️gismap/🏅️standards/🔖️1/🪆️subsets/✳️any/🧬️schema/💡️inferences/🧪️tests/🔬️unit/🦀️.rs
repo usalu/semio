@@ -1,5 +1,26 @@
-use super::*;
-use crate::{gis_map_snapshot_with_derived_children, MapFeature};
+use crate::GisMapSnapshot;
+use semio_framework_test_fixtures::fixture_text;
+use semio_s_artifact_stdio_semio_drawing::schema::mutations::SemioDrawingMutation;
+use semio_s_artifact_stdio_semio_value_mutations::schema::mutations::SemioValueMutation;
+#[allow(unused_imports)]
+use crate::{standards::v1::subsets::any::schema::inferences::bounds::all_lon_lat_pairs, standards::v1::subsets::any::schema::inferences::bounds::lon_lat_bounds};
+#[allow(unused_imports)]
+use crate::{standards::v1::subsets::any::map_composition::GisMapDrawingChild, standards::v1::subsets::any::map_composition::GisMapValueChild};
+#[allow(unused_imports)]
+use ::semio_framework_schema::ArtifactSchema;
+#[allow(unused_imports)]
+use semio_framework_value_derive::{FromValue, ToValue};
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_semio_drawing::schema::diff::NodePath;
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_semio_drawing::{schema::mutations::create_node, schema::mutations::inverse_semio_drawing_mutation};
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_semio_drawing::schema::snapshot::DrawNode;
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_semio_value_mutations::schema::mutations::inverse_semio_value_mutation;
+use crate::standards::v1::subsets::any::schema::inferences::*;
+use crate::{MapFeature};
+use crate::standards::v1::subsets::any::map_composition::{gis_map_snapshot_with_derived_children};
 use protocol::Inference;
 
 //#region 🧪️InferenceLaws
@@ -17,7 +38,7 @@ async fn inference_default_law() {
 #[semio_framework_async_macros::async_test]
 async fn map_create_region_group_work_stabilizes_parent_drawing_value_without_image() {
     use crate::standards::v1::subsets::any::io::text::mutations::apply_gis_map_mutation;
-    use crate::schema::gis_map_snapshot_to_drawing;
+    use crate::schema::drawing_bridge::gis_map_snapshot_to_drawing;
 use crate::standards::v1::subsets::any::io::text::snapshot::gis_map_descriptor_json;
     use {semio_s_artifact_stdio_semio_drawing::schema::mutations::{diff_semio_drawing_mutation, SemioDrawingMutation as AppliedDrawingMutation}, semio_s_artifact_stdio_semio_drawing::schema::snapshot::SemioDrawingSnapshot as AppliedDrawingSnapshot};
     use {semio_s_artifact_stdio_semio_value_mutations::schema::mutations::{diff_semio_value_mutation, SemioValueMutation as AppliedValueMutation}, semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValueSnapshot as AppliedValueSnapshot};
@@ -56,8 +77,8 @@ use crate::standards::v1::subsets::any::io::text::snapshot::gis_map_descriptor_j
     }
     assert_eq!(projected_drawing, before_drawing);
 
-    let before_value = crate::gis_map_value_from_descriptor_json(&gis_map_descriptor_json(&snapshot));
-    let after_value = crate::gis_map_value_from_descriptor_json(&gis_map_descriptor_json(&parent_after));
+    let before_value = crate::standards::v1::subsets::any::map_composition::gis_map_value_from_descriptor_json(&gis_map_descriptor_json(&snapshot));
+    let after_value = crate::standards::v1::subsets::any::map_composition::gis_map_value_from_descriptor_json(&gis_map_descriptor_json(&parent_after));
     let mut projected_value = before_value.clone();
     apply_semio_value_mutation(&mut projected_value, &work.value);
     assert_eq!(projected_value, after_value);
@@ -70,7 +91,7 @@ use crate::standards::v1::subsets::any::io::text::snapshot::gis_map_descriptor_j
         apply_gis_map_mutation(&mut parent_after, inverse).expect("parent inverse applies");
     }
     assert_eq!(parent_after, snapshot);
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../🧪️tests/🧫️fixtures/🧩️map-create-region-group/🔣️.json")).expect("neutral Map membership corpus");
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../../../../../🧪️tests/🧫️fixtures/🧩️map-create-region-group/🔣️.json")).expect("neutral Map membership corpus");
     for row in fixture["membershipCases"].as_array().expect("membership cases") {
         let mut candidate = snapshot.clone();
         candidate.drawing.child_id = row["drawingChildId"].as_str().unwrap().into();

@@ -3,11 +3,14 @@
 use super::super::create_door_type::CreateDoorType;
 use super::super::cascade;
 use super::DeleteDoorType;
-use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{snapshot::ModelSnapshot};
 
-pub fn inverse(payload: &DeleteDoorType, base: &ModelSnapshot) -> Vec<ModelMutation> {
+pub fn inverse<Op>(payload: &DeleteDoorType, base: &ModelSnapshot) -> Vec<Op>
+where
+    Op: crate::standards::v1::subsets::any::schema::mutations::cascade::RemovalInverse + From<crate::standards::v1::subsets::any::schema::mutations::create_door_type::CreateDoorType>,
+{
     match base.door_types.get(&payload.id) {
-        Some(record) => cascade::data_rows(base, &payload.id).into_iter().chain(std::iter::once(ModelMutation::CreateDoorType(CreateDoorType { id: payload.id.clone(), door_type: record.clone() }))).collect(),
+        Some(record) => cascade::data_rows(base, &payload.id).into_iter().chain(std::iter::once(Op::from(CreateDoorType { id: payload.id.clone(), door_type: record.clone() }))).collect(),
         None => Vec::new(),
     }
 }

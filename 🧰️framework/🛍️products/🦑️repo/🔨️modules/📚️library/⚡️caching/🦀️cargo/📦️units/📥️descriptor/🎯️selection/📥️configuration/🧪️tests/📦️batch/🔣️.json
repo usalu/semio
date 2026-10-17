@@ -1,0 +1,115 @@
+{
+  "version": 1,
+  "files": [
+    {
+      "path": "Cargo.toml",
+      "source": "[workspace]\nresolver=\"2\"\n"
+    },
+    {
+      "path": "Cargo.lock",
+      "source": "version=4\n"
+    },
+    {
+      "path": ".cargo/config.toml",
+      "source": "[net]\nretry=1\n"
+    },
+    {
+      "path": "sealed/code.mjs",
+      "source": "export{};\n"
+    },
+    {
+      "path": "sealed/receipt.json",
+      "source": "{}\n"
+    }
+  ],
+  "manifests": [
+    {
+      "path": "base/Cargo.toml",
+      "source": "[package]\nname=\"0\"\nversion=\"0.1.0\"\n"
+    },
+    {
+      "path": "consumer/Cargo.toml",
+      "source": "[package]\nname=\"1\"\nversion=\"0.1.0\"\n"
+    },
+    {
+      "path": "sibling/Cargo.toml",
+      "source": "[package]\nname=\"2\"\nversion=\"0.1.0\"\n"
+    },
+    {
+      "path": "tool/Cargo.toml",
+      "source": "[package]\nname=\"3\"\nversion=\"0.1.0\"\n"
+    },
+    {
+      "path": "other/Cargo.toml",
+      "source": "[package]\nname=\"4\"\nversion=\"0.1.0\"\n"
+    },
+    {
+      "path": "größer/Cargo.toml",
+      "source": "[package]\nname=\"5\"\nversion=\"0.1.0\"\n"
+    }
+  ],
+  "changes": [
+    {
+      "name": "unchanged",
+      "kind": "none",
+      "accepted": true
+    },
+    {
+      "name": "changed",
+      "kind": "write",
+      "path": ".cargo/config.toml",
+      "source": "[net]\nretry=2\n",
+      "accepted": false
+    },
+    {
+      "name": "added",
+      "kind": "write",
+      "path": "rust-toolchain.toml",
+      "source": "[toolchain]\nchannel=\"stable\"\n",
+      "accepted": false
+    },
+    {
+      "name": "removed",
+      "kind": "remove",
+      "path": ".cargo/config.toml",
+      "accepted": false
+    }
+  ],
+  "epochs": [
+    {
+      "target": "source",
+      "stage": "entry"
+    },
+    {
+      "target": "source",
+      "stage": "delivery"
+    },
+    {
+      "target": "policy",
+      "stage": "entry"
+    },
+    {
+      "target": "policy",
+      "stage": "delivery"
+    }
+  ],
+  "limit": {
+    "commonBytes": 67108864,
+    "manifestBytes": 1,
+    "accepted": false
+  },
+  "empty": {
+    "manifestReads": 0,
+    "commonOpens": 0
+  },
+  "guards": [
+    {
+      "name": "proxy",
+      "message": "Canonical finite Source root required"
+    },
+    {
+      "name": "escape",
+      "message": "Owned Cargo coordinate required"
+    }
+  ]
+}

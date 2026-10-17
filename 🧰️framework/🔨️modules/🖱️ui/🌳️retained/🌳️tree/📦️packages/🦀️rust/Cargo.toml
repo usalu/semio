@@ -24,6 +24,7 @@ path = "../../🦀️.rs"
 testkit = []
 
 [dependencies]
+semio-framework-ui-retained-tree-tree = { path = "../../🍃️nodes/📦️packages/🦀️rust" }
 semio-framework-ui-arena = { path = "../../../🏟️arena/📦️packages/🦀️rust" }
 semio-framework-ui-action = { path = "../../../../🎬️action/📦️packages/🦀️rust" }
 semio-framework-ui-declaration = { path = "../../../../📜️declaration/📦️packages/🦀️rust" }
@@ -38,4 +39,5 @@ serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 
 [dev-dependencies]
+semio-framework-test-fixtures = { path = "../../../../../🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-framework-ui-viewport = { path = "../../../../🪟️viewport/📦️packages/🦀️rust" }

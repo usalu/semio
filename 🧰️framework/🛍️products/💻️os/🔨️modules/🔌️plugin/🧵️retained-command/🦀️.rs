@@ -1007,7 +1007,6 @@ pub fn test_raw_allocation_close<A: ArtifactApp>() {
         assert_eq!(copied,case["expectedCopiedBytes"].as_u64().unwrap() as usize);
         assert_eq!(released,case["expectedReleasedBytes"].as_u64().unwrap() as usize);
         assert_eq!(released,capacity);
-        eprintln!("[DEBUG] retained command raw {} copied={copied} physically-released={released}",case["id"]);
     }
 }
 

@@ -2,13 +2,13 @@
 import { readFileSync } from "node:fs";
 const files = process.argv.slice(2);
 const FAMILY = "no-cross-package-relative-";
-const isTest = (p: string) => /\/🧪️tests?\/|\/🧪️testing\//u.test(p);
+const isTest = (p: string) => /tests?\/|testing\//u.test(p.replace(/[^\x20-\x7e]/gu, ""));
 const parse = (p: string) => {
   const rules = new Map<string, { all: number; prod: number }>();
   const family = { lines: 0, prodLines: 0, edges: new Set<string>(), prodEdges: new Set<string>() };
   const byPkg = new Map<string, number>();
   let total = 0;
-  for (const line of readFileSync(p, "utf8").normalize("NFC").split("\n")) {
+  for (const line of readFileSync(p, "utf8").replaceAll("\uFFFD", "").normalize("NFC").split("\n")) {
     const x = line.match(/^  error ([^:]+): (.*) → (.*)$/u);
     if (!x) continue;
     total++;

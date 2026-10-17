@@ -353,6 +353,6 @@ pub struct PixelRun {
     #[value(with = "semio_framework_value::bytes")]
     pub bytes: Vec<u8>,
 }
-
-/// 🧬️ The artifact facet's schema leaves (rust, typescript, graphql, json schema, proto).
-pub const ARTIFACT_LEAVES: semio_framework_schema_registry::FacetLeaves = semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") };
+#[path = "📇️leaves/🦀️.rs"]
+pub mod leaves;
+pub use leaves::artifact_leaves;

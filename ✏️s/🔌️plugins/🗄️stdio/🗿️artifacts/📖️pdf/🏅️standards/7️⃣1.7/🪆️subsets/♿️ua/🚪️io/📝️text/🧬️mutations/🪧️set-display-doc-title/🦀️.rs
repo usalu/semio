@@ -1,6 +1,6 @@
 //! 🪧️ Direct text codec for `set-display-doc-title`.
 
-use crate::standards::v1_7::subsets::ua::schema::mutations::SetDisplayDocTitle;
+use crate::standards::v1_7::subsets::ua::schema::mutations::set_display_doc_title::SetDisplayDocTitle;
 
 //#region 🔖️Identity
 pub const OPCODE: &str = "set-display-doc-title";
@@ -20,7 +20,5 @@ pub fn parse(text: &str) -> Result<SetDisplayDocTitle, String> {
 //#endregion 🔖️Codec
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

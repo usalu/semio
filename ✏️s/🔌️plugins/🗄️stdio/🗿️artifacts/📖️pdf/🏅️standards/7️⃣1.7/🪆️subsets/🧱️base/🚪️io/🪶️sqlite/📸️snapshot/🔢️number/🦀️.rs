@@ -1,9 +1,10 @@
 //! 🔢️ Authored native binary64 scalar fields for each PDF semantic entity.
 use semio_framework_value::{ValueError,ValueRefusalKind};
-use crate::standards::v1_7::subsets::base::io::sqlite::snapshot::*;
+use crate::standards::v1_7::subsets::base::schema::snapshot::model::*;
+use store::sqlite_snapshot::{self, SqliteDatabase as Db, SqliteSnapshotControl as Control, SqliteSnapshotPhase as Phase, artifact::{Cell as C}};
 use sqlite_snapshot::artifact::{FloatColumn,FloatRow,insert_ieee754,insert_key_ieee754};
-pub(super) type Row<'a>=FloatRow<'a>;
-pub(super) fn columns(table:&str)->&'static[FloatColumn]{
+pub type Row<'a>=FloatRow<'a>;
+pub fn columns(table:&str)->&'static[FloatColumn]{
     use FloatColumn::Binary64 as F;
     match table{
         "pdf_function"=>&[F(7)],
@@ -51,7 +52,7 @@ enum Rows<'c,'p>{
     Owned(sqlite_snapshot::artifact::Projection<'c,'p>),
     Forecast{control:&'c mut Control<'p>,count:usize,bytes:usize},
 }
-pub(super) struct Projection<'c,'p>{rows:Rows<'c,'p>}
+pub struct Projection<'c,'p>{rows:Rows<'c,'p>}
 impl<'c,'p> Projection<'c,'p>{
     pub fn new(sql:&str,control:&'c mut Control<'p>)->Result<Self,ValueError>{Ok(Self{rows:Rows::Owned(sqlite_snapshot::artifact::Projection::new(sql,control)?)})}
     pub fn forecast(control:&'c mut Control<'p>)->Result<Self,ValueError>{control.checkpoint(Phase::EncodeNative,0,0)?;Ok(Self{rows:Rows::Forecast{control,count:0,bytes:0}})}

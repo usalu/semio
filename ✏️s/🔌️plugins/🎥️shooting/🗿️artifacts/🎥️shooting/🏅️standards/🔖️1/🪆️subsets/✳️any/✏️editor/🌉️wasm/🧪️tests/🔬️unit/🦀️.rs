@@ -1,4 +1,6 @@
-use super::*;
+use crate::standards::v1::subsets::any::schema::mutations::ShootingMutation;
+use crate::ShootingSnapshot;
+use crate::editor::shooting::wasm::*;
 
 #[semio_framework_async_macros::async_test]
 async fn shooting_store_type_alias_constructs_from_an_empty_envelope() {

@@ -4,7 +4,7 @@ use crate::standards::v1::subsets::any::schema::mutations::remove_node_handle::R
 use semio_framework_value::paged::PagedUtf8;
 
 use crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff;
-use {crate::standards::v1::subsets::any::schema::Puzzle2dHandle, crate::Puzzle2dSnapshot};
+use {crate::standards::v1::subsets::any::schema::records::Puzzle2dHandle, crate::Puzzle2dSnapshot};
 
 //#region 🔖️Mutation
 /// ➕ `add-node-handle` payload — owner node id + new handle payload at an optional FINAL-state

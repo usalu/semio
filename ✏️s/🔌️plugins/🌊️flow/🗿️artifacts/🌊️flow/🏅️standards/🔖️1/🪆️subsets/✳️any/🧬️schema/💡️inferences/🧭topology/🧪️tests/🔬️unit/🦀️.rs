@@ -1,4 +1,9 @@
-use super::*;
+use semio_framework_artifact_flow_flow::{SynapseSpec, Widget};
+#[allow(unused_imports)]
+use crate::schema::widget_id;
+#[allow(unused_imports)]
+use std::collections::{BTreeMap, BTreeSet, VecDeque};
+use crate::standards::v1::subsets::any::schema::inferences::topology::*;
 
 fn slider(id: &str) -> Widget {
     Widget::InputSlider { id: id.into(), label: id.into(), value: 0.0, min: 0.0, max: 1.0, step: 0.1 }

@@ -1,0 +1,92 @@
+{
+ "$schema": "http://json-schema.org/draft-07/schema#",
+ "type": "object",
+ "additionalProperties": false,
+ "required": [
+  "cases",
+  "probes"
+ ],
+ "properties": {
+  "cases": {
+   "type": "array",
+   "items": {
+    "$ref": "#/definitions/Case"
+   }
+  },
+  "probes": {
+   "type": "array",
+   "items": {
+    "$ref": "#/definitions/ProbeCase"
+   }
+  }
+ },
+ "definitions": {
+  "Case": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "name",
+    "accepted",
+    "units",
+    "stage"
+   ],
+   "properties": {
+    "name": {
+     "type": "string",
+     "minLength": 1
+    },
+    "accepted": {
+     "type": "boolean"
+    },
+    "units": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    },
+    "stage": {
+     "enum": [
+      "prepare",
+      "read"
+     ]
+    }
+   }
+  },
+  "ProbeCase": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "name",
+    "accepted",
+    "matches",
+    "oracleMatches"
+   ],
+   "properties": {
+    "name": {
+     "enum": [
+      "current",
+      "missing",
+      "mismatch",
+      "oversized",
+      "symlink",
+      "hardlink",
+      "copied-node",
+      "copied-control"
+     ]
+    },
+    "accepted": {
+     "type": "boolean"
+    },
+    "matches": {
+     "type": [
+      "boolean",
+      "null"
+     ]
+    },
+    "oracleMatches": {
+     "type": "boolean"
+    }
+   }
+  }
+ }
+}

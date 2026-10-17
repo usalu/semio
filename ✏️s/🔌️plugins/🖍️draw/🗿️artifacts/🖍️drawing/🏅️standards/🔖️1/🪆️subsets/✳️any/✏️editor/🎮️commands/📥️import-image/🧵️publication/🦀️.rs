@@ -80,6 +80,3 @@ impl DrawingImagePublicationJob{
  pub fn take_result(&mut self,input:&super::ImportImage,operation:&AppOperationContext,grant:RetainedCloneGrant)->Result<Option<(DrawingImagePublication,RetainedCloneProgress)>,ValueError>{if !self.ready(){return Err(refused("image publication is incomplete"));}let demand=self.work_demands(input,operation,grant.maximum_copy_bytes)?;if grant.maximum_items==0||grant.maximum_depth<1||grant.maximum_copy_bytes<demand.copy_bytes{return Ok(None);}self.phase=15;Ok(Some((DrawingImagePublication{mutations:std::mem::take(&mut self.mutations),selection:std::mem::take(&mut self.selection)},RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})))}
 }
 
-#[cfg(test)]
-#[path="🧪️tests/🦀️.rs"]
-mod tests;

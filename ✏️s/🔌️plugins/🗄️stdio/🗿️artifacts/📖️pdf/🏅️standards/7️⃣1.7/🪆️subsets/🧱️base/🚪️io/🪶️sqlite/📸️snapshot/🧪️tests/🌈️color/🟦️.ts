@@ -91,5 +91,5 @@ test("PDF sampled function rows preserve logical u32 words independently", async
   expect(sql.query("SELECT sample_count FROM pdf_function").get()).toEqual({ sample_count: fixture.functionSampleWords.length });
   sql.run("DELETE FROM pdf_function_sample WHERE ordinal=3");
   await expect(pdfFunctionFromSqliteDatabase(await importSqliteDatabase(sql.serialize()), encoded.root)).rejects.toThrow("sample count");
-  sql.close(); console.log("[DEBUG] PDF sampled function logical words native513=true exactU32=true independentSqlRows=true");
+  sql.close(); 
 });

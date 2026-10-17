@@ -5,10 +5,10 @@ import ts from "typescript";
 
 /** 🌉️ Proves physical service composition ownership with independent schema, AST and module-build oracles. */
 export async function serviceMcpCompositionOwnership(repoRoot: string): Promise<void> {
-  const owner = resolve(import.meta.dir, "../..");
+  const owner = resolve(import.meta.dir, "..");
   const read = (path: string): any => JSON.parse(readFileSync(path, "utf8"));
   const fixture = read(join(owner, "🧫️fixtures/🌉️mcp-composition/🔣️.json"));
-  assert.equal(fixture.cases.length, 9);
+  assert.equal(fixture.cases.length, 8);
   const project = read(join(repoRoot, fixture.packageRoot, "📋️project.json"));
   const generic = read(join(repoRoot, fixture.genericPackageRoot, "📋️project.json"));
   const router = ts.createSourceFile("script.ts", readFileSync(join(repoRoot, fixture.packageRoot, "📜️script.ts"), "utf8"), ts.ScriptTarget.Latest, true);

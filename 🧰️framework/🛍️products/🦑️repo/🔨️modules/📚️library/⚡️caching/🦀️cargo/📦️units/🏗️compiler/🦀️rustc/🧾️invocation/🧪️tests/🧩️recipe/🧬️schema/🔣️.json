@@ -1,0 +1,48 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/test/rust-rlib-command-recipe-v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "dataOnly",
+    "locations",
+    "bindingLikeLiterals",
+    "forgedPlans"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "dataOnly": {
+      "const": true
+    },
+    "locations": {
+      "const": [
+        "source",
+        "output",
+        "dep-info",
+        "incremental",
+        "dependency-output",
+        "dependency-directory",
+        "temporary",
+        "execution"
+      ]
+    },
+    "bindingLikeLiterals": {
+      "const": [
+        "/repo space/tmp/consumed.d",
+        "/repo space/out",
+        "C:\\repo space\\tmp",
+        "--emit=link,dep-info=/repo space/tmp/consumed.d",
+        "${workspace}/src/lib.rs"
+      ]
+    },
+    "forgedPlans": {
+      "const": [
+        "copy",
+        "proxy"
+      ]
+    }
+  }
+}

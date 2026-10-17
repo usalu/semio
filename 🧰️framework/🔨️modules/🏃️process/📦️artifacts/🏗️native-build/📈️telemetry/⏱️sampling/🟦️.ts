@@ -11,7 +11,7 @@ export function startTelemetrySamplerV1(control:ResourceLeaseControl,sample:(con
  const operation=withIssuedResourceOperationV1(control,async()=>{
   const closed=new Promise<void>(resolve=>{close=resolve;});
   const run=()=>{if(stopped||pending)return;if(count>=policy.maximumSamples){failed=true;failure=Error("Finite telemetry sample ceiling exceeded");stop();return;}count++;
-   pending=withRequestedIssuedResourceControlV1(control,policy.maximumSampleMilliseconds,sample).then(()=>{pending=undefined;},error=>{failed=true;failure=error;pending=undefined;stop();});
+   try{pending=withRequestedIssuedResourceControlV1(control,policy.maximumSampleMilliseconds,sample).then(()=>{pending=undefined;},error=>{failed=true;failure=error;pending=undefined;stop();});}catch(error){failed=true;failure=error;stop();}
   };
   control.signal.addEventListener("abort",stop,{once:true});
   try{if(stopped||control.signal.aborted)stop();else{timer=setInterval(run,intervalMilliseconds);run();}await closed;await pending;if(failed)throw failure;}

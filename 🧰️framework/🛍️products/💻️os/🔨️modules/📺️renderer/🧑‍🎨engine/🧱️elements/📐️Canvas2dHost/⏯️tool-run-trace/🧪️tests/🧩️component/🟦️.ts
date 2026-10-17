@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 import { encodeToolRunTraceDelta, ToolRunTraceStore, TOOL_RUN_VERDICTS, type ToolRunTraceOp } from "@semio-tech/framework/tool-run";
 import { base64UrlEncode } from "@semio-tech/framework/io/base64";
 import { ToolRunTraceRecordStore, TOOL_RUN_TRACE_METRICS } from "../../../../🌐️World3dHost/⏯️tool-run-trace/🟦️.tsx";
-import { worldToScreenLogical } from "../../../🟦️.tsx";
+import { worldToScreenLogical } from "../../../📷️camera-math/🟦️.ts";
 import { paintToolRunTrace2d, type ToolRunTrace2dContext } from "../../🟦️.tsx";
 
 type Call = { readonly kind: "fill" | "stroke"; readonly transform: readonly number[]; readonly alpha: number; readonly style: string };

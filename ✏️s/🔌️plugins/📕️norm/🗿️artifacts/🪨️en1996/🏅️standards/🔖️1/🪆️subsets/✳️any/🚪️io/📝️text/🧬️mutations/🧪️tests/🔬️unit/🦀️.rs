@@ -1,4 +1,4 @@
-use crate::text::mutations::*;
+use crate::mutations::*;
 use semio_s_plugin_norm_compliance::AnnexChoice;
 use semio_s_artifact_norm_en1996_model::MortarClass;
 use semio_s_artifact_norm_en1996_mut_project::change_annex;

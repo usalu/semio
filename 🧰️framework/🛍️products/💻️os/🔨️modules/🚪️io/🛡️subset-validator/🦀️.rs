@@ -34,7 +34,7 @@ pub fn subset_validator_entry_of<V: SubsetValidator>() -> SubsetValidatorEntry {
 pub fn snapshot_subset_validator_entry_of<V: SnapshotSubsetValidator>() -> SubsetValidatorEntry {
     fn validate_snapshot<V: SnapshotSubsetValidator>(snapshot: &dyn std::any::Any, database: &semio_framework_io_sqlite_snapshot::SqliteDatabase, control: &mut semio_framework_io_sqlite_snapshot::SqliteSnapshotControl<'_>) -> semio_framework_io_schema::IoResult<()> {
         match snapshot.downcast_ref::<V::Snapshot>() {
-            Some(snapshot) => semio_framework_ui_contract_validation::validate_snapshot(snapshot, database, control),
+            Some(snapshot) => V::validate_snapshot(snapshot, database, control),
             None => Err(semio_framework_io_schema::IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("snapshot type does not own subset {}", ArtifactDialect::from(V::DIALECT).to_coordinate())))),
         }
     }

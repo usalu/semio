@@ -8,8 +8,8 @@ mod diff_codec {
 use super::*;
 use crate::schema::diff::*;
 use protocol::{DiffText,DiffBinary};
-use crate::schema::WriterArtifact;
-use crate::{document_child_handle_with_text, WriterSnapshot};
+
+
 use crate::schema::diff::*;
 
 impl protocol::DiffBinary for WriterDiff {

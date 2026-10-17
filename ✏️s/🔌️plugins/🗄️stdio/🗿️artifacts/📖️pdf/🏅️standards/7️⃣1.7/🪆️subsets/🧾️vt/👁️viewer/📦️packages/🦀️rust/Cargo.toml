@@ -1,0 +1,73 @@
+[package]
+workspace = "../../../../../../.."
+name = "semio-s-artifact-stdio-pdf-viewer"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Component crate of semio-s-artifact-stdio-pdf: viewer"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "🦀️.rs"
+
+[dependencies]
+pack = { workspace = true }
+semio-framework-2d = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/📦️packages/🦀️rust" }
+semio-framework-artifact-reference = { workspace = true }
+semio-framework-async = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust" }
+semio-framework-diagnostic = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
+semio-framework-dsl = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🗣️dsl/📦️packages/🦀️rust" }
+semio-framework-dsl-record = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
+semio-framework-dsl-record-derive = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust" }
+semio-framework-hash = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-pack-json = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-framework-plugin = { workspace = true }
+semio-framework-schema = { workspace = true }
+semio-framework-schema-composition = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧩️composition/📦️packages/🦀️rust" }
+semio-framework-schema-registry = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/📇️registry/📦️packages/🦀️rust" }
+semio-framework-schema-state = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust" }
+semio-framework-ui-contract = { workspace = true }
+semio-framework-ui-locale = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-value-derive = { workspace = true }
+semio-s-artifact-stdio-binary = { workspace = true }
+semio-s-artifact-stdio-contract = { workspace = true }
+semio-s-artifact-stdio-deflate = { workspace = true }
+semio-s-artifact-stdio-pdf-graph-projection = { path = "../../../../🧱️base/🧬️schema/🔎️graph-projection/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-pdf-inferences = { path = "../../../../🧱️base/🧬️schema/💡️inferences/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-pdf-mut-family-8 = { path = "../../../../🧱️base/🔨️modules/🖋️content/🧪️tests/🔬️unit/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-pdf-pdf-snapshot-value-tests = { path = "../../../../🧱️base/🧬️schema/📸️snapshot/🧪️tests/🔬️pdf-snapshot-value/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-pdf-schema-4 = { path = "../../../../🧱️base/🧬️schema/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-pdf-schema-5 = { path = "../../../🧬️schema/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-pdf-snapshot-2 = { path = "../../../../🧱️base/🧬️schema/📸️snapshot/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-pdf-testkit = { path = "../../../../🧱️base/🧬️schema/🧪️testkit/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-pdf-tests-2 = { path = "../../../🧬️schema/🧬️mutations/🧪️tests/🔬️unit/📦️packages/🦀️rust" }
+serde_json = { workspace = true }
+
+[features]
+testkit = ["semio-s-artifact-stdio-pdf-snapshot-2/testkit", "semio-s-artifact-stdio-pdf-inferences/testkit", "semio-s-artifact-stdio-pdf-graph-projection/testkit", "semio-s-artifact-stdio-pdf-mut-family-8/testkit", "semio-s-artifact-stdio-pdf-testkit/testkit", "semio-s-artifact-stdio-pdf-tests-2/testkit", "semio-s-artifact-stdio-pdf-schema-4/testkit", "semio-s-artifact-stdio-pdf-schema-5/testkit", "semio-s-artifact-stdio-pdf-pdf-snapshot-value-tests/testkit"]
+
+[dev-dependencies]
+semio-framework-async-macros = { workspace = true }
+semio-framework-io-sqlite-snapshot-testing-backing = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️testing/💰️backing/📦️packages/🦀️rust" }
+semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
+semio-framework-ui-scene = { workspace = true }
+semio-repo-test-host = { path = "../../../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🦀️rust", default-features = false }
+semio-s-artifact-stdio-contract = { workspace = true, features = ["testing"] }
+semio-s-artifact-stdio-pdf-graph-projection = { path = "../../../../🧱️base/🧬️schema/🔎️graph-projection/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-stdio-pdf-inferences = { path = "../../../../🧱️base/🧬️schema/💡️inferences/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-stdio-pdf-mut-family-8 = { path = "../../../../🧱️base/🔨️modules/🖋️content/🧪️tests/🔬️unit/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-stdio-pdf-pdf-snapshot-value-tests = { path = "../../../../🧱️base/🧬️schema/📸️snapshot/🧪️tests/🔬️pdf-snapshot-value/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-stdio-pdf-schema-4 = { path = "../../../../🧱️base/🧬️schema/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-stdio-pdf-schema-5 = { path = "../../../🧬️schema/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-stdio-pdf-snapshot-2 = { path = "../../../../🧱️base/🧬️schema/📸️snapshot/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-stdio-pdf-test-oracle = { path = "../../../../../../../🔮️oracles/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-pdf-testkit = { path = "../../../../🧱️base/🧬️schema/🧪️testkit/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-stdio-pdf-tests-2 = { path = "../../../🧬️schema/🧬️mutations/🧪️tests/🔬️unit/📦️packages/🦀️rust", features = ["testkit"] }

@@ -5,14 +5,15 @@ import { createHash, webcrypto } from "node:crypto";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync, statSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { canonicalJson } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧾️serialization/🔣️json/🟦️.ts";
-import { encodePackValue } from "../../../🧰️framework/🛍️products/💻️os/🟦️.ts";
-import { DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🔏️document-open/🟦️.ts";
+import { encodePackValue } from "@semio-tech/framework-os";
+import { DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES } from "@semio-tech/framework-os/modules/directory/schema/document-open";
 import { DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1 } from "@semio-tech/framework/directory/schema";
 import { hubSchemaExport } from "../../📦️packages/🟦️typescript/🟦️.ts";
 import { assertObservationExpectation, type ObservationExpectation } from "../../🧪️testing/🛂️expectation/🟦️.ts";
 import { captureTrustedBootstrapCodecsV1, trustedBootstrapFixturePluginModule, trustedBootstrapGenerationReceipt, trustedBootstrapStageFixturePackages, trustedBootstrapVerifyGeneration, trustedBootstrapWriteFixturePluginModule } from "../../🏗️bootstrap/🧾️provenance/🗃️bootstrap-bundle/🟦️.ts";
 import { trustedBootstrapProfileEncoding } from "../../🏗️bootstrap/🧾️provenance/🧮️bootstrap-claims/🟦️.ts";
-import { runTrustedPublicationChild, trustedBootstrapPublicationReceipt, trustedBootstrapPublicationRevision, TrustedBootstrapPublicationUnconfirmed, trustedBootstrapReadCurrentPointer, trustedBootstrapVerifyPublication, trustedPublicationChildReceipt } from "../../🏗️bootstrap/🧾️provenance/🚚️bootstrap-publication/🟦️.ts";
+import { trustedBootstrapPublicationRevision, trustedBootstrapReadCurrentPointer, trustedBootstrapVerifyPublication } from "../../🏗️bootstrap/🧾️provenance/🚚️bootstrap-publication/🔄️rotation-and-current-pointer/🟦️.ts";
+import { runTrustedPublicationChild, trustedBootstrapPublicationReceipt, TrustedBootstrapPublicationUnconfirmed, trustedPublicationChildReceipt } from "../../🏗️bootstrap/🧾️provenance/🚚️bootstrap-publication/📮️receipts-and-publication-child/🟦️.ts";
 import { webSha256Hex } from "../../🚀️local-relay/🛰️servers/🟦️.ts";
 
 /** 🧪️ Compares fixed source admission with package schemas and independent generation hashes. */

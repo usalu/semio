@@ -1,6 +1,34 @@
+use crate::editor::puzzle5d::config::{Puzzle5dCamera3d, Puzzle5dRuntime};
+use crate::editor::puzzle5d::modes::edit::windows::world3d::utilities;
+use crate::editor::puzzle5d::terminology::Puzzle5dLabels;
+use crate::editor::puzzle5d::entities::{Puzzle5dDocument, PUZZLE5D_GRANULARITY_FASTENER, PUZZLE5D_GRANULARITY_GRIP, PUZZLE5D_GRANULARITY_PART, PUZZLE5D_GRIP_SHOW_ALWAYS, PUZZLE5D_INTERACTION_DOMAIN};
+use crate::editor::puzzle5d::view::{puzzle5d_gumball_active, Puzzle5dInteractionSnapshot, Puzzle5dScene};
+use semio_framework_plugin::{World3dScene, WindowMeasure};
+use semio_framework_pack_json::{json, Value};
+#[allow(unused_imports)]
+use crate::editor::puzzle5d::modes::edit;
+#[allow(unused_imports)]
+use crate::editor::puzzle5d::modes::edit::options as mode_options;
+#[allow(unused_imports)]
+use crate::editor::puzzle5d::modes::edit::windows::world3d::options;
+#[allow(unused_imports)]
+use crate::editor::puzzle5d::precompute::{puzzle5d_placement_entity, PUZZLE5D_WORLD_MESH_KINDS};
+#[allow(unused_imports)]
+use crate::editor::puzzle5d::terminology::puzzle5d_localized;
+#[allow(unused_imports)]
+use crate::editor::puzzle5d::entities::{part_scale_json, puzzle5d_grip_full_id, resolve_grip_world_position, resolve_part_mesh_url, world_grip_direction, target_volume_scale_json, world_grip_position, Puzzle5dPart, PUZZLE5D_FALLBACK_MESH_KIND, PUZZLE5D_TARGET_VOLUME_COLOR};
+#[allow(unused_imports)]
+use crate::editor::puzzle5d::view::{puzzle5d_scene_mode, puzzle5d_transform_handle};
+#[allow(unused_imports)]
+use semio_s_artifact_puzzle_3d_precompute_brush::BrushSuggestionsFound;
+#[allow(unused_imports)]
+use semio_framework_plugin::{world3d_camera_projection_json, world3d_chunking_json, world3d_environment_json, world3d_fit_json, world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls, world3d_selection_json, SurfaceKind, ToolRunView, WindowEngagement, WindowEngagementSlot, WindowKindDefinition, WindowOptions};
+#[allow(unused_imports)]
+use semio_framework_ui_contract::BuiltNode;
+use crate::editor::puzzle5d::modes::edit::windows::world3d::{world_fasteners_json};
 
-use super::*;
-use crate::editor::puzzle5d::unit_tests::context::*;
+use crate::editor::puzzle5d::modes::edit::windows::world3d::*;
+use crate::editor::puzzle5d::testkit::*;
 
 #[test]
 fn renders_the_world_scene() {
@@ -23,7 +51,7 @@ fn scene_with(interaction: Puzzle5dInteractionSnapshot, runtime: Puzzle5dRuntime
 }
 
 fn part_selection() -> Puzzle5dInteractionSnapshot {
-    Puzzle5dInteractionSnapshot { granularity: crate::editor::puzzle5d::PUZZLE5D_GRANULARITY_PART.into(), selected: vec!["teil-ä".into()], hovered: Vec::new(), referenced: Vec::new() }
+    Puzzle5dInteractionSnapshot { granularity: crate::editor::puzzle5d::entities::PUZZLE5D_GRANULARITY_PART.into(), selected: vec!["teil-ä".into()], hovered: Vec::new(), referenced: Vec::new() }
 }
 
 /// 🕹️ Law: a part the framework `vortex` domain holds selected paints as `selected` on its world
@@ -31,7 +59,7 @@ fn part_selection() -> Puzzle5dInteractionSnapshot {
 #[test]
 fn world_instances_paint_the_live_selection_and_hover() {
     let document = document_with_one_gripped_part();
-    let marked = Puzzle5dInteractionSnapshot { granularity: crate::editor::puzzle5d::PUZZLE5D_GRANULARITY_PART.into(), selected: vec!["teil-ä".into()], hovered: vec!["teil-ä".into()], referenced: Vec::new() };
+    let marked = Puzzle5dInteractionSnapshot { granularity: crate::editor::puzzle5d::entities::PUZZLE5D_GRANULARITY_PART.into(), selected: vec!["teil-ä".into()], hovered: vec!["teil-ä".into()], referenced: Vec::new() };
     let instances: serde_json::Value = serde_json::from_str(&world_instances_json(&document, &marked, None)).expect("instancesJson");
     assert_eq!(instances[0]["selected"], serde_json::json!(true));
     assert_eq!(instances[0]["hovered"], serde_json::json!(true));
@@ -75,7 +103,7 @@ fn grip_markers_follow_the_show_mode_and_the_live_marks() {
     assert!(idle.is_empty(), "selected mode emits no markers for an untouched part");
     let touched: Vec<serde_json::Value> = serde_json::from_str(&world_grips_json(&document, &selected_mode, &part_selection(), "select")).expect("vorticesJson");
     assert_eq!(touched.len(), 1);
-    assert_eq!(touched[0]["displayDirection"], serde_json::json!(crate::editor::puzzle5d::PUZZLE5D_GRIP_DIRECTION_OUTWARDS));
+    assert_eq!(touched[0]["displayDirection"], serde_json::json!(crate::editor::puzzle5d::entities::PUZZLE5D_GRIP_DIRECTION_OUTWARDS));
     let always = Puzzle5dRuntime { grip_show: PUZZLE5D_GRIP_SHOW_ALWAYS.into(), ..Puzzle5dRuntime::default() };
     let shown: Vec<serde_json::Value> = serde_json::from_str(&world_grips_json(&document, &always, &Puzzle5dInteractionSnapshot::default(), "select")).expect("vorticesJson");
     assert_eq!(shown.len(), 1);
@@ -137,7 +165,7 @@ fn the_world_window_binds_one_transform_utility_with_one_flag_group() {
 /// built from — the render half of "dispatch → config changes → measure reflects it".
 #[test]
 fn window_measures_expose_every_world_option_group() {
-    let labels = &crate::editor::puzzle5d::terminology::Puzzle5dLabels::NATIVE_EN;
+    let labels = crate::editor::puzzle5d::terminology::puzzle5d_native_en_labels();
     let runtime = Puzzle5dRuntime { grid_visible: false, grid_spacing: 4.0, lod_automatic: false, lod_manual: 250.0, ..Puzzle5dRuntime::default() };
     let envelope = scene_with(Puzzle5dInteractionSnapshot::default(), runtime, "select");
     let measures = window_measures(&envelope, labels);
@@ -198,7 +226,7 @@ fn camera_json_follows_the_projection() {
 #[test]
 fn every_world_instance_names_a_mesh_this_scene_publishes() {
     let mut app = app();
-    dispatch(&mut app, "setActiveExample", Some(&semio_framework_pack_json::json!({ "exampleId": crate::editor::puzzle5d::PUZZLE5D_EXAMPLE_NAKAGIN })), None).expect("load nakagin");
+    dispatch(&mut app, "setActiveExample", Some(&semio_framework_pack_json::json!({ "exampleId": crate::editor::puzzle5d::entities::PUZZLE5D_EXAMPLE_NAKAGIN })), None).expect("load nakagin");
     let rendered = render_body(&mut app, BODY_KEY);
     close_app(&mut app);
     let scene: serde_json::Value = serde_json::from_str(&rendered).expect("world scene json");
@@ -228,7 +256,7 @@ fn every_world_instance_names_a_mesh_this_scene_publishes() {
 #[test]
 fn the_world_scene_stages_a_one_shot_fit_for_its_document() {
     let scene = scene_with(part_selection(), Puzzle5dRuntime::default(), "select");
-    let node = render(&scene, &crate::editor::puzzle5d::terminology::Puzzle5dLabels::NATIVE_EN, None, &[], None).expect("the world surface assembles");
+    let node = render(&scene, crate::editor::puzzle5d::terminology::puzzle5d_native_en_labels(), None, &[], None).expect("the world surface assembles");
     let built: World3dScene = semio_framework_plugin::artifact_app_laws::built_surface_scene(&node).expect("the world surface decodes as a 3d scene");
     let fit = built.fit_json.as_deref().expect("the world window must publish a fit lane");
     assert!(fit.contains("\"enabled\":true"), "the fit lane must be enabled, else the authored camera is the only framing: {fit}");

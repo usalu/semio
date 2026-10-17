@@ -13,7 +13,8 @@
 //! belongs here beside its one real consumer instead of behind an engine facade.
 
 use {semio_s_artifact_puzzle_3d_inferences::flatten::flatten_objects, semio_s_artifact_puzzle_3d_model::Puzzle3dAttraction, semio_s_artifact_puzzle_3d_model::Puzzle3dObject, semio_s_artifact_puzzle_3d_model::Puzzle3dObjectAnchor, semio_s_artifact_puzzle_3d_model::Puzzle3dVortex, semio_s_artifact_puzzle_3d_inferences::flatten::DIAGRAM_HORIZONTAL_SCALE, semio_s_artifact_puzzle_3d_inferences::flatten::DIAGRAM_RADIUS, semio_s_artifact_puzzle_3d_inferences::flatten::DIAGRAM_VERTICAL_V_EXTRA};
-use crate::{Puzzle5dFastener, Puzzle5dGrip, Puzzle5dPart, Puzzle5dPartAnchor, Puzzle5dScale, Puzzle5dSnapshot};
+use crate::{Puzzle5dSnapshot};
+use crate::standards::v1::subsets::any::schema::document_records::{Puzzle5dFastener, Puzzle5dGrip, Puzzle5dPart, Puzzle5dPartAnchor, Puzzle5dScale};
 use std::collections::HashMap;
 
 // 🔗️ Kept public (the pre-relocation shim's own surface): the result TYPES stay owned by

@@ -205,6 +205,11 @@ pub fn puzzle5d_labels(view_state: &semio_framework_plugin::ViewModel) -> Option
     Some(Puzzle5dLabels::labels(locale, terminology))
 }
 
+/// 🇬🇧️ The authored native-English label set, for callers that render without a host view.
+pub fn puzzle5d_native_en_labels() -> &'static Puzzle5dLabels {
+    &Puzzle5dLabels::NATIVE_EN
+}
+
 /// 🗺️ Lifts a `Puzzle5dLabels` field accessor into a full manifest-level `LocalizedLabel` matrix —
 /// for `.operation`/`.utility`/arg-option declarations that should track this app's own native/reuse
 /// naming instead of a fixed, terminology-invariant string.
@@ -300,7 +305,5 @@ pub fn puzzle5d_brush_suggestions_run_reasons() -> Vec<ToolRunReasonDefinition> 
 //#endregion 🔖️BrushSuggestionsRun
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

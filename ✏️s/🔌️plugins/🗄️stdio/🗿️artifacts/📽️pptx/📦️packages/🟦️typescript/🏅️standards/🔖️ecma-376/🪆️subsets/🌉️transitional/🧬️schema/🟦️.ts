@@ -1,0 +1,2 @@
+/** 🧬️ Public entry `@semio-tech/stdio-pptx/standards/ecma-376/subsets/transitional/schema`: the explicit surface that importers outside the module use. */
+export type { PptxArtifact } from "../../../../../../../🏅️standards/🔖️ecma-376/🪆️subsets/🌉️transitional/🧬️schema/🟦️.ts";

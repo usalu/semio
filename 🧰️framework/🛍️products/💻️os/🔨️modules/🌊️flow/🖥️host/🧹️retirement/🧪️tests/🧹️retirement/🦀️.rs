@@ -22,7 +22,6 @@ fn original_preview_retention_preserves_roster_and_closes_one_original_row_per_t
         while !session.preview_retention_terminal_is_empty(){turns+=1;assert!(turns<100000);let demand=session.next_preview_retention_demands(copy).unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};let before=session.preview_mesh_by_handle.len()+session.preview_diagnostics_by_handle.len();let (step,heap)=observe(||session.retain_preview_meshes_step(grant).unwrap());assert!(step.progress().fits(grant));assert_eq!(step.progress(),session.preview_retention_step_progress());assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));born+=heap.requested_bytes;freed+=heap.released_bytes;assert!(before-(session.preview_mesh_by_handle.len()+session.preview_diagnostics_by_handle.len())<=1);}
         let actual:Vec<_>=session.preview_mesh_by_handle.keys().map(String::as_str).collect();let expected:Vec<_>=law["expected"].as_array().unwrap().iter().map(|value|value.as_str().unwrap()).collect();assert_eq!(actual,expected);assert_eq!(session.preview_mesh_by_handle.get("live-高").unwrap().paint_texture_base64.as_ref().unwrap().as_ptr(),mesh);
         close(session,copy,original+born-freed);
-        eprintln!("[DEBUG] Original preview retention copy={copy} turns={turns} allocated={born} released={freed} Drop=0");
     }
 }
 
@@ -44,7 +43,6 @@ fn session_begin_close_preserves_original_text_fault_and_latch_backing() {
         session.retire_cold();
         assert_eq!((hidden_birth,hidden_release),(0,0),"begin_close must retain every original backing before grant");
         assert!(original,"begin_close must preserve the original painted/converged/fault/latch sources");
-        eprintln!("[DEBUG] Original Flow session begin-close id={} bytes={} latches={latches} hiddenBirth=0 hiddenFree=0",row["id"],text.len());
     }
 }
 
@@ -299,7 +297,6 @@ fn close(mut session: FlowEvalSession, copy_budget: usize, original_bytes: usize
     assert!(session.terminal_is_empty());
     assert_eq!(released,original_bytes+born);
     let (_,heap)=observe(||drop(session));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
-    eprintln!("[DEBUG] Original Flow session source={original_bytes} admittedBirth={born} physicalRelease={released} terminalDrop=0 copy={copy_budget}");
     released
 }
 
@@ -372,7 +369,7 @@ fn original_host_retirement_preserves_whole_source_and_full_close_receipts(){
    let(step,heap)=observe(||retirement.close_step(grant).unwrap());assert!(step.progress().fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));born+=heap.requested_bytes;freed+=heap.released_bytes;
    stalled=if step.progress()==RetainedCloneProgress::default(){stalled+1}else{0};assert!(stalled<64,"original Host must progress with fixed positive copy grant");
   }
-  assert_eq!(freed,source_bytes+born);let(_,terminal)=observe(||drop(retirement));assert_eq!((terminal.requested_bytes,terminal.released_bytes),(0,0));eprintln!("[DEBUG] original whole Host copy={copy} pureSourceHandoff=true originalPointers=true source={source_bytes} admitted={born} physical={freed} turns={turns} terminalDrop0");
+  assert_eq!(freed,source_bytes+born);let(_,terminal)=observe(||drop(retirement));assert_eq!((terminal.requested_bytes,terminal.released_bytes),(0,0));
  }
 }
 
@@ -415,7 +412,7 @@ fn original_dag_host_retirement_preserves_source_and_independent_physical_receip
    if grant.maximum_release_bytes>0{let(step,heap)=observe(||owner.close_step(RetainedCloneGrant{maximum_release_bytes:grant.maximum_release_bytes-1,..grant}).unwrap());assert_eq!(step.progress(),RetainedCloneProgress::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));}
    let(step,heap)=observe(||owner.close_step(grant).unwrap());assert!(step.progress().fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));born+=heap.requested_bytes;freed+=heap.released_bytes;
   }
-  assert!(freed>=born+minimum_bytes);let(_,heap)=observe(||drop(owner));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));eprintln!("[DEBUG] original whole DAG copy={copy} sameSource=true admitted={born} physical={freed} turns={turns} terminalDrop0");
+  assert!(freed>=born+minimum_bytes);let(_,heap)=observe(||drop(owner));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
  }
 }
 

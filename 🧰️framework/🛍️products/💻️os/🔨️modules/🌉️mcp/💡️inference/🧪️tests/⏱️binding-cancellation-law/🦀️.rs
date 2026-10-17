@@ -4,6 +4,7 @@
 //! `.cwasm` store points at the shared one, so the component is read and hashed here while its
 //! compiled code still loads from the cache instead of a cold compile.
 
+use semio_framework_test_fixtures::fixture_text;
 use std::path::Path;
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -27,17 +28,14 @@ use semio_framework_os_mcp_workspace::headless_workspace_state::HeadlessWorkspac
 use semio_framework_os_mcp_plugin_runtime::compiled_components::set_component_compile_worker;
 
 /// 🧪️ Reads a committed fixture from the package directory at run time instead of embedding it in the test binary.
-fn fixture_text(relative: &str) -> &'static str {
-    Box::leak(std::fs::read_to_string(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative)).expect(relative).into_boxed_str())
-}
 
 
 fn fixture() -> serde_json::Value {
-    serde_json::from_str(fixture_text("../../💡️inference/🧪️tests/🧫️fixtures/⏱️binding-cancellation-law.json")).expect("binding-cancellation law fixture")
+    serde_json::from_str(fixture_text!("../../💡️inference/🧪️tests/🧫️fixtures/⏱️binding-cancellation-law.json")).expect("binding-cancellation law fixture")
 }
 
 fn create_fixture() -> serde_json::Value {
-    serde_json::from_str(fixture_text("../../🗿️artifact/🧪️tests/🧫️fixtures/⏱️create-cancellation-law.json")).expect("create-cancellation law fixture")
+    serde_json::from_str(fixture_text!("../../🗿️artifact/🧪️tests/🧫️fixtures/⏱️create-cancellation-law.json")).expect("create-cancellation law fixture")
 }
 
 fn phase(id: &str) -> ActivationPhase {

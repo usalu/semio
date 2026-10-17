@@ -53,9 +53,8 @@ fn drive_layout_with(ui: &mut Ui, atlas: &mut FontAtlas, pool: &semio_framework_
         let mut actual_retained_progress=semio_framework_job::RetainedCloneProgress::default();
         let mut cx = semio_framework_job::StepContext::new(operation, semio_framework_job::Generation(0), semio_framework_job::StepBudget::new(1, u64::MAX,ui_contract::UI_WORKER_RETIREMENT_POLICY), cancel.clone(), || Some(0), &mut preview_sequence,&mut actual_retained_progress);
         let step=ui.step_layouts(pool, atlas, &mut cx);
-        if let UiLayoutStep::Refused{refusal,..}=&step{eprintln!("[DEBUG] retained disclosure original close refused turn={turn} stage={} kind={:?} progress={:?}",refusal.stage,refusal.kind,refusal.progress);}
+        if let UiLayoutStep::Refused{refusal,..}=&step{}
         if matches!(step, UiLayoutStep::Idle) && !ui.layout_is_dirty("fixture") {
-            eprintln!("[DEBUG] retained disclosure original layout settled turns={} fixed original retirement policy every return witness checked",turn+1);
             return;
         }
     }

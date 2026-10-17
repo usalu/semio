@@ -65,21 +65,28 @@ impl protocol::InferenceSpec<SHomeSnapshot> for SHomeInference {
 /// 💡️ Registers `s.space.home.inference`'s facet leaves into the OS-wide inference catalog — call
 /// once at plugin init, alongside `home_artifact_schema_descriptor`'s registration.
 pub fn home_artifact_inference_descriptor() -> ::semio_framework_schema_registry::ArtifactInferenceDescriptor {
+    ::semio_framework_schema_registry::register_schema_leaf_documents(&[
+        ::semio_framework_schema_registry::SchemaLeafDocument { scope: "s.space.home.inference", export: "inference", format: ::semio_framework_schema_registry::SchemaFormat::Rust, path: "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs" },
+        ::semio_framework_schema_registry::SchemaLeafDocument { scope: "s.space.home.inference", export: "inference", format: ::semio_framework_schema_registry::SchemaFormat::Typescript, path: "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🟦️.ts" },
+        ::semio_framework_schema_registry::SchemaLeafDocument { scope: "s.space.home.inference", export: "inference", format: ::semio_framework_schema_registry::SchemaFormat::Graphql, path: "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🔗️.graphql" },
+        ::semio_framework_schema_registry::SchemaLeafDocument { scope: "s.space.home.inference", export: "inference", format: ::semio_framework_schema_registry::SchemaFormat::Protobuf, path: "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🛰️.proto" },
+    ]);
+    #[cfg(target_arch = "wasm32")]
+    semio_framework_schema_registry::install_default_schema_leaf_reader(semio_framework_plugin::reactor::package_asset, "");
+    #[cfg(not(target_arch = "wasm32"))]
+    semio_framework_schema_registry::install_default_schema_leaf_reader(semio_framework_plugin::reactor::package_asset, env!("CARGO_MANIFEST_DIR"));
     ::semio_framework_schema_registry::ArtifactInferenceDescriptor {
         id: "s.space.home.inference",
         inference: ::semio_framework_schema_registry::FacetLeaves {
-            rust: include_str!("🦀️.rs"),
-            typescript: include_str!("🟦️.ts"),
-            graphql: include_str!("🔗️.graphql"),
+            rust: "",
+            typescript: "",
+            graphql: "",
             json_schema: include_str!("🔣️.json"),
-            proto: include_str!("🛰️.proto"),
+            proto: "",
         },
     }
 }
 //#endregion 🔖️Descriptor
 
-#[cfg(test)]
-//#region 🧪️Tests
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

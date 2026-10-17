@@ -71,7 +71,7 @@ pub fn reference_findings(snapshot: &ModelSnapshot, families: &BTreeMap<&str, &F
 
 /// 🔑️ What `reference_findings` reads of the snapshot: the profile references of the holders.
 pub fn reference_dependency(snapshot: &ModelSnapshot) -> DslValue {
-    DslValue::object(profile_holders(snapshot).into_iter().map(|(holder, named)| (holder, super::dep_value(&named.into_iter().collect::<Vec<_>>()))))
+    DslValue::object(profile_holders(snapshot).into_iter().map(|(holder, named)| (holder, crate::standards::v1::subsets::any::schema::inferences::element_solids::dep_value(&named.into_iter().collect::<Vec<_>>()))))
 }
 
 #[cfg(test)]

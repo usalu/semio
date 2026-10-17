@@ -1,7 +1,7 @@
 //! 🧪️ Per-window ownership laws — both panes own their own config instance, and the config/transient
 //! envelopes round-trip through the exact codecs the retained loader reads.
 
-use super::*;
+use crate::editor::grid2d::window::*;
 
 #[test]
 fn the_default_pane_config_snaps_to_a_visible_unit_grid() {

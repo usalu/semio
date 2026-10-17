@@ -36,6 +36,10 @@ type stdioSemioV1PresentationInferenceGuardSizeBounds = { readonly minItems?: nu
 
 export const stdioSemioV1PresentationInferenceGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : stdioSemioV1PresentationInferenceGuardReject(at, "value is not an object");
+export const stdioSemioV1PresentationInferenceGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) stdioSemioV1PresentationInferenceGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const stdioSemioV1PresentationInferenceGuardArray = (value: unknown, at: string, bounds: stdioSemioV1PresentationInferenceGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return stdioSemioV1PresentationInferenceGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) stdioSemioV1PresentationInferenceGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -66,14 +70,14 @@ export const stdioSemioV1PresentationInferenceGuardConstant = <T extends string 
 //#endregion 🚪️Parsers
 
 export function parseSemioPresentationInference(value: unknown, at = "$"): SemioPresentationInference {
-  const row = stdioSemioV1PresentationInferenceGuardObject(value, at);
+  const row = stdioSemioV1PresentationInferenceGuardClosed(stdioSemioV1PresentationInferenceGuardObject(value, at), at, ["outline"]);
   return {
     outline: parseSemioPresentationOutline(row["outline"], `${at}.outline`),
   };
 }
 
 export function parseSemioPresentationOutline(value: unknown, at = "$"): SemioPresentationOutline {
-  const row = stdioSemioV1PresentationInferenceGuardObject(value, at);
+  const row = stdioSemioV1PresentationInferenceGuardClosed(stdioSemioV1PresentationInferenceGuardObject(value, at), at, ["sectionOutline", "slideCount", "shapeCount", "blockCount", "wordCount"]);
   return {
     sectionOutline: stdioSemioV1PresentationInferenceGuardArray(row["sectionOutline"], `${at}.sectionOutline`).map((item, index) => parseSemioPresentationHeadingEntry(item, `${at}.sectionOutline[${index}]`)),
     slideCount: stdioSemioV1PresentationInferenceGuardInteger(row["slideCount"], `${at}.slideCount`, {"minimum": 0}),
@@ -84,7 +88,7 @@ export function parseSemioPresentationOutline(value: unknown, at = "$"): SemioPr
 }
 
 export function parseSemioPresentationHeadingEntry(value: unknown, at = "$"): SemioPresentationHeadingEntry {
-  const row = stdioSemioV1PresentationInferenceGuardObject(value, at);
+  const row = stdioSemioV1PresentationInferenceGuardClosed(stdioSemioV1PresentationInferenceGuardObject(value, at), at, ["level", "text"]);
   return {
     level: stdioSemioV1PresentationInferenceGuardInteger(row["level"], `${at}.level`, {"minimum": 0}),
     text: stdioSemioV1PresentationInferenceGuardString(row["text"], `${at}.text`),

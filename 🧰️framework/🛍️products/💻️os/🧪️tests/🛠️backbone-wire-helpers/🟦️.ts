@@ -34,4 +34,4 @@ export type AppCommandValue = import("@semio-tech/framework/wire-contracts").App
 
 export type AppFrameValue = import("@semio-tech/framework/wire-contracts").AppFrameValue;
 
-export type TurnOutcome = import("../../../../🔨️modules/🎠️kernel/📡️turn-outcome-broadcast/🟦️.ts").TurnOutcome;
+export type TurnOutcome = import("@semio-tech/framework-kernel/turn-outcome-broadcast").TurnOutcome;

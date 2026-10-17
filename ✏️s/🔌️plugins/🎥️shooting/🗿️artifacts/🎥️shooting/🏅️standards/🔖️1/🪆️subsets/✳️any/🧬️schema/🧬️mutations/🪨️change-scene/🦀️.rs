@@ -1,7 +1,6 @@
 //! 🪨️ Shooting mutation payload — `ChangeSceneMaterialRoughness`. One of the scene's independently-settable fields.
 
 use crate::diff::ShootingDiff;
-use crate::mutations::ShootingMutation;
 use crate::ShootingSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 
@@ -15,12 +14,15 @@ pub struct ChangeSceneMaterialRoughness {
     pub new_roughness: f64,
 }
 
-impl MutationKind<ShootingSnapshot, ShootingMutation> for ChangeSceneMaterialRoughness {
+impl<Op> MutationKind<ShootingSnapshot, Op> for ChangeSceneMaterialRoughness
+where
+    Op: protocol::Mutation<ShootingSnapshot, Diff = ShootingDiff> + From<ChangeSceneMaterialRoughness>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "scene-material-roughness", kind: "change-scene-material-roughness", record: "ChangedSceneMaterialRoughness" };
     fn diff(&self, base: &ShootingSnapshot) -> protocol::MutationOutcome<ShootingDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &ShootingSnapshot) -> Result<Vec<ShootingMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &ShootingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

@@ -12,7 +12,6 @@ test("Cargo coverage compile phase excludes incompatible report suppression",asy
  const refused=spawnSync("cargo",["llvm-cov","nextest","--no-run","--no-report"],{cwd:owner,encoding:"utf8",timeout:5000});expect(refused.status).not.toBe(0);expect(refused.stderr).toContain("--no-report may not be used together with --no-run");
  const reclean=spawnSync("cargo",["llvm-cov","nextest","--no-clean","--no-report"],{cwd:owner,encoding:"utf8",timeout:5000});expect(reclean.status).not.toBe(0);expect(reclean.stderr).toContain("--no-report may not be used together with --no-clean");
  const api=await import("../🟦️.ts"),policy=fixture.policies.find((policy:any)=>policy.nextest&&policy.coverageEnabled),plan=api.cargoTestPlanV1({manifestPath:policy.manifestPath,packages:["owner-package"],cwd:owner,extraArgs:["--lib"]},policy,join(owner,"coverage-metadata.json"));for(const row of law){const actual=plan.find(step=>step.phase===row.phase)!;expect(actual.args[1]).toBe(row.operation);expect(actual.args.includes("--no-run")).toBe(row.noRun);expect(actual.args.includes("--no-report")).toBe(row.noReport);expect(actual.args.includes("--no-clean")).toBe(row.noClean);expect(actual.args.includes("--extract-overwrite")).toBe(row.extractOverwrite);}
- console.log("[DEBUG] Ajv/SQLite coverage phase grammar agrees with independent installed cargo-llvm-cov refusal; original compile and assertion budgets remain separate");
 });
 
 test("Cargo retains failed build stdout without admitting invalid metadata", async () => {
@@ -33,7 +32,6 @@ test("Cargo retains failed build stdout without admitting invalid metadata", asy
       expect(readFileSync(join(retained, "build-failure.stdout.txt"), "utf8")).toBe(oracle.stdout);
       expect(() => readFileSync(join(retained, "binaries-metadata.json"))).toThrow();
       expect(readFileSync(calls, "utf8").trim().split("\n")).toHaveLength(1);
-      console.log(`[DEBUG] Cargo failed build ${row.name}: status=${row.exitCode} exact-retained-stdout=true assert-not-run=true`);
     }
   } finally { rmSync(temporary, { recursive: true, force: true }); }
 }, 10_000);
@@ -50,7 +48,7 @@ test("Kernel package executes neutral target selections through its exact bounde
    process.env.SEMIO_TEST_LEVEL="fundamental";process.env.SEMIO_COVERAGE="0";
    const environment:Record<string,string|undefined>={...process.env,CARGO_TARGET_DIR:target,CARGO_BUILD_TARGET_DIR:target,CARGO_BUILD_BUILD_DIR:target,SEMIO_CARGO_TEST_POLICY:JSON.stringify({...base,manifestPath:manifest,targetDirectory:target,configPath:config,artifactDirectory:temporary,buildDirectory:join(temporary,"b"),leaseDirectory:join(temporary,"l"),retainArtifacts:false,coverageEnabled:false})};let calls=0;
    const Runner=runInNewContext(body+";TestScript",{BundleScript:class{},resolve,process:{env:environment},resolveTestLevel:(args:string[])=>{const resolved=levels.resolveTestLevel(args);environment.SEMIO_TEST_LEVEL=resolved.level;return resolved;},readCargoTestPolicyV1:api.readCargoTestPolicyV1,runCargo:()=>{throw Error("Kernel runner bypasses exact bounded Cargo policy");},runCargoTestsV1:async(request:Parameters<typeof api.runCargoTestsV1>[0],policy:Parameters<typeof api.runCargoTestsV1>[1])=>{calls++;expect(request.manifestPath).toBe(manifest);expect(request.packages).toEqual([fixture.packageName]);expect([...request.extraArgs!]).toEqual(row.extraArgs);expect(policy.level).toBe(row.level);await api.runCargoTestsV1({...request,environment},policy);}});
-   const runner=new Runner();runner.root=temporary;await runner.run(row.arguments);expect(calls).toBe(1);console.log(`[DEBUG] kernel package neutral selection=${row.id} policy=${row.level} actual-native=true`);
+   const runner=new Runner();runner.root=temporary;await runner.run(row.arguments);expect(calls).toBe(1);
   }
  }finally{if(oldLevel===undefined)delete process.env.SEMIO_TEST_LEVEL;else process.env.SEMIO_TEST_LEVEL=oldLevel;if(oldCoverage===undefined)delete process.env.SEMIO_COVERAGE;else process.env.SEMIO_COVERAGE=oldCoverage;rmSync(temporary,{recursive:true,force:true});}
 },30000);

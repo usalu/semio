@@ -1,0 +1,23 @@
+{
+ "name": "rf8",
+ "crates": [
+  "semio-framework-repo-statutes",
+  "semio-framework-repo-cli-verbs",
+  "semio-framework-repo-events",
+  "semio-framework-repo-metrics",
+  "semio-framework-repo-move",
+  "semio-s-spatial-kernel-semio-session"
+ ],
+ "base": {
+  "rev": "1bae6115bc5",
+  "crates": [
+   "semio-framework-repo-statutes",
+   "semio-framework-repo-cli-verbs",
+   "semio-framework-repo-events",
+   "semio-framework-repo-metrics",
+   "semio-framework-repo-move",
+   "semio-s-spatial-kernel-semio-session"
+  ]
+ },
+ "note": "RUST-FILE-SPLITS-8"
+}

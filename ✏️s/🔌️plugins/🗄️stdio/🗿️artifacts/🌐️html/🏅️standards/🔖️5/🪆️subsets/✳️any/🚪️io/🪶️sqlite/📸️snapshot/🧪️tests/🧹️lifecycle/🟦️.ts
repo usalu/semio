@@ -30,5 +30,4 @@ test("HTML lifecycle neutral deep and wide literals retain every owned field in 
  const late=neutral.lateTextUnit.repeat(neutral.lateTextRepeat),bytes=new TextEncoder().encode(late).byteLength;expect(Buffer.byteLength(late,"utf8")).toBe(bytes);expect(bytes).toBeGreaterThan(neutral.cancelAfterBytes);
  const lateDb=Database.deserialize(await exportSqliteDatabase(await htmlSnapshotToSqliteDatabase({schema:late,doctype:late,root:{kind:"text",text:"owned leaf"}})));
  try{expect(lateDb.query("SELECT length(CAST(schema AS BLOB)) AS schemaBytes,length(CAST(doctype AS BLOB)) AS doctypeBytes FROM html_document").get()).toEqual({schemaBytes:bytes,doctypeBytes:bytes});}finally{lateDb.close();}
- console.log("[DEBUG] HTML lifecycle neutral fields, known late-copy frontier and independent recursive SQL ownership executed");
 });

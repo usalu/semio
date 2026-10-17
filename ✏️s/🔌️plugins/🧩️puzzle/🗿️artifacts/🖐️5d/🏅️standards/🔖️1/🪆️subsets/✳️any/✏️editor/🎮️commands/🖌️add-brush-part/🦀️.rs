@@ -1,6 +1,6 @@
 //! 🖌️ The brush source grip `cycle-brush-candidate` shares with the retained `addBrushPart` work.
 
-use crate::editor::puzzle5d::Puzzle5dActionCtx;
+use crate::editor::puzzle5d::interaction::Puzzle5dActionCtx;
 
 /// 🎯️ The grip a brush placement or a candidate cycle works on: `explicit`, else the grip an open suggestion
 /// menu lists candidates for, else the first selected grip, else the grip the brush suggestions run is pointed at.

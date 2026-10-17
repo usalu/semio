@@ -25,6 +25,8 @@
     "@semio-tech/cad-js-module-aec-building-structure": "workspace:*"
   },
   "devDependencies": {
+    "@semio-tech/framework-os": "workspace:*",
+    "@semio-tech/repo-test": "workspace:*",
     "typescript": "^5.9.3"
   },
   "author": {

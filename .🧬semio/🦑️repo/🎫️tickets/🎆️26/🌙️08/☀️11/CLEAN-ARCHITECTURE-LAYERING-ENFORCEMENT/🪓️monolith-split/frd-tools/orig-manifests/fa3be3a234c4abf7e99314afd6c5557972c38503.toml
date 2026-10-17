@@ -1,0 +1,34 @@
+[package]
+workspace = "../../../../../../.."
+name = "semio-framework-os-shell"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Shell UI state single source of truth: ShellState/ShellCommand/ShellEvent vocabulary and the pure reduce() function every host (React, wgpu, MCP gateway) becomes a client of — pure, no I/O, no clock (now_ms is caller-supplied), no wasm_bindgen/web_sys/winit/tokio/std::thread."
+
+[package.metadata.semio]
+role = "framework"
+id = "os-shell"
+
+[lints]
+workspace = true
+
+[lib]
+name = "semio_framework_os_shell"
+path = "🦀️.rs"
+
+[dependencies]
+semio-framework-value = { path = "../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
+schemars = "0.8.22"
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = "1.0.149"
+# 🧬️ `#[derive(ToValue, FromValue)]`, additive alongside serde
+# (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS, 26/09/01). This crate is
+# intentionally kernel-free ("pure, no I/O" above), so it cannot reach the derive's default
+# `::semio_framework_os_kernel` crate path — types here target `#[value(crate = "::protocol::value")]`
+# instead. `semio-framework-replication` has no dependency edge back to this crate.
+semio-framework-value-derive = { path = "../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust" }
+semio-framework-replication = { workspace = true }
+semio-framework-os-config = { workspace = true }
+
+[dev-dependencies]

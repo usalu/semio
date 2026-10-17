@@ -1,6 +1,6 @@
 //! 🔺️ Sparse diff builder for `EditRhs` — names only the rewrite-program statement lists the new right-hand side changes.
 use crate::standards::v1::subsets::any::schema::diff::{RewritingDiff, RhsPatch};
-use crate::RewritingSnapshot;
+use crate::standards::v1::subsets::any::schema::snapshot::RewritingSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::EditRhs, base: &RewritingSnapshot) -> protocol::MutationOutcome<RewritingDiff> {

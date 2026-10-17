@@ -269,7 +269,7 @@ mod tests;
 
 #[allow(unused_imports)]
 mod mutations_codec {
-use crate::text::mutations::*;
+use crate::mutations::*;
 use semio_s_artifact_norm_vdi3805_mutations::*;
 use semio_s_artifact_norm_vdi3805_model::{CatalogIndexEntry, CatalogueProduct, SheetAttributes, Vdi3805Snapshot};
 use semio_s_artifact_norm_vdi3805_diff::Vdi3805Diff;
@@ -303,7 +303,7 @@ pub fn decode_vdi3805_mutation_json(text: &str) -> Result<Vdi3805Mutation, Strin
     semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
 }
 }
-pub use crate::text::mutations::mutations_codec::*;
+pub use crate::mutations::mutations_codec::*;
 
 /// 📜️ Describes the artifact mutation dialect.
 pub const MUTATION_GRAMMAR_SEMIO: &str = include_str!("📖️mutations.grammar.semio");

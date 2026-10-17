@@ -414,7 +414,5 @@ impl protocol::DiffAlgebra<BitmapSnapshot> for BitmapDiff {
 //#endregion 🔖️Apply
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

@@ -7,7 +7,8 @@
   "required": [
     "cameraX",
     "cameraY",
-    "cameraZoom"
+    "cameraZoom",
+    "activeUtilityId"
   ],
   "properties": {
     "cameraX": {
@@ -20,6 +21,10 @@
     },
     "cameraZoom": {
       "type": "number",
+      "x-semio-state": "presence"
+    },
+    "activeUtilityId": {
+      "type": "string",
       "x-semio-state": "presence"
     }
   }

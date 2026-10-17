@@ -1,4 +1,4 @@
-import { fixtureOriginalWorkStock } from "../../../../../🔨️modules/🎭️actor/🎟️retained-turn/🏛️bootstrap/🧪️tests/🧫️fixtures/🟦️.ts";
+import { fixtureOriginalWorkStock } from "@semio-tech/framework-actor/retained-turn/bootstrap/testing/fixtures";
 /** 🧪️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (bench-web-rows): the web half of the 50-plugin ×
  * 50-extension scale proof. Bundled for the BROWSER (see `📜️script.ts`'s `buildBenchWebHarnessBundle`,
  * `Bun.build({ target: "browser" })`) and run inside a real headless Chromium page (Playwright — already
@@ -26,7 +26,7 @@ import { fixtureOriginalWorkStock } from "../../../../../🔨️modules/🎭️a
  *     again in `📜️script.ts`'s row `note`.
  * @see .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME/📓️terra-bench-web-rows-report.md
  */
-import { ShardClient, type ShardBudget, type ShardWorkerLike } from "../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
+import { ShardClient, type ShardBudget, type ShardWorkerLike } from "@semio-tech/framework-actor/shard-client";
 import { OwnedResidentLedger } from "@semio-tech/value-ts/resident";
 
 //#region 🟨️StubWorker
@@ -129,7 +129,7 @@ function bytesEqual(a: Uint8Array, b: Uint8Array): boolean {
 }
 //#endregion 🧮️Helpers
 
-const STUB_BUDGET: ShardBudget = { fuel: 1_000_000, wallMs: 16, memoryBytes: 32 * 1024 * 1024, uiNodes: 256, mailboxLen: 32, maxEffects: 16, maxPatchBytes: 65_536 };
+const STUB_BUDGET: ShardBudget = { fuel: 1_000_000, wallMs: 16, memoryBytes: 32 * 1024 * 1024, uiNodes: 256, mailboxLen: 32, maxEffects: 16, maxPatchBytes: 65_536, maxFrames: 8 };
 
 export type BenchWebRawRow = { readonly id: number; readonly ok: boolean; readonly measured: unknown; readonly note: string };
 

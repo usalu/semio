@@ -36,7 +36,6 @@ test("original fixture caller spends one source stock and CPU balance through al
   expect(source).toContain("self.fuel=cx.fuel_remaining()");
   expect(source).toContain("pub fn retire_step");
   expect(source).not.toContain("let mut receipt=RetainedCloneProgress::default();let mut cx=");
-  console.log("[DEBUG] Ajv and independent JSONPatch preserve one original stock, failed effects, CPU and immutable depth across actual caller turns; native physical qualification is separate");
 });
 
 test("original work loan narrows CPU and absolute deadline while preserving parent balances",()=>{
@@ -54,5 +53,4 @@ test("original work loan narrows CPU and absolute deadline while preserving pare
   }
   const source=readFileSync(new URL("../../../../🦀️.rs",import.meta.url),"utf8");
   expect(source.includes("pub fn with_original_work_loan")).toBe(true);
-  console.log("[DEBUG] Ajv and independent JSONPatch/minimum arithmetic preserve original CPU/deadline after zero, partial, wide, expired and unwind child loans; native same-source proof remains separate");
 });

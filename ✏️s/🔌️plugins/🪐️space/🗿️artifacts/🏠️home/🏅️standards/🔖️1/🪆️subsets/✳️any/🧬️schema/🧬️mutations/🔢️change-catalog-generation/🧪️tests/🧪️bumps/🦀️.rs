@@ -7,12 +7,13 @@
 use crate::standards::v1::subsets::any::schema::diff::SHomeDiff;
 use crate::standards::v1::subsets::any::schema::mutations::SHomeMutation;
 use crate::SHomeSnapshot;
+use semio_framework_test_fixtures::fixture_text;
 
-const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔢️change-catalog-generation/🧪️bumps/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔢️change-catalog-generation/🧪️bumps/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔢️change-catalog-generation/🧪️bumps/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔢️change-catalog-generation/🧪️bumps/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔢️change-catalog-generation/🧪️bumps/🎯️outcome/🔣️.json");
+static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔢️change-catalog-generation/🧪️bumps/📸️snapshot/⬅️before/🔣️.json"));
+static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔢️change-catalog-generation/🧪️bumps/📸️snapshot/➡️after/🔣️.json"));
+static MUTATION: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔢️change-catalog-generation/🧪️bumps/🦠️mutation/🔣️.json"));
+static DIFF: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔢️change-catalog-generation/🧪️bumps/🔺️diff/🔣️.json"));
+static OUTCOME: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔢️change-catalog-generation/🧪️bumps/🎯️outcome/🔣️.json"));
 
 fn decode_value<T: semio_framework_value::FromValue>(text: &str) -> T {
     let json = semio_framework_pack_json::parse(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("fixture JSON decodes");
@@ -22,13 +23,13 @@ fn encode_value<T: semio_framework_value::ToValue>(value: &T) -> semio_framework
     semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(value))
 }
 fn before() -> SHomeSnapshot {
-    decode_value(BEFORE)
+    decode_value((*BEFORE))
 }
 fn expected_after() -> SHomeSnapshot {
-    decode_value(AFTER)
+    decode_value((*AFTER))
 }
 fn mutation() -> SHomeMutation {
-    decode_value(MUTATION)
+    decode_value((*MUTATION))
 }
 fn built_outcome() -> protocol::MutationOutcome<SHomeDiff> {
     <SHomeMutation as protocol::Mutation<SHomeSnapshot>>::diff(&mutation(), &before())
@@ -62,14 +63,14 @@ async fn repinning_the_old_counter_restores_before() {
 /// 🔣️ Both committed launcher snapshots and the `changeCatalogGeneration` payload are canonical.
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
-    for (label, text) in [("before", BEFORE), ("after", AFTER)] {
+    for (label, text) in [("before", (*BEFORE)), ("after", (*AFTER))] {
         let decoded = decode_value::<SHomeSnapshot>(text);
         let reencoded = encode_value(&decoded);
         let original = semio_framework_pack_json::parse(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("launcher snapshot reparses");
         assert_eq!(reencoded, original, "change-catalog-generation/bumps-the-catalog-generation-to-7: committed {label} launcher JSON is not canonical");
     }
     let reencoded = encode_value(&mutation());
-    let original = semio_framework_pack_json::parse(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("changeCatalogGeneration payload reparses");
+    let original = semio_framework_pack_json::parse((*MUTATION), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("changeCatalogGeneration payload reparses");
     assert_eq!(reencoded, original, "change-catalog-generation/bumps-the-catalog-generation-to-7: committed changeCatalogGeneration JSON is not canonical");
 }
 
@@ -77,7 +78,7 @@ async fn committed_json_is_canonical() {
 /// the declared `applied` outcome must be message-free.
 #[semio_framework_async_macros::async_test]
 async fn declared_outcome_holds() {
-    let declared = semio_framework_pack_json::parse(OUTCOME, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("outcome decodes");
+    let declared = semio_framework_pack_json::parse((*OUTCOME), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("outcome decodes");
     assert_eq!(declared.get("status").and_then(semio_framework_pack_json::Value::as_str), Some("applied"), "change-catalog-generation/bumps-the-catalog-generation-to-7: this fixture declares an applied outcome");
     let produced = built_outcome();
     assert_eq!(produced.worst_level(), None, "change-catalog-generation/bumps-the-catalog-generation-to-7: pinning a different value must not raise mutation.no-op");
@@ -89,7 +90,7 @@ async fn declared_outcome_holds() {
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
     let produced = encode_value(built_outcome().diff());
-    let committed = semio_framework_pack_json::parse(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
+    let committed = semio_framework_pack_json::parse((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
     assert_eq!(produced, committed, "change-catalog-generation/bumps-the-catalog-generation-to-7: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
 
@@ -97,18 +98,18 @@ async fn produces_committed_diff() {
 /// null, which `SHomeDiff` emits because no field carries `skip_serializing_if`.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
-    let decoded = decode_value::<SHomeDiff>(DIFF);
+    let decoded = decode_value::<SHomeDiff>((*DIFF));
     assert_eq!(decoded.catalog_generation, Some(7), "change-catalog-generation/bumps-the-catalog-generation-to-7: the committed diff must set the counter");
     assert!(decoded.schema.is_none(), "a catalog-generation delta preserves the schema");
     let reencoded = encode_value(&decoded);
-    let original = semio_framework_pack_json::parse(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff reparses");
+    let original = semio_framework_pack_json::parse((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff reparses");
     assert_eq!(reencoded, original, "change-catalog-generation/bumps-the-catalog-generation-to-7: committed diff JSON is not canonical");
 }
 
 /// 🩹 The committed diff alone carries the before-document to the after-document.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded = decode_value::<SHomeDiff>(DIFF);
+    let decoded = decode_value::<SHomeDiff>((*DIFF));
     let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-document");
     assert_eq!(produced, expected_after(), "change-catalog-generation/bumps-the-catalog-generation-to-7: committed diff did not carry before to after");
 }

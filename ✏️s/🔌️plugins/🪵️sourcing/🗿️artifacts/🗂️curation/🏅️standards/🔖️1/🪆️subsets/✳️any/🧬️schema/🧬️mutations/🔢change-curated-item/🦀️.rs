@@ -1,6 +1,5 @@
 //! 🔢 Direct `change-curated-item-count` mutation owner: sets one curated item's count.
 use crate::diff::CurationDiff;
-use crate::mutations::SourcingMutation;
 use crate::CurationSnapshot;
 
 //#region 🔖️Mutation
@@ -17,17 +16,23 @@ pub struct ChangeCuratedItemCount {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_curated_item_count(object_id: String, new_count: u32) -> SourcingMutation {
-    SourcingMutation::ChangeCuratedItemCount(ChangeCuratedItemCount { object_id, new_count })
+pub fn change_curated_item_count<Op>(object_id: String, new_count: u32) -> Op
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::change_curated_item_count::ChangeCuratedItemCount>,
+{
+    Op::from(ChangeCuratedItemCount { object_id, new_count })
 }
 
-impl protocol::MutationKind<CurationSnapshot, SourcingMutation> for ChangeCuratedItemCount {
+impl<Op> protocol::MutationKind<CurationSnapshot, Op> for ChangeCuratedItemCount
+where
+    Op: protocol::Mutation<CurationSnapshot, Diff = CurationDiff> + From<ChangeCuratedItemCount>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "curated-item", kind: "change-curated-item-count", record: "ChangedCuratedItemCount" };
 
     fn diff(&self, base: &CurationSnapshot) -> protocol::MutationOutcome<CurationDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &CurationSnapshot) -> Result<Vec<SourcingMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &CurationSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

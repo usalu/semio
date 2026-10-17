@@ -1,7 +1,6 @@
 //! 📐️️ `change-stroke-width` — sets one scalar field (`DrawStyle.stroke_width`, name-keyed) on
 //! the named style, independently of `change-stroke-color` per SMO's stroke decomposition ruling.
 
-use crate::schema::mutations::SemioDrawingMutation;
 use crate::schema::snapshot::SemioDrawingSnapshot;
 
 //#region 🔖️Payload
@@ -13,13 +12,16 @@ pub struct ChangeStrokeWidth {
     pub new_width: Option<f64>,
 }
 
-impl protocol::MutationKind<SemioDrawingSnapshot, SemioDrawingMutation> for ChangeStrokeWidth {
+impl<Op> protocol::MutationKind<SemioDrawingSnapshot, Op> for ChangeStrokeWidth
+where
+    Op: protocol::Mutation<SemioDrawingSnapshot, Diff = crate::schema::diff::SemioDrawingDiff> + From<ChangeStrokeWidth>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "stroke-width", kind: "change-stroke-width", record: "ChangedStrokeWidth" };
 
-    fn diff(&self, base: &SemioDrawingSnapshot) -> protocol::MutationOutcome<<SemioDrawingMutation as protocol::Mutation<SemioDrawingSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioDrawingSnapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<SemioDrawingSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &SemioDrawingSnapshot) -> Result<Vec<SemioDrawingMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &SemioDrawingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

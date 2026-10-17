@@ -1,12 +1,13 @@
 //! 🧪️ Original group digest transport preserves native edit custody, exact grants and independent fixture digests.
 use semio_framework_os_kernel::{os_store::{admit_artifact_batch_digest,artifact_batch_digest_birth_demand},os_spr::Edit};
+use semio_framework_test_fixtures::fixture_text;
 use semio_framework_value::{RetirementDemand,retained_clone::{RetainedCloneGrant,RetainedCloneProgress},retirement::controlled::ControlledRetirement};
 use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
 fn grant(d:RetirementDemand)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth}}
 fn below(full:RetainedCloneGrant)->[RetainedCloneGrant;5]{[RetainedCloneGrant{maximum_items:0,..full},RetainedCloneGrant{maximum_copy_bytes:full.maximum_copy_bytes.saturating_sub(1),..full},RetainedCloneGrant{maximum_capacity_bytes:full.maximum_capacity_bytes.saturating_sub(1),..full},RetainedCloneGrant{maximum_release_bytes:full.maximum_release_bytes.saturating_sub(1),..full},RetainedCloneGrant{maximum_depth:full.maximum_depth.saturating_sub(1),..full}]}
 #[test]
 fn original_group_digest_wrapper_retains_native_edit_and_separate_physical_frame(){
- let policy:serde_json::Value=serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let maximum_turns=policy["maximumTurns"].as_u64().unwrap()as usize;
+ let policy:serde_json::Value=serde_json::from_str(fixture_text!("../../🔨️modules/🏪️store/🧩️composition/📬️publication/🤝️group/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let maximum_turns=policy["maximumTurns"].as_u64().unwrap()as usize;
  let cases:serde_json::Value=serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"),"/../../../../🔨️modules/📡️replication/🚪️io/📝️text/🧵️canonical/🧪️tests/🧫️fixtures/🔣️.json"))).unwrap();
  let expected:serde_json::Value=serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"),"/../../../../🔨️modules/📡️replication/🚪️io/📝️text/🧵️canonical/🔏️seal/🧪️tests/🧫️fixtures/🔣️.json"))).unwrap();
  for(index,row)in cases["cases"].as_array().unwrap().iter().enumerate(){for pause in policy["law"]["nativeDigestCancellationTurns"].as_array().unwrap(){let cancel_at=pause.as_u64().map(|turn|turn as usize);
@@ -21,6 +22,5 @@ fn original_group_digest_wrapper_retains_native_edit_and_separate_physical_frame
    let(step,heap)=observe(||owner.advance_digest(full).unwrap());born+=heap.requested_bytes;released+=heap.released_bytes;assert!(step.progress().fits(full));assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));turns+=1;
   }
   assert!(owner.terminal_is_empty());let frame=std::mem::size_of_val(owner.as_ref());let mut owner=Some(owner);let full=RetainedCloneGrant{maximum_items:1,maximum_release_bytes:frame,maximum_depth:1,..Default::default()};for denied in below(full){if denied==full{continue;}let(result,heap)=observe(||{if denied.maximum_items==0||denied.maximum_release_bytes<frame||denied.maximum_depth==0{false}else{drop(owner.take());true}});assert!(!result);assert!(owner.is_some());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));}let((),heap)=observe(||drop(owner.take()));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,frame));released+=heap.released_bytes;assert_eq!(released,held+born);let((),heap)=observe(||drop(owner));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
-  eprintln!("[DEBUG] original group digest wrapper case={index} cancellation={cancel_at:?} cancelled={cancelled} turns={turns}; native original Box/id/forward custody, independent NodeSHA256, five grants, separate outerFrame={frame}, held={held} born={born} released={released}, terminalDrop0");
  }}
 }

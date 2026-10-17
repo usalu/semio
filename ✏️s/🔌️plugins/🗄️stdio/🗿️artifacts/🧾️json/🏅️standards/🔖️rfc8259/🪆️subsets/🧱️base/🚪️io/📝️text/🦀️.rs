@@ -1,13 +1,16 @@
 //! 🚪️ Artifact representation module ownership.
 
-#[path = "📸️snapshot/🦀️.rs"]
-pub mod snapshot;
+pub use semio_s_artifact_stdio_json_schema::standards::v_rfc8259::subsets::base::io::text::snapshot;
 
-#[path = "🧬️mutations/🦀️.rs"]
-pub mod mutations;
+pub mod mutations {
+    pub use semio_s_artifact_stdio_json_mutations::standards::v_rfc8259::subsets::base::io::text::mutations::*;
+    pub use semio_s_artifact_stdio_json_tests::standards::v_rfc8259::subsets::base::io::text::mutations::insert_array_element;
+    pub use semio_s_artifact_stdio_json_tests::standards::v_rfc8259::subsets::base::io::text::mutations::remove_array_element;
+    pub use semio_s_artifact_stdio_json_tests::standards::v_rfc8259::subsets::base::io::text::mutations::remove_member;
+    pub use semio_s_artifact_stdio_json_tests::standards::v_rfc8259::subsets::base::io::text::mutations::set_member;
+    pub use semio_s_artifact_stdio_json_tests::standards::v_rfc8259::subsets::base::io::text::mutations::set_scalar;
+}
 
-#[path = "🔺️diff/🦀️.rs"]
-pub mod diff;
+pub use semio_s_artifact_stdio_json_mutations::standards::v_rfc8259::subsets::base::io::text::diff;
 
-#[path = "💡️inferences/🦀️.rs"]
-pub mod inferences;
+

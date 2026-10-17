@@ -22,14 +22,9 @@ pub fn print_dsl(document: &NoteSnapshot) -> String {
 }
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️semio-grammar-conformance/🦀️.rs"]
-mod semio_grammar_conformance;
+
 
 //#region 🔖️ExternalBridges
 /// 📖️ Parses `.note` DSL text with a plain-`String` error, reachable from OUTSIDE this crate —

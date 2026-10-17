@@ -3,24 +3,22 @@ use crate::standards::v2_0::subsets::any::schema::snapshot::*;
 use semio_framework_value::{ValueError,ValueRefusalKind};
 use semio_framework_dsl_record::DslField;
 use semio_framework_dsl_record::{BorrowedDslField,BorrowedShape};
-#[cfg(test)]
-#[path="🧪️tests/🫳️borrowed-carriers/🦀️.rs"]
-mod borrowed_carrier_tests;
-#[path="🛫️encoding/🦀️.rs"]mod encoding;
+
+#[path="🛫️encoding/🦀️.rs"]pub mod encoding;
 #[derive(semio_framework_dsl_record_derive::DslRecord)]
-pub(crate) struct Attribute{semantic:String,accessor:usize}
+pub struct Attribute{semantic:String,accessor:usize}
 #[derive(semio_framework_dsl_record_derive::DslRecord)]
-pub(crate) struct Target{attributes:Vec<Attribute>}
+pub struct Target{attributes:Vec<Attribute>}
 #[derive(semio_framework_dsl_record_derive::DslRecord)]
-pub(crate) struct Primitive{attributes:Vec<Attribute>,indices:Option<usize>,material:Option<usize>,mode:Option<u64>,targets:Vec<GltfMorphTarget>,extensions:Option<GltfJson>,extras:Option<GltfJson>}
+pub struct Primitive{attributes:Vec<Attribute>,indices:Option<usize>,material:Option<usize>,mode:Option<u64>,targets:Vec<GltfMorphTarget>,extensions:Option<GltfJson>,extras:Option<GltfJson>}
 #[derive(semio_framework_dsl_record_derive::DslScalar)]
-pub(crate) enum ProjectionKind{Perspective,Orthographic}
+pub enum ProjectionKind{Perspective,Orthographic}
 #[derive(semio_framework_dsl_record_derive::DslRecord)]
-pub(crate) struct Projection{kind:ProjectionKind,perspective:Option<GltfPerspective>,orthographic:Option<GltfOrthographic>}
+pub struct Projection{kind:ProjectionKind,perspective:Option<GltfPerspective>,orthographic:Option<GltfOrthographic>}
 fn attributes(value:&[(String,usize)])->Vec<Attribute>{value.iter().map(|(semantic,accessor)|Attribute{semantic:semantic.clone(),accessor:*accessor}).collect()}
 fn pairs(value:Vec<Attribute>)->Vec<(String,usize)>{value.into_iter().map(|value|(value.semantic,value.accessor)).collect()}
 #[path="🧩️extras/🦀️.rs"]
-mod json;
+pub mod json;
 impl BorrowedDslField for GltfJson{const SHAPE:BorrowedShape=<json::Json as BorrowedDslField>::SHAPE;}
 impl BorrowedDslField for GltfMorphTarget{const SHAPE:BorrowedShape=<Target as BorrowedDslField>::SHAPE;}
 impl BorrowedDslField for GltfPrimitive{const SHAPE:BorrowedShape=<Primitive as BorrowedDslField>::SHAPE;}
@@ -66,13 +64,13 @@ impl DslField for GltfCameraProjection{
  fn from_value_controlled(value:&semio_framework_dsl_record::FieldValue,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,ValueError>{let mut owner=semio_framework_dsl_record::__rt::DecodedFieldOwner::new(Projection::from_value_controlled(value,control)?,Projection::retire_decoded);let value=owner.as_mut();if !matches!((&value.kind,&value.perspective,&value.orthographic),(ProjectionKind::Perspective,Some(_),None)|(ProjectionKind::Orthographic,None,Some(_))){return Err(ValueError::new(ValueRefusalKind::InvalidValue,"GLTF projection record components differ"))}let value=owner.take();match value.kind{ProjectionKind::Perspective=>Ok(Self::Perspective(value.perspective.unwrap())),ProjectionKind::Orthographic=>Ok(Self::Orthographic(value.orthographic.unwrap()))}}
 }
 #[derive(semio_framework_dsl_record_derive::DslScalar)]
-pub(crate) enum ImageKind{Image}
+pub enum ImageKind{Image}
 #[derive(semio_framework_dsl_record_derive::DslScalar)]
-pub(crate) enum TextureKind{Texture}
+pub enum TextureKind{Texture}
 #[derive(semio_framework_dsl_record_derive::DslRecord)]
-pub(crate) struct Image{kind:ImageKind,uri:Option<String>,mime_type:Option<String>,buffer_view:Option<usize>,name:Option<String>,extensions:Option<GltfJson>,extras:Option<GltfJson>}
+pub struct Image{kind:ImageKind,uri:Option<String>,mime_type:Option<String>,buffer_view:Option<usize>,name:Option<String>,extensions:Option<GltfJson>,extras:Option<GltfJson>}
 #[derive(semio_framework_dsl_record_derive::DslRecord)]
-pub(crate) struct Texture{kind:TextureKind,sampler:Option<usize>,source:Option<usize>,name:Option<String>,extensions:Option<GltfJson>,extras:Option<GltfJson>}
+pub struct Texture{kind:TextureKind,sampler:Option<usize>,source:Option<usize>,name:Option<String>,extensions:Option<GltfJson>,extras:Option<GltfJson>}
 impl DslField for GltfImage{
  fn shape_controlled<C:semio_framework_dsl_record::NativeSchemaControl>(control:&mut C)->Result<semio_framework_dsl_record::Shape,ValueError>{encoding::image_shape(control)}
  fn to_value_controlled(&self,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<semio_framework_dsl_record::FieldValue,ValueError>{encoding::image(self,control)}
@@ -92,28 +90,8 @@ impl DslField for GltfTexture{
  fn from_value_controlled(value:&semio_framework_dsl_record::FieldValue,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,ValueError>{let value=Texture::from_value_controlled(value,control)?;Ok(Self{sampler:value.sampler,source:value.source,name:value.name,extensions:value.extensions,extras:value.extras})}
 }
 #[derive(semio_framework_dsl_record_derive::DslRecord)]
-pub(crate) struct ResolvedBuffer{bytes:Vec<u8>}
+pub struct ResolvedBuffer{pub bytes:Vec<u8>}
 #[derive(semio_framework_dsl_record_derive::DslRecord)]
-pub(crate) struct Snapshot{schema:String,document:GltfDocument,buffers:Vec<ResolvedBuffer>,source_form:GltfSourceForm}
-pub(crate) fn record(value:&GltfSnapshot)->semio_framework_dsl_record::RecordValue{let buffers=value.buffers.iter().map(|bytes|ResolvedBuffer{bytes:bytes.clone()}).collect::<Vec<_>>();semio_framework_dsl_record::RecordValue{fields:[(0,value.schema.to_value()),(1,value.document.to_value()),(2,buffers.to_value()),(3,value.source_form.to_value())].into_iter().collect()}}
-impl From<Snapshot> for GltfSnapshot{fn from(value:Snapshot)->Self{Self{schema:value.schema,document:value.document,buffers:value.buffers.into_iter().map(|buffer|buffer.bytes).collect(),source_form:value.source_form}}}
-
-impl pack::snapshot::ArtifactPack for GltfSnapshot{
- 
- fn encode_pack_with(&self,options:&store::PackEncodeOptions)->Result<Vec<u8>,store::PackError>{let inner=store::pack_rt::encode_document(&Snapshot::__dsl_spec(),&record(self),options)?;let envelope=store::semio_format::SemioEnvelope::from_envelope_id("stdio.gltf",store::semio_format::Component::Pack,1).map_err(|error|store::PackError::from(error.into_value_error()))?;Ok(store::semio_format::wrap_binary(&envelope,&inner))}
- fn decode_pack_with(bytes:&[u8],options:&store::PackDecodeOptions)->Result<Self,store::PackError>{let(envelope,inner)=store::semio_format::unwrap_binary(bytes).map_err(|error|store::PackError::from(error.into_value_error()))?;if !envelope.matches_identity("stdio.gltf",store::semio_format::Component::Pack,1){return Err(store::PackError::from(ValueError::new(ValueRefusalKind::InvalidValue, "GLTF owned pack identity differs")));}let(record,_)=store::pack_rt::decode_document(&inner,&Snapshot::__dsl_spec(),options)?;Snapshot::__dsl_from_record(&record).map(Into::into).map_err(store::os_store::serialization::text_error_to_pack_error)}
- fn record_spec()->Option<semio_framework_dsl_record::RecordSpec>{Some(Snapshot::__dsl_spec())}
-}
-impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for GltfSnapshot {
-fn sqlite_snapshot_codec()->Option<store::os_store::serialization::ArtifactSqliteSnapshotCodec>{Some(<Self as store::os_store::ArtifactSqliteSnapshotOperations>::sqlite_codec())}
-}
-
-/// 🛬️ Admit each declared native child and the resolved buffer collection before ownership transfer.
-pub(crate) fn reconstruct_record_controlled(record:&semio_framework_dsl_record::RecordValue,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<GltfSnapshot,ValueError>{
- let mut owner=semio_framework_dsl_record::__rt::DecodedFieldOwner::new(Snapshot::__dsl_from_record_controlled(record,control)?,Snapshot::retire_decoded);let count=owner.as_mut().buffers.len();let mut owned=control.allocate_vec(count)?;control.begin_stage(count)?;for _ in&owner.as_mut().buffers{control.step()?;}control.checkpoint()?;let Snapshot{schema,document,buffers,source_form}=owner.take();for buffer in buffers{owned.push(buffer.bytes);}Ok(GltfSnapshot{schema,document,buffers:owned,source_form})
-}
-
+pub struct Snapshot{pub schema:String,pub document:GltfDocument,pub buffers:Vec<ResolvedBuffer>,pub source_form:GltfSourceForm}
 /// 🏭️ Supplies the actual controlled metadata authority without constructing ordinary metadata.
-pub(crate) fn controlled_spec_producer()->semio_framework_dsl_record::RecordSpecProducer{encoding::spec_producer()}
-/// 🛫️ Emits every literal logical field through the declared controlled native output terminal.
-pub(crate) fn encode_native(value:&GltfSnapshot,kind:semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding,control:&mut semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io::IoPayload,ValueError>{encoding::encode_native(value,kind,control,native_owner)}
+pub fn controlled_spec_producer()->semio_framework_dsl_record::RecordSpecProducer{encoding::spec_producer()}

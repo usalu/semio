@@ -2,6 +2,7 @@ use crate::{standards::mpeg1_layer3::subsets::any::schema::snapshot::Mp3Snapshot
 use crate::standards::mpeg1_layer3::subsets::any::schema::snapshot::Id3Content;
 use crate::standards::mpeg1_layer3::subsets::any::io::{parse_frame_header, encode_frame_header};
 use crate::standards::mpeg1_layer3::subsets::any::io::*;
+use semio_framework_test_fixtures::fixture_path;
 
 /// 🌱 Real ID3v2.3.0 + 4× MPEG1 Layer III fixture — byte-identical to the artifact's own
 /// `📚️examples/🎬️demo/🖼️assets/🔊️.mp3` (per ticket `fixtures/mp3/NOTES.md`), duplicated
@@ -168,7 +169,7 @@ fn owned_fixture_publication_reports_canonical_logical_carriers() {
     let codec = (factory.codec)();
     let kind = (factory.kind)();
     let compiled = include_bytes!("../../💾️binary/📸️snapshot/📡️.protocol.semio");
-    let current = std::fs::read(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../🚪️io/💾️binary/📸️snapshot/📡️.protocol.semio")).unwrap();
+    let current = std::fs::read(fixture_path!("../../../../../🚪️io/💾️binary/📸️snapshot/📡️.protocol.semio")).unwrap();
     assert_eq!(current.as_slice(), compiled, "the live native receipt requires the current compiled protocol");
     let digest = semio_framework_hash::Sha256::digest(compiled);
     assert_ne!(codec.pack_schema_hash, [0; 32]);
@@ -177,5 +178,5 @@ fn owned_fixture_publication_reports_canonical_logical_carriers() {
     assert_eq!(codec.extension, "semio");
     let hex = |bytes: &[u8]| bytes.iter().map(|byte| format!("{byte:02x}")).collect::<String>();
     let receipt = serde_json::json!({"schemaVersion":1,"artifactKind":kind.id,"artifactSchema":codec.schema,"factoryId":factory.id,"extension":codec.extension,"packSchemaHash":hex(&codec.pack_schema_hash),"protocolSourceSha256":hex(&digest)});
-    eprintln!("[DEBUG] native-codec-publication={receipt}");
+    eprintln!("native-codec-publication={receipt}");
 }

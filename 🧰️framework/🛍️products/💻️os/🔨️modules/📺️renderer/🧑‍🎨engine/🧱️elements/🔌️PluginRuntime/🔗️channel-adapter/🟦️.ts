@@ -41,16 +41,16 @@ import { noteGuestIngressV1, performContextMenu, performInvocation } from "../�
 //#region 🔖️ActorIdentity
 /** 🪪️ ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS §C0/§C3 — the shell's
  * current actor id (`user:{userId}#{shellSessionId}` once identity resolves, `client-<random>` before
- * that), stamped onto every `AppChannelClient` created from here on. Module-level rather than an
+ * that), stamped onto every plugin instance opened from here on. Module-level rather than an
  * `adaptPluginHandle` parameter because `PluginWasmHandle` is the kernel's frozen shape (no setter
- * method to add) and every real call site (`loadPluginModuleResilient`, `🐚️🌿️ShellHelpers/🟦️.tsx`)
+ * method to add) and every real call site (`loadPluginModuleResilient`, `🛠️ShellHelpers/🛣️route-and-chrome/🟦️.tsx`)
  * lives outside this ticket's lease — this is the smallest surface that reaches every future
  * `createApp` call without touching a foreign-leased signature. Known limitation: a single JS realm
  * hosting more than one `🏛️ShellHost` (e.g. the multi-pane demonstrator) shares one actor id across
  * panes — out of scope for this lane, flagged in `📓️w2-c-report.md`. */
 export let currentPluginRuntimeActor = "local";
 
-/** 🪪️ Sets the actor id every subsequently-created `AppChannelClient` is stamped with — call once the
+/** 🪪️ Sets the actor id every subsequently-opened plugin instance is stamped with — call once the
  * shell mints/resolves its `user:{userId}#{shellSessionId}` identity (or reverts it on sign-out). */
 export function setPluginRuntimeActor(actor: string): void {
   currentPluginRuntimeActor = actor;
@@ -138,7 +138,7 @@ export async function adaptPluginHandle(pluginId: string, lease: { readonly hand
       const instanceId = await handle.createApp(appId);
       if (disposing) { await handle.destroyApp(instanceId); throw new Error("plugin-handle.closed"); }
       forgetPluginInstanceRetirementV1(pluginId, instanceId);
-      channels.set(instanceId, new AppChannelClient(handle, channelRequests, instanceId, appId, currentPluginRuntimeActor));
+      channels.set(instanceId, new AppChannelClient(handle, channelRequests, instanceId, appId));
       return instanceId;
     },
     /** 🪦️ Retires this instance's DISPATCH QUEUE before its actor is destroyed, never after.

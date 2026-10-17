@@ -1,9 +1,19 @@
 //! 🧬️ Puzzle5d artifact schema — every field of the artifact with its state class.
 
-use crate::{Puzzle5dKindCatalogsExtra, Puzzle5dSnapshot, Puzzle5dTargetVolume};
+use crate::{Puzzle5dSnapshot};
+use crate::standards::v1::subsets::any::schema::kind_catalogs::{Puzzle5dKindCatalogsExtra};
+use crate::standards::v1::subsets::any::schema::document_records::{Puzzle5dTargetVolume};
 use ::semio_framework_schema::ArtifactSchema;
 use semio_s_artifact_stdio_semio_kit::schema::snapshot::SemioKitSnapshot;
 use std::collections::HashSet;
+
+pub use semio_s_artifact_puzzle_5d_document_records::standards::v1::subsets::any::schema::document_records;
+pub use document_records::*;
+
+pub use semio_s_artifact_puzzle_5d_kind_catalogs::standards::v1::subsets::any::schema::kind_catalogs;
+pub use kind_catalogs::*;
+
+pub use semio_s_artifact_puzzle_5d_kind_catalogs::standards::v1::subsets::any::schema::graph_manifest;
 
 //#region 🔖️Artifact
 /// 🧬️ puzzle5d document artifact state.
@@ -149,7 +159,7 @@ pub const PUZZLE5D_DEFAULT_MANIFEST_ID: &str = "puzzle5d-default";
 /// `kindCompatibility` rows — the single shared table both the 2D board and 3D world honor so
 /// brush/fill suggestions agree across projections.
 pub fn puzzle5d_grip_kinds_compatible(source_kind: &str, target_kind: &str) -> bool {
-    let Some(manifest) = crate::graph_manifest::manifest_by_id(PUZZLE5D_DEFAULT_MANIFEST_ID) else {
+    let Some(manifest) = crate::standards::v1::subsets::any::schema::graph_manifest::manifest_by_id(PUZZLE5D_DEFAULT_MANIFEST_ID) else {
         return false;
     };
     manifest.kind_compatibility.iter().any(|row| {
@@ -184,15 +194,13 @@ pub fn next_id<'a>(existing: impl Iterator<Item = &'a str>, prefix: &str) -> Str
 //#endregion 🔖️DerivedDocumentHelpers
 
 //#region 🧪️EngineRelocationTests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️engine-relocation/🦀️.rs"]
-mod engine_relocation_tests;
+
 //#endregion 🧪️EngineRelocationTests
 
 //#region 🔁️Re-exports
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
-pub use crate::Puzzle5dMeta;
-pub use crate::Puzzle5dKindCompatibility;
-pub use crate::Puzzle5dPart;
-pub use crate::Puzzle5dFastener;
+pub use crate::standards::v1::subsets::any::schema::document_records::Puzzle5dMeta;
+pub use crate::standards::v1::subsets::any::schema::document_records::Puzzle5dKindCompatibility;
+pub use crate::standards::v1::subsets::any::schema::document_records::Puzzle5dPart;
+pub use crate::standards::v1::subsets::any::schema::document_records::Puzzle5dFastener;
 //#endregion 🔁️Re-exports

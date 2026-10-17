@@ -2,7 +2,7 @@
 //! world origin, by one world-axis rotation. The gesture's own inputs (which ids, which axis, which angle) are the
 //! payload, so editing the turn in history re-derives every orientation from whatever base it replays on.
 use crate::standards::v1::subsets::any::schema::diff::Puzzle5dDiff;
-use crate::standards::v1::subsets::any::schema::mutations::{puzzle5d_selection_items,puzzle5d_selection_number,Puzzle5dMutation};
+use crate::standards::v1::subsets::any::schema::mutations::{puzzle5d_selection_items, puzzle5d_selection_number};
 
 use crate::Puzzle5dSnapshot;
 
@@ -22,13 +22,16 @@ pub struct RotateSelection3d {
     pub angle: f64,
 }
 
-impl protocol::MutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for RotateSelection3d {
+impl<Op> protocol::MutationKind<Puzzle5dSnapshot, Op> for RotateSelection3d
+where
+    Op: protocol::Mutation<Puzzle5dSnapshot, Diff = Puzzle5dDiff> + From<RotateSelection3d> + From<crate::standards::v1::subsets::any::schema::mutations::rotate_part_3d::RotatePart3d> + From<crate::standards::v1::subsets::any::schema::mutations::rotate_target_volume::RotateTargetVolume>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "rotate", entity: "selection", kind: "rotate-selection3d", record: "RotatedSelection3d" };
 
     fn diff(&self, base: &Puzzle5dSnapshot) -> protocol::MutationOutcome<Puzzle5dDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Puzzle5dSnapshot) -> Result<Vec<Puzzle5dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Puzzle5dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     
@@ -46,6 +49,9 @@ impl protocol::MutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for RotateSelect
 //#endregion 🔖️Mutation
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn rotate_selection_3d(targets: Vec<String>, axis: [f64; 3], angle: f64) -> Puzzle5dMutation {
-    Puzzle5dMutation::RotateSelection3d(RotateSelection3d { targets, axis, angle })
+pub fn rotate_selection_3d<Op>(targets: Vec<String>, axis: [f64; 3], angle: f64) -> Op
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::rotate_selection_3d::RotateSelection3d>,
+{
+    Op::from(RotateSelection3d { targets, axis, angle })
 }

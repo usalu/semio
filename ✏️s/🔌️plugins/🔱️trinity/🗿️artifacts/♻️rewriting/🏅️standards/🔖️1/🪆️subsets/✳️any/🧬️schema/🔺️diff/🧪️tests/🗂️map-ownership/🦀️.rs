@@ -1,12 +1,12 @@
-use super::RewritingDiff;
+use crate::standards::v1::subsets::any::schema::diff::RewritingDiff;
 use crate::standards::v1::subsets::any::schema::mutations::RewriteRuleMutation;
-use crate::RewritingSnapshot;
+use crate::standards::v1::subsets::any::schema::snapshot::RewritingSnapshot;
 use protocol::{Mutation, MutationDiff};
 
 /// 🗂️ Each persisted map edit preserves null and removal as distinct operations.
 #[semio_framework_async_macros::async_test]
 async fn rewriting_map_ownership_transport_preserves_entry_presence() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🔺️diff/🗂️map-ownership/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(runtime_fixture_text("../../../../🧪️tests/🧫️fixtures/🔺️diff/🗂️map-ownership/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap() {
         let mut current = RewritingSnapshot { parameter_bindings: semio_framework_pack_json::from_json_str(&row["before"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap(), ..Default::default() };
         for input in row["mutations"].as_array().unwrap() {
@@ -27,7 +27,7 @@ async fn rewriting_map_ownership_transport_preserves_entry_presence() {
 /// 🪢 Coalesced map edits retain successful sequential application over the original base.
 #[semio_framework_async_macros::async_test]
 async fn rewriting_map_ownership_absorb_preserves_sequential_application() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🔺️diff/🗂️map-ownership/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(runtime_fixture_text("../../../../🧪️tests/🧫️fixtures/🔺️diff/🗂️map-ownership/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap() {
         let base = RewritingSnapshot { parameter_bindings: semio_framework_pack_json::from_json_str(&row["before"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap(), ..Default::default() };
         let mut current = base.clone();
@@ -40,4 +40,9 @@ async fn rewriting_map_ownership_absorb_preserves_sequential_application() {
         }
         assert_eq!(protocol::apply_diff(&combined, &base).as_ref(), Ok(&current), "{}", row["name"]);
     }
+}
+
+fn runtime_fixture_text(relative: &str) -> &'static str {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative);
+    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display())).into_boxed_str())
 }

@@ -72,7 +72,7 @@ pub struct RecordDiffCursor {
     pub owned_copy: Option<RecordOwnedCopy>,
 }
 
-pub struct RecordSource(Option<ui_contract::UiNodeRecord>);
+pub struct RecordSource(pub Option<ui_contract::UiNodeRecord>);
 impl From<ui_contract::UiNodeRecord> for RecordSource { fn from(record: ui_contract::UiNodeRecord) -> Self { Self(Some(record)) } }
 impl std::ops::Deref for RecordSource {
     type Target = ui_contract::UiNodeRecord;

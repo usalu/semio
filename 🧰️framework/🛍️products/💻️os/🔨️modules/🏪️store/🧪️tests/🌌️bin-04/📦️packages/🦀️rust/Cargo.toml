@@ -51,3 +51,4 @@ semio-framework-value-snapshot-read = { path = "../../../../../../../../🔨️m
 serde_json = "1.0.140"
 
 [dev-dependencies]
+semio-framework-os-spr = { path = "../../../../../📡️spr/📦️packages/🦀️rust", features = ["protocol-laws"] }

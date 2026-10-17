@@ -50,6 +50,6 @@ export const stdioSemioV1KitDiffTextGuardConstant = <T extends string | number |
 export function parseSemioKitDiffDsl(value: unknown, at = "$"): SemioKitDiffDsl {
   const row = stdioSemioV1KitDiffTextGuardObject(value, at);
   return {
-    line: row["line"] === undefined ? undefined : stdioSemioV1KitDiffTextGuardString(row["line"], `${at}.line`),
+    line: stdioSemioV1KitDiffTextGuardString(row["line"], `${at}.line`),
   };
 }

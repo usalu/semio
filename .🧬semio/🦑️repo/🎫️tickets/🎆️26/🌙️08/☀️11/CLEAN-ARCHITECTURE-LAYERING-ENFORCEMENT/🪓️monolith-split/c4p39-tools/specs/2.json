@@ -1,0 +1,95 @@
+{
+ "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️tests/🔗️hub-projection-workspace/🦀️.rs",
+ "original": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/c4p39-tools/orig/2.rs",
+ "stage": "/Users/ueli/.cache/c4p39/stage",
+ "chunks": [
+  {
+   "name": "🔗️projection-fixtures-and-live-workspace",
+   "folder": "🔗️projection-fixtures-and-live-workspace",
+   "doc": "🔗️ Projection fixtures and live workspace: the hub projection fixture records, the route overlay and summary laws, the resolution band and the live sign-in to the retained workspace.",
+   "ranges": [
+    [
+     5,
+     208
+    ]
+   ]
+  },
+  {
+   "name": "🪢️severable-relay-and-ledger",
+   "folder": "🪢️severable-relay-and-ledger",
+   "doc": "🪢️ Severable relay and ledger: the loopback relay whose connections can be cut, the collaboration ledger and the native drive and sign-in helpers.",
+   "ranges": [
+    [
+     210,
+     337
+    ]
+   ]
+  },
+  {
+   "name": "📣️replay-refusals-and-agent-offer",
+   "folder": "📣️replay-refusals-and-agent-offer",
+   "doc": "📣️ Replay refusals and agent offer: the shared replay-refusal vocabulary, the unserved guest refusal, the space artifact creation replay and the agent bridge offer scope.",
+   "ranges": [
+    [
+     339,
+     457
+    ]
+   ]
+  },
+  {
+   "name": "⏱️frame-pumps-and-edit-ledger",
+   "folder": "⏱️frame-pumps-and-edit-ledger",
+   "doc": "⏱️ Frame pumps and edit ledger: remote and liveness probes, the frame pump, document opening settle, paired pumping and the applied-edit and membership ledgers.",
+   "ranges": [
+    [
+     459,
+     568
+    ]
+   ]
+  },
+  {
+   "name": "🤝️two-shell-collaboration",
+   "folder": "🤝️two-shell-collaboration",
+   "doc": "🤝️ Two-shell collaboration: two live native shells collaborating on one hub document.",
+   "ranges": [
+    [
+     570,
+     744
+    ]
+   ]
+  },
+  {
+   "name": "🧭️native-guest-journey",
+   "folder": "🧭️native-guest-journey",
+   "doc": "🧭️ Native guest journey: the shared guest journey fixture and the hubless mount, undo, redo, copy and cancellable open laws.",
+   "ranges": [
+    [
+     746,
+     935
+    ]
+   ]
+  },
+  {
+   "name": "🏗️creation-door-and-cross-shell-meeting",
+   "folder": "🏗️creation-door-and-cross-shell-meeting",
+   "doc": "🏗️ Creation door and cross-shell meeting: the live artifact creation door, the cross-shell file handshake, the window painter and the cross-shell meeting driver.",
+   "ranges": [
+    [
+     937,
+     1152
+    ]
+   ]
+  },
+  {
+   "name": "🖱️cross-shell-collaboration-and-sign-in-task",
+   "folder": "🖱️cross-shell-collaboration-and-sign-in-task",
+   "doc": "🖱️ Cross-shell collaboration and sign-in task: native and React collaboration, shared cursors, the long guest turn and the cancellable sign-in verb.",
+   "ranges": [
+    [
+     1154,
+     1411
+    ]
+   ]
+  }
+ ]
+}

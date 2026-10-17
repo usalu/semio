@@ -1,0 +1,3 @@
+//! 🪪️ Explicit admitted command authority for original Drawing receiver fixtures.
+pub fn operation()->semio_framework_plugin::AppOperationContext{semio_framework_plugin::AppOperationContext {app_instance_id:7,parent_document_id:"drawing-test-document".into(),operation_id:11,generation:13,canonical_base_revision:[17;32],authoring_seed:"drawing-test-author".into()}}
+pub fn session(utility:&str,seed:&str)->semio_s_artifact_draw_drawing_editor_tool::DrawingSession{let mut session=semio_s_artifact_draw_drawing_editor_tool::DrawingSession::new(utility,seed);session.identity_cancel=Some(semio_framework_job::CancelToken::root_now());session}

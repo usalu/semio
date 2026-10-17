@@ -19,7 +19,6 @@ test("bounded tool archives share finite framing with independent tar ZIP and SQ
   const prefixed=await new Bun.Archive({"package/a":"x"},{compress:"gzip"}).bytes(),projected=await decodeBoundedArchiveV1(prefixed,{version:1,format:"tar.gz",prefix:"package",policy:corpus.policy},control);expect(projected.entries.find(row=>row.kind==="file")?.path).toBe("a");
   await refusals(decodeBoundedArchiveV1,control);
   for(const stage of["preflight","accepted"]){const stopped=new AbortController(),reason=Error("Actual archive "+stage+" cancellation");if(stage==="preflight")stopped.abort(reason);const work=decodeBoundedArchiveV1(prefixed,{version:1,format:"tar.gz",prefix:"package",policy:corpus.policy},scriptCompilerAdmissionControlV1(original,"archive:cancel:"+stage,120000,stopped.signal));if(stage==="accepted")stopped.abort(reason);let failed=false,failure:unknown;try{await work;}catch(error){failed=true;failure=error;}expect(failed).toBe(true);expect(failure).toBe(reason);}
-  console.log("[DEBUG] Actual Original bounded tool tar/ZIP bytes agree with Bun, fflate and SQLite; prefix projection stays explicit");
  });}finally{db.close();}
 });
 
@@ -40,7 +39,6 @@ async function refusals(decode:typeof import("../🟦️.ts").decodeBoundedArchi
  const padded=pack([frame(header,"tectonic")],corpus.tarFooterBytes),paddedRequest={...request("tar.gz"),policy:{...corpus.policy,maximumInflatedBytes:corpus.tarFooterBytes+1024}},paddedResult=await decode(padded,paddedRequest,control),paddedOracle=await new Bun.Archive(padded).files();expect(paddedResult.inflatedBytes).toBe(corpus.tarFooterBytes+1024);expect(Buffer.from(paddedResult.entries.find(row=>row.kind==="file")!.bytes).toString()).toBe(await paddedOracle.get("tectonic")!.text());
  const snapshot=Buffer.from(zipSync({tectonic:strToU8("snapshot")})),policy={...corpus.policy},pending=decode(snapshot,{...request("zip"),policy},control);snapshot.fill(0);policy.maximumInflatedBytes=1;expect(Buffer.from((await pending).entries[0]!.bytes).toString()).toBe("snapshot");
  for(const value of[{...request("zip"),extra:true},{...request("zip"),format:"rar"},{...request("zip"),policy:{...corpus.policy,maximumEntries:0}}])await expect(decode(unicode,value,control)).rejects.toThrow("closed request");
- console.log("[DEBUG] Closed malformed tar/ZIP, portability, collision, CRC/descriptor, size and snapshot corpus refused before materialization");
 }
 
 import "../../🔢️checksum/🔁️crc32/🧪️tests/🟦️.ts";

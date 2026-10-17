@@ -52,7 +52,10 @@ pub fn plan(p: &GltfChangeNodeNamePayload, base: &GltfSnapshot) -> Result<GltfDi
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn inverse(p: &GltfChangeNodeNamePayload, base: &GltfSnapshot) -> Vec<super::GltfMutation> {
+pub fn inverse<Op>(p: &GltfChangeNodeNamePayload, base: &GltfSnapshot) -> Vec<Op>
+where
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::remove_used_extension::RemoveUsedExtensionMutation>,
+{
     if validate(p, base).is_err() {
         return Vec::new();
     }
@@ -73,11 +76,17 @@ pub enum ChangeNodeNameMutation {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn mutation(payload: GltfChangeNodeNamePayload) -> super::GltfMutation {
-    super::GltfMutation::ChangeNodeName(ChangeNodeNameMutation::Apply(payload))
+pub fn mutation<Op>(payload: GltfChangeNodeNamePayload) -> Op
+where
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::change_node_name::ChangeNodeNameMutation>,
+{
+    Op::from(ChangeNodeNameMutation::Apply(payload))
 }
 
-impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ChangeNodeNameMutation {
+impl<Op> protocol::MutationKind<GltfSnapshot, Op> for ChangeNodeNameMutation
+where
+    Op: protocol::Mutation<GltfSnapshot, Diff = GltfDiff> + From<ChangeNodeNameMutation>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "node-name", kind: "change-node-name", record: "ChangedNodeName" };
 
     fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<GltfDiff> {
@@ -89,7 +98,7 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ChangeNodeNam
         }
     }
 
-    fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<super::GltfMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         match self {
             Self::Apply(payload) => Ok(inverse(payload, base)),
         }
@@ -107,11 +116,7 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ChangeNodeNam
 //#endregion 🧬️Operation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/✏️renames-the-root-f1e002/🦀️.rs"]
-mod case_renames_the_root_f1e002;
+
 //#endregion 🧪️Tests
 
-#[cfg(test)]
-#[path = "📜️contract/🧪️tests/🔬️unit/🦀️.rs"]
-mod contract;
+

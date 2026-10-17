@@ -31,6 +31,10 @@ type architectProgramInferenceGuardSizeBounds = { readonly minItems?: number; re
 
 export const architectProgramInferenceGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : architectProgramInferenceGuardReject(at, "value is not an object");
+export const architectProgramInferenceGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) architectProgramInferenceGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const architectProgramInferenceGuardArray = (value: unknown, at: string, bounds: architectProgramInferenceGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return architectProgramInferenceGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) architectProgramInferenceGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -61,14 +65,14 @@ export const architectProgramInferenceGuardConstant = <T extends string | number
 //#endregion 🚪️Parsers
 
 export function parseProgramInference(value: unknown, at = "$"): ProgramInference {
-  const row = architectProgramInferenceGuardObject(value, at);
+  const row = architectProgramInferenceGuardClosed(architectProgramInferenceGuardObject(value, at), at, ["topology"]);
   return {
     topology: parseProgramTopology(row["topology"], `${at}.topology`),
   };
 }
 
 export function parseProgramTopology(value: unknown, at = "$"): ProgramTopology {
-  const row = architectProgramInferenceGuardObject(value, at);
+  const row = architectProgramInferenceGuardClosed(architectProgramInferenceGuardObject(value, at), at, ["nodeCount", "rootCount", "maxDepth", "cycleFree", "topoOrder"]);
   return {
     nodeCount: architectProgramInferenceGuardInteger(row["nodeCount"], `${at}.nodeCount`, {"minimum": 0}),
     rootCount: architectProgramInferenceGuardInteger(row["rootCount"], `${at}.rootCount`, {"minimum": 0}),

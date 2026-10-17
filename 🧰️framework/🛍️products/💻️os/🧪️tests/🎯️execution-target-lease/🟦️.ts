@@ -2,7 +2,7 @@
 import { semioSchemaAjvV1 } from "@semio-tech/schema-ts/oracles/validator";
 import { stubFetch } from "../🌐️fetch-stub/🟦️.ts";
 import type { BackboneWorkerTestDependencies } from "../../🔨️modules/🏪️store/👷️worker/🟦️.ts";
-import { workerLawFakesV1, FakeHubWebSocket, executionTargetBytes, WORKER_LAW_CAPABILITY, sampleEnvelope } from "../🧰️worker-law-fakes/🟦️.ts";
+import { workerLawFakesV1, FakeHubWebSocket, executionTargetBytes, WORKER_LAW_CAPABILITY, sampleEnvelope, WORKER_LAW_ACTOR_IDENTITY_GRANT } from "../🧰️worker-law-fakes/🟦️.ts";
 import type { TestSource } from "../🧰️worker-law-fakes/🟦️.ts";
 
 type BackboneWorkerResponse = import("../../🟦️.ts").BackboneWorkerResponse;
@@ -67,6 +67,7 @@ export async function registerExecutionTargetLeaseTests(vitest: Vitest, dependen
           schema: plan.artifact.schema,
           actor: "caller-is-not-authority",
           bindings: [{ kind: "hub", dataClass: "persistedShared", baseUrl: fixture.hubOrigin, spaceId: scope.spaceId, requestedSurfaceId: fixture.intent.requestedSurfaceId }],
+          actorIdentityGrant: WORKER_LAW_ACTOR_IDENTITY_GRANT,
         });
         const deadline = Date.now() + 5_000;
         while (FakeHubWebSocket.instances.length === 0 && !posted.some((message) => message.kind === "socket-actor-failed") && Date.now() < deadline) await new Promise((resolve) => setTimeout(resolve, 0));
@@ -88,11 +89,11 @@ export async function registerExecutionTargetLeaseTests(vitest: Vitest, dependen
         expect(socket.sent).toHaveLength(1);
         expect(decodeClientFrame(socket.sent[0]!).frame).toHaveProperty("SocketHelloV1.schema", plan.artifact.schema);
         const localId = "local-first-opening";
-        handleTsRequest({ kind: "open", documentId: localId, schema: plan.artifact.schema, actor: "local", bindings: [] });
+        handleTsRequest({ kind: "open", documentId: localId, schema: plan.artifact.schema, actor: "local", bindings: [], actorIdentityGrant: WORKER_LAW_ACTOR_IDENTITY_GRANT });
         expect(posted.filter((message) => message.kind === "socket-actor-failed" && message.documentId === localId)).toHaveLength(corpus.firstOpen.localSocketFailures);
         closeArtifact(localId);
         const unselectedId = "unselected-first-opening";
-        handleTsRequest({ kind: "open", documentId: unselectedId, schema: plan.artifact.schema, actor: "untrusted", bindings: [{ kind: "hub", dataClass: "persistedShared", baseUrl: fixture.hubOrigin, spaceId: scope.spaceId }] });
+        handleTsRequest({ kind: "open", documentId: unselectedId, schema: plan.artifact.schema, actor: "untrusted", bindings: [{ kind: "hub", dataClass: "persistedShared", baseUrl: fixture.hubOrigin, spaceId: scope.spaceId }], actorIdentityGrant: WORKER_LAW_ACTOR_IDENTITY_GRANT });
         expect(posted.filter((message) => message.kind === "socket-actor-failed" && message.documentId === unselectedId)).toHaveLength(corpus.firstOpen.unselectedSocketFailures);
         closeArtifact(unselectedId, scope.spaceId);
         expect(requests.map(({ stage }) => stage)).toEqual(corpus.firstOpen.requestStages);
@@ -153,6 +154,7 @@ export async function registerExecutionTargetLeaseTests(vitest: Vitest, dependen
               schema: fixture.plan.artifact.schema,
               actor: "untrusted",
               bindings: [{ kind: "hub", dataClass: "persistedShared", baseUrl: fixture.hubOrigin, spaceId: scope.spaceId, requestedSurfaceId: fixture.intent.requestedSurfaceId }],
+              actorIdentityGrant: WORKER_LAW_ACTOR_IDENTITY_GRANT,
             });
             const state = artifacts.get(runtimeKey);
             const deadline = Date.now() + 5_000;

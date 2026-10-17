@@ -167,3 +167,42 @@ pub fn create_equation_viewer() -> semio_framework_plugin::AppDefinition {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🧩️ArtifactItems
+pub mod artifact_items {
+use semio_framework_artifact_reference::{Dialect, StandardId, SubsetId};
+
+//#region 🔖️Constants
+/// 🗂️ The store envelope schema AND the plugin's registered document codec key — see
+/// `crate::artifact`/`🚪️io/🦀️.rs::io`.
+pub const MATH_DOCUMENT_SCHEMA: &str = "semio.equation/v1";
+
+/// 🎯️ This artifact's dialect coordinate (ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET
+/// contract §1) — lives at the ARTIFACT level (not under `editor`/`viewer`) specifically so a viewer
+/// file can read it without ever importing through the sibling `editor` module.
+/// `artifact_kind = "s.mathematical.equation"` matches this file's own `definition()`'s
+/// `"s.mathematical.schema.artifact"` capability row descriptor AND the subset schema's own
+/// `#[artifact_schema(id = "s.mathematical.equation")]`
+/// (`🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️component.rs`) — never guessed. `standard`/`subset`
+/// match this file's own `🏅️standards/🔖️1/🪆️subsets/✳️any` location, i.e. the canonical surface id is
+/// `s.mathematical.equation@1/*#editor` / `s.mathematical.equation@1/*#viewer`.
+pub const EQUATION_DIALECT: Dialect = Dialect { artifact_kind: "s.mathematical.equation", standard: StandardId("1"), subset: SubsetId::ANY };
+//#endregion 🔖️Constants
+}
+//#endregion 🧩️ArtifactItems
+
+//#region 🧩️ArtifactItems7
+pub mod artifact_items_7 {
+pub use crate::standards::v1::subsets::any::schema::snapshot::EquationSnapshot;
+
+//#region 🧬️ChildRestoreProjection
+/// 🧬️ The loaded-parent child projection, read off the snapshot's own derived composition fields — the ONE
+/// definition the editor and the viewer both declare. The `ArtifactEditor`/`ArtifactViewer` trait default
+/// refuses it (`… did not declare a loaded-parent child projection`), and since PX1 the live envelope load
+/// asks for it before the decoded document may replace the store, so an undeclared app fails every live load.
+pub fn equation_child_restore_projection(snapshot: &EquationSnapshot) -> Result<semio_framework_composition_admission::ChildRestoreProjection<'_>, semio_framework_plugin::Fault> {
+    semio_framework_composition_admission::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("equation.child-projection"), error.to_string()))
+}
+//#endregion 🧬️ChildRestoreProjection
+}
+//#endregion 🧩️ArtifactItems7

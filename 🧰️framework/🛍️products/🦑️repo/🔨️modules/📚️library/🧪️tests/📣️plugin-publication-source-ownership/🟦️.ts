@@ -25,7 +25,7 @@ type Fixture = Readonly<{
 
 const libraryRoot = resolve(import.meta.dir, "../..");
 const repoRoot = resolve(import.meta.dir, "../../../../../../..");
-const fixture = JSON.parse(readFileSync(resolve(libraryRoot, "🧫️fixtures/📣️plugin-publication-source-ownership/🔣️.json"), "utf8")) as Fixture;
+const fixture = JSON.parse(readFileSync(resolve(import.meta.dir, "../🧫️fixtures/📣️plugin-publication-source-ownership/🔣️.json"), "utf8")) as Fixture;
 
 
 function exportedNames(path: string): ReadonlySet<string> {
@@ -113,7 +113,7 @@ describe("plugin publication source ownership", () => {
   test("closes every direct consumer on semantic owners", () => {
     const owners = new Set(fixture.owners.map(({ path }) => path));
     const routers = new Set(fixture.routers.map(({ path }) => path));
-    expect(fixture.consumers).toHaveLength(11);
+    expect(fixture.consumers).toHaveLength(13);
     for (const consumer of fixture.consumers) {
       const path = resolve(repoRoot, consumer.path);
       expect(existsSync(path), consumer.path).toBe(true);
@@ -167,7 +167,7 @@ describe("plugin publication source ownership", () => {
     const project = JSON.parse(readFileSync(resolve(packageRoot, "📋️project.json"), "utf8"));
     expect(project.targets[fixture.registration.target]?.options?.command).toBe("bun ./📜️script.ts test plugin-publication-source-ownership");
     const manifest = JSON.parse(readFileSync(resolve(packageRoot, "package.json"), "utf8"));
-    expect(manifest.scripts[fixture.registration.target]).toBe(`nx run @semio-tech/repo-lib:${fixture.registration.target}`);
+    expect(manifest.scripts[fixture.registration.target]).toBe(`bun --cwd "../../../../../../.." repo run @semio-tech/repo-lib:${fixture.registration.target}`);
     const commandSource = readFileSync(resolve(packageRoot, "📜️script.ts"), "utf8");
     expect(commandSource).toContain('segments[0] === "plugin-publication-source-ownership"');
   });

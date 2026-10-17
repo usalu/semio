@@ -134,3 +134,18 @@ pub fn create_sequence_viewer() -> semio_framework_plugin::AppDefinition {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🧩️ArtifactItems2
+pub mod artifact_items_2 {
+//#region 🔖️Constants
+/// 🪪️ The canonical dialect for this artifact's one subset (`✳️any`) — lives at the ARTIFACT level
+/// (not under `editor`/`viewer`) specifically so the sibling `viewer` module can read it without ever
+/// importing through the `editor` module (contract §1/§7.4). `artifact_kind` matches this schema's own
+/// `#[artifact_schema(id = "s.sequence.sequence")]` / `definition()`'s `s.sequence.schema.artifact`
+/// capability row; `standard`/`subset` match this file's own `🏅️standards/🔖️1/🪆️subsets/✳️any`
+/// location — i.e. the canonical surface id is `s.sequence.sequence@1/*#editor` /
+/// `s.sequence.sequence@1/*#viewer`, the contract §1 grammar.
+pub const SEQUENCE_DIALECT: semio_framework_artifact_reference::Dialect = semio_framework_artifact_reference::Dialect { artifact_kind: "s.sequence.sequence", standard: semio_framework_artifact_reference::StandardId("1"), subset: semio_framework_artifact_reference::SubsetId::ANY };
+//#endregion 🔖️Constants
+}
+//#endregion 🧩️ArtifactItems2

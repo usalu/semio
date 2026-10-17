@@ -9,16 +9,14 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), "../../📦️pack
 export default {
   root,
   resolve: {
-    alias: {
-      "@semio-tech/presentation": resolve(root, "🟦️.ts"),
-    },
+    alias: [{ find: /^@semio-tech\/presentation$/u, replacement: resolve(root, "🟦️.ts") }],
   },
   test: {
     root,
     name: "@semio-tech/presentation",
     mode: "test",
     environment: "node",
-    include: ["../../🧪️tests/🧭️slide-glob-assembly/🟦️.ts", "../../🧪️tests/📽️presentation-core/🟦️.ts"],
+    include: ["../../🧪️tests/🧭️slide-glob-assembly/🟦️.ts", "../../🧪️tests/📽️presentation-core/🟦️.ts", "../../🧪️tests/🌱️intro-and-resolution/🟦️.ts", "../../🧪️tests/🪡️thought-expansion/🟦️.ts", "../../🧪️tests/🗺️arrangement-geometry-and-sequences/🟦️.ts", "../../🧪️tests/🔄️analogy-and-tile-play/🟦️.ts"],
     coverage: { include: ["🟦️.ts"] },
     passWithNoTests: false,
   },

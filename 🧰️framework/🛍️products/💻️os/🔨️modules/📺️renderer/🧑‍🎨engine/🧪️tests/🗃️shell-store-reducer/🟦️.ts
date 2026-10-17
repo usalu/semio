@@ -3,7 +3,8 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { applyPatch } from "fast-json-patch";
 import { Layout } from "@semio-tech/ui-react";
-import { createLocalInteractionStoreV1, resolvePluginCanvasStatus, type PluginSupervisorState } from "../../🧱️elements/🐚️Shell/🟦️.tsx";
+import { resolvePluginCanvasStatus, type PluginSupervisorState } from "../../🧱️elements/🐚️Shell/📦️program-sessions/🟦️.ts";
+import { createLocalInteractionStoreV1 } from "../../🧱️elements/🐚️Shell/🕹️shell-store/🟦️.ts";
 import bootCanvasFixture from "../../🧱️elements/🐚️Shell/🧪️tests/🧫️fixtures/🔣️.json";
 import windowIconOverrideFixture from "../../🧱️elements/🐚️Shell/🧪️tests/🧫️fixtures/🪟️window-icon-overrides/🔣️.json" with { type: "json" };
 import { tutorialInteractionSelectionActions } from "../../🧱️elements/🏛️ShellHost/🟦️.tsx";
@@ -18,7 +19,11 @@ import { semioSchemaAjvV1 } from "../../../../../../../🔨️modules/🧬️sch
 import { describe, expect, it } from "vitest";
 import { createMemoryStoragePort } from "@semio-tech/framework";
 import { initialShellState, mergeRecordPreservingIdentity, type ShellAction, shellReducer, shellStateUnchanged, type PluginPanelStatus, type PluginManifest, type PluginWasmHandle, TutorialRecorder, type ShellPresencePeer, derivePeerInteractionByDomain, peerIdsSelecting, peerIdsHovering } from "../../🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx";
-import { applyTutorialUiChangeToShell, applyTutorialUiSnapshotToShell, captureTutorialUiSnapshot } from "../../🧱️elements/🛠️ShellHelpers/🟦️.tsx";
+import {
+  applyTutorialUiChangeToShell,
+  applyTutorialUiSnapshotToShell,
+  captureTutorialUiSnapshot
+} from "../../🧱️elements/🛠️ShellHelpers/🧾️transfer-checkin-tutorial/🟦️.ts";
 import "../🧰️engine-contract-helpers/🟦️.ts";
 
 describe("shell store reducer", () => {
@@ -52,7 +57,7 @@ describe("shell store reducer", () => {
   const tutorialBridgeContext = (
     interactionSelection: () => InteractionState["selection"] = () => ({}),
     publishInteractionSelection: (selection: InteractionState["selection"]) => void = () => {},
-  ): import("../../🧱️elements/🛠️ShellHelpers/🟦️.tsx").TutorialUiBridgeContext => ({
+  ): import("../../🧱️elements/🛠️ShellHelpers/🧾️transfer-checkin-tutorial/🟦️.ts").TutorialUiBridgeContext => ({
     session: null,
     restoreDialog: () => null,
     appLabelsOverlay: {

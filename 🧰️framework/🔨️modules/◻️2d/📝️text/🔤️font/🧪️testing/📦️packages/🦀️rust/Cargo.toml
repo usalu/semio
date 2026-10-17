@@ -23,5 +23,6 @@ name = "semio_framework_2d_text_font_testing"
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-framework-test-fixtures = { path = "../../../../../../🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../🌱️value/📦️packages/🦀️rust" }
 semio-framework-trace = { path = "../../../../../../⏱️trace/📦️packages/🦀️rust" }

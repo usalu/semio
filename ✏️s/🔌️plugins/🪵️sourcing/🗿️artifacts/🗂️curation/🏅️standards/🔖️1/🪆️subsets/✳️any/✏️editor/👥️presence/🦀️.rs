@@ -220,3 +220,215 @@ mod law_tests {
         protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&SourcingCurationPresenceMutation::SetWorldCamera { position: [1.0, 2.0, 3.0], target: [0.5, 0.0, 0.0], fov: 35.0 }, &base).await;
     }
 }
+
+//#region 🧩️ArtifactItems
+pub mod artifact_items {
+pub const SOURCING_CURATION_SCHEMA: &str = "sourcing.curation/v1";
+}
+//#endregion 🧩️ArtifactItems
+
+//#region 🧩️ArtifactItems3
+pub mod artifact_items_3 {
+//#region 🔖️Geometry
+/// 📦️ A parametric geometry recipe an object kind is composed of — data describing shape, not a subclass.
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[value(tag = "kind", rename_all = "camelCase", deny_unknown_fields)]
+pub enum GeometryRecipe {
+    Box {
+        #[dsl(unit = "m")]
+        width: f64,
+        #[dsl(unit = "m")]
+        height: f64,
+        #[dsl(unit = "m")]
+        depth: f64,
+    },
+    Frame {
+        #[dsl(unit = "m")]
+        width: f64,
+        #[dsl(unit = "m")]
+        height: f64,
+        #[dsl(unit = "m")]
+        depth: f64,
+        #[dsl(unit = "m")]
+        profile: f64,
+    },
+    Slab {
+        #[dsl(unit = "m")]
+        width: f64,
+        #[dsl(unit = "m")]
+        depth: f64,
+        #[dsl(unit = "m")]
+        thickness: f64,
+    },
+    Mesh {
+        positions: Vec<f32>,
+        normals: Vec<f32>,
+        indices: Vec<u32>,
+    },
+    Glb {
+        url: String,
+        #[dsl(unit = "m")]
+        extent: f64,
+    },
+}
+//#endregion 🔖️Geometry
+}
+//#endregion 🧩️ArtifactItems3
+
+//#region 🧩️ArtifactItems4
+pub mod artifact_items_4 {
+use crate::{GeometryRecipe};
+
+//#region 🔖️ObjectKind
+/// 🧱️ A catalogue object KIND: identity ∘ typology reference ∘ availability ∘ geometry (composition, not subclassing).
+///
+/// `geometry` is `Box<GeometryRecipe>` (not a bare `GeometryRecipe`) because `#[dsl(statements)]`'s
+/// `RequiredStatements` shape — the "exactly one required tagged value" slot a `DslEnum` sum type
+/// needs to occupy a plain (non-`Option`, non-`Vec`) field — only recognizes a `Box<T>` inner type.
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ObjectKind {
+    #[dsl(defines = "object")]
+    pub id: String,
+    pub name: String,
+    pub module_id: String,
+    pub typology_path: Vec<String>,
+    pub availability: u32,
+    #[dsl(statements)]
+    pub geometry: Box<GeometryRecipe>,
+}
+//#endregion 🔖️ObjectKind
+}
+//#endregion 🧩️ArtifactItems4
+
+//#region 🧩️ArtifactItems6
+pub mod artifact_items_6 {
+use crate::{GeometryRecipe};
+use crate::{ObjectKind};
+use crate::{CuratedItem};
+use semio_s_artifact_stdio_semio_kit::schema::snapshot::{SemioKitSnapshot, SemioKitType};
+pub use crate::schema::snapshot::CurationSnapshot;
+
+//#region 🔖️CatalogComposition
+/// 🧩️ Sourcing-owned per-kind metadata NOT representable in stdio's composed `s.stdio.semio.kit`
+/// subset (`SemioKitType` carries only `id`/`name`/`category`) — typology classification,
+/// availability, and procedural geometry. Id-joined 1:1 to a `SemioKitType` in the composed
+/// `CurationSnapshot::catalog` child by `id` (see `stock_of`/`object_kind_from_parts`). Ticket
+/// 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM: replaces the former inline `stock: Vec<ObjectKind>`
+/// field, which duplicated the `kit.catalog`/type-registry vocabulary this ticket composes instead.
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ObjectKindExtra {
+    #[dsl(defines = "object")]
+    pub id: String,
+    pub name: String,
+    pub module_id: String,
+    pub typology_path: Vec<String>,
+    pub availability: u32,
+    #[dsl(statements)]
+    pub geometry: Box<GeometryRecipe>,
+}
+
+/// 🔀️ `ObjectKind` → the shared `SemioKitType` half of the composed catalog child. `category` maps
+/// from `module_id` — the closest existing kit vocabulary slot for a grouping label (`SemioKitType`
+/// has no separate module concept).
+pub fn kit_type_from_object_kind(kind: &ObjectKind) -> SemioKitType {
+    SemioKitType { id: kind.id.clone(), name: kind.name.clone(), category: kind.module_id.clone() }
+}
+
+/// 🔀️ `ObjectKind` → the sourcing-owned overflow half (`stock_extra`) the composed kit type cannot
+/// carry. Lossless together with `kit_type_from_object_kind`: every `ObjectKind` field lands in
+/// exactly one of the two halves.
+pub fn object_kind_extra_from_object_kind(kind: &ObjectKind) -> ObjectKindExtra {
+    ObjectKindExtra { id: kind.id.clone(), name: kind.name.clone(), module_id: kind.module_id.clone(), typology_path: kind.typology_path.clone(), availability: kind.availability, geometry: kind.geometry.clone() }
+}
+
+/// 🔀️ Inverse of the split above — reassembles one full `ObjectKind` from its two composed halves.
+pub fn object_kind_from_parts(kit_type: &SemioKitType, extra: &ObjectKindExtra) -> ObjectKind {
+    ObjectKind { id: kit_type.id.clone(), name: kit_type.name.clone(), module_id: kit_type.category.clone(), typology_path: extra.typology_path.clone(), availability: extra.availability, geometry: extra.geometry.clone() }
+}
+
+/// 🔀️ The full stock list's shared half, as a fresh (design-less, link-less) `SemioKitSnapshot` —
+/// content-addressed by `catalog_child_handle` below, never embedded inline in `CurationSnapshot`.
+pub fn catalog_snapshot_from_stock(stock: &[ObjectKind]) -> SemioKitSnapshot {
+    SemioKitSnapshot { types: stock.iter().map(kit_type_from_object_kind).collect(), ..SemioKitSnapshot::default() }
+}
+
+/// 🔀️ The full stock list's sourcing-owned overflow half.
+pub fn stock_extra_from_stock(stock: &[ObjectKind]) -> Vec<ObjectKindExtra> {
+    stock.iter().map(object_kind_extra_from_object_kind).collect()
+}
+
+/// 🔀️ Reassembles the full `Vec<ObjectKind>` catalog from its composed-child half and its
+/// sourcing-owned overflow half, id-joined. A `SemioKitType` with no matching `ObjectKindExtra`
+/// (composed-child content the working-scene cache hasn't seen yet — see `stock_of`'s doc comment) is
+/// silently dropped rather than fabricated with placeholder geometry.
+pub fn stock_from_catalog_and_extra(catalog: &SemioKitSnapshot, extra: &[ObjectKindExtra]) -> Vec<ObjectKind> {
+    let extra_by_id: std::collections::HashMap<&str, &ObjectKindExtra> = extra.iter().map(|e| (e.id.as_str(), e)).collect();
+    catalog.types.iter().filter_map(|kit_type| extra_by_id.get(kit_type.id.as_str()).map(|extra| object_kind_from_parts(kit_type, extra))).collect()
+}
+
+/// 🪪️ Content-addressed child handle for a stock list's shared catalog half — hashes the deterministic
+/// JSON of the derived `SemioKitType` list so peers replaying the same stock converge on the same
+/// `child_id` (never a random/incrementing id), mirroring `lowpoly`'s `mesh_child_handle`.
+pub fn catalog_child_handle(stock: &[ObjectKind]) -> store::os_store::artifact_child::ArtifactChild<SemioKitSnapshot> {
+    let catalog = catalog_snapshot_from_stock(stock);
+    let canonical = semio_framework_pack_json::to_json_string(&catalog.types);
+    let child_id = store::content_id("catalog", canonical.as_bytes());
+    let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "kit".into() };
+    let target = semio_framework_artifact_reference::ArtifactRef { artifact_id: child_id.clone(), dialect };
+    store::os_store::artifact_child::ArtifactChild::new(child_id, target)
+}
+
+/// 🏗️ Builds a `CurationSnapshot` from a full stock list, minting its content-addressed `catalog`
+/// handle, splitting the stock into its composed-child half and sourcing-owned overflow half, and
+/// seeding the working-scene cache so this SAME call's render/export/inference paths can resolve the
+/// handle immediately. The one sanctioned construction path for "real stock content" — every fixture,
+/// test, and command that used to write `CurationSnapshot { stock, .. }` directly goes through this now.
+pub fn curation_snapshot_from_stock(stock: &[ObjectKind], curated: Vec<CuratedItem>) -> CurationSnapshot {
+    let handle = catalog_child_handle(stock);
+    CurationSnapshot { catalog: handle, stock_extra: stock_extra_from_stock(stock), curated }
+}
+
+/// 🌱 Seeds the working-scene cache for `stock`'s deterministic `catalog_child_handle`, without
+/// building a whole `CurationSnapshot` — for fixture loaders (`default_document`/`empty_document`) that
+/// parse the persisted snapshot from DSL text (which never embeds child content) but still need the
+/// SAME content-addressed handle's catalog resolvable immediately after loading.
+pub fn validate_catalog_payload(stock: &[ObjectKind]) {
+    let _ = catalog_child_handle(stock);
+}
+
+/// 👁️ The one accessor every render/export/inference call site funnels through to read the full
+/// reassembled stock catalogue from snapshot-owned overflow records.
+pub fn stock_of(document: &CurationSnapshot) -> Vec<ObjectKind> {
+    let _ = &document.catalog;
+    document.stock_extra.iter().map(|row| ObjectKind { id: row.id.clone(), name: row.name.clone(), module_id: row.module_id.clone(), typology_path: row.typology_path.clone(), availability: row.availability, geometry: row.geometry.clone() }).collect()
+}
+
+/// 🪆️ The persisted slot name of the composed kit catalogue child — `CurationSnapshot::catalog`'s
+/// `#[child]` field, as the framework's child projection names it.
+pub const CATALOG_CHILD_SLOT: &str = "catalog";
+
+/// 🌱️ `ArtifactApp::genesis_child_pack` for the catalogue: the kit half is a pure function of the
+/// stock (`catalog_snapshot_from_stock`), so a whole-document load or a fresh boot re-derives it here
+/// instead of shipping it. Answers only when the handle derived from the snapshot's own stock is the
+/// handle the snapshot declares — a document whose catalog id disagrees with its stock is left for
+/// closure validation to reject as `Incomplete`, never silently repaired.
+pub fn genesis_catalog_pack(document: &CurationSnapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
+    if slot != CATALOG_CHILD_SLOT || child_id != document.catalog.child_id {
+        return None;
+    }
+    let stock = stock_of(document);
+    (catalog_child_handle(&stock).child_id == child_id).then(|| <SemioKitSnapshot as pack::snapshot::ArtifactPack>::encode_pack(&catalog_snapshot_from_stock(&stock)))
+}
+
+/// 🧬️ The bounded projection of the curation's composed `catalog` handle, as both surfaces hand it to
+/// the framework's replacement pump (`ArtifactEditor::child_restore_projection` /
+/// `ArtifactViewer::child_restore_projection`). The trait default grants no restore authority, so
+/// without it every live envelope load faults `editor did not declare a loaded-parent child projection`.
+pub fn curation_child_restore_projection(document: &CurationSnapshot) -> Result<semio_framework_composition_admission::ChildRestoreProjection<'_>, semio_framework_plugin::Fault> {
+    semio_framework_composition_admission::ChildRestoreProjection::from_snapshot(document).map_err(|error| semio_framework_plugin::Fault::from(format!("sourcing curation child projection failed: {error}")))
+}
+//#endregion 🔖️CatalogComposition
+}
+//#endregion 🧩️ArtifactItems6

@@ -3,7 +3,7 @@
 pub const TAG: u8 = 1;
 pub const BINARY_TAG: u8 = TAG;
 
-use crate::standards::v1_7::subsets::e::schema::mutations::RemoveEncryptionDictionary;
+use crate::standards::v1_7::subsets::e::schema::mutations::remove_encryption_dictionary::RemoveEncryptionDictionary;
 
 /// 📤️ Encodes this direct payload as canonical schema JSON bytes.
 pub fn encode(payload: &RemoveEncryptionDictionary) -> Result<Vec<u8>, String> {

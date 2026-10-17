@@ -9,6 +9,7 @@ use semio_framework_plugin::ArtifactView;
 use semio_framework_plugin::ConfigView;
 use semio_framework_plugin::Editor;
 use semio_framework_plugin::HierarchyProvider;
+use semio_framework_test_fixtures::fixture_text;
 use store::pack::snapshot::ArtifactPack;
 use crate::editor::procedure::commands::run;
 use crate::editor::procedure::commands::set_active_example;
@@ -132,7 +133,7 @@ use semio_framework_plugin::{EditorApp, PluginApp};
 use std::collections::BTreeMap;
 use store::{os_store::backbone::Backbone, os_store::backbone::BackboneMessage, os_store::backbone::MemoryBackbone};
 
-static RETAINED_ROUTES: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../🧪️tests/🧫️fixtures/🛣️retained-command-routes.json"));
+static RETAINED_ROUTES: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../🧪️tests/🧫️fixtures/🛣️retained-command-routes.json"));
 
 #[test]
 fn retained_route_fixture_matches_the_exact_factory_and_fail_closed_census() {
@@ -487,8 +488,3 @@ fn every_declared_action_is_carried_by_a_window_kind() {
     }
 }
 //#endregion 🪟️WindowActionScope
-
-fn runtime_fixture_text(relative: &str) -> &'static str {
-    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative);
-    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display())).into_boxed_str())
-}

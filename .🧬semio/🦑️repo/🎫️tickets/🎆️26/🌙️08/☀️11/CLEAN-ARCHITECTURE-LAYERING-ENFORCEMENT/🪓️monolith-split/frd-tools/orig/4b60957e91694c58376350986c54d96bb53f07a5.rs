@@ -1,0 +1,137 @@
+//! 🧪️ `move-frame` fixture — `📍️moves-the-rect-frame`.
+//!
+//! Proves the bounds origin moves while the extent and rotation stay fixed.
+//!
+//! Source of truth is the committed JSON quartet beside this file (contract D1, ticket
+//! `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`). The `.op.semio`/`.spr.semio`/`.dsl.semio`/
+//! `.pack.semio`/`.patch.semio` encodings are derived from it by `fixtures generate` and are
+//! asserted by the shared codec-matrix harness, not here.
+
+use semio_s_artifact_layout_layout_mutations::LayoutMutation;
+use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
+use protocol::{Mutation, MutationDiff};
+
+static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🕹️move-frame/📍️moves-the-rect-frame/📸️snapshot/⬅️before/🔣️.json"));
+static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🕹️move-frame/📍️moves-the-rect-frame/📸️snapshot/➡️after/🔣️.json"));
+static MUTATION: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🕹️move-frame/📍️moves-the-rect-frame/🦠️mutation/🔣️.json"));
+static DIFF: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🕹️move-frame/📍️moves-the-rect-frame/🔺️diff/🔣️.json"));
+static OUTCOME: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🕹️move-frame/📍️moves-the-rect-frame/🎯️outcome/🔣️.json"));
+
+fn before() -> LayoutSnapshot {
+    semio_framework_pack_json::from_json_str(*BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("move-frame/moves-the-rect-frame: before snapshot decodes")
+}
+fn expected_after() -> LayoutSnapshot {
+    semio_framework_pack_json::from_json_str(*AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("move-frame/moves-the-rect-frame: after snapshot decodes")
+}
+fn mutation() -> LayoutMutation {
+    serde_json::from_str(*MUTATION).expect("move-frame/moves-the-rect-frame: mutation decodes")
+}
+fn applied() -> LayoutSnapshot {
+    let base = before();
+    protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("move-frame applies to its committed before-snapshot")
+}
+
+/// ▶️ `move-frame` writes `bounds.x`/`bounds.y`; width, height and rotation are untouched.
+#[semio_framework_async_macros::async_test]
+async fn translates_the_bounds_origin_only() {
+    let after = applied();
+    let page = &after.pages[0];
+    let bounds = page.frames.iter().find(|frame| frame.id() == "frame-rect").expect("the rect frame survives").bounds();
+    assert_eq!((bounds.x, bounds.y), (55.0, 65.0), "move-frame must write the payload position into the frame bounds");
+    assert_eq!((bounds.width, bounds.height), (60.0, 40.0), "move-frame must not resize the frame");
+    assert_eq!(bounds.rotation, 0.0, "move-frame must not rotate the frame");
+    assert_eq!(page.frames.iter().find(|frame| frame.id() == "frame-text").expect("the text frame survives").bounds().x, 20.0, "move-frame must not move sibling frames");
+    assert_eq!(after, expected_after(), "move-frame/moves-the-rect-frame: applied state differs from the committed after-snapshot");
+}
+
+/// ↩️ The inverse is a `move-frame` carrying the bounds origin captured from BASE.
+#[semio_framework_async_macros::async_test]
+async fn inverse_moves_the_rect_frame_back() {
+    let base = before();
+    let inverse = mutation().inverse(&base).expect("valid retained mutation inverse fixture");
+    assert_eq!(inverse.len(), 1, "move-frame inverts to exactly one step");
+    match &inverse[0] {
+        LayoutMutation::MoveFrame(step) => {
+            assert_eq!((step.page_id.as_str(), step.frame_id.as_str()), ("page-1", "frame-rect"), "the inverse must address the same frame on the same page");
+            assert_eq!((step.new_x, step.new_y), (20.0, 30.0), "the inverse must carry the pre-move bounds origin");
+        }
+        other => panic!("move-frame must invert to move-frame, got {other:?}"),
+    }
+    let mut snapshot = applied();
+    for step in inverse.iter().rev() {
+        snapshot = protocol::apply_diff(step.diff(&snapshot).diff(), &snapshot).expect("move-frame/moves-the-rect-frame: inverse step applies");
+    }
+    assert_eq!(snapshot, base, "move-frame/moves-the-rect-frame: inverse did not restore the before-snapshot");
+}
+
+/// 🔣️ Both committed snapshots and the committed mutation are canonical: decode→encode is a fixed point.
+#[semio_framework_async_macros::async_test]
+async fn committed_json_is_canonical() {
+    for (label, text) in [("before", *BEFORE), ("after", *AFTER)] {
+        let decoded: LayoutSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("snapshot encodes");
+        let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
+        assert_eq!(reencoded, original, "move-frame/moves-the-rect-frame: committed {label} JSON is not canonical");
+    }
+    let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&mutation())).expect("mutation encodes");
+    let original: serde_json::Value = serde_json::from_str(*MUTATION).expect("mutation reparses");
+    assert_eq!(reencoded, original, "move-frame/moves-the-rect-frame: committed mutation JSON is not canonical");
+}
+
+/// 🎯️ The declared outcome matches what `move-frame`'s own diff builder actually produces.
+#[semio_framework_async_macros::async_test]
+async fn declared_outcome_holds() {
+    let declared: serde_json::Value = serde_json::from_str(*OUTCOME).expect("outcome decodes");
+    assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "move-frame/moves-the-rect-frame: this fixture declares an applied outcome");
+    let base = before();
+    let produced = mutation().diff(&base);
+    assert!(produced.messages().is_empty(), "move-frame/moves-the-rect-frame: declared clean-applied but the diff builder reported {:?}", produced.messages());
+    let patch = &produced.diff().pages.as_ref().expect("move-frame fills the pages delta").modified[0].patch;
+    let [patched] = patch.frames.modified.as_slice() else { panic!("move-frame fills the page patch's `frames.modified` with exactly one frame") };
+    assert_eq!(patched.id, "frame-rect", "the `frames.modified` entry addresses the moved frame");
+    assert_eq!((patched.patch.x, patched.patch.y), (Some(55.0), Some(65.0)), "move-frame fills only x/y of the frame patch");
+    assert!(patched.patch.width.is_none() && patched.patch.height.is_none(), "move-frame must not emit a size patch");
+}
+
+/// 🔺️ The sparse delta `move-frame` produces is exactly the committed diff — the most load-bearing
+/// assertion in the fixture, because it pins WHICH fields the mutation may touch, not merely that the
+/// end state matches. Here the nested `FramePatch` populates only `x`/`y`; `width`/`height`/`rotation`-bearing fields stay null.
+#[semio_framework_async_macros::async_test]
+async fn produces_committed_diff() {
+    let base = before();
+    let outcome = mutation().diff(&base);
+    let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
+    let committed: serde_json::Value = serde_json::from_str(*DIFF).expect("committed diff decodes");
+    assert_eq!(produced, committed, "move-frame/moves-the-rect-frame: move-frame must emit a nested frame patch populating only x and y");
+}
+
+/// 🔣️ The committed diff decodes into `LayoutDiff` and re-encodes byte-for-byte: `LayoutDiff` has
+/// `#[value(rename_all = "camelCase", default)]` with no `skip_serializing_if`, so EVERY field is on
+/// the wire and the untouched ones must be committed as explicit `null`.
+#[semio_framework_async_macros::async_test]
+async fn committed_diff_is_canonical() {
+    let decoded: semio_s_artifact_layout_layout_diff::LayoutDiff = semio_framework_pack_json::from_json_str(*DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes into the artifact's diff type");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("committed diff re-encodes");
+    let original: serde_json::Value = serde_json::from_str(*DIFF).expect("committed diff reparses");
+    assert_eq!(reencoded, original, "move-frame/moves-the-rect-frame: committed diff JSON is not canonical");
+}
+
+/// 🩹 Applying the committed diff directly to `before` yields `after` — the diff is a complete
+/// description of the change `move-frame` makes, not a summary of it.
+#[semio_framework_async_macros::async_test]
+async fn committed_diff_applies_to_after() {
+    let decoded: semio_s_artifact_layout_layout_diff::LayoutDiff = semio_framework_pack_json::from_json_str(*DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes into the artifact's diff type");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    assert_eq!(produced, expected_after(), "move-frame/moves-the-rect-frame: committed diff did not carry before to after");
+}
+
+/// ⚖️ The inverse steps' diffs sum, by `absorb`, to the negative of the forward diff.
+#[semio_framework_async_macros::async_test]
+async fn inverse_diffs_sum_to_negative_diff() {
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation(), &before()).await;
+}
+
+fn runtime_fixture_text(relative: &str) -> &'static str {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative);
+    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display())).into_boxed_str())
+}

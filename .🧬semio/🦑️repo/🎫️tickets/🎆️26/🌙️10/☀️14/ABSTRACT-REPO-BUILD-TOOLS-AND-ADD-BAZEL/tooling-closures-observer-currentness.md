@@ -1,0 +1,8 @@
+# Observer-Era Tooling Source Currentness
+
+Existing closure-check7486 exited1 at its exact reader declaration check. All three complete double captures were stable and independently matched Bun file/manifest hashes: reader173/runtime253/compiler134 under unchanged256file/16MiB limits. The existing literal declared171 reader paths. Actual scanner measured exactly two missing and no extra paths: native storage mapping owner and bounded Source revision owner. Their real imports are present in Native fixed/image/storage/cleanup and input-storage/digest/data-loader modules. No Source path is to be excluded and no cap increased.
+
+Hand-author these two paths into the canonical sorted retention reader literal, preserving all other declaration data. Preserve prealignment receipt, rerun complete three-role capture and the exact physical-retention reader test before treating this declaration current. Metadata-only captures do not authenticate the activated SDK or qualify public Nx/Bazel runtime.
+
+
+Handcrafted two-line declaration edit completed. Repeat actual21370 returned0 with173reader/253runtime/134compiler, no missing/extra and stable double captures. The canonical declaration/entry bytes remained stable during the repeat. Source fixture50476 returned0:3laws32assertions3.94s, including the exact complete reader path/lease namespace law. Saved aligned metadata is tooling-closures-observer-aligned.json; it preserves earlier canonical and prealignment outputs separately. Actual role manifests contain no P/Wwitness Source paths. Independent FD/complete-manifest review remains pending; no current activated SDK or public runtime claim.

@@ -2,13 +2,15 @@
 //! captured pre-state (`base`), never by structurally inverting the diff. Split from
 //! `🏷️update-meta` per Wave C.
 
-use crate::standards::v1::subsets::any::schema::mutations::ProgramMutation;
 use crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot;
 
 /// ↩️ Undo by restoring the pre-state meta wholesale.
-pub fn inverse(_payload: &super::ReplaceMeta, base: &ProgramSnapshot) -> Result<Vec<ProgramMutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op>(_payload: &super::ReplaceMeta, base: &ProgramSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError>
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::replace_meta::ReplaceMeta>,
+{
     Ok((|| {
-    vec![ProgramMutation::ReplaceMeta(super::ReplaceMeta { new_meta: base.meta.clone() })]
+    vec![Op::from(super::ReplaceMeta { new_meta: base.meta.clone() })]
 
     })())
 }

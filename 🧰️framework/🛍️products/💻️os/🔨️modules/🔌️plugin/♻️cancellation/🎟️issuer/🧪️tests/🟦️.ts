@@ -14,7 +14,6 @@ test("canonical cancellation issuer admits only its exact original creation sour
   expect(outcome).toBe(row.expected);expect(database.query("SELECT phase FROM births").all()).toEqual(row.expectedPhases.map(phase=>({phase})));database.close();
  }
  const issuer=readFileSync(resolve(import.meta.dir,"../🦀️.rs"),"utf8");expect(issuer.includes("admit_step")).toBe(true);expect(issuer.includes("OriginalCallerSourceParent")).toBe(true);const canonical=readFileSync(resolve(import.meta.dir,"../../🦀️.rs"),"utf8");expect(canonical.includes("impl Default for ToolCancellationHandle")).toBe(false);expect(canonical.includes("CancelToken::root_now()")).toBe(false);
- console.log("[DEBUG] cancellationIssuerExactCreationIdentity=true zeroLoanRetains=true SQLiteAjv=true");
 });
 
 test("lease phases retain their exact key before every denied or foreign-key turn",()=>{
@@ -25,17 +24,14 @@ test("lease phases retain their exact key before every denied or foreign-key tur
   expect(db.query("SELECT id FROM pending").get()).toEqual({id:row.expectedKey});expect(phase===fixture.lease.phases.length).toBe(row.expectedPublished);db.close();
  }
  const source=readFileSync(resolve(import.meta.dir,"../🦀️.rs"),"utf8");expect(source.includes("fn begin_keyed(&mut self,key:&ToolOperationKey,cx:")).toBe(true);expect(source.includes("PendingLease")).toBe(true);
- console.log("[DEBUG] canonical lease exact retained key denies foreign retry; SQLite independent transaction oracle");
 });
 
 test("renewal returns displaced parent aliases to the retained creation witness",()=>{
  const db=new Database(":memory:");for(const row of fixture.renewal){const result=db.query("SELECT COALESCE(? = ? AND ? = ?,0) AS admitted").get(row.creationRoot,row.witness,row.displacedParent,row.witness);expect(result).toEqual({admitted:Number(row.expected)});}db.close();
  const source=readFileSync(resolve(import.meta.dir,"../🦀️.rs"),"utf8");expect(source.includes("parts.close_step(self.issued.as_ref().unwrap(),self.admission.source.as_ref().unwrap().cancellation()?,grant)")).toBe(true);
- console.log("[DEBUG] renewal exact original creation-root witness; SQLite null/foreign refusal oracle");
 });
 
 test("inline claim custody posts no physical scaffold birth",()=>{
  const db=new Database(":memory:");const row=fixture.retirementInlineTransfer;expect(db.query("SELECT ? AS physicalBirth").get(row.capacityBytes)).toEqual({physicalBirth:row.expectedPhysicalBirth});db.close();
  const source=readFileSync(resolve(import.meta.dir,"../🦀️.rs"),"utf8");expect(source.includes("progress.retained_capacity_bytes=demand.capacity_bytes")).toBe(false);
- console.log("[DEBUG] inline typed claim custody capacity0; later actual scaffold receives separate grant and receipt");
 });

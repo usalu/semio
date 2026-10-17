@@ -11,5 +11,5 @@ test("borrowed artifact reference is an independent bounded identity floor",asyn
  expect(manifest.package.name).toBe(fixture.owner);expect(manifest.dependencies??{}).toEqual({});expect(manifest.package.metadata.semio["rust-source-boundary"]).toEqual(fixture.sourceBoundary);
  const own=await import("../🟦️.ts"),oracle=new Ajv({strict:true}).compile({type:"string",pattern:"^[a-z0-9]+(?:-[a-z0-9]+)*[.][a-z0-9]+(?:-[a-z0-9]+)*[.][a-z0-9]+(?:-[a-z0-9]+)*$(?![\\s\\S])"});
  for(const row of fixture.cases){expect(oracle(row.kind),row.kind).toBe(row.accepted);expect(own.isCanonicalArtifactKind(row.kind),row.kind).toBe(row.accepted);}
- const source=readFileSync(join(root,"🦀️.rs"),"utf8");expect(Buffer.byteLength(source)).toBeLessThanOrEqual(fixture.sourceBoundary.maxSourceBytes);expect(source).not.toContain("semio_framework_value");console.log("[DEBUG] Dependency-free borrowed reference owner and kind grammar agree with independent Ajv/TOML");
+ const source=readFileSync(join(root,"🦀️.rs"),"utf8");expect(Buffer.byteLength(source)).toBeLessThanOrEqual(fixture.sourceBoundary.maxSourceBytes);expect(source).not.toContain("semio_framework_value");
 });

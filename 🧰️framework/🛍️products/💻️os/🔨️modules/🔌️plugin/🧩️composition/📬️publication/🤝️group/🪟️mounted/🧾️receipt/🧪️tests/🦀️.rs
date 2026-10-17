@@ -1,6 +1,6 @@
 #[test]
 fn mounted_receipt_bytes_preserve_original_backing_and_all_native_allocation_axes() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = crate::fixture_json("🧾️receipt/🧪️tests/🧫️fixtures/🔣️.json");
     assert_eq!(fixture["maximumCapacityBytes"].as_u64().unwrap() as usize, MOUNTED_RECEIPT_MAXIMUM_BYTES);
     for row in fixture["cases"].as_array().unwrap() {
         let text = row["text"].as_str().unwrap().as_bytes();
@@ -50,13 +50,12 @@ fn mounted_receipt_bytes_preserve_original_backing_and_all_native_allocation_axe
         assert!(owner.terminal_is_empty());
         let (_, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| drop(owner));
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
-        println!("[DEBUG] original mounted receipt case={} retained initial={initial} outputBytes={} copy64; birth/copy/original-release all separate; every denied original pointer preserved", row["id"], text.len());
     }
 }
 
 #[test]
 fn mounted_receipt_bytes_cancel_every_original_growth_frontier_without_hidden_release() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = crate::fixture_json("🧾️receipt/🧪️tests/🧫️fixtures/🔣️.json");
     for (index, frontier) in fixture["cancellationFrontiers"].as_array().unwrap().iter().enumerate() {
         let mut original = Vec::with_capacity(64); original.extend_from_slice(&[17u8; 64]);
         let mut owner = MountedReceiptBytes::from_original(original);
@@ -88,7 +87,6 @@ fn mounted_receipt_bytes_cancel_every_original_growth_frontier_without_hidden_re
         assert!(owner.terminal_is_empty());
         let (_, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| drop(owner));
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
-        println!("[DEBUG] original receipt growth cancellation={frontier} candidate128 then original64 exact funded frees, zero/one-below preserve pointer, terminal Drop0heap");
     }
 }
 
@@ -100,7 +98,7 @@ impl store::ArtifactCanonicalJson for MountedReceiptJsonString<'_> {
 
 #[test]
 fn mounted_receipt_prepared_operation_prestages_exact_original_payload_before_acknowledgment() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = crate::fixture_json("🧾️receipt/🧪️tests/🧫️fixtures/🔣️.json");
     assert_eq!(fixture["operationHeader"], serde_json::json!([1, 7]));
     for row in fixture["cases"].as_array().unwrap() {
         let body = MountedReceiptJsonString(row["text"].as_str().unwrap());
@@ -148,7 +146,6 @@ fn mounted_receipt_prepared_operation_prestages_exact_original_payload_before_ac
             let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| bytes.close_step(RetainedCloneGrant { maximum_release_bytes: demand, ..grant }));
             assert_eq!((heap.requested_bytes, heap.released_bytes), (0, step.progress().released_bytes));
             assert!(bytes.terminal_is_empty());
-            println!("[DEBUG] mounted prepared operation original={} hex={hex} bytes={} exact serde oracle; codec and append copy64 in separate turns; every birth and original free independently funded", row["id"], expected.len());
         }
     }
 }
@@ -185,13 +182,12 @@ fn mounted_receipt_prepared_operation_cancellation_retires_only_funded_original_
         assert!(owner.terminal_is_empty());
         let (_, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| drop(owner));
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
-        println!("[DEBUG] mounted prepared operation cancel frontier={frontier}: inline codec first, whole original candidate/output separately funded, terminal Drop0heap");
     }
 }
 
 #[test]
 fn mounted_receipt_operation_list_retains_every_original_inverse_length_and_payload() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = crate::fixture_json("🧾️receipt/🧪️tests/🧫️fixtures/🔣️.json");
     for hex in fixture["operationHexModes"].as_array().unwrap() {
         let hex = hex.as_bool().unwrap();
         for indices in fixture["operationLists"].as_array().unwrap() {
@@ -225,7 +221,6 @@ fn mounted_receipt_operation_list_retains_every_original_inverse_length_and_payl
             let (_, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| drop(owner)); assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
             let mut bytes = MountedReceiptBytes::from_original(bytes); let demand = bytes.next_close_byte_demand();
             let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| bytes.close_step(RetainedCloneGrant { maximum_release_bytes: demand, ..grant })); assert_eq!((heap.requested_bytes, heap.released_bytes), (0, step.progress().released_bytes)); assert!(bytes.terminal_is_empty());
-            println!("[DEBUG] original mounted inverse framing operations={} hex={hex} bytes={}: exact count/length varints and complete original serde payload; every operation backing freed separately from framed output", bodies.len(), expected.len());
         }
     }
 }
@@ -249,13 +244,12 @@ fn mounted_receipt_operation_list_cancels_codec_payload_and_framed_growth_fronti
             let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| owner.close_step(grant).unwrap()); assert!(step.progress().fits(grant)); assert_eq!((heap.requested_bytes, heap.released_bytes), (0, step.progress().released_bytes));
         }
         assert!(owner.terminal_is_empty()); let (_, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| drop(owner)); assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
-        println!("[DEBUG] original inverse-list cancellation frontier={frontier}: inline codec, unframed payload, growth candidate, and framed output all separately funded; terminal Drop0heap");
     }
 }
 
 #[test]
 fn mounted_receipt_kernel_mutation_preserves_every_original_causal_field_before_publication() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap(); let meta = &fixture["receiptMetadata"];
+    let fixture: serde_json::Value = crate::fixture_json("🧾️receipt/🧪️tests/🧫️fixtures/🔣️.json"); let meta = &fixture["receiptMetadata"];
     for dependency_count in [0, 3] {
         let dependencies: Vec<_> = meta["dependencies"].as_array().unwrap().iter().take(dependency_count).map(|id| MutationId(id.as_str().unwrap().into())).collect();
         for row in fixture["cases"].as_array().unwrap() {
@@ -282,7 +276,6 @@ fn mounted_receipt_kernel_mutation_preserves_every_original_causal_field_before_
             assert_eq!(mutation.dependencies, dependencies); assert_eq!(mutation.inverse.dependencies, dependencies); assert_eq!(undo_inverse.dependencies, dependencies); assert_eq!(undo_id, mutation.id); assert_eq!(undo_inverse, mutation.inverse);
             if dependency_count > 0 { assert_ne!(mutation.dependencies.as_ptr(), dependencies.as_ptr()); assert_ne!(mutation.inverse.dependencies.as_ptr(), mutation.dependencies.as_ptr()); assert_ne!(undo_inverse.dependencies.as_ptr(), mutation.inverse.dependencies.as_ptr()); }
             let (_, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| drop(owner)); assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
-            println!("[DEBUG] original kernel receipt={} dependencies={dependency_count}: original forward8194 pointer transferred, exact IDs/schema/HLC/base/author/inverse preserved; three independent causal vectors, every birth/free funded, final assembly0heap", row["id"]);
         }
     }
 }
@@ -304,13 +297,12 @@ fn mounted_receipt_kernel_mutation_cancellation_retains_original_owners_under_pa
             let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| owner.close_step(grant)); assert!(step.progress().fits(grant)); assert_eq!((heap.requested_bytes, heap.released_bytes), (0, step.progress().released_bytes));
         }
         assert!(owner.terminal_is_empty()); let (_, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| drop(owner)); assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
-        println!("[DEBUG] original host receipt cancellation={frontier}: original8194 forward first, all UTF8/inverse/dependency backing separately funded; denied whole frees0heap and terminal Drop0heap");
     }
 }
 
 #[test]
 fn mounted_receipt_child_document_handle_hashes_original_utf8_with_bounded_zero_heap_turns() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = crate::fixture_json("🧾️receipt/🧪️tests/🧫️fixtures/🔣️.json");
     for (index, row) in fixture["cases"].as_array().unwrap().iter().enumerate() {
         let source = row["text"].as_str().unwrap();
         for copy in [1, 3, 7, 64] {
@@ -325,7 +317,6 @@ fn mounted_receipt_child_document_handle_hashes_original_utf8_with_bounded_zero_
             }
             assert!(owner.ready());
             let (handle, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| owner.take(grant).unwrap()); assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0)); assert_eq!(format!("{:032x}", handle.0), fixture["artifactHandles"][index].as_str().unwrap());
-            println!("[DEBUG] original child handle={} copy={copy}: exact Node/BigInt two-lane handle {:?}, original pointer retained, every turn0heap", row["id"], handle);
         }
     }
 }

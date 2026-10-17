@@ -1,0 +1,11 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🐾️pets/🔨️modules/🧗️climbing/🧪️tests/🔬️unit/🟦️.ts",
+ "importers": [],
+ "childRoot": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🐾️pets/🔨️modules/🧗️climbing/🧪️tests",
+ "children": [
+  {"dir": "🧰️climbing-test-kit", "doc": "/** 🧰️ Shared fixtures and builders of the climbing unit suites: the stage sample size, the pet sizes, the seeded stream, perch, pitch and rectangle builders, the climb path and the floor, card and wall fixtures. */", "lines": [[17,82]]},
+  {"dir": "🪜️ladder-suites", "doc": "/** 🪜️ Unit suite of the climbing module, ladders: the placement of a ladder, climbing it, what it holds and where it leads. */", "lines": [[358,598]]},
+  {"dir": "🪝️rope-and-shot-suites", "doc": "/** 🪝️ Unit suite of the climbing module, the grappling rope: shots, the hook flight, the haul and what a shot holds. */", "lines": [[600,904]]},
+  {"dir": "🗺️route-and-determinism-suites", "doc": "/** 🗺️ Unit suite of the climbing module, routes: the routes between perches, the chains, the constants and determinism. */", "lines": [[906,1016]]}
+ ]
+}

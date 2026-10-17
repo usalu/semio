@@ -2,7 +2,11 @@
 //! 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING design §12, §17.6, §20.15): every element's BASE orientation is composed with the
 //! turn, so editing the axis or the angle in history re-derives every orientation from whatever base it replays on.
 
-use super::*;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioQuaternion;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
+use crate::schema::diff::SemioModelDiff;
+use crate::schema::snapshot::SemioModelSnapshot;
+use crate::schema::mutations::{element_count_label, number_label, quaternion_product, relative_placement_diff, relative_placement_inverse};
 
 //#region 🔖️Payload
 /// 🔄️ `rotate-elements` payload — the element ids it turns, the world axis and the right-handed angle (radians).
@@ -29,7 +33,10 @@ impl RotateElements {
     }
 }
 
-impl protocol::MutationKind<SemioModelSnapshot, SemioModelMutation> for RotateElements {
+impl<Op> protocol::MutationKind<SemioModelSnapshot, Op> for RotateElements
+where
+    Op: protocol::Mutation<SemioModelSnapshot, Diff = SemioModelDiff> + From<RotateElements>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "rotate", entity: "elements", kind: "rotate-elements", record: "RotatedElements" };
 
     fn diff(&self, base: &SemioModelSnapshot) -> protocol::MutationOutcome<SemioModelDiff> {
@@ -38,7 +45,7 @@ impl protocol::MutationKind<SemioModelSnapshot, SemioModelMutation> for RotateEl
         };
         relative_placement_diff(&self.targets, self.angle == 0.0, base, |placement| SemioTransform { rotation: quaternion_product(delta, placement.rotation), ..placement })
     }
-    fn inverse(&self, base: &SemioModelSnapshot) -> Result<Vec<SemioModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &SemioModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         Ok(relative_placement_inverse(&self.targets, self.angle == 0.0 || self.delta().is_none(), base))
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {

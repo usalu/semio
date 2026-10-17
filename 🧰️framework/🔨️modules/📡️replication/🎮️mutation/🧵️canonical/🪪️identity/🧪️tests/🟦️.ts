@@ -19,7 +19,6 @@ test("canonical identity assembly copies native fields through paid UTF8 pages",
     expect(Buffer.from(JSON.parse(JSON.stringify(text)))).toEqual(Buffer.from(text));
   }
   db.close();
-  console.log("[DEBUG] independent SQLite scalar turns and Node UTF8 identity outputs conserve original giant actor and two edit IDs exactly");
   const path = new URL("🦀️.rs", root);
   expect(existsSync(path)).toBe(true);
   const source = readFileSync(path, "utf8");

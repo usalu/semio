@@ -3,8 +3,11 @@
 
 use super::super::cascade;
 use super::DeleteOpening;
-use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{snapshot::ModelSnapshot};
 
-pub fn inverse(payload: &DeleteOpening, base: &ModelSnapshot) -> Vec<ModelMutation> {
+pub fn inverse<Op>(payload: &DeleteOpening, base: &ModelSnapshot) -> Vec<Op>
+where
+    Op: crate::standards::v1::subsets::any::schema::mutations::cascade::RemovalInverse,
+{
     cascade::inverse(base, std::slice::from_ref(&payload.id))
 }

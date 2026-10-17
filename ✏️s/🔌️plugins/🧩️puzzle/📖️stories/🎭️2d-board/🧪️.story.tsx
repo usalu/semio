@@ -144,6 +144,10 @@ function applyStoryBoardEvents(state: StoryPuzzle2dState, eventsJson: string): S
 }
 
 /** 🧩️ Story-local mirror of a subset of `Puzzle2dPlayApp::handle_action_patch_operations` — enough for the interaction stories to round-trip. */
+function storyActionArguments(value: unknown): Record<string, unknown> | undefined {
+  return typeof value === "object" && value !== null && !Array.isArray(value) ? Object.fromEntries(Object.entries(value)) : undefined;
+}
+
 function reduceStoryPuzzle2dAction(state: StoryPuzzle2dState, action: string, args: Record<string, unknown> | undefined): StoryPuzzle2dState {
   const { fixture, runtime } = state;
   switch (action) {
@@ -324,7 +328,7 @@ function Board2dStoryHost({ initialFixture, initialRuntime, interactive }: { rea
   const [state, setState] = useState<StoryPuzzle2dState>(() => ({ fixture: initialFixture, runtime: { ...STORY_DEFAULT_RUNTIME, ...initialRuntime } }));
 
   const onAction = useCallback((descriptor: ActionDescriptor): void => {
-    setState((current) => reduceStoryPuzzle2dAction(current, descriptor.action, descriptor.args));
+    setState((current) => reduceStoryPuzzle2dAction(current, descriptor.action, storyActionArguments(descriptor.args)));
   }, []);
 
   const node = useMemo(() => buildStorySceneNode(state, interactive), [state, interactive]);

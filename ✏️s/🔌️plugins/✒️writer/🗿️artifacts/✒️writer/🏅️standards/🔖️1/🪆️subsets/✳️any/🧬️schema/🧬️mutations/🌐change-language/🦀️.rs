@@ -1,5 +1,4 @@
 //! 🌐️ Direct Writer mutation — `ChangeLanguage` sets the document's language mode.
-use crate::schema::mutations::WriterMutation;
 use crate::WriterDiff;
 use crate::WriterSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
@@ -19,18 +18,24 @@ pub struct ChangeLanguage {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_language(new_language_id: String) -> WriterMutation {
-    WriterMutation::ChangeLanguage(ChangeLanguage { new_language_id })
+pub fn change_language<Op>(new_language_id: String) -> Op
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::change_language::ChangeLanguage>,
+{
+    Op::from(ChangeLanguage { new_language_id })
 }
 
-impl MutationKind<WriterSnapshot, WriterMutation> for ChangeLanguage {
+impl<Op> MutationKind<WriterSnapshot, Op> for ChangeLanguage
+where
+    Op: protocol::Mutation<WriterSnapshot, Diff = WriterDiff> + From<ChangeLanguage>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "language", kind: "change-language", record: "ChangedLanguage" };
 
     fn diff(&self, base: &WriterSnapshot) -> protocol::MutationOutcome<WriterDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &WriterSnapshot) -> Result<Vec<WriterMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &WriterSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

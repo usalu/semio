@@ -2,7 +2,7 @@
 //! offset. The gesture's own inputs (which ids, which offset) are the payload, so editing the drag in history re-derives
 //! every origin from whatever base it replays on.
 use crate::standards::v1::subsets::any::schema::diff::Puzzle5dDiff;
-use crate::standards::v1::subsets::any::schema::mutations::{puzzle5d_selection_items,puzzle5d_selection_triple,Puzzle5dMutation};
+use crate::standards::v1::subsets::any::schema::mutations::{puzzle5d_selection_items, puzzle5d_selection_triple};
 
 use crate::Puzzle5dSnapshot;
 
@@ -21,13 +21,16 @@ pub struct DragSelection3d {
     pub offset: [f64; 3],
 }
 
-impl protocol::MutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for DragSelection3d {
+impl<Op> protocol::MutationKind<Puzzle5dSnapshot, Op> for DragSelection3d
+where
+    Op: protocol::Mutation<Puzzle5dSnapshot, Diff = Puzzle5dDiff> + From<DragSelection3d> + From<crate::standards::v1::subsets::any::schema::mutations::move_part_2d::MovePart2d> + From<crate::standards::v1::subsets::any::schema::mutations::move_part_3d::MovePart3d> + From<crate::standards::v1::subsets::any::schema::mutations::move_target_volume::MoveTargetVolume>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "drag", entity: "selection", kind: "drag-selection3d", record: "DraggedSelection3d" };
 
     fn diff(&self, base: &Puzzle5dSnapshot) -> protocol::MutationOutcome<Puzzle5dDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Puzzle5dSnapshot) -> Result<Vec<Puzzle5dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Puzzle5dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     
@@ -45,6 +48,9 @@ impl protocol::MutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for DragSelectio
 //#endregion 🔖️Mutation
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn drag_selection_3d(targets: Vec<String>, offset: [f64; 3]) -> Puzzle5dMutation {
-    Puzzle5dMutation::DragSelection3d(DragSelection3d { targets, offset })
+pub fn drag_selection_3d<Op>(targets: Vec<String>, offset: [f64; 3]) -> Op
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::drag_selection_3d::DragSelection3d>,
+{
+    Op::from(DragSelection3d { targets, offset })
 }

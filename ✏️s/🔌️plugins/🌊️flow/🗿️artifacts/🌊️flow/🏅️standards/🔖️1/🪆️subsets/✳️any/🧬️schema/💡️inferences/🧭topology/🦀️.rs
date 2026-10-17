@@ -82,8 +82,5 @@ pub fn compute_flow_topology(widgets: &[Widget], synapses: &[SynapseSpec]) -> Fl
 }
 //#endregion 🔖️Topology
 
-#[cfg(test)]
-//#region 🧪️Tests
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

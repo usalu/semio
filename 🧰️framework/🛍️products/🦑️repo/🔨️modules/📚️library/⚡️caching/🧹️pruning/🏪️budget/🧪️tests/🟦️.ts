@@ -17,5 +17,4 @@ test("neutral inactive budget retires recent unused data while preserving actual
   }
   expect(()=>planInactiveCargoRetirementV1(fixture.units as CacheUnit[],{...fixture.policy,maximumDeletionBytes:0} as CargoRetirementPolicyV1,40)).toThrow("policy");
  }finally{db.close();}
- console.log("[DEBUG] Neutral inactive retirement agrees with SQLite ordering, active custody and bounded deletion");
 });

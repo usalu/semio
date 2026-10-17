@@ -41,7 +41,7 @@ fn retained_dictionary_binding_moves_typed_input_under_existing_owner_grants() {
     }
     let refused=fixture["invalidDictionaryText"].as_str().unwrap();assert!(serde_json::from_str::<Dictionary>(refused).is_err());let mut owner=RetainedDictionaryInput::new(semio_framework_pack_json::from_json_str(refused,semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap());
     for turn in 0..100000 {let grant=input_grant(&owner,3,false);match owner.step(grant){Ok(step)=>{if let Some(value)=step.dictionary{drop(ColdOwner::new(value));panic!("malformed typed input admitted");}},Err(_)=>break}assert!(turn<99999);}
-    owner.cancel();close_input(&mut owner,3);eprintln!("[DEBUG] Original input shared headers/frame/update work and cancellation physical receipts, turns={turns}, phases={phases:?}");
+    owner.cancel();close_input(&mut owner,3);
 }
 
 #[test]
@@ -157,5 +157,4 @@ fn owned_neural_controlled_dictionary_keeps_refusal_categories_at_partial_bounda
     let retained = ColdOwner::new(builder.finish());
     assert_eq!(retained.len(), 1);
     assert_eq!(retained.get("first"), Some(&crate::Value::Atom(Atom::Integer(7))));
-    eprintln!("[DEBUG] Controlled neural refusal categories survive canceled partial dictionary insertion");
 }

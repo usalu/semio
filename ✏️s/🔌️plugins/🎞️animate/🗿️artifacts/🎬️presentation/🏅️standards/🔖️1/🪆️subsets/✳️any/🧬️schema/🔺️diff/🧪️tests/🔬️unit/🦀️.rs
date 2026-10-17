@@ -1,4 +1,11 @@
-use super::*;
+use crate::{FigureTileDraft, FigureTileFrame, PresentationSnapshot};
+#[allow(unused_imports)]
+use crate::FigureTileSource;
+#[allow(unused_imports)]
+use schema::ArtifactSchema;
+#[allow(unused_imports)]
+use protocol::MutationDiff;
+use crate::standards::v1::subsets::any::schema::diff::*;
 use crate::default_presentation_snapshot;
 use crate::standards::v1::subsets::any::schema::mutations::PresentationMutation;
 use crate::standards::v1::subsets::any::schema::mutations::replace_source;

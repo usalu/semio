@@ -17,7 +17,6 @@ fn retained_scene_input_neutral_zero_work_and_one_short_birth_refuse_without_all
  let(step,requests,releases)=crate::test_allocation::observe_backing(||cursor.append(&input,SceneInputGrant{maximum_units:0,maximum_capacity_bytes:input.len(),cancelled:false}).unwrap());assert_eq!((step.units,step.copied_bytes,step.admitted_bytes,requests,releases),(0,0,0,0,0));assert!(cursor.input().is_empty());
  close(&mut cursor);for offset in corpus()["capacityOffsets"].as_array().unwrap(){let offset=offset.as_i64().unwrap()as isize;let mut cursor=SceneInputCursor::new(input.len(),IntrinsicFormat::Body,configured).unwrap();let capacity=input.len().checked_add_signed(offset).unwrap();let(result,requests,releases)=crate::test_allocation::observe_backing(||cursor.append(&input,SceneInputGrant{maximum_units:1,maximum_capacity_bytes:capacity,cancelled:false}));let admitted=cursor.admitted_bytes();let initialized=cursor.input().len();close(&mut cursor);assert_eq!(initialized,0);assert_eq!(releases,0);if offset<0{assert_eq!(result.unwrap_err().kind,ValueRefusalKind::OwnershipLimit);assert_eq!((admitted,requests),(0,0))}else{let step=result.unwrap();assert_eq!((step.units,step.copied_bytes),(1,0));assert_eq!((step.admitted_bytes,admitted,requests),(input.len(),input.len(),input.len()))}}
  let mut small=limits();small.maximum_owned_bytes=input.len()-1;let(result,requests,releases)=crate::test_allocation::observe_backing(||SceneInputCursor::new(input.len(),IntrinsicFormat::Body,small));assert_eq!(result.err().unwrap().kind,ValueRefusalKind::OwnershipLimit);assert_eq!((requests,releases),(0,0));
- println!("[DEBUG] OS scene receiving input constructor and denied capacity grants perform no heap work");
 }
 
 #[test]
@@ -27,7 +26,6 @@ fn retained_scene_input_neutral_partial_cancellation_preserves_exact_source_cust
   let(result,requests,releases)=crate::test_allocation::observe_backing(||cursor.append(&input[cutoff..],SceneInputGrant{maximum_units:256,maximum_capacity_bytes:0,cancelled:true}));assert_eq!(result.unwrap_err().kind,ValueRefusalKind::Canceled);assert_eq!((requests,releases),(0,0));assert_eq!(cursor.input().as_ptr(),pointer);assert_eq!(cursor.input(),&input[..cutoff]);assert_eq!(cursor.admitted_bytes(),before);assert!(cursor.take_output().is_none());
   let(_,requests,releases)=crate::test_allocation::observe_backing(||cursor.close_step(Default::default()).unwrap());assert_eq!((requests,releases),(0,0));close(&mut cursor);
  }
- println!("[DEBUG] OS cancelled partial uploads retain initialized bytes and exact original backing until explicit close");
 }
 
 #[test]
@@ -38,7 +36,6 @@ fn retained_scene_input_neutral_finite_upload_moves_original_backing_into_genera
   assert_eq!(cursor.next_work_demand(),0);let(step,requests,releases)=crate::test_allocation::observe_backing(||cursor.advance(0,false).unwrap());assert_eq!((step.units,step.complete,requests,releases),(0,true,0,0));
   let output=cursor.take_output().unwrap();close(&mut cursor);assert_eq!(output.nodes.len(),1);assert_eq!(output.nodes[0].id,corpus()["expectedNode"].as_str().unwrap());let expected:Value=serde_json::from_str("{\"nodes\":[{\"id\":\"雪😀\"}]}").unwrap();assert_eq!(output.nodes[0].id,expected["nodes"][0]["id"].as_str().unwrap());
  }}
- println!("[DEBUG] OS finite uploads preserve the actual backing pointer through General retained scene materialization");
 }
 
 #[test]
@@ -47,5 +44,4 @@ fn retained_scene_input_neutral_terminal_close_keeps_copy_capacity_and_physical_
   for _ in 0..1000000{if cursor.terminal_is_empty(){break}let copy=cursor.next_close_copy_byte_demand().max(3);let release=cursor.next_close_release_byte_demand().unwrap();let capacity=cursor.next_close_capacity_byte_demand(copy.max(release)).unwrap();let depth=cursor.next_close_depth_demand().unwrap();let(step,requests,releases)=crate::test_allocation::observe_backing(||cursor.close_step(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:capacity,maximum_release_bytes:release,maximum_depth:depth}).unwrap());let receipt=step.progress();assert_eq!(requests,receipt.retained_capacity_bytes);assert_eq!(releases,receipt.released_bytes);assert!(receipt.copied_bytes<=copy);assert!(requests<=capacity);assert!(releases<=release);born+=requests;released+=releases;}
   assert!(cursor.terminal_is_empty());assert_eq!(released,born);
  }
- println!("[DEBUG] OS partial source and completed retained decoder release every admitted backing under independent exact receipts");
 }

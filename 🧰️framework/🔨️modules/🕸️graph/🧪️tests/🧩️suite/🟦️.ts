@@ -58,7 +58,8 @@ test("explicit output identities preserve independent manifest IDs and reject am
   const parsed = parseGraphOutputCatalog(fixture.catalog, fixture.manifestIds);
   expect([...Object.values(parsed.shared), ...parsed.manifests.flatMap((row) => [row.rust, row.typescript])]).toEqual(fixture.expectedPaths);
   expect(validate(currentInput)).toBe(true);
-  expect<unknown>(parseGraphOutputCatalog(currentInput, current.manifests.map((row) => row.id))).toEqual(currentInput);
+  const parsedCatalog = parseGraphOutputCatalog(currentInput, current.manifests.map((row) => row.id));
+  expect(parsedCatalog).toEqual<typeof currentInput>(currentInput);
   for (const row of fixture.invalid) {
     const invalid = structuredClone(fixture.catalog) as unknown as Record<string | number, unknown>;
     let owner = invalid;
@@ -71,6 +72,25 @@ test("explicit output identities preserve independent manifest IDs and reject am
   expect(() => parseGraphOutputCatalog(fixture.catalog, ["chronology", "absent"])).toThrow();
   expect(() => parseGraphOutputCatalog(fixture.catalog, ["chronology", "chronology"])).toThrow();
 }, 15_000);
+
+test("a manifest row may name the lower crate module that already owns its generated Rust module", () => {
+  const sandbox=mkdtempSync(join(testArtifactRoot(),"graph-rust-owner-"));
+  try {
+    mkdirSync(join(sandbox,"owners"),{recursive:true});
+    for(const doc of fixture.emission) writeFileSync(join(sandbox,"owners",`${doc.id}.manifest.json`),JSON.stringify(doc));
+    const validate=new Ajv({strict:true}).addSchema(schema).getSchema(`${schema.$id}#/$defs/Outputs`)!;
+    const input={...fixture.catalog,manifests:fixture.catalog.manifests.map((row)=>row.id==="chronology"?{...row,rustOwner:"lower_crate::standards::graph_manifest::chronology"}:row)};
+    expect(validate(input)).toBe(true);
+    const registry=renderGraphArtifacts(sandbox,join(sandbox,"output"),parseGraphOutputCatalog(input,fixture.manifestIds),false).artifacts.find((artifact)=>artifact.path.endsWith("📇️registry/🦀️.rs"))!.content;
+    expect(registry).toContain("pub use lower_crate::standards::graph_manifest::chronology;");
+    expect(registry).not.toContain("pub mod chronology;");
+    expect(registry).toContain("pub mod measurement;");
+    expect(registry).toContain("chronology::chronology_manifest()");
+    const plain=renderGraphArtifacts(sandbox,join(sandbox,"plain"),fixtureCatalog,false).artifacts.find((artifact)=>artifact.path.endsWith("📇️registry/🦀️.rs"))!.content;
+    expect(plain).toContain("pub mod chronology;");
+    expect(plain).not.toContain("pub use");
+  } finally {rmSync(sandbox,{recursive:true,force:true});}
+},15_000);
 
 test("catalog identity is required and agrees with the independent schema", () => {
   const validate = new Ajv({ strict: true }).addSchema(schema).getSchema(`${schema.$id}#/$defs/Outputs`)!;
@@ -108,7 +128,6 @@ test("independent owner previews execute with every specific owner unavailable",
       expect(preview.contractId).toBe(row.expectedContractId);
       expect(preview.nodes.filter((node: { nodeKind: string }) => node.nodeKind === "file")).toHaveLength(3);
       expect(existsSync(join(sandbox, "owner", "🤖️generated"))).toBe(false);
-      console.log(`[DEBUG] graph-preview-owner ${JSON.stringify({ expected: row.expectedContractId, actual: preview.contractId, nodes: preview.nodes.length, published: false })}`);
     } finally {
       rmSync(sandbox, { recursive: true, force: true });
     }
@@ -121,7 +140,6 @@ test("actual graph contract sources pass strict compiler admission", async () =>
   const program = ts.createProgram(sources, { noEmit: true, strict: true, noUncheckedIndexedAccess: true, target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext, moduleResolution: ts.ModuleResolutionKind.Bundler, allowImportingTsExtensions: true, resolveJsonModule: true, esModuleInterop: true, skipLibCheck: true, types: ["bun", "node"] });
   const diagnostics = ts.getPreEmitDiagnostics(program);
   expect(diagnostics.map((row) => ts.flattenDiagnosticMessageText(row.messageText, "\n"))).toEqual([]);
-  console.log(`[DEBUG] graph-contract strictSources=${sources.length} diagnostics=${diagnostics.length}`);
 }, 30_000);
 
 test("the producer writes exactly declared nested paths and refuses symlink traversal", () => {

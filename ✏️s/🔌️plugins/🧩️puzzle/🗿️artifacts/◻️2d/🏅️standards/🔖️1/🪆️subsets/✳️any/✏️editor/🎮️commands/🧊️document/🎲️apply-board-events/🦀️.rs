@@ -2,19 +2,21 @@
 
 #![allow(unexpected_cfgs)]
 
-use crate::editor::puzzle2d::modes::edit::windows::overview::utilities::select::PUZZLE2D_EDITOR_APP_ID;
-use crate::editor::puzzle2d::modes::edit::windows::{detail, overview, selection};
-use crate::editor::puzzle2d::panels::{artifact, inspection};
+use crate::editor::puzzle2d::config::PUZZLE2D_WINDOW_BODY_KEYS;
+use crate::editor::puzzle2d::modes::edit::windows::overview;
 use crate::editor::puzzle2d::config::Puzzle2dPlayRuntime;
 use crate::editor::puzzle2d::recorder::Puzzle2dRecorder;
-use {crate::editor::puzzle2d::snapshot::puzzle2d_selection_write, crate::editor::puzzle2d::Puzzle2dActionCtx, crate::editor::puzzle2d::Puzzle2dSelectionRecord};
+use {crate::editor::puzzle2d::snapshot::puzzle2d_selection_write, crate::editor::puzzle2d::interaction::Puzzle2dActionCtx, crate::editor::puzzle2d::modes::edit::windows::overview::utilities::select::Puzzle2dSelectionRecord};
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
 
 use machine::Command;
 use semio_framework::kernel::UiDirtyScope;
-use semio_framework_tool_machine::{GestureChart, GesturePhase, ToolYield};
+use semio_framework_tool_machine::{ChartGesture, GestureChart, GesturePhase, ToolYield};
 use semio_framework_pack_json::Value;
 use std::sync::{Arc, OnceLock};
+use crate::editor::puzzle2d::engine::BoardHost;
+use crate::editor::puzzle2d::recorder;
+use crate::editor::puzzle2d::engine::board_host::{drain_board_events_json};
 
 /// 🐢️ Classifies a batch of board events into the narrowest `UiDirtyScope` that covers all of them —
 /// `applyBoardEvents` fires on every select and drag (a camera move is the view verb `setCamera`), so getting this right is most of the
@@ -81,10 +83,10 @@ fn puzzle2d_board_events_scope(events: &[Value]) -> UiDirtyScope {
     }
     let mut panel_bodies = Vec::new();
     if panel_layers {
-        panel_bodies.push(artifact::PUZZLE2D_PLAY_BODY_LAYERS.to_string());
+        panel_bodies.push(crate::editor::puzzle2d::config::PUZZLE2D_PLAY_BODY_LAYERS.to_string());
     }
     if panel_properties {
-        panel_bodies.push(inspection::PUZZLE2D_PLAY_BODY_PROPERTIES.to_string());
+        panel_bodies.push(crate::editor::puzzle2d::config::PUZZLE2D_PLAY_BODY_PROPERTIES.to_string());
     }
     UiDirtyScope::Partial { window_bodies: if window_bodies { panes } else { Vec::new() }, panel_bodies, utilities: false, tools: false, engagements, measures, labels: false }
 }
@@ -251,12 +253,6 @@ fn fold_brush_candidates(runtime: &mut Puzzle2dPlayRuntime, payload: &Value) {
     }
 }
 
-/// 🐢️ `UiDirtyScope.windowBodies`/`.panelBodies` are matched against `AppDefinition.windowKinds[].bodyKey`
-/// on the shell side (`buildUiRefreshRequest`'s `uiRefreshWantsWindow`), so these must be the body-key
-/// constants (`puzzle2d.play.overview`, …) — *not* the pane/kind-id constants (`PUZZLE2D_PANES`,
-/// `2d-overview`, …), which are a different id space used to key utilities/engagements/measures.
-pub const PUZZLE2D_WINDOW_BODY_KEYS: [&str; 3] = [overview::BODY_KEY, detail::BODY_KEY, selection::BODY_KEY];
-
 /// 🕹️ The LAST `select` row of a batch is the engine's whole selection set (`ids`, replace semantics),
 /// so it becomes one framework selection write — later rows supersede earlier ones inside a batch.
 fn board_selection_write(events: &[Value], snapshot: &Value) -> Option<semio_framework_plugin::InteractionWrite> {
@@ -296,7 +292,7 @@ pub fn apply_board_events(ctx: &mut Puzzle2dActionCtx<'_>, args: Option<&Value>)
             None => {}
         }
     }
-    let released = ctx.release_board(&rows);
+    let released = release_board(ctx, &rows);
     let released_view=released.as_ref().map(|snapshot|semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(snapshot.as_ref())));
     if let Some(write) = events.as_deref().and_then(|events| board_selection_write(events, released_view.as_ref().unwrap_or(&ctx.scene.board_snapshot))) {
         ctx.interaction_writes.push(write);
@@ -307,4 +303,30 @@ pub fn apply_board_events(ctx: &mut Puzzle2dActionCtx<'_>, args: Option<&Value>)
     if !ctx.interaction_writes.is_empty() && matches!(*ctx.ui_scope, UiDirtyScope::None) {
         *ctx.ui_scope = scope;
     }
+}
+
+/// 🪞️ Replays the board host's owned events: a board-tool row (an area painted, a brush stamped, a wire dropped or cut, a
+/// delete) is recorded as the concrete kinds it consists of, a candidate page is window-transient runtime state, and a
+/// guest-side host never receives a pointer, so it never records a gesture. Selection is framework-owned and camera is
+/// deliberately NOT mirrored: every action that moves the camera already writes the config's camera fields directly.
+pub fn apply_host_events(host: &mut BoardHost, recorder: &mut Puzzle2dRecorder, runtime: &mut Puzzle2dPlayRuntime) {
+    let events_raw = drain_board_events_json(host);
+    apply_board_events::replay_board_events(&events_raw, recorder, runtime);
+}
+
+/// 🧱️ Commits the board-tool rows of ONE flush (`rows`: kind and payload, in board order): every run of one kind is
+/// one release of that tool — ONE `ToolTransaction` of `<appId>#<kind>` on the window's gesture slot, folded on the
+/// document the runs before it left. Answers the document after every release, `None` when no row changed it.
+pub fn release_board(ctx: &mut Puzzle2dActionCtx<'_>, rows: &[(&'static str, Value)]) -> Option<std::sync::Arc<crate::Puzzle2dSnapshot>> {
+    let mut after: Option<std::sync::Arc<crate::Puzzle2dSnapshot>> = None;
+    for run in rows.chunk_by(|left, right| left.0 == right.0) {
+        let base = after.clone().unwrap_or_else(|| ctx.base.shared_typed());
+        let release = apply_board_events::BoardToolRelease::new(base, run[0].0, run.iter().map(|row| row.1.clone()).collect());
+        let committed = ctx.gesture.drive::<ChartGesture<apply_board_events::board_tool::BoardTool>>(None, run[0].0, GesturePhase::Once, Some(release.clone()), ctx.authoring_seed).ok().flatten();
+        if let Some((transaction, mutations)) = committed {
+            ctx.publish_transaction(transaction, mutations);
+            after = Some(std::sync::Arc::clone(&release.outcome().after));
+        }
+    }
+    after
 }

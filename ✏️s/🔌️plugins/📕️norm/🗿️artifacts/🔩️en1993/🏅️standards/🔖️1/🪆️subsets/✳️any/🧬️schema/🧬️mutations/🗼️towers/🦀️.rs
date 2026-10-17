@@ -1,6 +1,7 @@
 //! 🗼️ EN 1993 towers mutation leaves.
 
 //#region 🪢️Mounts
+#![allow(async_fn_in_trait)]
 #[path = "../➕️insert-pile/🦀️.rs"]
 pub mod insert_pile;
 #[path = "../➕️insert-tower-leg/🦀️.rs"]
@@ -15,7 +16,6 @@ pub mod update_pile_inputs;
 pub mod update_tower_inputs;
 //#endregion 🪢️Mounts
 
-#![allow(async_fn_in_trait)]
 
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;

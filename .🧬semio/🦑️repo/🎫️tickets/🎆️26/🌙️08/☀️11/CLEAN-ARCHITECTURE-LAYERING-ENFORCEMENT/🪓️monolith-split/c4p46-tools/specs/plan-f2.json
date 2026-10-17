@@ -1,0 +1,45 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖥️Board2dHost/🟦️.tsx",
+ "fn": "Board2dHost",
+ "propsType": "ComponentSceneHostProps",
+ "coreType": "BoardCore",
+ "region": "Board2dHost",
+ "parentTail": 123,
+ "hooks": [
+  {
+   "dir": "🧰️board-session-state",
+   "name": "useBoardSessionState",
+   "upto": 48,
+   "doc": "/** 🧰️ Board2dHost session state: the scene, peer scope and window instance, the container, canvas, session and scheduler refs, the pending lanes, the gesture recognizer, the selection, epoch, error, context menu and suggestion state, the labels, the dispatchers, the vitals publishing, the render scheduler and the container size reader. */",
+   "docFn": "/** 🧰️ Holds the refs, state, labels, dispatchers and render scheduling of the board window. */"
+  },
+  {
+   "dir": "💡️board-suggestions-and-events",
+   "name": "useBoardSuggestionsAndEvents",
+   "upto": 80,
+   "doc": "/** 💡️ Board2dHost suggestions and events: the suggestion menu and its rows, the hover paint and dispatch and the buffered board event drain, flush, snapshot and selection application with the peer gesture end and camera interaction settle. */",
+   "docFn": "/** 💡️ Wires the suggestion menu, hover and the buffered board event flush. */"
+  },
+  {
+   "dir": "🔁️board-lifecycle-and-sync",
+   "name": "useBoardLifecycleAndSync",
+   "upto": 101,
+   "doc": "/** 🔁️ Board2dHost lifecycle and sync: the layout effect that creates the board session and the scene sync effects that feed the session and the canvas appearance. */",
+   "docFn": "/** 🔁️ Creates the board session and keeps it in step with the scene lanes. */"
+  },
+  {
+   "dir": "👆️board-pointer-and-keyboard",
+   "name": "useBoardPointerAndKeyboard",
+   "upto": 109,
+   "doc": "/** 👆️ Board2dHost pointer and keyboard: the presence publishing, the canvas pointer effect and the keyboard effects. */",
+   "docFn": "/** 👆️ Wires the canvas pointer gestures, presence and keyboard of the board. */"
+  },
+  {
+   "dir": "🖱️board-context-menu-and-drop",
+   "name": "useBoardContextMenuAndDrop",
+   "upto": 123,
+   "doc": "/** 🖱️ Board2dHost context menu and drop: the context menu handler, the catalogue drop preview and drop handlers, the host registration, the pointer tracking and the tool-run trace lanes. */",
+   "docFn": "/** 🖱️ Builds the context menu and catalogue drop handlers and the tool-run trace lanes. */"
+  }
+ ]
+}

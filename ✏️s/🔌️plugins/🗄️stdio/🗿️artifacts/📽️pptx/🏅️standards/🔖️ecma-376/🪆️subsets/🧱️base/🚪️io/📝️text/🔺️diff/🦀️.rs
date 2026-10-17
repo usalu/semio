@@ -41,3 +41,7 @@ fn parse_diff(line: &str) -> Result<Self, semio_framework_diagnostic::TextError>
 }
 }
 #[cfg(test)] pub use diff_codec::*;
+
+#[cfg(test)]
+#[path = "🧪️tests/🦀️.rs"]
+mod tests;

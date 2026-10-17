@@ -158,9 +158,9 @@ impl ToolJobFactory for JpgBaselineEditorExampleFactory {
         &mut self,
         _operation: semio_framework_job::Operation,
         payload: Self::Payload,
-        input: semio_framework_plugin::action_bus::RetainedToolWireInput,
-        checkpoint: Option<semio_framework_plugin::action_bus::RetainedToolWireInput>,
-    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework_plugin::action_bus::RetainedToolWireInput, Option<semio_framework_plugin::action_bus::RetainedToolWireInput>)> {
+        input: semio_framework_action_bus::RetainedToolWireInput,
+        checkpoint: Option<semio_framework_action_bus::RetainedToolWireInput>,
+    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework_action_bus::RetainedToolWireInput, Option<semio_framework_action_bus::RetainedToolWireInput>)> {
         if input.declared_bytes() > STDIO_JPG_DOCUMENT_SCHEMA_EXAMPLE_BYTES || checkpoint.is_some() {
             return Err((ToolJobFactoryError::new("stdio example command rejects oversized wire"), input, checkpoint));
         }
@@ -374,3 +374,144 @@ pub fn create_jpg_baseline_editor() -> semio_framework_plugin::AppDefinition {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🧩️ArtifactItems10
+pub mod artifact_items_10 {
+use crate::{definition};
+use crate::{formats};
+use crate::{STDIO_JPG_DOCUMENT_SCHEMA};
+use crate::{JPG_ANY_DIALECT, JPG_BASELINE_DIALECT};
+pub use crate::schema::mutations::JpgMutation;
+pub use crate::schema::snapshot::JpgSnapshot;
+
+//#region 🔖️Declaration
+/// 🔖️ This artifact's declaration (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W6) —
+/// replaces the old side-effecting `crate::standards::v_jfif_1_01::subsets::document::io::register()`, previously called
+/// unconditionally from `🗄️stdio`'s plugin root. Mirrors `🗒️note`/`🔋️model`'s own `declaration()`
+/// exemplars: `.composers(...)` reaches `⚙️engine`'s OWN `io_registry` (the real `ComposerEntry`
+/// rows — 🧾️document + 🧱️baseline already folded into one list there) by its FULLY QUALIFIED path,
+/// never the bare `io_registry::entries()` shortcut that would silently rebind to this file's own
+/// shadowing `io_registry` module below (repo-wide "silent rebind" hazard this ticket tracks —
+/// that module returns `&[&ComposerEntry]`, a different type, and is left in place as orphaned
+/// dead code, matching `🔋️model`'s own precedent for its orphaned wrapper). The baseline subset's
+/// `SubsetValidator` (`🧱️baseline/🚪️io`'s own `JpgBaselineValidator`, previously registered via
+/// `⚙️engine::register()`'s trailing `subsets::baseline::io::register()` call) is re-derived here
+/// via `subset_validator_entry_of::<JpgBaselineValidator>()` rather than reused from that file's
+/// own private `validator_entry()` cache (not `pub`) — same erasure helper, fresh instance, same
+/// registry effect. `register_schema_specs()` (this engine's own, real, `#[cfg]`-unconditional
+/// `pub fn`) is deliberately dropped, not re-wired: its body is a genuine no-op (`{}`, see that
+/// fn's own doc comment — `JpgSnapshot`/`JpgDiff`/`JpgMutation` all fail `dsl`'s derive machinery
+/// on hand-rolled fields, so it never calls `dsl::registry::register_schema_spec` at all), so
+/// dropping the call changes zero runtime behaviour. `⚙️engine` itself is untouched — this only
+/// REFERENCES what it already exposes.
+/// 🧩️ Binds this executable root to its sole schema-owned definition.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn assembly() -> Result<semio_s_artifact_stdio_contract::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
+    semio_s_artifact_stdio_contract::runtime_assembly("jpg", definition()?, declaration)
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+    let formats = formats()?;
+    semio_framework_plugin::ArtifactDeclaration::builder(definition)
+        .schema(crate::standards::v_jfif_1_01::subsets::document::schema::jpg_artifact_schema_descriptor())
+        .formats(formats)
+        .inferences([crate::standards::v_jfif_1_01::subsets::document::schema::inferences::jpg_artifact_inference_descriptor()])
+        .composers(crate::standards::v_jfif_1_01::subsets::baseline::io::io_registry::entries())
+        .subset_validators(declared_subset_validators())
+        .languages(pilot_languages())
+        .document_codec_bare::<JpgSnapshot, JpgMutation>(STDIO_JPG_DOCUMENT_SCHEMA, JPG_ANY_DIALECT)
+        .document_codec_bare::<JpgSnapshot, JpgMutation>(STDIO_JPG_DOCUMENT_SCHEMA, JPG_BASELINE_DIALECT)
+        .try_build()
+}
+
+/// 🛡️ Re-derives the 🧱️baseline subset's `SubsetValidatorEntry` — see `declaration()`'s own doc for
+/// why this calls `subset_validator_entry_of` directly instead of reusing the private cache in
+/// `🧱️baseline/🚪️io`.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn declared_subset_validators() -> &'static [semio_framework_plugin::io::SubsetValidatorEntry] {
+    static ENTRIES: std::sync::OnceLock<Vec<semio_framework_plugin::io::SubsetValidatorEntry>> = std::sync::OnceLock::new();
+    ENTRIES.get_or_init(|| vec![semio_framework_plugin::io::subset_validator_entry_of::<crate::standards::v_jfif_1_01::subsets::baseline::io::JpgBaselineValidator>()]).as_slice()
+}
+
+/// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — moved
+/// here verbatim from `⚙️engine::register_pilot_languages` (same 5-role Document/Ops/Diff/Pack/Spr
+/// shape every stdio artifact uses), leaked to a `&'static` slice since `dsl::passthrough_hooks`
+/// isn't `const fn`, mirroring the `🗒️note`/`🔋️model` exemplars' own helper of the same shape.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
+    static LANGUAGES: std::sync::OnceLock<Vec<semio_framework_dsl::LanguageSpec>> = std::sync::OnceLock::new();
+    LANGUAGES
+        .get_or_init(|| {
+            vec![
+                semio_framework_dsl::LanguageSpec {
+                    id: "stdio.jpg",
+                    extension: Some("jpg"),
+                    role: semio_framework_dsl::LanguageRole::Document,
+                    grammar: Some(crate::standards::v_jfif_1_01::subsets::document::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::standards::v_jfif_1_01::subsets::document::io::text::snapshot::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::standards::v_jfif_1_01::subsets::document::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::standards::v_jfif_1_01::subsets::document::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
+                    hooks: semio_framework_dsl::passthrough_hooks("stdio.jpg"),
+                },
+                semio_framework_dsl::LanguageSpec {
+                    id: "stdio.jpg.op",
+                    extension: None,
+                    role: semio_framework_dsl::LanguageRole::Ops,
+                    grammar: Some(crate::standards::v_jfif_1_01::subsets::document::io::text::mutations::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::standards::v_jfif_1_01::subsets::document::io::text::mutations::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::standards::v_jfif_1_01::subsets::document::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::standards::v_jfif_1_01::subsets::document::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
+                    hooks: semio_framework_dsl::passthrough_hooks("stdio.jpg.op"),
+                },
+                semio_framework_dsl::LanguageSpec {
+                    id: "stdio.jpg.diff",
+                    extension: None,
+                    role: semio_framework_dsl::LanguageRole::Diff,
+                    grammar: Some(crate::standards::v_jfif_1_01::subsets::document::io::text::diff::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::standards::v_jfif_1_01::subsets::document::io::text::diff::COMPONENT_GRAMMAR_PATH),
+                    protocol: None,
+                    protocol_path: None,
+                    hooks: semio_framework_dsl::passthrough_hooks("stdio.jpg.diff"),
+                },
+                semio_framework_dsl::LanguageSpec {
+                    id: "stdio.jpg.pack",
+                    extension: None,
+                    role: semio_framework_dsl::LanguageRole::Pack,
+                    grammar: None,
+                    grammar_path: None,
+                    protocol: Some(crate::standards::v_jfif_1_01::subsets::document::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::standards::v_jfif_1_01::subsets::document::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
+                    hooks: semio_framework_dsl::passthrough_hooks("stdio.jpg.pack"),
+                },
+                semio_framework_dsl::LanguageSpec {
+                    id: "stdio.jpg.spr",
+                    extension: None,
+                    role: semio_framework_dsl::LanguageRole::Spr,
+                    grammar: None,
+                    grammar_path: None,
+                    protocol: Some(crate::standards::v_jfif_1_01::subsets::document::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::standards::v_jfif_1_01::subsets::document::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
+                    hooks: semio_framework_dsl::passthrough_hooks("stdio.jpg.spr"),
+                },
+            ]
+        })
+        .as_slice()
+}
+//#endregion 🔖️Declaration
+}
+//#endregion 🧩️ArtifactItems10
+
+//#region 🧩️ArtifactItems11
+pub mod artifact_items_11 {
+use crate::{ARTIFACT_DEFINITION_SCHEMA};
+use crate::{definition};
+use crate::{assembly};
+use crate::{formats};
+use crate::{native_codecs};
+
+pub fn contribution() -> semio_s_artifact_stdio_contract::ArtifactContribution {
+    semio_s_artifact_stdio_contract::ArtifactContribution { definition_constraint: None, identity: "jpg", schema: ARTIFACT_DEFINITION_SCHEMA, definition, assembly, formats, native_codecs }
+}
+}
+//#endregion 🧩️ArtifactItems11

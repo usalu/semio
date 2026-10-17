@@ -1,12 +1,14 @@
 //! ↩️ Inverse for `RenameNote`.
 use super::RenameNote;
-use crate::schema::mutations::NoteMutation;
 use crate::NoteSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(_payload: &RenameNote, base: &NoteSnapshot) -> Result<Vec<NoteMutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op>(_payload: &RenameNote, base: &NoteSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError>
+where
+    Op: From<crate::standards::v1::subsets::document::schema::mutations::rename_note::RenameNote>,
+{
     Ok((|| {
-    vec![NoteMutation::RenameNote(RenameNote { new_title: base.title.clone() })]
+    vec![Op::from(RenameNote { new_title: base.title.clone() })]
 
     })())
 }

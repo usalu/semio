@@ -1,0 +1,12 @@
+{
+ "name": "c4p47",
+ "crates": [
+  "semio-framework-artifact-workflow-workflow-graph",
+  "semio-framework-os-shell",
+  "semio-framework-os-dsl-tests",
+  "semio-framework-os-kernel-neural-engine",
+  "semio-framework-os-host-codec-abi",
+  "semio-framework-os"
+ ],
+ "note": "CENSUS4-PKG-47: the six owning crates of the seven split files (workflow graph, shell schema, dsl unit, neural engine unit, host codec ABI, plugin host and host unit)"
+}

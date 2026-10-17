@@ -31,13 +31,16 @@ pub fn plan(p: &GltfDeleteScenePayload, base: &GltfSnapshot) -> Result<GltfDiff,
     Ok(diff)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn inverse(p: &GltfDeleteScenePayload, base: &GltfSnapshot) -> Vec<super::GltfMutation> {
+pub fn inverse<Op>(p: &GltfDeleteScenePayload, base: &GltfSnapshot) -> Vec<Op>
+where
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::remove_used_extension::RemoveUsedExtensionMutation>,
+{
     if validate(p, base).is_err() {
         return Vec::new();
     }
-    let mut rows = vec![super::create_scene::mutation(super::create_scene::GltfCreateScenePayload { position: u32::try_from(p.index).unwrap_or(u32::MAX), scene: Some(Box::new(base.document.scenes[p.index].clone())) })];
+    let mut rows = vec![crate::standards::v2_0::subsets::any::schema::mutations::create_scene::mutation(crate::standards::v2_0::subsets::any::schema::mutations::create_scene::GltfCreateScenePayload { position: u32::try_from(p.index).unwrap_or(u32::MAX), scene: Some(Box::new(base.document.scenes[p.index].clone())) })];
     if base.document.scene == Some(p.index) {
-        rows.push(super::bind_default_scene::mutation(super::bind_default_scene::GltfBindDefaultScenePayload { scene: p.index }));
+        rows.push(crate::standards::v2_0::subsets::any::schema::mutations::bind_default_scene::mutation(crate::standards::v2_0::subsets::any::schema::mutations::bind_default_scene::GltfBindDefaultScenePayload { scene: p.index }));
     }
     rows.reverse();
     rows
@@ -53,11 +56,17 @@ pub enum DeleteSceneMutation {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn mutation(payload: GltfDeleteScenePayload) -> super::GltfMutation {
-    super::GltfMutation::DeleteScene(DeleteSceneMutation::Apply(payload))
+pub fn mutation<Op>(payload: GltfDeleteScenePayload) -> Op
+where
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::delete_scene::DeleteSceneMutation>,
+{
+    Op::from(DeleteSceneMutation::Apply(payload))
 }
 
-impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for DeleteSceneMutation {
+impl<Op> protocol::MutationKind<GltfSnapshot, Op> for DeleteSceneMutation
+where
+    Op: protocol::Mutation<GltfSnapshot, Diff = GltfDiff> + From<DeleteSceneMutation>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "scene", kind: "delete-scene", record: "DeletedScene" };
 
     fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<GltfDiff> {
@@ -69,7 +78,7 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for DeleteSceneMu
         }
     }
 
-    fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<super::GltfMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         match self {
             Self::Apply(payload) => Ok(inverse(payload, base)),
         }
@@ -86,14 +95,8 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for DeleteSceneMu
 //#endregion 🧬️DirectMutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🚫️removes-the-af9666/🦀️.rs"]
-mod case_removes_the_af9666;
-#[cfg(test)]
-#[path = "🧪️tests/🔬️middle-row/🦀️.rs"]
-mod case_middle_row;
+
+
 //#endregion 🧪️Tests
 
-#[cfg(test)]
-#[path = "📜️contract/🧪️tests/🔬️unit/🦀️.rs"]
-mod contract;
+

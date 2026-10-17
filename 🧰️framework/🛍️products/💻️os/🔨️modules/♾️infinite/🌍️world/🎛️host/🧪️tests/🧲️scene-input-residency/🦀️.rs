@@ -5,28 +5,25 @@ use semio_framework_os_infinite_world_scene::{reserve_world3d_asset_request, ret
 use semio_framework_os_infinite_world_bridge::sync_world3d_scene_document_lanes;
 use semio_framework_os_infinite_world_interaction::{apply_reference_image_bytes, world3d_catalogue_drop_origin, world3d_end_relocate_drag, world3d_update_catalogue_drop_preview, world3d_update_relocate_drag};
 use semio_framework_os_infinite_world_host::World3dState;
+use semio_framework_test_fixtures::fixture_text;
 use ui_wgpu::wgpu::{Camera3d, CameraProjection3d, OrbitController, Rect, Rgba, Vec3};
 use semio_framework_ui_viewport::{Viewport3dProjectionMode, Viewport3dProjectionOrientation, Viewport3dProjectionSpec};
 use serde_json::json;
 
 /// 📖️ Reads one test input at run time (relative to the package manifest) so it does not count as an embedded compile input.
-fn read_static(path_from_manifest: &str) -> &'static str {
-    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(path_from_manifest);
-    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("test input {}: {error}", path.display())).into_boxed_str())
-}
 
 /// 📖️ Reads several test inputs at run time and joins them into the one text the unsplit sources formed.
 fn read_joined(paths: &[&str]) -> &'static str {
     let mut joined = String::new();
     for path in paths {
-        joined.push_str(read_static(path));
+        joined.push_str(fixture_text!(path));
     }
     Box::leak(joined.into_boxed_str())
 }
 
 #[allow(non_snake_case)]
 fn FIXTURE() -> &'static str {
-    read_static("../../../🧪️tests/🧫️fixtures/🧲️scene-input-residency/🔣️.json")
+    fixture_text!("../../../🧪️tests/🧫️fixtures/🧲️scene-input-residency/🔣️.json")
 }
 
 fn fixture() -> serde_json::Value {

@@ -29,7 +29,6 @@ class StageRuntimeAssetsScript extends BundleScript {
     await withRepositoryArtifactDestinationV1({workspace:this.repoRoot,invocation:this.invocation,storage:store.storage,control:store.control,phaseControl:phase,directory:tree.root},destination=>stageRepositoryArtifacts(destination,tree.owner,new Map(tree.files.map(({name,source})=>[name,join(this.repoRoot,source)]))));
     count+=tree.files.length;
    }
-   console.log(`[DEBUG] Staged ${count} bounded Canvas runtime asset files mode=${mode}`);
   });
  }
 }

@@ -1,4 +1,6 @@
-use super::*;
+use crate::{schema::snapshot::TAG_BITS_PER_SAMPLE, schema::snapshot::TAG_SAMPLES_PER_PIXEL};
+use crate::TiffSnapshot;
+use crate::standards::v6_0::subsets::document::schema::inferences::dimensions::*;
 use crate::schema::snapshot::{TiffFieldType, TiffIfd, TiffTag, TiffValues, TAG_IMAGE_LENGTH, TAG_IMAGE_WIDTH};
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9

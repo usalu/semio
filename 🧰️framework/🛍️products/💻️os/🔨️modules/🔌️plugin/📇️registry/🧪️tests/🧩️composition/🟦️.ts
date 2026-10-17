@@ -7,10 +7,12 @@ import { describe, expect, test } from "bun:test";
 import Ajv from "ajv";
 import fixture from "../🧫️fixtures/🧩️composition/🔣️.json";
 import schema from "../../🧬️schema/🔣️.json";
-import { admitPluginCatalogV1, pluginCatalogV1, type PluginCatalogAdmissionV1 } from "../../🟦️.ts";
+import { admitPluginCatalogV1, pluginCatalogV1 } from "../../🟦️.ts";
+import type { PluginCatalogAdmissionV1 } from "@semio-tech/framework/plugin-catalog";
 import { artifactKindActivationOwner } from "../../../../../../../🔨️modules/🎠️kernel/📚️plugin-catalog/🟦️.ts";
 import { resolvePlaygroundBoot, resolvePluginHostConfig } from "../../../../../../../🔨️modules/🎠️kernel/🎮️playground-boot/🟦️.ts";
 import { extensionRegistryFromCatalog } from "../../../../../../../🔨️modules/🎠️kernel/🔌️plugin-source/🟦️.ts";
+const admissionPort = { admit: admitPluginCatalogV1, catalogOf: pluginCatalogV1 };
 const authority = (changes: Partial<PluginCatalogAdmissionV1> = {}): PluginCatalogAdmissionV1 => ({ maxBytes: 2097152, maxRows: 128, maxEdges: 4096, maxWork: 65536, deadlineMs: 30000, now: () => 0, cancelled: () => false, progress: () => {}, ...changes });
 const validate = new Ajv({ strict: false }).compile(schema);
 const synthetic = () => structuredClone(fixture.cases[1]!.input);
@@ -30,7 +32,7 @@ describe("injected catalog portable laws", () => {
   });
   test("all receiving metadata and exact module address survive composition", () => {
     const catalog = pluginCatalogV1(admitPluginCatalogV1(synthetic(), authority()));
-    expect(resolvePlaygroundBoot(catalog, "canvas").plugins.map(row => row.pluginId)).toEqual(fixture.cases[1]!.expectedPlugins);
+    expect(resolvePlaygroundBoot(catalog, "canvas").plugins.map(row => row.pluginId)).toEqual(fixture.cases[1]!.expectedPlugins!);
     expect(resolvePlaygroundBoot(catalog, "canvas").defaultAppId).toBe("canvas");
     expect(resolvePluginHostConfig(catalog, "studio")?.hostAppId).toBe("studio");
     expect(resolvePluginHostConfig(catalog, "canvas")).toBeUndefined();
@@ -85,18 +87,18 @@ describe("catalog worker receiving laws", () => {
 
 describe("real React catalog configuration laws", () => {
   test("empty and simultaneous synthetic mounts use their own admitted inventories", () => {
-    const idle = resolveFrameworkOsCatalogConfigurationV1(fixture.cases[0]!.input, undefined, authority());
+    const idle = resolveFrameworkOsCatalogConfigurationV1(admissionPort, fixture.cases[0]!.input, undefined, authority());
     expect(idle.idle).toBe(true);
     expect(idle.boot.plugins).toEqual([]);
-    const one = resolveFrameworkOsCatalogConfigurationV1(synthetic(), "canvas", authority());
+    const one = resolveFrameworkOsCatalogConfigurationV1(admissionPort, synthetic(), "canvas", authority());
     const changed = synthetic(); changed.targets[0]!.moduleUrl = "https://example.test/second.js";
-    const two = resolveFrameworkOsCatalogConfigurationV1(changed, "canvas", authority());
+    const two = resolveFrameworkOsCatalogConfigurationV1(admissionPort, changed, "canvas", authority());
     expect(one.catalog.moduleUrl("custom.core")).not.toBe(two.catalog.moduleUrl("custom.core"));
     const graph = new graphlib.Graph();
     for (const row of synthetic().targets) graph.setNode(row.pluginId);
     for (const row of synthetic().targets) for (const dependency of row.dependsOn) graph.setEdge(dependency, row.pluginId);
     expect(one.boot.plugins.map(row => row.pluginId)).toEqual(graphlib.alg.topsort(graph));
-    expect(() => resolveFrameworkOsCatalogConfigurationV1(fixture.cases[0]!.input, "absent", authority())).toThrow();
+    expect(() => resolveFrameworkOsCatalogConfigurationV1(admissionPort, fixture.cases[0]!.input, "absent", authority())).toThrow();
   });
 });
 
@@ -117,7 +119,6 @@ test("canonical injected catalog policy owns seven current exports",async()=>{
  const {existsSync}=await import("node:fs"),{dirname,join}=await import("node:path");let root=import.meta.dir;while(!existsSync(join(root,"🧰️framework")))root=dirname(root);
  expect(schema.$id).toBe("https://json.schemas.assets.semio-tech.com/os/plugin/registry/component.json");expect(schema.title).toBe("InjectedPluginCatalogV1");
  expect(Object.keys(schema.$defs).sort()).toEqual(["PluginCatalogIdV1","PluginCatalogTextV1","PluginCatalogTextsV1","PluginCatalogTargetV1","PluginCatalogHostV1","PluginCatalogPlaygroundV1"].sort());
- console.log("[DEBUG] actual injected canonical catalog root and six helper identities admitted");
 });
 
 test("actual injected catalog scope preserves all original export and diagnostic laws",async()=>{
@@ -125,7 +126,6 @@ test("actual injected catalog scope preserves all original export and diagnostic
  expect(schema.$id).toBe("https://json.schemas.assets.semio-tech.com/os/plugin/registry/component.json");expect(schema.title).toBe("InjectedPluginCatalogV1");
  const {inventorySchemaScopes}=await import("../../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts"),inventory=inventorySchemaScopes(root),scope=inventory.catalog.scopes["os.plugin.registry"],exports=["InjectedPluginCatalogV1","PluginCatalogIdV1","PluginCatalogTextV1","PluginCatalogTextsV1","PluginCatalogTargetV1","PluginCatalogHostV1","PluginCatalogPlaygroundV1"];
  expect(Object.keys(scope.exports).sort()).toEqual(exports.sort());expect(inventory.diagnostics.filter((row:any)=>row.path===scope.path||row.path.startsWith(scope.path+"/")&&!row.path.slice(scope.path.length+1).includes("/🧬️schema/"))).toEqual([]);
- console.log("[DEBUG] actual injected catalog canonical scope os.plugin.registry exports7 owned diagnostics0");
 }, 300000);
 
 import { devPlaygroundSessionSchema as publicationSchema, devPlaygroundSessionFixture as publicationCases } from "../../../../🧑‍💻dev/🧪️tests/🧫️fixtures/🟦️.ts";
@@ -152,9 +152,8 @@ for (const row of publicationCases.cases) test(`explicit session publication ${r
     expect(JSON.parse(actual.stdout)).toEqual(row.arguments);
     expect(parseArgv([...args], { configuration: { "parse-numbers": false } })._).toEqual(JSON.parse(actual.stdout));
   }
-  const row = source.default.receiving, route = generatorPreviewExecution({ ownership: "owned", ownerPath: "compiler", target: "@neutral/compiler:generate", previewTarget: "@neutral/compiler:preview-browser", previewArguments: row.arguments.slice(1) }, { executor: "nx:run-commands", options: { cwd: "compiler", command: row.command } });
+  const row = source.default.receiving, route = generatorPreviewExecution({ ownership: "owned", ownerPath: "compiler", target: "@neutral/compiler:generate", previewTarget: "@neutral/compiler:preview-browser", previewArguments: row.arguments.slice(1) }, { executor: "repo:script", options: { cwd: "compiler", command: row.command } });
   expect(route.args).toEqual(row.arguments);
-  console.log("[DEBUG] literal preview argv schema/Ajv/yargs/actual Bun child byte identity and explicit empty receiver accepted");
  });
 
  test("preview shell metadata has a finite literal grammar with an independent lexer", async () => {
@@ -164,10 +163,9 @@ for (const row of publicationCases.cases) test(`explicit session publication ${r
   for (const row of source.literalCommands) {
     if (!row.valid) { expect(() => parseGeneratorPreviewLiteralCommandV1(row.command)).toThrow(); continue; }
     expect(lexical(row.command)).toBe(true);
-    expect(parseGeneratorPreviewLiteralCommandV1(row.command)).toEqual(row.arguments);
-    expect(split(row.command)).toEqual(row.arguments);
+    expect(parseGeneratorPreviewLiteralCommandV1(row.command)).toEqual(row.arguments!);
+    expect(split(row.command)).toEqual(row.arguments!);
   }
-  console.log("[DEBUG] preview strict literal command fixture and independent string-argv token identity accepted; expansion syntax refused");
  });
 
  test("declared preview progress preserves strict artifact output and bounded first-party event custody", async () => {
@@ -178,22 +176,22 @@ for (const row of publicationCases.cases) test(`explicit session publication ${r
   for (const row of source.cases) {
     const stderr = row.events.map(event => `[DEBUG] ${JSON.stringify(event)}\n`).join("");
     if (!row.valid) { expect(() => progress.receiveGeneratorPreviewProgressV1(stderr, admitted, control)).toThrow(); continue; }
-    expect(row.events.every(eventOracle)).toBe(true);
+    expect(row.events.every((event) => Boolean(eventOracle(event)))).toBe(true);
     const events = progress.receiveGeneratorPreviewProgressV1(stderr, admitted, control);
-    expect(events).toEqual(row.events);
-    expect(stderr.split("\n").filter(Boolean).map(line => jsonc.parse(line.slice(8)))).toEqual(events);
+    expect(row.events).toEqual([...events]);
+    expect(stderr.split("\n").filter(Boolean).map(line => jsonc.parse(line.slice(8)))).toEqual([...events]);
     expect(events.map(event => progress.serializeGeneratorPreviewProgressV1(event, admitted)).join("")).toBe(stderr);
   }
   for (const row of source.policyCases) {
     const candidate = { ...source.policy, ...row.changes };
     expect(oracle(candidate), row.id).toBe(row.valid);
-    if (row.valid) expect(progress.parseGeneratorPreviewProgressPolicyV1(candidate)).toEqual(candidate);
+    if (row.valid) expect(candidate).toEqual(progress.parseGeneratorPreviewProgressPolicyV1(candidate));
     else expect(() => progress.parseGeneratorPreviewProgressPolicyV1(candidate)).toThrow();
   }
   for (const row of source.capacityCases) {
     const policy = progress.parseGeneratorPreviewProgressPolicyV1({ ...source.policy, ...row.changes }), events = source.cases.find(candidate => candidate.id === row.caseId)!.events, stderr = events.map(event => `[DEBUG] ${JSON.stringify(event)}\n`).join("");
-    expect(events.every(eventOracle)).toBe(true);
-    if (row.valid) expect(progress.receiveGeneratorPreviewProgressV1(stderr, policy, control)).toEqual(events);
+    expect(events.every((event) => Boolean(eventOracle(event)))).toBe(true);
+    if (row.valid) expect(events).toEqual([...progress.receiveGeneratorPreviewProgressV1(stderr, policy, control)]);
     else expect(() => progress.receiveGeneratorPreviewProgressV1(stderr, policy, control)).toThrow();
   }
   for (const stderr of source.foreignStderr) expect(() => progress.receiveGeneratorPreviewProgressV1(stderr, admitted, control)).toThrow();
@@ -201,5 +199,4 @@ for (const row of publicationCases.cases) test(`explicit session publication ${r
   expect(progress.receiveGeneratorPreviewProgressV1("", undefined, control)).toEqual([]);
   expect(() => progress.receiveGeneratorPreviewProgressV1("", admitted, { ...control, remainingMs: () => 0 })).toThrow();
   controller.abort();expect(() => progress.receiveGeneratorPreviewProgressV1("", admitted, control)).toThrow();
-  console.log("[DEBUG] explicit bounded preview progress Ajv/jsonc identity and malformed/undeclared/cancel/deadline refusals accepted");
  });

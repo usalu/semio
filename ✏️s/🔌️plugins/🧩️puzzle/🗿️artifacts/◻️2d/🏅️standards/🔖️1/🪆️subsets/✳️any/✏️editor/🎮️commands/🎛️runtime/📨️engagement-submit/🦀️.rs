@@ -1,7 +1,8 @@
 //! 🤝️ `engagement-submit` command.
 
 use crate::editor::puzzle2d::modes::edit::tools::fill;
-use crate::editor::puzzle2d::{puzzle2d_selection_pivot, Puzzle2dActionCtx, Puzzle2dSelectionMotion, Puzzle2dSelectionRecord};
+use crate::editor::puzzle2d::modes::edit::windows::overview::utilities::select::{puzzle2d_selection_pivot, Puzzle2dSelectionMotion, Puzzle2dSelectionRecord};
+use crate::editor::puzzle2d::interaction::Puzzle2dActionCtx;
 use semio_framework_plugin::kernel::Effect;
 use semio_framework_pack_json::Value;
 
@@ -87,7 +88,5 @@ pub fn engagement_submit(ctx: &mut Puzzle2dActionCtx<'_>, args: Option<&Value>) 
 }
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

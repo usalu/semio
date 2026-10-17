@@ -11,14 +11,14 @@ use semio_s_artifact_stdio_zip::opc::{OpcRelationship, OpcTargetMode};
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 pub struct SetRelationship {
-    pub(crate) owner: String,
-    pub(crate) id: String,
-    pub(crate) rel_type: String,
-    pub(crate) target: String,
+    pub owner: String,
+    pub id: String,
+    pub rel_type: String,
+    pub target: String,
     #[value(default)]
-    pub(crate) external: bool,
+    pub external: bool,
     #[value(default, skip_serializing_if = "Option::is_none")]
-    pub(crate) index: Option<usize>,
+    pub index: Option<usize>,
 }
 
 impl SetRelationship {

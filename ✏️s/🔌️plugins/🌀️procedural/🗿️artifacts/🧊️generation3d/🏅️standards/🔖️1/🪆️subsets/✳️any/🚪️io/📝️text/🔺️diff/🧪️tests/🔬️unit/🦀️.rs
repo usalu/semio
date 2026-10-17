@@ -1,3 +1,4 @@
+use semio_framework_test_fixtures::fixture_text;
 use semio_s_artifact_procedural_3d_model::diff::Generation3dDiff;
 use semio_s_artifact_procedural_3d_model::diff::Generation3dDiffRead;
 use semio_framework_value::{FromValue, ToValue};
@@ -5,7 +6,7 @@ use semio_framework_value::{FromValue, ToValue};
 /// 🧫️ Original sparse diff text/binary records preserve complete field values against serde_json.
 #[test]
 fn generation3d_original_diff_record_preserves_sparse_domain_fields_and_serde_oracle() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../🔺️diff/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     assert_eq!(fixture["contract"]["fieldIds"], serde_json::json!({"schema":0,"camera":1,"widgets":2,"synapses":3,"layout":4,"generations":5,"selectedGeneration":6,"previewText":7}));
     for case in fixture["cases"].as_array().unwrap() {
         let source = Generation3dDiffRead::new(semio_framework_pack_json::from_json_str(&case["value"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap());
@@ -23,7 +24,6 @@ fn generation3d_original_diff_record_preserves_sparse_domain_fields_and_serde_or
             assert_eq!(record.fields.contains_key(&id), !case["value"][key].is_null());
         }
         semio_framework_dsl_record::native_encoding::retire_field(semio_framework_dsl_record::FieldValue::Record(record));
-        eprintln!("[DEBUG] original generation3d diff record case={} exactSparseFields=true textBinary=true independentSerdeJson=true", case["id"]);
     }
     assert!(Generation3dDiff::from_value(semio_framework_value::DslValue::Object(vec![("widgets".into(), semio_framework_value::DslValue::String("wrong field shape".into()))])).is_err());
 }

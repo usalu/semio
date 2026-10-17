@@ -37,9 +37,7 @@ pub fn decode_op(bytes: &[u8]) -> Result<Puzzle2dMutation, protocol::ProtocolErr
 //#endregion 🔖️Store
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
 
 //#region 🔒️WireFormatGuard

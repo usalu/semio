@@ -7,7 +7,7 @@ use protocol::value::ToValue;
 
 #[test]
 fn sqlite_snapshot_native_child_metadata_owns_literal_fields_under_both_native_controls() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🏭️schema/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = crate::fixture_json(file!(), "🧫️fixtures/🏭️schema/🔣️.json");
     let maximum = fixture["maximumBytes"].as_u64().unwrap() as usize;
     let tiny = fixture["tinyBytes"].as_u64().unwrap() as usize;
     let semio_framework_dsl_record::Shape::Record(producer) = <ArtifactChild<()> as DslField>::shape() else { panic!("declared child record") };
@@ -36,7 +36,7 @@ fn sqlite_snapshot_native_child_metadata_owns_literal_fields_under_both_native_c
 }
 
 fn fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap()
+    crate::fixture_json(file!(), "🧫️fixtures/🔣️.json")
 }
 fn child(value: &serde_json::Value) -> ArtifactChild<()> {
     let t = &value["target"];

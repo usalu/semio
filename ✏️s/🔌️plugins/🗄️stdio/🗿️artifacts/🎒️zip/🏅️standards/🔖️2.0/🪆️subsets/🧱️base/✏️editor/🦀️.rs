@@ -259,3 +259,144 @@ pub fn create_zip_any_editor() -> semio_framework_plugin::AppDefinition {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🧩️ArtifactItems9
+pub mod artifact_items_9 {
+use crate::{definition};
+use crate::{formats};
+use crate::{STDIO_ZIP_DOCUMENT_SCHEMA};
+pub use crate::schema::mutations::ZipMutation;
+pub use crate::schema::snapshot::ZipSnapshot;
+
+//#region 🔖️Declaration
+/// 🔖️ This artifact's declaration (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W6, g2) —
+/// replaces the old side-effecting `crate::engine::register()`. Mirrors `🔋️energy`'s
+/// `s.model` exemplar: headless library artifact, zero `ArtifactApp`s, so `.document_codec_bare`
+/// stands in for the old `store::os_store::codec_registry::register_document_codec(store::artifact_codec::<ZipSnapshot,
+/// ZipMutation>(...))` call. `.composers(...)` reaches the subset IO module's own `io_registry`
+/// (the former `⚙️engine`'s `io_registry`, dissolved into `standards::v2_0::subsets::any::io` per
+/// ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES), whose `entries()` already
+/// aggregates BOTH the `🧱️base` and `🌐️iso21320` `ComposerEntry` rows — NOT this file's own
+/// shadowing `io_registry` below, whose `entries()` returns `&'static [&'static ComposerEntry]`
+/// (references) and would silently rebind under a bare call (this ticket's "SILENT REBIND" hazard).
+/// `.subset_validators(...)` is new here: the old `register()`'s
+/// `crate::standards::v2_0::subsets::iso21320::io::register()` call
+/// (`register_subset_validator(validator_entry())`) is expressed as data by re-deriving the same
+/// `SubsetValidatorEntry` via `subset_validator_entry_of::<ZipIso21320Validator>()` — the identical
+/// side-effect-free constructor that file's own (module-private) `validator_entry()` calls, so no
+/// visibility widening into `🚪️io/` was needed.
+///
+/// **NOT covered by any field**: nothing — zip's `register()` never called `register_schema_spec`
+/// in the first place (`ZipSnapshot`/`ZipDiff` are hand-rolled, no derivable `RecordSpec` — see
+/// the deleted `register_pilot_languages`' own doc comment), so this artifact converts cleanly with
+/// zero residual `.setup()` calls.
+/// 🧩️ Binds this executable root to its sole schema-owned definition.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn assembly() -> Result<semio_s_artifact_stdio_contract::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
+    semio_s_artifact_stdio_contract::runtime_assembly("zip", definition()?, declaration)
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+    let formats = formats()?;
+    semio_framework_plugin::ArtifactDeclaration::builder(definition)
+        .schema(crate::schema::zip_artifact_schema_descriptor())
+        .formats(formats)
+        .inferences([crate::schema::inferences::zip_artifact_inference_descriptor()])
+        .composers(crate::standards::v2_0::subsets::iso21320::io::io_registry::entries())
+        .subset_validators(zip_subset_validators())
+        .languages(pilot_languages())
+        .document_codec_bare::<ZipSnapshot, ZipMutation>(STDIO_ZIP_DOCUMENT_SCHEMA, semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.zip", standard: semio_framework_artifact_reference::StandardId("2.0"), subset: semio_framework_artifact_reference::SubsetId("*") })
+        .document_codec_bare::<ZipSnapshot, ZipMutation>(STDIO_ZIP_DOCUMENT_SCHEMA, semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.zip", standard: semio_framework_artifact_reference::StandardId("2.0"), subset: semio_framework_artifact_reference::SubsetId("iso21320") })
+        .try_build()
+}
+
+/// 🛡️ The `🌐️iso21320` subset's `SubsetValidatorEntry`, re-derived (not moved) from the same
+/// side-effect-free `subset_validator_entry_of::<ZipIso21320Validator>()` constructor
+/// `🚪️io/🦀️.rs`'s own (module-private) `validator_entry()` calls.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn zip_subset_validators() -> &'static [semio_framework_plugin::io::SubsetValidatorEntry] {
+    static ENTRIES: std::sync::OnceLock<Vec<semio_framework_plugin::io::SubsetValidatorEntry>> = std::sync::OnceLock::new();
+    ENTRIES.get_or_init(|| vec![semio_framework_plugin::io::subset_validator_entry_of::<crate::standards::v2_0::subsets::iso21320::io::ZipIso21320Validator>()]).as_slice()
+}
+
+/// 📌️ Handcrafted facet grammars (text) and protocols (binary), copied verbatim (five
+/// `LanguageSpec` rows) from the former `crate::engine::register_pilot_languages`'s
+/// own `dsl::register_language(...)` call bodies.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
+    static LANGUAGES: std::sync::OnceLock<Vec<semio_framework_dsl::LanguageSpec>> = std::sync::OnceLock::new();
+    LANGUAGES
+        .get_or_init(|| {
+            vec![
+                semio_framework_dsl::LanguageSpec {
+                    id: "stdio.zip",
+                    extension: Some("zip"),
+                    role: semio_framework_dsl::LanguageRole::Document,
+                    grammar: Some(crate::standards::v2_0::subsets::base::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::standards::v2_0::subsets::base::io::text::snapshot::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::standards::v2_0::subsets::base::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::standards::v2_0::subsets::base::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
+                    hooks: semio_framework_dsl::passthrough_hooks("stdio.zip"),
+                },
+                semio_framework_dsl::LanguageSpec {
+                    id: "stdio.zip.op",
+                    extension: None,
+                    role: semio_framework_dsl::LanguageRole::Ops,
+                    grammar: Some(crate::standards::v2_0::subsets::base::io::text::mutations::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::standards::v2_0::subsets::base::io::text::mutations::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::standards::v2_0::subsets::base::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::standards::v2_0::subsets::base::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
+                    hooks: semio_framework_dsl::passthrough_hooks("stdio.zip.op"),
+                },
+                semio_framework_dsl::LanguageSpec {
+                    id: "stdio.zip.diff",
+                    extension: None,
+                    role: semio_framework_dsl::LanguageRole::Diff,
+                    grammar: Some(crate::standards::v2_0::subsets::base::io::text::diff::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::standards::v2_0::subsets::base::io::text::diff::COMPONENT_GRAMMAR_PATH),
+                    protocol: None,
+                    protocol_path: None,
+                    hooks: semio_framework_dsl::passthrough_hooks("stdio.zip.diff"),
+                },
+                semio_framework_dsl::LanguageSpec {
+                    id: "stdio.zip.pack",
+                    extension: None,
+                    role: semio_framework_dsl::LanguageRole::Pack,
+                    grammar: None,
+                    grammar_path: None,
+                    protocol: Some(crate::standards::v2_0::subsets::base::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::standards::v2_0::subsets::base::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
+                    hooks: semio_framework_dsl::passthrough_hooks("stdio.zip.pack"),
+                },
+                semio_framework_dsl::LanguageSpec {
+                    id: "stdio.zip.spr",
+                    extension: None,
+                    role: semio_framework_dsl::LanguageRole::Spr,
+                    grammar: None,
+                    grammar_path: None,
+                    protocol: Some(crate::standards::v2_0::subsets::base::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::standards::v2_0::subsets::base::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
+                    hooks: semio_framework_dsl::passthrough_hooks("stdio.zip.spr"),
+                },
+            ]
+        })
+        .as_slice()
+}
+//#endregion 🔖️Declaration
+}
+//#endregion 🧩️ArtifactItems9
+
+//#region 🧩️ArtifactItems10
+pub mod artifact_items_10 {
+use crate::{ARTIFACT_DEFINITION_SCHEMA};
+use crate::{definition};
+use crate::{assembly};
+use crate::{formats};
+use crate::{native_codecs};
+
+pub fn contribution() -> semio_s_artifact_stdio_contract::ArtifactContribution {
+    semio_s_artifact_stdio_contract::ArtifactContribution { definition_constraint: None, identity: "zip", schema: ARTIFACT_DEFINITION_SCHEMA, definition, assembly, formats, native_codecs }
+}
+}
+//#endregion 🧩️ArtifactItems10

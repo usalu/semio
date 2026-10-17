@@ -16,7 +16,6 @@ extern crate semio_framework_schema as framework_schema;
 #[cfg(test)]
 use pack::snapshot::ArtifactDsl;
 
-
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
@@ -97,238 +96,63 @@ pub mod standards {
             pub mod any {
                 #[path = "."]
                 pub mod schema {
-                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs"]
-                    mod component;
-                    pub use component::*;
-                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧱️kernel/🦀️.rs"]
-                    pub mod kernel;
+                    pub use semio_s_artifact_architect_program_schema::standards::v1::subsets::any::schema::*;
+
+                    pub use semio_s_artifact_architect_program_tests::standards::v1::subsets::any::schema::kernel;
                     #[path = "."]
                     pub mod registers {
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🗄️registers/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🗄️registers/🗂️catalog/🦀️.rs"]
-                        pub mod catalog;
+                        pub use semio_s_artifact_architect_program_registers::standards::v1::subsets::any::schema::registers::*;
+
+                        pub use semio_s_artifact_architect_program_catalog::standards::v1::subsets::any::schema::registers::catalog;
                         pub use catalog::{RegisterKey, RegisterLabel, RegisterRow};
                     }
-                    #[path = "."]
-                    pub mod snapshot {
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                    #[path = "."]
-                    pub mod inferences {
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                        #[path = "."]
-                        pub mod topology {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧭topology/🦀️.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                    }
-                    #[path = "."]
-                    pub mod diff {
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
+                    pub use semio_s_artifact_architect_program_snapshot::standards::v1::subsets::any::schema::snapshot;
+                    pub use semio_s_artifact_architect_program_inferences::standards::v1::subsets::any::schema::inferences;
+                    pub use semio_s_artifact_architect_program_inferences::standards::v1::subsets::any::schema::diff;
                     #[path = "."]
                     pub mod mutations {
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                        #[path = "."]
-                        pub mod create_register_row {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📋️register-row/🌱️create/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📋️register-row/🌱️create/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📋️register-row/🌱️create/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod delete_register_row {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📋️register-row/🗑️delete/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📋️register-row/🗑️delete/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📋️register-row/🗑️delete/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod rename_register_row {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📋️register-row/🏷️rename/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📋️register-row/🏷️rename/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📋️register-row/🏷️rename/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod replace_register_row {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📋️register-row/♻️replace/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📋️register-row/♻️replace/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📋️register-row/♻️replace/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod rename_governance {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏛️governance/🏷️rename/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏛️governance/🏷️rename/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏛️governance/🏷️rename/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod replace_governance {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏛️governance/♻️replace/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏛️governance/♻️replace/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏛️governance/♻️replace/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod rename_meta {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️meta/🏷️rename/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️meta/🏷️rename/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️meta/🏷️rename/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod replace_meta {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️meta/♻️replace/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️meta/♻️replace/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️meta/♻️replace/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod rename_project {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏙️project/🏷️rename/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏙️project/🏷️rename/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏙️project/🏷️rename/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod replace_project {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏙️project/♻️replace/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏙️project/♻️replace/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏙️project/♻️replace/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod connect_adjacency {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧲️adjacency/🧲️connect/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧲️adjacency/🧲️connect/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧲️adjacency/🧲️connect/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod connect_trace {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧵️trace/🧵️connect/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧵️trace/🧵️connect/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧵️trace/🧵️connect/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod disconnect_trace {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧵️trace/✂️disconnect/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧵️trace/✂️disconnect/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧵️trace/✂️disconnect/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod disconnect_adjacency {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧲️adjacency/🫷️disconnect/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧲️adjacency/🫷️disconnect/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧲️adjacency/🫷️disconnect/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                        }
+                        pub use semio_s_artifact_architect_program_mutations::standards::v1::subsets::any::schema::mutations::*;
+
+                        pub use semio_s_artifact_architect_program_schema::standards::v1::subsets::any::schema::mutations::create_register_row;
+                        pub use semio_s_artifact_architect_program_schema::standards::v1::subsets::any::schema::mutations::delete_register_row;
+                        pub use semio_s_artifact_architect_program_schema::standards::v1::subsets::any::schema::mutations::rename_register_row;
+                        pub use semio_s_artifact_architect_program_schema::standards::v1::subsets::any::schema::mutations::replace_register_row;
+                        pub use semio_s_artifact_architect_program_catalog::standards::v1::subsets::any::schema::mutations::rename_governance;
+                        pub use semio_s_artifact_architect_program_mut_any::standards::v1::subsets::any::schema::mutations::replace_governance;
+                        pub use semio_s_artifact_architect_program_mut_any::standards::v1::subsets::any::schema::mutations::rename_meta;
+                        pub use semio_s_artifact_architect_program_mut_any::standards::v1::subsets::any::schema::mutations::replace_meta;
+                        pub use semio_s_artifact_architect_program_mut_any::standards::v1::subsets::any::schema::mutations::rename_project;
+                        pub use semio_s_artifact_architect_program_mut_any::standards::v1::subsets::any::schema::mutations::replace_project;
+                        pub use semio_s_artifact_architect_program_mut_any::standards::v1::subsets::any::schema::mutations::connect_adjacency;
+                        pub use semio_s_artifact_architect_program_mut_any::standards::v1::subsets::any::schema::mutations::connect_trace;
+                        pub use semio_s_artifact_architect_program_mut_any::standards::v1::subsets::any::schema::mutations::disconnect_trace;
+                        pub use semio_s_artifact_architect_program_mut_any::standards::v1::subsets::any::schema::mutations::disconnect_adjacency;
                     }
                 }
                 #[path = "."]
                 pub mod io {
-                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs"]
-                    mod component;
-                    pub use component::*;
+                    pub use semio_s_artifact_architect_program_panels::standards::v1::subsets::any::io::*;
+pub mod binary {
+    pub use semio_s_artifact_architect_program_tests::standards::v1::subsets::any::io::binary::*;
+    pub use semio_s_artifact_architect_program_catalog::standards::v1::subsets::any::io::binary::diff;
+    pub use semio_s_artifact_architect_program_tests_2::standards::v1::subsets::any::io::binary::inferences;
+    pub use semio_s_artifact_architect_program_mutations::standards::v1::subsets::any::io::binary::mutations;
+    pub use semio_s_artifact_architect_program_snapshot::standards::v1::subsets::any::io::binary::snapshot;
+}
+pub mod sqlite {
+    pub use semio_s_artifact_architect_program_tests_2::standards::v1::subsets::any::io::sqlite::*;
+    pub use semio_s_artifact_architect_program_snapshot::standards::v1::subsets::any::io::sqlite::snapshot;
+}
+
                     #[path = "."]
                     pub mod import {
                         #[path = "."]
                         pub mod deserializers {
                             #[path = "."]
                             pub mod artifacts {
-                                #[path = "."]
-                                pub mod txt {
-                                    #[path = "."]
-                                    pub mod v_utf_8 {
-                                        #[path = "."]
-                                        pub mod any {
-                                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔤️txt/🔖️utf-8/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
-                                #[path = "."]
-                                pub mod csv {
-                                    #[path = "."]
-                                    pub mod v_rfc4180 {
-                                        #[path = "."]
-                                        pub mod any {
-                                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📊️csv/🔖️rfc4180/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
-                                #[path = "."]
-                                pub mod json {
-                                    #[path = "."]
-                                    pub mod v_rfc8259 {
-                                        #[path = "."]
-                                        pub mod any {
-                                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
+                                pub use semio_s_artifact_architect_program_snapshot::standards::v1::subsets::any::io::import::deserializers::artifacts::txt;
+                                pub use semio_s_artifact_architect_program_tests_exchange::standards::v1::subsets::any::io::import::deserializers::artifacts::csv;
+                                pub use semio_s_artifact_architect_program_inferences::standards::v1::subsets::any::io::import::deserializers::artifacts::json;
                             }
                         }
                     }
@@ -338,78 +162,12 @@ pub mod standards {
                         pub mod serializers {
                             #[path = "."]
                             pub mod artifacts {
-                                #[path = "."]
-                                pub mod zip {
-                                    #[path = "."]
-                                    pub mod v2_0 {
-                                        #[path = "."]
-                                        pub mod any {
-                                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎒️zip/🔖️2.0/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
-                                #[path = "."]
-                                pub mod txt {
-                                    #[path = "."]
-                                    pub mod v_utf_8 {
-                                        #[path = "."]
-                                        pub mod any {
-                                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🔤️txt/🔖️utf-8/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
-                                #[path = "."]
-                                pub mod csv {
-                                    #[path = "."]
-                                    pub mod v_rfc4180 {
-                                        #[path = "."]
-                                        pub mod any {
-                                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📊️csv/🔖️rfc4180/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
-                                #[path = "."]
-                                pub mod tsv {
-                                    #[path = "."]
-                                    pub mod v_iana {
-                                        #[path = "."]
-                                        pub mod any {
-                                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📑️tsv/🔖️iana/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
-                                #[path = "."]
-                                pub mod xlsx {
-                                    #[path = "."]
-                                    pub mod v_ecma_376 {
-                                        #[path = "."]
-                                        pub mod any {
-                                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📕️xlsx/🔖️ecma-376/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
-                                #[path = "."]
-                                pub mod json {
-                                    #[path = "."]
-                                    pub mod v_rfc8259 {
-                                        #[path = "."]
-                                        pub mod any {
-                                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
+                                pub use semio_s_artifact_architect_program_panels::standards::v1::subsets::any::io::export::serializers::artifacts::zip;
+                                pub use semio_s_artifact_architect_program_snapshot::standards::v1::subsets::any::io::export::serializers::artifacts::txt;
+                                pub use semio_s_artifact_architect_program_tests_exchange::standards::v1::subsets::any::io::export::serializers::artifacts::csv;
+                                pub use semio_s_artifact_architect_program_tests_exchange::standards::v1::subsets::any::io::export::serializers::artifacts::tsv;
+                                pub use semio_s_artifact_architect_program_panels::standards::v1::subsets::any::io::export::serializers::artifacts::xlsx;
+                                pub use semio_s_artifact_architect_program_inferences::standards::v1::subsets::any::io::export::serializers::artifacts::json;
                             }
                         }
                     }
@@ -419,108 +177,80 @@ pub mod standards {
     }
 }
 
-#[path = "."]
-pub mod examples {
-    #[path = "."]
-    pub mod demo {
-        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️.rs"]
-        mod component;
-        pub use component::*;
-    }
-}
+pub use semio_s_artifact_architect_program_tests_2::examples;
 
 #[path = "."]
 pub mod editor {
     #[path = "."]
     pub mod architect {
-        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs"]
-        mod component;
-        pub use component::*;
+        pub use semio_s_artifact_architect_program_architect::editor::architect::*;
+pub use semio_s_artifact_architect_program_tests_2::editor::architect::demo_session;
 
         #[path = "."]
         pub mod config {
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️.rs"]
-            mod component;
-            pub use component::*;
+            pub use semio_s_artifact_architect_program_config::editor::architect::config::*;
+pub mod io {
+    pub use semio_s_artifact_architect_program_tests_2::editor::architect::config::io::*;
+    pub mod binary {
+        pub use semio_s_artifact_architect_program_tests::editor::architect::config::io::binary::*;
+        pub use semio_s_artifact_architect_program_config::editor::architect::config::io::binary::mutations;
+    }
+    pub mod text {
+        pub use semio_s_artifact_architect_program_tests::editor::architect::config::io::text::*;
+        pub use semio_s_artifact_architect_program_config::editor::architect::config::io::text::mutations;
+    }
+}
 
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🦀️.rs"]
-            pub mod schema;
+            pub use semio_s_artifact_architect_program_tests_2::editor::architect::config::schema;
         }
 
         #[path = "."]
         pub mod presence {
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🦀️.rs"]
-            mod component;
-            pub use component::*;
+            pub use semio_s_artifact_architect_program_presence::editor::architect::presence::*;
+pub mod io {
+    pub use semio_s_artifact_architect_program_tests_2::editor::architect::presence::io::*;
+    pub mod binary {
+        pub use semio_s_artifact_architect_program_tests::editor::architect::presence::io::binary::*;
+        pub use semio_s_artifact_architect_program_presence::editor::architect::presence::io::binary::mutations;
+    }
+    pub mod text {
+        pub use semio_s_artifact_architect_program_tests::editor::architect::presence::io::text::*;
+        pub use semio_s_artifact_architect_program_presence::editor::architect::presence::io::text::mutations;
+    }
+}
 
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema/🦀️.rs"]
-            pub mod schema;
+            pub use semio_s_artifact_architect_program_registers::editor::architect::presence::schema;
         }
-        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗂️catalog/🦀️.rs"]
-        pub mod catalog;
-        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎨️chrome/🦀️.rs"]
-        pub mod chrome;
+        pub use semio_s_artifact_architect_program_tests_exchange::editor::architect::catalog;
+        pub use semio_s_artifact_architect_program_snapshot::editor::architect::chrome;
 
         #[path = "."]
         pub mod commands {
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/↔️adjacency/🦀️.rs"]
-            pub mod adjacency;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔬️analysis/🦀️.rs"]
-            pub mod analysis;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🏗️element/🦀️.rs"]
-            pub mod element;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📚️example/🦀️.rs"]
-            pub mod example;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📤️exchange/🦀️.rs"]
-            pub mod exchange;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🕸️graph/🦀️.rs"]
-            pub mod graph;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📋️register/🦀️.rs"]
-            pub mod register;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔍️search/🦀️.rs"]
-            pub mod search;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📐️template/🦀️.rs"]
-            pub mod template;
+            pub use semio_s_artifact_architect_program_tests_exchange::editor::architect::commands::adjacency;
+            pub use semio_s_artifact_architect_program_tests_exchange::editor::architect::commands::analysis;
+            pub use semio_s_artifact_architect_program_tests_exchange::editor::architect::commands::element;
+            pub use semio_s_artifact_architect_program_mutations::editor::architect::commands::example;
+            pub use semio_s_artifact_architect_program_tests_exchange::editor::architect::commands::exchange;
+            pub use semio_s_artifact_architect_program_tests_exchange::editor::architect::commands::graph;
+            pub use semio_s_artifact_architect_program_panels::editor::architect::commands::register;
+            pub use semio_s_artifact_architect_program_mutations::editor::architect::commands::search;
+            pub use semio_s_artifact_architect_program_panels::editor::architect::commands::template;
         }
 
         #[path = "."]
         pub mod modes {
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/📊️report/🦀️.rs"]
-            pub mod report;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🔍️review/🦀️.rs"]
-            pub mod review;
+            pub use semio_s_artifact_architect_program_tests_2::editor::architect::modes::report;
+            pub use semio_s_artifact_architect_program_tests_2::editor::architect::modes::review;
 
             #[path = "."]
             pub mod edit {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🦀️.rs"]
-                mod component;
-                pub use component::*;
+                pub use semio_s_artifact_architect_program_tests_exchange::editor::architect::modes::edit::*;
 
-                #[path = "."]
-                pub mod windows {
-                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/↔️adjacency/🦀️.rs"]
-                    pub mod adjacency;
-                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🕸️graph/🦀️.rs"]
-                    pub mod graph;
-                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📋️register/🦀️.rs"]
-                    pub mod register;
-                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📓️report/🦀️.rs"]
-                    pub mod report;
-                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧭️trace/🦀️.rs"]
-                    pub mod trace;
-                }
+                pub use semio_s_artifact_architect_program_tests_exchange::editor::architect::modes::edit::windows;
             }
         }
 
-        #[path = "."]
-        pub mod panels {
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📚️catalogue/🦀️.rs"]
-            pub mod catalogue;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🗿️artifact/🦀️.rs"]
-            pub mod document;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🦀️.rs"]
-            pub mod inspection;
-        }
+        pub use semio_s_artifact_architect_program_panels::editor::architect::panels;
     }
 }
 
@@ -528,35 +258,23 @@ pub mod editor {
 pub mod viewer {
     #[path = "."]
     pub mod architect {
-        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs"]
-        mod component;
-        pub use component::*;
-        #[path = "."]
-        pub mod presence {
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/👥️presence/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
-        #[path = "."]
-        pub mod config {
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎚️config/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
+        pub use semio_s_artifact_architect_program_mutations::viewer::architect::*;
+
+        pub use semio_s_artifact_architect_program_tests_2::viewer::architect::presence;
+        pub use semio_s_artifact_architect_program_tests_2::viewer::architect::config;
 
         #[path = "."]
         pub mod modes {
             #[path = "."]
             pub mod view {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🦀️.rs"]
-                mod component;
-                pub use component::*;
+                pub use semio_s_artifact_architect_program_schema::viewer::architect::modes::view::*;
 
-                #[path = "."]
-                pub mod windows {
-                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/📋️register/🦀️.rs"]
-                    pub mod register;
-                }
+                pub use semio_s_artifact_architect_program_schema::viewer::architect::modes::view::windows;
             }
         }
     }
 }
 
+#[cfg(test)]
+#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs"]
+mod hoisted_snapshot_0;

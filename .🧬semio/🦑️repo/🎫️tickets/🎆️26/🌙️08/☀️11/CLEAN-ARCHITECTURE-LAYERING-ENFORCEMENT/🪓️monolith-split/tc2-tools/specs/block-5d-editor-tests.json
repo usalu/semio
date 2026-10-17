@@ -1,0 +1,18 @@
+{
+ "parent": "semio-s-artifact-block-5d-editor",
+ "name": "semio-s-artifact-block-5d-editor-tests",
+ "dir": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🥣️companion",
+ "files": [
+  "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧪️tests/🔬️unit/🦀️.rs",
+  "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🧪️tests/🔬️unit/🦀️.rs",
+  "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🌐️world/🧪️tests/🔬️unit/🦀️.rs",
+  "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📋️board/🧪️tests/🔬️unit/🦀️.rs",
+  "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗣️terminology/🧪️tests/🔬️unit/🦀️.rs"
+ ],
+ "testkit": [
+  "semio-s-artifact-block-5d-editor"
+ ],
+ "emoji": "🥣️",
+ "summary": "the small public-surface laws of the 5D block editor modules.",
+ "description": "Companion test crate of semio-s-artifact-block-5d-editor: the small public-surface laws of the 5D block editor modules"
+}

@@ -1,0 +1,693 @@
+//! 🌀️ Dense Jacobi eigen kernel, subspace state types and the job constructor, accessors and checkpoint owners.
+
+use super::*;
+
+// #region 🔖️DenseEigen
+/// 🎯️ Cyclic Jacobi eigenvalue algorithm for a small dense symmetric matrix — returns eigenvalues
+/// (ascending) and the matching eigenvectors as columns of the returned `MatD`. Used internally to
+/// solve the small (`p×p`, `p ≤ ~40`) projected eigenproblem inside `subspace_iteration`.
+#[cfg(test)]
+pub(super) fn dense_symmetric_eigen_jacobi(a: &MatD) -> (Vec<f64>, MatD) {
+    let n = a.rows;
+    let mut m = a.clone();
+    let mut v = MatD::identity(n);
+    if n == 0 {
+        return (Vec::new(), v);
+    }
+
+    for _sweep in 0..100 {
+        let mut off_sq = 0.0;
+        for p in 0..n {
+            for q in (p + 1)..n {
+                off_sq += m.get(p, q) * m.get(p, q);
+            }
+        }
+        if off_sq.sqrt() < 1e-12 * (frobenius_norm(&m) + 1.0) {
+            break;
+        }
+
+        for p in 0..n {
+            for q in (p + 1)..n {
+                let apq = m.get(p, q);
+                if apq.abs() < 1e-300 {
+                    continue;
+                }
+                let app = m.get(p, p);
+                let aqq = m.get(q, q);
+                let theta = (aqq - app) / (2.0 * apq);
+                let t = if theta >= 0.0 { 1.0 / (theta + (theta * theta + 1.0).sqrt()) } else { -1.0 / (-theta + (theta * theta + 1.0).sqrt()) };
+                let c = 1.0 / (t * t + 1.0).sqrt();
+                let s = t * c;
+
+                m.set(p, p, app - t * apq);
+                m.set(q, q, aqq + t * apq);
+                m.set(p, q, 0.0);
+                m.set(q, p, 0.0);
+
+                for i in 0..n {
+                    if i == p || i == q {
+                        continue;
+                    }
+                    let aip = m.get(i, p);
+                    let aiq = m.get(i, q);
+                    let new_aip = c * aip - s * aiq;
+                    let new_aiq = s * aip + c * aiq;
+                    m.set(i, p, new_aip);
+                    m.set(p, i, new_aip);
+                    m.set(i, q, new_aiq);
+                    m.set(q, i, new_aiq);
+                }
+
+                for i in 0..n {
+                    let vip = v.get(i, p);
+                    let viq = v.get(i, q);
+                    v.set(i, p, c * vip - s * viq);
+                    v.set(i, q, s * vip + c * viq);
+                }
+            }
+        }
+    }
+
+    let raw_vals: Vec<f64> = (0..n).map(|i| m.get(i, i)).collect();
+    let mut order: Vec<usize> = (0..n).collect();
+    order.sort_by(|&a_idx, &b_idx| raw_vals[a_idx].total_cmp(&raw_vals[b_idx]));
+    let mut vals = vec![0.0; n];
+    let mut vecs = MatD::zeros(n, n);
+    for (new_idx, &old_idx) in order.iter().enumerate() {
+        vals[new_idx] = raw_vals[old_idx];
+        for row in 0..n {
+            vecs.set(row, new_idx, v.get(row, old_idx));
+        }
+    }
+    (vals, vecs)
+}
+
+#[cfg(test)]
+fn frobenius_norm(m: &MatD) -> f64 {
+    let mut sum = 0.0;
+    for row in 0..m.rows {
+        for col in 0..m.cols {
+            sum += m.get(row, col) * m.get(row, col);
+        }
+    }
+    sum.sqrt()
+}
+
+// #endregion 🔖️DenseEigen
+
+// #region 🔖️SubspaceIteration
+/// 📐️ The lowest `p` eigenpairs of a generalized eigenproblem, ascending by value.
+#[derive(Clone, Debug, PartialEq)]
+pub struct EigenPairs {
+    pub values: Vec<f64>,
+    pub vectors: Vec<VecD>,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct SubspacePreview {
+    pub iteration: usize,
+    pub eigenvalues: Vec<f64>,
+    pub mode_shapes: Vec<Vec<f64>>,
+    pub residuals: Vec<f64>,
+    pub converged_count: usize,
+    pub converged: bool,
+}
+
+fn mat_col(m: &MatD, col: usize) -> VecD {
+    VecD::from_vec((0..m.rows).map(|row| m.get(row, col)).collect())
+}
+
+#[derive(Clone, PartialEq)]
+pub(super) struct SubspaceCheckpoint {
+    pub(super) identity: NumericalCheckpointIdentity,
+    pub(super) k_factor: LdltFactor,
+    pub(super) b: Csr,
+    pub(super) n: usize,
+    pub(super) p: usize,
+    pub(super) max_iter: usize,
+    pub(super) m: usize,
+    pub(super) x: MatD,
+    pub(super) prev_theta: Vec<f64>,
+    pub(super) final_theta: Vec<f64>,
+    pub(super) iteration: usize,
+    pub(super) residuals: Vec<f64>,
+    pub(super) converged_count: usize,
+    pub(super) converged: bool,
+    pub(super) checkpoint_due: bool,
+    pub(super) preview_due: bool,
+    pub(super) admission_fault: bool,
+    pub(super) factor_validation_cursor: usize,
+    pub(super) factor_validation_complete: bool,
+    pub(super) initialization_cursor: usize,
+    pub(super) publication_stage: u8,
+    pub(super) publication_first: usize,
+    pub(super) publication_second: usize,
+    pub(super) work: SubspaceWork,
+    pub(super) retiring_work: Option<SubspaceWork>,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(super) enum SubspaceStage {
+    ReserveIteration,
+    ApplyOperatorColumnRow,
+    FactorForwardEntry,
+    FactorDiagonalEntry,
+    FactorBackwardEntry,
+    OrthogonalizePairElement,
+    NormalizeColumnElement,
+    ProjectedMatrixCellEntry,
+    JacobiFindPairCell,
+    JacobiRotateCell,
+    JacobiConvergenceCell,
+    ModeSortCompare,
+    ModePermuteElement,
+    ResidualColumnRow,
+    ConvergenceMode,
+    PublishIteration,
+}
+
+#[derive(Clone, PartialEq)]
+pub(super) struct SubspaceWork {
+    pub(super) stage: SubspaceStage,
+    pub(super) reserve: usize,
+    pub(super) first: usize,
+    pub(super) second: usize,
+    pub(super) third: usize,
+    pub(super) phase: usize,
+    pub(super) sweep: usize,
+    pub(super) scalar: f64,
+    pub(super) coefficient: f64,
+    pub(super) cosine: f64,
+    pub(super) sine: f64,
+    pub(super) tangent: f64,
+    pub(super) rhs: MatD,
+    pub(super) solved: MatD,
+    pub(super) b_basis: MatD,
+    pub(super) projected: MatD,
+    pub(super) jacobi: MatD,
+    pub(super) jacobi_vectors: MatD,
+    pub(super) ordered_vectors: MatD,
+    pub(super) candidate_x: MatD,
+    pub(super) mu: Vec<f64>,
+    pub(super) theta: Vec<f64>,
+    pub(super) order: Vec<usize>,
+    pub(super) close_lane: u8,
+}
+
+impl SubspaceWork {
+    fn checkpoint_control(&self) -> [u64; 12] {
+        [
+            self.stage as u64,
+            self.reserve as u64,
+            self.first as u64,
+            self.second as u64,
+            self.third as u64,
+            self.phase as u64,
+            self.sweep as u64,
+            self.scalar.to_bits(),
+            self.coefficient.to_bits(),
+            self.cosine.to_bits(),
+            self.sine.to_bits(),
+            self.tangent.to_bits(),
+        ]
+    }
+
+    pub(super) fn empty() -> Self {
+        Self {
+            stage: SubspaceStage::ReserveIteration,
+            reserve: 0,
+            first: 0,
+            second: 0,
+            third: 0,
+            phase: 0,
+            sweep: 0,
+            scalar: 0.0,
+            coefficient: 0.0,
+            cosine: 0.0,
+            sine: 0.0,
+            tangent: 0.0,
+            rhs: MatD::zeros(0, 0),
+            solved: MatD::zeros(0, 0),
+            b_basis: MatD::zeros(0, 0),
+            projected: MatD::zeros(0, 0),
+            jacobi: MatD::zeros(0, 0),
+            jacobi_vectors: MatD::zeros(0, 0),
+            ordered_vectors: MatD::zeros(0, 0),
+            candidate_x: MatD::zeros(0, 0),
+            mu: Vec::new(),
+            theta: Vec::new(),
+            order: Vec::new(),
+            close_lane: 0,
+        }
+    }
+
+    pub(super) fn close_step(&mut self, maximum_bytes: usize) -> (bool, usize, usize) {
+        loop {
+            let step = match self.close_lane {
+                0 => close_vec_owner_step(&mut self.rhs.data, maximum_bytes),
+                1 => close_vec_owner_step(&mut self.solved.data, maximum_bytes),
+                2 => close_vec_owner_step(&mut self.b_basis.data, maximum_bytes),
+                3 => close_vec_owner_step(&mut self.projected.data, maximum_bytes),
+                4 => close_vec_owner_step(&mut self.jacobi.data, maximum_bytes),
+                5 => close_vec_owner_step(&mut self.jacobi_vectors.data, maximum_bytes),
+                6 => close_vec_owner_step(&mut self.ordered_vectors.data, maximum_bytes),
+                7 => close_vec_owner_step(&mut self.candidate_x.data, maximum_bytes),
+                8 => close_vec_owner_step(&mut self.mu, maximum_bytes),
+                9 => close_vec_owner_step(&mut self.theta, maximum_bytes),
+                10 => close_vec_owner_step(&mut self.order, maximum_bytes),
+                _ => return (true, 0, 0),
+            };
+            match step {
+                Ok(Some((items, bytes))) => return (false, items, bytes),
+                Ok(None) => self.close_lane += 1,
+                Err(()) => return (false, 0, 0),
+            }
+        }
+    }
+
+    pub(super) fn terminal_is_empty(&self) -> bool {
+        self.close_lane > 10
+    }
+}
+
+/// 📏️ Every dense subspace owner (`x`, `rhs`, `solved`, `b_basis`, `candidate_x`) is one
+/// `n × m` page of `f64`, and the narrowest admitted subspace is `m = p + 8 ≥ 9` columns, so this
+/// is the largest order any admitted problem can page — `reserve_matrix_owner` still prices the
+/// exact `n × m` product per owner. The fem3d demo hall alone is 132 free DOFs.
+const SUBSPACE_MINIMUM_COLUMNS: usize = 9;
+pub(super) const SUBSPACE_MAXIMUM_ORDER: usize = NUMERICAL_OWNER_PAGE_BYTES / size_of::<f64>() / SUBSPACE_MINIMUM_COLUMNS;
+pub(super) const SUBSPACE_MAXIMUM_COLUMNS: usize = 40;
+
+pub struct SubspaceIterationJob {
+    pub(super) operation: Operation,
+    pub(super) state: SubspaceCheckpoint,
+    pub(super) preview_writer: Option<RetainedJobPayloadWriter>,
+    pub(super) preview_page_cursor: usize,
+    pub(super) terminal_writer: Option<RetainedJobPayloadWriter>,
+    pub(super) terminal_page_cursor: usize,
+    pub(super) checkpoint_writer: Option<RetainedJobPayloadWriter>,
+    pub(super) checkpoint_cursor: NumericalPageCursor,
+    pub(super) desk: NumericalOutcomeDesk,
+}
+
+pub(super) fn close_subspace_checkpoint_step(state: &mut SubspaceCheckpoint, maximum_bytes: usize) -> (bool, usize, usize) {
+    match close_nested_vec_owner_step(&mut state.k_factor.l_cols, maximum_bytes) {
+        Ok(Some((items, bytes))) => return (false, items, bytes),
+        Err(()) => return (false, 0, 0),
+        Ok(None) => {}
+    }
+    for owner in [&mut state.k_factor.d, &mut state.x.data, &mut state.prev_theta, &mut state.final_theta, &mut state.residuals] {
+        match close_vec_owner_step(owner, maximum_bytes) {
+            Ok(Some((items, bytes))) => return (false, items, bytes),
+            Err(()) => return (false, 0, 0),
+            Ok(None) => {}
+        }
+    }
+    let (matrix_terminal, matrix_items, matrix_bytes) = state.b.close_step(maximum_bytes);
+    if !matrix_terminal {
+        return (false, matrix_items, matrix_bytes);
+    }
+    let (terminal, items, bytes) = state.work.close_step(maximum_bytes);
+    if !terminal {
+        return (false, items, bytes);
+    }
+    if let Some(retiring) = state.retiring_work.as_mut() {
+        let (terminal, items, bytes) = retiring.close_step(maximum_bytes);
+        if !terminal {
+            return (false, items, bytes);
+        }
+        state.retiring_work = None;
+        return (false, 1, 0);
+    }
+    (true, 0, 0)
+}
+// #endregion 🔖️SubspaceIteration
+
+impl SubspaceIterationJob {
+    pub fn new(operation: Operation, k_factor: LdltFactor, b: Csr, n: usize, p: usize, max_iter: usize) -> Self {
+        let factor_pages_valid = k_factor.l_cols.capacity().saturating_mul(size_of::<Vec<(u32, f64)>>()) <= NUMERICAL_OWNER_PAGE_BYTES;
+        let admission_fault = n == 0 || p == 0 || p > n || b.n != n || k_factor.n != n || n > SUBSPACE_MAXIMUM_ORDER || !factor_pages_valid || !b.ownership_is_valid();
+        let m = if admission_fault { 0 } else { (p + 8).max(2 * p).min(n).max(1) };
+        Self {
+            operation,
+            state: SubspaceCheckpoint {
+                identity: NumericalCheckpointIdentity::from_operation(operation),
+                k_factor,
+                b,
+                n,
+                p,
+                max_iter,
+                m,
+                x: MatD::zeros(0, 0),
+                prev_theta: Vec::new(),
+                final_theta: Vec::new(),
+                iteration: 0,
+                residuals: Vec::new(),
+                converged_count: 0,
+                converged: false,
+                checkpoint_due: false,
+                preview_due: false,
+                admission_fault,
+                factor_validation_cursor: 0,
+                factor_validation_complete: admission_fault,
+                initialization_cursor: 0,
+                publication_stage: 0,
+                publication_first: 0,
+                publication_second: 0,
+                work: SubspaceWork::empty(),
+                retiring_work: None,
+            },
+            preview_writer: None,
+            preview_page_cursor: 0,
+            terminal_writer: None,
+            terminal_page_cursor: 0,
+            checkpoint_writer: None,
+            checkpoint_cursor: NumericalPageCursor::new(),
+            desk: NumericalOutcomeDesk::default(),
+        }
+    }
+
+    pub fn preview(&self) -> SubspacePreview {
+        SubspacePreview {
+            iteration: self.state.iteration,
+            eigenvalues: self.state.final_theta.iter().take(self.state.p).copied().collect(),
+            mode_shapes: (0..self.state.p.min(self.state.x.cols)).map(|column| mat_col(&self.state.x, column).0).collect(),
+            residuals: self.state.residuals.clone(),
+            converged_count: self.state.converged_count,
+            converged: self.state.converged,
+        }
+    }
+
+    pub fn solution(&self) -> EigenPairs {
+        EigenPairs { values: self.state.final_theta.iter().take(self.state.p).copied().collect(), vectors: (0..self.state.p.min(self.state.x.cols)).map(|column| mat_col(&self.state.x, column)).collect() }
+    }
+
+    /// 🎼 Borrows one converged genuine subspace component and its eigenvalue without cloning a mode.
+    pub fn visual_mode_scalar(&self, mode: usize, index: usize) -> Option<(f64, f64)> {
+        let eigenvalue = *self.state.final_theta.get(mode)?;
+        (mode < self.state.x.cols && index < self.state.x.rows).then(|| (self.state.x.get(index, mode), eigenvalue))
+    }
+
+    /// 🎼 Exposes the retained subspace convergence authority without cloning eigen owners.
+    pub fn visual_progress(&self) -> (usize, usize, f64, bool) {
+        let residual = self.state.residuals.first().copied().unwrap_or(f64::INFINITY);
+        (self.state.iteration, self.state.max_iter, residual, self.state.converged)
+    }
+
+    pub(super) fn reset_cursor(&mut self, stage: SubspaceStage) {
+        self.state.work.stage = stage;
+        self.state.work.first = 0;
+        self.state.work.second = 0;
+        self.state.work.third = 0;
+        self.state.work.phase = 0;
+        self.state.work.scalar = 0.0;
+    }
+
+    fn advance_work_checkpoint_entry(work: &SubspaceWork, cursor: &mut NumericalPageCursor, writer: &mut RetainedJobPayloadWriter, base: u16) -> Result<bool, JobPayloadAdmissionFault> {
+        Ok(match cursor.field - base {
+            0 => {
+                let values = work.checkpoint_control();
+                advance_u64_values(writer, &values, cursor)?
+            }
+            1 => advance_matrix_owner(writer, &work.rhs, cursor)?,
+            2 => advance_matrix_owner(writer, &work.solved, cursor)?,
+            3 => advance_matrix_owner(writer, &work.b_basis, cursor)?,
+            4 => advance_matrix_owner(writer, &work.projected, cursor)?,
+            5 => advance_matrix_owner(writer, &work.jacobi, cursor)?,
+            6 => advance_matrix_owner(writer, &work.jacobi_vectors, cursor)?,
+            7 => advance_matrix_owner(writer, &work.ordered_vectors, cursor)?,
+            8 => advance_matrix_owner(writer, &work.candidate_x, cursor)?,
+            9 => advance_f64_owner(writer, &work.mu, cursor)?,
+            10 => advance_f64_owner(writer, &work.theta, cursor)?,
+            11 => advance_u64_owner(writer, &work.order, cursor)?,
+            _ => true,
+        })
+    }
+
+    pub(super) fn advance_checkpoint_entry(state: &SubspaceCheckpoint, cursor: &mut NumericalPageCursor, writer: &mut RetainedJobPayloadWriter) -> Result<bool, JobPayloadAdmissionFault> {
+        if advance_numerical_page_header(writer, b"FEMSCP1\0", 12, *cursor)? {
+            return Ok(false);
+        }
+        let complete = match cursor.field {
+            0 => {
+                let values = [
+                    state.identity.operation,
+                    state.identity.revision,
+                    state.identity.generation,
+                    state.identity.seed,
+                    state.n as u64,
+                    state.p as u64,
+                    state.max_iter as u64,
+                    state.m as u64,
+                    state.iteration as u64,
+                    state.converged_count as u64,
+                    state.converged as u64,
+                    state.checkpoint_due as u64,
+                    state.preview_due as u64,
+                    state.admission_fault as u64,
+                    state.factor_validation_cursor as u64,
+                    state.factor_validation_complete as u64,
+                    state.initialization_cursor as u64,
+                    state.publication_stage as u64,
+                    state.publication_first as u64,
+                    state.publication_second as u64,
+                ];
+                advance_u64_values(writer, &values, cursor)?
+            }
+            1 => advance_owner_length(writer, state.k_factor.l_cols.len(), cursor)?,
+            field if field >= 2 && field < 2 + state.n as u16 => advance_pair_owner(writer, &state.k_factor.l_cols[(field - 2) as usize], cursor)?,
+            514 => advance_f64_owner(writer, &state.k_factor.d, cursor)?,
+            515 => advance_paged_u32_owner(writer, &state.b.indptr, cursor)?,
+            516 => advance_paged_u32_owner(writer, &state.b.indices, cursor)?,
+            517 => advance_paged_f64_owner(writer, &state.b.vals, cursor)?,
+            518 => advance_matrix_owner(writer, &state.x, cursor)?,
+            519 => advance_f64_owner(writer, &state.prev_theta, cursor)?,
+            520 => advance_f64_owner(writer, &state.final_theta, cursor)?,
+            521 => advance_f64_owner(writer, &state.residuals, cursor)?,
+            field if (522..=533).contains(&field) => Self::advance_work_checkpoint_entry(&state.work, cursor, writer, 522)?,
+            534 => {
+                if cursor.owner == 0 {
+                    writer.write_staged(&(state.retiring_work.is_some() as u64).to_le_bytes())?;
+                    cursor.owner = 1;
+                    false
+                } else if let Some(work) = state.retiring_work.as_ref() {
+                    let values = work.checkpoint_control();
+                    if cursor.owner == 1 {
+                        writer.write_staged(&(values.len() as u64).to_le_bytes())?;
+                        cursor.owner = 2;
+                        false
+                    } else if let Some(value) = values.get(cursor.item) {
+                        writer.write_staged(&value.to_le_bytes())?;
+                        cursor.item += 1;
+                        false
+                    } else {
+                        true
+                    }
+                } else {
+                    true
+                }
+            }
+            field if (535..=545).contains(&field) => {
+                let Some(work) = state.retiring_work.as_ref() else { return Ok(true) };
+                Self::advance_work_checkpoint_entry(work, cursor, writer, 534)?
+            }
+            _ => return Ok(true),
+        };
+        if complete {
+            writer.commit_staged_page()?;
+            cursor.item = 0;
+            cursor.owner = 0;
+            cursor.field = match cursor.field {
+                0 => 1,
+                1 if state.n == 0 => 514,
+                1 => 2,
+                field if field >= 2 && field + 1 < 2 + state.n as u16 => field + 1,
+                field if field >= 2 && field < 2 + state.n as u16 => 514,
+                field if (514..=533).contains(&field) => field + 1,
+                534 if state.retiring_work.is_some() => 535,
+                534 => u16::MAX,
+                field if (535..545).contains(&field) => field + 1,
+                545 => u16::MAX,
+                _ => u16::MAX,
+            };
+        }
+        Ok(cursor.field == u16::MAX)
+    }
+
+    fn reserve_matrix_owner(matrix: &mut MatD, rows: usize, columns: usize) -> Result<(), ()> {
+        let cells = rows.checked_mul(columns).ok_or(())?;
+        if matrix.data.capacity() == 0 {
+            matrix.data.try_reserve_exact(cells).map_err(|_| ())?;
+        }
+        if matrix.data.capacity().checked_mul(size_of::<f64>()).ok_or(())? > NUMERICAL_OWNER_PAGE_BYTES {
+            return Err(());
+        }
+        matrix.rows = rows;
+        matrix.cols = columns;
+        Ok(())
+    }
+
+    fn initialize_matrix_owner(matrix: &mut MatD) -> bool {
+        let cells = matrix.rows.saturating_mul(matrix.cols);
+        if matrix.data.len() < cells {
+            matrix.data.push(0.0);
+            false
+        } else {
+            true
+        }
+    }
+
+    fn reserve_scalar_owner<T>(owner: &mut Vec<T>, items: usize) -> Result<(), ()> {
+        owner.try_reserve_exact(items).map_err(|_| ())?;
+        if owner.capacity().checked_mul(size_of::<T>()).ok_or(())? > NUMERICAL_OWNER_PAGE_BYTES {
+            return Err(());
+        }
+        Ok(())
+    }
+
+    pub(super) fn reserve_iteration_owner(&mut self) -> Result<(), ()> {
+        if let Some(retiring) = self.state.retiring_work.as_mut() {
+            if retiring.close_step(usize::MAX).0 {
+                self.state.retiring_work = None;
+            }
+            return Ok(());
+        }
+        let n = self.state.n;
+        let m = self.state.m;
+        let work = &mut self.state.work;
+        match work.reserve {
+            0 => Self::reserve_matrix_owner(&mut self.state.x, n, m)?,
+            1 => {
+                if !Self::initialize_matrix_owner(&mut self.state.x) {
+                    return Ok(());
+                }
+            }
+            2 => {
+                if self.state.initialization_cursor < m {
+                    let column = self.state.initialization_cursor;
+                    self.state.x.set(column, column, 1.0);
+                    if column + 1 < n {
+                        self.state.x.add_at(column + 1, column, 0.3);
+                    }
+                    if column > 0 {
+                        self.state.x.add_at(column - 1, column, 0.3);
+                    }
+                    self.state.initialization_cursor += 1;
+                    return Ok(());
+                }
+            }
+            3 => {
+                if self.state.prev_theta.capacity() == 0 {
+                    Self::reserve_scalar_owner(&mut self.state.prev_theta, self.state.p)?;
+                }
+            }
+            4 => {
+                if self.state.prev_theta.len() < self.state.p {
+                    self.state.prev_theta.push(f64::MAX);
+                    return Ok(());
+                }
+            }
+            5 => {
+                if self.state.residuals.capacity() == 0 {
+                    Self::reserve_scalar_owner(&mut self.state.residuals, self.state.p)?;
+                }
+            }
+            6 => {
+                if self.state.residuals.len() < self.state.p {
+                    self.state.residuals.push(f64::MAX);
+                    return Ok(());
+                }
+            }
+            7 => {
+                if self.state.final_theta.capacity() == 0 {
+                    Self::reserve_scalar_owner(&mut self.state.final_theta, m)?;
+                }
+            }
+            8 => {}
+            9 => Self::reserve_matrix_owner(&mut work.rhs, n, m)?,
+            10 => {
+                if !Self::initialize_matrix_owner(&mut work.rhs) {
+                    return Ok(());
+                }
+            }
+            11 => Self::reserve_matrix_owner(&mut work.solved, n, m)?,
+            12 => {
+                if !Self::initialize_matrix_owner(&mut work.solved) {
+                    return Ok(());
+                }
+            }
+            13 => Self::reserve_matrix_owner(&mut work.b_basis, n, m)?,
+            14 => {
+                if !Self::initialize_matrix_owner(&mut work.b_basis) {
+                    return Ok(());
+                }
+            }
+            15 => Self::reserve_matrix_owner(&mut work.projected, m, m)?,
+            16 => {
+                if !Self::initialize_matrix_owner(&mut work.projected) {
+                    return Ok(());
+                }
+            }
+            17 => Self::reserve_matrix_owner(&mut work.jacobi, m, m)?,
+            18 => {
+                if !Self::initialize_matrix_owner(&mut work.jacobi) {
+                    return Ok(());
+                }
+            }
+            19 => Self::reserve_matrix_owner(&mut work.jacobi_vectors, m, m)?,
+            20 => {
+                if !Self::initialize_matrix_owner(&mut work.jacobi_vectors) {
+                    return Ok(());
+                }
+            }
+            21 => {
+                if work.first < m {
+                    work.jacobi_vectors.set(work.first, work.first, 1.0);
+                    work.first += 1;
+                    return Ok(());
+                }
+                work.first = 0;
+            }
+            22 => Self::reserve_matrix_owner(&mut work.ordered_vectors, m, m)?,
+            23 => {
+                if !Self::initialize_matrix_owner(&mut work.ordered_vectors) {
+                    return Ok(());
+                }
+            }
+            24 => Self::reserve_matrix_owner(&mut work.candidate_x, n, m)?,
+            25 => {
+                if !Self::initialize_matrix_owner(&mut work.candidate_x) {
+                    return Ok(());
+                }
+            }
+            26 => Self::reserve_scalar_owner(&mut work.mu, m)?,
+            27 => {
+                if work.mu.len() < m {
+                    work.mu.push(0.0);
+                    return Ok(());
+                }
+            }
+            28 => Self::reserve_scalar_owner(&mut work.theta, m)?,
+            29 => {
+                if work.theta.len() < m {
+                    work.theta.push(f64::MAX);
+                    return Ok(());
+                }
+            }
+            30 => Self::reserve_scalar_owner(&mut work.order, m)?,
+            31 => {
+                if work.order.len() < m {
+                    work.order.push(work.order.len());
+                    return Ok(());
+                }
+            }
+            32 => {
+                self.reset_cursor(SubspaceStage::ApplyOperatorColumnRow);
+                return Ok(());
+            }
+            _ => return Err(()),
+        }
+        work.reserve += 1;
+        Ok(())
+    }
+}

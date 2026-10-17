@@ -1,6 +1,6 @@
 //! 🧬️ Forms app configuration mutations.
 
-use super::*;
+use crate::editor::forms::config::*;
 #[path = "📸️replace/🦀️.rs"]
 mod replace_config;
 pub use replace_config::ReplaceConfig;

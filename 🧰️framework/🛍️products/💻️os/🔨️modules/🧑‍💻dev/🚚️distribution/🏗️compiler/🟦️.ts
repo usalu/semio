@@ -2,7 +2,7 @@ import {runtimeCatalogBuildInventoryV1} from "../../../🔌️plugin/📇️regi
 import {requirePlaygroundVariant} from "../../../🔌️plugin/📇️registry/🎮️playground/⭐️default/🟦️.ts";
 import {runtimeFixturePathV1} from "../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🟦️.ts";
 import {loadDevContribution,resolveDevContributionFile} from "../../🧩️contribution/📥️loading/🟦️.ts";
-import type {OwnedBuildConfig} from "../../../../../../🔨️modules/🖱️ui/🎯️targets/⚛️react/🛠️build-tooling/🟦️.ts";
+import type {OwnedBuildConfig} from "@semio-tech/ui-react/build-tooling";
 import type {InlineConfig} from "vite";
 import {readFileSync,existsSync,statSync,realpathSync} from "node:fs";
 import {fileURLToPath,pathToFileURL} from "node:url";
@@ -33,7 +33,7 @@ export async function compileDistributionProductV1(workspace:string,invocation:S
  if(resolve(workspace)!==authority.repositoryRoot||process.env.SEMIO_BUILD_MODE!==mode||process.env.SEMIO_COMPILER_CAPACITY_HELD!==undefined)throw Error("Exact unmarked distribution compiler Original required");
  return withRepositoryCacheStoreV1(workspace,"dependencies",invocation,phase,(dependencies,dependenciesPhase)=>withViteStorageV1(workspace,mode,owner,invocation,dependenciesPhase,(products,layout,_temporary,productsPhase)=>withViteArtifactInputsV1({workspace,invocation,store:products,control:productsPhase,requests:frameworkOsViteArtifactInputsV1(products.root,{version:1,mode,renderer:"react",command:"build",engines:"distribution"})},control=>withArtifactScratchV1({workspace,invocation,storage:products.storage,control:products.control,phaseControl:control,request:{version:1,mode,owner:schema.definitions.Protocol.const.scratchOwner}},token=>withArtifactDestinationTaskV1(token,invocation,async sink=>{
   const compiler=createRequire(join(workspace,"package.json"))("vite/package.json").version;
-  return withCompilerState({root:layout.state,owner,compiler:"vite:"+compiler+":bun:"+process.versions.bun,configuration:JSON.stringify(DISTRIBUTION_LAYOUT),mode,control:sink.control,storage:products.storage,storageControl:products.control,files:["deps/_metadata.json"],environment:{...process.env,...dependencies.environment,...products.environment,...sink.environment}},async(directory,environment,control)=>{
+  return withCompilerState({capacity:{kind:"whole-host"},root:layout.state,owner,compiler:"vite:"+compiler+":bun:"+process.versions.bun,configuration:JSON.stringify(DISTRIBUTION_LAYOUT),mode,control:sink.control,storage:products.storage,storageControl:products.control,files:["deps/_metadata.json"],environment:{...process.env,...dependencies.environment,...products.environment,...sink.environment}},async(directory,environment,control)=>{
    requireNativeStoragePathV1(products.root,directory);const selected={...environment,SEMIO_VITE_CACHE_DIRECTORY:directory,SEMIO_BUILD_MODE:mode},previous=new Map(Object.keys(selected).map(name=>[name,process.env[name]]));
    try{
     for(const[name,value]of Object.entries(selected))if(value===undefined)delete process.env[name];else process.env[name]=value;

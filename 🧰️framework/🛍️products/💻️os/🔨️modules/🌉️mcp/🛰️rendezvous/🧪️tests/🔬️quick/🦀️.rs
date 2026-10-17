@@ -3,14 +3,12 @@
 //! REAL directory layout under its OWN temporary root (never a process-global `HOME`, which sibling
 //! tests read concurrently) and never a mocked filesystem.
 
+use semio_framework_test_fixtures::fixture_text;
 use std::path::Path;
 use std::path::PathBuf;
 use crate::rendezvous::{BridgeOffer, BridgeOfferScope, OsSessionRecord, RENDEZVOUS_SCHEMA_VERSION, live_os_sessions_in, mint_admission_proof, now_ms, offers_dir_in, publish_offer_in, sessions_dir_in};
 
 /// 🧪️ Reads a committed fixture from the package directory at run time instead of embedding it in the test binary.
-fn fixture_text(relative: &str) -> &'static str {
-    Box::leak(std::fs::read_to_string(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative)).expect(relative).into_boxed_str())
-}
 
 
 /// 📂️ A rendezvous root of this test's own, removed when the test ends.
@@ -52,7 +50,7 @@ fn offer_for(pid: u32) -> BridgeOffer {
 /// record of another version, with an extra field or a scope missing its space is refused.
 #[test]
 fn the_scoped_offer_records_are_this_gateways_offer_files() {
-    let fixture: serde_json::Value = serde_json::from_str(fixture_text("../../../../📺️renderer/🧑‍🎨engine/🧱️elements/🔗️AgentBridge/🧪️tests/🧫️fixtures/🛰️offer-answers/🔣️.json")).expect("offer fixture parses");
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../📺️renderer/🧑‍🎨engine/🧱️elements/🔗️AgentBridge/🧪️tests/🧫️fixtures/🛰️offer-answers/🔣️.json")).expect("offer fixture parses");
     let records = fixture["select"]["records"].as_array().expect("select records");
     assert!(records.len() >= 6);
     for record in records {

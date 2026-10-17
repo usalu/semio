@@ -1,6 +1,6 @@
 //! 🌐️ `set-grid-factor` command.
 
-use {crate::editor::puzzle2d::snapshot::puzzle2d_window_and_measures_scope, crate::editor::puzzle2d::Puzzle2dActionCtx};
+use {crate::editor::puzzle2d::snapshot::puzzle2d_window_and_measures_scope, crate::editor::puzzle2d::interaction::Puzzle2dActionCtx};
 use semio_framework_pack_json::Value;
 
 pub fn set_grid_factor(ctx: &mut Puzzle2dActionCtx<'_>, args: Option<&Value>) {

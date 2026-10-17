@@ -153,7 +153,7 @@ describe("🪟️ window lifecycle and template drag contract", () => {
 
   test("React journals template transfers while its Display palette remains drag-only", () => {
     const shell = readModuleTreeSource(join(engineRoot, "🧱️elements", "🏛️ShellHost", "🟦️.tsx"));
-    const panels = readFileSync(join(engineRoot, "🧱️elements", "📌️ChromePanels", "🟦️.tsx"), "utf8");
+    const panels = readModuleTreeSource(join(engineRoot, "🧱️elements", "📌️ChromePanels", "🟦️.tsx"));
     const transfer = shell.slice(shell.indexOf("const handleTemplateDrop"), shell.indexOf("const displayHostRef"));
     const display = panels.slice(panels.indexOf("function buildDisplayWindowsTree"), panels.indexOf("function buildDisplayLayoutTree"));
     expect(transfer).toContain(`noteShellCommand("${fixture.publicationOutcomes.journalPolicy.transferCommand}"`);
@@ -177,7 +177,7 @@ describe("🪟️ window lifecycle and template drag contract", () => {
     expect(displayBranchIds(law, true, law.acceptedGeneration)).toEqual(law.openedPublishedIds);
     expect(displayBranchIds(law, true, law.staleGeneration)).toEqual([]);
 
-    const panels = readFileSync(join(engineRoot, "🧱️elements", "📌️ChromePanels", "🟦️.tsx"), "utf8");
+    const panels = readModuleTreeSource(join(engineRoot, "🧱️elements", "📌️ChromePanels", "🟦️.tsx"));
     const tree = readFileSync(join(engineRoot, "..", "..", "..", "..", "..", "🔨️modules", "🖱️ui", "🧱️elements", "🌳️Tree", "🟦️.tsx"), "utf8");
     const projectionBuilder = panels.slice(panels.indexOf("function worldProjectionTemplatesToTreeItems"), panels.indexOf("function displayWindowKindIcon"));
     expect(projectionBuilder).toContain("defaultOpen: false");

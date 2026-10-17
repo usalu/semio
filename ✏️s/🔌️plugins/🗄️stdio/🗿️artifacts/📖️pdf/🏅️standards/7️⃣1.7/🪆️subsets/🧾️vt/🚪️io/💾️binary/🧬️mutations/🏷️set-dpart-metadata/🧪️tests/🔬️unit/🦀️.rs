@@ -1,4 +1,5 @@
-use super::*;
+use crate::standards::v1_7::subsets::vt::schema::mutations::set_dpart_metadata::SetDpartMetadata;
+use crate::standards::v1_7::subsets::vt::io::binary::mutations::set_dpart_metadata::*;
 
 #[test]
 fn owned_payload_round_trips() {

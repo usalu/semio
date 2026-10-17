@@ -2,6 +2,8 @@
 //! rows, replayed last-to-first, and those rows' diffs sum to the negative of the forward diff.
 
 use super::*;
+use protocol::Mutation;
+use crate::schema::mutations::{SemioModelMutation, demo_mutation_cases, fixture};
 
 #[semio_framework_async_macros::async_test]
 async fn demo_mutations_of_this_kind_invert_and_sum_to_the_negative_diff() {

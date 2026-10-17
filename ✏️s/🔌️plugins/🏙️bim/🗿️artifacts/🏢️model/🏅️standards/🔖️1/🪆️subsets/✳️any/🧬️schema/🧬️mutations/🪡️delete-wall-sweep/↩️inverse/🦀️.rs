@@ -2,8 +2,11 @@
 
 use super::super::cascade;
 use super::DeleteWallSweep;
-use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{snapshot::ModelSnapshot};
 
-pub fn inverse(payload: &DeleteWallSweep, base: &ModelSnapshot) -> Vec<ModelMutation> {
+pub fn inverse<Op>(payload: &DeleteWallSweep, base: &ModelSnapshot) -> Vec<Op>
+where
+    Op: crate::standards::v1::subsets::any::schema::mutations::cascade::RemovalInverse,
+{
     cascade::inverse(base, std::slice::from_ref(&payload.id))
 }

@@ -11,7 +11,7 @@ pub(super) fn authored_source(law:&serde_json::Value)->HalfedgeMesh{
 fn original_mesh_tessellation_metadata_capture_borrows_exact_source_rows(){
     use crate::test_support::observe_tessellation_system as observe;
     use semio_framework_value::{retained_clone::{RetainedCloneGrant,RetainedCloneProgress},retirement::controlled::ControlledRetirement};
-    let law:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🧩️tessellation/🎟️owners.json")).unwrap();
+    let law:serde_json::Value=crate::fixture_json("🧪️tests/🧫️fixtures/🧩️tessellation/🎟️owners.json");
     for copy in law["copyGrants"].as_array().unwrap().iter().map(|value|value.as_u64().unwrap()as usize){
         let(mut job,source)=observe(||MeshTessellationJob::new(super::tessellation_metadata_tests::authored_source(&law)));
         let mut originals=[(0usize,0usize);3];for(index,(key,attribute))in job.mesh.attributes.iter().enumerate(){originals[index]=(key.as_ptr()as usize,attribute.values.as_ptr()as usize);}
@@ -20,6 +20,6 @@ fn original_mesh_tessellation_metadata_capture_borrows_exact_source_rows(){
         assert_eq!(turns,law["metadataCapture"]["attributes"].as_array().unwrap().len());for semantic in [MeshAttributeSemantic::Normal,MeshAttributeSemantic::Uv,MeshAttributeSemantic::Color]{let attribute=job.semantic_attribute(semantic).unwrap();let source=job.mesh.attributes.values().find(|attribute|attribute.semantic==semantic).unwrap();assert_eq!(attribute.semantic,semantic);assert!(std::ptr::eq(source,attribute));}
         let(mut owner,handoff)=observe(||ControlledRetirement::new(job).unwrap_or_else(|_|panic!("original metadata closure unsupported")));assert_eq!(handoff,(0,0));let(mut born,mut freed,mut close_turns)=(source.0,source.1,0);
         while !owner.terminal_is_empty(){let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:owner.next_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:owner.next_release_byte_demand().unwrap(),maximum_depth:owner.next_depth_demand().unwrap()};let(step,heap)=observe(||owner.step(grant).unwrap());assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));assert!(step.progress().fits(grant));born+=heap.0;freed+=heap.1;close_turns+=1;assert!(close_turns<100000);}
-        assert_eq!(born,freed);let(_,heap)=observe(||drop(owner));assert_eq!(heap,(0,0));eprintln!("[DEBUG] Original Mesh metadata capture copy={copy} slots={turns} sameKeys=true sameSamples=true physical={freed} terminalDrop=0");
+        assert_eq!(born,freed);let(_,heap)=observe(||drop(owner));assert_eq!(heap,(0,0));
     }
 }

@@ -1,0 +1,3 @@
+/** 🧩️ Public entry `@semio-tech/framework-sqlite-snapshot-ts/artifact`: the explicit surface that importers outside the module use. */
+export { ArtifactSqliteProjection, ArtifactSqliteRowIndex, artifactSqliteBoolean, artifactSqliteCheckpoint, artifactSqliteDatabase, artifactSqliteDocument, artifactSqliteDocumentReference, artifactSqliteInteger, artifactSqliteOrderedRows, artifactSqliteOrderedRowsControlled, artifactSqliteReal, artifactSqliteTables, artifactSqliteText, artifactSqliteTextBytes, artifactSqliteValueBudget, artifactSqliteValueByteLengthControlled, artifactSqliteValueControl } from "../../../🧩️artifact/🟦️.ts";
+export type { ArtifactSqliteOptions, ArtifactSqliteProgress } from "../../../🧩️artifact/🟦️.ts";

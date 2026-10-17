@@ -1,9 +1,11 @@
+import{testMethodV1,testRecordV1,testInputsV1}from"../📋️values/🟦️.ts";
 import assert from "node:assert/strict";
 import { existsSync, mkdtempSync, mkdirSync, readFileSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { createHash } from "node:crypto";
 
 type ImportEdge = Readonly<{ source: string; target: string; sourceFile?: string; type: string }>;
+function edges(value:unknown):readonly ImportEdge[]{return testInputsV1(value).map(value=>{const row=testRecordV1(value),source=row.source,target=row.target,type=row.type,sourceFile=row.sourceFile;if(typeof source!=="string"||typeof target!=="string"||typeof type!=="string"||sourceFile!==undefined&&typeof sourceFile!=="string")throw Error("Actual import dependency DATA required");return{source,target,type,...(sourceFile===undefined?{}:{sourceFile})};});}
 
 /** 🔗️ Fixture + repo import edges from the full scan equal the incremental filesToProcess path. */
 export async function testImportEdgeEquality(workspace: string, output: string): Promise<void> {
@@ -49,11 +51,11 @@ export async function testImportEdgeEquality(workspace: string, output: string):
       externalNodes: {},
       nxJsonConfiguration: {},
     };
-    const full = await cacheInternals.createDependenciesImplementation({ analyzeLockfile: false }, context);
+    const full = edges(await testMethodV1(cacheInternals,"createDependenciesImplementation",{ analyzeLockfile: false }, context));
     const fullKeys = new Set(full.map(key));
     for (const expected of cases.expectedEdges) assert.ok(fullKeys.has(key(expected)), JSON.stringify(expected));
 
-    const again = await cacheInternals.createDependenciesImplementation({ analyzeLockfile: false }, context);
+    const again = edges(await testMethodV1(cacheInternals,"createDependenciesImplementation",{ analyzeLockfile: false }, context));
     assert.deepEqual([...again.map(key)].sort(), [...full.map(key)].sort());
 
     const utilOnly = {
@@ -63,7 +65,7 @@ export async function testImportEdgeEquality(workspace: string, output: string):
         nonProjectFiles: [],
       },
     };
-    const partial: readonly ImportEdge[] = await cacheInternals.createDependenciesImplementation({ analyzeLockfile: false }, utilOnly);
+    const partial: readonly ImportEdge[] = edges(await testMethodV1(cacheInternals,"createDependenciesImplementation",{ analyzeLockfile: false }, utilOnly));
     assert.ok(partial.some((edge) => edge.source === "fixture-a" && edge.target === "fixture-b" && edge.sourceFile === "a/deep/util.js"));
 
     const nodes = pg.nodes;
@@ -80,8 +82,8 @@ export async function testImportEdgeEquality(workspace: string, output: string):
       externalNodes: {},
       nxJsonConfiguration: {},
     };
-    const cold: readonly ImportEdge[] = await cacheInternals.createDependenciesImplementation({ analyzeLockfile: false }, repoContext);
-    const warm = await cacheInternals.createDependenciesImplementation({ analyzeLockfile: false }, repoContext);
+    const cold: readonly ImportEdge[] = edges(await testMethodV1(cacheInternals,"createDependenciesImplementation",{ analyzeLockfile: false }, repoContext));
+    const warm = edges(await testMethodV1(cacheInternals,"createDependenciesImplementation",{ analyzeLockfile: false }, repoContext));
     assert.deepEqual([...warm.map(key)].sort(), [...cold.map(key)].sort(), "warm immutable facts must preserve the full edge set");
 
     const byPackage = new Map<string, string>();
@@ -95,10 +97,9 @@ export async function testImportEdgeEquality(workspace: string, output: string):
     const add = (source: string, target: string | undefined, sourceFile: string) => {
       if (target && source !== target) importOnly.set(`${source}\0${target}\0${sourceFile}`, { source, target, sourceFile, type: "static" });
     };
-    await cacheInternals.collectImportEdges(workspace, fileMapRepo.projectFileMap, repoProjects, byPackage, undefined, add);
+    await testMethodV1(cacheInternals,"collectImportEdges",workspace,fileMapRepo.projectFileMap,repoProjects,byPackage,undefined,add);
     const fromCreate = cold.filter((edge) => /\.[cm]?[jt]sx?$/.test(edge.sourceFile ?? ""));
     assert.deepEqual([...fromCreate.map(key)].sort(), [...importOnly.values()].map(key).sort(), "createDependencies import edges must equal full collectImportEdges scan");
-    console.log(`[DEBUG] full repository import dependency equality: ${cold.length} edges, cold/warm/incremental fixture and independent import-only scan`);
   } finally {
     if (previousData === undefined) delete process.env.NX_WORKSPACE_DATA_DIRECTORY;
     else process.env.NX_WORKSPACE_DATA_DIRECTORY = previousData;

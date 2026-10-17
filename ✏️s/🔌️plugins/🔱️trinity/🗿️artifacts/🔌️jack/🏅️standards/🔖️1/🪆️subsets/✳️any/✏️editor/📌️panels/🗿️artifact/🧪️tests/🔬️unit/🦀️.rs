@@ -1,6 +1,18 @@
-use super::*;
+use crate::editor::jack::terminology::TrinityJackLabels;
+use semio_framework_plugin::TreeWindows;
+#[allow(unused_imports)]
+use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase};
+#[allow(unused_imports)]
+use semio_framework_plugin::PanelTreeBuilder;
+#[allow(unused_imports)]
+use semio_framework_ui_contract as ui;
+use crate::editor::jack::panels::document::*;
 use crate::editor::jack::TRINITY_JACK_PLAY_BODY_ARTIFACT;
-use crate::{Camera, Edge, JackSnapshot, JackWorkingScene, Manifest, Node, PropertyBag};
+use crate::standards::v1::subsets::any::schema::graph::{Camera, Edge, Node};
+use crate::standards::v1::subsets::any::schema::snapshot::JackSnapshot;
+use crate::standards::v1::subsets::any::schema::content::JackWorkingScene;
+use crate::standards::v1::subsets::any::schema::manifest::Manifest;
+use semio_framework_graph_manifest::PropertyBag;
 use semio_framework_plugin::{TreeWindowRequest, ViewModel, TREE_WINDOW_DEFAULT_ROWS};
 
 //#region 🪟️WindowLaws
@@ -16,7 +28,7 @@ fn oversized_snapshot(nodes: usize, edges: usize) -> JackSnapshot {
 /// 🪟️ The panel body exactly as the host reads it, for the host-known windows in `requests`.
 fn window_body(snapshot: &JackSnapshot, requests: Vec<TreeWindowRequest>) -> String {
     let view = ViewModel { tree_windows: requests, ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
-    let content = crate::jack_content_for_handle(&snapshot.content).expect("retained content child");
+    let content = crate::standards::v1::subsets::any::schema::content::jack_content_for_handle(&snapshot.content).expect("retained content child");
     let node = render(content.read(), &semio_framework_plugin::NoConfig::default(), &TrinityJackLabels::NATIVE_EN, &TreeWindows::for_body(&view, TRINITY_JACK_PLAY_BODY_ARTIFACT)).expect("render the jack document tree");
     semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("project the jack document tree")
 }

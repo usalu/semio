@@ -254,8 +254,3 @@ impl Field for f64 {
     }
 }
 // #endregion 🔖️PrimitiveImpls
-
-// #region 🔖️Tests
-#[cfg(test)]
-include!("../🧪️tests/🔬️traits-unit/🦀️.rs");
-// #endregion 🔖️Tests

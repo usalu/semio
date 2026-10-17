@@ -16,6 +16,23 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-s-artifact-architect-program-tests = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🔬️unit/📦️packages/🦀️rust" }
+semio-s-artifact-architect-program-tests-2 = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧱️kernel/🧪️tests/🔬️unit/📦️packages/🦀️rust" }
+semio-s-artifact-architect-program-program-structure = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🗄️registers/🧭️program-structure/📦️packages/🦀️rust" }
+semio-s-artifact-architect-program-context-requirements = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🗄️registers/🌐️context-requirements/📦️packages/🦀️rust" }
+semio-s-artifact-architect-program-registers = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🗄️registers/📦️packages/🦀️rust" }
+semio-s-artifact-architect-program-snapshot = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️packages/🦀️rust" }
+semio-s-artifact-architect-program-presence = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/📦️packages/🦀️rust" }
+semio-s-artifact-architect-program-inferences = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦️packages/🦀️rust" }
+semio-s-artifact-architect-program-tests-3 = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🗄️registers/🧭️program-structure/🧪️tests/🔬️unit/📦️packages/🦀️rust" }
+semio-s-artifact-architect-program-catalog = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🗄️registers/🗂️catalog/📦️packages/🦀️rust" }
+semio-s-artifact-architect-program-mut-any = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust" }
+semio-s-artifact-architect-program-schema = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust" }
+semio-s-artifact-architect-program-config = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/📦️packages/🦀️rust" }
+semio-s-artifact-architect-program-mutations = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/🧬️mutations/📦️packages/🦀️rust" }
+semio-s-artifact-architect-program-tests-exchange = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧪️tests/🔬️tests-exchange/📦️packages/🦀️rust" }
+semio-s-artifact-architect-program-panels = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📚️catalogue/📦️packages/🦀️rust" }
+semio-s-artifact-architect-program-architect = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust" }
 semio-framework-composition-admission = { path = "../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧩️composition/📥️admission/📦️packages/🦀️rust" }
 semio-framework-pack = { path = "../../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 semio-framework = { path = "../../../../../../../🧰️framework/📦️packages/🦀️rust" }
@@ -48,6 +65,7 @@ semio-s-artifact-stdio-zip = { workspace = true }
 graph = { path = "../../../../../../../🧰️framework/🔨️modules/🕸️graph/⚙️engine/📦️packages/🦀️rust", package = "semio-framework-graph-engine" }
 semio-framework-os-kernel = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
 semio-framework-plugin = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", package = "semio-framework-plugin" }
+semio-framework-action-bus = { path = "../../../../../../../🧰️framework/🔨️modules/🎯️action-bus/📦️packages/🦀️rust" }
 semio-framework-dispatch-macros = { path = "../../../../../../../🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust", package = "semio-framework-dispatch-macros" }
 semio-framework-job.workspace = true
 semio-framework-schema = { path = "../../../../../../../🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust", package = "semio-framework-schema" }
@@ -59,6 +77,7 @@ semio-framework-os-kernel = { path = "../../../../../../../🧰️framework/🛍
 serde.workspace = true
 serde_json.workspace = true
 semio-framework-async-macros = { path = "../../../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
+semio-framework-test-fixtures = { path = "../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 zip = { version = "6", default-features = false, features = ["deflate"] }
 # 🔮 Test-only CSV ORACLE: the third-party `csv` reader parses the register export.
 csv = "1"

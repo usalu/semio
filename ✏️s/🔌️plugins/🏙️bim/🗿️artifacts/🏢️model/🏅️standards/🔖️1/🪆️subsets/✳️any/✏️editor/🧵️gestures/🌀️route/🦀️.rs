@@ -6,7 +6,8 @@
 
 use super::place::{length, next_system};
 use super::plane::P;
-use super::session::{GestureKey, Mark, Pointer, Preview, Step, Style, Tool, ToolContext, ToolEvent, ELEVATION_STEP, STOREY_MISSING};
+use super::session::{snap_mark, GestureKey, Pointer, Step, Tool, ToolContext, ToolEvent, ELEVATION_STEP, STOREY_MISSING};
+use crate::editor::bim::marks::{Mark, Preview, Style};
 use super::snap::SnapHit;
 use super::typed::INVALID;
 use crate::editor::bim::entities::components::{system_label, system_of, SYSTEMS};
@@ -199,7 +200,7 @@ impl Tool for Route {
                 run.push(hit.point);
             }
             marks.push(Mark::label(hit.point, self.describe(ctx)));
-            marks.push(Mark::snap(hit));
+            marks.push(snap_mark(hit));
         }
         if run.len() >= 2 {
             marks.push(Mark::path(&run, false, Style::Ghost));

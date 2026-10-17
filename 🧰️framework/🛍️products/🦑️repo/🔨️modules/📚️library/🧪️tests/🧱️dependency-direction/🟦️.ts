@@ -101,7 +101,6 @@ test("policy construction rejects ambiguous names and divergent owner declaratio
   }
   expect(Buffer.byteLength(rule.from.pathNot),row.id+" bounded shared-prefix ownership pattern").toBeLessThanOrEqual(row.maximumPatternBytes);
  }
- console.log(`[DEBUG] bounded ownership pattern cases=${cases.length}; independent predicate=dependency-cruiser flat ownership`);
 });
 
 test("schema defines unique neutral dependency cases and exact expected edges", () => {
@@ -291,7 +290,6 @@ test("resolver graph requires complete authored strict rule authority", async ()
       if(row.accept)expect(()=>dependencyDirectionEdges(receipt,row.rules,scope),row.id).not.toThrow();
       else expect(()=>dependencyDirectionEdges(receipt,row.rules,scope),row.id).toThrow();
     }
-    console.log(`[DEBUG] portable rule authority cases=${rows.length}; independent oracle=dependency-cruiser normalization and Ajv equality`);
   } finally {rmSync(root,{recursive:true,force:true});}
 },45_000);
 
@@ -551,7 +549,6 @@ test("cross-owner public targets agree with independent resolver and complete gr
       expect(publicRules.filter(rule=>rule.name.startsWith("no-cross-package-relative-")).length,row.id+" admitted strict owner rules").toBe(row.packages.length);
       expect(publicRules.every(rule=>rule.severity==="error"),row.id).toBe(true);
     }
-    console.log(`[DEBUG] public owner cases=${rows.length}; independent resolver=dependency-cruiser; schema=Ajv2020`);
   } finally {rmSync(root,{recursive:true,force:true});}
 },90_000);
 
@@ -591,6 +588,5 @@ test("actual public package targets obey Node ownership and expose neutral Proce
     const source=readFileSync(join(repo,row.path),"utf8"),tree=ts.createSourceFile(row.path,source,ts.ScriptTarget.Latest,true),exports=new Set(tree.statements.flatMap(statement=>ts.isExportDeclaration(statement)&&statement.exportClause&&ts.isNamedExports(statement.exportClause)?statement.exportClause.elements.map(item=>item.name.text):[]));
     for(const name of row.names)try{expect(exports.has(name),row.id+" actual explicit first-party public named contract "+name).toBe(true);}catch(error){failures.push(error);}
   }
-  console.log(`[DEBUG] actual public package cases=${rows.length}; actual named cases=${named.length}; independent oracle=Node exports and TypeScript AST; failures=${failures.length}`);
   if(failures.length)throw new AggregateError(failures,"Actual first-party public receiving and named contracts failed");
 });

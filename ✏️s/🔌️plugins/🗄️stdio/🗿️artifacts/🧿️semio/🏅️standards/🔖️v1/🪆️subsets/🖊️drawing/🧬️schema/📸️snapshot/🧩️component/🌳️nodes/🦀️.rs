@@ -3,8 +3,7 @@ use crate::schema::snapshot::DrawNode;
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
 use semio_framework_value::{DslValue, ToValue, FromValue, ValueError, ValueRefusalKind, DecodedValue, NativeEncodeControl};
 
-#[path="🧾️original/🦀️.rs"]
-mod original;
+pub use semio_s_artifact_stdio_semio_drawing_schema::schema::snapshot::native_binding::nodes::original;
 pub use original::{decode_node,decode_style,decode_layer,decode_snapshot};
 
 pub(crate) fn retire_values(values:Vec<DslValue>){<Vec<DslValue> as FromValue>::retire_decoded(values);}

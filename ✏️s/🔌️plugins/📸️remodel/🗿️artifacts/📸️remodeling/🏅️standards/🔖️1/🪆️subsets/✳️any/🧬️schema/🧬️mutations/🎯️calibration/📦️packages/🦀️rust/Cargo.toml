@@ -16,6 +16,8 @@ workspace = true
 path = "🦀️.rs"
 
 [dependencies]
+semio-s-artifact-remodel-remodeling-mut-calib-3 = { workspace = true }
+semio-s-artifact-remodel-remodeling-mut-calib-2 = { workspace = true }
 semio-framework-dsl-record = { workspace = true }
 semio-framework-dsl-record-derive = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
@@ -37,7 +39,3 @@ semio-s-artifact-remodel-remodeling-mut-vectors = { workspace = true }
 [[test]]
 name = "cameras"
 path = "🧪️tests/🔬️cameras/🦀️.rs"
-
-[[test]]
-name = "gcps"
-path = "🧪️tests/🔬️gcps/🦀️.rs"

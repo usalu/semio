@@ -51,8 +51,8 @@ export const stdioSemioV1ObjectDiffBinaryGuardConstant = <T extends string | num
 export function parseSemioObjectDiffFrame(value: unknown, at = "$"): SemioObjectDiffFrame {
   const row = stdioSemioV1ObjectDiffBinaryGuardObject(value, at);
   return {
-    format: row["format"] === undefined ? undefined : stdioSemioV1ObjectDiffBinaryGuardInteger(row["format"], `${at}.format`),
-    presence: row["presence"] === undefined ? undefined : stdioSemioV1ObjectDiffBinaryGuardInteger(row["presence"], `${at}.presence`),
-    payload: row["payload"] === undefined ? undefined : stdioSemioV1ObjectDiffBinaryGuardString(row["payload"], `${at}.payload`),
+    format: stdioSemioV1ObjectDiffBinaryGuardInteger(row["format"], `${at}.format`),
+    presence: stdioSemioV1ObjectDiffBinaryGuardInteger(row["presence"], `${at}.presence`),
+    payload: stdioSemioV1ObjectDiffBinaryGuardString(row["payload"], `${at}.payload`),
   };
 }

@@ -1,5 +1,43 @@
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_semio_animation::schema::snapshot::SemioAnimationSnapshot;
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_semio_audio_model::schema::snapshot::SemioAudioSnapshot;
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_semio_brep::schema::snapshot::SemioBrepSnapshot;
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_semio_cad::schema::snapshot::SemioCadSnapshot;
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_semio_document::schema::snapshot::SemioDocumentSnapshot;
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_semio_drawing::schema::snapshot::SemioDrawingSnapshot;
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_semio_flow::schema::snapshot::SemioFlowSnapshot;
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_semio_graph::schema::snapshot::SemioGraphSnapshot;
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_semio_image::schema::snapshot::SemioImageSnapshot;
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_semio_kit::schema::snapshot::SemioKitSnapshot;
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_semio_mesh::schema::snapshot::SemioMeshSnapshot;
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_semio_model::schema::snapshot::SemioModelSnapshot;
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_semio_object::schema::snapshot::SemioObjectSnapshot;
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_semio_presentation::schema::snapshot::SemioPresentationSnapshot;
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_semio_table_model::schema::snapshot::SemioTableSnapshot;
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_semio_text_model::schema::snapshot::SemioTextSnapshot;
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValueSnapshot;
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_semio_video_model::schema::snapshot::SemioVideoSnapshot;
+#[allow(unused_imports)]
+use framework_schema::ArtifactSchema;
 use crate::schema::snapshot::subset_tag;
-use super::*;
+use crate::schema::snapshot::*;
 
 #[semio_framework_async_macros::async_test]
 async fn pack_round_trips_default_subset() {

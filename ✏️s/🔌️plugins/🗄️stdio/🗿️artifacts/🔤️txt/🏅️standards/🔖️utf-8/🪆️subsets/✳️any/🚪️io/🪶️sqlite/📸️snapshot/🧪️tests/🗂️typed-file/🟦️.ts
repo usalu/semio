@@ -25,12 +25,10 @@ test("complete typed TXT snapshots preserve all legal fields in independently re
  const ending=snapshot.lineEnding==="lf"?"\n":"\r\n";expect(snapshot.lines.join(ending)+(snapshot.trailingNewline?ending:"")).toBe(fixture.cases[index]!.raw);
  }
  for(const [leftId,rightId]of fixture.collisions){const left=fixture.cases.find(row=>row.id===leftId)!,right=fixture.cases.find(row=>row.id===rightId)!;expect(left.raw).toBe(right.raw);expect(left.snapshot).not.toEqual(right.snapshot);}
- console.log("[DEBUG] Complete typed Snapshot file witness: eight canonical TXT inputs and four raw collisions preserve every legal field, exact metadata and semantic tables in both own-file and independent SQLite-file directions");
 });
 
 test("registered full TXT file laws borrow genuine Store reads and retire accepted complete output",()=>{
  const laws=read("../🦀️.rs");
  const start=laws.indexOf("async fn txt_original_receiving_registered_complete_store_and_destination");expect(start).toBeGreaterThan(0);const registered=laws.slice(start);
  for(const name of["plain_test_store","snapshot_read().unwrap().into_erased()","io_export_sqlite_snapshot_read","io_import_sqlite_snapshot_into","try_return_to_registry_witness","close_plain_test_store","txt_full_file_retire","lines.capacity()","schema.capacity()","registered_full_fixture"])expect(registered.includes(name)).toBe(true);
- console.log("[DEBUG] Registered TXT full-file owning law mounts the shared complete semantic corpus, real Store-issued reads and paid accepted-output retirement; Source does not qualify Native runtime");
 });

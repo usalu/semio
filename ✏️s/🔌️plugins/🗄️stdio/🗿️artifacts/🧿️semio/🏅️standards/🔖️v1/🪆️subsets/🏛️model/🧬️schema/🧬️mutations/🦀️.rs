@@ -47,24 +47,17 @@ use semio_s_artifact_stdio_contract::deserialize_double_option;
 
 //#region 🔖️Mutation
 //#region 🔖️Leaves
-#[path = "🧱insert-element/🦀️.rs"]
-pub mod insert_element;
-#[path = "🪢insert-relation/🦀️.rs"]
-pub mod insert_relation;
-#[path = "🏗️insert-spatial-node/🦀️.rs"]
-pub mod insert_spatial_node;
-#[path = "🔨remove-element/🦀️.rs"]
-pub mod remove_element;
-#[path = "✂️remove-relation/🦀️.rs"]
-pub mod remove_relation;
-#[path = "🕳️remove-spatial-node/🦀️.rs"]
-pub mod remove_spatial_node;
-#[path = "🎛️set-element/🦀️.rs"]
-pub mod set_element;
-#[path = "🔧️set-relation/🦀️.rs"]
-pub mod set_relation;
-#[path = "🧭set-spatial-node/🦀️.rs"]
-pub mod set_spatial_node;
+pub use semio_s_artifact_stdio_semio_model_examples::schema::mutations::support;
+pub use support::{element_count_label, number_label, quaternion_product, relative_placement_diff, vector_label};
+pub use semio_s_artifact_stdio_semio_model_mut_family::schema::mutations::insert_element;
+pub use semio_s_artifact_stdio_semio_model_mut_family::schema::mutations::insert_relation;
+pub use semio_s_artifact_stdio_semio_model_mut_family::schema::mutations::insert_spatial_node;
+pub use semio_s_artifact_stdio_semio_model_mut_family::schema::mutations::remove_element;
+pub use semio_s_artifact_stdio_semio_model_mut_family::schema::mutations::remove_relation;
+pub use semio_s_artifact_stdio_semio_model_mut_family::schema::mutations::remove_spatial_node;
+pub use semio_s_artifact_stdio_semio_model_examples::schema::mutations::set_element;
+pub use semio_s_artifact_stdio_semio_model_mut_family::schema::mutations::set_relation;
+pub use semio_s_artifact_stdio_semio_model_mut_family::schema::mutations::set_spatial_node;
 #[path = "✋️drag-elements/🦀️.rs"]
 pub mod drag_elements;
 #[path = "🔄️rotate-elements/🦀️.rs"]
@@ -131,37 +124,10 @@ pub fn semio_model_mutation_inverse(mutation: &SemioModelMutation, base: &SemioM
 //#endregion 🔖️MutationTrait
 
 //#region 🔖️RelativePlacement
-/// 🧭️ The diff of one relative placement edit: `edit` rewrites the BASE placement of every addressed element, so the leaf
-/// replays on any base. An empty or repeated target list is a Fatal `mutation.invariant`, no addressed element left is
-/// `mutation.target-missing`, a target the model lacks is skipped as `mutation.partial`, an `identity` motion is
-/// `mutation.no-op`.
-pub(crate) fn relative_placement_diff(targets: &[String], identity: bool, base: &SemioModelSnapshot, edit: impl Fn(SemioTransform) -> SemioTransform) -> protocol::MutationOutcome<SemioModelDiff> {
-    if targets.is_empty() || targets.iter().enumerate().any(|(at, id)| targets[..at].contains(id)) {
-        return protocol::MutationOutcome::fatal("mutation.invariant", "targets must name at least one element and never one twice", targets.to_vec());
-    }
-    let missing: Vec<String> = targets.iter().filter(|id| !base.elements.iter().any(|element| element.id == **id)).cloned().collect();
-    if missing.len() == targets.len() {
-        return protocol::MutationOutcome::error("mutation.target-missing", format!("none of the {} target(s) is an element of this model", targets.len()), targets.to_vec());
-    }
-    let partial: Vec<protocol::MutationMessage> =
-        (!missing.is_empty()).then(|| protocol::MutationMessage::warning("mutation.partial", format!("{} of {} target(s) skipped (not in this model): {}", missing.len(), targets.len(), missing.join(", "))).at(missing)).into_iter().collect();
-    if identity {
-        return protocol::MutationOutcome::new(SemioModelDiff::default()).absorb_messages(partial.into_iter().chain([protocol::MutationMessage::warning("mutation.no-op", "an identity motion moves nothing").at(targets.to_vec())]));
-    }
-    let modified = base
-        .elements
-        .iter()
-        .filter(|element| targets.contains(&element.id))
-        .map(|element| {
-            NamedModified { key: element.id.clone(), diff: SemioModelElementDiff { placement: Some(edit(element.placement)), ..Default::default() } }
-        })
-        .collect();
-    protocol::MutationOutcome::new(SemioModelDiff { elements: Some(NamedTripleDiff { modified, ..Default::default() }), ..Default::default() }).absorb_messages(partial)
-}
 
 /// ↩️ The exact undo of a relative placement edit: one absolute `set-element` placement per addressed element carrying its
 /// BASE placement — never a negated motion that would accumulate float error. Nothing for an identity or invalid motion.
-pub(crate) fn relative_placement_inverse(targets: &[String], inert: bool, base: &SemioModelSnapshot) -> Vec<SemioModelMutation> {
+pub fn relative_placement_inverse(targets: &[String], inert: bool, base: &SemioModelSnapshot) -> Vec<SemioModelMutation> {
     if inert {
         return Vec::new();
     }
@@ -174,73 +140,31 @@ pub(crate) fn relative_placement_inverse(targets: &[String], inert: bool, base: 
         .collect()
 }
 
-/// 🌀️ The Hamilton product `left ⊗ right` — a world-axis turn composed onto an element's own orientation.
-pub fn quaternion_product(left: SemioQuaternion, right: SemioQuaternion) -> SemioQuaternion {
-    let SemioQuaternion { x: lx, y: ly, z: lz, w: lw } = left;
-    let SemioQuaternion { x: rx, y: ry, z: rz, w: rw } = right;
-    SemioQuaternion { x: lw * rx + lx * rw + ly * rz - lz * ry, y: lw * ry - lx * rz + ly * rw + lz * rx, z: lw * rz + lx * ry - ly * rx + lz * rw, w: lw * rw - lx * rx - ly * ry - lz * rz }
-}
 
-/// 🔢️ A label number `(en, de)`: two decimals at most, trailing zeros dropped, the German decimal comma.
-fn number_label(value: f64) -> (String, String) {
-    let rounded = (value * 100.0).round() / 100.0;
-    let text = format!("{:.2}", if rounded == 0.0 { 0.0 } else { rounded });
-    let en = text.trim_end_matches('0').trim_end_matches('.').to_string();
-    let de = en.replace('.', ",");
-    (en, de)
-}
 
-/// 📐️ A label vector `(en, de)`: "(1, 0, 2.5)" and "(1; 0; 2,5)".
-fn vector_label(values: [f64; 3]) -> (String, String) {
-    let [x, y, z] = values.map(number_label);
-    (format!("({}, {}, {})", x.0, y.0, z.0), format!("({}; {}; {})", x.1, y.1, z.1))
-}
 
-/// 🔠️ A label's counted noun `(en, de)`: "1 element" / "1 Element", "3 elements" / "3 Elemente".
-fn element_count_label(count: usize) -> (String, String) {
-    match count {
-        1 => ("1 element".to_string(), "1 Element".to_string()),
-        count => (format!("{count} elements"), format!("{count} Elemente")),
-    }
-}
 
 
 
 
 //#endregion 🔖️RelativePlacement
 
-//#region 🔖️OpCodecs
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//#endregion 🔖️OpCodecs
 
 //#region 🔖️Demo
 /// 🌱 Shared fixture helpers + representative `SemioModelMutation` cases (one per variant) —
 /// single source of truth for this facet's own tests AND `ops_grammar_conformance_law`/
 /// `protocol_walk_law` in `🎹️composer/🦀️.rs`.
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn sample_transform() -> SemioTransform {
+pub fn sample_transform() -> SemioTransform {
     use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3;
     use semio_s_artifact_stdio_semio_base::schema::geometry::SemioQuaternion;
     SemioTransform { translation: SemioPoint3 { x: 5.0, y: 6.0, z: 7.0 }, rotation: SemioQuaternion::default(), scale: SemioPoint3 { x: 1.0, y: 1.0, z: 1.0 } }
 }
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn fixture() -> SemioModelSnapshot {
+pub fn fixture() -> SemioModelSnapshot {
     let mut snap = SemioModelSnapshot::default();
     snap.spatial.push(SpatialNode { id: "s1".into(), kind: SpatialKind::Site, name: "Site".into(), parent_id: None, placement: SemioTransform::identity() });
     snap.elements.push(SemioModelElement { id: "e1".into(), class: ElementClass::Wall, placement: SemioTransform::identity(), geometry: GeometryRef::None, spatial_id: None, psets: vec![] });
@@ -248,9 +172,9 @@ pub(crate) fn fixture() -> SemioModelSnapshot {
     snap
 }
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn demo_mutation_cases() -> Vec<SemioModelMutation> {
+pub fn demo_mutation_cases() -> Vec<SemioModelMutation> {
     let _base = fixture();
     vec![
         SemioModelMutation::InsertSpatialNode(insert_spatial_node::InsertSpatialNode { node: SpatialNode { id: "s2".into(), kind: SpatialKind::Space, name: "Room".into(), parent_id: None, placement: SemioTransform::identity() }, at: None }),
@@ -272,9 +196,7 @@ pub(crate) fn demo_mutation_cases() -> Vec<SemioModelMutation> {
 //#endregion 🔖️Demo
 
 //#region 🔖️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🔖️Tests
 
 #[cfg(test)]

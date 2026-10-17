@@ -1,8 +1,9 @@
 //! 🧪️ Selected-face cuts preserve geometry, downstream measurements, and document history.
 use super::*;
+use semio_framework_test_fixtures::repo_text;
 use semio_s_artifact_procedural_3d_mutations::central_apply::apply_generation3d_mutation;
 
-fn fixtures() -> serde_json::Value { serde_json::from_str(include_str!("../../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔪️knife-mesh-selection/🧪️tests/🧫️fixtures/🔣️.json")).unwrap() }
+fn fixtures() -> serde_json::Value { serde_json::from_str(repo_text!("✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔪️knife-mesh-selection/🧪️tests/🧫️fixtures/🔣️.json")).unwrap() }
 fn payload() -> KnifeMeshSelection { KnifeMeshSelection { start: [0.0, -1.0, 0.0], end: [0.0, 1.0, 0.0] } }
 fn ids(value: &serde_json::Value) -> Vec<String> { value.as_array().unwrap().iter().map(|value| value.as_str().unwrap().to_owned()).collect() }
 

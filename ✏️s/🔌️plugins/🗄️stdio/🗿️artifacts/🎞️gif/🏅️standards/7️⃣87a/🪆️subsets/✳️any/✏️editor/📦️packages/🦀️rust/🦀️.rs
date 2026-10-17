@@ -19,7 +19,7 @@ pub use crate::editor::gif_87a::artifact_items_5::{formats};
 pub use crate::editor::gif_87a::artifact_items_7::{artifact_kind, assembly, declaration};
 pub use crate::editor::gif_87a::artifact_items_8::{contribution};
 pub use crate::editor::gif_87a::artifact_items_9::{GIF_87A_DIALECT, GIF_89A_DIALECT};
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 pub use crate::editor::gif_87a::artifact_items_9::{register_sqlite_test_declaration};
 
 #[path = "🪞️mirror/🦀️.rs"]

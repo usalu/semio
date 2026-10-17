@@ -1,0 +1,41 @@
+[package]
+workspace = "../../../../../../.."
+name = "semio-s-artifact-raster-raster-viewer"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Raster viewer"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+base64_codec = { workspace = true }
+semio-framework-2d = { workspace = true }
+semio-framework-artifact-reference = { workspace = true }
+semio-framework-composition-admission = { workspace = true }
+semio-framework-dsl-record = { workspace = true }
+semio-framework-dsl-record-derive = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-pack-json = { workspace = true }
+semio-framework-plugin = { workspace = true }
+semio-framework-schema = { workspace = true }
+semio-framework-ui-locale = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-framework-value-derive = { workspace = true }
+semio-s-artifact-raster-raster-host = { workspace = true }
+semio-s-artifact-raster-raster-io = { workspace = true }
+semio-s-artifact-raster-raster-model = { workspace = true }
+semio-s-artifact-raster-raster-mutations = { workspace = true }
+
+[dev-dependencies]
+semio-framework = { workspace = true }
+semio-framework-async-macros = { workspace = true }
+semio-framework-os-kernel = { workspace = true, features = ["mutation-testing", "protocol-laws"] }
+semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }

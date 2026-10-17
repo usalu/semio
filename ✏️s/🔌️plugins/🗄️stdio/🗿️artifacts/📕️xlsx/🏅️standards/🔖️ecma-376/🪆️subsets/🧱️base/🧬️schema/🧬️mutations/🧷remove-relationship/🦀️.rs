@@ -9,8 +9,8 @@ use super::*;
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 pub struct RemoveRelationship {
-    pub(crate) owner: String,
-    pub(crate) id: String,
+    pub owner: String,
+    pub id: String,
 }
 
 impl protocol::MutationKind<XlsxSnapshot, XlsxMutation> for RemoveRelationship {

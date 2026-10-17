@@ -2,12 +2,13 @@
 //! process, the way a host would at boot. Enabled by the `testkit` feature (and in this crate's own tests).
 
 use super::{install_runtime_assets, RuntimeAssets, RuntimeAssetsInstallError};
-use std::path::{Path, PathBuf};
+use semio_framework_test_fixtures::fixture_path;
+use std::path::PathBuf;
 use std::sync::OnceLock;
 
 /// 📂️ The repository root, found from this crate's manifest directory.
 pub fn repository_root() -> PathBuf {
-    Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../..")
+    fixture_path!("../../../../../..")
 }
 
 /// 🔌️ Reads the seven assets from the repository once per process and installs them; a process that already installed

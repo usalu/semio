@@ -38,6 +38,5 @@ test("PDF logical code units retain u32 precision in independent integer rows", 
     expect(sql.query("PRAGMA foreign_key_check").all()).toEqual([]);
     const reader=await PdfReader.create(await importSqliteDatabase(bytes),PDF17_SQLITE_SCHEMA,{},pdfContentNumberColumns);expect(await readPdfOperations(reader,root)).toEqual(input);await reader.finish();
     sql.run("UPDATE pdf_operation_code SET code=4294967295 WHERE ordinal=0");const edited=await PdfReader.create(await importSqliteDatabase(sql.serialize()),PDF17_SQLITE_SCHEMA,{},pdfContentNumberColumns);const current=await readPdfOperations(edited,root);expect(current[0]).toEqual({op:"showText",text:{kind:"codes",codes:[0xffffffff,...sample.codes.slice(1)]}});await edited.finish();sql.close();
-    console.log(`[DEBUG] PDF logical code case=${sample.id} native width=${sample.width} independent integer rows exact`);
   }
 }, {timeout:30000});

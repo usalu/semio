@@ -797,8 +797,11 @@
         "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/📡️wire/🎮️command/📥️ingress/🏛️ownership/🧪️testing/🧩️consumer/🟦️.ts",
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧵️channel/🦀️.rs",
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧵️channel/*/🦀️.rs",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧵️channel/🗜️codec/*/🦀️.rs",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧵️channel/🧩️command-decode/*/🦀️.rs",
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🦀️.rs",
-        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧵️channel/🧪️tests/🔬️unit/🦀️.rs"
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧵️channel/🧪️tests/🔬️unit/🦀️.rs",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧵️channel/🧪️tests/🔬️unit/*/🦀️.rs"
       ]
     },
     "test-command-transport-source": {

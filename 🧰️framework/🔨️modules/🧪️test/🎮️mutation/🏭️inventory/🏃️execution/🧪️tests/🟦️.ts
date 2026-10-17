@@ -42,7 +42,7 @@ test("real refusal conserves exact partial capture and stopped process owners",a
       const result=await runMutationInventoryProcess(request(row.source,row.maximumCaptureBytes!==undefined?{maximumCaptureBytes:row.maximumCaptureBytes}:row.budgetMs!==undefined?{budgetMs:row.budgetMs}:{}),op);
       expect(String(result.reason)).toBe(row.reason);expect(w.process === undefined || w.process.closed).toBe(true);expect(w.stdout?.closed).toBe(true);expect(w.stderr?.closed).toBe(true);
       if(row.kind==="capture"){expect(w.process?.closed).toBe(true);expect(result.stdout.bytes+result.stderr.bytes).toBe(13);expect(await readFile(result.stdout.path,"utf8")).toBe("x".repeat(13));}
-      expect(JSON.parse(await readFile(result.receiptPath,"utf8")).reason).toBe(row.reason);console.log(`[DEBUG] execution refusal kind=${row.kind} reason=${result.reason} process-started=${w.process !== undefined} process-closed=${w.process?.closed ?? true}`);
+      expect(JSON.parse(await readFile(result.receiptPath,"utf8")).reason).toBe(row.reason);
     }catch(error){expect(error).toBeInstanceOf(MutationInventoryProcessError);expect(String((error as MutationInventoryProcessError).reason)).toBe(row.reason);expect((error as MutationInventoryProcessError).workspace).toBe(w);expect(w.process).toBeUndefined();expect(w.input).toBeDefined();}
     finally{if(timer)clearTimeout(timer);}
   }
@@ -64,7 +64,7 @@ test("real compiler lease stays owned until shutdown and cancels in the queue",a
 },30000);
 
 test("compiler paths are admitted before physical storage or process work",async()=>{
-  for(const compiler of [{buildDirectory:"relative",leaseDirectory:policy.compilerStorage.leaseDirectory},{buildDirectory:policy.compilerStorage.buildDirectory,leaseDirectory:"relative"},{buildDirectory:join(output!,"bad\0path"),leaseDirectory:policy.compilerStorage.leaseDirectory}]){
+  for(const compiler of [{buildDirectory:"relative",targetDirectory:policy.compilerStorage.targetDirectory,leaseDirectory:policy.compilerStorage.leaseDirectory},{buildDirectory:policy.compilerStorage.buildDirectory,targetDirectory:policy.compilerStorage.targetDirectory,leaseDirectory:"relative"},{buildDirectory:join(output!,"bad\0path"),targetDirectory:policy.compilerStorage.targetDirectory,leaseDirectory:policy.compilerStorage.leaseDirectory}]){
     const w=new MutationInventoryProcessWorkspace();let failure:unknown;
     try{await runMutationInventoryProcess({...request("void 0"),compiler},operation(w));}catch(error){failure=error;}
     expect(failure).toBeDefined();expect(w.input).toBeDefined();expect(w.directory).toBeUndefined();expect(w.process).toBeUndefined();expect(w.lease).toBeUndefined();

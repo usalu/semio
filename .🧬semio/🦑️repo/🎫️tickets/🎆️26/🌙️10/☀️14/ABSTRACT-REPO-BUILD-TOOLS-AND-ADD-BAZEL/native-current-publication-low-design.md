@@ -64,3 +64,23 @@ The final Fixed leaf now compares initial/opened/post-read descriptor mtime and 
 ## Shared Fixed Wiring Finding
 
 An in-flight shared owner snapshot required `scope.device` unconditionally before detach, while concrete Fixed observation populated mappingData/initialMapping/mountedRoot and no Mac device field. This made a valid Linux mounted flow refuse before concrete detach. Sent the exact observer/detach boundary to High for a platform-specific real mapping predicate and regression law. Windows is explicitly refused before effects until authenticated metadata actions exist; that refusal is an honest implementation gate, not Windows qualification.
+
+## Held POSIX Slice Final Point-in-Time Check
+
+Independent sequential nofollow FD/stamp/SHA checks of all 19 held paths completed cleanly; receipt `🗑️generated/native-publication-posix-low-independent.json` retains actual per-file observations. Shared owner SHA is `192e456e254d8a9d1a319f1f8ff22ecf6a163fceb49439e6d132dbe6a8d9e410`. Reported Source evidence is 17 laws/1958 assertions; six-root strict is nonzero for two retained dependency diagnostics and is not reclassified as success. Windows remains pre-effect refused pending metadata actions. No Native/SDK/store execution or physical publication acceptance is provided by this audit.
+
+## Final POSIX Dispatch Gate
+
+Current private body dispatch admits only the next declared platform/initial-state image-or-metadata action, increments once before dispatch and refuses pending overlap; terminal cleanup has its separate bounded accepted-funding counter and awaited process close. Windows remains explicitly refused before effects until metadata implementation. Current owner SHA `6a213b6e0e84f911da54209648fe980004fcfc70469ae326fd91254041fe0ed0` has stable own FD/named stamps. High reports final 18 laws/2143 assertions and six-root strict success; this audit did not execute them. The previous two-diagnostic strict receipt remains historical rather than being overwritten as a pass. Source review has no remaining concrete blocker for the scoped private Mac proof; full-tree OS metadata may still honestly refuse.
+
+## Windows Metadata Early Draft Blockers
+
+The first emitted PowerShell draft contains a trailing escape in its drive-root regex, vacuous EndsWith(empty), an incomplete volume GUID prefix/trailing separator check and TrimEnd(empty) calls. These are concrete script-generation defects; actual emitted-string regression laws are required, rather than checking TypeScript template spelling. The existing record reader also rejects zero-byte files, preventing the approved discard/rebuild of exact schema-owned partial metadata after a crash. Sent both findings to Lease/Root before any Windows integration acceptance. Current Source-only ACL models do not establish real Windows semantics or remedy these blockers.
+
+## Held Windows Metadata Source Scope
+
+The corrected Windows metadata leaf has stable own FD/named SHA `732422a591daacf565f53984287961f8913a3484a7b53df0cf46210f10a54e1d`, matching held Source. Reported owner gates are five laws/210 assertions and focused strict success; no PowerShell or Windows physical execution is established. Emitted-string, partial-prefix, ACL/handle and close-loop models remain Source/explicit-port evidence. The shared publisher still needs actual three-action integration and complete platform funding/drain checks before any effects. Independent receipt: `🗑️generated/windows-publication-metadata-low-independent.json`.
+
+## Held Windows Shared Hookup Scope
+
+Independent five-path FD/stamp/SHA comparison matches held hookup receipt. Private metadata pending/published/settled actions are counted in the declared actual dispatch order, use genuine requested body phase and retained system facts, validate native result before publishing private receipt proof, and avoid Node mutation/POSIX barriers on the Windows branch. Mutation-followed-by-error retains protocol recovery semantics; settled failure may have already removed marker only after actual private qualification. No new Source blocker found. Reported full Source28 laws/2892 assertions and six-root strict success are owner evidence. Runtime O_NOFOLLOW support is an explicit pre-effect guard/qualification limit, not a substitute for actual Windows ABI/ACL/provider proof. Receipt `🗑️generated/native-publication-windows-hook-low-independent.json`.

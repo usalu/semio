@@ -24,6 +24,7 @@ path = "../../🦀️.rs"
 
 [dependencies]
 semio-framework-async = { path = "../../../../📦️packages/🦀️rust", features = ["testkit", "entrypoint"] }
+semio-framework-test-fixtures = { path = "../../../../../🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-framework-trace = { workspace = true }

@@ -3,7 +3,7 @@
 pub const OPCODE: &str = "remove-catalog-entry";
 pub const TEXT_OPCODE: &str = OPCODE;
 
-use crate::standards::v1_7::subsets::base::schema::mutations::RemoveCatalogEntry;
+use crate::standards::v1_7::subsets::base::schema::mutations::remove_catalog_entry::RemoveCatalogEntry;
 
 /// 🖨️ Prints this direct payload through its schema-derived JSON representation.
 pub fn print(payload: &RemoveCatalogEntry) -> Result<String, String> {

@@ -64,15 +64,15 @@ pub struct PlaygroundEditor;
 
 //#region 🧵️RetainedCommands
 const PLAYGROUND_RETAINED_TOOL_IDS: &[&str] = &["changeSchema", "setActiveExample"];
-const PLAYGROUND_RETAINED_PAYLOAD_SCHEMA: &str = "playground.playground.tool-command.v1";
-const PLAYGROUND_RETAINED_RAW_BYTES: usize = 8_192;
-const PLAYGROUND_RETAINED_WORK_ITEMS: usize = 1;
+pub const PLAYGROUND_RETAINED_PAYLOAD_SCHEMA: &str = "playground.playground.tool-command.v1";
+pub const PLAYGROUND_RETAINED_RAW_BYTES: usize = 8_192;
+pub const PLAYGROUND_RETAINED_WORK_ITEMS: usize = 1;
 
 fn playground_retained_contract() -> ToolExecutionContract {
     ToolExecutionContract::bounded_first_step(PLAYGROUND_RETAINED_RAW_BYTES, 32, 32, 16_384, 7_500)
 }
 
-fn playground_retained_extent(command: &PlaygroundCommand, _snapshot: &PlaygroundSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
+pub fn playground_retained_extent(command: &PlaygroundCommand, _snapshot: &PlaygroundSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
     match command {
         PlaygroundCommand::ChangeSchema(payload) if payload.new_schema.len() <= PLAYGROUND_RETAINED_RAW_BYTES => Some(1),
         PlaygroundCommand::ChangeSchema(_) => None,
@@ -94,7 +94,7 @@ fn playground_retained_reduce(
     command.dispatch(&ArtifactView::with_operation(snapshot, history, operation.clone()), &ConfigView { snapshot: config, window: None })
 }
 
-struct PlaygroundCommandJobFactory {
+pub struct PlaygroundCommandJobFactory {
     keys: Vec<ToolFactoryKey>,
 }
 
@@ -132,9 +132,9 @@ impl ToolJobFactory for PlaygroundCommandJobFactory {
         &mut self,
         _operation: semio_framework_job::Operation,
         payload: Self::Payload,
-        input: semio_framework::action_bus::RetainedToolWireInput,
-        checkpoint: Option<semio_framework::action_bus::RetainedToolWireInput>,
-    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework::action_bus::RetainedToolWireInput, Option<semio_framework::action_bus::RetainedToolWireInput>)> {
+        input: semio_framework_action_bus::RetainedToolWireInput,
+        checkpoint: Option<semio_framework_action_bus::RetainedToolWireInput>,
+    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework_action_bus::RetainedToolWireInput, Option<semio_framework_action_bus::RetainedToolWireInput>)> {
         if input.declared_bytes() > PLAYGROUND_RETAINED_RAW_BYTES || checkpoint.is_some() {
             return Err((ToolJobFactoryError::new("Playground bounded command rejects oversized wire or checkpoint owner"), input, checkpoint));
         }
@@ -495,3 +495,45 @@ pub fn create_playground_editor() -> semio_framework_plugin::AppDefinition {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 pub(crate) mod unit_tests;
 //#endregion 🧪️UnitTests
+
+//#region 🧩️ArtifactItems2
+pub mod artifact_items_2 {
+use semio_framework_artifact_reference::{Dialect, StandardId, SubsetId};
+
+//#region 🔖️Dialect
+/// 🎯️ Ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §2.1 — the one `Dialect`
+/// coordinate `PlaygroundEditor`/`PlaygroundViewer` (`✏️editor`/`👁️viewer`) both read `DIALECT` off,
+/// lives at the ARTIFACT root (not under either surface) so a viewer file can read it without ever
+/// importing through the sibling editor module. The root, definition and native dialect share
+/// one plugin-owned identity; the document payload schema remains independently named.
+pub const PLAYGROUND_DIALECT: Dialect = Dialect { artifact_kind: "s.demonstrator.playground", standard: StandardId("1"), subset: SubsetId::ANY };
+//#endregion 🔖️Dialect
+}
+//#endregion 🧩️ArtifactItems2
+
+//#region 🧩️ArtifactItems3
+pub mod artifact_items_3 {
+use crate::{PLAYGROUND_DOCUMENT_SCHEMA};
+use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
+
+//#region 🔖️ArtifactKind
+/// 🗂️ This artifact's `ArtifactKindSpec`.
+pub fn artifact_kind() -> ArtifactKindSpec {
+    ArtifactKindSpec {
+        id: "playground.document".into(),
+        label: semio_framework_ui_locale::LocalizedLabel::native("Playground Document", "Playground-Dokument"),
+        source_format: PLAYGROUND_DOCUMENT_SCHEMA.into(),
+        component_kind: "playground".into(),
+        dimension: "data".into(),
+        media_capability: OsMediaCapability::MeshOnly,
+        media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
+        schema: PLAYGROUND_DOCUMENT_SCHEMA.into(),
+        export_formats: vec![],
+        import_formats: vec![],
+        export_stdio_kinds: vec!["stdio.json".into(), "stdio.zip".into()],
+        import_stdio_kinds: vec!["stdio.json".into(), "stdio.zip".into()],
+    }
+}
+//#endregion 🔖️ArtifactKind
+}
+//#endregion 🧩️ArtifactItems3

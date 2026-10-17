@@ -1,0 +1,73 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "variant": "queued-direct",
+      "accepted": true
+    },
+    {
+      "variant": "queued-descendant",
+      "accepted": true
+    },
+    {
+      "variant": "nonwaiting-direct",
+      "accepted": true
+    },
+    {
+      "variant": "nonwaiting-descendant",
+      "accepted": true
+    },
+    {
+      "variant": "wrong-original",
+      "accepted": false
+    },
+    {
+      "variant": "sibling",
+      "accepted": false
+    },
+    {
+      "variant": "cancelled",
+      "accepted": false
+    },
+    {
+      "variant": "expired",
+      "accepted": false
+    },
+    {
+      "variant": "closed",
+      "accepted": false
+    },
+    {
+      "variant": "forged-lease",
+      "accepted": false
+    },
+    {
+      "variant": "forged-enrollment",
+      "accepted": false
+    },
+    {
+      "variant": "wrong-cleanup-body",
+      "accepted": false
+    },
+    {
+      "variant": "nonwaiting-busy",
+      "accepted": true
+    },
+    {
+      "variant": "queued-contender",
+      "accepted": true
+    },
+    {
+      "variant": "lease-descendant-cleanup",
+      "accepted": true
+    },
+    {
+      "variant": "released-lease",
+      "accepted": false
+    },
+    {
+      "variant": "forged-control",
+      "accepted": false
+    }
+  ]
+}

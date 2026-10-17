@@ -47,6 +47,9 @@ path = "../../🔤change-stock-label/🧪️tests/🔤️relabels/🦀️.rs"
 name = "process3d_replace_stock_solid"
 path = "../../🧊replace-stock-solid/🧪️tests/🧊️reissues/🦀️.rs"
 
+[features]
+testkit = []
+
 [dependencies]
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-diagnostic = { workspace = true }

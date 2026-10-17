@@ -1,5 +1,33 @@
 //! 🪁️ The instance components of `instance-jobs`: PendingReserved, ToolOperations (WP6, plan section 7.3).
-use super::*;
+use semio_framework_plugin_ownership::bounded_ownership::{ARTIFACT_LIVE_OUTPUT_SLOTS, ArtifactFixedQueue, ArtifactFixedRegistry};
+use semio_framework_plugin_window_kits::AppActionRegistry;
+use semio_framework::kernel::{AppEvent, Effect, InvocationResult, UiDirtyScope};
+use semio_framework_plugin_decl_app::ArtifactApp;
+use store::os_store::store_schema::ArtifactCommand;
+use semio_framework_plugin_decl_views::tool_contract::ArtifactInstanceOperationOwnerHandle;
+use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use pack::snapshot::ArtifactPack;
+use semio_framework_plugin_decl_app::tool_contract::{ArtifactToolPublicContract, ArtifactToolRegistration};
+use std::collections::BTreeMap;
+use semio_framework_ui_runtime::ComponentTree;
+use semio_framework_plugin_composition_publication::ComposedGestureResult;
+use semio_framework_value::retirement::controlled::ControlledRetirement;
+use crate::jobs_document_replacement::DocumentWindowResetAdmission;
+use semio_framework_value::DslValue;
+use semio_framework_plugin_decl_emission::Emit;
+use semio_framework_plugin_job::{EmitWire, TYPED_OPERATION_HOST_OUTBOX_SLOTS, TypedOperationCompletionWitness, TypedOperationLeftover};
+use semio_framework::{Fault, FaultFrom};
+use semio_framework_plugin_job::reserved_jobs::{FrameworkReservedCommit, FrameworkReservedCommitPermit, PendingFrameworkReserved, QualifiedBoundedFirstStepProof};
+use std::future::Future;
+use std::mem::ManuallyDrop;
+use store::{MemberFactory, Mutation, SpaceMember};
+use semio_framework_plugin_retained_command::typed_operation::MountedTypedCommandFullOperation;
+use protocol::OpText;
+use crate::jobs_instance_root::OriginalRenderTreeIdentity;
+use crate::jobs_lease::OriginalToolLeaseAdmission;
+use semio_framework_plugin_command::command_admission::{PendingLatestWinsCommand, ToolLatestWinsRegistry};
+use semio_framework_plugin_reactor_app::PluginApp;
+use semio_framework_ui_contract::*;
 
 /// 🪂️ Pending reserved work: the reserved commits, render trees, configuration commands and their failure custody.
 pub struct PendingReserved<A: ArtifactApp> {
@@ -12,18 +40,18 @@ pub struct PendingReserved<A: ArtifactApp> {
     pub pending_render_tree_identity: Option<OriginalRenderTreeIdentity>,
     pub pending_render_tree_ready: bool,
     pub pending_render_tree_close:std::mem::ManuallyDrop<Option<semio_framework_ui_contract::OriginalBuiltTreeRetirement>>,
-    pub pending_configuration_completion:Option<crate::reserved_jobs::ConfigurationDecodeRetirement<A::ConfigMutation>>,
+    pub pending_configuration_completion:Option<semio_framework_plugin_job::reserved_jobs::ConfigurationDecodeRetirement<A::ConfigMutation>>,
     pub pending_configuration_command:std::mem::ManuallyDrop<Option<ArtifactCommand<A::ConfigMutation>>>,
     pub pending_configuration_command_close:Option<ControlledRetirement<ArtifactCommand<A::ConfigMutation>>>,
     pub pending_configuration_permit:Option<FrameworkReservedCommitPermit>,
-    pub pending_configuration_failure:std::mem::ManuallyDrop<Option<crate::reserved_jobs::OriginalConfigurationFailure>>,
+    pub pending_configuration_failure:std::mem::ManuallyDrop<Option<semio_framework_plugin_job::reserved_jobs::OriginalConfigurationFailure>>,
     pub pending_configuration_identity:Option<(semio_framework_job::OperationId,semio_framework_job::Generation)>,
-    pub pending_configuration_retirement:Option<ControlledRetirement<crate::reserved_jobs::OriginalConfigurationFailure>>,
-    pub pending_render_failure: std::mem::ManuallyDrop<Option<crate::OriginalRenderFailure>>,
+    pub pending_configuration_retirement:Option<ControlledRetirement<semio_framework_plugin_job::reserved_jobs::OriginalConfigurationFailure>>,
+    pub pending_render_failure: std::mem::ManuallyDrop<Option<semio_framework_plugin_ownership::sdk_fault::OriginalRenderFailure>>,
     pub pending_render_identity: Option<(semio_framework_job::OperationId,semio_framework_job::Generation)>,
     pub pending_render_close_failure:std::mem::ManuallyDrop<Option<semio_framework_job::OriginalTurnFailure>>,
     pub pending_render_compound:std::mem::ManuallyDrop<Option<semio_framework_job::OriginalClosureFailure>>,
-    pub pending_render_retirement: std::mem::ManuallyDrop<Option<semio_framework_value::retirement::controlled::ControlledRetirement<crate::OriginalRenderFailure>>>,
+    pub pending_render_retirement: std::mem::ManuallyDrop<Option<semio_framework_value::retirement::controlled::ControlledRetirement<semio_framework_plugin_ownership::sdk_fault::OriginalRenderFailure>>>,
     pub pending_reserved: ArtifactFixedRegistry<PendingFrameworkReserved>,
     pub reserved_commits: std::collections::VecDeque<FrameworkReservedCommit>,
     pub reserved_commit_outcome: Option<Result<InvocationResult, Fault>>,
@@ -91,13 +119,13 @@ pub struct ToolOperations<A: ArtifactApp> {
     pub registry: AppActionRegistry,
     pub tool_job_controller_id: String,
     pub tool_jobs: semio_framework::ActionBus,
-    pub agent_lane_preview:Option<crate::tool_jobs::AgentLanePreview<A>>,
+    pub agent_lane_preview:Option<semio_framework_plugin_job::AgentLanePreview<A>>,
     pub bounded_tool_proofs: BTreeMap<String, QualifiedBoundedFirstStepProof>,
     pub bounded_tool_contracts: Vec<ArtifactToolPublicContract>,
     pub framework_tool_registrations: BTreeMap<String, ArtifactToolRegistration>,
     pub app_tool_registrations: BTreeMap<String, ArtifactToolRegistration>,
     pub instance_operation_owner: ArtifactInstanceOperationOwnerHandle,
-    pub tool_cancellations: crate::tool_cancellation::ToolCancellationIssuer,
+    pub tool_cancellations: semio_framework_plugin_operation::ToolCancellationIssuer,
     pub live_runtime_instance_id: Option<u32>,
     pub tool_operations: ArtifactFixedRegistry<MountedTypedCommandFullOperation<A>>,
     #[cfg(test)]
@@ -133,7 +161,7 @@ impl<A: ArtifactApp> ToolOperations<A> {
             framework_tool_registrations,
             app_tool_registrations,
             instance_operation_owner,
-            tool_cancellations: crate::tool_cancellation::ToolCancellationIssuer::empty(),
+            tool_cancellations: semio_framework_plugin_operation::ToolCancellationIssuer::empty(),
             live_runtime_instance_id: None,
             tool_operations: ArtifactFixedRegistry::new(),
             #[cfg(test)]

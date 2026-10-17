@@ -8,13 +8,13 @@ import { frameworkSourcePath } from "@semio-tech/framework/test/source-text";
 
 test("original geometry reads agree with independent Three mesh and rational curve geometry",async()=>{
  expect(new Ajv({strict:true}).validate(schema,fixture)).toBe(true);
- expect(new Vector3().fromArray(fixture.mesh.positions[fixture.mesh.vertex]).toArray()).toEqual(fixture.mesh.output);
+ expect([...new Vector3().fromArray(fixture.mesh.positions[fixture.mesh.vertex]).toArray()]).toEqual(fixture.mesh.output);
  const law=fixture.curve;const curve=new NURBSCurve(law.degree,law.knots,law.controls.map((p,i)=>new Vector4(p[0],p[1],p[2],law.weights[i])));const point=curve.getPoint(law.parameter).toArray();
  point.forEach((value,i)=>expect(Math.abs(value-law.output[i])).toBeLessThan(fixture.tolerance));
- expect(new LineCurve3(new Vector3().fromArray(fixture.line.start),new Vector3().fromArray(fixture.line.end)).getPoint(fixture.line.parameter).toArray()).toEqual(fixture.line.output);
+ expect([...new LineCurve3(new Vector3().fromArray(fixture.line.start),new Vector3().fromArray(fixture.line.end)).getPoint(fixture.line.parameter).toArray()]).toEqual(fixture.line.output);
  const plane=new PlaneGeometry(fixture.plane.width,fixture.plane.depth).rotateX(Math.PI/2);const positions=plane.attributes.position;const actual=Array.from({length:positions.count},(_,i)=>[positions.getX(i),Math.abs(positions.getY(i))<1e-6?0:positions.getY(i),positions.getZ(i)]).sort((a,b)=>JSON.stringify(a).localeCompare(JSON.stringify(b)));expect(actual).toEqual([...fixture.plane.positions].sort((a,b)=>JSON.stringify(a).localeCompare(JSON.stringify(b))));
  plane.attributes.normal.array.slice(0,3).forEach((value,i)=>expect(Math.abs(value-fixture.plane.normal[i])).toBeLessThan(fixture.tolerance));
- fixture.translation.positions.forEach((point,i)=>expect(new Vector3().fromArray(point).add(new Vector3().fromArray(fixture.translation.offset)).toArray()).toEqual(fixture.translation.output[i]));
+ fixture.translation.positions.forEach((point,i)=>expect([...new Vector3().fromArray(point).add(new Vector3().fromArray(fixture.translation.offset)).toArray()]).toEqual(fixture.translation.output[i]));
  expect(JSON.parse(JSON.stringify(fixture.translation.texture))).toEqual(fixture.translation.texture);
  const source=await Bun.file(new URL("../📐️read/🦀️.rs",import.meta.url)).text();
  expect(source).not.toContain("curve_input(");

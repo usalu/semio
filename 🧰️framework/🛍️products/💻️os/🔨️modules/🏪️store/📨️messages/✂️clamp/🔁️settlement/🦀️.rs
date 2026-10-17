@@ -8,7 +8,7 @@ enum Phase { Select, Reserve, Visit, Copy, CloseCopy, Place, Finished }
 pub struct EditMessageSettlement {pub selection:FinalMessageSelection,pub messages:ManuallyDrop<Option<Vec<MutationMessage>>>,pub phase:Phase,pub outcome:usize,pub end:usize,pub ledger:usize,pub copy:Option<MessageCopyCursor>,pub pending:Option<MutationMessage>,pub active:Option<MutationMessageRetirement>,pub retiring:Option<MutationMessageLedgerRetirement>,pub closing:bool,pub work:u64}
 fn refusal()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,"edit diagnostic settlement lost its original admitted owner")}
 impl EditMessageSettlement {
- pub(crate) fn new(edit_id:&str,messages:&ReplayMessageAccumulator,first:usize,end:usize)->Self{Self{selection:FinalMessageSelection::new(edit_id.len(),messages.rows().len()),messages:ManuallyDrop::new(None),phase:Phase::Select,outcome:first,end,ledger:0,copy:None,pending:None,active:None,retiring:None,closing:false,work:0}}
+ pub fn new(edit_id:&str,messages:&ReplayMessageAccumulator,first:usize,end:usize)->Self{Self{selection:FinalMessageSelection::new(edit_id.len(),messages.rows().len()),messages:ManuallyDrop::new(None),phase:Phase::Select,outcome:first,end,ledger:0,copy:None,pending:None,active:None,retiring:None,closing:false,work:0}}
  pub fn completed_work(&self)->u64{self.work}
  pub fn is_finished(&self)->bool{matches!(self.phase,Phase::Finished)&&!self.closing}
  pub fn messages(&self)->&[MutationMessage]{self.messages.as_ref().map_or(&[],Vec::as_slice)}

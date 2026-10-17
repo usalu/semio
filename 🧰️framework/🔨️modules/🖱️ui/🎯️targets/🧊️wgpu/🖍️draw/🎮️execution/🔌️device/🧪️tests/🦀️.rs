@@ -1,6 +1,6 @@
 use super::*;
 fn devices()->Option<(Device,Queue,Device,Queue)>{
-    match semio_framework_async::block_on(async{let(a,aq)=Device::headless().await?;let(b,bq)=Device::headless().await?;Ok::<_,String>((a,aq,b,bq))}){Ok(devices)=>Some(devices),Err(fault)=>{eprintln!("[DEBUG] actual opaque provider device laws unavailable: {fault}");None}}
+    match semio_framework_async::block_on(async{let(a,aq)=Device::headless().await?;let(b,bq)=Device::headless().await?;Ok::<_,String>((a,aq,b,bq))}){Ok(devices)=>Some(devices),Err(fault)=>{None}}
 }
 #[test]
 fn foreign_actual_binding_is_refused_before_driver_access_and_original_resources_remain_owned(){
@@ -13,7 +13,6 @@ fn foreign_actual_binding_is_refused_before_driver_access_and_original_resources
     assert!(matches!(result,Err(ResourceFault::ForeignSession)));
     assert!(Arc::ptr_eq(&roots,&original.session.0));
     assert_eq!(original.size(),16);
-    eprintln!("[DEBUG] actual independent device binding law rejected a foreign resource before driver construction and retained its real original session");
 }
 #[test]
 fn foreign_submission_returns_exact_actual_command_and_completion_requires_callback(){
@@ -24,7 +23,6 @@ fn foreign_submission_returns_exact_actual_command_and_completion_requires_callb
     for _ in 0..100_000{if submission.poll().unwrap(){break}std::thread::yield_now();}
     assert!(submission.complete(),"actual submitted-work callback must settle");
     assert!(!a.same_session(&b));
-    eprintln!("[DEBUG] foreign actual queue returned the exact command; issuer executed it and actual submitted-work callback established completion");
 }
 #[test]
 fn foreign_actual_render_attachment_is_refused_before_a_pass_is_born(){
@@ -34,5 +32,4 @@ fn foreign_actual_render_attachment_is_refused_before_a_pass_is_born(){
     let mut encoder=a.create_command_encoder(&CommandEncoderDescriptor::default());
     assert!(matches!(encoder.try_begin_render_pass(&RenderPassDescriptor{label:None,color_attachments:&[Some(RenderPassColorAttachment{view:&view,depth_slice:None,resolve_target:None,ops:Operations{load:LoadOp::Clear(Color::TRANSPARENT),store:StoreOp::Store}})],depth_stencil_attachment:None,timestamp_writes:None,occlusion_query_set:None,multiview_mask:None}),Err(ResourceFault::ForeignSession)));
     assert!(Arc::ptr_eq(&texture.session.0,&view.session.0));
-    eprintln!("[DEBUG] actual render pass refused a foreign attachment before backend pass creation");
 }

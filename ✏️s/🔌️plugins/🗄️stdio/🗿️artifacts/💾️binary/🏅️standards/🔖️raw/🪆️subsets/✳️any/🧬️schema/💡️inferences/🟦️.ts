@@ -30,6 +30,10 @@ type stdioBinaryRawAnyInferenceGuardSizeBounds = { readonly minItems?: number; r
 
 export const stdioBinaryRawAnyInferenceGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : stdioBinaryRawAnyInferenceGuardReject(at, "value is not an object");
+export const stdioBinaryRawAnyInferenceGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) stdioBinaryRawAnyInferenceGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const stdioBinaryRawAnyInferenceGuardArray = (value: unknown, at: string, bounds: stdioBinaryRawAnyInferenceGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return stdioBinaryRawAnyInferenceGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) stdioBinaryRawAnyInferenceGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -60,14 +64,14 @@ export const stdioBinaryRawAnyInferenceGuardConstant = <T extends string | numbe
 //#endregion 🚪️Parsers
 
 export function parseBinaryInference(value: unknown, at = "$"): BinaryInference {
-  const row = stdioBinaryRawAnyInferenceGuardObject(value, at);
+  const row = stdioBinaryRawAnyInferenceGuardClosed(stdioBinaryRawAnyInferenceGuardObject(value, at), at, ["extent"]);
   return {
     extent: parseBinaryExtent(row["extent"], `${at}.extent`),
   };
 }
 
 export function parseBinaryExtent(value: unknown, at = "$"): BinaryExtent {
-  const row = stdioBinaryRawAnyInferenceGuardObject(value, at);
+  const row = stdioBinaryRawAnyInferenceGuardClosed(stdioBinaryRawAnyInferenceGuardObject(value, at), at, ["byteLength", "isEmpty", "contentDigest"]);
   return {
     byteLength: stdioBinaryRawAnyInferenceGuardInteger(row["byteLength"], `${at}.byteLength`, {"minimum": 0}),
     isEmpty: stdioBinaryRawAnyInferenceGuardBoolean(row["isEmpty"], `${at}.isEmpty`),

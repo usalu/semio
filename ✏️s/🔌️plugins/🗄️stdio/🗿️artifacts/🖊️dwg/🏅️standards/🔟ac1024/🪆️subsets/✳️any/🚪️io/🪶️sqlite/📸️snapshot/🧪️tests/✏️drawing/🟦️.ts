@@ -24,6 +24,5 @@ test("DWG ordered drawing and nine native symbol controls preserve exact indepen
     const edited=await read(native);expect(edited.objects[9]!.body).toEqual({kind:"dictionary",value:{cloningFlag:65535,hardOwner:true,defaultEntryHandle:0n,entries:[{name:"same",handle:max},{name:"edited",handle:0n}]}});
     expect(edited.objects[1]!.body).toEqual({kind:"tableControl",value:{kind:"layer",value:{entryHandles:[{handle:max},{handle:0n},{handle:max}]}}});
     native.run("UPDATE dwg_object_reactor_handle SET ordinal=0 WHERE id=2");expect(native.query("PRAGMA integrity_check").get()).toEqual({integrity_check:"ok"});await expect(read(native)).rejects.toThrow();
-    console.log("[DEBUG] DWG drawing orders, mixed owners, dictionary and nine symbol controls independently verified");
   }finally{native.close();}
 },20000);

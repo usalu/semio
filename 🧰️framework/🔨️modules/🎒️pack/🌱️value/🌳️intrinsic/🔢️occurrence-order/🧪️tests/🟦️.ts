@@ -21,7 +21,6 @@ test("intrinsic occurrence examples preserve original ordinal wire independently
  for(const row of fixture.cases){expect(body(row.source as Value).toString("hex")).toBe(row.bodyHex);expect(applyPatch({},[{op:"add",path:"/source",value:structuredClone(row.source)}],true).newDocument).toEqual({source:row.source});}
  const unicode=fixture.cases.find(row=>row.id==="utf8-versus-utf16")!;const names=unicode.source.members!.map(member=>member.name);expect([...names].sort((a,b)=>Buffer.compare(Buffer.from(a),Buffer.from(b)))).not.toEqual(names);
  expect(fixture.cases[0]!.bodyHex).not.toBe(fixture.cases[1]!.bodyHex);expect(fixture.cases[4]!.source.members!.map(member=>member.name)).toEqual(["z","a","a"]);
- console.log("[DEBUG] intrinsic occurrence order5 exact independent Buffer wire and RFC6902 clone");
 });
 
-test("original receipt order fold 1 keeps plain trials outside schema authority",async()=>{const {existsSync}=await import("node:fs");expect(existsSync(new URL("../🧬️schema/🔣️.json",import.meta.url))).toBe(false);console.log("[DEBUG] Original receipt/order/fold trial has no whole-corpus schema authority");});
+test("original receipt order fold 1 keeps plain trials outside schema authority",async()=>{const {existsSync}=await import("node:fs");expect(existsSync(new URL("../🧬️schema/🔣️.json",import.meta.url))).toBe(false);});

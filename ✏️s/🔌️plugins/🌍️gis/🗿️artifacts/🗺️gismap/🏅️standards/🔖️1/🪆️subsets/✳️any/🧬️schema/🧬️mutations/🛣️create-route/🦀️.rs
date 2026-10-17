@@ -1,7 +1,6 @@
 //! 🆕️ `create-route` mutation payload — adds a new route feature to `routes`.
 
 use crate::diff::GisMapDiff;
-use crate::mutations::GisMapMutation;
 use crate::{GisMapSnapshot, MapFeature};
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -24,14 +23,17 @@ pub struct CreateRoute {
     pub item: MapFeature,
 }
 
-impl MutationKind<GisMapSnapshot, GisMapMutation> for CreateRoute {
+impl<Op> MutationKind<GisMapSnapshot, Op> for CreateRoute
+where
+    Op: protocol::Mutation<GisMapSnapshot, Diff = GisMapDiff> + From<CreateRoute> + From<crate::standards::v1::subsets::any::schema::mutations::delete_route::DeleteRoute>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "route", kind: "create-route", record: "CreatedRoute" };
 
     fn diff(&self, base: &GisMapSnapshot) -> protocol::MutationOutcome<GisMapDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &GisMapSnapshot) -> Result<Vec<GisMapMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &GisMapSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         super::inverse::inverse(self, base)
     }
 

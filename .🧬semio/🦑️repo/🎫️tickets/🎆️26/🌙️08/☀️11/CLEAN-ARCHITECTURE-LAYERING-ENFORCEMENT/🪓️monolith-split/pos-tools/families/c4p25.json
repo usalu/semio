@@ -1,0 +1,13 @@
+{
+ "name": "c4p25",
+ "crates": [
+  "semio-s-artifact-remodel-remodeling-optimize",
+  "semio-s-plugin-energy-engine-kernel",
+  "semio-s-plugin-energy-engine-model",
+  "semio-s-plugin-energy-engine-precompute",
+  "semio-s-plugin-energy-engine-sim-wire",
+  "semio-s-artifact-energy-model-editor",
+  "semio-s-artifact-energy-model-export"
+ ],
+ "note": "CENSUS4-PKG-25: remodel optimize + energy engine kernel/model/precompute/sim-wire + energy model editor + epjson export (absolute classification against the pre-edit working tree)"
+}

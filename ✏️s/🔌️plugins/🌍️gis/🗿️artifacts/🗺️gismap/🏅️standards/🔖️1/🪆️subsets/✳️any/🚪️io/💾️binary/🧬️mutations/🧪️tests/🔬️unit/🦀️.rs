@@ -1,3 +1,5 @@
+#[allow(unused_imports)]
+use protocol::OpBinary;
 use crate::{GisMapMutation, MapFeature};
 use crate::standards::v1::subsets::any::io::binary::mutations::*;
 use crate::mutations::{create_position, create_region, create_route, delete_position, delete_region, delete_route, reorder_positions, reorder_regions, reorder_routes, replace_position_data, replace_region_data, replace_route_data, set_position_property, remove_position_property, set_route_property, remove_route_property, set_region_property, remove_region_property};

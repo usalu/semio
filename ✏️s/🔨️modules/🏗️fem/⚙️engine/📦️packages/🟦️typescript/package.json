@@ -1,0 +1,14 @@
+{
+  "name": "@semio-tech/s-fem-engine-ts",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./analyses/testing/merge-refusal": "./🧮️analyses/🧪️testing/🔀️merge-refusal/🟦️.ts",
+    "./analyses/testing/step-grant": "./🧮️analyses/🧪️testing/⛽️step-grant/🟦️.ts",
+    "./elements3d/testing/mounted-stiffness": "./🧱️elements3d/🧪️testing/🧱️mounted-stiffness/🟦️.ts",
+    "./mesh/testing/edge-authority": "./🕸️mesh/🧪️testing/🕸️edge-authority/🟦️.ts",
+    "./sparse/testing/paged-csr": "./🔢️sparse/🧪️testing/📚️paged-csr/🟦️.ts",
+    "./sparse/testing/publication-grant": "./🔢️sparse/🧪️testing/⛽️publication-grant/🟦️.ts",
+    "./sparse/testing/scalar-owners": "./🔢️sparse/🧪️testing/🔢️scalar-owners/🟦️.ts"
+  }
+}

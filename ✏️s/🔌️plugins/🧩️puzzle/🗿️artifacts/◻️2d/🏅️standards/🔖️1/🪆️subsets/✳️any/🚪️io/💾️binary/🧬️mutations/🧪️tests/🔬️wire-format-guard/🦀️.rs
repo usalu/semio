@@ -7,7 +7,7 @@
 use crate::standards::v1::subsets::any::io::binary::mutations::*;
 use crate::standards::v1::subsets::any::schema::mutations::{change_manifest_id,connect_handles,create_node,delete_node,disconnect_handles,drag_selection,move_node,rotate_selection,scale_selection};
 
-use crate::standards::v1::subsets::any::schema::Puzzle2dNode;
+use crate::standards::v1::subsets::any::schema::records::Puzzle2dNode;
 use protocol::OpText;
 
 fn ops() -> Vec<Puzzle2dMutation> {

@@ -1,5 +1,14 @@
-use ::semio_framework_ui_contract as ui;
-use crate::window_surface::{UiAssemblyResult, ui_assembly_error};
+use semio_framework_plugin_window_kits_rich::tree_kit::PanelTreeBuilder;
+use semio_framework_plugin_window_kits_rich::tree_kit::TREE_WINDOW_DEFAULT_ROWS;
+use semio_framework_plugin_window_kits_rich::tree_kit::TreeWindows;
+use semio_framework_plugin_window_kits_rich::tree_kit::selection_ids;
+use semio_framework_plugin_window_kits_rich::tree_kit::tree_item;
+use semio_framework_plugin_window_kits_rich::tree_kit::tree_item_with_action_draggable;
+use semio_framework_plugin_window_kits_rich::tree_kit::tree_window_item;
+use semio_framework_plugin_window_kits_rich::tree_kit::tree_window_section;
+use semio_framework_plugin_window_kits_rich::tree_kit::tree_window_section_or_placeholder;
+use semio_framework_ui_contract as ui;
+use semio_framework_plugin_interaction::{UiAssemblyResult, ui_assembly_error};
 use semio_framework::{ActionKind, INTERACTION_SELECT_ACTION_ID, TreeWindowRequest, ViewModel};
 use semio_framework_plugin_ownership::sdk_fault::PluginAssemblyError;
 use semio_framework_ui_contract::{BuiltNode, TREE_WINDOW_BODY_NODE_BUDGET, TREE_WINDOW_FIXED_NODE_HEADROOM, TREE_WINDOW_PATH_SEPARATOR};
@@ -8,10 +17,10 @@ use semio_framework_value::DslValue;
 #[cfg(any(test, feature = "artifact-app-testing"))]
 use semio_framework_ui_locale::Locale;
 #[cfg(test)]
-use crate::command_history::ui_history_panel;
+use semio_framework_plugin_time_travel_panel::command_history_panel_lift::ui_history_panel;
 #[cfg(test)]
-use crate::history_view::{CommandView, HistoryCommandFilter, HistoryView};
-use crate::tree_kit::*;
+use semio_framework_plugin_decl_views::history_view::{CommandView, HistoryCommandFilter, HistoryView};
+use semio_framework_plugin_window_kits_rich::tree_kit::*;
 mod panel_kit_tests {
     use super::*;
 

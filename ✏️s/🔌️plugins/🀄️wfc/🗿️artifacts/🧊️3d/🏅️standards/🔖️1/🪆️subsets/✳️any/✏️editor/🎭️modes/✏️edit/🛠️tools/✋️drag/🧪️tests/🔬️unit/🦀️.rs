@@ -4,7 +4,9 @@
 //! replays its downstream exactly like a fresh fold of the edited log. A host drag never moves a slot along `z` (the
 //! canvas is a plan); an edited drag may.
 
-use super::*;
+use crate::mutations::Wfc3dMutation;
+use semio_framework_tool_machine::{NodeDragEmit, NodeDragRecord};
+use crate::editor::wfc3d::modes::edit::tools::drag::*;
 use crate::editor::wfc3d::modes::edit::windows::graph::WFC_GRAPH_WINDOW;
 use crate::editor::wfc3d::{Wfc3dEditor, Wfc3dEditorCommand, WFC_3D_GRAPH_UNIT};
 use crate::mutations::{drag_slots, resize_slot};

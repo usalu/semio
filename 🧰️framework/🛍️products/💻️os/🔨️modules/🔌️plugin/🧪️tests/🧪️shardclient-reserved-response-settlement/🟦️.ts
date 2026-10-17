@@ -648,7 +648,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     throw new Error("Exact fixture builder phase sequence did not publish");
   }
 
-  const BUDGET: ShardBudget = { fuel: 1000, wallMs: 4, memoryBytes: 1 << 20, uiNodes: 100, mailboxLen: 16, maxEffects: 8, maxPatchBytes: 1 << 16 };
+  const BUDGET: ShardBudget = { fuel: 1000, wallMs: 4, memoryBytes: 1 << 20, uiNodes: 100, mailboxLen: 16, maxEffects: 8, maxPatchBytes: 1 << 16, maxFrames: 8 };
   const fixtureHosts = new WeakMap<ShardInstanceLifecycleLease, OwnedUiInstance>();
   function bindFixtureHost(lease: ShardInstanceLifecycleLease): OwnedUiInstance {
     const host = new OwnedUiInstance(lease.activation, lease.lifetime!, { maxNodes: 128, maxDepth: 16, maxChildren: 32, maxTextBytes: 4096, maxPatchOps: 128, maxPatchBytes: 65536 }, { usizeBits: 32 });
@@ -1949,7 +1949,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const patchObjects = [patch, { ...patch, surface: { instance: 7, surface: "second" } }];
       for (const [index, row] of fixture.patchIdentity.entries()) {
         expect(identityOracle(row.references)).toBe(row.accepted);
-        const output = await returned(encodeActorUiPatchReceipt({ ...receipt, patchSequence: BigInt(index + 1) }), row.references.map(reference => patchObjects[reference]!));
+        const output = await returned(encodeActorUiPatchReceipt({ ...receipt, patchSequence: BigInt(index + 1) }), row.references.map((reference: number) => patchObjects[reference]!));
         if (row.accepted) expect(() => lease.captureUiPatchAuthority(output, 0)).not.toThrow();
         else expect(() => lease.captureUiPatchAuthority(output, 0)).toThrow("actor-ui-patch.pairing");
       }

@@ -25,8 +25,8 @@ test("original Progress uses required scalar fields, exact10-byte counters and o
  }}finally{db.close()}
  const canonical=ticks.ticks[0]!.tick.progress!;
  const full=law.cases[1]!;
- expect([full.sequence,full.state,full.stage,full.completed,full.total,full.counters,full.unitsPerSecond,full.conflicts,full.stepCount]).toEqual([canonical.sequence,1,canonical.stage,canonical.completed,canonical.total,canonical.counters,canonical.unitsPerSecond,canonical.conflicts,canonical.steps.length]);
- console.log("[DEBUG] original full Tick Progress agrees with Ajv/SQLite/Buffer required415 mask, counters10/max8, Steps64, state9 and F64→f32; direct native receiving remains separate");
+ const canonicalRow=[canonical.sequence,1,canonical.stage,canonical.completed,canonical.total,canonical.counters,canonical.unitsPerSecond,canonical.conflicts,canonical.steps.length];
+ expect([full.sequence,full.state,full.stage,full.completed,full.total,full.counters,full.unitsPerSecond,full.conflicts,full.stepCount]).toEqual<typeof canonicalRow>(canonicalRow);
  const path=new URL("../🦀️.rs",import.meta.url);
  expect(existsSync(path)).toBe(true);
  const source=readFileSync(path,"utf8");

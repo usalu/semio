@@ -38,7 +38,6 @@ export async function testArtifactPublication(output: string): Promise<void> {
     const markerOracle = Bun.spawnSync([Bun.which("python3") ?? "python", "-c", "import json,pathlib,sys\np=pathlib.Path(sys.argv[1]);print(json.dumps(json.loads((p/sys.argv[2]).read_text())))", staging, fixture.markerFilename], { stdout: "pipe", stderr: "pipe" });
     assert.equal(markerOracle.exitCode, 0, markerOracle.stderr.toString());
     assert.deepEqual(JSON.parse(markerOracle.stdout.toString()), { version: 1, owner: fixture.owner, files: Object.keys(fixture.files).sort() });
-    console.log(`[DEBUG] Published ${fixture.markerFilename} with independently verified owner and ${files.size} declared files`);
     const program = "import json,pathlib,sys\np=pathlib.Path(sys.argv[1]);print(json.dumps({str(f.relative_to(p)).replace('\\\\','/'):f.read_text() for f in p.rglob('*') if f.is_file() and f.name!='.semio-artifact.json'}))";
     const oracle = Bun.spawnSync([Bun.which("python3") ?? "python", "-c", program, staging], { stdout: "pipe", stderr: "pipe" });
     assert.equal(oracle.exitCode, 0, oracle.stderr.toString());

@@ -15,7 +15,11 @@ workspace = true
 [lib]
 path = "../../🦀️.rs"
 
+[features]
+testkit = ["semio-s-artifact-layout-layout-diff/testkit", "semio-s-artifact-layout-layout-model/testkit", "semio-s-artifact-layout-layout-mutations-content-2/testkit"]
+
 [dependencies]
+semio-s-artifact-layout-layout-mutations-content-2 = { workspace = true }
 semio-framework-dsl-record = { workspace = true }
 semio-framework-dsl-record-derive = { workspace = true }
 semio-framework-os-kernel = { workspace = true }

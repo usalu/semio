@@ -10,9 +10,11 @@ pub fn translate(transform: [f64;5], parent: [f64;6], delta: [f64;2]) -> Option<
 
 #[cfg(test)]
 mod tests {
+    use semio_framework_test_fixtures::fixture_text;
+
     #[test]
     fn parent_translation_fixtures() {
-        let cases: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🧮️geometry/↔️translation/🔣️.json")).unwrap();
+        let cases: serde_json::Value = serde_json::from_str(fixture_text!("../../../../🧪️tests/🧫️fixtures/🧮️geometry/↔️translation/🔣️.json")).unwrap();
         for case in cases.as_array().unwrap() {
             let result = super::translate(serde_json::from_value(case["transform"].clone()).unwrap(),serde_json::from_value(case["parent"].clone()).unwrap(),serde_json::from_value(case["delta"].clone()).unwrap());
             let expected: Option<[f64;5]> = serde_json::from_value(case["after"].clone()).unwrap();
@@ -29,9 +31,11 @@ pub fn path_contains(parent: &[u16], child: &[u16]) -> bool {
 
 #[cfg(test)]
 mod selection_tests {
+    use semio_framework_test_fixtures::fixture_text;
+
     #[test]
     fn selected_ancestors_move_once() {
-        let cases:serde_json::Value=serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🧮️geometry/↔️translation/🗂️selection/🔣️.json")).unwrap();
+        let cases:serde_json::Value=serde_json::from_str(fixture_text!("../../../../🧪️tests/🧫️fixtures/🧮️geometry/↔️translation/🗂️selection/🔣️.json")).unwrap();
         for case in cases.as_array().unwrap() {
             let paths:Vec<Vec<u16>>=serde_json::from_value(case["paths"].clone()).unwrap();
             let roots:Vec<_>=paths.iter().filter(|path|!paths.iter().any(|parent|parent.len()<path.len() && super::path_contains(parent,path))).cloned().collect();

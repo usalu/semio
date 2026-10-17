@@ -3,7 +3,7 @@
 pub const OPCODE: &str = "set-object-value";
 pub const TEXT_OPCODE: &str = OPCODE;
 
-use crate::standards::v1_7::subsets::base::schema::mutations::SetObjectValue;
+use crate::standards::v1_7::subsets::base::schema::mutations::set_object_value::SetObjectValue;
 
 /// 🖨️ Prints this direct payload through its schema-derived JSON representation.
 pub fn print(payload: &SetObjectValue) -> Result<String, String> {

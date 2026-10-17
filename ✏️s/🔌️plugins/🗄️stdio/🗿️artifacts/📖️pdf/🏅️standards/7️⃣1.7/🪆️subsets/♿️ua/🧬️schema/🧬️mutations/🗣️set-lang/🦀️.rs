@@ -1,7 +1,6 @@
 //! 🗣️ Authoritative PDF/UA mutation for set lang.
 
-use super::remove_lang::RemoveLang;
-use super::PdfUaMutation;
+use crate::standards::v1_7::subsets::ua::schema::mutations::remove_lang::RemoveLang;
 use crate::standards::v1_7::subsets::base::schema::conformance_support as support;
 use crate::standards::v1_7::subsets::base::schema::diff::{self, PdfDiff};
 use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfObject, PdfSnapshot};
@@ -18,19 +17,22 @@ pub struct SetLang {
     pub entry_index: Option<usize>,
 }
 
-impl MutationKind<PdfSnapshot, PdfUaMutation> for SetLang {
+impl<Op> MutationKind<PdfSnapshot, Op> for SetLang
+where
+    Op: protocol::Mutation<PdfSnapshot, Diff = PdfDiff> + From<SetLang> + From<crate::standards::v1_7::subsets::ua::schema::mutations::remove_lang::RemoveLang>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "lang", kind: "set-lang", record: "Set" };
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
         MutationOutcome::new(diff::graph_edit(support::set_catalog_entry_rows(base, "Lang", support::literal(&self.lang), self.entry_index)))
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfUaMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         Ok({
             match support::catalog_entry(base, "Lang") {
-                Some(PdfObject::Str(bytes)) => vec![PdfUaMutation::SetLang(SetLang { lang: String::from_utf8_lossy(bytes).into_owned(), entry_index: None })],
-                Some(PdfObject::Text(lang)) => vec![PdfUaMutation::SetLang(SetLang { lang: lang.clone(), entry_index: None })],
-                _ => vec![PdfUaMutation::RemoveLang(RemoveLang {})],
+                Some(PdfObject::Str(bytes)) => vec![Op::from(SetLang { lang: String::from_utf8_lossy(bytes).into_owned(), entry_index: None })],
+                Some(PdfObject::Text(lang)) => vec![Op::from(SetLang { lang: lang.clone(), entry_index: None })],
+                _ => vec![Op::from(RemoveLang {})],
             }
         })
     }
@@ -46,9 +48,7 @@ impl MutationKind<PdfSnapshot, PdfUaMutation> for SetLang {
 //#endregion 🔖️Mutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
 
 //#region 🔖️Facets

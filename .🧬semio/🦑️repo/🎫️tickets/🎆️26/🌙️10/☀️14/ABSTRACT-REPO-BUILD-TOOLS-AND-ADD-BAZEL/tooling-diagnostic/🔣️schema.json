@@ -1,0 +1,145 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "schema://repo.ticket/DependencyCurrentPlanDiagnosticV1",
+  "definitions": {
+    "ProducerUnreadyEntry":{"type":"object","additionalProperties":false,"required":["mode","census"],"properties":{"mode":{"const":"--producer-rebuild-unready"},"census":{"type":"string","pattern":"^native-assets-protected-[1-9][0-9]*[.]json$","maxLength":80}}},
+    "ProducerUnreadySourceEntry":{"type":"object","additionalProperties":false,"required":["mode"],"properties":{"mode":{"enum":["--producer-rebuild-unready-source","--producer-rebuild-unready-strict"]}}},
+    "ProducerCompletionWorkerReceipt":{"type":"object","additionalProperties":false,"required":["version","mode","failed","primaryExact","closed","events","policy","deadlineEpochMilliseconds","wireSha256","nativeEffects"],"properties":{"version":{"const":1},"mode":{"enum":["success","undefined","frozen"]},"failed":{"type":"boolean"},"primaryExact":{"const":true},"closed":{"const":true},"events":{"type":"array","minItems":3,"maxItems":8,"items":{"enum":["open","body-failure","abort","close","original-settled"]}},"policy":{"type":"object"},"deadlineEpochMilliseconds":{"type":["integer","null"]},"wireSha256":{"type":"string","pattern":"^[a-f0-9]{64}$"},"nativeEffects":{"const":0}}},
+    "ProducerCompletionWorkerEntry":{"type":"object","additionalProperties":false,"required":["mode","case"],"properties":{"mode":{"const":"--producer-sync-worker"},"case":{"enum":["success","undefined","frozen"]}}},
+    "ProducerPreservingCompletionEntry":{"type":"object","additionalProperties":false,"required":["mode","census"],"properties":{"mode":{"const":"--producer-sync-preserving"},"census":{"type":"string","pattern":"^native-assets-protected-[1-9][0-9]*[.]json$","maxLength":80}}},
+"ProducerPreservingCompletionSourceEntry":{"type":"object","additionalProperties":false,"required":["mode"],"properties":{"mode":{"enum":["--producer-sync-preserving-source","--producer-sync-preserving-strict"]}}},
+"ProducerCompletionEntry":{"type":"object","additionalProperties":false,"required":["mode","census"],"properties":{"mode":{"const":"--producer-sync"},"census":{"type":"string","pattern":"^native-assets-protected-[1-9][0-9]*[.]json$","maxLength":80}}},
+    "ProducerCompletionSourceEntry":{"type":"object","additionalProperties":false,"required":["mode"],"properties":{"mode":{"enum":["--producer-sync-source","--producer-sync-strict"]}}},
+    "SelectedRetirementEntry": {"anyOf":[{"type":"object","additionalProperties":false,"required":["mode","census","prefix"],"properties":{"mode":{"const":"--dependency-selected-plan"},"census":{"type":"string","pattern":"^native-assets-protected-[1-9][0-9]*[.]json$","maxLength":80},"prefix":{"type":"string","pattern":"^[a-f0-9]{20}$"}}},{"type":"object","additionalProperties":false,"required":["mode","path","sha256"],"properties":{"mode":{"enum":["--dependency-observe","--dependency-retire"]},"path":{"type":"string","minLength":1,"maxLength":256},"sha256":{"type":"string","pattern":"^[a-f0-9]{64}$"}}}]},
+    "SelectedRetirementSourceEntry": {"type":"object","additionalProperties":false,"required":["mode"],"properties":{"mode":{"enum":["--dependency-retirement-source","--dependency-retirement-source-strict"]}}},
+    "SelectedRetirementLaunchCase": {"type":"object","additionalProperties":false,"required":["mode","fault","accepted"],"properties":{"mode":{"enum":["plan","observe","retire"]},"fault":{"enum":["none","input","owner","busy","active","operation"]},"accepted":{"type":"boolean"}}},
+    "ProducerProbeEntry": {"type": "object", "additionalProperties": false, "required": ["mode", "census"], "properties": {"mode": {"const": "--producer-probe"}, "census": {"type": "string", "pattern": "^native-assets-protected-[1-9][0-9]*[.]json$", "maxLength": 80}}},
+    "ProducerProbeSourceEntry": {"type": "object", "additionalProperties": false, "required": ["mode"], "properties": {"mode": {"const": "--producer-probe-source"}}},
+    "ProducerEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode",
+        "census"
+      ],
+      "properties": {
+        "mode": {
+          "const": "--producer-plan"
+        },
+        "census": {
+          "type": "string",
+          "pattern": "^native-assets-protected-[1-9][0-9]*[.]json$",
+          "maxLength": 80
+        }
+      }
+    },
+    "ProducerSourceEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode"
+      ],
+      "properties": {
+        "mode": {
+          "const": "--producer-source"
+        }
+      }
+    },
+    "ProducerWorkerCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode",
+        "accepted"
+      ],
+      "properties": {
+        "mode": {
+          "enum": [
+            "success",
+            "busy",
+            "oversize",
+            "undefined",
+            "frozen",
+            "foreign-result"
+          ]
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "Entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode",
+        "census"
+      ],
+      "properties": {
+        "mode": {
+          "const": "--dependency-plan"
+        },
+        "census": {
+          "type": "string",
+          "pattern": "^native-assets-protected-[1-9][0-9]*[.]json$",
+          "maxLength": 80
+        }
+      }
+    },
+    "EntryCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "args",
+        "environment",
+        "accepted"
+      ],
+      "properties": {
+        "args": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "environment": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "ResultProtocol": {
+      "const": {
+        "version": 1,
+        "maximumBytes": 1048576,
+        "maximumGenerations": 4096
+      }
+    },
+    "SourceEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode"
+      ],
+      "properties": {
+        "mode": {
+          "const": "--dependency-source"
+        }
+      }
+    },
+    "WorkerCase": {
+      "enum": [
+        "success",
+        "busy",
+        "oversize",
+        "undefined",
+        "frozen",
+        "foreign-result"
+      ]
+    }
+  }
+}

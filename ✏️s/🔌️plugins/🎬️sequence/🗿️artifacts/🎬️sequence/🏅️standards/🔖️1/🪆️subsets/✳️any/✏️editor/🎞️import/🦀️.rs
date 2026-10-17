@@ -1,10 +1,19 @@
 //! 🎞️ Sequence reserved media import job.
 
-use super::*;
+use neural_engine::Dictionary;
+use semio_framework_plugin::{DslValue, Emit, Fault, Media, MediaPayload, NoConfigMutation};
+use crate::mutations::SequenceMutation;
+use crate::{SequenceSnapshot, SequenceStep, SequenceWorkingScene, StepParams};
+use crate::editor::sequence::edit_rules;
+use crate::editor::sequence::retained::SEQUENCE_STORE_MAXIMUM_BYTES;
+use crate::editor::sequence::app::SequencePlayApp;
+use crate::editor::sequence::host::max_serial_in_snapshot;
+use crate::editor::sequence::base::{sequence_child_leaves_emit, sequence_host_snapshot_from_children};
+use crate::editor::sequence::persistent::sequence_close_step;
 
 //#region 🎞️ReservedImport
 /// 🎞️ The reserved tool id the framework registers for every app's media import.
-pub(super) const SEQUENCE_IMPORT_TOOL_ID: &str = "import-media";
+pub const SEQUENCE_IMPORT_TOOL_ID: &str = "import-media";
 
 /// 🎞️ The only media port Sequence declares as an importer (`sequence_io`).
 const SEQUENCE_IMPORT_PORT: &str = "steps:in";
@@ -16,15 +25,15 @@ const SEQUENCE_IMPORT_PORT: &str = "steps:in";
 /// (ticket 26/09/19/SEMIO-TECH-PLAY-GRID-WITH-EVERY-APP, media §8, S10-E). Original admitted media
 /// remains owned through native parsing/projection, typed binding and the same composed child
 /// publication. Every source candidate drains through its existing retirement authority.
-pub(super) struct SequenceImportJob {
-    pub(super) port: Option<String>,
-    pub(super) media: Option<Media>,
+pub struct SequenceImportJob {
+    pub port: Option<String>,
+    pub media: Option<Media>,
     parser: Option<semio_framework_pack_json::JsonParseCursor>,
     projection: Option<semio_framework_pack_json::JsonValueProjection>,
     decode_receipt: Option<semio_framework_value::native_decoding::NativeDecodeContinuation>,
-    pub(super) input: Option<neural_engine::retirement::RetainedDictionaryInput>,
-    pub(super) params: Option<Dictionary>,
-    pub(super) retirement: Option<Box<dyn semio_framework_value::ErasedSnapshotRetirement>>,
+    pub input: Option<neural_engine::retirement::RetainedDictionaryInput>,
+    pub params: Option<Dictionary>,
+    pub retirement: Option<Box<dyn semio_framework_value::ErasedSnapshotRetirement>>,
     snapshot: Option<std::sync::Arc<SequenceSnapshot>>,
     children: Option<semio_framework_plugin::app::ChildContentView>,
     emit: Option<Emit<SequenceMutation, NoConfigMutation>>,
@@ -72,7 +81,7 @@ fn sequence_input_grant(input: &neural_engine::retirement::RetainedDictionaryInp
 }
 
 impl SequenceImportJob {
-    pub(super) fn new(request: semio_framework_plugin::ArtifactReservedToolJobRequest<semio_framework_plugin::EditorApp<SequencePlayApp>>, port: String, media: Media) -> Self {
+    pub fn new(request: semio_framework_plugin::ArtifactReservedToolJobRequest<semio_framework_plugin::EditorApp<SequencePlayApp>>, port: String, media: Media) -> Self {
         Self {
             port: Some(port),
             media: Some(media),
@@ -97,7 +106,7 @@ impl SequenceImportJob {
         }
     }
 
-    pub(super) fn fault<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>, detail: &str) -> SequenceJobTurn<'a> {
+    pub fn fault<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>, detail: &str) -> SequenceJobTurn<'a> {
         if self.fault_detail.is_none() {
             let bytes = detail.as_bytes();
             self.fault_detail = Some(bytes[..bytes.len().min(semio_framework_job::JOB_PAYLOAD_PAGE_BYTES)].to_vec());

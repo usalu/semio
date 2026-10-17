@@ -4,9 +4,10 @@
 //! `CeilingCovering` name the materials) plus the ids in `Semio_Authoring`, so the importer finds the material again.
 //! 📎 https://standards.buildingsmart.org/IFC/RELEASE/IFC2x3/TC1/HTML/ifcproductextension/lexical/ifczone.htm
 
-use super::data::{define, label, number, property_set};
-use super::writer::{opt_text, refs, rf, text, typed, unset, V};
-use super::{Export, Quantity};
+use crate::standards::v1::subsets::any::io::export::ifc::data::{define, number, property_set};
+use crate::standards::v1::subsets::any::io::export::ifc::writer::label;
+use crate::standards::v1::subsets::any::io::export::ifc::writer::{opt_text, refs, rf, text, typed, unset, V};
+use crate::standards::v1::subsets::any::io::export::ifc::context::{Export, Quantity};
 use crate::standards::v1::subsets::any::schema::inferences::zones::ZoneTotals;
 use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use std::collections::BTreeMap;

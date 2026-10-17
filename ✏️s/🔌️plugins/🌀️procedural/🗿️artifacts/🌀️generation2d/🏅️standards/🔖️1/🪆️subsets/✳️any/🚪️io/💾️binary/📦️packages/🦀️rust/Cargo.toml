@@ -15,6 +15,9 @@ workspace = true
 [lib]
 path = "../../🦀️.rs"
 
+[features]
+testkit = []
+
 [dependencies]
 pack = { workspace = true }
 semio-framework-artifact-flow-flow = { workspace = true }
@@ -36,4 +39,6 @@ semio-s-artifact-procedural-2d-mut-generations = { workspace = true }
 semio-s-artifact-procedural-2d-mut-synapses = { workspace = true }
 semio-s-artifact-procedural-2d-mut-widgets = { workspace = true }
 semio-s-artifact-procedural-2d-testkit = { workspace = true }
+semio-s-artifact-procedural-2d-model = { workspace = true, features = ["testkit"] }
+semio-s-artifact-procedural-2d-mutations = { workspace = true, features = ["testkit"] }
 

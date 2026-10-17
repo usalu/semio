@@ -1,9 +1,9 @@
 //! 🎥️ 3D-window option — the world projection picker (orthographic / axonometric / oblique /
 //! one-two-three-point / curvilinear plus their parameters), delegated wholesale to the framework's
 //! shared `world3d_projection_measures` builder over this pane's own `Puzzle5dCamera3d::projection`.
+use crate::editor::puzzle5d::entities::puzzle5d_action;
 
 use crate::editor::puzzle5d::config::Puzzle5dRuntime;
-use crate::editor::puzzle5d::puzzle5d_action;
 use semio_framework_plugin::{world3d_projection_measures, WindowMeasure};
 
 /// 🧭️ The projection select plus its parameter sliders for this window instance's camera.

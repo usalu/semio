@@ -46,7 +46,7 @@ export async function proveGisMapCreateRegionGroup(repoRoot: string): Promise<vo
     && JSON.stringify(candidate.expected.touchedChildren) === JSON.stringify(["drawing", "value"]);
   if (!admitted(fixture) || JSON.stringify(region) !== JSON.stringify(fixture.expected.region)) throw new Error("GIS Map group contract mismatch");
   const source = readFileSync(join(repoRoot, "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs"), "utf8");
-  const owner = readFileSync(join(repoRoot, "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🦀️.rs"), "utf8");
+  const owner = ["🦀️.rs", "🧩️map-composition/🦀️.rs"].map((file) => readFileSync(join(repoRoot, "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap", file), "utf8")).join("\n");
   const schema = readFileSync(join(repoRoot, "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs"), "utf8");
   for (const symbol of ["GisMapCreateRegionGroupWorkV1", "create_region_group_work", "SemioDrawingMutation", "SemioValueMutation", "drawing_inverse", "value_inverse"]) {
     if (!source.includes(symbol)) throw new Error(`GIS Map typed group owner missing ${symbol}`);

@@ -5,44 +5,25 @@
 //! and that `io_route` finds the `standard 1 / subset strict` conformance-profile hop back to
 //! `standard 1 / subset any`. Plugin waves reading this ticket copy this shape verbatim.
 
-use crate::surface_contract::remember_subset_examples;
-use semio_framework_ui_contract::schema_metadata;
-use crate::plugin_program::AppFactory;
 use semio_framework::AppDefinition;
 use semio_framework::kernel::ActorId;
-use semio_framework::kernel::ArtifactKind;
-use semio_framework::kernel::CapabilityRequirement;
-use semio_framework::kernel::Rights;
-use semio_framework::kernel::Scope;
-use std::collections::BTreeMap;
 use semio_framework_artifact_reference::ArtifactKindId;
 use semio_framework_artifact_reference::ArtifactDialect;
 use semio_framework_artifact_reference::Dialect;
 use semio_framework_artifact_reference::StandardId;
-use semio_framework::surface_app_id;
 use semio_framework::AppRole;
-use crate::plugin_app::NoPluginApp;
-use crate::app_builder::App;
-use crate::app_builder::ExampleSource;
-use crate::window_kits::AppActionRegistry;
-use crate::app_contract::ArtifactApp;
-use crate::plugin_app::PluginApp;
-use crate::app_contract::mount_natural_file_actions;
-use crate::artifact_identity::ArtifactLocale;
-use semio_framework_plugin_ownership::sdk_fault::PluginAssemblyError;
-use crate::artifact_identity::preflight_artifact_identity;
-use crate::artifact_inference::ArtifactInferenceService;
-use crate::artifact_inference::preflight_artifact_inference_services;
-use crate::artifact_inference::register_artifact_inference_services;
-use crate::artifact_instance::VcsArtifactApp;
-use semio_framework_plugin_ownership::store_lifecycle::OwnerMutationRoster;
-use crate::surface_contract::ArtifactCodecTableV1;
-use crate::surface_contract::ArtifactEditor;
-use crate::surface_contract::ArtifactViewer;
-use crate::surface_contract::EditorApp;
-use crate::surface_contract::ViewerApp;
-use crate::surface_contract::artifact_codec_table;
-use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
+use semio_framework_plugin_reactor_app::NoPluginApp;
+use semio_framework_plugin_app_builder::ExampleSource;
+use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_framework_plugin_reactor_app::PluginApp;
+use semio_framework_plugin_instance_app::VcsArtifactApp;
+use semio_framework_plugin_decl_surface::ArtifactEditor;
+use semio_framework_plugin_decl_surface::ArtifactViewer;
+use semio_framework_plugin_decl_surface::EditorApp;
+use semio_framework_plugin_decl_surface::ViewerApp;
+use semio_framework_artifact_reference::io::text::artifact_reference::DialectCoordinateText as _;
 #[allow(unused_imports)]
-use crate::declarations::*;
+use semio_framework_plugin_decl_registry::declarations::{ArtifactDeclaration, IoDeclaration, LanguagePair, MediaDeclaration, NativeCodecs, SchemaDeclaration, StandardDeclaration, SubsetDeclaration, format_descriptor_of, project_artifact_declarations};
+#[allow(unused_imports)]
+use semio_framework_plugin_instance_app::lifted_tree::{editor_surface, viewer_surface};
 include!("../../../../🧪️tests/🔬️app-declarations-fixture/🦀️.rs");

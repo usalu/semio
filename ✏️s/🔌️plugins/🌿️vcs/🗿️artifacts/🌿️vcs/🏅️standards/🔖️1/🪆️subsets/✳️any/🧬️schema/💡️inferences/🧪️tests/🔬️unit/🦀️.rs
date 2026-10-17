@@ -1,4 +1,5 @@
-use super::*;
+use crate::VcsSnapshot;
+use crate::standards::v1::subsets::any::schema::inferences::*;
 use protocol::Inference;
 
 fn tagged_snapshot() -> VcsSnapshot {

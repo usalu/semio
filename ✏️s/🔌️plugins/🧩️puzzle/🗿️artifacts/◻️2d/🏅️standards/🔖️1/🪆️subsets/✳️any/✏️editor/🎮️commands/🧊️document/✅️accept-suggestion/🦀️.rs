@@ -1,6 +1,6 @@
 //! 💡️ `accept-suggestion` command.
 
-use {crate::editor::puzzle2d::snapshot::apply_host_events, crate::editor::puzzle2d::snapshot::puzzle2d_restore_brush_slot, crate::editor::puzzle2d::snapshot::puzzle2d_selection_write, crate::editor::puzzle2d::Puzzle2dActionCtx};
+use {crate::editor::puzzle2d::commands::apply_board_events::apply_host_events, crate::editor::puzzle2d::interaction::puzzle2d_restore_brush_slot, crate::editor::puzzle2d::snapshot::puzzle2d_selection_write, crate::editor::puzzle2d::interaction::Puzzle2dActionCtx};
 use semio_framework_pack_json::Value;
 
 /// 🧹️ Drops every trace of the one-shot picker. Called on ACCEPT and on a refused placement alike, so

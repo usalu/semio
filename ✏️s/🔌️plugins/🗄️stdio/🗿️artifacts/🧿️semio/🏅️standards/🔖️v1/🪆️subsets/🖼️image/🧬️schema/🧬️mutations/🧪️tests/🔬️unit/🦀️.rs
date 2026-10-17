@@ -1,4 +1,6 @@
-use super::*;
+use crate::{schema::snapshot::SemioColorspace, schema::snapshot::SemioImageFrame, schema::snapshot::SemioImageMetadataEntry, schema::snapshot::SemioImageSnapshot};
+use protocol::Mutation;
+use crate::schema::mutations::*;
 /// 🔧️ `DiffAlgebra` lives at `protocol::command::DiffAlgebra`, not `protocol::DiffAlgebra`
 /// (W2b closer fix — was an unresolved-import compile error).
 use protocol::command::DiffAlgebra;

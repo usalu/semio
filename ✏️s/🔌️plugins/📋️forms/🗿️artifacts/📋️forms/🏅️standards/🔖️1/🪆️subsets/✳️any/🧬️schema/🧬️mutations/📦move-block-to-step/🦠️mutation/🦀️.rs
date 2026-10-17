@@ -4,7 +4,7 @@
 //! (`↔️move-block`, wired by `🦀️.rs`) predates the semantic rename; the Rust module is still
 //! `move_block`, the type/variant/kind are `move-block-to-step`.
 
-use crate::{FormMutation, FormsDiff, FormsSnapshot};
+use crate::{FormsDiff, FormsSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 
 //#region 🚚️MoveBlockToStep
@@ -22,15 +22,18 @@ pub struct MoveBlockToStep {
     pub index: usize,
 }
 
-impl MutationKind<FormsSnapshot, FormMutation> for MoveBlockToStep {
+impl<Op> MutationKind<FormsSnapshot, Op> for MoveBlockToStep
+where
+    Op: protocol::Mutation<FormsSnapshot, Diff = FormsDiff> + From<MoveBlockToStep>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "move", entity: "block", kind: "move-block-to-step", record: "MovedBlockToStep" };
 
     fn diff(&self, base: &FormsSnapshot) -> protocol::MutationOutcome<FormsDiff> {
-        super::diff::diff_move_block_to_step(self, base)
+        crate::standards::v1::subsets::any::schema::mutations::move_block_to_step::diff::diff_move_block_to_step(self, base)
     }
-    fn inverse(&self, base: &FormsSnapshot) -> Result<Vec<FormMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &FormsSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
-        super::inverse::inverse_move_block_to_step(self, base)?
+        crate::standards::v1::subsets::any::schema::mutations::move_block_to_step::inverse::inverse_move_block_to_step(self, base)?
     
     })
 }

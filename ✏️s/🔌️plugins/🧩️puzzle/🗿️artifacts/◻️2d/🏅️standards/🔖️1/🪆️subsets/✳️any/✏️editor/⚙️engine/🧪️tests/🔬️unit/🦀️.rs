@@ -1,4 +1,4 @@
-use super::*;
+use crate::editor::puzzle2d::engine::*;
 use crate::editor::puzzle2d::engine::canvas::Point;
 
 #[test]

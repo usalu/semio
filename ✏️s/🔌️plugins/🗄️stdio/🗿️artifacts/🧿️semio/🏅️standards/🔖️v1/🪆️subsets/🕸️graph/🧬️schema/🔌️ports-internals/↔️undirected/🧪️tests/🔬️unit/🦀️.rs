@@ -1,4 +1,6 @@
-use super::*;
+use graph_core::{AttrView, EdgeId, EdgeWeights, GraphView, NodeId};
+use graph_manifest::{PropertyBag, PropertyValue};
+use crate::schema::ports_internals::undirected::*;
 
 #[test]
 fn parallel_edges_get_distinct_ids() {

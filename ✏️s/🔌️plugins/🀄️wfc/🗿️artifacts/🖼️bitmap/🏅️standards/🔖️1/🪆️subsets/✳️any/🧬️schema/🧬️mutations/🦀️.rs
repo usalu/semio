@@ -15,17 +15,17 @@ use semio_framework_value_derive::{FromValue, ToValue};
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutations(snapshot = BitmapSnapshot, diff = BitmapDiff, schema = "wfcbitmap")]
 pub enum BitmapMutation {
-    ChangeSeed(super::change_seed::ChangeSeed),
-    ResizeInput(super::resize_input::ResizeInput),
-    SetInputPixels(super::set_input_pixels::SetInputPixels),
-    AddPaletteColor(super::add_palette_color::AddPaletteColor),
-    ChangePaletteColor(super::change_palette_color::ChangePaletteColor),
-    RemovePaletteColor(super::remove_palette_color::RemovePaletteColor),
-    ResizeOutput(super::resize_output::ResizeOutput),
-    ChangeModel(super::change_model::ChangeModel),
-    PinPixel(super::pin_pixel::PinPixel),
-    UnpinPixel(super::unpin_pixel::UnpinPixel),
-    PaintInputStroke(super::paint_input_stroke::PaintInputStroke),
+    ChangeSeed(crate::standards::v1::subsets::any::schema::mutations::change_seed::ChangeSeed),
+    ResizeInput(crate::standards::v1::subsets::any::schema::mutations::resize_input::ResizeInput),
+    SetInputPixels(crate::standards::v1::subsets::any::schema::mutations::set_input_pixels::SetInputPixels),
+    AddPaletteColor(crate::standards::v1::subsets::any::schema::mutations::add_palette_color::AddPaletteColor),
+    ChangePaletteColor(crate::standards::v1::subsets::any::schema::mutations::change_palette_color::ChangePaletteColor),
+    RemovePaletteColor(crate::standards::v1::subsets::any::schema::mutations::remove_palette_color::RemovePaletteColor),
+    ResizeOutput(crate::standards::v1::subsets::any::schema::mutations::resize_output::ResizeOutput),
+    ChangeModel(crate::standards::v1::subsets::any::schema::mutations::change_model::ChangeModel),
+    PinPixel(crate::standards::v1::subsets::any::schema::mutations::pin_pixel::PinPixel),
+    UnpinPixel(crate::standards::v1::subsets::any::schema::mutations::unpin_pixel::UnpinPixel),
+    PaintInputStroke(crate::standards::v1::subsets::any::schema::mutations::paint_input_stroke::PaintInputStroke),
 }
 
 //#region 🏷️Kinds
@@ -38,17 +38,9 @@ pub const KINDS: &[&str] = &["change-seed", "resize-input", "set-input-pixels", 
 //#endregion 🔖️Mutations
 
 //#region 🔖️Builders
-pub use super::add_palette_color::add_palette_color;
-pub use super::change_model::change_model;
-pub use super::change_palette_color::change_palette_color;
-pub use super::change_seed::change_seed;
-pub use super::paint_input_stroke::{paint_input_stroke, stroke_cells, stroke_extent, BitmapStrokePoint, BITMAP_STROKE_MAXIMUM_POINTS};
-pub use super::pin_pixel::pin_pixel;
-pub use super::remove_palette_color::remove_palette_color;
-pub use super::resize_input::resize_input;
-pub use super::resize_output::resize_output;
-pub use super::set_input_pixels::set_input_pixels;
-pub use super::unpin_pixel::unpin_pixel;
+pub use crate::standards::v1::subsets::any::schema::mutations::add_palette_color::add_palette_color;
+pub use crate::standards::v1::subsets::any::schema::mutations::change_palette_color::change_palette_color;
+pub use crate::standards::v1::subsets::any::schema::mutations::paint_input_stroke::{stroke_cells, stroke_extent, BitmapStrokePoint, BITMAP_STROKE_MAXIMUM_POINTS};
 //#endregion 🔖️Builders
 
 pub type BitmapEnvelope = store::os_store::store_schema::ArtifactEnvelope<BitmapSnapshot, BitmapMutation>;
@@ -69,7 +61,52 @@ pub fn inverse_bitmap_mutation(projection: &BitmapSnapshot, mutation: &BitmapMut
 //#endregion 🌉️TestBridge
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
+
+//#region 🔖️ConcreteBuilders
+/// 🏗️ Builder of the `change_model` leaf for this aggregate; the leaf builder stays generic over its aggregate.
+pub fn change_model(pattern_size: u32, symmetry: u32, periodic_input: bool, ground: Option<u32>) -> BitmapMutation {
+    crate::standards::v1::subsets::any::schema::mutations::change_model::change_model::<BitmapMutation>(pattern_size, symmetry, periodic_input, ground)
+}
+
+/// 🏗️ Builder of the `change_seed` leaf for this aggregate; the leaf builder stays generic over its aggregate.
+pub fn change_seed(seed: u64) -> BitmapMutation {
+    crate::standards::v1::subsets::any::schema::mutations::change_seed::change_seed::<BitmapMutation>(seed)
+}
+
+/// 🏗️ Builder of the `paint_input_stroke` leaf for this aggregate; the leaf builder stays generic over its aggregate.
+pub fn paint_input_stroke(points: Vec<BitmapStrokePoint>, color: u32) -> BitmapMutation {
+    crate::standards::v1::subsets::any::schema::mutations::paint_input_stroke::paint_input_stroke::<BitmapMutation>(points, color)
+}
+
+/// 🏗️ Builder of the `pin_pixel` leaf for this aggregate; the leaf builder stays generic over its aggregate.
+pub fn pin_pixel(x: u32, y: u32, color: u32) -> BitmapMutation {
+    crate::standards::v1::subsets::any::schema::mutations::pin_pixel::pin_pixel::<BitmapMutation>(x, y, color)
+}
+
+/// 🏗️ Builder of the `remove_palette_color` leaf for this aggregate; the leaf builder stays generic over its aggregate.
+pub fn remove_palette_color(index: usize) -> BitmapMutation {
+    crate::standards::v1::subsets::any::schema::mutations::remove_palette_color::remove_palette_color::<BitmapMutation>(index)
+}
+
+/// 🏗️ Builder of the `resize_input` leaf for this aggregate; the leaf builder stays generic over its aggregate.
+pub fn resize_input(width: u32, height: u32) -> BitmapMutation {
+    crate::standards::v1::subsets::any::schema::mutations::resize_input::resize_input::<BitmapMutation>(width, height)
+}
+
+/// 🏗️ Builder of the `resize_output` leaf for this aggregate; the leaf builder stays generic over its aggregate.
+pub fn resize_output(width: u32, height: u32, periodic: bool) -> BitmapMutation {
+    crate::standards::v1::subsets::any::schema::mutations::resize_output::resize_output::<BitmapMutation>(width, height, periodic)
+}
+
+/// 🏗️ Builder of the `set_input_pixels` leaf for this aggregate; the leaf builder stays generic over its aggregate.
+pub fn set_input_pixels(x: u32, y: u32, width: u32, height: u32, pixels: Vec<u8>) -> BitmapMutation {
+    crate::standards::v1::subsets::any::schema::mutations::set_input_pixels::set_input_pixels::<BitmapMutation>(x, y, width, height, pixels)
+}
+
+/// 🏗️ Builder of the `unpin_pixel` leaf for this aggregate; the leaf builder stays generic over its aggregate.
+pub fn unpin_pixel(x: u32, y: u32) -> BitmapMutation {
+    crate::standards::v1::subsets::any::schema::mutations::unpin_pixel::unpin_pixel::<BitmapMutation>(x, y)
+}
+//#endregion 🔖️ConcreteBuilders

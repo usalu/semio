@@ -46,7 +46,6 @@ fn original_session_cold_validation_remains_inside_each_granted_turn() {
     assert_eq!(triangles, fixture["expected"]["triangles"].as_u64().unwrap() as usize);
     assert!((area - fixture["expected"]["area"].as_f64().unwrap()).abs() < 1e-8);
     assert!((volume - fixture["expected"]["volume"].as_f64().unwrap()).abs() < 1e-8);
-    eprintln!("[DEBUG] original Session cold validation turns={done} cancelled={cancelled} triangles={triangles} area={area} volume={volume}");
 }
 // #region 📏️RealMeshCost
 /// ⚖️ LAW: on a REAL tessellated solid (not a toy triangle) the binary body is at least twice as

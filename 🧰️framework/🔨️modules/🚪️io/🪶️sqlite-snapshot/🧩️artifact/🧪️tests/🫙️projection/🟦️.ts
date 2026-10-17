@@ -13,7 +13,6 @@ test("original projection corpus is closed against independent Ajv", () => {
     { ...fixture, owners: [{ ...fixture.owners[0], payload: [256] }] },
     { ...fixture, relations: [{ ...fixture.relations[0], owner: 0 }] },
   ]) expect(validate(value)).toBe(false);
-  console.log("[DEBUG] Original projection closed corpus accepted; four hostile cases refused");
 });
 
 test("original projection per-table census and fields agree with independent SQLite", () => {
@@ -29,7 +28,6 @@ test("original projection per-table census and fields agree with independent SQL
     expect(database.query("SELECT id FROM relation ORDER BY owner,ordinal").all()).toEqual([{ id: 2n }, { id: 3n }, { id: 1n }]);
     expect(database.query("PRAGMA foreign_key_check").all()).toEqual([]);
     expect(() => database.run("INSERT INTO relation VALUES(4,99,0)")).toThrow();
-    console.log("[DEBUG] SQLite independently confirms exact per-table rows, ordering, fields and foreign-key refusal");
   } finally { database.close(); }
 });
 

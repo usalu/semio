@@ -119,7 +119,7 @@ pub fn set_vertex_action() -> ActionDefinition {
 /// full `InteractionView` (whose fields are private outside the plugin crate — this is the
 /// dispatch decision `handle` delegates to, tested directly below).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn move_vertex_mutation(snapshot: &SemioBrepSnapshot, vertex_id: &str, point: [f64; 3]) -> Result<Option<SemioBrepMutation>, Fault> {
+pub fn move_vertex_mutation(snapshot: &SemioBrepSnapshot, vertex_id: &str, point: [f64; 3]) -> Result<Option<SemioBrepMutation>, Fault> {
     let mut matched = None;
     for (index, _vertex) in snapshot.vertices.iter().enumerate().filter(|(_, vertex)| vertex.id == vertex_id) {
         if matched.replace(index).is_some() {
@@ -203,8 +203,7 @@ fn semio_brep_set_vertex_work(_tool_id: &'static str) -> Box<dyn ArtifactCommand
 }
 //#endregion 🔖️Mutation
 
-#[path = "🧭️edit-rules/🦀️.rs"]
-pub mod edit_rules;
+pub use semio_s_artifact_stdio_semio_brep_viewer::editor::edit_rules;
 
 //#region 🔖️Editor
 #[derive(Default, Clone, Copy)]

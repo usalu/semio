@@ -1,20 +1,37 @@
 //! 🎳️ Staged `history-view` members of the `instance-render` use cases, as methods of the borrowed bundle (WP7 of the instance family).
 //!
 //! 📜️ The history projection: the command log backfill, the history view and its patches, the projection cache refresh, the history route commands and the reprojection status.
-use super::*;
-#[cfg(test)] use semio_framework_os_kernel::HistoryPageStack;
+use semio_framework_plugin_decl_app::ArtifactApp;
+use store::os_store::store_schema::ArtifactCommand;
+use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use pack::snapshot::ArtifactPack;
+use semio_framework_plugin_command::{CommandLogAppendKey, HistoryBackfillMark, HistoryRowReads, HistoryViewCache, HistoryViewPatch, HistoryViewStamp, backfilled_edit_label};
+use semio_framework_plugin_decl_views::history_view::{CommandLogEntry, CommandView, HistoryView, MutationView};
+use semio_framework_value::DslValue;
+use semio_framework_plugin_decl_emission::Emit;
+use semio_framework::{Fault, FaultFrom};
+use std::future::Future;
+use std::collections::{HashMap, HashSet};
+use semio_framework::kernel::{HistoryEntry, HistoryPatch, InvocationResult};
+use semio_framework_ui_locale::LocalizedLabel;
+use store::{Mutation, build_history_columns};
+use protocol::OpText;
+use semio_framework_plugin_reactor_app::PluginApp;
+use crate::render_bundle::{RenderCtx, RenderRef};
+use semio_framework_plugin_command::lifted_command::history_mutation_entry;
+use semio_framework_plugin_job::reserved_jobs::plugin_job_yield_once;
+use semio_framework_ui_contract::*;
 use semio_framework::kernel::HistoryReprojection;
 use semio_framework::kernel::HistoryReprojectionKind;
 use semio_framework::history_edit::HISTORY_EDIT_COMMIT_ACTION_ID;
 use std::sync::Arc;
-use crate::artifact_instance::InstanceExtension;
-use crate::command_history::CommandLogAppend;
-use crate::document_ingress::ActiveDocumentArchiveLoad;
-use crate::tree_kit::TREE_WINDOW_DEFAULT_ROWS;
+use semio_framework_plugin_instance_extension::InstanceExtension;
+use semio_framework_plugin_command::CommandLogAppend;
+use semio_framework_plugin_document_media::ActiveDocumentArchiveLoad;
 use semio_framework::ActionKind;
 use store::MemberFactory;
 use store::SpaceMember;
-use crate::tool_jobs::time_travel;
+use semio_framework_plugin_time_travel as time_travel;
 
 /// 🖋️ Decodes `args.authors` (`[{id, name, avatar?}]`, both shells' wire shape for a
 /// checkpoint dispatch) into `vcs::Author`s — empty when absent or malformed, never a hard
@@ -24,7 +41,8 @@ pub(crate) async fn history_command_authors(args: Option<&DslValue>) -> Vec<vcs:
 }
 
 /// 🕰️ Maps one of the six injected history action ids to its `ArtifactCommand`.
-pub(crate) async fn history_command<A: ArtifactApp>(action: &str, args: Option<&DslValue>) -> Option<ArtifactCommand<A::Mutation>> {
+#[doc(hidden)]
+pub async fn history_command<A: ArtifactApp>(action: &str, args: Option<&DslValue>) -> Option<ArtifactCommand<A::Mutation>> {
     let arg_str = |key: &str| args.and_then(|value| value.get(key)).and_then(DslValue::as_str).map(str::to_string);
     match action {
         "undo" => Some(ArtifactCommand::Undo),
@@ -54,7 +72,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
     /// 🧪️ Refreshes (backfilling the command log) and returns the current `HistoryView` —
     /// the merged command+operation timeline test harness accessor.
     #[cfg(test)]
-    pub(crate) async fn test_history(&mut self) -> HistoryView {
+    pub async fn test_history(&mut self) -> HistoryView {
         self.refresh_cache().await.expect("refresh cache");
         self.shared().build_history_view(None).await
     }
@@ -207,7 +225,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
     /// 🧾️ Converts the authoritative command log into a typed host projection patch. Rows are
     /// never folded or capped here; the host controls its own visible window. A delta patch reads only its dirty rows
     /// (each found by its `seq` in the newest-first view, design §20.14) and shares the cached view, never copies it.
-    pub(crate) async fn history_patch(&mut self, snapshot: bool) -> Result<HistoryPatch, Fault> {
+    pub async fn history_patch(&mut self, snapshot: bool) -> Result<HistoryPatch, Fault> {
         self.refresh_cache().await?;
         let history = std::sync::Arc::clone(&self.history.cache.as_ref().expect("history cache refreshed").3);
         let dirty = std::mem::take(&mut self.history.history_dirty_sequences);
@@ -271,7 +289,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
     ///
     /// 🧾️ The history view is patched, not rebuilt ([`Self::refresh_history_view`], design §20.14): the cache's own
     /// share of it is dropped first, so the retained view stays the only owner and is patched in its own allocation.
-    pub(crate) async fn refresh_cache(&mut self) -> Result<(), Fault> {
+    pub async fn refresh_cache(&mut self) -> Result<(), Fault> {
         while self.history.command_prune_requested() || self.history.pending_command_prune.is_some() {
             ({ let __a0 = self.mounted_policy.maintenance; let __a1 = false; self.history.advance_command_prune_step(&mut *self.stores, __a0, __a1) })?;
             plugin_job_yield_once().await;
@@ -299,7 +317,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
     /// no longer a plugin-rendered panel body, so this deliberately leaves `ui_scope` untouched.
     /// `verb` is the DECLARED action/command id — every caller must pass the real one, never a generic
     /// placeholder, or the kind lookup below silently resolves to nothing and the skip is unreachable.
-    pub(super) async fn finish_recorded(&mut self, log_generation_before: u64, verb: &str, mut result: InvocationResult) -> InvocationResult {
+    pub async fn finish_recorded(&mut self, log_generation_before: u64, verb: &str, mut result: InvocationResult) -> InvocationResult {
         if self.history.log_generation == log_generation_before {
             return result;
         }
@@ -366,7 +384,7 @@ impl<'v, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceEx
     /// (ticket 26/09/18 S11). The parent document lane is authoritative whenever the row
     /// published into it; the other two answer only for a row that has no parent edit at
     /// all, which is exactly the Child/Config-only case the fix above exists for.
-    pub(crate) async fn build_history_view(&self, previous: Option<&HistoryView>) -> HistoryView {
+    pub async fn build_history_view(&self, previous: Option<&HistoryView>) -> HistoryView {
         let envelope = self.stores.store.envelope();
         let labelled: HashMap<&str, &MutationView> =
             previous.map_or_else(HashMap::new, |previous| previous.commands.iter().flat_map(|row| row.mutations.iter()).filter(|mutation| !mutation.superseded).map(|mutation| (mutation.mutation_id.as_str(), mutation)).collect());
@@ -446,7 +464,7 @@ impl<'v, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceEx
     /// load first (its archive operation's progress), else the document store's waiting reprojection — this replica's own
     /// history step or a remote change — with whether the user paused a remote one and the code of a refused adoption;
     /// `None` while nothing waits.
-    pub(crate) fn reprojection_status(&self) -> Option<HistoryReprojection> {
+    pub fn reprojection_status(&self) -> Option<HistoryReprojection> {
         if let Some(load) = self.ingest.live_document_load().and_then(|operation| self.ingest.document_archive_loads.get(operation)).map(ActiveDocumentArchiveLoad::status) {
             return Some(HistoryReprojection { done: u32::try_from(load.completed).unwrap_or(u32::MAX), total: u32::try_from(load.total).unwrap_or(u32::MAX), processed: None, kind: HistoryReprojectionKind::Load, paused: false, fault: None });
         }

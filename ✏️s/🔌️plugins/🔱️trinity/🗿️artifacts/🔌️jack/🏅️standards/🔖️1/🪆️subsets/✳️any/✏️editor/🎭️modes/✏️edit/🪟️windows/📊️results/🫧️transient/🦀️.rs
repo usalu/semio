@@ -1,7 +1,9 @@
 //! 📊️ Ephemeral execution output for one concrete Jack results window.
 
+pub const WINDOW_KIND_ID: &str = "trinity-jack-results";
+
 #[path = "🧬️schema/🦀️.rs"]
-mod schema;
+pub mod schema;
 pub use schema::{JackResultsWindowTransient, JackResultsWindowTransientDiff};
 
 impl pack::snapshot::ArtifactDsl for JackResultsWindowTransient {
@@ -49,13 +51,13 @@ pub use mutations::*;
 
 /// 📏️ Heap bytes one property value retains (inline enum size plus every owned string/key), the
 /// same walk for a table cell and for a fixture node's property bag.
-fn property_value_retained_bytes(value: &crate::PropertyValue) -> usize {
-    let inline = size_of::<crate::PropertyValue>();
+fn property_value_retained_bytes(value: &semio_framework_graph_manifest::PropertyValue) -> usize {
+    let inline = size_of::<semio_framework_graph_manifest::PropertyValue>();
     match value {
-        crate::PropertyValue::Null | crate::PropertyValue::Bool(_) | crate::PropertyValue::Number(_) => inline,
-        crate::PropertyValue::String(text) => inline.saturating_add(text.len()),
-        crate::PropertyValue::Array(items) => items.iter().fold(inline, |bytes, item| bytes.saturating_add(property_value_retained_bytes(item))),
-        crate::PropertyValue::Object(entries) => entries.iter().fold(inline, |bytes, (key, item)| bytes.saturating_add(key.len()).saturating_add(property_value_retained_bytes(item))),
+        semio_framework_graph_manifest::PropertyValue::Null | semio_framework_graph_manifest::PropertyValue::Bool(_) | semio_framework_graph_manifest::PropertyValue::Number(_) => inline,
+        semio_framework_graph_manifest::PropertyValue::String(text) => inline.saturating_add(text.len()),
+        semio_framework_graph_manifest::PropertyValue::Array(items) => items.iter().fold(inline, |bytes, item| bytes.saturating_add(property_value_retained_bytes(item))),
+        semio_framework_graph_manifest::PropertyValue::Object(entries) => entries.iter().fold(inline, |bytes, (key, item)| bytes.saturating_add(key.len()).saturating_add(property_value_retained_bytes(item))),
     }
 }
 
@@ -64,26 +66,26 @@ fn property_value_retained_bytes(value: &crate::PropertyValue) -> usize {
 /// envelope (`ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES`, the same 1 MiB) for EVERY result, so no query
 /// output could ever be published. The executor already refuses results past its ceiling, so this
 /// count is bounded by it.
-fn query_result_retained_bytes(result: &crate::ast::QueryResult) -> Result<usize, semio_framework_value::ValueError> {
-    let mut bytes = size_of::<crate::ast::QueryResult>();
+fn query_result_retained_bytes(result: &crate::standards::v1::subsets::any::schema::ast::QueryResult) -> Result<usize, semio_framework_value::ValueError> {
+    let mut bytes = size_of::<crate::standards::v1::subsets::any::schema::ast::QueryResult>();
     for column in &result.columns {
         bytes = bytes.saturating_add(size_of::<String>()).saturating_add(column.len());
     }
     for row in &result.rows {
-        bytes = bytes.saturating_add(size_of::<Vec<crate::PropertyValue>>());
+        bytes = bytes.saturating_add(size_of::<Vec<semio_framework_graph_manifest::PropertyValue>>());
         for cell in row {
             bytes = bytes.saturating_add(property_value_retained_bytes(cell));
         }
     }
     if let Some(fixture) = result.graph_snapshot.as_deref() {
-        bytes = bytes.saturating_add(size_of::<crate::ast::JackQueryGraphSnapshot>()).saturating_add(fixture.name.len()).saturating_add(fixture.manifest_id.as_ref().map_or(0, String::len));
+        bytes = bytes.saturating_add(size_of::<crate::standards::v1::subsets::any::schema::ast::JackQueryGraphSnapshot>()).saturating_add(fixture.name.len()).saturating_add(fixture.manifest_id.as_ref().map_or(0, String::len));
         for node in &fixture.nodes {
-            bytes = bytes.saturating_add(size_of::<crate::Node>()).saturating_add(node.id.len()).saturating_add(node.kind.len()).saturating_add(node.name.len());
+            bytes = bytes.saturating_add(size_of::<crate::standards::v1::subsets::any::schema::graph::Node>()).saturating_add(node.id.len()).saturating_add(node.kind.len()).saturating_add(node.name.len());
             bytes = node.properties.iter().fold(bytes, |bytes, (key, value)| bytes.saturating_add(key.len()).saturating_add(property_value_retained_bytes(value)));
-            bytes = node.ports.iter().fold(bytes, |bytes, port| bytes.saturating_add(size_of::<crate::Port>()).saturating_add(port.id.len()).saturating_add(port.kind.len()));
+            bytes = node.ports.iter().fold(bytes, |bytes, port| bytes.saturating_add(size_of::<crate::standards::v1::subsets::any::schema::graph::Port>()).saturating_add(port.id.len()).saturating_add(port.kind.len()));
         }
         for edge in &fixture.edges {
-            bytes = bytes.saturating_add(size_of::<crate::Edge>()).saturating_add(edge.id.len()).saturating_add(edge.kind.len()).saturating_add(edge.source.len()).saturating_add(edge.target.len());
+            bytes = bytes.saturating_add(size_of::<crate::standards::v1::subsets::any::schema::graph::Edge>()).saturating_add(edge.id.len()).saturating_add(edge.kind.len()).saturating_add(edge.source.len()).saturating_add(edge.target.len());
             bytes = edge.properties.iter().fold(bytes, |bytes, (key, value)| bytes.saturating_add(key.len()).saturating_add(property_value_retained_bytes(value)));
         }
     }
@@ -107,14 +109,12 @@ fn results_window_transient_transfer(mutation: JackResultsWindowTransientMutatio
     JackResultsWindowTransient { query_execution_id: value.execution_id, result: value.result, query_error: value.error }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🧩️bounded/🦀️.rs"]
-mod bounded_publication_tests;
+
 
 pub struct JackResultsWindowTransientOwner;
 
 impl semio_framework_plugin::WindowTransientOwner for JackResultsWindowTransientOwner {
-    const WINDOW_KIND_ID: &'static str = crate::editor::jack::TRINITY_JACK_PLAY_WINDOW_RESULTS;
+    const WINDOW_KIND_ID: &'static str = WINDOW_KIND_ID;
     type State = JackResultsWindowTransient;
     type Mutation = JackResultsWindowTransientMutation;
 
@@ -133,7 +133,7 @@ pub fn register(registry: &mut semio_framework_plugin::WindowTransientOwnerRegis
 pub fn addressed(window_id: &str, view: &semio_framework_plugin::ViewModel, mutation: JackResultsWindowTransientMutation) -> Result<semio_framework_plugin::WindowTransientMutation, semio_framework_plugin::Fault> {
     use semio_framework_plugin::{Fault, FaultCode, FaultOrigin, WindowTransientMutation};
     let kind = view.window_instances.iter().find(|window| window.id == window_id).map(|window| window.window_kind_id.as_str());
-    if kind != Some(crate::editor::jack::TRINITY_JACK_PLAY_WINDOW_RESULTS) {
+    if kind != Some(WINDOW_KIND_ID) {
         return Err(Fault::new(FaultOrigin::App, FaultCode::new("jack.results-window-required"), "Jack query output requires the explicit attached results window"));
     }
     Ok(WindowTransientMutation::of::<JackResultsWindowTransientOwner>(window_id, mutation))

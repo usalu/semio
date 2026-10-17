@@ -4,7 +4,7 @@
 //!
 //! See `🌎️hub/🗿️artifact-authority/📌️check-in` for the hub job.
 
-use super::{valid_document_open_hash, EditedArtifactFrontierV1, DOCUMENT_OPEN_MAX_SAFE_INTEGER};
+use semio_framework_os_directory_schema::{valid_document_open_hash, EditedArtifactFrontierV1, DOCUMENT_OPEN_MAX_SAFE_INTEGER};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 /// 🧯️ Maximum canonical Check In request or status bytes.
@@ -130,3 +130,6 @@ impl DocumentCheckInStatusV1 {
 
     
 }
+
+#[path = "../../🚪️io/📝️text/📌️document-check-in-v1/🦀️.rs"]
+mod text;

@@ -5,7 +5,7 @@ use crate::standards::v1::subsets::any::io::snapshot::json::decode_curation_snap
 use crate::standards::v1::subsets::any::io::text::snapshot::sourcing_json_envelope_is_bounded;
 use crate::CurationSnapshot;
 use crate::editor::sourcing::config::{SourcingCurationConfig, SourcingCurationConfigMutation};
-use crate::editor::sourcing::reset_document_effect;
+use crate::editor::sourcing::base::reset_document_effect;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -27,7 +27,4 @@ pub fn handle(payload: &LoadDocumentJson, _doc: &ArtifactView<'_, CurationSnapsh
 }
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

@@ -27,6 +27,5 @@ test("neutral Pack tooling follows the same explicit boundary for computed impor
   const source=ts.createSourceFile(file,readFileSync(file,"utf8"),ts.ScriptTarget.Latest,true,ts.ScriptKind.TS);
   const visit=(node:ts.Node):void=>{if(ts.isStringLiteralLike(node)&&node.text.includes("🧰️framework/🛍️products/"))violations.push({source:file,line:source.getLineAndCharacterOfPosition(node.getStart(source)).line+1});ts.forEachChild(node,visit);};visit(source);
  }
- console.log(`[DEBUG] Pack tooling boundary: neutral-vectors=${fixture.cases.length} product-edges=${violations.length}`);
  expect(violations.length).toBe(0);
 });

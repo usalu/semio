@@ -1,0 +1,10 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/❓️quiz/🧪️tests/🪜️challenge-views/🟦️.tsx",
+ "importers": [],
+ "childRoot": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/❓️quiz/🧪️tests",
+ "children": [
+  {"dir": "🧱️challenge-views-kit", "doc": "/** 🧱️ Shared fixtures of the challenge-view suites: the quantities and items of the sample tasks, the hint questions the second hint audit quotes, and the sheet and text helpers. */", "lines": [[44, 332]]},
+  {"dir": "💡️challenge-hint-views", "doc": "/** 💡️ The hints of an easy run as the client shows and speaks them, in English and in German, with the guesses of the German client. */", "lines": [[399, 630]]},
+  {"dir": "⏱️challenge-clock-views", "doc": "/** ⏱️ The clock of a timed task: closed until opened, running, warning, up and locked, in English and German, with the submission and the timers it leaves behind. */", "lines": [[698, 1030]]}
+ ]
+}

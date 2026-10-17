@@ -1,0 +1,20 @@
+{
+ "name": "frd-h2",
+ "crates": [
+  "semio-framework-test-fixtures",
+  "semio-hub-bim",
+  "semio-hub-component-codec-laws",
+  "semio-hub-directory-laws",
+  "semio-hub-directory-laws-2",
+  "semio-hub-draw",
+  "semio-hub-gis",
+  "semio-hub-note",
+  "semio-hub-trusted-catalog-laws",
+  "semio-s-artifact-stdio-docx-test-oracle",
+  "semio-s-artifact-stdio-ifc-test-oracle",
+  "semio-s-artifact-stdio-mp3-test-oracle",
+  "semio-s-artifact-stdio-mp4-test-oracle",
+  "semio-s-artifact-stdio-step-test-oracle"
+ ],
+ "note": "FRD sample, no baseline"
+}

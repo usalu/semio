@@ -3,8 +3,9 @@
 //! keystroke (design §13.2 of ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING).
 
 use crate::editor::rewriting::terminology::TrinityRewritingLabels;
-use crate::standards::v1::subsets::any::schema::{self, ParameterKind};
-use crate::RewritingSnapshot;
+use crate::standards::v1::subsets::any::schema::{self};
+use crate::standards::v1::subsets::any::schema::rule::ParameterKind;
+use crate::standards::v1::subsets::any::schema::snapshot::RewritingSnapshot;
 use semio_framework_graph_manifest::PropertyValue;
 use semio_framework_ui_locale::Label;
 use semio_framework_ui_contract::{Buildable, HasBase, HasChildren, InputKind, Trigger};
@@ -13,7 +14,7 @@ trait ParameterKindLabel {
     fn kind_label(&self) -> String;
 }
 
-impl ParameterKindLabel for schema::ParameterSpec {
+impl ParameterKindLabel for schema::rule::ParameterSpec {
     fn kind_label(&self) -> String {
         match self.kind {
             ParameterKind::String => "string".into(),
@@ -23,7 +24,7 @@ impl ParameterKindLabel for schema::ParameterSpec {
     }
 }
 
-pub(crate) fn render(state: &RewritingSnapshot, labels: &TrinityRewritingLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(state: &RewritingSnapshot, labels: &TrinityRewritingLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let rhs = &state.rhs;
     let mut children = semio_framework_plugin::UiFixedList::<semio_framework_plugin::BuiltNode>::default();
     for param in &rhs.parameters {
@@ -40,9 +41,9 @@ pub(crate) fn render(state: &RewritingSnapshot, labels: &TrinityRewritingLabels)
         };
         let input_id = format!("trinity-rewriting.param.{}.input", param.name);
         let input_value = semio_framework_plugin::UiText::try_from_string(display).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "parameter value admission failed"))?;
-        let placeholder = crate::editor::rewriting::ui_label(param.kind_label())?;
-        let args = crate::editor::rewriting::ui_value_map([("name", crate::editor::rewriting::ui_value_text(&param.name)?)])?;
-        let (action, args) = crate::editor::rewriting::rewriting_action("setParameter", Some(args))?;
+        let placeholder = crate::editor::rewriting::ui::ui_label(param.kind_label())?;
+        let args = crate::editor::rewriting::ui::ui_value_map([("name", crate::editor::rewriting::ui::ui_value_text(&param.name)?)])?;
+        let (action, args) = crate::editor::rewriting::ui::rewriting_action("setParameter", Some(args))?;
         let commit = semio_framework_plugin::UiText::try_from_str("blur").ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "parameter commit admission failed"))?;
         let input = semio_framework_ui_contract::input(input_kind)
             .value(input_value)
@@ -58,7 +59,7 @@ pub(crate) fn render(state: &RewritingSnapshot, labels: &TrinityRewritingLabels)
         .try_build()
         .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "parameter input admission failed"))?;
         let field_id = format!("trinity-rewriting.param.{}", param.name);
-        let field = semio_framework_ui_contract::field(crate::editor::rewriting::ui_label(&param.name)?)
+        let field = semio_framework_ui_contract::field(crate::editor::rewriting::ui::ui_label(&param.name)?)
             .try_id(&field_id)
             .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "parameter field id admission failed"))?
             .try_child(input)

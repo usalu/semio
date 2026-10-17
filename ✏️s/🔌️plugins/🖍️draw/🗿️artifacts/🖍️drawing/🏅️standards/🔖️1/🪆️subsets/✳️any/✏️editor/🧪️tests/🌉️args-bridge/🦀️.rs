@@ -1,5 +1,5 @@
-use super::args_bridge::command_from_action;
-use crate::DrawingCommand;
+use semio_s_artifact_draw_drawing_editor::args_bridge::command_from_action;
+use semio_s_artifact_draw_drawing_editor::DrawingCommand;
 use semio_s_artifact_draw_drawing_editor_commands::{add_layer, edit_fill, edit_path, edit_selection, export_document, patch_layer, set_active_example};
 
 #[test]

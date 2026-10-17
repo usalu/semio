@@ -330,7 +330,7 @@
     {
       "plugin": "trinity",
       "kind": "s.trinity.jack",
-      "definition": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🦀️.rs",
+      "definition": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🔨️modules/🧩️registration/🦀️.rs",
       "root": "🌎️hub/🧩️compositions/🔱️trinity/🦀️.rs"
     },
     {

@@ -1,10 +1,11 @@
 //! 🧪️ Language-neutral node editing and source-preservation laws.
 use super::*;
+use semio_framework_test_fixtures::fixture_text;
 
 #[test]
 fn path_algorithms_shared_cases_and_semantic_undo() {
     use protocol::Mutation;
-    let cases:serde_json::Value=serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/🧮️geometry/✏️editing/🎮️operations/🎛️algorithms/🔣️.json")).unwrap();
+    let cases:serde_json::Value=serde_json::from_str(fixture_text!("../../../../🧪️tests/🧫️fixtures/🧮️geometry/✏️editing/🎮️operations/🎛️algorithms/🔣️.json")).unwrap();
     for case in cases.as_array().unwrap() {
         let source:Vec<PathSegment>=serde_json::from_value(case["before"].clone()).unwrap();
         let edit:PathEdit=serde_json::from_value(case["operation"].clone()).unwrap();let saved=source.clone();
@@ -41,7 +42,7 @@ fn assert_geometry(actual: &serde_json::Value, expected: &serde_json::Value) {
 
 #[test]
 fn path_node_editing_shared_cases() {
-    let cases: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/🧮️geometry/✏️editing/🎮️operations/🔣️.json")).unwrap();
+    let cases: serde_json::Value = serde_json::from_str(fixture_text!("../../../../🧪️tests/🧫️fixtures/🧮️geometry/✏️editing/🎮️operations/🔣️.json")).unwrap();
     for case in cases.as_array().unwrap() {
         let source: Vec<PathSegment> = serde_json::from_value(case["before"].clone()).unwrap();
         let operation: PathEdit = serde_json::from_value(case["operation"].clone()).unwrap();
@@ -59,12 +60,11 @@ fn path_node_editing_shared_cases() {
         assert_geometry(&serde_json::to_value(&actual).unwrap(), &serde_json::to_value(&expected).unwrap());
         assert_eq!(edit_path(&edit_path(&actual, &PathEdit::Reverse).unwrap(), &PathEdit::Reverse).unwrap(), actual);
     }
-    eprintln!("[DEBUG] Drawing persisted paged and computed path geometry preserve every shared edit/reversal/join/refusal fixture through borrowed ordinal access");
 }
 
 #[test]
 fn arc_segment_extrema_shared_cases() {
-    let cases: serde_json::Value=serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/🧮️geometry/🔄️arc-bounds/🔣️.json")).unwrap();
+    let cases: serde_json::Value=serde_json::from_str(fixture_text!("../../../../🧪️tests/🧫️fixtures/🧮️geometry/🔄️arc-bounds/🔣️.json")).unwrap();
     for case in cases.as_array().unwrap() {
         let segment: PathSegment=serde_json::from_value(case["segment"].clone()).unwrap();
         let from=serde_json::from_value(case["from"].clone()).unwrap();
@@ -76,7 +76,7 @@ fn arc_segment_extrema_shared_cases() {
 
 #[test]
 fn pointer_drag_uses_full_affine_ancestors_and_preserves_press_offset() {
-    let fixtures:serde_json::Value=serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/🧮️geometry/✏️editing/🎮️operations/🖱️drag/🔣️.json")).unwrap();
+    let fixtures:serde_json::Value=serde_json::from_str(fixture_text!("../../../../🧪️tests/🧫️fixtures/🧮️geometry/✏️editing/🎮️operations/🖱️drag/🔣️.json")).unwrap();
     for row in fixtures.as_array().unwrap() {
         let segment=serde_json::from_value(row["segment"].clone()).unwrap();
         let point=serde_json::from_value(row["point"].clone()).unwrap();
@@ -90,7 +90,7 @@ fn pointer_drag_uses_full_affine_ancestors_and_preserves_press_offset() {
 
 #[test]
 fn gesture_position_preview_copies_only_adjacent_segments() {
-    let cases:serde_json::Value=serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/🧮️geometry/✏️editing/🎮️operations/🔣️.json")).unwrap();
+    let cases:serde_json::Value=serde_json::from_str(fixture_text!("../../../../🧪️tests/🧫️fixtures/🧮️geometry/✏️editing/🎮️operations/🔣️.json")).unwrap();
     for row in cases.as_array().unwrap().iter().filter(|row|row["name"].as_str().unwrap().starts_with("position-") && row["error"]!=true) {
         let source:Vec<PathSegment>=serde_json::from_value(row["before"].clone()).unwrap();
         let operation:PathEdit=serde_json::from_value(row["operation"].clone()).unwrap();
@@ -110,7 +110,7 @@ fn gesture_position_preview_copies_only_adjacent_segments() {
 
 #[test]
 fn node_picking_names_nearest_point_with_anchor_priority() {
-    let cases:serde_json::Value=serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/🧮️geometry/✏️editing/🎮️operations/🎯️point-hit/🔣️.json")).unwrap();
+    let cases:serde_json::Value=serde_json::from_str(fixture_text!("../../../../🧪️tests/🧫️fixtures/🧮️geometry/✏️editing/🎮️operations/🎯️point-hit/🔣️.json")).unwrap();
     for row in cases.as_array().unwrap() {
         let segment=serde_json::from_value(row["segment"].clone()).unwrap();
         let matrix=serde_json::from_value(row["matrix"].clone()).unwrap();
@@ -123,7 +123,7 @@ fn node_picking_names_nearest_point_with_anchor_priority() {
 
 #[test]
 fn multi_point_translation_matches_shared_cases_atomically() {
-    let cases:serde_json::Value=serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/🧮️geometry/✏️editing/🎮️operations/↔️points/🔣️.json")).unwrap();
+    let cases:serde_json::Value=serde_json::from_str(fixture_text!("../../../../🧪️tests/🧫️fixtures/🧮️geometry/✏️editing/🎮️operations/↔️points/🔣️.json")).unwrap();
     for row in cases.as_array().unwrap() {
         let source:Vec<PathSegment>=serde_json::from_value(row["before"].clone()).unwrap();
         let saved=source.clone();
@@ -146,7 +146,7 @@ fn multi_point_translation_matches_shared_cases_atomically() {
 
 #[test]
 fn world_point_nudges_follow_the_complete_affine_basis() {
-    let cases:serde_json::Value=serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/🧮️geometry/✏️editing/🎮️operations/🌍️translation/🔣️.json")).unwrap();
+    let cases:serde_json::Value=serde_json::from_str(fixture_text!("../../../../🧪️tests/🧫️fixtures/🧮️geometry/✏️editing/🎮️operations/🌍️translation/🔣️.json")).unwrap();
     for row in cases.as_array().unwrap() {
         let source:Vec<PathSegment>=serde_json::from_value(row["segments"].clone()).unwrap();
         let saved=source.clone();

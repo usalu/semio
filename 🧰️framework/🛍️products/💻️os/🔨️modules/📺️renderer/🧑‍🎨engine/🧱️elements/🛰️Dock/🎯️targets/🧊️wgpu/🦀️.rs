@@ -2149,4 +2149,7 @@ mod window_template_drag_tests;
 #[cfg(all(test, not(target_arch = "wasm32")))]
 #[path = "../../🧪️tests/🎯️stack-drop-destination/🦀️.rs"]
 mod stack_drop_destination_tests;
+#[cfg(all(test, not(target_arch = "wasm32")))]
+#[path = "../../🧪️tests/🔬️wgpu-unit/🦀️.rs"]
+mod unit_tests;
 //#endregion DockTests

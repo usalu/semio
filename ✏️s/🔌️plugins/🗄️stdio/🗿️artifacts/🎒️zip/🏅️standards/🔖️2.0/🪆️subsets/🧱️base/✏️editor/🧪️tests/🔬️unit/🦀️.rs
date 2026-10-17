@@ -1,5 +1,9 @@
+use crate::editor::zip::base::modes::edit::windows::main;
+use crate::{ZipMutation, ZipSnapshot};
+use semio_framework_plugin::ArtifactEditor;
+use semio_framework_plugin::Editor;
 use crate::apply_mutation;
-use super::*;
+use crate::editor::zip::base::*;
 
 #[semio_framework_async_macros::async_test]
 async fn create_zip_any_editor_builds_a_definition_for_the_editor_role() {
@@ -19,7 +23,7 @@ async fn editor_declares_the_main_window() {
     assert!(def.window_kinds.iter().any(|window| window.id == main::WINDOW_KIND_ID));
 }
 
-semio_framework_plugin::history_edit_acceptance_law!("stdio", super::ZipAnyEditor, || semio_framework_plugin::App { definition: super::create_zip_any_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️2.0/🪆️subsets/🧱️base");
+semio_framework_plugin::history_edit_acceptance_law!("stdio", crate::editor::zip::base::ZipAnyEditor, || semio_framework_plugin::App { definition: crate::editor::zip::base::create_zip_any_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️2.0/🪆️subsets/🧱️base");
 
 #[semio_framework_async_macros::async_test]
 async fn details_edits_resolve_to_the_kind_of_the_addressed_member() {

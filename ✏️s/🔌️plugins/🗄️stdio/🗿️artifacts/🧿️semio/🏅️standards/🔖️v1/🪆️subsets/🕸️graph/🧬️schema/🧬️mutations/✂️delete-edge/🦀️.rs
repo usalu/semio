@@ -1,6 +1,5 @@
 //! ✂️ `delete-edge` — removes an id-keyed edge; no cascade needed (edges don't own other entities).
 
-use crate::schema::mutations::SemioGraphMutation;
 use crate::schema::snapshot::{GraphEdgeId, SemioGraphSnapshot};
 
 //#region 🔖️Payload
@@ -11,13 +10,16 @@ pub struct DeleteEdge {
     pub id: GraphEdgeId,
 }
 
-impl protocol::MutationKind<SemioGraphSnapshot, SemioGraphMutation> for DeleteEdge {
+impl<Op> protocol::MutationKind<SemioGraphSnapshot, Op> for DeleteEdge
+where
+    Op: protocol::Mutation<SemioGraphSnapshot, Diff = crate::schema::diff::SemioGraphDiff> + From<DeleteEdge> + From<crate::schema::mutations::create_edge::CreateEdge>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "edge", kind: "delete-edge", record: "DeletedEdge" };
 
-    fn diff(&self, base: &SemioGraphSnapshot) -> protocol::MutationOutcome<<SemioGraphMutation as protocol::Mutation<SemioGraphSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioGraphSnapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<SemioGraphSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &SemioGraphSnapshot) -> Result<Vec<SemioGraphMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &SemioGraphSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

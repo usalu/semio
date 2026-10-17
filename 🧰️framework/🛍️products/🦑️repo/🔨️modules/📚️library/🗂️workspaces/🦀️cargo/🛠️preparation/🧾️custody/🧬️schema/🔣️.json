@@ -189,6 +189,51 @@
           }
         }
       }
+    },
+    "CargoPreparationControlProtocolV1": {
+      "const": {
+        "version": 1,
+        "maximumChildMilliseconds": 30000,
+        "operations": [
+          "capture-program",
+          "resolve-program"
+        ],
+        "progressOperation": "recipe",
+        "maximumCaptureBytes": 16777216,
+        "maximumCaptureLines": 65536
+      }
+    },
+    "CargoPreparationControlCaseV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "effect",
+        "accepted",
+        "operation"
+      ],
+      "properties": {
+        "effect": {
+          "enum": [
+            "ordinary",
+            "copy",
+            "missing",
+            "cancelled",
+            "progress-refused",
+            "progress-cancelled",
+            "expired",
+            "mutation"
+          ]
+        },
+        "accepted": {
+          "type": "boolean"
+        },
+        "operation": {
+          "enum": [
+            "capture-program",
+            "resolve-program"
+          ]
+        }
+      }
     }
   },
   "$ref": "#/$defs/CargoPreparationObservationV1"

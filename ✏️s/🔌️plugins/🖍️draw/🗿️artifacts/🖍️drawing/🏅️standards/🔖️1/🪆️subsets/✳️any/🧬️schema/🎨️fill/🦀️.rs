@@ -6,9 +6,9 @@ static EMPTY_STOPS: std::sync::LazyLock<PagedList<GradientStop, {usize::MAX}>> =
 pub mod sampling;
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
 #[value(tag = "kind", rename_all = "camelCase")]
-#[cfg_attr(test, serde(tag = "kind", rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testkit"), serde(tag = "kind", rename_all = "camelCase"))]
 pub enum FillEdit {
     Type { value: FillType },
     Coordinate { axis: FillAxis, value: f64 },
@@ -20,15 +20,15 @@ pub enum FillEdit {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslScalar)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
 pub enum FillType { None, Solid, LinearGradient, RadialGradient }
 
 #[derive(Clone, Copy, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslScalar)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
 pub enum FillAxis { X1, Y1, X2, Y2, Cx, Cy, R }
 
 pub fn stops(fill: &FillStyle) -> &PagedList<GradientStop, {usize::MAX}> {
@@ -120,9 +120,13 @@ pub fn edit_fill(source: Option<&FillStyle>, edit: &FillEdit) -> Result<Option<F
 
 #[cfg(test)]
 mod tests {
+use semio_framework_test_fixtures::fixture_text;
+
+    use semio_framework_test_fixtures::fixture_path;
+
     #[test]
     fn fill_edit_fixtures() {
-        let cases: serde_json::Value = serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/🎨️fill/🔣️.json")).unwrap();
+        let cases: serde_json::Value = serde_json::from_str(fixture_text!("../../../🧪️tests/🧫️fixtures/🎨️fill/🔣️.json")).unwrap();
         for case in cases.as_array().unwrap() {
             let source: Option<crate::FillStyle> = serde_json::from_value(case["before"].clone()).unwrap();
             let edit = serde_json::from_value(case["edit"].clone()).unwrap();

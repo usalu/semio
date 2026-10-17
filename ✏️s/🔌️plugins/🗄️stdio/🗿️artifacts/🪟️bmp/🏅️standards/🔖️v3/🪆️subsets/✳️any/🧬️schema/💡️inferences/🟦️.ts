@@ -31,6 +31,10 @@ type stdioBmpV3AnyInferenceGuardSizeBounds = { readonly minItems?: number; reado
 
 export const stdioBmpV3AnyInferenceGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : stdioBmpV3AnyInferenceGuardReject(at, "value is not an object");
+export const stdioBmpV3AnyInferenceGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) stdioBmpV3AnyInferenceGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const stdioBmpV3AnyInferenceGuardArray = (value: unknown, at: string, bounds: stdioBmpV3AnyInferenceGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return stdioBmpV3AnyInferenceGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) stdioBmpV3AnyInferenceGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -61,14 +65,14 @@ export const stdioBmpV3AnyInferenceGuardConstant = <T extends string | number | 
 //#endregion 🚪️Parsers
 
 export function parseBmpInference(value: unknown, at = "$"): BmpInference {
-  const row = stdioBmpV3AnyInferenceGuardObject(value, at);
+  const row = stdioBmpV3AnyInferenceGuardClosed(stdioBmpV3AnyInferenceGuardObject(value, at), at, ["dimensions"]);
   return {
     dimensions: parseBmpDimensions(row["dimensions"], `${at}.dimensions`),
   };
 }
 
 export function parseBmpDimensions(value: unknown, at = "$"): BmpDimensions {
-  const row = stdioBmpV3AnyInferenceGuardObject(value, at);
+  const row = stdioBmpV3AnyInferenceGuardClosed(stdioBmpV3AnyInferenceGuardObject(value, at), at, ["width", "height", "bitDepth", "hasAlpha", "pixelCount"]);
   return {
     width: stdioBmpV3AnyInferenceGuardInteger(row["width"], `${at}.width`, {"minimum": 0}),
     height: stdioBmpV3AnyInferenceGuardInteger(row["height"], `${at}.height`, {"minimum": 0}),

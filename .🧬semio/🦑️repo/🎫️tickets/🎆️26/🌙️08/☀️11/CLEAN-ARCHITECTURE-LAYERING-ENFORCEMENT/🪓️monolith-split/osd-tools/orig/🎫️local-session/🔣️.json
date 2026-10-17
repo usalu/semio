@@ -1,0 +1,21 @@
+{
+  "note": "Development local-session answers (`GET /_semio/dev/local-session`, always 200, schema semio.os.dev-local-hub-session/v1). `encode`: what a serve sends for its broker's result; `decode`: the session a shell adopts (null = none) and whether the body is a well-formed answer (`shape`, per `🧬️.schema.json`). Token values are opaque fixture strings, not credentials.",
+  "encode": [
+    { "id": "no-broker", "session": null, "answer": { "schema": "semio.os.dev-local-hub-session/v1", "offered": false } },
+    { "id": "broker-session", "session": { "token": "session.v1.fixture", "userId": "user-1" }, "answer": { "schema": "semio.os.dev-local-hub-session/v1", "offered": true, "token": "session.v1.fixture", "userId": "user-1" } }
+  ],
+  "decode": [
+    { "id": "offered", "body": { "schema": "semio.os.dev-local-hub-session/v1", "offered": true, "token": "session.v1.fixture", "userId": "user-1" }, "shape": true, "expected": { "token": "session.v1.fixture", "userId": "user-1" } },
+    { "id": "not-offered", "body": { "schema": "semio.os.dev-local-hub-session/v1", "offered": false }, "shape": true, "expected": null },
+    { "id": "offered-empty-token", "body": { "schema": "semio.os.dev-local-hub-session/v1", "offered": true, "token": "", "userId": "user-1" }, "shape": false, "expected": null },
+    { "id": "offered-without-user", "body": { "schema": "semio.os.dev-local-hub-session/v1", "offered": true, "token": "session.v1.fixture" }, "shape": false, "expected": null },
+    { "id": "offered-extra-field", "body": { "schema": "semio.os.dev-local-hub-session/v1", "offered": true, "token": "session.v1.fixture", "userId": "user-1", "profile": "developer" }, "shape": false, "expected": null },
+    { "id": "not-offered-with-token", "body": { "schema": "semio.os.dev-local-hub-session/v1", "offered": false, "token": "session.v1.fixture" }, "shape": false, "expected": null },
+    { "id": "legacy-without-offered", "body": { "schema": "semio.os.dev-local-hub-session/v1", "token": "session.v1.fixture", "userId": "user-1" }, "shape": false, "expected": null },
+    { "id": "other-schema", "body": { "schema": "semio.os.dev-local-hub-session/v2", "offered": true, "token": "session.v1.fixture", "userId": "user-1" }, "shape": false, "expected": null },
+    { "id": "token-not-string", "body": { "schema": "semio.os.dev-local-hub-session/v1", "offered": true, "token": 7, "userId": "user-1" }, "shape": false, "expected": null },
+    { "id": "array", "body": [], "shape": false, "expected": null },
+    { "id": "text", "body": "local-session unavailable", "shape": false, "expected": null },
+    { "id": "null", "body": null, "shape": false, "expected": null }
+  ]
+}

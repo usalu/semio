@@ -6,7 +6,7 @@ import stableStringify from "fast-json-stable-stringify";
 import {MockFlowBridge} from "../🎭️mock-flow-bridge/🟦️.ts";
 import {createFlowHost} from "../../🖥️host/🏃️runtime/🟨️.js";
 import {createFlowBrowserRuntime} from "../../🌐️browser/🏃️runtime/🟨️.js";
-import { cloneWireProgressSchemaUrl } from "../../../../../../../🔨️modules/🌱️value/🧪️tests/🧫️fixtures/🟦️.ts";
+import { cloneWireProgressSchemaUrl } from "@semio-tech/value-ts/testing/fixtures";
 
 /** 🧾️ Actual Flow receiving transport preserves pending, failed and terminal child receipts. */
 export async function testFlowRetainedReceipt():Promise<void>{
@@ -37,5 +37,4 @@ export async function testFlowRetainedReceipt():Promise<void>{
  assert.ok(vcs.includes("pub cause:Option<ValueError>")&&vcs.includes("cause:Some(error)"));assertions++;
  assert.ok(domain.includes("FlowFailure::from_value")&&domain.includes("failure.cause"));assertions++;
  assert.equal(/#\[derive\(Clone[^\n]*\)\]\s*pub (?:struct FlowFailure|enum FlowFeatureStep|struct FlowVcsCloseFailure)/.test(protocol+vcs),false);assertions++;
- console.log("[DEBUG] original Flow receiving retained receipt cases="+fixture.cases.length+" assertions="+assertions+" plainExamples=true canonicalProgressAjv=true BigUint64ArrayReference=true normalFailureSource=true");
 }

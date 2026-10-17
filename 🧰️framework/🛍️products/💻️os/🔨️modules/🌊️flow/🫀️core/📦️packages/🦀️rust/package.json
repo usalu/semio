@@ -10,6 +10,7 @@
     "test:browser-ownership": "bun --cwd \"../../../../../../../..\" repo run semio-framework-os-flow-core:test-browser-ownership"
   },
   "devDependencies": {
-    "@semio-tech/process": "workspace:*"
+    "@semio-tech/process": "workspace:*",
+    "@semio-tech/framework-os": "workspace:*"
   }
 }

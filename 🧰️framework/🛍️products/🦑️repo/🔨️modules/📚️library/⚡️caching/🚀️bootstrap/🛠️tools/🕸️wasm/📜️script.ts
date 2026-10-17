@@ -9,7 +9,8 @@ import { getWorkspaceRoot } from "../../../../🗂️workspaces/🟦️.ts";
 import { withResourceLeases } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import {runTool} from "../../📦️dependencies/🟦️.ts";
 import {repositoryCargoPreparationStorageV1} from "../../../📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🟦️.ts";
-import binaryenManifest from "./🔣️.json";
+import binaryenSchema from "./🧬️schema/🔣️.json";
+const binaryenManifest=binaryenSchema.definitions.Release.const;
 import {withRepositoryToolingStoreV1,type RepositoryToolingStoreV1} from "../../../💾️storage/🔒️enforcement/🛠️tools/🟦️.ts";
 import {repositoryCachePartitionRootV1} from "../../../💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts";
 import {requireNativeStorageReservationV1} from "../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
@@ -125,7 +126,7 @@ export async function prepareBinaryen(workspace: string, store:RepositoryTooling
 class PrepareScript extends Script {
   async run(args: string[]): Promise<void> {
     if (args.length) throw new Error("Optimizer preparation accepts no arguments");
-    await withRepositoryToolingStoreV1(this.root,this.invocation,createIssuedResourceControlV1(this.invocation,"cache:entry",0),async store=>{const executable=await prepareBinaryen(this.root,store);console.log(`[DEBUG] Prepared bounded Binaryen ${executable}`);});
+    await withRepositoryToolingStoreV1(this.root,this.invocation,createIssuedResourceControlV1(this.invocation,"cache:entry",0),async store=>{const executable=await prepareBinaryen(this.root,store);});
   }
 }
 

@@ -41,14 +41,9 @@ import {
   type WorldSuggestionMenuRecord,
   type WorldVortexRecord
 } from "../🔭️scene-schema/🟦️.ts";
-import {
-  buildVertexPickData,
-  disposeWorldMeshAppearance,
-  type MeshVisuals,
-  useFrame,
-  useThree,
-  world3dInstanceLocalCorners
-} from "../🎨️mesh-render/🟦️.tsx";
+import { useFrame, useThree } from "../🎨️mesh-render/🟦️.tsx";
+import { buildVertexPickData, disposeWorldMeshAppearance, type MeshVisuals } from "../🎨️mesh-render/🔺️mesh-geometry-and-appearance/🟦️.ts";
+import { world3dInstanceLocalCorners } from "../🎨️mesh-render/🪟️glb-bounds-and-styling/🟦️.ts";
 
 //#region 🔖️World3dHost
 /** 🧲️ Rubber-band line drawn from the drag-connect source vortex to the currently hovered vortex (or itself, if hovering nothing). */

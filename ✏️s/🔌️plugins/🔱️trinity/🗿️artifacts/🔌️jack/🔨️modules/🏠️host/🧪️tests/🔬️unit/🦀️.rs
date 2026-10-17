@@ -1,7 +1,29 @@
-use super::*;
+use crate::standards::v1::subsets::any::schema::mutations::TrinityGraphMutation;
+use crate::standards::v1::subsets::any::schema::mutations::set_query;
+use crate::standards::v1::subsets::any::schema::graph::GraphEffect;
+use crate::standards::v1::subsets::any::schema::graph::{Edge, EntityRef, Node};
+use crate::standards::v1::subsets::any::schema::snapshot::JackSnapshot;
+use semio_framework_graph_manifest::{PropertyBag, PropertyValue};
+use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind};
+use crate::standards::v1::subsets::any::io::binary::mutations::{encode_op, decode_op};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::graph::Port;
+#[allow(unused_imports)]
+use semio_framework_graph_manifest::PropertyDef;
+#[allow(unused_imports)]
+use protocol::{Mutation, MutationDiff, OpBinary, OpText};
+#[allow(unused_imports)]
+use semio_framework_diagnostic::TextError;
+#[allow(unused_imports)]
+use semio_framework_value::retained_clone::admit_retained_clone_close;
+#[allow(unused_imports)]
+use semio_framework_value::retirement::{controlled::ControlledRetirement, OwnedValueRetirementFactory, SharedValueRetirementFactory};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::host::initialization_authority::*;
+use crate::standards::v1::subsets::any::schema::host::*;
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 use crate::standards::v1::subsets::any::io::binary::mutations::new_trinity_graph_store;
-use crate::TRINITY_GRAPH_SCHEMA;
+use crate::standards::v1::subsets::any::schema::graph::TRINITY_GRAPH_SCHEMA;
 
 #[semio_framework_async_macros::async_test]
 async fn set_query_op_binary_round_trips_and_agrees_with_text() {
@@ -71,8 +93,8 @@ fn close_jack_candidate(mut candidate: store::ArtifactStore<JackSnapshot, Trinit
 
     let mut disposer = semio_framework_plugin::ArtifactDocumentStoreDisposer::<JackSnapshot, TrinityGraphMutation>::new();
     for _ in 0..100_000 {
-        let demand = disposer.retirement_demands(&candidate, crate::JACK_SELF_FUNDED_BODY_BYTES).expect("Jack candidate close quote");
-        let grant = crate::jack_self_funded_grant(demand);
+        let demand = disposer.retirement_demands(&candidate, crate::standards::v1::subsets::any::schema::content::JACK_SELF_FUNDED_BODY_BYTES).expect("Jack candidate close quote");
+        let grant = crate::standards::v1::subsets::any::schema::content::jack_self_funded_grant(demand);
         match disposer.close_step(&mut candidate, grant).expect("Jack candidate close step") {
             semio_framework_plugin::PluginLifecycleStep::Progress(progress) => assert!(progress.fits(grant)),
             semio_framework_plugin::PluginLifecycleStep::Blocked { reason } => panic!("fresh Jack candidate close unexpectedly blocked: {reason}"),
@@ -126,7 +148,7 @@ fn jack_store_initializer_cancel_and_stale_generation_return_every_owner_termina
 /// ♻️ Drives one admitted owned value turn by turn under exactly its own published quote and counts the turns.
 fn drive_owned_retirement<T: semio_framework_value::retirement::RetireOwned>(value: T) -> usize {
     use semio_framework_value::ErasedSnapshotRetirement;
-    let birth = crate::jack_self_funded_grant(RetirementDemand { capacity_bytes: semio_framework_value::retirement::owned_retirement_birth_bytes::<T>(), ..Default::default() });
+    let birth = crate::standards::v1::subsets::any::schema::content::jack_self_funded_grant(RetirementDemand { capacity_bytes: semio_framework_value::retirement::owned_retirement_birth_bytes::<T>(), ..Default::default() });
     let (mut retirement, receipt) = semio_framework_value::retirement::admit_owned_retirement(value, birth).unwrap_or_else(|(error, _)| panic!("owned retirement admission refused: {error:?}"));
     assert!(receipt.fits(birth));
     let mut steps = 0;
@@ -135,8 +157,8 @@ fn drive_owned_retirement<T: semio_framework_value::retirement::RetireOwned>(val
             return steps;
         }
         steps += 1;
-        let demand = retirement.next_demand(crate::JACK_SELF_FUNDED_BODY_BYTES).expect("owned retirement quote");
-        let grant = crate::jack_self_funded_grant(demand);
+        let demand = retirement.next_demand(crate::standards::v1::subsets::any::schema::content::JACK_SELF_FUNDED_BODY_BYTES).expect("owned retirement quote");
+        let grant = crate::standards::v1::subsets::any::schema::content::jack_self_funded_grant(demand);
         let step = retirement.close_step(grant).expect("bounded owned retirement");
         assert!(step.progress().fits(grant));
     }
@@ -175,14 +197,14 @@ fn drive_snapshot_retirement(value: JackSnapshot) -> usize {
 fn query_ownership_shared_scene_clone_retires_while_source_remains_live() {
     let mut source = crate::standards::v1::subsets::any::schema::empty_jack_document::<crate::test_support::FixtureComposition>();
     crate::test_support::materialize_fixture(&mut source.content, vec![Node { id: "live".into(), kind: "Apartment".into(), name: "Live".into(), x: 0.0, y: 0.0, width: 1.0, height: 1.0, properties: PropertyBag::new(), ports: Vec::new() }], Vec::new());
-    let source_owner = source.content.local_owner::<crate::JackContentOwner>().expect("source content owner");
+    let source_owner = source.content.local_owner::<crate::standards::v1::subsets::any::schema::content::JackContentOwner>().expect("source content owner");
     let clone = drive_snapshot_clone(&source);
-    let clone_owner = clone.content.local_owner::<crate::JackContentOwner>().expect("clone content owner");
+    let clone_owner = clone.content.local_owner::<crate::standards::v1::subsets::any::schema::content::JackContentOwner>().expect("clone content owner");
     assert!(std::sync::Arc::ptr_eq(&source_owner, &clone_owner));
     drop(source_owner);
     drop(clone_owner);
     let steps = drive_snapshot_retirement(clone);
-    assert_eq!(source.content.local_owner::<crate::JackContentOwner>().expect("live source owner remains").read().node_id(0).unwrap(), "live");
+    assert_eq!(source.content.local_owner::<crate::standards::v1::subsets::any::schema::content::JackContentOwner>().expect("live source owner remains").read().node_id(0).unwrap(), "live");
     assert!(steps > 1);
     drive_snapshot_retirement(source);
 }
@@ -219,7 +241,7 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
     use protocol::{ArtifactId, Edit, SchemaId};
 
     let mut store = new_trinity_graph_store(create_document_envelope_for_test(), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store");
-    crate::standards::v1::subsets::any::schema::mutations::dispatch_trinity_graph_mutations(&mut store, vec![set_query("MATCH (a:Piece) RETURN a".into())], &mut identity).await.unwrap_or(());
+    crate::standards::v1::subsets::any::schema::operations::dispatch_trinity_graph_mutations(&mut store, vec![set_query("MATCH (a:Piece) RETURN a".into())], &mut identity).await.unwrap_or(());
     if let Some(edit) = store.envelope().vcs.edits.last() {
         let edit: &Edit<TrinityGraphMutation> = edit;
         ::store::os_store::test_support::assert_command_envelope_round_trip::<JackSnapshot, TrinityGraphMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone())).await;
@@ -263,8 +285,8 @@ impl semio_framework_value::ErasedSnapshotRetirement for JackCloseRefusalOwner {
 
 fn close_jack_initializer(authority: &mut JackStoreInitializationAuthority) {
     for _ in 0..100_000 {
-        let demand = semio_framework_plugin::ArtifactStoreInitializationAuthority::retirement_demands(authority, crate::JACK_SELF_FUNDED_BODY_BYTES).expect("Jack initializer close quote");
-        let grant = crate::jack_self_funded_grant(demand);
+        let demand = semio_framework_plugin::ArtifactStoreInitializationAuthority::retirement_demands(authority, crate::standards::v1::subsets::any::schema::content::JACK_SELF_FUNDED_BODY_BYTES).expect("Jack initializer close quote");
+        let grant = crate::standards::v1::subsets::any::schema::content::jack_self_funded_grant(demand);
         match semio_framework_plugin::ArtifactStoreInitializationAuthority::close_step(authority, grant).expect("Jack initializer close") {
             RetainedCloneStep::Progress(progress) => assert!(progress.fits(grant)),
             RetainedCloneStep::Complete(progress) => {
@@ -278,7 +300,7 @@ fn close_jack_initializer(authority: &mut JackStoreInitializationAuthority) {
 }
 
 fn jack_close_refusal_fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../🧫️fixtures/🚫️close-refusal/🔣️.json")).expect("closed language-neutral Jack refusal corpus")
+    serde_json::from_str(runtime_fixture_text("../../🔨️modules/🏠️host/🧪️tests/🧫️fixtures/🚫️close-refusal/🔣️.json")).expect("closed language-neutral Jack refusal corpus")
 }
 
 #[test]
@@ -300,9 +322,9 @@ fn jack_initializer_close_preserves_typed_refusal_and_owned_message() {
         };
         let mut authority = empty_jack_initializer(semio_framework_job::OperationId(503), semio_framework_job::Generation(17));
         *authority.active = Some(Box::new(JackCloseRefusalOwner { kind, message: Some(row["message"].as_str().expect("refusal message").to_owned()) }));
-        let demand = semio_framework_plugin::ArtifactStoreInitializationAuthority::retirement_demands(&authority, crate::JACK_SELF_FUNDED_BODY_BYTES).expect("Jack initializer close quote");
-        let zero_grant = semio_framework_plugin::ArtifactStoreInitializationAuthority::close_step(&mut authority, RetainedCloneGrant { maximum_items: 0, ..crate::jack_self_funded_grant(demand) });
-        let result = semio_framework_plugin::ArtifactStoreInitializationAuthority::close_step(&mut authority, crate::jack_self_funded_grant(demand));
+        let demand = semio_framework_plugin::ArtifactStoreInitializationAuthority::retirement_demands(&authority, crate::standards::v1::subsets::any::schema::content::JACK_SELF_FUNDED_BODY_BYTES).expect("Jack initializer close quote");
+        let zero_grant = semio_framework_plugin::ArtifactStoreInitializationAuthority::close_step(&mut authority, RetainedCloneGrant { maximum_items: 0, ..crate::standards::v1::subsets::any::schema::content::jack_self_funded_grant(demand) });
+        let result = semio_framework_plugin::ArtifactStoreInitializationAuthority::close_step(&mut authority, crate::standards::v1::subsets::any::schema::content::jack_self_funded_grant(demand));
         close_jack_initializer(&mut authority);
         drop(authority);
         assert_eq!(zero_grant.expect("zero grant retains owner"), RetainedCloneStep::Progress(RetainedCloneProgress::default()));
@@ -311,7 +333,6 @@ fn jack_initializer_close_preserves_typed_refusal_and_owned_message() {
         let oracle: serde_json::Value = serde_json::from_slice(&semio_framework_diagnostic::encode_fault_bytes(&fault)).expect("independent JSON fault oracle");
         assert_eq!(oracle, row["expected"]);
         assert_eq!(fault.to_value(), row["expected"]);
-        eprintln!("[DEBUG] Jack typed close refusal {} retains exact message and retires every owner", row["kind"]);
     }
 }
 
@@ -331,6 +352,10 @@ fn jack_initializer_fault_copies_short_borrow_into_owned_bytes() {
         assert_eq!(phase, JackStoreInitializationPhase::RetireFault);
         let oracle: Vec<u8> = serde_json::from_value(row["expectedBytes"].clone()).expect("independent byte-array oracle");
         assert_eq!(actual.as_deref(), Some(oracle.as_slice()));
-        eprintln!("[DEBUG] Jack borrowed fault retains {} exact owned bytes after source drops", oracle.len());
     }
+}
+
+fn runtime_fixture_text(relative: &str) -> &'static str {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative);
+    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display())).into_boxed_str())
 }

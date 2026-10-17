@@ -1,6 +1,13 @@
 //! 🏷️️ `set-metadata-entry` — authored as its own mutation leaf; its diff and inverse live in `🔺️diff` and `↩️inverse`.
 
-use super::*;
+#[allow(unused_imports)]
+use protocol::Mutation;
+#[allow(unused_imports)]
+use crate::schema::diff::SemioImageDiff;
+#[allow(unused_imports)]
+use crate::schema::snapshot::SemioImageSnapshot;
+#[allow(unused_imports)]
+use crate::schema::mutations::remove_metadata_entry;
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
@@ -13,13 +20,16 @@ pub struct SetMetadataEntry {
     pub at: Option<usize>,
 }
 
-impl protocol::MutationKind<SemioImageSnapshot, SemioImageMutation> for SetMetadataEntry {
+impl<Op> protocol::MutationKind<SemioImageSnapshot, Op> for SetMetadataEntry
+where
+    Op: protocol::Mutation<SemioImageSnapshot, Diff = crate::schema::diff::SemioImageDiff> + From<SetMetadataEntry> + From<crate::schema::mutations::remove_metadata_entry::RemoveMetadataEntry>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "metadata-entry", kind: "set-metadata-entry", record: "SetMetadataEntry" };
 
-    fn diff(&self, base: &SemioImageSnapshot) -> protocol::MutationOutcome<<SemioImageMutation as Mutation<SemioImageSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioImageSnapshot) -> protocol::MutationOutcome<<Op as Mutation<SemioImageSnapshot>>::Diff> {
         diff::diff(self, base)
     }
-    fn inverse(&self, base: &SemioImageSnapshot) -> Result<Vec<SemioImageMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &SemioImageSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         inverse::inverse(self, base)?
     

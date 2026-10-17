@@ -9,6 +9,9 @@ use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
+/// 🪟️ Id of the play app's one map window kind; the window config is the first owner so the config does not reach back into the window module.
+pub const GIS2D_PLAY_WINDOW_MAIN: &str = "gis2d-main";
+
 //#region 🔖️Config
 /// 🧮️ One Map window's per-layer visibility/stroke-weight, camera, and render/vector/LOD
 /// mode. Layer AND feature selection/hover/method/mode moved to the framework-owned
@@ -119,7 +122,7 @@ impl store::ConfigRecord for MapWindowConfig {}
 pub struct MapWindowConfigOwner;
 
 impl semio_framework_plugin::WindowConfigOwner for MapWindowConfigOwner {
-    const WINDOW_KIND_ID: &'static str = crate::editor::gis2d::modes::edit::windows::map::GIS2D_PLAY_WINDOW_MAIN;
+    const WINDOW_KIND_ID: &'static str = GIS2D_PLAY_WINDOW_MAIN;
     const SCHEMA: &'static str = "gis.mapwindowcfg";
     const MAXIMUM_PUBLICATION_BYTES: usize = 65_536;
     type State = MapWindowConfig;
@@ -140,7 +143,7 @@ pub fn register(registry: &mut semio_framework_plugin::WindowConfigOwnerRegistry
 
 pub fn from_snapshot(snapshot: Option<&semio_framework_plugin::WindowConfigSnapshot>) -> MapWindowConfig {
     snapshot
-        .filter(|snapshot| snapshot.window_kind_id() == crate::editor::gis2d::modes::edit::windows::map::GIS2D_PLAY_WINDOW_MAIN)
+        .filter(|snapshot| snapshot.window_kind_id() == GIS2D_PLAY_WINDOW_MAIN)
         .and_then(|snapshot| snapshot.get::<MapWindowConfigOwner>())
         .cloned()
         .unwrap_or_default()
@@ -158,7 +161,7 @@ pub fn addressed(view: &semio_framework_plugin::ViewModel, mutation: MapWindowCo
         .find(|window| window.id == id)
         .map(|window| window.window_kind_id.as_str())
         .ok_or_else(|| semio_framework_plugin::Fault::from("gis-map-window-stale"))?;
-    if kind != crate::editor::gis2d::modes::edit::windows::map::GIS2D_PLAY_WINDOW_MAIN {
+    if kind != GIS2D_PLAY_WINDOW_MAIN {
         return Err(semio_framework_plugin::Fault::from("gis-map-window-kind-required"));
     }
     Ok(semio_framework_plugin::WindowConfigMutation::of::<MapWindowConfigOwner>(id, mutation))
@@ -213,18 +216,12 @@ impl protocol::OpBinary for MapWindowConfigMutation {
 //#endregion 🔖️ConfigOperations
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 
 #[cfg(test)]
 #[path = "🧪️tests/🧬️direct/🦀️.rs"]
-mod direct_mutation_tests;
+pub mod direct_mutation_tests;
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️window/🦀️.rs"]
-mod window_ownership_tests;
 //#endregion 🧪️Tests
 
-#[path = "🚪️io/🦀️.rs"]
-pub mod io;
+

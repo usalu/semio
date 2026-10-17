@@ -1,0 +1,15 @@
+{
+ "name": "otcpd",
+ "crates": [
+  "semio-framework-os-directory",
+  "semio-framework-os-directory-tests-1",
+  "semio-framework-os-directory-tests-2"
+ ],
+ "base": {
+  "rev": "1bae6115bc5",
+  "crates": [
+   "semio-framework-os-directory"
+  ]
+ },
+ "note": "OTCP directory (2 companions)"
+}

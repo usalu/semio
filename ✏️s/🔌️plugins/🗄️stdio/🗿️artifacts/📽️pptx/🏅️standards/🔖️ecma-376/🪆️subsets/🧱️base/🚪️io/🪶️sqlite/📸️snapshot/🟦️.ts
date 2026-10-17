@@ -14,8 +14,8 @@ import {
   type ArtifactSqliteOptions,
 } from "@semio-tech/framework/io/sqlite-snapshot/artifact";
 import type { SqliteDatabase, SqliteRow } from "@semio-tech/framework/io/sqlite-snapshot";
-import { measureXmlDocuments, projectXmlDocuments, reconstructXmlDocuments, type XmlSqliteTables } from "../../../../../../../../📰️xml/🟦️.ts";
-import { measureOpcPackage, projectOpcPackage, reconstructOpcPackage, type OpcSqliteTables } from "../../../../../../../../🎒️zip/📦️opc/🪶️sqlite/🟦️.ts";
+import { measureXmlDocuments, projectXmlDocuments, reconstructXmlDocuments, type XmlSqliteTables } from "@semio-tech/stdio-xml/source";
+import { measureOpcPackage, projectOpcPackage, reconstructOpcPackage, type OpcSqliteTables } from "@semio-tech/stdio-zip/opc/sqlite";
 
 export const PPTX_SQLITE_SCHEMA: string = sql;
 const OPC: OpcSqliteTables = { package: 'pptx_package', part: 'pptx_binary_part', defaultType: 'pptx_default_content_type', overrideType: 'pptx_override_content_type', relationshipOwner: 'pptx_relationship_owner', relationship: 'pptx_relationship' };

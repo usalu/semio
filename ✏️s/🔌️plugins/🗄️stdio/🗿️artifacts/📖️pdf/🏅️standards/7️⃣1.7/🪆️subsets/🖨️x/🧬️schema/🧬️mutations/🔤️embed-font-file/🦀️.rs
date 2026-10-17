@@ -1,7 +1,6 @@
 //! 🔤️ Authoritative PDF/X mutation for attaching a font program to a font descriptor.
 
-use super::remove_font_file::RemoveFontFile;
-use super::PdfXMutation;
+use crate::standards::v1_7::subsets::x::schema::mutations::remove_font_file::RemoveFontFile;
 use crate::standards::v1_7::subsets::base::schema::conformance_support as support;
 use crate::standards::v1_7::subsets::base::schema::diff::{self, PdfDiff};
 use crate::standards::v1_7::subsets::base::schema::snapshot::{ObjRef, PdfSnapshot};
@@ -20,7 +19,10 @@ pub struct EmbedFontFile {
     pub entry_index: Option<usize>,
 }
 
-impl MutationKind<PdfSnapshot, PdfXMutation> for EmbedFontFile {
+impl<Op> MutationKind<PdfSnapshot, Op> for EmbedFontFile
+where
+    Op: protocol::Mutation<PdfSnapshot, Diff = PdfDiff> + From<EmbedFontFile> + From<crate::standards::v1_7::subsets::x::schema::mutations::remove_font_file::RemoveFontFile>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "insert", entity: "font-file", kind: "embed-font-file", record: "Embed" };
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
@@ -28,12 +30,12 @@ impl MutationKind<PdfSnapshot, PdfXMutation> for EmbedFontFile {
         MutationOutcome::new(diff::graph_edit(rows))
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfXMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         Ok({
             let Some(id) = support::font_descriptors(base).get(self.descriptor_ordinal).copied() else { return Ok(Vec::new()) };
             match support::font_program(base, id) {
-                Some((key, program)) => vec![PdfXMutation::EmbedFontFile(EmbedFontFile { descriptor_ordinal: self.descriptor_ordinal, key, program, entry_index: None })],
-                None => vec![PdfXMutation::RemoveFontFile(RemoveFontFile { descriptor_ordinal: self.descriptor_ordinal })],
+                Some((key, program)) => vec![Op::from(EmbedFontFile { descriptor_ordinal: self.descriptor_ordinal, key, program, entry_index: None })],
+                None => vec![Op::from(RemoveFontFile { descriptor_ordinal: self.descriptor_ordinal })],
             }
         })
     }
@@ -49,9 +51,7 @@ impl MutationKind<PdfSnapshot, PdfXMutation> for EmbedFontFile {
 //#endregion 🔖️Mutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
 
 //#region 🔖️Facets

@@ -66,7 +66,5 @@ impl neural_engine::ColdRetire for SequenceMutation {
 //#endregion 🔖️Aggregate
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

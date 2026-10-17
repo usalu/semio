@@ -4,7 +4,7 @@ import{createNativeBuildCallerCapabilitiesV1,type NativeBuildCallerCapabilitiesV
 import{createScriptProcessEnvelope,readScriptProcessEnvelope,type ScriptProcessEnvelope}from"../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import{validateJsonSchemaSubset}from"../../../../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
 import callerSchema from"../../../../../🧬️schema/📥️caller.json";
-import contextSchema from"../../../🧬️schema/🧪️purpose.json";
+import contextSchema from"../🧬️schema/🔣️.json";
 import birthSchema from"../🧬️schema/🌱️birth.json";
 import receiptSchema from"../🧬️schema/📤️output.json";
 import fixture from"../../../../../🧪️tests/🧫️fixtures/🕸️graph/🔣️.json";

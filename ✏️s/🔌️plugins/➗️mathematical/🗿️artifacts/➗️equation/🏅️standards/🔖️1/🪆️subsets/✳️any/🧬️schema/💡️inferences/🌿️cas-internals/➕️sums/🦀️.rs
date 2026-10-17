@@ -5,7 +5,7 @@
 
 use crate::cas::expr::{Constant, Expr, Kind};
 use crate::cas::fnkind::FnKind;
-use crate::polynomial::PolyU;
+use crate::polynomial::univariate::PolyU;
 use number::Rational;
 
 // #region 🔖️ClosedForm

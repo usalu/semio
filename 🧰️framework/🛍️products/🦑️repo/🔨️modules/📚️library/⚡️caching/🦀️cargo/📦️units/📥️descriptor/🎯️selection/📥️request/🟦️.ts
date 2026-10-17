@@ -1,0 +1,19 @@
+/** 📦️ Request: module exporting `SelectedCargoCompilationV1`, `captureSelectedRustProducerDataV1`. */
+import{types}from"node:util";
+import{validateJsonSchemaSubset}from"../../../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
+import schema from"../🧬️schema/🔣️.json";
+const requestSchema=structuredClone(schema),policy=Object.freeze({...schema.$defs.DataPolicy.const});
+/** 🎯️ Immutable compilation DATA; the actual compiler factory supplies authority separately. */
+export interface SelectedCargoCompilationV1{readonly version:1;readonly manifest:string;readonly cwd:string;readonly arguments:readonly string[];readonly mode:"prototype"|"release"}
+function record(value:unknown):Record<string,PropertyDescriptor>{if(!value||typeof value!=="object"||types.isProxy(value)||![Object.prototype,null].includes(Object.getPrototypeOf(value)))throw Error("Plain selected Rust DATA required");return Object.getOwnPropertyDescriptors(value);}
+function field(fields:Record<string,PropertyDescriptor>,name:string):unknown{const row=fields[name];if(!row||!("value"in row)||!row.enumerable)throw Error("Own primitive selected Rust DATA required");return row.value;}
+/** 📥️ Copies every command/environment field before the first actual storage wait without invoking accessors. */
+export function captureSelectedRustProducerDataV1(value:readonly SelectedCargoCompilationV1[],environment:Readonly<Record<string,string|undefined>>):Readonly<{selected:readonly SelectedCargoCompilationV1[];environment:Readonly<Record<string,string|undefined>>}>{
+ if(!Array.isArray(value)||types.isProxy(value)||value.length>policy.maximumSelections)throw Error("Finite selected Rust DATA required");let argumentBytes=0;const selected:SelectedCargoCompilationV1[]=[];
+ for(let index=0;index<value.length;index++){const descriptor=Object.getOwnPropertyDescriptor(value,String(index));if(!descriptor||!("value"in descriptor))throw Error("Own selected Rust row required");const row=record(descriptor.value);if(Reflect.ownKeys(row).length!==5)throw Error("Closed selected Rust row required");const version=field(row,"version"),manifest=field(row,"manifest"),cwd=field(row,"cwd"),mode=field(row,"mode"),args=field(row,"arguments");if(version!==1||typeof manifest!=="string"||typeof cwd!=="string"||mode!=="prototype"&&mode!=="release"||!Array.isArray(args)||types.isProxy(args)||args.length>policy.maximumArguments)throw Error("Closed selected Rust row required");const arguments_:string[]=[];
+  for(let offset=0;offset<args.length;offset++){const entry=Object.getOwnPropertyDescriptor(args,String(offset));if(!entry||!("value"in entry)||typeof entry.value!=="string"||entry.value.includes("\0"))throw Error("Own compiler argument required");argumentBytes+=Buffer.byteLength(entry.value);if(argumentBytes>policy.maximumArgumentBytes)throw Error("Selected compiler argument bytes exceeded");arguments_.push(entry.value);}
+  const captured=Object.freeze({version:1 as const,manifest,cwd,mode,arguments:Object.freeze(arguments_)});if(validateJsonSchemaSubset(requestSchema,captured).length)throw Error("Closed selected Cargo producer request required");selected.push(captured);
+ }
+ const entries=record(environment),output:Record<string,string|undefined>=Object.create(null);let count=0,bytes=0;for(const name of Reflect.ownKeys(entries)){if(typeof name!=="string"||++count>policy.maximumEnvironmentEntries)throw Error("Finite compiler environment required");const value=field(entries,name);if(value!==undefined&&typeof value!=="string")throw Error("Primitive compiler environment required");bytes+=Buffer.byteLength(name)+(value===undefined?0:Buffer.byteLength(value));if(bytes>policy.maximumEnvironmentBytes)throw Error("Compiler environment bytes exceeded");output[name]=value;}
+ return Object.freeze({selected:Object.freeze(selected),environment:Object.freeze(output)});
+}

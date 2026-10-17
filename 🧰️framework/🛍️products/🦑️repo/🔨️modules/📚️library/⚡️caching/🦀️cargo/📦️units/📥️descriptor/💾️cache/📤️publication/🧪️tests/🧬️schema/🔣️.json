@@ -1,0 +1,140 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "nodes",
+    "cases",
+    "primaries",
+    "epochs",
+    "drain"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "nodes": {
+      "const": 2
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 6,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "accepted",
+          "events",
+          "message",
+          "mutateNodeLimit"
+        ],
+        "properties": {
+          "name": {
+            "enum": [
+              "healthy",
+              "pressure",
+              "recovery",
+              "staging",
+              "too-large",
+              "corrupt"
+            ]
+          },
+          "accepted": {
+            "type": "boolean"
+          },
+          "events": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "message": {
+            "type": "string"
+          },
+          "mutateNodeLimit": {
+            "enum": [
+              0,
+              1
+            ]
+          }
+        }
+      }
+    },
+    "primaries": {
+      "type": "array",
+      "minItems": 6,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "phase",
+          "primary"
+        ],
+        "properties": {
+          "phase": {
+            "enum": [
+              "publish",
+              "validate",
+              "consume"
+            ]
+          },
+          "primary": {
+            "enum": [
+              "error",
+              "undefined"
+            ]
+          }
+        }
+      }
+    },
+    "epochs": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "entry",
+          "delivery"
+        ]
+      },
+      "minItems": 2
+    },
+    "drain": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "child",
+          "invalidate",
+          "failed"
+        ],
+        "properties": {
+          "name": {
+            "enum": [
+              "success",
+              "child-error",
+              "child-undefined",
+              "final-recheck"
+            ]
+          },
+          "child": {
+            "enum": [
+              "success",
+              "error",
+              "undefined"
+            ]
+          },
+          "invalidate": {
+            "type": "boolean"
+          },
+          "failed": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

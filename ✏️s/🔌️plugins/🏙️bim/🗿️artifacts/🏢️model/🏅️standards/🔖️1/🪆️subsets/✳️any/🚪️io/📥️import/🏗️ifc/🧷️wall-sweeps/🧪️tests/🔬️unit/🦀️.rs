@@ -1,6 +1,6 @@
 use crate::standards::v1::subsets::any::io::export::ifc::export_ifc2x3;
 use crate::standards::v1::subsets::any::io::export::ifc::testkit::attic;
-use crate::standards::v1::subsets::any::io::import::ifc::attach::tests::with_depth;
+use crate::standards::v1::subsets::any::io::export::ifc::testkit::with_depth;
 use crate::standards::v1::subsets::any::io::import::ifc::import_ifc2x3;
 
 #[test]

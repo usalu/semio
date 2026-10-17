@@ -1,18 +1,32 @@
-use crate::standards::v1::subsets::any::io::text::snapshot::run;
-use crate::executor::execute;
-use crate::JackWorkingScene;
-use super::*;
-use crate::ast::QueryResultKind;
-use crate::language_service::{parse, complete, format as format_source, hover, lint, semantic_tokens};
-use crate::lexer::{lex, tokenize, Token, TokenClass};
-use crate::{Camera, JackSnapshot, Manifest};
+use crate::standards::v1::subsets::any::schema::memory::Graph;
+use semio_framework_graph_manifest::PropertyValue;
+use crate::standards::v1::subsets::any::schema::ast::JackQueryGraphSnapshot;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::graph::{Edge, EntityRef, GraphEffect, Node};
+#[allow(unused_imports)]
+use std::collections::{BTreeMap, BTreeSet};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::ast::{Clause, Expr, Pattern, Query, QueryResult, ReturnItem};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::executor::execution::{emit_create_operations_from_graph, emit_set_operation_from_graph};
+use crate::standards::v1::subsets::any::schema::executor::{execution};
+use crate::standards::v1::subsets::any::schema::runner::run;
+use crate::standards::v1::subsets::any::schema::executor::execute;
+use crate::standards::v1::subsets::any::schema::content::JackWorkingScene;
+use crate::standards::v1::subsets::any::schema::executor::*;
+use crate::standards::v1::subsets::any::schema::ast::QueryResultKind;
+use crate::standards::v1::subsets::any::schema::language_service::{parse, complete, format as format_source, hover, lint, semantic_tokens};
+use crate::standards::v1::subsets::any::schema::lexer::{lex, tokenize, Token, TokenClass};
+use crate::standards::v1::subsets::any::schema::graph::Camera;
+use crate::standards::v1::subsets::any::schema::snapshot::JackSnapshot;
+use crate::standards::v1::subsets::any::schema::manifest::Manifest;
 use semio_framework_value::retained_clone::RetainedCloneGrant;
 
 /// 🧸️ The retained content child of a standalone snapshot — what the run-query job reads from its child view.
-fn content_of(snapshot:&JackSnapshot)->std::sync::Arc<crate::JackContentOwner>{crate::jack_content_for_handle(&snapshot.content).expect("retained fixture content")}
+fn content_of(snapshot:&JackSnapshot)->std::sync::Arc<crate::standards::v1::subsets::any::schema::content::JackContentOwner>{crate::standards::v1::subsets::any::schema::content::jack_content_for_handle(&snapshot.content).expect("retained fixture content")}
 
 fn mini_graph() -> Graph {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🧮️executor/🪜️resumable-query/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(runtime_fixture_text("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧮️executor/🪜️resumable-query/🔣️.json")).unwrap();
     let graph = &fixture["graph"];
     let nodes = semio_framework_value::FromValue::from_value(semio_framework_value::DslValue::from(graph["nodes"].clone())).unwrap();
     let edges = semio_framework_value::FromValue::from_value(semio_framework_value::DslValue::from(graph["edges"].clone())).unwrap();
@@ -183,7 +197,7 @@ async fn lex_not_equal() {
 
 #[semio_framework_async_macros::async_test]
 async fn query_ownership_resumable_matches_neutral_results_and_single_mutation_publication() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🧮️executor/🪜️resumable-query/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(runtime_fixture_text("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧮️executor/🪜️resumable-query/🔣️.json")).unwrap();
     for case in fixture["cases"].as_array().unwrap() {
         let graph = if case["inlineManifest"] == true {
             let mut snapshot = mini_graph().to_snapshot::<crate::test_support::FixtureComposition>();
@@ -219,7 +233,7 @@ async fn query_ownership_resumable_matches_neutral_results_and_single_mutation_p
         assert_eq!(actual.0.columns, expected.0.columns);
         assert_eq!(actual.0.rows, expected.0.rows);
         assert_eq!(actual.1, expected.1);
-        let graph_value = |snapshot: &Option<Box<crate::ast::JackQueryGraphSnapshot>>| snapshot.as_ref().map(|snapshot| serde_json::from_str::<serde_json::Value>(&snapshot.to_json().expect("materialized graph JSON")).expect("reference JSON"));
+        let graph_value = |snapshot: &Option<Box<crate::standards::v1::subsets::any::schema::ast::JackQueryGraphSnapshot>>| snapshot.as_ref().map(|snapshot| serde_json::from_str::<serde_json::Value>(&snapshot.to_json().expect("materialized graph JSON")).expect("reference JSON"));
         assert_eq!(graph_value(&actual.0.graph_snapshot), graph_value(&expected.0.graph_snapshot));
         let packed = semio_framework_pack_json::to_json_string(&actual.0);
         assert!(packed.len() <= 1_048_576, "retained query result exceeded its emitted byte admission");
@@ -244,7 +258,7 @@ async fn query_ownership_resumable_matches_neutral_results_and_single_mutation_p
         }
         assert_eq!(actual.1.len(), case["mutations"].as_u64().unwrap() as usize);
         let mut published = mini_graph();
-        crate::apply_graph_effects(&mut published, &actual.1).unwrap();
+        crate::standards::v1::subsets::any::schema::operations::apply_graph_effects(&mut published, &actual.1).unwrap();
         if let Some(count) = case.get("postNodeCount") { assert_eq!(published.nodes.len(), count.as_u64().unwrap() as usize); }
         if let Some(count) = case.get("postEdgeCount") { assert_eq!(published.edges.len(), count.as_u64().unwrap() as usize); }
         assert!(execution.step().is_err());
@@ -255,7 +269,7 @@ async fn query_ownership_resumable_matches_neutral_results_and_single_mutation_p
 
 #[semio_framework_async_macros::async_test]
 async fn query_ownership_artifact_contract_exposes_document_state_only() {
-    for source in [include_str!("../../../🔣️.json"), include_str!("../../../🔺️diff/🔣️.json")] {
+    for source in [runtime_fixture_text("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json"), runtime_fixture_text("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🔣️.json")] {
         let schema: serde_json::Value = serde_json::from_str(source).unwrap();
         for (name, field) in schema["properties"].as_object().unwrap() {
             assert_eq!(field["x-semio-state"], "artifact", "{name} belongs to a separate app or window owner");
@@ -265,12 +279,12 @@ async fn query_ownership_artifact_contract_exposes_document_state_only() {
 
 #[test]
 fn query_ownership_cancelled_preparation_closes_while_source_scene_remains_live() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🧮️executor/🪜️resumable-query/🔣️.json")).expect("neutral retained query fixture");
+    let fixture: serde_json::Value = serde_json::from_str(runtime_fixture_text("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧮️executor/🪜️resumable-query/🔣️.json")).expect("neutral retained query fixture");
     let policy = &fixture["retainedExecution"];
     let cancel_after = policy["cancelAfterWorkUnits"].as_u64().expect("cancel units") as usize;
     let maximum_bytes = policy["retirementBytesPerStep"].as_u64().expect("retirement bytes") as usize;
     let source = mini_graph().to_snapshot::<crate::test_support::FixtureComposition>();
-    let source_owner = source.content.local_owner::<crate::JackContentOwner>().expect("source content owner");
+    let source_owner = source.content.local_owner::<crate::standards::v1::subsets::any::schema::content::JackContentOwner>().expect("source content owner");
     let query = parse("MATCH (a:Apartment) RETURN a.name").expect("query");
     let mut preparation = QueryExecutionPreparation::new(query);
     let content = content_of(&source);
@@ -283,11 +297,11 @@ fn query_ownership_cancelled_preparation_closes_while_source_scene_remains_live(
             break;
         }
         let demand = preparation.close_demands(maximum_bytes).expect("preparation close quote");
-        let grant = RetainedCloneGrant { maximum_items: policy["retirementItemsPerStep"].as_u64().expect("retirement items") as usize, ..crate::jack_self_funded_grant(demand) };
+        let grant = RetainedCloneGrant { maximum_items: policy["retirementItemsPerStep"].as_u64().expect("retirement items") as usize, ..crate::standards::v1::subsets::any::schema::content::jack_self_funded_grant(demand) };
         assert!(preparation.close_step(grant).expect("preparation close").progress().fits(grant));
     }
     assert!(preparation.terminal_is_empty());
-    assert_eq!(source.content.local_owner::<crate::JackContentOwner>().expect("source survives cancellation").read().node_count(), source_owner.read().node_count());
+    assert_eq!(source.content.local_owner::<crate::standards::v1::subsets::any::schema::content::JackContentOwner>().expect("source survives cancellation").read().node_count(), source_owner.read().node_count());
     drop(preparation);
 }
 
@@ -307,7 +321,7 @@ fn query_ownership_preparation_rejection(source: &JackSnapshot) -> semio_framewo
             break;
         }
         let demand = preparation.close_demands(4_096).expect("rejected preparation close quote");
-        let grant = crate::jack_self_funded_grant(demand);
+        let grant = crate::standards::v1::subsets::any::schema::content::jack_self_funded_grant(demand);
         assert!(preparation.close_step(grant).expect("rejected preparation close").progress().fits(grant));
     }
     assert!(preparation.terminal_is_empty());
@@ -316,7 +330,7 @@ fn query_ownership_preparation_rejection(source: &JackSnapshot) -> semio_framewo
 
 #[test]
 fn query_ownership_preparation_rejects_oversized_node_and_edge_before_clone() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🧮️executor/🪜️resumable-query/🔣️.json")).expect("neutral retained query fixture");
+    let fixture: serde_json::Value = serde_json::from_str(runtime_fixture_text("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧮️executor/🪜️resumable-query/🔣️.json")).expect("neutral retained query fixture");
     let property_bytes = fixture["retainedExecution"]["entityAdmission"]["oversizedPropertyBytes"].as_u64().expect("oversized property bytes") as usize;
     let mut node_graph = mini_graph();
     node_graph.nodes.get_mut("root").expect("root node").properties.insert("payload".into(), PropertyValue::String("n".repeat(property_bytes)));
@@ -332,7 +346,7 @@ fn query_ownership_preparation_rejects_oversized_node_and_edge_before_clone() {
 
 #[test]
 fn query_ownership_output_admission_rejects_oversized_table_before_publication() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🧮️executor/🪜️resumable-query/🔣️.json")).expect("neutral retained query fixture");
+    let fixture: serde_json::Value = serde_json::from_str(runtime_fixture_text("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧮️executor/🪜️resumable-query/🔣️.json")).expect("neutral retained query fixture");
     let policy = &fixture["retainedExecution"]["outputAdmission"];
     let row_count = policy["rowCount"].as_u64().expect("row count") as usize;
     let cell_bytes = policy["cellBytes"].as_u64().expect("cell bytes") as usize;
@@ -367,16 +381,15 @@ fn query_ownership_output_admission_rejects_oversized_table_before_publication()
             break;
         }
         let demand = execution.close_demands(4_096).expect("rejected execution close quote");
-        let grant = crate::jack_self_funded_grant(demand);
+        let grant = crate::standards::v1::subsets::any::schema::content::jack_self_funded_grant(demand);
         assert!(execution.close_step(grant).expect("rejected execution close").progress().fits(grant));
     }
     assert!(execution.terminal_is_empty());
-    eprintln!("[DEBUG] query retained ownership rejected a table whose JSON has {encoded_cells} bytes");
 }
 
 #[test]
 fn query_ownership_typed_result_capacity_is_independent_of_json_escaping() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🧮️executor/🪜️resumable-query/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(runtime_fixture_text("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧮️executor/🪜️resumable-query/🔣️.json")).unwrap();
     let policy = &fixture["resultOwnership"];
     for (index, text) in policy["texts"].as_array().unwrap().iter().enumerate() {
         let mut graph = mini_graph();
@@ -390,21 +403,25 @@ fn query_ownership_typed_result_capacity_is_independent_of_json_escaping() {
         let reference = serde_json::to_string(&serde_json::json!({"kind":"table","columns":["a.name"],"rows":[[result.rows[0][0].as_str().unwrap()]]})).unwrap();
         let mut progress = |_| true;
         let mut control = semio_framework_value::NativeEncodeControl::new(policy["maximumEncodedBytes"].as_u64().unwrap() as usize, &mut progress);
-        let encoded = crate::standards::v1::subsets::any::io::text::snapshot::encode_query_result_json(&result, &mut control);
+        let encoded = crate::standards::v1::subsets::any::schema::runner::encode_query_result_json(&result, &mut control);
         assert_eq!(encoded.is_ok(), policy["textAdmission"][index].as_bool().unwrap());
         if let Ok(encoded) = encoded { assert_eq!(serde_json::from_str::<serde_json::Value>(&encoded).unwrap(), serde_json::from_str::<serde_json::Value>(&reference).unwrap()); }
         assert_eq!(reference.len() <= policy["maximumEncodedBytes"].as_u64().unwrap() as usize, policy["textAdmission"][index].as_bool().unwrap());
         let mut progress = |_| false;
         let mut control = semio_framework_value::NativeEncodeControl::new(1_048_576, &mut progress);
-        assert_eq!(crate::standards::v1::subsets::any::io::text::snapshot::encode_query_result_json(&result, &mut control).unwrap_err().kind, semio_framework_value::ValueRefusalKind::Canceled);
+        assert_eq!(crate::standards::v1::subsets::any::schema::runner::encode_query_result_json(&result, &mut control).unwrap_err().kind, semio_framework_value::ValueRefusalKind::Canceled);
     }
-    eprintln!("[DEBUG] Jack query ownership uses intrinsic text bytes; JSON admission remains physical");
 }
 
 #[test]
 fn query_preparation_layout_matches_neutral_budget() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🧮️executor/🪜️resumable-query/🔣️.json")).expect("neutral query ownership fixture");
+    let fixture: serde_json::Value = serde_json::from_str(runtime_fixture_text("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧮️executor/🪜️resumable-query/🔣️.json")).expect("neutral query ownership fixture");
     let maximum = fixture["retainedExecution"]["maximumPreparationStepInlineBytes"].as_u64().expect("inline preparation budget") as usize;
     let actual = size_of::<QueryPreparationStep>();
     assert!(actual <= maximum, "query preparation must transfer a compact execution owner");
+}
+
+fn runtime_fixture_text(relative: &str) -> &'static str {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative);
+    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display())).into_boxed_str())
 }

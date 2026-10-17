@@ -1,12 +1,12 @@
 //! ♻️ typed thirty-table Rewriting capability awaiting its owning assertion gate.
 use pack::snapshot::ArtifactSqliteSnapshot as _;
-use crate::RewritingSnapshot;
+use crate::standards::v1::subsets::any::schema::snapshot::RewritingSnapshot;
 use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl,SnapshotEncoding}};
 use semio_framework_value::ValueError;
 #[path="💰️backing/🦀️.rs"]
 mod backing;
 #[path="📏️encoding/🦀️.rs"]
-mod encoding;
+pub mod encoding;
 #[path="🚦️native/🦀️.rs"]
 mod native;
 impl ArtifactSqliteSnapshotHost for RewritingSnapshot {
@@ -29,7 +29,5 @@ fn to_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<Sqli
 fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{backing::reconstruct(database,control)}
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;
+
 

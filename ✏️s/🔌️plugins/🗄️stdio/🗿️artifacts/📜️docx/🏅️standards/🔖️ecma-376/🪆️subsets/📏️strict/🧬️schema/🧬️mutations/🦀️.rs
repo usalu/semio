@@ -103,7 +103,7 @@ pub const KINDS: &[&str] = &["set-main-namespace", "set-relationship-base", "set
 /// ▶️ Applies `mutation` to `snapshot` through its own diff — the diff is the single semantics
 /// source, never a separate imperative apply path.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 pub fn apply_docx_strict_mutation(snapshot: &mut DocxSnapshot, mutation: &DocxStrictMutation) -> protocol::MutationOutcome<DocxDiff> {
     let outcome = Mutation::diff(mutation, snapshot);
     match protocol::apply_diff(outcome.diff(), snapshot) {

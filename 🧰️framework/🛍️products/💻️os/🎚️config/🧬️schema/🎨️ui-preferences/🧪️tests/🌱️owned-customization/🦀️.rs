@@ -1,9 +1,10 @@
 use super::*;
+use semio_framework_test_fixtures::fixture_path;
 use semio_framework_value::{DslValue,FromValue,ToValue};
 
 #[test]
 fn config_owned_customization_semantics_match_independent_json_without_projection_bridge(){
-    let fixture:serde_json::Value=serde_json::from_str(std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🧫️fixtures/🎨️ui-preferences/🌱️owned-customization/🔣️.json")).expect("fixture").as_str()).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(std::fs::read_to_string(fixture_path!("../../../🧫️fixtures/🎨️ui-preferences/🌱️owned-customization/🔣️.json")).expect("fixture").as_str()).unwrap();
     for sample in fixture["samples"].as_array().unwrap(){
         let value:DslValue=semio_framework_pack_json::from_json_str(&serde_json::to_string(sample).unwrap(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         let driver=UiDriver{driver_id:fixture["driverId"].as_str().unwrap().into(),label:fixture["label"].as_str().unwrap().into(),config:value.clone()};
@@ -34,7 +35,6 @@ fn config_owned_customization_semantics_match_independent_json_without_projectio
         let driver=UiDriver{driver_id:"semantic".into(),label:"Owned".into(),config:original.clone()};
         assert_eq!(UiDriver::from_value(driver.to_value()).unwrap().config,original);
     }
-    println!("[DEBUG] Config customization12 neutral JSON shapes agree with independent Serde; exact64-bit integers, intrinsic bytes and duplicate semantic keys retain first-party ownership; sparse driver intent inverses restore typed preferences");
 }
 
 #[test]
@@ -46,5 +46,4 @@ fn config_owned_customization_native_external_facets_read_authored_schema(){
     assert_eq!(schema["additionalProperties"],false);
     assert_eq!(schema["definitions"]["OsConfigUiUiDriver"]["required"],serde_json::json!(["driverId","label","config"]));
     assert_eq!(schema["definitions"]["OsConfigUiUserNamedLayout"]["properties"]["layout"]["$ref"],"#/definitions/OsConfigUiWindowLayout");
-    println!("[DEBUG] Native IO owns Serde and schema interfaces; custom records derive only first-party value admission; authored schema references and exact declared fields preserved");
 }

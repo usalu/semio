@@ -3,8 +3,7 @@
 #[allow(unused_imports)]
 mod mutations_codec {
 use super::*;
-use crate::editor::animate::config::component::mutations::*;
-use crate::editor::animate::config::component::*;
+use crate::editor::animate::config::*;
 use crate::editor::animate::config::SetEngagementInput;
 
 impl protocol::OpText for PresentationConfigMutation {
@@ -29,8 +28,7 @@ impl protocol::OpText for PresentationConfigMutation {
 #[allow(unused_imports)]
 mod mutations_wire_codec {
 use super::*;
-use crate::editor::animate::config::component::mutations::*;
-use crate::editor::animate::config::component::*;
+use crate::editor::animate::config::*;
 use crate::editor::animate::config::SetEngagementInput;
 
 /// 🌉️ The committed-vector report of this state lane for the language-neutral case adapter, which links only this

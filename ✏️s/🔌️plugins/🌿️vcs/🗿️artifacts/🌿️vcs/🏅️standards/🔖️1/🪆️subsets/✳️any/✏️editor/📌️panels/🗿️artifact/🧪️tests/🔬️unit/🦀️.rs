@@ -1,4 +1,5 @@
-use super::*;
+use semio_framework_plugin::HistoryView;
+use crate::editor::vcs::panels::document::*;
 use crate::editor::vcs::unit_tests::context::{app, render as render_body};
 
 #[semio_framework_async_macros::async_test]

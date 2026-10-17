@@ -49,7 +49,11 @@ wasm-bindgen = "0.2.106"
 web-sys = { version = "0.3.98", features = ["Window", "Document", "HtmlCanvasElement", "OffscreenCanvas", "CanvasRenderingContext2d", "Element", "Event", "MouseEvent", "WheelEvent", "KeyboardEvent", "InputEvent", "ResizeObserver", "ResizeObserverEntry", "DomRect", "Performance", "WorkerGlobalScope", "Request", "RequestInit", "RequestMode", "Response", "Headers", "Blob", "Url", "HtmlAnchorElement", "console", "MediaQueryList"] }
 
 [dev-dependencies]
+semio-framework-os-renderer-wgpu-thread-isolation = { path = "../../../🔒️thread-isolation/📦️packages/🦀️rust", features = ["isolated"] }
 semio-framework-job = { workspace = true, features = ["testkit"] }
+semio-framework-ui-draw-contract = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🏷️types/📦️packages/🦀️rust" }
 semio-framework-ui-layout = { path = "../../../../../../../../../../🔨️modules/🖱️ui/📜️declaration/📐️layout/📦️packages/🦀️rust" }
 semio-framework-ui-scene-plane = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🎬️scenes/🖼️plane/📦️packages/🦀️rust" }
 semio-framework-ui-scene-views = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🎬️scenes/📄️views/📦️packages/🦀️rust" }
+semio-framework-ui-text = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🔤️typography/📦️packages/🦀️rust" }
+ui_contract = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }

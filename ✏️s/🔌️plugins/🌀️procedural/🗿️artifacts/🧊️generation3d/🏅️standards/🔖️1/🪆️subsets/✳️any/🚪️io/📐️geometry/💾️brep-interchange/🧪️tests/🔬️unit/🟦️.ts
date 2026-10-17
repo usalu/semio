@@ -2,14 +2,14 @@ import { expect, test } from "bun:test";
 import { OBJLoader } from "three/examples/jsm/loaders/OBJLoader.js";
 import { STLLoader } from "three/examples/jsm/loaders/STLLoader.js";
 import { Mesh } from "three";
-import { casesOf, loadFixture, measure, type PinnedMesh } from "../../../⏱️phased-job/🧪️tests/🧰️support/🟦️.ts";
+import { casesOf, loadFixture, measure, type PinnedMesh } from "../../../../../🧬️schema/💡️inferences/📐️geometry/⏱️phased-job/🧪️tests/🧰️support/🟦️.ts";
 
 const fixture = loadFixture(import.meta.url);
 
 const pinnedOf = (positions: ArrayLike<number>, indices?: ArrayLike<number>): PinnedMesh => ({
   deflection: 0,
-  positions: [...positions],
-  indices: indices ? [...indices] : Array.from({ length: positions.length / 3 }, (_, index) => index),
+  positions: Array.from(positions),
+  indices: indices ? Array.from(indices) : Array.from({ length: positions.length / 3 }, (_, index) => index),
 });
 
 test("three's STL loader reads the hand-built cube as a closed unit cube", () => {

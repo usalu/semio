@@ -109,65 +109,35 @@ pub use derived_composition::*;
 //#endregion ⚠️Errors
 
 //#region 🔖️MediaImportExport
-/// 🌉️ Semio/drawing bridge (ticket 26/08/11/SEMIO-ARTIFACT-UNIFIED-IMPORT-EXPORT-AND-MEDIA-FORMAT-RETIREMENT
-/// W5b): every SVG this artifact emits is composed through stdio's real `s.stdio.semio/v1/drawing`
-/// subset via `io_dispatch` — nothing in this region hand-rolls an SVG string anymore. Layout's own
-/// page/rect model maps onto `DrawNode::Group` (one per page, translated) with each page boundary
-/// and each `Frame::Rect`/`Text`/`Image` nested inside as a rect-shaped `DrawNode::Path`. Relocated
-/// from the deleted `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) —
-/// codec/composer-dispatch territory per the region → destination map.
-///
-/// `rect_path_segments` and `compose_svg_from_drawing` are `pub` (were `pub(crate)`, widened because
-/// the app engine's `export_display_list_svg` is now a cross-module SECOND consumer — see this
-/// region's own header on the "more than one consumer" rule).
+/// 🌉️ Layout's pages, frames and background trace become one neutral [`VectorScene`] (one translated group per page, each page boundary and each frame
+/// nested inside as a rect-shaped path); the codec bound to `LAYOUT_BACKGROUND_DRAWING` writes that scene as an external format and reads external documents back
+/// as the document's background child. Layout never names the owner of those formats.
 use semio_s_artifact_layout_layout_model::{Frame, GridSettings, Layer, Page, PageColumns, PageMargins, Spread, LAYOUT_DOCUMENT_SCHEMA};
 use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
+use semio_framework_io_ports::{VectorCanvas, VectorLayer, VectorNode, VectorPoint2, VectorPoint3, VectorRgba, VectorScene, VectorSegment, VectorStyle, VectorTransform};
 use semio_framework_value::DslValue as Value;
 use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
-use {semio_framework_plugin::io::io_dispatch,semio_framework_artifact_reference::Dialect,semio_framework_plugin::io::ErasedComposeSource,semio_framework_plugin::io::IoDirection,semio_framework_plugin::io::IoKey,semio_framework_plugin::io::IoPayload,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
-#[cfg(test)]
-use semio_s_artifact_stdio_dwg_geometry::standards::v_ac1024::subsets::any::schema::geometry::DwgColor;
-#[cfg(test)]
-use semio_s_artifact_stdio_dwg_geometry::standards::v_ac1024::subsets::any::schema::geometry::DwgEntity;
-use semio_s_artifact_stdio_dwg_geometry::standards::v_ac1024::subsets::any::schema::geometry::DwgDrawing;
-use semio_s_artifact_stdio_dwg_geometry::standards::v_ac1024::subsets::any::schema::geometry::DwgGeometry;
-use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3;
-use semio_s_artifact_stdio_semio_base::schema::geometry::SemioRgba;
-use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
-use semio_s_artifact_stdio_semio_drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, DrawStyle, PathSegment, SemioDrawingSnapshot, STDIO_SEMIODRAWING_DOCUMENT_SCHEMA};
-use semio_s_artifact_stdio_svg::schema::snapshot::SvgSnapshot;
-use semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::io::text::snapshot::write_svg_xml;
 
-const DRAWING_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("drawing") };
-const SVG_FORMAT_KIND: &str = "s.stdio.svg";
-const SVG_FORMAT_STANDARD: &str = "1.1";
-
-/// 📐️ A closed axis-aligned rectangle as `MoveTo` + three `LineTo`s + `Close` — the shared
-/// "rects-as-paths" primitive both `layout_snapshot_to_semio_drawing` (page/frame rects) and the app
-/// engine's `display_list_to_semio_drawing` (rendered display-list rects) build on.
-pub fn rect_path_segments(x: f64, y: f64, width: f64, height: f64) -> Vec<PathSegment> {
-    use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
+/// 📐️ A closed axis-aligned rectangle as `MoveTo` + three `LineTo`s + `Close`, the "rects-as-paths" primitive the page and frame rects build on.
+pub fn rect_path_segments(x: f64, y: f64, width: f64, height: f64) -> Vec<VectorSegment> {
     vec![
-        PathSegment::MoveTo { to: SemioPoint2 { x, y } },
-        PathSegment::LineTo { to: SemioPoint2 { x: x + width, y } },
-        PathSegment::LineTo { to: SemioPoint2 { x: x + width, y: y + height } },
-        PathSegment::LineTo { to: SemioPoint2 { x, y: y + height } },
-        PathSegment::Close,
+        VectorSegment::MoveTo { to: VectorPoint2 { x, y } },
+        VectorSegment::LineTo { to: VectorPoint2 { x: x + width, y } },
+        VectorSegment::LineTo { to: VectorPoint2 { x: x + width, y: y + height } },
+        VectorSegment::LineTo { to: VectorPoint2 { x, y: y + height } },
+        VectorSegment::Close,
     ]
 }
 
-/// 📐️ Recovers a rect's `(x, y, width, height)` from a `MoveTo`/`LineTo`×3/`Close` path — the exact
-/// inverse of `rect_path_segments`, used to read `dwg_drawing_to_semio_drawing`'s output back into
-/// `Page` boundaries.
 /// ▭️ The bounds of a path that is a closed axis-aligned rectangle — the page frames of a trace.
-fn rectangle_bounds(segments: &[PathSegment]) -> Option<(f64, f64, f64, f64)> {
+fn rectangle_bounds(segments: &[VectorSegment]) -> Option<(f64, f64, f64, f64)> {
     let corners: Vec<_> = segments.iter().filter_map(|segment| match segment {
-        PathSegment::MoveTo { to } | PathSegment::LineTo { to } => Some(*to),
+        VectorSegment::MoveTo { to } | VectorSegment::LineTo { to } => Some(*to),
         _ => None,
     }).collect();
-    let only_lines = segments.iter().all(|segment| matches!(segment, PathSegment::MoveTo { .. } | PathSegment::LineTo { .. } | PathSegment::Close));
-    let closed = matches!(segments.last(), Some(PathSegment::Close)) || (corners.len() == 5 && (corners[0].x - corners[4].x).abs() < 1e-6 && (corners[0].y - corners[4].y).abs() < 1e-6);
+    let only_lines = segments.iter().all(|segment| matches!(segment, VectorSegment::MoveTo { .. } | VectorSegment::LineTo { .. } | VectorSegment::Close));
+    let closed = matches!(segments.last(), Some(VectorSegment::Close)) || (corners.len() == 5 && (corners[0].x - corners[4].x).abs() < 1e-6 && (corners[0].y - corners[4].y).abs() < 1e-6);
     if !only_lines || !closed || !(4..=5).contains(&corners.len()) {
         return None;
     }
@@ -176,7 +146,7 @@ fn rectangle_bounds(segments: &[PathSegment]) -> Option<(f64, f64, f64, f64)> {
     (on_edge && width > 0.0 && height > 0.0).then_some((x, y, width, height))
 }
 
-fn path_bounds(segments: &[PathSegment]) -> Option<(f64, f64, f64, f64)> {
+fn path_bounds(segments: &[VectorSegment]) -> Option<(f64, f64, f64, f64)> {
     let mut min_x = f64::INFINITY;
     let mut min_y = f64::INFINITY;
     let mut max_x = f64::NEG_INFINITY;
@@ -184,8 +154,8 @@ fn path_bounds(segments: &[PathSegment]) -> Option<(f64, f64, f64, f64)> {
     let mut any = false;
     for segment in segments {
         let point = match segment {
-            PathSegment::MoveTo { to } | PathSegment::LineTo { to } | PathSegment::QuadTo { to, .. } | PathSegment::CubicTo { to, .. } | PathSegment::ArcTo { to, .. } => Some(*to),
-            PathSegment::Close => None,
+            VectorSegment::MoveTo { to } | VectorSegment::LineTo { to } | VectorSegment::QuadTo { to, .. } | VectorSegment::CubicTo { to, .. } | VectorSegment::ArcTo { to, .. } => Some(*to),
+            VectorSegment::Close => None,
         };
         if let Some(point) = point {
             any = true;
@@ -198,51 +168,24 @@ fn path_bounds(segments: &[PathSegment]) -> Option<(f64, f64, f64, f64)> {
     any.then_some((min_x, min_y, max_x - min_x, max_y - min_y))
 }
 
-fn semio_rgba_from_channels(channels: [f32; 4]) -> SemioRgba {
-    SemioRgba { r: channels[0], g: channels[1], b: channels[2], a: channels[3] }
+fn rgba_from_channels(channels: [f32; 4]) -> VectorRgba {
+    VectorRgba { r: channels[0], g: channels[1], b: channels[2], a: channels[3] }
 }
 
-/// 🌉️ Composes a `SemioDrawingSnapshot` into real SVG text through stdio's `drawing↔svg` bridge
-/// (`io_dispatch`, never a hand-rolled string). `stdio_gaps`: this is the only DWG/SVG bridge stdio
-/// registers for the `drawing` subset today (svg/dxf/pdf per the master plan's own lattice) — see
-/// `layout_document_json_from_dwg` below for the DWG-import side of that gap.
-pub fn compose_svg_from_drawing(drawing: &SemioDrawingSnapshot) -> Result<String, String> {
-    let key = IoKey {
-        artifact_kind: DRAWING_DIALECT.artifact_kind.to_string(),
-        standard: DRAWING_DIALECT.standard.0.to_string(),
-        subset: DRAWING_DIALECT.subset.0.to_string(),
-        direction: IoDirection::Export,
-        format_kind: SVG_FORMAT_KIND.to_string(),
-        format_standard: SVG_FORMAT_STANDARD.to_string(),
-        format_subset: "*".to_string(),
-    };
-    let bytes = <SemioDrawingSnapshot as pack::snapshot::ArtifactPack>::encode_pack(drawing);
-    let source = ErasedComposeSource { dialect: DRAWING_DIALECT, payload: IoPayload::Binary(bytes) };
-    let composed = ::semio_framework_async::poll::resolve_ready(io_dispatch(&key, std::slice::from_ref(&source))).map_err(|e| format!("layout->semio/drawing->svg: {}", e.message))?;
-    let svg_bytes = match composed.payload {
-        IoPayload::Binary(bytes) => bytes,
-        IoPayload::Text(text) => text.into_bytes(),
-    };
-    let svg = <SvgSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&svg_bytes).map_err(|e| format!("layout->semio/drawing->svg decode: {e:?}"))?;
-    write_svg_xml(&svg.doc).map_err(|e| format!("layout->semio/drawing->svg write: {e}"))
+fn drawing_codec() -> Result<&'static dyn semio_framework_io_ports::EmbeddedChildCodecV1, String> {
+    semio_s_artifact_layout_layout_model::drawing_codec().map_err(|error| error.to_string())
 }
 
-/// 🖍️ Maps this document's pages onto one translated `DrawNode::Group` per page (matching the
-/// previous side-by-side thumbnail layout), each nesting the page boundary plus every visible
-/// frame as a rect-shaped `DrawNode::Path` — `Frame::Rect` keeps its real fill/stroke, `Text`/
-/// `Image` frames get a neutral outline (mirrors the blueprint chrome colors the app engine's scene
-/// module already uses for the same frame kinds). Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`
-/// wave 4: if the document has a composed `background_drawing` child AND that child's content is
-/// present in its snapshot-owned child record (`artifacts::layout::background_drawing_content`),
-/// its layers are merged in first (behind every page layer), so an
-/// imported DWG/DXF/SVG trace an author draws pages on top of actually reaches SVG export instead of
-/// only ever informing page-boundary framing at import time.
-pub fn layout_snapshot_to_semio_drawing(doc: &LayoutSnapshot) -> SemioDrawingSnapshot {
+/// 🖍️ Maps this document's pages onto one translated group per page, each nesting the page boundary plus every visible
+/// frame as a rect-shaped path — `Frame::Rect` keeps its real fill/stroke, `Text`/`Image` frames get a neutral outline (mirrors the blueprint
+/// chrome colors the scene module uses for the same frame kinds). When the document has a composed `background_drawing`, its layers are merged in
+/// first (behind every page layer), so an imported trace an author draws pages on top of actually reaches the export.
+pub fn layout_snapshot_to_scene(doc: &LayoutSnapshot) -> Result<VectorScene, String> {
     const PAGE_GAP: f64 = 24.0;
-    let mut styles = vec![DrawStyle { name: "page".into(), fill: None, stroke: Some(SemioRgba { r: 0.58, g: 0.65, b: 0.72, a: 1.0 }), stroke_width: Some(2.0), opacity: None }];
+    let mut styles = vec![VectorStyle { name: "page".into(), fill: None, stroke: Some(VectorRgba { r: 0.58, g: 0.65, b: 0.72, a: 1.0 }), stroke_width: Some(2.0), opacity: None }];
     let mut layers = Vec::with_capacity(doc.pages.len());
 
-    if let Some(background) = semio_s_artifact_layout_layout_model::background_drawing_content(doc) {
+    if let Some(background) = semio_s_artifact_layout_layout_model::background_drawing_scene(doc).map_err(|error| error.to_string())? {
         for mut layer in background.layers {
             layer.id = format!("background-{}", layer.id);
             layers.push(layer);
@@ -255,7 +198,7 @@ pub fn layout_snapshot_to_semio_drawing(doc: &LayoutSnapshot) -> SemioDrawingSna
     let mut canvas_height = 0.0f64;
 
     for page in &doc.pages {
-        let mut children = vec![DrawNode::Path { segments: rect_path_segments(0.0, 0.0, page.width, page.height), style: Some("page".into()) }];
+        let mut children = vec![VectorNode::Path { segments: rect_path_segments(0.0, 0.0, page.width, page.height), style: Some("page".into()) }];
         for frame in &page.frames {
             if !frame.visible() {
                 continue;
@@ -263,102 +206,76 @@ pub fn layout_snapshot_to_semio_drawing(doc: &LayoutSnapshot) -> SemioDrawingSna
             let bounds = frame.bounds();
             let segments = rect_path_segments(bounds.x, bounds.y, bounds.width, bounds.height);
             let (fill, stroke) = match frame {
-                Frame::Rect { fill, stroke, .. } => (fill.map(semio_rgba_from_channels), stroke.map(semio_rgba_from_channels)),
-                Frame::Text { .. } => (None, Some(SemioRgba { r: 0.2, g: 0.55, b: 0.9, a: 0.9 })),
-                Frame::Image { .. } => (None, Some(SemioRgba { r: 0.85, g: 0.45, b: 0.2, a: 0.9 })),
+                Frame::Rect { fill, stroke, .. } => (fill.map(rgba_from_channels), stroke.map(rgba_from_channels)),
+                Frame::Text { .. } => (None, Some(VectorRgba { r: 0.2, g: 0.55, b: 0.9, a: 0.9 })),
+                Frame::Image { .. } => (None, Some(VectorRgba { r: 0.85, g: 0.45, b: 0.2, a: 0.9 })),
             };
             if fill.is_none() && stroke.is_none() {
-                children.push(DrawNode::Path { segments, style: None });
+                children.push(VectorNode::Path { segments, style: None });
                 continue;
             }
             let style_name = format!("frame-{}", frame.id());
-            styles.push(DrawStyle { name: style_name.clone(), fill, stroke, stroke_width: stroke.map(|_| 1.0), opacity: None });
-            children.push(DrawNode::Path { segments, style: Some(style_name) });
+            styles.push(VectorStyle { name: style_name.clone(), fill, stroke, stroke_width: stroke.map(|_| 1.0), opacity: None });
+            children.push(VectorNode::Path { segments, style: Some(style_name) });
         }
-        layers.push(DrawLayer { id: page.id.clone(), name: page.name.clone(), visible: true, root: DrawNode::Group { transform: SemioTransform { translation: SemioPoint3 { x: x_offset, y: 0.0, z: 0.0 }, ..SemioTransform::identity() }, children } });
+        layers.push(VectorLayer { id: page.id.clone(), name: page.name.clone(), visible: true, root: VectorNode::Group { transform: VectorTransform { translation: VectorPoint3 { x: x_offset, y: 0.0, z: 0.0 }, ..VectorTransform::identity() }, children } });
         canvas_width = (x_offset + page.width).max(canvas_width);
         canvas_height = page.height.max(canvas_height);
         x_offset += page.width + PAGE_GAP;
     }
 
-    SemioDrawingSnapshot { schema: STDIO_SEMIODRAWING_DOCUMENT_SCHEMA.into(), canvas: DrawCanvas { width: canvas_width.max(1.0), height: canvas_height.max(1.0), background: Some(SemioRgba { r: 1.0, g: 1.0, b: 1.0, a: 1.0 }) }, styles, layers }
+    Ok(VectorScene { schema: String::new(), canvas: VectorCanvas { width: canvas_width.max(1.0), height: canvas_height.max(1.0), background: Some(VectorRgba { r: 1.0, g: 1.0, b: 1.0, a: 1.0 }) }, styles, layers })
+}
+
+/// 📤️ One scene written as one external document of `format` by the bound codec.
+pub fn export_scene(scene: &VectorScene, format: &str) -> Result<Vec<u8>, String> {
+    let codec = drawing_codec()?;
+    let content = codec.lift(scene).map_err(|error| error.to_string())?;
+    codec.export(format, &content)
+}
+
+/// 📤️ The pages laid side by side, written as one external document of `format` by the bound codec.
+pub fn layout_snapshot_to_format(doc: &LayoutSnapshot, format: &str) -> Result<Vec<u8>, String> {
+    export_scene(&layout_snapshot_to_scene(doc)?, format)
 }
 
 pub fn layout_document_json_to_svg(value: &Value) -> Result<(String, u32, u32), String> {
     let doc: LayoutSnapshot = LayoutSnapshot::from_value(value.clone()).map_err(|e| format!("layout document: {e}"))?;
-    let drawing = layout_snapshot_to_semio_drawing(&doc);
-    let width = drawing.canvas.width.round() as u32;
-    let height = drawing.canvas.height.round() as u32;
-    let svg = compose_svg_from_drawing(&drawing)?;
+    let scene = layout_snapshot_to_scene(&doc)?;
+    let width = scene.canvas.width.round() as u32;
+    let height = scene.canvas.height.round() as u32;
+    let svg = String::from_utf8(export_scene(&scene, "svg")?).map_err(|error| format!("layout->svg: {error}"))?;
     Ok((svg, width, height))
 }
 
-/// 📥️ Extracts axis-aligned rectangular boundaries from closed 4-vertex `LwPolyline`s and frames one page per rectangle, falling back to a single page framed to the drawing extents. Reads an already-decoded `DwgDrawing` (real geometry, not raw bytes) — see `dwg_drawing_to_semio_drawing` for how this feeds the shared `DrawNode` shape.
-fn dwg_rect_pages(drawing: &DwgDrawing) -> Vec<(f64, f64, f64, f64)> {
-    let mut rects = Vec::new();
-    for entity in &drawing.entities {
-        let DwgGeometry::LwPolyline { closed: true, vertices, .. } = &entity.geometry else { continue };
-        if vertices.len() != 4 {
-            continue;
-        }
-        let (min_x, max_x) = vertices.iter().fold((f64::INFINITY, f64::NEG_INFINITY), |(min, max), v| (min.min(v[0]), max.max(v[0])));
-        let (min_y, max_y) = vertices.iter().fold((f64::INFINITY, f64::NEG_INFINITY), |(min, max), v| (min.min(v[1]), max.max(v[1])));
-        let is_axis_aligned = vertices.iter().all(|v| ((v[0] - min_x).abs() < 1e-6 || (v[0] - max_x).abs() < 1e-6) && ((v[1] - min_y).abs() < 1e-6 || (v[1] - max_y).abs() < 1e-6));
-        if is_axis_aligned && max_x > min_x && max_y > min_y {
-            rects.push((min_x, min_y, max_x - min_x, max_y - min_y));
-        }
-    }
-    if rects.is_empty() {
-        rects.push((drawing.extmin[0], drawing.extmin[1], (drawing.extmax[0] - drawing.extmin[0]).max(1.0), (drawing.extmax[1] - drawing.extmin[1]).max(1.0)));
-    }
-    rects
-}
-
-/// 🖍️ Builds a real `SemioDrawingSnapshot` from the rectangular page boundaries `dwg_rect_pages`
-/// detects — one flat layer, one unstyled rect-shaped `Path` per detected page. `stdio_gaps`: stdio
-/// registers no `drawing↔dwg` composer entry (the master plan's own lattice only wires
-/// `drawing↔svg/dxf/pdf`), so this can't route through `io_dispatch` the way `compose_svg_from_drawing`
-/// does — it still avoids hand-rolling anything by funneling the already-decoded `DwgDrawing`
-/// geometry through the real, schema-owning `SemioDrawingSnapshot`/`DrawNode` shape instead of a
-/// bespoke tuple list, symmetric with the export direction above.
-fn dwg_drawing_to_semio_drawing(drawing: &DwgDrawing) -> SemioDrawingSnapshot {
-    let children: Vec<DrawNode> = dwg_rect_pages(drawing).into_iter().map(|(x, y, width, height)| DrawNode::Path { segments: rect_path_segments(x, y, width, height), style: None }).collect();
-    SemioDrawingSnapshot {
-        schema: STDIO_SEMIODRAWING_DOCUMENT_SCHEMA.into(),
-        canvas: DrawCanvas::default(),
-        styles: Vec::new(),
-        layers: vec![DrawLayer { id: "imported".into(), name: "Imported".into(), visible: true, root: DrawNode::Group { transform: SemioTransform::identity(), children } }],
-    }
-}
-
-/// 📥️ Builds a schema-valid layout document from a parsed DWG drawing, framing one page per rectangular boundary found — routed through the real `SemioDrawingSnapshot`/`DrawNode` shape (`dwg_drawing_to_semio_drawing`/`path_bounds`) rather than a bespoke tuple list. Ticket
-/// `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 4: this used to build `drawing_snapshot` only
-/// to read `path_bounds` back out of it for page framing, then discard the rest of the decoded DWG
-/// geometry entirely. It now also mints a real content-addressed `background_drawing` composed child
-/// whose snapshot-owned record retains the full drawing — nothing imported is thrown away anymore.
-pub fn layout_document_json_from_dwg(drawing: &DwgDrawing) -> Result<Value, String> {
-    layout_document_json_from_drawing(&dwg_drawing_to_semio_drawing(drawing), "dwg", "Imported DWG")
+/// 📥️ Reads one external document of `format` as a drawing and frames a layout document on it; see [`layout_document_json_from_drawing`].
+pub fn layout_document_json_from_format(format: &str, bytes: &[u8], name: &str) -> Result<Value, String> {
+    let content = drawing_codec()?.import(format, bytes)?;
+    layout_document_json_from_drawing(&content, format, name)
 }
 
 /// 📥️ Frames one page per closed axis-aligned rectangle of an imported drawing (a dwg, dxf or svg
 /// trace) and keeps the whole drawing as the document's background, so an author lays pages out on
 /// top of the real plan.
-pub fn layout_document_json_from_drawing(drawing_snapshot: &SemioDrawingSnapshot, source: &str, name: &str) -> Result<Value, String> {
-    let background_child = semio_s_artifact_layout_layout_model::background_drawing_child_handle(source, drawing_snapshot);
-    let mut rects: Vec<(f64, f64, f64, f64)> = drawing_snapshot
-        .layers
-        .iter()
-        .flat_map(|layer| match &layer.root {
-            DrawNode::Group { children, .. } => children.iter().collect::<Vec<_>>(),
+pub fn layout_document_json_from_drawing(content: &Value, source: &str, name: &str) -> Result<Value, String> {
+    let scene: VectorScene = drawing_codec()?.lower(content).map_err(|error| error.to_string())?;
+    let background_child = semio_s_artifact_layout_layout_model::background_drawing_child_handle(source, content);
+    let mut rects: Vec<(f64, f64, f64, f64)> = Vec::new();
+    for layer in &scene.layers {
+        let nodes: Vec<&VectorNode> = match &layer.root {
+            VectorNode::Group { children, .. } => children.iter().collect(),
             other => vec![other],
-        })
-        .filter_map(|child| match child {
-            DrawNode::Path { segments, .. } => rectangle_bounds(segments),
-            _ => None,
-        })
-        .collect();
-    if rects.is_empty() && drawing_snapshot.canvas.width > 0.0 && drawing_snapshot.canvas.height > 0.0 {
-        rects.push((0.0, 0.0, drawing_snapshot.canvas.width, drawing_snapshot.canvas.height));
+        };
+        for node in nodes {
+            if let VectorNode::Path { segments, .. } = node {
+                if let Some(bounds) = rectangle_bounds(segments) {
+                    rects.push(bounds);
+                }
+            }
+        }
+    }
+    if rects.is_empty() && scene.canvas.width > 0.0 && scene.canvas.height > 0.0 {
+        rects.push((0.0, 0.0, scene.canvas.width, scene.canvas.height));
     }
     let pages: Vec<Page> = rects
         .into_iter()
@@ -403,29 +320,6 @@ pub fn layout_document_json_from_drawing(drawing_snapshot: &SemioDrawingSnapshot
     Ok(document.to_value())
 }
 //#endregion 🔖️MediaImportExport
-
-//#region 🔖️TestSupport
-/// 🧪️ Registers stdio's real `s.stdio.semio/v1/drawing` composer (svg/dxf/pdf io entries incl.)
-/// into the shared `io` registry exactly once per test binary — mirrors what the plugin host does
-/// once at boot via `Plugin::builder(...).setup(...)`, which `cargo test` never runs. Shared by this
-/// file's own tests and the app engine's scene tests (both call through `compose_svg_from_drawing`).
-/// Widened from `pub(crate)` to `pub`: the app engine is now a cross-module second caller.
-#[cfg(test)]
-pub fn ensure_stdio_semio_drawing_registered() {
-    static ONCE: std::sync::Once = std::sync::Once::new();
-    ONCE.call_once(|| {
-        semio_s_artifact_stdio_semio_drawing::io::register();
-        (semio_s_artifact_stdio_semio_drawing_import::CONVERSION.register)();
-        (semio_s_artifact_stdio_semio_drawing_export::CONVERSION.register)();
-    });
-}
-//#endregion 🔖️TestSupport
-
-//#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️media-import-export/🦀️.rs"]
-mod media_import_export_tests;
-//#endregion 🧪️Tests
 
 //#region 🚪️DerivedIoRegistry
 /// 🚪️ Relocated from the deleted `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES).

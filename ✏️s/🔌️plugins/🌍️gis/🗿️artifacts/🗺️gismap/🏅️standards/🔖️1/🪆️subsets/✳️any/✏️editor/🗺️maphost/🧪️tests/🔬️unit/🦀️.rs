@@ -1,4 +1,11 @@
-use super::*;
+use crate::editor::gis2d::modes::edit::windows::map::config::MapWindowConfig;
+use crate::GisMapSnapshot;
+use serde_json::Value;
+#[allow(unused_imports)]
+use crate::{tile_coordinates::gis_policy::gis_map_extension, tile_coordinates::gis_policy::gis_map_overlays_value};
+#[allow(unused_imports)]
+use semio_framework_surface::tiled_map::MapHost;
+use crate::editor::gis2d::maphost::*;
 use crate::standards::v1::subsets::any::io::text::snapshot::default_document;
 use crate::tile_coordinates::gis_policy::GIS_MAP_OVERLAY_POSITIONS;
 

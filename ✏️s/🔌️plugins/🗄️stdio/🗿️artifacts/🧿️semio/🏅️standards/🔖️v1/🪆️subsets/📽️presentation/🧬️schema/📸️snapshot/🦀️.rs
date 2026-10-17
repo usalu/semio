@@ -174,9 +174,9 @@ impl Default for SemioPresentationSnapshot {
 /// `Other`), plus the `document::DocBlock` reuse in `TextBox.blocks`/table cell `blocks`/
 /// `Slide.notes`. Single source of truth for `📚️examples/…/🖼️assets/🗣️.dsl.semio`/
 /// `🎒️.pack.semio` and for the conformance-law tests in `🎹️composer/🦀️.rs`.
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn demo_semio_presentation_snapshot() -> SemioPresentationSnapshot {
+pub fn demo_semio_presentation_snapshot() -> SemioPresentationSnapshot {
     let frame = SlideFrame { origin: SemioPoint2 { x: 1.0, y: 2.0 }, width: 50.0, height: 10.0 };
     SemioPresentationSnapshot {
         schema: STDIO_SEMIOPRESENTATION_DOCUMENT_SCHEMA.into(),
@@ -201,8 +201,6 @@ pub(crate) fn demo_semio_presentation_snapshot() -> SemioPresentationSnapshot {
 }
 //#endregion 🔖️Demo
 //#region 🔖️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🔖️Tests
                            

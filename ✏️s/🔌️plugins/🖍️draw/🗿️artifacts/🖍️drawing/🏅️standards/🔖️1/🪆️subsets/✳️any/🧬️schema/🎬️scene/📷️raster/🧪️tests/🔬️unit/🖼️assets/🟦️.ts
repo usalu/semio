@@ -37,7 +37,7 @@ async function reference(value:RasterSceneInput){
 }
 for(const row of cases)test(row.name,async()=>{
  expect(validate(row.input)).toBe(true);const value=sceneInput(row.input),before=structuredClone(value);
- for(const grant of [1,7,4096]){const result=complete(value,grant);expect(Array.from(result.image.pixels)).toEqual(row.expected);expect(result.progress.admittedImages).toBe(row.expectedAdmittedImages);expect(result.progress.sourceBytes).toBe(row.expectedSourceBytes);expect(result.progress.assets).toBe(value.assets.length);if("expectedAllocatedPixels" in row)expect<unknown>(result.progress.pixels).toBe(row.expectedAllocatedPixels);}
+ for(const grant of [1,7,4096]){const result=complete(value,grant);expect(Array.from(result.image.pixels)).toEqual(row.expected);expect(result.progress.admittedImages).toBe(row.expectedAdmittedImages);expect(result.progress.sourceBytes).toBe(row.expectedSourceBytes);expect(result.progress.assets).toBe(value.assets.length);const allocated="expectedAllocatedPixels" in row?row.expectedAllocatedPixels:undefined;if(allocated!==undefined)expect(result.progress.pixels).toBe(allocated);}
  expect(value).toEqual(before);expect(delta(new Uint8Array(row.expected),await reference(value))).toBeLessThanOrEqual(2);
 });
 for(const row of invalid)test("refuse encoded scene "+row.name,()=>{
@@ -53,7 +53,6 @@ test("asset admission counts UTF-8 source bytes and abort covers every live prep
  const controller=new AbortController();let timer=false;setTimeout(()=>{timer=true;},0);
  await expect(rasterizeScene(value,{signal:controller.signal,workBudget:7,onProgress:p=>{if(p.phase==="compositing")controller.abort();}})).rejects.toThrow(/cancel/);expect(timer).toBe(true);
  const late=new AbortController();await expect(rasterizeScene(value,{signal:late.signal,onProgress:p=>{if(p.done)late.abort();}})).rejects.toThrow(/cancel/);
- console.info("[DEBUG] Encoded scene admission/source/filter/composition phases cancelled without publication; actual UTF-8 budgets verified");
 });
 
 test("encoded image layers preserve every blend mode above a painted path",async()=>{
@@ -64,12 +63,10 @@ test("encoded image layers preserve every blend mode above a painted path",async
   const actual=complete(value,7).image.pixels,data=PNG.sync.write({width:base.assets[0]!.image.width,height:base.assets[0]!.image.height,data:Buffer.from(base.assets[0]!.image.pixels)} as PNG).toString("base64"),svg=`<svg xmlns="http://www.w3.org/2000/svg" width="1" height="1"><rect width="1" height="1" fill="rgb(63.75,127.5,191.25)"/><image width="1" height="1" opacity=".5" style="mix-blend-mode:${css[blendMode]??blendMode}" href="data:image/png;base64,${data}"/></svg>`,expected=await sharp(Buffer.from(svg)).ensureAlpha().raw().toBuffer();
   expect(delta(actual,expected),blendMode).toBeLessThanOrEqual(2);
  }
- console.info("[DEBUG] Encoded assets above painted paths matched independent SVG for all sixteen blend modes");
 });
 
 test("scene retains admitted images while partial composition remains private",()=>{
  const row=cases[31]!,value=sceneInput(row.input),before=structuredClone(value),job=new RasterSceneJob(value);let partial=false;
  for(;;){const p=job.advance(1);expect(validateProgress(neutral(p))).toBe(true);if(p.phase==="compositing"&&!p.done){partial=true;expect(()=>job.result()).toThrow();}if(p.done)break;}
  expect(partial).toBe(true);expect(value).toEqual(before);expect([...job.result().pixels]).toEqual(row.expected);
- console.info("[DEBUG] Admitted image owners remain intact through private bounded scene composition");
 });

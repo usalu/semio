@@ -3,10 +3,11 @@
 //! ONE row stamped with the paint tool's `TransactionRef` holding ONE leaf of every sample, exactly the one-shot stroke of
 //! the same samples; a host fact ends an open stroke with zero trace, and a late tick of a closed press is dropped.
 
-use super::fill_tool_transactions::{blank_layer, document_rows, retire};
-use super::unit_tests::context::{app, dispatch, raster_view_state, RasterAppFixture};
-use super::*;
-use crate::commands::paint_stroke::{paint_stroke_leaf, PaintStroke, RASTER_PAINT_TOOL_ID};
+use semio_s_artifact_raster_raster_editor::config::RasterConfig;
+use crate::fill_tool_transactions::{blank_layer, document_rows, retire};
+use crate::unit_tests::context::{app, dispatch, raster_view_state, RasterAppFixture};
+use semio_s_artifact_raster_raster_editor::*;
+use semio_s_artifact_raster_raster_editor::commands::paint_stroke::{paint_stroke_leaf, PaintStroke, RASTER_PAINT_TOOL_ID};
 use semio_s_artifact_raster_raster_mutations::text::apply_raster_mutation;
 use semio_framework_plugin::PluginApp;
 

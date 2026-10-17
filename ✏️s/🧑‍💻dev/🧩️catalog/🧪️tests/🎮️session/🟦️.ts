@@ -1,5 +1,6 @@
 import type { GeneratorPreviewProgressControlV1 } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏭️generator/👁️preview/📈️progress/🟦️.ts";
 import { atTestLevel } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
+import { receiveScriptProcessInvocation } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from "node:fs";
@@ -11,8 +12,9 @@ import {
   PLAYGROUND_SESSION_OUTPUT_ROOT_ENV,
   playgroundSessionOutputPath,
   playgroundSessionStagedOutputPath,
+  playgroundSessionsRootV1,
   playgroundSessionViteAlias,
-} from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🟦️.ts";
+} from "@semio-tech/framework-os-dev/activation";
 import { readGeneratedCatalogProjection } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📖️catalog-view/🟦️.ts";
 import { PLAYGROUND_SESSION_ARTIFACT_KEY, renderPlaygroundSessionTypeScript, stagePlaygroundSession } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🎮️playground/🧭️session/🟦️.ts";
 
@@ -40,7 +42,7 @@ type FileSnapshot = { readonly exists: false } | { readonly exists: true; readon
 type TreeSnapshot = { readonly exists: false } | { readonly exists: true; readonly files: Readonly<Record<string, FileSnapshot>> };
 
 const workspace = resolve(import.meta.dirname, "../../../../..");
-const owning = JSON.parse(readFileSync(resolve(import.meta.dirname, "../../🎮️session/🧫️fixtures/🔣️.json"), "utf8"));
+const owning = JSON.parse(readFileSync(resolve(import.meta.dirname, "../../🎮️session/🧪️tests/🧫️fixtures/🔣️.json"), "utf8"));
 const fixture = owning.integration as Fixture;
 const projection = readGeneratedCatalogProjection(join(workspace, owning.publication.catalogPath));
 const scratchBase = process.env.SEMIO_SESSION_OUTPUT_TEST_ROOT ? resolve(workspace, process.env.SEMIO_SESSION_OUTPUT_TEST_ROOT) : join(workspace, ".🧬semio/🦑️repo/⚡️cache/🧪️plugin-registry/playground-session-output");
@@ -96,9 +98,8 @@ describe("playground session output ownership", () => {
     const liveSnapshot = () => ({ canonical: snapshotFile(absolute(fixture.default.sourcePath)), staged: snapshotTree(liveStagingRoot) });
     const liveBefore = liveSnapshot();
     const canonicalRoot = join(scratch, fixture.isolation.canonicalOutputRoot);
-    const stagedRoot = join(scratch, fixture.isolation.stagedOutputRoot);
+    const stagedRoot = playgroundSessionsRootV1(workspace, process.env.SEMIO_BUILD_MODE as "prototype" | "release");
     expect(existsSync(canonicalRoot)).toBe(false);
-    expect(existsSync(stagedRoot)).toBe(false);
 
     const devScript = absolute(fixture.default.producerScript);
     const isolatedEnv = { ...process.env, [fixture.isolation.canonicalRootEnvironment]: canonicalRoot };
@@ -110,7 +111,7 @@ describe("playground session output ownership", () => {
     expect(canonicalBytes).toBe(renderPlaygroundSessionTypeScript(owning.publication.variant, projection));
 
     for (const row of fixture.staging.variants) {
-      const result = await stagePlaygroundSession(row.variant, stagedRoot, projection);
+      const result = await receiveScriptProcessInvocation(process.env, invocation => stagePlaygroundSession(workspace, invocation, row.variant, projection));
       expect(result.path).toBe(playgroundSessionStagedOutputPath(stagedRoot, row.variant));
       expect(result.session.variant).toBe(row.variant);
       expect(result.session.registryPluginId).toBe(row.pluginId);
@@ -164,7 +165,7 @@ describe("playground session output ownership", () => {
   const code = functions.join("\n") + "\nreturn invokeGeneratorPreview;", contract = discovery.loadCatalogTaxonomy().generatorContracts["s-playground-session"]!, declaration = readFileSync(join(workspace, contract.ownerPath!, "📋️project.json"), "utf8"), target = JSON.parse(declaration).targets[contract.previewTarget!.slice(contract.previewTarget!.lastIndexOf(":") + 1)], controller = new AbortController(), outputs = snapshotFile(absolute(fixture.default.sourcePath));
   for (const javascript of [ts.transpileModule(code, { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText, (await esbuild.transform(code, { loader: "ts", target: "es2022" })).code]) {
     let received = 0;
-    const invoke = new Function("nxTargetRecord", "requireRecord", "generatorPreviewExecution", "generatorPreviewResourceLimits", "receiveGeneratorPreviewProgressV1", "checkCancellation", "absolutePath", "spawnSync", "parseGeneratorPreviewManifest", "generatorPathCompare", "sha256", javascript)(() => target, (value: unknown) => value, discovery.generatorPreviewExecution, discovery.generatorPreviewResourceLimits, (stderr: string, policy: typeof contract.previewProgress, control: GeneratorPreviewProgressControlV1) => { const events = progress.receiveGeneratorPreviewProgressV1(stderr, policy, control); received += events.length; return events; }, () => { if (controller.signal.aborted) throw new Error("owned test cancellation"); }, join, spawnSync, normalization.parseGeneratorPreviewManifest, (left: string, right: string) => Buffer.from(left).compare(Buffer.from(right)), sha256);
+    const invoke = new Function("buildTargetRecord", "requireRecord", "generatorPreviewExecution", "generatorPreviewResourceLimits", "receiveGeneratorPreviewProgressV1", "checkCancellation", "absolutePath", "spawnSync", "parseGeneratorPreviewManifest", "generatorPathCompare", "sha256", javascript)(() => target, (value: unknown) => value, discovery.generatorPreviewExecution, discovery.generatorPreviewResourceLimits, (stderr: string, policy: typeof contract.previewProgress, control: GeneratorPreviewProgressControlV1) => { const events = progress.receiveGeneratorPreviewProgressV1(stderr, policy, control); received += events.length; return events; }, () => { if (controller.signal.aborted) throw new Error("owned test cancellation"); }, join, spawnSync, normalization.parseGeneratorPreviewManifest, (left: string, right: string) => Buffer.from(left).compare(Buffer.from(right)), sha256);
     const actual = invoke({ repoRoot: workspace }, "s-playground-session", contract, { exclusions: [] });
     expect(received).toBeGreaterThan(0);
     expect(actual.manifest.contractId).toBe("s-playground-session");
@@ -172,5 +173,4 @@ describe("playground session output ownership", () => {
     expect(Buffer.from(file.bytesBase64, "base64").toString("utf8")).toBe(renderPlaygroundSessionTypeScript(owning.publication.variant, projection));
     expect(snapshotFile(absolute(fixture.default.sourcePath))).toEqual(outputs);
   }
-  console.log("[DEBUG] actual Specific publisher and two independently compiled normalization receivers admitted explicit bounded progress with unchanged artifact stdout and source outputs");
  }, 120000);

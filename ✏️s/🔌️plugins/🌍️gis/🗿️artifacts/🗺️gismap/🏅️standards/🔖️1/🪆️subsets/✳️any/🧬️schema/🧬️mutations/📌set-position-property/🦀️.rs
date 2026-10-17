@@ -3,7 +3,6 @@
 //! only, never the whole payload (`replace-position-data` stays the whole-payload gesture).
 
 use crate::diff::GisMapDiff;
-use crate::mutations::GisMapMutation;
 use crate::GisMapSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -28,14 +27,17 @@ pub struct SetPositionProperty {
     pub before: Option<String>,
 }
 
-impl MutationKind<GisMapSnapshot, GisMapMutation> for SetPositionProperty {
+impl<Op> MutationKind<GisMapSnapshot, Op> for SetPositionProperty
+where
+    Op: protocol::Mutation<GisMapSnapshot, Diff = GisMapDiff> + From<SetPositionProperty> + From<crate::standards::v1::subsets::any::schema::mutations::remove_position_property::RemovePositionProperty>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "position-property", kind: "set-position-property", record: "PositionPropertySet" };
 
     fn diff(&self, base: &GisMapSnapshot) -> protocol::MutationOutcome<GisMapDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &GisMapSnapshot) -> Result<Vec<GisMapMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &GisMapSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         super::inverse::inverse(self, base)
     }
 

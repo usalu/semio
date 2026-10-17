@@ -13,7 +13,7 @@ pub(crate) fn record_spec_producer()->semio_framework_dsl_record::RecordSpecProd
 pub(crate) fn record_controlled(snapshot:&FormsSnapshot,counts:&crate::standards::v1::subsets::any::io::sqlite::snapshot::admission::Counts,c:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<semio_framework_dsl_record::RecordValue,ValueError>{
  projection::project(snapshot,counts,c)?.__dsl_to_record_controlled(c)
 }
-pub(crate) fn record(snapshot:&FormsSnapshot)->Result<semio_framework_dsl_record::RecordValue,ValueError>{
+pub fn record(snapshot:&FormsSnapshot)->Result<semio_framework_dsl_record::RecordValue,ValueError>{
  let mut callback=|_|true;let counts=crate::standards::v1::subsets::any::io::sqlite::snapshot::admission::forecast(snapshot,&mut SqliteSnapshotControl::new(&mut callback,store::sqlite_snapshot::SqliteDatabaseLimits{max_file_bytes:usize::MAX,max_value_bytes:usize::MAX,max_rows:usize::MAX,..Default::default()}),SqliteSnapshotPhase::EncodeNative)?;
  let mut callback=|_:semio_framework_value::native_encoding::NativeEncodeProgress|true;let mut c=semio_framework_value::NativeEncodeControl::new(usize::MAX,&mut callback);record_controlled(snapshot,&counts,&mut c)
 }
@@ -29,7 +29,7 @@ pub(crate) fn borrowed_rows(source:&semio_framework_dsl_record::RecordValue,c:&m
  for value in values{c.step()?;let v=view(value)?;let bytes=match v.fields.get(&6){None|Some(semio_framework_dsl_record::FieldValue::Absent)=>0,Some(semio_framework_dsl_record::FieldValue::Bytes64(values))=>values.len(),_=>return Err(ValueError::new(ValueRefusalKind::InvalidValue,"Forms native intrinsic octet field differs"))};add(&mut rows,bytes,maximum)?;add(&mut rows,list(v,7)?.len(),maximum)?;add(&mut rows,list(v,8)?.len(),maximum)?;}
  for condition in conditions{c.step()?;add(&mut rows,list(view(condition)?,6)?.len(),maximum)?;}Ok(rows)})
 }
-pub(crate) fn reconstruct_record_controlled(source:&semio_framework_dsl_record::RecordValue,c:&mut semio_framework_value::NativeDecodeControl<'_>,maximum:usize)->Result<FormsSnapshot,ValueError>{
+pub fn reconstruct_record_controlled(source:&semio_framework_dsl_record::RecordValue,c:&mut semio_framework_value::NativeDecodeControl<'_>,maximum:usize)->Result<FormsSnapshot,ValueError>{
  let result=(||{borrowed_rows(source,c,maximum)?;let document=Document::__dsl_from_record_controlled(source,c)?;let snapshot=reconstruction::reconstruct(document,c)?;let validation=crate::standards::v1::subsets::any::io::sqlite::snapshot::admission::identities::snapshot(&snapshot,c).and_then(|()|validate(&snapshot,c));if let Err(error)=validation{crate::standards::v1::subsets::any::io::sqlite::snapshot::reconstruction::retire_snapshot(snapshot);return Err(error)}Ok(snapshot)})();result
 }
 fn validate(s:&FormsSnapshot,c:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<(),ValueError>{

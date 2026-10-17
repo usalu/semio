@@ -22,7 +22,6 @@ use semio_s_artifact_raster_raster_diff::{RasterDiff, RasterPixelRegion};
 #[cfg(test)] use semio_s_artifact_raster_raster_model::find_layer;
 use semio_s_artifact_raster_raster_model::{RasterLayerMask, RasterPixelContent};
 #[cfg(test)] use semio_s_artifact_raster_raster_model::RasterLayerNode;
-#[cfg(test)] use semio_s_artifact_raster_raster_mutations::RasterMutation;
 use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
 use semio_s_artifact_stdio_semio_image::schema::snapshot::SemioImageSnapshot;
 use semio_framework_pixels::editing::{paint_stroke_in_place, validate_extent, PixelAlphaBrush, PixelBrush, PixelOperation};
@@ -148,7 +147,7 @@ pub fn selection_mask(spans: &[RasterSelectionSpan], count: usize) -> Option<Vec
 }
 
 /// 🖌️ The rasterizer operation `payload` means on its target.
-fn operation(payload: &PaintStroke) -> PixelOperation {
+pub fn operation(payload: &PaintStroke) -> PixelOperation {
     let points = payload.points.iter().map(|point| [point.x, point.y]).collect();
     let brush = &payload.brush;
     let erase = payload.tool == "eraser";
@@ -342,7 +341,4 @@ impl<Op> protocol::MutationKind<RasterSnapshot, Op> for PaintStroke where Op: pr
 //#endregion 🔖️Kind
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

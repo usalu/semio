@@ -1,0 +1,53 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/rust-unit-descriptor-node-v2",
+  "$ref": "#/definitions/Node",
+  "definitions": {
+    "Policy": {
+      "const": {
+        "maximumNodeBytes": 16777216,
+        "maximumGraphBytes": 268435456,
+        "maximumPredecessors": 4096
+      }
+    },
+    "Node": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "plan",
+        "predecessors"
+      ],
+      "properties": {
+        "version": {
+          "const": 2
+        },
+        "plan": {
+          "$ref": "https://semio.tech/schema/rust-unit-plan-v1"
+        },
+        "predecessors": {
+          "type": "array",
+          "maxItems": 4096,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "unit",
+              "node"
+            ],
+            "properties": {
+              "unit": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9_-]{0,79}$"
+              },
+              "node": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -6,7 +6,7 @@ import { resolveTestLevel } from "../../../../../../../../../📦️packages/�
 /** 🎨️ `@semio-tech/framework-renderer-react` task router. */
 import { readFileSync } from "node:fs";
 import assert from "node:assert/strict";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { ValidateFunction } from "ajv";
 import { runBunx, runVitest } from "../../../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
@@ -420,6 +420,12 @@ class ScopedPresenceCheckScript extends BundleScript {
   }
 }
 
+
+/** 🌐️ The `World3dHost` source as the one text the unsplit file held: the host root with its mounted module tree, plus the `🖱️interaction-domain-args` child whose action-argument builders only the hooks import. */
+function world3dHostSource(hostRoot: string): string {
+  return readModuleTreeSource(join(hostRoot, "🟦️.tsx")) + "\n" + readModuleTreeSource(join(hostRoot, "🖱️interaction-domain-args", "🟦️.ts"));
+}
+
 /** 🖱️ Re-derives the `World3dHost` gesture→action law from `🖱️pointer-gestures.json` WITHOUT React, three
  * or the DOM — a second, independent implementation of the same fixture the mounted jsdom suite
  * (`🧪️tests/🖱️world3d-interaction`) plays through the real component, so neither side can drift alone. Also
@@ -542,7 +548,7 @@ export function world3dPointerGestureOracle(repoRoot: string): number {
       assert.fail(`gesture ${gesture.id} has an unknown kind ${gesture.kind}`);
     }
   }
-  const host = readFileSync(join(hostRoot, "🟦️.tsx"), "utf8");
+  const host = world3dHostSource(hostRoot);
   check(host.includes(`dispatch("interactionSelect", ${fixture.wiring.selectionTargetsArgsBuilder}(interactionDomainId, [${fixture.wiring.instanceTargetBuilder}(instances, id, interactionGranularity)], merge))`), "the instance pick must preserve its resolved target through the selection builder");
   // 🏁️ Hover travels on `dispatchSettled`, `dispatch`'s awaitable twin: the coalescing dispatcher bounds the
   // lane at ONE outstanding round trip only when it can see the promise `onAction` settles on, and `dispatch`
@@ -713,7 +719,7 @@ export function selectionMergeVocabularyOracle(repoRoot: string): number {
   const plugin = readFileSync(join(repoRoot, fixture.wiring.domainPath.file), "utf8");
   check(plugin.includes(fixture.wiring.domainPath.decoder), "the domain path must decode through the shared codec, never through its own match arms");
   check(plugin.includes(fixture.wiring.domainPath.worldPath), "the non-domain world path must take a decoded MergeMode, so a private word is unrepresentable");
-  const host = readFileSync(join(repoRoot, fixture.wiring.host.file), "utf8");
+  const host = world3dHostSource(dirname(join(repoRoot, fixture.wiring.host.file)));
   check(host.includes(fixture.wiring.host.selectionArgs), "the host's selection args builder must take a typed MergeMode");
   check(host.includes(fixture.wiring.host.componentPick), "the component pick's one deviation must be a named MergeMode→MergeMode function, not a word table");
   for (const builder of fixture.wiring.host.deletedBuilders) check(!host.includes(`function ${builder}(`), `${builder} is deleted — greenfield, no adapter between two vocabularies`);

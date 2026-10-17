@@ -226,13 +226,13 @@
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🧭️routing/🟦️.ts",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts",
         "{workspaceRoot}/🌎️hub/📦️packages/🦀️rust/📜️script.ts",
-        "{workspaceRoot}/🌎️hub/{🧪️testing/{📜️script-sources,📖️source-readers},🎛️commands/{🚦️gate-commands,🏷️trusted-catalog,🏗️build-and-dev},🚀️local-relay/🛰️servers,🚀️local-bootstrap/🧰️mcp-process-support,🧪️tests/{🪪️check-in-process,🔐️secure-local-smoke,🌐️relay-checks,📄️browser-document-open,🛡️admin-relay-checks,🔑️directory-authority-checks,🗺️open-plan-checks,📇️native-catalog-checks,🔗️execution-target-lease-checks,👤️browser-actor-checks,💡️inference-fixtures,🌍️gis-map-fixtures,🏛️trusted-catalog-fixtures,📮️trusted-publication-fixtures,🎮️gis-map-process-support,🕹️gis-map-process,🎁️trusted-stdio-gis-bundle-check,📣️directory-live-support,📰️event-page-checks,🏠️home-browser-checks,🧾️command-receipt-checks,🎫️invite-redemption-checks,🛂️space-administration-checks,🧬️space-artifact-creation-checks,🧭️space-journey-checks},🏗️bootstrap/🧾️provenance/{🧭️bootstrap-selection,🌍️gis-browser-proof,🧮️bootstrap-claims,🗃️bootstrap-bundle,🚚️bootstrap-publication}}/🟦️.ts",
+        "{workspaceRoot}/🌎️hub/{🧪️testing/{📜️script-sources,📖️source-readers},🎛️commands/{🚦️gate-commands,🏷️trusted-catalog,🏗️build-and-dev},🚀️local-relay/🛰️servers,🚀️local-bootstrap/🧰️mcp-process-support,🧪️tests/{🪪️check-in-process,🔐️secure-local-smoke,🌐️relay-checks,📄️browser-document-open,🛡️admin-relay-checks,🔑️directory-authority-checks,🗺️open-plan-checks,📇️native-catalog-checks,🔗️execution-target-lease-checks,👤️browser-actor-checks,💡️inference-fixtures,🌍️gis-map-fixtures,🏛️trusted-catalog-fixtures,📮️trusted-publication-fixtures,🎮️gis-map-process-support,🕹️gis-map-process,🎁️trusted-stdio-gis-bundle-check,📣️directory-live-support,📰️event-page-checks,🏠️home-browser-checks,🧾️command-receipt-checks,🎫️invite-redemption-checks,🛂️space-administration-checks,🧬️space-artifact-creation-checks,🧭️space-journey-checks},🏗️bootstrap/🧾️provenance/{🧭️bootstrap-selection,🌍️gis-browser-proof,🧮️bootstrap-claims,🗃️bootstrap-bundle,🚚️bootstrap-publication/🧱️materialized-bundle,🚚️bootstrap-publication/🗺️gis-proofs-and-staging,🚚️bootstrap-publication/🔄️rotation-and-current-pointer,🚚️bootstrap-publication/📮️receipts-and-publication-child,🚚️bootstrap-publication}}/🟦️.ts",
         "{workspaceRoot}/🌎️hub/📦️packages/🦀️rust/📋️project.json",
         "{workspaceRoot}/🌎️hub/📦️packages/🦀️rust/Cargo.toml",
         "{workspaceRoot}/🌎️hub/📇️directory/🦀️.rs",
         "{workspaceRoot}/Cargo.lock",
         "{workspaceRoot}/🌎️hub/🧪️tests/🔬️bin-unit/**/🦀️.rs",
-        "{workspaceRoot}/🌎️hub/📇️directory/🧪️tests/🔬️unit/🦀️.rs",
+        "{workspaceRoot}/🌎️hub/📇️directory/🧪️tests/🔬️unit/**/🦀️.rs",
         "{workspaceRoot}/🌎️hub/📇️directory/🪶️sqlite/🧪️tests/🔬️unit/🦀️.rs",
         "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/📡️wire/🧪️tests/🔬️unit/🦀️.rs",
         "{workspaceRoot}/🌎️hub/🏗️bootstrap/**/🦀️.rs",
@@ -263,7 +263,7 @@
         "--exact",
         "--test-threads=1"
       ],
-      "source": "🌎️hub/🧪️tests/🔬️bin-unit/🧭️open-plan/🔬️unit/🦀️.rs",
+      "source": "🌎️hub/🧪️tests/🔬️bin-unit/🧭️open-plan/🔬️unit/🗂️scoped-directory-socket-laws/🦀️.rs",
       "declaration": "scoped_directory_socket_ledger_indexes_and_invalidates_exact_membership"
     },
     {
@@ -281,7 +281,7 @@
         "--exact",
         "--test-threads=1"
       ],
-      "source": "🌎️hub/🧪️tests/🔬️bin-unit/🧭️open-plan/🔬️unit/🦀️.rs",
+      "source": "🌎️hub/🧪️tests/🔬️bin-unit/🧭️open-plan/🔬️unit/🗂️scoped-directory-socket-laws/🦀️.rs",
       "declaration": "scoped_directory_socket_message_matching_is_body_exact_and_removal_private"
     },
     {
@@ -299,7 +299,7 @@
         "--exact",
         "--test-threads=1"
       ],
-      "source": "🌎️hub/🧪️tests/🔬️bin-unit/🧭️open-plan/🔬️unit/🦀️.rs",
+      "source": "🌎️hub/🧪️tests/🔬️bin-unit/🧭️open-plan/🔬️unit/🗂️scoped-directory-socket-laws/🦀️.rs",
       "declaration": "scoped_directory_socket_admin_removal_uses_the_same_membership_fence"
     },
     {
@@ -317,7 +317,7 @@
         "--exact",
         "--test-threads=1"
       ],
-      "source": "🌎️hub/🧪️tests/🔬️bin-unit/🧭️open-plan/🔬️unit/🦀️.rs",
+      "source": "🌎️hub/🧪️tests/🔬️bin-unit/🧭️open-plan/🔬️unit/🗂️scoped-directory-socket-laws/🦀️.rs",
       "declaration": "scoped_directory_socket_route_rejects_scope_substitution_and_rest_removal_closes_without_event"
     },
     {
@@ -330,12 +330,12 @@
         "-p",
         "semio-hub-hostile-input-laws",
         "--lib",
-        "tests::scoped_directory_socket_removal_and_delivery_have_one_total_membership_order",
+        "tests::quick::scoped_directory_socket_removal_and_delivery_have_one_total_membership_order",
         "--",
         "--exact",
         "--test-threads=1"
       ],
-      "source": "🌎️hub/🧪️tests/🔬️bin-unit/🎲️hostile-input/🔬️unit/🦀️.rs",
+      "source": "🌎️hub/🧪️tests/🔬️bin-unit/🎲️hostile-input/🔬️unit/⚡️quick-hostile-laws/🦀️.rs",
       "declaration": "scoped_directory_socket_removal_and_delivery_have_one_total_membership_order"
     },
     {
@@ -348,12 +348,12 @@
         "-p",
         "semio-hub-hostile-input-laws",
         "--lib",
-        "tests::socket_admin_user_gate_rejects_a_late_same_user_grant_after_batch_revoke",
+        "tests::quick::socket_admin_user_gate_rejects_a_late_same_user_grant_after_batch_revoke",
         "--",
         "--exact",
         "--test-threads=1"
       ],
-      "source": "🌎️hub/🧪️tests/🔬️bin-unit/🎲️hostile-input/🔬️unit/🦀️.rs",
+      "source": "🌎️hub/🧪️tests/🔬️bin-unit/🎲️hostile-input/🔬️unit/⚡️quick-hostile-laws/🦀️.rs",
       "declaration": "socket_admin_user_gate_rejects_a_late_same_user_grant_after_batch_revoke"
     },
     {
@@ -407,7 +407,7 @@
         "--exact",
         "--test-threads=1"
       ],
-      "source": "🌎️hub/🧪️tests/🔬️bin-unit/🧭️open-plan/🔬️unit/🦀️.rs",
+      "source": "🌎️hub/🧪️tests/🔬️bin-unit/🧭️open-plan/🔬️unit/🔌️socket-grant-laws/🦀️.rs",
       "declaration": "socket_grant_directory_route_uses_credential_free_hello_and_revokes_live"
     },
     {
@@ -425,7 +425,7 @@
         "--exact",
         "--test-threads=1"
       ],
-      "source": "🌎️hub/🧪️tests/🔬️bin-unit/🧭️open-plan/🔬️unit/🦀️.rs",
+      "source": "🌎️hub/🧪️tests/🔬️bin-unit/🧭️open-plan/🔬️unit/🔌️socket-grant-laws/🦀️.rs",
       "declaration": "socket_grant_document_route_is_exact_replay_safe_actor_bound_and_revoke_live"
     },
     {
@@ -438,12 +438,12 @@
         "-p",
         "semio-hub-hostile-input-laws",
         "--lib",
-        "tests::socket_grant_ledger_is_bounded_single_consume_restart_scoped_and_revoke_race_safe",
+        "tests::long::socket_grant_ledger_is_bounded_single_consume_restart_scoped_and_revoke_race_safe",
         "--",
         "--exact",
         "--test-threads=1"
       ],
-      "source": "🌎️hub/🧪️tests/🔬️bin-unit/🎲️hostile-input/🔬️unit/🦀️.rs",
+      "source": "🌎️hub/🧪️tests/🔬️bin-unit/🎲️hostile-input/🔬️unit/🐢️long-hostile-laws/🦀️.rs",
       "declaration": "socket_grant_ledger_is_bounded_single_consume_restart_scoped_and_revoke_race_safe"
     },
     {
@@ -461,7 +461,7 @@
         "--exact",
         "--test-threads=1"
       ],
-      "source": "🌎️hub/🧪️tests/🔬️bin-unit/🧭️open-plan/🔬️unit/🦀️.rs",
+      "source": "🌎️hub/🧪️tests/🔬️bin-unit/🧭️open-plan/🔬️unit/🔌️socket-grant-laws/🦀️.rs",
       "declaration": "socket_grant_revoke_and_welcome_have_a_bounded_binding_linearization"
     },
     {
@@ -479,7 +479,7 @@
         "--exact",
         "--test-threads=1"
       ],
-      "source": "🌎️hub/🧪️tests/🔬️bin-unit/🧭️open-plan/🔬️unit/🦀️.rs",
+      "source": "🌎️hub/🧪️tests/🔬️bin-unit/🧭️open-plan/🔬️unit/🔌️socket-grant-laws/🦀️.rs",
       "declaration": "socket_grant_revoke_before_broadcast_authorization_suppresses_frame"
     },
     {
@@ -492,12 +492,12 @@
         "-p",
         "semio-hub-hostile-input-laws",
         "--lib",
-        "tests::socket_grant_revoke_before_command_admission_has_no_storage_effect",
+        "tests::quick::socket_grant_revoke_before_command_admission_has_no_storage_effect",
         "--",
         "--exact",
         "--test-threads=1"
       ],
-      "source": "🌎️hub/🧪️tests/🔬️bin-unit/🎲️hostile-input/🔬️unit/🦀️.rs",
+      "source": "🌎️hub/🧪️tests/🔬️bin-unit/🎲️hostile-input/🔬️unit/⚡️quick-hostile-laws/🦀️.rs",
       "declaration": "socket_grant_revoke_before_command_admission_has_no_storage_effect"
     },
     {
@@ -515,7 +515,7 @@
         "--exact",
         "--test-threads=1"
       ],
-      "source": "🌎️hub/🧪️tests/🔬️bin-unit/🧭️open-plan/🔬️unit/🦀️.rs",
+      "source": "🌎️hub/🧪️tests/🔬️bin-unit/🧭️open-plan/🔬️unit/🔌️socket-grant-laws/🦀️.rs",
       "declaration": "socket_grant_revoke_before_lag_authorization_reads_no_private_control"
     },
     {
@@ -532,7 +532,7 @@
         "--",
         "--test-threads=1"
       ],
-      "source": "🌎️hub/📇️directory/🧪️tests/🔬️unit/🦀️.rs",
+      "source": "🌎️hub/📇️directory/🧪️tests/🔬️unit/🪪️identity-laws/🦀️.rs",
       "declaration": "typed_capabilities_match_neutral_sha256_vectors_and_fixed_boundaries"
     },
     {

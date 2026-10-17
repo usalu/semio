@@ -1,0 +1,126 @@
+//! 🧪️ `rename-artifact` fixture — `🗿️renames-artifact-1`.
+//!
+//! Source of truth is the committed JSON quintet beside this file (contract D1, ticket
+//! `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`). The `.op.semio`/`.spr.semio`/`.dsl.semio`/
+//! `.pack.semio`/`.patch.semio` encodings are derived from it by `fixtures generate`, not here.
+
+use crate::standards::v1::subsets::any::schema::diff::SSpaceDiff;
+use crate::standards::v1::subsets::any::schema::mutations::SSpaceMutation;
+use crate::standards::v1::subsets::any::schema::snapshot::SSpaceSnapshot;
+
+static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏷️rename-artifact/🧪️renames-artifact-1/📸️snapshot/⬅️before/🔣️.json"));
+static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏷️rename-artifact/🧪️renames-artifact-1/📸️snapshot/➡️after/🔣️.json"));
+static MUTATION: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏷️rename-artifact/🧪️renames-artifact-1/🦠️mutation/🔣️.json"));
+static DIFF: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏷️rename-artifact/🧪️renames-artifact-1/🔺️diff/🔣️.json"));
+static OUTCOME: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏷️rename-artifact/🧪️renames-artifact-1/🎯️outcome/🔣️.json"));
+
+fn decode_value<T: semio_framework_value::FromValue>(text: &str) -> T {
+    let json = semio_framework_pack_json::parse(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("fixture JSON decodes");
+    semio_framework_value::FromValue::from_value(semio_framework_pack_json::to_dsl_value(&json)).expect("fixture value decodes")
+}
+fn encode_value<T: semio_framework_value::ToValue>(value: &T) -> semio_framework_pack_json::Value {
+    semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(value))
+}
+fn before() -> SSpaceSnapshot {
+    decode_value((*BEFORE))
+}
+fn expected_after() -> SSpaceSnapshot {
+    decode_value((*AFTER))
+}
+fn mutation() -> SSpaceMutation {
+    decode_value((*MUTATION))
+}
+fn built_outcome() -> protocol::MutationOutcome<SSpaceDiff> {
+    <SSpaceMutation as protocol::Mutation<SSpaceSnapshot>>::diff(&mutation(), &before())
+}
+
+/// ▶️ Renaming `artifact-1` rewrites only that row's `name`; its ids, kind, dialect and both
+/// timestamps stay exactly as committed (a rename is not a touch).
+#[semio_framework_async_macros::async_test]
+async fn rewrites_only_the_name_of_the_committed_after() {
+    let applied = protocol::apply_diff(built_outcome().diff(), &before()).expect("rename-artifact applies to its committed before-index");
+    assert_eq!(applied, expected_after(), "rename-artifact/renames-artifact-1: the renamed index differs from the committed after-snapshot");
+    let renamed = applied.artifacts.iter().find(|row| row.id == "artifact-1").expect("artifact-1 survives its own rename");
+    assert_eq!(renamed.updated_at_ms, 1000, "rename-artifact/renames-artifact-1: renaming must not restamp updatedAtMs");
+}
+
+/// ↩️ `rename-artifact`'s inverse carries the OLD name read out of BASE, so replaying it puts
+/// "Site Plan" back on `artifact-1`.
+#[semio_framework_async_macros::async_test]
+async fn renaming_back_restores_before() {
+    let base = before();
+    let forward = <SSpaceMutation as protocol::Mutation<SSpaceSnapshot>>::diff(&mutation(), &base);
+    let mut snapshot = protocol::apply_diff(forward.diff(), &base).expect("forward rename-artifact applies");
+    let inverse = <SSpaceMutation as protocol::Mutation<SSpaceSnapshot>>::inverse(&mutation(), &base).expect("valid retained mutation inverse fixture");
+    assert_eq!(inverse.len(), 1, "rename-artifact/renames-artifact-1: the inverse of one rename is exactly one rename back");
+    for step in &inverse {
+        let undo = <SSpaceMutation as protocol::Mutation<SSpaceSnapshot>>::diff(step, &snapshot);
+        snapshot = protocol::apply_diff(undo.diff(), &snapshot).expect("the rename-artifact inverse step applies");
+    }
+    assert_eq!(snapshot, base, "rename-artifact/renames-artifact-1: renaming back to \"Site Plan\" did not restore the before-index");
+}
+
+/// 🔣️ Both committed index snapshots and the `renameArtifact` payload are canonical.
+#[semio_framework_async_macros::async_test]
+async fn committed_json_is_canonical() {
+    for (label, text) in [("before", (*BEFORE)), ("after", (*AFTER))] {
+        let decoded = decode_value::<SSpaceSnapshot>(text);
+        let reencoded = encode_value(&decoded);
+        let original = semio_framework_pack_json::parse(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("space index snapshot reparses");
+        assert_eq!(reencoded, original, "rename-artifact/renames-artifact-1: committed {label} index JSON is not canonical");
+    }
+    let reencoded = encode_value(&mutation());
+    let original = semio_framework_pack_json::parse((*MUTATION), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation fixture reparses");
+    assert_eq!(reencoded, original, "rename-artifact/renames-artifact-1: committed renameArtifact JSON is not canonical");
+}
+
+/// 🎯️ "Site Plan Rev B" is neither `artifact-1`'s current name (which would be a `mutation.no-op`
+/// warning with an empty diff) nor any sibling's name (which would be a fatal collision), so the
+/// declared `applied` outcome must be message-free.
+#[semio_framework_async_macros::async_test]
+async fn declared_outcome_holds() {
+    let declared = semio_framework_pack_json::parse((*OUTCOME), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("outcome decodes");
+    assert_eq!(declared.get("status").and_then(semio_framework_pack_json::Value::as_str), Some("applied"), "rename-artifact/renames-artifact-1: this fixture declares an applied outcome");
+    let produced = built_outcome();
+    assert_eq!(produced.worst_level(), None, "rename-artifact/renames-artifact-1: a genuine, uncontested new name raises neither mutation.no-op nor mutation.duplicate-id");
+    assert!(produced.messages().is_empty(), "rename-artifact/renames-artifact-1: an accepted rename emits no diagnostics");
+}
+
+/// 🔺️ The committed diff is the whole row vector with one `name` swapped — `artifact-2` is carried
+/// through byte-identical and `schema` stays untouched.
+#[semio_framework_async_macros::async_test]
+async fn produces_committed_diff() {
+    let produced = encode_value(built_outcome().diff());
+    let committed = semio_framework_pack_json::parse((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
+    assert_eq!(produced, committed, "rename-artifact/renames-artifact-1: produced diff differs from the committed 🔺️diff/🔣️.json");
+}
+
+/// 🔣️ The committed diff decodes to `SSpaceDiff` and re-encodes unchanged.
+#[semio_framework_async_macros::async_test]
+async fn committed_diff_is_canonical() {
+    let decoded = decode_value::<SSpaceDiff>((*DIFF));
+    let rows = decoded.artifacts.as_ref().expect("the committed rename diff carries the row vector");
+    assert_eq!(rows[1].name, "Massing Study", "rename-artifact/renames-artifact-1: the untargeted sibling row must ride through the diff unchanged");
+    let reencoded = encode_value(&decoded);
+    let original = semio_framework_pack_json::parse((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff reparses");
+    assert_eq!(reencoded, original, "rename-artifact/renames-artifact-1: committed diff JSON is not canonical");
+}
+
+/// 🩹 The committed diff alone carries the before-index to the after-index.
+#[semio_framework_async_macros::async_test]
+async fn committed_diff_applies_to_after() {
+    let decoded = decode_value::<SSpaceDiff>((*DIFF));
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-index");
+    assert_eq!(produced, expected_after(), "rename-artifact/renames-artifact-1: committed diff did not carry before to after");
+}
+
+/// ⚖️ The inverse diffs sum to the negative of the forward diff: `Σ.apply(after) == before` and `canon(Σ) == canon(d.inverse(before))`.
+#[semio_framework_async_macros::async_test]
+async fn inverse_diffs_sum_to_the_negative_diff() {
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation(), &before()).await;
+}
+
+fn runtime_fixture_text(relative: &str) -> &'static str {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative);
+    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display())).into_boxed_str())
+}

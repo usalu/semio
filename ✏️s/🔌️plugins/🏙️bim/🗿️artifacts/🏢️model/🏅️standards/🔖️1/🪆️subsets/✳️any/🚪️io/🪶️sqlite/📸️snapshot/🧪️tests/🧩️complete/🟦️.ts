@@ -19,7 +19,6 @@ test("BIM complete original input uses the genuine sixty-five-field schema",()=>
  expect(validateJsonSchemaSubset(snapshotSchema,input,snapshotSchema,[documentSchema])).toEqual([]);
  const oracle=semioSchemaAjvV1({strict:true,allErrors:true}).addSchema(documentSchema).compile(snapshotSchema);expect(oracle(input)).toBe(true);
  for(const field of missing)expect(Object.keys(input[field]).length,field).toBeGreaterThan(0);
- console.log("[DEBUG] BIM original complete input actual65fields nonempty16missingmaps both canonical schema and independent Ajv admitted");
 });
 
 test("BIM actual semantic projection and reconstruction conserve every original field",async()=>{
@@ -34,7 +33,6 @@ test("BIM actual semantic projection and reconstruction conserve every original 
   expect(oracle.query("SELECT component_key,name,value FROM bim_component_override ORDER BY ordinal").all()).toEqual([{component_key:"component/mount",name:"Width",value:"Width * 2 + 0.25"}]);
   expect(oracle.query("SELECT e.map_key,o.map_key AS target FROM bim_element_option e JOIN bim_design_option o ON o.document_id=e.document_id AND o.map_key=e.target_key ORDER BY e.ordinal").all()).toEqual([{map_key:"beam/λ",target:"option/β"}]);
  }finally{oracle.close();}
- console.log("[DEBUG] BIM actual65field semantic roundtrip and independent sixteen named map/ordinal/literal/reference SQL outputs passed; Native receiving custody remains separate");
 });
 
 test("BIM actual public pack declares its owning SQLite capability",()=>{
@@ -51,5 +49,4 @@ test("BIM new named child ownership and active variants reject independently wit
   expect(sqlite.query(law.witness).get(),law.name).toEqual({n:1n});
   await expect(bimModelSnapshotFromSqliteDatabase(await importSqliteDatabase(sqlite.serialize()))).rejects.toThrow();
  }finally{sqlite.close();}}
- console.log("[DEBUG] BIM six original named child/ordinal/variant corruptions independently witnessed by SQLite and refused by actual reconstruction");
 },60000);

@@ -1,0 +1,141 @@
+{
+  "version": 1,
+  "signals": [
+    {
+      "id": "live",
+      "cancel": false
+    },
+    {
+      "id": "cancelled",
+      "cancel": true
+    }
+  ],
+  "rejected": [
+    [],
+    [
+      "cargo",
+      "--force"
+    ],
+    [
+      "unknown"
+    ]
+  ],
+  "systemModules": [
+    "bun:ffi",
+    "bun:sqlite"
+  ],
+  "systemCases": [
+    {
+      "path": "node:fs",
+      "admit": true
+    },
+    {
+      "path": "bun:ffi",
+      "admit": true
+    },
+    {
+      "path": "bun:sqlite",
+      "admit": true
+    },
+    {
+      "path": "ajv",
+      "admit": false
+    },
+    {
+      "path": "nx",
+      "admit": false
+    },
+    {
+      "path": "@semio-tech/schema-validator-ts",
+      "admit": false
+    },
+    {
+      "path": "bun:unknown",
+      "admit": false
+    }
+  ],
+  "receipts": [
+    {
+      "fault": "none",
+      "admit": true
+    },
+    {
+      "fault": "historical",
+      "admit": true
+    },
+    {
+      "fault": "status",
+      "admit": false
+    },
+    {
+      "fault": "signal",
+      "admit": false
+    },
+    {
+      "fault": "maximum",
+      "admit": false
+    },
+    {
+      "fault": "deadline",
+      "admit": false
+    },
+    {
+      "fault": "capabilities",
+      "admit": false
+    },
+    {
+      "fault": "owner",
+      "admit": false
+    },
+    {
+      "fault": "digest",
+      "admit": false
+    },
+    {
+      "fault": "calls",
+      "admit": false
+    },
+    {
+      "fault": "reason",
+      "admit": false
+    },
+    {
+      "fault": "zero",
+      "admit": false
+    },
+    {
+      "fault": "null",
+      "admit": false
+    }
+  ],
+  "failures": [
+    {
+      "fault": "exact",
+      "admit": true
+    },
+    {
+      "fault": "undefined",
+      "admit": true
+    },
+    {
+      "fault": "aggregate",
+      "admit": true
+    },
+    {
+      "fault": "foreign",
+      "admit": false
+    },
+    {
+      "fault": "combined",
+      "admit": false
+    },
+    {
+      "fault": "cause",
+      "admit": false
+    },
+    {
+      "fault": "cycle",
+      "admit": false
+    }
+  ]
+}

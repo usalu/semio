@@ -1,0 +1,79 @@
+{
+ "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts",
+ "importers": [],
+ "children": [
+  {
+   "dir": "🏗️base-document",
+   "doc": "/** 🏗️ glTF fixture generator: the FileReader shim, the untyped document model and the ONE real base document that three's own scene graph and GLTFExporter produce. */",
+   "lines": [
+    [
+     43,
+     151
+    ]
+   ]
+  },
+  {
+   "dir": "✂️structural-edit",
+   "doc": "/** ✂️ glTF fixture generator: the generic create, delete, move and reorder edits on the raw exported document and the index remapping every reference family needs. */",
+   "lines": [
+    [
+     153,
+     369
+    ]
+   ]
+  },
+  {
+   "dir": "🧬️recipe-registry",
+   "doc": "/** 🧬️ glTF fixture generator: the recipe type, the registry every family registers into and the document helpers the recipes share. */",
+   "lines": [
+    [
+     372,
+     395
+    ]
+   ]
+  },
+  {
+   "dir": "👪️recipes-nodes-and-scenes",
+   "doc": "/** 👪️ glTF fixture generator: the recipes of the node hierarchy, the node bindings and the scenes. */",
+   "lines": [
+    [
+     397,
+     654
+    ]
+   ],
+   "sideEffect": true
+  },
+  {
+   "dir": "🕸️recipes-geometry-and-materials",
+   "doc": "/** 🕸️ glTF fixture generator: the recipes of meshes, primitives, morph targets, materials and cameras. */",
+   "lines": [
+    [
+     656,
+     953
+    ]
+   ],
+   "sideEffect": true
+  },
+  {
+   "dir": "🧥️recipes-skin-animation-and-resources",
+   "doc": "/** 🧥️ glTF fixture generator: the recipes of skins, animations, extensions, the asset block and the accessor, buffer, image, sampler and texture resources. */",
+   "lines": [
+    [
+     955,
+     1226
+    ]
+   ],
+   "sideEffect": true
+  },
+  {
+   "dir": "🌱️real-input-rows",
+   "doc": "/** 🌱️ glTF fixture generator: the real-input rows that edit the committed real GLB export, its container reader and writer and the output path of a row. */",
+   "lines": [
+    [
+     1229,
+     1320
+    ]
+   ]
+  }
+ ]
+}

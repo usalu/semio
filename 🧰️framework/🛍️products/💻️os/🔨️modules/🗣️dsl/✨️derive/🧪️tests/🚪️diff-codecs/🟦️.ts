@@ -14,4 +14,3 @@ try {
  assert.equal(functions.some(node=>node.childForFieldName("name")?.text==="expand_dsl_diff"),false);
 } finally {tree.delete();parser.delete();}
 
-console.log("[DEBUG] actual diff representation generator methods and forbidden contracts checked with independent Rust tree-sitter grammar");

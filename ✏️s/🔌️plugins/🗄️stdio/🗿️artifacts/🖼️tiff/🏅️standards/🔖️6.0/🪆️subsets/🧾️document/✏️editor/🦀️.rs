@@ -45,8 +45,7 @@ use semio_s_artifact_stdio_contract::editing;
 
 #[path = "🎭️modes/✏️edit/🎮️commands/🎨️paint-region/🦀️.rs"]
 pub(crate) mod paint_region;
-#[path = "🎚️config/🦀️.rs"]
-pub mod config;
+pub use semio_s_artifact_stdio_tiff_inferences::editor::tiff_any::config;
 use config::{TiffEditorConfig, TiffEditorConfigMutation};
 
 //#region 🔖️Command
@@ -106,7 +105,7 @@ fn tiff_any_editor_command_id(command: &TiffAnyEditCommand) -> &'static str {
         TiffAnyEditCommand::EditSnapshot { .. } => unreachable!("handled above"),
     }
 }
-fn tiff_any_editor_command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<TiffAnyEditCommand, Fault> {
+pub fn tiff_any_editor_command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<TiffAnyEditCommand, Fault> {
     if editing::is_snapshot_edit_action(action) { return editing::snapshot_edit_event_from_action(action, args).and_then(|event| event.map(|event| TiffAnyEditCommand::EditSnapshot { event }).ok_or_else(|| Fault::from(format!("action '{action}' is not a snapshot edit")))); }
     match action {
         paint_region::ACTION_ID => Ok(TiffAnyEditCommand::PaintRegion(paint_region::PaintRegionCommand::from_action(args)?)),
@@ -124,7 +123,7 @@ fn tiff_any_editor_command_from_action(action: &str, args: Option<&semio_framewo
 fn tiff_any_editor_retained_extent(command: &TiffAnyEditCommand, _snapshot: &TiffSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
     matches!(command, TiffAnyEditCommand::SetActiveExample { .. } | TiffAnyEditCommand::SelectIfd { .. }).then_some(1)
 }
-fn tiff_any_editor_retained_reduce(command: &TiffAnyEditCommand, snapshot: &TiffSnapshot, _config: &TiffEditorConfig, _history: &semio_framework_plugin::HistoryView, _interaction: &protocol::InteractionState, _hover: &semio_framework_plugin::app::InteractionHoverState, _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<TiffAnyEditor>>>, _operation: &AppOperationContext) -> Result<Emit<TiffMutation, TiffEditorConfigMutation, NoDraftMutation>, Fault> {
+pub fn tiff_any_editor_retained_reduce(command: &TiffAnyEditCommand, snapshot: &TiffSnapshot, _config: &TiffEditorConfig, _history: &semio_framework_plugin::HistoryView, _interaction: &protocol::InteractionState, _hover: &semio_framework_plugin::app::InteractionHoverState, _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<TiffAnyEditor>>>, _operation: &AppOperationContext) -> Result<Emit<TiffMutation, TiffEditorConfigMutation, NoDraftMutation>, Fault> {
     match command {
         TiffAnyEditCommand::SetActiveExample { example_id } => Ok(Emit { config_mutations: vec![TiffEditorConfigMutation::SetSelectedIfd { selected_ifd: 0 }], effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&tiff_any_editor_example_snapshot(example_id), STDIO_TIFF_DOCUMENT_SCHEMA)], ..Default::default() }),
         TiffAnyEditCommand::SelectIfd { ifd_index } => {
@@ -147,7 +146,7 @@ impl ToolJobFactory for TiffAnyEditorExampleFactory {
     fn classification(&self) -> InteractiveJobClassification { InteractiveJobClassification::Migrated }
     fn execution_contract(&self) -> ToolExecutionContract { ToolExecutionContract::bounded_first_step(STDIO_TIFF_DOCUMENT_SCHEMA_EXAMPLE_BYTES, 64, 1, 65_536, 7_500) }
     fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> { Ok(ArtifactRetainedCommandJob::new(payload)) }
-    fn create_job_from_wire_pages_with_payload(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload, input: semio_framework_plugin::action_bus::RetainedToolWireInput, checkpoint: Option<semio_framework_plugin::action_bus::RetainedToolWireInput>) -> Result<Self::Job, (ToolJobFactoryError, semio_framework_plugin::action_bus::RetainedToolWireInput, Option<semio_framework_plugin::action_bus::RetainedToolWireInput>)> {
+    fn create_job_from_wire_pages_with_payload(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload, input: semio_framework_action_bus::RetainedToolWireInput, checkpoint: Option<semio_framework_action_bus::RetainedToolWireInput>) -> Result<Self::Job, (ToolJobFactoryError, semio_framework_action_bus::RetainedToolWireInput, Option<semio_framework_action_bus::RetainedToolWireInput>)> {
         if input.declared_bytes() > STDIO_TIFF_DOCUMENT_SCHEMA_EXAMPLE_BYTES || checkpoint.is_some() { return Err((ToolJobFactoryError::new("stdio example command rejects oversized wire"), input, checkpoint)); }
         Ok(ArtifactRetainedCommandJob::from_wire(payload, input))
     }
@@ -180,7 +179,7 @@ impl ToolJobFactory for TiffPaintRegionFactory {
     fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> {
         Ok(ArtifactRetainedCommandJob::new(payload))
     }
-    fn create_job_from_wire_pages_with_payload(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload, input: semio_framework_plugin::action_bus::RetainedToolWireInput, checkpoint: Option<semio_framework_plugin::action_bus::RetainedToolWireInput>) -> Result<Self::Job, (ToolJobFactoryError, semio_framework_plugin::action_bus::RetainedToolWireInput, Option<semio_framework_plugin::action_bus::RetainedToolWireInput>)> {
+    fn create_job_from_wire_pages_with_payload(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload, input: semio_framework_action_bus::RetainedToolWireInput, checkpoint: Option<semio_framework_action_bus::RetainedToolWireInput>) -> Result<Self::Job, (ToolJobFactoryError, semio_framework_action_bus::RetainedToolWireInput, Option<semio_framework_action_bus::RetainedToolWireInput>)> {
         if input.declared_bytes() > paint_region::MAXIMUM_RAW_BYTES || checkpoint.is_some() {
             return Err((ToolJobFactoryError::new("TIFF paint region rejects oversized wire or checkpoint owner"), input, checkpoint));
         }
@@ -352,3 +351,19 @@ pub fn create_tiff_any_editor() -> semio_framework_plugin::AppDefinition {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🧩️ArtifactItems11
+pub mod artifact_items_11 {
+use semio_framework_artifact_reference::{Dialect, StandardId, SubsetId};
+
+//#region 🔖️Dialect
+/// 🪪️ Surface coordinate(s) for this artifact — `artifact_kind` matches the schema descriptor
+/// id above verbatim (never guessed); `standard`/`subset` match this file's own on-disk
+/// `🏅️standards/🔖️.../🪆️subsets/✳️...` location. Lives at the artifact root (not under
+/// `editor`/`viewer`) so a viewer file can read it without ever importing through the
+/// sibling `editor` module.
+pub const TIFF_ANY_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.tiff", standard: StandardId("6.0"), subset: SubsetId("*") };
+pub const TIFF_BASELINE_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.tiff", standard: StandardId("6.0"), subset: SubsetId("baseline") };
+//#endregion 🔖️Dialect
+}
+//#endregion 🧩️ArtifactItems11

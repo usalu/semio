@@ -1,0 +1,19 @@
+{
+ "name": "dm2p",
+ "crates": [
+  "semio-framework-pack-schema-index",
+  "semio-framework-pack-record-schema",
+  "semio-framework-os-pack",
+  "semio-framework-pack",
+  "semio-framework-pack-intrinsic-media-laws"
+ ],
+ "base": {
+  "rev": "1bae6115bc5",
+  "crates": [
+   "semio-framework-pack-record-schema",
+   "semio-framework-os-pack",
+   "semio-framework-pack"
+  ]
+ },
+ "note": "DM2 pack slot index + intrinsic media laws macro owner"
+}

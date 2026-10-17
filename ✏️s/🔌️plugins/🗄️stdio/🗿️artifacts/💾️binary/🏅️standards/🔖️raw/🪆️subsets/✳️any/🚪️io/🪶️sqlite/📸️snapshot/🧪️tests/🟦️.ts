@@ -145,7 +145,6 @@ test("Original Binary required paid receiver keeps the raw carrier and canonical
  expect(source.includes("owner.receive::<Self,Self>")).toBe(true);
  expect(source.includes("bind_raw_pack(bytes,slot,native,body)")).toBe(true);
  expect(source.includes("NativeDecodeControl::new")).toBe(false);
- console.log("[DEBUG] Original required Binary receiver uses canonical supplied Grant and independent Buffer/Uint8Array raw-carrier output; actual System cancellation proof is separate");
 });
 
 test("current Binary examples have no whole-trial schema authority", async()=>{const {existsSync}=await import("node:fs");expect(existsSync(new URL("../🫴️receiving/🧪️tests/🧫️fixtures/🧬️schema/🔣️.json",import.meta.url))).toBe(false);});

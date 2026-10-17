@@ -3,7 +3,7 @@
 pub const OPCODE: &str = "remove-form";
 pub const TEXT_OPCODE: &str = OPCODE;
 
-use crate::standards::v1_7::subsets::base::schema::mutations::RemoveForm;
+use crate::standards::v1_7::subsets::base::schema::mutations::remove_form::RemoveForm;
 
 /// 🖨️ Prints this direct payload through its schema-derived JSON representation.
 pub fn print(payload: &RemoveForm) -> Result<String, String> {

@@ -1,17 +1,12 @@
 #!/usr/bin/env bun
 /** 🌱️ Executes the shared authority's complete app and portable native laws. */
 import {resolve} from "node:path";
-import {readMutationInventoryExecutionPolicy} from "../../../../../../🧰️framework/📦️packages/🟦️typescript/🧪️test/🎮️mutation/🏭️inventory/🏃️execution/🟦️.ts";
-import {readCargoTestPolicyV1,runCargoTestsV1} from "../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
+import {receiveScriptProcessInvocation} from "../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {runRepositoryCargoTests} from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 if(process.argv[2]!=="test"){
  const {runArtifactRustPackageMain}=await import("../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts");
  await runArtifactRustPackageMain(import.meta.dir,"semio-s-space-core");
 }else{
 if(process.argv.length!==3)throw Error("test accepts no overrides");
-const manifestPath=resolve(import.meta.dir,"Cargo.toml"),cwd=resolve(import.meta.dir,"../.."),controller=new AbortController(),cancel=()=>controller.abort(),policy=readMutationInventoryExecutionPolicy(process.env);
-process.once("SIGINT",cancel);process.once("SIGTERM",cancel);
-if(process.env.CARGO_TARGET_DIR!==policy.compilerStorage.targetDirectory||process.env.CARGO_BUILD_BUILD_DIR!==policy.compilerStorage.buildDirectory)throw Error("Compiler custody differs from the authored shared policy");
-try{await runCargoTestsV1({manifestPath,packages:["semio-s-space-core"],cwd,extraArgs:["--offline","--locked","--all-targets","--no-fail-fast","--","--nocapture"],environment:process.env,signal:controller.signal},readCargoTestPolicyV1(process.env));}
-finally{process.off("SIGINT",cancel);process.off("SIGTERM",cancel);}
-
+await receiveScriptProcessInvocation(process.env,invocation=>runRepositoryCargoTests(["semio-s-space-core"],resolve(import.meta.dir,"../.."),invocation,["--offline","--locked","--all-targets","--no-fail-fast","--","--nocapture"]));
 }

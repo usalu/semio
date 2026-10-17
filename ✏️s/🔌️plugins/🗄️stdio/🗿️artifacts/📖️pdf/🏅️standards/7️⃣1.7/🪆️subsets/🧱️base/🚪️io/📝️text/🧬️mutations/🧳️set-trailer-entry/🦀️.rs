@@ -3,7 +3,7 @@
 pub const OPCODE: &str = "set-trailer-entry";
 pub const TEXT_OPCODE: &str = OPCODE;
 
-use crate::standards::v1_7::subsets::base::schema::mutations::SetTrailerEntry;
+use crate::standards::v1_7::subsets::base::schema::mutations::set_trailer_entry::SetTrailerEntry;
 
 /// 🖨️ Prints this direct payload through its schema-derived JSON representation.
 pub fn print(payload: &SetTrailerEntry) -> Result<String, String> {

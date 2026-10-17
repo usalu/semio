@@ -1,6 +1,6 @@
 //! 🧬️ Presentation presentation.config mutation collection.
 
-use super::*;
+use crate::editor::animate::config::*;
 #[path = "⌨️set-engagement-input/🦀️.rs"]
 mod set_engagement_input;
 pub use set_engagement_input::SetEngagementInput;

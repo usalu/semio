@@ -9,5 +9,8 @@
   },
   "devDependencies": {
     "@semio-tech/framework": "workspace:*"
+  },
+  "dependencies": {
+    "@semio-tech/framework-os": "workspace:*"
   }
 }

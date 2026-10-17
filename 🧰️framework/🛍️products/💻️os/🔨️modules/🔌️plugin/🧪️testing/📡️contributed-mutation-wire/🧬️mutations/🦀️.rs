@@ -1,19 +1,21 @@
 //#region 🧬️ContributedMutationWireRoster
 //! 🧬️ Transparent contributed-wire mutation roster.
 
-use super::{WireTestDiff, WireTestSnapshot};
+use crate::contributed_mutation_wire::{WireTestDiff, WireTestSnapshot};
 use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 
+#[doc(hidden)]
 #[path = "➕️add-value/🦀️.rs"]
-mod add_value;
-pub(crate) use add_value::AddValue;
+pub mod add_value;
+pub use crate::contributed_mutation_wire::mutations::add_value::AddValue;
 
+#[doc(hidden)]
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::Mutations)]
 #[serde(tag = "operation", rename_all = "camelCase", deny_unknown_fields)]
 #[value(tag = "operation", rename_all = "camelCase", deny_unknown_fields)]
 #[mutations(snapshot = WireTestSnapshot, diff = WireTestDiff, schema = "wiretest.contributed.document")]
-pub(crate) enum WireTestMutation {
+pub enum WireTestMutation {
     AddValue(AddValue),
 }
 

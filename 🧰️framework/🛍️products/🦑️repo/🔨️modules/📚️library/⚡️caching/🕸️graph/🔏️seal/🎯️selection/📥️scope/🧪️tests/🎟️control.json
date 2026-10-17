@@ -1,0 +1,43 @@
+{
+  "version": 1,
+  "refusals": [
+    {
+      "kind": "copied",
+      "reads": 0,
+      "planned": 0,
+      "refused": true,
+      "exact": false
+    },
+    {
+      "kind": "retired",
+      "reads": 0,
+      "planned": 0,
+      "refused": true,
+      "exact": false
+    },
+    {
+      "kind": "cancelled",
+      "reads": 0,
+      "planned": 0,
+      "refused": true,
+      "exact": true
+    }
+  ],
+  "order": [
+    "accepted",
+    "reader-close",
+    "scope-drained"
+  ],
+  "descriptorCancellation": {
+    "source": "pub fn exact_source(){}\n",
+    "expected": {
+      "opened": 1,
+      "closed": 1,
+      "exact": true,
+      "custody": {
+        "active": 0,
+        "unresolved": 0
+      }
+    }
+  }
+}

@@ -414,11 +414,6 @@ pub fn plan_at(snapshot: &ModelSnapshot, storey: &str, inputs: &Inputs<'_>, cut_
     PlanLinework { cut_height, ..sheet.finish(storey, cx.cut) }
 }
 
-/// 🗺️ The plan of every storey (the `Plan` nodes of the model graph).
-#[cfg(test)]
-pub fn compute_plan_linework(snapshot: &ModelSnapshot) -> BTreeMap<String, PlanLinework> {
-    std::mem::take(&mut super::super::model_graph::infer_selected::<{ super::super::model_graph::kinds::PLANS }>(snapshot).plan_linework)
-}
 /// 📏️ The measures of a plan that third-party geometry libraries can adjudicate: areas of cut regions and lengths of outlines.
 pub const METRICS: &[(&str, PlanKind, bool)] = &[
     ("WallCut.area", PlanKind::WallCut, true),
@@ -430,7 +425,6 @@ pub const METRICS: &[(&str, PlanKind, bool)] = &[
     ("GridLine.length", PlanKind::GridLine, false),
     ("SpaceOutline.length", PlanKind::SpaceOutline, false),
 ];
-
 
 //#endregion 🔖️Plan
 

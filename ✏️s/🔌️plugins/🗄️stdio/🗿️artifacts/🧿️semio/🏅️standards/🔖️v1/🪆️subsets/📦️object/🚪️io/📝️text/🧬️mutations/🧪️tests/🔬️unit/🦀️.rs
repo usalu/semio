@@ -1,3 +1,10 @@
+use crate::schema::mutations::SemioObjectMutation;
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3;
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioQuaternion;
+#[allow(unused_imports)]
+use crate::schema::mutations::{create_brep::CreateBrep, create_mesh::CreateMesh, create_properties::CreateProperties, delete_brep::DeleteBrep, delete_mesh::DeleteMesh, delete_properties::DeleteProperties, move_object::MoveObject, rotate_object::RotateObject, scale_object::ScaleObject};
 use crate::io::text::mutations::*;
 use protocol::OpText;
 

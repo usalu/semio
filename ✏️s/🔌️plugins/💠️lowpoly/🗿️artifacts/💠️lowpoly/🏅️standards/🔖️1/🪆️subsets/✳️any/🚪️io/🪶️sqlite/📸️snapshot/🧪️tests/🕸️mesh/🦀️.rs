@@ -1,4 +1,5 @@
 //! 🕸️ The actual Lowpoly owner must retain managed topology independently of literal source text.
+use semio_framework_test_fixtures::fixture_path;
 use semio_framework_test_original_snapshot_owners as original_owners;
 use ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot as _;
 use super::*;
@@ -30,7 +31,7 @@ impl<'de> serde::Deserialize<'de> for OrderedValue{
 
 #[test]
 fn sqlite_snapshot_lowpoly_managed_mesh_complete_owner_and_independent_sql_edits(){
- let neutral=serde_json::from_str::<OrderedValue>(std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🕸️mesh/🔣️.json")).expect("../../../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🕸️mesh/🔣️.json").leak()).unwrap().0;
+ let neutral=serde_json::from_str::<OrderedValue>(std::fs::read_to_string(fixture_path!("../../../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🕸️mesh/🔣️.json")).expect("../../../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🕸️mesh/🔣️.json").leak()).unwrap().0;
  let mut input=fixture().to_value();let DslValue::Object(document)=&mut input else{panic!("document owner")};let DslValue::Array(objects)=&mut document.iter_mut().find(|(name,_)|name=="objects").unwrap().1 else{panic!("ordered objects")};let DslValue::Object(object)=&mut objects[0]else{panic!("object owner")};object.iter_mut().find(|(name,_)|name=="meshState").expect("single authored managed mesh field").1=neutral["mesh"].clone();
  let expected=semio_s_artifact_lowpoly_lowpoly_model::standards::v1::subsets::any::io::text::lowpoly_json_bind::<LowpolySnapshot>(input).expect("declared full managed mesh owner");
  assert_eq!(expected.to_value()["objects"][0]["meshState"],neutral["mesh"].clone(),"actual owning construction must preserve all seven managed mesh fields");

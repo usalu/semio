@@ -29,10 +29,12 @@
           },
           "bytes": {
             "type": "integer",
-            "minimum": 0
+            "minimum": 0,
+            "maximum": 8388608
           }
         }
-      }
+      },
+      "maxItems": 256
     },
     "compilerInputs": {
       "type": "array",
@@ -57,10 +59,110 @@
           },
           "bytes": {
             "type": "integer",
-            "minimum": 0
+            "minimum": 0,
+            "maximum": 8388608
           },
           "kind": {
             "const": "configuration"
+          }
+        }
+      },
+      "minItems": 2,
+      "maxItems": 2
+    }
+  },
+  "definitions": {
+    "Policy": {
+      "const": {
+        "maximumPlanningInputs": 256,
+        "maximumDefiningInputs": 2,
+        "maximumPlanningFileBytes": 4194304,
+        "maximumDefiningFileBytes": 8388608,
+        "maximumAggregateBytes": 67108864,
+        "maximumAncestors": 64,
+        "maximumReaderSourceBytes": 8388608,
+        "maximumReaderPolicyBytes": 65536,
+        "maximumReaderChunkBytes": 65536
+      }
+    },
+    "Request": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "workspace",
+        "cargoWorkspace",
+        "cwd",
+        "manifest",
+        "definingInputs"
+      ],
+      "properties": {
+        "workspace": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "cargoWorkspace": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "cwd": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "manifest": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "definingInputs": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          }
+        }
+      }
+    },
+    "Scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "workspace",
+        "cargoWorkspace",
+        "cwd",
+        "definingInputs"
+      ],
+      "properties": {
+        "workspace": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "cargoWorkspace": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "cwd": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "definingInputs": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
           }
         }
       }

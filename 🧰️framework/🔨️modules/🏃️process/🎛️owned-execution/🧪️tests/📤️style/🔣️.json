@@ -1,0 +1,82 @@
+{
+  "chunks": {
+    "stdout": [
+      "c3",
+      "a90a6f6e65",
+      "0a"
+    ],
+    "stderr": [
+      "6572720a"
+    ]
+  },
+  "limits": {
+    "maximumBytes": 1024,
+    "maximumLines": 32
+  },
+  "cases": [
+    {
+      "style": null,
+      "status": 0,
+      "sinkFailure": false,
+      "stdout": "é\none\n",
+      "stderr": "err\n",
+      "failure": null
+    },
+    {
+      "style": "stream-without-prefixes",
+      "status": 0,
+      "sinkFailure": false,
+      "stdout": "é\none\n",
+      "stderr": "err\n",
+      "failure": null
+    },
+    {
+      "style": "stream",
+      "status": 0,
+      "sinkFailure": false,
+      "stdout": "[fixture] é\n[fixture] one\n",
+      "stderr": "[fixture] err\n",
+      "failure": null
+    },
+    {
+      "style": "static",
+      "status": 0,
+      "sinkFailure": false,
+      "stdout": "é\none\n",
+      "stderr": "err\n",
+      "failure": null
+    },
+    {
+      "style": "static",
+      "status": 7,
+      "sinkFailure": false,
+      "stdout": "é\none\n",
+      "stderr": "err\n",
+      "failure": "failed (7)"
+    },
+    {
+      "style": "static",
+      "status": 7,
+      "sinkFailure": true,
+      "stdout": "",
+      "stderr": "",
+      "failure": "failed (7)"
+    },
+    {
+      "style": "static",
+      "status": 0,
+      "sinkFailure": true,
+      "stdout": "",
+      "stderr": "",
+      "failure": "output-sink"
+    },
+    {
+      "style": "stream",
+      "status": 0,
+      "sinkFailure": "asynchronous",
+      "stdout": "",
+      "stderr": "",
+      "failure": "output-sink"
+    }
+  ]
+}

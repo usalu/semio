@@ -1,0 +1,29 @@
+{
+ "name": "c4p19a",
+ "crates": [
+  "semio-s-artifact-norm-iso16757-diff",
+  "semio-s-artifact-norm-iso16757-io",
+  "semio-s-artifact-norm-iso16757-schema",
+  "semio-s-artifact-norm-iso16757-mut-selection",
+  "semio-s-artifact-norm-iso16757-mut-catalogue",
+  "semio-s-artifact-norm-iso16757-mut-definitions",
+  "semio-s-artifact-norm-iso16757-mutations",
+  "semio-s-artifact-norm-iso16757-mut-products",
+  "semio-s-artifact-norm-iso16757"
+ ],
+ "note": "CENSUS4-PKG-19 semio-s-artifact-norm-iso16757-diff plus direct dependents",
+ "base": {
+  "rev": "b84bf526c7b",
+  "crates": [
+   "semio-s-artifact-norm-iso16757-diff",
+   "semio-s-artifact-norm-iso16757-io",
+   "semio-s-artifact-norm-iso16757-schema",
+   "semio-s-artifact-norm-iso16757-mut-selection",
+   "semio-s-artifact-norm-iso16757-mut-catalogue",
+   "semio-s-artifact-norm-iso16757-mut-definitions",
+   "semio-s-artifact-norm-iso16757-mutations",
+   "semio-s-artifact-norm-iso16757-mut-products",
+   "semio-s-artifact-norm-iso16757"
+  ]
+ }
+}

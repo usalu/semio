@@ -4,15 +4,34 @@
 //! in which an empty stage never consumes the call. Every unit quotes its next demand on all axes and spends the caller's
 //! unchanged grant on exactly one owner; the same module drives the envelope-ingress, store-replacement and archive-load
 //! frontiers for both the live rotation and the close ladder.
-use super::*;
-use crate::tool_jobs::time_travel;
-use semio_framework_value::{RetirementDemand, ValueError, retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}};
+use semio_framework_plugin_document_media::{ActiveArtifactStoreReplacementState, ActiveDocumentArchiveLoad, ActiveDocumentArchiveLoadPhase, ActiveDocumentArchiveLoadState, ArtifactEnvelopeDecodeOperationPoll, PendingDocumentArchiveMember};
+use semio_framework_plugin_decl_app::{ArtifactApp, DOCUMENT_LOAD_FAILED_CODE, DOCUMENT_LOAD_HISTORY_INVALID_CODE, document_load_fault};
+use store::os_store::store_schema::ArtifactEnvelope;
+use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use pack::snapshot::ArtifactPack;
+use semio_framework_artifact_reference::ArtifactRef;
+use semio_framework_plugin_instance_children::children_components::ChildComposition;
+use semio_framework_plugin_decl_emission::Emit;
+use crate::docs_components::{EnvelopeJobs, MediaTransfers};
+use semio_framework::{Fault, FaultFrom};
+use std::future::Future;
+use semio_framework_plugin_instance_stores::stores_components::InstanceStores;
+use store::{MemberFactory, Mutation, SpaceMember};
+use protocol::OpText;
+use semio_framework_plugin_reactor_app::PluginApp;
+use semio_framework_plugin_ownership::bounded_ownership::{PluginLifecycleStep, plugin_retirement_fault};
+use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
+use semio_framework_ui_contract::*;
+use semio_framework_value::{RetirementDemand, ValueError};
+use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 
-pub(crate) fn item() -> RetainedCloneProgress {
+#[doc(hidden)]
+pub fn item() -> RetainedCloneProgress {
     RetainedCloneProgress { copied_items: 1, ..Default::default() }
 }
 
-pub(crate) fn item_demand() -> RetirementDemand {
+#[doc(hidden)]
+pub fn item_demand() -> RetirementDemand {
     RetirementDemand { depth: 1, ..Default::default() }
 }
 
@@ -20,15 +39,18 @@ fn nonzero(demand: RetirementDemand) -> RetirementDemand {
     if demand == RetirementDemand::default() { item_demand() } else { demand }
 }
 
-pub(crate) fn idle() -> PluginLifecycleStep {
+#[doc(hidden)]
+pub fn idle() -> PluginLifecycleStep {
     PluginLifecycleStep::Progress(RetainedCloneProgress::default())
 }
 
-pub(crate) fn progressed(step: RetainedCloneStep) -> PluginLifecycleStep {
+#[doc(hidden)]
+pub fn progressed(step: RetainedCloneStep) -> PluginLifecycleStep {
     PluginLifecycleStep::Progress(step.progress())
 }
 
-pub(crate) fn removed(progress: RetainedCloneProgress) -> PluginLifecycleStep {
+#[doc(hidden)]
+pub fn removed(progress: RetainedCloneProgress) -> PluginLifecycleStep {
     PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: progress.copied_items.max(1), ..progress })
 }
 
@@ -75,7 +97,7 @@ impl<A: ArtifactApp> MediaTransfers<A> {
 }
 
 impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> EnvelopeJobs<A, M> {
-    pub(crate) fn document_archive_load_demands(&self, active: &ActiveDocumentArchiveLoad<A::Snapshot, A::Mutation>, closing: bool, body: usize) -> Result<RetirementDemand, ValueError> {
+    pub fn document_archive_load_demands(&self, active: &ActiveDocumentArchiveLoad<A::Snapshot, A::Mutation>, closing: bool, body: usize) -> Result<RetirementDemand, ValueError> {
         let item = item_demand();
         if active.terminal_target.is_some() || (closing && !active.terminal()) {
             let replacement_live = active.replacement.is_some_and(|handle| self.store_replacement_jobs.get(handle.operation.0).is_some());
@@ -157,7 +179,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> EnvelopeJobs<A, M
     /// Genesis and `try_begin_owned_document_members` happen in ONE step: yielding between them would let the replacement
     /// lane observe `AwaitingMembers` with no ingress and seal the roster before the archived members were admitted. A
     /// childless candidate is sealed by the replacement lane itself, so this load then only awaits its outcome.
-    pub(crate) fn advance_document_archive_load(&mut self, stores: &mut InstanceStores<A>, child_composition: &mut ChildComposition<M>, active: &mut ActiveDocumentArchiveLoad<A::Snapshot, A::Mutation>, grant: RetainedCloneGrant,cx:&mut semio_framework_job::StepContext<'_>) -> Result<PluginLifecycleStep,crate::PluginLifecycleFailure> {
+    pub fn advance_document_archive_load(&mut self, stores: &mut InstanceStores<A>, child_composition: &mut ChildComposition<M>, active: &mut ActiveDocumentArchiveLoad<A::Snapshot, A::Mutation>, grant: RetainedCloneGrant,cx:&mut semio_framework_job::StepContext<'_>) -> Result<PluginLifecycleStep,semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
         let empty = RetainedCloneProgress::default();
         let item = item();
         let missing = |message: &'static str| document_load_fault(DOCUMENT_LOAD_FAILED_CODE, message);

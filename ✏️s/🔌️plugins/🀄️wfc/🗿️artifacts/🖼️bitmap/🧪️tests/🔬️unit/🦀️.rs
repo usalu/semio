@@ -4,6 +4,7 @@
 use crate::schema::snapshot::{BitmapColor, BitmapPinnedPixel, BitmapSnapshot};
 use crate::standards::v1::subsets::any::io::text::snapshot::{decode_base64};
 use crate::standards::v1::subsets::any::io::text::snapshot::{encode_base64};
+use semio_framework_test_fixtures::fixture_path;
 
 #[test]
 fn the_dialect_agrees_with_the_document_schema() {
@@ -84,25 +85,12 @@ fn every_example_declares_a_distinct_id_and_a_localized_label() {
 pub mod fixtures {
     use super::*;
     use crate::mutations::{add_palette_color, change_model, change_palette_color, change_seed, paint_input_stroke, pin_pixel, remove_palette_color, resize_input, resize_output, set_input_pixels, unpin_pixel, BitmapMutation, BitmapStrokePoint};
-    use crate::schema::snapshot::{BitmapInput, BitmapOutputSpec, BitmapOverlappingModel, WFC_BITMAP_DOCUMENT_SCHEMA};
 
     /// 🧪️ The shared scene every case starts from: a 4 × 3 two-colour checker, a 6 × 4 output, an
     /// `N = 2` model, no pins. Small enough to read in a diff, structured enough that the
     /// overlapping model has real patterns to learn.
     pub fn base() -> BitmapSnapshot {
-        BitmapSnapshot {
-            schema: WFC_BITMAP_DOCUMENT_SCHEMA.into(),
-            seed: 7,
-            input: BitmapInput {
-                width: 4,
-                height: 3,
-                palette: vec![BitmapColor::opaque(0, 0, 0), BitmapColor::opaque(255, 255, 255)],
-                pixels: ([0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0]).to_vec(),
-            },
-            output: BitmapOutputSpec { width: 6, height: 4, periodic: false },
-            model: BitmapOverlappingModel { pattern_size: 2, symmetry: 1, periodic_input: true, ground: None },
-            pinned: Vec::new(),
-        }
+        BitmapSnapshot::reference_scene()
     }
 
     /// 🎨️ The base scene plus an unused third palette entry — the only state in which removing a
@@ -214,7 +202,7 @@ fn collapse_empty_containers(text: &str) -> String {
 }
 
 fn subset_root() -> std::path::PathBuf {
-    std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️1/🪆️subsets/✳️any")
+    fixture_path!("../../🏅️standards/🔖️1/🪆️subsets/✳️any")
 }
 
 fn write_fixture(directory: &std::path::Path, leaf: &str, body: &str) {
@@ -235,15 +223,15 @@ fn emit_committed_fixtures() {
         let mut after = before.clone();
         vcs::apply_mutation(&after, &mutation).map(|(applied_state, _)| { after = applied_state; }).unwrap_or_else(|error| panic!("{kind}/{case} applies: {error}"));
         let directory = root.join("🧫️fixtures/🧬️mutations").join(kind).join(case);
-        write_fixture(&directory, "📸️snapshot/⬅️before/🔣️.json", &reindent_json(&crate::standards::v1::subsets::any::io::text::bitmap_json_encode(&before)));
-        write_fixture(&directory, "📸️snapshot/➡️after/🔣️.json", &reindent_json(&crate::standards::v1::subsets::any::io::text::bitmap_json_encode(&after)));
-        write_fixture(&directory, "🦠️mutation/🔣️.json", &reindent_json(&crate::standards::v1::subsets::any::io::text::bitmap_json_encode(&mutation)));
-        write_fixture(&directory, "🔺️diff/🔣️.json", &reindent_json(&crate::standards::v1::subsets::any::io::text::bitmap_json_encode(outcome.diff())));
+        write_fixture(&directory, "📸️snapshot/⬅️before/🔣️.json", &reindent_json(&crate::standards::v1::subsets::any::io::text::snapshot::bitmap_json_encode(&before)));
+        write_fixture(&directory, "📸️snapshot/➡️after/🔣️.json", &reindent_json(&crate::standards::v1::subsets::any::io::text::snapshot::bitmap_json_encode(&after)));
+        write_fixture(&directory, "🦠️mutation/🔣️.json", &reindent_json(&crate::standards::v1::subsets::any::io::text::snapshot::bitmap_json_encode(&mutation)));
+        write_fixture(&directory, "🔺️diff/🔣️.json", &reindent_json(&crate::standards::v1::subsets::any::io::text::snapshot::bitmap_json_encode(outcome.diff())));
         let messages: Vec<String> = outcome
             .messages()
             .iter()
             .map(|message| {
-                let level = crate::standards::v1::subsets::any::io::text::bitmap_json_encode(&message.level);
+                let level = crate::standards::v1::subsets::any::io::text::snapshot::bitmap_json_encode(&message.level);
                 format!("{{\"level\":{level},\"code\":\"{}\"}}", message.code.0)
             })
             .collect();

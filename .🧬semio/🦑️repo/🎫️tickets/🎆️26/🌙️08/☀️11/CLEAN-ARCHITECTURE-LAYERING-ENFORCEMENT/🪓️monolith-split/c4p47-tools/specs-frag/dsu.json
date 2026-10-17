@@ -1,0 +1,52 @@
+{
+ "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🧪️tests/🔬️unit/🦀️.rs",
+ "original": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/c4p47-tools/orig/dsu.rs",
+ "stage": "/Users/ueli/.cache/c4p47/stage-frag",
+ "base_depth": 0,
+ "chunks": [
+  {
+   "name": "🧱️dsl-field-and-derived-document-laws",
+   "folder": "🧱️dsl-field-and-derived-document-laws",
+   "doc": "🧱️ DSL field and derived document laws: the primitive and wire field impls, the toy idiom with the language registry, the derived scalar and record document with its handcrafted codecs and the derived operation enum with its text and binary laws.",
+   "ranges": [
+    [
+     13,
+     291
+    ]
+   ]
+  },
+  {
+   "name": "🌳️scene-and-shape-laws",
+   "folder": "🌳️scene-and-shape-laws",
+   "doc": "🌳️ Scene and shape laws: the recursive block tree, the nested collections, the newtype tuple variants and their handcrafted document codecs.",
+   "ranges": [
+    [
+     293,
+     483
+    ]
+   ]
+  },
+  {
+   "name": "🖌️paint-self-ref-and-table-laws",
+   "folder": "🖌️paint-self-ref-and-table-laws",
+   "doc": "🖌️ Paint, self-reference and table laws: the optional statements and block record fields, the paint operations, the boxed required field, the self-referential record struct and the compact structure-of-arrays table field.",
+   "ranges": [
+    [
+     485,
+     888
+    ]
+   ]
+  },
+  {
+   "name": "📦️paged-operation-laws",
+   "folder": "📦️paged-operation-laws",
+   "doc": "📦️ Paged operation laws: the paged DSL operation settle and take helpers and the 8194-byte header, frame policy, intrinsic bridge and metadata admission laws.",
+   "ranges": [
+    [
+     896,
+     1124
+    ]
+   ]
+  }
+ ]
+}

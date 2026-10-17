@@ -21,12 +21,12 @@ pub struct GisTerrainBounds {
 
 /// 🗺️ Decodes `imported_map`'s `positions` overlay into raw `(lon, lat)` pairs —
 /// malformed/empty JSON (including the default empty string) contributes no positions.
-pub(crate) fn imported_lon_lat_positions(snapshot: &GisTerrainSnapshot) -> Vec<(f64, f64)> {
+pub fn imported_lon_lat_positions(snapshot: &GisTerrainSnapshot) -> Vec<(f64, f64)> {
     snapshot.imported_map.as_ref().map(|map| map.coordinates().collect()).unwrap_or_default()
 }
 
 /// 📦 Bounding box across every decoded `(lon, lat)` pair, or `None` for an empty overlay.
-pub(crate) fn lon_lat_bounds(positions: &[(f64, f64)]) -> Option<GisTerrainBounds> {
+pub fn lon_lat_bounds(positions: &[(f64, f64)]) -> Option<GisTerrainBounds> {
     positions.iter().fold(None, |acc, &(lon, lat)| {
         Some(match acc {
             Some(bounds) => GisTerrainBounds { lon_min: bounds.lon_min.min(lon), lon_max: bounds.lon_max.max(lon), lat_min: bounds.lat_min.min(lat), lat_max: bounds.lat_max.max(lat) },

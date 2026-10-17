@@ -2,6 +2,9 @@
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_os_kernel as pack;
+#[cfg(test)]
+#[global_allocator]
+static CANCELLATION_HEAP_WITNESS:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
 use semio_framework::{Fault, FaultCode, FaultOrigin};
 use semio_framework_async::{PublicationClaimHandle, PublicationClaim, PublicationPermit};
 use semio_framework_plugin_ownership::bounded_ownership::ArtifactFixedRegistry;

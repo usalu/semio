@@ -128,185 +128,124 @@ impl OpText for PdfMutation {
 }
 //#endregion 🧱️Framing
 
-#[path = "🌈️set-color-space/🦀️.rs"]
-pub mod set_color_space;
+pub use semio_s_artifact_stdio_pdf_mut_base_6::standards::v1_7::subsets::base::io::text::mutations::set_color_space;
 
-#[path = "📐️set-page-media-box/🦀️.rs"]
-pub mod set_page_media_box;
+pub use semio_s_artifact_stdio_pdf_mut_base_6::standards::v1_7::subsets::base::io::text::mutations::set_page_media_box;
 
-#[path = "🧩️set-pattern/🦀️.rs"]
-pub mod set_pattern;
+pub use semio_s_artifact_stdio_pdf_mut_base_6::standards::v1_7::subsets::base::io::text::mutations::set_pattern;
 
-#[path = "🌄️remove-shading/🦀️.rs"]
-pub mod remove_shading;
+pub use semio_s_artifact_stdio_pdf_mut_base_6::standards::v1_7::subsets::base::io::text::mutations::remove_shading;
 
-#[path = "🔄️set-page-rotation/🦀️.rs"]
-pub mod set_page_rotation;
+pub use semio_s_artifact_stdio_pdf_mut_base_6::standards::v1_7::subsets::base::io::text::mutations::set_page_rotation;
 
-#[path = "🔀️move-page/🦀️.rs"]
-pub mod move_page;
+pub use semio_s_artifact_stdio_pdf_mut_base_6::standards::v1_7::subsets::base::io::text::mutations::move_page;
 
-#[path = "🚪️set-open-action/🦀️.rs"]
-pub mod set_open_action;
+pub use semio_s_artifact_stdio_pdf_mut_base_6::standards::v1_7::subsets::base::io::text::mutations::set_open_action;
 
-#[path = "🪡️remove-pattern/🦀️.rs"]
-pub mod remove_pattern;
+pub use semio_s_artifact_stdio_pdf_mut_base_6::standards::v1_7::subsets::base::io::text::mutations::remove_pattern;
 
-#[path = "🗑️remove-page/🦀️.rs"]
-pub mod remove_page;
+pub use semio_s_artifact_stdio_pdf_mut_base_6::standards::v1_7::subsets::base::io::text::mutations::remove_page;
 
-#[path = "📦️insert-object/🦀️.rs"]
-pub mod insert_object;
+pub use semio_s_artifact_stdio_pdf_mut_base_6::standards::v1_7::subsets::base::io::text::mutations::insert_object;
 
-#[path = "🛠️set-viewer-preferences/🦀️.rs"]
-pub mod set_viewer_preferences;
+pub use semio_s_artifact_stdio_pdf_mut_base_6::standards::v1_7::subsets::base::io::text::mutations::set_viewer_preferences;
 
-#[path = "📏️set-page-user-unit/🦀️.rs"]
-pub mod set_page_user_unit;
+pub use semio_s_artifact_stdio_pdf_mut_base_6::standards::v1_7::subsets::base::io::text::mutations::set_page_user_unit;
 
-#[path = "🗣️set-language/🦀️.rs"]
-pub mod set_language;
+pub use semio_s_artifact_stdio_pdf_mut_base_6::standards::v1_7::subsets::base::io::text::mutations::set_language;
 
-#[path = "✂️set-page-crop-box/🦀️.rs"]
-pub mod set_page_crop_box;
+pub use semio_s_artifact_stdio_pdf_mut_base_6::standards::v1_7::subsets::base::io::text::mutations::set_page_crop_box;
 
-#[path = "🏞️set-image/🦀️.rs"]
-pub mod set_image;
+pub use semio_s_artifact_stdio_pdf_mut_base_7::standards::v1_7::subsets::base::io::text::mutations::set_image;
 
-#[path = "🎯️set-named-destination/🦀️.rs"]
-pub mod set_named_destination;
+pub use semio_s_artifact_stdio_pdf_mut_base_7::standards::v1_7::subsets::base::io::text::mutations::set_named_destination;
 
-#[path = "📄️set-form/🦀️.rs"]
-pub mod set_form;
+pub use semio_s_artifact_stdio_pdf_mut_base_7::standards::v1_7::subsets::base::io::text::mutations::set_form;
 
-#[path = "🗂️set-catalog-entry/🦀️.rs"]
-pub mod set_catalog_entry;
+pub use semio_s_artifact_stdio_pdf_mut_base_7::standards::v1_7::subsets::base::io::text::mutations::set_catalog_entry;
 
-#[path = "🔏️set-mark-info/🦀️.rs"]
-pub mod set_mark_info;
+pub use semio_s_artifact_stdio_pdf_mut_base_7::standards::v1_7::subsets::base::io::text::mutations::set_mark_info;
 
-#[path = "🎚️remove-ext-g-state/🦀️.rs"]
-pub mod remove_ext_g_state;
+pub use semio_s_artifact_stdio_pdf_mut_base_7::standards::v1_7::subsets::base::io::text::mutations::remove_ext_g_state;
 
-#[path = "📝️set-annotation/🦀️.rs"]
-pub mod set_annotation;
+pub use semio_s_artifact_stdio_pdf_mut_base_7::standards::v1_7::subsets::base::io::text::mutations::set_annotation;
 
-#[path = "📖️set-page-layout/🦀️.rs"]
-pub mod set_page_layout;
+pub use semio_s_artifact_stdio_pdf_mut_base_7::standards::v1_7::subsets::base::io::text::mutations::set_page_layout;
 
-#[path = "🏳️set-output-intents/🦀️.rs"]
-pub mod set_output_intents;
+pub use semio_s_artifact_stdio_pdf_mut_base_7::standards::v1_7::subsets::base::io::text::mutations::set_output_intents;
 
-#[path = "📋️set-acro-form/🦀️.rs"]
-pub mod set_acro_form;
+pub use semio_s_artifact_stdio_pdf_mut_base_7::standards::v1_7::subsets::base::io::text::mutations::set_acro_form;
 
-#[path = "📍️remove-annotation/🦀️.rs"]
-pub mod remove_annotation;
+pub use semio_s_artifact_stdio_pdf_mut_base_7::standards::v1_7::subsets::base::io::text::mutations::remove_annotation;
 
-#[path = "📎️set-embedded-file/🦀️.rs"]
-pub mod set_embedded_file;
+pub use semio_s_artifact_stdio_pdf_mut_base_7::standards::v1_7::subsets::base::io::text::mutations::set_embedded_file;
 
-#[path = "🧻️remove-content/🦀️.rs"]
-pub mod remove_content;
+pub use semio_s_artifact_stdio_pdf_mut_base_7::standards::v1_7::subsets::base::io::text::mutations::remove_content;
 
-#[path = "🧾️set-metadata/🦀️.rs"]
-pub mod set_metadata;
+pub use semio_s_artifact_stdio_pdf_mut_base_7::standards::v1_7::subsets::base::io::text::mutations::set_metadata;
 
-#[path = "📌️insert-annotation/🦀️.rs"]
-pub mod insert_annotation;
+pub use semio_s_artifact_stdio_pdf_mut_base_7::standards::v1_7::subsets::base::io::text::mutations::insert_annotation;
 
-#[path = "🗃️remove-embedded-file/🦀️.rs"]
-pub mod remove_embedded_file;
+pub use semio_s_artifact_stdio_pdf_mut_base_7::standards::v1_7::subsets::base::io::text::mutations::remove_embedded_file;
 
-#[path = "🚫️remove-dict-entry/🦀️.rs"]
-pub mod remove_dict_entry;
+pub use semio_s_artifact_stdio_pdf_mut_base_7::standards::v1_7::subsets::base::io::text::mutations::remove_dict_entry;
 
-#[path = "🎛️set-ext-g-state/🦀️.rs"]
-pub mod set_ext_g_state;
+pub use semio_s_artifact_stdio_pdf_mut_base_7::standards::v1_7::subsets::base::io::text::mutations::set_ext_g_state;
 
-#[path = "🌅️set-shading/🦀️.rs"]
-pub mod set_shading;
+pub use semio_s_artifact_stdio_pdf_mut_base_7::standards::v1_7::subsets::base::io::text::mutations::set_shading;
 
-#[path = "➕️append-page-content/🦀️.rs"]
-pub mod append_page_content;
+pub use semio_s_artifact_stdio_pdf_mut_family_5::standards::v1_7::subsets::base::io::text::mutations::append_page_content;
 
-#[path = "🗞️remove-form/🦀️.rs"]
-pub mod remove_form;
+pub use semio_s_artifact_stdio_pdf_mut_base_7::standards::v1_7::subsets::base::io::text::mutations::remove_form;
 
-#[path = "🔤️set-font/🦀️.rs"]
-pub mod set_font;
+pub use semio_s_artifact_stdio_pdf_mut_base_7::standards::v1_7::subsets::base::io::text::mutations::set_font;
 
-#[path = "🧹️remove-object/🦀️.rs"]
-pub mod remove_object;
+pub use semio_s_artifact_stdio_pdf_mut_base_7::standards::v1_7::subsets::base::io::text::mutations::remove_object;
 
-#[path = "🏷️set-properties/🦀️.rs"]
-pub mod set_properties;
+pub use semio_s_artifact_stdio_pdf_mut_base_7::standards::v1_7::subsets::base::io::text::mutations::set_properties;
 
-#[path = "🧳️set-trailer-entry/🦀️.rs"]
-pub mod set_trailer_entry;
+pub use semio_s_artifact_stdio_pdf_mut_base_7::standards::v1_7::subsets::base::io::text::mutations::set_trailer_entry;
 
-#[path = "🎪️remove-named-destination/🦀️.rs"]
-pub mod remove_named_destination;
+pub use semio_s_artifact_stdio_pdf_mut_base_7::standards::v1_7::subsets::base::io::text::mutations::remove_named_destination;
 
-#[path = "📑️set-outlines/🦀️.rs"]
-pub mod set_outlines;
+pub use semio_s_artifact_stdio_pdf_mut_base_7::standards::v1_7::subsets::base::io::text::mutations::set_outlines;
 
-#[path = "🔑️set-dict-entry/🦀️.rs"]
-pub mod set_dict_entry;
+pub use semio_s_artifact_stdio_pdf_mut_base_7::standards::v1_7::subsets::base::io::text::mutations::set_dict_entry;
 
-#[path = "🧺️remove-catalog-entry/🦀️.rs"]
-pub mod remove_catalog_entry;
+pub use semio_s_artifact_stdio_pdf_mut_family_2::standards::v1_7::subsets::base::io::text::mutations::remove_catalog_entry;
 
-#[path = "🧽️remove-trailer-entry/🦀️.rs"]
-pub mod remove_trailer_entry;
+pub use semio_s_artifact_stdio_pdf_mut_family_2::standards::v1_7::subsets::base::io::text::mutations::remove_trailer_entry;
 
-#[path = "📥️insert-page/🦀️.rs"]
-pub mod insert_page;
+pub use semio_s_artifact_stdio_pdf_mut_family_2::standards::v1_7::subsets::base::io::text::mutations::insert_page;
 
-#[path = "🔁️replace-content/🦀️.rs"]
-pub mod replace_content;
+pub use semio_s_artifact_stdio_pdf_mut_family_2::standards::v1_7::subsets::base::io::text::mutations::replace_content;
 
-#[path = "🔐️set-encryption/🦀️.rs"]
-pub mod set_encryption;
+pub use semio_s_artifact_stdio_pdf_mut_family_2::standards::v1_7::subsets::base::io::text::mutations::set_encryption;
 
-#[path = "🔧️set-object-value/🦀️.rs"]
-pub mod set_object_value;
+pub use semio_s_artifact_stdio_pdf_mut_family_4::standards::v1_7::subsets::base::io::text::mutations::set_object_value;
 
-#[path = "🌫️remove-image/🦀️.rs"]
-pub mod remove_image;
+pub use semio_s_artifact_stdio_pdf_mut_family_2::standards::v1_7::subsets::base::io::text::mutations::remove_image;
 
-#[path = "👁️set-optional-content/🦀️.rs"]
-pub mod set_optional_content;
+pub use semio_s_artifact_stdio_pdf_mut_family_2::standards::v1_7::subsets::base::io::text::mutations::set_optional_content;
 
-#[path = "🔢️set-page-labels/🦀️.rs"]
-pub mod set_page_labels;
+pub use semio_s_artifact_stdio_pdf_mut_family_2::standards::v1_7::subsets::base::io::text::mutations::set_page_labels;
 
-#[path = "🔖️remove-properties/🦀️.rs"]
-pub mod remove_properties;
+pub use semio_s_artifact_stdio_pdf_mut_family_2::standards::v1_7::subsets::base::io::text::mutations::remove_properties;
 
-#[path = "✏️set-page-content/🦀️.rs"]
-pub mod set_page_content;
+pub use semio_s_artifact_stdio_pdf_mut_family_2::standards::v1_7::subsets::base::io::text::mutations::set_page_content;
 
-#[path = "🖼️set-page-box/🦀️.rs"]
-pub mod set_page_box;
+pub use semio_s_artifact_stdio_pdf_mut_family_2::standards::v1_7::subsets::base::io::text::mutations::set_page_box;
 
-#[path = "🅾️remove-font/🦀️.rs"]
-pub mod remove_font;
+pub use semio_s_artifact_stdio_pdf_mut_family_2::standards::v1_7::subsets::base::io::text::mutations::remove_font;
 
-#[path = "🎨️remove-color-space/🦀️.rs"]
-pub mod remove_color_space;
+pub use semio_s_artifact_stdio_pdf_mut_family_2::standards::v1_7::subsets::base::io::text::mutations::remove_color_space;
 
-#[path = "🖥️set-page-mode/🦀️.rs"]
-pub mod set_page_mode;
+pub use semio_s_artifact_stdio_pdf_mut_family_2::standards::v1_7::subsets::base::io::text::mutations::set_page_mode;
 
-#[path = "🖋️insert-content/🦀️.rs"]
-pub mod insert_content;
+pub use semio_s_artifact_stdio_pdf_mut_family_2::standards::v1_7::subsets::base::io::text::mutations::insert_content;
 
-#[path = "ℹ️set-info/🦀️.rs"]
-pub mod set_info;
+pub use semio_s_artifact_stdio_pdf_mut_family_2::standards::v1_7::subsets::base::io::text::mutations::set_info;
 
-#[path = "🆔️set-document-id/🦀️.rs"]
-pub mod set_document_id;
+pub use semio_s_artifact_stdio_pdf_mut_family_2::standards::v1_7::subsets::base::io::text::mutations::set_document_id;
 
-#[path = "🪄️replace-page/🦀️.rs"]
-pub mod replace_page;
+pub use semio_s_artifact_stdio_pdf_mut_family_2::standards::v1_7::subsets::base::io::text::mutations::replace_page;

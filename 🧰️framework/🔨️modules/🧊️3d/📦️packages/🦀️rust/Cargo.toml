@@ -16,22 +16,17 @@ role = "framework"
 path = "🦀️.rs"
 
 [dependencies]
+semio-framework-3d-collision = { path = "../../🧿️collision/📦️packages/🦀️rust" }
+semio-framework-3d-rigid = { path = "../../🌀️rigid/📦️packages/🦀️rust" }
+semio-framework-3d-mesh-reconstruction = { path = "../../🥽️mesh/🛠️modeling/🔁️reconstruction/📦️packages/🦀️rust" }
+semio-framework-3d-mesh-document = { path = "../../🥽️mesh/📄️document/📦️packages/🦀️rust" }
+semio-framework-3d-mesh-contract = { path = "../../🥽️mesh/🧬️contract/📦️packages/🦀️rust" }
+semio-framework-3d-mesh-clipping = { path = "../../🥽️mesh/🛠️modeling/✂️clipping/📦️packages/🦀️rust" }
 semio-framework-3d-brep-vector.workspace = true
-semio-framework-pack-json = { path = "../../../🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../🌱️value/📦️packages/🦀️rust" }
 semio-framework-mesh-engine.workspace = true
 # 🧬️ `#[derive(ToValue, FromValue)]`; types here target `#[value(crate = "::semio_framework_value")]`.
 semio-framework-value-derive = { path = "../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust" }
 
-[dev-dependencies]
-semio-framework-async-macros = { path = "../../../⏳️async/✨️macros/📦️packages/🦀️rust" }
-# 🧪️ Differential oracle for `🧿️collision` ONLY — proves our BVH triangle-mesh queries agree with
-# `parry3d`'s. Test-only: never a `[dependencies]` entry, never reachable from a production target.
-parry3d = "0.17"
-# 🔬️ `🥽️mesh`'s `value_round_trip_matches_serde_shape` differential oracle ONLY — proves the
-# first-party `ToValue`/`FromValue` codec agrees byte-for-byte with `serde_json`'s own encoding of
-# the same types. Test-only, `#[cfg(test)]`-gated: never a `[dependencies]` entry.
-serde = { workspace = true }
-serde_json = { workspace = true }
-semio-framework-trace.workspace = true
-semio-framework-3d-testing-support = { path = "../../🧪️tests/🧰️support/📦️packages/🦀️rust" }
+[features]
+mesh-test-observation = ["semio-framework-3d-mesh-reconstruction/mesh-test-observation"]

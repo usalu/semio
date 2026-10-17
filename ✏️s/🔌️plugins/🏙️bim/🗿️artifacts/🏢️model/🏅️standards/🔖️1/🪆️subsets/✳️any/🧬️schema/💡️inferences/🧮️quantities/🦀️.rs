@@ -34,7 +34,6 @@ use super::super::ramp_runs::{strip_of, RampRun};
 use super::super::stair_runs::StairRun;
 use super::super::storey_levels::{vertical_of, StoreyLevel};
 use super::super::wall_layout::WallLayout;
-#[cfg(test)] use super::super::ModelInference;
 use crate::standards::v1::subsets::any::schema::snapshot::{Beam, Ceiling, Column, Component, CurtainWall, Infill, Layer, ModelSnapshot, Opening, OpeningKind, Phase, Railing, Ramp, Roof, Slab, Space, Stair, Vertex, Wall, WallSweep};
 use semio_framework_geometry::loops;
 use semio_framework_geometry::Point;
@@ -788,12 +787,6 @@ pub fn totals_of<'a>(elements: impl IntoIterator<Item = &'a ElementQuantity>) ->
     totals
 }
 
-/// 🧮️ The take-off of a model (the `Quantity` and `Totals` nodes of the model graph). The inference argument is ignored: the graph derives everything the take-off reads in one run.
-#[cfg(test)]
-pub fn compute_quantities(snapshot: &ModelSnapshot, _inferred: &ModelInference) -> ModelQuantities {
-    std::mem::take(&mut super::super::model_graph::infer_selected::<{ super::super::model_graph::kinds::QUANTITIES }>(snapshot).quantities)
-}
-
 /// ➕️ The totals of a set of element quantities: per storey, per building and for the project.
 pub fn summarise(snapshot: &ModelSnapshot, elements: BTreeMap<String, ElementQuantity>) -> ModelQuantities {
     let mut quantities = ModelQuantities { elements, ..ModelQuantities::default() };
@@ -806,7 +799,6 @@ pub fn summarise(snapshot: &ModelSnapshot, elements: BTreeMap<String, ElementQua
     }
     quantities
 }
-
 
 //#endregion 🔖️Totals
 

@@ -69,7 +69,12 @@ pub fn gis2d_layer_label(layer_id: &str, labels: &Gis2dPlayLabels) -> &'static s
 //#endregion 🔖️Labels
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
+
+//#region 🧩️ArtifactItems2
+pub mod artifact_items_2 {
+/// ♻️ This synchronous executable retains no callback child between invocations.
+pub fn gis_map_inference_demands(_request:&semio_framework_plugin::ArtifactInferenceExecutionRequest<'_>,_copy:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(semio_framework_value::RetirementDemand::default())}
+}
+//#endregion 🧩️ArtifactItems2

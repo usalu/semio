@@ -12,7 +12,6 @@ test("complete module facts retain command test and typed imports while producti
   await build({stdin:{contents:row.source,sourcefile:row.file,loader:"ts"},write:false,bundle:true,format:"esm",define:{"import.meta.vitest":"false"},logLevel:"silent",plugins:[{name:"production-scheduling-oracle",setup(builder){builder.onResolve({filter:/^\./},args=>{runtime.add(args.path);return{path:args.path,external:true}})}}]});
   expect([...runtime].sort()).toEqual(row.production.filter(path=>!path.includes("types.ts")).sort());
  }
- console.log("[DEBUG] Production DAG retains typed runtime edges and complete command/test source facts; esbuild runtime oracle agrees");
 });
 
 import Ajv from "ajv";
@@ -54,8 +53,7 @@ test("original SDK full roster supplies complete immutable metadata through full
   const snapshot=full.app.metadata.semio.moduleGraph.files.find(row=>row.file==="app/core.ts");
   writeFileSync(join(root,"app/core.ts"),"export const changed=1;");
   expect(cacheInternals.createMetadataImplementation(graph,{},context).app.metadata.semio.moduleGraph.files.find(row=>row.file==="app/core.ts")).toEqual(snapshot);
-  expect(snapshot.imports).toEqual(fixture.cases.find(row=>row.file==="app/core.ts").all);
-  console.log("[DEBUG] Original full/incremental SDK facts preserve command/test metadata and captured structural imports; production DAG has no command cycles");
+  expect(snapshot!.imports).toEqual(fixture.cases.find(row=>row.file==="app/core.ts")!.all);
  }finally{rmSync(root,{recursive:true,force:true});}
 });
 
@@ -68,7 +66,7 @@ test("structural source analyses preserve body edits and invalidate dependency e
   const {captureObservedSourceInputsV1,observationsHold,observedFs,observeInference}=await import("../../../../🏗️build/👁️observation/🟨️.mjs");
   await observeInference({cachePath:join(root,"sealed.json"),key:"structural-analysis"},()=>null);
   const module=fixture.analysis.module,file=join(root,module.file);mkdirSync(dirname(file),{recursive:true});writeFileSync(file,module.initial);
-  const projects={app:{root:"app"},leaf:{root:"leaf"},other:{root:"other"}},context={workspaceRoot:root,projects,fileMap:{projectFileMap:{app:[{file:module.file}]}}};
+  const projects={app:{root:"app",targets:{}},leaf:{root:"leaf",targets:{}},other:{root:"other",targets:{}}},context={workspaceRoot:root,projects,fileMap:{projectFileMap:{app:[{file:module.file}]}}};
   const captured=await captureObservedSourceInputsV1(()=>cacheInternals.createDependenciesImplementation({},context));
   expect(captured.observations.some(row=>row.kind==="analysis"&&row.path===file)).toBe(true);
   writeFileSync(file,module.body);expect(await observationsHold(captured.observations.filter(row=>row.path.startsWith(root)))).toBe(true);

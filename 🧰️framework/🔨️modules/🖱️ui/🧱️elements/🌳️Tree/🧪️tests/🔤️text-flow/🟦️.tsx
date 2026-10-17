@@ -44,14 +44,12 @@ describe("Tree label reading order", () => {
           const stemRect = stem.getBoundingClientRect(), gutterRect = gutter.getBoundingClientRect();
           return { row: row.getBoundingClientRect().height, gutter: gutterRect.height, slot: parseFloat(getComputedStyle(slot).top), stemTop: stemRect.top - gutterRect.top, stemBottom: gutterRect.bottom - stemRect.bottom, reference: referenceMarker.getBoundingClientRect().top - reference.getBoundingClientRect().top };
         });
-        console.info("[DEBUG] Tree row anchor", direction, entry.id, JSON.stringify(result));
         expect(result.row).toBe(entry.rowPx ?? anchorFixture.inheritedRowPx);
         expect(result.gutter).toBe(result.row);
         expect(result.reference).toBe(entry.expectedPx);
         expect(result.slot, direction + ":" + entry.id).toBe(result.reference);
         expect(direction === "up" ? result.stemBottom : result.stemTop).toBe(result.reference);
       }
-      console.info("[DEBUG] Tree standalone guide geometry: six actual Chromium and independent reference layouts");
     } finally {
       await browser.close();
     }
@@ -87,7 +85,6 @@ describe("Tree label reading order", () => {
         expect(result.inline).toBe(fixture.root.rowInline);
         expect(result.visual).toBe(entry.visual);
       }
-      console.info("[DEBUG] Tree root reading order: both panel flows, twelve bilingual browser cases");
     } finally {
       await browser.close();
     }

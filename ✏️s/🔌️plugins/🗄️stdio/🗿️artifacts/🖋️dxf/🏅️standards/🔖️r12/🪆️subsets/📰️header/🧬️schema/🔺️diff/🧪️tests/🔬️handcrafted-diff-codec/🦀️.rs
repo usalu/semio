@@ -1,4 +1,20 @@
-use super::*;
+#[allow(unused_imports)]
+use std::{collections::BTreeMap, collections::BTreeSet, collections::HashSet};
+#[allow(unused_imports)]
+use crate::{schema::snapshot::DxfBlock, schema::snapshot::DxfEntity, schema::snapshot::DxfArc, schema::snapshot::DxfCircle, schema::snapshot::DxfInsert, schema::snapshot::DxfLine, schema::snapshot::DxfOther, schema::snapshot::DxfPolyline, schema::snapshot::DxfSolid, schema::snapshot::DxfText, schema::snapshot::DxfHeaderVar, schema::snapshot::DxfLayer, schema::snapshot::DxfLinetype, schema::snapshot::DxfOtherTable, schema::snapshot::DxfStyle, schema::snapshot::DxfTables, schema::snapshot::DxfValue, schema::snapshot::DxfVertex};
+#[allow(unused_imports)]
+use crate::DxfSnapshot;
+#[allow(unused_imports)]
+use framework_schema::ArtifactSchema;
+#[allow(unused_imports)]
+use protocol::command::DiffAlgebra;
+#[allow(unused_imports)]
+use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
+#[allow(unused_imports)]
+use collection_algebra_core::*;
+use crate::standards::v_r12::subsets::any::schema::diff::{collection_algebra_core};
+use crate::standards::v_r12::subsets::any::schema::diff::*;
+use crate::standards::v_r12::subsets::any::schema::diff::collection_algebra_core::*;
 use protocol::{DiffBinary,DiffCodec,DiffText};
 
 /// 🧪️ `DiffCodec` text/binary round-trip laws over every `demo_diff_cases()` fixture (`#region

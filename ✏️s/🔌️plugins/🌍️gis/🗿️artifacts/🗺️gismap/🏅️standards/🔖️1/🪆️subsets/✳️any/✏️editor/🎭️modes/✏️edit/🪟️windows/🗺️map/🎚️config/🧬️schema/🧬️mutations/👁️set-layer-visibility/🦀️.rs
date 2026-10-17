@@ -1,8 +1,8 @@
 //! 👁️ Exact visibility override assignment or removal for one map layer.
 
 #[cfg(test)]
-use super::super::required_nullable;
-use super::super::{MapWindowConfig, MapWindowConfigDelta, MapWindowConfigDiff, MapWindowConfigMutation};
+use crate::editor::gis2d::modes::edit::windows::map::config::component::required_nullable;
+use crate::editor::gis2d::modes::edit::windows::map::config::component::{MapWindowConfig, MapWindowConfigDelta, MapWindowConfigDiff};
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -23,7 +23,10 @@ pub struct SetLayerVisibility {
 //#endregion 🧬️Payload
 
 //#region ⚙️Behavior
-impl MutationKind<MapWindowConfig, MapWindowConfigMutation> for SetLayerVisibility {
+impl<Op> MutationKind<MapWindowConfig, Op> for SetLayerVisibility
+where
+    Op: protocol::Mutation<MapWindowConfig, Diff = MapWindowConfigDiff> + From<SetLayerVisibility>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "layer-visibility", kind: "set-layer-visibility", record: "SetLayerVisibility" };
     fn diff(&self, base: &MapWindowConfig) -> MutationOutcome<MapWindowConfigDiff> {
         if base.layer_visibility.get(&self.layer_id).copied() == self.visible {
@@ -31,7 +34,7 @@ impl MutationKind<MapWindowConfig, MapWindowConfigMutation> for SetLayerVisibili
         }
         MutationOutcome::new(MapWindowConfigDelta { layer_visibility: [(self.layer_id.clone(), self.visible)].into(), ..Default::default() }.into())
     }
-    fn inverse(&self, base: &MapWindowConfig) -> Result<Vec<MapWindowConfigMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &MapWindowConfig) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
         vec![Self { layer_id: self.layer_id.clone(), visible: base.layer_visibility.get(&self.layer_id).copied() }.into()]
     

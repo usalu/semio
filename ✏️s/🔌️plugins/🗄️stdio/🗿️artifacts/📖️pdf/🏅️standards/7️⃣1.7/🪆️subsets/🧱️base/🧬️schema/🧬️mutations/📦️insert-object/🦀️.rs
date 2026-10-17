@@ -1,7 +1,6 @@
 //! 📦️ Authoritative PDF mutation payload, diff, inverse, and tests for `insert-object`.
 
-use super::remove_object::RemoveObject;
-use super::PdfMutation;
+use crate::standards::v1_7::subsets::base::schema::mutations::remove_object::RemoveObject;
 use crate::standards::v1_7::subsets::base::schema::diff::{self, PdfDiff};
 use crate::standards::v1_7::subsets::base::schema::snapshot::{ObjRef, PdfObject, PdfSnapshot};
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
@@ -20,7 +19,10 @@ pub struct InsertObject {
     pub admitted_stream_roles: Option<diff::PdfIndexedDiff<crate::standards::v1_7::subsets::base::schema::stream_roles::PdfAdmittedStreamRole>>,
 }
 
-impl MutationKind<PdfSnapshot, PdfMutation> for InsertObject {
+impl<Op> MutationKind<PdfSnapshot, Op> for InsertObject
+where
+    Op: protocol::Mutation<PdfSnapshot, Diff = PdfDiff> + From<InsertObject> + From<crate::standards::v1_7::subsets::base::schema::mutations::remove_object::RemoveObject>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "insert", entity: "object", kind: "insert-object", record: "Insert" };
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
@@ -30,12 +32,12 @@ impl MutationKind<PdfSnapshot, PdfMutation> for InsertObject {
         MutationOutcome::new(diff::graph_edit_with_roles(diff::diff_insert_object(self.id, self.index.map_or(base.objects.len(), |at| at.min(base.objects.len())), self.value.clone()), self.admitted_stream_roles.as_ref()))
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
         if base.objects.iter().any(|object| object.id == self.id) {
             Vec::new()
         } else {
-            vec![PdfMutation::RemoveObject(RemoveObject { id: self.id, admitted_stream_roles: self.admitted_stream_roles.as_ref().map(|roles| roles.inverse(&base.admitted_stream_roles)) })]
+            vec![Op::from(RemoveObject { id: self.id, admitted_stream_roles: self.admitted_stream_roles.as_ref().map(|roles| roles.inverse(&base.admitted_stream_roles)) })]
         }
     
     })())
@@ -53,8 +55,6 @@ impl MutationKind<PdfSnapshot, PdfMutation> for InsertObject {
 //#endregion 🔖️Mutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
 

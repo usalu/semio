@@ -24,7 +24,6 @@ test("production schema search specimens match the independent filesystem oracle
       const files = await fg("**/🧬️schema/**/*.json", { cwd: root, onlyFiles: true, dot: false, ignore: ["**/target/**", "**/node_modules/**", "**/dist/**", "**/🗑️generated/**", "**/📦️packages/**"] });
       const ids = isCollection(item.root) ? [] : files.filter(path => !isCollection(path)).map(path => JSON.parse(readFileSync(join(root, path), "utf8")).$id).sort();
       expect(ids).toEqual(item.expected.ids);
-      console.log("[DEBUG] independent fast-glob schema index case=" + item.id + " indexed=" + ids.length);
     }
   } finally {
     rmSync(base, { recursive: true, force: true });

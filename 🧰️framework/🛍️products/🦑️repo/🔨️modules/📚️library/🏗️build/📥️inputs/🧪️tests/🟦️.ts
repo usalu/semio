@@ -31,7 +31,6 @@ test("selected source discovery compiles each reached glob once per operation",a
    expect(compiled.length,row.id+":"+attempt).toBe(row.compilations);
   }
  }
- console.log("[DEBUG] Actual selected discovery loop retains lazy glob semantics and one compilation per reached pattern against Ajv/minimatch");
 });
 
 test("source input compaction prepares exact patterns once per operation without changing lazy precedence",()=>{
@@ -51,5 +50,4 @@ test("source input compaction prepares exact patterns once per operation without
     }
   }
   for(const row of fixture.errors)expect(()=>compactSourceInputs(row.inputs,process.cwd())).toThrow(row.message);
-  console.log("[DEBUG] Source compaction operation-local compilation counts and lazy negation/path results agree with independent Ajv/minimatch");
 });

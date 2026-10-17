@@ -7,7 +7,7 @@ import {fileURLToPath} from "node:url";
 import Ajv from "ajv";
 import Parser from "web-tree-sitter";
 import {parse as parseToml} from "smol-toml";
-import {rustTokens,inspectRustCompileReferences} from "../../../../📚️compiler/📖️syntax/🦀️rust/🟦️.ts";
+import {rustTokens,inspectRustCompileReferences} from "@semio-tech/compiler-syntax-rust-ts";
 const root=resolve(import.meta.dir,"../../../../../.."),owner=resolve(import.meta.dir,"../..");
 const fixture=JSON.parse(readFileSync(resolve(owner,"🧪️tests/🧫️fixtures/🏛️ownership/🔣️.json"),"utf8")) as {owner:string;definition:string;requiredExports:string[];cases:{id:string;kind:"definition";path:string;binding:string}[]};
 function publicUses(source:string):string[]{
@@ -36,7 +36,6 @@ test("the neutral SQLite owner exposes its complete controlled surface",async()=
      expect(refs.length).toBe(1);
      const exports=publicUses(source).find(value=>value.startsWith("pubusecomponent::{"));
      for(const symbol of fixture.requiredExports)expect(rustTokens(exports??"").some(token=>token.kind==="identifier"&&token.text===symbol)).toBe(true);
-    console.log("[DEBUG] SQLite owner "+JSON.stringify({id:row.id,definition:fixture.owner}));
    }finally{tree.delete();}
   }
  }finally{parser.delete();}
@@ -62,5 +61,4 @@ test("native paged reconstruction retains SQLite UTF8 values with cumulative phy
  try{db.exec(f.schemaSql);const texts=[...f.samples.map((row:{text:string})=>row.text),f.large.unit.repeat(f.large.repeats)];for(const[index,text]of texts.entries())db.run("INSERT INTO paged_text VALUES(?,?)",[index+1,text]);const rows=db.query("SELECT value,length(CAST(value AS BLOB)) AS bytes FROM paged_text ORDER BY id").all() as {value:string;bytes:number}[];for(const[index,row]of rows.entries()){expect(row.value).toBe(texts[index]);expect(row.bytes).toBe(new TextEncoder().encode(row.value).byteLength);expect(JSON.parse(JSON.stringify(row.value))).toBe(row.value);}expect(f.reconstruction.chunkBytes).toBe(1024);expect(f.reconstruction.cancelAfterBytes).toBeLessThan(f.large.bytes);expect(f.reconstruction.aggregateCopies).toBe(2);expect(f.reconstruction.constructorAllocationBytes).toBe(0);}
  finally{db.close();}
  const source=readFileSync(resolve(owner,"🧩️artifact/🦀️.rs"),"utf8");expect(source).toContain("pub fn paged_text(");expect(source).toContain("PagedUtf8::try_from_str_controlled");
- console.log("[DEBUG] Independent SQLite/TextEncoder/JSON preserve empty, NUL, Unicode and160000-byte native reconstruction values");
 });

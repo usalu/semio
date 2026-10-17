@@ -10,7 +10,7 @@ enum Parent<'a> { Root, Member(i64, usize, &'a str), Element(i64, usize) }
 fn integer(value: usize) -> Result<i64, ValueError> { i64::try_from(value).map_err(|error| ValueError::new(ValueRefusalKind::WorkLimit, error.to_string())) }
 fn add(value: &mut usize, amount: usize) -> Result<(), ValueError> { *value = value.checked_add(amount).ok_or_else(|| ValueError::new(ValueRefusalKind::WorkLimit, "JSON relational size overflow"))?; Ok(()) }
 fn add_bytes(value: &mut usize, amount: usize) -> Result<(), ValueError> { *value = value.checked_add(amount).ok_or_else(|| ValueError::new(ValueRefusalKind::OwnershipLimit, "JSON relational size overflow"))?; Ok(()) }
-fn kind(value: &JsonValue) -> &'static str { match value { JsonValue::Null => "null", JsonValue::Bool { .. } => "boolean", JsonValue::Number { .. } => "number", JsonValue::String { .. } => "string", JsonValue::Array { .. } => "array", JsonValue::Object { .. } => "object" } }
+pub fn kind(value: &JsonValue) -> &'static str { match value { JsonValue::Null => "null", JsonValue::Bool { .. } => "boolean", JsonValue::Number { .. } => "number", JsonValue::String { .. } => "string", JsonValue::Array { .. } => "array", JsonValue::Object { .. } => "object" } }
 
 fn measure(snapshot: &JsonSnapshot, control: &mut SqliteSnapshotControl<'_>) -> Result<usize, ValueError> {
     let mut rows = 1usize; let mut bytes = snapshot.schema.len().checked_add(16).ok_or_else(|| ValueError::new(ValueRefusalKind::OwnershipLimit, "JSON document size overflow"))?;
@@ -50,7 +50,7 @@ impl ArtifactSqliteSnapshotHost for JsonSnapshot {
         control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,0).map_err(IoError::from_value_error)?;
         if dialect.artifact_kind!="s.stdio.json"||dialect.standard!="rfc8259"{return Err(IoError::from_value_error(ValueError::new(ValueRefusalKind::UnsupportedOwner,"JSON owned snapshot dialect differs from RFC8259")));}
         let row=database.table("json_document").map_err(IoError::from_value_error)?.single_row().map_err(IoError::from_value_error)?;if row.rowid!=1||row.text(1).map_err(IoError::from_value_error)?!=self.schema{return Err(IoError::from_value_error(ValueError::new(ValueRefusalKind::InvalidValue,"JSON owned document identity differs from semantic projection")));}
-        let diagnostics=match dialect.subset.as_str(){"*"=>Vec::new(),"i-json"=>crate::standards::v_rfc8259::subsets::i_json::io::check_i_json_conformance_controlled(self,control).map_err(IoError::from_value_error)?,"geojson"=>crate::standards::v_rfc8259::subsets::geojson::io::sqlite::snapshot::check_geojson_conformance_controlled(self,control).map_err(IoError::from_value_error)?,_=>return Err(IoError::from_value_error(ValueError::new(ValueRefusalKind::UnsupportedOwner,"JSON named subset has no owned semantic validator")))};
+        let diagnostics=match dialect.subset.as_str(){"*"=>Vec::new(),"i-json"=>crate::standards::v_rfc8259::subsets::i_json::schema::conformance::check_i_json_conformance_controlled(self,control).map_err(IoError::from_value_error)?,"geojson"=>crate::standards::v_rfc8259::subsets::geojson::schema::check_geojson_conformance_controlled(self,control).map_err(IoError::from_value_error)?,_=>return Err(IoError::from_value_error(ValueError::new(ValueRefusalKind::UnsupportedOwner,"JSON named subset has no owned semantic validator")))};
         Ok(semio_framework_os_kernel::io_schema::IoOutcome{value:(),diagnostics})
     }
 
@@ -159,11 +159,6 @@ fn from_sqlite_database(database: &SqliteDatabase, control: &mut SqliteSnapshotC
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;
 
 
-#[cfg(test)]
-#[path="🫴️receiving/🧪️tests/🦀️.rs"]
-mod original_receiving_tests;
+

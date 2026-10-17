@@ -559,5 +559,43 @@ pub fn text_editor_popup_pointer(scene: &UiComponentSceneNode, inner: Rect, x: f
 #[cfg(test)]
 #[path = "../../../🧪️tests/🔬️wgpu-text-editor/🦀️.rs"]
 mod text_editor_tests;
+#[cfg(any(test, feature = "testkit"))]
+pub fn cursor_from_click(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, scroll: f32) -> usize {
+    let Some(editor) = &scene.text_editor else {
+        return 0;
+    };
+    let line_h = 18.0;
+    let line_index = ((y - inner.y - 8.0 + scroll) / line_h).max(0.0) as usize;
+    let lines: Vec<&str> = editor.buffer.lines().collect();
+    let line = lines.get(line_index).copied().unwrap_or("");
+    let rel_x = (x - inner.x - 8.0).max(0.0);
+    let mut cursor = 0usize;
+    let mut width = 0.0f32;
+    for (index, ch) in line.chars().enumerate() {
+        let advance = if ch == '\t' { 8.0 } else { 7.0 };
+        if width + advance * 0.5 > rel_x {
+            cursor = index;
+            break;
+        }
+        width += advance;
+        cursor = index + 1;
+    }
+    lines.iter().take(line_index).map(|l| l.len() + 1).sum::<usize>() + cursor
+}
+
+#[cfg(any(test, feature = "testkit"))]
+pub fn line_col_at(text: &str, cursor: usize) -> (usize, usize) {
+    let mut index = 0usize;
+    for (line_index, line) in text.lines().enumerate() {
+        let next = index + line.len() + 1;
+        if cursor < next {
+            return (line_index, cursor.saturating_sub(index));
+        }
+        index = next;
+    }
+    let line_count = text.lines().count();
+    (line_count.saturating_sub(1), 0)
+}
+
 //#endregion State
 //#endregion TextEditor

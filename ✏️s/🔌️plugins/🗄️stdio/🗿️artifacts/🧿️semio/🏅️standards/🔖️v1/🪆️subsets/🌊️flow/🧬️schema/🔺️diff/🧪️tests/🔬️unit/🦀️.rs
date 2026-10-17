@@ -1,8 +1,11 @@
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
+use crate::{schema::snapshot::FlowEdge, schema::snapshot::FlowNode, schema::snapshot::FlowParam, schema::snapshot::PortRef, schema::snapshot::SemioFlowSnapshot};
+use protocol::MutationDiff;
 use crate::io::text::diff::dec_edge;
 use crate::io::text::diff::enc_edge;
 use crate::io::text::diff::dec_node;
 use crate::io::text::diff::enc_node;
-use super::*;
+use crate::schema::diff::*;
 use protocol::{DiffBinary,DiffText};
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9

@@ -29,7 +29,6 @@ test("Cargo test profile lease follows schema and independent Node CLI selection
   const plan=api.cargoTestPlanV1(input,current,join(root,"metadata.json")),option=row.nextest?"cargo-profile":"profile",compiler=plan[0]!.args,at=compiler.indexOf("--"+option),parsed=parseArgs({args:compiler.slice(at,at+2),options:{[option]:{type:"string"}},strict:true});
   expect(parsed.values[option]).toBe(row.profile);
   const identity=(api as any).cargoTestBuildLeaseIdentityV1(input,current);expect(identityValidate(identity)).toBe(true);expect(identity.profile).toBe(row.profile);expect(identity.buildDirectory).toBe(cargoBuildLeaseIdentityV1(current.buildDirectory,[]).buildDirectory);
-  console.log(`[DEBUG] Native test compiler lease ${row.id} actualProfile=${identity.profile}`);
  }
  for(const args of corpus.invalid)expect(()=>(api as any).cargoTestBuildLeaseIdentityV1({...request(root,policy(root)),extraArgs:args},policy(root))).toThrow();
  for(const key of ["buildDirectory","leaseDirectory"]){const invalid={...policy(root)};delete invalid[key];expect(validate(invalid)).toBe(false);}
@@ -45,7 +44,6 @@ test("Cargo tests hold the shared compiler lease through list and assertion term
   for(const phase of corpus.phases){await until(()=>existsSync(join(root,phase+".started")));const database=new Database(databasePath);try{database.exec("PRAGMA busy_timeout=0");expect(()=>database.exec("BEGIN EXCLUSIVE")).toThrow();}finally{database.close();}writeFileSync(join(root,phase+".release"),"");}
   await run;run=undefined;const database=new Database(databasePath);try{database.exec("BEGIN EXCLUSIVE");database.exec("ROLLBACK");}finally{database.close();}
   const calls=readFileSync(join(root,"calls.jsonl"),"utf8").trim().split("\n").map(line=>JSON.parse(line));expect(calls.map(row=>row[1])).toEqual(corpus.phases);expect(calls[0]).toContain("long");expect(calls[1]).toContain("--binaries-metadata");
-  console.log("[DEBUG] Native test shared compiler lease list/run SQLite exclusion=true terminalRelease=true exactArgs=true");
  }finally{controller.abort();held?.release();for(const phase of corpus.phases)writeFileSync(join(root,phase+".release"),"");await run?.catch(()=>{});retire(root);}
 },30000);
 
@@ -55,6 +53,5 @@ test("Cargo lease cancellation and process timeout release exact ownership",asyn
  try{
   await expect(api.runCargoTestsV1(request(root,current),{...current,buildBudgetMs:corpus.timeoutMs},port)).rejects.toThrow("budget");
   const reacquired=await acquireCargoBuildLeaseV1({directory:current.leaseDirectory,buildDirectory:current.buildDirectory,targetDirectory:current.targetDirectory,args:["--profile",current.mode],signal:new AbortController().signal});reacquired.release();
-  console.log("[DEBUG] Native test compiler lease queuedCancel=noSpawn timeout=terminated ownership=reacquired");
  }finally{retire(root);}
 },30000);

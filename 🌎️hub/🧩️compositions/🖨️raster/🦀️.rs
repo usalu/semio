@@ -10,8 +10,8 @@ use semio_framework_plugin::PluginBuilder;
 semio_framework_dispatch_macros::dyn_enum_close! {
     /// 🗃️ Closed runtime app fleet for the raster editor and viewer surfaces.
     pub enum RasterApps: PluginApp {
-        RasterEditor(VcsArtifactApp<EditorApp<crate::editor::raster::RasterPlayApp>>),
-        RasterViewer(VcsArtifactApp<ViewerApp<crate::viewer::raster::RasterViewer>>),
+        RasterEditor(VcsArtifactApp<EditorApp<semio_s_artifact_raster_raster_editor::RasterPlayApp>>),
+        RasterViewer(VcsArtifactApp<ViewerApp<semio_s_artifact_raster_raster_viewer::RasterViewer>>),
     }
 }
 //#endregion 🗃️Apps
@@ -37,10 +37,10 @@ pub fn plugin() -> Result<Plugin<RasterApps>, PluginAssemblyError> {
         .version("0.1.0")
         .package_id("semio:raster")
         .artifact(crate::artifacts::raster::declaration().map_err(PluginAssemblyError::definition)?)
-        .editor::<crate::editor::raster::RasterPlayApp>(crate::editor::raster::create_raster_app())
-        .editor_mutation_roster::<crate::editor::raster::RasterPlayApp>()
-        .viewer::<crate::viewer::raster::RasterViewer>(crate::viewer::raster::create_raster_viewer())
-        .viewer_mutation_roster::<crate::viewer::raster::RasterViewer>()
+        .editor::<semio_s_artifact_raster_raster_editor::RasterPlayApp>(semio_s_artifact_raster_raster_editor::create_raster_app())
+        .editor_mutation_roster::<semio_s_artifact_raster_raster_editor::RasterPlayApp>()
+        .viewer::<semio_s_artifact_raster_raster_viewer::RasterViewer>(semio_s_artifact_raster_raster_viewer::create_raster_viewer())
+        .viewer_mutation_roster::<semio_s_artifact_raster_raster_viewer::RasterViewer>()
         .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::raster::artifact_kind().id })
         .execution(ExecutionMode::Isolated)
         .requests(CapabilityRequest { id: CapabilityId("artifacts.write".into()), scope: "plugin".into(), reason: "persist raster edits to the open document".into(), optional: false })

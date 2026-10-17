@@ -54,7 +54,7 @@ fn example_media_present(example_id: &str, current: &RasterSnapshot) -> bool {
 }
 
 /// 🧹️ Dismantles a document that is not handed on: the asset pool is drained and the layer forest released before the drop.
-fn dismantle(mut document: RasterSnapshot) {
+pub fn dismantle(mut document: RasterSnapshot) {
     drain_owned_map(&mut document.assets);
     release_layer_forest(std::mem::take(&mut document.layers));
 }
@@ -88,7 +88,4 @@ pub fn handle(payload: &SetActiveExample, doc: &ArtifactView<'_, RasterSnapshot>
 }
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

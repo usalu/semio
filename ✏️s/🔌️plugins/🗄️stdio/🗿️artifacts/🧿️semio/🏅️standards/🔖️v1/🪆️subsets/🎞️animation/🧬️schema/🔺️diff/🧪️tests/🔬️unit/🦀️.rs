@@ -1,4 +1,9 @@
-use super::*;
+use crate::{schema::snapshot::AnimKeyframe, schema::snapshot::AnimValue};
+use semio_s_artifact_stdio_semio_base::schema::triples::IndexAdded;
+use semio_s_artifact_stdio_semio_base::schema::triples::IndexModified;
+use semio_s_artifact_stdio_semio_base::schema::triples::IndexedTripleDiff;
+use crate::schema::diff::{absorb_indexed};
+use crate::schema::diff::*;
 
 //#region AbsorbCanonical
 /// 🧪️ Canonical absorb case 1 (at the innermost `keyframes` level): `Insert(2,f)` then

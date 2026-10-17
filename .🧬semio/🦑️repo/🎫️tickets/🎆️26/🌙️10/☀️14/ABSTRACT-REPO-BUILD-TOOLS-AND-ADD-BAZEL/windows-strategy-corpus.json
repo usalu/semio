@@ -1,0 +1,1328 @@
+{
+  "version": 1,
+  "scope": "ticket-only-future-strategy",
+  "productionApiExecuted": false,
+  "windowsRuntime": false,
+  "protocol": {
+    "nameWindow": 64,
+    "chunkBytes": 65536,
+    "maximumDepth": 64,
+    "maximumPathUnits": 256,
+    "censuses": 2,
+    "pending": 1,
+    "bodyOnly": true,
+    "sameContextControl": true,
+    "sameSystem": true,
+    "workReset": false,
+    "journalNames": [
+      "storage-checkpoint.jsonl",
+      "storage-events.jsonl"
+    ],
+    "workUnits": {
+      "next": 1,
+      "cachedEof": 1,
+      "yieldedContinuation": 1,
+      "nativeQuery": 2,
+      "setOffset": 1,
+      "nativeRead": 2,
+      "scan": 1,
+      "frame": 1
+    }
+  },
+  "frameSchema": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "oneOf": [
+      {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path",
+          "kind",
+          "mode"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "maxLength": 256
+          },
+          "kind": {
+            "const": "directory"
+          },
+          "mode": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4095
+          }
+        }
+      },
+      {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path",
+          "kind",
+          "bytes",
+          "sha256",
+          "mode"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "maxLength": 256
+          },
+          "kind": {
+            "const": "file"
+          },
+          "bytes": {
+            "type": "string",
+            "pattern": "^(0|[1-9][0-9]*)$"
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "mode": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4095
+          }
+        }
+      },
+      {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path",
+          "kind",
+          "bytes",
+          "sha256",
+          "mode",
+          "ino",
+          "links"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "maxLength": 256
+          },
+          "kind": {
+            "const": "file"
+          },
+          "bytes": {
+            "type": "string",
+            "pattern": "^(0|[1-9][0-9]*)$"
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "mode": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4095
+          },
+          "ino": {
+            "type": "string",
+            "pattern": "^(0|[1-9][0-9]*)$"
+          },
+          "links": {
+            "type": "string",
+            "pattern": "^([2-9]|[1-9][0-9]+)$"
+          }
+        }
+      },
+      {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path",
+          "kind",
+          "platform",
+          "attributes",
+          "securitySha256"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "maxLength": 256
+          },
+          "kind": {
+            "const": "directory"
+          },
+          "platform": {
+            "const": "win32"
+          },
+          "attributes": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4294967295
+          },
+          "securitySha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          }
+        }
+      },
+      {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path",
+          "kind",
+          "bytes",
+          "sha256",
+          "platform",
+          "attributes",
+          "securitySha256"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "maxLength": 256
+          },
+          "kind": {
+            "const": "file"
+          },
+          "bytes": {
+            "type": "string",
+            "pattern": "^(0|[1-9][0-9]*)$"
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "platform": {
+            "const": "win32"
+          },
+          "attributes": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4294967295
+          },
+          "securitySha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          }
+        }
+      },
+      {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path",
+          "kind",
+          "bytes",
+          "sha256",
+          "platform",
+          "attributes",
+          "securitySha256",
+          "fileId",
+          "volumeSerial",
+          "links"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "maxLength": 256
+          },
+          "kind": {
+            "const": "file"
+          },
+          "bytes": {
+            "type": "string",
+            "pattern": "^(0|[1-9][0-9]*)$"
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "platform": {
+            "const": "win32"
+          },
+          "attributes": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4294967295
+          },
+          "securitySha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "fileId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$"
+          },
+          "volumeSerial": {
+            "type": "string",
+            "pattern": "^(0|[1-9][0-9]*)$"
+          },
+          "links": {
+            "type": "string",
+            "pattern": "^([2-9]|[1-9][0-9]+)$"
+          }
+        }
+      }
+    ]
+  },
+  "frames": [
+    {
+      "id": "posix-default-directory",
+      "input": {
+        "platform": "posix",
+        "path": "",
+        "kind": "directory",
+        "mode": 448
+      },
+      "accepted": true
+    },
+    {
+      "id": "posix-default-file",
+      "input": {
+        "platform": "posix",
+        "path": "alpha",
+        "kind": "file",
+        "mode": 384,
+        "payload": "payload",
+        "links": 1,
+        "ino": "99"
+      },
+      "accepted": true
+    },
+    {
+      "id": "posix-hardlink",
+      "input": {
+        "platform": "posix",
+        "path": "alpha",
+        "kind": "file",
+        "mode": 384,
+        "payload": "payload",
+        "links": 2,
+        "ino": "99"
+      },
+      "accepted": true
+    },
+    {
+      "id": "native-root-directory",
+      "input": {
+        "platform": "win32",
+        "path": "",
+        "kind": "directory",
+        "attributes": 16,
+        "securitySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "accepted": true
+    },
+    {
+      "id": "native-single-link",
+      "input": {
+        "platform": "win32",
+        "path": "alpha",
+        "kind": "file",
+        "attributes": 32,
+        "securitySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "payload": "payload",
+        "links": 1,
+        "fileIdLow": "99",
+        "fileIdHigh": "18446744073709551614",
+        "volumeSerial": "7"
+      },
+      "accepted": true
+    },
+    {
+      "id": "native-hardlink",
+      "input": {
+        "platform": "win32",
+        "path": "alpha",
+        "kind": "file",
+        "attributes": 32,
+        "securitySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "payload": "payload",
+        "links": 2,
+        "fileIdLow": "99",
+        "fileIdHigh": "18446744073709551614",
+        "volumeSerial": "7"
+      },
+      "accepted": true
+    },
+    {
+      "id": "native-high-half-differs",
+      "input": {
+        "platform": "win32",
+        "path": "alpha",
+        "kind": "file",
+        "attributes": 32,
+        "securitySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "payload": "payload",
+        "links": 2,
+        "fileIdLow": "99",
+        "fileIdHigh": "18446744073709551613",
+        "volumeSerial": "7"
+      },
+      "accepted": true
+    },
+    {
+      "id": "native-serial-differs",
+      "input": {
+        "platform": "win32",
+        "path": "alpha",
+        "kind": "file",
+        "attributes": 32,
+        "securitySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "payload": "payload",
+        "links": 2,
+        "fileIdLow": "99",
+        "fileIdHigh": "18446744073709551614",
+        "volumeSerial": "8"
+      },
+      "accepted": true
+    },
+    {
+      "id": "native-full128-upper-bound",
+      "input": {
+        "platform": "win32",
+        "path": "alpha",
+        "kind": "file",
+        "attributes": 32,
+        "securitySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "payload": "payload",
+        "links": 4294967295,
+        "fileIdLow": "18446744073709551615",
+        "fileIdHigh": "18446744073709551615",
+        "volumeSerial": "18446744073709551615"
+      },
+      "accepted": true
+    },
+    {
+      "id": "native-unicode-stream",
+      "input": {
+        "platform": "win32",
+        "path": "alpha",
+        "kind": "file",
+        "attributes": 32,
+        "securitySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "payload": "Grüße/雪\n",
+        "links": 1,
+        "fileIdLow": "99",
+        "fileIdHigh": "18446744073709551614",
+        "volumeSerial": "7"
+      },
+      "accepted": true
+    },
+    {
+      "id": "native-zero-byte",
+      "input": {
+        "platform": "win32",
+        "path": "alpha",
+        "kind": "file",
+        "attributes": 32,
+        "securitySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "payload": "",
+        "links": 1,
+        "fileIdLow": "99",
+        "fileIdHigh": "18446744073709551614",
+        "volumeSerial": "7"
+      },
+      "accepted": true
+    },
+    {
+      "id": "native-zero-links",
+      "input": {
+        "platform": "win32",
+        "path": "alpha",
+        "kind": "file",
+        "attributes": 32,
+        "securitySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "payload": "payload",
+        "links": 0,
+        "fileIdLow": "99",
+        "fileIdHigh": "18446744073709551614",
+        "volumeSerial": "7"
+      },
+      "accepted": false
+    },
+    {
+      "id": "native-links-overflow",
+      "input": {
+        "platform": "win32",
+        "path": "alpha",
+        "kind": "file",
+        "attributes": 32,
+        "securitySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "payload": "payload",
+        "links": 4294967296,
+        "fileIdLow": "99",
+        "fileIdHigh": "18446744073709551614",
+        "volumeSerial": "7"
+      },
+      "accepted": false
+    },
+    {
+      "id": "native-file-id-overflow",
+      "input": {
+        "platform": "win32",
+        "path": "alpha",
+        "kind": "file",
+        "attributes": 32,
+        "securitySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "payload": "payload",
+        "links": 1,
+        "fileIdLow": "99",
+        "fileIdHigh": "18446744073709551616",
+        "volumeSerial": "7"
+      },
+      "accepted": false
+    },
+    {
+      "id": "native-canonical-journal",
+      "input": {
+        "platform": "win32",
+        "path": "storage-events.jsonl",
+        "kind": "file",
+        "attributes": 32,
+        "securitySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "payload": "payload",
+        "links": 1,
+        "fileIdLow": "99",
+        "fileIdHigh": "18446744073709551614",
+        "volumeSerial": "7"
+      },
+      "accepted": true
+    },
+    {
+      "id": "native-canonical-checkpoint",
+      "input": {
+        "platform": "win32",
+        "path": "storage-checkpoint.jsonl",
+        "kind": "file",
+        "attributes": 32,
+        "securitySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "payload": "{}\n",
+        "links": 1,
+        "fileIdLow": "99",
+        "fileIdHigh": "18446744073709551614",
+        "volumeSerial": "7"
+      },
+      "accepted": true
+    },
+    {
+      "id": "native-journal-uppercase",
+      "input": {
+        "platform": "win32",
+        "path": "STORAGE-EVENTS.JSONL",
+        "kind": "file",
+        "attributes": 32,
+        "securitySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "payload": "payload",
+        "links": 1,
+        "fileIdLow": "99",
+        "fileIdHigh": "18446744073709551614",
+        "volumeSerial": "7"
+      },
+      "accepted": false
+    },
+    {
+      "id": "native-journal-multilink",
+      "input": {
+        "platform": "win32",
+        "path": "storage-events.jsonl",
+        "kind": "file",
+        "attributes": 32,
+        "securitySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "payload": "payload",
+        "links": 2,
+        "fileIdLow": "99",
+        "fileIdHigh": "18446744073709551614",
+        "volumeSerial": "7"
+      },
+      "accepted": false
+    },
+    {
+      "id": "native-journal-directory",
+      "input": {
+        "platform": "win32",
+        "path": "storage-events.jsonl",
+        "kind": "directory",
+        "attributes": 16,
+        "securitySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "accepted": false
+    },
+    {
+      "id": "native-nested-journal-name",
+      "input": {
+        "platform": "win32",
+        "path": "nested/storage-events.jsonl",
+        "kind": "file",
+        "attributes": 32,
+        "securitySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "payload": "payload",
+        "links": 2,
+        "fileIdLow": "99",
+        "fileIdHigh": "18446744073709551614",
+        "volumeSerial": "7"
+      },
+      "accepted": true
+    },
+    {
+      "id": "native-short-final-name",
+      "input": {
+        "platform": "win32",
+        "path": "alpha",
+        "kind": "file",
+        "attributes": 32,
+        "securitySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "payload": "payload",
+        "links": 1,
+        "fileIdLow": "99",
+        "fileIdHigh": "18446744073709551614",
+        "volumeSerial": "7",
+        "finalName": "ALPHA~1"
+      },
+      "accepted": false
+    },
+    {
+      "id": "native-posix-mode-not-fact",
+      "input": {
+        "platform": "win32",
+        "path": "alpha",
+        "kind": "file",
+        "attributes": 32,
+        "securitySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "payload": "payload",
+        "links": 1,
+        "fileIdLow": "99",
+        "fileIdHigh": "18446744073709551614",
+        "volumeSerial": "7",
+        "mode": 384
+      },
+      "accepted": false
+    },
+    {
+      "id": "native-hardlink-beta",
+      "input": {
+        "platform": "win32",
+        "path": "beta",
+        "kind": "file",
+        "attributes": 32,
+        "securitySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "payload": "payload",
+        "links": 2,
+        "fileIdLow": "99",
+        "fileIdHigh": "18446744073709551614",
+        "volumeSerial": "7"
+      },
+      "accepted": true
+    }
+  ],
+  "work": [
+    {
+      "id": "buffered-name",
+      "limit": 16,
+      "spent": 0,
+      "units": [
+        2
+      ],
+      "expectedSpent": 2,
+      "accepted": true
+    },
+    {
+      "id": "fresh-directory-query-name",
+      "limit": 16,
+      "spent": 0,
+      "units": [
+        4
+      ],
+      "expectedSpent": 4,
+      "accepted": true
+    },
+    {
+      "id": "fresh-cursor-eof",
+      "limit": 16,
+      "spent": 0,
+      "units": [
+        3
+      ],
+      "expectedSpent": 3,
+      "accepted": true
+    },
+    {
+      "id": "cached-cursor-eof",
+      "limit": 16,
+      "spent": 0,
+      "units": [
+        1
+      ],
+      "expectedSpent": 1,
+      "accepted": true
+    },
+    {
+      "id": "read-and-real-yield",
+      "limit": 16,
+      "spent": 0,
+      "units": [
+        4
+      ],
+      "expectedSpent": 4,
+      "accepted": true
+    },
+    {
+      "id": "read-eof-and-real-yield",
+      "limit": 16,
+      "spent": 0,
+      "units": [
+        4
+      ],
+      "expectedSpent": 4,
+      "accepted": true
+    },
+    {
+      "id": "buffered-name-and-skipped-scan",
+      "limit": 16,
+      "spent": 0,
+      "units": [
+        2,
+        1
+      ],
+      "expectedSpent": 3,
+      "accepted": true
+    },
+    {
+      "id": "frame-after-read",
+      "limit": 16,
+      "spent": 0,
+      "units": [
+        4,
+        1
+      ],
+      "expectedSpent": 5,
+      "accepted": true
+    },
+    {
+      "id": "two-censuses-same-account",
+      "limit": 10,
+      "spent": 0,
+      "units": [
+        6,
+        6
+      ],
+      "expectedSpent": 6,
+      "accepted": false
+    },
+    {
+      "id": "host-work-is-not-reset",
+      "limit": 10,
+      "spent": 8,
+      "units": [
+        2,
+        1
+      ],
+      "expectedSpent": 10,
+      "accepted": false
+    },
+    {
+      "id": "cached-eof-tiny-work",
+      "limit": 3,
+      "spent": 0,
+      "units": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "expectedSpent": 3,
+      "accepted": false
+    },
+    {
+      "id": "refusal-closes-next-birth",
+      "limit": 5,
+      "spent": 4,
+      "units": [
+        2,
+        1
+      ],
+      "expectedSpent": 4,
+      "accepted": false
+    },
+    {
+      "id": "cancelled-continuation",
+      "limit": 16,
+      "spent": 0,
+      "units": [
+        4,
+        1
+      ],
+      "cancelAt": 1,
+      "expectedSpent": 4,
+      "accepted": false
+    },
+    {
+      "id": "cancelled-before-read",
+      "limit": 16,
+      "spent": 0,
+      "units": [
+        4
+      ],
+      "cancelAt": 0,
+      "expectedSpent": 0,
+      "accepted": false
+    },
+    {
+      "id": "unsafe-volume-bound",
+      "limit": 9007199254740992,
+      "spent": 0,
+      "units": [
+        1
+      ],
+      "expectedSpent": 0,
+      "accepted": false
+    },
+    {
+      "id": "unsafe-charge",
+      "limit": 16,
+      "spent": 0,
+      "units": [
+        9007199254740992
+      ],
+      "expectedSpent": 0,
+      "accepted": false
+    },
+    {
+      "id": "zero-charge-refused",
+      "limit": 16,
+      "spent": 0,
+      "units": [
+        0
+      ],
+      "expectedSpent": 0,
+      "accepted": false
+    }
+  ],
+  "lifetime": [
+    {
+      "id": "exact-body-context",
+      "input": {
+        "platform": "win32",
+        "context": "exact",
+        "control": "exact",
+        "owner": "same",
+        "role": "body",
+        "live": true,
+        "accepting": true,
+        "consumed": false,
+        "pending": false,
+        "mapped": true,
+        "payloadReturned": true,
+        "transition": false,
+        "system": "captured"
+      },
+      "accepted": true
+    },
+    {
+      "id": "copied-token",
+      "input": {
+        "platform": "win32",
+        "context": "copied",
+        "control": "exact",
+        "owner": "same",
+        "role": "body",
+        "live": true,
+        "accepting": true,
+        "consumed": false,
+        "pending": false,
+        "mapped": true,
+        "payloadReturned": true,
+        "transition": false,
+        "system": "captured"
+      },
+      "accepted": false
+    },
+    {
+      "id": "foreign-session",
+      "input": {
+        "platform": "win32",
+        "context": "exact",
+        "control": "exact",
+        "owner": "foreign",
+        "role": "body",
+        "live": true,
+        "accepting": true,
+        "consumed": false,
+        "pending": false,
+        "mapped": true,
+        "payloadReturned": true,
+        "transition": false,
+        "system": "captured"
+      },
+      "accepted": false
+    },
+    {
+      "id": "genuine-foreign-phase",
+      "input": {
+        "platform": "win32",
+        "context": "exact",
+        "control": "foreign",
+        "owner": "same",
+        "role": "body",
+        "live": true,
+        "accepting": true,
+        "consumed": false,
+        "pending": false,
+        "mapped": true,
+        "payloadReturned": true,
+        "transition": false,
+        "system": "captured"
+      },
+      "accepted": false
+    },
+    {
+      "id": "copied-control",
+      "input": {
+        "platform": "win32",
+        "context": "exact",
+        "control": "copied",
+        "owner": "same",
+        "role": "body",
+        "live": true,
+        "accepting": true,
+        "consumed": false,
+        "pending": false,
+        "mapped": true,
+        "payloadReturned": true,
+        "transition": false,
+        "system": "captured"
+      },
+      "accepted": false
+    },
+    {
+      "id": "escaped-after-body",
+      "input": {
+        "platform": "win32",
+        "context": "exact",
+        "control": "exact",
+        "owner": "same",
+        "role": "body",
+        "live": false,
+        "accepting": true,
+        "consumed": false,
+        "pending": false,
+        "mapped": true,
+        "payloadReturned": true,
+        "transition": false,
+        "system": "captured"
+      },
+      "accepted": false
+    },
+    {
+      "id": "closed-admission",
+      "input": {
+        "platform": "win32",
+        "context": "exact",
+        "control": "exact",
+        "owner": "same",
+        "role": "body",
+        "live": true,
+        "accepting": false,
+        "consumed": false,
+        "pending": false,
+        "mapped": true,
+        "payloadReturned": true,
+        "transition": false,
+        "system": "captured"
+      },
+      "accepted": false
+    },
+    {
+      "id": "single-consume",
+      "input": {
+        "platform": "win32",
+        "context": "exact",
+        "control": "exact",
+        "owner": "same",
+        "role": "body",
+        "live": true,
+        "accepting": true,
+        "consumed": true,
+        "pending": false,
+        "mapped": true,
+        "payloadReturned": true,
+        "transition": false,
+        "system": "captured"
+      },
+      "accepted": false
+    },
+    {
+      "id": "pending-one",
+      "input": {
+        "platform": "win32",
+        "context": "exact",
+        "control": "exact",
+        "owner": "same",
+        "role": "body",
+        "live": true,
+        "accepting": true,
+        "consumed": false,
+        "pending": true,
+        "mapped": true,
+        "payloadReturned": true,
+        "transition": false,
+        "system": "captured"
+      },
+      "accepted": false
+    },
+    {
+      "id": "terminal-has-no-payload",
+      "input": {
+        "platform": "win32",
+        "context": "exact",
+        "control": "exact",
+        "owner": "same",
+        "role": "terminal",
+        "live": true,
+        "accepting": true,
+        "consumed": false,
+        "pending": false,
+        "mapped": true,
+        "payloadReturned": true,
+        "transition": false,
+        "system": "captured"
+      },
+      "accepted": false
+    },
+    {
+      "id": "missing-mapped-evidence",
+      "input": {
+        "platform": "win32",
+        "context": "exact",
+        "control": "exact",
+        "owner": "same",
+        "role": "body",
+        "live": true,
+        "accepting": true,
+        "consumed": false,
+        "pending": false,
+        "mapped": false,
+        "payloadReturned": true,
+        "transition": false,
+        "system": "captured"
+      },
+      "accepted": false
+    },
+    {
+      "id": "payload-before-cleanup",
+      "input": {
+        "platform": "win32",
+        "context": "exact",
+        "control": "exact",
+        "owner": "same",
+        "role": "body",
+        "live": true,
+        "accepting": true,
+        "consumed": false,
+        "pending": false,
+        "mapped": true,
+        "payloadReturned": true,
+        "transition": true,
+        "system": "captured"
+      },
+      "accepted": true
+    },
+    {
+      "id": "cleanup-before-payload-return",
+      "input": {
+        "platform": "win32",
+        "context": "exact",
+        "control": "exact",
+        "owner": "same",
+        "role": "body",
+        "live": true,
+        "accepting": true,
+        "consumed": false,
+        "pending": false,
+        "mapped": true,
+        "payloadReturned": false,
+        "transition": true,
+        "system": "captured"
+      },
+      "accepted": false
+    },
+    {
+      "id": "forged-system-data",
+      "input": {
+        "platform": "win32",
+        "context": "exact",
+        "control": "exact",
+        "owner": "same",
+        "role": "body",
+        "live": true,
+        "accepting": true,
+        "consumed": false,
+        "pending": false,
+        "mapped": true,
+        "payloadReturned": true,
+        "transition": false,
+        "system": "caller-json"
+      },
+      "accepted": false
+    },
+    {
+      "id": "posix-default-no-native-context",
+      "input": {
+        "platform": "posix",
+        "context": "none",
+        "control": "exact",
+        "owner": "same",
+        "role": "body",
+        "live": true,
+        "accepting": true,
+        "consumed": false,
+        "pending": false,
+        "mapped": false,
+        "payloadReturned": true,
+        "transition": false,
+        "system": "none"
+      },
+      "accepted": true
+    }
+  ],
+  "streams": [
+    {
+      "id": "posix-default-tree",
+      "rows": [
+        "posix-default-directory",
+        "posix-default-file"
+      ]
+    },
+    {
+      "id": "windows-complete-journals",
+      "rows": [
+        "native-canonical-journal",
+        "native-root-directory",
+        "native-canonical-checkpoint",
+        "native-single-link"
+      ]
+    },
+    {
+      "id": "windows-reordered-same-tree",
+      "rows": [
+        "native-single-link",
+        "native-canonical-checkpoint",
+        "native-root-directory",
+        "native-canonical-journal"
+      ]
+    },
+    {
+      "id": "windows-full128-hardlink-members",
+      "rows": [
+        "native-root-directory",
+        "native-hardlink-beta",
+        "native-hardlink"
+      ]
+    }
+  ],
+  "frameCaseSchema": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "id",
+      "input",
+      "accepted"
+    ],
+    "properties": {
+      "id": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 128
+      },
+      "input": {
+        "type": "object"
+      },
+      "accepted": {
+        "type": "boolean"
+      }
+    }
+  },
+  "workCaseSchema": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "id",
+      "limit",
+      "spent",
+      "units",
+      "expectedSpent",
+      "accepted"
+    ],
+    "properties": {
+      "id": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 128
+      },
+      "limit": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "spent": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "units": {
+        "type": "array",
+        "minItems": 1,
+        "maxItems": 8,
+        "items": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "cancelAt": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "expectedSpent": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "accepted": {
+        "type": "boolean"
+      }
+    }
+  },
+  "lifetimeCaseSchema": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "id",
+      "input",
+      "accepted"
+    ],
+    "properties": {
+      "id": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 128
+      },
+      "input": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "platform",
+          "context",
+          "control",
+          "owner",
+          "role",
+          "live",
+          "accepting",
+          "consumed",
+          "pending",
+          "mapped",
+          "payloadReturned",
+          "transition",
+          "system"
+        ],
+        "properties": {
+          "platform": {
+            "type": "string",
+            "enum": [
+              "posix",
+              "win32"
+            ]
+          },
+          "context": {
+            "type": "string",
+            "enum": [
+              "copied",
+              "exact",
+              "none"
+            ]
+          },
+          "control": {
+            "type": "string",
+            "enum": [
+              "copied",
+              "exact",
+              "foreign"
+            ]
+          },
+          "owner": {
+            "type": "string",
+            "enum": [
+              "foreign",
+              "same"
+            ]
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "body",
+              "terminal"
+            ]
+          },
+          "live": {
+            "type": "boolean"
+          },
+          "accepting": {
+            "type": "boolean"
+          },
+          "consumed": {
+            "type": "boolean"
+          },
+          "pending": {
+            "type": "boolean"
+          },
+          "mapped": {
+            "type": "boolean"
+          },
+          "payloadReturned": {
+            "type": "boolean"
+          },
+          "transition": {
+            "type": "boolean"
+          },
+          "system": {
+            "type": "string",
+            "enum": [
+              "caller-json",
+              "captured",
+              "none"
+            ]
+          }
+        }
+      },
+      "accepted": {
+        "type": "boolean"
+      }
+    }
+  },
+  "streamCaseSchema": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "id",
+      "rows"
+    ],
+    "properties": {
+      "id": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 128
+      },
+      "rows": {
+        "type": "array",
+        "minItems": 1,
+        "maxItems": 64,
+        "uniqueItems": true,
+        "items": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        }
+      }
+    }
+  }
+}

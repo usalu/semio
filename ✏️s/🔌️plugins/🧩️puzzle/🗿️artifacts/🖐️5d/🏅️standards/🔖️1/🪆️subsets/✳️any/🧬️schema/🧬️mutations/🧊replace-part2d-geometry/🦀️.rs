@@ -1,6 +1,5 @@
 //! Puzzle5d mutation — `ReplacePart2dGeometry`: whole-value swap of a part's 2D shape/extent.
 use crate::standards::v1::subsets::any::schema::diff::Puzzle5dDiff;
-use crate::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation;
 use crate::Puzzle5dSnapshot;
 
 //#region 🔖️Mutation
@@ -20,13 +19,16 @@ pub struct ReplacePart2dGeometry {
     pub new_height: Option<f64>,
 }
 
-impl protocol::MutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for ReplacePart2dGeometry {
+impl<Op> protocol::MutationKind<Puzzle5dSnapshot, Op> for ReplacePart2dGeometry
+where
+    Op: protocol::Mutation<Puzzle5dSnapshot, Diff = Puzzle5dDiff> + From<ReplacePart2dGeometry>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "part", kind: "replace-part2d-geometry", record: "ReplacedPart2dGeometry" };
 
     fn diff(&self, base: &Puzzle5dSnapshot) -> protocol::MutationOutcome<Puzzle5dDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Puzzle5dSnapshot) -> Result<Vec<Puzzle5dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Puzzle5dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     
@@ -42,6 +44,9 @@ impl protocol::MutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for ReplacePart2
 //#endregion 🔖️Mutation
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn replace_part_2d_geometry(id: String, new_shape: Option<String>, new_radius: Option<f64>, new_width: Option<f64>, new_height: Option<f64>) -> Puzzle5dMutation {
-    Puzzle5dMutation::ReplacePart2dGeometry(ReplacePart2dGeometry { id, new_shape, new_radius, new_width, new_height })
+pub fn replace_part_2d_geometry<Op>(id: String, new_shape: Option<String>, new_radius: Option<f64>, new_width: Option<f64>, new_height: Option<f64>) -> Op
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::replace_part_2d_geometry::ReplacePart2dGeometry>,
+{
+    Op::from(ReplacePart2dGeometry { id, new_shape, new_radius, new_width, new_height })
 }

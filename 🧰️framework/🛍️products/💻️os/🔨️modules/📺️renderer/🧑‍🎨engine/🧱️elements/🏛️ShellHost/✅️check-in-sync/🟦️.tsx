@@ -19,10 +19,14 @@ import { buildFrameworkSyncUtilities, encodeBackboneWorkerRequest } from "@semio
 import { type ScopedPresencePeerV1 } from "../👥️presence-scope/🟦️.ts";
 import { SHELL_HUB_ROUTE, shellRouteAdmissionTextV1, shellRouteAdmissionV1 } from "../🔀️surface-switch/🟦️.ts";
 import { type PanelTabNode, singleTreeLeaf } from "@semio-tech/ui-react";
-import { type ActiveSession, selectQuarantinedConflicts } from "../../🐚️Shell/🟦️.tsx";
+import { type ActiveSession } from "../../🐚️Shell/📦️program-sessions/🟦️.ts";
+import { selectQuarantinedConflicts } from "../../🐚️Shell/🕹️shell-store/🟦️.ts";
 import {
   panelTabDefinitionToNode,
   historyRefusalNoticeV1,
+  partitionFrameworkHistoryPanelTab
+} from "../../🛠️ShellHelpers/🛣️route-and-chrome/🟦️.tsx";
+import {
   AutoCheckinScheduler,
   automaticCheckinWaitsV1,
   canCheckIn,
@@ -30,12 +34,11 @@ import {
   checkpointOnCloseKeyV1,
   useCheckpointOnCloseV1,
   computeSyncPillState,
-  shellHistoryCursorDomV1,
-  partitionFrameworkHistoryPanelTab,
-  shellTabIcon,
   syncPillText,
   type SyncPillState
-} from "../../🛠️ShellHelpers/🟦️.tsx";
+} from "../../🛠️ShellHelpers/🧾️transfer-checkin-tutorial/🟦️.ts";
+import { shellHistoryCursorDomV1 } from "../../🛠️ShellHelpers/🔩️plumbing/🟦️.ts";
+import { shellTabIcon } from "../../🛠️ShellHelpers/🏷️labels/🟦️.tsx";
 // #endregion 🔌️Adapters
 import { timeTravelPeerPresenceV1, timeTravelRowActionRefusalsV1 } from "../../🛠️ShellHelpers/⏪️time-travel/🟦️.tsx";
 import { type PluginWasmHandle } from "../../🔌️PluginRuntime/🟦️.tsx";

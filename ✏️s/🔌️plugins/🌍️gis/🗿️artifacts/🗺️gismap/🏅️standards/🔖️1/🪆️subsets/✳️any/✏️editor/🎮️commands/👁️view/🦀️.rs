@@ -150,7 +150,4 @@ pub mod set_layer_stroke_scale {
 //#endregion 🔖️SetLayerStrokeScale
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

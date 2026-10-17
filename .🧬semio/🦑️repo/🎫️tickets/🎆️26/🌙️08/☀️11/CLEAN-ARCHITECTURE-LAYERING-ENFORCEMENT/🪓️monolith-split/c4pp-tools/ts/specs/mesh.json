@@ -1,0 +1,64 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🎨️mesh-render/🟦️.tsx",
+ "importers": "auto",
+ "children": [
+  {
+   "dir": "🖌️mesh-style-palette",
+   "doc": "/** 🖌️ Mesh style palette: the style kinds, the CSS-expression paint table, the live palette resolution, the style and selection-preview resolution and the semantic colors. */",
+   "lines": [
+    [
+     103,
+     227
+    ]
+   ]
+  },
+  {
+   "dir": "🎊️instance-celebration",
+   "doc": "/** 🎊️ Instance celebration: the transient celebrating-instance store with its prune timer and subscription, the conic spin angle, the conic shaders and the celebrating conic material factory. */",
+   "lines": [
+    [
+     229,
+     359
+    ],
+    [
+     398,
+     417
+    ]
+   ]
+  },
+  {
+   "dir": "🧱️mesh-parsing-and-residency",
+   "doc": "/** 🧱️ Mesh parsing and residency: the kind geometry, the mesh record resolution and JSON array splitting, the residency stepping and the surface sample accessors. */",
+   "lines": [
+    [
+     599,
+     767
+    ]
+   ]
+  },
+  {
+   "dir": "🔺️mesh-geometry-and-appearance",
+   "doc": "/** 🔺️ Mesh geometry and appearance: the buffer geometry of a mesh, the vertex pick data, the world surface material and appearance, the mesh visuals and the edge, face and vertex overlay geometry. */",
+   "lines": [
+    [
+     769,
+     1032
+    ]
+   ]
+  },
+  {
+   "dir": "🪟️glb-bounds-and-styling",
+   "doc": "/** 🪟️ GLB bounds and styling: the paint texture URL and tint constants, the GLB mesh frame corners, the instance local corners, the GLB edge borders and the mesh bounds corners. */",
+   "lines": [
+    [
+     1034,
+     1042
+    ],
+    [
+     1100,
+     1237
+    ]
+   ]
+  }
+ ]
+}

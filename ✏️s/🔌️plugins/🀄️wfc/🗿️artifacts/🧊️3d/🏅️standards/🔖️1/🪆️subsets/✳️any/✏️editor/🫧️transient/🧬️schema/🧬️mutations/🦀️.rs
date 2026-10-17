@@ -1,7 +1,7 @@
 //! 🫧️ WFC 3D app-transient mutation aggregate — one verb, because the solve result is replaced
 //! wholesale by whoever last ran the inference.
 
-use super::{Wfc3dTransient, Wfc3dAssignment};
+use crate::editor::wfc3d::transient::{Wfc3dTransient, Wfc3dAssignment};
 
 #[path = "🏁️set-solve/🦀️.rs"]
 mod set_solve;

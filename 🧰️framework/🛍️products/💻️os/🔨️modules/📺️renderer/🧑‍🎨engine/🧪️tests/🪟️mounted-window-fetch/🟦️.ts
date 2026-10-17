@@ -80,7 +80,6 @@ for (const row of debtFixture.cases) it(`React mounting observes owed bodies: ${
     await work;
     expect(observed).toEqual(row.owedAtMount);
     expect([...debt]).toEqual(row.remaining);
-    console.log(`[DEBUG] Mounted body debt ${row.id}: ${JSON.stringify({ observed, remaining: [...debt] })}`);
   } finally {
     release();
     await work;

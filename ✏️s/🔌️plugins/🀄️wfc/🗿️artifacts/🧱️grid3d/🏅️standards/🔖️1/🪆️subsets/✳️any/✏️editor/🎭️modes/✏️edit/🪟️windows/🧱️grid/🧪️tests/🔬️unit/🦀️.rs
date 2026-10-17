@@ -1,7 +1,9 @@
 //! 🔬️ Grid-window laws — the scene is non-empty for every example and the opening pose frames the
 //! document instead of standing inside it.
 
-use super::*;
+use crate::editor::grid3d::window::Grid3dWindowConfig;
+use semio_framework_plugin::plugin_app_close_prelude::SurfaceKind;
+use crate::editor::grid3d::modes::edit::windows::grid::*;
 use crate::standards::v1::subsets::any::io::text::inferences::scene_projection::grid_instances_json;
 
 #[test]

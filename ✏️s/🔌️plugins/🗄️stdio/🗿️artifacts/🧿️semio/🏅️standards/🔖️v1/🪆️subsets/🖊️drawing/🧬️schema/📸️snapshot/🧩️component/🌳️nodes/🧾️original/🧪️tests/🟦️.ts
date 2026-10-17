@@ -28,10 +28,9 @@ const ajv=new Ajv({strict:false});ajv.addSchema(schema);const validate=ajv.compi
 test("Drawing original neutral nodes match typed projection and independent schema",()=>{
  for(const row of fixture.cases){expect(validate(row.node)).toBe(true);expect(project(parseDrawNode(capture(row.node)))).toEqual(row.node);}
  for(const node of fixture.malformed){expect(validate(node)).toBe(false);expect(()=>parseDrawNode(capture(node))).toThrow();}
- console.log("[DEBUG] Drawing original typed/JSON schema neutral four cases and four malformed prefixes");
 });
 
-test("Drawing exact variant schema refuses missing fields and foreign branch payloads",()=>{for(const node of shapes.malformed){expect(validate(node)).toBe(false);expect(()=>parseDrawNode(capture(node))).toThrow();}console.log("[DEBUG] Drawing six exact variant-shape refusals against independent AJV");});
+test("Drawing exact variant schema refuses missing fields and foreign branch payloads",()=>{for(const node of shapes.malformed){expect(validate(node)).toBe(false);expect(()=>parseDrawNode(capture(node))).toThrow();}});
 
 test("Drawing container defaults and field membership agree with independent schema",()=>{
  const validators={style:ajv.compile({$ref:schema.$id+"#/$defs/DrawStyle"}),canvas:ajv.compile({$ref:schema.$id+"#/$defs/DrawCanvas"}),layer:ajv.compile({$ref:schema.$id+"#/$defs/DrawLayer"}),snapshot:ajv.compile({$ref:schema.$id})};
@@ -39,7 +38,6 @@ test("Drawing container defaults and field membership agree with independent sch
  for(const row of defaults.defaults){const node="kind"in row.input;expect((node?validate:validators.snapshot)(row.input)).toBe(true);expect(project((node?parseDrawNode:parseSemioDrawingSnapshot)(capture(row.input)))).toEqual(row.expected);}
  for(const row of defaults.malformed){const kind=row.kind as keyof typeof validators;expect(validators[kind](row.input)).toBe(false);expect(()=>parsers[kind](capture(row.input))).toThrow();}
  const long=JSON.parse(JSON.stringify(defaults.defaults[2]!.input));long.layers[1].root.children[1].value=defaults.longText.text.repeat(defaults.longText.repeat);expect(new TextEncoder().encode(long.layers[1].root.children[1].value).length).toBe(100000);expect(validators.snapshot(long)).toBe(true);expect(project(parseSemioDrawingSnapshot(capture(long)))).toEqual(long);
- console.log("[DEBUG] Drawing two canonical defaults, authored layers, long Unicode text, and four foreign container refusals against independent AJV");
 });
 
 
@@ -60,7 +58,6 @@ test("Shared authored Drawing document preserves layer visibility and topology a
  }finally{oracle.close();}
  const reordered={...database,tables:database.tables.map(table=>({...table,rows:table.rows.toReversed()}))};
  expect(await semioDrawingSnapshotFromSqliteDatabase(reordered)).toEqual(source);
- console.log("[DEBUG] Shared Drawing two-layer path/text/image corpus agrees with independent SQLite integrity, foreign keys, topology, visibility and byte identity");
 });
 
 const receiptDirectory=process.env.SEMIO_NATIVE_DRAWING_DIRECTORY;
@@ -69,6 +66,5 @@ test.skipIf(!receiptDirectory)("Actual native Drawing recipient receipts preserv
  expect(receipt.cases).toEqual(fixture.cases);expect(receipt.malformed).toBe(fixture.malformed.length);expect(receipt.cancelled).toBeGreaterThan(0);
  for(const row of receipt.denials){expect(fixture.deniedAxes).toContain(row.axis);expect(row.requested).toBe(0);expect(row.released).toBe(0);}
  expect(receipt.terminal).toEqual({requested:0,released:0});
- console.log("[DEBUG] Drawing original native typed-prefix and exact denied allocator receipts match portable schema");
 });
                                    

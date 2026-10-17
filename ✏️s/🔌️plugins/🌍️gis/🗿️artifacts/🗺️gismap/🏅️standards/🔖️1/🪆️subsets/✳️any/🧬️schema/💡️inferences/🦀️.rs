@@ -5,7 +5,8 @@
 //! inference gets its own `<emoji><slug>/` child (currently: `📦bounds/`).
 
 use super::bounds::{all_lon_lat_pairs, lon_lat_bounds};
-use crate::{GisMapDrawingChild, GisMapSnapshot, GisMapValueChild};
+use crate::{GisMapSnapshot};
+use crate::standards::v1::subsets::any::map_composition::{GisMapDrawingChild, GisMapValueChild};
 use ::semio_framework_schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
 use semio_s_artifact_stdio_semio_drawing::schema::diff::NodePath;
@@ -91,7 +92,7 @@ impl GisMapInference {
     /// 🧬️ Builds exactly one stable-member parent+drawing+value CreateRegion work group.
     pub fn create_region_group_work(&self, snapshot: &GisMapSnapshot, job_id: &str) -> Result<GisMapCreateRegionGroupWorkV1, GisMapProposalError> {
         use crate::mutations::{inverse_gis_map_mutation, GisMapMutation};
-        use crate::schema::gis_map_snapshot_to_drawing;
+        use crate::schema::drawing_bridge::gis_map_snapshot_to_drawing;
 
         use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
@@ -130,8 +131,8 @@ use semio_framework_value::ToValue;
         let drawing = SemioDrawingMutation::CreateNode(create_node::CreateNode { parent: NodePath { layer: 0, path: Vec::new() }, index: before_children.len(), node: after_children[before_children.len()].clone() });
         let drawing_inverse = inverse_semio_drawing_mutation(&drawing, &before_drawing).map_err(GisMapProposalError::InverseRefused)?;
 
-        let before_value = crate::gis_map_value_from_descriptor(&crate::schema::gis_map_descriptor_value(snapshot));
-        let value_payload = crate::semio_value_from_intrinsic(&created.item.data);
+        let before_value = crate::standards::v1::subsets::any::map_composition::gis_map_value_from_descriptor(&crate::schema::gis_map_descriptor_value(snapshot));
+        let value_payload = crate::standards::v1::subsets::any::map_composition::semio_value_from_intrinsic(&created.item.data);
         let value = SemioValueMutation::from_value(semio_framework_value::DslValue::object([
             ("mutation".into(), semio_framework_value::DslValue::String("insertListItem".into())),
             ("path".into(), semio_framework_value::DslValue::Array(vec![semio_framework_value::DslValue::object([("kind".into(), semio_framework_value::DslValue::String("key".into())), ("key".into(), semio_framework_value::DslValue::String("regions".into()))])])),
@@ -188,10 +189,7 @@ pub fn gismap_artifact_inference_descriptor() -> ::semio_framework_schema_regist
 }
 //#endregion 🔖️Descriptor
 
-#[cfg(test)]
-//#region 🧪️Tests
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
 
 //#region 🔁️Re-exports

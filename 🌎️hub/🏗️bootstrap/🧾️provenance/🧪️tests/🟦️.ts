@@ -37,7 +37,6 @@ export function createTrustedCatalogProvenanceTests() {
     const durable=readFileSync(published);rmSync(join(root,"diagnostics"),{recursive:true,force:true});assert.deepEqual(readFileSync(published),durable);await readTrustedCatalogPublicationProvenanceV1(root,control);
     assert.throws(()=>readCompletedCargoPublicationReferenceV1({...producer.packages[0]!.cargoInvocations[0],origin:{workspace:"/foreign"}}));
     rmSync(root,{recursive:true,force:true});
-    console.log("[DEBUG] trusted-catalog-producer-neutral: metadata selection/refusal laws; Ajv=2 WebCrypto=1; complete packet runtime remains separately qualified; evidence="+root);
   }
   return {testTrustedCatalogProvenanceV1};
 }

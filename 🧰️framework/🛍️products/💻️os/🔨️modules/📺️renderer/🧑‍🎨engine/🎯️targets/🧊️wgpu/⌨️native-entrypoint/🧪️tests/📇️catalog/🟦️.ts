@@ -33,6 +33,5 @@ test("native publication and launch read the completed variant catalog", async (
   expect(launched[2].SEMIO_PLUGIN_MODULES).toBe(join(root,"runtime"));
   expect(launched[2].SEMIO_RUNTIME_ASSETS).toBe(root);
   originalController.abort();expect(built[2].control.signal.aborted).toBe(true);
-  console.log("[DEBUG] native scoped publication and launch checked against independent lodash selection");
 });
 

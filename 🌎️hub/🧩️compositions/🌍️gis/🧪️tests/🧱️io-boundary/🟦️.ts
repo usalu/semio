@@ -9,5 +9,4 @@ test("GIS receiving schema compilers select the canonical framework schema oracl
     const match=source.match(/import \{ compileSchemaScopeExport \} from "([^"]+)"/);
     if(name==="📇️native-codecs"){expect(match).not.toBeNull();expect(new URL(match![1]!,path).href).toBe(owner.href);}else expect(match).toBeNull();
   }
-  console.log("[DEBUG] Three GIS receivers select the canonical framework schema oracle, import no plugin and resolve their imports");
 });

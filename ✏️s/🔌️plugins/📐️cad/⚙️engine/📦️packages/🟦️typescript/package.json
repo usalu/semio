@@ -1,0 +1,10 @@
+{
+  "name": "@semio-tech/cad-engine-ts",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./brepjs": "./🧱️brepjs/🟦️.ts",
+    "./kernel": "./🫀️kernel/🟦️.ts",
+    "./registry": "./📔️registry/🟦️.ts"
+  }
+}

@@ -21,14 +21,54 @@ export type TestTransformResult = {
 
 type TestMount = { readonly hostFile: string; readonly node: RustModuleNode; readonly testFile: string; readonly ownerPath: readonly string[]; readonly hostIsRoot: boolean };
 
-const FIXTURE_HELPER = [
-  "fn runtime_fixture_text(relative: &str) -> &'static str {",
-  "    let path = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(relative);",
-  "    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!(\"fixture {}: {error}\", path.display())).into_boxed_str())",
-  "}",
-].join("\n");
+/** 🧲️ The crate that reads test fixtures at run time for every other crate, as a dev-dependency. */
+export const FIXTURE_READER_CRATE = "semio-framework-test-fixtures";
 
-/** 🧪️ Rewrites `include_str!` of test fixtures into runtime reads, so fixtures leave the compiled source closure. */
+/** 🧭️ Package directory of the fixture reader crate, relative to the repository root. */
+export const FIXTURE_READER_PACKAGE_DIR = "🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust";
+
+const FIXTURE_READER_IDENT = "semio_framework_test_fixtures";
+
+/** 📥️ Adds `use semio_framework_test_fixtures::{names};` to the top of a file module, after its inner attributes and documentation, at the place rustfmt keeps its first group of `use` lines (`self`, `super`, `crate`, then by path) and before the first item otherwise; names that are already imported stay alone and a one-line import of the crate in the first group grows by the missing names. */
+export function importFixtureMacros(text: string, names: readonly string[]): string {
+  const imported = new RegExp(String.raw`^use\s+${FIXTURE_READER_IDENT}::(?:(\w+)|\{([^}]*)\});\s*$`, "u");
+  const lines = text.split("\n");
+  let at = 0;
+  let lastInner = -1;
+  for (let index = 0; index < lines.length; index += 1) {
+    const current = lines[index]!;
+    if (/^\s*\/\/!/u.test(current) || /^\s*#!\[.*\]\s*$/u.test(current)) lastInner = index;
+    else if (current.trim() !== "" && !/^\s*\/\/(?![/!])/u.test(current)) break;
+  }
+  at = lastInner + 1;
+  while (at < lines.length && lines[at]!.trim() === "") at += 1;
+  let end = at;
+  while (end < lines.length && /^use\s[^\n]*;\s*$/u.test(lines[end]!)) end += 1;
+  const render = (all: readonly string[]): string => (all.length === 1 ? `use ${FIXTURE_READER_IDENT}::${all[0]};` : `use ${FIXTURE_READER_IDENT}::{${all.join(", ")}};`);
+  const existing = lines.findIndex((line, index) => index >= at && index < end && imported.test(line));
+  const have = new Set<string>();
+  for (const line of lines) { const match = imported.exec(line); if (match) for (const name of (match[1] ?? match[2] ?? "").split(",").map((part) => part.trim()).filter(Boolean)) have.add(name); }
+  const missing = [...new Set(names)].filter((name) => !have.has(name));
+  if (!missing.length) return text;
+  if (existing >= 0) {
+    const match = imported.exec(lines[existing]!)!;
+    lines[existing] = render([...new Set([...(match[1] ?? match[2] ?? "").split(",").map((part) => part.trim()).filter(Boolean), ...missing])].sort());
+    return lines.join("\n");
+  }
+  const line = render([...missing].sort());
+  if (end === at) {
+    lines.splice(at, 0, ...(at >= lines.length ? [line] : [line, ""]));
+    return lines.join("\n");
+  }
+  const rank = (use: string): number => { const head = /^use\s+(self|super|crate)\b/u.exec(use)?.[1]; return head === undefined ? 3 : ["self", "super", "crate"].indexOf(head); };
+  const before = (use: string): boolean => rank(use) < rank(line) || (rank(use) === rank(line) && use.slice(4) < line.slice(4));
+  let place = at;
+  while (place < end && before(lines[place]!)) place += 1;
+  lines.splice(place, 0, line);
+  return lines.join("\n");
+}
+
+/** 🧪️ Rewrites `include_str!` of test fixtures into runtime reads, so fixtures leave the compiled source closure: every embedded text of a file below a `🧪️tests` directory, and every embedded text whose own path lies below one. */
 export function fixturesToRuntime(text: string, fileAbs: string, repoRoot: string): string | null {
   const tokens = rustTokens(text);
   const pairs = rustTokenPairs(tokens);
@@ -37,7 +77,8 @@ export function fixturesToRuntime(text: string, fileAbs: string, repoRoot: strin
   const definitionRanges: [number, number][] = [];
   const literal = (index: number): string | null => (tokens[index]?.kind === "string" ? tokens[index]!.text.slice(1, -1) : null);
   const target = (relative: string): string => `${FIXTURE_PLACEHOLDER}${relativePosix(repoRoot, resolve(dirname(fileAbs), relative))}`;
-  const isFixture = (relative: string): boolean => relativePosix(repoRoot, resolve(dirname(fileAbs), relative)).includes("/🧪️tests/");
+  const inTestFile = relativePosix(repoRoot, fileAbs).includes("/🧪️tests/");
+  const isFixture = (relative: string): boolean => inTestFile || relativePosix(repoRoot, resolve(dirname(fileAbs), relative)).includes("/🧪️tests/");
   const literalMacros: [number, number][] = [];
   for (const [open, close] of pairs) if (tokens[open]!.text === "(" && tokens[open - 1]?.text === "!" && ["concat", "stringify"].includes(tokens[open - 2]?.text ?? "")) literalMacros.push([open, close]);
   const inLiteralMacro = (index: number): boolean => literalMacros.some(([open, close]) => open < index && index < close);
@@ -48,24 +89,80 @@ export function fixturesToRuntime(text: string, fileAbs: string, repoRoot: strin
     depth[i] = current;
     if (tokens[i]!.text === "{") current += 1;
   }
+  const moduleDepth = new Array<number>(tokens.length).fill(0);
+  const braces: boolean[] = [];
+  for (let i = 0; i < tokens.length; i += 1) {
+    if (tokens[i]!.text === "}") braces.pop();
+    moduleDepth[i] = braces.filter(Boolean).length;
+    if (tokens[i]!.text === "{") braces.push(tokens[i - 2]?.text === "mod" && tokens[i - 1]?.kind === "identifier");
+  }
+  const converted = new Set<number>();
+  const used = new Set<string>();
   for (let i = 0; i + 6 < tokens.length; i += 1) {
-    if (tokens[i]!.text !== "include_str" || tokens[i + 1]!.text !== "!" || tokens[i + 2]!.text !== "(") continue;
+    const macroName = tokens[i]!.text;
+    if ((macroName !== "include_str" && macroName !== "include_bytes") || tokens[i + 1]!.text !== "!" || tokens[i + 2]!.text !== "(") continue;
+    const helperName = macroName === "include_str" ? "fixture_text" : "fixture_bytes";
     const relative = literal(i + 3);
     if (relative === null || tokens[i + 4]!.text !== ")" || !isFixture(relative) || inLiteralMacro(i)) continue;
     let head = i - 1;
     const level = depth[i];
-    const isConst = tokens[head]?.text === "=" && tokens[head - 1]?.text === "str" && tokens[head - 2]?.text === "&" && tokens[head - 3]?.text === ":" && tokens[head - 4]?.kind === "identifier" && (tokens[head - 5]?.text === "const" || tokens[head - 5]?.text === "static") && depth[i] === 0;
+    const declaresItem = macroName === "include_str" && tokens[head]?.text === "=" && tokens[head - 1]?.text === "str" && tokens[head - 2]?.text === "&" && tokens[head - 3]?.text === ":" && tokens[head - 4]?.kind === "identifier" && (tokens[head - 5]?.text === "const" || tokens[head - 5]?.text === "static");
+    let back = i - 1;
+    let nesting = 0;
+    for (; back >= 0 && depth[back] === depth[i]; back -= 1) {
+      const word = tokens[back]!.text;
+      if (word === "]" || word === ")") nesting += 1;
+      else if (word === "[" || word === "(") nesting = Math.max(0, nesting - 1);
+      else if (nesting === 0 && (word === ";" || word === "{" || word === "}" || word === "const" || word === "static")) break;
+    }
+    const owner = back >= 0 && depth[back] === depth[i] && (tokens[back]!.text === "const" || tokens[back]!.text === "static") ? back : -1;
+    const prefix = "super::".repeat(moduleDepth[i]!);
+    used.add(helperName);
+    if (owner >= 0 && !(declaresItem && depth[i] === 0)) {
+      if (!converted.has(owner)) {
+        const nameIndex = tokens[owner + 1]?.text === "mut" ? owner + 2 : owner + 1;
+        let equals = nameIndex + 2;
+        let inner = 0;
+        for (; equals < tokens.length; equals += 1) {
+          const word = tokens[equals]!.text;
+          if (word === "[" || word === "(" || word === "<") inner += 1;
+          else if (word === "]" || word === ")" || word === ">") inner -= 1;
+          else if (word === "=" && inner <= 0) break;
+        }
+        let end = equals + 1;
+        let open = 0;
+        for (; end < tokens.length; end += 1) {
+          const word = tokens[end]!.text;
+          if (word === "[" || word === "(" || word === "{") open += 1;
+          else if (word === "]" || word === ")" || word === "}") open -= 1;
+          else if (word === ";" && open === 0) break;
+        }
+        if (tokens[nameIndex]?.kind !== "identifier" || tokens[nameIndex + 1]?.text !== ":" || equals >= tokens.length || end >= tokens.length) return null;
+        const name = tokens[nameIndex]!.text;
+        const type = text.slice(tokens[nameIndex + 2]!.start, tokens[equals - 1]!.end);
+        converted.add(owner);
+        const byReference = tokens[equals + 1]?.text === "&";
+        edits.push({ start: tokens[owner]!.start, end: tokens[equals]!.end, text: `static ${name}: std::sync::LazyLock<${type}> = std::sync::LazyLock::new(||${byReference ? " &*Box::leak(Box::new(" : ""}` });
+        if (byReference) edits.push({ start: tokens[equals + 1]!.start, end: tokens[equals + 1]!.end, text: "" });
+        edits.push({ start: tokens[end]!.start, end: tokens[end]!.end, text: byReference ? ")));" : ");" });
+        names.add(name);
+        definitionRanges.push([tokens[owner]!.start, tokens[equals]!.end]);
+      }
+      edits.push({ start: tokens[i]!.start, end: tokens[i + 4]!.end, text: `${prefix}${helperName}!("${target(relative)}")` });
+      continue;
+    }
+    const isConst = declaresItem && depth[i] === 0;
     if (isConst) {
       const name = tokens[head - 4]!.text;
       let start = head - 5;
       if (tokens[start - 1]?.text === ")" && pairs.get(start - 1) !== undefined) start = pairs.get(start - 1)! - 1;
       else if (tokens[start - 1]?.text === "pub") start -= 1;
       const end = tokens[i + 5]?.text === ";" ? i + 5 : i + 4;
-      edits.push({ start: tokens[start]!.start, end: tokens[end]!.end, text: `static ${name}: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("${target(relative)}"));` });
+      edits.push({ start: tokens[start]!.start, end: tokens[end]!.end, text: `static ${name}: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("${target(relative)}"));` });
       names.add(name);
       definitionRanges.push([tokens[start]!.start, tokens[end]!.end]);
     } else if (level !== undefined && level >= 1) {
-      edits.push({ start: tokens[i]!.start, end: tokens[i + 4]!.end, text: `runtime_fixture_text("${target(relative)}")` });
+      edits.push({ start: tokens[i]!.start, end: tokens[i + 4]!.end, text: `${prefix}${helperName}!("${target(relative)}")` });
     }
   }
   if (!edits.length) return null;
@@ -78,14 +175,14 @@ export function fixturesToRuntime(text: string, fileAbs: string, repoRoot: strin
   }
   let out = text;
   for (const edit of edits.sort((a, b) => b.start - a.start)) out = out.slice(0, edit.start) + edit.text + out.slice(edit.end);
-  return `${out.trimEnd()}\n\n${FIXTURE_HELPER}\n`;
+  return importFixtureMacros(`${out.trimEnd()}\n`, [...used]);
 }
 
 /** 🔁️ Replaces fixture placeholders by paths relative to the owning crate directory. */
 export function resolveFixturePlaceholders(text: string, repoRoot: string, manifestDir: string): string {
   return text.replace(/@fixtures\/([^"]+)"/gu, (_, repoRelative: string) => `${relativePosix(manifestDir, resolve(repoRoot, repoRelative))}"`);
 }
-/** 🧭️ Rewrites the file-level `super::` paths of a test module into the absolute path of the module they name, so the test no longer needs its parent module to be in the same crate; a `pub(super)` restriction widens to `pub(crate)` because a `pub(in path)` restriction cannot be resolved through the glob re-export a mirror root makes. */
+/** 🧭️ Rewrites the file-level `super::` paths of a test module into the absolute path of the module they name, so the test no longer needs its parent module to be in the same crate; a `pub(super)` restriction widens to `pub(crate)` because a `pub(in path)` restriction cannot be resolved through the glob re-export a mirror root makes. `moduleEff` is the physical module path of the test, so a private `component` segment counts as one `super` level and is dropped from the result. */
 export function absolutizeSuperPaths(text: string, moduleEff: readonly string[]): string | null {
   const tree = parseRustSourceTree(text);
   const spans: { start: number; end: number; names: readonly string[] }[] = [];
@@ -105,13 +202,13 @@ export function absolutizeSuperPaths(text: string, moduleEff: readonly string[])
     if (count <= nested.length) continue;
     const above = count - nested.length;
     if (above > moduleEff.length) return null;
-    const target = moduleEff.slice(0, moduleEff.length - above);
+    const target = moduleEff.slice(0, moduleEff.length - above).filter((segment) => segment !== "component");
     const restriction = tokens[k - 1]?.text === "(" && tokens[k - 2]?.text === "pub" && tokens[last + 1]?.text === ")";
     edits.push({ start: tokens[k]!.start, end: tokens[last]!.end, text: restriction ? "crate" : ["crate", ...target].join("::") });
   }
   let out = text;
   for (const edit of edits.sort((left, right) => right.start - left.start)) out = out.slice(0, edit.start) + edit.text + out.slice(edit.end);
-  return out;
+  return out.replace(/\bcrate((?:::[A-Za-z_][A-Za-z0-9_]*)*?)::component(?=::)/gu, "crate$1");
 }
 
 
@@ -127,8 +224,37 @@ function usedAsItem(tokens: readonly { kind: string; text: string }[], name: str
   return false;
 }
 
-export function hostPrivate(hostText: string, bodyIdentifiers: ReadonlySet<string>, declaredInBody: ReadonlySet<string>, bodyText: string | null = null): { items: string[]; carry: string[]; relative: string[] } {
+/** 🔎️ Whether a body reads the name an import of its host brings in: not a field (`x.mep`, `Row { mep: … }`), not an associated item or variant (`Node::Component`), not a name the body binds itself (`let walls = …`, `for (a, walls) in …`; `let Name::Variant(x) = …` is a pattern that reads `Name`); a module path from `crate`, `super` or `self` (`crate::a::Private`) does name the import. */
+function usedAsImport(tokens: readonly { kind: string; text: string }[], name: string, hostPath: readonly string[] | null): boolean {
+  for (let i = 0; i < tokens.length; i += 1) {
+    if (tokens[i]!.text !== "for") continue;
+    for (let at = i + 1; at < tokens.length && tokens[at]!.text !== "in" && tokens[at]!.text !== "{" && at < i + 24; at += 1) if (tokens[at]!.text === name) return false;
+  }
+  let used = false;
+  for (let i = 0; i < tokens.length; i += 1) {
+    if (tokens[i]!.text !== name) continue;
+    const previous = tokens[i - 1]?.text;
+    if ((previous === "let" || (previous === "mut" && tokens[i - 2]?.text === "let")) && [ "=", ":", ";" ].includes(tokens[i + 1]?.text ?? "")) return false;
+    if (previous === "." || tokens[i + 1]?.text === ":") continue;
+    if (previous === "::") {
+      let head = i - 2;
+      while (tokens[head - 1]?.text === "::" && tokens[head - 2] !== undefined) head -= 2;
+      if (!["crate", "super", "self"].includes(tokens[head]?.text ?? "")) continue;
+      if (hostPath !== null && tokens[head]!.text === "crate") {
+        const segments: string[] = [];
+        for (let at = head + 2; at < i; at += 2) segments.push(tokens[at]!.text);
+        const wanted = hostPath.filter((segment) => segment !== "component");
+        if (segments.length !== wanted.length || segments.some((segment, index) => segment !== wanted[index])) continue;
+      }
+    }
+    used = true;
+  }
+  return used;
+}
+
+export function hostPrivate(hostText: string, bodyIdentifiers: ReadonlySet<string>, declaredInBody: ReadonlySet<string>, bodyText: string | null = null, hostPath: readonly string[] | null = null): { items: string[]; carry: string[]; relative: string[] } {
   const tree = parseRustSourceTree(hostText);
+  const childModules = new Set(tree.modules.map((node) => node.name));
   const bodyTokens = bodyText === null ? null : rustTokens(bodyText);
   const items: string[] = [];
   const carry: string[] = [];
@@ -138,11 +264,11 @@ export function hostPrivate(hostText: string, bodyIdentifiers: ReadonlySet<strin
     if (!restricted) continue;
     if (item.kind === "use") {
       const statement = hostText.slice(item.declStart, item.end);
-      const leaves = useLeafNames(statement).filter((leaf) => bodyIdentifiers.has(leaf) && !declaredInBody.has(leaf));
+      const leaves = useLeafNames(statement).filter((leaf) => bodyIdentifiers.has(leaf) && !declaredInBody.has(leaf) && (!bodyTokens || usedAsImport(bodyTokens, leaf, hostPath)));
       if (!leaves.length) continue;
       const pruned = prunedUse(statement, leaves);
       if (!pruned) continue;
-      if (/^use\s+(?:self|super)::/u.test(pruned) || /\*\s*;\s*$/u.test(pruned)) relative.push(pruned);
+      if (/^use\s+(?:self|super)::/u.test(pruned) || /\*\s*;\s*$/u.test(pruned) || childModules.has(/^use\s+(\w+)::/u.exec(pruned)?.[1] ?? "")) relative.push(pruned);
       else carry.push(pruned);
     } else if (item.kind !== "extern-crate" && item.kind !== "macro" && item.kind !== "impl" && item.name && bodyIdentifiers.has(item.name) && !declaredInBody.has(item.name) && (!bodyTokens || usedAsItem(bodyTokens, item.name))) items.push(item.name);
   }
@@ -175,11 +301,14 @@ export function widenHostItems(hostText: string, names: readonly string[]): { st
   return edits;
 }
 
-export function declaredNames(body: string): Set<string> {
+export function declaredNames(body: string, bindsHost = false): Set<string> {
   const names = new Set<string>();
   for (const item of parseRustSourceTree(body).items) {
-    if (item.name) names.add(item.name);
-    if (item.kind === "use") for (const leaf of useLeafNames(body.slice(item.declStart, item.end))) names.add(leaf);
+    if (item.name && item.kind !== "impl") names.add(item.name);
+    if (item.kind !== "use") continue;
+    const statement = body.slice(item.declStart, item.end);
+    if (bindsHost && /^\s*(?:#\[[^\]]*\]\s*)*use\s+super::/u.test(statement)) continue;
+    for (const leaf of useLeafNames(statement)) names.add(leaf);
   }
   return names;
 }
@@ -188,14 +317,14 @@ function snake(name: string): string {
   return name.replace(/^[^\p{L}\p{N}]+/u, "").replace(/[^A-Za-z0-9]+/gu, "_").replace(/^_+|_+$/gu, "").toLowerCase();
 }
 
-function discoverMounts(rootFile: string, rootSource: string, readText: (path: string) => string | null): { mounts: TestMount[]; inline: Map<string, { node: RustModuleNode; base: string }> } {
+function discoverMounts(rootFile: string, rootSource: string, readText: (path: string) => string | null): { mounts: TestMount[]; inline: Map<string, { node: RustModuleNode; base: string; file: string }> } {
   const mounts: TestMount[] = [];
-  const inline = new Map<string, { node: RustModuleNode; base: string }>();
+  const inline = new Map<string, { node: RustModuleNode; base: string; file: string }>();
   const visit = (nodes: readonly RustModuleNode[], file: string, base: string, inFileScope: boolean, trail: readonly string[], isRoot: boolean): void => {
     for (const node of nodes) {
       const path = [...trail, node.name];
       if (node.inline) {
-        inline.set(path.join("::"), { node, base: resolve(base, node.pathAttribute ?? node.name) });
+        inline.set(path.join("::"), { node, base: resolve(base, node.pathAttribute ?? node.name), file });
         visit(node.children, file, resolve(base, node.pathAttribute ?? node.name), false, path, isRoot);
         continue;
       }
@@ -224,9 +353,10 @@ export function transformTestClosure(repoRoot: string, rootFile: string, rootSou
   };
   const rootEdits: { start: number; end: number; text: string }[] = [];
   const hostEdits = new Map<string, { start: number; end: number; text: string }[]>();
+  const sameEdit = (left: { start: number; end: number; text: string }, right: { start: number; end: number; text: string }): boolean => left.start === right.start && left.end === right.end && left.text === right.text;
   const queueEdit = (host: string, edit: { start: number; end: number; text: string }): void => {
-    if (host === rootFile) rootEdits.push(edit);
-    else hostEdits.set(host, [...(hostEdits.get(host) ?? []), edit]);
+    if (host === rootFile) { if (!rootEdits.some((queued) => sameEdit(queued, edit))) rootEdits.push(edit); }
+    else if (!(hostEdits.get(host) ?? []).some((queued) => sameEdit(queued, edit))) hostEdits.set(host, [...(hostEdits.get(host) ?? []), edit]);
   };
   const flushEdits = (): void => {
     const apply = (host: string, edits: { start: number; end: number; text: string }[]): void => {
@@ -286,6 +416,33 @@ export function transformTestClosure(repoRoot: string, rootFile: string, rootSou
     for (const node of parseRustSourceTree(text).modules) if (!node.inline && node.pathAttribute !== null) out += `\n${subtreeText(resolve(dirname(file), node.pathAttribute), seen)}`;
     return out;
   };
+  const retargetPrivateImportPaths = (body: string, mount: TestMount, carry: readonly string[]): string => {
+    const hostPath = mount.ownerPath.filter((segment) => segment !== "component").join("::");
+    if (!hostPath || !carry.length) return body;
+    let out = body;
+    for (const name of new Set(carry.flatMap((statement) => useLeafNames(statement)))) {
+      out = out.replace(new RegExp(`\\buse\\s+crate::${hostPath}::${name}\\s*;`, "gu"), "");
+      out = out.replace(new RegExp(`\\bcrate::${hostPath}::${name}(?![A-Za-z0-9_])`, "gu"), name);
+    }
+    return out;
+  };
+  const carryIntoHostGlobModules = (body: string, mount: TestMount, carry: readonly string[]): string => {
+    const hostPath = mount.ownerPath.filter((segment) => segment !== "component").join("::");
+    if (!hostPath || !carry.length) return body;
+    const glob = new RegExp(`^use\\s+crate::${hostPath}::\\*\\s*;$`, "u");
+    const edits: { at: number; text: string }[] = [];
+    const visit = (nodes: readonly RustModuleNode[]): void => {
+      for (const node of nodes) {
+        if (!node.inline) continue;
+        for (const item of node.items) if (item.kind === "use" && glob.test(body.slice(item.declStart, item.end).trim())) edits.push({ at: item.end, text: `\n${carry.join("\n")}` });
+        visit(node.children);
+      }
+    };
+    visit(parseRustSourceTree(body).modules);
+    let out = body;
+    for (const edit of edits.sort((a, b) => b.at - a.at)) out = out.slice(0, edit.at) + edit.text + out.slice(edit.at);
+    return out;
+  };
   const hostGlobCarry = (mount: TestMount, body: string): string[] | null => {
     const hostPath = mount.ownerPath.filter((segment) => segment !== "component").join("::");
     if (!hostPath || !new RegExp(`\\buse\\s+crate::${hostPath}::\\*\\s*;`, "u").test(body)) return [];
@@ -294,7 +451,18 @@ export function transformTestClosure(repoRoot: string, rootFile: string, rootSou
     for (const item of parseRustSourceTree(hostText).items) {
       if (item.kind !== "use" || item.visibility !== "private") continue;
       const statement = hostText.slice(item.declStart, item.end).trim();
-      if (/^use\s+(?:self|super)::/u.test(statement) || statement.includes("{self") || /\bsuper::/u.test(statement)) return null;
+      if (/^use\s+super::/u.test(statement) && !statement.includes("{self") && !/\*\s*;\s*$/u.test(statement)) {
+        const absolute = absolutizeSuperPaths(statement, mount.ownerPath);
+        if (absolute === null) return null;
+        carry.push(absolute);
+        continue;
+      }
+      const childHead = /^use\s+([A-Za-z_][A-Za-z0-9_]*)::/u.exec(statement)?.[1];
+      if (childHead && parseRustSourceTree(hostText).modules.some((node) => node.name === childHead)) {
+        carry.push(statement.replace(/^use\s+/u, `use crate::${hostPath}::`));
+        continue;
+      }
+      if (/^use\s+(?:self|super)::/u.test(statement) || (statement.includes("{self") && !/^use\s+(?:crate|[A-Za-z_][A-Za-z0-9_]*)::/u.test(statement)) || /\bsuper::/u.test(statement)) return null;
       carry.push(statement);
     }
     return carry;
@@ -314,7 +482,10 @@ export function transformTestClosure(repoRoot: string, rootFile: string, rootSou
       const restrictedNames = parseRustSourceTree(childText).items.filter((item) => item.name && item.kind !== "use" && item.kind !== "impl" && item.kind !== "macro" && item.visibility !== "pub" && bodyNames.has(item.name)).map((item) => item.name!);
       for (const edit of widenHostItems(childText, restrictedNames) ?? []) queueEdit(childFile, edit);
     }
-    return [`use crate::${mount.ownerPath.filter((segment) => segment !== "component").join("::")}::{${items.join(", ")}};`];
+    const bound = declaredNames(body, true);
+    const imported = [...declaredNames(body)].filter((name) => !bound.has(name));
+    const fresh = items.filter((name) => !imported.includes(name));
+    return fresh.length ? [`use crate::${mount.ownerPath.filter((segment) => segment !== "component").join("::")}::{${fresh.join(", ")}};`] : [];
   };
   if (options.hoist || options.detach) {
     const { mounts } = discoverMounts(rootFile, result.rootSource, readText);
@@ -359,8 +530,21 @@ export function transformTestClosure(repoRoot: string, rootFile: string, rootSou
       if (widenedUse === null) { result.notes.push(`kept ${relativePosix(repoRoot, mount.testFile)} in place (it uses private items of its host module that cannot be widened: ${privateUse.items.join(", ").slice(0, 120)})`); continue; }
       queueEdit(mount.hostFile, removalOf(mount.hostFile, mount.node));
       for (const edit of orphanedDocRemoval(mount.hostFile, mount.node)) queueEdit(mount.hostFile, edit);
-      if (privateUse.carry.length || widenedUse.length || globCarry.length) setText(mount.testFile, prependAfterInner(body, [...privateUse.carry, ...globCarry, ...widenedUse]));
-      hoisted.push(`#[cfg(test)]\n#[path = "${relativePosix(dirname(rootFile), mount.testFile)}"]\nmod hoisted_${snake(basename(dirname(dirname(mount.testFile))))}_${hoisted.length};`);
+      if (privateUse.carry.length || widenedUse.length || globCarry.length) setText(mount.testFile, prependAfterInner(retargetPrivateImportPaths(body, mount, privateUse.carry), [...privateUse.carry, ...globCarry, ...widenedUse]));
+      const hoistedName = `hoisted_${snake(basename(dirname(dirname(mount.testFile))))}_${hoisted.length}`;
+      const formerPath = [...mount.ownerPath.filter((segment) => segment !== "component"), mount.node.name].join("::");
+      const former = new RegExp(`\\bcrate::${formerPath}(?![A-Za-z0-9_])`, "gu");
+      const retarget = (file: string, seenFiles = new Set<string>()): void => {
+        if (seenFiles.has(file)) return;
+        seenFiles.add(file);
+        const text = readText(file);
+        if (text === null) return;
+        const rewritten = text.replace(former, `crate::${hoistedName}`);
+        if (rewritten !== text) setText(file, rewritten);
+        for (const node of parseRustSourceTree(rewritten).modules) if (!node.inline && node.pathAttribute !== null) retarget(resolve(dirname(file), node.pathAttribute), seenFiles);
+      };
+      retarget(mount.testFile);
+      hoisted.push(`#[cfg(test)]\n#[path = "${relativePosix(dirname(rootFile), mount.testFile)}"]\nmod ${hoistedName};`);
       result.notes.push(`hoisted ${relativePosix(repoRoot, mount.testFile)} to the artifact root (references ${[...new Set(bound)].join(", ")}${privateUse.items.length ? `; widened ${privateUse.items.join(", ")} of the host to pub` : ""})`);
     }
     flushEdits();
@@ -368,12 +552,17 @@ export function transformTestClosure(repoRoot: string, rootFile: string, rootSou
   }
   if (options.fixtures) {
     const { mounts } = discoverMounts(rootFile, result.rootSource, readText);
-    for (const mount of mounts) {
-      const text = readText(mount.testFile);
-      if (text === null) continue;
-      const rewritten = fixturesToRuntime(text, mount.testFile, repoRoot);
-      if (rewritten !== null) { setText(mount.testFile, rewritten); result.notes.push(`runtime fixtures in ${relativePosix(repoRoot, mount.testFile)}`); }
-    }
+    const converted = new Set<string>();
+    const convert = (file: string): void => {
+      if (converted.has(file)) return;
+      converted.add(file);
+      const text = readText(file);
+      if (text === null) return;
+      const rewritten = fixturesToRuntime(text, file, repoRoot);
+      if (rewritten !== null) { setText(file, rewritten); result.notes.push(`runtime fixtures in ${relativePosix(repoRoot, file)}`); }
+      for (const node of parseRustSourceTree(readText(file) ?? text).modules) if (!node.inline && node.pathAttribute !== null) convert(resolve(dirname(file), node.pathAttribute));
+    };
+    for (const mount of mounts) convert(mount.testFile);
     const rootRewrite = fixturesToRuntime(result.rootSource, rootFile, repoRoot);
     if (rootRewrite !== null) setText(rootFile, rootRewrite);
   }
@@ -415,7 +604,7 @@ export function transformTestClosure(repoRoot: string, rootFile: string, rootSou
         const carried = mount.hostIsRoot ? [] : parseRustSourceTree(hostText).items.filter((item) => item.kind === "use" && !item.visibility.startsWith("pub")).map((item) => ({ statement: hostText.slice(item.declStart, item.end), leaves: useLeafNames(hostText.slice(item.declStart, item.end)).filter((leaf) => used.has(leaf) && !new RegExp(`\\buse\\s+[^;]*\\b${leaf}\\b`, "u").test(body)) })).filter((entry) => entry.leaves.length && !/\*\s*;\s*$/u.test(entry.statement)).map((entry) => prunedUse(entry.statement, entry.leaves));
         const seen = (moduleNames.get(owner) ?? 0) + 1;
         moduleNames.set(owner, seen);
-        return `mod ${seen === 1 ? owner : `${owner}_${seen}`} {\n${carried.length ? `${carried.join("\n")}\n` : ""}${body}\n}`;
+        return `mod ${seen === 1 ? owner : `${owner}_${seen}`} {\n${prependAfterInner(body, carried)}\n}`;
       });
       for (const mount of eligible) {
         queueEdit(mount.hostFile, removalOf(mount.hostFile, mount.node));
@@ -428,7 +617,7 @@ export function transformTestClosure(repoRoot: string, rootFile: string, rootSou
       if (existsSync(aggregate)) result.edits.set(aggregate, aggregateText);
       else result.creates.set(aggregate, aggregateText);
       overlay.set(aggregate, aggregateText);
-      queueEdit(rootFile, { start: parent.node.bodyEnd, end: parent.node.bodyEnd, text: `\n#[cfg(test)]\n#[path = "${relativePosix(parent.base, aggregate)}"]\nmod leaf_tests;\n` });
+      queueEdit(parent.file, { start: parent.node.bodyEnd, end: parent.node.bodyEnd, text: `\n#[cfg(test)]\n#[path = "${relativePosix(parent.base, aggregate)}"]\nmod leaf_tests;\n` });
       result.notes.push(`aggregated ${eligible.length} leaf test files under ${key} into ${relativePosix(repoRoot, aggregate)}`);
     }
     flushEdits();
@@ -440,14 +629,27 @@ export function transformTestClosure(repoRoot: string, rootFile: string, rootSou
       const body = readText(mount.testFile);
       if (body === null) continue;
       const whole = subtreeText(mount.testFile);
-      const privateUse = hostPrivate(readText(mount.hostFile) ?? "", identifierSet(whole), declaredNames(body), whole);
+      const rawPrivateUse = hostPrivate(readText(mount.hostFile) ?? "", identifierSet(whole), declaredNames(body, true), whole, mount.ownerPath);
+      const stuck = rawPrivateUse.relative.filter((statement) => !/^use\s+super::/u.test(statement) || /\*\s*;\s*$/u.test(statement));
+      const relativeCarry = rawPrivateUse.relative.filter((statement) => !stuck.includes(statement)).map((statement) => absolutizeSuperPaths(statement, mount.ownerPath));
+      if (relativeCarry.some((statement) => statement === null)) continue;
+      const privateUse = { ...rawPrivateUse, relative: stuck, carry: [...rawPrivateUse.carry, ...(relativeCarry as string[])] };
       const hasSuper = /\bsuper::/u.test(body);
       if (privateUse.relative.length || (!hasSuper && !privateUse.items.length)) continue;
-      const absolute = hasSuper ? absolutizeSuperPaths(body, [...mount.ownerPath.filter((segment) => segment !== "component"), mount.node.name]) : body;
+      const absolute = hasSuper ? absolutizeSuperPaths(body, [...mount.ownerPath, mount.node.name]) : body;
       if (absolute === null || (absolute === body && !privateUse.items.length)) continue;
       const widenedUse = widenFor(mount, privateUse.items, body);
       if (widenedUse === null) continue;
-      setText(mount.testFile, prependAfterInner(absolute, [...privateUse.carry, ...widenedUse]));
+      const rawGlobCarry = hostGlobCarry(mount, absolute);
+      if (rawGlobCarry === null) continue;
+      const known = new Set([...privateUse.carry.flatMap((statement) => useLeafNames(statement)), ...declaredNames(body)]);
+      const globCarry = rawGlobCarry.flatMap((statement) => {
+        const leaves = useLeafNames(statement);
+        if (!leaves.length) return [`#[allow(unused_imports)]\n${statement}`];
+        const fresh = leaves.filter((leaf) => !known.has(leaf));
+        return fresh.length ? [`#[allow(unused_imports)]\n${prunedUse(statement, fresh)}`] : [];
+      });
+      setText(mount.testFile, prependAfterInner(retargetPrivateImportPaths(carryIntoHostGlobModules(absolute, mount, privateUse.carry), mount, privateUse.carry), [...privateUse.carry, ...globCarry, ...widenedUse]));
       result.notes.push(`made ${relativePosix(repoRoot, mount.testFile)} independent of its host module (super paths absolute${privateUse.carry.length ? ", private absolute imports carried" : ""}${privateUse.items.length ? `, widened ${privateUse.items.join(", ")} to pub` : ""})`);
     }
     flushEdits();

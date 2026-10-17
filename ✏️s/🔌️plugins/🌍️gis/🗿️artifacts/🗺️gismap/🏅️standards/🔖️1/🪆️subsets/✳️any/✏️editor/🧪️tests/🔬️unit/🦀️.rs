@@ -1,7 +1,34 @@
+use crate::editor::gis2d::commands::{example, features, view};
+use crate::editor::gis2d::modes::edit::windows::map;
+use crate::editor::gis2d::panels::{artifact as document_panel, catalogue as catalogue_panel, inspection as inspection_panel};
+use crate::standards::v1::subsets::any::schema::mutations::GisMapMutation;
+use crate::{GisMapSnapshot, MapFeature, GIS_MAP_SCHEMA};
+use crate::standards::v1::subsets::any::artifact_declaration::{artifact_kind};
+use semio_framework_plugin::ActionDefinition;
+use semio_framework_plugin::ActionKind;
+use semio_framework_plugin::ArtifactEditor;
+use semio_framework_plugin::ArtifactOwnedToolJobFactory;
+use semio_framework_plugin::ArtifactToolPublicationLane;
+use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::EditorApp;
+use semio_framework_plugin::Fault;
+use semio_framework_plugin::Media;
+use semio_framework_plugin::MediaClass;
+use semio_framework_plugin::MediaForm;
+use semio_framework_plugin::MediaPayload;
+use semio_framework_plugin::MediaType;
+use semio_framework_plugin::WindowMeasure;
+use pack::snapshot::ArtifactPack;
+use crate::editor::gis2d::commands::example::set_active_example;
+use crate::editor::gis2d::commands::features::{patch_positions, patch_route, patch_routes};
+use crate::editor::gis2d::commands::inference::propose_bounds_region;
+use crate::editor::gis2d::commands::shell::open_source;
+use crate::editor::gis2d::commands::view::{fit_world, focus_feature, set_camera, set_layer_stroke_scale, set_lod_mode, set_render_mode, set_vector_style, toggle_layer_visibility};
+use crate::editor::gis2d::*;
 use crate::standards::v1::subsets::any::io::text::snapshot::{default_document, empty_gis_map_snapshot};
 
-pub(crate) mod context {
-    use super::super::*;
+pub mod context {
+    use super::*;
     use semio_framework_plugin::app::TypedOperationResultLane;
     use semio_framework_plugin::artifact_app_laws::{close_registered_fixture_app, meta, new_app_with_registry_and_members};
     use semio_framework_plugin::{EditorApp, Effect, PluginApp, VcsArtifactApp, ViewModel, ViewWindowInstance};
@@ -129,7 +156,6 @@ pub(crate) mod context {
     }
 }
 
-use super::*;
 use crate::editor::gis2d::unit_tests::context::{app, close, gis2d_app_manifest_for_tests, render, Gis2dApp};
 use semio_framework_plugin::{ContextMenuRequest, EditorApp, PluginApp, VcsArtifactApp};
 
@@ -607,4 +633,4 @@ async fn the_retained_tool_surface_proofs_and_publication_contracts_cover_every_
 }
 //#endregion 🎬️StageableActionVocabulary
 
-semio_framework_plugin::history_edit_acceptance_law!("gis", super::Gis2dPlayApp, || semio_framework_plugin::App { definition: super::create_gis2d_app(), examples: Vec::new() }, "../../🏅️standards/🔖️1/🪆️subsets/✳️any");
+semio_framework_plugin::history_edit_acceptance_law!("gis", crate::editor::gis2d::Gis2dPlayApp, || semio_framework_plugin::App { definition: crate::editor::gis2d::create_gis2d_app(), examples: Vec::new() }, "../../🏅️standards/🔖️1/🪆️subsets/✳️any");

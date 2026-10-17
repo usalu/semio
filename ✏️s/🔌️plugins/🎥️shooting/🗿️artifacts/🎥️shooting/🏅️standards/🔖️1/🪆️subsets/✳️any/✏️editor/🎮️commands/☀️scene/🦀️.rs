@@ -2,7 +2,7 @@
 //! undoable document mutations via `ShootingMutation::PatchScene`.
 
 use crate::editor::shooting::config::{ShootingConfig, ShootingConfigMutation};
-use crate::editor::shooting::ShootingDispatchCtx;
+use crate::editor::shooting::ui_helpers_and_io::ShootingDispatchCtx;
 use crate::standards::v1::subsets::any::schema::mutations::ShootingMutation;
 use crate::ShootingSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
@@ -121,7 +121,5 @@ pub mod toggle_sun {
 //#endregion 🔖️ToggleSun
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

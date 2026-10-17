@@ -23,7 +23,7 @@ const PRIMITIVE_CATALOG: &[(&str, &str, &str)] = &[("box", "Cube", "box"), ("pla
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub(crate) fn definition() -> PanelTabDefinition {
+pub fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_CATALOGUE_ID.into()),
         label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "Katalog"),
@@ -47,7 +47,7 @@ fn primitive_row(entry: &(&'static str, &'static str, &'static str), labels: &Lo
     Ok(node)
 }
 
-pub(crate) fn render(labels: &LowpolyLabels, windows: &TreeWindows<'_>) -> UiAssemblyResult<BuiltNode> {
+pub fn render(labels: &LowpolyLabels, windows: &TreeWindows<'_>) -> UiAssemblyResult<BuiltNode> {
     PanelTreeBuilder::new("lowpoly-play-catalogue")?
         .window_section(windows, "lowpoly-play-catalogue.primitives", Some(ui_label(labels.primitives.as_str())?), true, PRIMITIVE_CATALOG, |entry| primitive_row(entry, labels))?
         .build()

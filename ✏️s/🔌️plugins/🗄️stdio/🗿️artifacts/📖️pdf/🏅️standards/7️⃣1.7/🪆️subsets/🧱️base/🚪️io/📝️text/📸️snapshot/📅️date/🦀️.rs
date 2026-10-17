@@ -40,6 +40,4 @@ impl std::fmt::Display for NativePdfDate<'_> {
 /// 📤️ Formats a native PDF date.
 pub fn print_pdf_date(date:&PdfDate)->String { NativePdfDate(date).to_string() }
 
-#[cfg(test)]
-#[path="🧪️tests/🦀️.rs"]
-mod tests;
+

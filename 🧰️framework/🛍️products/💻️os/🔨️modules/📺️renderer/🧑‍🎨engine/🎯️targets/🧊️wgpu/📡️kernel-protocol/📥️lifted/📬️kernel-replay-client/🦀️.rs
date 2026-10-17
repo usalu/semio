@@ -237,8 +237,16 @@ impl MountedProductReplayRecoveryOwner {
 }
 
 struct MountedProductReplayRecoverySlot {
+    #[cfg(any(test, feature = "testkit"))]
+    #[doc(hidden)]
+    pub generation: u64,
+    #[cfg(not(any(test, feature = "testkit")))]
     generation: u64,
     pub reserved: bool,
+    #[cfg(any(test, feature = "testkit"))]
+    #[doc(hidden)]
+    pub owner: Option<MountedProductReplayRecoveryOwner>,
+    #[cfg(not(any(test, feature = "testkit")))]
     owner: Option<MountedProductReplayRecoveryOwner>,
 }
 
@@ -511,9 +519,17 @@ impl RetainedRefusedProductReplay {
 }
 
 struct MountedProductReplayRefusalSlot {
+    #[cfg(any(test, feature = "testkit"))]
+    #[doc(hidden)]
+    pub generation: u64,
+    #[cfg(not(any(test, feature = "testkit")))]
     generation: u64,
     pub instance: Option<u32>,
     pub reserved: bool,
+    #[cfg(any(test, feature = "testkit"))]
+    #[doc(hidden)]
+    pub owner: Option<RetainedRefusedProductReplay>,
+    #[cfg(not(any(test, feature = "testkit")))]
     owner: Option<RetainedRefusedProductReplay>,
 }
 

@@ -23,7 +23,6 @@ test("mounted command history uses original paged append and whole physical reti
   expect(source.includes("self.command_log.pop()")).toBe(false);
   expect(source.includes("self.command_log[")).toBe(false);
   expect(source.includes("self.command_log.partition_point(")).toBe(false);
-  console.log("[DEBUG] mounted history original0/1/8/9/17 row order agrees with RFC6902/Node JSON; paged app consumer retains exact whole backing");
 });
 
 test("mounted replacement visibility prepares bounded original identities and retains discarded backing", async () => {
@@ -39,5 +38,4 @@ test("mounted replacement visibility prepares bounded original identities and re
   expect(source.includes(".min(64)")).toBe(true);
   expect(source.includes("owner.revision != self.store.content_revision_now()")).toBe(true);
   expect(source.includes("owner.requested != self.command_prune_generation")).toBe(true);
-  console.log("[DEBUG] mounted replacement visibility exact conjunction matches RFC6902/Node JSON across3 neutral histories; original identifiers compare atmost64bytes per structuralturn");
 });

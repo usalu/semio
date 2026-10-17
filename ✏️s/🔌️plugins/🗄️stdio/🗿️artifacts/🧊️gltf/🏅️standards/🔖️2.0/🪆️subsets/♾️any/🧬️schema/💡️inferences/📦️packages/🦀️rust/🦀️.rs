@@ -17,70 +17,34 @@ pub mod standards {
             pub mod any {
                 #[path = "."]
                 pub mod io {
-                    #[path = "."]
-                    pub mod binary {
-                        #[path = "../../../../🚪️io/💾️binary/💡️inferences/🦀️.rs"]
-                        pub mod inferences;
-                    }
-                    #[path = "."]
-                    pub mod text {
-                        #[path = "../../../../🚪️io/📝️text/💡️inferences/🦀️.rs"]
-                        pub mod inferences;
-                    }
-                    #[path = "../../../../🚪️io/💾️binary/📸️snapshot/🧮️decoded-accessors/🦀️.rs"]
-                    pub mod inference_projection;
+                    pub use semio_s_artifact_stdio_gltf_inferences_inferences::standards::v2_0::subsets::any::io::binary;
+                    pub use semio_s_artifact_stdio_gltf_inferences_inferences::standards::v2_0::subsets::any::io::text;
+                    pub use semio_s_artifact_stdio_gltf_inferences_inferences::standards::v2_0::subsets::any::io::inference_projection;
                 }
                 #[path = "."]
                 pub mod schema {
                     #[path = "."]
                     pub mod inferences {
-                        #[path = "../../🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                        #[path = "../../🤝️adjacency/🦀️.rs"]
-                        pub mod adjacency;
-                        #[path = "../../🧱️area-volume/🦀️.rs"]
-                        pub mod area_volume;
-                        #[path = "../../↔️clearance/🦀️.rs"]
-                        pub mod clearance;
-                        #[path = "../../🗜️compactness/🦀️.rs"]
-                        pub mod compactness;
-                        #[path = "../../🕳️concavity/🦀️.rs"]
-                        pub mod concavity;
-                        #[path = "../../🌀️curvature/🦀️.rs"]
-                        pub mod curvature;
-                        #[path = "../../🏗️dag-assembly/🦀️.rs"]
-                        pub mod dag_assembly;
-                        #[path = "../../🔨️geometry-kernel/🦀️.rs"]
-                        pub mod geometry_core;
-                        #[path = "../../⚖️mass-distribution/🦀️.rs"]
-                        pub mod mass_distribution;
-                        #[path = "../../🧭️orientation/🦀️.rs"]
-                        pub mod orientation;
-                        #[path = "../../📏️proportion/🦀️.rs"]
-                        pub mod proportion;
-                        #[path = "../../🌊️roughness/🦀️.rs"]
-                        pub mod roughness;
-                        #[path = "../../📦️size/🦀️.rs"]
-                        pub mod size;
-                        #[path = "../../🪞️symmetry/🦀️.rs"]
-                        pub mod symmetry;
-                        #[path = "../../↕️thickness/🦀️.rs"]
-                        pub mod thickness;
-                        #[path = "../../🕸️topology/🦀️.rs"]
-                        pub mod topology;
+                        pub use semio_s_artifact_stdio_gltf_inferences_inferences::standards::v2_0::subsets::any::schema::inferences::*;
+
+                        pub use semio_s_artifact_stdio_gltf_inferences_adjacency::standards::v2_0::subsets::any::schema::inferences::adjacency;
+                        pub use semio_s_artifact_stdio_gltf_inferences_adjacency::standards::v2_0::subsets::any::schema::inferences::area_volume;
+                        pub use semio_s_artifact_stdio_gltf_inferences_clearance::standards::v2_0::subsets::any::schema::inferences::clearance;
+                        pub use semio_s_artifact_stdio_gltf_inferences_compactness::standards::v2_0::subsets::any::schema::inferences::compactness;
+                        pub use semio_s_artifact_stdio_gltf_inferences_concavity::standards::v2_0::subsets::any::schema::inferences::concavity;
+                        pub use semio_s_artifact_stdio_gltf_inferences_curvature::standards::v2_0::subsets::any::schema::inferences::curvature;
+                        pub use semio_s_artifact_stdio_gltf_inferences_inferences::standards::v2_0::subsets::any::schema::inferences::dag_assembly;
+                        pub use semio_s_artifact_stdio_gltf_inferences_geometry_core::standards::v2_0::subsets::any::schema::inferences::geometry_core;
+                        pub use semio_s_artifact_stdio_gltf_inferences_inferences::standards::v2_0::subsets::any::schema::inferences::mass_distribution;
+                        pub use semio_s_artifact_stdio_gltf_inferences_clearance::standards::v2_0::subsets::any::schema::inferences::orientation;
+                        pub use semio_s_artifact_stdio_gltf_inferences_clearance::standards::v2_0::subsets::any::schema::inferences::proportion;
+                        pub use semio_s_artifact_stdio_gltf_inferences_roughness::standards::v2_0::subsets::any::schema::inferences::roughness;
+                        pub use semio_s_artifact_stdio_gltf_inferences_adjacency::standards::v2_0::subsets::any::schema::inferences::size;
+                        pub use semio_s_artifact_stdio_gltf_inferences_symmetry::standards::v2_0::subsets::any::schema::inferences::symmetry;
+                        pub use semio_s_artifact_stdio_gltf_inferences_thickness::standards::v2_0::subsets::any::schema::inferences::thickness;
+                        pub use semio_s_artifact_stdio_gltf_inferences_topology::standards::v2_0::subsets::any::schema::inferences::topology;
                     }
-                    #[path = "."]
-                    pub mod modules {
-                        #[path = "../../../../🔨️modules/💡️inference-measures/🦀️.rs"]
-                        pub mod inference_measures;
-                        #[path = "../../../../🔨️modules/🧾️measurement-contracts/🦀️.rs"]
-                        pub mod measurement_contracts;
-                        #[path = "../../../../🔨️modules/🕸️mesh-topology/🦀️.rs"]
-                        pub mod mesh_topology;
-                        #[path = "../../../../🔨️modules/🧮️vector-operations/🦀️.rs"]
-                        pub mod vector_operations;
-                    }
+                    pub use semio_s_artifact_stdio_gltf_inferences_modules::standards::v2_0::subsets::any::schema::modules;
                 }
             }
         }

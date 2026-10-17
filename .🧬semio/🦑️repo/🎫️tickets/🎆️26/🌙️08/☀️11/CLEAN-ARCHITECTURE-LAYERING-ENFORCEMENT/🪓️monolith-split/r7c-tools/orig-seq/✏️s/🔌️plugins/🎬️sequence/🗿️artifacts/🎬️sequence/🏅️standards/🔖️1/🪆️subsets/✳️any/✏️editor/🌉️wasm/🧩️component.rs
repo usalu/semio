@@ -1,0 +1,473 @@
+//! 🌉️ Sequence editor owned byte/message bridge and primitive linear-memory exports.
+
+#[path = "📡️protocol.rs"]
+pub mod protocol;
+
+use crate::editor::sequence::SequenceHost;
+use crate::{SequenceHostSnapshot, SlotRef};
+use protocol::{SequenceBridge, SequenceDomain, SequenceFailure, SequencePayloadReader};
+use semio_framework_abi::{decode_abi_message, encode_abi_message, AbiErrorCode, AbiMessage, AbiPort, AbiPortPoll, AbiWorkBudget};
+
+//#region 🔖️DomainAdapter
+
+#[derive(Default)]
+struct SequenceDomainAdapter {
+    host: SequenceHost,
+    width: u32,
+    height: u32,
+    dpr: f64,
+    pointer_down: (f64, f64, u8),
+}
+
+impl SequenceDomain for SequenceDomainAdapter {
+    fn execute(&mut self, operation: u16, payload: &[u8]) -> Result<Vec<u8>, SequenceFailure> {
+        use protocol::*;
+        match operation {
+            SEQUENCE_OPERATION_LOAD_SNAPSHOT => {
+                let snapshot: SequenceHostSnapshot = semio_framework_pack_json::from_json_str(std::str::from_utf8(payload).map_err(domain_error)?, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(domain_error)?;
+                if snapshot.schema != "sequence.sequence" {
+                    return Err(domain_error(format!("unsupported sequence schema {}", snapshot.schema)));
+                }
+                self.host = SequenceHost::from_host_snapshot(snapshot);
+                Ok(Vec::new())
+            }
+            SEQUENCE_OPERATION_SNAPSHOT => {
+                self.host.sync_from_dag();
+                self.host.to_json().map(String::into_bytes).map_err(domain_error)
+            }
+            SEQUENCE_OPERATION_CATALOGUE => Ok(self.host.catalogue_json().into_bytes()),
+            SEQUENCE_OPERATION_ADD_STEP => self.add_step(payload, 0),
+            SEQUENCE_OPERATION_ADD_STEP_DROPPED => self.add_step(payload, 1),
+            SEQUENCE_OPERATION_ADD_STEP_TO_SLOT => self.add_step(payload, 2),
+            SEQUENCE_OPERATION_SET_STEP_COLLAPSED => self.set_step_collapsed(payload),
+            SEQUENCE_OPERATION_PICK_STEP => self.pick_step(payload),
+            SEQUENCE_OPERATION_BUILD_PATH => self.host.build_path_json().map(String::into_bytes).map_err(domain_error),
+            SEQUENCE_OPERATION_REMOVE_STEP => {
+                let id = one_text(payload)?;
+                Ok(vec![u8::from(self.host.remove_step(&id))])
+            }
+            SEQUENCE_OPERATION_SET_STEP_PARAMS => {
+                let (id, json) = two_texts(payload)?;
+                self.host.set_step_params_json(&id, &json).map(|_| Vec::new()).map_err(domain_error)
+            }
+            SEQUENCE_OPERATION_CONNECT_STEPS => {
+                let (from, to) = two_texts(payload)?;
+                self.host.connect_steps(&from, &to).map(String::into_bytes).map_err(domain_error)
+            }
+            SEQUENCE_OPERATION_DISCONNECT_STEPS => {
+                let (from, to) = two_texts(payload)?;
+                Ok(vec![u8::from(self.host.disconnect_steps(&from, &to))])
+            }
+            SEQUENCE_OPERATION_COMPILE_TEXT => Ok(self.host.compile_text().into_bytes()),
+            SEQUENCE_OPERATION_COMPILED_WIRE => Ok(self.host.compiled_wire_literal().into_bytes()),
+            SEQUENCE_OPERATION_RUN => {
+                let result = self.host.run();
+                Ok(semio_framework_pack_json::to_json_string(&result).into_bytes())
+            }
+            SEQUENCE_OPERATION_SET_SIZE => self.set_size(payload),
+            SEQUENCE_OPERATION_RENDER_FRAME => self.render_frame(),
+            SEQUENCE_OPERATION_WORLD_FROM_SCREEN => self.world_from_screen(payload),
+            SEQUENCE_OPERATION_POINTER_DOWN => self.pointer_down(payload),
+            SEQUENCE_OPERATION_POINTER_MOVE => self.pointer_move(payload),
+            SEQUENCE_OPERATION_POINTER_UP => self.pointer_up(payload),
+            SEQUENCE_OPERATION_WHEEL => self.wheel(payload),
+            SEQUENCE_OPERATION_REORGANIZE => {
+                let mut progress=|_|true;let mut decode=semio_framework_value::NativeDecodeControl::new(64*1024,&mut progress);let options=semio_framework_os_infinite::board::io::text::layout::decode_dag_options_json(std::str::from_utf8(payload).map_err(domain_error)?,&mut decode).map_err(domain_error)?;
+                let mut progress=|_|true;let mut control=semio_framework_os_infinite::board::schema::layout::LayoutControl::new(100_000_000,&mut progress);self.host.dag.reorganize(&options,&mut control).map_err(domain_error)?;
+                self.host.sync_from_dag();
+                self.host.layout_expanded_slots();
+                Ok(Vec::new())
+            }
+            SEQUENCE_OPERATION_LOD_SCALE => Ok(infinite_board_port_directed_dag::board::ports::directed_dag::dag_lod_scale_json().into_bytes()),
+            SEQUENCE_OPERATION_SET_AUTOMATIC_LOD => {
+                self.host.dag.set_automatic_lod(one_bool(payload)?);
+                Ok(Vec::new())
+            }
+            SEQUENCE_OPERATION_SET_FORCED_LOD => {
+                self.host.dag.set_forced_draw_lod_label(&one_text(payload)?);
+                Ok(Vec::new())
+            }
+            SEQUENCE_OPERATION_DRAW_LOD => Ok(self.host.dag.draw_lod_label().to_string().into_bytes()),
+            SEQUENCE_OPERATION_SET_THEME => {
+                let json = std::str::from_utf8(payload).map_err(|_| abi_failure(AbiErrorCode::InvalidUtf8))?;
+                let mut accepted = |_| true;
+                let mut control = semio_framework_value::NativeDecodeControl::new(64 * 1024, &mut accepted);
+                let overlay = semio_framework_os_infinite::board::io::text::palette::decode_board_palette_overlay_json(json, &mut control).map_err(domain_error)?;
+                self.host.dag.set_canvas_palette(&overlay);
+                Ok(Vec::new())
+            }
+            SEQUENCE_OPERATION_SELECTED_NODES => Ok(semio_framework_pack_json::to_json_string(&self.host.dag.selected_node_ids()).into_bytes()),
+            SEQUENCE_OPERATION_SET_SELECTION => self.set_selection(payload),
+            SEQUENCE_OPERATION_LABEL_OVERLAY => self.host.dag.label_overlay_paint_state_json().map(String::into_bytes).map_err(domain_error),
+            SEQUENCE_OPERATION_HOVERED_NODE => Ok(self.host.dag.hovered_node_id().unwrap_or_default().into_bytes()),
+            SEQUENCE_OPERATION_PRESELECT_NODES => Ok(semio_framework_pack_json::json!({
+                "ids": self.host.dag.preselect_widget_ids(),
+                "removedIds": self.host.dag.preselect_removed_widget_ids(),
+            })
+            .to_string()
+            .into_bytes()),
+            SEQUENCE_OPERATION_SELECTION_PREVIEW_POINTS => Ok(self.host.dag.selection_preview_points_json().into_bytes()),
+            SEQUENCE_OPERATION_SELECTION_PREVIEW_CROSSING => Ok(vec![u8::from(self.host.dag.selection_preview_crossing())]),
+            SEQUENCE_OPERATION_SELECTION_PREVIEW_METHOD => Ok(self.host.dag.selection_preview_method().to_string().into_bytes()),
+            SEQUENCE_OPERATION_SELECTION_BOUNDS => Ok(self.host.dag.selection_union_bounds_screen_json().into_bytes()),
+            SEQUENCE_OPERATION_SET_SELECTION_OPTIONS => {
+                let (method, mode) = two_texts(payload)?;
+                self.host.dag.set_selection_options(&method, &mode, true, false, false);
+                Ok(Vec::new())
+            }
+            SEQUENCE_OPERATION_SET_GHOST_STEP => {
+                let mut reader = SequencePayloadReader::new(payload);
+                let kind = reader.text().map_err(abi_failure)?.to_owned();
+                let x = reader.f64().map_err(abi_failure)?;
+                let y = reader.f64().map_err(abi_failure)?;
+                reader.finish().map_err(abi_failure)?;
+                self.host.set_ghost_step(&kind, x, y);
+                Ok(Vec::new())
+            }
+            SEQUENCE_OPERATION_CLEAR_GHOST_STEP => {
+                self.host.clear_ghost_step();
+                Ok(Vec::new())
+            }
+            _ => Err(SequenceFailure::new(AbiErrorCode::UnknownOperation, "unknown Sequence operation")),
+        }
+    }
+}
+
+impl SequenceDomainAdapter {
+    fn add_step(&mut self, payload: &[u8], variant: u8) -> Result<Vec<u8>, SequenceFailure> {
+        let mut reader = SequencePayloadReader::new(payload);
+        let kind = reader.text().map_err(abi_failure)?.to_owned();
+        let x = reader.f64().map_err(abi_failure)?;
+        let y = reader.f64().map_err(abi_failure)?;
+        let id = match variant {
+            0 => {
+                reader.finish().map_err(abi_failure)?;
+                self.host.add_step(&kind, x, y)
+            }
+            1 => {
+                let picked = reader.optional_text().map_err(abi_failure)?.map(str::to_owned);
+                reader.finish().map_err(abi_failure)?;
+                self.host.add_step_dropped(&kind, x, y, picked.as_deref())
+            }
+            2 => {
+                let owner = reader.text().map_err(abi_failure)?.to_owned();
+                let name = reader.text().map_err(abi_failure)?.to_owned();
+                reader.finish().map_err(abi_failure)?;
+                self.host.add_step_in_slot(&kind, x, y, Some(SlotRef { owner, name }))
+            }
+            _ => return Err(abi_failure(AbiErrorCode::MalformedTag)),
+        };
+        Ok(id.into_bytes())
+    }
+
+    fn set_step_collapsed(&mut self, payload: &[u8]) -> Result<Vec<u8>, SequenceFailure> {
+        let mut reader = SequencePayloadReader::new(payload);
+        let id = reader.text().map_err(abi_failure)?.to_owned();
+        let collapsed = byte_bool(reader.u8().map_err(abi_failure)?)?;
+        reader.finish().map_err(abi_failure)?;
+        Ok(vec![u8::from(self.host.set_step_collapsed(&id, collapsed))])
+    }
+
+    fn pick_step(&mut self, payload: &[u8]) -> Result<Vec<u8>, SequenceFailure> {
+        let (sx, sy) = point(payload)?;
+        Ok(self.host.pick_step_id_at_screen(sx, sy, self.width, self.height, self.dpr).unwrap_or_default().into_bytes())
+    }
+
+    fn set_size(&mut self, payload: &[u8]) -> Result<Vec<u8>, SequenceFailure> {
+        let mut reader = SequencePayloadReader::new(payload);
+        self.width = reader.u32().map_err(abi_failure)?.max(1);
+        self.height = reader.u32().map_err(abi_failure)?.max(1);
+        self.dpr = reader.f64().map_err(abi_failure)?.max(1.0);
+        reader.finish().map_err(abi_failure)?;
+        self.host.dag.set_viewport(self.width, self.height, self.dpr);
+        Ok(Vec::new())
+    }
+
+    fn render_frame(&mut self) -> Result<Vec<u8>, SequenceFailure> {
+        let snapshot = self.host.to_json().map_err(domain_error)?;
+        let labels = self.host.dag.label_overlay_paint_state_json().map_err(domain_error)?;
+        Ok(format!("{{\"snapshot\":{snapshot},\"labels\":{labels}}}").into_bytes())
+    }
+
+    fn world_from_screen(&self, payload: &[u8]) -> Result<Vec<u8>, SequenceFailure> {
+        use semio_framework_canvas::camera::{screen_to_world, Camera, Viewport};
+        use semio_framework_canvas::Point;
+        let (sx, sy) = point(payload)?;
+        let viewport = Viewport { width: self.width.max(1), height: self.height.max(1), dpr: self.dpr.max(1.0) };
+        let camera = Camera { x: self.host.dag.host_snapshot.camera.x, y: self.host.dag.host_snapshot.camera.y, zoom: self.host.dag.host_snapshot.camera.zoom };
+        let world = screen_to_world(&camera, &viewport, Point::new(sx, sy));
+        Ok(format!("{{\"x\":{},\"y\":{}}}", world.x, world.y).into_bytes())
+    }
+
+    fn pointer_down(&mut self, payload: &[u8]) -> Result<Vec<u8>, SequenceFailure> {
+        let mut reader = SequencePayloadReader::new(payload);
+        let sx = reader.f64().map_err(abi_failure)?;
+        let sy = reader.f64().map_err(abi_failure)?;
+        let button = reader.u8().map_err(abi_failure)?;
+        let shift = byte_bool(reader.u8().map_err(abi_failure)?)?;
+        let ctrl = byte_bool(reader.u8().map_err(abi_failure)?)?;
+        let alt = byte_bool(reader.u8().map_err(abi_failure)?)?;
+        reader.finish().map_err(abi_failure)?;
+        self.pointer_down = (sx, sy, button);
+        self.host.dag.pointer_down_screen(sx, sy, button, shift, ctrl, alt, false);
+        Ok(Vec::new())
+    }
+
+    fn pointer_move(&mut self, payload: &[u8]) -> Result<Vec<u8>, SequenceFailure> {
+        let (sx, sy, shift, ctrl, alt) = pointer(payload)?;
+        self.host.dag.pointer_move_screen(sx, sy, shift, ctrl, alt);
+        Ok(Vec::new())
+    }
+
+    fn pointer_up(&mut self, payload: &[u8]) -> Result<Vec<u8>, SequenceFailure> {
+        let (sx, sy, shift, ctrl, alt) = pointer(payload)?;
+        self.host.dag.pointer_up_screen(sx, sy, shift, ctrl, alt);
+        self.host.sync_from_dag();
+        if self.pointer_down.2 == 0 && !shift && !ctrl && !alt {
+            let dx = sx - self.pointer_down.0;
+            let dy = sy - self.pointer_down.1;
+            if dx * dx + dy * dy <= 64.0 {
+                let selected = self.host.dag.selected_node_ids();
+                if let Some(id) = self.host.pick_step_id_at_screen(sx, sy, self.width, self.height, self.dpr) {
+                    if selected.is_empty() || (selected.len() == 1 && !selected.contains(&id)) {
+                        self.host.dag.set_selection(&[id]);
+                    }
+                }
+            }
+        }
+        Ok(Vec::new())
+    }
+
+    fn wheel(&mut self, payload: &[u8]) -> Result<Vec<u8>, SequenceFailure> {
+        use semio_framework_canvas::camera::{wheel_screen, Camera, Viewport};
+        let mut reader = SequencePayloadReader::new(payload);
+        let sx = reader.f64().map_err(abi_failure)?;
+        let sy = reader.f64().map_err(abi_failure)?;
+        let delta_y = reader.f64().map_err(abi_failure)?;
+        reader.finish().map_err(abi_failure)?;
+        self.host.dag.set_wheel_zoom_active(true);
+        let viewport = Viewport { width: self.width.max(1), height: self.height.max(1), dpr: self.dpr.max(1.0) };
+        let mut camera = Camera { x: self.host.dag.host_snapshot.camera.x, y: self.host.dag.host_snapshot.camera.y, zoom: self.host.dag.host_snapshot.camera.zoom };
+        wheel_screen(&mut camera, &viewport, sx, sy, delta_y);
+        self.host.dag.set_camera(camera.x, camera.y, camera.zoom);
+        self.host.dag.set_wheel_zoom_active(false);
+        self.host.sync_from_dag();
+        Ok(Vec::new())
+    }
+
+    fn set_selection(&mut self, payload: &[u8]) -> Result<Vec<u8>, SequenceFailure> {
+        let mut reader = SequencePayloadReader::new(payload);
+        let count = reader.u32().map_err(abi_failure)? as usize;
+        let mut selected = Vec::with_capacity(count);
+        for _ in 0..count {
+            selected.push(reader.text().map_err(abi_failure)?.to_owned());
+        }
+        reader.finish().map_err(abi_failure)?;
+        self.host.dag.set_selection(&selected);
+        Ok(Vec::new())
+    }
+}
+
+fn domain_error(error: impl std::fmt::Display) -> SequenceFailure {
+    SequenceFailure::new(AbiErrorCode::MalformedTag, error.to_string())
+}
+
+fn abi_failure(code: AbiErrorCode) -> SequenceFailure {
+    SequenceFailure::new(code, code.to_string())
+}
+
+fn byte_bool(value: u8) -> Result<bool, SequenceFailure> {
+    match value {
+        0 => Ok(false),
+        1 => Ok(true),
+        _ => Err(abi_failure(AbiErrorCode::MalformedTag)),
+    }
+}
+
+fn one_bool(payload: &[u8]) -> Result<bool, SequenceFailure> {
+    if payload.len() != 1 {
+        return Err(abi_failure(AbiErrorCode::MalformedLength));
+    }
+    byte_bool(payload[0])
+}
+
+fn one_text(payload: &[u8]) -> Result<String, SequenceFailure> {
+    let mut reader = SequencePayloadReader::new(payload);
+    let value = reader.text().map_err(abi_failure)?.to_owned();
+    reader.finish().map_err(abi_failure)?;
+    Ok(value)
+}
+
+fn two_texts(payload: &[u8]) -> Result<(String, String), SequenceFailure> {
+    let mut reader = SequencePayloadReader::new(payload);
+    let value = (reader.text().map_err(abi_failure)?.to_owned(), reader.text().map_err(abi_failure)?.to_owned());
+    reader.finish().map_err(abi_failure)?;
+    Ok(value)
+}
+
+fn point(payload: &[u8]) -> Result<(f64, f64), SequenceFailure> {
+    let mut reader = SequencePayloadReader::new(payload);
+    let value = (reader.f64().map_err(abi_failure)?, reader.f64().map_err(abi_failure)?);
+    reader.finish().map_err(abi_failure)?;
+    Ok(value)
+}
+
+fn pointer(payload: &[u8]) -> Result<(f64, f64, bool, bool, bool), SequenceFailure> {
+    let mut reader = SequencePayloadReader::new(payload);
+    let value = (reader.f64().map_err(abi_failure)?, reader.f64().map_err(abi_failure)?, byte_bool(reader.u8().map_err(abi_failure)?)?, byte_bool(reader.u8().map_err(abi_failure)?)?, byte_bool(reader.u8().map_err(abi_failure)?)?);
+    reader.finish().map_err(abi_failure)?;
+    Ok(value)
+}
+
+//#endregion 🔖️DomainAdapter
+
+//#region 🌉️LinearMemory
+
+struct RetainedMessage {
+    _message: AbiMessage,
+    bytes: Vec<u8>,
+}
+
+/// 🌉 One caller-owned bridge instance. The protocol queue and undersized-poll payload are retained
+/// by this exact owner, never by process-global or thread-global storage.
+pub struct SequenceBridgeOwner {
+    bridge: SequenceBridge<SequenceDomainAdapter>,
+    retained: Option<RetainedMessage>,
+}
+
+impl SequenceBridgeOwner {
+    fn new() -> Self {
+        Self { bridge: SequenceBridge::new(SequenceDomainAdapter::default), retained: None }
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.retained.is_none() && self.bridge.terminal_is_empty()
+    }
+}
+
+unsafe fn sequence_bridge_owner<'a>(owner: *mut SequenceBridgeOwner) -> Option<&'a mut SequenceBridgeOwner> {
+    unsafe { owner.as_mut() }
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn sequence_bridge_create() -> *mut SequenceBridgeOwner {
+    Box::into_raw(Box::new(SequenceBridgeOwner::new()))
+}
+
+/// 🗑️ Frees a terminal bridge owner; returns zero while it still retains work.
+///
+/// # Safety
+/// A non-null owner must come from `sequence_bridge_create`, remain allocated, and
+/// have no concurrent access or outstanding references. A return value of one consumes it.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn sequence_bridge_destroy(owner: *mut SequenceBridgeOwner) -> i32 {
+    let Some(owner_ref) = (unsafe { owner.as_ref() }) else {
+        return -1;
+    };
+    if !owner_ref.terminal_is_empty() {
+        return 0;
+    }
+    drop(unsafe { Box::from_raw(owner) });
+    1
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn sequence_bridge_allocate(length: usize) -> *mut u8 {
+    if length == 0 {
+        return std::ptr::null_mut();
+    }
+    let mut bytes = Vec::<u8>::with_capacity(length);
+    let pointer = bytes.as_mut_ptr();
+    std::mem::forget(bytes);
+    pointer
+}
+
+/// ♻️ Releases a buffer allocated by the bridge.
+///
+/// # Safety
+/// A non-null pointer with nonzero capacity must identify an unreleased allocation from
+/// `sequence_bridge_allocate` with that capacity. No references may remain to its storage.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn sequence_bridge_release(pointer: *mut u8, capacity: usize) {
+    if !pointer.is_null() && capacity != 0 {
+        drop(unsafe { Vec::from_raw_parts(pointer, 0, capacity) });
+    }
+}
+
+/// 📨️ Decodes and submits one request to the bridge owner.
+///
+/// # Safety
+/// A non-null owner must be a live bridge allocation with exclusive access for this call.
+/// The input must remain readable for `length` initialized bytes and must not alias
+/// memory mutated through the owner.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn sequence_bridge_send(owner: *mut SequenceBridgeOwner, pointer: *const u8, length: usize, byte_credit: usize) -> i32 {
+    let Some(owner) = (unsafe { sequence_bridge_owner(owner) }) else {
+        return -1;
+    };
+    if pointer.is_null() || length == 0 || length > protocol::SEQUENCE_MAX_REQUEST_BYTES + 32 {
+        return -1;
+    }
+    let bytes = unsafe { std::slice::from_raw_parts(pointer, length) };
+    let Ok(message) = decode_abi_message(bytes) else {
+        return -1;
+    };
+    owner.bridge.try_send(message, AbiWorkBudget::credits(byte_credit)).map_or(-1, |_| 1)
+}
+
+/// 📬️ Copies the next bridge message into caller-owned storage when it fits.
+///
+/// # Safety
+/// A non-null owner must be a live bridge allocation with exclusive access for this call.
+/// The output must be writable for `capacity` bytes and must not overlap owner storage
+/// or any retained message. No other references may access the written bytes during the call.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn sequence_bridge_poll(owner: *mut SequenceBridgeOwner, pointer: *mut u8, capacity: usize, byte_credit: usize) -> i32 {
+    let Some(owner) = (unsafe { sequence_bridge_owner(owner) }) else {
+        return -1;
+    };
+    if pointer.is_null() || capacity == 0 {
+        return -1;
+    }
+    if owner.retained.is_none() {
+        match owner.bridge.poll(AbiWorkBudget::credits(byte_credit)) {
+            Ok(AbiPortPoll::Message(message)) => {
+                let bytes = encode_abi_message(&message);
+                owner.retained = Some(RetainedMessage { _message: message, bytes });
+            }
+            Ok(AbiPortPoll::Pending) => return 0,
+            Ok(AbiPortPoll::Closed) | Err(_) => return -1,
+        }
+    }
+    let value = owner.retained.as_ref().expect("retained Sequence message");
+    if value.bytes.len() > capacity {
+        return i32::try_from(value.bytes.len()).unwrap_or(-1);
+    }
+    unsafe { std::ptr::copy_nonoverlapping(value.bytes.as_ptr(), pointer, value.bytes.len()) };
+    let length = value.bytes.len();
+    owner.retained = None;
+    i32::try_from(length).unwrap_or(-1)
+}
+
+/// 🔒️ Starts closing the bridge and releases its pending delivery.
+///
+/// # Safety
+/// A non-null owner must be a live bridge allocation with exclusive access for this call.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn sequence_bridge_begin_close(owner: *mut SequenceBridgeOwner) {
+    if let Some(owner) = unsafe { sequence_bridge_owner(owner) } {
+        owner.retained = None;
+        owner.bridge.begin_close();
+    }
+}
+
+/// 🔎️ Reports whether the bridge retains any pending work.
+///
+/// # Safety
+/// A non-null owner must be a live bridge allocation with exclusive access for this call.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn sequence_bridge_terminal_is_empty(owner: *mut SequenceBridgeOwner) -> i32 {
+    unsafe { sequence_bridge_owner(owner) }.map_or(0, |owner| i32::from(owner.terminal_is_empty()))
+}
+
+//#endregion 🌉️LinearMemory

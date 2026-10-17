@@ -9,8 +9,8 @@ import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { canonicalJson } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧾️serialization/🔣️json/🟦️.ts";
 import { blake3Hex } from "@semio-tech/framework/hash";
-import { decodePackValue, encodePackValue, packValueToExactJson } from "../../../🧰️framework/🛍️products/💻️os/🟦️.ts";
-import { DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🔏️document-open/🟦️.ts";
+import { decodePackValue, encodePackValue, packValueToExactJson } from "@semio-tech/framework-os";
+import { DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES } from "@semio-tech/framework-os/modules/directory/schema/document-open";
 import { DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1 } from "@semio-tech/framework/directory/schema";
 import { componentReceiptBindsV1, componentReceiptValueV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏷️component-receipt/🟦️.ts";
 import { verifySemanticDescriptorPairBytesV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/✅️catalog-verification/🟦️.ts";
@@ -22,7 +22,7 @@ import { assertObservationExpectation, type ObservationExpectation } from "../..
 import { readHubScriptModule } from "../../🧪️testing/📜️script-sources/🟦️.ts";
 import { projectTrustedBootstrapCodecsV1 } from "../../🏗️bootstrap/🧾️provenance/🗃️bootstrap-bundle/🟦️.ts";
 import { trustedBootstrapBrowserActorEncoding, trustedBootstrapBrowserActorV1, trustedBootstrapClosureEncoding, type TrustedBootstrapCodec, trustedBootstrapDependencies, trustedBootstrapDependencyEncoding, trustedBootstrapDescriptorClaims, trustedBootstrapIdentity, trustedBootstrapPlanGenerationOutcome, trustedBootstrapProfileEncoding, trustedBootstrapResolveClosure, trustedBootstrapResolveDependencies } from "../../🏗️bootstrap/🧾️provenance/🧮️bootstrap-claims/🟦️.ts";
-import { proveTrustedRotationSourceFixture } from "../../🏗️bootstrap/🧾️provenance/🚚️bootstrap-publication/🟦️.ts";
+import { proveTrustedRotationSourceFixture } from "../../🏗️bootstrap/🧾️provenance/🚚️bootstrap-publication/🗺️gis-proofs-and-staging/🟦️.ts";
 import { proveBrowserDocumentOpenFixture } from "../📄️browser-document-open/🟦️.ts";
 import { proveExecutionTargetLeaseCorpus } from "../🔗️execution-target-lease-checks/🟦️.ts";
 import { proveDocumentOpenPlanFixture } from "../🗺️open-plan-checks/🟦️.ts";
@@ -947,7 +947,7 @@ export async function proveTrustedStdioGisBootstrapFixture(invocation: ScriptInv
 
 /** 🔗️ Exercises receipt-derived dependency claims with Pack, AJV and independent byte framing. */
 export async function proveTrustedCompiledDependenciesFixture(repoRoot: string): Promise<void> {
-  await (await import("../../../🧰️framework/🔨️modules/🎒️pack/🌱️value/📜️script.ts")).proveWireValueMaterializationFixture(repoRoot);
+  await (await import("@semio-tech/framework-pack-record-ts/script")).proveWireValueMaterializationFixture(repoRoot);
   const assert: (typeof import("node:assert"))["strict"] = (await import("node:assert/strict")).default;
   const root = join(repoRoot, "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧪️tests/🧫️fixtures/🔗️compiled-dependencies");
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));

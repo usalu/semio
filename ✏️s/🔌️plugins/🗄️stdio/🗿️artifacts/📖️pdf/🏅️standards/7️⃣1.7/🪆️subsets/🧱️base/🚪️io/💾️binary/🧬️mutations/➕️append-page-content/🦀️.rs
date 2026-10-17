@@ -3,7 +3,7 @@
 pub const TAG: u8 = dsl::protocol_record::tag_u8(include_str!("../📡️.protocol.semio"), "append-page-content");
 pub const BINARY_TAG: u8 = TAG;
 
-use crate::standards::v1_7::subsets::base::schema::mutations::AppendPageContent;
+use crate::standards::v1_7::subsets::base::schema::mutations::append_page_content::AppendPageContent;
 
 /// 📤️ Encodes this direct payload as canonical schema JSON bytes.
 pub fn encode(payload: &AppendPageContent) -> Result<Vec<u8>, String> {

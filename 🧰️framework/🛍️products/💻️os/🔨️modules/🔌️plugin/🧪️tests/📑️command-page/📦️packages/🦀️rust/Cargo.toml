@@ -1,0 +1,22 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-framework-plugin-command-page-laws"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+autotests = false
+[lints]
+workspace = true
+[package.metadata.semio]
+role = "test"
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+[dev-dependencies]
+semio-framework = { path = "../../../../../../../../📦️packages/🦀️rust" }
+semio-framework-diagnostic = { path = "../../../../../../../../🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
+semio-framework-trace.workspace = true
+[[test]]
+name = "command-page-authority"
+path = "../../🦀️.rs"

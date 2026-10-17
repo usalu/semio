@@ -1,6 +1,6 @@
 //! 🧬️ Transparent XmlMutation aggregate.
 use crate::schema::diff::XmlDiff;
-#[cfg(test)] use crate::schema::snapshot::XmlNode;
+#[cfg(any(test, feature = "testkit"))] use crate::schema::snapshot::XmlNode;
 use crate::XmlSnapshot;
 
 pub use super::insert_element::{InsertElementMutation, InsertElementPayload};
@@ -28,8 +28,8 @@ pub enum XmlMutation {
 
 
 
-#[cfg(test)]
-pub(crate) fn demo_mutation_cases() -> Vec<XmlMutation> {
+#[cfg(any(test, feature = "testkit"))]
+pub fn demo_mutation_cases() -> Vec<XmlMutation> {
     use crate::schema::snapshot::XmlNode;
     vec![
         XmlMutation::SetDeclaration(SetDeclarationPayload { declaration: None }),
@@ -41,6 +41,4 @@ pub(crate) fn demo_mutation_cases() -> Vec<XmlMutation> {
     ]
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

@@ -166,6 +166,18 @@ pub fn repo_text(relative: &str) -> &'static str {
     })
 }
 
+/// 📦️ One repository file as bytes, read once; a missing file names its path in the panic.
+pub fn repo_bytes(relative: &str) -> &'static [u8] {
+    static BYTES: OnceLock<Mutex<HashMap<String, &'static [u8]>>> = OnceLock::new();
+    let table = BYTES.get_or_init(|| Mutex::new(HashMap::new()));
+    if let Some(bytes) = table.lock().unwrap_or_else(std::sync::PoisonError::into_inner).get(relative) {
+        return bytes;
+    }
+    let path = repo_root().join(relative);
+    let leaked: &'static [u8] = Box::leak(std::fs::read(&path).unwrap_or_else(|error| panic!("{} is readable: {error}", path.display())).into_boxed_slice());
+    table.lock().unwrap_or_else(std::sync::PoisonError::into_inner).entry(relative.to_owned()).or_insert(leaked)
+}
+
 /// 📚️ Several repository files as one text, in order, each newline-terminated.
 pub fn repo_texts(relatives: &[&str]) -> &'static str {
     remember(format!("files:{}", relatives.join("\n")), || {

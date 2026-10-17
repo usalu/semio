@@ -6,25 +6,26 @@
 //! leaving `rows: None`. That `None` is the whole point of this case: a rename is a pure
 //! identity-field change, so the committed diff must not even mention `rows`.
 
+use semio_framework_test_fixtures::fixture_text;
 use semio_s_artifact_stdio_semio_table_model::schema::diff::SemioTableDiff;
 use semio_s_artifact_stdio_semio_table_mutations::schema::mutations::SemioTableMutation;
 use semio_s_artifact_stdio_semio_table_model::schema::snapshot::SemioTableSnapshot;
 use protocol::Mutation;
 
-const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏷️rename-column/✏️renames/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏷️rename-column/✏️renames/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏷️rename-column/✏️renames/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏷️rename-column/✏️renames/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏷️rename-column/✏️renames/🎯️outcome/🔣️.json");
+static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏷️rename-column/✏️renames/📸️snapshot/⬅️before/🔣️.json"));
+static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏷️rename-column/✏️renames/📸️snapshot/➡️after/🔣️.json"));
+static MUTATION: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏷️rename-column/✏️renames/🦠️mutation/🔣️.json"));
+static DIFF: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏷️rename-column/✏️renames/🔺️diff/🔣️.json"));
+static OUTCOME: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏷️rename-column/✏️renames/🎯️outcome/🔣️.json"));
 
 fn before() -> SemioTableSnapshot {
-    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("rename-column before snapshot decodes")
+    semio_framework_pack_json::from_json_str((*BEFORE), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("rename-column before snapshot decodes")
 }
 fn expected_after() -> SemioTableSnapshot {
-    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("rename-column after snapshot decodes")
+    semio_framework_pack_json::from_json_str((*AFTER), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("rename-column after snapshot decodes")
 }
 fn rename_column() -> SemioTableMutation {
-    semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("rename-column mutation decodes")
+    semio_framework_pack_json::from_json_str((*MUTATION), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("rename-column mutation decodes")
 }
 
 /// ▶️ Only the column's native key changes — its declared kind and every row stay put.
@@ -60,14 +61,14 @@ async fn the_undo_rename_column_swaps_the_two_names_back() {
 /// 🔣️ Snapshots and the `{"RenameColumn":{"name":"city","new_name":"town"}}` payload are canonical.
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
-    for (label, text) in [("before", BEFORE), ("after", AFTER)] {
+    for (label, text) in [("before", (*BEFORE)), ("after", (*AFTER))] {
         let decoded: SemioTableSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
         let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "rename-column/renames-city-to-town-without-touching-any-row: committed {label} JSON is not canonical");
     }
     let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&(rename_column()))).expect("rename-column mutation encodes");
-    let original: serde_json::Value = serde_json::from_str(MUTATION).expect("rename-column mutation reparses");
+    let original: serde_json::Value = serde_json::from_str((*MUTATION)).expect("rename-column mutation reparses");
     assert_eq!(reencoded, original, "rename-column/renames-city-to-town-without-touching-any-row: committed mutation JSON is not canonical");
 }
 
@@ -75,7 +76,7 @@ async fn committed_json_is_canonical() {
 /// `mutation.no-op` warning nor the `mutation.duplicate-id` FATAL may fire.
 #[semio_framework_async_macros::async_test]
 async fn declared_outcome_holds_with_no_no_op_and_no_duplicate_id() {
-    let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
+    let outcome: serde_json::Value = serde_json::from_str((*OUTCOME)).expect("outcome decodes");
     assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("applied"), "rename-column/renames-city-to-town-without-touching-any-row: this case is declared applied");
     let produced = rename_column().diff(&before());
     assert!(produced.messages().is_empty(), "renaming to a genuinely free name must raise no diagnostics");
@@ -87,7 +88,7 @@ async fn produces_committed_diff() {
     let base = before();
     let outcome = <SemioTableMutation as Mutation<SemioTableSnapshot>>::diff(&rename_column(), &base);
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
-    let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
+    let committed: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff decodes");
     assert_eq!(produced, committed, "rename-column/renames-city-to-town-without-touching-any-row: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
 
@@ -95,10 +96,10 @@ async fn produces_committed_diff() {
 /// key is absent from the JSON entirely, which is what proves the rename never reached the rows.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical_and_omits_rows_entirely() {
-    let decoded: SemioTableDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed rename-column diff decodes");
+    let decoded: SemioTableDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed rename-column diff decodes");
     assert!(decoded.columns.is_some(), "rename-column must rebuild the column list");
     assert!(decoded.rows.is_none(), "rename-column must leave the rows slot untouched");
-    let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
+    let committed: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff reparses");
     assert!(committed.get("rows").is_none(), "the committed diff JSON must not carry a rows key at all");
     let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("diff re-encodes");
     assert_eq!(reencoded, committed, "rename-column/renames-city-to-town-without-touching-any-row: committed diff JSON is not canonical");
@@ -107,7 +108,7 @@ async fn committed_diff_is_canonical_and_omits_rows_entirely() {
 /// 🩹 Applying the committed diff to `before` yields `after`.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: SemioTableDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed rename-column diff decodes");
+    let decoded: SemioTableDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed rename-column diff decodes");
     let produced = protocol::apply_diff(&decoded, &before()).expect("committed rename-column diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "rename-column/renames-city-to-town-without-touching-any-row: committed diff did not carry before to after");
 }

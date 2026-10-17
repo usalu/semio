@@ -22,10 +22,11 @@ workspace = true
 path = "../../🦀️.rs"
 
 [features]
-testkit = ["semio-framework-os-infinite-world-model/testkit", "semio-framework-os-infinite-world-components/testkit", "semio-framework-os-infinite-world-cursors/testkit", "semio-framework-os-infinite-world-scene/testkit", "semio-framework-os-infinite-world-bridge/testkit", "semio-framework-os-infinite-world-interaction/testkit"]
+testkit = ["semio-framework-os-infinite-world-model/testkit", "semio-framework-os-infinite-world-components/testkit", "semio-framework-os-infinite-world-cursors/testkit", "semio-framework-os-infinite-world-scene/testkit", "semio-framework-os-infinite-world-bridge/testkit", "semio-framework-os-infinite-world-interaction/testkit", "dep:semio-framework-test-fixtures"]
 
 [dependencies]
 semio-framework-pack-json = { path = "../../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-framework-test-fixtures = { path = "../../../../../../../../🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust", optional = true }
 semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-job = { workspace = true }
 semio-framework-tool-run = { workspace = true }
@@ -49,8 +50,8 @@ image = { version = "0.25", default-features = false, features = ["png", "jpeg",
 ui_wgpu = { path = "../../../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", package = "semio-framework-ui", features = ["wgpu"] }
 
 [dev-dependencies]
-semio-framework-os-infinite-world-host = { path = ".", features = ["testkit"] }
 semio-framework-job = { workspace = true, features = ["testkit"] }
+semio-framework-test-fixtures = { path = "../../../../../../../../🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-framework-trace = { path = "../../../../../../../../🔨️modules/⏱️trace/📦️packages/🦀️rust" }
 semio-framework-async = { workspace = true }
 base64_codec = { path = "../../../../../../../../🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust", package = "semio-framework-io-base64" }
@@ -59,31 +60,39 @@ semio-framework-hash = { workspace = true }
 [[test]]
 name = "world_host_bridge_empty_build"
 path = "../../🧪️tests/🌉️bridge-empty-build/🦀️.rs"
+required-features = ["testkit"]
 
 [[test]]
 name = "world_host_surface_verbs"
 path = "../../🧪️tests/📇️surface-verbs/🦀️.rs"
+required-features = ["testkit"]
 
 [[test]]
 name = "world_host_journal_sequences"
 path = "../../🧪️tests/📜️journal-sequences/🦀️.rs"
+required-features = ["testkit"]
 
 [[test]]
 name = "world_host_unit"
 path = "../../🧪️tests/🔬️unit/🦀️.rs"
+required-features = ["testkit"]
 
 [[test]]
 name = "world_host_unit_2"
 path = "../../🧪️tests/🔭️unit-2/🦀️.rs"
+required-features = ["testkit"]
 
 [[test]]
 name = "world_host_unit_3"
 path = "../../🧪️tests/🧪️unit-3/🦀️.rs"
+required-features = ["testkit"]
 
 [[test]]
 name = "world_host_pointer_gestures"
 path = "../../🧪️tests/🖱️pointer-gestures/🦀️.rs"
+required-features = ["testkit"]
 
 [[test]]
 name = "world_host_scene_input_residency"
 path = "../../🧪️tests/🧲️scene-input-residency/🦀️.rs"
+required-features = ["testkit"]

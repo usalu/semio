@@ -1,4 +1,42 @@
-use super::*;
+use crate::FLOW_DIALECT;
+use semio_framework_plugin::ArtifactViewer;
+use semio_framework_plugin::Viewer;
+use semio_framework_test_fixtures::fixture_text;
+#[allow(unused_imports)]
+use crate::viewer::flow::modes::view;
+#[allow(unused_imports)]
+use crate::viewer::flow::modes::view::windows::main;
+#[allow(unused_imports)]
+use crate::{FlowMutation, FlowSnapshot, FLOW_DOCUMENT_SCHEMA};
+#[allow(unused_imports)]
+use semio_framework_plugin::app::InteractionView;
+#[allow(unused_imports)]
+use semio_framework_plugin::ArtifactView;
+#[allow(unused_imports)]
+use semio_framework_plugin::ConfigView;
+#[allow(unused_imports)]
+use semio_framework_artifact_reference::Dialect;
+#[allow(unused_imports)]
+use semio_framework_plugin::Fault;
+#[allow(unused_imports)]
+use semio_framework_ui_locale::Label;
+#[allow(unused_imports)]
+use semio_framework_plugin::NoConfig;
+#[allow(unused_imports)]
+use semio_framework_plugin::NoConfigMutation;
+#[allow(unused_imports)]
+use semio_framework_plugin::NoPresence;
+#[allow(unused_imports)]
+use semio_framework_plugin::NoPresenceMutation;
+#[allow(unused_imports)]
+use semio_framework_plugin::NoTransient;
+#[allow(unused_imports)]
+use semio_framework_plugin::NoTransientMutation;
+#[allow(unused_imports)]
+use semio_framework_plugin::ViewEmit;
+#[allow(unused_imports)]
+use semio_framework_2d::compute::EngineHandles;
+use crate::viewer::flow::*;
 use semio_framework_plugin::{__semio_dispatch_PluginApp, plugin_app_close_prelude::*};
 
 semio_framework_dispatch_macros::dyn_enum_close! {
@@ -12,7 +50,7 @@ async fn flow_viewer_member_factory_and_full_store_close_match_neutral_contract(
     use semio_framework::kernel::{ArtifactKind, Rights, Scope};
     use semio_framework_plugin::{Plugin, PluginApp, PluginLifecycleStep};
     use semio_framework_plugin::PluginBuilder;
-    let fixture: Value = serde_json::from_str(include_str!("../🧫️fixtures/🧹️owners/🔣️.json")).unwrap();
+    let fixture: Value = serde_json::from_str(fixture_text!("../../🧪️tests/🧫️fixtures/🧹️owners/🔣️.json")).unwrap();
     let definition = create_flow_viewer();
     assert_eq!(definition.role, AppRole::Viewer);
     assert_eq!(fixture["role"].as_str().unwrap(), "viewer");

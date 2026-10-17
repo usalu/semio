@@ -28,14 +28,17 @@ pub fn plan(p: &GltfDeleteCameraPayload, base: &GltfSnapshot) -> Result<GltfDiff
     Ok(diff)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn inverse(p: &GltfDeleteCameraPayload, base: &GltfSnapshot) -> Vec<super::GltfMutation> {
+pub fn inverse<Op>(p: &GltfDeleteCameraPayload, base: &GltfSnapshot) -> Vec<Op>
+where
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::remove_used_extension::RemoveUsedExtensionMutation>,
+{
     if validate(p, base).is_err() {
         return Vec::new();
     }
-    let mut rows = vec![super::create_camera::mutation(super::create_camera::GltfCreateCameraPayload { position: p.index, projection: base.document.cameras[p.index].projection.clone(), camera: Some(Box::new(base.document.cameras[p.index].clone())) })];
+    let mut rows = vec![crate::standards::v2_0::subsets::any::schema::mutations::create_camera::mutation(crate::standards::v2_0::subsets::any::schema::mutations::create_camera::GltfCreateCameraPayload { position: p.index, projection: base.document.cameras[p.index].projection.clone(), camera: Some(Box::new(base.document.cameras[p.index].clone())) })];
     for (node, entry) in base.document.nodes.iter().enumerate() {
         if entry.camera == Some(p.index) {
-            rows.push(super::bind_node_camera::mutation(super::bind_node_camera::GltfBindNodeCameraPayload { node, camera: p.index }));
+            rows.push(crate::standards::v2_0::subsets::any::schema::mutations::bind_node_camera::mutation(crate::standards::v2_0::subsets::any::schema::mutations::bind_node_camera::GltfBindNodeCameraPayload { node, camera: p.index }));
         }
     }
     rows.reverse();
@@ -52,11 +55,17 @@ pub enum DeleteCameraMutation {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn mutation(payload: GltfDeleteCameraPayload) -> super::GltfMutation {
-    super::GltfMutation::DeleteCamera(DeleteCameraMutation::Apply(payload))
+pub fn mutation<Op>(payload: GltfDeleteCameraPayload) -> Op
+where
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::delete_camera::DeleteCameraMutation>,
+{
+    Op::from(DeleteCameraMutation::Apply(payload))
 }
 
-impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for DeleteCameraMutation {
+impl<Op> protocol::MutationKind<GltfSnapshot, Op> for DeleteCameraMutation
+where
+    Op: protocol::Mutation<GltfSnapshot, Diff = GltfDiff> + From<DeleteCameraMutation>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "camera", kind: "delete-camera", record: "DeletedCamera" };
 
     fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<GltfDiff> {
@@ -68,7 +77,7 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for DeleteCameraM
         }
     }
 
-    fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<super::GltfMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         match self {
             Self::Apply(payload) => Ok(inverse(payload, base)),
         }
@@ -85,10 +94,6 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for DeleteCameraM
 //#endregion 🧬️DirectMutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🚫️removes-the-2257c3/🦀️.rs"]
-mod case_removes_the_2257c3;
-#[cfg(test)]
-#[path = "🧪️tests/🔬️middle-row/🦀️.rs"]
-mod case_middle_row;
+
+
 //#endregion 🧪️Tests

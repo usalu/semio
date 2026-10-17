@@ -1,14 +1,10 @@
 //! 🧬️ Puzzle5d snapshot schema — artifact-lane fields only.
 
-use crate::{Puzzle5dFastener, Puzzle5dKindCompatibility, Puzzle5dMeta, Puzzle5dPart, Puzzle5dTargetVolume, PUZZLE_5D_SCHEMA};
+use crate::{PUZZLE_5D_SCHEMA};
+use crate::standards::v1::subsets::any::schema::document_records::{Puzzle5dFastener, Puzzle5dKindCompatibility, Puzzle5dMeta, Puzzle5dPart, Puzzle5dTargetVolume};
 use ::semio_framework_schema::ArtifactSchema;
 use semio_s_artifact_stdio_semio_kit::schema::snapshot::SemioKitSnapshot;
 
-
-/// 🚪️ Owns the codec used by the actual subset's native declaration.
-pub(crate) fn native_codec()->store::os_store::serialization::ArtifactCodec {
-    store::bare_artifact_codec::<Puzzle5dSnapshot,crate::Puzzle5dMutation>(PUZZLE_5D_SCHEMA)
-}
 
 //#region 🔖️Snapshot
 /// 📸️ Persisted puzzle5d document snapshot (persistent fields of the artifact).
@@ -80,7 +76,7 @@ impl Default for Puzzle5dSnapshot {
 
 //#region 🔁️Re-exports
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
-pub use crate::Puzzle5dKindCatalogsExtra;
+pub use crate::standards::v1::subsets::any::schema::kind_catalogs::Puzzle5dKindCatalogsExtra;
 //#endregion 🔁️Re-exports
 
 

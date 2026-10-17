@@ -4,7 +4,6 @@
 pub mod sqlite_snapshot_operations;
 #[path = "📥️lifted/🚪️io/🦀️.rs"]
 pub mod lifted_composer_registry;
-use semio_framework_ui_contract_validation::{validate_snapshot};
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use semio_framework_os_store_text_io::ArtifactStoreSnapshot as _;
 use semio_framework_value::FromValue;

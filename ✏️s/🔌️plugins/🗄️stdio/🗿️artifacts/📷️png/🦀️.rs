@@ -154,7 +154,7 @@ pub mod viewer {
     }
 }
 
-pub use crate::standards::v1_2::subsets::any::io::{PngBuilderConstruction, PngParts, PngAnalyzerAnalysis, PngBuilderFacets, PngBuilder, PngAnalyzer, PngComposer};
+pub use crate::standards::v1_2::subsets::any::io::facets::{PngBuilderConstruction, PngParts, PngAnalyzerAnalysis, PngBuilderFacets, PngBuilder, PngAnalyzer, PngComposer};
 
 #[cfg(test)]
 #[path = "🏅️standards/🔖️1.2/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs"]

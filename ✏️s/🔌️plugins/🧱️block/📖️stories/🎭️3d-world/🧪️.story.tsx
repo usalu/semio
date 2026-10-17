@@ -29,7 +29,7 @@ import { useCallback, useMemo, useState, type ReactElement } from "react";
 import { World3dHost } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx";
 import type { ActionDescriptor } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx";
 
-import { admitBlockStoryRepresentations, block3dStorySnapshotFor, blockStoryActionArgs, buildBlock3dWorldSceneNode } from "../../../../🧑‍💻dev/🧱️block/📖️stories/🧭️coordination/🟦️.ts";
+import { admitBlockStoryRepresentations, block3dStorySnapshotFor, blockStoryActionArgs, buildBlock3dWorldSceneNode } from "@semio-tech/s-dev-block-ts/stories/coordination";
 
 //#region PluginEmulator
 type Block3dStoryRuntime = { readonly selectedIds: readonly string[]; readonly hoveredId: string | null };

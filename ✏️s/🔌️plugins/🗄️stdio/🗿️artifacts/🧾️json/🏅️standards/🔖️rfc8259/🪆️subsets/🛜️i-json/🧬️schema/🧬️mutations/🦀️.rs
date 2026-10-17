@@ -129,7 +129,7 @@ pub const MAX_SAFE_INTEGER_MAGNITUDE: i128 = 9_007_199_254_740_991;
 
 /// 🚫️ Frozen `MutationMessage` code for every refusal below (`Fatal`, empty diff). The seven-code
 /// set is closed and generic; a per-plugin code is never minted.
-const CODE_INVARIANT: &str = "mutation.invariant";
+pub const CODE_INVARIANT: &str = "mutation.invariant";
 
 /// 🚫️ Frozen code for "the addressed node is not there, or is not the kind this verb writes over".
 const CODE_TARGET_MISSING: &str = "mutation.target-missing";
@@ -168,7 +168,7 @@ pub fn is_unicode_noncharacter(c: char) -> bool {
 /// 🔎️ Read-only navigation of `path` from `root`; `None` on the first unresolvable segment. A local
 /// copy because the ✳️any sibling keeps its own `resolve` private to that module.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn resolve<'a>(root: &'a JsonValue, path: &[JsonPathSegment]) -> Option<&'a JsonValue> {
+pub fn resolve<'a>(root: &'a JsonValue, path: &[JsonPathSegment]) -> Option<&'a JsonValue> {
     let mut node = root;
     for segment in path {
         node = match (segment, node) {

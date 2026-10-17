@@ -17,7 +17,7 @@ import {
   peersForWindow,
   type PresencePeerInput,
 } from "@semio-tech/framework-replication";
-import { boardScreenToWorld } from "../../🧱️elements/🖥️Board2dHost/🟦️.tsx";
+import { boardScreenToWorld } from "../../🧱️elements/🖥️Board2dHost/📍️drop-and-camera/🟦️.ts";
 
 const engineRoot = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const fixture = JSON.parse(readFileSync(join(engineRoot, "🧪️tests/🧫️fixtures", "👕️canvas-presence", "🔣️.json"), "utf8"));

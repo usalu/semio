@@ -86,11 +86,9 @@ use semio_framework_diagnostic::TextSpan;
 pub use derived_composition::*;
 //#endregion 🎹️DerivedComposition
 
-#[path = "💾️binary/🦀️.rs"]
-pub mod binary;
+pub use semio_s_artifact_stdio_pdf_testkit::standards::v1_7::subsets::ua::io::binary;
 
-#[path = "📝️text/🦀️.rs"]
-pub mod text;
+pub use semio_s_artifact_stdio_pdf_testkit::standards::v1_7::subsets::ua::io::text;
 
 /// 🌉️ Applies one ua conformance mutation through its leaf-owned diff and the base bridge.
 pub mod mutation_bridge {

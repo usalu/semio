@@ -6,6 +6,7 @@ import * as TOML from "@iarna/toml";
 
 type Move = Readonly<{ source: string; owner: string; kind: string; sourceDisposition: "removed" | "package-glue"; anchor: string; consumers: readonly string[] }>;
 type Fixture = Readonly<{
+  version: number;
   moves: readonly Move[];
   packageBoundary: Readonly<{ cargoRoot: string; nodeRoot: string; nodeManifest: string; nxManifest: string; nodeEntry: string; name: string }>;
 }>;

@@ -36,6 +36,5 @@ describe("🎯️ stack drop destination", () => {
     expect(projectedMarkup(stacks(result))).toBe(projectedMarkup(law.expectedStacks));
     expect(JSON.stringify(layout)).toBe(before);
     if (!law.accepted) expect(result).toBe(layout);
-    console.log(`[DEBUG] React stack drop ${law.id}: ${JSON.stringify(stacks(result))}`);
   });
 });

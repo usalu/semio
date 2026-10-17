@@ -10,11 +10,11 @@ import law from "./🧫️fixtures/🫴️receiving.json";
 import { orderedRetirementSchema as grant } from "@semio-tech/value-ts/ordered/retirement/schema";
 import originalCloseSchema from "./🧬️schema/🧵️original-close.json";
 import originalClose from "./🧫️fixtures/🧵️original-close.json";
-import { readModuleTreeSource } from "../../../📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 
 test("original UI close keeps both causes and one actual initiating context",()=>{
  const validate=new Ajv({strict:true}).compile(originalCloseSchema);expect(validate(originalClose)).toBe(true);for(const key of ["wholePrimary","wholeReceiptRefusal","sameSourcePointers","originalContext","debitOnce"]){expect(validate({...originalClose,[key]:false})).toBe(false);}expect(validate({...originalClose,terminalDrop:1})).toBe(false);
- const primary={message:"original UI source 源",cause:{message:"nested whole Fault"}},receipt={message:"original distinct receipt refusal"};const oracle=JSON.parse(Buffer.from(JSON.stringify({primary,receipt,identity:[originalClose.operation,originalClose.generation],deadline:originalClose.deadline})).toString("utf8"));expect(oracle.primary).toEqual(primary);expect(oracle.receipt).toEqual(receipt);expect(oracle.identity).toEqual([17,9]);expect(oracle.deadline).toBe(12345);console.log("[DEBUG] Original UI close strict Ajv and independent JSON UTF8 oracle retain complete distinct causes and explicit initiating identity; native/runtime qualification remains separate");
+ const primary={message:"original UI source 源",cause:{message:"nested whole Fault"}},receipt={message:"original distinct receipt refusal"};const oracle=JSON.parse(Buffer.from(JSON.stringify({primary,receipt,identity:[originalClose.operation,originalClose.generation],deadline:originalClose.deadline})).toString("utf8"));expect(oracle.primary).toEqual(primary);expect(oracle.receipt).toEqual(receipt);expect(oracle.identity).toEqual([17,9]);expect(oracle.deadline).toBe(12345);
 });
 
 test("actual worker close and frame consumers parse with mandatory original context",async()=>{
@@ -24,20 +24,18 @@ test("actual worker close and frame consumers parse with mandatory original cont
   ["🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs",["render_chrome_step"]],
   ["🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs",["frame_before_input_step"]]
  ]as const;
- try{for(const[path,names]of rows){const ast=parser.parse(readModuleTreeSource(resolve(process.cwd(),path)))!;const found:Parser.SyntaxNode[]=[];const visit=(node:Parser.SyntaxNode):void=>{if(node.type==="function_item"&&names.some(name=>node.childForFieldName("name")?.text===name))found.push(node);for(const child of node.namedChildren)visit(child);};visit(ast.rootNode);expect(found).toHaveLength(names.length);for(const node of found){expect(node.hasError()).toBe(false);expect(node.childForFieldName("parameters")!.text).toContain("StepContext");}ast.delete();}}finally{parser.delete();}console.log("[DEBUG] Independent TreeSitter accepts the actual original-context worker/surface/interpreter/chrome/frame functions; source syntax is separate from native System and GPU acceptance");
+ try{for(const[path,names]of rows){const ast=parser.parse(readModuleTreeSource(resolve(process.cwd(),path)))!;const found:Parser.SyntaxNode[]=[];const visit=(node:Parser.SyntaxNode):void=>{if(node.type==="function_item"&&names.some(name=>node.childForFieldName("name")?.text===name))found.push(node);for(const child of node.namedChildren)visit(child);};visit(ast.rootNode);expect(found).toHaveLength(names.length);for(const node of found){expect(node.hasError()).toBe(false);expect(node.childForFieldName("parameters")!.text).toContain("StepContext");}ast.delete();}}finally{parser.delete();}
 });
 
 test("mounted receiving declares the original policy and exact ownership obligations",()=>{
 expect(testingSchemaExists(new URL("./🧬️schema/🫴️receiving.json",import.meta.url))).toBe(false); const oracle=new Ajv({strict:true}).addSchema(grant).compile({$ref:grant.$id+"#/$defs/Grant"});
  for(const [value,expected]of [[law.grant,true],[{...law.grant,maximumCopyBytes:-1},false],[{...law.grant,maximumCopyBytes:law.grant.maximumCopyBytes+1},true]]as const){expect(validateJsonSchemaSubset(grant.$defs.Grant,value).length===0).toBe(expected);expect(Boolean(oracle(value))).toBe(expected);}
- console.log("[DEBUG] Mounted receiving genuineGrantAjv=true wholeCorpusSchema=false fixedCallerPolicyOriginalNativeLaw=unqualified runtime=false");
 });
 
 test("mounted receiving uses original loans and explicit paid acknowledgement",async()=>{
  await Parser.init();const parser=new Parser();parser.setLanguage(await Parser.Language.load(resolve(dirname(Bun.resolveSync("tree-sitter-wasms/package.json",process.cwd())),"out/tree-sitter-rust.wasm")));
  const root=resolve(import.meta.dir,"../.."),source=readFileSync(resolve(root,law.source),"utf8"),engine=readFileSync(resolve(root,law.engine),"utf8");
  try{const ast=parser.parse(source)!;const syntax:Parser.SyntaxNode[]=[];const errors=(node:Parser.SyntaxNode):void=>{if(node.type==="ERROR"||node.isMissing())syntax.push(node);for(const child of node.namedChildren)errors(child);};errors(ast.rootNode);expect(syntax.filter(node=>!(node.type==="ERROR"&&/^[13]$/.test(node.text)&&node.parent?.type==="tuple_pattern"&&node.parent.text.startsWith("(UiNode::")&&node.parent.text.endsWith(", "+node.text+"..)")))).toHaveLength(0);const steps:Parser.SyntaxNode[]=[];const visit=(node:Parser.SyntaxNode):void=>{if(node.type==="function_item"&&node.childForFieldName("name")?.text==="step")steps.push(node);for(const child of node.namedChildren)visit(child);};visit(ast.rootNode);expect(steps).toHaveLength(1);expect(steps[0]!.text).toContain("JobOutcomeBorrow");expect(source).not.toContain("StepOutcome");expect(source).not.toContain("RetainedJobPayload::empty");expect(source).toContain("RetainedPayloadBuilder");expect(source).toContain("fn borrow_outcome");expect(engine).toContain("acknowledge_checked_out_outcome");expect(engine).not.toContain("take_checked_out_outcome");ast.delete();}finally{parser.delete();}
- console.log("[DEBUG] Mounted receiving actual source loans=true independentTreeSitter=true runtime=false");
 });
 
 
@@ -51,5 +49,4 @@ expect(testingSchemaExists(new URL("./🧬️schema/🚪️admission.json",impor
  expect(engine).toContain("original_cancel_token()");expect(engine).toContain("window.layout_admission.failure=Some(error)");expect(engine).toContain("failure_close");expect(engine).not.toContain("std::mem::size_of::<semio_framework_job::BatchJobParams>() + std::mem::size_of::<semio_framework_async::CancelTokenRetirement>()");
  const quote=engine.match(/fn parameter_retirement_demands\([^)]*\)[^{]*\{([\s\S]*?)\n    \}/)![1]!;expect(quote).toContain("copy_bytes: 0");expect(quote).not.toContain("size_of");const body=engine.match(/struct LayoutWorkerAdmission \{([^}]+)\}/)![1]!;expect([...body.matchAll(/^\s*(\w+):/gm)].map(field=>field[1])).toEqual(law.admission.pendingFields);const close=engine.slice(engine.indexOf("impl LayoutWorkerAdmission {"),engine.indexOf("impl Drop for LayoutWorkerAdmission"));expect(close).not.toContain("std::mem::size_of::<Option<semio_framework_async::CancelTokenRetirement>>");expect(close).not.toContain("std::mem::size_of::<Option<semio_framework_value::ValueError>>");
  for(const marker of ["pub fn close_surface_one","pub fn step_layouts"]){const at=engine.indexOf(marker),body=engine.slice(at,engine.indexOf("let next = match phase",at)>at?engine.indexOf("let next = match phase",at):engine.indexOf("let Some(root)",at));expect(body).toContain("layout_admission.close_step");expect(body).toContain("!window.layout_admission.terminal_is_empty()");expect(body.indexOf("layout_admission.close_step")).toBeLessThan(body.indexOf("layout_retirement_refusal = None"));}
- console.log("[DEBUG] mounted birth original caller generation and semantic layout generation stay distinct; actual pending job/params custody required; sourceCustody=true nativeRuntime=false");
 });

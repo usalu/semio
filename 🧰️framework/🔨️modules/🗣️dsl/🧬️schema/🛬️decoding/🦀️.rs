@@ -349,7 +349,6 @@ mod continuation_tests {
         accepted.set(false);
         assert_eq!(reader.scan_quoted_text_step(&mut cursor, 1).err().unwrap().kind, semio_framework_value::ValueRefusalKind::Canceled);
         assert_eq!(reader.position, before);
-        eprintln!("[DEBUG] original quoted scanner1/8/256 unicode-scalar grants preserve serde_json text semantics and source identity");
     }
 
     fn retained_text_unescape_laws(fixture: &serde_json::Value) {
@@ -399,6 +398,5 @@ mod continuation_tests {
         let mut cursor=NativeTextDecode::default();let mut accepted=|_|true;let mut control=NativeDecodeControl::new(1,&mut accepted);control.begin_stage(body.len()).unwrap();
         assert_eq!(cursor.step(token,1,&mut control).err().unwrap().kind,semio_framework_value::ValueRefusalKind::OwnershipLimit);
         assert_eq!(cursor.position,0);assert!(cursor.output.is_none());
-        eprintln!("[DEBUG] original text decoder1/8/256 resumes exact borrowed source with cumulative ownership, serde_json Unicode parity and refusal owner retention");
     }
 }

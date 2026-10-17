@@ -1867,7 +1867,7 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
         requireOpening();
         await settleInstanceLifecycle(lifecycle, route, opened, execute, instanceId);
         requireOpening();
-        const channel = new AppChannelClient(channelHandle, channelRequests, instanceId, appId, "local");
+        const channel = new AppChannelClient(channelHandle, channelRequests, instanceId, appId);
         channel.onOperationCompleted((completion) => stashOperationPublication(instanceId, operationCompletionPublication(completion)));
         channelByInstance.set(instanceId, channel);
         return instanceId;

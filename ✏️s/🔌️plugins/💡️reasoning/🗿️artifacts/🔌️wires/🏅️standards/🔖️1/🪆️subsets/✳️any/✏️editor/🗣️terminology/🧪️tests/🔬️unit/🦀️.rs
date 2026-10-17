@@ -1,4 +1,4 @@
-use super::*;
+use crate::editor::wires::terminology::*;
 use semio_framework_ui_locale::AppLabels;
 use semio_framework_ui_locale::Locale;
 use semio_framework_ui_locale::Terminology;

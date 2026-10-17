@@ -6,10 +6,10 @@ use super::*;
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct InsertCell {
-    pub(crate) address: cell_address::XlsxCellVacancyAddress,
-    pub(crate) value: XlsxCellValue,
+    pub address: cell_address::XlsxCellVacancyAddress,
+    pub value: XlsxCellValue,
     #[value(default, skip_serializing_if = "Option::is_none")]
-    pub(crate) node: Option<XmlNode>,
+    pub node: Option<XmlNode>,
 }
 
 impl protocol::MutationKind<XlsxSnapshot, XlsxMutation> for InsertCell {

@@ -1,4 +1,12 @@
-use super::*;
+#[allow(unused_imports)]
+use crate::{NoteImageAsset, NOTE_DOCUMENT_SCHEMA};
+#[allow(unused_imports)]
+use framework_schema::ArtifactSchema;
+#[allow(unused_imports)]
+use semio_framework_value_derive::{FromValue, ToValue};
+#[allow(unused_imports)]
+use std::collections::BTreeMap;
+use crate::standards::v1::subsets::any::schema::snapshot::*;
 use crate::NoteBlockNode;
 
 /// 🧪️ `linked_artifact` (the new `R:any` forward reference slot) and a text block's composed

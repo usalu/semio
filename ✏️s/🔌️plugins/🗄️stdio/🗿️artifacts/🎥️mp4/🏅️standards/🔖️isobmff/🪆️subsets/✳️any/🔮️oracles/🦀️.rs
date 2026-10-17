@@ -474,11 +474,13 @@ mod reference {
 
 #[cfg(test)]
 mod tests {
+    use semio_framework_test_fixtures::fixture_bytes;
+
     use super::project_mp4_mutation;
 
     #[test]
     fn independent_reader_accepts_the_exact_playback_fixture() {
-        let projection = project_mp4_mutation(include_bytes!("../🧪️tests/🧫️fixtures/🎬️.mp4")).expect("mp4 0.14 independently parses the playback bytes");
+        let projection = project_mp4_mutation(&fixture_bytes!("../../../🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🎬️.mp4").to_vec()).expect("mp4 0.14 independently parses the playback bytes");
         assert_eq!(projection.str("majorBrand"), "isom");
         assert!(projection.get("tracks").is_some(), "independent projection includes typed tracks");
     }

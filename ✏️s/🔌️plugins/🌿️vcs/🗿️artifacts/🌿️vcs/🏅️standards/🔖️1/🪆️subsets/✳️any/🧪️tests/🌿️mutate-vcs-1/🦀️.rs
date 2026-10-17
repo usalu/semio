@@ -40,7 +40,7 @@
 //! so the oracle-only run never compiles the local implementation.
 
 use semio_repo_test_host::{parse_json, Adapter, Context, Json, Outcome};
-use semio_s_artifact_vcs_vcs::central_apply::{apply_vcs_mutation_reporting};
+use semio_s_artifact_vcs_vcs::mutations::central_apply::{apply_vcs_mutation_reporting};
 
 //#region 🔖️Kinds
 /// 🏷️ Mirrors `VcsDemoMutation::KINDS` (`../../🧬️schema/

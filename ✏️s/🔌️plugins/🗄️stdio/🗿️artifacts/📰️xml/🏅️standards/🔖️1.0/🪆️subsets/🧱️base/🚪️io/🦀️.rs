@@ -69,14 +69,15 @@ pub mod io_registry {
 }
 //#endregion 🚪️DerivedIoRegistry
 
-#[path = "💾️binary/🦀️.rs"]
-pub mod binary;
+pub mod binary {
+    pub use semio_s_artifact_stdio_xml_tests::standards::v1_0::subsets::base::io::binary::*;
+    pub use semio_s_artifact_stdio_xml_inferences::standards::v1_0::subsets::base::io::binary::inferences;
+}
 
 #[path = "📝️text/🦀️.rs"]
 pub mod text;
 
-#[path = "🪶️sqlite/🦀️.rs"]
-pub mod sqlite;
+
 
 pub mod derived_construction {
     use crate::{XmlDiff, XmlMutation, XmlSnapshot};

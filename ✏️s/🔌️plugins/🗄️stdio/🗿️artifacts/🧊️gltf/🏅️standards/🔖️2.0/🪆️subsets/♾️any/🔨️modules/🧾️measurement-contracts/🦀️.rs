@@ -72,11 +72,11 @@ pub struct GltfVec3 {
 impl GltfVec3 {
     // 🚫️async: E1/R9 pure field-shuffle, zero I/O, consumed synchronously throughout
     // 🔨️geometry-kernel (a whole-file R9 revert) — see that file's header for the full rationale.
-    pub(crate) fn new(v: [f64; 3]) -> Self {
+    pub fn new(v: [f64; 3]) -> Self {
         Self { x: v[0], y: v[1], z: v[2] }
     }
     // 🚫️async: E1/R9 — see `new` above
-    pub(crate) fn array(self) -> [f64; 3] {
+    pub fn array(self) -> [f64; 3] {
         [self.x, self.y, self.z]
     }
 }
@@ -239,11 +239,26 @@ pub struct GltfEntityAddress {
 
 //#region 🧩️InferenceStage
 /// 🧩️ Executable inference leaf with its own available and unavailable semantics.
-pub(crate) trait GltfInferenceStage<Context> {
+pub trait GltfInferenceStage<Context> {
     type Output;
 
     fn infer(context: &Context) -> Self::Output;
     fn unavailable(diagnostic_ids: &[String]) -> Self::Output;
 }
 //#endregion 🧩️InferenceStage
+//#region 🧭️LeafContract
+pub const GLTF_GEOMETRY_READS: &[&str] = &["document/scene", "document/scenes", "document/nodes", "document/meshes", "document/accessors", "document/bufferViews", "document/buffers", "buffers"];
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct GltfInferenceLeafDescriptor {
+    pub id: &'static str,
+    pub algorithm_version: u32,
+    pub cache_key: &'static str,
+    pub reads: &'static [&'static str],
+}
+
+pub trait GltfInferenceLeaf {
+    const DESCRIPTOR: GltfInferenceLeafDescriptor;
+}
+//#endregion 🧭️LeafContract
 //#endregion 🧾️MeasurementContracts

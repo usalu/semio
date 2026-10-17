@@ -137,6 +137,5 @@ test("test inference awaits the exact library bootstrap before command helpers",
   const revision=new Bun.CryptoHasher("sha256").update(wrapper).digest("hex"),received=await import(pathToFileURL(join(root,"📚️library/🏗️build/🕸️graph/📥️inference/🟨️.mjs")).href+"?revision="+revision);
   expect(received.events).toEqual(fixture.bootstrapOrder.expected);
   const oracle=spawnSync("node",["--input-type=module","--eval",'const events=[];let ready=false;const bootstrap={then(accept){ready=true;events.push("ready");accept();}};await bootstrap;if(!ready)throw Error("not ready");events.push("inputs");console.log(JSON.stringify(events));'],{encoding:"utf8",timeout:3000});expect(oracle.status,oracle.stderr).toBe(0);expect(JSON.parse(oracle.stdout)).toEqual(fixture.bootstrapOrder.expected);
-  console.log("[DEBUG] Actual test inference receives canonical library readiness before helpers; independent Node thenable ordering agrees");
  }finally{rmSync(root,{recursive:true,force:true});}
 },30000);

@@ -1,0 +1,3 @@
+# Native Independent Runtime Version Observation
+
+Existing actual private54187 log native-publication-bounded-io-private-current.log records its independent before Node process as runtime node, version v24.15.0, payload SHA62973580cb0d8f44b830898e019c50399ddc804352fbade1f66ee187e9617871. This is historical evidence for that actual process, not a current SDK/public aggregate claim. Removed the ambiguous Node38 wording from the future public qualification table; preflight assertion counts must never be presented as a Node major version. Future SDK stages must record their own actual version/provenance.

@@ -27,6 +27,3 @@ pub fn select_layer_effect(id:&str)->Result<semio_framework::kernel::Effect,Faul
     Ok(semio_framework::kernel::Effect::DispatchAction {req:RequestId(0),action:INTERACTION_SELECT_ACTION_ID.into(),args:Some(layer_selection_args(id)?),delay_ms:0})
 }
 
-#[cfg(test)]
-#[path="🧪️tests/🦀️.rs"]
-mod tests;

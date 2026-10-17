@@ -1,10 +1,14 @@
 //! 🎭️ Selection mask pixels and undo history share a neutral coverage fixture.
-use super::*;
+use semio_s_artifact_raster_raster_model::RasterLayerNode;
+use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
+use semio_framework_pixels::png_encoding::PngEncodeJob;
+use semio_s_artifact_raster_raster_editor::commands::mask_from_selection::*;
 use protocol::Mutation;
+use semio_framework_test_fixtures::fixture_text;
 
 #[test]
 fn selection_mask_preserves_soft_coverage_and_round_trips_history() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../🎮️commands/🎭️mask-from-selection/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let mut document = semio_s_artifact_raster_raster_model::io::text::snapshot::snapshot_wire_codec::empty_raster_snapshot();
     document.layers.push(semio_s_artifact_raster_raster_model::create_pixel_layer("Paint",3,2));
     let id = semio_s_artifact_raster_raster_model::layer_node_id(&document.layers[0]).to_owned();
@@ -65,7 +69,7 @@ fn selection_mask_cancellation_releases_private_work_without_publication() {
 
 #[test]
 fn protected_pixels_refuse_before_preparation() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../../../../../../🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧪️tests/🧫️fixtures/🔒️protection/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../../../../../../../../../../../../🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧪️tests/🧫️fixtures/🔒️protection/🔣️.json")).unwrap();
     let mut document=semio_s_artifact_raster_raster_model::io::text::snapshot::snapshot_wire_codec::empty_raster_snapshot();document.layers=semio_framework_pack_json::from_json_str(&fixture["layers"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     for id in ["locked-pixel","inherited-pixel"] {
         let command=MaskFromSelection {layer_id:id.into(),expected_image_key:None,selection:vec![semio_s_artifact_raster_raster_mutations_pixels::paint_stroke::RasterSelectionSpan { start: 0, length: 1, coverage: 255 }]};

@@ -1,8 +1,12 @@
 //! 🧩️ PDF COS values, ordered dictionary members and explicitly typed stream filters.
 use semio_framework_value::{ValueError,ValueRefusalKind};
-use crate::standards::v1_7::subsets::base::io::sqlite::snapshot::*;
+use crate::standards::v1_7::subsets::base::schema::snapshot::model::*;
+use crate::standards::v1_7::subsets::base::io::sqlite::snapshot::reader::{integer, boolean, optional_integer, null_except, Reader};
+use store::sqlite_snapshot::{SqliteRow as RawRow, SqliteValue as V, SqliteSnapshotPhase as Phase, artifact::{Cell as C}};
+use crate::standards::v1_7::subsets::base::io::sqlite::snapshot::number::{Projection};
+use crate::standards::v1_7::subsets::base::io::sqlite::snapshot::metadata;
 
-pub(super) fn write_filters(out: &mut Projection<'_, '_>, filters: &[PdfStreamFilter]) -> Result<i64,ValueError> {
+pub fn write_filters(out: &mut Projection<'_, '_>, filters: &[PdfStreamFilter]) -> Result<i64,ValueError> {
     let chain = out.insert("pdf_filter_chain", &[])?;
     for (ordinal, filter) in filters.iter().enumerate() {
         let mut fields = [C::Null; 4];
@@ -23,7 +27,7 @@ pub(super) fn write_filters(out: &mut Projection<'_, '_>, filters: &[PdfStreamFi
     Ok(chain)
 }
 
-pub(super) fn read_filters(reader: &mut Reader<'_, '_, '_>, chain: i64) -> Result<Vec<PdfStreamFilter>,ValueError> {
+pub fn read_filters(reader: &mut Reader<'_, '_, '_>, chain: i64) -> Result<Vec<PdfStreamFilter>,ValueError> {
     reader.take("pdf_filter_chain", chain, 1)?;
     let mut filters = Vec::new();
     for row in reader.children("pdf_stream_filter", 1, 2, chain)? {
@@ -63,11 +67,11 @@ fn write_children(out:&mut Projection<'_,'_>,root:WriteChildren<'_>)->Result<(),
     Ok(())
 }
 fn object_children(value:&PdfObject,key:i64)->Option<WriteChildren<'_>>{match value{PdfObject::Array(values)=>Some(WriteChildren::Array{key,values:values.iter().enumerate()}),PdfObject::Dict(entries)|PdfObject::Stream{dict:entries,..}=>Some(WriteChildren::Dictionary{key,entries:entries.iter().enumerate()}),_=>None}}
-pub(super) fn write_dictionary(out:&mut Projection<'_,'_>,entries:&[PdfDictEntry])->Result<i64,ValueError>{
+pub fn write_dictionary(out:&mut Projection<'_,'_>,entries:&[PdfDictEntry])->Result<i64,ValueError>{
     let key=out.insert("pdf_cos_value",&[C::Text("dictionary"),C::Null,C::Null,C::Null,C::Null,C::Null,C::Null,C::Null,C::Null,C::Null,C::Null,C::Null,C::Null])?;
     write_children(out,WriteChildren::Dictionary{key,entries:entries.iter().enumerate()})?;Ok(key)
 }
-pub(super) fn write_object(out:&mut Projection<'_,'_>,value:&PdfObject)->Result<i64,ValueError>{let key=write_shallow(out,value)?;if let Some(children)=object_children(value,key){write_children(out,children)?;}Ok(key)}
+pub fn write_object(out:&mut Projection<'_,'_>,value:&PdfObject)->Result<i64,ValueError>{let key=write_shallow(out,value)?;if let Some(children)=object_children(value,key){write_children(out,children)?;}Ok(key)}
 fn write_shallow(out:&mut Projection<'_,'_>,value:&PdfObject)->Result<i64,ValueError>{
     let mut fields = [C::Null; 12];
     let kind = match value {
@@ -84,9 +88,9 @@ fn write_shallow(out:&mut Projection<'_,'_>,value:&PdfObject)->Result<i64,ValueE
     let mut cells = vec![C::Text(kind)]; cells.extend(fields);
     out.insert("pdf_cos_value", &cells)
 }
-pub(super) fn read_dictionary(reader:&mut Reader<'_,'_,'_>,key:i64)->Result<Vec<PdfDictEntry>,ValueError>{match read_object(reader,key)?{PdfObject::Dict(entries)=>Ok(entries),_=>Err(ValueError::new(ValueRefusalKind::InvalidValue,"PDF relationship requires a dictionary value"))}}
+pub fn read_dictionary(reader:&mut Reader<'_,'_,'_>,key:i64)->Result<Vec<PdfDictEntry>,ValueError>{match read_object(reader,key)?{PdfObject::Dict(entries)=>Ok(entries),_=>Err(ValueError::new(ValueRefusalKind::InvalidValue,"PDF relationship requires a dictionary value"))}}
 fn read_children<'a>(reader:&mut Reader<'a,'_,'_>,key:i64,value:&PdfObject)->Result<std::vec::IntoIter<&'a RawRow>,ValueError>{match value{PdfObject::Array(_)=>reader.children("pdf_cos_array_element",1,2,key),PdfObject::Dict(_)|PdfObject::Stream{..}=>reader.children("pdf_cos_dictionary_entry",1,2,key),_=>Ok(Vec::new())}.map(Vec::into_iter)}
-pub(super) fn read_object(reader:&mut Reader<'_,'_,'_>,key:i64)->Result<PdfObject,ValueError>{
+pub fn read_object(reader:&mut Reader<'_,'_,'_>,key:i64)->Result<PdfObject,ValueError>{
     let value=read_shallow(reader,key)?;let children=read_children(reader,key,&value)?;let mut pending=vec![(value,children,None::<String>)];
     loop{
         let child=pending.last_mut().and_then(|(value,children,_)|children.next().map(|row|(matches!(value,PdfObject::Array(_)),row)));

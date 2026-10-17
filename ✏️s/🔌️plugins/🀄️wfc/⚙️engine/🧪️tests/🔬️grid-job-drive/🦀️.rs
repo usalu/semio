@@ -26,7 +26,7 @@ fn solve<T: Topology + Clone + Send>(job: &mut WfcJob<T>, operation: Operation, 
     let mut terminal = None;
     for _ in 0..STEP_LIMIT {
         let mut receipt = RetainedCloneProgress::default();
-        let mut context = crate::job::test_step_context(operation.operation, operation.generation, StepBudget::new(fuel, u64::MAX, HEADLESS_GRANT), root_cancel_token(), &mut sequence, &mut receipt);
+        let mut context = semio_s_plugin_wfc_engine_oracle::step_context::test_step_context(operation.operation, operation.generation, StepBudget::new(fuel, u64::MAX, HEADLESS_GRANT), root_cancel_token(), &mut sequence, &mut receipt);
         let ended = match job.step(&mut context).expect("wfc step admission") {
             Some(JobOutcomeBorrow::Complete { .. }) => Some(true),
             Some(JobOutcomeBorrow::Fault { .. } | JobOutcomeBorrow::Cancelled { .. }) => Some(false),

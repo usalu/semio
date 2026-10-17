@@ -8,14 +8,15 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 /// 🚚️ The carrier this facet's `parse`/`print` speak, named as the schema names the export.
 pub type JackDiffText = String;
 
-use crate::{Camera,JackContentChild};
+use crate::standards::v1::subsets::any::schema::graph::Camera;
+use crate::standards::v1::subsets::any::schema::content::JackContentChild;
 use crate::standards::v1::subsets::any::schema::diff::JackDiff;
 #[derive(semio_framework_dsl_record_derive::DslRecord)]
 struct JackDiffDsl {
     schema: Option<String>,
     name: Option<String>,
     manifest_id: Option<Option<String>>,
-    manifest: Option<crate::Manifest>,
+    manifest: Option<crate::standards::v1::subsets::any::schema::manifest::Manifest>,
     camera: Option<Camera>,
     content: Option<JackContentChild>,
     root_node_id: Option<Option<String>>,

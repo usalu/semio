@@ -35,6 +35,4 @@ impl protocol::Inference<GltfSnapshot> for GltfInference {
 }
 
 
-#[cfg(test)]
-#[path = "🧪️tests/🧮️decoded-accessor/🦀️.rs"]
-mod projection_tests;
+

@@ -30,14 +30,16 @@ export type MirrorSpec = Readonly<{
   owned: readonly MirrorUnit[];
   imported: readonly MirrorImport[];
   wrapperNodes: ReadonlyMap<string, RustModuleNode>;
+  gates?: ReadonlyMap<string, readonly string[]>;
   hoist?: boolean;
 }>;
 
 type TrieNode = { name: string; children: Map<string, TrieNode>; owned: MirrorUnit | null; component: MirrorUnit | null; imported: MirrorImport | null; globs: MirrorImport[]; order: number };
 
 /** 🛤️ Rewrites every `#[path]` of a copied module declaration so it resolves from the new scope. */
-export function rewriteMountPaths(source: string, node: RustModuleNode, oldScope: string, newScope: string): string {
+export function rewriteMountPaths(source: string, node: RustModuleNode, oldScope: string, newScope: string, widenPrivate = false): string {
   const edits: { start: number; end: number; text: string }[] = [];
+  if (widenPrivate && node.visibility === "private") edits.push({ start: node.declStart, end: node.declStart, text: "pub " });
   const visit = (current: RustModuleNode, oldBase: string, newBase: string): void => {
     if (current.pathAttribute !== null) {
       const region = source.slice(current.start, current.declStart);
@@ -73,7 +75,7 @@ export function renderMirrorRoot(spec: MirrorSpec): string {
   return renderMirrorFiles(spec).root;
 }
 
-const mirrorText = (unit: MirrorUnit, nestDir: string): string => rebaseRustIncludes(rewriteMountPaths(unit.sourceText, unit.node, unit.oldScope, nestDir), unit.fileDir ?? unit.oldScope, nestDir);
+const mirrorText = (unit: MirrorUnit, nestDir: string): string => rebaseRustIncludes(rewriteMountPaths(unit.sourceText, unit.node, unit.oldScope, nestDir, !unit.component), unit.fileDir ?? unit.oldScope, nestDir);
 
 const closesWithBrace = (text: string): boolean => text.trimEnd().endsWith("}");
 
@@ -93,6 +95,7 @@ export function renderMirrorFiles(spec: MirrorSpec): { root: string; body: strin
   for (const unit of spec.owned) place(unit.path, (node) => { if (unit.component) node.component = unit; else { node.owned = unit; node.order = unit.node.start + 0; } }, unit.node.start);
   for (const entry of spec.imported) place(entry.path, (node) => { if (entry.glob) node.globs.push(entry); else { node.imported = entry; node.order = entry.order; } }, entry.order);
   const lines: string[] = [];
+  const gateLines = (trail: readonly string[], indent: string): string[] => (spec.gates?.get(trail.join("::")) ?? []).map((gate) => `${indent}${gate}`);
   const emit = (node: TrieNode, trail: readonly string[], indent: string): void => {
     const children = [...node.children.values()].sort((a, b) => a.order - b.order);
     for (const child of children) {
@@ -101,7 +104,7 @@ export function renderMirrorFiles(spec: MirrorSpec): { root: string; body: strin
         const text = mirrorText(child.owned, nestDir);
         lines.push(...text.split("\n").map((line) => (line.length ? indent + line : line)));
       } else if (child.imported && !child.component && !child.children.size) {
-        lines.push(`${indent}${child.imported.visibility === "private" ? "" : `${child.imported.visibility} `}use ${child.imported.crateIdent}::${childTrail.join("::")};`);
+        lines.push(...gateLines(childTrail, indent), `${indent}${child.imported.visibility === "private" ? "" : `${child.imported.visibility} `}use ${child.imported.crateIdent}::${childTrail.join("::")};`);
       } else if (child.owned && child.owned.node.inline && !child.component && child.children.size && closesWithBrace(mirrorText(child.owned, nestDir))) {
         const ownedLines = mirrorText(child.owned, nestDir).split("\n").map((line) => (line.length ? indent + line : line));
         let last = ownedLines.length - 1;
@@ -114,7 +117,7 @@ export function renderMirrorFiles(spec: MirrorSpec): { root: string; body: strin
         lines.push(`${indent}}`);
       } else {
         const wrapper = spec.wrapperNodes.get(childTrail.join("::"));
-        const attributes = wrapper?.attributeTexts.map((text) => `${indent}#[${/^path\s*=/u.test(text) ? 'path = "."' : text}]`) ?? [`${indent}#[path = "."]`];
+        const attributes = wrapper?.attributeTexts.map((text) => `${indent}#[${/^path\s*=/u.test(text) ? 'path = "."' : text}]`) ?? [...gateLines(childTrail, indent), `${indent}#[path = "."]`];
         lines.push(...attributes, `${indent}${wrapper?.visibility && wrapper.visibility !== "private" ? `${wrapper.visibility} ` : "pub "}mod ${child.name} {`);
         const inner = indent + "    ";
         if (child.owned) {
@@ -192,6 +195,7 @@ export type ManifestSpec = Readonly<{
   dependencyRows: readonly string[];
   devDependencyRows: readonly string[];
   targetSections: readonly string[];
+  featureRows?: readonly string[];
 }>;
 
 /** 📝️ Renders the manifest of a carved library crate. */
@@ -218,6 +222,7 @@ export function renderCrateManifest(spec: ManifestSpec): string {
     ...[...spec.dependencyRows].sort((a, b) => compareBytes(manifestRowKey(a), manifestRowKey(b))),
     "",
   ];
+  if (spec.featureRows?.length) lines.push("[features]", ...spec.featureRows, "");
   if (spec.devDependencyRows.length) lines.push("[dev-dependencies]", ...[...spec.devDependencyRows].sort((a, b) => compareBytes(manifestRowKey(a), manifestRowKey(b))), "");
   for (const section of spec.targetSections) lines.push(section.trimEnd(), "");
   return lines.join("\n").replace(/\n{3,}/gu, "\n\n").trimEnd() + "\n";
@@ -277,32 +282,38 @@ export function addWorkspaceMembers(manifestText: string, additions: readonly st
   return dropArrayEntries(dropArrayEntries(widened, "exclude", (entry) => lifted.includes(entry)), "exclude-patterns", (entry) => lifted.includes(entry));
 }
 
-/** 🔒️ Adds carved crates to the artifact lockfile and extends the artifact package's own dependency list. */
+/** 🔒️ Adds carved crates to a lockfile and extends the dependency list of the crate they were carved from. Blocks of other crates, including several versions of one name, stay byte-identical and in place. */
 export function patchCargoLock(lockText: string, artifactCrate: string, carved: readonly { name: string; dependsOn: readonly string[] }[]): string {
   const blocks = lockText.split(/\n(?=\[\[package\]\]\n)/u);
   const header = blocks[0]!.startsWith("[[package]]") ? "" : blocks.shift()!;
-  const parse = (block: string): { name: string; version: string; rest: string; dependencies: string[] } => {
-    const name = /name = "([^"]+)"/u.exec(block)![1]!;
-    const version = /version = "([^"]+)"/u.exec(block)?.[1] ?? "0.1.0";
-    const dependencies = /dependencies = \[([\s\S]*?)\n\]/u.exec(block);
-    const list = dependencies ? [...dependencies[1]!.matchAll(/"((?:[^"\\]|\\.)*)"/gu)].map((entry) => entry[1]!) : [];
-    return { name, version, rest: block, dependencies: list };
+  const nameOf = (block: string): string => /name = "([^"]+)"/u.exec(block)![1]!;
+  const isPath = (block: string): boolean => !/^source = /mu.test(block);
+  const dependenciesOf = (block: string): string[] => {
+    const match = /dependencies = \[([\s\S]*?)\n\]/u.exec(block);
+    return match ? [...match[1]!.matchAll(/"((?:[^"\\]|\\.)*)"/gu)].map((entry) => entry[1]!) : [];
   };
   const render = (name: string, version: string, dependencies: readonly string[]): string => `[[package]]\nname = "${name}"\nversion = "${version}"\n${dependencies.length ? `dependencies = [\n${[...dependencies].sort(compareBytes).map((entry) => ` "${entry}",`).join("\n")}\n]\n` : ""}`;
-  const packages = blocks.map(parse);
-  const artifact = packages.find((entry) => entry.name === artifactCrate);
-  if (!artifact) throw new Error(`Lockfile has no package ${artifactCrate}`);
-  const baseDependencies = artifact.dependencies;
-  const out = new Map<string, string>();
-  for (const entry of packages) out.set(entry.name, entry.rest.trimEnd() + "\n");
-  for (const crate of carved) out.set(crate.name, render(crate.name, artifact.version, [...new Set([...baseDependencies.filter((name) => !carved.some((other) => other.name === name)), ...crate.dependsOn])]));
-  out.set(artifactCrate, render(artifactCrate, artifact.version, [...new Set([...baseDependencies, ...carved.map((crate) => crate.name)])]));
-  const ordered = [...out.entries()].sort((a, b) => compareBytes(a[0], b[0])).map((entry) => entry[1].trimEnd());
-  return `${header}${ordered.join("\n\n")}\n`;
+  const artifactBlock = blocks.find((block) => nameOf(block) === artifactCrate && isPath(block));
+  if (!artifactBlock) throw new Error(`Lockfile has no package ${artifactCrate}`);
+  const version = /version = "([^"]+)"/u.exec(artifactBlock)?.[1] ?? "0.1.0";
+  const baseDependencies = dependenciesOf(artifactBlock);
+  const carvedNames = new Set(carved.map((crate) => crate.name));
+  const kept = blocks.filter((block) => !(isPath(block) && carvedNames.has(nameOf(block)))).map((block) => (block === artifactBlock ? render(artifactCrate, version, [...new Set([...baseDependencies, ...carved.map((crate) => crate.name)])]) : block.trimEnd() + "\n"));
+  for (const crate of carved) {
+    const rendered = render(crate.name, version, [...new Set([...baseDependencies.filter((name) => !carvedNames.has(name)), ...crate.dependsOn])]);
+    const after = kept.findIndex((block) => compareBytes(nameOf(block), crate.name) > 0);
+    kept.splice(after < 0 ? kept.length : after, 0, rendered);
+  }
+  return `${header ? `${header}\n` : ""}${kept.map((block) => block.trimEnd()).join("\n\n")}\n`;
 }
 
-/** 📜️ Extends the package router's `packages` option so check and test cover every carved crate. */
+/** 📜️ Extends the package router's `packages` option (or the package list of an extension router's `runRepositoryCargoTests` call) so check and test cover every carved crate. */
 export function patchRouterPackages(scriptText: string, artifactCrate: string, additions: readonly string[]): string {
+  const extension = new RegExp(`(runRepositoryCargoTests\\(\\[)([^\\]]*"${artifactCrate.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&")}"[^\\]]*)(\\])`, "u").exec(scriptText);
+  if (extension) {
+    const list = [...new Set([...[...extension[2]!.matchAll(/"([^"]+)"/gu)].map((entry) => entry[1]!), ...additions])].sort(compareBytes);
+    return scriptText.slice(0, extension.index) + extension[1] + list.map((name) => `"${name}"`).join(", ") + extension[3] + scriptText.slice(extension.index + extension[0].length);
+  }
   const call = new RegExp(`(runArtifactRustPackageMain\\([^,]+,\\s*"${artifactCrate.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&")}")\\s*(?:,\\s*(\\{))?`, "u").exec(scriptText);
   if (!call) throw new Error(`Router call for ${artifactCrate} not found`);
   const existing = /packages\s*:\s*\[([^\]]*)\]/u.exec(scriptText);
@@ -350,11 +361,17 @@ export function rebaseRustIncludes(text: string, fromDirectory: string, toDirect
   return out;
 }
 
-/** 🧲️ Rebases the string literals that are joined onto `env!("CARGO_MANIFEST_DIR")` (in `concat!` or in `Path::join`) from the manifest directory a file was written for to the one it now compiles under. */
+/** 🧲️ Rebases the string literals that are joined onto `env!("CARGO_MANIFEST_DIR")` (in `concat!` or in `Path::join`) or passed to the shared fixture reader (`fixture_path!`, `fixture_text!`, `fixture_bytes!`) from the manifest directory a file was written for to the one it now compiles under. */
 export function rebaseManifestDirPaths(text: string, fromManifestDirectory: string, toManifestDirectory: string): string {
-  if (fromManifestDirectory === toManifestDirectory || !text.includes("CARGO_MANIFEST_DIR")) return text;
+  if (fromManifestDirectory === toManifestDirectory || !(text.includes("CARGO_MANIFEST_DIR") || text.includes("fixture_"))) return text;
   const tokens = rustTokens(text);
   const edits: { start: number; end: number; text: string }[] = [];
+  for (let k = 0; k + 3 < tokens.length; k += 1) {
+    if (!["fixture_path", "fixture_text", "fixture_bytes"].includes(tokens[k]!.text) || tokens[k + 1]!.text !== "!" || tokens[k + 2]!.text !== "(" || tokens[k + 3]!.kind !== "string" || !tokens[k + 3]!.text.startsWith('"')) continue;
+    const value = JSON.parse(tokens[k + 3]!.text) as string;
+    if (value.startsWith("@fixtures/")) continue;
+    edits.push({ start: tokens[k + 3]!.start, end: tokens[k + 3]!.end, text: JSON.stringify(relativePosix(toManifestDirectory, resolve(fromManifestDirectory, value))) });
+  }
   for (let k = 0; k + 5 < tokens.length; k += 1) {
     if (tokens[k]!.text !== "env" || tokens[k + 1]!.text !== "!" || tokens[k + 2]!.text !== "(" || tokens[k + 3]!.text !== '"CARGO_MANIFEST_DIR"' || tokens[k + 4]!.text !== ")") continue;
     let literal = -1;

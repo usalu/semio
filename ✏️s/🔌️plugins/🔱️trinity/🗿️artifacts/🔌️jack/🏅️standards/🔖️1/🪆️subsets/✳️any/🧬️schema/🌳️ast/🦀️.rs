@@ -1,6 +1,6 @@
 //! 🌳️ Trinity jack query AST.
 
-use crate::PropertyValue;
+use semio_framework_graph_manifest::PropertyValue;
 
 /// 🌳️ Jack query abstract syntax tree.
 #[derive(Clone, Debug, PartialEq, semio_framework_value::RetireOwned)]
@@ -116,16 +116,16 @@ impl QueryResult {
 #[derive(Clone,Debug,PartialEq,value_derive::ToValue,value_derive::FromValue,semio_framework_value::RetireOwned)]
 #[value(rename_all="camelCase")]
 pub struct JackQueryGraphSnapshot{
- pub schema:String,pub name:String,pub manifest_id:Option<String>,pub manifest:crate::Manifest,pub camera:crate::Camera,pub nodes:Vec<crate::Node>,pub edges:Vec<crate::Edge>,pub root_node_id:Option<String>,pub query:String,
+ pub schema:String,pub name:String,pub manifest_id:Option<String>,pub manifest:crate::standards::v1::subsets::any::schema::manifest::Manifest,pub camera:crate::standards::v1::subsets::any::schema::graph::Camera,pub nodes:Vec<crate::standards::v1::subsets::any::schema::graph::Node>,pub edges:Vec<crate::standards::v1::subsets::any::schema::graph::Edge>,pub root_node_id:Option<String>,pub query:String,
 }
 impl JackQueryGraphSnapshot{
- pub fn into_graph(self)->Result<crate::Graph,crate::TrinityRamError>{crate::Graph::with_scene(crate::JackSnapshot{schema:self.schema,name:self.name,manifest_id:self.manifest_id,manifest:self.manifest,camera:self.camera,root_node_id:self.root_node_id,query:self.query,..Default::default()},crate::JackWorkingScene{nodes:self.nodes,edges:self.edges})}
+ pub fn into_graph(self)->Result<crate::standards::v1::subsets::any::schema::memory::Graph,crate::standards::v1::subsets::any::schema::errors::TrinityRamError>{crate::standards::v1::subsets::any::schema::memory::Graph::with_scene(crate::standards::v1::subsets::any::schema::snapshot::JackSnapshot{schema:self.schema,name:self.name,manifest_id:self.manifest_id,manifest:self.manifest,camera:self.camera,root_node_id:self.root_node_id,query:self.query,..Default::default()},crate::standards::v1::subsets::any::schema::content::JackWorkingScene{nodes:self.nodes,edges:self.edges})}
 
- pub fn to_json(&self)->Result<String,crate::TrinityRamError>{let value=crate::standards::v1::subsets::any::io::json_native::convert(semio_framework_value::ToValue::to_value(self),false)?;Ok(semio_framework_pack_json::to_string_pretty(&semio_framework_pack_json::from_dsl_value(&value)))}
+ pub fn to_json(&self)->Result<String,crate::standards::v1::subsets::any::schema::errors::TrinityRamError>{let value=crate::standards::v1::subsets::any::schema::json_transport::convert(semio_framework_value::ToValue::to_value(self),false)?;Ok(semio_framework_pack_json::to_string_pretty(&semio_framework_pack_json::from_dsl_value(&value)))}
 }
-impl crate::JackContentVisual for JackQueryGraphSnapshot{
+impl semio_s_artifact_trinity_jack_graph_query::JackContentVisual for JackQueryGraphSnapshot{
  fn visual_counts(&self)->(usize,usize){(self.nodes.len(),self.edges.len())}
- fn node_view(&self,index:usize)->Option<crate::JackContentNodeView<'_>>{self.nodes.get(index).map(|node|crate::JackContentNodeView{id:&node.id,kind:&node.kind,label:&node.name,x:node.x,y:node.y,width:node.width,height:node.height,port_count:node.ports.len()})}
- fn port_view(&self,node_index:usize,port_index:usize)->Option<crate::JackContentPortView<'_>>{self.nodes.get(node_index)?.ports.get(port_index).map(|port|crate::JackContentPortView{id:&port.id,label:&port.id,inbound:matches!(port.direction,crate::PortDirection::In),outbound:matches!(port.direction,crate::PortDirection::Out)})}
- fn edge_view(&self,index:usize)->Option<crate::JackContentEdgeView<'_>>{self.edges.get(index).map(|edge|{let(source,source_port)=edge.source.split_once('@').map_or((edge.source.as_str(),None),|(node,port)|(node,Some(port)));let(target,target_port)=edge.target.split_once('@').map_or((edge.target.as_str(),None),|(node,port)|(node,Some(port)));crate::JackContentEdgeView{id:&edge.id,kind:&edge.kind,label:"",source,target,source_port,target_port}})}
+ fn node_view(&self,index:usize)->Option<semio_s_artifact_trinity_jack_graph_query::JackContentNodeView<'_>>{self.nodes.get(index).map(|node|semio_s_artifact_trinity_jack_graph_query::JackContentNodeView{id:&node.id,kind:&node.kind,label:&node.name,x:node.x,y:node.y,width:node.width,height:node.height,port_count:node.ports.len()})}
+ fn port_view(&self,node_index:usize,port_index:usize)->Option<semio_s_artifact_trinity_jack_graph_query::JackContentPortView<'_>>{self.nodes.get(node_index)?.ports.get(port_index).map(|port|semio_s_artifact_trinity_jack_graph_query::JackContentPortView{id:&port.id,label:&port.id,inbound:matches!(port.direction,semio_framework_graph_manifest::PortDirection::In),outbound:matches!(port.direction,semio_framework_graph_manifest::PortDirection::Out)})}
+ fn edge_view(&self,index:usize)->Option<semio_s_artifact_trinity_jack_graph_query::JackContentEdgeView<'_>>{self.edges.get(index).map(|edge|{let(source,source_port)=edge.source.split_once('@').map_or((edge.source.as_str(),None),|(node,port)|(node,Some(port)));let(target,target_port)=edge.target.split_once('@').map_or((edge.target.as_str(),None),|(node,port)|(node,Some(port)));semio_s_artifact_trinity_jack_graph_query::JackContentEdgeView{id:&edge.id,kind:&edge.kind,label:"",source,target,source_port,target_port}})}
 }

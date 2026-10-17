@@ -1,0 +1,26 @@
+{
+ "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🏛️mutate-energy-model-1/🔌️power-and-plant/🐍️.py",
+ "snapshot": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/🗑️generated/c4p21-snap/f7.py",
+ "alias": "mutate_energy_model_1_power",
+ "pieces": [
+  {
+   "key": "electrical",
+   "first": "create_electrical_load_center",
+   "last": "_invert_change_battery_round_trip_efficiency"
+  },
+  {
+   "key": "hot_water_solar",
+   "dir": "🚿️hot-water-and-solar-thermal",
+   "doc": "Service hot water and solar thermal system kinds.",
+   "first": "create_shw_system",
+   "last": "_invert_change_solar_thermal_system_azimuth"
+  },
+  {
+   "key": "services_faults",
+   "dir": "❄️refrigeration-water-and-faults",
+   "doc": "Refrigeration system, water system and equipment fault kinds.",
+   "first": "create_refrigeration_system",
+   "last": "_invert_change_fault_start_schedule"
+  }
+ ]
+}

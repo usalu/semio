@@ -1,5 +1,6 @@
 //! 🧱️ Ui_quick of the tools-gateway crate: Artifact, ui, context resource and prompt tools.
 
+use semio_framework_test_fixtures::fixture_text;
 use std::sync::Arc;
 use std::sync::OnceLock;
 use std::time::Duration;
@@ -18,9 +19,6 @@ use semio_framework_os_mcp_wire::notify::{NotificationSink, NotificationSlot, Re
 use semio_framework_os_mcp_wire::protocol::{InMemoryToolRegistry, ToolRegistry, is_valid_tool_name};
 
 /// 🧪️ Reads a committed fixture from the package directory at run time instead of embedding it in the test binary.
-fn fixture_text(relative: &str) -> &'static str {
-    Box::leak(std::fs::read_to_string(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative)).expect(relative).into_boxed_str())
-}
 
 
 fn ui_principal(scopes: &[&str]) -> AgentPrincipal {
@@ -255,7 +253,7 @@ fn cancelling_a_running_job_only_sets_the_cooperative_flag_until_the_producer_ac
 /// guest blocked in a solve fires once per cancel, late binds fire immediately, terminal jobs never.
 #[test]
 fn a_bound_cancel_hook_obeys_the_language_agnostic_law() {
-    let fixture: serde_json::Value = serde_json::from_str(fixture_text("../../../🖥️ui/🧪️tests/🧫️fixtures/🛑️job-cancel-hook-law.json")).expect("law fixture is JSON");
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../🖥️ui/🧪️tests/🧫️fixtures/🛑️job-cancel-hook-law.json")).expect("law fixture is JSON");
     for case in fixture["cases"].as_array().expect("cases") {
         let name = case["name"].as_str().expect("name");
         let registry = JobRegistry::new();

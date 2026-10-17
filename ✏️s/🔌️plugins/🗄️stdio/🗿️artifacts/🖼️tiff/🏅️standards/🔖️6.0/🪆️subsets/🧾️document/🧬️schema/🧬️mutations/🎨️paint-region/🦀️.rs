@@ -65,5 +65,4 @@ pub(crate) fn test_case() -> TiffMutation {
     TiffMutation::PaintRegion(PaintRegionMutation { revision: crate::standards::v6_0::subsets::document::schema::mutations::paint_region::samples::tiff_revision(&base), ifd_index: 0, x: 0, y: 0, width: 1, height: 1, red: 0, green: 0, blue: 0, alpha: 255 })
 }
 
-#[path="🖌️samples/🦀️.rs"]
-pub mod samples;
+pub use semio_s_artifact_stdio_tiff_inferences::standards::v6_0::subsets::document::schema::mutations::paint_region::samples;

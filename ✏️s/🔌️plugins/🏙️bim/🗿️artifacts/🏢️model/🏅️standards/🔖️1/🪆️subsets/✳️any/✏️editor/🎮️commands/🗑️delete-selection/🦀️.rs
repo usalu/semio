@@ -7,7 +7,7 @@
 use crate::editor::bim::entities::{kind_holding, ENTITIES};
 use crate::editor::bim::interaction::{BIM_ELEMENT_DOMAIN, BIM_LIBRARY_DOMAIN};
 use crate::editor::bim::kit::{fault, select_effect};
-use crate::editor::bim::BimDispatchCtx;
+use crate::editor::bim::dispatch_context::BimDispatchCtx;
 use crate::standards::v1::subsets::any::schema::mutations::cascade::{closure, INVERSE_ROWS};
 use crate::standards::v1::subsets::any::schema::mutations::delete_elements::DeleteElements;
 use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};

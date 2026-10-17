@@ -16,7 +16,6 @@ test("durable journal original string capacities require independent physical re
     expect(oracle).toEqual([row.decisionCapacity, row.anchorCapacity]);
     expect(db.query("SELECT sum(length(backing)) AS bytes FROM owners").get()).toEqual({bytes: row.decisionCapacity + row.anchorCapacity});
     for (const release of oracle) expect(release - 1).toBeLessThan(release);
-    console.log(`[DEBUG] durable journal case=${row.id} independent SQLite physical extents=${oracle} UTF8=${Buffer.byteLength(row.decision)+Buffer.byteLength(row.anchor)} unchangedBody=${fixture.maximumBodyBytes}`);
   }
   db.close();
   const production = readFileSync(new URL("../../🦀️.rs", import.meta.url), "utf8");

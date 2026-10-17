@@ -8,8 +8,8 @@ use protocol::{MutationKind, SemanticDescriptor};
 #[mutation_leaf(contract = ::protocol)]
 pub struct AlignElements {
     pub ids: Vec<String>,
-    pub axis: super::super::modify::AlignAxis,
-    pub edge: super::super::modify::AlignEdge,
+    pub axis: crate::standards::v1::subsets::any::schema::mutations::modify::AlignAxis,
+    pub edge: crate::standards::v1::subsets::any::schema::mutations::modify::AlignEdge,
     pub target: f64,
 }
 

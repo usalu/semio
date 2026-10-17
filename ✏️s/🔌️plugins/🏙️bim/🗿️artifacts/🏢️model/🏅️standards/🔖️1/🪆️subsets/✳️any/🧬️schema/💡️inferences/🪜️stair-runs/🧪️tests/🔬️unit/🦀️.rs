@@ -4,6 +4,7 @@ use crate::standards::v1::subsets::any::schema::mutations::{apply_model_mutation
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::{kinds, plan, ModelInferenceSession, ModelNode};
 use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::TopConstraint};
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
+use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_stair_runs;
 
 const HOUSE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🏠️house/📸️snapshot/🔣️.json");
 

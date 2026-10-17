@@ -1,0 +1,189 @@
+[
+  {
+    "id": "cross-out",
+    "a": [
+      -1,
+      0,
+      0
+    ],
+    "b": [
+      1,
+      2,
+      0
+    ],
+    "normal": [
+      1,
+      0,
+      0
+    ],
+    "distance": 0,
+    "epsilon": 0,
+    "expected": {
+      "retained": true,
+      "parameter": 0.5,
+      "position": [
+        0,
+        1,
+        0
+      ]
+    }
+  },
+  {
+    "id": "cross-in",
+    "a": [
+      2,
+      0,
+      0
+    ],
+    "b": [
+      -2,
+      4,
+      0
+    ],
+    "normal": [
+      1,
+      0,
+      0
+    ],
+    "distance": 0,
+    "epsilon": 0.01,
+    "expected": {
+      "retained": false,
+      "parameter": 0.5,
+      "position": [
+        0,
+        2,
+        0
+      ]
+    }
+  },
+  {
+    "id": "inside",
+    "a": [
+      -2,
+      0,
+      0
+    ],
+    "b": [
+      -1,
+      2,
+      0
+    ],
+    "normal": [
+      1,
+      0,
+      0
+    ],
+    "distance": 0,
+    "epsilon": 0,
+    "expected": {
+      "retained": true,
+      "parameter": null,
+      "position": null
+    }
+  },
+  {
+    "id": "outside",
+    "a": [
+      2,
+      0,
+      0
+    ],
+    "b": [
+      1,
+      2,
+      0
+    ],
+    "normal": [
+      1,
+      0,
+      0
+    ],
+    "distance": 0,
+    "epsilon": 0,
+    "expected": {
+      "retained": false,
+      "parameter": null,
+      "position": null
+    }
+  },
+  {
+    "id": "on-plane",
+    "a": [
+      0,
+      0,
+      0
+    ],
+    "b": [
+      2,
+      0,
+      0
+    ],
+    "normal": [
+      1,
+      0,
+      0
+    ],
+    "distance": 0,
+    "epsilon": 0,
+    "expected": {
+      "retained": true,
+      "parameter": null,
+      "position": null
+    }
+  },
+  {
+    "id": "epsilon-touch",
+    "a": [
+      0.125,
+      0,
+      0
+    ],
+    "b": [
+      1,
+      0,
+      0
+    ],
+    "normal": [
+      1,
+      0,
+      0
+    ],
+    "distance": 0,
+    "epsilon": 0.125,
+    "expected": {
+      "retained": true,
+      "parameter": null,
+      "position": null
+    }
+  },
+  {
+    "id": "z-plane",
+    "a": [
+      0,
+      0,
+      -1
+    ],
+    "b": [
+      2,
+      4,
+      3
+    ],
+    "normal": [
+      0,
+      0,
+      1
+    ],
+    "distance": 0,
+    "epsilon": 0,
+    "expected": {
+      "retained": true,
+      "parameter": 0.25,
+      "position": [
+        0.5,
+        1,
+        0
+      ]
+    }
+  }
+]

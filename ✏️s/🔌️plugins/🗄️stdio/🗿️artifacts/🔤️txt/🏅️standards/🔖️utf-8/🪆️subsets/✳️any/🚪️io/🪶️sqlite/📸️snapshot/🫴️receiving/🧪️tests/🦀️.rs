@@ -2,9 +2,10 @@
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use super::*;
 use semio_framework_os_kernel::{sqlite_snapshot::SqliteDatabaseLimits,os_store::serialization::ArtifactSqliteSnapshotHost};
+use semio_framework_test_fixtures::fixture_text;
 use semio_framework_value::{NativeDecodeControl,NativeEncodeControl,RetainedCloneGrant,RetainedCloneProgress};
 use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
-fn fixture()->serde_json::Value{serde_json::from_str(runtime_fixture_text("../../../🚪️io/🪶️sqlite/📸️snapshot/🫴️receiving/🧪️tests/🧫️fixtures/🔣️.json")).unwrap()}
+fn fixture()->serde_json::Value{serde_json::from_str(fixture_text!("../../../🚪️io/🪶️sqlite/📸️snapshot/🫴️receiving/🧪️tests/🧫️fixtures/🔣️.json")).unwrap()}
 fn grant(value:&serde_json::Value)->RetainedCloneGrant{serde_json::from_value(value.clone()).unwrap()}
 fn snapshot(value:&serde_json::Value)->TxtSnapshot{TxtSnapshot{schema:value["schema"].as_str().unwrap().into(),lines:value["lines"].as_array().unwrap().iter().map(|line|line.as_str().unwrap().into()).collect(),trailing_newline:value["trailingNewline"].as_bool().unwrap(),line_ending:if value["lineEnding"]=="crLf"{LineEnding::CrLf}else{LineEnding::Lf}}}
 fn database(value:&serde_json::Value)->SqliteDatabase{SqliteDatabase{tables:value["tables"].as_array().unwrap().iter().map(|table|SqliteTable{name:table["name"].as_str().unwrap().into(),sql:table["sql"].as_str().unwrap().into(),rows:table["rows"].as_array().unwrap().iter().map(|row|SqliteRow{rowid:row["rowid"].as_i64().unwrap(),values:row["values"].as_array().unwrap().iter().map(|value|if let Some(value)=value.as_i64(){SqliteValue::Integer(value)}else{SqliteValue::Text(value.as_str().unwrap().into())}).collect()}).collect()}).collect()}}
@@ -29,7 +30,6 @@ fn txt_original_receiving_complete_rows_preserve_literal_empty_unicode_and_surro
   let(projected,_,born,freed)=decode(&law,policy,maximum,Default::default(),&mut |_|true,|sql,owner|source.to_sqlite_database_receiving(sql,owner));let projected=projected.unwrap();let restored=TxtSnapshot::from_sqlite_database(&projected,&mut SqliteSnapshotControl::new(&mut |_|true,Default::default())).unwrap();assert_eq!(restored,source);assert_eq!(projected.tables.len(),2);assert_eq!(projected.tables[0].rows[0].values[1],SqliteValue::Text(case["snapshot"]["schema"].as_str().unwrap().into()));assert_eq!(projected.tables[1].rows.len(),source.lines.len());let(extra,released)=retire(projected,&law);assert_eq!(born+extra,freed+released);
   let(restored,_,born,freed)=encode(&law,policy,maximum,Default::default(),&mut |_|true,|sql,owner|TxtSnapshot::from_sqlite_database_receiving(&input,sql,owner));let restored=restored.unwrap();assert_eq!(restored,source);assert_eq!(restored.to_body(),case["body"].as_str().unwrap());let(extra,released)=retire(restored,&law);assert_eq!(born+extra,freed+released);assert_eq!((source.schema.as_ptr(),input.tables.as_ptr()),(source_pointer,input_pointer));
  }
- eprintln!("[DEBUG] Original TXT semantic receiving six authored shapes preserve exact metadata, empty[]/one-empty-line, UTF8/NUL/literal separators and sorted surrogate rows, actual System bytes equal original owner receipts and paid terminal retirement");
 }
 #[test]
 fn txt_original_receiving_malformed_inputs_and_independent_grant_axes_keep_exact_original_receipts(){
@@ -41,7 +41,6 @@ fn txt_original_receiving_malformed_inputs_and_independent_grant_axes_keep_exact
   let(result,_,born,freed)=decode(&law,incoming,ceiling,limits,&mut |_|true,|sql,owner|source.to_sqlite_database_receiving(sql,owner));assert!(result.is_err());assert_eq!(born,freed);if ["items","capacity","depth","native","sqlAllocation"].contains(&axis){assert_eq!(born,0);}
   let(result,_,born,freed)=encode(&law,incoming,ceiling,limits,&mut |_|true,|sql,owner|TxtSnapshot::from_sqlite_database_receiving(&input,sql,owner));assert!(result.is_err());assert_eq!(born,freed);if ["items","capacity","depth","native","sqlAllocation"].contains(&axis){assert_eq!(born,0);}
  }
- eprintln!("[DEBUG] Original TXT eighteen malformed inputs retain literal exact causes and both directions refuse seven independent authority axes; zero-close retains custody and funded close conserves all accepted System backing");
 }
 #[test]
 fn txt_original_receiving_sql_cancellation_keeps_original_cause_and_same_native_close_observer(){
@@ -56,14 +55,12 @@ fn txt_original_receiving_sql_cancellation_keeps_original_cause_and_same_native_
  }
  direction!(NativeDecodeControl,NativeSnapshotDecodeOwner,semio_framework_value::native_decoding::NativeDecodeRetirementRecipient,|sql:&mut SqliteSnapshotControl<'_>,owner:&mut store::NativeSnapshotDecodeOwner<'_,'_>|source.to_sqlite_database_receiving(sql,owner));
  direction!(NativeEncodeControl,NativeSnapshotEncodeOwner,semio_framework_value::native_encoding::NativeEncodeRetirementRecipient,|sql:&mut SqliteSnapshotControl<'_>,owner:&mut store::NativeSnapshotEncodeOwner<'_,'_>|TxtSnapshot::from_sqlite_database_receiving(&input,sql,owner));
- eprintln!("[DEBUG] Original TXT semantic SQL cancellation retains exact borrowed cause and both paid partial frames; same original Native observer blocks funded close before rearming, zero close and terminal System conservation verified");
 }
 #[test]
 fn txt_original_receiving_cumulative_same_owner_uses_prior_paid_receipts(){
  let law=fixture();let policy=grant(&law["bodyGrant"]);let maximum=law["nativeMaximumBytes"].as_u64().unwrap()as usize;let source=snapshot(&law["cases"][3]["snapshot"]);let input=database(&law["cases"][3]["database"]);let mut prior=None;let mut first=RetainedCloneProgress::default();
  let(second,receipt,born,freed)=decode(&law,policy,maximum,Default::default(),&mut |_|true,|sql,owner|{prior=Some(source.to_sqlite_database_receiving(sql,owner)?);first=owner.progress();source.to_sqlite_database_receiving(sql,owner)});assert!(first.copied_items>0);assert!(receipt.copied_items>first.copied_items);let(a,b)=retire(prior.take().unwrap(),&law);let(c,d)=retire(second.unwrap(),&law);assert_eq!(born+a+c,freed+b+d);
  let mut prior=None;let mut first=RetainedCloneProgress::default();let(second,receipt,born,freed)=encode(&law,policy,maximum,Default::default(),&mut |_|true,|sql,owner|{prior=Some(TxtSnapshot::from_sqlite_database_receiving(&input,sql,owner)?);first=owner.progress();TxtSnapshot::from_sqlite_database_receiving(&input,sql,owner)});assert!(first.copied_items>0);assert!(receipt.copied_items>first.copied_items);let(a,b)=retire(prior.take().unwrap(),&law);let(c,d)=retire(second.unwrap(),&law);assert_eq!(born+a+c,freed+b+d);
- eprintln!("[DEBUG] Original TXT projection and reconstruction repeat with the same actual supplied owner, original grant and SQL control; cumulative prior receipts survive and both accepted outputs close with exact actual bytes");
 }
 
 #[test]
@@ -78,10 +75,4 @@ fn txt_original_receiving_directional_validators_borrow_both_original_controls_w
  }
  direction!(NativeDecodeControl,NativeSnapshotDecodeOwner,validate_sqlite_snapshot_subset_decoding,"native decoding canceled");
  direction!(NativeEncodeControl,NativeSnapshotEncodeOwner,validate_sqlite_snapshot_subset_encoding,"native encoding canceled");
- eprintln!("[DEBUG] Original TXT six directional cases per control borrow exact kind/standard/subset and literal Native/SQL causes with zero physical allocations, zero fabricated receipts and no cleanup recipient");
-}
-
-fn runtime_fixture_text(relative: &str) -> &'static str {
-    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative);
-    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display())).into_boxed_str())
 }

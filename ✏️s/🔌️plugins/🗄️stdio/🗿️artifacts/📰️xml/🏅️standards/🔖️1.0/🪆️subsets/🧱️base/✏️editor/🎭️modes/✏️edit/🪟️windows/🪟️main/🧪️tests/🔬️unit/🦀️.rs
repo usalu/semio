@@ -1,4 +1,8 @@
-use super::*;
+use crate::schema::snapshot::XmlNode;
+use crate::XmlSnapshot;
+use semio_framework_plugin::app::TreeWindowKit;
+use semio_framework_ui_locale::Locale;
+use crate::editor::xml_any::modes::edit::windows::main::*;
 
 #[semio_framework_async_macros::async_test]
 async fn definition_declares_a_tree_window() {

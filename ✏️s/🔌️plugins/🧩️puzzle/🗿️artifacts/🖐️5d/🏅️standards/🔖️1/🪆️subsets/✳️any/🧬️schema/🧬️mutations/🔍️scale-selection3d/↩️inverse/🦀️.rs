@@ -1,10 +1,14 @@
 //! ↩️ Inverse for `ScaleSelection3d` — the absolute setters restoring every BASE pose field the transform changes (exact,
 //! never a negated parameter that would accumulate float error). Nothing moved ⇒ `Vec::new()`.
-use crate::standards::v1::subsets::any::schema::mutations::{puzzle5d_scaled, puzzle5d_selection, scale_part_3d, scale_target_volume, Puzzle5dMutation};
+use crate::standards::v1::subsets::any::schema::mutations::{puzzle5d_scaled, scale_part_3d, scale_target_volume};
+use crate::standards::v1::subsets::any::schema::diff::{puzzle5d_selection};
 use crate::Puzzle5dSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &super::ScaleSelection3d, base: &Puzzle5dSnapshot) -> Result<Vec<Puzzle5dMutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op>(payload: &super::ScaleSelection3d, base: &Puzzle5dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError>
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::scale_part_3d::ScalePart3d> + From<crate::standards::v1::subsets::any::schema::mutations::scale_target_volume::ScaleTargetVolume>,
+{
     let Ok(selection) = puzzle5d_selection(base, &payload.targets, true) else { return Ok(Vec::new()) };
     if !payload.factors.iter().all(|value| value.is_finite() && *value > 0.0) || payload.factors == [1.0; 3] {
         return Ok(Vec::new());

@@ -17,5 +17,11 @@
       "type": "string",
       "contentEncoding": "hex"
     }
-  }
+  },
+  "required": [
+    "format",
+    "schemaLen",
+    "schemaBytes",
+    "payload"
+  ]
 }

@@ -1,4 +1,5 @@
 use super::*;
+use semio_framework_test_fixtures::fixture_text;
 
 fn owner_handle(text: &str) -> FlowContentChild {
     let target = semio_framework_artifact_reference::ArtifactRef { artifact_id: "flow-content-reused".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "flow".into() } };
@@ -14,7 +15,7 @@ fn owner_text(handle: &FlowContentChild) -> String {
 
 #[test]
 fn flow_scene_owner_fixture_is_language_neutral_and_bounded() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/⚖️flow-scene-owner-law.json")).expect("language-neutral Flow owner fixture");
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../🧪️tests/🧫️fixtures/⚖️flow-scene-owner-law.json")).expect("language-neutral Flow owner fixture");
     assert_eq!(fixture["ownedSlots"], 1);
     assert_eq!(fixture["maximumCases"], 5);
     assert_eq!(fixture["cases"].as_array().map(Vec::len), Some(5));
@@ -89,7 +90,7 @@ async fn widget_content_round_trips_through_the_composed_child_snapshot() {
 
 #[test]
 fn authored_slider_labels_survive_child_content_round_trip() {
-    let cases: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧪️tests/🧫️fixtures/📸️snapshot/🏷️slider-labels.json")).unwrap();
+    let cases: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧪️tests/🧫️fixtures/📸️snapshot/🏷️slider-labels.json")).unwrap();
     for row in cases["cases"].as_array().unwrap() {
         let widget: Widget = semio_framework_value::FromValue::from_value(semio_framework_value::DslValue::from(row["widget"].clone())).unwrap();
         let content = flow_content_snapshot_from_working(&[widget.clone()], &[], &flow::OrderedMap::new());
@@ -109,8 +110,8 @@ fn authored_slider_labels_survive_child_content_round_trip() {
 /// renderers. Read from the production source because that literal is the only place the drift lives.
 #[test]
 fn editor_tool_proofs_declare_the_artifact_document_schema() {
-    const EDITOR_SOURCE: &str = include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs");
-    let declared: Vec<&str> = EDITOR_SOURCE
+    static EDITOR_SOURCE: std::sync::LazyLock<&str> = std::sync::LazyLock::new(|| fixture_text!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs"));
+    let declared: Vec<&str> = (*EDITOR_SOURCE)
         .lines()
         .filter_map(|line| line.trim().strip_prefix("artifact_schema:"))
         .filter_map(|rest| rest.trim().trim_end_matches(',').strip_prefix('"').and_then(|rest| rest.strip_suffix('"')))

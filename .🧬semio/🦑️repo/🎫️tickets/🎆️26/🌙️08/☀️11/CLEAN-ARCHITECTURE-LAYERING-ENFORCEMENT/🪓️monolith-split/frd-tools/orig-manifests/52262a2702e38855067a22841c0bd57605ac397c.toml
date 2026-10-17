@@ -1,0 +1,40 @@
+[package]
+workspace = "../../../../.."
+name = "teaching-proctor-base"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Teaching proctor base: the SQLite storage roles over one file, the quiz catalog with its revisions, the process configuration, the crowd tally and the presence rules, below the domain deciders and the instance."
+
+# 🧱️ The lowest crate of the proctor: everything the domain and the instance stand on.
+[package.metadata.semio]
+role = "library"
+id = "teaching-proctor-base"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+# 🧰️ The fixtures of the base tests (the fixture catalog, scratch directories) for the crates above.
+[features]
+testkit = []
+
+[dependencies]
+semio-framework-quiz = { workspace = true }
+semio-framework-server = { workspace = true }
+semio-framework-replication = { workspace = true }
+semio-framework-async = { workspace = true }
+semio-framework-hash = { workspace = true }
+serde = { workspace = true }
+# 🎯️ `float_roundtrip`: catalogs and stored events are read correctly rounded, as the device reads them.
+serde_json = { workspace = true, features = ["float_roundtrip"] }
+tokio = { workspace = true, features = ["rt-multi-thread", "macros", "net", "time", "fs", "signal", "sync"] }
+# 🗄️ The workspace's one SQLite binding (a workspace may link a single native `sqlite3`), bundled so
+# every platform builds it without a system package — the same requirement hub states.
+rusqlite = { version = "0.38.0", features = ["bundled"] }
+
+[dev-dependencies]
+# 🔮️ Third-party oracle: `sha2` for the quiz revision digest.
+sha2 = "0.10.9"

@@ -19,12 +19,12 @@ import { randomBytes } from "node:crypto";
 import { chmodSync, existsSync, mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { sealSpaceArtifactCreateV1 } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🌱️space-artifact-creation-v1/🟦️.ts";
+import { sealSpaceArtifactCreateV1 } from "@semio-tech/framework-os/modules/directory/schema/space-artifact-creation-v1";
 
 import { createSpaceCommandV1 } from "@semio-tech/framework/directory/spaces";
 import { agentDelegationRevokePathV1 } from "@semio-tech/framework/directory/delegations";
-import { hubCredentialFromEnv, isAcceptancePreconditionMissing, requireMcpBinary } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🟦️.ts";
-import { acceptanceCheckResult, publishAcceptanceCheckResult, withAcceptanceRecord } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/🟦️.ts";
+import { hubCredentialFromEnv, isAcceptancePreconditionMissing, requireMcpBinary } from "@semio-tech/framework-os-mcp";
+import { acceptanceCheckResult, publishAcceptanceCheckResult, withAcceptanceRecord } from "@semio-tech/repo-test/acceptance/orchestration";
 
 const here = dirname(fileURLToPath(new URL(import.meta.url)));
 function findWorkspaceRoot(start: string): string {

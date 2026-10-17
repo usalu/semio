@@ -37,6 +37,5 @@ fn prepared_original_abandoned_atlas_reports_full_physical_grants() {
         assert_eq!(released, expected);
         assert!(PREPARED_ATLAS_ABANDONMENT_OWNER[slot].load(Ordering::Acquire).is_null());
         assert_eq!(PREPARED_ATLAS_ABANDONMENT_STATE[slot].load(Ordering::Acquire), 0);
-        println!("[DEBUG] original abandoned input/atlas copy={copy} exactBoxAndBackingRelease=true custodyRetained=true");
     }
 }

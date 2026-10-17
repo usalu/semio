@@ -28,16 +28,16 @@ test("strict lane vectors retain their original programs and independent closed 
 });
 
 test("R13 and R14 reject whole-state diff and restore in every original ephemeral lane and type",()=>{
- for(const row of fixture.cases){const original=vectors.cases.find(candidate=>candidate.id===row.id)!;const reports=policyDiffOnlyFileBreaches(original.segments.join("/"),original.lines.join("\n")).map(record=>{const match=/:(\d+) (R1[34]):/u.exec(record.summary);return match?match[1]+"|"+match[2]:null;}).filter(Boolean).sort();expect(reports).toEqual(row.expected);console.log("[DEBUG] strict diff lane "+row.id+" breaches="+reports.length);}
+ for(const row of fixture.cases){const original=vectors.cases.find(candidate=>candidate.id===row.id)!;const reports=policyDiffOnlyFileBreaches(original.segments.join("/"),original.lines.join("\n")).map(record=>{const match=/:(\d+) (R1[34]):/u.exec(record.summary);return match?match[1]+"|"+match[2]:null;}).filter(Boolean).sort();expect(reports).toEqual(row.expected);}
 });
 
 test("complete original per-file mutation programs retain every exact rule and design-code expectation",()=>{
  for(const row of vectors.cases){
   const path=row.segments.join("/"),reports=policyDiffOnlyFileBreaches(path,row.lines.join("\n")+"\n"),actual=reports.map(record=>{const match=/^(.*):(\d+) (R\d+):([A-Z0-9-]+) /u.exec(record.summary);expect(match).not.toBeNull();expect(match![1]).toBe(path);expect(match![4]).toBe(vectors.codes[match![3]!]);return match![2]+"|"+match![3];}).sort();
-  expect(actual).toEqual(row.breaches.map(record=>record.line+"|"+record.rule).sort());console.log("[DEBUG] complete original diff program "+row.id+" breaches="+actual.length);
+  expect(actual).toEqual(row.breaches.map(record=>record.line+"|"+record.rule).sort());
  }
 });
 
 test("complete original R15 leaf trees retain exact authored ownership without Git mutation or source transport",()=>{
- for(const tree of vectors.leafTrees){const files=Object.keys(tree.files),reports=policyInverseSumLawUntestedLeafBreaches(files,path=>(tree.files[path]??[]).join("\n"));expect(reports.map(row=>row.scope).sort()).toEqual([...tree.breaches].sort());for(const report of reports)expect(/ R15:([A-Z0-9-]+) /u.exec(report.summary)?.[1]).toBe(vectors.codes.R15);console.log("[DEBUG] complete original diff leaf tree "+tree.id+" breaches="+reports.length);}
+ for(const tree of vectors.leafTrees){const files=Object.keys(tree.files),reports=policyInverseSumLawUntestedLeafBreaches(files,path=>(tree.files[path]??[]).join("\n"));expect(reports.map(row=>row.scope).sort()).toEqual([...tree.breaches].sort());for(const report of reports)expect(/ R15:([A-Z0-9-]+) /u.exec(report.summary)?.[1]).toBe(vectors.codes.R15);}
 });

@@ -7,12 +7,13 @@
 use crate::standards::v1::subsets::any::schema::diff::SSpaceDiff;
 use crate::standards::v1::subsets::any::schema::mutations::SSpaceMutation;
 use crate::standards::v1::subsets::any::schema::snapshot::SSpaceSnapshot;
+use semio_framework_test_fixtures::fixture_text;
 
-static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏷️rename-artifact/🧪️renames-artifact-1/📸️snapshot/⬅️before/🔣️.json"));
-static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏷️rename-artifact/🧪️renames-artifact-1/📸️snapshot/➡️after/🔣️.json"));
-static MUTATION: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏷️rename-artifact/🧪️renames-artifact-1/🦠️mutation/🔣️.json"));
-static DIFF: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏷️rename-artifact/🧪️renames-artifact-1/🔺️diff/🔣️.json"));
-static OUTCOME: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏷️rename-artifact/🧪️renames-artifact-1/🎯️outcome/🔣️.json"));
+static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏷️rename-artifact/🧪️renames-artifact-1/📸️snapshot/⬅️before/🔣️.json"));
+static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏷️rename-artifact/🧪️renames-artifact-1/📸️snapshot/➡️after/🔣️.json"));
+static MUTATION: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏷️rename-artifact/🧪️renames-artifact-1/🦠️mutation/🔣️.json"));
+static DIFF: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏷️rename-artifact/🧪️renames-artifact-1/🔺️diff/🔣️.json"));
+static OUTCOME: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏷️rename-artifact/🧪️renames-artifact-1/🎯️outcome/🔣️.json"));
 
 fn decode_value<T: semio_framework_value::FromValue>(text: &str) -> T {
     let json = semio_framework_pack_json::parse(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("fixture JSON decodes");
@@ -118,9 +119,4 @@ async fn committed_diff_applies_to_after() {
 #[semio_framework_async_macros::async_test]
 async fn inverse_diffs_sum_to_the_negative_diff() {
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation(), &before()).await;
-}
-
-fn runtime_fixture_text(relative: &str) -> &'static str {
-    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative);
-    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display())).into_boxed_str())
 }

@@ -1,0 +1,11 @@
+# Controlled Cargo Custody Birth
+
+Current custody capture and resolver revalidation use two raw synchronous Bun child births. Their callers cannot observe original cancellation/progress while blocked. Existing structural positive test controls do not authenticate any issued phase.
+
+The mandatory `CargoPreparationControlV1` gains its actual `leaseControl`. Both public custody functions become async with mandatory control. Admission snapshots phase, signal, budget/options/advance references before awaiting; validates genuine issuance, exact signal and actual finite remaining budget. Every advance is awaited before checking and dispatching existing separated owned capture under a requested descendant bounded by the existing 30-second recipe maximum and actual phase. Exact received wire/output and canonical helper argv/input are used; child is joined by owned capture before return or failure. No callback selected backend/capture authority.
+
+The physical generator gains explicit program-capture and observation-current operations; only the async driver executes them. Synchronous draining refuses these operations, avoiding Promise-valued observations. Existing synchronous preparation without observations stays unchanged in this contained slice. Producer completion calls a private no-resolution exact-byte validator synchronously and cannot launch a child. Dependency-pair current checks become awaited throughout.
+
+The canonical Native adapter exposes its actual phase; it does not create an Original or reset deadlines. Genuine Source laws cover copied/absent/cancelled phases, prebirth progress refusal, finite descendant/capability wire, real capture and re-resolution against independent esbuild/Node hashes. Schema/corpus and Ajv/SQLite govern portable expectations. Positive fixtures use incoming issued Original; expected accepted-operation failures need isolated strict-wire children where necessary. No Native/Cargo executable, SDK or canonical store operations.
+
+Ownership: execution owns custody production, Cargo generator/driver, dependency pair, Native adapter, custody ordinary/control tests. High retains NativeDependencies fixture and consumes the same mandatory async API. Shared publication owner and held Windows leaf remain untouched.

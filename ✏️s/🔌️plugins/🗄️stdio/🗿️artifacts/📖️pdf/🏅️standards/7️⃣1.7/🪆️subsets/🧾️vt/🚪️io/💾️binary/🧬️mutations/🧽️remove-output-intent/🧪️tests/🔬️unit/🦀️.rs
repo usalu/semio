@@ -1,4 +1,5 @@
-use super::*;
+use crate::standards::v1_7::subsets::vt::schema::mutations::remove_output_intent::RemoveOutputIntent;
+use crate::standards::v1_7::subsets::vt::io::binary::mutations::remove_output_intent::*;
 
 #[test]
 fn owned_payload_round_trips() {

@@ -1,3 +1,5 @@
+import{inferenceInventoryReferencesHoldV1,requireCurrentInferenceInventoryReuseV1}from"../../../🏗️build/👁️observation/📥️reuse/🟨️.mjs";
+import{requireCurrentSourceInventoryV1}from"../../../🏗️build/📥️inputs/📋️data/📥️load/🟨️.mjs";
 import{printArtifactNxOutputV1}from"../../../../../../📓️print/📦️artifacts/🟦️.ts";
 import{checkResourceLeaseControl}from"../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
 import {frameworkOsEngineSourceOwnersV1} from "../../../../../../💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/📥️artifacts/🕸️engines/🟦️.ts";
@@ -21,7 +23,7 @@ import {advanceScriptInvocation} from "../../../../../../../🔨️modules/🏃�
 import { buildModesV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 import {declaredNativeOwnerCommandV1,literalCommandTokensV1,bindBuildCommandV1} from "../../../🏗️build/📤️arguments/🟨️.mjs";
 import {readCargoExecutionContractV1,selectCargoExecutionOperationV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️execution/🟦️.ts";
-import { memoizedObservedComputationV1, memoizedObservedAsyncComputationV1, memoizedFileRecord, registerSourceAnalysisV1, observedSourceAnalysisV1, observedSourceAnalysisAsyncV1, observeDependencies, observedFs, observedRequireResolve, observedTypeScriptHost, observeInference, observeProjectInferenceV1, settleObservedComputationV1 } from "../../../🏗️build/👁️observation/🟨️.mjs";
+import { requireCurrentObservationV1, memoizedObservedComputationV1, memoizedObservedAsyncComputationV1, memoizedFileRecord, registerSourceAnalysisV1, observedSourceAnalysisV1, observedSourceAnalysisAsyncV1, observeDependencies, observedFs, observedRequireResolve, observedTypeScriptHost, observeInference, observeProjectInferenceV1, settleObservedComputationV1 } from "../../../🏗️build/👁️observation/🟨️.mjs";
 import { availableParallelism } from "node:os";
 
 const { existsSync, lstatSync, readFileSync, readdirSync, realpathSync, statSync } = observedFs;
@@ -113,7 +115,7 @@ let relativeSourceInputsAsyncV1;
 let componentDeploymentDirectoryV1;
 let { inferProjectInputs, compactSourceInputs, cargoLockInput, deduplicateProjectInputs } = loadedProjectInputs;
 let { targetBuildModes } = loadedBuildMode;
-const libraryBootstrap = (loadedCommandInputs.sourceHash === commandInputHash ? Promise.resolve(loadedCommandInputs) : importRevision(new URL(`./${COMMAND_INPUT_MODULE}`, LIBRARY_URL), commandInputHash)).then((commandInputs) => {
+const libraryBootstrap = Promise.resolve().then(()=>{requireCurrentSourceInventoryV1();requireCurrentObservationV1();return (loadedCommandInputs.sourceHash === commandInputHash ? Promise.resolve(loadedCommandInputs) : importRevision(new URL(`./${COMMAND_INPUT_MODULE}`, LIBRARY_URL), commandInputHash));}).then((commandInputs) => {
   const inputRevision = createHash("sha256").update(readPhysicalSource(join(LIBRARY_ROOT, PROJECT_INPUT_MODULE))).digest("hex");
   const modeRevision = createHash("sha256").update(readPhysicalSource(join(LIBRARY_ROOT, BUILD_MODE_MODULE))).digest("hex");
   return Promise.all([importRevision(new URL(`./${PROJECT_INPUT_MODULE}`, LIBRARY_URL), inputRevision), importRevision(new URL(`./${BUILD_MODE_MODULE}`, LIBRARY_URL), modeRevision)]).then(([inputs, mode]) => {
@@ -1808,7 +1810,7 @@ async function emojiProjectJsonNodes(configFiles, options, context) {
     const assemblyAuthority=native||pipeline?projectAssemblyAuthorityV1(workspaceRoot,native?nativeRoot:undefined,projectsByRoot,pipeline?componentRoots:undefined,nativeCache,nativeClosures):null;
     const authorityMilliseconds=performance.now()-started;
     const cachePath=join(workspaceDataDirectory(workspaceRoot),"np",createHash("sha256").update(root).digest("hex").slice(0,24)+".json");
-    result.projects[name]=await observeProjectInferenceV1({cachePath,key:[projectAuthority,registryDigest,native?commandRevision:null,native||pipeline?assemblyAuthority:null,root,json,selectedTargets??null],owner:root},async()=>{
+    result.projects[name]=await observeProjectInferenceV1({cachePath,key:[projectAuthority,registryDigest,native?commandRevision:null,native||pipeline?assemblyAuthority:null,root,json,selectedTargets??null],owner:root,reusable:value=>inferenceInventoryReferencesHoldV1(workspaceRoot,value,context.phaseControl)},async()=>{
       try{
       const sourceGroups=await declaredSourceInputs(activeJson,workspaceRoot,context);
       await yieldInferenceV1(context,"build:project-assembly",0);
@@ -2011,7 +2013,7 @@ async function createDependenciesImplementation(_options, context) {
 /** ♻️ Identifies the complete authored graph implementation and policy authority. */
 function implementationRevision() {
   const hash = createHash("sha256").update(readPhysicalSource(fileURLToPath(import.meta.url)));
-  for (const path of ["⚡️caching/🔣️policy.json", "🔣️taxonomy.json", TARGET_EXECUTION_SCHEMA, COMMAND_INPUT_MODULE, OWNER_ARGUMENTS_MODULE, OBSERVATION_MODULE, CARGO_EXECUTION_MODULE, CARGO_EXECUTION_SCHEMA, BUILD_MODE_MODULE, BUILD_MODE_API, PROJECT_INPUT_MODULE, "🏗️build/📥️inputs/💾️storage/🟨️.mjs", "🏗️build/📥️inputs/💾️storage/🧬️schema/🔣️.json", "🏗️build/📥️inputs/💾️storage/🧬️schema/📦️dataset.json", "🏗️build/📥️inputs/💾️storage/🧬️schema/💾️quota.json", "⚡️caching/🗃️records/🟦️.ts", "⚡️caching/💾️storage/🔒️enforcement/📦️budget/🔣️policy.json", RUNTIME_COMPONENT_MODULE, SOURCE_INPUT_MODULE, BROWSER_SESSION_MODULE, PLAYGROUND_COMPOSITION_MODULE, NATIVE_HOST_MODULE, COMPONENT_DEPLOYMENT_MODULE, "../../../../🔨️modules/🪪️identity/📁️installation/🟨️.mjs", "../../../../🔨️modules/🪪️identity/📁️installation/🧬️schema/🔣️.json"]) hash.update(path === "🔣️taxonomy.json" ? JSON.stringify(readTaxonomyProjectionV1(join(LIBRARY_ROOT, path))) : readPhysicalSource(join(LIBRARY_ROOT, path)));
+  for (const path of ["🏗️build/📥️inputs/🔏️revision/🟨️.mjs", "🏗️build/📥️inputs/🔏️revision/🧬️schema/🔣️.json", "⚡️caching/🔣️policy.json", "🔣️taxonomy.json", TARGET_EXECUTION_SCHEMA, COMMAND_INPUT_MODULE, OWNER_ARGUMENTS_MODULE, OBSERVATION_MODULE, "🏗️build/👁️observation/📥️reuse/🟨️.mjs", "🏗️build/👁️observation/📥️reuse/🧬️schema/🔣️.json", CARGO_EXECUTION_MODULE, CARGO_EXECUTION_SCHEMA, BUILD_MODE_MODULE, BUILD_MODE_API, PROJECT_INPUT_MODULE, "🏗️build/📥️inputs/📋️data/🟨️.mjs", "🏗️build/📥️inputs/📋️data/📥️load/🟨️.mjs", "🏗️build/📥️inputs/📋️data/🧬️schema/🔣️.json", "🏗️build/📥️inputs/🧮️digest/🟨️.mjs", "🏗️build/📥️inputs/🧮️digest/🔣️schema.json", "🏗️build/📥️inputs/🧮️digest/📥️read/🟨️.mjs", "🏗️build/📥️inputs/🧮️digest/📥️read/🧬️schema/🔣️.json", "🏗️build/📥️inputs/🔒️lock/🟨️.mjs", "🏗️build/📥️inputs/🔒️lock/🔣️schema.json", "🏗️build/📥️inputs/🔒️lock/📥️read/🟨️.mjs", "🏗️build/📥️inputs/💾️storage/🟨️.mjs", "🏗️build/📥️inputs/💾️storage/📒️ledger/🟨️.mjs", "🏗️build/📥️inputs/💾️storage/🧬️schema/🔣️.json", "⚡️caching/🗃️records/🟦️.ts", "⚡️caching/💾️storage/🔒️enforcement/📦️budget/🔣️policy.json", RUNTIME_COMPONENT_MODULE, SOURCE_INPUT_MODULE, BROWSER_SESSION_MODULE, PLAYGROUND_COMPOSITION_MODULE, NATIVE_HOST_MODULE, COMPONENT_DEPLOYMENT_MODULE, "../../../../🔨️modules/🪪️identity/📁️installation/🟨️.mjs", "../../../../🔨️modules/🪪️identity/📁️installation/🧬️schema/🔣️.json"]) hash.update(path === "🔣️taxonomy.json" ? JSON.stringify(readTaxonomyProjectionV1(join(LIBRARY_ROOT, path))) : readPhysicalSource(join(LIBRARY_ROOT, path)));
   hash.update(JSON.stringify(buildModesV1()));
   return hash.digest("hex");
 }
@@ -2019,6 +2021,9 @@ function implementationRevision() {
 let reloadedImplementation;
 
 function invokeCurrentImplementation(kind, args) {
+  requireCurrentSourceInventoryV1();
+  requireCurrentInferenceInventoryReuseV1();
+  requireCurrentObservationV1();
   if(kind!=="nodes"&&kind!=="dependencies")return invokeCurrentImplementationV1(kind,args);
   const index=kind==="nodes"?2:1,context=args[index],run=(invocation,phaseControl)=>withRepositoryBuildGraphFactStoreV1(context.workspaceRoot,invocation,phaseControl,(_store,actualControl)=>{const current=[...args];current[index]={...context,invocation,phaseControl:actualControl};return invokeCurrentImplementationV1(kind,current);});
   return context.invocation?run(context.invocation,context.phaseControl):receiveScriptProcessInvocation(process.env,invocation=>run(invocation,createIssuedResourceControlV1(invocation,"graph:inference-entry",0)));
@@ -2026,9 +2031,10 @@ function invokeCurrentImplementation(kind, args) {
 
 function invokeCurrentImplementationV1(kind, args) {
   return libraryBootstrap.then(() => {
+    requireCurrentSourceInventoryV1();requireCurrentObservationV1();
     const revision = implementationRevision();
     if (revision === IMPLEMENTATION_REVISION && kind === "metadata")return createMetadataImplementation(...args);
-    if (revision === IMPLEMENTATION_REVISION) return kind === "nodes" ? observeInference({ cachePath: join(workspaceDataDirectory(args[2].workspaceRoot), "inference", "emoji-project-json.json"), key: [revision, args[0], args[1] ?? null, resolve(args[2].workspaceRoot)] }, () => settleObservedComputationV1(() => emojiProjectJsonNodes(...args), settlementOptionsV1(args[2]))) : kind === "authority" ? dependencyResolutionAuthorityImplementation(...args) : observeDependencies({ receiptPath: join(workspaceDataDirectory(args[1].workspaceRoot), "inference", "emoji-project-json.receipt.json"), recordDirectory:moduleSourceRecordCacheRootV1(args[1].workspaceRoot) }, () => settleObservedComputationV1(() => createDependenciesImplementation(...args), settlementOptionsV1(args[1])));
+    if (revision === IMPLEMENTATION_REVISION) return kind === "nodes" ? observeInference({ cachePath: join(workspaceDataDirectory(args[2].workspaceRoot), "inference", "emoji-project-json.json"), key: [revision, args[0], args[1] ?? null, resolve(args[2].workspaceRoot)],reusable:value=>inferenceInventoryReferencesHoldV1(args[2].workspaceRoot,value,args[2].phaseControl) }, () => settleObservedComputationV1(() => emojiProjectJsonNodes(...args), settlementOptionsV1(args[2]))) : kind === "authority" ? dependencyResolutionAuthorityImplementation(...args) : observeDependencies({ receiptPath: join(workspaceDataDirectory(args[1].workspaceRoot), "inference", "emoji-project-json.receipt.json"), recordDirectory:moduleSourceRecordCacheRootV1(args[1].workspaceRoot) }, () => settleObservedComputationV1(() => createDependenciesImplementation(...args), settlementOptionsV1(args[1])));
     if (reloadedImplementation?.revision !== revision) {
       const entry = { revision, module: importRevision(import.meta.url, revision).catch((error) => { if (reloadedImplementation === entry) reloadedImplementation = undefined; throw error; }) };
       reloadedImplementation = entry;

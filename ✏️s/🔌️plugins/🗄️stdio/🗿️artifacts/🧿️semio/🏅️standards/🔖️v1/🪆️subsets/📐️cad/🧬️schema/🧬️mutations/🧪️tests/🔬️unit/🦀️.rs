@@ -1,6 +1,8 @@
+use protocol::Mutation;
+use crate::schema::mutations::{fixture};
 use crate::io::binary::mutations::wire_tag;
 use crate::io::text::mutations::print_cad_mutation;
-use super::*;
+use crate::schema::mutations::*;
 
 //#region 🧪️KindsCatalog
 /// 🏷️ [`KINDS`] must name every declared variant, in the exact order and spelling the binary op

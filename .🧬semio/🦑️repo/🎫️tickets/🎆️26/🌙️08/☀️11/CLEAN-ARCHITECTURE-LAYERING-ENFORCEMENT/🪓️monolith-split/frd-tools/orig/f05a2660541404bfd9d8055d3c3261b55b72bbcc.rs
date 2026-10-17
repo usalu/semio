@@ -1,0 +1,333 @@
+//! 🧪️ Bitmap artifact root — identity, the shared canvas layer builder, and the committed-fixture
+//! generator this artifact's quintets are produced by.
+
+use crate::schema::snapshot::{BitmapColor, BitmapPinnedPixel, BitmapSnapshot};
+use crate::standards::v1::subsets::any::io::text::snapshot::{decode_base64};
+use crate::standards::v1::subsets::any::io::text::snapshot::{encode_base64};
+
+#[test]
+fn the_dialect_agrees_with_the_document_schema() {
+    assert_eq!(crate::WFC_BITMAP_DIALECT.artifact_kind, crate::WFC_BITMAP_DOCUMENT_SCHEMA);
+    assert_eq!(crate::WFC_BITMAP_DOCUMENT_SCHEMA, "s.wfc.bitmap");
+    assert_eq!(crate::WFC_BITMAP_DIALECT.standard.0, "1");
+}
+
+#[test]
+fn the_artifact_kind_is_the_os_level_two_dimensional_raster_id() {
+    let kind = crate::artifact_kind();
+    assert_eq!(kind.id, "2d.wfcbitmap");
+    assert_eq!(kind.component_kind, "wfcbitmap");
+    assert_eq!(kind.dimension, "2d");
+    assert_eq!(kind.schema, crate::WFC_BITMAP_DOCUMENT_SCHEMA);
+}
+
+#[test]
+fn the_capability_definition_builds() {
+    assert!(crate::definition().is_ok());
+}
+
+#[test]
+fn base64_round_trips_every_length_class() {
+    for length in 0..64usize {
+        let bytes: Vec<u8> = (0..length).map(|index| (index * 37 % 251) as u8).collect();
+        let text = encode_base64(&bytes);
+        assert_eq!(text.len() % 4, 0, "base64 is padded to a multiple of four");
+        assert_eq!(decode_base64(&text).as_deref(), Some(bytes.as_slice()), "length {length}");
+    }
+}
+
+#[test]
+fn base64_refuses_a_malformed_buffer() {
+    assert_eq!(decode_base64("AAA"), None, "an unpadded remainder is not base64");
+    assert_eq!(decode_base64("A!AA"), None, "a non-alphabet byte is not base64");
+    assert_eq!(decode_base64("A=AA"), None, "padding may only sit at the end");
+}
+
+#[test]
+fn the_layer_builder_always_draws_the_extent_even_with_no_pixels() {
+    let layers = crate::bitmap_layers_json("out", 4, 4, &[BitmapColor::opaque(1, 2, 3)], &[], &[]);
+    assert!(layers.starts_with('['), "the layer list is a JSON array");
+    assert!(layers.contains("out-extent"), "an unsolved output still states its extent");
+}
+
+#[test]
+fn the_layer_builder_merges_equal_runs_and_marks_pins() {
+    let palette = vec![BitmapColor::opaque(0, 0, 0), BitmapColor::opaque(255, 255, 255)];
+    let indices = vec![0, 0, 0, 0, 1, 1, 1, 1];
+    let layers = crate::bitmap_layers_json("in", 4, 2, &palette, &indices, &[BitmapPinnedPixel { x: 1, y: 1, color: 1 }]);
+    assert_eq!(layers.matches("\"kind\":\"path\"").count(), 4, "extent + two merged runs + one pin");
+    assert!(layers.contains("in-pin-1-1"));
+}
+
+#[test]
+fn the_layer_budget_is_respected_by_coarsening() {
+    let palette: Vec<BitmapColor> = (0..8u32).map(|index| BitmapColor::opaque(index * 31, 0, 0)).collect();
+    let indices: Vec<u8> = (0..(96 * 96u32)).map(|cell| ((cell * 7 + cell / 96) % 8) as u8).collect();
+    let layers = crate::bitmap_layers_json("in", 96, 96, &palette, &indices, &[]);
+    assert!(layers.len() <= crate::BITMAP_LAYERS_JSON_BUDGET_BYTES, "a dense sample is coarsened rather than overflowing the surface spine");
+}
+
+#[test]
+fn every_example_declares_a_distinct_id_and_a_localized_label() {
+    let sources = crate::examples::sources();
+    assert_eq!(sources.len(), 2);
+    assert_ne!(sources[0].id(), sources[1].id());
+    assert_eq!(crate::examples::example_source_slice().len(), 2);
+}
+
+//#region 🧫️EvidenceGenerator
+/// 🧫️ The committed quintet generator. Every fixture under
+/// `🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🧬️mutations/` is emitted from THIS table, so a
+/// hand-edited fixture is a bug by construction: run `cargo test -p semio-s-artifact-wfc-bitmap
+/// --lib -- --ignored fixtures` to regenerate them.
+#[cfg(test)]
+pub mod fixtures {
+    use super::*;
+    use crate::mutations::{add_palette_color, change_model, change_palette_color, change_seed, paint_input_stroke, pin_pixel, remove_palette_color, resize_input, resize_output, set_input_pixels, unpin_pixel, BitmapMutation, BitmapStrokePoint};
+
+    /// 🧪️ The shared scene every case starts from: a 4 × 3 two-colour checker, a 6 × 4 output, an
+    /// `N = 2` model, no pins. Small enough to read in a diff, structured enough that the
+    /// overlapping model has real patterns to learn.
+    pub fn base() -> BitmapSnapshot {
+        BitmapSnapshot::reference_scene()
+    }
+
+    /// 🎨️ The base scene plus an unused third palette entry — the only state in which removing a
+    /// colour is legal at all.
+    pub fn base_with_spare_colour() -> BitmapSnapshot {
+        let mut snapshot = base();
+        snapshot.input.palette.push(BitmapColor::opaque(200, 60, 60));
+        snapshot
+    }
+
+    /// 📌️ The base scene plus the two pins the pin/unpin and output-shrink cases need.
+    pub fn base_with_pins() -> BitmapSnapshot {
+        let mut snapshot = base();
+        snapshot.pinned = vec![BitmapPinnedPixel { x: 0, y: 0, color: 1 }, BitmapPinnedPixel { x: 4, y: 3, color: 0 }];
+        snapshot
+    }
+
+    pub fn cases() -> Vec<(&'static str, &'static str, BitmapSnapshot, BitmapMutation)> {
+        vec![
+            ("🎲️change-seed", "🎲️reseeds", base(), change_seed(99)),
+            ("📐️resize-input", "📐️grows", base(), resize_input(6, 4)),
+            ("🖌️set-input-pixels", "🖌️paints", base(), set_input_pixels(1, 0, 2, 2, ([1, 1, 1, 1]).to_vec())),
+            ("🎨️add-palette-color", "🎨️appends", base(), add_palette_color(2, BitmapColor::opaque(200, 60, 60))),
+            ("🖍️change-palette-color", "🖍️recolours", base(), change_palette_color(1, BitmapColor::opaque(240, 230, 200))),
+            ("🧽️remove-palette-color", "🧽️drops", base_with_spare_colour(), remove_palette_color(2)),
+            ("🖼️resize-output", "🖼️shrinks", base_with_pins(), resize_output(2, 2, true)),
+            ("⚙️change-model", "⚙️widens", base(), change_model(3, 4, false, Some(0))),
+            ("📌️pin-pixel", "📌️pins", base(), pin_pixel(0, 0, 1)),
+            ("📍️unpin-pixel", "📍️releases", base_with_pins(), unpin_pixel(0, 0)),
+            ("✍️paint-input-stroke", "✍️paints", base(), paint_input_stroke(vec![BitmapStrokePoint { x: 0, y: 0 }, BitmapStrokePoint { x: 3, y: 2 }], 1)),
+            ("✍️paint-input-stroke", "⚠️clips", base(), paint_input_stroke(vec![BitmapStrokePoint { x: 2, y: 0 }, BitmapStrokePoint { x: 5, y: 0 }], 0)),
+        ]
+    }
+}
+//#endregion 🧫️EvidenceGenerator
+
+//#region 🖨️FixtureEmitter
+/// 🖨️ Re-indents a compact JSON string WITHOUT reordering its keys — `serde_json`'s own pretty
+/// printer would sort them, and a fixture whose key order no longer matches its struct's field
+/// order is exactly the drift the canonical-form tests exist to catch.
+fn reindent_json(text: &str) -> String {
+    let mut out = String::with_capacity(text.len() * 2);
+    let mut depth = 0usize;
+    let mut in_string = false;
+    let mut escaped = false;
+    for character in text.chars() {
+        if in_string {
+            out.push(character);
+            if escaped {
+                escaped = false;
+            } else if character == '\\' {
+                escaped = true;
+            } else if character == '"' {
+                in_string = false;
+            }
+            continue;
+        }
+        match character {
+            '"' => {
+                in_string = true;
+                out.push(character);
+            }
+            '{' | '[' => {
+                depth += 1;
+                out.push(character);
+                out.push('\n');
+                out.push_str(&"  ".repeat(depth));
+            }
+            '}' | ']' => {
+                depth -= 1;
+                out.push('\n');
+                out.push_str(&"  ".repeat(depth));
+                out.push(character);
+            }
+            ',' => {
+                out.push(character);
+                out.push('\n');
+                out.push_str(&"  ".repeat(depth));
+            }
+            ':' => out.push_str(": "),
+            other if other.is_whitespace() => {}
+            other => out.push(other),
+        }
+    }
+    out.push('\n');
+    collapse_empty_containers(&out)
+}
+
+/// 🧹️ Folds `[\n   \n]` and `{\n   \n}` back to `[]`/`{}` — an empty container printed across
+/// three lines is noise in every committed fixture and in every review of one.
+fn collapse_empty_containers(text: &str) -> String {
+    let mut out = String::with_capacity(text.len());
+    let mut rest = text;
+    while let Some(start) = rest.find(['[', '{']) {
+        let opener = rest.as_bytes()[start] as char;
+        let closer = if opener == '[' { ']' } else { '}' };
+        out.push_str(&rest[..=start]);
+        let tail = &rest[start + 1..];
+        let inner = tail.trim_start_matches([' ', '\n']);
+        if inner.starts_with(closer) {
+            out.push(closer);
+            rest = &inner[1..];
+        } else {
+            rest = tail;
+        }
+    }
+    out.push_str(rest);
+    out
+}
+
+fn subset_root() -> std::path::PathBuf {
+    std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️1/🪆️subsets/✳️any")
+}
+
+fn write_fixture(directory: &std::path::Path, leaf: &str, body: &str) {
+    let path = directory.join(leaf);
+    std::fs::create_dir_all(path.parent().expect("fixture leaf has a parent")).expect("fixture directory");
+    std::fs::write(&path, body).expect("fixture write");
+}
+
+/// 🧫️ Regenerates every committed quintet and both example assets from the Rust authorities above.
+/// Ignored by default: it WRITES into the source tree, which is the point — the committed files are
+/// a print of this table and never hand-edited.
+#[test]
+#[ignore]
+fn emit_committed_fixtures() {
+        let root = subset_root();
+    for (kind, case, before, mutation) in fixtures::cases() {
+        let outcome = <crate::BitmapMutation as protocol::Mutation<BitmapSnapshot>>::diff(&mutation, &before);
+        let mut after = before.clone();
+        vcs::apply_mutation(&after, &mutation).map(|(applied_state, _)| { after = applied_state; }).unwrap_or_else(|error| panic!("{kind}/{case} applies: {error}"));
+        let directory = root.join("🧫️fixtures/🧬️mutations").join(kind).join(case);
+        write_fixture(&directory, "📸️snapshot/⬅️before/🔣️.json", &reindent_json(&crate::standards::v1::subsets::any::io::text::snapshot::bitmap_json_encode(&before)));
+        write_fixture(&directory, "📸️snapshot/➡️after/🔣️.json", &reindent_json(&crate::standards::v1::subsets::any::io::text::snapshot::bitmap_json_encode(&after)));
+        write_fixture(&directory, "🦠️mutation/🔣️.json", &reindent_json(&crate::standards::v1::subsets::any::io::text::snapshot::bitmap_json_encode(&mutation)));
+        write_fixture(&directory, "🔺️diff/🔣️.json", &reindent_json(&crate::standards::v1::subsets::any::io::text::snapshot::bitmap_json_encode(outcome.diff())));
+        let messages: Vec<String> = outcome
+            .messages()
+            .iter()
+            .map(|message| {
+                let level = crate::standards::v1::subsets::any::io::text::snapshot::bitmap_json_encode(&message.level);
+                format!("{{\"level\":{level},\"code\":\"{}\"}}", message.code.0)
+            })
+            .collect();
+        let body = if messages.is_empty() { "{\"status\":\"applied\"}".to_string() } else { format!("{{\"status\":\"applied\",\"messages\":[{}]}}", messages.join(",")) };
+        write_fixture(&directory, "🎯️outcome/🔣️.json", &reindent_json(&body));
+    }
+    for (slug, text) in [
+        ("🚪️rooms-16", crate::standards::v1::subsets::any::io::text::snapshot::print_dsl(&crate::examples::rooms_16::snapshot())),
+        ("🌸️flowers-24", crate::standards::v1::subsets::any::io::text::snapshot::print_dsl(&crate::examples::flowers_24::snapshot())),
+    ] {
+        let path = root.join("📚️examples").join(slug).join("🖼️assets").join(slug).join("🗣️.dsl.semio");
+        std::fs::create_dir_all(path.parent().expect("asset parent")).expect("asset directory");
+        std::fs::write(&path, text).expect("asset write");
+    }
+}
+//#endregion 🖨️FixtureEmitter
+
+//#region 🧩️MountContract
+/// 🧩️ The surfaces this subset mounts measured against the committed language-agnostic mount contract
+/// (`✳️any/🧫️fixtures/🧩️mount-contract/🔣️.json`) from inside the crate: the dialect both surfaces share, the app, kind and
+/// tool ids, the window roster, the mutation roster and the bundled examples with their DSL and pack round trips. The
+/// `🧩️mount-contract` case runs the same statement through the platform.
+mod mount_contract {
+    use crate::examples::{flowers_24, rooms_16};
+    use crate::standards::v1::subsets::any::io::text::snapshot::{parse_dsl, print_dsl};
+    use crate::{BitmapSnapshot, WFC_BITMAP_DIALECT};
+    use pack::snapshot::ArtifactPack;
+
+    const CONTRACT: &str = include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧩️mount-contract/🔣️.json");
+
+    fn contract() -> serde_json::Value {
+        serde_json::from_str(CONTRACT).expect("the mount contract decodes")
+    }
+
+    fn strings(value: &serde_json::Value, key: &str) -> Vec<String> {
+        value[key].as_array().unwrap_or_else(|| panic!("the contract declares '{key}'")).iter().map(|entry| entry.as_str().expect("a text entry").to_string()).collect()
+    }
+
+    #[test]
+    fn editor_and_viewer_share_the_bitmap_dialect() {
+        assert_eq!(<crate::editor::bitmap::BitmapEditor as semio_framework_plugin::ArtifactEditor>::DIALECT, WFC_BITMAP_DIALECT);
+        assert_eq!(<crate::viewer::bitmap::BitmapViewer as semio_framework_plugin::ArtifactViewer>::DIALECT, WFC_BITMAP_DIALECT);
+    }
+
+    #[test]
+    fn the_declared_app_ids_and_kind_id_are_the_committed_ones() {
+        let contract = contract();
+        assert_eq!(crate::editor::bitmap::create_bitmap_editor().id, contract["editorAppId"].as_str().expect("editorAppId"));
+        assert_eq!(crate::viewer::bitmap::create_bitmap_viewer().id, contract["viewerAppId"].as_str().expect("viewerAppId"));
+        assert_eq!(crate::artifact_kind().id, contract["artifactKindId"].as_str().expect("artifactKindId"));
+        assert_eq!(crate::inferences::BITMAP_INFERENCE_TOOL_ID, contract["inferenceToolId"].as_str().expect("inferenceToolId"));
+    }
+
+    #[test]
+    fn both_surfaces_declare_exactly_the_committed_window_kinds() {
+        let declared = strings(&contract(), "windowKindIds");
+        for definition in [crate::editor::bitmap::create_bitmap_editor(), crate::viewer::bitmap::create_bitmap_viewer()] {
+            let ids: Vec<String> = definition.window_kinds.iter().map(|window| window.id.clone()).collect();
+            assert_eq!(ids, declared, "surface {} declares the wrong window kinds", definition.id);
+        }
+    }
+
+    #[test]
+    fn the_mutation_vocabulary_is_the_committed_one() {
+        assert_eq!(crate::mutations::KINDS.to_vec(), strings(&contract(), "mutationKinds"));
+    }
+
+    #[test]
+    fn examples_round_trip_dsl_and_pack() {
+        for snapshot in [rooms_16::snapshot(), flowers_24::snapshot()] {
+            let text = print_dsl(&snapshot);
+            assert!(!text.trim().is_empty());
+            assert_eq!(parse_dsl(&text).expect("dsl"), snapshot);
+            let pack = ArtifactPack::encode_pack(&snapshot);
+            assert!(pack.len() > 64);
+            assert_eq!(<BitmapSnapshot as ArtifactPack>::decode_pack(&pack).expect("pack"), snapshot);
+        }
+    }
+
+    #[test]
+    fn every_committed_example_row_matches_its_builder() {
+        let contract = contract();
+        let rows = contract["examples"].as_array().expect("examples");
+        let built = [("rooms-16", rooms_16::snapshot()), ("flowers-24", flowers_24::snapshot())];
+        assert_eq!(rows.len(), built.len());
+        for (row, (id, snapshot)) in rows.iter().zip(built) {
+            assert_eq!(row["id"].as_str(), Some(id));
+            assert_eq!(row["inputWidth"].as_u64(), Some(u64::from(snapshot.input.width)));
+            assert_eq!(row["inputHeight"].as_u64(), Some(u64::from(snapshot.input.height)));
+            assert_eq!(row["paletteSize"].as_u64(), Some(snapshot.input.palette.len() as u64));
+        }
+    }
+
+    #[test]
+    fn example_labels_are_localized_en_and_de() {
+        assert_eq!(rooms_16::label(), semio_framework_ui_locale::LocalizedLabel::native("Rooms 16", "Räume 16"));
+        assert_eq!(flowers_24::label(), semio_framework_ui_locale::LocalizedLabel::native("Flowers 24", "Blumen 24"));
+    }
+}
+//#endregion 🧩️MountContract

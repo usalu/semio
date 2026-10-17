@@ -2,8 +2,8 @@ use super::*;
 use crate::editor::bim::modes::edit::windows::plan;
 use crate::editor::bim::presence::BimPresenceMutation;
 use crate::editor::bim::transient::BimWindowTransient;
-use crate::editor::bim::unit_tests::context::view;
-use crate::editor::bim::unit_tests::support::{demo, run};
+use crate::editor::bim::fixture::context::view;
+use crate::editor::bim::fixture::support::{demo, run};
 use semio_framework_ui_locale::Locale;
 
 fn addressed() -> BimDispatchCtx {

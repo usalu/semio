@@ -1,0 +1,17 @@
+{
+ "name": "reasoning",
+ "crates": [
+  "semio-reasoning-mutation-bridge",
+  "semio-s-artifact-reasoning-wires",
+  "semio-s-artifact-reasoning-wires-inferences",
+  "semio-s-artifact-reasoning-wires-schema",
+  "semio-s-artifact-reasoning-wires-snapshot",
+  "semio-s-artifact-reasoning-wires-snapshot-2",
+  "semio-s-artifact-reasoning-wires-v1",
+  "semio-s-artifact-reasoning-wires-viewer",
+  "semio-s-artifact-reasoning-wires-window-transient",
+  "semio-s-artifact-reasoning-wires-windows",
+  "semio-s-artifact-reasoning-wires-wires"
+ ],
+ "note": "ORACLE-HARVEST-PLUGINS: ✏️s/🔌️plugins/💡️reasoning"
+}

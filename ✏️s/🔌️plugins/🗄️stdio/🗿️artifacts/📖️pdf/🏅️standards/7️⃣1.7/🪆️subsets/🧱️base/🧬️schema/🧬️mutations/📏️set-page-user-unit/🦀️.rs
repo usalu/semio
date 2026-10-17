@@ -1,6 +1,5 @@
 //! 📏️ Authoritative PDF mutation payload, diff, inverse, and tests for `set-page-user-unit`.
 
-use super::PdfMutation;
 use crate::standards::v1_7::subsets::base::schema::diff::{self, PdfDiff};
 use crate::standards::v1_7::subsets::base::schema::snapshot::*;
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
@@ -15,7 +14,10 @@ pub struct SetPageUserUnit {
     pub user_unit: Option<f64>,
 }
 
-impl MutationKind<PdfSnapshot, PdfMutation> for SetPageUserUnit {
+impl<Op> MutationKind<PdfSnapshot, Op> for SetPageUserUnit
+where
+    Op: protocol::Mutation<PdfSnapshot, Diff = PdfDiff> + From<SetPageUserUnit>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "page-user-unit", kind: "set-page-user-unit", record: "Set" };
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
@@ -23,10 +25,10 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetPageUserUnit {
         MutationOutcome::new(diff::diff_set_page_user_unit(self.index, self.user_unit))
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
         let _ = base;
-        base.pages.get(self.index).map(|page| PdfMutation::SetPageUserUnit(SetPageUserUnit { index: self.index, user_unit: page.user_unit })).into_iter().collect()
+        base.pages.get(self.index).map(|page| Op::from(SetPageUserUnit { index: self.index, user_unit: page.user_unit })).into_iter().collect()
     
     })())
 }
@@ -43,8 +45,6 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetPageUserUnit {
 //#endregion 🔖️Mutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
 

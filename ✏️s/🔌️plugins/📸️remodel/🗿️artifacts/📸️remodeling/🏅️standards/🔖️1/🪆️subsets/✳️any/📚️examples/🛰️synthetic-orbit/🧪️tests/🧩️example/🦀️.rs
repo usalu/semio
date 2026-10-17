@@ -8,6 +8,7 @@
 //! (stdlib Python), which produced the committed bytes. PNG containers differ between encoders;
 //! decoded rasters do not, and that equality is what these tests assert.
 
+use semio_framework_test_fixtures::fixture_path;
 use semio_s_artifact_remodel_remodeling_examples::examples::synthetic_orbit::frames;
 use semio_s_artifact_remodel_remodeling_examples::examples::synthetic_orbit::CAMERA_ID;
 use semio_s_artifact_remodel_remodeling_examples::examples::synthetic_orbit::FRAME_MIME;
@@ -864,7 +865,7 @@ fn frame_asset_id(index: usize) -> String {
 #[test]
 #[ignore = "regenerates committed fixture assets; run explicitly"]
 fn regenerates_the_synthetic_orbit_example() {
-    let assets = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🛰️synthetic-orbit/🖼️assets");
+    let assets = fixture_path!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🛰️synthetic-orbit/🖼️assets");
     std::fs::create_dir_all(&assets).expect("example asset directory");
 
     let markers = generate_markers();

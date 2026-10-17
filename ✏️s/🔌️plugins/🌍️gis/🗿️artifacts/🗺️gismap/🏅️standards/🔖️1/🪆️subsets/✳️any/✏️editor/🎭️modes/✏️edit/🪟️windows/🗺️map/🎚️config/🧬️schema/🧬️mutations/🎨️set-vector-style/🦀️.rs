@@ -1,6 +1,6 @@
 //! 🎨️ Vector-style payload and sparse configuration change.
 
-use super::super::{MapWindowConfig, MapWindowConfigDelta, MapWindowConfigDiff, MapWindowConfigMutation};
+use crate::editor::gis2d::modes::edit::windows::map::config::component::{MapWindowConfig, MapWindowConfigDelta, MapWindowConfigDiff};
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -16,7 +16,10 @@ pub struct SetVectorStyle {
 //#endregion 🧬️Payload
 
 //#region ⚙️Behavior
-impl MutationKind<MapWindowConfig, MapWindowConfigMutation> for SetVectorStyle {
+impl<Op> MutationKind<MapWindowConfig, Op> for SetVectorStyle
+where
+    Op: protocol::Mutation<MapWindowConfig, Diff = MapWindowConfigDiff> + From<SetVectorStyle>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "vector-style", kind: "set-vector-style", record: "SetVectorStyle" };
     fn diff(&self, base: &MapWindowConfig) -> MutationOutcome<MapWindowConfigDiff> {
         if base.vector_style == self.value {
@@ -24,7 +27,7 @@ impl MutationKind<MapWindowConfig, MapWindowConfigMutation> for SetVectorStyle {
         }
         MutationOutcome::new(MapWindowConfigDelta { vector_style: Some(self.value.clone()), ..Default::default() }.into())
     }
-    fn inverse(&self, base: &MapWindowConfig) -> Result<Vec<MapWindowConfigMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &MapWindowConfig) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
         vec![Self { value: base.vector_style.clone() }.into()]
     

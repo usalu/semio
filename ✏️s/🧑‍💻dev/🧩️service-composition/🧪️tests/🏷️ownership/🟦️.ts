@@ -15,7 +15,6 @@ export async function sDevCompositionOwnershipV1(repoRoot: string): Promise<void
   assert(scope);
   assert(scope.exports.SDevBrowserInventoryV1);
   assert.deepEqual(inventory.diagnostics.filter(row => row.path === schemaPath || row.path.startsWith(`${schemaPath}/`)), []);
-  console.log("[DEBUG] actual s.dev.entry schema discovery admitted SDevBrowserInventoryV1 with zero scope diagnostics");
   await sDevCompositionSourceOwnershipV1(repoRoot);
 }
 
@@ -52,7 +51,6 @@ export async function sDevCompositionSourceOwnershipV1(repoRoot:string):Promise<
       assert.equal(calls, 0);
       assert.equal(retired, 0);
     }
-    console.log(`[DEBUG] neutral isolated bundle ${path}: host=${calls} retired=${retired}`);
   }
   const isRecord=(value:unknown):value is Record<string,unknown>=>!!value&&typeof value==="object"&&!Array.isArray(value),record=(value:unknown):Record<string,unknown>=>{assert(isRecord(value));return value;};
   const manifest = (path: string): Record<string,unknown> => record(toml.parse(readFileSync(join(repoRoot, path), "utf8")));
@@ -121,7 +119,6 @@ export async function sDevCompositionSourceOwnershipV1(repoRoot:string):Promise<
   assert(receivingFixtures > 8);
   const receiverConfiguration = readFileSync(join(repoRoot, "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/🧩️service-composition/🎚️config/🟦️.ts"), "utf8");
   assert(receiverConfiguration.includes("../👷️worker/🟦️.ts"));
-  console.log(`[DEBUG] GIS worker defining source authority: ${receivingFixtures} actual fixture/source URL readers resolve`);
   assert(!existsSync(join(repoRoot, `${neutral}/🧩️service-composition/🧪️tests/🟦️.ts`)));
   console.log(`s-dev-composition-source: neutral entries=${entries.length}, isolated neutral runtimes=2, independent AST/esbuild/Cargo owners, GIS/Puzzle deployment source passed`);
 }

@@ -1,5 +1,5 @@
 
-use super::*;
+use crate::examples::building::*;
 #[semio_framework_async_macros::async_test]
 async fn building_source_nonempty() {
     assert!(!PRIMARY_TEXT.is_empty());

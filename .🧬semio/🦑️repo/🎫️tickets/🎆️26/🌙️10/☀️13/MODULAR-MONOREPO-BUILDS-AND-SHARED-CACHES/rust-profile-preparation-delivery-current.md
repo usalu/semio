@@ -1,0 +1,5 @@
+# Profile Preparation Delivery Qualification
+
+Frozen checkpoint `rust-profile-preparation-checkpoint-current.md`, SHA256`7913eb11d7d76021de9b06df0c14d80c150c82b4776a5eaa7e9720e94ec83e49`, retains the actual passing8command results and its eight validation-window drifts. Delivery census finds another launch file change after freeze: `.vscode/launch.json` SHA256`2039fd08831aa520a7bd8391e10aeab5457ff71fc4059cc15267eec9866526ad` to`3db8c1b2cc65476c413c634c5615ad514c86e5b7e0fc7bc94f5cf4f4017f1438` (8954915bytes). The latter equals the before-validation hash, but this does not erase intervening drift or prove one unchanged execution closure.
+
+Actual current parse retains all44declared Source launch rows exactly. No other observed identity changes after freeze and no observed file is missing. Earlier runtime/storage/schema/test drift remains qualified; launch is actual executable configuration, not dismissed as harmless/nonexecuting. No unchanged test/Original/clock is retried, no Native authority or independent review is invented, and all full-goal/ticket/hold/physical-footprint limits remain.

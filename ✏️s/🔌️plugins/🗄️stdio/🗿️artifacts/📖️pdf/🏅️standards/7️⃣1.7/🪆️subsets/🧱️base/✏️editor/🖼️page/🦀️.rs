@@ -86,7 +86,7 @@ mod arguments;
 pub use self::arguments::*;
 
 #[path = "🔎️inspector/🦀️.rs"]
-mod inspector;
+pub mod inspector;
 pub use self::inspector::*;
 
 
@@ -94,9 +94,7 @@ pub use self::inspector::*;
 mod graphics;
 pub use self::graphics::*;
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 
 #[path = "📝️page-text/🦀️.rs"]
 mod page_text;

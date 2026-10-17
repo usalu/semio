@@ -1,7 +1,7 @@
 import { expect, test } from "vitest";
 import Ajv from "ajv/dist/2020.js";
 import { applyPatch } from "fast-json-patch";
-import orbitSchema from "../../../../../../../🧰️framework/🔨️modules/🖱️ui/🪟️viewport/🧊️3d/🧬️schema/🔣️.json";
+import { viewport3dSchema as orbitSchema } from "@semio-tech/framework-ui-viewport-ts/3d/schema";
 import rendererGestures from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🧪️tests/🧫️fixtures/🖱️pointer-gestures.json";
 import { buildFem3dSceneNode, fem2dStoryStateFor, fem3dStoryStateFor, reduceFem2dStoryAction, reduceFem3dStoryAction } from "../../🟦️.ts";
 

@@ -70,6 +70,5 @@ fn coverage_retirement_transfers_actual_masks_and_drains_private_sweep_owners() 
         }
         assert!(work>0);assert!(retired.terminal_is_empty());assert!(retired.owner.original().is_none());
         let stable=retired.advance(1).unwrap();assert!(stable.done);assert_eq!(stable.work,work);
-        eprintln!("[DEBUG] Actual coverage retirement {}: grant {}, work {}, output {}",row["name"],grant,work,has_output);
     }}
 }

@@ -3,9 +3,10 @@
 //! library rule for tests), the injected-sink contract a server's own handler laws build on, and
 //! the bounded counter table an introspection route reads.
 use super::*;
+use semio_framework_test_fixtures::fixture_text;
 
 fn vocabulary() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🛰️span-vocabulary/🔣️.json")).unwrap()
+    serde_json::from_str(fixture_text!("../../🧪️tests/🧫️fixtures/🛰️span-vocabulary/🔣️.json")).unwrap()
 }
 
 //#region 🌍️Vocabulary
@@ -203,11 +204,11 @@ fn the_counter_table_is_bounded_and_says_how_much_it_dropped() {
 
 //#region 🧬️Schema
 fn record_schema() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../🧬️schema/🔣️.json")).unwrap()
+    serde_json::from_str(fixture_text!("../../📝️record/🧬️schema/🔣️.json")).unwrap()
 }
 
 fn record_vectors() -> serde_json::Value {
-    serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap()
+    serde_json::from_str(fixture_text!("../../📝️record/🧪️tests/🧫️fixtures/🔣️.json")).unwrap()
 }
 
 fn vector_record(value: &serde_json::Value) -> TraceRecord {

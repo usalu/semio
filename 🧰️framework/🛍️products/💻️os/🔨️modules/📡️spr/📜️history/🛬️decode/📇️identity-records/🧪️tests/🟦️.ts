@@ -18,7 +18,6 @@ test("original document viewer and composition records receive typed fields from
   expect(actual).toEqual(row.expected);expect(at).toBe(source.length);
   expect(db.query("select json(?) as value").get(JSON.stringify(actual))).toEqual({value:JSON.stringify(row.expected)});
  }}finally{db.close()}
- console.log("[DEBUG] Original document/viewer/composition Buffer and SQLite controls agree on every field and presence combination");
  const path=new URL("../🦀️.rs",import.meta.url);expect(existsSync(path)).toBe(true);if(!existsSync(path))return;
  const source=readFileSync(path,"utf8");
  for(const proof of["pub struct RetainedHistoryIdentityRecordDecode","HistoryReadLimits","OriginalWireSourceIdentity","RetainedHistoryIdDecode","pub fn take_ready_into","pub fn take_partial_into","control.charge"]){expect(source.includes(proof)).toBe(true)}

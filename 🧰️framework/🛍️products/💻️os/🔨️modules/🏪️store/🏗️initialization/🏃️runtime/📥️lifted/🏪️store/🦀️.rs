@@ -377,7 +377,7 @@ impl<P> ArtifactStoreInitializationRuntime<P> {
         }
         let previous = records.last().map_or(identity_digest, |record| record.prefix_digest);
         let prefix_digest = CursorRevisionAccumulator::hash_record(domain, &[&previous, &edit_digest]);
-        records.push(CursorRevisionRecord { ledger_key: Some(ledger_key), id_digest: CursorRevisionAccumulator::hash_record(b"edit-id", &[id.as_bytes()]), edit_digest, prefix_digest });
+        records.push(CursorRevisionRecord::new(Some(ledger_key), CursorRevisionAccumulator::hash_record(b"edit-id", &[id.as_bytes()]), edit_digest, prefix_digest));
         Ok(())
     }
 

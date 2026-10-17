@@ -282,7 +282,8 @@
             "copy",
             "foreign",
             "cancelled",
-            "expired"
+            "expired",
+            "retired"
           ]
         },
         "accepted": {
@@ -294,6 +295,20 @@
           "maximum": 1000
         }
       }
+    },
+    "NativeDependencyKind": {
+      "enum": [
+        "python",
+        "cargo",
+        "cargo-lock",
+        "go",
+        "dotnet",
+        "cpp",
+        "browsers",
+        "wasm",
+        "trunk",
+        "tools"
+      ]
     }
   }
 }

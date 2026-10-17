@@ -1,7 +1,7 @@
 //! 🧪️ Mutation aggregate — the kind vocabulary stays honest against the enum, and every builder is
 //! reachable through the aggregate.
 
-use super::*;
+use crate::standards::v1::subsets::any::schema::mutations::*;
 use protocol::Mutation;
 use crate::schema::snapshot::{BitmapColor, BitmapInput, BitmapSnapshot};
 use protocol::SemanticMutation;

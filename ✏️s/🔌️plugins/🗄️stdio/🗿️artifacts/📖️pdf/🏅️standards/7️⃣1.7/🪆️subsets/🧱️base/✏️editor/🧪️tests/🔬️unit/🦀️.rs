@@ -1,4 +1,18 @@
-use super::*;
+use crate::editor::pdf17::modes::edit;
+use crate::editor::pdf17::modes::edit::windows::main;
+use crate::standards::v1_7::subsets::base::schema::mutations::PdfMutation;
+use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfSnapshot, STDIO_PDF17_DOCUMENT_SCHEMA};
+use semio_framework_plugin::{ArtifactEditor, Editor};
+use semio_framework_test_fixtures::{fixture_bytes, fixture_text};
+#[allow(unused_imports)]
+use crate::editor::page::page_text_edit_mutation;
+#[allow(unused_imports)]
+use crate::standards::v1_7::subsets::base::schema::PDF_ARTIFACT_SCHEMA_ID;
+#[allow(unused_imports)]
+use {semio_framework_plugin::built_to_component_tree, semio_framework_plugin::ArtifactView, semio_framework_plugin::ComponentTree, semio_framework_plugin::ConfigView, semio_framework_artifact_reference::Dialect, semio_framework_plugin::DraftView, semio_framework_plugin::Emit, semio_framework_plugin::Fault, semio_framework_plugin::NoConfig, semio_framework_plugin::NoConfigMutation, semio_framework_plugin::NoDraft, semio_framework_plugin::NoDraftMutation, semio_framework_plugin::NoPresence, semio_framework_plugin::NoPresenceMutation, semio_framework_plugin::NoTransient, semio_framework_plugin::NoTransientMutation, semio_framework_artifact_reference::StandardId, semio_framework_artifact_reference::SubsetId};
+#[allow(unused_imports)]
+use semio_framework_2d::compute::EngineHandles;
+use crate::editor::pdf17::*;
 
 #[test]
 fn natural_file_route_profile_checks_refuse_decrypted_security_state() {
@@ -6,8 +20,8 @@ fn natural_file_route_profile_checks_refuse_decrypted_security_state() {
     use crate::standards::v1_7::subsets::base::io;
     use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfEncryption, PdfEncryptionAlgorithm};
     use semio_framework_diagnostic::Severity;
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🔒️natural-file-profile-encryption/🔣️.json")).unwrap();
-    let mut snapshot = io::import::decode_pdf(include_bytes!("../../../🧪️tests/🧫️fixtures/✏️edit-existing-pdf/2️⃣two-pages.pdf")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../🧪️tests/🧫️fixtures/🔒️natural-file-profile-encryption/🔣️.json")).unwrap();
+    let mut snapshot = io::import::decode_pdf(fixture_bytes!("../../../../../../🧪️tests/🧫️fixtures/✏️edit-existing-pdf/2️⃣two-pages.pdf")).unwrap();
     assert_eq!(fixture["algorithm"], "rc4-128");
     let password = fixture["password"].as_str().unwrap();
     snapshot.encryption = Some(PdfEncryption { algorithm: PdfEncryptionAlgorithm::Rc4_128, permissions: -1, user_password: password.into(), owner_password: None, encrypt_metadata: true });
@@ -36,8 +50,8 @@ fn natural_file_route_profile_checks_refuse_decrypted_security_state() {
 #[test]
 fn natural_file_route_matches_independent_rotation_and_retains_other_pdf_objects() {
     use semio_s_artifact_stdio_pdf_test_oracle::standards::v1_7::subsets::base as oracle;
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/📄️natural-file-edit/🔣️.json")).unwrap();
-    let input = include_bytes!("../../../🧪️tests/🧫️fixtures/✏️edit-existing-pdf/2️⃣two-pages.pdf");
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../🧪️tests/🧫️fixtures/📄️natural-file-edit/🔣️.json")).unwrap();
+    let input = fixture_bytes!("../../../../../../🧪️tests/🧫️fixtures/✏️edit-existing-pdf/2️⃣two-pages.pdf");
     let codec = <Pdf17Editor as ArtifactEditor>::natural_file_codec().expect("PDF editor declares paired natural IO");
     assert_eq!(codec.format_kind, fixture["codec"]["formatKind"].as_str().unwrap());
     assert_eq!(codec.extension, fixture["codec"]["extension"].as_str().unwrap());

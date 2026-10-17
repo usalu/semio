@@ -1,5 +1,5 @@
 /** 🧩️ Isolated RGBA compositing following https://www.w3.org/TR/compositing-1/. */
-import {UnitRetirement,type WorkRetirement} from "../../◻️2d/🧹️retire/🟦️.ts";
+import {UnitRetirement,type WorkRetirement} from "@semio-tech/framework-2d-js/retire";
 import {validateExtent,validateImage,type PixelImage,type PixelProgress} from "../✍️editing/🟦️.ts";
 
 export type CompositeAffine = readonly [number,number,number,number,number,number];

@@ -70,7 +70,7 @@ export function parseZipEntryDiff(value: unknown, at = "$"): ZipEntryDiff {
   const row = stdioZip20BaseDiffGuardObject(value, at);
   return {
     name: row["name"] === undefined ? undefined : stdioZip20BaseDiffGuardString(row["name"], `${at}.name`),
-    data: row["data"] === undefined ? undefined : stdioZip20BaseDiffGuardArray(row["data"], `${at}.data`).map((item, index) => stdioZip20BaseDiffGuardInteger(item, `${at}.data[${index}]`, { minimum: 0, maximum: 255 })),
+    data: row["data"] === undefined ? undefined : stdioZip20BaseDiffGuardArray(row["data"], `${at}.data`).map((item, index) => stdioZip20BaseDiffGuardInteger(item, `${at}.data[${index}]`, {"minimum": 0, "maximum": 255})),
     metadata: row["metadata"] === undefined ? undefined : parseZipEntryMetadata(row["metadata"], `${at}.metadata`),
   };
 }

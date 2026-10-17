@@ -30,10 +30,12 @@ semio-framework-diagnostic = { path = "../../../⚠️diagnostic/📦️packages
 
 [dev-dependencies]
 semio-framework-async = { workspace = true, features = ["testkit"] }
+semio-framework-test-fixtures = { path = "../../../🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 serde_json = { workspace = true }
 
 [[test]]
 name = "original-turn-failure"
+required-features = ["testkit"]
 path = "../../⚠️failure/🧪️tests/🦀️.rs"
 
 [[test]]

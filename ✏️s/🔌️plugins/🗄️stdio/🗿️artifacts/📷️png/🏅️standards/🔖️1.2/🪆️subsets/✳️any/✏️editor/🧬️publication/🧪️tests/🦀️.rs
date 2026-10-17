@@ -1,6 +1,7 @@
 //! 🧪️ Neutral publication vectors and independent PNG sample witnesses.
 use crate::{PngSnapshot, schema::mutations::PngMutation, schema::mutations::ReplaceImage, schema::mutations::ReplaceSamples, schema::snapshot::PngImage};
 use crate::schema::snapshot::PngRegion;
+use semio_framework_test_fixtures::fixture_text;
 use semio_framework_value::{retained_clone::RetainedCloneGrant, retained_clone::RetainedCloneProgress, retained_clone::RetainedCloneStep};
 use store::snapshot_clone_preparation::RetainedCloneEditStep;
 use std::sync::Arc;
@@ -32,7 +33,7 @@ fn close(cursor:&mut PngPublicationCursor){
 
 #[test]
 fn retained_png_publication_prepares_authored_intent_and_validates_with_fuel() {
-    let fixture:serde_json::Value=serde_json::from_str(runtime_fixture_text("../../🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     for case in fixture["cases"].as_array().unwrap() {
         let mut snapshot=PngSnapshot::default();snapshot.image.width=case["width"].as_u64().unwrap()as u32;snapshot.image.height=case["height"].as_u64().unwrap()as u32;
         let original:Vec<u16>=case["base"].as_array().unwrap().iter().map(|v|v.as_u64().unwrap()as u16).collect();snapshot.image.samples=original.repeat((snapshot.image.width*snapshot.image.height)as usize);
@@ -50,7 +51,6 @@ fn retained_png_publication_prepares_authored_intent_and_validates_with_fuel() {
         let mut bytes=Vec::new();{let mut encoder=png::Encoder::new(&mut bytes,post.image.width,post.image.height);encoder.set_color(png::ColorType::Rgba);encoder.set_depth(png::BitDepth::Eight);let mut writer=encoder.write_header().unwrap();writer.write_image_data(&expected.image.samples.iter().map(|v|*v as u8).collect::<Vec<_>>()).unwrap();}
         let mut reader=png::Decoder::new(std::io::Cursor::new(bytes)).read_info().unwrap();let mut decoded=vec![0;reader.output_buffer_size().unwrap()];let info=reader.next_frame(&mut decoded).unwrap();assert_eq!(decoded[..info.buffer_size()],post.image.samples.iter().map(|v|*v as u8).collect::<Vec<_>>());
         retire_owned_value(inverse);
-        eprintln!("[DEBUG] retained PNG publication case={} turns={turns} exactSamples={}",case["id"],post.image.samples.len());
     }
 }
 #[test]
@@ -64,7 +64,7 @@ fn retained_png_publication_cancellation_releases_mutation_projection_lease() {
 #[test]
 fn retained_png_publication_canonical_reader_preserves_neutral_owned_fields() {
     use semio_framework_value::FromValue;
-    let fixture:serde_json::Value=serde_json::from_str(runtime_fixture_text("../../../../🧪️tests/🧫️fixtures/🧬️owned-native-samples/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️owned-native-samples/🔣️.json")).unwrap();
     let grant=encoding_grant(1,17);
     for case in fixture["cases"].as_array().unwrap() {
         let snapshot=PngSnapshot::from_value(semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse_bytes(case["snapshot"].to_string().as_bytes(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap())).unwrap();
@@ -77,7 +77,6 @@ fn retained_png_publication_canonical_reader_preserves_neutral_owned_fields() {
         let actual:serde_json::Value=serde_json::from_slice(&encoded).unwrap();assert_eq!(actual,expected);assert_eq!(actual,case["snapshot"]);
         reader.begin_close();retire_reader(&mut reader);
         assert!(reader.terminal_is_empty());assert_eq!(lifetime.strong_count(),0);assert!(lifetime.upgrade().is_none());
-        eprintln!("[DEBUG] retained png canonical neutral={} turns={turns} bytes={}",case["name"],encoded.len());
     }
 }
 
@@ -85,7 +84,7 @@ fn retained_png_publication_canonical_reader_preserves_neutral_owned_fields() {
 fn retained_png_publication_canonical_diff_preserves_neutral_owned_fields() {
     use semio_framework_value::FromValue;
     use crate::schema::diff::PngDiff;
-    let fixture:serde_json::Value=serde_json::from_str(runtime_fixture_text("../../../../🧪️tests/🧫️fixtures/🧬️owned-native-samples/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️owned-native-samples/🔣️.json")).unwrap();
     let grant=encoding_grant(1,17);
     for case in fixture["cases"].as_array().unwrap() {
         let snapshot=PngSnapshot::from_value(semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse_bytes(case["snapshot"].to_string().as_bytes(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap())).unwrap();
@@ -98,7 +97,6 @@ fn retained_png_publication_canonical_diff_preserves_neutral_owned_fields() {
             let actual:serde_json::Value=serde_json::from_slice(&encoded).unwrap();assert_eq!(actual,expected);if actual.get("image").is_some(){assert_eq!(actual["image"],case["snapshot"]["image"]);}
             reader.begin_close();retire_reader(&mut reader);
             assert!(reader.terminal_is_empty());assert!(lifetime.upgrade().is_none());
-            eprintln!("[DEBUG] retained PNG diff neutral={} turns={turns} bytes={}",case["name"],encoded.len());
         }
     }
 }
@@ -108,7 +106,7 @@ fn retained_png_publication_canonical_diff_preserves_neutral_owned_fields() {
 fn retained_png_publication_replays_neutral_intent_profiles() {
     use semio_framework_value::FromValue;
     use crate::schema::snapshot::PngNativeProfile;
-    let fixture:serde_json::Value=serde_json::from_str(runtime_fixture_text("../../../../🧪️tests/🧫️fixtures/🧬️owned-native-samples/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️owned-native-samples/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap() {
         let snapshot=PngSnapshot::from_value(semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse_bytes(row["snapshot"].to_string().as_bytes(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap())).unwrap();
         let p=&row["paint"];let region=PngRegion{x:p["x"].as_u64().unwrap()as u32,y:p["y"].as_u64().unwrap()as u32,width:p["width"].as_u64().unwrap()as u32,height:p["height"].as_u64().unwrap()as u32};
@@ -120,7 +118,6 @@ fn retained_png_publication_replays_neutral_intent_profiles() {
         loop {turns+=1;assert!(turns<100000);let step=cursor.advance(source.borrow(),&mut post,mutation.borrow(),grant).unwrap();assert!(step.progress().fits(grant));if matches!(step,RetainedCloneEditStep::Complete(_)){break;}}
         let expected:Vec<u16>=row["expectedSamples"].as_array().unwrap().iter().map(|v|v.as_u64().unwrap()as u16).collect();assert_eq!(post.image.samples,expected);assert!(post.image.same_metadata(&snapshot.image));
         let restores=if post.image.samples==snapshot.image.samples{Vec::new()}else{vec![PngMutation::ReplaceSamples(crate::schema::mutations::ReplaceSamples{region,samples:snapshot.image.region_samples(region).unwrap()})]};assert_eq!(cursor.take_inverse().unwrap(),restores);close(&mut cursor);close_source(source);close_source(mutation);
-        eprintln!("[DEBUG] retained PNG authored intent neutral={} turns={turns} exactSamples={}",row["name"],post.image.samples.len());
     }
 }
 
@@ -128,7 +125,7 @@ fn retained_png_publication_replays_neutral_intent_profiles() {
 #[test]
 fn retained_png_publication_metadata_intents_match_neutral_targets() {
     use semio_framework_value::FromValue;
-    let fixture:serde_json::Value=serde_json::from_str(runtime_fixture_text("../../../../🧪️tests/🧫️fixtures/🧬️owned-native-samples/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️owned-native-samples/🔣️.json")).unwrap();
     let value=|row:&serde_json::Value|semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse_bytes(row.to_string().as_bytes(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap());
     for row in fixture["metadataEdits"].as_array().unwrap() {
         let snapshot=PngSnapshot::from_value(value(&row["snapshot"])).unwrap();
@@ -148,7 +145,6 @@ fn retained_png_publication_metadata_intents_match_neutral_targets() {
         }
         assert!(paused);
         let expected=PngSnapshot::from_value(value(&row["expected"])).unwrap();assert_eq!(post,expected);let inverse=cursor.take_inverse().unwrap();assert_eq!(inverse,vec![PngMutation::ReplaceImage(ReplaceImage{image:source.borrow().get().image.clone()})]);close(&mut cursor);close_source(source);close_source(mutation);
-        eprintln!("[DEBUG] retained PNG metadata intent neutral={} turns={turns} exactMetadata=true",row["name"]);
     }
 }
 
@@ -156,7 +152,7 @@ fn retained_png_publication_metadata_intents_match_neutral_targets() {
 fn retained_png_publication_replacement_and_inverse_use_bounded_typed_image_owners(){
     use protocol::Mutation;
     use semio_framework_value::FromValue;
-    let fixture:serde_json::Value=serde_json::from_str(runtime_fixture_text("../../../../🧪️tests/🧫️fixtures/🧬️owned-native-samples/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️owned-native-samples/🔣️.json")).unwrap();
     let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:4096,maximum_depth:64,maximum_release_bytes:4096};
     for row in fixture["cases"].as_array().unwrap().iter(){
         let target=PngSnapshot::from_value(semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse_bytes(row["snapshot"].to_string().as_bytes(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap())).unwrap();
@@ -176,11 +172,5 @@ fn retained_png_publication_replacement_and_inverse_use_bounded_typed_image_owne
         assert_eq!(post,target);let inverse=cursor.take_inverse().unwrap();assert_eq!(inverse.len(),1);
         let restored=protocol::apply_diff(inverse[0].diff(&post).diff(),&post).unwrap();assert_eq!(restored,base);close(&mut cursor);close_source(source);close_source(mutation);
         retire_owned_value(inverse);
-        eprintln!("[DEBUG] retained Png typed image replacement neutral={} turns={turns} inverseCapacityGranted=true nativeWordsExact=true",row["name"]);
     }
-}
-
-fn runtime_fixture_text(relative: &str) -> &'static str {
-    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative);
-    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display())).into_boxed_str())
 }

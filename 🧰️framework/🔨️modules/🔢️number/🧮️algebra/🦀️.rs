@@ -551,8 +551,3 @@ impl<T: EuclideanDomain> MatG<T> {
     }
 }
 // #endregion 🔖️Smith
-
-// #region 🔖️Tests
-#[cfg(test)]
-include!("../🧪️tests/🔬️algebra-unit/🦀️.rs");
-// #endregion 🔖️Tests

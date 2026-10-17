@@ -5,7 +5,7 @@ import { resolve } from "node:path";
 import Ajv from "ajv";
 import TOML from "@iarna/toml";
 import { readRustSourceClosureV1, selectRustSourceV1 } from "@semio-tech/process/artifacts/native-build/source";
-import { rustTokens } from "../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/🟦️.ts";
+import { rustTokens } from "@semio-tech/compiler-syntax-rust-ts";
 
 const os = resolve(import.meta.dir, "../.."), workspace = resolve(os, "../../.."), read = (path: string) => readFileSync(resolve(os, path), "utf8");
 const cfg = ["target_arch=aarch64", "target_os=macos", "target_env=", "target_pointer_width=64", "unix"];

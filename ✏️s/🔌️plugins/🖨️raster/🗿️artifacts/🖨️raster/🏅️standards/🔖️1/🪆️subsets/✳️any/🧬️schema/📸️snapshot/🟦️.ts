@@ -1,5 +1,5 @@
 /** 🧬️ Raster snapshot schema — artifact-lane fields only. */
-import { parseArtifactChild, type ArtifactChild } from "../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts";
+import { parseArtifactChild, type ArtifactChild } from "@semio-tech/framework-os/modules/store/child/schema";
 import { parseRasterLayerNode, type RasterLayerNode } from "../🟦️.ts";
 
 export interface RasterSnapshot {

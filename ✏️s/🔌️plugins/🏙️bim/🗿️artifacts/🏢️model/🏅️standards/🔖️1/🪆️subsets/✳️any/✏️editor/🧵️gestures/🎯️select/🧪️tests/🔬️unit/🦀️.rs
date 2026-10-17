@@ -1,6 +1,7 @@
 use super::*;
-use crate::editor::bim::gestures::session::{Modifiers, Pick, Shape, Surface, ToolEvent};
-use crate::editor::bim::gestures::tests::fixture::{room, Rig};
+use crate::editor::bim::gestures::session::{Modifiers, Pick, Surface, ToolEvent};
+use crate::editor::bim::marks::Shape;
+use crate::editor::bim::fixture::{room, Rig};
 use crate::standards::v1::subsets::any::schema::snapshot::{Opening, OpeningKind, Point2};
 
 fn target(kind: &str, id: &str) -> (String, String) {

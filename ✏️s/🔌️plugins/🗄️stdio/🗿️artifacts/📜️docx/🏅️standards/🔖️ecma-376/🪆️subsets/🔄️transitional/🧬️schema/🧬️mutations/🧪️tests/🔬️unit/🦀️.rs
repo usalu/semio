@@ -1,4 +1,5 @@
 use super::*;
+use semio_framework_test_fixtures::fixture_text;
 
 //#region 🔖️KindsConformanceLaw
 /// 🧭️ `kind_of` is an EXHAUSTIVE match (no wildcard arm) — the compiler refuses this file if a
@@ -25,7 +26,7 @@ fn kinds_match_enum_and_catalog() {
     let from_enum: Vec<&'static str> = samples.iter().map(kind_of).collect();
     assert_eq!(from_enum, KINDS, "KINDS must list every DocxTransitionalMutation variant, in declaration order");
 
-    let manifest = include_str!("../../../../🔮️oracles/🔣️.json");
+    let manifest = fixture_text!("../../🔮️oracles/🔣️.json");
     let needle = "\"kinds\": [";
     let start = manifest.find(needle).expect("manifest declares a kinds array") + needle.len();
     let end = start + manifest[start..].find(']').expect("kinds array is closed");

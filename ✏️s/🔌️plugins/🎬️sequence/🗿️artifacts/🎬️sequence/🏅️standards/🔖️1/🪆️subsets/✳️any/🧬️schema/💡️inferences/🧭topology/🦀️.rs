@@ -88,8 +88,5 @@ pub fn compute_scene_topology(steps: &[crate::SequenceStep], edges: &[crate::Seq
 }
 //#endregion 🔖️Topology
 
-#[cfg(test)]
-//#region 🧪️Tests
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

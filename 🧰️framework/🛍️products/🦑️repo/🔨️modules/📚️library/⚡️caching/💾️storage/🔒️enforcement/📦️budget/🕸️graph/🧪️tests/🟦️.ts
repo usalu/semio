@@ -15,14 +15,14 @@ import {rm} from "node:fs/promises";
 
 test("all graph fact namespaces use the finite authored graph partition",()=>{
  const database=new Database(":memory:"),workspace=process.cwd();
- try{for(const namespace of fixture.namespaces){const path=repositoryBuildGraphDataDirectoryV1(workspace,namespace as "inference"),expected=database.query("SELECT ? || '/.cache/b/g/m/' || ? AS path").get(workspace,namespace) as {path:string};expect(path).toBe(expected.path);}expect(()=>repositoryBuildGraphDataDirectoryV1(workspace,fixture.refusedNamespace as never)).toThrow();console.log("[DEBUG] Graph fact paths match independent SQLite path oracle and refuse foreign namespaces");}finally{database.close();}
+ try{for(const namespace of fixture.namespaces){const path=repositoryBuildGraphDataDirectoryV1(workspace,namespace as "inference"),expected=database.query("SELECT ? || '/.cache/b/g/m/' || ? AS path").get(workspace,namespace) as {path:string};expect(path).toBe(expected.path);}expect(()=>repositoryBuildGraphDataDirectoryV1(workspace,fixture.refusedNamespace as never)).toThrow();}finally{database.close();}
 });
 
 test("synchronous fact publication requires live enforcing graph writer custody",async()=>{
  await receiveScriptProcessInvocation(process.env,async original=>{
   const workspace=process.cwd(),manifest=fixture.writerManifest,source=JSON.stringify({version:1,manifest}),digest=createHash("sha256").update(source).digest("hex"),path=join(repositoryBuildGraphDataDirectoryV1(workspace,"build-lock-closures"),digest+".json");
   expect(()=>cargoLockInput(manifest,workspace)).toThrow("Original bounded graph writer custody");let release!:()=>void,escaped!:Promise<void>;
-  await withRepositoryBuildGraphFactStoreV1(workspace,original,scriptCompilerAdmissionControlV1(original,"graph:fixture-writer",0),async(store,phaseControl)=>{try{escaped=new Promise<void>(accept=>{release=accept;}).then(()=>requireRepositoryBuildGraphWriterV1(workspace));expect(cargoLockInput(manifest,workspace)).toEqual({env:"SEMIO_CARGO_LOCK_"+digest});expect((await readFile(path)).toString()).toBe(source);await withRepositoryBuildGraphFactStoreV1(workspace,original,phaseControl,async nested=>{expect(nested).toBe(store);requireRepositoryBuildGraphWriterV1(workspace);});}finally{await store.recheck();await rm(path,{force:true});}});release();await expect(escaped).rejects.toThrow("Original bounded graph writer custody");expect(()=>requireRepositoryBuildGraphWriterV1(workspace)).toThrow("Original bounded graph writer custody");console.log("[DEBUG] Actual graph fact publication uses fixed volume and refuses before admission and after release");
+  await withRepositoryBuildGraphFactStoreV1(workspace,original,scriptCompilerAdmissionControlV1(original,"graph:fixture-writer",0),async(store,phaseControl)=>{try{escaped=new Promise<void>(accept=>{release=accept;}).then(()=>requireRepositoryBuildGraphWriterV1(workspace));expect(cargoLockInput(manifest,workspace)).toEqual({env:"SEMIO_CARGO_LOCK_"+digest});expect((await readFile(path)).toString()).toBe(source);await withRepositoryBuildGraphFactStoreV1(workspace,original,phaseControl,async nested=>{expect(nested).toBe(store);requireRepositoryBuildGraphWriterV1(workspace);});}finally{await store.recheck();await rm(path,{force:true});}});release();await expect(escaped).rejects.toThrow("Original bounded graph writer custody");expect(()=>requireRepositoryBuildGraphWriterV1(workspace)).toThrow("Original bounded graph writer custody");
  });
 },120000);
 
@@ -34,7 +34,6 @@ test("actual bounded graph publication retains exact immutable bytes through ori
    expect(bytes.toString()).toBe(source);expect(bytes.byteLength).toBe(oracle.bytes);expect(oracle.bytes).toBe(fixture.expectedBytes);expect(artifact.digest).toBe(Buffer.from(await crypto.subtle.digest("SHA-256",bytes)).toString("hex"));expect(createHash("sha256").update(source).digest("hex")).toBe(artifact.digest);expect(artifact.path).toContain("/.cache/b/g/m/");
    const contender=new Database(resourceLeasePathV1(join(process.cwd(),".cache/b/l/m/data"),"build-graph:"+artifact.path));try{expect(()=>contender.exec("BEGIN EXCLUSIVE")).toThrow("database is locked");}finally{contender.close();}
    await withRepositoryBuildGraphArtifactV1(process.cwd(),fixture.graph as BuildGraphV1,original,actualPhase,async again=>{expect(again).toEqual(artifact);});
-   console.log("[DEBUG] Actual fixed4GiB graph backing retains immutable snapshot bytes and concurrent original readers");
   });}finally{database.close();}
  });
 },120000);

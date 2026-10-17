@@ -21,16 +21,14 @@ pub fn decode(bytes: &[u8]) -> Result<Puzzle2dSnapshot, PackError> {
 }
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
 
 #[allow(unused_imports)]
 mod snapshot_codec {
 use super::*;
 use crate::standards::v1::subsets::any::schema::snapshot::*;
-use {crate::standards::v1::subsets::any::schema::Puzzle2dCamera, crate::standards::v1::subsets::any::schema::Puzzle2dEdge, crate::standards::v1::subsets::any::schema::Puzzle2dMeta, crate::standards::v1::subsets::any::schema::Puzzle2dNode, crate::standards::v1::subsets::any::schema::Puzzle2dTargetRegion, crate::standards::v1::subsets::any::schema::PUZZLE_2D_SCHEMA};
+use {crate::standards::v1::subsets::any::schema::records::Puzzle2dCamera, crate::standards::v1::subsets::any::schema::records::Puzzle2dEdge, crate::standards::v1::subsets::any::schema::records::Puzzle2dMeta, crate::standards::v1::subsets::any::schema::records::Puzzle2dNode, crate::standards::v1::subsets::any::schema::records::Puzzle2dTargetRegion, crate::standards::v1::subsets::any::schema::records::PUZZLE_2D_SCHEMA};
 use ::semio_framework_schema::ArtifactSchema;
 
 impl pack::snapshot::ArtifactPack for Puzzle2dSnapshot {

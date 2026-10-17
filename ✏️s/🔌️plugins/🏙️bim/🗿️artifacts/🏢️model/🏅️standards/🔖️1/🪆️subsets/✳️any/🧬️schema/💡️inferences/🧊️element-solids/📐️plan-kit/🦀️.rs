@@ -100,11 +100,11 @@ pub fn is_curved(snapshot: &ModelSnapshot, id: &str) -> bool {
 
 //#region 🔖️Testing
 /// 🧪️ Shared test support of the families: fixture cases written by the oracle and the comparison of a solid with its expected row.
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 pub mod testing {
     use crate::standards::v1::subsets::any::schema::inferences::element_solids::{ElementSolid, SolidFamily};
-    use crate::standards::v1::subsets::any::schema::mutations::{apply_model_mutation, set_storey_height::SetStoreyHeight};
-    use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
+    use crate::standards::v1::subsets::any::schema::diff::{patches::StoreyPatch, Entry, ModelDiff};
+    use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
     use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
     use std::collections::BTreeMap;
 
@@ -121,10 +121,11 @@ pub mod testing {
         Case { snapshot, expected: document["expected"].clone() }
     }
 
-    /// 🪜️ The snapshot with the height of `storey` changed by `delta` through the real mutation.
+    /// 🪜️ The snapshot with the height of `storey` changed by `delta` through the one-field storey patch the height mutation writes.
     pub fn raised(snapshot: &ModelSnapshot, storey: &str, delta: f64) -> ModelSnapshot {
         let height = snapshot.storeys[storey].height + delta;
-        apply_model_mutation(snapshot, &ModelMutation::SetStoreyHeight(SetStoreyHeight { id: storey.into(), height })).expect("the height edit applies")
+        let diff = ModelDiff::storeys(storey.into(), Entry::Patched(StoreyPatch { height: Some(height), ..Default::default() }));
+        protocol::apply_diff(&diff, snapshot).expect("the height edit applies")
     }
 
     /// ⚖️ `true` when `got` is within `tolerance` of `want`.

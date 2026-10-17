@@ -24,4 +24,4 @@ if (segments[0] === "writer-window-state") {
   }
 }
 
-await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-writer-writer", { snapshotSqliteTests: ["../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"], commands: { "graph-generate":GraphGenerateScript,"preview-generated":GraphPreviewScript,"graph-wire-check":OwnerGraphWireCheckScript, verify: OwnedVerifyScript } });
+await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-writer-writer", { packages: ["semio-s-artifact-writer-writer", "semio-s-artifact-writer-writer-editor", "semio-s-artifact-writer-writer-inferences", "semio-s-artifact-writer-writer-operations", "semio-s-artifact-writer-writer-rename-writer", "semio-s-artifact-writer-writer-schema", "semio-s-artifact-writer-writer-tests", "semio-s-artifact-writer-writer-tests-2", "semio-s-artifact-writer-writer-v1"], snapshotSqliteTests: ["../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"], commands: { "graph-generate":GraphGenerateScript,"preview-generated":GraphPreviewScript,"graph-wire-check":OwnerGraphWireCheckScript, verify: OwnedVerifyScript } });

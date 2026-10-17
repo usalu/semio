@@ -1,6 +1,15 @@
 //! 🔺️ Diff for `InsertBlock`.
 
-use super::super::*;
+#[allow(unused_imports)]
+use crate::schema::mutations::support::DocBlockLeaf;
+#[allow(unused_imports)]
+use crate::schema::diff::SemioDocumentDiff;
+#[allow(unused_imports)]
+use crate::schema::snapshot::SemioDocumentSnapshot;
+#[allow(unused_imports)]
+use crate::schema::mutations::support::resolve_blocks;
+#[allow(unused_imports)]
+use crate::schema::mutations::support::wrap_body_diff;
 
 //#region 🔖️Diff
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

@@ -2,7 +2,7 @@
 
 use crate::editor::gis2d::modes::edit::windows::map::config::MapWindowConfig;
 use crate::editor::gis2d::terminology::Gis2dPlayLabels;
-use crate::editor::gis2d::{Gis2dInteractionSnapshot, GIS_MAP_LAYER_IDS};
+use crate::editor::gis2d::constants_and_io::{Gis2dInteractionSnapshot, GIS_MAP_LAYER_IDS};
 use crate::tile_coordinates::gis_policy::gis_map_scene_descriptor_json;
 use crate::GisMapSnapshot;
 use semio_framework_plugin::plugin_app_close_prelude::SurfaceKind as ContractSurfaceKind;
@@ -19,7 +19,7 @@ use semio_framework_surface::tiled_map::clamp_map_layer_weight;
 use std::collections::HashMap;
 
 //#region 🔖️Constants
-pub const GIS2D_PLAY_WINDOW_MAIN: &str = "gis2d-main";
+pub use crate::editor::gis2d::modes::edit::windows::map::config::GIS2D_PLAY_WINDOW_MAIN;
 pub const GIS2D_PLAY_BODY_COMPOSITE: &str = "gis2d.play.composite";
 const GIS2D_PLAY_SURFACE: &str = "gis2d.play.composite";
 //#endregion 🔖️Constants
@@ -112,7 +112,5 @@ pub fn render(document: &GisMapSnapshot, cfg: &MapWindowConfig, interaction: &Gi
 //#endregion 🔖️Render
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

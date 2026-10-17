@@ -27,8 +27,7 @@ pub fn decode_op(bytes: &[u8]) -> Result<SHomeMutation, protocol::ProtocolError>
 mod tests;
 //#endregion 🧪️Tests
 
-#[path = "🔢️change-catalog-generation/🦀️.rs"]
-pub mod change_catalog_generation;
+pub use semio_s_artifact_space_home_inferences::standards::v1::subsets::any::io::binary::mutations::change_catalog_generation;
 
 mod native_codec {
 #[cfg(test)] use super::*;

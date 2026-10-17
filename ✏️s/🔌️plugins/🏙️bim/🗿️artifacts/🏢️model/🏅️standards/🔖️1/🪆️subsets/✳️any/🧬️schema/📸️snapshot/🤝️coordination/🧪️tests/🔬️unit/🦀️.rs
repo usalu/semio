@@ -1,6 +1,8 @@
 //! 🧪️ The coordination rules: element classes, storeys and phases, selectors, scopes, moments and why a clash set, a rule, an issue or a comment cannot be written.
 
 use super::*;
+use crate::standards::v1::subsets::any::schema::snapshot::values::*;
+use crate::standards::v1::subsets::any::schema::snapshot::coordination_values::*;
 use crate::standards::v1::subsets::any::schema::snapshot::{Point2, Point3, SectionBox, ViewCamera};
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 
@@ -58,27 +60,27 @@ fn elements_have_a_class_a_storey_and_a_phase() {
 fn a_selector_picks_when_every_restriction_that_is_set_holds() {
     let model = model();
     let beams = ElementSelector::of_classes(&[ElementClass::Beam]);
-    assert!(beams.picks(&model, "b-a", ElementClass::Beam));
-    assert!(!beams.picks(&model, "w-south", ElementClass::Wall));
-    assert!(ElementSelector::all().picks(&model, "w-south", ElementClass::Wall));
+    assert!(selector_picks(&beams, &model, "b-a", ElementClass::Beam));
+    assert!(!selector_picks(&beams, &model, "w-south", ElementClass::Wall));
+    assert!(selector_picks(&ElementSelector::all(), &model, "w-south", ElementClass::Wall));
     let existing = ElementSelector { phases: vec![Phase::Existing], ..ElementSelector::all() };
-    assert!(existing.picks(&model, "w-south", ElementClass::Wall) && existing.picks(&model, "o-window", ElementClass::Window));
-    assert!(!existing.picks(&model, "b-a", ElementClass::Beam));
+    assert!(selector_picks(&existing, &model, "w-south", ElementClass::Wall) && selector_picks(&existing, &model, "o-window", ElementClass::Window));
+    assert!(!selector_picks(&existing, &model, "b-a", ElementClass::Beam));
     let upstairs = ElementSelector { storeys: vec!["st-first".into()], ..ElementSelector::all() };
-    assert!(!upstairs.picks(&model, "w-south", ElementClass::Wall));
+    assert!(!selector_picks(&upstairs, &model, "w-south", ElementClass::Wall));
     let named = ElementSelector { ids: vec!["w-east".into()], ..ElementSelector::all() };
-    assert!(named.picks(&model, "w-east", ElementClass::Wall) && !named.picks(&model, "w-south", ElementClass::Wall));
+    assert!(selector_picks(&named, &model, "w-east", ElementClass::Wall) && !selector_picks(&named, &model, "w-south", ElementClass::Wall));
 }
 
 #[test]
 fn a_scope_covers_what_it_names_and_a_zone_stands_on_no_storey() {
     let model = model();
     let scope = RuleScope { storeys: vec!["st-ground".into()], ..RuleScope::all() };
-    assert!(scope.covers(&model, "b-a", Some(&"st-ground".to_string())));
-    assert!(!scope.covers(&model, "b-a", Some(&"st-first".to_string())));
-    assert!(scope.covers(&model, "zone-1", None));
+    assert!(scope_covers(&scope, &model, "b-a", Some(&"st-ground".to_string())));
+    assert!(!scope_covers(&scope, &model, "b-a", Some(&"st-first".to_string())));
+    assert!(scope_covers(&scope, &model, "zone-1", None));
     let phased = RuleScope { phases: vec![Phase::Existing], ..RuleScope::all() };
-    assert!(phased.covers(&model, "w-south", None) && !phased.covers(&model, "b-a", None));
+    assert!(scope_covers(&phased, &model, "w-south", None) && !scope_covers(&phased, &model, "b-a", None));
 }
 
 #[test]

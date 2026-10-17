@@ -31,7 +31,6 @@ test("actual Rust source-direction execution rejects declared runtime owner path
       expect(report.problems).toEqual([]);
       if (row.violations) await expect(verifyRustSourceDirection(cwd)).rejects.toThrow("runtime path");
       else await expect(verifyRustSourceDirection(cwd)).resolves.toBeUndefined();
-      console.log("[DEBUG] runtime source census " + JSON.stringify({ id: row.id, runtime: report.runtime }));
     }
   } finally { rmSync(root, { recursive: true, force: true }); }
 });

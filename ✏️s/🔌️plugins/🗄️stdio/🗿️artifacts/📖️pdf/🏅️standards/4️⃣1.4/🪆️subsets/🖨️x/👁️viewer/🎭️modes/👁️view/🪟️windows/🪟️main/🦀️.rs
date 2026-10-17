@@ -23,7 +23,7 @@ pub fn definition() -> WindowKindDefinition {
 //#region 🔖️Render
 /// 👁️ Pure `PdfSnapshot -> BuiltNode` read: one summary line per page, no mutation.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn page_summary(index: usize, page: &PageDoc) -> String {
+pub fn page_summary(index: usize, page: &PageDoc) -> String {
     format!("{} | {} × {}\n{}", index + 1, page.width, page.height, page.text)
 }
 
@@ -39,7 +39,5 @@ pub fn render(document: &PdfSnapshot) -> semio_framework_plugin::UiAssemblyResul
 //#endregion 🔖️Render
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

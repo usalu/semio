@@ -1,5 +1,6 @@
 //! 🧱️ Artifact_quick of the tools-gateway crate: Artifact, ui, context resource and prompt tools.
 
+use semio_framework_test_fixtures::fixture_text;
 use std::sync::Arc;
 use crate::artifact::{base64_encode, register_artifact_tools};
 use semio_framework_os_mcp_catalog::catalog::{CapabilityAudience, CapabilityDefinition, CapabilityKind, CapabilityOwner, CapabilityPresentation, CapabilityRef, CapabilitySource, Catalog, CatalogSource, ToolExposure, compile};
@@ -10,9 +11,6 @@ use semio_framework_os_mcp_wire::protocol::{CallToolResult, GatewayBackend, InMe
 use semio_framework_os_mcp_workspace::headless_workspace_state::HeadlessWorkspace;
 
 /// 🧪️ Reads a committed fixture from the package directory at run time instead of embedding it in the test binary.
-fn fixture_text(relative: &str) -> &'static str {
-    Box::leak(std::fs::read_to_string(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative)).expect(relative).into_boxed_str())
-}
 
 
 const ARTIFACT_TOOL_NAMES: [&str; 5] = ["artifact_open", "artifact_create", "artifact_validate", "artifact_snapshot", "artifact_export"];
@@ -259,7 +257,7 @@ fn tool_result_json(result: &CallToolResult) -> serde_json::Value {
 
 #[test]
 fn document_authored_content_reaches_an_agent_only_inside_the_untrusted_envelope() {
-    let law: serde_json::Value = serde_json::from_str(fixture_text("../../../🗿️artifact/🧪️tests/🧫️fixtures/🧷️untrusted-content-law.json")).expect("law fixture parses");
+    let law: serde_json::Value = serde_json::from_str(fixture_text!("../../../🗿️artifact/🧪️tests/🧫️fixtures/🧷️untrusted-content-law.json")).expect("law fixture parses");
     let canary = law["canary"].as_str().expect("canary");
     let needles = canary_needles(canary);
     let dir = store::test_support::tempdir().expect("tempdir");

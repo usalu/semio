@@ -14,7 +14,6 @@ test("original history native caller grant retains five independently authored a
  const validate=new Ajv2020({strict:true,allErrors:true}).compile(callerGrantSchema);expect(validate(callerGrant)).toBe(true);expect(validate({...callerGrant,extra:1})).toBe(false);
  for(const axis of callerGrantSchema.required){const missing:Record<string,unknown>={...callerGrant};delete missing[axis];expect(validate(missing)).toBe(false);expect(validate({...callerGrant,[axis]:-1})).toBe(false);expect(validate({...callerGrant,[axis]:0.5})).toBe(false);expect(validate({...callerGrant,[axis]:0})).toBe(true);}
  expect(Object.keys(callerGrant)).toEqual(["maximumItems","maximumCopyBytes","maximumCapacityBytes","maximumReleaseBytes","maximumDepth"]);
- console.error("[DEBUG] Original History caller grant closed five axes independently validated with Ajv; unchanged authored policy");
 });
 authoredSnapshotSqliteContract({sql:join(snapshot,"🗄️.sql"),fixtures:join(snapshot,"🧪️tests/🧫️fixtures")});
 const rustTokens = (node: Parser.SyntaxNode): string[] => {
@@ -48,7 +47,6 @@ test("closed owner-registration corpus covers every opening and native encoding 
     expect(sample.after).toEqual({ export: "completeSnapshot", import: "completeSnapshot", metadata: "sameOwnerAndEncoding" });
   }
   const wrong = structuredClone(corpus); wrong.cases[0].before.export = "InvalidValue";
-  console.log("[DEBUG] owner-registration matrix: create/reload/retained × binary/text; typed pre-refusal and retained envelope metadata");
 });
 
 test("actual native isolated law admits explicit owner registration and generic constructors remain owner-neutral", async () => {
@@ -86,7 +84,6 @@ test("actual native isolated law admits explicit owner registration and generic 
   const binding = parse(join(store,"📜️space-history/🏠️space/📣️registration/🦀️.rs")), ownerRegistration = binding.rootNode.namedChildren.find(node => node.type === "function_item" && node.childForFieldName("name")?.text === "register_sqlite_snapshot");
   expect(calls(ownerRegistration!).some(node => node.name === "crate::io::register_native_snapshot_codec")).toBe(true);
   expect(ownerRegistration!.text.includes("SQLITE_SNAPSHOT_DIALECT")).toBe(true); expect(containsRust(ownerRegistration!, ["SpaceHistorySnapshot", ",", "SpaceHistoryMutation"])).toBe(true);
-  console.log("[DEBUG] actual tree-sitter owner admission: isolated exact selector; both typed refusals before owner publication; complete same-owner roundtrips after; generic Store/hydration unchanged");
   } finally { for (const tree of trees) tree.delete(); parser.delete(); }
 });
 
@@ -102,7 +99,6 @@ test("actual owner literals and existing GUI source/native routes identify the s
     expect(project.targets[command].options.command).toBe(`bun ./📜️script.ts ${command}`);
     expect(project.targets[command].cache).toBe(false);
   }
-  console.log("[DEBUG] existing actual GUI/source/native gate routes and literal SpaceHistory mounts agree");
 });
 
 test("closed native ownership corpus separates physical and reconstruction ceilings on both encodings", async () => {
@@ -114,12 +110,11 @@ test("closed native ownership corpus separates physical and reconstruction ceili
   expect(containsTokens(law, ["control", ".", "reconstruction_remaining_bytes", "(", ")"])).toBe(true);
   expect(containsTokens(law, ["control", ".", "allocation_remaining_bytes", "(", ")"])).toBe(true);
   expect(containsTokens(law, ["assert_eq", "!", "(", "semantic", ",", "allocation"])).toBe(true);
-  console.log("[DEBUG] native ownership source independently retains both cumulative ceilings, row refusal and owned interior cancellation");
 });
 
 import {Database as HistoryOutputDatabase} from "bun:sqlite";
-import { valueIntrinsicMediaFixtureUrl } from "../../../../../../../../../🔨️modules/🎒️pack/🧪️tests/🧫️fixtures/🟦️.ts";
-import { valueRetirementSchemaUrl, valueOrderedRetirementSchemaUrl, cloneWireProgressSchemaUrl } from "../../../../../../../../../🔨️modules/🌱️value/🧪️tests/🧫️fixtures/🟦️.ts";
+import { valueIntrinsicMediaFixtureUrl } from "@semio-tech/framework-pack-ts/testing/fixtures";
+import { valueRetirementSchemaUrl, valueOrderedRetirementSchemaUrl, cloneWireProgressSchemaUrl } from "@semio-tech/value-ts/testing/fixtures";
 
 test("closed History native output contract independently retains literal bytes and cumulative physical roles",()=>{
  const corpus=JSON.parse(readFileSync(join(snapshot,"🧪️tests/🧫️fixtures/🧮️ownership/🔣️.json"),"utf8")),expected={"schema":"space-history.sqlite.native-output/v1","nativeLaw":"sqlite_snapshot_framework_space_history_native_output_full_requests_and_cumulative_owner_are_admitted","encodings":["binary","text"],"phase":"encodeNative","requestAccounting":"fullAllocatorRequests","ledger":"sameCallerAllocation","source":"completeUnchangedOwner","zeroPhysical":{"maximumBytes":0,"expectedKind":"ownershipLimit","expectedCharge":0},"cumulative":{"ceilingNumerator":3,"ceilingDenominator":2,"expectedKind":"ownershipLimit"},"cancellation":{"minimumCompleted":65536,"expectedKind":"canceled","retainedDebit":"positiveNoRefund"},"literal":{"unit":"日本𐀀","repeat":32768,"utf8Bytes":327680},"appendRequests":{"schema":"native.output.append-requests/v1","fragments":["","語","x","","\u0000é!"],"utf8Bytes":8,"fullReplacementRequests":[3,4,8],"replacementDebit":15,"reusedCapacity":16,"reusedRequestBytes":0,"refusal":"ownershipLimit","allocationRefusal":"allocationFailed","retirement":"noRefund"},"retirement":{"schema":"history.native.temporary-retirement/v1","sourceCorpus":"intrinsic-media-wire-v1","nativeLaw":"sqlite_snapshot_framework_space_history_native_temporary_retirement_requests_no_backing_for_every_intrinsic_kind","kinds":["null","bool","uint","int","float","string","bytes","array","object"],"containers":["empty","orderedDuplicateMembers","deepArray","deepObject","longBranch"],"depth":256,"longBranch":{"unit":"é語🧾","repeat":14564,"utf8Bytes":131076},"requestBytes":0,"releasedBytes":"completeBorrowedCapacityCensus","cleanup":"mandatoryAfterCancellation","temporaryLinks":"reuseVacatedOwnedSlots","recursiveDropFallback":false,"partial":{"schema":"history.native.partial-retirement/v1","grants":[0,1,3,255,256,"complete"],"work":"oneDestructiveTransitionPerUnit","requests":0,"released":"completeBorrowedCapacityCensus","zeroGrant":"retainsEveryOwnedCapacity","drop":"mandatoryCompleteReleaseAfterCancellation","nativeLaw":"sqlite_snapshot_framework_space_history_native_temporary_retirement_partial_grants_and_drop_release_every_owned_capacity"}}};
@@ -181,7 +176,6 @@ test("Space-history native codec bodies and publication have an explicit IO owne
  expect(storeOwner.includes('"📜️space-history/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs"')).toBe(false);
  const bound=await sourceTokens(join(snapshot,"🚦️native/🦀️.rs"),corpus.law);
  expect(containsTokens(bound,["module_path","!","(",")"])).toBe(true);
- console.log("[DEBUG] Space-history controlled JSON/native codec bodies, neutral owner and actual IO module mount agree");
 });
 
 test("native snapshot owner policy is a closed independent five-axis caller input",async()=>{
@@ -189,7 +183,6 @@ test("native snapshot owner policy is a closed independent five-axis caller inpu
  const contract=JSON.parse(readFileSync(valueRetirementSchemaUrl,"utf8"));const ordered=JSON.parse(readFileSync(valueOrderedRetirementSchemaUrl,"utf8"));const ajv=new Ajv({strict:false,allErrors:true});ajv.addSchema(ordered);ajv.addSchema(contract);const validate=ajv.compile({$ref:contract.$id+"#/$defs/Grant"});
  for(const row of fixture.cases){expect(validate(row.grant)).toBe(true);expect(validate({...row.grant,undeclared:1})).toBe(false);expect(validate({...row.grant,maximumCopyBytes:-1})).toBe(false);}
  for(const row of fixture.cases){const db=new HistoryOutputDatabase(":memory:");try{db.exec("CREATE TABLE owner(owned INTEGER NOT NULL,ceiling INTEGER NOT NULL,items INTEGER NOT NULL,copy INTEGER NOT NULL,capacity INTEGER NOT NULL,released INTEGER NOT NULL,depth INTEGER NOT NULL,CHECK(owned<=ceiling))");const g=row.grant;db.run("INSERT INTO owner VALUES(?,?,?,?,?,?,?)",[fixture.initialBytes,fixture.nativeMaximumBytes,g.maximumItems,g.maximumCopyBytes,g.maximumCapacityBytes,g.maximumReleaseBytes,g.maximumDepth]);db.run("UPDATE owner SET owned=owned+?",[new TextEncoder().encode(fixture.copy).length]);expect(db.query("SELECT owned FROM owner").get()).toEqual({owned:row.expectedNativeOwnedBytes});expect(db.query("SELECT items,copy,capacity,released,depth FROM owner").get()).toEqual({items:g.maximumItems,copy:g.maximumCopyBytes,capacity:g.maximumCapacityBytes,released:g.maximumReleaseBytes,depth:g.maximumDepth});if(row.id!=="full")expect(g[row.id]).toBe(0);}finally{db.close();}}
- console.log("[DEBUG] Native snapshot original owner vectors: genuine Value five-axis Grant contract, zero authority stays zero, independent SQLite cumulative native receipt agrees");
 });
 
 
@@ -208,7 +201,6 @@ test("field close examples preserve genuine progress and actual physical totals"
   await Parser.init();const parser=new Parser();parser.setLanguage(await Parser.Language.load(join(dirname(Bun.resolveSync("tree-sitter-wasms/package.json",root)),"out/tree-sitter-rust.wasm")));
   const tree=parser.parse(readFileSync(join(store,"🚪️io/🧬️schema/⚠️diagnostic/🦀️.rs"),"utf8"));
   try {const visit=(n:Parser.SyntaxNode):Parser.SyntaxNode[]=>[n,...n.namedChildren.flatMap(visit)];const diagnostic=visit(tree.rootNode).find(n=>n.type==="struct_item"&&n.childForFieldName("name")?.text==="SchemaDecodeDiagnostic");expect(diagnostic?.text.includes("retained_progress:RetainedCloneProgress")).toBe(true);expect(diagnostic?.text.includes("refusal_kind:ValueRefusalKind")).toBe(true);expect(readFileSync(join(store,"🦀️.rs"),"utf8")).toContain("OwnedSchemaDecodeDiagnostic=schema_diagnostic::SchemaDecodeDiagnostic<OwnedSchemaPath>");} finally {tree.delete();}
-  console.log("[DEBUG] original failed field close retains all receipt axes; genuine Progress Ajv omissions and SQLite frame/release totals agree");
 });
 
 test("actual retained child owners use independently bounded physical currencies", async () => {
@@ -229,7 +221,6 @@ test("actual retained child owners use independently bounded physical currencies
   expect(()=>db.run("UPDATE currencies SET spent=1 WHERE axis='capacity'")).toThrow();
  }finally{db.close();}
  for(const path of ["🛫️encoder","🫙️owner","🪪️registry"]){const source=readFileSync(join(child,"🧩️child-operations",path,"🦀️.rs"),"utf8");expect(source).not.toContain("SnapshotRetirementStep");expect(source).toContain("RetainedCloneGrant");for(const demand of ["next_copy_byte_demand","next_capacity_byte_demand","next_release_byte_demand","next_depth_demand"])expect(source).toContain(demand);}
- console.log("[DEBUG] all8 original child carriers retain independent fixed1/4096/0/4096/64 authority; genuine Grant/Progress Ajv payload projections and SQLite copy-versus-release denial agree; no trial contract or native runtime credit");
 });
 
 
@@ -239,8 +230,7 @@ test("normal decoder release keeps the original independent job wallet on failur
  const db=new HistoryOutputDatabase(":memory:");try{db.run("CREATE TABLE receipt(items INTEGER,copy INTEGER,born INTEGER,freed INTEGER,CHECK(items<=65536 AND copy<=65536 AND born<=65536 AND freed<=65536))");db.run("INSERT INTO receipt VALUES(?,?,?,?)",[1,new TextEncoder().encode(law.source).length,law.birthBytes,law.beforeBytes]);expect(db.query("SELECT items AS copiedItems,copy AS copiedBytes,born AS retainedCapacityBytes,freed AS releasedBytes FROM receipt").get()).toEqual(law.receipt);expect(db.query("SELECT born-freed AS delta FROM receipt").get()).toEqual({delta:32});}finally{db.close();}
  const tokens=await sourceTokens(join(store,"🦀️.rs"),"ArtifactEnvelopeDecodeAuthority::release_step");expect(containsTokens(tokens,["cx",".","retained_grant","(",")"])).toBe(true);expect(containsTokens(tokens,["cx",".","consume_retained","(","progress",")"])).toBe(true);expect(tokens.includes("artifact_retirement_self_grant")).toBe(false);expect(tokens.includes("record_close_grant")).toBe(false);
  await Parser.init();const parser=new Parser();parser.setLanguage(await Parser.Language.load(join(dirname(Bun.resolveSync("tree-sitter-wasms/package.json",root)),"out/tree-sitter-rust.wasm")));const tree=parser.parse(readFileSync(join(store,"🧪️tests/🌴️bin-06/🔬️unit/🦀️.rs"),"utf8"));
- try{const visit=(node:Parser.SyntaxNode):Parser.SyntaxNode[]=>[node,...node.namedChildren.flatMap(visit)];const functions=tree.rootNode.namedChildren.filter(node=>node.type==="function_item"&&node.childForFieldName("name")?.text===law.nativeLaw);expect(functions.length).toBe(1);const original=functions[0]!;expect(original.hasError()).toBe(false);const errors=visit(tree.rootNode).filter(node=>node.type==="ERROR"||node.isMissing());for(const error of errors){expect(error.text).toBe("async");expect(error.endIndex<=original.startIndex||error.startIndex>=original.endIndex).toBe(true);}console.log("[DEBUG] original native-law subtree is syntax clean; unrelated original async-closure grammar qualifications "+JSON.stringify(errors.map(node=>({line:node.startPosition.row+1,column:node.startPosition.column+1}))));const native=rustTokens(original);expect(containsTokens(native,["job",".","step","(","&","mut","cx",")"])).toBe(true);expect(containsTokens(native,["cx",".","retained_progress","(",")"])).toBe(true);}finally{tree.delete();parser.delete();}
- console.log("[DEBUG] strict five-axis caller policy and SQLite original copy23/birth64/release32 receipt agree; actual Store step uses the same original wallet even after child refusal");
+ try{const visit=(node:Parser.SyntaxNode):Parser.SyntaxNode[]=>[node,...node.namedChildren.flatMap(visit)];const functions=tree.rootNode.namedChildren.filter(node=>node.type==="function_item"&&node.childForFieldName("name")?.text===law.nativeLaw);expect(functions.length).toBe(1);const original=functions[0]!;expect(original.hasError()).toBe(false);const errors=visit(tree.rootNode).filter(node=>node.type==="ERROR"||node.isMissing());for(const error of errors){expect(error.text).toBe("async");expect(error.endIndex<=original.startIndex||error.startIndex>=original.endIndex).toBe(true);}const native=rustTokens(original);expect(containsTokens(native,["job",".","step","(","&","mut","cx",")"])).toBe(true);expect(containsTokens(native,["cx",".","retained_progress","(",")"])).toBe(true);}finally{tree.delete();parser.delete();}
 });
 
 
@@ -250,14 +240,12 @@ test("Store semantics do not emit native snapshot or mutation codec implementati
  expect(new Ajv2020({strict:true}).compile(schema)(corpus)).toBe(true);
  for(const path of corpus.semanticRoots){const tokens=await sourceTokens(join(store,path));for(const name of ["ArtifactPack","ArtifactDsl","OpText","OpBinary"]){expect(containsTokens(tokens,["impl",name,"for"])).toBe(false);expect(containsTokens(tokens,["impl","$","crate","::",name,"for"])).toBe(false);}}
  for(const path of [...corpus.binaryOwners,...corpus.textOwners]){const tokens=await sourceTokens(join(store,path));expect(tokens.includes("impl")).toBe(true);}
- console.error("[DEBUG] Store physical codec ownership witnesses validated against Ajv and tree-sitter Rust parser");
 });
 
 test("authored field-set vectors distinguish structured binary from canonical text",()=>{
  const corpus=JSON.parse(readFileSync(join(store,"🚪️io/🧪️tests/🧫️fixtures/🎚️field-set/🔣️.json"),"utf8"));
  const schema=JSON.parse(readFileSync(join(store,"🚪️io/🧬️schema/🎚️field-set/🔣️.json"),"utf8"));expect(new Ajv2020({strict:true,allowUnionTypes:true}).compile(schema)(corpus)).toBe(true);
  for(const row of corpus.vectors)expect(JSON.parse(row.text)).toEqual(row.value);
- console.error("[DEBUG] field-set neutral vectors validated independently with Ajv and native JSON parsing");
 });
 
 test("neutral snapshot contracts and native bridge have no OS application imports",()=>{
@@ -266,7 +254,6 @@ test("neutral snapshot contracts and native bridge have no OS application import
  const schema=JSON.parse(readFileSync(join(owner,"🧬️schema/🔣️.json"),"utf8"));expect(new Ajv2020({strict:true}).compile(schema)(corpus)).toBe(true);
  for(const reference of corpus.valueCases)expect(JSON.parse(JSON.stringify(reference))).toEqual(reference);
  for(const path of ["../📝️text/📸️snapshot/🦀️.rs","../💾️binary/📸️snapshot/🦀️.rs","🫴️native/🦀️.rs","../🪶️sqlite-snapshot/📸️snapshot/🦀️.rs"]){const source=readFileSync(join(owner,path),"utf8");expect(/crate::os_|semio_framework_os_kernel|ArtifactCodec|ArtifactStoreSnapshot|NativeSnapshotDecodeOwner/.test(source.replace(/^\s*\/\/.*$/gm,""))).toBe(false);}
- console.error("[DEBUG] schema-first neutral snapshot/native contracts validated with Ajv and JSON oracle, physically independent of OS application vocabulary");
 });
 
 test("encoding-only native laws require representation contracts without Store publication capability",async()=>{
@@ -279,6 +266,5 @@ test("encoding-only native laws require representation contracts without Store p
    const functions=visit(tree.rootNode).filter(node=>node.type==="function_item"&&node.childForFieldName("name")?.text===name);expect(functions.length).toBe(1);
    const tokens=rustTokens(functions[0]!);expect(tokens.includes("ArtifactPack")).toBe(true);expect(tokens.includes("ArtifactStoreSnapshot")).toBe(false);
   }
-  console.error("[DEBUG] five actual encoding-only native laws retain neutral Pack bounds without attaching optional OS capabilities");
  }finally{tree?.delete();parser.delete();}
 });

@@ -26,5 +26,4 @@ export function geometryOwnershipLaws(): void {
   assert.equal(sessionFixture.expectedVolume,sessionFixture.box.width*sessionFixture.box.depth*sessionFixture.box.height);
   const laws=readFileSync(join(owner,"🧪️tests/📐️step-session/🦀️.rs"),"utf8");
   assert.deepEqual([...laws.matchAll(/#\[test\]\s*fn (\w+)/g)].map(match=>match[1]),sessionFixture.nativeLaws);
-  console.log(`[DEBUG] geometry ownership: ${fixture.moves.length} physical mathematical owners; closed format boundary`);
 }

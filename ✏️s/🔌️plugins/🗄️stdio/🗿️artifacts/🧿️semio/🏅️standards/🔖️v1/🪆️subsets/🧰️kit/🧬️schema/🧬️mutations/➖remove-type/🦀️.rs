@@ -1,7 +1,6 @@
 //! ➖️ `remove-type` — removes the TYPE matching `id`. Idempotent no-op if absent; inverse
 //! escrows the removed type from BASE.
 
-use crate::schema::mutations::SemioKitMutation;
 use crate::schema::snapshot::SemioKitSnapshot;
 
 //#region 🔖️Payload
@@ -12,13 +11,16 @@ pub struct RemoveType {
     pub id: String,
 }
 
-impl protocol::MutationKind<SemioKitSnapshot, SemioKitMutation> for RemoveType {
+impl<Op> protocol::MutationKind<SemioKitSnapshot, Op> for RemoveType
+where
+    Op: protocol::Mutation<SemioKitSnapshot, Diff = crate::schema::diff::SemioKitDiff> + From<RemoveType> + From<crate::schema::mutations::add_type::AddType>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "type", kind: "remove-type", record: "RemovedType" };
 
-    fn diff(&self, base: &SemioKitSnapshot) -> protocol::MutationOutcome<<SemioKitMutation as protocol::Mutation<SemioKitSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioKitSnapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<SemioKitSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &SemioKitSnapshot) -> Result<Vec<SemioKitMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &SemioKitSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

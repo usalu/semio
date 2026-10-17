@@ -44,7 +44,4 @@ pub use mutation::RemoveLayerAsset;
 pub mod diff;
 #[path = "↩️inverse/🦀️.rs"]
 pub mod inverse;
-#[cfg(test)]
-#[path = "🧪️tests/🖼️rejects/🦀️.rs"]
-mod tests_rejects_removing_an_asset_the_document_never_attached;
 //#endregion 🪢️TaxonomyMounts

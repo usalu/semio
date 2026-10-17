@@ -57,7 +57,6 @@ test("parallel incremental inference settles concurrent edits onto serial full i
    return [run.name,JSON.parse(output.trim().split("\n").findLast(row=>row.startsWith("{"))!)] as const;
   })));
   const result=Object.fromEntries(outputs) as {scenario:Record<string,Outcome>;raced:Outcome;stale:Outcome;broken:Outcome},scenario=result.scenario,owners=Object.fromEntries(fixture.owners.map(owner=>[owner,owner]));
-  console.log("[DEBUG] G1 incremental inference counts "+JSON.stringify(Object.fromEntries(Object.entries(scenario).map(([step,row])=>[step,row.counts])))+" persisted "+JSON.stringify(scenario.halfWritten!.persisted));
   expect(scenario.race!.raced).toBe(true);
   expect(scenario.race!.result).toBe(result.raced.result);
   for(const root of fixture.race.untouched)expect(scenario.race!.counts[owners[root]!]).toBe(1);

@@ -22,9 +22,7 @@ pub fn print_dsl(snapshot: &PlaygroundSnapshot) -> String {
 }
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
 
 //#region 🚚️Carrier

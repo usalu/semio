@@ -1,5 +1,15 @@
 //! 🧪️ Shared simplification cases publish only after cooperative work and retire at exact grants.
-use super::*;
+use semio_framework_test_fixtures::fixture_text;
+
+#[allow(unused_imports)] use semio_s_artifact_draw_drawing_editor::{DRAWING_BOUNDED_PAYLOAD_SCHEMA, DRAWING_PATH_PUBLICATION_CONTRACTS, DRAWING_PATH_TOOL_IDS, DrawingCommand, DrawingPlayApp, DrawingWindowCommandWork};
+#[allow(unused_imports)] #[cfg(test)] use semio_s_artifact_draw_drawing_editor_commands::edit_path;
+#[allow(unused_imports)] use semio_framework_plugin::retained_command::{ArtifactCommandWork,ArtifactCommandInputs,ArtifactCommandWorkStep};
+#[allow(unused_imports)] use semio_framework_value::{list::PagedList,retirement::controlled::ControlledRetirement,retained_clone::{RetainedCloneGrant,RetainedCloneStep},ValueError};
+#[allow(unused_imports)] use semio_s_artifact_draw_drawing_model::DrawingLayerNode;
+#[allow(unused_imports)] use semio_s_artifact_draw_drawing_editor::path_job::*;
+
+/// 🎟️ Unbounded retained grant: the pre-migration step budget carried no retained limit.
+const UNBOUNDED_STEP_GRANT: semio_framework_job::RetainedCloneGrant = semio_framework_job::RetainedCloneGrant { maximum_items: usize::MAX, maximum_copy_bytes: usize::MAX, maximum_capacity_bytes: usize::MAX, maximum_release_bytes: usize::MAX, maximum_depth: usize::MAX };
 fn close(work:&mut Work) {
     use semio_framework_job::InteractiveJobCloseStep;
     work.begin_close();
@@ -14,7 +24,7 @@ fn close(work:&mut Work) {
 }
 #[test]
 fn retained_path_simplification_shared_cases() {
-    let cases:serde_json::Value=serde_json::from_str(include_str!("../../../../../../🧪️tests/🧫️fixtures/🧮️geometry/✏️editing/🎮️operations/🎛️algorithms/🔣️.json")).unwrap();
+    let cases:serde_json::Value=serde_json::from_str(fixture_text!("../../../../../🧪️tests/🧫️fixtures/🧮️geometry/✏️editing/🎮️operations/🎛️algorithms/🔣️.json")).unwrap();
     for case in cases.as_array().unwrap().iter().filter(|case|case["operation"]["kind"]=="simplify"&&case["error"]!=true) {
         let source:Vec<semio_s_artifact_draw_drawing_model::PathSegment>=serde_json::from_value(case["before"].clone()).unwrap();
         let layer=semio_s_artifact_draw_drawing_model::create_drawing_path_layer(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Simplify")).to_string().into()).expect("nonempty authored identity"), "Simplify",source.into());let id=semio_s_artifact_draw_drawing_model::layer_base(&layer).id.clone();
@@ -25,11 +35,12 @@ fn retained_path_simplification_shared_cases() {
         let input=ArtifactCommandInputs::<App> {command:&command,snapshot:&snapshot,snapshot_owner:None,config:&config,history:&history,interaction:&interaction,hover:&hover,context:None,operation:&operation};
         let mut work=Work::new();let cancel=semio_framework_job::root_cancel_token();let mut sequence=0;let mut progressed=false;let mut completed=false;
         for _ in 0..20000 {
-            let mut cx=semio_framework_job::StepContext::new(semio_framework_job::OperationId(1),semio_framework_job::Generation(1),semio_framework_job::StepBudget::new(1,u64::MAX),cancel.clone(),semio_framework_job::default_now_us,&mut sequence);
+            let mut cx_retained = semio_framework_job::RetainedCloneProgress::default();
+            let mut cx=semio_framework_job::StepContext::new(semio_framework_job::OperationId(1),semio_framework_job::Generation(1),semio_framework_job::StepBudget::new(1,u64::MAX,UNBOUNDED_STEP_GRANT),cancel.clone(),semio_framework_job::default_now_us,&mut sequence,&mut cx_retained);
             match work.step(&input,&mut cx).unwrap() {
                 ArtifactCommandWorkStep::Progress {..}=>progressed=true,
                 ArtifactCommandWorkStep::Complete(emit)=>{
-                    let mut after=snapshot.clone();for mutation in emit.mutations {crate::mutations::apply_drawing_mutation(&mut after,&mutation).unwrap();}
+                    let mut after=snapshot.clone();for mutation in emit.mutations {semio_s_artifact_draw_drawing_editor::mutations::apply_drawing_mutation(&mut after,&mutation).unwrap();}
                     let DrawingLayerNode::Path(path)=after.layers.get(0).unwrap() else {unreachable!()};
                     let expected:Vec<semio_s_artifact_draw_drawing_model::PathSegment>=serde_json::from_value(case["after"].clone()).unwrap();assert_eq!(path.segments.iter().cloned().collect::<Vec<_>>(),expected);completed=true;break;
                 },_=>panic!("Unexpected retained path result"),
@@ -37,8 +48,7 @@ fn retained_path_simplification_shared_cases() {
             assert_eq!(snapshot,saved);
         }
         assert!(progressed&&completed);assert_eq!(snapshot,saved);close(&mut work);
-        let mut interrupted=Work::new();let mut cx=semio_framework_job::StepContext::new(semio_framework_job::OperationId(2),semio_framework_job::Generation(1),semio_framework_job::StepBudget::new(1,u64::MAX),cancel.clone(),semio_framework_job::default_now_us,&mut sequence);
+        let mut interrupted=Work::new();let mut cx_retained = semio_framework_job::RetainedCloneProgress::default(); let mut cx=semio_framework_job::StepContext::new(semio_framework_job::OperationId(2),semio_framework_job::Generation(1),semio_framework_job::StepBudget::new(1,u64::MAX,UNBOUNDED_STEP_GRANT),cancel.clone(),semio_framework_job::default_now_us,&mut sequence,&mut cx_retained);
         assert!(matches!(interrupted.step(&input,&mut cx).unwrap(),ArtifactCommandWorkStep::Progress {..}));close(&mut interrupted);assert_eq!(snapshot,saved);
     }
-    eprintln!("[DEBUG] Retained path simplification fixture, deferred publication and exact retirement laws executed");
 }

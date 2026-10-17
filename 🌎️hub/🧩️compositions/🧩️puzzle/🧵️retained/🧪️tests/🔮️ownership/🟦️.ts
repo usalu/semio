@@ -3,7 +3,7 @@ import { createHash } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import contract from "../🧫️fixtures/🔮️ownership/🔣️.json";
-import { inspectRustCompileReferences } from "../../../../../../🧰️framework/🔨️modules/📚️compiler/📖️syntax/🦀️rust/🟦️.ts";
+import { inspectRustCompileReferences } from "@semio-tech/compiler-syntax-rust-ts";
 
 const root = resolve(import.meta.dir, "../../../../../..");
 const read = (path: string) => readFileSync(resolve(root, path), "utf8");

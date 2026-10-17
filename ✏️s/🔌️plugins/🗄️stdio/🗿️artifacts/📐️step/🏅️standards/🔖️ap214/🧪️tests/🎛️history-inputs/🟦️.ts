@@ -19,21 +19,19 @@ for(const [index,subset] of subsets.entries())test(`STEP ${subset} commits every
   expect(jsonPatch.applyPatch(structuredClone(fixture.before),fixture.oracle.patch,true).newDocument).toEqual(fixture.after);expect(fixture.after).not.toEqual(fixture.before);
   expect(jsonPatch.applyPatch(structuredClone(fixture.after),jsonPatch.compare(fixture.after,fixture.before),true).newDocument).toEqual(fixture.before);
  }
- expect(actual.sort()).toEqual(kinds.sort());console.log(`[DEBUG] STEP ${subset} committed ${actual.length} class-native intent fixtures with independent schema/RFC6902 output`);
+ expect(actual.sort()).toEqual(kinds.sort());
 });
 
 for(const [index,subset] of subsets.entries())test(`STEP ${subset} native editor and viewer retain the declared class mutation owner`,()=>{
  const owner=join(root,subset),name=`StepCc${index+1}Mutation`;
  for(const leaf of ["✏️editor/🦀️.rs","👁️viewer/🦀️.rs"]){const native=readFileSync(join(owner,leaf),"utf8");expect(native).toContain(`type Mutation = ${name};`);expect(native).not.toContain("type Mutation = StepMutation;");}
  const codec=readFileSync(join(owner,"🚪️io/🧬️mutations/🦀️.rs"),"utf8");expect(codec).toContain(name);expect(readFileSync(join(owner,"🚪️io/🧬️mutations/💾️binary/🦀️.rs"),"utf8")).toContain("VariantTag::Key");
- console.log(`[DEBUG] STEP ${subset} editor/viewer retain ${name} and its direct externally tagged native codec`);
 });
 
 
 for(const [index,subset] of subsets.entries())test(`STEP ${subset} construction retains its independently declared class-native intent`,()=>{
  const owner=join(root,subset),name=`StepCc${index+1}Mutation`,fixture=JSON.parse(readFileSync(join(owner,"🧫️fixtures/🎛️history-inputs/♻️restore-entities/🦠️mutation/🔣️.json"),"utf8"));expect(jsonPatch.applyPatch(structuredClone(fixture.before),fixture.oracle.patch,true).newDocument).toEqual(fixture.after);
  const native=readFileSync(join(owner,"🚪️io/🦀️.rs"),"utf8"),construction=native.slice(native.indexOf("pub mod derived_construction"));expect(construction).toContain(`type Mutation = ${name};`);expect(construction).toContain(`apply_step_cc${index+1}_mutation`);expect(construction).not.toContain("type Mutation = StepMutation;");
- console.log(`[DEBUG] STEP ${subset} construction retains ${name} and the independently authored native RestoreEntities intent`);
 });
 
 for(const subset of subsets)test(`STEP ${subset} instance words stay references while human names remain primitive controls`,async()=>{
@@ -44,7 +42,6 @@ for(const subset of subsets)test(`STEP ${subset} instance words stay references 
 
  if(subset!=="1️⃣cc1"){const representation=JSON.parse(readFileSync(join(owner,"🧬️schema/🧬️mutations/🪜set-shape-representation/🧬️schema/🔣️.json"),"utf8"));for(const field of ["items","context"]){const descriptor=representation.$defs.ShapeRepresentationRow.properties[field];expect(descriptor["x-semio-ui"].widget).toBe("reference");expect(descriptor["x-semio-ui"].role).toBe("target");expect(descriptor["x-semio-ui"].ref).toEqual({kind:"entity"});}const control=mutationInputDefs(representation,()=>undefined).find((input:any)=>input.id==="/representation")!;expect(control.schema.kind).toBe("object");for(const field of ["items","context"]){const input=(control.schema as any).fields.find((input:any)=>input.id===`/${field}`)!;expect(input.schema.kind).toBe("reference");expect(input.schema.idType).toBe("integer");expect(input.schema.many??false).toBe(field==="items");}}
  const fixtures=join(owner,"🧫️fixtures/🎛️history-inputs");for(const directory of readdirSync(fixtures)){const fixture=JSON.parse(readFileSync(join(fixtures,directory,"🦠️mutation/🔣️.json"),"utf8"));expect(jsonPatch.applyPatch(structuredClone(fixture.before),fixture.oracle.patch,true).newDocument).toEqual(fixture.after);}
- console.log(`[DEBUG] STEP ${subset} owned instance identities/edges expose reference controls and unchanged independent intent semantics`);
 });
 
 test("STEP snapshot instance and reference words remain addresses with independently valid unchanged fixtures",()=>{
@@ -52,5 +49,4 @@ test("STEP snapshot instance and reference words remain addresses with independe
  for(const subset of subsets)for(const directory of readdirSync(join(root,subset,"🧫️fixtures/🎛️history-inputs"))){const fixture=JSON.parse(readFileSync(join(root,subset,"🧫️fixtures/🎛️history-inputs",directory,"🦠️mutation/🔣️.json"),"utf8"));expect(admits(fixture.before),JSON.stringify(admits.errors)).toBe(true);expect(admits(fixture.after),JSON.stringify(admits.errors)).toBe(true);}
  const reference=snapshot.$defs.StepValue.oneOf.find((variant:any)=>variant.properties?.reference)?.properties.reference;
  for(const descriptor of [snapshot.$defs.StepEntity.properties.id,reference]){expect(descriptor.type).toBe("integer");expect(descriptor["x-semio-ui"].widget).toBe("reference");expect(descriptor["x-semio-ui"].role).toBe("target");expect(descriptor["x-semio-ui"].ref).toEqual({kind:"entity"});}
- console.log("[DEBUG] STEP snapshot native identity/reference words keep exact integer wire and all28 independently valid graphs");
 });

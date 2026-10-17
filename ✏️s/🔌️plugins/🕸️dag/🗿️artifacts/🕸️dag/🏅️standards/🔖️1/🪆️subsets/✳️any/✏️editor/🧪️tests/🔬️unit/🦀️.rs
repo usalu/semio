@@ -1,5 +1,17 @@
+use crate::{editor::dag::commands::add_node, editor::dag::commands::patch_dag_nodes, editor::dag::commands::remove_node, editor::dag::commands::rename_dag_node};
+use crate::{editor::dag::commands::connect_media_ports, editor::dag::commands::delete_selection, editor::dag::commands::disconnect, editor::dag::commands::move_media_node, editor::dag::commands::node_graph_edit};
+use crate::{editor::dag::commands::graph_pointer_down, editor::dag::commands::node_graph_viewport};
+use crate::{editor::dag::config::DagConfig, editor::dag::config::DagConfigMutation};
+use crate::editor::dag::modes::edit;
+use semio_framework_plugin::ArtifactEditor;
+use semio_framework_plugin::ArtifactToolPublicationLane;
+use semio_framework_plugin::ContextMenuRequest;
+use semio_framework_plugin::EditorApp;
+use semio_framework_plugin::HierarchyProvider;
+use semio_framework_plugin::InteractionRef;
+use crate::editor::dag::{DAG_RETAINED_TOOL_IDS, DAG_RETAINED_PUBLICATION_CONTRACTS, DagRetainedCommandJobFactory, DAG_CONFIG_STORE_MAXIMUM_BYTES, dag_config_footprint, prepare_dag_config};
 pub(crate) mod context {
-    use super::super::*;
+    use crate::editor::dag::*;
     use semio_framework_plugin::artifact_app_laws::new_app_with_registry_and_members as framework_new_app_with_registry;
     use semio_framework_plugin::{EditorApp, PluginApp, VcsArtifactApp, ViewModel};
     
@@ -66,7 +78,7 @@ pub(crate) mod context {
     }
 }
 
-use super::*;
+use crate::editor::dag::*;
 
 //#region 🧪️RetainedConfigOracle
 #[test]
@@ -88,7 +100,7 @@ use semio_framework_plugin::PluginApp;
 
 //#region 🔖️CommandSurface
 /// 🧾️ One representative value per row, in declaration (= binary ordinal) order.
-pub(super) fn every_command() -> Vec<DagCommand> {
+pub(crate) fn every_command() -> Vec<DagCommand> {
     vec![
         DagCommand::AddNode(add_node::AddNode { kind: "slider".into(), x: Some(10.0), y: None }),
         DagCommand::RemoveNode(remove_node::RemoveNode { node_id: "n1".into() }),

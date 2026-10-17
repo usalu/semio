@@ -4,7 +4,7 @@
  * @see ../../../🖋️latex/semio-viz-geo.sty
  */
 import { vizPathRecorder, type VizPathCommand, type VizPathContext } from "../✒️mark/🟦️.ts";
-import type { VizExtent, VizPoint, VizProjectionKind } from "../../📸️snapshot/📊️chart/🟦️.ts";
+import type { VizExtent, VizPoint, VizProjectionKind } from "@semio-tech/print/schema/snapshot/chart";
 
 //#region 🔖️Spherical
 const EPSILON = 1e-6;

@@ -26,5 +26,4 @@ fn original_projection_retirement_keeps_the_exact_issuer_and_all_physical_receip
   assert!(cursor.terminal_is_empty());assert!(pumped);assert!(!registry.contains(index,generation));assert!(registry.terminal_is_empty());assert_eq!(born,released);assert_eq!(observe(||drop(cursor)).1.released_bytes,0);
   assert_eq!(serde_json::json!({"projectionHeapRelease":0,"originalPreserved":source.as_str()==row["owner"].as_str().unwrap(),"returnedToOriginalIssuer":pumped}),row["expected"]);
  }
- eprintln!("[DEBUG] original draft/transient projection closes through its exact Store read issuer with original pointer and physical receipts");
 }

@@ -11,4 +11,4 @@ test("TXT physical protobuf field decoding preserves Unicode and rejects truncat
  expect(Buffer.from(bytes.subarray(4)).toString("utf8")).toBe(fixture.txt.expected.text);
  expect(()=>decodeSetLineProtobuf(bytes.subarray(0,bytes.length-1))).toThrow();
 });
-afterAll(()=>console.log("[DEBUG] Owned transport corpus completed: @semio-tech/stdio-txt"));
+afterAll(()=>{});

@@ -29,14 +29,13 @@ test("pinned Cargo launches a large static graph and its procedural macro withou
   const {RUSTC_WRAPPER:_wrapper,RUSTC_WORKSPACE_WRAPPER:_workspaceWrapper,...ambient}=process.env;
   const child=Bun.spawn(["cargo","-Zbuild-dir-new-layout","run","--quiet","--offline","--manifest-path",join(root,"Cargo.toml"),"-p","application"],{cwd:root,env:{...ambient,RUSTUP_TOOLCHAIN:toolchain.toolchain.channel,CARGO_TARGET_DIR:join(root,"target"),CARGO_BUILD_BUILD_DIR:build,CARGO_INCREMENTAL:"0"},stdout:"pipe",stderr:"pipe"});
   const [output,errors,code]=await Promise.all([new Response(child.stdout).text(),new Response(child.stderr).text(),child.exited]);
-  console.log(`[DEBUG] Cargo library path contract exit=${code} libraries=${fixture.libraries}`);
   expect(code,errors).toBe(0);expect(output.trim()).toBe(String(fixture.expected));
 }, {timeout:120000});
 
 
 test("the pinned Cargo consumes the current metadata configuration without obsolete keys", async () => {
   const workspace=getWorkspaceRoot(),text=readFileSync(join(workspace,".cargo/config.toml"),"utf8"),config=Bun.TOML.parse(text) as {unstable:Record<string,unknown>};
-  expect(config).toEqual(parse(text));expect(config.unstable["no-embed-metadata"]).toBeUndefined();expect(config.unstable["embed-metadata"]).toBe("DoNotEmbed");
+  const independent=parse(text);expect(config).toEqual<typeof independent>(independent);expect(config.unstable["no-embed-metadata"]).toBeUndefined();expect(config.unstable["embed-metadata"]).toBe("DoNotEmbed");
   const child=Bun.spawn(["cargo","-Z","unstable-options","config","get","unstable.embed-metadata","--format","json"],{cwd:workspace,stdout:"pipe",stderr:"pipe"});
   const [output,errors,code]=await Promise.all([new Response(child.stdout).text(),new Response(child.stderr).text(),child.exited]);
   expect(code,errors).toBe(0);expect(errors).not.toContain("unused config key");expect(JSON.parse(output)).toEqual({unstable:{"embed-metadata":"DoNotEmbed"}});

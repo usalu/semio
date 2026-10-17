@@ -3,7 +3,7 @@
 pub const TAG: u8 = dsl::protocol_record::tag_u8(include_str!("../📡️.protocol.semio"), "remove-catalog-entry");
 pub const BINARY_TAG: u8 = TAG;
 
-use crate::standards::v1_7::subsets::base::schema::mutations::RemoveCatalogEntry;
+use crate::standards::v1_7::subsets::base::schema::mutations::remove_catalog_entry::RemoveCatalogEntry;
 
 /// 📤️ Encodes this direct payload as canonical schema JSON bytes.
 pub fn encode(payload: &RemoveCatalogEntry) -> Result<Vec<u8>, String> {

@@ -95,7 +95,7 @@ impl Default for GraphCamera {
 /// caller then either mints an edit against nothing or is refused, and either way the pane reads as
 /// inert. Every argument here is artifact-agnostic (ids and plain numbers), so `wfc3d` still copies
 /// this file verbatim.
-fn action(id: &'static str, en: &'static str, de: &'static str, args: Vec<ActionArgDef>) -> ActionDefinition {
+pub fn action(id: &'static str, en: &'static str, de: &'static str, args: Vec<ActionArgDef>) -> ActionDefinition {
     ActionDefinition { args, ..ActionDefinition::bounded_catalog(id, LocalizedLabel::native(en, de), ActionKind::Mutation) }
 }
 
@@ -231,7 +231,5 @@ pub fn render(view: &impl SlotGraphView, camera: GraphCamera, selection: &[Strin
 //#endregion 🔖️Render
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

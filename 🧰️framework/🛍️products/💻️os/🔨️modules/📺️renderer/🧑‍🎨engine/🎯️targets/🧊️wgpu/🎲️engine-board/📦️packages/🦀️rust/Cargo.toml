@@ -28,6 +28,9 @@ semio-framework-os-renderer-wgpu-engine-registry = { path = "../../../🗺️eng
 infinite_canvas = { path = "../../../../../../../♾️infinite/📦️packages/🦀️rust", package = "semio-framework-os-infinite" }
 semio-framework-canvas = { path = "../../../../../../../../../../🔨️modules/🖼️canvas/📦️packages/🦀️rust" }
 semio-framework-job = { workspace = true }
+semio-framework-os-infinite-board-normal-focus = { path = "../../../../../../../♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/🎯️focus/📦️packages/🦀️rust" }
+semio-framework-os-infinite-board-normal-gestures = { path = "../../../../../../../♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/🕹️gestures/📦️packages/🦀️rust" }
+semio-framework-os-infinite-board-normal-host = { path = "../../../../../../../♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/🧭️host/📦️packages/🦀️rust" }
 semio-framework-surface = { path = "../../../../../../../../../../🔨️modules/🗺️surface/📦️packages/🦀️rust" }
 serde_json = "1.0.140"
 ui_wgpu = { path = "../../../../../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", features = ["wgpu-engine"], package = "semio-framework-ui" }

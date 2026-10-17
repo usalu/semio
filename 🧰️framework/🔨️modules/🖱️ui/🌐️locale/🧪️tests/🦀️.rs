@@ -53,7 +53,6 @@ fn complete_portable_label_corpus_matches_native_admission_and_independent_serde
         }
         <DslValue as FromValue>::retire_decoded(input);
     }
-    println!("[DEBUG] native locale corpus executed all32 duplicate-aware label vectors");
 }
 
 #[test]
@@ -66,7 +65,6 @@ fn explicit_locale_authority_replays_all_portable_id_and_language_tag_vectors() 
         assert_eq!(actual.is_some(), row["accepted"].as_bool().unwrap(), "{} admission", row["id"]);
         assert_eq!(actual.map(Locale::as_str), row["locale"].as_str(), "{} identity", row["id"]);
     }
-    println!("[DEBUG] native locale authority executed all17 vectors without default language");
 }
 
 fn decode_at_depth(control: &mut NativeDecodeControl<'_>, remaining: usize, input: &DslValue) -> Result<LocalizedLabel, ValueError> {

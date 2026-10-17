@@ -1,0 +1,21 @@
+{
+  "path": "🧰️framework/Cargo.lock",
+  "beforeSha256": "0f08d30bcefaf4612080e8c7cd7bfc78d5601a79a1a3015c9c2593deeccd8c92",
+  "afterSha256": "97645ef0ae370aef8ca2df22812f30d650ba6232e1a416dc30785d0d96d81975",
+  "thirdpartyPinsSha256": "cec33bada3d45ab1e279cd48fa43e2b814aadaad6ee076be0fe7b39cbb8fee23",
+  "package": "semio-framework-plugin-surface-carrier-laws",
+  "dependencies": [
+    "semio-framework",
+    "semio-framework-async-macros",
+    "semio-framework-plugin-testing-laws",
+    "semio-framework-plugin-window-transient",
+    "semio-framework-trace",
+    "semio-framework-ui-contract",
+    "semio-framework-ui-scene",
+    "serde_json"
+  ],
+  "missingDirectFirstparty": [
+    "semio-framework-plugin-testing-laws",
+    "semio-framework-plugin-window-transient"
+  ]
+}

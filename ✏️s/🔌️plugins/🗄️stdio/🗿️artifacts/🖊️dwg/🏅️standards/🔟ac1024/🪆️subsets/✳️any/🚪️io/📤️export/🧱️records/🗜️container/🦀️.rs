@@ -134,12 +134,12 @@ pub fn r2004_page_checksum(seed: u32, data: &[u8]) -> u32 {
 //#region 🔖️R2004Writer
 #[derive(Clone)]
 pub struct EncodedR2004Page {
-    section_id: u32,
-    page_number: i32,
-    start_offset: u64,
-    payload: Vec<u8>,
-    address: u64,
-    allocation_size: u32,
+    pub section_id: u32,
+    pub page_number: i32,
+    pub start_offset: u64,
+    pub payload: Vec<u8>,
+    pub address: u64,
+    pub allocation_size: u32,
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn align_r2004(value: usize) -> usize {
@@ -193,12 +193,12 @@ pub fn write_data_page(output: &mut Vec<u8>, page: &EncodedR2004Page) -> Result<
     Ok(())
 }
 pub struct R2004SectionDescriptor {
-    name: &'static str,
-    section_id: u32,
-    semantic_size: u64,
-    max_decompressed_size: u32,
-    compression: u32,
-    encryption: u32,
+    pub name: &'static str,
+    pub section_id: u32,
+    pub semantic_size: u64,
+    pub max_decompressed_size: u32,
+    pub compression: u32,
+    pub encryption: u32,
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn encode_r2004_section_info(descriptors: &[R2004SectionDescriptor], pages: &[EncodedR2004Page], reserved_name: &[u8; 64], application_history_scratch: &[u8]) -> Result<Vec<u8>, String> {

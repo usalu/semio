@@ -1,7 +1,6 @@
 //! 💥️ `delete-brep` — clears the object's `brep` CHILD slot. Idempotent (a no-op if already
 //! empty); the inverse captures the escrowed handle from BASE so undo restores it exactly.
 
-use crate::schema::mutations::SemioObjectMutation;
 use crate::schema::snapshot::SemioObjectSnapshot;
 
 //#region 🔖️Payload
@@ -11,13 +10,16 @@ use crate::schema::snapshot::SemioObjectSnapshot;
 #[value(deny_unknown_fields)]
 pub struct DeleteBrep {}
 
-impl protocol::MutationKind<SemioObjectSnapshot, SemioObjectMutation> for DeleteBrep {
+impl<Op> protocol::MutationKind<SemioObjectSnapshot, Op> for DeleteBrep
+where
+    Op: protocol::Mutation<SemioObjectSnapshot, Diff = crate::schema::diff::SemioObjectDiff> + From<DeleteBrep> + From<crate::schema::mutations::create_brep::CreateBrep>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "brep", kind: "delete-brep", record: "DeletedBrep" };
 
-    fn diff(&self, base: &SemioObjectSnapshot) -> protocol::MutationOutcome<<SemioObjectMutation as protocol::Mutation<SemioObjectSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioObjectSnapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<SemioObjectSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &SemioObjectSnapshot) -> Result<Vec<SemioObjectMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &SemioObjectSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

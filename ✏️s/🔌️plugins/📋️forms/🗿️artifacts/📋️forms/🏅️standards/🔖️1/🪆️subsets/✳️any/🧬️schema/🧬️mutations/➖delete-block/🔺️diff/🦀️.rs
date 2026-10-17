@@ -1,6 +1,6 @@
 //! 🔺️ `delete-block` — sparse diff construction: one removed question id in the touched step.
 
-use super::mutation::DeleteBlock;
+use crate::standards::v1::subsets::any::schema::mutations::delete_block::mutation::DeleteBlock;
 use crate::schema::diff::{FormsQuestionsDelta, FormsStepPatch, FormsStepsDelta};
 use crate::{forms_steps, FormsDiff, FormsSnapshot};
 

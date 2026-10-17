@@ -37,6 +37,3 @@ semio-framework-os-infinite-board-engine = { path = "../../../../../../⚙️eng
 semio-framework-os-infinite-board-normal-model = { path = "../../../🗃️model/📦️packages/🦀️rust" }
 semio-framework-os-infinite-board-normal-scene = { path = "../../../🖼️scene/📦️packages/🦀️rust" }
 semio-framework-os-infinite-board-normal-focus = { path = "../../../🎯️focus/📦️packages/🦀️rust" }
-
-[dev-dependencies]
-semio-framework-os-infinite-board-normal-gestures = { path = ".", features = ["testkit"] }

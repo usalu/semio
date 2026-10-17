@@ -1,29 +1,47 @@
 //! 📪️ Staged slice of the `instance-root` band of the mounted artifact instance: its `instance-jobs` members (WP6 step S0 of the instance family).
 //!
 //! 🧵️ The mounted artifact instance `VcsArtifactApp`: its state, its turns and its `PluginApp` implementation.
-use super::*;
+use semio_framework_plugin_window_kits::AppActionRegistry;
+use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use pack::snapshot::ArtifactPack;
+use std::collections::{BTreeMap, BTreeSet, HashMap};
+use semio_framework_ui_runtime::{ComponentTree, TreeNode};
+use semio_framework_plugin_decl_emission::Emit;
+use semio_framework::FaultFrom;
+use std::future::Future;
+use semio_framework_plugin_decl_views::{InteractionHoverState, InteractionView, PeerPresenceRoot};
+use store::{MemberFactory, Mutation, SpaceMember};
+use protocol::OpText;
+use semio_framework_plugin_reactor_app::PluginApp;
+use semio_framework_value::retained_clone::RetainedCloneProgress;
+use semio_framework_plugin_interaction::{UiAssemblyResult, ui_assembly_error};
+use semio_framework_value::ValueError;
+use semio_framework_plugin_interaction::interaction_topology::{empty_draft_references, ui_tree_domain_topology};
+use semio_framework_ui_contract::*;
 
 pub(crate) fn original_render_posted_since(before:RetainedCloneProgress,after:RetainedCloneProgress)->Result<RetainedCloneProgress,ValueError>{
  let delta=|after:usize,before:usize|after.checked_sub(before).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original render recipient moved backwards"));
  Ok(RetainedCloneProgress{copied_items:delta(after.copied_items,before.copied_items)?,copied_bytes:delta(after.copied_bytes,before.copied_bytes)?,retained_capacity_bytes:delta(after.retained_capacity_bytes,before.retained_capacity_bytes)?,released_bytes:delta(after.released_bytes,before.released_bytes)?})
 }
 
-pub(crate) struct OriginalRenderTreeIdentity {
-    pub(crate) operation: semio_framework_job::OperationId,
-    pub(crate) generation: semio_framework_job::Generation,
-    pub(crate) parent: usize,
-    pub(crate) recipient: usize,
-    pub(crate) cancellation: usize,
-    pub(crate) epoch: Option<u64>,
-    pub(crate) clock: fn()->Option<u64>,
+#[doc(hidden)]
+pub struct OriginalRenderTreeIdentity {
+    pub operation: semio_framework_job::OperationId,
+    pub generation: semio_framework_job::Generation,
+    pub parent: usize,
+    pub recipient: usize,
+    pub cancellation: usize,
+    pub epoch: Option<u64>,
+    pub clock: fn()->Option<u64>,
     pub(crate) deadline: u64,
 }
 
 impl OriginalRenderTreeIdentity {
-    pub(crate) fn capture(cx:&semio_framework_job::StepContext<'_>)->Result<Self,ValueError> {
+    pub fn capture(cx:&semio_framework_job::StepContext<'_>)->Result<Self,ValueError> {
         Ok(Self { operation:cx.operation(), generation:cx.generation(), parent:cx.original_source_parent()?.source_identity()?, recipient:cx.original_recipient_identity(), cancellation:cx.original_cancel_token() as *const _ as usize, epoch:cx.original_source_epoch(), clock:cx.clock_source(), deadline:cx.deadline_us() })
     }
-    pub(crate) fn validate(&mut self,cx:&semio_framework_job::StepContext<'_>)->Result<(),ValueError> {
+    pub fn validate(&mut self,cx:&semio_framework_job::StepContext<'_>)->Result<(),ValueError> {
         if self.operation!=cx.operation() || self.generation!=cx.generation() || self.parent!=cx.original_source_parent()?.source_identity()? || self.recipient!=cx.original_recipient_identity() || self.cancellation!=cx.original_cancel_token() as *const _ as usize || !std::ptr::fn_addr_eq(self.clock,cx.clock_source()) || self.deadline!=cx.deadline_us() || matches!((self.epoch,cx.original_source_epoch()),(Some(before),Some(after)) if after<before) || self.epoch.is_some()!=cx.original_source_epoch().is_some() {
             return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"stationary render source requires its original parent recipient control and work lifetime"));
         }
@@ -32,19 +50,20 @@ impl OriginalRenderTreeIdentity {
     }
 }
 
-pub(crate) struct OriginalRenderInteractionStamp<'a> {
-    pub(crate) registry: &'a AppActionRegistry,
-    pub(crate) interaction_hover: &'a InteractionHoverState,
-    pub(crate) peer_presence: &'a PeerPresenceRoot,
-    pub(crate) own_color: Option<u8>,
-    pub(crate) local_interaction_authority: &'a mut crate::local_interaction::authority::LocalInteractionTopologyAuthority,
-    pub(crate) interaction_ui_topology: &'a mut HashMap<String, protocol::DomainTopology>,
-    pub(crate) pending_presence: &'a mut Vec<PresenceUpdate>,
-    pub(crate) presence_marked_keys: &'a mut BTreeMap<String, BTreeSet<String>>,
+#[doc(hidden)]
+pub struct OriginalRenderInteractionStamp<'a> {
+    pub registry: &'a AppActionRegistry,
+    pub interaction_hover: &'a InteractionHoverState,
+    pub peer_presence: &'a PeerPresenceRoot,
+    pub own_color: Option<u8>,
+    pub local_interaction_authority: &'a mut semio_framework_plugin_interaction::authority::LocalInteractionTopologyAuthority,
+    pub interaction_ui_topology: &'a mut HashMap<String, protocol::DomainTopology>,
+    pub pending_presence: &'a mut Vec<PresenceUpdate>,
+    pub presence_marked_keys: &'a mut BTreeMap<String, BTreeSet<String>>,
 }
 
 impl OriginalRenderInteractionStamp<'_> {
-    pub(crate) async fn stamp_and_cache_interaction_ui(&mut self, tree: &ComponentTree, state: &protocol::InteractionState, body_key: &str) -> UiAssemblyResult<()> {
+    pub async fn stamp_and_cache_interaction_ui(&mut self, tree: &ComponentTree, state: &protocol::InteractionState, body_key: &str) -> UiAssemblyResult<()> {
         let hover = self.interaction_hover;
         let peers = self.peer_presence;
         let own_color = self.own_color;

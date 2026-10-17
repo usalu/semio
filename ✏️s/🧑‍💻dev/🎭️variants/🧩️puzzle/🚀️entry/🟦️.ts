@@ -1,5 +1,5 @@
-import { composeSpecificOsCatalogV1 } from "../../../🧩️catalog/🟦️.ts";
-import { bootFrameworkOsDev } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🟦️.ts";
+import { composeSpecificOsCatalogV1 } from "@semio-tech/s-dev-catalog-ts";
+import { bootFrameworkOsDev } from "@semio-tech/framework-os-dev";
 import { PUZZLE_BOARD_SESSION_FACTORIES } from "@semio-tech/puzzle-2d";
 const operation = new AbortController();
 window.addEventListener("pagehide", () => operation.abort(), { once: true });

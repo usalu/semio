@@ -1,0 +1,119 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:repository:dependencies-current-selected:proposal",
+  "definitions": {
+    "ReadContextCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "effect",
+        "accepted"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "effect": {
+          "enum": [
+            "ordinary",
+            "released",
+            "foreign-control",
+            "cancelled",
+            "changed-source",
+            "changed-receipt",
+            "changed-link",
+            "fake-store"
+          ]
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "BindingDecisionCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "selected",
+        "scopes",
+        "receipt",
+        "unqualified",
+        "accepted"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "selected": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "scopes": {
+          "type": "array",
+          "maxItems": 4096,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "scope",
+              "packages"
+            ],
+            "properties": {
+              "scope": {
+                "type": "string",
+                "minLength": 1
+              },
+              "packages": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 4096,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "source",
+                    "kind",
+                    "generation"
+                  ],
+                  "properties": {
+                    "source": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "kind": {
+                      "enum": [
+                        "missing",
+                        "bound",
+                        "unknown"
+                      ]
+                    },
+                    "generation": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "pattern": "^[a-f0-9]{64}$"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "receipt": {
+          "type": "boolean"
+        },
+        "unqualified": {
+          "type": "boolean"
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

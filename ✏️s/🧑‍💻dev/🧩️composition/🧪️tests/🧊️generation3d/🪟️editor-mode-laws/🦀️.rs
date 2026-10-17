@@ -1,4 +1,14 @@
-/// 🪟️ Editor mode laws: the panel and the generate and edit mode window law wrappers.
+//! 🪟️ Editor mode laws: the panel and the generate and edit mode window law wrappers plus the archive, brep and surface-budget law groups.
+#![allow(dead_code, unused_imports)]
+
+include!("../🦀️.rs");
+
+#[path = ".."]
+mod editor_domain {
+include!("../📥️editor-imports/🦀️.rs");
+#[path = "🪟️editor-mode-laws/📚️editor-laws/🦀️.rs"]
+pub(crate) mod editor_laws;
+}
 
 #[path = ".."]
 mod editor_generation3d_panels_artifact_tests_laws {

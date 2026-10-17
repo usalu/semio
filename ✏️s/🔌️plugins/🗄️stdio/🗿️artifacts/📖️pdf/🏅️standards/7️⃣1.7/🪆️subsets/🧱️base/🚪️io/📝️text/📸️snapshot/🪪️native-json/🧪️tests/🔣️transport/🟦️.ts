@@ -17,4 +17,4 @@ test("PDF native JSON converts only at IO and canonical guards require owned wor
  expect(fn.kind).toBe("exponential");if(fn.kind==="exponential")expect(fn.n.bits).toBe(word(fixture.word.number));
  const native={$defs:pdfNativeSchema.$defs,$ref:"#/$defs/PdfFunction"};expect(oracle.compile(native)(fixture.pdf.function)).toBe(true);
 });
-afterAll(()=>console.log("[DEBUG] Owned transport corpus completed: @semio-tech/stdio-pdf"));
+afterAll(()=>{});

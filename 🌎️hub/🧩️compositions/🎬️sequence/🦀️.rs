@@ -10,7 +10,7 @@ use semio_framework_plugin::PluginBuilder;
 semio_framework_dispatch_macros::dyn_enum_close! {
     /// 🗃️ Closed runtime app fleet for the declaration-owned sequence surfaces.
     pub enum SequenceApps: PluginApp {
-        Editor(VcsArtifactApp<EditorApp<crate::editor::sequence::SequencePlayApp>, semio_s_artifact_stdio_semio::SemioMembers>),
+        Editor(VcsArtifactApp<EditorApp<crate::editor::sequence::app::SequencePlayApp>, semio_s_artifact_stdio_semio::SemioMembers>),
         Viewer(VcsArtifactApp<ViewerApp<crate::viewer::sequence::SequenceViewer>, semio_s_artifact_stdio_semio::SemioMembers>),
     }
 }
@@ -33,7 +33,7 @@ pub fn plugin() -> Result<Plugin<SequenceApps>, PluginAssemblyError> {
         .version("0.1.0")
         .package_id("semio:sequence")
         .declare_artifact(crate::artifacts::sequence::artifact())
-        .editor_mutation_roster::<crate::editor::sequence::SequencePlayApp>()
+        .editor_mutation_roster::<crate::editor::sequence::app::SequencePlayApp>()
         .viewer_mutation_roster::<crate::viewer::sequence::SequenceViewer>()
         .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::sequence::artifact_kind().id })
         .execution(ExecutionMode::Isolated)

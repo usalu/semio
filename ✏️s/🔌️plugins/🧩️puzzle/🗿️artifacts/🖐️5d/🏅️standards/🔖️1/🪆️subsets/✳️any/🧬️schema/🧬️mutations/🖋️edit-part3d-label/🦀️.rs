@@ -1,6 +1,5 @@
 //! Puzzle5d mutation — `EditPart3dLabel`: replaces a part's 3D-projection authored display label.
 use crate::standards::v1::subsets::any::schema::diff::Puzzle5dDiff;
-use crate::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation;
 use crate::Puzzle5dSnapshot;
 
 //#region 🔖️Mutation
@@ -17,13 +16,16 @@ pub struct EditPart3dLabel {
     pub new_label: Option<String>,
 }
 
-impl protocol::MutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for EditPart3dLabel {
+impl<Op> protocol::MutationKind<Puzzle5dSnapshot, Op> for EditPart3dLabel
+where
+    Op: protocol::Mutation<Puzzle5dSnapshot, Diff = Puzzle5dDiff> + From<EditPart3dLabel>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "edit", entity: "part", kind: "edit-part3d-label", record: "EditedPart3dLabel" };
 
     fn diff(&self, base: &Puzzle5dSnapshot) -> protocol::MutationOutcome<Puzzle5dDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Puzzle5dSnapshot) -> Result<Vec<Puzzle5dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Puzzle5dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     
@@ -39,6 +41,9 @@ impl protocol::MutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for EditPart3dLa
 //#endregion 🔖️Mutation
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn edit_part_3d_label(id: String, new_label: Option<String>) -> Puzzle5dMutation {
-    Puzzle5dMutation::EditPart3dLabel(EditPart3dLabel { id, new_label })
+pub fn edit_part_3d_label<Op>(id: String, new_label: Option<String>) -> Op
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::edit_part_3d_label::EditPart3dLabel>,
+{
+    Op::from(EditPart3dLabel { id, new_label })
 }

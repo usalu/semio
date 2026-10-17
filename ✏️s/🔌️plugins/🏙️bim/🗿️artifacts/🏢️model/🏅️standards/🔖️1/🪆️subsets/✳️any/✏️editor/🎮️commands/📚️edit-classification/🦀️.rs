@@ -2,7 +2,7 @@
 //! one that has no children. The edit is a pure function of the table ([`apply`]) and becomes one `set-classification-system` mutation that decides whether the result stands.
 
 use crate::editor::bim::kit::fault;
-use crate::editor::bim::BimDispatchCtx;
+use crate::editor::bim::dispatch_context::BimDispatchCtx;
 use crate::standards::v1::subsets::any::schema::mutations::set_classification_system::SetClassificationSystem;
 use crate::standards::v1::subsets::any::schema::{snapshot::{ClassificationItem, ModelSnapshot}, diff::patches::ClassificationSystemPatch, mutations::ModelMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};

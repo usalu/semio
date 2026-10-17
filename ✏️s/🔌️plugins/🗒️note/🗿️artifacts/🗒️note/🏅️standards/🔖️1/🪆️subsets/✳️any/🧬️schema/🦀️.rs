@@ -493,13 +493,347 @@ pub type Construction = semio_framework_plugin::app::SnapshotBuilder<crate::Note
 //#endregion 🏗️Construction
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
+
+//#region 🔖️Helpers
+/// 🔢️ A history label's number, `(en, de)`: two decimals at most, trailing zeros trimmed, a German decimal comma.
+pub fn note_label_number(value: f64) -> (String, String) {
+    let rounded = (value * 100.0).round() / 100.0;
+    let en = format!("{:.2}", if rounded == 0.0 { 0.0 } else { rounded }).trim_end_matches('0').trim_end_matches('.').to_string();
+    let de = en.replace('.', ",");
+    (en, de)
+}
+
+/// 🎚️ A document-setting history label from the setting's `(en, de)` name: "Change grid spacing to 20" / "Rasterabstand auf
+/// 20 ändern" for a value, "Reset grid spacing" / "Rasterabstand zurücksetzen" for `None` (the default applies again).
+pub fn note_setting_label(setting: (&str, &str), value: Option<(String, String)>) -> semio_framework_ui_locale::LocalizedLabel {
+    match value {
+        Some((en, de)) => semio_framework_ui_locale::LocalizedLabel::native(&format!("Change {} to {en}", setting.0), &format!("{} auf {de} ändern", setting.1)),
+        None => semio_framework_ui_locale::LocalizedLabel::native(&format!("Reset {}", setting.0), &format!("{} zurücksetzen", setting.1)),
+    }
+}
+//#endregion 🔖️Helpers
 
 //#region 🔁️Re-exports
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
 pub use crate::NoteBlockNode;
 pub use crate::NoteImageAsset;
 //#endregion 🔁️Re-exports
+
+//#region 🧩️ArtifactItems4
+pub mod artifact_items_4 {
+use semio_framework_value_derive::{FromValue, ToValue};
+use semio_s_artifact_stdio_semio_text_model::schema::snapshot::SemioTextMark;
+use semio_s_artifact_stdio_semio_text_model::schema::snapshot::SemioTextMarkKind;
+use semio_s_artifact_stdio_semio_text_model::schema::snapshot::SemioTextRun;
+use semio_s_artifact_stdio_semio_text_model::schema::snapshot::SemioTextSnapshot;
+use semio_s_artifact_stdio_semio_text_model::schema::snapshot::STDIO_SEMIOTEXT_DOCUMENT_SCHEMA;
+use serde::{Deserialize, Serialize};
+pub use crate::standards::v1::subsets::any::schema;
+
+//#region 🔖️Domain
+pub const NOTE_DOCUMENT_SCHEMA: &str = "note.document";
+
+/// 🎥️ Camera pose — persisted by the exact composite-window configuration owner, never in
+/// `NoteSnapshot` or app-wide configuration, so two open canvases retain independent poses.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
+pub struct NoteCamera {
+    #[serde(default)]
+    #[value(default)]
+    pub x: f64,
+    #[serde(default)]
+    #[value(default)]
+    pub y: f64,
+    #[serde(default = "default_zoom")]
+    #[value(default = "default_zoom")]
+    pub zoom: f64,
+}
+
+impl Default for NoteCamera {
+    fn default() -> Self {
+        Self { x: 0.0, y: 0.0, zoom: 1.0 }
+    }
+}
+
+pub fn default_zoom() -> f64 {
+    1.0
+}
+
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[value(tag = "kind", rename_all = "camelCase")]
+pub enum NoteBlockNode {
+    #[value(rename = "text", rename_all = "camelCase")]
+    Text {
+        id: String,
+        name: String,
+        x: f64,
+        y: f64,
+        width: f64,
+        height: f64,
+        #[value(default)]
+        rotation: f64,
+        #[value(default = "default_true")]
+        visible: bool,
+        #[value(default)]
+        locked: bool,
+        /// ✏️ Composed content — ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` (`note→C:text`):
+        /// replaces the former inline `paragraphs: Vec<NoteTextParagraph>` (which duplicated stdio's
+        /// `s.stdio.semio.text` run/mark shape) with a content-addressed handle onto that composed
+        /// subset. See this file's `🔖️TextBridge`/`🔖️TextChildren` regions for the
+        /// converter and durable child-record accessor.
+        content: NoteTextChild,
+        font_size: f64,
+        font_weight: String,
+        align: String,
+    },
+    #[value(rename = "image", rename_all = "camelCase")]
+    Image {
+        id: String,
+        name: String,
+        x: f64,
+        y: f64,
+        width: f64,
+        height: f64,
+        #[value(default)]
+        rotation: f64,
+        #[value(default = "default_true")]
+        visible: bool,
+        #[value(default)]
+        locked: bool,
+        image_key: String,
+    },
+    #[value(rename = "table", rename_all = "camelCase")]
+    Table {
+        id: String,
+        name: String,
+        x: f64,
+        y: f64,
+        width: f64,
+        height: f64,
+        #[value(default)]
+        rotation: f64,
+        #[value(default = "default_true")]
+        visible: bool,
+        #[value(default)]
+        locked: bool,
+        columns: Vec<String>,
+        rows: Vec<Vec<NoteTableCell>>,
+    },
+    #[value(rename = "math", rename_all = "camelCase")]
+    Math {
+        id: String,
+        name: String,
+        x: f64,
+        y: f64,
+        width: f64,
+        height: f64,
+        #[value(default)]
+        rotation: f64,
+        #[value(default = "default_true")]
+        visible: bool,
+        #[value(default)]
+        locked: bool,
+        #[dsl(lang = "tex")]
+        tex: String,
+        display_mode: bool,
+    },
+    #[value(rename = "stroke", rename_all = "camelCase")]
+    #[dsl(key = "stroke")]
+    Ink {
+        id: String,
+        name: String,
+        x: f64,
+        y: f64,
+        width: f64,
+        height: f64,
+        #[value(default)]
+        rotation: f64,
+        #[value(default = "default_true")]
+        visible: bool,
+        #[value(default)]
+        locked: bool,
+        points: Vec<[f64; 2]>,
+        stroke_width: f64,
+        color: [f64; 4],
+    },
+    #[value(rename = "group", rename_all = "camelCase")]
+    Group {
+        id: String,
+        name: String,
+        x: f64,
+        y: f64,
+        width: f64,
+        height: f64,
+        #[value(default)]
+        rotation: f64,
+        #[value(default = "default_true")]
+        visible: bool,
+        #[value(default)]
+        locked: bool,
+        #[dsl(statements, block)]
+        children: Vec<NoteBlockNode>,
+    },
+}
+
+//#region 🔖️ComposedTypes
+/// 🕸️ Snapshot-owned text child record. The handle preserves composition identity while the bounded
+/// paragraph records are durable authority that survives reopen and worker migration.
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[value(rename_all = "camelCase")]
+pub struct NoteTextChild {
+    pub handle: store::os_store::artifact_child::ArtifactChild<SemioTextSnapshot>,
+    #[value(default)]
+    pub paragraphs: Vec<NoteTextParagraph>,
+}
+//#endregion 🔖️ComposedTypes
+
+//#region 🔖️TextBridge
+/// 🌉 REAL bidirectional converter between one `NoteBlockNode::Text`'s paragraph/run working
+/// representation and the composed child's own `SemioTextSnapshot` (a flat run list — no paragraph
+/// grouping). Paragraph boundaries are honestly lossy in one edge case, documented here rather than
+/// silently dropped: a boundary is represented as a marks-free, language-free run whose `content` is
+/// exactly `"\n"`; this collapses "zero paragraphs" and "one paragraph containing zero runs" onto the
+/// same single empty paragraph on the way back (both are legitimate "no text yet" states,
+/// indistinguishable once flattened — [`paragraphs_from_text_snapshot`] always emits a trailing
+/// paragraph for whatever ran since the last separator, even an empty one). `NoteTextRun.underline`
+/// has no equivalent mark in stdio's closed
+/// bold/italic/code/link vocabulary and is dropped on the way in — real, honestly-lossy, not fabricated.
+pub fn text_snapshot_from_paragraphs(paragraphs: &[NoteTextParagraph]) -> SemioTextSnapshot {
+    let mut runs = Vec::new();
+    for (index, paragraph) in paragraphs.iter().enumerate() {
+        if index > 0 {
+            runs.push(SemioTextRun { language: String::new(), content: "\n".into(), marks: Vec::new() });
+        }
+        for run in &paragraph.runs {
+            let mut marks = Vec::new();
+            if run.bold == Some(true) {
+                marks.push(SemioTextMark { kind: SemioTextMarkKind::Bold, href: String::new() });
+            }
+            if run.italic == Some(true) {
+                marks.push(SemioTextMark { kind: SemioTextMarkKind::Italic, href: String::new() });
+            }
+            if let Some(href) = &run.link {
+                marks.push(SemioTextMark { kind: SemioTextMarkKind::Link, href: href.clone() });
+            }
+            runs.push(SemioTextRun { language: String::new(), content: run.text.clone(), marks });
+        }
+    }
+    SemioTextSnapshot { schema: STDIO_SEMIOTEXT_DOCUMENT_SCHEMA.into(), runs }
+}
+
+/// 🌉 Inverse of [`text_snapshot_from_paragraphs`] — splits the flat run list back into paragraphs on
+/// every marks-free/language-free `"\n"` separator run. See that function's doc comment for the one
+/// honestly-lossy edge case (empty paragraph list vs. one paragraph with zero runs).
+pub fn paragraphs_from_text_snapshot(snapshot: &SemioTextSnapshot) -> Vec<NoteTextParagraph> {
+    let mut paragraphs = Vec::new();
+    let mut current = Vec::new();
+    for run in &snapshot.runs {
+        if run.content == "\n" && run.marks.is_empty() && run.language.is_empty() {
+            paragraphs.push(NoteTextParagraph { runs: std::mem::take(&mut current) });
+            continue;
+        }
+        let bold = run.marks.iter().any(|mark| mark.kind == SemioTextMarkKind::Bold).then_some(true);
+        let italic = run.marks.iter().any(|mark| mark.kind == SemioTextMarkKind::Italic).then_some(true);
+        let link = run.marks.iter().find(|mark| mark.kind == SemioTextMarkKind::Link).map(|mark| mark.href.clone());
+        current.push(NoteTextRun { text: run.content.clone(), bold, italic, underline: None, link });
+    }
+    paragraphs.push(NoteTextParagraph { runs: current });
+    paragraphs
+}
+
+/// 🕸️ Deterministic content-addressed CHILD handle for one text block's composed content — same
+/// `(child_id, target)` for identical `(block_id, paragraphs)`, a different pair once either changes;
+/// mirrors writer's `document_child_handle`/cad's `cad_model_child_handle`, keyed by `block_id` (not
+/// content alone) so two distinct blocks never collide on the same child slot.
+pub fn note_text_child_handle(block_id: &str, paragraphs: &[NoteTextParagraph]) -> NoteTextChild {
+    let content_json = serde_json::to_string(paragraphs).unwrap_or_default();
+    let child_id = store::content_id("note-text", format!("{block_id}\u{1f}{content_json}").as_bytes());
+    let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "text".into() };
+    let target = semio_framework_artifact_reference::ArtifactRef { artifact_id: format!("{block_id}-text"), dialect };
+    NoteTextChild { handle: store::os_store::artifact_child::ArtifactChild::new(child_id, target), paragraphs: paragraphs.to_vec() }
+}
+//#endregion 🔖️TextBridge
+
+//#region 🔖️TextChildren
+/// 🔎 Reads the durable paragraphs owned by the text-child record.
+pub fn note_block_text(handle: &NoteTextChild) -> Vec<NoteTextParagraph> {
+    handle.paragraphs.clone()
+}
+
+/// 🏗️ Mints a new content-addressed handle and stores its paragraphs in the same snapshot-owned
+/// record used by mutation-diff, fixture, and converter builders.
+pub fn note_text_child_record(block_id: &str, paragraphs: &[NoteTextParagraph]) -> NoteTextChild {
+    note_text_child_handle(block_id, paragraphs)
+}
+//#endregion 🔖️TextChildren
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
+#[dsl(keyword = "r")]
+pub struct NoteTextRun {
+    #[dsl(positional)]
+    pub text: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub bold: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub italic: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub underline: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub link: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
+#[dsl(keyword = "p")]
+pub struct NoteTextParagraph {
+    pub runs: Vec<NoteTextRun>,
+}
+
+pub fn default_true() -> bool {
+    true
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+pub struct NoteTableCell {
+    #[dsl(positional)]
+    pub content: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
+pub struct NoteImageAsset {
+    pub mime: String,
+    pub data: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub width: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub height: Option<f64>,
+}
+
+pub use crate::schema::diff::NoteDiff;
+pub use crate::schema::mutations::NoteMutation;
+pub use crate::schema::snapshot::NoteSnapshot;
+
+//#endregion 🔖️Domain
+}
+//#endregion 🧩️ArtifactItems4

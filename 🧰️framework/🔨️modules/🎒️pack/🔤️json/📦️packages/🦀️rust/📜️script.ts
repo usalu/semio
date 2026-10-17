@@ -7,7 +7,7 @@ import { receiveScriptProcessInvocation } from "../../../../🏃️process/📦�
 import { resolve } from "node:path";
 import { BundleScript, ScriptRouter } from "../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { advanceScriptInvocation } from "../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { admitJsonReadSourceOwner } from "../../📥️decode/🧪️testing/📥️invocation/🟦️.ts";
+import { admitJsonReadSourceOwner } from "../../📥️decode/📦️packages/🟦️typescript/🧪️testing/📥️invocation/🟦️.ts";
 import { runScriptMain } from "../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runBudgetedTestCommand } from "../../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts";
 import { readCargoTestPolicyV1 } from "../../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";

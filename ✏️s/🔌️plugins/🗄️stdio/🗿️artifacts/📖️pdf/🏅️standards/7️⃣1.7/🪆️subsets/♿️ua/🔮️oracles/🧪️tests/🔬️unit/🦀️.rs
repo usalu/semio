@@ -1,10 +1,6 @@
 
 use super::*;
-
-/// 🧫️ The real committed document this subset's case runs on, read where the artifact already
-/// keeps it — a 6.3 MB, 65-page LaTeX bachelor thesis with 3,189 indirect objects and 23
-/// `/FontDescriptor` objects, every one of them carrying an embedded font program.
-const FIXTURE: &[u8] = include_bytes!("../../../../🧱️base/🖼️assets/🎓️bachelor-thesis/🎓️bachelor-thesis.pdf");
+use semio_framework_test_fixtures::fixture_bytes;
 
 fn json_object(pairs: Vec<(&str, Json)>) -> Json {
     Json::Object(pairs.into_iter().map(|(key, value)| (key.to_string(), value)).collect())
@@ -33,8 +29,11 @@ fn spec(kind: &str) -> Json {
     json_object(vec![("kind", Json::String(kind.to_string())), ("params", params_for(kind))])
 }
 
+/// 🧫️ The real committed document this subset's case runs on, read where the artifact already
+/// keeps it — a 6.3 MB, 65-page LaTeX bachelor thesis with 3,189 indirect objects and 23
+/// `/FontDescriptor` objects, every one of them carrying an embedded font program.
 fn fixture() -> Vec<u8> {
-    FIXTURE.to_vec()
+    fixture_bytes!("../../../🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🖼️assets/🎓️bachelor-thesis/🎓️bachelor-thesis.pdf").to_vec()
 }
 
 #[test]

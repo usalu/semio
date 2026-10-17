@@ -4,10 +4,11 @@
 //! `IfcDistributionSystem` with its predefined type) that groups the segments and the terminals (components with a system) of that service with `IfcRelAssignsToGroup` and serves the buildings they stand in.
 //! 📎 <https://standards.buildingsmart.org/IFC/RELEASE/IFC4/ADD2_TC1/HTML/schema/ifcsharedbldgserviceelements/lexical/ifcflowsegment.htm>
 
-use super::brep::{body_kind, mesh_item, mesh_where};
-use super::data::{label, property_set};
-use super::writer::{en, opt_text, refs, rf, unset, V};
-use super::{Export, Quantity};
+use crate::standards::v1::subsets::any::io::export::ifc::brep::{body_kind, mesh_item, mesh_where};
+use crate::standards::v1::subsets::any::io::export::ifc::data::{property_set};
+use crate::standards::v1::subsets::any::io::export::ifc::writer::label;
+use crate::standards::v1::subsets::any::io::export::ifc::writer::{en, opt_text, refs, rf, unset, V};
+use crate::standards::v1::subsets::any::io::export::ifc::context::{Export, Quantity};
 use crate::standards::v1::subsets::any::schema::inferences::mep::{key, MepSectionKind};
 use crate::standards::v1::subsets::any::schema::snapshot::{MepSystem, MepShape};
 use std::collections::{BTreeMap, BTreeSet};

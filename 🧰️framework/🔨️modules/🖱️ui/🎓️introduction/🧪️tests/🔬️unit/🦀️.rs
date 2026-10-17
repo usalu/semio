@@ -19,5 +19,4 @@ fn shared_introduction_cases_preserve_every_required_fact() {
         });
         assert_eq!(actual, row["expected"].as_bool().expect("expected eligibility"), "{}", row["id"].as_str().expect("case identity"));
     }
-    println!("[DEBUG] neutral introduction: 130 shared vectors");
 }

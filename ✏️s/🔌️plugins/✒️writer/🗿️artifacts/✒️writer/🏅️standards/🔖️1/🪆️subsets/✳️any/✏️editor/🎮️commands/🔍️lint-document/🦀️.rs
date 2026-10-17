@@ -14,7 +14,4 @@ pub fn handle(_payload: &LintDocument, _doc: &ArtifactView<'_, WriterSnapshot>, 
 }
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

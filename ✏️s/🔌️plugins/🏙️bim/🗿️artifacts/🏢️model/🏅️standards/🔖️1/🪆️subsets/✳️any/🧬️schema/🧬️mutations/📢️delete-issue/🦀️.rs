@@ -8,13 +8,4 @@ pub mod diff;
 #[path = "↩️inverse/🦀️.rs"]
 pub mod inverse;
 pub use component::*;
-#[cfg(test)]
-#[path = "🧪️tests/✅️cascades-its-comments/🦀️.rs"]
-mod tests_cascades_its_comments;
-#[cfg(test)]
-#[path = "🧪️tests/🧲️removes-an-issue-without-comments/🦀️.rs"]
-mod tests_removes_an_issue_without_comments;
-#[cfg(test)]
-#[path = "🧪️tests/🧵️missing/🦀️.rs"]
-mod tests_missing;
 //#endregion 🔖️Leaves

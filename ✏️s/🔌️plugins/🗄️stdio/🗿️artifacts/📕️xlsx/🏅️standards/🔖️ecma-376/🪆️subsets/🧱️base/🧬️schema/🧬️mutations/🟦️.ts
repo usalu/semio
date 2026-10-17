@@ -1,5 +1,5 @@
 import type { XlsxCellValue, XlsxSheet } from '../📸️snapshot/🟦️.ts';
-import type { XmlAttr, XmlDocument, XmlNode } from '../../../../../../../📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🟦️.ts';
+import type { XmlAttr, XmlDocument, XmlNode } from '@semio-tech/stdio-xml/standards/1.0/subsets/base/schema/snapshot';
 export type { XlsxCellAddress } from './🧭️cell-address/🟦️.ts';
 export type { XlsxCellVacancyAddress, XlsxWorksheetAddress } from './🧭️cell-vacancy-address/🟦️.ts';
 import type { XlsxCellAddress } from './🧭️cell-address/🟦️.ts';

@@ -7,7 +7,11 @@
     "cases",
     "metadata",
     "commands",
-    "reads"
+    "reads",
+    "dispatches",
+    "windowsMetadata",
+    "windowsCandidates",
+    "observerChecks"
   ],
   "properties": {
     "version": {
@@ -192,6 +196,178 @@
           },
           "unresolved": {
             "type": "boolean"
+          }
+        }
+      }
+    },
+    "dispatches": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "platform",
+          "initialState",
+          "fault",
+          "admit",
+          "count"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "platform": {
+            "enum": [
+              "darwin",
+              "linux",
+              "win32"
+            ]
+          },
+          "initialState": {
+            "enum": [
+              "mounted",
+              "inactive"
+            ]
+          },
+          "fault": {
+            "enum": [
+              "none",
+              "reorder",
+              "exhausted",
+              "pending"
+            ]
+          },
+          "admit": {
+            "type": "boolean"
+          },
+          "count": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 8
+          }
+        }
+      }
+    },
+    "windowsMetadata": {
+      "type": "array",
+      "minItems": 8,
+      "maxItems": 8,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "action",
+          "fault",
+          "admit"
+        ],
+        "properties": {
+          "action": {
+            "enum": [
+              "pending",
+              "published",
+              "settled"
+            ]
+          },
+          "fault": {
+            "enum": [
+              "none",
+              "order",
+              "cancel",
+              "receipt",
+              "undefined",
+              "frozen"
+            ]
+          },
+          "admit": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "windowsCandidates": {
+      "type": "array",
+      "minItems": 8,
+      "maxItems": 8,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "initialState",
+          "fault",
+          "admit"
+        ],
+        "properties": {
+          "initialState": {
+            "enum": [
+              "mounted",
+              "inactive"
+            ]
+          },
+          "fault": {
+            "enum": [
+              "none",
+              "pending",
+              "published",
+              "settled"
+            ]
+          },
+          "admit": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "observerChecks": {
+      "type": "array",
+      "minItems": 20,
+      "maxItems": 20,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "fault",
+          "admit",
+          "parents",
+          "observations",
+          "stats"
+        ],
+        "properties": {
+          "fault": {
+            "enum": [
+              "none",
+              "phase-cancel",
+              "writer",
+              "ancestor-0",
+              "ancestor-1",
+              "ancestor-2",
+              "ancestor-file",
+              "ancestor-symlink",
+              "folder-cas",
+              "backing-dev",
+              "backing-ino",
+              "backing-size",
+              "backing-allocation",
+              "backing-links",
+              "backing-file",
+              "backing-symlink",
+              "root-dev",
+              "root-ino",
+              "root-file",
+              "root-symlink"
+            ]
+          },
+          "admit": {
+            "type": "boolean"
+          },
+          "parents": {
+            "const": 3
+          },
+          "observations": {
+            "const": 3
+          },
+          "stats": {
+            "const": 18
           }
         }
       }

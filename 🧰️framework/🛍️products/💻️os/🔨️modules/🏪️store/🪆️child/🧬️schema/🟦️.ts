@@ -3,11 +3,12 @@ import { hexLower, sha256 } from "@semio-tech/framework/hash";
 import { parseArtifactRef, type ArtifactRef } from "@semio-tech/schema-ts/artifact-reference";
 export interface ArtifactChild { childId: string; target: ArtifactRef }
 
-/** 🪆️ Decodes only the two fields that cross a child-document boundary. */
-export function parseArtifactChild(value: unknown): ArtifactChild {
-  if (value === null || typeof value !== "object" || Array.isArray(value)) throw new Error("artifact child must be an object");
+/** 🪆️ Decodes only the two fields that cross a child-document boundary; `at` names the instance position a refusal reports (the root position `$` adds nothing). */
+export function parseArtifactChild(value: unknown, at = "$"): ArtifactChild {
+  const where = at === "$" ? "" : `${at}: `;
+  if (value === null || typeof value !== "object" || Array.isArray(value)) throw new Error(`${where}artifact child must be an object`);
   const row = value as Record<string, unknown>;
-  if (Object.keys(row).length !== 2 || !Object.hasOwn(row, "childId") || !Object.hasOwn(row, "target") || typeof row.childId !== "string") throw new Error("artifact child requires exactly childId and target");
+  if (Object.keys(row).length !== 2 || !Object.hasOwn(row, "childId") || !Object.hasOwn(row, "target") || typeof row.childId !== "string") throw new Error(`${where}artifact child requires exactly childId and target`);
   return { childId: row.childId, target: parseArtifactRef(row.target) };
 }
 

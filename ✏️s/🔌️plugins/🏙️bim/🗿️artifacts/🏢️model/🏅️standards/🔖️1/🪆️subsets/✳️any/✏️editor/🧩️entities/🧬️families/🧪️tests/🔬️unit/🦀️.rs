@@ -1,4 +1,7 @@
-use super::*;
+use super::{FAMILY_INFERRED, FAMILY_SOLID_INFERRED, create_family, create_family_solid};
+use crate::editor::bim::entities::InferredRow;
+use crate::standards::v1::subsets::any::schema::snapshot::{FamilyCategory, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::mutations::ModelMutation;
 use protocol::Inference;
 use crate::editor::bim::entities::{kind_of, kind_holding};
 use crate::standards::v1::subsets::any::schema::inferences::ModelInference;

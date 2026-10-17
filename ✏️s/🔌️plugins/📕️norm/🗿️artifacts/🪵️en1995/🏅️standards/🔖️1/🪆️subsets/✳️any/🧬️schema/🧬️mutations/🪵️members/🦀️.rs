@@ -13,20 +13,12 @@ extern crate semio_framework_value_derive as value_derive;
 pub mod change_annex;
 #[path = "../🔥️change-member-fire-duration/🦀️.rs"]
 pub mod change_member_fire_duration;
-#[path = "../🏷️change-member-label-de/🦀️.rs"]
-pub mod change_member_label_de;
 #[path = "../🏷️change-member-label-en/🦀️.rs"]
 pub mod change_member_label_en;
-#[path = "../🎯️change-member-role/🦀️.rs"]
-pub mod change_member_role;
 #[path = "../🌧️change-member-service-class/🦀️.rs"]
 pub mod change_member_service_class;
-#[path = "../🛡️change-member-strength-class/🦀️.rs"]
-pub mod change_member_strength_class;
 #[path = "../📍️change-member-support/🦀️.rs"]
 pub mod change_member_support;
-#[path = "../➕️insert-member/🦀️.rs"]
-pub mod insert_member;
-#[path = "../➖️remove-member/🦀️.rs"]
-pub mod remove_member;
 //#endregion 🪢️Mounts
+
+pub use semio_s_artifact_norm_en1995_mut_members_2::{change_member_label_de, change_member_role, change_member_strength_class, insert_member, remove_member};

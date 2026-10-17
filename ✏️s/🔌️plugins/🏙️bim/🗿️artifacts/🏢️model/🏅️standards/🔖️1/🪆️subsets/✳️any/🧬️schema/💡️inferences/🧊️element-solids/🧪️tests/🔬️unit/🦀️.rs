@@ -3,6 +3,7 @@ use super::*;
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::{kinds, plan, ModelInferenceSession, ModelNode};
 use crate::standards::v1::subsets::any::schema::{diff::{Entry, patches::{MaterialPatch, StoreyPatch}, ModelDiff}, snapshot::TopConstraint};
 use semio_framework_geometry::placement::ZPlane;
+use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_element_solids;
 
 fn square_prism(side: f64, height: f64) -> TriMesh {
     semio_framework_geometry::mesh::extrude(&[Point::new(0.0, 0.0), Point::new(side, 0.0), Point::new(side, side), Point::new(0.0, side)], &[], ZPlane::flat(0.0), ZPlane::flat(height))

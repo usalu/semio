@@ -1,4 +1,5 @@
-use super::super::{TxnDiff, TxnMutation, TxnSnapshot};
+use crate::testing_laws_unit_1::mutation_fixture::transaction::{TxnDiff, TxnSnapshot};
+use crate::testing_laws_unit_1::mutation_fixture::transaction::mutations::TxnMutation;
 use protocol::{MutationKind, MutationOutcome, OpBinary, OpText, ProtocolError, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 #[derive(semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, ToValue, FromValue, dsl::MutationLeaf)]
@@ -9,8 +10,8 @@ pub(crate) struct SetTransactionCount {
     pub value: i32,
 }
 impl SetTransactionCount {
-    const OPCODE: &'static str = "set-transaction-count";
-    const TAG: u8 = 0x62;
+    pub const OPCODE: &'static str = "set-transaction-count";
+    pub const TAG: u8 = 0x62;
 }
 impl OpText for SetTransactionCount {
     fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {

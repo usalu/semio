@@ -7,7 +7,7 @@ use semio_framework_actor::{ActorId, Envelope, JobCheckpoint, JobOperation, JobP
 use semio_framework_plugin_host_shard::{AdmissionLimit, CancelCursor, DeferredAuthority, FixedOwnerRing, IssuedShardTurn, JOB_REPLAY_ABI_BYTES, JOB_REPLAY_KIND_PAGE_CAPACITY, JOB_REPLAY_SEED_PAGES, JOB_REPLAY_SEED_PAGE_BYTES, JobAuthority, MountedReplaySeed, ReplaySeedCloseReason, ReplaySeedPhase, ReplaySpawnRefusal, SHARD_DEFERRED_ITEMS, ShardDrive, ShardFrame, ShardLoop, ShardOutcome, ShardTransports, TerminalFrameOverflow, split_frame_credit, to_actor_turn_result, try_replay_abi_buffer, turn_events};
 use std::sync::Arc;
 use semio_framework::kernel::{Budget, Effect, Event, JobPlacement, RequestOutcome, TurnResult};
-use semio_framework_plugin_host_guest_runtime::{GuestInstanceState, GuestRuntimes, PackageRef};
+use semio_framework_plugin_host_guest_runtime::{GuestInstanceState, GuestRuntime, GuestRuntimes, PackageRef};
 use std::collections::HashMap;
 use semio_framework_plugin_guest_contract::{JobStep, PluginHostError};
 use std::sync::atomic::Ordering;
@@ -26,7 +26,7 @@ async fn issued_shard_batch_has_one_original_ledger_and_one_terminal_return(){
   let accepted=turn.settle_envelope(index,receipt).unwrap();original=semio_framework_actor::RetainedTurnInput{grant:receipt.remaining,..issued};if let Some(whole)=accepted{completions+=1;assert_eq!(index+1,law["envelopes"].as_u64().unwrap()as usize);whole.validate_for(input).unwrap();assert_eq!(serde_json::to_value(whole.remaining).unwrap(),law["remaining"])}else{assert!(index+1<law["envelopes"].as_u64().unwrap()as usize)}
   let(duplicate,physical)=semio_framework_trace::observe_heap_allocations_on_this_thread(||turn.settle_envelope(index,receipt));assert_eq!(serde_json::to_value(duplicate.is_err()).unwrap(),law["duplicateRefused"]);assert_eq!(serde_json::to_value([physical.requested_bytes,physical.released_bytes]).unwrap(),law["refusalHeap"]);
  }
- assert_eq!(serde_json::to_value(completions).unwrap(),law["completionCount"]);assert!(turn.issue_envelope(3).is_err());eprintln!("[DEBUG] Actual issued Shard batch original71/3/19 three envelope loans preserve remaining all5axes forged/duplicate heap0 one final original return no per-envelope renewal");
+ assert_eq!(serde_json::to_value(completions).unwrap(),law["completionCount"]);assert!(turn.issue_envelope(3).is_err());
 }
 
 #[semio_framework_async_macros::async_test]
@@ -52,7 +52,6 @@ async fn shard_grant_transports_original_retained_authority_independently_of_sca
     assert_eq!(decoded_retained, original);
     assert_eq!(decoded_budget, budget);
     assert_eq!(cursor, bytes.len());
-    eprintln!("[DEBUG] Actual ShardFrame original71/3/19 all5currencies independent of eighth scheduling scale same Pack backing zero heap encode/decode");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -62,7 +61,6 @@ async fn shard_grant_invalid_original_operation_preserves_wire_backing_without_h
     let mut bytes = Vec::with_capacity(256);bytes.extend_from_slice(&[11,13]);let pointer=bytes.as_ptr();let capacity=bytes.capacity();
     let(result,physical)=semio_framework_trace::observe_heap_allocations_on_this_thread(||semio_framework_async::poll::resolve_ready(frame.pack_encode(&mut bytes)));
     assert_eq!(result.unwrap_err(),semio_framework_actor::pack::PackError::InvalidRetainedTurn("operation identity is absent"));assert_eq!((physical.requested_bytes,physical.released_bytes),(0,0));assert_eq!(bytes.as_ptr(),pointer);assert_eq!(bytes.capacity(),capacity);assert_eq!(bytes,[11,13]);let ShardFrame::Grant{retained,..}=frame else{unreachable!()};assert_eq!(retained,original);
-    eprintln!("[DEBUG] Actual ShardFrame invalid original operation0 checked before tag/header/body write heap0; original71/3/19 grant and supplied wire backing unchanged");
 }
 
 /// 👶️ host-dedyn: every `ShardLoop::pump()`/`pump_primed()` call below is wrapped in
@@ -1637,7 +1635,6 @@ async fn original_host_dispatch_refusal_keeps_original_decision_and_typed_cause_
     assert_eq!(next.as_ref().unwrap().wake_at, Some(20));
     assert!(dispatch.finish().is_none());
     assert_eq!(dispatch.decision().unwrap().run.as_ptr(), pointer);
-    eprintln!("[DEBUG] Actual Host original Decision backing retained through typed checked frame refusal/retry, original epoch19/cursor0 wire unchanged heap0; no replacement Decision admitted");
 }
 
 #[test]
@@ -1648,7 +1645,7 @@ fn issued_shard_active_spans_shrink_the_original_services_recipient_before_envel
   let mut original=turn.envelope_recipient(index).unwrap();let progress=serde_json::from_value(spent.clone()).unwrap();let(child,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||{match index{0=>{source=Vec::with_capacity(128);source.extend_from_slice("文".as_bytes());},1=>{source.extend_from_slice(&[81;9]);drop(std::mem::take(&mut source));},_=>{}}ComputeRetainedRecipient::record_progress(&mut original,progress).unwrap();progress});assert_eq!((heap.requested_bytes,heap.released_bytes),(child.retained_capacity_bytes,child.released_bytes));assert_eq!(serde_json::to_value(ComputeRetainedRecipient::remaining_grant(&original).unwrap()).unwrap(),law["activeRemaining"][index]);assert_eq!(serde_json::to_value(original.parent_remaining_input().unwrap().grant).unwrap(),law["activeRemaining"][index]);
   if let Some(receipt)=original.finish().unwrap(){returned+=1;receipt.validate_for(input).unwrap();assert_eq!(serde_json::to_value(receipt.remaining).unwrap(),law["remaining"])}
  }
- assert_eq!(serde_json::to_value(returned).unwrap(),law["completionCount"]);assert_eq!(semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(source)).1.released_bytes,0);eprintln!("[DEBUG] Actual issued Shard services recipient original three physical spans birth128/copy3/copy9/release128 shrink active all5 remaining before envelope return, one final original receipt; independentSerde expected outputs");
+ assert_eq!(serde_json::to_value(returned).unwrap(),law["completionCount"]);assert_eq!(semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(source)).1.released_bytes,0);
 }
 
 #[test]
@@ -1656,5 +1653,4 @@ fn issued_shard_closed_services_recipient_cannot_checkout_or_spend_again(){
  use semio_framework_os_services::ComputeRetainedRecipient;
  let law:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../🔨️modules/🎭️actor/🎟️retained-turn/📦️batch/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let input=serde_json::from_value(law["input"].clone()).unwrap();let resources=semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Interactive);let mut turn=IssuedShardTurn::new(resources,input,1).unwrap();let mut original=turn.envelope_recipient(0).unwrap();let receipt=original.finish().unwrap().unwrap();receipt.validate_for(input).unwrap();let remaining=receipt.remaining;
  let(refused,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||(ComputeRetainedRecipient::remaining_grant(&original).is_err(),ComputeRetainedRecipient::record_progress(&mut original,Default::default()).is_err(),original.finish().is_err()));let expected=&law["closedRecipient"];assert_eq!(serde_json::to_value(refused).unwrap(),serde_json::json!([expected["grantRefused"],expected["recordRefused"],expected["finishRefused"]]));assert_eq!(serde_json::to_value([heap.requested_bytes,heap.released_bytes]).unwrap(),expected["heap"]);assert_eq!(serde_json::to_value(*original.original_input()==input).unwrap(),expected["sameOriginalIdentity"]);assert_eq!(receipt.remaining,remaining);assert_eq!(original.settled_progress(),Default::default());assert!(original.parent_remaining_input().is_err());
- eprintln!("[DEBUG] Actual issued Shard completed original Services recipient rejects remaining checkout, span and duplicatefinish heap0 while original identity/receipt and spent0 remain unchanged; independentSerde expected outputs");
 }

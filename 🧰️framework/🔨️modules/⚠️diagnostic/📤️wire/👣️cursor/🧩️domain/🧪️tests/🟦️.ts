@@ -19,5 +19,4 @@ test("Canonical Fault lends complete domain with exact original intrinsic u64 an
  const db=new Database(":memory:");try{expect(db.query("SELECT json_extract(?, '$.unsigned') AS operation,json_array_length(json_extract(?, '$.octets')) AS octets").get(JSON.stringify(law),JSON.stringify(law))).toEqual({operation:law.unsigned,octets:law.octets.length});}finally{db.close();}
  const source=readFileSync(resolve(root,"../🦀️.rs"),"utf8");expect(source).toContain("self.scalar.write_node(node)");expect(source).toContain("maximum_depth<demand.depth");expect(source).not.toContain("ScalarBytes::from_node");
  for(const value of [{kind:"null"},{kind:"array",items:[]},{kind:"text",value:"unowned JSON text"}]as IntrinsicValue[])await expect(decodeFaultDomainControlled(value,{...control,checkpoint:async()=>{},charge:async()=>{}})).rejects.toThrow("Fault.domain requires an original object projection");
- console.log("[DEBUG] actual TS Fault.domain borrows original projection/nested/bytes/u64max/i64min and receipt; finite codec alias32/2 plus Ajv/Buffer/SQLite oracle; native qualification remains separate");
 });

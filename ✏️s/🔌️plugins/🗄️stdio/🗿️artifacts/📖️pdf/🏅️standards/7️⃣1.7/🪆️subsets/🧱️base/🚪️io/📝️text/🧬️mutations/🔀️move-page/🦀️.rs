@@ -3,7 +3,7 @@
 pub const OPCODE: &str = "move-page";
 pub const TEXT_OPCODE: &str = OPCODE;
 
-use crate::standards::v1_7::subsets::base::schema::mutations::MovePage;
+use crate::standards::v1_7::subsets::base::schema::mutations::move_page::MovePage;
 
 /// 🖨️ Prints this direct payload through its schema-derived JSON representation.
 pub fn print(payload: &MovePage) -> Result<String, String> {

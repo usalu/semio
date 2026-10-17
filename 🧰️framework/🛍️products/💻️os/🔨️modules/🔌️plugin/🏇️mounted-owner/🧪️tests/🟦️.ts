@@ -45,16 +45,13 @@ test("portable mounted ownership schema agrees with strict independent Ajv",()=>
  const oracle=createMountedOwnerOracleV1();expect(fixture.vectors).toHaveLength(29);
  for(const vector of fixture.vectors){expect(validateJsonSchemaSubset(schema,vector.observation)).toEqual([]);expect(oracle.valid(vector.observation)).toBe(true);}
  for(const vector of fixture.invalid){expect(validateJsonSchemaSubset(schema,vector.observation).length).toBeGreaterThan(0);expect(oracle.valid(vector.observation)).toBe(false);}
- console.log("[DEBUG] Mounted turn schema: all29 observations including actual initial store generation0 and same canceled original close and eight malformed grants/identities/clocks agreed with strict Ajv");
 });
 test("all independent physical currencies and original scheduling ownership have portable oracle verdicts",()=>{
  const oracle=createMountedOwnerOracleV1();for(const vector of fixture.vectors)expect(oracle.verdict(vector.observation)).toBe(vector.expected);
- console.log("[DEBUG] Mounted ownership verdicts retained independent copy/capacity/release/depth, identity, cancellation, deadline, wake and terminal rules");
 });
 test("runtime policy requires all three explicit caller phase grants",()=>{
  const oracle=createMountedOwnerOracleV1(),policySchema={...schema,$ref:"#/$defs/MountedOwnerPolicyV1"};
  for(const vector of fixture.policies){expect(validateJsonSchemaSubset(policySchema,vector.value).length===0).toBe(vector.valid);expect(oracle.policy(vector.value)).toBe(vector.valid);}
- console.log("[DEBUG] Four portable caller policies agreed: explicit independent phases, explicit empty authority, missing phase and forbidden default");
 });
 test("portable mounted ownership nested job debits preserve the original scheduling owner",()=>{
  const oracle=createMountedNestedJobOracleV1();
@@ -67,14 +64,12 @@ test("portable mounted ownership nested job debits preserve the original schedul
   expect(oracle.receipt(receipt)).toBe(true);expect(validateJsonSchemaSubset(receiptSchema,receipt)).toEqual([]);
   expect(oracle.verdict(value)).toBe(vector.expected);expect(Math.max(0,value.schedule.fuel-value.usedFuel)).toBe(vector.expectedFuel);
  }
- console.log("[DEBUG] Eight nested job schema/output vectors agreed with strict Ajv and independently measured original scheduling debit");
 });
 test("actual native verdicts preserve every nested physical receipt and original scheduling debit",()=>{
  const path=process.env.SEMIO_MOUNTED_OWNER_NESTED_RESULTS;if(!path)throw Error("Nested mounted oracle requires an explicit native result artifact");
  expect(path.length<=256&&[...path].length<=256).toBe(true);
  const results:unknown=JSON.parse(readFileSync(path,"utf8")),oracle=createMountedNestedJobOracleV1();
  expect(results).toEqual(fixture.nestedJobs.map(vector=>({id:vector.id,actual:oracle.verdict(vector.observation),remainingFuel:Math.max(0,vector.observation.schedule.fuel-vector.observation.usedFuel)})));
- console.log("[DEBUG] All eight actual nested native verdicts and remaining original fuel agreed with strict independent Ajv");
 });
 test("actual native verdicts reproduce the complete strict independent mounted oracle",()=>{
  const path=process.env.SEMIO_MOUNTED_OWNER_RESULTS;if(!path)throw Error("Native mounted oracle requires an explicit result artifact");
@@ -82,7 +77,6 @@ test("actual native verdicts reproduce the complete strict independent mounted o
  const results:unknown=JSON.parse(readFileSync(path,"utf8"));
  const oracle=createMountedOwnerOracleV1(),expected=fixture.vectors.map(vector=>({id:vector.id,actual:oracle.verdict(vector.observation)}));
  expect(results).toEqual(expected);
- console.log("[DEBUG] All29 actual native mounted turn verdicts agreed with strict independent Ajv, including exact decimal-u64 identity and clocks");
 });
 test("actual runtime mounted receivers require caller policy and typed scheduling turn",()=>{
  const root=resolve(import.meta.dir,"../../../../../../.."),source=readFileSync(resolve(root,"🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs"),"utf8");
@@ -98,7 +92,6 @@ test("actual runtime mounted receivers require caller policy and typed schedulin
  expect(source.includes("fn create_app(&self, app_id: &str, actor: protocol::ActorId, mounted_policy: crate::MountedOwnerPolicyV1")).toBe(true);
  expect(source.includes("runtime_lifecycle_grant")).toBe(false);
  expect(source.includes("cx.is_cancelled()")).toBe(true);expect(source.includes("cx.deadline_exceeded()")).toBe(true);
- console.log("[DEBUG] Actual General mounted receiver source binding is explicit; native host/session runtime remains a separate required gate");
 });
 
 function mountedContextOracle() {
@@ -115,14 +108,12 @@ function mountedContextOracle() {
 
 test("all independent physical original context recipients agree with Ajv and SQLite",()=>{
  expect(mountedContextOracle()).toHaveLength(16);
- console.log("[DEBUG] Ajv/SQLite twelve original policy/context/preconsumed grant cases preserve five independent axes; four nested receipt cases require exact original child debit");
 });
 
 test("actual native verdicts preserve the original context recipient and reject repeated physical credits",()=>{
  const path=process.env.SEMIO_MOUNTED_OWNER_CONTEXT_RESULTS;if(!path)throw Error("Original context oracle requires an explicit native result artifact");
  expect(path.length<=256&&[...path].length<=256).toBe(true);
  expect(JSON.parse(readFileSync(path,"utf8"))).toEqual(mountedContextOracle());
- console.log("[DEBUG] All sixteen actual original context/native verdicts agree with independent Ajv/SQLite and exact caller remaining currency");
 });
 
 test("portable mounted ownership consumes the original context memory wallet once",()=>{
@@ -137,7 +128,6 @@ test("actual native verdicts preserve original mounted actor capture and full ph
  const ajv=new Ajv({strict:true,allErrors:true});const valid=ajv.compile({type:"array",minItems:3,maxItems:3,items:{type:"object",required:["id","textBytes","copyBytes","capacityBytes","releaseBytes","turns","births","releases","deniedHeapBytes","dropHeapBytes"],additionalProperties:false,properties:{id:{type:"string"},textBytes:{type:"integer",minimum:1,maximum:256},copyBytes:{type:"integer",minimum:1,maximum:law.nativeGrant[1]},capacityBytes:{type:"integer",minimum:1,maximum:law.nativeGrant[2]},releaseBytes:{const:0},turns:{type:"integer",minimum:1,maximum:999},births:{type:"integer",minimum:1},releases:{type:"integer",minimum:1},deniedHeapBytes:{const:0},dropHeapBytes:{const:0}}}});
  expect(valid(rows)).toBe(true);expect(rows.map(row=>row.id)).toEqual(law.cases.map((row:{id:string})=>row.id));
  const db=new Database(":memory:");try{db.run("CREATE TABLE actor(id TEXT,text INTEGER,copy INTEGER,capacity INTEGER,birth INTEGER,release INTEGER,denied INTEGER,terminal INTEGER)");for(const row of rows)db.query("INSERT INTO actor VALUES(?,?,?,?,?,?,?,?)").run(row.id,row.textBytes,row.copyBytes,row.capacityBytes,row.births,row.releases,row.deniedHeapBytes,row.dropHeapBytes);expect(db.query("SELECT count(*) AS n FROM actor WHERE birth=release AND denied=0 AND terminal=0 AND copy>text AND capacity>text").get()).toEqual({n:3});expect(db.query("SELECT count(distinct capacity-text) AS frames FROM actor").get()).toEqual({frames:1});}finally{db.close();}
- console.log("[DEBUG] Actual three native actor receipts and original cancellation heap outputs agree with independent strict Ajv/SQLite; original borrowed source and fixed caller grants retained");
 });
 
  test("runtime policy records the actual failed producer before refusing its mounted turn",()=>{
@@ -173,7 +163,6 @@ test("actual native verdicts preserve measured alias births and physical phase r
  const path=process.env.SEMIO_MOUNTED_OWNER_RESULTS;if(!path)throw Error("Original mounted results are required");const rows=JSON.parse(readFileSync(resolve(path,"../alias.json"),"utf8"))as {aliases:number;birth:number;release:number;arc:number;payload:number;shell:number;constructor:number;denied:number;terminal:number;sharedClosed:boolean}[];
  const schema={type:"array",minItems:3,maxItems:3,items:{type:"object",required:["aliases","birth","release","arc","payload","shell","constructor","denied","terminal","sharedClosed"],additionalProperties:false,properties:{aliases:{enum:[0,1,3]},birth:{type:"integer",minimum:1},release:{type:"integer",minimum:1},arc:{type:"integer",minimum:1},payload:{const:64},shell:{type:"integer",minimum:1},constructor:{const:0},denied:{const:0},terminal:{const:0},sharedClosed:{const:false}}}};expect(new Ajv({strict:true}).compile(schema)(rows)).toBe(true);
  const db=new Database(":memory:");try{db.run("CREATE TABLE receipt(birth INTEGER,release INTEGER,arc INTEGER,payload INTEGER,shell INTEGER)");for(const row of rows)db.query("INSERT INTO receipt VALUES(?,?,?,?,?)").run(row.birth,row.release,row.arc,row.payload,row.shell);expect(db.query("SELECT count(*) AS n FROM receipt WHERE birth=release AND release=arc+payload+shell").get()).toEqual({n:3});}finally{db.close();}
- console.log("[DEBUG] Actual three original alias custody laws agree with independent strict Ajv/SQLite: backing, same payload and shell each separately funded and released");
 });
 
 /** 🧾️ Independent scheduling vectors retain the original extension receipt at the actual turn boundary. */
@@ -188,7 +177,6 @@ test("runtime policy forwards original extension retirement currencies into the 
  expect(turn.includes("admit_retained_clone_progress(extension_grant, progress")).toBe(true);
  expect(turn.includes("semio_framework_diagnostic::FaultFrom::to_fault(&error)")).toBe(true);
  expect(turn.includes("extension_retirement_turn(usize::from")).toBe(false);
- console.log("[DEBUG] Independent strict mounted policy/Ajv/SQLite vectors preserve cumulative original currencies; actual extension-to-reactor source join retains the performed receipt, native whole Plugin remains required");
 });
 
 /** 🩹️ Independent original phase grants bind one cumulative recipient across reconcile continuations. */
@@ -202,5 +190,4 @@ test("runtime policy forwards one original cumulative reconcile recipient to all
  expect(patches.includes("StepBudget::new(1, u64::MAX)")).toBe(false);
  expect(turn.includes("runtime.mounted_owner_policy().maintenance")).toBe(true);
  expect(turn.includes("patches.drive_one(retained, retained_progress)")).toBe(true);
- console.log("[DEBUG] Strict original mounted policy/Ajv/SQLite vectors require one cumulative full-grant reconcile recipient; full original Plugin native laws remain independent");
 });

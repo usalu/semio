@@ -1,5 +1,7 @@
-use super::*;
-use crate::editor::sequence::unit_tests::context::{new_app, render as render_body};
+use semio_framework_plugin::UiText;
+use semio_framework_plugin::{FRAMEWORK_PANEL_TAB_ARTIFACT_ID, TreeWindows};
+use crate::editor::sequence::panels::document::{SEQUENCE_PLAY_BODY_ARTIFACT, definition, render};
+use crate::editor_unit_tests::context::{new_app, render as render_body};
 
 #[semio_framework_async_macros::async_test]
 async fn document_lists_steps() {

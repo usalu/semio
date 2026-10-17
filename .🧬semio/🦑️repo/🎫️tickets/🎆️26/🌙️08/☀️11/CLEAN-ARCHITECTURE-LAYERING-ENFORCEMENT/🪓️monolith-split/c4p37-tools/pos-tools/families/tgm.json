@@ -1,0 +1,23 @@
+{
+ "name": "tgm",
+ "crates": [
+  "semio-framework-tool-run",
+  "semio-framework-tool-machine",
+  "semio-framework-machine",
+  "semio-framework-graph-dsl",
+  "semio-framework-graph-engine",
+  "semio-framework-graph-layout-run"
+ ],
+ "base": {
+  "rev": "1bae6115bc5",
+  "crates": [
+   "semio-framework-tool-run",
+   "semio-framework-tool-machine",
+   "semio-framework-machine",
+   "semio-framework-graph-dsl",
+   "semio-framework-graph-engine",
+   "semio-framework-graph-layout-run"
+  ]
+ },
+ "note": "TOOL-GRAPH-MACHINE-SPLITS"
+}

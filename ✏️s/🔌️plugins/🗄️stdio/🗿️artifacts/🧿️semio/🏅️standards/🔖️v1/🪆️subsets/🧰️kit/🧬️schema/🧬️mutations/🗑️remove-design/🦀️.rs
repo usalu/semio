@@ -2,7 +2,6 @@
 //! Idempotent no-op if absent; inverse escrows the FULL design (via `add-design` + `edit-design`,
 //! a real 2-step inverse — `add-design` alone only creates an empty design).
 
-use crate::schema::mutations::SemioKitMutation;
 use crate::schema::snapshot::SemioKitSnapshot;
 
 //#region 🔖️Payload
@@ -13,13 +12,16 @@ pub struct RemoveDesign {
     pub id: String,
 }
 
-impl protocol::MutationKind<SemioKitSnapshot, SemioKitMutation> for RemoveDesign {
+impl<Op> protocol::MutationKind<SemioKitSnapshot, Op> for RemoveDesign
+where
+    Op: protocol::Mutation<SemioKitSnapshot, Diff = crate::schema::diff::SemioKitDiff> + From<RemoveDesign> + From<crate::schema::mutations::add_design::AddDesign> + From<crate::schema::mutations::edit_design::EditDesign>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "design", kind: "remove-design", record: "RemovedDesign" };
 
-    fn diff(&self, base: &SemioKitSnapshot) -> protocol::MutationOutcome<<SemioKitMutation as protocol::Mutation<SemioKitSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioKitSnapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<SemioKitSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &SemioKitSnapshot) -> Result<Vec<SemioKitMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &SemioKitSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

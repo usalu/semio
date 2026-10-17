@@ -48,5 +48,4 @@ test("Canvas path retirement preserves original capacities under canonical suppl
  expect(pop).toContain("grant.maximum_copy_bytes < copy");
  expect(pop.indexOf("grant.maximum_copy_bytes < copy")).toBeLessThan(pop.indexOf("self.elements.pop()"));
  expect(pop).toContain("copied_bytes: copy");
- console.log("[DEBUG] Canvas path canonical Grant/Shape per-value Ajv plus Buffer/RFC6902 whole original-capacity denial and cancellation-cut conservation; native pointer/Kurbo/System proof separate");
 });

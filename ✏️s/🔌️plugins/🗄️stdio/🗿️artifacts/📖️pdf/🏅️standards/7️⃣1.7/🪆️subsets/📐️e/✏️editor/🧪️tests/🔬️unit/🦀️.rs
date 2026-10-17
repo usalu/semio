@@ -1,4 +1,20 @@
-use super::*;
+use crate::editor::pdf17e::modes::edit::windows::main;
+use semio_framework_plugin::{ArtifactEditor, Editor};
+#[allow(unused_imports)]
+use crate::editor::pdf17e::modes::edit;
+#[allow(unused_imports)]
+use crate::editor::page::page_text_edit_mutation;
+#[allow(unused_imports)]
+use crate::standards::v1_7::subsets::base::schema::mutations::PdfMutation;
+#[allow(unused_imports)]
+use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfSnapshot, STDIO_PDF17_DOCUMENT_SCHEMA};
+#[allow(unused_imports)]
+use crate::standards::v1_7::subsets::base::schema::PDF_ARTIFACT_SCHEMA_ID;
+#[allow(unused_imports)]
+use {semio_framework_plugin::built_to_component_tree, semio_framework_plugin::ArtifactView, semio_framework_plugin::ComponentTree, semio_framework_plugin::ConfigView, semio_framework_artifact_reference::Dialect, semio_framework_plugin::DraftView, semio_framework_plugin::Emit, semio_framework_plugin::Fault, semio_framework_plugin::NoConfig, semio_framework_plugin::NoConfigMutation, semio_framework_plugin::NoDraft, semio_framework_plugin::NoDraftMutation, semio_framework_plugin::NoPresence, semio_framework_plugin::NoPresenceMutation, semio_framework_plugin::NoTransient, semio_framework_plugin::NoTransientMutation, semio_framework_artifact_reference::StandardId, semio_framework_artifact_reference::SubsetId};
+#[allow(unused_imports)]
+use semio_framework_2d::compute::EngineHandles;
+use crate::editor::pdf17e::*;
 
 #[semio_framework_async_macros::async_test]
 async fn create_pdf17_e_editor_builds_a_definition_for_the_editor_role() {

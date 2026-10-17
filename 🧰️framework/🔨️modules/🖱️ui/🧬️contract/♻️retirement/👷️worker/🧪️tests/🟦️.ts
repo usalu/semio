@@ -26,7 +26,6 @@ test("worker retirement fixed policy refuses oversize original owners before eff
  const implementation=await import("../🟦️.ts");
  expect(implementation.UI_WORKER_RETIREMENT_POLICY).toEqual(fixture.policy);
  for(let i=0;i<fixture.cases.length;i++)expect(implementation.uiWorkerRetirementPermits(fixture.cases[i].demand)).toBe(expected[i]);
- console.log(`[DEBUG] fixed worker policy original ownership: ${fixture.cases.length} SQLite/RFC6902 cases; release ceiling=${fixture.policy.maximum_release_bytes}`);
 });
 
 test("worker retirement structural refusal has an independent SQLite identity",async()=>{
@@ -38,5 +37,4 @@ test("worker retirement structural refusal has an independent SQLite identity",a
   expect(implementation.uiWorkerRetirementRefusal(row.demand)).toBe(oracle.reason);
  }
  expect(fixture.refusal.owner).toBe("retain");expect(fixture.refusal.automaticRetry).toBe(false);db.close();
- console.log("[DEBUG] independent SQLite worker refusal identity matches the original fixed policy");
 });

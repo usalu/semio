@@ -1,5 +1,8 @@
 use super::*;
 
+/// 🎟️ Unbounded retained grant: the pre-migration step budget carried no retained limit.
+const UNBOUNDED_STEP_GRANT: semio_framework_job::RetainedCloneGrant = semio_framework_job::RetainedCloneGrant { maximum_items: usize::MAX, maximum_copy_bytes: usize::MAX, maximum_capacity_bytes: usize::MAX, maximum_release_bytes: usize::MAX, maximum_depth: usize::MAX };
+
 #[allow(non_snake_case)]
 fn LIBRARY_SOURCE() -> &'static str {
     semio_framework_os_renderer_wgpu_test_support::renderer_source()
@@ -549,7 +552,7 @@ fn renderer_asset_probe_keeps_pages_owned_across_chunk_boundaries_and_rejects_ma
 #[cfg(not(target_arch = "wasm32"))]
 #[test]
 fn glb_sub_element_id_attributes_survive_into_the_resident_mesh_table() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧪️tests/🧫️fixtures/📏️world3d-modelling/🔣️.json")).expect("modelling fixture");
+    let fixture: serde_json::Value = serde_json::from_str(semio_framework_os_renderer_wgpu_test_support::repo_text("🧰️framework/🔨️modules/🖱️ui/🎬️scene/🧪️tests/🧫️fixtures/📏️world3d-modelling/🔣️.json")).expect("modelling fixture");
     let row = &fixture["glbSubElementIds"];
     let attribute_names = (row["faceAttribute"].as_str().unwrap().to_string(), row["vertexAttribute"].as_str().unwrap().to_string());
     let face_ids: Vec<u32> = row["faceIds"].as_array().unwrap().iter().map(|id| id.as_u64().unwrap() as u32).collect();
@@ -666,7 +669,7 @@ fn glb_sub_element_id_attributes_survive_into_the_resident_mesh_table() {
 
 #[cfg(not(target_arch = "wasm32"))]
 fn owned_decoder_fixture() -> (WorldAssetIoAuthority, RendererAssetProbe) {
-    let bytes = include_bytes!("../../../../../../../🔨️modules/🖼️assets/🌱️metabolism/🎨️representation/💊️capsules/🪝️j/🧊️capsule_J.glb");
+    let bytes = semio_framework_os_renderer_wgpu_test_support::repo_bytes("🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🎨️representation/💊️capsules/🪝️j/🧊️capsule_J.glb");
     let mut authority = WorldAssetIoAuthority::default();
     authority.reserve(1, 1, WorldAssetRequestKind::Glb, "catalogue-decode-owner.glb", bytes.len()).unwrap();
     let mut owner = authority.take_next().unwrap();
@@ -750,7 +753,6 @@ fn embedded_glb_materials_publish_with_their_primitive_ranges_texture_and_vertex
     assert_eq!(mask.material.occlusion_texture,mask.material.metallic_roughness_texture);
     assert_eq!(mask.material.emissive_texture,mask.material.base_color_texture);
     assert_eq!(mask.material.additional_texture_samplers,[mask.material.texture_sampler;4]);
-    eprintln!("[DEBUG] GLB authored five maps: 2 role leases, five sampler descriptors, mask/blend publication");
     assert_eq!(
         mask.material.texture_sampler,
         semio_framework_ui_scene_pass::SceneTextureSampler3d {
@@ -772,9 +774,9 @@ fn embedded_glb_materials_publish_with_their_primitive_ranges_texture_and_vertex
         "shape": "ellipse"
     })
     .to_string();
-    let mut preparation = crate::scenes::icon_export::IconExportScenePreparation::new(request, asset).expect("request-owned Icon scene admits the full material asset");
+    let mut preparation = semio_framework_os_renderer_wgpu_icon_host::icon_export::IconExportScenePreparation::new(request, asset).expect("request-owned Icon scene admits the full material asset");
     assert_eq!(preparation.dimensions(), (64, 32));
-    assert_eq!(preparation.format(), crate::scenes::icon_export::IconExportFormat::Png);
+    assert_eq!(preparation.format(), semio_framework_os_renderer_wgpu_icon_host::icon_export::IconExportFormat::Png);
     for turn in 0..262_144 {
         match preparation.advance() {
             Ok(true) => break,
@@ -785,7 +787,7 @@ fn embedded_glb_materials_publish_with_their_primitive_ranges_texture_and_vertex
     assert!(preparation.terminal(), "request-owned Icon scene preparation reaches its accepted boundary");
     let mut prepared = preparation.take_prepared().expect("the exact prepared scene owner is published once");
     assert_eq!(prepared.dimensions(), (64, 32));
-    assert_eq!(prepared.format(), crate::scenes::icon_export::IconExportFormat::Png);
+    assert_eq!(prepared.format(), semio_framework_os_renderer_wgpu_icon_host::icon_export::IconExportFormat::Png);
     let mut packet = prepared.take_packet().expect("prepared scene transfers one packet while retaining its World owner");
     let uploads = packet.uploads();
     assert!((0..uploads.len()).any(|index| matches!(uploads.get(index), Some(semio_framework_ui_prepared_staging::PreparedRenderUpload::Mesh { .. }))));
@@ -810,7 +812,7 @@ fn decoder_denied_original_invocation_preserves_exact_owner_and_receipt() {
     let (authority, probe) = owned_decoder_fixture();
     let token = probe.owner().owner().token();
     let mut job = RendererAssetDecodeJob::new(probe, Arc::new(AtomicBool::new(false)));
-    let original = crate::frame_authority::FRAME_BOOTSTRAP_ROOT_GRANT;
+    let original = semio_framework_os_renderer_wgpu_frame_job::frame_authority::FRAME_BOOTSTRAP_ROOT_GRANT;
     let denied = semio_framework_job::RetainedCloneGrant { maximum_items: 0, ..original };
     let mut sequence = 0;
     let mut receipt = semio_framework_job::RetainedCloneProgress::default();
@@ -843,8 +845,9 @@ fn an_independent_decoder_job_preserves_its_exact_response_through_cancellation(
     let cancelled = Arc::new(AtomicBool::new(false));
     let mut job = RendererAssetDecodeJob::new(probe, cancelled.clone());
     let mut sequence = 0;
+    let mut context_retained = semio_framework_job::RetainedCloneProgress::default();
     let mut context =
-        semio_framework_job::StepContext::new(semio_framework_job::OperationId(72), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
+        semio_framework_job::StepContext::new(semio_framework_job::OperationId(72), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(1, u64::MAX, UNBOUNDED_STEP_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut context_retained);
     assert!(matches!(job.step(&mut context), StepOutcome::Yield));
     let observed = job.probe.borrow().as_ref().unwrap().observed_bytes;
     assert_eq!(observed, 16 * 1024);
@@ -1020,8 +1023,9 @@ fn native_asset_response_transfers_each_credited_page_without_losing_its_bytes()
         let mut writer = RetainedJobPayloadWriter::new(JobPayloadStream::CommitOutput);
         let mut sequence = 0;
         for source in bytes.chunks(semio_framework_job::JOB_PAYLOAD_PAGE_BYTES) {
+            let mut context_retained = semio_framework_job::RetainedCloneProgress::default();
             let mut context =
-                semio_framework_job::StepContext::new(semio_framework_job::OperationId(74), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
+                semio_framework_job::StepContext::new(semio_framework_job::OperationId(74), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(1, u64::MAX, UNBOUNDED_STEP_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut context_retained);
             let mut page = writer.admit_page(&mut context).unwrap();
             page.write(source).unwrap();
             page.commit();
@@ -1067,7 +1071,7 @@ fn native_asset_response_transfers_each_credited_page_without_losing_its_bytes()
 #[test]
 fn a_frame_candidate_never_advances_the_independently_owned_asset_decoder() {
     let law: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧵️frame-turn-scheduling/🔣️.json")).unwrap();
-    let bytes = include_bytes!("../../../../../../../🔨️modules/🖼️assets/🌱️metabolism/🎨️representation/💊️capsules/🪝️j/🧊️capsule_J.glb");
+    let bytes = semio_framework_os_renderer_wgpu_test_support::repo_bytes("🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🎨️representation/💊️capsules/🪝️j/🧊️capsule_J.glb");
     let mut authority = WorldAssetIoAuthority::default();
     authority.reserve(1, 1, WorldAssetRequestKind::Glb, "catalogue-frame-isolation.glb", bytes.len()).unwrap();
     let mut owner = authority.take_next().unwrap();
@@ -1101,7 +1105,8 @@ fn a_frame_candidate_never_advances_the_independently_owned_asset_decoder() {
     let generation = semio_framework_job::Generation(0);
     let mut candidate = FrameTransaction::new(Default::default(), operation, generation, semio_framework_job::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 65_536, maximum_capacity_bytes: 65_536, maximum_release_bytes: 16_777_216, maximum_depth: 64 });
     let mut sequence = 0;
-    let mut context = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
+    let mut context_retained = semio_framework_job::RetainedCloneProgress::default();
+    let mut context = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(1, u64::MAX, UNBOUNDED_STEP_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut context_retained);
     let result = candidate.step(&runtime, &Arc::downgrade(&runtime.0), &mut context);
     let mut probe = runtime.0.asset_probe.lock().unwrap().take().expect("the decoder retains its exact response");
     let observed = probe.observed_bytes;
@@ -1546,7 +1551,7 @@ fn runtime_dispatch_cursor_merges_retained_pointer_by_input_generation() {
     let mut events = ui_host::DrainedEvents { pointer_move: Some(pointer), ..Default::default() };
     events.discrete[0] = Some(scroll);
     events.discrete[1] = Some(key);
-    let mut caller=crate::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);let original=caller.turn(super::RuntimeDispatchSource::admit).unwrap().unwrap();
+    let mut caller=semio_framework_os_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);let original=caller.turn(super::RuntimeDispatchSource::admit).unwrap().unwrap();
     let mut cursor = RuntimeDispatchCursor::new(events,original);
 
     assert!(matches!(cursor.take_next(), Some(ui_render::DispatchEvent::Scroll { .. })));
@@ -1563,7 +1568,7 @@ fn runtime_dispatch_cursor_retires_one_owned_event_per_step() {
     for (index, slot) in events.discrete.iter_mut().enumerate() {
         *slot = Some(ui_host::DiscreteEvent { event: ui_render::DispatchEvent::Paste { text: "x".repeat(4096) }, generation: ui_host::InputGeneration(index as u64) });
     }
-    let mut caller=crate::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);let original=caller.turn(super::RuntimeDispatchSource::admit).unwrap().unwrap();
+    let mut caller=semio_framework_os_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);let original=caller.turn(super::RuntimeDispatchSource::admit).unwrap().unwrap();
     let mut cursor = RuntimeDispatchCursor::new(events,original);
     for _ in 0..cursor.events.discrete.len() {
         assert!(!caller.turn(|cx|cursor.close_step(cx)).unwrap());
@@ -1645,7 +1650,7 @@ fn renderer_input_retirement_drains_ready_handback_resident_cursor_and_staged_ac
         assert!(queue.reserve_interaction());
         queue.finish(returned_completion(141, RuntimeApply::ResumeFrameDeferred { interaction: Some(returned), cursor: Some(FrameDeferredCursor::new(handback, false, false, false, false, 141, semio_framework_job::root_cancel_token())) }));
     }
-    let mut caller=crate::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
+    let mut caller=semio_framework_os_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
     assert!(!caller.turn(|cx|runtime.close_input_step(cx)).unwrap());
     assert!(runtime.try_lock().unwrap().interaction_available());
     for step in 0..64 {
@@ -1843,7 +1848,7 @@ fn frame_maintenance_test_owner(generation: u64, actions: usize) -> FrameMainten
         last_pointer_y: 0.0,
         pointer_down: false,
         pointer_button: 0,
-        pointer_capture: shell::PointerCapture::default(),
+        pointer_capture: semio_framework_os_renderer_wgpu_shell_input::PointerCapture::default(),
         modifiers: PointerModifiers::default(),
         space_pressed: false,
         wheel_zoom_deadline_ms: 0.0,
@@ -2306,13 +2311,15 @@ fn a_fetched_glb_becomes_the_resident_world_mesh_its_url_names() {
     assert!(begin_world3d_dynamic_retirement(&mut state.session, &mut state.camera, &mut state.retirement, &mut state.scene, &mut state.assets));
     for _ in 0..4_096 {
         let mut sequence = 0;
+        let mut context_retained = semio_framework_job::RetainedCloneProgress::default();
         let mut context = semio_framework_job::StepContext::new(
             semio_framework_job::OperationId(1),
             semio_framework_job::Generation(1),
-            semio_framework_job::StepBudget::new(1, u64::MAX),
+            semio_framework_job::StepBudget::new(1, u64::MAX, UNBOUNDED_STEP_GRANT),
             semio_framework_job::root_cancel_token(),
             semio_framework_job::default_now_us,
             &mut sequence,
+            &mut context_retained,
         );
         let terrain_grant=semio_framework_value::retained_clone::RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:65536,maximum_release_bytes:16*1024*1024,maximum_depth:64};
         let terrain=infinite_world::world::step_world3d_terrain_retirement(&mut state.session, &mut state.terrain,terrain_grant,&mut context);
@@ -2342,7 +2349,7 @@ fn a_real_catalogued_glb_streams_through_the_surfaces_own_asset_lane_into_its_me
         begin_world3d_dynamic_retirement, finish_world3d_asset, publish_world3d_asset_mesh_lease, reserve_world3d_asset_request, reserve_world3d_asset_response, return_world3d_asset, seal_world3d_asset_response, step_world3d_dynamic_retirement,
         take_next_completed_world3d_asset_step, take_next_world3d_asset, world3d_dynamic_retirement_terminal_is_empty, World3dState,
     };
-    let glb: &[u8] = include_bytes!("../../../../../../../🔨️modules/🖼️assets/🌱️metabolism/🎨️representation/💊️capsules/🪝️j/🧊️capsule_J.glb");
+    let glb: &[u8] = semio_framework_os_renderer_wgpu_test_support::repo_bytes("🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🎨️representation/💊️capsules/🪝️j/🧊️capsule_J.glb");
     let url = "/mesh/🧊️capsule_J.glb";
     let mut state = World3dState::new("surface-1".into(), "controller-1".into());
     reserve_world3d_asset_request(&mut state.session, &mut state.assets, WorldAssetRequestKind::Glb, url).unwrap();
@@ -2379,13 +2386,15 @@ fn a_real_catalogued_glb_streams_through_the_surfaces_own_asset_lane_into_its_me
     assert!(begin_world3d_dynamic_retirement(&mut state.session, &mut state.camera, &mut state.retirement, &mut state.scene, &mut state.assets));
     for _ in 0..8_192 {
         let mut sequence = 0;
+        let mut context_retained = semio_framework_job::RetainedCloneProgress::default();
         let mut context = semio_framework_job::StepContext::new(
             semio_framework_job::OperationId(1),
             semio_framework_job::Generation(1),
-            semio_framework_job::StepBudget::new(1, u64::MAX),
+            semio_framework_job::StepBudget::new(1, u64::MAX, UNBOUNDED_STEP_GRANT),
             semio_framework_job::root_cancel_token(),
             semio_framework_job::default_now_us,
             &mut sequence,
+            &mut context_retained,
         );
         let terrain_grant=semio_framework_value::retained_clone::RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:65536,maximum_release_bytes:16*1024*1024,maximum_depth:64};
         let terrain=infinite_world::world::step_world3d_terrain_retirement(&mut state.session, &mut state.terrain,terrain_grant,&mut context);
@@ -2588,7 +2597,6 @@ fn original_decoder_close_hands_back_same_response_under_exact_independent_grant
     assert_eq!(recovered.owner().owner().token(), token);
     assert_eq!(recovered.owner().owner().received_bytes(), observed);
     close_owned_decoder_fixture(authority, recovered);
-    eprintln!("[DEBUG] original decoder close same response, zero physical handback, exact item receipt");
 }
 
 #[test]
@@ -2602,9 +2610,9 @@ fn original_engine_packet_pages_require_actual_birth_and_release_grants() {
     assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
     assert!(owner.terminal_is_empty());
     assert_eq!(fixture["enginePacketBacking"]["pageSlots"], FRAME_ENGINE_PACKET_PAGE_SLOTS);
-    let layout = std::alloc::Layout::array::<Option<engine_canvas::EngineCanvasPacket>>(FRAME_ENGINE_PACKET_PAGE_SLOTS).unwrap();
+    let layout = std::alloc::Layout::array::<Option<semio_framework_os_renderer_wgpu_engine_registry::prepared_engine_canvas::EngineCanvasPacket>>(FRAME_ENGINE_PACKET_PAGE_SLOTS).unwrap();
     assert!(layout.size() <= grant.maximum_capacity_bytes);
-    let mut caller = crate::fixture_original_turn::FixtureTurnV1::new(grant);
+    let mut caller = semio_framework_os_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(grant);
     for refused in [RetainedCloneGrant { maximum_items: 0, ..grant }, RetainedCloneGrant { maximum_capacity_bytes: layout.size() - 1, ..grant }, RetainedCloneGrant { maximum_copy_bytes: layout.size() - 1, ..grant }] {
         let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| caller.turn(|cx|cx.with_retained_loan(refused, |cx|owner.prepare_step(cx))));
         assert_eq!(step.unwrap(), false);
@@ -2647,7 +2655,6 @@ fn original_engine_packet_pages_require_actual_birth_and_release_grants() {
     assert!(owner.terminal_is_empty());
     caller.finish();
     assert!(matches!(owner.close_backing_step(RetainedCloneGrant::default()).unwrap(), InteractiveJobCloseStep::Complete { progress } if progress == Default::default()));
-    println!("[DEBUG] original engine packet array backing released={} terminal=true", layout.size());
 }
 
 /// 📬️ Cancelling the unpolled dispatch future returns every original owner before any physical event release.
@@ -2658,7 +2665,7 @@ fn cancelled_dispatch_future_preserves_original_interaction_event_and_paid_sourc
     let runtime=native_reference_runtime();let interaction=frame_maintenance_test_owner(511,0).interaction.take().unwrap();assert!(runtime.reserve_interaction_future());
     let mut text=String::with_capacity(law["capacity"].as_u64().unwrap()as usize);text.push_str(law["text"].as_str().unwrap());let pointer=text.as_ptr();let capacity=text.capacity();
     let mut events=ui_host::DrainedEvents::default();events.discrete[0]=Some(ui_host::DiscreteEvent{event:ui_render::DispatchEvent::Paste{text},generation:ui_host::InputGeneration(1)});
-    let grant=ui_contract::UI_WORKER_RETIREMENT_POLICY;let mut caller=crate::fixture_original_turn::FixtureTurnV1::new(grant);let original=caller.turn(super::RuntimeDispatchSource::admit).unwrap().unwrap();let mut cursor=RuntimeDispatchCursor::new(events,original);
+    let grant=ui_contract::UI_WORKER_RETIREMENT_POLICY;let mut caller=semio_framework_os_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(grant);let original=caller.turn(super::RuntimeDispatchSource::admit).unwrap().unwrap();let mut cursor=RuntimeDispatchCursor::new(events,original);
     caller.turn(|cx|{cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,..Default::default()}).unwrap();cx.consume_fuel(1);cursor.inflight=cursor.take_next();});
     let future=RuntimeDispatchReturn{mailbox:runtime.clone(),revision:511,cursor:Some(cursor),interaction:Some(interaction)}.run();drop(future);
     let mut completion=runtime.0.completions.lock().unwrap().take_at(0).expect("cancellation returns exact reserved custody");let RuntimeApply::ResumeDispatch{interaction,cursor}=&mut completion.apply else{panic!("original dispatch return")};assert!(interaction.is_some());let mut cursor=cursor.take().expect("original cursor remains owned");
@@ -2666,5 +2673,4 @@ fn cancelled_dispatch_future_preserves_original_interaction_event_and_paid_sourc
     assert!(!caller.turn(|cx|cx.with_retained_loan(semio_framework_value::RetainedCloneGrant{maximum_release_bytes:capacity-1,..grant},|cx|cursor.close_inflight_step(cx))).unwrap());let ui_render::DispatchEvent::Paste{text}=cursor.inflight.as_ref().unwrap()else{panic!("denied original event remains owned")};assert_eq!(text.as_ptr(),pointer);assert_eq!(text.capacity(),capacity);
     assert!(!caller.turn(|cx|cursor.close_inflight_step(cx)).unwrap());assert!(cursor.inflight.is_none());while !caller.turn(|cx|cursor.close_step(cx)).unwrap(){}assert!(cursor.terminal_is_empty());
     runtime.try_lock().unwrap().return_interaction(interaction.take().unwrap());let mut complete=false;for _ in 0..65536{complete=caller.turn(|cx|runtime.close_input_step(cx)).unwrap();if complete{break}}assert!(complete,"original interaction input reaches paid terminal closure");caller.finish();
-    eprintln!("[DEBUG] cancelled dispatch future returned exact interaction/event/source; denied whole-capacity closure retained pointer and later original close retired event/source");
 }

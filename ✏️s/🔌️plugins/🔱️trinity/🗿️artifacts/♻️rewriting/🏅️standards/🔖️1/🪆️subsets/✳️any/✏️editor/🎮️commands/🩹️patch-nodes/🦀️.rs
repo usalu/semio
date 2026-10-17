@@ -1,8 +1,8 @@
 //! 🩹️ Trinity Rewriting app command — `patch-nodes`.
 
-use crate::content::{read, working_child_emit};
+use crate::standards::v1::subsets::any::content::{read, working_child_emit};
 use crate::standards::v1::subsets::any::schema::mutations::RewriteRuleMutation;
-use crate::RewritingSnapshot;
+use crate::standards::v1::subsets::any::schema::snapshot::RewritingSnapshot;
 use semio_framework_plugin::app::ChildContentView;
 use semio_framework_plugin::{Emit, Fault, FaultCode, FaultOrigin, NoConfigMutation};
 use {semio_s_artifact_stdio_semio_graph::schema::mutations::change_node_kind::ChangeNodeKind, semio_s_artifact_stdio_semio_graph::schema::mutations::change_node_label::ChangeNodeLabel, semio_s_artifact_stdio_semio_graph::schema::mutations::SemioGraphMutation};
@@ -14,7 +14,7 @@ use semio_s_artifact_stdio_semio_graph::schema::snapshot::GraphNodeId;
 /// by name instead of answering an empty emit (the silent empty emit read as an accepted edit that moved nothing, S15 session 11):
 /// `app.command.targets-required` when neither `nodeIds` nor a selection names a node — an agent has no selection and names them —
 /// `mutation.target-missing`, `app.command.invalid-args` (also for a kind the resolved manifest does not declare).
-pub(crate) fn patch_nodes(state: &RewritingSnapshot, children: &ChildContentView, node_ids: &[String], selection: &[String], field: &str, value: &str) -> Result<Emit<RewriteRuleMutation, NoConfigMutation>, Fault> {
+pub fn patch_nodes(state: &RewritingSnapshot, children: &ChildContentView, node_ids: &[String], selection: &[String], field: &str, value: &str) -> Result<Emit<RewriteRuleMutation, NoConfigMutation>, Fault> {
     let invalid = |detail: String| Fault::new(FaultOrigin::App, FaultCode::new("app.command.invalid-args"), detail);
     if !matches!(field, "name" | "kind") {
         return Err(invalid(format!("rewriting nodes have no patchable field '{field}' (only 'name' or 'kind')")));
@@ -32,7 +32,7 @@ pub(crate) fn patch_nodes(state: &RewritingSnapshot, children: &ChildContentView
     if !missing.is_empty() {
         return Err(Fault::new(FaultOrigin::App, FaultCode::new("mutation.target-missing"), format!("the working graph has no node {}", missing.join(", "))));
     }
-    if field == "kind" && crate::editor::rewriting::resolved_working_manifest(state).is_some_and(|manifest| manifest.node_kind(value).is_none()) {
+    if field == "kind" && crate::editor::rewriting::document::resolved_working_manifest(state).is_some_and(|manifest| manifest.node_kind(value).is_none()) {
         return Err(invalid(format!("the working graph's manifest declares no node kind “{value}”")));
     }
     let leaf = |id: &String| match field {

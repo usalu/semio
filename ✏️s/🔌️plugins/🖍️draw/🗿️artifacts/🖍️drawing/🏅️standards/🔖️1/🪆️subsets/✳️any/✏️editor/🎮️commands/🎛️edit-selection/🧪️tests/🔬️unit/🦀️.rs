@@ -1,9 +1,17 @@
 //! 🧪️ Selection operations must produce the language-neutral document outcomes.
-use super::*;
+use semio_framework_test_fixtures::fixture_text;
+
+#[allow(unused_imports)] use semio_s_artifact_draw_drawing_model::{drawing_layer_is_locked, find_drawing_layer, find_drawing_layer_location, layer_base, selected_drawing_layers};
+#[allow(unused_imports)] #[cfg(test)] use semio_s_artifact_draw_drawing_model::layer_base_mut;
+#[allow(unused_imports)] use semio_s_artifact_draw_drawing_model::DrawingLayerNode;
+#[allow(unused_imports)] use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
+#[allow(unused_imports)] use semio_s_artifact_draw_drawing_mutations::DrawingMutation;
+#[allow(unused_imports)] use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
+#[allow(unused_imports)] use semio_s_artifact_draw_drawing_editor_commands::edit_selection::*;
 
 #[test]
 fn shape_conversion_fixtures_preserve_identity_style_transform_and_order() {
-    let cases:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🛤️to-path/🔣️.json")).unwrap();
+    let cases:serde_json::Value=serde_json::from_str(fixture_text!("../../../../🎛️edit-selection/🧪️tests/🧫️fixtures/🛤️to-path/🔣️.json")).unwrap();
     for case in cases.as_array().unwrap() {
         let mut value=serde_json::to_value(semio_s_artifact_draw_drawing_model::create_drawing_shape_layer_rect(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Original")).to_string().into()).expect("nonempty authored identity"), "Original")).unwrap();
         let kind=case["kind"].as_str().unwrap();
@@ -53,7 +61,7 @@ fn conversion_preserves_distinct_parents_and_rejects_locked_or_unsupported_selec
 }
 #[test]
 fn selection_operation_fixtures() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../🎛️edit-selection/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let layers = fixture["layers"].as_array().unwrap().iter().map(|value| {
         let mut layer = semio_s_artifact_draw_drawing_model::create_drawing_shape_layer_rect(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit(((value["id"].as_str().unwrap())).to_string().into()).expect("nonempty authored identity"), value["id"].as_str().unwrap());
         semio_s_artifact_draw_drawing_model::layer_base_mut(&mut layer).id = value["id"].as_str().unwrap().into();
@@ -123,7 +131,7 @@ fn arrangement_preserves_ancestor_coordinates_and_atomicity() {
             }
         }
     }
-    let cases:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🌍️arrangement/🔣️.json")).unwrap();
+    let cases:serde_json::Value=serde_json::from_str(fixture_text!("../../../../🎛️edit-selection/🧪️tests/🧫️fixtures/🌍️arrangement/🔣️.json")).unwrap();
     for case in cases.as_array().unwrap() {
         let document=DrawingSnapshot {layers:case["nodes"].as_array().unwrap().iter().map(node).collect(),..Default::default()};
         let saved=document.clone();
@@ -143,7 +151,7 @@ fn arrangement_preserves_ancestor_coordinates_and_atomicity() {
 
 #[test]
 fn layer_stack_steps_match_shared_order_in_root_and_group() {
-    let cases:serde_json::Value=serde_json::from_str(include_str!("../../🗂️stack/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+    let cases:serde_json::Value=serde_json::from_str(fixture_text!("../../../../🎛️edit-selection/🗂️stack/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     for case in cases.as_array().unwrap() {for nested in [false,true] {
         let layers=case["order"].as_array().unwrap().iter().map(|id| {
             let mut layer=semio_s_artifact_draw_drawing_model::create_drawing_shape_layer_rect(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit(((id.as_str().unwrap())).to_string().into()).expect("nonempty authored identity"), id.as_str().unwrap());
@@ -169,12 +177,12 @@ fn layer_stack_steps_match_shared_order_in_root_and_group() {
 
 #[test]
 fn ungroup_matches_shared_structure_transform_and_selection_cases() {
-    let cases:serde_json::Value=serde_json::from_str(include_str!("../../🧩️ungroup/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+    let cases:serde_json::Value=serde_json::from_str(fixture_text!("../../../../🎛️edit-selection/🧩️ungroup/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     for case in cases.as_array().unwrap() {
         let document=DrawingSnapshot {layers:serde_json::from_value(case["before"].clone()).unwrap(),..Default::default()};
         let saved=document.clone();
         let ids:Vec<String>=serde_json::from_value(case["ids"].clone()).unwrap();
-        let result=ungroup::plan(&document,&ids);
+        let result=semio_s_artifact_draw_drawing_editor_commands::edit_selection::ungroup::plan(&document,&ids);
         assert_eq!(document,saved);
         if case["error"]==true {assert!(result.is_err(),"{}",case["name"]);continue;}
         let (mutations,selection)=result.unwrap();
@@ -201,4 +209,4 @@ fn ungroup_refuses_explicit_isolation_even_at_normal_blend_and_unit_opacity() {
     assert!(admitted_plan(&document,&["group".into()],"ungroup").is_err());
 }
 
-fn admitted_plan(document:&semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot,ids:&[String],operation:&str)->Result<Vec<semio_s_artifact_draw_drawing_mutations::DrawingMutation>,semio_framework_plugin::Fault>{let admission=semio_s_artifact_draw_drawing_editor::identity_test::operation();let mut observer=|_|true;let mut control=semio_framework_value::NativeEncodeControl::new(1024*1024,&mut observer);super::plan(document,ids,operation,&admission,&mut control)}
+fn admitted_plan(document:&semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot,ids:&[String],operation:&str)->Result<Vec<semio_s_artifact_draw_drawing_mutations::DrawingMutation>,semio_framework_plugin::Fault>{let admission=semio_s_artifact_draw_drawing_editor::identity_test::operation();let mut observer=|_|true;let mut control=semio_framework_value::NativeEncodeControl::new(1024*1024,&mut observer);semio_s_artifact_draw_drawing_editor_commands::edit_selection::plan(document,ids,operation,&admission,&mut control)}

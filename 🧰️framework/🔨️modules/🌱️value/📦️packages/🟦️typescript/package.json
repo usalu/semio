@@ -33,16 +33,22 @@
     "./schema/intrinsic/json": "./🧬️schema/🌳️intrinsic/🔣️json/🟦️.ts",
     "./testing/json-projection": "./🧪️testing/🔣️json-projection/🟦️.ts",
     "./text": "./📝️text/🟦️.ts",
-    "./type": "./🏷️type/🟦️.ts"
+    "./type": "./🏷️type/🟦️.ts",
+    "./testing/fixtures": "./🧪️testing/🧫️fixtures/🟦️.ts",
+    "./retirement/testing/fixtures": "./♻️retirement/🧪️testing/🧫️fixtures/🟦️.ts"
   },
   "scripts": {
     "test-numeric-api": "bun --cwd \"../../../../..\" repo run @semio-tech/value-ts:test-numeric-api",
     "test-scalars-api": "bun --cwd \"../../../../..\" repo run @semio-tech/value-ts:test-scalars-api"
   },
   "devDependencies": {
+    "@semio-tech/framework": "workspace:*",
+    "@semio-tech/framework-pack-ts": "workspace:*",
     "@semio-tech/process": "workspace:*"
   },
   "dependencies": {
+    "@semio-tech/framework-async": "workspace:*",
+    "@semio-tech/framework-io-base64-ts": "workspace:*",
     "@semio-tech/schema-ts": "workspace:*"
   }
 }

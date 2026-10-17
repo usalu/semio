@@ -11,7 +11,7 @@ pub use rows::OperationWireRows;
 
 pub struct OperationIdentityCursor{pub cursor:ArtifactPreparedOperationCursor,pub terminal:bool}
 impl OperationIdentityCursor{
-    pub(super) fn new()->Self{Self{cursor:ArtifactPreparedOperationCursor::default(),terminal:false}}
+    pub fn new()->Self{Self{cursor:ArtifactPreparedOperationCursor::default(),terminal:false}}
     pub fn encode_into(&mut self,source:ArtifactPreparedOperationSource<'_>,output:&mut Vec<u8>,control:&mut NativeEncodeControl<'_>)->Result<(),ValueError>{
         control.begin_stage(0)?;
         let mut span=[0;64];

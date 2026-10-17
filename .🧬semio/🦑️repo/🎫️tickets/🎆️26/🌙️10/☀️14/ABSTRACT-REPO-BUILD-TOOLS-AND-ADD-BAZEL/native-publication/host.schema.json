@@ -1,0 +1,174 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "policy",
+    "cases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "policy": {
+      "const": {
+        "maximumElapsedMilliseconds": 120000,
+        "filesystemBytes": 33554432,
+        "maximumPhysicalBytes": 34603008,
+        "maximumReceiptBytes": 4096,
+        "fields": [
+          "dev",
+          "ino",
+          "mode",
+          "nlink",
+          "size",
+          "mtimeNs",
+          "ctimeNs"
+        ],
+        "stages": [
+          "accepted",
+          "observed",
+          "witnessed",
+          "detached",
+          "underlying",
+          "staged",
+          "published",
+          "attached",
+          "verified",
+          "settled"
+        ]
+      }
+    },
+    "cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "before",
+          "after",
+          "changed"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "before": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "dev",
+              "ino",
+              "mode",
+              "nlink",
+              "size",
+              "mtimeNs",
+              "ctimeNs",
+              "sha256"
+            ],
+            "properties": {
+              "dev": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              },
+              "ino": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              },
+              "mode": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              },
+              "nlink": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              },
+              "size": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              },
+              "mtimeNs": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              },
+              "ctimeNs": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              },
+              "sha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              }
+            }
+          },
+          "after": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "dev",
+              "ino",
+              "mode",
+              "nlink",
+              "size",
+              "mtimeNs",
+              "ctimeNs",
+              "sha256"
+            ],
+            "properties": {
+              "dev": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              },
+              "ino": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              },
+              "mode": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              },
+              "nlink": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              },
+              "size": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              },
+              "mtimeNs": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              },
+              "ctimeNs": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              },
+              "sha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              }
+            }
+          },
+          "changed": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "enum": [
+                "dev",
+                "ino",
+                "mode",
+                "nlink",
+                "size",
+                "mtimeNs",
+                "ctimeNs",
+                "sha256"
+              ]
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -23,7 +23,6 @@ class TestScript extends BundleScript{
   }else if(language==="funding-native"){
    if(rest.length||!process.env.SEMIO_TEST_ARTIFACT_DIR||!process.env.CARGO_TARGET_DIR)throw Error("funding-native requires original caller artifact and target directories");
    const receipts=await runExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),preparation:configuredRepositoryCargoPreparationPolicyV1(),policy:{...configuredExactCargoLawPolicyV1(),buildMilliseconds:3600000,listMilliseconds:60000,lawMilliseconds:120000},invocation:this.invocation,manifestPaths:{"semio-framework-io-binary-source":resolve(this.root,"📦️packages/🦀️rust/Cargo.toml")},cwd:this.repoRoot,groups:[{package:"semio-framework-io-binary-source",target:{kind:"lib"},laws:["tests::original_binary_source_funding_preserves_axes_and_allocator_receipts","tests::binary_sources_match_neutral_font_image_bytes_and_independent_oracles","tests::binary_sources_refuse_malformed_contracts_and_private_failures","tests::binary_sources_load_actual_bundled_font_resources"]}]});
-   console.log(`[DEBUG] Original binary source native receipts=${receipts.length}`);
   }else if(language==="rust")await runCargoTestsV1({manifestPath:resolve(this.root,"📦️packages/🦀️rust/Cargo.toml"),packages:["semio-framework-io-binary-source"],cwd:this.root,extraArgs:rest},readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation,cargoPhase);
   else throw Error("Expected typescript or rust");
  }

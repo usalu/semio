@@ -34,7 +34,6 @@ test("JSON source owner requires its original finite child capability before eff
     } else expect(admit).toThrow();
     expect(effects).toBe(before);
   }
-  console.log("[DEBUG] JSON source finite child admission preserves original identities and refuses before effects; independent Ajv corpus passed");
 });
 
 test("JSON source command consumes its mandatory admitted child ceiling",()=>{

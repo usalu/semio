@@ -1,10 +1,8 @@
 //! 🔍️ Forms metadata, field and step editing driven by framework-owned selection.
 
-use crate::editor::forms::ui_label;
-#[path = "🧬️schema/🦀️.rs"]
-pub mod schema;
-#[path = "🧱️controls/🦀️.rs"]
-mod controls;
+use crate::editor::forms::support::ui_label;
+pub use semio_s_artifact_forms_forms_tests::editor::forms::panels::inspection::schema;
+pub use semio_s_artifact_forms_forms_tests_2::editor::forms::panels::inspection::controls;
 #[path = "🫥️visibility/🦀️.rs"]
 mod visibility;
 
@@ -76,7 +74,7 @@ pub fn render(
     windows: &semio_framework_plugin::TreeWindows<'_>,
 ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     use controls::*;
-    use crate::editor::forms::{ui_value_map, ui_value_text};
+    use crate::editor::forms::support::{ui_value_map, ui_value_text};
     let labels = crate::editor::forms::terminology::forms_play_labels(view);
     const ROOT: &str = "forms-play-inspector";
     let steps = forms_steps(spec);
@@ -112,8 +110,8 @@ pub fn render(
                 panel = panel.section(format!("{ROOT}.vector.actions"), None, true, ui_node_list([button(&format!("{ROOT}.vector.add"), labels.add_vector_field.as_str(), "addVectorField", arguments(vec![("fieldKey", ui_value_text(key)?), ("questionId", ui_value_text(&question.id)?)])?)])?)?;
             }
             if crate::schema::is_extension_question_kind(&question.kind) {
-                let contributions = crate::editor::forms::parse_contributions(config);
-                let extension = crate::editor::forms::render_extension_question(question, &semio_framework_pack_json::Object::new(), &contributions, crate::editor::forms::questions::extensions::ExtensionSurface::Blueprint, true, labels)?;
+                let contributions = crate::editor::forms::contributions::parse_contributions(config);
+                let extension = crate::editor::forms::contributions::render_extension_question(question, &semio_framework_pack_json::Object::new(), &contributions, crate::editor::forms::questions::extensions::ExtensionSurface::Blueprint, true, labels)?;
                 panel = panel.section(format!("{ROOT}.extension"), Some(ui_label(labels.parameters.as_str())?), true, ui_node_list([Ok(extension)])?)?;
             }
             panel = panel.section(format!("{ROOT}.question.actions"), None, true, ui_node_list([button(&format!("{ROOT}.question.remove"), labels.remove.as_str(), "removeBlock", arguments(vec![("questionId", ui_value_text(&question.id)?)])?)])?)?;
@@ -124,10 +122,6 @@ pub fn render(
 //#endregion 🔖️Render
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-#[cfg(test)]
-#[path = "🧪️tests/🔬️authoring/🦀️.rs"]
-mod authoring_tests;
+
+
 //#endregion 🧪️Tests

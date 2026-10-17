@@ -1,7 +1,7 @@
 //! 🗣️ Flow play app — the compiled-DAG window: the read-only wire literal of the current snapshot.
 
 use crate::editor::flow::modes::edit::windows::main::config::FlowMainWindowConfig;
-use crate::editor::flow::with_host_from_snapshot;
+use crate::editor::flow::host::with_host_from_snapshot;
 use crate::FlowSnapshot;
 use flow::FlowEvalSession;
 use semio_framework_plugin::scene_surface;
@@ -51,7 +51,5 @@ pub fn render(snapshot: &FlowSnapshot, config: &FlowMainWindowConfig, session: &
 //#endregion 🔖️Render
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

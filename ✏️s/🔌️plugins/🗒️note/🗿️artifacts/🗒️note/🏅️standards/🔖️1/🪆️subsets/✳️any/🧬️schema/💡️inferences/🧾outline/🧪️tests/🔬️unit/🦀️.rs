@@ -1,4 +1,9 @@
-use super::*;
+use crate::{NoteBlockNode, NoteSnapshot};
+#[allow(unused_imports)]
+use semio_framework_value_derive::{FromValue, ToValue};
+#[allow(unused_imports)]
+use serde::{Deserialize, Serialize};
+use crate::standards::v1::subsets::any::schema::inferences::outline::*;
 use crate::{NoteTextParagraph, NoteTextRun};
 
 fn text_block(id: &str, name: &str, text: &str) -> NoteBlockNode {

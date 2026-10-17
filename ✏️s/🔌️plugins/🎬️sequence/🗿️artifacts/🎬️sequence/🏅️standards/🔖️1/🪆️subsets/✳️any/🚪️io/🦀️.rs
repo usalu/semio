@@ -63,11 +63,9 @@ pub fn snapshot_pack(snapshot: &crate::SequenceSnapshot) -> Vec<u8> {
 #[path = "🧪️tests/🔬️carrier-contract/🦀️.rs"]
 mod carrier_contract;
 
-#[path = "💾️binary/🦀️.rs"]
-pub mod binary;
+
 
 #[path = "📝️text/🦀️.rs"]
 pub mod text;
 
-#[path = "🪶️sqlite/🦀️.rs"]
-pub mod sqlite;
+

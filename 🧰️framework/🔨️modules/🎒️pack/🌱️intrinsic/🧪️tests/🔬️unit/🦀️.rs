@@ -30,7 +30,6 @@ fn intrinsic_decoding_preserves_the_language_neutral_corpus_and_serde_oracle() {
             assert!(steps > 0);
         }
     }
-    eprintln!("[DEBUG] intrinsic decoding eleven corpus values match serde_json across both physical formats");
 }
 
 #[test]

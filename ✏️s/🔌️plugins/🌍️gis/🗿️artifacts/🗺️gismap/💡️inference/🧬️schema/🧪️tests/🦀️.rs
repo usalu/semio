@@ -1,8 +1,14 @@
-use super::*;
+use semio_framework_test_fixtures::fixture_text;
+
+#[allow(unused_imports)]
+use semio_framework_value_derive::{FromValue, ToValue};
+#[allow(unused_imports)]
+use semio_framework_os_kernel::{os_directory::schema::EditedArtifactFrontierV1, os_directory::schema::DocumentExecutionTargetLocaleV1, os_directory::schema::DOCUMENT_OPEN_MAX_SAFE_INTEGER};
+use crate::inference_schema::*;
 
 #[test]
 fn inference_current_hub_wire_preserves_required_nullable_hash() {
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/💡️gis-map-inference-port-v1/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(fixture_text!("../../💡️inference/🧪️tests/🧫️fixtures/💡️gis-map-inference-port-v1/🔣️.json")).unwrap();
     let receipt: GisMapInferenceJobReceiptV1 = semio_framework_pack_json::from_json_str(&corpus["wire"]["receipt"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let page: GisMapInferenceEventPageV1 = semio_framework_pack_json::from_json_str(&corpus["wire"]["page"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     assert_eq!(receipt.schema, "semio.hub.inference-job-receipt/v1");
@@ -33,7 +39,7 @@ fn inference_current_hub_wire_preserves_required_nullable_hash() {
 
 #[test]
 fn inference_indeterminate_lifecycle_matches_neutral_corpus() {
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/💡️gis-map-inference-port-v1/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(fixture_text!("../../💡️inference/🧪️tests/🧫️fixtures/💡️gis-map-inference-port-v1/🔣️.json")).unwrap();
     let mut status = GisMapInferencePortStatusV1::default();
     for row in corpus["uncertainLifecycle"].as_array().unwrap() {
         let event = &row["event"];
@@ -50,4 +56,3 @@ fn inference_indeterminate_lifecycle_matches_neutral_corpus() {
         assert_eq!(observed, row["expected"], "{}", row["name"]);
     }
 }
-

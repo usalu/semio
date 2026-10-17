@@ -30,6 +30,10 @@ type shootingShootingInferenceGuardSizeBounds = { readonly minItems?: number; re
 
 export const shootingShootingInferenceGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : shootingShootingInferenceGuardReject(at, "value is not an object");
+export const shootingShootingInferenceGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) shootingShootingInferenceGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const shootingShootingInferenceGuardArray = (value: unknown, at: string, bounds: shootingShootingInferenceGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return shootingShootingInferenceGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) shootingShootingInferenceGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -60,17 +64,17 @@ export const shootingShootingInferenceGuardConstant = <T extends string | number
 //#endregion 🚪️Parsers
 
 export function parseShootingInference(value: unknown, at = "$"): ShootingInference {
-  const row = shootingShootingInferenceGuardObject(value, at);
+  const row = shootingShootingInferenceGuardClosed(shootingShootingInferenceGuardObject(value, at), at, ["topology"]);
   return {
     topology: parseShootingTopology(row["topology"], `${at}.topology`),
   };
 }
 
 export function parseShootingTopology(value: unknown, at = "$"): ShootingTopology {
-  const row = shootingShootingInferenceGuardObject(value, at);
+  const row = shootingShootingInferenceGuardClosed(shootingShootingInferenceGuardObject(value, at), at, ["topoOrder", "depth", "cycleFree", "nodeCount"]);
   return {
     topoOrder: shootingShootingInferenceGuardArray(row["topoOrder"], `${at}.topoOrder`).map((item, index) => shootingShootingInferenceGuardString(item, `${at}.topoOrder[${index}]`)),
-    depth: shootingShootingInferenceGuardObject(row["depth"], `${at}.depth`),
+    depth: Object.fromEntries(Object.entries(shootingShootingInferenceGuardObject(row["depth"], `${at}.depth`)).map(([key0, value0]) => [key0, shootingShootingInferenceGuardInteger(value0, `${at}.depth.${key0}`)])),
     cycleFree: shootingShootingInferenceGuardBoolean(row["cycleFree"], `${at}.cycleFree`),
     nodeCount: shootingShootingInferenceGuardInteger(row["nodeCount"], `${at}.nodeCount`),
   };

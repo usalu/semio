@@ -1,7 +1,24 @@
 //! 🏷️ `set-basic-attribute` — authored as its own mutation leaf. It builds its own sparse diff and concrete
 //! inverse from its payload and reads of `base`.
 
-use super::*;
+#[allow(unused_imports)]
+use crate::standards::v1_1::subsets::basic::schema::mutations::support::CODE_REJECTED;
+#[allow(unused_imports)]
+use crate::schema::snapshot::NodePath;
+#[allow(unused_imports)]
+use crate::schema::snapshot::SvgAttributeValue;
+#[allow(unused_imports)]
+use crate::schema::diff::SvgDiff;
+#[allow(unused_imports)]
+use crate::SvgSnapshot;
+#[allow(unused_imports)]
+use crate::schema::mutation_support::attributes_diff_at_path;
+#[allow(unused_imports)]
+use crate::standards::v1_1::subsets::basic::schema::mutations::support::local_name;
+#[allow(unused_imports)]
+use crate::schema::mutation_support::prior_attribute;
+#[allow(unused_imports)]
+use crate::standards::v1_1::subsets::basic::schema::mutations::support::resolve_clip_path;
 
 //#region 🔖️Payload
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree)]
@@ -15,7 +32,10 @@ pub struct SetBasicAttribute {
     pub(crate) index: Option<usize>,
 }
 
-impl protocol::MutationKind<SvgSnapshot, SvgBasicMutation> for SetBasicAttribute {
+impl<Op> protocol::MutationKind<SvgSnapshot, Op> for SetBasicAttribute
+where
+    Op: protocol::Mutation<SvgSnapshot, Diff = SvgDiff> + From<SetBasicAttribute>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "basic-attribute", kind: "set-basic-attribute", record: "SetBasicAttribute" };
 
     fn diff(&self, base: &SvgSnapshot) -> protocol::MutationOutcome<SvgDiff> {
@@ -31,10 +51,10 @@ impl protocol::MutationKind<SvgSnapshot, SvgBasicMutation> for SetBasicAttribute
             protocol::MutationOutcome::new(attributes_diff_at_path(base, path, &[(name.as_str(), value.clone(), *index)]))
         }
     }
-    fn inverse(&self, base: &SvgSnapshot) -> Result<Vec<SvgBasicMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &SvgSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         let Self { path, name, .. } = self;
         let (value, index) = prior_attribute(base, path, name);
-        Ok(vec![SvgBasicMutation::SetBasicAttribute(SetBasicAttribute { path: path.clone(), name: name.clone(), value, index })])
+        Ok(vec![Op::from(SetBasicAttribute { path: path.clone(), name: name.clone(), value, index })])
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set basic attribute", "Basic-Attribut setzen")

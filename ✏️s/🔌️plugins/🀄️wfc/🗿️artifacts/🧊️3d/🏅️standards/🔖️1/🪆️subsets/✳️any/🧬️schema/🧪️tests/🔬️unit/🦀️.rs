@@ -2,7 +2,7 @@
 //! derived construction/analysis facets that `subset()` binds.
 
 use crate::{Wfc3dBuilderConstruction, Wfc3dAnalyzerAnalysis};
-use super::*;
+use crate::standards::v1::subsets::any::schema::*;
 use crate::Wfc3dSnapshot;
 use semio_framework_plugin::{io::AnalyzeSource, ArtifactAnalysis, ArtifactBuilder};
 

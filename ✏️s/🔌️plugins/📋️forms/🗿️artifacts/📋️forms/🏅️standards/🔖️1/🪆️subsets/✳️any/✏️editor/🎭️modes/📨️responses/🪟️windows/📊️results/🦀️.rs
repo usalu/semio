@@ -1,5 +1,5 @@
 //! 📊️ Windowed submission history with original field labels and explicit export actions.
-use crate::editor::forms::{forms_action, ui_admit, ui_label, ui_value_map, ui_value_text, FORMS_PLAY_APP_ID};
+use crate::editor::forms::support::{forms_action, ui_admit, ui_label, ui_value_map, ui_value_text, FORMS_PLAY_APP_ID};
 use crate::editor::forms::terminology::FormsLabels;
 use crate::schema::response::{FormsAnswer, FormsResponse};
 use crate::FormsSnapshot;
@@ -66,6 +66,4 @@ pub fn render(spec: &FormsSnapshot, labels: &FormsLabels, windows: &TreeWindows<
         .build()
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;
+

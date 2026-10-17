@@ -37,8 +37,8 @@ struct ShotPreset {
 }
 
 fn catalog_shot_item(preset: &ShotPreset) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    let args = crate::editor::shooting::ui_value_map([("format", crate::editor::shooting::ui_value_text(preset.format)?), ("shape", crate::editor::shooting::ui_value_text(preset.shape)?)])?;
-    crate::editor::shooting::tree_item_with_icon(format!("shooting-play-catalogue.{}", preset.id), preset.label, "camera", crate::editor::shooting::shooting_action("addShot", Some(args)))
+    let args = crate::editor::shooting::ui_helpers_and_io::ui_value_map([("format", crate::editor::shooting::ui_helpers_and_io::ui_value_text(preset.format)?), ("shape", crate::editor::shooting::ui_helpers_and_io::ui_value_text(preset.shape)?)])?;
+    crate::editor::shooting::ui_helpers_and_io::tree_item_with_icon(format!("shooting-play-catalogue.{}", preset.id), preset.label, "camera", crate::editor::shooting::ui_helpers_and_io::shooting_action("addShot", Some(args)))
 }
 
 pub fn render(labels: &ShootingLabels, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
@@ -50,10 +50,10 @@ pub fn render(labels: &ShootingLabels, windows: &TreeWindows<'_>) -> semio_frame
     ];
     let assets = [labels.glb_asset];
     PanelTreeBuilder::new("shooting-play-catalogue")?
-        .window_section(windows, "shooting-play-catalogue.shots", Some(crate::editor::shooting::ui_label(labels.add_shot.as_str())?), true, &presets, catalog_shot_item)?
-        .window_section(windows, "shooting-play-catalogue.assets", Some(crate::editor::shooting::ui_label(labels.add_asset.as_str())?), true, &assets, |label| {
-            let args = crate::editor::shooting::ui_value_map([("format", crate::editor::shooting::ui_value_text("glb")?)])?;
-            crate::editor::shooting::tree_item_with_icon("shooting-play-catalogue.asset.glb", *label, "box", crate::editor::shooting::shooting_action("addAsset", Some(args)))
+        .window_section(windows, "shooting-play-catalogue.shots", Some(crate::editor::shooting::ui_helpers_and_io::ui_label(labels.add_shot.as_str())?), true, &presets, catalog_shot_item)?
+        .window_section(windows, "shooting-play-catalogue.assets", Some(crate::editor::shooting::ui_helpers_and_io::ui_label(labels.add_asset.as_str())?), true, &assets, |label| {
+            let args = crate::editor::shooting::ui_helpers_and_io::ui_value_map([("format", crate::editor::shooting::ui_helpers_and_io::ui_value_text("glb")?)])?;
+            crate::editor::shooting::ui_helpers_and_io::tree_item_with_icon("shooting-play-catalogue.asset.glb", *label, "box", crate::editor::shooting::ui_helpers_and_io::shooting_action("addAsset", Some(args)))
         })?
         .build()
 }
@@ -61,7 +61,5 @@ pub fn render(labels: &ShootingLabels, windows: &TreeWindows<'_>) -> semio_frame
 //#endregion 🔖️Render
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

@@ -1,0 +1,22 @@
+# Fresh Registration and Declaration Law Candidates
+
+- {"name":"declared_child_projection_default_preserves_empty_and_full_literal_references","bytes":2346,"line":1144,"fixture":true,"start":78691,"end":81011}
+- {"name":"activated_tool_factory_keys_are_an_exact_bijection_with_migrated_declarations","bytes":6753,"line":2777,"fixture":true,"start":206055,"end":212808}
+- {"name":"plugin_builder_builds_bundle_from_fluent_spec","bytes":418,"line":4156,"fixture":true,"start":321699,"end":322117}
+- {"name":"plugin_builder_wires_app_factory_for_create_app","bytes":3448,"line":4170,"fixture":true,"start":322433,"end":325861}
+- {"name":"ephemeral_snapshot_carries_encoded_interaction_from_declared_broadcast_specs","bytes":2748,"line":4387,"fixture":false,"start":342997,"end":345745}
+- {"name":"reserved_undo_actor_ingress_admits_undeclared_window_kind","bytes":4542,"line":6404,"fixture":true,"start":523978,"end":528520}
+- {"name":"reserved_undo_steps_over_undeclared_chrome_and_pops_the_document_edit","bytes":3497,"line":6815,"fixture":true,"start":557620,"end":561117}
+- {"name":"context_menu_resolves_labels_from_the_registry_and_respects_guards","bytes":3325,"line":7930,"fixture":true,"start":650371,"end":653696}
+- {"name":"a_scene_that_declares_no_lanes_still_publishes_one_childless_surface","bytes":684,"line":8376,"fixture":false,"start":686387,"end":687071}
+- {"name":"manifest_command_dispatch_validates_structural_app_ownership","bytes":2798,"line":8692,"fixture":true,"start":713890,"end":716688}
+- {"name":"manifest_mode_command_requires_the_active_structural_owner","bytes":2723,"line":8763,"fixture":true,"start":721261,"end":723984}
+- {"name":"plugin_command_handler_is_program_owned_across_app_instances","bytes":1937,"line":8821,"fixture":false,"start":726859,"end":728796}
+- {"name":"registry_less_construction_rejects_before_the_reducer","bytes":2167,"line":8878,"fixture":true,"start":731133,"end":733300}
+- {"name":"clear_selection_and_select_all_apply_across_every_declared_domain","bytes":2553,"line":9017,"fixture":false,"start":745290,"end":747843}
+- {"name":"interaction_select_carries_the_apps_declared_selection_lane","bytes":2449,"line":9410,"fixture":false,"start":778977,"end":781426}
+- {"name":"an_undeclared_interaction_verb_falls_through_to_the_declared_surface_scope","bytes":2306,"line":9448,"fixture":false,"start":782073,"end":784379}
+- {"name":"a_domain_no_window_declares_keeps_the_framework_full_scope","bytes":871,"line":9474,"fixture":false,"start":784638,"end":785509}
+- {"name":"guest_emitted_interaction_select_on_an_undeclared_domain_is_a_diagnostic_not_a_fault","bytes":2968,"line":9645,"fixture":false,"start":802117,"end":805085}
+- {"name":"spawn_task_quota_gate_faults_the_n_plus_1th_task_and_never_silently_drops_it","bytes":1754,"line":10214,"fixture":false,"start":855595,"end":857347}
+- {"name":"instance_close_cancellation_drops_the_instances_tasks_and_leaks_no_registry_slot","bytes":2557,"line":10283,"fixture":false,"start":860321,"end":862876}

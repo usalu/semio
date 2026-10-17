@@ -1,9 +1,9 @@
 /** 🗒️ Authored Note fields and block payloads, using shared Store child and link identities. */
-import { parseArtifactChild, type ArtifactChild } from "../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts";
-import { parseArtifactLink, type ArtifactLink } from "../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️link/🧬️schema/🟦️.ts";
+import { parseArtifactChild, type ArtifactChild } from "@semio-tech/framework-os/modules/store/child/schema";
+import { parseArtifactLink, type ArtifactLink } from "@semio-tech/framework-os/modules/store/link/schema";
 import {parseBinary64,type Binary64} from "@semio-tech/framework/value/ieee754";
-export type { ArtifactChild } from "../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts";
-export type { ArtifactLink } from "../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️link/🧬️schema/🟦️.ts";
+export type { ArtifactChild } from "@semio-tech/framework-os/modules/store/child/schema";
+export type { ArtifactLink } from "@semio-tech/framework-os/modules/store/link/schema";
 
 export interface NoteArtifact {
   /** 🧬️ @state artifact */

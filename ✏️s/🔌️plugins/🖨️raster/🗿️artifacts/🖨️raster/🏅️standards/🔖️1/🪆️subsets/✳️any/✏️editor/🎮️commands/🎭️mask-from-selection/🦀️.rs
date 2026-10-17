@@ -1,12 +1,13 @@
 //! 🎭️ Publish a selection as an image-backed layer mask without changing source pixels.
-use crate::{RasterCommand, RasterPlayApp};
+use crate::RasterCommand;
+use crate::commands::work_app::RasterWorkApp;
 use crate::config::{RasterConfig, RasterConfigMutation};
 use semio_s_artifact_raster_raster_model::{find_layer, flatten_raster_layers, layer_node_id};
 use semio_s_artifact_raster_raster_model::{RasterLayerMask, RasterLayerNode};
 use semio_s_artifact_raster_raster_mutations::RasterMutation;
 use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
 use semio_framework_pixels::{editing::validate_extent, png_encoding::{EncodedPngImage, PngEncodeJob}, RasterImage};
-use semio_framework_plugin::{ArtifactView, ConfigView, EditorApp, Emit, Fault};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -18,18 +19,18 @@ pub struct MaskFromSelection {
     pub selection: Vec<semio_s_artifact_raster_raster_mutations_pixels::paint_stroke::RasterSelectionSpan>,
 }
 
-struct Candidate {
-    layer_id: String,
-    expected_image_key: Option<String>,
+pub struct Candidate {
+    pub layer_id: String,
+    pub expected_image_key: Option<String>,
     expected_mask: Option<RasterLayerMask>,
-    image: RasterImage,
+    pub image: RasterImage,
     spans: Vec<(usize,usize,u8)>,
     cursor: usize,
     span: usize,
 }
 
 impl Candidate {
-    fn advance(&mut self, maximum: usize) -> bool {
+    pub fn advance(&mut self, maximum: usize) -> bool {
         let count = self.image.width as usize * self.image.height as usize;
         let end = self.cursor.saturating_add(maximum).min(count);
         while self.cursor < end {
@@ -42,7 +43,7 @@ impl Candidate {
     }
 }
 
-fn prepare(command: &MaskFromSelection, document: &RasterSnapshot) -> Result<Candidate, Fault> {
+pub fn prepare(command: &MaskFromSelection, document: &RasterSnapshot) -> Result<Candidate, Fault> {
     semio_s_artifact_raster_raster_model::require_layer_edit(&document.layers,&command.layer_id,false).map_err(Fault::from)?;
     let Some(RasterLayerNode::Pixel { image_key, mask, width, height, .. }) = find_layer(&document.layers, &command.layer_id) else { return Err(Fault::from("raster.mask-requires-pixel-layer")); };
     if image_key != &command.expected_image_key { return Err(Fault::from("raster.mask-image-conflict")); }
@@ -55,7 +56,7 @@ fn prepare(command: &MaskFromSelection, document: &RasterSnapshot) -> Result<Can
     Ok(Candidate { layer_id:command.layer_id.clone(),expected_image_key:image_key.clone(),expected_mask:mask.clone(),image:RasterImage::new(width,height),spans,cursor:0,span:0 })
 }
 
-fn publish(image: EncodedPngImage, candidate: &Candidate, document: &RasterSnapshot) -> Result<Emit<RasterMutation,RasterConfigMutation>,Fault> {
+pub fn publish(image: EncodedPngImage, candidate: &Candidate, document: &RasterSnapshot) -> Result<Emit<RasterMutation,RasterConfigMutation>,Fault> {
     use semio_s_artifact_raster_raster_mutations_pixels::{add_layer_asset, change_layer_mask, remove_layer_asset};
     let Some(RasterLayerNode::Pixel { image_key,mask,width,height,.. })=find_layer(&document.layers,&candidate.layer_id) else { return Err(Fault::from("raster.mask-layer-missing")); };
     if image_key!=&candidate.expected_image_key || mask!=&candidate.expected_mask { return Err(Fault::from("raster.mask-revision-conflict")); }
@@ -66,7 +67,7 @@ fn publish(image: EncodedPngImage, candidate: &Candidate, document: &RasterSnaps
     if mask.as_ref()==Some(&replacement) { return Ok(Emit::default()); }
     let mut operations=Vec::new();
     if !document.assets.contains_key(&key) {
-        operations.push(RasterMutation::AddLayerAsset(add_layer_asset::AddLayerAsset {asset_id:key.clone(),asset:crate::standards::v1::subsets::any::io::semio_image_from_png_bytes(&image.data).expect("mask PNG decodes")}));
+        operations.push(RasterMutation::AddLayerAsset(add_layer_asset::AddLayerAsset {asset_id:key.clone(),asset:semio_s_artifact_raster_raster_io::semio_image_from_png_bytes(&image.data).expect("mask PNG decodes")}));
     }
     operations.push(RasterMutation::ChangeLayerMask(change_layer_mask::ChangeLayerMask {layer_id:candidate.layer_id.clone(),expected:mask.clone(),mask:Some(replacement)}));
     if let Some(previous)=mask.as_ref().and_then(|mask|mask.image_key.as_ref()).filter(|previous|*previous!=&key) {
@@ -86,22 +87,22 @@ pub fn handle(_payload:&MaskFromSelection,_doc:&ArtifactView<'_,RasterSnapshot>,
 
 #[derive(Default)]
 pub struct MaskFromSelectionWork {
-    candidate:Option<Candidate>,
+    pub candidate:Option<Candidate>,
     encoding:Option<PngEncodeJob>,
     complete:bool,
 }
 
-impl ArtifactCommandWork<EditorApp<RasterPlayApp>> for MaskFromSelectionWork {
+impl<A: RasterWorkApp> ArtifactCommandWork<A> for MaskFromSelectionWork {
     fn tool_id(&self)->&'static str { "maskFromSelection" }
-    fn extent(&self,command:&RasterCommand,_snapshot:&RasterSnapshot,_interaction:&protocol::InteractionState,_context:Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<RasterPlayApp>>>) -> Option<usize> {
+    fn extent(&self,command:&RasterCommand,_snapshot:&RasterSnapshot,_interaction:&protocol::InteractionState,_context:Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<A>>) -> Option<usize> {
         matches!(command,RasterCommand::MaskFromSelection(_)).then_some(1)
     }
-    fn work_demands(&self,input:&ArtifactCommandInputs<'_,EditorApp<RasterPlayApp>>,_maximum_copy_bytes:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError> {
+    fn work_demands(&self,input:&ArtifactCommandInputs<'_,A>,_maximum_copy_bytes:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError> {
         let RasterCommand::MaskFromSelection(command)=input.command else { return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"raster mask command required")); };
         let stage=if self.encoding.is_some() {size_of::<PngEncodeJob>()+size_of::<Emit<RasterMutation,RasterConfigMutation>>()} else {size_of::<Candidate>()+command.selection.len().saturating_mul(size_of::<semio_s_artifact_raster_raster_mutations_pixels::paint_stroke::RasterSelectionSpan>())};
         Ok(semio_framework_value::RetirementDemand {copy_bytes:stage,depth:1,..Default::default()})
     }
-    fn step(&mut self,input:&ArtifactCommandInputs<'_,EditorApp<RasterPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<RasterPlayApp>>, semio_framework_job::OriginalTurnFailure> {
+    fn step(&mut self,input:&ArtifactCommandInputs<'_,A>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<A>, semio_framework_job::OriginalTurnFailure> {
         let original: Result<_, Fault> = (|| {
         if self.complete { return Err(Fault::from("raster.mask-work-complete")); }
         let RasterCommand::MaskFromSelection(command)=input.command else { return Err(Fault::from("raster.mask-work-mismatch")); };
@@ -137,6 +138,3 @@ impl ArtifactCommandWork<EditorApp<RasterPlayApp>> for MaskFromSelectionWork {
     fn terminal_is_empty(&self)->bool {self.candidate.is_none()&&self.encoding.is_none()}
 }
 
-#[cfg(test)]
-#[path="🧪️tests/🦀️.rs"]
-mod tests;

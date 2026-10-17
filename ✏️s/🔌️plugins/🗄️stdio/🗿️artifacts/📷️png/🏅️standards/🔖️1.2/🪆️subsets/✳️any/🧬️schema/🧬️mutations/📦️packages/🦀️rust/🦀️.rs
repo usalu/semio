@@ -21,7 +21,7 @@ pub mod schema {
     pub use super::standards::v1_2::subsets::any::schema::*;
 }
 pub use semio_s_artifact_stdio_png_snapshot::{STDIO_PNG_DOCUMENT_SCHEMA};
-pub use crate::standards::v1_2::subsets::any::io::artifact_items_5::{native_codec};
+pub use crate::standards::v1_2::subsets::any::io::facets::artifact_items_5::{native_codec};
 
 #[path = "."]
 pub mod standards {
@@ -31,36 +31,20 @@ pub mod standards {
         pub mod subsets {
             #[path = "."]
             pub mod any {
-                #[path = "."]
-                pub mod schema {
-                    pub use semio_s_artifact_stdio_png_schema::standards::v1_2::subsets::any::schema::*;
-                    pub use semio_s_artifact_stdio_png_snapshot::standards::v1_2::subsets::any::schema::snapshot;
-                    pub use semio_s_artifact_stdio_png_diff::standards::v1_2::subsets::any::schema::diff;
-                    #[path = "."]
-                    pub mod mutations {
-                        #[path = "../../🦀️.rs"]
-                        mod top_level;
-                        pub use top_level::*;
-                        #[path = "../../🌗️change-gamma/🦀️.rs"]
-                        pub mod change_gamma;
-                        #[path = "../../🩹️patch-pixels/🦀️.rs"]
-                        pub mod patch_pixels;
-                        #[path = "../../🎨️paint-native-samples/🦀️.rs"]
-                        pub mod paint_native_samples;
-                        #[path = "../../🔄️replace-image/🦀️.rs"]
-                        pub mod replace_image;
-                        #[path = "../../🎚️set-gamma/🦀️.rs"]
-                        pub mod set_gamma;
-                        #[path = "../../🧩️replace-samples/🦀️.rs"]
-                        pub mod replace_samples;
-                    }
-                    pub use semio_s_artifact_stdio_png_diff::standards::v1_2::subsets::any::schema::operations;
-                }
+                pub use semio_s_artifact_stdio_png_mutations_schema::standards::v1_2::subsets::any::schema;
                 #[path = "."]
                 pub mod io {
-                    #[path = "../../../../🚪️io/🦀️.rs"]
-                    mod component;
-                    pub use component::*;
+                    pub use semio_s_artifact_stdio_png_mutations_io::standards::v1_2::subsets::any::io::*;
+
+                    pub use semio_s_artifact_stdio_png_mutations_facets::standards::v1_2::subsets::any::io::facets;
+                    pub mod binary {
+    pub use semio_s_artifact_stdio_png_mutations_io::standards::v1_2::subsets::any::io::binary::*;
+    pub use semio_s_artifact_stdio_png_mutations_schema::standards::v1_2::subsets::any::io::binary::mutations;
+}
+                    pub mod text {
+    pub use semio_s_artifact_stdio_png_mutations_io::standards::v1_2::subsets::any::io::text::*;
+    pub use semio_s_artifact_stdio_png_mutations_schema::standards::v1_2::subsets::any::io::text::mutations;
+}
                     pub use semio_s_artifact_stdio_png_diff::standards::v1_2::subsets::any::io::sqlite;
                 }
             }

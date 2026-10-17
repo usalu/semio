@@ -14,7 +14,7 @@ import { applyVizChartDiff, inverseVizChartDiff } from "../../../🧬️schema/�
 import legendVectors from "../../🎬️render-scene/🔣️legend.json";
 import { legendSpecifications } from "../../🎬️render-scene/🧭️legend/🟦️.ts";
 import { inferVizChart } from "../../../🔨️modules/🏠️host/💡️inferences/🟦️.ts";
-import { validateVizChartSpecification } from "../../../🧬️schema/💡️inferences/🟦️.ts";
+import { validateVizChartSpecification } from "@semio-tech/print-viz-inference";
 import fontVectors from "../../../🔨️modules/🔤print-font-catalog/📏️metrics/🧪️tests/🔣️.json";
 import { measurePrintSans } from "../../../🔨️modules/🔤print-font-catalog/📏️metrics/🟦️.ts";
 import { existsSync, mkdirSync, readFileSync } from "node:fs";
@@ -454,7 +454,7 @@ export async function compileNativeVectorPaintControls(execution:PrintExecutionV
       for(const path of paths){equal(entry.render==="particle"?path.fill:path.stroke,expected,entry.id+" actual D3 CSS paint",.005);equal([entry.render==="particle"?path.fillOpacity:path.opacity],[entry.opacity*(entry.render==="lic"?.55:entry.render==="particle"?.7:1)],entry.id+" actual vector alpha",.002);if(entry.render!=="particle")equal([path.width],[scaleLinear([0,1],[0,c.lineWidth])(1)],entry.id+" actual physical stroke width",.005);}
     }catch(error){failures.push(appearance+" "+String(error));}}
   });}
-  if(JSON.stringify(c)!==before)throw Error("Vector paint neutral fixture changed");if(failures.length)throw Error("Native vector paint effects:\n"+failures.join("\n"));console.log("[DEBUG] Vector paint "+cases.length*themes.length+" actual native CSS color/width/alpha controls matched AJV, D3 and inverse/purity");
+  if(JSON.stringify(c)!==before)throw Error("Vector paint neutral fixture changed");if(failures.length)throw Error("Native vector paint effects:\n"+failures.join("\n"));
 });}
 
 /** 🧭️ Rejects geographic map controls on a plane vector field through canonical inference and independent JSON Schema admission. */
@@ -467,7 +467,7 @@ export async function compileNativeVectorBaseAdmission():Promise<void>{
       const original=JSON.stringify(base),outcome=changeVizChartValue(base,{path:["presets","0","options",entry.key],value:entry.value});if(outcome.messages.length||outcome.diff.edits.length!==1)throw Error(entry.key+" vector applicability mutation refused");const replay=applyVizChartDiff(base,outcome.diff),inverse=applyVizChartDiff(replay.snapshot,inverseVizChartDiff(base,outcome.diff));if(replay.messages.length||inverse.messages.length)throw Error(entry.key+" vector applicability replay refused");deepStrictEqual(inverse.snapshot,base);if(JSON.stringify(base)!==original)throw Error("Vector applicability base changed");if(validate({...c.vectors.accepted,[entry.key]:entry.value}))throw Error("Independent JSON Schema admitted map-only vector option "+entry.key);const result=await inferVizChart(replay.snapshot);if(result.complete||result.tikz!==""||result.scene!==undefined||result.plan!==undefined)failures.push(language+" plane-vector map-only control published "+entry.key);
     }
   }
-  if(JSON.stringify(c)!==before)throw Error("Vector applicability fixture changed");if(failures.length)throw Error("Vector applicability failures:\n"+failures.join("\n"));console.log("[DEBUG] Vector14 map-only canonical rejections and2 admitted plane-control sets matched independent AJV, mutation/replay/inverse/purity");
+  if(JSON.stringify(c)!==before)throw Error("Vector applicability fixture changed");if(failures.length)throw Error("Vector applicability failures:\n"+failures.join("\n"));
 }
 
 /** 🌊️ Rejects route-only controls and invalid flow style selectors on a flow map through canonical inference and independent JSON Schema admission. */
@@ -480,5 +480,5 @@ export async function compileNativeGeoFlowAdmission():Promise<void>{
       const original=JSON.stringify(base),outcome=changeVizChartValue(base,{path:["presets","0","options",entry.key],value:entry.value});if(outcome.messages.length||outcome.diff.edits.length!==1)throw Error(entry.key+" vector applicability mutation refused");const replay=applyVizChartDiff(base,outcome.diff),inverse=applyVizChartDiff(replay.snapshot,inverseVizChartDiff(base,outcome.diff));if(replay.messages.length||inverse.messages.length)throw Error(entry.key+" vector applicability replay refused");deepStrictEqual(inverse.snapshot,base);if(JSON.stringify(base)!==original)throw Error("Flow applicability base changed");if(validate({...c.vectors.accepted,[entry.key]:entry.value}))throw Error("Independent JSON Schema admitted inapplicable vector option "+entry.key);const result=await inferVizChart(replay.snapshot);if(result.complete||result.tikz!==""||result.scene!==undefined||result.plan!==undefined)failures.push(language+" geographic-flow inapplicable control published "+entry.key);
     }
   }
-  if(JSON.stringify(c)!==before)throw Error("Flow applicability fixture changed");if(failures.length)throw Error("Flow applicability failures:\n"+failures.join("\n"));console.log("[DEBUG] Flow10 inapplicable canonical rejections and2 admitted flow-control sets matched independent AJV, mutation/replay/inverse/purity");
+  if(JSON.stringify(c)!==before)throw Error("Flow applicability fixture changed");if(failures.length)throw Error("Flow applicability failures:\n"+failures.join("\n"));
 }

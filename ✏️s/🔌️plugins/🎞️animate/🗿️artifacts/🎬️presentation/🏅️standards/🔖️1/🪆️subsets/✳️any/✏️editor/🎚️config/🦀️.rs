@@ -125,5 +125,80 @@ mod tests;
 #[path = "🧪️tests/🔬️contract-vectors/🦀️.rs"]
 mod contract_vectors;
 
-#[path = "🚪️io/🦀️.rs"]
-pub mod io;
+
+
+//#region 🧩️ArtifactItems3
+pub mod artifact_items_3 {
+//#region 🔖️Domain
+/// 📐️ Normalized `x,y,width,height` rect — always reached through a `#[dsl(block)]` field (see
+/// {@link FigureTileSource}/{@link FigureTileDraft}), so it declares no `#[dsl(keyword)]` of its own.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[value(rename_all = "camelCase")]
+pub struct FigureTileFrame {
+    pub x: f64,
+    pub y: f64,
+    pub width: f64,
+    pub height: f64,
+}
+
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[value(rename_all = "camelCase")]
+pub struct FigureTileSource {
+    pub src: String,
+    pub kind: String,
+    #[dsl(block)]
+    pub frame: FigureTileFrame,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub source_aspect: Option<f64>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub pdf_page: Option<u32>,
+}
+
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[value(rename_all = "camelCase")]
+pub struct FigureTileDraft {
+    pub id: String,
+    pub name: String,
+    #[dsl(block)]
+    pub crop: FigureTileFrame,
+}
+//#endregion 🔖️Domain
+}
+//#endregion 🧩️ArtifactItems3
+
+//#region 🧩️ArtifactItems13
+pub mod artifact_items_13 {
+use crate::{FigureTileDraft, FigureTileFrame};
+use protocol::{Identified, Patchable};
+
+//#region 🔖️CollectionSupport
+impl Identified<String> for FigureTileDraft {
+    fn id(&self) -> &String {
+        &self.id
+    }
+}
+
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
+#[value(rename_all = "camelCase")]
+pub struct FigureTileDraftPatch {
+    pub name: Option<String>,
+    #[dsl(block)]
+    pub crop: Option<FigureTileFrame>,
+}
+
+impl Patchable<FigureTileDraftPatch> for FigureTileDraft {
+    fn apply_patch(&mut self, patch: &FigureTileDraftPatch) {
+        if let Some(name) = &patch.name {
+            self.name = name.clone();
+        }
+        if let Some(crop) = &patch.crop {
+            self.crop = crop.clone();
+        }
+    }
+}
+//#endregion 🔖️CollectionSupport
+}
+//#endregion 🧩️ArtifactItems13

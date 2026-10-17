@@ -1,10 +1,11 @@
-use super::*;
+use semio_framework::PluginManifest;
+use semio_framework_test_fixtures::fixture_path;
 
 /// 📇️ The bound a descriptor is actually read against, taken from its own declaration site rather
 /// than restated here — `trustedBootstrapReadRegular` and the directory's execution-target read
 /// both refuse a descriptor above it.
 fn directory_schema_source() -> String {
-    semio_framework_plugin_test_support::read_module_tree_source(&std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../📇️directory/🧬️schema/🦀️.rs")).expect("the directory schema module tree reads")
+    semio_framework_plugin_test_support::read_module_tree_source(&fixture_path!("../../../../../📇️directory/🧬️schema/🦀️.rs")).expect("the directory schema module tree reads")
 }
 
 const DESCRIPTOR_MAX_BYTES: usize = 4 * 1024 * 1024;

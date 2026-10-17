@@ -1,4 +1,9 @@
-use super::*;
+use crate::test_app_mutation_fixture::config::mutations::change_test_config_selection::ChangeTestConfigSelection;
+use semio_framework_test_fixtures::fixture_text;
+use semio_framework_value_derive::{FromValue, ToValue};
+use protocol::{MutationKind, OpText};
+use crate::test_app_mutation_fixture::config::{TestConfig, TestConfigDiff};
+use crate::test_app_mutation_fixture::config::mutations::TestConfigMutation;
 #[test]
 fn nullable_selection_serde_text_and_binary_round_trip() {
     for value in [None, Some("null".into()), Some("".into()), Some("☃\n".into())] {
@@ -45,14 +50,14 @@ fn close_config_original<T:semio_framework_value::retirement::RetireOwned>(origi
         for denied in [Some(RetainedCloneGrant{maximum_items:0,..grant}),(copy>0).then_some(RetainedCloneGrant{maximum_copy_bytes:copy.saturating_sub(1),..grant}),(capacity>0).then_some(RetainedCloneGrant{maximum_capacity_bytes:capacity.saturating_sub(1),..grant}),(release>0).then_some(RetainedCloneGrant{maximum_release_bytes:release.saturating_sub(1),..grant}),(depth>0).then_some(RetainedCloneGrant{maximum_depth:depth.saturating_sub(1),..grant})].into_iter().flatten(){let(step,heap)=observe_heap_allocations_on_this_thread(||owner.step(denied));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));if let Ok(step)=step{assert_eq!(step.progress(),Default::default());}}
         let(step,heap)=observe_heap_allocations_on_this_thread(||owner.step(grant).unwrap());assert!(step.progress().fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));births+=heap.requested_bytes;released+=heap.released_bytes;turns+=1;assert!(turns<100000);assert!(step.progress().copied_items>0||matches!(step,RetainedCloneStep::Complete(_)));
     }
-    assert_eq!(released,held+births);let(_,heap)=observe_heap_allocations_on_this_thread(||drop(owner));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));eprintln!("[DEBUG] Actual config nullable owner={scope} body={body} original={held} births={births} released={released} terminalDrop=0");
+    assert_eq!(released,held+births);let(_,heap)=observe_heap_allocations_on_this_thread(||drop(owner));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
 }
 
 #[test]
 fn test_config_original_record_receiving_preserves_nullable_selection() {
     use replication::{OpBinary, OpBinaryReceiving, OpBinaryReceivingCursor};
     use semio_framework_value::{NativeDecodeControl, RetainedCloneGrant};
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️receiving.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../🧪️tests/🎚️test-app-config-selection-unit/🧫️fixtures/🔣️receiving.json")).unwrap();
     let turn = &fixture["turn"];
     let grant = RetainedCloneGrant { maximum_items: turn["items"].as_u64().unwrap() as usize, maximum_copy_bytes: turn["copyBytes"].as_u64().unwrap() as usize, maximum_capacity_bytes: turn["capacityBytes"].as_u64().unwrap() as usize, maximum_release_bytes: turn["releaseBytes"].as_u64().unwrap() as usize, maximum_depth: turn["depth"].as_u64().unwrap() as usize };
     for selected in fixture["selections"].as_array().unwrap() {
@@ -87,6 +92,5 @@ fn test_config_original_record_receiving_preserves_nullable_selection() {
         let TestConfigMutation::ChangeTestConfigSelection(change) = &output;
         let held = change.selected.as_ref().map_or(0, String::capacity);
         close_config_original(output, held, grant.maximum_copy_bytes, "receiving");
-        eprintln!("[DEBUG] actual config canonical ordinal=0 nullableSerde=true oneItemReceiving=true paidCursorClose=true turns={turns}");
     }
 }

@@ -2,7 +2,7 @@
 //! Physical dir name (`➖remove-step`, wired by `🦀️.rs`) predates the semantic rename; the Rust
 //! module is still `remove_step`, the type/variant/kind are `delete-step`.
 
-use crate::{FormMutation, FormsDiff, FormsSnapshot};
+use crate::{FormsDiff, FormsSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 
 //#region 🗑️DeleteStep
@@ -16,15 +16,18 @@ pub struct DeleteStep {
     pub id: String,
 }
 
-impl MutationKind<FormsSnapshot, FormMutation> for DeleteStep {
+impl<Op> MutationKind<FormsSnapshot, Op> for DeleteStep
+where
+    Op: protocol::Mutation<FormsSnapshot, Diff = FormsDiff> + From<DeleteStep> + From<crate::standards::v1::subsets::any::schema::mutations::create_step::mutation::CreateStep>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "step", kind: "delete-step", record: "DeletedStep" };
 
     fn diff(&self, base: &FormsSnapshot) -> protocol::MutationOutcome<FormsDiff> {
-        super::diff::diff_delete_step(self, base)
+        crate::standards::v1::subsets::any::schema::mutations::delete_step::diff::diff_delete_step(self, base)
     }
-    fn inverse(&self, base: &FormsSnapshot) -> Result<Vec<FormMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &FormsSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
-        super::inverse::inverse_delete_step(self, base)?
+        crate::standards::v1::subsets::any::schema::mutations::delete_step::inverse::inverse_delete_step(self, base)?
     
     })
 }

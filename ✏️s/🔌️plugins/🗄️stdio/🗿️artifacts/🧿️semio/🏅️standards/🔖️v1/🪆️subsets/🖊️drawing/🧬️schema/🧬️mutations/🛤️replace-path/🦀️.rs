@@ -2,7 +2,6 @@
 //! control points are edited piecewise by any real editor, so this is `replace`, not `change`).
 
 use crate::schema::diff::NodePath;
-use crate::schema::mutations::SemioDrawingMutation;
 use crate::schema::snapshot::{PathSegment, SemioDrawingSnapshot};
 
 //#region 🔖️Payload
@@ -14,13 +13,16 @@ pub struct ReplacePath {
     pub new_segments: Vec<PathSegment>,
 }
 
-impl protocol::MutationKind<SemioDrawingSnapshot, SemioDrawingMutation> for ReplacePath {
+impl<Op> protocol::MutationKind<SemioDrawingSnapshot, Op> for ReplacePath
+where
+    Op: protocol::Mutation<SemioDrawingSnapshot, Diff = crate::schema::diff::SemioDrawingDiff> + From<ReplacePath>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "path", kind: "replace-path", record: "ReplacedPath" };
 
-    fn diff(&self, base: &SemioDrawingSnapshot) -> protocol::MutationOutcome<<SemioDrawingMutation as protocol::Mutation<SemioDrawingSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioDrawingSnapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<SemioDrawingSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &SemioDrawingSnapshot) -> Result<Vec<SemioDrawingMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &SemioDrawingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

@@ -92,7 +92,7 @@ fn dag_host_snapshot_to_workflow(host_snapshot: &DagHostSnapshot) -> (Vec<NodeGr
 pub fn render(document: &FlowSnapshot) -> UiAssemblyResult<BuiltNode> {
     let live = document.to_host_snapshot();
     let session = FlowEvalSession::new();
-    let host = crate::editor::flow::host_with_session(document.to_host_snapshot(), &session);
+    let host = crate::editor::flow::host::host_with_session(document.to_host_snapshot(), &session);
     let (nodes, edges) = dag_host_snapshot_to_workflow(&host.dag.graph.host_snapshot);
     let viewport = Viewport2d { x: 0.0, y: 0.0, zoom: 1.0 };
     let snapshot_json = Some(semio_framework_pack_json::to_json_string(document));
@@ -118,7 +118,5 @@ pub fn render(document: &FlowSnapshot) -> UiAssemblyResult<BuiltNode> {
 //#endregion 🔖️Render
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

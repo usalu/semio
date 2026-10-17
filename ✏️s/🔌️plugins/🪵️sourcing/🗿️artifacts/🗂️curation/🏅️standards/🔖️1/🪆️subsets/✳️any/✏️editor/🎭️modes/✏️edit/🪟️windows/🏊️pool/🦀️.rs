@@ -4,7 +4,7 @@ use crate::schema::{available_modules, curated_count, filtered_stock, typology_f
 use crate::{CurationSnapshot, ObjectKind, SortDirection};
 use crate::editor::sourcing::config::SourcingCurationConfig;
 use crate::editor::sourcing::terminology::SourcingLabels;
-use crate::editor::sourcing::{sourcing_action, sourcing_table, sourcing_table_action, sourcing_table_row, ui_value_bool, ui_value_map, ui_value_text};
+use crate::editor::sourcing::base::{sourcing_action, sourcing_table, sourcing_table_action, sourcing_table_row, ui_value_bool, ui_value_map, ui_value_text};
 use semio_framework_plugin::plugin_app_close_prelude as ui;
 use semio_framework_plugin::plugin_app_close_prelude::InputKind;
 use semio_framework_plugin::Buildable;
@@ -56,7 +56,7 @@ const SOURCING_CURATION_SURFACE_POOL: &str = "sourcing.pool.table";
 /// curated table's `count`) leaves the pool in document order instead of silently falling back to name.
 pub const SOURCING_CURATION_POOL_SORT_COLUMNS: [&str; 3] = ["name", "module", "availability"];
 
-fn pool_kinds(document: &CurationSnapshot, cfg: &SourcingCurationConfig) -> Vec<ObjectKind> {
+pub fn pool_kinds(document: &CurationSnapshot, cfg: &SourcingCurationConfig) -> Vec<ObjectKind> {
     let mut filtered = filtered_stock(document, &cfg.filters);
     let Some(sort) = cfg.filters.sort.as_ref().filter(|sort| SOURCING_CURATION_POOL_SORT_COLUMNS.contains(&sort.column_id.as_str())) else { return filtered };
     filtered.sort_by(|a, b| {
@@ -72,7 +72,7 @@ fn pool_kinds(document: &CurationSnapshot, cfg: &SourcingCurationConfig) -> Vec<
 
 /// 🧺️ One pool row: catalogue fields plus a single curated-count stepper (`curationSetCount`). Row
 /// buttons were removed — they duplicated the stepper's +/- and stacked extra plus icons beside it.
-fn pool_row(document: &CurationSnapshot, kind: &ObjectKind, _labels: &SourcingLabels) -> semio_framework_value::DslValue {
+pub fn pool_row(document: &CurationSnapshot, kind: &ObjectKind, _labels: &SourcingLabels) -> semio_framework_value::DslValue {
     sourcing_table_row(
         &kind.id,
         vec![
@@ -99,7 +99,7 @@ fn ui_label(value: impl AsRef<str>) -> UiAssemblyResult<semio_framework_plugin::
 
 /// 🔍️ The pool's filter chrome: free-text query, one toggle per module, the typology path, and the
 /// minimum availability — each bound to its session-only config command.
-fn filter_bar(cfg: &SourcingCurationConfig, labels: &SourcingLabels) -> UiAssemblyResult<BuiltNode> {
+pub fn filter_bar(cfg: &SourcingCurationConfig, labels: &SourcingLabels) -> UiAssemblyResult<BuiltNode> {
     let filters = &cfg.filters;
     let mut children = UiFixedList::<BuiltNode>::default();
     let (query_action, _) = sourcing_action("setFilterQuery", None)?;
@@ -152,7 +152,4 @@ pub fn render(document: &CurationSnapshot, cfg: &SourcingCurationConfig, labels:
 //#endregion 🔖️Render
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

@@ -1,10 +1,10 @@
 /// <reference path="./🗄️.d.ts" />
 import sql from"./🗄️.sql"with{type:"text"};
 import type{RunSnapshot,RunStatus,RunNodeStatus,RunTrigger}from"../../../🧬️schema/📸️snapshot/🟦️.ts";
-import {encodeIeee754Cells,readBinary64,type Ieee754Column} from "../../../../../../../../../🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+import {encodeIeee754Cells,readBinary64,type Ieee754Column} from "@semio-tech/framework-sqlite-snapshot-ts/ieee754";
 import {parseBinary64} from "../../../../../../../../../🔨️modules/🌱️value/📦️packages/🟦️typescript/🔢️ieee754/🟦️.ts";
-import{ArtifactSqliteProjection,artifactSqliteTables,artifactSqliteCheckpoint,artifactSqliteInteger,artifactSqliteText,artifactSqliteDocument,type ArtifactSqliteOptions}from"../../../../../../../../../🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
-import{sqliteOperation,ValueError,type SqliteDatabase,type SqliteRow,type SqliteOperation}from"../../../../../../../../../🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import{ArtifactSqliteProjection,artifactSqliteTables,artifactSqliteCheckpoint,artifactSqliteInteger,artifactSqliteText,artifactSqliteDocument,type ArtifactSqliteOptions}from"@semio-tech/framework-sqlite-snapshot-ts/artifact";
+import{sqliteOperation,ValueError,type SqliteDatabase,type SqliteRow,type SqliteOperation}from"@semio-tech/framework-sqlite-snapshot-ts";
 export const RUN_SQLITE_SCHEMA:string=sql;
 const STATUS=["pending","running","succeeded","failed","canceled"]as const;
 const NODE_STATUS=["computed","cacheHit","failed"]as const;

@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 
 import { chromium } from "playwright";
 import { expect, it } from "vitest";
-import { downloadDataUrl } from "../../../🛠️ShellHelpers/🟦️.tsx";
+import { downloadDataUrl } from "../../../🛠️ShellHelpers/🔩️plumbing/📥️downloads-and-file-requests/🟦️.ts";
 import fixture from "../🧫️fixtures/📥️download/🔣️.json";
 
 it("delivers the real icon data-url download through Chromium with exact UTF-8 bytes", async () => {

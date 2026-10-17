@@ -137,3 +137,17 @@ pub fn create_wfc2d_viewer() -> semio_framework_plugin::AppDefinition {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🧩️ArtifactItems
+pub mod artifact_items {
+pub use crate::schema::snapshot::WFC_2D_DOCUMENT_SCHEMA;
+use semio_framework_artifact_reference::{Dialect, StandardId, SubsetId};
+
+//#region 🔖️Dialect
+/// 🪪️ The one `Dialect` coordinate every surface of the `✳️any` subset binds — `s.wfc.wfc2d@1/*`.
+/// It lives at the ARTIFACT level (not under `editor`/`viewer`) so a viewer file can read it without
+/// importing through the sibling editor module, which `policyViewerPurityBreaches` refuses.
+pub const WFC_2D_DIALECT: Dialect = Dialect { artifact_kind: WFC_2D_DOCUMENT_SCHEMA, standard: StandardId("1"), subset: SubsetId::ANY };
+//#endregion 🔖️Dialect
+}
+//#endregion 🧩️ArtifactItems

@@ -3,8 +3,7 @@
 //! ([`crate::standards::v1::subsets::any::schema::rule_graph_position`]). The node-graph drag tool yields it, one per released
 //! drag (design §13.3 of ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING); its exact undo is ONE `set-rule-layout-points`.
 use crate::standards::v1::subsets::any::schema::diff::RewritingDiff;
-use crate::standards::v1::subsets::any::schema::mutations::RewriteRuleMutation;
-use crate::RewritingSnapshot;
+use crate::standards::v1::subsets::any::schema::snapshot::RewritingSnapshot;
 
 //#region 🔖️Mutation
 /// 🫳️ `drag-rule-nodes` payload.
@@ -20,8 +19,11 @@ pub struct DragRuleNodes {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn drag_rule_nodes(targets: Vec<String>, dx: f64, dy: f64) -> RewriteRuleMutation {
-    RewriteRuleMutation::DragRuleNodes(DragRuleNodes { targets, dx, dy })
+pub fn drag_rule_nodes<Op>(targets: Vec<String>, dx: f64, dy: f64) -> Op
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::drag_rule_nodes::DragRuleNodes>,
+{
+    Op::from(DragRuleNodes { targets, dx, dy })
 }
 
 impl DragRuleNodes {
@@ -31,13 +33,16 @@ impl DragRuleNodes {
     }
 }
 
-impl protocol::MutationKind<RewritingSnapshot, RewriteRuleMutation> for DragRuleNodes {
+impl<Op> protocol::MutationKind<RewritingSnapshot, Op> for DragRuleNodes
+where
+    Op: protocol::Mutation<RewritingSnapshot, Diff = RewritingDiff> + From<DragRuleNodes> + From<crate::standards::v1::subsets::any::schema::mutations::set_rule_layout_points::SetRuleLayoutPoints>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "drag", entity: "rule-nodes", kind: "drag-rule-nodes", record: "DraggedRuleNodes" };
 
     fn diff(&self, base: &RewritingSnapshot) -> protocol::MutationOutcome<RewritingDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &RewritingSnapshot) -> Result<Vec<RewriteRuleMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &RewritingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

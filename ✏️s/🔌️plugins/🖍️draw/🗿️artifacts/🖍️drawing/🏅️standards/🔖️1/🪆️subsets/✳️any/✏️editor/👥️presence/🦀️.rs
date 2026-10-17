@@ -212,11 +212,6 @@ impl protocol::OpBinary for DrawingPresenceMutation {
 }
 //#endregion 🔖️PresenceMutation
 
-//#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests
 
 //#region 🪢️TaxonomyMounts
 #[path = "🧬️schema/🦀️.rs"]

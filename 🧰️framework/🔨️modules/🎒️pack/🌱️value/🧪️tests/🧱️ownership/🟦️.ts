@@ -3,7 +3,7 @@ import {test,expect} from "bun:test";
 import {existsSync,readFileSync} from "node:fs";
 import {resolve,dirname} from "node:path";
 import TOML from "@iarna/toml";
-import { readModuleTreeSource } from "../../../../📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 import fixture from "../../🧪️tests/🧫️fixtures/🧩️ownership/🔣️.json";
 type Ownership={package:string;facade:string;module:string;manifest:string;library:{path:string};facadeLibrary:string;dependencies:string[];publicEntries:string[];schemaEntries:string[];forbiddenProviders:string[]};
 const contract=fixture as unknown as Ownership,owner=resolve(import.meta.dir,"../.."),read=(path:string)=>readFileSync(resolve(owner,path),"utf8"),tree=(path:string)=>readModuleTreeSource(resolve(owner,path),{crates:false});
@@ -18,7 +18,7 @@ test("Record ownership examples name the actual package and public module",()=>{
 test("one actual Pack record library owns the codec and the facade exposes it with no product source authority",()=>{
  expect(contract.manifest).toBe("📦️packages/🦀️rust/Cargo.toml");
  const path=resolve(owner,contract.manifest);expect(existsSync(path)).toBe(true);
- const source=readFileSync(path,"utf8"),native=Bun.TOML.parse(source) as {package:{name:string};lib:{name:string;path:string};dependencies:Record<string,unknown>};
+ const source=readFileSync(path,"utf8"),native=Bun.TOML.parse(source) as {package:{name:string};lib:{path:string};dependencies:Record<string,unknown>};
  expect(native).toEqual(TOML.parse(source) as typeof native);expect(native.package.name).toBe(contract.package);expect(native.lib).toEqual(contract.library);
  expect(Object.keys(native.dependencies).sort()).toEqual([...contract.dependencies].sort());expect(native.dependencies).not.toHaveProperty(contract.package);
  expect(resolve(dirname(path),contract.library.path)).toBe(resolve(owner,"🦀️.rs"));

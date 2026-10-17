@@ -1,6 +1,6 @@
 /** 🔀️ Guarded chart event replay preserves preconditions and atomicity. */
 import type { VizChartSnapshot, VizChartValue } from "../📸️snapshot/🟦️.ts";
-import { validateVizChartSpecification } from "../💡️inferences/✅️validation/🟦️.ts";
+import { validateVizChartSpecification } from "@semio-tech/print-viz-inference/validation";
 
 export type VizChartEdit = { readonly path: readonly string[]; readonly before?: VizChartValue; readonly after?: VizChartValue };
 export type VizChartDiff = { readonly edits: readonly VizChartEdit[] };

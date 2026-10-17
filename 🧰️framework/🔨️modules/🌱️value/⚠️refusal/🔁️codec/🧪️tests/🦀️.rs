@@ -27,7 +27,6 @@ fn controlled_value_refusal_codec_closed_wire_matches_original_kind_message_and_
         let mut kind_decoding = |_| true;
         assert_eq!(ValueRefusalKind::from_value_controlled(&encoded_kind, &mut NativeDecodeControl::new(1_000_000, &mut kind_decoding)).unwrap(), error.kind);
     }
-    println!("[DEBUG] controlled refusal codec preserves every original kind, Unicode message and authored path against serde wire output");
 }
 #[test]
 fn controlled_value_refusal_codec_rejects_every_non_closed_record_without_mutating_input() {
@@ -66,5 +65,4 @@ fn controlled_value_refusal_codec_keeps_cancellation_and_cumulative_ownership_ca
     }
     assert_eq!(original.kind, ValueRefusalKind::InvariantViolated);
     assert_eq!(source.get("message").unwrap().as_str().unwrap(), original.message);
-    println!("[DEBUG] refusal transport preserves source ownership and distinct cancellation/quota causes through long-message construction");
 }

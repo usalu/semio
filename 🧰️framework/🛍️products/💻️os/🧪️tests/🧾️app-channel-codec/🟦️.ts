@@ -12,7 +12,7 @@ import { decodeDocumentArchiveBytes, encodeDocumentArchiveBytes } from "@semio-t
 import { decodePresencePeer, encodePresencePeer } from "@semio-tech/framework-replication";
 import { source, documentArchive, type AppChannelHandle, type AppCommandValue, type AppFrameValue, type TurnOutcome } from "../🛠️backbone-wire-helpers/🟦️.ts";
 
-type ArtifactPresencePeer = import("../../../../🔨️modules/📡️replication/🟦️.ts").ArtifactPresencePeer;
+type ArtifactPresencePeer = import("@semio-tech/framework-replication").ArtifactPresencePeer;
 
 describe("@semio-tech/framework-os AppChannelCodec", () => {
   it("round-trips the app-typed presence pack through the document-presence wire", () => {

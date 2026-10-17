@@ -1,5 +1,5 @@
-use super::DagNodeGraphEditOp;
-use super::*;
+use crate::editor::dag::commands::node_graph_edit::DagNodeGraphEditOp;
+use crate::editor::dag::commands::node_graph_edit::*;
 use crate::editor::dag::commands::{connect_media_ports, disconnect, patch_dag_nodes};
 use crate::editor::dag::unit_tests::context;
 use crate::editor::dag::unit_tests::context::DagApp;

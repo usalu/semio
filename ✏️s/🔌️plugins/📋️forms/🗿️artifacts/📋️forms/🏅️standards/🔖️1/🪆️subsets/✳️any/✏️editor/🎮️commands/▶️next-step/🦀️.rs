@@ -1,7 +1,7 @@
 //! ▶️ Advance one exact Forms Try window when its visible step is valid.
 
 use crate::editor::forms::config::{FormsConfig, FormsConfigMutation};
-use crate::editor::forms::effective_try_values;
+use crate::editor::forms::modes::blueprint::windows::try_wizard::effective_try_values;
 use crate::editor::forms::modes::blueprint::windows::try_wizard::config::FormsTryWindowConfig;
 use crate::editor::forms::modes::blueprint::windows::try_wizard::transient::FormsTryWindowTransient;
 use crate::schema::can_advance;
@@ -17,8 +17,8 @@ pub struct NextStep {
     pub window_kind_id: String,
 }
 
-pub(crate) fn handle_window(payload: &NextStep, spec: &FormsSnapshot, config: &FormsTryWindowConfig, transient: &FormsTryWindowTransient) -> Result<FormsTryWindowConfig, Fault> {
-    if payload.window_id.is_empty() || payload.window_kind_id != crate::editor::forms::modes::blueprint::windows::try_wizard::FORMS_PLAY_WINDOW_TRY {
+pub fn handle_window(payload: &NextStep, spec: &FormsSnapshot, config: &FormsTryWindowConfig, transient: &FormsTryWindowTransient) -> Result<FormsTryWindowConfig, Fault> {
+    if payload.window_id.is_empty() || payload.window_kind_id != crate::editor::forms::support::FORMS_PLAY_WINDOW_TRY {
         return Err(Fault::from("forms-next-step-window-required"));
     }
     let index = config.current_step_index as usize;

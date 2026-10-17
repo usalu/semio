@@ -4,6 +4,7 @@
 
 use crate::bestest::{is_free_float, model, model_json, project, run, CASES};
 use crate::model::Model;
+use semio_framework_test_fixtures::fixture_path;
 
 //#region 🔮️EnergyPlusComparison
 /// 🔮️ INDICATIVE ANSI/ASHRAE 140 §5.2 reference envelopes (the min/max across the reference
@@ -116,7 +117,7 @@ const FREE_FLOAT_TOLERANCE_K: f64 = 2.5;
 /// 📁️ The committed fixture tree, resolved from the crate manifest rather than the process
 /// working directory so it holds under `cargo test` from anywhere.
 fn subset_root() -> std::path::PathBuf {
-    std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../..")
+    fixture_path!("../../..")
 }
 
 fn fixture_path(case: &str) -> std::path::PathBuf {

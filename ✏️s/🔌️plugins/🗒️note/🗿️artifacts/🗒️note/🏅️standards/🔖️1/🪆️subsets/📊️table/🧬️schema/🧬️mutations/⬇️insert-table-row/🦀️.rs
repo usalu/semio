@@ -1,6 +1,5 @@
 //! ⬇️ Note mutation — `InsertTableRow`: appends a blank row to a table block (width matches the current column count).
 
-use crate::schema::mutations::NoteMutation;
 use crate::{NoteDiff, NoteSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -23,17 +22,23 @@ pub struct InsertTableRow {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn insert_table_row(id: String) -> NoteMutation {
-    NoteMutation::InsertTableRow(InsertTableRow { id, cells: None })
+pub fn insert_table_row<Op>(id: String) -> Op
+where
+    Op: From<crate::standards::v1::subsets::table::schema::mutations::insert_table_row::InsertTableRow>,
+{
+    Op::from(InsertTableRow { id, cells: None })
 }
 
-impl MutationKind<NoteSnapshot, NoteMutation> for InsertTableRow {
+impl<Op> MutationKind<NoteSnapshot, Op> for InsertTableRow
+where
+    Op: protocol::Mutation<NoteSnapshot, Diff = NoteDiff> + From<InsertTableRow> + From<crate::standards::v1::subsets::table::schema::mutations::remove_table_row::RemoveTableRow>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "insert", entity: "table-row", kind: "insert-table-row", record: "InsertedTableRow" };
 
     fn diff(&self, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &NoteSnapshot) -> Result<Vec<NoteMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &NoteSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

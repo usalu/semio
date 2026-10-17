@@ -3,19 +3,34 @@
 //! every `Supersede` transition's role and history edit, the history edits in effect for the final alternative, which
 //! rows read as applied, every history edit each author may undo with the restore it authors, and each author's redo.
 
-use super::*;
+#[cfg(test)]
+use semio_framework_plugin_decl_app::ArtifactApp;
+use pack::snapshot::ArtifactPack;
+use store::{ArtifactStoreInitializationAuthority, MemberFactory, Mutation, SpaceMember};
+use std::collections::BTreeMap;
+use std::future::Future;
+use semio_framework::kernel::{HybridLogicalTimestamp, MutationId};
+#[cfg(test)]
+use semio_framework_plugin_time_travel::{SupersedeLedger, SupersedeRecord, SupersedeRole};
+#[cfg(test)]
+use semio_framework_plugin_window_config::WindowConfigOwner;
+#[cfg(test)]
+use semio_framework_plugin_window_transient::window_transient::WindowTransientOwner;
+use semio_framework_ui_contract::*;
 use serde_json::{json, Value};
 
 const SUPERSEDE_LEDGER_FIXTURE_JSON: &str = include_str!("../🧫️fixtures/🧫️supersede-ledger/🔣️.json");
 
-fn replacement(value: &Value) -> protocol::InputReplacement {
+#[doc(hidden)]
+pub fn replacement(value: &Value) -> protocol::InputReplacement {
     match value.as_str() {
         Some(text) => protocol::InputReplacement::Input { schema: "fixture".into(), payload: text.as_bytes().to_vec() },
         None => protocol::InputReplacement::Withdrawn,
     }
 }
 
-fn authored(scope: &Option<String>, inputs: &[protocol::SupersededInput]) -> Value {
+#[doc(hidden)]
+pub fn authored(scope: &Option<String>, inputs: &[protocol::SupersededInput]) -> Value {
     let inputs: Vec<Value> = inputs
         .iter()
         .map(|input| {

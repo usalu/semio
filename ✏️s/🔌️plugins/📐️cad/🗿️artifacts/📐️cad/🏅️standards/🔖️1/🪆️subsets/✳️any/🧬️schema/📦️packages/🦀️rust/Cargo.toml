@@ -61,6 +61,7 @@ semio-framework-async-macros = { workspace = true }
 semio-framework-dispatch-macros = { workspace = true }
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
+semio-framework-test-fixtures = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-framework-trace = { workspace = true }
 semio-s-artifact-cad-cad = { workspace = true }
 semio-s-artifact-cad-cad-editor = { workspace = true }

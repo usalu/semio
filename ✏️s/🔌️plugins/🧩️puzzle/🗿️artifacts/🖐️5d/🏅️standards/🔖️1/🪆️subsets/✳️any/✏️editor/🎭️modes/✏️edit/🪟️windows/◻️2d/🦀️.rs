@@ -12,14 +12,15 @@ use crate::editor::puzzle5d::modes::edit::windows::board2d::{options, utilities}
 use crate::editor::puzzle5d::modes::edit::windows::world3d;
 use crate::editor::puzzle5d::precompute::PUZZLE5D_PLANNER_TRACE_TWIN_BIT;
 use crate::editor::puzzle5d::terminology::{puzzle5d_localized, Puzzle5dLabels};
-use crate::editor::puzzle5d::{puzzle5d_grip_full_id, puzzle5d_scene_mode, target_volume_flat_rect, Puzzle5dDocument, Puzzle5dPart, Puzzle5dScene, PUZZLE5D_BOARD_SNAPSHOT_SCHEMA, PUZZLE5D_DEFAULT_PART_RADIUS};
+use crate::editor::puzzle5d::entities::{puzzle5d_grip_full_id, target_volume_flat_rect, Puzzle5dDocument, Puzzle5dPart, PUZZLE5D_BOARD_SNAPSHOT_SCHEMA, PUZZLE5D_DEFAULT_PART_RADIUS};
+use crate::editor::puzzle5d::view::{puzzle5d_scene_mode, Puzzle5dScene};
 use semio_framework_plugin::{Board2dScene, SurfaceKind, WindowEngagement, WindowEngagementSlot, WindowKindDefinition, WindowMeasure, WindowOptions};
 use semio_framework_ui_contract::BuiltNode;
 use semio_framework_pack_json::{json, Value};
 use semio_framework_os_infinite::BoardPlacementNaming;
 
 //#region 🔖️Constants
-pub const WINDOW_KIND_ID: &str = "puzzle5d-2d";
+pub const WINDOW_KIND_ID: &str = crate::editor::puzzle5d::entities::PUZZLE5D_BOARD_WINDOW_KIND_ID;
 pub const BODY_KEY: &str = "puzzle.5d.play.2d";
 pub const SURFACE_ID: &str = "puzzle.5d.play.2d";
 //#endregion 🔖️Constants
@@ -37,7 +38,7 @@ pub fn definition() -> WindowKindDefinition {
         options: WindowOptions { measures: Vec::new(), engagement: WindowEngagementSlot::None },
         actions: Vec::new(),
         utilities: vec![utilities::select::UTILITY_ID.into(), utilities::brush::UTILITY_ID.into()],
-        interactions: vec![semio_framework_plugin::InteractionRef::new(crate::editor::puzzle5d::PUZZLE5D_INTERACTION_DOMAIN)],
+        interactions: vec![semio_framework_plugin::InteractionRef::new(crate::editor::puzzle5d::entities::PUZZLE5D_INTERACTION_DOMAIN)],
         params_schema: None,
         artifact_snapshot_schema: None,
         input_event_schema: None,
@@ -208,7 +209,7 @@ pub fn puzzle5d_board_scene(envelope: &Puzzle5dScene) -> Board2dScene {
         lod_mode: envelope.runtime.lod_mode.clone(),
         transform_flags: Some(json!({ "move": envelope.runtime.transform_move, "rotate": envelope.runtime.transform_rotate }).to_string()),
         area_brush_size: None,
-        domain_id: Some(crate::editor::puzzle5d::PUZZLE5D_INTERACTION_DOMAIN.into()),
+        domain_id: Some(crate::editor::puzzle5d::entities::PUZZLE5D_INTERACTION_DOMAIN.into()),
         placement_naming: Some(puzzle5d_board_placement_naming().to_json()),
         suggestion_menu_json: None,
         tool_run_trace: None,
@@ -250,7 +251,5 @@ pub fn render(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels, suggestions: Op
 //#endregion 🔖️Render
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

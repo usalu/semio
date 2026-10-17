@@ -5,7 +5,7 @@
 import { describe, expect, it } from "vitest";
 import type { ContextMenuItem } from "@semio-tech/ui-react";
 import type { ContextMenuItemSpec } from "@semio-tech/framework";
-import { suggestionMenuItems } from "../../../🌐️World3dHost/🟦️.tsx";
+import { suggestionMenuItems } from "../../../🌐️World3dHost/🎯️marquee-and-bridges/🟦️.tsx";
 import { SUGGESTION_SUBMENU_OPEN_ACTION, suggestionMenuOwnsWindow, suggestionPopupOwnsWindow, suggestionRowsWithFocus, suggestionSubmenuTarget, withSuggestionSubmenu } from "../../🟦️.ts";
 
 const labels = { checkingPlacement: "Checking placement…", noPlacement: "No placement" } as never;

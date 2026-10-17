@@ -28,7 +28,6 @@ test("EN1997 all 210 independent SQL cells and coherent nested edit preserve bot
   const edited=await en1997CompleteIndependentOracle(await exportSqliteDatabase(await en1997SnapshotToSqliteDatabase(original)),"edit",annex);
   const actual=await en1997SnapshotFromSqliteDatabase(await importSqliteDatabase(edited));expect(actual).toEqual(expected);
   await en1997CompleteIndependentOracle(await exportSqliteDatabase(await en1997SnapshotToSqliteDatabase(actual)),"edited",annex);
-  console.log("[DEBUG] EN1997 Source independently edited complete owner annex="+annex+" tables=9 rows=9 cells=210");
  }
 });
 
@@ -42,5 +41,5 @@ test("EN1997 complete independent cells preserve copied limits and required empt
  expect(normSemanticContract["schemaBytes"]).toEqual(8324);expect(normSemanticContract["tableWidths"]).toEqual({"en1997_document":12,"en1997_footing":19,"en1997_foundation_load_case":23,"en1997_pile":33,"en1997_pile_test_profile":10,"en1997_retaining_wall":42,"en1997_slope":14,"en1997_soil_layer":38,"en1997_uplift_case":19});expect(normSemanticContract["cases"]).toEqual([{"id":"full","rows":9,"valueBytes":1602},{"id":"emptyCollections","rows":1,"valueBytes":112}]);
  for(const item of normSemanticContract.cases){const source=owned();if(item.id==="emptyCollections"){source.layers=[];source.footings=[];source.piles=[];source.retainingWalls=[];source.slopes=[];source.upliftCases=[];}const database=await normSemanticProject(source),bytes=await normSemanticExport(database);expect(normIndependentExtent(bytes)).toEqual({rows:item.rows,valueBytes:item.valueBytes,schemaBytes:normSemanticContract.schemaBytes,tableWidths:normSemanticContract.tableWidths});const limits={maxRows:item.rows,maxValueBytes:item.valueBytes,maxSchemaBytes:normSemanticContract.schemaBytes,maxTables:9,maxColumns:42};expect(await normSemanticProject(source,limits)).toEqual(database);expect(await normSemanticRestore(await normSemanticImport(bytes),limits)).toEqual(source);
   for(const short of[{...limits,maxRows:item.rows-1},{...limits,maxValueBytes:item.valueBytes-1},{...limits,maxSchemaBytes:limits.maxSchemaBytes-1},{...limits,maxTables:8},{...limits,maxColumns:41}]){await expect(normSemanticProject(source,short)).rejects.toThrow();await expect(normSemanticRestore(database,short)).rejects.toThrow();}
- }console.log("[DEBUG] EN1997 complete independent SQLite cells and metadata preserve full and empty semantic limits");
+ }
 });

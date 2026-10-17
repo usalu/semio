@@ -1,6 +1,5 @@
 //! 📋️ Authoritative PDF mutation payload, diff, inverse, and tests for `set-acro-form`.
 
-use super::PdfMutation;
 use crate::standards::v1_7::subsets::base::schema::diff::{self, PdfDiff};
 use crate::standards::v1_7::subsets::base::schema::snapshot::*;
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
@@ -14,7 +13,10 @@ pub struct SetAcroForm {
     pub form: Option<PdfAcroForm>,
 }
 
-impl MutationKind<PdfSnapshot, PdfMutation> for SetAcroForm {
+impl<Op> MutationKind<PdfSnapshot, Op> for SetAcroForm
+where
+    Op: protocol::Mutation<PdfSnapshot, Diff = PdfDiff> + From<SetAcroForm>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "acro-form", kind: "set-acro-form", record: "Set" };
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
@@ -22,10 +24,10 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetAcroForm {
         MutationOutcome::new(diff::diff_set_acro_form(base, self.form.clone()))
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
         let _ = base;
-        vec![PdfMutation::SetAcroForm(SetAcroForm { form: base.acro_form.clone() })]
+        vec![Op::from(SetAcroForm { form: base.acro_form.clone() })]
     
     })())
 }
@@ -42,8 +44,6 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetAcroForm {
 //#endregion 🔖️Mutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
 

@@ -29,17 +29,17 @@ const FOLDER_BAND_MAX_WIDTH: f32 = 720.0;
 #[derive(Clone, Debug, PartialEq)]
 pub struct FolderReconnectBandPlan {
     pub band: Rect,
-    pub lines: Vec<time_travel::ChromeBandLine>,
+    pub lines: Vec<ChromeBandLine>,
     pub buttons: [(&'static str, &'static str, String, Rect); 2],
 }
 
-/// 📐️ Lays the band out bottom-centre through the time-travel band's [`time_travel::chrome_band_layout`], stacked above
+/// 📐️ Lays the band out bottom-centre through the time-travel band's [`chrome_band_layout`], stacked above
 /// the time-travel band when one shows (React stacks the folder offer first), else as the subfooter's last row under the footer: one row with
 /// the buttons right-aligned after the message, or on a phone-width viewport the message wrapped at its words with the
 /// buttons below it.
 pub fn folder_reconnect_band_plan(message: String, reconnect: String, forget: String, below: Option<Rect>, width: f32, height: f32, theme: &Theme) -> FolderReconnectBandPlan {
     let floor = below.map_or(height, |rect| rect.y);
-    let layout = time_travel::chrome_band_layout(&message, " ", &[reconnect.as_str(), forget.as_str()], floor, width, FOLDER_BAND_MAX_WIDTH, theme);
+    let layout = chrome_band_layout(&message, " ", &[reconnect.as_str(), forget.as_str()], floor, width, FOLDER_BAND_MAX_WIDTH, theme);
     let (reconnect_rect, forget_rect) = (layout.buttons[0], layout.buttons[1]);
     FolderReconnectBandPlan { band: layout.band, lines: layout.lines, buttons: [(FOLDER_RECONNECT_CONTROL_ID, FOLDER_RECONNECT_ACTION, reconnect, reconnect_rect), (FOLDER_FORGET_CONTROL_ID, FOLDER_FORGET_ACTION, forget, forget_rect)] }
 }

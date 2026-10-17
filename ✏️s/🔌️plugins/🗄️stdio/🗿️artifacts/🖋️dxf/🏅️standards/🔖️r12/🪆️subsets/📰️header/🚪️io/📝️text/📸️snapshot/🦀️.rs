@@ -66,11 +66,12 @@ pub(crate) fn from_record_controlled(record:&semio_framework_dsl_record::RecordV
     })
 }
 
-#[cfg(test)]
-#[path="🧪️tests/🏭️producer/🦀️.rs"]
-mod producer_tests;
+
 
 #[allow(unused_imports)]
+#[path="🏷️entity-codec/🦀️.rs"]
+pub mod entity_codec;
+
 mod snapshot_codec {
 use super::*;
 use crate::standards::v_r12::subsets::any::schema::snapshot::*;
@@ -111,7 +112,7 @@ use crate::standards::v_r12::subsets::any::schema::snapshot::*;
 use crate::STDIO_DXF_DOCUMENT_SCHEMA;
 use framework_schema::ArtifactSchema;
 use crate::standards::v_r12::subsets::any::io::text::snapshot as snapshot_text;
-use crate::standards::v_r12::subsets::any::io::text::diff::{dec_block, dec_dxf_entities, dec_header_var, dec_list, dec_str, enc_block, enc_dxf_entities, enc_header_var, enc_list, enc_str, split_top_level, strip_brackets};
+use crate::standards::v_r12::subsets::any::io::text::snapshot::entity_codec::{dec_block, dec_dxf_entities, dec_header_var, dec_list, dec_str, enc_block, enc_dxf_entities, enc_header_var, enc_list, enc_str, split_top_level, strip_brackets};
 
 /// 🧭️ Simplification of the DXF group-code value-type table (spec appendix) into the four
 /// `DxfValue` kinds — good enough for every code this codec reads generically (unknown-group-code
@@ -892,13 +893,12 @@ pub use snapshot_wire_codec::*;
 #[allow(unused_imports)]
 mod diff_codec {
 use super::*;
-use crate::standards::v_r12::subsets::any::schema::diff::*;
 use std::collections::{BTreeMap, BTreeSet, HashSet};
 use crate::schema::snapshot::{DxfBlock, DxfEntity, DxfArc, DxfCircle, DxfInsert, DxfLine, DxfOther, DxfPolyline, DxfSolid, DxfText, DxfHeaderVar, DxfLayer, DxfLinetype, DxfOtherTable, DxfStyle, DxfTables, DxfTag, DxfValue, DxfVertex};
 use crate::DxfSnapshot;
 use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
-use crate::standards::v_r12::subsets::any::io::text::diff::{dec_block, dec_dxf_entities, dec_dxf_tables, dec_header_var, dec_list, dec_other_table, dec_str, enc_block, enc_dxf_entities, enc_dxf_tables, enc_header_var, enc_list, enc_other_table, enc_str, split_top_level, strip_brackets};
+use crate::standards::v_r12::subsets::any::io::text::snapshot::entity_codec::{dec_block, dec_dxf_entities, dec_dxf_tables, dec_header_var, dec_list, dec_other_table, dec_str, enc_block, enc_dxf_entities, enc_dxf_tables, enc_header_var, enc_list, enc_other_table, enc_str, split_top_level, strip_brackets};
 }
 #[cfg(test)] pub use diff_codec::*;

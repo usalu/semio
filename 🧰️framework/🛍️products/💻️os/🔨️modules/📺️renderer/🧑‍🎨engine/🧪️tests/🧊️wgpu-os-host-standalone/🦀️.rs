@@ -1,4 +1,7 @@
 use super::*;
+
+/// 🎟️ Unbounded retained grant: the pre-migration step budget carried no retained limit.
+const UNBOUNDED_STEP_GRANT: semio_framework_job::RetainedCloneGrant = semio_framework_job::RetainedCloneGrant { maximum_items: usize::MAX, maximum_copy_bytes: usize::MAX, maximum_capacity_bytes: usize::MAX, maximum_release_bytes: usize::MAX, maximum_depth: usize::MAX };
 extern crate infinite_canvas as infinite_world;
 use crate::os_host::OsHostRetirement;
 use infinite_world::world::{World3dState, WorldAssetRequestKind, WorldAssetResponsePage, begin_world3d_dynamic_retirement, step_world3d_dynamic_retirement, world3d_dynamic_retirement_terminal_is_empty};
@@ -206,13 +209,15 @@ fn retire_component_world_fixture(runtime: &AppMailbox) {
         infinite_world::world::begin_world3d_dynamic_retirement(&mut owner.value.session, &mut owner.value.camera, &mut owner.value.retirement, &mut owner.value.scene, &mut owner.value.assets);
         let mut sequence = 0;
         for _ in 0..262_144 {
+            let mut context_retained = semio_framework_job::RetainedCloneProgress::default();
             let mut context = semio_framework_job::StepContext::new(
                 semio_framework_job::OperationId(1),
                 semio_framework_job::Generation(1),
-                semio_framework_job::StepBudget::new(1, u64::MAX),
+                semio_framework_job::StepBudget::new(1, u64::MAX, UNBOUNDED_STEP_GRANT),
                 semio_framework_job::root_cancel_token(),
                 semio_framework_job::default_now_us,
                 &mut sequence,
+                &mut context_retained,
             );
             let terrain_grant=semio_framework_value::retained_clone::RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:65536,maximum_release_bytes:16*1024*1024,maximum_depth:64};
             let terrain=infinite_world::world::step_world3d_terrain_retirement(&mut owner.value.session, &mut owner.value.terrain,terrain_grant,&mut context);

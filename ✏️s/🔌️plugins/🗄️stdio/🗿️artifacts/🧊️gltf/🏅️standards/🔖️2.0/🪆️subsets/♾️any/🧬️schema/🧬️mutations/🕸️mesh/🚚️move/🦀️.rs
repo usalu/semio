@@ -32,7 +32,10 @@ pub fn plan(p: &GltfMoveMeshPayload, base: &GltfSnapshot) -> Result<GltfDiff, Gl
     Ok(diff)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn inverse(p: &GltfMoveMeshPayload, base: &GltfSnapshot) -> Vec<super::GltfMutation> {
+pub fn inverse<Op>(p: &GltfMoveMeshPayload, base: &GltfSnapshot) -> Vec<Op>
+where
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::remove_used_extension::RemoveUsedExtensionMutation>,
+{
     if validate(p, base).is_err() {
         return Vec::new();
     }
@@ -49,11 +52,17 @@ pub enum MoveMeshMutation {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn mutation(payload: GltfMoveMeshPayload) -> super::GltfMutation {
-    super::GltfMutation::MoveMesh(MoveMeshMutation::Apply(payload))
+pub fn mutation<Op>(payload: GltfMoveMeshPayload) -> Op
+where
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::move_mesh::MoveMeshMutation>,
+{
+    Op::from(MoveMeshMutation::Apply(payload))
 }
 
-impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for MoveMeshMutation {
+impl<Op> protocol::MutationKind<GltfSnapshot, Op> for MoveMeshMutation
+where
+    Op: protocol::Mutation<GltfSnapshot, Diff = GltfDiff> + From<MoveMeshMutation>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "move", entity: "mesh", kind: "move-mesh", record: "MovedMesh" };
 
     fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<GltfDiff> {
@@ -65,7 +74,7 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for MoveMeshMutat
         }
     }
 
-    fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<super::GltfMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         match self {
             Self::Apply(payload) => Ok(inverse(payload, base)),
         }
@@ -82,7 +91,5 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for MoveMeshMutat
 //#endregion 🧬️DirectMutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🚚️swaps-the-hull-and-9758af/🦀️.rs"]
-mod case_swaps_the_hull_and_9758af;
+
 //#endregion 🧪️Tests

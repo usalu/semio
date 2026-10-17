@@ -72,7 +72,7 @@ test("strict own API needs no external runtime or product dependency", async () 
   const path = resolve(root, "🟦️.ts"), source = readFileSync(path, "utf8");
   const ast = ts.createSourceFile(path, source, ts.ScriptTarget.Latest, true);
   const imports = ast.statements.filter(ts.isImportDeclaration).map(node => (node.moduleSpecifier as ts.StringLiteral).text);
-  expect(imports.every(value => value.startsWith(".") && !value.includes("🛍️products") && !value.includes("🌎️hub") && !value.includes("🖥️s"))).toBe(true);
+  expect(imports.every(value => (value.startsWith(".") || value.startsWith("@semio-tech/")) && !value.includes("🛍️products") && !value.includes("🌎️hub") && !value.includes("🖥️s"))).toBe(true);
   const program = ts.createProgram([path], { noEmit: true, strict: true, skipLibCheck: true, types: [], target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext, moduleResolution: ts.ModuleResolutionKind.Bundler, allowImportingTsExtensions: true, lib: ["lib.es2022.d.ts", "lib.dom.d.ts"] });
   expect(ts.getPreEmitDiagnostics(program).map(value => ts.flattenDiagnosticMessageText(value.messageText, "\n"))).toEqual([]);
 });

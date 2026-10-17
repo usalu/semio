@@ -10,5 +10,4 @@ test("funded preparation birth preserves original request on independent currenc
   const admitted=applyPatch({pending:law.request,retained:null},[{op:"replace",path:"/retained",value:law.request},{op:"replace",path:"/pending",value:null}],true,false).newDocument;
   expect(admitted.retained).toEqual(law.request);expect(admitted.pending).toBeNull();expect(law.preflight.afterRefusalCalls).toBe(0);expect(applyPatch({calls:law.preflight.afterRefusalCalls},[{op:"replace",path:"/calls",value:1}],true,false).newDocument.calls).toBe(law.preflight.afterBirthCalls);
   expect([law.grant.maximumCopyBytes,law.grant.maximumCapacityBytes,law.grant.maximumReleaseBytes,law.grant.maximumDepth]).toEqual([3,512,97,7]);
-  console.log("[DEBUG] funded preparation birth RFC6902 oracle preserves original request and independent constructor funding");
 });

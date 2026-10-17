@@ -9,9 +9,9 @@ pub mod reentrant_area;
 #[path = "📦️reentrant-volume/🦀️.rs"]
 pub mod reentrant_volume;
 
-use super::super::modules::measurement_contracts::*;
-use super::super::modules::vector_operations::{add, dot, mul};
-use super::geometry_core::{convex_hull_metrics, hull_sample, triangle_area, GltfGeometryContext};
+use crate::standards::v2_0::subsets::any::schema::modules::measurement_contracts::*;
+use crate::standards::v2_0::subsets::any::schema::modules::vector_operations::{add, dot, mul};
+use crate::standards::v2_0::subsets::any::schema::inferences::geometry_core::{convex_hull_metrics, hull_sample, triangle_area, GltfGeometryContext};
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
@@ -24,13 +24,13 @@ pub struct GltfConcavityIndicators {
 
 pub struct GltfConcavityInference;
 
-pub(crate) struct GltfConcavityRaw {
-    pub(crate) hull_volume: Option<f64>,
-    pub(crate) reentrant_area: Option<f64>,
+pub struct GltfConcavityRaw {
+    pub hull_volume: Option<f64>,
+    pub reentrant_area: Option<f64>,
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn raw(context: &GltfGeometryContext<'_>) -> GltfConcavityRaw {
+pub fn raw(context: &GltfGeometryContext<'_>) -> GltfConcavityRaw {
     let hull_input = hull_sample(&context.points, context.policy.sampling_budget as usize);
     let tolerance = (context.diagonal * context.policy.relative_tolerance).max(context.policy.absolute_length_tolerance);
     let hull = convex_hull_metrics(&hull_input, tolerance);

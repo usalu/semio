@@ -81,7 +81,7 @@ impl Default for Block3dSnapshot {
 }
 
 #[path = "🔢️transport/🦀️.rs"]
-pub(crate) mod json_transport;
+pub mod json_transport;
 
 //#region 🍃️FacetLeaves
 /// 🍃️ The five handcrafted leaves of the `snapshot` schema facet.

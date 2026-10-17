@@ -66,9 +66,9 @@ pub fn decode_semio_brep_mutation_json(text: &str) -> Result<SemioBrepMutation, 
 /// facet's now-`pub(crate)` hex/value primitives (one source of truth for entity encoding, same
 /// convention this file's pre-rewrite version and `🌊️flow`'s mutations facet both established).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn hex_encode(bytes: &[u8]) -> String { bytes.iter().map(|byte| format!("{byte:02x}")).collect() }
+pub fn hex_encode(bytes: &[u8]) -> String { bytes.iter().map(|byte| format!("{byte:02x}")).collect() }
 
-pub(crate) fn hex_decode(value: &str) -> Result<Vec<u8>, String> {
+pub fn hex_decode(value: &str) -> Result<Vec<u8>, String> {
     if !value.len().is_multiple_of(2) { return Err("snapshot payload has odd hexadecimal length".into()); }
     (0..value.len()).step_by(2).map(|index| u8::from_str_radix(&value[index..index + 2], 16).map_err(|error| error.to_string())).collect()
 }
@@ -83,7 +83,7 @@ fn dec_at(args: &std::collections::BTreeMap<&str, &str>) -> Result<Option<usize>
     args.get("at").map(|at| at.parse::<usize>().map_err(|error| error.to_string())).transpose()
 }
 
-pub(crate) fn print_brep_mutation(m: &SemioBrepMutation) -> String {
+pub fn print_brep_mutation(m: &SemioBrepMutation) -> String {
     match m {
         SemioBrepMutation::CreateVertex(p) => format!("create-vertex id={} point={} tol={}{}", enc_str(&p.id), enc_point3(&p.point), NativeF64(p.tol), enc_at(p.at)),
         SemioBrepMutation::DeleteVertex(p) => format!("delete-vertex id={}", enc_str(&p.id)),
@@ -104,7 +104,7 @@ pub(crate) fn print_brep_mutation(m: &SemioBrepMutation) -> String {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn parse_brep_mutation(line: &str) -> Result<SemioBrepMutation, String> {
+pub fn parse_brep_mutation(line: &str) -> Result<SemioBrepMutation, String> {
     let (keyword, rest) = line.split_once(' ').unwrap_or((line, ""));
     let args: std::collections::BTreeMap<&str, &str> = rest.split(' ').filter(|s| !s.is_empty()).map(|tok| tok.split_once('=').ok_or_else(|| format!("brep mutation: bad arg token {tok:?}"))).collect::<Result<Vec<_>, String>>()?.into_iter().collect();
     let arg = |k: &str| args.get(k).copied().ok_or_else(|| format!("brep mutation: missing arg '{k}' for '{keyword}'"));

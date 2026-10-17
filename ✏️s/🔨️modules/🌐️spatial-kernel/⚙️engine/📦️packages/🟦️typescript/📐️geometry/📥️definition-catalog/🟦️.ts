@@ -1,0 +1,3 @@
+/** 📥️ Public entry `@semio-tech/s-spatial-kernel-ts/geometry/definition-catalog`: the explicit surface that importers outside the module use. */
+export { defaultModelDefinitionId, isShapeModelDefinition, kernelTypologyIds, listModelDefinitionManifests, modelDefinitionActionCatalog, modelDefinitionIdFromAssetPath, modelDefinitionInteractionCatalog, onModelDefinitionAssetsChanged, parseModelDefinitionManifest, registerModelDefinitionAssets } from "../../../../📐️geometry/📥️definition-catalog/🟦️.ts";
+export type { ModelDefinitionAssetModules, ModelDefinitionManifest, ResolvedTypologyStyle, TypologyConstructKit, TypologyStylePatternKind, TypologyStylePatternSpec } from "../../../../📐️geometry/📥️definition-catalog/🟦️.ts";

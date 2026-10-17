@@ -1,0 +1,5 @@
+# Probe Endpoint Metadata Independent Design Review
+
+The separate nominal metadata purpose is sound for the fixed no-binding probe: fresh input/output mutation authority remains the actual parent/Core token/global EX/ALL and fixed issuer. Ordinary file/directory and hardlink leaf metadata can be observed without pretending they are usable bindings. Contents and descendant bytes remain unobserved; leaf stamps are not content hashes.
+
+All initial/repeated/boundary captures must use the same domain-separated metadata purpose. Strict ordinary producer-plan reader stays byte-identical, and metadata DTO must fail strict-purpose validation and never become a transition, readiness, installed, inactivity or preservation proof. Existing physical ancestor checks, nofollow behavior, bounded raw link targets, complete current ownership and controls remain. Prospective13-case Ajv/SQLite validation is design-only; actual Generated observer/primary/drift/zero-content-read and caller integration laws remain required. No material design blocker found; no production or Native operation performed.

@@ -222,7 +222,7 @@ pub trait ArtifactOwnedHistoryEntryAuthority<T>: Send {
 pub struct ArtifactRepositoryHistoryEntryDecoder<T>(PhantomData<fn() -> T>);
 
 impl<T> ArtifactRepositoryHistoryEntryDecoder<T> {
-    pub(crate) fn new() -> Self {
+    pub fn new() -> Self {
         Self(PhantomData)
     }
 }

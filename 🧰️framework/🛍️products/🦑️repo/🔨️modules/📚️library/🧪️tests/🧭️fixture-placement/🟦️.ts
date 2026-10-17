@@ -18,7 +18,6 @@ for (const row of examples.cases) test("fixture collection ancestry: " + row.pat
   const actual = inspectTestLayoutSources(taxonomy, [], [row.path]).some(row => row.code === "fixture-outside-tests");
   expect(oracle).toBe(row.outside);
   expect(actual).toBe(row.outside);
-  console.log("[DEBUG] fixture ancestry " + JSON.stringify({ path: row.path, actual, oracle }));
 });
 test("all semantic-owner examples have true test ancestry", () => {
   const scopes = examples.physicalScopes;
@@ -43,7 +42,6 @@ test("all semantic-owner examples have true test ancestry", () => {
     const at = parts.findIndex((name, index) => names.has(name) && parts[index - 1] !== taxonomy.schemaScopeOwnerLevels.moduleMemberDirName);
     return !parts.slice(0, at).some((name, index) => name === taxonomy.testsDirName && parts[index - 1] !== taxonomy.schemaScopeOwnerLevels.moduleMemberDirName);
   });
-  console.log("[DEBUG] repository fixture physical inventory " + JSON.stringify({ examples: physicalExamples.length, misplaced: misplaced.length, independentFiles: thirdParty.length }));
   expect(misplaced).toEqual([]);
 }, 60000);
 
@@ -56,5 +54,4 @@ test("production coordinate metadata never enrolls fixture payload authority", (
   const oracle = contracts.filter(row => row.path.split("/").some((name, at, parts) => names.has(name) && parts[at - 1] !== taxonomy.schemaScopeOwnerLevels.moduleMemberDirName && minimatch(row.path, "**/" + name + "/**", { dot: true }))).map(row => row.path);
   expect(actual).toEqual(oracle);
   expect(actual).toEqual([]);
-  console.log("[DEBUG] production fixture authority enrollment " + JSON.stringify({ fixtures: actual.length }));
 });

@@ -26,6 +26,7 @@ semio-s-artifact-norm-din18599-mutations = { workspace = true }
 
 [dev-dependencies]
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-framework-test-fixtures = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-s-artifact-norm-din18599-checks = { workspace = true }
 semio-s-artifact-norm-din18599-io = { workspace = true }
 serde = { workspace = true }

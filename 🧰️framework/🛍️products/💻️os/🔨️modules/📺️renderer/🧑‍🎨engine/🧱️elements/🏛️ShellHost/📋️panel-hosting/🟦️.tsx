@@ -44,45 +44,49 @@ import {
 import { InterpretedUiNode } from "../../🗣️Interpreter/🟦️.tsx";
 import { TreeWindowContext } from "../../🗣️Interpreter/🪟️tree-windows/🟦️.ts";
 import { MediaTransportOwnerContext, type MediaTransportOwner } from "../../🎬️MediaTransportHost/🟦️.tsx";
-import { resolveBootExampleId, ShellFaultBoundary } from "../../🐚️Shell/🟦️.tsx";
-import { World3dWindowViewStoreContext } from "../../🌐️World3dHost/🟦️.tsx";
+import { resolveBootExampleId } from "../../🐚️Shell/🔒️boot-and-locks/🟦️.ts";
+import { ShellFaultBoundary } from "../../🐚️Shell/🟦️.tsx";
+import { World3dWindowViewStoreContext } from "../../🌐️World3dHost/🪟️window-view-store/🟦️.tsx";
 import { wireLabel, WindowInstanceIdContext } from "../../🗣️Interpreter/🌉️scene-host-contract/🟦️.ts";
+import { FRAMEWORK_CATEGORY_COMMAND_ID } from "../../🛠️ShellHelpers/🔩️plumbing/🟦️.ts";
 import {
-  FRAMEWORK_CATEGORY_COMMAND_ID,
   LAYOUT_CHANGE_SETTLE_MS,
   appBreadcrumb,
   appWindowLabel,
-  toolCategoryOpenPath,
-  toolLeafInactiveRepress,
-  toolPanelTreeContentRevision,
   classifyWindowLayoutChange,
-  commandAddressKey,
-  commandCategoryLabel,
-  commandKeybindingChords,
-  detectCommandPlatform,
   flattenPanelTabLeaves,
-  introductionTargetsWindow,
-  shellLabelTextV1,
-  resolveAppLabel,
   resolveAppBreadcrumb,
   resolveArtifactByAppId,
   resolveFrameworkLayoutSeed,
   frameworkLayoutDeclaredInstances,
+  resolveWindowEngagement,
+  spawnedWindowChromeForKind,
+  windowEngagementToSearchSpec,
+  windowEngagementToSpec
+} from "../../🛠️ShellHelpers/🛣️route-and-chrome/🟦️.tsx";
+import {
+  toolCategoryOpenPath,
+  toolLeafInactiveRepress,
+  toolPanelTreeContentRevision,
+  commandAddressKey,
+  commandCategoryLabel,
+  commandKeybindingChords,
+  detectCommandPlatform
+} from "../../🛠️ShellHelpers/🎛️command-registry/🟦️.tsx";
+import { introductionTargetsWindow } from "../../🛠️ShellHelpers/🔄️ui-refresh/🟦️.ts";
+import { shellLabelTextV1 } from "../../🛠️ShellHelpers/🔩️plumbing/🆔️action-ids/🟦️.ts";
+import {
+  resolveAppLabel,
   resolveManifestLabel,
   resolvePanelTabLabel,
-  resolveUtilityNodes,
-  resolveWindowEngagement,
   shellLabel,
-  spawnedWindowChromeForKind,
   surfaceRoleChipText,
-  viewerReadOnlyNoticeText,
-  utilityBarNode,
-  windowActionPaneNode,
-  windowEngagementToSearchSpec,
-  windowEngagementToSpec,
-  windowMeasuresChrome,
-  type ActionPaneSlice
-} from "../../🛠️ShellHelpers/🟦️.tsx";
+  viewerReadOnlyNoticeText
+} from "../../🛠️ShellHelpers/🏷️labels/🟦️.tsx";
+import { resolveUtilityNodes } from "../../🛠️ShellHelpers/🌳️tree-windows/🟦️.tsx";
+import { utilityBarNode } from "../../🛠️ShellHelpers/🪟️window-panes/🪛️utility-bar-options/🟦️.tsx";
+import { windowActionPaneNode, type ActionPaneSlice } from "../../🛠️ShellHelpers/🪟️window-panes/🟦️.tsx";
+import { windowMeasuresChrome } from "../../🛠️ShellHelpers/🪟️window-panes/🎚️window-measures/🟦️.tsx";
 // #endregion 🔌️Adapters
 import { type UISearchItem } from "../../🔎️ShellSearch/🟦️.tsx";
 import { WindowFaultStatus } from "../🎚️shell-model/🟦️.tsx";

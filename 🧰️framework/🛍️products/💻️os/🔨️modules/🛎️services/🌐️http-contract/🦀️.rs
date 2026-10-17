@@ -270,6 +270,12 @@ impl HttpTransport for UnwiredHttpTransport {
 #[doc(hidden)] pub struct BufferedHttpBody {
     pub(super) remaining: Option<Vec<u8>>,
 }
+impl BufferedHttpBody {
+    /// 📦️ Replays one whole buffered response as the single chunk of the body.
+    #[doc(hidden)] pub fn new(response: Vec<u8>) -> Self {
+        Self { remaining: Some(response) }
+    }
+}
 impl HttpBody for BufferedHttpBody {
     fn cancellation_handle(&self) -> HttpBodyCancellationHandle {
         HttpBodyCancellationHandle::idle()
@@ -329,7 +335,7 @@ impl AsyncHttpTransport for BlockingHttpTransport {
             match result {
                 Ok(Ok(response)) => {
                     let head = HttpResponseHead { status: response.status, headers: response.headers };
-                    let body: Box<dyn HttpBody> = Box::new(BufferedHttpBody { remaining: Some(response.body) });
+                    let body: Box<dyn HttpBody> = Box::new(BufferedHttpBody::new(response.body));
                     Ok((head, body))
                 }
                 Ok(Err(io_error)) => Err(HttpPoolError::Transport(io_error.to_string())),

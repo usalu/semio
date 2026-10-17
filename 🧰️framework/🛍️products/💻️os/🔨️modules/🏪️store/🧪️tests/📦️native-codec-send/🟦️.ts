@@ -26,6 +26,5 @@ export function testNativeCodecSendFixture(): void {
   for (const hostile of [2147483648, -2147483649, 0.5]) assert.equal(validate(hostile), false);
   assert(fixture.slots.every((slot: { send: boolean }) => slot.send));
   assert.equal(fixture.invariants.localExecutorFallback, false);
-  console.log("[DEBUG] native codec Send laws preserve real nullable I32 Ajv admission, Buffer and lodash snapshot identity");
 }
 //#endregion 🧵️CodecSendOracle

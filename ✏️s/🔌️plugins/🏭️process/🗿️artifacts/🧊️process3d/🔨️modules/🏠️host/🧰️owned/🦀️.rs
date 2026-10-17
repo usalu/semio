@@ -6,6 +6,7 @@ extern crate semio_framework_os_kernel as store;
 
 use semio_s_artifact_process_process3d_mutations::Process3dMutation;
 use semio_s_artifact_process_process3d_mutations::{standards::v1::subsets::any::io::binary::mutations::process3d_protocol_error, standards::v1::subsets::any::io::binary::mutations::PROCESS3D_MUTATION_BINARY_FORMAT};
+use semio_s_artifact_process_process3d_mutations::standards::v1::subsets::any::io::binary::mutations::{PROCESS3D_MAXIMUM_DOMAIN_ITEMS, PROCESS3D_OWNER_BYTES};
 use store::{os_store::owned_schema_decode::ArtifactEnvelopeMutationFieldAuthority as _, os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldAuthority as _};
 use semio_framework_plugin::ArtifactOwnedDisposer as _;
 use semio_s_artifact_process_process3d_model::{snapshot::Capability, snapshot::CapabilityParameter, snapshot::CapabilityRule, snapshot::MeasureRecipe, snapshot::Pose, snapshot::Process3dSnapshot, snapshot::ProcessMeasure, snapshot::ProcessStep, snapshot::StepOrigin, snapshot::Stock, snapshot::StockQuantity, snapshot::WorkingSolid, snapshot::WorkshopMachine};
@@ -51,3 +52,7 @@ const PROCESS3D_RETAINED_STACK_CAPACITY: usize = 64;
 const PROCESS3D_MAXIMUM_OUTPUT_PAGES: usize = store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_PAGES;
 
 const PROCESS3D_MUTATION_VARIANT_COUNT: usize = 15;
+
+#[cfg(test)]
+#[path = "🧪️tests/🔬️retained-laws/🦀️.rs"]
+mod retained_laws;

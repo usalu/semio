@@ -55,7 +55,6 @@ test("shared provider authored SQLite tables preserve IEEE bits and ordered rela
     for (const [index, ordinal] of fixture.duplicateOrdinals.entries()) database.run("INSERT INTO provider_relation VALUES(?,?,?,?)", [index + 1, 1, ordinal, 7]);
     expect(database.query("SELECT ordinal,count(*) AS count FROM provider_relation GROUP BY ordinal HAVING count(*)>1").all()).toEqual([{ ordinal: 0n, count: 2n }]);
   } finally { database.close(); }
-  console.log("[DEBUG] Independent Bun SQLite and DataView: two tables, two IEEE owners, three ordered relations, duplicate ordinal, reopen");
 });
 
 test("shared provider semantic bytes and late copy frontiers have independent SQLite authority", () => {
@@ -76,11 +75,10 @@ test("shared provider semantic bytes and late copy frontiers have independent SQ
     expect(database.query("SELECT sum(requested) AS bytes FROM retired_admission").get()).toEqual({ bytes: fixture.repeatedAllocationBytes });
     expect(database.query("SELECT CASE WHEN sum(requested)+? > ? THEN 'ownershipLimit' ELSE 'admitted' END AS kind FROM retired_admission").get(bytes, fixture.repeatedAllocationBytes)).toEqual({ kind: fixture.expectedOwnershipKind });
   } finally { database.close(); }
-  console.log("[DEBUG] Independent UTF-8/octet authority: 100000 bytes each, 65536 interior frontier, repeated retired admission 8 bytes");
 });
 
 function cancellationDiagnosticLedger(corpus:typeof fixture.cancellationDiagnostics){const backing=(kind:string,text:string)=>kind==="borrowed"?0:new TextEncoder().encode(text).length;return corpus.cases.map(row=>({id:row.id,parent:row.parent,child:row.child,requestedBytes:row.parent*backing(corpus.parentBacking,corpus.parentMessage)+row.child*backing(corpus.childBacking,corpus.childMessage)}));}
-test("shared cancellation diagnostic ledger has one exact borrowed owner",()=>{const corpus=fixture.cancellationDiagnostics,own=cancellationDiagnosticLedger(corpus),database=new Database(":memory:");try{const oracle=corpus.cases.map(row=>({id:row.id,parent:row.parent,child:row.child,...database.query("SELECT ?*(CASE WHEN ?='borrowed' THEN 0 ELSE length(CAST(? AS BLOB)) END)+?*(CASE WHEN ?='borrowed' THEN 0 ELSE length(CAST(? AS BLOB)) END) AS requestedBytes").get(row.parent,corpus.parentBacking,corpus.parentMessage,row.child,corpus.childBacking,corpus.childMessage) as {requestedBytes:number}}));expect(own).toEqual(corpus.cases);expect(oracle).toEqual(corpus.cases);expect(database.query("SELECT length(CAST(? AS BLOB)) AS parent,length(CAST(? AS BLOB)) AS child").get(corpus.parentMessage,corpus.childMessage)).toEqual({parent:new TextEncoder().encode(corpus.parentMessage).length,child:new TextEncoder().encode(corpus.childMessage).length});console.log("[DEBUG] Five cancellation diagnostic ledgers have borrowed backing0 and unchanged UTF8 messages; independent SQLite/UTF8 agree; native heap observation remains required");}finally{database.close();}});
+test("shared cancellation diagnostic ledger has one exact borrowed owner",()=>{const corpus=fixture.cancellationDiagnostics,own=cancellationDiagnosticLedger(corpus),database=new Database(":memory:");try{const oracle=corpus.cases.map(row=>({id:row.id,parent:row.parent,child:row.child,...database.query("SELECT ?*(CASE WHEN ?='borrowed' THEN 0 ELSE length(CAST(? AS BLOB)) END)+?*(CASE WHEN ?='borrowed' THEN 0 ELSE length(CAST(? AS BLOB)) END) AS requestedBytes").get(row.parent,corpus.parentBacking,corpus.parentMessage,row.child,corpus.childBacking,corpus.childMessage) as {requestedBytes:number}}));expect(own).toEqual(corpus.cases);expect(oracle).toEqual(corpus.cases);expect(database.query("SELECT length(CAST(? AS BLOB)) AS parent,length(CAST(? AS BLOB)) AS child").get(corpus.parentMessage,corpus.childMessage)).toEqual({parent:new TextEncoder().encode(corpus.parentMessage).length,child:new TextEncoder().encode(corpus.childMessage).length});}finally{database.close();}});
 
 import fileBoundFixture from "../🧫️fixtures/📏️file-bound/🔣️.json";
 

@@ -1,6 +1,6 @@
 //! 🕸️ `add-node` command.
 
-use crate::editor::puzzle2d::Puzzle2dActionCtx;
+use crate::editor::puzzle2d::interaction::Puzzle2dActionCtx;
 use semio_framework_pack_json::Value;
 
 /// 🌱️ Records one `create-node` of the requested kind at the requested position.

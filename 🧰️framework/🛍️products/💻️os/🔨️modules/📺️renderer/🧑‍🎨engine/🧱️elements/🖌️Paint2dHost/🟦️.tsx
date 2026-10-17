@@ -32,8 +32,8 @@ import { GestureRecognizer, type ComponentSceneHostProps, type Paint2dScene, typ
 import { type RasterWasmSession, createRasterSession } from "../🪪️WasmSessionLoader/🟦️.tsx";
 import { PixelEditingOverlay } from "./✍️editing/🟦️.tsx";
 // 🐢️ Direct element-to-element imports — `Canvas2dHost`/`🟦️Interpreter` already landed in a prior batch.
-import { type CanvasCamera, canvasPinchCamera, worldToScreenLogical, wheelCameraAtScreen } from "../📐️Canvas2dHost/🟦️.tsx";
-import { world3dHoverActionArgs, world3dSelectionActionArgs } from "../🌐️World3dHost/🟦️.tsx";
+import { type CanvasCamera, canvasPinchCamera, worldToScreenLogical, wheelCameraAtScreen } from "../📐️Canvas2dHost/📷️camera-math/🟦️.ts";
+import { world3dHoverActionArgs, world3dSelectionActionArgs } from "../🌐️World3dHost/🖱️interaction-domain-args/🟦️.ts";
 import { useMapContextMenuSpecs, useShellContextMenuFallback, openSurfaceContextMenu, type SurfaceContextMenuResult } from "../🗣️Interpreter/🖱️surface-menu/🟦️.ts";
 import { WindowInstanceIdContext } from "../🗣️Interpreter/🌉️scene-host-contract/🟦️.ts";
 

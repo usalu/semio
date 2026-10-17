@@ -1,7 +1,7 @@
 //! 📜️ Sequence play app — the script window: the compiled imperative path plus the last `run` result.
 
 use super::transient::SequenceScriptWindowTransient;
-use crate::editor::sequence::host_from_host_snapshot;
+use crate::editor::sequence::host::host_from_host_snapshot;
 use crate::SequenceHostSnapshot;
 use semio_framework_plugin::BuiltNode;
 use semio_framework_ui_locale::LocalizedLabel;
@@ -52,7 +52,4 @@ pub fn render(host_snapshot: &SequenceHostSnapshot, transient: &SequenceScriptWi
 //#endregion 🔖️Render
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

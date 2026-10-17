@@ -29,6 +29,10 @@ type stdioTxtUtf8AnyInferenceGuardSizeBounds = { readonly minItems?: number; rea
 
 export const stdioTxtUtf8AnyInferenceGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : stdioTxtUtf8AnyInferenceGuardReject(at, "value is not an object");
+export const stdioTxtUtf8AnyInferenceGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) stdioTxtUtf8AnyInferenceGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const stdioTxtUtf8AnyInferenceGuardArray = (value: unknown, at: string, bounds: stdioTxtUtf8AnyInferenceGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return stdioTxtUtf8AnyInferenceGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) stdioTxtUtf8AnyInferenceGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -59,14 +63,14 @@ export const stdioTxtUtf8AnyInferenceGuardConstant = <T extends string | number 
 //#endregion 🚪️Parsers
 
 export function parseTxtInference(value: unknown, at = "$"): TxtInference {
-  const row = stdioTxtUtf8AnyInferenceGuardObject(value, at);
+  const row = stdioTxtUtf8AnyInferenceGuardClosed(stdioTxtUtf8AnyInferenceGuardObject(value, at), at, ["outline"]);
   return {
     outline: parseTxtOutline(row["outline"], `${at}.outline`),
   };
 }
 
 export function parseTxtOutline(value: unknown, at = "$"): TxtOutline {
-  const row = stdioTxtUtf8AnyInferenceGuardObject(value, at);
+  const row = stdioTxtUtf8AnyInferenceGuardClosed(stdioTxtUtf8AnyInferenceGuardObject(value, at), at, ["lineCount", "wordCount", "charCount"]);
   return {
     lineCount: stdioTxtUtf8AnyInferenceGuardInteger(row["lineCount"], `${at}.lineCount`),
     wordCount: stdioTxtUtf8AnyInferenceGuardInteger(row["wordCount"], `${at}.wordCount`),

@@ -1,6 +1,16 @@
 //! 🪪️ Persisted window configuration is admitted only to its exact generated partition identity.
 
-use super::*;
+use std::sync::Arc;
+use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_framework_plugin_window_config::retained::ErasedWindowConfigPackLoad;
+use std::future::Future;
+use semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep;
+use semio_framework_value::retained_clone::RetainedCloneGrant;
+use semio_framework_value::ValueError;
+use semio_framework_plugin_window_config::{WindowConfigOwner, WindowConfigOwnerRegistry, bounded_window_config_preparation_factory, bounded_window_config_store_disposer, bounded_window_config_store_owners, registry};
+use semio_framework_os_kernel as protocol;
+use semio_framework_os_kernel as store;
+use crate::window_config_tests::retained_pack_load_tests;
 
 pub(super) struct IdentityWindowOwner;
 
@@ -38,11 +48,11 @@ fn window_config_pack_identity_rejects_foreign_inner_window_without_changing_or_
             let target_exists = row["targetExists"].as_bool().unwrap();
             let mut registry = WindowConfigOwnerRegistry::new(protocol::ActorId(fixture["openedActor"].as_str().unwrap().to_owned().into()));
             registry.register::<IdentityWindowOwner>().unwrap();
-            let original=registry.owners.get_mut(IdentityWindowOwner::WINDOW_KIND_ID).unwrap().capture(source).await.unwrap(); crate::component::window_mutation_tests::close_test_original_with_pump(original,||{let demand=registry.maintenance_retirements_demands(4096).unwrap();registry.maintenance_retirements_step(retained_pack_load_tests::quoted(demand,4096)).unwrap();});
+            let original=registry.owners.get_mut(IdentityWindowOwner::WINDOW_KIND_ID).unwrap().capture(source).await.unwrap(); crate::window_mutation_tests::tests::close_with(original,||{let demand=registry.maintenance_retirements_demands(4096).unwrap();registry.maintenance_retirements_step(retained_pack_load_tests::quoted(demand,4096)).unwrap();});
             let target_before = if target_exists {
                 let before = registry.owners.get_mut(IdentityWindowOwner::WINDOW_KIND_ID).unwrap().capture(target).await.unwrap();
                 let witness = (before.generation, before.revision, before.snapshot.get::<IdentityWindowOwner>().unwrap() as *const _ as *const ());
-                crate::component::window_mutation_tests::close_test_original_with_pump(before,||{let demand=registry.maintenance_retirements_demands(4096).unwrap();registry.maintenance_retirements_step(retained_pack_load_tests::quoted(demand,4096)).unwrap();});
+                crate::window_mutation_tests::tests::close_with(before,||{let demand=registry.maintenance_retirements_demands(4096).unwrap();registry.maintenance_retirements_step(retained_pack_load_tests::quoted(demand,4096)).unwrap();});
                 Some(witness)
             } else {
                 None
@@ -57,7 +67,7 @@ fn window_config_pack_identity_rejects_foreign_inner_window_without_changing_or_
                 Some((generation, revision, pointer)) if !row["accepted"].as_bool().unwrap() => {
                     let after = registry.owners.get_mut(IdentityWindowOwner::WINDOW_KIND_ID).unwrap().capture(target).await.unwrap();
                     let unchanged = after.generation == generation && after.revision == revision && after.snapshot.get::<IdentityWindowOwner>().unwrap() as *const _ as *const () == pointer && after_ids == before_ids;
-                    crate::component::window_mutation_tests::close_test_original_with_pump(after,||{let demand=registry.maintenance_retirements_demands(4096).unwrap();registry.maintenance_retirements_step(retained_pack_load_tests::quoted(demand,4096)).unwrap();});
+                    crate::window_mutation_tests::tests::close_with(after,||{let demand=registry.maintenance_retirements_demands(4096).unwrap();registry.maintenance_retirements_step(retained_pack_load_tests::quoted(demand,4096)).unwrap();});
                     unchanged
                 }
                 None => after_ids == before_ids && !after_ids.iter().any(|(kind, id)| kind == IdentityWindowOwner::WINDOW_KIND_ID && id == target),
@@ -73,7 +83,6 @@ fn window_config_pack_identity_rejects_foreign_inner_window_without_changing_or_
             }
             let id = row["id"].as_str().unwrap().to_owned();
             let terminal_empty = closed && registry.terminal_is_empty();
-            eprintln!("[DEBUG] Window Pack identity {id}: admitted={admitted}, target_exists={target_exists}, target_unchanged_or_absent={unchanged}, terminal_empty={terminal_empty}");
             observed.push((id, admitted, row["accepted"].as_bool().unwrap(), unchanged, terminal_empty));
         }
         observed

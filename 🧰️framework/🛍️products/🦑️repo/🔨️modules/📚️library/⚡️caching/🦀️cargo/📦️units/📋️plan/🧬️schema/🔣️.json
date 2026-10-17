@@ -1,0 +1,91 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/rust-unit-plan-v1",
+  "$ref": "#/definitions/Plan",
+  "definitions": {
+    "Policy": {
+      "const": {
+        "maximumBytes": 16777216,
+        "maximumNodes": 262144,
+        "maximumDepth": 64,
+        "maximumItems": 65536,
+        "maximumProperties": 4096,
+        "maximumStringBytes": 32768,
+        "maximumInputBytes": 4194304,
+        "maximumUnits": 4096
+      }
+    },
+    "Plan": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "unit",
+        "context",
+        "digest",
+        "outputDirectory",
+        "dependencyDigests"
+      ],
+      "properties": {
+        "unit": {
+          "$ref": "https://semio.tech/schema/rust-unit-v1"
+        },
+        "context": {
+          "$ref": "https://semio.tech/schema/rust-unit-context-v4"
+        },
+        "digest": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "outputDirectory": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256,
+          "pattern": "^(?!/)(?!.*[\\\\:\\u0000-\\u001f])(?!.*(?:^|/)\\.\\.?(/|$))(?!.*//)[^\\u0000-\\u001f]+$"
+        },
+        "dependencyDigests": {
+          "type": "array",
+          "maxItems": 4096,
+          "uniqueItems": true,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "unit",
+              "semanticDigest",
+              "artifactDigest"
+            ],
+            "properties": {
+              "unit": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9_-]{0,79}$"
+              },
+              "semanticDigest": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              },
+              "artifactDigest": {
+                "anyOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "type": "string",
+                    "pattern": "^[a-f0-9]{64}$"
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "Inputs": {
+      "type": "array",
+      "minItems": 0,
+      "maxItems": 4096,
+      "items": {
+        "$ref": "https://semio.tech/schema/rust-unit-v1"
+      }
+    }
+  }
+}

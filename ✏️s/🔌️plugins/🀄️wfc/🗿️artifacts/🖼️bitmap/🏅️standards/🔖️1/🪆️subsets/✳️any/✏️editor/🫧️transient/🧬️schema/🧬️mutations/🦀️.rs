@@ -1,7 +1,7 @@
 //! 🫧️ Bitmap app-transient mutation aggregate — one verb, because the transient is a cache with a
 //! single writer, not an edit history.
 
-use super::{BitmapTransient, BitmapTransientDiff, BitmapTransientText};
+use crate::editor::bitmap::transient::{BitmapTransient, BitmapTransientDiff, BitmapTransientText};
 
 #[path = "👁️set-solve/🦀️.rs"]
 mod set_solve;

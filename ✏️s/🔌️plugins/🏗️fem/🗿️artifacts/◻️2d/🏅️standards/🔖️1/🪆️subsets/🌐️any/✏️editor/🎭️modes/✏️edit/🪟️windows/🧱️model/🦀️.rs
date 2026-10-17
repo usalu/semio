@@ -38,7 +38,7 @@ pub const BODY_KEY: &str = "fem2d.play.model";
 /// 📐️ Exaggeration factor for offsetting the moment-diagram polyline perpendicular to a member — single
 /// consumer: the results window's static-results moment diagram
 /// (`crate::editor::fem2d::modes::edit::windows::results::render`).
-pub(crate) const MOMENT_SCALE_2D: f64 = 0.001;
+pub const MOMENT_SCALE_2D: f64 = 0.001;
 
 /// 🎨️ Muted color for the mesh-edge preview overlay drawn under this window's members.
 const MESH_EDGE_COLOR: &str = "#475569";
@@ -323,7 +323,7 @@ impl Fem2dMountedVisualLease {
         self.snapshot
     }
 
-    pub(crate) fn matches_freshness(&self, freshness: Fem2dVisualFreshness) -> bool {
+    pub fn matches_freshness(&self, freshness: Fem2dVisualFreshness) -> bool {
         self.app_instance_id == freshness.app_instance_id
             && self.base_revision == freshness.model_revision
             && self.generation == freshness.document_generation
@@ -333,7 +333,7 @@ impl Fem2dMountedVisualLease {
             && self.renderer_scene_generation == freshness.renderer_scene_generation
     }
 
-    pub(crate) fn close_step(&mut self, maximum_bytes: usize) -> (bool, usize, usize) {
+    pub fn close_step(&mut self, maximum_bytes: usize) -> (bool, usize, usize) {
         if self.region_order.pop().is_some() || self.assembly_order.pop().is_some() || self.field_order.pop().is_some() {
             return (false, 1, size_of::<usize>());
         }
@@ -353,7 +353,7 @@ impl Fem2dMountedVisualLease {
         }
     }
 
-    pub(crate) fn terminal_is_empty(&self) -> bool {
+    pub fn terminal_is_empty(&self) -> bool {
         canvas2d_snapshot_terminal_is_empty(self.snapshot) && self.region_order.is_empty() && self.assembly_order.is_empty() && self.field_order.is_empty()
     }
 }
@@ -984,7 +984,7 @@ pub fn fem2d_live_visual_layers(doc: &Fem2dSnapshot, visual: &Fem2dLiveVisual) -
 /// 📐️ Bounding-box diagonal (in model meters) over every node plus every region outline vertex — the
 /// reference length `MODE_SHAPE_AMPLITUDE_RATIO` scales a normalized mode shape against. Falls back to
 /// `1.0` for a degenerate (empty or point-like) model so mode-shape rendering never divides by zero.
-pub(crate) fn fem2d_model_extent(doc: &Fem2dSnapshot) -> f64 {
+pub fn fem2d_model_extent(doc: &Fem2dSnapshot) -> f64 {
     let mut min = [f64::INFINITY; 2];
     let mut max = [f64::NEG_INFINITY; 2];
     let mut expand = |x: f64, y: f64| {
@@ -1138,7 +1138,7 @@ pub(crate) fn fem2d_highlight_layers(doc: &Fem2dSnapshot, interaction: &semio_s_
 /// 🖼️ [`fem2d_structure_layers`] plus the interaction emphasis overlay — the entry point both windows
 /// render through; the bare twin stays for the viewer app and the story fixtures, which have no
 /// interaction state at all.
-pub(crate) fn fem2d_structure_layers_with(doc: &Fem2dSnapshot, node_color: &str, line_color: &str, support_color: &str, interaction: &semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::Fem2dInteractionSnapshot) -> Vec<semio_framework_pack_json::Value> {
+pub fn fem2d_structure_layers_with(doc: &Fem2dSnapshot, node_color: &str, line_color: &str, support_color: &str, interaction: &semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::Fem2dInteractionSnapshot) -> Vec<semio_framework_pack_json::Value> {
     let mut layers = fem2d_structure_layers(doc, node_color, line_color, support_color);
     layers.extend(fem2d_highlight_layers(doc, interaction));
     layers
@@ -1167,7 +1167,7 @@ pub(crate) fn fem2d_region_triangles(doc: &Fem2dSnapshot) -> Vec<(String, [(f64,
 /// 🗺️ Every meshed region's triangles as `(element_id, screen points, node ids)` — like
 /// `fem2d_region_triangles` but also carrying each vertex's mesh node id, needed to look values up in
 /// `fem2d_nodal_von_mises`'s node-keyed map for banded contour rendering.
-pub(crate) fn fem2d_region_mesh_triangles(doc: &Fem2dSnapshot) -> Vec<Fem2dRegionMeshTriangle> {
+pub fn fem2d_region_mesh_triangles(doc: &Fem2dSnapshot) -> Vec<Fem2dRegionMeshTriangle> {
     let mut out = Vec::new();
     let Ok(meshes) = semio_s_artifact_fem_2d_engine::fem2d_engine::mesh_preview::fem2d_mesh_preview(doc) else { return out };
     for mesh in &meshes {
@@ -1185,7 +1185,7 @@ pub(crate) fn fem2d_region_mesh_triangles(doc: &Fem2dSnapshot) -> Vec<Fem2dRegio
 
 /// 🖼️ Every element's deformed-shape polyline (pink), given a node-id-keyed displacement map and a
 /// display scale — shared by the static, modal, and buckling results renders.
-pub(crate) fn fem2d_deformed_shape_layers(doc: &Fem2dSnapshot, disp_map: &HashMap<String, [f64; 6]>, deform_scale: f64) -> Vec<semio_framework_pack_json::Value> {
+pub fn fem2d_deformed_shape_layers(doc: &Fem2dSnapshot, disp_map: &HashMap<String, [f64; 6]>, deform_scale: f64) -> Vec<semio_framework_pack_json::Value> {
     let mut layers = Vec::new();
     for element in &doc.elements {
         let (start, end) = fem2d_element_endpoints(element);

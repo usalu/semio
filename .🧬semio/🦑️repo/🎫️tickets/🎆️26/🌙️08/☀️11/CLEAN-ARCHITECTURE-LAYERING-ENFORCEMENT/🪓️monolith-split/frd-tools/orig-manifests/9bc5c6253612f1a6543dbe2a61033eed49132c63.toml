@@ -1,0 +1,48 @@
+[package]
+workspace = "../../../../../../../../../../.."
+name = "semio-framework-plugin-host-shard-laws"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Shard laws: the loop, lifecycle, identity, transport and executor laws over the real shard crates"
+
+[package.metadata.semio]
+role = "product"
+id = "os-plugin-host-shard-laws"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+doctest = false
+
+[features]
+testkit = []
+
+[dependencies]
+
+[dev-dependencies]
+semio-framework-plugin-host-guest-runtime = { path = "../../../../../🎭️guest-runtime/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-plugin-host-process-transport = { path = "../../../../🚚️process-transport/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-plugin-host-shard = { path = "../../../../📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-job = { workspace = true, features = ["testkit"] }
+semio-framework-async-macros = { path = "../../../../../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
+# 🧪️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-effects-async): `testkit` (unions with the
+# plain dependency above for test builds only) brings in `semio-framework-async::testkit::
+# ManualRuntime`, this crate's own `#[cfg(test)]` double for `⚡️effects/🦀️.rs`'s tests —
+# same pattern `semio-framework-os-services`'s own Cargo.toml already establishes.
+semio-framework-async = { workspace = true, features = ["testkit"] }
+semio-framework = { path = "../../../../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
+semio-framework-os-services = { workspace = true }
+semio-framework-pack-json = { path = "../../../../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-framework-trace = { workspace = true }
+semio-framework-plugin-guest-contract = { workspace = true }
+semio-framework-value = { path = "../../../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-actor = { workspace = true }
+serde_json = "1.0.140"

@@ -9,5 +9,4 @@ for(const row of examples.cases)test("Value canonical authority "+row.id,()=>{
  const independent=glob.sync(row.path,{cwd:owner,onlyFiles:true,followSymbolicLinks:false}).length===1;
  expect(independent,row.path).toBe(row.present);
  expect(existsSync(resolve(owner,row.path))).toBe(independent);
- console.log(`[DEBUG] Value canonical authority ${row.id}: present=${independent}`);
 });

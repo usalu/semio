@@ -1,5 +1,6 @@
-#[cfg(test)] use crate::tool_contract::ArtifactToolPublicationLane;
-pub(crate) async fn test_mounted_original_owned_publication<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static>(app: &mut VcsArtifactApp<A, M>, emit: Emit<A::Mutation, A::ConfigMutation, A::DraftMutation>, meta: ActionMeta, parent_touched: bool, observe: impl Fn(&VcsArtifactApp<A, M>) -> Vec<bool>) -> (Vec<KernelMutation>, UndoGroup, u64,semio_framework_job::OriginalJobFixtureCaller) {
+use semio_framework_plugin_decl_app::tool_contract::ArtifactToolPublicationLane;
+#[doc(hidden)]
+pub async fn test_mounted_original_owned_publication<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static>(app: &mut VcsArtifactApp<A, M>, emit: Emit<A::Mutation, A::ConfigMutation, A::DraftMutation>, meta: ActionMeta, parent_touched: bool, observe: impl Fn(&VcsArtifactApp<A, M>) -> Vec<bool>) -> (Vec<KernelMutation>, UndoGroup, u64,semio_framework_job::OriginalJobFixtureCaller) {
     let revision = app.stores.store.content_revision_now();
     let command_count = app.history.command_log.len();
         let operation = semio_framework_job::Operation::new(semio_framework_job::allocate_operation_id(), semio_framework_job::RevisionId(u64::from_be_bytes(revision[..8].try_into().unwrap())), semio_framework_job::Generation(app.stores.store.generation_now()), 17);
@@ -17,7 +18,7 @@ pub(crate) async fn test_mounted_original_owned_publication<A: ArtifactApp, M: S
             ui_pending: true, progress: None, progress_pending: false, user_cancel_requested: false, published_artifact: false, published_config: false, published_window_config: false,
             command_logged: false, interaction_revalidated: false, retained_close_fault: None,retained_close_fault_retirement:None,retained_close_fault_refusal:None, terminal_fault: None, stage: MountedTypedCommandFullOperationStage::Publishing,
         };
-        let policy=crate::app_testing::artifact_app_laws::fixture_mounted_policy();
+        let policy=semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy();
         let mut caller=semio_framework_job::OriginalJobFixtureCaller::admit(operation.operation,operation.generation,policy.preparation,||Some(1),1_000_000,1);
         let started = std::time::Instant::now();
         let mut child_page = false;
@@ -27,9 +28,7 @@ pub(crate) async fn test_mounted_original_owned_publication<A: ArtifactApp, M: S
                 witnessed = true;
                 if let Some(owner) = mounted.owned_child_group.and_then(|id| app.child_composition.private_child_groups.get(id)) {
                     let state = owner.publication.as_ref().map(|group| (group.inputs_ready(),group.openings_ready(),group.publications_ready(),group.projection_ready(),group.entries_ready()));
-                    println!("[DEBUG] mounted original group bounded witness stage={:?} owner_phase={} closing={} input/open/publication/projection/entries={state:?} receipt={:?} command={} append={} output={} pending_ack={}",mounted.stage,owner.phase,owner.closing,owner.receipts.as_ref().and_then(|receipts|receipts.receipt_index()),owner.command.is_some(),owner.append.is_some(),owner.output.is_some(),mounted.owned_child_result_pending);
                 } else {
-                    println!("[DEBUG] mounted original group bounded witness stage={:?} group={:?} publication={} pending_ack={}",mounted.stage,mounted.owned_child_group,mounted.publication.is_some(),mounted.owned_child_result_pending);
                 }
             }
             assert!(started.elapsed().as_millis() <= 90000, "original mounted publication wall limit");

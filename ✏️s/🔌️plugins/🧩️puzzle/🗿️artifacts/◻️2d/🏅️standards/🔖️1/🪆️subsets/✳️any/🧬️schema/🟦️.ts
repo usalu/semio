@@ -210,6 +210,10 @@ type puzzlePuzzle2dArtifactGuardSizeBounds = { readonly minItems?: number; reado
 
 export const puzzlePuzzle2dArtifactGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : puzzlePuzzle2dArtifactGuardReject(at, "value is not an object");
+export const puzzlePuzzle2dArtifactGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) puzzlePuzzle2dArtifactGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const puzzlePuzzle2dArtifactGuardArray = (value: unknown, at: string, bounds: puzzlePuzzle2dArtifactGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return puzzlePuzzle2dArtifactGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) puzzlePuzzle2dArtifactGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -240,7 +244,7 @@ export const puzzlePuzzle2dArtifactGuardConstant = <T extends string | number | 
 //#endregion 🚪️Parsers
 
 export function parsePuzzle2dArtifact(value: unknown, at = "$"): Puzzle2dArtifact {
-  const row = puzzlePuzzle2dArtifactGuardObject(value, at);
+  const row = puzzlePuzzle2dArtifactGuardClosed(puzzlePuzzle2dArtifactGuardObject(value, at), at, ["schema", "camera", "nodes", "edges", "targetRegions", "meta"]);
   return {
     schema: puzzlePuzzle2dArtifactGuardString(row["schema"], `${at}.schema`),
     camera: parsePuzzle2dCamera(row["camera"], `${at}.camera`),
@@ -252,7 +256,7 @@ export function parsePuzzle2dArtifact(value: unknown, at = "$"): Puzzle2dArtifac
 }
 
 export function parsePuzzle2dTargetRegion(value: unknown, at = "$"): Puzzle2dTargetRegion {
-  const row = puzzlePuzzle2dArtifactGuardObject(value, at);
+  const row = puzzlePuzzle2dArtifactGuardClosed(puzzlePuzzle2dArtifactGuardObject(value, at), at, ["id", "x", "y", "width", "height", "label", "hidden", "locked"]);
   return {
     id: puzzlePuzzle2dArtifactGuardString(row["id"], `${at}.id`),
     x: puzzlePuzzle2dArtifactGuardNumber(row["x"], `${at}.x`),
@@ -260,13 +264,13 @@ export function parsePuzzle2dTargetRegion(value: unknown, at = "$"): Puzzle2dTar
     width: puzzlePuzzle2dArtifactGuardNumber(row["width"], `${at}.width`),
     height: puzzlePuzzle2dArtifactGuardNumber(row["height"], `${at}.height`),
     label: row["label"] === undefined ? undefined : puzzlePuzzle2dArtifactGuardString(row["label"], `${at}.label`),
-    hidden: row["hidden"] === undefined ? false : puzzlePuzzle2dArtifactGuardBoolean(row["hidden"], `${at}.hidden`),
-    locked: row["locked"] === undefined ? false : puzzlePuzzle2dArtifactGuardBoolean(row["locked"], `${at}.locked`),
+    hidden: puzzlePuzzle2dArtifactGuardBoolean(row["hidden"], `${at}.hidden`),
+    locked: puzzlePuzzle2dArtifactGuardBoolean(row["locked"], `${at}.locked`),
   };
 }
 
 export function parsePuzzle2dCamera(value: unknown, at = "$"): Puzzle2dCamera {
-  const row = puzzlePuzzle2dArtifactGuardObject(value, at);
+  const row = puzzlePuzzle2dArtifactGuardClosed(puzzlePuzzle2dArtifactGuardObject(value, at), at, ["x", "y", "zoom"]);
   return {
     x: puzzlePuzzle2dArtifactGuardNumber(row["x"], `${at}.x`),
     y: puzzlePuzzle2dArtifactGuardNumber(row["y"], `${at}.y`),
@@ -275,7 +279,7 @@ export function parsePuzzle2dCamera(value: unknown, at = "$"): Puzzle2dCamera {
 }
 
 export function parsePuzzle2dNode(value: unknown, at = "$"): Puzzle2dNode {
-  const row = puzzlePuzzle2dArtifactGuardObject(value, at);
+  const row = puzzlePuzzle2dArtifactGuardClosed(puzzlePuzzle2dArtifactGuardObject(value, at), at, ["id", "nodeKind", "shape", "x", "y", "radius", "width", "height", "text", "iconKind", "root", "scale", "visible", "locked", "anchor", "handles"]);
   return {
     id: puzzlePuzzle2dArtifactGuardString(row["id"], `${at}.id`),
     nodeKind: row["nodeKind"] === undefined ? undefined : puzzlePuzzle2dArtifactGuardString(row["nodeKind"], `${at}.nodeKind`),
@@ -297,7 +301,7 @@ export function parsePuzzle2dNode(value: unknown, at = "$"): Puzzle2dNode {
 }
 
 export function parsePuzzle2dEdge(value: unknown, at = "$"): Puzzle2dEdge {
-  const row = puzzlePuzzle2dArtifactGuardObject(value, at);
+  const row = puzzlePuzzle2dArtifactGuardClosed(puzzlePuzzle2dArtifactGuardObject(value, at), at, ["id", "source", "target", "edgeKind", "gap", "shift", "rise", "rotation", "turn", "tilt", "x", "y", "sourceTip", "targetTip", "visible", "locked"]);
   return {
     id: puzzlePuzzle2dArtifactGuardString(row["id"], `${at}.id`),
     source: puzzlePuzzle2dArtifactGuardString(row["source"], `${at}.source`),
@@ -319,7 +323,7 @@ export function parsePuzzle2dEdge(value: unknown, at = "$"): Puzzle2dEdge {
 }
 
 export function parsePuzzle2dMeta(value: unknown, at = "$"): Puzzle2dMeta {
-  const row = puzzlePuzzle2dArtifactGuardObject(value, at);
+  const row = puzzlePuzzle2dArtifactGuardClosed(puzzlePuzzle2dArtifactGuardObject(value, at), at, ["manifestId", "kindCompatibility", "kindCatalogs"]);
   return {
     manifestId: row["manifestId"] === undefined ? undefined : puzzlePuzzle2dArtifactGuardString(row["manifestId"], `${at}.manifestId`),
     kindCompatibility: puzzlePuzzle2dArtifactGuardArray(row["kindCompatibility"], `${at}.kindCompatibility`).map((item, index) => parsePuzzle2dKindCompatibility(item, `${at}.kindCompatibility[${index}]`)),
@@ -332,7 +336,7 @@ export function parsePuzzle2dNodeAnchor(value: unknown, at = "$"): Puzzle2dNodeA
 }
 
 export function parsePuzzle2dHandle(value: unknown, at = "$"): Puzzle2dHandle {
-  const row = puzzlePuzzle2dArtifactGuardObject(value, at);
+  const row = puzzlePuzzle2dArtifactGuardClosed(puzzlePuzzle2dArtifactGuardObject(value, at), at, ["id", "handleKind", "angle", "radius", "color", "iconKind", "scale", "visible", "locked"]);
   return {
     id: puzzlePuzzle2dArtifactGuardString(row["id"], `${at}.id`),
     handleKind: row["handleKind"] === undefined ? undefined : puzzlePuzzle2dArtifactGuardString(row["handleKind"], `${at}.handleKind`),
@@ -351,7 +355,7 @@ export function parsePuzzle2dCompatSpecificity(value: unknown, at = "$"): Puzzle
 }
 
 export function parsePuzzle2dKindCompatibility(value: unknown, at = "$"): Puzzle2dKindCompatibility {
-  const row = puzzlePuzzle2dArtifactGuardObject(value, at);
+  const row = puzzlePuzzle2dArtifactGuardClosed(puzzlePuzzle2dArtifactGuardObject(value, at), at, ["source", "target", "bidirectional", "important", "specificity"]);
   return {
     source: puzzlePuzzle2dArtifactGuardString(row["source"], `${at}.source`),
     target: puzzlePuzzle2dArtifactGuardString(row["target"], `${at}.target`),
@@ -362,7 +366,7 @@ export function parsePuzzle2dKindCompatibility(value: unknown, at = "$"): Puzzle
 }
 
 export function parsePuzzle2dAttribute(value: unknown, at = "$"): Puzzle2dAttribute {
-  const row = puzzlePuzzle2dArtifactGuardObject(value, at);
+  const row = puzzlePuzzle2dArtifactGuardClosed(puzzlePuzzle2dArtifactGuardObject(value, at), at, ["id", "key", "value", "definition"]);
   return {
     id: puzzlePuzzle2dArtifactGuardString(row["id"], `${at}.id`),
     key: puzzlePuzzle2dArtifactGuardString(row["key"], `${at}.key`),
@@ -372,7 +376,7 @@ export function parsePuzzle2dAttribute(value: unknown, at = "$"): Puzzle2dAttrib
 }
 
 export function parsePuzzle2dAuthor(value: unknown, at = "$"): Puzzle2dAuthor {
-  const row = puzzlePuzzle2dArtifactGuardObject(value, at);
+  const row = puzzlePuzzle2dArtifactGuardClosed(puzzlePuzzle2dArtifactGuardObject(value, at), at, ["id", "name", "email", "role", "rank"]);
   return {
     id: puzzlePuzzle2dArtifactGuardString(row["id"], `${at}.id`),
     name: puzzlePuzzle2dArtifactGuardString(row["name"], `${at}.name`),
@@ -383,7 +387,7 @@ export function parsePuzzle2dAuthor(value: unknown, at = "$"): Puzzle2dAuthor {
 }
 
 export function parsePuzzle2dRepresentation(value: unknown, at = "$"): Puzzle2dRepresentation {
-  const row = puzzlePuzzle2dArtifactGuardObject(value, at);
+  const row = puzzlePuzzle2dArtifactGuardClosed(puzzlePuzzle2dArtifactGuardObject(value, at), at, ["id", "name", "url", "mime", "tags", "lod", "description"]);
   return {
     id: puzzlePuzzle2dArtifactGuardString(row["id"], `${at}.id`),
     name: puzzlePuzzle2dArtifactGuardString(row["name"], `${at}.name`),
@@ -396,7 +400,7 @@ export function parsePuzzle2dRepresentation(value: unknown, at = "$"): Puzzle2dR
 }
 
 export function parsePuzzle2dHandleTemplate(value: unknown, at = "$"): Puzzle2dHandleTemplate {
-  const row = puzzlePuzzle2dArtifactGuardObject(value, at);
+  const row = puzzlePuzzle2dArtifactGuardClosed(puzzlePuzzle2dArtifactGuardObject(value, at), at, ["id", "name", "label", "description", "icon", "handleKind", "angle", "t", "mandatory", "radius"]);
   return {
     id: puzzlePuzzle2dArtifactGuardString(row["id"], `${at}.id`),
     name: puzzlePuzzle2dArtifactGuardString(row["name"], `${at}.name`),
@@ -412,7 +416,7 @@ export function parsePuzzle2dHandleTemplate(value: unknown, at = "$"): Puzzle2dH
 }
 
 export function parsePuzzle2dCatalogNodeKind(value: unknown, at = "$"): Puzzle2dCatalogNodeKind {
-  const row = puzzlePuzzle2dArtifactGuardObject(value, at);
+  const row = puzzlePuzzle2dArtifactGuardClosed(puzzlePuzzle2dArtifactGuardObject(value, at), at, ["id", "name", "label", "description", "icon", "image", "unit", "abstract", "baseKinds", "representations", "handles", "attributes", "authors"]);
   return {
     id: puzzlePuzzle2dArtifactGuardString(row["id"], `${at}.id`),
     name: puzzlePuzzle2dArtifactGuardString(row["name"], `${at}.name`),
@@ -431,7 +435,7 @@ export function parsePuzzle2dCatalogNodeKind(value: unknown, at = "$"): Puzzle2d
 }
 
 export function parsePuzzle2dCatalogHandleKind(value: unknown, at = "$"): Puzzle2dCatalogHandleKind {
-  const row = puzzlePuzzle2dArtifactGuardObject(value, at);
+  const row = puzzlePuzzle2dArtifactGuardClosed(puzzlePuzzle2dArtifactGuardObject(value, at), at, ["id", "code", "label", "order", "compatibleWith", "description", "icon", "color", "defaultWireKind"]);
   return {
     id: puzzlePuzzle2dArtifactGuardString(row["id"], `${at}.id`),
     code: row["code"] === undefined ? undefined : puzzlePuzzle2dArtifactGuardString(row["code"], `${at}.code`),
@@ -446,7 +450,7 @@ export function parsePuzzle2dCatalogHandleKind(value: unknown, at = "$"): Puzzle
 }
 
 export function parsePuzzle2dCatalogEdgeKind(value: unknown, at = "$"): Puzzle2dCatalogEdgeKind {
-  const row = puzzlePuzzle2dArtifactGuardObject(value, at);
+  const row = puzzlePuzzle2dArtifactGuardClosed(puzzlePuzzle2dArtifactGuardObject(value, at), at, ["id", "name", "label", "description", "icon", "color"]);
   return {
     id: puzzlePuzzle2dArtifactGuardString(row["id"], `${at}.id`),
     name: puzzlePuzzle2dArtifactGuardString(row["name"], `${at}.name`),
@@ -458,7 +462,7 @@ export function parsePuzzle2dCatalogEdgeKind(value: unknown, at = "$"): Puzzle2d
 }
 
 export function parsePuzzle2dCatalogWireKind(value: unknown, at = "$"): Puzzle2dCatalogWireKind {
-  const row = puzzlePuzzle2dArtifactGuardObject(value, at);
+  const row = puzzlePuzzle2dArtifactGuardClosed(puzzlePuzzle2dArtifactGuardObject(value, at), at, ["id", "name", "label", "description", "icon", "color", "defaultEdgeKind"]);
   return {
     id: puzzlePuzzle2dArtifactGuardString(row["id"], `${at}.id`),
     name: puzzlePuzzle2dArtifactGuardString(row["name"], `${at}.name`),
@@ -471,7 +475,7 @@ export function parsePuzzle2dCatalogWireKind(value: unknown, at = "$"): Puzzle2d
 }
 
 export function parsePuzzle2dKindCatalogs(value: unknown, at = "$"): Puzzle2dKindCatalogs {
-  const row = puzzlePuzzle2dArtifactGuardObject(value, at);
+  const row = puzzlePuzzle2dArtifactGuardClosed(puzzlePuzzle2dArtifactGuardObject(value, at), at, ["nodes", "handles", "edges", "wires"]);
   return {
     nodes: puzzlePuzzle2dArtifactGuardArray(row["nodes"], `${at}.nodes`).map((item, index) => parsePuzzle2dCatalogNodeKind(item, `${at}.nodes[${index}]`)),
     handles: puzzlePuzzle2dArtifactGuardArray(row["handles"], `${at}.handles`).map((item, index) => parsePuzzle2dCatalogHandleKind(item, `${at}.handles[${index}]`)),

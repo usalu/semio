@@ -1,0 +1,1 @@
+{"name": "stdio09", "crates": ["semio-s-artifact-stdio-bcf", "semio-s-artifact-stdio-bcf-inferences", "semio-s-artifact-stdio-bcf-io-registry", "semio-s-artifact-stdio-bcf-mutations", "semio-s-artifact-stdio-bcf-schema", "semio-s-artifact-stdio-bcf-test-oracle"], "note": "stdio 💬️bcf"}

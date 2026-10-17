@@ -9,6 +9,7 @@
 
 use crate::inferences::solve_assignments;
 use crate::Wfc3dSnapshot;
+use semio_framework_test_fixtures::{fixture_path, fixture_text};
 use std::collections::BTreeMap;
 
 const OUTCOME_SCHEMA: &str = "s.wfc.wfc3d.example-outcome/v1";
@@ -21,9 +22,9 @@ struct Committed {
 
 fn committed() -> Vec<Committed> {
     vec![
-        Committed { example: super::two_room_corridor::ID, json: include_str!("../../🚪️two-room-corridor/🧪️tests/🧫️fixtures/🧩️example/🔣️.json"), snapshot: super::two_room_corridor::snapshot },
-        Committed { example: super::wall_roof_facade_strip::ID, json: include_str!("../../🧱️wall-roof-facade-strip/🧪️tests/🧫️fixtures/🧩️example/🔣️.json"), snapshot: super::wall_roof_facade_strip::snapshot },
-        Committed { example: super::tower_stack::ID, json: include_str!("../../🗼️tower-stack/🧪️tests/🧫️fixtures/🧩️example/🔣️.json"), snapshot: super::tower_stack::snapshot },
+        Committed { example: crate::examples::two_room_corridor::ID, json: fixture_text!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🚪️two-room-corridor/🧪️tests/🧫️fixtures/🧩️example/🔣️.json"), snapshot: crate::examples::two_room_corridor::snapshot },
+        Committed { example: crate::examples::wall_roof_facade_strip::ID, json: fixture_text!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🧱️wall-roof-facade-strip/🧪️tests/🧫️fixtures/🧩️example/🔣️.json"), snapshot: crate::examples::wall_roof_facade_strip::snapshot },
+        Committed { example: crate::examples::tower_stack::ID, json: fixture_text!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🗼️tower-stack/🧪️tests/🧫️fixtures/🧩️example/🔣️.json"), snapshot: crate::examples::tower_stack::snapshot },
     ]
 }
 
@@ -132,8 +133,8 @@ fn every_example_edge_names_a_declared_slot() {
 
 #[test]
 fn the_bundled_roster_is_exactly_the_committed_set() {
-    let ids: Vec<String> = super::sources().iter().map(|source| source.id().to_string()).collect();
-    assert_eq!(ids, vec![super::two_room_corridor::ID.to_string(), super::wall_roof_facade_strip::ID.to_string(), super::tower_stack::ID.to_string()]);
+    let ids: Vec<String> = crate::examples::sources().iter().map(|source| source.id().to_string()).collect();
+    assert_eq!(ids, vec![crate::examples::two_room_corridor::ID.to_string(), crate::examples::wall_roof_facade_strip::ID.to_string(), crate::examples::tower_stack::ID.to_string()]);
 }
 
 /// 🏭️ Writes each example's printed `🗣️.dsl.semio` asset and its committed outcome from the Rust
@@ -142,8 +143,8 @@ fn the_bundled_roster_is_exactly_the_committed_set() {
 #[test]
 #[ignore]
 fn regenerate_committed_example_assets() {
-    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples");
-    let slugs = [("🚪️two-room-corridor", super::two_room_corridor::ID), ("🧱️wall-roof-facade-strip", super::wall_roof_facade_strip::ID), ("🗼️tower-stack", super::tower_stack::ID)];
+    let root = fixture_path!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples");
+    let slugs = [("🚪️two-room-corridor", crate::examples::two_room_corridor::ID), ("🧱️wall-roof-facade-strip", crate::examples::wall_roof_facade_strip::ID), ("🗼️tower-stack", crate::examples::tower_stack::ID)];
     for (case, (slug, id)) in committed().into_iter().zip(slugs) {
         let snapshot = (case.snapshot)();
         std::fs::write(root.join(slug).join("🖼️assets").join(slug).join("🗣️.dsl.semio"), crate::standards::v1::subsets::any::io::text::snapshot::print_dsl(&snapshot)).expect("write dsl asset");

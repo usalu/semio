@@ -294,7 +294,16 @@ async function driveChunks(unit: ResumableBootUnit, base: number, span: number):
 //#endregion ⏱️StepAuthority
 
 //#region 🧵️Worker
-const scope = self as DedicatedWorkerGlobalScope;
+/** 🧵️ The members of a dedicated worker's global scope this worker reads and assigns (the program is not compiled with the `webworker` library, so the scope is declared where it is used). */
+type DedicatedWorkerScope = {
+  readonly location: Location;
+  onmessage: ((event: MessageEvent<BrowserFrameUiMessage>) => void) | null;
+  onerror: ((event: Event | string) => boolean | void) | null;
+  onunhandledrejection: ((event: PromiseRejectionEvent) => void) | null;
+  close(): void;
+  postMessage(message: unknown, transfer?: Transferable[]): void;
+};
+const scope = self as unknown as DedicatedWorkerScope;
 
 /** 🩺️ The diagnostics preference the UI isolate stamped on THIS worker's url — the only channel
  * that exists before the boot message, and the one the renderer wasm's own per-frame `[TRACE]` dumps are

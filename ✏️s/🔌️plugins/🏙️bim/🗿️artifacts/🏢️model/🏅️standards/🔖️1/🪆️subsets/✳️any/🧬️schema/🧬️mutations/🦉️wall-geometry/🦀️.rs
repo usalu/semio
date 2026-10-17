@@ -250,10 +250,11 @@ pub fn offsets_flaw(top_offset: f64, end_top_offset: Option<f64>) -> Option<Flaw
 
 //#region 🔖️Testing
 /// 🧪️ Helpers shared by the wall leaf tests: fixture decoding, tolerant comparison and the code of a refusal.
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 pub mod testing {
-    use crate::standards::v1::subsets::any::schema::inferences::wall_layout::{compute_wall_layout, WallLayout};
-    use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, mutations::ModelMutation, snapshot::ModelSnapshot};
+    use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_wall_layout;
+    use crate::standards::v1::subsets::any::schema::inferences::wall_layout::WallLayout;
+    use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, snapshot::ModelSnapshot};
     use protocol::Mutation;
     use semio_framework_diagnostic::Severity;
     use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
@@ -274,7 +275,7 @@ pub mod testing {
     }
 
     /// 🚫 The code of the single refusal of `mutation` against `base`, asserting that it produced no diff.
-    pub fn refusal(mutation: &ModelMutation, base: &ModelSnapshot) -> String {
+    pub fn refusal<Op: Mutation<ModelSnapshot, Diff = ModelDiff>>(mutation: &Op, base: &ModelSnapshot) -> String {
         let (diff, messages) = mutation.diff(base).into_parts();
         assert_eq!(diff, ModelDiff::default(), "a refused mutation produces an empty diff");
         messages.iter().find(|message| matches!(message.level, Severity::Error | Severity::Fatal)).expect("the mutation is refused").code.0.to_string()

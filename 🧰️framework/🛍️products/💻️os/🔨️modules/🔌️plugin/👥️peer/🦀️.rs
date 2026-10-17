@@ -143,7 +143,6 @@ mod peer_root_retirement_laws {
         let (_, terminal) = observe(|| drop(owner));
         assert_eq!((terminal.requested_bytes, terminal.released_bytes), (0, 0));
         assert_eq!(serde_json::json!({ "message": law["message"] }), serde_json::from_str::<serde_json::Value>("{\"message\":\"Original configuration cancellation\"}").unwrap());
-        eprintln!("[DEBUG] configuration original completion exact pointers, denied/constructor/final-drop zero effects, physical conservation {allocated}/{released}");
     }
 
     #[test]
@@ -173,7 +172,6 @@ mod peer_root_retirement_laws {
         let (_, heap) = observe(|| drop(retained));
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
         drop(fault);
-        eprintln!("[DEBUG] original peer fault preserves all original pointers and admits typed outcome transfer without physical effects");
     }
 
     #[test]
@@ -228,7 +226,6 @@ mod peer_root_retirement_laws {
             assert_eq!(original.progress(), RetainedCloneProgress::default());
             assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
         }
-        eprintln!("[DEBUG] original empty presence native owners retain callbacks and exact zero physical effects");
     }
 
     #[test]
@@ -249,7 +246,6 @@ mod peer_root_retirement_laws {
                 assert_eq!(serde_json::to_value(interaction).unwrap(), expected["interaction"], "{}", row["id"]);
             }
         }
-        eprintln!("[DEBUG] original borrowed peer projection matches the complete neutral codec corpus with zero physical effects");
     }
 
     #[test]
@@ -273,7 +269,6 @@ mod peer_root_retirement_laws {
         let (error, heap) = observe(|| protocol::borrow_presence_metadata(&invalid));
         assert!(error.is_err());
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
-        eprintln!("[DEBUG] original peer metadata projection borrowed validated wire without physical effects");
     }
 
     #[test]
@@ -295,7 +290,6 @@ mod peer_root_retirement_laws {
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, step.progress().released_bytes));
         let (_, heap) = observe(|| drop(original));
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
-        eprintln!("[DEBUG] original presence page released its exact4096 backing under independent axes");
     }
 
     #[test]
@@ -344,7 +338,6 @@ mod peer_root_retirement_laws {
         assert_eq!(born, released);
         let (_, terminal) = observe(|| drop(owner));
         assert_eq!((terminal.requested_bytes, terminal.released_bytes), (0, 0));
-        eprintln!("[DEBUG] original peer root pointer custody conserved {born} physical bytes");
     }
 }
 

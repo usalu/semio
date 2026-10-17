@@ -30,6 +30,10 @@ type flowFlowInferenceGuardSizeBounds = { readonly minItems?: number; readonly m
 
 export const flowFlowInferenceGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : flowFlowInferenceGuardReject(at, "value is not an object");
+export const flowFlowInferenceGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) flowFlowInferenceGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const flowFlowInferenceGuardArray = (value: unknown, at: string, bounds: flowFlowInferenceGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return flowFlowInferenceGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) flowFlowInferenceGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -60,17 +64,17 @@ export const flowFlowInferenceGuardConstant = <T extends string | number | boole
 //#endregion 🚪️Parsers
 
 export function parseFlowInference(value: unknown, at = "$"): FlowInference {
-  const row = flowFlowInferenceGuardObject(value, at);
+  const row = flowFlowInferenceGuardClosed(flowFlowInferenceGuardObject(value, at), at, ["topology"]);
   return {
     topology: parseFlowTopology(row["topology"], `${at}.topology`),
   };
 }
 
 export function parseFlowTopology(value: unknown, at = "$"): FlowTopology {
-  const row = flowFlowInferenceGuardObject(value, at);
+  const row = flowFlowInferenceGuardClosed(flowFlowInferenceGuardObject(value, at), at, ["topoOrder", "depth", "cycleFree", "nodeCount"]);
   return {
     topoOrder: flowFlowInferenceGuardArray(row["topoOrder"], `${at}.topoOrder`).map((item, index) => flowFlowInferenceGuardString(item, `${at}.topoOrder[${index}]`)),
-    depth: flowFlowInferenceGuardObject(row["depth"], `${at}.depth`),
+    depth: Object.fromEntries(Object.entries(flowFlowInferenceGuardObject(row["depth"], `${at}.depth`)).map(([key0, value0]) => [key0, flowFlowInferenceGuardInteger(value0, `${at}.depth.${key0}`, {"minimum": 0})])),
     cycleFree: flowFlowInferenceGuardBoolean(row["cycleFree"], `${at}.cycleFree`),
     nodeCount: flowFlowInferenceGuardInteger(row["nodeCount"], `${at}.nodeCount`, {"minimum": 0}),
   };

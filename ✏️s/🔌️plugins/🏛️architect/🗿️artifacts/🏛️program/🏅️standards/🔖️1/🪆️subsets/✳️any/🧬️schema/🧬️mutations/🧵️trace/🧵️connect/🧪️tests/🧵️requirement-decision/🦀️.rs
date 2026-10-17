@@ -11,23 +11,24 @@
 
 use crate::standards::v1::subsets::any::schema::{diff::ProgramDiff, mutations::ProgramMutation, snapshot::ProgramSnapshot};
 use protocol::Mutation;
+use semio_framework_test_fixtures::fixture_text;
 
-const BEFORE: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧵️trace/🧵️connect/🧵️requirement-decision/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧵️trace/🧵️connect/🧵️requirement-decision/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧵️trace/🧵️connect/🧵️requirement-decision/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧵️trace/🧵️connect/🧵️requirement-decision/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧵️trace/🧵️connect/🧵️requirement-decision/🎯️outcome/🔣️.json");
+static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧵️trace/🧵️connect/🧵️requirement-decision/📸️snapshot/⬅️before/🔣️.json"));
+static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧵️trace/🧵️connect/🧵️requirement-decision/📸️snapshot/➡️after/🔣️.json"));
+static MUTATION: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧵️trace/🧵️connect/🧵️requirement-decision/🦠️mutation/🔣️.json"));
+static DIFF: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧵️trace/🧵️connect/🧵️requirement-decision/🔺️diff/🔣️.json"));
+static OUTCOME: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧵️trace/🧵️connect/🧵️requirement-decision/🎯️outcome/🔣️.json"));
 
 fn before() -> ProgramSnapshot {
-    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("connect-trace/connects-requirement-a-to-decision-a: before snapshot decodes")
+    semio_framework_pack_json::from_json_str((*BEFORE), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("connect-trace/connects-requirement-a-to-decision-a: before snapshot decodes")
 }
 
 fn expected_after() -> ProgramSnapshot {
-    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("connect-trace/connects-requirement-a-to-decision-a: after snapshot decodes")
+    semio_framework_pack_json::from_json_str((*AFTER), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("connect-trace/connects-requirement-a-to-decision-a: after snapshot decodes")
 }
 
 fn mutation() -> ProgramMutation {
-    serde_json::from_str(MUTATION).expect("connect-trace/connects-requirement-a-to-decision-a: mutation decodes")
+    serde_json::from_str((*MUTATION)).expect("connect-trace/connects-requirement-a-to-decision-a: mutation decodes")
 }
 
 /// ▶️ connect-trace carries the committed before-snapshot to exactly the committed after-snapshot.
@@ -57,21 +58,21 @@ async fn connect_trace_inverse_restores_before() {
 /// is a fixed point.
 #[semio_framework_async_macros::async_test]
 async fn connect_trace_committed_json_is_canonical() {
-    for (side, text) in [("before", BEFORE), ("after", AFTER)] {
+    for (side, text) in [("before", (*BEFORE)), ("after", (*AFTER))] {
         let decoded: ProgramSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("connect-trace/connects-requirement-a-to-decision-a: snapshot decodes");
         let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("connect-trace/connects-requirement-a-to-decision-a: snapshot re-encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("connect-trace/connects-requirement-a-to-decision-a: snapshot reparses");
         assert_eq!(reencoded, original, "connect-trace/connects-requirement-a-to-decision-a: committed {side} snapshot JSON is not canonical");
     }
     let reencoded = serde_json::to_value(mutation()).expect("connect-trace/connects-requirement-a-to-decision-a: connect-trace payload re-encodes");
-    let original: serde_json::Value = serde_json::from_str(MUTATION).expect("connect-trace/connects-requirement-a-to-decision-a: connect-trace payload reparses");
+    let original: serde_json::Value = serde_json::from_str((*MUTATION)).expect("connect-trace/connects-requirement-a-to-decision-a: connect-trace payload reparses");
     assert_eq!(reencoded, original, "connect-trace/connects-requirement-a-to-decision-a: committed connect-trace payload JSON is not canonical");
 }
 
 /// 🎯️ The declared outcome holds: connect-trace applies cleanly here and raises no diagnostic at all.
 #[semio_framework_async_macros::async_test]
 async fn connect_trace_declared_outcome_holds() {
-    let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("connect-trace/connects-requirement-a-to-decision-a: outcome decodes");
+    let declared: serde_json::Value = serde_json::from_str((*OUTCOME)).expect("connect-trace/connects-requirement-a-to-decision-a: outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "connect-trace/connects-requirement-a-to-decision-a: this fixture declares an applied outcome");
     let base = before();
     let outcome = mutation().diff(&base);
@@ -84,16 +85,16 @@ async fn connect_trace_declared_outcome_holds() {
 #[semio_framework_async_macros::async_test]
 async fn connect_trace_produces_committed_diff() {
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(mutation().diff(&before()).diff())).expect("connect-trace/connects-requirement-a-to-decision-a: produced diff encodes");
-    let committed: serde_json::Value = serde_json::from_str(DIFF).expect("connect-trace/connects-requirement-a-to-decision-a: committed diff decodes");
+    let committed: serde_json::Value = serde_json::from_str((*DIFF)).expect("connect-trace/connects-requirement-a-to-decision-a: committed diff decodes");
     assert_eq!(produced, committed, "connect-trace/connects-requirement-a-to-decision-a: the diff connect-trace builds differs from the committed 🔺️diff/🔣️.json");
 }
 
 /// 🔣️ The committed diff is itself canonical and decodes to ProgramDiff.
 #[semio_framework_async_macros::async_test]
 async fn connect_trace_committed_diff_is_canonical() {
-    let decoded: ProgramDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("connect-trace/connects-requirement-a-to-decision-a: committed diff decodes");
+    let decoded: ProgramDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("connect-trace/connects-requirement-a-to-decision-a: committed diff decodes");
     let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("connect-trace/connects-requirement-a-to-decision-a: committed diff re-encodes");
-    let original: serde_json::Value = serde_json::from_str(DIFF).expect("connect-trace/connects-requirement-a-to-decision-a: committed diff reparses");
+    let original: serde_json::Value = serde_json::from_str((*DIFF)).expect("connect-trace/connects-requirement-a-to-decision-a: committed diff reparses");
     assert_eq!(reencoded, original, "connect-trace/connects-requirement-a-to-decision-a: committed diff JSON is not canonical");
 }
 
@@ -101,7 +102,7 @@ async fn connect_trace_committed_diff_is_canonical() {
 /// after-snapshot — the diff is a complete description of what connect-trace does, not a summary.
 #[semio_framework_async_macros::async_test]
 async fn connect_trace_committed_diff_applies_to_after() {
-    let decoded: ProgramDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("connect-trace/connects-requirement-a-to-decision-a: committed diff decodes");
+    let decoded: ProgramDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("connect-trace/connects-requirement-a-to-decision-a: committed diff decodes");
     let produced = protocol::apply_diff(&decoded, &before()).expect("connect-trace/connects-requirement-a-to-decision-a: committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "connect-trace/connects-requirement-a-to-decision-a: the committed diff did not carry before to after");
 }

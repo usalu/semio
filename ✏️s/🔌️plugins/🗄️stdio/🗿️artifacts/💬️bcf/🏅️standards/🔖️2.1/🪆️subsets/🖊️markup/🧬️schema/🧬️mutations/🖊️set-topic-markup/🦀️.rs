@@ -8,21 +8,21 @@ use super::*;
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 pub struct SetTopicMarkup {
-    pub(crate) guid: String,
+    pub guid: String,
     #[value(default, skip_serializing_if = "Option::is_none")]
-    pub(crate) title: Option<String>,
+    pub title: Option<String>,
     #[value(default, skip_serializing_if = "Option::is_none")]
-    pub(crate) description: Option<String>,
+    pub description: Option<String>,
     #[value(default, skip_serializing_if = "Option::is_none")]
-    pub(crate) status: Option<String>,
+    pub status: Option<String>,
     #[value(default, skip_serializing_if = "Option::is_none")]
-    pub(crate) priority: Option<String>,
+    pub priority: Option<String>,
     #[value(default, skip_serializing_if = "Option::is_none")]
-    pub(crate) labels: Option<Vec<String>>,
+    pub labels: Option<Vec<String>>,
     #[value(default, skip_serializing_if = "Option::is_none")]
-    pub(crate) creation_date: Option<String>,
+    pub creation_date: Option<String>,
     #[value(default, skip_serializing_if = "Option::is_none")]
-    pub(crate) creation_author: Option<String>,
+    pub creation_author: Option<String>,
 }
 
 impl protocol::MutationKind<BcfSnapshot, BcfMutation> for SetTopicMarkup {

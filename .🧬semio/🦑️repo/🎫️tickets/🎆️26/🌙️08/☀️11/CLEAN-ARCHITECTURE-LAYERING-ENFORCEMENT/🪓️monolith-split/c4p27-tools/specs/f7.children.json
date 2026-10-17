@@ -1,0 +1,5 @@
+[
+ {"dir":"🌐️ui-labels","doc":"/** 🌐️ HubConnection labels: every `os.hub.*` string the three hub elements render, English first and German second, registered as one translation bundle. */","lines":[[87,391]]},
+ {"dir":"🔌️connection-contract","doc":"/** 🔌️ HubConnection contract: the authority recheck bound, the injected port, the delegation refusal, the credential, member, invitation and redemption rows, the connection value and the operation owner. */","lines":[[394,552]]},
+ {"dir":"🛰️fetch-port","doc":"/** 🛰️ HubConnection fetch port: the member row parser, the capability cells and the `fetch`-backed port that every hub call enters through, plus the bootstrap connection it offers. */","lines":[[1178,1349]]}
+]

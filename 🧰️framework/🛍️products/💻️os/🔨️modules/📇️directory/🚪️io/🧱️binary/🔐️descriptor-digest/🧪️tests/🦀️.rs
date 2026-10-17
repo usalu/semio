@@ -13,7 +13,6 @@ struct ArtifactAuthorityFixture {
 #[semio_framework_async_macros::async_test]
 async fn document_descriptor_digest_v1_matches_the_language_neutral_binary_vector() {
     let fixture: ArtifactAuthorityFixture = semio_framework_pack_json::from_json_str(include_str!("../../../../../../🧪️tests/🧫️fixtures/📇️directory/🛡️artifact-authority.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("artifact authority fixture decodes");
-    println!("[DEBUG] descriptor canonical bytes and native authority digest admitted in explicit IO");
     assert_eq!(hex_lower(&descriptor_digest_encoding_v1(&fixture.descriptor).expect("descriptor encodes")), fixture.descriptor_encoding_hex);
     assert_eq!(descriptor_digest_v1(&fixture.descriptor).expect("descriptor hashes"), fixture.descriptor_digest_v1);
 }
@@ -35,5 +34,4 @@ async fn descriptor_metadata_refusals_precede_native_encoding() {
         assert_eq!(descriptor_digest_encoding_v1(&invalid).map(|_| ()), validate_document_descriptor_v1(&invalid));
         assert!(validate_document_descriptor_v1(&invalid).is_err());
     }
-    println!("[DEBUG] Five descriptor metadata refusals agree at pure and native boundaries");
 }

@@ -1,7 +1,6 @@
 //! 🪓️ `delete-object` — removes the entry matching `child_id` from `objects` (BASE-state
 //! addressing). Idempotent no-op if absent; the inverse escrows the removed handle from BASE.
 
-use crate::schema::mutations::SemioKitMutation;
 use crate::schema::snapshot::SemioKitSnapshot;
 
 //#region 🔖️Payload
@@ -12,13 +11,16 @@ pub struct DeleteObject {
     pub child_id: String,
 }
 
-impl protocol::MutationKind<SemioKitSnapshot, SemioKitMutation> for DeleteObject {
+impl<Op> protocol::MutationKind<SemioKitSnapshot, Op> for DeleteObject
+where
+    Op: protocol::Mutation<SemioKitSnapshot, Diff = crate::schema::diff::SemioKitDiff> + From<DeleteObject> + From<crate::schema::mutations::create_object::CreateObject>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "object", kind: "delete-object", record: "DeletedObject" };
 
-    fn diff(&self, base: &SemioKitSnapshot) -> protocol::MutationOutcome<<SemioKitMutation as protocol::Mutation<SemioKitSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioKitSnapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<SemioKitSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &SemioKitSnapshot) -> Result<Vec<SemioKitMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &SemioKitSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

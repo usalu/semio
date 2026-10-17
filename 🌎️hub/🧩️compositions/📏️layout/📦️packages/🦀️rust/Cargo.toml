@@ -19,6 +19,7 @@ path = "🦀️.rs"
 semio-framework-pack = { path = "../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-s-artifact-layout-layout = { workspace = true }
+semio-hub-layout-drawing = { path = "../../🖊️drawing/📦️packages/🦀️rust" }
 semio-framework-ui-contract.workspace = true
 semio-s-artifact-stdio-dwg = { workspace = true }
 semio-s-artifact-stdio-dxf = { workspace = true }

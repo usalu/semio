@@ -20,7 +20,12 @@
     ".": {
       "types": "./dist/🟦️.d.ts",
       "import": "./dist/🟦️.js"
-    }
+    },
+    "./source": "./📥️source/🟦️.ts",
+    "./standards/1.0/subsets/base/io/sqlite/snapshot": "./🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🟦️.ts",
+    "./standards/1.0/subsets/base/io/text/snapshot/json": "./🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🚪️io/📝️text/📸️snapshot/🔣️json/🟦️.ts",
+    "./standards/1.0/subsets/base/schema/diff": "./🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/🔺️diff/🟦️.ts",
+    "./standards/1.0/subsets/base/schema/snapshot": "./🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🟦️.ts"
   },
   "dependencies": {},
   "license": "LGPL-3.0-or-later",

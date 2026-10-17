@@ -61,28 +61,24 @@ import {
   writeStoredIntroductionSeen
 } from "@semio-tech/ui-react";
 import { resolveAppSurfaceSessionFactory } from "../../🪪️WasmSessionLoader/🟦️.tsx";
-import {
-  type ActiveSession,
-  shouldPersistIntroductionSeen,
-  shouldReplayIntroductionOnLoad,
-  type SpawnedAppEntry
-} from "../../🐚️Shell/🟦️.tsx";
+import { type SpawnedAppEntry } from "../../🐚️Shell/🟦️.tsx";
+import { type ActiveSession } from "../../🐚️Shell/📦️program-sessions/🟦️.ts";
+import { shouldPersistIntroductionSeen, shouldReplayIntroductionOnLoad } from "../../🐚️Shell/🔒️boot-and-locks/🟦️.ts";
 // #endregion 🔌️Adapters
 import type { ViewModel } from "../../🔌️PluginRuntime/🧷️handle-contract/🟦️.ts";
-import { leftoverWorldWindowOverlayV1, publishLeftoverWorldSelectionV1 } from "../../🌐️World3dHost/🟦️.tsx";
+import { leftoverWorldWindowOverlayV1, publishLeftoverWorldSelectionV1 } from "../../🌐️World3dHost/🔗️instance-selection/🟦️.ts";
 import {
   appBreadcrumb,
-  buildActiveUtilityByWindowId,
-  EMPTY_SHELL_HISTORY_PROJECTION_V1,
-  parsePanelState,
   pluginAvailabilityRouteV1,
-  createLatestAsyncDispatcher,
   resolveAppBreadcrumb,
   resolveArtifactByAppId,
-  frameworkLayoutDeclaredInstances,
-  sessionWindowInstances,
-  shellLabel
-} from "../../🛠️ShellHelpers/🟦️.tsx";
+  frameworkLayoutDeclaredInstances
+} from "../../🛠️ShellHelpers/🛣️route-and-chrome/🟦️.tsx";
+import { buildActiveUtilityByWindowId, sessionWindowInstances } from "../../🛠️ShellHelpers/🔄️ui-refresh/🟦️.ts";
+import { EMPTY_SHELL_HISTORY_PROJECTION_V1 } from "../../🛠️ShellHelpers/🔩️plumbing/🟦️.ts";
+import { parsePanelState } from "../../🛠️ShellHelpers/📌️panel/🟦️.ts";
+import { createLatestAsyncDispatcher } from "../../🛠️ShellHelpers/🛑️extension-io/🟦️.ts";
+import { shellLabel } from "../../🛠️ShellHelpers/🏷️labels/🟦️.tsx";
 import { timeTravelIndicatorTextV1, TimeTravelWindowIndicator } from "../../🛠️ShellHelpers/⏪️time-travel/🟦️.tsx";
 import { type PluginWasmHandle } from "../../🔌️PluginRuntime/🟦️.tsx";
 import type { BridgeInstanceRef } from "@semio-tech/framework/mcp/bridge";

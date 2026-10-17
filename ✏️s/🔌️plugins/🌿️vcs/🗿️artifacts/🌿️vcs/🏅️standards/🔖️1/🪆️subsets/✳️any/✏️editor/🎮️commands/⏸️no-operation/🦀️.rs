@@ -14,7 +14,4 @@ pub fn handle(_payload: &NoMutation, _doc: &ArtifactView<'_, VcsSnapshot>, _cfg:
 }
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

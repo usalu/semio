@@ -1,4 +1,5 @@
-use super::*;
+use semio_framework_value::DslValue;
+use crate::standards::v1::subsets::any::schema::inferences::topology::*;
 
 fn board(nodes: &[&str], edges: &[(&str, &str)]) -> DslValue {
     DslValue::object([

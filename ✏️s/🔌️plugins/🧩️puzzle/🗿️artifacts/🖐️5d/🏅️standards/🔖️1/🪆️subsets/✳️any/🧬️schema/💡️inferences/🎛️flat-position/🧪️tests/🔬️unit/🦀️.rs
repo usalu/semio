@@ -1,6 +1,14 @@
+use semio_s_artifact_puzzle_3d_inferences::flatten::DIAGRAM_VERTICAL_V_EXTRA;
+#[allow(unused_imports)]
+use {semio_s_artifact_puzzle_3d_inferences::flatten::flatten_objects, semio_s_artifact_puzzle_3d_model::Puzzle3dAttraction, semio_s_artifact_puzzle_3d_model::Puzzle3dObject, semio_s_artifact_puzzle_3d_model::Puzzle3dObjectAnchor, semio_s_artifact_puzzle_3d_model::Puzzle3dVortex, semio_s_artifact_puzzle_3d_inferences::flatten::DIAGRAM_HORIZONTAL_SCALE, semio_s_artifact_puzzle_3d_inferences::flatten::DIAGRAM_RADIUS};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::document_records::Puzzle5dScale;
+#[allow(unused_imports)]
+use std::collections::HashMap;
 
-use super::*;
-use crate::{Puzzle5dFastener, Puzzle5dGrip, Puzzle5dGrip2d, Puzzle5dGrip3d, Puzzle5dMeta, Puzzle5dPart, Puzzle5dPart2d, Puzzle5dPart3d, Puzzle5dPartAnchor, Puzzle5dSnapshot};
+use crate::standards::v1::subsets::any::schema::inferences::flat_position::*;
+use crate::{Puzzle5dSnapshot};
+use crate::standards::v1::subsets::any::schema::document_records::{Puzzle5dFastener, Puzzle5dGrip, Puzzle5dGrip2d, Puzzle5dGrip3d, Puzzle5dMeta, Puzzle5dPart, Puzzle5dPart2d, Puzzle5dPart3d, Puzzle5dPartAnchor};
 
 #[test]
 fn flatten_writes_diagram_offsets_onto_part_2d() {

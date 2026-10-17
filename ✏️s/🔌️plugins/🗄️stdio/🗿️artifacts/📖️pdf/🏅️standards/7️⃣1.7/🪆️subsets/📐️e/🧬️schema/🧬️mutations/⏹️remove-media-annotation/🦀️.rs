@@ -1,7 +1,6 @@
 //! ⏹️ Authoritative PDF/E mutation for removing a matching Movie or Sound annotation.
 
-use super::insert_media_annotation::InsertMediaAnnotation;
-use super::PdfEMutation;
+use crate::standards::v1_7::subsets::e::schema::mutations::insert_media_annotation::InsertMediaAnnotation;
 use crate::standards::v1_7::subsets::base::schema::conformance_support as support;
 use crate::standards::v1_7::subsets::base::schema::diff::{self, PdfDiff};
 use crate::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot;
@@ -17,7 +16,10 @@ pub struct RemoveMediaAnnotation {
     pub title: String,
 }
 
-impl MutationKind<PdfSnapshot, PdfEMutation> for RemoveMediaAnnotation {
+impl<Op> MutationKind<PdfSnapshot, Op> for RemoveMediaAnnotation
+where
+    Op: protocol::Mutation<PdfSnapshot, Diff = PdfDiff> + From<RemoveMediaAnnotation> + From<crate::standards::v1_7::subsets::e::schema::mutations::insert_media_annotation::InsertMediaAnnotation>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "remove", entity: "media-annotation", kind: "remove-media-annotation", record: "Remove" };
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
@@ -25,9 +27,9 @@ impl MutationKind<PdfSnapshot, PdfEMutation> for RemoveMediaAnnotation {
         MutationOutcome::new(diff::graph_edit(rows))
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfEMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         Ok({
-            support::media_annotation(base, &self.subtype, &self.title).map(|id| PdfEMutation::InsertMediaAnnotation(InsertMediaAnnotation { subtype: self.subtype.clone(), title: self.title.clone(), placements: support::placements_of(base, &[id]) })).into_iter().collect()
+            support::media_annotation(base, &self.subtype, &self.title).map(|id| Op::from(InsertMediaAnnotation { subtype: self.subtype.clone(), title: self.title.clone(), placements: support::placements_of(base, &[id]) })).into_iter().collect()
         })
     }
 
@@ -42,9 +44,7 @@ impl MutationKind<PdfSnapshot, PdfEMutation> for RemoveMediaAnnotation {
 //#endregion 🔖️Mutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
 
 //#region 🔖️Facets

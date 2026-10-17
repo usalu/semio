@@ -31,14 +31,17 @@ pub fn plan(p: &GltfWithdrawUsedExtensionPayload, base: &GltfSnapshot) -> Result
     Ok(GltfDiff { extensions_used: Some(GltfStringsDelta::removal(&base.document.extensions_used, index)), ..Default::default() })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn inverse(p: &GltfWithdrawUsedExtensionPayload, base: &GltfSnapshot) -> Vec<super::GltfMutation> {
+pub fn inverse<Op>(p: &GltfWithdrawUsedExtensionPayload, base: &GltfSnapshot) -> Vec<Op>
+where
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::remove_used_extension::RemoveUsedExtensionMutation>,
+{
     if validate(p, base).is_err() {
         return Vec::new();
     }
     let Some(index) = base.document.extensions_used.iter().position(|value| value == &p.extension) else {
         return Vec::new();
     };
-    vec![super::add_used_extension::mutation(super::add_used_extension::GltfDeclareUsedExtensionPayload { extension: p.extension.clone(), position: index })]
+    vec![crate::standards::v2_0::subsets::any::schema::mutations::add_used_extension::mutation(crate::standards::v2_0::subsets::any::schema::mutations::add_used_extension::GltfDeclareUsedExtensionPayload { extension: p.extension.clone(), position: index })]
 }
 
 //#region 🧬️DirectMutation
@@ -51,11 +54,17 @@ pub enum RemoveUsedExtensionMutation {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn mutation(payload: GltfWithdrawUsedExtensionPayload) -> super::GltfMutation {
-    super::GltfMutation::RemoveUsedExtension(RemoveUsedExtensionMutation::Apply(payload))
+pub fn mutation<Op>(payload: GltfWithdrawUsedExtensionPayload) -> Op
+where
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::remove_used_extension::RemoveUsedExtensionMutation>,
+{
+    Op::from(RemoveUsedExtensionMutation::Apply(payload))
 }
 
-impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for RemoveUsedExtensionMutation {
+impl<Op> protocol::MutationKind<GltfSnapshot, Op> for RemoveUsedExtensionMutation
+where
+    Op: protocol::Mutation<GltfSnapshot, Diff = GltfDiff> + From<RemoveUsedExtensionMutation>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "used-extension", kind: "remove-used-extension", record: "RemovedUsedExtension" };
 
     fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<GltfDiff> {
@@ -67,7 +76,7 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for RemoveUsedExt
         }
     }
 
-    fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<super::GltfMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         match self {
             Self::Apply(payload) => Ok(inverse(payload, base)),
         }
@@ -84,10 +93,6 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for RemoveUsedExt
 //#endregion 🧬️DirectMutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️t057/🦀️.rs"]
-mod case_t057;
-#[cfg(test)]
-#[path = "🧪️tests/🔬️middle-row/🦀️.rs"]
-mod case_middle_row;
+
+
 //#endregion 🧪️Tests

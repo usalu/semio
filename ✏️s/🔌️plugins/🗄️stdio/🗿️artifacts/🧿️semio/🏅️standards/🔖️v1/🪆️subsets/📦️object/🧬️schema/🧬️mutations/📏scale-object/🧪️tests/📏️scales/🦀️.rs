@@ -9,21 +9,22 @@ use crate::schema::diff::SemioObjectDiff;
 use crate::schema::mutations::SemioObjectMutation;
 use crate::schema::snapshot::SemioObjectSnapshot;
 use protocol::Mutation;
+use semio_framework_test_fixtures::fixture_text;
 
-const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📏scale-object/📏️scales/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📏scale-object/📏️scales/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📏scale-object/📏️scales/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📏scale-object/📏️scales/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📏scale-object/📏️scales/🎯️outcome/🔣️.json");
+static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧪️tests/🧫️fixtures/🧬️mutations/📏scale-object/📏️scales/📸️snapshot/⬅️before/🔣️.json"));
+static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧪️tests/🧫️fixtures/🧬️mutations/📏scale-object/📏️scales/📸️snapshot/➡️after/🔣️.json"));
+static MUTATION: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧪️tests/🧫️fixtures/🧬️mutations/📏scale-object/📏️scales/🦠️mutation/🔣️.json"));
+static DIFF: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧪️tests/🧫️fixtures/🧬️mutations/📏scale-object/📏️scales/🔺️diff/🔣️.json"));
+static OUTCOME: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧪️tests/🧫️fixtures/🧬️mutations/📏scale-object/📏️scales/🎯️outcome/🔣️.json"));
 
 fn before() -> SemioObjectSnapshot {
-    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("scale-object before snapshot decodes")
+    semio_framework_pack_json::from_json_str((*BEFORE), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("scale-object before snapshot decodes")
 }
 fn expected_after() -> SemioObjectSnapshot {
-    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("scale-object after snapshot decodes")
+    semio_framework_pack_json::from_json_str((*AFTER), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("scale-object after snapshot decodes")
 }
 fn scale_object() -> SemioObjectMutation {
-    semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("scale-object mutation decodes")
+    semio_framework_pack_json::from_json_str((*MUTATION), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("scale-object mutation decodes")
 }
 
 /// ▶️ Unit scale becomes the non-uniform `(2, 0.5, 4)`; translation and rotation stay put.
@@ -56,14 +57,14 @@ async fn the_undo_scale_object_restores_the_unit_scale() {
 /// 🔣️ Snapshots and the `{"ScaleObject":{"scale":{…}}}` payload are canonical.
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
-    for (label, text) in [("before", BEFORE), ("after", AFTER)] {
+    for (label, text) in [("before", (*BEFORE)), ("after", (*AFTER))] {
         let decoded: SemioObjectSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
         let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "scale-object/scales-the-object-non-uniformly: committed {label} JSON is not canonical");
     }
     let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&(scale_object()))).expect("scale-object mutation encodes");
-    let original: serde_json::Value = serde_json::from_str(MUTATION).expect("scale-object mutation reparses");
+    let original: serde_json::Value = serde_json::from_str((*MUTATION)).expect("scale-object mutation reparses");
     assert_eq!(reencoded, original, "scale-object/scales-the-object-non-uniformly: committed mutation JSON is not canonical");
 }
 
@@ -71,7 +72,7 @@ async fn committed_json_is_canonical() {
 /// `mutation.invariant` guard must not fire.
 #[semio_framework_async_macros::async_test]
 async fn declared_outcome_holds_with_a_strictly_positive_scale() {
-    let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
+    let outcome: serde_json::Value = serde_json::from_str((*OUTCOME)).expect("outcome decodes");
     assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("applied"), "scale-object/scales-the-object-non-uniformly: this case is declared applied");
     let produced = scale_object().diff(&before());
     assert!(produced.messages().is_empty(), "a finite, strictly-positive, genuinely-different scale must raise no diagnostics");
@@ -83,26 +84,26 @@ async fn produces_committed_diff() {
     let base = before();
     let outcome = <SemioObjectMutation as Mutation<SemioObjectSnapshot>>::diff(&scale_object(), &base);
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
-    let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
+    let committed: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff decodes");
     assert_eq!(produced, committed, "scale-object/scales-the-object-non-uniformly: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
 
 /// 🔣️ The committed diff is canonical and touches only the `transform` slot.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical_and_touches_only_the_transform_slot() {
-    let decoded: SemioObjectDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed scale-object diff decodes");
+    let decoded: SemioObjectDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed scale-object diff decodes");
     let transform = decoded.transform.as_ref().expect("scale-object must write the transform slot");
     assert_eq!(transform.translation, before().transform.translation, "the diff carries the whole transform, so the untouched translation must be the base translation");
     assert!(decoded.brep.is_none() && decoded.mesh.is_none() && decoded.properties.is_none(), "scale-object must leave all three child slots untouched");
     let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("diff re-encodes");
-    let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
+    let original: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff reparses");
     assert_eq!(reencoded, original, "scale-object/scales-the-object-non-uniformly: committed diff JSON is not canonical");
 }
 
 /// 🩹 Applying the committed diff to `before` yields `after`.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: SemioObjectDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed scale-object diff decodes");
+    let decoded: SemioObjectDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed scale-object diff decodes");
     let produced = protocol::apply_diff(&decoded, &before()).expect("committed scale-object diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "scale-object/scales-the-object-non-uniformly: committed diff did not carry before to after");
 }

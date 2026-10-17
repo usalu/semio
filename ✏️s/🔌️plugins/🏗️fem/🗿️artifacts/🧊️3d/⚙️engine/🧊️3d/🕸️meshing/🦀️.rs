@@ -252,7 +252,7 @@ pub fn footprint_area(mesh: &SolidMesh) -> f64 {
 /// yields an empty, still-structurally-valid mesh (and thus an empty .obj/.stl) rather than a
 /// fabricated shape. A solid that fails to mesh is skipped, so one degenerate outline never voids
 /// the export of its neighbours.
-pub(crate) fn build_semio_mesh_snapshot(doc: &Fem3dSnapshot) -> SemioMeshSnapshot {
+pub fn build_semio_mesh_snapshot(doc: &Fem3dSnapshot) -> SemioMeshSnapshot {
     let mut meshes = Vec::with_capacity(doc.solids.len());
     for solid in &doc.solids {
         let Ok(footprint) = triangulate_solid(solid) else { continue };

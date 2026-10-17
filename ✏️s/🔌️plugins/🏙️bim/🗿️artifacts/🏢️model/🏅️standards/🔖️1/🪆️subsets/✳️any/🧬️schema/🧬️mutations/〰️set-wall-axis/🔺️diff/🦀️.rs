@@ -1,7 +1,7 @@
 //! 🔺️ Diff constructor for `SetWallAxis`: a one-field wall patch. The axis must have finite end points, length and a real arc; hosted
 //! openings are never touched, their placement along the new axis is inferred.
 
-use super::super::wall_geometry::flaw;
+use crate::standards::v1::subsets::any::schema::mutations::wall_geometry::flaw;
 use super::SetWallAxis;
 use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff, patches::WallPatch}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};

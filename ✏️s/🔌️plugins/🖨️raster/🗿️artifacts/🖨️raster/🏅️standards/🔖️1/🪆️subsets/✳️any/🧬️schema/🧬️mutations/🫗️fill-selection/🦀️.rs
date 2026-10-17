@@ -8,7 +8,6 @@ use crate::fill_region::{fill_color_invariant, fill_operation};
 use semio_s_artifact_raster_raster_diff::{canvas, painted, Painted, Refusal};
 use crate::paint_stroke::{repainted_diff, repainted_inverse, refused, selection_invariant, selection_mask, RasterSelectionSpan, RASTER_PAINT_TARGETS};
 use semio_s_artifact_raster_raster_diff::RasterDiff;
-#[cfg(test)] use semio_s_artifact_raster_raster_mutations::RasterMutation;
 use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
 use semio_framework_pixels::editing::fill_in_place;
 use semio_framework_pixels::RasterImage;
@@ -122,7 +121,4 @@ impl<Op> protocol::MutationKind<RasterSnapshot, Op> for FillSelection where Op: 
 //#endregion 🔖️Kind
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

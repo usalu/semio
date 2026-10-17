@@ -5,7 +5,16 @@
 //! performs is a plain attribute assignment on the root, so `SEMANTICS.verb` is `"set"`, matching
 //! what `attributes_diff_at_path` actually does underneath.
 
-use super::*;
+#[allow(unused_imports)]
+use crate::schema::snapshot::SvgAttributeValue;
+#[allow(unused_imports)]
+use crate::schema::diff::SvgDiff;
+#[allow(unused_imports)]
+use crate::SvgSnapshot;
+#[allow(unused_imports)]
+use crate::schema::mutation_support::attributes_diff_at_path;
+#[allow(unused_imports)]
+use crate::schema::mutation_support::prior_attribute;
 
 //#region 🔖️Payload
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree)]
@@ -21,18 +30,21 @@ pub struct StampBaseProfile {
     pub(crate) version_index: Option<usize>,
 }
 
-impl protocol::MutationKind<SvgSnapshot, SvgBasicMutation> for StampBaseProfile {
+impl<Op> protocol::MutationKind<SvgSnapshot, Op> for StampBaseProfile
+where
+    Op: protocol::Mutation<SvgSnapshot, Diff = SvgDiff> + From<StampBaseProfile>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "base-profile", kind: "stamp-base-profile", record: "StampBaseProfile" };
 
     fn diff(&self, base: &SvgSnapshot) -> protocol::MutationOutcome<SvgDiff> {
         let Self { base_profile, version, base_profile_index, version_index } = self;
         protocol::MutationOutcome::new(attributes_diff_at_path(base, &[], &[("baseProfile", base_profile.clone().map(SvgAttributeValue::Text), *base_profile_index), ("version", version.clone().map(SvgAttributeValue::Text), *version_index)]))
     }
-    fn inverse(&self, base: &SvgSnapshot) -> Result<Vec<SvgBasicMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &SvgSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         let text = |value: Option<SvgAttributeValue>| value.and_then(|value| value.text().map(str::to_owned));
         let (base_profile, base_profile_index) = prior_attribute(base, &[], "baseProfile");
         let (version, version_index) = prior_attribute(base, &[], "version");
-        Ok(vec![SvgBasicMutation::StampBaseProfile(StampBaseProfile { base_profile: text(base_profile), version: text(version), base_profile_index, version_index })])
+        Ok(vec![Op::from(StampBaseProfile { base_profile: text(base_profile), version: text(version), base_profile_index, version_index })])
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Stamp base profile", "Basisprofil kennzeichnen")

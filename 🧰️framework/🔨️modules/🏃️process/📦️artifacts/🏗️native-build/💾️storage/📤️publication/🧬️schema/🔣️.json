@@ -19,7 +19,11 @@
           "const": 1
         },
         "purpose": {
-          "const": "current-publication"
+          "enum": [
+            "current-publication",
+            "current-exact-publication",
+            "current-prepared-publication"
+          ]
         },
         "receiptSha256": {
           "type": "string",
@@ -105,14 +109,6 @@
         }
       }
     },
-    "Slot": {
-      "const": {
-        "directory": ".publication",
-        "intent": "intent.json",
-        "candidate": "receipt.json",
-        "maximumFileBytes": 4096
-      }
-    },
     "Witness": {
       "type": "object",
       "additionalProperties": false,
@@ -122,8 +118,11 @@
         "files",
         "directories",
         "links",
+        "sockets",
         "bytes",
-        "journalSha256"
+        "journalSha256",
+        "applicationSha256",
+        "service"
       ],
       "properties": {
         "version": {
@@ -145,6 +144,10 @@
           "type": "integer",
           "minimum": 0
         },
+        "sockets": {
+          "type": "integer",
+          "minimum": 0
+        },
         "bytes": {
           "type": "string",
           "pattern": "^(0|[1-9][0-9]*)$"
@@ -159,6 +162,158 @@
               "type": "null"
             }
           ]
+        },
+        "applicationSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "service": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "identity",
+                "digest",
+                "files",
+                "directories",
+                "bytes"
+              ],
+              "properties": {
+                "identity": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "kind",
+                    "uuid",
+                    "directory",
+                    "file"
+                  ],
+                  "properties": {
+                    "kind": {
+                      "const": "darwin-fsevents"
+                    },
+                    "uuid": {
+                      "type": "string",
+                      "pattern": "^[A-F0-9]{8}-[A-F0-9]{4}-[A-F0-9]{4}-[A-F0-9]{4}-[A-F0-9]{12}$"
+                    },
+                    "directory": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "ino",
+                        "mode",
+                        "uid",
+                        "gid"
+                      ],
+                      "properties": {
+                        "ino": {
+                          "type": "string",
+                          "pattern": "^[1-9][0-9]*$"
+                        },
+                        "mode": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 4095
+                        },
+                        "uid": {
+                          "type": "string",
+                          "pattern": "^(0|[1-9][0-9]*)$"
+                        },
+                        "gid": {
+                          "type": "string",
+                          "pattern": "^(0|[1-9][0-9]*)$"
+                        }
+                      }
+                    },
+                    "file": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "ino",
+                        "mode",
+                        "uid",
+                        "gid",
+                        "sha256"
+                      ],
+                      "properties": {
+                        "ino": {
+                          "type": "string",
+                          "pattern": "^[1-9][0-9]*$"
+                        },
+                        "mode": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 4095
+                        },
+                        "uid": {
+                          "type": "string",
+                          "pattern": "^(0|[1-9][0-9]*)$"
+                        },
+                        "gid": {
+                          "type": "string",
+                          "pattern": "^(0|[1-9][0-9]*)$"
+                        },
+                        "sha256": {
+                          "type": "string",
+                          "pattern": "^[a-f0-9]{64}$"
+                        }
+                      }
+                    }
+                  }
+                },
+                "digest": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "files": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "directories": {
+                  "const": 1
+                },
+                "bytes": {
+                  "type": "string",
+                  "pattern": "^(0|[1-9][0-9]*)$"
+                }
+              }
+            }
+          ]
+        },
+        "exactServicePayload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "version",
+            "withoutServiceMetadataSha256",
+            "serviceContentSha256",
+            "serviceMetadataSha256",
+            "authority"
+          ],
+          "properties": {
+            "version": {
+              "const": 1
+            },
+            "withoutServiceMetadataSha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "serviceContentSha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "serviceMetadataSha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "authority": {
+              "const": false
+            }
+          }
         }
       }
     },
@@ -205,13 +360,6 @@
           "minimum": 1,
           "maximum": 1000000
         }
-      }
-    },
-    "Namespace": {
-      "const": {
-        "mode": 448,
-        "fileMode": 384,
-        "maximumEntries": 2
       }
     },
     "MetadataEntry": {
@@ -283,9 +431,339 @@
     },
     "Qualification": {
       "enum": [
-        "mounted-preserved",
+        "mounted-application-preserved",
         "inactive-current"
       ]
+    },
+    "DispatchOrders": {
+      "const": {
+        "darwin": {
+          "mounted": [
+            "image:information",
+            "image:detach",
+            "image:inactive",
+            "image:attach",
+            "image:verify"
+          ],
+          "inactive": [
+            "image:information",
+            "image:attach",
+            "image:verify"
+          ]
+        },
+        "linux": {
+          "mounted": [
+            "image:information",
+            "image:detach",
+            "image:inactive",
+            "image:attach",
+            "image:verify"
+          ],
+          "inactive": [
+            "image:information",
+            "image:attach",
+            "image:verify"
+          ]
+        },
+        "win32": {
+          "mounted": [
+            "image:information",
+            "metadata:pending",
+            "image:detach",
+            "image:inactive",
+            "metadata:published",
+            "image:attach",
+            "image:verify",
+            "metadata:settled"
+          ],
+          "inactive": [
+            "image:information",
+            "metadata:pending",
+            "metadata:published",
+            "image:attach",
+            "image:verify",
+            "metadata:settled"
+          ]
+        }
+      }
+    },
+    "ServiceIdentity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "uuid",
+        "directory",
+        "file"
+      ],
+      "properties": {
+        "kind": {
+          "const": "darwin-fsevents"
+        },
+        "uuid": {
+          "type": "string",
+          "pattern": "^[A-F0-9]{8}-[A-F0-9]{4}-[A-F0-9]{4}-[A-F0-9]{4}-[A-F0-9]{12}$"
+        },
+        "directory": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "ino",
+            "mode",
+            "uid",
+            "gid"
+          ],
+          "properties": {
+            "ino": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]*$"
+            },
+            "mode": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4095
+            },
+            "uid": {
+              "type": "string",
+              "pattern": "^(0|[1-9][0-9]*)$"
+            },
+            "gid": {
+              "type": "string",
+              "pattern": "^(0|[1-9][0-9]*)$"
+            }
+          }
+        },
+        "file": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "ino",
+            "mode",
+            "uid",
+            "gid",
+            "sha256"
+          ],
+          "properties": {
+            "ino": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]*$"
+            },
+            "mode": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4095
+            },
+            "uid": {
+              "type": "string",
+              "pattern": "^(0|[1-9][0-9]*)$"
+            },
+            "gid": {
+              "type": "string",
+              "pattern": "^(0|[1-9][0-9]*)$"
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          }
+        }
+      }
+    },
+    "ReceiptConflict": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "kind",
+        "stampEqual",
+        "bytesEqual",
+        "expectedStamp",
+        "actualStamp",
+        "expectedSha256",
+        "actualSha256",
+        "expectedBytes",
+        "actualBytes"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "kind": {
+          "const": "qualified-receipt-conflict"
+        },
+        "stampEqual": {
+          "type": "boolean"
+        },
+        "bytesEqual": {
+          "type": "boolean"
+        },
+        "expectedStamp": {
+          "type": "string",
+          "maxLength": 448,
+          "pattern": "^[0-9]+(:[0-9]+){6}$"
+        },
+        "actualStamp": {
+          "type": "string",
+          "maxLength": 448,
+          "pattern": "^[0-9]+(:[0-9]+){6}$"
+        },
+        "expectedSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "actualSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "expectedBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4096
+        },
+        "actualBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4096
+        }
+      }
+    },
+    "ExactServicePayloadDiagnostic": {
+      "$ref": "#/definitions/Witness/properties/exactServicePayload"
+    },
+    "PreservationRefusal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "kind",
+        "before",
+        "after",
+        "authority"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "kind": {
+          "const": "publication-preservation-refusal"
+        },
+        "before": {
+          "$ref": "#/definitions/Witness"
+        },
+        "after": {
+          "$ref": "#/definitions/Witness"
+        },
+        "authority": {
+          "const": false
+        }
+      }
+    },
+    "PreservationRefusalProtocol": {
+      "const": {
+        "maximumBytes": 8192,
+        "authority": false
+      }
+    },
+    "PreservationDiagnosticDeliveryProtocol": {
+      "const": {
+        "maximumNodes": 128,
+        "maximumDepth": 8,
+        "maximumStringUnits": 256,
+        "maximumKeyUnits": 64
+      }
+    },
+    "PreservationDiagnosticDeliveryCase": {
+      "type": "object",
+      "required": [
+        "effect",
+        "reported"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "effect": {
+          "enum": [
+            "valid",
+            "error-proxy",
+            "cause-accessor",
+            "cause-proxy",
+            "nested-proxy",
+            "nested-accessor",
+            "symbol",
+            "inherited",
+            "unknown-field",
+            "overbounds",
+            "sink-failure",
+            "undefined-primary"
+          ]
+        },
+        "reported": {
+          "type": "boolean"
+        }
+      }
+    },
+    "PreparedServicePolicy": {
+      "const": {
+        "purpose": "current-prepared-publication",
+        "platform": "darwin"
+      }
+    },
+    "PreparedDispatchOrders": {
+      "const": {
+        "mounted": [
+          "image:information",
+          "service:before",
+          "image:detach",
+          "image:inactive",
+          "image:attach",
+          "image:verify",
+          "service:after"
+        ],
+        "inactive": [
+          "image:information",
+          "image:attach",
+          "image:verify",
+          "service:current"
+        ]
+      }
+    },
+    "PreparedParentCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "effect",
+        "accepted",
+        "children"
+      ],
+      "properties": {
+        "effect": {
+          "enum": [
+            "before",
+            "after",
+            "current",
+            "linux",
+            "ordinary-purpose",
+            "wrong-stage",
+            "inactive-mapping",
+            "pending",
+            "root-changed",
+            "worker-status",
+            "worker-signal",
+            "worker-json",
+            "worker-open",
+            "worker-stderr",
+            "worker-undefined",
+            "worker-frozen"
+          ]
+        },
+        "accepted": {
+          "type": "boolean"
+        },
+        "children": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1
+        }
+      }
     }
   }
 }

@@ -1,0 +1,35 @@
+[package]
+workspace = "../../../../../../../../.."
+name = "semio-s-artifact-draw-drawing-editor-tests-2"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Companion test crate of semio-s-artifact-draw-drawing-editor: the unit laws of the drawing editor commands, clipboard, completion, argument bridge and gesture operation owner outside the shared unit context"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dev-dependencies]
+semio-framework-async-macros = { workspace = true }
+semio-framework-job = { workspace = true }
+semio-framework-job-registry = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧵️job/🗄️registry/📦️packages/🦀️rust" }
+semio-framework-os-kernel = { workspace = true, features = ["mutation-testing", "protocol-laws"] }
+semio-framework-pack-json = { workspace = true }
+semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
+semio-framework-trace = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-s-artifact-draw-drawing-editor = { workspace = true, features = ["testkit"] }
+semio-s-artifact-draw-drawing-editor-commands = { workspace = true }
+semio-s-artifact-draw-drawing-editor-interaction = { workspace = true, features = ["testkit"] }
+semio-s-artifact-draw-drawing-editor-tool = { workspace = true }
+semio-s-artifact-draw-drawing-geometry = { workspace = true, features = ["testkit"] }
+semio-s-artifact-draw-drawing-model = { workspace = true, features = ["testkit"] }
+semio-s-artifact-draw-drawing-mutations = { workspace = true, features = ["testkit"] }
+semio-s-artifact-draw-drawing-scene = { workspace = true, features = ["testkit"] }
+serde_json = { workspace = true }

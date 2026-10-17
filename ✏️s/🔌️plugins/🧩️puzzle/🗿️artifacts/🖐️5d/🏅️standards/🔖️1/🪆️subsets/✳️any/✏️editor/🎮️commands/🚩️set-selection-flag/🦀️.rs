@@ -1,7 +1,8 @@
 //! 🚩️ `set-selection-flag` command, and the two set-verbs a document-tree part row names (`setSelectionHidden`,
 //! `setSelectionLocked`).
 
-use crate::editor::puzzle5d::{Puzzle5dActionCtx, PUZZLE5D_GRANULARITY_PART};
+use crate::editor::puzzle5d::interaction::Puzzle5dActionCtx;
+use crate::editor::puzzle5d::entities::PUZZLE5D_GRANULARITY_PART;
 use crate::standards::v1::subsets::any::schema::mutations::{change_part_2d_hidden, change_part_2d_locked, Puzzle5dMutation};
 use crate::Puzzle5dSnapshot;
 use semio_framework_pack_json::Value;

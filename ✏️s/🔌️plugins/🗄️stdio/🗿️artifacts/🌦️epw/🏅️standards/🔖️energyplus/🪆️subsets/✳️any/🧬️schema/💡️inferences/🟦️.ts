@@ -31,6 +31,10 @@ type stdioEpwEnergyplusAnyInferenceGuardSizeBounds = { readonly minItems?: numbe
 
 export const stdioEpwEnergyplusAnyInferenceGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : stdioEpwEnergyplusAnyInferenceGuardReject(at, "value is not an object");
+export const stdioEpwEnergyplusAnyInferenceGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) stdioEpwEnergyplusAnyInferenceGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const stdioEpwEnergyplusAnyInferenceGuardArray = (value: unknown, at: string, bounds: stdioEpwEnergyplusAnyInferenceGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return stdioEpwEnergyplusAnyInferenceGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) stdioEpwEnergyplusAnyInferenceGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -61,14 +65,14 @@ export const stdioEpwEnergyplusAnyInferenceGuardConstant = <T extends string | n
 //#endregion 🚪️Parsers
 
 export function parseEpwInference(value: unknown, at = "$"): EpwInference {
-  const row = stdioEpwEnergyplusAnyInferenceGuardObject(value, at);
+  const row = stdioEpwEnergyplusAnyInferenceGuardClosed(stdioEpwEnergyplusAnyInferenceGuardObject(value, at), at, ["climate"]);
   return {
     climate: parseEpwClimateSummary(row["climate"], `${at}.climate`),
   };
 }
 
 export function parseEpwClimateSummary(value: unknown, at = "$"): EpwClimateSummary {
-  const row = stdioEpwEnergyplusAnyInferenceGuardObject(value, at);
+  const row = stdioEpwEnergyplusAnyInferenceGuardClosed(stdioEpwEnergyplusAnyInferenceGuardObject(value, at), at, ["recordCount", "parsedTempCount", "minDryBulbC", "maxDryBulbC", "avgDryBulbC"]);
   return {
     recordCount: stdioEpwEnergyplusAnyInferenceGuardInteger(row["recordCount"], `${at}.recordCount`, {"minimum": 0}),
     parsedTempCount: stdioEpwEnergyplusAnyInferenceGuardInteger(row["parsedTempCount"], `${at}.parsedTempCount`, {"minimum": 0}),

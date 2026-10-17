@@ -1,4 +1,5 @@
 use super::*;
+use semio_framework_test_fixtures::repo_text;
 use semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_BOX_FILLET;
 use semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_BOX_SHELL;
 use semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_FACE_SWEEP_EXTRUDE;
@@ -15,7 +16,7 @@ use semio_framework_plugin::app::TypedOperationResultLane;
 use semio_framework_plugin::ArtifactViewer;
 
 /// 📜️ The language-agnostic picker table both surfaces answer — the viewer's own half is `viewer`.
-const EXAMPLE_SWITCH_FIXTURE_JSON: &str = include_str!("../../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🎨️example-switch.json");
+fn example_switch_fixture_json() -> &'static str { repo_text!("✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🎨️example-switch.json") }
 
 /// 📚️ Every example the dialect publishes, in the order the manifest registers them.
 const EVERY_BUNDLED_EXAMPLE: &[&str] = &[
@@ -56,7 +57,7 @@ fn viewed_node_ids(example_id: Option<&str>) -> Vec<String> {
 #[test]
 fn the_no_example_row_clears_the_viewed_document_and_never_picking_does_not() {
     let _serial = context::lock();
-    let fixture = semio_framework_pack_json::parse(EXAMPLE_SWITCH_FIXTURE_JSON, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the example-switch fixture parses");
+    let fixture = semio_framework_pack_json::parse(example_switch_fixture_json(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the example-switch fixture parses");
     let viewer = fixture.get("viewer").cloned().expect("the fixture declares the viewer's picker states");
     assert_eq!(viewer.get("windowKind").and_then(semio_framework_pack_json::Value::as_str), Some(preview::WINDOW_KIND_ID));
     let states = viewer.get("states").cloned().expect("states");

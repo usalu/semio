@@ -1,0 +1,10 @@
+🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/📦️packages
+🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/📦️packages/🦀️rust
+🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🌐️browser-actor/📦️packages/🦀️rust
+🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/📌️document-check-in-v1/📦️packages/🦀️rust
+🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🚪️io/🧱️binary/📦️packages/🦀️rust
+🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🛡️access-policy/📦️packages/🦀️rust
+🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🛡️access-policy
+🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🚪️io/🧱️binary
+🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🌐️browser-actor
+🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/📌️document-check-in-v1

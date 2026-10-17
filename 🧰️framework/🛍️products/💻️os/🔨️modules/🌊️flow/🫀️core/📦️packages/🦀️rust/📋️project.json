@@ -67,10 +67,14 @@
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/🕸️bindings/package.json",
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🧪️tests/🌐️browser-declaration/🟦️.ts",
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧪️tests/⏱️consumed-browser-clock/🟨️.js",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🔨️modules/🌊️flow/🕸️wasm/🧪️testing/⏱️consumed-browser-clock/🟦️.ts",
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧪️tests/🖥️host/🟨️.js",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🔨️modules/🌊️flow/🕸️wasm/🧪️testing/🖥️host/🟦️.ts",
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧪️tests/🎬️draw-list/🟨️.js",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🔨️modules/🌊️flow/🕸️wasm/🧪️testing/🎬️draw-list/🟦️.ts",
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧪️tests/🔓️open-ownership/🟦️.ts",
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧪️tests/🧬️schema-oracle/🟨️.js",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🔨️modules/🌊️flow/🕸️wasm/🧪️testing/🧬️schema-oracle/🟦️.ts",
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧪️tests/🎭️mock-flow-bridge/🟦️.ts",
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/📡️protocol/🦀️.rs",
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧪️tests/🔬️component-domain-laws/🦀️.rs",
@@ -93,7 +97,8 @@
       },
       "inputs": [
         "flowBrowserRuntimeOracle",
-        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧪️tests/⏱️consumed-browser-clock/🟨️.js"
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧪️tests/⏱️consumed-browser-clock/🟨️.js",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🔨️modules/🌊️flow/🕸️wasm/🧪️testing/⏱️consumed-browser-clock/🟦️.ts"
       ]
     },
     "test-source-read": {
@@ -310,9 +315,12 @@
       "sharedGlobals",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🔮️oracles/🛂️contract-admission/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧪️tests/🖥️host/🟨️.js",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🔨️modules/🌊️flow/🕸️wasm/🧪️testing/🖥️host/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧪️tests/🎬️draw-list/🟨️.js",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🔨️modules/🌊️flow/🕸️wasm/🧪️testing/🎬️draw-list/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧪️tests/🔓️open-ownership/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧪️tests/🧬️schema-oracle/🟨️.js",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🔨️modules/🌊️flow/🕸️wasm/🧪️testing/🧬️schema-oracle/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧬️schema/🔣️.json",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧪️tests/🧫️fixtures/**/*.json",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/🕸️bindings/package.json",

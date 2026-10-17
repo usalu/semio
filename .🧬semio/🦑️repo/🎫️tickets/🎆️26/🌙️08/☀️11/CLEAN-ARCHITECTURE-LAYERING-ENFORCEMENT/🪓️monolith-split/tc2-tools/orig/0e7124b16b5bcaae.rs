@@ -1,0 +1,128 @@
+//! 🧪️ `delete-page` fixture — `🚫️removes-page-2`.
+//!
+//! Proves a page id leaves the collection and that undo re-materializes the full record.
+//!
+//! Source of truth is the committed JSON quartet beside this file (contract D1, ticket
+//! `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`). The `.op.semio`/`.spr.semio`/`.dsl.semio`/
+//! `.pack.semio`/`.patch.semio` encodings are derived from it by `fixtures generate` and are
+//! asserted by the shared codec-matrix harness, not here.
+
+use semio_s_artifact_layout_layout_mutations::LayoutMutation;
+use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
+use protocol::{Mutation, MutationDiff};
+
+const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗑️delete-page/🚫️removes-page-2/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗑️delete-page/🚫️removes-page-2/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗑️delete-page/🚫️removes-page-2/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗑️delete-page/🚫️removes-page-2/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗑️delete-page/🚫️removes-page-2/🎯️outcome/🔣️.json");
+
+fn before() -> LayoutSnapshot {
+    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("delete-page/removes-page-2: before snapshot decodes")
+}
+fn expected_after() -> LayoutSnapshot {
+    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("delete-page/removes-page-2: after snapshot decodes")
+}
+fn mutation() -> LayoutMutation {
+    serde_json::from_str(MUTATION).expect("delete-page/removes-page-2: mutation decodes")
+}
+fn applied() -> LayoutSnapshot {
+    let base = before();
+    protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("delete-page applies to its committed before-snapshot")
+}
+
+/// ▶️ `delete-page` removes only the addressed page; sibling pages are untouched.
+#[semio_framework_async_macros::async_test]
+async fn drops_page_2_and_keeps_page_1_intact() {
+    let after = applied();
+    assert_eq!(after.pages.iter().map(|page| page.id.as_str()).collect::<Vec<_>>(), vec!["page-1"], "delete-page must remove page-2 and only page-2");
+    assert_eq!(after.pages[0].frames.len(), 2, "delete-page must not disturb the surviving page's frames");
+    assert_eq!(after.stories.len(), 2, "delete-page does not cascade into the stories collection");
+    assert_eq!(after, expected_after(), "delete-page/removes-page-2: applied state differs from the committed after-snapshot");
+}
+
+/// ↩️ The inverse is a `create-page` carrying the ENTIRE removed page plus its original index.
+#[semio_framework_async_macros::async_test]
+async fn inverse_recreates_the_full_page_record() {
+    let base = before();
+    let inverse = mutation().inverse(&base).expect("valid retained mutation inverse fixture");
+    assert_eq!(inverse.len(), 1, "delete-page inverts to exactly one step");
+    match &inverse[0] {
+        LayoutMutation::CreatePage(step) => {
+            assert_eq!(step.page.id, "page-2", "the inverse must recreate the removed page");
+            assert_eq!(step.page.layers[0].id, "layer-2", "the inverse must carry the removed page's layers, not a stub");
+            assert_eq!(step.index, Some(1), "the inverse must capture the removed page's original index");
+        }
+        other => panic!("delete-page must invert to create-page, got {other:?}"),
+    }
+    let mut snapshot = applied();
+    for step in &inverse {
+        snapshot = protocol::apply_diff(step.diff(&snapshot).diff(), &snapshot).expect("delete-page/removes-page-2: inverse step applies");
+    }
+    assert_eq!(snapshot, base, "delete-page/removes-page-2: inverse did not restore the before-snapshot");
+}
+
+/// 🔣️ Both committed snapshots and the committed mutation are canonical: decode→encode is a fixed point.
+#[semio_framework_async_macros::async_test]
+async fn committed_json_is_canonical() {
+    for (label, text) in [("before", BEFORE), ("after", AFTER)] {
+        let decoded: LayoutSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("snapshot encodes");
+        let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
+        assert_eq!(reencoded, original, "delete-page/removes-page-2: committed {label} JSON is not canonical");
+    }
+    let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&mutation())).expect("mutation encodes");
+    let original: serde_json::Value = serde_json::from_str(MUTATION).expect("mutation reparses");
+    assert_eq!(reencoded, original, "delete-page/removes-page-2: committed mutation JSON is not canonical");
+}
+
+/// 🎯️ The declared outcome matches what `delete-page`'s own diff builder actually produces.
+#[semio_framework_async_macros::async_test]
+async fn declared_outcome_holds() {
+    let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
+    assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "delete-page/removes-page-2: this fixture declares an applied outcome");
+    let base = before();
+    let produced = mutation().diff(&base);
+    assert!(produced.messages().is_empty(), "delete-page/removes-page-2: declared clean-applied but the diff builder reported {:?}", produced.messages());
+    let delta = produced.diff().pages.as_ref().expect("delete-page fills the pages delta");
+    assert_eq!(delta.removed, vec![crate::diff::LayoutPageRemoval { id: "page-2".to_string(), index: 1 }], "delete-page's diff carries the id and base index in `removed`");
+    assert!(delta.inserted.is_empty() && delta.moved.is_empty() && delta.modified.is_empty(), "delete-page touches only the `removed` arm of the pages delta");
+}
+
+/// 🔺️ The sparse delta `delete-page` produces is exactly the committed diff — the most load-bearing
+/// assertion in the fixture, because it pins WHICH fields the mutation may touch, not merely that the
+/// end state matches. Here only `pages.removed` is populated, and it carries the id and base index — the removed record itself lives in the INVERSE, never in the forward diff.
+#[semio_framework_async_macros::async_test]
+async fn produces_committed_diff() {
+    let base = before();
+    let outcome = mutation().diff(&base);
+    let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
+    let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
+    assert_eq!(produced, committed, "delete-page/removes-page-2: delete-page must emit a pages delta whose only populated arm is `removed`, carrying the id and base index");
+}
+
+/// 🔣️ The committed diff decodes into `LayoutDiff` and re-encodes byte-for-byte: `LayoutDiff` has
+/// `#[value(rename_all = "camelCase", default)]` with no `skip_serializing_if`, so EVERY field is on
+/// the wire and the untouched ones must be committed as explicit `null`.
+#[semio_framework_async_macros::async_test]
+async fn committed_diff_is_canonical() {
+    let decoded: semio_s_artifact_layout_layout_diff::LayoutDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes into the artifact's diff type");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("committed diff re-encodes");
+    let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
+    assert_eq!(reencoded, original, "delete-page/removes-page-2: committed diff JSON is not canonical");
+}
+
+/// 🩹 Applying the committed diff directly to `before` yields `after` — the diff is a complete
+/// description of the change `delete-page` makes, not a summary of it.
+#[semio_framework_async_macros::async_test]
+async fn committed_diff_applies_to_after() {
+    let decoded: semio_s_artifact_layout_layout_diff::LayoutDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes into the artifact's diff type");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    assert_eq!(produced, expected_after(), "delete-page/removes-page-2: committed diff did not carry before to after");
+}
+
+/// ⚖️ The inverse steps' diffs sum, by `absorb`, to the negative of the forward diff.
+#[semio_framework_async_macros::async_test]
+async fn inverse_diffs_sum_to_negative_diff() {
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation(), &before()).await;
+}

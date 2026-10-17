@@ -3,7 +3,6 @@
 //! only, never the whole payload (`replace-region-data` stays the whole-payload gesture).
 
 use crate::diff::GisMapDiff;
-use crate::mutations::GisMapMutation;
 use crate::GisMapSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -28,14 +27,17 @@ pub struct SetRegionProperty {
     pub before: Option<String>,
 }
 
-impl MutationKind<GisMapSnapshot, GisMapMutation> for SetRegionProperty {
+impl<Op> MutationKind<GisMapSnapshot, Op> for SetRegionProperty
+where
+    Op: protocol::Mutation<GisMapSnapshot, Diff = GisMapDiff> + From<SetRegionProperty> + From<crate::standards::v1::subsets::any::schema::mutations::remove_region_property::RemoveRegionProperty>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "region-property", kind: "set-region-property", record: "RegionPropertySet" };
 
     fn diff(&self, base: &GisMapSnapshot) -> protocol::MutationOutcome<GisMapDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &GisMapSnapshot) -> Result<Vec<GisMapMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &GisMapSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         super::inverse::inverse(self, base)
     }
 

@@ -1,0 +1,6 @@
+{
+ "name": "hdr-dsl",
+ "crates": ["semio-framework-dsl", "semio-framework-dsl-syntax", "semio-framework-dsl-lexical", "semio-framework-dsl-token"],
+ "base": {"rev": "b84bf526c7ba26f99c4054b47da1c1a4d5064e3d", "crates": ["semio-framework-dsl", "semio-framework-dsl-lexical", "semio-framework-dsl-token"]},
+ "note": "HDR: dsl grammar syntax layer (model, lexer, parsers) carved into semio-framework-dsl-syntax"
+}

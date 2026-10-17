@@ -18,13 +18,11 @@ pub fn measure(snapshot: &ShootingSnapshot, labels: &ShootingLabels) -> WindowMe
         loading: None,
         waiting: None,
         disabled: None,
-        on_change: crate::editor::shooting::shooting_window_action("setSunAzimuth", None),
+        on_change: crate::editor::shooting::ui_helpers_and_io::shooting_window_action("setSunAzimuth", None),
     }
 }
 //#endregion 🔖️Measure
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

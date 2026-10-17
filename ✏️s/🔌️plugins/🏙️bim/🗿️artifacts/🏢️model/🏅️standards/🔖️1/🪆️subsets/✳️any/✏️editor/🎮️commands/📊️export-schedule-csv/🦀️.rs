@@ -7,7 +7,8 @@
 
 use crate::editor::bim::kit::fault;
 use crate::editor::bim::modes::edit::windows::schedule;
-use crate::editor::bim::{BimCommand, BimDispatchCtx, BimModelApp};
+use crate::editor::bim::dispatch_context::BimDispatchCtx;
+use crate::editor::bim::{BimCommand, BimModelApp};
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::instance as inference;
 use crate::standards::v1::subsets::any::io::export::csv::{codec, schedule_records};
 use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};

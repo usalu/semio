@@ -1,14 +1,16 @@
 //! 🫧️ Laws of the whole-root transient declarations (`transient_root!`, `window_transient_owners!`, audit K3) over a probe
 //! state: the wire of the one mutation, its diff and inverse, every codec round trip, the footprint, and the window owners'
 //! registration, snapshot read and addressing.
-#[cfg(test)] use semio_framework_os_kernel::one_item::ArtifactStoreOneItemFootprint;
-#[cfg(test)] use pack::snapshot::ArtifactPack;
-#[cfg(test)] use pack::snapshot::ArtifactDsl;
+#[cfg(test)]
+use pack::snapshot::ArtifactPack;
+#[cfg(test)]
+use pack::snapshot::ArtifactDsl;
 
-use crate::{protocol, store};
+use semio_framework_os_kernel as protocol;
+use semio_framework_os_kernel as store;
 
 /// 🧪️ A probe window-transient root.
-#[derive(Clone, Debug, Default, PartialEq, crate::ToValue, crate::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct ProbeTransient {
     pub label: String,
@@ -17,7 +19,7 @@ pub struct ProbeTransient {
 
 semio_framework_value::artifact_retire_struct!(ProbeTransient { label, count });
 
-crate::transient_root! {
+semio_framework_plugin::transient_root! {
     state: ProbeTransient,
     mutation: ProbeTransientMutation,
     diff: ProbeTransientDiff,
@@ -30,13 +32,14 @@ crate::transient_root! {
     fields: { label: String, count: u32 },
 }
 
-crate::window_transient_owners! {
+semio_framework_plugin_testing_fixtures_publication::window_transient_owners! {
     state: ProbeTransient,
     mutation: ProbeTransientMutation,
     windows: { ProbeMainOwner => "probe.main", ProbeSideOwner => "probe.side" },
 }
 
-fn probe() -> ProbeTransient {
+#[doc(hidden)]
+pub fn probe() -> ProbeTransient {
     ProbeTransient { label: "drag".into(), count: 3 }
 }
 
@@ -96,20 +99,20 @@ fn the_footprint_is_one_item_of_the_encoded_root() {
 /// the view's own window of a declared kind, refusing a view without a window, a stale window and an undeclared kind.
 #[test]
 fn the_window_owners_register_once_and_address_the_views_own_window() {
-    let mut registry = crate::WindowTransientOwnerRegistry::default();
+    let mut registry = semio_framework_plugin_window_transient::window_transient::WindowTransientOwnerRegistry::default();
     register(&mut registry).expect("every owner registers");
     assert!(register(&mut registry).is_err(), "a kind registers once");
     let window = |id: &str, kind: &str| semio_framework::ViewWindowInstance { id: id.into(), window_kind_id: kind.into() };
-    let view = |window_id: Option<&str>| crate::ViewModel {
+    let view = |window_id: Option<&str>| semio_framework::ViewModel {
         window_id: window_id.map(str::to_string),
         window_instances: vec![window("w-main", "probe.main"), window("w-side", "probe.side"), window("w-other", "other.kind")],
-        ..crate::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
+        ..semio_framework::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
     };
     for (id, kind) in [("w-main", "probe.main"), ("w-side", "probe.side")] {
         let mutation = addressed(&view(Some(id)), probe()).expect("a declared window");
         assert_eq!((mutation.window_id(), mutation.window_kind_id()), (id, kind));
     }
-    let code = |result: Result<crate::WindowTransientMutation, crate::Fault>| result.err().map(|fault| fault.code.0);
+    let code = |result: Result<semio_framework_plugin_window_transient::window_transient::WindowTransientMutation, semio_framework::Fault>| result.err().map(|fault| fault.code.0);
     assert_eq!(code(addressed(&view(None), probe())).as_deref(), Some("window-transient.window-required"));
     assert_eq!(code(addressed(&view(Some("gone")), probe())).as_deref(), Some("window-transient.window-stale"));
     assert_eq!(code(addressed(&view(Some("w-other")), probe())).as_deref(), Some("window-transient.kind-unknown"));

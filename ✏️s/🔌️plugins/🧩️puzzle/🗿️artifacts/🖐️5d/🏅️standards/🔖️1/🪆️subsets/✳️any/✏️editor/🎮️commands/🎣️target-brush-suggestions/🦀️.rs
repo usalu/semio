@@ -1,7 +1,7 @@
 //! 🎣️ `target-brush-suggestions` command.
 
 use crate::editor::puzzle5d::modes::edit::windows::board2d::utilities::brush;
-use crate::editor::puzzle5d::Puzzle5dActionCtx;
+use crate::editor::puzzle5d::interaction::Puzzle5dActionCtx;
 use semio_framework_pack_json::Value;
 
 /// 🎣️ Points the brush suggestions run at the grip the armed brush is over (`fullId`, else the first selected

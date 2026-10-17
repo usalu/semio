@@ -31,6 +31,10 @@ type stdioSemioV1TextInferenceGuardSizeBounds = { readonly minItems?: number; re
 
 export const stdioSemioV1TextInferenceGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : stdioSemioV1TextInferenceGuardReject(at, "value is not an object");
+export const stdioSemioV1TextInferenceGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) stdioSemioV1TextInferenceGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const stdioSemioV1TextInferenceGuardArray = (value: unknown, at: string, bounds: stdioSemioV1TextInferenceGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return stdioSemioV1TextInferenceGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) stdioSemioV1TextInferenceGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -61,14 +65,14 @@ export const stdioSemioV1TextInferenceGuardConstant = <T extends string | number
 //#endregion 🚪️Parsers
 
 export function parseSemioTextInference(value: unknown, at = "$"): SemioTextInference {
-  const row = stdioSemioV1TextInferenceGuardObject(value, at);
+  const row = stdioSemioV1TextInferenceGuardClosed(stdioSemioV1TextInferenceGuardObject(value, at), at, ["profile"]);
   return {
     profile: parseSemioTextProfile(row["profile"], `${at}.profile`),
   };
 }
 
 export function parseSemioTextProfile(value: unknown, at = "$"): SemioTextProfile {
-  const row = stdioSemioV1TextInferenceGuardObject(value, at);
+  const row = stdioSemioV1TextInferenceGuardClosed(stdioSemioV1TextInferenceGuardObject(value, at), at, ["wordCount", "charCount", "runCount", "markCount", "languages"]);
   return {
     wordCount: stdioSemioV1TextInferenceGuardInteger(row["wordCount"], `${at}.wordCount`, {"minimum": 0}),
     charCount: stdioSemioV1TextInferenceGuardInteger(row["charCount"], `${at}.charCount`, {"minimum": 0}),

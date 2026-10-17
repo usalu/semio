@@ -121,7 +121,7 @@ describe("compact snapshot patches", () => {
       expect(validate(patch)).toBe(true);
       const after = applySnapshotPatch(fixture.base, patch) as Record<string, SnapshotValue>;
       expect(Object.keys(after.metadata as object)).toEqual(row.keys);
-      expect(after).toEqual(applyPatch(structuredClone(fixture.base), [{ op: "add", path: `/metadata/${row.key}`, value: "Inserted" }]).newDocument);
+      const expectedAt124x29 = applyPatch(structuredClone(fixture.base), [{ op: "add", path: `/metadata/${row.key}`, value: "Inserted" }]).newDocument; expect<typeof expectedAt124x29>(after).toEqual(expectedAt124x29);
       expect(JSON.stringify(applySnapshotPatch(after, inverseSnapshotPatch(fixture.base, patch)))).toBe(JSON.stringify(fixture.base));
     }
     for (const index of fixture.invalidPositions) expect(() => applySnapshotPatch(fixture.base, { operation: "insert", path: "/metadata/bad", value: "Rejected", index })).toThrow();

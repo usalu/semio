@@ -13,7 +13,7 @@
 //! plain config field instead of joining the interaction domain.
 
 use crate::editor::shooting::config::{ShootingConfig, ShootingConfigMutation};
-use crate::editor::shooting::ShootingDispatchCtx;
+use crate::editor::shooting::ui_helpers_and_io::ShootingDispatchCtx;
 use crate::standards::v1::subsets::any::schema::mutations::ShootingMutation;
 use crate::ShootingSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
@@ -86,7 +86,5 @@ pub mod set_center_model {
 //#endregion 🔖️SetCenterModel
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

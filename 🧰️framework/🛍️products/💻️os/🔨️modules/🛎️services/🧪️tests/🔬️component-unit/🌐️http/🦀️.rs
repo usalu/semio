@@ -221,7 +221,7 @@ fn http_body_cancellation_handles_report_each_exact_owner_outcome() {
     assert!(interrupted.load(Ordering::SeqCst));
     assert_eq!(HttpBodyCancellationHandle::read_deadline(15_000).cancel_in_flight(), HttpBodyCancellationStep::AwaitingReadDeadline { maximum_ms: 15_000 });
     assert_eq!(HttpBodyCancellationHandle::interrupt(|| Err(std::io::Error::other("transport cancellation probe failed"))).cancel_in_flight(), HttpBodyCancellationStep::Fault("transport cancellation probe failed".into()));
-    assert_eq!(BufferedHttpBody { remaining: Some(vec![1]) }.cancellation_handle().cancel_in_flight(), HttpBodyCancellationStep::Idle);
+    assert_eq!(BufferedHttpBody::new(vec![1]).cancellation_handle().cancel_in_flight(), HttpBodyCancellationStep::Idle);
 }
 
 /// 🌐️ A test-only `AsyncHttpTransport`/`HttpBody` over a REAL local TCP socket — the harness the

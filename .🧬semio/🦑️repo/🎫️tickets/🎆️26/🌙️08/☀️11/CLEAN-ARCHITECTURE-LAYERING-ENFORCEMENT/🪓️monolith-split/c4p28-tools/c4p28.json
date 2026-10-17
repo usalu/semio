@@ -1,0 +1,12 @@
+{
+ "name": "c4p28",
+ "crates": [
+  "semio-s-artifact-puzzle-3d-model",
+  "semio-s-artifact-puzzle-3d-retained-action",
+  "semio-s-artifact-puzzle-3d-retained-document",
+  "semio-s-artifact-puzzle-3d-editor",
+  "semio-s-artifact-block-3d-editor",
+  "semio-s-artifact-sourcing-curation"
+ ],
+ "note": "CENSUS4-PKG-28: puzzle 3d schema, retained works and editor tests; block 3d editor; sourcing curation editor (absolute classification against the pre-edit working tree)"
+}

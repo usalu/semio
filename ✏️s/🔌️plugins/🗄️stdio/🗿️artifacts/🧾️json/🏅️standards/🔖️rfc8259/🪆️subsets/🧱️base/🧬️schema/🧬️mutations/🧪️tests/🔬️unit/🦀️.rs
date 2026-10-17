@@ -1,4 +1,6 @@
-use super::*;
+use crate::schema::snapshot::JsonValue;
+use crate::JsonSnapshot;
+use crate::standards::v_rfc8259::subsets::base::schema::mutations::*;
 use protocol::SemanticMutation;
 #[test]
 fn aggregate_roster_is_exact() {

@@ -1,12 +1,35 @@
 //! ⏪️ Original actor retirement quotes and admits each retained physical frontier independently.
-use crate::__value::retirement::controlled::ControlledRetirement;
-use super::*;
-use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,FactoryAuthority,FactoryOwnedRetirement,close_factory_ticket,factory_ticket_demands};
-use std::mem::{size_of,size_of_val};
+use semio_framework_value::retirement::controlled::ControlledRetirement;
+use semio_framework::{ActionArgDef, ArgSchema, FaultFrom};
+use semio_framework_plugin_decl_app::ArtifactApp;
+#[cfg(test)]
+use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+#[cfg(test)]
+use semio_framework_plugin_decl_app::tool_contract::ArtifactOwnedToolJobFactory;
+use pack::snapshot::ArtifactPack;
+use store::{ArtifactStore, Mutation, MutationDiff};
+use semio_framework_value::DslValue;
+use semio_framework_plugin_decl_emission::Emit;
+use semio_framework_value_derive::{FromValue, ToValue};
+use semio_framework_ui_locale::LocalizedLabel;
+use protocol::{OpBinary, OpText};
+use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
+use semio_framework_time_travel::{TimeTravelBase, TimeTravelEvent, TimeTravelSession, TimeTravelStage, TimeTravelTarget};
+use crate::{TimeTravelEditor, TimeTravelLedger, TimeTravelMemberMetadata, TimeTravelOwners, TimeTravelStoreState};
+#[cfg(test)]
+use semio_framework_plugin_decl_views::tool_run_contract::ToolRunRetargetableJob;
+#[cfg(any(test, feature = "artifact-app-testing"))]
+use semio_framework_plugin_window_config::WindowConfigOwner;
+use semio_framework_ui_contract::*;
+use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind, FactoryAuthority, FactoryOwnedRetirement, close_factory_ticket, factory_ticket_demands};
+use std::mem::{size_of, size_of_val};
 fn original_refusal(message:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::UnsupportedOwner,message)}
-fn nested(mut demand:RetirementDemand)->Result<RetirementDemand,ValueError>{demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"actor retirement depth overflow"))?;Ok(demand)}
-fn permits(grant:RetainedCloneGrant,demand:RetirementDemand)->bool{grant.maximum_items>0&&grant.maximum_copy_bytes>=demand.copy_bytes&&grant.maximum_capacity_bytes>=demand.capacity_bytes&&grant.maximum_release_bytes>=demand.release_bytes&&grant.maximum_depth>=demand.depth}
-fn progress(step:RetainedCloneStep)->RetainedCloneStep{RetainedCloneStep::Progress(step.progress())}
+#[doc(hidden)]
+pub fn nested(mut demand:RetirementDemand)->Result<RetirementDemand,ValueError>{demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"actor retirement depth overflow"))?;Ok(demand)}
+#[doc(hidden)]
+pub fn permits(grant:RetainedCloneGrant,demand:RetirementDemand)->bool{grant.maximum_items>0&&grant.maximum_copy_bytes>=demand.copy_bytes&&grant.maximum_capacity_bytes>=demand.capacity_bytes&&grant.maximum_release_bytes>=demand.release_bytes&&grant.maximum_depth>=demand.depth}
+#[doc(hidden)]
+pub fn progress(step:RetainedCloneStep)->RetainedCloneStep{RetainedCloneStep::Progress(step.progress())}
 impl<A:ArtifactApp> TimeTravelLedger<A> {
  fn session_transfer_copy_bytes()->usize{0}
  fn session_removal_copy_bytes()->usize{0}
@@ -43,17 +66,18 @@ impl<A:ArtifactApp> TimeTravelLedger<A> {
  }
 }
 
+#[doc(hidden)]
 #[cfg(test)]
 #[path="🧪️tests/🦀️.rs"]
-mod tests;
+pub mod tests;
 #[cfg(test)]
-pub(crate) use tests::assert_session_original;
+pub use crate::original_retirement::tests::assert_session_original;
 #[cfg(test)]
-pub(crate) use tests::assert_pending_command_original;
+pub use crate::original_retirement::tests::assert_pending_command_original;
 #[cfg(test)]
-pub(crate) use tests::assert_discard_publication_original;
+pub use crate::original_retirement::tests::assert_discard_publication_original;
 #[cfg(test)]
-pub(crate) use tests::native_original_actor_grant;
+pub use crate::original_retirement::tests::native_original_actor_grant;
 impl<P,Mu> TimeTravelStoreState<P,Mu> where P:Clone+semio_framework_value::ToValue+semio_framework_value::FromValue+ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot+Send+Sync+'static,Mu:Clone+semio_framework_value::ToValue+semio_framework_value::FromValue+::protocol::Mutation<P>+OpBinary+OpText+Send+'static {
  pub(crate) fn original_retirement_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
   if let Some(demand)=self.discard_effects_retirement_demands(body)?{return Ok(demand)}

@@ -25,7 +25,6 @@ test("all nine real neutral region surfaces retain binary64 topology volume and 
    expect([...edges.values()].every(count=>count===2)).toBe(true);expect(vertices.size-edges.size+region.triangles.length).toBe(2-2*input.domain.holes.length);expect(region.triangles.length).toBeGreaterThanOrEqual(expected.minimumTriangles);expect(Math.abs(signedVolume-expected.volume)).toBeLessThan(1e-10);expect(Math.abs(tetVolume-expected.volume)).toBeLessThan(1e-10);const area=independentArea(input.domain.outer,input.domain.holes);expect(Math.abs(area-expected.area)).toBeLessThan(1e-12);expect(Math.abs(area*Math.abs(input.thickness)-tetVolume)).toBeLessThan(1e-10);
   }
  }
- console.log("[DEBUG] All nine actual neutral vectors agreed with portable binary64 goldens and independent Earcut area");
 });
 
 test("strict independent schema oracle refuses undeclared and malformed annotation vocabulary",()=>{
@@ -33,5 +32,4 @@ test("strict independent schema oracle refuses undeclared and malformed annotati
  const narrowed=structuredClone(schema);narrowed["x-semio-numeric-policy"].positions="binary32";expect(()=>createSurfaceSchemaOracleV1(narrowed)).toThrow();
  const implicit=structuredClone(schema);implicit["x-semio-operation-contract"].refusal="default-grant";expect(()=>createSurfaceSchemaOracleV1(implicit)).toThrow();
  expect(createSurfaceSchemaOracleV1(schema).surface(fixture.referenceSurface)).toBe(true);
- console.log("[DEBUG] Strict Ajv accepted only the two declared exact first-party annotation vocabularies");
 });

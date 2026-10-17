@@ -5,7 +5,7 @@ use super::*;
 fn original_mesh_tessellation_reservation_receipts_preserve_all_original_buffers(){
     use crate::test_support::observe_tessellation_system as observe;
     use semio_framework_value::{retained_clone::{RetainedCloneGrant,RetainedCloneProgress},retirement::controlled::ControlledRetirement};
-    let law:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🧩️tessellation/🎟️owners.json")).unwrap();
+    let law:serde_json::Value=crate::fixture_json("🧪️tests/🧫️fixtures/🧩️tessellation/🎟️owners.json");
     for copy in law["copyGrants"].as_array().unwrap().iter().map(|value|value.as_u64().unwrap()as usize){
         let(mut job,source)=observe(||{let positions=serde_json::from_value::<Vec<[f32;3]>>(law["positions"].clone()).unwrap();let faces=serde_json::from_value::<Vec<Vec<u32>>>(law["faces"].clone()).unwrap();MeshTessellationJob::new(HalfedgeMesh::from_faces(&positions,&faces).unwrap())});
         let original=job.mesh.vertices.as_ptr();let(mut born,mut freed,mut turns)=(source.0,source.1,0);let mut pointers=[0usize;16];
@@ -19,6 +19,6 @@ fn original_mesh_tessellation_reservation_receipts_preserve_all_original_buffers
         assert_eq!(turns,law["normalReservation"]["buffers"].as_array().unwrap().len());let(_,heap)=observe(||{job.step(super::tessellation_metadata_tests::funded_normal_grant(&job)).unwrap();job.step(super::tessellation_metadata_tests::funded_normal_grant(&job)).unwrap();});assert_eq!(heap,(0,0));
         let(mut owner,handoff)=observe(||ControlledRetirement::new(job).unwrap_or_else(|_|panic!("original reserved tessellation closure unsupported")));assert_eq!(handoff,(0,0));let mut close_turns=0;
         while !owner.terminal_is_empty(){let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:owner.next_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:owner.next_release_byte_demand().unwrap(),maximum_depth:owner.next_depth_demand().unwrap()};let(step,heap)=observe(||owner.step(grant).unwrap());assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));assert!(step.progress().fits(grant));born+=heap.0;freed+=heap.1;close_turns+=1;assert!(close_turns<100000);}
-        assert_eq!(born,freed);let(_,heap)=observe(||drop(owner));assert_eq!(heap,(0,0));eprintln!("[DEBUG] Original Mesh buffer reservation copy={copy} buffers={turns} sameSource=true sameBacking=true physical={freed} terminalDrop=0");
+        assert_eq!(born,freed);let(_,heap)=observe(||drop(owner));assert_eq!(heap,(0,0));
     }
 }

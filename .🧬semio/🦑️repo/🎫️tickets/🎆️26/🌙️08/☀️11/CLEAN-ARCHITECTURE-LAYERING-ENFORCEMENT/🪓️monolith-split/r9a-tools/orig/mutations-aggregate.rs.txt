@@ -1,0 +1,952 @@
+//! 🧬️ BIM model semantic mutation dispatch enum.
+//!
+//! `#[derive(dsl::Mutations)]` generates `impl protocol::Mutation<ModelSnapshot>` and `impl protocol::SemanticMutation<ModelSnapshot>`
+//! for [`ModelMutation`] by delegating each variant to its payload's `protocol::MutationKind` impl; the handcrafted logic lives in
+//! the triad leaves (`<slug>/{🦠️mutation,🔺️diff,↩️inverse}`). This file is dispatch-only.
+
+use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, snapshot::ModelSnapshot};
+
+#[cfg(test)]
+#[path = "🧪️tests/🧰️kit/🦀️.rs"]
+pub mod kit;
+
+#[path = "🧵️elements/🦀️.rs"]
+pub mod elements;
+
+#[path = "🌊️cascade/🦀️.rs"]
+pub mod cascade;
+
+#[path = "🖍️annotating/🦀️.rs"]
+pub mod annotating;
+
+#[path = "🔩️family-rules/🦀️.rs"]
+pub mod family_rules;
+
+#[path = "🔌️component-rules/🦀️.rs"]
+pub mod component_rules;
+
+#[path = "📍️placement/🦀️.rs"]
+pub mod placement;
+
+#[path = "🧲️wall-depth/🦀️.rs"]
+pub mod wall_depth;
+
+#[path = "🧭️option-rules/🦀️.rs"]
+pub mod option_rules;
+
+//#region 🔖️Operations
+/// 🧬️ Every variant wraps exactly one `protocol::MutationKind<ModelSnapshot, ModelMutation>` payload struct declared in the
+/// corresponding leaf's `🦠️mutation/🦀️.rs`.
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[value(tag = "mutation", rename_all = "camelCase")]
+#[mutations(snapshot = ModelSnapshot, diff = ModelDiff, schema = "bim.model")]
+pub enum ModelMutation {
+    SetElementWorkset(super::set_element_workset::SetElementWorkset),
+    SetElementOption(super::set_element_option::SetElementOption),
+    DeleteWorkset(super::delete_workset::DeleteWorkset),
+    SetWorkset(super::set_workset::SetWorkset),
+    CreateWorkset(super::create_workset::CreateWorkset),
+    DeleteDesignOption(super::delete_design_option::DeleteDesignOption),
+    SetDesignOption(super::set_design_option::SetDesignOption),
+    CreateDesignOption(super::create_design_option::CreateDesignOption),
+    DeleteOptionGroup(super::delete_option_group::DeleteOptionGroup),
+    SetOptionGroup(super::set_option_group::SetOptionGroup),
+    CreateOptionGroup(super::create_option_group::CreateOptionGroup),
+    CreateSupport(super::create_support::CreateSupport),
+    SetSupport(super::set_support::SetSupport),
+    DeleteSupport(super::delete_support::DeleteSupport),
+    CreateLoadCase(super::create_load_case::CreateLoadCase),
+    SetLoadCase(super::set_load_case::SetLoadCase),
+    DeleteLoadCase(super::delete_load_case::DeleteLoadCase),
+    CreateLoad(super::create_load::CreateLoad),
+    SetLoad(super::set_load::SetLoad),
+    DeleteLoad(super::delete_load::DeleteLoad),
+
+    SetCurtainWall(super::set_curtain_wall::SetCurtainWall),
+    DeleteCurtainWall(super::delete_curtain_wall::DeleteCurtainWall),
+    CreateCurtainWall(super::create_curtain_wall::CreateCurtainWall),
+    SplitWall(super::split_wall::SplitWall),
+    FlipWall(super::flip_wall::FlipWall),
+    SetWallLocation(super::set_wall_location::SetWallLocation),
+    SetWallTypeOf(super::set_wall_type_of::SetWallTypeOf),
+    SetWallBaseOffset(super::set_wall_base_offset::SetWallBaseOffset),
+    SetWallAxis(super::set_wall_axis::SetWallAxis),
+    CreateSite(super::create_site::CreateSite),
+    DeleteSite(super::delete_site::DeleteSite),
+    CreateBuilding(super::create_building::CreateBuilding),
+    DeleteBuilding(super::delete_building::DeleteBuilding),
+    CreateStorey(super::create_storey::CreateStorey),
+    RenameStorey(super::rename_storey::RenameStorey),
+    SetStoreyHeight(super::set_storey_height::SetStoreyHeight),
+    SetStoreyCutHeight(super::set_storey_cut_height::SetStoreyCutHeight),
+    SetElementPhase(super::set_element_phase::SetElementPhase),
+    SetElementStorey(super::set_element_storey::SetElementStorey),
+    SetStoreyLevel(super::set_storey_level::SetStoreyLevel),
+    DeleteStorey(super::delete_storey::DeleteStorey),
+    CreateWall(super::create_wall::CreateWall),
+    DeleteWall(super::delete_wall::DeleteWall),
+    SetWallTop(super::set_wall_top::SetWallTop),
+    SetProjectInfo(super::set_project_info::SetProjectInfo),
+    SetSite(super::set_site::SetSite),
+    SetBuilding(super::set_building::SetBuilding),
+    CreateGridLine(super::create_grid_line::CreateGridLine),
+    DeleteGridLine(super::delete_grid_line::DeleteGridLine),
+    SetGridLine(super::set_grid_line::SetGridLine),
+    CreateColumnType(super::create_column_type::CreateColumnType),
+    DeleteColumnType(super::delete_column_type::DeleteColumnType),
+    SetColumnType(super::set_column_type::SetColumnType),
+    CreateBeamType(super::create_beam_type::CreateBeamType),
+    DeleteBeamType(super::delete_beam_type::DeleteBeamType),
+    SetBeamType(super::set_beam_type::SetBeamType),
+    CreateWindowType(super::create_window_type::CreateWindowType),
+    DeleteWindowType(super::delete_window_type::DeleteWindowType),
+    SetWindowType(super::set_window_type::SetWindowType),
+    CreateDoorType(super::create_door_type::CreateDoorType),
+    DeleteDoorType(super::delete_door_type::DeleteDoorType),
+    SetDoorType(super::set_door_type::SetDoorType),
+    CreateMaterial(super::create_material::CreateMaterial),
+    DeleteMaterial(super::delete_material::DeleteMaterial),
+    SetMaterial(super::set_material::SetMaterial),
+    CreateWallType(super::create_wall_type::CreateWallType),
+    DeleteWallType(super::delete_wall_type::DeleteWallType),
+    SetWallType(super::set_wall_type::SetWallType),
+    CreateSlabType(super::create_slab_type::CreateSlabType),
+    DeleteSlabType(super::delete_slab_type::DeleteSlabType),
+    SetSlabType(super::set_slab_type::SetSlabType),
+    CreateRoofType(super::create_roof_type::CreateRoofType),
+    DeleteRoofType(super::delete_roof_type::DeleteRoofType),
+    SetRoofType(super::set_roof_type::SetRoofType),
+    CreateColumn(super::create_column::CreateColumn),
+    DeleteColumn(super::delete_column::DeleteColumn),
+    SetColumn(super::set_column::SetColumn),
+    CreateBeam(super::create_beam::CreateBeam),
+    DeleteBeam(super::delete_beam::DeleteBeam),
+    SetBeam(super::set_beam::SetBeam),
+    CreateRailing(super::create_railing::CreateRailing),
+    DeleteRailing(super::delete_railing::DeleteRailing),
+    SetRailing(super::set_railing::SetRailing),
+    CreateRamp(super::create_ramp::CreateRamp),
+    SetRamp(super::set_ramp::SetRamp),
+    DeleteRamp(super::delete_ramp::DeleteRamp),
+    CreateSpace(super::create_space::CreateSpace),
+    DeleteSpace(super::delete_space::DeleteSpace),
+    SetSpace(super::set_space::SetSpace),
+    CreateZone(super::create_zone::CreateZone),
+    SetZone(super::set_zone::SetZone),
+    DeleteZone(super::delete_zone::DeleteZone),
+    CreateAreaScheme(super::create_area_scheme::CreateAreaScheme),
+    SetAreaScheme(super::set_area_scheme::SetAreaScheme),
+    DeleteAreaScheme(super::delete_area_scheme::DeleteAreaScheme),
+    CreateSlab(super::create_slab::CreateSlab),
+    DeleteSlab(super::delete_slab::DeleteSlab),
+    SetSlabBoundary(super::set_slab_boundary::SetSlabBoundary),
+    SetSlab(super::set_slab::SetSlab),
+    CreateCeilingType(super::create_ceiling_type::CreateCeilingType),
+    DeleteCeilingType(super::delete_ceiling_type::DeleteCeilingType),
+    SetCeilingType(super::set_ceiling_type::SetCeilingType),
+    CreateCeiling(super::create_ceiling::CreateCeiling),
+    CreateDimension(super::create_dimension::CreateDimension),
+    DeleteDimension(super::delete_dimension::DeleteDimension),
+    SetDimension(super::set_dimension::SetDimension),
+    CreateTag(super::create_tag::CreateTag),
+    DeleteTag(super::delete_tag::DeleteTag),
+    SetTag(super::set_tag::SetTag),
+    CreateTextNote(super::create_text_note::CreateTextNote),
+    DeleteTextNote(super::delete_text_note::DeleteTextNote),
+    SetTextNote(super::set_text_note::SetTextNote),
+    CreateLeader(super::create_leader::CreateLeader),
+    DeleteLeader(super::delete_leader::DeleteLeader),
+    SetLeader(super::set_leader::SetLeader),
+    CreateAnnotationStyle(super::create_annotation_style::CreateAnnotationStyle),
+    DeleteMepElement(super::delete_mep_element::DeleteMepElement),
+    SetMepElement(super::set_mep_element::SetMepElement),
+    CreateMepElement(super::create_mep_element::CreateMepElement),
+    RemoveComponentOverride(super::remove_component_override::RemoveComponentOverride),
+    SetComponentOverride(super::set_component_override::SetComponentOverride),
+    DeleteComponent(super::delete_component::DeleteComponent),
+    SetComponent(super::set_component::SetComponent),
+    CreateComponent(super::create_component::CreateComponent),
+    SetFamilySolid(super::set_family_solid::SetFamilySolid),
+    DeleteFamilySolid(super::delete_family_solid::DeleteFamilySolid),
+    CreateFamilySolid(super::create_family_solid::CreateFamilySolid),
+    RemoveFamilyParameter(super::remove_family_parameter::RemoveFamilyParameter),
+    SetFamilyParameter(super::set_family_parameter::SetFamilyParameter),
+    SetFamily(super::set_family::SetFamily),
+    DeleteFamily(super::delete_family::DeleteFamily),
+    CreateFamily(super::create_family::CreateFamily),
+    DeleteAnnotationStyle(super::delete_annotation_style::DeleteAnnotationStyle),
+    SetAnnotationStyle(super::set_annotation_style::SetAnnotationStyle),
+    DeleteCeiling(super::delete_ceiling::DeleteCeiling),
+    SetCeilingBoundary(super::set_ceiling_boundary::SetCeilingBoundary),
+    SetCeiling(super::set_ceiling::SetCeiling),
+    CreateRoof(super::create_roof::CreateRoof),
+    DeleteRoof(super::delete_roof::DeleteRoof),
+    SetRoofFootprint(super::set_roof_footprint::SetRoofFootprint),
+    SetRoofShape(super::set_roof_shape::SetRoofShape),
+    CreateOpening(super::create_opening::CreateOpening),
+    DeleteOpening(super::delete_opening::DeleteOpening),
+    MoveOpening(super::move_opening::MoveOpening),
+    SetOpening(super::set_opening::SetOpening),
+    CreateStair(super::create_stair::CreateStair),
+    DeleteStair(super::delete_stair::DeleteStair),
+    SetStair(super::set_stair::SetStair),
+    MoveElements(super::move_elements::MoveElements),
+    RotateElements(super::rotate_elements::RotateElements),
+    PlaceElements(super::place_elements::PlaceElements),
+    DeleteElements(super::delete_elements::DeleteElements),
+    RenameElement(super::rename_element::RenameElement),
+    SetElementProperty(super::set_element_property::SetElementProperty),
+    RemoveElementProperty(super::remove_element_property::RemoveElementProperty),
+    SetElementClassification(super::set_element_classification::SetElementClassification),
+    RemoveElementClassification(super::remove_element_classification::RemoveElementClassification),
+    CreatePropertyTemplate(super::create_property_template::CreatePropertyTemplate),
+    SetPropertyTemplate(super::set_property_template::SetPropertyTemplate),
+    DeletePropertyTemplate(super::delete_property_template::DeletePropertyTemplate),
+    CreateClassificationSystem(super::create_classification_system::CreateClassificationSystem),
+    SetClassificationSystem(super::set_classification_system::SetClassificationSystem),
+    DeleteClassificationSystem(super::delete_classification_system::DeleteClassificationSystem),
+    CreateSchedule(super::create_schedule::CreateSchedule),
+    SetSchedule(super::set_schedule::SetSchedule),
+    DeleteSchedule(super::delete_schedule::DeleteSchedule),
+    CreateView(super::create_view::CreateView),
+    SetView(super::set_view::SetView),
+    DeleteView(super::delete_view::DeleteView),
+    CreateSheet(super::create_sheet::CreateSheet),
+    SetSheet(super::set_sheet::SetSheet),
+    DeleteSheet(super::delete_sheet::DeleteSheet),
+    CreateViewport(super::create_viewport::CreateViewport),
+    SetViewport(super::set_viewport::SetViewport),
+    DeleteViewport(super::delete_viewport::DeleteViewport),
+    CreateSheetRevision(super::create_sheet_revision::CreateSheetRevision),
+    SetSheetRevision(super::set_sheet_revision::SetSheetRevision),
+    DeleteSheetRevision(super::delete_sheet_revision::DeleteSheetRevision),
+    SetSpaceConditions(super::set_space_conditions::SetSpaceConditions),
+    RemoveSpaceConditions(super::remove_space_conditions::RemoveSpaceConditions),
+    SetTypeThermalData(super::set_type_thermal_data::SetTypeThermalData),
+    CreateClashSet(super::create_clash_set::CreateClashSet),
+    SetClashSet(super::set_clash_set::SetClashSet),
+    DeleteClashSet(super::delete_clash_set::DeleteClashSet),
+    CreateRule(super::create_rule::CreateRule),
+    SetRule(super::set_rule::SetRule),
+    DeleteRule(super::delete_rule::DeleteRule),
+    CreateIssue(super::create_issue::CreateIssue),
+    SetIssue(super::set_issue::SetIssue),
+    DeleteIssue(super::delete_issue::DeleteIssue),
+    CreateIssueComment(super::create_issue_comment::CreateIssueComment),
+    SetIssueComment(super::set_issue_comment::SetIssueComment),
+    DeleteIssueComment(super::delete_issue_comment::DeleteIssueComment),
+    SetWallEndJoin(super::set_wall_end_join::SetWallEndJoin),
+    CopyElements(super::copy_elements::CopyElements),
+    MirrorElements(super::mirror_elements::MirrorElements),
+    ArrayElements(super::array_elements::ArrayElements),
+    AlignElements(super::align_elements::AlignElements),
+    OffsetWall(super::offset_wall::OffsetWall),
+    TrimExtendWall(super::trim_extend_wall::TrimExtendWall),
+    SplitSlab(super::split_slab::SplitSlab),
+    SplitBeam(super::split_beam::SplitBeam),
+    CreateWallSweep(super::create_wall_sweep::CreateWallSweep),
+    SetWallSweep(super::set_wall_sweep::SetWallSweep),
+    DeleteWallSweep(super::delete_wall_sweep::DeleteWallSweep),
+    SetWallBaseSlab(super::set_wall_base_slab::SetWallBaseSlab),
+    SetBeamAxis(super::set_beam_axis::SetBeamAxis),
+    SetColumnTilt(super::set_column_tilt::SetColumnTilt),
+    CreateCurtainWallType(super::create_curtain_wall_type::CreateCurtainWallType),
+    SetCurtainWallType(super::set_curtain_wall_type::SetCurtainWallType),
+    DeleteCurtainWallType(super::delete_curtain_wall_type::DeleteCurtainWallType),
+    SetCurtainWallTypeOf(super::set_curtain_wall_type_of::SetCurtainWallTypeOf),
+    SetCurtainWallGrid(super::set_curtain_wall_grid::SetCurtainWallGrid),
+    CreateCurtainPanelOverride(super::create_curtain_panel_override::CreateCurtainPanelOverride),
+    SetCurtainPanelOverride(super::set_curtain_panel_override::SetCurtainPanelOverride),
+    DeleteCurtainPanelOverride(super::delete_curtain_panel_override::DeleteCurtainPanelOverride),
+}
+
+/// 🏷️ The kebab spelling of every [`ModelMutation`] variant, in declaration order: the one list the language-neutral test platform
+/// is measured against (this subset's oracle catalog and the `mutate-model-1` adapter repeat it on purpose).
+pub const KINDS: &[&str] = &[
+    "set-element-workset",
+    "set-element-option",
+    "delete-workset",
+    "set-workset",
+    "create-workset",
+    "delete-design-option",
+    "set-design-option",
+    "create-design-option",
+    "delete-option-group",
+    "set-option-group",
+    "create-option-group",
+    "create-support",
+    "set-support",
+    "delete-support",
+    "create-load-case",
+    "set-load-case",
+    "delete-load-case",
+    "create-load",
+    "set-load",
+    "delete-load",
+
+    "set-curtain-wall",
+    "delete-curtain-wall",
+    "create-curtain-wall",
+    "split-wall",
+    "flip-wall",
+    "set-wall-location",
+    "set-wall-type-of",
+    "set-wall-base-offset",
+    "set-wall-axis",
+    "create-site",
+    "delete-site",
+    "create-building",
+    "delete-building",
+    "create-storey",
+    "rename-storey",
+    "set-storey-height",
+    "set-storey-cut-height",
+    "set-element-phase",
+    "set-element-storey",
+    "set-storey-level",
+    "delete-storey",
+    "create-wall",
+    "delete-wall",
+    "set-wall-top",
+    "set-project-info",
+    "set-site",
+    "set-building",
+    "create-grid-line",
+    "delete-grid-line",
+    "set-grid-line",
+    "create-column-type",
+    "delete-column-type",
+    "set-column-type",
+    "create-beam-type",
+    "delete-beam-type",
+    "set-beam-type",
+    "create-window-type",
+    "delete-window-type",
+    "set-window-type",
+    "create-door-type",
+    "delete-door-type",
+    "set-door-type",
+    "create-material",
+    "delete-material",
+    "set-material",
+    "create-wall-type",
+    "delete-wall-type",
+    "set-wall-type",
+    "create-slab-type",
+    "delete-slab-type",
+    "set-slab-type",
+    "create-roof-type",
+    "delete-roof-type",
+    "set-roof-type",
+    "create-column",
+    "delete-column",
+    "set-column",
+    "create-beam",
+    "delete-beam",
+    "set-beam",
+    "create-railing",
+    "delete-railing",
+    "set-railing",
+    "create-ramp",
+    "set-ramp",
+    "delete-ramp",
+    "create-space",
+    "delete-space",
+    "set-space",
+    "create-zone",
+    "set-zone",
+    "delete-zone",
+    "create-area-scheme",
+    "set-area-scheme",
+    "delete-area-scheme",
+    "create-slab",
+    "delete-slab",
+    "set-slab-boundary",
+    "set-slab",
+    "create-ceiling-type",
+    "delete-ceiling-type",
+    "set-ceiling-type",
+    "create-ceiling",
+    "create-dimension",
+    "delete-dimension",
+    "set-dimension",
+    "create-tag",
+    "delete-tag",
+    "set-tag",
+    "create-text-note",
+    "delete-text-note",
+    "set-text-note",
+    "create-leader",
+    "delete-leader",
+    "set-leader",
+    "create-annotation-style",
+    "delete-mep-element",
+    "set-mep-element",
+    "create-mep-element",
+    "remove-component-override",
+    "set-component-override",
+    "delete-component",
+    "set-component",
+    "create-component",
+    "set-family-solid",
+    "delete-family-solid",
+    "create-family-solid",
+    "remove-family-parameter",
+    "set-family-parameter",
+    "set-family",
+    "delete-family",
+    "create-family",
+    "delete-annotation-style",
+    "set-annotation-style",
+    "delete-ceiling",
+    "set-ceiling-boundary",
+    "set-ceiling",
+    "create-roof",
+    "delete-roof",
+    "set-roof-footprint",
+    "set-roof-shape",
+    "create-opening",
+    "delete-opening",
+    "move-opening",
+    "set-opening",
+    "create-stair",
+    "delete-stair",
+    "set-stair",
+    "move-elements",
+    "rotate-elements",
+    "place-elements",
+    "delete-elements",
+    "rename-element",
+    "set-element-property",
+    "remove-element-property",
+    "set-element-classification",
+    "remove-element-classification",
+    "create-property-template",
+    "set-property-template",
+    "delete-property-template",
+    "create-classification-system",
+    "set-classification-system",
+    "delete-classification-system",
+    "create-schedule",
+    "set-schedule",
+    "delete-schedule",
+    "create-view",
+    "set-view",
+    "delete-view",
+    "create-sheet",
+    "set-sheet",
+    "delete-sheet",
+    "create-viewport",
+    "set-viewport",
+    "delete-viewport",
+    "create-sheet-revision",
+    "set-sheet-revision",
+    "delete-sheet-revision",
+    "set-space-conditions",
+    "remove-space-conditions",
+    "set-type-thermal-data",
+    "create-clash-set",
+    "set-clash-set",
+    "delete-clash-set",
+    "create-rule",
+    "set-rule",
+    "delete-rule",
+    "create-issue",
+    "set-issue",
+    "delete-issue",
+    "create-issue-comment",
+    "set-issue-comment",
+    "delete-issue-comment",
+    "set-wall-end-join",
+    "copy-elements",
+    "mirror-elements",
+    "array-elements",
+    "align-elements",
+    "offset-wall",
+    "trim-extend-wall",
+    "split-slab",
+    "split-beam",
+    "create-wall-sweep",
+    "set-wall-sweep",
+    "delete-wall-sweep",
+    "set-wall-base-slab",
+    "set-beam-axis",
+    "set-column-tilt",
+    "create-curtain-wall-type",
+    "set-curtain-wall-type",
+    "delete-curtain-wall-type",
+    "set-curtain-wall-type-of",
+    "set-curtain-wall-grid",
+    "create-curtain-panel-override",
+    "set-curtain-panel-override",
+    "delete-curtain-panel-override",
+];
+//#endregion 🔖️Operations
+
+//#region 🔖️Apply
+/// 📦️ Applies `mutation` onto `snapshot`, returning the resulting snapshot, through the central applier.
+pub fn apply_model_mutation(snapshot: &ModelSnapshot, mutation: &ModelMutation) -> protocol::MutationApplyResult<ModelSnapshot> {
+    store::apply_mutation(snapshot, mutation).map(|(next, _messages)| next)
+}
+
+/// ↩️ Computes `mutation`'s concrete inverse mutations against `snapshot` (pre-state), in storage order.
+pub fn inverse_model_mutation(snapshot: &ModelSnapshot, mutation: &ModelMutation) -> Result<Vec<ModelMutation>, semio_framework_value::ValueError> {
+    <ModelMutation as protocol::Mutation<ModelSnapshot>>::inverse(mutation, snapshot)
+}
+//#endregion 🔖️Apply
+
+#[cfg(test)]
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
+
+//#region 🧩️Modules
+#[path = "🧿️horizontal-rules/🦀️.rs"]
+pub mod horizontal_rules;
+//#region 🔖️Leaves
+#[path = "🌍️create-site/🦀️.rs"]
+pub mod create_site;
+#[path = "🧹️delete-site/🦀️.rs"]
+pub mod delete_site;
+#[path = "🏢️create-building/🦀️.rs"]
+pub mod create_building;
+#[path = "🏚️delete-building/🦀️.rs"]
+pub mod delete_building;
+#[path = "🪜️create-storey/🦀️.rs"]
+pub mod create_storey;
+#[path = "🏷️rename-storey/🦀️.rs"]
+pub mod rename_storey;
+#[path = "📏️set-storey-height/🦀️.rs"]
+pub mod set_storey_height;
+#[path = "🔢️set-storey-level/🦀️.rs"]
+pub mod set_storey_level;
+#[path = "🚮️delete-storey/🦀️.rs"]
+pub mod delete_storey;
+#[path = "🧱️create-wall/🦀️.rs"]
+pub mod create_wall;
+#[path = "💥️delete-wall/🦀️.rs"]
+pub mod delete_wall;
+#[path = "🔝️set-wall-top/🦀️.rs"]
+pub mod set_wall_top;
+#[path = "🛤️create-railing/🦀️.rs"]
+pub mod create_railing;
+#[path = "🪚️delete-railing/🦀️.rs"]
+pub mod delete_railing;
+#[path = "🔧️set-railing/🦀️.rs"]
+pub mod set_railing;
+#[path = "🛋️create-space/🦀️.rs"]
+pub mod create_space;
+#[path = "🧽️delete-space/🦀️.rs"]
+pub mod delete_space;
+#[path = "🪑️set-space/🦀️.rs"]
+pub mod set_space;
+#[path = "🏛️create-column/🦀️.rs"]
+pub mod create_column;
+#[path = "🪦️delete-column/🦀️.rs"]
+pub mod delete_column;
+#[path = "🎛️set-column/🦀️.rs"]
+pub mod set_column;
+#[path = "➖️create-beam/🦀️.rs"]
+pub mod create_beam;
+#[path = "✂️delete-beam/🦀️.rs"]
+pub mod delete_beam;
+#[path = "⬜️create-slab/🦀️.rs"]
+pub mod create_slab;
+#[path = "🔻️delete-slab/🦀️.rs"]
+pub mod delete_slab;
+#[path = "🔷️set-slab-boundary/🦀️.rs"]
+pub mod set_slab_boundary;
+#[path = "🔸️set-slab/🦀️.rs"]
+pub mod set_slab;
+#[path = "🏠️create-roof/🦀️.rs"]
+pub mod create_roof;
+#[path = "🏘️delete-roof/🦀️.rs"]
+pub mod delete_roof;
+#[path = "👣️set-roof-footprint/🦀️.rs"]
+pub mod set_roof_footprint;
+#[path = "🏔️set-roof-shape/🦀️.rs"]
+pub mod set_roof_shape;
+#[path = "🗼️create-column-type/🦀️.rs"]
+pub mod create_column_type;
+#[path = "🏺️delete-column-type/🦀️.rs"]
+pub mod delete_column_type;
+#[path = "🎚️set-column-type/🦀️.rs"]
+pub mod set_column_type;
+#[path = "🌉️create-beam-type/🦀️.rs"]
+pub mod create_beam_type;
+#[path = "🪢️delete-beam-type/🦀️.rs"]
+pub mod delete_beam_type;
+#[path = "🎞️set-beam-type/🦀️.rs"]
+pub mod set_beam_type;
+#[path = "🖼️create-window-type/🦀️.rs"]
+pub mod create_window_type;
+#[path = "🧊️delete-window-type/🦀️.rs"]
+pub mod delete_window_type;
+#[path = "🔅️set-window-type/🦀️.rs"]
+pub mod set_window_type;
+#[path = "🛗️create-door-type/🦀️.rs"]
+pub mod create_door_type;
+#[path = "🔒️delete-door-type/🦀️.rs"]
+pub mod delete_door_type;
+#[path = "🔑️set-door-type/🦀️.rs"]
+pub mod set_door_type;
+#[path = "🪨️create-material/🦀️.rs"]
+pub mod create_material;
+#[path = "🗑️delete-material/🦀️.rs"]
+pub mod delete_material;
+#[path = "🖌️set-material/🦀️.rs"]
+pub mod set_material;
+#[path = "🪵️create-wall-type/🦀️.rs"]
+pub mod create_wall_type;
+#[path = "🚧️delete-wall-type/🦀️.rs"]
+pub mod delete_wall_type;
+#[path = "🔨️set-wall-type/🦀️.rs"]
+pub mod set_wall_type;
+#[path = "🟫️create-slab-type/🦀️.rs"]
+pub mod create_slab_type;
+#[path = "🟥️delete-slab-type/🦀️.rs"]
+pub mod delete_slab_type;
+#[path = "🟧️set-slab-type/🦀️.rs"]
+pub mod set_slab_type;
+#[path = "🛖️create-roof-type/🦀️.rs"]
+pub mod create_roof_type;
+#[path = "⛺️delete-roof-type/🦀️.rs"]
+pub mod delete_roof_type;
+#[path = "🏕️set-roof-type/🦀️.rs"]
+pub mod set_roof_type;
+#[path = "🕳️create-opening/🦀️.rs"]
+pub mod create_opening;
+#[path = "🪓️delete-opening/🦀️.rs"]
+pub mod delete_opening;
+#[path = "🛷️move-opening/🦀️.rs"]
+pub mod move_opening;
+#[path = "🕹️set-opening/🦀️.rs"]
+pub mod set_opening;
+#[path = "🧗️create-stair/🦀️.rs"]
+pub mod create_stair;
+#[path = "🧨️delete-stair/🦀️.rs"]
+pub mod delete_stair;
+#[path = "🧮️set-stair/🦀️.rs"]
+pub mod set_stair;
+#[path = "📇️set-project-info/🦀️.rs"]
+pub mod set_project_info;
+#[path = "🗺️set-site/🦀️.rs"]
+pub mod set_site;
+#[path = "🏗️set-building/🦀️.rs"]
+pub mod set_building;
+#[path = "🔲️create-grid-line/🦀️.rs"]
+pub mod create_grid_line;
+#[path = "🔳️delete-grid-line/🦀️.rs"]
+pub mod delete_grid_line;
+#[path = "🧭️set-grid-line/🦀️.rs"]
+pub mod set_grid_line;
+#[path = "."]
+pub mod wall_geometry {
+    #[path = "🦉️wall-geometry/🦀️.rs"]
+    mod component;
+    pub use component::*;
+}
+#[path = "〰️set-wall-axis/🦀️.rs"]
+pub mod set_wall_axis;
+#[path = "🔽️set-wall-base-offset/🦀️.rs"]
+pub mod set_wall_base_offset;
+#[path = "🥞️set-wall-type-of/🦀️.rs"]
+pub mod set_wall_type_of;
+#[path = "🦚️set-wall-location/🦀️.rs"]
+pub mod set_wall_location;
+#[path = "🪞️flip-wall/🦀️.rs"]
+pub mod flip_wall;
+#[path = "🦈️split-wall/🦀️.rs"]
+pub mod split_wall;
+#[path = "🦖️delete-curtain-wall/🦀️.rs"]
+pub mod delete_curtain_wall;
+#[path = "🚚️move-elements/🦀️.rs"]
+pub mod move_elements;
+#[path = "🎡️rotate-elements/🦀️.rs"]
+pub mod rotate_elements;
+#[path = "🪧️place-elements/🦀️.rs"]
+pub mod place_elements;
+#[path = "💣️delete-elements/🦀️.rs"]
+pub mod delete_elements;
+#[path = "🪪️rename-element/🦀️.rs"]
+pub mod rename_element;
+#[path = "🧾️set-element-property/🦀️.rs"]
+pub mod set_element_property;
+#[path = "🫧️remove-element-property/🦀️.rs"]
+pub mod remove_element_property;
+#[path = "🗂️set-element-classification/🦀️.rs"]
+pub mod set_element_classification;
+#[path = "🗄️remove-element-classification/🦀️.rs"]
+pub mod remove_element_classification;
+#[path = "🎬️set-storey-cut-height/🦀️.rs"]
+pub mod set_storey_cut_height;
+#[path = "🎑️create-ceiling-type/🦀️.rs"]
+pub mod create_ceiling_type;
+#[path = "🎏️delete-ceiling-type/🦀️.rs"]
+pub mod delete_ceiling_type;
+#[path = "🎐️set-ceiling-type/🦀️.rs"]
+pub mod set_ceiling_type;
+#[path = "🏞️create-ceiling/🦀️.rs"]
+pub mod create_ceiling;
+#[path = "🌆️delete-ceiling/🦀️.rs"]
+pub mod delete_ceiling;
+#[path = "🌇️set-ceiling-boundary/🦀️.rs"]
+pub mod set_ceiling_boundary;
+#[path = "🌄️set-ceiling/🦀️.rs"]
+pub mod set_ceiling;
+#[path = "🛝️create-ramp/🦀️.rs"]
+pub mod create_ramp;
+#[path = "🛹️set-ramp/🦀️.rs"]
+pub mod set_ramp;
+#[path = "🛼️delete-ramp/🦀️.rs"]
+pub mod delete_ramp;
+#[path = "📽️create-view/🦀️.rs"]
+pub mod create_view;
+#[path = "🔭️set-view/🦀️.rs"]
+pub mod set_view;
+#[path = "📺️delete-view/🦀️.rs"]
+pub mod delete_view;
+#[path = "🎨️create-annotation-style/🦀️.rs"]
+pub mod create_annotation_style;
+#[path = "🧺️delete-annotation-style/🦀️.rs"]
+pub mod delete_annotation_style;
+#[path = "🖊️set-annotation-style/🦀️.rs"]
+pub mod set_annotation_style;
+#[path = "↔️create-dimension/🦀️.rs"]
+pub mod create_dimension;
+#[path = "📎️delete-dimension/🦀️.rs"]
+pub mod delete_dimension;
+#[path = "📌️set-dimension/🦀️.rs"]
+pub mod set_dimension;
+#[path = "🔖️create-tag/🦀️.rs"]
+pub mod create_tag;
+#[path = "🎫️delete-tag/🦀️.rs"]
+pub mod delete_tag;
+#[path = "🏴️set-tag/🦀️.rs"]
+pub mod set_tag;
+#[path = "🗒️create-text-note/🦀️.rs"]
+pub mod create_text_note;
+#[path = "📃️delete-text-note/🦀️.rs"]
+pub mod delete_text_note;
+#[path = "📝️set-text-note/🦀️.rs"]
+pub mod set_text_note;
+#[path = "↗️create-leader/🦀️.rs"]
+pub mod create_leader;
+#[path = "↪️delete-leader/🦀️.rs"]
+pub mod delete_leader;
+#[path = "⤴️set-leader/🦀️.rs"]
+pub mod set_leader;
+#[path = "🗾️create-zone/🦀️.rs"]
+pub mod create_zone;
+#[path = "🪄️set-zone/🦀️.rs"]
+pub mod set_zone;
+#[path = "🧯️delete-zone/🦀️.rs"]
+pub mod delete_zone;
+#[path = "🗃️create-area-scheme/🦀️.rs"]
+pub mod create_area_scheme;
+#[path = "🗳️set-area-scheme/🦀️.rs"]
+pub mod set_area_scheme;
+#[path = "🧻️delete-area-scheme/🦀️.rs"]
+pub mod delete_area_scheme;
+#[path = "📊️create-schedule/🦀️.rs"]
+pub mod create_schedule;
+#[path = "📈️set-schedule/🦀️.rs"]
+pub mod set_schedule;
+#[path = "📉️delete-schedule/🦀️.rs"]
+pub mod delete_schedule;
+#[path = "🎢️set-element-storey/🦀️.rs"]
+pub mod set_element_storey;
+#[path = "🕰️set-element-phase/🦀️.rs"]
+pub mod set_element_phase;
+#[path = "."]
+pub mod modify {
+    #[path = "🧙️modify/🦀️.rs"]
+    mod component;
+    pub use component::*;
+}
+#[path = "🧷️set-wall-end-join/🦀️.rs"]
+pub mod set_wall_end_join;
+#[path = "👯️copy-elements/🦀️.rs"]
+pub mod copy_elements;
+#[path = "🔀️mirror-elements/🦀️.rs"]
+pub mod mirror_elements;
+#[path = "💠️array-elements/🦀️.rs"]
+pub mod array_elements;
+#[path = "📋️align-elements/🦀️.rs"]
+pub mod align_elements;
+#[path = "🧶️offset-wall/🦀️.rs"]
+pub mod offset_wall;
+#[path = "🔪️trim-extend-wall/🦀️.rs"]
+pub mod trim_extend_wall;
+#[path = "🍰️split-slab/🦀️.rs"]
+pub mod split_slab;
+#[path = "🥖️split-beam/🦀️.rs"]
+pub mod split_beam;
+#[path = "📄️create-sheet/🦀️.rs"]
+pub mod create_sheet;
+#[path = "📑️set-sheet/🦀️.rs"]
+pub mod set_sheet;
+#[path = "📒️delete-sheet/🦀️.rs"]
+pub mod delete_sheet;
+#[path = "📓️create-viewport/🦀️.rs"]
+pub mod create_viewport;
+#[path = "📔️set-viewport/🦀️.rs"]
+pub mod set_viewport;
+#[path = "📕️delete-viewport/🦀️.rs"]
+pub mod delete_viewport;
+#[path = "📖️create-sheet-revision/🦀️.rs"]
+pub mod create_sheet_revision;
+#[path = "📗️set-sheet-revision/🦀️.rs"]
+pub mod set_sheet_revision;
+#[path = "📘️delete-sheet-revision/🦀️.rs"]
+pub mod delete_sheet_revision;
+#[path = "🪝️set-beam-axis/🦀️.rs"]
+pub mod set_beam_axis;
+#[path = "🗽️set-column-tilt/🦀️.rs"]
+pub mod set_column_tilt;
+#[path = "🏟️create-curtain-wall-type/🦀️.rs"]
+pub mod create_curtain_wall_type;
+#[path = "🏤️set-curtain-wall-type/🦀️.rs"]
+pub mod set_curtain_wall_type;
+#[path = "🏥️delete-curtain-wall-type/🦀️.rs"]
+pub mod delete_curtain_wall_type;
+#[path = "🏦️set-curtain-wall-type-of/🦀️.rs"]
+pub mod set_curtain_wall_type_of;
+#[path = "🏧️set-curtain-wall-grid/🦀️.rs"]
+pub mod set_curtain_wall_grid;
+#[path = "🏨️create-curtain-panel-override/🦀️.rs"]
+pub mod create_curtain_panel_override;
+#[path = "🏩️set-curtain-panel-override/🦀️.rs"]
+pub mod set_curtain_panel_override;
+#[path = "🏪️delete-curtain-panel-override/🦀️.rs"]
+pub mod delete_curtain_panel_override;
+#[path = "📐️set-beam/🦀️.rs"]
+pub mod set_beam;
+#[path = "🔆️set-curtain-wall/🦀️.rs"]
+pub mod set_curtain_wall;
+#[path = "🏬️create-curtain-wall/🦀️.rs"]
+pub mod create_curtain_wall;
+#[path = "🧰️create-property-template/🦀️.rs"]
+pub mod create_property_template;
+#[path = "🛠️set-property-template/🦀️.rs"]
+pub mod set_property_template;
+#[path = "🗜️delete-property-template/🦀️.rs"]
+pub mod delete_property_template;
+#[path = "📚️create-classification-system/🦀️.rs"]
+pub mod create_classification_system;
+#[path = "🔏️set-classification-system/🦀️.rs"]
+pub mod set_classification_system;
+#[path = "🔐️delete-classification-system/🦀️.rs"]
+pub mod delete_classification_system;
+#[path = "🧩️create-family/🦀️.rs"]
+pub mod create_family;
+#[path = "🪅️delete-family/🦀️.rs"]
+pub mod delete_family;
+#[path = "🪆️set-family/🦀️.rs"]
+pub mod set_family;
+#[path = "🔡️set-family-parameter/🦀️.rs"]
+pub mod set_family_parameter;
+#[path = "🔠️remove-family-parameter/🦀️.rs"]
+pub mod remove_family_parameter;
+#[path = "🔶️create-family-solid/🦀️.rs"]
+pub mod create_family_solid;
+#[path = "🔹️delete-family-solid/🦀️.rs"]
+pub mod delete_family_solid;
+#[path = "📦️set-family-solid/🦀️.rs"]
+pub mod set_family_solid;
+#[path = "🪛️create-wall-sweep/🦀️.rs"]
+pub mod create_wall_sweep;
+#[path = "🪠️set-wall-sweep/🦀️.rs"]
+pub mod set_wall_sweep;
+#[path = "🪡️delete-wall-sweep/🦀️.rs"]
+pub mod delete_wall_sweep;
+#[path = "🪔️set-wall-base-slab/🦀️.rs"]
+pub mod set_wall_base_slab;
+#[path = "🦴️create-support/🦀️.rs"]
+pub mod create_support;
+#[path = "🦴️set-support/🦀️.rs"]
+pub mod set_support;
+#[path = "🦴️delete-support/🦀️.rs"]
+pub mod delete_support;
+#[path = "🦴️create-load-case/🦀️.rs"]
+pub mod create_load_case;
+#[path = "🦴️set-load-case/🦀️.rs"]
+pub mod set_load_case;
+#[path = "🦴️delete-load-case/🦀️.rs"]
+pub mod delete_load_case;
+#[path = "🦴️create-load/🦀️.rs"]
+pub mod create_load;
+#[path = "🦴️set-load/🦀️.rs"]
+pub mod set_load;
+#[path = "🦴️delete-load/🦀️.rs"]
+pub mod delete_load;
+#[path = "🧭️create-option-group/🦀️.rs"]
+pub mod create_option_group;
+#[path = "🧭️set-option-group/🦀️.rs"]
+pub mod set_option_group;
+#[path = "🧭️delete-option-group/🦀️.rs"]
+pub mod delete_option_group;
+#[path = "🧭️create-design-option/🦀️.rs"]
+pub mod create_design_option;
+#[path = "🧭️set-design-option/🦀️.rs"]
+pub mod set_design_option;
+#[path = "🧭️delete-design-option/🦀️.rs"]
+pub mod delete_design_option;
+#[path = "🧭️create-workset/🦀️.rs"]
+pub mod create_workset;
+#[path = "🧭️set-workset/🦀️.rs"]
+pub mod set_workset;
+#[path = "🧭️delete-workset/🦀️.rs"]
+pub mod delete_workset;
+#[path = "🧭️set-element-option/🦀️.rs"]
+pub mod set_element_option;
+#[path = "🧭️set-element-workset/🦀️.rs"]
+pub mod set_element_workset;
+#[path = "🚨️create-clash-set/🦀️.rs"]
+pub mod create_clash_set;
+#[path = "🚥️set-clash-set/🦀️.rs"]
+pub mod set_clash_set;
+#[path = "💢️delete-clash-set/🦀️.rs"]
+pub mod delete_clash_set;
+#[path = "⚖️create-rule/🦀️.rs"]
+pub mod create_rule;
+#[path = "🚦️set-rule/🦀️.rs"]
+pub mod set_rule;
+#[path = "❗️delete-rule/🦀️.rs"]
+pub mod delete_rule;
+#[path = "🚩️create-issue/🦀️.rs"]
+pub mod create_issue;
+#[path = "🏁️set-issue/🦀️.rs"]
+pub mod set_issue;
+#[path = "📢️delete-issue/🦀️.rs"]
+pub mod delete_issue;
+#[path = "💬️create-issue-comment/🦀️.rs"]
+pub mod create_issue_comment;
+#[path = "🗨️set-issue-comment/🦀️.rs"]
+pub mod set_issue_comment;
+#[path = "💭️delete-issue-comment/🦀️.rs"]
+pub mod delete_issue_comment;
+#[path = "🛏️create-component/🦀️.rs"]
+pub mod create_component;
+#[path = "🛁️set-component/🦀️.rs"]
+pub mod set_component;
+#[path = "🚽️delete-component/🦀️.rs"]
+pub mod delete_component;
+#[path = "🚿️set-component-override/🦀️.rs"]
+pub mod set_component_override;
+#[path = "🚰️remove-component-override/🦀️.rs"]
+pub mod remove_component_override;
+#[path = "💧️create-mep-element/🦀️.rs"]
+pub mod create_mep_element;
+#[path = "💨️set-mep-element/🦀️.rs"]
+pub mod set_mep_element;
+#[path = "💦️delete-mep-element/🦀️.rs"]
+pub mod delete_mep_element;
+#[path = "🌡️set-space-conditions/🦀️.rs"]
+pub mod set_space_conditions;
+#[path = "🥶️remove-space-conditions/🦀️.rs"]
+pub mod remove_space_conditions;
+#[path = "♨️set-type-thermal-data/🦀️.rs"]
+pub mod set_type_thermal_data;
+//#endregion 🔖️Leaves
+//#endregion 🧩️Modules

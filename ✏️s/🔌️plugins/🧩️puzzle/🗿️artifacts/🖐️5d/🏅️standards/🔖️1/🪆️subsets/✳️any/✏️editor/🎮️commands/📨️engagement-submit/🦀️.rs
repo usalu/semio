@@ -2,8 +2,8 @@
 
 use crate::editor::puzzle5d::commands::{focus_selection, rotate_selection, scale_selection, set_fill_count, translate_selection};
 use crate::editor::puzzle5d::modes::edit::tools::fill as fill_tool;
-use crate::editor::puzzle5d::modes::edit::windows::world3d;
-use crate::editor::puzzle5d::{Puzzle5dActionCtx, PUZZLE5D_DEFAULT_UTILITY};
+use crate::editor::puzzle5d::interaction::Puzzle5dActionCtx;
+use crate::editor::puzzle5d::entities::PUZZLE5D_DEFAULT_UTILITY;
 
 use semio_framework_pack_json::Value;
 use semio_framework_plugin::kernel::Effect;
@@ -40,7 +40,7 @@ pub fn engagement_submit(ctx: &mut Puzzle5dActionCtx<'_>, args: Option<&Value>) 
                 delay_ms: 0,
             });
         }
-        "select" => ctx.scene.active_utility = if ctx.window_kind == world3d::WINDOW_KIND_ID { world3d::utilities::transform::UTILITY_ID.into() } else { PUZZLE5D_DEFAULT_UTILITY.into() },
+        "select" => ctx.scene.active_utility = if ctx.window_kind == crate::editor::puzzle5d::entities::PUZZLE5D_WORLD_WINDOW_KIND_ID { crate::editor::puzzle5d::modes::edit::windows::world3d::utilities::transform::UTILITY_ID.into() } else { PUZZLE5D_DEFAULT_UTILITY.into() },
         "brush" => ctx.scene.active_utility = "brush".into(),
         // 🧹️ Empties the framework-owned `vortex` domain through the one sanctioned reducer channel, never by
         // poking selection state this app does not own.

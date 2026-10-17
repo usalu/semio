@@ -1,18 +1,13 @@
 //! ⚖️ GLTF mass-distribution indicators.
 
-#[path = "🎯️centroid/🦀️.rs"]
-pub mod centroid;
-#[path = "🧮️inertia-tensor/🦀️.rs"]
-pub mod inertia_tensor;
-#[path = "🌀️moments-of-inertia/🦀️.rs"]
-pub mod moments_of_inertia;
-#[path = "🧭️principal-axes/🦀️.rs"]
-pub mod principal_axes;
-#[path = "🖼️principal-frame/🦀️.rs"]
-pub mod principal_frame;
+pub use semio_s_artifact_stdio_gltf_inferences_centroid::standards::v2_0::subsets::any::schema::inferences::mass_distribution::centroid;
+pub use semio_s_artifact_stdio_gltf_inferences_clearance::standards::v2_0::subsets::any::schema::inferences::mass_distribution::inertia_tensor;
+pub use semio_s_artifact_stdio_gltf_inferences_centroid::standards::v2_0::subsets::any::schema::inferences::mass_distribution::moments_of_inertia;
+pub use semio_s_artifact_stdio_gltf_inferences_centroid::standards::v2_0::subsets::any::schema::inferences::mass_distribution::principal_axes;
+pub use semio_s_artifact_stdio_gltf_inferences_centroid::standards::v2_0::subsets::any::schema::inferences::mass_distribution::principal_frame;
 
-use super::super::modules::measurement_contracts::*;
-use super::geometry_core::GltfGeometryContext;
+use crate::standards::v2_0::subsets::any::schema::modules::measurement_contracts::*;
+use crate::standards::v2_0::subsets::any::schema::inferences::geometry_core::GltfGeometryContext;
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]

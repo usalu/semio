@@ -1,0 +1,33 @@
+[package]
+workspace = "../../../../../../../../.."
+name = "semio-s-artifact-draw-drawing-model-tests"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Companion test crate of semio-s-artifact-draw-drawing-model: the unit laws of the drawing model's fill, shape, affine, inference and snapshot-codec modules"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dev-dependencies]
+semio-framework-async-macros = { workspace = true }
+semio-framework-os-kernel = { workspace = true, features = ["mutation-testing", "protocol-laws"] }
+semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
+semio-framework-schema = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-s-artifact-draw-drawing-geometry = { workspace = true, features = ["testkit"] }
+semio-s-artifact-draw-drawing-model = { workspace = true, features = ["testkit"] }
+semio-s-artifact-draw-drawing-mutations = { workspace = true, features = ["testkit"] }
+semio-s-artifact-draw-drawing-read = { workspace = true }
+semio-s-artifact-draw-drawing-scene = { workspace = true, features = ["testkit"] }
+semio-s-artifact-draw-drawing-structure = { workspace = true, features = ["testkit"] }
+semio-s-artifact-draw-drawing-style = { workspace = true, features = ["testkit"] }
+semio-s-artifact-draw-drawing-transform = { workspace = true, features = ["testkit"] }
+semio-s-artifact-draw-drawing-write = { workspace = true }
+serde_json = { workspace = true }

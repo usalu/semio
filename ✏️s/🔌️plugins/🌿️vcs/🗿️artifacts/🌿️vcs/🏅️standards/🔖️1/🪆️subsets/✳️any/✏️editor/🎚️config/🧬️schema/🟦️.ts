@@ -21,6 +21,10 @@ type vcsVcsConfigGuardSizeBounds = { readonly minItems?: number; readonly maxIte
 
 export const vcsVcsConfigGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : vcsVcsConfigGuardReject(at, "value is not an object");
+export const vcsVcsConfigGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) vcsVcsConfigGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const vcsVcsConfigGuardArray = (value: unknown, at: string, bounds: vcsVcsConfigGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return vcsVcsConfigGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) vcsVcsConfigGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -51,5 +55,5 @@ export const vcsVcsConfigGuardConstant = <T extends string | number | boolean>(v
 //#endregion 🚪️Parsers
 
 export function parseVcsDemoConfig(value: unknown, at = "$"): VcsDemoConfig {
-  return vcsVcsConfigGuardObject(value, `${at}`);
+  return vcsVcsConfigGuardClosed(vcsVcsConfigGuardObject(value, `${at}`), `${at}`, []);
 }

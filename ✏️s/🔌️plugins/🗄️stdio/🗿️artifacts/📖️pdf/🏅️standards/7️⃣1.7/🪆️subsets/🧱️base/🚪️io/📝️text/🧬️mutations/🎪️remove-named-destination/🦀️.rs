@@ -3,7 +3,7 @@
 pub const OPCODE: &str = "remove-named-destination";
 pub const TEXT_OPCODE: &str = OPCODE;
 
-use crate::standards::v1_7::subsets::base::schema::mutations::RemoveNamedDestination;
+use crate::standards::v1_7::subsets::base::schema::mutations::remove_named_destination::RemoveNamedDestination;
 
 /// 🖨️ Prints this direct payload through its schema-derived JSON representation.
 pub fn print(payload: &RemoveNamedDestination) -> Result<String, String> {

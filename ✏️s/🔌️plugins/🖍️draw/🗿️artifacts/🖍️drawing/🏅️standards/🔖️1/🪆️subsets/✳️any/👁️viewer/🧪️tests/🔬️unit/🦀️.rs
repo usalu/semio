@@ -54,7 +54,6 @@ async fn drawing_viewer_restores_edited_archive_and_preserves_history() {
             if snapshot.layers.len() != count { return Err(format!("{action} lost the pre-switch rectangle history")); }
             let actual_name=semio_s_artifact_draw_drawing_model::find_drawing_layer(&snapshot, &created_id).map(|layer| semio_s_artifact_draw_drawing_model::layer_base(layer).name.to_string_owner());
             if actual_name.as_deref() != name { return Err(format!("{action} lost the pre-switch rectangle name: expected {name:?}, received {actual_name:?}")); }
-            eprintln!("[DEBUG] Restored drawing history actor={} action={action} layers={count} name={actual_name:?}",row["actor"]);
         }
         Ok(())
     }.await;

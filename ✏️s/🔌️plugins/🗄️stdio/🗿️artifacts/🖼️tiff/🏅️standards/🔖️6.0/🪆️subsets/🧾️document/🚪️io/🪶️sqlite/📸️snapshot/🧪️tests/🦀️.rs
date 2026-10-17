@@ -1,3 +1,11 @@
+use crate::{standards::v6_0::subsets::document::schema::snapshot::TiffWord64, standards::v6_0::subsets::document::schema::snapshot::TiffSnapshot, standards::v6_0::subsets::document::schema::snapshot::TiffValues};
+use semio_framework_test_fixtures::fixture_text;
+#[allow(unused_imports)]
+use crate::{standards::v6_0::subsets::document::schema::snapshot::TiffBinary32, standards::v6_0::subsets::document::schema::snapshot::TiffIfd, standards::v6_0::subsets::document::schema::snapshot::TiffSampleBlock, standards::v6_0::subsets::document::schema::snapshot::TiffTag, standards::v6_0::subsets::document::schema::snapshot::TiffFieldType};
+#[allow(unused_imports)]
+use semio_framework_os_kernel::{sqlite_snapshot::artifact::Cell, sqlite_snapshot::artifact::RowWriter, sqlite_snapshot::artifact::FloatColumn, sqlite_snapshot::artifact::read_binary32, sqlite_snapshot::artifact::validate_ieee754_row, sqlite_snapshot::artifact::reconstruct_text, sqlite_snapshot::artifact::reconstruct_blob};
+#[allow(unused_imports)]
+use semio_framework_os_kernel::io_schema::IoError;
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v6_0::subsets::document::io::sqlite::snapshot::*;
 use semio_framework_os_kernel::{sqlite_snapshot::*, os_store::serialization::ArtifactSqliteSnapshotHost};
@@ -57,7 +65,6 @@ fn sqlite_snapshot_tiff_declared_native_factory_matches_live_protocol() {
     let declared: serde_json::Value = serde_json::from_str(crate::ARTIFACT_DEFINITION_SCHEMA).expect("TIFF definition");
     let binding = &declared["codecs"][0]["native_factory"];
     let hash: String = codec.pack_schema_hash.iter().map(|byte| format!("{byte:02x}")).collect();
-    eprintln!("[DEBUG] TIFF actual native factory={} artifact={} kind={} schema={} extension={} pack_hash={} declared_binding={}", factory.id, factory.artifact, kind.id, codec.schema, codec.extension, hash, binding);
     let protocol = include_bytes!("../../../💾️binary/📸️snapshot/📡️.protocol.semio");
     let independent = bun_oracle(protocol, r#"import{createHash}from'node:crypto';await Bun.write(Bun.stdout,createHash('sha256').update(new Uint8Array(await Bun.stdin.arrayBuffer())).digest('hex'));"#);
     assert_eq!(hash, String::from_utf8(independent).expect("independent protocol hash"));
@@ -66,7 +73,7 @@ fn sqlite_snapshot_tiff_declared_native_factory_matches_live_protocol() {
 
 #[test]
 fn sqlite_snapshot_tiff_erased_native_preserves_complete_custom_owner() {
-    let neutral: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🧾️native-owner/🔣️.json")).expect("closed neutral owner");
+    let neutral: serde_json::Value = serde_json::from_str(fixture_text!("../../🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🧾️native-owner/🔣️.json")).expect("closed neutral owner");
     let snapshot:TiffSnapshot=semio_framework_pack_json::from_json_str(&neutral.to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.tiff".into(), standard: "6.0".into(), subset: "*".into() };
     let codec = <TiffSnapshot as semio_framework_os_kernel::os_store::ArtifactSqliteSnapshotOperations>::sqlite_codec();
@@ -97,17 +104,14 @@ fn ordinary_and_controlled_initial_record_pack_body_diagnostic() {
     let controlled = pack_rt::encode_document_controlled(&paid_spec, &paid_record, &options, &mut native).unwrap();
     for (label,bytes) in [("record", &record_join),("spec", &spec_join),("controlled", &controlled)] {
         let first = original.iter().zip(bytes.iter()).position(|(left,right)|left != right);
-        eprintln!("[DEBUG] tiff body {label} original={} candidate={} first={first:?}",original.len(),bytes.len());
     }
     let original_decoded = pack_rt::decode_document(&original,&original_spec,&pack_rt::DecodeOptions::default()).unwrap().0;
     let controlled_decoded = pack_rt::decode_document(&controlled,&original_spec,&pack_rt::DecodeOptions::default()).unwrap().0;
-    eprintln!("[DEBUG] tiff record equal={} decoded equal={} original={:?} controlled={:?}",original_record == paid_record,original_decoded == controlled_decoded,original_record,paid_record);
     assert_eq!(original_record,paid_record,"real initial owner RecordValue changed");
     assert_eq!(original,record_join,"paid RecordValue changes ordinary body");
     assert_eq!(original,spec_join,"paid RecordSpec changes ordinary body");
     assert_eq!(original,controlled,"controlled encoder changes exact body");
     let shipped = semio_framework_os_kernel::pack_rt::encode_document(&original_spec,&original_record,&semio_framework_os_kernel::PackEncodeOptions::default()).unwrap();
-    eprintln!("[DEBUG] actual shipped Record authority original={} core={} first={:?}",shipped.len(),original.len(),shipped.iter().zip(&original).position(|(left,right)|left!=right));
     assert_eq!(shipped,original,"actual shipped ArtifactPack runtime must use the same intrinsic Record authority as SQLite");
 }
 
@@ -117,12 +121,12 @@ fn norm_complete_source(case:&serde_json::Value)->TiffSnapshot{semio_framework_p
 }
 #[test]
 fn sqlite_snapshot_tiff_complete_independent_native_semantic_limits(){
- use store::{os_store::serialization::ArtifactSqliteSnapshotHost as _,sqlite_snapshot::*};let contract:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🎛️semantic.json")).unwrap();
+ use store::{os_store::serialization::ArtifactSqliteSnapshotHost as _,sqlite_snapshot::*};let contract:serde_json::Value=serde_json::from_str(fixture_text!("../../🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🎛️semantic.json")).unwrap();
  for case in contract["cases"].as_array().unwrap(){let source=norm_complete_source(case);let extent=norm_independent_complete_extent(&source);assert_eq!(extent["rows"],case["rows"]);assert_eq!(extent["valueBytes"],case["valueBytes"]);assert_eq!(extent["schemaBytes"],contract["schemaBytes"]);assert_eq!(extent["tableWidths"],contract["tableWidths"]);let limits=SqliteDatabaseLimits{max_rows:case["rows"].as_u64().unwrap()as usize,max_value_bytes:case["valueBytes"].as_u64().unwrap()as usize,max_schema_bytes:contract["schemaBytes"].as_u64().unwrap()as usize,max_tables:17,max_columns:8,..SqliteDatabaseLimits::default()};let database=source.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap();assert_eq!(TiffSnapshot::from_sqlite_database(&database,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap(),source);
   for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{source.preflight_sqlite_snapshot_encoding(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap();let payload=semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| source.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,limits), native_owner)).unwrap();assert_eq!(semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| TiffSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,limits), native_owner)).unwrap(),source);
    for short in[SqliteDatabaseLimits{max_rows:limits.max_rows-1,..limits},SqliteDatabaseLimits{max_value_bytes:limits.max_value_bytes-1,..limits},SqliteDatabaseLimits{max_schema_bytes:limits.max_schema_bytes-1,..limits},SqliteDatabaseLimits{max_tables:16,..limits},SqliteDatabaseLimits{max_columns:7,..limits}]{assert!(source.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,short)).is_err(),"relational copied limits {short:?}");assert!(TiffSnapshot::from_sqlite_database(&database,&mut SqliteSnapshotControl::new(&mut |_|true,short)).is_err(),"reconstruct copied limits {short:?}");assert!(source.preflight_sqlite_snapshot_encoding(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,short)).is_err(),"preflight copied limits {encoding:?} {short:?}");assert!(semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| source.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,short), native_owner)).is_err(),"encoder copied limits {encoding:?} {short:?}");assert!(semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| TiffSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,short), native_owner)).is_err(),"decoder copied limits {encoding:?} {short:?}");}
   }
- }eprintln!("[DEBUG] TIFF independently measured complete copied native semantic limits");
+ }
 }
 #[test]
 fn sqlite_snapshot_tiff_complete_independent_copied_columns_admission(){

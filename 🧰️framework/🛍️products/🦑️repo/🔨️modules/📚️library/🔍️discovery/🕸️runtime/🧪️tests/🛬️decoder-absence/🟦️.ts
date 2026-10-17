@@ -33,5 +33,4 @@ test("the original neutral decoder closure excludes products, S, Hub and fixture
   expect((graph.edges as typeof independent).toSorted((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b)))).toEqual(independent.toSorted((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b))));
   const fixture = decoder + "/🧪️tests/🧫️fixtures/🔣️.json";
   expect(inspectRuntimeGraphV1([fixture], { read: (path: string) => readFileSync(resolve(root, path), "utf8") }).findings.map((row: {code: string}) => row.code)).toEqual(["runtime-fixture-edge"]);
-  console.log("[DEBUG] Original neutral decoder closure nodes=" + graph.nodes.length + " edges=" + graph.edges.length + " TypeScriptImportOracle=true lexicalRealSpecializations=0 fixtureRuntimeEdges=0 actualFixtureRefused=true SourceCopies=0");
 });

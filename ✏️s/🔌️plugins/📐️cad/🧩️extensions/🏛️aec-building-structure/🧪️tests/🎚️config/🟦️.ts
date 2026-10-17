@@ -1,7 +1,7 @@
 // #region 🔌️Adapters
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { defineConfig } from "vitest/config";
+import { defineOwnedTestConfig } from "../../../../../../../🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🛠️build-tooling/🟦️.ts";
 
 const testRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 // #endregion 🔌️Adapters
@@ -9,7 +9,7 @@ const testRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const configDir = resolve(dirname(fileURLToPath(import.meta.url)), "../../📦️packages/🟦️typescript");
 const root = resolve(configDir, "../.."); // extension root
 
-export default defineConfig({
+export default defineOwnedTestConfig({
   root: testRoot,
   test: {
     root: testRoot,

@@ -1,0 +1,96 @@
+[
+  {
+    "name": "origin",
+    "point": [
+      0,
+      0,
+      0
+    ],
+    "precision": 1,
+    "expected": [
+      "0",
+      "0",
+      "0"
+    ]
+  },
+  {
+    "name": "half-away-from-zero",
+    "point": [
+      0.5,
+      -0.5,
+      1.5
+    ],
+    "precision": 1,
+    "expected": [
+      "1",
+      "-1",
+      "2"
+    ]
+  },
+  {
+    "name": "within-cell",
+    "point": [
+      0.49,
+      -0.49,
+      0
+    ],
+    "precision": 1,
+    "expected": [
+      "0",
+      "0",
+      "0"
+    ]
+  },
+  {
+    "name": "f32-alias",
+    "point": [
+      1.00000001,
+      -1.00000001,
+      0
+    ],
+    "precision": 0.001,
+    "expected": [
+      "1000",
+      "-1000",
+      "0"
+    ]
+  },
+  {
+    "name": "signed-zero",
+    "point": [
+      -0.0,
+      0,
+      -0.0
+    ],
+    "precision": 1,
+    "expected": [
+      "0",
+      "0",
+      "0"
+    ]
+  },
+  {
+    "name": "minimum-grid",
+    "point": [
+      1e-09,
+      -1e-09,
+      0
+    ],
+    "precision": 1e-12,
+    "expected": [
+      "1",
+      "-1",
+      "0"
+    ]
+  },
+  {
+    "name": "range-refusal",
+    "point": [
+      1e+30,
+      0,
+      0
+    ],
+    "precision": 1e-09,
+    "expected": null
+  }
+]

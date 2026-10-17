@@ -36,27 +36,24 @@ import {
   uiDataLabel
 } from "@semio-tech/ui-react";
 import { ShellFaultBoundary } from "../../🐚️Shell/🟦️.tsx";
-import { clearPendingWorldProjection } from "../../🌐️World3dHost/🟦️.tsx";
+import { clearPendingWorldProjection } from "../../🌐️World3dHost/🪟️window-view-store/🟦️.tsx";
 import { wireLabel } from "../../🗣️Interpreter/🌉️scene-host-contract/🟦️.ts";
 import { mapContextMenuSpecs } from "../../🗣️Interpreter/🖱️surface-menu/🟦️.ts";
+import { PANEL_TAB_BAR_HOSTS } from "../../🛠️ShellHelpers/🔩️plumbing/🟦️.ts";
+import { actionCategoryId } from "../../🛠️ShellHelpers/🪟️window-panes/🟦️.tsx";
+import { actionRequiresStagedForm } from "../../🛠️ShellHelpers/🪟️window-panes/📝️staged-args/🟦️.tsx";
 import {
-  PANEL_TAB_BAR_HOSTS,
-  actionCategoryId,
-  actionRequiresStagedForm,
   appBreadcrumb,
-  buildSpacePanelState,
-  toolPanelTreeContentRevision,
-  filterDefinitionsForRole,
-  openArtifactWithText,
-  shellLabelTextV1,
-  resolveAppLabel,
   resolveAppBreadcrumb,
   resolveArtifactByAppId,
   resolveFrameworkLayoutSeed,
-  frameworkLayoutDeclaredInstances,
-  resolveManifestLabel,
-  shellLabel
-} from "../../🛠️ShellHelpers/🟦️.tsx";
+  frameworkLayoutDeclaredInstances
+} from "../../🛠️ShellHelpers/🛣️route-and-chrome/🟦️.tsx";
+import { buildSpacePanelState } from "../../🛠️ShellHelpers/📌️panel/🟦️.ts";
+import { toolPanelTreeContentRevision } from "../../🛠️ShellHelpers/🎛️command-registry/🟦️.tsx";
+import { filterDefinitionsForRole } from "../../🛠️ShellHelpers/🧾️transfer-checkin-tutorial/🟦️.ts";
+import { openArtifactWithText, resolveAppLabel, resolveManifestLabel, shellLabel } from "../../🛠️ShellHelpers/🏷️labels/🟦️.tsx";
+import { shellLabelTextV1 } from "../../🛠️ShellHelpers/🔩️plumbing/🆔️action-ids/🟦️.ts";
 // #endregion 🔌️Adapters
 import { PluginRecoveryPanel, ShellRouteNotFoundPage } from "../../📌️ChromePanels/🟦️.tsx";
 import { HubConnectionIndicator } from "../../🔄️ShellSync/🟦️.tsx";

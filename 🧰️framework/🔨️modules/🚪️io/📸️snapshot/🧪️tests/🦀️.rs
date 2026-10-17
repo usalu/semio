@@ -17,10 +17,9 @@ fn neutral_snapshot_contracts_encode_firstparty_values_and_interaction_state_wit
   assert_eq!(serde_json::Value::from(restored),*reference);
  }
  for reference in fixture["interactionCases"].as_array().unwrap(){
-  let state=protocol::InteractionState::from_value(DslValue::from(reference)).unwrap();
+  let state=semio_framework_replication_interaction::InteractionState::from_value(DslValue::from(reference)).unwrap();
   assert_eq!(serde_json::to_value(&state).unwrap(),*reference);
-  let bytes=state.encode_pack();let decoded=protocol::InteractionState::decode_pack(&bytes).unwrap();
+  let bytes=state.encode_pack();let decoded=semio_framework_replication_interaction::InteractionState::decode_pack(&bytes).unwrap();
   assert_eq!(serde_json::Value::from(decoded.to_value()),*reference);
  }
- eprintln!("[DEBUG] neutral Pack consumer exercises value, InteractionState and controlled native text with serde_json oracle and zero OS dependencies");
 }

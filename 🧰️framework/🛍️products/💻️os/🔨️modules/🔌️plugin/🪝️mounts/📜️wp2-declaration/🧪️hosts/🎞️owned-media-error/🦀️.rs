@@ -1,66 +1,23 @@
 //! 🎞️ Test host of `app_contract`: runs `🔬️app-owned-media-error` in the facade, where the names it uses are in scope.
 
-use semio_framework::history_edit::HISTORY_EDIT_ACTION_IDS;
-use crate::window_kits::AppActionRegistry;
-use crate::MountedOwnerPhaseV1;
-use semio_framework_plugin_ownership::transient_publication::bounded_transient_store_disposer;
-use super::window_config::WindowConfigOwnerRegistry;
-use super::window_transient::WindowTransientOwnerRegistry;
 use semio_framework_value::DslValue;
-use semio_framework::kernel::UiDirtyScope;
-use semio_framework::AppDefinition;
-use semio_framework::{kernel::{ActorId, ClipboardError, ClipboardFragment, Effect, PastePlacement}, ActionArgDef, ActionDefinition, ActionKind, AppIo, ArgPresentation, CapabilityAudience, ConfigSpec, Fault, FaultCode, FaultOrigin, InteractionVerb, MediaForm, MediaPortSpec, ViewModel, REVERT_TO_COMMAND_ACTION_ID, OPEN_ARTIFACT_FILE_ACTION_ID, SAVE_ARTIFACT_FILE_ACTION_ID};
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework::MediaForm;
 use semio_framework_ui_contract::*;
-use semio_framework_ui_runtime::ComponentTree;
 use semio_framework_value_derive::{FromValue, ToValue};
-use std::collections::HashMap;
 use pack::snapshot::ArtifactPack;
-use store::{os_store::store_schema::ArtifactEnvelope, ArtifactStore, ConfigStore};
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_ui_layout::layout::ContextMenuItemSpec;
-use semio_framework_ui_layout::layout::ContextMenuRequest;
-use semio_framework_ui_layout::layout::WindowEngagement;
-use semio_framework_ui_layout::layout::WindowMeasure;
 use semio_framework::MediaWireFormat;
 use semio_framework::{Media, MediaError, MediaFingerprint, MediaPayload};
 use semio_framework::{MediaClass, MediaType};
-use semio_framework_artifact_reference::Dialect;
-use semio_framework_value::{RetirementDemand, ValueError, retained_clone::{RetainedCloneGrant, RetainedCloneProgress}};
-use semio_framework::AppRole;
-use crate::app_emission::Emit;
-use crate::app_emission::EphemeralEmit;
-use crate::app_emission::HostEvent;
-use crate::app_views::AppRenderOperationContext;
-use crate::app_views::ArtifactView;
-use crate::app_views::ConfigView;
-use crate::app_views::DraftView;
-use crate::app_views::InteractionView;
-use crate::app_views::PresenceView;
-use crate::window_transient::TransientView;
-use semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep;
-use crate::media_contract::ArtifactMediaExportJobRequest;
-use crate::tool_contract::ArtifactReservedToolJob;
-use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
-use semio_framework_plugin_ownership::store_lifecycle::ArtifactDisposal;
-use semio_framework_plugin_ownership::store_lifecycle::ArtifactInitializationAdmission;
-use crate::app_emission::ArtifactMutationOutcome;
-use semio_framework_plugin_ownership::store_lifecycle::bounded_config_store_disposer;
-use semio_framework_plugin_ownership::store_lifecycle::bounded_document_store_disposer;
-use semio_framework_plugin_ownership::store_lifecycle::bounded_document_store_initialization_job;
-use crate::tool_contract::ArtifactBoundedFirstStepProof;
-use crate::tool_contract::ArtifactInstanceOperationOwner;
-use crate::tool_contract::ArtifactInstanceOperationOwnerHandle;
-use crate::tool_contract::ArtifactOwnedToolJobRequest;
-use crate::tool_contract::ArtifactReservedToolJobRequest;
-use crate::tool_contract::ArtifactToolCompletionValue;
-use crate::tool_contract::ArtifactToolFactoryRegistry;
-use crate::tool_contract::EmptyArtifactInstanceOperationOwner;
-use crate::tool_run_contract::ToolRunJob;
-use crate::tool_run_contract::ToolRunJobRequest;
-use crate::tool_run_contract::ToolRunRetargetableJob;
-use crate::window_kits::merge_ui_values;
-use crate::window_surface::UiAssemblyResult;
+use semio_framework_value::ValueError;
+use semio_framework_value::retained_clone::RetainedCloneGrant;
+use semio_framework_plugin_decl_emission::Emit;
+use semio_framework_plugin_decl_views::tool_contract::ArtifactInstanceOperationOwner;
+use semio_framework_plugin_decl_views::tool_run_contract::ToolRunRetargetableJob;
 #[allow(unused_imports)]
-use crate::app_contract::*;
+use semio_framework_plugin_document_media::MediaArtifact;
+#[allow(unused_imports)]
+use semio_framework_plugin_decl_app::{MediaArtifactDescriptor, MediaArtifactError, media_type};
+#[allow(unused_imports)]
+#[cfg(test)]
+use semio_framework_plugin_document_media::{receive_media_artifact_fault, receive_media_output};
 include!("../../../../🧪️tests/🔬️app-owned-media-error/🦀️.rs");

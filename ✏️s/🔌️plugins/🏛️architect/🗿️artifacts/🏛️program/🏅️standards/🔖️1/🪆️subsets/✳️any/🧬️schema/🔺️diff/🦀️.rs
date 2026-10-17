@@ -910,6 +910,4 @@ impl DiffAlgebra<ProgramSnapshot> for ProgramDiff {
 }
 //#endregion 🔖️ProgramDiffAlgebra
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

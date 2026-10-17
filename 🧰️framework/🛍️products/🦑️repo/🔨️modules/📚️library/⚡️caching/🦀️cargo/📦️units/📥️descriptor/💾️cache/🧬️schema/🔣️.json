@@ -1,0 +1,113 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "Policy": {
+      "const": {
+        "maximumRetainedBytes": 1073741824,
+        "maximumRetainedNodes": 65536,
+        "maximumCatalogBytes": 16777216,
+        "maximumNodeBytes": 16777216
+      }
+    },
+    "Limits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maximumRetainedBytes",
+        "maximumRetainedNodes"
+      ],
+      "properties": {
+        "maximumRetainedBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1073741824
+        },
+        "maximumRetainedNodes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65536
+        }
+      }
+    },
+    "State": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "retainedBytes",
+        "retainedNodes",
+        "matches"
+      ],
+      "properties": {
+        "version": {
+          "const": 2
+        },
+        "retainedBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1099511627776
+        },
+        "retainedNodes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65536
+        },
+        "matches": {
+          "type": "array",
+          "maxItems": 65536,
+          "items": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": [
+              {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              },
+              {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 16777216
+              }
+            ],
+            "additionalItems": false
+          }
+        }
+      }
+    },
+    "Snapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "entries"
+      ],
+      "properties": {
+        "version": {
+          "const": 2
+        },
+        "entries": {
+          "type": "array",
+          "maxItems": 65536,
+          "items": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": [
+              {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              },
+              {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 16777216
+              }
+            ],
+            "additionalItems": false
+          }
+        }
+      }
+    }
+  }
+}

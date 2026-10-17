@@ -46,7 +46,6 @@ export class DocumentMountSingleFlightCheckScript extends BundleScript {
     for (const marker of ["_pool_use: Arc<semio_framework_async::WorkerPoolUse>", "spawn_with_pool_use", "pool.acquire_use()"] ) assert(mountedArtifact.includes(marker), `missing authority pool-use marker ${marker}`);
     for (const marker of ["_pool_use: std::sync::Arc<semio_framework_async::WorkerPoolUse>", "let pool_use = match pool.acquire_use()"] ) assert(mountedSync.includes(marker), `missing sync-hello pool-use marker ${marker}`);
     for (const law of ["database_worker_pool_use_blocks_early_shutdown_and_releases_at_terminal_ack", "database_worker_pool_use_is_admitted_before_the_first_storage_probe", "database_document_mount_hard_scheduler_fault_retains_nonrunnable_job_without_retry_timer"]) assert(engineLaws.includes(`fn ${law}(`), `missing mounted pool-use law ${law}`);
-    console.log(`[DEBUG] database-mounted-pool-use-independent-oracle: behavior-oracles=retained cases=${mountedPoolUse.cases.length} retained-source-owners=3`);
     for (const row of fixture.cases) {
       let activeGeneration: bigint | undefined;
       let waiters = 0;
@@ -523,7 +522,7 @@ export class ReopenStormCheckScript extends BundleScript {
     console.log(`[reopen-storm] throughput example: storm ${throughput.storm.documents}×${throughput.storm.batches}×${throughput.storm.batchEdits}, storm/serial ≤ ${throughput.bounds.stormToSerialRatioMax}`);
     const unclaimed = wanted.filter((name) => REOPEN_STORM_LAWS[name]!.claimed && !process.env[REOPEN_STORM_LAWS[name]!.claimed!]);
     if (unclaimed.length) throw new Error(`reopen-storm-check ${unclaimed.join(",")} needs the claimed shared server: run it under \`os-hub-ts backend run ${unclaimed[0]} -- …\``);
-    const { acceptanceCheckResult, publishAcceptanceCheckResult, runLawProcess } = await import("../../../../../🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/🟦️.ts");
+    const { acceptanceCheckResult, publishAcceptanceCheckResult, runLawProcess } = await import("@semio-tech/repo-test/acceptance/orchestration");
     const startedAt = new Date();
     const measured: Record<string, number | string | boolean> = {};
     const failed: string[] = [];

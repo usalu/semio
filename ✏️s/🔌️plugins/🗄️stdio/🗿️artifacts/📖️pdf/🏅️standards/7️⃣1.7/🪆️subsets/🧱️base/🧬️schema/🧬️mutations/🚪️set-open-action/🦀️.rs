@@ -1,6 +1,5 @@
 //! 🚪️ Authoritative PDF mutation payload, diff, inverse, and tests for `set-open-action`.
 
-use super::PdfMutation;
 use crate::standards::v1_7::subsets::base::schema::diff::{self, PdfDiff};
 use crate::standards::v1_7::subsets::base::schema::snapshot::*;
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
@@ -14,7 +13,10 @@ pub struct SetOpenAction {
     pub action: Option<PdfOpenAction>,
 }
 
-impl MutationKind<PdfSnapshot, PdfMutation> for SetOpenAction {
+impl<Op> MutationKind<PdfSnapshot, Op> for SetOpenAction
+where
+    Op: protocol::Mutation<PdfSnapshot, Diff = PdfDiff> + From<SetOpenAction>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "open-action", kind: "set-open-action", record: "Set" };
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
@@ -22,10 +24,10 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetOpenAction {
         MutationOutcome::new(diff::diff_set_open_action(base, self.action.clone()))
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
         let _ = base;
-        vec![PdfMutation::SetOpenAction(SetOpenAction { action: base.open_action.clone() })]
+        vec![Op::from(SetOpenAction { action: base.open_action.clone() })]
     
     })())
 }
@@ -42,8 +44,6 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetOpenAction {
 //#endregion 🔖️Mutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
 

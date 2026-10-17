@@ -24,7 +24,6 @@ fn paged_native_serde_and_sequence_ownership_match_neutral_shapes() {
             _ => {}
         }
     }
-    eprintln!("[DEBUG] paged native serde and owned iterator preserve neutral arrays/text");
 }
 
 #[test]

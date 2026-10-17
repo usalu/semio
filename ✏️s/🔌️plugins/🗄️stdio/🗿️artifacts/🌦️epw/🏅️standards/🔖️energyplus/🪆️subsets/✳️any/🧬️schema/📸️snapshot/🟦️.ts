@@ -60,6 +60,10 @@ type stdioEpwEnergyplusAnySnapshotGuardSizeBounds = { readonly minItems?: number
 
 export const stdioEpwEnergyplusAnySnapshotGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : stdioEpwEnergyplusAnySnapshotGuardReject(at, "value is not an object");
+export const stdioEpwEnergyplusAnySnapshotGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) stdioEpwEnergyplusAnySnapshotGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const stdioEpwEnergyplusAnySnapshotGuardArray = (value: unknown, at: string, bounds: stdioEpwEnergyplusAnySnapshotGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return stdioEpwEnergyplusAnySnapshotGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) stdioEpwEnergyplusAnySnapshotGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -91,7 +95,7 @@ export const stdioEpwEnergyplusAnySnapshotGuardConstant = <T extends string | nu
 //#endregion 🚪️Parsers
 
 export function parseEpwSnapshot(value: unknown, at = "$"): EpwSnapshot {
-  const row = stdioEpwEnergyplusAnySnapshotGuardObject(value, at);
+  const row = stdioEpwEnergyplusAnySnapshotGuardClosed(stdioEpwEnergyplusAnySnapshotGuardObject(value, at), at, ["schema", "location", "designConditions", "typicalExtremePeriods", "groundTemperatures", "holidaysDst", "comments1", "comments2", "dataPeriods", "records"]);
   return {
     schema: stdioEpwEnergyplusAnySnapshotGuardString(row["schema"], `${at}.schema`),
     location: parseEpwLocation(row["location"], `${at}.location`),
@@ -107,7 +111,7 @@ export function parseEpwSnapshot(value: unknown, at = "$"): EpwSnapshot {
 }
 
 export function parseEpwLocation(value: unknown, at = "$"): EpwLocation {
-  const row = stdioEpwEnergyplusAnySnapshotGuardObject(value, at);
+  const row = stdioEpwEnergyplusAnySnapshotGuardClosed(stdioEpwEnergyplusAnySnapshotGuardObject(value, at), at, ["city", "stateProvince", "country", "source", "wmo", "latitude", "longitude", "timeZone", "elevation"]);
   return {
     city: stdioEpwEnergyplusAnySnapshotGuardString(row["city"], `${at}.city`),
     stateProvince: stdioEpwEnergyplusAnySnapshotGuardString(row["stateProvince"], `${at}.stateProvince`),
@@ -122,7 +126,7 @@ export function parseEpwLocation(value: unknown, at = "$"): EpwLocation {
 }
 
 export function parseEpwDataPeriod(value: unknown, at = "$"): EpwDataPeriod {
-  const row = stdioEpwEnergyplusAnySnapshotGuardObject(value, at);
+  const row = stdioEpwEnergyplusAnySnapshotGuardClosed(stdioEpwEnergyplusAnySnapshotGuardObject(value, at), at, ["name", "startDayOfWeek", "startDate", "endDate"]);
   return {
     name: stdioEpwEnergyplusAnySnapshotGuardString(row["name"], `${at}.name`),
     startDayOfWeek: stdioEpwEnergyplusAnySnapshotGuardString(row["startDayOfWeek"], `${at}.startDayOfWeek`),
@@ -132,7 +136,7 @@ export function parseEpwDataPeriod(value: unknown, at = "$"): EpwDataPeriod {
 }
 
 export function parseEpwDataPeriods(value: unknown, at = "$"): EpwDataPeriods {
-  const row = stdioEpwEnergyplusAnySnapshotGuardObject(value, at);
+  const row = stdioEpwEnergyplusAnySnapshotGuardClosed(stdioEpwEnergyplusAnySnapshotGuardObject(value, at), at, ["recordsPerHour", "periods"]);
   return {
     recordsPerHour: stdioEpwEnergyplusAnySnapshotGuardInteger(row["recordsPerHour"], `${at}.recordsPerHour`, {"minimum": 0, "maximum": 4294967295}),
     periods: stdioEpwEnergyplusAnySnapshotGuardArray(row["periods"], `${at}.periods`).map((item, index) => parseEpwDataPeriod(item, `${at}.periods[${index}]`)),
@@ -140,7 +144,7 @@ export function parseEpwDataPeriods(value: unknown, at = "$"): EpwDataPeriods {
 }
 
 export function parseEpwRecord(value: unknown, at = "$"): EpwRecord {
-  const row = stdioEpwEnergyplusAnySnapshotGuardObject(value, at);
+  const row = stdioEpwEnergyplusAnySnapshotGuardClosed(stdioEpwEnergyplusAnySnapshotGuardObject(value, at), at, ["year", "month", "day", "hour", "minute", "dataSourceUncertainty", "dryBulbTemp", "dewPointTemp", "relativeHumidity", "atmosphericPressure", "extraterrestrialHorizontalRadiation", "extraterrestrialDirectNormalRadiation", "horizontalInfraredRadiation", "globalHorizontalRadiation", "directNormalRadiation", "diffuseHorizontalRadiation", "globalHorizontalIlluminance", "directNormalIlluminance", "diffuseHorizontalIlluminance", "zenithLuminance", "windDirection", "windSpeed", "totalSkyCover", "opaqueSkyCover", "visibility", "ceilingHeight", "presentWeatherObservation", "presentWeatherCodes", "precipitableWater", "aerosolOpticalDepth", "snowDepth", "daysSinceLastSnowfall", "albedo", "liquidPrecipDepth", "liquidPrecipQuantity"]);
   return {
     year: stdioEpwEnergyplusAnySnapshotGuardString(row["year"], `${at}.year`),
     month: stdioEpwEnergyplusAnySnapshotGuardString(row["month"], `${at}.month`),

@@ -24,9 +24,6 @@ pub async fn decode_op(bytes: &[u8]) -> Result<RasterMutation, protocol::Protoco
 //#endregion 🔖️RetainedStoreInitialization
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-pub mod unit_tests;
 //#endregion 🧪️Tests
 
 mod native_codec {

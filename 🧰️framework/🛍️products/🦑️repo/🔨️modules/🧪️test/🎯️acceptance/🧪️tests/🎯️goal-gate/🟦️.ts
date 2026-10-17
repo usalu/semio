@@ -16,23 +16,12 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync, existsSync } from "no
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import Ajv2020 from "ajv/dist/2020";
-import {
-  ACCEPTANCE_SCHEMA_REL_PATH,
-  GOAL_PLAN_REL_PATH,
-  acceptanceCheckResult,
-  acceptanceSchemaViolations,
-  readGoalPlan,
-  runGoalGate,
-  type AcceptanceStatus,
-  type GoalGateExecutor,
-  type GoalGateProvisioner,
-  type GoalPlan,
-  type ProvidedRequirement,
-} from "../../📋️orchestration/🟦️.ts";
+import { ACCEPTANCE_SCHEMA_REL_PATH, GOAL_PLAN_REL_PATH, acceptanceCheckResult, acceptanceSchemaViolations, readGoalPlan, type AcceptanceStatus, type GoalPlan, type ProvidedRequirement } from "../../📋️orchestration/🟦️.ts";
+import { runGoalGate, type GoalGateExecutor, type GoalGateProvisioner } from "../../📋️orchestration/🚦️goal-gate/🟦️.ts";
 //#endregion 🔌️Adapters
 
 const repoRoot = join(import.meta.dir, "../../../../../../../..");
-const fixture = JSON.parse(readFileSync(join(import.meta.dir, "..", "..", "🧫️fixtures", "🎯️goal-gate", "🔣️.json"), "utf8")) as {
+const fixture = JSON.parse(readFileSync(join(import.meta.dir, "..", "🧫️fixtures", "🎯️goal-gate", "🔣️.json"), "utf8")) as {
   records: { name: string; definition: "checkResult" | "goalPlan" | "goalSummary"; valid: boolean; value: unknown }[];
   runs: {
     name: string;

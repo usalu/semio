@@ -364,7 +364,6 @@ fn tessellation_cancel_handoff_and_small_grants_cover_every_actual_system_alloca
         turns += 1;
         assert!(turns < 10000);
     }
-    eprintln!("[DEBUG] whole original Tessellation System constructor={constructor:?} cancel={signal:?} handoff={handoff:?} maximumEightByteRelease={maximum_small_release} maximumUnfundedCapacity={maximum_unfunded_capacity} turns={turns}");
     assert_eq!(constructor, (fixture["system"]["constructorCapacityBytes"].as_u64().unwrap() as usize, 0));
     assert_eq!(signal, (fixture["system"]["cancelCapacityBytes"].as_u64().unwrap() as usize, fixture["system"]["cancelReleaseBytes"].as_u64().unwrap() as usize));
     assert_eq!(handoff, (fixture["system"]["handoffCapacityBytes"].as_u64().unwrap() as usize, fixture["system"]["handoffReleaseBytes"].as_u64().unwrap() as usize), "existing owner handoff requires no unfunded allocation or release");
@@ -389,7 +388,6 @@ fn original_native_family_handoff_retains_all_system_owners_until_grants() {
         if step.progress()==Default::default() {let grant=exact_retirement_grant(&retirement,1);let (receipt,heap)=observe_tessellation_system(||retirement.step(grant).unwrap());assert!(receipt.progress().fits(grant));assert_eq!(heap,(receipt.progress().retained_capacity_bytes,receipt.progress().released_bytes));}
         turns+=1;assert!(turns<100000);
     }
-    eprintln!("[DEBUG] original native family handoff={handoff:?} maximumEightByteRelease={maximum_release} maximumUnfundedBirth={maximum_birth} turns={turns}");
     assert_eq!(handoff,(fixture["nativeFamily"]["handoffCapacityBytes"].as_u64().unwrap() as usize,fixture["nativeFamily"]["handoffReleaseBytes"].as_u64().unwrap() as usize));
     assert!(maximum_release<=small,"original native family physical release exceeded the actual eight-byte grant");
     assert_eq!(maximum_birth,0);
@@ -420,7 +418,6 @@ fn original_native_family_typed_owner_covers_nurbs_wire_aliases_and_compound() {
             let (step,heap)=observe_tessellation_system(||owner.step(grant).unwrap());assert!(step.progress().fits(grant));assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));born+=heap.0;released+=heap.1;turns+=1;assert!(turns<100000);
         }
         assert!(refusals>0);assert_eq!(released,source.0-source.1+born);
-        eprintln!("[DEBUG] original typed Brep nurbs={converted} wire+aliases+compound samePointer=true retainedSource={} born={born} physicallyReleased={released} repeatedEightByteRefusals={refusals} turns={turns}",source.0-source.1);
     }
 }
 
@@ -446,7 +443,7 @@ fn original_live_index_extraction_preserves_row_pointers_without_heap_work() {
         let copy=owner.next_copy_byte_demand().unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:owner.next_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:owner.next_release_byte_demand().unwrap(),maximum_depth:owner.next_depth_demand().unwrap()};
         let (step,heap)=observe_tessellation_system(||owner.step(grant).unwrap());assert!(step.progress().fits(grant));assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));born+=heap.0;released+=heap.1;
     }
-    assert_eq!(released,source.0-source.1+born);eprintln!("[DEBUG] original live index extract sameKey=true sameValue=true slotMaximum=1 heap=(0,0) retainedSource={} born={born} released={released}",source.0-source.1);
+    assert_eq!(released,source.0-source.1+born);
 }
 
 #[test]
@@ -477,7 +474,6 @@ fn original_body_arenas_retire_by_exact_physical_full_grants() {
         born+=heap.0;freed+=heap.1;turns+=1;assert!(turns<100000);
     }
     assert!(refusals>0);assert_eq!(freed,source.0-source.1+born);
-    eprintln!("[DEBUG] original Body slots+holes+freeLists retainedSource={} born={born} physicallyReleased={freed} repeatedEightByteRefusals={refusals} turns={turns}",source.0-source.1);
 }
 
 #[test]
@@ -529,7 +525,6 @@ fn original_whole_tessellation_typed_owner_matches_each_physical_full_grant() {
     }
     assert!(refusals > 0);
     assert_eq!(freed, source.0 - source.1 + born);
-    eprintln!("[DEBUG] original whole Tessellation typed custody retainedSource={} born={born} physicallyReleased={freed} repeatedEightByteRefusals={refusals} turns={turns}", source.0 - source.1);
 }
 
 #[test]
@@ -563,7 +558,6 @@ fn tessellation_cancel_preserves_original_allocations_until_retirement_grants() 
     assert!(refused>0);assert!(physical>8);
     assert_eq!(SAMPLE_RELEASES.load(SeqCst),fixture["cancel"]["sampleReleases"].as_u64().unwrap() as usize);assert_eq!(MESH_RELEASES.load(SeqCst),fixture["cancel"]["meshReleases"].as_u64().unwrap() as usize);
     OBSERVED_SAMPLE.store(0,SeqCst);OBSERVED_MESH.store(0,SeqCst);
-    eprintln!("[DEBUG] Tessellation ownership: original sample/mesh allocations survived cancel and zero grants; actual allocator released each once after {} one-item turns, {} repeated eight-byte refusals, {} observed physical bytes",turns,refused,physical);
 }
 
 #[test]
@@ -586,7 +580,6 @@ fn tessellation_cold_admission_does_not_collect_original_topology_before_a_grant
         assert_eq!(caller.progress().phase,"tessellate","original Split Plan advanced before its cold child produced a mesh");assert_eq!(caller.progress().done,turn+1);assert!(caller.progress().total>=caller.progress().done);
     }
     assert!((semio_framework_3d_brep_queries::mass_properties::solid_volume(&body,solid,0.1).unwrap()-fixture["box"]["volume"].as_f64().unwrap()).abs()<1e-6);
-    eprintln!("[DEBUG] Tessellation cold ownership: no original topology collection before grants; one grant advanced one frontier; original box parity area=6 volume=1 triangles=12; original Split Plan remains on cold tessellation through eight granted caller turns");
 }
 
 #[test]
@@ -604,7 +597,7 @@ fn original_validation_scratch_retains_all_physical_buffers_until_full_grants() 
         if grant.maximum_release_bytes>8 {for _ in 0..2 {let (step,heap)=observe_tessellation_system(||owner.step(RetainedCloneGrant {maximum_release_bytes:8,..grant}).unwrap());assert_eq!(step.progress(),Default::default());assert_eq!(heap,(0,0));assert_eq!(owner.next_release_byte_demand().unwrap(),grant.maximum_release_bytes);refusals+=1;}}
         let (step,heap)=observe_tessellation_system(||owner.step(grant).unwrap());assert!(step.progress().fits(grant));assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));born+=heap.0;freed+=heap.1;turns+=1;assert!(turns<1000000);
     }
-    assert!(refusals>0);assert_eq!(source.0-source.1+born,freed);eprintln!("[DEBUG] Original validation scratch source={} admittedBirth={born} physicalRelease={freed} repeatedEightByteRefusals={refusals} turns={turns}",source.0-source.1);
+    assert!(refusals>0);assert_eq!(source.0-source.1+born,freed);
 }
 
 #[test]
@@ -626,5 +619,4 @@ fn original_mesh_import_cancel_retains_original_buffers_before_full_grants() {
     let mut owner=ControlledRetirement::new(body).unwrap_or_else(|_|panic!("same original import arena backing requires typed ownership"));
     while !owner.terminal_is_empty() {let grant=exact_retirement_grant(&owner,1);let (receipt,heap)=observe_tessellation_system(||owner.step(grant).unwrap());assert!(receipt.progress().fits(grant));assert_eq!(heap,(receipt.progress().retained_capacity_bytes,receipt.progress().released_bytes));born+=heap.0;freed+=heap.1;}
     let (_,shell)=observe_tessellation_system(||drop(cursor));assert_eq!(shell,(0,0));assert!(refusals>0);assert_eq!(source.0-source.1+born,freed);
-    eprintln!("[DEBUG] Original mesh import typed cancellation source={} admittedBirth={born} physicalRelease={freed} eightByteRefusals={refusals} turns={turns} handoff={handoff:?} cursorTerminalDrop={shell:?}",source.0-source.1);
 }

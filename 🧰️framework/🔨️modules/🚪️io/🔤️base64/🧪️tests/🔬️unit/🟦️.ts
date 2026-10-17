@@ -118,7 +118,6 @@ test("retained input ranges preserve the original backing and span-relative prog
  const length=controlled.cancellationInputLength,generator=controlled.generator,bytes=Uint8Array.from({length},(_,index)=>(index*generator.multiplier+length*generator.lengthMultiplier)%generator.modulus),text="pk:"+Buffer.from(bytes).toString("base64")+":end",range={start:3,end:text.length-4},cursor=new Base64DecodeCursor(text,range);let cause:unknown;
  try{while(!cursor.isComplete())cursor.step(cursor.nextWorkDemand(),{maximumOutputBytes:length,progress:event=>event.phase!=="decode"||event.completed!==4096});}catch(error){cause=error;}
  const parts=cursor.intoParts();expect(cause).toBeInstanceOf(Error);expect(firstRefusal(parts)).toBe(cause);expect(parts.input).toBe(text);expect(parts.range).toEqual(range);expect(parts.output?.subarray(0,parts.written)).toEqual(bytes.subarray(0,3072));
- console.log("[DEBUG] Base64 ranged source agrees with Buffer and retains complete original text");
 });
 test.each(controlled.callbackMutations)("retained progress %s cannot reenter or consume its active owner",mutation=>{
   const cursor=new Base64DecodeCursor("TWFu"),control={maximumOutputBytes:3,progress:()=>{

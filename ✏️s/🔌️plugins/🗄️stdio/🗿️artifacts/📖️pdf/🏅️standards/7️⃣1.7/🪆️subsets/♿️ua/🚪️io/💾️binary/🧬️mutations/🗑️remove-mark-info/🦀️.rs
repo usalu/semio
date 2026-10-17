@@ -1,6 +1,6 @@
 //! 🗑️ Direct binary codec for `remove-mark-info`.
 
-use crate::standards::v1_7::subsets::ua::schema::mutations::RemoveMarkInfo;
+use crate::standards::v1_7::subsets::ua::schema::mutations::remove_mark_info::RemoveMarkInfo;
 
 //#region 🔖️Identity
 pub const TAG: u8 = 1;
@@ -21,7 +21,5 @@ pub fn decode(bytes: &[u8]) -> Result<RemoveMarkInfo, String> {
 //#endregion 🔖️Codec
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

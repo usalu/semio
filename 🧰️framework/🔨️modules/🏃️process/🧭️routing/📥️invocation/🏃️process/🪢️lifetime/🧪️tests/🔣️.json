@@ -1,0 +1,151 @@
+{
+  "cases": [
+    {
+      "name": "overlap",
+      "status": 0,
+      "callbacks": 2,
+      "peak": 2,
+      "failure": null
+    },
+    {
+      "name": "late-descendant",
+      "status": 0,
+      "callbacks": 2,
+      "peak": 2,
+      "failure": null
+    },
+    {
+      "name": "copied",
+      "status": 1,
+      "callbacks": 0,
+      "peak": 0,
+      "failure": "copied"
+    },
+    {
+      "name": "retired",
+      "status": 1,
+      "callbacks": 0,
+      "peak": 0,
+      "failure": "retired"
+    },
+    {
+      "name": "outside-drain",
+      "status": 1,
+      "callbacks": 1,
+      "peak": 1,
+      "failure": "closed"
+    },
+    {
+      "name": "capacity",
+      "status": 1,
+      "callbacks": 2,
+      "peak": 1,
+      "failure": "capacity"
+    },
+    {
+      "name": "depth",
+      "status": 1,
+      "callbacks": 64,
+      "peak": 64,
+      "failure": "depth"
+    },
+    {
+      "name": "child-first",
+      "status": 1,
+      "callbacks": 1,
+      "peak": 1,
+      "failure": "child-first"
+    },
+    {
+      "name": "body-first",
+      "status": 1,
+      "callbacks": 1,
+      "peak": 1,
+      "failure": "body-first"
+    },
+    {
+      "name": "undefined",
+      "status": 1,
+      "callbacks": 1,
+      "peak": 1,
+      "failure": "undefined"
+    },
+    {
+      "name": "cancelled",
+      "status": 1,
+      "callbacks": 0,
+      "peak": 0,
+      "failure": "cancelled"
+    },
+    {
+      "name": "detached-intermediate",
+      "status": 0,
+      "callbacks": 3,
+      "peak": 2,
+      "failure": null
+    },
+    {
+      "name": "root-frame",
+      "status": 1,
+      "callbacks": 0,
+      "peak": 0,
+      "failure": "frame"
+    },
+    {
+      "name": "copied-control",
+      "status": 1,
+      "callbacks": 0,
+      "peak": 0,
+      "failure": "control"
+    },
+    {
+      "name": "sibling-restriction",
+      "status": 1,
+      "callbacks": 0,
+      "peak": 0,
+      "failure": "restriction"
+    },
+    {
+      "name": "subtree-first",
+      "status": 1,
+      "callbacks": 2,
+      "peak": 2,
+      "failure": "child-first"
+    },
+    {
+      "name": "ancestor-phase",
+      "status": 0,
+      "callbacks": 2,
+      "peak": 2,
+      "failure": null
+    },
+    {
+      "name": "settlement",
+      "status": 0,
+      "callbacks": 2,
+      "peak": 2,
+      "failure": null
+    },
+    {
+      "name": "guard-admission",
+      "status": 1,
+      "callbacks": 1,
+      "peak": 1,
+      "failure": "closed"
+    },
+    {
+      "name": "retired-frame",
+      "status": 1,
+      "callbacks": 1,
+      "peak": 1,
+      "failure": "closed"
+    },
+    {
+      "name": "cross-lifetime",
+      "status": 0,
+      "callbacks": 3,
+      "peak": 3,
+      "failure": null
+    }
+  ]
+}

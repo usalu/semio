@@ -1,8 +1,16 @@
 //! 🧪️ Scalar preparation preserves the neutral RFC6902 inverse and refusal ordering.
 
-use super::*;
+use crate::standards::v1::subsets::any::schema::mutations::move_node::MoveNode;
+use crate::Puzzle2dSnapshot;
+use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::lookup::{Puzzle2dLookupCursor, Puzzle2dLookupScope, Puzzle2dLookupStep};
+#[allow(unused_imports)]
+use semio_framework_value::{ValueError, ValueRefusalKind, retained_clone::RetainedCloneBinding, retained_clone::RetainedCloneRef, retained_clone::RetainedCloneStep};
+use crate::standards::v1::subsets::any::schema::preparation::move_node_preparation::*;
+use semio_framework_test_fixtures::fixture_text;
 use semio_framework_value::paged::PagedUtf8;
-use crate::test_source_custody;
+use crate::standards::v1::subsets::any::schema::testkit as test_source_custody;
 
 fn close(cursor: &mut Puzzle2dMoveNodePreparationCursor) {
     cursor.begin_close();
@@ -22,14 +30,14 @@ fn close(cursor: &mut Puzzle2dMoveNodePreparationCursor) {
 #[test]
 fn history_edit_puzzle2d_scalar_move_preparation_preserves_inverse_and_refusal_without_owned_payload_copy() {
     assert!(std::mem::size_of::<Puzzle2dMoveNodePreparationCursor>() <= 4096);
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📍move-node/🎮️prepare/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📍move-node/🎮️prepare/🔣️.json")).unwrap();
     let controls = &corpus["control"];
     let text = |value: &serde_json::Value| { let value = value.as_str().unwrap(); match value.strip_prefix("$large:") { Some(suffix) => PagedUtf8::<{usize::MAX}>::from(format!("{}{suffix}", controls["largePrefix"].as_str().unwrap().repeat(controls["largeRepeats"].as_u64().unwrap() as usize))), None => value.into() } };
     let scalar = |value: &serde_json::Value| match value.as_str() { Some("nan") => f64::NAN, Some("positive-infinity") => f64::INFINITY, None => value.as_f64().unwrap(), _ => panic!("unknown neutral scalar") };
     let grant = RetainedCloneGrant { maximum_items: controls["maximumItems"].as_u64().unwrap() as usize, maximum_copy_bytes: controls["maximumBytes"].as_u64().unwrap() as usize, maximum_depth:64,..Default::default() };
     for case in corpus["cases"].as_array().unwrap() {
         let mut snapshot = Puzzle2dSnapshot::default();
-        snapshot.nodes = case["nodes"].as_array().unwrap().iter().map(|row| crate::standards::v1::subsets::any::schema::Puzzle2dNode { id: text(&row["id"]), x: scalar(&row["x"]), y: scalar(&row["y"]), ..Default::default() }).collect();
+        snapshot.nodes = case["nodes"].as_array().unwrap().iter().map(|row| crate::standards::v1::subsets::any::schema::records::Puzzle2dNode { id: text(&row["id"]), x: scalar(&row["x"]), y: scalar(&row["y"]), ..Default::default() }).collect();
         let payload = MoveNode { id: text(&case["mutation"]["id"]), new_x: scalar(&case["mutation"]["newX"]), new_y: scalar(&case["mutation"]["newY"]) };
         let original = serde_json::to_value(&snapshot).unwrap();
         let bits = [payload.new_x.to_bits(), payload.new_y.to_bits()];
@@ -79,5 +87,4 @@ fn history_edit_puzzle2d_scalar_move_preparation_preserves_inverse_and_refusal_w
         }
         test_source_custody::close(&mut source);test_source_custody::close(&mut mutation);
     }
-    eprintln!("[DEBUG] Puzzle2d scalar preparation preserved seven RFC6902 inverse/refusal plans, original borrowed payloads, zero-allocation advance and exact alias cancellation");
 }

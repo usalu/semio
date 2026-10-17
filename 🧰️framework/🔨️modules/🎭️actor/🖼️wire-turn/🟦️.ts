@@ -13,15 +13,15 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Imports
-import type { Effect } from "../../🎠️kernel/⚡️effect/🟦️.ts";
-import type { SpawnedJobCompletion, SpawnedJobStep } from "../../🎠️kernel/🛠️spawned-job/🟦️.ts";
+import type { Effect } from "@semio-tech/framework-kernel/effect";
+import type { SpawnedJobCompletion, SpawnedJobStep } from "@semio-tech/framework-kernel/spawned-job";
 // 🧵️ The spawned-job drive RULE is the kernel's (Rust `kernel::spawned_job_completion` and this
 // twin), not this module's: the wire layer recovers a `spawn-job` off the boundary and pumps it, the
 // kernel alone decides what a transcript of `step-job` observations means. A value import, unlike
 // `decodePackValue`'s injected codec, because nothing in `🎠️kernel`'s own import graph reaches
 // back here — verified, not assumed.
-import { jobPlacementFromWireName, spawnedJobCompletion, SPAWNED_JOB_DEADLINE_MS, SPAWNED_JOB_FUEL, SPAWNED_JOB_STEP_CEILING } from "../../🎠️kernel/🛠️spawned-job/🟦️.ts";
-import { videoRenderProgramFromWire } from "../../🎠️kernel/🎥️video-render-program/🟦️.ts";
+import { jobPlacementFromWireName, spawnedJobCompletion, SPAWNED_JOB_DEADLINE_MS, SPAWNED_JOB_FUEL, SPAWNED_JOB_STEP_CEILING } from "@semio-tech/framework-kernel/spawned-job";
+import { videoRenderProgramFromWire } from "@semio-tech/framework-kernel/video-render-program";
 import { parseWitColdPairIngressStatus, type ColdPairIngressStatus } from "../📥️cold-pair/🟦️.ts";
 // #endregion 🔌️Imports
 

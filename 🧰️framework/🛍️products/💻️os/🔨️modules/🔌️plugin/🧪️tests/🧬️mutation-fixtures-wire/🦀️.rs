@@ -1,7 +1,8 @@
 //! 🧵️ Authoring wire and funded document catalog every registered fixture installs beside its bounded retirement owners.
 
 use protocol::{OpBinary, OpText, SemanticMutation};
-use semio_framework_value::{retained_clone::RetainedCloneBirthDemand, ValueError, ValueRefusalKind};
+use semio_framework_value::retained_clone::RetainedCloneBirthDemand;
+use semio_framework_value::{ValueError, ValueRefusalKind};
 use std::sync::Arc;
 
 /// 🫳️ Names a fixture mutation's own `OpBinary` image as its authoring wire, borrowed from the original operation.
@@ -34,7 +35,8 @@ pub(crate) fn wire_schema<P, M: SemanticMutation<P>>(mutation: &M) -> Option<(&s
 }
 
 /// 📬️ The fixture's document preparation authority: bounded retained preparation wrapped in the mutation's own wire.
-pub(crate) fn preparation_factory<P, M>(prefix: &'static str) -> Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<P, M>>
+#[doc(hidden)]
+pub fn preparation_factory<P, M>(prefix: &'static str) -> Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<P, M>>
 where
     P: Clone + Send + Sync + semio_framework_value::retirement::RetireOwned + semio_framework_value::retained_clone::RetainedClone + 'static,
     M: Clone + OpBinary + SemanticMutation<P> + store::ArtifactOperationText + store::ArtifactCanonicalJsonTree + Send + Sync + semio_framework_value::retirement::RetireOwned + 'static,
@@ -56,7 +58,8 @@ where
 }
 
 /// 📏️ Quotes the funded wire catalog source for the owner hooks.
-pub(crate) fn document_store_owners_source_demands<P, M>() -> Result<semio_framework_value::RetirementDemand, ValueError>
+#[doc(hidden)]
+pub fn document_store_owners_source_demands<P, M>() -> Result<semio_framework_value::RetirementDemand, ValueError>
 where
     P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + pack::snapshot::ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_value::retirement::RetireOwned + semio_framework_value::retained_clone::RetainedClone + Send + Sync + 'static,
     M: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + OpBinary + OpText + SemanticMutation<P> + store::ArtifactOperationText + store::ArtifactCanonicalJsonTree + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
@@ -66,7 +69,8 @@ where
 }
 
 /// 🗃️ Admits the bounded document catalog together with the fixture's wire-carrying preparation authority under the caller's grant.
-pub(crate) fn admit_document_store_owners<P, M>(prefix: &'static str, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(store::os_store::document_store_owners::DocumentStoreOwners<P, M>, semio_framework_value::retained_clone::RetainedCloneProgress), store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<P, M>>
+#[doc(hidden)]
+pub fn admit_document_store_owners<P, M>(prefix: &'static str, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(store::os_store::document_store_owners::DocumentStoreOwners<P, M>, semio_framework_value::retained_clone::RetainedCloneProgress), store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<P, M>>
 where
     P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + pack::snapshot::ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_value::retirement::RetireOwned + semio_framework_value::retained_clone::RetainedClone + Send + Sync + 'static,
     M: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + OpBinary + OpText + SemanticMutation<P> + store::ArtifactOperationText + store::ArtifactCanonicalJsonTree + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,

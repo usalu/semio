@@ -1,6 +1,6 @@
 //! 🧽️ Direct text codec for `remove-trim-box`.
 
-use crate::standards::v1_7::subsets::vt::schema::mutations::RemoveTrimBox;
+use crate::standards::v1_7::subsets::vt::schema::mutations::remove_trim_box::RemoveTrimBox;
 
 //#region 🔖️Identity
 pub const OPCODE: &str = "remove-trim-box";
@@ -21,7 +21,5 @@ pub fn parse(text: &str) -> Result<RemoveTrimBox, String> {
 //#endregion 🔖️Codec
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

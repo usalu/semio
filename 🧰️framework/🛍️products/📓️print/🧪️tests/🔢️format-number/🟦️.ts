@@ -53,7 +53,7 @@ const SPECIFIERS: readonly (readonly [string, number | string])[] = [
 ];
 
 /** 🔮️ Renders the specifier list through d3-format in the transport encoding the probe uses. */
-function reference(locale: string): { projection: ProbeProjection } {
+function reference(locale: string): ProbeProjection {
   const format = formatLocale(LOCALES[locale]!);
   return Object.fromEntries(SPECIFIERS.map(([specifier, value], index) => [`format/${index}`, [`|${format.format(specifier)(value as number).replaceAll(" ", "_")}`]]));
 }

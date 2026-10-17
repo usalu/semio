@@ -21,6 +21,10 @@ type block5dConfigGuardSizeBounds = { readonly minItems?: number; readonly maxIt
 
 export const block5dConfigGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : block5dConfigGuardReject(at, "value is not an object");
+export const block5dConfigGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) block5dConfigGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const block5dConfigGuardArray = (value: unknown, at: string, bounds: block5dConfigGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return block5dConfigGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) block5dConfigGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -51,5 +55,5 @@ export const block5dConfigGuardConstant = <T extends string | number | boolean>(
 //#endregion 🚪️Parsers
 
 export function parseBlock5dConfig(value: unknown, at = "$"): Block5dConfig {
-  return block5dConfigGuardObject(value, `${at}`);
+  return block5dConfigGuardClosed(block5dConfigGuardObject(value, `${at}`), `${at}`, []);
 }

@@ -3,7 +3,7 @@
 pub const TAG: u8 = dsl::protocol_record::tag_u8(include_str!("../📡️.protocol.semio"), "set-output-intents");
 pub const BINARY_TAG: u8 = TAG;
 
-use crate::standards::v1_7::subsets::base::schema::mutations::SetOutputIntents;
+use crate::standards::v1_7::subsets::base::schema::mutations::set_output_intents::SetOutputIntents;
 
 /// 📤️ Encodes this direct payload as canonical schema JSON bytes.
 pub fn encode(payload: &SetOutputIntents) -> Result<Vec<u8>, String> {

@@ -18,7 +18,8 @@
     {
       "id": "rewrite-lhs",
       "rust": "🫲️rewrite-lhs/🦀️.rs",
-      "typescript": "🫲️rewrite-lhs/🟦️.ts"
+      "typescript": "🫲️rewrite-lhs/🟦️.ts",
+      "rustOwner": "semio_s_artifact_trinity_rewriting_model::standards::v1::subsets::any::schema::graph_manifest::rewrite_lhs"
     }
   ]
 }

@@ -1,11 +1,10 @@
 //! 🧬️ GltfArtifact schema — full artifact state.
 
 use crate::standards::v2_0::subsets::any::schema::snapshot::{GltfAccessor, GltfBuffer, GltfBufferView, GltfDocument, GltfJson, GltfMesh, GltfPrimitive, GltfSourceForm};
-use crate::standards::v2_0::subsets::any::schema::snapshot::GltfSnapshot;
+use crate::standards::v2_0::subsets::any::schema::snapshot_root::GltfSnapshot;
 use framework_schema::ArtifactSchema;
 
-/// 🏷️ Document schema / DSL envelope id.
-pub const STDIO_GLTF_DOCUMENT_SCHEMA: &str = "stdio.gltf";
+pub use crate::standards::v2_0::subsets::any::schema::snapshot_root::STDIO_GLTF_DOCUMENT_SCHEMA;
 
 //#region 🔖️Artifact
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]

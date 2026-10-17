@@ -1,6 +1,26 @@
 //! 🧵️ Retained work of the puzzle 2d editor: the board-event batch limits, window and export work, the dispatch emit, the active-example reduce and the force-layout and redraw-handles work. See [`super`].
 
-use super::*;
+use crate::{editor::puzzle2d::snapshot::PUZZLE2D_ADD_NODE_DIALOG_ID, editor::puzzle2d::snapshot::PUZZLE2D_BOARD_SNAPSHOT_SCHEMA, editor::puzzle2d::snapshot::PUZZLE2D_INTERACTION_DOMAIN, editor::puzzle2d::snapshot::PUZZLE2D_PROXIMITY_GESTURE_MAX, editor::puzzle2d::snapshot::Puzzle2dInteractionSnapshot, editor::puzzle2d::commands::apply_board_events::apply_host_events, editor::puzzle2d::engine::board_host::drain_board_events_json, editor::puzzle2d::snapshot::puzzle2d_active_utility, editor::puzzle2d::snapshot::puzzle2d_load_document_effect, editor::puzzle2d::snapshot::sync_host_fixture_content, editor::puzzle2d::snapshot::sync_host_runtime_state};
+use crate::{editor::puzzle2d::commands::accept_suggestion, editor::puzzle2d::commands::add_node, editor::puzzle2d::commands::add_target_region, editor::puzzle2d::commands::apply_board_events, editor::puzzle2d::commands::close_handle_suggestions, editor::puzzle2d::commands::create_edge, editor::puzzle2d::commands::cycle_candidate, editor::puzzle2d::commands::delete_edge, editor::puzzle2d::commands::delete_selection, editor::puzzle2d::commands::delete_target_region, editor::puzzle2d::commands::duplicate_selection, editor::puzzle2d::commands::engagement_abort, editor::puzzle2d::commands::engagement_control_select, editor::puzzle2d::commands::engagement_input, editor::puzzle2d::commands::engagement_repeat_last, editor::puzzle2d::commands::engagement_submit, editor::puzzle2d::commands::export_snapshot, editor::puzzle2d::commands::focus_selection, editor::puzzle2d::commands::force_layout, editor::puzzle2d::commands::hover_suggestion, editor::puzzle2d::commands::target_brush_suggestions, editor::puzzle2d::commands::import_snapshot, editor::puzzle2d::commands::lod_scale_json, editor::puzzle2d::commands::open_handle_suggestions, editor::puzzle2d::commands::open_import_snapshot, editor::puzzle2d::commands::patch_inspector, editor::puzzle2d::commands::proximity_connect, editor::puzzle2d::commands::relocate_target_region, editor::puzzle2d::commands::rotate_selection, editor::puzzle2d::commands::scale_selection, editor::puzzle2d::commands::select_same_kind, editor::puzzle2d::commands::set_active_example, editor::puzzle2d::commands::set_area_brush_size, editor::puzzle2d::commands::set_brush_kind_weights, editor::puzzle2d::commands::set_brush_node_size, editor::puzzle2d::commands::set_brush_placement_contact_tolerance, editor::puzzle2d::commands::set_brush_placement_overlap_budget, editor::puzzle2d::commands::set_camera, editor::puzzle2d::commands::set_fill_count, editor::puzzle2d::commands::set_grid_factor, editor::puzzle2d::commands::set_grid_snap_enabled, editor::puzzle2d::commands::set_grid_visible, editor::puzzle2d::commands::set_lod_mode_for_pane, editor::puzzle2d::commands::set_proximity_radius, editor::puzzle2d::commands::set_selectable_kind, editor::puzzle2d::commands::set_selection_flag, editor::puzzle2d::commands::set_suggestion_offset, editor::puzzle2d::commands::set_target_region_flag, editor::puzzle2d::commands::set_transform_gumball_flag, editor::puzzle2d::commands::translate_selection};
+use crate::{editor::puzzle2d::config::Puzzle2dConfig, editor::puzzle2d::config::Puzzle2dConfigMutation};
+use crate::editor::puzzle2d::engine::Point;
+use crate::{editor::puzzle2d::window, editor::puzzle2d::window::Puzzle2dWindowConfig, editor::puzzle2d::window::Puzzle2dWindowTransient};
+use crate::editor::puzzle2d::snapshot::Puzzle2dPlaySnapshot;
+use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
+use crate::editor::puzzle2d::recorder::Puzzle2dRecorder;
+use semio_framework::kernel::UiDirtyScope;
+use semio_framework_plugin::kernel::Effect;
+use semio_framework_plugin::EditorApp;
+use semio_framework_plugin::Emit;
+use semio_framework_plugin::Fault;
+use semio_framework_plugin::app::EphemeralEmit;
+use semio_framework_pack_json::Value;
+#[cfg(test)] use std::cell::RefCell;
+use std::{collections::HashMap, collections::HashSet};
+use crate::editor::puzzle2d::snapshot::puzzle2d_scene_with;
+use crate::editor::puzzle2d::snapshot::Puzzle2dEditor;
+use crate::editor::puzzle2d::{interaction, recorder, snapshot};
+use crate::editor::puzzle2d::snapshot::{PUZZLE2D_GENERIC_TOOL_IDS};
 
 //#region 🔖️PlayApp
 //#region 🧵️RetainedCommands
@@ -16,7 +36,7 @@ fn puzzle2d_batch_drops_a_node(events: &[Value]) -> bool {
     events.iter().any(|event| event.get("name").and_then(Value::as_str) == Some("gesture"))
 }
 
-pub(super) fn puzzle2d_board_events_extent(command: &Puzzle2dCommand, _snapshot: &Puzzle2dPlaySnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
+pub fn puzzle2d_board_events_extent(command: &Puzzle2dCommand, _snapshot: &Puzzle2dPlaySnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
     if command.action_id() != "applyBoardEvents" {
         return None;
     }
@@ -30,39 +50,39 @@ pub(super) fn puzzle2d_board_events_extent(command: &Puzzle2dCommand, _snapshot:
     Some(rows.len().saturating_add(connects).max(1))
 }
 
-pub(super) struct Puzzle2dWindowCommandWork {
-    pub(super) tool_id: &'static str,
-    pub(super) extent: crate::retained_command::PuzzleCommandExtent<EditorApp<Puzzle2dPlayApp>>,
-    pub(super) authoring_seed: String,
-    pub(super) base_revision: String,
+pub struct Puzzle2dWindowCommandWork<A: Puzzle2dEditor> {
+    pub tool_id: &'static str,
+    pub extent: crate::retained_command::PuzzleCommandExtent<EditorApp<A>>,
+    pub authoring_seed: String,
+    pub base_revision: String,
     consumed: bool,
 }
 
-impl Puzzle2dWindowCommandWork {
-    pub(super) fn new(tool_id: &'static str, extent: crate::retained_command::PuzzleCommandExtent<EditorApp<Puzzle2dPlayApp>>, authoring_seed: String, base_revision: String) -> Self {
+impl<A: Puzzle2dEditor> Puzzle2dWindowCommandWork<A> {
+    pub fn new(tool_id: &'static str, extent: crate::retained_command::PuzzleCommandExtent<EditorApp<A>>, authoring_seed: String, base_revision: String) -> Self {
         Self { tool_id, extent, authoring_seed, base_revision, consumed: false }
     }
 }
 
 /// 📐️ A canonical document revision as lowercase hex — the identity a persisted select-tool gesture pins its base by.
-pub(super) fn puzzle2d_revision_hex(revision: &[u8; 32]) -> String {
+pub fn puzzle2d_revision_hex(revision: &[u8; 32]) -> String {
     revision.iter().map(|byte| format!("{byte:02x}")).collect()
 }
 
-impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puzzle2dPlayApp>> for Puzzle2dWindowCommandWork {
+impl<A: Puzzle2dEditor> semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<A>> for Puzzle2dWindowCommandWork<A> {
     fn tool_id(&self) -> &'static str {
         self.tool_id
     }
 
-    fn extent(&self, command: &Puzzle2dCommand, snapshot: &Puzzle2dPlaySnapshot, interaction: &protocol::InteractionState, _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Puzzle2dPlayApp>>>) -> Option<usize> {
+    fn extent(&self, command: &Puzzle2dCommand, snapshot: &Puzzle2dPlaySnapshot, interaction: &protocol::InteractionState, _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<A>>>) -> Option<usize> {
         (self.extent)(command, snapshot, interaction)
     }
 
-    fn work_demands(&self, _input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle2dPlayApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-        crate::retained_command::step_demands::<EditorApp<Puzzle2dPlayApp>>(size_of::<Self>())
+    fn work_demands(&self, _input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        crate::retained_command::step_demands::<EditorApp<A>>(size_of::<Self>())
     }
 
-    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle2dPlayApp>>, _cx: &mut StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<Puzzle2dPlayApp>>, Fault> {
+    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, _cx: &mut StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, Fault> {
         let semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config, interaction, hover: _hover, context, .. } = *input;
         if self.consumed {
             return Err(Fault::from("puzzle2d-window-work-repeated"));
@@ -75,7 +95,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puz
         let selection = interaction.selection.get(PUZZLE2D_INTERACTION_DOMAIN).cloned().unwrap_or_default();
         let detached = semio_framework_plugin::app::GestureSlot::detached();
         let gesture = context.map_or(&detached, |context| context.gesture());
-        let (emit, ephemeral) = puzzle2d_dispatch_emit(command, snapshot, config, &window_config, &window_transient, window_kind, view_state, puzzle2d_active_utility(view_state), &selection, &self.authoring_seed, &self.base_revision, gesture, None)?;
+        let (emit, ephemeral) = puzzle2d_dispatch_emit::<A>(command, snapshot, config, &window_config, &window_transient, window_kind, view_state, puzzle2d_active_utility(view_state), &selection, &self.authoring_seed, &self.base_revision, gesture, None)?;
         self.consumed = true;
         Ok(semio_framework_plugin::retained_command::ArtifactCommandWorkStep::CompleteWithEphemeral { emit, ephemeral })
     }
@@ -86,24 +106,24 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puz
 /// request ceiling, the framework's segmented-download lane above it, a notice above what one segmented
 /// download may carry.
 #[derive(Default)]
-pub(super) struct Puzzle2dExportWork {
+pub struct Puzzle2dExportWork {
     consumed: bool,
 }
 
-impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puzzle2dPlayApp>> for Puzzle2dExportWork {
+impl<A: Puzzle2dEditor> semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<A>> for Puzzle2dExportWork {
     fn tool_id(&self) -> &'static str {
         "exportSnapshot"
     }
 
-    fn extent(&self, _command: &Puzzle2dCommand, _snapshot: &Puzzle2dPlaySnapshot, _interaction: &protocol::InteractionState, _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Puzzle2dPlayApp>>>) -> Option<usize> {
+    fn extent(&self, _command: &Puzzle2dCommand, _snapshot: &Puzzle2dPlaySnapshot, _interaction: &protocol::InteractionState, _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<A>>>) -> Option<usize> {
         Some(1)
     }
 
-    fn work_demands(&self, _input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle2dPlayApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-        crate::retained_command::step_demands::<EditorApp<Puzzle2dPlayApp>>(size_of::<Self>())
+    fn work_demands(&self, _input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        crate::retained_command::step_demands::<EditorApp<A>>(size_of::<Self>())
     }
 
-    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle2dPlayApp>>, _cx: &mut StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<Puzzle2dPlayApp>>, Fault> {
+    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, _cx: &mut StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, Fault> {
         let semio_framework_plugin::retained_command::ArtifactCommandInputs { command: _command, snapshot, config: _config, interaction: _interaction, hover: _hover, context: _context, .. } = *input;
         if self.consumed {
             return Err(Fault::from("puzzle2d-export-work-repeated"));
@@ -125,7 +145,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puz
 /// mutations ride this emit stamped with the transaction ref. `operation` is the committed public
 /// authority a mounted continuation carries and is simply `None` for a retained work, which never sees an
 /// `ArtifactView`; `authoring_seed` is the admission's seed every tool transaction id is minted from.
-pub(super) fn puzzle2d_dispatch_emit(
+pub fn puzzle2d_dispatch_emit<A: Puzzle2dEditor>(
     command: &Puzzle2dCommand,
     document: &Puzzle2dPlaySnapshot,
     config: &Puzzle2dConfig,
@@ -139,13 +159,13 @@ pub(super) fn puzzle2d_dispatch_emit(
     base_revision: &str,
     gesture: &semio_framework_plugin::app::GestureSlot<Puzzle2dMutation>,
     operation: Option<semio_framework_plugin::AppOperationContext>,
-) -> Result<(Emit<Puzzle2dMutation, Puzzle2dConfigMutation>, EphemeralEmit<EditorApp<Puzzle2dPlayApp>>), Fault> {
+) -> Result<(Emit<Puzzle2dMutation, Puzzle2dConfigMutation>, EphemeralEmit<EditorApp<A>>), Fault> {
     let (action, args, window_id) = (command.action_id(), command.args(), command.window_id());
     let before = document.value();
     let active_utility = active_utility.to_string();
     let runtime = window::runtime(config, window_config, window_transient, Some(window_kind));
     let interaction = Puzzle2dInteractionSnapshot { granularity: selection.granularity.clone(), selected: selection.ids.clone(), ..Default::default() };
-    let mut scene = Puzzle2dPlayApp::scene_with(before.clone(), runtime, &active_utility, interaction);
+    let mut scene = puzzle2d_scene_with(before.clone(), runtime, &active_utility, interaction);
     // 🐚️ ArtifactApp::handle is pure (no &self) — rebuild a fresh BoardHost from the document
     // each call. The previous last_synced_fixture cache lived on &self and cannot return.
     let host = RefCell::new(puzzle_board_host());
@@ -281,7 +301,7 @@ const PUZZLE2D_IMPORT_FIXTURE_WORK_ITEMS: usize = 1_024;
 /// (each is a fixed-shape config/host setter whose cost is independent of document size). An
 /// oversized selection returns `None` and is refused by the retained preflight rather than silently
 /// truncated. `patchInspectorNodes` may address an explicit `ids` argument instead of the selection.
-pub(super) fn puzzle2d_generic_extent(command: &Puzzle2dCommand, _snapshot: &Puzzle2dPlaySnapshot, interaction: &protocol::InteractionState) -> Option<usize> {
+pub fn puzzle2d_generic_extent(command: &Puzzle2dCommand, _snapshot: &Puzzle2dPlaySnapshot, interaction: &protocol::InteractionState) -> Option<usize> {
     let action = command.action_id();
     if !PUZZLE2D_GENERIC_TOOL_IDS.contains(&action) {
         return None;
@@ -310,17 +330,17 @@ pub(super) fn puzzle2d_generic_extent(command: &Puzzle2dCommand, _snapshot: &Puz
 /// 🛍️ The example switch is a whole-document LOAD: `Effect::LoadDocument` carrying the example's pack (an unknown id loads
 /// the empty board) and no mutation row, so it leaves no history row either. One bounded step, shared by the retained
 /// `setActiveExample` route and the batch `handle` path.
-pub(super) fn puzzle2d_active_example_emit(command: &Puzzle2dCommand, _snapshot: &Puzzle2dPlaySnapshot, _config: &Puzzle2dConfig) -> Result<Emit<Puzzle2dMutation, Puzzle2dConfigMutation>, Fault> {
+pub fn puzzle2d_active_example_emit(command: &Puzzle2dCommand, _snapshot: &Puzzle2dPlaySnapshot, _config: &Puzzle2dConfig) -> Result<Emit<Puzzle2dMutation, Puzzle2dConfigMutation>, Fault> {
     let id = set_active_example::canonical_example_id(command.args().and_then(|args| args.get("exampleId")).and_then(Value::as_str).unwrap_or(""));
     Ok(Emit { effects: vec![puzzle2d_load_document_effect(set_active_example::target(id))], ui_scope: UiDirtyScope::Full, ..Default::default() })
 }
 
 /// ➕️ `addNode` places one node through the shared window-command dispatch, so it is one admitted unit.
-pub(super) fn puzzle2d_add_node_extent(command: &Puzzle2dCommand, _snapshot: &Puzzle2dPlaySnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
+pub fn puzzle2d_add_node_extent(command: &Puzzle2dCommand, _snapshot: &Puzzle2dPlaySnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
     (command.action_id() == "addNode").then_some(1)
 }
 
-pub(super) fn puzzle2d_active_example_reduce(
+pub fn puzzle2d_active_example_reduce(
     command: &Puzzle2dCommand,
     snapshot: &Puzzle2dPlaySnapshot,
     config: &Puzzle2dConfig,
@@ -331,7 +351,7 @@ pub(super) fn puzzle2d_active_example_reduce(
     puzzle2d_active_example_emit(command, snapshot, config)
 }
 
-pub(super) fn puzzle2d_active_example_extent(command: &Puzzle2dCommand, _snapshot: &Puzzle2dPlaySnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
+pub fn puzzle2d_active_example_extent(command: &Puzzle2dCommand, _snapshot: &Puzzle2dPlaySnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
     (command.action_id() == "setActiveExample").then_some(1)
 }
 
@@ -401,7 +421,7 @@ enum Puzzle2dForceStage {
 /// ♻️ The owners one `Puzzle2dForceLayoutWork` still holds when its job closes, retired as one controlled bundle.
 #[derive(semio_framework_value::RetireOwned)]
 struct Puzzle2dForceLayoutWorkOwners {
-    pub(super) node_ids: Vec<String>,
+    pub node_ids: Vec<String>,
     raw_node_indices: Vec<usize>,
     original: Vec<Option<[f64; 2]>>,
     positions: Vec<[f64; 2]>,
@@ -410,14 +430,14 @@ struct Puzzle2dForceLayoutWorkOwners {
     radii: Vec<f64>,
     id_to_index: HashMap<String, usize>,
     handle_to_node: HashMap<String, String>,
-    pub(super) edges: Vec<(usize, usize)>,
+    pub edges: Vec<(usize, usize)>,
     edge_set: HashSet<(usize, usize)>,
-    pub(super) mutations: Vec<Puzzle2dMutation>,
+    pub mutations: Vec<Puzzle2dMutation>,
 }
 
-pub(super) struct Puzzle2dForceLayoutWork {
-    pub(super) tool_id: &'static str,
-    pub(super) stage: Puzzle2dForceStage,
+pub struct Puzzle2dForceLayoutWork {
+    pub tool_id: &'static str,
+    pub stage: Puzzle2dForceStage,
     node_cursor: usize,
     handle_cursor: usize,
     edge_cursor: usize,
@@ -430,7 +450,7 @@ pub(super) struct Puzzle2dForceLayoutWork {
     rng: u64,
     center: [f64; 2],
     finite_count: usize,
-    pub(super) node_ids: Vec<String>,
+    pub node_ids: Vec<String>,
     raw_node_indices: Vec<usize>,
     original: Vec<Option<[f64; 2]>>,
     positions: Vec<[f64; 2]>,
@@ -439,10 +459,10 @@ pub(super) struct Puzzle2dForceLayoutWork {
     radii: Vec<f64>,
     id_to_index: HashMap<String, usize>,
     handle_to_node: HashMap<String, String>,
-    pub(super) edges: Vec<(usize, usize)>,
+    pub edges: Vec<(usize, usize)>,
     edge_set: HashSet<(usize, usize)>,
-    pub(super) mutations: Vec<Puzzle2dMutation>,
-    pub(super) retained_bytes: usize,
+    pub mutations: Vec<Puzzle2dMutation>,
+    pub retained_bytes: usize,
     close_owners: crate::puzzle_job::WorkClosing<Puzzle2dForceLayoutWorkOwners>,
 }
 
@@ -456,7 +476,7 @@ impl Puzzle2dForceLayoutWork {
     /// 🧲️ `forceLayout` and `reorganize` are the same simulation behind two verbs, so the admitted
     /// tool id travels with the work — the retained job's decode phase rejects a payload whose
     /// action id does not equal [`crate::retained_command::PuzzleCommandWork::tool_id`].
-    pub(super) fn new(tool_id: &'static str) -> Self {
+    pub fn new(tool_id: &'static str) -> Self {
         Self { close_owners: Default::default(),
             tool_id,
             stage: Puzzle2dForceStage::Nodes,
@@ -488,11 +508,11 @@ impl Puzzle2dForceLayoutWork {
         }
     }
 
-    pub(super) fn visible(object: &semio_framework_pack_json::Object) -> bool {
+    pub fn visible(object: &semio_framework_pack_json::Object) -> bool {
         object.get("hidden").and_then(Value::as_bool).map_or_else(|| object.get("visible").and_then(Value::as_bool).unwrap_or(true), |hidden| !hidden)
     }
 
-    pub(super) fn radius(node: &Value) -> f64 {
+    pub fn radius(node: &Value) -> f64 {
         let Some(object) = node.as_object() else { return 32.0 };
         if object.get("shape").and_then(Value::as_str) == Some("rectangle") {
             let width = object.get("width").and_then(Value::as_f64).unwrap_or(40.0);
@@ -773,7 +793,7 @@ impl Puzzle2dForceLayoutWork {
     }
 }
 
-impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puzzle2dPlayApp>> for Puzzle2dForceLayoutWork {
+impl<A: Puzzle2dEditor> semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<A>> for Puzzle2dForceLayoutWork {
     fn tool_id(&self) -> &'static str {
         self.tool_id
     }
@@ -784,7 +804,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puz
     /// repulsion/spring chunks, and the epilogue emits one mutation pass. Handles are counted here
     /// too, so a document that would trip `PUZZLE2D_FORCE_MAX_HANDLES` mid-run is refused at
     /// preflight instead.
-    fn extent(&self, command: &Puzzle2dCommand, snapshot: &Puzzle2dPlaySnapshot, _interaction: &protocol::InteractionState, _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Puzzle2dPlayApp>>>) -> Option<usize> {
+    fn extent(&self, command: &Puzzle2dCommand, snapshot: &Puzzle2dPlaySnapshot, _interaction: &protocol::InteractionState, _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<A>>>) -> Option<usize> {
         if command.action_id() != self.tool_id || snapshot.value().get("schema").and_then(Value::as_str) != Some(PUZZLE2D_BOARD_SNAPSHOT_SCHEMA) {
             return None;
         }
@@ -811,11 +831,11 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puz
     /// 🍰️ Each call drains one chunk of the current stage and yields a progress boundary, so the
     /// number of `step()` calls matches [`Puzzle2dForceLayoutWork::extent`] instead of running one
     /// force evaluation per checkpoint.
-    fn work_demands(&self, _input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle2dPlayApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-        crate::retained_command::step_demands::<EditorApp<Puzzle2dPlayApp>>(size_of::<Self>())
+    fn work_demands(&self, _input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        crate::retained_command::step_demands::<EditorApp<A>>(size_of::<Self>())
     }
 
-    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle2dPlayApp>>, _cx: &mut StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<Puzzle2dPlayApp>>, Fault> {
+    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, _cx: &mut StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, Fault> {
         let semio_framework_plugin::retained_command::ArtifactCommandInputs { command: _command, snapshot, config: _config, interaction: _interaction, hover: _hover, context: _context, .. } = *input;
         let nodes = snapshot.value().get("nodes").and_then(Value::as_array).ok_or_else(|| Fault::from("puzzle2d-force-nodes-missing"))?;
         let edges = snapshot.value().get("edges").and_then(Value::as_array);
@@ -968,7 +988,7 @@ enum Puzzle2dRedrawStage {
 #[derive(Clone, Copy)]
 struct Puzzle2dRedrawShape {
     center: [f64; 2],
-    pub(super) rectangle: Option<[f64; 2]>,
+    pub rectangle: Option<[f64; 2]>,
 }
 
 semio_framework_value::artifact_retire_leaf!(Puzzle2dRedrawShape);
@@ -983,19 +1003,19 @@ struct Puzzle2dRedrawHandlesWorkOwners {
     shapes: Vec<Option<Puzzle2dRedrawShape>>,
     handle_locations: HashMap<String, (usize, usize)>,
     angles: std::collections::BTreeMap<(usize, usize), f64>,
-    pub(super) mutations: Vec<Puzzle2dMutation>,
+    pub mutations: Vec<Puzzle2dMutation>,
 }
 
-pub(super) struct Puzzle2dRedrawHandlesWork {
-    pub(super) stage: Puzzle2dRedrawStage,
+pub struct Puzzle2dRedrawHandlesWork {
+    pub stage: Puzzle2dRedrawStage,
     node_cursor: usize,
     handle_cursor: usize,
     edge_cursor: usize,
     shapes: Vec<Option<Puzzle2dRedrawShape>>,
     handle_locations: HashMap<String, (usize, usize)>,
     angles: std::collections::BTreeMap<(usize, usize), f64>,
-    pub(super) mutations: Vec<Puzzle2dMutation>,
-    pub(super) retained_bytes: usize,
+    pub mutations: Vec<Puzzle2dMutation>,
+    pub retained_bytes: usize,
     close_owners: crate::puzzle_job::WorkClosing<Puzzle2dRedrawHandlesWorkOwners>,
 }
 
@@ -1016,7 +1036,7 @@ impl Default for Puzzle2dRedrawHandlesWork {
 }
 
 impl Puzzle2dRedrawHandlesWork {
-    pub(super) fn shape(object: &semio_framework_pack_json::Object) -> Option<Puzzle2dRedrawShape> {
+    pub fn shape(object: &semio_framework_pack_json::Object) -> Option<Puzzle2dRedrawShape> {
         let cx = object.get("x").and_then(Value::as_f64)?;
         let cy = object.get("y").and_then(Value::as_f64)?;
         if object.get("shape").and_then(Value::as_str) == Some("rectangle") {
@@ -1128,7 +1148,7 @@ impl Puzzle2dRedrawHandlesWork {
         let object = nodes.get(node_index).and_then(Value::as_object).ok_or_else(|| Fault::from("puzzle2d-redraw-node-owner-lost"))?;
         let node_id = object.get("id").and_then(Value::as_str).ok_or_else(|| Fault::from("puzzle2d-redraw-node-id-missing"))?;
         let handle = object.get("handles").and_then(Value::as_array).and_then(|handles| handles.get(handle_index)).ok_or_else(|| Fault::from("puzzle2d-redraw-handle-owner-lost"))?;
-        let original = <crate::standards::v1::subsets::any::schema::Puzzle2dHandle as semio_framework_value::FromValue>::from_value(semio_framework_value::ToValue::to_value(handle)).map_err(|_| Fault::from("puzzle2d-redraw-handle-malformed"))?;
+        let original = <crate::standards::v1::subsets::any::schema::records::Puzzle2dHandle as semio_framework_value::FromValue>::from_value(semio_framework_value::ToValue::to_value(handle)).map_err(|_| Fault::from("puzzle2d-redraw-handle-malformed"))?;
         let mut next = original.clone();
         next.angle = angle;
         if next == original {
@@ -1157,14 +1177,14 @@ impl Puzzle2dRedrawHandlesWork {
     }
 }
 
-impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puzzle2dPlayApp>> for Puzzle2dRedrawHandlesWork {
+impl<A: Puzzle2dEditor> semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<A>> for Puzzle2dRedrawHandlesWork {
     fn tool_id(&self) -> &'static str {
         "redrawHandles"
     }
 
     /// 📐️ One index chunk per [`PUZZLE2D_REDRAW_UNITS_PER_STEP`] node-or-handle records, one chunk
     /// per that many edges, one chunk per that many published handles, plus one stage handover each.
-    fn extent(&self, command: &Puzzle2dCommand, snapshot: &Puzzle2dPlaySnapshot, _interaction: &protocol::InteractionState, _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Puzzle2dPlayApp>>>) -> Option<usize> {
+    fn extent(&self, command: &Puzzle2dCommand, snapshot: &Puzzle2dPlaySnapshot, _interaction: &protocol::InteractionState, _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<A>>>) -> Option<usize> {
         if command.action_id() != "redrawHandles" || snapshot.value().get("schema").and_then(Value::as_str) != Some(PUZZLE2D_BOARD_SNAPSHOT_SCHEMA) {
             return None;
         }
@@ -1184,11 +1204,11 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puz
         (items <= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS).then_some(items.max(1))
     }
 
-    fn work_demands(&self, _input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle2dPlayApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-        crate::retained_command::step_demands::<EditorApp<Puzzle2dPlayApp>>(size_of::<Self>())
+    fn work_demands(&self, _input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        crate::retained_command::step_demands::<EditorApp<A>>(size_of::<Self>())
     }
 
-    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle2dPlayApp>>, _cx: &mut StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<Puzzle2dPlayApp>>, Fault> {
+    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, _cx: &mut StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, Fault> {
         let semio_framework_plugin::retained_command::ArtifactCommandInputs { command: _command, snapshot, config: _config, interaction: _interaction, hover: _hover, context: _context, .. } = *input;
         let nodes = snapshot.value().get("nodes").and_then(Value::as_array).ok_or_else(|| Fault::from("puzzle2d-redraw-nodes-missing"))?;
         match self.stage {

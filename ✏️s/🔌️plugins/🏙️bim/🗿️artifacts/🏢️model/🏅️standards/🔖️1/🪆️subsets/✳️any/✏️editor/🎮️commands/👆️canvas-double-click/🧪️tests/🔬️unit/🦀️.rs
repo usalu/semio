@@ -1,5 +1,5 @@
 use super::*;
-use crate::editor::bim::unit_tests::support::{ctx, demo, run};
+use crate::editor::bim::fixture::support::{ctx, demo, run};
 
 #[semio_framework_async_macros::async_test]
 async fn a_double_click_is_a_gesture_command_and_needs_its_retained_route() {

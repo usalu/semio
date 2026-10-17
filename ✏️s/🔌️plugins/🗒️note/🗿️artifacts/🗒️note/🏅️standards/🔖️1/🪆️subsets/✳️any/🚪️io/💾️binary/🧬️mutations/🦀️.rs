@@ -29,9 +29,7 @@ pub fn decode_op(bytes: &[u8]) -> Result<NoteMutation, protocol::ProtocolError> 
 mod tests;
 //#endregion 🧪️Tests
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️semio-protocol-conformance/🦀️.rs"]
-mod semio_protocol_conformance;
+
 
 mod native_codec {
 #[cfg(test)] use super::*;

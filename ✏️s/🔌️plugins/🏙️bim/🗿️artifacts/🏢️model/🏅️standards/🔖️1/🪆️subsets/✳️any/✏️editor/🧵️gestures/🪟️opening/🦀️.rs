@@ -4,7 +4,8 @@
 //! another wall.
 
 use super::plane::{axis_length, axis_point_at, axis_tangent_at, project, P};
-use super::session::{Mark, Pointer, Preview, Step, Style, Tool, ToolContext, ToolEvent, REJECTED, TYPE_MISSING};
+use super::session::{Pointer, Step, Tool, ToolContext, ToolEvent, REJECTED, TYPE_MISSING};
+use crate::editor::bim::marks::{Mark, Preview, Style};
 use crate::standards::v1::subsets::any::schema::inferences::wall_layout::thickness_of;
 use crate::standards::v1::subsets::any::schema::{snapshot::{Axis, ModelSnapshot, Opening, OpeningKind}, mutations::ModelMutation};
 

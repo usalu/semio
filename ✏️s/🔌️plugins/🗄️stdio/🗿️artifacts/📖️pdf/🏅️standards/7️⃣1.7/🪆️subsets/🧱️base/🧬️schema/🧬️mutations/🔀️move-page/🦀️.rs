@@ -1,6 +1,5 @@
 //! 🔀️ Authoritative PDF mutation payload, diff, inverse, and tests for `move-page`.
 
-use super::PdfMutation;
 use crate::standards::v1_7::subsets::base::schema::diff::{self, PdfDiff};
 use crate::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot;
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
@@ -15,19 +14,22 @@ pub struct MovePage {
     pub to: usize,
 }
 
-impl MutationKind<PdfSnapshot, PdfMutation> for MovePage {
+impl<Op> MutationKind<PdfSnapshot, Op> for MovePage
+where
+    Op: protocol::Mutation<PdfSnapshot, Diff = PdfDiff> + From<MovePage>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "move", entity: "page", kind: "move-page", record: "Move" };
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
         MutationOutcome::new(diff::diff_move_page(base, self.from, self.to))
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
         if base.pages.get(self.from).is_none() {
             Vec::new()
         } else {
-            vec![PdfMutation::MovePage(MovePage { from: self.to.min(base.pages.len().saturating_sub(1)), to: self.from })]
+            vec![Op::from(MovePage { from: self.to.min(base.pages.len().saturating_sub(1)), to: self.from })]
         }
     
     })())
@@ -45,8 +47,6 @@ impl MutationKind<PdfSnapshot, PdfMutation> for MovePage {
 //#endregion 🔖️Mutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
 

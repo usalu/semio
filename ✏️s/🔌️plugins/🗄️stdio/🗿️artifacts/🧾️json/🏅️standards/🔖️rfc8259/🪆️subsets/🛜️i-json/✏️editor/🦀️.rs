@@ -74,7 +74,7 @@ pub enum JsonIJsonIJsonEditorCommand {
 /// ancestors' sibling keys and its own, joined by `TREE_WINDOW_PATH_SEPARATOR` — and
 /// `main::JSON_ROOT_NODE_ID` alone is the root.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn decode_path_id(node_id: &str) -> Result<String, String> {
+pub fn decode_path_id(node_id: &str) -> Result<String, String> {
     if node_id == main::JSON_ROOT_NODE_ID {
         return Ok("/value".into());
     }
@@ -171,7 +171,7 @@ impl protocol::OpBinary for JsonIJsonIJsonEditorCommand {
 
 //#region 🧵️RetainedRoutes
 /// 🪟️ The verb the `TreeWindowKit` mints for `🪟️main` — declared by the framework, reduced only here.
-const JSON_I_JSON_KIT_ACTION_ID: &str = "set-node";
+pub const JSON_I_JSON_KIT_ACTION_ID: &str = "set-node";
 /// 🧵️ The app-owned retained routes this editor declares: the example switch and `set-node`.
 /// `validate_ui_dispatch_classification` refuses any verb that is not `Migrated`, and `Migrated`
 /// only survives the guest's `interactive-job.catalog-incomplete` boot check when this roster, the
@@ -208,7 +208,7 @@ fn json_i_json_retained_contract() -> ToolExecutionContract {
 /// whose asset IS this app's curated document; every other id — including the empty id the shell
 /// sends for "the app's own default document" — opens the genesis document.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn json_i_json_example_snapshot(example_id: &str) -> JsonSnapshot {
+pub fn json_i_json_example_snapshot(example_id: &str) -> JsonSnapshot {
     if example_id == crate::standards::v_rfc8259::subsets::i_json::examples::demo::ID {
         <JsonSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(crate::standards::v_rfc8259::subsets::i_json::examples::demo::PRIMARY_TEXT).unwrap_or_default()
     } else {
@@ -220,7 +220,7 @@ fn json_i_json_example_snapshot(example_id: &str) -> JsonSnapshot {
 /// `ArtifactEditor::command_from_action`'s default refuses EVERY id, which is why the boot example,
 /// every navbar pick and every Actions-pane row died before reaching a command.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn json_i_json_command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<JsonIJsonIJsonEditorCommand, Fault> {
+pub fn json_i_json_command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<JsonIJsonIJsonEditorCommand, Fault> {
     if let Some(event) = semio_s_artifact_stdio_contract::editing::snapshot_edit_event_from_action(action, args)? {
         return Ok(JsonIJsonIJsonEditorCommand::EditSnapshot { event });
     }
@@ -255,7 +255,7 @@ fn json_i_json_retained_extent(_command: &JsonIJsonIJsonEditorCommand, _snapshot
 /// ✏️ The one reduction `handle` and the retained route share: the example switch hands the host
 /// its document, `set-node` becomes this artifact's own mutation.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn json_i_json_emit(command: &JsonIJsonIJsonEditorCommand, snapshot: &JsonSnapshot, canonical_revision: Option<[u8; 32]>) -> Result<Emit<JsonMutation, NoConfigMutation, NoDraftMutation>, Fault> {
+pub fn json_i_json_emit(command: &JsonIJsonIJsonEditorCommand, snapshot: &JsonSnapshot, canonical_revision: Option<[u8; 32]>) -> Result<Emit<JsonMutation, NoConfigMutation, NoDraftMutation>, Fault> {
     if let JsonIJsonIJsonEditorCommand::EditSnapshot { event } = command {
         return <JsonIJsonEditor as semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor>::snapshot_edit_emit(event, snapshot);
     }
@@ -326,9 +326,9 @@ impl ToolJobFactory for JsonIJsonRetainedCommandJobFactory {
         &mut self,
         _operation: semio_framework_job::Operation,
         payload: Self::Payload,
-        input: semio_framework_plugin::action_bus::RetainedToolWireInput,
-        checkpoint: Option<semio_framework_plugin::action_bus::RetainedToolWireInput>,
-    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework_plugin::action_bus::RetainedToolWireInput, Option<semio_framework_plugin::action_bus::RetainedToolWireInput>)> {
+        input: semio_framework_action_bus::RetainedToolWireInput,
+        checkpoint: Option<semio_framework_action_bus::RetainedToolWireInput>,
+    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework_action_bus::RetainedToolWireInput, Option<semio_framework_action_bus::RetainedToolWireInput>)> {
         if input.declared_bytes() > JSON_I_JSON_RETAINED_RAW_BYTES || checkpoint.is_some() {
             return Err((ToolJobFactoryError::new("stdio json i-json retained command rejects oversized wire or checkpoint owner"), input, checkpoint));
         }
@@ -381,7 +381,7 @@ impl ArtifactEditor for JsonIJsonEditor {
         let snapshot = crate::standards::v_rfc8259::subsets::base::io::text::snapshot::parse_json_text(text)
             .map(JsonSnapshot::from_value)
             .map_err(|error| semio_framework_plugin::MediaError::Payload("artifact:native".into(), error.to_string()))?;
-        if let Some(diagnostic) = crate::standards::v_rfc8259::subsets::i_json::io::check_i_json_conformance(&snapshot)
+        if let Some(diagnostic) = crate::standards::v_rfc8259::subsets::i_json::schema::check_i_json_conformance(&snapshot)
             .into_iter()
             .find(|diagnostic| matches!(diagnostic.severity, semio_framework_diagnostic::Severity::Error | semio_framework_diagnostic::Severity::Fatal))
         {

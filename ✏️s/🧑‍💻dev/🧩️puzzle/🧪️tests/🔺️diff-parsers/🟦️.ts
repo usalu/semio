@@ -9,9 +9,9 @@ import { artifactReferenceSchema } from "@semio-tech/schema-ts/artifact-referenc
 import { existsSync, readFileSync } from "node:fs";
 import Ajv, { type ValidateFunction } from "ajv";
 import { describe, expect, it } from "vitest";
-import * as puzzle2dDiff from "../../../../🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts";
-import * as puzzle3dDiff from "../../../../🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts";
-import * as puzzle5dDiff from "../../../../🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts";
+import * as puzzle2dDiff from "@semio-tech/puzzle-2d/standards/1/subsets/any/schema/diff";
+import * as puzzle3dDiff from "@semio-tech/puzzle-3d-ts/standards/1/subsets/any/schema/diff";
+import * as puzzle5dDiff from "@semio-tech/puzzle-js/artifacts/5d/standards/1/subsets/any/schema/diff";
 
 /** 🚪️ The framework-owned `ArtifactRef` every composed-child handle `$ref`s. */
 const frameworkIoSchema = "../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🧬️schema/🔣️.json";

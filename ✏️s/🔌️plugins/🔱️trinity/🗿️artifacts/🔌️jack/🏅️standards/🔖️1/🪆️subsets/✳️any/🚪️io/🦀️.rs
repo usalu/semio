@@ -1,19 +1,19 @@
 /// 🧩️ Native composition accepts only this artifact's declared codecs; authored installations supply foreign formats.
 pub mod derived_composition{
- use crate::JackSnapshot;
+ use crate::standards::v1::subsets::any::schema::snapshot::JackSnapshot;
  use semio_framework_plugin::{ArtifactComposition,io::{AnalyzeSource,ComposeError,ComposeSource,Composition}};
  pub struct JackComposerComposition;
  impl ArtifactComposition for JackComposerComposition{
   type Snapshot=JackSnapshot;
-  const WRITES:semio_framework_artifact_reference::Dialect=crate::TRINITY_JACK_DIALECT;
-  fn reads()->&'static[semio_framework_artifact_reference::Dialect]{&[crate::TRINITY_JACK_DIALECT]}
+  const WRITES:semio_framework_artifact_reference::Dialect=crate::standards::v1::subsets::any::schema::graph::TRINITY_JACK_DIALECT;
+  fn reads()->&'static[semio_framework_artifact_reference::Dialect]{&[crate::standards::v1::subsets::any::schema::graph::TRINITY_JACK_DIALECT]}
   fn compose(sources:&[ComposeSource<'_>])->Result<Composition<JackSnapshot>,ComposeError>{use semio_framework_plugin::ArtifactAnalysis;for source in sources{if source.dialect!=Self::WRITES{continue}let payload=match&source.payload{AnalyzeSource::Text(text)=>AnalyzeSource::Text(text),AnalyzeSource::Binary(bytes)=>AnalyzeSource::Binary(bytes)};let analysis=super::JackAnalyzer::analyze(&[payload]);if let Some(snapshot)=analysis.parts.snapshot{return Ok(Composition{snapshot,confidence:analysis.confidence,diagnostics:analysis.diagnostics})}}Err(ComposeError{message:"Jack native composition requires its declared source dialect".into(),diagnostics:Vec::new()})}
  }
 }
 pub use derived_composition::*;
 pub mod io_registry{pub fn entries()->&'static[semio_framework_plugin::io::ComposerEntry]{static ENTRIES:std::sync::LazyLock<Vec<semio_framework_plugin::io::ComposerEntry>>=std::sync::LazyLock::new(||vec![semio_framework_plugin::composer_entry_of::<super::JackComposer>()]);ENTRIES.as_slice()}}
 
-#[path="🔣️json/🦀️.rs"] pub mod json_native;
+
 
 #[path = "💾️binary/🦀️.rs"]
 pub mod binary;
@@ -21,11 +21,12 @@ pub mod binary;
 #[path = "📝️text/🦀️.rs"]
 pub mod text;
 
-#[path = "🪶️sqlite/🦀️.rs"]
-pub mod sqlite;
+pub use semio_s_artifact_trinity_jack_language_service::standards::v1::subsets::any::io::sqlite;
 
 pub mod derived_construction {
-    use crate::{JackDiff, JackSnapshot, TrinityGraphMutation};
+    use crate::standards::v1::subsets::any::schema::diff::JackDiff;
+use crate::standards::v1::subsets::any::schema::snapshot::JackSnapshot;
+use crate::standards::v1::subsets::any::schema::mutations::TrinityGraphMutation;
     use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
@@ -75,7 +76,7 @@ pub mod derived_construction {
 pub use derived_construction::*;
 
 pub mod derived_analysis {
-    use crate::JackSnapshot;
+    use crate::standards::v1::subsets::any::schema::snapshot::JackSnapshot;
     use {semio_framework_plugin::io::Analysis,semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     #[derive(Clone, Debug, Default)]

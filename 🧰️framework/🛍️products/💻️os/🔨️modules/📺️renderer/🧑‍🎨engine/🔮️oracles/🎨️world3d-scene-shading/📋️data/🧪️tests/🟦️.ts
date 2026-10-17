@@ -1,4 +1,4 @@
-import surfaceFixture from"../../../../../../../../../🔨️modules/🖱️ui/🖌️render/🧪️tests/🧫️fixtures/🎨️world3d-inline-surface/🔣️.json";
+import { world3dInlineSurfaceFixture as surfaceFixture } from "../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🟦️.ts";
 import{test,expect}from"bun:test";
 import Ajv2020 from"ajv/dist/2020.js";
 import{Database}from"bun:sqlite";

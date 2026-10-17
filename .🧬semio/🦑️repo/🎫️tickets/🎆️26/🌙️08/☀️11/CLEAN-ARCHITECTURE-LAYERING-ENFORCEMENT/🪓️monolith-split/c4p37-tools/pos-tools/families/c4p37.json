@@ -1,0 +1,27 @@
+{
+ "name": "c4p37",
+ "crates": [
+  "semio-framework-time-travel",
+  "semio-framework-trace",
+  "semio-framework-editor",
+  "semio-framework-abi",
+  "semio-framework-value-intrinsic",
+  "semio-framework-value-retained-map",
+  "semio-framework-pack-record-retained",
+  "semio-framework-pack-format-retained"
+ ],
+ "base": {
+  "rev": "b84bf526c7b",
+  "crates": [
+   "semio-framework-time-travel",
+   "semio-framework-trace",
+   "semio-framework-editor",
+   "semio-framework-abi",
+   "semio-framework-value-intrinsic",
+   "semio-framework-value-retained-map",
+   "semio-framework-pack-record-retained",
+   "semio-framework-pack-format-retained"
+  ]
+ },
+ "note": "CENSUS4-PKG-37: framework modules time-travel, trace, editor, abi, value codec, retained ordered map, pack record decode and pack retained source split into children"
+}

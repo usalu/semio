@@ -1,4 +1,6 @@
-use super::*;
+use graph_core::{AttrView, EdgeWeights, GraphView, NodeId};
+use graph_manifest::{PropertyBag, PropertyValue};
+use crate::schema::normal_internals::directed::*;
 
 // #subregion CrudDirection
 #[test]

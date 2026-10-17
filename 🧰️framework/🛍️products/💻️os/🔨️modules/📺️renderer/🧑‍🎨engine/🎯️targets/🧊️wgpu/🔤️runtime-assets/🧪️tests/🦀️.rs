@@ -2,9 +2,10 @@
 
 use super::*;
 use semio_framework_canvas::{resolve_icon_kind, ResolvedIcon};
+use semio_framework_test_fixtures::manifest_dir;
 
 fn manifest_anchor() -> Vec<PathBuf> {
-    vec![PathBuf::from(env!("CARGO_MANIFEST_DIR"))]
+    vec![manifest_dir!()]
 }
 
 #[test]

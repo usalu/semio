@@ -17,5 +17,4 @@ test("inspector selection actions match neutral cases and independent relational
    expect(actual).toEqual([...row.expected].sort());expect(actual).toEqual(reference);expect(drawingSelectionActionAvailable(selection,"unknown")).toBe(false);
   }
  }finally{db.close();}
- console.log(`[DEBUG] Inspector selection action eligibility matched ${fixture.cases.length} neutral cases and independent SQLite rules`);
 });

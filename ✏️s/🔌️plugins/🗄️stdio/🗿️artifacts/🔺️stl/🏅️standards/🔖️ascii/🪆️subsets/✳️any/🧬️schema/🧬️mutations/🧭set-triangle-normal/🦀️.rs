@@ -8,8 +8,8 @@ use super::*;
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetTriangleNormal {
-    pub(crate) index: usize,
-    pub(crate) normal: [f64; 3],
+    pub index: usize,
+    pub normal: [f64; 3],
 }
 
 impl protocol::MutationKind<StlSnapshot, StlMutation> for SetTriangleNormal {

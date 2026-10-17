@@ -1,11 +1,52 @@
+use semio_framework_test_fixtures::fixture_path;
+use semio_framework_ui_contract::*;
+use semio_framework::*;
+use semio_framework::kernel::*;
 //#region 📡️RegisteredQueryDispatch
-use super::*;
+use semio_framework_plugin_plugin_program::{AppInstance, decode_wire_serialized, encode_wire_serialized, plugin_runtime};
+use semio_framework_plugin_abi::{ArtifactAnalysis, ArtifactAnalyzer, ArtifactBuilder, ArtifactChildren, ArtifactComposer, ArtifactComposition, ArtifactDecomposer, ArtifactDeserializer, ArtifactSerializer, DerivedArtifactSpec};
+use semio_framework_plugin_decl_app::{ArtifactApp, NaturalFileDecodeCursor};
+use semio_framework_plugin_decl_surface::{ArtifactEditor, ArtifactViewer};
+use semio_framework_plugin_decl_views::tool_contract::ArtifactInstanceOperationOwner;
+use semio_framework_plugin_decl_app::tool_contract::{ArtifactOwnedToolJobFactory, ArtifactReservedJob};
+use pack::snapshot::ArtifactPack;
+use store::ArtifactStoreInitializationAuthority;
+use semio_framework_plugin_decl_emission::{AsyncTaskRun, AsyncTaskSource, Emit, ToolCommandCatalog};
+use semio_framework_os_kernel::os_store::backbone::Backbone;
+use semio_framework_plugin_decl_views::child_view::ChildContentRetainers;
+use semio_framework_value::DslValue;
+use semio_framework::{Fault, *};
+use semio_framework_diagnostic::FaultFrom;
+use semio_framework_value_derive::{FromValue, ToValue};
+use semio_framework_plugin_interaction::mutations::InteractionConfigMutation;
+use protocol::LOCAL_ACTOR_ID;
+use semio_framework_plugin_window_kits::{LabelAxes, WindowKit};
+use semio_framework_os_kernel::{MemberFactory, Mutation, SpaceMember};
+use semio_framework_plugin_reactor_app::PluginApp;
+use semio_framework_plugin_builder::Ready;
+use semio_framework_value::retained_clone::RetainedCloneGrant;
+use semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::document::mutations::set_count::SetCount;
+use semio_framework_os_kernel::io::SubsetValidator;
+use semio_framework_plugin_tests_05::plugin_runtime_plugin_builder_contract_support_1::{TestApp, interaction_app_raw};
+use semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::document::mutations::TestMutation;
+use semio_framework_plugin_decl_views::tool_run_contract::ToolRunRetargetableJob;
+use serde_json::{Value, json};
+use semio_framework_plugin_instance_app::VcsArtifactApp;
+use semio_framework_plugin_window_config::{WindowConfigOwner, WindowConfigReplaceMutation};
+use semio_framework_plugin_window_transient::window_transient::WindowTransientOwner;
+use semio_framework_job::InteractiveJob as _;
+#[cfg(any(test, feature = "artifact-app-testing"))]
+use semio_framework_plugin_testing_laws::artifact_app_laws;
+use semio_framework_os_kernel as protocol;
+use semio_framework_os_kernel as store;
+use semio_framework_plugin_tool_run as tool_run;
+use semio_framework_plugin_job::reserved_job_outcomes;
 
 //#region 🚪️ExactRuntimeCloseLease
 /// ⏱️ Mirrors the close worker's clock contract so a fixture clock row pins WHICH cleanup-fault
 /// variant the turn must publish, not merely that some fault was published.
-fn expected_clock_cause(samples: &[Option<u64>]) -> super::super::RuntimeCleanupFault {
-    use super::super::RuntimeCleanupFault;
+fn expected_clock_cause(samples: &[Option<u64>]) -> semio_framework_plugin_reactor_lifecycle::life_cleanup_vocabulary::RuntimeCleanupFault {
+    use semio_framework_plugin_reactor_lifecycle::life_cleanup_vocabulary::RuntimeCleanupFault;
     let (Some(Some(start)), Some(Some(preflight))) = (samples.first().copied(), samples.get(1).copied()) else { return RuntimeCleanupFault::Clock };
     if preflight < start { return RuntimeCleanupFault::ClockRegression; }
     let Some(Some(finished)) = samples.get(2).copied() else { return RuntimeCleanupFault::Clock };
@@ -15,33 +56,33 @@ fn expected_clock_cause(samples: &[Option<u64>]) -> super::super::RuntimeCleanup
 
 fn admit_fixture_session<J:semio_framework_job::InteractiveJob+'static>(job:J,config:semio_framework_job_worker_authority::BatchDriveConfig,cx:&mut semio_framework_job::StepContext<'_>)->semio_framework_job_worker::BatchJobSession<J>{
     let mut original=semio_framework_plugin_ownership::reserved_job_session::RefusedWorkerSource::pending(job,(cx.operation(),cx.generation()));
-    for _ in 0..crate::app_testing::OriginalFixtureCaller::maximum_turns(){if let Some(session)=original.admit_pending_batch(config,cx).expect("same original fixture session admission"){assert!(original.terminal_is_empty());return session;}}
+    for _ in 0..semio_framework_plugin_testing_laws::OriginalFixtureCaller::maximum_turns(){if let Some(session)=original.admit_pending_batch(config,cx).expect("same original fixture session admission"){assert!(original.terminal_is_empty());return session;}}
     panic!("original session admission exceeded its supplied fixture turns")
 }
 
 fn close_fixture_session<J:semio_framework_job::InteractiveJob+'static>(session:&mut semio_framework_job_worker::BatchJobSession<J>,cx:&mut semio_framework_job::StepContext<'_>){
-    for _ in 0..crate::app_testing::OriginalFixtureCaller::maximum_turns(){if session.terminal_is_empty(){break;}session.close_step(cx).expect("same original fixture session close");}
+    for _ in 0..semio_framework_plugin_testing_laws::OriginalFixtureCaller::maximum_turns(){if session.terminal_is_empty(){break;}session.close_step(cx).expect("same original fixture session close");}
     assert!(session.terminal_is_empty());
 }
 
-fn drive_fixture_close_with_samples(state:&std::sync::Arc<super::super::RuntimeCloseWorkerState<TestRuntimeApps>>,cx:&mut semio_framework_job::StepContext<'_>,mut samples:impl FnMut()->Option<u64>){
+fn drive_fixture_close_with_samples(state:&std::sync::Arc<semio_framework_plugin_reactor_lifecycle::life_instance_registry::RuntimeCloseWorkerState<TestRuntimeApps>>,cx:&mut semio_framework_job::StepContext<'_>,mut samples:impl FnMut()->Option<u64>){
     use super::super::*;
     let measured=runtime_callback_clock_begin(&mut samples);
     let candidate=match measured{Ok(start)=>run_runtime_close_turn_inner(state,cx).expect("same original full close failure").map(|candidate|runtime_callback_clock_elapsed(&mut samples,start).map(|elapsed|(candidate,elapsed))),Err(cause)=>Some(Err(cause))};
     match candidate{Some(Ok((status,elapsed)))=>runtime_close_publish_turn(state,status,elapsed),Some(Err(cause))=>{state.last_callback_elapsed_us.store(u64::MAX,Ordering::SeqCst);state.status.store(runtime_close_fault(state,cause).repr(),Ordering::SeqCst);},None=>{}}
 }
 
-fn terminal_close_state(complete: bool, faulted: bool, blocked: bool,cx:&mut semio_framework_job::StepContext<'_>) -> std::sync::Arc<super::super::RuntimeCloseWorkerState<TestRuntimeApps>> {
+fn terminal_close_state(complete: bool, faulted: bool, blocked: bool,cx:&mut semio_framework_job::StepContext<'_>) -> std::sync::Arc<semio_framework_plugin_reactor_lifecycle::life_instance_registry::RuntimeCloseWorkerState<TestRuntimeApps>> {
     use super::super::*;
-    let job = RuntimeCloseCleanupJob { state: None, instance_id: 7, progress: None, contended: false, publication: crate::reserved_job_outcomes::CleanupPublication::new(), closing: true };
-    let params = semio_framework_job_worker_authority::BatchDriveConfig { retained: crate::app::artifact_app_laws::fixture_mounted_policy().close, site: "exact-close-terminal-law", stage: semio_framework_job::InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_us: 500 };
+    let job = RuntimeCloseCleanupJob { state: None, instance_id: 7, progress: None, contended: false, publication: semio_framework_plugin_job::reserved_job_outcomes::CleanupPublication::new(), closing: true };
+    let params = semio_framework_job_worker_authority::BatchDriveConfig { retained: semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy().close, site: "exact-close-terminal-law", stage: semio_framework_job::InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_us: 500 };
     let mut session = admit_fixture_session(job, params,cx);
     session.begin_close();
     close_fixture_session(&mut session,cx);
     let mut pump = RuntimeCloseCleanupPump::new();
     pump.session = Some(session); pump.terminal = true; pump.complete = complete; pump.faulted = faulted; pump.blocked = blocked;
     std::sync::Arc::new(RuntimeCloseWorkerState {
-        instance_id: 7, generation: semio_framework_job::Generation(1), mounted_policy: crate::app::artifact_app_laws::fixture_mounted_policy(),
+        instance_id: 7, generation: semio_framework_job::Generation(1), mounted_policy: semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(),
         cell: std::sync::Mutex::new(std::mem::ManuallyDrop::new(None)), pump: std::sync::Mutex::new(pump),
         status: AtomicU8::new(RuntimeCloseStatus::Queued.repr()), deadline_resume: AtomicU8::new(u8::MAX), deadline_elapsed_us: AtomicU64::new(0), stalled_steps: AtomicU8::new(0),
         stall_since_us: AtomicU64::new(0), stall_credit_spent_us: AtomicU64::new(0),
@@ -53,7 +94,7 @@ fn terminal_close_state(complete: bool, faulted: bool, blocked: bool,cx:&mut sem
 
 #[test]
 fn instance_lifetime_close_does_not_publish_terminal_before_watchdog() {
-    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("original full-body dispatch caller");let mut original_context=original_caller.context();let cx=&mut original_context;let result=(||{
+    let mut original_caller=semio_framework_plugin_testing_laws::OriginalFixtureCaller::admit().expect("original full-body dispatch caller");let mut original_context=original_caller.context();let cx=&mut original_context;let result=(||{
     use super::super::*;
     let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🚨️fault.fixture.json")).unwrap();
     let state = terminal_close_state(true, false, false,cx);
@@ -74,7 +115,7 @@ fn instance_lifetime_close_does_not_publish_terminal_before_watchdog() {
 
 #[test]
 fn instance_lifetime_close_deadline_resume_never_reenters_completed_work() {
-    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("original full-body dispatch caller");let mut original_context=original_caller.context();let cx=&mut original_context;let result=(||{
+    let mut original_caller=semio_framework_plugin_testing_laws::OriginalFixtureCaller::admit().expect("original full-body dispatch caller");let mut original_context=original_caller.context();let cx=&mut original_context;let result=(||{
     use super::super::*;
     let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🚨️fault.fixture.json")).unwrap();
     for row in fixture["callbacks"].as_array().unwrap().iter().filter(|row| row["published"] == "deadline-yield") {
@@ -103,12 +144,12 @@ fn instance_lifetime_close_deadline_resume_never_reenters_completed_work() {
 
 #[semio_framework_async_macros::async_test]
 async fn instance_lifetime_close_late_physical_step_retains_its_exact_outcome() {
-    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("original full-body dispatch caller");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+    let mut original_caller=semio_framework_plugin_testing_laws::OriginalFixtureCaller::admit().expect("original full-body dispatch caller");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
     use super::super::*;
     let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🚨️fault.fixture.json")).unwrap();
     let state = terminal_close_state(false, false, false,cx);
     *state.pump.lock().unwrap() = RuntimeCloseCleanupPump::new();
-    **state.cell.lock().unwrap() = Some(std::sync::Arc::new(RuntimeAppCell::new(AppInstance { id: 7, app: TestRuntimeApps::from(query_app().await), surface_contexts: Default::default() }, crate::app::artifact_app_laws::fixture_mounted_policy())));
+    **state.cell.lock().unwrap() = Some(std::sync::Arc::new(RuntimeAppCell::new(AppInstance { id: 7, app: TestRuntimeApps::from(query_app().await), surface_contexts: Default::default() }, semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy())));
     let limit = fixture["callbackLimitUs"].as_u64().unwrap();
     for _ in 0..4096 {
         state.status.store(RuntimeCloseStatus::Queued.repr(), Ordering::SeqCst);
@@ -144,7 +185,7 @@ async fn instance_lifetime_close_late_physical_step_retains_its_exact_outcome() 
 
 #[test]
 fn instance_lifetime_close_deadline_submit_refusal_preserves_candidate() {
-    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("original full-body dispatch caller");let mut original_context=original_caller.context();let cx=&mut original_context;let result=(||{
+    let mut original_caller=semio_framework_plugin_testing_laws::OriginalFixtureCaller::admit().expect("original full-body dispatch caller");let mut original_context=original_caller.context();let cx=&mut original_context;let result=(||{
     use super::super::*;
     let state = terminal_close_state(true, false, false,cx);
     assert_eq!(run_runtime_close_turn_inner(&state,cx).unwrap(), Some(RuntimeCloseStatus::Complete));
@@ -166,7 +207,7 @@ fn instance_lifetime_close_deadline_submit_refusal_preserves_candidate() {
 
 #[test]
 fn instance_lifetime_close_fault_outcome_dominates_complete_progress() {
-    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("original full-body dispatch caller");let mut original_context=original_caller.context();let cx=&mut original_context;let result=(||{
+    let mut original_caller=semio_framework_plugin_testing_laws::OriginalFixtureCaller::admit().expect("original full-body dispatch caller");let mut original_context=original_caller.context();let cx=&mut original_context;let result=(||{
     use super::super::*;
     let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🚨️fault.fixture.json")).unwrap();
     for row in fixture["terminalPump"].as_array().unwrap() {
@@ -180,7 +221,7 @@ fn instance_lifetime_close_fault_outcome_dominates_complete_progress() {
 
 #[test]
 fn instance_lifetime_close_optional_monotonic_clock_rejects_missing_and_backward_authority() {
-    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("original full-body dispatch caller");let mut original_context=original_caller.context();let cx=&mut original_context;let result=(||{
+    let mut original_caller=semio_framework_plugin_testing_laws::OriginalFixtureCaller::admit().expect("original full-body dispatch caller");let mut original_context=original_caller.context();let cx=&mut original_context;let result=(||{
     use super::super::*;
     let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🚨️fault.fixture.json")).unwrap();
     for row in fixture["clocks"].as_array().unwrap() {
@@ -202,10 +243,10 @@ fn instance_lifetime_close_optional_monotonic_clock_rejects_missing_and_backward
 
 #[semio_framework_async_macros::async_test]
 async fn instance_lifetime_close_preflight_and_shared_restore_preserve_exact_owner() {
-    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("original full-body dispatch caller");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+    let mut original_caller=semio_framework_plugin_testing_laws::OriginalFixtureCaller::admit().expect("original full-body dispatch caller");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
     use super::super::*;
     let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🚨️fault.fixture.json")).unwrap();
-    let cell = std::sync::Arc::new(RuntimeAppCell::new(AppInstance { id: 7, app: TestRuntimeApps::from(query_app().await), surface_contexts: Default::default() }, crate::app::artifact_app_laws::fixture_mounted_policy()));
+    let cell = std::sync::Arc::new(RuntimeAppCell::new(AppInstance { id: 7, app: TestRuntimeApps::from(query_app().await), surface_contexts: Default::default() }, semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy()));
     let state = terminal_close_state(true, false, false,cx);
     **state.cell.lock().unwrap() = Some(cell.clone());
     assert_eq!(runtime_close_retire_cell(&state), RuntimeCloseStatus::Fault(RuntimeCleanupFault::InstanceNotDrained));
@@ -234,12 +275,12 @@ async fn instance_lifetime_close_preflight_and_shared_restore_preserve_exact_own
 
 #[test]
 fn instance_lifetime_close_contended_pump_keeps_exact_outcome_source() {
-    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("original full-body dispatch caller");let mut original_context=original_caller.context();let cx=&mut original_context;let result=(||{
+    let mut original_caller=semio_framework_plugin_testing_laws::OriginalFixtureCaller::admit().expect("original full-body dispatch caller");let mut original_context=original_caller.context();let cx=&mut original_context;let result=(||{
     use super::super::*;
     let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🚨️fault.fixture.json")).unwrap();
     let state = terminal_close_state(true, false, false,cx);
-    let job = RuntimeCloseCleanupJob { state: Some(std::sync::Arc::downgrade(&state)), instance_id: 7, progress: None, contended: false, publication: crate::reserved_job_outcomes::CleanupPublication::new(), closing: false };
-    let params = semio_framework_job_worker_authority::BatchDriveConfig { retained: crate::app::artifact_app_laws::fixture_mounted_policy().close, site: "exact-close-source-law", stage: semio_framework_job::InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_us: 500 };
+    let job = RuntimeCloseCleanupJob { state: Some(std::sync::Arc::downgrade(&state)), instance_id: 7, progress: None, contended: false, publication: semio_framework_plugin_job::reserved_job_outcomes::CleanupPublication::new(), closing: false };
+    let params = semio_framework_job_worker_authority::BatchDriveConfig { retained: semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy().close, site: "exact-close-source-law", stage: semio_framework_job::InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_us: 500 };
     let mut session = admit_fixture_session(job, params,cx);
     session.step_on_original_caller(cx).unwrap();
     assert!(session.checkout_outcome());
@@ -279,14 +320,14 @@ fn instance_lifetime_close_contended_pump_keeps_exact_outcome_source() {
 })();let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original full-body dispatch caller terminal close");result
 }
 
-async fn close_lease_app(runtime: &crate::plugin_runtime::PluginRuntime<TestRuntimeApps>) {
-    let cell = std::sync::Arc::new(super::super::RuntimeAppCell::new(AppInstance { id: 7, app: TestRuntimeApps::from(query_app().await), surface_contexts: Default::default() }, crate::app::artifact_app_laws::fixture_mounted_policy()));
+async fn close_lease_app(runtime: &semio_framework_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<TestRuntimeApps>) {
+    let cell = std::sync::Arc::new(semio_framework_plugin_reactor_lifecycle::life_app_cell::RuntimeAppCell::new(AppInstance { id: 7, app: TestRuntimeApps::from(query_app().await), surface_contexts: Default::default() }, semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy()));
     runtime.instances.borrow_mut().insert_admitted(7, cell);
 }
 
-fn drive_close_lease(runtime: &crate::plugin_runtime::PluginRuntime<TestRuntimeApps>, lease: &crate::plugin_runtime::PluginInstanceCloseLease<TestRuntimeApps>,cx:&mut semio_framework_job::StepContext<'_>) {
+fn drive_close_lease(runtime: &semio_framework_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<TestRuntimeApps>, lease: &semio_framework_plugin_reactor_lifecycle::life_instance_registry::instance_lifetime::PluginInstanceCloseLease<TestRuntimeApps>,cx:&mut semio_framework_job::StepContext<'_>) {
     for _ in 0..200_000 {
-        if let Err(error) = crate::plugin_runtime::plugin_step_close_cleanup(runtime,cx) {
+        if let Err(error) = semio_framework_plugin_runtime_instances::inst_cleanup_turns::plugin_step_close_cleanup(runtime,cx) {
             let entries = runtime.close_quarantine.borrow();
             let state = &entries.get(7).unwrap().state;
             let pump = state.pump.lock().unwrap();
@@ -303,11 +344,11 @@ fn drive_close_lease(runtime: &crate::plugin_runtime::PluginRuntime<TestRuntimeA
 
 #[semio_framework_async_macros::async_test]
 async fn instance_lifetime_close_witness_survives_quarantine_removal_and_reused_id() {
-    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("original full-body dispatch caller");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+    let mut original_caller=semio_framework_plugin_testing_laws::OriginalFixtureCaller::admit().expect("original full-body dispatch caller");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
     let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
-    let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new({ let grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
+    let runtime = semio_framework_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime::<TestRuntimeApps>::new({ let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
     close_lease_app(&runtime).await;
-    let mut lease = crate::plugin_runtime::plugin_capture_instance_close(&runtime, 7).unwrap();
+    let mut lease = semio_framework_plugin_reactor_lifecycle::life_instance_registry::instance_lifetime::plugin_capture_instance_close(&runtime, 7).unwrap();
     assert!(!lease.is_retired().unwrap());
     lease.begin_close(&runtime).unwrap();
     assert_eq!(lease.close_generation(), Some(1));
@@ -322,7 +363,7 @@ async fn instance_lifetime_close_witness_survives_quarantine_removal_and_reused_
     close_lease_app(&runtime).await;
     lease.begin_close(&runtime).unwrap();
     assert_eq!(runtime.instances.borrow().get(7).is_some(), fixture["nativeCases"]["repeatCloseKeepsReplacement"].as_bool().unwrap());
-    let mut fresh = crate::plugin_runtime::plugin_capture_instance_close(&runtime, 7).unwrap();
+    let mut fresh = semio_framework_plugin_reactor_lifecycle::life_instance_registry::instance_lifetime::plugin_capture_instance_close(&runtime, 7).unwrap();
     fresh.begin_close(&runtime).unwrap();
     assert_eq!(fresh.close_generation(), Some(2));
     drive_close_lease(&runtime, &fresh,cx);
@@ -331,14 +372,14 @@ async fn instance_lifetime_close_witness_survives_quarantine_removal_and_reused_
 
 #[semio_framework_async_macros::async_test]
 async fn instance_lifetime_close_constructs_worker_shell_before_exact_live_detachment() {
-    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("original full-body dispatch caller");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+    let mut original_caller=semio_framework_plugin_testing_laws::OriginalFixtureCaller::admit().expect("original full-body dispatch caller");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
     let fixture: Value = serde_json::from_str(include_str!("../../../../../🚪️lifetime/🏗️construction.json")).unwrap();
-    let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new({ let grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
+    let runtime = semio_framework_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime::<TestRuntimeApps>::new({ let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
     close_lease_app(&runtime).await;
-    let mut lease = crate::plugin_runtime::plugin_capture_instance_close(&runtime, 7).unwrap();
-    super::super::RUNTIME_CLOSE_CONSTRUCTION_LIVE.with(|probe| probe.set(None));
+    let mut lease = semio_framework_plugin_reactor_lifecycle::life_instance_registry::instance_lifetime::plugin_capture_instance_close(&runtime, 7).unwrap();
+    semio_framework_plugin_reactor_lifecycle::life_cleanup_pumps::RUNTIME_CLOSE_CONSTRUCTION_LIVE.with(|probe| probe.set(None));
     lease.begin_close(&runtime).unwrap();
-    let constructed_while_live = super::super::RUNTIME_CLOSE_CONSTRUCTION_LIVE.with(|probe| probe.take());
+    let constructed_while_live = semio_framework_plugin_reactor_lifecycle::life_cleanup_pumps::RUNTIME_CLOSE_CONSTRUCTION_LIVE.with(|probe| probe.take());
     let live_after = runtime.instances.borrow().get(7).is_some();
     let quarantined_after = runtime.close_quarantine.borrow().get(7).is_some();
     drive_close_lease(&runtime, &lease,cx);
@@ -350,17 +391,17 @@ async fn instance_lifetime_close_constructs_worker_shell_before_exact_live_detac
 
 #[semio_framework_async_macros::async_test]
 async fn instance_lifetime_close_rejects_foreign_root_and_exhaustion_before_detach() {
-    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("original full-body dispatch caller");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+    let mut original_caller=semio_framework_plugin_testing_laws::OriginalFixtureCaller::admit().expect("original full-body dispatch caller");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
     let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
-    let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new({ let grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
+    let runtime = semio_framework_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime::<TestRuntimeApps>::new({ let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
     close_lease_app(&runtime).await;
-    let mut old = crate::plugin_runtime::plugin_capture_instance_close(&runtime, 7).unwrap();
+    let mut old = semio_framework_plugin_reactor_lifecycle::life_instance_registry::instance_lifetime::plugin_capture_instance_close(&runtime, 7).unwrap();
     let displaced = runtime.instances.borrow_mut().take(7).unwrap();
     close_lease_app(&runtime).await;
     assert_eq!(old.begin_close(&runtime).is_err(), fixture["nativeCases"]["sameIdReplacementRejected"].as_bool().unwrap());
     assert!(runtime.instances.borrow().get(7).is_some());
     assert!(runtime.close_quarantine.borrow().is_empty());
-    let mut fresh = crate::plugin_runtime::plugin_capture_instance_close(&runtime, 7).unwrap();
+    let mut fresh = semio_framework_plugin_reactor_lifecycle::life_instance_registry::instance_lifetime::plugin_capture_instance_close(&runtime, 7).unwrap();
     runtime.close_generation.set(u64::MAX);
     assert!(fresh.begin_close(&runtime).is_err());
     assert_eq!(runtime.instances.borrow().get(7).is_some(), fixture["nativeCases"]["overflowPreservesLiveOwner"].as_bool().unwrap());
@@ -375,15 +416,15 @@ async fn instance_lifetime_close_rejects_foreign_root_and_exhaustion_before_deta
 
 #[semio_framework_async_macros::async_test]
 async fn instance_lifetime_close_construction_failure_preserves_original_live_root() {
-    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("original full-body dispatch caller");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+    let mut original_caller=semio_framework_plugin_testing_laws::OriginalFixtureCaller::admit().expect("original full-body dispatch caller");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
     let fixture: Value = serde_json::from_str(include_str!("../../../../../🚪️lifetime/🏗️construction.json")).unwrap();
     let law = &fixture["constructionFailure"];
-    let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new({ let grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
+    let runtime = semio_framework_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime::<TestRuntimeApps>::new({ let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
     close_lease_app(&runtime).await;
     let rescue = runtime.instances.borrow().get(7).unwrap().clone();
     let generation = runtime.close_generation.get();
-    let mut lease = crate::plugin_runtime::plugin_capture_instance_close(&runtime, 7).unwrap();
-    super::super::RUNTIME_CLOSE_CONSTRUCTION_FAIL.with(|fail| fail.set(true));
+    let mut lease = semio_framework_plugin_reactor_lifecycle::life_instance_registry::instance_lifetime::plugin_capture_instance_close(&runtime, 7).unwrap();
+    semio_framework_plugin_reactor_lifecycle::life_cleanup_pumps::RUNTIME_CLOSE_CONSTRUCTION_FAIL.with(|fail| fail.set(true));
     let fault = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| lease.begin_close(&runtime)));
     let live = runtime.instances.borrow().get(7).is_some();
     let same = runtime.instances.borrow().get(7).is_some_and(|owner| std::sync::Arc::ptr_eq(owner, &rescue));
@@ -402,24 +443,24 @@ async fn instance_lifetime_close_construction_failure_preserves_original_live_ro
 }
 //#endregion 🚪️ExactRuntimeCloseLease
 
-async fn query_command(runtime: &crate::plugin_runtime::PluginRuntime<TestRuntimeApps>, seq: u64, command: protocol::LocalInteractionQueryCommand,cx:&mut semio_framework_job::StepContext<'_>) -> Vec<protocol::AppFrame> {
+async fn query_command(runtime: &semio_framework_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<TestRuntimeApps>, seq: u64, command: protocol::LocalInteractionQueryCommand,cx:&mut semio_framework_job::StepContext<'_>) -> Vec<protocol::AppFrame> {
     wire_command(runtime, seq, protocol::AppCommand::LocalInteractionQuery { seq, command },cx).await
 }
 
-async fn wire_command(runtime: &crate::plugin_runtime::PluginRuntime<TestRuntimeApps>, seq: u64, command: protocol::AppCommand,cx:&mut semio_framework_job::StepContext<'_>) -> Vec<protocol::AppFrame> {
+async fn wire_command(runtime: &semio_framework_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<TestRuntimeApps>, seq: u64, command: protocol::AppCommand,cx:&mut semio_framework_job::StepContext<'_>) -> Vec<protocol::AppFrame> {
     let encoded = protocol::encode_app_command(&command).await.unwrap();
-    run_ingress(runtime, seq, crate::plugin_runtime::PluginCommandIngress::Encoded(encoded),cx).await
+    run_ingress(runtime, seq, semio_framework_plugin_runtime_ops::ops_ingress::PluginCommandIngress::Encoded(encoded),cx).await
 }
 
-async fn cold_decoded_command(runtime: &crate::plugin_runtime::PluginRuntime<TestRuntimeApps>, seq: u64, command: protocol::AppCommand,cx:&mut semio_framework_job::StepContext<'_>) -> Vec<protocol::AppFrame> {
-    run_ingress(runtime, seq, crate::plugin_runtime::PluginCommandIngress::Decoded(crate::plugin_runtime::OriginalDecodedPluginCommand::new(command)),cx).await
+async fn cold_decoded_command(runtime: &semio_framework_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<TestRuntimeApps>, seq: u64, command: protocol::AppCommand,cx:&mut semio_framework_job::StepContext<'_>) -> Vec<protocol::AppFrame> {
+    run_ingress(runtime, seq, semio_framework_plugin_runtime_ops::ops_ingress::PluginCommandIngress::Decoded(semio_framework_plugin_runtime_ops::ops_ingress::original_manifest_receiving::OriginalDecodedPluginCommand::new(command)),cx).await
 }
 
-async fn run_ingress(runtime: &crate::plugin_runtime::PluginRuntime<TestRuntimeApps>, seq: u64, ingress: crate::plugin_runtime::PluginCommandIngress,cx:&mut semio_framework_job::StepContext<'_>) -> Vec<protocol::AppFrame> {
+async fn run_ingress(runtime: &semio_framework_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<TestRuntimeApps>, seq: u64, ingress: semio_framework_plugin_runtime_ops::ops_ingress::PluginCommandIngress,cx:&mut semio_framework_job::StepContext<'_>) -> Vec<protocol::AppFrame> {
     let mut input = Some((seq, ingress));
     let mut frames = Vec::new();
     for _ in 0..100 {
-        let output = crate::plugin_runtime::plugin_exchange(runtime, 7, input, &mut crate::app::artifact_app_laws::fixture_identity(), cx).await.unwrap();
+        let output = semio_framework_plugin_runtime_exchange::exch_plugin_exchange::plugin_exchange(runtime, 7, input, &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity(), cx).await.unwrap();
         for bytes in output.frames { frames.push(protocol::decode_app_frame(&bytes).await.unwrap()); }
         input = output.retry_command;
         if input.is_none() { return frames; }
@@ -435,11 +476,11 @@ async fn run_ingress(runtime: &crate::plugin_runtime::PluginRuntime<TestRuntimeA
 /// owner-mutation payload past the decoder, and no `Error` frame hides the outcome.
 #[semio_framework_async_macros::async_test]
 async fn local_interaction_cold_transaction_receipts_and_encoded_route_rejection() {
-    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("original full-body dispatch caller");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
-    let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new({ let grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
-    let cell = std::sync::Arc::new(super::super::RuntimeAppCell::new(AppInstance { id: 7, app: TestRuntimeApps::from(query_app().await), surface_contexts: Default::default() }, crate::app::artifact_app_laws::fixture_mounted_policy()));
+    let mut original_caller=semio_framework_plugin_testing_laws::OriginalFixtureCaller::admit().expect("original full-body dispatch caller");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+    let runtime = semio_framework_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime::<TestRuntimeApps>::new({ let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
+    let cell = std::sync::Arc::new(semio_framework_plugin_reactor_lifecycle::life_app_cell::RuntimeAppCell::new(AppInstance { id: 7, app: TestRuntimeApps::from(query_app().await), surface_contexts: Default::default() }, semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy()));
     runtime.instances.borrow_mut().insert_admitted(7, cell.clone());
-    crate::plugin_runtime::test_admit_instance_actor(&runtime, 7, "local");
+    semio_framework_plugin_runtime_instances::inst_wire_frames::test_admit_instance_actor(&runtime, 7, "local");
     let denied = wire_command(&runtime, 0, protocol::AppCommand::TransactionPrepare { seq: 0, txn_id: "denied".into(), mutation_id: String::new(), payload: Vec::new(), prepared_ops: Vec::new(), origin: Vec::new(), prepared_child_ops: Vec::new() },cx).await;
     assert!(!denied.iter().any(|frame| matches!(frame, protocol::AppFrame::Error { .. })), "the route answers through its own transaction frame, not an error frame: {denied:?}");
     let rejection = denied
@@ -450,7 +491,7 @@ async fn local_interaction_cold_transaction_receipts_and_encoded_route_rejection
         })
         .unwrap_or_else(|| panic!("the encoded transaction route answers its own TransactionPrepared frame; got {denied:?}"));
     assert!(!rejection.is_empty(), "an empty owner-mutation payload must be REJECTED, never silently prepared: {denied:?}");
-    let fault: Fault = super::super::decode_wire_serialized(rejection).await.unwrap();
+    let fault: Fault = semio_framework_plugin_plugin_program::decode_wire_serialized(rejection).await.unwrap();
     assert_eq!(fault.code.0, "transaction.unknown-mutation");
     assert!(fault.message.contains("did not decode as a"), "the refusal names the decoder that rejected it: {fault:?}");
     assert!(denied.iter().any(|frame| matches!(frame, protocol::AppFrame::Done { in_reply_to } if *in_reply_to == 0)), "the rejected command still closes its own ingress slot: {denied:?}");
@@ -472,9 +513,9 @@ async fn local_interaction_cold_transaction_receipts_and_encoded_route_rejection
     assert!(rejected.iter().any(|frame| matches!(frame, protocol::AppFrame::Error { in_reply_to: Some(5), .. })));
     assert!(!rejected.iter().any(|frame| matches!(frame, protocol::AppFrame::Done { .. })));
     drop(cell);
-    crate::plugin_runtime::plugin_destroy_app(&runtime, 7).await.unwrap();
+    semio_framework_plugin_runtime_instances::inst_cleanup_turns::plugin_destroy_app(&runtime, 7).await.unwrap();
     for _ in 0..200_000 {
-        crate::plugin_runtime::plugin_step_close_cleanup(&runtime,cx).unwrap();
+        semio_framework_plugin_runtime_instances::inst_cleanup_turns::plugin_step_close_cleanup(&runtime,cx).unwrap();
         if runtime.close_quarantine.borrow().get(7).is_none() { break; }
         std::thread::yield_now();
     }
@@ -487,9 +528,9 @@ async fn local_interaction_cold_transaction_receipts_and_encoded_route_rejection
 /// the merge then does is the folder route law's (`🧪️tests/🧪️folder-reload-route`); closing the program cancels what it admitted.
 #[semio_framework_async_macros::async_test]
 async fn a_merge_archive_command_is_admitted_under_its_own_sequence_on_both_routes() {
-    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("original full-body dispatch caller");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
-    let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new({ let grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
-    let cell = std::sync::Arc::new(super::super::RuntimeAppCell::new(AppInstance { id: 7, app: TestRuntimeApps::from(query_app().await), surface_contexts: Default::default() }, crate::app::artifact_app_laws::fixture_mounted_policy()));
+    let mut original_caller=semio_framework_plugin_testing_laws::OriginalFixtureCaller::admit().expect("original full-body dispatch caller");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+    let runtime = semio_framework_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime::<TestRuntimeApps>::new({ let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
+    let cell = std::sync::Arc::new(semio_framework_plugin_reactor_lifecycle::life_app_cell::RuntimeAppCell::new(AppInstance { id: 7, app: TestRuntimeApps::from(query_app().await), surface_contexts: Default::default() }, semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy()));
     runtime.instances.borrow_mut().insert_admitted(7, cell.clone());
     let merge = |seq| protocol::AppCommand::MergeDocumentArchive { seq, archive: protocol::DocumentArchivePack { parent_pack: vec![1, 2], parent_spr: vec![3], members: Vec::new() } };
     for (seq, frames) in [(0, wire_command(&runtime, 0, merge(0),cx).await), (1, cold_decoded_command(&runtime, 1, merge(1),cx).await)] {
@@ -497,9 +538,9 @@ async fn a_merge_archive_command_is_admitted_under_its_own_sequence_on_both_rout
         assert!(!frames.iter().any(|frame| matches!(frame, protocol::AppFrame::Error { .. })), "an admitted merge answers no error frame: {frames:?}");
     }
     drop(cell);
-    crate::plugin_runtime::plugin_destroy_app(&runtime, 7).await.unwrap();
+    semio_framework_plugin_runtime_instances::inst_cleanup_turns::plugin_destroy_app(&runtime, 7).await.unwrap();
     for _ in 0..200_000 {
-        crate::plugin_runtime::plugin_step_close_cleanup(&runtime,cx).unwrap();
+        semio_framework_plugin_runtime_instances::inst_cleanup_turns::plugin_step_close_cleanup(&runtime,cx).unwrap();
         if runtime.close_quarantine.borrow().get(7).is_none() { break; }
         std::thread::yield_now();
     }
@@ -507,22 +548,23 @@ async fn a_merge_archive_command_is_admitted_under_its_own_sequence_on_both_rout
 }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original full-body dispatch caller terminal close");result
 }
 
-use protocol::InteractionState;
-type Wallet = ::semio_framework_os_kernel::io::control::NativeSnapshotBodyWallet;
-type InteractionStore = store::ArtifactStore<InteractionState, InteractionConfigMutation>;
-use crate::local_interaction::retirement::interaction_store_owners;
-include!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🕹️interaction/📃️query/🧪️tests/🧰️original-owners/🦀️.rs"));
+use semio_framework_os_kernel::InteractionState;
+#[doc(hidden)]
+pub type Wallet = ::semio_framework_os_kernel::io::control::NativeSnapshotBodyWallet;
+#[doc(hidden)]
+pub type InteractionStore = store::ArtifactStore<InteractionState, InteractionConfigMutation>;
+include!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🕹️interaction/📃️query/🧪️tests/🧰️original-owners/🦀️.rs"));
 
 async fn query_app() -> VcsArtifactApp<TestApp> {
-    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧪️tests/🧫️fixtures/🏠️local-interaction/🔣️.json")).unwrap();
+    let fixture: Value = serde_json::from_str(&std::fs::read_to_string(fixture_path!("../../../../../../../../🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧪️tests/🧫️fixtures/🏠️local-interaction/🔣️.json")).unwrap()).unwrap();
     let row = fixture["cases"].as_array().unwrap().iter().find(|row| row["id"] == "semantic-unicode-over-page").unwrap();
     let mut state = row["expected"].clone(); state["hover"] = serde_json::json!({});
     let state: InteractionState = serde_json::from_value(state).unwrap();
     let envelope = store::os_store::document_materialize::create_document_envelope::<InteractionState, InteractionConfigMutation>("framework.interaction", "query-dispatch", state, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
-    let mut interaction = store::ArtifactStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await.unwrap();
+    let mut interaction = store::ArtifactStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.unwrap();
     let mut receiving = original_receiving_recipient();
     install_original_interaction_owners(&mut interaction, &mut receiving);
-    let mut app = interaction_app_raw(crate::app::artifact_app_laws::fixture_mounted_policy(), &mut crate::app::artifact_app_laws::fixture_identity()).await;
+    let mut app = interaction_app_raw(semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity()).await;
     let mut previous = std::mem::replace(&mut app.stores.interaction_store, interaction);
     previous.close_owned_unscheduled().unwrap();
     assert!(previous.close_owned_terminal_is_empty());
@@ -532,9 +574,9 @@ async fn query_app() -> VcsArtifactApp<TestApp> {
 
 #[semio_framework_async_macros::async_test]
 async fn local_interaction_registered_query_channel_continuation_ack_and_close() {
-    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("original full-body dispatch caller");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
-    let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new({ let grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
-    let cell = std::sync::Arc::new(super::super::RuntimeAppCell::new(AppInstance { id: 7, app: TestRuntimeApps::from(query_app().await), surface_contexts: Default::default() }, crate::app::artifact_app_laws::fixture_mounted_policy()));
+    let mut original_caller=semio_framework_plugin_testing_laws::OriginalFixtureCaller::admit().expect("original full-body dispatch caller");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+    let runtime = semio_framework_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime::<TestRuntimeApps>::new({ let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
+    let cell = std::sync::Arc::new(semio_framework_plugin_reactor_lifecycle::life_app_cell::RuntimeAppCell::new(AppInstance { id: 7, app: TestRuntimeApps::from(query_app().await), surface_contexts: Default::default() }, semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy()));
     runtime.instances.borrow_mut().insert_admitted(7, cell.clone());
     let mut pending = std::collections::VecDeque::from(query_command(&runtime, 1, protocol::LocalInteractionQueryCommand::Read { request_id: 13 },cx).await);
     let mut expected_identity = None;
@@ -546,7 +588,7 @@ async fn local_interaction_registered_query_channel_continuation_ack_and_close()
     let mut ephemeral = 0;
     for _ in 0..200_000 {
         if pending.is_empty() {
-            let (next, _) = crate::plugin_runtime::plugin_continue_typed_operations(&runtime, crate::plugin_runtime::TypedOperationGrant::UNIT, &mut crate::app::artifact_app_laws::fixture_identity(), cx).await.unwrap();
+            let (next, _) = semio_framework_plugin_runtime_ops::ops_typed_operations::plugin_continue_typed_operations(&runtime, semio_framework_plugin_runtime_ops::ops_typed_operations::TypedOperationGrant::UNIT, &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity(), cx).await.unwrap();
             if let Some((instance, batch)) = next {
                 assert_eq!(instance, 7);
                 for bytes in batch.frames { pending.push_back(protocol::decode_app_frame(&bytes).await.unwrap()); }
@@ -585,9 +627,9 @@ async fn local_interaction_registered_query_channel_continuation_ack_and_close()
     assert_eq!(Some(capture.identity), expected_identity);
     assert!(!cell.instance.lock().unwrap().app.has_pending_typed_operations());
     drop(cell);
-    crate::plugin_runtime::plugin_destroy_app(&runtime, 7).await.unwrap();
+    semio_framework_plugin_runtime_instances::inst_cleanup_turns::plugin_destroy_app(&runtime, 7).await.unwrap();
     for _ in 0..200_000 {
-        crate::plugin_runtime::plugin_step_close_cleanup(&runtime,cx).unwrap();
+        semio_framework_plugin_runtime_instances::inst_cleanup_turns::plugin_step_close_cleanup(&runtime,cx).unwrap();
         if runtime.close_quarantine.borrow().get(7).is_none() { break; }
         std::thread::yield_now();
     }
@@ -599,9 +641,9 @@ async fn local_interaction_registered_query_channel_continuation_ack_and_close()
 #[derive(Clone, Debug, PartialEq, semio_framework_value::FromValue, semio_framework_value::ToValue)]
 #[value(rename_all = "camelCase")]
 struct DeclaredOrderWitness {
-    cursor: u64,
-    can_undo: bool,
-    inner: Vec<DeclaredOrderInner>,
+    pub cursor: u64,
+    pub can_undo: bool,
+    pub inner: Vec<DeclaredOrderInner>,
 }
 
 /// 🪜️ The nested half of [`DeclaredOrderWitness`].
@@ -609,7 +651,7 @@ struct DeclaredOrderWitness {
 #[value(rename_all = "camelCase")]
 struct DeclaredOrderInner {
     zulu: u32,
-    alpha: u32,
+    pub alpha: u32,
 }
 
 /// 🔡️ LAW (live fault F9 class, build B1): every typed value the program sends leaves with its object members in key-byte order
@@ -626,7 +668,7 @@ fn typed_wire_values_leave_in_key_byte_order_whatever_their_types_declare() {
     }
     let witness = DeclaredOrderWitness { cursor: 7, can_undo: true, inner: vec![DeclaredOrderInner { zulu: 1, alpha: 2 }] };
     assert!(!ordered(&semio_framework_value::ToValue::to_value(&witness)), "the witness declares `cursor` before `canUndo`: its own order is not the wire order");
-    let sent = super::super::encode_wire_serialized(&witness);
+    let sent = semio_framework_plugin_plugin_program::encode_wire_serialized(&witness);
     let read = semio_framework_os_kernel::pack_rt::decode_wire_value(&sent).expect("the sent value decodes");
     assert!(ordered(&read), "members leave in key-byte order at every depth: {read:?}");
     assert_eq!(<DeclaredOrderWitness as semio_framework_value::FromValue>::from_value(read).expect("the witness reads back"), witness);

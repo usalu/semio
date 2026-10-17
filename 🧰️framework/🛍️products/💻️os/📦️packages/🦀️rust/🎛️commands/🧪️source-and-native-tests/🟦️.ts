@@ -187,7 +187,6 @@ export class ArtifactKindNativeScript extends BundleScript {
      
     
       const receipts = await runRepositoryExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),preparation: configuredRepositoryCargoPreparationPolicyV1(),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: buildBudgetMs(), listMilliseconds: 60_000, lawMilliseconds: 60_000 },cwd: this.repoRoot,progress: event => console.log(`[artifact-kind] ${event.stage}`),groups: [{ package: "semio-framework-os-store-tests-02", target: { kind: "lib" }, laws: ["artifact_kind_id_follows_owner_neutral_corpus"] }]});
-      console.log(`[DEBUG] artifact-kind native laws=${receipts.reduce((count, receipt) => count + receipt.assertions, 0)}`);
     
 
  }
@@ -202,7 +201,7 @@ export class ReturnedReadCustodyScript extends BundleScript {
   for(const row of fixture.cases)assert.equal(row.expectLastCustody,row.otherAliases===0||row.dropOtherBeforeRelease,row.id);
   const artifactDir=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!artifactDir)throw Error("SEMIO_TEST_ARTIFACT_DIR must name caller-owned native output");
   
-  const receipts=await runRepositoryExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),preparation: configuredRepositoryCargoPreparationPolicyV1(),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: buildBudgetMs(), listMilliseconds: 60000, lawMilliseconds: 120000 },cwd:this.repoRoot,...exactCargoStageEnvironments(),progress:event=>console.log("[DEBUG] returned-read native "+event.stage),groups:[{package:"semio-framework-os-kernel",target:{kind:"lib"},laws:["os_store::component::retained_read_return_retirement::tests::original_returned_read_registry_alias_has_exact_physical_custody","os_store::component::retained_read_return_retirement::tests::original_returned_read_registry_parallel_aliases_credit_exactly_one_frame"]}]});console.log("[DEBUG] returned-read custody receipts "+JSON.stringify(receipts));
+  const receipts=await runRepositoryExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),preparation: configuredRepositoryCargoPreparationPolicyV1(),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: buildBudgetMs(), listMilliseconds: 60000, lawMilliseconds: 120000 },cwd:this.repoRoot,...exactCargoStageEnvironments(),progress:event=>{},groups:[{package:"semio-framework-os-kernel",target:{kind:"lib"},laws:["os_store::component::retained_read_return_retirement::tests::original_returned_read_registry_alias_has_exact_physical_custody","os_store::component::retained_read_return_retirement::tests::original_returned_read_registry_parallel_aliases_credit_exactly_one_frame"]}]});
  }
 }
 

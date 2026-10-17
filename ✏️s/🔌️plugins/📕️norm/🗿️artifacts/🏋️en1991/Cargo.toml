@@ -22,8 +22,10 @@ members = [
   "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏭️silos/📦️packages/🦀️rust",
   "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
   "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔥️fire/📦️packages/🦀️rust",
+  "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧰️silos-2/📦️packages/🦀️rust",
   "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱️compartment/📦️packages/🦀️rust",
   "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪁️wind-faces/📦️packages/🦀️rust",
+  "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪜️traffic-2/📦️packages/🦀️rust",
   "📦️packages/🦀️rust",
 ]
 exclude = [
@@ -169,6 +171,9 @@ path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️
 [workspace.dependencies.semio-s-artifact-norm-en1991-mut-silos]
 path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏭️silos/📦️packages/🦀️rust"
 
+[workspace.dependencies.semio-s-artifact-norm-en1991-mut-silos-2]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧰️silos-2/📦️packages/🦀️rust"
+
 [workspace.dependencies.semio-s-artifact-norm-en1991-mut-snow]
 path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/❄️snow/📦️packages/🦀️rust"
 
@@ -177,6 +182,9 @@ path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️
 
 [workspace.dependencies.semio-s-artifact-norm-en1991-mut-traffic]
 path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌉️traffic/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1991-mut-traffic-2]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪜️traffic-2/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-s-artifact-norm-en1991-mut-wind]
 path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌬️wind/📦️packages/🦀️rust"

@@ -1,8 +1,42 @@
-use super::*;
+use crate::editor::puzzle5d::terminology::Puzzle5dLabels;
+use crate::editor::puzzle5d::view::Puzzle5dScene;
+use semio_framework_plugin::plugin_app_close_prelude::BuiltNode;
+#[allow(unused_imports)]
+use crate::editor::puzzle5d::interaction::ui_label;
+#[allow(unused_imports)]
+use crate::editor::puzzle5d::entities::PUZZLE5D_PLAY_CONTROLLER_ID;
+#[allow(unused_imports)]
+use semio_framework_plugin::plugin_app_close_prelude::{ActionBinding, Buildable, Component, HasBase, HasChildren, NumberStepperProps, Trigger};
+#[allow(unused_imports)]
+use semio_framework_plugin::ui_node_list;
+#[allow(unused_imports)]
+use semio_framework_plugin::ActionFactory;
+#[allow(unused_imports)]
+use semio_framework_ui_locale::LocalizedLabel;
+#[allow(unused_imports)]
+use semio_framework_plugin::PanelGroup;
+#[allow(unused_imports)]
+use semio_framework_plugin::PanelTabDefinition;
+#[allow(unused_imports)]
+use semio_framework_plugin::PanelTabKind;
+#[allow(unused_imports)]
+use semio_framework_plugin::PluginAssemblyError;
+#[allow(unused_imports)]
+use semio_framework_plugin::UiAssemblyResult;
+#[allow(unused_imports)]
+use semio_framework_plugin::UiMapBuilder;
+#[allow(unused_imports)]
+use semio_framework_plugin::UiText;
+#[allow(unused_imports)]
+use semio_framework_plugin::UiValue;
+#[allow(unused_imports)]
+use semio_framework_ui_contract as ui;
+use crate::editor::puzzle5d::panels::settings::*;
 use crate::editor::puzzle5d::config::Puzzle5dRuntime;
 use crate::editor::puzzle5d::terminology::puzzle5d_labels;
-use crate::editor::puzzle5d::unit_tests::context::*;
-use crate::editor::puzzle5d::{empty_document, Puzzle5dInteractionSnapshot};
+use crate::editor::puzzle5d::testkit::*;
+use crate::editor::puzzle5d::entities::empty_document;
+use crate::editor::puzzle5d::view::Puzzle5dInteractionSnapshot;
 use semio_framework_plugin::{ViewModel, ViewWindowInstance};
 
 fn labels() -> &'static Puzzle5dLabels {

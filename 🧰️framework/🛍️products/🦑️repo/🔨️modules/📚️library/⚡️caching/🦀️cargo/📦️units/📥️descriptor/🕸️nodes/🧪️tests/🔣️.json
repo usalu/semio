@@ -1,0 +1,226 @@
+{
+ "version": 2,
+ "graphs": [
+  {
+   "name": "independent",
+   "selected": "b",
+   "units": [
+    {
+     "id": "a",
+     "dependencies": []
+    },
+    {
+     "id": "b",
+     "dependencies": []
+    },
+    {
+     "id": "c",
+     "dependencies": []
+    }
+   ],
+   "closure": [
+    "b"
+   ]
+  },
+  {
+   "name": "chain",
+   "selected": "d",
+   "units": [
+    {
+     "id": "a",
+     "dependencies": []
+    },
+    {
+     "id": "b",
+     "dependencies": [
+      "a"
+     ]
+    },
+    {
+     "id": "c",
+     "dependencies": [
+      "b"
+     ]
+    },
+    {
+     "id": "d",
+     "dependencies": [
+      "c"
+     ]
+    }
+   ],
+   "closure": [
+    "a",
+    "b",
+    "c",
+    "d"
+   ]
+  },
+  {
+   "name": "diamond",
+   "selected": "d",
+   "units": [
+    {
+     "id": "a",
+     "dependencies": []
+    },
+    {
+     "id": "b",
+     "dependencies": [
+      "a"
+     ]
+    },
+    {
+     "id": "c",
+     "dependencies": [
+      "a"
+     ]
+    },
+    {
+     "id": "d",
+     "dependencies": [
+      "b",
+      "c"
+     ]
+    },
+    {
+     "id": "s",
+     "dependencies": []
+    }
+   ],
+   "closure": [
+    "a",
+    "b",
+    "c",
+    "d"
+   ]
+  },
+  {
+   "name": "fan-in",
+   "selected": "d",
+   "units": [
+    {
+     "id": "a",
+     "dependencies": []
+    },
+    {
+     "id": "b",
+     "dependencies": []
+    },
+    {
+     "id": "c",
+     "dependencies": []
+    },
+    {
+     "id": "d",
+     "dependencies": [
+      "a",
+      "b",
+      "c"
+     ]
+    }
+   ],
+   "closure": [
+    "a",
+    "b",
+    "c",
+    "d"
+   ]
+  },
+  {
+   "name": "disconnected",
+   "selected": "d",
+   "units": [
+    {
+     "id": "a",
+     "dependencies": []
+    },
+    {
+     "id": "b",
+     "dependencies": [
+      "a"
+     ]
+    },
+    {
+     "id": "c",
+     "dependencies": []
+    },
+    {
+     "id": "d",
+     "dependencies": [
+      "c"
+     ]
+    },
+    {
+     "id": "e",
+     "dependencies": []
+    },
+    {
+     "id": "f",
+     "dependencies": [
+      "e"
+     ]
+    }
+   ],
+   "closure": [
+    "c",
+    "d"
+   ]
+  }
+ ],
+ "mutations": [
+  {
+   "name": "base-source",
+   "unit": "a",
+   "kind": "source"
+  },
+  {
+   "name": "sibling-source",
+   "unit": "s",
+   "kind": "source"
+  },
+  {
+   "name": "compiler-code",
+   "unit": null,
+   "kind": "compiler-code"
+  }
+ ],
+ "growth": [
+  8,
+  16,
+  32
+ ],
+ "refusals": [
+  "version",
+  "extra",
+  "ref-unit",
+  "duplicate-ref",
+  "sparse",
+  "array-accessor",
+  "array-proxy",
+  "plan-proxy",
+  "plan-altered",
+  "node-ref-shape",
+  "node-ref-accessor"
+ ],
+ "graphRefusals": [
+  "missing",
+  "duplicate",
+  "cycle"
+ ],
+ "scopedCounts": [
+  32,
+  4097
+ ],
+ "scopeFailures": [
+  "cancel",
+  "cycle",
+  "graph-limit",
+  "input-copy"
+ ],
+ "namespace": {
+  "held": "busy",
+  "released": "free",
+  "detached": "busy"
+ }
+}

@@ -1,4 +1,28 @@
-use super::*;
+use semio_framework_plugin::SurfaceKind;
+use semio_framework_plugin::TreeWindows;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::status_summary;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot;
+#[allow(unused_imports)]
+use semio_framework_plugin::tree_item_desc;
+#[allow(unused_imports)]
+use semio_framework_plugin::tree_window_item;
+#[allow(unused_imports)]
+use semio_framework_ui_locale::Label;
+#[allow(unused_imports)]
+use semio_framework_ui_locale::LocalizedLabel;
+#[allow(unused_imports)]
+use semio_framework_plugin::PanelTreeBuilder;
+#[allow(unused_imports)]
+use semio_framework_plugin::PluginAssemblyError;
+#[allow(unused_imports)]
+use semio_framework_plugin::WindowKindDefinition;
+#[allow(unused_imports)]
+use semio_framework_plugin::WindowOptions;
+#[allow(unused_imports)]
+use semio_framework_ui_contract::HasBase;
+use crate::viewer::architect::modes::view::windows::register::*;
 use crate::standards::v1::subsets::any::schema::snapshot::{empty_plugin, sample_plugin};
 
 #[semio_framework_async_macros::async_test]

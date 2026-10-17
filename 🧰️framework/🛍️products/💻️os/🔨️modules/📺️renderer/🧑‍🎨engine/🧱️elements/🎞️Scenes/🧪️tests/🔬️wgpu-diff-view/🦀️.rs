@@ -1,4 +1,7 @@
-use super::*;
+use semio_framework_os_renderer_wgpu_contracts::framework_widget_context;
+use std::collections::HashMap;
+use super::{DIFF_GUTTER_COLUMN_W, DiffLineOperation, diff_lines, diff_view_metrics, render_diff_view};
+use ui_wgpu::wgpu::{ActionDescriptor, Rect, Rgba, SurfaceKind, TextFace, Theme, UiComponentSceneNode, UiPresence};
 
 #[test]
 fn neutral_diff_fixture_matches_the_native_operation_sequence() {
@@ -136,7 +139,7 @@ fn render_diff(before: &str, after: &str, mode: Option<&str>) -> (semio_framewor
     let mut collapsed = HashMap::new();
     let mut selects = HashMap::new();
     {
-        let mut ctx = crate::interpreter::framework_widget_context(&mut draw, None, &mut atlas, None, &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None, 0.0);
+        let mut ctx = framework_widget_context(&mut draw, None, &mut atlas, None, &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None, 0.0);
         render_diff_view(&scene, Rect::new(0.0, 0.0, 400.0, 300.0), &mut ctx);
     }
     (draw, theme)

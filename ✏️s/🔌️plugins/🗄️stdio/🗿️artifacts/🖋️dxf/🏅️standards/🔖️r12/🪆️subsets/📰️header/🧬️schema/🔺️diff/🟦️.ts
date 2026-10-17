@@ -2,6 +2,8 @@
  * field-for-field (camelCase). Name-keyed removed/modified/added triples for
  * headerVars/layers/styles/linetypes; index-keyed triples for blocks/entities. No
  * full-replace `snapshot` slot anywhere. */
+import { parseDxfOtherTable } from "../📸️snapshot/🟦️.ts";
+import { parseDxfBlock, parseDxfEntity, parseDxfGroupCode, parseDxfHeaderVar, parseDxfLayer, parseDxfLinetype, parseDxfStyle, parseDxfValue } from "../📸️snapshot/🟦️.ts";
 
 import type {
   DxfBlock, DxfEntity, DxfGroupCode, DxfHeaderVar, DxfLayer, DxfLinetype, DxfOtherTable, DxfStyle, DxfVertex,
@@ -149,7 +151,7 @@ export function parseDxfDiff(value: unknown, at = "$"): DxfDiff {
     tables: row["tables"] === undefined ? undefined : parseDxfTablesDiff(row["tables"], `${at}.tables`),
     blocks: row["blocks"] === undefined ? undefined : parseDxfBlocksDiff(row["blocks"], `${at}.blocks`),
     entities: row["entities"] === undefined ? undefined : parseDxfEntitiesDiff(row["entities"], `${at}.entities`),
-    otherTables: row["otherTables"] === undefined ? undefined : stdioDxfR12HeaderDiffGuardArray(row["otherTables"], `${at}.otherTables`) as DxfOtherTable[],
+    otherTables: row["otherTables"] === undefined ? undefined : stdioDxfR12HeaderDiffGuardArray(row["otherTables"], `${at}.otherTables`).map((item, index) => parseDxfOtherTable(item, `${at}.otherTables[${index}]`)),
   };
 }
 
@@ -166,9 +168,9 @@ export function parseDxfBlockDiff(value: unknown, at = "$"): DxfBlockDiff {
   const row = stdioDxfR12HeaderDiffGuardObject(value, at);
   return {
     name: row["name"] === undefined ? undefined : stdioDxfR12HeaderDiffGuardString(row["name"], `${at}.name`),
-    basePoint: row["basePoint"] === undefined ? undefined : [...stdioDxfR12HeaderDiffGuardArray(row["basePoint"], `${at}.basePoint`)],
+    basePoint: row["basePoint"] === undefined ? undefined : ((items0) => [stdioDxfR12HeaderDiffGuardNumber(items0[0], `${at}.basePoint[0]`), stdioDxfR12HeaderDiffGuardNumber(items0[1], `${at}.basePoint[1]`), stdioDxfR12HeaderDiffGuardNumber(items0[2], `${at}.basePoint[2]`)])(stdioDxfR12HeaderDiffGuardArray(row["basePoint"], `${at}.basePoint`, {"minItems": 3, "maxItems": 3})),
     entities: row["entities"] === undefined ? undefined : parseDxfEntitiesDiff(row["entities"], `${at}.entities`),
-    unknownGroupCodes: row["unknownGroupCodes"] === undefined ? undefined : [...stdioDxfR12HeaderDiffGuardArray(row["unknownGroupCodes"], `${at}.unknownGroupCodes`)],
+    unknownGroupCodes: row["unknownGroupCodes"] === undefined ? undefined : stdioDxfR12HeaderDiffGuardArray(row["unknownGroupCodes"], `${at}.unknownGroupCodes`).map((item, index) => parseDxfGroupCode(item, `${at}.unknownGroupCodes[${index}]`)),
   };
 }
 
@@ -177,7 +179,7 @@ export function parseDxfBlocksDiff(value: unknown, at = "$"): DxfBlocksDiff {
   return {
     removed: row["removed"] === undefined ? undefined : stdioDxfR12HeaderDiffGuardArray(row["removed"], `${at}.removed`).map((item, index) => stdioDxfR12HeaderDiffGuardInteger(item, `${at}.removed[${index}]`)),
     modified: row["modified"] === undefined ? undefined : stdioDxfR12HeaderDiffGuardArray(row["modified"], `${at}.modified`).map((item, index) => ((row1) => ({ index: stdioDxfR12HeaderDiffGuardInteger(row1["index"], `${at}.modified[${index}].index`), diff: parseDxfBlockDiff(row1["diff"], `${at}.modified[${index}].diff`) }))(stdioDxfR12HeaderDiffGuardObject(item, `${at}.modified[${index}]`))),
-    added: row["added"] === undefined ? undefined : stdioDxfR12HeaderDiffGuardArray(row["added"], `${at}.added`).map((item, index) => ((row1) => ({ index: stdioDxfR12HeaderDiffGuardInteger(row1["index"], `${at}.added[${index}].index`), block: stdioDxfR12HeaderDiffGuardObject(row1["block"], `${at}.added[${index}].block`) }))(stdioDxfR12HeaderDiffGuardObject(item, `${at}.added[${index}]`))),
+    added: row["added"] === undefined ? undefined : stdioDxfR12HeaderDiffGuardArray(row["added"], `${at}.added`).map((item, index) => ((row1) => ({ index: stdioDxfR12HeaderDiffGuardInteger(row1["index"], `${at}.added[${index}].index`), block: parseDxfBlock(row1["block"], `${at}.added[${index}].block`) }))(stdioDxfR12HeaderDiffGuardObject(item, `${at}.added[${index}]`))),
   };
 }
 
@@ -186,20 +188,20 @@ export function parseDxfEntitiesDiff(value: unknown, at = "$"): DxfEntitiesDiff 
   return {
     removed: row["removed"] === undefined ? undefined : stdioDxfR12HeaderDiffGuardArray(row["removed"], `${at}.removed`).map((item, index) => stdioDxfR12HeaderDiffGuardInteger(item, `${at}.removed[${index}]`)),
     modified: row["modified"] === undefined ? undefined : stdioDxfR12HeaderDiffGuardArray(row["modified"], `${at}.modified`).map((item, index) => ((row1) => ({ index: stdioDxfR12HeaderDiffGuardInteger(row1["index"], `${at}.modified[${index}].index`), diff: parseDxfEntityDiff(row1["diff"], `${at}.modified[${index}].diff`) }))(stdioDxfR12HeaderDiffGuardObject(item, `${at}.modified[${index}]`))),
-    added: row["added"] === undefined ? undefined : stdioDxfR12HeaderDiffGuardArray(row["added"], `${at}.added`).map((item, index) => ((row1) => ({ index: stdioDxfR12HeaderDiffGuardInteger(row1["index"], `${at}.added[${index}].index`), entity: stdioDxfR12HeaderDiffGuardObject(row1["entity"], `${at}.added[${index}].entity`) }))(stdioDxfR12HeaderDiffGuardObject(item, `${at}.added[${index}]`))),
+    added: row["added"] === undefined ? undefined : stdioDxfR12HeaderDiffGuardArray(row["added"], `${at}.added`).map((item, index) => ((row1) => ({ index: stdioDxfR12HeaderDiffGuardInteger(row1["index"], `${at}.added[${index}].index`), entity: parseDxfEntity(row1["entity"], `${at}.added[${index}].entity`) }))(stdioDxfR12HeaderDiffGuardObject(item, `${at}.added[${index}]`))),
   };
 }
 
 export function parseDxfEntityDiff(value: unknown, at = "$"): DxfEntityDiff {
-  return ((row0) => { if (row0["replace"] !== undefined) return { replace: ((row1) => ({ entity: stdioDxfR12HeaderDiffGuardObject(row1["entity"], `${at}.replace.entity`) }))(stdioDxfR12HeaderDiffGuardObject(row0["replace"], `${at}.replace`)) }; if (row0["line"] !== undefined) return { line: stdioDxfR12HeaderDiffGuardObject(row0["line"], `${at}.line`) }; if (row0["circle"] !== undefined) return { circle: stdioDxfR12HeaderDiffGuardObject(row0["circle"], `${at}.circle`) }; if (row0["arc"] !== undefined) return { arc: stdioDxfR12HeaderDiffGuardObject(row0["arc"], `${at}.arc`) }; if (row0["polyline"] !== undefined) return { polyline: stdioDxfR12HeaderDiffGuardObject(row0["polyline"], `${at}.polyline`) }; if (row0["text"] !== undefined) return { text: stdioDxfR12HeaderDiffGuardObject(row0["text"], `${at}.text`) }; if (row0["solid"] !== undefined) return { solid: stdioDxfR12HeaderDiffGuardObject(row0["solid"], `${at}.solid`) }; if (row0["insert"] !== undefined) return { insert: stdioDxfR12HeaderDiffGuardObject(row0["insert"], `${at}.insert`) }; if (row0["other"] !== undefined) return { other: stdioDxfR12HeaderDiffGuardObject(row0["other"], `${at}.other`) }; return stdioDxfR12HeaderDiffGuardReject(`${at}`, "value matches no variant"); })(stdioDxfR12HeaderDiffGuardObject(value, `${at}`));
+  return ((row0) => { if (row0["replace"] !== undefined) return { replace: ((row1) => ({ entity: parseDxfEntity(row1["entity"], `${at}.replace.entity`) }))(stdioDxfR12HeaderDiffGuardObject(row0["replace"], `${at}.replace`)) }; if (row0["line"] !== undefined) return { line: stdioDxfR12HeaderDiffGuardObject(row0["line"], `${at}.line`) }; if (row0["circle"] !== undefined) return { circle: stdioDxfR12HeaderDiffGuardObject(row0["circle"], `${at}.circle`) }; if (row0["arc"] !== undefined) return { arc: stdioDxfR12HeaderDiffGuardObject(row0["arc"], `${at}.arc`) }; if (row0["polyline"] !== undefined) return { polyline: stdioDxfR12HeaderDiffGuardObject(row0["polyline"], `${at}.polyline`) }; if (row0["text"] !== undefined) return { text: stdioDxfR12HeaderDiffGuardObject(row0["text"], `${at}.text`) }; if (row0["solid"] !== undefined) return { solid: stdioDxfR12HeaderDiffGuardObject(row0["solid"], `${at}.solid`) }; if (row0["insert"] !== undefined) return { insert: stdioDxfR12HeaderDiffGuardObject(row0["insert"], `${at}.insert`) }; if (row0["other"] !== undefined) return { other: stdioDxfR12HeaderDiffGuardObject(row0["other"], `${at}.other`) }; return stdioDxfR12HeaderDiffGuardReject(`${at}`, "value matches no variant"); })(stdioDxfR12HeaderDiffGuardObject(value, `${at}`));
 }
 
 export function parseDxfHeaderVarDiff(value: unknown, at = "$"): DxfHeaderVarDiff {
   const row = stdioDxfR12HeaderDiffGuardObject(value, at);
   return {
     groupCode: row["groupCode"] === undefined ? undefined : stdioDxfR12HeaderDiffGuardInteger(row["groupCode"], `${at}.groupCode`),
-    value: row["value"] === undefined ? undefined : stdioDxfR12HeaderDiffGuardObject(row["value"], `${at}.value`),
-    extraGroupCodes: row["extraGroupCodes"] === undefined ? undefined : [...stdioDxfR12HeaderDiffGuardArray(row["extraGroupCodes"], `${at}.extraGroupCodes`)],
+    value: row["value"] === undefined ? undefined : parseDxfValue(row["value"], `${at}.value`),
+    extraGroupCodes: row["extraGroupCodes"] === undefined ? undefined : stdioDxfR12HeaderDiffGuardArray(row["extraGroupCodes"], `${at}.extraGroupCodes`).map((item, index) => parseDxfGroupCode(item, `${at}.extraGroupCodes[${index}]`)),
   };
 }
 
@@ -208,7 +210,7 @@ export function parseDxfHeaderVarsDiff(value: unknown, at = "$"): DxfHeaderVarsD
   return {
     removed: row["removed"] === undefined ? undefined : stdioDxfR12HeaderDiffGuardArray(row["removed"], `${at}.removed`).map((item, index) => stdioDxfR12HeaderDiffGuardString(item, `${at}.removed[${index}]`)),
     modified: row["modified"] === undefined ? undefined : stdioDxfR12HeaderDiffGuardArray(row["modified"], `${at}.modified`).map((item, index) => ((row1) => ({ name: stdioDxfR12HeaderDiffGuardString(row1["name"], `${at}.modified[${index}].name`), diff: parseDxfHeaderVarDiff(row1["diff"], `${at}.modified[${index}].diff`) }))(stdioDxfR12HeaderDiffGuardObject(item, `${at}.modified[${index}]`))),
-    added: row["added"] === undefined ? undefined : stdioDxfR12HeaderDiffGuardArray(row["added"], `${at}.added`).map((item, index) => ((row1) => ({ index: stdioDxfR12HeaderDiffGuardInteger(row1["index"], `${at}.added[${index}].index`), headerVar: stdioDxfR12HeaderDiffGuardObject(row1["headerVar"], `${at}.added[${index}].headerVar`) }))(stdioDxfR12HeaderDiffGuardObject(item, `${at}.added[${index}]`))),
+    added: row["added"] === undefined ? undefined : stdioDxfR12HeaderDiffGuardArray(row["added"], `${at}.added`).map((item, index) => ((row1) => ({ index: stdioDxfR12HeaderDiffGuardInteger(row1["index"], `${at}.added[${index}].index`), headerVar: parseDxfHeaderVar(row1["headerVar"], `${at}.added[${index}].headerVar`) }))(stdioDxfR12HeaderDiffGuardObject(item, `${at}.added[${index}]`))),
   };
 }
 
@@ -218,7 +220,7 @@ export function parseDxfLayerDiff(value: unknown, at = "$"): DxfLayerDiff {
     color: row["color"] === undefined ? undefined : stdioDxfR12HeaderDiffGuardInteger(row["color"], `${at}.color`),
     linetype: row["linetype"] === undefined ? undefined : stdioDxfR12HeaderDiffGuardString(row["linetype"], `${at}.linetype`),
     flags: row["flags"] === undefined ? undefined : stdioDxfR12HeaderDiffGuardInteger(row["flags"], `${at}.flags`),
-    unknownGroupCodes: row["unknownGroupCodes"] === undefined ? undefined : [...stdioDxfR12HeaderDiffGuardArray(row["unknownGroupCodes"], `${at}.unknownGroupCodes`)],
+    unknownGroupCodes: row["unknownGroupCodes"] === undefined ? undefined : stdioDxfR12HeaderDiffGuardArray(row["unknownGroupCodes"], `${at}.unknownGroupCodes`).map((item, index) => parseDxfGroupCode(item, `${at}.unknownGroupCodes[${index}]`)),
   };
 }
 
@@ -227,7 +229,7 @@ export function parseDxfLayersDiff(value: unknown, at = "$"): DxfLayersDiff {
   return {
     removed: row["removed"] === undefined ? undefined : stdioDxfR12HeaderDiffGuardArray(row["removed"], `${at}.removed`).map((item, index) => stdioDxfR12HeaderDiffGuardString(item, `${at}.removed[${index}]`)),
     modified: row["modified"] === undefined ? undefined : stdioDxfR12HeaderDiffGuardArray(row["modified"], `${at}.modified`).map((item, index) => ((row1) => ({ name: stdioDxfR12HeaderDiffGuardString(row1["name"], `${at}.modified[${index}].name`), diff: parseDxfLayerDiff(row1["diff"], `${at}.modified[${index}].diff`) }))(stdioDxfR12HeaderDiffGuardObject(item, `${at}.modified[${index}]`))),
-    added: row["added"] === undefined ? undefined : stdioDxfR12HeaderDiffGuardArray(row["added"], `${at}.added`).map((item, index) => ((row1) => ({ index: stdioDxfR12HeaderDiffGuardInteger(row1["index"], `${at}.added[${index}].index`), layer: stdioDxfR12HeaderDiffGuardObject(row1["layer"], `${at}.added[${index}].layer`) }))(stdioDxfR12HeaderDiffGuardObject(item, `${at}.added[${index}]`))),
+    added: row["added"] === undefined ? undefined : stdioDxfR12HeaderDiffGuardArray(row["added"], `${at}.added`).map((item, index) => ((row1) => ({ index: stdioDxfR12HeaderDiffGuardInteger(row1["index"], `${at}.added[${index}].index`), layer: parseDxfLayer(row1["layer"], `${at}.added[${index}].layer`) }))(stdioDxfR12HeaderDiffGuardObject(item, `${at}.added[${index}]`))),
   };
 }
 
@@ -236,7 +238,7 @@ export function parseDxfLinetypeDiff(value: unknown, at = "$"): DxfLinetypeDiff 
   return {
     flags: row["flags"] === undefined ? undefined : stdioDxfR12HeaderDiffGuardInteger(row["flags"], `${at}.flags`),
     description: row["description"] === undefined ? undefined : stdioDxfR12HeaderDiffGuardString(row["description"], `${at}.description`),
-    unknownGroupCodes: row["unknownGroupCodes"] === undefined ? undefined : [...stdioDxfR12HeaderDiffGuardArray(row["unknownGroupCodes"], `${at}.unknownGroupCodes`)],
+    unknownGroupCodes: row["unknownGroupCodes"] === undefined ? undefined : stdioDxfR12HeaderDiffGuardArray(row["unknownGroupCodes"], `${at}.unknownGroupCodes`).map((item, index) => parseDxfGroupCode(item, `${at}.unknownGroupCodes[${index}]`)),
   };
 }
 
@@ -245,7 +247,7 @@ export function parseDxfLinetypesDiff(value: unknown, at = "$"): DxfLinetypesDif
   return {
     removed: row["removed"] === undefined ? undefined : stdioDxfR12HeaderDiffGuardArray(row["removed"], `${at}.removed`).map((item, index) => stdioDxfR12HeaderDiffGuardString(item, `${at}.removed[${index}]`)),
     modified: row["modified"] === undefined ? undefined : stdioDxfR12HeaderDiffGuardArray(row["modified"], `${at}.modified`).map((item, index) => ((row1) => ({ name: stdioDxfR12HeaderDiffGuardString(row1["name"], `${at}.modified[${index}].name`), diff: parseDxfLinetypeDiff(row1["diff"], `${at}.modified[${index}].diff`) }))(stdioDxfR12HeaderDiffGuardObject(item, `${at}.modified[${index}]`))),
-    added: row["added"] === undefined ? undefined : stdioDxfR12HeaderDiffGuardArray(row["added"], `${at}.added`).map((item, index) => ((row1) => ({ index: stdioDxfR12HeaderDiffGuardInteger(row1["index"], `${at}.added[${index}].index`), linetype: stdioDxfR12HeaderDiffGuardObject(row1["linetype"], `${at}.added[${index}].linetype`) }))(stdioDxfR12HeaderDiffGuardObject(item, `${at}.added[${index}]`))),
+    added: row["added"] === undefined ? undefined : stdioDxfR12HeaderDiffGuardArray(row["added"], `${at}.added`).map((item, index) => ((row1) => ({ index: stdioDxfR12HeaderDiffGuardInteger(row1["index"], `${at}.added[${index}].index`), linetype: parseDxfLinetype(row1["linetype"], `${at}.added[${index}].linetype`) }))(stdioDxfR12HeaderDiffGuardObject(item, `${at}.added[${index}]`))),
   };
 }
 
@@ -254,7 +256,7 @@ export function parseDxfStyleDiff(value: unknown, at = "$"): DxfStyleDiff {
   return {
     flags: row["flags"] === undefined ? undefined : stdioDxfR12HeaderDiffGuardInteger(row["flags"], `${at}.flags`),
     fontName: row["fontName"] === undefined ? undefined : stdioDxfR12HeaderDiffGuardString(row["fontName"], `${at}.fontName`),
-    unknownGroupCodes: row["unknownGroupCodes"] === undefined ? undefined : [...stdioDxfR12HeaderDiffGuardArray(row["unknownGroupCodes"], `${at}.unknownGroupCodes`)],
+    unknownGroupCodes: row["unknownGroupCodes"] === undefined ? undefined : stdioDxfR12HeaderDiffGuardArray(row["unknownGroupCodes"], `${at}.unknownGroupCodes`).map((item, index) => parseDxfGroupCode(item, `${at}.unknownGroupCodes[${index}]`)),
   };
 }
 
@@ -263,6 +265,6 @@ export function parseDxfStylesDiff(value: unknown, at = "$"): DxfStylesDiff {
   return {
     removed: row["removed"] === undefined ? undefined : stdioDxfR12HeaderDiffGuardArray(row["removed"], `${at}.removed`).map((item, index) => stdioDxfR12HeaderDiffGuardString(item, `${at}.removed[${index}]`)),
     modified: row["modified"] === undefined ? undefined : stdioDxfR12HeaderDiffGuardArray(row["modified"], `${at}.modified`).map((item, index) => ((row1) => ({ name: stdioDxfR12HeaderDiffGuardString(row1["name"], `${at}.modified[${index}].name`), diff: parseDxfStyleDiff(row1["diff"], `${at}.modified[${index}].diff`) }))(stdioDxfR12HeaderDiffGuardObject(item, `${at}.modified[${index}]`))),
-    added: row["added"] === undefined ? undefined : stdioDxfR12HeaderDiffGuardArray(row["added"], `${at}.added`).map((item, index) => ((row1) => ({ index: stdioDxfR12HeaderDiffGuardInteger(row1["index"], `${at}.added[${index}].index`), style: stdioDxfR12HeaderDiffGuardObject(row1["style"], `${at}.added[${index}].style`) }))(stdioDxfR12HeaderDiffGuardObject(item, `${at}.added[${index}]`))),
+    added: row["added"] === undefined ? undefined : stdioDxfR12HeaderDiffGuardArray(row["added"], `${at}.added`).map((item, index) => ((row1) => ({ index: stdioDxfR12HeaderDiffGuardInteger(row1["index"], `${at}.added[${index}].index`), style: parseDxfStyle(row1["style"], `${at}.added[${index}].style`) }))(stdioDxfR12HeaderDiffGuardObject(item, `${at}.added[${index}]`))),
   };
 }

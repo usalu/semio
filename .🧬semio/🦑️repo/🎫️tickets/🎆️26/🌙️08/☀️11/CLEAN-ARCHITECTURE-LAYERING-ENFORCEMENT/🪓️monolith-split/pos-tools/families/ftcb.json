@@ -1,0 +1,14 @@
+{
+ "name": "ftcb",
+ "crates": [
+  "semio-framework-io-base64",
+  "semio-framework-io-base64-tests"
+ ],
+ "base": {
+  "rev": "1bae6115bc5",
+  "crates": [
+   "semio-framework-io-base64"
+  ]
+ },
+ "note": "FTC io-base64"
+}

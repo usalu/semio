@@ -162,7 +162,6 @@ fn all_rows_execute_in_distinct_process_gates() {
         if timed_out || !output.status.success() || !observed.contains(&witness) {
             failures.push(format!("{id}: timedOut={timed_out}, status={}, stdout={observed}, stderr={}", output.status, String::from_utf8_lossy(&output.stderr)));
         }
-        println!("[DEBUG] Publication subprocess {id}: status={}, timedOut={timed_out}", output.status);
     }
     assert!(failures.is_empty(), "{}", failures.join("\n"));
 }
@@ -225,7 +224,6 @@ fn independent_mutex_observes_the_same_admission_subtraces() {
             }
         }
         let expected = row["expected"]["results"].as_array().unwrap().iter().map(|result| result["outcome"].as_str().unwrap()).collect::<Vec<_>>();
-        println!("[DEBUG] Independent publication admission {id}: {observed:?}");
         assert_eq!(observed, expected, "{id}");
     }
 }
@@ -298,7 +296,6 @@ fn transaction_checkpoint_fixture_case() {
             let stdout = String::from_utf8(output.stdout).unwrap();
             assert!(!timed_out && output.status.success(), "timedOut={timed_out}, stdout={stdout}, stderr={}", String::from_utf8_lossy(&output.stderr));
             assert!(stdout.contains("[DEBUG] Publication checkpoint case live-owner:"));
-            println!("[DEBUG] Publication checkpoint default executes in an isolated process gate");
             return;
         }
     };
@@ -322,7 +319,6 @@ fn transaction_checkpoints_execute_under_distinct_process_gates() {
         if timed_out || !output.status.success() || !observed.contains(&witness) {
             failures.push(format!("{id}: timedOut={timed_out}, status={}, stdout={observed}, stderr={}", output.status, String::from_utf8_lossy(&output.stderr)));
         }
-        println!("[DEBUG] Publication checkpoint subprocess {id}: status={}, timedOut={timed_out}", output.status);
     }
     assert!(failures.is_empty(), "{}", failures.join("\n"));
 }

@@ -1,8 +1,8 @@
 /** ◻️ Complete Block2d persisted fields with one canonical shared Block authority. */
-import * as shared from "../../../../../../../../🧬️schema/🧱️document-fields/🟦️.ts";
-import * as p from "../../../../../../../../🧬️schema/🧱️document-fields/📐️scalar/🟦️.ts";
+import * as shared from "@semio-tech/block-js/schema/document-fields";
+import * as p from "@semio-tech/block-js/schema/document-fields/scalar";
 import type {Binary64} from "@semio-tech/framework/value/ieee754";
-export * from "../../../../../../../../🧬️schema/🧱️document-fields/🟦️.ts";
+export * from "@semio-tech/block-js/schema/document-fields";
 export interface Block2dPresentation{shape:string|null;radius:Binary64|null;width:Binary64|null;height:Binary64|null;color:string|null;iconKind:string|null}
 export interface Block2dHandleKind{id:string;name:string;label:string;color:string;defaultWireKind:string}
 export interface Block2dHandleTemplate{id:string;handleKind:string;angle:Binary64;radius:Binary64}

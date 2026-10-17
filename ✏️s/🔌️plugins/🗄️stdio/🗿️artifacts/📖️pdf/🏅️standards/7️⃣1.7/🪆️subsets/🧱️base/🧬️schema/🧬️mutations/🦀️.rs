@@ -14,128 +14,70 @@ use semio_framework_plugin::{Fault, FaultCode, FaultOrigin};
 use semio_s_artifact_stdio_contract::editing::{EditRules, EntityRule, InsertRule, RemoveRule, Selector, SnapshotEditEvent};
 
 //#region 🔖️Leaves
-#[path = "📥️insert-page/🦀️.rs"]
-pub mod insert_page;
-#[path = "🗑️remove-page/🦀️.rs"]
-pub mod remove_page;
-#[path = "📐️set-page-media-box/🦀️.rs"]
-pub mod set_page_media_box;
-#[path = "✂️set-page-crop-box/🦀️.rs"]
-pub mod set_page_crop_box;
-#[path = "➕️append-page-content/🦀️.rs"]
-pub mod append_page_content;
-#[path = "ℹ️set-info/🦀️.rs"]
-pub mod set_info;
-#[path = "📦️insert-object/🦀️.rs"]
-pub mod insert_object;
-#[path = "🧹️remove-object/🦀️.rs"]
-pub mod remove_object;
-#[path = "🔧️set-object-value/🦀️.rs"]
-pub mod set_object_value;
-#[path = "🔑️set-dict-entry/🦀️.rs"]
-pub mod set_dict_entry;
-#[path = "🚫️remove-dict-entry/🦀️.rs"]
-pub mod remove_dict_entry;
-#[path = "🧳️set-trailer-entry/🦀️.rs"]
-pub mod set_trailer_entry;
-#[path = "🧽️remove-trailer-entry/🦀️.rs"]
-pub mod remove_trailer_entry;
-#[path = "🔀️move-page/🦀️.rs"]
-pub mod move_page;
-#[path = "✏️set-page-content/🦀️.rs"]
-pub mod set_page_content;
-#[path = "🔄️set-page-rotation/🦀️.rs"]
-pub mod set_page_rotation;
-#[path = "🖼️set-page-box/🦀️.rs"]
-pub mod set_page_box;
-#[path = "📏️set-page-user-unit/🦀️.rs"]
-pub mod set_page_user_unit;
-#[path = "🖋️insert-content/🦀️.rs"]
-pub mod insert_content;
-#[path = "🧻️remove-content/🦀️.rs"]
-pub mod remove_content;
-#[path = "🔁️replace-content/🦀️.rs"]
-pub mod replace_content;
-#[path = "📌️insert-annotation/🦀️.rs"]
-pub mod insert_annotation;
-#[path = "📍️remove-annotation/🦀️.rs"]
-pub mod remove_annotation;
-#[path = "📝️set-annotation/🦀️.rs"]
-pub mod set_annotation;
-#[path = "🔤️set-font/🦀️.rs"]
-pub mod set_font;
-#[path = "🅾️remove-font/🦀️.rs"]
-pub mod remove_font;
-#[path = "🏞️set-image/🦀️.rs"]
-pub mod set_image;
-#[path = "🌫️remove-image/🦀️.rs"]
-pub mod remove_image;
-#[path = "📄️set-form/🦀️.rs"]
-pub mod set_form;
-#[path = "🗞️remove-form/🦀️.rs"]
-pub mod remove_form;
-#[path = "🎛️set-ext-g-state/🦀️.rs"]
-pub mod set_ext_g_state;
-#[path = "🎚️remove-ext-g-state/🦀️.rs"]
-pub mod remove_ext_g_state;
-#[path = "🌅️set-shading/🦀️.rs"]
-pub mod set_shading;
-#[path = "🌄️remove-shading/🦀️.rs"]
-pub mod remove_shading;
-#[path = "🧩️set-pattern/🦀️.rs"]
-pub mod set_pattern;
-#[path = "🪡️remove-pattern/🦀️.rs"]
-pub mod remove_pattern;
-#[path = "🌈️set-color-space/🦀️.rs"]
-pub mod set_color_space;
-#[path = "🎨️remove-color-space/🦀️.rs"]
-pub mod remove_color_space;
-#[path = "🏷️set-properties/🦀️.rs"]
-pub mod set_properties;
-#[path = "🔖️remove-properties/🦀️.rs"]
-pub mod remove_properties;
-#[path = "📎️set-embedded-file/🦀️.rs"]
-pub mod set_embedded_file;
-#[path = "🗃️remove-embedded-file/🦀️.rs"]
-pub mod remove_embedded_file;
-#[path = "📑️set-outlines/🦀️.rs"]
-pub mod set_outlines;
-#[path = "🎯️set-named-destination/🦀️.rs"]
-pub mod set_named_destination;
-#[path = "🎪️remove-named-destination/🦀️.rs"]
-pub mod remove_named_destination;
-#[path = "🔢️set-page-labels/🦀️.rs"]
-pub mod set_page_labels;
-#[path = "🏳️set-output-intents/🦀️.rs"]
-pub mod set_output_intents;
-#[path = "📋️set-acro-form/🦀️.rs"]
-pub mod set_acro_form;
-#[path = "👁️set-optional-content/🦀️.rs"]
-pub mod set_optional_content;
-#[path = "📖️set-page-layout/🦀️.rs"]
-pub mod set_page_layout;
-#[path = "🖥️set-page-mode/🦀️.rs"]
-pub mod set_page_mode;
-#[path = "🛠️set-viewer-preferences/🦀️.rs"]
-pub mod set_viewer_preferences;
-#[path = "🚪️set-open-action/🦀️.rs"]
-pub mod set_open_action;
-#[path = "🗣️set-language/🦀️.rs"]
-pub mod set_language;
-#[path = "🔏️set-mark-info/🦀️.rs"]
-pub mod set_mark_info;
-#[path = "🧾️set-metadata/🦀️.rs"]
-pub mod set_metadata;
-#[path = "🆔️set-document-id/🦀️.rs"]
-pub mod set_document_id;
-#[path = "🔐️set-encryption/🦀️.rs"]
-pub mod set_encryption;
-#[path = "🗂️set-catalog-entry/🦀️.rs"]
-pub mod set_catalog_entry;
-#[path = "🧺️remove-catalog-entry/🦀️.rs"]
-pub mod remove_catalog_entry;
-#[path = "🪄️replace-page/🦀️.rs"]
-pub mod replace_page;
+pub use semio_s_artifact_stdio_pdf_model::standards::v1_7::subsets::base::schema::mutations::support;
+#[allow(unused_imports)]
+use support::{position, refused};
+pub use semio_s_artifact_stdio_pdf_mut_base_2::standards::v1_7::subsets::base::schema::mutations::insert_page;
+pub use semio_s_artifact_stdio_pdf_mut_base_2::standards::v1_7::subsets::base::schema::mutations::remove_page;
+pub use semio_s_artifact_stdio_pdf_conformance_support::standards::v1_7::subsets::base::schema::mutations::set_page_media_box;
+pub use semio_s_artifact_stdio_pdf_conformance_support::standards::v1_7::subsets::base::schema::mutations::set_page_crop_box;
+pub use semio_s_artifact_stdio_pdf_mut_base_4::standards::v1_7::subsets::base::schema::mutations::append_page_content;
+pub use semio_s_artifact_stdio_pdf_conformance_support::standards::v1_7::subsets::base::schema::mutations::set_info;
+pub use semio_s_artifact_stdio_pdf_conformance_support::standards::v1_7::subsets::base::schema::mutations::insert_object;
+pub use semio_s_artifact_stdio_pdf_conformance_support::standards::v1_7::subsets::base::schema::mutations::remove_object;
+pub use semio_s_artifact_stdio_pdf_mut_base_4::standards::v1_7::subsets::base::schema::mutations::set_object_value;
+pub use semio_s_artifact_stdio_pdf_mut_base_3::standards::v1_7::subsets::base::schema::mutations::set_dict_entry;
+pub use semio_s_artifact_stdio_pdf_mut_base_3::standards::v1_7::subsets::base::schema::mutations::remove_dict_entry;
+pub use semio_s_artifact_stdio_pdf_mut_base_3::standards::v1_7::subsets::base::schema::mutations::set_trailer_entry;
+pub use semio_s_artifact_stdio_pdf_mut_base_3::standards::v1_7::subsets::base::schema::mutations::remove_trailer_entry;
+pub use semio_s_artifact_stdio_pdf_mut_base_3::standards::v1_7::subsets::base::schema::mutations::move_page;
+pub use semio_s_artifact_stdio_pdf_mut_base_3::standards::v1_7::subsets::base::schema::mutations::set_page_content;
+pub use semio_s_artifact_stdio_pdf_mut_base_3::standards::v1_7::subsets::base::schema::mutations::set_page_rotation;
+pub use semio_s_artifact_stdio_pdf_mut_base_3::standards::v1_7::subsets::base::schema::mutations::set_page_box;
+pub use semio_s_artifact_stdio_pdf_mut_base_3::standards::v1_7::subsets::base::schema::mutations::set_page_user_unit;
+pub use semio_s_artifact_stdio_pdf_mut_base_3::standards::v1_7::subsets::base::schema::mutations::insert_content;
+pub use semio_s_artifact_stdio_pdf_mut_base_3::standards::v1_7::subsets::base::schema::mutations::remove_content;
+pub use semio_s_artifact_stdio_pdf_mut_base_3::standards::v1_7::subsets::base::schema::mutations::replace_content;
+pub use semio_s_artifact_stdio_pdf_mut_base_3::standards::v1_7::subsets::base::schema::mutations::insert_annotation;
+pub use semio_s_artifact_stdio_pdf_mut_base_3::standards::v1_7::subsets::base::schema::mutations::remove_annotation;
+pub use semio_s_artifact_stdio_pdf_mut_base_3::standards::v1_7::subsets::base::schema::mutations::set_annotation;
+pub use semio_s_artifact_stdio_pdf_mut_base_3::standards::v1_7::subsets::base::schema::mutations::set_font;
+pub use semio_s_artifact_stdio_pdf_mut_base_3::standards::v1_7::subsets::base::schema::mutations::remove_font;
+pub use semio_s_artifact_stdio_pdf_mut_base_3::standards::v1_7::subsets::base::schema::mutations::set_image;
+pub use semio_s_artifact_stdio_pdf_mut_base_3::standards::v1_7::subsets::base::schema::mutations::remove_image;
+pub use semio_s_artifact_stdio_pdf_mut_base_3::standards::v1_7::subsets::base::schema::mutations::set_form;
+pub use semio_s_artifact_stdio_pdf_mut_base_3::standards::v1_7::subsets::base::schema::mutations::remove_form;
+pub use semio_s_artifact_stdio_pdf_mut_base_3::standards::v1_7::subsets::base::schema::mutations::set_ext_g_state;
+pub use semio_s_artifact_stdio_pdf_mut_base_3::standards::v1_7::subsets::base::schema::mutations::remove_ext_g_state;
+pub use semio_s_artifact_stdio_pdf_mut_base_3::standards::v1_7::subsets::base::schema::mutations::set_shading;
+pub use semio_s_artifact_stdio_pdf_mut_base_3::standards::v1_7::subsets::base::schema::mutations::remove_shading;
+pub use semio_s_artifact_stdio_pdf_mut_base_3::standards::v1_7::subsets::base::schema::mutations::set_pattern;
+pub use semio_s_artifact_stdio_pdf_mut_base_3::standards::v1_7::subsets::base::schema::mutations::remove_pattern;
+pub use semio_s_artifact_stdio_pdf_mut_family::standards::v1_7::subsets::base::schema::mutations::set_color_space;
+pub use semio_s_artifact_stdio_pdf_mut_family::standards::v1_7::subsets::base::schema::mutations::remove_color_space;
+pub use semio_s_artifact_stdio_pdf_mut_family::standards::v1_7::subsets::base::schema::mutations::set_properties;
+pub use semio_s_artifact_stdio_pdf_mut_family::standards::v1_7::subsets::base::schema::mutations::remove_properties;
+pub use semio_s_artifact_stdio_pdf_mut_family::standards::v1_7::subsets::base::schema::mutations::set_embedded_file;
+pub use semio_s_artifact_stdio_pdf_mut_family::standards::v1_7::subsets::base::schema::mutations::remove_embedded_file;
+pub use semio_s_artifact_stdio_pdf_mut_family::standards::v1_7::subsets::base::schema::mutations::set_outlines;
+pub use semio_s_artifact_stdio_pdf_mut_family::standards::v1_7::subsets::base::schema::mutations::set_named_destination;
+pub use semio_s_artifact_stdio_pdf_mut_family::standards::v1_7::subsets::base::schema::mutations::remove_named_destination;
+pub use semio_s_artifact_stdio_pdf_mut_family::standards::v1_7::subsets::base::schema::mutations::set_page_labels;
+pub use semio_s_artifact_stdio_pdf_mut_family::standards::v1_7::subsets::base::schema::mutations::set_output_intents;
+pub use semio_s_artifact_stdio_pdf_mut_family::standards::v1_7::subsets::base::schema::mutations::set_acro_form;
+pub use semio_s_artifact_stdio_pdf_mut_family::standards::v1_7::subsets::base::schema::mutations::set_optional_content;
+pub use semio_s_artifact_stdio_pdf_mut_family::standards::v1_7::subsets::base::schema::mutations::set_page_layout;
+pub use semio_s_artifact_stdio_pdf_mut_family::standards::v1_7::subsets::base::schema::mutations::set_page_mode;
+pub use semio_s_artifact_stdio_pdf_mut_family::standards::v1_7::subsets::base::schema::mutations::set_viewer_preferences;
+pub use semio_s_artifact_stdio_pdf_mut_family::standards::v1_7::subsets::base::schema::mutations::set_open_action;
+pub use semio_s_artifact_stdio_pdf_mut_family::standards::v1_7::subsets::base::schema::mutations::set_language;
+pub use semio_s_artifact_stdio_pdf_mut_family::standards::v1_7::subsets::base::schema::mutations::set_mark_info;
+pub use semio_s_artifact_stdio_pdf_mut_family::standards::v1_7::subsets::base::schema::mutations::set_metadata;
+pub use semio_s_artifact_stdio_pdf_mut_family::standards::v1_7::subsets::base::schema::mutations::set_document_id;
+pub use semio_s_artifact_stdio_pdf_mut_family::standards::v1_7::subsets::base::schema::mutations::set_encryption;
+pub use semio_s_artifact_stdio_pdf_mut_family::standards::v1_7::subsets::base::schema::mutations::set_catalog_entry;
+pub use semio_s_artifact_stdio_pdf_mut_family::standards::v1_7::subsets::base::schema::mutations::remove_catalog_entry;
+pub use semio_s_artifact_stdio_pdf_mut_family::standards::v1_7::subsets::base::schema::mutations::replace_page;
 
 pub use insert_page::InsertPage;
 pub use remove_page::RemovePage;
@@ -278,10 +220,6 @@ enum Edit {
     Remove,
 }
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn refused(code: &'static str, message: impl Into<String>) -> Fault {
-    Fault::new(FaultOrigin::App, FaultCode::new(code), message)
-}
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn pointer_segments(path: &str) -> Result<Vec<String>, Fault> {
@@ -292,16 +230,6 @@ fn pointer_segments(path: &str) -> Result<Vec<String>, Fault> {
     Ok(rest.split('/').map(|raw| raw.replace("~1", "/").replace("~0", "~")).collect())
 }
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn position(segment: &str, length: usize, insert: bool) -> Result<usize, Fault> {
-    if insert && segment == "-" {
-        return Ok(length);
-    }
-    match segment.parse::<usize>() {
-        Ok(index) if index < length || (insert && index == length) => Ok(index),
-        _ => Err(refused("pdf-edit.invalid-index", format!("'{segment}' addresses no position of a list of {length}"))),
-    }
-}
 
 /// ✋️ Applies `edit` at `rest` below `value`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -558,11 +486,7 @@ pub fn pdf_mutation_kinds() -> &'static [protocol::SemanticDescriptor] {
 //#endregion 🔖️Delegation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 
-#[cfg(test)]
-#[path = "🧪️tests/⚖️lopdf-vectors/🦀️.rs"]
-mod tests_lopdf_vectors;
+
+
 //#endregion 🧪️Tests

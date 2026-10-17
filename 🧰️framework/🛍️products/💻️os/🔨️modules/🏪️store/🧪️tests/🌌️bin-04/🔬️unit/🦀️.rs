@@ -486,7 +486,6 @@ async fn backbone_retirement_blocks_for_live_peer_then_drains_one_owned_message_
         turns += 1;
         assert!(turns < 100_000, "backbone queue and payload retirement terminates across interruptions");
     }
-    eprintln!("[DEBUG] backbone live peer blocked then original shared queues and payload closed turns={turns}");
 }
 
 #[semio_framework_async_macros::async_test]

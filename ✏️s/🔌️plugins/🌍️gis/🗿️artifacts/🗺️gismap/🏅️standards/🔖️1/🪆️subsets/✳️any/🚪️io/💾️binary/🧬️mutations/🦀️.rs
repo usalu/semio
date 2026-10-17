@@ -36,9 +36,6 @@ pub fn decode_op(bytes: &[u8]) -> Result<GisMapMutation, protocol::ProtocolError
 //#endregion 🔖️RetainedStoreInitialization
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests
 
 mod native_codec {

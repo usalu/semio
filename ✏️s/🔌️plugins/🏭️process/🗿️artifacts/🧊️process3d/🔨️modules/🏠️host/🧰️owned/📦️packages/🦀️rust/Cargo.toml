@@ -15,9 +15,8 @@ workspace = true
 [lib]
 path = "../../🦀️.rs"
 
-[[test]]
-name = "process3d_host_retained_laws"
-path = "../../🧪️tests/🔬️retained-laws/🦀️.rs"
+[features]
+testkit = []
 
 [dependencies]
 semio-framework-job-publication = { path = "../../../../../../../../../../🧰️framework/🔨️modules/🧵️job/📬️outcome/📤️publication/📦️packages/🦀️rust" }
@@ -43,3 +42,4 @@ semio-s-artifact-stdio-semio-flow = { workspace = true }
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
 serde_json = { workspace = true }
+semio-s-artifact-process-process3d-mutations = { workspace = true, features = ["testkit"] }

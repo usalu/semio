@@ -1,4 +1,46 @@
-use super::*;
+use crate::editor::shooting::modes::edit::windows::scene::options;
+use semio_framework_pack_json::json;
+use semio_framework_pack_json::{parse, Value};
+use semio_framework_plugin::SurfaceKind;
+#[allow(unused_imports)]
+use crate::editor::shooting::config::ShootingConfig;
+#[allow(unused_imports)]
+use crate::editor::shooting::terminology::ShootingLabels;
+#[allow(unused_imports)]
+use crate::is_transparent_shooting_background;
+#[allow(unused_imports)]
+use crate::{shooting_asset_scale, ShootingAsset, ShootingShot, ShootingSnapshot};
+#[allow(unused_imports)]
+use semio_framework_plugin::world3d_mesh_id_from_url;
+#[allow(unused_imports)]
+use semio_framework_plugin::world3d_meshes_json_from_kinds_and_urls;
+#[allow(unused_imports)]
+use semio_framework_plugin::world3d_scene;
+#[allow(unused_imports)]
+use semio_framework_plugin::world3d_selection_json;
+#[allow(unused_imports)]
+use semio_framework_ui_locale::LocalizedLabel;
+#[allow(unused_imports)]
+use semio_framework_plugin::WindowEngagement;
+#[allow(unused_imports)]
+use semio_framework_plugin::WindowEngagementInput;
+#[allow(unused_imports)]
+use semio_framework_plugin::WindowEngagementPossible;
+#[allow(unused_imports)]
+use semio_framework_plugin::WindowEngagementStatus;
+#[allow(unused_imports)]
+use semio_framework_plugin::WindowKindDefinition;
+#[allow(unused_imports)]
+use semio_framework_plugin::WindowMeasure;
+#[allow(unused_imports)]
+use semio_framework_plugin::WindowOptions;
+#[allow(unused_imports)]
+use semio_framework_plugin::World3dScene;
+#[allow(unused_imports)]
+use semio_framework_plugin::WorldSunConfig;
+#[allow(unused_imports)]
+use std::collections::HashSet;
+use crate::editor::shooting::modes::edit::windows::scene::*;
 use crate::editor::shooting::unit_tests::context::{scene_window_measures, shooting_app};
 
 #[semio_framework_async_macros::async_test]

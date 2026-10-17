@@ -4,9 +4,9 @@ export function repositoryBuildGraphDataDirectoryV1(workspace:string,namespace:"
 import type {ScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import type {RepositoryCacheStoreV1} from "../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
 /** 🎟️ Runs producers within original fixed-volume custody. */
-export function withRepositoryBuildGraphFactStoreV1<T>(workspace:string,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,body:(store:BuildGraphFactStoreV1,actualControl:ResourceLeaseControl)=>Promise<T>):Promise<T>;
+export function withRepositoryBuildGraphFactStoreV1<T>(workspace:string,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,body:(store:RepositoryCacheStoreV1,actualControl:ResourceLeaseControl)=>Promise<T>):Promise<T>;
 /** 🎯️ Holds one selected inference namespace within the original graph writer. */
-export function withRepositoryBuildGraphSelectionV1<T>(workspace:string,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,identity:string,body:(store:BuildGraphFactStoreV1,actualControl:ResourceLeaseControl)=>Promise<T>):Promise<T>;
+export function withRepositoryBuildGraphSelectionV1<T>(workspace:string,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,identity:string,body:(store:RepositoryCacheStoreV1,actualControl:ResourceLeaseControl)=>Promise<T>):Promise<T>;
 /** 🔒️ Checks live writer custody before synchronous publication. */
 export function requireRepositoryBuildGraphWriterV1(workspace:string):void;
 /** 📁️ Admits one closed directory on the original writer device. */
@@ -23,7 +23,9 @@ export function withRepositoryBuildInferenceDatasetV1<T>(workspace:string,invoca
 export interface BuildGraphOptionalQuotaStateV1{readonly maximumBytes:number;readonly usedBytes:number;readonly availableBytes:number;readonly minimumAvailableBytes:number}
 export interface BuildGraphOptionalPublicationV1{readonly peakBytes:number;readonly retainedDeltaBytes:number}
 export interface BuildGraphOptionalQuotaV1{readonly usedBytes:number;readonly pendingBytes:number;reserve(request:BuildGraphOptionalPublicationV1):Readonly<{commit():void;release():void}>|undefined}
-export interface BuildGraphFactStoreV1 extends RepositoryCacheStoreV1{readonly optionalQuota:BuildGraphOptionalQuotaV1}
+/** 📊️ Observes finite private optional accounting without exposing reservation operations. */
+export interface BuildGraphWriterOptionalQuotaFactsV1{readonly version:1;readonly usedBytes:number;readonly pendingBytes:number}
+export function buildGraphWriterOptionalQuotaFactsV1(workspace:string):BuildGraphWriterOptionalQuotaFactsV1;
 export function createBuildGraphOptionalQuotaV1(state:BuildGraphOptionalQuotaStateV1,check?:()=>void):BuildGraphOptionalQuotaV1;
 /** 🏷️ Refuses mandatory files and foreign optional cache names. */
 export function isBuildGraphOptionalCachePathV1(path:unknown):boolean;
@@ -48,3 +50,7 @@ export function buildGraphWriterOptionalPathAdmittedV1(scope:{readonly kind:"sel
 
 /** 🚰️ Keeps pressure recovery independent of producer scope. */
 export function buildGraphWriterMaintenanceDueV1(request:{readonly kind:"full"|"selection"|"dataset";readonly usedBytes:number;readonly availableBytes:number}):boolean;
+
+export function withRepositoryBuildGraphConsumerV1<T>(workspace:string,control:ResourceLeaseControl,body:(store:RepositoryCacheStoreV1,actualControl:ResourceLeaseControl)=>Promise<T>):Promise<T>;
+
+export function requireCurrentRepositoryBuildGraphConsumerV1():void;

@@ -1,58 +1,12 @@
+use super::fixtures::{answer, bus, command_id, play, submit};
 use super::*;
-use crate::actors::tests::{admission, envelope, id, perfect, ADA, BOB, TENANT};
-use crate::actors::{deciders, enrollment, handle_key, learner_key, ProctorDeciders};
-use crate::catalog::tests::fixture;
-use crate::storage::Database;
+use crate::actors::fixtures::{id, perfect, ADA, BOB, TENANT};
+use crate::actors::{handle_key, learner_key};
+use teaching_proctor_base::catalog::fixtures::fixture;
+use teaching_proctor_base::storage::Database;
 use quiz::{Best, Challenge, Command, CrowdView, HandleHolder, LearnerView, RunStatus, RunView, TranscriptBadge, TranscriptRun, CHALLENGES, LEADERBOARD_PERIODS};
-use server::authority::{AuthorityDirectory, CommandBus};
-use server::contract::{ActorKey, CommandOutcome, EventRecord, HybridLogicalClock, PolicyDecision, TenantId};
+use server::contract::{ActorKey, CommandOutcome, EventRecord, HybridLogicalClock, TenantId};
 use server::storage::AuthorityStore;
-
-/// 🎬️ A bus over `database` with the proctor's deciders, allowing every command.
-pub(crate) async fn bus(database: &Database, catalog: &Arc<LoadedCatalog>) -> CommandBus<SqliteAuthorityStore, ProctorDeciders> {
-    let mut bus = CommandBus::new(AuthorityDirectory::new(), SqliteAuthorityStore::new(database.clone()), Box::new(|_| PolicyDecision::Allow));
-    for decider in deciders(catalog, &admission(0)) {
-        bus.register(decider).await;
-    }
-    bus
-}
-
-/// 📨️ Submit one quiz command and relay what a handle decided, like the enrollment saga does.
-pub(crate) async fn submit(bus: &mut CommandBus<SqliteAuthorityStore, ProctorDeciders>, command: &Command, millis: u64) -> CommandOutcome {
-    let outcome = bus.submit(envelope(command), HybridLogicalClock { millis, counter: 0 }).await;
-    if let CommandOutcome::Accepted { events, .. } = &outcome {
-        for relay in events.iter().filter_map(enrollment) {
-            bus.submit(relay, HybridLogicalClock { millis, counter: 1 }).await;
-        }
-    }
-    outcome
-}
-
-fn command_id(number: usize, run: &str) -> String {
-    format!("c{number:07x}{}", &run[8..])
-}
-
-/// ▶️ Start a run of `quiz` at `challenge` as `learner` and answer every sheet task perfectly — on a
-/// timed run each right after opening it —, without submitting.
-pub(crate) async fn answer(bus: &mut CommandBus<SqliteAuthorityStore, ProctorDeciders>, catalog: &LoadedCatalog, learner: &str, run: &str, quiz: &str, challenge: Challenge, millis: u64) {
-    submit(bus, &Command::StartRun { id: command_id(1, run), learner: learner.into(), run: run.into(), quiz: quiz.into(), challenge, at: millis }, millis).await;
-    let document = &catalog.current()[quiz].quiz;
-    for (index, task) in quiz::sheet_of(document, quiz::run_seed(run), challenge).tasks.iter().enumerate() {
-        if task.seconds().is_some() {
-            let opened = submit(bus, &Command::OpenTask { id: command_id(50 + index, run), learner: learner.into(), run: run.into(), task: task.id().clone(), at: millis }, millis).await;
-            assert!(matches!(opened, CommandOutcome::Accepted { .. }), "{opened:?}");
-        }
-        let command = Command::RecordAnswer { id: command_id(2 + index, run), learner: learner.into(), run: run.into(), task: task.id().clone(), answer: perfect(document, task), at: millis + 1 };
-        let outcome = submit(bus, &command, millis + 1).await;
-        assert!(matches!(outcome, CommandOutcome::Accepted { .. }), "{outcome:?}");
-    }
-}
-
-/// 🏁️ Play one perfect run of `quiz` at `challenge` as `learner`.
-pub(crate) async fn play(bus: &mut CommandBus<SqliteAuthorityStore, ProctorDeciders>, catalog: &LoadedCatalog, learner: &str, run: &str, quiz: &str, challenge: Challenge, millis: u64) {
-    answer(bus, catalog, learner, run, quiz, challenge, millis).await;
-    assert!(matches!(submit(bus, &Command::SubmitRun { id: command_id(99, run), learner: learner.into(), run: run.into() }, millis + 2).await, CommandOutcome::Accepted { .. }));
-}
 
 async fn catch_up(projector: &Projector, database: &Database) -> CatchUp {
     let mut projections = SqliteProjectionStore::new(database.clone());

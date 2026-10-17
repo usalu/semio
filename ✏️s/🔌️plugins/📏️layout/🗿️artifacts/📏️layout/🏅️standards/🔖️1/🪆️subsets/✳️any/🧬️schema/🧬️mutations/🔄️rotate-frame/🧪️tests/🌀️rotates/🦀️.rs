@@ -7,24 +7,25 @@
 //! `.pack.semio`/`.patch.semio` encodings are derived from it by `fixtures generate` and are
 //! asserted by the shared codec-matrix harness, not here.
 
+use semio_framework_test_fixtures::fixture_text;
 use semio_s_artifact_layout_layout_mutations::LayoutMutation;
 use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
 use protocol::{Mutation, MutationDiff};
 
-const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔄️rotate-frame/🌀️rotates/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔄️rotate-frame/🌀️rotates/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔄️rotate-frame/🌀️rotates/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔄️rotate-frame/🌀️rotates/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔄️rotate-frame/🌀️rotates/🎯️outcome/🔣️.json");
+static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔄️rotate-frame/🌀️rotates/📸️snapshot/⬅️before/🔣️.json"));
+static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔄️rotate-frame/🌀️rotates/📸️snapshot/➡️after/🔣️.json"));
+static MUTATION: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔄️rotate-frame/🌀️rotates/🦠️mutation/🔣️.json"));
+static DIFF: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔄️rotate-frame/🌀️rotates/🔺️diff/🔣️.json"));
+static OUTCOME: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔄️rotate-frame/🌀️rotates/🎯️outcome/🔣️.json"));
 
 fn before() -> LayoutSnapshot {
-    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("rotate-frame/rotates-the-rect-frame: before snapshot decodes")
+    semio_framework_pack_json::from_json_str(*BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("rotate-frame/rotates-the-rect-frame: before snapshot decodes")
 }
 fn expected_after() -> LayoutSnapshot {
-    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("rotate-frame/rotates-the-rect-frame: after snapshot decodes")
+    semio_framework_pack_json::from_json_str(*AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("rotate-frame/rotates-the-rect-frame: after snapshot decodes")
 }
 fn mutation() -> LayoutMutation {
-    serde_json::from_str(MUTATION).expect("rotate-frame/rotates-the-rect-frame: mutation decodes")
+    serde_json::from_str(*MUTATION).expect("rotate-frame/rotates-the-rect-frame: mutation decodes")
 }
 fn applied() -> LayoutSnapshot {
     let base = before();
@@ -66,14 +67,14 @@ async fn inverse_turns_the_rect_frame_back() {
 /// 🔣️ Both committed snapshots and the committed mutation are canonical: decode→encode is a fixed point.
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
-    for (label, text) in [("before", BEFORE), ("after", AFTER)] {
+    for (label, text) in [("before", *BEFORE), ("after", *AFTER)] {
         let decoded: LayoutSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
         let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "rotate-frame/rotates-the-rect-frame: committed {label} JSON is not canonical");
     }
     let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&mutation())).expect("mutation encodes");
-    let original: serde_json::Value = serde_json::from_str(MUTATION).expect("mutation reparses");
+    let original: serde_json::Value = serde_json::from_str(*MUTATION).expect("mutation reparses");
     assert_eq!(reencoded, original, "rotate-frame/rotates-the-rect-frame: committed mutation JSON is not canonical");
 }
 
@@ -82,9 +83,9 @@ async fn committed_json_is_canonical() {
 async fn produces_the_committed_diff_and_outcome() {
     let outcome = mutation().diff(&before());
     let produced: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("diff encodes");
-    let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
+    let committed: serde_json::Value = serde_json::from_str(*DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "rotate-frame/rotates-the-rect-frame: produced diff differs from the committed 🔺️diff");
-    let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
+    let declared: serde_json::Value = serde_json::from_str(*OUTCOME).expect("outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"));
     assert!(outcome.messages().is_empty(), "rotate-frame/rotates-the-rect-frame: an applied rotation raises no diagnostic");
 }

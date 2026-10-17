@@ -3,7 +3,6 @@
 //! per-node fields as keyed graph properties, so a field edit is this one leaf and history edits the typed value directly;
 //! a key the node lacks is attached by `add-node-property` and detached by `remove-node-property`.
 
-use crate::schema::mutations::SemioGraphMutation;
 use crate::schema::snapshot::{GraphNodeId, SemioGraphSnapshot};
 use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValue;
 
@@ -18,13 +17,16 @@ pub struct SetNodeProperty {
     pub value: SemioValue,
 }
 
-impl protocol::MutationKind<SemioGraphSnapshot, SemioGraphMutation> for SetNodeProperty {
+impl<Op> protocol::MutationKind<SemioGraphSnapshot, Op> for SetNodeProperty
+where
+    Op: protocol::Mutation<SemioGraphSnapshot, Diff = crate::schema::diff::SemioGraphDiff> + From<SetNodeProperty>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "node-property", kind: "set-node-property", record: "SetNodeProperty" };
 
-    fn diff(&self, base: &SemioGraphSnapshot) -> protocol::MutationOutcome<<SemioGraphMutation as protocol::Mutation<SemioGraphSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioGraphSnapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<SemioGraphSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &SemioGraphSnapshot) -> Result<Vec<SemioGraphMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &SemioGraphSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         Ok(super::inverse::inverse(self, base))
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {

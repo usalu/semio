@@ -40,6 +40,4 @@ impl protocol::DiffAlgebra<PlaygroundSnapshot> for PlaygroundDiff {
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

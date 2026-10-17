@@ -4,7 +4,21 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./🟦️.ts"
+    ".": "./🟦️.ts",
+    "./acceptance/orchestration": "./🎯️acceptance/📋️orchestration/🟦️.ts",
+    "./adapter-context": "./🔌️adapter-context/🟦️.ts",
+    "./case-discovery": "./🧭️case-discovery/🟦️.ts",
+    "./contributions": "./🤝️contributions/🟦️.ts",
+    "./execution-plan": "./🎬️execution-plan/🟦️.ts",
+    "./host": "./🖥️host/🟦️.ts",
+    "./host/materialization": "./🖥️host/🏗️materialization/🟦️.ts",
+    "./storage": "./💾️storage/🟦️.ts",
+    "./dependencies/testing/inputs": "./🕸️dependencies/🧪️testing/🦀️inputs/🟦️.ts",
+    "./inventory/schema": "./🏭️inventory/🧬️schema/🟦️.ts",
+    "./schema/orchestration/mutation-caps": "./🧬️schema/📋️orchestration/🐘️mutation-caps/🟦️.ts",
+    "./taxonomy": "./🗂️taxonomy/🟦️.ts",
+    "./test-layout": "./🗺️test-layout/🟦️.ts",
+    "./dependencies": "./🕸️dependencies/🟦️.ts"
   },
   "scripts": {
     "lint": "bun --cwd \"../../../../../../..\" repo run @semio-tech/repo-test:lint",
@@ -23,7 +37,8 @@
     "@semio-tech/process": "workspace:*",
     "@semio-tech/schema-validator-ts": "workspace:*",
     "@semio-tech/schema-ts": "workspace:*",
-    "@semio-tech/framework": "workspace:*"
+    "@semio-tech/framework": "workspace:*",
+    "@semio-tech/framework-compiler-ts": "workspace:*"
   },
   "_comment": "🔮️ Every dependency here is test-only by construction: this package is the repository test platform, never a production target. `clsx` is a REGISTERED ORACLE (📇️registry/🔣️.json) — `bun ./📜️script.ts dependency` fails if it ever becomes production-reachable."
 }

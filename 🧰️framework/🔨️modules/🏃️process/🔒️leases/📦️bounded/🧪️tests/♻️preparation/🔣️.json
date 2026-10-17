@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "iterations": 4097,
+  "preparedContracts": 1,
+  "oneShotCalls": 0,
+  "cases": [
+    {"maximumDatabaseBytes": 16384, "accepted": true, "maximumPages": 4},
+    {"maximumDatabaseBytes": 32768, "accepted": true, "maximumPages": 8},
+    {"maximumDatabaseBytes": 65536, "accepted": true, "maximumPages": 16},
+    {"maximumDatabaseBytes": 1048576, "accepted": true, "maximumPages": 256},
+    {"maximumDatabaseBytes": 0, "accepted": false, "maximumPages": null},
+    {"maximumDatabaseBytes": 8192, "accepted": false, "maximumPages": null},
+    {"maximumDatabaseBytes": 16385, "accepted": false, "maximumPages": null},
+    {"maximumDatabaseBytes": 1048577, "accepted": false, "maximumPages": null},
+    {"maximumDatabaseBytes": 2097152, "accepted": false, "maximumPages": null},
+    {"maximumDatabaseBytes": -16384, "accepted": false, "maximumPages": null},
+    {"maximumDatabaseBytes": 16384.5, "accepted": false, "maximumPages": null}
+  ],
+  "hostRefusals": ["nan", "positive-infinity", "negative-infinity", "undefined", "null", "boolean", "text", "array", "record", "coercion", "proxy"],
+  "schemaAliasSnapshot": true,
+  "primitiveBeforeEffects": true
+}

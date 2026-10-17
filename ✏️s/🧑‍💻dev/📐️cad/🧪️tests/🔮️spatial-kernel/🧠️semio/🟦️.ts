@@ -1,5 +1,5 @@
 /// <reference types="vitest/importMeta" />
-import { SemioBrepKernel } from "../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🟦️.ts";
+import { SemioBrepKernel } from "@semio-tech/s-spatial-kernel-ts/semio";
 // #region 🧪️Tests
 /** 🎒️ The values this module hands its extracted suite `./🧪️tests/🧪️semio-tech-cad-js-spatial-kernel-semio/🟦️.ts`. */
 export type SemioTestDependencies = {

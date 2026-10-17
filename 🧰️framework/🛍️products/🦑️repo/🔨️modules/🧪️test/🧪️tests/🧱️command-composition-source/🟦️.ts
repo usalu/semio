@@ -29,7 +29,6 @@ test("phase commands drain every compiler stream before returning their exit sta
       expect(actual.errHash).toBe(new Bun.CryptoHasher("sha256").update(row.stderrChunk.repeat(row.repetitions)+row.stderrTerminal).digest("hex"));
     }
   }
-  console.log("[DEBUG] phase output drainage oracle=TypeScript AST and Node.js");
 },{timeout:30000});
 
 function namedDeclarations(path: string): string[] {

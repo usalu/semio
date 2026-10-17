@@ -1,6 +1,6 @@
 //! 👁️ Consumer-owned reads preserve the rich original child behind borrowed views.
-use crate::{Edge,GraphEffect,JackGraphQuery,JackSnapshot,Node};
-pub use crate::graph_query::{JackContentNodeView,JackContentPortView,JackContentEdgeView,JackContentVisual};
+use crate::standards::v1::subsets::any::schema::graph::{Edge,GraphEffect,Node};
+use semio_s_artifact_trinity_jack_graph_query::{JackContentVisual,JackGraphQuery};
 use semio_framework_value::{ValueError,retirement::RetirementCursor};
 use semio_framework_plugin::{Fault,app::{ChildContentView,ChildEmitPreparation}};
 
@@ -34,22 +34,8 @@ pub trait JackContentRead:JackGraphQuery+JackContentLayout+JackContentProjection
 }
 
 /// 🧳️ The original rich child supplies pack bytes and its own bounded retirement authority.
-pub trait JackOwnedContent:JackContentRead+Send+Sync{
+pub trait JackOwnedContent:JackContentRead+Send+Sync+std::any::Any{
     fn genesis_pack(&self)->Result<Vec<u8>,ValueError>;
     fn retirement_birth_bytes(&self)->Option<usize>;
     fn into_retirement(self:Box<Self>)->Box<dyn RetirementCursor>;
-}
-
-/// 🏗️ The authored native installation selects members, live bindings, genesis and format assembly.
-pub trait JackComposition:Default+Clone+Send+Sync+'static{
-    type Members:store::SpaceMember+store::MemberFactory+Send+'static;
-    type Read<'a>:JackContentRead+'a;
-    fn child_from_working(nodes:Vec<Node>,edges:Vec<Edge>)->crate::JackContentChild;
-    fn initial_snapshot()->JackSnapshot;
-    fn example_snapshot(id:&str)->Option<JackSnapshot>;
-    fn initial_viewer_snapshot()->JackSnapshot;
-    fn bind<'a>(snapshot:&JackSnapshot,children:&'a ChildContentView)->Result<Self::Read<'a>,Fault>;
-    fn genesis_child_pack(snapshot:&JackSnapshot,slot:&str,child_id:&str)->Result<Option<Vec<u8>>,ValueError>;
-    fn examples()->&'static[semio_framework_plugin::ExampleSource];
-    fn io_entries()->&'static[store::io::io_mechanism::IoEntry];
 }

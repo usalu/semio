@@ -1,3 +1,4 @@
+use semio_framework_test_fixtures::fixture_path;
 use serde_json::Value;
 use std::collections::{HashMap, HashSet};
 use std::fs::read_to_string;
@@ -7,7 +8,7 @@ use syn::{Attribute, Item};
 fn repo_root() -> PathBuf {
     std::env::var_os("SEMIO_REPO_ROOT")
         .map(PathBuf::from)
-        .unwrap_or_else(|| PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.."))
+        .unwrap_or_else(|| fixture_path!("../../.."))
 }
 
 fn source(path: impl AsRef<Path>) -> String {

@@ -25,7 +25,10 @@ pub fn plan(p: &GltfChangeSceneNamePayload, base: &GltfSnapshot) -> Result<GltfD
     Ok(GltfDiff { scenes: patch(p.scene, GltfSceneDiff { name: (current != &p.value).then(|| p.value.clone()), ..Default::default() }), ..Default::default() })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn inverse(p: &GltfChangeSceneNamePayload, base: &GltfSnapshot) -> Vec<super::GltfMutation> {
+pub fn inverse<Op>(p: &GltfChangeSceneNamePayload, base: &GltfSnapshot) -> Vec<Op>
+where
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::remove_used_extension::RemoveUsedExtensionMutation>,
+{
     if validate(p, base).is_err() {
         return Vec::new();
     }
@@ -46,11 +49,17 @@ pub enum ChangeSceneNameMutation {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn mutation(payload: GltfChangeSceneNamePayload) -> super::GltfMutation {
-    super::GltfMutation::ChangeSceneName(ChangeSceneNameMutation::Apply(payload))
+pub fn mutation<Op>(payload: GltfChangeSceneNamePayload) -> Op
+where
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::change_scene_name::ChangeSceneNameMutation>,
+{
+    Op::from(ChangeSceneNameMutation::Apply(payload))
 }
 
-impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ChangeSceneNameMutation {
+impl<Op> protocol::MutationKind<GltfSnapshot, Op> for ChangeSceneNameMutation
+where
+    Op: protocol::Mutation<GltfSnapshot, Diff = GltfDiff> + From<ChangeSceneNameMutation>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "scene-name", kind: "change-scene-name", record: "ChangedSceneName" };
 
     fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<GltfDiff> {
@@ -62,7 +71,7 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ChangeSceneNa
         }
     }
 
-    fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<super::GltfMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         match self {
             Self::Apply(payload) => Ok(inverse(payload, base)),
         }
@@ -79,7 +88,5 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ChangeSceneNa
 //#endregion 🧬️DirectMutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/✏️renames-the-main-4b6c9d/🦀️.rs"]
-mod case_renames_the_main_4b6c9d;
+
 //#endregion 🧪️Tests

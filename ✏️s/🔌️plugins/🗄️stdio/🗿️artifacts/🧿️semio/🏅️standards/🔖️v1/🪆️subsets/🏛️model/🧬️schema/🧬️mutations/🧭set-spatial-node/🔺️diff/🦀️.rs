@@ -1,6 +1,9 @@
 //! 🔺️ Diff for `SetSpatialNode`.
 
-use super::super::*;
+use semio_s_artifact_stdio_semio_base::schema::triples::NamedModified;
+use semio_s_artifact_stdio_semio_base::schema::triples::NamedTripleDiff;
+use crate::{schema::diff::SemioModelDiff, schema::diff::SpatialNodeDiff};
+use crate::schema::snapshot::SemioModelSnapshot;
 
 //#region 🔖️Diff
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

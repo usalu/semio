@@ -30,6 +30,10 @@ type stdioSemioV1GraphInferenceGuardSizeBounds = { readonly minItems?: number; r
 
 export const stdioSemioV1GraphInferenceGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : stdioSemioV1GraphInferenceGuardReject(at, "value is not an object");
+export const stdioSemioV1GraphInferenceGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) stdioSemioV1GraphInferenceGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const stdioSemioV1GraphInferenceGuardArray = (value: unknown, at: string, bounds: stdioSemioV1GraphInferenceGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return stdioSemioV1GraphInferenceGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) stdioSemioV1GraphInferenceGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -60,17 +64,17 @@ export const stdioSemioV1GraphInferenceGuardConstant = <T extends string | numbe
 //#endregion 🚪️Parsers
 
 export function parseSemioGraphInference(value: unknown, at = "$"): SemioGraphInference {
-  const row = stdioSemioV1GraphInferenceGuardObject(value, at);
+  const row = stdioSemioV1GraphInferenceGuardClosed(stdioSemioV1GraphInferenceGuardObject(value, at), at, ["topology"]);
   return {
     topology: parseSemioGraphTopology(row["topology"], `${at}.topology`),
   };
 }
 
 export function parseSemioGraphTopology(value: unknown, at = "$"): SemioGraphTopology {
-  const row = stdioSemioV1GraphInferenceGuardObject(value, at);
+  const row = stdioSemioV1GraphInferenceGuardClosed(stdioSemioV1GraphInferenceGuardObject(value, at), at, ["topoOrder", "depth", "cycleFree", "nodeCount"]);
   return {
     topoOrder: stdioSemioV1GraphInferenceGuardArray(row["topoOrder"], `${at}.topoOrder`).map((item, index) => stdioSemioV1GraphInferenceGuardString(item, `${at}.topoOrder[${index}]`)),
-    depth: stdioSemioV1GraphInferenceGuardObject(row["depth"], `${at}.depth`),
+    depth: Object.fromEntries(Object.entries(stdioSemioV1GraphInferenceGuardObject(row["depth"], `${at}.depth`)).map(([key0, value0]) => [key0, stdioSemioV1GraphInferenceGuardInteger(value0, `${at}.depth.${key0}`)])),
     cycleFree: stdioSemioV1GraphInferenceGuardBoolean(row["cycleFree"], `${at}.cycleFree`),
     nodeCount: stdioSemioV1GraphInferenceGuardInteger(row["nodeCount"], `${at}.nodeCount`),
   };

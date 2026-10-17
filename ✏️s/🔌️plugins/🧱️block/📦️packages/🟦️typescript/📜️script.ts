@@ -7,6 +7,7 @@ import { resolve } from "node:path";
 import { runCmd } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
+import { readModuleTreeSource } from "../../../../../🧰️framework/📦️packages/🟦️typescript/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
 /** 🔤️ The Rust variant name of one kebab lane/disposition from `framework.ui`'s shared vocabulary. */
 const variant = (value: string): string => value.split("-").map((part) => `${part[0]!.toUpperCase()}${part.slice(1)}`).join("");
 
@@ -81,7 +82,7 @@ class TestScript extends BundleScript {
     const authority = resolve(plugin, "🧪️tests/🧫️fixtures/🧪️publication-authority");
     const fixture = await Bun.file(resolve(authority, "🔣️.json")).json() as Fixture;
     const sources = new Map<string, string>();
-    for (const app of fixture.apps) sources.set(app.owner, await Bun.file(resolve(plugin, app.source)).text());
+    for (const app of fixture.apps) sources.set(app.owner, readModuleTreeSource(resolve(plugin, app.source)));
     if (!oracle(fixture, sources)) throw new Error("Block publication-authority oracle rejected production");
     let hostile = 0;
     for (const app of fixture.apps) {

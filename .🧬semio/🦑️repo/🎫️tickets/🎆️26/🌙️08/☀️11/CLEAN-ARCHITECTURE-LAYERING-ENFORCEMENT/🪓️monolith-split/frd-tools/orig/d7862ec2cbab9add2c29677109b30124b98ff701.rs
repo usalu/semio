@@ -1,0 +1,201 @@
+use crate::editor::writer::modes::edit::windows::main::config::*;
+use crate::editor::writer::modes::edit::windows::main::transient::{WriterMainWindowTransient, WriterMainWindowTransientMutation, WriterMainWindowTransientOwner};
+use dsl::os_pack as pack;
+use protocol::{Mutation, OpBinary, OpText};
+
+fn block_on_writer_window_state<F: std::future::Future>(future: F) -> F::Output {
+    let mut future = std::pin::pin!(future);
+    let waker = std::task::Waker::noop();
+    let mut context = std::task::Context::from_waker(waker);
+    loop {
+        match future.as_mut().poll(&mut context) {
+            std::task::Poll::Ready(output) => return output,
+            std::task::Poll::Pending => std::thread::yield_now(),
+        }
+    }
+}
+
+#[test]
+fn writer_window_state_retained_publications_isolate_two_windows_and_reload_only_config() {
+    std::thread::Builder::new()
+        .name("writer-window-state-law".into())
+        .stack_size(8 * 1024 * 1024)
+        .spawn(|| {
+            block_on_writer_window_state(async {
+                use crate::editor::writer::commands::{engagement_input, lint_document, set_camera, set_editor_selection, set_font_px};
+                use crate::editor::writer::{create_writer_app, WriterCommand, WriterPlayApp, WRITER_PLAY_BODY_MAIN};
+                use crate::WriterCamera;
+                use semio_framework_plugin::{artifact_app_laws, ActionMeta, App, EditorApp, PluginApp, VcsArtifactApp, ViewModel, ViewWindowInstance, WindowConfigOwner};
+
+                fn manifest() -> App {
+                    App { definition: create_writer_app(), examples: Vec::new() }
+                }
+                async fn render(app: &mut VcsArtifactApp<EditorApp<WriterPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>, view: &ViewModel) -> Result<semio_framework_plugin::TextEditorScene, String> {
+                    let tree = app.render(WRITER_PLAY_BODY_MAIN, None, view).await.map_err(|error| format!("{error:?}"))?;
+                    let json = artifact_app_laws::project_and_retire_fixture_tree(tree).map_err(str::to_string)?;
+                    artifact_app_laws::decode_fixture_scene::<semio_framework_plugin::TextEditorScene>(&json).map_err(str::to_string)
+                }
+                fn scene_json(text: Option<&String>, field: &str) -> Result<serde_json::Value, String> {
+                    let text = text.ok_or_else(|| format!("missing Writer scene field {field}"))?;
+                    serde_json::from_str(text).map_err(|error| error.to_string())
+                }
+                /// 🚰️ Settles every admitted retained operation through the FRAMEWORK's own pump and
+                /// counts the window lanes it published.
+                ///
+                /// 🧹️ It used to re-roll that pump and drained the lane pages, effects, events and ui
+                /// scopes — but never the terminal-witness outbox (`take_typed_operation_completion`),
+                /// the composed-result outbox or the interaction-query replies, all three of which
+                /// `has_pending_typed_operations` COUNTS. Any window command that published no further
+                /// lane page therefore spun to the 30 s deadline ("Writer window operations did not
+                /// finish"). It also took ONE page per turn, where the helper drains every presented
+                /// page — so a turn publishing both a config and a transient reported only one of them.
+                async fn drain(app: &mut VcsArtifactApp<EditorApp<WriterPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>, receiver: u32) -> Result<(usize, usize), String> {
+                    let receipt = artifact_app_laws::settle_registered_typed_operation(app, receiver, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.map_err(|fault| format!("{fault:?}"))?;
+                    let count = |wanted: semio_framework_plugin::app::TypedOperationResultLane| receipt.lanes.iter().filter(|lane| **lane == wanted).count();
+                    Ok((count(semio_framework_plugin::app::TypedOperationResultLane::WindowConfig), count(semio_framework_plugin::app::TypedOperationResultLane::WindowTransient)))
+                }
+
+                let fixture: serde_json::Value = serde_json::from_str(runtime_fixture_text("../../🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/✒️main/🎚️config/🧪️tests/🧫️fixtures/🔬️window/🔣️.json")).unwrap();
+                let left_id = fixture["leftWindowId"].as_str().unwrap();
+                let right_id = fixture["rightWindowId"].as_str().unwrap();
+                let view = ViewModel { window_instances: [left_id, right_id].into_iter().map(|id| ViewWindowInstance { id: id.into(), window_kind_id: WriterMainWindowConfigOwner::WINDOW_KIND_ID.into() }).collect(), ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
+                let left = view.for_window_instance(left_id).unwrap();
+                let right = view.for_window_instance(right_id).unwrap();
+                let mut app = Box::new(artifact_app_laws::new_app_with_registry_and_members::<EditorApp<WriterPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await);
+                let mut reopened = Box::new(artifact_app_laws::new_app_with_registry_and_members::<EditorApp<WriterPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await);
+                app.bind_instance_id(1).await;
+                reopened.bind_instance_id(2).await;
+                let outcome: Result<(), String> = async {
+                    let document = app.snapshot().map_err(|error| format!("{error:?}"))?;
+                    let app_config = app.config_pack().await.map_err(|error| format!("{error:?}"))?;
+                    for (context, command) in [
+                        (&left, WriterCommand::SetCamera(set_camera::SetCamera { camera: WriterCamera { x: 12.0, y: -4.0, zoom: 1.5 } })),
+                        (&right, WriterCommand::SetEditorSelection(set_editor_selection::SetEditorSelection { start: 3, end: 8, splice: 0 })),
+                        (&right, WriterCommand::SetFontPx(set_font_px::SetFontPx { value: 16 })),
+                        (&left, WriterCommand::EngagementInput(engagement_input::EngagementInput { value: "format".into() })),
+                    ] {
+                        app.dispatch_typed(command, &ActionMeta { view_state: Some(context.clone()), ..artifact_app_laws::meta("writer-window-state") }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.map_err(|error| format!("{error:?}"))?;
+                    }
+                    let (mut config_receipts, mut transient_receipts) = drain(&mut app, 1).await?;
+                    app.dispatch_typed(WriterCommand::LintDocument(lint_document::LintDocument {}), &ActionMeta { view_state: Some(left.clone()), ..artifact_app_laws::meta("writer-window-state") }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.map_err(|error| format!("{error:?}"))?;
+                    let (next_config_receipts, next_transient_receipts) = drain(&mut app, 1).await?;
+                    config_receipts += next_config_receipts;
+                    transient_receipts += next_transient_receipts;
+                    if (config_receipts, transient_receipts) != (2, 3) {
+                        return Err(format!("expected 2 config and 3 transient receipts, got {config_receipts} and {transient_receipts}"));
+                    }
+                    if app.snapshot().map_err(|error| format!("{error:?}"))? != document {
+                        return Err("Writer view publications changed the document".into());
+                    }
+                    let app_config_after = app.config_pack().await.map_err(|error| format!("{error:?}"))?;
+                    if app_config.pack != app_config_after.pack || app_config.spr != app_config_after.spr {
+                        return Err("Writer view publications changed app configuration".into());
+                    }
+                    for context in [&left, &right] {
+                        if app.window_config_generation(context).await.map_err(|error| format!("{error:?}"))? != Some(1) {
+                            return Err(format!("Writer config generation was not isolated for {:?}", context.window_id));
+                        }
+                    }
+                    if app.window_transient_generation(&left).map_err(|error| format!("{error:?}"))? != Some(2) || app.window_transient_generation(&right).map_err(|error| format!("{error:?}"))? != Some(1) {
+                        return Err("Writer transient generations were not isolated".into());
+                    }
+                    let left_transient = app.window_transient_snapshot(&left).map_err(|error| format!("{error:?}"))?.and_then(|snapshot| snapshot.get::<WriterMainWindowTransientOwner>().cloned()).ok_or("missing left Writer transient")?;
+                    let right_transient = app.window_transient_snapshot(&right).map_err(|error| format!("{error:?}"))?.and_then(|snapshot| snapshot.get::<WriterMainWindowTransientOwner>().cloned()).ok_or("missing right Writer transient")?;
+                    if left_transient.engagement_input != "format" || left_transient.lint_generation != 1 || left_transient.editor_selection.is_some() {
+                        return Err(format!("left Writer transient crossed partitions: {left_transient:?}"));
+                    }
+                    if right_transient.editor_selection != Some(crate::WriterEditorSelection { start: 3, end: 8, splice: 0 }) || right_transient.lint_generation != 0 || !right_transient.engagement_input.is_empty() {
+                        return Err(format!("right Writer transient crossed partitions: {right_transient:?}"));
+                    }
+                    let left_tree = render(&mut app, &left).await?;
+                    let right_tree = render(&mut app, &right).await?;
+                    if scene_json(left_tree.camera_json.as_ref(), "cameraJson")? != serde_json::json!({ "x": 12.0, "y": -4.0, "zoom": 1.5 }) {
+                        return Err("left Writer camera did not render".into());
+                    }
+                    let default_camera = serde_json::to_value(WriterCamera::default()).map_err(|error| error.to_string())?;
+                    if scene_json(right_tree.camera_json.as_ref(), "cameraJson")? != default_camera {
+                        return Err("left Writer camera contaminated right render".into());
+                    }
+                    if scene_json(right_tree.selection_json.as_ref(), "selectionJson")? != serde_json::json!({ "start": 3, "end": 8, "splice": 0 }) {
+                        return Err("right Writer selection did not render".into());
+                    }
+                    if scene_json(right_tree.settings_json.as_ref(), "settingsJson")?["fontPx"] != serde_json::json!(16) {
+                        return Err("right Writer settings did not render".into());
+                    }
+                    let packs = app.window_config_packs().await.map_err(|error| format!("{error:?}"))?;
+                    if packs.len() != 2 {
+                        return Err(format!("expected two Writer window config packs, got {}", packs.len()));
+                    }
+                    for pack in packs {
+                        reopened.load_window_config_pack(pack).await.map_err(|error| format!("{error:?}"))?;
+                    }
+                    let reopened_left = render(&mut reopened, &left).await?;
+                    let reopened_right = render(&mut reopened, &right).await?;
+                    if scene_json(reopened_left.camera_json.as_ref(), "cameraJson")? != scene_json(left_tree.camera_json.as_ref(), "cameraJson")?
+                        || scene_json(reopened_right.settings_json.as_ref(), "settingsJson")? != scene_json(right_tree.settings_json.as_ref(), "settingsJson")?
+                    {
+                        return Err("Writer persisted window config changed during reload".into());
+                    }
+                    if scene_json(reopened_right.selection_json.as_ref(), "selectionJson")? != serde_json::json!({ "start": 0, "end": 0, "splice": 0 }) {
+                        return Err("Writer ephemeral selection survived config reload".into());
+                    }
+                    Ok(())
+                }
+                .await;
+                if let Err(error) = &outcome {
+                    eprintln!("Writer exact-window runtime failure before close: {error}");
+                }
+                artifact_app_laws::close_registered_fixture_app(reopened.as_mut(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
+                artifact_app_laws::close_registered_fixture_app(app.as_mut(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
+                outcome.expect("retained Writer exact-window ownership and persistence");
+            })
+        })
+        .expect("spawn Writer window-state law")
+        .join()
+        .expect("Writer window-state law thread");
+}
+
+#[test]
+fn writer_window_state_mutations_are_exact_reversible_and_codec_stable() {
+    let fixture: serde_json::Value = serde_json::from_str(runtime_fixture_text("../../🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/✒️main/🎚️config/🧪️tests/🧫️fixtures/🔬️window/🔣️.json")).unwrap();
+    let base_config: WriterMainWindowConfig = semio_framework_pack_json::from_json_str(&fixture["baseConfig"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let base_transient: WriterMainWindowTransient = semio_framework_pack_json::from_json_str(&fixture["baseTransient"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let ids = [fixture["leftWindowId"].as_str().unwrap(), fixture["rightWindowId"].as_str().unwrap()];
+    let mut configs = std::collections::BTreeMap::from(ids.map(|id| (id.to_string(), base_config.clone())));
+    let mut transients = std::collections::BTreeMap::from(ids.map(|id| (id.to_string(), base_transient.clone())));
+    for step in fixture["steps"].as_array().unwrap() {
+        let id = step["windowId"].as_str().unwrap();
+        if step["lane"] == "config" {
+            let mutation: WriterMainWindowConfigMutation = semio_framework_pack_json::from_json_str(&step["mutation"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+            let before = configs[id].clone();
+            let after = protocol::apply_diff(mutation.diff(&before).diff(), &before).unwrap();
+            let restored = mutation.inverse(&before).expect("valid retained mutation inverse fixture").into_iter().fold(after.clone(), |state, inverse| protocol::apply_diff(inverse.diff(&state).diff(), &state).unwrap());
+            assert_eq!(restored, before);
+            assert_eq!(WriterMainWindowConfigMutation::parse_op(&mutation.print_op()).unwrap(), mutation);
+            assert_eq!(WriterMainWindowConfigMutation::decode_op(&mutation.encode_op().unwrap()).unwrap(), mutation);
+            configs.insert(id.into(), after);
+        } else {
+            let mutation: WriterMainWindowTransientMutation = semio_framework_pack_json::from_json_str(&step["mutation"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+            let before = transients[id].clone();
+            let after = protocol::apply_diff(mutation.diff(&before).diff(), &before).unwrap();
+            let restored = mutation.inverse(&before).expect("valid retained mutation inverse fixture").into_iter().fold(after.clone(), |state, inverse| protocol::apply_diff(inverse.diff(&state).diff(), &state).unwrap());
+            assert_eq!(restored, before);
+            assert_eq!(WriterMainWindowTransientMutation::parse_op(&mutation.print_op()).unwrap(), mutation);
+            assert_eq!(WriterMainWindowTransientMutation::decode_op(&mutation.encode_op().unwrap()).unwrap(), mutation);
+            transients.insert(id.into(), after);
+        }
+    }
+    for (id, state) in configs {
+        let expected: WriterMainWindowConfig = semio_framework_pack_json::from_json_str(&fixture["expectedConfigs"][id].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+        assert_eq!(state, expected);
+    }
+    for (id, state) in transients {
+        let expected: WriterMainWindowTransient = semio_framework_pack_json::from_json_str(&fixture["expectedTransients"][id].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+        assert_eq!(state, expected);
+    }
+}
+
+fn runtime_fixture_text(relative: &str) -> &'static str {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative);
+    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display())).into_boxed_str())
+}

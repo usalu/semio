@@ -1,4 +1,6 @@
-use super::*;
+use semio_framework::kernel::MessageEndpoint;
+#[cfg(all(target_arch = "wasm32", target_env = "p2"))]
+use semio_framework::kernel::RequestOutcome;
 use semio_framework_value::ToValue;
 use semio_framework::kernel::{Effect, RequestId};
 

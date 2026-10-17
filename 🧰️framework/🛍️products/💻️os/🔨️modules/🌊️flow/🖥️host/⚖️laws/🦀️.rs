@@ -1,5 +1,7 @@
 //! ⚖️ Flow host retirement, work continuation and source read laws: the suites that drive a retained host together with its evaluation session.
 
+use semio_framework_test_fixtures::fixture_text;
+
 pub use semio_framework_os_flow_host_core::*;
 pub use semio_framework_os_flow_host_read::*;
 pub use semio_framework_os_flow_host_session::*;
@@ -40,10 +42,6 @@ mod read_tests;
 
 /// 🧾️ Reads one file below the host node at test time instead of compiling it into the suite; the text lives for the whole test process.
 #[cfg(test)]
-fn read_node(path: &str) -> &'static str {
-    let file = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../..").join(path);
-    Box::leak(std::fs::read_to_string(&file).unwrap_or_else(|error| panic!("{}: {error}", file.display())).into_boxed_str())
-}
 
 #[cfg(test)]
 #[path = "../📤️publication/📡️invocation/🧪️tests/🦀️.rs"]

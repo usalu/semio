@@ -1,6 +1,6 @@
-import{mcpJsonPathV1,mcpJsonArrayV1}from"../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📡️stdio/🎫️session/📋️data/🟦️.ts";
+import{mcpJsonPathV1,mcpJsonArrayV1}from"@semio-tech/framework-os-mcp/stdio/session/data";
 import{receiveScriptProcessInvocation,createIssuedResourceControlV1,withRequestedIssuedResourceControlV1}from"../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import{withDelegatedMcpClientSessionV1,withMcpDelegationCleanupV1}from"../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📡️stdio/🎫️session/📦️published/🟦️.ts";
+import{withDelegatedMcpClientSessionV1,withMcpDelegationCleanupV1}from"@semio-tech/framework-os-mcp/stdio/session/published";
 import { directoryCommandRequestJson, sealDirectoryCommandRequestV1 } from "@semio-tech/framework/directory/io/text";
 import { serviceMcpTestArtifactRoot } from "../📁️artifact-root/🟦️.ts";
 /** 🤖️ The hub-agent-participant gate: is an MCP agent a REAL third participant in a hub space?
@@ -33,9 +33,9 @@ import { chmodSync, existsSync, mkdirSync, mkdtempSync, writeFileSync } from "no
 import { randomBytes } from "node:crypto";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { AcceptancePreconditionMissing, hubCredentialFromEnv, mcpServerEntries, minimalInputForSchema, requireMcpBinary } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🟦️.ts";
-import { acceptanceCheckResult, publishAcceptanceCheckResult } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/🟦️.ts";
-import { sealSpaceArtifactCreateV1 } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🌱️space-artifact-creation-v1/🟦️.ts";
+import { AcceptancePreconditionMissing, hubCredentialFromEnv, mcpServerEntries, minimalInputForSchema, requireMcpBinary } from "@semio-tech/framework-os-mcp";
+import { acceptanceCheckResult, publishAcceptanceCheckResult } from "@semio-tech/repo-test/acceptance/orchestration";
+import { sealSpaceArtifactCreateV1 } from "@semio-tech/framework-os/modules/directory/schema/space-artifact-creation-v1";
 
 import { createSpaceCommandV1 } from "@semio-tech/framework/directory/spaces";
 

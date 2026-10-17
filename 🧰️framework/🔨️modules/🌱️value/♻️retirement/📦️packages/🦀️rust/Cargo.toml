@@ -26,6 +26,7 @@ semio-framework-value-allocation-return = { path="../../📦️allocation-return
 semio-framework-value-paged-list = { path="../../../📋️list/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-framework-test-fixtures = { path = "../../../../🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-framework-value = { path="../../../📦️packages/🦀️rust" }
 semio-framework-value-factory = { path="../../🏭️factory/📦️packages/🦀️rust" }
 serde_json = { workspace = true }

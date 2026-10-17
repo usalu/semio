@@ -1,0 +1,136 @@
+use super::*;
+
+/// 🧬️ Registers the document schema jpg's declaration contributes — the contract every snapshot edit validates against;
+/// a fixture editor runs without the plugin assembly that publishes it.
+fn register_document_schema() {
+    semio_framework_schema_registry::register_artifact_schema_descriptors(vec![crate::standards::v_jfif_1_01::subsets::document::schema::jpg_artifact_schema_descriptor()]).expect("the jpg document schema registers");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn create_editor_builds_a_definition_for_the_editor_role() {
+    let def = create_jpg_any_editor();
+    assert_eq!(def.role, semio_framework::AppRole::Editor);
+    assert_eq!(def.dialect, JPG_ANY_DIALECT.into());
+}
+
+#[semio_framework_async_macros::async_test]
+async fn editor_dialect_matches_the_artifact_coordinate() {
+    assert_eq!(<JpgAnyEditor as ArtifactEditor>::DIALECT, JPG_ANY_DIALECT);
+}
+
+#[test]
+fn large_raster_density_edit_uses_compact_owned_event() {
+    register_document_schema();
+    let mut snapshot = JpgSnapshot::default();
+    snapshot.image.pixels = vec![7; 2 * 1_024 * 1_024];
+    snapshot.image.jfif_x_density = 80;
+    let event = editing::SnapshotEditEvent::SetValue { path: "/image/jfifXDensity".into(), value: semio_framework_value::DslValue::Number(semio_framework_value::Number::UInt(75)) };
+    assert!(<JpgAnyEditor as editing::SnapshotEditingEditor>::snapshot_edit_is_admitted(&event, &snapshot));
+    let emit = <JpgAnyEditor as editing::SnapshotEditingEditor>::snapshot_edit_emit(&event, &snapshot).expect("density edit emits");
+    let [JpgMutation::ChangeJfifHeader(_payload)] = emit.artifact_mutations.as_slice() else { panic!("density edit must use its typed JFIF header intent") };
+    
+    assert!(<JpgMutation as protocol::OpBinary>::encode_op(&emit.artifact_mutations[0]).expect("density mutation encodes").len() < store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES);
+    let next = protocol::apply_diff(<JpgMutation as protocol::Mutation<JpgSnapshot>>::diff(&emit.artifact_mutations[0], &snapshot).diff(), &snapshot).expect("density mutation applies");
+    assert_eq!(next.image.jfif_x_density, 75);
+    assert_eq!(next.image.pixels, snapshot.image.pixels);
+    let inverse = <JpgMutation as protocol::Mutation<JpgSnapshot>>::inverse(&emit.artifact_mutations[0], &snapshot).expect("valid retained mutation inverse fixture");
+    assert!(inverse.iter().all(|mutation| <JpgMutation as protocol::OpBinary>::encode_op(mutation).is_ok_and(|bytes| bytes.len() < store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES)));
+    let restored = inverse.into_iter().fold(next, |current, mutation| protocol::apply_diff(<JpgMutation as protocol::Mutation<JpgSnapshot>>::diff(&mutation, &current).diff(), &current).expect("density inverse applies"));
+    assert_eq!(restored, snapshot);
+
+    let native_base = crate::schema::demo_jpg_snapshot();
+    let native_emit = <JpgAnyEditor as editing::SnapshotEditingEditor>::snapshot_edit_emit(&event, &native_base).expect("native density edit emits");
+    let native_edited = protocol::apply_diff(<JpgMutation as protocol::Mutation<JpgSnapshot>>::diff(&native_emit.artifact_mutations[0], &native_base).diff(), &native_base).expect("native density mutation applies");
+    let base_bytes = crate::standards::v_jfif_1_01::subsets::document::io::encode_jpg(&native_base, &crate::standards::v_jfif_1_01::subsets::document::io::JpgEncodeOptions::default()).expect("base JPEG encodes");
+    let edited_bytes = crate::standards::v_jfif_1_01::subsets::document::io::encode_jpg(&native_edited, &crate::standards::v_jfif_1_01::subsets::document::io::JpgEncodeOptions::default()).expect("edited JPEG encodes");
+    assert_ne!(edited_bytes, base_bytes, "the density edit must affect the native JPEG export");
+    let reopened = crate::standards::v_jfif_1_01::subsets::document::io::decode_jpg(&edited_bytes).expect("edited native JPEG reopens");
+    assert_eq!((reopened.image.width, reopened.image.height), (native_edited.image.width, native_edited.image.height));
+}
+
+#[test]
+fn payload_detail_edits_publish_the_exact_requested_value() {
+    register_document_schema();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../📇️registry/🧬️contract/✏️editing/🩹️patch/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+    let mut snapshot = JpgSnapshot::default();
+    snapshot.image.pixels = vec![7, 9];
+    let base: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&semio_framework_value::ToValue::to_value(&snapshot))).unwrap();
+    for row in fixture["payload"]["cases"].as_array().unwrap() {
+        let mut event = row["event"].clone();
+        event["path"] = format!("/image/pixels{}", event["path"].as_str().unwrap()).into();
+        if let Some(from) = event.get_mut("from") {
+            *from = format!("/image/pixels{}", from.as_str().unwrap()).into();
+        }
+        let event: editing::SnapshotEditEvent = semio_framework_pack_json::from_json_str(&event.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+        let emitted = <JpgAnyEditor as editing::SnapshotEditingEditor>::snapshot_edit_emit(&event, &snapshot).unwrap_or_else(|error| panic!("{}: {error:?}", row["id"]));
+        let mut next = snapshot.clone();
+        for mutation in emitted.artifact_mutations {
+            next = protocol::apply_diff(<JpgMutation as protocol::Mutation<JpgSnapshot>>::diff(&mutation, &next).diff(), &next).unwrap();
+        }
+        let mut expected = base.clone();
+        *expected.pointer_mut("/image/pixels").unwrap() = row["expected"].clone();
+        let actual: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&semio_framework_value::ToValue::to_value(&next))).unwrap();
+        assert_eq!(actual, expected, "{}", row["id"]);
+    }
+}
+
+semio_framework_plugin::history_edit_acceptance_law!("stdio", super::JpgAnyEditor, || semio_framework_plugin::App { definition: super::create_jpg_any_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document");
+
+#[semio_framework_async_macros::async_test]
+async fn natural_file_route_uses_plugin_media_and_isolates_fresh_owner_history() {
+    use semio_framework_plugin::plugin_app_close_prelude::{MediaArtifact, MediaArtifactDescriptor};
+    use semio_framework_plugin::{artifact_app_laws, EditorApp, MediaWireFormat, PluginApp, NATURAL_FILE_PORT};
+    let source = include_bytes!("../../../📚️examples/🎬️demo/🖼️assets/🖼️.jpg");
+    let codec = <JpgAnyEditor as ArtifactEditor>::natural_file_codec().expect("paired natural codec");
+    assert_eq!((codec.format_kind, codec.extension, codec.media_type, codec.binary), ("s.stdio.jpg@jfif-1.01", ".jpg", "image/jpeg", true));
+    let artifact = MediaArtifact {
+        descriptor: MediaArtifactDescriptor {
+            edge_id: None,
+            port_id: Some(NATURAL_FILE_PORT.into()),
+            kind_id: Some(codec.format_kind.into()),
+            media_type: None,
+            wire: MediaWireFormat::Binary { format_kind: codec.format_kind.into() },
+            blob_hash: None,
+        },
+        data: source.to_vec(),
+    };
+    let initial = <JpgAnyEditor as ArtifactEditor>::initial_snapshot();
+    let mut app = semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::new_registered_app::<EditorApp<JpgAnyEditor>, _>(async { semio_framework_plugin::App { definition: create_jpg_any_editor(), examples: Vec::new() } }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
+    let mut outside = artifact.clone();
+    outside.data.push(0x7f);
+    app.consume_media(NATURAL_FILE_PORT, artifact).await.expect("registered natural import");
+    semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_registered_typed_operation(&mut app, 1, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await).expect("natural import publishes");
+    let opened = app.snapshot().expect("opened snapshot").clone();
+    let refused = match app.consume_media(NATURAL_FILE_PORT, outside).await {
+        Err(_) => true,
+        Ok(_) => semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_registered_typed_operation(&mut app, 1, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await).is_err(),
+    };
+    assert!(refused);
+    assert_eq!(app.snapshot().expect("refused JPEG preserves the owner"), opened);
+    let saved = semio_s_artifact_stdio_contract::testing::with_encoding_async(async |native_owner| app.produce_media(NATURAL_FILE_PORT, native_owner).await).await.expect("registered natural save");
+    assert_eq!(saved.descriptor.port_id.as_deref(), Some(NATURAL_FILE_PORT));
+    assert_eq!(saved.descriptor.kind_id.as_deref(), Some(codec.format_kind));
+    let oracle = semio_s_artifact_stdio_jpg_test_oracle::standards::v_jfif_1_01::subsets::document::oracle_identity_round_trip(&saved.data).expect("image independently reopens and writes the JPEG export");
+    let observed = semio_s_artifact_stdio_jpg_test_oracle::standards::v_jfif_1_01::subsets::document::project_jpg_mutation(&saved.data).expect("project JPEG export");
+    let expected = semio_s_artifact_stdio_jpg_test_oracle::standards::v_jfif_1_01::subsets::document::project_jpg_mutation(&oracle).expect("project independent JPEG output");
+    assert_eq!(observed.get("width"), expected.get("width"));
+    assert_eq!(observed.get("height"), expected.get("height"));
+    let mut reopened = semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::new_registered_app::<EditorApp<JpgAnyEditor>, _>(async { semio_framework_plugin::App { definition: create_jpg_any_editor(), examples: Vec::new() } }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
+    reopened.bind_instance_id(2).await;
+    reopened.consume_media(NATURAL_FILE_PORT, saved).await.expect("fresh owner imports exported bytes");
+    semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_registered_typed_operation(&mut reopened, 2, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await).expect("fresh owner import publishes");
+    let reopened_snapshot = reopened.snapshot().expect("reopened snapshot").clone();
+    assert_eq!(reopened_snapshot, opened);
+    semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_history_verb(&mut app, "undo", 1, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
+    assert_eq!(app.snapshot().expect("source undo snapshot"), initial);
+    assert_eq!(reopened.snapshot().expect("reopened snapshot remains isolated"), reopened_snapshot);
+    semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_history_verb(&mut app, "redo", 1, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
+    assert_eq!(app.snapshot().expect("source redo snapshot"), opened);
+    semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_history_verb(&mut reopened, "undo", 2, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
+    assert_eq!(reopened.snapshot().expect("reopened undo snapshot"), initial);
+    assert_eq!(app.snapshot().expect("source remains isolated"), opened);
+    semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_history_verb(&mut reopened, "redo", 2, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
+    assert_eq!(reopened.snapshot().expect("reopened redo snapshot"), reopened_snapshot);
+    artifact_app_laws::close_registered_fixture_app(&mut reopened, semio_s_artifact_stdio_contract::testing::mounted_policy());
+    artifact_app_laws::close_registered_fixture_app(&mut app, semio_s_artifact_stdio_contract::testing::mounted_policy());
+}

@@ -552,7 +552,7 @@ where
         let next = ArtifactStoreInitializationOwnerCatalog::retain_id_capacity(next);
         store_owners.displaced_retirements.reserve(Self::string_vector_owner_slots(&store_log.applied_edit_ids))?;
         if changed {
-            store_cursor.mirror_dirt.applied = store_cursor.mirror_dirt.applied.min(common);
+            store_cursor.mirror_dirt.dirty_applied_from(common);
             self.prefix_ring_dirty_from = self.prefix_ring_dirty_from.min(common);
             self.fold_frontier = None;
         }
@@ -569,7 +569,7 @@ where
         let next = ArtifactStoreInitializationOwnerCatalog::retain_id_capacity(next);
         store_owners.displaced_retirements.reserve(Self::string_vector_owner_slots(&store_log.redo_edit_ids))?;
         if changed {
-            store_cursor.mirror_dirt.redo = store_cursor.mirror_dirt.redo.min(common);
+            store_cursor.mirror_dirt.dirty_redo_from(common);
             self.fold_frontier = None;
         }
         if let Some(owner) = Self::take_string_vector_replacement(&mut store_log.redo_edit_ids, next) {
@@ -1511,7 +1511,7 @@ where
     pub fn pop_applied_edit_id(&mut self, store_log: &mut StoreLog<P, Mutation>, store_cursor: &mut StoreCursor<P, Mutation>) -> Option<String> {
         let edit_id = store_log.applied_edit_ids.pop()?;
         let length = store_log.applied_edit_ids.len();
-        store_cursor.mirror_dirt.applied = store_cursor.mirror_dirt.applied.min(length);
+        store_cursor.mirror_dirt.dirty_applied_from(length);
         self.prefix_ring_dirty_from = self.prefix_ring_dirty_from.min(length);
         Some(edit_id)
     }
@@ -1545,9 +1545,7 @@ where
     }
 
     fn pending_report_owner_slots(value: &PendingCommandReport) -> usize {
-        usize::from(
-            value.edit_ids.as_ref().is_some_and(|ids| !ids.is_empty() || ids.capacity() != 0) || !value.messages.is_empty() || value.messages.capacity() != 0 || value.worst.is_some() || !value.outbound.is_empty() || value.outbound.capacity() != 0,
-        )
+        usize::from(value.holds_owner_slot())
     }
 
     fn push_pending_report_replacement_reserved(&mut self, store_owners: &mut StoreOwners<P, Mutation>, next: PendingCommandReport) {
@@ -1622,7 +1620,7 @@ where
                 Err(rejected) => return Err(VcsError::ValidationFailed(rejected.error.to_string())),
             }
         }
-        self.pending_report.outbound.extend(operations);
+        self.pending_report.author_outbound(operations);
         Ok(())
     }
 
@@ -2103,7 +2101,7 @@ where
         if let Some(report) = report {
             self.record_replay_report(&report);
         }
-        self.pending_report.outbound.extend(envelopes);
+        self.pending_report.author_outbound(envelopes);
         self.flush_outbound(store_owners, store_wire).await?;
         Ok(replayed)
     }
@@ -2119,8 +2117,7 @@ where
                 _ => grouped.push(semio_framework_os_spr::EditMessages { edit_id: outcome.edit_id.clone(), messages: outcome.messages.clone() }),
             }
         }
-        self.pending_report.messages = grouped;
-        self.pending_report.worst = report.worst;
+        self.pending_report.record_replay(grouped, report.worst);
     }
 
     //#endregion 🔖️Supersede
@@ -2128,11 +2125,8 @@ where
     /// hand back as the resulting `CommandReceipt` — shared by the `IngestRemote`/`ResolveConflict`
     /// arms above.
     pub fn absorb_merge_report(&mut self, report: &semio_framework_os_spr::MergeReport) {
-        if self.pending_report.edit_ids.is_none() {
-            self.pending_report.edit_ids = Some(if report.accepted { report.replayed.iter().map(|edit_messages| edit_messages.edit_id.clone()).collect() } else { Vec::new() });
-        }
-        self.pending_report.messages = report.replayed.clone();
-        self.pending_report.worst = report.worst;
+        self.pending_report.declare_edit_ids_unless_declared(|| if report.accepted { report.replayed.iter().map(|edit_messages| edit_messages.edit_id.clone()).collect() } else { Vec::new() });
+        self.pending_report.record_replay(report.replayed.clone(), report.worst);
     }
 
     //#region 🔖️HistoryLane
@@ -2270,8 +2264,7 @@ where
             store_owners.displaced_retirements.push_reserved(Box::new(ArtifactStoreMessageLedgerRetirement::new(rejected.edit_id, rejected.messages)));
             return Err(VcsError::ValidationFailed("artifact edit-message fixed ledger rejected its exact candidate owner".into()));
         }
-        self.pending_report.worst = semio_framework_os_spr::worst_level(&messages).max(self.pending_report.worst);
-        self.pending_report.messages.push(semio_framework_os_spr::EditMessages { edit_id: edit_id.to_string(), messages });
+        self.pending_report.record_edit_messages(edit_id.to_string(), messages);
         Ok(())
     }
 
@@ -2313,7 +2306,7 @@ where
                     store_log.dag.seed_applied(envelope.mutation_id.clone()).map_err(|error| VcsError::ValidationFailed(error.to_string()))?;
                 }
                 store_log.envelope.conflicts[index].status = semio_framework_os_spr::ConflictStatus::Discarded;
-                self.pending_report.edit_ids = Some(Vec::new());
+                self.pending_report.declare_edit_ids(Vec::new());
                 self.bump(store_log, store_owners, store_cursor, store_live)?;
                 store_cursor.last_projection_cause = Some(ArtifactProjectionCause::RemoteIngest);
                 store_owners.prune_resolved_conflicts(store_log)?;
@@ -2321,7 +2314,7 @@ where
             }
             (semio_framework_os_spr::ConflictKind::Degraded { .. }, semio_framework_os_spr::ConflictResolution::Accept) => {
                 store_log.envelope.conflicts[index].status = semio_framework_os_spr::ConflictStatus::Accepted;
-                self.pending_report.edit_ids = Some(Vec::new());
+                self.pending_report.declare_edit_ids(Vec::new());
                 self.bump(store_log, store_owners, store_cursor, store_live)?;
                 store_cursor.last_projection_cause = Some(ArtifactProjectionCause::RemoteIngest);
                 store_owners.prune_resolved_conflicts(store_log)?;
@@ -2384,7 +2377,7 @@ where
             for (_, inverse) in rebased_inverse {
                 retire_scratch_operations::<P, Mutation>(inverse);
             }
-            self.pending_report.edit_ids = Some(Vec::new());
+            self.pending_report.declare_edit_ids(Vec::new());
             return Ok(report);
         }
         let admitted_ids: Vec<String> = admitted.iter().map(|edit| edit.id.clone()).collect();
@@ -2410,7 +2403,7 @@ where
         }
         store_log.envelope.conflicts[index].status = semio_framework_os_spr::ConflictStatus::Accepted;
         store_live.reproject(store_log, store_owners, store_cursor).await?;
-        self.pending_report.edit_ids = Some(admitted_ids);
+        self.pending_report.declare_edit_ids(admitted_ids);
         self.bump(store_log, store_owners, store_cursor, store_live)?;
         store_cursor.last_projection_cause = Some(ArtifactProjectionCause::RemoteIngest);
         store_owners.prune_resolved_conflicts(store_log)?;
@@ -2420,14 +2413,14 @@ where
     /// 📤️ Announces every event the finished command authored — edit operations and history
     /// transitions alike — as one `BackboneMessage::Mutations` batch.
     pub async fn flush_outbound(&mut self, store_owners: &mut StoreOwners<P, Mutation>, store_wire: &mut StoreWire<P, Mutation>) -> Result<(), VcsError> {
-        if self.pending_report.outbound.is_empty() {
+        if !self.pending_report.has_outbound() {
             return Ok(());
         }
         let Some(mut backbone) = store_wire.backbone.take() else {
             return Ok(());
         };
         let mut result = Ok(());
-        for batch in document_backbone_batches(std::mem::take(&mut self.pending_report.outbound)) {
+        for batch in document_backbone_batches(self.pending_report.take_outbound()) {
             result = backbone.send(BackboneMessage::Mutations { envelopes: semio_framework_os_spr::encode_envelopes(&batch) }).await;
             if result.is_err() {
                 break;

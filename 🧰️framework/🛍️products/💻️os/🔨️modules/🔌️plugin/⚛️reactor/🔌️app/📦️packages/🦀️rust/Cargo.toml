@@ -47,5 +47,11 @@ semio-framework-ui-layout = { path = "../../../../../../../../🔨️modules/�
 semio_framework_ui_runtime = { path = "../../../../../../../../🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust", package = "semio-framework-ui-runtime" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
+semio-framework-ui-locale = { path = "../../../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
+semio-framework-value-derive = { path = "../../../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
+semio-framework-plugin-interaction = { path = "../../../../🕹️interaction/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+
+[features]
+artifact-app-testing = []

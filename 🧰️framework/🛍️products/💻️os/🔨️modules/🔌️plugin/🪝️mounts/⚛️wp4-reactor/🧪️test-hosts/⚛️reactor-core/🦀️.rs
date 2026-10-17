@@ -1,5 +1,5 @@
 //! 🧪️ Facade test host of `reactor-core`: the cfg(test) units that name higher layers or facade fixtures and therefore cannot run inside the crate.
 
-#[cfg(test)]
+#[doc(hidden)]
 #[path = "🧱️unit-1/🦀️.rs"]
-pub(crate) mod reactor_core_unit_1;
+pub mod reactor_core_unit_1;

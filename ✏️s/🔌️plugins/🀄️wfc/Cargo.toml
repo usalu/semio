@@ -3,8 +3,14 @@ cargo-features = [ "trim-paths" ]
 [workspace]
 resolver = "2"
 members = [
-    "⚙️engine/📦️packages/🦀️rust",
-    "🪶️sqlite/🎨️bitmap/📦️packages/🦀️rust",
+  "⚙️engine/🏛️foundation/📦️packages/🦀️rust",
+  "⚙️engine/💼️job/📦️packages/🦀️rust",
+  "⚙️engine/📦️packages/🦀️rust",
+  "⚙️engine/🧗️solve/📦️packages/🦀️rust",
+  "⚙️engine/🧠️kernel/📦️packages/🦀️rust",
+  "⚙️engine/🧮️lattice/📦️packages/🦀️rust",
+  "⚙️engine/🧿️oracle/📦️packages/🦀️rust",
+  "🪶️sqlite/🎨️bitmap/📦️packages/🦀️rust",
 ]
 exclude = [
     "**/🏅️standards/**",

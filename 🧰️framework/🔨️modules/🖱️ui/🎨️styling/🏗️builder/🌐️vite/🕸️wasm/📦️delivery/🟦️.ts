@@ -1,6 +1,6 @@
 import {isAbsolute,join,resolve} from "node:path";
 import {validateJsonSchemaSubset} from "@semio-tech/schema-validator-ts";
-import type {OwnedBuildPlugin} from "../../../../../🎯️targets/⚛️react/🛠️build-tooling/🟦️.ts";
+import type {OwnedBuildPlugin} from "@semio-tech/ui-react/build-tooling";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 export type ManagedWasmPackageDeliveryV1=Readonly<{packageName:string;root:string;entry:string;files:readonly string[];entrypoint:"source"|"generated"}>;
 /** 🕸️ Resolves only copied explicitly declared package files without probing checkout or ambient package manifests. */

@@ -1,0 +1,69 @@
+{
+  "cases": [
+    {
+      "mode": "missing",
+      "accepted": true,
+      "strictAccepted": true
+    },
+    {
+      "mode": "link",
+      "accepted": true,
+      "strictAccepted": true
+    },
+    {
+      "mode": "broken-link",
+      "accepted": true,
+      "strictAccepted": true
+    },
+    {
+      "mode": "file",
+      "accepted": true,
+      "strictAccepted": false
+    },
+    {
+      "mode": "directory",
+      "accepted": true,
+      "strictAccepted": false
+    },
+    {
+      "mode": "hardlink-file",
+      "accepted": true,
+      "strictAccepted": false
+    },
+    {
+      "mode": "ancestor-link",
+      "accepted": false,
+      "strictAccepted": false
+    },
+    {
+      "mode": "endpoint-drift",
+      "accepted": false,
+      "strictAccepted": false
+    },
+    {
+      "mode": "parent-drift",
+      "accepted": false,
+      "strictAccepted": false
+    },
+    {
+      "mode": "link-drift",
+      "accepted": false,
+      "strictAccepted": false
+    },
+    {
+      "mode": "cancel",
+      "accepted": false,
+      "strictAccepted": false
+    },
+    {
+      "mode": "undefined",
+      "accepted": false,
+      "strictAccepted": false
+    },
+    {
+      "mode": "frozen",
+      "accepted": false,
+      "strictAccepted": false
+    }
+  ]
+}

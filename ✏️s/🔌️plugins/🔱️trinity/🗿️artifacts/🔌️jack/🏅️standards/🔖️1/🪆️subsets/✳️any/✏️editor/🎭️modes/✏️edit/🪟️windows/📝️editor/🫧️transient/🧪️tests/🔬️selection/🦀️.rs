@@ -1,6 +1,6 @@
 //! 🧪️ `set-editor-selection` keeps its sparse diff and concrete inverse in step.
 
-use super::*;
+use crate::editor::jack::transient::editor_window::*;
 
 /// ➕️ The inverse row sums to exactly the negative of the diff (law L3), for a set and for a clear.
 #[semio_framework_async_macros::async_test]

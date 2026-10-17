@@ -49,11 +49,6 @@ pub fn decode(bytes: &[u8]) -> Result<DrawingSnapshot, PackError> {
     <DrawingSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes)
 }
 
-//#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests
 
 /// 🫴️ Declares this owner’s actual controlled native record factories.
 impl pack::snapshot::ArtifactNativeSnapshot for DrawingSnapshot {

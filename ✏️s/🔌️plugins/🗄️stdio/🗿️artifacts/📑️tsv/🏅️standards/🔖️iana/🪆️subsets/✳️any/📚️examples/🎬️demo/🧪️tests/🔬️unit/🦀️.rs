@@ -2,6 +2,7 @@ use crate::examples::demo::*;
 use crate::standards::iana::subsets::any::schema::snapshot::{TsvSnapshot};
 use crate::standards::iana::subsets::any::io::text::snapshot::{encode_tsv};
 use crate::standards::iana::subsets::any::io::text::snapshot::{decode_tsv};
+use semio_framework_test_fixtures::fixture_path;
 
 #[semio_framework_async_macros::async_test]
 async fn demo_source_nonempty() {
@@ -36,7 +37,7 @@ async fn zzz_write_demo_fixtures() {
     let snapshot = decode_tsv(RAW_TSV);
     let text = pack::snapshot::ArtifactDsl::print_dsl(&snapshot);
     let pack: Vec<u8> = pack::snapshot::ArtifactPack::encode_pack(&snapshot);
-    let assets = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../📚️examples/🎬️demo/🖼️assets");
+    let assets = fixture_path!("../../../../📚️examples/🎬️demo/🖼️assets");
     std::fs::write(assets.join("🗣️.dsl.semio"), &text).unwrap_or_else(|error| panic!("write {}: {error}", assets.display()));
     std::fs::write(assets.join("🎒️.pack.semio"), &pack).unwrap_or_else(|error| panic!("write {}: {error}", assets.display()));
 }

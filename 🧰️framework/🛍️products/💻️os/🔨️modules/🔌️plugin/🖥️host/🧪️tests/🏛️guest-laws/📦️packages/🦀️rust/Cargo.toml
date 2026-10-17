@@ -45,6 +45,7 @@ semio-framework-async = { workspace = true, features = ["testkit"] }
 semio-framework-plugin-interpreter-runtime = { workspace = true }
 semio-framework-os-vcs = { path = "../../../../../../🌿️vcs/📦️packages/🦀️rust" }
 semio-framework-artifact-reference = { workspace = true }
+semio-framework-test-fixtures = { path = "../../../../../../../../../🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-framework-ui-contract = { path = "../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust" }
 wasmtime = { version = "47.0.3", features = ["cranelift", "component-model", "component-model-async"] }
 semio-framework-hash = { path = "../../../../../../../../../🔨️modules/🔏️hash/📦️packages/🦀️rust" }

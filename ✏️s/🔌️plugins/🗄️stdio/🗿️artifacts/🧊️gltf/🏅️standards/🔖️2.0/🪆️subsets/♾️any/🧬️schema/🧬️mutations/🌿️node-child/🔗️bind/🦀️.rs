@@ -43,11 +43,14 @@ pub fn plan(p: &GltfBindNodeChildPayload, base: &GltfSnapshot) -> Result<GltfDif
     Ok(GltfDiff { nodes: patch(p.parent, GltfNodeDiff { children: Some(GltfRefsDelta::insertion(p.position, GltfRef(p.child))), ..Default::default() }), ..Default::default() })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn inverse(p: &GltfBindNodeChildPayload, base: &GltfSnapshot) -> Vec<super::GltfMutation> {
+pub fn inverse<Op>(p: &GltfBindNodeChildPayload, base: &GltfSnapshot) -> Vec<Op>
+where
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::remove_used_extension::RemoveUsedExtensionMutation>,
+{
     if validate(p, base).is_err() {
         return Vec::new();
     }
-    vec![super::unbind_node_child::mutation(super::unbind_node_child::GltfUnbindNodeChildPayload { parent: p.parent, child: p.child })]
+    vec![crate::standards::v2_0::subsets::any::schema::mutations::unbind_node_child::mutation(crate::standards::v2_0::subsets::any::schema::mutations::unbind_node_child::GltfUnbindNodeChildPayload { parent: p.parent, child: p.child })]
 }
 
 //#region 🧬️DirectMutation
@@ -60,11 +63,17 @@ pub enum BindNodeChildMutation {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn mutation(payload: GltfBindNodeChildPayload) -> super::GltfMutation {
-    super::GltfMutation::BindNodeChild(BindNodeChildMutation::Apply(payload))
+pub fn mutation<Op>(payload: GltfBindNodeChildPayload) -> Op
+where
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::bind_node_child::BindNodeChildMutation>,
+{
+    Op::from(BindNodeChildMutation::Apply(payload))
 }
 
-impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for BindNodeChildMutation {
+impl<Op> protocol::MutationKind<GltfSnapshot, Op> for BindNodeChildMutation
+where
+    Op: protocol::Mutation<GltfSnapshot, Diff = GltfDiff> + From<BindNodeChildMutation>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "bind", entity: "node-child", kind: "bind-node-child", record: "BoundNodeChild" };
 
     fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<GltfDiff> {
@@ -76,7 +85,7 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for BindNodeChild
         }
     }
 
-    fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<super::GltfMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         match self {
             Self::Apply(payload) => Ok(inverse(payload, base)),
         }
@@ -93,11 +102,7 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for BindNodeChild
 //#endregion 🧬️DirectMutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔗️adopts-the-child-aebf46/🦀️.rs"]
-mod case_adopts_the_child_aebf46;
+
 //#endregion 🧪️Tests
 
-#[cfg(test)]
-#[path = "📜️contract/🧪️tests/🔬️unit/🦀️.rs"]
-mod contract;
+

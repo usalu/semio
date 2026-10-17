@@ -1,0 +1,27 @@
+{
+ "name": "dm2l",
+ "crates": [
+  "semio-s-artifact-lowpoly-lowpoly-mut-laws",
+  "semio-s-artifact-lowpoly-lowpoly-mut-geometry",
+  "semio-s-artifact-lowpoly-lowpoly-mut-objects",
+  "semio-s-artifact-lowpoly-lowpoly-mut-paint",
+  "semio-s-artifact-remodel-remodeling-mut-vectors",
+  "semio-s-artifact-remodel-remodeling-mut-calib",
+  "semio-s-artifact-remodel-remodeling-mut-media",
+  "semio-s-artifact-remodel-remodeling-mut-params",
+  "semio-s-artifact-remodel-remodeling-mut-results"
+ ],
+ "base": {
+  "rev": "1bae6115bc5",
+  "crates": [
+   "semio-s-artifact-lowpoly-lowpoly-mut-geometry",
+   "semio-s-artifact-lowpoly-lowpoly-mut-objects",
+   "semio-s-artifact-lowpoly-lowpoly-mut-paint",
+   "semio-s-artifact-remodel-remodeling-mut-calib",
+   "semio-s-artifact-remodel-remodeling-mut-media",
+   "semio-s-artifact-remodel-remodeling-mut-params",
+   "semio-s-artifact-remodel-remodeling-mut-results"
+  ]
+ },
+ "note": "DM2 mutation law libraries (plugin artifact crates)"
+}

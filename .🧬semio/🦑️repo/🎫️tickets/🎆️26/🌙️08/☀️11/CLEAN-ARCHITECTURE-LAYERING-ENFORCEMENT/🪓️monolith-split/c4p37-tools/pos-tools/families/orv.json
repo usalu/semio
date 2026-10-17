@@ -1,0 +1,21 @@
+{
+ "name": "orv",
+ "crates": [
+  "semio-framework-os-run",
+  "semio-framework-os-vcs",
+  "semio-framework-os-pack",
+  "semio-framework-os-io",
+  "semio-framework-os-kernel-neural-engine-model"
+ ],
+ "base": {
+  "rev": "1bae6115bc5",
+  "crates": [
+   "semio-framework-os-run",
+   "semio-framework-os-vcs",
+   "semio-framework-os-pack",
+   "semio-framework-os-io",
+   "semio-framework-os-kernel-neural-engine-model"
+  ]
+ },
+ "note": "OS-RUN-VCS-IO-SPLITS"
+}

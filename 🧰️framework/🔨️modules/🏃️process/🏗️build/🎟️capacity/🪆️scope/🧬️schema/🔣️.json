@@ -24,12 +24,52 @@
         "requested": {
           "anyOf": [
             {
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 9007199254740991
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "parallelism"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "exact"
+                },
+                "parallelism": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 9007199254740991
+                }
+              }
             },
             {
-              "type": "null"
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "maximumParallelism"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "available"
+                },
+                "maximumParallelism": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 9007199254740991
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "whole-host"
+                }
+              }
             }
           ]
         }
@@ -47,8 +87,29 @@
         "sampler-undefined",
         "consumer-error",
         "consumer-undefined",
-        "sampler-cancel"
+        "sampler-cancel",
+        "sampler-birth-close",
+        "available-cancel"
       ]
+    },
+    "CensusMutation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "accepted"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "removed",
+            "forwarded"
+          ]
+        },
+        "accepted": {
+          "const": false
+        }
+      }
     }
   }
 }

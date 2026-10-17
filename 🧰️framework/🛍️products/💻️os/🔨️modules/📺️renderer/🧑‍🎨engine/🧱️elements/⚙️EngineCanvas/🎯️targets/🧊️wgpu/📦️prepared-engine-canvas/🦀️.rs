@@ -135,8 +135,8 @@ pub enum EngineCanvasPacketDestination {
 #[cfg(test)]
 struct EngineCanvasPacketReservation {
     pub(super) generation: u64,
-    pub(super) sequence: u64,
-    pub(super) destination: EngineCanvasPacketDestination,
+    pub sequence: u64,
+    pub destination: EngineCanvasPacketDestination,
     pub(super) surface: EngineSurfaceSnapshot,
 }
 
@@ -174,7 +174,7 @@ impl Default for EngineCanvasBuildContext {
 }
 
 impl EngineCanvasBuildContext {
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testkit"))]
     pub fn new(document_generation: u64, scene_revision: u64) -> Self {
         Self { document_generation, scene_revision, ..Self::default() }
     }
@@ -239,7 +239,7 @@ impl EngineCanvasBuildContext {
         Ok(())
     }
 
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testkit"))]
     pub fn try_reserve_fresh_packet(&mut self, surface: EngineSurfaceSnapshot) -> Result<EngineCanvasPacketReservation, EngineSurfaceSnapshot> {
         let destination = if self.len < ENGINE_CANVAS_FRAME_PACKET_CAPACITY {
             let index = self.len;
@@ -271,7 +271,7 @@ impl EngineCanvasBuildContext {
         Ok(EngineCanvasPacketReservation { generation: self.document_generation, sequence, destination, surface })
     }
 
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testkit"))]
     pub fn publish_reserved(&mut self, reservation: EngineCanvasPacketReservation, scene: canvas::Scene, clear: Color, width: u32, height: u32) {
         self.published_reservation_sequence = reservation.sequence;
         let packet = EngineCanvasPacket {

@@ -23,7 +23,7 @@ const editCalls=(dispatch:{mock:{calls:any[][]}})=>dispatch.mock.calls.filter(ca
 import fixture from "../🧫️fixtures/🖱️selection-focus/🔣️.json";
 
 vi.mock("@semio-tech/ui-react",async original=>({...await original<typeof import("@semio-tech/ui-react")>(),useTranslation:()=>({i18n:{resolvedLanguage:"en"}})}));
-vi.mock("../../../../📐️Canvas2dHost/🟦️.tsx",()=>({canvasPinchCamera:()=>({x:0,y:0,zoom:1})}));
+vi.mock("../../../../📐️Canvas2dHost/📷️camera-math/🟦️.ts",()=>({canvasPinchCamera:()=>({x:0,y:0,zoom:1})}));
 afterEach(()=>{cleanup();vi.restoreAllMocks();vi.unstubAllGlobals();});
 
 for(const action of fixture.actions) test("selection survives focus moving to "+action,async()=>{

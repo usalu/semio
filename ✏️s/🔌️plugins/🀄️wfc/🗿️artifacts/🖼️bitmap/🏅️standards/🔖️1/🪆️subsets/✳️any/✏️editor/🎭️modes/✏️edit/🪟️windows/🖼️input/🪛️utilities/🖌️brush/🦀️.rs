@@ -265,7 +265,5 @@ pub fn bitmap_brush_pointer_stroke(pointer: &BitmapBrushPointer, width: u32, hei
 //#endregion 🖱️Pointer
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "../../../../../../🧪️tests/🧪️brush-tool/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

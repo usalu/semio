@@ -1,4 +1,6 @@
 use super::*;
+use crate::standards::v1::subsets::any::schema::kernel::{normalize_pair, EntityId};
+use semio_framework_test_fixtures::repo_root;
 
 #[semio_framework_async_macros::async_test]
 async fn normalize_pair_orders_endpoints() {
@@ -15,7 +17,7 @@ fn the_served_schema_documents_are_declared_with_their_exact_size() {
     use semio_framework_schema_registry::{resolve_schema_export, SchemaFormat};
     let declarations = schema_leaf_asset_declarations();
     assert_eq!(declarations.len(), 4);
-    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).ancestors().find(|candidate| candidate.join("nx.json").is_file()).expect("the repository root holds nx.json");
+    let root = repo_root!();
     for declaration in &declarations {
         let bytes = std::fs::read(root.join(&declaration.name)).expect("the declared document exists");
         assert_eq!(bytes.len() as u64, declaration.size_bytes, "{}", declaration.name);

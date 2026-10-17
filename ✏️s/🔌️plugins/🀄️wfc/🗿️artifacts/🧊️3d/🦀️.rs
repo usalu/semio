@@ -14,501 +14,172 @@ extern crate semio_framework_os_kernel as vcs;
 pub use crate::schema::snapshot::WFC3D_DOCUMENT_SCHEMA;
 
 use crate::schema::snapshot::{Color, TileMedia3d};
-use {semio_framework_plugin::ArtifactKindSpec,semio_framework_artifact_reference::Dialect,semio_framework_plugin::MediaClass,semio_framework_plugin::MediaForm,semio_framework_plugin::MediaType,semio_framework_plugin::OsMediaCapability,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
-//#region 🔖️Dialect
-/// 🪪️ The canonical surface-id coordinate for this artifact's ONE subset (`✳️any`) —
-/// `s.wfc.wfc3d@1/*`. Lives at the ARTIFACT root (not under `✏️editor`/`👁️viewer`) so a viewer file
-/// can read it without importing through the sibling editor module. `artifact_kind` matches
-/// `Wfc3dSnapshot`/`Wfc3dDiff`'s own `#[artifact_schema(id = "s.wfc.wfc3d")]` attribute and
-/// `WFC3D_DOCUMENT_SCHEMA`'s literal value; it is NOT `artifact_kind()`'s OS-level `"3d.wfc3d"`
-/// kind id, which is a different, unrelated namespace.
-pub const WFC3D_DIALECT: Dialect = Dialect { artifact_kind: WFC3D_DOCUMENT_SCHEMA, standard: StandardId("1"), subset: SubsetId::ANY };
-//#endregion 🔖️Dialect
+pub use semio_s_artifact_wfc_3d_wfc3d::{WFC3D_DIALECT};
 
-//#region 🔖️ArtifactKind
-/// 🗂️ This artifact's `ArtifactKindSpec`. `dimension`/`media_*` follow the 3d/mesh family: the
-/// editor's preview window is a `World3d` surface placing one mesh instance per solved slot.
-pub fn artifact_kind() -> ArtifactKindSpec {
-    ArtifactKindSpec {
-        id: "3d.wfc3d".into(),
-        label: semio_framework_ui_locale::LocalizedLabel::native("3D", "3D"),
-        source_format: WFC3D_DOCUMENT_SCHEMA.into(),
-        component_kind: "wfc3d".into(),
-        dimension: "3d".into(),
-        media_capability: OsMediaCapability::MeshOnly,
-        media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh },
-        schema: WFC3D_DOCUMENT_SCHEMA.into(),
-        export_formats: vec![],
-        import_formats: vec![],
-        export_stdio_kinds: vec!["stdio.txt".into()],
-        import_stdio_kinds: vec!["stdio.txt".into()],
-    }
-}
-//#endregion 🔖️ArtifactKind
+pub use semio_s_artifact_wfc_3d_wfc3d::{artifact_kind};
 
-//#region 🥽️MeshChild
-/// 🥽️ Addresses one tile's geometry as this document's child in the `s.stdio.semio@v1/mesh` store —
-/// the `TileMedia3d::MeshChild` variant's handle. A tile catalogue small enough to author inline
-/// uses `TileMedia3d::Mesh` instead and mints no handle at all.
-pub fn mesh_child_handle(tile_id: &str) -> store::os_store::artifact_child::ArtifactChild<semio_s_artifact_stdio_semio_mesh::schema::snapshot::SemioMeshSnapshot> {
-    let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "mesh".into() };
-    store::os_store::artifact_child::ArtifactChild::new(tile_id.to_string(), semio_framework_artifact_reference::ArtifactRef { artifact_id: tile_id.to_string(), dialect })
-}
-/// 📦️ An axis-aligned unit box in tile space (`0..1` on every axis), as inline media. Twelve
-/// triangles over eight corners — the honest default body for a tile that fills its slot's box, and
-/// what the preview falls back to when a tile's media resolves to nothing.
-pub fn unit_box_media(color: Option<Color>) -> TileMedia3d {
-    TileMedia3d::Mesh {
-        positions: vec![0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 1.0, 1.0, 0.0, 1.0, 1.0],
-        indices: vec![0, 2, 1, 0, 3, 2, 4, 5, 6, 4, 6, 7, 0, 1, 5, 0, 5, 4, 3, 7, 6, 3, 6, 2, 0, 4, 7, 0, 7, 3, 1, 2, 6, 1, 6, 5],
-        color,
-    }
-}
+pub use semio_s_artifact_wfc_3d_snapshot::{mesh_child_handle, unit_box_media, unit_wedge_media};
 
-/// 🔺️ A unit wedge in tile space — the box with its `+y`/`+z` edge collapsed, so a roof/ramp tile
-/// reads differently from a solid bay at a glance.
-pub fn unit_wedge_media(color: Option<Color>) -> TileMedia3d {
-    TileMedia3d::Mesh {
-        positions: vec![0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0],
-        indices: vec![0, 2, 1, 0, 3, 2, 0, 1, 5, 0, 5, 4, 3, 0, 4, 1, 2, 5, 2, 3, 4, 2, 4, 5],
-        color,
-    }
-}
-//#endregion 🥽️MeshChild
-
-//#region 🔖️Declaration
-/// 🧾️ Defines `s.wfc.wfc3d`'s immutable runtime capability leaves.
-pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
-    use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
-
-    let rows: &[semio_framework_plugin::ArtifactCapabilityRow<'_>] = &[
-        ("s.wfc.wfc3d.standard.v1", "standard", "1", &[], None),
-        ("s.wfc.wfc3d.standard.v1.profile.any", "profile", "any", &[], None),
-        ("s.wfc.wfc3d.schema.artifact", "schema", "s.wfc.wfc3d", &[("schema", "s.wfc.wfc3d")], None),
-        ("s.wfc.wfc3d.inference.artifact", "inference", "s.wfc.wfc3d.solve", &[("schema", "s.wfc.wfc3d.solve")], None),
-        ("s.wfc.wfc3d.composer.native", "composer", "s.wfc.wfc3d@1/*", &[("dialect", "s.wfc.wfc3d@1/*")], None),
-        ("s.wfc.wfc3d.grammar.1", "grammar", "wfc3d.snapshot", &[("grammar", "wfc3d.snapshot")], None),
-        ("s.wfc.wfc3d.grammar.2", "grammar", "wfc3d.mutations", &[("grammar", "wfc3d.mutations")], None),
-        ("s.wfc.wfc3d.codec.document-1", "codec", "s.wfc.wfc3d:wfc3d", &[("codec", "s.wfc.wfc3d"), ("codec-extension", "5:s.wfc.wfc3d:wfc3d")], None),
-        ("s.wfc.wfc3d.localization.en", "localization", "3D", &[], Some(("en", "3D"))),
-        ("s.wfc.wfc3d.localization.de", "localization", "3D", &[], Some(("de", "3D"))),
-    ];
-    let mut definition = ArtifactDefinition::new(ArtifactIdentity::parse("s.wfc.wfc3d")?);
-    for (identity, kind, descriptor, claims, localization) in rows {
-        let mut capability = ArtifactCapability::new(ArtifactIdentity::parse(*identity)?, ArtifactCapabilityKind::parse(*kind)?).descriptor(descriptor.as_bytes())?;
-        for (namespace, value) in *claims {
-            capability = capability.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::parse(*namespace)?, *value)?)?;
-        }
-        if let Some((locale, text)) = localization {
-            capability = capability.localization(ArtifactLocalization::new(ArtifactLocale::parse(*locale)?, *text)?)?;
-        }
-        definition = definition.capability(capability)?;
-    }
-    Ok(definition)
-}
-
-/// 🎭️ The two apps this artifact contributes to its plugin's closed fleet.
-pub trait ArtifactApps:
-    semio_framework_plugin::PluginApp
-    + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::EditorApp<editor::wfc3d::Wfc3dEditor>>>
-    + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::ViewerApp<viewer::wfc3d::Wfc3dViewer>>>
-{
-}
-
-impl<PA> ArtifactApps for PA where
-    PA: semio_framework_plugin::PluginApp
-        + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::EditorApp<editor::wfc3d::Wfc3dEditor>>>
-        + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::ViewerApp<viewer::wfc3d::Wfc3dViewer>>>
-{
-}
-
-/// 🌳️ This artifact's declaration tree root — the ONLY registration channel for schema/io/viewer/
-/// editor rows.
-pub fn artifact<PA: ArtifactApps>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<PA> {
-    use semio_framework_plugin::app::declarations::ArtifactDeclaration;
-    use {semio_framework_artifact_reference::ArtifactKindId};
-    ArtifactDeclaration { kind: ArtifactKindId::parse("s.wfc.wfc3d").expect("canonical wfc3d kind"), localization: &[], standards: vec![standards::v1::standard::<PA>()] }
-}
-
-/// 📌️ Handcrafted facet grammars (text) and protocols (binary) — built once and leaked to a
-/// `&'static` slice since `dsl::passthrough_hooks` is not `const fn`. Index order is fixed:
-/// 0 = document, 1 = op, 2 = diff, 3 = pack, 4 = spr.
-pub fn wfc3d_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
-    static LANGUAGES: std::sync::OnceLock<Vec<semio_framework_dsl::LanguageSpec>> = std::sync::OnceLock::new();
-    LANGUAGES
-        .get_or_init(|| {
-            vec![
-                semio_framework_dsl::LanguageSpec {
-                    id: "wfc3d.snapshot",
-                    extension: Some("wfc3d"),
-                    role: semio_framework_dsl::LanguageRole::Document,
-                    grammar: Some(standards::v1::subsets::any::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(standards::v1::subsets::any::io::text::snapshot::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(standards::v1::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(standards::v1::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
-                    hooks: semio_framework_dsl::passthrough_hooks("wfc3d.snapshot"),
-                },
-                semio_framework_dsl::LanguageSpec {
-                    id: "wfc3d.mutations",
-                    extension: None,
-                    role: semio_framework_dsl::LanguageRole::Ops,
-                    grammar: Some(standards::v1::subsets::any::io::text::mutations::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(standards::v1::subsets::any::io::text::mutations::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(standards::v1::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(standards::v1::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
-                    hooks: semio_framework_dsl::passthrough_hooks("wfc3d.mutations"),
-                },
-                semio_framework_dsl::LanguageSpec {
-                    id: "wfc3d.diff",
-                    extension: None,
-                    role: semio_framework_dsl::LanguageRole::Diff,
-                    grammar: Some(standards::v1::subsets::any::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(standards::v1::subsets::any::io::text::snapshot::COMPONENT_GRAMMAR_PATH),
-                    protocol: None,
-                    protocol_path: None,
-                    hooks: semio_framework_dsl::passthrough_hooks("wfc3d.diff"),
-                },
-                semio_framework_dsl::LanguageSpec {
-                    id: "wfc3d.pack",
-                    extension: None,
-                    role: semio_framework_dsl::LanguageRole::Pack,
-                    grammar: None,
-                    grammar_path: None,
-                    protocol: Some(standards::v1::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(standards::v1::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
-                    hooks: semio_framework_dsl::passthrough_hooks("wfc3d.pack"),
-                },
-                semio_framework_dsl::LanguageSpec {
-                    id: "wfc3d.spr",
-                    extension: None,
-                    role: semio_framework_dsl::LanguageRole::Spr,
-                    grammar: None,
-                    grammar_path: None,
-                    protocol: Some(standards::v1::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(standards::v1::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
-                    hooks: semio_framework_dsl::passthrough_hooks("wfc3d.spr"),
-                },
-            ]
-        })
-        .as_slice()
-}
-//#endregion 🔖️Declaration
+pub use semio_s_artifact_wfc_3d_tests::{ArtifactApps, artifact, definition, wfc3d_languages};
 
 #[path = "."]
 pub mod standards {
     #[path = "."]
     pub mod v1 {
-        #[path = "🏅️standards/🔖️1/🦀️.rs"]
-        mod component;
-        pub use component::*;
+        pub use semio_s_artifact_wfc_3d_tests::standards::v1::*;
 
         #[path = "."]
         pub mod subsets {
             #[path = "."]
             pub mod any {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🦀️.rs"]
-                mod component;
-                pub use component::*;
+                pub use semio_s_artifact_wfc_3d_tests::standards::v1::subsets::any::*;
 
                 #[path = "."]
                 pub mod schema {
-                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs"]
-                    mod component;
-                    pub use component::*;
-                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs"]
-                    pub mod diff;
-                    #[path = "."]
-                    pub mod snapshot {
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
+                    pub use semio_s_artifact_wfc_3d_schema::standards::v1::subsets::any::schema::*;
+
+                    pub use semio_s_artifact_wfc_3d_snapshot::standards::v1::subsets::any::schema::diff;
+                    pub use semio_s_artifact_wfc_3d_snapshot::standards::v1::subsets::any::schema::snapshot;
                     #[path = "."]
                     pub mod mutations {
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
+                        pub use semio_s_artifact_wfc_3d_mutations::standards::v1::subsets::any::schema::mutations::*;
+
                         #[path = "."]
                         pub mod create_slot {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧩️create-slot/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧩️create-slot/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧩️create-slot/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧩️create-slot/🧪️tests/🧩️inserts/🦀️.rs"]
-                            mod tests_inserts_room_c_at_the_sorted_position;
+                            pub use semio_s_artifact_wfc_3d_mut_family::standards::v1::subsets::any::schema::mutations::create_slot::*;
+                            pub use semio_s_artifact_wfc_3d_mut_family::standards::v1::subsets::any::schema::mutations::create_slot::diff;
+                            pub use semio_s_artifact_wfc_3d_mut_family::standards::v1::subsets::any::schema::mutations::create_slot::inverse;
+
                         }
                         #[path = "."]
                         pub mod delete_slot {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕳️delete-slot/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕳️delete-slot/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕳️delete-slot/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕳️delete-slot/🧪️tests/🕳️removes/🦀️.rs"]
-                            mod tests_removes_room_a_and_cascades_its_edge;
+                            pub use semio_s_artifact_wfc_3d_mut_family::standards::v1::subsets::any::schema::mutations::delete_slot::*;
+                            pub use semio_s_artifact_wfc_3d_mut_family::standards::v1::subsets::any::schema::mutations::delete_slot::diff;
+                            pub use semio_s_artifact_wfc_3d_mut_family::standards::v1::subsets::any::schema::mutations::delete_slot::inverse;
+
                         }
                         #[path = "."]
                         pub mod move_slot {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚚️move-slot/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚚️move-slot/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚚️move-slot/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚚️move-slot/🧪️tests/🚚️lifts-room-b-one-storey/🦀️.rs"]
-                            mod tests_lifts_room_b_one_storey;
+                            pub use semio_s_artifact_wfc_3d_snapshot::standards::v1::subsets::any::schema::mutations::move_slot::*;
+                            pub use semio_s_artifact_wfc_3d_snapshot::standards::v1::subsets::any::schema::mutations::move_slot::diff;
+                            pub use semio_s_artifact_wfc_3d_snapshot::standards::v1::subsets::any::schema::mutations::move_slot::inverse;
+
                         }
                         #[path = "."]
                         pub mod drag_slots {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️drag-slots/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️drag-slots/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️drag-slots/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️drag-slots/🧪️tests/✋️lifts-both-rooms-two-storeys/🦀️.rs"]
-                            mod tests_lifts_both_rooms_two_storeys;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️drag-slots/🧪️tests/⚠️skips/🦀️.rs"]
-                            mod tests_skips_a_slot_the_corridor_lacks;
+                            pub use semio_s_artifact_wfc_3d_mut_family::standards::v1::subsets::any::schema::mutations::drag_slots::*;
+                            pub use semio_s_artifact_wfc_3d_mut_family::standards::v1::subsets::any::schema::mutations::drag_slots::diff;
+                            pub use semio_s_artifact_wfc_3d_mut_family::standards::v1::subsets::any::schema::mutations::drag_slots::inverse;
+
                         }
                         #[path = "."]
                         pub mod set_slot_positions {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎯️set-slot-positions/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎯️set-slot-positions/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎯️set-slot-positions/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎯️set-slot-positions/🧪️tests/🎯️sets/🦀️.rs"]
-                            mod tests_sets_the_corridor_and_room_b;
+                            pub use semio_s_artifact_wfc_3d_set_slot_positions::standards::v1::subsets::any::schema::mutations::set_slot_positions::*;
+                            pub use semio_s_artifact_wfc_3d_set_slot_positions::standards::v1::subsets::any::schema::mutations::set_slot_positions::diff;
+                            pub use semio_s_artifact_wfc_3d_set_slot_positions::standards::v1::subsets::any::schema::mutations::set_slot_positions::inverse;
+
                         }
                         #[path = "."]
                         pub mod resize_slot {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️resize-slot/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️resize-slot/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️resize-slot/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️resize-slot/🧪️tests/📐️widens/🦀️.rs"]
-                            mod tests_widens_room_a_to_a_double_bay;
+                            pub use semio_s_artifact_wfc_3d_set_slot_positions::standards::v1::subsets::any::schema::mutations::resize_slot::*;
+                            pub use semio_s_artifact_wfc_3d_set_slot_positions::standards::v1::subsets::any::schema::mutations::resize_slot::diff;
+                            pub use semio_s_artifact_wfc_3d_set_slot_positions::standards::v1::subsets::any::schema::mutations::resize_slot::inverse;
+
                         }
                         #[path = "."]
                         pub mod connect_slots {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗️connect-slots/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗️connect-slots/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗️connect-slots/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗️connect-slots/🧪️tests/🔗️joins/🦀️.rs"]
-                            mod tests_joins_room_a_to_room_b_beside;
+                            pub use semio_s_artifact_wfc_3d_set_slot_positions::standards::v1::subsets::any::schema::mutations::connect_slots::*;
+                            pub use semio_s_artifact_wfc_3d_set_slot_positions::standards::v1::subsets::any::schema::mutations::connect_slots::diff;
+                            pub use semio_s_artifact_wfc_3d_set_slot_positions::standards::v1::subsets::any::schema::mutations::connect_slots::inverse;
+
                         }
                         #[path = "."]
                         pub mod disconnect_slots {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-slots/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-slots/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-slots/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-slots/🧪️tests/✂️severs/🦀️.rs"]
-                            mod tests_severs_the_corridor_b_edge;
+                            pub use semio_s_artifact_wfc_3d_set_slot_positions::standards::v1::subsets::any::schema::mutations::disconnect_slots::*;
+                            pub use semio_s_artifact_wfc_3d_set_slot_positions::standards::v1::subsets::any::schema::mutations::disconnect_slots::diff;
+                            pub use semio_s_artifact_wfc_3d_set_slot_positions::standards::v1::subsets::any::schema::mutations::disconnect_slots::inverse;
+
                         }
                         #[path = "."]
                         pub mod pin_slot {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📌️pin-slot/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📌️pin-slot/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📌️pin-slot/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📌️pin-slot/🧪️tests/📌️pins-room-a-to-the-room-tile/🦀️.rs"]
-                            mod tests_pins_room_a_to_the_room_tile;
+                            pub use semio_s_artifact_wfc_3d_set_slot_positions::standards::v1::subsets::any::schema::mutations::pin_slot::*;
+                            pub use semio_s_artifact_wfc_3d_set_slot_positions::standards::v1::subsets::any::schema::mutations::pin_slot::diff;
+                            pub use semio_s_artifact_wfc_3d_set_slot_positions::standards::v1::subsets::any::schema::mutations::pin_slot::inverse;
+
                         }
                         #[path = "."]
                         pub mod unpin_slot {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️unpin-slot/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️unpin-slot/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️unpin-slot/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️unpin-slot/🧪️tests/📍️releases-the-pin-on-room-a/🦀️.rs"]
-                            mod tests_releases_the_pin_on_room_a;
+                            pub use semio_s_artifact_wfc_3d_set_slot_positions::standards::v1::subsets::any::schema::mutations::unpin_slot::*;
+                            pub use semio_s_artifact_wfc_3d_set_slot_positions::standards::v1::subsets::any::schema::mutations::unpin_slot::diff;
+                            pub use semio_s_artifact_wfc_3d_set_slot_positions::standards::v1::subsets::any::schema::mutations::unpin_slot::inverse;
+
                         }
                         #[path = "."]
                         pub mod create_tile {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🀄️create-tile/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🀄️create-tile/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🀄️create-tile/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🀄️create-tile/🧪️tests/🀄️adds/🦀️.rs"]
-                            mod tests_adds_a_stair_tile_to_the_catalogue;
+                            pub use semio_s_artifact_wfc_3d_mutations::standards::v1::subsets::any::schema::mutations::create_tile::*;
+                            pub use semio_s_artifact_wfc_3d_mutations::standards::v1::subsets::any::schema::mutations::create_tile::diff;
+                            pub use semio_s_artifact_wfc_3d_mutations::standards::v1::subsets::any::schema::mutations::create_tile::inverse;
+
                         }
                         #[path = "."]
                         pub mod delete_tile {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-tile/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-tile/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-tile/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-tile/🧪️tests/🗑️drops/🦀️.rs"]
-                            mod tests_drops_the_corridor_tile_and_its_rule;
+                            pub use semio_s_artifact_wfc_3d_mutations::standards::v1::subsets::any::schema::mutations::delete_tile::*;
+                            pub use semio_s_artifact_wfc_3d_mutations::standards::v1::subsets::any::schema::mutations::delete_tile::diff;
+                            pub use semio_s_artifact_wfc_3d_mutations::standards::v1::subsets::any::schema::mutations::delete_tile::inverse;
+
                         }
                         #[path = "."]
                         pub mod change_tile_weight {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚖️change-tile-weight/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚖️change-tile-weight/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚖️change-tile-weight/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚖️change-tile-weight/🧪️tests/⚖️raises/🦀️.rs"]
-                            mod tests_raises_the_room_tile_selection_bias;
+                            pub use semio_s_artifact_wfc_3d_set_slot_positions::standards::v1::subsets::any::schema::mutations::change_tile_weight::*;
+                            pub use semio_s_artifact_wfc_3d_set_slot_positions::standards::v1::subsets::any::schema::mutations::change_tile_weight::diff;
+                            pub use semio_s_artifact_wfc_3d_set_slot_positions::standards::v1::subsets::any::schema::mutations::change_tile_weight::inverse;
+
                         }
                         #[path = "."]
                         pub mod change_tile_media {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️change-tile-media/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️change-tile-media/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️change-tile-media/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️change-tile-media/🧪️tests/🖼️swaps/🦀️.rs"]
-                            mod tests_swaps_the_corridor_box_for_a_wedge;
+                            pub use semio_s_artifact_wfc_3d_mut_family::standards::v1::subsets::any::schema::mutations::change_tile_media::*;
+                            pub use semio_s_artifact_wfc_3d_mut_family::standards::v1::subsets::any::schema::mutations::change_tile_media::diff;
+                            pub use semio_s_artifact_wfc_3d_mut_family::standards::v1::subsets::any::schema::mutations::change_tile_media::inverse;
+
                         }
                         #[path = "."]
                         pub mod create_rule {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚦️create-rule/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚦️create-rule/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚦️create-rule/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚦️create-rule/🧪️tests/🚦️forbids/🦀️.rs"]
-                            mod tests_forbids_two_rooms_side_by_side;
+                            pub use semio_s_artifact_wfc_3d_mut_family::standards::v1::subsets::any::schema::mutations::create_rule::*;
+                            pub use semio_s_artifact_wfc_3d_mut_family::standards::v1::subsets::any::schema::mutations::create_rule::diff;
+                            pub use semio_s_artifact_wfc_3d_mut_family::standards::v1::subsets::any::schema::mutations::create_rule::inverse;
+
                         }
                         #[path = "."]
                         pub mod delete_rule {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚫️delete-rule/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚫️delete-rule/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚫️delete-rule/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚫️delete-rule/🧪️tests/🚫️drops/🦀️.rs"]
-                            mod tests_drops_the_room_corridor_pairing;
+                            pub use semio_s_artifact_wfc_3d_mut_family::standards::v1::subsets::any::schema::mutations::delete_rule::*;
+                            pub use semio_s_artifact_wfc_3d_mut_family::standards::v1::subsets::any::schema::mutations::delete_rule::diff;
+                            pub use semio_s_artifact_wfc_3d_mut_family::standards::v1::subsets::any::schema::mutations::delete_rule::inverse;
+
                         }
                         #[path = "."]
                         pub mod change_seed {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎲️change-seed/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎲️change-seed/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎲️change-seed/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎲️change-seed/🧪️tests/🎲️reseeds/🦀️.rs"]
-                            mod tests_reseeds_the_solve_from_7_to_99;
+                            pub use semio_s_artifact_wfc_3d_mut_family::standards::v1::subsets::any::schema::mutations::change_seed::*;
+                            pub use semio_s_artifact_wfc_3d_mut_family::standards::v1::subsets::any::schema::mutations::change_seed::diff;
+                            pub use semio_s_artifact_wfc_3d_mut_family::standards::v1::subsets::any::schema::mutations::change_seed::inverse;
+
                         }
                     }
-                    #[path = "."]
-                    pub mod inferences {
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
+                    pub use semio_s_artifact_wfc_3d_inferences::standards::v1::subsets::any::schema::inferences;
                 }
+
+                pub use semio_s_artifact_wfc_3d_snapshot::standards::v1::subsets::any::examples;
 
                 #[path = "."]
                 pub mod io {
-                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs"]
-                    mod component;
-                    pub use component::*;
-                    #[path = "."]
-                    pub mod import {
-                        #[path = "."]
-                        pub mod deserializers {
-                            #[path = "."]
-                            pub mod artifacts {
-                                #[path = "."]
-                                pub mod txt {
-                                    #[path = "."]
-                                    pub mod v_utf_8 {
-                                        #[path = "."]
-                                        pub mod any {
-                                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔤️txt/🔖️utf-8/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    #[path = "."]
-                    pub mod export {
-                        #[path = "."]
-                        pub mod serializers {
-                            #[path = "."]
-                            pub mod artifacts {
-                                #[path = "."]
-                                pub mod txt {
-                                    #[path = "."]
-                                    pub mod v_utf_8 {
-                                        #[path = "."]
-                                        pub mod any {
-                                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🔤️txt/🔖️utf-8/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
+                    pub use semio_s_artifact_wfc_3d_tests::standards::v1::subsets::any::io::*;
+pub mod sqlite {
+    pub use semio_s_artifact_wfc_3d_schema::standards::v1::subsets::any::io::sqlite::*;
+    pub use semio_s_artifact_wfc_3d_snapshot::standards::v1::subsets::any::io::sqlite::snapshot;
+}
+
+                    pub use semio_s_artifact_wfc_3d_snapshot::standards::v1::subsets::any::io::import;
+                    pub use semio_s_artifact_wfc_3d_snapshot::standards::v1::subsets::any::io::export;
                 }
             }
         }
@@ -519,42 +190,32 @@ pub mod standards {
 pub mod editor {
     #[path = "."]
     pub mod wfc3d {
-        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs"]
-        mod component;
-        pub use component::*;
-        #[path = "."]
-        pub mod presence {
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
+        pub use semio_s_artifact_wfc_3d_wfc3d::editor::wfc3d::*;
 
-        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️.rs"]
-        pub mod config;
-        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🦀️.rs"]
-        pub mod transient;
+        pub use semio_s_artifact_wfc_3d_schema::editor::wfc3d::presence;
+
+        pub mod config {
+    pub use semio_s_artifact_wfc_3d_config::editor::wfc3d::config::*;
+    pub use semio_s_artifact_wfc_3d_schema::editor::wfc3d::config::schema;
+}
+        pub use semio_s_artifact_wfc_3d_transient::editor::wfc3d::transient;
 
         #[path = "."]
         pub mod modes {
             #[path = "."]
             pub mod edit {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🦀️.rs"]
-                mod component;
-                pub use component::*;
+                pub use semio_s_artifact_wfc_3d_wfc3d::editor::wfc3d::modes::edit::*;
 
                 #[path = "."]
                 pub mod tools {
-                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🛠️tools/📑️fill/🦀️.rs"]
-                    pub mod fill;
-                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🛠️tools/✋️drag/🦀️.rs"]
-                    pub mod drag;
+                    pub use semio_s_artifact_wfc_3d_wfc3d::editor::wfc3d::modes::edit::tools::fill;
+                    pub use semio_s_artifact_wfc_3d_inferences::editor::wfc3d::modes::edit::tools::drag;
                 }
 
                 #[path = "."]
                 pub mod windows {
-                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🕸️graph/🦀️.rs"]
-                    pub mod graph;
-                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧊️preview/🦀️.rs"]
-                    pub mod preview;
+                    pub use semio_s_artifact_wfc_3d_schema::editor::wfc3d::modes::edit::windows::graph;
+                    pub use semio_s_artifact_wfc_3d_wfc3d::editor::wfc3d::modes::edit::windows::preview;
                 }
             }
         }
@@ -565,69 +226,27 @@ pub mod editor {
 pub mod viewer {
     #[path = "."]
     pub mod wfc3d {
-        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs"]
-        mod component;
-        pub use component::*;
-        #[path = "."]
-        pub mod presence {
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/👥️presence/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
-        #[path = "."]
-        pub mod config {
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎚️config/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
+        pub use semio_s_artifact_wfc_3d_tests::viewer::wfc3d::*;
+
+        pub use semio_s_artifact_wfc_3d_schema::viewer::wfc3d::presence;
+        pub use semio_s_artifact_wfc_3d_schema::viewer::wfc3d::config;
 
         #[path = "."]
         pub mod modes {
             #[path = "."]
             pub mod view {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🦀️.rs"]
-                mod component;
-                pub use component::*;
+                pub use semio_s_artifact_wfc_3d_wfc3d::viewer::wfc3d::modes::view::*;
 
-                #[path = "."]
-                pub mod windows {
-                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🧊️preview/🦀️.rs"]
-                    pub mod preview;
-                }
+                pub use semio_s_artifact_wfc_3d_wfc3d::viewer::wfc3d::modes::view::windows;
             }
         }
     }
 }
 
-//#region 📚️Examples
-/// 📚️ The bundled problem specs this subset ships — a forced corridor path, a cyclic facade strip,
-/// and a non-boxed tower. Each slug owns its own directory under `📚️examples/`, and the Rust builder
-/// there is the authority its `🗣️.dsl.semio` asset is printed from.
-#[path = "."]
-pub mod examples {
-    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🚪️two-room-corridor/🦀️.rs"]
-    pub mod two_room_corridor;
-    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🧱️wall-roof-facade-strip/🦀️.rs"]
-    pub mod wall_roof_facade_strip;
-    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🗼️tower-stack/🦀️.rs"]
-    pub mod tower_stack;
-
-    /// 📇️ Every bundled example, in the order the editor's example picker offers them.
-    pub fn sources() -> Vec<semio_framework_plugin::ExampleSource> {
-        vec![two_room_corridor::source(), wall_roof_facade_strip::source(), tower_stack::source()]
-    }
-
-    /// 📇️ The same roster as a `&'static` slice, for the subset declaration.
-    pub fn example_source_slice() -> &'static [semio_framework_plugin::ExampleSource] {
-        static EXAMPLES: std::sync::OnceLock<Vec<semio_framework_plugin::ExampleSource>> = std::sync::OnceLock::new();
-        EXAMPLES.get_or_init(sources).as_slice()
-    }
-
-    #[cfg(test)]
-    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🧪️tests/🧩️outcome/🦀️.rs"]
-    mod tests;
-}
-//#endregion 📚️Examples
-
 //#region 🔗️FlatShims
+pub mod examples {
+    pub use crate::standards::v1::subsets::any::examples::*;
+}
 pub mod schema {
     pub use super::standards::v1::subsets::any::schema::*;
 }
@@ -662,6 +281,10 @@ mod mount_contract;
 #[cfg(test)]
 #[path = "./🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🗄️store-fixture/🦀️.rs"]
 mod store_fixture;
+
+#[cfg(test)]
+#[path = "./🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🧪️tests/🧩️outcome/🦀️.rs"]
+mod examples_outcome;
 //#endregion 🧪️Tests
 
 pub use crate::standards::v1::subsets::any::io::{Wfc3dBuilderConstruction, Wfc3dParts, Wfc3dAnalyzerAnalysis, Wfc3dBuilderFacets, Wfc3dBuilder, Wfc3dAnalyzer, Wfc3dComposer};
@@ -670,3 +293,7 @@ pub use crate::standards::v1::subsets::any::io::{Wfc3dBuilderConstruction, Wfc3d
 pub mod host;
 
 pub use host::inferences::*;
+
+#[cfg(test)]
+#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs"]
+mod hoisted_snapshot_0;

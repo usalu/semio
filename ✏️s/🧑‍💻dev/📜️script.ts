@@ -42,9 +42,9 @@ class JackGraphScript extends BundleScript {
 class PlaygroundSessionScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     if (args.length > 1 || (args[0] !== undefined && args[0] !== "check" && args[0] !== "preview")) throw new Error("Specific session accepts check or preview");
-    const { default: owning } = await import("./🧩️catalog/🎮️session/🔣️.json");
-    const { parsePlaygroundSessionPublicationRequestV1 } = await import("../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🎮️playground-session/🧬️schema/🟦️.ts");
-    const { PlaygroundSessionGenerateScript, PlaygroundSessionPreviewScript } = await import("../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🎮️playground-session/🏃️execution/🟦️.ts");
+    const { sessionSchema: owning } = await import("./🧩️catalog/📦️packages/🟦️typescript/🎮️session/🟦️.ts");
+    const { parsePlaygroundSessionPublicationRequestV1 } = await import("../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/🎮️playground-session/🧬️schema/🟦️.ts");
+    const { PlaygroundSessionGenerateScript, PlaygroundSessionPreviewScript } = await import("../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/🎮️playground-session/🏃️execution/🟦️.ts");
     const request = parsePlaygroundSessionPublicationRequestV1(owning);
     if (args[0] === "preview") await new PlaygroundSessionPreviewScript(this.root, this.repoRoot, this.invocation, request).run([]);
     else await new PlaygroundSessionGenerateScript(this.root, this.repoRoot, this.invocation, request).run(args);
@@ -53,7 +53,7 @@ class PlaygroundSessionScript extends BundleScript {
 class CatalogPublicationScript extends BundleScript {
   async run(args:string[]):Promise<void>{
     if(args.length!==1||!["generate","check","preview","verify"].includes(args[0]!))throw Error("catalog-publication requires generate, check, preview or verify");
-    const {specificCatalogPublicationV1}=await import("./🧩️catalog/📣️publication/🟦️.ts");
+    const {specificCatalogPublicationV1}=await import("./🧩️catalog/📦️packages/🟦️typescript/📣️publication/🟦️.ts");
     const {GenerateScript,CheckGeneratedScript,PreviewGeneratedScript,CheckScript}=await import("../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📽️projection/🟦️.ts");
     const selected=args[0]==="generate"?GenerateScript:args[0]==="check"?CheckGeneratedScript:args[0]==="preview"?PreviewGeneratedScript:CheckScript;
     await new selected(this.root,this.repoRoot,this.invocation,specificCatalogPublicationV1(path=>readFileSync(resolve(this.repoRoot,path),"utf8"))).run([]);
@@ -72,8 +72,8 @@ class McpClientEndToEndScript extends BundleScript {
     const flag = args.indexOf("--folder");
     if (flag >= 0 && !args[flag + 1]) throw new Error("usage: mcp-client-e2e [--folder <path>]");
     const { join } = await import("node:path");
-    const { runMcpClientEndToEnd } = await import("../../🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🟦️.ts");
-    const { withMcpClientWorkspaceV1 } = await import("../../🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📡️stdio/🎫️session/📦️published/🟦️.ts");
+    const { runMcpClientEndToEnd } = await import("../../🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript/🟦️.ts");
+    const { withMcpClientWorkspaceV1 } = await import("../../🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript/📡️stdio/🎫️session/📦️published/🟦️.ts");
     const { SPECIFIC_MCP_CLIENT_E2E_PINS_V1 } = await import("./🤝️mcp-client-e2e/🟦️.ts");
     const phase=createIssuedResourceControlV1(this.invocation,"mcp:client-e2e",120000);
     const run=async(folder:string,control:import("../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts").ResourceLeaseControl)=>{

@@ -1,11 +1,15 @@
 use super::*;
+use semio_framework_test_fixtures::{fixture_bytes, fixture_text};
 
-const SCAN: &[u8] = include_bytes!("../../../🧪️tests/🧫️fixtures/🧪️abbau-aufbau-masterarbeit-grundriss/🖼️.tiff");
+fn scan() -> &'static [u8] {
+    static CELL: std::sync::OnceLock<Vec<u8>> = std::sync::OnceLock::new();
+    CELL.get_or_init(|| fixture_bytes!("../../../🏅️standards/🔖️6.0/🪆️subsets/🧱️baseline/🧪️tests/🧫️fixtures/🧪️abbau-aufbau-masterarbeit-grundriss/🖼️.tiff").to_vec()).as_slice()
+}
 
 /// 🖼️ The real scan read by the `tiff` crate sits inside the Baseline class, strip-organized.
 #[test]
 fn the_real_scan_reads_inside_the_baseline_class() {
-    let axes = read_axes(SCAN).expect("the tiff reader decodes the committed scan");
+    let axes = read_axes(scan()).expect("the tiff reader decodes the committed scan");
     assert!(axes.raster, "the scan's raster decodes");
     assert!(axes.strip_offsets.is_some() && axes.tile_width.is_none(), "the scan is strip-organized");
     assert_eq!(verdict(&axes), Vec::<&str>::new(), "the committed scan is a Baseline TIFF");
@@ -14,7 +18,7 @@ fn the_real_scan_reads_inside_the_baseline_class() {
 /// 🛡️ Every kind moves its own axis and raises exactly the code the specification table names.
 #[test]
 fn native_baseline_every_profile_moves_its_axis_and_the_verdict_the_table_names() {
-    let axes = read_axes(SCAN).expect("reads");
+    let axes = read_axes(scan()).expect("reads");
     let json = |text: &str| semio_repo_test_host::parse_json(text).expect("params");
     for (kind, params, code) in [
         ("set-compression", r#"{"compression": 5}"#, Some("stdio.tiff.baseline.unsupported-compression")),
@@ -34,7 +38,7 @@ fn native_baseline_every_profile_moves_its_axis_and_the_verdict_the_table_names(
 /// 🧮️ Neutral profiles have the independently specified exact ordered code lists.
 #[test]
 fn native_baseline_neutral_profiles_match_reference_tables(){
- let fixture=semio_repo_test_host::parse_json(include_str!("../../../🚪️io/🧪️tests/🧮️native-conformance/🔣️.json")).unwrap();
+ let fixture=semio_repo_test_host::parse_json(&fixture_text!("../../../🏅️standards/🔖️6.0/🪆️subsets/🧱️baseline/🚪️io/🧪️tests/🧮️native-conformance/🔣️.json").to_owned()).unwrap();
  let base=fixture.get("base").unwrap();
  let values=|o:&Json,key:&str|match o.get(key){Some(Json::Array(_))=>Some(numbers(o,key)),_=>None};
  for case in fixture.array("cases"){
@@ -44,6 +48,5 @@ fn native_baseline_neutral_profiles_match_reference_tables(){
   let expected=case.array("codes").iter().map(|code|match code{Json::String(code)=>format!("stdio.tiff.baseline.{code}"),_=>panic!("code")}).collect::<Vec<_>>();
   assert_eq!(verdict(&axes),expected,"{}",case.str("id"));
  }
- let before=read_axes(include_bytes!("../../../../🧾️document/🧪️tests/🧫️fixtures/🎨️paint-region-applied/⬅️before.tiff")).unwrap();
- eprintln!("[DEBUG] independent native TIFF observations {}",project(&before).to_string());
+ let before=read_axes(&fixture_bytes!("../../../🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧪️tests/🧫️fixtures/🎨️paint-region-applied/⬅️before.tiff").to_vec()).unwrap();
 }

@@ -29,6 +29,5 @@ for (const row of fixtures.analytic) {
   assert.throws(() => meshSelectionInputs(row.ids.map(id => id.split("~")[0]!), row.payload), row.name);
   assert.throws(() => meshSelectionInputs(row.ids, { ...row.payload, amount: 0, radius: 0 }), row.name);
 }
-console.log("[DEBUG] Selected BRep absolute inputs exactLabels=uint64 operations=filletEdges,chamferEdges,shell,draft,defeature");
   return checks + fixtures.analytic.length * 4;
 }

@@ -10,21 +10,22 @@ use crate::schema::diff::SemioDrawingDiff;
 use crate::schema::mutations::SemioDrawingMutation;
 use crate::schema::snapshot::{DrawNode, SemioDrawingSnapshot};
 use protocol::Mutation;
+use semio_framework_test_fixtures::fixture_text;
 
-const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📍move-node/📍️moves/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📍move-node/📍️moves/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📍move-node/📍️moves/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📍move-node/📍️moves/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📍move-node/📍️moves/🎯️outcome/🔣️.json");
+static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/📍move-node/📍️moves/📸️snapshot/⬅️before/🔣️.json"));
+static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/📍move-node/📍️moves/📸️snapshot/➡️after/🔣️.json"));
+static MUTATION: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/📍move-node/📍️moves/🦠️mutation/🔣️.json"));
+static DIFF: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/📍move-node/📍️moves/🔺️diff/🔣️.json"));
+static OUTCOME: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/📍move-node/📍️moves/🎯️outcome/🔣️.json"));
 
 fn before() -> SemioDrawingSnapshot {
-    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("move-node before snapshot decodes")
+    semio_framework_pack_json::from_json_str((*BEFORE), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("move-node before snapshot decodes")
 }
 fn expected_after() -> SemioDrawingSnapshot {
-    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("move-node after snapshot decodes")
+    semio_framework_pack_json::from_json_str((*AFTER), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("move-node after snapshot decodes")
 }
 fn mutation() -> SemioDrawingMutation {
-    semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("move-node mutation decodes")
+    semio_framework_pack_json::from_json_str((*MUTATION), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("move-node mutation decodes")
 }
 
 /// ▶️ Only the text node's anchor moves; its value, style and every sibling stay.
@@ -61,21 +62,21 @@ async fn the_undo_move_node_restores_the_captured_origin() {
 /// 🔣️ Snapshots and the payload are canonical — every coordinate is dyadic, so decode→encode is exact.
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
-    for (label, text) in [("before", BEFORE), ("after", AFTER)] {
+    for (label, text) in [("before", (*BEFORE)), ("after", (*AFTER))] {
         let decoded: SemioDrawingSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
         let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "move-node/moves-the-text-node-to-a-new-origin: committed {label} JSON is not canonical");
     }
     let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&(mutation()))).expect("move-node mutation encodes");
-    let original: serde_json::Value = serde_json::from_str(MUTATION).expect("move-node mutation reparses");
+    let original: serde_json::Value = serde_json::from_str((*MUTATION)).expect("move-node mutation reparses");
     assert_eq!(reencoded, original, "move-node/moves-the-text-node-to-a-new-origin: committed mutation JSON is not canonical");
 }
 
 /// 🎯️ Declared `applied`: the path resolves, the origin is finite and genuinely different, so none of the three guards may fire
 #[semio_framework_async_macros::async_test]
 async fn declared_outcome_holds_as_committed() {
-    let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
+    let outcome: serde_json::Value = serde_json::from_str((*OUTCOME)).expect("outcome decodes");
     assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("applied"), "move-node/moves-the-text-node-to-a-new-origin: this case is declared applied");
     let produced = mutation().diff(&before());
     assert!(produced.messages().is_empty(), "a finite, genuinely-different origin must raise no diagnostics");
@@ -87,7 +88,7 @@ async fn produces_committed_diff() {
     let base = before();
     let outcome = <SemioDrawingMutation as Mutation<SemioDrawingSnapshot>>::diff(&mutation(), &base);
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
-    let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
+    let committed: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff decodes");
     assert_eq!(produced, committed, "move-node/moves-the-text-node-to-a-new-origin: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
 
@@ -95,7 +96,7 @@ async fn produces_committed_diff() {
 /// this subset ever writes — stays absent from it.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical_and_narrowly_scoped() {
-    let decoded: SemioDrawingDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed move-node diff decodes");
+    let decoded: SemioDrawingDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed move-node diff decodes");
     assert!(decoded.canvas.is_none(), "no drawing mutation writes the canvas slot");
     let layers = decoded.layers.as_ref().expect("the layers triple must be present");
     assert!(layers.removed.is_empty() && layers.added.is_empty(), "a node-level edit modifies its layer, never removes or re-adds it");
@@ -111,14 +112,14 @@ async fn committed_diff_is_canonical_and_narrowly_scoped() {
     assert!(text_diff.value.is_none() && text_diff.style.is_none(), "neither the value nor the style may be written");
     assert!(decoded.styles.is_none(), "the style table must stay untouched");
     let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("diff re-encodes");
-    let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
+    let original: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff reparses");
     assert_eq!(reencoded, original, "move-node/moves-the-text-node-to-a-new-origin: committed diff JSON is not canonical");
 }
 
 /// 🩹 Applying the committed diff to `before` yields `after`.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: SemioDrawingDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed move-node diff decodes");
+    let decoded: SemioDrawingDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed move-node diff decodes");
     let produced = protocol::apply_diff(&decoded, &before()).expect("committed move-node diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "move-node/moves-the-text-node-to-a-new-origin: committed diff did not carry before to after");
 }

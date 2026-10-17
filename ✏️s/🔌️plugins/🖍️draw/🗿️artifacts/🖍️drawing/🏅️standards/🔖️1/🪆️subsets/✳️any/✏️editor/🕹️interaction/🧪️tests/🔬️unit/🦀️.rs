@@ -1,4 +1,13 @@
-use super::*;
+use semio_framework_test_fixtures::fixture_text;
+
+#[allow(unused_imports)] use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
+#[allow(unused_imports)] use semio_framework_job_registry::{FixedOperationOwner};
+#[allow(unused_imports)] use semio_framework_plugin::ArtifactEditor;
+#[allow(unused_imports)] use semio_framework_plugin::Emit;
+#[allow(unused_imports)] use pack::snapshot::ArtifactPack;
+#[allow(unused_imports)] use std::collections::HashMap;
+#[allow(unused_imports)] use semio_s_artifact_draw_drawing_model::DrawingLayerNode;
+#[allow(unused_imports)] use semio_s_artifact_draw_drawing_editor_interaction::*;
 
 fn layer(value: &serde_json::Value) -> DrawingLayerNode {
     let kind = value["kind"].as_str().unwrap();
@@ -19,7 +28,7 @@ fn layer(value: &serde_json::Value) -> DrawingLayerNode {
 
 #[test]
 fn document_topology_matches_language_neutral_fixture() {
-    let cases: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let cases: serde_json::Value = serde_json::from_str(fixture_text!("../../../🧫️fixtures/🔣️.json")).unwrap();
     for case in cases.as_array().unwrap() {
         let snapshot = DrawingSnapshot { layers: case["layers"].as_array().unwrap().iter().map(layer).collect(), ..Default::default() };
         let topology = drawing_interaction_topology(&snapshot);
@@ -34,7 +43,7 @@ fn document_topology_matches_language_neutral_fixture() {
 
 #[test]
 fn point_topology_obeys_ancestor_restrictions_and_actual_handles() {
-    let cases:serde_json::Value=serde_json::from_str(include_str!("../../🎯️points/🧪️tests/🧫️fixtures/🌳️topology/🔣️.json")).unwrap();
+    let cases:serde_json::Value=serde_json::from_str(fixture_text!("../../../../🎯️points/🧪️tests/🧫️fixtures/🌳️topology/🔣️.json")).unwrap();
     for row in cases.as_array().unwrap() {
         let snapshot=DrawingSnapshot {layers:row["layers"].as_array().unwrap().iter().map(layer).collect(),..Default::default()};
         let actual=drawing_point_topology(&snapshot).ordered.into_iter().map(|node| {

@@ -1,8 +1,8 @@
 //! 📝️ remove-page text payload owner.
 
 use crate::standards::v1_4::subsets::base::schema::mutations::PdfMutation;
-use crate::standards::v1_4::subsets::base::io::text::mutations::{hex, unhex};
-use crate::standards::v1_4::subsets::base::schema::mutations::RemovePage;
+use crate::standards::v1_4::subsets::base::io::text::mutations::wire::{hex, unhex};
+use crate::standards::v1_4::subsets::base::schema::mutations::remove_page::RemovePage;
 
 //#region 🔖️Codec
 pub const OPCODE: &str = "remove-page";

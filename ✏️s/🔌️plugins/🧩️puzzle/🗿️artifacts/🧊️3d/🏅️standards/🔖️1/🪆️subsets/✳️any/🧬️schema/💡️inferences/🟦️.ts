@@ -35,6 +35,10 @@ type puzzlePuzzle3dInferenceGuardSizeBounds = { readonly minItems?: number; read
 
 export const puzzlePuzzle3dInferenceGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : puzzlePuzzle3dInferenceGuardReject(at, "value is not an object");
+export const puzzlePuzzle3dInferenceGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) puzzlePuzzle3dInferenceGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const puzzlePuzzle3dInferenceGuardArray = (value: unknown, at: string, bounds: puzzlePuzzle3dInferenceGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return puzzlePuzzle3dInferenceGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) puzzlePuzzle3dInferenceGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -65,27 +69,27 @@ export const puzzlePuzzle3dInferenceGuardConstant = <T extends string | number |
 //#endregion 🚪️Parsers
 
 export function parsePuzzle3dInference(value: unknown, at = "$"): Puzzle3dInference {
-  const row = puzzlePuzzle3dInferenceGuardObject(value, at);
+  const row = puzzlePuzzle3dInferenceGuardClosed(puzzlePuzzle3dInferenceGuardObject(value, at), at, ["flatPositions"]);
   return {
-    flatPositions: Object.fromEntries(Object.entries(puzzlePuzzle3dInferenceGuardObject(row["flatPositions"], `${at}.flatPositions`)).map(([key,value])=>[key,parseFlattenPose(value,at+".flatPositions."+key)])),
+    flatPositions: Object.fromEntries(Object.entries(puzzlePuzzle3dInferenceGuardObject(row["flatPositions"], `${at}.flatPositions`)).map(([key0, value0]) => [key0, parseFlattenPose(value0, `${at}.flatPositions.${key0}`)])),
   };
 }
 
 export function parseFlattenPlane(value: unknown, at = "$"): FlattenPlane {
-  const row = puzzlePuzzle3dInferenceGuardObject(value, at);
+  const row = puzzlePuzzle3dInferenceGuardClosed(puzzlePuzzle3dInferenceGuardObject(value, at), at, ["origin", "xAxis", "yAxis"]);
   return {
-    origin: puzzle3dInferenceTuple3(row["origin"],at+".origin"),
-    xAxis: puzzle3dInferenceTuple3(row["xAxis"],at+".xAxis"),
-    yAxis: puzzle3dInferenceTuple3(row["yAxis"],at+".yAxis"),
+    origin: ((items0) => [puzzlePuzzle3dInferenceGuardNumber(items0[0], `${at}.origin[0]`), puzzlePuzzle3dInferenceGuardNumber(items0[1], `${at}.origin[1]`), puzzlePuzzle3dInferenceGuardNumber(items0[2], `${at}.origin[2]`)])(puzzlePuzzle3dInferenceGuardArray(row["origin"], `${at}.origin`, {"minItems": 3, "maxItems": 3})),
+    xAxis: ((items0) => [puzzlePuzzle3dInferenceGuardNumber(items0[0], `${at}.xAxis[0]`), puzzlePuzzle3dInferenceGuardNumber(items0[1], `${at}.xAxis[1]`), puzzlePuzzle3dInferenceGuardNumber(items0[2], `${at}.xAxis[2]`)])(puzzlePuzzle3dInferenceGuardArray(row["xAxis"], `${at}.xAxis`, {"minItems": 3, "maxItems": 3})),
+    yAxis: ((items0) => [puzzlePuzzle3dInferenceGuardNumber(items0[0], `${at}.yAxis[0]`), puzzlePuzzle3dInferenceGuardNumber(items0[1], `${at}.yAxis[1]`), puzzlePuzzle3dInferenceGuardNumber(items0[2], `${at}.yAxis[2]`)])(puzzlePuzzle3dInferenceGuardArray(row["yAxis"], `${at}.yAxis`, {"minItems": 3, "maxItems": 3})),
   };
 }
 
 export function parseFlattenPose(value: unknown, at = "$"): FlattenPose {
-  const row = puzzlePuzzle3dInferenceGuardObject(value, at);
+  const row = puzzlePuzzle3dInferenceGuardClosed(puzzlePuzzle3dInferenceGuardObject(value, at), at, ["plane", "center", "orientation"]);
   return {
     plane: parseFlattenPlane(row["plane"], `${at}.plane`),
-    center: puzzle3dInferenceTuple2(row["center"],at+".center"),
-    orientation: puzzle3dInferenceTuple4(row["orientation"],at+".orientation"),
+    center: ((items0) => [puzzlePuzzle3dInferenceGuardNumber(items0[0], `${at}.center[0]`), puzzlePuzzle3dInferenceGuardNumber(items0[1], `${at}.center[1]`)])(puzzlePuzzle3dInferenceGuardArray(row["center"], `${at}.center`, {"minItems": 2, "maxItems": 2})),
+    orientation: ((items0) => [puzzlePuzzle3dInferenceGuardNumber(items0[0], `${at}.orientation[0]`), puzzlePuzzle3dInferenceGuardNumber(items0[1], `${at}.orientation[1]`), puzzlePuzzle3dInferenceGuardNumber(items0[2], `${at}.orientation[2]`), puzzlePuzzle3dInferenceGuardNumber(items0[3], `${at}.orientation[3]`)])(puzzlePuzzle3dInferenceGuardArray(row["orientation"], `${at}.orientation`, {"minItems": 4, "maxItems": 4})),
   };
 }
 

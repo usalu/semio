@@ -1,8 +1,13 @@
 //! 🧪️ Laws of the raster bucket tool: a click is ONE transaction holding ONE `fill-region` leaf built from the session
 //! colour, target, mask value and selection, its seed the clicked pixel; a click the layer cannot take leaves zero trace.
 
-use super::*;
-use crate::selection::RasterPixelSelection;
+use semio_s_artifact_raster_raster_editor::config::RasterConfig;
+use semio_s_artifact_raster_raster_mutations_pixels::fill_region::{FillRegion as FillRegionLeaf, RasterSeed};
+use semio_s_artifact_raster_raster_mutations::RasterMutation;
+use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
+use semio_framework_plugin::{ArtifactView, ConfigView};
+use semio_s_artifact_raster_raster_editor::commands::fill_region::*;
+use semio_s_artifact_raster_raster_editor::selection::RasterPixelSelection;
 use semio_s_artifact_raster_raster_mutations_pixels::paint_stroke::RasterSelectionSpan;
 use semio_framework_plugin::{AppOperationContext, HistoryView};
 

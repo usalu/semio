@@ -32,10 +32,10 @@ class TestScript extends BundleScript {
 
 class CanonicalArchitectureScript extends BundleScript {
   async run(): Promise<void> {
-    const { toolJobPuzzleReservedRoutesSelfTests } = await import("../../../../../✏️s/🔌️plugins/🧩️puzzle/🧪️tests/🔬️tool-job-puzzle-reserved-routes/🟦️.ts");
+    const { toolJobPuzzleReservedRoutesSelfTests } = await import("../../../../../✏️s/🔌️plugins/🧩️puzzle/📦️packages/🟦️typescript/🧪️testing/🔬️tool-job-puzzle-reserved-routes/🟦️.ts");
     console.log(`puzzle-reserved-route-contributions: checks=${toolJobPuzzleReservedRoutesSelfTests()}`);
     resolveTestLevel([], "quick");
-    await runVitest(this.root, [], "../../🧪️tests/🎚️renderer-contract/🟦️.ts");
+    await runVitest(join(this.repoRoot, "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🟦️typescript"), [], "../../🧪️tests/🎚️renderer-contract/🟦️.ts");
   }
 }
 

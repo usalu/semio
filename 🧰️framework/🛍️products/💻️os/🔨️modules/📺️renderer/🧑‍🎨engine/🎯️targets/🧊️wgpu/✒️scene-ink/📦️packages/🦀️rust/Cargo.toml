@@ -38,6 +38,7 @@ image = { version = "0.25", default-features = false, features = ["png", "jpeg"]
 serde = { version = "1.0.219", features = ["derive"] }
 
 [dev-dependencies]
+semio-framework-os-renderer-wgpu-thread-isolation = { path = "../../../🔒️thread-isolation/📦️packages/🦀️rust", features = ["isolated"] }
 semio-framework-ui-draw-contract = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🏷️types/📦️packages/🦀️rust" }
 semio-framework-ui-layout = { path = "../../../../../../../../../../🔨️modules/🖱️ui/📜️declaration/📐️layout/📦️packages/🦀️rust" }
 semio-framework-ui-scene-plane = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🎬️scenes/🖼️plane/📦️packages/🦀️rust" }

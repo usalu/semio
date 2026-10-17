@@ -584,7 +584,6 @@ fn paged_snapshot_patch_original_json_source_keeps_every_variant_and_owned_prefi
     let patch=operations.last().unwrap();let expected=patch.encode_op().unwrap();let mut prefix=OwnedOperationBytes::try_new(expected.len(),allocation).unwrap();let mut options=kernel::codec::PackEncodeOptions::default();options.limits.max_file_len=expected.len()as u64;
     let mut cancel=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|progress.completed<fixture["cancelAt"].as_u64().unwrap()as usize;let mut encoding=NativeEncodeControl::new(allocation,&mut cancel);
     assert_eq!(kind(patch.encode_op_into(&options,&mut prefix,&mut encoding).unwrap_err()),ValueRefusalKind::Canceled);assert!(prefix.len()<expected.len());assert!(prefix.iter().eq(expected[..prefix.len()].iter().copied()));close(&mut prefix,expected.len()+fixture["closeStepScaffold"].as_u64().unwrap()as usize);
-    println!("[DEBUG] All six original SnapshotPatch JSON variants preserve authored occurrences, optional omissions and neutral Serde values; direct8194 source and exact refused prefix return all page allocations under fixed4096 grants");
 }
 
 #[test]
@@ -599,7 +598,6 @@ fn paged_snapshot_patch_original_json_source_honors_paid_allocation_policy(){
     let result=patch.encode_op_into(&options,&mut preparation,&mut encoding);let accepted=preparation.accepted_prefix().unwrap().len();assert_eq!(encoding.owned_bytes(),paid);assert_eq!(preparation.allocated_bytes(),backing);assert_eq!(encoding.maximum_bytes(),allocation);
     for _ in 0..steps{match preparation.close_one(items,bytes).unwrap(){OperationByteCloseStep::Complete=>break,OperationByteCloseStep::Pending{released_items,released_bytes}=>{assert!(released_items<=items);assert!(released_bytes<=bytes);}}}assert!(preparation.terminal_is_empty());assert_eq!(preparation.allocated_bytes(),0);
     let error=result.expect_err("original caller allocation policy must reject already-admitted backing before accepting source bytes");let kernel::ProtocolError::Pack(kernel::PackError::Refusal(refusal))=error else{panic!("expected exact typed Pack allocation refusal")};assert_eq!(refusal.kind(),semio_framework_value::ValueRefusalKind::OwnershipLimit);assert_eq!(accepted,0);
-    println!("[DEBUG] Original8194 source and prepaid operation backing retained on caller allocation-policy refusal; same cumulative control restored and every page physically returned under fixed4096 grants");
 }
 
 #[test]
@@ -635,7 +633,6 @@ fn retained_snapshot_patch_reader_moves_original_cells_and_retains_refused_candi
         assert_eq!(reader.admit_patch(&mut decode).unwrap_err().kind,ValueRefusalKind::InvalidValue);assert!(reader.candidate().is_some());assert!(reader.take_patch().is_none());assert_eq!(decode.owned_bytes(),paid);
         assert_eq!(serde_json::Value::from(reader.candidate().unwrap()),serde_json::from_str::<serde_json::Value>(text).unwrap());close_original_patch_reader(reader,cleanup);
     }
-    eprintln!("[DEBUG] original six-kind Patch reader retains paged source, cancellation/refused candidate and semantic pointer through typed admission;8194 value moves once with no paid mirror");
 }
 
 fn close_original_patch_reader(reader:SnapshotPatchReadCursor<'_>,maximum_bytes:usize){

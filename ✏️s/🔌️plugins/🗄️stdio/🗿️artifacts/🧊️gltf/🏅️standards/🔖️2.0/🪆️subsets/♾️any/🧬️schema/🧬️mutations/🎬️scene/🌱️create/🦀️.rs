@@ -36,14 +36,17 @@ pub fn plan(p: &GltfCreateScenePayload, base: &GltfSnapshot) -> Result<GltfDiff,
     Ok(diff)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn inverse(p: &GltfCreateScenePayload, base: &GltfSnapshot) -> Vec<super::GltfMutation> {
+pub fn inverse<Op>(p: &GltfCreateScenePayload, base: &GltfSnapshot) -> Vec<Op>
+where
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::remove_used_extension::RemoveUsedExtensionMutation>,
+{
     if validate(p, base).is_err() {
         return Vec::new();
     }
     let Ok(position) = insertion_position(p.position, base) else {
         return Vec::new();
     };
-    vec![super::delete_scene::mutation(super::delete_scene::GltfDeleteScenePayload { index: position })]
+    vec![crate::standards::v2_0::subsets::any::schema::mutations::delete_scene::mutation(crate::standards::v2_0::subsets::any::schema::mutations::delete_scene::GltfDeleteScenePayload { index: position })]
 }
 
 //#region 🧬️DirectMutation
@@ -56,11 +59,17 @@ pub enum CreateSceneMutation {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn mutation(payload: GltfCreateScenePayload) -> super::GltfMutation {
-    super::GltfMutation::CreateScene(CreateSceneMutation::Apply(payload))
+pub fn mutation<Op>(payload: GltfCreateScenePayload) -> Op
+where
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::create_scene::CreateSceneMutation>,
+{
+    Op::from(CreateSceneMutation::Apply(payload))
 }
 
-impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for CreateSceneMutation {
+impl<Op> protocol::MutationKind<GltfSnapshot, Op> for CreateSceneMutation
+where
+    Op: protocol::Mutation<GltfSnapshot, Diff = GltfDiff> + From<CreateSceneMutation>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "scene", kind: "create-scene", record: "CreatedScene" };
 
     fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<GltfDiff> {
@@ -72,7 +81,7 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for CreateSceneMu
         }
     }
 
-    fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<super::GltfMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         match self {
             Self::Apply(payload) => Ok(inverse(payload, base)),
         }
@@ -89,11 +98,7 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for CreateSceneMu
 //#endregion 🧬️DirectMutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🎞️inserts-an-empty-3bc9ce/🦀️.rs"]
-mod case_inserts_an_empty_3bc9ce;
+
 //#endregion 🧪️Tests
 
-#[cfg(test)]
-#[path = "📜️contract/🧪️tests/🔬️unit/🦀️.rs"]
-mod contract;
+

@@ -13,7 +13,8 @@
 
 // #region 🔌️Adapters
 import { afterAll, describe, expect, it } from "vitest";
-import { buildNoteShellCommandAction, manifestLabelTextV1, shellLabelTextV1, syncShellLabelLocale } from "../../🟦️.tsx";
+import { buildNoteShellCommandAction, manifestLabelTextV1, shellLabelTextV1 } from "../../🔩️plumbing/🆔️action-ids/🟦️.ts";
+import { syncShellLabelLocale } from "../../🏷️labels/🟦️.tsx";
 // #endregion 🔌️Adapters
 
 //#region 🧱️Fixtures

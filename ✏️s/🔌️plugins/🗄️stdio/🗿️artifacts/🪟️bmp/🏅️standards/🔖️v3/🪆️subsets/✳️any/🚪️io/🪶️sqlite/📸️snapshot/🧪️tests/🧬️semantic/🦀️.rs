@@ -36,7 +36,6 @@ fn sqlite_snapshot_semantic_every_supported_profile_preserves_precise_owned_valu
   let encoded=crate::standards::v_v3::subsets::any::io::encode_bmp(&restored).unwrap();
   let (_,_,independent)=semio_s_artifact_stdio_bmp_test_oracle::standards::v_v3::subsets::any::oracle_visual_rgba8(&encoded).unwrap();
   assert_eq!(crate::schema::operations::bmp_rgba8_preview(&restored).unwrap(),independent,"{name}: independent image crate");
-  eprintln!("[DEBUG] bmp semantic profile={name} precise-values=exact");
  }
 }
 
@@ -49,5 +48,4 @@ fn sqlite_snapshot_semantic_refuses_invalid_owned_models_and_orphan_samples() {
  for snapshot in models {assert!(snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,Default::default())).is_err());}
  let mut database=project(&fixture);database.table_mut("bmp_pixel_sample").unwrap().rows[0].values[1]=SqliteValue::Integer(2);
  assert!(BmpSnapshot::from_sqlite_database(&database,&mut SqliteSnapshotControl::new(&mut |_|true,Default::default())).is_err());
- eprintln!("[DEBUG] bmp semantic invalid-owned-refusals=4");
 }

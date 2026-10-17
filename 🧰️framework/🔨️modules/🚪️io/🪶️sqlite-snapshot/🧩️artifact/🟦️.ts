@@ -1,4 +1,4 @@
-import { hostContinuations } from "../../../⏳️async/🪃️continuation/🟦️.ts";
+import { hostContinuations } from "@semio-tech/framework-async/continuation";
 import {NativeDecodeControl} from "@semio-tech/value-ts/decode";
 /** 🧩️ Owned helpers for handcrafted semantic artifact projections. */
 import {ArtifactSqliteTableIndex} from "./🗂️table/🟦️.ts";

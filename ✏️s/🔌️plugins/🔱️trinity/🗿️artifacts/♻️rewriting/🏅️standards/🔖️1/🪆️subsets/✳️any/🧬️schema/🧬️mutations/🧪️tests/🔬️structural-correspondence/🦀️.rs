@@ -1,9 +1,13 @@
-use super::*;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::diff::RewritingDiff;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::snapshot::RewritingSnapshot;
+use crate::standards::v1::subsets::any::schema::mutations::*;
 use protocol::SemanticMutation;
 
 #[test]
 fn direct_owners_descriptors_surfaces_and_catalog_correspond() {
-    let mutation_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations");
+    let mutation_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../🧬️mutations");
     let descriptor_kinds: Vec<_> = RewriteRuleMutation::kinds().iter().map(|descriptor| descriptor.kind).collect();
     let catalog_source = std::fs::read_to_string(mutation_root.join("../../🔮️oracles/🔣️.json")).expect("language-neutral oracle catalog");
     let catalog: semio_framework_pack_json::Value = semio_framework_pack_json::parse(&catalog_source, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("language-neutral oracle catalog must be valid JSON");
@@ -448,7 +452,7 @@ fn direct_owners_descriptors_surfaces_and_catalog_correspond() {
 
 #[test]
 fn rewriting_declared_json_mutations_and_sparse_deltas_preserve_roles(){
- let root=std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️1/🪆️subsets/✳️any");
+ let root=std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../..");
  let catalog:serde_json::Value=serde_json::from_str(&std::fs::read_to_string(root.join("🔮️oracles/🔣️.json")).unwrap()).unwrap();
  let vectors=catalog["mutationCatalogs"][0]["vectors"].as_array().unwrap();assert_eq!(vectors.len(),9);
  let mut scenarios=0;
@@ -461,8 +465,8 @@ fn rewriting_declared_json_mutations_and_sparse_deltas_preserve_roles(){
    let encoded=crate::standards::v1::subsets::any::io::text::mutations::encode_rewriting_mutation_json(&mutation).unwrap();
    assert_eq!(serde_json::from_str::<serde_json::Value>(&encoded).unwrap(),serde_json::from_str::<serde_json::Value>(&mutation_json).unwrap(),"{directory}: mutation declared roles");
    let diff_json=std::fs::read_to_string(case.join("🔺️diff/🔣️.json")).unwrap();
-   let diff=crate::standards::v1::subsets::any::schema::diff::decode_rewriting_diff_json(&diff_json).unwrap();
-   let encoded=crate::standards::v1::subsets::any::schema::diff::encode_rewriting_diff_json(&diff).unwrap();
+   let diff=crate::standards::v1::subsets::any::io::text::diff::decode_rewriting_diff_json(&diff_json).unwrap();
+   let encoded=crate::standards::v1::subsets::any::io::text::diff::encode_rewriting_diff_json(&diff).unwrap();
    assert_eq!(serde_json::from_str::<serde_json::Value>(&encoded).unwrap(),serde_json::from_str::<serde_json::Value>(&diff_json).unwrap(),"{directory}: sparse declared roles");
    scenarios+=1;
   }

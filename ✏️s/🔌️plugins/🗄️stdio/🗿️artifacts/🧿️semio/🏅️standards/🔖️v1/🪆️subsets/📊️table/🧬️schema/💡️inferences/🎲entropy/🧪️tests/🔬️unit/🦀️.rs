@@ -121,5 +121,4 @@ fn owned_dependency_matches_neutral_fixture_and_serde_oracle() {
     let mut counts=BTreeMap::new(); for value in symbols { *counts.entry(value.as_str().unwrap()).or_insert(0u64)+=1; } let oracle=serde_json::to_value(counts.values().copied().collect::<Vec<_>>()).unwrap();
     assert_eq!(actual,oracle);
     assert_eq!(actual,fixture["expected"]);
-    eprintln!("[DEBUG] Typed inference dependency matches authored values and independent serde_json output");
 }

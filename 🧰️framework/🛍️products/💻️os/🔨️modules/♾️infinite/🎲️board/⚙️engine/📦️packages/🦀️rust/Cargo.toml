@@ -40,30 +40,35 @@ serde = { version = "1.0.219", features = ["derive"] }
 semio-framework-os-infinite-board-schema = { path = "../../../🧬️schema/📦️packages/🦀️rust" }
 
 [dev-dependencies]
-semio-framework-os-infinite-board-engine = { path = ".", features = ["testkit"] }
 semio-framework-os-kernel = { path = "../../../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["mutation-testing"] }
 serde_json = "1.0.140"
 
 [[test]]
 name = "board_engine_undirected_normal"
 path = "../../🧪️tests/↔️undirected-normal/🦀️.rs"
+required-features = ["testkit"]
 
 [[test]]
 name = "board_engine_undirected_ports"
 path = "../../🧪️tests/↔️undirected-ports/🦀️.rs"
+required-features = ["testkit"]
 
 [[test]]
 name = "board_engine_directed_normal"
 path = "../../🧪️tests/➡️directed-normal/🦀️.rs"
+required-features = ["testkit"]
 
 [[test]]
 name = "board_engine_quadrant"
 path = "../../🧪️tests/📐️quadrant/🦀️.rs"
+required-features = ["testkit"]
 
 [[test]]
 name = "board_engine_dag_unit"
 path = "../../🧪️tests/🔬️dag-unit/🦀️.rs"
+required-features = ["testkit"]
 
 [[test]]
 name = "board_engine_engine_unit"
 path = "../../🧪️tests/🔬️engine-unit/🦀️.rs"
+required-features = ["testkit"]

@@ -9,21 +9,6 @@ pub mod diff;
 pub mod inverse;
 pub use component::*;
 #[cfg(test)]
-#[path = "🧪️tests/✅️removes/🦀️.rs"]
-mod tests_removes;
-#[cfg(test)]
-#[path = "🧪️tests/🕳️missing/🦀️.rs"]
-mod tests_missing;
-#[cfg(test)]
 #[path = "🧪️tests/🔗️follows-by-inference/🦀️.rs"]
 mod tests_follows_by_inference;
-#[cfg(test)]
-#[path = "🧪️tests/🧭️cascades-the-opening/🦀️.rs"]
-mod tests_cascades_the_opening;
-#[cfg(test)]
-#[path = "🧪️tests/🧮️removes-its-data/🦀️.rs"]
-mod tests_removes_its_data;
-#[cfg(test)]
-#[path = "🧪️tests/💪️cascades-its-overrides/🦀️.rs"]
-mod tests_cascades_its_overrides;
 //#endregion 🔖️Leaves

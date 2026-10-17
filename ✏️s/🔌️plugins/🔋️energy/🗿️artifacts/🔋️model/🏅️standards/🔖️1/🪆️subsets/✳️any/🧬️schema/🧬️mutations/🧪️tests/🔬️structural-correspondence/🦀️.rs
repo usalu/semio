@@ -1,12 +1,13 @@
 use super::*;
 use protocol::SemanticMutation;
+use semio_framework_test_fixtures::fixture_path;
 
 /// 🧭️ Every declared kind owns a leaf directory whose descriptor, payload schema and behaviour
 /// facets agree with the aggregate enum AND with the subset's language-neutral oracle catalog —
 /// which lives at `✳️any/🔮️oracles/🔣️.json`, never at a flat `🔣️oracle.json`.
 #[test]
 fn direct_owner_descriptors_and_catalog_correspond() {
-    let mutation_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../..");
+    let mutation_root = fixture_path!("../../../..");
     let catalog_source = std::fs::read_to_string(mutation_root.join("../../🔮️oracles/🔣️.json")).expect("language-neutral oracle catalog");
     let catalog: semio_framework_pack_json::Value = semio_framework_pack_json::parse(&catalog_source, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("language-neutral oracle catalog must be valid JSON");
     let catalog_kinds: Vec<String> = catalog["mutationCatalogs"][0]["kinds"].as_array().expect("catalog kinds").iter().map(|kind| kind.as_str().expect("catalog kind is a string").to_string()).collect();

@@ -1,5 +1,5 @@
 use super::*;
-use crate::editor::bim::unit_tests::support::{demo, run};
+use crate::editor::bim::fixture::support::{demo, run};
 use semio_framework_plugin::Effect;
 
 fn select(ids: &[&str]) -> Result<Emit<ModelMutation, NoConfigMutation>, Fault> {

@@ -1,0 +1,10 @@
+{
+  "name": "@semio-tech/framework-pack-json-ts",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./members": "./🧩️members/🟦️.ts",
+    "./testing/fixtures": "./🧪️testing/🧫️fixtures/🟦️.ts",
+    "./testing/fixtures/borrowed-retirement": "./🧪️testing/🧫️fixtures/🎟️borrowed-retirement/🟦️.ts"
+  }
+}

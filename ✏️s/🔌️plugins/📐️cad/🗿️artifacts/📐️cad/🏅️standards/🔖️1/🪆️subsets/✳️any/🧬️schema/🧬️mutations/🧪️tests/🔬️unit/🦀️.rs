@@ -1,4 +1,5 @@
 use super::*;
+use semio_framework_test_fixtures::fixture_path;
 use semio_s_artifact_cad_cad_mut_references::{change_reference_hidden::ChangeReferenceHidden, change_reference_locked::ChangeReferenceLocked, change_reference_width::ChangeReferenceWidth, move_reference::MoveReference, replace_reference_media::ReplaceReferenceMedia, replace_references::ReplaceReferences};
 use semio_s_artifact_cad_cad_mut_slots::{create_building_model::CreateBuildingModel, create_energy_model::CreateEnergyModel, create_shape_model::CreateShapeModel, create_structure_classic_model::CreateStructureClassicModel, delete_building_model::DeleteBuildingModel, delete_energy_model::DeleteEnergyModel, delete_shape_model::DeleteShapeModel, delete_structure_classic_model::DeleteStructureClassicModel};
 use semio_s_artifact_cad_cad_mut_documents::{create_drawing::CreateDrawing, delete_drawing::DeleteDrawing};
@@ -198,7 +199,7 @@ fn kinds_match_the_enum_and_the_catalog() {
     for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
         assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
     }
-    let manifest = std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🔮️oracles/🔣️.json")).expect("../../../../🔮️oracles/🔣️.json").leak();
+    let manifest = std::fs::read_to_string(fixture_path!("../../../../🔮️oracles/🔣️.json")).expect("../../../../🔮️oracles/🔣️.json").leak();
     for kind in KINDS {
         assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
     }

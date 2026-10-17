@@ -294,7 +294,6 @@ async fn sqlite_snapshot_process3d_actual_public_file_preserves_complete_parent_
             assert_full(&actual, &literal, word);
             assert_eq!(actual.encode_pack(), literal.encode_pack());
             assert_eq!(actual.print_dsl(), literal.print_dsl());
-            eprintln!("[DEBUG] Process3d actual public SQLite full parent word={word:016x} encoding={encoding:?}");
         }
     }
 }

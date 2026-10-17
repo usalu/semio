@@ -19,6 +19,5 @@ test("Pending mounted render remains scheduled until original paid identity retr
   }
   const retry=source.slice(source.indexOf("pub fn take_pending_render_on_original("),source.indexOf("pub fn take_deferred_ready("));
   expect(retry).toContain("pending_render_ready");expect(retry).toContain("cx.consume_retained(");expect(retry).toContain("cx.consume_fuel(1)");
-  console.log("[DEBUG] pendingMountedRenderSQLite6=true originalPaidRetrySource=true nativeRuntimePending=true");
  }finally{database.close();}
 });

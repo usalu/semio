@@ -491,16 +491,12 @@ pub fn artifact_envelope_decode_record(operation: semio_framework_job::Operation
 impl ArtifactEnvelopeDecodePage {
     /// 📄️ Creates one definitionally shallow page from an already bounded producer buffer.
     pub fn try_from_array(bytes: [u8; ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES], len: usize) -> Result<Self, [u8; ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES]> {
-        if len > ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES {
-            return Err(bytes);
-        }
-        Ok(Self { inner: OwnedSchemaDecodePage { bytes, len: len as u16 } })
+        Ok(Self { inner: OwnedSchemaDecodePage::try_from_array(bytes, len)? })
     }
 
     /// 📄️ Constructs the fixed page inside a producer callback whose extent was already accepted.
     pub fn from_preflighted_array(bytes: [u8; ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES], len: usize) -> Self {
-        debug_assert!(len <= ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES);
-        Self { inner: OwnedSchemaDecodePage { bytes, len: len as u16 } }
+        Self { inner: OwnedSchemaDecodePage::from_preflighted_array(bytes, len) }
     }
 
     /// 📥️ Moves this exact page into pre-reserved schema storage or returns it untouched.

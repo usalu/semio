@@ -939,6 +939,11 @@ impl SessionStore for SqliteSessionStore {
 }
 //#endregion 🔖️Session
 
+#[cfg(any(test, feature = "testkit"))]
+#[doc(hidden)]
+#[path = "🧰️fixtures/🦀️.rs"]
+pub mod fixtures;
+
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
-pub(crate) mod tests;
+mod tests;

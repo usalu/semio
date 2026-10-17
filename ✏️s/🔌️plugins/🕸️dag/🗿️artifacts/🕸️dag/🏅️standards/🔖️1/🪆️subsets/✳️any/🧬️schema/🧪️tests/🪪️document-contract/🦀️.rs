@@ -3,7 +3,7 @@ use crate::{DagSnapshot, DagDiff};
 use store::{pack::snapshot::ArtifactDsl, pack::snapshot::ArtifactPack};
 
 fn vectors() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🔬️contract/🪪️document-contract/🔣️.json")).expect("neutral vectors")
+    serde_json::from_str(runtime_fixture_text("../../../../../🧪️tests/🧫️fixtures/🔬️contract/🪪️document-contract/🔣️.json")).expect("neutral vectors")
 }
 
 #[test]
@@ -70,4 +70,9 @@ fn dag_document_contract_rejects_foreign_pack_identity() {
         let envelope = store::semio_format::parse_preamble_line(header.as_str().unwrap()).unwrap();
         assert!(DagSnapshot::decode_pack(&store::semio_format::wrap_binary(&envelope, &body)).is_err(), "{header}");
     }
+}
+
+fn runtime_fixture_text(relative: &str) -> &'static str {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative);
+    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display())).into_boxed_str())
 }

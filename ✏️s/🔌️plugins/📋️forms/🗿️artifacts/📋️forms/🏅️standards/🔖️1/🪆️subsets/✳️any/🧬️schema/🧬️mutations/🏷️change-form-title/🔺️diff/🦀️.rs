@@ -1,6 +1,6 @@
 //! 🔺️ `change-form-title` — sparse diff construction.
 
-use super::mutation::ChangeFormTitle;
+use crate::standards::v1::subsets::any::schema::mutations::change_form_title::mutation::ChangeFormTitle;
 use crate::schema::diff::FormsOptionalText;
 use crate::{FormsDiff, FormsSnapshot};
 

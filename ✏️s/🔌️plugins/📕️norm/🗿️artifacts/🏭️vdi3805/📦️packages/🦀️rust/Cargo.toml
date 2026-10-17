@@ -32,6 +32,7 @@ semio-s-artifact-norm-vdi3805-schema = { workspace = true }
 semio-s-plugin-norm-compliance = { workspace = true }
 
 [dev-dependencies]
+semio-framework-test-fixtures = { path = "../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-s-artifact-norm-vdi3805-examples-failing = { workspace = true }
 pack = { workspace = true }
 semio-framework-artifact-reference = { workspace = true }

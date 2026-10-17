@@ -56,5 +56,156 @@
   "delayedOriginal": {
     "milliseconds": 20,
     "receiveDelayMilliseconds": 40
-  }
+  },
+  "overflows": [
+    {
+      "name": "utf8-byte",
+      "stream": "stdout",
+      "payload": "é",
+      "maximumBytes": 1,
+      "maximumLines": 2,
+      "observedBytes": 2,
+      "observedLines": 1
+    },
+    {
+      "name": "stderr-lines",
+      "stream": "stderr",
+      "payload": "\na\nb",
+      "maximumBytes": 9,
+      "maximumLines": 2,
+      "observedBytes": 4,
+      "observedLines": 3
+    },
+    {
+      "name": "stdout-lines",
+      "stream": "stdout",
+      "payload": "a\nb",
+      "maximumBytes": 9,
+      "maximumLines": 1,
+      "observedBytes": 3,
+      "observedLines": 2
+    }
+  ],
+  "counters": [
+    {
+      "name": "split-line",
+      "chunks": [
+        {
+          "stream": "stdout",
+          "hex": "61"
+        },
+        {
+          "stream": "stdout",
+          "hex": "0a62"
+        }
+      ],
+      "bytes": 3,
+      "lines": 2
+    },
+    {
+      "name": "mixed",
+      "chunks": [
+        {
+          "stream": "stdout",
+          "hex": "61"
+        },
+        {
+          "stream": "stderr",
+          "hex": "770a"
+        },
+        {
+          "stream": "stdout",
+          "hex": "0a"
+        }
+      ],
+      "bytes": 4,
+      "lines": 2
+    },
+    {
+      "name": "crlf",
+      "chunks": [
+        {
+          "stream": "stdout",
+          "hex": "0d"
+        },
+        {
+          "stream": "stdout",
+          "hex": "0a"
+        },
+        {
+          "stream": "stdout",
+          "hex": "63"
+        }
+      ],
+      "bytes": 3,
+      "lines": 2
+    },
+    {
+      "name": "nul-fields",
+      "chunks": [
+        {
+          "stream": "stdout",
+          "hex": "7031006332000a"
+        }
+      ],
+      "bytes": 7,
+      "lines": 1
+    },
+    {
+      "name": "split-utf8",
+      "chunks": [
+        {
+          "stream": "stdout",
+          "hex": "c3"
+        },
+        {
+          "stream": "stdout",
+          "hex": "a9"
+        }
+      ],
+      "bytes": 2,
+      "lines": 1
+    },
+    {
+      "name": "empty",
+      "chunks": [
+        {
+          "stream": "stdout",
+          "hex": ""
+        },
+        {
+          "stream": "stderr",
+          "hex": ""
+        }
+      ],
+      "bytes": 0,
+      "lines": 0
+    },
+    {
+      "name": "blank-lines",
+      "chunks": [
+        {
+          "stream": "stdout",
+          "hex": "0a0a"
+        }
+      ],
+      "bytes": 2,
+      "lines": 2
+    },
+    {
+      "name": "separate-blank-lines",
+      "chunks": [
+        {
+          "stream": "stderr",
+          "hex": "0a"
+        },
+        {
+          "stream": "stdout",
+          "hex": "0a"
+        }
+      ],
+      "bytes": 2,
+      "lines": 2
+    }
+  ]
 }

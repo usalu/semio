@@ -26,9 +26,9 @@ use crate::editor::animate::modes::main;
 use crate::editor::animate::modes::main::windows::tile_editor;
 use crate::editor::animate::panels::{artifact, catalogue, inspection};
 use crate::editor::animate::terminology::animate_presentation_labels;
+use crate::editor::animate::support::*;
 use crate::mutations::create_tile::CreateTile;
 use crate::standards::v1::subsets::any::schema::mutations::PresentationMutation;
-use crate::standards::v1::subsets::any::io::text::snapshot::build_tile_morph_prompt;
 use crate::{default_presentation_snapshot, FigureTileDraft, PresentationSnapshot, PRESENTATION_DOCUMENT_SCHEMA};
 use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
 use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, StepContext};
@@ -75,97 +75,16 @@ use semio_framework_plugin::NoDraftMutation;
 use semio_framework_plugin::SelectionMethod;
 use semio_framework_plugin::SelectionMode;
 use semio_framework_plugin::SelectionSpec;
-use std::collections::HashSet;
 use semio_framework_2d::compute::EngineHandles;
 
 //#region 🔖️Constants
-pub const PRESENTATION_PLAY_APP_ID: &str = "s.animate.presentation@1/*#editor";
 pub use artifact::PRESENTATION_PLAY_BODY_ARTIFACT;
 pub use catalogue::PRESENTATION_PLAY_BODY_CATALOGUE;
 pub use inspection::PRESENTATION_PLAY_BODY_DETAILS;
 pub use tile_editor::PRESENTATION_PLAY_BODY_MAIN;
-
-/// 🎯️ Binds catalogue actions to the canonical presentation editor.
-pub fn animate_presentation_action(action: &str, args: Option<semio_framework_plugin::UiValue>) -> semio_framework_plugin::UiAssemblyResult<(semio_framework_plugin::ActionId, Option<semio_framework_plugin::UiValue>)> {
-    semio_framework_plugin::ActionFactory::new(PRESENTATION_PLAY_APP_ID).action(action, args)
-}
-
-/// 🌳️ The framework's one node-list admission — the panel-local copy is gone (ticket
-/// 26/09/16/ARTIFACT-TREE-VIRTUALISED-STREAMING §8.3).
-pub use semio_framework_plugin::ui_node_list;
-
-/// 🏷️ Admits a semantic presentation label.
-pub fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_ui_contract::Label> {
-    semio_framework_ui_contract::Label::try_from(value.as_ref()).map_err(|_| ui_capacity_error())
-}
-
-/// 📝️ Admits a fixed presentation UI string.
-pub fn ui_text(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_ui_contract::UiText> {
-    semio_framework_ui_contract::UiText::try_from_str(value.as_ref()).ok_or_else(ui_capacity_error)
-}
-
-/// 🧱️ Finalizes a presentation UI node with explicit identity.
-pub fn ui_node<B: semio_framework_ui_contract::HasBase + semio_framework_ui_contract::Buildable>(builder: B, id: &str) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    builder.try_id(id).map_err(|_| ui_capacity_error())?.try_build().map_err(|_| ui_capacity_error())
-}
-
-/// 👶️ Admits a complete collection of presentation UI children.
-pub fn ui_children<B: semio_framework_ui_contract::HasChildren>(builder: B, children: impl IntoIterator<Item = semio_framework_plugin::BuiltNode>) -> semio_framework_plugin::UiAssemblyResult<B> {
-    builder.try_children(children).map_err(|_| ui_capacity_error())
-}
-
-/// 🗺️ Admits structured presentation action arguments.
-pub fn ui_map(values: impl IntoIterator<Item = (&'static str, semio_framework_plugin::UiValue)>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
-    let mut builder = semio_framework_plugin::UiMapBuilder::try_new().ok_or_else(ui_capacity_error)?;
-    for (key, value) in values {
-        builder.push(key.to_string(), value).map_err(|_| ui_capacity_error())?;
-    }
-    Ok(semio_framework_plugin::UiValue::Map(builder.finish()))
-}
-
-/// 🚧️ Reports fixed-capacity UI admission failure.
-pub fn ui_capacity_error() -> semio_framework_plugin::PluginAssemblyError {
-    semio_framework_plugin::PluginAssemblyError::new("animate.ui.capacity", "presentation UI admission failed")
-}
 //#endregion 🔖️Constants
 
 //#region 🔖️Interaction
-/// 🕹️ "tiles" — the single FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14) interaction domain
-/// this app declares: `HierarchyProvider::Flat` over the tile grid (a document panel tree binds it
-/// directly; the canvas hit-tests a click and asks the framework to apply it, mirroring `🖍️draw`'s
-/// "strokes" domain).
-pub const PRESENTATION_INTERACTION_DOMAIN: &str = "tiles";
-pub const PRESENTATION_INTERACTION_GRANULARITY: &str = "tile";
-
-/// 🕹️ Per-dispatch scratch: the "tiles" domain's current selection, resolved once by
-/// `ArtifactApp::handle` from `InteractionView` and threaded to every leaf command handler —
-/// `app_commands!`'s generated `dispatch` has no way to thread `InteractionView` itself.
-pub struct PresentationDispatchCtx {
-    pub selected_ids: Vec<String>,
-}
-
-/// 🕹️ JSON-encodes `ids` as the `Vec<InteractionTarget>` string the framework's `interactionSelect`
-/// action requires in its `targets` arg — every hit id shares the domain's one granularity.
-fn interaction_targets_json(ids: &[String]) -> String {
-    let targets = ids.iter().map(|id| semio_framework_pack_json::object([("granularity".to_string(), semio_framework_pack_json::Value::from(PRESENTATION_INTERACTION_GRANULARITY)), ("id".to_string(), semio_framework_pack_json::Value::from(id.clone()))])).collect();
-    semio_framework_pack_json::to_string(&semio_framework_pack_json::Value::Array(targets))
-}
-
-/// 🕹️ Requests the shell to redispatch the framework-owned `interactionSelect` verb through its
-/// normal action funnel — the only way `canvas-pointer-down`'s hit test can drive selection now that
-/// it is framework-owned state, never a `PresentationConfigMutation` (ticket
-/// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
-pub(crate) fn interaction_select_effect(ids: &[String], merge: &str) -> Effect {
-    Effect::ReplayShellCommand {
-        action_id: semio_framework::INTERACTION_SELECT_ACTION_ID.into(),
-        args: Some(semio_framework_value::DslValue::object([
-            ("domainId".to_string(), semio_framework_value::DslValue::String(PRESENTATION_INTERACTION_DOMAIN.into())),
-            ("targets".to_string(), semio_framework_value::DslValue::String(interaction_targets_json(ids))),
-            ("merge".to_string(), semio_framework_value::DslValue::String(merge.into())),
-            ("method".to_string(), semio_framework_value::DslValue::String("pick".into())),
-        ])),
-    }
-}
 //#endregion 🔖️Interaction
 
 //#region 🔖️Io
@@ -209,37 +128,11 @@ pub fn next_frame_tile_crop(existing_tile_count: usize) -> crate::FigureTileFram
     let cell = 1.0 / FRAME_IMPORT_GRID_COLUMNS as f64;
     let column = existing_tile_count % FRAME_IMPORT_GRID_COLUMNS;
     let row = existing_tile_count / FRAME_IMPORT_GRID_COLUMNS;
-    crate::standards::v1::subsets::any::schema::clamp_tile_crop(&crate::FigureTileFrame { x: column as f64 * cell, y: (row as f64 * cell).min(1.0 - cell), width: cell, height: cell })
+    crate::standards::v1::subsets::any::schema::tile_grid::clamp_tile_crop(&crate::FigureTileFrame { x: column as f64 * cell, y: (row as f64 * cell).min(1.0 - cell), width: cell, height: cell })
 }
 //#endregion 🔖️Io
 
 //#region 🔖️Helpers
-/// 🔢️ Mints a fresh, process-unique tile id — shared by `🎮️commands/🀄️add-tile::add_tile` and
-/// `🎮️commands/⌨️engagement::engagement_submit`'s `"add"` keyword.
-pub(crate) fn new_tile_id(prefix: &str) -> String {
-    let serial = {
-        let hex = framework_hash::hash_bytes(concat!(file!(), line!()).as_bytes());
-        u64::from_str_radix(&hex[..8], 16).unwrap_or(1)
-    };
-    format!("{prefix}-{serial}")
-}
-
-/// 🧱️ The concrete rows that make the tile roster `next`: one `delete-tiles` of every tile the deck holds, then one position-exact
-/// `create-tile` per new tile — never a whole-roster replace.
-pub(crate) fn tile_roster_mutations(deck: &PresentationSnapshot, next: Vec<FigureTileDraft>) -> Vec<PresentationMutation> {
-    let (_, held) = crate::presentation_working_scene(deck);
-    let cleared = (!held.is_empty()).then(|| PresentationMutation::DeleteTiles(crate::mutations::delete_tiles::DeleteTiles { ids: held.iter().map(|tile| tile.id.clone()).collect() }));
-    cleared.into_iter().chain(next.into_iter().enumerate().map(|(index, tile)| PresentationMutation::CreateTile(CreateTile { index, tile }))).collect()
-}
-
-/// 🧹️ Retains only the ids that reference an existing tile in `deck` — shared by every command that
-/// accepts a selection/target id list.
-pub(crate) fn valid_tile_ids(deck: &PresentationSnapshot, ids: Vec<String>) -> Vec<String> {
-    let (_, tiles) = crate::presentation_working_scene(deck);
-    let valid: HashSet<&str> = tiles.iter().map(|tile| tile.id.as_str()).collect();
-    ids.into_iter().filter(|id| valid.contains(id.as_str())).collect()
-}
-
 /// 🎞️ `frames:in` display name (Wave-2 port recipe) — a `Structured` payload's `"name"`/`"src"` field
 /// (falling back to a generic label), a `Binary` payload's leading blob-hash characters.
 fn frame_media_name(port: &str, media: &Media) -> Result<String, MediaError> {
@@ -253,30 +146,6 @@ fn frame_media_name(port: &str, media: &Media) -> Result<String, MediaError> {
     }
 }
 
-/// 📋️ Host effect delivering the generated tile-morph prompt to the user as a downloadable markdown
-/// file — the genuine shell side-effect that replaces the retired ephemeral clipboard scratch (the
-/// landed `Effect` contract carries no clipboard variant, so the prompt is exported as media).
-/// Shared by `🎮️commands/📋️copy-prompt::copy_prompt` and `🎮️commands/⌨️engagement::engagement_submit`'s
-/// `"copy"`/`"copy prompt"` keywords.
-pub(crate) fn tile_morph_prompt_effect(deck: &PresentationSnapshot) -> Effect {
-    let (source, tiles) = crate::presentation_working_scene(deck);
-    Effect::DownloadMediaExport { filename: "tile-morph-prompt.md".into(), mime_type: "text/markdown".into(), data: build_tile_morph_prompt(&source, &tiles), encoding: None }
-}
-
-/// 🔁️ Builds a `Effect::LoadDocument` for `document` — the sanctioned non-history "reset the
-/// whole document" gesture (`ArtifactStore::reset`, applied host-side) that
-/// `🎮️commands/📥️set-source::set_active_example` uses instead of the banned whole-snapshot mutation. The
-/// spr is a fresh, edit-free op-log — a genesis envelope with no history to encode.
-pub fn reset_presentation_document_effect(document: &PresentationSnapshot) -> Effect {
-    let pack = <PresentationSnapshot as pack::snapshot::ArtifactPack>::encode_pack(document);
-    // 🪦️ NOT `create_document_envelope` + `print_document_spr`: an envelope is a terminal store shell
-    // whose `Drop` asserts that its app-owned bounded retirement authority detached every nested
-    // owner first, and nothing here ever mounts or retires it — so building this effect panicked the
-    // guest (`unreachable`) at boot, before any window kind existed. `🗒️note`/`✒️writer`/`📐️cad` all
-    // take the `empty_document_spr` route; the log is edit-free by construction either way.
-    let spr = ::semio_framework_async::poll::resolve_ready(store::os_store::text_format::empty_document_spr("presentation", PRESENTATION_DOCUMENT_SCHEMA));
-    Effect::LoadDocument { pack, spr }
-}
 //#endregion 🔖️Helpers
 
 //#region 🔖️Commands
@@ -311,7 +180,7 @@ semio_framework_plugin::app_commands! {
 //#endregion 🔖️Commands
 
 //#region 🧵️RetainedCommands
-const ANIMATE_PRESENTATION_RETAINED_TOOL_IDS: &[&str] = &[
+pub const ANIMATE_PRESENTATION_RETAINED_TOOL_IDS: &[&str] = &[
     "seedGrid",
     "addTile",
     "deleteTile",
@@ -333,13 +202,13 @@ const ANIMATE_PRESENTATION_RETAINED_TOOL_IDS: &[&str] = &[
 const ANIMATE_PRESENTATION_RETAINED_PAYLOAD_SCHEMA: &str = "animate.presentation.tool-command.v1";
 const ANIMATE_PRESENTATION_RETAINED_RAW_BYTES: usize = 8_192;
 const ANIMATE_PRESENTATION_RETAINED_WORK_ITEMS: usize = 1;
-const ANIMATE_PRESENTATION_CONFIG_VALUE_BYTES: usize = 512;
+pub const ANIMATE_PRESENTATION_CONFIG_VALUE_BYTES: usize = 512;
 const ANIMATE_PRESENTATION_CONFIG_BASE_BYTES: usize = 512;
-const ANIMATE_PRESENTATION_CONFIG_STEP_BYTES: usize = 4_096;
+pub const ANIMATE_PRESENTATION_CONFIG_STEP_BYTES: usize = 4_096;
 /// 🀄️ The largest tile roster one retained verb may build. A roster is staged as one `delete-tiles` row
 /// plus one `create-tile` row per tile, so nothing downstream bounds its length — this constant is the only ceiling.
 const ANIMATE_PRESENTATION_MAXIMUM_TILES: usize = 256;
-const ANIMATE_PRESENTATION_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
+pub const ANIMATE_PRESENTATION_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
     ArtifactToolPublicationContract { tool_id: "seedGrid", lanes: &[ArtifactToolPublicationLane::Artifact] },
     ArtifactToolPublicationContract { tool_id: "addTile", lanes: &[ArtifactToolPublicationLane::Artifact] },
     ArtifactToolPublicationContract { tool_id: "deleteTile", lanes: &[ArtifactToolPublicationLane::Artifact] },
@@ -452,9 +321,9 @@ impl ToolJobFactory for AnimatePresentationRetainedCommandJobFactory {
         &mut self,
         _operation: semio_framework_job::Operation,
         payload: Self::Payload,
-        input: semio_framework::action_bus::RetainedToolWireInput,
-        checkpoint: Option<semio_framework::action_bus::RetainedToolWireInput>,
-    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework::action_bus::RetainedToolWireInput, Option<semio_framework::action_bus::RetainedToolWireInput>)> {
+        input: semio_framework_action_bus::RetainedToolWireInput,
+        checkpoint: Option<semio_framework_action_bus::RetainedToolWireInput>,
+    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework_action_bus::RetainedToolWireInput, Option<semio_framework_action_bus::RetainedToolWireInput>)> {
         if input.declared_bytes() > ANIMATE_PRESENTATION_RETAINED_RAW_BYTES || checkpoint.as_ref().is_some_and(|value| value.declared_bytes() > semio_framework_plugin::retained_command::ARTIFACT_COMMAND_CHECKPOINT_MAXIMUM_BYTES) {
             return Err((ToolJobFactoryError::new("Animate Presentation retained command rejects an oversized wire or checkpoint owner"), input, checkpoint));
         }
@@ -475,16 +344,16 @@ impl ArtifactOwnedToolJobFactory for AnimatePresentationRetainedCommandJobFactor
 
 //#region 📬️ConfigStorePreparation
 #[derive(semio_framework_value::FactoryPayloadRetirement)]
-struct AnimatePresentationConfigPreparationFactory;
+pub struct AnimatePresentationConfigPreparationFactory;
 
-struct AnimatePresentationConfigPreparation {
+pub struct AnimatePresentationConfigPreparation {
     owners: store::OneItemOwners<PresentationConfig, PresentationConfigMutation>,
     serialized_bytes: Option<usize>,
     checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint,
     cancelled: bool,
 }
 
-struct AnimatePresentationConfigByteCounter {
+pub struct AnimatePresentationConfigByteCounter {
     bytes: usize,
 }
 
@@ -1355,9 +1224,34 @@ pub(crate) mod unit_tests;
 //#endregion 🧪️UnitTests
 
 //#region 🪢️TaxonomyMounts
-#[path = "📚️examples/🎬️demo-session/🦀️.rs"]
-pub mod demo_session;
-#[cfg(test)]
-#[path = "📚️examples/🎬️demo-session/🧪️tests/🧩️example/🦀️.rs"]
-mod example;
+
+
 //#endregion 🪢️TaxonomyMounts
+
+//#region 🧩️ArtifactItems12
+pub mod artifact_items_12 {
+use crate::{PRESENTATION_DOCUMENT_SCHEMA};
+use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
+
+//#region 🔖️ArtifactKind
+/// 🗂️ This artifact's `ArtifactKindSpec` — stitched into the app manifest by
+/// `crate::apps::presentation::create_animate_presentation_app`'s `🔖️Manifest` region.
+pub fn artifact_kind() -> ArtifactKindSpec {
+    ArtifactKindSpec {
+        id: PRESENTATION_DOCUMENT_SCHEMA.into(),
+        label: semio_framework_ui_locale::LocalizedLabel::native("Animate Presentation", "Animierte Präsentation"),
+        source_format: PRESENTATION_DOCUMENT_SCHEMA.into(),
+        component_kind: "panel".into(),
+        dimension: "2d".into(),
+        media_capability: OsMediaCapability::MeshOnly,
+        media_type: MediaType { class: MediaClass::Presentation, form: MediaForm::Deck },
+        schema: PRESENTATION_DOCUMENT_SCHEMA.into(),
+        export_formats: vec![],
+        import_formats: vec![],
+        export_stdio_kinds: vec!["stdio.json".into(), "stdio.pdf".into()],
+        import_stdio_kinds: vec!["stdio.json".into(), "stdio.pdf".into()],
+    }
+}
+//#endregion 🔖️ArtifactKind
+}
+//#endregion 🧩️ArtifactItems12

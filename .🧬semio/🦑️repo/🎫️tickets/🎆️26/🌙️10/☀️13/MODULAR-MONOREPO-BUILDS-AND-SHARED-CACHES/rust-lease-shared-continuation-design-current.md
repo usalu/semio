@@ -1,0 +1,27 @@
+# Shared Retirement Continuation Design Investigation
+
+Read-only design follow-up, not implemented or qualified. Current ordinary/queue collectors restart sorted inventory every call. The current queue-cap law proves256actual eligible foreign files exhaust one turn and leave the settled tail intact; it must not be described as fairness. Ordinary bound8192has the same ordering issue by Source inspection. The unfinished-file fix does not resolve eligible-but-unretirable prefixes. No Native provider/quota/cleanup authority or clock is created by this document.
+
+## Current Constraints
+
+Directory admissionEX is retained across ordinary cleanup; queue cleanup retains parent/catalog writer plus claims admissionEX in fixed order. Both use the existing reserved queue-claim catalog with actual page_size4096/max_page_count4and maximumDatabaseBytes16384. A fresh resource identity alone occupies two SQLite pages. Each actual lease holds BEGIN or BEGIN EXCLUSIVE until its database closes; close rolls back any uncommitted writes. Therefore simply writing a cursor through the held catalog and releasing would lose it. Adding a separate connection is blocked by the real held exclusive transaction. Cursor persistence needs explicit transaction/closure semantics, not a map bit claiming that a committed transaction still holds a kernel lock.
+
+The metadata-headroom file is a4MiB physically allocated emergency reserve that can be truncated/replenished; it is not durable cursor storage. Do not hide a cursor there or invent a per-turn cursor file. Process-local maps, random/time-based starts, packed SQLite header tricks, larger candidate bounds or repeated scopes to bypass one turn are unsuitable shared deterministic continuation.
+
+## Proposed Direction To Qualify
+
+Use one schema-authored fixed table within the existing reserved catalog, exactly two rows for ordinary and claim name watermarks. A watermark is empty or one canonical71-character hashed SQLite filename, ordinary DATA without deletion authority. The expected extra leaf page should fit the existing four-page cap, but this must be measured with actual SQLite main/freelist/page/journal evidence and cross-runtime source/strict gates before adoption. Do not increase any bound. Catalog initialization/recognized exact shape must be designed for fresh greenfield data; no migration/compatibility adapter.
+
+Start at the first sorted name greater than the retained watermark, wrap at most once, and stop at the existing eligible-probe limit. Advance to the last actually considered name only under genuine retained directory/catalog custody and a live Original. Missing/deleted watermark names use binary upper_bound over the newly observed inventory. Name order is ASCII here. Do not retain all prior names, introduce an unbounded history or treat cursor bytes as permission to delete. Exact single-resource retirement should not perturb global continuation.
+
+Persist before normal successful turn release with explicit durable transaction behavior. The existing catalog connection is already inside EX; committing drops that actual lock. Any commit/reacquire sequence must prove directory admissionEX excludes all relevant opener paths and retain actual original custody across commit errors, unknown close, full storage and cleanup. Headroom/provider authority cannot be inferred from cursor DATA. Prefer an owner-level actual transaction API with honest live state over exporting raw SQLite or mutating the issued lease map from a helper. Preserve arbitrary Error/undefined primary failures and conservative finalizers. Do not silently retry an unknown commit or heal a failed Original.
+
+## Required Evidence
+
+Neutral schema/data vectors and independent SQLite ordering oracle before implementation: empty, wrap, deletion of the saved name, inserted earlier/later names, invalid shape/copy, exact full authored bounds and real cancellation. A true full8192eligible ordinary prefix and full256eligible claim prefix must allow useful tail work in later successful turns across actual separate child processes sharing the same directory. Keep one-turn bounds intact, real live kernel-held/foreign files protected and exact single-target behavior. Prove fixed catalog main/freelist/page size under repeated turns, bounded journal/transient extent, actual commit/close failures, process crash and accepted-child drainage. Native charged backing/headroom/platform/physical quota proof remains a separately held requirement; Source SQLite page counts are not a physical cap. Preserve the existing unqualified full65536physical inventory evidence.
+
+Observed lease Source SHA256: fe25c70945f64d8969ffe7d5ccb719fd96070bcc5ebcc3ef95654df5a5029c83. This design is a next implementation investigation, not a completed feature or a substitute for broad cache/Nx/compiler/architecture acceptance.
+
+## Current Source Implementation Qualification
+
+Frozen `rust-lease-continuation-checkpoint-current.md`, SHA256`37ac0244f4724b36c04ae7d54fcab95936879ad9041c1ead2ff44640f03ea74a`, 15802bytes. Theearliernotimplementedlabeldescribesthedesignstage. Thecurrentimplementationusesfixed2rowcatalogDATA, next-turnsuffixwrap, actualrootEXandhonesttransaction/closedphases; realcrossprocess/fault/crashcaseshaveevidence. Sourceusesexisting4pagecap/4MiBreservewithoutnewNativeauthority orlegacyadapter. Finalprototypedeadlinefailuresmeancompletequalificationremainsopen; oldcatalogNativeepoch/historicalhandling, physicalbacking/pressure/platformandallbroaderrequirementsremainunderholds.

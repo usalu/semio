@@ -1,6 +1,7 @@
 //! 📥️ Observes the actual queue/scene frontier of one production enqueue.
 
-use super::{enqueue_runtime_completion, RuntimeApply, RuntimeCompletion, RuntimeCompletionQueue, RuntimeHostWaker, RuntimePresentationAuthority};
+use super::{RuntimeApply, RuntimeCompletion, RuntimeCompletionQueue, RuntimePresentationAuthority};
+use semio_framework_os_renderer_wgpu_runtime_mailbox::{enqueue_runtime_completion, set_after_completion_publication_hook, RuntimeHostWaker};
 use std::sync::{mpsc, Mutex, TryLockError};
 use std::time::Duration;
 
@@ -14,7 +15,7 @@ thread_local! {
     static INTERLOCK: std::cell::RefCell<Option<PublicationInterlock>> = const { std::cell::RefCell::new(None) };
 }
 
-pub(super) fn pause_after_completion_publication() {
+fn pause_after_completion_publication() {
     INTERLOCK.with(|slot| {
         if let Some(interlock) = slot.borrow().as_ref() {
             interlock.published.send(()).unwrap();
@@ -47,7 +48,9 @@ fn runtime_single_enqueue_reader_cannot_observe_completion_without_its_scene_inv
         let waker = &waker;
         let writer = scope.spawn(move || {
             INTERLOCK.with(|slot| *slot.borrow_mut() = Some(PublicationInterlock { published, resume: resumed }));
+            set_after_completion_publication_hook(Some(Box::new(pause_after_completion_publication)));
             let accepted = enqueue_runtime_completion(queue, presentation, waker, completion);
+            set_after_completion_publication_hook(None);
             INTERLOCK.with(|slot| {
                 slot.borrow_mut().take();
             });

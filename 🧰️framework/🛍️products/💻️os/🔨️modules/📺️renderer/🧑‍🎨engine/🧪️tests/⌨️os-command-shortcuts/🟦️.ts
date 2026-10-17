@@ -5,7 +5,11 @@ import { fileURLToPath } from "node:url";
 
 import userEvent from "@testing-library/user-event";
 import { describe, expect, test } from "vitest";
-import { buildOsCommands, keyboardEventMatchesChord, controlOwnsKeyboardEvent } from "../../🧱️elements/🛠️ShellHelpers/🟦️.tsx";
+import { buildOsCommands } from "../../🧱️elements/🛠️ShellHelpers/🎛️command-registry/🟦️.tsx";
+import {
+  keyboardEventMatchesChord,
+  controlOwnsKeyboardEvent
+} from "../../🧱️elements/🛠️ShellHelpers/🪟️window-panes/⌨️keyboard-chords/🟦️.ts";
 import controlCases from "../🧫️fixtures/⌨️control-key-ownership/🔣️.json";
 
 const engineRoot = join(dirname(fileURLToPath(import.meta.url)), "..", "..");

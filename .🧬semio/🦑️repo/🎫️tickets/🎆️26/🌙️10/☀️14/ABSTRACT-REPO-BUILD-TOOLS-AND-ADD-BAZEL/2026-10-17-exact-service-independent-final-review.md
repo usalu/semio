@@ -1,0 +1,9 @@
+# Exact Service Independent Final Review
+
+All nineteen current inputs match the final manifest through nofollow regular-file descriptors, stable descriptor/name seven-field metadata, exact bytes and SHA-256. Receipt: `🗑️generated/exact-service-nineteen-independent-hold.json`. Sequential point-time Source only.
+
+Prior phase1/2 reviews remain applicable. The helper admits maintain-exact as a closed fresh ordinary-policy mode and rejects typed payload/artifact purpose before dispatch. Repo validates exact fourth literal/publish-only before infrastructure admission. Core validates exact fifth literal plus actual fourth progress callback before private leaf reservation/effects, derives the immutable exact request purpose and invokes the actual retained canonical publisher. Windows exact mode refuses before system capture/effects. No public callback/provider or arbitrary program/path authority was added.
+
+The same frozen purpose selects before/after/current witness mode. Its sentinel binds equality even when no service directory exists. Every service subtree frame is ordinary application payload with full content/topology and the explicitly enumerated extra inode/uid/gid/nlink/mtime/ctime; st_dev remains per-census checked. Directory size/ACL/xattrs are not cross-phase promises. Strict authenticated service observer stays distinct and unchanged. Actual parent/child EX, mapping custody, funding/journal/current snapshot, canonical pending recovery and all ten stages remain mandatory.
+
+No material Source blocker identified. Root reports91041 strict6roots0/eight relevant witness laws779,91049 genuine Root0 Graph27laws1750,91063 ordinary35grammar/24localized argv/control-preservation laws0. Not rerun here. Exact Native publication has not yet been qualified; service mutation may legitimately refuse across remount. No protected or Native operation was performed by this review.

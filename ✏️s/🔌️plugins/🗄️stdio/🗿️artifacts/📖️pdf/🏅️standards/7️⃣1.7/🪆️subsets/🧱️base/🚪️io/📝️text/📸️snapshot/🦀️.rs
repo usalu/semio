@@ -39,7 +39,7 @@ const FIELDS:[(u16,&str,semio_framework_dsl_record::Shape,bool);32]=[
     (31,"trailer",semio_framework_dsl_record::Shape::Value,false),
     (32,"admittedStreamRoles",semio_framework_dsl_record::Shape::Value,false),
 ];
-pub(crate) fn spec()->semio_framework_dsl_record::RecordSpec{
+pub fn spec()->semio_framework_dsl_record::RecordSpec{
     semio_framework_dsl_record::RecordSpec::new(None,semio_framework_dsl_record::RecordLayout::Lines,FIELDS.into_iter().map(|(id,key,shape,optional)|{let mut field=semio_framework_dsl_record::FieldSpec::new(id,key,shape);field.optional=optional;field}).collect())
 }
 fn spec_controlled<C:semio_framework_dsl_record::NativeSchemaControl>(control:&mut C)->Result<semio_framework_dsl_record::RecordSpec,ValueError>{
@@ -50,9 +50,9 @@ fn spec_controlled<C:semio_framework_dsl_record::NativeSchemaControl>(control:&m
     })
 }
 /// 🏭️ Owns literal snapshot metadata independently under either native allocation controller.
-pub(crate) fn spec_producer()->semio_framework_dsl_record::RecordSpecProducer{semio_framework_dsl_record::RecordSpecProducer{ordinary:spec,decoding:|control|spec_controlled(control),encoding:|control|spec_controlled(control)}}
+pub fn spec_producer()->semio_framework_dsl_record::RecordSpecProducer{semio_framework_dsl_record::RecordSpecProducer{ordinary:spec,decoding:|control|spec_controlled(control),encoding:|control|spec_controlled(control)}}
 
-pub(crate) fn to_record(value:&PdfSnapshot)->semio_framework_dsl_record::RecordValue{
+pub fn to_record(value:&PdfSnapshot)->semio_framework_dsl_record::RecordValue{
     use semio_framework_dsl_record::FieldValue as V;
     semio_framework_dsl_record::RecordValue{fields:[
         (1,V::Text(value.schema.clone())),(2,V::Text(value.declared_version.clone())),
@@ -62,7 +62,7 @@ pub(crate) fn to_record(value:&PdfSnapshot)->semio_framework_dsl_record::RecordV
     ].into_iter().collect()}
 }
 /// 🛫️ Projects each literal root slot with bounded allocation and partial-record retirement.
-pub(crate) fn to_record_controlled(value:&PdfSnapshot,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<semio_framework_dsl_record::RecordValue,ValueError>{
+pub fn to_record_controlled(value:&PdfSnapshot,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<semio_framework_dsl_record::RecordValue,ValueError>{
     control.scoped_depth(64,|control|control.scoped_stage(|control|->Result<semio_framework_dsl_record::RecordValue,ValueError>{
         control.begin_stage(FIELDS.len())?;
         let mut record=semio_framework_dsl_record::native_encoding::EncodedRecord::new(FIELDS.len(),control)?;
@@ -102,8 +102,8 @@ pub(crate) fn to_record_controlled(value:&PdfSnapshot,control:&mut semio_framewo
         Ok(record.take())
     }))
 }
-fn field(record:&semio_framework_dsl_record::RecordValue,id:u16,key:&str)->Result<DslValue,semio_framework_diagnostic::TextError>{match record.get(id){Some(semio_framework_dsl_record::FieldValue::Text(value))if id<=2=>Ok(DslValue::String(value.clone())),Some(semio_framework_dsl_record::FieldValue::Value(value))if id>2=>Ok(value.clone()),None|Some(semio_framework_dsl_record::FieldValue::Absent)if(17..=27).contains(&id)=>Ok(DslValue::Null),_=>Err(semio_framework_diagnostic::TextError::new(ValueRefusalKind::InvalidValue, format!("PDF snapshot field {key} is missing or has a different shape"),semio_framework_diagnostic::TextSpan::at(1,1)))}}
-pub(crate) fn from_record(record:&semio_framework_dsl_record::RecordValue)->Result<PdfSnapshot,semio_framework_diagnostic::TextError>{
+pub fn field(record:&semio_framework_dsl_record::RecordValue,id:u16,key:&str)->Result<DslValue,semio_framework_diagnostic::TextError>{match record.get(id){Some(semio_framework_dsl_record::FieldValue::Text(value))if id<=2=>Ok(DslValue::String(value.clone())),Some(semio_framework_dsl_record::FieldValue::Value(value))if id>2=>Ok(value.clone()),None|Some(semio_framework_dsl_record::FieldValue::Absent)if(17..=27).contains(&id)=>Ok(DslValue::Null),_=>Err(semio_framework_diagnostic::TextError::new(ValueRefusalKind::InvalidValue, format!("PDF snapshot field {key} is missing or has a different shape"),semio_framework_diagnostic::TextSpan::at(1,1)))}}
+pub fn from_record(record:&semio_framework_dsl_record::RecordValue)->Result<PdfSnapshot,semio_framework_diagnostic::TextError>{
     if record.fields.keys().any(|id|!(1..=32).contains(id)){return Err(semio_framework_diagnostic::TextError::new(ValueRefusalKind::InvalidValue, "PDF snapshot contains an undeclared root field",semio_framework_diagnostic::TextSpan::at(1,1)));}
     PdfSnapshot::from_value(DslValue::object([
         ("schema".into(),field(record,1,"schema")?),("declaredVersion".into(),field(record,2,"declaredVersion")?),
@@ -115,7 +115,7 @@ pub(crate) fn from_record(record:&semio_framework_dsl_record::RecordValue)->Resu
 
 fn borrowed_field<'a>(record:&'a semio_framework_dsl_record::RecordValue,id:u16,key:&str)->Result<&'a DslValue,ValueError>{match record.get(id){Some(semio_framework_dsl_record::FieldValue::Value(value))=>Ok(value),None|Some(semio_framework_dsl_record::FieldValue::Absent)if(17..=27).contains(&id)=>Ok(&DslValue::Null),_=>Err(ValueError::new(ValueRefusalKind::InvalidValue, format!("PDF snapshot field {key} is missing or has a different shape")))}}
 fn owned<T:FromValue>(record:&semio_framework_dsl_record::RecordValue,id:u16,key:&str,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<pack::value::DecodedValue<T>,ValueError>{let value=T::from_value_controlled(borrowed_field(record,id,key)?,control).map_err(|error|error.under(key))?;let owner=pack::value::DecodedValue::new(value,T::retire_decoded);control.step()?;Ok(owner)}
-pub(crate) fn from_record_controlled(record:&semio_framework_dsl_record::RecordValue,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<PdfSnapshot,ValueError>{
+pub fn from_record_controlled(record:&semio_framework_dsl_record::RecordValue,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<PdfSnapshot,ValueError>{
     control.scoped_stage(|control|->Result<_,ValueError>{
         control.begin_stage(32)?;if record.fields.keys().any(|id|!(1..=32).contains(id)){return Err(ValueError::new(ValueRefusalKind::InvalidValue, "PDF snapshot contains an undeclared root field"));}
         let text=|id,key:&str,control:&mut semio_framework_value::NativeDecodeControl<'_>|{let Some(semio_framework_dsl_record::FieldValue::Text(value))=record.get(id)else{return Err(ValueError::new(ValueRefusalKind::InvalidValue, format!("PDF snapshot field {key} is missing or has a different shape")))};let value=control.copy_text(value)?;control.step()?;Ok::<_,ValueError>(value)};
@@ -154,9 +154,7 @@ pub(crate) fn from_record_controlled(record:&semio_framework_dsl_record::RecordV
     })
 }
 
-#[cfg(test)]
-#[path="🧪️tests/🏭️producer/🦀️.rs"]
-mod producer_tests;
+
 
 #[allow(unused_imports)]
 mod snapshot_codec {

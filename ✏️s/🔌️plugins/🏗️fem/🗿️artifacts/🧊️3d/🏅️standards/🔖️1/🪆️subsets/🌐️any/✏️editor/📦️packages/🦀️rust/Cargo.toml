@@ -19,9 +19,14 @@ path = "🦀️.rs"
 name = "editor_app"
 path = "../../🧪️tests/🔬️app/🦀️.rs"
 
+[[test]]
+name = "editor_app_2"
+path = "../../🧪️tests/🔬️app-2/🦀️.rs"
+
 [dependencies]
 pack = { workspace = true }
 semio-framework = { workspace = true }
+semio-framework-action-bus = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🎯️action-bus/📦️packages/🦀️rust" }
 semio-framework-2d = { workspace = true }
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-dsl-record-derive = { workspace = true }
@@ -56,6 +61,7 @@ semio-s-fem-model = { workspace = true }
 [dev-dependencies]
 semio-framework-async = { workspace = true }
 semio-framework-async-macros = { workspace = true }
+semio-framework-test-fixtures = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-framework-ui-scene = { workspace = true }
 semio-s-artifact-fem-3d-analysis = { workspace = true }
 semio-s-artifact-fem-3d-boundary = { workspace = true }
@@ -64,3 +70,5 @@ semio-s-artifact-fem-3d-material = { workspace = true }
 semio-s-artifact-fem-3d-mesh-topology = { workspace = true }
 semio-s-artifact-fem-3d-scene = { workspace = true }
 serde_json = { workspace = true }
+semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
+semio-s-artifact-fem-3d-editor-model-window = { workspace = true, features = ["testkit"] }

@@ -73,11 +73,11 @@ impl ArtifactViewer for FlowViewer {
     const DOCUMENT_SCHEMA: &'static str = FLOW_DOCUMENT_SCHEMA;
 
     fn document_store_owners_source_demands() -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-        crate::retirement::store_owners_source_demands()
+        crate::schema::retirement::store_owners_source_demands()
     }
 
     fn build_document_store_owners(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Option<Result<(store::os_store::document_store_owners::DocumentStoreOwners<Self::Snapshot, Self::Mutation>, semio_framework_value::retained_clone::RetainedCloneProgress), store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self::Snapshot, Self::Mutation>>> {
-        Some(crate::retirement::store_owners(grant))
+        Some(crate::schema::retirement::store_owners(grant))
     }
 
     fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
@@ -158,3 +158,19 @@ pub fn create_flow_viewer() -> semio_framework_plugin::AppDefinition {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🧩️ArtifactItems2
+pub mod artifact_items_2 {
+use semio_framework_artifact_reference::{Dialect, StandardId, SubsetId};
+
+//#region 🔖️Dialect
+/// 🪪️ Ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §1/§2.1 — lives at the
+/// ARTIFACT level (not under the sibling editor module) so a viewer file can read it without ever
+/// importing through that module. `artifact_kind` matches this artifact's own `definition()` capability
+/// row (`s.flow.schema.artifact` descriptor `b"s.flow.flow"`); `standard`/`subset` match this file's own
+/// `🏅️standards/🔖️1/🪆️subsets/✳️any` location — the canonical surface ids are
+/// `s.flow.flow@1/*#editor` / `s.flow.flow@1/*#viewer`.
+pub const FLOW_DIALECT: Dialect = Dialect { artifact_kind: "s.flow.flow", standard: StandardId("1"), subset: SubsetId::ANY };
+//#endregion 🔖️Dialect
+}
+//#endregion 🧩️ArtifactItems2

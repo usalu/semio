@@ -125,7 +125,5 @@ pub fn build_job(identity: ToolRunIdentity, board: &DslValue, checkpoint: Option
 //#endregion 🔖️Job
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

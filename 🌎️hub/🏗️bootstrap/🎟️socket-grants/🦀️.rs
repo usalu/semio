@@ -2,7 +2,7 @@
 //!
 //! Carved out of `🏗️bootstrap/🦀️.rs`; mounted from its root with `#[path]`.
 
-use directory::os_directory::io::text::access_policy::directory_access_permits;
+use directory::os_directory::access_policy::directory_access_permits;
 use futures::StreamExt;
 use semio_hub_artifact_authority::chunk_cas::ArtifactChunkCasStorage;
 use semio_hub_artifact_creation::ArtifactCreationCommitAuthorityV1;

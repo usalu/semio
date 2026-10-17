@@ -4,7 +4,8 @@
 //! child identities through the shared Text, Pack and SQLite projection in
 //! [`crate::standards::v1::subsets::any::io::binary::snapshot::owned_pack`].
 
-use crate::{gis_map_drawing_child_handle, gis_map_value_child_handle, GisMapDrawingChild, GisMapImageChild, GisMapValueChild, MapFeature};
+use crate::{MapFeature};
+use crate::standards::v1::subsets::any::map_composition::{gis_map_drawing_child_handle, gis_map_value_child_handle, GisMapDrawingChild, GisMapImageChild, GisMapValueChild};
 use ::semio_framework_schema::ArtifactSchema;
 
 

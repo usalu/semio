@@ -6,7 +6,8 @@
 import { useLayoutEffect, Suspense } from "react";
 import type { ThreeCamera } from "@semio-tech/ui-react";
 import { type WorldMeshRecord } from "../🔭️scene-schema/🟦️.ts";
-import { type MeshStylePalette, useThree } from "../🎨️mesh-render/🟦️.tsx";
+import { useThree } from "../🎨️mesh-render/🟦️.tsx";
+import { type MeshStylePalette } from "../🎨️mesh-render/🖌️mesh-style-palette/🟦️.ts";
 import { GlbInstanceMesh } from "../🧩️glb-surface/🟦️.tsx";
 import { GUMBALL_TRANSFORM_EPSILON } from "../🧮️gumball-math/🟦️.ts";
 import { DemandInvalidateOnToken, raycastGroundPoint, worldGhostMeshUrl } from "../🎯️marquee-and-bridges/🟦️.tsx";

@@ -30,7 +30,7 @@ pub fn measure(document: &NoteSnapshot, labels: &NotePlayLabels) -> WindowMeasur
             ready: None,
             loading: None,
             disabled: None,
-            on_change: crate::editor::note::note_action("setEraserRadius", None),
+            on_change: crate::editor::note::support::note_action("setEraserRadius", None),
             waiting: None,
         }],
     }

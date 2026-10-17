@@ -13,7 +13,8 @@
 //! the schema. Everything downstream of that boundary — the tolerance, the diagram constants, the
 //! BFS root order, the degenerate-direction branches, the matrix order — is React's.
 
-use crate::{Puzzle5dFastener, Puzzle5dGrip, Puzzle5dPart, Puzzle5dPartAnchor, Puzzle5dSnapshot};
+use crate::{Puzzle5dSnapshot};
+use crate::standards::v1::subsets::any::schema::document_records::{Puzzle5dFastener, Puzzle5dGrip, Puzzle5dPart, Puzzle5dPartAnchor};
 use std::collections::{HashMap, HashSet, VecDeque};
 
 //#region 📐️Constants

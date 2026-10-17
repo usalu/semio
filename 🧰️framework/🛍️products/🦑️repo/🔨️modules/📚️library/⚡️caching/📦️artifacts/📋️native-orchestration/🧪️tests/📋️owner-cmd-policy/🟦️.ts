@@ -2,6 +2,7 @@ import { expect, test } from "bun:test";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { join, relative, resolve } from "node:path";
 import Ajv from "ajv";
+import type { ClassDeclaration, ClassElement, FunctionDeclaration, IfStatement, MethodDeclaration, Statement } from "typescript";
 import {cargoExecutionSchemaV1 as cargoExecutionSchema} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️execution/🟦️.ts";
 import { validateJsonSchemaSubset } from "../../../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
 import * as toml from "@iarna/toml";
@@ -74,7 +75,7 @@ test("interactive dashboard delegates its native owner progress", () => {
 
 test("native progress follows the declared owner and preserves independent child output", async () => {
   const started = Date.now();
-  const corpus=JSON.parse(readFileSync(join(owner,"🧪️tests/🧫️fixtures/📣️progress/🔣️.json"),"utf8"));
+  const corpus:{version:number;durationMs:number;cases:{id:string;mode:string;wrapperProgress:boolean}[];artifactEnvironment:{route:string;defaultRelativeRoot:string}}=JSON.parse(readFileSync(join(owner,"🧪️tests/🧫️fixtures/📣️progress/🔣️.json"),"utf8"));
   const artifacts=process.env.SEMIO_TEST_ARTIFACT_DIR;
   if(!artifacts)throw Error("SEMIO_TEST_ARTIFACT_DIR must name caller-owned ticket output");
   const output=mkdtempSync(join(artifacts,"native-progress-"));
@@ -103,8 +104,12 @@ test("native progress follows the declared owner and preserves independent child
 test("dashboard-selected owner tests allocate their output without manual environment setup", async () => {
   const corpus=JSON.parse(readFileSync(join(owner,"🧪️tests/🧫️fixtures/📣️progress/🔣️.json"),"utf8")),ts=(await import("typescript")).default;
   const script=join(root,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts"),source=ts.createSourceFile(script,readFileSync(script,"utf8"),ts.ScriptTarget.Latest,true);
-  const selected=source.statements.find((node:any)=>node.name?.text==="TestScript").members.find((node:any)=>node.name?.text==="run").body.statements.find((node:any)=>ts.isIfStatement(node)&&node.expression.getText(source)==='segments[0] === "native-owner-command-policy"');
-  const environmentPath=join(root,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🌿️environment/🧪️test-output/🟦️.ts"),environmentSyntax=ts.createSourceFile(environmentPath,readFileSync(environmentPath,"utf8"),ts.ScriptTarget.Latest,true),environmentSource=environmentSyntax.statements.find((node:any)=>node.name?.text==="repoTestArtifactEnvironment").getText(environmentSyntax).replace(/^export /,"");
+  const testScript=source.statements.find((node:Statement):node is ClassDeclaration=>ts.isClassDeclaration(node)&&node.name?.text==="TestScript"),runMethod=testScript?.members.find((node:ClassElement):node is MethodDeclaration=>ts.isMethodDeclaration(node)&&ts.isIdentifier(node.name)&&node.name.text==="run");
+  const selected=runMethod?.body?.statements.find((node:Statement):node is IfStatement=>ts.isIfStatement(node)&&node.expression.getText(source)==='segments[0] === "native-owner-command-policy"');
+  if(selected===undefined)throw new Error("The dashboard-selected owner-test route is missing");
+  const environmentPath=join(root,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🌿️environment/🧪️test-output/🟦️.ts"),environmentSyntax=ts.createSourceFile(environmentPath,readFileSync(environmentPath,"utf8"),ts.ScriptTarget.Latest,true),environmentDeclaration=environmentSyntax.statements.find((node:Statement):node is FunctionDeclaration=>ts.isFunctionDeclaration(node)&&node.name?.text==="repoTestArtifactEnvironment");
+  if(environmentDeclaration===undefined)throw new Error("repoTestArtifactEnvironment is missing");
+  const environmentSource=environmentDeclaration.getText(environmentSyntax).replace(/^export /,"");
   const compilers=[(text:string)=>new Bun.Transpiler({loader:"ts"}).transformSync(text),(text:string)=>ts.transpileModule(text,{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText];
   for(const compile of compilers){
     const allocate=new Function("resolve","mkdirSync",compile(environmentSource)+";return repoTestArtifactEnvironment;")(resolve,()=>{});
@@ -113,7 +118,6 @@ test("dashboard-selected owner tests allocate their output without manual enviro
     await run.call({repoRoot:root},[corpus.artifactEnvironment.route]);
     expect(observed?.SEMIO_TEST_ARTIFACT_DIR).toBe(resolve(root,corpus.artifactEnvironment.defaultRelativeRoot,corpus.artifactEnvironment.route));
   }
-  console.log("[DEBUG] dashboard-selected owner test output checked through Bun and TypeScript compilers");
 });
 
 
@@ -139,7 +143,6 @@ test("actual native receiving command refuses a different original caller comman
     writeFileSync(join(output, `${id}.stdout.log`), actual.stdout); writeFileSync(join(output, `${id}.stderr.log`), actual.stderr);
     return { id, code: actual.exitCode, stderr: new TextDecoder().decode(actual.stderr), stdout: new TextDecoder().decode(actual.stdout) };
   });
-  console.log("[DEBUG] " + JSON.stringify(observations.map(row => ({ id: row.id, code: row.code, acquisition: row.stdout.includes("foreign acquisition occurred") }))));
   for (const actual of observations) {
     expect(actual.code, actual.id).not.toBe(0);
     expect(actual.stderr, actual.id).toContain(actual.id === "different-command" ? "Original native caller command refused" : "Original native caller capabilities required");

@@ -1,14 +1,18 @@
 //! 🌱️ Original initializer authority and cancellation Arc require separately funded physical release.
 use semio_framework_plugin_ownership::store_lifecycle::ArtifactStoreInitializationJob;
-use crate::test_app_mutation_fixture::{TestSnapshot,TestMutation};
-use store::{ArtifactStore,ArtifactStoreInitializationAuthority};
-use semio_framework_value::{RetirementDemand,ValueError};
+use semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::document::TestSnapshot;
+use semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::document::mutations::TestMutation;
+use store::{ArtifactStore, ArtifactStoreInitializationAuthority};
+use semio_framework_value::{RetirementDemand, ValueError};
 use semio_framework_job::InteractiveJob;
-use semio_framework_value::{retirement::controlled::ControlledRetirement,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,admit_retained_clone_close}};
+use semio_framework_value::retirement::controlled::ControlledRetirement;
+use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, admit_retained_clone_close};
 use std::mem::size_of;
-fn funds(grant:RetainedCloneGrant,demand:RetirementDemand)->bool{grant.maximum_items>0&&grant.maximum_copy_bytes>=demand.copy_bytes&&grant.maximum_capacity_bytes>=demand.capacity_bytes&&grant.maximum_release_bytes>=demand.release_bytes&&grant.maximum_depth>=demand.depth}
-fn nested(mut demand:RetirementDemand)->Result<RetirementDemand,ValueError>{demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"fixture child depth overflow"))?;Ok(demand)}
-struct OriginalAuthority{payload:Option<ControlledRetirement<String>>,pointer:usize,closing:bool}
+#[doc(hidden)]
+pub fn funds(grant:RetainedCloneGrant,demand:RetirementDemand)->bool{grant.maximum_items>0&&grant.maximum_copy_bytes>=demand.copy_bytes&&grant.maximum_capacity_bytes>=demand.capacity_bytes&&grant.maximum_release_bytes>=demand.release_bytes&&grant.maximum_depth>=demand.depth}
+#[doc(hidden)]
+pub fn nested(mut demand:RetirementDemand)->Result<RetirementDemand,ValueError>{demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"fixture child depth overflow"))?;Ok(demand)}
+struct OriginalAuthority{pub payload:Option<ControlledRetirement<String>>,pub pointer:usize,pub closing:bool}
 impl ArtifactStoreInitializationAuthority<TestSnapshot,TestMutation> for OriginalAuthority{
  fn step<'a>(&'a mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>,ValueError>{semio_framework_job::JobOutcomeBorrow::admit_yield(cx)}
  fn borrow_outcome<'a>(&'a self,descriptor:&'a semio_framework_job::JobOutcomeDescriptor)->Result<semio_framework_job::JobOutcomeView<'a>,ValueError>{descriptor.yielded()}
@@ -25,6 +29,6 @@ fn original_initializer_job_keeps_source_authority_cancel_arc_and_full_receipts(
  for size in[0,1,8192]{let mut original=String::with_capacity(size);original.extend(std::iter::repeat_n('x',size));assert_eq!(serde_json::to_value(&original).unwrap(),serde_json::Value::String("x".repeat(size)));let pointer=original.as_ptr()as usize;let mut born=original.capacity()+size_of::<OriginalAuthority>()+semio_framework_value::retirement::shared::shared_retirement_allocation_bytes::<std::sync::atomic::AtomicBool>();let mut job=ArtifactStoreInitializationJob::new(Box::new(OriginalAuthority{payload:Some(ControlledRetirement::new(original).ok().unwrap()),pointer,closing:false}));let mut released=0;let mut turns=0;
   while !job.terminal_is_empty(){let(demand,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||job.retirement_demands(grant.maximum_copy_bytes).unwrap());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));let mut denials=vec![RetainedCloneGrant{maximum_items:0,..grant},RetainedCloneGrant{maximum_depth:0,..grant}];if demand.copy_bytes>0{denials.push(RetainedCloneGrant{maximum_copy_bytes:demand.copy_bytes-1,..grant});}if demand.capacity_bytes>0{denials.push(RetainedCloneGrant{maximum_capacity_bytes:demand.capacity_bytes-1,..grant});}if demand.release_bytes>0{denials.push(RetainedCloneGrant{maximum_release_bytes:demand.release_bytes-1,..grant});}for denied in denials{let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||InteractiveJob::close_step(&mut job,denied));assert_eq!(step.progress(),Default::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert!(!job.terminal_is_empty());}
    let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||InteractiveJob::close_step(&mut job,grant));assert!(step.progress().fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));born+=heap.requested_bytes;released+=heap.released_bytes;turns+=1;assert!(turns<100000);
-  }assert_eq!(born,released);let((),heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(job));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));println!("[DEBUG] original initializer size={size} turns={turns} physical={released} unchanged5currencies originalBytes samePointer authorityFrame and cancelArc separate terminalDrop0");
+  }assert_eq!(born,released);let((),heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(job));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
  }
 }

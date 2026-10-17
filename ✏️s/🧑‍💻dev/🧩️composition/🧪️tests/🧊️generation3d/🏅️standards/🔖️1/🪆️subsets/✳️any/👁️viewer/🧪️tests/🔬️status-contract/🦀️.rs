@@ -13,8 +13,9 @@ use super::*;
 use crate::viewer_domain::viewer_laws::context::{self, app};
 use semio_framework_os_flow::FlowEvalSession;
 use semio_framework_plugin::PluginApp;
+use semio_framework_test_fixtures::repo_text;
 
-const PREVIEW_CANCEL_FIXTURE_JSON: &str = include_str!("../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🛑️preview-cancel.json");
+fn preview_cancel_fixture_json() -> &'static str { repo_text!("✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🛑️preview-cancel.json") }
 const VIEWER_SURFACE_ID: &str = "viewer";
 const GEOMETRY_EXTENSION_PLUGIN_ID: &str = "flow-extension-brep";
 
@@ -150,7 +151,7 @@ struct ExpectedFault {
 }
 
 fn preview_cancel_fixture() -> PreviewCancelFixture {
-    let fixture: PreviewCancelFixture = serde_json::from_str(PREVIEW_CANCEL_FIXTURE_JSON).expect("preview cancel fixture");
+    let fixture: PreviewCancelFixture = serde_json::from_str(preview_cancel_fixture_json()).expect("preview cancel fixture");
     assert_eq!(fixture.format, "semio.generation3d.preview-cancel");
     assert_eq!(fixture.version, 1);
     fixture
@@ -397,7 +398,7 @@ async fn a_viewer_kernel_release_dispatches_live_and_never_mutates_the_document(
 /// from the framework's own injection pass over the declared run, which is the point of the move.
 #[test]
 fn the_viewer_preview_window_offers_the_cancel_verb_the_fixture_names() {
-    let fixture: serde_json::Value = serde_json::from_str(PREVIEW_CANCEL_FIXTURE_JSON).expect("preview-cancel fixture");
+    let fixture: serde_json::Value = serde_json::from_str(preview_cancel_fixture_json()).expect("preview-cancel fixture");
     let row = fixture["statusContract"]["surfaces"].as_array().expect("surfaces").iter().find(|row| row["surface"] == "viewer").expect("the viewer surface row");
     let window_kind_id = row["windowKindId"].as_str().expect("window kind id");
     let verb = row["cancelAction"].as_str().expect("cancel action");

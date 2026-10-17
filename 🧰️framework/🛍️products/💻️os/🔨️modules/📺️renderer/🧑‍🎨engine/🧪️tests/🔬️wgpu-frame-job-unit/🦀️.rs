@@ -451,5 +451,4 @@ fn original_frame_directive_inline_retirement_preserves_the_full_independent_gra
     for _ in 0..64{if cancel.terminal_is_empty(){break}let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cancel.close_step(source).unwrap());assert_eq!((step.progress().retained_capacity_bytes,step.progress().released_bytes),(heap.requested_bytes,heap.released_bytes));released+=heap.released_bytes;}
     assert!(cancel.terminal_is_empty());drop(cancel);
     assert_eq!(released,cancel_heap.requested_bytes+ledger_heap.requested_bytes);
-    eprintln!("[DEBUG] original frame directive copy={} physicalRelease={}", receipt.copied_bytes, receipt.released_bytes);
 }

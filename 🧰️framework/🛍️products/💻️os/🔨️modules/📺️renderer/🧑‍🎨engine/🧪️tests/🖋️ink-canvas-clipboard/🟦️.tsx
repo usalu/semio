@@ -8,13 +8,9 @@ import { createElement } from "react";
 import Ajv2020 from "ajv/dist/2020.js";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { act, cleanup, fireEvent, render, waitFor } from "@semio-tech/ui-react/test";
-import {
-  InkCanvasHost,
-  cloneInkItemsWithOffset,
-  inkClipboardPayload,
-  inkItemsFromClipboardPayload,
-  type InkItem,
-} from "../../🧱️elements/🖋️InkCanvasHost/🟦️.tsx";
+import { InkCanvasHost } from "../../🧱️elements/🖋️InkCanvasHost/🟦️.tsx";
+import { type InkItem } from "../../🧱️elements/🖋️InkCanvasHost/🧾️ink-model/🟦️.ts";
+import { cloneInkItemsWithOffset, inkClipboardPayload, inkItemsFromClipboardPayload } from "../../🧱️elements/🖋️InkCanvasHost/🌳️ink-document-ops/🟦️.ts";
 import { uiInkClipboardFixtureUrl } from "../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🟦️.ts";
 
 const suiteRoot = dirname(fileURLToPath(import.meta.url));

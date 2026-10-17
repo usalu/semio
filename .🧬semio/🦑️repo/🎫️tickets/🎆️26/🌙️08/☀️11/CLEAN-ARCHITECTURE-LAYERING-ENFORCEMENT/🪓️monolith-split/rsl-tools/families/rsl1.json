@@ -1,0 +1,47 @@
+{
+ "name": "rsl1",
+ "crates": [
+  "semio-s-artifact-writer-writer",
+  "semio-s-artifact-mathematical-equation",
+  "semio-s-artifact-wfc-2d",
+  "semio-s-artifact-wfc-grid2d",
+  "semio-s-artifact-wfc-bitmap",
+  "semio-s-artifact-wfc-3d",
+  "semio-s-artifact-wfc-grid3d",
+  "semio-s-artifact-procedural-2d-editor",
+  "semio-s-artifact-procedural-3d-editor",
+  "semio-s-artifact-procedural-3d-viewer",
+  "semio-s-artifact-flow-flow",
+  "semio-s-artifact-gis-gisterrain",
+  "semio-s-artifact-gis-gismap",
+  "semio-s-artifact-vcs-vcs",
+  "semio-s-artifact-animate-presentation",
+  "semio-s-artifact-shooting-shooting",
+  "semio-s-artifact-demonstrator-playground",
+  "semio-s-artifact-sequence-sequence"
+ ],
+ "base": {
+  "rev": "b84bf526c7ba",
+  "crates": [
+   "semio-s-artifact-writer-writer",
+   "semio-s-artifact-mathematical-equation",
+   "semio-s-artifact-wfc-2d",
+   "semio-s-artifact-wfc-grid2d",
+   "semio-s-artifact-wfc-bitmap",
+   "semio-s-artifact-wfc-3d",
+   "semio-s-artifact-wfc-grid3d",
+   "semio-s-artifact-procedural-2d-editor",
+   "semio-s-artifact-procedural-3d-editor",
+   "semio-s-artifact-procedural-3d-viewer",
+   "semio-s-artifact-flow-flow",
+   "semio-s-artifact-gis-gisterrain",
+   "semio-s-artifact-gis-gismap",
+   "semio-s-artifact-vcs-vcs",
+   "semio-s-artifact-animate-presentation",
+   "semio-s-artifact-shooting-shooting",
+   "semio-s-artifact-demonstrator-playground",
+   "semio-s-artifact-sequence-sequence"
+  ]
+ },
+ "note": "RUST-LEFTOVERS F-04(a): consumers re-pointed from facade alias paths"
+}

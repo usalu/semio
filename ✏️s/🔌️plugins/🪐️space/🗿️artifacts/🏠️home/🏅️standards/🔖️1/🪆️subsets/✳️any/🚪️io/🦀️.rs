@@ -157,14 +157,11 @@ pub mod io_registry {
 }
 //#endregion 🚪️DerivedIoRegistry
 
-#[path = "💾️binary/🦀️.rs"]
-pub mod binary;
 
-#[path = "📝️text/🦀️.rs"]
-pub mod text;
 
-#[path = "🪶️sqlite/🦀️.rs"]
-pub mod sqlite;
+
+
+
 
 pub mod derived_construction {
     use crate::standards::v1::subsets::any::schema::diff::SHomeDiff;

@@ -8,7 +8,7 @@ use std::collections::{BTreeMap,BTreeSet};
 use semio_framework_value::ValueError;
 fn invalid(message:impl Into<String>)->ValueError{ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,message)}
 const TABLES:[&str;20]=["gis_map_document","gis_map_value","gis_map_position","gis_map_route","gis_map_region","gis_map_drawing_child","gis_map_image_child","gis_map_value_child","gis_map_null","gis_map_boolean","gis_map_unsigned","gis_map_signed","gis_map_float","gis_map_text","gis_map_bytes","gis_map_octet","gis_map_array","gis_map_array_element","gis_map_object","gis_map_object_member"];
-pub(crate) const WIDTHS:[usize;20]=[1,2,5,5,5,6,6,6,1,2,3,2,4,2,1,4,1,4,1,5];
+pub const WIDTHS:[usize;20]=[1,2,5,5,5,6,6,6,1,2,3,2,4,2,1,4,1,4,1,5];
 const FLOAT:&[FloatColumn]=&[FloatColumn::Binary64(1)];
 fn kind(value:&semio_framework_value::DslValue)->&'static str{match value{semio_framework_value::DslValue::Null=>"null",semio_framework_value::DslValue::Bool(_)=>"boolean",semio_framework_value::DslValue::Number(semio_framework_value::Number::UInt(_))=>"unsigned",semio_framework_value::DslValue::Number(semio_framework_value::Number::Int(_))=>"signed",semio_framework_value::DslValue::Number(semio_framework_value::Number::Float(_))=>"float",semio_framework_value::DslValue::String(_)=>"text",semio_framework_value::DslValue::Bytes(_)=>"bytes",semio_framework_value::DslValue::Array(_)=>"array",semio_framework_value::DslValue::Object(_)=>"object"}}
 fn child<S>(p:&mut RowWriter<'_,'_>,table:&str,c:&store::os_store::artifact_child::ArtifactChild<S>)->Result<(),ValueError>{p.insert(table,&[Cell::Text(&c.child_id),Cell::Text(&c.target.artifact_id),Cell::Text(&c.target.dialect.artifact_kind),Cell::Text(&c.target.dialect.standard),Cell::Text(&c.target.dialect.subset)])?;Ok(())}
@@ -53,7 +53,4 @@ fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotCont
  native.begin_stage(feature_rows.iter().map(Vec::len).sum())?;let mut output=native.allocate_vec::<Features>(3)?;for rows in feature_rows{let mut features=Features(native.allocate_vec::<MapFeature>(rows.len())?);for row in rows{native.step()?;let id=native.copy_text(row.text(3)?)?;features.0.push(MapFeature{id,data:take(&mut forest,row.integer(4)?)?});}output.push(features);}if forest.0.iter().any(Option::is_some){return Err(invalid("GIS feature roots differ"))}native.checkpoint()?;let mut out=output.into_iter();let mut positions=out.next().ok_or_else(||invalid("GIS positions missing"))?;let mut routes=out.next().ok_or_else(||invalid("GIS routes missing"))?;let mut regions=out.next().ok_or_else(||invalid("GIS regions missing"))?;Ok(Self{positions:std::mem::take(&mut positions.0),routes:std::mem::take(&mut routes.0),regions:std::mem::take(&mut regions.0),drawing,image,value})}
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;
 

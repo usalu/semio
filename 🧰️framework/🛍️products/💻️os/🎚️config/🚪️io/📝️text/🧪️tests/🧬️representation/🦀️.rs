@@ -1,10 +1,11 @@
 //! 🧪️ Neutral config wire declarations checked against independent Serde JSON.
 
 use super::{mutations, snapshot};
+use semio_framework_test_fixtures::fixture_path;
 use semio_framework_value::ToValue;
 
 fn fixture() -> serde_json::Value {
-    serde_json::from_str(std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🚪️io/📝️text/🧪️tests/🧫️fixtures/🔣️.json")).expect("fixture").as_str()).expect("neutral IO fixture")
+    serde_json::from_str(std::fs::read_to_string(fixture_path!("../../../../🚪️io/📝️text/🧪️tests/🧫️fixtures/🔣️.json")).expect("fixture").as_str()).expect("neutral IO fixture")
 }
 
 #[test]
@@ -22,7 +23,6 @@ fn service_io_snapshots_match_neutral_json_and_independent_serde() {
             other => panic!("undeclared facet {other}"),
         };
         assert_eq!(serde_json::from_str::<serde_json::Value>(&output).expect("independent JSON"), case["snapshot"]);
-        eprintln!("[DEBUG] Config IO snapshot: facet={} independentSerde=true", case["kind"]);
     }
     assert!(snapshot::decode_identity_setting_json("[]").is_err());
     assert!(snapshot::decode_local_catalog_json("{\"documents\":[],\"documents\":[]}").is_err());
@@ -44,7 +44,6 @@ fn service_io_mutations_match_neutral_json_and_refuse_malformed_frames() {
         };
         let output = semio_framework_pack_json::to_json_string(&value);
         assert_eq!(serde_json::from_str::<serde_json::Value>(&output).expect("independent JSON"), case["mutation"]);
-        eprintln!("[DEBUG] Config IO mutation: facet={} independentSerde=true", case["kind"]);
     }
     assert!(mutations::decode_identity_config_mutation_json("{\"mutation\":\"physical-replacement\"}").is_err());
     assert!(mutations::decode_local_folders_config_mutation_json("[]").is_err());

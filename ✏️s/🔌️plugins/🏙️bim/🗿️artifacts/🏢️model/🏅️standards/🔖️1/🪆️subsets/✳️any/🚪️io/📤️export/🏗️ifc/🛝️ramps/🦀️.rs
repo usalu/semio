@@ -3,10 +3,10 @@
 //! set of the `IfcRamp` (canonical JSON) and an import restores it exactly.
 //! 📎 <https://standards.buildingsmart.org/IFC/RELEASE/IFC2x3/TC1/HTML/ifcsharedbldgelements/lexical/ifcramp.htm>
 
-use super::brep::{brep_definition, mesh_where};
-use super::data::label;
-use super::writer::en;
-use super::{Export, Quantity};
+use crate::standards::v1::subsets::any::io::export::ifc::brep::{brep_definition, mesh_where};
+use crate::standards::v1::subsets::any::io::export::ifc::writer::label;
+use crate::standards::v1::subsets::any::io::export::ifc::writer::en;
+use crate::standards::v1::subsets::any::io::export::ifc::context::{Export, Quantity};
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::parts;
 use crate::standards::v1::subsets::any::schema::inferences::ramp_runs::{strip_of, RampRun, RampStrip};
 use crate::standards::v1::subsets::any::schema::snapshot::Ramp;
@@ -65,11 +65,11 @@ fn ramp(x: &mut Export<'_>, id: &str, row: &Ramp) {
         return;
     }
     let placement = x.ifc.place(Some(storey.placement), x.ifc.origin);
-    let entity = x.product("IFCRAMP", id, &row.name, placement, None, vec![en(match (ramp_type(row, run), x.schema()) { ("USERDEFINED", super::writer::Schema::Ifc4) => "NOTDEFINED", (kind, _) => kind })]);
+    let entity = x.product("IFCRAMP", id, &row.name, placement, None, vec![en(match (ramp_type(row, run), x.schema()) { ("USERDEFINED", crate::standards::v1::subsets::any::io::export::ifc::writer::Schema::Ifc4) => "NOTDEFINED", (kind, _) => kind })]);
     x.contain(&row.storey, id, entity);
     let body = |part: &str| part == parts::BODY;
     let mut components = Vec::new();
-    let part_of = |x: &mut Export<'_>, entity: &str, key: String, piece: Piece, tail: Vec<super::writer::V>| {
+    let part_of = |x: &mut Export<'_>, entity: &str, key: String, piece: Piece, tail: Vec<crate::standards::v1::subsets::any::io::export::ifc::writer::V>| {
         let shape = brep_definition(&mut x.ifc, &mesh_where(solid, storey.elevation, |group, centroid| body(&group.part) && piece_of(run, station(&strip, centroid)) == piece));
         let axis = x.ifc.axis3([0.0, 0.0, 0.0], None, None);
         let place = x.ifc.place(Some(storey.placement), axis);
@@ -96,7 +96,7 @@ fn ramp(x: &mut Export<'_>, id: &str, row: &Ramp) {
     if let Some(definition) = x.links.material_defs.get(&row.material).copied() {
         x.links.materials.entry(definition).or_default().push(entity);
     }
-    let v4 = x.schema() == super::writer::Schema::Ifc4;
+    let v4 = x.schema() == crate::standards::v1::subsets::any::io::export::ifc::writer::Schema::Ifc4;
     x.quantify(entity, "Qto_RampBaseQuantities", id, |row| vec![Quantity::Length("Length", row.length), Quantity::Length("Width", row.width), Quantity::Length("Height", if v4 { row.height.abs() } else { row.height }), Quantity::Area("GrossArea", row.gross_area), Quantity::Volume("GrossVolume", row.gross_volume)]);
     x.links.authoring.push((entity, vec![(RECORD_ROW, label(&semio_framework_pack_json::to_json_string(row)))]));
 }

@@ -1,0 +1,360 @@
+{
+  "entries": [
+    {
+      "args": [
+        "--dependency-plan",
+        "native-assets-protected-1.json"
+      ],
+      "environment": {},
+      "accepted": true
+    },
+    {
+      "args": [
+        "--dependency-plan",
+        "native-assets-protected-19.json",
+        "extra"
+      ],
+      "environment": {},
+      "accepted": false
+    },
+    {
+      "args": [
+        "--selected-plan",
+        "native-assets-protected-1.json"
+      ],
+      "environment": {},
+      "accepted": false
+    },
+    {
+      "args": [
+        "--dependency-plan",
+        "../native-assets-protected-1.json"
+      ],
+      "environment": {},
+      "accepted": false
+    },
+    {
+      "args": [
+        "--dependency-plan",
+        "native-assets-protected-0.json"
+      ],
+      "environment": {},
+      "accepted": false
+    },
+    {
+      "args": [
+        "--dependency-plan",
+        "native-assets-protected-1.json"
+      ],
+      "environment": {
+        "SEMIO_SCRIPT_PROCESS_INVOCATION": "finite"
+      },
+      "accepted": false
+    },
+    {
+      "args": [
+        "--dependency-plan",
+        "native-assets-protected-1.json"
+      ],
+      "environment": {
+        "SEMIO_BUILD_BUDGET_MS": "0"
+      },
+      "accepted": false
+    },
+    {
+      "args": [
+        "--dependency-plan",
+        "native-assets-protected-1.json"
+      ],
+      "environment": {
+        "SEMIO_SCRIPT_CAPABILITIES": "cancelled"
+      },
+      "accepted": false
+    }
+  ],
+  "outcomes": [
+    {
+      "mode": "success",
+      "accepted": true
+    },
+    {
+      "mode": "busy",
+      "accepted": false
+    },
+    {
+      "mode": "oversize",
+      "accepted": false
+    },
+    {
+      "mode": "undefined",
+      "accepted": false
+    },
+    {
+      "mode": "frozen",
+      "accepted": false
+    },
+    {
+      "mode": "foreign-result",
+      "accepted": false
+    }
+  ],
+  "launches": [
+    {
+      "language": "EN",
+      "order": 924
+    },
+    {
+      "language": "DE",
+      "order": 924.1
+    }
+  ],
+  "census": {
+    "version": 1,
+    "scope": "Source-only closed declared census DATA",
+    "facts": [
+      {
+        "name": "dependencies",
+        "directory": "/workspace/.cache/dependencies",
+        "present": true,
+        "mounted": true,
+        "declaration": {
+          "filesystemBytes": 33554432,
+          "maximumPhysicalBytes": 34603008
+        },
+        "folder": {
+          "dev": "1",
+          "ino": "2",
+          "mode": "16832",
+          "nlink": "1",
+          "size": "0",
+          "allocatedBytes": "0",
+          "stamp": "1:2:16832:1:0:1:1"
+        },
+        "root": {
+          "dev": "1",
+          "ino": "2",
+          "mode": "16832",
+          "nlink": "1",
+          "size": "0",
+          "allocatedBytes": "0",
+          "stamp": "1:2:16832:1:0:1:1"
+        },
+        "backing": {
+          "dev": "1",
+          "ino": "3",
+          "mode": "33152",
+          "nlink": "1",
+          "size": "34603008",
+          "allocatedBytes": "34603008",
+          "stamp": "1:2:16832:1:0:1:1"
+        },
+        "receipt": {
+          "dev": "1",
+          "ino": "2",
+          "mode": "33152",
+          "nlink": "1",
+          "size": "0",
+          "allocatedBytes": "0",
+          "stamp": "1:2:16832:1:0:1:1",
+          "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "value": null
+        }
+      },
+      {
+        "name": "diagnostics",
+        "directory": "/workspace/.cache/diagnostics",
+        "present": false
+      },
+      {
+        "name": "graph",
+        "directory": "/workspace/.cache/graph",
+        "present": false
+      },
+      {
+        "name": "products",
+        "directory": "/workspace/.cache/products",
+        "present": false
+      },
+      {
+        "name": "rust",
+        "directory": "/workspace/.cache/rust",
+        "present": false
+      },
+      {
+        "name": "tools",
+        "directory": "/workspace/.cache/tools",
+        "present": false
+      },
+      {
+        "name": "leases",
+        "directory": "/workspace/.cache/leases",
+        "present": false
+      }
+    ],
+    "kernel": []
+  },
+  "censusCases": [
+    {
+      "mode": "valid",
+      "accepted": true
+    },
+    {
+      "mode": "duplicate",
+      "accepted": false
+    },
+    {
+      "mode": "wrong-directory",
+      "accepted": false
+    },
+    {
+      "mode": "wrong-capacity",
+      "accepted": false
+    },
+    {
+      "mode": "unmounted",
+      "accepted": false
+    },
+    {
+      "mode": "unsafe-inode",
+      "accepted": false
+    },
+    {
+      "mode": "extra",
+      "accepted": false
+    }
+  ],
+  "sourceEntries": [
+    {
+      "args": [
+        "--dependency-source"
+      ],
+      "environment": {},
+      "accepted": true
+    },
+    {
+      "args": [
+        "--dependency-source",
+        "extra"
+      ],
+      "environment": {},
+      "accepted": false
+    },
+    {
+      "args": [
+        "--dependency-plan"
+      ],
+      "environment": {},
+      "accepted": false
+    },
+    {
+      "args": [
+        "--dependency-source"
+      ],
+      "environment": {
+        "SEMIO_SCRIPT_PROCESS_INVOCATION": "incoming"
+      },
+      "accepted": false
+    }
+  ],
+  "producerEntries": [
+    {
+      "args": [
+        "--producer-plan",
+        "native-assets-protected-1.json"
+      ],
+      "environment": {},
+      "accepted": true
+    },
+    {
+      "args": [
+        "--producer-plan",
+        "native-assets-protected-0.json"
+      ],
+      "environment": {},
+      "accepted": false
+    },
+    {
+      "args": [
+        "--producer-plan",
+        "../native-assets-protected-1.json"
+      ],
+      "environment": {},
+      "accepted": false
+    },
+    {
+      "args": [
+        "--producer-plan",
+        "native-assets-protected-1.json",
+        "extra"
+      ],
+      "environment": {},
+      "accepted": false
+    },
+    {
+      "args": [
+        "--dependency-plan",
+        "native-assets-protected-1.json"
+      ],
+      "environment": {},
+      "accepted": false
+    },
+    {
+      "args": [
+        "--producer-plan"
+      ],
+      "environment": {},
+      "accepted": false
+    }
+  ],
+  "producerSourceEntries": [
+    {
+      "args": [
+        "--producer-source"
+      ],
+      "environment": {},
+      "accepted": true
+    },
+    {
+      "args": [
+        "--producer-source",
+        "extra"
+      ],
+      "environment": {},
+      "accepted": false
+    },
+    {
+      "args": [
+        "--producer-plan"
+      ],
+      "environment": {},
+      "accepted": false
+    }
+  ],
+  "producerOutcomes": [
+    {
+      "mode": "success",
+      "accepted": true
+    },
+    {
+      "mode": "busy",
+      "accepted": false
+    },
+    {
+      "mode": "oversize",
+      "accepted": false
+    },
+    {
+      "mode": "undefined",
+      "accepted": false
+    },
+    {
+      "mode": "frozen",
+      "accepted": false
+    },
+    {
+      "mode": "foreign-result",
+      "accepted": false
+    }
+  ]
+
+}

@@ -9,6 +9,7 @@
   },
   "bundleKind": "library",
   "devDependencies": {
+    "@semio-tech/framework-replication": "workspace:*",
     "@semio-tech/process": "workspace:*"
   }
 }

@@ -14,110 +14,43 @@ extern crate semio_framework_value_derive as value_derive;
 pub mod io;
 #[path = "."]
 pub mod schema {
-    #[path = "🧬️schema/🦀️.rs"]
-    mod component;
-    pub use component::*;
-    #[path = "."]
-    pub mod snapshot {
-        #[path = "🧬️schema/📸️snapshot/🦀️.rs"]
-        mod component;
-        pub use component::*;
-    }
-    #[path = "."]
-    pub mod diff {
-        #[path = "🧬️schema/🔺️diff/🦀️.rs"]
-        mod component;
-        pub use component::*;
-    }
-    #[path = "."]
-    pub mod inferences {
-        #[path = "🧬️schema/💡️inferences/🦀️.rs"]
-        mod component;
-        pub use component::*;
-        #[path = "."]
-        pub mod duration {
-            #[path = "🧬️schema/💡️inferences/⏱️duration/🦀️.rs"]
-            mod component;
-            pub use component::*;
-        }
-    }
-    #[path = "."]
-    pub mod mutations {
-        #[path = "🧬️schema/🧬️mutations/🦀️.rs"]
-        mod component;
-        pub use component::*;
-    }
+    pub use semio_s_artifact_stdio_semio_animation_schema_2::schema::*;
+
+    pub use semio_s_artifact_stdio_semio_animation_schema::schema::snapshot;
+    pub use semio_s_artifact_stdio_semio_animation_examples::schema::diff;
+    pub use semio_s_artifact_stdio_semio_animation_schema_2::schema::inferences;
+    pub use semio_s_artifact_stdio_semio_animation_schema_4::schema::mutations;
 }
-#[path = "."]
-pub mod examples {
-    #[path = "📚️examples/🚶️walk/🦀️.rs"]
-    pub mod walk;
-}
+pub use semio_s_artifact_stdio_semio_animation_examples::examples;
 #[path = "."]
 pub mod editor {
-    #[path = "✏️editor/🦀️.rs"]
-    mod component;
-    pub use component::*;
-    #[path = "."]
-    pub mod presence {
-        #[path = "✏️editor/👥️presence/🧬️schema/🦀️.rs"]
-        pub mod schema;
-    }
-    #[path = "."]
-    pub mod config {
-        #[path = "✏️editor/🎚️config/🧬️schema/🦀️.rs"]
-        pub mod schema;
-    }
+    pub use semio_s_artifact_stdio_semio_animation_editor::editor::*;
+
+    pub use semio_s_artifact_stdio_semio_animation_examples::editor::presence;
+    pub use semio_s_artifact_stdio_semio_animation_examples::editor::config;
     #[path = "."]
     pub mod modes {
         #[path = "."]
         pub mod edit {
-            #[path = "✏️editor/🎭️modes/✏️edit/🦀️.rs"]
-            mod component;
-            pub use component::*;
-            #[path = "."]
-            pub mod windows {
-                #[path = "."]
-                pub mod main {
-                    #[path = "✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️.rs"]
-                    mod component;
-                    pub use component::*;
-                }
-            }
+            pub use semio_s_artifact_stdio_semio_animation_examples::editor::modes::edit::*;
+
+            pub use semio_s_artifact_stdio_semio_animation_examples::editor::modes::edit::windows;
         }
     }
 }
 #[path = "."]
 pub mod viewer {
-    #[path = "👁️viewer/🦀️.rs"]
-    mod component;
-    pub use component::*;
-    #[path = "."]
-    pub mod presence {
-        #[path = "👁️viewer/👥️presence/🧬️schema/🦀️.rs"]
-        pub mod schema;
-    }
-    #[path = "."]
-    pub mod config {
-        #[path = "👁️viewer/🎚️config/🧬️schema/🦀️.rs"]
-        pub mod schema;
-    }
+    pub use semio_s_artifact_stdio_semio_animation_editor::viewer::*;
+
+    pub use semio_s_artifact_stdio_semio_animation_examples::viewer::presence;
+    pub use semio_s_artifact_stdio_semio_animation_examples::viewer::config;
     #[path = "."]
     pub mod modes {
         #[path = "."]
         pub mod view {
-            #[path = "👁️viewer/🎭️modes/👁️view/🦀️.rs"]
-            mod component;
-            pub use component::*;
-            #[path = "."]
-            pub mod windows {
-                #[path = "."]
-                pub mod main {
-                    #[path = "👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️.rs"]
-                    mod component;
-                    pub use component::*;
-                }
-            }
+            pub use semio_s_artifact_stdio_semio_animation_examples::viewer::modes::view::*;
+
+            pub use semio_s_artifact_stdio_semio_animation_examples::viewer::modes::view::windows;
         }
     }
 }

@@ -137,14 +137,16 @@ pub mod io_registry {
 }
 //#endregion 🚪️DerivedIoRegistry
 
-#[path = "💾️binary/🦀️.rs"]
-pub mod binary;
 
-#[path = "📝️text/🦀️.rs"]
-pub mod text;
 
-#[path = "🪶️sqlite/🦀️.rs"]
-pub mod sqlite;
+pub mod text {
+    pub use semio_s_artifact_flow_flow_tests::standards::v1::subsets::any::io::text::*;
+    pub use semio_s_artifact_flow_flow_diff::standards::v1::subsets::any::io::text::diff;
+    pub use semio_s_artifact_flow_flow_inferences::standards::v1::subsets::any::io::text::inferences;
+    pub use semio_s_artifact_flow_flow_mutations::standards::v1::subsets::any::io::text::mutations;
+}
+
+
 
 pub mod derived_construction {
     use crate::{FlowDiff, FlowMutation, FlowSnapshot};

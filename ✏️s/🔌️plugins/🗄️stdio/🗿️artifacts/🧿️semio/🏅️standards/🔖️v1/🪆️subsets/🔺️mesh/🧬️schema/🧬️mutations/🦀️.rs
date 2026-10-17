@@ -56,11 +56,11 @@
 //! `📸️set-snapshot` is DELETED, with no replacement, per the locked decision
 //! (`📌️important.md`): whole-document replace goes through `ArtifactStore::reset`, outside history.
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3;
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioRgba;
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioUv;
 use crate::schema::diff::SemioMeshDiff;
 
@@ -88,7 +88,7 @@ use crate::schema::diff::SemioMeshDiff;
 
 
 use crate::schema::snapshot::SemioMeshSnapshot;
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 use crate::schema::snapshot::{SemioMaterial, SemioMesh, SemioPrimitive, SemioTexture, SemioTopology};
 /// 🔧️ Unconditional — the non-test `impl protocol::OpBinary for SemioMeshMutation` block below
 /// calls `self.print_op()` via method syntax, which needs `OpText` in scope in production code
@@ -96,23 +96,23 @@ use crate::schema::snapshot::{SemioMaterial, SemioMesh, SemioPrimitive, SemioTex
 
 
 //#region 🔖️Leaves
-use super::change_material_base_color;
-use super::change_material_metallic;
-use super::change_material_roughness;
-use super::change_texture_mime;
-use super::create_material;
-use super::create_mesh;
-use super::create_primitive;
-use super::create_texture;
-use super::delete_material;
-use super::delete_mesh;
-use super::delete_primitive;
-use super::delete_texture;
-use super::move_vertex;
-use super::replace_primitive_geometry;
-use super::replace_texture_bytes;
-use super::set_primitive_material;
-use super::set_primitive_topology;
+use crate::schema::mutations::change_material_base_color;
+use crate::schema::mutations::change_material_metallic;
+use crate::schema::mutations::change_material_roughness;
+use crate::schema::mutations::change_texture_mime;
+use crate::schema::mutations::create_material;
+use crate::schema::mutations::create_mesh;
+use crate::schema::mutations::create_primitive;
+use crate::schema::mutations::create_texture;
+use crate::schema::mutations::delete_material;
+use crate::schema::mutations::delete_mesh;
+use crate::schema::mutations::delete_primitive;
+use crate::schema::mutations::delete_texture;
+use crate::schema::mutations::move_vertex;
+use crate::schema::mutations::replace_primitive_geometry;
+use crate::schema::mutations::replace_texture_bytes;
+use crate::schema::mutations::set_primitive_material;
+use crate::schema::mutations::set_primitive_topology;
 //#endregion 🔖️Leaves
 
 //#region 🔖️Mutations
@@ -214,9 +214,9 @@ pub fn inverse_semio_mesh_mutation(mutation: &SemioMeshMutation, base: &SemioMes
 /// 🌱 Shared fixture + representative `SemioMeshMutation` cases (one per variant) — single source
 /// of truth for this facet's own tests AND `ops_grammar_conformance_law`/`protocol_walk_law` in
 /// `🎹️composer/🦀️.rs` (another session's file, read-only here).
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn fixture() -> SemioMeshSnapshot {
+pub fn fixture() -> SemioMeshSnapshot {
     SemioMeshSnapshot {
         meshes: vec![SemioMesh {
             id: "mesh-a".into(),
@@ -237,9 +237,9 @@ pub(crate) fn fixture() -> SemioMeshSnapshot {
     }
 }
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn demo_mutation_cases() -> Vec<SemioMeshMutation> {
+pub fn demo_mutation_cases() -> Vec<SemioMeshMutation> {
     vec![
         SemioMeshMutation::CreateMesh(create_mesh::CreateMesh { mesh: SemioMesh { id: "mesh-b".into(), primitives: vec![] }, at: None }),
         SemioMeshMutation::DeleteMesh(delete_mesh::DeleteMesh { id: "mesh-a".into() }),
@@ -277,13 +277,7 @@ mod tests;
 //#endregion 🧪️Tests
 
 //#region 🧪️FixtureTests
-/// 🧪️ Handcrafted mutation fixtures (contract D1, ticket `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`)
-/// — one case per triad leaf, self-wired here rather than in `🦀️.rs` so this subset owns its
-/// own test surface. `#[path = "."]` re-roots the nested `#[path]`s at THIS file's directory (the
-/// `🧬️mutations` root) instead of the implicit `🦀️component/` child directory.
-#[cfg(test)]
-#[path = "🧪️tests/🔬️fixture/🦀️.rs"]
-mod fixture_tests;
+
 //#endregion 🧪️FixtureTests
 
 #[cfg(test)]

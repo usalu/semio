@@ -25,7 +25,7 @@ export async function runDeclaredRustBuildV1(workspace:string,project:string,pac
  checkScriptInvocation(invocation);const phaseControl=createIssuedResourceControlV1(invocation,"rust:declared-build",0);const file=join(resolve(packageRoot),"📋️project.json"),facts=lstatSync(file);if(file.length>256||!facts.isFile()||facts.isSymbolicLink()||facts.nlink!==1||facts.size>4194304)throw Error("Physical declared Rust project required");const declaration=JSON.parse(readFileSync(file,"utf8"));if(declaration.name!==project)throw Error("Original declared Rust project changed");const intent=readRustBuildIntentV1(declaration.targets?.[target]?.metadata?.semio?.rustBuildIntent),fallback=declaredRustBuildFallbackV1(project,target,intent,process.env);
  if(fallback){
   const {buildRepositoryCargoArtifacts}=await import("../../../../../⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts"),{repositoryCargoNetworkV1}=await import("../../../../../🏃️process/🦀️cargo/📥️dependencies/🟦️.ts");
-  checkResourceLeaseControl(phaseControl);console.log("[DEBUG] Selected Rust bounded Cargo fallback "+JSON.stringify({project,target,adapters:fallback.adapters,cache:false}));
+  checkResourceLeaseControl(phaseControl);
   await buildRepositoryCargoArtifacts(resolve(workspace,intent.manifest),[...rustBuildIntentArgumentsV1(intent),...args],workspace,{producer:"artifact",invocation:invocation,consume:verifyCapturedCargoArtifactsV1,network:repositoryCargoNetworkV1(invocation,workspace),control:phaseControl,environment:process.env});checkResourceLeaseControl(phaseControl);return;
  }
  const request=declaredRustBuildArgumentsV1(project,args,process.env,target),{runOwnedBuildChildInvocationV1}=await import("../../../../📥️caller/📤️child/🟦️.ts");

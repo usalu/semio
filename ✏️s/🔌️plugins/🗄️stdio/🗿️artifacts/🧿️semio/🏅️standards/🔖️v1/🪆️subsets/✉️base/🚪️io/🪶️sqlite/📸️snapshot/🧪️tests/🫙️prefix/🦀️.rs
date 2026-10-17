@@ -39,17 +39,17 @@ assert_eq!(source(&payload),original);assert_eq!(heap.released_bytes,0,"normal d
 match result{Ok(actual)=>{assert_eq!(actual,expected);assert_eq!(mode,"success");assert_eq!(admitted,heap.requested_bytes);let(b,r)=close_value(actual,grant);born+=b;freed+=r},Err(error)=>{assert_eq!(error.kind,ValueRefusalKind::Canceled);if mode!="count"{assert!(interior);assert!(heap.requested_bytes>=label_bytes,"interior cancellation lacks the real long label backing")}if recipient.has_owner(){prefixes+=1;assert!(admitted>0)}let(b,r)=close_value(error,grant);born+=b;freed+=r}}
 let(b,r)=close(&mut recipient,grant);born+=b;freed+=r;assert_eq!(born,freed,"whole original prefix and refusal metadata physical balance");let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(recipient));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
 }
-}assert!(prefixes>=2);println!("[DEBUG] Actual original Flow binary/text native prefixes retained source pointers, all5 denied currencies and exact caller-funded physical close; cancelledPrefixes={prefixes}");
+}assert!(prefixes>=2);
 }
 #[test]
-fn native_prefix_missing_recipient_refuses_before_owned_materialization(){let f=corpus();let expected=fixture(&f);let payload=store::io::IoPayload::Binary(expected.encode_pack());let pointer=source(&payload);let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| SemioFlowSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default()), native_owner)));assert_eq!(result.unwrap_err().kind,ValueRefusalKind::OwnershipLimit);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(source(&payload),pointer);println!("[DEBUG] Missing caller recipient rejected original Flow source before any materialized prefix");}
+fn native_prefix_missing_recipient_refuses_before_owned_materialization(){let f=corpus();let expected=fixture(&f);let payload=store::io::IoPayload::Binary(expected.encode_pack());let pointer=source(&payload);let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| SemioFlowSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default()), native_owner)));assert_eq!(result.unwrap_err().kind,ValueRefusalKind::OwnershipLimit);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(source(&payload),pointer);}
 
 #[test]
 fn native_prefix_original_link_pin_variants_and_funded_fields(){
 let pins:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️link/🧪️tests/🧫️fixtures/♻️retirement/🔣️.json")).unwrap();let grant=policy(&corpus());
 for row in pins["pins"].as_array().unwrap(){let pin=match row["kind"].as_str().unwrap(){"head"=>store::LinkPin::Head,"checkpoint"=>store::LinkPin::Checkpoint{id:row["id"].as_str().unwrap().into()},"snapshot"=>store::LinkPin::Snapshot{blob:store::BlobRef{hash:row["blob"]["hash"].as_str().unwrap().into(),size:row["blob"]["size"].as_u64().unwrap(),media_type:row["blob"]["mediaType"].as_str().unwrap().into()}},_=>panic!("invalid neutral pin")};let original=match &pin{store::LinkPin::Head=>0,store::LinkPin::Checkpoint{id}=>{assert_eq!(id,row["id"].as_str().unwrap());id.capacity()},store::LinkPin::Snapshot{blob}=>{assert_eq!(blob.hash,row["blob"]["hash"].as_str().unwrap());assert_eq!(blob.size,row["blob"]["size"].as_u64().unwrap());assert_eq!(blob.media_type,row["blob"]["mediaType"].as_str().unwrap());blob.hash.capacity()+blob.media_type.capacity()}};
 assert!(store::LinkPin::controlled_retirement_supported());let(born,released)=close_value(pin,grant);assert_eq!(original+born,released);
-}println!("[DEBUG] Neutral head/checkpoint/snapshot pins preserve all authored fields and conserve exact original backing through independently denied and funded five-currency close");
+}
 }
 
 #[test]
@@ -59,7 +59,7 @@ let f=corpus();let envelope:serde_json::Value=serde_json::from_str(include_str!(
 for stop in [0,1,7,31,89,usize::MAX-1,usize::MAX]{let mut recipient=NativeDecodeRetirementRecipient::new();let mut events=0;let mut interior=false;let mut callback=|event:store::sqlite_snapshot::SqliteSnapshotProgress|{let current=events;events+=1;let canceled=stop==usize::MAX-1&&event.total==label_bytes&&event.completed>=65536&&event.completed<label_bytes;interior|=canceled;current!=stop&&!canceled};let((result,admitted),heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||{let mut control=SqliteSnapshotControl::new(&mut callback,SqliteDatabaseLimits::default());control.install_native_retirement_recipient(&mut recipient).unwrap();let result=SemioSnapshot::from_sqlite_database(&database,&mut control);(result,SqliteDatabaseLimits::default().max_allocation_bytes-control.allocation_remaining_bytes())});assert_eq!(database.tables.as_ptr(),pointer);assert_eq!(heap.released_bytes,0,"envelope released original child or validation fields during production");let(mut born,mut released)=(heap.requested_bytes,0);
 match result{Ok(actual)=>{assert_eq!(stop,usize::MAX);assert_eq!(actual,expected);assert_eq!(admitted,heap.requested_bytes);let(b,r)=close_value(actual,grant);born+=b;released+=r;},Err(error)=>{assert_eq!(error.kind,ValueRefusalKind::Canceled);if stop==usize::MAX-1{assert!(interior);assert!(heap.requested_bytes>=label_bytes);cancelled_children+=1;}let(b,r)=close_value(error,grant);born+=b;released+=r;}}
 let(b,r)=close(&mut recipient,grant);born+=b;released+=r;assert_eq!(born,released,"whole envelope and original selected child physical conservation");let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(recipient));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
-}assert_eq!(cancelled_children,1);println!("[DEBUG] Original envelope selected Flow child shares exact physical allocation ledger, retains partial fields and original child cursor, and closes through denied/funded five-currency grants");
+}assert_eq!(cancelled_children,1);
 }
 
 #[test]
@@ -68,7 +68,7 @@ let f=corpus();let grant=policy(&f);let expected=fixture(&f);let database=fixtur
 for stop in [0,1,7,31,89,usize::MAX-1,usize::MAX]{let mut recipient=NativeDecodeRetirementRecipient::new();let mut count=0;let mut reached=false;let mut callback=|event:store::sqlite_snapshot::SqliteSnapshotProgress|{let current=count;count+=1;let interior=stop==usize::MAX-1&&event.total==label_bytes&&event.completed>=65536&&event.completed<label_bytes;reached|=interior;current!=stop&&!interior};let((result,admitted),heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||{let mut control=SqliteSnapshotControl::new(&mut callback,SqliteDatabaseLimits::default());control.install_native_retirement_recipient(&mut recipient).unwrap();let result=SemioFlowSnapshot::from_sqlite_database(&database,&mut control);(result,SqliteDatabaseLimits::default().max_allocation_bytes-control.allocation_remaining_bytes())});assert_eq!(database.tables.as_ptr(),original);assert_eq!(heap.released_bytes,0,"relational work released original owner before caller close");let(mut born,mut released)=(heap.requested_bytes,0);
 match result{Ok(actual)=>{assert_eq!(stop,usize::MAX);assert_eq!(actual,expected);assert_eq!(admitted,heap.requested_bytes);let(b,r)=close_value(actual,grant);born+=b;released+=r},Err(error)=>{assert_eq!(error.kind,ValueRefusalKind::Canceled);if stop==usize::MAX-1{assert!(reached);assert!(born>=label_bytes);}let(b,r)=close_value(error,grant);born+=b;released+=r}}
 if recipient.has_owner(){actual_prefixes+=1;}let(b,r)=close(&mut recipient,grant);born+=b;released+=r;assert_eq!(born,released,"original relational field/index/schema scratch backing conservation");let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(recipient));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
-}assert!(actual_prefixes>=5);println!("[DEBUG] Actual original Flow relational workspace preserves schema/index/field owners through six cancellation boundaries, semantic completion and all5 caller-funded physical currencies");
+}assert!(actual_prefixes>=5);
 }
 
 #[test]
@@ -91,7 +91,7 @@ assert_eq!(database.tables.as_ptr(),original);assert_eq!(heap.released_bytes,0,"
 match result{Ok(actual)=>{assert_eq!(stop,usize::MAX);assert_eq!(actual,expected);assert_eq!(admitted,heap.requested_bytes);let(b,r)=close_value(actual,grant);born+=b;released+=r},Err(error)=>{assert_eq!(error.kind,ValueRefusalKind::Canceled);if stop==usize::MAX-1{assert!(reached);assert!(born>=text_bytes);}let(b,r)=close_value(error,grant);born+=b;released+=r}}
 if recipient.has_owner(){retained+=1;}let(b,r)=close(&mut recipient,grant);born+=b;released+=r;assert_eq!(born,released,"complete original document block forest physical conservation");let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(recipient));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
 }
-assert!(retained>=6);println!("[DEBUG] Original document complete eight block variants, nested collections, formatting, styles and octets preserve all5 denied currencies and physical conservation through seven cancellations");
+assert!(retained>=6);
 }
 
 #[test]
@@ -113,7 +113,7 @@ assert_eq!(database.tables.as_ptr(),original);assert_eq!(heap.released_bytes,0,"
 match result{Ok(actual)=>{assert_eq!(stop,usize::MAX);assert_eq!(actual,expected);assert_eq!(admitted,heap.requested_bytes);let(b,r)=close_value(actual,grant);born+=b;released+=r},Err(error)=>{assert_eq!(error.kind,ValueRefusalKind::Canceled);if stop==usize::MAX-1{assert!(reached);assert!(born>=text_bytes);}let(b,r)=close_value(error,grant);born+=b;released+=r}}
 if recipient.has_owner(){retained+=1;}let(b,r)=close(&mut recipient,grant);born+=b;released+=r;assert_eq!(born,released,"complete original presentation shape and block forest physical conservation");let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(recipient));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
 }
-assert!(retained>=6);println!("[DEBUG] Original presentation four shape variants, nested block collections, notes, master/layout references and picture octets preserve all5 denied currencies through seven cancellations");
+assert!(retained>=6);
 }
 
 #[test]
@@ -138,7 +138,7 @@ assert_eq!(database.tables.as_ptr(),original);assert_eq!(heap.released_bytes,0,"
 match result{Ok(actual)=>{assert_eq!(mode,"success");assert_eq!(actual,expected);assert_eq!(admitted,heap.requested_bytes);let(b,r)=close_value(actual,grant);born+=b;released+=r},Err(error)=>{assert_eq!(error.kind,ValueRefusalKind::Canceled);if mode=="text"||mode=="octets"{assert!(reached);assert!(born>=target);}let(b,r)=close_value(error,grant);born+=b;released+=r}}
 if recipient.has_owner(){retained+=1;}let(b,r)=close(&mut recipient,grant);born+=b;released+=r;assert_eq!(born,released,"all original recursive value variants and links physical conservation");let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(recipient));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
 }
-assert!(retained>=7);println!("[DEBUG] Original value forest preserves nine variants, exact numeric lexemes, duplicate ordered map keys, graph references and all5 denied close currencies through six count and two interior cancellations");
+assert!(retained>=7);
 }
 #[test]
 fn native_prefix_original_projection_text_rows_and_cancelled_fields(){
@@ -155,5 +155,4 @@ assert_eq!(expected.runs[0].content.as_ptr(),original);assert_eq!(heap.released_
 match result{Ok(database)=>{assert_eq!(stop,usize::MAX);assert_eq!(admitted,heap.requested_bytes);for(table,rows)in neutral["expectedRows"].as_object().unwrap(){assert_eq!(database.table(table).unwrap().rows.len(),rows.as_u64().unwrap()as usize);}let run=database.table("semio_text_run").unwrap().single_row().unwrap();assert_eq!(run.rowid,1);assert_eq!(run.integer(1).unwrap(),1);assert_eq!(run.text(3).unwrap(),expected.runs[0].language);assert_eq!(run.text(4).unwrap(),expected.runs[0].content);let mark=database.table("semio_text_mark").unwrap().single_row().unwrap();assert_eq!(mark.rowid,1);assert_eq!(mark.integer(1).unwrap(),1);assert_eq!(mark.text(3).unwrap(),neutral["kind"].as_str().unwrap());assert_eq!(mark.text(4).unwrap(),neutral["href"].as_str().unwrap());let(b,r)=close_value(database,grant);born+=b;released+=r},Err(error)=>{assert_eq!(error.kind,ValueRefusalKind::Canceled);if stop==usize::MAX-1{assert!(reached);assert!(born>=length);}let(b,r)=close_value(error,grant);born+=b;released+=r}}
 let(b,r)=close(&mut recipient,grant);born+=b;released+=r;assert_eq!(born,released,"complete original projection physical conservation");let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(recipient));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
 }
-println!("[DEBUG] Original text projection exact per-table identities, schema/census and interior field custody preserve five denied currencies and physical conservation through seven cancellations");
 }                                                                                                                                                

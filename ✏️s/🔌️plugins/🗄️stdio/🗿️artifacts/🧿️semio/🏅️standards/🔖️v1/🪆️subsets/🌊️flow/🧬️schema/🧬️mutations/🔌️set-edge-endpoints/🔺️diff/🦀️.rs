@@ -1,6 +1,11 @@
 //! 🔺️ Diff for `SetEdgeEndpoints`.
 
-use super::super::*;
+#[allow(unused_imports)]
+use crate::schema::diff::SemioFlowDiff;
+#[allow(unused_imports)]
+use crate::schema::snapshot::SemioFlowSnapshot;
+#[allow(unused_imports)]
+use crate::schema::diff::diff_set_edge_endpoints;
 
 //#region 🔖️Diff
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

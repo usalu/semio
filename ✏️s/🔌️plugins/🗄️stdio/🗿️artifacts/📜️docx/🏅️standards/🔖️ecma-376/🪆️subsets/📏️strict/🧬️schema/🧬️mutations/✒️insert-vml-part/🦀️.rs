@@ -7,12 +7,12 @@ use super::*;
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct InsertVmlPart {
-    pub(crate) path: String,
-    pub(crate) document: XmlDocument,
+    pub path: String,
+    pub document: XmlDocument,
     #[value(default, skip_serializing_if = "Option::is_none")]
-    pub(crate) index: Option<usize>,
+    pub index: Option<usize>,
     #[value(default, skip_serializing_if = "Option::is_none")]
-    pub(crate) override_index: Option<usize>,
+    pub override_index: Option<usize>,
 }
 
 impl protocol::MutationKind<DocxSnapshot, DocxStrictMutation> for InsertVmlPart {

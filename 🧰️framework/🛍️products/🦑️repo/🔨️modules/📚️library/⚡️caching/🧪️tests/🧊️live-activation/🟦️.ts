@@ -1,4 +1,5 @@
-import {preparePlaygroundSourceFixtureV1,type PlaygroundPreparationTargetV1} from "../🧊️preparation/🟦️.ts";
+import {preparePlaygroundSourceFixtureV1} from "../🧊️preparation/🟦️.ts";
+import {testMethodV1,testRecordV1,testStringsV1} from "../📋️values/🟦️.ts";
 import {type ScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {type ResourceLeaseControl} from "../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
 import assert from "node:assert/strict";
@@ -22,21 +23,22 @@ export async function testWgpuLiveActivation(workspace: string, output: string, 
   const { cacheInternals, libraryBootstrap } = await import("../../../🏗️build/🕸️graph/📥️inference/🟨️.mjs");
   await libraryBootstrap;
   const {contracts,catalogContributions,context,check}=preparePlaygroundSourceFixtureV1(workspace,root,invocation,phaseControl);
-  const targets:Record<string,PlaygroundPreparationTargetV1> = await cacheInternals.playgroundPreparationTargets(["component/Cargo.toml"], root, owner, contracts, catalogContributions, context);
+  const targets = testRecordV1(await testMethodV1(cacheInternals,"playgroundPreparationTargets",["component/Cargo.toml"], root, owner, contracts, catalogContributions, context));
+  const targetFor = (name:string) => testRecordV1(targets,name);
   check();
-  for (const profile of ["prototype", "release"]) assert.ok(targets[`prepare-${fixture.variant}-wgpu-${profile}`].dependsOn.includes(`renderer:wasm`), "The renderer prerequisite must select the matching compilation profile");
+  for (const profile of ["prototype", "release"]) assert.ok(testStringsV1(targetFor(`prepare-${fixture.variant}-wgpu-${profile}`).dependsOn).includes(`renderer:wasm`), "The renderer prerequisite must select the matching compilation profile");
   for (const profile of ["prototype", "release"]) for (const command of ["serve", "dev"]) {
-    const target = targets[`${command}-${fixture.variant}-wgpu-${profile}`];
-    assert.equal(target.options.command, `bun ../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🌐️server/📜️script.ts serve ${fixture.variant} ${profile} --port 4321`, "The server must consume the completed profile through its narrow leaf");
+    const target = targetFor(`${command}-${fixture.variant}-wgpu-${profile}`);
+    assert.equal(testRecordV1(target,"options").command, `bun ../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🌐️server/📜️script.ts serve ${fixture.variant} ${profile} --port 4321`, "The server must consume the completed profile through its narrow leaf");
     assert.deepEqual(target.dependsOn, [`activate-${fixture.variant}-wgpu-${profile}`]);
     assert.equal(target.cache, false);
     assert.equal(target.continuous, true);
   }
   const prepare = `prepare-${fixture.variant}-wgpu-${fixture.profile}`, activate = `activate-${fixture.variant}-wgpu-${fixture.profile}`;
-  assert.equal(targets[prepare].cache, false);
-  assert.equal(targets[activate].cache, false, "Live installation and reload publication must execute after every preparation/cache restoration");
-  assert.deepEqual(targets[activate].outputs, [`{workspaceRoot}/.cache/b/p/m/browser/${fixture.profile}/runtime/wgpu/${fixture.variant}`], "Uncached activation still owns its complete live output namespace");
-  assert.deepEqual(targets[activate].dependsOn, [prepare]);
+  assert.equal(targetFor(prepare).cache, false);
+  assert.equal(targetFor(activate).cache, false, "Live installation and reload publication must execute after every preparation/cache restoration");
+  assert.deepEqual(targetFor(activate).outputs, [`{workspaceRoot}/.cache/b/p/m/browser/${fixture.profile}/runtime/wgpu/${fixture.variant}`], "Uncached activation still owns its complete live output namespace");
+  assert.deepEqual(targetFor(activate).dependsOn, [prepare]);
   const ts = require("typescript"), activationOwner = dirname(activationModule);
   const definitions: readonly (readonly [string, readonly string[]])[] = [["🧰️preparation/🟦️.ts", ["PreparationScript"]], ["🏃️execution/🟦️.ts", ["ActivationScript"]], ["📥️installation/🟦️.ts", ["activationFilesDigest", "publishActivatedExtension"]]] as const;
   const code = definitions.map(([file, names]) => {
@@ -52,8 +54,8 @@ export async function testWgpuLiveActivation(workspace: string, output: string, 
   put(".gitignore", "node_modules\n.nx\nmodules\ndist\n.counts\n.🧬semio\n");
   put("project.json", JSON.stringify({ name: "fixture", targets: {
     materialize: { executor: "nx:run-commands", cache: true, inputs: ["{workspaceRoot}/📜️script.ts"], outputs: ["{workspaceRoot}/modules", "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions", "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/dist/fonts"], options: { command: "bun ./📜️script.ts materialize" } },
-    [prepare]: { ...targets[prepare], executor: "nx:run-commands", dependsOn: ["materialize"], inputs: ["{workspaceRoot}/📜️script.ts", { dependentTasksOutputFiles: "**/*" }], options: { command: "bun ./📜️script.ts prepare" } },
-    [activate]: { ...targets[activate], executor: "nx:run-commands", options: { command: "bun ./📜️script.ts activate" } },
+    [prepare]: { ...targetFor(prepare), executor: "nx:run-commands", dependsOn: ["materialize"], inputs: ["{workspaceRoot}/📜️script.ts", { dependentTasksOutputFiles: "**/*" }], options: { command: "bun ./📜️script.ts prepare" } },
+    [activate]: { ...targetFor(activate), executor: "nx:run-commands", options: { command: "bun ./📜️script.ts activate" } },
     cancel: { executor: "nx:run-commands", cache: false, outputs: [], dependsOn: ["materialize"], options: { command: "bun ./📜️script.ts cancel" } },
     ...Object.fromEntries(namespaces.map((row: any) => [`install-${row.variant}-${row.renderer}-${row.profile}`, { executor: "nx:run-commands", cache: false, outputs: [], dependsOn: ["materialize"], options: { command: `bun ./📜️script.ts activate ${row.variant} ${row.renderer} ${row.profile}` } }]))
   } }));

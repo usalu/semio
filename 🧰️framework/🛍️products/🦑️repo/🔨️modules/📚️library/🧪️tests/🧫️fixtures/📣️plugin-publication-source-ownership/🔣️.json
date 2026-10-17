@@ -26,9 +26,9 @@
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🧩️component-stage/🟦️.ts",
       "exports": [
-        "stageComponentV1",
-        "describeComponentsV1",
-        "profileIndependenceV1"
+        "describeComponentStageV1",
+        "settleComponentDescriptorV1",
+        "componentStageTargetV1"
       ]
     },
     {
@@ -108,7 +108,7 @@
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/✅️catalog-verification/🟦️.ts",
       "exports": [
         "verifySemanticDescriptorPairBytesV1",
-        "verifyFreshCatalogPackageV1"
+        "createFreshCatalogBuildVerifier"
       ]
     },
     {
@@ -272,10 +272,21 @@
       ]
     },
     {
-      "path": "🌎️hub/🏗️bootstrap/🧾️provenance/🚚️bootstrap-publication/🟦️.ts",
+      "path": "🌎️hub/🏗️bootstrap/🧾️provenance/🚚️bootstrap-publication/🧱️materialized-bundle/🟦️.ts",
       "owners": [
-        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/✅️catalog-verification/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🧾️source-epoch/🟦️.ts"
+      ]
+    },
+    {
+      "path": "🌎️hub/🏗️bootstrap/🧾️provenance/🚚️bootstrap-publication/🔄️rotation-and-current-pointer/🟦️.ts",
+      "owners": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/✅️catalog-verification/🟦️.ts"
+      ]
+    },
+    {
+      "path": "🌎️hub/🏗️bootstrap/🧾️provenance/🚚️bootstrap-publication/📮️receipts-and-publication-child/🟦️.ts",
+      "owners": [
         "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🧾️source-epoch/🟦️.ts"
       ]
     },

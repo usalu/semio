@@ -158,6 +158,5 @@ fn retained_presence_peer_admission_preserves_rejected_actor_allocation_and_payl
         assert_eq!(text.len(), expected_bytes);
         assert_eq!(seeded_bytes, if matches!(state, "full" | "created-full") { PRESENCE_PEER_SLOTS * "seed-00".len() } else { 0 });
         assert_eq!(count.load(std::sync::atomic::Ordering::Relaxed), 1);
-        eprintln!("[DEBUG] peer admission case={} retained actor capacity={capacity}, semantic UTF8 bytes={expected_bytes}, physical close receipt={bytes}, exact target snapshots=1", case["name"]);
     }
 }

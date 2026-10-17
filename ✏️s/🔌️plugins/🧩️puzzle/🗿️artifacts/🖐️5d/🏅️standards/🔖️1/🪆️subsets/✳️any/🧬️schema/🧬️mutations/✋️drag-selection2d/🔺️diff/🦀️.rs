@@ -2,7 +2,7 @@
 //! payload offset, read off the BASE position, so the leaf replays on any base. Target volumes live in the world.
 use crate::standards::v1::subsets::any::schema::diff::{Puzzle5dDiff, Puzzle5dPart2dPatch, Puzzle5dPartPatch, Puzzle5dPartModification};
 use protocol::list_delta::RowPatch;
-use crate::standards::v1::subsets::any::schema::mutations::{puzzle5d_selection, puzzle5d_selection_outcome};
+use crate::standards::v1::subsets::any::schema::diff::{puzzle5d_selection, puzzle5d_selection_outcome};
 use crate::Puzzle5dSnapshot;
 
 //#region 🔖️Diff

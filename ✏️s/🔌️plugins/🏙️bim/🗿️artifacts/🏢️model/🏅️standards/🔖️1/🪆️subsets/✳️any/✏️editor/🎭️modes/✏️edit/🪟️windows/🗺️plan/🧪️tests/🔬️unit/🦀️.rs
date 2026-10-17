@@ -1,3 +1,4 @@
+use crate::editor::bim::modes::edit::windows::plan::config::BimPlanWindowConfig;
 use super::*;
 
 fn demo() -> (ModelSnapshot, ModelInference) {

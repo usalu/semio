@@ -1,11 +1,11 @@
 //! ⬜️ Slabs and roofs. A level slab is an `IfcSlab` (`FLOOR`) whose boundary, with its holes, is extruded by the sum of its layers downward from the storey elevation plus `offset`;
 //! a sloped slab is the faceted brep of its inferred solid. A roof is an `IfcRoof` aggregating one `IfcSlab` (`ROOF`) per layer, each a faceted brep of the roof solid.
 
-use super::brep::{brep_definition, mesh_where};
-use super::data::label;
-use super::frames::{ccw, cw};
-use super::writer::{en, real, rf, unset};
-use super::{Export, Quantity};
+use crate::standards::v1::subsets::any::io::export::ifc::brep::{brep_definition, mesh_where};
+use crate::standards::v1::subsets::any::io::export::ifc::writer::label;
+use crate::standards::v1::subsets::any::io::export::ifc::frames::{ccw, cw};
+use crate::standards::v1::subsets::any::io::export::ifc::writer::{en, real, rf, unset};
+use crate::standards::v1::subsets::any::io::export::ifc::context::{Export, Quantity};
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::ElementSolid;
 use crate::standards::v1::subsets::any::schema::inferences::quantities::LayerQuantity;
 use crate::standards::v1::subsets::any::schema::snapshot::{RoofShape, Slab};

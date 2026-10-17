@@ -1,4 +1,36 @@
-use super::*;
+use semio_framework_plugin::BuiltNode;
+use semio_framework_test_fixtures::fixture_text;
+#[allow(unused_imports)]
+use crate::editor::sequence::terminology::SequenceLabels;
+#[allow(unused_imports)]
+use crate::editor::sequence::base::ui_label;
+#[allow(unused_imports)]
+use crate::{SequenceHostSnapshot, SequenceStep};
+#[allow(unused_imports)]
+use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase};
+#[allow(unused_imports)]
+use semio_framework_ui_locale::LocalizedLabel;
+#[allow(unused_imports)]
+use semio_framework_plugin::PanelGroup;
+#[allow(unused_imports)]
+use semio_framework_plugin::PanelTabDefinition;
+#[allow(unused_imports)]
+use semio_framework_plugin::PanelTabKind;
+#[allow(unused_imports)]
+use semio_framework_plugin::PanelTreeBuilder;
+#[allow(unused_imports)]
+use semio_framework_plugin::PluginAssemblyError;
+#[allow(unused_imports)]
+use semio_framework_plugin::UiAssemblyResult;
+#[allow(unused_imports)]
+use semio_framework_plugin::UiFixedList;
+#[allow(unused_imports)]
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_ID;
+#[allow(unused_imports)]
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_LABEL;
+#[allow(unused_imports)]
+use semio_framework_ui_contract as ui;
+use crate::editor::sequence::panels::inspection::*;
 
 fn project(node: BuiltNode) -> serde_json::Value {
     let text = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("retire semantic tree");
@@ -7,7 +39,7 @@ fn project(node: BuiltNode) -> serde_json::Value {
 
 #[test]
 fn sequence_semantic_panels_match_the_json_oracle() {
-    let vectors: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️panels.json")).expect("neutral panels");
+    let vectors: serde_json::Value = serde_json::from_str(fixture_text!("../../🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🧪️tests/🧫️fixtures/🔣️panels.json")).expect("neutral panels");
     let document = neural_engine::ColdOwner::new(crate::default_snapshot());
     let fixture = neural_engine::ColdOwner::new(document.to_host_snapshot());
     for row in vectors["cases"].as_array().expect("locales") {

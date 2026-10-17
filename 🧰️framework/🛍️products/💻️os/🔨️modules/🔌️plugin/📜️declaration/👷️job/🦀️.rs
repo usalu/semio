@@ -10,8 +10,6 @@ use semio_framework_job::JobOutcomeDescriptor;
 use semio_framework_job::JobOutcomeKind;
 use semio_framework_job::JobOutcomeView;
 use semio_framework_job::JobPayloadStream;
-use semio_framework_job_publication::JobPublicationKind;
-use semio_framework_job_publication::RetainedJobPublication;
 use semio_framework_job::RetainedPayloadBuilder;
 use semio_framework_value::retained_clone::RetainedCloneProgress;
 use std::mem::ManuallyDrop;
@@ -345,7 +343,8 @@ impl OriginalAuthoringEffect {
 /// 📬️ Operation-owned completion cell shared by an app factory's job and the exact framework
 /// commit path. It is single-assignment and consumed exactly once after freshness validation.
 pub struct ArtifactToolCompletion<A: ArtifactApp> {
-    inner: crate::completion_retirement::CompletionCell<A>,
+    #[doc(hidden)]
+    pub inner: crate::completion_retirement::CompletionCell<A>,
 
 }
 

@@ -1,5 +1,7 @@
 //! ️tests for example `🌙️capsule-dream`.
 
+use semio_framework_test_fixtures::{fixture_bytes, fixture_text};
+
 #[test]
 fn dsl_asset_parses_and_round_trips() {
     let text = super::capsule_dream::dsl_text();
@@ -15,7 +17,7 @@ fn flatten_matches_golden_poses_to_1e4() {
     let text = super::capsule_dream::dsl_text();
     let mut projection = crate::standards::v1::subsets::any::io::text::snapshot::parse_dsl(text).expect("example dsl parses");
     crate::standards::v1::subsets::any::schema::inferences::flat_position::flatten_snapshot_inplace(&mut projection);
-    let golden: serde_json::Map<String, serde_json::Value> = serde_json::from_slice(&std::fs::read(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🌙️capsule-dream/🖼️assets/🔣️.json")).expect("the committed golden poses are readable")).expect("golden json");
+    let golden: serde_json::Map<String, serde_json::Value> = serde_json::from_slice(&std::fs::read(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../📚️examples/🌙️capsule-dream/🖼️assets/🔣️.json")).expect("the committed golden poses are readable")).expect("golden json");
     assert_eq!(golden.len(), 2880);
     let mut center_mismatches = 0usize;
     let mut origin_mismatches = 0usize;
@@ -40,9 +42,9 @@ fn flatten_matches_golden_poses_to_1e4() {
 
 #[test]
 fn op_pack_and_spr_assets_are_nonempty() {
-    assert!(include_str!("../../🖼️assets/🔧️dream.op.semio").len() > 64);
-    assert!(include_bytes!("../../🖼️assets/🎒️.pack.semio").len() > 64);
-    assert!(include_bytes!("../../🖼️assets/📡️dream.spr.semio").len() > 64);
+    assert!(fixture_text!("../../../../../../📚️examples/🌙️capsule-dream/🖼️assets/🔧️dream.op.semio").len() > 64);
+    assert!(fixture_bytes!("../../../../../../📚️examples/🌙️capsule-dream/🖼️assets/🎒️.pack.semio").len() > 64);
+    assert!(fixture_bytes!("../../../../../../📚️examples/🌙️capsule-dream/🖼️assets/📡️dream.spr.semio").len() > 64);
 }
 
 #[test]

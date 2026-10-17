@@ -2,10 +2,13 @@
 //! negated offset), so a multi-node drag stays one point-invertible row.
 
 use crate::standards::v1::subsets::graph::schema::mutations::set_node_positions::{equation_targets_invariant, EquationNodePosition, SetNodePositions};
-use crate::{EquationMutation, EquationSnapshot};
+use crate::EquationSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &super::MoveNodes, base: &EquationSnapshot) -> Result<Vec<EquationMutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op>(payload: &super::MoveNodes, base: &EquationSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError>
+where
+    Op: From<crate::standards::v1::subsets::graph::schema::mutations::set_node_positions::SetNodePositions>,
+{
     Ok((|| {
     if equation_targets_invariant(&payload.ids).is_err() || !payload.dx.is_finite() || !payload.dy.is_finite() || (payload.dx, payload.dy) == (0.0, 0.0) {
         return Vec::new();
@@ -15,7 +18,7 @@ pub fn inverse(payload: &super::MoveNodes, base: &EquationSnapshot) -> Result<Ve
     if positions.is_empty() {
         return Vec::new();
     }
-    vec![EquationMutation::SetNodePositions(SetNodePositions { positions })]
+    vec![Op::from(SetNodePositions { positions })]
 
     })())
 }

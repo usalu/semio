@@ -1,6 +1,6 @@
 /** 📦️ Specific Jack foreign carriers preserve the complete original native archive. */
-import {decodeJsonSyntax} from "../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🟦️.ts";
-import {JsonMemberPolicy} from "../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/🧩️members/🟦️.ts";
+import {decodeJsonSyntax} from "@semio-tech/pack-json-decode-ts";
+import {JsonMemberPolicy} from "@semio-tech/framework-pack-json-ts/members";
 export type JackArchiveFormat="json"|"txt";
 export interface JackArchiveControl {admit(bytes:number):void;checkpoint(completed:number,total:number):void;yield():Promise<void>;}
 export const JACK_ARCHIVE_SCHEMA="s.dev.trinity.jack.archive.v1";

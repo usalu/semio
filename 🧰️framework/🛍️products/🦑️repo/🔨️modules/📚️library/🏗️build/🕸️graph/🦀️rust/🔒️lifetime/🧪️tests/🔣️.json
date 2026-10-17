@@ -1,0 +1,63 @@
+{
+  "cases": [
+    {
+      "mode": "prototype",
+      "configurations": [
+        "prototype"
+      ],
+      "accept": true
+    },
+    {
+      "mode": "prototype",
+      "configurations": [
+        "prototype",
+        "prototype"
+      ],
+      "accept": true
+    },
+    {
+      "mode": "release",
+      "configurations": [
+        "release",
+        "release"
+      ],
+      "accept": true
+    },
+    {
+      "mode": "prototype",
+      "configurations": [
+        "release"
+      ],
+      "accept": false
+    },
+    {
+      "mode": "release",
+      "configurations": [
+        "release",
+        "prototype"
+      ],
+      "accept": false
+    },
+    {
+      "mode": "dev",
+      "configurations": [
+        "dev"
+      ],
+      "accept": false
+    },
+    {
+      "mode": "release",
+      "configurations": [],
+      "accept": false
+    }
+  ],
+  "lifetime": {
+    "version": 1,
+    "compilerReaders": 1,
+    "selectedRows": 2,
+    "backendHeld": true,
+    "detachedHeld": true,
+    "readerFree": true,
+    "closedRefused": true
+  }
+}

@@ -85,6 +85,8 @@ pub trait RetainedCloneCursor<T: RetainedClone>: Send {
 #[derive(Default)]
 pub struct RetainedCloneClose {retirement:ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>}
 impl RetainedCloneClose {
+    /// 🪑️ Seats one already admitted original retirement so custody laws can quote and fund its close without a typed owner.
+    #[doc(hidden)] pub fn from_admitted_original(retirement:Box<dyn ErasedSnapshotRetirement>)->Self{Self{retirement:ManuallyDrop::new(Some(retirement))}}
     pub fn next_owner_depth_with_binding(&self,present:bool,binding:&Option<RetainedCloneBinding>)->Result<usize,crate::ValueError>{if !self.is_empty(){self.next_depth_demand()}else if present{Ok(1)}else{RetainedCloneBinding::depth_demand(binding)}}
     pub fn next_copy_with_binding(&self,binding:&Option<RetainedCloneBinding>)->Result<usize,crate::ValueError>{if self.is_empty(){RetainedCloneBinding::copy_demand(binding)}else{self.next_copy_byte_demand()}}
     pub fn next_release_with_binding(&self,binding:&Option<RetainedCloneBinding>)->Result<usize,crate::ValueError>{if self.is_empty(){RetainedCloneBinding::release_demand(binding)}else{self.next_release_byte_demand()}}

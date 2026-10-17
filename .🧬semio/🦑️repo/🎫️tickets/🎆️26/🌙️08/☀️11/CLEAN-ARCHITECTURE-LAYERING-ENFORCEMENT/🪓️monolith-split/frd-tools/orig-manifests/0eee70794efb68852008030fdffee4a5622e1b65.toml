@@ -1,0 +1,37 @@
+[package]
+workspace = "../../../../../../../../.."
+name = "semio-s-artifact-lowpoly-lowpoly-mut-objects"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "lowpoly object mutation leaves"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[[test]]
+name = "lowpoly_objects_mutations"
+path = "../../🧪️tests/🦀️.rs"
+
+[dependencies]
+semio-framework-os-kernel = { workspace = true }
+semio-framework-pack-json = { workspace = true }
+semio-framework-ui-locale = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-framework-value-derive = { workspace = true }
+semio-s-artifact-lowpoly-lowpoly-model = { workspace = true }
+semio-s-artifact-lowpoly-lowpoly-model-diff = { workspace = true }
+serde = { workspace = true }
+
+[dev-dependencies]
+semio-framework-async-macros = { workspace = true }
+semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-s-artifact-lowpoly-lowpoly-mutations = { workspace = true }
+serde_json = { workspace = true }
+semio-s-artifact-lowpoly-lowpoly-mut-laws = { workspace = true }

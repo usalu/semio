@@ -1,0 +1,28 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/lease-capacity-preparation-tests-v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "iterations", "preparedContracts", "oneShotCalls", "cases", "hostRefusals", "schemaAliasSnapshot", "primitiveBeforeEffects"],
+  "properties": {
+    "version": {"const": 1},
+    "iterations": {"const": 4097},
+    "preparedContracts": {"const": 1},
+    "oneShotCalls": {"const": 0},
+    "cases": {
+      "type": "array", "minItems": 11, "maxItems": 11,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["maximumDatabaseBytes", "accepted", "maximumPages"],
+        "properties": {
+          "maximumDatabaseBytes": {"type": "number"},
+          "accepted": {"type": "boolean"},
+          "maximumPages": {"type": ["integer", "null"]}
+        }
+      }
+    },
+    "hostRefusals": {"const": ["nan", "positive-infinity", "negative-infinity", "undefined", "null", "boolean", "text", "array", "record", "coercion", "proxy"]},
+    "schemaAliasSnapshot": {"const": true},
+    "primitiveBeforeEffects": {"const": true}
+  }
+}

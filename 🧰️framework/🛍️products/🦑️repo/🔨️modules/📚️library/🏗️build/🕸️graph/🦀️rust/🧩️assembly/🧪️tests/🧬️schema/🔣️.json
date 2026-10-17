@@ -1,0 +1,291 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "cases",
+    "invalid",
+    "growth",
+    "hooks",
+    "failures",
+    "epochs",
+    "extents",
+    "invalidLimits"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "seed",
+          "batches"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "seed": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "source",
+                "target"
+              ],
+              "properties": {
+                "source": {
+                  "type": "string"
+                },
+                "target": {
+                  "type": "string"
+                },
+                "type": {
+                  "type": "string"
+                },
+                "sourceFile": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "batches": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "owner",
+                "projects",
+                "expected"
+              ],
+              "properties": {
+                "owner": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "projects": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "name",
+                      "dependencies"
+                    ],
+                    "properties": {
+                      "name": {
+                        "type": "string",
+                        "pattern": "^rust-unit-[a-z][a-z0-9_-]{0,79}$"
+                      },
+                      "dependencies": {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "pattern": "^rust-unit-[a-z][a-z0-9_-]{0,79}:compile$"
+                        },
+                        "maxItems": 4096
+                      }
+                    }
+                  },
+                  "maxItems": 65536
+                },
+                "expected": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "roots",
+                    "dependencies"
+                  ],
+                  "properties": {
+                    "roots": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "dependencies": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "source",
+                          "target",
+                          "type"
+                        ],
+                        "properties": {
+                          "source": {
+                            "type": "string"
+                          },
+                          "target": {
+                            "type": "string"
+                          },
+                          "type": {
+                            "const": "implicit"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "minItems": 1
+          }
+        }
+      },
+      "minItems": 6
+    },
+    "invalid": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "projects",
+          "message"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "projects": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      },
+      "minItems": 4
+    },
+    "growth": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "projects",
+          "roots",
+          "newEdges",
+          "references",
+          "membershipChecks"
+        ],
+        "properties": {
+          "projects": {
+            "enum": [
+              4097,
+              65536
+            ]
+          },
+          "roots": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "newEdges": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "references": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "membershipChecks": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      },
+      "minItems": 2
+    },
+    "hooks": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "seed-proxy",
+          "project-getter",
+          "refs-proxy"
+        ]
+      }
+    },
+    "failures": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "error",
+          "undefined"
+        ]
+      }
+    },
+    "epochs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "target",
+          "stage"
+        ],
+        "properties": {
+          "target": {
+            "enum": [
+              "source",
+              "policy",
+              "budget"
+            ]
+          },
+          "stage": {
+            "enum": [
+              "entry",
+              "delivery"
+            ]
+          }
+        }
+      }
+    },
+    "extents": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "delta",
+          "accepted"
+        ],
+        "properties": {
+          "delta": {
+            "enum": [
+              0,
+              -1
+            ]
+          },
+          "accepted": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "invalidLimits": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "number"
+      }
+    }
+  }
+}

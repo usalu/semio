@@ -1,0 +1,35 @@
+# Selected Tools Read Substrate Progress
+
+Implementation is in progress and is not a physical or selected-retirement release. No Native or protected cache read/effect was performed. Root owns Native descriptor-census repair and any physical run.
+
+## Actual Completed Gates
+
+Schema-first selected intent/context/custody/binary/copied/funded cases were authored in existing physical schema/test fixture and actual tests. Missing production reader/kernel/factory exports produced semantic REDs in Generated/tools-selected-read-red.log, tools-selected-binary-read-red.log, tools-selected-copied-read-red.log and tools-selected-funded-read-red.log. Initial parser/relative-import/type-only failures were harness/strict failures and are not semantic acceptance.
+
+Latest completed stable slice: retention-identity --selected-strict session30371 terminal0, TS strict authored test/helper roots and transitive owners zero diagnostics;6pass/12filtered/0fail/231 assertions in4.40s. It covers8 closed selected intents,10 genuine-control ordinary projection traces,8 actual private store-registry relation laws,5 real Generated binary link/full-byte cases,6 real Generated copied-tree cases and7 funded Native projection laws using exact production private reservation guard AST with explicit Source maps/Native ports. Independent Ajv/SQLite plus actual owned Node full-byte/roster output validate the same decisions. Generated files only; no Native image/reservation authority is issued by those model ports.
+
+The prior copied slice26356 completed5tests/204 assertions/strict0. The new shared source-tree kernel is now under schema-first seven-case RED/GREEN; no final gate yet in this progress report. Further derivative index/material sharing and fixed selected owner are outstanding.
+
+## Current Production Additions
+
+- Existing tools/scope defines a read-only context (root, Original/control, check, read recheck, image recheck), a strict private registered RepositoryStore projection and an accurately named nativeFundedToolingReadContextV1. Neither exports image/reservation/effect authority.
+- Existing Store adds a distinct cheap exact private read-custody guard, leaving reader-only and maintenance-only guards unchanged; ordinary strict projection also runs the current Source check at entry.
+- Existing binary verification and copied generation census/recheck share readonly kernels. Copied inventory remains privately bound to the exact context and directory, copied values refuse.
+- Existing low-level physical copied fixtures legitimately hold real Native image/reservation but are not private RepositoryStores. Existing read APIs therefore use the accurate funded-Native read projection rather than incorrectly asserting private repository registration. It requires actual reservation/Original/control/root and exact privately captured port/backing via existing readNativeStorageImageReservationV1. Memoization retains only context identity; live private guards run on checks and actual port.observe/recheck refreshes each async recheck. No new Native API was added. Administrative selectedTools will never manufacture or use this funded projection; it retains its separate genuine Core token.
+- Existing physical owner now has only the pure immutable selected intent reader. The old headroom stop/short-circuit and all actual deletion code remain unchanged.
+- Existing source/tree now factors the same rooted nofollow/read-drain implementation into a readonly kernel; existing public route delegates with its original control checks. This hunk awaits its final Source gate.
+
+## Remaining Work
+
+Share derivative source metadata/hash/index/namespace kernels without changing publication/seal authority, preserve existing cheap Source regressions, then implement the fixed explicit Repo selected-generation command with actual Core retain-allocation token + real nonwaiting registry/generation/base/shard custody and full current material/witness/activation authentication. Restrict binary cleanup to hashes from selected authenticated manifests. Whole tooling-store row/raw CAS remains unchanged even on partial failure. Add exact actual caller tests/independent ordering and charge oracles, primary/cleanup counterlaws, full strict/Source and independent final hold. Current Graph terminal inventory/admission is separate and still refuses live-row image retirement.
+
+All changed files are existing files; no new TypeScript module or runtime external library was introduced. Existing generic EN/DE retention-identity helper covers --selected-source and --selected-strict under unchanged60000ms Original. This progress report is not a settled manifest or physical release.
+
+
+## Generation Admission And Complete Derivative Payload Check In Progress
+
+The stable derivative read checkpoint completed in standalone genuine60s mode: Source9pass,1worker skip,0fail,399assertions. The additional existing ordinary completion test extracted the actual shared reader tail and passed its twelve Ajv/SQLite laws with81assertions; strict mode included that test Source and reported no diagnostics. These are read-kernel checks only, not selected cleanup acceptance.
+
+The new generation evidence schema was authored before its production export. Its initial actual missing-export assertion reached the none-vector and failed; after export, pre-reader identity/authorizer failures now correctly terminate the isolated Source worker0 because they are caught before entering the owned reader phase. Owned reader failures still terminate1. This distinction is explicit in the SQLite terminal oracle. The full derivative payload census extension initially had a wrong test import path, a harness failure rather than semantic RED. An intermediate gate was edited while running and is not acceptance. A later strict run hit the unchanged30s Bun parent-test limit after8workers; the real receiver aborted/drained accepted work, with no Native effects. The harness now runs at most two independent Generated workers concurrently under the same unchanged60s Original and unchanged30s test limit; it does not increase resource or output caps.
+
+The new current generation reader authenticates canonical identity/path, exact patch input names and count/aggregate bytes, host install identity, actual authorizer receipt, closed copied/shared-pristine material, optional exact canonical binary receipt and selected binary hash roster, plus stable generation root. Its evidence is privately bound to exact read context/directory for complete current reobservation; it grants no deletion authority. The generic full census reuses the original bounded copied descriptor/hash/namespace algorithm and additionally accepts separately authenticated derivative shared inode DATA. Every complete payload output is compared with independent Node filesystem bytes and SHA; base SH stays real and retained during that census. New base-busy vector uses a real Generated SQLite EX blocker and expects immediate timeout0 SH refusal. Current broader gate is pending; no selected effect API has been released.

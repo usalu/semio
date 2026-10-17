@@ -1,10 +1,10 @@
 # Result: Renderer hosts only UI, second pass (slice RENDERER-HOSTS-UI-2, prefix `rhu2`)
 
-Executor: Sonnet, foreground, no sub-agents, no modifying git command, no ticket tool. 2026-10-16 14:34 to about 17:40. Tools: `rhu2-tools/`. Logs and raw outputs: `🗑️generated/rhu2-*` (nothing deleted, no `[DEBUG]` log added).
+Executor: Sonnet, foreground, no sub-agents, no modifying git command, no ticket tool. 2026-10-16 14:34 to about 18:40. Tools: `rhu2-tools/`. Logs and raw outputs: `🗑️generated/rhu2-*` (nothing deleted, no `[DEBUG]` log added).
 
 Aliases: `E` = `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements`, `RT` = `E/..` (the engine folder), `SDK` = `🧰️framework/📦️packages/🟦️typescript` (package `@semio-tech/framework`), `OS` = `🧰️framework/🛍️products/💻️os`, `FM` = `🧰️framework/🔨️modules`, `F` = this folder.
 
-STATUS: COMPLETE except the final full-cruiser row (section 0 marks it). The file was rewritten after every milestone.
+STATUS: COMPLETE. Every row below was run; the final full-cruiser run finished 18:25.
 
 ## 0. Verdict
 
@@ -22,8 +22,8 @@ Rule `renderer-hosts-only-ui`, renderer scope. The scoped cruiser run is exact f
 
 - The 124 production edges removed (156 to 31 actionable) all went the way the rule and the brief prescribe: the neutral wire and contract modules the renderer needs were lowered into `FM` (56 files moved, 10 files created by extraction or split), exposed through 31 new explicit SDK entries, and both the renderer and the os subsystem were re-pointed to them. 0 shims, 0 re-export barrels.
 - No runtime port was added. Section 4 explains why for each remaining family, with the measured closure, and gives the port design where one is the right answer (hub plugin source factory, access policy).
-- Exact audit cruiser command (section 8), full tree, baseline 14:35 to 15:04 against final 17:14 to FULL-PENDING: `renderer-hosts-only-ui` 535 to FULL-PENDING, `framework-no-products` 149 to FULL-PENDING, `no-circular` 583 to FULL-PENDING, total error lines 13926 to FULL-PENDING.
-- Verification (section 7): `tsc` renderer closure 7 errors to 6 (the removed one is a peer's fix in `📚️library`; the same six test-file errors remain, none in a file I edited); `tsc` semantic diagnostics over 1091 root files 113 to 114 (the one added error is `🌎️hub/🧪️tests/🎛️run` importing `VitestPolicyV1`, a peer's vitest-policy change); os vitest 609 tests, 496 pass, 113 fail before and after with every file identical; renderer vitest 31 failed files and 38 failed tests before, 32 and 40 after, the difference being three load-sensitive tests that pass in isolation; SDK surface law 6 of 6 (591 expects, was 498); a real Vite plugin container resolves all 32 new specifiers.
+- Exact audit cruiser command (section 8), full tree, baseline 14:35 to 15:04 against final 18:05 to 18:25 (after the three folder renames; the first final run at 17:14 was killed by its 50-minute alarm under machine load 50 and a second one was started with a 7000 s alarm): `renderer-hosts-only-ui` 535 to **391** (-144), `framework-no-products` 149 to 167 (+18, none from this slice, see section 8), `no-circular` 583 to **574** (-9), total violations 13926 to 10596 (peers' concurrent work dominates that number).
+- Verification (section 7): `tsc` renderer closure: the same six test-file errors as before, plus seven errors in peers' files that the closure follows (`jobserver` 2, `caching/vite` 5); `tsc` semantic diagnostics over 1094 root files 113 to 113 (one react-target `📜️script.ts` diagnostic gone, one added in `🌎️hub/🧪️tests/🎛️run`, a peer's `VitestPolicyV1` change); os vitest 609 tests, 113 fail before and 110 after, no new failure, every file SAME or better; renderer vitest 38 failed tests before, 29 after, with 12 test files that cannot load because a peer's in-flight `🖱️ui/🧪️tests/🧫️fixtures/🟦️.ts` entry (written 18:28 by the fixture-entry slice) yields non-file URLs (section 7 row 5); SDK surface law 6 of 6 (591 expects, was 498); a real Vite plugin container resolves all 32 new specifiers.
 
 ## 1. Baselines (before the first edit, 14:35 to 15:12)
 
@@ -109,6 +109,7 @@ The unit rows are the net change measured by the scoped run after each unit; the
 3. `RT/🎯️targets/⚛️react/🧪️tests/🎚️config/🟦️.ts`: regex aliases for the four wasm packages (section 1).
 4. Rust docs and Rust twins: the TS twin of each moved scope now lives under `FM`; a later pass can move the Rust twins and their JSON to the same folders.
 5. `🎠️kernel/📖️opening-resolver` duplicates config types ("duplicated, not imported"); they can now be imported from `FM/🎚️config/🧬️schema`.
+6. Re-run the renderer vitest (section 7 row 5) when the ui fixture entry of the peer slice is finished, and compare with `rhu2-fn-renderer-baseline.txt`.
 
 ## 7. Verification (every command and its real result)
 
@@ -116,23 +117,38 @@ The unit rows are the net change measured by the scoped run after each unit; the
 |---|---|---|
 | 1 | `rhu2-tools/cruise.sh <label> scoped` at baseline, after each unit and at the end | 535, 522, 451, 408, 397 (production 326, 309, 253, 213, 202) |
 | 2 | `rhu2-tools/cruise.sh base-full full` and `final-full full` (exact audit command) | section 8 |
-| 3 | `tsc -p …/tsconfig.json --noEmit --incremental false` on the renderer closure | 7 errors before, 6 after (`rhu2-tsc-baseline2.log`, `rhu2-tsc-final.log`); the six are test-file errors that were there before; the seventh was a peer's `📚️library` error fixed meanwhile |
-| 4 | `sdk2-tools/tsc-sem.ts` over 1074 (before) and 1091 (after) root files, compared by `rhu2-tools/tscdiff.mjs` with the 74 move records | before 113, after 114, removed 0, added 1: `🌎️hub/🧪️tests/🎛️run/🟦️.ts` TS2724 `VitestPolicyV1` (a peer's change to the repo vitest policy; I did not touch the file). Intermediate runs after stage 1 and 2: 113 and 113. One run at stage 3 caught 11 real errors (two os config tests used extensionless dynamic imports of the split aggregator); fixed, the final run is above |
-| 5 | `rhu2-tools/vitest.sh renderer` with the wrapper config | before 31 files and 38 tests failed; after 32 and 40. New names: `renders two idle real ShellHosts and retires only the selected root` (passes alone, 31/31 in its file), `selection survives focus moving to Apply` and `selection combination cancels with Cancel after shape preparation` (all of `Paint2dHost` passes alone, 63/63); gone: `menu filters and grid changes each dispatch ONE parametric verb`. The final run took 449 s against 202 s at baseline (machine load 55 to 65), which is what the timing-sensitive tests react to. The set is otherwise name for name identical |
-| 6 | `rhu2-tools/vitest-os.sh base` and `final` compared by `dlo-tools/vitest-diff.cjs` | 609 tests, 496 pass, 113 fail both times; every one of the 22 files `SAME`. A run after stage 1 had caught three newly failing handoff/child tests (they find their fixtures relative to the module-under-test URL); fixed and re-run (4 of 4 pass) |
-| 7 | `bun test ./🧪️tests/🔌️sdk-surface/🟦️.ts` in `SDK` | 6 pass, 0 fail, 591 expects, including loading every entry in a fresh process and the runtime identity test of every facade |
+| 3 | `tsc -p .../tsconfig.json --noEmit --incremental false` on the renderer closure | baseline 7 errors; final after the renames (`rhu2-tsc-final2.log`) 13 `error TS` lines: the same six test-file errors (TextEditor draft `splices`, `textEditorSyncPackV1`, World3dHost overload, MediaTransportHost lifecycle, Canvas2dHost jsdom declaration, TaskManager `maxFrames`; none in a file this slice edited) and seven in peers' files that the closure follows: native-build `jobserver` 2 (TS7006) and repo library `caching/vite` 5 (`leaseDirectory`, a peer's in-flight cache-lease change). 0 errors mention a moved or renamed path |
+| 4 | `sdk2-tools/tsc-sem.ts` over 1074 (before) and 1094 (after the renames) root files, compared by `rhu2-tools/tscdiff.mjs` with the move records | before 113, after 113, removed 1 (a react-target `script.ts` diagnostic), added 1: `hub/tests/run` TS2724 `VitestPolicyV1` (a peer's change to the repo vitest policy; I did not touch the file). One run at stage 3 caught 11 real errors (two os config tests used extensionless dynamic imports of the split aggregator); fixed |
+| 5 | `VITEST_CONFIG=rhu2-tools/work/vitest.react.config.ts zsh rhu2-tools/vitest.sh renderer` (`rhu2-vt-renderer-final2.log`, `rhu2-fn-renderer-final2.txt`) | before 214 files, 31 failed files, 38 failed tests; after 38 failed files, **29 failed tests** (2900 passed of 2929; 168 s). The diff of failing test names shows 0 names that were not failing before and 18 baseline failures that now pass. The 7 additional failed files are 12 test files that fail to **load** (no tests ran), `TypeError: The URL must be of scheme file` at `readFileSync(<name>FixtureUrl)`: retained-toggle-semantics, puzzle3d-settings-document, diff-view-produced-surface, resident-refresh-budget, world3d-camera-framing, icon-svg-lighting, world3d-glb-outline, world3d-scene-shading, projection-render-parity, browser-frame-transport, ink-canvas-clipboard, ink-canvas-editing. Cause: they import the ui module's public fixture entry (`ui/tests/fixtures/` entry file) that a peer slice (test fixture public entries) wrote at 18:28, during my run; its `*FixtureUrl` exports are not file URLs under vitest. I did not touch these tests or that file. A re-run of just those 12 files at 18:31 fails the same way (`rhu2-vt-renderer-final3.log`); they loaded at baseline. This row needs a re-run once that peer finishes |
+| 6 | `rhu2-tools/vitest-os.sh base` and `final2` compared by `dlo-tools/vitest-diff.cjs` | 609 tests, 496 pass and 113 fail before; **499 pass and 110 fail after** (run after the renames, 18:10); no file with a new failure (2 fixed in plugin-graph-and-routers, 1 in actor-transport). An earlier run after stage 1 had caught three newly failing handoff/child tests (they find fixtures relative to the module-under-test URL); fixed and re-run (4 of 4 pass) |
+| 7 | `bun test ./tests/sdk-surface` in `SDK`, run after the renames | 6 pass, 0 fail, 723 expects (591 before the renames; a peer added entries), including loading every entry in a fresh process and the runtime identity test of every facade |
 | 8 | `BASELINE=… node rhu2-tools/vite-resolve2.mjs` (a real Vite plugin container with the repo builders' exact-match alias, importer `E/🔌️PluginRuntime/🟦️.tsx`) | 32 of 32 new specifiers (the root plus the 31 new entries) resolve to the facade files, 0 unresolved |
 | 9 | `bun test` of the moved pure modules' own suites: `🤖️mcp/🧵️bridge/🧪️tests` (2 pass, 879 expects), `♾️infinite/🎲️board/🚪️io/📝️text/🎯️dag-input/🧪️tests` (5 pass, 68076 expects) | pass |
 | 10 | `rhu2-tools/unresolved.mjs` over all changed files and the old and new folders; `rhu2-tools/fnp-check.mjs`; `rhu2-tools/stale-names.mjs` for the five split or emptied os files; `rhu2-tools/taxcheck.mjs` | 0 unresolved relative imports; 253 framework files with 0 imports into `🛍️products`; 0 stale names; taxonomy arrays valid |
 
 ## 8. Final full cruiser run (the exact audit command)
 
-FULL-PENDING
+Command (`rhu2-tools/cruise.sh final-full full`): `node node_modules/dependency-cruiser/bin/dependency-cruise.mjs <framework> <s> <hub> <mit-bestand> --config <repo lint dependency-boundaries config> --output-type err`, the same roots and config as the baseline (the literal command is in `rhu2-tools/cruise.sh`). Outputs: `generated/rhu2-base-full-err.txt` (14:35 to 15:04, 17520 modules) and `rhu2-final-full-err.txt` (18:05 to 18:25, 17900 modules, exit 100 as the baseline's 102), rule counts in `rhu2-*-full-rules.txt`. The first final attempt (17:14) was invalid: the folder renames changed the tree under it and its 50-minute alarm fired at machine load 50; the second run used a 7000 s alarm and no source edit of mine happened during it.
+
+| Rule | Baseline | Final | Delta |
+|---|---:|---:|---:|
+| `renderer-hosts-only-ui` | 535 | **391** | -144 |
+| `framework-no-products` | 149 | 167 | +18 |
+| `no-circular` | 583 | **574** | -9 |
+| all violations | 13926 | 10596 | -3330 (peers' concurrent work dominates) |
+
+`renderer-hosts-only-ui`: 195 edges gone and 51 new by exact source-and-target text. The 51 are re-spellings and tree movement, not new coupling: 25 point at test fixture files of framework and os modules (test files whose imports were re-pointed to the fixture folders; the same sources carried an edge before), 9 are the `react` resolver artefact (new spelling for moved or renamed files such as the ShellHost session notice), 5 are tooling entries (`script.ts`), and 12 are others: Actor wire and shard-client edges owned by the parent (PluginRuntime, TaskManager), the NodeGraph loader and its tests that a peer created during the slice, `plugin-lifecycle` to the hub source factory (documented in section 4), and two UiDocumentStore tests whose inline `import()` type forms and dynamic imports now spell the framework path.
+
+`framework-no-products`: +18 edges, none from a file this slice created, moved or edited (24 new, 6 gone). The new ones are: the SDK package's own products-mirroring facade folder to library files (4, the SDK-boundary slice), `script.ts` entries of the rust, typescript and react packages to the repo library (7, the class of the previous result's hand-off), framework native-build and process test files to the repo library build test support (11, a peer's native-build test support) and one retirement-context test to an os plugin test-support file. My own check (`rhu2-tools/fnp-check.mjs`) over the 258 files I placed in the framework modules reports 1 violation, which is a peer's edit in `SDK/script.ts` (an import of the repo library).
+
+`no-circular`: 583 to 574.
 
 ## 9. Found state, peers, foreign issues
 
 - No predecessor of this slice (the previous slice `rhu` was complete). Peers changed files under me: the NodeGraph loader and its runtime package (created while I measured), `🔣️taxonomy.json`, `SDK/package.json` (a peer added a script line). Every write of mine re-read the file immediately before and changed anchored places.
 - Foreign: the wasm alias prefix (section 1), the repo vitest-policy export (section 7 row 4), the older channel-version census findings (section 3.3), `rhu2-tools/work/census.ts` shows them.
+- Foreign, found at the end: (1) `SDK/script.ts` imports the repo library (the only `framework-no-products` violation among files I touched or created, and not my edit); (2) 12 renderer test files cannot load since a peer's ui fixture entry was written at 18:28 (section 7 row 5); (3) renderer `tsc` errors in the native-build `jobserver` and the repo library `caching/vite` files (section 7 row 3); (4) the final-run `framework-no-products` growth of 18 (section 8).
+- Folder names: the first drafts of `FM/backbone`, `FM/mcp` and `FM/plugin-module` reused emojis of sibling folders; they were renamed to the backbone satellite, robot and plug emojis, with moves, repaths, `package.json` exports and facades updated; the final cruiser run and all checks in section 7 were taken after that.
 - The auto-commit stages work continuously, so `git status` cannot attribute my changes; counts here come from the tools' own tables.
 
 ## 10. Files changed

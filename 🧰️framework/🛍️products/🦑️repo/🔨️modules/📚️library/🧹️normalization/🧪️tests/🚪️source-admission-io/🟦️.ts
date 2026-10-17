@@ -133,7 +133,6 @@ describe("taxonomy source admission IO", () => {
       const emit = invoke("report", [])();
       const prepare = invoke("sourceAdmissionPrepareOptions", ["sourceAdmissionAssertLexical", "TAXONOMY_RELATIVE_PATH", "resolve", "relative", "isAbsolute", "join", "sep", "noFollowDirectoryChain", "report", "sourceAdmissionGitRows", "taxonomyScopedGitPathspec", "sourceAdmissionRepositoryFences", "sourceAdmissionAssertRepositoryPath", "sourceAdmissionLstat"])(lexical, "taxonomy", resolve, relative, isAbsolute, join, sep, () => [], emit, () => indexRows, () => ({}), () => repositoryFences, assertRepositoryPath, () => ({ isFile: () => true, isSymbolicLink: () => false }));
       const prepared = prepare(options);
-      console.log(`[DEBUG] callback-request-snapshot scope=${prepared.scope} tracked-callbacks=${events.length} replacement-callbacks=${replacementCallbacks}`);
       expect(prepared.scope).toBe<typeof row.expected.scope>(row.expected.scope);
       expect(prepared.structuralDirectoryNames).toEqual(expectedInput.structuralDirectoryNames);
       expect(prepared.structuralDirectoryNames).toEqual<typeof row.expected.structuralDirectoryNames>(row.expected.structuralDirectoryNames);
@@ -164,7 +163,6 @@ describe("taxonomy source admission IO", () => {
         const inventoryOptions = { ...cloneDeep(expectedInput), workers: worker.workers, progress: (_event: unknown) => { inventoryOptions.workers = worker.mutation; } };
         const inventory = invoke("inventoryTaxonomyWithSourceParentPruning", ["sourceAdmissionPrepareOptions", "report", "loadTaxonomy"])((request: any) => { emit(request.progress, "inventory", "tracked-enumeration", 0, 1, request.scope); return { repoRoot: request.repoRoot, scope: request.scope, taxonomyPath: request.taxonomyPath }; }, emit, () => { throw Error("taxonomy-boundary"); });
         expect(() => inventory(inventoryOptions, new Set(), () => new Uint8Array())).toThrow(outcomes[index]!);
-        console.log(`[DEBUG] inventory-worker-snapshot original=${worker.workers} attempted=${worker.mutation} outcome=${outcomes[index]}`);
       }
     }
     if (!handled) throw new Error(`Unknown neutral IO case: ${row.id}`);

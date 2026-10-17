@@ -11,6 +11,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from poslib import *
 import posunion as U
 import postrait as TR
+import poshir as HIR
 from posstub import Stub, mask, DEFINED_RX
 
 CFGS = {
@@ -24,6 +25,7 @@ CFGS = {
 PRIV = {"E0603", "E0616", "E0624", "E0451", "E0364", "E0365", "E0445", "E0446", "E0742", "E0704"}
 RESOLVE = {"E0412", "E0425", "E0422", "E0423", "E0432", "E0433", "E0405", "E0407", "E0531", "E0532", "E0574", "E0583", "E0426", "E0408", "E0424", "E0434", "E0435"}
 TYPEC = {"E0599", "E0277", "E0308", "E0282", "E0283", "E0061", "E0063", "E0559", "E0560", "E0609", "E0610", "E0614", "E0615", "E0618", "E0369", "E0053", "E0046", "E0117", "E0116", "E0119", "E0120", "E0195", "E0200", "E0201", "E0204", "E0207", "E0220", "E0229", "E0191", "E0107", "E0106", "E0038", "E0040", "E0004", "E0023", "E0026", "E0027", "E0029", "E0030", "E0034", "E0054", "E0057", "E0069", "E0070", "E0072", "E0080", "E0081", "E0084", "E0133", "E0184", "E0185", "E0186", "E0199", "E0261", "E0263", "E0271", "E0275", "E0276", "E0373", "E0381", "E0382", "E0383", "E0384", "E0499", "E0502", "E0503", "E0505", "E0506", "E0507", "E0515", "E0597", "E0599", "E0600", "E0604", "E0605", "E0606", "E0607", "E0608", "E0620"}
+FILE_CACHE = {}
 PATHRX = re.compile(r"\b(?:[a-z_][a-z0-9_]*::)+(?=[A-Za-z_{(<])")
 
 
@@ -37,11 +39,24 @@ def cat_of(code, msg):
     return "other"
 
 
+PRIV_LINE = re.compile(r'"code":\{"code":"(?:E0603|E0616|E0624|E0451)"')
+
+
+def priv_lines(err):
+    return "\n".join(l for l in err.split("\n") if PRIV_LINE.search(l[:2000])) + "\n"
+
+
+def is_trait_scope(d):
+    k = d.get("kids", "")
+    return d["code"] == "E0599" and d["msg"].startswith("no ") and ("implemented but not in scope" in k or "items from traits can only be used if the trait is in scope" in k)
+
+
 def nrm(s):
-    return re.sub(r"\bTr\d+\b", "Tr", PATHRX.sub("", s))
+    return re.sub(r"__m_[A-Za-z0-9_]+", "__m_X", re.sub(r"\bTr\d+\b", "Tr", PATHRX.sub("", s)))
 
 
 def parse_json(stderr, cwd, stub_only=frozenset()):
+    FILE_CACHE.clear()
     diags = []
     for line in stderr.split("\n"):
         line = line.strip()
@@ -82,8 +97,27 @@ def parse_json(stderr, cwd, stub_only=frozenset()):
             for tx in prim.get("text", []):
                 snippet += tx.get("text", "")[max(0, tx.get("highlight_start", 1) - 1):tx.get("highlight_end", 1) - 1] + " "
         toks = set(re.findall(r"[A-Za-z_][A-Za-z0-9_]*", msg + " " + label + " " + snippet))
-        stub = ("__ext" in rendered) or bool(toks & stub_only)
-        diags.append(dict(code=code, msg=msg, file=file_, line=ln, label=label, kids=kids, stub=stub, cat=cat_of(code, msg), line_text=line_text, hs=hs, rendered=rendered[:1800]))
+        spanlabels = " ".join((s.get("label") or "") for s in d.get("spans", [])) + " " + " ".join((s.get("label") or "") for c_ in d.get("children", []) for s in c_.get("spans", []))
+        child_snip = " ".join(tx.get("text", "") for c_ in d.get("children", []) for s_ in c_.get("spans", []) for tx in s_.get("text", [])) if code in ("E0204", "E0277", "E0599", "E0308") else ""
+        ctoks = set(re.findall(r"[A-Za-z_][A-Za-z0-9_]*", child_snip))
+        tscope_ = code == "E0599" and msg.startswith("no ") and ("implemented but not in scope" in kids or "items from traits can only be used if the trait is in scope" in kids)
+        unit_noise = ("unit type `()`" in msg) or ("`()` is not" in msg) or ("`()` doesn't implement" in msg) or ("`__dsl_" in msg) or ("for type `!`" in msg) or ("`?` operator can only be applied" in msg) or ("no field `" in msg and "type `()`" in msg) or ("found `()`" in label and code == "E0308") or (code == "E0599" and ("for type parameter" in msg or re.search(r"for (?:mutable )?reference `&(?:mut )?[A-Z][A-Za-z0-9]?`", msg)) and not tscope_) or (code == "E0599" and "trait bounds were not satisfied" in msg) or (code == "E0599" and "for struct" in msg and msg.startswith("no method named") and not tscope_ and any(w in kids for w in ("the following trait defines", "trait bounds")))
+        in_root_ = any(s_.get("file_name", "").endswith("__pos_root.rs") for s_ in d.get("spans", [])) or any(s_.get("file_name", "").endswith("__pos_root.rs") for c_ in d.get("children", []) for s_ in c_.get("spans", []))
+        stub = (in_root_ or ("__ext" in (msg + " " + label + " " + kids + " " + spanlabels)) or bool((toks | ctoks) & stub_only) or unit_noise or code == "E0747") and cat_of(code, msg) != "privacy"
+        ctx_trait = False
+        if prim and code in TR.HEAD_CODES and file_ and prim.get("byte_start") is not None and not prim.get("expansion"):
+            try:
+                tx_ = FILE_CACHE.get(os.path.join(cwd, file_))
+                if tx_ is None:
+                    with open(os.path.join(cwd, file_), "rb") as fh_:
+                        tx_ = fh_.read()
+                    FILE_CACHE[os.path.join(cwd, file_)] = tx_
+                pre_ = mask(tx_[:prim["byte_start"]].decode("utf-8", "replace"))
+                post_ = tx_[prim["byte_end"]:prim["byte_end"] + 80].decode("utf-8", "replace")
+                ctx_trait = TR.deep_trait_context(pre_, post_)
+            except Exception:
+                ctx_trait = False
+        diags.append(dict(code=code, msg=msg, file=file_, line=ln, label=label, kids=kids, stub=stub, cat=cat_of(code, msg), line_text=line_text, hs=hs, ctx_trait=ctx_trait, in_macro=any(s_.get("expansion") for s_ in d.get("spans", [])), rendered=rendered[:1800]))
     canary = [d for d in diags if d["file"].endswith("__pos_root.rs") and d["code"] in ("E0616", "E0624", "E0308")]
     reached = {d["code"] for d in canary}
     diags = [d for d in diags if d not in canary]
@@ -244,7 +278,7 @@ def run_family(spec, args):
                 if os.path.exists(full):
                     ball |= TR.broken_aliases(open(full, encoding="utf-8").read(), lnmap)
             if ball:
-                rx_ = re.compile(r"\b(" + "|".join(re.escape(x) for x in sorted(ball)) + r")\s*::")
+                rx_ = re.compile(r"\b(" + "|".join(re.escape(x) for x in sorted(ball)) + r")\b")
                 for c_ in d["crates"]:
                     for rel_ in c_.code:
                         full = os.path.join(d["dir"], c_.mod, rel_)
@@ -308,9 +342,10 @@ def run_family(spec, args):
                 feats = U.cfg_args(d["crates"])
                 err, sec = rn.run_rustc(d["dir"], CFGS[c_], feats, f"{s}_{c_}")
                 diags, reached = parse_json(err, d["dir"], stub_only)
-                results[(s, c_)] = dict(diags=diags, canary=sorted(reached), seconds=round(sec), stderr_len=len(err))
-                log_write(f"{GEN}/pos-{name}-{label}-{s}-{c_}-it{it}.err", err[:1_500_000])
-                log_write(f"{GEN}/pos-{name}-{label}-{s}-{c_}-it{it}-nonstub.txt", "\n".join(f"#{k} {x['code']} {x['file']}:{x['line']}\n{x['rendered']}" for k, x in enumerate(x for x in diags if not x["stub"])))
+                results[(s, c_)] = dict(diags=diags, canary=sorted(reached), seconds=round(sec), stderr_len=len(err), ice=HIR.ice_items(err))
+                log_write(f"{GEN}/{PREFIX}-{name}-{label}-{s}-{c_}-it{it}.err", err[:12_000_000])
+                log_write(f"{GEN}/{PREFIX}-{name}-{label}-{s}-{c_}-final.err", err[:30_000_000]); log_write(f"{GEN}/{PREFIX}-{name}-{label}-{s}-{c_}-priv.err", priv_lines(err))
+                log_write(f"{GEN}/{PREFIX}-{name}-{label}-{s}-{c_}-it{it}-nonstub.txt", "\n".join(f"#{k} {x['code']} {x['file']}:{x['line']}\n{x['rendered']}" for k, x in enumerate(x for x in diags if not x["stub"])))
                 print(f"[{name}] it{it} {s}/{c_}: {len(diags)} errors in {round(sec)}s", flush=True)
         new_fill = False
         newattr = set()
@@ -353,7 +388,7 @@ def run_family(spec, args):
         new_tfix = False
         for (s, c_), r in results.items():
             for dg in r["diags"]:
-                fx = TR.fix_from_diag(dg)
+                fx = TR.fix_from_diag(dg) if not dg.get("in_macro") else None
                 if fx and dg["file"]:
                     bucket = tfixes.setdefault(s, {}).setdefault(dg["file"], set())
                     if fx not in bucket:
@@ -391,6 +426,62 @@ def run_family(spec, args):
         if not new_fill or it == iters - 1:
             break
         print(f"[{name}] grew stub globs by {len(fills)} names; re-running", flush=True)
+    result["hir_cull"] = {}
+    result["ice_bodies"] = {}
+    hir_counter = [0]
+    dirty = {}
+    for s, d in sides.items():
+        for c_ in cfgs:
+            if len(results[(s, c_)]["canary"]) == 3:
+                continue
+            rows_all, ice_all = [], []
+            hir_done = False
+            if dirty.get(s):
+                en = U.feature_closure(d["crates"], "test" in c_, mans)
+                for c in d["crates"]:
+                    c.features = en[c.pkg]
+                err, sec = rn.run_rustc(d["dir"], CFGS[c_], U.cfg_args(d["crates"]), f"{s}_{c_}_h")
+                diags, reached = parse_json(err, d["dir"], stub_only)
+                results[(s, c_)] = dict(diags=diags, canary=sorted(reached), seconds=round(sec), stderr_len=len(err), ice=HIR.ice_items(err))
+                log_write(f"{GEN}/{PREFIX}-{name}-{label}-{s}-{c_}-final.err", err[:30_000_000]); log_write(f"{GEN}/{PREFIX}-{name}-{label}-{s}-{c_}-priv.err", priv_lines(err))
+                print(f"[{name}] refreshed {s}/{c_} after earlier rewrites: {len(diags)} errors, canary {sorted(reached)}", flush=True)
+                if len(reached) == 3:
+                    continue
+            for rnd in range(int(args.get("hir_rounds", 60))):
+                en = U.feature_closure(d["crates"], "test" in c_, mans)
+                for c in d["crates"]:
+                    c.features = en[c.pkg]
+                t_h = time.time()
+                if results[(s, c_)].get("ice"):
+                    rows = HIR.neutralise_bodies(rn.sb, d["dir"], results[(s, c_)]["ice"], mask)
+                    ice_all += rows
+                    dirty[s] = True
+                    print(f"[{name}] ice round {rnd} {s}/{c_}: {[(r['fn'], r['note']) for r in rows][:3]}", flush=True)
+                    if not any(r["note"].startswith("body replaced") for r in rows):
+                        break
+                elif not hir_done:
+                    spans = HIR.scan(d["dir"], [TOOLCHAIN], U.cfg_args(d["crates"]) + CFGS[c_])
+                    rows = HIR.rewrite_files(rn.sb, d["dir"], spans, hir_counter, d["dir"] + "/__pos_root.rs")
+                    rows_all += rows
+                    dirty[s] = dirty.get(s) or bool(rows)
+                    hir_done = True
+                    print(f"[{name}] hir scan {s}/{c_} round {rnd}: {len(spans)} unresolved trait refs, {len(rows)} rewritten in {round(time.time() - t_h)}s", flush=True)
+                    if not rows:
+                        break
+                else:
+                    break
+                err, sec = rn.run_rustc(d["dir"], CFGS[c_], U.cfg_args(d["crates"]), f"{s}_{c_}_h")
+                diags, reached = parse_json(err, d["dir"], stub_only)
+                results[(s, c_)] = dict(diags=diags, canary=sorted(reached), seconds=round(sec), stderr_len=len(err), ice=HIR.ice_items(err))
+                log_write(f"{GEN}/{PREFIX}-{name}-{label}-{s}-{c_}-h{rnd}-nonstub.txt", "\n".join(f"#{k} {x['code']} {x['file']}:{x['line']}\n{x['rendered']}" for k, x in enumerate(x for x in diags if not x["stub"])))
+                log_write(f"{GEN}/{PREFIX}-{name}-{label}-{s}-{c_}-final.err", err[:30_000_000]); log_write(f"{GEN}/{PREFIX}-{name}-{label}-{s}-{c_}-priv.err", priv_lines(err))
+                print(f"[{name}] after hir cull {s}/{c_}: {len(diags)} errors, canary {sorted(reached)}", flush=True)
+                if len(reached) == 3:
+                    break
+            if rows_all:
+                result["hir_cull"][f"{s}/{c_}"] = rows_all
+            if ice_all:
+                result["ice_bodies"][f"{s}/{c_}"] = ice_all
     final = results
     result["quarantined"] = {}
     if args.get("quarantine"):
@@ -406,8 +497,8 @@ def run_family(spec, args):
                             c.features = en[c.pkg]
                         err, sec = rn.run_rustc(d["dir"], CFGS[c_], U.cfg_args(d["crates"]), f"{s}_{c_}_q")
                         diags, reached = parse_json(err, d["dir"], stub_only)
-                        results[(s, c_)] = dict(diags=diags, canary=sorted(reached), seconds=round(sec), stderr_len=len(err))
-                        log_write(f"{GEN}/pos-{name}-{label}-{s}-{c_}-q-nonstub.txt", "\n".join(f"#{k} {x['code']} {x['file']}:{x['line']}\n{x['rendered']}" for k, x in enumerate(x for x in diags if not x["stub"])))
+                        results[(s, c_)] = dict(diags=diags, canary=sorted(reached), seconds=round(sec), stderr_len=len(err), ice=HIR.ice_items(err))
+                        log_write(f"{GEN}/{PREFIX}-{name}-{label}-{s}-{c_}-q-nonstub.txt", "\n".join(f"#{k} {x['code']} {x['file']}:{x['line']}\n{x['rendered']}" for k, x in enumerate(x for x in diags if not x["stub"])))
                         print(f"[{name}] quarantined {s}/{c_}: {len(diags)} errors, canary {sorted(reached)}", flush=True)
         final = results
     result["strip_attrs"] = sorted(strip_attrs)
@@ -440,6 +531,15 @@ def run_family(spec, args):
                 seen[k] += 1
                 if seen[k] > kb.get(k, 0):
                     newlist.append(d)
+            base_names = {}
+            for b_ in base:
+                for x_ in re.findall(r"`([^`]+)`", b_["msg"]):
+                    base_names.setdefault(b_["code"], set()).add(x_.split("::")[-1])
+            for d_ in newlist:
+                if d_["cat"] == "resolve" and not d_["stub"]:
+                    nm_ = {x_.split("::")[-1] for x_ in re.findall(r"`([^`]+)`", d_["msg"])}
+                    if nm_ and nm_ <= base_names.get(d_["code"], set()):
+                        d_["inherited"] = True
             entry["new_list"] = newlist
             entry["gone_keys"] = [dict(code=k[0], msg=k[1], label=k[2], n=n) for k, n in sorted(gone.items())]
         else:
@@ -448,13 +548,13 @@ def run_family(spec, args):
     result["summary"] = summary
     result["definition_sides"] = {s: d["dir"] for s, d in sides.items()}
     for c_n, e_ in summary.items():
-        log_write(f"{GEN}/pos-{name}-{label}-new-{c_n}.txt", "\n".join(f"#{k} {x['code']} {x['file']}:{x['line']} stub={x['stub']}\n{x.get('rendered', '')}" for k, x in enumerate(e_.get("new_list", [])[:400])))
+        log_write(f"{GEN}/{PREFIX}-{name}-{label}-new-{c_n}.txt", "\n".join(f"#{k} {x['code']} {x['file']}:{x['line']} stub={x['stub']}\n{x.get('rendered', '')}" for k, x in enumerate(e_.get("new_list", [])[:400])))
         for d_ in e_.get("new_list", []):
             d_.pop("rendered", None)
-    out_json = f"{GEN}/pos-{name}-{label}-result.json"
+    out_json = f"{GEN}/{PREFIX}-{name}-{label}-result.json"
     log_write(out_json, json.dumps(result, ensure_ascii=False, indent=1))
     txt = render_text(result)
-    log_write(f"{GEN}/pos-{name}-{label}-report.txt", txt)
+    log_write(f"{GEN}/{PREFIX}-{name}-{label}-report.txt", txt)
     print(txt)
     return result
 
@@ -468,17 +568,29 @@ def render_text(result):
     out = [f"== family {result['family']} label {result['label']} iterations {result['iterations']} stub-glob-fills {result['stub_glob_fills']} stripped attrs {result['strip_attrs']}"]
     for s, d in result["sides"].items():
         out.append(f"   side {s}: {len(d['crates'])} crates; absent {d['absent']}; missing files { {k: v for k, v in d['missing_files'].items()} }; dup macros {d['dup_macros']}; excluded heads {d['excluded_heads']}")
+    for sc_, rows_ in (result.get("ice_bodies") or {}).items():
+        out.append(f"   ICE-BODIES {sc_}: {len(rows_)} fn bodies replaced by `loop {{}}` because rustc panicked (internal compiler error) while type-checking them: " + "; ".join(f"{r['file'][-60:]}:{r['line']} `{r['fn']}` ({r['note']})" for r in rows_[:12]))
+    for sc_, rows_ in (result.get("hir_cull") or {}).items():
+        out.append(f"   HIR-CULL {sc_}: {len(rows_)} Res::Err trait refs rewritten to stub traits (body type-check was blocked by them): " + "; ".join(f"{r['file'][-70:]}:{r['line']} `{r['path'][:40]}`" for r in rows_[:10]))
     if result.get("quarantined"):
         for s_, q_ in result["quarantined"].items():
             out.append(f"   QUARANTINE {s_}: " + ("canary never reached by emptying files" if q_ is None else f"{len(q_)} file(s) emptied so that body type-check runs: " + "; ".join(x[-110:] for x in q_[:12])))
     for c_, e in result["summary"].items():
         out.append(f"-- cfg {c_}: cur errors {e['cur_total']} (stub-involved {e['cur_noise']}), {e['seconds']}s" + (f"; base errors {e['base_total']}; NEW {e['new']}; GONE {e['gone']}" if "base_total" in e else "; absolute (no baseline)"))
         out.append(f"   typeck canary (E0616,E0624,E0308 expected): cur {e['canary_cur']} base {e['canary_base']}")
+        out.append(f"   new errors flagged as stub-layer noise (hidden below): {sum(1 for d in e['new_list'] if d['stub'])}")
         out.append("   by code: " + ", ".join(f"{k}={v}" for k, v in e["by_code"].items()))
         grp = collections.defaultdict(list)
+        e["new_stub_filtered"] = sum(1 for d in e["new_list"] if d["stub"])
+        e["new_inherited"] = sum(1 for d in e["new_list"] if d.get("inherited") and not d["stub"])
+        out.append(f"   new resolve rows whose every name is also unresolved in the baseline (inherited by name, hidden below): {e['new_inherited']}")
         for d in e["new_list"]:
-            grp[d["cat"]].append(d)
-        for cat in ("privacy", "resolve", "type", "other"):
+            if not d["stub"] and not d.get("inherited"):
+                if is_trait_scope(d):
+                    grp["trait-scope"].append(d)
+                else:
+                    grp[d["cat"]].append(d)
+        for cat in ("privacy", "trait-scope", "resolve", "type", "other"):
             lst = grp.get(cat, [])
             out.append(f"   {cat}: {len(lst)}" + (" (non-stub, new)" if "base_total" in e else " (non-stub)"))
             g2 = collections.OrderedDict()

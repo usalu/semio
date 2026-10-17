@@ -18,7 +18,6 @@ test("original retained text decoding corpus preserves independent JSON and SQLi
   }
   expect(decoding.invalid).toHaveLength(7);
  }finally{database.close();}
- console.log("[DEBUG] original text unescape neutral cases preserve JSON/SQLite/TextEncoder exact Unicode bytes");
 });
 test("controlled decoder intrinsic corpus has closed independent literal and arithmetic identities",()=>{
  const mirror=resolve(owner,"../../../..","🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🧬️schema");

@@ -9,6 +9,8 @@ description = "Trinity Jack artifact"
 [package.metadata.semio]
 role = "artifact"
 
+[features]
+testkit = ["semio-s-artifact-trinity-jack-model/testkit", "semio-s-artifact-trinity-jack-graph-manifest-tests/testkit", "semio-s-artifact-trinity-jack-window-config/testkit", "semio-s-artifact-trinity-jack-inferences/testkit", "semio-s-artifact-trinity-jack-language-service/testkit", "semio-s-artifact-trinity-jack-schema/testkit", "semio-s-artifact-trinity-jack-executor/testkit", "semio-s-artifact-trinity-jack-results-window/testkit", "semio-s-artifact-trinity-jack-transient/testkit", "semio-s-artifact-trinity-jack-jack/testkit"]
 [lints]
 workspace = true
 
@@ -16,6 +18,16 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-s-artifact-trinity-jack-model = { path = "../../🔨️modules/⚠️errors/📦️packages/🦀️rust" }
+semio-s-artifact-trinity-jack-graph-manifest-tests = { path = "../../🛂️manifest/🧪️tests/🔬️unit/📦️packages/🦀️rust" }
+semio-s-artifact-trinity-jack-window-config = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🌐️graph/🎚️config/📦️packages/🦀️rust" }
+semio-s-artifact-trinity-jack-inferences = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦️packages/🦀️rust" }
+semio-s-artifact-trinity-jack-language-service = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🗣️language-service/📦️packages/🦀️rust" }
+semio-s-artifact-trinity-jack-schema = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust" }
+semio-s-artifact-trinity-jack-executor = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️executor/📦️packages/🦀️rust" }
+semio-s-artifact-trinity-jack-results-window = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🫧️transient/📦️packages/🦀️rust" }
+semio-s-artifact-trinity-jack-transient = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/📦️packages/🦀️rust" }
+semio-s-artifact-trinity-jack-jack = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust" }
 semio-framework-job-fault-publication = { path = "../../../../../../../🧰️framework/🔨️modules/🧵️job/📬️outcome/📤️publication/⚠️fault/📦️packages/🦀️rust" }
 semio-framework-composition-admission = { path = "../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧩️composition/📥️admission/📦️packages/🦀️rust" }
 semio-s-artifact-trinity-jack-graph-query = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🪆️graph-query/📦️packages/🦀️rust" }
@@ -33,6 +45,7 @@ semio-framework-schema-registry = { path = "../../../../../../../🧰️framewor
 semio-framework-2d = { path = "../../../../../../../🧰️framework/🔨️modules/◻️2d/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework = { workspace = true }
+semio-framework-action-bus = { path = "../../../../../../../🧰️framework/🔨️modules/🎯️action-bus/📦️packages/🦀️rust" }
 semio-framework-artifact-flow-flow = { workspace = true }
 semio-framework-geometry = { workspace = true }
 semio-framework-graph-manifest = { workspace = true }

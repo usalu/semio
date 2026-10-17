@@ -16,8 +16,13 @@ import {
   type BootstrapUiStatus,
 } from "../../🧱️elements/🏛️ShellHost/🪪️host-bootstrap/🟦️.tsx";
 import hostBootstrapFixture from "../../🧱️elements/🏛️ShellHost/🧪️tests/🧫️fixtures/🪪️host-bootstrap/🔣️.json";
-import { pluginAvailabilityRouteV1, pluginInstallBandTextV1, pluginInstallProgressTotalV1 } from "../../🧱️elements/🛠️ShellHelpers/🟦️.tsx";
-import { localProgramsV1, programPluginIdV1, sessionProgramsV1, upsertLoadedProgramV1, type LoadedProgramState } from "../../🧱️elements/🐚️Shell/🟦️.tsx";
+import {
+  pluginAvailabilityRouteV1,
+  pluginInstallBandTextV1,
+  pluginInstallProgressTotalV1
+} from "../../🧱️elements/🛠️ShellHelpers/🛣️route-and-chrome/🟦️.tsx";
+import { localProgramsV1, programPluginIdV1, sessionProgramsV1, type LoadedProgramState } from "../../🧱️elements/🐚️Shell/📦️program-sessions/🟦️.ts";
+import { upsertLoadedProgramV1 } from "../../🧱️elements/🐚️Shell/♻️slice-reducers/🟦️.ts";
 import { extensionProgramForV1, invocationPluginIdV1, spaceIndexOpeningArgsV1 } from "../../🧱️elements/🏛️ShellHost/🟦️.tsx";
 import { SpaceDirectoryHistoryV1 } from "../../🧱️elements/🏛️ShellHost/📇️space-directory/🟦️.ts";
 import rendererSchema from "../../../🧬️schema/🔣️.json" with { type: "json" };

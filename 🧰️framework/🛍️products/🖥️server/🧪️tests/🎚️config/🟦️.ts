@@ -12,14 +12,11 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), "../../📦️pack
 export default defineConfig({
   root: testRoot,
   resolve: {
-    alias: {
-      "@semio-tech/framework-server": resolve(root, "🟦️.ts"),
-    },
+    alias: [{ find: /^@semio-tech\/framework-server$/u, replacement: resolve(root, "🟦️.ts") }],
   },
   test: {
     root: testRoot,
     name: "@semio-tech/framework-server",
-    mode: "test",
     environment: "node",
     include: [],
     coverage: { include: ["../../🟦️.ts"] },

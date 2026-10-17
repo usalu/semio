@@ -1,4 +1,36 @@
-use super::*;
+use semio_framework_plugin::SurfaceKind;
+use serde_json::json;
+#[allow(unused_imports)]
+use crate::schema::terrain_descriptor::TerrainDescriptorJson;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::io::text::snapshot::build_terrain_scene_json;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::io::text::snapshot::fixture_descriptor;
+#[allow(unused_imports)]
+use crate::GisTerrainSnapshot;
+#[allow(unused_imports)]
+use semio_framework_plugin::plugin_app_close_prelude::SurfaceKind as ContractSurfaceKind;
+#[allow(unused_imports)]
+use semio_framework_plugin::scene_surface;
+#[allow(unused_imports)]
+use semio_framework_plugin::world3d_selection_json;
+#[allow(unused_imports)]
+use semio_framework_plugin::BuiltNode;
+#[allow(unused_imports)]
+use semio_framework_ui_locale::LocalizedLabel;
+#[allow(unused_imports)]
+use semio_framework_plugin::UiAssemblyResult;
+#[allow(unused_imports)]
+use semio_framework_plugin::WindowKindDefinition;
+#[allow(unused_imports)]
+use semio_framework_plugin::WindowOptions;
+#[allow(unused_imports)]
+use semio_framework_plugin::World3dScene;
+#[allow(unused_imports)]
+use semio_framework_surface::terrain::projection;
+#[allow(unused_imports)]
+use serde_json::Value;
+use crate::editor::gis3d::modes::view::windows::terrain::*;
 use crate::editor::gis3d::unit_tests::context::{app, close, render as render_body};
 
 #[semio_framework_async_macros::async_test]

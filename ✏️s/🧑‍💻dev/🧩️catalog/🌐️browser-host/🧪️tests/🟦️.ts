@@ -10,7 +10,7 @@ import {fileURLToPath} from "node:url";
 import {mkdirSync,mkdtempSync,readFileSync,readdirSync,writeFileSync,rmSync} from "node:fs";
 import {exactSpaceCreateArtifactArgs} from "../🏗️staging/🟦️.ts";
 import {TEST_BROWSER_ACTIVATION_ROOT_ENV,TEST_BROWSER_HOST_RECEIPT_ENV,TEST_BROWSER_MODULE_ROOT_ENV,closeTestBrowserHostStagingV1,parseTestBrowserGisMaterializationReceiptV1,parseTestBrowserHostStagingReceiptV1,prepareTestBrowserHostRootsV1,resolveTestBrowserHostRootsV1,writeTestBrowserGisMaterializationReceiptV1} from "../🟦️.ts";
-import {readActivationReceipt,ACTIVATION_RECEIPT_FILE} from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🟦️.ts";
+import {readActivationReceipt,ACTIVATION_RECEIPT_FILE} from "@semio-tech/framework-os-dev/activation";
   const ownedRelativeFiles = (root: string): string[] => {
     const files: string[] = [];
     const visit = (directory: string): void => {

@@ -3,7 +3,7 @@
 #[allow(unused_imports)]
 mod mutations_codec {
 use super::*;
-use crate::editor::bitmap::transient::component::mutations::*;
+use crate::editor::bitmap::transient::component::*;
 use crate::editor::bitmap::transient::component::BitmapTransient;
 
 impl protocol::OpText for BitmapTransientMutation {
@@ -30,7 +30,7 @@ impl protocol::OpText for BitmapTransientMutation {
 #[allow(unused_imports)]
 mod mutations_wire_codec {
 use super::*;
-use crate::editor::bitmap::transient::component::mutations::*;
+use crate::editor::bitmap::transient::component::*;
 use crate::editor::bitmap::transient::component::BitmapTransient;
 
 /// 🌉️ The committed-vector report of this state lane for the language-neutral case adapter, which links only this

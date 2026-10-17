@@ -2,7 +2,7 @@
 //!
 //! Carved out of `🏗️bootstrap/🦀️.rs`; mounted from its root with `#[path]`.
 
-use directory::os_directory::io::text::access_policy::directory_access_permits;
+use directory::os_directory::access_policy::directory_access_permits;
 use axum::extract::ws::{CloseFrame, Message, WebSocket, WebSocketUpgrade};
 use axum::extract::{Path, Query, State};
 use axum::http::{HeaderMap, StatusCode};

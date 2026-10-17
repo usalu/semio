@@ -1,4 +1,24 @@
-use super::*;
+use crate::editor::gis2d::modes::edit::windows::map::config::MapWindowConfig;
+use semio_framework_plugin::WindowMeasure;
+use semio_framework_surface::tiled_map::MAP_LOD_MODE_AUTOMATIC;
+#[allow(unused_imports)]
+use crate::editor::gis2d::maphost;
+#[allow(unused_imports)]
+use crate::editor::gis2d::constants_and_io::gis2d_window_action;
+#[allow(unused_imports)]
+use crate::editor::gis2d::terminology::Gis2dPlayLabels;
+#[allow(unused_imports)]
+use semio_framework_plugin::ActionArgOption;
+#[allow(unused_imports)]
+use semio_framework_ui_locale::LocalizedLabel;
+#[allow(unused_imports)]
+use semio_framework_plugin::MeasureSelectItem;
+#[allow(unused_imports)]
+use crate::tile_coordinates::gis_policy::gis_map_lod_scale_json;
+#[allow(unused_imports)]
+use serde_json::Value;
+use crate::editor::gis2d::modes::edit::windows::map::options::lod_mode::{resolved_automatic_lod_id};
+use crate::editor::gis2d::modes::edit::windows::map::options::lod_mode::*;
 use crate::editor::gis2d::terminology::gis2d_labels;
 use crate::GisMapSnapshot;
 

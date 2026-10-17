@@ -1,6 +1,6 @@
 //! 🔺️ `delete-step` — sparse diff construction.
 
-use super::mutation::DeleteStep;
+use crate::standards::v1::subsets::any::schema::mutations::delete_step::mutation::DeleteStep;
 use crate::schema::diff::FormsStepsDelta;
 use crate::{forms_steps, FormsDiff, FormsSnapshot};
 

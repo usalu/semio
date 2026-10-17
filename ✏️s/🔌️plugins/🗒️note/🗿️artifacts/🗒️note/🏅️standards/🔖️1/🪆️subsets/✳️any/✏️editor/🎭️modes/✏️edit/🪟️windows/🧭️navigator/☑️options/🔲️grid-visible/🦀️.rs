@@ -13,7 +13,7 @@ pub fn measure(document: &NoteSnapshot, labels: &NotePlayLabels) -> WindowMeasur
         label: Some(labels.measure_show_grid.into()),
         pressed: document.grid_visible.unwrap_or(true),
         text: None,
-        on_change: crate::editor::note::note_action("setGridVisible", None),
+        on_change: crate::editor::note::support::note_action("setGridVisible", None),
     }
 }
 //#endregion 🔖️Measure

@@ -12,7 +12,6 @@ for(const row of fixtures.cases)test(row.name,async()=>{
  const oracle=row.ownerKind===null?"empty":row.sourceKind!=="file"||!reference(row.contribution)?"refused":"admitted";
  if("reject" in row){expect(oracle).toBe("refused");await expect(loadCatalogBuildProvidersV1(fixtures.providers,ports)).rejects.toThrow();}
  else{const supplied=await loadCatalogBuildProvidersV1(fixtures.providers,ports);expect(supplied.length).toBe(row.count);expect(catalogBuildContributionForManifestV1(supplied,"applications/design/plugins/demo/Cargo.toml")?.project).toBe(row.count?"design-composition":undefined);}
- console.log("[DEBUG] Build catalog provider",row.name,oracle);
 });
 test("absent application providers never inspect owner paths",async()=>{expect(await loadCatalogBuildProvidersV1(fixtures.noProviders,{readText:()=>{throw Error("unexpected source read");},kind:()=>{throw Error("unexpected owner read");},load:async()=>{throw Error("unexpected owner import");}})).toEqual([]);});
 

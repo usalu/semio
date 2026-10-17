@@ -2,7 +2,7 @@
 //! operation, so these commands write nothing; the keybinding table binds a key to each (W wall, C column, B beam, S slab, R roof, N window, D door, T stair, L railing,
 //! P space, G grid, M measure, V select, E move, Q rotate, Shift+S slab from walls, Shift+W split wall). Arming a utility drops the gesture another utility had in progress.
 
-use crate::editor::bim::BimDispatchCtx;
+use crate::editor::bim::dispatch_context::BimDispatchCtx;
 use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
 use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault, NoConfig, NoConfigMutation};
 

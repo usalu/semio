@@ -7,6 +7,10 @@ import { checkResourceLeaseControl } from "../../../../🔒️leases/🟦️.ts"
 import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { startAdmissionBrokerV1, type UnitRecordV1 } from "../../🎟️admission/🟦️.ts";
+import { verifyCapturedCargoArtifactsV1, type CargoArtifactBuildOptionsV1 } from "../../🟦️.ts";
+import { CARGO_PROVENANCE_RECEIPT_MAX_BYTES_V1 } from "../../🧾️receipt/🟦️.ts";
+import { scriptCompilerAdmissionControlV1 } from "../../../../🏗️build/🎟️capacity/🟦️.ts";
+import { withScriptInvocationSignalV1, type IssuedScriptInvocationV1 } from "../../../../🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import { createJobserverV1, defaultJobserverStyleV1 } from "../../🎰️jobserver/🟦️.ts";
 import type { BuildScriptRunV1 } from "../../📈️telemetry/🟦️.ts";
 import { acquireNativeStorageV1, nativeStorageRetirementPortV1, type NativeStorageReservationV1 } from "../../💾️storage/🟦️.ts";
@@ -26,6 +30,16 @@ export type LawStorageV1 = Readonly<{ storage: NativeStorageReservationV1; root:
 /** 🗄️ Retains the real scoped Native body and its allocation until accepted work and terminal cleanup settle. */
 export function withLawStorageV1<T>(control:CompilerAdmissionControl,filesystemBytes:number,body:(held:LawStorageV1,control:CompilerAdmissionControl)=>Promise<T>):Promise<T>{
  const directory=join(mkdtempSync(join(artifacts,"i-")),"i");return withNativeImageStorageV1({directory,leaseDirectory:artifacts,filesystemBytes,maximumPhysicalBytes:filesystemBytes+policy.imageSlackBytes,control},async(image,control)=>{const root=join(image.root,"o");let storage:NativeStorageReservationV1|undefined;try{storage=await acquireNativeStorageV1({policy:{version:1,root:image.root,leaseDirectory:artifacts,capacityBytes:image.maximumPhysicalBytes,maximumWorkspaceBytes:filesystemBytes,maximumArtifactBytes:filesystemBytes},control,port:nativeStorageRetirementPortV1(image.port,async()=>rmSync(root,{recursive:true,force:true})),owner:"law:"+basename(resolve(directory,"..")),kind:"compiler-workspace",bytes:filesystemBytes});const home=join(root,"h"),temporary=join(root,"tmp");for(const path of[root,home,temporary])mkdirSync(path,{recursive:true});return await body({storage,root,environment:{CARGO_HOME:home,TMPDIR:temporary,TMP:temporary,TEMP:temporary}},control);}finally{if(storage)await storage.retire();}});
+}
+
+/** 🗄️ Retains the real scoped Native body inside a compiler reservation derived from an issued invocation and the case's own cancellation, so the build, relay and storage laws share one original authority. */
+export function withIssuedLawStorageV1<T>(original:IssuedScriptInvocationV1,signal:AbortSignal,body:(held:LawStorageV1,control:CompilerAdmissionControl,invocation:IssuedScriptInvocationV1)=>Promise<T>):Promise<T>{
+ return withScriptInvocationSignalV1(original,signal,invocation=>withLawStorageV1(scriptCompilerAdmissionControlV1(invocation,"law:storage",120000),lawStoragePolicyV1.realImageBytes,(held,control)=>body(held,control,invocation)));
+}
+
+/** 🏗️ Completes one build's options with the reservation, Source boundary and finite completed consumer every build requires; the ticket mirror stays unset unless the case names it. */
+export function lawBuildOptionsV1(held:LawStorageV1,control:CompilerAdmissionControl,extra:Partial<CargoArtifactBuildOptionsV1>={}):CargoArtifactBuildOptionsV1{
+ return{control,storage:held.storage,sourceBoundary:lawSourceBoundaryV1,maximumObservationBytes:CARGO_PROVENANCE_RECEIPT_MAX_BYTES_V1,consume:verifyCapturedCargoArtifactsV1,...extra,environment:{...process.env,...held.environment,SEMIO_TEST_ARTIFACT_DIR:undefined,...extra.environment}};
 }
 
 /** 📐️ The fixed image sizes, the slack each law's image envelope admits and the storage reserve a law's small image keeps free, kept with the Source

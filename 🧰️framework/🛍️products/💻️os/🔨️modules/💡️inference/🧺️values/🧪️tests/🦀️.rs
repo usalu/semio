@@ -45,6 +45,5 @@ async fn original_inferred_values_same_source_donor_denials_partial_cancel_and_f
         }
         assert!(values.terminal_is_empty());assert!(caller.turn(grant,|cx|Ok(cx.original_source_parent()?.original_loans_are_returned())).unwrap());assert_eq!(births,releases);caller.retire(grant);
         let(_,born,freed)=semio_framework_trace_memory_testing::observe_backing(||drop(values));assert_eq!((born,freed),(0,0));
-        eprintln!("[DEBUG] original inference values op969/gen17 stop{stop} turns{turns} capacity{births}=release{releases}; refused exact output donor preserved; typed payload before source return; terminal Drop0");
     }
 }

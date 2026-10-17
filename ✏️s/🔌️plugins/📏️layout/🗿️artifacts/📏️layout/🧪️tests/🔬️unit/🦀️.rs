@@ -1,6 +1,7 @@
 use semio_s_artifact_layout_layout_model::{Frame, LAYOUT_DOCUMENT_SCHEMA, LayoutBounds, LayoutRect, artifact_kind, background_drawing_child_handle};
 use semio_s_artifact_layout_layout_diff::LayoutDiff;
 use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
+use semio_framework_io_ports::testkit::{bind, scene_content};
 
 fn rect_frame(id: &str, visible: Option<bool>) -> Frame {
     Frame::Rect { id: id.into(), layer_id: "layer-1".into(), bounds: LayoutBounds { x: 0.0, y: 0.0, width: 10.0, height: 10.0, rotation: 0.0 }, locked: None, visible, fill: None, stroke: None }
@@ -47,6 +48,7 @@ async fn artifact_kind_uses_the_fixture_schema() {
 
 #[test]
 fn layout_document_contract_json_text_pack_projection_and_identity() {
+    bind(&semio_s_artifact_layout_layout_model::LAYOUT_BACKGROUND_DRAWING);
     let source = include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🔬️contract/🪪️document/🔣️.json");
     let fixture: serde_json::Value = serde_json::from_str(source).expect("language-neutral Layout document fixture");
     let document_json = serde_json::to_string(&fixture["document"]).expect("Layout document JSON");
@@ -87,7 +89,7 @@ fn layout_document_contract_json_text_pack_projection_and_identity() {
 
 #[semio_framework_async_macros::async_test]
 async fn background_drawing_identity_depends_only_on_canonical_content() {
-    let content = SemioDrawingSnapshot::default();
+    let content = scene_content(&Default::default());
     let dwg = background_drawing_child_handle("dwg", &content);
     let svg = background_drawing_child_handle("svg", &content);
     assert_eq!(dwg.handle.child_id, svg.handle.child_id);

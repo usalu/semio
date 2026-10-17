@@ -3,11 +3,14 @@
 use super::super::create_slab_type::CreateSlabType;
 use super::super::cascade;
 use super::DeleteSlabType;
-use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{snapshot::ModelSnapshot};
 
-pub fn inverse(payload: &DeleteSlabType, base: &ModelSnapshot) -> Vec<ModelMutation> {
+pub fn inverse<Op>(payload: &DeleteSlabType, base: &ModelSnapshot) -> Vec<Op>
+where
+    Op: crate::standards::v1::subsets::any::schema::mutations::cascade::RemovalInverse + From<crate::standards::v1::subsets::any::schema::mutations::create_slab_type::CreateSlabType>,
+{
     match base.slab_types.get(&payload.id) {
-        Some(slab_type) => cascade::data_rows(base, &payload.id).into_iter().chain(std::iter::once(ModelMutation::CreateSlabType(CreateSlabType { id: payload.id.clone(), slab_type: slab_type.clone() }))).collect(),
+        Some(slab_type) => cascade::data_rows(base, &payload.id).into_iter().chain(std::iter::once(Op::from(CreateSlabType { id: payload.id.clone(), slab_type: slab_type.clone() }))).collect(),
         None => Vec::new(),
     }
 }

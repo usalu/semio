@@ -311,5 +311,49 @@
       },
       "accepted": false
     }
+  ],
+  "runtimeCases": [
+    {
+      "id": "current",
+      "path": null,
+      "value": null,
+      "sourceMatches": true,
+      "inputsMatch": true
+    },
+    {
+      "id": "source",
+      "path": "child.rs",
+      "value": "pub fn b(){}",
+      "sourceMatches": false,
+      "inputsMatch": false
+    },
+    {
+      "id": "embedded",
+      "path": "data.txt",
+      "value": "def",
+      "sourceMatches": false,
+      "inputsMatch": false
+    },
+    {
+      "id": "configuration",
+      "path": "policy.json",
+      "value": "bbbb",
+      "sourceMatches": true,
+      "inputsMatch": false
+    },
+    {
+      "id": "stale-source",
+      "path": "child.rs",
+      "value": "pub fn b(){}",
+      "sourceMatches": false,
+      "inputsMatch": false
+    },
+    {
+      "id": "stale-configuration",
+      "path": "policy.json",
+      "value": "bbbb",
+      "sourceMatches": true,
+      "inputsMatch": false
+    }
   ]
 }

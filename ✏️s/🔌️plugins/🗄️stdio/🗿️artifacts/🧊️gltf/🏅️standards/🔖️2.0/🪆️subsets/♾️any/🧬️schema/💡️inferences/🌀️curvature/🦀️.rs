@@ -9,9 +9,9 @@ pub mod mean_curvature;
 #[path = "🗡️sharp-feature-proportion/🦀️.rs"]
 pub mod sharp_feature_proportion;
 
-use super::super::modules::measurement_contracts::*;
-use super::super::modules::vector_operations::{cross, dot, norm, normalize, sub};
-use super::geometry_core::{statistics, triangle_area, GltfGeometryContext};
+use crate::standards::v2_0::subsets::any::schema::modules::measurement_contracts::*;
+use crate::standards::v2_0::subsets::any::schema::modules::vector_operations::{cross, dot, norm, normalize, sub};
+use crate::standards::v2_0::subsets::any::schema::inferences::geometry_core::{statistics, triangle_area, GltfGeometryContext};
 use std::collections::BTreeSet;
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
@@ -25,14 +25,14 @@ pub struct GltfCurvatureIndicators {
 
 pub struct GltfCurvatureInference;
 
-pub(crate) struct GltfCurvatureRaw {
-    pub(crate) edge_curvatures: Vec<f64>,
-    pub(crate) gaussian_values: Vec<f64>,
-    pub(crate) sharp_feature_proportion: f64,
+pub struct GltfCurvatureRaw {
+    pub edge_curvatures: Vec<f64>,
+    pub gaussian_values: Vec<f64>,
+    pub sharp_feature_proportion: f64,
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn raw(context: &GltfGeometryContext<'_>) -> GltfCurvatureRaw {
+pub fn raw(context: &GltfGeometryContext<'_>) -> GltfCurvatureRaw {
     let mut edge_curvatures = Vec::new();
     let mut sharp_length = 0.0;
     let mut edge_length = 0.0;

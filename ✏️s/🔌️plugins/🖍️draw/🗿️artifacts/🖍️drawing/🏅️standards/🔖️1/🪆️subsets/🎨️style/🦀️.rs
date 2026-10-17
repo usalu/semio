@@ -17,9 +17,6 @@ pub mod replace_layer_fill {
     pub mod inverse;
     #[path = "🧬️schema/🧬️mutations/🎨️replace-layer-fill/🦠️mutation/🦀️.rs"]
     pub mod mutation;
-    #[cfg(test)]
-    #[path = "🧬️schema/🧬️mutations/🎨️replace-layer-fill/🧪️tests/🌈️solid/🦀️.rs"]
-    mod tests_solid_to_linear_gradient;
 }
 #[path = "."]
 pub mod replace_layer_stroke {
@@ -29,9 +26,6 @@ pub mod replace_layer_stroke {
     pub mod inverse;
     #[path = "🧬️schema/🧬️mutations/🖊️replace-layer-stroke/🦠️mutation/🦀️.rs"]
     pub mod mutation;
-    #[cfg(test)]
-    #[path = "🧬️schema/🧬️mutations/🖊️replace-layer-stroke/🧪️tests/🖊️adds/🦀️.rs"]
-    mod tests_adds_a_dashed_stroke;
 }
 #[path = "."]
 pub mod set_group_isolation {
@@ -41,9 +35,6 @@ pub mod set_group_isolation {
     pub mod inverse;
     #[path = "🧬️schema/🧬️mutations/🧩️set-group-isolation/🦠️mutation/🦀️.rs"]
     pub mod mutation;
-    #[cfg(test)]
-    #[path = "🧬️schema/🧬️mutations/🧩️set-group-isolation/🧪️tests/🔬️unit/🦀️.rs"]
-    mod tests;
 }
 #[path = "."]
 pub mod set_layer_blend_mode {
@@ -53,9 +44,6 @@ pub mod set_layer_blend_mode {
     pub mod inverse;
     #[path = "🧬️schema/🧬️mutations/🌓️set-layer-blend-mode/🦠️mutation/🦀️.rs"]
     pub mod mutation;
-    #[cfg(test)]
-    #[path = "🧬️schema/🧬️mutations/🌓️set-layer-blend-mode/🧪️tests/✖️normal/🦀️.rs"]
-    mod tests_normal_to_multiply;
 }
 #[path = "."]
 pub mod set_layer_fill_rule {
@@ -65,9 +53,6 @@ pub mod set_layer_fill_rule {
     pub mod inverse;
     #[path = "🧬️schema/🧬️mutations/🌀️set-layer-fill-rule/🦠️mutation/🦀️.rs"]
     pub mod mutation;
-    #[cfg(test)]
-    #[path = "🧬️schema/🧬️mutations/🌀️set-layer-fill-rule/🧪️tests/🔬️unit/🦀️.rs"]
-    mod tests;
 }
 #[path = "."]
 pub mod set_layer_opacity {
@@ -77,9 +62,6 @@ pub mod set_layer_opacity {
     pub mod inverse;
     #[path = "🧬️schema/🧬️mutations/🌫️set-layer-opacity/🦠️mutation/🦀️.rs"]
     pub mod mutation;
-    #[cfg(test)]
-    #[path = "🧬️schema/🧬️mutations/🌫️set-layer-opacity/🧪️tests/🌫️dims/🦀️.rs"]
-    mod tests_dims_shape_a_to_half;
 }
 #[path = "."]
 pub mod update_image {
@@ -89,9 +71,6 @@ pub mod update_image {
     pub mod inverse;
     #[path = "🧬️schema/🧬️mutations/🖼️update-image/🦠️mutation/🦀️.rs"]
     pub mod mutation;
-    #[cfg(test)]
-    #[path = "🧬️schema/🧬️mutations/🖼️update-image/🧪️tests/🔬️unit/🦀️.rs"]
-    mod tests;
 }
 #[path = "."]
 pub mod update_text {
@@ -101,8 +80,5 @@ pub mod update_text {
     pub mod inverse;
     #[path = "🧬️schema/🧬️mutations/📝️update-text/🦠️mutation/🦀️.rs"]
     pub mod mutation;
-    #[cfg(test)]
-    #[path = "🧬️schema/🧬️mutations/📝️update-text/🧪️tests/🔬️unit/🦀️.rs"]
-    mod tests;
 }
 //#endregion 🪢️TaxonomyMounts

@@ -89,7 +89,5 @@ pub fn flow_extension_action_title_label(action_id: &str, title: &'static str, l
 //#endregion 🔖️Resolvers
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

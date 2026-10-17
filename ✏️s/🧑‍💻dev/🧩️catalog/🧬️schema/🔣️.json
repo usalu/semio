@@ -18,7 +18,7 @@
     "installedTargetIds": {
       "type": "array",
       "minItems": 1,
-      "maxItems": 128,
+      "maxItems": 512,
       "uniqueItems": true,
       "items": {
         "type": "string",
@@ -29,7 +29,7 @@
     "installedVariants": {
       "type": "array",
       "minItems": 1,
-      "maxItems": 128,
+      "maxItems": 512,
       "uniqueItems": true,
       "items": {
         "type": "string",

@@ -1,4 +1,8 @@
-use super::*;
+use semio_framework_3d_brep_curve::bspline::KnotVector;
+use semio_framework_3d_brep_curve::Curve3;
+use semio_framework_3d_brep_representation::topology::Body;
+use semio_framework_3d_brep_vector::Pnt3;
+use crate::schema::snapshot::body::*;
 use semio_framework_3d_brep_construction::primitives::{make_box, make_cylinder, make_sphere, make_torus};
 use semio_framework_3d_brep_representation::topology::history::OpRecorder;
 use semio_framework_3d_brep_representation::topology::EntityCounts;

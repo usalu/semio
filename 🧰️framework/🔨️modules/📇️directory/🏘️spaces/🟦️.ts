@@ -5,7 +5,10 @@
  * write), and invite redemption leaves as the hub's own `POST /directory/invites/{token}/redeem`
  * path. Sorting and filtering are locale-independent so the two renderers agree byte for byte. */
 
-import type { DirectoryCommand, DirectoryEvent, DirectorySpaceKind, DirectorySpaceListEntryV1, DirectorySpaceRole, DirectorySpaceVisibility, MemberSpaceViewV1, PublicSpaceViewV1 } from "../🧬️schema/🟦️.ts";
+import type { DirectorySpaceKind, DirectorySpaceRole, DirectorySpaceVisibility } from "../🧬️schema/🟦️.ts";
+import type { DirectoryEvent } from "../🧬️schema/📜️event/🟦️.ts";
+import type { DirectoryCommand } from "../🧬️schema/🎫️command/🟦️.ts";
+import type { DirectorySpaceListEntryV1, MemberSpaceViewV1, PublicSpaceViewV1 } from "../🧬️schema/👀️views/🟦️.ts";
 
 //#region 🔖️Routes
 export const DIRECTORY_COMMANDS_PATH_V1 = "/directory/commands";

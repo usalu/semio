@@ -73,6 +73,3 @@ pub fn commit(space_id: &str, folder_path: &str, _doc: &ArtifactView<'_, SHomeSn
     Ok(Emit::effect(super::apply_local_catalog_document::keep_on_device(space_id, "folder", folder_path)?))
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;

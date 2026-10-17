@@ -6,11 +6,11 @@ import { tmpdir } from "node:os";
 import { basename, delimiter, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { loadCatalogTaxonomy, semanticDirectoryKindId, implementationLeafBasenameFinding } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts";
-import { buildCasePlan } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🎬️execution-plan/🟦️.ts";
-import { loadOracleRegistry, oracleHostPackagesFor } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🤝️contributions/🟦️.ts";
-import { testProjectName } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧭️case-discovery/🟦️.ts";
+import { buildCasePlan } from "@semio-tech/repo-test/execution-plan";
+import { loadOracleRegistry, oracleHostPackagesFor } from "@semio-tech/repo-test/contributions";
+import { testProjectName } from "@semio-tech/repo-test/case-discovery";
 import { parseFeature } from "@semio-tech/framework/test/gherkin";
-import { oracleHostPython, pythonHostArguments } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🖥️host/🏗️materialization/🟦️.ts";
+import { oracleHostPython, pythonHostArguments } from "@semio-tech/repo-test/host/materialization";
 import control from "../🧫️fixtures/🔮️oracle-source-ownership/🔣️.json";
 import { frameworkSourcePath } from "@semio-tech/framework/test/source-text";
 
@@ -18,7 +18,7 @@ import { frameworkSourcePath } from "@semio-tech/framework/test/source-text";
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "../../../../..");
 const controlPath = join(root, control.plugin, "🧫️fixtures/🔮️oracle-source-ownership/🔣️.json");
 const read = (path: string) => readFileSync(join(root, path), "utf8");
-const normSources = [control.manifest, control.destination, ...control.adapters.map((row) => row.path)].map((path) => `{workspaceRoot}/${path}`).sort();
+const normSources = [control.manifest, control.destination, ...control.destinationChildren, ...control.adapters.map((row) => row.path)].map((path) => `{workspaceRoot}/${path}`).sort();
 
 describe("Norm oracle source ownership", () => {
   test("portable data and third-party filesystem enumeration identify exactly fifteen adapters", () => {
@@ -41,7 +41,8 @@ describe("Norm oracle source ownership", () => {
       }),
     ).toBe("oracle-execution");
     expect(implementationLeafBasenameFinding(control.destination, taxonomy)).toBeNull();
-    expect(fg.sync(`${control.plugin}/🔮️oracles/**/*.py`, { cwd: root })).toEqual([control.destination]);
+    expect(fg.sync(`${control.plugin}/🔮️oracles/**/*.py`, { cwd: root }).sort()).toEqual([control.destination, ...control.destinationChildren].sort());
+    expect(control.destinationChildren.every((child) => dirname(dirname(child)) === dirname(control.destination))).toBe(true);
   }, 15000);
 
   test("ancestor contributions select the anonymous local module for all fifteen owners", () => {

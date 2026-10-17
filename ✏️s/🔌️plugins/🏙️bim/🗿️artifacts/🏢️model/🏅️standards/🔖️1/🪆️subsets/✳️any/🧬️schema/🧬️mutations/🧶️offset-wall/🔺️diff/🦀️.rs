@@ -4,8 +4,8 @@
 //! offset that collapses an arc into its centre.
 
 use super::super::elements;
-use super::super::modify::cut::offset_axis;
-use super::super::wall_geometry::flaw;
+use crate::standards::v1::subsets::any::schema::mutations::modify::cut::offset_axis;
+use crate::standards::v1::subsets::any::schema::mutations::wall_geometry::flaw;
 use super::OffsetWall;
 use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff}, snapshot::{ModelSnapshot, Wall}};
 use protocol::{MutationOutcome, OutcomeCode};

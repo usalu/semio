@@ -368,7 +368,7 @@ pub fn fresh_relationship_id(taken: &mut Vec<String>) -> String {
 /// 📍 The `*.rels` part path that carries `owner`'s relationships (`""` = package root ->
 /// `_rels/.rels`; `"word/document.xml"` -> `"word/_rels/document.xml.rels"`).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn rels_part_path_for(owner: &str) -> String {
+pub fn rels_part_path_for(owner: &str) -> String {
     if owner.is_empty() {
         "_rels/.rels".into()
     } else if let Some(slash) = owner.rfind('/') {
@@ -382,7 +382,7 @@ fn rels_part_path_for(owner: &str) -> String {
 /// `None` when `path` isn't shaped like a rels part at all (should never happen for a
 /// conformant package, but never silently misattributed either).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn owner_for_rels_path(path: &str) -> Option<String> {
+pub fn owner_for_rels_path(path: &str) -> Option<String> {
     let file = path.rsplit('/').next()?;
     let name = file.strip_suffix(".rels")?;
     let dir = &path[..path.len() - file.len()];
@@ -711,9 +711,7 @@ pub fn sniff_opc_bytes(data: &[u8]) -> bool {
 //#endregion 🔖️Package
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
 
 #[path="🪶️sqlite/🦀️.rs"]

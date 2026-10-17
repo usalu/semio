@@ -1,6 +1,7 @@
-use super::*;
-use super::mutations as map_config_mutations;
+use crate::editor::gis2d::modes::edit::windows::map::config::*;
+use crate::editor::gis2d::modes::edit::windows::map::config::mutations as map_config_mutations;
 use protocol::{Mutation, OpBinary, OpText};
+use semio_framework_test_fixtures::fixture_text;
 
 fn block_on_gis_map_windows<F: std::future::Future>(future: F) -> F::Output {
     let mut future = std::pin::pin!(future);
@@ -16,7 +17,7 @@ fn block_on_gis_map_windows<F: std::future::Future>(future: F) -> F::Output {
 
 #[test]
 fn gis_map_window_ownership_mutations_match_neutral_fixture_and_codecs() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔬️window/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️config/🧪️tests/🧫️fixtures/🔬️window/🔣️.json")).unwrap();
     let base: MapWindowConfig = semio_framework_pack_json::from_json_str(&fixture["baseConfig"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let mut windows = std::collections::BTreeMap::<String, MapWindowConfig>::new();
     for row in fixture["windowInstances"].as_array().unwrap() {
@@ -67,7 +68,7 @@ fn gis_map_window_ownership_runtime_isolates_renders_and_reopens_two_map_windows
             use crate::editor::gis2d::commands::example::set_active_example;
             use crate::editor::gis2d::commands::view::{fit_world, set_camera, set_layer_stroke_scale, set_lod_mode, set_render_mode, set_vector_style, toggle_layer_visibility};
             use crate::editor::gis2d::{create_gis2d_app, Gis2dCommand, Gis2dPlayApp};
-            use crate::editor::gis2d::unit_tests::context::Gis2dApp;
+            type Gis2dApp = semio_framework_plugin::VcsArtifactApp<EditorApp<Gis2dPlayApp>, SemioMembers>;
             use semio_framework_plugin::{artifact_app_laws, ActionMeta, App, EditorApp, PluginApp, ViewModel, ViewWindowInstance, WindowConfigOwner, WindowMeasure};
             use semio_s_artifact_stdio_semio::SemioMembers;
 

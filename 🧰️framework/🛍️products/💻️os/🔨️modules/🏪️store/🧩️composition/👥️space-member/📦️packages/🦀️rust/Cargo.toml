@@ -23,6 +23,7 @@ path = "../../🦀️.rs"
 
 [dependencies]
 semio-framework-os-spr = { path = "../../../../../📡️spr/📦️packages/🦀️rust" }
+semio-framework-os-store-backbone = { path = "../../../../🔗️backbone/📦️packages/🦀️rust" }
 semio-framework-os-store-child = { path = "../../../../🪆️child/📦️packages/🦀️rust" }
 semio-framework-os-store-engine = { path = "../../../../⚙️engine/📦️packages/🦀️rust" }
 semio-framework-os-store-engine-core = { path = "../../../../⚙️engine/🧱️core/📦️packages/🦀️rust" }

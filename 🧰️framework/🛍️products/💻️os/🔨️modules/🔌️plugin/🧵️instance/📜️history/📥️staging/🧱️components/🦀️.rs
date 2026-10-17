@@ -1,5 +1,22 @@
 //! 🪗️ The instance components of `instance-history`: CommandHistory, HostEvents, Transactions (WP6, plan section 7.3).
-use super::*;
+use semio_framework::{ActionKind, FaultFrom};
+use semio_framework_plugin_document_media::AppProjectionCache;
+use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use pack::snapshot::ArtifactPack;
+use semio_framework_plugin_decl_emission::Emit;
+use std::future::Future;
+use std::collections::{HashMap, HashSet};
+use semio_framework_plugin_command::{HistoryBackfillMark, HistoryViewCache};
+use semio_framework_plugin_decl_views::history_view::{HistoryCommandFilter, ShellHistoryReplay};
+use store::{MemberFactory, Mutation, SpaceMember};
+use semio_framework_plugin_publication_mounted::command_mounted::MountedCommandPrune;
+use protocol::OpText;
+use semio_framework_plugin_publication_mounted::mounted_child_group_receipt_group::command::PagedCommandLog;
+use semio_framework_plugin_job::{PendingTransaction, TransactionProposalDraft};
+use semio_framework_plugin_reactor_app::PluginApp;
+use semio_framework_plugin_time_travel::SupersedeLedger;
+use semio_framework_ui_contract::*;
 
 /// 🎸️ Command history: the session command log, the cached history view, backfill marks and the supersede ledger.
 pub struct CommandHistory<A: ArtifactApp> {

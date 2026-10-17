@@ -13,7 +13,7 @@ pub fn writer_document_store_owners() -> store::os_store::document_store_owners:
 
 pub type WriterDocumentStore = store::ArtifactStore<WriterSnapshot, WriterMutation>;
 
-const WRITER_ENVELOPE_FIELD_BYTES: usize = store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES;
+pub const WRITER_ENVELOPE_FIELD_BYTES: usize = store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES;
 
 /// 🔐️ Opens a Writer store WITH its exact owner catalog installed. `ArtifactStore::new` installs no
 /// catalog, and `reserve_edit_history_slot` then refuses every `Apply`

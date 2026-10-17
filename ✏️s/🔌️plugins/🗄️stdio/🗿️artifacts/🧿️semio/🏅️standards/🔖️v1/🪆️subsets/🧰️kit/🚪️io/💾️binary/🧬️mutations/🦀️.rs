@@ -106,7 +106,4 @@ impl protocol::OpBinary for SemioKitMutation {
 //#endregion 🔖️OpBinary
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

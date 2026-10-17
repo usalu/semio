@@ -1,0 +1,180 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "actual-immediate",
+      "action": "immediate",
+      "delayMilliseconds": 50,
+      "outcome": "terminated",
+      "trace": [
+        "ready",
+        "closed",
+        "terminal"
+      ]
+    },
+    {
+      "name": "actual-eof",
+      "action": "eof",
+      "delayMilliseconds": 50,
+      "outcome": "completed",
+      "trace": [
+        "ready",
+        "closed",
+        "eof",
+        "terminal"
+      ]
+    },
+    {
+      "name": "actual-cancel",
+      "action": "cancel",
+      "delayMilliseconds": 5000,
+      "outcome": "cancelled",
+      "trace": [
+        "ready",
+        "closed",
+        "refused",
+        "terminal"
+      ]
+    },
+    {
+      "name": "actual-expiry",
+      "action": "expiry",
+      "delayMilliseconds": 5000,
+      "outcome": "expired",
+      "trace": [
+        "ready",
+        "closed",
+        "refused",
+        "terminal"
+      ]
+    },
+    {
+      "name": "actual-undefined",
+      "action": "undefined",
+      "delayMilliseconds": 5000,
+      "outcome": "preserved",
+      "trace": [
+        "ready",
+        "closed",
+        "refused",
+        "terminal"
+      ]
+    },
+    {
+      "name": "actual-frozen",
+      "action": "frozen",
+      "delayMilliseconds": 5000,
+      "outcome": "preserved",
+      "trace": [
+        "ready",
+        "closed",
+        "refused",
+        "terminal"
+      ]
+    }
+  ],
+  "closureCases": [
+    {
+      "primary": "none",
+      "close": "none",
+      "count": 0
+    },
+    {
+      "primary": "none",
+      "close": "same",
+      "count": 1
+    },
+    {
+      "primary": "none",
+      "close": "distinct",
+      "count": 1
+    },
+    {
+      "primary": "undefined",
+      "close": "none",
+      "count": 1
+    },
+    {
+      "primary": "undefined",
+      "close": "same",
+      "count": 1
+    },
+    {
+      "primary": "undefined",
+      "close": "distinct",
+      "count": 2
+    },
+    {
+      "primary": "frozen",
+      "close": "none",
+      "count": 1
+    },
+    {
+      "primary": "frozen",
+      "close": "same",
+      "count": 1
+    },
+    {
+      "primary": "frozen",
+      "close": "distinct",
+      "count": 2
+    }
+  ],
+  "diagnosticCases": [
+    {
+      "name": "direct",
+      "form": "direct",
+      "count": 1
+    },
+    {
+      "name": "aggregate",
+      "form": "aggregate",
+      "count": 1
+    },
+    {
+      "name": "nested",
+      "form": "nested",
+      "count": 1
+    },
+    {
+      "name": "cycle",
+      "form": "cycle",
+      "count": 1
+    },
+    {
+      "name": "undefined",
+      "form": "undefined",
+      "count": 0
+    },
+    {
+      "name": "getter",
+      "form": "getter",
+      "count": 0
+    },
+    {
+      "name": "proxy",
+      "form": "proxy",
+      "count": 0
+    },
+    {
+      "name": "extra",
+      "form": "extra",
+      "count": 0
+    },
+    {
+      "name": "oversize",
+      "form": "oversize",
+      "count": 0
+    },
+    {
+      "name": "invalid-number",
+      "form": "invalid-number",
+      "count": 0
+    },
+    {
+      "name": "frozen-primary",
+      "form": "frozen-primary",
+      "count": 0
+    }
+  ]
+}

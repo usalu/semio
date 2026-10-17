@@ -4,15 +4,15 @@ pub mod set_transaction_count;
 pub mod set_transaction_count_and_notify;
 #[path = "⏩️set-transaction/🦀️.rs"]
 pub mod set_transaction_count_without_preflight;
-pub(crate) use set_transaction_count::SetTransactionCount;
-pub(crate) use set_transaction_count_and_notify::SetTransactionCountAndNotify;
-pub(crate) use set_transaction_count_without_preflight::SetTransactionCountWithoutPreflight;
+pub(crate) use crate::testing_laws_unit_1::mutation_fixture::transaction::mutations::set_transaction_count::SetTransactionCount;
+pub(crate) use crate::testing_laws_unit_1::mutation_fixture::transaction::mutations::set_transaction_count_and_notify::SetTransactionCountAndNotify;
+pub(crate) use crate::testing_laws_unit_1::mutation_fixture::transaction::mutations::set_transaction_count_without_preflight::SetTransactionCountWithoutPreflight;
 
 #[derive(semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, dsl::Mutations)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[serde(tag = "operation", content = "payload", rename_all = "camelCase", deny_unknown_fields)]
 #[value(tag = "operation", content = "payload", rename_all = "camelCase", deny_unknown_fields)]
-#[mutations(snapshot = super::TxnSnapshot, diff = super::TxnDiff, schema = "plugin.testkit.transaction")]
+#[mutations(snapshot = crate::testing_laws_unit_1::mutation_fixture::transaction::TxnSnapshot, diff = crate::testing_laws_unit_1::mutation_fixture::transaction::TxnDiff, schema = "plugin.testkit.transaction")]
 pub(crate) enum TxnMutation {
     SetTransactionCount(SetTransactionCount),
     SetTransactionCountWithoutPreflight(SetTransactionCountWithoutPreflight),

@@ -17,7 +17,8 @@
     "cameraTarget",
     "cameraZoom",
     "cameraFov",
-    "engagementStep"
+    "engagementStep",
+    "activeUtilityId"
   ],
   "properties": {
     "selectedObjectIds": {
@@ -114,6 +115,10 @@
       "x-semio-state": "presence"
     },
     "engagementPane": {
+      "type": "string",
+      "x-semio-state": "presence"
+    },
+    "activeUtilityId": {
       "type": "string",
       "x-semio-state": "presence"
     }

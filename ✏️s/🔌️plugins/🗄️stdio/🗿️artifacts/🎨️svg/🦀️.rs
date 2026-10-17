@@ -14,21 +14,18 @@ pub use semio_s_artifact_stdio_contract::{apply_mutation_checked, mutation_from_
 pub(crate) use semio_s_artifact_stdio_contract::base64_standard;
 pub(crate) use semio_s_artifact_stdio_contract::impl_serde_op_codec;
 
-use {semio_framework_plugin::ArtifactKindSpec,semio_framework_artifact_reference::Dialect,semio_framework_plugin::MediaClass,semio_framework_plugin::MediaForm,semio_framework_plugin::MediaType,semio_framework_plugin::OsMediaCapability,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+use {semio_framework_artifact_reference::Dialect, semio_framework_artifact_reference::StandardId, semio_framework_artifact_reference::SubsetId};
 
 pub use schema::diff::SvgDiff;
 pub use schema::mutations::SvgMutation;
 pub use schema::snapshot::SvgSnapshot;
 pub use schema::SvgArtifact;
 
-/// 🏷️ Document schema / DSL envelope id.
-pub const STDIO_SVG_DOCUMENT_SCHEMA: &str = "stdio.svg";
+pub use semio_s_artifact_stdio_svg_snapshot::{STDIO_SVG_DOCUMENT_SCHEMA};
 
-/// 🧬️ Artifact schema descriptor id.
-pub const SVG_ARTIFACT_SCHEMA_ID: &str = "s.stdio.svg";
+pub use semio_s_artifact_stdio_svg_snapshot::{SVG_ARTIFACT_SCHEMA_ID};
 
-/// 📜 Schema-owned package definition.
-pub const ARTIFACT_DEFINITION_SCHEMA: &str = include_str!("📜️artifact-definition.json");
+pub use semio_s_artifact_stdio_svg_snapshot::{ARTIFACT_DEFINITION_SCHEMA};
 
 pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::PluginAssemblyError> {
     let factories = native_codecs();
@@ -36,9 +33,7 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
     semio_s_artifact_stdio_contract::definition_from_schema_with_executables(ARTIFACT_DEFINITION_SCHEMA, executables)
 }
 
-pub fn formats() -> Result<Vec<semio_framework_plugin::io::FormatDescriptor>, semio_framework_plugin::ArtifactDefinitionError> {
-    semio_s_artifact_stdio_contract::format_descriptors(ARTIFACT_DEFINITION_SCHEMA)
-}
+pub use semio_s_artifact_stdio_svg_snapshot::{formats};
 
 fn native_codec() -> store::os_store::serialization::ArtifactCodec {
     let mut codec = store::artifact_codec::<SvgSnapshot, SvgMutation>(STDIO_SVG_DOCUMENT_SCHEMA);
@@ -55,48 +50,17 @@ pub fn contribution() -> semio_s_artifact_stdio_contract::ArtifactContribution {
     semio_s_artifact_stdio_contract::ArtifactContribution { definition_constraint: None, identity: "svg", schema: ARTIFACT_DEFINITION_SCHEMA, definition, assembly, formats, native_codecs }
 }
 
-//#region 🔖️Dialect
-/// 🪪️ Surface coordinate(s) for this artifact — `artifact_kind` matches the schema descriptor
-/// id above verbatim (never guessed); `standard`/`subset` match this file's own on-disk
-/// `🏅️standards/🔖️.../🪆️subsets/✳️...` location. Lives at the artifact root (not under
-/// `editor`/`viewer`) so a viewer file can read it without ever importing through the
-/// sibling `editor` module.
-pub const SVG_ANY_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.svg", standard: StandardId("1.1"), subset: SubsetId("*") };
-pub const SVG_BASIC_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.svg", standard: StandardId("1.1"), subset: SubsetId("basic") };
-pub const SVG_TINY_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.svg", standard: StandardId("1.1"), subset: SubsetId("tiny") };
-//#endregion 🔖️Dialect
+pub use semio_s_artifact_stdio_svg_mut_family::{SVG_ANY_DIALECT, SVG_BASIC_DIALECT, SVG_TINY_DIALECT};
 
-//#region 🔖️ArtifactKind
-/// 🗂️ This artifact's `ArtifactKindSpec`.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn artifact_kind() -> ArtifactKindSpec {
-    ArtifactKindSpec {
-        id: "s.stdio.svg".into(),
-        label: semio_framework_ui_locale::LocalizedLabel::native("Svg", "Svg"),
-        source_format: STDIO_SVG_DOCUMENT_SCHEMA.into(),
-        component_kind: "stdio".into(),
-        dimension: "data".into(),
-        media_capability: OsMediaCapability::MeshOnly,
-        media_type: MediaType { class: MediaClass::Data, form: MediaForm::Document },
-        schema: STDIO_SVG_DOCUMENT_SCHEMA.into(),
-        export_formats: vec![],
-        import_formats: vec![],
-        export_stdio_kinds: vec![],
-        import_stdio_kinds: vec![],
-    }
-}
-//#endregion 🔖️ArtifactKind
+pub use semio_s_artifact_stdio_svg_snapshot::{artifact_kind};
 
 //#region 🔖️Declaration
 /// 🔖️ This artifact's declaration (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W6) —
 /// replaces the old side-effecting `crate::engine::register()`, previously called
 /// unconditionally from `🗄️stdio`'s plugin root. Mirrors `🗒️note`/`🔋️model`'s own `declaration()`
-/// exemplars: `.composers(...)` reaches `⚙️engine`'s OWN `io_registry` (the real `ComposerEntry`
-/// rows — ✳️any + 🔬️tiny + 🔰️basic already folded into one list there) by its FULLY QUALIFIED path,
-/// never the bare `io_registry::entries()` shortcut that would silently rebind to this file's own
-/// shadowing `io_registry` module below (repo-wide "silent rebind" hazard this ticket tracks —
-/// that module returns `&[&ComposerEntry]`, a different type, and is left in place as orphaned
-/// dead code, matching `🔋️model`'s own precedent for its orphaned wrapper). Both subset dialects'
+/// exemplars: `.composers(...)` reads the real `ComposerEntry` rows (✳️any + 🔬️tiny + 🔰️basic folded
+/// into one list) from `io_registry::v1_1` below, which sits at the root so the ✳️any subset does not
+/// have to name the 🔬️tiny and 🔰️basic composers that are built on top of it. Both subset dialects'
 /// `SubsetValidator`s (`🔬️tiny`/`🔰️basic`'s own `SvgTinyValidator`/`SvgBasicValidator`, previously
 /// registered via `⚙️engine::register()`'s two trailing `subsets::{tiny,basic}::io::register()`
 /// calls) are re-derived here via `subset_validator_entry_of::<…>()` rather than reused from those
@@ -117,7 +81,7 @@ pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Re
         .formats(formats)
         .schema_documents(semio_framework_schema_registry::ScopeSchemaExports { scope: "s.stdio.svg", exports: &[semio_framework_schema_registry::SchemaExport { id: "xml-document", leaves: semio_s_artifact_stdio_xml::schema::XML_DOCUMENT_SCHEMA_LEAVES }] })
         .inferences([standards::v1_1::subsets::base::schema::inferences::svg_artifact_inference_descriptor()])
-        .composers(standards::v1_1::subsets::base::io::io_registry::entries())
+        .composers(io_registry::v1_1::entries())
         .subset_validators(declared_subset_validators())
         .languages(pilot_languages())
         .document_codec_bare::<SvgSnapshot, SvgMutation>(STDIO_SVG_DOCUMENT_SCHEMA, Dialect { artifact_kind: "s.stdio.svg", standard: StandardId("1.1"), subset: SubsetId("*") })
@@ -204,29 +168,7 @@ fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
 //#endregion 🔖️Declaration
 
 //#region 🚪️DerivedIoRegistry
-pub mod io_registry {
-    use crate::standards::v1_1::subsets::base::io::io_registry as v1_1;
-    use {semio_framework_plugin::io::register_composer_entries,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposedArtifact,semio_framework_plugin::io::ComposerEntry,semio_framework_artifact_reference::Dialect,semio_framework_plugin::io::ErasedComposeSource};
-    use std::sync::OnceLock;
-
-    static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
-
-    // 🚫️async: E1 pure table accessor consumed by OnceLock::get_or_init's sync closure — see R9
-    pub fn entries() -> &'static [&'static ComposerEntry] {
-        ENTRIES.get_or_init(|| v1_1::entries().iter().collect()).as_slice()
-    }
-
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
-        let entry = entries().iter().find(|e| e.writes == target).ok_or_else(|| ComposeError { message: format!("SvgComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
-        ::semio_framework_async::poll::resolve_ready((entry.compose)(sources))
-    }
-
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn register() {
-        register_composer_entries(v1_1::entries()).expect("static Stdio registration must be available and conflict-free");
-    }
-}
+pub use semio_s_artifact_stdio_svg_mutations_2::io_registry;
 //#endregion 🚪️DerivedIoRegistry
 
 #[path = "."]
@@ -240,109 +182,28 @@ pub mod standards {
             pub mod base {
                 #[path = "."]
                 pub mod schema {
-                    #[path = "🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/🦀️.rs"]
-                    mod component;
-                    pub use component::*;
-                    #[path = "🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/🔨️modules/🧬️mutation-support/🦀️.rs"]
-                    pub mod mutation_support;
-                    #[path = "."]
-                    pub mod snapshot {
-                        #[path = "🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                    #[path = "."]
-                    pub mod inferences {
-                        #[path = "🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/💡️inferences/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                        #[path = "."]
-                        pub mod dimensions {
-                            #[path = "🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/💡️inferences/📐dimensions/🦀️.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                    }
-                    #[path = "."]
-                    pub mod diff {
-                        #[path = "🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/🔺️diff/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                    #[path = "."]
-                    pub mod mutations {
-                        #[path = "🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                        #[path = "🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs"]
-                        pub mod edit_rules;
-                        #[path = "🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/📥️insert-element/🦀️.rs"]
-                        pub mod insert_element;
-                        #[path = "🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🗑️remove-element/🦀️.rs"]
-                        pub mod remove_element;
-                        #[path = "🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🏷️set-attribute/🦀️.rs"]
-                        pub mod set_attribute;
-                        #[path = "🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/📣️set-declaration/🦀️.rs"]
-                        pub mod set_declaration;
-                        #[path = "🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/📜️set-doctype/🦀️.rs"]
-                        pub mod set_doctype;
-                        #[path = "🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🔤️set-element-name/🦀️.rs"]
-                        pub mod set_element_name;
-                        #[path = "🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/✍️set-text/🦀️.rs"]
-                        pub mod set_text;
-                        #[path = "🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🔄️set-transform/🦀️.rs"]
-                        pub mod set_transform;
-                        #[path = "🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🖼️set-view-box/🦀️.rs"]
-                        pub mod set_view_box;
-                    }
+                    pub use semio_s_artifact_stdio_svg_schema::standards::v1_1::subsets::base::schema::*;
+
+                    pub use semio_s_artifact_stdio_svg_schema::standards::v1_1::subsets::base::schema::mutation_support;
+                    pub use semio_s_artifact_stdio_svg_snapshot::standards::v1_1::subsets::base::schema::snapshot;
+                    pub use semio_s_artifact_stdio_svg_schema::standards::v1_1::subsets::base::schema::inferences;
+                    pub use semio_s_artifact_stdio_svg_snapshot::standards::v1_1::subsets::base::schema::diff;
+                    pub use semio_s_artifact_stdio_svg_mutations::standards::v1_1::subsets::base::schema::mutations;
                 }
                 #[path = "."]
                 pub mod io {
-                    #[path = "🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🚪️io/🦀️.rs"]
-                    mod component;
-                    pub use component::*;
-                    #[path = "."]
-                    pub mod import {
-                        #[path = "."]
-                        pub mod deserializers {
-                            #[path = "."]
-                            pub mod artifacts {
-                                #[path = "."]
-                                pub mod xml {
-                                    #[path = "."]
-                                    pub mod v1_0 {
-                                        #[path = "."]
-                                        pub mod any {
-                                            #[path = "🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📰️xml/🔖️1.0/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    #[path = "."]
-                    pub mod export {
-                        #[path = "."]
-                        pub mod serializers {
-                            #[path = "."]
-                            pub mod artifacts {
-                                #[path = "."]
-                                pub mod xml {
-                                    #[path = "."]
-                                    pub mod v1_0 {
-                                        #[path = "."]
-                                        pub mod any {
-                                            #[path = "🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📰️xml/🔖️1.0/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
+                    pub use semio_s_artifact_stdio_svg_mutations_2::standards::v1_1::subsets::base::io::*;
+pub mod sqlite {
+    pub use semio_s_artifact_stdio_svg_handcrafted_diff_codec_tests::standards::v1_1::subsets::base::io::sqlite::*;
+    pub use semio_s_artifact_stdio_svg_snapshot::standards::v1_1::subsets::base::io::sqlite::snapshot;
+}
+pub mod text {
+    pub use semio_s_artifact_stdio_svg_mutations_2::standards::v1_1::subsets::base::io::text::*;
+    pub use semio_s_artifact_stdio_svg_handcrafted_diff_codec_tests::standards::v1_1::subsets::base::io::text::inferences;
+}
+
+                    pub use semio_s_artifact_stdio_svg_handcrafted_diff_codec_tests::standards::v1_1::subsets::base::io::import;
+                    pub use semio_s_artifact_stdio_svg_handcrafted_diff_codec_tests::standards::v1_1::subsets::base::io::export;
                 }
             }
             #[path = "."]
@@ -352,19 +213,15 @@ pub mod standards {
                 // verbatim (same Rust type, same `s.stdio.svg` schema id); `io` reuses
                 // the ✳️any subset's xml import/export leaves rather than duplicating
                 // them. Ticket 26/08/11/ARTIFACT-STANDARD-SUBSETS-REAL-VOCABULARIES.
-                #[path = "🏅️standards/🔖️1.1/🪆️subsets/🔬️tiny/🚪️io/🦀️.rs"]
-                pub mod io;
-                #[path = "🏅️standards/🔖️1.1/🪆️subsets/🔬️tiny/🧬️schema/🦀️.rs"]
-                pub mod schema;
+                pub use semio_s_artifact_stdio_svg_mutations_2::standards::v1_1::subsets::tiny::io;
+                pub use semio_s_artifact_stdio_svg_schema_2::standards::v1_1::subsets::tiny::schema;
             }
             #[path = "."]
             pub mod basic {
                 // 🏅️ SVG Basic 1.1 (W3C Mobile SVG Profiles, REC-SVGMobile-20030114 §SVG
                 // Basic 1.1). Same shape as `✳️tiny` above.
-                #[path = "🏅️standards/🔖️1.1/🪆️subsets/🔰️basic/🚪️io/🦀️.rs"]
-                pub mod io;
-                #[path = "🏅️standards/🔖️1.1/🪆️subsets/🔰️basic/🧬️schema/🦀️.rs"]
-                pub mod schema;
+                pub use semio_s_artifact_stdio_svg_mutations_2::standards::v1_1::subsets::basic::io;
+                pub use semio_s_artifact_stdio_svg_schema_3::standards::v1_1::subsets::basic::schema;
             }
         }
     }
@@ -374,118 +231,55 @@ pub mod schema {
     pub use super::standards::v1_1::subsets::base::schema::*;
 }
 
-
-#[path = "."]
-pub mod examples {
-    #[path = "."]
-    pub mod demo {
-        #[path = "🏅️standards/🔖️1.1/🪆️subsets/🧱️base/📚️examples/🎬️demo/🦀️.rs"]
-        mod component;
-        pub use component::*;
-    }
-}
+pub use semio_s_artifact_stdio_svg_handcrafted_diff_codec_tests::examples;
 
 #[path = "."]
 pub mod editor {
     #[path = "."]
     pub mod svg_any {
-        #[path = "🏅️standards/🔖️1.1/🪆️subsets/🧱️base/✏️editor/🦀️.rs"]
-        mod component;
-        pub use component::*;
-        #[path = "."]
-        pub mod presence {
-            #[path = "🏅️standards/🔖️1.1/🪆️subsets/🧱️base/✏️editor/👥️presence/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
-        #[path = "."]
-        pub mod config {
-            #[path = "🏅️standards/🔖️1.1/🪆️subsets/🧱️base/✏️editor/🎚️config/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
+        pub use semio_s_artifact_stdio_svg_mut_family::editor::svg_any::*;
+
+        pub use semio_s_artifact_stdio_svg_handcrafted_diff_codec_tests::editor::svg_any::presence;
+        pub use semio_s_artifact_stdio_svg_handcrafted_diff_codec_tests::editor::svg_any::config;
         #[path = "."]
         pub mod modes {
             #[path = "."]
             pub mod edit {
-                #[path = "🏅️standards/🔖️1.1/🪆️subsets/🧱️base/✏️editor/🎭️modes/✏️edit/🦀️.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "."]
-                pub mod windows {
-                    #[path = "."]
-                    pub mod main {
-                        #[path = "🏅️standards/🔖️1.1/🪆️subsets/🧱️base/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                }
+                pub use semio_s_artifact_stdio_svg_mutations::editor::svg_any::modes::edit::*;
+
+                pub use semio_s_artifact_stdio_svg_mutations::editor::svg_any::modes::edit::windows;
             }
         }
     }
     #[path = "."]
     pub mod svg_basic {
-        #[path = "🏅️standards/🔖️1.1/🪆️subsets/🔰️basic/✏️editor/🦀️.rs"]
-        mod component;
-        pub use component::*;
-        #[path = "."]
-        pub mod presence {
-            #[path = "🏅️standards/🔖️1.1/🪆️subsets/🔰️basic/✏️editor/👥️presence/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
-        #[path = "."]
-        pub mod config {
-            #[path = "🏅️standards/🔖️1.1/🪆️subsets/🔰️basic/✏️editor/🎚️config/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
+        pub use semio_s_artifact_stdio_svg_schema_3::editor::svg_basic::*;
+
+        pub use semio_s_artifact_stdio_svg_handcrafted_diff_codec_tests::editor::svg_basic::presence;
+        pub use semio_s_artifact_stdio_svg_handcrafted_diff_codec_tests::editor::svg_basic::config;
         #[path = "."]
         pub mod modes {
             #[path = "."]
             pub mod edit {
-                #[path = "🏅️standards/🔖️1.1/🪆️subsets/🔰️basic/✏️editor/🎭️modes/✏️edit/🦀️.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "."]
-                pub mod windows {
-                    #[path = "."]
-                    pub mod main {
-                        #[path = "🏅️standards/🔖️1.1/🪆️subsets/🔰️basic/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                }
+                pub use semio_s_artifact_stdio_svg_schema_3::editor::svg_basic::modes::edit::*;
+
+                pub use semio_s_artifact_stdio_svg_schema_3::editor::svg_basic::modes::edit::windows;
             }
         }
     }
     #[path = "."]
     pub mod svg_tiny {
-        #[path = "🏅️standards/🔖️1.1/🪆️subsets/🔬️tiny/✏️editor/🦀️.rs"]
-        mod component;
-        pub use component::*;
-        #[path = "."]
-        pub mod presence {
-            #[path = "🏅️standards/🔖️1.1/🪆️subsets/🔬️tiny/✏️editor/👥️presence/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
-        #[path = "."]
-        pub mod config {
-            #[path = "🏅️standards/🔖️1.1/🪆️subsets/🔬️tiny/✏️editor/🎚️config/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
+        pub use semio_s_artifact_stdio_svg_schema_2::editor::svg_tiny::*;
+
+        pub use semio_s_artifact_stdio_svg_handcrafted_diff_codec_tests::editor::svg_tiny::presence;
+        pub use semio_s_artifact_stdio_svg_handcrafted_diff_codec_tests::editor::svg_tiny::config;
         #[path = "."]
         pub mod modes {
             #[path = "."]
             pub mod edit {
-                #[path = "🏅️standards/🔖️1.1/🪆️subsets/🔬️tiny/✏️editor/🎭️modes/✏️edit/🦀️.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "."]
-                pub mod windows {
-                    #[path = "."]
-                    pub mod main {
-                        #[path = "🏅️standards/🔖️1.1/🪆️subsets/🔬️tiny/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                }
+                pub use semio_s_artifact_stdio_svg_schema_2::editor::svg_tiny::modes::edit::*;
+
+                pub use semio_s_artifact_stdio_svg_schema_2::editor::svg_tiny::modes::edit::windows;
             }
         }
     }
@@ -495,103 +289,49 @@ pub mod editor {
 pub mod viewer {
     #[path = "."]
     pub mod svg_any {
-        #[path = "🏅️standards/🔖️1.1/🪆️subsets/🧱️base/👁️viewer/🦀️.rs"]
-        mod component;
-        pub use component::*;
-        #[path = "."]
-        pub mod presence {
-            #[path = "🏅️standards/🔖️1.1/🪆️subsets/🧱️base/👁️viewer/👥️presence/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
-        #[path = "."]
-        pub mod config {
-            #[path = "🏅️standards/🔖️1.1/🪆️subsets/🧱️base/👁️viewer/🎚️config/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
+        pub use semio_s_artifact_stdio_svg_mut_family::viewer::svg_any::*;
+
+        pub use semio_s_artifact_stdio_svg_handcrafted_diff_codec_tests::viewer::svg_any::presence;
+        pub use semio_s_artifact_stdio_svg_handcrafted_diff_codec_tests::viewer::svg_any::config;
         #[path = "."]
         pub mod modes {
             #[path = "."]
             pub mod view {
-                #[path = "🏅️standards/🔖️1.1/🪆️subsets/🧱️base/👁️viewer/🎭️modes/👁️view/🦀️.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "."]
-                pub mod windows {
-                    #[path = "."]
-                    pub mod main {
-                        #[path = "🏅️standards/🔖️1.1/🪆️subsets/🧱️base/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                }
+                pub use semio_s_artifact_stdio_svg_tests::viewer::svg_any::modes::view::*;
+
+                pub use semio_s_artifact_stdio_svg_mutations::viewer::svg_any::modes::view::windows;
             }
         }
     }
     #[path = "."]
     pub mod svg_basic {
-        #[path = "🏅️standards/🔖️1.1/🪆️subsets/🔰️basic/👁️viewer/🦀️.rs"]
-        mod component;
-        pub use component::*;
-        #[path = "."]
-        pub mod presence {
-            #[path = "🏅️standards/🔖️1.1/🪆️subsets/🔰️basic/👁️viewer/👥️presence/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
-        #[path = "."]
-        pub mod config {
-            #[path = "🏅️standards/🔖️1.1/🪆️subsets/🔰️basic/👁️viewer/🎚️config/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
+        pub use semio_s_artifact_stdio_svg_schema_3::viewer::svg_basic::*;
+
+        pub use semio_s_artifact_stdio_svg_handcrafted_diff_codec_tests::viewer::svg_basic::presence;
+        pub use semio_s_artifact_stdio_svg_handcrafted_diff_codec_tests::viewer::svg_basic::config;
         #[path = "."]
         pub mod modes {
             #[path = "."]
             pub mod view {
-                #[path = "🏅️standards/🔖️1.1/🪆️subsets/🔰️basic/👁️viewer/🎭️modes/👁️view/🦀️.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "."]
-                pub mod windows {
-                    #[path = "."]
-                    pub mod main {
-                        #[path = "🏅️standards/🔖️1.1/🪆️subsets/🔰️basic/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                }
+                pub use semio_s_artifact_stdio_svg_schema_3::viewer::svg_basic::modes::view::*;
+
+                pub use semio_s_artifact_stdio_svg_schema_3::viewer::svg_basic::modes::view::windows;
             }
         }
     }
     #[path = "."]
     pub mod svg_tiny {
-        #[path = "🏅️standards/🔖️1.1/🪆️subsets/🔬️tiny/👁️viewer/🦀️.rs"]
-        mod component;
-        pub use component::*;
-        #[path = "."]
-        pub mod presence {
-            #[path = "🏅️standards/🔖️1.1/🪆️subsets/🔬️tiny/👁️viewer/👥️presence/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
-        #[path = "."]
-        pub mod config {
-            #[path = "🏅️standards/🔖️1.1/🪆️subsets/🔬️tiny/👁️viewer/🎚️config/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
+        pub use semio_s_artifact_stdio_svg_schema_2::viewer::svg_tiny::*;
+
+        pub use semio_s_artifact_stdio_svg_handcrafted_diff_codec_tests::viewer::svg_tiny::presence;
+        pub use semio_s_artifact_stdio_svg_handcrafted_diff_codec_tests::viewer::svg_tiny::config;
         #[path = "."]
         pub mod modes {
             #[path = "."]
             pub mod view {
-                #[path = "🏅️standards/🔖️1.1/🪆️subsets/🔬️tiny/👁️viewer/🎭️modes/👁️view/🦀️.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "."]
-                pub mod windows {
-                    #[path = "."]
-                    pub mod main {
-                        #[path = "🏅️standards/🔖️1.1/🪆️subsets/🔬️tiny/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                }
+                pub use semio_s_artifact_stdio_svg_schema_2::viewer::svg_tiny::modes::view::*;
+
+                pub use semio_s_artifact_stdio_svg_schema_2::viewer::svg_tiny::modes::view::windows;
             }
         }
     }
@@ -602,3 +342,7 @@ pub use crate::standards::v1_1::subsets::tiny::io::{SvgTinyBuilderConstruction, 
 pub use crate::standards::v1_1::subsets::base::io::{PathBuilder, GradientStopSpec, ElementBuilder, SvgBuilderConstruction, SvgParts, SvgAnalyzerAnalysis, SvgBuilderFacets, SvgBuilder, SvgAnalyzer, SvgComposer};
 
 pub use crate::standards::v1_1::subsets::basic::io::{SvgBasicBuilderConstruction, SvgBasicAnalyzerAnalysis, SvgBasicBuilderFacets, SvgBasicBuilder, SvgBasicAnalyzer, SvgBasicComposer};
+
+#[cfg(test)]
+#[path = "🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs"]
+mod hoisted_snapshot_0;

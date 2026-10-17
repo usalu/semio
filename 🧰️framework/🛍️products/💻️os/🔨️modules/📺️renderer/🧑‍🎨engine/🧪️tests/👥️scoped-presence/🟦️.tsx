@@ -11,7 +11,7 @@ import {
 } from "@semio-tech/framework-os";
 import { canvasPointToScreen } from "@semio-tech/framework-replication";
 import { scopedPresencePeersV1 } from "../../🧱️elements/🏛️ShellHost/👥️presence-scope/🟦️.ts";
-import { inkPresenceCanvasV1, worldToScreen } from "../../🧱️elements/🖋️InkCanvasHost/🟦️.tsx";
+import { inkPresenceCanvasV1, worldToScreen } from "../../🧱️elements/🖋️InkCanvasHost/📐️ink-geometry/🟦️.ts";
 import {
   inferencePortStatusRuntimeKeyV1,
   reduceBootstrapUiState,
@@ -22,7 +22,13 @@ import {
 import fixture from "../../🧱️elements/🏛️ShellHost/🧪️tests/🧫️fixtures/👥️presence-scope/🔣️.json";
 import { storePresenceSchema as presenceSchema } from "../../../../🏪️store/🧪️tests/🧫️fixtures/🟦️.ts";
 import { presenceLivenessV1Fixture as presenceLiveness } from "../../../../../../../🔨️modules/📡️replication/🧪️tests/🧫️fixtures/🟦️.ts";
-import { PRESENCE_EPHEMERAL_SNAPSHOT_DEADLINE_MS, PRESENCE_HEARTBEAT_INTERVAL_MS, PRESENCE_LIVE_VIEW_BEAT_INTERVAL_MS, presenceEphemeralSnapshotWithinBoundV1, presenceLiveViewBeatDelayMsV1 } from "../../🧱️elements/🛠️ShellHelpers/🟦️.tsx";
+import {
+  PRESENCE_EPHEMERAL_SNAPSHOT_DEADLINE_MS,
+  PRESENCE_HEARTBEAT_INTERVAL_MS,
+  PRESENCE_LIVE_VIEW_BEAT_INTERVAL_MS,
+  presenceEphemeralSnapshotWithinBoundV1,
+  presenceLiveViewBeatDelayMsV1
+} from "../../🧱️elements/🛠️ShellHelpers/🔩️plumbing/👥️presence-identity/🟦️.ts";
 
 type Case = (typeof fixture.cases)[number];
 

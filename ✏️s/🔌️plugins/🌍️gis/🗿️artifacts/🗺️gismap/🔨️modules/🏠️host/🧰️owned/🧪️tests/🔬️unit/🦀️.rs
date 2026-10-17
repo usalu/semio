@@ -1,9 +1,22 @@
-use super::*;
+use crate::standards::v1::subsets::any::schema::mutations::GisMapMutation;
+use crate::{GisMapSnapshot, MapFeature};
+use semio_framework_value::{retained_clone::RetainedCloneGrant, retained_clone::RetainedCloneProgress, retained_clone::RetainedCloneStep};
+use semio_framework_value::RetirementDemand;
+#[allow(unused_imports)]
+use semio_framework_job_publication::{RetainedJobPublication, JobPublicationKind};
+#[allow(unused_imports)]
+use protocol::{Mutation, OpBinary};
+#[allow(unused_imports)]
+use initialization_authority::*;
+use crate::host::owned::*;
 use crate::mutations::{create_position, create_region, create_route, delete_position, delete_region, delete_route, reorder_positions, reorder_regions, reorder_routes, replace_position_data, replace_region_data, replace_route_data, set_position_property, remove_position_property, set_route_property, remove_route_property, set_region_property, remove_region_property};
 use crate::standards::v1::subsets::any::io::text::snapshot::{default_document};
 use crate::standards::v1::subsets::any::io::text::snapshot::{empty_gis_map_snapshot};
 use crate::GIS_MAP_SCHEMA;
 use serde_json::json;
+
+/// 🎟️ Unbounded retained grant: the pre-migration step budget carried no retained limit.
+const UNBOUNDED_STEP_GRANT: semio_framework_job::RetainedCloneGrant = semio_framework_job::RetainedCloneGrant { maximum_items: usize::MAX, maximum_copy_bytes: usize::MAX, maximum_capacity_bytes: usize::MAX, maximum_release_bytes: usize::MAX, maximum_depth: usize::MAX };
 
 fn dsl_of(value: &serde_json::Value) -> semio_framework_value::DslValue {
     semio_framework_value::DslValue::from(value)
@@ -64,7 +77,8 @@ fn drive_gis_map_initializer(authority: &mut GisMapStoreInitializationAuthority,
     let cancel = semio_framework_job::root_cancel_token();
     let mut preview_sequence = 0;
     for _ in 0..100_000 {
-        let mut context = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(4_096, u64::MAX), cancel.clone(), semio_framework_job::default_now_us, &mut preview_sequence);
+        let mut context_retained = semio_framework_job::RetainedCloneProgress::default();
+        let mut context = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(4_096, u64::MAX, UNBOUNDED_STEP_GRANT), cancel.clone(), semio_framework_job::default_now_us, &mut preview_sequence, &mut context_retained);
         let end = match semio_framework_plugin::ArtifactStoreInitializationAuthority::step(authority, &mut context).expect("GIS initializer turn") {
             Some(semio_framework_job::JobOutcomeBorrow::Complete { .. }) => Some(GisDriveEnd::Complete),
             Some(semio_framework_job::JobOutcomeBorrow::Cancelled { .. }) => Some(GisDriveEnd::Cancelled),
@@ -248,7 +262,8 @@ async fn the_initialization_candidate_projects_its_canonical_child_handles() {
         let mut preview_sequence = 0;
         let mut complete = false;
         for _ in 0..200_000 {
-            let mut cx = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(1, u64::MAX), cancel.clone(), semio_framework_job::default_now_us, &mut preview_sequence);
+            let mut cx_retained = semio_framework_job::RetainedCloneProgress::default();
+            let mut cx = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(1, u64::MAX, UNBOUNDED_STEP_GRANT), cancel.clone(), semio_framework_job::default_now_us, &mut preview_sequence, &mut cx_retained);
             match ArtifactStoreInitializationAuthority::step(&mut authority, &mut cx).expect("GIS initializer turn") {
                 Some(semio_framework_job::JobOutcomeBorrow::Complete { .. }) => {
                     complete = true;

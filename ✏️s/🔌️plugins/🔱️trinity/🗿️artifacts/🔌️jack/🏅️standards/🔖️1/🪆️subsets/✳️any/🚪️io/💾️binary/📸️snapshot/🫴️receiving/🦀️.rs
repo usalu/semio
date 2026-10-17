@@ -1,5 +1,9 @@
 //! 🫴️ Original Jack record backing moves into one typed candidate through finite receiving turns.
-use crate::{Camera,JackSnapshot,JackContentChild,Manifest,NodeKindDef,EdgeKindDef,PortKindDef,PortDirection,PropertyDef,PropertyKind};
+use crate::standards::v1::subsets::any::schema::graph::Camera;
+use crate::standards::v1::subsets::any::schema::snapshot::JackSnapshot;
+use crate::standards::v1::subsets::any::schema::content::JackContentChild;
+use crate::standards::v1::subsets::any::schema::manifest::{Manifest, NodeKindDef, EdgeKindDef, PortKindDef};
+use semio_framework_graph_manifest::{PortDirection, PropertyDef, PropertyKind};
 use semio_framework_dsl_record::{FieldValue,RecordValue};
 use semio_framework_dsl_record::receiving::owned::{DslOwnedReceivingField,OwnedFieldReceiving,OwnedSlot,funds};
 use crate::standards::v1::subsets::any::io::text::snapshot::JackPackRecord;

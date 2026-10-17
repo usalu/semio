@@ -38,6 +38,7 @@ semio-s-space-core = { path = "../../../../../../../✏️s/🔌️plugins/🪐�
 semio-framework-os-kernel = { workspace = true }
 semio-framework-plugin = { workspace = true, features = ["canvas-runtime-assets"] }
 semio-framework = { workspace = true }
+semio-framework-action-bus = { path = "../../../../../../../🧰️framework/🔨️modules/🎯️action-bus/📦️packages/🦀️rust" }
 semio-framework-job = { workspace = true }
 semio-framework-ui-contract = { workspace = true }
 semio-framework-ui-scene = { workspace = true }

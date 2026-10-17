@@ -4,7 +4,7 @@ import { join, relative,dirname,resolve,posix,win32 } from "node:path";
 import {pathToFileURL} from "node:url";
 import ts from "typescript";
 import { getWorkspaceRoot } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
-import { type JsonMap, readStdioJson, slashStdioPath, STDIO_RELATIVE_ROOT, stdioArtifactDefinitionPaths, stdioArtifactPackageContract } from "../../../../🔌️plugins/🗄️stdio/🗿️artifacts/📇️inventory/🟦️.ts";
+import { type JsonMap, readStdioJson, slashStdioPath, STDIO_RELATIVE_ROOT, stdioArtifactDefinitionPaths, stdioArtifactPackageContract } from "@semio-tech/stdio-inventory-ts";
 import { assertStdioArtifactSchema, assertStdioArtifactSourceContract } from "../../🏘️composition/🛂️artifact-contract/🟦️.ts";
 import { assertStdioArtifactCargoMetadata, assertStdioArtifactBuildGraph, stdioCargoMetadata,readStdioArtifactBuildGraphPin } from "../../🏘️composition/🕸️artifact-graph/🟦️.ts";
 import Ajv from "ajv";

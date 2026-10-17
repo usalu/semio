@@ -1,0 +1,41 @@
+[package]
+workspace = "../../../../../../.."
+name = "semio-framework-3d-brep-mesh-io"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Triangle-mesh exchange of the 3D kernel - STL, OBJ and GLB import and export over native B-Rep bodies, the bounded retained mesh-import cursor and the analytic preview mesh conversion"
+
+[package.metadata.semio]
+role = "framework"
+id = "3d-brep-mesh-io"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-3d-brep-construction.workspace = true
+semio-framework-3d-brep-curve.workspace = true
+semio-framework-3d-brep-kernel-contract.workspace = true
+semio-framework-3d-brep-representation.workspace = true
+semio-framework-3d-brep-surface.workspace = true
+semio-framework-3d-brep-tessellation.workspace = true
+semio-framework-3d-brep-tolerance.workspace = true
+semio-framework-3d-brep-vector.workspace = true
+semio-framework-mesh-component-references = { path = "../../../../../../🏗️mesh-engine/🎯️component-references/📦️packages/🦀️rust" }
+semio-framework-mesh-engine.workspace = true
+semio-framework-value.workspace = true
+
+[dev-dependencies]
+parry3d = "0.17"
+semio-framework-async-macros.workspace = true
+semio-framework-pack-json = { path = "../../../../../../🎒️pack/🔤️json/📦️packages/🦀️rust" }
+serde_json.workspace = true

@@ -11,9 +11,7 @@ const root = resolve(resolve(dirname(fileURLToPath(import.meta.url)), "../../�
 export default {
   root: testRoot,
   resolve: {
-    alias: {
-      "@semio-tech/ui-styling": resolve(root, "📦️packages/🟦️typescript/🟦️.ts"),
-    },
+    alias: [{ find: /^@semio-tech\/ui-styling$/u, replacement: resolve(root, "📦️packages/🟦️typescript/🟦️.ts") }],
   },
   test: {
     root: testRoot,

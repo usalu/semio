@@ -89,17 +89,18 @@ impl protocol::OpText for PlaygroundMutation {
 //#endregion 🔖️OpText
 
 //#region 🧪️RoundTrip
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️RoundTrip
+
+#[path = "🌉️apply/🦀️.rs"]
+mod central_apply;
 
 mod json_orchestration {
 use crate::standards::v1::subsets::any::schema::{mutations::PlaygroundMutation, snapshot::PlaygroundSnapshot};
 #[cfg(test)] use crate::standards::v1::subsets::any::schema::{diff::PlaygroundDiff};
 
 use semio_framework_pack_json::{array, from_dsl_value, from_json_str, object, to_string, Value};
-use crate::central_apply::{bridge_step};
+use super::central_apply::{bridge_step};
 fn bridge_decode_pair(snapshot_json: &str, mutation_json: &str) -> Result<(PlaygroundSnapshot, PlaygroundMutation), String> {
     let snapshot = from_json_str(snapshot_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| format!("the committed playground snapshot JSON does not decode: {error}"))?;
     let mutation = from_json_str(mutation_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| format!("the committed playground mutation JSON does not decode: {error}"))?;

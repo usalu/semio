@@ -3,7 +3,7 @@
 pub const TAG: u8 = dsl::protocol_record::tag_u8(include_str!("../📡️.protocol.semio"), "set-mark-info");
 pub const BINARY_TAG: u8 = TAG;
 
-use crate::standards::v1_7::subsets::base::schema::mutations::SetMarkInfo;
+use crate::standards::v1_7::subsets::base::schema::mutations::set_mark_info::SetMarkInfo;
 
 /// 📤️ Encodes this direct payload as canonical schema JSON bytes.
 pub fn encode(payload: &SetMarkInfo) -> Result<Vec<u8>, String> {

@@ -1,6 +1,6 @@
 //! 🧬️ Dependency-free Sequence editor protocol over the owned framework ABI.
 
-use semio_framework::abi::{
+use semio_framework_abi::{
     AbiBytes, AbiControl, AbiError, AbiErrorCode, AbiEvent, AbiEventCode, AbiHandle, AbiHandleTable, AbiMessage, AbiMessageBytes, AbiPageReader, AbiPort, AbiPortPoll, AbiPortRejection, AbiReply, AbiReplyLedger, AbiRequest, AbiRequestId, AbiStatus,
     AbiStatusCode, AbiWorkBudget, ABI_MAX_BODY_BYTES, ABI_MAX_IN_FLIGHT_HANDLES, ABI_MAX_IN_FLIGHT_REQUESTS, ABI_MAX_MESSAGE_BYTES, ABI_MAX_TRANSFER_BYTES,
 };
@@ -252,7 +252,7 @@ struct SequenceOperation<D> {
     cancelled: bool,
 }
 
-enum SequenceResource<D> {
+pub enum SequenceResource<D> {
     Session(Rc<RefCell<SequenceSession<D>>>),
     Operation(SequenceOperation<D>),
 }
@@ -526,10 +526,10 @@ impl<D: SequenceDomain> SequenceBridge<D> {
                     OperationPhase::Stream => {
                         let reader = operation.reader.as_mut().ok_or(AbiErrorCode::UnknownHandle)?;
                         match reader.read_step(budget)? {
-                            semio_framework::abi::AbiCursorStep::PageComplete(_) => {
+                            semio_framework_abi::AbiCursorStep::PageComplete(_) => {
                                 page = Some(reader.page().cloned().ok_or(AbiErrorCode::UnknownHandle)?);
                             }
-                            semio_framework::abi::AbiCursorStep::Complete => {
+                            semio_framework_abi::AbiCursorStep::Complete => {
                                 reply = Some(success_reply(operation.request_id, operation.generation, Vec::new()));
                                 operation.phase = OperationPhase::Terminal;
                                 retain = false;
@@ -680,7 +680,7 @@ fn failure_reply(request_id: AbiRequestId, generation: u32, status: AbiStatusCod
     AbiReply { request_id, generation, status: AbiStatus { code: status, error: Some(AbiError { code, message }) }, bytes: AbiBytes::default() }
 }
 
-fn request_slot(request_id: AbiRequestId) -> usize {
+pub fn request_slot(request_id: AbiRequestId) -> usize {
     (request_id.0 % SEQUENCE_MAX_REQUESTS as u64) as usize
 }
 
@@ -707,8 +707,6 @@ fn admitted_bytes(budget: AbiWorkBudget, remaining: usize) -> Result<usize, AbiE
 
 //#region 🧪️Laws
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️protocol-unit/🦀️.rs"]
-mod tests;
+
 
 //#endregion 🧪️Laws

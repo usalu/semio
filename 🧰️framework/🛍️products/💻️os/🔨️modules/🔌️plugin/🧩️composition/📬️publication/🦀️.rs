@@ -210,7 +210,7 @@ pub fn test_original_pending_child_group_closure<A:ArtifactApp>(original:impl Fn
         for denied in denied{let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.close_step(denied).unwrap());assert_eq!(step.progress().unwrap_or_default(),Default::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));if owner.mutation_retirement.is_none()&&owner.artifact_mutations.capacity()!=0{assert_eq!(owner.artifact_mutations.as_ptr(),pointer);}}
         let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.close_step(grant).unwrap());let progress=step.progress().unwrap_or_default();assert!(progress.fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));if matches!(step,PluginLifecycleStep::Complete(_)){assert!(owner.terminal_is_empty());}born+=heap.requested_bytes;released+=heap.released_bytes;turns+=1;assert!(turns<100000);
     }
-    assert_eq!(born,released);let((),heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(owner));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));println!("[DEBUG] original pending child mutation/transaction closure turns={turns} originalNativeSource physical={released} full5currencies terminalDrop0");
+    assert_eq!(born,released);let((),heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(owner));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
 }
 
 impl<A:ArtifactApp> Drop for PendingChildGroupPublication<A>{
@@ -431,3 +431,16 @@ pub fn advance_original_fault_capture(capture:&mut Option<MountedWorkerFaultCapt
 
 #[path = "🤝️group/🦀️.rs"]
 pub mod group;
+
+#[cfg(test)]
+use semio_framework_plugin_decl_emission as app_emission;
+#[cfg(test)]
+use semio_framework_plugin_decl_emission::child_emit_preparation;
+#[cfg(test)]
+use crate::group as child_content;
+#[cfg(test)]
+#[path="../../🧪️tests/🧩️private-child-metadata/🦀️.rs"]
+mod private_child_metadata_laws;
+#[cfg(test)]
+#[global_allocator]
+static CHILD_METADATA_HEAP_WITNESS:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;

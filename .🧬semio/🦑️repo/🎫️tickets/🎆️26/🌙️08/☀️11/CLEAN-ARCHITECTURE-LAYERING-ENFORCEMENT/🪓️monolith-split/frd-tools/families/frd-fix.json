@@ -1,0 +1,14 @@
+{
+ "name": "frd-fix",
+ "crates": [
+  "semio-framework-test-fixtures",
+  "semio-s-artifact-architect-program",
+  "semio-s-artifact-norm-en1995",
+  "semio-s-artifact-shooting-shooting",
+  "semio-s-artifact-sourcing-curation",
+  "semio-s-artifact-stdio-ifc",
+  "semio-s-artifact-stdio-mp4",
+  "semio-s-artifact-stdio-pdf"
+ ],
+ "note": "FRD part 2"
+}

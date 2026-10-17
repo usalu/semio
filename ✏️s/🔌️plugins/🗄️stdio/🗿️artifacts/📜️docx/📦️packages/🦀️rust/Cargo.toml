@@ -40,9 +40,9 @@ semio-s-artifact-stdio-docx-transitional = { workspace = true }
 semio-s-artifact-stdio-contract = { workspace = true, features = ["testing"] }
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
-semio-s-artifact-stdio-docx-strict-mutations = { workspace = true }
+semio-s-artifact-stdio-docx-strict-mutations = { workspace = true, features = ["testkit"] }
 semio-s-artifact-stdio-docx-strict = { workspace = true }
-semio-s-artifact-stdio-docx-base-mutations = { workspace = true }
+semio-s-artifact-stdio-docx-base-mutations = { workspace = true, features = ["testkit"] }
 semio-s-artifact-stdio-docx-base-model = { workspace = true }
 semio-s-artifact-stdio-docx-base-inferences = { workspace = true }
 semio-s-artifact-stdio-docx-base = { workspace = true }

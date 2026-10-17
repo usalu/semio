@@ -3,7 +3,7 @@ import { dirname, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { oklabMix, rgba8ToLinear, linearToOklab, type Rgba8 } from "../🌗️mixing/🟦️.ts";
 import { parseUiTheme, resolveThemeGeometry, resolveThemeMetrics, resolveThemePaint, type ThemePaintRef, type UiTheme } from "../🌓️theme/🏛️model/🟦️.ts";
-import { SEMIO_ASSET_ROUTE } from "../../../🖼️assets/🔍️resolver/🌐️delivery/🟦️.ts";
+import { SEMIO_ASSET_ROUTE } from "@semio-tech/assets/resolver/delivery";
 import { loadFontCatalog, resolveFontSource } from "../🔤️fonts/🟦️.ts";
 
 const moduleRoot = import.meta.dir ?? dirname(fileURLToPath(import.meta.url));

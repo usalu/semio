@@ -3,7 +3,8 @@
 use crate::editor::forms::config::{FormsConfig, FormsConfigMutation};
 use crate::editor::forms::questions::patch_question;
 use crate::standards::v1::subsets::any::io::text::snapshot::{value_to_dsl};
-use crate::schema::{locate_question,question_edit_mutations};
+use crate::mutations::question_edit_mutations;
+use crate::schema::locate_question;
 use crate::{op::FormMutation, FormsSnapshot};
 use semio_framework_pack_json::Value;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};

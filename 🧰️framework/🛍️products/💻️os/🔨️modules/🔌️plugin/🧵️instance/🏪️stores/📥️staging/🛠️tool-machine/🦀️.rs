@@ -1,17 +1,27 @@
 //! 🎸️ Staged slice of the `tool-machine` band of the mounted artifact instance: its `instance-stores` members (WP6 step S0 of the instance family).
 //!
 //! 🛠️ The instance's tool-machine turns: gesture, scrub and typing dispatch.
-use super::*;
-use crate::tool_jobs::tool_machine::*;
-use crate::tool_jobs::tool_machine::gesture_issuer::{GestureOperation,reserve_live,issue_live};
-use semio_framework_tool_machine::{
-    ScrubPhase, ToolAbortReason, ToolStep, TypingCommit, TypingInput, TypingPhase, SCRUB_ABORT_ARG, SCRUB_COMMIT_ARG, SCRUB_GESTURE_ARG,
-    TYPING_BUFFER_ARG, TYPING_COMMIT_ARG,
-};
-use std::collections::BTreeMap;
-use semio_framework_value::retirement::controlled::ControlledRetirement;
-use semio_framework_value::OriginalAliasBatch as ToolOriginalAliasBatch;
-use semio_framework_value::{RetirementDemand,ValueError,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
+use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_framework_plugin_decl_app::tool_contract::ArtifactOwnedToolJobFactory;
+use pack::snapshot::ArtifactPack;
+use semio_framework_plugin_decl_emission::Emit;
+use semio_framework::FaultFrom;
+use semio_framework_value_derive::FromValue;
+use store::Mutation;
+use store::MutationDiff;
+use protocol::OpBinary;
+use protocol::OpText;
+use semio_framework_plugin_reactor_app::PluginApp;
+use semio_framework_value::retirement::RetireOwned;
+use semio_framework_value_derive::ToValue;
+use semio_framework_plugin_decl_views::tool_run_contract::ToolRunRetargetableJob;
+use semio_framework_plugin_window_config::WindowConfigOwner;
+use std::future::Future;
+use crate::stores_components::InstanceStores;
+use store::{MemberFactory, SpaceMember};
+use semio_framework_ui_contract::*;
+use semio_framework_plugin_tool_run::tool_jobs_tool_machine::*;
 
 //#region 🔖️Driver
 impl<A: ArtifactApp> InstanceStores<A> {

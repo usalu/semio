@@ -17,7 +17,7 @@ use semio_framework_os_renderer_wgpu_kernel_protocol::{
     mounted_product_replay_refusal_registry, mounted_product_replay_worker_slot, native_shard_count, next_seq, parallel_runtime, read_native_component, reserve_seq, run_turn_continuation_turns, run_turn_quiescent_continuations,
     CreateAppRequestOwner, ExchangeOutcome, ExchangeSurfaceDocument, JobProgressPresentationToken, KernelCloseHandle, KernelCloseStatus, KernelCloseSubmission, KernelCloseSubmissionRegistry, KernelOutcome, KernelRequest, KernelRequestQueue,
     MountedProductReplayAdmissionPermit, MountedProductReplayAuthority, MountedProductReplayCheckpoint, MountedProductReplayClaim, MountedProductReplayExpected, MountedProductReplayRequest, QueuedKernelEvent, RefusedProductReplay,
-    RejectedKernelEvents, ResponseSlot, TypedOperationResultPage, COMPILED_COMPONENT_CAPACITY, JOB_PROGRESS_PRESENTATION_CAPACITY, KERNEL_CLOSE_READY, KERNEL_CLOSE_UNADMITTED, KERNEL_REQUEST_QUEUE_CAPACITY, PRODUCT_REPLAY_PROFILE_COUNT,
+    RejectedKernelEvents, ResponseSlot, TypedOperationResultPage, COMPILED_COMPONENT_CAPACITY, JOB_PROGRESS_PRESENTATION_CAPACITY, JOB_REPLAY_STEP_GRANT, KERNEL_CLOSE_READY, KERNEL_CLOSE_UNADMITTED, KERNEL_REQUEST_QUEUE_CAPACITY, PRODUCT_REPLAY_PROFILE_COUNT,
     RUN_TURN_OUTCOME_TIMEOUT, RUN_TURN_SETTLE_BUDGET, TURN_BUDGET, TURN_REQUESTS_BETWEEN_SLICES,
 };
 use semio_framework_os_renderer_wgpu_kernel_retained::{

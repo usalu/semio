@@ -2,6 +2,7 @@ use super::*;
 use flow_extension_sdk::evaluate_json;
 use neural_engine::{Atom, Value};
 use semio_framework_3d_brep_engine::Brep;
+use semio_framework_test_fixtures::fixture_text;
 use std::sync::{Mutex, OnceLock};
 
 async fn point(x: f64, y: f64, z: f64) -> Dictionary {
@@ -342,7 +343,7 @@ async fn schema_component_deconstructs_geometry() {
 /// 🧩️ The live topology widget exposes every reachable component through its existing owner.
 #[semio_framework_async_macros::async_test]
 async fn topology_widget_exposes_every_shape_kind_and_exact_labels() {
-    let fixture = semio_framework_pack_json::parse(include_str!("../../../../../../../🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/🧪️tests/🧫️fixtures/🎯️component-picking/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let fixture = semio_framework_pack_json::parse(fixture_text!("../../../../../../../../../🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/🧪️tests/🧫️fixtures/🎯️component-picking/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let session = Session::new();
     let mut registry = Registry::new();
     register(&mut registry, &session);
@@ -394,7 +395,6 @@ async fn topology_widget_exposes_every_shape_kind_and_exact_labels() {
             measurements += 1;
         }
     }
-    eprintln!("[DEBUG] BRep topology widget shapeKinds=10 labelEncoding=decimal-text shellPort=true measurements={measurements}");
     drop(registry);
     session.close();
     assert!(session.terminal_is_empty());
@@ -574,7 +574,6 @@ async fn topology_family_shells_compound_explode_and_label() {
     let label = channel_payload(&label_out, "label").await;
     assert_eq!(label.schema(), Some("text"));
     assert_eq!(label.get("value").and_then(Value::as_atom).and_then(Atom::as_str), Some(expected_label.to_string().as_str()));
-    eprintln!("[DEBUG] BRep persistent label text={expected_label}");
 }
 
 /// 🎯️ `q`'s tag round-trips through the live registry — the contract's `operation_quality`
@@ -640,7 +639,7 @@ async fn every_brep_port_has_explicit_types_and_distinct_identifiers() {
 
 #[semio_framework_async_macros::async_test]
 async fn packaged_widget_descriptor_matches_live_registration() {
-    let descriptor = semio_framework_pack_json::parse(include_str!("../../🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let descriptor = semio_framework_pack_json::parse(fixture_text!("../../../../🧩️component/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let manifest_json = extension_manifest_json().await;
     let manifest = semio_framework_pack_json::parse(&manifest_json, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let expected: serde_json::Value = serde_json::from_str(&manifest_json).unwrap();
@@ -657,13 +656,12 @@ async fn packaged_widget_descriptor_matches_live_registration() {
         }
         assert_eq!(actual, expected);
     }
-    eprintln!("[DEBUG] BRep packaged/live widget manifest topics={} operators={}", descriptor.get("manifest").unwrap().get("topicContributions").unwrap().as_array().unwrap().len(), manifest.get("contributes").unwrap().get("operators").unwrap().as_array().unwrap().len());
 }
 
 #[semio_framework_async_macros::async_test]
 async fn portable_channel_identity_fixtures_match_live_widgets() {
     let registry = neural_engine::ColdOwner::new(module_registry(geometry_session()));
-    let fixtures = semio_framework_pack_json::parse(include_str!("../🧫️fixtures/🪪️channels/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let fixtures = semio_framework_pack_json::parse(fixture_text!("../../../🧫️fixtures/🪪️channels/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     for fixture in fixtures.get("cases").unwrap().as_array().unwrap() {
         let info = registry.operator_info(fixture.get("operator").unwrap().as_str().unwrap()).unwrap();
         let channels = if fixture.get("direction").unwrap().as_str() == Some("inputs") { &info.inputs } else { &info.outputs };
@@ -690,7 +688,7 @@ fn geometry_session() -> &'static Session {
 async fn brep_deconstruct_resolves_selected_labels_without_ordinal_identity() {
     let _serial = test_serial().await;
     reset_test_kernel().await;
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎯️component-label-selection/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../🧫️fixtures/🎯️component-label-selection/🔣️.json")).unwrap();
     let row = &fixture["box"];
     let point = parry3d::math::Point::new;
     let edge_length = parry3d::shape::Segment::new(point(0.0,0.0,0.0),point(row["width"].as_f64().unwrap() as f32,0.0,0.0)).length();
@@ -723,11 +721,10 @@ async fn brep_deconstruct_resolves_selected_labels_without_ordinal_identity() {
         let text = if text==fixture["missingLabel"].as_str().unwrap() {serde_json::json!([text]).to_string()} else {text.into()};
         assert!(registry.dispatch_cold("brep.brep",(*input).clone().insert("edgeLabels",Value::Dictionary(text_dictionary(text))).insert("faceLabels",Value::Dictionary(text_dictionary("[]"))).insert("sourceHandle",Value::Dictionary(text_dictionary("")))).is_err());
     }
-    println!("[DEBUG] BRep scoped exact-label selection edgeLength={edge_length} faceArea={face_area} independentParry=true");
 }
 
 pub(crate) fn geometry_test_retained()->semio_framework_pack_json::Value {
-    let fixture=semio_framework_pack_json::parse(include_str!("../🧫️fixtures/🚪️retirement/🔣️.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let fixture=semio_framework_pack_json::parse(fixture_text!("../../../🧫️fixtures/🚪️retirement/🔣️.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     fixture.get("evaluate").unwrap().get("retained").unwrap().clone()
 }
 
@@ -741,7 +738,7 @@ async fn brep_deconstruct_scopes_source_handles_across_collection_reorder() {
     let _serial = test_serial().await;
     reset_test_kernel().await;
     let registry = neural_engine::ColdOwner::new(module_registry(geometry_session()));
-    let fixtures: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎯️component-label-selection/🔣️.json")).unwrap();
+    let fixtures: serde_json::Value = serde_json::from_str(fixture_text!("../../../🧫️fixtures/🎯️component-label-selection/🔣️.json")).unwrap();
     let shape = |width| registry.dispatch_cold("brep.prim3d.box",Dictionary::new().insert("width",Value::Dictionary(number_dictionary(width))).insert("depth",Value::Dictionary(number_dictionary(3.0))).insert("height",Value::Dictionary(number_dictionary(4.0)))).unwrap();
     let selected = channel_payload(&shape(2.0),"solid").await;
     let other = channel_payload(&shape(5.0),"solid").await;
@@ -765,5 +762,18 @@ async fn brep_deconstruct_scopes_source_handles_across_collection_reorder() {
     }
     let oracle=parry3d::shape::Shape::mass_properties(&parry3d::shape::Cuboid::new(parry3d::math::Vector::new(1.0,1.5,2.0)),1.0).mass();
     assert_eq!(oracle,24.0);
-    println!("[DEBUG] BRep source scope current=reordered exactHandle=true absent=refused ambiguous=refused parryVolume={oracle}");
 }
+
+/// 🙈️ `BrepKernel` methods this extension deliberately exposes NO node for, with why — checked by
+/// `every_kernel_operation_is_either_a_node_or_explicitly_unexposed` against
+/// [`BREP_KERNEL_OPERATIONS`] so a newly added trait method can never silently fall through both
+/// lists unnoticed.
+const INTENTIONALLY_UNEXPOSED: &[(&str, &str)] = &[
+    ("scale", "Uniform scaling is represented by equal factors in the scale_axes widget"),
+    ("kind", "internal handle-kind lookup behind geometry_dict, not a graph operation"),
+    ("tessellate", "internal preview/export bridge (tessellate_geometry), not a graph node"),
+    ("dispose", "internal GC primitive (dispose_geometry), not a graph node"),
+    ("retain", "internal GC primitive (retain_geometry_handles), not a graph node"),
+    ("registry_len", "internal diagnostic counter, not a graph node"),
+    ("export_gltf", "glTF/GLB leaves the extension only via the tessellation mesh bridge (export_solid_json \"glb\"), never this trait method directly"),
+];

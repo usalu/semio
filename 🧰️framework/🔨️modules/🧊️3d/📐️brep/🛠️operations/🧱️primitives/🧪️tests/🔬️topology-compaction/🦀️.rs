@@ -1,4 +1,5 @@
 use semio_framework_3d_brep_representation::topology::{Body, BodyCompactionJob, EntityRef};
+use semio_framework_test_fixtures::fixture_text;
 
 /// 🧹️ Every original arena slot and removed payload closes with an exact physical receipt while kept generations remain unchanged.
 #[test]
@@ -6,7 +7,7 @@ fn original_body_compaction_turns_own_all_physical_effects() {
     use {crate::primitives::make_box, semio_framework_3d_brep_representation::topology::history};
     use crate::test_support::observe_tessellation_system as observe;
     use semio_framework_value::{retirement::controlled::ControlledRetirement,retained_clone::RetainedCloneGrant};
-    let law:serde_json::Value=serde_json::from_str(include_str!("../../../../📸️representation/🕸️topology/🧪️tests/🧫️fixtures/🎟️reachability/🔣️.json")).unwrap();
+    let law:serde_json::Value=serde_json::from_str(fixture_text!("../../../📸️representation/🕸️topology/🧪️tests/🧫️fixtures/🎟️reachability/🔣️.json")).unwrap();
     for cancel in std::iter::once(None).chain(law["compaction"]["cancelTurns"].as_array().unwrap().iter().map(|turn|Some(turn.as_u64().unwrap()as usize))) {
         let ((mut body,solid,discard),source)=observe(||{let mut body=Body::new();let mut rec=history::OpRecorder::new();let solid=make_box(&mut body,1.,1.,1.,&mut rec).unwrap();let discard=make_box(&mut body,2.,2.,2.,&mut rec).unwrap();(body,solid,discard)});
         let(keep,membership)=observe(||body.reachable_from(&[EntityRef::Solid(solid)]));let kept=keep.solids.get(&solid).copied().unwrap();
@@ -22,6 +23,6 @@ fn original_body_compaction_turns_own_all_physical_effects() {
         let(_,heap)=observe(||drop(job));assert_eq!(heap,(0,0));
         let(mut owner,heap)=observe(||ControlledRetirement::new(body).unwrap_or_else(|(error,_)|panic!("original body closure: {error}")));assert_eq!(heap,(0,0));
         while !owner.terminal_is_empty(){let copy=owner.next_copy_byte_demand().unwrap();let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:owner.next_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:owner.next_release_byte_demand().unwrap(),maximum_depth:owner.next_depth_demand().unwrap()};let(step,heap)=observe(||owner.step(grant).unwrap());assert!(step.progress().fits(grant));assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));born+=heap.0;freed+=heap.1;}
-        assert_eq!(born,freed);let(_,heap)=observe(||drop(owner));assert_eq!(heap,(0,0));eprintln!("[DEBUG] Original compaction cancel={cancel:?} oneItem=true keptGenerations=true physical={freed} turns={turns} terminalDrop=0");
+        assert_eq!(born,freed);let(_,heap)=observe(||drop(owner));assert_eq!(heap,(0,0));
     }
 }

@@ -1,5 +1,7 @@
-use super::*;
+use crate::JsonSnapshot;
+use crate::standards::v_rfc8259::subsets::base::schema::inferences::*;
 use protocol::Inference;
+use semio_framework_test_fixtures::{fixture_bytes, fixture_text};
 
 #[semio_framework_async_macros::async_test]
 async fn inference_determinism_law() {
@@ -114,18 +116,18 @@ mod conformance_laws {
     /// fixtures can never silently drift back to a fake again.
     #[semio_framework_async_macros::async_test]
     async fn fixture_honesty_law() {
-        const FIXTURE_DSL: &str = include_str!("../../../../📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio");
-        const FIXTURE_PACK: &[u8] = include_bytes!("../../../../📚️examples/🎬️demo/🖼️assets/🎒️.pack.semio");
+        static FIXTURE_DSL: std::sync::LazyLock<&str> = std::sync::LazyLock::new(|| super::fixture_text!("../../../../📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio"));
+        static FIXTURE_PACK: std::sync::LazyLock<&[u8]> = std::sync::LazyLock::new(|| super::fixture_bytes!("../../../../📚️examples/🎬️demo/🖼️assets/🎒️.pack.semio"));
 
         let demo = snapshot::demo_json_snapshot();
 
-        let parsed = <JsonSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(FIXTURE_DSL).expect("parse shipped .dsl.semio fixture");
+        let parsed = <JsonSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl((*FIXTURE_DSL)).expect("parse shipped .dsl.semio fixture");
         assert_eq!(parsed, demo, "shipped .dsl.semio fixture does not parse back to demo_json_snapshot()");
-        assert_eq!(pack::snapshot::ArtifactDsl::print_dsl(&demo), FIXTURE_DSL, "print_dsl(demo_json_snapshot()) drifted from the shipped .dsl.semio fixture");
+        assert_eq!(pack::snapshot::ArtifactDsl::print_dsl(&demo), (*FIXTURE_DSL), "print_dsl(demo_json_snapshot()) drifted from the shipped .dsl.semio fixture");
 
-        let decoded = <JsonSnapshot as pack::snapshot::ArtifactPack>::decode_pack(FIXTURE_PACK).expect("decode shipped .pack.semio fixture");
+        let decoded = <JsonSnapshot as pack::snapshot::ArtifactPack>::decode_pack((*FIXTURE_PACK)).expect("decode shipped .pack.semio fixture");
         assert_eq!(decoded, demo, "shipped .pack.semio fixture does not decode back to demo_json_snapshot()");
-        assert_eq!(pack::snapshot::ArtifactPack::encode_pack(&demo), FIXTURE_PACK, "encode_pack(demo_json_snapshot()) drifted from the shipped .pack.semio fixture");
+        assert_eq!(pack::snapshot::ArtifactPack::encode_pack(&demo), (*FIXTURE_PACK), "encode_pack(demo_json_snapshot()) drifted from the shipped .pack.semio fixture");
     }
 }
 //#endregion 🔖️ConformanceLaws

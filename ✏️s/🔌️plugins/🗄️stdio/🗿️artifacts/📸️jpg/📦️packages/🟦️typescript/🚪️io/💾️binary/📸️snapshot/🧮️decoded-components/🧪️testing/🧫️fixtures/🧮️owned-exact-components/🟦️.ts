@@ -1,0 +1,2 @@
+/** 🧮️ Public entry `@semio-tech/stdio-jpg/io/binary/snapshot/decoded-components/testing/fixtures/owned-exact-components`: the explicit surface that importers outside the module use. */
+export { default as decodedComponentsOwnedExactComponentsFixture } from "../../../../../../../../../🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🚪️io/💾️binary/📸️snapshot/🧮️decoded-components/🧪️tests/🧫️fixtures/🧮️owned-exact-components/🔣️.json";

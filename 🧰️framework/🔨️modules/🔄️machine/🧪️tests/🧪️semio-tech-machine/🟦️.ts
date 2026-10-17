@@ -3,7 +3,7 @@ import type { Command, GuardFn, Machine, MachineSpec, NodeDef, StatechartEvent, 
 
 type TestSource = { readonly directory: string; readonly url: string };
 
-export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../🟦️.ts"), "EventId" | "GuardId" | "NodeId" | "ROOT" | "init" | "runConformance">, source: TestSource): Promise<void> {
+export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../🟦️.ts"), "EventId" | "GuardId" | "NodeId" | "ROOT"> & Pick<typeof import("../../🧠️kernel/🟦️.ts"), "init"> & Pick<typeof import("../../🧭️testing/🟦️.ts"), "runConformance">, source: TestSource): Promise<void> {
   const { EventId, GuardId, NodeId, ROOT, init, runConformance } = dependencies;
 
   const { describe, expect, it } = vitest;

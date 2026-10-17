@@ -252,14 +252,6 @@ impl RampStrip {
 }
 //#endregion 🔖️Strip
 
-//#region 🔖️Projection
-/// 🛝️ The run of every ramp (the `RampRun` nodes of the model graph).
-#[cfg(test)]
-pub fn compute_ramp_runs(snapshot: &ModelSnapshot) -> BTreeMap<String, RampRun> {
-    std::mem::take(&mut super::super::model_graph::infer_selected::<{ super::super::model_graph::kinds::RAMP_RUNS }>(snapshot).ramp_runs)
-}
-//#endregion 🔖️Projection
-
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;

@@ -22,6 +22,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [features]
+testkit = []
 deflate = ["semio-framework-replication-codec/deflate"]
 
 [dependencies]

@@ -1,7 +1,7 @@
 //! 🌍 Puzzle5d mutation — `CreateTargetVolume`: brings a new id-keyed target volume into existence.
 use crate::standards::v1::subsets::any::schema::diff::Puzzle5dDiff;
-use crate::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation;
-use crate::{Puzzle5dSnapshot, Puzzle5dTargetVolume};
+use crate::{Puzzle5dSnapshot};
+use crate::standards::v1::subsets::any::schema::document_records::{Puzzle5dTargetVolume};
 
 //#region 🔖️Mutation
 /// 🌍 `create-target-volume` payload — full initial payload at an optional FINAL-state `index`
@@ -20,17 +20,23 @@ pub struct CreateTargetVolume {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn create_target_volume(target_volume: Puzzle5dTargetVolume, index: Option<usize>) -> Puzzle5dMutation {
-    Puzzle5dMutation::CreateTargetVolume(CreateTargetVolume { target_volume, index })
+pub fn create_target_volume<Op>(target_volume: Puzzle5dTargetVolume, index: Option<usize>) -> Op
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::create_target_volume::CreateTargetVolume>,
+{
+    Op::from(CreateTargetVolume { target_volume, index })
 }
 
-impl protocol::MutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for CreateTargetVolume {
+impl<Op> protocol::MutationKind<Puzzle5dSnapshot, Op> for CreateTargetVolume
+where
+    Op: protocol::Mutation<Puzzle5dSnapshot, Diff = Puzzle5dDiff> + From<CreateTargetVolume> + From<crate::standards::v1::subsets::any::schema::mutations::delete_target_volume::DeleteTargetVolume>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "target volume", kind: "create-target-volume", record: "CreatedTargetVolume" };
 
     fn diff(&self, base: &Puzzle5dSnapshot) -> protocol::MutationOutcome<Puzzle5dDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Puzzle5dSnapshot) -> Result<Vec<Puzzle5dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Puzzle5dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

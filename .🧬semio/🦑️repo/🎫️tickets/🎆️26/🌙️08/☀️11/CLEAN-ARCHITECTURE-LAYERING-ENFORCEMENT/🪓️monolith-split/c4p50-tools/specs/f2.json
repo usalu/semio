@@ -1,0 +1,122 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📇️directory/🧬️schema/🟦️.ts",
+ "importers": "auto",
+ "childrenImportParent": true,
+ "allowManual": [],
+ "children": [
+  {
+   "dir": "📜️event",
+   "lines": [
+    [
+     44,
+     213
+    ]
+   ],
+   "doc": "/** 📜️ Directory event log wire contract: the event bodies, the document index entry and the `DirectoryEvent` envelope. */"
+  },
+  {
+   "dir": "📄️event-page",
+   "lines": [
+    [
+     214,
+     314
+    ]
+   ],
+   "doc": "/** 📄️ Directory event page: the bounded `DirectoryEventPageV1` shape and its structural guards. */"
+  },
+  {
+   "dir": "🎫️command",
+   "lines": [
+    [
+     315,
+     442
+    ]
+   ],
+   "doc": "/** 🎫️ Directory commands: the closed `DirectoryCommand` union, the command request and receipt contract and its error classification. */"
+  },
+  {
+   "dir": "🛠️admin",
+   "lines": [
+    [
+     443,
+     550
+    ]
+   ],
+   "doc": "/** 🛠️ Directory administration intents: the intent union, its outcomes, receipts, progress, recorded connections and the operation audit. */"
+  },
+  {
+   "dir": "👀️views",
+   "lines": [
+    [
+     551,
+     607
+    ],
+    [
+     784,
+     839
+    ]
+   ],
+   "doc": "/** 👀️ Directory read views: spaces as the hub renders them, members, users, connections and document descriptors. */"
+  },
+  {
+   "dir": "📋️admin-page",
+   "lines": [
+    [
+     608,
+     783
+    ]
+   ],
+   "doc": "/** 📋️ Space administration page: the bounded page, member and invite rows, capabilities and the parsers of the canonical page. */"
+  },
+  {
+   "dir": "📂️document-open",
+   "lines": [
+    [
+     840,
+     951
+    ]
+   ],
+   "doc": "/** 📂️ Document open plan: intent, catalog, package, surface, grants, checkpoint, revalidation and the typed plan errors. */"
+  },
+  {
+   "dir": "🎯️execution-target",
+   "lines": [
+    [
+     952,
+     1111
+    ]
+   ],
+   "doc": "/** 🎯️ Execution target lease: the verified component, descriptor, lease fields, surface kind admission, status text and progress stages. */"
+  },
+  {
+   "dir": "🧊️artifact-checkpoints",
+   "lines": [
+    [
+     1112,
+     1190
+    ]
+   ],
+   "doc": "/** 🧊️ Artifact checkpoints: blob references, published checkpoints, retention, the document descriptor validator, document and invite views. */"
+  },
+  {
+   "dir": "🪢️checkpoint-pair",
+   "lines": [
+    [
+     1191,
+     1243
+    ]
+   ],
+   "doc": "/** 🪢️ Canonical checkpoint pair: the decoded pair, the admitted selection and the admission checks. */"
+  },
+  {
+   "dir": "🌊️stream",
+   "lines": [
+    [
+     1244,
+     1275
+    ]
+   ],
+   "doc": "/** 🌊️ Directory stream: connection phases, presence actors, rebootstrap and access changes carried by the directory stream. */"
+  }
+ ]
+}

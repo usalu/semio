@@ -5,25 +5,26 @@
 //! REMOVED first and re-inserted at `min(to, len_after_removal)`. `columns` stays `None`: rows are
 //! an anonymous ordered collection, so a permutation of them cannot affect the schema.
 
+use semio_framework_test_fixtures::fixture_text;
 use semio_s_artifact_stdio_semio_table_model::schema::diff::SemioTableDiff;
 use semio_s_artifact_stdio_semio_table_mutations::schema::mutations::SemioTableMutation;
 use semio_s_artifact_stdio_semio_table_model::schema::snapshot::SemioTableSnapshot;
 use protocol::Mutation;
 
-const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔃reorder-rows/🔃️moves/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔃reorder-rows/🔃️moves/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔃reorder-rows/🔃️moves/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔃reorder-rows/🔃️moves/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔃reorder-rows/🔃️moves/🎯️outcome/🔣️.json");
+static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔃reorder-rows/🔃️moves/📸️snapshot/⬅️before/🔣️.json"));
+static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔃reorder-rows/🔃️moves/📸️snapshot/➡️after/🔣️.json"));
+static MUTATION: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔃reorder-rows/🔃️moves/🦠️mutation/🔣️.json"));
+static DIFF: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔃reorder-rows/🔃️moves/🔺️diff/🔣️.json"));
+static OUTCOME: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔃reorder-rows/🔃️moves/🎯️outcome/🔣️.json"));
 
 fn before() -> SemioTableSnapshot {
-    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("reorder-rows before snapshot decodes")
+    semio_framework_pack_json::from_json_str((*BEFORE), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("reorder-rows before snapshot decodes")
 }
 fn expected_after() -> SemioTableSnapshot {
-    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("reorder-rows after snapshot decodes")
+    semio_framework_pack_json::from_json_str((*AFTER), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("reorder-rows after snapshot decodes")
 }
 fn reorder_rows() -> SemioTableMutation {
-    semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("reorder-rows mutation decodes")
+    semio_framework_pack_json::from_json_str((*MUTATION), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("reorder-rows mutation decodes")
 }
 
 /// ▶️ The Hamburg row leaves the tail and becomes the head; the other two shift down one.
@@ -57,21 +58,21 @@ async fn the_undo_reorder_sends_the_row_back_to_the_tail() {
 /// 🔣️ Snapshots and the `{"ReorderRows":{"from":2,"to":0}}` payload are canonical fixed points.
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
-    for (label, text) in [("before", BEFORE), ("after", AFTER)] {
+    for (label, text) in [("before", (*BEFORE)), ("after", (*AFTER))] {
         let decoded: SemioTableSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
         let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "reorder-rows/moves-the-last-row-to-the-front: committed {label} JSON is not canonical");
     }
     let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&(reorder_rows()))).expect("reorder-rows mutation encodes");
-    let original: serde_json::Value = serde_json::from_str(MUTATION).expect("reorder-rows mutation reparses");
+    let original: serde_json::Value = serde_json::from_str((*MUTATION)).expect("reorder-rows mutation reparses");
     assert_eq!(reencoded, original, "reorder-rows/moves-the-last-row-to-the-front: committed mutation JSON is not canonical");
 }
 
 /// 🎯️ Declared `applied`: `from` (2) differs from `to` (0), so `mutation.no-op` must not fire.
 #[semio_framework_async_macros::async_test]
 async fn declared_outcome_holds_without_a_no_op_warning() {
-    let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
+    let outcome: serde_json::Value = serde_json::from_str((*OUTCOME)).expect("outcome decodes");
     assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("applied"), "reorder-rows/moves-the-last-row-to-the-front: this case is declared applied");
     let produced = reorder_rows().diff(&before());
     assert!(produced.messages().is_empty(), "a genuine row move must raise no diagnostics");
@@ -83,24 +84,24 @@ async fn produces_committed_diff() {
     let base = before();
     let outcome = <SemioTableMutation as Mutation<SemioTableSnapshot>>::diff(&reorder_rows(), &base);
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
-    let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
+    let committed: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff decodes");
     assert_eq!(produced, committed, "reorder-rows/moves-the-last-row-to-the-front: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
 
 /// 🔣️ The committed diff is canonical, is a strict permutation, and omits `columns`.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical_and_omits_columns_entirely() {
-    let decoded: SemioTableDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed reorder-rows diff decodes");
+    let decoded: SemioTableDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed reorder-rows diff decodes");
     assert!(decoded.columns.is_none(), "reorder-rows must leave the columns slot untouched");
     let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("diff re-encodes");
-    let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
+    let original: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff reparses");
     assert_eq!(reencoded, original, "reorder-rows/moves-the-last-row-to-the-front: committed diff JSON is not canonical");
 }
 
 /// 🩹 Applying the committed diff to `before` yields `after`.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: SemioTableDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed reorder-rows diff decodes");
+    let decoded: SemioTableDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed reorder-rows diff decodes");
     let produced = protocol::apply_diff(&decoded, &before()).expect("committed reorder-rows diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "reorder-rows/moves-the-last-row-to-the-front: committed diff did not carry before to after");
 }

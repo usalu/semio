@@ -5,7 +5,7 @@
 //! exaggeration control, no selection, no camera persistence: a viewer has no utilities that edit and
 //! emits no mutations by construction (`ViewEmit`).
 
-use crate::schema::{TerrainDescriptorJson};
+use crate::schema::terrain_descriptor::{TerrainDescriptorJson};
 use crate::standards::v1::subsets::any::io::text::snapshot::{build_terrain_scene_json};
 use crate::standards::v1::subsets::any::io::text::snapshot::fixture_descriptor;
 use crate::GisTerrainSnapshot;

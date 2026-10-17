@@ -1,0 +1,27 @@
+{
+ "name": "c4p1",
+ "crates": [
+  "semio-framework-os-infinite-world-model",
+  "semio-framework-os-infinite-world-components",
+  "semio-framework-os-infinite-world-cursors",
+  "semio-framework-os-infinite-world-scene",
+  "semio-framework-os-infinite-world-bridge",
+  "semio-framework-os-infinite-world-interaction",
+  "semio-framework-os-infinite-world-host",
+  "semio-framework-os-infinite"
+ ],
+ "base": {
+  "rev": "b84bf526c7b",
+  "crates": [
+   "semio-framework-os-infinite-world-model",
+   "semio-framework-os-infinite-world-components",
+   "semio-framework-os-infinite-world-cursors",
+   "semio-framework-os-infinite-world-scene",
+   "semio-framework-os-infinite-world-bridge",
+   "semio-framework-os-infinite-world-interaction",
+   "semio-framework-os-infinite-world-host",
+   "semio-framework-os-infinite"
+  ]
+ },
+ "note": "CENSUS4-PKG-1: os/infinite world crate roots, split into children"
+}

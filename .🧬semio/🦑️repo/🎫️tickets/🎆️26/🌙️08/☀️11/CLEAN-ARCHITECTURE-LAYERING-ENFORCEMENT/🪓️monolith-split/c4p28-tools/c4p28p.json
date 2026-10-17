@@ -1,0 +1,10 @@
+{
+ "name": "c4p28p",
+ "crates": [
+  "semio-s-artifact-puzzle-3d-model",
+  "semio-s-artifact-puzzle-3d-retained-action",
+  "semio-s-artifact-puzzle-3d-retained-document",
+  "semio-s-artifact-puzzle-3d-editor"
+ ],
+ "note": "CENSUS4-PKG-28 family p"
+}

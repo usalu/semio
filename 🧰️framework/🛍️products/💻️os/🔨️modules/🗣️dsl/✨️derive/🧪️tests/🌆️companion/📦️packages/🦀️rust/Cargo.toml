@@ -30,3 +30,6 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 sha2 = "0.10"
 syn = { version = "2.0", features = ["full", "extra-traits", "visit", "visit-mut"] }
+
+[dev-dependencies]
+semio-framework-test-fixtures = { path = "../../../../../../../../../🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }

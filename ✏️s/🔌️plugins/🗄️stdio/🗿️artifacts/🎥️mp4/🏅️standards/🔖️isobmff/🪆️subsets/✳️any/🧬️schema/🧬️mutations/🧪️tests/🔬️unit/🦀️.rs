@@ -5,6 +5,7 @@ use crate::apply_mutation;
 use crate::standards::isobmff::subsets::any::schema::mutations::*;
 use crate::standards::isobmff::subsets::any::schema::snapshot::STDIO_MP4_DOCUMENT_SCHEMA;
 use protocol::MutationDiff;
+use semio_framework_test_fixtures::fixture_path;
 
 async fn base_snapshot() -> Mp4Snapshot {
     Mp4Snapshot {
@@ -143,7 +144,7 @@ async fn kinds_const_matches_enum_variants_in_declaration_order() {
 
 #[semio_framework_async_macros::async_test]
 async fn exact_fixture_no_mutation_inverse_and_set_movie_binary_codec_preserve_source() {
-    let bytes = std::fs::read(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../🧪️tests/🧫️fixtures/🎬️.mp4")).expect("the committed fixture is readable");
+    let bytes = std::fs::read(fixture_path!("../../../../../../🧪️tests/🧫️fixtures/🎬️.mp4")).expect("the committed fixture is readable");
     let base = crate::standards::isobmff::subsets::any::io::decode_mp4(&bytes).expect("decode exact MP4 fixture");
 
     let mut unchanged = base.clone();

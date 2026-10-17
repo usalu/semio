@@ -76,6 +76,5 @@ test("retained Nx reuse admits only current roots manifests lock scope and imple
       const cache = createProjectFileMapCache(nxJson, {}, { projectFileMap: { caller: [] }, nonProjectFiles: [] }, {}, "same-external-node-identity", before);
       expect(shouldRecomputeWholeGraph(cache, {}, projects, nxJson, {}, "same-external-node-identity", after), row.id).toBe(true);
     }
-    console.log(`[DEBUG] retained Nx context authority: ${fixture.contexts.length} replay pairs plus ${fixture.lockScopes.length} source-scoped locks and ${fixture.authorityInputs.length} immutable recipe inputs with unchanged external nodes; actual selected Nx cache admission`);
   } finally { rmSync(root, { recursive: true, force: true }); }
 }, 120000);

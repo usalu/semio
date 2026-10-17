@@ -86,11 +86,9 @@ use semio_framework_diagnostic::TextSpan;
 pub use derived_composition::*;
 //#endregion 🎹️DerivedComposition
 
-#[path = "💾️binary/🦀️.rs"]
-pub mod binary;
 
-#[path = "📝️text/🦀️.rs"]
-pub mod text;
+
+
 
 /// 🌉️ Applies one e conformance mutation through its leaf-owned diff and the base bridge.
 pub mod mutation_bridge {

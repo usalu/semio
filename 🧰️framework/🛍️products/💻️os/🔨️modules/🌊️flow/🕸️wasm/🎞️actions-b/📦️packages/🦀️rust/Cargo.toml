@@ -30,6 +30,7 @@ semio-framework-pack-json = { path = "../../../../../../../../🔨️modules/�
 semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-os-infinite = { path = "../../../../../♾️infinite/📦️packages/🦀️rust", package = "semio-framework-os-infinite" }
 semio-framework = { path = "../../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
+semio-framework-abi = { path = "../../../../../../../../🔨️modules/🌉️abi/📦️packages/🦀️rust" }
 semio-framework-job = { workspace = true }
 
 [dev-dependencies]

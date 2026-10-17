@@ -1,5 +1,6 @@
 //! 🏁️ The original guard checks admission and includes optional telemetry in its terminal window.
 use super::*;
+use semio_framework_test_fixtures::fixture_text;
 use std::cell::{Cell, RefCell};
 
 //#region 🕰️ClockFixture
@@ -40,7 +41,7 @@ impl Drop for ClockScope {
     }
 }
 fn fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap()
+    serde_json::from_str(fixture_text!("../../⏱️clock/🏁️tail/🧪️tests/🧫️fixtures/🔣️.json")).unwrap()
 }
 //#endregion 🕰️ClockFixture
 

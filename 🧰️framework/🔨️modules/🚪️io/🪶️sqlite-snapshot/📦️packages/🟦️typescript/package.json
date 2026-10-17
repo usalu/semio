@@ -1,0 +1,17 @@
+{
+  "name": "@semio-tech/framework-sqlite-snapshot-ts",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./🟦️.ts",
+    "./artifact": "./🧩️artifact/🟦️.ts",
+    "./artifact/keys": "./🧩️artifact/🔤️keys/🟦️.ts",
+    "./ieee754": "./🔢️ieee754/🟦️.ts",
+    "./ieee754/testing/fixtures": "./🔢️ieee754/🧪️testing/🧫️fixtures/🟦️.ts",
+    "./refusal/testing/fixtures": "./⚠️refusal/🧪️testing/🧫️fixtures/🟦️.ts",
+    "./schema": "./🧬️schema/🟦️.ts",
+    "./schema/relational": "./🧬️schema/🏛️relational/🟦️.ts",
+    "./testing/mutable-copy": "./🧪️testing/🔓️mutable-copy/🟦️.ts",
+    "./testing/semantic-extent": "./🧪️testing/🔮️semantic-extent/🟦️.ts"
+  }
+}

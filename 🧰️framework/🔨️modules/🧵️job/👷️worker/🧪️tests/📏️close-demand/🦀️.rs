@@ -1,4 +1,5 @@
 use super::*;
+use semio_framework_test_fixtures::fixture_text;
 use std::sync::Mutex;
 
 struct PhysicalDemandJob {
@@ -26,7 +27,7 @@ impl InteractiveJob for PhysicalDemandJob {
 #[test]
 fn worker_close_demand_queries_preserve_exact_physical_grants() {
     let _admission = worker_session_slots_shared();
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/📏️close-demand/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../🧪️tests/🧫️fixtures/📏️close-demand/🔣️.json")).unwrap();
     let admission = fixture["admissionBytes"].as_u64().unwrap() as usize;
     for row in fixture["cases"].as_array().unwrap() {
         let extent = row["physicalBytes"].as_u64().unwrap() as usize;
@@ -67,7 +68,6 @@ fn worker_close_demand_queries_preserve_exact_physical_grants() {
         assert!(observed_progress(observed).fits(caller));
         assert_eq!(demand_after.release_bytes,if released>0{0}else{extent});
         issuer.retire(source);
-        eprintln!("[DEBUG] worker close demand {}: extent={extent} caller={grant} released={released}", row["name"]);
     }
 }
 
@@ -75,11 +75,10 @@ fn observed_progress(step:WorkerJobCloseStep)->RetainedCloneProgress{match step{
 
 #[test]
 fn worker_close_receipt_preserves_all_original_currencies_without_heap_effects(){
- let law:serde_json::Value=serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/📏️close-demand/🔣️.json")).unwrap();let p=&law["progress"];let progress=RetainedCloneProgress{copied_items:p["copiedItems"].as_u64().unwrap()as usize,copied_bytes:p["copiedBytes"].as_u64().unwrap()as usize,retained_capacity_bytes:p["retainedCapacityBytes"].as_u64().unwrap()as usize,released_bytes:p["releasedBytes"].as_u64().unwrap()as usize};
+ let law:serde_json::Value=serde_json::from_str(fixture_text!("../../../🧪️tests/🧫️fixtures/📏️close-demand/🔣️.json")).unwrap();let p=&law["progress"];let progress=RetainedCloneProgress{copied_items:p["copiedItems"].as_u64().unwrap()as usize,copied_bytes:p["copiedBytes"].as_u64().unwrap()as usize,retained_capacity_bytes:p["retainedCapacityBytes"].as_u64().unwrap()as usize,released_bytes:p["releasedBytes"].as_u64().unwrap()as usize};
  let g=&law["grant"];let grant=RetainedCloneGrant{maximum_items:g["maximumItems"].as_u64().unwrap()as usize,maximum_copy_bytes:g["maximumCopyBytes"].as_u64().unwrap()as usize,maximum_capacity_bytes:g["maximumCapacityBytes"].as_u64().unwrap()as usize,maximum_release_bytes:g["maximumReleaseBytes"].as_u64().unwrap()as usize,maximum_depth:g["maximumDepth"].as_u64().unwrap()as usize};
  for step in [WorkerJobCloseStep::Pending{progress},WorkerJobCloseStep::Complete{progress}]{let(actual,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||step.progress());assert_eq!(actual,progress);assert!(actual.fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));for denied in [RetainedCloneGrant{maximum_items:grant.maximum_items-1,..grant},RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-1,..grant},RetainedCloneGrant{maximum_capacity_bytes:grant.maximum_capacity_bytes-1,..grant},RetainedCloneGrant{maximum_release_bytes:grant.maximum_release_bytes-1,..grant}]{assert!(!actual.fits(denied));}}
  assert_eq!(WorkerJobCloseStep::Blocked.progress(),RetainedCloneProgress::default());
- println!("[DEBUG] worker Pending/Complete full receipt preserved items1/copy3/capacity128/release65536 pure heap0, each independent undergrant refused");
 }
 
 #[test]
@@ -92,5 +91,4 @@ fn original_failed_job_close_preserves_actual_allocated_receipt_before_refusal()
  let(failure,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||OriginalTurnFailure::debit_original(error,&mut cx));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(failure.primary.retained_progress(),progress);assert!(failure.receipt_refusal.is_some());assert_eq!(cx.retained_progress(),progress);assert_eq!(original.as_ptr(),pointer);assert!(!progress.fits(denied));
  let refused=InteractiveJobCloseStep::Complete{progress}.admit(denied,false).unwrap_err();assert_eq!(refused.retained_progress(),progress);assert_eq!(refused.kind,ValueRefusalKind::InvariantViolated);
  let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(std::mem::take(&mut original)));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,64));
- eprintln!("[DEBUG] original Worker/Interactive failure preserves real allocated64 receipt before failure without heap effect; same original Vec pointer retained until physical release64");
 }

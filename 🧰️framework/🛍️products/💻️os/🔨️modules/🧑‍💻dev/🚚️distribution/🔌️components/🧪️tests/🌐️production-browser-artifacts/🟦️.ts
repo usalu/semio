@@ -46,8 +46,8 @@ export async function testProductionBrowserArtifacts(workspace: string, output: 
     const sources = productionBrowserSources(root, cases.plan);
     assert.deepEqual(sources.map(source => source.destination), cases.destinations);
     assert.ok(sources.every(source => !source.root.includes("runtime") && !source.root.includes("activation")));
-    for (let index = 0; index < sources.length; index++) {
-      const source = sources[index], component = source.shimDirectory !== undefined, name = component ? "🌉️bridge.js" : index === 0 ? "io.js" : index === 1 ? "worker.js" : "font.bin";
+    for (const [index, source] of sources.entries()) {
+      const component = source.shimDirectory !== undefined, name = component ? "🌉️bridge.js" : index === 0 ? "io.js" : index === 1 ? "worker.js" : "font.bin";
       await mkdir(source.root, { recursive: true });
       const bytes = index === 0 ? 'export const identity = "owned";' : component ? 'export { identity } from "@bytecodealliance/preview2-shim/io";' : "owned";
       await writeFile(join(source.root, name), bytes);
@@ -71,9 +71,11 @@ export async function testProductionBrowserArtifacts(workspace: string, output: 
     assert.deepEqual(await Promise.all(files.sort().map(async (file: string) => [file, (await readFile(join(outDir, file))).toString("base64")])), before);
     const forbidden = join(root, "unwritten");
     await build({ ...options, plugins: [productionBrowserArtifactsVitePlugin(root, cases.plan)], build: { outDir: forbidden, write: false } });
-    await assert.rejects(readFile(join(forbidden, sources[0].destination, "io.js")), /ENOENT/);
+    const firstSource = sources[0];
+    assert.ok(firstSource, "The authored production plan must include its JavaScript source");
+    await assert.rejects(readFile(join(forbidden, firstSource.destination, "io.js")), /ENOENT/);
     const caching = join(workspace, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching"), published = join(root, "published");
-    for (let index = 0; index < sources.length; index++) await cp(sources[index].root, join(root, "fixture-sources", String(index)), { recursive: true });
+    for (const [index, source] of sources.entries()) await cp(source.root, join(root, "fixture-sources", String(index)), { recursive: true });
     await writeFile(join(root, "plan.json"), JSON.stringify(cases.plan));
     await writeFile(join(root, "⚙️vite.config.ts"), `import { productionBrowserArtifactsVitePlugin } from ${JSON.stringify(join(directory, "🟦️.ts"))}; import plan from "./plan.json"; import { dirname } from "node:path"; import { fileURLToPath } from "node:url"; const root = dirname(fileURLToPath(import.meta.url)); export default { root, publicDir: false, logLevel: "silent", plugins: [productionBrowserArtifactsVitePlugin(root, plan)] };`);
     await writeFile(join(root, "📜️script.ts"), `import { appendFileSync } from "node:fs"; import { cp } from "node:fs/promises"; import { buildViteArtifact } from ${JSON.stringify(join(caching, "🌐️vite/🟦️.ts"))}; import {receiveScriptProcessInvocation} from ${JSON.stringify(join(workspace,"🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts"))}; import {scriptCompilerAdmissionControlV1} from ${JSON.stringify(join(workspace,"🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts"))}; await receiveScriptProcessInvocation(process.env,async invocation=>{const control=scriptCompilerAdmissionControlV1(invocation,"fixture:vite-production",0);if (process.argv[2] === "prepare") { const sources = ${JSON.stringify(sources)}; for (let index = 0; index < sources.length; index++) await cp(import.meta.dir + "/fixture-sources/" + index, sources[index].root, { recursive: true }); } else { appendFileSync(import.meta.dir + "/.compiler-invocations", "build\\n"); await buildViteArtifact({ invocation,control,root: import.meta.dir, workspace: ${JSON.stringify(workspace)}, config: import.meta.dir + "/⚙️vite.config.ts", owner: "fixture:production" }); }});`);

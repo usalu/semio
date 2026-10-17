@@ -1,5 +1,5 @@
 /** 🎫 The shell says what it holds, plus gizmo, virtual file system, replay refusal and locale source. */
-import { readUiPreferences } from "../../🎚️UiPreferences/🟦️.ts";
+import { readUiPreferences } from "../../🧱️elements/🎚️UiPreferences/🟦️.ts";
 import explicitLocaleFixture from "../../🧱️elements/🌐️World3dHost/🧪️tests/🧫️fixtures/⏳️compute-locale.json";
 import { gizmoTipBoundsFixture, sceneListTransferFixture, treeDragHandleFixture, vfsDescriptorFixture } from "../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🟦️.ts";
 import { renderVirtualFileSystemDescriptorCell, type DescriptorKind, type FileNodeDescriptorValue } from "../../../../../../../🔨️modules/🖱️ui/🧱️elements/⚙️VirtualFileSystem/🟦️.tsx";
@@ -63,7 +63,7 @@ describe("🎫️ the shell says what it holds", () => {
   });
 
   it("the shell publishes the framework history cursor undo and redo are decided by, in the locale it is showing", async () => {
-    const { shellHistoryCursorDomV1, SHELL_HISTORY_DOM_LABELS } = await import("../../🧱️elements/🛠️ShellHelpers/🟦️.tsx");
+    const { shellHistoryCursorDomV1, SHELL_HISTORY_DOM_LABELS } = await import("../../🧱️elements/🛠️ShellHelpers/🔩️plumbing/🟦️.ts");
     // 🌐️ A history row carries the whole locale matrix, exactly as Rust `LocalizedLabel` serialises
     // it — the projection resolves it, so the SAME ledger publishes German labels for a German shell
     // with no re-read of the guest's history. Ticket 26/09/18 slice U3.
@@ -96,7 +96,7 @@ describe("🎫️ the shell says what it holds", () => {
   });
 
   it("a cleared leftover overlay carries no ids, so an outline row it named goes idle on the clearing turn", async () => {
-    const { leftoverOverlayCarryingSelectionV1, leftoverTreeItemSelectedV1, leftoverWorldOverlayAppliesV1, mergeWorldSelectionWithLeftoverV1 } = await import("../../🧱️elements/🌐️World3dHost/🟦️.tsx");
+    const { leftoverOverlayCarryingSelectionV1, leftoverTreeItemSelectedV1, leftoverWorldOverlayAppliesV1, mergeWorldSelectionWithLeftoverV1 } = await import("../../🧱️elements/🌐️World3dHost/🔗️instance-selection/🟦️.ts");
     const prior = { ids: ["extrusion-axis"], hoveredId: null, gumballActive: true, gumballAnchorId: "extrusion-axis", activeUtility: "select" };
     /** 🧹️ The publication generation3d's `clearSelection` really sends, measured on 6018:
      * `selectionCleared: true` alongside the ids it has just retired. */
@@ -532,7 +532,6 @@ describe("shell explicit locale source", () => {
       const state = initialShellState({locale, plugins:[], storage});
       expect(state.uiPrefs.uiLocale).toBe(locale);
       expect(readUiPreferences(storage).locale).toBeNull();
-      console.debug(`[DEBUG] unlocked shell actual initial state user locale=${locale}`);
     }
   });
 });

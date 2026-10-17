@@ -5,11 +5,13 @@
 //! connected to its targets by `IfcRelConnectsElements` (`TopAttach`, `BaseAttach`). An opening with an authored reveal carries its depth and material in `Semio_OpeningReveal`, and its filling sits back from the front face.
 //! 📎 <https://standards.buildingsmart.org/IFC/RELEASE/IFC2x3/TC1/HTML/ifcsharedbldgelements/lexical/ifcrelconnectselements.htm>
 
-use super::brep::{body_kind, mesh_item, mesh_where};
-use super::data::{define, label, number, property_set};
-use super::frames::frame_at;
-use super::writer::{en, real, refs, rf, unset, Schema, V};
-use super::{data, Export, Quantity};
+use crate::standards::v1::subsets::any::io::export::ifc::brep::{body_kind, mesh_item, mesh_where};
+use crate::standards::v1::subsets::any::io::export::ifc::data::{define, number, property_set};
+use crate::standards::v1::subsets::any::io::export::ifc::writer::label;
+use crate::standards::v1::subsets::any::io::export::ifc::frames::frame_at;
+use crate::standards::v1::subsets::any::io::export::ifc::writer::{en, real, refs, rf, unset, Schema, V};
+use crate::standards::v1::subsets::any::io::export::ifc::context::{Export, Quantity};
+use crate::standards::v1::subsets::any::io::export::ifc::data;
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::walls::wall_solid;
 use crate::standards::v1::subsets::any::schema::authored::sizes::resolve_size;
 use crate::standards::v1::subsets::any::schema::authored::plan::segment_of;

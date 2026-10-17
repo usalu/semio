@@ -4,7 +4,6 @@
 //! round-trips at all.
 
 use crate::diff::BitmapDiff;
-use crate::mutations::BitmapMutation;
 use crate::schema::snapshot::{BitmapColor, BitmapSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -20,17 +19,23 @@ pub struct AddPaletteColor {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn add_palette_color(index: usize, color: BitmapColor) -> BitmapMutation {
-    BitmapMutation::AddPaletteColor(AddPaletteColor { index, color })
+pub fn add_palette_color<Op>(index: usize, color: BitmapColor) -> Op
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::add_palette_color::AddPaletteColor>,
+{
+    Op::from(AddPaletteColor { index, color })
 }
 
-impl MutationKind<BitmapSnapshot, BitmapMutation> for AddPaletteColor {
+impl<Op> MutationKind<BitmapSnapshot, Op> for AddPaletteColor
+where
+    Op: protocol::Mutation<BitmapSnapshot, Diff = BitmapDiff> + From<AddPaletteColor> + From<crate::standards::v1::subsets::any::schema::mutations::remove_palette_color::RemovePaletteColor>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "add", entity: "palette-color", kind: "add-palette-color", record: "AddedPaletteColor" };
 
     fn diff(&self, base: &BitmapSnapshot) -> protocol::MutationOutcome<BitmapDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &BitmapSnapshot) -> Result<Vec<BitmapMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &BitmapSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

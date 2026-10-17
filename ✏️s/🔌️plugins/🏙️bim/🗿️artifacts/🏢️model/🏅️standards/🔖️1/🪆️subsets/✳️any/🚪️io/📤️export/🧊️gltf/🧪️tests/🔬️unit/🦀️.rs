@@ -2,7 +2,7 @@ use super::*;
 use crate::standards::v1::subsets::any::io::binary::snapshot as pack;
 use crate::standards::v1::subsets::any::io::export::gltf::testkit::{house, read, third_party, HOUSE_DIR};
 use crate::standards::v1::subsets::any::io::io;
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::compute_element_solids;
+use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_element_solids;
 use semio_framework_os_kernel::io::io_mechanism::IoEntryDirection;
 
 #[test]

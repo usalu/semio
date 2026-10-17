@@ -4,7 +4,7 @@ import {applyPatch} from "fast-json-patch";
 import stableStringify from "fast-json-stable-stringify";
 import Ajv from "ajv";
 import {Database} from "bun:sqlite";
-import { valueOrderedRetirementSchemaUrl, valueRetirementSchemaUrl } from "../../../../../../../🔨️modules/🌱️value/🧪️tests/🧫️fixtures/🟦️.ts";
+import { valueOrderedRetirementSchemaUrl, valueRetirementSchemaUrl } from "@semio-tech/value-ts/testing/fixtures";
 
 /** 🌿️ Original VCS ownership laws use plain examples and independent JSONPatch/UTF8 references. */
 export function testOriginalVcsClosure():void{
@@ -33,5 +33,4 @@ export function testOriginalVcsClosure():void{
  assert.ok(source.includes("admit_retained_clone_close(child,step,owner.terminal_is_empty()"));assertions++;
  assert.equal(/admit_retained_clone_close\(budget.retained,1,/.test(domain),false);assertions++;
  for(const scope of ["original Flow domain frame","original Flow domain VCS","original Flow domain host"]){assert.ok(domain.includes(scope));assertions++;}
- console.log("[DEBUG] original VCS admissionCases="+fixture.closeAdmissionCases.length+" receiptCases="+fixture.closeReceiptCases.length+" assertions="+assertions+" canonicalGrantProgressAjv=true wholeCorpusSchema=false SQLiteReference=true JSONPatch=true UTF8=true sourceReceivingOnly=true");
 }

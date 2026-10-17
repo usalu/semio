@@ -18,5 +18,4 @@ fn owned_editor_errors_preserve_kind_message_and_cause() {
     }
     fn assert_shareable<T: Send + Sync>() {}
     assert_shareable::<EditorError>();
-    println!("[DEBUG] owned Editor error: eleven shared cases retained");
 }

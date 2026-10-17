@@ -1,7 +1,8 @@
 //! 🌿️ Native VCS declaration and full semantic SQLite ownership laws.
+use crate::standards::v1::subsets::any::io::sqlite::snapshot::{extent};
 use semio_framework_test_original_snapshot_owners as original_owners;
 use pack::snapshot::ArtifactSqliteSnapshot as _;
-use crate::standards::v1::subsets::any::io::sqlite::snapshot::VcsSnapshot;
+use crate::VcsSnapshot;
 
 use store::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{SqliteDatabase,SqliteDatabaseLimits,SqliteSnapshotControl,SqliteSnapshotPhase,SqliteValue,SnapshotEncoding,export_sqlite_database,import_sqlite_database}};
 use semio_framework_plugin::{PluginApp,VcsArtifactApp,EditorApp,ViewerApp,__semio_dispatch_PluginApp,plugin_app_close_prelude::*};
@@ -12,7 +13,7 @@ semio_framework_dispatch_macros::dyn_enum_close!{
   Viewer(VcsArtifactApp<ViewerApp<crate::viewer::vcs::VcsViewer>>),
  }
 }
-fn laws()->serde_json::Value{serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap()}
+fn laws()->serde_json::Value{serde_json::from_str(runtime_fixture_text("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json")).unwrap()}
 fn fixture()->VcsSnapshot{semio_framework_pack_json::from_json_str(&laws()["snapshot"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()}
 fn database(snapshot:&VcsSnapshot)->SqliteDatabase{original_owners::with_sqlite_recipient(SqliteDatabaseLimits::default(),&mut |_|true,|sqlite_control|snapshot.to_sqlite_database(sqlite_control)).unwrap()}
 fn restore(database:&SqliteDatabase)->VcsSnapshot{original_owners::with_sqlite_recipient(SqliteDatabaseLimits::default(),&mut |_|true,|sqlite_control|VcsSnapshot::from_sqlite_database(database, sqlite_control)).unwrap()}
@@ -105,7 +106,7 @@ fn sqlite_snapshot_vcs_actual_native_declaration_exposes_relational_capability()
 
 #[test]
 fn sqlite_snapshot_vcs_neutral_native_fields_agree_with_independent_serde(){
- let laws:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
+ let laws:serde_json::Value=serde_json::from_str(runtime_fixture_text("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
  let text=laws["snapshot"].to_string();let snapshot:VcsSnapshot=semio_framework_pack_json::from_json_str(&text, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
  assert_eq!(serde_json::from_str::<VcsSnapshot>(&text).unwrap(),snapshot);
  for word in laws["signed64"].as_array().unwrap(){let word=word.as_str().unwrap();let text=format!("{{\"schema\":\"vcs.vcs\",\"title\":\"\",\"counter\":{word},\"notes\":\"\",\"status\":\"\",\"tags\":[]}}");assert_eq!(semio_framework_pack_json::from_json_str::<VcsSnapshot>(&text, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap(),serde_json::from_str::<VcsSnapshot>(&text).unwrap());}
@@ -141,7 +142,7 @@ fn sqlite_snapshot_vcs_independent_complete_semantic_cells_precede_native_owners
   for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{snapshot.preflight_sqlite_snapshot_encoding(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,exact)).unwrap();let payload=original_owners::with_encoding(|native_owner|snapshot.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,exact), native_owner)).unwrap();assert_eq!(original_owners::with_decoding(|native_owner|VcsSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,exact), native_owner)).unwrap(),snapshot);
    for restricted in[SqliteDatabaseLimits{max_rows:rows-1,..exact},SqliteDatabaseLimits{max_value_bytes:cells-1,..exact}]{assert!(original_owners::with_sqlite_recipient(restricted,&mut |_|true,|sqlite_control|snapshot.to_sqlite_database(sqlite_control)).is_err());assert!(snapshot.preflight_sqlite_snapshot_encoding(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,restricted)).is_err());assert!(original_owners::with_encoding(|native_owner|snapshot.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,restricted), native_owner)).is_err());assert!(original_owners::with_decoding(|native_owner|VcsSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,restricted), native_owner)).is_err());}
   }
- }eprintln!("[DEBUG] VCS complete authored cells match independent SQLite before typed owner binding");
+ }
 }
 
 fn norm_complete_source(case:&serde_json::Value)->VcsSnapshot{let mut source=fixture();if case["id"]=="emptyTags"{source.tags.clear();}source}
@@ -150,14 +151,19 @@ fn norm_independent_complete_extent(source:&VcsSnapshot)->serde_json::Value{
 }
 #[test]
 fn sqlite_snapshot_vcs_complete_independent_native_semantic_limits(){
- use store::{os_store::serialization::ArtifactSqliteSnapshotHost as _,sqlite_snapshot::*};let contract:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🎛️semantic.json")).unwrap();
+ use store::{os_store::serialization::ArtifactSqliteSnapshotHost as _,sqlite_snapshot::*};let contract:serde_json::Value=serde_json::from_str(runtime_fixture_text("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🎛️semantic.json")).unwrap();
  for case in contract["cases"].as_array().unwrap(){let source=norm_complete_source(case);let extent=norm_independent_complete_extent(&source);assert_eq!(extent["rows"],case["rows"]);assert_eq!(extent["valueBytes"],case["valueBytes"]);assert_eq!(extent["schemaBytes"],contract["schemaBytes"]);assert_eq!(extent["tableWidths"],contract["tableWidths"]);let limits=SqliteDatabaseLimits{max_rows:case["rows"].as_u64().unwrap()as usize,max_value_bytes:case["valueBytes"].as_u64().unwrap()as usize,max_schema_bytes:contract["schemaBytes"].as_u64().unwrap()as usize,max_tables:2,max_columns:6,..SqliteDatabaseLimits::default()};let database=original_owners::with_sqlite_recipient(limits,&mut |_|true,|sqlite_control|source.to_sqlite_database(sqlite_control)).unwrap();assert_eq!(original_owners::with_sqlite_recipient(limits,&mut |_|true,|sqlite_control|VcsSnapshot::from_sqlite_database(&database, sqlite_control)).unwrap(),source);
   for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{source.preflight_sqlite_snapshot_encoding(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap();let payload=original_owners::with_encoding(|native_owner|source.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,limits), native_owner)).unwrap();assert_eq!(original_owners::with_decoding(|native_owner|VcsSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,limits), native_owner)).unwrap(),source);
    for short in[SqliteDatabaseLimits{max_rows:limits.max_rows-1,..limits},SqliteDatabaseLimits{max_value_bytes:limits.max_value_bytes-1,..limits},SqliteDatabaseLimits{max_schema_bytes:limits.max_schema_bytes-1,..limits},SqliteDatabaseLimits{max_tables:1,..limits},SqliteDatabaseLimits{max_columns:5,..limits}]{assert!(original_owners::with_sqlite_recipient(short,&mut |_|true,|sqlite_control|source.to_sqlite_database(sqlite_control)).is_err(),"relational copied limits {short:?}");assert!(original_owners::with_sqlite_recipient(short,&mut |_|true,|sqlite_control|VcsSnapshot::from_sqlite_database(&database, sqlite_control)).is_err(),"reconstruct copied limits {short:?}");assert!(source.preflight_sqlite_snapshot_encoding(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,short)).is_err(),"preflight copied limits {encoding:?} {short:?}");assert!(original_owners::with_encoding(|native_owner|source.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,short), native_owner)).is_err(),"encoder copied limits {encoding:?} {short:?}");assert!(original_owners::with_decoding(|native_owner|VcsSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,short), native_owner)).is_err(),"decoder copied limits {encoding:?} {short:?}");}
   }
- }eprintln!("[DEBUG] VCS independently measured complete copied native semantic limits");
+ }
 }
 #[test]
 fn sqlite_snapshot_vcs_complete_independent_copied_columns_admission(){
  use store::{os_store::serialization::ArtifactSqliteSnapshotHost as _,sqlite_snapshot::*};let source=fixture();let database=original_owners::with_sqlite_recipient(SqliteDatabaseLimits::default(),&mut |_|true,|sqlite_control|source.to_sqlite_database(sqlite_control)).unwrap();let limits=SqliteDatabaseLimits{max_columns:5,..SqliteDatabaseLimits::default()};assert!(original_owners::with_sqlite_recipient(limits,&mut |_|true,|sqlite_control|source.to_sqlite_database(sqlite_control)).is_err());assert!(original_owners::with_sqlite_recipient(limits,&mut |_|true,|sqlite_control|VcsSnapshot::from_sqlite_database(&database, sqlite_control)).is_err());for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let payload=original_owners::with_encoding(|native_owner|source.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default()), native_owner)).unwrap();assert!(source.preflight_sqlite_snapshot_encoding(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).is_err(),"preflight copied columns {encoding:?}");assert!(original_owners::with_encoding(|native_owner|source.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,limits), native_owner)).is_err(),"encoder copied columns {encoding:?}");assert!(original_owners::with_decoding(|native_owner|VcsSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,limits), native_owner)).is_err(),"decoder copied columns {encoding:?}");}
+}
+
+fn runtime_fixture_text(relative: &str) -> &'static str {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative);
+    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display())).into_boxed_str())
 }

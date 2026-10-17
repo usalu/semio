@@ -63,3 +63,4 @@ semio_framework_ui_runtime = { path = "../../../../../../../../../🔨️modules
 semio-framework-job = { path = "../../../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust", features = ["testkit"], package = "semio-framework-job" }
 semio-framework-os-kernel = { path = "../../../../../../../📦️packages/🦀️rust", features = ["mutation-testing"], package = "semio-framework-os-kernel" }
 semio-framework-async-macros = { path = "../../../../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
+semio-framework-plugin-testing-caller = { path = "../../../../../🧪️testing/🎟️caller/📦️packages/🦀️rust" }

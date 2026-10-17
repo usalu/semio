@@ -1,5 +1,5 @@
 //! 🪪️ Admitted native stream meanings bound to exact retained logical identities.
-use crate::standards::v1_7::subsets::base::schema::snapshot::{ObjRef, PdfObject, PdfIndirectObject, PdfOp, PdfToUnicode, PdfEmbeddedCMap, PdfFontProgram, PdfImage};
+use crate::standards::v1_7::subsets::base::schema::snapshot::model::{ObjRef, PdfObject, PdfIndirectObject, PdfOp, PdfToUnicode, PdfEmbeddedCMap, PdfFontProgram, PdfImage};
 
 /// 🧭️ An exact location within an indirect logical object.
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, Eq, Hash, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -127,6 +127,4 @@ pub fn page_content(roles: &[PdfAdmittedStreamRole], owner: ObjRef) -> Option<&[
     })
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;
+

@@ -122,8 +122,8 @@ describe("guarded archive text editing", () => {
     const changed = structuredClone(fixture.snapshot);
     changed.entries[0]!.metadata.compressionMethod = 65536;
     expect(() => parseZipSnapshot(changed)).toThrow("compressionMethod");
-    const invalidExtra = structuredClone(fixture.snapshot);
-    invalidExtra.entries[0]!.metadata.local.extraFields.push({ id: 0xcafe, data: [256] });
+    const [first, ...others] = structuredClone(fixture.snapshot.entries);
+    const invalidExtra = { ...fixture.snapshot, entries: [{ ...first!, metadata: { ...first!.metadata, local: { ...first!.metadata.local, extraFields: [{ id: 0xcafe, data: [256] }] } } }, ...others] };
     expect(() => parseZipSnapshot(invalidExtra)).toThrow("extraFields");
   });
   it("matches the neutral reordered rename with an independent JSON Patch oracle", () => {

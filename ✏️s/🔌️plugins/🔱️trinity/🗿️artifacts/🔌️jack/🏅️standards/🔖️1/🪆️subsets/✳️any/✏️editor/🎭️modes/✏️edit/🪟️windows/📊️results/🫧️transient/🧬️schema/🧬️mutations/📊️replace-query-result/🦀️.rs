@@ -1,7 +1,7 @@
 //! 📊️ Replaces output in the addressed Jack results window.
 
 use super::{JackResultsWindowTransient, JackResultsWindowTransientDiff, JackResultsWindowTransientMutation};
-use crate::ast::QueryResult;
+use crate::standards::v1::subsets::any::schema::ast::QueryResult;
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]

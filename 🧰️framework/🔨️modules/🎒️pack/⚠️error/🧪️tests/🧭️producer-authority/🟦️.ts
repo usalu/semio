@@ -23,7 +23,7 @@ import causeKindFixture from "../../🧪️tests/🧫️fixtures/🧭️cause/�
 import fixture from "../../🧪️tests/🧫️fixtures/🧭️cause/🔣️.json";
 import {PackError,type PackErrorData} from "../../🟦️.ts";
 import {ValueError,type ValueRefusalKind} from "../../../../🌱️value/📦️packages/🟦️typescript/⚠️refusal/🟦️.ts";
-import {TextError} from "../../../../⚠️diagnostic/🚧️text-error/🟦️.ts";
+import {TextError} from "@semio-tech/framework-diagnostic-ts/text-error";
 
 const kinds=["invalidValue","canceled","ownershipLimit","allocationFailed","workLimit","depthLimit","unsupportedOwner","invariantViolated"] as const;
 const typedKind=(kind:string|null):ValueRefusalKind=>{

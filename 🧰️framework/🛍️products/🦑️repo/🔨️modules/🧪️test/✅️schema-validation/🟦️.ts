@@ -7,7 +7,9 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { testFilenameForKind, testTaxonomy } from "../🗂️taxonomy/🟦️.ts";
-import { moduleExportSchema, parseSchemaUri, readJson, readSchemaCatalog, resolveSchemaExport, schemaExportCompletenessDiagnostics, type SchemaHarnessDiagnosticCode, schemaTreeFiles } from "../📐️schema-contracts/🟦️.ts";
+import { parseSchemaUri, readSchemaCatalog, resolveSchemaExport, type SchemaHarnessDiagnosticCode } from "../📐️schema-contracts/🟦️.ts";
+import { readJson, schemaTreeFiles } from "../📐️schema-contracts/🏗️scope-eligibility-and-tree/🟦️.ts";
+import { moduleExportSchema, schemaExportCompletenessDiagnostics } from "../📐️schema-contracts/📤️export-completeness/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🧬️SchemaValidation

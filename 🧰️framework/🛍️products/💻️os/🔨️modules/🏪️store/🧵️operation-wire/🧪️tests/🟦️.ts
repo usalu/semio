@@ -4,7 +4,7 @@ import { join } from "node:path";
 import Ajv from "ajv/dist/2020";
 import {spawnSync} from "node:child_process";
 import {parseArtifactPreparedOperationOutput,parseArtifactPreparedOperations} from "../📦️output/🧬️schema/🟦️.ts";
-import { valueRefusalCodecSchemaUrl } from "../../../../../../🔨️modules/🌱️value/🧪️tests/🧫️fixtures/🟦️.ts";
+import { valueRefusalCodecSchemaUrl } from "@semio-tech/value-ts/testing/fixtures";
 const base = join(import.meta.dir, "..");
 const fixture = JSON.parse(readFileSync(join(base, "🧪️tests/🧫️fixtures/🔣️.json"), "utf8"));
 test("borrowed operation wire neutral UTF8/ordered JSON and bounded chunk oracle", () => {
@@ -94,7 +94,6 @@ test("original text operation admits its real frontier under supplied parent dep
  const encode=(node:any):string=>node.kind==="sequence"?node.open+node.children.map(encode).join(node.separator)+node.close:node.text;
  for(const row of fixture.textDepthRows){const text=encode(row.node);expect(Buffer.from(text)).toEqual(Buffer.from(new TextEncoder().encode(text)));if(row.refused)expect(text.startsWith(row.expectedPrefix)).toBe(true);else expect(text).toBe(row.expectedText);}
  const text=readFileSync(join(base,"📝️text/🦀️.rs"),"utf8");expect(text).toContain("grant: RetainedCloneGrant");expect(text).toContain("grant.maximum_depth");expect(text).toContain("self.depth + 2");const wire=readFileSync(join(base,"🦀️.rs"),"utf8");expect(wire).not.toContain("grant.maximum_depth < super::ARTIFACT_CANONICAL_JSON_DEPTH");expect(wire).toContain("self.text.advance(body, &mut output[written..maximum], child)");expect(wire).not.toContain("ValueError::new");
- console.log("[DEBUG] original Text byte/sequence Unicode oracle retains parent depth2/3 and refuses unadmitted child before output");
 });
 
 test("original proposal contiguous octets preserve independent payload and funded ownership",()=>{
@@ -116,5 +115,4 @@ test("original wire source boundaries retain independent rows and reuse paid cur
  const policy=fixture.sourceBoundaryGrant;expect(policy.maximumItems).toBe(1);expect(policy.maximumCopyBytes).toBe(4096);
  for(const row of fixture.sourceBatches){const actual=row.sources.map((source:any)=>[...Buffer.concat([Buffer.from(source.header),Buffer.from(JSON.stringify(source.body))])]);expect(actual).toEqual(row.expected);for(let index=0;index<row.sources.length;index++)expect(actual[index].slice(row.sources[index].header.length)).toEqual([...new TextEncoder().encode(JSON.stringify(row.sources[index].body))]);}
  const source=readFileSync(join(base,"🦀️.rs"),"utf8");expect(source).toContain("pub fn begin_next_source");expect(source).toContain("self.pack.begin_next_source");expect(source).toContain("self.json.begin_next_source");expect(source).toContain("self.text.begin_next_source");
- console.log("[DEBUG] original wire source rows match immutable Unicode/empty octets independently; paid reset/native System remains required");
 });

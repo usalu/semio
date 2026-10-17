@@ -105,5 +105,4 @@ it("canonical checkpoint pair framing has an explicit IO owner", () => {
   const ajv = semioSchemaAjvV1({ allErrors: true, strict: true });
   expect(ajv.validate({ type: "object", additionalProperties: false, required: ["schema", "owner", "nativeLaw", "semanticMethods", "physicalBodies", "typescriptBodies"], properties: { schema: {const: "directory.checkpoint-pair.io-owner/v1"}, owner: {const: "os_directory::io::binary::checkpoint_pair"}, nativeLaw: {type: "string", minLength: 1}, semanticMethods: {type: "array", items: {type: "string"}, minItems: 2}, physicalBodies: {type: "array", items: {type: "string"}, minItems: 2}, typescriptBodies: {type: "array", items: {type: "string"}, minItems: 2} } }, owner)).toBe(true);
   for (const method of owner.semanticMethods) expect(semanticRust).toContain(`pub fn ${method}(`);
-  console.log("[DEBUG] Directory neutral IO owner separates binary framing from pure checkpoint admission; independent crypto framing corpus retained");
 });

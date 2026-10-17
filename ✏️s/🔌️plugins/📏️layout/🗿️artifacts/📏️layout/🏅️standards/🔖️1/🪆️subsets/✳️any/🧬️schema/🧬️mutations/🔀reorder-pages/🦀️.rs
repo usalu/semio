@@ -12,8 +12,8 @@ use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔀ReorderPages
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 pub struct ReorderPages {
@@ -66,11 +66,3 @@ pub fn inverse_reorder_pages<Op: From<crate::reorder_pages::ReorderPages>>(paylo
 }
 //#endregion 🔀ReorderPages
 
-//#region 🪢️TaxonomyMounts
-#[cfg(test)]
-#[path = "🧪️tests/📍️moves-a-middle-row/🦀️.rs"]
-mod tests_moves_a_middle_row;
-#[cfg(test)]
-#[path = "🧪️tests/🔀️moves/🦀️.rs"]
-mod tests_moves_page_1_behind_page_2;
-//#endregion 🪢️TaxonomyMounts

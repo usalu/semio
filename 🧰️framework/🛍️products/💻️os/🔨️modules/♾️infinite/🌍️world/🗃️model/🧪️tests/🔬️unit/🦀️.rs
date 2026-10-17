@@ -1,6 +1,7 @@
 //! 🧪️ model tests (🔬️unit): compiled against the `testkit` surface of the world crates.
 
 use semio_framework_os_infinite_world_model::{World3dBuildContext, WORLD_DYNAMIC_DRAW_INSTANCE_CAPACITY, WORLD_DYNAMIC_ID_BYTE_CAPACITY, WORLD_INTERACTION_BYTE_CAPACITY, WORLD_INTERACTION_ID_BYTE_CAPACITY, WORLD_INTERACTION_INTENT_CAPACITY, WORLD_INTERACTION_ITEM_CAPACITY, WORLD_INTERACTION_OBJECT_CAPACITY, world_pick_keys_match, WORLD_PICK_TARGET_CAPACITY, WORLD_PICK_TARGET_POINT_CAPACITY, world_pick_targets_from_json, world_scene_raster_pool, WorldCursorWakeAuthority, WorldCursorWakeFault, WorldDrawRegistry, WorldDynamicEntry, WorldDynamicFault, WorldDynamicRegistry, WorldFlatAction, WorldFlatActionKind, WorldInteractionIntent, WorldInteractionIntentQueue, WorldInteractionObjectKind, WorldInteractionObjectRegistry, WorldInteractionObjectSlot, WorldInteractionPhase, WorldInteractionPlan, WorldOpaqueOwner, WorldOpaqueQuarantine};
+use semio_framework_test_fixtures::fixture_text;
 use std::collections::BTreeMap;
 use ui_wgpu::wgpu::{Camera3d, Instance3d, Mat4, PreparedRenderUpload, Rect, SceneDraw3d, SceneRasterBegin, SceneRasterDescriptor, SceneRasterLease, SceneRasterProfile, SceneRasterWriteMode};
 use semio_framework_value::{RetainedCloneGrant, RetainedCloneProgress};
@@ -8,23 +9,36 @@ use semio_framework_value::{RetainedCloneGrant, RetainedCloneProgress};
 use ui_wgpu::wgpu::{gizmo, SceneRasterMeshSeal};
 
 /// 📖️ Reads one test input at run time (relative to the package manifest) so it does not count as an embedded compile input.
-fn read_static(path_from_manifest: &str) -> &'static str {
-    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(path_from_manifest);
-    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("test input {}: {error}", path.display())).into_boxed_str())
-}
 
 /// 📖️ Reads several test inputs at run time and joins them into the one text the unsplit sources formed.
 fn read_joined(paths: &[&str]) -> &'static str {
     let mut joined = String::new();
     for path in paths {
-        joined.push_str(read_static(path));
+        joined.push_str(fixture_text!(path));
     }
     Box::leak(joined.into_boxed_str())
 }
 
+/// 🌳️ Reads one world crate root and splices every split-out child (a `#[path]` module re-exported with a glob) in at its mount, so the text keeps the item order of the unsplit file.
+fn read_world_tree(path_from_manifest: &str) -> String {
+    let directory = path_from_manifest.trim_end_matches("🦀️.rs");
+    let lines: Vec<&str> = fixture_text!(path_from_manifest).lines().collect();
+    let mut text = String::new();
+    for (index, line) in lines.iter().enumerate() {
+        text.push_str(line);
+        text.push('\n');
+        if index >= 2 && line.contains("use ") && line.ends_with("::*;") && lines[index - 2].starts_with("#[path = \"") {
+            let child = lines[index - 2].trim_start_matches("#[path = \"").trim_end_matches("\"]");
+            text.push_str(&read_world_tree(&format!("{directory}{child}")));
+        }
+    }
+    text
+}
+
 #[allow(non_snake_case)]
 fn WORLD_SOURCE() -> &'static str {
-    read_joined(&["../../🦀️.rs", "../../../🧩️components/🦀️.rs", "../../../🧲️cursors/🦀️.rs", "../../../🧱️scene/🦀️.rs", "../../../🌉️bridge/🦀️.rs", "../../../🧵️interaction/🦀️.rs", "../../../🎛️host/🦀️.rs"])
+    let joined: String = ["../../🦀️.rs", "../../../🧩️components/🦀️.rs", "../../../🧲️cursors/🦀️.rs", "../../../🧱️scene/🦀️.rs", "../../../🌉️bridge/🦀️.rs", "../../../🧵️interaction/🦀️.rs", "../../../🎛️host/🦀️.rs"].iter().map(|root| read_world_tree(root)).collect();
+    Box::leak(joined.into_boxed_str())
 }
 
 /// 🧊️ The wgpu renderer glue as the one text the unsplit file held: its root and every mounted child.
@@ -164,9 +178,9 @@ fn live_renderer_retains_generation_wake_and_rejects_recreation_erasure_loss_and
     }
 
     let glue = RENDERER_SOURCE();
-    let host = read_static("../../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🏠️os-host/🦀️.rs");
-    let native = read_static("../../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🪟️winit-app/🦀️.rs");
-    let browser = read_static("../../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🌐️browser-worker/🦀️.rs");
+    let host = fixture_text!("../../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🏠️os-host/🦀️.rs");
+    let native = fixture_text!("../../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🪟️winit-app/🦀️.rs");
+    let browser = fixture_text!("../../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🌐️browser-worker/🦀️.rs");
     assert!(exact(glue, host, native, browser));
     assert!(!exact(&glue.replace("World3dBuildContext::new(runtime.world_cursor_wake_authority())", "World3dBuildContext::default()"), host, native, browser));
     for (name, start, end) in [
@@ -467,7 +481,7 @@ fn production_dynamic_owners_have_no_hash_map_vec_or_direct_pixel_mutation_bypas
     for forbidden in [concat!("Mesh", "3d::from_buffers"), "FaceOverlayBucket", "HashSet<String>", "Vec<f32>"] {
         assert!(!face_route.contains(forbidden), "face overlay recursive/contiguous constructor returned: {forbidden}");
     }
-    let mounted_root = read_static("../../../../🦀️.rs");
+    let mounted_root = fixture_text!("../../../../🦀️.rs");
     assert!(mounted_root.contains("pub use crate::world::*;"));
     assert!(!mounted_root.contains(concat!("Mesh", "3d")));
 }
@@ -483,7 +497,7 @@ fn production_dynamic_owners_have_no_hash_map_vec_or_direct_pixel_mutation_bypas
 #[cfg(not(target_arch = "wasm32"))]
 #[test]
 fn world_interaction_object_slot_table_is_heap_first_and_fits_a_bounded_thread_stack() {
-    let fixture: serde_json::Value = serde_json::from_str(read_static("../../../../🧪️tests/🧫️fixtures/🧱️boxed-fixed-slots/🔣️.json")).expect("🧱️ the committed fixed-slot-table budget parses");
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../🧪️tests/🧫️fixtures/🧱️boxed-fixed-slots/🔣️.json")).expect("🧱️ the committed fixed-slot-table budget parses");
     let declared: Vec<semio_framework_async::FixedSlotTableBudget> = fixture["tables"]
         .as_array()
         .expect("🧱️ the budget lists its tables")
@@ -529,7 +543,7 @@ fn scalar_attribute_slot_retirement_keeps_original_backing_until_mesh_owner_clos
     use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress,retirement::controlled::ControlledRetirement};
     use semio_framework_os_kernel::os_spr::causal::transition::HistoryFoldIndex;
     use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
-    let law:serde_json::Value=serde_json::from_str(read_static("../../../🧪️tests/🔬️unit/🧫️retained-attributes.json")).unwrap();
+    let law:serde_json::Value=serde_json::from_str(fixture_text!("../../../🧪️tests/🔬️unit/🧫️retained-attributes.json")).unwrap();
     let reference:Vec<(String,String)>=serde_json::from_value(law["input"].clone()).unwrap();
     let(mut original,birth)=observe(||HistoryFoldIndex::<String,String>::from_iter(reference.iter().cloned()));
     assert_eq!(birth.released_bytes,0);
@@ -560,10 +574,9 @@ fn scalar_attribute_slot_retirement_keeps_original_backing_until_mesh_owner_clos
     let(mut born,mut released,mut turns)=(birth.requested_bytes+incoming.requested_bytes+backing.requested_bytes,incoming.released_bytes+backing.released_bytes,0);
     while !owner.terminal_is_empty(){let(step,heap)=observe(||owner.step(grant).unwrap());assert!(step.progress().fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));born+=heap.requested_bytes;released+=heap.released_bytes;turns+=1;assert!(turns<16384);}
     assert_eq!(born,released);let(_,heap)=observe(||drop(owner));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
-    eprintln!("[DEBUG] original retained attribute slots preserved all pointers and funded teardown conserved {born} bytes in {turns} turns");
 }
 
 fn world_original_fixture_grant()->semio_framework_value::RetainedCloneGrant{
-    let law:serde_json::Value=serde_json::from_str(read_static("../../../🧪️tests/🔬️unit/🧫️retained-attributes.json")).unwrap();let axes=&law["grant"];
+    let law:serde_json::Value=serde_json::from_str(fixture_text!("../../../🧪️tests/🔬️unit/🧫️retained-attributes.json")).unwrap();let axes=&law["grant"];
     semio_framework_value::RetainedCloneGrant{maximum_items:axes["items"].as_u64().unwrap()as usize,maximum_copy_bytes:axes["copyBytes"].as_u64().unwrap()as usize,maximum_capacity_bytes:axes["capacityBytes"].as_u64().unwrap()as usize,maximum_release_bytes:axes["releaseBytes"].as_u64().unwrap()as usize,maximum_depth:axes["depth"].as_u64().unwrap()as usize}
 }

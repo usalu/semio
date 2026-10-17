@@ -9,8 +9,6 @@ use semio_framework_value::{RetirementDemand, ValueError};
 #[path = "🏃️headless/🦀️.rs"]
 mod headless;
 pub use headless::{admit_payload_authority, close_job, close_payload_authority, payload_bytes, run_headless, HeadlessSite, HEADLESS_GRANT};
-#[cfg(test)]
-pub(crate) use headless::test_step_context;
 
 #[path = "📤️publication/🦀️.rs"]
 mod publication;

@@ -42,7 +42,6 @@ test("SQLite refusal has one closed language-neutral schema and independent auth
     for (const row of corpus.cases) database.run("INSERT INTO authority VALUES(?,?,?)", [row.id, row.authority, row.expectedKind]);
     expect(database.query("SELECT id, CASE producer WHEN 'syntax' THEN 'invalidValue' WHEN 'callback' THEN 'canceled' WHEN 'ownership' THEN 'ownershipLimit' WHEN 'work' THEN 'workLimit' END AS kind FROM authority ORDER BY id").all()).toEqual(corpus.cases.map(row => ({id: row.id, kind: row.expectedKind})).sort((a,b) => a.id.localeCompare(b.id)));
   } finally { database.close(); }
-  console.log("[DEBUG] Independent SQLite admitted thirteen owned refusal authorities");
 });
 
 test("SQLite native-equivalent producers retain actual typed refusal identity", async () => {
@@ -55,7 +54,6 @@ test("SQLite native-equivalent producers retain actual typed refusal identity", 
     expect(refusal.message.length, row.id).toBeGreaterThan(0);
     expect<string>(refusal.under("document").kind, row.id).toBe(row.expectedKind);
   }
-  console.log("[DEBUG] Thirteen actual SQLite producer kinds retained");
 });
 
 test("SQLite cumulative allocation admission never refunds retired backing", () => {

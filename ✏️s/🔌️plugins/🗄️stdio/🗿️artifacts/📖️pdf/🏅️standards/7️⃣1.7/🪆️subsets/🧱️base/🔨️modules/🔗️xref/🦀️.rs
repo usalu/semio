@@ -5,10 +5,10 @@
 //! into the snapshot's retained `objects` lane.
 
 use crate::standards::v1_7::subsets::base::schema::graph_source::ObjectSource;
-use super::encryption::Decryptor;
-use super::filters::decode_stream;
+use crate::standards::v1_7::subsets::base::modules::encryption::Decryptor;
+use crate::standards::v1_7::subsets::base::modules::filters::decode_stream;
 use crate::standards::v1_7::subsets::base::modules::lexer::{brute_force_scan, dict_i64, find_last_subslice, parse_indirect_at, Lexer};
-use crate::standards::v1_7::subsets::base::io::{malformed, PResult, PdfEngineError};
+use crate::standards::v1_7::subsets::base::io::error::{malformed, PResult, PdfEngineError};
 use crate::standards::v1_7::subsets::base::schema::snapshot::{ObjRef, PdfDictEntry, PdfIndirectObject, PdfObject};
 use std::collections::{HashMap, HashSet};
 
@@ -450,7 +450,5 @@ pub trait ObjectSink {
 //#endregion 🔖️Sources
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

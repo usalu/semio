@@ -2,6 +2,7 @@
 //! ABSOLUTE `change-slider-value` a slider press commits and the RELATIVE `move-nodes` a node drag commits — outcome codes
 //! from the frozen vocabulary, exact inverses, labels in English and German, wire witnesses, and time travel: an edited
 //! gesture leaf replays its downstream exactly like a fresh fold of the edited log.
+use semio_framework_test_fixtures::fixture_text;
 use semio_s_artifact_procedural_2d_model::snapshot::Generation2dSnapshot;
 use semio_s_artifact_procedural_2d_model::widget_id;
 use protocol::Mutation;
@@ -113,8 +114,8 @@ fn gesture_leaves_label_their_rows_in_english_and_german() {
 #[test]
 fn every_wire_witness_decodes_and_round_trips_both_codecs() {
     let witnesses = [
-        (include_str!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎚️change-slider-value/🧾️wire-witness/🦠️mutation/🔣️.json"), "change-slider-value"),
-        (include_str!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🚚️move-nodes/🧾️wire-witness/🦠️mutation/🔣️.json"), "move-nodes"),
+        (fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎚️change-slider-value/🧾️wire-witness/🦠️mutation/🔣️.json"), "change-slider-value"),
+        (fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🚚️move-nodes/🧾️wire-witness/🦠️mutation/🔣️.json"), "move-nodes"),
     ];
     for (witness, kind) in witnesses {
         let mutation: Generation2dMutation = semio_framework_pack_json::from_json_str(witness, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_else(|error| panic!("{kind} witness decodes: {error}"));

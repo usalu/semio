@@ -1,0 +1,7 @@
+# Logical Metadata Witness Prehold Review
+
+Current defining functions reviewed read-only after Root19386 gate. The optional closed sixthliteral invokes private metadata walker inside existing run callback before two unchanged hash censuses; ordinary five-argument path skips it. Actual Windows filesystem/meter context is consumed only once and shared with hashing, with no account reset. Additional work can correctly refuse under existing Windows budget. No Native/NTFS qualification inferred.
+
+Metadata path observes all named file aliases/services with BigInt sum, never opens regular file contents.64-name UTF8 paged rescans, entry/work/depth/path/resident bounds, tracked directory close, nofollow named kind/same-device checks and per-visit7/ancestoridentity fences are present. Links are raw metadata, not followed. Completed rows are not retained globally; result is advisory aggregate, not atomic immutable snapshot, funding or fit proof. Later full hashing independently enforces the same authored budget and exact preservation. Paging/resident/work may refuse before entry/depth ceilings.
+
+No material new Source issue found. Root reports19386 three-rootstrict0/three newlaws153 covering actual Generated metadata/Python/SQLite and combined fullcontent equality, wrongliteral zeroobserver; not rerun here. Earlier Cargoparse failure was coherence/harness scope, not witness acceptance. More faultwindow laws, final immutable caller policy wiring and exact hashes remain pending; no physical release is asserted.

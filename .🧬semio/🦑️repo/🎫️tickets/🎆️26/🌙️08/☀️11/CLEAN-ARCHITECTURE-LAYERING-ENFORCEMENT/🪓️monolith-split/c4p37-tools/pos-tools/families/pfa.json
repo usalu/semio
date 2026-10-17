@@ -1,0 +1,29 @@
+{
+ "name": "pfa",
+ "crates": [
+  "semio-s-artifact-bim-model",
+  "semio-s-artifact-process-process3d-host",
+  "semio-s-artifact-raster-raster",
+  "semio-s-artifact-norm-vdi3805-inferences",
+  "semio-s-artifact-norm-vdi3805-checks",
+  "semio-s-artifact-norm-en1999-inferences",
+  "semio-s-artifact-norm-en1999-checks",
+  "semio-s-artifact-norm-en1993-inferences",
+  "semio-s-artifact-norm-en1993-checks"
+ ],
+ "base": {
+  "rev": "1bae6115bc5",
+  "crates": [
+   "semio-s-artifact-bim-model",
+   "semio-s-artifact-process-process3d-host",
+   "semio-s-artifact-raster-raster",
+   "semio-s-artifact-norm-vdi3805-inferences",
+   "semio-s-artifact-norm-vdi3805-checks",
+   "semio-s-artifact-norm-en1999-inferences",
+   "semio-s-artifact-norm-en1999-checks",
+   "semio-s-artifact-norm-en1993-inferences",
+   "semio-s-artifact-norm-en1993-checks"
+  ]
+ },
+ "note": "PLUGIN-FILE-SPLITS-A"
+}

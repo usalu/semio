@@ -1,0 +1,9 @@
+# Prepared Service Worker Independent Review
+
+Four current inputs match final manifest bytes/SHA under nofollow descriptors and stable descriptor/name seven-field metadata. Receipt: `🗑️generated/prepared-service-worker-four-independent-hold.json`. Source-only sequential hold.
+
+The fixed child uses own-thread current CFRunLoop/custom mode and non-threadsafe JSCallback, never dispatch scheduling. Callback only counts bounded events and never dereferences/retains borrowed pointer arrays. Empty relative path, SinceNow, signed32 device and bounded slices are fixed. CF strings are explicitly retained through stream release; CFArray copies pointers with no callbacks and its pointees remain live. Normal cleanup stops started stream, invalidates scheduled stream, releases stream, releases array/strings, closes callback then libraries. Null/false known partial acquisition follows corresponding cleanup. Uncertain FFI completion or cleanup failure prevents later unsafe frees and prevents success output. No borrowed runloop release is attempted.
+
+Parent must still enforce genuine finite transport/kill/join and bounded input/output; Bun.stdin.text itself reads to EOF before byte validation, safe only with the closed bounded parent input. Forced termination cannot claim graceful worker cleanup. No valid device was exercised here; modeled lifecycle and malformed pre-FFI child failures are not actual CF runtime qualification. Existing strict eventServiceUuid/observe remain unchanged, and mandatory strict before/after observer integration is still future work.
+
+Root reports88461 six-rootstrict0/12Source2489 including21CF-port cases and three genuine malformed finite worker terminals. Not rerun here. No material Source lifecycle blocker found within this declared phase; no UUID guarantee, Native or publication acceptance inferred.

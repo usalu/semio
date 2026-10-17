@@ -6,7 +6,7 @@ import { Database } from "bun:sqlite";
 import TOML from "@iarna/toml";
 import Ajv from "ajv";
 import { readRustSourceClosureV1 } from "@semio-tech/process/artifacts/native-build/source";
-import { rustTokens } from "../../../📚️compiler/📖️syntax/🦀️rust/🟦️.ts";
+import { rustTokens } from "@semio-tech/compiler-syntax-rust-ts";
 
 const ui = resolve(import.meta.dir, "../.."), read = (path: string) => readFileSync(resolve(ui, path), "utf8");
 type Manifest = { package: { name: string }; lib: { path: string }; dependencies: Record<string, { package?: string; path?: string }>; target?: Record<string, { dependencies?: Record<string, { package?: string; path?: string }> }> };

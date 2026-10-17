@@ -9,7 +9,7 @@ import subsetValidationPolicy from "../🫴️receiving/🛂️validation/🧪�
 test("CSV original receiving subset validation has a closed independent directional policy",()=>{
  const{cases}=subsetValidationPolicy;expect(subsetValidationPolicy.directions).toEqual(["decoding","encoding"]);
  const database=new Database(":memory:");try{for(const direction of subsetValidationPolicy.directions){for(const row of cases){const actual=database.query("SELECT CASE WHEN ? <> 'accepted' THEN 'canceled' WHEN ? = '*' THEN 'clean' ELSE 'unsupportedOwner' END AS kind").get(row.port,row.subset);expect(actual).toEqual({kind:row.kind});expect(direction==="decoding"||direction==="encoding").toBe(true);}}}finally{database.close();}
- expect(subsetValidationPolicy.grant).toEqual({maximumItems:0,maximumCopyBytes:0,maximumCapacityBytes:0,maximumReleaseBytes:0,maximumDepth:0});console.log("[DEBUG] CSV closed neutral eight-case receiving validation agrees with independent SQLite wildcard/refusal/cancellation policy; Native custody is checked separately");
+ expect(subsetValidationPolicy.grant).toEqual({maximumItems:0,maximumCopyBytes:0,maximumCapacityBytes:0,maximumReleaseBytes:0,maximumDepth:0});
 });
 import { expect, test } from "bun:test";
 import fixture from "./🧫️fixtures/🔣️.json";
@@ -173,7 +173,6 @@ test("Csv complete logical owner preserves authored metadata and empty records i
    if(index===logicalOwnerFixture.edit.snapshotIndex){independent.run(logicalOwnerFixture.edit.query);expect(await csvSnapshotFromSqliteDatabase(await importSqliteDatabase(new Uint8Array(independent.serialize())))).toEqual({...owner,hasHeader:true});}
   }finally{independent.close();}
  }
- console.log("[DEBUG] Csv complete logical owners retained literal schema, header flag, quote flags and zero-field record occurrences through independent SQLite");
 });
 
 import {readClosedRecordPack,type ClosedValue} from "@semio-tech/framework/pack/value/testing/preflight/pack";
@@ -195,7 +194,6 @@ test("CSV canonical producer assets retain complete owner fields and remain sepa
  const demo=readCSVLogicalAsset(readLogicalAsset(new URL("🎒️.pack.semio",assets)));
  expect(demo.schema).toBe("stdio.csv");
  expect(demo.records.map(row=>row.fields.map(field=>field.value))).toEqual(rows);
- console.log("[DEBUG] CSV independent DEFLATE, CRC32C and external table reader retained real canonical producer assets");
 });
 
 import receivingPolicy from "../🫴️receiving/🧪️tests/🧫️fixtures/🔣️.json";
@@ -203,7 +201,6 @@ test("csv original receiving custody and late malformed SQL preserve independent
  expect(receivingPolicy.refusals.map(row=>row.axis)).toEqual(["work","copy","capacity","release","depth"]);const text=receivingPolicy.stringUnit.repeat(receivingPolicy.stringRepetitions);expect(Buffer.byteLength(text,"utf8")).toBe(receivingPolicy.stringBytes);
  const ddl=await Bun.file(new URL("../🗄️.sql",import.meta.url)).text();for(const mutation of receivingPolicy.sqlMutations){const database=new Database(":memory:");try{expect(()=>database.exec(ddl.replace(mutation.from,mutation.to))).toThrow();}finally{database.close();}}
  const input={schema:"owned-λ🙂",hasHeader:true,records:[{fields:[]},{fields:[{value:text,quoted:true},{value:"tail",quoted:false}]},{fields:[]}]};const original=await csvSnapshotToSqliteDatabase(input);const bytes=await exportSqliteDatabase(original);for(const mutation of receivingPolicy.lateMutations){const independent=Database.deserialize(bytes);try{expect(independent.query("SELECT length(CAST(value AS BLOB)) AS bytes FROM csv_field WHERE id=1").get()).toEqual({bytes:receivingPolicy.stringBytes});independent.exec("PRAGMA ignore_check_constraints=ON");independent.run(`UPDATE ${mutation.table} SET ${mutation.column}=? WHERE id=2`,[mutation.value]);expect(independent.query(`SELECT ${mutation.column} AS value FROM ${mutation.table} WHERE id=2`).get()).toEqual({value:mutation.value});await expect(csvSnapshotFromSqliteDatabase(await importSqliteDatabase(new Uint8Array(independent.serialize())))).rejects.toMatchObject({kind:mutation.kind});}finally{independent.close();}}
- console.error("[DEBUG] Independent Buffer and actual SQLite preserve original CSV receiving UTF8 prefix witness and late malformed quote/ordinal refusals; Native receiving is qualified separately");
 });
 import completeSemantic from "./🧫️fixtures/🛂️semantic/🔣️.json";
 
@@ -242,7 +239,6 @@ test("CSV original typed destination policy preserves neutral relational text an
  expect(binder.includes("fn bind(")).toBe(true);
  const producer=readFileSync(new URL("../🚦️native/🦀️.rs",import.meta.url),"utf8");
  expect(producer.includes("admission::bind(record,snapshot_output,native,body)")).toBe(true);
- console.log("[DEBUG] Independent SQLite/JSON/UTF8 CSV typed destination preserves literal schema, header, quote flags, empty records/fields and140000-byte prefixes under authored distinct body/close authority; Native receipts separate");
 });
 
 /** 🎟️ Verifies separately authored original body and retirement currencies independently. */
@@ -256,14 +252,13 @@ test("original tabular native caller grants agree with independent schema and SQ
   expect(database.query("SELECT COUNT(*) AS axes FROM authority").get()).toEqual({axes:15});
  }finally{database.close();}
  expect(law.maximumCloseTurns).toBe(65536);expect(law.nativeMaximumBytes).toBe(16777216);expect(law.custody).toBe("originalNativeRecipient");
- console.log("[DEBUG] Original tabular native caller15 independent SQL currencies/Ajv agree; body65536 and separately funded close4096, deniedClose0, originalNative16MiB, bounded65536turns");
 });
 
 /** ▶️ Preserves one original observer through canceled body and independently funded closing. */
 test("original tabular observer continuation preserves caller state before funded closing",async()=>{
  const{readFileSync}=await import("node:fs");const law=JSON.parse(readFileSync(new URL("🧫️fixtures/🛬️native-control/🎟️original.json",import.meta.url),"utf8"));
  const witness=law.observerContinuation;const db=new Database(":memory:");try{db.exec("CREATE TABLE observer(id INTEGER PRIMARY KEY,state TEXT NOT NULL,copy_extent INTEGER NOT NULL,stop_after INTEGER NOT NULL,owner_held INTEGER NOT NULL,body_canceled INTEGER NOT NULL)");db.query("INSERT INTO observer VALUES(1,?,?,?,1,1)").run(witness.state,witness.copyExtentBytes,witness.cancelAfterBytes);expect(db.query("SELECT id,owner_held,body_canceled,copy_extent-stop_after AS retained_tail FROM observer").get()).toEqual({id:1,owner_held:1,body_canceled:1,retained_tail:74466});db.exec("UPDATE observer SET body_canceled=0 WHERE id=1 AND owner_held=1");expect(db.query("SELECT id,state,owner_held,body_canceled FROM observer").get()).toEqual({id:1,state:witness.state,owner_held:1,body_canceled:0});}finally{db.close();}
- const caller=readFileSync(new URL("./🦀️.rs",import.meta.url),"utf8");expect(caller.includes("original_continuation(&mut native)")).toBe(true);expect(witness.canceledCloseKind).toBe("Canceled");expect(witness.resumedSameObserver).toBe(true);console.log("[DEBUG] Original tabular observer closed policy/Ajv and independent SQLite retain same caller state and74466-byte tail before explicit funded-close continuation; Native behavior separate");
+ const caller=readFileSync(new URL("./🦀️.rs",import.meta.url),"utf8");expect(caller.includes("original_continuation(&mut native)")).toBe(true);expect(witness.canceledCloseKind).toBe("Canceled");expect(witness.resumedSameObserver).toBe(true);
 });
 
 /** ⚠️ Preserves the original native canceled cause fields independently of its promoted receipt. */
@@ -271,5 +266,5 @@ test("original CSV observer continuation declares exact borrowed native cause cu
  const{readFileSync}=await import("node:fs");const law=JSON.parse(readFileSync(new URL("🧫️fixtures/🛬️native-control/🎟️original.json",import.meta.url),"utf8"));
  const cause=law.observerContinuation.nativeCause;
  const db=new Database(":memory:");try{db.run("CREATE TABLE original_cause(kind TEXT NOT NULL,message TEXT NOT NULL,storage TEXT NOT NULL)");db.query("INSERT INTO original_cause VALUES(?,?,?)").run(cause.kind,cause.message,cause.storage);expect(db.query("SELECT kind,message,storage FROM original_cause").get()).toEqual(cause);expect(db.query("SELECT hex(CAST(message AS BLOB)) AS bytes FROM original_cause").get()).toEqual({bytes:Buffer.from(cause.message,"utf8").toString("hex").toUpperCase()});}finally{db.close();}
- expect(JSON.parse(JSON.stringify(cause))).toEqual(cause);const native=readFileSync(new URL("./🦀️.rs",import.meta.url),"utf8");expect(native.includes("observed_cause_pointer")).toBe(true);expect(native.includes('cause.message.as_ref(),policy["nativeCause"]["message"]')).toBe(true);console.log("[DEBUG] Original CSV canceled cause closed Ajv policy agrees with independent SQLite/Buffer/JSON kind/message/borrowed-literal identity; actual Native cause transfer remains separate");
+ expect(JSON.parse(JSON.stringify(cause))).toEqual(cause);const native=readFileSync(new URL("./🦀️.rs",import.meta.url),"utf8");expect(native.includes("observed_cause_pointer")).toBe(true);expect(native.includes('cause.message.as_ref(),policy["nativeCause"]["message"]')).toBe(true);
 });

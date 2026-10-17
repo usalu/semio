@@ -54,7 +54,7 @@ export const stdioBinaryRawAnyArtifactGuardConstant = <T extends string | number
 export function parseBinaryArtifact(value: unknown, at = "$"): BinaryArtifact {
   const row = stdioBinaryRawAnyArtifactGuardObject(value, at);
   return {
-    schema: row["schema"] === undefined ? undefined : stdioBinaryRawAnyArtifactGuardString(row["schema"], `${at}.schema`),
-    bytes: row["bytes"] === undefined ? undefined : stdioBinaryRawAnyArtifactGuardString(row["bytes"], `${at}.bytes`),
+    schema: stdioBinaryRawAnyArtifactGuardString(row["schema"], `${at}.schema`),
+    bytes: stdioBinaryRawAnyArtifactGuardArray(row["bytes"], `${at}.bytes`).map((item, index) => stdioBinaryRawAnyArtifactGuardInteger(item, `${at}.bytes[${index}]`, {"minimum": 0, "maximum": 255})),
   };
 }

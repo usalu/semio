@@ -1,12 +1,49 @@
 //! 🧩️ glTF inference DAG assembly over independently-owned leaf results.
 
-use super::super::modules::{measurement_contracts::*, mesh_topology::Topology};
-use super::{
+use crate::standards::v2_0::subsets::any::schema::modules::{inference_measures, measurement_contracts::*, mesh_topology::Topology};
+use crate::standards::v2_0::subsets::any::schema::inferences::{
     adjacency::GltfAdjacencyInference, area_volume::GltfAreaVolumeInference, clearance::GltfClearanceInference, compactness::GltfCompactnessInference, concavity::GltfConcavityInference, curvature::GltfCurvatureInference, geometry_core::*,
-    mass_distribution::GltfMassInference, orientation::GltfOrientationInference, proportion::GltfProportionInference, roughness::GltfRoughnessInference, size::GltfSizeInference, symmetry::GltfSymmetryInference, thickness::GltfThicknessInference,
+    mass_distribution::GltfMassInference, orientation::GltfOrientationInference, proportion::GltfProportionInference, roughness::GltfRoughnessInference, size::GltfSizeInference, symmetry::{GltfSymmetryIndicators, GltfSymmetryInference}, thickness::GltfThicknessInference,
     topology::GltfTopologyInference, GltfEntityIndicators, GltfGeometricInference, GltfInferenceCounts, GltfPairInference, GltfPartInference,
 };
 use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfDecodedSnapshot;
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn assembly_ratios(parts: &[GltfPartInference], policy: &GltfAnalysisPolicy) -> Option<(f64, f64)> {
+    if parts.is_empty() {
+        return None;
+    }
+    let signature = |part: &GltfPartInference| {
+        let mut dimensions = part.indicators.size.oriented_bounds.value.as_ref().map_or([0.0; 3], |bounds| bounds.dimensions.array());
+        dimensions.sort_by(f64::total_cmp);
+        let quantum = policy.absolute_length_tolerance.max(1e-9);
+        let area_quantum = quantum * quantum;
+        let volume_quantum = area_quantum * quantum;
+        format!(
+            "{},{},{},{},{}",
+            (dimensions[0] / quantum).round() as i64,
+            (dimensions[1] / quantum).round() as i64,
+            (dimensions[2] / quantum).round() as i64,
+            (part.indicators.area_volume.surface_area.value.unwrap_or(0.0) / area_quantum).round() as i64,
+            (part.indicators.area_volume.volume.value.unwrap_or(0.0) / volume_quantum).round() as i64
+        )
+    };
+    let mut signatures = std::collections::BTreeMap::<String, usize>::new();
+    for part in parts {
+        *signatures.entry(signature(part)).or_default() += 1;
+    }
+    let repeated_members = signatures.values().filter(|count| **count > 1).sum::<usize>();
+    let repeated_excess = signatures.values().map(|count| count.saturating_sub(1)).sum::<usize>();
+    Some((repeated_excess as f64 / parts.len() as f64, repeated_members as f64 / parts.len() as f64))
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn infer_symmetry_assembly(indicators: &mut GltfSymmetryIndicators, parts: &[GltfPartInference], policy: &GltfAnalysisPolicy, topology: Topology) {
+    if let Some((repetition, modularity)) = assembly_ratios(parts, policy) {
+        indicators.repetition_ratio = inference_measures::estimate(repetition, GltfUnit::Unitless, parts.len(), Some(topology));
+        indicators.modularity_ratio = inference_measures::estimate(modularity, GltfUnit::Unitless, parts.len(), Some(topology));
+    }
+}
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn empty_indicators(diagnostic_ids: &[String]) -> GltfEntityIndicators {
@@ -75,7 +112,7 @@ pub fn compute_gltf_inference(snapshot: &GltfDecodedSnapshot<'_>) -> GltfGeometr
         component_count += topology.components;
         parts.push(GltfPartInference { address: raw.address.clone(), name: raw.name.clone(), indicators, diagnostic_ids: raw.diagnostic_ids.clone() });
     }
-    GltfSymmetryInference::infer_assembly(&mut overall.symmetry, &parts, &policy, overall_topology);
+    infer_symmetry_assembly(&mut overall.symmetry, &parts, &policy, overall_topology);
     let mut pairs = Vec::new();
     for first in 0..raw_parts.len() {
         for second in first + 1..raw_parts.len() {

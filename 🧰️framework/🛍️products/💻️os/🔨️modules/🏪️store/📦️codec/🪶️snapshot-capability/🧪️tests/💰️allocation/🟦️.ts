@@ -11,7 +11,6 @@ import {resolve} from "node:path";
 test("original snapshot producer spans debit four physical currencies without replenishing depth",()=>{
  const neutral=JSON.parse(readFileSync(snapshotEncodeOwnerFixtureUrl,"utf8"));const policy=neutral.producer;const validate=new Ajv({strict:true,allErrors:true}).compile(grantSchema);expect(validate(policy.walletGrant)).toBe(true);expect(validate(policy.remainingGrant)).toBe(true);expect(policy.custody).toBe("originalDestinationBeforeCopy");expect(policy.receipt).toBe("actualDestinationOnSuccessAndRefusal");expect(policy.publication).toBe("moveOriginal");
  const db=new Database(":memory:");try{db.exec("CREATE TABLE producer_span(ordinal INTEGER PRIMARY KEY,items INTEGER NOT NULL,copy_bytes INTEGER NOT NULL,capacity_bytes INTEGER NOT NULL,release_bytes INTEGER NOT NULL)");for(const[index,span]of policy.receipts.entries())db.query("INSERT INTO producer_span VALUES(?,?,?,?,?)").run(index,span.copiedItems,span.copiedBytes,span.retainedCapacityBytes,span.releasedBytes);const remaining=db.query("SELECT ?1-SUM(items) AS maximumItems,?2-SUM(copy_bytes) AS maximumCopyBytes,?3-SUM(capacity_bytes) AS maximumCapacityBytes,?4-SUM(release_bytes) AS maximumReleaseBytes,?5 AS maximumDepth FROM producer_span").get(policy.walletGrant.maximumItems,policy.walletGrant.maximumCopyBytes,policy.walletGrant.maximumCapacityBytes,policy.walletGrant.maximumReleaseBytes,policy.walletGrant.maximumDepth);expect(remaining).toEqual(policy.remainingGrant);expect(policy.copyBytes).toBe(new TextEncoder().encode(neutral.copy).length);for(const axis of grantSchema.required){const missing={...policy.walletGrant};delete missing[axis];expect(validate(missing)).toBe(false);}}finally{db.close();}
- console.error("[DEBUG] Original producer neutral spans match independent SQLite subtraction and closed five-axis Ajv policy; native parser body accounting remains separately unqualified");
 });
 
 test("original buffer constructor custody uses an independent closed five-axis caller policy",()=>{
@@ -21,7 +20,6 @@ test("original buffer constructor custody uses an independent closed five-axis c
  for(const axis of grantSchema.required){const missing={...contract.callerGrant};delete missing[axis];expect(validate(missing)).toBe(false);expect(validate({...contract.callerGrant,[axis]:-1})).toBe(false);expect(validate({...contract.callerGrant,[axis]:0.5})).toBe(false);expect(validate({...contract.callerGrant,[axis]:0})).toBe(true);}
  expect(validate({...contract.callerGrant,extra:1})).toBe(false);
  const db=new Database(":memory:");try{db.exec("CREATE TABLE buffer_owner(case_id TEXT NOT NULL,ordinal INTEGER NOT NULL,octets INTEGER NOT NULL,PRIMARY KEY(case_id,ordinal))");const insert=db.query("INSERT INTO buffer_owner VALUES(?,?,?)");for(const row of contract.cases){for(const[index,bytes]of row.bufferBytes.entries())insert.run(row.id,index,bytes);const total=db.query("SELECT COALESCE(SUM(octets),0) AS bytes FROM buffer_owner WHERE case_id=?").get(row.id) as {bytes:number};expect(total.bytes).toBe(row.bufferBytes.reduce((n:number,b:number)=>n+b,0));expect(contract.callerGrant.maximumCapacityBytes).not.toBe(row.maximumBytes);}}finally{db.close();}
- console.error("[DEBUG] Original buffer constructor neutral custody and independent five-axis grant agree with Ajv/SQLite; expansion ceilings remain separate");
 });
 
 
@@ -82,9 +80,9 @@ test("independent SQLite preserves UTF-8 semantics separately from allocation st
 });
 
 import { refusalFixture } from "@semio-tech/value-ts/refusal/testing";
-import { errorCauseCodecFixture as deflateFixture } from "../../../../../../../../🔨️modules/🎒️pack/🧪️tests/🧫️fixtures/🟦️.ts";
+import { errorCauseCodecFixture as deflateFixture } from "@semio-tech/framework-pack-ts/testing/fixtures";
 import {deflateRawSync,inflateRawSync} from "node:zlib";
-import {PackError} from "../../../../../../../../🔨️modules/🎒️pack/⚠️error/🟦️.ts";
+import {PackError} from "@semio-tech/framework-pack-error-ts";
 import {ValueError} from "../../../../../../../../🔨️modules/🌱️value/📦️packages/🟦️typescript/⚠️refusal/🟦️.ts";
 import { snapshotEncodeOwnerFixtureUrl } from "@semio-tech/framework/io/testing/fixtures";
 
@@ -104,7 +102,7 @@ test("retained Deflate physical credit has an explicit closed ownership authorit
    if(row.expectedKind!=="ownershipLimit"&&row.expectedKind!=="workLimit")throw Error("unknown authored retained admission kind");
    const cause=new ValueError(row.expectedKind,"same deliberately misleading cancellation/depth prose"),error=PackError.fromValue(cause);
    expect(error.cause).toBe(cause);
-   expect(cause.kind).toBe(reference.kind);
+   expect<typeof reference.kind>(cause.kind).toBe(reference.kind);
   }
  }finally{database.close();}
 });

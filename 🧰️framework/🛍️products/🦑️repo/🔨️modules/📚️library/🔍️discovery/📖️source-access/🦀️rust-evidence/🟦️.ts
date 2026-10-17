@@ -21,7 +21,7 @@ export function policyRustTestSource(evidence: string | PolicyRustSourceEvidence
 /**
  * 🏪️ The os Store's production source: its root plus the vocabulary, ledger, codec and composition modules wave E1 decomposed
  * that root into (`.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT/📓️2026-10-13-wave-e1-os-kernel.md`).
- * Store-wide policies read them as one text, so they scan exactly the production source the single root file held.
+ * Store-wide policies read them as one text, so they scan exactly the production source the single root file held. The composer crate `os-store-engine`, its component crates `os-store-engine-core` and `os-store-engine-live`, the use-case crate `os-store-engine-bundle` (spill valve D3) and the batch publication owners are part of that text.
  */
 export const OS_STORE_ROOT_SOURCES = [
   "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
@@ -43,6 +43,11 @@ export const OS_STORE_ROOT_SOURCES = [
   "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🦀️.rs",
   "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🦀️.rs",
   "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧱️core/📥️lifted/🏪️store/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🎞️live/📥️lifted/🏪️store/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧳️bundle/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📬️one-item-owners/📥️lifted/📬️publication/🦀️.rs",
 ] as const;
 
 /** 🏭️ Binds exact domain-owned member producer bodies and this workspace’s explicit semio extension. */

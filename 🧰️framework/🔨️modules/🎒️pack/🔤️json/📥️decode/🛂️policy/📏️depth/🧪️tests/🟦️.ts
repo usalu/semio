@@ -6,7 +6,7 @@ import {createRequire} from "node:module";
 import fixture from "../🧪️tests/🧫️fixtures/🔣️.json";
 import { retirementContractSchema as contract } from "@semio-tech/value-ts/retirement/contract/schema";
 import { orderedRetirementSchema as ordered } from "@semio-tech/value-ts/ordered/retirement/schema";
-import originalLimits from "../../../../🧪️tests/🧫️fixtures/🫳️read-limits.json";
+import { readLimitsFixture as originalLimits } from "@semio-tech/framework-pack-json-ts/testing/fixtures";
 
 test("complete source container limits match an independent relational JSON tree",()=>{
   expect(existsSync(resolve(import.meta.dir,"../🧬️schema/🔣️.json"))).toBe(false);
@@ -28,5 +28,4 @@ test("complete source container limits match an independent relational JSON tree
       if(independent.depth>row.maximumDepth){expect(row.accept).toBe(false);expect("kind" in row?row.kind:undefined).toBe("DepthLimit");}
     }
   }finally{database.close();}
-  console.log("[DEBUG] JSON seven empty/scalar/mixed container depth boundaries match canonical per-grant admission and independent SQLite recursive JSON tree");
 });

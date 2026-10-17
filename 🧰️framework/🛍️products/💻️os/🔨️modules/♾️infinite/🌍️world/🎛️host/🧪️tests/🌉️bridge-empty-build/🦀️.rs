@@ -5,20 +5,17 @@ use semio_framework_os_infinite_world_scene::{step_world3d_terrain_retirement, W
 use semio_framework_os_infinite_world_bridge::{begin_world3d_dynamic_retirement, world3d_draw_rebuild_terminal_is_empty, World3dSceneBridgeStep, World3dSnapshotApplyStep};
 use semio_framework_os_infinite_world_interaction::step_world3d_draw_rebuild;
 use semio_framework_os_infinite_world_host::{apply_runtime_draw_flags, step_world3d_dynamic_retirement, step_world3d_scene_bridge, step_world3d_snapshot, sync_world3d_state, world3d_dynamic_retirement_terminal_is_empty, World3dState};
+use semio_framework_test_fixtures::fixture_text;
 use ui_wgpu::wgpu::{Rect, SurfaceKind, UiComponentSceneNode, UiPresence, World3dScene};
 use semio_framework_value::{RetainedCloneGrant, RetainedCloneProgress};
 
 /// 📖️ Reads one test input at run time (relative to the package manifest) so it does not count as an embedded compile input.
-fn read_static(path_from_manifest: &str) -> &'static str {
-    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(path_from_manifest);
-    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("test input {}: {error}", path.display())).into_boxed_str())
-}
 
 /// 📖️ Reads several test inputs at run time and joins them into the one text the unsplit sources formed.
 fn read_joined(paths: &[&str]) -> &'static str {
     let mut joined = String::new();
     for path in paths {
-        joined.push_str(read_static(path));
+        joined.push_str(fixture_text!(path));
     }
     Box::leak(joined.into_boxed_str())
 }
@@ -111,7 +108,7 @@ fn scene_with_selection_and_domain(selection_json: &str, domain: Option<(&str, &
 /// `provenance` block, and the twin assertion in that harness that keeps this file from rotting.
 #[allow(non_snake_case)]
 fn SCENE_BRIDGE_FIXTURE() -> &'static str {
-    read_static("../../../🧪️tests/🧫️fixtures/🌉️scene-bridge/🔣️.json")
+    fixture_text!("../../../🧪️tests/🧫️fixtures/🌉️scene-bridge/🔣️.json")
 }
 
 pub(crate) fn scene_bridge_fixture() -> serde_json::Value {
@@ -178,13 +175,13 @@ pub(crate) fn terrain_test_retire_then_dynamic(state:&mut World3dState,context:&
 }
 
 fn world_original_fixture_grant()->semio_framework_value::RetainedCloneGrant{
-    let law:serde_json::Value=serde_json::from_str(read_static("../../../🧪️tests/🔬️unit/🧫️retained-attributes.json")).unwrap();let axes=&law["grant"];
+    let law:serde_json::Value=serde_json::from_str(fixture_text!("../../../🧪️tests/🔬️unit/🧫️retained-attributes.json")).unwrap();let axes=&law["grant"];
     semio_framework_value::RetainedCloneGrant{maximum_items:axes["items"].as_u64().unwrap()as usize,maximum_copy_bytes:axes["copyBytes"].as_u64().unwrap()as usize,maximum_capacity_bytes:axes["capacityBytes"].as_u64().unwrap()as usize,maximum_release_bytes:axes["releaseBytes"].as_u64().unwrap()as usize,maximum_depth:axes["depth"].as_u64().unwrap()as usize}
 }
 
 #[allow(non_snake_case)]
 fn EMPTY_BUILD() -> &'static str {
-    read_static("../../../🧪️tests/🧫️fixtures/🌉️bridge-empty-build/🔣️.json")
+    fixture_text!("../../../🧪️tests/🧫️fixtures/🌉️bridge-empty-build/🔣️.json")
 }
 
 fn empty_build_fixture() -> serde_json::Value {

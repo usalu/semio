@@ -1,0 +1,21 @@
+{
+ "name": "frd-p4",
+ "crates": [
+  "semio-framework-test-fixtures",
+  "semio-s-artifact-animate-presentation-mutations",
+  "semio-s-artifact-architect-program-mutations",
+  "semio-s-artifact-cad-cad-transient",
+  "semio-s-artifact-fem-3d-mutations",
+  "semio-s-artifact-flow-flow-unit-tests",
+  "semio-s-artifact-forms-forms-tests",
+  "semio-s-artifact-gis-gisterrain-relocated-engine-tests",
+  "semio-s-artifact-imperative-procedure-editor",
+  "semio-s-artifact-norm-din18599-editor",
+  "semio-s-artifact-norm-en1992-mutations",
+  "semio-s-artifact-norm-en1998-mutations",
+  "semio-s-artifact-procedural-3d-editor-panels",
+  "semio-s-artifact-space-home-operations",
+  "semio-s-artifact-wfc-3d"
+ ],
+ "note": "FRD sample, no baseline"
+}

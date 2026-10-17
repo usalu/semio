@@ -1,0 +1,34 @@
+[package]
+workspace = "../../../.."
+name = "semio-s-plugin-wfc-engine-foundation"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Foundation of the wfc engine: ids, bitsets, weights, the compiled model, domains, topology and the propagation primitives every solver builds on"
+
+[package.metadata.semio]
+role = "s-module"
+
+[lints]
+workspace = true
+
+[lib]
+path = "🦀️.rs"
+
+[dependencies]
+semio-framework-dispatch-macros = { workspace = true }
+semio-framework-geometry = { workspace = true }
+semio-framework-graph-engine = { workspace = true }
+semio-framework-job = { workspace = true }
+semio-framework-job-publication = { path = "../../../../../../../🧰️framework/🔨️modules/🧵️job/📬️outcome/📤️publication/📦️packages/🦀️rust" }
+semio-framework-job-worker = { path = "../../../../../../../🧰️framework/🔨️modules/🧵️job/👷️worker/📦️packages/🦀️rust" }
+semio-framework-job-worker-authority = { path = "../../../../../../../🧰️framework/🔨️modules/🧵️job/👷️worker/🎟️authority/📦️packages/🦀️rust" }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-pack = { path = "../../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
+semio-framework-pack-json = { path = "../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-value-derive = { workspace = true }
+
+[dev-dependencies]
+semio-framework-os-kernel = { workspace = true, features = ["mutation-testing"] }
+serde_json = { workspace = true }

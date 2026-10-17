@@ -24,6 +24,10 @@ use std::mem::ManuallyDrop;
 use std::sync::Arc;
 use ui_wgpu::wgpu::{Rect, Rgba, SurfaceKind, Theme, UiComponentSceneNode};
 use infinite_canvas::{board_set_camera, board_set_grid_visible};
+use semio_framework_os_infinite_board_dag_graph::{adopt_camera_or_fit, refit_camera_if_content_left_view, set_hover_channel};
+use semio_framework_os_infinite_board_dag_host::{set_computing_progress, set_dimmed, set_node_statuses};
+use semio_framework_os_infinite_board_normal_focus::{set_camera_silent, set_selection_ids_silent};
+use semio_framework_os_infinite_board_normal_gestures::set_transform_flags;
 
 //#region 🧩️EngineSurfaceAttach
 /// 🧩️ The per-kind payload one attached surface projects into the shell's own bespoke pointer state
@@ -1068,8 +1072,8 @@ pub fn stage_engine_scene_paint(scene: &UiComponentSceneNode, bounds: Rect, clea
 
 #[derive(Clone, Copy)]
 pub(crate) struct RasterCompositeProgress {
-    pub(crate) completed: u64,
-    pub(crate) done: bool,
+    pub completed: u64,
+    pub done: bool,
 }
 
 /// 🧩️ Advances raster preparation within one frame-build grant, retaining the previous presented image.

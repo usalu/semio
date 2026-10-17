@@ -1,6 +1,7 @@
 use crate::standards::v1::subsets::any::io::text::snapshot::{parse_dsl, print_dsl, BIM_EXAMPLE_TEXT};
 use crate::standards::v1::subsets::any::schema::{inferences::ModelInference, snapshot::ModelSnapshot};
 use protocol::Inference;
+const SNAPSHOT_JSON: &str = include_str!("../../../../🖼️assets/🎬️demo/📸️snapshot.json");
 
 #[semio_framework_async_macros::async_test]
 async fn the_demo_parses_and_is_the_documented_scene() {
@@ -37,7 +38,8 @@ async fn bless_the_demo_text() {
 
 mod shared {
     use crate::examples::checks::Asset;
-    use crate::examples::demo::{ASSET_DIR, PRIMARY_TEXT, SNAPSHOT_JSON};
+    use crate::examples::demo::{ASSET_DIR, PRIMARY_TEXT};
+    use super::SNAPSHOT_JSON;
 
     const ASSET: Asset = Asset { dir: ASSET_DIR, text: PRIMARY_TEXT, json: SNAPSHOT_JSON };
 

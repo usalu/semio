@@ -4,6 +4,7 @@ use semio_framework_3d_brep_sweep::{extrude_face, revolve_face};
 use semio_framework_3d_brep_analysis::{manifold_report, mass_properties, topology_counts, validity, ShapeScope, Watertightness};
 use semio_framework_3d_brep_tessellation::tessellate_solid;
 use semio_framework_3d_brep_vector::matrix::Affine3;
+use semio_framework_test_fixtures::fixture_path;
 use serde_json::Value;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Mutex;
@@ -88,11 +89,6 @@ fn run_case(entry: &Value, tolerance: &Value) -> Result<String, String> {
     }
     let result = outcome.map_err(|e| format!("boolean failed: {e:?}"))?;
     let scope = ShapeScope::solid(result);
-    if std::env::var("KB1_DUMP").is_ok() {
-        for face in body.solid_faces(result) {
-            debug_dump_face(&body, face);
-        }
-    }
     let mut failures = Vec::new();
     let mut note = |ok: bool, text: String| {
         if !ok {
@@ -129,7 +125,7 @@ fn run_case(entry: &Value, tolerance: &Value) -> Result<String, String> {
 /// watertight result whose tessellation agrees too. `KB1_ONLY` narrows the run to ids containing that text.
 #[test]
 fn boolean_differential_matrix_matches_manifold_oracle() {
-    let fixture: Value = serde_json::from_str(include_str!("../🧫️fixtures/differential-matrix/🔣️.json")).unwrap();
+    let fixture: Value = serde_json::from_str(&std::fs::read_to_string(fixture_path!("../../🧪️tests/🧫️fixtures/differential-matrix/🔣️.json")).unwrap()).unwrap();
     let only = std::env::var("KB1_ONLY").ok();
     let cases: Vec<&Value> = fixture["cases"].as_array().unwrap().iter().filter(|c| only.as_ref().is_none_or(|text| c["id"].as_str().unwrap().contains(text.as_str()))).collect();
     let threads = std::env::var("KB1_THREADS").ok().and_then(|t| t.parse().ok()).unwrap_or(4usize);
@@ -142,7 +138,6 @@ fn boolean_differential_matrix_matches_manifold_oracle() {
                 let index = next.fetch_add(1, Ordering::SeqCst);
                 let Some(entry) = cases.get(index) else { break };
                 let id = entry["id"].as_str().unwrap().to_string();
-                let started = std::time::Instant::now();
                 let (sender, receiver) = std::sync::mpsc::channel();
                 std::thread::Builder::new()
                     .stack_size(64 << 20)
@@ -156,38 +151,11 @@ fn boolean_differential_matrix_matches_manifold_oracle() {
                     })
                     .unwrap();
                 let outcome = receiver.recv_timeout(std::time::Duration::from_secs(limit)).unwrap_or_else(|_| Err(format!("did not finish within {limit}s")));
-                eprintln!("[DEBUG] case {id} {} in {}ms {}", if outcome.is_ok() { "OK" } else { "FAIL" }, started.elapsed().as_millis(), match &outcome { Ok(text) | Err(text) => text.as_str() });
                 results.lock().unwrap().push((id, outcome));
             });
         }
     });
     let results = results.into_inner().unwrap();
     let failed: Vec<String> = results.iter().filter_map(|(id, outcome)| outcome.as_ref().err().map(|e| format!("{id}: {e}"))).collect();
-    eprintln!("[DEBUG] matrix {} cases, {} failed", results.len(), failed.len());
     assert!(failed.is_empty(), "{} of {} cases failed:\n{}", failed.len(), results.len(), failed.join("\n"));
-}
-
-/// [DEBUG] temporary: tessellates every face of one case separately with timings.
-#[test]
-fn debug_face_tessellation() {
-    let Ok(only) = std::env::var("KB1_FACES") else { return };
-    let fixture: Value = serde_json::from_str(include_str!("../🧫️fixtures/differential-matrix/🔣️.json")).unwrap();
-    let entry = fixture["cases"].as_array().unwrap().iter().find(|c| c["id"] == only.as_str()).unwrap().clone();
-    std::thread::Builder::new().stack_size(64 << 20).spawn(move || {
-        let mut body = Body::new();
-        let mut rec = OpRecorder::new();
-        let a = build_operand(&mut body, &mut rec, &entry["a"]).unwrap();
-        let b = build_operand(&mut body, &mut rec, &entry["b"]).unwrap();
-        let op = match entry["operation"].as_str().unwrap() { "fuse" => BooleanOp::Unite, "cut" => BooleanOp::Cut, _ => BooleanOp::Intersect };
-        let result = boolean_solid(&mut body, a, b, op, 1e-6, &mut rec).unwrap();
-        let body = std::sync::Arc::new(body);
-        for face in body.solid_faces(result) {
-            let started = std::time::Instant::now();
-            let (sender, receiver) = std::sync::mpsc::channel();
-            let shared = body.clone();
-            std::thread::spawn(move || { let _ = sender.send(semio_framework_3d_brep_tessellation::tessellate_face(&shared, face, 0.01).map(|m| m.index.len() / 3)); });
-            let outcome = receiver.recv_timeout(std::time::Duration::from_secs(10));
-            eprintln!("[DEBUG] face {face} tessellation {:?} in {}ms", outcome, started.elapsed().as_millis());
-        }
-    }).unwrap().join().unwrap();
 }

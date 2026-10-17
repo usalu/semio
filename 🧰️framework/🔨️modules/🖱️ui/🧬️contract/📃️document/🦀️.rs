@@ -19,6 +19,7 @@ use std::sync::Mutex;
 //#region 🔖️Document
 
 use semio_framework_ui_contract_identity::{SurfaceId,UiNodeId,UiRevision};
+use crate::{TransitionHint,UiNodeBindings};
 use semio_framework_ui_contract_budget::{UI_DOCUMENT_NODES,UI_NODE_BINDINGS,UI_DOCUMENT_PATCH_OPS};
 
 

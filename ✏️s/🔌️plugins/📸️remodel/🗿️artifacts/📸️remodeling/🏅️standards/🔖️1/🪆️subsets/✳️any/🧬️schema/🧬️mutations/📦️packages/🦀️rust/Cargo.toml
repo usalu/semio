@@ -38,3 +38,4 @@ semio-framework-async-macros = { workspace = true }
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
 semio-framework-schema-state = { workspace = true }
+semio-s-artifact-remodel-remodeling-model = { workspace = true, features = ["testkit"] }

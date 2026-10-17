@@ -1,7 +1,8 @@
 //! 🔺️ Sparse diff builder for `SetRuleLayoutPoints` — one map entry per key that changes: a set for a point that differs, a
 //! removal for a cleared key the map holds.
 use crate::standards::v1::subsets::any::schema::diff::RewritingDiff;
-use crate::{LayoutPoint, RewritingSnapshot};
+use crate::standards::v1::subsets::any::schema::model::LayoutPoint;
+use crate::standards::v1::subsets::any::schema::snapshot::RewritingSnapshot;
 use replication::MapDelta;
 
 //#region 🔖️Diff

@@ -1,0 +1,315 @@
+/* 🖱️ The interaction layer, hover and selection paint of dispositions, the enlarged state, pinned and canvas-framed dispositions and their chrome. */
+
+/* #region 🔖️Interaction */
+.reveal .presentation-interaction-layer {
+	position: absolute;
+	inset: 0;
+	z-index: 0;
+	touch-action: none;
+}
+
+.reveal .presentation-arrangement-canvas,
+.reveal .presentation-interactive-disposition {
+	position: relative;
+	z-index: 1;
+	overflow: visible;
+}
+
+.reveal .presentation-interactive-disposition {
+	touch-action: none;
+	user-select: none;
+	cursor: default;
+}
+
+.reveal .presentation-interactive-disposition--selected {
+	z-index: 2;
+}
+
+.reveal
+	.presentation-interactive-disposition--kind-text:hover:not(.presentation-interactive-disposition--selected)
+	:is(h1, h2, h3, h4, p, .presentation-morph-text),
+.reveal
+	.presentation-interactive-disposition--kind-authors:hover:not(.presentation-interactive-disposition--selected)
+	.presentation-morph-text,
+.reveal
+	.presentation-interactive-disposition--kind-affiliations:hover:not(.presentation-interactive-disposition--selected)
+	.presentation-morph-text,
+.reveal
+	.presentation-interactive-disposition--kind-bullet:hover:not(.presentation-interactive-disposition--selected)
+	.presentation-morph-text,
+.reveal
+	.presentation-interactive-disposition--kind-bullet:hover:not(.presentation-interactive-disposition--selected)
+	li {
+	color: var(--color-primary);
+	transition: color 0.15s ease;
+}
+
+.reveal
+	.presentation-interactive-disposition--kind-text.presentation-interactive-disposition--selected
+	.presentation-interactive-disposition__content,
+.reveal
+	.presentation-interactive-disposition--kind-authors.presentation-interactive-disposition--selected
+	.presentation-interactive-disposition__content,
+.reveal
+	.presentation-interactive-disposition--kind-affiliations.presentation-interactive-disposition--selected
+	.presentation-interactive-disposition__content,
+.reveal
+	.presentation-interactive-disposition--kind-bullet.presentation-interactive-disposition--selected
+	.presentation-interactive-disposition__content {
+	background-color: var(--color-primary);
+	transition: background-color 0.15s ease;
+}
+
+.reveal
+	.presentation-interactive-disposition--kind-text.presentation-interactive-disposition--selected
+	:is(h1, h2, h3, h4, p, .presentation-morph-text),
+.reveal
+	.presentation-interactive-disposition--kind-authors.presentation-interactive-disposition--selected
+	.presentation-morph-text,
+.reveal
+	.presentation-interactive-disposition--kind-affiliations.presentation-interactive-disposition--selected
+	.presentation-morph-text,
+.reveal
+	.presentation-interactive-disposition--kind-bullet.presentation-interactive-disposition--selected
+	.presentation-morph-text,
+.reveal
+	.presentation-interactive-disposition--kind-bullet.presentation-interactive-disposition--selected
+	li {
+	color: var(--active-foreground);
+	transition: color 0.15s ease;
+}
+
+.reveal
+	.presentation-interactive-disposition--kind-figure:hover:not(.presentation-interactive-disposition--selected)
+	:is(.presentation-disposition-frame, .presentation-morph-slot--figure)::after,
+.reveal
+	.presentation-interactive-disposition--kind-video:hover:not(.presentation-interactive-disposition--selected)
+	.presentation-morph-anchor::after,
+.reveal
+	.presentation-interactive-disposition--kind-pdf:hover:not(.presentation-interactive-disposition--selected)
+	.presentation-morph-anchor::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+	pointer-events: none;
+	background: color-mix(in oklab, var(--color-primary) 22%, transparent);
+	transition: background-color 0.15s ease;
+}
+
+.reveal
+	.presentation-interactive-disposition--kind-figure.presentation-interactive-disposition--selected
+	.presentation-morph-slot--figure::after,
+.reveal
+	.presentation-interactive-disposition--kind-video.presentation-interactive-disposition--selected
+	.presentation-morph-anchor::after,
+.reveal
+	.presentation-interactive-disposition--kind-pdf.presentation-interactive-disposition--selected
+	.presentation-morph-anchor::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+	z-index: 1;
+	pointer-events: none;
+	background: color-mix(in oklab, var(--color-primary) 40%, transparent);
+	transition: background-color 0.15s ease;
+}
+
+.reveal
+	.presentation-interactive-disposition--kind-video.presentation-interactive-disposition--selected
+	.presentation-morph-anchor,
+.reveal
+	.presentation-interactive-disposition--kind-pdf.presentation-interactive-disposition--selected
+	.presentation-morph-anchor {
+	background-color: var(--color-primary);
+	transition: background-color 0.15s ease;
+}
+
+.reveal
+	.presentation-interactive-disposition--kind-video.presentation-interactive-disposition--selected
+	.presentation-morph-anchor::after,
+.reveal
+	.presentation-interactive-disposition--kind-pdf.presentation-interactive-disposition--selected
+	.presentation-morph-anchor::after {
+	content: none;
+}
+
+.reveal .presentation-interactive-disposition--kind-video .presentation-morph-anchor,
+.reveal .presentation-interactive-disposition--kind-pdf .presentation-morph-anchor {
+	position: relative;
+}
+
+.reveal .presentation-arrangement-canvas > .presentation-interactive-disposition--enlarged,
+.reveal
+	.presentation-arrangement-surface
+	> .presentation-interactive-disposition--enlarged:not(.presentation-interactive-disposition--pinned),
+.reveal
+	.slides
+	> section.presentation-arrangement--interactive
+	> .presentation-interactive-disposition--enlarged:not(.presentation-interactive-disposition--pinned) {
+	display: flex;
+	position: absolute;
+	align-items: center;
+	justify-content: center;
+	box-sizing: border-box;
+	background: color-mix(in oklab, var(--base) 94%, transparent);
+}
+
+.reveal .presentation-interactive-disposition--enlarged {
+	z-index: 50;
+}
+
+.reveal .presentation-interactive-disposition--enlarged .presentation-interactive-disposition__content {
+	flex: 1 1 auto;
+	width: 100%;
+	height: 100%;
+	max-width: 100%;
+	max-height: 100%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 0;
+	min-height: 0;
+}
+
+.reveal .presentation-interactive-disposition--enlarged .presentation-interactive-disposition__chrome {
+	z-index: 2;
+}
+
+.reveal
+	.presentation-arrangement-canvas
+	.presentation-interactive-disposition--enlarged:not(.presentation-interactive-disposition--offset)
+	.presentation-interactive-disposition__content
+	:is(.presentation-disposition-frame, .presentation-morph-slot) {
+	position: static !important;
+	left: auto !important;
+	top: auto !important;
+	width: 100% !important;
+	height: 100% !important;
+	transform: none !important;
+}
+
+.reveal
+	.presentation-arrangement-canvas
+	.presentation-interactive-disposition--enlarged:not(.presentation-interactive-disposition--offset)
+	.presentation-interactive-disposition__content
+	.presentation-figure-crop-fill {
+	width: 100% !important;
+	height: 100% !important;
+}
+
+.reveal
+	.presentation-interactive-disposition--kind-pdf.presentation-interactive-disposition--enlarged:not(
+		.presentation-interactive-disposition--offset
+	)
+	.presentation-interactive-disposition__content
+	.presentation-morph-anchor,
+.reveal
+	.presentation-interactive-disposition--kind-pdf.presentation-interactive-disposition--enlarged:not(
+		.presentation-interactive-disposition--offset
+	)
+	.presentation-interactive-disposition__content
+	.presentation-media-pdf-document {
+	width: 100%;
+	height: 100%;
+	min-width: 0;
+	min-height: 0;
+}
+
+.reveal .presentation-interactive-disposition--pinned,
+.reveal .presentation-interactive-disposition--offset {
+	cursor: move;
+}
+
+.reveal .presentation-interactive-disposition--offset {
+	transform-origin: center center;
+	will-change: transform;
+}
+
+.reveal .presentation-interactive-disposition--canvas-framed.presentation-interactive-disposition--pinned {
+	overflow: visible;
+}
+
+.reveal
+	.presentation-arrangement-canvas
+	.presentation-interactive-disposition--canvas-framed:not(.presentation-interactive-disposition--offset)
+	.presentation-interactive-disposition__content {
+	position: relative;
+	width: 100%;
+	height: 100%;
+	min-height: 0;
+	min-width: 0;
+}
+
+.reveal
+	.presentation-arrangement-canvas
+	.presentation-interactive-disposition--canvas-framed:not(.presentation-interactive-disposition--offset)
+	.presentation-interactive-disposition__content
+	:is(.presentation-disposition-frame, .presentation-morph-slot:not(.presentation-morph-slot--figure)) {
+	position: static !important;
+	left: auto !important;
+	top: auto !important;
+	width: 100% !important;
+	height: 100% !important;
+	transform: none !important;
+}
+
+.reveal
+	.presentation-arrangement-canvas
+	.presentation-interactive-disposition--canvas-framed:not(.presentation-interactive-disposition--offset)
+	.presentation-interactive-disposition__content
+	.presentation-morph-slot--figure:not(.presentation-figure-scroll-content) {
+	position: relative !important;
+	left: auto !important;
+	top: auto !important;
+	width: 100% !important;
+	height: 100% !important;
+	transform: none !important;
+}
+
+.reveal
+	.presentation-interactive-disposition--measuring
+	.presentation-interactive-disposition__content
+	:is(h1, h2, h3, h4, p) {
+	display: block;
+	width: fit-content;
+	max-width: 100%;
+	margin-inline: auto;
+}
+
+.reveal
+	.slides
+	> section
+	> section.presentation-arrangement--interactive:not(.presentation-arrangement--positioned)
+	> .presentation-interactive-disposition--pinned
+	.presentation-interactive-disposition__content {
+	box-sizing: border-box;
+	width: 100%;
+	height: 100%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 0;
+	min-height: 0;
+}
+
+.reveal .presentation-interactive-disposition__content {
+	position: relative;
+}
+
+.reveal .presentation-interactive-disposition__chrome {
+	position: absolute;
+	inset: 0;
+	z-index: 3;
+	pointer-events: none;
+}
+
+.reveal .presentation-interactive-disposition--canvas-framed .presentation-interactive-disposition__chrome {
+	box-sizing: border-box;
+}
+
+.reveal .presentation-interactive-disposition--gesturing .presentation-interactive-disposition__chrome {
+	pointer-events: none;
+	visibility: visible;
+	opacity: 1;
+}
+/* #endregion 🔖️Interaction */

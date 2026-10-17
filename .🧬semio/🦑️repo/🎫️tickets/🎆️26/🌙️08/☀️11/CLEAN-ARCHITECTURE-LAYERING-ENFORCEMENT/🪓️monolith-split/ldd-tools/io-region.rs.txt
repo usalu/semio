@@ -1,0 +1,162 @@
+//#region 🔖️MediaImportExport
+/// 🌉️ Layout's pages, frames and background trace become one neutral [`VectorScene`] (one translated group per page, each page boundary and each frame
+/// nested inside as a rect-shaped path); the codec bound to `LAYOUT_BACKGROUND_DRAWING` writes that scene as an external format and reads external documents back
+/// as the document's background child. Layout never names the owner of those formats.
+use semio_s_artifact_layout_layout_model::{Frame, GridSettings, Layer, Page, PageColumns, PageMargins, Spread, LAYOUT_DOCUMENT_SCHEMA};
+use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
+use semio_framework_io_ports::{VectorCanvas, VectorLayer, VectorNode, VectorPoint2, VectorPoint3, VectorRgba, VectorScene, VectorSegment, VectorStyle, VectorTransform};
+use semio_framework_value::DslValue as Value;
+use semio_framework_value::FromValue;
+use semio_framework_value::ToValue;
+
+/// 📐️ A closed axis-aligned rectangle as `MoveTo` + three `LineTo`s + `Close`, the "rects-as-paths" primitive the page and frame rects build on.
+pub fn rect_path_segments(x: f64, y: f64, width: f64, height: f64) -> Vec<VectorSegment> {
+    vec![
+        VectorSegment::MoveTo { to: VectorPoint2 { x, y } },
+        VectorSegment::LineTo { to: VectorPoint2 { x: x + width, y } },
+        VectorSegment::LineTo { to: VectorPoint2 { x: x + width, y: y + height } },
+        VectorSegment::LineTo { to: VectorPoint2 { x, y: y + height } },
+        VectorSegment::Close,
+    ]
+}
+
+/// ▭️ The bounds of a path that is a closed axis-aligned rectangle — the page frames of a trace.
+fn rectangle_bounds(segments: &[VectorSegment]) -> Option<(f64, f64, f64, f64)> {
+    let corners: Vec<_> = segments.iter().filter_map(|segment| match segment {
+        VectorSegment::MoveTo { to } | VectorSegment::LineTo { to } => Some(*to),
+        _ => None,
+    }).collect();
+    let only_lines = segments.iter().all(|segment| matches!(segment, VectorSegment::MoveTo { .. } | VectorSegment::LineTo { .. } | VectorSegment::Close));
+    let closed = matches!(segments.last(), Some(VectorSegment::Close)) || (corners.len() == 5 && (corners[0].x - corners[4].x).abs() < 1e-6 && (corners[0].y - corners[4].y).abs() < 1e-6);
+    if !only_lines || !closed || !(4..=5).contains(&corners.len()) {
+        return None;
+    }
+    let (x, y, width, height) = path_bounds(segments)?;
+    let on_edge = corners.iter().all(|c| ((c.x - x).abs() < 1e-6 || (c.x - x - width).abs() < 1e-6) && ((c.y - y).abs() < 1e-6 || (c.y - y - height).abs() < 1e-6));
+    (on_edge && width > 0.0 && height > 0.0).then_some((x, y, width, height))
+}
+
+fn path_bounds(segments: &[VectorSegment]) -> Option<(f64, f64, f64, f64)> {
+    let mut min_x = f64::INFINITY;
+    let mut min_y = f64::INFINITY;
+    let mut max_x = f64::NEG_INFINITY;
+    let mut max_y = f64::NEG_INFINITY;
+    let mut any = false;
+    for segment in segments {
+        let point = match segment {
+            VectorSegment::MoveTo { to } | VectorSegment::LineTo { to } | VectorSegment::QuadTo { to, .. } | VectorSegment::CubicTo { to, .. } | VectorSegment::ArcTo { to, .. } => Some(*to),
+            VectorSegment::Close => None,
+        };
+        if let Some(point) = point {
+            any = true;
+            min_x = min_x.min(point.x);
+            max_x = max_x.max(point.x);
+            min_y = min_y.min(point.y);
+            max_y = max_y.max(point.y);
+        }
+    }
+    any.then_some((min_x, min_y, max_x - min_x, max_y - min_y))
+}
+
+fn rgba_from_channels(channels: [f32; 4]) -> VectorRgba {
+    VectorRgba { r: channels[0], g: channels[1], b: channels[2], a: channels[3] }
+}
+
+fn drawing_codec() -> Result<&'static dyn semio_framework_io_ports::EmbeddedChildCodecV1, String> {
+    semio_s_artifact_layout_layout_model::drawing_codec().map_err(|error| error.to_string())
+}
+
+/// 🖍️ Maps this document's pages onto one translated group per page, each nesting the page boundary plus every visible
+/// frame as a rect-shaped path — `Frame::Rect` keeps its real fill/stroke, `Text`/`Image` frames get a neutral outline (mirrors the blueprint
+/// chrome colors the scene module uses for the same frame kinds). When the document has a composed `background_drawing`, its layers are merged in
+/// first (behind every page layer), so an imported trace an author draws pages on top of actually reaches the export.
+pub fn layout_snapshot_to_scene(doc: &LayoutSnapshot) -> Result<VectorScene, String> {
+    const PAGE_GAP: f64 = 24.0;
+    let mut styles = vec![VectorStyle { name: "page".into(), fill: None, stroke: Some(VectorRgba { r: 0.58, g: 0.65, b: 0.72, a: 1.0 }), stroke_width: Some(2.0), opacity: None }];
+    let mut layers = Vec::with_capacity(doc.pages.len());
+
+    if let Some(background) = semio_s_artifact_layout_layout_model::background_drawing_scene(doc).map_err(|error| error.to_string())? {
+        for mut layer in background.layers {
+            layer.id = format!("background-{}", layer.id);
+            layers.push(layer);
+        }
+        styles.extend(background.styles);
+    }
+
+    let mut x_offset = 0.0f64;
+    let mut canvas_width = 0.0f64;
+    let mut canvas_height = 0.0f64;
+
+    for page in &doc.pages {
+        let mut children = vec![VectorNode::Path { segments: rect_path_segments(0.0, 0.0, page.width, page.height), style: Some("page".into()) }];
+        for frame in &page.frames {
+            if !frame.visible() {
+                continue;
+            }
+            let bounds = frame.bounds();
+            let segments = rect_path_segments(bounds.x, bounds.y, bounds.width, bounds.height);
+            let (fill, stroke) = match frame {
+                Frame::Rect { fill, stroke, .. } => (fill.map(rgba_from_channels), stroke.map(rgba_from_channels)),
+                Frame::Text { .. } => (None, Some(VectorRgba { r: 0.2, g: 0.55, b: 0.9, a: 0.9 })),
+                Frame::Image { .. } => (None, Some(VectorRgba { r: 0.85, g: 0.45, b: 0.2, a: 0.9 })),
+            };
+            if fill.is_none() && stroke.is_none() {
+                children.push(VectorNode::Path { segments, style: None });
+                continue;
+            }
+            let style_name = format!("frame-{}", frame.id());
+            styles.push(VectorStyle { name: style_name.clone(), fill, stroke, stroke_width: stroke.map(|_| 1.0), opacity: None });
+            children.push(VectorNode::Path { segments, style: Some(style_name) });
+        }
+        layers.push(VectorLayer { id: page.id.clone(), name: page.name.clone(), visible: true, root: VectorNode::Group { transform: VectorTransform { translation: VectorPoint3 { x: x_offset, y: 0.0, z: 0.0 }, ..VectorTransform::identity() }, children } });
+        canvas_width = (x_offset + page.width).max(canvas_width);
+        canvas_height = page.height.max(canvas_height);
+        x_offset += page.width + PAGE_GAP;
+    }
+
+    Ok(VectorScene { schema: String::new(), canvas: VectorCanvas { width: canvas_width.max(1.0), height: canvas_height.max(1.0), background: Some(VectorRgba { r: 1.0, g: 1.0, b: 1.0, a: 1.0 }) }, styles, layers })
+}
+
+/// 📤️ The pages laid side by side, written as one external document of `format` by the bound codec.
+pub fn layout_snapshot_to_format(doc: &LayoutSnapshot, format: &str) -> Result<Vec<u8>, String> {
+    let codec = drawing_codec()?;
+    let content = codec.lift(&layout_snapshot_to_scene(doc)?).map_err(|error| error.to_string())?;
+    codec.export(format, &content)
+}
+
+pub fn layout_document_json_to_svg(value: &Value) -> Result<(String, u32, u32), String> {
+    let doc: LayoutSnapshot = LayoutSnapshot::from_value(value.clone()).map_err(|e| format!("layout document: {e}"))?;
+    let scene = layout_snapshot_to_scene(&doc)?;
+    let width = scene.canvas.width.round() as u32;
+    let height = scene.canvas.height.round() as u32;
+    let svg = String::from_utf8(layout_snapshot_to_format(&doc, "svg")?).map_err(|error| format!("layout->svg: {error}"))?;
+    Ok((svg, width, height))
+}
+
+/// 📥️ Reads one external document of `format` as a drawing and frames a layout document on it; see [`layout_document_json_from_drawing`].
+pub fn layout_document_json_from_format(format: &str, bytes: &[u8], name: &str) -> Result<Value, String> {
+    let content = drawing_codec()?.import(format, bytes)?;
+    layout_document_json_from_drawing(&content, format, name)
+}
+
+/// 📥️ Frames one page per closed axis-aligned rectangle of an imported drawing (a dwg, dxf or svg
+/// trace) and keeps the whole drawing as the document's background, so an author lays pages out on
+/// top of the real plan.
+pub fn layout_document_json_from_drawing(content: &Value, source: &str, name: &str) -> Result<Value, String> {
+    let scene = drawing_codec()?.lower(content).map_err(|error| error.to_string())?;
+    let background_child = semio_s_artifact_layout_layout_model::background_drawing_child_handle(source, content);
+    let mut rects: Vec<(f64, f64, f64, f64)> = scene
+        .layers
+        .iter()
+        .flat_map(|layer| match &layer.root {
+            VectorNode::Group { children, .. } => children.iter().collect::<Vec<_>>(),
+            other => vec![other],
+        })
+        .filter_map(|child| match child {
+            VectorNode::Path { segments, .. } => rectangle_bounds(segments),
+            _ => None,
+        })
+        .collect();
+    if rects.is_empty() && scene.canvas.width > 0.0 && scene.canvas.height > 0.0 {
+        rects.push((0.0, 0.0, scene.canvas.width, scene.canvas.height));
+    }

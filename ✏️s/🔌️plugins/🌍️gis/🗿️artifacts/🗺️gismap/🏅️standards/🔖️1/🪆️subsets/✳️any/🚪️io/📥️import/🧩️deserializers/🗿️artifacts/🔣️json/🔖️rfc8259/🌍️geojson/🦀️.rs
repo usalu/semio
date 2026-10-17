@@ -13,7 +13,8 @@
 use semio_s_artifact_stdio_json::standards::v_rfc8259::subsets::geojson::io::text::snapshot::read_geojson_text;
 use crate::standards::v1::subsets::any::io::export::serializers::artifacts::json::v_rfc8259::geojson::GEOMETRY_MEMBERS;
 use crate::standards::v1::subsets::any::io::text::snapshot::value_to_dsl;
-use crate::{gis_map_snapshot_with_derived_children, GisMapSnapshot, MapFeature};
+use crate::{GisMapSnapshot, MapFeature};
+use crate::standards::v1::subsets::any::map_composition::{gis_map_snapshot_with_derived_children};
 use semio_s_artifact_stdio_json::standards::v_rfc8259::subsets::geojson::schema::{ GeoJsonFeature, GeoJsonGeometry, GeoJsonId, GeoJsonPosition};
 use serde_json::{json, Map, Value};
 use std::collections::HashSet;

@@ -1,6 +1,7 @@
 //! 🌳️ Recursive-descent parsers for `.grammar.semio` and `.protocol.semio` sources over one shared token cursor.
 
-use crate::{CommentDialect, LexOptions, StringEscape, StringMode, TextError};
+use semio_framework_diagnostic::TextError;
+use semio_framework_dsl_lexical::lexer::{CommentDialect, LexOptions, StringEscape, StringMode};
 use super::{Alternative, Block, Cond, CondOp, Count, DispatchOrder, Field, Framing, GKind, GToken, GrammarFile, MacroArg, NestedDispatch, Prim, Production, ProtocolFile, RepeatArm, RepeatDispatch, SemioDialect, Symbol, lex, prim_fixed_width};
 
 //#region 🔖️Parser
@@ -391,7 +392,7 @@ pub fn parse_grammar(text: &str) -> Result<GrammarFile, TextError> {
     Ok(GrammarFile { dialect: SemioDialect::Grammar, id, extension, uses, start, productions, lex })
 }
 
-pub(super) fn is_protocol_source(text: &str) -> bool {
+pub fn is_protocol_source(text: &str) -> bool {
     for line in text.lines() {
         let trimmed = line.trim();
         if trimmed.is_empty() || trimmed.starts_with('#') || trimmed.starts_with("//") {

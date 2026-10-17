@@ -13,15 +13,15 @@ use crate::schema::diff::SemioObjectDiff;
 use crate::schema::snapshot::SemioObjectSnapshot;
 
 //#region 🔖️Leaves
-use super::create_brep;
-use super::create_mesh;
-use super::create_properties;
-use super::delete_brep;
-use super::delete_mesh;
-use super::delete_properties;
-use super::move_object;
-use super::rotate_object;
-use super::scale_object;
+use crate::schema::mutations::create_brep;
+use crate::schema::mutations::create_mesh;
+use crate::schema::mutations::create_properties;
+use crate::schema::mutations::delete_brep;
+use crate::schema::mutations::delete_mesh;
+use crate::schema::mutations::delete_properties;
+use crate::schema::mutations::move_object;
+use crate::schema::mutations::rotate_object;
+use crate::schema::mutations::scale_object;
 //#endregion 🔖️Leaves
 
 //#region 🔖️Mutations

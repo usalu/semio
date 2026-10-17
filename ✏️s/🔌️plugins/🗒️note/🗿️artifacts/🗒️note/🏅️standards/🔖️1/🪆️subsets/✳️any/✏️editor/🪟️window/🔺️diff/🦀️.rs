@@ -1,7 +1,7 @@
 //! 🔺️ Note composite-window diffs — sparse per-field deltas over the window configuration and the window transient.
 
 use super::{NoteCompositeWindowConfig, NoteCompositeWindowTransient};
-use crate::editor::note::commands::ink_apply_events::NoteInkToolState;
+use crate::editor::note::window::schema::NoteInkToolState;
 use crate::schema::diff::NoteAssigned;
 use crate::NoteCamera;
 use protocol::{ApplyCapability, DiffAlgebra, MutationApplyResult, MutationDiff};

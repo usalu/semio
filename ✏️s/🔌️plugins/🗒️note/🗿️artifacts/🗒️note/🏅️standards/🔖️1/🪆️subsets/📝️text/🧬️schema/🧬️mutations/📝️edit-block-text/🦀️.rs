@@ -1,6 +1,5 @@
 //! 📝 Note mutation — `EditBlockText`: replaces a text block's authored paragraph content.
 
-use crate::schema::mutations::NoteMutation;
 use crate::{NoteDiff, NoteSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -20,17 +19,23 @@ pub struct EditBlockText {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn edit_block_text(id: String, new_paragraphs: Vec<crate::NoteTextParagraph>) -> NoteMutation {
-    NoteMutation::EditBlockText(EditBlockText { id, new_paragraphs })
+pub fn edit_block_text<Op>(id: String, new_paragraphs: Vec<crate::NoteTextParagraph>) -> Op
+where
+    Op: From<crate::standards::v1::subsets::text::schema::mutations::edit_block_text::EditBlockText>,
+{
+    Op::from(EditBlockText { id, new_paragraphs })
 }
 
-impl MutationKind<NoteSnapshot, NoteMutation> for EditBlockText {
+impl<Op> MutationKind<NoteSnapshot, Op> for EditBlockText
+where
+    Op: protocol::Mutation<NoteSnapshot, Diff = NoteDiff> + From<EditBlockText>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "edit", entity: "block-text", kind: "edit-block-text", record: "EditedBlockText" };
 
     fn diff(&self, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &NoteSnapshot) -> Result<Vec<NoteMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &NoteSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

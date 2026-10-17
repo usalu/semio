@@ -1,6 +1,6 @@
 
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { installTextEditorCaretCadenceV1, TEXT_EDITOR_CARET_BLINK_MS } from "../../🧱️elements/✏️TextEditor/🟦️.tsx";
+import { installTextEditorCaretCadenceV1, TEXT_EDITOR_CARET_BLINK_MS } from "../../🧱️elements/✏️TextEditor/⏱️caret-cadence/🟦️.ts";
 import { uiCaretCadenceFixture as fixture } from "../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🟦️.ts";
 
 afterEach(() => {

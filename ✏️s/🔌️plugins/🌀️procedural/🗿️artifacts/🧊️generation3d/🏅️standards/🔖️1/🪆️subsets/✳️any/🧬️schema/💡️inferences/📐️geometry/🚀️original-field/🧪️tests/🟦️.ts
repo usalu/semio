@@ -21,9 +21,9 @@ test("actual original field dispatch resolves native literals defaults wiring an
  expect(new Ajv({strict:true}).validate(schema,fixture)).toBe(true);
  const ids=new Set(fixture.widgets.map(widget=>widget.id));fixture.wires.forEach(wire=>{expect(ids.has(wire.from)).toBe(true);expect(ids.has(wire.to)).toBe(true)});
  const end=fixture.widgets.find(widget=>widget.id==="line")!.params.end!;
- expect(new LineCurve3(new Vector3(),new Vector3().fromArray(end)).getPoint(0.5).toArray()).toEqual(fixture.expected["curve point"]);
+ expect([...new LineCurve3(new Vector3(),new Vector3().fromArray(end)).getPoint(0.5).toArray()]).toEqual(fixture.expected["curve point"]);
  const plane=new PlaneGeometry(fixture.expected["width Ä"],6).rotateX(Math.PI/2);expect(plane.attributes.position.count).toBe(fixture.expected.planePositions.length);expect(fixture.expected.position).toEqual(fixture.expected.planePositions[2]);
- expect(new Vector3().fromArray(fixture.expected.position).add(new Vector3(1,2,3)).toArray()).toEqual(fixture.expected["translated position"]);
+ expect([...new Vector3().fromArray(fixture.expected.position).add(new Vector3(1,2,3)).toArray()]).toEqual(fixture.expected["translated position"]);
  const source=await Bun.file(new URL("../🦀️.rs",import.meta.url)).text();const field=await Bun.file(new URL("../../🦀️.rs",import.meta.url)).text();
  expect(field).toContain("original_field::compute_step(snapshot,key,parents,pending,cx)");
  expect(source).toContain("snapshot.computes.start_original(kind,&mut state.inputs,cx)");
@@ -53,18 +53,18 @@ test("original analytic BRep graph creation and reads agree with independent Thr
 
 test("original mesh edge graph publishes all three ports and agrees with independent Three distance",()=>{
  expect(new Ajv({strict:true}).validate(edgeSchema,edge)).toBe(true);
- const curve=new LineCurve3(new Vector3().fromArray(edge.expected.start),new Vector3().fromArray(edge.expected.end));expect(curve.getLength()).toBe(edge.expected.length);expect(curve.getPoint(0).toArray()).toEqual(edge.expected.start);expect(curve.getPoint(1).toArray()).toEqual(edge.expected.end);
+ const curve=new LineCurve3(new Vector3().fromArray(edge.expected.start),new Vector3().fromArray(edge.expected.end));expect(curve.getLength()).toBe(edge.expected.length);expect([...curve.getPoint(0).toArray()]).toEqual(edge.expected.start);expect([...curve.getPoint(1).toArray()]).toEqual(edge.expected.end);
 });
 
 test("original plane surface graph agrees with independent Three frame point and normal",()=>{
  expect(new Ajv({strict:true}).validate(surfaceSchema,surface)).toBe(true);const frame=surface.frame;const matrix=new Matrix4().makeBasis(new Vector3().fromArray(frame.x),new Vector3().fromArray(frame.y),new Vector3().fromArray(frame.z)).setPosition(new Vector3().fromArray(frame.origin));
- expect(new Vector3(2,3,0).applyMatrix4(matrix).toArray()).toEqual(surface.expected.point);expect(new Vector3().fromArray(frame.x).cross(new Vector3().fromArray(frame.y)).normalize().toArray()).toEqual(surface.expected.normal);
+ expect([...new Vector3(2,3,0).applyMatrix4(matrix).toArray()]).toEqual(surface.expected.point);expect([...new Vector3().fromArray(frame.x).cross(new Vector3().fromArray(frame.y)).normalize().toArray()]).toEqual(surface.expected.normal);
 });
 
 test("original analytic BRep translations agree with independent Three and retain labels",()=>{
  expect(new Ajv({strict:true}).validate(translationSchema,translation)).toBe(true);
- expect(new LineCurve3(new Vector3(),new Vector3(3,4,0)).getPoint(0.5).add(new Vector3(1,2,3)).toArray()).toEqual(translation.expected["translated curve point"]);
- expect(new Vector3().fromArray(surface.expected.point).add(new Vector3(-1,-2,-3)).toArray()).toEqual(translation.expected["translated surface point"]);
+ expect([...new LineCurve3(new Vector3(),new Vector3(3,4,0)).getPoint(0.5).add(new Vector3(1,2,3)).toArray()]).toEqual(translation.expected["translated curve point"]);
+ expect([...new Vector3().fromArray(surface.expected.point).add(new Vector3(-1,-2,-3)).toArray()]).toEqual(translation.expected["translated surface point"]);
 });
 
 test("original borrowed dictionary lookup has an independent JSON object oracle",()=>{

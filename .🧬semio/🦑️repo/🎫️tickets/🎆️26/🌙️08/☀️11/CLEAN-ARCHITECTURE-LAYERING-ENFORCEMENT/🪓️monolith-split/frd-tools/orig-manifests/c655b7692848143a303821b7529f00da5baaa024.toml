@@ -1,0 +1,56 @@
+[package]
+workspace = "../../../../../../.."
+name = "semio-s-artifact-cad-cad-editor"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "cad editor app: play app, retained commands, store preparation and manifest"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-composition-admission = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧩️composition/📥️admission/📦️packages/🦀️rust" }
+base64_codec = { workspace = true }
+semio-framework = { workspace = true }
+semio-framework-action-bus = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🎯️action-bus/📦️packages/🦀️rust" }
+semio-framework-2d = { workspace = true }
+semio-framework-3d-brep-engine = { workspace = true }
+semio-framework-diagnostic = { workspace = true }
+semio-framework-job = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-pack = { workspace = true }
+semio-framework-pack-json = { workspace = true }
+semio-framework-plugin = { workspace = true }
+semio-framework-schema-registry = { workspace = true }
+semio-framework-ui-locale = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-framework-value-derive = { workspace = true }
+semio-s-artifact-cad-cad-commands = { workspace = true }
+semio-s-artifact-cad-cad-config = { workspace = true }
+semio-s-artifact-cad-cad-examples = { workspace = true }
+semio-s-artifact-cad-cad-inferences = { workspace = true }
+semio-s-artifact-cad-cad-interaction = { workspace = true }
+semio-s-artifact-cad-cad-io = { workspace = true }
+semio-s-artifact-cad-cad-kit = { workspace = true }
+semio-s-artifact-cad-cad-model = { workspace = true }
+semio-s-artifact-cad-cad-modes = { workspace = true }
+semio-s-artifact-cad-cad-mutations = { workspace = true }
+semio-s-artifact-cad-cad-panels = { workspace = true }
+semio-s-artifact-cad-cad-play = { workspace = true }
+semio-s-artifact-cad-cad-presence = { workspace = true }
+semio-s-artifact-cad-cad-transform = { workspace = true }
+semio-s-artifact-cad-cad-transient = { workspace = true }
+semio-s-artifact-stdio-semio = { workspace = true }
+semio-s-artifact-stdio-semio-model = { workspace = true }
+
+[dev-dependencies]
+semio-framework-async-macros = { workspace = true }
+semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }

@@ -33,7 +33,7 @@ import {
 import type { HubConnectionStorageV1, HubSignInTransportV1 } from "@semio-tech/framework/directory/sign-in";
 import { HubFirstRun, hubFirstRunStageAtIndex } from "../../🟦️.tsx";
 import { HubWorkspace } from "../../../🔗️HubConnection/🏛️workspace/🟦️.tsx";
-import type { HubConnectionPortV1 } from "../../../🔗️HubConnection/🟦️.tsx";
+import type { HubConnectionPortV1 } from "../../../🔗️HubConnection/🔌️connection-contract/🟦️.ts";
 // #endregion 🔌️Adapters
 
 //#region 🔌️jsdom polyfills

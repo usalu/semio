@@ -59,22 +59,22 @@ function isRelativeFetchUrl(url: string): boolean {
 }
 
 if (typeof globalThis.fetch !== "function") {
-  (globalThis as { fetch?: typeof fetch }).fetch = async (input: RequestInfo | URL) => {
+  globalThis.fetch = Object.assign(async (input: RequestInfo | URL) => {
     const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
     if (isRelativeFetchUrl(url)) {
       return stubRelativeFetchResponse(url);
     }
     throw new TypeError(`fetch not available for ${url}`);
-  };
+  }, { preconnect: () => {} });
 } else {
   const originalFetch = globalThis.fetch.bind(globalThis);
-  globalThis.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
+  globalThis.fetch = Object.assign(async (input: RequestInfo | URL, init?: RequestInit) => {
     const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
     if (isRelativeFetchUrl(url)) {
       return stubRelativeFetchResponse(url);
     }
     return originalFetch(input, init);
-  };
+  }, { preconnect: () => {} });
 }
 
 if (typeof Promise.withResolvers !== "function") {

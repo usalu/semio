@@ -1,0 +1,21 @@
+// 🧮️ c4p30: source closure census through the canonical counter (hard budget 32 files, 262144 bytes, 4000 active lines). usage: bun census.ts <manifest> [--test] [--entry=<path relative to the manifest directory>] [--list]
+import {readFileSync} from "node:fs";
+import {dirname, resolve} from "node:path";
+import {execFileSync} from "node:child_process";
+import {readRustSourceClosureV1} from "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🟦️.ts";
+const ROOT = "/Users/ueli/Documents/semio";
+const manifest = resolve(ROOT, process.argv[2]!);
+const withTest = process.argv.includes("--test");
+const list = process.argv.includes("--list");
+const entryArg = process.argv.find(a => a.startsWith("--entry="))?.slice(8);
+const rustc = execFileSync("rustup", ["which", "rustc"], {encoding: "utf8"}).trim();
+const hostCfg = execFileSync(rustc, ["--print", "cfg"], {encoding: "utf8"}).trim().split("\n").map(v => v.replace(/=(".*")$/u, (_, q) => "=" + JSON.parse(q)));
+const cfg = [...hostCfg, "debug_assertions", ...(withTest ? ["test"] : [])];
+const readFile = async (p: string) => { try { return readFileSync(p); } catch (e) { if ((e as NodeJS.ErrnoException).code === "ENOENT") return null; throw e; } };
+const parsed = Bun.TOML.parse(readFileSync(manifest, "utf8")) as any;
+const dir = dirname(manifest);
+const entry = entryArg ? resolve(dir, entryArg) : resolve(dir, parsed.lib?.path ?? "src/lib.rs");
+const inputs = await readRustSourceClosureV1([entry], ROOT, cfg, readFile, {manifestDirectory: dir, generated: () => undefined});
+const files = inputs.length, bytes = inputs.reduce((s: number, i: any) => s + i.bytes, 0), lines = inputs.reduce((s: number, i: any) => s + i.activeLines, 0);
+console.log(JSON.stringify({name: parsed.package?.name, test: withTest, entry: entryArg ?? "lib", files, bytes, lines, ok: files <= 32 && bytes <= 262144 && lines <= 4000}));
+if (list) for (const i of inputs) console.log([(i as any).kind, (i as any).bytes, (i as any).activeLines, (i as any).path.split("/").slice(-5).join("/")].join("\t"));

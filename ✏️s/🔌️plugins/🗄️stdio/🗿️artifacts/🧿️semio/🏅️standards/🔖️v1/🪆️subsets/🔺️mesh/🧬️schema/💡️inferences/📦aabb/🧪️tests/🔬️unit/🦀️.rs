@@ -1,4 +1,7 @@
-use super::*;
+use semio_framework_test_fixtures::fixture_text;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3;
+use crate::schema::snapshot::SemioMeshSnapshot;
+use crate::schema::inferences::aabb::*;
 use crate::schema::snapshot::{SemioMesh, SemioPrimitive};
 use store::{InferenceCache, InferenceCacheConfig};
 
@@ -91,12 +94,11 @@ async fn changing_an_unrelated_field_on_the_same_primitive_does_not_miss() {
 #[test]
 fn owned_dependency_matches_neutral_fixture_and_serde_oracle() {
     use store::InferredField;
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/📦aabb/🌱️owned-dependency/🔣️.json")).expect("neutral dependency");
+    let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../../🧪️tests/🧫️fixtures/💡️inferences/📦aabb/🌱️owned-dependency/🔣️.json")).expect("neutral dependency");
     let points:Vec<[f64;3]>=serde_json::from_value(fixture["points"].clone()).unwrap(); let snapshot=SemioMeshSnapshot{meshes:vec![SemioMesh{id:"mesh-a".into(),primitives:vec![SemioPrimitive{id:"prim-1".into(),positions:points.iter().map(|[x,y,z]|SemioPoint3{x:*x,y:*y,z:*z}).collect(),..Default::default()}]}],..Default::default()};
     let dependency=MeshAabb::dep_input(&snapshot,&aabb_key("mesh-a","prim-1"),&[]);
     let actual:serde_json::Value=serde_json::from_str(&semio_framework_pack_json::to_json_string(&dependency)).expect("owned dependency output");
     let oracle=serde_json::Value::Array(points.iter().map(|[x,y,z]|serde_json::json!({"x":x,"y":y,"z":z})).collect());
     assert_eq!(actual,oracle);
     assert_eq!(actual,fixture["expected"]);
-    eprintln!("[DEBUG] Typed inference dependency matches authored values and independent serde_json output");
 }

@@ -9,10 +9,11 @@
 //! 🎚️ Its measures are the mode-level tool options rail (`ArtifactEditor::tool_measures`): the count the run
 //! plans toward and the part/grip distribution trees its candidate order reads. Progress, status and every run
 //! control belong to the framework ToolRun panel.
-
 use crate::editor::puzzle5d::modes::edit::options::brush::distribution_children;
+
 use crate::editor::puzzle5d::terminology::{puzzle5d_fill_run_counters, puzzle5d_fill_run_reasons, puzzle5d_fill_run_stages, puzzle5d_fill_run_unit, Puzzle5dLabels};
-use crate::editor::puzzle5d::{puzzle5d_action, Puzzle5dScene, PUZZLE5D_PLAY_CONTROLLER_ID};
+use crate::editor::puzzle5d::entities::{puzzle5d_action, PUZZLE5D_PLAY_CONTROLLER_ID};
+use crate::editor::puzzle5d::view::Puzzle5dScene;
 use semio_framework_plugin::ActionDescriptor;
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::ToolDefinition;
@@ -21,7 +22,7 @@ use semio_framework_plugin::WindowMeasure;
 use semio_framework_tool_run::{JobKindId, ToolRunDefinition, ToolRunRebasePolicy, ToolRunReconfigurePolicy, ToolRunSettingsReads, ToolRunTraceKind, TOOL_RUN_ABORT_ACTION_ID, TOOL_RUN_ARG_GENERATION, TOOL_RUN_ARG_RUN_ID};
 
 //#region 🔖️Constants
-pub const TOOL_ID: &str = "fill";
+pub const TOOL_ID: &str = crate::editor::puzzle5d::entities::PUZZLE5D_FILL_TOOL_ID;
 /// 🧵️ `ToolRunDefinition.runJob` of the fill tool.
 pub const RUN_JOB_KIND: &str = "s.puzzle.puzzle5d.fill.run";
 /// 🔍️ `ToolRunDefinition.revalidateJob` of the fill tool.

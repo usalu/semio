@@ -44,5 +44,4 @@ export function proveRepoEntityKindsOwnership(repoRoot: string): void {
   assert(contracts, "missing generator contract collection");
   assert.deepEqual(contracts[GENERATOR_ID].outputRoots.map((output: { path: string }) => output.path), [fixture.output]);
   assert(contracts[GENERATOR_ID].inputPatterns.includes("🧰️framework/🔨️modules/🧬️schema/🏷️entity-kinds/📥️source/🟦️.ts"));
-  console.log(`[DEBUG] Repo entity ownership: Ajv source, ${source.kinds.length} entries, ${index.size} FIRST-WINS emoji keys, Go byte freshness and explicit generator provenance observed`);
 }

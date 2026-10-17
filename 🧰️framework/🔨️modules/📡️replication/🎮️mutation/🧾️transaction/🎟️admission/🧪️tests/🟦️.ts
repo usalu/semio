@@ -6,7 +6,6 @@ import{readFileSync,existsSync}from"node:fs";
 test("original transaction admission preserves Unicode NUL segments and all five currencies",()=>{
  const root=new URL("../",import.meta.url),read=(path:string)=>JSON.parse(readFileSync(new URL(path,root),"utf8")),law=read("🧪️tests/🧫️fixtures/🔣️.json");expect(new Ajv2020({strict:true}).compile(read("🧬️schema/🔣️.json"))(law)).toBe(true);
  const db=new Database(":memory:");try{db.exec("CREATE TABLE transactions(actor TEXT,app TEXT,tool TEXT,stamp TEXT)");for(const actor of law.actors)for(const app of law.apps)for(const tool of law.tools){db.query("INSERT INTO transactions VALUES(?,?,?,?)").run(actor,app,tool,JSON.stringify(law.clock));expect(db.query("SELECT actor,app,tool,stamp FROM transactions ORDER BY rowid DESC LIMIT 1").get()).toEqual({actor,app,tool,stamp:JSON.stringify(law.clock)});}}finally{db.close();}
- console.log("[DEBUG] SQLite retained exact original transaction actor/app/tool Unicode-NUL segments and timestamp under fixed independent 1/4096/4096/262144/4096 grant");
  const path=new URL("🦀️.rs",root);expect(existsSync(path)).toBe(true);const source=readFileSync(path,"utf8");for(const name of["admit_tool_transaction","tool_transaction_demand","Hasher","maximum_copy_bytes","maximum_capacity_bytes","maximum_release_bytes","maximum_depth"]){expect(source).toContain(name);}expect(source).not.toContain("Vec::");expect(source).not.toContain("ActorId(");expect(source).not.toContain("format!(");
 });
 test("ToolRun retains original publication ingress and transports its unchanged grant receipt",()=>{

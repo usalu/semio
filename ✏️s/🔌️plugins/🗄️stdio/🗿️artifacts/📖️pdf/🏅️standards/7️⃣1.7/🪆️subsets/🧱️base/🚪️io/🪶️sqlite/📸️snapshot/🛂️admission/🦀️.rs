@@ -1,5 +1,7 @@
 //! 🛂️ Borrowed literal PDF fields admitted against their handwritten SQL cells.
-use crate::standards::v1_7::subsets::base::io::sqlite::snapshot::*;
+use crate::standards::v1_7::subsets::base::schema::snapshot::model::*;
+use store::sqlite_snapshot::{self};
+use semio_framework_value::{ValueError, ValueRefusalKind};
 use pack::value::DslValue as D;
 use semio_framework_value::NativeDecodeControl;
 #[derive(Clone,Copy)]
@@ -64,7 +66,7 @@ fn named_color(c:&mut Census<'_,'_>,v:&D)->Result<(),ValueError>{colors::color(c
 fn properties(c:&mut Census<'_,'_>,v:&D)->Result<(),ValueError>{objects::dictionary(c,field(v,"entries")?)?;c.row("pdf_named_properties",&[Text(text(field(v,"name")?)?),Int])}
 fn indirect(c:&mut Census<'_,'_>,v:&D)->Result<(),ValueError>{objects::object(c,field(v,"value")?)?;c.row("pdf_indirect_object",&[Int;3])}
 fn optional(c:&mut Census<'_,'_>,v:&D,visit:fn(&mut Census<'_,'_>,&D)->Result<(),ValueError>)->Result<Cell<'static>,ValueError>{if matches!(v,D::Null){Ok(Null)}else{visit(c,v)?;Ok(Int)}}
-pub(super) fn borrowed(record:&semio_framework_dsl_record::RecordValue,native:&mut NativeDecodeControl<'_>,limits:sqlite_snapshot::SqliteDatabaseLimits)->Result<(),ValueError>{
+pub fn borrowed(record:&semio_framework_dsl_record::RecordValue,native:&mut NativeDecodeControl<'_>,limits:sqlite_snapshot::SqliteDatabaseLimits)->Result<(),ValueError>{
  use semio_framework_dsl_record::FieldValue as F;
  native.scoped_stage(|native|{
  native.begin_stage(0)?;

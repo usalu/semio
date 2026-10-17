@@ -33,3 +33,4 @@ ui_wgpu = { path = "../../../../../../../../../../🔨️modules/🖱️ui/📦�
 serde = { version = "1.0.219", features = ["derive"] }
 
 [dev-dependencies]
+semio-framework-os-renderer-wgpu-thread-isolation = { path = "../../../🔒️thread-isolation/📦️packages/🦀️rust", features = ["isolated"] }

@@ -102,3 +102,18 @@ pub fn create_shooting_viewer() -> semio_framework_plugin::AppDefinition {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🧩️ArtifactItems2
+pub mod artifact_items_2 {
+use semio_framework_artifact_reference::{Dialect, StandardId, SubsetId};
+
+/// 🪪️ This artifact's dialect (ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §1
+/// canonical surface id grammar) — lives at the ARTIFACT level (not under `editor`/`viewer`) so a
+/// viewer file can read it without ever importing through the sibling editor module.
+/// `artifact_kind = "s.shooting.shooting"` matches the descriptor `definition()`'s own
+/// `"s.shooting.schema.artifact"` capability row already keys off; `standard`/`subset` match this
+/// file's own `🏅️standards/🔖️1/🪆️subsets/✳️any` location — i.e. the canonical surface id is
+/// `s.shooting.shooting@1/*#editor` / `s.shooting.shooting@1/*#viewer`.
+pub const SHOOTING_DIALECT: Dialect = Dialect { artifact_kind: "s.shooting.shooting", standard: StandardId("1"), subset: SubsetId::ANY };
+}
+//#endregion 🧩️ArtifactItems2

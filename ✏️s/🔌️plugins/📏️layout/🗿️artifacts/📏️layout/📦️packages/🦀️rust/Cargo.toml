@@ -33,10 +33,10 @@ semio-s-artifact-layout-layout-editor = { workspace = true }
 semio-s-artifact-layout-layout-io = { workspace = true }
 semio-s-artifact-layout-layout-model = { workspace = true }
 semio-s-artifact-layout-layout-mutations = { workspace = true }
-semio-s-artifact-stdio-semio-drawing = { workspace = true }
 
 [dev-dependencies]
 semio-framework-async-macros = { workspace = true }
 semio-framework-os-kernel = { workspace = true, features = ["mutation-testing", "protocol-laws"] }
 semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
 serde_json = { workspace = true }
+semio-framework-io-ports = { workspace = true, features = ["testkit"] }

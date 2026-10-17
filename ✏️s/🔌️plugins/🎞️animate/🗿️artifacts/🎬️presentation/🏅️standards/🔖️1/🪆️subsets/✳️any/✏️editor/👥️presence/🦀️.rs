@@ -95,5 +95,4 @@ pub use mutations::*;
 #[path = "🧪️tests/🔬️contract-vectors/🦀️.rs"]
 mod contract_vectors;
 
-#[path = "🚪️io/🦀️.rs"]
-pub mod io;
+

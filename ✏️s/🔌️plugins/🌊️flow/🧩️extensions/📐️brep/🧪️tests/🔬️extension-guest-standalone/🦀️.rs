@@ -1,6 +1,13 @@
+use super::*;
+use super::extension_guest::{bundle, scoped_bundle};
+use flow_extension_sdk::flow_extension_topic_contribution;
+use semio_framework::{Fault, FaultCode, FaultOrigin};
+use semio_framework_plugin::{ExecutionMode, ExtensionBundle, ExtensionResourceOwner, PluginLifecycleStep};
+use semio_framework_test_fixtures::fixture_text;
+
 #[test]
     fn bundle_identity_matches_catalogue_fixture() {
-        let fixture = semio_framework_pack_json::parse(include_str!("../../../🧪️tests/🧫️fixtures/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+        let fixture = semio_framework_pack_json::parse(fixture_text!("../../../../../🧪️tests/🧫️fixtures/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         let mut bundle = bundle();
         assert_eq!(Some(bundle.manifest.extension_id.as_str()), fixture.get("brep").and_then(|entry| entry.get("pluginId")).and_then(semio_framework_pack_json::Value::as_str));
         assert_eq!(bundle.manifest.topic_contributions.len(), 2);
@@ -19,7 +26,7 @@
 
     #[test]
     fn extension_guest_retires_actual_session_geometry_and_inflight_tessellation() {
-        let imports=semio_framework_pack_json::parse(include_str!("../../../../../../../🧰️framework/🔨️modules/🏗️mesh-engine/🥽️polygon/🧪️tests/🧫️fixtures/⏱️output-budget/🔣️.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+        let imports=semio_framework_pack_json::parse(fixture_text!("../../../../../../../../../🧰️framework/🔨️modules/🏗️mesh-engine/🥽️polygon/🧪️tests/🧫️fixtures/⏱️output-budget/🔣️.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         for (index,phase) in ["mesh-to-brep-tessellate","mesh-to-brep-retire-source","mesh-to-brep-admit","mesh-to-brep-triangles","mesh-to-brep-shell","mesh-to-brep-ready"].into_iter().enumerate() {
             let (mut owner,scope)=scoped_bundle();let input=semio_framework_pack_json::object([
                 ("mesh".into(),semio_framework_pack_json::object([("$schema".into(),semio_framework_pack_json::Value::from("mesh")),("data".into(),semio_framework_pack_json::Value::from(semio_framework_pack_json::to_string(imports.get("toBrep").unwrap().get("mesh").unwrap())))])),
@@ -29,9 +36,8 @@
             owner.begin_close();if flow_extension_sdk::evaluation_retirement_pending(&scope) {let grant=geometry_test_close_grant(&owner,1,8);assert_eq!(owner.close_step(semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:0,..grant}).unwrap().progress(),Some(Default::default()));assert_eq!(owner.close_step(semio_framework_value::retained_clone::RetainedCloneGrant{maximum_copy_bytes:0,maximum_capacity_bytes:0,maximum_release_bytes:0,..grant}).unwrap().progress(),Some(Default::default()));}
             let mut trips=0;while flow_extension_sdk::evaluation_retirement_pending(&scope) {let grant=geometry_test_close_grant(&owner,1,8);let small=semio_framework_value::retained_clone::RetainedCloneGrant{maximum_release_bytes:8,..grant};let step=owner.close_step(small).unwrap();assert!(step.progress().unwrap().fits(small));if step.progress()==Some(Default::default()){assert!(owner.close_step(grant).unwrap().progress().unwrap().fits(grant));}trips+=1;assert!(trips<10000);}
             drop(scope);loop {let grant=geometry_test_close_grant(&owner,1,64);let step=owner.close_step(grant).unwrap();trips+=1;assert!(trips<100000);assert!(step.progress().unwrap().fits(grant));if matches!(step,PluginLifecycleStep::Complete(_)){assert!(owner.terminal_is_empty());break;}}
-            eprintln!("[DEBUG] Existing BRep bundle drained inflight toBrep at {phase} before Session close,steps={trips}");
         }
-        let fixture = semio_framework_pack_json::parse(include_str!("../🧫️fixtures/🚪️retirement/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+        let fixture = semio_framework_pack_json::parse(fixture_text!("../../../🧫️fixtures/🚪️retirement/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         let grant = fixture.get("grant").and_then(semio_framework_pack_json::Value::as_array).unwrap();
         let items = grant[0].as_f64().unwrap() as usize;
         let bytes = grant[1].as_f64().unwrap() as usize;
@@ -139,15 +145,15 @@ fn close_geometry_test_bundle(bundle: &mut ExtensionBundle) {
 
 #[test]
 fn extension_guest_close_retires_only_its_existing_session_evaluation_owner() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🚪️retirement/🔣️.json")).unwrap();let law=&fixture["ownerIsolation"];let mut request=fixture["evaluate"].clone();request["nodeHash"]=law["sharedNodeHash"].clone();request["budget"]=law["roundUnits"].clone();request["roundUnits"]=law["roundUnits"].clone();let request=serde_json::to_string(&request).unwrap();let compact=super::tests::compact_evaluation_request(&request);
+    let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../🧫️fixtures/🚪️retirement/🔣️.json")).unwrap();let law=&fixture["ownerIsolation"];let mut request=fixture["evaluate"].clone();request["nodeHash"]=law["sharedNodeHash"].clone();request["budget"]=law["roundUnits"].clone();request["roundUnits"]=law["roundUnits"].clone();let request=serde_json::to_string(&request).unwrap();let compact=super::tests::compact_evaluation_request(&request);
     let mut retired=bundle();let mut live=bundle();assert_eq!(geometry_test_envelope(&retired,&request).get("done").and_then(semio_framework_pack_json::Value::as_bool),Some(false));assert_eq!(geometry_test_envelope(&live,&request).get("done").and_then(semio_framework_pack_json::Value::as_bool),Some(false));close_geometry_test_bundle(&mut retired);assert!(retired.terminal_is_empty());
     let mut answer=geometry_test_envelope(&live,&compact);let pending=answer.get("done").and_then(semio_framework_pack_json::Value::as_bool)==Some(false);if !pending {close_geometry_test_bundle(&mut live);}assert_eq!(pending,law["liveOwnerMustRemainPendingAfterOtherClose"].as_bool().unwrap());let mut turns=0;while answer.get("done").and_then(semio_framework_pack_json::Value::as_bool)==Some(false) {turns+=1;assert!(turns<law["maximumTurns"].as_u64().unwrap());answer=geometry_test_envelope(&live,&compact);}
-    let signature=geometry_test_mesh_signature(geometry_test_mesh_pack(&live,&geometry_test_output(&answer)));let half=law["halfExtents"].as_array().unwrap();let oracle=parry3d::shape::Shape::mass_properties(&parry3d::shape::Cuboid::new(parry3d::math::Vector::new(half[0].as_f64().unwrap()as f32,half[1].as_f64().unwrap()as f32,half[2].as_f64().unwrap()as f32)),1.0).mass();assert!((signature.4.abs()-f64::from(oracle)).abs()<1e-8);close_geometry_test_bundle(&mut live);assert!(live.terminal_is_empty());println!("[DEBUG] Existing guest owners isolate same-node-hash cancellation and preserve live Parry volume={},turns={turns}",signature.4.abs());
+    let signature=geometry_test_mesh_signature(geometry_test_mesh_pack(&live,&geometry_test_output(&answer)));let half=law["halfExtents"].as_array().unwrap();let oracle=parry3d::shape::Shape::mass_properties(&parry3d::shape::Cuboid::new(parry3d::math::Vector::new(half[0].as_f64().unwrap()as f32,half[1].as_f64().unwrap()as f32,half[2].as_f64().unwrap()as f32)),1.0).mass();assert!((signature.4.abs()-f64::from(oracle)).abs()<1e-8);close_geometry_test_bundle(&mut live);assert!(live.terminal_is_empty());
 }
 
 #[test]
 fn extension_guest_cancellation_preserves_the_original_u64_node_identity() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🚪️retirement/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../🧫️fixtures/🚪️retirement/🔣️.json")).unwrap();
     let law = &fixture["exactCancellation"];
     let identity = law["nodeHashLiteral"].as_str().unwrap().parse::<u64>().unwrap();
     let mut request = fixture["evaluate"].clone();
@@ -166,12 +172,11 @@ fn extension_guest_cancellation_preserves_the_original_u64_node_identity() {
     assert_eq!(started.get("done").and_then(semio_framework_pack_json::Value::as_bool), Some(false));
     assert_eq!(answer["retired"], law["retired"]);
     assert_eq!(answer["pending"], law["pending"]);
-    println!("[DEBUG] Existing guest cancellation preserves independent Serde u64 node identity={identity}");
 }
 
 #[test]
 fn extension_guest_compact_hops_keep_the_original_distinct_execution_readers() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🚪️retirement/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../🧫️fixtures/🚪️retirement/🔣️.json")).unwrap();
     let law = &fixture["ownerIsolation"];
     let operator = fixture["evaluate"]["operatorId"].as_str().unwrap();
     let hash = law["sharedNodeHash"].as_u64().unwrap();
@@ -203,12 +208,11 @@ fn extension_guest_compact_hops_keep_the_original_distinct_execution_readers() {
     drop(second_reader);
     close_geometry_test_bundle(&mut second);
     assert!(first.terminal_is_empty() && second.terminal_is_empty());
-    println!("[DEBUG] Two original guest execution readers retain distinct source identities through eight compact hops and isolated close");
 }
 
 #[test]
 fn extension_guest_malformed_cancellation_preserves_the_original_live_owner() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🚪️retirement/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../🧫️fixtures/🚪️retirement/🔣️.json")).unwrap();
     let law = &fixture["exactCancellation"];
     let operator = fixture["evaluate"]["operatorId"].as_str().unwrap();
     let hash = fixture["ownerIsolation"]["sharedNodeHash"].as_u64().unwrap();
@@ -232,13 +236,12 @@ fn extension_guest_malformed_cancellation_preserves_the_original_live_owner() {
         assert_eq!(result.err().map(|fault| fault.code.0).as_deref(), law["faultCode"].as_str());
         assert!(!cancelled && live);
     }
-    println!("[DEBUG] Four independent Serde malformed identities refuse cancellation and preserve original live owners");
 }
 
 #[semio_framework_async_macros::async_test]
 async fn named_geometry_inference_owns_worker_invocation_and_dependency_identity() {
     let _serial = super::tests::test_serial().await;
-    let fixture = semio_framework_pack_json::parse(include_str!("../../💡️inferences/📐️geometry/🧪️tests/🧫️fixtures/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let fixture = semio_framework_pack_json::parse(fixture_text!("../../../../💡️inferences/📐️geometry/🧪️tests/🧫️fixtures/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let mut bundle = bundle();
     let service = semio_framework_plugin::artifact_inference_service(super::geometry_inference::GEOMETRY_ARTIFACT_KIND, super::geometry_inference::GEOMETRY_INFERENCE_SCHEMA).unwrap().unwrap();
     assert!(service.metadata().payload.is_some());
@@ -300,7 +303,7 @@ async fn named_geometry_inference_owns_worker_invocation_and_dependency_identity
 #[test]
 fn named_geometry_bypass_preserves_original_node_identity_and_round_grants() {
     use semio_framework_plugin::{WireArtifactInferenceRequest,WireArtifactInferenceResult,WireArtifactInferenceBudget,WireArtifactInferenceCacheMode};
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🚪️retirement/🔣️.json")).unwrap();let law=&fixture["bypassIdentity"];let (mut owner,reader)=scoped_bundle();let identity=reader.owner_identity();let metadata=super::geometry_inference::geometry_inference_service().metadata();let mut receipts=Vec::new();
+    let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../🧫️fixtures/🚪️retirement/🔣️.json")).unwrap();let law=&fixture["bypassIdentity"];let (mut owner,reader)=scoped_bundle();let identity=reader.owner_identity();let metadata=super::geometry_inference::geometry_inference_service().metadata();let mut receipts=Vec::new();
     for hash in law["nodeHashes"].as_array().unwrap().iter().map(|value|value.as_u64().unwrap()) {
         let mut payload=serde_json::json!({"operatorId":fixture["evaluate"]["operatorId"],"inputJson":fixture["evaluate"]["inputJson"],"nodeHash":hash,"dependencyJson":"","operatorVersion":"bypass-v1","budget":law["roundUnits"],"roundUnits":law["roundUnits"],"wallMicros":1,"resume":false,"retained":fixture["evaluate"]["retained"]});
         for hop in 0..=law["compactHops"].as_u64().unwrap() {
@@ -312,7 +315,6 @@ fn named_geometry_bypass_preserves_original_node_identity_and_round_grants() {
     }
     drop(reader);close_geometry_test_bundle(&mut owner);assert!(owner.terminal_is_empty());
     for (index,(complete,mode,envelope,units,original)) in receipts.into_iter().enumerate() {let hop=index as u64%(law["compactHops"].as_u64().unwrap()+1);assert_eq!(complete,law["complete"].as_bool().unwrap());assert_eq!(mode,WireArtifactInferenceCacheMode::Bypass);assert_eq!(envelope["done"],law["complete"]);assert_eq!(units,Some((hop+1)as usize));assert_eq!(original,identity);}
-    println!("[DEBUG] Original bypass node identities retain independent one-unit compact frontiers under the same cancellation group");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -345,14 +347,14 @@ async fn named_geometry_inference_resumes_with_progress_matches_output_and_cance
     assert!(hops > 1);
     let ordinary = geometry_test_output(&geometry_test_envelope(&bundle, &geometry_test_request("brep.bool.cut", input.clone(), 0, 1000000, 3600000000)));
     assert!(stepped.get("error").is_none());
-    let a=geometry_test_mesh_signature(geometry_test_mesh_pack(&bundle,&stepped));let b=geometry_test_mesh_signature(geometry_test_mesh_pack(&bundle,&ordinary));assert_eq!(a.0,b.0,"retained and ordinary corner positions/normals");assert_eq!(a.1,b.1,"retained and ordinary boundary geometry");assert_eq!(a.2,b.2);assert!((a.3-b.3).abs()<1e-5);assert!((a.4-b.4).abs()<1e-5);eprintln!("[DEBUG] Named retained/ordinary tessellation parity: triangles={} area={} signedVolume={} order-independent authored corners/edges",a.2,a.3,a.4);
+    let a=geometry_test_mesh_signature(geometry_test_mesh_pack(&bundle,&stepped));let b=geometry_test_mesh_signature(geometry_test_mesh_pack(&bundle,&ordinary));assert_eq!(a.0,b.0,"retained and ordinary corner positions/normals");assert_eq!(a.1,b.1,"retained and ordinary boundary geometry");assert_eq!(a.2,b.2);assert!((a.3-b.3).abs()<1e-5);assert!((a.4-b.4).abs()<1e-5);
     let pending = geometry_test_envelope(&bundle, &request);
     assert_eq!(pending.get("done").and_then(semio_framework_pack_json::Value::as_bool), Some(false));
     let initial_units = pending.get("unitsDone").unwrap().clone();
     let _progressed = geometry_test_envelope(&bundle, &compact_request);
     let mut invalidated = parse(&request);
     invalidated.as_object_mut().unwrap().insert("operatorVersion", semio_framework_pack_json::Value::from("2"));
-    let fixture=semio_framework_pack_json::parse(include_str!("../../💡️inferences/📐️geometry/🧪️tests/🧫️fixtures/🔣️.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let fixture=semio_framework_pack_json::parse(fixture_text!("../../../../💡️inferences/📐️geometry/🧪️tests/🧫️fixtures/🔣️.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let replacement=fixture.get("replacement").unwrap();
     let invalidated=semio_framework_pack_json::to_string(&invalidated);
     let compact_invalidated=super::tests::compact_evaluation_request(&invalidated);
@@ -405,7 +407,7 @@ async fn named_geometry_inference_resumes_with_progress_matches_output_and_cance
 async fn named_geometry_inference_standard_gateway_uses_registered_extension_context() {
     use semio_framework_plugin::{WireArtifactInferenceRequest, WireArtifactInferenceResult, WireArtifactInferenceBudget, WireArtifactInferenceCacheMode};
     let _serial = super::tests::test_serial().await;
-    let fixture = semio_framework_pack_json::parse(include_str!("../../💡️inferences/📐️geometry/🧪️tests/🧫️fixtures/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let fixture = semio_framework_pack_json::parse(fixture_text!("../../../../💡️inferences/📐️geometry/🧪️tests/🧫️fixtures/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let bundle = bundle();
     let metadata = super::geometry_inference::geometry_inference_service().metadata();
     let request = WireArtifactInferenceRequest {
@@ -435,7 +437,7 @@ async fn named_geometry_inference_standard_gateway_uses_registered_extension_con
     assert_eq!(schema_result.quality, "SchemaValue");
     assert_eq!(schema_result.validity, "valid");
     assert!(schema_result.complete);
-    let mesh_fixture = semio_framework_pack_json::parse(include_str!("../../../../../../../🧰️framework/🔨️modules/🏗️mesh-engine/🥽️polygon/🧪️tests/🧫️fixtures/⏱️output-budget/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let mesh_fixture = semio_framework_pack_json::parse(fixture_text!("../../../../../../../../../🧰️framework/🔨️modules/🏗️mesh-engine/🥽️polygon/🧪️tests/🧫️fixtures/⏱️output-budget/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let mesh = semio_framework_pack_json::to_string(mesh_fixture.get("cases").unwrap().as_array().unwrap()[0].get("mesh").unwrap());
     let mesh_input = neural_engine::ColdOwner::new(super::Dictionary::new().insert("data", super::Value::Dictionary(super::text_dictionary(mesh))));
     let mut mesh_request = request.clone();

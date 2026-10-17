@@ -1,6 +1,6 @@
 //! 🎯️ `add-target-region` command.
 
-use crate::editor::puzzle2d::Puzzle2dActionCtx;
+use crate::editor::puzzle2d::interaction::Puzzle2dActionCtx;
 use semio_framework_pack_json::Value;
 
 /// 🖍️ Paints one grid-snapped target region at `args.origin`, sized by the Area Brush's own

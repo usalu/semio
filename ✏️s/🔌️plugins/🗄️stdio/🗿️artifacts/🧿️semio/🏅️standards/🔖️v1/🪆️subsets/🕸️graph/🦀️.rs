@@ -9,327 +9,84 @@ extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_schema as framework_schema;
 extern crate semio_framework_value_derive as value_derive;
-extern crate semio_framework_graph as graph_core;
+extern crate semio_framework_graph_engine as graph_core;
+extern crate semio_framework_graph_manifest as graph_manifest;
 
 #[path = "🚪️io/🦀️.rs"]
 pub mod io;
 #[path = "."]
 pub mod schema {
-    #[path = "🧬️schema/🦀️.rs"]
-    mod component;
-    pub use component::*;
-    #[path = "🧬️schema/🔧️operators-internals/🦀️.rs"]
-    pub mod operators_internals;
-    #[path = "🧬️schema/🚶️traversal-internals/🦀️.rs"]
-    pub mod traversal_internals;
+    pub use semio_s_artifact_stdio_semio_graph_schema::schema::*;
+
+    pub use semio_s_artifact_stdio_semio_graph_examples::schema::operators_internals;
+    pub use semio_s_artifact_stdio_semio_graph_examples::schema::traversal_internals;
     #[path = "."]
     pub mod normal_internals {
-        #[path = "🧬️schema/➕️normal-internals/➡️directed/🦀️.rs"]
-        pub mod directed;
-        #[path = "🧬️schema/➕️normal-internals/↔️undirected/🦀️.rs"]
-        pub mod undirected;
+        pub use semio_s_artifact_stdio_semio_graph_examples::schema::normal_internals::directed;
+        pub use semio_s_artifact_stdio_semio_graph_examples::schema::normal_internals::undirected;
     }
     #[path = "."]
     pub mod ports_internals {
-        #[path = "🧬️schema/🔌️ports-internals/↔️undirected/🦀️.rs"]
-        pub mod undirected;
-        #[path = "."]
-        pub mod directed {
-            #[path = "🧬️schema/🔌️ports-internals/➡️directed/➕️normal/🦀️.rs"]
-            pub mod normal;
-        }
+        pub use semio_s_artifact_stdio_semio_graph_examples::schema::ports_internals::undirected;
+        pub use semio_s_artifact_stdio_semio_graph_examples::schema::ports_internals::directed;
     }
-    #[path = "."]
-    pub mod snapshot {
-        #[path = "🧬️schema/📸️snapshot/🦀️.rs"]
-        mod component;
-        pub use component::*;
-    }
-    #[path = "."]
-    pub mod diff {
-        #[path = "🧬️schema/🔺️diff/🦀️.rs"]
-        mod component;
-        pub use component::*;
-    }
-    #[path = "."]
-    pub mod inferences {
-        #[path = "🧬️schema/💡️inferences/🦀️.rs"]
-        mod component;
-        pub use component::*;
-        #[path = "."]
-        pub mod topology {
-            #[path = "🧬️schema/💡️inferences/🧭topology/🦀️.rs"]
-            mod component;
-            pub use component::*;
-        }
-        #[path = "."]
-        pub mod connectivity {
-            #[path = "🧬️schema/💡️inferences/🕸️connectivity/🦀️.rs"]
-            mod component;
-            pub use component::*;
-        }
-    }
+    pub use semio_s_artifact_stdio_semio_graph_snapshot::schema::snapshot;
+    pub use semio_s_artifact_stdio_semio_graph_snapshot::schema::diff;
+    pub use semio_s_artifact_stdio_semio_graph_inferences::schema::inferences;
     #[path = "."]
     pub mod mutations {
-        #[path = "🧬️schema/🧬️mutations/🦀️.rs"]
-        mod component;
-        pub use component::*;
-        #[path = "."]
-        pub mod create_node {
-            #[path = "🧬️schema/🧬️mutations/🏗️create-node/🦀️.rs"]
-            mod component;
-            #[path = "🧬️schema/🧬️mutations/🏗️create-node/🔺️diff/🦀️.rs"]
-            pub mod diff;
-            #[path = "🧬️schema/🧬️mutations/🏗️create-node/↩️inverse/🦀️.rs"]
-            pub mod inverse;
-            pub use component::*;
-        }
-        #[path = "."]
-        pub mod delete_node {
-            #[path = "🧬️schema/🧬️mutations/🗑️delete-node/🦀️.rs"]
-            mod component;
-            #[path = "🧬️schema/🧬️mutations/🗑️delete-node/🔺️diff/🦀️.rs"]
-            pub mod diff;
-            #[path = "🧬️schema/🧬️mutations/🗑️delete-node/↩️inverse/🦀️.rs"]
-            pub mod inverse;
-            pub use component::*;
-        }
-        #[path = "."]
-        pub mod change_node_kind {
-            #[path = "🧬️schema/🧬️mutations/🔧change-node-kind/🦀️.rs"]
-            mod component;
-            #[path = "🧬️schema/🧬️mutations/🔧change-node-kind/🔺️diff/🦀️.rs"]
-            pub mod diff;
-            #[path = "🧬️schema/🧬️mutations/🔧change-node-kind/↩️inverse/🦀️.rs"]
-            pub mod inverse;
-            pub use component::*;
-        }
-        #[path = "."]
-        pub mod change_node_label {
-            #[path = "🧬️schema/🧬️mutations/🖍️change-node-label/🦀️.rs"]
-            mod component;
-            #[path = "🧬️schema/🧬️mutations/🖍️change-node-label/🔺️diff/🦀️.rs"]
-            pub mod diff;
-            #[path = "🧬️schema/🧬️mutations/🖍️change-node-label/↩️inverse/🦀️.rs"]
-            pub mod inverse;
-            pub use component::*;
-        }
-        #[path = "."]
-        pub mod move_node {
-            #[path = "🧬️schema/🧬️mutations/📍move-node/🦀️.rs"]
-            mod component;
-            #[path = "🧬️schema/🧬️mutations/📍move-node/🔺️diff/🦀️.rs"]
-            pub mod diff;
-            #[path = "🧬️schema/🧬️mutations/📍move-node/↩️inverse/🦀️.rs"]
-            pub mod inverse;
-            pub use component::*;
-        }
-        #[path = "."]
-        pub mod add_node_port {
-            #[path = "🧬️schema/🧬️mutations/🔌add-node-port/🦀️.rs"]
-            mod component;
-            #[path = "🧬️schema/🧬️mutations/🔌add-node-port/🔺️diff/🦀️.rs"]
-            pub mod diff;
-            #[path = "🧬️schema/🧬️mutations/🔌add-node-port/↩️inverse/🦀️.rs"]
-            pub mod inverse;
-            pub use component::*;
-        }
-        #[path = "."]
-        pub mod remove_node_port {
-            #[path = "🧬️schema/🧬️mutations/🔚remove-node-port/🦀️.rs"]
-            mod component;
-            #[path = "🧬️schema/🧬️mutations/🔚remove-node-port/🔺️diff/🦀️.rs"]
-            pub mod diff;
-            #[path = "🧬️schema/🧬️mutations/🔚remove-node-port/↩️inverse/🦀️.rs"]
-            pub mod inverse;
-            pub use component::*;
-        }
-        #[path = "."]
-        pub mod add_node_property {
-            #[path = "🧬️schema/🧬️mutations/➕add-node-property/🦀️.rs"]
-            mod component;
-            #[path = "🧬️schema/🧬️mutations/➕add-node-property/🔺️diff/🦀️.rs"]
-            pub mod diff;
-            #[path = "🧬️schema/🧬️mutations/➕add-node-property/↩️inverse/🦀️.rs"]
-            pub mod inverse;
-            pub use component::*;
-        }
-        #[path = "."]
-        pub mod remove_node_property {
-            #[path = "🧬️schema/🧬️mutations/➖remove-node-property/🦀️.rs"]
-            mod component;
-            #[path = "🧬️schema/🧬️mutations/➖remove-node-property/🔺️diff/🦀️.rs"]
-            pub mod diff;
-            #[path = "🧬️schema/🧬️mutations/➖remove-node-property/↩️inverse/🦀️.rs"]
-            pub mod inverse;
-            pub use component::*;
-        }
-        #[path = "."]
-        pub mod create_edge {
-            #[path = "🧬️schema/🧬️mutations/🌉️create-edge/🦀️.rs"]
-            mod component;
-            #[path = "🧬️schema/🧬️mutations/🌉️create-edge/🔺️diff/🦀️.rs"]
-            pub mod diff;
-            #[path = "🧬️schema/🧬️mutations/🌉️create-edge/↩️inverse/🦀️.rs"]
-            pub mod inverse;
-            pub use component::*;
-        }
-        #[path = "."]
-        pub mod delete_edge {
-            #[path = "🧬️schema/🧬️mutations/✂️delete-edge/🦀️.rs"]
-            mod component;
-            #[path = "🧬️schema/🧬️mutations/✂️delete-edge/🔺️diff/🦀️.rs"]
-            pub mod diff;
-            #[path = "🧬️schema/🧬️mutations/✂️delete-edge/↩️inverse/🦀️.rs"]
-            pub mod inverse;
-            pub use component::*;
-        }
-        #[path = "."]
-        pub mod drag_nodes {
-            #[path = "🧬️schema/🧬️mutations/✋️drag-nodes/🦀️.rs"]
-            mod component;
-            #[path = "🧬️schema/🧬️mutations/✋️drag-nodes/🔺️diff/🦀️.rs"]
-            pub mod diff;
-            #[path = "🧬️schema/🧬️mutations/✋️drag-nodes/↩️inverse/🦀️.rs"]
-            pub mod inverse;
-            pub use component::*;
-        }
-        #[path = "."]
-        pub mod set_node_property {
-            #[path = "🧬️schema/🧬️mutations/🎛️set-node-property/🦀️.rs"]
-            mod component;
-            #[path = "🧬️schema/🧬️mutations/🎛️set-node-property/🔺️diff/🦀️.rs"]
-            pub mod diff;
-            #[path = "🧬️schema/🧬️mutations/🎛️set-node-property/↩️inverse/🦀️.rs"]
-            pub mod inverse;
-            pub use component::*;
-        }
-        #[path = "."]
-        pub mod resize_node {
-            #[path = "🧬️schema/🧬️mutations/📐resize-node/🦀️.rs"]
-            mod component;
-            #[path = "🧬️schema/🧬️mutations/📐resize-node/🔺️diff/🦀️.rs"]
-            pub mod diff;
-            #[path = "🧬️schema/🧬️mutations/📐resize-node/↩️inverse/🦀️.rs"]
-            pub mod inverse;
-            pub use component::*;
-        }
-        #[path = "."]
-        pub mod rename_node {
-            #[path = "🧬️schema/🧬️mutations/🏷️rename-node/🦀️.rs"]
-            mod component;
-            #[path = "🧬️schema/🧬️mutations/🏷️rename-node/🔺️diff/🦀️.rs"]
-            pub mod diff;
-            #[path = "🧬️schema/🧬️mutations/🏷️rename-node/↩️inverse/🦀️.rs"]
-            pub mod inverse;
-            pub use component::*;
-        }
-        #[path = "."]
-        pub mod set_edge_property {
-            #[path = "🧬️schema/🧬️mutations/🎚️set-edge-property/🦀️.rs"]
-            mod component;
-            #[path = "🧬️schema/🧬️mutations/🎚️set-edge-property/🔺️diff/🦀️.rs"]
-            pub mod diff;
-            #[path = "🧬️schema/🧬️mutations/🎚️set-edge-property/↩️inverse/🦀️.rs"]
-            pub mod inverse;
-            pub use component::*;
-        }
-        #[path = "."]
-        pub mod add_edge_property {
-            #[path = "🧬️schema/🧬️mutations/➕add-edge-property/🦀️.rs"]
-            mod component;
-            #[path = "🧬️schema/🧬️mutations/➕add-edge-property/🔺️diff/🦀️.rs"]
-            pub mod diff;
-            #[path = "🧬️schema/🧬️mutations/➕add-edge-property/↩️inverse/🦀️.rs"]
-            pub mod inverse;
-            pub use component::*;
-        }
-        #[path = "."]
-        pub mod remove_edge_property {
-            #[path = "🧬️schema/🧬️mutations/➖remove-edge-property/🦀️.rs"]
-            mod component;
-            #[path = "🧬️schema/🧬️mutations/➖remove-edge-property/🔺️diff/🦀️.rs"]
-            pub mod diff;
-            #[path = "🧬️schema/🧬️mutations/➖remove-edge-property/↩️inverse/🦀️.rs"]
-            pub mod inverse;
-            pub use component::*;
-        }
+        pub use semio_s_artifact_stdio_semio_graph_editor::schema::mutations::*;
+
+        pub use semio_s_artifact_stdio_semio_graph_editor::schema::mutations::create_node;
+        pub use semio_s_artifact_stdio_semio_graph_editor::schema::mutations::delete_node;
+        pub use semio_s_artifact_stdio_semio_graph_inferences::schema::mutations::change_node_kind;
+        pub use semio_s_artifact_stdio_semio_graph_inferences::schema::mutations::change_node_label;
+        pub use semio_s_artifact_stdio_semio_graph_inferences::schema::mutations::move_node;
+        pub use semio_s_artifact_stdio_semio_graph_inferences::schema::mutations::add_node_port;
+        pub use semio_s_artifact_stdio_semio_graph_inferences::schema::mutations::remove_node_port;
+        pub use semio_s_artifact_stdio_semio_graph_examples::schema::mutations::add_node_property;
+        pub use semio_s_artifact_stdio_semio_graph_examples::schema::mutations::remove_node_property;
+        pub use semio_s_artifact_stdio_semio_graph_mut_family::schema::mutations::create_edge;
+        pub use semio_s_artifact_stdio_semio_graph_mut_family::schema::mutations::delete_edge;
+        pub use semio_s_artifact_stdio_semio_graph_editor::schema::mutations::drag_nodes;
+        pub use semio_s_artifact_stdio_semio_graph_mut_family::schema::mutations::set_node_property;
+        pub use semio_s_artifact_stdio_semio_graph_mut_family::schema::mutations::resize_node;
+        pub use semio_s_artifact_stdio_semio_graph_mut_family::schema::mutations::rename_node;
+        pub use semio_s_artifact_stdio_semio_graph_mut_family::schema::mutations::set_edge_property;
+        pub use semio_s_artifact_stdio_semio_graph_mut_family::schema::mutations::add_edge_property;
+        pub use semio_s_artifact_stdio_semio_graph_mut_family::schema::mutations::remove_edge_property;
     }
 }
-#[path = "."]
-pub mod examples {
-    #[path = "."]
-    pub mod wires {
-        #[path = "📚️examples/🕸️wires/🦀️.rs"]
-        mod component;
-        pub use component::*;
-    }
-}
+pub use semio_s_artifact_stdio_semio_graph_examples::examples;
 #[path = "."]
 pub mod editor {
-    #[path = "✏️editor/🦀️.rs"]
-    mod component;
-    pub use component::*;
-    #[path = "."]
-    pub mod presence {
-        #[path = "✏️editor/👥️presence/🧬️schema/🦀️.rs"]
-        pub mod schema;
-    }
-    #[path = "."]
-    pub mod config {
-        #[path = "✏️editor/🎚️config/🧬️schema/🦀️.rs"]
-        pub mod schema;
-    }
+    pub use semio_s_artifact_stdio_semio_graph_editor::editor::*;
+
+    pub use semio_s_artifact_stdio_semio_graph_examples::editor::presence;
+    pub use semio_s_artifact_stdio_semio_graph_examples::editor::config;
     #[path = "."]
     pub mod modes {
         #[path = "."]
         pub mod edit {
-            #[path = "✏️editor/🎭️modes/✏️edit/🦀️.rs"]
-            mod component;
-            pub use component::*;
-            #[path = "."]
-            pub mod windows {
-                #[path = "."]
-                pub mod main {
-                    #[path = "✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️.rs"]
-                    mod component;
-                    pub use component::*;
-                }
-            }
+            pub use semio_s_artifact_stdio_semio_graph_editor::editor::modes::edit::*;
+
+            pub use semio_s_artifact_stdio_semio_graph_mut_family::editor::modes::edit::windows;
         }
     }
 }
 #[path = "."]
 pub mod viewer {
-    #[path = "👁️viewer/🦀️.rs"]
-    mod component;
-    pub use component::*;
-    #[path = "."]
-    pub mod presence {
-        #[path = "👁️viewer/👥️presence/🧬️schema/🦀️.rs"]
-        pub mod schema;
-    }
-    #[path = "."]
-    pub mod config {
-        #[path = "👁️viewer/🎚️config/🧬️schema/🦀️.rs"]
-        pub mod schema;
-    }
+    pub use semio_s_artifact_stdio_semio_graph_editor::viewer::*;
+
+    pub use semio_s_artifact_stdio_semio_graph_examples::viewer::presence;
+    pub use semio_s_artifact_stdio_semio_graph_examples::viewer::config;
     #[path = "."]
     pub mod modes {
         #[path = "."]
         pub mod view {
-            #[path = "👁️viewer/🎭️modes/👁️view/🦀️.rs"]
-            mod component;
-            pub use component::*;
-            #[path = "."]
-            pub mod windows {
-                #[path = "."]
-                pub mod main {
-                    #[path = "👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️.rs"]
-                    mod component;
-                    pub use component::*;
-                }
-            }
+            pub use semio_s_artifact_stdio_semio_graph_editor::viewer::modes::view::*;
+
+            pub use semio_s_artifact_stdio_semio_graph_mut_family::viewer::modes::view::windows;
         }
     }
 }
@@ -344,3 +101,10 @@ semio_framework_value::artifact_retire_struct!(schema::snapshot::SemioGraphSnaps
 
 semio_s_artifact_stdio_semio_base::semio_snapshot_retirement!(schema::snapshot::SemioGraphSnapshot);
 semio_s_artifact_stdio_semio_base::semio_member_owner!(schema::snapshot::SemioGraphSnapshot, schema::mutations::SemioGraphMutation);
+
+#[cfg(test)]
+#[path = "🚪️io/💾️binary/🧬️mutations/🧪️tests/🔬️unit/🦀️.rs"]
+mod hoisted_tests_0;
+#[cfg(test)]
+#[path = "🚪️io/📝️text/🧬️mutations/🧪️tests/🔬️unit/🦀️.rs"]
+mod hoisted_tests_1;

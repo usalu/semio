@@ -3,8 +3,8 @@
 #[allow(unused_imports)]
 mod mutations_codec {
 use super::*;
-use crate::editor::jack::transient::component::editor_window::mutations::*;
-use crate::editor::jack::transient::component::editor_window::JackEditorWindowTransient;
+use crate::editor::jack::transient::editor_window::mutations::*;
+use crate::editor::jack::transient::editor_window::JackEditorWindowTransient;
 
 impl protocol::OpBinary for JackEditorWindowTransientMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {

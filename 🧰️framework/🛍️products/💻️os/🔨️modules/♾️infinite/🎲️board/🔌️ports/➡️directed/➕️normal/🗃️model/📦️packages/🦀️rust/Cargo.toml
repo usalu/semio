@@ -36,9 +36,7 @@ serde_json = "1.0.140"
 semio-framework-os-infinite-board-schema = { path = "../../../../../../🧬️schema/📦️packages/🦀️rust" }
 semio-framework-os-infinite-board-engine = { path = "../../../../../../⚙️engine/📦️packages/🦀️rust" }
 
-[dev-dependencies]
-semio-framework-os-infinite-board-normal-model = { path = ".", features = ["testkit"] }
-
 [[test]]
 name = "board_normal_model_board_host"
 path = "../../🧪️tests/🔬️board-host/🦀️.rs"
+required-features = ["testkit"]

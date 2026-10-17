@@ -3,7 +3,7 @@ import {expect,test,spyOn} from "bun:test";
 import {Database} from "bun:sqlite";
 
 import fixture from "./🧫️fixtures/🔣️.json";
-import {hostContinuations} from "../../../../⏳️async/🪃️continuation/🟦️.ts";
+import {hostContinuations} from "@semio-tech/framework-async/continuation";
 import {NativeDecodeControl} from "@semio-tech/value-ts/decode";
 import {parseSqliteDatabaseSchemaControlled} from "../../🟦️.ts";
 import {artifactSqliteCheckpoint} from "../../🧩️artifact/🟦️.ts";

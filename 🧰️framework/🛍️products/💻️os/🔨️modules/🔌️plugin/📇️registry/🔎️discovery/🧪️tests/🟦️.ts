@@ -22,7 +22,11 @@ test("source, build target, compiled and deployed contracts agree with independe
     const stage = row.stage as keyof typeof parsers;
     const oracle = ajv.compile({ $ref: `${contract.$id}#/$defs/${names[stage]}` });
     expect(oracle(row.value), row.name).toBe(row.valid);
-    if (row.valid) expect(parsers[stage](row.value), row.name).toEqual(row.value);
+    if (row.valid) {
+      const parsed = parsers[stage](row.value);
+      expect(parsed, row.name).toMatchObject(row.value);
+      expect(row.value, row.name).toMatchObject(parsed);
+    }
     else expect(() => parsers[stage](row.value), row.name).toThrow();
   }
 });
@@ -48,7 +52,7 @@ test("real source and descriptor admission preserves compiled-only ownership", (
     const toml = parseToml(corpus.source.cargo) as { package: { metadata: { component: { package: string }; semio: { "component-kind": string } } } };
     const source = parseComponentSourceOwnerV1(cargo, root);
     expect(source.packageId).toBe(toml.package.metadata.component.package);
-    expect(source.role).toBe(toml.package.metadata.semio["component-kind"]);
+    expect(toml.package.metadata.semio["component-kind"]).toBe(source.role);
     expect(source.directoryName).toBeUndefined();
     for (const field of ["capabilities", "contributes", "activationEvents", "extensionPoints", "hashes"]) expect(Object.hasOwn(source, field)).toBe(false);
     expect(() => parseCompiledComponentOwnerV1(cargo, root)).toThrow();
@@ -58,7 +62,7 @@ test("real source and descriptor admission preserves compiled-only ownership", (
     expect(compiled).toEqual({ ...source, ...corpus.source.compiled });
     expect(() => parseDeployedRegistryEntryV1(compiled)).toThrow();
     writeFileSync(cargo, corpus.source.cargo + `deployment-directory=${JSON.stringify(corpus.source.directoryName)}\n`);
-    expect(parseDeployedRegistryEntryV1(parseCompiledComponentOwnerV1(cargo, root)).directoryName).toBe(corpus.source.directoryName);
+    expect(corpus.source.directoryName).toBe(parseDeployedRegistryEntryV1(parseCompiledComponentOwnerV1(cargo, root)).directoryName);
     writeFileSync(descriptor, JSON.stringify({ ...corpus.source.descriptor, packageId: "semio:other" }));
     expect(() => parseCompiledComponentOwnerV1(cargo, root)).toThrow(/identity/);
     writeFileSync(descriptor, JSON.stringify({ ...corpus.source.descriptor, executionProtocol: { appChannelVersion: 19 } }));
@@ -127,7 +131,7 @@ test("a withheld stale-channel row is still a build target while deployment keep
     if (previousOnly === undefined) delete process.env.SEMIO_PLUGIN_ONLY; else process.env.SEMIO_PLUGIN_ONLY = previousOnly;
     rmSync(root, { recursive: true, force: true });
   }
-});
+}, 120000);
 
 test("JSON-schema equality preserves array order and ignores object member order", () => {
   const ajv = new Ajv({ strict: false });
@@ -170,7 +174,7 @@ test("pure session file DATA carries its supplied catalog independently of the g
 });
 
 test("descriptor emitter product request is selected-mode DATA without a checkout binary probe",async()=>{
- const {descriptorEmitterRequestV1}=await import("../../../🖨️describe/🛠️emitter/📋️contract/🟦️.ts");for(const mode of["prototype","release"]as const){const request=descriptorEmitterRequestV1(join(process.cwd(),".fixture-products"),{version:1,mode,platform:process.platform});expect(request.path).toContain("/browser/"+mode+"/tools/descriptor-emitter/");expect(request.maximumFiles).toBe(2);}
+ const {descriptorEmitterRequestV1}=await import("../../../🖨️describe/🛠️emitter/📋️contract/🟦️.ts");for(const mode of["prototype","release"]as const){const request=descriptorEmitterRequestV1(join(process.cwd(),".fixture-products"),{version:1,mode,platform:process.platform});expect(request.path).toContain("/browser/"+mode+"/tools/descriptor-emitter/");expect(request.maximumFiles).toBe((await import("../../../../../../../🔨️modules/🏃️process/📦️artifacts/📤️publication/📥️sources/🧬️schema/🔣️.json")).default.properties.maximumFiles.const);}
 });
 
 

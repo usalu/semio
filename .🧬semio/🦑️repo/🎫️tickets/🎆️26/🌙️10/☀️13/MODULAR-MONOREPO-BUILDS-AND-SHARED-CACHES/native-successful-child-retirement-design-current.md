@@ -1,0 +1,39 @@
+# Successful Persistent Native Child Retirement Design
+
+## Scope And Current Boundary
+
+This epoch follows the independently CLEAN queue/context checkpoint (`audit-rust-concurrent-state-current.md`, 236 stable identities). Full producer concurrency remains RED. No Native/image/cache/compiler/Cargo/rustc/metadata/network or OS-sampling operation is permitted. Source, ordinary Node filesystem descriptors, SQLite, schema validation and strict TypeScript can qualify only the implementation and neutral laws.
+
+The existing successful funded birth commits its parent `compiler-state` allocation, closes the original child reader and retains the image, receipt and `.native-birth-<allocation>.jsonl` sidecar. Failed-birth retirement already authenticates the original generated request pointer separately from immutable request DATA. It cannot authenticate successful recovered children. `retireNativePlatformStorageV1` returns a public boolean and cannot authorize parent discharge. The Mac recovered cleanup owner intentionally preserves existing images. Neither branch will be weakened.
+
+## Defining Owners And Private Handoff
+
+The parent allocation owner is native-build/storage/🟦️.ts (`reservationSources`, `allocationCleanups`, the actual retained physical reader, original journal cleanup loan). Successful retirement must accept only an existing issued recovered committed compiler-state child reservation. It captures the real parent cleanup reader and journal loan before child opening or waiting, retains the original request object carried by that captured reservation and independently checks its complete closed immutable DATA against every recovered claim record. No caller-selected path, allocation id or cloned request can grant retirement.
+
+The claim owner is native-build/storage/birth/claim. Its current creation replay deliberately requires directory inventory containing only m and an empty root. Successful recovery needs a separate terminal operation in this same defining owner: authenticate the existing private backend maintenance receiver, exact original parent allocation cleanup, child kernel EX proof and exact request identity; read all three bounded records through no-follow descriptors; verify declaration order, unchanged parent and directory inode, final sidecar bytes/inode, and original underlying mount inode from the actual backend receipt. A populated mounted filesystem is never treated as the original empty mount directory. This terminal operation neither enters creator replay nor creates any filesystem object.
+
+The physical owners remain Mac cleanup/command and fixed/🟦️.ts, including their actual receiver sets, maintenance custody WeakMaps and existing borrower/maintenance owners. Both must authenticate the exact same live custody and genuine parent child frame. All original readers and retained cleanup readers drain before acquiring child EX. Complete reader-FD exclusion uses the existing bounded system census/parser under the same original control, with unchanged root identities before and after. Windows has no equivalent qualified complete census and must refuse before removal. No fake positive provider fixture will be introduced.
+
+The existing maintenance callback currently unconditionally rechecks mounted facts after its body. A terminal branch may bypass that mounted recheck only after the same private receiver records completed physical removal, claim unlink and parent durability. It must still close the real maintenance borrower, close the original open lifetime and retain unresolved state on errors. This is an explicit terminal transition, never a public boolean or absence test.
+
+## Required Order
+
+1. Validate/capture closed options, received Original/control, exact recovered committed allocation and parent image/port; enroll the accepted cleanup and capture original retained parent reader/journal loan before any child wait.
+2. Open only through the actual parent child scope, then stop/drain all original child readers and accepted descendants; acquire the existing child kernel EX and authenticate its private maintenance custody.
+3. Authenticate the recovered sidecar through the claim owner and the exact request pointer retained with the parent cleanup. Validate mounted mapping, backing/receipt identities, original underlying mount identity, finite content/journal census and complete reader-FD exclusion. Nested held child allocations forbid physical destruction.
+4. Under that same backend operation and EX, detach the exact kernel mapping, reobserve inactive state, verify original empty underlying mount and exact directory inventory, remove only the original receipt/backing/m/directory, then persist the entry parent.
+5. Under the same exact backend operation and claim descriptor identity, unlink the recovered sidecar and persist its parent. Unknown unlink/removal/sync outcomes remain charged. No absence-only positive proof is allowed.
+6. Record the terminal result on the existing private backend custody; drain/close its accepted commands and actual kernel writer, close the original reader lifetime, and only then authorize the parent allocation owner through a non-issuing backend checker.
+7. Under the original retained parent reader and captured journal cleanup loan, remove only the exact original empty namespace and persist its parent. Append exact retiring/retired bytes, fsync the original journal descriptor, reread the complete journal and sync its directory before settling the reservation and releasing the retained parent reader. Future ordinary journal checkpoints reclaim retired history; no permanent sidecar/residual metadata charge remains on successful completion.
+
+## Recovery And Failure
+
+Successful recovered images have to prove actual image/kernel/receipt and sidecar custody; replayed DATA alone cannot grant authority. A partial physical removal or missing sidecar is not success. Unknown/incomplete retirement stays charged and is a separately reported recovery frontier until the defining owner has a durable private retirement recovery protocol; this design does not adopt a missing directory or mint a new Original to heal it. A normal completed retirement must reclaim all child sidecar/namespace metadata and the full parent charge, otherwise it is not a sustainable positive path.
+
+Accepted work preserves the first Error or thrown undefined, joins late preaccepted descendants, seals post-return admission and joins all cleanup work before terminal handle completion. Cancellation before removal preserves physical state; cancellation/descriptor-close/metadata failures after effects cannot discharge charge. Parent and child guard acquisition order must avoid opening a new shared reader while its own maintenance EX is held.
+
+## Schema-First Evidence And Freeze
+
+Before production changes, add a closed language-neutral terminal-retirement evidence/case definition and corpus. Independently validate using Ajv and SQLite. Add actual Source RED assertions for the canonical platform consumer, both private backend owners, claim recovery owner and final parent-discharge checker. Ordinary real NodeFS/SQLite laws exercise exact inode replacement, descriptor closure, fsync ordering, Error/undefined/cancellation and conservative partial recovery; they never impersonate a physical Native owner.
+
+Retain every prior strict root/flag and both modes, append new roots only as needed, retain failed diagnostics, record every handle terminal and freeze exact SHA-256/byte lengths of all declared Source/log/design identities in native-successful-child-retirement-current.md. Independent review precedes producer-image integration. Physical concurrency, cold build success, sustainable runtime eviction and platform performance remain unclaimed until genuine permitted runtime qualification.

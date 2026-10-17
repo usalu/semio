@@ -695,7 +695,6 @@ fn causal_empty_fixed_slots_keep_each_allocation_under_declared_admission(){
     assert!(original<=law["admissionBytes"].as_u64().unwrap() as usize,"empty causal payload allocation {original} exceeds original admission");
     let (_,birth,freed)=semio_framework_trace_memory_testing::observe_backing(||drop(dag));
     assert_eq!(birth,0);assert_eq!(freed,requested);
-    println!("[DEBUG] original causal slot shell requested={requested} largest-payload-allocation={original} exact System release={freed}");
 }
 
 #[test]
@@ -716,7 +715,7 @@ fn causal_backing_retirement_preserves_exact_slots_and_funds_one_indivisible_all
             for(items,bytes)in [(0,query),(1,query.saturating_sub(1))]{let(step,requested,released)=semio_framework_trace_memory_testing::observe_backing(||dag.close_backing_step(items,bytes));assert_eq!(step,(0,0,false));assert_eq!((requested,released),(0,0));assert_eq!(dag.next_backing_release_byte_demand(),query);}
             let(step,requested,released)=semio_framework_trace_memory_testing::observe_backing(||dag.close_backing_step(1,query));assert_eq!(requested,0);assert_eq!(released,query);assert_eq!(step.0,1);assert_eq!(step.1,released);freed+=released;turns+=1;
         }
-        assert_eq!(freed,birth);assert_eq!(dag.next_backing_release_byte_demand(),0);let(_,requested,released)=semio_framework_trace_memory_testing::observe_backing(||drop(dag));assert_eq!((requested,released),(0,0));println!("[DEBUG] causal case={} exact-original-slots={count} pages/metadata={turns} Systemrelease={freed}; zero/one-below retain; terminalDrop0heap",case["name"]);
+        assert_eq!(freed,birth);assert_eq!(dag.next_backing_release_byte_demand(),0);let(_,requested,released)=semio_framework_trace_memory_testing::observe_backing(||drop(dag));assert_eq!((requested,released),(0,0));
     }
 }
 
@@ -732,5 +731,4 @@ fn causal_empty_shell_has_no_physical_birth_or_terminal_release() {
     assert_eq!((requested, released), (0, 0));
     let (_, requested, released) = semio_framework_trace_memory_testing::observe_backing(|| drop(empty));
     assert_eq!((requested, released), (0, 0));
-    println!("[DEBUG] genuine causal terminal shell System birth=0 release=0; original owner transfers without allocating a replacement");
 }

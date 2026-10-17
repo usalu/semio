@@ -3,6 +3,8 @@
 
 #[path = "📝️formula/🦀️.rs"]
 pub mod formula;
+#[path = "🎚️option-rules/🦀️.rs"]
+pub mod option_rules;
 #[path = "🧭️plan/🦀️.rs"]
 pub mod plan;
 #[path = "▭️profile/🦀️.rs"]

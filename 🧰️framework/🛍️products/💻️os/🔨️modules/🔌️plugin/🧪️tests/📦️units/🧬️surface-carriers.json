@@ -1,0 +1,122 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "package",
+    "original",
+    "target",
+    "beforeSha256",
+    "beforeBytes",
+    "beforeAssertions",
+    "records",
+    "remaining",
+    "dependencies"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "package": {
+      "const": "semio-framework-plugin-surface-carrier-laws"
+    },
+    "original": {
+      "type": "string"
+    },
+    "target": {
+      "type": "string"
+    },
+    "beforeSha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "beforeBytes": {
+      "type": "integer"
+    },
+    "beforeAssertions": {
+      "type": "integer"
+    },
+    "records": {
+      "type": "array",
+      "minItems": 13,
+      "maxItems": 13,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "sha256",
+          "assertions",
+          "law",
+          "bytes"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "assertions": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "law": {
+            "type": "boolean"
+          },
+          "bytes": {
+            "type": "integer",
+            "minimum": 1
+          }
+        }
+      }
+    },
+    "remaining": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "sha256",
+          "assertions",
+          "law",
+          "bytes"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "assertions": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "law": {
+            "type": "boolean"
+          },
+          "bytes": {
+            "type": "integer",
+            "minimum": 1
+          }
+        }
+      }
+    },
+    "dependencies": {
+      "type": "array",
+      "minItems": 8,
+      "maxItems": 8,
+      "uniqueItems": true,
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

@@ -4,5 +4,5 @@ import corpus from "../🧫️fixtures/🚀️activation/🔣️.json";
 
 test("CAD activation coordinates retain the owned relay contract", () => {
   const parsed = parseSurfaceAppId(`${corpus.artifactRef}#${corpus.role}`);
-  expect(parsed).toEqual({ dialect: { artifactKind: corpus.artifactKinds[0], standard: "1", subset: "*" }, role: corpus.role });
+  const expectedAt7x108 = { dialect: { artifactKind: corpus.artifactKinds[0], standard: "1", subset: "*" }, role: corpus.role }; expect<typeof expectedAt7x108>(parsed).toEqual(expectedAt7x108);
 });

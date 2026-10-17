@@ -1,0 +1,21 @@
+{
+ "name": "frd-s3",
+ "crates": [
+  "semio-framework-test-fixtures",
+  "semio-s-artifact-stdio-avi",
+  "semio-s-artifact-stdio-csv-mutations",
+  "semio-s-artifact-stdio-epw-editor",
+  "semio-s-artifact-stdio-mp4-viewer",
+  "semio-s-artifact-stdio-png",
+  "semio-s-artifact-stdio-semio-drawing-binary",
+  "semio-s-artifact-stdio-semio-drawing-mut-family-2",
+  "semio-s-artifact-stdio-semio-flow-io",
+  "semio-s-artifact-stdio-semio-mesh-mutations",
+  "semio-s-artifact-stdio-wav-codec-tests",
+  "semio-s-artifact-stdio-xml-mutations",
+  "semio-s-artifact-stdio-xml-schema",
+  "semio-s-artifact-stdio-xml-tests-3",
+  "semio-s-artifact-stdio-zip-mutations"
+ ],
+ "note": "FRD sample, no baseline"
+}

@@ -1,0 +1,81 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🔄️machine/🟦️.ts",
+ "importers": "auto",
+ "childrenImportParent": true,
+ "allowManual": [
+  "export * from parent",
+  "import() type of parent"
+ ],
+ "children": [
+  {
+   "dir": "🔎️inspect",
+   "lines": [
+    [
+     290,
+     322
+    ]
+   ],
+   "doc": "/** 🔎️ Statechart inspection: the inspection events, the `Inspector` port, the null inspector and the microstep trace recorder. TypeScript twin of `🔎️inspect/🦀️.rs`. */"
+  },
+  {
+   "dir": "🧠️kernel",
+   "lines": [
+    [
+     324,
+     620
+    ]
+   ],
+   "doc": "/** 🧠️ Statechart kernel: the SCXML-style microstep and macrostep algorithm over the compiled tables (domains, entry and exit sets, conflict resolution, run to completion). TypeScript twin of `🧠️kernel/🦀️.rs`. */"
+  },
+  {
+   "dir": "🌐️host",
+   "lines": [
+    [
+     622,
+     774
+    ]
+   ],
+   "doc": "/** 🌐️ Statechart hosts: the `Host` port a machine runs on, the native host and the deterministic test host. TypeScript twin of `🌐️host/🦀️.rs`. */"
+  },
+  {
+   "dir": "💾️persist",
+   "lines": [
+    [
+     776,
+     850
+    ]
+   ],
+   "doc": "/** 💾️ Statechart persistence: persisted snapshots, migrations, `persist` and `restore`. TypeScript twin of `💾️persist/🦀️.rs`. */"
+  },
+  {
+   "dir": "🎬️runtime",
+   "lines": [
+    [
+     852,
+     972
+    ]
+   ],
+   "doc": "/** 🎬️ Statechart runtime: actors, the actor system and command routing. TypeScript twin of `🎬️runtime/🦀️.rs`. */"
+  },
+  {
+   "dir": "🔁️step",
+   "lines": [
+    [
+     974,
+     1054
+    ]
+   ],
+   "doc": "/** 🔁️ Statechart stepping: the step inspector and the `MachineStep` driver with `start` and `step`. TypeScript twin of `🔁️step/🦀️.rs`. */"
+  },
+  {
+   "dir": "🧭️testing",
+   "lines": [
+    [
+     1056,
+     1156
+    ]
+   ],
+   "doc": "/** 🧭️ Statechart testing: the explorer, invariants, conformance runner and the in-source suite of the machine package. TypeScript twin of `🧭️testing/🦀️.rs`. */"
+  }
+ ]
+}

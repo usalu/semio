@@ -85,7 +85,6 @@ fn controlled_diagnostic_all_owner_corpus_and_exact_admission() {
             _ => panic!("closed diagnostic owner"),
         }
     }
-    println!("[DEBUG] controlled Diagnostic all eleven owners preserve invalid, quota and cancellation kinds with exact admission");
 }
 
 #[test]
@@ -144,5 +143,4 @@ fn controlled_diagnostic_long_text_lists_and_interior_cancellation() {
     let mut reached = false;
     let mut cancel = |p: semio_framework_value::native_encoding::NativeEncodeProgress| { if p.completed == 256 && p.total == count { reached = true; false } else { true } };
     refusal(fault.to_value_controlled(&mut NativeEncodeControl::new(maximum, &mut cancel)).unwrap_err(), "cancel"); assert!(reached);
-    println!("[DEBUG] controlled Diagnostic long UTF-8, 1024 causes and interior cancellation retain typed authority");
 }

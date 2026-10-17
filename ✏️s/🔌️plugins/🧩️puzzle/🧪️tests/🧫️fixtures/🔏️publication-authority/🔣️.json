@@ -177,6 +177,13 @@
     {
       "owner": "Puzzle3dPlayApp",
       "source": "🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "mounted": [
+        "🧰️retained-commands/🦀️.rs",
+        "📬️store-preparation/🦀️.rs",
+        "✂️clipboard-job/🦀️.rs",
+        "🧩️play-app/🦀️.rs",
+        "📋️manifest/🦀️.rs"
+      ],
       "groups": [
         {
           "status": "migrated",

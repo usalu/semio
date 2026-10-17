@@ -40,7 +40,6 @@ fn retirement_queue_admits_original_frames_and_releases_exact_terminal_backings(
             assert!(progress.copied_items!=0 || matches!(step,RetainedCloneStep::Complete(_)),"exact queue grant blocked on turn {turn}");
         }
         assert!(queue.terminal_is_empty());assert_eq!(released,original+births);assert_eq!(copied,0);
-        eprintln!("[DEBUG] Generic admitted retirement queue count={} copy={} original={original} births={births} physical={released}",count,copy);
     }}}
 }
 
@@ -71,7 +70,6 @@ fn partial_retirement_queue_transfers_to_the_actual_generic_retained_owner() {
             assert!(progress.copied_items!=0 || matches!(step,RetainedCloneStep::Complete(_)),"nested exact queue grant blocked on turn {turn}");
         }
         assert!(owner.terminal_is_empty());assert_eq!(released,original+births);assert_eq!(copied,0);
-        eprintln!("[DEBUG] Partial Generic retirement queue transfer cutoff={cut} copy={copy} original={original} births={births} physical={released}");
     }}}
 }
 
@@ -116,7 +114,6 @@ fn retirement_queue_retains_original_snapshot_frames_and_closes_mixed_custody() 
             let (step,(a,r))=observe_retirement_allocations(||owner.step(grant).unwrap());let p=step.progress();assert_eq!((p.retained_capacity_bytes,p.released_bytes),(a,r));assert!(p.fits(grant));assert!(p.copied_items!=0||matches!(step,RetainedCloneStep::Complete(_)),"mixed original queue blocked on turn {turn}");births+=a;released+=r;copied+=p.copied_bytes;
         }
         assert!(owner.terminal_is_empty());assert_eq!(released,originals+births);assert_eq!(copied,0);let (_,heap)=observe_retirement_allocations(||drop(owner));assert_eq!(heap,(0,0));
-        eprintln!("[DEBUG] Original mixed snapshot queue copy={copy} cancellation={cut} original={originals} births={births} physical={released} terminalDrop=0");
     }}
 }
 
@@ -125,5 +122,4 @@ fn queue_reservation_quote_matches_original_physical_allocator_receipt(){
  let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();let law=&fixture["reservation"];let mut owner=RetirementQueue::default();
  for _ in 0..law["maximumTurns"].as_u64().unwrap(){if owner.has_reserved_slot(){break}let grant=RetainedCloneGrant{maximum_items:1,maximum_capacity_bytes:owner.next_reserve_capacity_byte_demand().unwrap(),maximum_depth:1,..Default::default()};let(receipt,actual)=observe_retirement_allocations(||owner.reserve_step(grant).unwrap());assert_eq!(receipt.retained_capacity_bytes,actual.0);assert_eq!(actual.1,0);assert_ne!(receipt.copied_items,0);}
  assert_eq!(owner.has_reserved_slot(),law["expectedSlot"].as_bool().unwrap());assert!(law["expectedPhysicalReceipt"].as_bool().unwrap());while !owner.terminal_is_empty(){let grant=RetainedCloneGrant{maximum_items:1,maximum_capacity_bytes:owner.next_capacity_byte_demand(0).unwrap(),maximum_release_bytes:owner.next_release_byte_demand().unwrap(),maximum_depth:owner.next_depth_demand().unwrap(),..Default::default()};let(receipt,actual)=observe_retirement_allocations(||owner.step(grant).unwrap());assert_eq!((receipt.progress().retained_capacity_bytes,receipt.progress().released_bytes),actual);}
- eprintln!("[DEBUG] Actual queue quoted backing equals original physical reservation receipt and bounded slot progress");
 }

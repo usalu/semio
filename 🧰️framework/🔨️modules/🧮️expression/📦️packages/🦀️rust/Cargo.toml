@@ -26,4 +26,5 @@ path = "../../🧪️tests/📜️conformance/🦀️.rs"
 
 [dev-dependencies]
 # 🧪️ Language-agnostic fixtures (`🧪️tests/🧫️fixtures/*/🔣️.json`) are parsed by tests only.
+semio-framework-test-fixtures = { path = "../../../🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 serde_json = { workspace = true, features = ["float_roundtrip"] }

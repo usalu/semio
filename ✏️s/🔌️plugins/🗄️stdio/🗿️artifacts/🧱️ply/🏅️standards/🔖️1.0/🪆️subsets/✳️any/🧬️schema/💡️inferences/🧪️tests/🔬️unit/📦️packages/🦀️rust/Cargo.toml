@@ -1,0 +1,23 @@
+[package]
+workspace = "../../../../../../../../../.."
+name = "semio-s-artifact-stdio-ply-inferences-tests"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Companion crate of semio-s-artifact-stdio-ply-inferences: its unit laws"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "🦀️.rs"
+
+[dependencies]
+semio-framework-os-kernel = { workspace = true }
+semio-s-artifact-stdio-ply-inferences = { path = "../../../../📦️packages/🦀️rust" }
+
+[dev-dependencies]
+semio-framework-async-macros = { workspace = true }

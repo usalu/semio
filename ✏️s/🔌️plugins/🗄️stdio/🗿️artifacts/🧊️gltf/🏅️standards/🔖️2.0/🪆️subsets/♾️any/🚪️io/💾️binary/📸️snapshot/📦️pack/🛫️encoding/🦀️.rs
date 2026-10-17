@@ -8,17 +8,17 @@ use semio_framework_dsl_record::RecordValue;
 use semio_framework_value::{ValueError,ValueRefusalKind};
 
 
-fn emit<T: DslField>(value: &T, control: &mut NativeEncodeControl<'_>) -> Result<FieldValue, ValueError> {
+pub fn emit<T: DslField>(value: &T, control: &mut NativeEncodeControl<'_>) -> Result<FieldValue, ValueError> {
     control.scoped_stage(|control| {
         control.begin_stage(0)?;
         value.to_value_controlled(control)
     })
 }
-fn put(record: &mut EncodedRecord, id: u16, value: FieldValue, control: &mut NativeEncodeControl<'_>) -> Result<(), ValueError> {
+pub fn put(record: &mut EncodedRecord, id: u16, value: FieldValue, control: &mut NativeEncodeControl<'_>) -> Result<(), ValueError> {
     record.insert(id, value)?;
     control.step()
 }
-fn build(count: usize, control: &mut NativeEncodeControl<'_>, construct: impl FnOnce(&mut EncodedRecord, &mut NativeEncodeControl<'_>) -> Result<(), ValueError>) -> Result<FieldValue, ValueError> {
+pub fn build(count: usize, control: &mut NativeEncodeControl<'_>, construct: impl FnOnce(&mut EncodedRecord, &mut NativeEncodeControl<'_>) -> Result<(), ValueError>) -> Result<FieldValue, ValueError> {
     control.scoped_stage(|control| {
         control.begin_stage(count)?;
         let mut record = EncodedRecord::new(count, control)?;
@@ -26,7 +26,7 @@ fn build(count: usize, control: &mut NativeEncodeControl<'_>, construct: impl Fn
         Ok(FieldValue::Record(record.take()))
     })
 }
-fn list<T>(values: &[T], control: &mut NativeEncodeControl<'_>, mut project: impl FnMut(&T, &mut NativeEncodeControl<'_>) -> Result<FieldValue, ValueError>) -> Result<FieldValue, ValueError> {
+pub fn list<T>(values: &[T], control: &mut NativeEncodeControl<'_>, mut project: impl FnMut(&T, &mut NativeEncodeControl<'_>) -> Result<FieldValue, ValueError>) -> Result<FieldValue, ValueError> {
     control.scoped_stage(|control| {
         control.begin_stage(values.len())?;
         let mut result = semio_framework_dsl_record::__rt::DecodedFieldOwner::new(control.allocate_vec(values.len())?, |values: Vec<FieldValue>| {
@@ -230,69 +230,49 @@ fn json_value(value: &GltfJson, control: &mut NativeEncodeControl<'_>) -> Result
     let mut next = 1;
     build(1, control, |record, control| put(record, 0, list(&frontier, control, |value, control| json_node(value, &mut next, control))?, control))
 }
-/// 📸️ Projects the four actual root fields and resolved buffers without a native mirror clone.
-fn snapshot_value(value: &GltfSnapshot, control: &mut NativeEncodeControl<'_>) -> Result<RecordValue, ValueError> {
-    let FieldValue::Record(record) = build(4, control, |record, control| {
-        put(record, 0, emit(&value.schema, control)?, control)?;
-        put(record, 1, emit(&value.document, control)?, control)?;
-        put(record, 2, list(&value.buffers, control, |bytes, control| build(1, control, |record, control| put(record, 0, emit(bytes, control)?, control)))?, control)?;
-        put(record, 3, emit(&value.source_form, control)?, control)
-    })?
-    else {
-        unreachable!("authored GLTF record")
-    };
-    Ok(record)
-}
-
 /// 🏭️ Uses the actual generated flat extras metadata producer.
-pub(super) fn json_shape<C: semio_framework_dsl_record::NativeSchemaControl>(control: &mut C) -> Result<semio_framework_dsl_record::Shape, ValueError> {
+pub fn json_shape<C: semio_framework_dsl_record::NativeSchemaControl>(control: &mut C) -> Result<semio_framework_dsl_record::Shape, ValueError> {
     json::Json::shape_controlled(control)
 }
 /// 🏭️ Uses the actual authored morph target metadata producer.
-pub(super) fn morph_shape<C: semio_framework_dsl_record::NativeSchemaControl>(control: &mut C) -> Result<semio_framework_dsl_record::Shape, ValueError> {
+pub fn morph_shape<C: semio_framework_dsl_record::NativeSchemaControl>(control: &mut C) -> Result<semio_framework_dsl_record::Shape, ValueError> {
     Target::shape_controlled(control)
 }
 /// 🏭️ Uses the actual authored primitive metadata producer.
-pub(super) fn primitive_shape<C: semio_framework_dsl_record::NativeSchemaControl>(control: &mut C) -> Result<semio_framework_dsl_record::Shape, ValueError> {
+pub fn primitive_shape<C: semio_framework_dsl_record::NativeSchemaControl>(control: &mut C) -> Result<semio_framework_dsl_record::Shape, ValueError> {
     Primitive::shape_controlled(control)
 }
 /// 🏭️ Uses the actual authored camera projection metadata producer.
-pub(super) fn camera_shape<C: semio_framework_dsl_record::NativeSchemaControl>(control: &mut C) -> Result<semio_framework_dsl_record::Shape, ValueError> {
+pub fn camera_shape<C: semio_framework_dsl_record::NativeSchemaControl>(control: &mut C) -> Result<semio_framework_dsl_record::Shape, ValueError> {
     Projection::shape_controlled(control)
 }
 /// 🏭️ Uses the actual authored image metadata producer.
-pub(super) fn image_shape<C: semio_framework_dsl_record::NativeSchemaControl>(control: &mut C) -> Result<semio_framework_dsl_record::Shape, ValueError> {
+pub fn image_shape<C: semio_framework_dsl_record::NativeSchemaControl>(control: &mut C) -> Result<semio_framework_dsl_record::Shape, ValueError> {
     Image::shape_controlled(control)
 }
 /// 🏭️ Uses the actual authored texture metadata producer.
-pub(super) fn texture_shape<C: semio_framework_dsl_record::NativeSchemaControl>(control: &mut C) -> Result<semio_framework_dsl_record::Shape, ValueError> {
+pub fn texture_shape<C: semio_framework_dsl_record::NativeSchemaControl>(control: &mut C) -> Result<semio_framework_dsl_record::Shape, ValueError> {
     Texture::shape_controlled(control)
 }
 /// 📑️ Retains ordinary, decoding, and encoding metadata factories without constructing metadata.
-pub(super) fn spec_producer() -> semio_framework_dsl_record::RecordSpecProducer {
+pub fn spec_producer() -> semio_framework_dsl_record::RecordSpecProducer {
     Snapshot::__dsl_spec_producer()
 }
 
 /// 🛫️ Retains typed admission through the declared controlled field boundary.
-pub(super) fn morph(value:&GltfMorphTarget,control:&mut NativeEncodeControl<'_>)->Result<FieldValue,ValueError>{morph_value(value,control)}
+pub fn morph(value:&GltfMorphTarget,control:&mut NativeEncodeControl<'_>)->Result<FieldValue,ValueError>{morph_value(value,control)}
 
 /// 🛫️ Retains typed admission through the declared controlled field boundary.
-pub(super) fn primitive(value:&GltfPrimitive,control:&mut NativeEncodeControl<'_>)->Result<FieldValue,ValueError>{primitive_value(value,control)}
+pub fn primitive(value:&GltfPrimitive,control:&mut NativeEncodeControl<'_>)->Result<FieldValue,ValueError>{primitive_value(value,control)}
 
 /// 🛫️ Retains typed admission through the declared controlled field boundary.
-pub(super) fn camera(value:&GltfCameraProjection,control:&mut NativeEncodeControl<'_>)->Result<FieldValue,ValueError>{camera_value(value,control)}
+pub fn camera(value:&GltfCameraProjection,control:&mut NativeEncodeControl<'_>)->Result<FieldValue,ValueError>{camera_value(value,control)}
 
 /// 🛫️ Retains typed admission through the declared controlled field boundary.
-pub(super) fn image(value:&GltfImage,control:&mut NativeEncodeControl<'_>)->Result<FieldValue,ValueError>{image_value(value,control)}
+pub fn image(value:&GltfImage,control:&mut NativeEncodeControl<'_>)->Result<FieldValue,ValueError>{image_value(value,control)}
 
 /// 🛫️ Retains typed admission through the declared controlled field boundary.
-pub(super) fn texture(value:&GltfTexture,control:&mut NativeEncodeControl<'_>)->Result<FieldValue,ValueError>{texture_value(value,control)}
+pub fn texture(value:&GltfTexture,control:&mut NativeEncodeControl<'_>)->Result<FieldValue,ValueError>{texture_value(value,control)}
 
 /// 🛫️ Retains typed admission through the declared controlled field boundary.
-pub(super) fn json(value:&GltfJson,control:&mut NativeEncodeControl<'_>)->Result<FieldValue,ValueError>{json_value(value,control)}
-
-/// 📸️ Retains canonical refusals through the controlled logical-record boundary.
-pub(super) fn snapshot(value:&GltfSnapshot,control:&mut NativeEncodeControl<'_>)->Result<RecordValue,ValueError>{snapshot_value(value,control)}
-
-/// 🛫️ Uses the declared output terminal with the owner’s controlled borrowed field producer.
-pub(super) fn encode_native(value:&GltfSnapshot,encoding:semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding,control:&mut semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io::IoPayload,ValueError>{store::encode_sqlite_snapshot_record_native(encoding,"stdio.gltf",spec_producer(),|native|snapshot_value(value,native),control,native_owner)}
+pub fn json(value:&GltfJson,control:&mut NativeEncodeControl<'_>)->Result<FieldValue,ValueError>{json_value(value,control)}

@@ -234,7 +234,6 @@ fn mutation_apply_prepares_structural_edits_with_ordered_inverse_rows() {
             let outcome = prepare(&build, grant(floor, WIDE), Some(cancel_at));
             assert_eq!(matches!(outcome, Outcome::Completed { .. }), cancel_at >= turns[0], "cancel at {cancel_at} of {} turns for {}", turns[0], case["name"]);
         }
-        eprintln!("[DEBUG] mutation-apply {} floor={floor} turns={turns:?}; clone, inverse rows, apply, displaced retirement, seal and cancellation conserved", case["name"]);
     }
 }
 
@@ -254,7 +253,6 @@ fn mutation_apply_admits_documents_beyond_the_one_item_cap_when_turns_fund_the_s
     assert_eq!(inverse, vec![DocumentMutation::SetText { index: 700, text }]);
     let stalled = catch_unwind(AssertUnwindSafe(|| prepare(&build, grant(1 << 16, 1 << 20), None)));
     assert!(stalled.is_err_and(|payload| payload.is::<Stall>()), "a turn that cannot fund the snapshot-sized apply never completes");
-    eprintln!("[DEBUG] mutation-apply admitted a {bytes}-byte document; footprint={}", footprint.retained_bytes);
 }
 
 #[test]
@@ -284,11 +282,8 @@ fn config_apply_reaches_prepared_in_the_same_harness() {
     let factory = semio_framework_os_store_snapshot_clone::config_apply::config_apply_preparation_factory::<Document, DocumentMutation>();
     let build = || (base.clone(), DocumentMutation::SetText { index: 1, text: "changed".into() });
     let Outcome::Completed { post, inverse, turns, retained, peak } = prepare_with(&factory, &build, grant(1 << 16, WIDE), None) else { panic!("config apply must complete") };
-    eprintln!("[DEBUG] sealer retained capacity for a 4-node record: cumulative {retained}, peak live {peak}");
     let tiny = Document { title: String::new(), nodes: vec![Node { id: "a".into(), text: "b".into() }] };
     let Outcome::Completed { retained: tiny_retained, peak: tiny_peak, .. } = prepare_with(&factory, &|| (tiny.clone(), DocumentMutation::SetText { index: 0, text: "c".into() }), grant(1 << 16, WIDE), None) else { panic!("tiny must complete") };
-    eprintln!("[DEBUG] sealer cumulative retained capacity for a 1-node record cumulative {tiny_retained}, peak live {tiny_peak}");
     assert_eq!(post.nodes[1].text, "changed");
     assert_eq!(inverse, vec![DocumentMutation::SetText { index: 1, text: "beta é".into() }]);
-    eprintln!("[DEBUG] config apply reached Prepared in {turns} turns through the same harness");
 }

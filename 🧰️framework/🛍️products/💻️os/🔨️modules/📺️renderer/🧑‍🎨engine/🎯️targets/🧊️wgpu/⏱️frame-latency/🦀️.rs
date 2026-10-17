@@ -25,7 +25,15 @@ impl FrameLatencyAuthorityDomain {
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct FrameLatencyAuthority {
+    #[cfg(any(test, feature = "testkit"))]
+    #[doc(hidden)]
+    pub domain: FrameLatencyAuthorityDomain,
+    #[cfg(not(any(test, feature = "testkit")))]
     domain: FrameLatencyAuthorityDomain,
+    #[cfg(any(test, feature = "testkit"))]
+    #[doc(hidden)]
+    pub generation: u64,
+    #[cfg(not(any(test, feature = "testkit")))]
     generation: u64,
 }
 
@@ -110,8 +118,8 @@ impl FrameLatencyStage {
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct FrameLatencyObservation {
-    authority: FrameLatencyAuthority,
-    stage: FrameLatencyStage,
+    pub authority: FrameLatencyAuthority,
+    pub stage: FrameLatencyStage,
     pub started_us: u64,
     pub duration_us: u64,
     pub work_items: u32,
@@ -120,7 +128,7 @@ pub struct FrameLatencyObservation {
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct FrameLatencyPhaseSummary {
-    authority: FrameLatencyAuthority,
+    pub authority: FrameLatencyAuthority,
     stage: FrameLatencyStage,
     first_sequence: u64,
     pub last_sequence: u64,

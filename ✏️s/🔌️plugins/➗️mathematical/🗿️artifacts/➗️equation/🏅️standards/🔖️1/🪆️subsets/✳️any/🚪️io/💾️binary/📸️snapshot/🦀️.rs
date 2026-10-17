@@ -40,7 +40,7 @@ mod controlled;
 pub(crate) fn decode_sqlite_native(payload:&store::io::IoPayload,control:&mut store::sqlite_snapshot::SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<EquationSnapshot,ValueError>{let maximum_rows=control.limits().max_rows;store::decode_sqlite_snapshot_record_native(payload,"mathematical.equation",EquationPackRecord::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {controlled::reconstruct(record,native,maximum_rows)})(); *snapshot_output = Some(constructed?); Ok(()) },control,native_control)}
 pub(crate) fn encode_sqlite_native(snapshot:&EquationSnapshot,encoding:store::sqlite_snapshot::SnapshotEncoding,control:&mut store::sqlite_snapshot::SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io::IoPayload,ValueError>{let maximum_rows=control.limits().max_rows;store::encode_sqlite_snapshot_record_native(encoding,"mathematical.equation",EquationPackRecord::__dsl_spec_producer(),|native|controlled_output::project(snapshot,maximum_rows,native),control,native_owner)}
 /// 🛬️ Bind the explicit owned fields and admit reverse construction before every allocation.
-pub(crate) fn reconstruct_pack_record_controlled(record:&semio_framework_dsl_record::RecordValue,control:&mut semio_framework_value::NativeDecodeControl<'_>,maximum_rows:usize)->Result<EquationSnapshot,ValueError>{controlled::reconstruct(record,control,maximum_rows)}
+pub fn reconstruct_pack_record_controlled(record:&semio_framework_dsl_record::RecordValue,control:&mut semio_framework_value::NativeDecodeControl<'_>,maximum_rows:usize)->Result<EquationSnapshot,ValueError>{controlled::reconstruct(record,control,maximum_rows)}
 /// 🖨️ Print the literal owned equation records without recursively lowering the expression.
 pub(crate) fn print_pack_record_text(snapshot:&EquationSnapshot)->String{semio_framework_dsl_record::print(&EquationPackRecord::from_snapshot(snapshot).__dsl_to_record(),&EquationPackRecord::__dsl_spec(),semio_framework_dsl_record::JoinMode::Document)}
 /// 📖️ Parse every owned field and refuse trailing unrelated native text.
@@ -77,9 +77,6 @@ pub fn decode(bytes:&[u8])->Result<EquationSnapshot,PackError>{<EquationSnapshot
 //#endregion 🔖️Store
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests
 
 /// 🫴️ Declares this owner’s actual controlled native record factories.

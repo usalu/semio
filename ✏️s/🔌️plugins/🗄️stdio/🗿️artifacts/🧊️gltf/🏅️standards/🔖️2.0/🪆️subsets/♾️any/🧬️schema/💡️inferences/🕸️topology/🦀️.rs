@@ -1,18 +1,13 @@
 //! 🕸 GLTF topology indicators.
 
-#[path = "➰️boundary-loops/🦀️.rs"]
-pub mod boundary_loops;
-#[path = "🧮️euler-characteristic/🦀️.rs"]
-pub mod euler_characteristic;
-#[path = "🔢️genus/🦀️.rs"]
-pub mod genus;
-#[path = "🥯️handles/🦀️.rs"]
-pub mod handles;
-#[path = "🕳️holes/🦀️.rs"]
-pub mod holes;
+pub use semio_s_artifact_stdio_gltf_inferences_repetition_ratio::standards::v2_0::subsets::any::schema::inferences::topology::boundary_loops;
+pub use semio_s_artifact_stdio_gltf_inferences_repetition_ratio::standards::v2_0::subsets::any::schema::inferences::topology::euler_characteristic;
+pub use semio_s_artifact_stdio_gltf_inferences_repetition_ratio::standards::v2_0::subsets::any::schema::inferences::topology::genus;
+pub use semio_s_artifact_stdio_gltf_inferences_repetition_ratio::standards::v2_0::subsets::any::schema::inferences::topology::handles;
+pub use semio_s_artifact_stdio_gltf_inferences_adjacency::standards::v2_0::subsets::any::schema::inferences::topology::holes;
 
-use super::super::modules::measurement_contracts::*;
-use super::geometry_core::GltfGeometryContext;
+use crate::standards::v2_0::subsets::any::schema::modules::measurement_contracts::*;
+use crate::standards::v2_0::subsets::any::schema::inferences::geometry_core::GltfGeometryContext;
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]

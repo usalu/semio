@@ -4,22 +4,19 @@ use semio_framework_os_infinite_world_model::WorldEnvironmentRecord;
 use semio_framework_os_infinite_world_cursors::{selection_method_wire_str, WORLD_INTERACTION_DOMAIN_ID};
 use semio_framework_os_infinite_world_scene::{mesh_id_from_url, srgb_to_linear};
 use semio_framework_os_infinite_world_interaction::{brush_preview_mesh_id, environment_clear_color, world_interaction_definition};
+use semio_framework_test_fixtures::fixture_text;
 #[cfg(any(test, feature = "testkit"))]
 use semio_framework_os_infinite_world_interaction::merge_u32_ids;
 use semio_framework::{HierarchyProvider, MergeMode, SelectionMethod};
 use ui_wgpu::wgpu::Rgba;
 
 /// 📖️ Reads one test input at run time (relative to the package manifest) so it does not count as an embedded compile input.
-fn read_static(path_from_manifest: &str) -> &'static str {
-    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(path_from_manifest);
-    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("test input {}: {error}", path.display())).into_boxed_str())
-}
 
 /// 📖️ Reads several test inputs at run time and joins them into the one text the unsplit sources formed.
 fn read_joined(paths: &[&str]) -> &'static str {
     let mut joined = String::new();
     for path in paths {
-        joined.push_str(read_static(path));
+        joined.push_str(fixture_text!(path));
     }
     Box::leak(joined.into_boxed_str())
 }
@@ -83,10 +80,9 @@ fn world_interaction_definition_declares_path_delimited_item_domain() {
 /// 🕹️ The shared domain admits the same component granularities and gesture vocabulary.
 #[test]
 fn world_component_contract_admits_shared_domain_methods() {
-    let fixture: serde_json::Value = serde_json::from_str(read_static("../../../🧪️tests/🧫️fixtures/🎯️component-contract/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../🧪️tests/🧫️fixtures/🎯️component-contract/🔣️.json")).unwrap();
     let definition = world_interaction_definition();
     for value in fixture["granularities"].as_array().unwrap() { assert!(definition.granularities.iter().any(|granularity| granularity.id == value.as_str().unwrap()), "{value}"); }
     for value in fixture["methods"].as_array().unwrap() { assert!(definition.selection.methods.iter().any(|method| selection_method_wire_str(*method) == value.as_str().unwrap()), "{value}"); }
     for value in fixture["merges"].as_array().unwrap() { assert!(definition.selection.merges.iter().any(|merge| merge.wire_label() == value.as_str().unwrap()), "{value}"); }
-    println!("[DEBUG] componentDomain granularities=5 methods=3 merges=4 locales=EnglishGerman");
 }

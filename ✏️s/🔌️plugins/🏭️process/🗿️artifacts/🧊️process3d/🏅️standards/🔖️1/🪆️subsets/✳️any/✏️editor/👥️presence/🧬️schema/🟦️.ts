@@ -30,6 +30,10 @@ type process3dPresenceGuardSizeBounds = { readonly minItems?: number; readonly m
 
 export const process3dPresenceGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : process3dPresenceGuardReject(at, "value is not an object");
+export const process3dPresenceGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) process3dPresenceGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const process3dPresenceGuardArray = (value: unknown, at: string, bounds: process3dPresenceGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return process3dPresenceGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) process3dPresenceGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -60,11 +64,11 @@ export const process3dPresenceGuardConstant = <T extends string | number | boole
 //#endregion 🚪️Parsers
 
 export function parseProcess3dPresence(value: unknown, at = "$"): Process3dPresence {
-  const row = process3dPresenceGuardObject(value, at);
+  const row = process3dPresenceGuardClosed(process3dPresenceGuardObject(value, at), at, ["engagementInput", "cameraPosition", "cameraTarget", "cameraFov", "activeUtilityId"]);
   return {
     engagementInput: process3dPresenceGuardString(row["engagementInput"], `${at}.engagementInput`),
-    cameraPosition: process3dPresenceGuardArray(row["cameraPosition"], `${at}.cameraPosition`, {"minItems": 3, "maxItems": 3}).map((item, index) => process3dPresenceGuardNumber(item, `${at}.cameraPosition[${index}]`)),
-    cameraTarget: process3dPresenceGuardArray(row["cameraTarget"], `${at}.cameraTarget`, {"minItems": 3, "maxItems": 3}).map((item, index) => process3dPresenceGuardNumber(item, `${at}.cameraTarget[${index}]`)),
+    cameraPosition: ((items0) => [process3dPresenceGuardNumber(items0[0], `${at}.cameraPosition[0]`), process3dPresenceGuardNumber(items0[1], `${at}.cameraPosition[1]`), process3dPresenceGuardNumber(items0[2], `${at}.cameraPosition[2]`)])(process3dPresenceGuardArray(row["cameraPosition"], `${at}.cameraPosition`, {"minItems": 3, "maxItems": 3})),
+    cameraTarget: ((items0) => [process3dPresenceGuardNumber(items0[0], `${at}.cameraTarget[0]`), process3dPresenceGuardNumber(items0[1], `${at}.cameraTarget[1]`), process3dPresenceGuardNumber(items0[2], `${at}.cameraTarget[2]`)])(process3dPresenceGuardArray(row["cameraTarget"], `${at}.cameraTarget`, {"minItems": 3, "maxItems": 3})),
     cameraFov: process3dPresenceGuardNumber(row["cameraFov"], `${at}.cameraFov`),
     activeUtilityId: process3dPresenceGuardString(row["activeUtilityId"], `${at}.activeUtilityId`),
   };

@@ -20,7 +20,8 @@
     ".": {
       "types": "./dist/🟦️.d.ts",
       "import": "./dist/🟦️.js"
-    }
+    },
+    "./standards/3.0/subsets/geometry/schema/snapshot": "./🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🧬️schema/📸️snapshot/🟦️.ts"
   },
   "dependencies": {},
   "license": "LGPL-3.0-or-later",

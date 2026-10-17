@@ -6,6 +6,13 @@
   "description": "@semio-tech/procedural-js authored owner test infrastructure.",
   "type": "module",
   "private": true,
+  "exports": {
+    "./foundation/generation/schema/snapshot": "./🫀️foundation/🧬️generation/🧬️schema/📸️snapshot/🟦️.ts",
+    "./foundation/generation/schema/snapshot/admission": "./🫀️foundation/🧬️generation/🧬️schema/📸️snapshot/🛡️admission/🟦️.ts",
+    "./foundation/generation/sqlite": "./🫀️foundation/🧬️generation/🪶️sqlite/🟦️.ts",
+    "./foundation/generation/sqlite/testing/fixtures": "./🫀️foundation/🧬️generation/🪶️sqlite/🧪️testing/🧫️fixtures/🟦️.ts",
+    "./foundation/generation/sqlite/testing/support": "./🫀️foundation/🧬️generation/🪶️sqlite/🧪️testing/🧰️support/🟦️.ts"
+  },
   "scripts": {
     "test": "bun --cwd \"../../../../..\" repo run @semio-tech/procedural-js:test"
   },

@@ -1,6 +1,6 @@
 /** 🛂️ The narrow authority port a document worker lends to an installed owner service. The os worker implements it; a plugin driver builds on it through the SDK entry `@semio-tech/framework/inference/service/worker-host` and never imports the worker.
  * @see ../🟦️.ts installed service contract the driver implements */
-import type { ColdDocumentPairFrontier } from "../../../🎭️actor/📥️cold-pair/🟦️.ts";
+import type { ColdDocumentPairFrontier } from "@semio-tech/framework-actor/cold-pair";
 import type { FetchTimeoutResponse } from "../../../🚪️io/🌐️fetch-timeout/🟦️.ts";
 import type { DocumentScope } from "../../../📄️document/🪪️scope/🟦️.ts";
 

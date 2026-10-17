@@ -34,3 +34,4 @@ semio-framework-os-mcp-bridge = { path = "../../../🪢️bridge-session/📦️
 semio-framework = { workspace = true }
 semio-framework-os-mcp-catalog = { path = "../../../📚️catalog-compiler/📦️packages/🦀️rust" }
 semio-framework-os-mcp-port = { path = "../../../🔌️channel-port/📦️packages/🦀️rust" }
+semio-framework-test-fixtures = { path = "../../../../../../../🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }

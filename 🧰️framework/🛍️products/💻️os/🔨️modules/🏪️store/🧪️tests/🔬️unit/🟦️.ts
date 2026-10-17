@@ -18,7 +18,6 @@ test("retained member publication funds independent decoding and release passes"
     assert.equal(turns, bytes.byteLength * corpus.wirePasses + schemaBytes + corpus.fixedPublicationTurns);
     assert.equal(Math.max(1, ...Array.from(bytes, () => 1)), corpus.maximumItems);
     assert(1 <= corpus.maximumBytes);
-    console.log(`[DEBUG] Independent member publication ${row.id} borrowed-decode=${decodeTurns} retained-release=${releaseTurns} fixed=${corpus.fixedPublicationTurns}`);
   }
 });
 
@@ -29,7 +28,6 @@ test("current original Store unit source is accepted by the independent Rust gra
     assert.ifError(error);
     assert.equal(status, 0, unit + ": " + stderr.toString());
   }
-  console.log("[DEBUG] Original Store Unit Rust grammar accepted; no source copy or native type/runtime credit");
 });
 
 test("original Presence examples separate Unicode body from funded physical backing", async () => {
@@ -46,7 +44,6 @@ test("original Presence examples separate Unicode body from funded physical back
   }
   assert.equal(law.requiresCapacitySizedCopyGrant, false);
   assert.equal(law.requiresCapacitySizedReleaseGrant, true);
-  console.log("[DEBUG] Original Presence seven Unicode examples keep copy4096 independent of original backing release; JSON/Buffer/TextEncoder agree");
 });
 
 test("current original Presence and Store read owners parse with independent Rust grammar", () => {
@@ -64,7 +61,6 @@ test("current original Presence and Store read owners parse with independent Rus
     assert.ifError(error);
     assert.equal(status, 0, stderr.toString());
   }
-  console.log("[DEBUG] Original Presence/read Rust grammar accepted:7; Source copies0, native type/runtime assertions0");
 });
 
 
@@ -103,7 +99,6 @@ test("current transfer, clone and schema consumers retain five original currenci
     assert.equal(metadata.copyBytes, 6 * wordBytes);
     assert.equal(metadata.arcBytes, 5 * wordBytes);
   }
-  console.log("[DEBUG] Three original consumer grammars and independent JSON/Buffer/TextEncoder transfer grants; native System assertions remain required");
 });
 
 test("current native cleanup callers retain independent plain authority instead of pricing it from demands", async () => {
@@ -131,11 +126,10 @@ test("current native cleanup callers retain independent plain authority instead 
     assert.ifError(result.error);
     assert.equal(result.status, 0, result.stderr.toString());
   }
-  console.log("[DEBUG] Independent original full policy admitted by Ajv; JSON/Buffer/TextEncoder body agrees, queries never price positive native cleanup authority; eight original Rust grammars, native System proof still required");
 });
 
 import{existsSync,readFileSync}from"node:fs";
-import { retainedCloneNestedFixtureUrl } from "../../../../../../🔨️modules/🌱️value/🧪️tests/🧫️fixtures/🟦️.ts";
-test("original returned read examples have no independent whole-trial schema",()=>{assert.equal(existsSync(new URL("../../🔗️read/🧾️return/🧬️schema/🔣️.json",import.meta.url)),false);const examples=JSON.parse(readFileSync(new URL("../../🔗️read/🧾️return/🧪️tests/🧫️fixtures/🔣️.json",import.meta.url),"utf8"));for(const row of examples.cases)assert.equal(row.expectLastCustody,row.otherAliases===0||row.dropOtherBeforeRelease,row.id);console.log("[DEBUG] Original returned read plain aliases preserve last-custody expectations without a trial contract; native2laws unqualified");});
+import { retainedCloneNestedFixtureUrl } from "@semio-tech/value-ts/testing/fixtures";
+test("original returned read examples have no independent whole-trial schema",()=>{assert.equal(existsSync(new URL("../../🔗️read/🧾️return/🧬️schema/🔣️.json",import.meta.url)),false);const examples=JSON.parse(readFileSync(new URL("../../🔗️read/🧾️return/🧪️tests/🧫️fixtures/🔣️.json",import.meta.url),"utf8"));for(const row of examples.cases)assert.equal(row.expectLastCustody,row.otherAliases===0||row.dropOtherBeforeRelease,row.id);});
 
 test("original codec custody examples do not own a whole-trial schema",()=>{assert.equal(existsSync(new URL("../../📦️codec/🪶️snapshot-capability/🪶️native-retirement/🧬️schema/🔣️.json",import.meta.url)),false);});

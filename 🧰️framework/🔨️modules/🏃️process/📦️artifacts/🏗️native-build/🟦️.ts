@@ -318,7 +318,7 @@ export class BoundedDiagnosticsV1 {
 }
 
 /** 🗂️ Observes actual directory names, entry kinds and raw link targets in portable UTF-8 order. */
-export function cargoDirectoryEntriesV1(path: string): Array<[string, string, string | null]> | null {
+export function cargoDirectoryEntriesV1(path: string): Array<[string, "file" | "directory" | "symlink" | "other", string | null]> | null {
   try { return readdirSync(path).sort((a, b) => Buffer.compare(Buffer.from(a), Buffer.from(b))).map(name => { const child = join(path, name), entry = lstatSync(child); return [name, entry.isSymbolicLink() ? "symlink" : entry.isDirectory() ? "directory" : entry.isFile() ? "file" : "other", entry.isSymbolicLink() ? readlinkSync(child) : null]; }); } catch { return null; }
 }
 
@@ -845,7 +845,7 @@ async function captureCargoArtifacts(manifest: string, args: string[], policy: C
   const commandPort = options.commandPort ?? { command: "cargo", args: [] };
   let status:Promise<number>|undefined;const captureOptions=options;
   try{
-  await withCompilerCapacityScopeV1({directory:policy.leaseDirectory,control:options.control,environment:options.environment},async(facts,control)=>{
+  await withCompilerCapacityScopeV1({request:{kind:"whole-host"},directory:policy.leaseDirectory,control:options.control,environment:options.environment},async(facts,control)=>{
   const environment:Record<string,string|undefined>={...captureOptions.environment,SEMIO_COMPILER_PARALLELISM:String(facts.parallelism)};delete environment.SEMIO_COMPILER_CAPACITY_HELD;const options={...captureOptions,control,environment},granted=compilerAdmissionBudgetV1(control);
   if(!environment.MAKEFLAGS&&!environment.CARGO_MAKEFLAGS)environment.CARGO_BUILD_JOBS=String(facts.parallelism);
   const child = spawn(commandPort.command, [...commandPort.args, options.command ?? "build", "--locked", "--manifest-path", path, ...cargoArgs, "--message-format=json-render-diagnostics", ...compilerArgs], {

@@ -2,7 +2,7 @@
   "name": "@semio-tech/framework-server",
   "$schema": "../../../🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "namedInputs": {
-    "default": ["{workspaceRoot}/🧰️framework/🛍️products/🖥️server/🟦️.ts", "{projectRoot}/**/*", "{workspaceRoot}/🧰️framework/🛍️products/🖥️server/🧪️tests/🎚️config/🟦️.ts"]
+    "default": ["{workspaceRoot}/🧰️framework/🛍️products/🖥️server/🟦️.ts", "{workspaceRoot}/🧰️framework/🛍️products/🖥️server/🧬️wire-types/🟦️.ts", "{workspaceRoot}/🧰️framework/🛍️products/🖥️server/🚚️transport/🟦️.ts", "{workspaceRoot}/🧰️framework/🛍️products/🖥️server/🔤️codec/🟦️.ts", "{workspaceRoot}/🧰️framework/🛍️products/🖥️server/🛣️routes-and-sockets/🟦️.ts", "{workspaceRoot}/🧰️framework/🛍️products/🖥️server/📡️client/🟦️.ts", "{projectRoot}/**/*", "{workspaceRoot}/🧰️framework/🛍️products/🖥️server/🧪️tests/🎚️config/🟦️.ts"]
   },
   "targets": {
     "test": {

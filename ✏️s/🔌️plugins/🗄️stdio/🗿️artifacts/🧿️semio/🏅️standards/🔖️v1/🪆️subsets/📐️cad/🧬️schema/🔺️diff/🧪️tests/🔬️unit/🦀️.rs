@@ -1,4 +1,7 @@
-use super::*;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
+use crate::{schema::snapshot::CadBlock, schema::snapshot::CadEntity, schema::snapshot::CadEntityRecord, schema::snapshot::CadLayer, schema::snapshot::SemioCadSnapshot};
+use protocol::MutationDiff;
+use crate::schema::diff::*;
 use semio_s_artifact_stdio_semio_base::schema::triples::NamedAdded;
 use protocol::{DiffBinary,DiffText};
 

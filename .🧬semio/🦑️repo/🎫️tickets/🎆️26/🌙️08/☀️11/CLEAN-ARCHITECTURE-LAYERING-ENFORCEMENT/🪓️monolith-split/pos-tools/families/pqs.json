@@ -1,0 +1,17 @@
+{
+ "name": "pqs",
+ "crates": [
+  "semio-framework-pack-record",
+  "semio-framework-pack-format-catalog",
+  "semio-framework-quiz-schema"
+ ],
+ "base": {
+  "rev": "1bae6115bc5",
+  "crates": [
+   "semio-framework-pack-record",
+   "semio-framework-pack-format-catalog",
+   "semio-framework-quiz-schema"
+  ]
+ },
+ "note": "PACK-QUIZ-FILE-SPLITS"
+}

@@ -40,5 +40,4 @@ test("the actual router bundles with every specific source owner unavailable", a
   const inputs = Object.keys(result.metafile!.inputs);
   expect(inputs.length).toBeGreaterThan(3);
   expect(inputs.some((path) => fixture.refusedOwners.some((owner) => path.replaceAll("\\", "/").startsWith(owner + "/")))).toBe(false);
-  console.log("[DEBUG] framework-script-boundary " + JSON.stringify({ sourceOwners: inputs.length, specificOwners: 0 }));
 }, 15_000);

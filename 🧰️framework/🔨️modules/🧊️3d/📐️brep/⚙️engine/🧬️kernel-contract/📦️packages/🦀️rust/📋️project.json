@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/3d-brep-kernel-contract-rs",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

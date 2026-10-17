@@ -34,7 +34,6 @@ fn ordered_set_wire_matches_serde_btree_oracle_and_retirement_uses_tiny_grants()
         }
     }
     assert_eq!(released, bytes);
-    eprintln!("[DEBUG] OrderedSet original ranked keys share pointer identity, match independentBTreeSet and retain onebyte work with separate whole allocation release grants");
 }
 
 #[test]

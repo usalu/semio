@@ -1,0 +1,23 @@
+{
+ "name": "c4p16d",
+ "crates": [
+  "semio-s-artifact-stdio-mp4-tests",
+  "semio-s-artifact-stdio-mp4-boxes",
+  "semio-s-artifact-stdio-mp4-schema",
+  "semio-s-artifact-stdio-mp4-inferences",
+  "semio-s-artifact-stdio-mp4-mutations",
+  "semio-s-artifact-stdio-mp4"
+ ],
+ "note": "CENSUS4-PKG-16 split family c4p16d",
+ "base": {
+  "rev": "b84bf526c7b",
+  "crates": [
+   "semio-s-artifact-stdio-mp4-tests",
+   "semio-s-artifact-stdio-mp4-boxes",
+   "semio-s-artifact-stdio-mp4-schema",
+   "semio-s-artifact-stdio-mp4-inferences",
+   "semio-s-artifact-stdio-mp4-mutations",
+   "semio-s-artifact-stdio-mp4"
+  ]
+ }
+}

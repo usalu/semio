@@ -1,9 +1,12 @@
+use semio_framework_plugin::BuiltNode;
 
-use super::*;
+use crate::editor::sourcing::config::SourcingCurationConfig;
+use semio_framework_plugin::SurfaceKind;
+use crate::editor::sourcing::modes::edit::windows::grid::{SOURCING_CURATION_BODY_GRID, definition, render};
 use crate::editor::sourcing::modes::edit::windows::grid::config::{GridWindowConfig, GRID_INSTANCE_DISPLAY_REPRESENTATIVE, GRID_INSTANCE_DISPLAY_REPRESENTATIVE_WITH_COUNT};
 use crate::editor::sourcing::SourcingCurationCommand;
 use crate::editor::sourcing::commands::curation_add;
-use crate::editor::sourcing::unit_tests::context::{dispatch, new_app};
+use crate::editor_unit_tests::context::{dispatch, new_app};
 use crate::schema::{box_parts, curation_set, filtered_stock};
 use crate::Filters;
 

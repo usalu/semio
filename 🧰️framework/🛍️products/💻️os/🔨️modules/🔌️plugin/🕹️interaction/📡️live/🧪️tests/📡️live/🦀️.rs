@@ -2,6 +2,7 @@
 
 use super::*;
 use crate::{mutations::InteractionConfigMutation, query::tests::install_original_interaction_owners};
+use semio_framework_test_fixtures::fixture_path;
 use store::{ArtifactStore, ErasedSnapshotRetirement, SpaceMember};
 
 type TestStore = ArtifactStore<protocol::InteractionState, InteractionConfigMutation>;
@@ -9,7 +10,7 @@ type Query = LocalInteractionLiveQuery<protocol::InteractionState, protocol::Int
 use crate::query::tests::original_receiving_recipient;
 
 async fn stores() -> ([TestStore; 3],crate::io::control::NativeSnapshotBodyWallet) {
-    let fixture: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧪️tests/🧫️fixtures/🏠️local-interaction/🔣️.json")).expect("fixture read at run time")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(fixture_path!("../../../../../../../🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧪️tests/🧫️fixtures/🏠️local-interaction/🔣️.json")).expect("fixture read at run time")).unwrap();
     let row = fixture["cases"].as_array().unwrap().iter().find(|row| row["id"] == "semantic-unicode-over-page").unwrap();
     let mut state = row["expected"].clone();
     state["hover"] = serde_json::json!({});
@@ -307,5 +308,4 @@ async fn original_live_page_refusal_preserves_borrowed_page_before_any_heap_copy
     let page=query.owned.query.as_ref().unwrap().page().unwrap();let preserved=(page.bytes.as_ptr(),page.bytes.len(),page.token.clone())==original;
     query.begin_close();finish_close(&mut stores,&mut query,&mut recipient);close_stores(&mut stores,&mut recipient);
     assert_eq!(serde_json::to_value([physical.requested_bytes,physical.released_bytes]).unwrap(),law["pagePublicationRefusal"]["physicalBytes"]);assert_eq!(serde_json::to_value(preserved).unwrap(),law["pagePublicationRefusal"]["originalPagePreserved"]);assert_eq!(serde_json::to_value(admitted).unwrap(),law["pagePublicationRefusal"]["replyAdmitted"]);
-    eprintln!("[DEBUG] Original live page refused beforeheapcopy same borrowed page/token/pointer original capture/Store owners closed under same caller wallet independentSerde=true");
 }

@@ -276,7 +276,7 @@ fn window_panes_stay_consumer_less_on_both_renderers() {
 #[test]
 fn the_introduction_seen_key_is_brand_scoped() {
     let restore = semio_framework_os_renderer_wgpu_host_base::boot_descriptor();
-    let shell = appearance_tour_and_footer_pill_tests::tour_shell(Some(appearance_tour_and_footer_pill_tests::tour_introduction()));
+    let shell = tour_shell(Some(tour_introduction()));
     let app_id = shell.docs.session.as_ref().expect("the fixture opens a session").app.id.clone();
 
     let mut unbranded = semio_framework_os_renderer_wgpu_host_base::boot_descriptor();

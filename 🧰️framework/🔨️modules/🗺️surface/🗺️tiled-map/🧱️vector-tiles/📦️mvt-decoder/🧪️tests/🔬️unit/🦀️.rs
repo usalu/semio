@@ -1,13 +1,14 @@
 //! 🧪️ Unit proofs of the MVT decoder against the six owned protobuf tiles, read at run time from the tiled-map fixture folder so no tile bytes are compiled into the crate.
 
 use super::{decode_mvt, feature_label, feature_label_anchor, GeomType, VectorFeature};
+use semio_framework_test_fixtures::fixture_path;
 use std::collections::BTreeMap;
 use std::path::PathBuf;
 
 const VECTOR_TILE_KEYS: [&str; 6] = ["0-0-0", "1-1-0", "2-2-1", "3-4-2", "4-8-5", "5-17-11"];
 
 fn fixture_root() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../../🧪️tests/🧫️fixtures/🗺️vector-tiles")
+    fixture_path!("../../../../🧪️tests/🧫️fixtures/🗺️vector-tiles")
 }
 
 fn vector_tile_fixture(key: &str) -> Vec<u8> {
@@ -43,7 +44,6 @@ fn owned_vector_tile_inventory_agrees_with_independent_protobuf_corpus() {
             .collect();
         assert_eq!(serde_json::Value::Array(layers), row["layers"], "tile {key}");
     }
-    println!("[DEBUG] Owned vector tile layer/feature/geometry inventory matches the independent Protobuf.js corpus for all six original tiles");
 }
 
 #[test]

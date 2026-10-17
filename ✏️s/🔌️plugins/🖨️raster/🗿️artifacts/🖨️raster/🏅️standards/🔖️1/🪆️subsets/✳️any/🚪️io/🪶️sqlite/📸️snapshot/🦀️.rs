@@ -2,7 +2,6 @@
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::{RasterLayerMask, RasterLayerNode, RasterOwnedMap, RasterTransform};
 use crate::snapshot::RasterSnapshot;
-use crate::snapshot::RasterSnapshot;
 use store::sqlite_snapshot::{SqliteDatabase,SqliteRow,SqliteValue,SqliteSnapshotControl,SqliteSnapshotPhase,validate_sqlite_database_schema,artifact::{Projection,Cell,FloatColumn,FloatRow,Reconstruction,insert_ieee754}};
 use std::collections::BTreeMap;
 use semio_framework_value::{ValueError,ValueRefusalKind};
@@ -164,6 +163,3 @@ fn to_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<Sqli
 fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{reconstruct(database,control)}
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;

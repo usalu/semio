@@ -26,6 +26,3 @@ impl<T:RetireAuthority> Table<T>{
 impl Table<()>{pub fn insert_key(&mut self,key:&str)->Result<bool,semio_framework::Fault>{self.insert(key,())}}
 impl Table<String>{pub fn insert_text(&mut self,key:&str,value:&str)->Result<bool,semio_framework::Fault>{if value.len()>MAX_ID_BYTES{return Err(fault(refused()));}self.insert_with(key,value.len(),||{let mut owned=String::new();owned.try_reserve_exact(value.len()).map_err(fault)?;owned.push_str(value);Ok(owned)})}}
 impl<T:RetireAuthority> std::ops::Index<&String> for Table<T>{type Output=T;fn index(&self,key:&String)->&T{self.get(key.as_str()).expect("admitted clipboard metadata key")}}
-#[cfg(test)]
-#[path="🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;

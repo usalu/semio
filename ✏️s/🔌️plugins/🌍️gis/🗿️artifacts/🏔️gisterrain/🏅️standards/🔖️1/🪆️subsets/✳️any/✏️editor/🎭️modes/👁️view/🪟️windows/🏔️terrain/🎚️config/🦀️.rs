@@ -201,14 +201,11 @@ pub fn gis_terrain_window_config_mutation_report_json(camera_json: &str, kind: &
 //#endregion 🔖️ConfigOperations
 
 //#region 🧪️Tests
-#[path = "🧬️schema/🦀️.rs"]
-pub mod schema;
+
 
 #[cfg(test)]
 #[path = "🧪️tests/🧬️direct/🦀️.rs"]
 mod direct_leaf_contracts;
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

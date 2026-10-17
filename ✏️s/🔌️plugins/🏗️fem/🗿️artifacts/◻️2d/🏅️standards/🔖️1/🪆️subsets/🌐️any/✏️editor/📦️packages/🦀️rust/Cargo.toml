@@ -22,6 +22,7 @@ path = "../../🧪️tests/🔬️app/🦀️.rs"
 [dependencies]
 pack = { workspace = true }
 semio-framework = { workspace = true }
+semio-framework-action-bus = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🎯️action-bus/📦️packages/🦀️rust" }
 semio-framework-2d = { workspace = true }
 semio-framework-dsl-record-derive = { workspace = true }
 semio-framework-job = { workspace = true }
@@ -60,3 +61,4 @@ semio-s-artifact-fem-2d-load = { workspace = true }
 semio-s-artifact-fem-2d-material = { workspace = true }
 semio-s-artifact-fem-2d-mesh-topology = { workspace = true }
 serde_json = { workspace = true }
+semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }

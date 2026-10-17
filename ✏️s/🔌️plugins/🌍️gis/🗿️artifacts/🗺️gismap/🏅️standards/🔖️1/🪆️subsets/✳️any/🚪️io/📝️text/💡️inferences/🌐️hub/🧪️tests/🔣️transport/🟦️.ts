@@ -12,4 +12,4 @@ test("GIS semantic requests acquire JSON byte admission only at transport IO",()
  expect(oracle.compile({const:JSON.parse(row.json)})(JSON.parse(json))).toBe(true);
  expect(()=>gisMapInferenceRequestToJson({...value,requestId:"x".repeat(10000)})).toThrow("oversized-request");
 });
-afterAll(()=>console.log("[DEBUG] Owned transport corpus completed: @semio-tech/gis-gismap-js"));
+afterAll(()=>{});

@@ -2,7 +2,8 @@
 //! bounded space and the number is the next free one of the storey) and the stair (press the foot, drag the direction and release, or click the foot and click the direction).
 
 use super::plane::{angle, dist, point2, same, P};
-use super::session::{length_label, Mark, Pointer, Preview, Step, Style, Tool, ToolContext, ToolEvent, STOREY_MISSING, TYPE_MISSING};
+use super::session::{length_label, Pointer, Step, Tool, ToolContext, ToolEvent, STOREY_MISSING, TYPE_MISSING};
+use crate::editor::bim::marks::{Mark, Preview, Style};
 use crate::standards::v1::subsets::any::schema::{snapshot::{Column, Space, SpaceBoundary, Stair, StairFlight, TopConstraint}, mutations::ModelMutation};
 
 /// 🖱️ How many pixels a press must travel before it counts as a drag.

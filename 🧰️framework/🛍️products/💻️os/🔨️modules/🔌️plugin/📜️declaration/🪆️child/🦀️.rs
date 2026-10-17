@@ -108,10 +108,13 @@ pub struct PreparedChildContentIdentity {
 }
 
 pub struct PreparedChildContentEntry {
-    entry: ManuallyDrop<Option<ChildContentEntry>>,
+    #[doc(hidden)]
+    pub entry: ManuallyDrop<Option<ChildContentEntry>>,
     pub metadata: ManuallyDrop<Option<[String; 7]>>,
-    metadata_cursor: usize,
-    visibility: ManuallyDrop<Option<std::sync::Arc<semio_framework_os_kernel::os_vcs::ArtifactGroupVisibility>>>,
+    #[doc(hidden)]
+    pub metadata_cursor: usize,
+    #[doc(hidden)]
+    pub visibility: ManuallyDrop<Option<std::sync::Arc<semio_framework_os_kernel::os_vcs::ArtifactGroupVisibility>>>,
     pub generation: u64,
 }
 

@@ -22,6 +22,10 @@ type spaceHomeConfigGuardSizeBounds = { readonly minItems?: number; readonly max
 
 export const spaceHomeConfigGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : spaceHomeConfigGuardReject(at, "value is not an object");
+export const spaceHomeConfigGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) spaceHomeConfigGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const spaceHomeConfigGuardArray = (value: unknown, at: string, bounds: spaceHomeConfigGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return spaceHomeConfigGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) spaceHomeConfigGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -52,7 +56,7 @@ export const spaceHomeConfigGuardConstant = <T extends string | number | boolean
 //#endregion 🚪️Parsers
 
 export function parseHomeConfig(value: unknown, at = "$"): HomeConfig {
-  const row = spaceHomeConfigGuardObject(value, at);
+  const row = spaceHomeConfigGuardClosed(spaceHomeConfigGuardObject(value, at), at, ["retiredLocalStudioIds"]);
   return {
     retiredLocalStudioIds: row["retiredLocalStudioIds"] === undefined ? [] : spaceHomeConfigGuardArray(row["retiredLocalStudioIds"], `${at}.retiredLocalStudioIds`, {"maxItems": 256}).map((item, index) => spaceHomeConfigGuardString(item, `${at}.retiredLocalStudioIds[${index}]`, {"minLength": 1})),
   };

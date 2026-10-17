@@ -1,12 +1,37 @@
 //! 🎿️ Staged `emit` members of the `instance-dispatch` use cases, as methods of the borrowed bundle (WP7 of the instance family).
 //!
 //! 📤️ `dispatch_emit` and the emit transaction groups: how one app emit lands as commands, effects and history rows.
-use super::*;
-use crate::tool_jobs::time_travel;
-use super::commands_instance_root::artifact_lane_commands;
-use super::docs_instance_root::artifact_handle_of;
-use super::docs_instance_root::tool_transaction_shape_fault;
-use super::docs_instance_root::viewer_read_only_fault;
+use semio_framework::{ActionKind, AppRole, Fault, FaultCode, FaultFrom, FaultOrigin};
+use semio_framework_plugin_decl_emission::{ActionMeta, ChildEmit, Emit, TransactionPhase};
+use semio_framework::kernel::{ActorId, AppEvent, ArtifactDiff, ArtifactHandle, ArtifactVersion, EditRef, Effect, HybridLogicalTimestamp, InverseMutation, InvocationId, InvocationResult, KernelMutation, MutationId, SchemaId, UiDirtyScope, UndoGroup, UndoPolicy};
+use semio_framework_plugin_decl_app::ArtifactApp;
+use store::os_store::store_schema::ArtifactCommand;
+use semio_framework_artifact_reference::{ArtifactDialect, ArtifactRef};
+use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use pack::snapshot::ArtifactPack;
+use semio_framework_plugin_child::ChildContentRetirement;
+use semio_framework_plugin_decl_views::child_view::{ChildContentView, MemberKeyRef};
+use store::os_store::composition_coordinator::{ChildDispatch, CompositionCoordinator, GroupMeta};
+use crate::dispatch_bundle::DispatchCtx;
+use semio_framework_value::DslValue;
+use semio_framework_plugin_job::{EmitWire, TransactionProposalDraft};
+use std::future::Future;
+use std::collections::HashSet;
+use semio_framework_plugin_instance_extension::InstanceExtension;
+use semio_framework_plugin_instance_docs::docs_components::MediaTransfers;
+use store::{MemberFactory, Mutation, SpaceMember};
+use semio_framework_plugin_retained_command::typed_operation::MountedTypedCommandFullOperation;
+use protocol::OpText;
+use semio_framework_plugin_reactor_app::PluginApp;
+use semio_framework_plugin_instance_jobs::jobs_components::ToolOperations;
+use crate::dispatch_emit;
+use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
+use semio_framework_plugin_interaction::interaction_topology::take_inline_interaction_verbs;
+use semio_framework_ui_contract::*;
+use semio_framework_plugin_time_travel as time_travel;
+use semio_framework_plugin_instance_docs::docs_instance_root::artifact_handle_of;
+use semio_framework_plugin_instance_docs::docs_instance_root::tool_transaction_shape_fault;
+use semio_framework_plugin_instance_docs::docs_instance_root::viewer_read_only_fault;
 
 impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceExtension> DispatchCtx<'ctx, A, M, X> {
     /// 🧪️ Lands one app `Emit` through the production `dispatch_emit` seam under a named
@@ -14,7 +39,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
     /// the host sees it (ticket 26/09/16/INPUT-CAUSALITY-LEDGER: the inline interaction fold),
     /// which no registry-less typed command can reach and no reserved route carries.
     #[cfg(test)]
-    pub(crate) async fn test_dispatch_emit(&mut self, verb: &str, emit: Emit<A::Mutation, A::ConfigMutation, A::DraftMutation>, meta: &ActionMeta, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<InvocationResult, Fault> {
+    pub async fn test_dispatch_emit(&mut self, verb: &str, emit: Emit<A::Mutation, A::ConfigMutation, A::DraftMutation>, meta: &ActionMeta, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<InvocationResult, Fault> {
         self.dispatch_emit(verb, emit, meta, identity, cx).await
     }
 
@@ -32,7 +57,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
     /// world overlay still lands), and one diagnostic per verb that could not be applied.
     /// A failed carrier applies no verb: its pick did not happen. The typed-operation ladder,
     /// which never enters here, has its own twin ([`Self::publish_mounted_typed_inline_interaction_unit`]).
-    pub(crate) async fn dispatch_emit(&mut self, verb: &str, mut emit: Emit<A::Mutation, A::ConfigMutation, A::DraftMutation>, meta: &ActionMeta, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<InvocationResult, Fault> {
+    pub async fn dispatch_emit(&mut self, verb: &str, mut emit: Emit<A::Mutation, A::ConfigMutation, A::DraftMutation>, meta: &ActionMeta, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<InvocationResult, Fault> {
         if !emit.owned_child_emits.is_empty()||emit.owned_child_emits.capacity()!=0||!emit.child_preparations.is_empty()||emit.child_preparations.capacity()!=0{
             return self.mount_original_emit_publication(verb, emit, meta, None, cx).await;
         }
@@ -304,7 +329,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
     /// `txn_id` on every member it touches, so the gateway's `TransactionUndo{group_id: txn_id}` moves them all.
     /// The parent's tail edit (when the group touched the parent) carries the prepared origin like a solitary
     /// commit does. Returns the parent's edit id, else the first touched child's.
-    pub(super) async fn commit_transaction_group(&mut self, txn_id: &str, ops: Vec<A::Mutation>, children: Vec<ChildEmit>, origin: protocol::MutationOrigin, meta: &ActionMeta, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<String, Fault> {
+    pub async fn commit_transaction_group(&mut self, txn_id: &str, ops: Vec<A::Mutation>, children: Vec<ChildEmit>, origin: protocol::MutationOrigin, meta: &ActionMeta, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<String, Fault> {
         let parent_edits_before = self.stores.store.envelope().vcs.edits.len();
         let result = self
             .dispatch_emit_group(&format!("transaction:{txn_id}"), &ops, &children, Vec::new(), Vec::new(), UiDirtyScope::Full, meta, Some(txn_id.to_string()), None, identity)
@@ -321,7 +346,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
     /// owned children) whose tail carries `group_id` through `CompositionCoordinator::undo_group`/`redo_group`,
     /// republishing each moved child's content like the shell lane's group history does. A group no member
     /// carries is refused by name, exactly like the solitary path.
-    pub(super) async fn transaction_group_history(&mut self, action: &str, group_id: &str, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), Fault> {
+    pub async fn transaction_group_history(&mut self, action: &str, group_id: &str, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), Fault> {
         self.child_composition.admit_child_content_publication_span(self.child_composition.children.len())?;
         let parent_id = self.stores.store.envelope().id.clone();
         let parent_dialect: ArtifactDialect = A::DIALECT.into();
@@ -409,7 +434,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
     /// 🧾️ One command-log row for the whole group, carrying every touched child's edit in `child_edit_ids` (see
     /// `CommandLogEntry::child_edit_ids`'s own doc comment); a config-lane edit never joins it (design §20.13, L4).
     #[allow(clippy::too_many_arguments)]
-    pub(super) async fn dispatch_emit_group(
+    pub async fn dispatch_emit_group(
         &mut self,
         verb: &str,
         artifact_mutations: &[A::Mutation],
@@ -606,7 +631,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
     /// edit is never a history row (design §20.13, L4). A coalesced gesture amends the edit its first dispatch already
     /// logged, so later dispatches append no second row — and they mark that row dirty, so the admitting completion
     /// re-upserts it.
-    pub(super) fn record_typed_operation_lane(&mut self, mounted: &mut MountedTypedCommandFullOperation<A>) {
+    pub fn record_typed_operation_lane(&mut self, mounted: &mut MountedTypedCommandFullOperation<A>) {
         if mounted.terminal_fault.is_some() {
             return;
         }
@@ -630,5 +655,24 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
         let verb = mounted.verb.clone();
         let label = self.tools.verb_label(&verb);
         self.tools.record_command(&mut *self.history, &verb, kind, label, Some(edit_id), Vec::new(), None);
+    }
+}
+
+/// 🎞️ The document-store commands an emission's artifact lane dispatches (design §15): a streamed tick appends to its
+/// transaction's open edit (opening it), a commit closes the open edit of its transaction (appending its last operations
+/// first) or, with none open, records its operations as one edit carrying the ref, an abort reverts the open edit, and an
+/// emission outside a transaction applies as one plain edit. An empty list publishes nothing.
+pub(crate) fn artifact_lane_commands<M>(mutations: Vec<M>, transaction: Option<protocol::TransactionRef>, phase: TransactionPhase, open: Option<&store::os_store::store_schema::OpenToolTransaction>) -> Vec<ArtifactCommand<M>> {
+    let open = open.zip(transaction.as_ref()).is_some_and(|(open, transaction)| open.transaction.id == transaction.id);
+    let append = |mutations: Vec<M>, transaction: protocol::TransactionRef| (!mutations.is_empty()).then(|| ArtifactCommand::AppendTransaction { mutations, transaction });
+    match (transaction, phase) {
+        (Some(transaction), TransactionPhase::Stream) => append(mutations, transaction).into_iter().collect(),
+        (Some(transaction), TransactionPhase::Commit) if open => {
+            let transaction_id = transaction.id.clone();
+            append(mutations, transaction).into_iter().chain([ArtifactCommand::CommitTransaction { transaction_id }]).collect()
+        }
+        (Some(transaction), TransactionPhase::Abort) => open.then(|| ArtifactCommand::AbortTransaction { transaction_id: transaction.id }).into_iter().collect(),
+        (_, _) if mutations.is_empty() => Vec::new(),
+        (transaction, _) => vec![ArtifactCommand::Apply { mutations, transaction }],
     }
 }

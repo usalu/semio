@@ -29,5 +29,4 @@ export function testRetainedWindowInputOracle(): void {
     }
     assert.deepEqual(database.query("SELECT count(*) AS count FROM backing WHERE released=CASE WHEN items>0 AND depth>0 AND release>=backing THEN backing ELSE 0 END").get(),{count:fixture.retirementBacking.length});
   } finally { database.close(); }
-  console.log("[DEBUG] original displaced-window SQLite oracle separates five final-backing policies");
 }

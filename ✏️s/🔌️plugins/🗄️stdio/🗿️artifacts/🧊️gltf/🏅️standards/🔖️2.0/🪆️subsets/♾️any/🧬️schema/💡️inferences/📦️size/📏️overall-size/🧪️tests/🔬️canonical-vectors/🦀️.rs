@@ -1,3 +1,5 @@
+use semio_framework_test_fixtures::fixture_text;
+
 #[derive(value_derive::FromValue)]
 struct Vector {
     value: Option<f64>,
@@ -9,7 +11,7 @@ struct Contract {
 }
 #[semio_framework_async_macros::async_test]
 async fn shared_analytic_unavailable_and_deterministic_vectors_are_typed() {
-    let contract: Contract = semio_framework_pack_json::from_json_str(include_str!("../../../../../../🧪️tests/🧫️fixtures/💡️inferences/📦️size/📏️overall-size/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let contract: Contract = semio_framework_pack_json::from_json_str(fixture_text!("../../../../🧪️tests/🧫️fixtures/💡️inferences/📦️size/📏️overall-size/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     assert_eq!(contract.vectors[0].value, Some(5.0));
     assert_eq!(contract.vectors[0].availability, "available");
     assert_eq!(contract.vectors[1].value, None);

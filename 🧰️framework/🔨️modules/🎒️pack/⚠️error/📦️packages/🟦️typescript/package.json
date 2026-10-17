@@ -1,0 +1,9 @@
+{
+  "name": "@semio-tech/framework-pack-error-ts",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./🟦️.ts",
+    "./testing/fixtures/cause/codec": "./🧪️testing/🧫️fixtures/🧭️cause/📡️codec/🟦️.ts"
+  }
+}

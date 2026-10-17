@@ -10,15 +10,11 @@
 use crate::editor::puzzle5d::config::{Puzzle5dCamera3d, Puzzle5dRuntime};
 use crate::editor::puzzle5d::modes::edit;
 use crate::editor::puzzle5d::modes::edit::options as mode_options;
-use crate::editor::puzzle5d::modes::edit::windows::board2d;
 use crate::editor::puzzle5d::modes::edit::windows::world3d::{options, utilities};
 use crate::editor::puzzle5d::precompute::{puzzle5d_placement_entity, PUZZLE5D_WORLD_MESH_KINDS};
 use crate::editor::puzzle5d::terminology::{puzzle5d_localized, Puzzle5dLabels};
-use crate::editor::puzzle5d::{
-    part_scale_json, puzzle5d_grip_full_id, puzzle5d_gumball_active, puzzle5d_scene_mode, puzzle5d_transform_handle, resolve_grip_world_position, resolve_part_mesh_url, world_grip_direction,
-    target_volume_scale_json, world_grip_position, Puzzle5dDocument, Puzzle5dInteractionSnapshot, Puzzle5dPart, Puzzle5dScene, PUZZLE5D_FALLBACK_MESH_KIND, PUZZLE5D_GRANULARITY_FASTENER, PUZZLE5D_GRANULARITY_GRIP,
-    PUZZLE5D_GRANULARITY_PART, PUZZLE5D_GRIP_SHOW_ALWAYS, PUZZLE5D_INTERACTION_DOMAIN, PUZZLE5D_TARGET_VOLUME_COLOR,
-};
+use crate::editor::puzzle5d::entities::{part_scale_json, puzzle5d_grip_full_id, resolve_grip_world_position, resolve_part_mesh_url, world_grip_direction, target_volume_scale_json, world_grip_position, Puzzle5dDocument, Puzzle5dPart, PUZZLE5D_FALLBACK_MESH_KIND, PUZZLE5D_GRANULARITY_FASTENER, PUZZLE5D_GRANULARITY_GRIP, PUZZLE5D_GRANULARITY_PART, PUZZLE5D_GRIP_SHOW_ALWAYS, PUZZLE5D_INTERACTION_DOMAIN, PUZZLE5D_TARGET_VOLUME_COLOR};
+use crate::editor::puzzle5d::view::{puzzle5d_gumball_active, puzzle5d_scene_mode, puzzle5d_transform_handle, Puzzle5dInteractionSnapshot, Puzzle5dScene};
 use semio_s_artifact_puzzle_3d_precompute_brush::BrushSuggestionsFound;
 use semio_framework_plugin::{
     world3d_camera_projection_json, world3d_chunking_json, world3d_environment_json, world3d_fit_json, world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls, World3dScene, world3d_selection_json, SurfaceKind, ToolRunView, WindowEngagement,
@@ -28,7 +24,7 @@ use semio_framework_ui_contract::BuiltNode;
 use semio_framework_pack_json::{json, Value};
 
 //#region 🔖️Constants
-pub const WINDOW_KIND_ID: &str = "puzzle5d-3d";
+pub const WINDOW_KIND_ID: &str = crate::editor::puzzle5d::entities::PUZZLE5D_WORLD_WINDOW_KIND_ID;
 pub const BODY_KEY: &str = "puzzle.5d.play.3d";
 pub const SURFACE_ID: &str = "puzzle.5d.play.3d";
 
@@ -55,7 +51,7 @@ pub fn definition() -> WindowKindDefinition {
         actions: Vec::new(),
         utilities: vec![
             utilities::transform::UTILITY_ID.into(),
-            board2d::utilities::brush::UTILITY_ID.into(),
+            crate::editor::puzzle5d::entities::PUZZLE5D_BRUSH_UTILITY_ID.into(),
             utilities::volume_brush::UTILITY_ID.into(),
             utilities::world_relocate::UTILITY_ID.into(),
         ],
@@ -211,7 +207,7 @@ pub fn world_grips_json(document: &Puzzle5dDocument, runtime: &Puzzle5dRuntime, 
     semio_framework_pack_json::to_json_string(&records)
 }
 
-fn world_fasteners_json(document: &Puzzle5dDocument) -> String {
+pub fn world_fasteners_json(document: &Puzzle5dDocument) -> String {
     let records: Vec<Value> = document
         .fasteners
         .iter()
@@ -411,7 +407,5 @@ pub fn render(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels, tool_run: Optio
 //#endregion 🔖️Render
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

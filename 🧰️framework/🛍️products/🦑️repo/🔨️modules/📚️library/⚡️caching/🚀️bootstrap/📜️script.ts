@@ -222,7 +222,7 @@ async function publishNxCollectionBoundaryV1(root: string,directory:string, sign
     } finally { rmSync(temporary, { force: true }); }
   }
   if (inventory === undefined && (reused !== directories || Object.keys(previous).length !== directories)) await writeNxAdmissionSnapshot(snapshotPath, { policy: snapshotPolicy, directories: current });
-  if(profile)console.log("[DEBUG] Nx workspace catalog admission "+JSON.stringify({policyBytes:Buffer.byteLength(policyText)+Buffer.byteLength(ownershipText),manifests:admitted.length,directories,reused,inventory:inventory===undefined?"physical-walk":"git",policyReadMilliseconds:policyRead-profileStarted,policyParseHashMilliseconds:policyParsed-policyRead,snapshotReadMilliseconds:snapshotRead-inventoryRead,inventoryMilliseconds:inventoryRead-inventoryStarted,discoveryMilliseconds:discoveryFinished-snapshotRead,custodyMilliseconds:custodyFinished-discoveryFinished,publicationMilliseconds:performance.now()-custodyFinished,totalMilliseconds:performance.now()-profileStarted}));
+  if(profile){}
 }
 
 /** 🏗️ Projects portable process controls into the selected Nx implementation. */

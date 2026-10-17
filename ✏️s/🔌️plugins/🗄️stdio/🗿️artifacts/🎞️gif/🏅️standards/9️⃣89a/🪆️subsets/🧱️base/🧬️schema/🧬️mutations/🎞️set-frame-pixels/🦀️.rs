@@ -9,9 +9,9 @@ use super::*;
 #[mutation_leaf(contract = ::protocol)]
 #[dsl(keyword = "set-frame-pixels")]
 pub struct SetFramePixels {
-    pub(crate) index: usize,
+    pub index: usize,
     #[dsl(base64)]
-    pub(crate) indices: Vec<u8>,
+    pub indices: Vec<u8>,
 }
 
 impl protocol::MutationKind<GifSnapshot, GifMutation> for SetFramePixels {

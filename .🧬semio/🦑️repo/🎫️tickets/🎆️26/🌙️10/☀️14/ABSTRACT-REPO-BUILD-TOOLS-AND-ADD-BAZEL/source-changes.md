@@ -1,12 +1,12 @@
 # Source Inventory
 
-The owned inventory contains 2570 paths: 1962 source/interface/owned-product paths and 608 retained ticket inputs/reports. Exact paths are recorded in `📥️files.json`.
+The owned inventory contains 2711 paths: 2004 source/interface/owned-product paths and 707 retained ticket inputs/reports. Exact paths are recorded in `📥️files.json`.
 
 Read-only scoped Git whitespace validation exited 0. 0 existing recorded paths exceed 256 UTF-16 units including the absolute workspace root. No modifying Git command was used.
 
 ## Removed Paths
 
-134 recorded paths are absent; these preserve removed ownership locations, the intermediate declaration path and old artifact marker filenames.
+149 recorded paths are absent; these preserve removed ownership locations, the intermediate declaration path and old artifact marker filenames.
 
 - `.🧬semio/🦑️repo/⚡️cache/tools/native-executables/semio-wgpu-native/4913bb3cd98aab28f0cde27f3362fd9e3d2befeb0fa300864432ff2ffe1eed38/.nx-artifact.json`
 - `.🧬semio/🦑️repo/⚡️cache/tools/tectonic/0.16.9/aarch64-apple-darwin/.nx-artifact.json`
@@ -98,6 +98,11 @@ Read-only scoped Git whitespace validation exited 0. 0 existing recorded paths e
 - `🎓️teaching/🏛️architecture/❓️quiz/📦️packages/🟦️typescript/dist/prototype/.nx-artifact.json`
 - `🎓️teaching/🏛️architecture/❓️quiz/📦️packages/🟦️typescript/dist/release/.nx-artifact.json`
 - `🧰️framework/🔨️modules/🎠️kernel/🫧️transient/📋️project.json`
+- `🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧱️fixed/🎛️command/🧬️schema/🔣️.json`
+- `🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧱️fixed/👓️observation/🧬️schema/🔣️.json`
+- `🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧱️fixed/🧬️schema/📥️paths.json`
+- `🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧱️fixed/🧬️schema/📥️receipt.json`
+- `🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧹️cleanup/📥️operation/🤲️lifetime/🧬️schema/🔣️.json`
 - `🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️inputs/🧪️tests/📋️schema.json`
 - `🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️inputs/🧪️tests/🔣️.json`
 - `🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/dist/wasm/prototype/.nx-artifact.json`
@@ -108,6 +113,7 @@ Read-only scoped Git whitespace validation exited 0. 0 existing recorded paths e
 - `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📣️publication/🔌️nx/🧪️tests/🧫️fixtures/🔣️.json`
 - `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📣️publication/🔌️nx/🧬️schema/📣️contribution/🔣️.json`
 - `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📣️publication/🔌️nx/🧬️schema/🔣️.json`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/🟦️.ts`
 - `🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🔐️writer/🧪️tests/🔬️fence-conformance/🦀️.rs`
 - `🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript/dist/fonts/.nx-artifact.json`
 - `🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/dist/prototype/extension/.nx-artifact.json`
@@ -115,6 +121,15 @@ Read-only scoped Git whitespace validation exited 0. 0 existing recorded paths e
 - `🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/dist/release/extension/.nx-artifact.json`
 - `🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/dist/release/vsix/.nx-artifact.json`
 - `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🌱️sources/🔣️.json`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/💾️storage/🧬️schema/🔣️.json`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧬️schema/⚙️policy.json`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧬️schema/📋️planner.json`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧬️schema/📥️birth.json`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧬️schema/📦️snapshot.json`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧬️schema/🔏️implementation.json`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧬️schema/🛠️modules.json`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧬️schema/🧪️purpose.json`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧬️schema/🧪️tests.json`
 - `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project.json`
 - `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📥️module-authority.json`
 - `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔌️nx-plugin/🎚️mode/🟨️.mjs`

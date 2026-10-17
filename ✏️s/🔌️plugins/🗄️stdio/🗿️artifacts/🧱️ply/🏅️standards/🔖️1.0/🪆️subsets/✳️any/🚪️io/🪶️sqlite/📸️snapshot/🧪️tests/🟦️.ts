@@ -99,7 +99,6 @@ test("PLY exact scalar words survive independent SQLite affinity, edits and malf
       await expect(plySnapshotFromSqliteDatabase(await importSqliteDatabase(new Uint8Array(db.serialize())))).rejects.toThrow();
     }finally{db.close();}
   }
-  console.log("[DEBUG] PLY exact binary words and independent SQLite identity laws");
 });
 test("PLY exact owned dialect, document identity and cancellation laws", async()=>{
   const database=await plySnapshotToSqliteDatabase(input);
@@ -157,5 +156,5 @@ test("PLY neutral native Text source retains independently observed lexical loca
  expect(result.tokens).toEqual([]);expect(result.errors).toHaveLength(1);
  const actual=result.errors[0]!;
  expect({line:actual.line,column:actual.column,length:actual.length}).toEqual({...topology.controlledTextSource.span,length:1});
- const db=new Database(":memory:");try{db.run("CREATE TABLE authored_source(source TEXT,line INTEGER,column INTEGER,length INTEGER)");const row=topology.controlledTextSource;db.run("INSERT INTO authored_source VALUES(?,?,?,?)",row.source,row.span.line,row.span.column,row.span.length);expect(db.query("SELECT source,line,column,length FROM authored_source").get()).toEqual({source:row.source,...row.span});}finally{db.close();}
+ const db=new Database(":memory:");try{db.run("CREATE TABLE authored_source(source TEXT,line INTEGER,column INTEGER,length INTEGER)");const row=topology.controlledTextSource;db.run("INSERT INTO authored_source VALUES(?,?,?,?)",[row.source,row.span.line,row.span.column,row.span.length]);expect(db.query("SELECT source,line,column,length FROM authored_source").get()).toEqual({source:row.source,...row.span});}finally{db.close();}
 });

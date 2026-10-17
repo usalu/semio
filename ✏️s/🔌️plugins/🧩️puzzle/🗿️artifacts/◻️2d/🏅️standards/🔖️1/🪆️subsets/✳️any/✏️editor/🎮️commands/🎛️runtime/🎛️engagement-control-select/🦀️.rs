@@ -1,6 +1,6 @@
 //! 🤝️ `engagement-control-select` command.
 
-use crate::editor::puzzle2d::Puzzle2dActionCtx;
+use crate::editor::puzzle2d::interaction::Puzzle2dActionCtx;
 use semio_framework_pack_json::Value;
 
 pub fn engagement_control_select(ctx: &mut Puzzle2dActionCtx<'_>, args: Option<&Value>) {

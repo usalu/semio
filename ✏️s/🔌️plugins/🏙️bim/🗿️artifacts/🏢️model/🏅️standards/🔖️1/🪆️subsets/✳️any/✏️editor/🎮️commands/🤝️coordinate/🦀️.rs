@@ -7,7 +7,7 @@ use crate::editor::bim::entities::id_taken;
 use crate::editor::bim::kit::{fault, IdMint};
 use crate::editor::bim::modes::edit::windows::world;
 use crate::editor::bim::panels::coordination::name_of;
-use crate::editor::bim::BimDispatchCtx;
+use crate::editor::bim::dispatch_context::BimDispatchCtx;
 use crate::standards::v1::subsets::any::schema::inferences::clash_sets::{Clash, ClashKind};
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::instance as inference;
 use crate::standards::v1::subsets::any::schema::{diff::{Assigned, patches::IssuePatch}, snapshot::{ClashRef, Issue, IssuePriority, IssueStatus, IssueViewpoint, ModelSnapshot, Point2, Point3, SectionBox, ViewCamera}, mutations::ModelMutation};

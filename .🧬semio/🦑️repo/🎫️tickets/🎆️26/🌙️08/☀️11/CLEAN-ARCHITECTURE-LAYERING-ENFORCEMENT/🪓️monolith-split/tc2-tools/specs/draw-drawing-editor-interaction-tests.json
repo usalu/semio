@@ -1,0 +1,33 @@
+{
+  "parent": "semio-s-artifact-draw-drawing-editor-interaction",
+  "name": "semio-s-artifact-draw-drawing-editor-interaction-tests",
+  "dir": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🕹️interaction/🧪️tests/🥣️companion",
+  "files": [
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧪️tests/🔬️unit/🦀️.rs",
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📋️clipboard/🧪️tests/🔬️unit/🦀️.rs",
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️properties/🧪️tests/🎛️selection/🦀️.rs",
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🗂️layers/🧪️tests/🔬️unit/🦀️.rs",
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🧪️tests/🧩️example/🦀️.rs",
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🕹️interaction/🎯️points/🧪️tests/🔬️unit/🦀️.rs",
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🕹️interaction/🧪️tests/🔬️unit/🦀️.rs"
+  ],
+  "testkit": [
+    "semio-s-artifact-draw-drawing-model",
+    "semio-s-artifact-draw-drawing-diff",
+    "semio-s-artifact-draw-drawing-geometry",
+    "semio-s-artifact-draw-drawing-mutations",
+    "semio-s-artifact-draw-drawing-transform",
+    "semio-s-artifact-draw-drawing-style",
+    "semio-s-artifact-draw-drawing-structure",
+    "semio-s-artifact-draw-drawing-metadata",
+    "semio-s-artifact-draw-drawing-scene",
+    "semio-s-artifact-draw-drawing-editor-interaction",
+    "semio-s-artifact-draw-drawing-editor"
+  ],
+  "emoji": "🥣️",
+  "summary": "the unit laws of the drawing editor interaction, clipboard, panels and geometry modules.",
+  "description": "Companion test crate of semio-s-artifact-draw-drawing-editor-interaction: the unit laws of the drawing editor interaction, clipboard, panels and geometry modules",
+  "crate_map": {
+    "schema::layer_to_path_segments": "semio_s_artifact_draw_drawing_geometry::layer_to_path_segments"
+  }
+}

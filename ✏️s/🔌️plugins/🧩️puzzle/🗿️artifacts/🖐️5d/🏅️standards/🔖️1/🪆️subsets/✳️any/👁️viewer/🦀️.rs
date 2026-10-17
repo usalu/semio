@@ -141,7 +141,18 @@ pub fn create_puzzle5d_viewer() -> semio_framework_plugin::AppDefinition {
 //#endregion 🔖️Manifest
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
+
+//#region 🧩️ArtifactItems3
+pub mod artifact_items_3 {
+/// 🪪️ Ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §2.1/§7.4 — lives at the
+/// ARTIFACT level (not under `editor`/`viewer`) specifically so a viewer file can read it without
+/// ever importing through the sibling editor module. `artifact_kind` matches this file's own
+/// `"s.puzzle5d.schema.artifact"` capability row descriptor (`s.puzzle.puzzle5d`), `standard`/
+/// `subset` match this file's own `🏅️standards/🔖️1/🪆️subsets/✳️any` location — canonical surface id
+/// `s.puzzle.puzzle5d@1/*#editor` / `s.puzzle.puzzle5d@1/*#viewer`.
+pub const PUZZLE5D_DIALECT: semio_framework_plugin::app::Dialect =
+    semio_framework_plugin::app::Dialect { artifact_kind: "s.puzzle.puzzle5d", standard: semio_framework_plugin::app::StandardId("1"), subset: semio_framework_plugin::app::SubsetId::ANY };
+}
+//#endregion 🧩️ArtifactItems3

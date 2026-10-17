@@ -11,7 +11,10 @@ pub struct SetDeclarationPayload {
     pub declaration: Option<XmlDeclaration>,
 }
 
-impl protocol::MutationKind<SvgSnapshot, super::SvgMutation> for SetDeclarationPayload {
+impl<Op> protocol::MutationKind<SvgSnapshot, Op> for SetDeclarationPayload
+where
+    Op: protocol::Mutation<SvgSnapshot, Diff = SvgDiff> + From<SetDeclarationPayload>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "declaration", kind: "set-declaration", record: "SetDeclaration" };
 
     fn diff(&self, base: &SvgSnapshot) -> protocol::MutationOutcome<SvgDiff> {
@@ -22,8 +25,8 @@ impl protocol::MutationKind<SvgSnapshot, super::SvgMutation> for SetDeclarationP
         protocol::MutationOutcome::new(SvgDiff { declaration: Some(declaration.clone()), ..Default::default() })
     }
 
-    fn inverse(&self, base: &SvgSnapshot) -> Result<Vec<super::SvgMutation>, semio_framework_value::ValueError> {
-        Ok(vec![super::SvgMutation::SetDeclaration(Self { declaration: base.doc.declaration.clone() })])
+    fn inverse(&self, base: &SvgSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+        Ok(vec![Op::from(Self { declaration: base.doc.declaration.clone() })])
     }
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
@@ -34,6 +37,4 @@ impl protocol::MutationKind<SvgSnapshot, super::SvgMutation> for SetDeclarationP
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

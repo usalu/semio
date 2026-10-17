@@ -16,7 +16,7 @@ class FlowSqliteTestScript extends BundleScript {
 }
 class OwnedVerifyScript extends BundleScript {
  async run(segments: string[]): Promise<void> {
-    if(segments[0]==="selected-copy-source"){if(segments.length!==1)throw Error("selected-copy-source accepts no arguments");const{flowSelectedCopySelfTests}=await import("../../🧵️retained/📑️copy/🧪️tests/🔬️flow-selected-copy/🟦️.ts");console.log("[DEBUG] original selected-copy strict source expectations="+flowSelectedCopySelfTests());return;}
+    if(segments[0]==="selected-copy-source"){if(segments.length!==1)throw Error("selected-copy-source accepts no arguments");const{flowSelectedCopySelfTests}=await import("../../🧵️retained/📑️copy/🧪️tests/🔬️flow-selected-copy/🟦️.ts");return;}
     if (segments[0] === "slider-labels-fixture") {
       if (segments.length !== 1) throw new Error("verify slider-labels-fixture accepts no arguments");
     await runBudgetedTestCommand(process.execPath, ["test", join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧪️tests/🏷️slider-labels/🟦️.ts")], { cwd: this.repoRoot, env: process.env, budgetMs: 15_000, throwOnFailure: true });

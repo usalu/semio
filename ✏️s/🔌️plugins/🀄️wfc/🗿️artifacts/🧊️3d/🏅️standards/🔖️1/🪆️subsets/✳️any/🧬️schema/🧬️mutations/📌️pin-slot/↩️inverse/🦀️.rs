@@ -1,9 +1,13 @@
 //! ↩️ Inverse for `PinSlot` — restores the slot's PRIOR pin, or unpins it when there was none.
 
-use crate::mutations::{pin_slot, unpin_slot, Wfc3dMutation};
+use crate::standards::v1::subsets::any::schema::mutations::pin_slot::pin_slot;
+use crate::standards::v1::subsets::any::schema::mutations::unpin_slot::unpin_slot;
 use crate::schema::snapshot::Wfc3dSnapshot;
 
-pub fn inverse(payload: &super::PinSlot, base: &Wfc3dSnapshot) -> Result<Vec<Wfc3dMutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op>(payload: &super::PinSlot, base: &Wfc3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError>
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::pin_slot::PinSlot> + From<crate::standards::v1::subsets::any::schema::mutations::unpin_slot::UnpinSlot>,
+{
     Ok((|| {
     let Some(slot) = base.slots.iter().find(|slot| slot.id == payload.id) else {
         return Vec::new();

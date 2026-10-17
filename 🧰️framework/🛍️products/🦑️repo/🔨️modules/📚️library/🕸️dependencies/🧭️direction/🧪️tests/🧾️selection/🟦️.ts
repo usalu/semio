@@ -50,7 +50,6 @@ test("strict production selection enforces every present plugin pair and preserv
     }
     }finally{rmSync(root,{recursive:true,force:true});}
   }
-  console.log(`[DEBUG] strict rule selection: ${fixture.cases.length} portable ownership cases; dependency-cruiser validates the selected production rule set`);
 });
 
 test("strict production selection refuses incomplete or weakened rule authority",()=>{

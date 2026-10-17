@@ -6,7 +6,7 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-use crate::JackSnapshot;
+use crate::standards::v1::subsets::any::schema::snapshot::JackSnapshot;
 use semio_framework_diagnostic::TextError;
 use pack::snapshot::ArtifactDsl;
 
@@ -66,9 +66,6 @@ pub fn print_dsl(document: &JackSnapshot) -> String {
 }
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests
 
 //#region 🚚️Carrier
@@ -80,7 +77,9 @@ pub type JackSnapshotText = String;
 mod snapshot_codec {
 use super::*;
 use crate::standards::v1::subsets::any::schema::snapshot::*;
-use crate::{Camera, JackContentChild, Manifest};
+use crate::standards::v1::subsets::any::schema::graph::Camera;
+use crate::standards::v1::subsets::any::schema::content::JackContentChild;
+use crate::standards::v1::subsets::any::schema::manifest::Manifest;
 use ::semio_framework_schema::ArtifactSchema;
 
 /// 📤️ Renders a [`JackSnapshot`] as this facet's own camelCase JSON projection — the comparison
@@ -94,7 +93,7 @@ use ::semio_framework_schema::ArtifactSchema;
 /// `pack::json_from_dsl_value` since `DslValue` and `pack::json::Value` are sibling trees (used
 /// behind this interface per CLAUDE.md's "external libraries behind an interface" rule).
 pub fn encode_jack_snapshot_json(snapshot: &JackSnapshot) -> Result<String, semio_framework_value::ValueError> {
-    let value = crate::standards::v1::subsets::any::io::json_native::convert(semio_framework_value::ToValue::to_value(snapshot), false)?;
+    let value = crate::standards::v1::subsets::any::schema::json_transport::convert(semio_framework_value::ToValue::to_value(snapshot), false)?;
     Ok(semio_framework_pack_json::to_string(&semio_framework_pack_json::from_dsl_value(&value)))
 }
 
@@ -103,7 +102,7 @@ pub fn encode_jack_snapshot_json(snapshot: &JackSnapshot) -> Result<String, semi
 /// rather than re-declaring it as a Rust literal beside it.
 pub fn decode_jack_snapshot_json(text: &str) -> Result<JackSnapshot, semio_framework_value::ValueError> {
     let parsed = semio_framework_pack_json::parse(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string()))?;
-    <JackSnapshot as semio_framework_value::FromValue>::from_value(crate::standards::v1::subsets::any::io::json_native::convert(semio_framework_pack_json::to_dsl_value(&parsed), true)?)
+    <JackSnapshot as semio_framework_value::FromValue>::from_value(crate::standards::v1::subsets::any::schema::json_transport::convert(semio_framework_pack_json::to_dsl_value(&parsed), true)?)
 }
 
 /// 📝️ Parses the literal Jack parent and its independent content-child address.
@@ -118,38 +117,3 @@ pub fn print_jack_dsl(snapshot: &JackSnapshot) -> String {
 }
 }
 pub use snapshot_codec::*;
-
-#[allow(unused_imports)]
-/// ▶️ Parses and executes a text query, publishing its semantic graph effects.
-pub fn run(graph: &mut crate::Graph, source: &str) -> Result<crate::ast::QueryResult, String> {
-    let query = crate::language_service::parse(source)?;
-    let (result, effects) = crate::executor::execute(graph, &query)?;
-    crate::apply_graph_effects(graph, &effects).map_err(|error| error.to_string())?;
-    Ok(result)
-}
-
-/// 📤️ Encodes a typed query result under caller-owned physical progress and byte admission.
-pub fn encode_query_result_json(result: &crate::ast::QueryResult, control: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<String, semio_framework_value::ValueError> {
-    semio_framework_pack_json::to_json_string_controlled(result, control)
-}
-
-/// ▶️ Runs a text query and emits its response under physical JSON byte admission.
-pub fn run_json_controlled(graph: &mut crate::Graph, source: &str, control: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<String, String> {
-    let result = run(graph, source)?;
-    encode_query_result_json(&result, control).map_err(|error| error.to_string())
-}
-
-/// ▶️ Executes a text query with the default response byte grant.
-pub fn run_json(graph: &mut crate::Graph, source: &str) -> Result<String, String> {
-    let mut progress = |_| true;
-    let mut control = semio_framework_value::NativeEncodeControl::new(1_048_576, &mut progress);
-    run_json_controlled(graph, source, &mut control)
-}
-
-
-#[allow(unused_imports)]
-/// 📤️ Encodes the typed language-service example at its physical text boundary.
-pub fn example_graph_snapshot_json() -> String {
-    semio_framework_pack_json::to_json_string(&crate::language_service::example_graph_snapshot())
-}
-

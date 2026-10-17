@@ -32,3 +32,4 @@ semio-framework-async-macros = { workspace = true }
 semio-framework-pack-json = { workspace = true }
 semio-s-artifact-remodel-remodeling-io = { workspace = true }
 serde_json = { workspace = true }
+semio-s-artifact-remodel-remodeling-model = { workspace = true, features = ["testkit"] }

@@ -1,0 +1,98 @@
+{
+ "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⏳️precompute/🦀️.rs",
+ "original": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/🗑️generated/c4p5-orig/1.rs",
+ "stage": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/🗑️generated/c4p5-stage",
+ "descendants": [
+  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⏳️precompute/🧪️tests/🔬️unit/🦀️.rs"
+ ],
+ "chunks": [
+  {
+   "name": "brush_meshes",
+   "folder": "🥽️brush-meshes",
+   "doc": "🥽️ Brush meshes: the process-wide content-addressed derived-mesh store (the `puzzle3d.mesh-decode` compute engine) and the paged `registerBrushMesh` upload staging.",
+   "segments": [
+    {
+     "lines": [
+      72,
+      207
+     ],
+     "before": [
+      "//#region 🥽️SharedBrushMeshes"
+     ],
+     "after": [
+      "//#endregion 🥽️SharedBrushMeshes"
+     ]
+    },
+    {
+     "lines": [
+      211,
+      406
+     ],
+     "before": [
+      "//#region 🧩️PagedBrushMeshUploads"
+     ],
+     "after": [
+      "//#endregion 🧩️PagedBrushMeshUploads"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "collision_engine",
+   "folder": "⚙️collision-engine",
+   "doc": "⚙️ Collision engine: the step clock, the scene invalidation plan, the brush broad phase and narrow phase over the registered meshes, and one document instance's collision session.",
+   "segments": [
+    {
+     "lines": [
+      44,
+      50
+     ]
+    },
+    {
+     "lines": [
+      53,
+      68
+     ],
+     "before": [
+      "//#region 🔖️Clock"
+     ],
+     "after": [
+      "//#endregion 🔖️Clock"
+     ]
+    },
+    {
+     "lines": [
+      410,
+      1221
+     ],
+     "before": [
+      "//#region 🔖️Engine"
+     ],
+     "after": [
+      "//#endregion 🔖️Engine"
+     ]
+    }
+   ],
+   "mountAt": 410
+  },
+  {
+   "name": "precompute_session",
+   "folder": "🧵️precompute-session",
+   "doc": "🧵️ Precompute session: the scene the host syncs in and `dispatch`, which drives `Puzzle3dEngineCommand` and `Puzzle3dEngineOutcome` through the collision engine.",
+   "segments": [
+    {
+     "lines": [
+      1225,
+      1362
+     ],
+     "before": [
+      "//#region 🔖️Session"
+     ],
+     "after": [
+      "//#endregion 🔖️Session"
+     ]
+    }
+   ]
+  }
+ ]
+}

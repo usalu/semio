@@ -2,7 +2,7 @@
 
 use crate::editor::flow::commands::evaluate::evaluate_result;
 use crate::editor::flow::modes::edit::windows::main::config::FlowMainWindowConfig;
-use crate::editor::flow::modes::edit::windows::main::FLOW_PLAY_WINDOW_MAIN;
+use crate::editor::flow::base::FLOW_PLAY_WINDOW_MAIN;
 use crate::editor::flow::commands::reorganize::reorganize_edit;
 use semio_framework_plugin::NoConfig;
 use semio_framework_plugin::NoConfigMutation;

@@ -9,7 +9,6 @@ describe("neutral introduction eligibility", () => {
     for (const row of corpus.cases) {
       expect(shouldStartIntroduction(row.input), row.id).toBe(row.expected);
     }
-    console.log("[DEBUG] neutral introduction: 130 shared vectors agree with Ajv");
   });
 
   test("rejects missing, unknown and wrongly typed required input facts", () => {

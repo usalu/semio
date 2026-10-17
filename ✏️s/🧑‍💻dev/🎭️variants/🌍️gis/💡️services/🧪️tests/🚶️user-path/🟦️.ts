@@ -24,11 +24,11 @@ import { fileURLToPath } from "node:url";
 import type { Page } from "playwright";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
-import { sealSpaceArtifactCreateV1 } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🌱️space-artifact-creation-v1/🟦️.ts";
+import { sealSpaceArtifactCreateV1 } from "@semio-tech/framework-os/modules/directory/schema/space-artifact-creation-v1";
 
 import { createSpaceCommandV1 } from "@semio-tech/framework/directory/spaces";
-import { hubCredentialFromEnv, isAcceptancePreconditionMissing } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🟦️.ts";
-import { acceptanceCheckResult, publishAcceptanceCheckResult, withAcceptanceRecord } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/🟦️.ts";
+import { hubCredentialFromEnv, isAcceptancePreconditionMissing } from "@semio-tech/framework-os-mcp";
+import { acceptanceCheckResult, publishAcceptanceCheckResult, withAcceptanceRecord } from "@semio-tech/repo-test/acceptance/orchestration";
 
 const here = dirname(fileURLToPath(new URL(import.meta.url)));
 function findWorkspaceRoot(start: string): string {

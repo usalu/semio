@@ -1,7 +1,6 @@
 //! 📐️ Authoritative PDF/X mutation for set trim box.
 
-use super::remove_trim_box::RemoveTrimBox;
-use super::PdfXMutation;
+use crate::standards::v1_7::subsets::x::schema::mutations::remove_trim_box::RemoveTrimBox;
 use crate::standards::v1_7::subsets::base::schema::conformance_support as support;
 use crate::standards::v1_7::subsets::base::schema::diff::{self, PdfDiff};
 use crate::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot;
@@ -19,7 +18,10 @@ pub struct SetTrimBox {
     pub entry_index: Option<usize>,
 }
 
-impl MutationKind<PdfSnapshot, PdfXMutation> for SetTrimBox {
+impl<Op> MutationKind<PdfSnapshot, Op> for SetTrimBox
+where
+    Op: protocol::Mutation<PdfSnapshot, Diff = PdfDiff> + From<SetTrimBox> + From<crate::standards::v1_7::subsets::x::schema::mutations::remove_trim_box::RemoveTrimBox>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "trim-box", kind: "set-trim-box", record: "Set" };
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
@@ -27,11 +29,11 @@ impl MutationKind<PdfSnapshot, PdfXMutation> for SetTrimBox {
         MutationOutcome::new(diff::graph_edit(rows))
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfXMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         Ok({
             match support::page_objects(base).get(self.page_index).copied().and_then(|page| support::page_box(base, page, "TrimBox")) {
-                Some(trim_box) => vec![PdfXMutation::SetTrimBox(SetTrimBox { page_index: self.page_index, trim_box, entry_index: None })],
-                None => vec![PdfXMutation::RemoveTrimBox(RemoveTrimBox { page_index: self.page_index })],
+                Some(trim_box) => vec![Op::from(SetTrimBox { page_index: self.page_index, trim_box, entry_index: None })],
+                None => vec![Op::from(RemoveTrimBox { page_index: self.page_index })],
             }
         })
     }
@@ -47,9 +49,7 @@ impl MutationKind<PdfSnapshot, PdfXMutation> for SetTrimBox {
 //#endregion 🔖️Mutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
 
 //#region 🔖️Facets

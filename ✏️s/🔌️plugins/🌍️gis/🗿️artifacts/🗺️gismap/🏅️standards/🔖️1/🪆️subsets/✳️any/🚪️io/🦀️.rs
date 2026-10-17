@@ -222,19 +222,23 @@ pub mod io_registry {
 //#endregion 🚪️IoRegistry
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
 
-#[path = "💾️binary/🦀️.rs"]
-pub mod binary;
+pub mod binary {
+    pub use semio_s_artifact_gis_gismap_schema::standards::v1::subsets::any::io::binary::*;
+    pub use semio_s_artifact_gis_gismap_snapshot::standards::v1::subsets::any::io::binary::diff;
+    pub use semio_s_artifact_gis_gismap_snapshot::standards::v1::subsets::any::io::binary::inferences;
+    pub use semio_s_artifact_gis_gismap_mutations::standards::v1::subsets::any::io::binary::mutations;
+}
 
-#[path = "📝️text/🦀️.rs"]
-pub mod text;
+pub mod text {
+    pub use semio_s_artifact_gis_gismap_tests::standards::v1::subsets::any::io::text::*;
+    pub use semio_s_artifact_gis_gismap_snapshot::standards::v1::subsets::any::io::text::diff;
+    pub use semio_s_artifact_gis_gismap_snapshot::standards::v1::subsets::any::io::text::inferences;
+}
 
-#[path = "🪶️sqlite/🦀️.rs"]
-pub mod sqlite;
+pub use semio_s_artifact_gis_gismap_mutations::standards::v1::subsets::any::io::sqlite;
 
 pub mod derived_construction {
     use crate::{GisMapDiff, GisMapMutation, GisMapSnapshot};

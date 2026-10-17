@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-import{scriptCompilerAdmissionControlV1 as exactCargoCallerControlV1}from"../../../../../../../🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🟦️.ts";
+import{scriptCompilerAdmissionControlV1 as exactCargoCallerControlV1}from"../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import {runRepositoryExactCargoLaws as runExactCargoLaws,configuredRepositoryCargoPreparationPolicyV1} from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎯️exact/🟦️.ts";
 /** 📦️ procedural-generation3d Rust artifact package router. */
 import { runArtifactRustPackageMain, runArtifactRustTests } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts";
@@ -44,7 +44,6 @@ class OwnedVerifyScript extends BundleScript {
     }
     if (segments[0] === "generation3d-widget-inputs") {
       console.log(`generation3d-mesh-selection checks=${generation3dMeshSelectionSelfTests()} independentAjv=true`);
-      console.log(`[DEBUG] generation3d-widget-input checks=${generation3dWidgetInputSelfTests()} independentAjvJsonPatch=true`);
       console.log(`generation3d-widget-creation checks=${generation3dWidgetCreationSelfTests()} independentAjv=true`);
       console.log(`generation3d-terminology checks=${generation3dTerminologySelfTests()}`);
       const testRoot = join(this.repoRoot, "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎚️set-widget-input");

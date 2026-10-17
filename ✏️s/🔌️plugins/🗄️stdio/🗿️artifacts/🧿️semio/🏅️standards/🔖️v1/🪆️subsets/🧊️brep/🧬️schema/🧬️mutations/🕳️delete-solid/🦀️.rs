@@ -1,6 +1,5 @@
 //! 🗑️ `delete-solid` — removes an id-keyed solid. Nothing else in this collection set references a solid, so no cascade question arises. Absent `id` is a no-op.
 
-use crate::schema::mutations::SemioBrepMutation;
 use crate::schema::snapshot::SemioBrepSnapshot;
 
 //#region 🔖️Payload
@@ -11,13 +10,16 @@ pub struct DeleteSolid {
     pub id: String,
 }
 
-impl protocol::MutationKind<SemioBrepSnapshot, SemioBrepMutation> for DeleteSolid {
+impl<Op> protocol::MutationKind<SemioBrepSnapshot, Op> for DeleteSolid
+where
+    Op: protocol::Mutation<SemioBrepSnapshot, Diff = crate::schema::diff::SemioBrepDiff> + From<DeleteSolid> + From<crate::schema::mutations::create_solid::CreateSolid>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "solid", kind: "delete-solid", record: "DeletedSolid" };
 
-    fn diff(&self, base: &SemioBrepSnapshot) -> protocol::MutationOutcome<<SemioBrepMutation as protocol::Mutation<SemioBrepSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioBrepSnapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<SemioBrepSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &SemioBrepSnapshot) -> Result<Vec<SemioBrepMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &SemioBrepSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

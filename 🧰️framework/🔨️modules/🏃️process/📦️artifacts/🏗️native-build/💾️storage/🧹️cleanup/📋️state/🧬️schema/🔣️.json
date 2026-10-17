@@ -99,6 +99,163 @@
           "type": "boolean"
         }
       }
+    },
+    "SuccessfulChildRetirement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "known",
+        "committed",
+        "parentRetained",
+        "childExclusive",
+        "readersClosed",
+        "requestBound",
+        "physicalRemoved",
+        "claimRemoved",
+        "metadataSynced",
+        "kernelClosed",
+        "phase"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "known": {
+          "type": "boolean"
+        },
+        "committed": {
+          "type": "boolean"
+        },
+        "parentRetained": {
+          "type": "boolean"
+        },
+        "childExclusive": {
+          "type": "boolean"
+        },
+        "readersClosed": {
+          "type": "boolean"
+        },
+        "requestBound": {
+          "type": "boolean"
+        },
+        "physicalRemoved": {
+          "type": "boolean"
+        },
+        "claimRemoved": {
+          "type": "boolean"
+        },
+        "metadataSynced": {
+          "type": "boolean"
+        },
+        "kernelClosed": {
+          "type": "boolean"
+        },
+        "phase": {
+          "enum": [
+            "body",
+            "cleanup"
+          ]
+        }
+      }
+    },
+    "SuccessfulChildRetirementCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "evidence",
+        "release"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "evidence": {
+          "$ref": "#/definitions/SuccessfulChildRetirement"
+        },
+        "release": {
+          "type": "boolean"
+        }
+      }
+    },
+    "TerminalCloseCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "body",
+        "close",
+        "primary"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "body": {
+          "enum": [
+            "value",
+            "error",
+            "undefined"
+          ]
+        },
+        "close": {
+          "enum": [
+            "ok",
+            "error",
+            "undefined"
+          ]
+        },
+        "primary": {
+          "enum": [
+            "value",
+            "body-error",
+            "body-undefined",
+            "close-error",
+            "close-undefined"
+          ]
+        }
+      }
+    },
+    "ChildJournalBoundaryCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "cut",
+        "replay",
+        "settled"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "cut": {
+          "enum": [
+            "before-append",
+            "retiring-written",
+            "partial-retired",
+            "retired-written",
+            "journal-synced",
+            "reread",
+            "directory-synced",
+            "parent-close-report"
+          ]
+        },
+        "replay": {
+          "enum": [
+            "charged",
+            "retired",
+            "unknown"
+          ]
+        },
+        "settled": {
+          "type": "boolean"
+        }
+      }
     }
   },
   "$ref": "#/definitions/FundingRequest"

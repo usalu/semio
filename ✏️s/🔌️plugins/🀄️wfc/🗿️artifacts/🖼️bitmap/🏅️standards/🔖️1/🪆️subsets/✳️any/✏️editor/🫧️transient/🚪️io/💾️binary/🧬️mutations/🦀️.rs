@@ -3,7 +3,7 @@
 #[allow(unused_imports)]
 mod mutations_codec {
 use super::*;
-use crate::editor::bitmap::transient::component::mutations::*;
+use crate::editor::bitmap::transient::component::*;
 use crate::editor::bitmap::transient::component::BitmapTransient;
 
 impl protocol::OpBinary for BitmapTransientMutation {

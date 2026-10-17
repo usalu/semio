@@ -7,7 +7,7 @@ const before = new Map(); // absolute path -> text | null
 for (const s of snaps) for (const [rel, text] of Object.entries(JSON.parse(readFileSync(s, "utf8")))) { const abs = (ROOT + rel).normalize("NFC"); if (!before.has(abs)) before.set(abs, text); }
 const ov = p => { const n = p.normalize("NFC"); return before.has(n) ? before.get(n) : undefined; };
 const cfg = ts.readConfigFile(configPath, ts.sys.readFile);
-const parsed = ts.parseJsonConfigFileContent(cfg.config, { ...ts.sys, readDirectory: () => [], fileExists: p => ov(p) !== undefined ? ov(p) !== null : ts.sys.fileExists(p), readFile: p => ov(p) !== undefined ? ov(p) : ts.sys.readFile(p) }, "/Users/ueli/Documents/semio");
+const parsed = ts.parseJsonConfigFileContent(cfg.config, { ...ts.sys, readDirectory: ts.sys.readDirectory, fileExists: p => ov(p) !== undefined ? ov(p) !== null : ts.sys.fileExists(p), readFile: p => ov(p) !== undefined ? ov(p) : ts.sys.readFile(p) }, "/Users/ueli/Documents/semio");
 const host = ts.createCompilerHost(parsed.options, true);
 const baseFileExists = host.fileExists.bind(host), baseReadFile = host.readFile.bind(host), baseGetSourceFile = host.getSourceFile.bind(host);
 host.fileExists = p => ov(p) !== undefined ? ov(p) !== null : baseFileExists(p);

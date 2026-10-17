@@ -1,6 +1,5 @@
 //! 🚚 Note mutation — `MoveBlockToContainer`: reparents a block into a new container at an index (hierarchy move).
 
-use crate::schema::mutations::NoteMutation;
 use crate::{NoteDiff, NoteSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -21,17 +20,23 @@ pub struct MoveBlockToContainer {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn move_block_to_container(id: String, new_parent_id: Option<String>, index: usize) -> NoteMutation {
-    NoteMutation::MoveBlockToContainer(MoveBlockToContainer { id, new_parent_id, index })
+pub fn move_block_to_container<Op>(id: String, new_parent_id: Option<String>, index: usize) -> Op
+where
+    Op: From<crate::standards::v1::subsets::block::schema::mutations::move_block_to_container::MoveBlockToContainer>,
+{
+    Op::from(MoveBlockToContainer { id, new_parent_id, index })
 }
 
-impl MutationKind<NoteSnapshot, NoteMutation> for MoveBlockToContainer {
+impl<Op> MutationKind<NoteSnapshot, Op> for MoveBlockToContainer
+where
+    Op: protocol::Mutation<NoteSnapshot, Diff = NoteDiff> + From<MoveBlockToContainer>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "move", entity: "block", kind: "move-block-to-container", record: "MovedBlockToContainer" };
 
     fn diff(&self, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &NoteSnapshot) -> Result<Vec<NoteMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &NoteSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

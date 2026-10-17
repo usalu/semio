@@ -1,12 +1,12 @@
 //! 🧪️ Neutral Jack graph-window configuration mutation and routing laws.
 
-use super::*;
+use crate::editor::jack::window_config::*;
 use protocol::{Mutation, MutationDiff, OpBinary, OpText};
 use semio_framework_plugin::WindowConfigOwner;
 
 #[test]
 fn jack_graph_window_config_mutations_match_the_independent_patch_trace() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔬️window/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(runtime_fixture_text("../../../../✏️editor/🎭️modes/✏️edit/🪟️windows/🌐️graph/🎚️config/🧪️tests/🧫️fixtures/🔬️window/🔣️.json")).unwrap();
     let base: JackGraphWindowConfig = semio_framework_pack_json::from_json_str(&fixture["base"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let mut windows = std::collections::BTreeMap::from([(fixture["leftWindowId"].as_str().unwrap().to_string(), base.clone()), (fixture["rightWindowId"].as_str().unwrap().to_string(), base)]);
     for row in fixture["cases"].as_array().unwrap() {
@@ -36,19 +36,19 @@ fn jack_graph_window_config_command_uses_the_trusted_concrete_window() {
         ],
         ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
     };
-    let emit = crate::editor::jack::commands::set_lod_mode("compact", Some(&view)).unwrap();
+    let emit = crate::editor::jack::commands::set_lod_mode::set_lod_mode("compact", Some(&view)).unwrap();
     assert!(emit.artifact_mutations.is_empty());
     assert!(emit.config_mutations.is_empty());
     assert_eq!(emit.window_config_mutations.len(), 1);
     assert_eq!(emit.window_config_mutations[0].window_id(), "graph-right");
     assert_eq!(emit.window_config_mutations[0].window_kind_id(), JackGraphWindowConfigOwner::WINDOW_KIND_ID);
-    assert!(crate::editor::jack::commands::set_lod_mode("compact", None).is_err());
+    assert!(crate::editor::jack::commands::set_lod_mode::set_lod_mode("compact", None).is_err());
 }
 
 /// ➕️ Every committed window-config mutation's concrete inverse rows sum to the negative of its diff (law L3).
 #[semio_framework_async_macros::async_test]
 async fn jack_graph_window_config_inverses_sum_to_the_negative_diff() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔬️window/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(runtime_fixture_text("../../../../✏️editor/🎭️modes/✏️edit/🪟️windows/🌐️graph/🎚️config/🧪️tests/🧫️fixtures/🔬️window/🔣️.json")).unwrap();
     let base: JackGraphWindowConfig = semio_framework_pack_json::from_json_str(&fixture["base"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let mut windows = std::collections::BTreeMap::from([(fixture["leftWindowId"].as_str().unwrap().to_string(), base.clone()), (fixture["rightWindowId"].as_str().unwrap().to_string(), base)]);
     for row in fixture["cases"].as_array().unwrap() {
@@ -58,4 +58,9 @@ async fn jack_graph_window_config_inverses_sum_to_the_negative_diff() {
         protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &before).await;
         windows.insert(id.into(), protocol::apply_diff(mutation.diff(&before).diff(), &before).unwrap());
     }
+}
+
+fn runtime_fixture_text(relative: &str) -> &'static str {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative);
+    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display())).into_boxed_str())
 }

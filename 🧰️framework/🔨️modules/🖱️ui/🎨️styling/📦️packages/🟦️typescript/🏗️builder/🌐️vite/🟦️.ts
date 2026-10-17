@@ -1,0 +1,3 @@
+/** 🌐️ Public entry `@semio-tech/ui-styling/builder/vite`: the explicit surface that importers outside the module use. */
+export { MESH_COLLECTION_ASSET_PROVIDER_V1, STATIC_DIRECTORY_ASSET_PROVIDER_V1, TILE_PROXY_ASSET_PROVIDER_V1, createWorkspaceViteResolveConfig, playgroundFlowWasmDevStubPlugin, playgroundSceneHostOptimizeDeps, playgroundSceneHostResolveAliases, playgroundStaticSiteBuildOptions, semioAssetsVitePlugin, semioEmojiIndexHtmlVitePlugin, semioFaviconVitePlugin, semioHostHtmlVitePlugin, semioServeCloseVitePlugin, semioViteBuild, staticDeployMarkerVitePlugins, staticDirVitePlugin } from "../../../../🏗️builder/🌐️vite/🟦️.ts";
+export type { FlowWasmDeliveryV1 } from "../../../../🏗️builder/🌐️vite/🟦️.ts";

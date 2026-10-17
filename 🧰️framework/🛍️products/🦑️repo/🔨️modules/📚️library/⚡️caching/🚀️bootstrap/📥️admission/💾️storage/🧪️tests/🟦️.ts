@@ -17,10 +17,10 @@ test("neutral admission scope is independent of broad inference under actual SQL
  await receiveScriptProcessInvocation(process.env,original=>withNxCollectionAdmissionStoreV1(process.cwd(),original,async directory=>{
   const root=join(directory,"qa-"+randomUUID().slice(0,8));mkdirSync(root);const plan=nxCollectionAdmissionPlanV1({version:1,platform:process.platform==="win32"?"windows":"posix",workspace:process.cwd(),storage:directory.slice(0,-"/admission".length)}),broadPath=resourceLeasePathV1(root,"repository-graph-facts:"+process.cwd()),admissionPath=resourceLeasePathV1(root,plan.resource),broad=new Database(broadPath),contender=new Database(broadPath),admission=new Database(admissionPath);
   try{broad.exec("CREATE TABLE actual(value INTEGER); INSERT INTO actual VALUES(7); BEGIN EXCLUSIVE");expect(()=>contender.query("SELECT value FROM actual").get()).toThrow();admission.exec("CREATE TABLE actual(value INTEGER); BEGIN EXCLUSIVE; INSERT INTO actual VALUES(11); COMMIT");expect(admission.query("SELECT value FROM actual").get()).toEqual({value:11});expect(lstatSync(root).dev).toBe(lstatSync(directory).dev);writeFileSync(join(root,"owned.json"),JSON.stringify({value:11}));}finally{broad.close();contender.close();admission.close();rmSync(root,{recursive:true,force:true});}
- }));console.log("[DEBUG] Actual issued admission scope and SQLite independent writer exclude broad inference without sharing its transaction");
+ }));
 },30000);
 
 
 test("actual collection publisher retains full checks outside the unrelated inference writer",async()=>{
- const {publishNxCollectionBoundary}=await import("../../../📜️script.ts");await receiveScriptProcessInvocation(process.env,async original=>{const started=performance.now();await publishNxCollectionBoundary(process.cwd(),original);console.log("[DEBUG] Actual full collection admission completed under independent graph custody "+JSON.stringify({milliseconds:performance.now()-started}));});
+ const {publishNxCollectionBoundary}=await import("../../../📜️script.ts");await receiveScriptProcessInvocation(process.env,async original=>{const started=performance.now();await publishNxCollectionBoundary(process.cwd(),original);});
 },30000);

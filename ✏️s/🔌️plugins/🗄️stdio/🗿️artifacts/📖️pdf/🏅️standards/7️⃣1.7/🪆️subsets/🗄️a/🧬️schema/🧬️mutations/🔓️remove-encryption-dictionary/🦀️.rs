@@ -1,7 +1,6 @@
 //! 🔓️ Authoritative PDF/A mutation for removing a matching encryption dictionary.
 
-use super::insert_encryption_dictionary::InsertEncryptionDictionary;
-use super::PdfAMutation;
+use crate::standards::v1_7::subsets::a::schema::mutations::insert_encryption_dictionary::InsertEncryptionDictionary;
 use crate::standards::v1_7::subsets::base::schema::conformance_support as support;
 use crate::standards::v1_7::subsets::base::schema::diff::{self, PdfDiff};
 use crate::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot;
@@ -17,7 +16,10 @@ pub struct RemoveEncryptionDictionary {
     pub revision: i64,
 }
 
-impl MutationKind<PdfSnapshot, PdfAMutation> for RemoveEncryptionDictionary {
+impl<Op> MutationKind<PdfSnapshot, Op> for RemoveEncryptionDictionary
+where
+    Op: protocol::Mutation<PdfSnapshot, Diff = PdfDiff> + From<RemoveEncryptionDictionary> + From<crate::standards::v1_7::subsets::a::schema::mutations::insert_encryption_dictionary::InsertEncryptionDictionary>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "remove", entity: "encryption-dictionary", kind: "remove-encryption-dictionary", record: "Remove" };
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
@@ -25,9 +27,9 @@ impl MutationKind<PdfSnapshot, PdfAMutation> for RemoveEncryptionDictionary {
         MutationOutcome::new(diff::graph_edit(rows))
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfAMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         Ok({
-            support::encryption_dictionary_with(base, self.version, self.revision).map(|id| PdfAMutation::InsertEncryptionDictionary(InsertEncryptionDictionary { version: self.version, revision: self.revision, placements: support::placements_of(base, &[id]) })).into_iter().collect()
+            support::encryption_dictionary_with(base, self.version, self.revision).map(|id| Op::from(InsertEncryptionDictionary { version: self.version, revision: self.revision, placements: support::placements_of(base, &[id]) })).into_iter().collect()
         })
     }
 
@@ -42,7 +44,5 @@ impl MutationKind<PdfSnapshot, PdfAMutation> for RemoveEncryptionDictionary {
 //#endregion 🔖️Mutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

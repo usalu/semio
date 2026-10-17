@@ -9,7 +9,8 @@
 //! Every tool shows the plan outline of what it would create as ghosts, so the preview travels in the window transient like every other mark.
 
 use super::plane::{angle, dist, point2, quantised, rotate_about, same, translate, COINCIDENT, P};
-use super::session::{length_label, Mark, Pick, Pointer, Preview, Step, Style, Tool, ToolContext, ToolEvent, PICK_PIXELS};
+use super::session::{length_label, Pick, Pointer, Step, Tool, ToolContext, ToolEvent, PICK_PIXELS};
+use crate::editor::bim::marks::{Mark, Preview, Style};
 use super::transform::{ghost, outline};
 use crate::editor::bim::entities::kind_holding;
 use crate::editor::bim::modes::edit::windows::plan;

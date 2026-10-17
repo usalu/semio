@@ -188,11 +188,11 @@ export function renderGraphArtifacts(root: string, outDir: string, catalog: Grap
       const modName = rustModName(doc.id);
       const path = byId.get(doc.id)!.rust;
       artifacts.push({ path: join(outDir, path), content: emitRustManifest(doc) });
-      return { modName, path };
+      return { modName, path, owner: byId.get(doc.id)!.rustOwner };
     });
     const registryRs =
       `// Generated manifest registry\n\n` +
-      rustModules.map((m) => `#[path = "${relative(dirname(outputs.shared.rustRegistry), m.path).replaceAll("\\", "/")}"]\npub mod ${m.modName};`).join("\n\n") +
+      rustModules.map((m) => m.owner === undefined ? `#[path = "${relative(dirname(outputs.shared.rustRegistry), m.path).replaceAll("\\", "/")}"]\npub mod ${m.modName};` : `pub use ${m.owner};`).join("\n\n") +
       `\n\nuse semio_framework_graph_manifest::Manifest;\n\npub const MANIFEST_IDS: &[&str] = &[${docs.map((d) => rustStr(d.id)).join(", ")}];\n\n` +
       `pub fn manifest_by_id(id: &str) -> Option<Manifest> {\n    match id {\n` +
       docs.map((d) => `        ${rustStr(d.id)} => Some(${rustModName(d.id)}::${rustFnName(d.id)}()),`).join("\n") +

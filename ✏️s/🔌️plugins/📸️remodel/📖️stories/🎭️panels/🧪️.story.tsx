@@ -24,7 +24,12 @@ import { useCallback, useMemo, useState, type ReactElement } from "react";
 import { InterpretedUiNode, UiDocumentStore, builtNodeToSnapshot } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx";
 import type { ActionDescriptor } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx";
 
-import { REMODEL_DEFAULT_CONFIG, REMODEL_EMPTY_SCENE, REMODEL_POPULATED_SCENE, remodelLabelsFor, type RemodelScene, REMODEL_EDITOR_CONTROLLER_ID, REMODEL_PANELS, reduceRemodelStoryAction, remodelPanelDocument, type RemodelPanelId } from "../🧭️coordination/🟦️.ts";
+import { reduceRemodelStoryAction } from "../🧭️coordination/🟦️.ts";
+import { REMODEL_DEFAULT_CONFIG, type RemodelScene } from "../🧭️coordination/📐️scene-model/🟦️.ts";
+import { REMODEL_EMPTY_SCENE, REMODEL_POPULATED_SCENE } from "../🧭️coordination/🗂️documents/🟦️.ts";
+import { remodelLabelsFor } from "../🧭️coordination/🗣️labels/🟦️.ts";
+import { REMODEL_EDITOR_CONTROLLER_ID, REMODEL_PANELS, type RemodelPanelId } from "../🧭️coordination/🪟️window-scenes/🟦️.ts";
+import { remodelPanelDocument } from "../🧭️coordination/🧩️panel-documents/🟦️.ts";
 
 const LOCALES = ["en-US", "de-DE"] as const;
 

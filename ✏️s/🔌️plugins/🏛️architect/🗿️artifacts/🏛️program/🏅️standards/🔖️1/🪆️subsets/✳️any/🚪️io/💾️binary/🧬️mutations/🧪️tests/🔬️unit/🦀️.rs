@@ -1,5 +1,5 @@
 use crate::standards::v1::subsets::any::io::binary::mutations::*;
-use crate::standards::v1::subsets::any::schema::registers::RegisterKey;
+use crate::standards::v1::subsets::any::schema::registers::catalog::RegisterKey;
 use crate::standards::v1::subsets::any::schema::kernel::EntityId;
 
 #[semio_framework_async_macros::async_test]

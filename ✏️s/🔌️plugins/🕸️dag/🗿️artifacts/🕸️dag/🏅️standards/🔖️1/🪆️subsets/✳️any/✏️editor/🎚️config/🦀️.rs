@@ -166,5 +166,4 @@ mod tests;
 #[path = "🧪️tests/🔬️mutation-vectors/🦀️.rs"]
 mod mutation_vectors;
 
-#[path = "🚪️io/🦀️.rs"]
-pub mod io;
+

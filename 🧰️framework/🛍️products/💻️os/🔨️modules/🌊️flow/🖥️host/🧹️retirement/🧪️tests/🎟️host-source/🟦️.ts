@@ -13,5 +13,4 @@ export function testHostSourceCustodyContract():void{
  const fields=Object.fromEntries(fixture.sourceFields.map((field:string)=>[field,field]));
  assert.equal(stableStringify(applyPatch(fields,[],true,false).newDocument),stableStringify(fields));
  assert.equal(new Set(Object.keys(fields)).size,fixture.sourceFields.length);assert.equal(Buffer.byteLength(fixture.text.repeat(fixture.repeat)),fixture.utf8Bytes);assert(fixture.capacityBytes>fixture.utf8Bytes);
- console.log("[DEBUG] original Host source examples originalFields="+fixture.sourceFields.length+" wholeCorpusSchema=false pendingEvaluationCustody=true JSONPatch=true UTF8=true");
 }

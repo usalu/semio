@@ -17,12 +17,10 @@ pub fn definition() -> ModeDefinition {
 /// 🪟️ The app's default window layout — this mode is the app's `default_mode_id`, so its layout IS the
 /// app-level `default_layout`.
 pub fn layout() -> WindowLayout {
-    create_default_layout(&[builder::FORMS_PLAY_WINDOW_BLUEPRINT.into(), try_wizard::FORMS_PLAY_WINDOW_TRY.into()], "row", Some(&[50.0, 50.0]), None)
+    create_default_layout(&[builder::FORMS_PLAY_WINDOW_BLUEPRINT.into(), crate::editor::forms::support::FORMS_PLAY_WINDOW_TRY.into()], "row", Some(&[50.0, 50.0]), None)
 }
 //#endregion 🔖️Definition
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

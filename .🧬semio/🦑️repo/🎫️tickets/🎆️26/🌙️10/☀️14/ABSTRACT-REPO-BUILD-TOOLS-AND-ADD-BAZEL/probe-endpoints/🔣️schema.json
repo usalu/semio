@@ -1,0 +1,200 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ProspectiveProbeEndpointMetadataOnly",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "cases"
+  ],
+  "properties": {
+    "cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "mode",
+          "accepted",
+          "strictAccepted"
+        ],
+        "properties": {
+          "mode": {
+            "enum": [
+              "missing",
+              "link",
+              "broken-link",
+              "file",
+              "directory",
+              "hardlink-file",
+              "ancestor-link",
+              "endpoint-drift",
+              "parent-drift",
+              "link-drift",
+              "cancel",
+              "undefined",
+              "frozen"
+            ]
+          },
+          "accepted": {
+            "type": "boolean"
+          },
+          "strictAccepted": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "Result": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "purpose",
+        "root",
+        "rows",
+        "parents",
+        "sha256",
+        "authority",
+        "contentsObserved"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "purpose": {
+          "const": "current-dependency-probe-source-endpoints"
+        },
+        "root": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "rows": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 16384,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "sourceDirectory",
+              "kind",
+              "stamp",
+              "target"
+            ],
+            "properties": {
+              "sourceDirectory": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "kind": {
+                "enum": [
+                  "missing",
+                  "link",
+                  "file",
+                  "directory"
+                ]
+              },
+              "stamp": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "maxLength": 512
+              },
+              "target": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "maxLength": 256
+              }
+            },
+            "oneOf": [
+              {
+                "properties": {
+                  "kind": {
+                    "const": "missing"
+                  },
+                  "stamp": {
+                    "const": null
+                  },
+                  "target": {
+                    "const": null
+                  }
+                }
+              },
+              {
+                "properties": {
+                  "kind": {
+                    "const": "link"
+                  },
+                  "stamp": {
+                    "type": "string"
+                  },
+                  "target": {
+                    "type": "string"
+                  }
+                }
+              },
+              {
+                "properties": {
+                  "kind": {
+                    "enum": [
+                      "file",
+                      "directory"
+                    ]
+                  },
+                  "stamp": {
+                    "type": "string"
+                  },
+                  "target": {
+                    "const": null
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "parents": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 16384,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "path",
+              "identity"
+            ],
+            "properties": {
+              "path": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "identity": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              }
+            }
+          }
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "authority": {
+          "const": false
+        },
+        "contentsObserved": {
+          "const": false
+        }
+      }
+    }
+  }
+}

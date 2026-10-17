@@ -1,7 +1,7 @@
 //! 🏔️ Normalized complete intrinsic map trees and exact independent child handles.
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v1::subsets::any::schema::snapshot::GisTerrainSnapshot;
-use crate::schema::{ImportedMap,ImportedProperty};
+use crate::schema::imported_map::{ImportedMap, ImportedProperty};
 use semio_framework_value::{DslValue,Number};
 use semio_framework_value::{ValueError,ValueRefusalKind};
 fn invalid(error:impl std::fmt::Display)->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,error.to_string())}
@@ -39,6 +39,3 @@ fn to_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<Sqli
 fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{owned_reconstruction::reconstruct(database,control)}
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;

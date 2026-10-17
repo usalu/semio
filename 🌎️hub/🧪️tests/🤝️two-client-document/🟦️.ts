@@ -3,7 +3,7 @@ import {receiveScriptProcessInvocation,scriptInvocationEnvironment} from "../../
 import {scriptCompilerAdmissionControlV1} from "@semio-tech/process/compiler-capacity";
 import {captureOwnedCommandResultV1} from "@semio-tech/process/owned-execution";
 import {withBuiltLocalHubHostV1,withLocalHubHostTaskV1,stopLocalHubV1,waitForLocalHubExitV1,startLocalHub,finishLocalHub,waitForReadiness,TRUSTED_CATALOG_READINESS_STALL_BOUND_MS} from "../../🚀️local-bootstrap/🏃️execution/🟦️.ts";
-import {withMaterializedTrustedCatalogBundleV1} from "../../🏗️bootstrap/🧾️provenance/🚚️bootstrap-publication/🟦️.ts";
+import { withMaterializedTrustedCatalogBundleV1 } from "../../🏗️bootstrap/🧾️provenance/🚚️bootstrap-publication/🧱️materialized-bundle/🟦️.ts";
 import {trustedBootstrapSelectPackages} from "../../🏗️bootstrap/🧾️provenance/🧭️bootstrap-selection/🟦️.ts";
 // #region Header
 /**
@@ -47,7 +47,7 @@ const hubRoot = pick(repoRoot, (n) => n.endsWith("hub") && !n.startsWith("."));
 
 describe("two-client document collaboration fixture", () => {
   it("loads the language-agnostic scenario fixture", () => {
-    const fixtures = pick(hubRoot, (n) => n.includes("fixtures"));
+    const fixtures = join(hubRoot, "🧪️tests", "🧫️fixtures");
     const fixtureDir = pick(fixtures, (n) => n.includes("two-client-document"));
     const fixture = JSON.parse(readFileSync(join(fixtureDir, "🔣️.json"), "utf8"));
     expect(fixture.schema).toBe("semio.hub.two-client-document-scenario/v1");
@@ -111,7 +111,7 @@ describe.skipIf(!HUB_E2E)("two-client document collaboration e2e", () => {
       const { encodeClientFrame, decodeServerFrame, encodePresencePeer, decodePresencePeer } = await import(join(replication, "🟦️.ts"));
       const { encodePackValue, parseDocumentSocketGrantReceiptV1 } = await import(join(osRoot, "🟦️.ts"));
 
-      const fixtures = pick(hubRoot, (n) => n.includes("fixtures"));
+      const fixtures = join(hubRoot, "🧪️tests", "🧫️fixtures");
       const fixtureDir = pick(fixtures, (n) => n.includes("two-client-document"));
       const fixture = JSON.parse(readFileSync(join(fixtureDir, "🔣️.json"), "utf8"));
       const dbMods = pick(osMods, (n) => n.endsWith("db"));

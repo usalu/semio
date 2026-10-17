@@ -52,9 +52,7 @@ impl pack::snapshot::ArtifactDsl for DagSnapshot {
 mod tests;
 //#endregion 🧪️Tests
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️semio-grammar-conformance/🦀️.rs"]
-mod semio_grammar_conformance;
+
 
 #[allow(unused_imports)]
 mod snapshot_codec {

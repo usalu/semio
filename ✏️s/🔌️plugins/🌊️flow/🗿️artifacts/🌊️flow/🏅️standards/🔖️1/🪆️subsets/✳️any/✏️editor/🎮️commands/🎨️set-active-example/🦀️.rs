@@ -46,7 +46,5 @@ pub fn handle(payload: &SetActiveExample, _doc: &ArtifactView<'_, FlowSnapshot>,
 }
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

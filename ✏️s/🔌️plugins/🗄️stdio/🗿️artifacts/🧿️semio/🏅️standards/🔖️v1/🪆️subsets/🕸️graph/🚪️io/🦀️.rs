@@ -122,14 +122,24 @@ pub mod derived_composition {
 pub use derived_composition::*;
 //#endregion 🎹️DerivedComposition
 
-#[path = "💾️binary/🦀️.rs"]
-pub mod binary;
+pub mod binary {
+    pub use semio_s_artifact_stdio_semio_graph_schema::io::binary::*;
+    pub use semio_s_artifact_stdio_semio_graph_snapshot::io::binary::diff;
+    pub use semio_s_artifact_stdio_semio_graph_examples::io::binary::inferences;
+    pub use semio_s_artifact_stdio_semio_graph_editor::io::binary::mutations;
+    pub use semio_s_artifact_stdio_semio_graph_snapshot::io::binary::snapshot;
+}
 
-#[path = "📝️text/🦀️.rs"]
-pub mod text;
+pub mod text {
+    pub use semio_s_artifact_stdio_semio_graph_schema::io::text::*;
+    pub use semio_s_artifact_stdio_semio_graph_examples::io::text::inferences;
+    pub use semio_s_artifact_stdio_semio_graph_editor::io::text::mutations;
+}
 
-#[path = "🪶️sqlite/🦀️.rs"]
-pub mod sqlite;
+pub mod sqlite {
+    pub use semio_s_artifact_stdio_semio_graph_examples::io::sqlite::*;
+    pub use semio_s_artifact_stdio_semio_graph_snapshot::io::sqlite::snapshot;
+}
 
 pub mod derived_construction {
     use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;

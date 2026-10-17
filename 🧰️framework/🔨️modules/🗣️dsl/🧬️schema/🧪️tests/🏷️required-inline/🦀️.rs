@@ -1,5 +1,6 @@
 //! 🏷️ Required single variants preserve the actual inline native owner.
-use super::*;
+use semio_framework_dsl_record::*;
+use semio_framework_test_fixtures::fixture_text;
 #[derive(Debug,PartialEq,serde::Deserialize,semio_framework_dsl_record_derive::DslEnum)]
 #[serde(tag="kind",rename_all="lowercase",deny_unknown_fields)]
 enum InlineVariant { Rect { width:f64 }, Text { text:String } }
@@ -9,7 +10,7 @@ struct InlineStatement { #[dsl(statements)] statement:InlineVariant }
 
 #[test]
 fn required_inline_statement_roundtrips_the_native_owner_and_refuses_zero_or_two(){
- let corpus:serde_json::Value=serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/✨️derive/🏷️required-inline/🔣️.json")).unwrap();
+ let corpus:serde_json::Value=serde_json::from_str(fixture_text!("../../../🧪️tests/🧫️fixtures/✨️derive/🏷️required-inline/🔣️.json")).unwrap();
  for row in corpus["valid"].as_array().unwrap(){
   let value=&row["statement"];let expected=InlineStatement{statement:match value["kind"].as_str().unwrap(){"rect"=>InlineVariant::Rect{width:value["width"].as_f64().unwrap()},"text"=>InlineVariant::Text{text:value["text"].as_str().unwrap().into()},_=>unreachable!()}};
   assert_eq!(serde_json::from_value::<InlineStatement>(row.clone()).unwrap(),expected);
@@ -24,5 +25,4 @@ fn required_inline_statement_roundtrips_the_native_owner_and_refuses_zero_or_two
   let id=spec.fields[0].id;for statements in [Vec::new(),match record.get(id).unwrap(){FieldValue::Statements(items)=>vec![items[0].clone(),items[0].clone()],_=>panic!("tagged native field")}]{let mut invalid=RecordValue::default();invalid.fields.insert(id,FieldValue::Statements(statements));assert!(InlineStatement::__dsl_from_record(&invalid).is_err());let mut accept=|_|true;let mut control=NativeDecodeControl::new(usize::MAX,&mut accept);assert!(InlineStatement::__dsl_from_record_controlled(&invalid,&mut control).is_err());}
  }
  for row in corpus["invalid"].as_array().unwrap(){assert!(serde_json::from_value::<InlineStatement>(row.clone()).is_err());}
- eprintln!("[DEBUG] required inline variant original native owner roundtrips, borrowed measurement, controlled cancellation and exact one-value refusal agree with independent serde interpretation of ordinary neutral examples");
 }

@@ -1,0 +1,9 @@
+# Exact Service Witness Phase1 Review
+
+Preliminary read-only current witness/schema review, no final hold or rerun. Explicit own-data binding accepts only POSIX plus service exact-payload; unrecognized extra fields and Win32/exact combinations refuse. It selects mode before observation, not by catching UUID failure. Existing strict observer calls remain on the strict path; exact mode invokes neither initial nor terminal API observer.
+
+A schema-owned policy sentinel is emitted into both full and application digests before traversal. Consequently even absent .fseventsd differs from a strict-mode witness; existing preservation application equality cannot silently mix these modes. All service subtree frames enter ordinary application hashing and existing names/content/logical-byte/work/path/depth/CAS enforcement. Additional inode/uid/gid/nlink/mtime/ctime metadata applies to every service subtree entry kind; existing mode and file bytes/content or raw-link target remain included. st_dev is deliberately not cross-phase hashed, while per-scan actual same-device checks remain.
+
+No material phase1 authority/equality blocker found. Precise evidence scope: directory size is not cross-phase hashed, and xattrs/ACLs are outside the existing witness contract; describe the explicit frame fields rather than claiming arbitrary filesystem metadata equality. Full file contents/topology plus enumerated metadata are preserved. Exact mode may safely fail when service mutation occurs across actual remount. Publisher request/private-scope mode wiring and both-phase dispatch, mixed-mode/equality laws, actual remount qualification and final hashes remain separate pending work.
+
+Root reports genuineissued70422 Source1/342 with independent Python frame hashes and SQLite13cases; strict pending. No API/Native/protected read or success claim was made here.

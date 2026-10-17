@@ -63,7 +63,6 @@ test("public refusal facets preserve original typed receipt and survive specific
     }
     for (const value of fixture.refusal.invalid) assert.equal(api.valueRefusalKindFromWire(value), undefined);
   } finally { db.close(); }
-  console.log("[DEBUG] public refusal facets originalKind=true originalPhysicalReceipt=true independentSQLite=true explicitExports=true actualPackageResolution=true declarations=true specificDeletion=true");
 });
 
 /** 🔢️ Public exact IEEE words match an independent width-specific oracle, including signed zeros and NaN payloads. */
@@ -88,5 +87,4 @@ test("public IEEE facets preserve native words against ieee754 and survive speci
     assert.equal(BigInt((width === 32 ? api.binary32(value) : api.binary64(value)).bits), BigInt("0x" + bytes.toString("hex")));
   }
   for (const bits of fixture.invalidWords) { assert.throws(() => api.parseBinary32({ bits })); assert.throws(() => api.parseBinary64({ bits })); }
-  console.log("[DEBUG] public IEEE facets exactWords=true signedZero=true nanPayload=true independentIeee754=true explicitExports=true actualPackageResolution=true declarations=true specificDeletion=true");
 });

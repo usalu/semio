@@ -1,0 +1,14 @@
+{
+ "name": "c4p34",
+ "crates": [
+  "semio-s-artifact-stdio-png-mutations",
+  "semio-s-artifact-stdio-png",
+  "semio-s-artifact-stdio-jpg",
+  "semio-s-artifact-stdio-avi-tests",
+  "semio-s-artifact-stdio-avi",
+  "semio-s-artifact-stdio-dxf",
+  "semio-s-artifact-stdio-deflate",
+  "semio-s-artifact-stdio-pptx"
+ ],
+ "note": "CENSUS4-PKG-34: stdio png/jpg/avi/dxf/deflate/pptx io, diff and oracle files split into children; absolute runs (--no-base), compared before and after"
+}

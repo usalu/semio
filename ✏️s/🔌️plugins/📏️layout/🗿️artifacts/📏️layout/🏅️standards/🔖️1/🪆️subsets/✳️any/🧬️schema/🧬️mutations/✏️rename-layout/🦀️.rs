@@ -9,8 +9,8 @@ use semio_framework_value_derive::{FromValue, ToValue};
 //#region ✏️RenameLayout
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 pub struct RenameLayout {
@@ -52,8 +52,3 @@ pub fn inverse_rename_layout<Op: From<crate::rename_layout::RenameLayout>>(_payl
 }
 //#endregion ✏️RenameLayout
 
-//#region 🪢️TaxonomyMounts
-#[cfg(test)]
-#[path = "🧪️tests/🏷️renames/🦀️.rs"]
-mod tests_renames_the_document;
-//#endregion 🪢️TaxonomyMounts

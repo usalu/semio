@@ -1,6 +1,5 @@
 //! 🏳️ Authoritative PDF mutation payload, diff, inverse, and tests for `set-output-intents`.
 
-use super::PdfMutation;
 use crate::standards::v1_7::subsets::base::schema::diff::{self, PdfDiff};
 use crate::standards::v1_7::subsets::base::schema::snapshot::*;
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
@@ -14,7 +13,10 @@ pub struct SetOutputIntents {
     pub intents: Vec<PdfOutputIntent>,
 }
 
-impl MutationKind<PdfSnapshot, PdfMutation> for SetOutputIntents {
+impl<Op> MutationKind<PdfSnapshot, Op> for SetOutputIntents
+where
+    Op: protocol::Mutation<PdfSnapshot, Diff = PdfDiff> + From<SetOutputIntents>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "output-intents", kind: "set-output-intents", record: "Set" };
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
@@ -22,10 +24,10 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetOutputIntents {
         MutationOutcome::new(diff::diff_set_output_intents(base, &self.intents))
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
         let _ = base;
-        vec![PdfMutation::SetOutputIntents(SetOutputIntents { intents: base.output_intents.clone() })]
+        vec![Op::from(SetOutputIntents { intents: base.output_intents.clone() })]
     
     })())
 }
@@ -42,8 +44,6 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetOutputIntents {
 //#endregion 🔖️Mutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
 

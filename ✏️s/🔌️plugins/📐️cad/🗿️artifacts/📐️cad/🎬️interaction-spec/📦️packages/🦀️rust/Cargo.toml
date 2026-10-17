@@ -22,3 +22,4 @@ semio-framework-value-derive = { workspace = true }
 [dev-dependencies]
 semio-framework-async-macros = { workspace = true }
 semio-framework-pack-json = { workspace = true }
+semio-framework-test-fixtures = { path = "../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }

@@ -149,7 +149,7 @@ fn changed_property_operation(collection: &str, target: &MapFeature, entries: &[
 /// 🧱️ Per-property edits taking `before` to `after`: removed keys become `remove-<noun>-property`, changed or new keys
 /// `set-<noun>-property` (new keys are inserted before the key that followed them, appended when last). Payloads that are
 /// not both objects are replaced whole.
-fn property_edit_operations(collection: &str, id: &str, before: &DslValue, after: &DslValue) -> Vec<GisMapMutation> {
+pub fn property_edit_operations(collection: &str, id: &str, before: &DslValue, after: &DslValue) -> Vec<GisMapMutation> {
     let (Some(old), Some(new)) = (before.as_object(), after.as_object()) else {
         return replace_data_operation(collection, id.to_string(), after.clone()).into_iter().collect();
     };
@@ -179,7 +179,7 @@ fn replace_data_operation(collection: &str, id: String, new_data: DslValue) -> O
 
 /// 🧱️ Concrete per-feature operations taking a collection from `before` to `after` for a patch gesture: features the patch
 /// omits are deleted, new ones created at their index, present ones edited property by property.
-fn collection_patch_operations(collection: &str, before: &[MapFeature], after: &[MapFeature]) -> Vec<GisMapMutation> {
+pub fn collection_patch_operations(collection: &str, before: &[MapFeature], after: &[MapFeature]) -> Vec<GisMapMutation> {
     let mut operations: Vec<GisMapMutation> = before.iter().filter(|feature| !after.iter().any(|next| next.id == feature.id)).filter_map(|feature| delete_operation(collection, feature.id.clone())).collect();
     for (index, feature) in after.iter().enumerate() {
         match before.iter().find(|entry| entry.id == feature.id) {

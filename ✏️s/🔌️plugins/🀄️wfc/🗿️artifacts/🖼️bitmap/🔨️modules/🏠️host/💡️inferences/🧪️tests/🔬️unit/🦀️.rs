@@ -2,8 +2,12 @@
 //! is reported as a contradiction rather than a wrong answer, and the roster identity is the one the
 //! plugin root advertises.
 
-use super::*;
+use semio_framework_job::InteractiveJob;
+use crate::schema::snapshot::BitmapSnapshot;
+use crate::host::inferences::*;
+use crate::standards::v1::subsets::any::schema::inferences::{pattern_universe_entropy, symmetry_group, BitmapContradiction, BitmapEntropy, BitmapSolve, BitmapSolveResult};
 use crate::schema::snapshot::{BitmapColor, BitmapInput, BitmapOutputSpec, BitmapOverlappingModel, BitmapPinnedPixel};
+use semio_framework_test_fixtures::fixture_text;
 
 /// 🧪️ A 4 × 4 vertical-stripe sample: every `2 × 2` window is one of two patterns, so a periodic
 /// output of any even width tiles cleanly.
@@ -287,14 +291,14 @@ fn the_published_contract_binds_the_field_the_request_decodes() {
     assert_eq!(contract.payload_schema_id, BITMAP_INFERENCE_PAYLOAD_SCHEMA);
     assert_eq!(contract.progress_unit, "cells");
     assert!(contract.input_schema.contains("\"document\"") && contract.input_schema.contains("\"snapshot\""), "the request schema names both carriers");
-    assert_eq!(contract.output_schema, include_str!("../../../../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🔣️.json"), "the result schema is the facet leaf, carried verbatim");
+    assert_eq!(contract.output_schema, fixture_text!("../../../../../../💡️inferences/🔣️.json"), "the result schema is the facet leaf, carried verbatim");
     let binding = contract.artifact_binding.expect("this solve runs ON an artifact");
     assert_eq!(binding.field, "document");
     assert_eq!(binding.encoding, semio_framework::INFERENCE_ARTIFACT_PACK_BASE64);
     assert!(binding.required, "a bitmap solve cannot be stated by hand, so the binding is required");
 
     let wire = format!("{{\"{}\":{{\"pack\":\"AAAA\",\"spr\":\"AAAA\"}}}}", binding.field);
-    let request: BitmapInferenceRequest = crate::standards::v1::subsets::any::io::text::bitmap_json_decode(&wire).expect("the field the contract names is the field the request decodes");
+    let request: BitmapInferenceRequest = crate::standards::v1::subsets::any::io::text::snapshot::bitmap_json_decode(&wire).expect("the field the contract names is the field the request decodes");
     assert!(request.document.is_some() && request.snapshot.is_none());
 }
 
@@ -340,7 +344,7 @@ fn the_artifact_bound_genesis_document_resolves_and_solves() {
 //#region ⏱️RelayCrossingGrant
 /// ⏱️ The language-agnostic law this region replays: `semio.infer`'s `Pump` must spend the host's
 /// whole crossing grant on the mounted session instead of ending the crossing at the first outcome.
-const RELAY_CROSSING_LAW: &str = include_str!("../../../../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/💡️inferences/⏱️relay-crossing-grant-law.json");
+static RELAY_CROSSING_LAW: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/💡️inferences/⏱️relay-crossing-grant-law.json"));
 
 /// 🔁️ The reactor's job futures settle inside the state action that polls them, so one poll with a
 /// no-op waker is the whole drive; a pending future here is itself a law violation.
@@ -376,10 +380,10 @@ fn genesis_wire_request(law: &serde_json::Value, cancellation_id: &str) -> Vec<u
         cancellation_id: cancellation_id.into(),
         previous_state: None,
         requested_cache_mode: semio_framework_plugin::app::WireArtifactInferenceCacheMode::Cold,
-        canonical_payload: crate::standards::v1::subsets::any::io::text::bitmap_json_encode(&payload).into_bytes(),
+        canonical_payload: crate::standards::v1::subsets::any::io::text::snapshot::bitmap_json_encode(&payload).into_bytes(),
         dependencies: Vec::new(),
     };
-    crate::standards::v1::subsets::any::io::text::bitmap_json_encode(&request).into_bytes()
+    crate::standards::v1::subsets::any::io::text::snapshot::bitmap_json_encode(&request).into_bytes()
 }
 
 /// 🏁 Drives one `semio.infer` job through the guest job protocol under `grant` exactly as the host
@@ -411,7 +415,7 @@ fn run_genesis_crossings(law: &serde_json::Value, job: u64, grant: &serde_json::
 /// ends on the grant, a lossless outcome or the terminal, never on time.
 #[test]
 fn a_whole_solve_grant_settles_the_genesis_inference_in_a_bounded_state_walk() {
-    let law: serde_json::Value = serde_json::from_str(RELAY_CROSSING_LAW).expect("relay crossing law parses");
+    let law: serde_json::Value = serde_json::from_str((*RELAY_CROSSING_LAW)).expect("relay crossing law parses");
     let grant = &law["wholeSolveGrant"];
     let snapshot = BitmapInferenceRequest { snapshot: None, document: Some(semio_framework_plugin::ArtifactDocumentPayload { pack: GENESIS_PACK_BASE64.to_string(), spr: GENESIS_SPR_BASE64.to_string() }), checkpoint: None }.resolve_snapshot().expect("the genesis pair decodes");
     let native_started = std::time::Instant::now();

@@ -1,0 +1,9 @@
+# Recorded Retained Root Native Fixture DATA
+
+Read only existing protected census6534 JSON. It records 1 kernel image associations under this ticket Generated path, distinct from the seven declared top-level stores and seventeen nested declared-store mappings. This is recorded DATA, not a current physical observation, descriptor/EX/charge/borrower or recovery grant. No filesystem/image walk or Native operation occurred. Exact bounded recorded image/mount strings are retained in Generated/recorded-retained-root-native-fixtures.json. Future cleanup must recover each concrete canonical original owner and current guards before child-first retirement; no raw Generated cleanup is permitted while mounted fixtures remain.
+
+- /Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️14/ABSTRACT-REPO-BUILD-TOOLS-AND-ADD-BAZEL/🗑️generated/initial-authority/.cache/b/l/fixed.dmg
+
+## Existing Owner Located, No New Recovery Script
+
+Existing native-retirement-expectation.md, cleanup-preflight.md and generated-cleanup-plan.md already cover this exact initial-authority fixture. The closed cleanup-preflight input binds historical raw receipt SHA and backing dev/inode/size/allocation, and existing cleanup-preflight/📜️script.ts --final-retire calls the canonical expected-image dispatcher with wait:false under its actual finite60 Original. Existing cleanup/📜️script.ts requires that image directory absent plus fresh complete mounts/ancestry before any Generated removal. Those authored operations remain unexecuted and require a fresh Source/current physical review at final release; current Source changes do not silently validate old reports. Reuse these actual owners rather than adding another script or widening historical receipt/identity acceptance. No old-ticket, Graph/Products or peer store is included.

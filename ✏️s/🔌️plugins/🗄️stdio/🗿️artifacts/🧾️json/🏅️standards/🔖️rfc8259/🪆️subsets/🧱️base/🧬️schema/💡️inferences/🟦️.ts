@@ -29,6 +29,10 @@ type stdioJsonRfc8259BaseInferenceGuardSizeBounds = { readonly minItems?: number
 
 export const stdioJsonRfc8259BaseInferenceGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : stdioJsonRfc8259BaseInferenceGuardReject(at, "value is not an object");
+export const stdioJsonRfc8259BaseInferenceGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) stdioJsonRfc8259BaseInferenceGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const stdioJsonRfc8259BaseInferenceGuardArray = (value: unknown, at: string, bounds: stdioJsonRfc8259BaseInferenceGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return stdioJsonRfc8259BaseInferenceGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) stdioJsonRfc8259BaseInferenceGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -59,14 +63,14 @@ export const stdioJsonRfc8259BaseInferenceGuardConstant = <T extends string | nu
 //#endregion 🚪️Parsers
 
 export function parseJsonInference(value: unknown, at = "$"): JsonInference {
-  const row = stdioJsonRfc8259BaseInferenceGuardObject(value, at);
+  const row = stdioJsonRfc8259BaseInferenceGuardClosed(stdioJsonRfc8259BaseInferenceGuardObject(value, at), at, ["outline"]);
   return {
     outline: parseJsonOutline(row["outline"], `${at}.outline`),
   };
 }
 
 export function parseJsonOutline(value: unknown, at = "$"): JsonOutline {
-  const row = stdioJsonRfc8259BaseInferenceGuardObject(value, at);
+  const row = stdioJsonRfc8259BaseInferenceGuardClosed(stdioJsonRfc8259BaseInferenceGuardObject(value, at), at, ["nodeCount", "maxDepth", "rootKind"]);
   return {
     nodeCount: stdioJsonRfc8259BaseInferenceGuardInteger(row["nodeCount"], `${at}.nodeCount`),
     maxDepth: stdioJsonRfc8259BaseInferenceGuardInteger(row["maxDepth"], `${at}.maxDepth`),

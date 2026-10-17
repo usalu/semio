@@ -8,21 +8,22 @@
 use crate::diff::BitmapDiff;
 use crate::mutations::{inverse_bitmap_mutation, BitmapMutation};
 use crate::schema::snapshot::BitmapSnapshot;
+use semio_framework_test_fixtures::fixture_text;
 
-const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🖍️change-palette-color/🖍️recolours/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🖍️change-palette-color/🖍️recolours/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🖍️change-palette-color/🖍️recolours/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🖍️change-palette-color/🖍️recolours/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🖍️change-palette-color/🖍️recolours/🎯️outcome/🔣️.json");
+static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🖍️change-palette-color/🖍️recolours/📸️snapshot/⬅️before/🔣️.json"));
+static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🖍️change-palette-color/🖍️recolours/📸️snapshot/➡️after/🔣️.json"));
+static MUTATION: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🖍️change-palette-color/🖍️recolours/🦠️mutation/🔣️.json"));
+static DIFF: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🖍️change-palette-color/🖍️recolours/🔺️diff/🔣️.json"));
+static OUTCOME: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🖍️change-palette-color/🖍️recolours/🎯️outcome/🔣️.json"));
 
 fn before() -> BitmapSnapshot {
-    crate::standards::v1::subsets::any::io::text::bitmap_json_decode(BEFORE).expect("before snapshot decodes")
+    crate::standards::v1::subsets::any::io::text::snapshot::bitmap_json_decode((*BEFORE)).expect("before snapshot decodes")
 }
 fn expected_after() -> BitmapSnapshot {
-    crate::standards::v1::subsets::any::io::text::bitmap_json_decode(AFTER).expect("after snapshot decodes")
+    crate::standards::v1::subsets::any::io::text::snapshot::bitmap_json_decode((*AFTER)).expect("after snapshot decodes")
 }
 fn mutation() -> BitmapMutation {
-    crate::standards::v1::subsets::any::io::text::bitmap_json_decode(MUTATION).expect("mutation decodes")
+    crate::standards::v1::subsets::any::io::text::snapshot::bitmap_json_decode((*MUTATION)).expect("mutation decodes")
 }
 
 /// ▶️ The mutation carries `before` to exactly the committed `after`.
@@ -50,14 +51,14 @@ fn inverse_restores_before() {
 /// 🔣️ Both committed snapshots are already canonical: decode→encode is a fixed point.
 #[test]
 fn committed_json_is_canonical() {
-    for (side, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: BitmapSnapshot = crate::standards::v1::subsets::any::io::text::bitmap_json_decode(text).expect("snapshot decodes");
-        let reencoded = serde_json::from_str::<serde_json::Value>(&crate::standards::v1::subsets::any::io::text::bitmap_json_encode(&decoded)).expect("snapshot encodes");
+    for (side, text) in [("before", (*BEFORE)), ("after", (*AFTER))] {
+        let decoded: BitmapSnapshot = crate::standards::v1::subsets::any::io::text::snapshot::bitmap_json_decode(text).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&crate::standards::v1::subsets::any::io::text::snapshot::bitmap_json_encode(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "change-palette-color/🖍️recolours: committed {side} JSON is not canonical");
     }
-    let reencoded = serde_json::from_str::<serde_json::Value>(&crate::standards::v1::subsets::any::io::text::bitmap_json_encode(&mutation())).expect("mutation encodes");
-    let original: serde_json::Value = serde_json::from_str(MUTATION).expect("mutation reparses");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&crate::standards::v1::subsets::any::io::text::snapshot::bitmap_json_encode(&mutation())).expect("mutation encodes");
+    let original: serde_json::Value = serde_json::from_str((*MUTATION)).expect("mutation reparses");
     assert_eq!(reencoded, original, "change-palette-color/🖍️recolours: committed mutation JSON is not canonical");
 }
 
@@ -65,7 +66,7 @@ fn committed_json_is_canonical() {
 /// matches what the mutation actually produces.
 #[test]
 fn declared_outcome_holds() {
-    let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
+    let outcome: serde_json::Value = serde_json::from_str((*OUTCOME)).expect("outcome decodes");
     let status = outcome.get("status").and_then(serde_json::Value::as_str).expect("outcome carries a status");
     let declared: Vec<(String, String)> = outcome
         .get("messages")
@@ -77,7 +78,7 @@ fn declared_outcome_holds() {
         .messages()
         .iter()
         .map(|message| {
-            let level = serde_json::from_str::<serde_json::Value>(&crate::standards::v1::subsets::any::io::text::bitmap_json_encode(&message.level)).expect("severity encodes");
+            let level = serde_json::from_str::<serde_json::Value>(&crate::standards::v1::subsets::any::io::text::snapshot::bitmap_json_encode(&message.level)).expect("severity encodes");
             (level.as_str().unwrap_or_default().to_string(), message.code.0.clone())
         })
         .collect();
@@ -99,17 +100,17 @@ fn declared_outcome_holds() {
 #[test]
 fn produces_committed_diff() {
     let raised = <BitmapMutation as protocol::Mutation<BitmapSnapshot>>::diff(&mutation(), &before());
-    let produced = serde_json::from_str::<serde_json::Value>(&crate::standards::v1::subsets::any::io::text::bitmap_json_encode(raised.diff())).expect("produced diff encodes");
-    let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
+    let produced = serde_json::from_str::<serde_json::Value>(&crate::standards::v1::subsets::any::io::text::snapshot::bitmap_json_encode(raised.diff())).expect("produced diff encodes");
+    let committed: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff decodes");
     assert_eq!(produced, committed, "change-palette-color/🖍️recolours: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
 
 /// 🔣️ The committed diff is itself canonical and decodes to the artifact's own diff type.
 #[test]
 fn committed_diff_is_canonical() {
-    let decoded: BitmapDiff = crate::standards::v1::subsets::any::io::text::bitmap_json_decode(DIFF).expect("committed diff decodes");
-    let reencoded = serde_json::from_str::<serde_json::Value>(&crate::standards::v1::subsets::any::io::text::bitmap_json_encode(&decoded)).expect("diff re-encodes");
-    let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
+    let decoded: BitmapDiff = crate::standards::v1::subsets::any::io::text::snapshot::bitmap_json_decode((*DIFF)).expect("committed diff decodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&crate::standards::v1::subsets::any::io::text::snapshot::bitmap_json_encode(&decoded)).expect("diff re-encodes");
+    let original: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff reparses");
     assert_eq!(reencoded, original, "change-palette-color/🖍️recolours: committed diff JSON is not canonical");
 }
 
@@ -117,7 +118,7 @@ fn committed_diff_is_canonical() {
 /// complete description of what `change-palette-color` changed, not a summary of it.
 #[test]
 fn committed_diff_applies_to_after() {
-    let decoded: BitmapDiff = crate::standards::v1::subsets::any::io::text::bitmap_json_decode(DIFF).expect("committed diff decodes");
+    let decoded: BitmapDiff = crate::standards::v1::subsets::any::io::text::snapshot::bitmap_json_decode((*DIFF)).expect("committed diff decodes");
     let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-palette-color/🖍️recolours: committed diff did not carry before to after");
 }

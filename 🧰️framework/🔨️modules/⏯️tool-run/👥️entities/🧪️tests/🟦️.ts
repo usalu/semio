@@ -29,7 +29,6 @@ test("original ToolRun rollback provenance retains earlier introductions and cap
    while(job.retained)expect(job.close(1)).toBeLessThanOrEqual(1);expect(job.original).toEqual(row.original);
   }
  }
- console.log("[DEBUG] Original ToolRun provenance rollback and deduplication matched independent BigInt/RFC6902 oracle");
 });
 
 test("original ToolRun entity versions publish once and preserve captured originals on cancellation",()=>{
@@ -47,7 +46,6 @@ test("original ToolRun entity versions publish once and preserve captured origin
    expect(original.entities).toEqual(row.initial);
   }
  }
- console.log("[DEBUG] Original ToolRun immutable entity versions match independent RFC6902 publication and cancellation outputs");
 });
 
 test("original ToolRun entity owner completes and cancels the shared append/retract corpus",()=>{
@@ -61,6 +59,5 @@ test("original ToolRun entity owner completes and cancels the shared append/retr
   expect(job.complete).toBe(true);expect(job.take()).toEqual(oracle.entities);expect(targets).toEqual(row.targets);
   for(const interrupt of fixture.interruptAfter){const original=[...row.initial],pending=new ToolRunEntityEdit(original,[...row.targets],row.kind as "append"|"retract");for(let turn=0;turn<interrupt&&!pending.complete;turn++)pending.advance(1);pending.cancel();expect(pending.take()).toBeUndefined();expect(pending.retained).toBe(true);while(pending.retained)expect(pending.close(1)).toBeLessThanOrEqual(1);}
  }
- console.log("[DEBUG] original ToolRun entity transitions agree with independent RFC6902 append/retract and full-u64 ordering");
 });
          

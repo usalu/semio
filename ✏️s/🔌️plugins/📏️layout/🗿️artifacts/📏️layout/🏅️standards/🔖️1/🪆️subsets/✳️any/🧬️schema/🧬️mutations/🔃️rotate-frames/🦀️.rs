@@ -17,8 +17,8 @@ use semio_framework_value_derive::{FromValue, ToValue};
 /// in radians.
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 pub struct RotateFrames {
@@ -89,23 +89,3 @@ pub fn inverse_rotate_frames<Op: From<crate::move_frame::MoveFrame> + From<crate
 }
 //#endregion ↩️Inverse
 
-//#region 🪢️TaxonomyMounts
-#[cfg(test)]
-#[path = "🧪️tests/⏸️keeps-a-zero-angle/🦀️.rs"]
-mod tests_keeps_a_zero_angle;
-#[cfg(test)]
-#[path = "🧪️tests/🔃️orbits/🦀️.rs"]
-mod tests_orbits_both_frames_a_quarter_turn;
-#[cfg(test)]
-#[path = "🧪️tests/🔁️refuses/🦀️.rs"]
-mod tests_refuses_a_repeated_frame;
-#[cfg(test)]
-#[path = "🧪️tests/🚫️rejects/🦀️.rs"]
-mod tests_rejects_a_missing_page;
-#[cfg(test)]
-#[path = "🧪️tests/⚠️skips/🦀️.rs"]
-mod tests_skips_a_locked_and_a_missing_frame;
-#[cfg(test)]
-#[path = "🧪️tests/🌀️turns/🦀️.rs"]
-mod tests_turns_the_rect_about_its_centre;
-//#endregion 🪢️TaxonomyMounts

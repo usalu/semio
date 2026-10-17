@@ -1,6 +1,9 @@
+use crate::{schema::diff::BlocksDiff, schema::diff::SemioDocumentDiff};
+use crate::{schema::snapshot::DocBlock, schema::snapshot::DocImage, schema::snapshot::DocRun, schema::snapshot::DocStyle, schema::snapshot::RunStyle, schema::snapshot::SemioDocumentSnapshot};
+use protocol::Mutation;
 use crate::io::binary::mutations::wire_tag;
 use crate::io::text::mutations::print_document_mutation;
-use super::*;
+use crate::schema::mutations::*;
 use crate::schema::snapshot::{DocListItem, DocTableCell, DocTableRow};
 use protocol::command::DiffAlgebra;
 use protocol::MutationDiff;

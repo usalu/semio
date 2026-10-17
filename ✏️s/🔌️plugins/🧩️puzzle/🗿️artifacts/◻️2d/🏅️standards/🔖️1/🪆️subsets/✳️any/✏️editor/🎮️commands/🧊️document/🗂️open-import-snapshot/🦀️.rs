@@ -1,6 +1,6 @@
 //! 🗂 Asks the host to pick a snapshot JSON file and re-dispatch import.
 
-use crate::editor::puzzle2d::Puzzle2dActionCtx;
+use crate::editor::puzzle2d::interaction::Puzzle2dActionCtx;
 use semio_framework::kernel::UiDirtyScope;
 use semio_framework_plugin::kernel::Effect;
 

@@ -1,0 +1,61 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "Policy": {
+      "const": {
+        "maximumOperations": 1024,
+        "maximumDepth": 64
+      }
+    },
+    "Case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "status",
+        "callbacks",
+        "peak",
+        "failure"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "status": {
+          "enum": [
+            0,
+            1
+          ]
+        },
+        "callbacks": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1024
+        },
+        "peak": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1024
+        },
+        "failure": {
+          "enum": [
+            null,
+            "copied",
+            "retired",
+            "closed",
+            "capacity",
+            "depth",
+            "child-first",
+            "body-first",
+            "undefined",
+            "cancelled",
+            "frame",
+            "restriction",
+            "control"
+          ]
+        }
+      }
+    }
+  }
+}

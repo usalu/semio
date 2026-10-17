@@ -1,10 +1,10 @@
 /** 🗺️ Complete map document with independently persisted child envelopes. */
 import { parseSchemaRecord } from "@semio-tech/framework/schema/record";
-import { parseArtifactChild, type ArtifactChild } from "../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts";
+import { parseArtifactChild, type ArtifactChild } from "@semio-tech/framework-os/modules/store/child/schema";
 import { parseGisMapFeature, type GisMapFeature } from "./📍️feature/🟦️.ts";
 export { parseGisMapFeature } from "./📍️feature/🟦️.ts";
 export type { GisMapFeature } from "./📍️feature/🟦️.ts";
-export type { ArtifactChild } from "../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts";
+export type { ArtifactChild } from "@semio-tech/framework-os/modules/store/child/schema";
 
 export interface GisMapArtifact {
   /** @state artifact */ positions: GisMapFeature[];

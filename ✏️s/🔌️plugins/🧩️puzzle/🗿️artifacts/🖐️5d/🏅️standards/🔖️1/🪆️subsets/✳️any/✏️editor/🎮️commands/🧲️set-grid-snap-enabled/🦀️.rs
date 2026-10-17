@@ -1,6 +1,6 @@
 //! 🧲️ `set-grid-snap-enabled` command.
 
-use crate::editor::puzzle5d::Puzzle5dActionCtx;
+use crate::editor::puzzle5d::interaction::Puzzle5dActionCtx;
 use semio_framework_pack_json::Value;
 
 /// 🧲️ A `WindowMeasure::Toggle` dispatches its next state as `pressed`; an argument-less invocation

@@ -18,7 +18,6 @@ fn snapshot_publication_original_build_six_frontiers_preserve_native_pointers_an
         for _ in 0..100000{if owner.terminal_is_empty(){break;}let(step,heap)=observe(||owner.close_step(grant).unwrap());let receipt=step.progress();assert!(receipt.fits(grant.retained_grant()));assert_eq!((heap.requested_bytes,heap.released_bytes),(receipt.retained_capacity_bytes,receipt.released_bytes));births+=heap.requested_bytes;releases+=heap.released_bytes;}
         assert!(owner.terminal_is_empty());let(_,heap)=observe(||drop(owner));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(releases,initial.requested_bytes+births);
     }
-    eprintln!("[DEBUG] six actual original publication construction frontiers preserve forward/inverse native pointers; fixed4096 copy/capacity denial heap0; separately paid post/inverse frame closure and finalDrop0");
 }
 
 #[test]
@@ -71,7 +70,6 @@ fn snapshot_clone_original_inline_custody_observes_exact_granted_birth_work_and_
     run(7u64);
     run("original\0Ä🧩".to_string());
     run((0..33).collect::<Vec<u32>>());
-    println!("[DEBUG] snapshot clone original scalar/text/sequence retains undergrant and closes under exact separate work/birth/release/depth");
 }
 
 #[derive(semio_framework_value::FactoryPayloadRetirement)]
@@ -165,5 +163,4 @@ use semio_framework_os_store_one_item_publication::ArtifactStoreOneItemLiveAutho
     assert_eq!((heap.requested_bytes,heap.released_bytes),(0,frame_grant.maximum_release_bytes));
     released += heap.released_bytes;
     assert_eq!(released, original_heap.requested_bytes+births);
-    eprintln!("[DEBUG] original preparation request preserved on all birth refusals; frame={} original={} fundedBirths={births} released={released} preflight=1", demand.capacity_bytes, original_heap.requested_bytes);
 }

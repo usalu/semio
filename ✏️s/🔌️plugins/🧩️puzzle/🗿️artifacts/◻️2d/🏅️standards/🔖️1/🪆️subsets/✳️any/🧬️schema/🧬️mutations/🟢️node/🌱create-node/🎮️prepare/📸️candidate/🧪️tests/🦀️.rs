@@ -1,8 +1,22 @@
 //! 🧪️ Native ordered insertion preserves every unrelated owner and retires partial candidates.
 
-use super::*;
+use crate::standards::v1::subsets::any::schema::mutations::CreateNode;
+use crate::standards::v1::subsets::any::schema::snapshot::Puzzle2dSnapshot;
+use crate::standards::v1::subsets::any::schema::records::Puzzle2dNode;
+use semio_framework_value::{ValueError, retirement::controlled::ControlledRetirement, retained_clone::RetainedCloneGrant, retained_clone::RetainedCloneProgress, retained_clone::RetainedCloneStep};
+use std::mem::size_of;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::preparation::native_preparation_child::Puzzle2dCloseAxis;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::preparation::create_node_preparation::{Puzzle2dCreateNodeDisposition, Puzzle2dCreateNodePlan, Puzzle2dCreateNodePreparationCursor, Puzzle2dCreateNodePreparationStep};
+#[allow(unused_imports)]
+use semio_framework_value::{ValueRefusalKind, list::PagedListEditCursor, retained_clone::RetainedCloneBinding, retained_clone::RetainedFieldCursor, retained_clone::RetainedCloneCursor, retained_clone::RetainedCloneRef};
+#[allow(unused_imports)]
+use std::{mem::ManuallyDrop, ops::Deref, ops::DerefMut};
+use crate::standards::v1::subsets::any::schema::preparation::create_node_preparation::candidate::*;
+use semio_framework_test_fixtures::fixture_text;
 use semio_framework_value::paged::PagedUtf8;
-use crate::test_source_custody;
+use crate::standards::v1::subsets::any::schema::testkit as test_source_custody;
 
 fn grant(turn: usize) -> RetainedCloneGrant { match turn % 3 { 0 => RetainedCloneGrant::one_capacity_turn(4096, 128), 1 => RetainedCloneGrant::one_payload_turn(4096, 128), _ => RetainedCloneGrant::one_release_turn(4096, 128) } }
 
@@ -38,13 +52,13 @@ fn retire(snapshot: Puzzle2dSnapshot) {
 #[test]
 fn history_edit_puzzle2d_native_create_candidate_preserves_ordered_placement_and_controlled_cancellation() {
     assert!(size_of::<Puzzle2dCreateNodeCandidateCursor>() <= 4096);
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌱create-node/🎮️prepare/🔣️.json")).unwrap();
-    let full: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌱create-node/🎮️prepare/🔣️.json")).unwrap();
+    let full: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let text = |value: &serde_json::Value| { let value = value.as_str().unwrap();match value.strip_prefix("$large:") { Some(suffix) => PagedUtf8::<{usize::MAX}>::from(format!("{}{suffix}", corpus["control"]["largePrefix"].as_str().unwrap().repeat(corpus["control"]["largeRepeats"].as_u64().unwrap() as usize))), None => value.into() } };
     let mut count = 0;
     for case in corpus["cases"].as_array().unwrap() {
         let mut snapshot: Puzzle2dSnapshot = serde_json::from_value(full["snapshot"].clone()).unwrap();
-        snapshot.nodes = case["nodes"].as_array().unwrap().iter().map(|id| Puzzle2dNode { id: text(id), text: Some("retained\0😀".into()), handles: [crate::standards::v1::subsets::any::schema::Puzzle2dHandle { id: "retained-handle".into(), angle: 0.25, ..Default::default() }].into_iter().collect(), ..Default::default() }).collect();
+        snapshot.nodes = case["nodes"].as_array().unwrap().iter().map(|id| Puzzle2dNode { id: text(id), text: Some("retained\0😀".into()), handles: [crate::standards::v1::subsets::any::schema::records::Puzzle2dHandle { id: "retained-handle".into(), angle: 0.25, ..Default::default() }].into_iter().collect(), ..Default::default() }).collect();
         let mut wire = case["mutation"]["node"].clone();
         for name in ["x", "y"] { if wire[name].is_string() { wire[name] = serde_json::json!(0); } }
         if let Some(handles) = wire.get_mut("handles").and_then(serde_json::Value::as_array_mut) { for handle in handles { if handle["angle"].is_string() { handle["angle"] = serde_json::json!(0); } } }
@@ -84,7 +98,6 @@ fn history_edit_puzzle2d_native_create_candidate_preserves_ordered_placement_and
         let (_, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| drop(cursor));assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
         test_source_custody::close(&mut source);test_source_custody::close(&mut mutation);
         count += 1;
-        eprintln!("[DEBUG] Puzzle2d CreateNode candidate {} preserved exact ordered placement and full untouched owners with zero-heap construction and granted snapshot/node/insertion cancellation", case["id"].as_str().unwrap());
     }
     assert_eq!(count, 16);
 }

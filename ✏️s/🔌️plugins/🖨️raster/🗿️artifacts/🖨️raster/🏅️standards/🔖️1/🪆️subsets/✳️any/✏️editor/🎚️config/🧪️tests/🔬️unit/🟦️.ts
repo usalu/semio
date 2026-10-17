@@ -7,7 +7,8 @@ import schema from "../../🧬️schema/🔣️.json";
 import fixture from "../🧫️fixtures/🖌️brush-style/🔣️.json";
 
 const validate=new Ajv({strict:false,validateFormats:false}).compile(schema);
-const config=(brushColor:string,brushHardness:number)=>({brushSize:24,brushOpacity:1,brushColor,brushHardness,paintTarget:"pixels",maskValue:255,fillTolerance:24,camera:{x:0,y:0,zoom:1}});
+const paintTarget=(value:string):"mask"|"pixels"=>{if(value==="mask"||value==="pixels")return value;throw new Error(`Unknown paint target ${JSON.stringify(value)}`);};
+const config=(brushColor:string,brushHardness:number)=>({brushSize:24,brushOpacity:1,brushColor,brushHardness,paintTarget:"pixels" as const,maskValue:255,fillTolerance:24,camera:{x:0,y:0,zoom:1}});
 for(const row of fixture.cases) test(`brush style ${row.color} at hardness ${row.hardness}`,async()=>{
   const value=config(row.color,row.hardness);
   expect(validate(value)).toBe(true);
@@ -30,7 +31,7 @@ test("brush style schema and parser reject malformed colors and hardness",()=>{
 
 import masks from "../🧫️fixtures/🎭️mask-paint/🔣️.json";
 for(const row of masks.cases)test(`paint target ${row.target} at mask value ${row.value}`,()=>{
-  const value={...config("#2878dc",1),paintTarget:row.target,maskValue:row.value};
+  const value={...config("#2878dc",1),paintTarget:paintTarget(row.target),maskValue:row.value};
   expect(validate(value)).toBe(true);expect(parseRasterConfig(value)).toEqual({...value,compositeViewport:undefined});
 });
 test("paint target and mask coverage reject invalid values",()=>{
@@ -50,9 +51,9 @@ test("bucket tolerance rejects values outside 0..255",()=>{
 import selections from "../🧫️fixtures/🎯️pixel-selection/🔣️.json";
 import { parsePixelLayerSelectionV1 } from "@semio-tech/framework/pixels/selection";
 for(const row of selections.cases)test(`completed selection: ${row.name}`,async()=>{
-  const value={...config("#2878dc",1),paintTarget:row.selection.target,pixelSelection:row.selection};
+  const value={...config("#2878dc",1),paintTarget:paintTarget(row.selection.target),pixelSelection:row.selection};
   expect(validate(value)).toBe(true);
-  expect(parseRasterConfig(value).pixelSelection).toEqual(row.selection);
+  expect(parseRasterConfig(value).pixelSelection).toEqual({...row.selection,target:paintTarget(row.selection.target)});
   const selected=parsePixelLayerSelectionV1(row.selection);
   const coverage=new Uint8Array(selected.width*selected.height);
   for(const {start,length,coverage:alpha} of selected.spans)coverage.fill(alpha,start,start+length);
@@ -73,10 +74,10 @@ import {PAINT2D_SCENE_LANES,paint2dSceneFromLanes,type Paint2dScene} from "@semi
 import { scenePaint2dSceneLanesFixture as sceneContract } from "@semio-tech/framework/ui/scene/testing";
 
 test("completed selection survives the shared optional scene carrier",()=>{
-  expect(PAINT2D_SCENE_LANES).toEqual(sceneContract.lanes);
+  expect(PAINT2D_SCENE_LANES).toEqual<typeof sceneContract.lanes>(sceneContract.lanes);
   const {spine,laneTexts,assembled}=sceneContract.roundTrip;
   const restored=paint2dSceneFromLanes(spine as Paint2dScene,new Map(Object.entries(laneTexts)));
-  expect(restored).toEqual({...assembled,lanes:spine.lanes});
+  expect(restored).toEqual({...assembled,lanes:spine.lanes,paintTarget:paintTarget(assembled.paintTarget)});
   expect(parsePixelLayerSelectionV1(JSON.parse(restored.pixelSelectionJson!)).spans).toEqual([{start:0,length:2,coverage:255},{start:3,length:1,coverage:128}]);
   const without={...spine,lanes:spine.lanes.filter(lane=>lane.lane!=="pixelSelection")} as Paint2dScene;
   expect(paint2dSceneFromLanes(without,new Map(Object.entries(laneTexts).filter(([key])=>!key.endsWith(".pixelSelection")))).pixelSelectionJson).toBeUndefined();

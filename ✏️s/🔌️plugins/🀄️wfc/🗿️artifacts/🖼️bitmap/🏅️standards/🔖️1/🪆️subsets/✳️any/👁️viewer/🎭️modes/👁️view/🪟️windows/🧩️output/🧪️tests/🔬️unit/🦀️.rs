@@ -1,6 +1,6 @@
 //! 🧪️ Viewer output window — read-only, no actions, and non-empty for every example.
 
-use super::*;
+use crate::viewer::bitmap::modes::view::windows::output::*;
 
 #[test]
 fn the_window_declares_no_actions_and_no_utilities() {

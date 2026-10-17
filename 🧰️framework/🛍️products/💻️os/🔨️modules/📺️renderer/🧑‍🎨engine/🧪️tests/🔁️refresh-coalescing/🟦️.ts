@@ -9,7 +9,7 @@ import { cleanup, render } from "@semio-tech/ui-react/test";
 import { describe, expect, it, vi } from "vitest";
 import { type UtilityNode } from "@semio-tech/framework";
 import { InterpretedUiNode, UiDocumentStore, applyUiRefreshResponseToCache, buildActiveUtilityByWindowId, buildUiRefreshRequest, groupUtilityNodesByCategory, mergeRecordPreservingIdentity, preserveJsonIdentity, createLatestAsyncDispatcher, createDirectionalAsyncDispatcher, createInFlightSkippingInterval, createCoalescingActionDispatcher, type UiRefreshCache, SyncAttachCard } from "../../🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx";
-import { createUiRefreshCoalescerV1, mergeUiDirtyScopeV1 } from "../../🧱️elements/🛠️ShellHelpers/🟦️.tsx";
+import { createUiRefreshCoalescerV1, mergeUiDirtyScopeV1 } from "../../🧱️elements/🛠️ShellHelpers/🔄️ui-refresh/🟦️.ts";
 import { buildContractSnapshot, computeAccessibleName, noopAction } from "../🧰️engine-contract-helpers/🟦️.ts";
 
 it("keeps the interpreted canvas visible beneath expanded Actions chrome", () => {
@@ -32,7 +32,6 @@ it("keeps the interpreted canvas visible beneath expanded Actions chrome", () =>
       expect(surface.querySelector('[role="application"]'), row.id).not.toBeNull();
     } finally { view.unmount(); bounds.mockRestore(); }
   }
-  console.info("[DEBUG] Canvas clearance: four mounted production-interpreter fixture cases");
 });
 
 describe("framework sync utilities", () => {
@@ -161,7 +160,7 @@ describe("framework sync utilities", () => {
       react: { helpers: string[]; hostIoOps?: string[] };
       wgpu: { hostIoOps: string[] };
     };
-    const helpers = await import("../../🧱️elements/🛠️ShellHelpers/🟦️.tsx");
+    const helpers = await import("../../🧱️elements/🛠️ShellHelpers/🔩️plumbing/📥️downloads-and-file-requests/🟦️.ts");
     for (const name of fixture.react.helpers) expect(typeof (helpers as Record<string, unknown>)[name]).toBe("function");
     const { default: hostIo } = await import("../../🎯️targets/🧊️wgpu/🚪️host-io/🟦️.ts?raw");
     for (const op of fixture.wgpu.hostIoOps) expect(hostIo).toContain(op);

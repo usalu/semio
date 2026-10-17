@@ -4,7 +4,4 @@
 // Carving a crate removes its unit here and puts `extern crate <crate> as <old module name>;` in its place (PLAN-RENDERER-WGPU-CRATES.md, section 10.3).
 
 //#region 🫀️SettlePumpTests
-#[cfg(test)]
-#[path = "../../../../../🧪️tests/🫀️settle-pump/🦀️.rs"]
-mod settle_pump_tests;
 //#endregion 🫀️SettlePumpTests

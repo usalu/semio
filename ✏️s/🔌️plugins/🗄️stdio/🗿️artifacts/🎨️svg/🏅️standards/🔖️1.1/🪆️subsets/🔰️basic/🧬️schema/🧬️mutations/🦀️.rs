@@ -29,34 +29,29 @@ use crate::schema::snapshot::{node_at, NodePath, TransformOp, ViewBox};
 
 
 use crate::SvgSnapshot;
-#[cfg(test)] use protocol::Mutation;
+#[cfg(any(test, feature = "testkit"))] use protocol::Mutation;
 use crate::schema::snapshot::{SvgNode, SvgAttributeValue};
 
 //#region 🔖️Mutations
+pub use semio_s_artifact_stdio_svg_handcrafted_diff_codec_tests::standards::v1_1::subsets::basic::schema::mutations::support;
+pub use support::{BLOCKED_FILTER_PRIMITIVES, TEXT_ELEMENTS, carries_text, is_blocked_filter_primitive, path_of_id, resolve_clip_path, subtree_profile_violation};
+#[allow(unused_imports)]
+use support::{CODE_REJECTED, insert_child_diff, local_name, remove_child_diff};
 #[path = "🧭️edit-rules/🦀️.rs"]
 pub mod edit_rules;
-#[path = "➕insert-basic-element/🦀️.rs"]
-pub mod insert_basic_element;
-#[path = "📎insert-clip-path-shape/🦀️.rs"]
-pub mod insert_clip_path_shape;
-#[path = "➖remove-element/🦀️.rs"]
-pub mod remove_element;
-#[path = "🏷️set-basic-attribute/🦀️.rs"]
-pub mod set_basic_attribute;
-#[path = "✂️set-clip-path-reference/🦀️.rs"]
-pub mod set_clip_path_reference;
+pub use semio_s_artifact_stdio_svg_tests::standards::v1_1::subsets::basic::schema::mutations::insert_basic_element;
+pub use semio_s_artifact_stdio_svg_mut_family::standards::v1_1::subsets::basic::schema::mutations::insert_clip_path_shape;
+pub use semio_s_artifact_stdio_svg_tests::standards::v1_1::subsets::basic::schema::mutations::remove_element;
+pub use semio_s_artifact_stdio_svg_tests::standards::v1_1::subsets::basic::schema::mutations::set_basic_attribute;
+pub use semio_s_artifact_stdio_svg_mut_family::standards::v1_1::subsets::basic::schema::mutations::set_clip_path_reference;
 /// 📐️ Typed content mutation for `stdio.svg` 1.1/🔰️basic. Nodes are addressed by `NodePath`; clip
 /// paths are addressed by their `id`, because that is how a `clip-path="url(#id)"` reference names
 /// them and the profile's whole clip-path rule is about what a reference resolves to.
 //#region 🔖️Leaves
-#[path = "✍️set-text/🦀️.rs"]
-pub mod set_text;
-#[path = "🔄set-transform/🦀️.rs"]
-pub mod set_transform;
-#[path = "🖼️set-view-box/🦀️.rs"]
-pub mod set_view_box;
-#[path = "🪧stamp-base-profile/🦀️.rs"]
-pub mod stamp_base_profile;
+pub use semio_s_artifact_stdio_svg_handcrafted_diff_codec_tests::standards::v1_1::subsets::basic::schema::mutations::set_text;
+pub use semio_s_artifact_stdio_svg_tests::standards::v1_1::subsets::basic::schema::mutations::set_transform;
+pub use semio_s_artifact_stdio_svg_tests::standards::v1_1::subsets::basic::schema::mutations::set_view_box;
+pub use semio_s_artifact_stdio_svg_tests::standards::v1_1::subsets::basic::schema::mutations::stamp_base_profile;
 //#endregion 🔖️Leaves
 
 /// 📐️ Typed mutation for this subset. `NoMutation` was dropped: `#[derive(dsl::Mutations)]` requires
@@ -113,99 +108,12 @@ pub fn kind_of(mutation: &SvgBasicMutation) -> &'static str {
 }
 //#endregion 🔖️Mutations
 
-//#region 🔖️Profile
-/// 🚫 The expensive raster filter primitives SVG Basic 1.1 excludes.
-const BLOCKED_FILTER_PRIMITIVES: &[&str] = &["feConvolveMatrix", "feDisplacementMap", "feTurbulence", "feMorphology", "feDiffuseLighting", "feSpecularLighting", "feDistantLight", "fePointLight", "feSpotLight"];
 
-/// ✍️ The SVG text element kinds — a clip path containing one clips to text.
-const TEXT_ELEMENTS: &[&str] = &["text", "tspan", "tref", "textPath"];
-
-const CODE_REJECTED: &str = "mutation.target-mismatch";
-
-fn local_name(name: &str) -> &str {
-    name.rsplit(':').next().unwrap_or(name)
-}
-
-/// 🚫 `true` for a raster filter primitive SVG Basic 1.1 does not retain.
-pub fn is_blocked_filter_primitive(name: &str) -> bool {
-    BLOCKED_FILTER_PRIMITIVES.contains(&local_name(name))
-}
-
-/// ✍️ `true` when `node` is, or contains, an SVG text element.
-pub fn carries_text(node: &SvgNode) -> bool {
-    match node {
-        SvgNode::Element { name, children, .. } => TEXT_ELEMENTS.contains(&local_name(name)) || children.iter().any(carries_text),
-        _ => false,
-    }
-}
-
-/// 🛡️ The subtree gate: the message naming the first excluded primitive, or the clip-to-text
-/// violation, or `None` when the subtree is Basic-clean.
-pub fn subtree_profile_violation(node: &SvgNode) -> Option<String> {
-    match node {
-        SvgNode::Element { name, children, .. } => {
-            if is_blocked_filter_primitive(name) {
-                return Some(format!("element <{name}> is an expensive raster filter primitive not supported by SVG Basic 1.1"));
-            }
-            if local_name(name) == "clipPath" && children.iter().any(carries_text) {
-                return Some(format!("<{name}> contains a text descendant -- SVG Basic 1.1 forbids clipping to text"));
-            }
-            children.iter().find_map(subtree_profile_violation)
-        }
-        _ => None,
-    }
-}
-
-/// 🗺️ The `NodePath` of the first element carrying `id`, depth-first from the root.
-pub fn path_of_id(snapshot: &SvgSnapshot, id: &str) -> Option<NodePath> {
-    fn walk(node: &SvgNode, id: &str, prefix: &mut NodePath) -> Option<NodePath> {
-        if let SvgNode::Element { attrs, children, .. } = node {
-            if attrs.iter().any(|a| a.name == "id" && a.value.text() == Some(id)) {
-                return Some(prefix.clone());
-            }
-            for (index, child) in children.iter().enumerate() {
-                prefix.push(index);
-                if let Some(found) = walk(child, id, prefix) {
-                    return Some(found);
-                }
-                prefix.pop();
-            }
-        }
-        None
-    }
-    walk(snapshot.doc.root.as_ref()?, id, &mut Vec::new())
-}
-
-/// 🛡️ Resolves `id` to a clip path this profile allows a reference to point at, or the message
-/// saying why it does not.
-pub fn resolve_clip_path(snapshot: &SvgSnapshot, id: &str) -> Result<NodePath, String> {
-    let path = path_of_id(snapshot, id).ok_or_else(|| format!("this document declares no element with id {id:?}"))?;
-    match node_at(&snapshot.doc, &path) {
-        Ok(SvgNode::Element { name, children, .. }) if local_name(name) == "clipPath" => {
-            if children.iter().any(carries_text) {
-                return Err(format!("clipPath #{id} contains a text descendant -- SVG Basic 1.1 forbids clipping to text"));
-            }
-            Ok(path)
-        }
-        _ => Err(format!("#{id} is not a clipPath element")),
-    }
-}
-//#endregion 🔖️Profile
-
-//#region 🔖️AttributeHelper
-fn insert_child_diff(parent: &[usize], index: usize, node: &SvgNode) -> SvgDiff {
-    diff_at_path(parent, SvgNodeDiff::Element(SvgElementDiff { name: None, attributes: None, children: Some(SvgChildrenDiff { removed: Vec::new(), modified: Vec::new(), added: vec![SvgChildAdded { index, item: node.clone() }] }) }))
-}
-
-fn remove_child_diff(parent: &[usize], index: usize) -> SvgDiff {
-    diff_at_path(parent, SvgNodeDiff::Element(SvgElementDiff { name: None, attributes: None, children: Some(SvgChildrenDiff { removed: vec![index], modified: Vec::new(), added: Vec::new() }) }))
-}
-//#endregion 🔖️AttributeHelper
 
 
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`: the diff is the single semantics source.
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 pub fn apply_svg_basic_mutation(snapshot: &mut SvgSnapshot, mutation: &SvgBasicMutation) -> protocol::MutationOutcome<SvgDiff> {
     let outcome = Mutation::diff(mutation, snapshot);
     match protocol::apply_diff(outcome.diff(), snapshot) {
@@ -220,6 +128,4 @@ pub fn apply_svg_basic_mutation(snapshot: &mut SvgSnapshot, mutation: &SvgBasicM
 //#endregion 🔖️Apply
 
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

@@ -3,6 +3,8 @@
 //! 🧭️ Every law reads the artifact through its public vocabulary and reads its fixtures from the artifact directory at run time.
 #![cfg(test)]
 
+use semio_framework_test_fixtures::fixture_path;
+
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
@@ -13,7 +15,7 @@ use std::{collections::HashMap, path::{Path, PathBuf}, sync::{Mutex, OnceLock}};
 
 pub fn product_directory() -> &'static Path {
     static DIRECTORY: OnceLock<PathBuf> = OnceLock::new();
-    DIRECTORY.get_or_init(|| Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../.."))
+    DIRECTORY.get_or_init(|| fixture_path!("../../../.."))
 }
 
 fn leaked(relative: &str) -> &'static [u8] {

@@ -1,7 +1,9 @@
 //! ♻️ full thirty-table owner projection with paid borrowed frontiers.
-use crate::{LayoutPoint, RewritingSnapshot};
-use crate::standards::v1::subsets::any::schema::{Pattern,ParameterKind};
-use semio_s_artifact_trinity_jack::{JackSnapshot,PropertyDef,PropertyKind,PortDirection};
+use crate::standards::v1::subsets::any::schema::model::LayoutPoint;
+use crate::standards::v1::subsets::any::schema::snapshot::RewritingSnapshot;
+use crate::standards::v1::subsets::any::schema::rule::{Pattern, ParameterKind};
+use semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::snapshot::JackSnapshot;
+use semio_framework_graph_manifest::{PropertyDef, PropertyKind, PortDirection};
 use semio_framework_graph_manifest::PropertyValue;
 use semio_framework_value::{ValueError,ValueRefusalKind,ValueType};
 use semio_framework_os_kernel::sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase,transfer,artifact::{Projection,Cell,FloatColumn,insert_ieee754}};

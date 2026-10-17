@@ -63,6 +63,13 @@ pub struct HubReadinessV1 {
     pub startup: Option<HubStartupProgressV1>,
 }
 
+impl HubReadinessV1 {
+    /// 📈️ Reports the given startup progress on an otherwise unchanged readiness body.
+    pub fn with_startup(self, startup: Option<HubStartupProgressV1>) -> Self {
+        Self { startup, ..self }
+    }
+}
+
 /// 📈️ How far a booting hub's startup work has come: the stage its trusted catalog load last
 /// reported and that stage's units, and the catalog's per-package phases, bytes and rows once it has
 /// selected its packages. Present only while the hub starts.
@@ -207,7 +214,7 @@ impl CheckpointPolicyLedgerV1 {
         }
     }
 
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testkit"))]
     pub fn tally(&self, scope: &DocumentScope) -> Option<CheckpointPolicyTallyV1> {
         self.documents.lock().unwrap_or_else(std::sync::PoisonError::into_inner).get(scope).copied()
     }

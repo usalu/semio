@@ -1,5 +1,6 @@
 //! 🧪️ Independent `syn` facts for the base mutation declaration contract.
 
+use semio_framework_test_fixtures::fixture_path;
 use serde::{Deserialize, Serialize};
 use syn::{Item, TraitItem};
 
@@ -54,7 +55,7 @@ fn mutation_trait_matches_adjacent_required_declaration_facts() {
     let expected = neutral.cases.into_iter().find(|case| case.id == "required-items-accepted").expect("neutral vector must contain required-items-accepted");
     assert_eq!(expected.subject, "mutation-trait-facts");
     assert_eq!(expected.category, "required-associated-items");
-    let actual = mutation_trait_facts(std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../../../🔨️modules/📡️replication/🎮️mutation/🦀️.rs")).expect("fixture").as_str());
+    let actual = mutation_trait_facts(std::fs::read_to_string(fixture_path!("../../../../../../../../../🔨️modules/📡️replication/🎮️mutation/🦀️.rs")).expect("fixture").as_str());
     println!("actual={} expected={}", serde_json::to_string(&actual).expect("actual facts serialize"), serde_json::to_string(&expected.facts).expect("expected facts serialize"));
     assert_eq!(actual, expected.facts);
 }
@@ -85,7 +86,6 @@ fn schema_document_index_reads_one_file_and_ignores_unlisted_schemas() {
     std::fs::create_dir_all(&collection).unwrap();
     assert!(super::mutation_schema_document_index(&collection).unwrap().is_empty());
     assert!(super::mutation_schema_document_index(&workspace.join("absent")).is_err());
-    println!("[DEBUG] schema document index tracked one file and ignored the unlisted schema");
     std::fs::remove_dir_all(&workspace).unwrap();
 }
 

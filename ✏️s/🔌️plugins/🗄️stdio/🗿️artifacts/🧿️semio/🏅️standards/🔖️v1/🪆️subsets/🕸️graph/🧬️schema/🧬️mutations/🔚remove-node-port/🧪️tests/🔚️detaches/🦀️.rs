@@ -8,21 +8,22 @@ use crate::schema::diff::SemioGraphDiff;
 use crate::schema::mutations::SemioGraphMutation;
 use crate::schema::snapshot::SemioGraphSnapshot;
 use protocol::Mutation;
+use semio_framework_test_fixtures::fixture_text;
 
-const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔚remove-node-port/🔚️detaches/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔚remove-node-port/🔚️detaches/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔚remove-node-port/🔚️detaches/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔚remove-node-port/🔚️detaches/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔚remove-node-port/🔚️detaches/🎯️outcome/🔣️.json");
+static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔚remove-node-port/🔚️detaches/📸️snapshot/⬅️before/🔣️.json"));
+static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔚remove-node-port/🔚️detaches/📸️snapshot/➡️after/🔣️.json"));
+static MUTATION: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔚remove-node-port/🔚️detaches/🦠️mutation/🔣️.json"));
+static DIFF: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔚remove-node-port/🔚️detaches/🔺️diff/🔣️.json"));
+static OUTCOME: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔚remove-node-port/🔚️detaches/🎯️outcome/🔣️.json"));
 
 fn before() -> SemioGraphSnapshot {
-    crate::io::text::snapshot::decode_semio_graph_snapshot_json(BEFORE).expect("remove-node-port before snapshot decodes")
+    crate::io::text::snapshot::decode_semio_graph_snapshot_json((*BEFORE)).expect("remove-node-port before snapshot decodes")
 }
 fn expected_after() -> SemioGraphSnapshot {
-    crate::io::text::snapshot::decode_semio_graph_snapshot_json(AFTER).expect("remove-node-port after snapshot decodes")
+    crate::io::text::snapshot::decode_semio_graph_snapshot_json((*AFTER)).expect("remove-node-port after snapshot decodes")
 }
 fn mutation() -> SemioGraphMutation {
-    semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("remove-node-port mutation decodes")
+    semio_framework_pack_json::from_json_str((*MUTATION), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("remove-node-port mutation decodes")
 }
 
 /// ▶️ The trailing `out` port goes; the leading `reset` port stays at index 0.
@@ -56,21 +57,21 @@ async fn the_undo_add_node_port_reattaches_the_out_port_in_place() {
 /// 🔣️ Snapshots and the `{"RemoveNodePort":{"node_id":{"value":"a"},"index":1}}` payload are canonical — the payload's own fields stay snake_case while the nested id keeps its named-struct shape.
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
-    for (label, text) in [("before", BEFORE), ("after", AFTER)] {
+    for (label, text) in [("before", (*BEFORE)), ("after", (*AFTER))] {
         let decoded: SemioGraphSnapshot = crate::io::text::snapshot::decode_semio_graph_snapshot_json(text).expect("snapshot decodes");
         let reencoded = serde_json::from_str::<serde_json::Value>(&crate::io::text::snapshot::encode_semio_graph_snapshot_json(&decoded).expect("snapshot encodes")).expect("snapshot reparses");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "remove-node-port/detaches-the-trailing-out-port-from-the-source-node: committed {label} JSON is not canonical");
     }
     let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&(mutation()))).expect("remove-node-port mutation encodes");
-    let original: serde_json::Value = serde_json::from_str(MUTATION).expect("remove-node-port mutation reparses");
+    let original: serde_json::Value = serde_json::from_str((*MUTATION)).expect("remove-node-port mutation reparses");
     assert_eq!(reencoded, original, "remove-node-port/detaches-the-trailing-out-port-from-the-source-node: committed mutation JSON is not canonical");
 }
 
 /// 🎯️ Declared `applied`: the node exists and index 1 is within its ports, so neither target-missing branch may fire
 #[semio_framework_async_macros::async_test]
 async fn declared_outcome_holds_with_no_guard_branch_firing() {
-    let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
+    let outcome: serde_json::Value = serde_json::from_str((*OUTCOME)).expect("outcome decodes");
     assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("applied"), "remove-node-port/detaches-the-trailing-out-port-from-the-source-node: this case is declared applied");
     let produced = mutation().diff(&before());
     assert!(produced.messages().is_empty(), "the node exists and index 1 is within its ports, so neither target-missing branch may fire");
@@ -82,7 +83,7 @@ async fn produces_committed_diff() {
     let base = before();
     let outcome = <SemioGraphMutation as Mutation<SemioGraphSnapshot>>::diff(&mutation(), &base);
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
-    let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
+    let committed: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff decodes");
     assert_eq!(produced, committed, "remove-node-port/detaches-the-trailing-out-port-from-the-source-node: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
 
@@ -90,9 +91,9 @@ async fn produces_committed_diff() {
 /// and nothing else.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical_and_omits_edges_entirely() {
-    let decoded: SemioGraphDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed remove-node-port diff decodes");
+    let decoded: SemioGraphDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed remove-node-port diff decodes");
     assert!(decoded.edges.is_none(), "remove-node-port must leave the edges slot untouched");
-    let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
+    let committed: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff reparses");
     assert!(committed.get("edges").is_none(), "the committed diff JSON must not carry a edges key at all");
     let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("diff re-encodes");
     assert_eq!(reencoded, committed, "remove-node-port/detaches-the-trailing-out-port-from-the-source-node: committed diff JSON is not canonical");
@@ -101,7 +102,7 @@ async fn committed_diff_is_canonical_and_omits_edges_entirely() {
 /// 🩹 Applying the committed diff to `before` yields `after`.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: SemioGraphDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed remove-node-port diff decodes");
+    let decoded: SemioGraphDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed remove-node-port diff decodes");
     let produced = protocol::apply_diff(&decoded, &before()).expect("committed remove-node-port diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "remove-node-port/detaches-the-trailing-out-port-from-the-source-node: committed diff did not carry before to after");
 }

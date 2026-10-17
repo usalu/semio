@@ -1,0 +1,3 @@
+/** 🔄️ Public entry `@semio-tech/s-spatial-kernel-ts/geometry/transformation-spec`: the explicit surface that importers outside the module use. */
+export { listModelDefinitionTransformations, listTransformationsFromModelDefinition, listTransformationsIntoModelDefinition, loadTransformation, parseTransformationSpec, qualifiedTransformationId } from "../../../../📐️geometry/🔄️transformation-spec/🟦️.ts";
+export type { TransformationDeriveClassifyRule, TransformationDeriveCollect, TransformationDeriveEnsure, TransformationDeriveFuse, TransformationDeriveHull, TransformationDeriveOpening, TransformationDeriveSpec, TransformationDeriveZBand, TransformationSpec } from "../../../../📐️geometry/🔄️transformation-spec/🟦️.ts";

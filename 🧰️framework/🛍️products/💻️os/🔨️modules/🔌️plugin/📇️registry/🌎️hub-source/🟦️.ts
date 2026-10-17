@@ -20,6 +20,7 @@
  */
 import { PluginModuleUnavailableError, type PluginModuleAcquired, type PluginModuleAcquisition, type PluginRegistryEntry, type PluginSource } from "@semio-tech/framework";
 import { PLUGIN_MODULE_STORE_V1, PLUGIN_MODULE_TRANSFER_RETRY_V1 } from "../../../../../../🔨️modules/🔌️plugin-module/🌎️hub-source/🧬️schema/🟦️.ts";
+import type { HubPluginSourceNoticeV1, HubPluginSourceV1, HubProgramModuleV1 } from "@semio-tech/framework/plugin-module/hub-source/port";
 import { pluginModuleStoreRecordV1, type PluginModuleStoreRecordV1 } from "./🧬️schema/🟦️.ts";
 import { decodeTrustedPluginModuleBundleV1, TRUSTED_PLUGIN_MODULE_BUNDLE_MAX_BYTES, TRUSTED_PLUGIN_MODULE_FILE_MAX_BYTES, validateTrustedPluginModuleIndexV1 } from "../📦️deployment/🧬️schema/🟦️.ts";
 import { trustedPluginModuleBundleSha256V1, trustedPluginModuleSourceOfEntryV1, TrustedPluginModuleRefusalV1, verifyTrustedPluginModuleFileV1, type TrustedPluginModuleBundleV1, type TrustedPluginModuleFileV1, type TrustedPluginModuleIndexEntryV1, type TrustedPluginModuleIndexV1 } from "../../../../../../🔨️modules/🔌️plugin-module/🟦️.ts";
@@ -45,9 +46,6 @@ export const HUB_PLUGIN_MODULE_ROUTE = "/trusted-catalog/plugin-modules";
 const HUB_PLUGIN_MODULE_INDEX_MAX_BYTES = 4 * 1024 * 1024;
 /** ⏱️ How long the shell waits for the store's service worker to control the page before hub installs are unavailable. */
 const PLUGIN_MODULE_STORE_CONTROL_DEADLINE_MS = 10_000;
-
-/** 🔔️ What the source tells the person using the shell: a stored module that must be reinstalled, or a store that is full. */
-export type HubPluginSourceNoticeV1 = Readonly<{ kind: "reinstalling" | "quota-exceeded"; pluginId: string }>;
 
 /** 🔒️ The part of the Web Locks API the source uses: a held shared lock per running bundle and the store lock. */
 export type PluginModuleLocksV1 = Readonly<{
@@ -76,30 +74,6 @@ export type HubPluginSourceOptionsV1 = Readonly<{
   serviceWorker: PluginModuleStoreWorkerContainerV1;
   persist?: () => Promise<boolean>;
   now?: () => number;
-}>;
-
-/** 🧩️ One installed hub program: the catalog generation's module of one plugin, loaded from this device's store. */
-export type HubProgramModuleV1 = Readonly<{
-  programId: string;
-  pluginId: string;
-  generationId: string;
-  bundleSha256: string;
-  moduleUrl: string;
-  source: PluginModuleSourceV1;
-}>;
-
-/** 🌎️ The hub source plus what only it knows: whether its store controls this page, the hub's current catalog of plugin
- * modules, and the programs hub documents run on. */
-export type HubPluginSourceV1 = PluginSource & Readonly<{
-  /** Registers the store's service worker and waits until it controls the page — before any plugin worker exists. */
-  ready(): Promise<void>;
-  /** The hub package whose surfaces open this dialect artifact kind (current index, else this device's records). */
-  ownerOfDialect(artifactKind: string): Promise<string | undefined>;
-  /** The hub's current generation of plugin modules, or `null` while the hub is unreachable. */
-  catalog(signal: AbortSignal): Promise<TrustedPluginModuleIndexV1 | null>;
-  /** Installs `entry` of `generationId` as a hub program: from the store when it holds the bundle complete, else from
-   * the staged module at `localModuleUrl` when every file of the bundle is byte-identical there, else from the hub. */
-  installProgram(generationId: string, entry: TrustedPluginModuleIndexEntryV1, localModuleUrl: string | null, acquisition: PluginModuleAcquisition): Promise<HubProgramModuleV1>;
 }>;
 
 /** 📥️ Reads one response body within `maximum` bytes, reporting every chunk. */

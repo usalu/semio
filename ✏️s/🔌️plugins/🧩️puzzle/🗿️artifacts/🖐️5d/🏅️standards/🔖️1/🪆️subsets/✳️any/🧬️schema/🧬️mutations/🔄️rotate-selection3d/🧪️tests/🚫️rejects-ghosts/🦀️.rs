@@ -9,26 +9,27 @@ use crate::standards::v1::subsets::any::schema::diff::Puzzle5dDiff;
 use crate::apply_puzzle5d_mutation;
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation;
 use crate::standards::v1::subsets::any::schema::mutations::{inverse_puzzle5d_mutation};
+use semio_framework_test_fixtures::fixture_text;
 
 use crate::Puzzle5dSnapshot;
 
-const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔄️rotate-selection3d/🚫️rejects-ghosts/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔄️rotate-selection3d/🚫️rejects-ghosts/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔄️rotate-selection3d/🚫️rejects-ghosts/🦠️mutation/🔣️.json");
-const DIFF_ABSENT: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔄️rotate-selection3d/🚫️rejects-ghosts/🔺️diff/🚫️.absent");
-const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔄️rotate-selection3d/🚫️rejects-ghosts/🎯️outcome/🔣️.json");
+static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔄️rotate-selection3d/🚫️rejects-ghosts/📸️snapshot/⬅️before/🔣️.json"));
+static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔄️rotate-selection3d/🚫️rejects-ghosts/📸️snapshot/➡️after/🔣️.json"));
+static MUTATION: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔄️rotate-selection3d/🚫️rejects-ghosts/🦠️mutation/🔣️.json"));
+static DIFF_ABSENT: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔄️rotate-selection3d/🚫️rejects-ghosts/🔺️diff/🚫️.absent"));
+static OUTCOME: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔄️rotate-selection3d/🚫️rejects-ghosts/🎯️outcome/🔣️.json"));
 
 fn before() -> Puzzle5dSnapshot {
-    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes")
+    semio_framework_pack_json::from_json_str((*BEFORE), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes")
 }
 fn expected_after() -> Puzzle5dSnapshot {
-    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after snapshot decodes")
+    semio_framework_pack_json::from_json_str((*AFTER), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after snapshot decodes")
 }
 fn mutation() -> Puzzle5dMutation {
-    semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation decodes")
+    semio_framework_pack_json::from_json_str((*MUTATION), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation decodes")
 }
 fn outcome() -> serde_json::Value {
-    serde_json::from_str(OUTCOME).expect("outcome decodes")
+    serde_json::from_str((*OUTCOME)).expect("outcome decodes")
 }
 
 /// 🗣️ `(level, code, target)` of every message `rotate-selection3d` raises on the committed base.
@@ -40,14 +41,14 @@ fn produced_messages() -> Vec<(semio_framework_diagnostic::Severity, String, Vec
 /// 🔣️ Both committed snapshots and the committed `rotate-selection3d` payload are already canonical.
 #[test]
 fn committed_json_is_canonical() {
-    for (label, text) in [("before", BEFORE), ("after", AFTER)] {
+    for (label, text) in [("before", (*BEFORE)), ("after", (*AFTER))] {
         let decoded: Puzzle5dSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
         let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "rotate-selection3d/rejects-ghosts: committed {label} JSON is not canonical");
     }
     let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&mutation())).expect("mutation encodes");
-    let original: serde_json::Value = serde_json::from_str(MUTATION).expect("mutation reparses");
+    let original: serde_json::Value = serde_json::from_str((*MUTATION)).expect("mutation reparses");
     assert_eq!(reencoded, original, "rotate-selection3d/rejects-ghosts: committed mutation JSON is not canonical");
 }
 
@@ -65,7 +66,7 @@ fn rejection_leaves_the_document_at_the_committed_after() {
 /// every target the payload named.
 #[test]
 fn the_refusal_is_the_declared_one() {
-    assert!(DIFF_ABSENT.is_empty(), "rotate-selection3d/rejects-ghosts: the D6 sentinel 🔺️diff/🚫️.absent must stay empty");
+    assert!((*DIFF_ABSENT).is_empty(), "rotate-selection3d/rejects-ghosts: the D6 sentinel 🔺️diff/🚫️.absent must stay empty");
     let produced = <Puzzle5dMutation as protocol::Mutation<Puzzle5dSnapshot>>::diff(&mutation(), &before());
     assert_eq!(produced.diff(), &Puzzle5dDiff::default(), "rotate-selection3d/rejects-ghosts: a refusing diff builder answers the default diff");
     let outcome = outcome();

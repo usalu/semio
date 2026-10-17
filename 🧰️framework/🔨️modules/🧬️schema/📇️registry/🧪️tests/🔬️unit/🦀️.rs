@@ -86,7 +86,12 @@ struct MemoryLeaves;
 
 impl SchemaLeafReader for MemoryLeaves {
     fn read(&self, path: &str) -> Option<&'static str> {
-        (path == "memory/leaf.ts").then_some("export type Served = {};")
+        match path {
+            "memory/leaf.ts" => Some("export type Served = {};"),
+            "memory/first.ts" => Some("export type First = {};\n"),
+            "memory/second.ts" => Some("export type Second = {};\n"),
+            _ => None,
+        }
     }
 }
 
@@ -108,6 +113,38 @@ fn served_leaf_documents_resolve_when_the_registering_crate_embeds_no_body() {
         Err(SchemaResolveError::FormatAbsent { scope: "test.served".to_string(), export: "artifact".to_string(), format: SchemaFormat::Graphql })
     );
     assert!(registry.entries().any(|entry| entry.scope == "test.served" && entry.format == SchemaFormat::Typescript));
+}
+
+#[test]
+fn several_served_documents_of_one_leaf_resolve_as_their_concatenation_in_registration_order() {
+    let _ = install_schema_leaf_reader(&MEMORY_LEAVES);
+    let first = SchemaLeafDocument { scope: "test.joined", export: "mutations", format: SchemaFormat::Typescript, path: "memory/first.ts" };
+    let second = SchemaLeafDocument { scope: "test.joined", export: "mutations", format: SchemaFormat::Typescript, path: "memory/second.ts" };
+    register_schema_leaf_documents(&[first, second]);
+    register_schema_leaf_documents(&[first, second]);
+    let mut registry = SchemaExportRegistry::new();
+    registry.register_facet_leaves("test.joined", [EMPTY_LEAVES, EMPTY_LEAVES, EMPTY_LEAVES, EMPTY_LEAVES]).expect("joined facets");
+    let expected = "export type First = {};\nexport type Second = {};\n";
+    assert_eq!(registry.resolve("test.joined", "mutations", SchemaFormat::Typescript), Ok(expected));
+    assert_eq!(registry.resolve("test.joined", "mutations", SchemaFormat::Typescript), Ok(expected));
+    let missing = SchemaLeafDocument { scope: "test.joined", export: "mutations", format: SchemaFormat::Graphql, path: "memory/first.ts" };
+    let absent = SchemaLeafDocument { scope: "test.joined", export: "mutations", format: SchemaFormat::Graphql, path: "memory/never.ts" };
+    register_schema_leaf_documents(&[missing, absent]);
+    assert_eq!(
+        registry.resolve("test.joined", "mutations", SchemaFormat::Graphql),
+        Err(SchemaResolveError::FormatAbsent { scope: "test.joined".to_string(), export: "mutations".to_string(), format: SchemaFormat::Graphql })
+    );
+}
+
+#[test]
+fn a_direct_reader_resolves_an_empty_inline_body_through_the_served_document() {
+    let _ = install_schema_leaf_reader(&MEMORY_LEAVES);
+    let served = SchemaLeafDocument { scope: "test.direct", export: "snapshot", format: SchemaFormat::Typescript, path: "memory/first.ts" };
+    register_schema_leaf_documents(&[served]);
+    let inline = FacetLeaves { typescript: "export type Inline = {};\n", ..EMPTY_LEAVES };
+    assert_eq!(resolved_leaf_body("test.direct", "snapshot", SchemaFormat::Typescript, &EMPTY_LEAVES), "export type First = {};\n");
+    assert_eq!(resolved_leaf_body("test.direct", "snapshot", SchemaFormat::Typescript, &inline), "export type Inline = {};\n", "an inline body wins over a served document");
+    assert_eq!(resolved_leaf_body("test.direct", "snapshot", SchemaFormat::Graphql, &EMPTY_LEAVES), "", "an unserved format stays empty");
 }
 
 fn delivered_package_asset(name: &str) -> Option<&'static [u8]> {

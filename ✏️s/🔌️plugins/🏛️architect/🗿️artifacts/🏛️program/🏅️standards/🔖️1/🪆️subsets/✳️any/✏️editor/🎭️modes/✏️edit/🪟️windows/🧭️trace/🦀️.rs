@@ -43,7 +43,7 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Projection
-fn rfc3339_utc_epoch_ms(value: &str) -> Option<i64> {
+pub fn rfc3339_utc_epoch_ms(value: &str) -> Option<i64> {
     let bytes = value.as_bytes();
     if bytes.len() < 20 || bytes[4] != b'-' || bytes[7] != b'-' || bytes[10] != b'T' || bytes[13] != b':' || bytes[16] != b':' || bytes.last() != Some(&b'Z') {
         return None;

@@ -56,7 +56,6 @@ test("the fixed-contract literal leaf never excludes a contract the glob oracle 
     for (const path of paths) if (matches(path.normalize("NFC"))) { checked++; expect(literal === null || literal === posix.basename(path.normalize("NFC")), `${pattern} ${path}`).toBe(true); }
   }
   expect(checked).toBeGreaterThan(0);
-  console.log(`[DEBUG] literal leaf prefilter agrees with picomatch on ${checked} matching pattern/path pairs over ${patterns.length} patterns`);
 });
 
 test("link reference definitions are found in one linear pass exactly as the original regex finds them", () => {

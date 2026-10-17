@@ -6,7 +6,7 @@ import { buildBudgetMs } from "../../../🧰️framework/🔨️modules/🏃️p
 import { createHash } from "node:crypto";
 import { mkdirSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { isAbsolute, join, relative, resolve } from "node:path";
-import { decodePackValue, encodePackValue } from "../../../🧰️framework/🛍️products/💻️os/🟦️.ts";
+import { decodePackValue, encodePackValue } from "@semio-tech/framework-os";
 import { produceFreshComponentV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts";
 import { buildClosedBrowserActorArtifactV1, type ClosedBrowserActorArtifactV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/📜️script.ts";
 import { runVitest } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";

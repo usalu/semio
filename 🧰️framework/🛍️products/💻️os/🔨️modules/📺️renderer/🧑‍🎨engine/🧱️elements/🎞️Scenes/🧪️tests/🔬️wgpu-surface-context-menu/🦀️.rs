@@ -8,7 +8,12 @@
 //! `route`, `object`, `feature`). A drift in one of those strings is silent — the menu simply comes
 //! back empty — so it is pinned here rather than left to a live boot.
 
-use super::*;
+use semio_framework_os_renderer_wgpu_engine_board::paint2d::{pick_target_hits, selection_domains};
+use semio_framework_os_renderer_wgpu_scene_tables::table_metrics;
+use semio_framework_os_renderer_wgpu_scene_text_vfs::vfs_metrics;
+use serde_json::json;
+use super::{context_menu_surface_kind_id, scene_context_menu_target};
+use ui_wgpu::wgpu::{Rect, SurfaceKind, Theme, UiComponentSceneNode, UiPresence};
 use semio_framework_ui_scene_plane::{Canvas2dScene, InkCanvasScene};
 use semio_framework_ui_scene_views::{BlockListScene, DiffViewScene, EventFeedScene, GraphTimelineScene, TableScene, VirtualFileSystemScene};
 
@@ -199,18 +204,18 @@ fn context_menu_surface_kind_ids_are_react_camel_case() {
 /// aliases). A resolver that only read one of them dropped every edge/handle selection.
 #[test]
 fn node_graph_selection_domains_accept_both_wire_shapes() {
-    assert_eq!(engine_canvas::selection_domains_for_test(&json!(["a", "b"]).to_string()), (vec!["a".to_string(), "b".to_string()], Vec::new(), Vec::new()));
-    assert_eq!(engine_canvas::selection_domains_for_test(&json!({ "nodes": ["n"], "edgeIds": ["e"], "handleIds": ["h"] }).to_string()), (vec!["n".to_string()], vec!["e".to_string()], vec!["h".to_string()]));
-    assert_eq!(engine_canvas::selection_domains_for_test(&json!({ "nodes": ["n"], "edges": ["e"], "handles": ["h"] }).to_string()), (vec!["n".to_string()], vec!["e".to_string()], vec!["h".to_string()]));
-    assert_eq!(engine_canvas::selection_domains_for_test("not json"), (Vec::new(), Vec::new(), Vec::new()));
+    assert_eq!(selection_domains(&json!(["a", "b"]).to_string()), (vec!["a".to_string(), "b".to_string()], Vec::new(), Vec::new()));
+    assert_eq!(selection_domains(&json!({ "nodes": ["n"], "edgeIds": ["e"], "handleIds": ["h"] }).to_string()), (vec!["n".to_string()], vec!["e".to_string()], vec!["h".to_string()]));
+    assert_eq!(selection_domains(&json!({ "nodes": ["n"], "edges": ["e"], "handles": ["h"] }).to_string()), (vec!["n".to_string()], vec!["e".to_string()], vec!["h".to_string()]));
+    assert_eq!(selection_domains("not json"), (Vec::new(), Vec::new(), Vec::new()));
 }
 
 /// 🖱️ `hits` carry the host's `label` when it publishes one — React maps `{domain, id, label}` for
 /// every canvas pick target, and a resolver labelling its rows off the hit relies on it.
 #[test]
 fn pick_target_hits_carry_the_optional_label() {
-    let hits = engine_canvas::pick_target_hits_for_test(&json!([{ "domain": "node", "id": "n1", "label": "Node One" }, { "domain": "edge", "id": "e1" }]).to_string());
+    let hits = pick_target_hits(&json!([{ "domain": "node", "id": "n1", "label": "Node One" }, { "domain": "edge", "id": "e1" }]).to_string());
     assert_eq!(hits[0], semio_framework_ui_layout::layout::ContextMenuHit { domain: "node".into(), id: "n1".into(), label: Some("Node One".into()) });
     assert_eq!(hits[1], semio_framework_ui_layout::layout::ContextMenuHit { domain: "edge".into(), id: "e1".into(), label: None });
-    assert!(engine_canvas::pick_target_hits_for_test("null").is_empty());
+    assert!(pick_target_hits("null").is_empty());
 }

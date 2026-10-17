@@ -6,6 +6,7 @@
 //! `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`), authored from the independent Python oracle
 //! (`🧪️tests/🧊️mutate-procedural-3d-1/🐍️.py`), never from this implementation.
 
+use semio_framework_test_fixtures::fixture_text;
 use semio_s_artifact_procedural_2d_model::diff::Generation2dDiff;
 use semio_s_artifact_procedural_2d_model::diff::Generation2dDiffRead;
 use semio_s_artifact_procedural_2d_mutations::inverse_generation2d_mutation;
@@ -15,20 +16,20 @@ use semio_s_artifact_procedural_2d_model::snapshot::Generation2dSnapshotRead;
 use semio_s_artifact_procedural_2d_model::snapshot::Generation2dSnapshot;
 use semio_s_artifact_procedural_2d_mutations::central_apply::apply_generation2d_mutation;
 
-const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🚚️move-nodes/🚚️shifts/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🚚️move-nodes/🚚️shifts/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🚚️move-nodes/🚚️shifts/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🚚️move-nodes/🚚️shifts/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🚚️move-nodes/🚚️shifts/🎯️outcome/🔣️.json");
+static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🚚️move-nodes/🚚️shifts/📸️snapshot/⬅️before/🔣️.json"));
+static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🚚️move-nodes/🚚️shifts/📸️snapshot/➡️after/🔣️.json"));
+static MUTATION: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🚚️move-nodes/🚚️shifts/🦠️mutation/🔣️.json"));
+static DIFF: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🚚️move-nodes/🚚️shifts/🔺️diff/🔣️.json"));
+static OUTCOME: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🚚️move-nodes/🚚️shifts/🎯️outcome/🔣️.json"));
 
 fn before() -> Generation2dSnapshotRead {
-    Generation2dSnapshotRead::new(semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes"))
+    Generation2dSnapshotRead::new(semio_framework_pack_json::from_json_str((*BEFORE), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes"))
 }
 fn expected_after() -> Generation2dSnapshotRead {
-    Generation2dSnapshotRead::new(semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after snapshot decodes"))
+    Generation2dSnapshotRead::new(semio_framework_pack_json::from_json_str((*AFTER), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after snapshot decodes"))
 }
 fn mutation() -> Generation2dMutation {
-    semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation decodes")
+    semio_framework_pack_json::from_json_str((*MUTATION), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation decodes")
 }
 fn raised_diff(base: &Generation2dSnapshot) -> (Generation2dDiffRead, Vec<protocol::MutationMessage>) {
     let (diff, messages) = <Generation2dMutation as protocol::Mutation<Generation2dSnapshot>>::diff(&mutation(), base).into_parts();
@@ -60,14 +61,14 @@ fn inverse_restores_before() {
 /// 🔣️ Both committed snapshots are already canonical: decode→encode is a fixed point.
 #[test]
 fn committed_json_is_canonical() {
-    for (side, text) in [("before", BEFORE), ("after", AFTER)] {
+    for (side, text) in [("before", (*BEFORE)), ("after", (*AFTER))] {
         let decoded = Generation2dSnapshotRead::new(semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes"));
         let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&*decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "move-nodes/shifts-both-nodes-by-the-drag-offset: committed {side} JSON is not canonical");
     }
     let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&mutation())).expect("mutation encodes");
-    let original: serde_json::Value = serde_json::from_str(MUTATION).expect("mutation reparses");
+    let original: serde_json::Value = serde_json::from_str((*MUTATION)).expect("mutation reparses");
     assert_eq!(reencoded, original, "move-nodes/shifts-both-nodes-by-the-drag-offset: committed mutation JSON is not canonical");
 }
 
@@ -75,7 +76,7 @@ fn committed_json_is_canonical() {
 /// matches what the mutation actually produces.
 #[test]
 fn declared_outcome_holds() {
-    let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
+    let outcome: serde_json::Value = serde_json::from_str((*OUTCOME)).expect("outcome decodes");
     let status = outcome.get("status").and_then(serde_json::Value::as_str).expect("outcome carries a status");
     let declared: Vec<(String, String)> =
         outcome.get("messages").and_then(serde_json::Value::as_array).map(|rows| rows.iter().map(|row| (row["level"].as_str().unwrap_or_default().to_string(), row["code"].as_str().unwrap_or_default().to_string())).collect()).unwrap_or_default();
@@ -111,16 +112,16 @@ fn produces_committed_diff() {
     let base = before();
     let (delta, _messages) = raised_diff(&base);
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&*delta)).expect("produced diff encodes");
-    let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
+    let committed: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff decodes");
     assert_eq!(produced, committed, "move-nodes/shifts-both-nodes-by-the-drag-offset: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
 
 /// 🔣️ The committed diff is itself canonical and decodes to the artifact's own diff type.
 #[test]
 fn committed_diff_is_canonical() {
-    let decoded = Generation2dDiffRead::new(semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes"));
+    let decoded = Generation2dDiffRead::new(semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes"));
     let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&*decoded)).expect("diff re-encodes");
-    let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
+    let original: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff reparses");
     assert_eq!(reencoded, original, "move-nodes/shifts-both-nodes-by-the-drag-offset: committed diff JSON is not canonical");
 }
 
@@ -128,7 +129,7 @@ fn committed_diff_is_canonical() {
 /// complete description of what `move-nodes` changed, not a summary of it.
 #[test]
 fn committed_diff_applies_to_after() {
-    let decoded = Generation2dDiffRead::new(semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes"));
+    let decoded = Generation2dDiffRead::new(semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes"));
     let produced = Generation2dSnapshotRead::new(
         protocol::apply_diff(&*decoded, &before()).expect("committed diff applies to the before-snapshot"),
     );

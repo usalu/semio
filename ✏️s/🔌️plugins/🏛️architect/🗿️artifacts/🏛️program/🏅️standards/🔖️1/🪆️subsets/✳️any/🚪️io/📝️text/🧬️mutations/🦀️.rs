@@ -34,9 +34,6 @@ impl protocol::OpText for ProgramMutation {
 #[allow(unused_imports)]
 mod mutations_codec {
 use super::*;
-use crate::standards::v1::subsets::any::schema::mutations::*;
-use crate::standards::v1::subsets::any::schema::diff::ProgramDiff;
-use crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot;
 
 /// 📥️ Decodes the internally-tagged (`{"mutation": "<camelCaseVariant>", …}`) projection the
 /// committed `<slug>/🧪️tests/<fixture>/🦠️mutation/🔣️.json` vectors carry.

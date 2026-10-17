@@ -1,0 +1,21 @@
+{
+ "name": "frd-p1",
+ "crates": [
+  "semio-framework-test-fixtures",
+  "semio-s-artifact-cad-cad-presence",
+  "semio-s-artifact-energy-model-examples",
+  "semio-s-artifact-fem-2d-mutations",
+  "semio-s-artifact-flow-flow-viewer",
+  "semio-s-artifact-gis-gisterrain",
+  "semio-s-artifact-gis-gisterrain-editor",
+  "semio-s-artifact-imperative-procedure-inferences",
+  "semio-s-artifact-norm-din18599-schema",
+  "semio-s-artifact-norm-en1990-inferences",
+  "semio-s-artifact-norm-en1991",
+  "semio-s-artifact-note-note-v1",
+  "semio-s-artifact-wfc-3d-wfc3d",
+  "semio-s-artifact-wfc-grid2d-v1",
+  "semio-s-artifact-writer-writer-tests-2"
+ ],
+ "note": "FRD sample, no baseline"
+}

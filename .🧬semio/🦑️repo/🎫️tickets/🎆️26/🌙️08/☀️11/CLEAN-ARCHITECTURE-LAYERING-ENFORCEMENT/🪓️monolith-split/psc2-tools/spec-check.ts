@@ -28,5 +28,5 @@ for (const f of listSourceFiles()) {
   }
 }
 console.log({ imports: total, ok, bad: bad.length });
-for (const b of bad.slice(0, 40)) console.log("BAD", b.slice(0, 300));
+for (const b of bad.slice(0, 5000)) console.log("BAD", b.slice(0, 300));
 process.exit(bad.length ? 1 : 0);

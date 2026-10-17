@@ -29,6 +29,10 @@ type stdioXlsxEcma376BaseInferenceGuardSizeBounds = { readonly minItems?: number
 
 export const stdioXlsxEcma376BaseInferenceGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : stdioXlsxEcma376BaseInferenceGuardReject(at, "value is not an object");
+export const stdioXlsxEcma376BaseInferenceGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) stdioXlsxEcma376BaseInferenceGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const stdioXlsxEcma376BaseInferenceGuardArray = (value: unknown, at: string, bounds: stdioXlsxEcma376BaseInferenceGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return stdioXlsxEcma376BaseInferenceGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) stdioXlsxEcma376BaseInferenceGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -59,14 +63,14 @@ export const stdioXlsxEcma376BaseInferenceGuardConstant = <T extends string | nu
 //#endregion 🚪️Parsers
 
 export function parseXlsxInference(value: unknown, at = "$"): XlsxInference {
-  const row = stdioXlsxEcma376BaseInferenceGuardObject(value, at);
+  const row = stdioXlsxEcma376BaseInferenceGuardClosed(stdioXlsxEcma376BaseInferenceGuardObject(value, at), at, ["outline"]);
   return {
     outline: parseXlsxOutline(row["outline"], `${at}.outline`),
   };
 }
 
 export function parseXlsxOutline(value: unknown, at = "$"): XlsxOutline {
-  const row = stdioXlsxEcma376BaseInferenceGuardObject(value, at);
+  const row = stdioXlsxEcma376BaseInferenceGuardClosed(stdioXlsxEcma376BaseInferenceGuardObject(value, at), at, ["sheetNames", "sheetCount", "cellCount"]);
   return {
     sheetNames: stdioXlsxEcma376BaseInferenceGuardArray(row["sheetNames"], `${at}.sheetNames`).map((item, index) => stdioXlsxEcma376BaseInferenceGuardString(item, `${at}.sheetNames[${index}]`)),
     sheetCount: stdioXlsxEcma376BaseInferenceGuardInteger(row["sheetCount"], `${at}.sheetCount`),

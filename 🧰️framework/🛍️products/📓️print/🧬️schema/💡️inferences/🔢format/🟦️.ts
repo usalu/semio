@@ -4,7 +4,7 @@
  * is no default language.
  * @see ../../../🖋️latex/semio-viz-format.sty
  */
-import type { VizLanguage } from "../../📸️snapshot/📊️chart/🟦️.ts";
+import type { VizLanguage } from "@semio-tech/print/schema/snapshot/chart";
 
 //#region 🔖️Specifier
 /** 🔢️ A parsed format specifier, every field carrying the default d3 assigns when it is absent. */

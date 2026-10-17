@@ -3,9 +3,8 @@
 #[allow(unused_imports)]
 mod mutations_codec {
 use super::*;
-use crate::editor::note::presence::component::mutations::*;
-use crate::editor::note::presence::component::*;
-use crate::editor::note::presence::component::mutations::ReplacePresence;
+use crate::editor::note::presence::*;
+use crate::editor::note::presence::ReplacePresence;
 
 impl protocol::OpBinary for NotePresenceMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {

@@ -22,7 +22,7 @@ use std::mem::size_of;
 use semio_framework_value::ErasedSnapshotRetirement as _;
 use std::collections::BTreeMap;
 pub use semio_framework_os_store_durable_group_wire::lifted_durable_group::{ArtifactStoreDurableGroupRootV1, DURABLE_OWNED_GROUP_ANCHOR_SCHEMA_V1, DURABLE_OWNED_GROUP_DECISION_SCHEMA_V1, DURABLE_OWNED_GROUP_EVENT_MAX_BYTES, DURABLE_OWNED_GROUP_ID_MAX_BYTES, DURABLE_OWNED_GROUP_RECOVERY_PACK_MAX_BYTES, DURABLE_OWNED_GROUP_SHAPE_V1, DURABLE_OWNED_GROUP_STRUCTURAL_MAX_BYTES, DurableOwnedGroupAnchorV1, DurableOwnedGroupDecisionError, DurableOwnedGroupJournalAdvanceV1, DurableOwnedGroupJournalCommitV1, DurableOwnedGroupJournalReceiptV1, DurableOwnedGroupJournalSinkV1, DurableOwnedGroupMapFrontiersV1, DurableOwnedGroupMapHandlesV1, DurableOwnedGroupMemberV1, DurableOwnedGroupVerifiedThreeEditsV1, DurableOwnedMapMemberAdmissionV1, DurableOwnedMapRecoveryAdvanceV1, DurableOwnedThreeStoreCommitAdvanceV1, DurableOwnedThreeStoreCommitPhaseV1, DurableOwnedThreeStoreMapAssemblyAdvanceV1, DurableOwnedThreeStoreMapAssemblyFailureV1, DurableOwnedThreeStoreMapAssemblyPhaseV1, DurableOwnedThreeStoreSnapshotV1, DurableStorePreparedOutcomeV1, DurableStorePreparedOutcomesV1, DurableStoreVerifiedOutcomeV1, StagedRootRetirement};
-use semio_framework_os_store_durable_group_wire::lifted_durable_group::{DRAWING_RECOVERY_SCHEMA, DRAWING_ROLE, DURABLE_OWNED_GROUP_BOUND_OUTCOME_SCHEMA_V1, DurableBoundOneItemOutcomeV1, DurableMemberRecoveryFrontier, DurableOwnedThreeMemberUnsignedV1, DurableUnboundOneItemOutcomeV1, PARENT_RECOVERY_SCHEMA, PARENT_ROLE, VALUE_RECOVERY_SCHEMA, VALUE_ROLE, close_assembly_publication, close_journal_owner, durable_group_test_bind_member, durable_group_test_member, durable_group_test_outcome, member_identity_matches, member_matches, parse_canonical_json_value, take_assembly_prepared, unsigned_member, valid_hash, valid_reference};
+use semio_framework_os_store_durable_group_wire::lifted_durable_group::{DRAWING_RECOVERY_SCHEMA, DRAWING_ROLE, DURABLE_OWNED_GROUP_BOUND_OUTCOME_SCHEMA_V1, DurableBoundOneItemOutcomeV1, DurableMemberRecoveryFrontier, DurableOwnedThreeMemberUnsignedV1, DurableUnboundOneItemOutcomeV1, PARENT_RECOVERY_SCHEMA, PARENT_ROLE, VALUE_RECOVERY_SCHEMA, VALUE_ROLE, close_assembly_publication, close_journal_owner, durable_group_test_bind_member, durable_group_test_member, durable_group_test_outcome, member_identity_matches, member_matches, parse_canonical_json_value, take_assembly_prepared, valid_hash, valid_reference};
 use semio_framework_os_store_engine_stage::lifted_durable_group::{DurableStorePreparedOwnerV1, bound_member, clear_adopted_store_member, prepared_base_matches_store, prepared_member, recovery_frontier, retire_unstaged_store_member, stage_store_member, store_member_identity, validate_adopted_store_member, verify_bound_member_edit};
 pub use semio_framework_os_store_engine_stage::lifted_durable_group::{DurableStoreBoundOutcomeV1, abort_staged_store_member, adopt_staged_store_member, stage_prebuilt_batch_root};
 
@@ -1880,13 +1880,7 @@ impl DurableOwnedThreeMemberDecisionV1 {
     }
 
     pub fn canonical_unsigned_json(&self) -> String {
-        semio_framework_pack_json::to_json_string(&DurableOwnedThreeMemberUnsignedV1 {
-            schema: self.schema.clone(),
-            anchor: self.anchor.clone(),
-            parent: unsigned_member(&self.parent),
-            drawing: unsigned_member(&self.drawing),
-            value: unsigned_member(&self.value),
-        })
+        semio_framework_pack_json::to_json_string(&DurableOwnedThreeMemberUnsignedV1::new(self.schema.clone(), self.anchor.clone(), &self.parent, &self.drawing, &self.value))
     }
 
     pub fn parse_canonical_json(json: &str) -> Result<Self, DurableOwnedGroupDecisionError> {

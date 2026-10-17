@@ -41,11 +41,14 @@ pub fn plan(p: &GltfCreateAccessorPayload, base: &GltfSnapshot) -> Result<GltfDi
     Ok(diff)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn inverse(p: &GltfCreateAccessorPayload, base: &GltfSnapshot) -> Vec<super::GltfMutation> {
+pub fn inverse<Op>(p: &GltfCreateAccessorPayload, base: &GltfSnapshot) -> Vec<Op>
+where
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::remove_used_extension::RemoveUsedExtensionMutation>,
+{
     if validate(p, base).is_err() {
         return Vec::new();
     }
-    vec![super::delete_accessor::mutation(super::delete_accessor::GltfDeleteAccessorPayload { index: p.position })]
+    vec![crate::standards::v2_0::subsets::any::schema::mutations::delete_accessor::mutation(crate::standards::v2_0::subsets::any::schema::mutations::delete_accessor::GltfDeleteAccessorPayload { index: p.position })]
 }
 
 //#region 🧬️DirectMutation
@@ -58,11 +61,17 @@ pub enum CreateAccessorMutation {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn mutation(payload: GltfCreateAccessorPayload) -> super::GltfMutation {
-    super::GltfMutation::CreateAccessor(CreateAccessorMutation::Apply(payload))
+pub fn mutation<Op>(payload: GltfCreateAccessorPayload) -> Op
+where
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::create_accessor::CreateAccessorMutation>,
+{
+    Op::from(CreateAccessorMutation::Apply(payload))
 }
 
-impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for CreateAccessorMutation {
+impl<Op> protocol::MutationKind<GltfSnapshot, Op> for CreateAccessorMutation
+where
+    Op: protocol::Mutation<GltfSnapshot, Diff = GltfDiff> + From<CreateAccessorMutation>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "accessor", kind: "create-accessor", record: "CreatedAccessor" };
 
     fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<GltfDiff> {
@@ -74,7 +83,7 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for CreateAccesso
         }
     }
 
-    fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<super::GltfMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         match self {
             Self::Apply(payload) => Ok(inverse(payload, base)),
         }
@@ -91,7 +100,5 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for CreateAccesso
 //#endregion 🧬️DirectMutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️t054/🦀️.rs"]
-mod case_t054;
+
 //#endregion 🧪️Tests

@@ -9,16 +9,56 @@
 //! whose descriptor declares `"editable": false` is withdraw-only (design §22.20) and never a case. One macro call, [`history_edit_acceptance_law!`](crate::history_edit_acceptance_law), wires it into a
 //! plugin crate's test target; every failure names the plugin, the leaf and the fixture case.
 
-use super::*;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as pack;
+#[cfg(any(test, feature = "artifact-app-testing"))]
+use semio_framework_plugin_decl_emission::{ActionMeta, Emit};
+use semio_framework::kernel::{ActorId, MutationId};
+#[cfg(any(test, feature = "artifact-app-testing"))]
+use semio_framework_plugin_app_builder::App;
+#[cfg(any(test, feature = "artifact-app-testing"))]
+use semio_framework_plugin_decl_app::ArtifactApp;
+use store::os_store::store_schema::ArtifactCommand;
+#[cfg(any(test, feature = "artifact-app-testing"))]
+use semio_framework_plugin_decl_surface::{ArtifactEditor, ArtifactViewer};
+#[cfg(test)]
+use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use pack::snapshot::ArtifactPack;
+use store::{ArtifactStore, ArtifactStoreInitializationAuthority, MemberFactory, Mutation, SpaceMember};
+use std::collections::BTreeSet;
+use semio_framework_plugin_command::CATALOGUE_EXAMPLE_ACTION_ID;
+use semio_framework_value::{DslValue, ValueError};
+use semio_framework_plugin_app_builder::ExampleSource;
+use semio_framework::{Fault, ViewModel};
+use std::future::Future;
+use protocol::{LOCAL_ACTOR_ID, OpBinary, OpText};
+use semio_framework_ui_locale::{Locale, LocalizedLabel, Terminology};
+#[cfg(any(test, feature = "artifact-app-testing"))]
+use semio_framework_plugin_reactor_app::PluginApp;
+use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
+use serde_json::Value;
+#[cfg(any(test, feature = "artifact-app-testing"))]
+use semio_framework_plugin_instance_app::VcsArtifactApp;
+use semio_framework_plugin_window_config::WindowConfigOwner;
+use semio_framework_ui_layout::layout::WindowMeasure;
+use semio_framework_plugin_window_transient::window_transient::WindowTransientOwner;
+#[cfg(any(test, feature = "artifact-app-testing"))]
+use semio_framework_plugin_testing_laws::{artifact_app_laws, with_authoring_identity};
+use store::os_store::document_materialize::create_document_envelope;
+#[cfg(any(test, feature = "artifact-app-testing"))]
+use crate as history_edit_acceptance;
+use semio_framework_plugin_time_travel as time_travel;
+use semio_framework_ui_contract::*;
 #[derive(Debug,semio_framework_value::RetireOwned)]
-struct AcceptanceError{message:String,original:Option<crate::PluginLifecycleFailure>}
-impl AcceptanceError{fn context(mut self,message:String)->Self{self.message=if self.message.is_empty(){message}else{format!("{message}: {}",self.message)};self}}
+struct AcceptanceError{pub message:String,pub original:Option<semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure>}
+impl AcceptanceError{pub fn context(mut self,message:String)->Self{self.message=if self.message.is_empty(){message}else{format!("{message}: {}",self.message)};self}}
 impl From<&str> for AcceptanceError{fn from(message:&str)->Self{message.to_owned().into()}}
 impl From<String> for AcceptanceError{fn from(message:String)->Self{Self{message,original:None}}}
-impl From<semio_framework_job::OriginalTurnFailure> for AcceptanceError{fn from(original:semio_framework_job::OriginalTurnFailure)->Self{crate::PluginLifecycleFailure::from(original).into()}}
-impl From<crate::PluginLifecycleFailure> for AcceptanceError{fn from(original:crate::PluginLifecycleFailure)->Self{Self{message:String::new(),original:Some(original)}}}
-impl From<semio_framework::Fault> for AcceptanceError{fn from(original:semio_framework::Fault)->Self{crate::PluginLifecycleFailure::from(original).into()}}
-impl From<semio_framework_value::ValueError> for AcceptanceError{fn from(original:semio_framework_value::ValueError)->Self{crate::PluginLifecycleFailure::from(original).into()}}
+impl From<semio_framework_job::OriginalTurnFailure> for AcceptanceError{fn from(original:semio_framework_job::OriginalTurnFailure)->Self{semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from(original).into()}}
+impl From<semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> for AcceptanceError{fn from(original:semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure)->Self{Self{message:String::new(),original:Some(original)}}}
+impl From<semio_framework::Fault> for AcceptanceError{fn from(original:semio_framework::Fault)->Self{semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from(original).into()}}
+impl From<semio_framework_value::ValueError> for AcceptanceError{fn from(original:semio_framework_value::ValueError)->Self{semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from(original).into()}}
 impl std::fmt::Display for AcceptanceError{fn fmt(&self,f:&mut std::fmt::Formatter<'_>)->std::fmt::Result{match &self.original{Some(original)=>write!(f,"{}: {original:?}",self.message),None=>f.write_str(&self.message)}}}
 
 use semio_framework::kernel::{HistoryTimeTravelReview, HistoryTimeTravelStage};
@@ -85,7 +125,7 @@ impl AcceptanceSeedFault {
 
 impl AcceptanceVerdict {
     /// 🗯️ The verdict's reason or summary in words.
-    fn text(&self) -> String {
+    pub fn text(&self) -> String {
         match self {
             Self::Pass(text) | Self::Skip(text) | Self::SkipCase(text) | Self::SkipBase(text) => text.clone(),
             Self::Fail(error) => error.to_string(),
@@ -100,9 +140,9 @@ fn original_guest_failure_debit_history_acceptance_keeps_complete_seed_cause_and
     use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress,ValueError,ValueRefusalKind};
     let expected:serde_json::Value=serde_json::from_str(include_str!("../../🧪️testing/🎟️caller/🧪️tests/🧫️fixtures/🧾️expected.json")).unwrap();let policy:serde_json::Value=serde_json::from_str(include_str!("../../🧪️testing/🎟️caller/🧪️tests/🧫️fixtures/🎟️caller.json")).unwrap();let phase:RetainedCloneGrant=serde_json::from_value(policy["retirementLoan"].clone()).unwrap();let mut caller=artifact_app_laws::OriginalFixtureCaller::admit().unwrap();let mut cx=caller.context();let identity=cx.original_recipient_identity();
     let((failure,pointers),heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||{let primary=ValueError::new(ValueRefusalKind::AllocationFailed,"original acceptance cause 源");let receipt=ValueError::new(ValueRefusalKind::InvariantViolated,"original acceptance receipt 拒");let context=ValueError::new(ValueRefusalKind::Canceled,"original acceptance context 断");let pointers=(primary.message.as_ptr(),receipt.message.as_ptr(),context.message.as_ptr());(semio_framework_job::OriginalTurnFailure{primary:semio_framework_job::OriginalTurnPrimary::Value(primary),receipt_refusal:Some(receipt),context_refusal:Some(context)},pointers)});let(mut born,mut released)=(heap.requested_bytes,heap.released_bytes);cx.consume_retained(RetainedCloneProgress{copied_items:3,retained_capacity_bytes:born,released_bytes:released,..Default::default()}).unwrap();
-    let(error,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||AcceptanceSeedFault::Original(failure.into()).into_error().context("the seed does not land".into()).context("original reload annotation".into()));born+=heap.requested_bytes;released+=heap.released_bytes;cx.consume_retained(RetainedCloneProgress{copied_items:2,retained_capacity_bytes:heap.requested_bytes,released_bytes:heap.released_bytes,..Default::default()}).unwrap();let original=error.original.as_ref().unwrap();let crate::PluginLifecyclePrimary::Value(primary)=&original.primary else{panic!("original acceptance primary retains its variant")};assert_eq!((primary.message.as_ptr(),original.receipt_refusal.as_ref().unwrap().message.as_ptr(),original.context_refusal.as_ref().unwrap().message.as_ptr()),pointers);assert_eq!(serde_json::json!({"callerRetainsFailure":true})["callerRetainsFailure"],expected["callerRetainsFailure"]);
+    let(error,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||AcceptanceSeedFault::Original(failure.into()).into_error().context("the seed does not land".into()).context("original reload annotation".into()));born+=heap.requested_bytes;released+=heap.released_bytes;cx.consume_retained(RetainedCloneProgress{copied_items:2,retained_capacity_bytes:heap.requested_bytes,released_bytes:heap.released_bytes,..Default::default()}).unwrap();let original=error.original.as_ref().unwrap();let semio_framework_plugin_ownership::bounded_ownership::PluginLifecyclePrimary::Value(primary)=&original.primary else{panic!("original acceptance primary retains its variant")};assert_eq!((primary.message.as_ptr(),original.receipt_refusal.as_ref().unwrap().message.as_ptr(),original.context_refusal.as_ref().unwrap().message.as_ptr()),pointers);assert_eq!(serde_json::json!({"callerRetainsFailure":true})["callerRetainsFailure"],expected["callerRetainsFailure"]);
     let(mut owner,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||semio_framework_value::retirement::controlled::ControlledRetirement::new(error).unwrap_or_else(|_|panic!("complete acceptance error supports paid retirement")));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
-    for turn in 0..artifact_app_laws::OriginalFixtureCaller::maximum_turns(){if owner.terminal_is_empty(){break}let before=cx.retained_progress();let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cx.with_retained_loan(phase,|same|semio_framework_job::close_original_retained_step(same,owner.selected_demand(phase.maximum_copy_bytes)?,|grant|owner.step(grant))));let progress=result.unwrap().progress();assert_eq!((heap.requested_bytes,heap.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));assert_eq!(cx.retained_progress(),before.checked_add(progress).unwrap());assert_eq!(cx.original_recipient_identity(),identity);born+=heap.requested_bytes;released+=heap.released_bytes;assert!(turn+1<artifact_app_laws::OriginalFixtureCaller::maximum_turns())}assert!(owner.terminal_is_empty());assert_eq!(born,released);let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(owner));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));let fuel=cx.fuel_remaining();drop(cx);caller.retire(fuel).unwrap();eprintln!("[DEBUG] originalAcceptanceSeedThreeCausePointers=true annotationsKeepOwnedFailure=true sameOriginalRecipient=true paidErrorPhysicalClose=true terminalDrop0=true");
+    for turn in 0..artifact_app_laws::OriginalFixtureCaller::maximum_turns(){if owner.terminal_is_empty(){break}let before=cx.retained_progress();let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cx.with_retained_loan(phase,|same|semio_framework_job::close_original_retained_step(same,owner.selected_demand(phase.maximum_copy_bytes)?,|grant|owner.step(grant))));let progress=result.unwrap().progress();assert_eq!((heap.requested_bytes,heap.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));assert_eq!(cx.retained_progress(),before.checked_add(progress).unwrap());assert_eq!(cx.original_recipient_identity(),identity);born+=heap.requested_bytes;released+=heap.released_bytes;assert!(turn+1<artifact_app_laws::OriginalFixtureCaller::maximum_turns())}assert!(owner.terminal_is_empty());assert_eq!(born,released);let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(owner));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));let fuel=cx.fuel_remaining();drop(cx);caller.retire(fuel).unwrap();
 }
 
 /// 🔍️ Where two document texts first disagree (line number and both lines, clipped), or that only their values disagree.
@@ -323,9 +363,9 @@ pub fn acceptance_change_buckets(inputs: &[ActionArgDef], value: &DslValue) -> [
 }
 
 /// 🎟️ The explicit mounted owner policy every acceptance instance runs under.
-fn acceptance_policy() -> crate::MountedOwnerPolicyV1 {
+fn acceptance_policy() -> semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1 {
     let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
-    crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant }
+    semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant }
 }
 
 /// 🪪️ The acceptance actor's action meta on the registered instance.
@@ -341,13 +381,13 @@ where
 {
     let mut args = Some(DslValue::Object(args.into_iter().map(|(key, value)| (key.to_string(), value)).collect()));
     let meta=acceptance_meta();
-    let outcome=crate::with_authoring_identity!(|identity| async{
+    let outcome=semio_framework_plugin_testing_laws::with_authoring_identity!(|identity| async{
         for _ in 0..artifact_app_laws::OriginalFixtureCaller::maximum_turns(){
             if cx.should_yield(){break}
             let result=app.handle_action(action,&mut args,&meta,&mut identity,cx).await.map_err(|fault|AcceptanceError::from(fault).context(format!("{action} faulted")))?;
             if let Some(result)=result{return match result.output.get("rejected").and_then(DslValue::as_str){Some(code)=>Err(format!("{action} was refused: {code}").into()),None=>Ok(())}}
         }
-        Err(crate::PluginLifecycleFailure::from(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original acceptance action remains pending at caller opportunity limit")).into())
+        Err(semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original acceptance action remains pending at caller opportunity limit")).into())
     }.await);
     let mut input=semio_framework_value::retirement::controlled::ControlledRetirement::new(args).unwrap_or_else(|_|panic!("original acceptance action input supports controlled retirement"));
     let loan=acceptance_policy().close;
@@ -365,11 +405,11 @@ where
     M: SpaceMember + MemberFactory + Send + 'static,
 {
     for _ in 0..artifact_app_laws::OriginalFixtureCaller::maximum_turns(){
-        if cx.should_yield(){return Err(crate::PluginLifecycleFailure::from(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original acceptance driver exhausted caller opportunity")).into())}
+        if cx.should_yield(){return Err(semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original acceptance driver exhausted caller opportunity")).into())}
         if done(app) {
             return Ok(());
         }
-        crate::with_authoring_identity!(|identity| app.advance_typed_operation_publication(&mut identity,cx).await)?;
+        semio_framework_plugin_testing_laws::with_authoring_identity!(|identity| app.advance_typed_operation_publication(&mut identity,cx).await)?;
         while app.take_typed_operation_ui_progress().is_some() {}
     }
     Err((format!(
@@ -400,19 +440,19 @@ where
     A: ArtifactApp + Default,
     M: SpaceMember + MemberFactory + Send + 'static,
 {
-    let mut app = crate::with_authoring_identity!(|identity| artifact_app_laws::new_app_with_registry_and_members::<A, M>(manifest, protocol::ActorId(ACCEPTANCE_ACTOR.into()), acceptance_policy(), &mut identity).await);
+    let mut app = semio_framework_plugin_testing_laws::with_authoring_identity!(|identity| artifact_app_laws::new_app_with_registry_and_members::<A, M>(manifest, protocol::ActorId(ACCEPTANCE_ACTOR.into()), acceptance_policy(), &mut identity).await);
     app.bind_instance_id(artifact_app_laws::meta(ACCEPTANCE_ACTOR).instance_id).await;
     let seeded = async {
         assert_eq!(app.stores.store.local_actor_id(), &protocol::ActorId(ACCEPTANCE_ACTOR.into()));
         let mut files = app.document_text().await.map_err(|fault| AcceptanceSeedFault::Original(AcceptanceError::from(fault).context("the document does not print".into())))?;
         if files.dsl != base {
             files.dsl = base.to_string();
-            crate::with_authoring_identity!(|identity| artifact_app_laws::load_document_text(&mut app, &files, &mut identity,cx).await).map_err(|fault| AcceptanceSeedFault::Original(AcceptanceError::from(fault).context("the base document does not load".into())))?;
+            semio_framework_plugin_testing_laws::with_authoring_identity!(|identity| artifact_app_laws::load_document_text(&mut app, &files, &mut identity,cx).await).map_err(|fault| AcceptanceSeedFault::Original(AcceptanceError::from(fault).context("the base document does not load".into())))?;
         }
         for (index, op) in ops.iter().enumerate() {
             let applied = app.stores.store.mutation_ops().map_or(0, |applied| applied.len());
             let receipt =
-                crate::with_authoring_identity!(|identity| app.stores.store.dispatch(ArtifactCommand::Apply { mutations: vec![(*op).clone()], transaction: None }, &mut identity).await).map_err(|error| AcceptanceSeedFault::Operation(index, format!("the seed edit is refused: {error:?}")))?;
+                semio_framework_plugin_testing_laws::with_authoring_identity!(|identity| app.stores.store.dispatch(ArtifactCommand::Apply { mutations: vec![(*op).clone()], transaction: None }, &mut identity).await).map_err(|error| AcceptanceSeedFault::Operation(index, format!("the seed edit is refused: {error:?}")))?;
             if matches!(receipt.worst, Some(semio_framework_diagnostic::Severity::Error | semio_framework_diagnostic::Severity::Fatal)) {
                 return Err(AcceptanceSeedFault::Operation(index, format!("the seed edit does not apply cleanly: {:?}", receipt.messages)));
             }
@@ -1117,13 +1157,13 @@ where
     M: SpaceMember + MemberFactory + Send + 'static,
 {
     let archive = PluginApp::document_archive(app).await.map_err(|fault| AcceptanceError::from(fault).context("the document does not archive".into()))?;
-    let mut reloaded = crate::with_authoring_identity!(|identity| artifact_app_laws::new_app_with_registry_and_members::<A, M>(manifest, protocol::ActorId(ACCEPTANCE_ACTOR.into()), acceptance_policy(), &mut identity).await);
+    let mut reloaded = semio_framework_plugin_testing_laws::with_authoring_identity!(|identity| artifact_app_laws::new_app_with_registry_and_members::<A, M>(manifest, protocol::ActorId(ACCEPTANCE_ACTOR.into()), acceptance_policy(), &mut identity).await);
     reloaded.bind_instance_id(artifact_app_laws::meta(ACCEPTANCE_ACTOR).instance_id).await;
     let loaded = async {
         assert_eq!(reloaded.stores.store.local_actor_id(), &protocol::ActorId(ACCEPTANCE_ACTOR.into()));
         PluginApp::begin_document_archive_load(&mut reloaded, ACCEPTANCE_ARCHIVE_OPERATION, archive).map_err(|fault| AcceptanceError::from(fault).context("the archive is refused".into()))?;
         for _ in 0..artifact_app_laws::OriginalFixtureCaller::maximum_turns(){
-            let status = crate::with_authoring_identity!(|identity| PluginApp::poll_document_archive_load(&mut reloaded, ACCEPTANCE_ARCHIVE_OPERATION, &mut identity,cx).await).map_err(|fault| AcceptanceError::from(fault).context("the archive load faulted".into()))?;
+            let status = semio_framework_plugin_testing_laws::with_authoring_identity!(|identity| PluginApp::poll_document_archive_load(&mut reloaded, ACCEPTANCE_ARCHIVE_OPERATION, &mut identity,cx).await).map_err(|fault| AcceptanceError::from(fault).context("the archive load faulted".into()))?;
             match status.state {
                 protocol::DocumentArchiveLoadState::Ready => break,
                 protocol::DocumentArchiveLoadState::Cancelled | protocol::DocumentArchiveLoadState::Fault => return Err((format!("the archive load ends {:?}: {}", status.state, String::from_utf8_lossy(&status.fault))).into()),
@@ -1162,8 +1202,8 @@ where
 /// 🖼️ What a reload must preserve of a document: its head (value and document text), its owned children (slot, child id, dialect,
 /// envelope bytes, sorted) and the projected render of every declared window body (a refusal compared as its fault text).
 struct AcceptanceDocumentView {
-    head: (DslValue, String),
-    children: Vec<(String, String, String, Vec<u8>)>,
+    pub head: (DslValue, String),
+    pub children: Vec<(String, String, String, Vec<u8>)>,
     renders: Vec<(String, Result<String, String>)>,
 }
 
@@ -1220,13 +1260,13 @@ where
     documents.extend(examples.iter().map(|example| (format!("example {}", example.id()), Some(example.id().to_string()))));
     let mut reloaded_documents = 0;
     for (name, example) in documents {
-        let mut saved = crate::with_authoring_identity!(|identity| artifact_app_laws::new_app_with_registry_and_members::<A, M>(manifest, protocol::ActorId(ACCEPTANCE_ACTOR.into()), acceptance_policy(), &mut identity).await);
+        let mut saved = semio_framework_plugin_testing_laws::with_authoring_identity!(|identity| artifact_app_laws::new_app_with_registry_and_members::<A, M>(manifest, protocol::ActorId(ACCEPTANCE_ACTOR.into()), acceptance_policy(), &mut identity).await);
         saved.bind_instance_id(artifact_app_laws::meta(ACCEPTANCE_ACTOR).instance_id).await;
         let outcome = async {
             if let Some(example) = example {
                 assert_eq!(saved.store.local_actor_id(), &protocol::ActorId(ACCEPTANCE_ACTOR.into()));
                 acceptance_verb(&mut saved, CATALOGUE_EXAMPLE_ACTION_ID, vec![("exampleId", DslValue::String(example))],cx).await.map_err(|refusal|refusal.context("the app's own example route does not load it".into()))?;
-                crate::with_authoring_identity!(|identity| artifact_app_laws::settle_registered_typed_operation(&mut saved, acceptance_meta().instance_id, acceptance_policy(), &mut identity,cx).await)?;
+                semio_framework_plugin_testing_laws::with_authoring_identity!(|identity| artifact_app_laws::settle_registered_typed_operation(&mut saved, acceptance_meta().instance_id, acceptance_policy(), &mut identity,cx).await)?;
             }
             saved.render_ctx().refresh_cache().await.map_err(|fault| AcceptanceError::from(fault).context("the history does not backfill".into()))?;
             let before = acceptance_document_view(&mut saved, manifest,cx).await?;
@@ -1279,7 +1319,7 @@ where
     A: ArtifactApp + Default,
     M: SpaceMember + MemberFactory + Send + 'static,
 {
-    let mut app = crate::with_authoring_identity!(|identity| artifact_app_laws::new_app_with_registry_and_members::<A, M>(manifest, protocol::ActorId(ACCEPTANCE_ACTOR.into()), acceptance_policy(), &mut identity).await);
+    let mut app = semio_framework_plugin_testing_laws::with_authoring_identity!(|identity| artifact_app_laws::new_app_with_registry_and_members::<A, M>(manifest, protocol::ActorId(ACCEPTANCE_ACTOR.into()), acceptance_policy(), &mut identity).await);
     app.bind_instance_id(artifact_app_laws::meta(ACCEPTANCE_ACTOR).instance_id).await;
     let seeded = async {
         assert_eq!(app.stores.store.local_actor_id(), &protocol::ActorId(ACCEPTANCE_ACTOR.into()));
@@ -1289,7 +1329,7 @@ where
                 return Err((format!("the seed args of {action} are not a JSON object")).into());
             };
             acceptance_verb(&mut app, action, args.iter().map(|(key, value)| (key.as_str(), value.clone())).collect(),cx).await?;
-            crate::with_authoring_identity!(|identity| artifact_app_laws::settle_registered_typed_operation(&mut app, acceptance_meta().instance_id, acceptance_policy(), &mut identity,cx).await).map_err(|fault|AcceptanceError::from(fault).context(format!("the seed gesture {action} does not publish")))?;
+            semio_framework_plugin_testing_laws::with_authoring_identity!(|identity| artifact_app_laws::settle_registered_typed_operation(&mut app, acceptance_meta().instance_id, acceptance_policy(), &mut identity,cx).await).map_err(|fault|AcceptanceError::from(fault).context(format!("the seed gesture {action} does not publish")))?;
         }
         app.render_ctx().refresh_cache().await.map_err(|fault| AcceptanceError::from(fault).context("the history does not backfill".into()))
     }
@@ -1476,7 +1516,7 @@ where
     M: SpaceMember + MemberFactory + Send + 'static,
 {
     let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original acceptance caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
-    let mut app = crate::with_authoring_identity!(|identity| artifact_app_laws::new_app_with_registry_and_members::<A, M>(manifest, protocol::ActorId(ACCEPTANCE_ACTOR.into()), acceptance_policy(), &mut identity).await);
+    let mut app = semio_framework_plugin_testing_laws::with_authoring_identity!(|identity| artifact_app_laws::new_app_with_registry_and_members::<A, M>(manifest, protocol::ActorId(ACCEPTANCE_ACTOR.into()), acceptance_policy(), &mut identity).await);
     let declared = acceptance_withdraw_only_kinds(fixtures);
     let failures = input_schema_resolution_failures::<A>(&declared);
     acceptance_close(&mut app,cx).await;
@@ -1954,3 +1994,10 @@ macro_rules! composed_child_history_law {
 #[cfg(test)]
 #[path = "🧪️tests/🔎️array-controls/🦀️.rs"]
 mod array_controls;
+
+#[cfg(any(test, feature = "artifact-app-testing"))]
+#[path = "../🧰️ui-action-collection/🦀️.rs"]
+pub mod ui_action_laws;
+#[cfg(any(test, feature = "artifact-app-testing"))]
+#[path = "../🧪️node-drag-history/🦀️.rs"]
+pub mod node_drag_history;

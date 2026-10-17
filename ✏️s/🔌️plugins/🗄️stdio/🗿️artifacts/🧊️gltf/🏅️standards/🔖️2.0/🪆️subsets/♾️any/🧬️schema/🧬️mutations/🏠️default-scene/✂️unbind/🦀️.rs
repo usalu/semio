@@ -23,12 +23,15 @@ pub fn plan(p: &GltfUnbindDefaultScenePayload, base: &GltfSnapshot) -> Result<Gl
     Ok(GltfDiff { scene: Some(None), ..Default::default() })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn inverse(p: &GltfUnbindDefaultScenePayload, base: &GltfSnapshot) -> Vec<super::GltfMutation> {
+pub fn inverse<Op>(p: &GltfUnbindDefaultScenePayload, base: &GltfSnapshot) -> Vec<Op>
+where
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::remove_used_extension::RemoveUsedExtensionMutation>,
+{
     if validate(p, base).is_err() {
         return Vec::new();
     }
     match base.document.scene {
-        Some(current) => vec![super::bind_default_scene::mutation(super::bind_default_scene::GltfBindDefaultScenePayload { scene: current })],
+        Some(current) => vec![crate::standards::v2_0::subsets::any::schema::mutations::bind_default_scene::mutation(crate::standards::v2_0::subsets::any::schema::mutations::bind_default_scene::GltfBindDefaultScenePayload { scene: current })],
         None => Vec::new(),
     }
 }
@@ -43,11 +46,17 @@ pub enum UnbindDefaultSceneMutation {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn mutation(payload: GltfUnbindDefaultScenePayload) -> super::GltfMutation {
-    super::GltfMutation::UnbindDefaultScene(UnbindDefaultSceneMutation::Apply(payload))
+pub fn mutation<Op>(payload: GltfUnbindDefaultScenePayload) -> Op
+where
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::unbind_default_scene::UnbindDefaultSceneMutation>,
+{
+    Op::from(UnbindDefaultSceneMutation::Apply(payload))
 }
 
-impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for UnbindDefaultSceneMutation {
+impl<Op> protocol::MutationKind<GltfSnapshot, Op> for UnbindDefaultSceneMutation
+where
+    Op: protocol::Mutation<GltfSnapshot, Diff = GltfDiff> + From<UnbindDefaultSceneMutation>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "unbind", entity: "default-scene", kind: "unbind-default-scene", record: "UnboundDefaultScene" };
 
     fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<GltfDiff> {
@@ -59,7 +68,7 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for UnbindDefault
         }
     }
 
-    fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<super::GltfMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         match self {
             Self::Apply(payload) => Ok(inverse(payload, base)),
         }
@@ -76,7 +85,5 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for UnbindDefault
 //#endregion 🧬️DirectMutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🎞️clears-the-b236b0/🦀️.rs"]
-mod case_clears_the_b236b0;
+
 //#endregion 🧪️Tests

@@ -1,6 +1,5 @@
 //! Puzzle5d mutation — `RotatePart3d`: changes a part's 3D-projection orientation quaternion.
 use crate::standards::v1::subsets::any::schema::diff::Puzzle5dDiff;
-use crate::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation;
 use crate::Puzzle5dSnapshot;
 
 //#region 🔖️Mutation
@@ -17,13 +16,16 @@ pub struct RotatePart3d {
     pub new_orientation: Option<[f64; 4]>,
 }
 
-impl protocol::MutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for RotatePart3d {
+impl<Op> protocol::MutationKind<Puzzle5dSnapshot, Op> for RotatePart3d
+where
+    Op: protocol::Mutation<Puzzle5dSnapshot, Diff = Puzzle5dDiff> + From<RotatePart3d>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "rotate", entity: "part", kind: "rotate-part3d", record: "RotatedPart3d" };
 
     fn diff(&self, base: &Puzzle5dSnapshot) -> protocol::MutationOutcome<Puzzle5dDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Puzzle5dSnapshot) -> Result<Vec<Puzzle5dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Puzzle5dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     
@@ -39,6 +41,9 @@ impl protocol::MutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for RotatePart3d
 //#endregion 🔖️Mutation
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn rotate_part_3d(id: String, new_orientation: Option<[f64; 4]>) -> Puzzle5dMutation {
-    Puzzle5dMutation::RotatePart3d(RotatePart3d { id, new_orientation })
+pub fn rotate_part_3d<Op>(id: String, new_orientation: Option<[f64; 4]>) -> Op
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::rotate_part_3d::RotatePart3d>,
+{
+    Op::from(RotatePart3d { id, new_orientation })
 }

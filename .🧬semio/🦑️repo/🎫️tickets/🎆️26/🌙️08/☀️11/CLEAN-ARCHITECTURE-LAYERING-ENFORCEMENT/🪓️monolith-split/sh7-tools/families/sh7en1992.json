@@ -1,0 +1,17 @@
+{
+ "name": "sh7en1992",
+ "crates": [
+  "semio-s-artifact-norm-en1992-checks",
+  "semio-s-artifact-norm-en1992-inferences",
+  "semio-s-artifact-norm-en1992"
+ ],
+ "base": {
+  "rev": "b84bf526c7b",
+  "crates": [
+   "semio-s-artifact-norm-en1992-checks",
+   "semio-s-artifact-norm-en1992-inferences",
+   "semio-s-artifact-norm-en1992"
+  ]
+ },
+ "note": "SPLIT-HARDENING-7: en1992 design-effects folder rename"
+}

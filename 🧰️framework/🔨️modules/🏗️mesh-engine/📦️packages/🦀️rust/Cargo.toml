@@ -33,6 +33,7 @@ protocol = { package = "semio-framework-replication", path = "../../../📡️re
 # RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS) — `serde`'s `Serialize`/`Deserialize`
 # derive on `MeshData` is `#[cfg(test)]`-gated to a differential oracle only, never a production
 # dependency of this crate.
+semio-framework-test-fixtures = { path = "../../../🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 serde = { workspace = true }
 semio-framework-async-macros = { path = "../../../⏳️async/✨️macros/📦️packages/🦀️rust" }
 serde_json = { workspace = true }

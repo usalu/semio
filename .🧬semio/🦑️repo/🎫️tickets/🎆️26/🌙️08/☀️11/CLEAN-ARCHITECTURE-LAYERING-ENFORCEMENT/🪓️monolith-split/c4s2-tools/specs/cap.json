@@ -1,0 +1,56 @@
+{
+ "file": "/Users/ueli/Documents/semio/🎓️teaching/🛂️proctor/🧪️tests/🏋️capacity/🟦️.ts",
+ "importers": [],
+ "children": [
+  {
+   "dir": "📊️settings-and-measurements",
+   "doc": "/** 📊️ The settings of one capacity run and its measurements: the options, defaults, limits and budgets, and the latency recorder with its generator lag probe. */",
+   "lines": [
+    [
+     56,
+     198
+    ]
+   ]
+  },
+  {
+   "dir": "🚚️transport",
+   "doc": "/** 🚚️ The transport of the capacity gate: the HTTP and WebSocket client on Bun's own `fetch`, `WebSocket` and sockets, the quiz client's real envelopes and the raw wire of the abusive script. */",
+   "lines": [
+    [
+     200,
+     344
+    ]
+   ]
+  },
+  {
+   "dir": "🎒️hall-learner",
+   "doc": "/** 🎒️ One simulated learner of the lecture hall: enrolment, rooms, polling, two quizzes at two challenges with revisions, submission and results, and the Wi-Fi drop. */",
+   "lines": [
+    [
+     346,
+     559
+    ]
+   ]
+  },
+  {
+   "dir": "🎭️abusive-script",
+   "doc": "/** 🦹️ The abusive script of the capacity gate: it fills the roster, floods malformed commands and queries, sends oversized bodies and frames and pushes sockets into the hall's room. */",
+   "lines": [
+    [
+     561,
+     755
+    ]
+   ]
+  },
+  {
+   "dir": "🖥️proctor-process",
+   "doc": "/** 🖥️ The proctor under test: the release build of `proctor serve` in production mode on a throw-away loopback port over a throw-away data directory, its memory and its roster count. */",
+   "lines": [
+    [
+     757,
+     838
+    ]
+   ]
+  }
+ ]
+}

@@ -4,30 +4,18 @@
 use crate::standards::v1_7::subsets::base::schema::{diff::PdfDiff, snapshot::PdfSnapshot};
 
 //#region 🔖️Leaves
-#[path = "🔤️embed-font-file/🦀️.rs"]
-pub mod embed_font_file;
-#[path = "🔒️insert-encryption-dictionary/🦀️.rs"]
-pub mod insert_encryption_dictionary;
-#[path = "📜️insert-javascript-action/🦀️.rs"]
-pub mod insert_javascript_action;
-#[path = "🚀️insert-launch-action/🦀️.rs"]
-pub mod insert_launch_action;
-#[path = "🎬️insert-media-annotation/🦀️.rs"]
-pub mod insert_media_annotation;
-#[path = "🔓️remove-encryption-dictionary/🦀️.rs"]
-pub mod remove_encryption_dictionary;
-#[path = "🧺️remove-font-file/🦀️.rs"]
-pub mod remove_font_file;
-#[path = "🚫️remove-javascript-action/🦀️.rs"]
-pub mod remove_javascript_action;
-#[path = "🛬️remove-launch-action/🦀️.rs"]
-pub mod remove_launch_action;
-#[path = "⏹️remove-media-annotation/🦀️.rs"]
-pub mod remove_media_annotation;
-#[path = "🧽️remove-output-intent/🦀️.rs"]
-pub mod remove_output_intent;
-#[path = "🏳️set-output-intent/🦀️.rs"]
-pub mod set_output_intent;
+pub use semio_s_artifact_stdio_pdf_mut_family_3::standards::v1_7::subsets::e::schema::mutations::embed_font_file;
+pub use semio_s_artifact_stdio_pdf_mut_family_3::standards::v1_7::subsets::e::schema::mutations::insert_encryption_dictionary;
+pub use semio_s_artifact_stdio_pdf_mut_family_3::standards::v1_7::subsets::e::schema::mutations::insert_javascript_action;
+pub use semio_s_artifact_stdio_pdf_mut_family_4::standards::v1_7::subsets::e::schema::mutations::insert_launch_action;
+pub use semio_s_artifact_stdio_pdf_mut_family_4::standards::v1_7::subsets::e::schema::mutations::insert_media_annotation;
+pub use semio_s_artifact_stdio_pdf_mut_family_3::standards::v1_7::subsets::e::schema::mutations::remove_encryption_dictionary;
+pub use semio_s_artifact_stdio_pdf_mut_family_3::standards::v1_7::subsets::e::schema::mutations::remove_font_file;
+pub use semio_s_artifact_stdio_pdf_mut_family_3::standards::v1_7::subsets::e::schema::mutations::remove_javascript_action;
+pub use semio_s_artifact_stdio_pdf_mut_family_4::standards::v1_7::subsets::e::schema::mutations::remove_launch_action;
+pub use semio_s_artifact_stdio_pdf_mut_family_4::standards::v1_7::subsets::e::schema::mutations::remove_media_annotation;
+pub use semio_s_artifact_stdio_pdf_mut_family_4::standards::v1_7::subsets::e::schema::mutations::remove_output_intent;
+pub use semio_s_artifact_stdio_pdf_mut_family_4::standards::v1_7::subsets::e::schema::mutations::set_output_intent;
 
 pub use embed_font_file::EmbedFontFile;
 pub use insert_encryption_dictionary::InsertEncryptionDictionary;
@@ -78,7 +66,5 @@ pub fn pdf_e_mutation_kinds() -> &'static [protocol::SemanticDescriptor] {
 //#endregion 🔖️Delegation
 
 //#region 🧪️CatalogParity
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️CatalogParity

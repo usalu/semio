@@ -48,7 +48,4 @@ pub fn handle_with_row(payload: &ShareSpace, _doc: &ArtifactView<'_, SHomeSnapsh
 //#endregion 🔖️Handle
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

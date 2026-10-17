@@ -20,7 +20,6 @@ fn pending_physical_claim_excludes_a_second_allocator_before_the_first_returns()
  assert_eq!(second.err().unwrap().refusal_kind(),Some(ValueRefusalKind::OwnershipLimit));
  let first=first.unwrap();assert_eq!(context.committed_bytes(),base+first.allocated_bytes());drop(first);assert_eq!(context.committed_bytes(),base);
  let next=context.reserve::<Sentinel>(PackTransportCategory::NativeIo,PackRetryDisposition::Never).unwrap();drop(next);assert_eq!(context.committed_bytes(),base);
- eprintln!("[DEBUG] pending source credit prevented a second actual allocator before the first completed");
 }
 
 struct PanickingPolicy(Arc<AtomicUsize>);
@@ -42,7 +41,6 @@ fn policy_panics_refund_only_their_charge_and_allow_a_subsequent_reservation(){
   assert_eq!(context.committed_bytes(),base+unrelated_bytes);
   let cause=unrelated.publish(Sentinel);drop(cause);assert_eq!(context.committed_bytes(),base+unrelated_bytes);
  }
- eprintln!("[DEBUG] two actual callback panic phases refunded only their live reservation and preserved unrelated published charge");
 }
 
 struct Policy(Arc<AtomicUsize>);
@@ -84,7 +82,6 @@ fn original_lifecycle_panics_drop_owned_context_and_source_once(){
  let error=context.reserve::<DropSentinel>(PackTransportCategory::NativeIo,PackRetryDisposition::Never).unwrap().publish(DropSentinel{drops:source_drops.clone(),panic:true});drop(context);
  let result=std::panic::catch_unwind(std::panic::AssertUnwindSafe(||drop(error)));
  assert_eq!(result.err().unwrap().downcast_ref::<&'static str>(),Some(&"original source destructor panic"));assert_eq!(source_drops.load(Ordering::SeqCst),1);assert_eq!(drops.load(Ordering::SeqCst),1);
- eprintln!("[DEBUG] four lifecycle callback panics and concrete source Drop panic retained their original panic and dropped policy/source once");
 }
 
 #[repr(align(128))]
@@ -108,7 +105,6 @@ fn aligned_source_identity_survives_actual_concurrent_final_clone_drops(){
   barrier.wait();
  });
  assert_eq!(source_drops.load(Ordering::SeqCst),1);assert_eq!(drops.load(Ordering::SeqCst),1);
- eprintln!("[DEBUG] overaligned source retained identity across concurrent final-owner Drop; zero-size Sentinel is covered by other context laws");
 }
 
 #[test]
@@ -201,5 +197,4 @@ fn all_original_typed_policy_kinds_and_message_allocations_survive_context_refus
    }
   }
  }
- eprintln!("[DEBUG] native context draft retained32 original typed policy causes and message allocations");
 }

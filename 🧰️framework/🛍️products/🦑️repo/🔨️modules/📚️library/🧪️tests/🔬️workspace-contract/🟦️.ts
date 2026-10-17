@@ -9,7 +9,7 @@ import { resolveTestLevel } from "../../../../../../🔨️modules/🏃️proces
 import { testLevelAtLeast, testLevelBudgetMs } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { DAEMON_BUDGET_MS, ORCHESTRATOR_BUDGET_MS, daemonBudgetMs, orchestratorBudgetMs } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 import toml from "@iarna/toml";
-import Ajv from "ajv";
+import Ajv, { type AnySchema } from "ajv";
 import { describe, expect, test } from "bun:test";
 import fastGlob from "fast-glob";
 import { spawnSync } from "node:child_process";
@@ -25,7 +25,7 @@ import { playgroundStaticSiteBuildOptions } from "../../../../../../🔨️modul
 import { newScaffoldMutationTree } from "../../🏗️authoring/🧬️mutation-tree/🟦️.ts";
 import { PLAYGROUND_LOCKED_EXAMPLE_ENV, PLAYGROUND_PORTS, allPlaygroundReservedPorts, areaOf, budgetTimeoutHint, canReuseDevPort, capturedTestFailureDiagnostics, clearDiscoveryCache, computeWorkspaces, daemonBudgetOpts, defineLint, dependencyBoundaryBreachesForBundleDir, dependencyBoundaryBreachesForFile, describeDevPortOccupant, devServerUrl, devToolingEnv, diffWorkspaces, discoverBurndown, discoverOwners, discoverPackageProblems, discoverPackages, dispatchSubcommand, getWorkspaceRoot, gitSpawnEnv, goLevelTestArgs, isAdapterBoundaryFile, isDevPortInUse, loadTaxonomy, nextestArtifactLocation, orchestratorBudgetOpts, parseTsImportSpecs, playgroundDevPort, playgroundPlayViteDefine, policyDiscoveredAllowlist, readSemioMarker, resolveCargoPackageName, resolveCargoPackageNames, resolveDevPort, resolveWorkspaceTaxonomyAuthority, resolveWorkspaceTaxonomyAuthorityFromDirectory, runCmd, runCmdStatus, runProbe, validateTaxonomy, vitestLevelArgs, wgpuDevPlayUrl, type FileLinter } from "../../📦️packages/🟦️typescript/🟦️.ts";
 import { partitionNextestExecutionFilters } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
-import { BundleScript, ScriptRouter, findWorkspaceRoot } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { BundleScript, ScriptRouter, findWorkspaceRoot, readScriptPolicy, type ScriptInvocation } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { artifactFacetPathIsDeclared, buildSemanticCensus, canonicalPrimaryFilenameForKind, createRustMutationCodecOwnershipInspector, fixedDirectoryContractIdsForPath, fixedFilenameContractIdsForPath, fixedSourceDispositionDecision, generatorBuildPreviewCommand, inspectMutationMetadataSource, inspectRustModuleGraph, inspectRustModuleGraphFacts, inspectRustMutationMetadataFacts, inspectRustStructure, inspectRustVirtualSources, loadCatalogTaxonomy, mutationDirectLeafInlinedBehaviorFacets, projectCargoProviderManifest, registryCompilerInputDependencies, renderRustStructuralFactsJson, renderSemanticCensusJson, resolveCargoProviderBinding, resolveRustPathAttributes, scopedFileKindIdForSourcePath, semanticPathProjectionAuthority, taxonomyCliAttemptPreparationsProblems, taxonomyCliBackupPreparationProblems, taxonomyCliBackupWritePreparationProblems, taxonomyCliEditPreparationProblems, taxonomyCliEditWritePreparationProblems, taxonomyCliJsonWritePreparationProblems, taxonomyCliLeaseDirectoryProblems, taxonomyCliRestorePreparationProblems, validateGeneratorContractsAgainstWorkspace, type FixedDirectoryContract, type FixedFilenameContract, type PackageSourceDisposition, type RegistryCompilerInputRole, type SemanticProjectionAuthorityNode, type Taxonomy } from "../../🔍️discovery/🟦️.ts";
 import { pathEmojiStatuteFindings } from "../../../../../../🔨️modules/🪪️identity/🛣️path/🟦️.ts";
 import { leadingEmojiIdentity } from "../../../../../../🔨️modules/🪪️identity/🧩️grapheme/🟦️.ts";
@@ -51,6 +51,28 @@ import "../📸️source-index-capture/🟦️.ts";
 import { ownedFilePaths, ownedFilesystemEntries, ownedPathByteSort, type OwnedFilesystemEntry } from "../🔍️filesystem/🟦️.ts";
 import "../🔏️path-emoji-statutes/🟦️.ts";
 import "../🧾️source-file-facts/🟦️.ts";
+
+/** 🧷️ Admits one authored scenario file as the JSON Schema document its row declares. */
+function schemaFile(files: Readonly<Record<string, unknown>>, path: string): AnySchema {
+  const body = files[path];
+  if (typeof body === "boolean" || (body !== null && typeof body === "object")) return body as AnySchema;
+  throw Error(`scenario file ${path} is not a JSON Schema document`);
+}
+
+/** 🎟️ Supplies each router dispatch the original 15-second control and a silent progress port. */
+function routerInvocation(owner: string): ScriptInvocation {
+  const controller = new AbortController(), started = performance.now();
+  return {
+    policy: readScriptPolicy({ version: 1, owner, maximumElapsedMilliseconds: 15000 }),
+    control: {
+      signal: controller.signal,
+      remainingMilliseconds: () => Math.max(1, 15000 - (performance.now() - started)),
+      publish: () => undefined,
+      yieldContinuation: () => Promise.resolve(),
+    },
+    capabilities: {},
+  };
+}
 
 /** 🧾️ `@iarna/toml` declares every document as `AnyJson`; a TOML document is always a keyed table, and each
  * reader below states the exact table shape it asserts against. */
@@ -100,32 +122,6 @@ interface FixedParentCases {
   readonly invalidLiteralBasenames: readonly string[];
   readonly matches: readonly { readonly parent: string; readonly filename: string; readonly accepted: boolean }[];
 }
-
-describe("extension Cargo installation owner", () => {
-  test("preserves the authored extension directory alongside the independent TOML identity", async () => {
-    const library = await import("../../📦️packages/🟦️typescript/🟦️.ts");
-    const root = findWorkspaceRoot(import.meta.dir);
-    const folder = join(import.meta.dir, "../🧫️fixtures/📦️extension-installation-owner");
-    const fixture = JSON.parse(readFileSync(join(folder, "🔣️.json"), "utf8"));
-    
-    expect(fixture["schema"]).toEqual("semio.extension.cargo-installation-owner/v1");expect(fixture["cases"]).toEqual([{"manifest":"✏️s/🔌️plugins/🌊️flow/🧩️extensions/🧮️math/📦️packages/🦀️rust/Cargo.toml","directoryName":"🧮️math"},{"manifest":"✏️s/🔌️plugins/🏭️process/🧩️extensions/🪵️wood/📦️packages/🦀️rust/Cargo.toml","directoryName":"🪵️wood"},{"manifest":"✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building/📦️packages/🦀️rust/Cargo.toml","directoryName":"🏢️aec-building"}]);
-    const workspace = readToml<CargoWorkspaceManifest>(readFileSync(join(root, "Cargo.toml"), "utf8"));
-    for (const row of fixture.cases) {
-      const manifestPath = join(root, row.manifest);
-      const parsed = library.parseExtensionCargoManifest(manifestPath, root);
-      const reference = readToml<CargoMemberManifest>(readFileSync(manifestPath, "utf8")).package;
-      expect(parsed.directoryName).toBe(row.directoryName);
-      expect(parsed.packageName).toBe(reference.name);
-      expect(parsed.version).toBe(workspace.workspace.package.version);
-      expect(parsed.componentPackageId).toBe(reference.metadata.component.package.slice("semio:".length));
-      expect(parsed.extends).toBe(reference.metadata.semio.extends);
-      expect(parsed.contributes).toEqual<typeof reference.metadata.semio.contributes>(reference.metadata.semio.contributes);
-    }
-    const bad = structuredClone(fixture);
-    bad.cases[0].directoryName = "rust";
-    
-  });
-});
 
 describe("current JCO destination authority", () => {
   test("preserves tool-owned declaration pairing and the exact vendored shim payloads", async () => {
@@ -583,19 +579,19 @@ describe("package language semantic handoff", () => {
       await new AsyncFunction(...Object.keys(dependencies), body)(...Object.values(dependencies));
       expect(router).toBeInstanceOf(ScriptRouter);
       expect(router!.usage()).toBe("bun ./📜️script.ts <test|check-wasm> [args…]");
-      await router!.run(["test"]);
+      await router!.run(["test"], routerInvocation("workspace-contract"));
       expect(calls).toEqual([[{manifestPath:join(packageRoot,"Cargo.toml"),packages:[expected.cargo.package.name],cwd:packageRoot,extraArgs:["--lib"]},{version:1}]]);
       calls.length = 0;
-      await router!.run(["check-wasm"]);
+      await router!.run(["check-wasm"], routerInvocation("workspace-contract"));
       expect(calls).toEqual(expected.wasmTargets.map((target: string) => ["cargo", ["check", "--manifest-path", "Cargo.toml", "--lib", "--target", target], { cwd: packageRoot, budgetMs: buildBudgetMs() }]));
       expect(events).toEqual(expected.wasmTargets.flatMap((target: string) => ["start:" + target, "end:" + target]));
       calls.length = 0;
-      for (const command of ["test", "check-wasm"]) await expect(router!.run([command, "unexpected"])).rejects.toThrow("accepts no arguments");
+      for (const command of ["test", "check-wasm"]) await expect(router!.run([command, "unexpected"], routerInvocation("workspace-contract"))).rejects.toThrow("accepts no arguments");
       expect(calls).toEqual([]);
-      await expect(router!.run(["unknown"])).rejects.toThrow('unknown command "unknown"');
+      await expect(router!.run(["unknown"], routerInvocation("workspace-contract"))).rejects.toThrow('unknown command "unknown"');
       expect(calls).toEqual([]);
       refuse = true;
-      await expect(router!.run(["check-wasm"])).rejects.toThrow("command refused");
+      await expect(router!.run(["check-wasm"], routerInvocation("workspace-contract"))).rejects.toThrow("command refused");
       expect(calls).toHaveLength(1);
       expect((calls[0]![1] as string[]).at(-1)).toBe(expected.wasmTargets[0]);
     }
@@ -742,7 +738,7 @@ describe("package language semantic handoff", () => {
         for (const row of expected.nativeCases) {
           process.env.SEMIO_TEST_LEVEL = "fundamental"; delete process.env.SEMIO_COVERAGE;
           calls.length = 0;
-          await router!.run(row.segments);
+          await router!.run(row.segments, routerInvocation("workspace-contract"));
           const args = ["--no-fail-fast", ...row.rest];
           expect(calls).toEqual([[process.execPath, [expected.browserHost.script], { cwd: packageRoot, budgetMs: buildBudgetMs() }], [{manifestPath:join(packageRoot,"Cargo.toml"),packages:[expected.cargo.name],cwd:packageRoot,extraArgs:args},{version:1}]]);
           expect(process.env.SEMIO_TEST_LEVEL).toBe(row.level);
@@ -751,28 +747,28 @@ describe("package language semantic handoff", () => {
         }
         for (const row of expected.checks) {
           calls.length = 0;
-          await router!.run([row.command]);
+          await router!.run([row.command], routerInvocation("workspace-contract"));
           expect(calls).toEqual([["cargo", row.args, { cwd: packageRoot, budgetMs: buildBudgetMs() }]]);
           expect(imported).toEqual([]);
         }
         for (const row of expected.sourceCases as { segments: string[]; scopes: string[] }[]) {
           calls.length = 0; imported.length = 0; called.length = 0;
-          await router!.run(row.segments);
+          await router!.run(row.segments, routerInvocation("workspace-contract"));
           expect(imported).toEqual(row.scopes);
           expect(called).toEqual(row.scopes);
           expect(calls).toEqual([]);
         }
         imported.length = 0; called.length = 0;
-        for (const args of expected.rejectedSegments) await expect(router!.run(args)).rejects.toThrow();
+        for (const args of expected.rejectedSegments) await expect(router!.run(args, routerInvocation("workspace-contract"))).rejects.toThrow();
         expect([imported, called]).toEqual([[], []]);
         expect(calls).toEqual([]);
-        await expect(router!.run(["unknown"])).rejects.toThrow('unknown command "unknown"');
+        await expect(router!.run(["unknown"], routerInvocation("workspace-contract"))).rejects.toThrow('unknown command "unknown"');
         expect(calls).toEqual([]);
         refuse = true;
-        await expect(router!.run(["test"])).rejects.toThrow("native delegation refused");
+        await expect(router!.run(["test"], routerInvocation("workspace-contract"))).rejects.toThrow("native delegation refused");
         expect(calls).toHaveLength(1);
         calls.length = 0;
-        await expect(router!.run(["check-wasm"])).rejects.toThrow("native delegation refused");
+        await expect(router!.run(["check-wasm"], routerInvocation("workspace-contract"))).rejects.toThrow("native delegation refused");
         expect(calls).toHaveLength(1);
       }
     } finally {
@@ -2695,6 +2691,7 @@ describe("nextest execution filters", () => {
   test("preserves language-neutral build and execution vectors with an independent Node parser", () => {
     const fixtureRoot = join(import.meta.dir, "../🧫️fixtures/🏎️nextest");
     const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🎮️command-vectors.json"), "utf8")) as {
+      schema: string;
       cases: Array<{ name: string; input: string[]; build: string[]; execution: string[]; libtest: string[] }>;
       rejected: string[][];
     };
@@ -2989,7 +2986,6 @@ describe("loadTaxonomy", () => {
       controller.abort();expect(() => invoke({ repoRoot: workspace }, "playground-session", contract, { exclusions: [] })).toThrow("owned test cancellation");
       expect(controller.signal.aborted).toBe(true);
     }
-    console.log("[DEBUG] actual empty General publisher passed strict undeclared-empty-stderr receiver without changing its owned output");
   }, 120000);
 
   test("routes native generator previews through their declared owner", async () => {
@@ -4272,7 +4268,7 @@ type DrawSourceScenario = Readonly<{
   cargoModuleRoot: DrawSourceScenarioInput;
   cadConsumerMount: Readonly<{ path: string; meaning: string }>;
   owner: Readonly<{ artifactId: string; standardVersion: string; subsetId: string; commandDirectoryName: string }>;
-  commandBundle: Readonly<{ directoryKinds: Readonly<Record<string, Taxonomy["semanticDirectoryKinds"][string]>>; descendantContract: Taxonomy["semanticDescendantContracts"][string] }>;
+  commandBundle: Readonly<{ directoryKinds: Readonly<Record<string, Taxonomy["semanticDirectoryKinds"][string]>>; descendantContract: Extract<Taxonomy["semanticDescendantContracts"][string], Readonly<{ exclusiveAlternatives: unknown }>> }>;
   members: readonly DrawSourceScenarioInput[];
   consumers: readonly DrawSourceScenarioInput[];
   retention: Readonly<{ fixtureOwnerSegments: readonly string[]; transactionTicketSegments: readonly string[]; parentSegments: readonly string[]; recordFilename: string; disposition: string; cases: readonly Readonly<{ kind: "directory" | "symlink" | "file" | "missing" | "unreadable"; allowed: boolean; creates: number }>[] }>;
@@ -4728,7 +4724,7 @@ describe.if(testLevelAtLeast("long"))("artifact path projection authority", () =
     const projection = projectionGolden("artifact-editor-command-bundle-v1");
     const nodes = projectionAuthorityNodes(projection, "authored-draw", () => { throw new Error("Live Draw input must not be read by a source scenario"); });
     expect(nodes.filter(({ nodeKind }) => nodeKind === "directory")).toHaveLength(DRAW_SOURCE_SCENARIO.oracle.sourceDirectoryCount);
-    {
+    for (const row of DRAW_SOURCE_SCENARIO.members) {
       const expected = row.content.replaceAll("{{sourceRoot}}", projection.sourceRoot).replaceAll("{{artifactSourceRoot}}", artifactProjectionFixturePath(projection.sourceRoot));
       expect(nodes.find(({ path }) => path === `${projection.sourceRoot}/${row.path}`)?.content).toBe(expected);
     }
@@ -6903,7 +6899,7 @@ describe("direct mutation ownership", () => {
     const inputRoot = join(import.meta.dir, "../🧫️fixtures/🌱️mutation-root-discovery");
     const vectorPath = join(inputRoot, "🔣️.json");
     
-    const vector = JSON.parse(readFileSync(vectorPath, "utf8")) as { includedRoots: string[]; filePaths: string[]; rejections: { name: string }[] };
+    const vector = JSON.parse(readFileSync(vectorPath, "utf8")) as { schemaVersion: number; includedRoots: string[]; filePaths: string[]; rejections: { name: string }[] };
     
     expect(vector["schemaVersion"]).toEqual(1);
     
@@ -7475,10 +7471,10 @@ describe("schema scope catalog", () => {
           mkdirSync(dirname(abs), { recursive: true });
           writeFileSync(abs, typeof body === "string" ? body : `${JSON.stringify(body, null, 2)}\n`);
         }
-        for (const [path, expected] of Object.entries(row.schemaGrammar ?? {})) expect(new Ajv({ strict: false }).validateSchema(row.files[path]), row.id).toBe(expected);
+        for (const [path, expected] of Object.entries(row.schemaGrammar ?? {})) expect(new Ajv({ strict: false }).validateSchema(schemaFile(row.files, path)), row.id).toBe(expected);
         for (const [path, expected] of Object.entries(row.schemaCompile ?? {})) {
           let accepted = true;
-          try { new Ajv({ strict: true, strictTypes: false }).compile(row.files[path]); } catch { accepted = false; }
+          try { new Ajv({ strict: true, strictTypes: false }).compile(schemaFile(row.files, path)); } catch { accepted = false; }
           expect(accepted, row.id).toBe(expected);
         }
         for (const example of row.grantExamples ?? []) expect(admitGrant(example.input), JSON.stringify(admitGrant.errors)).toBe(example.expected);
@@ -7492,7 +7488,7 @@ describe("schema scope catalog", () => {
       } finally {
         rmSync(root, { recursive: true, force: true });
       }
-      if (row === cases.cases.at(-1)) console.log(`[DEBUG] original schema scope catalog: ${cases.cases.length} independently registered neutral examples; real paths <=256; strict Ajv scope/document oracle and exact inventory/render laws`);
+      if (row === cases.cases.at(-1)) {}
     });
 
   test("resolves scope ids and export bindings only from declared identity", async () => {

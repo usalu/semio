@@ -3,7 +3,7 @@
 use semio_framework_plugin::NoConfig;
 use semio_framework_plugin::NoConfigMutation;
 use crate::editor::flow::edit_rules::ContentEdit;
-use crate::editor::flow::{flow_composed_content, flow_content_leaves_emit};
+use crate::editor::flow::host::{flow_composed_content, flow_content_leaves_emit};
 use crate::{FlowMutation, FlowSnapshot};
 use flow::FlowEvalSession;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
@@ -25,7 +25,5 @@ pub fn handle(payload: &Disconnect, doc: &ArtifactView<'_, FlowSnapshot>, _cfg: 
 }
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

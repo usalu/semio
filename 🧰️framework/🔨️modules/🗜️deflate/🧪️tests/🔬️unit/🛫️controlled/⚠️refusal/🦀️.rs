@@ -35,7 +35,6 @@ fn deflate_controlled_retains_every_refusal_kind_and_owns_internal_causes(){
   let mut control=RefusalControl{mode:"success",error:None,checkpoints:0,admissions:0};let stored=deflate_controlled(&raw,&mut control).unwrap();
   assert_eq!(stored,deflate(&raw));assert_eq!(miniz_oxide::inflate::decompress_to_vec_with_limit(&stored,raw.len().max(1)).unwrap(),raw);
  }
- eprintln!("[DEBUG] Deflate refusal callbacks=16 owned causes=2 independent inflate samples=2");
 }
 
 #[test]
@@ -48,5 +47,4 @@ fn deflate_controlled_retained_allocation_errors_retain_the_owned_kind(){
   let repeated=history.reserve(requested);let allocated=history.allocated_bytes();history.release(allocated);assert_eq!(history.allocated_bytes(),0);
   let error=result.unwrap_err();assert_eq!(error.kind,refusal_kind(row["kind"].as_str().unwrap()));assert_eq!(error.reason,row["reason"].as_str().unwrap());assert_eq!(error.allocated_bytes,row["allocatedBytes"].as_u64().unwrap() as usize);assert_eq!(repeated.unwrap_err(),error);
  }
- eprintln!("[DEBUG] Deflate retained allocator-refusal and physical-ceiling owned kinds=2");
 }

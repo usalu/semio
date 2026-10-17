@@ -44,8 +44,7 @@ pub mod derived_composition {
 pub use derived_composition::*;
 //#endregion 🎹️DerivedComposition
 
-#[path = "🧮️zlib/🦀️.rs"]
-pub mod zlib;
+pub use semio_s_artifact_stdio_deflate_zlib::standards::v_rfc1950::subsets::any::io::zlib;
 pub use zlib::*;
 pub use binary::snapshot::{decode_deflate_snapshot, encode_deflate_snapshot};
 
@@ -90,14 +89,17 @@ pub fn register_schema_specs() {
 pub fn register_schema_specs() {}
 //#endregion 🔖️RegisterSchemaSpecs
 
-#[path = "💾️binary/🦀️.rs"]
-pub mod binary;
+pub mod binary {
+    pub use semio_s_artifact_stdio_deflate_schema::standards::v_rfc1950::subsets::any::io::binary::*;
+    pub use semio_s_artifact_stdio_deflate_examples::standards::v_rfc1950::subsets::any::io::binary::inferences;
+}
 
-#[path = "📝️text/🦀️.rs"]
-pub mod text;
+pub mod text {
+    pub use semio_s_artifact_stdio_deflate_schema::standards::v_rfc1950::subsets::any::io::text::*;
+    pub use semio_s_artifact_stdio_deflate_examples::standards::v_rfc1950::subsets::any::io::text::inferences;
+}
 
-#[path = "🪶️sqlite/🦀️.rs"]
-pub mod sqlite;
+pub use semio_s_artifact_stdio_deflate_snapshot::standards::v_rfc1950::subsets::any::io::sqlite;
 
 pub mod derived_construction {
     use crate::{DeflateDiff, DeflateMutation, DeflateSnapshot};

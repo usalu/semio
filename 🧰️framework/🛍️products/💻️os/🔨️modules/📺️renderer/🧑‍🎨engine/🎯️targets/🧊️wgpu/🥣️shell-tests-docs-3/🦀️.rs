@@ -5,12 +5,12 @@
 #![cfg(test)]
 
 extern crate semio_framework_os_kernel as store_sync;
-use semio_framework_os_renderer_wgpu_dock as dock;
 use semio_framework::kernel::IconRenderExportItem;
 use semio_framework_async::CancelToken;
 #[cfg(not(target_arch = "wasm32"))]
 use semio_framework_async::{Lane, WorkerPool};
 use semio_framework_job::{InteractiveJobCloseStep, RetainedCloneGrant, RetainedCloneProgress};
+use semio_framework_os_renderer_wgpu_dock as dock;
 use semio_framework_os_renderer_wgpu_engine_registry::engine_surface_law_guard;
 use semio_framework_os_renderer_wgpu_fixtures::shell::{host_test_shell, mouse_pointer, paint_component_pointer_documents, pointer_interaction, tree_pointer_record};
 #[cfg(not(target_os = "wasi"))]
@@ -19,10 +19,13 @@ use semio_framework_os_renderer_wgpu_icon_host::icon_export::IconExportFault;
 use semio_framework_os_renderer_wgpu_shell_actions::ActionsCtx;
 use semio_framework_os_renderer_wgpu_shell_doc_open::{IconExportBatch, file_open_import_actions};
 use semio_framework_os_renderer_wgpu_shell_dock::{PanelAnchorState, ShellDock};
-use semio_framework_os_renderer_wgpu_shell_docs::{FRAMEWORK_SYNC_PANEL_TAB_ID, FRAMEWORK_TASK_MANAGER_PANEL_ID, SHELL_DOCUMENT_RETIREMENT_BYTES, SHELL_DOCUMENT_RETIREMENT_CAPACITY, SHELL_DOCUMENT_RETIREMENT_INDEX_BYTES, SHELL_DOCUMENT_RETIREMENT_ITEMS, SHELL_DOCUMENT_RETIREMENT_WORDS, SHELL_DOCUMENT_RETIREMENT_WORD_BITS, ShellDocumentRetirementRegistry, ShellDocumentRetirementSlot};
-use semio_framework_os_renderer_wgpu_shell_plugins::{ShellPluginInstall, ShellPluginInstallPhase};
+use semio_framework_os_renderer_wgpu_shell_docs::{
+    FRAMEWORK_SYNC_PANEL_TAB_ID, FRAMEWORK_TASK_MANAGER_PANEL_ID, SHELL_DOCUMENT_RETIREMENT_BYTES, SHELL_DOCUMENT_RETIREMENT_CAPACITY, SHELL_DOCUMENT_RETIREMENT_INDEX_BYTES, SHELL_DOCUMENT_RETIREMENT_ITEMS, SHELL_DOCUMENT_RETIREMENT_WORD_BITS,
+    SHELL_DOCUMENT_RETIREMENT_WORDS, ShellDocumentRetirementRegistry, ShellDocumentRetirementSlot,
+};
 #[cfg(not(target_arch = "wasm32"))]
 use semio_framework_os_renderer_wgpu_shell_plugins::plugin_modules_root_of;
+use semio_framework_os_renderer_wgpu_shell_plugins::{ShellPluginInstall, ShellPluginInstallPhase};
 use semio_framework_os_renderer_wgpu_shell_pointer::{CONTROL_ID, PointerCtx};
 use semio_framework_os_renderer_wgpu_shell_session::{SessionCtx, claim_app_catalogue_fetch, panel_ui_records};
 use semio_framework_os_renderer_wgpu_shell_state::ShellState;
@@ -33,11 +36,11 @@ use semio_framework_os_renderer_wgpu_shell_sync::ShellSyncOwner;
 use semio_framework_os_renderer_wgpu_shell_view_chrome::ShellChromeChildCursor;
 use semio_framework_os_renderer_wgpu_shell_view_panels::PanelsViewCtx;
 use semio_framework_os_renderer_wgpu_shell_vocab::shell_chrome_string;
-use semio_framework_os_renderer_wgpu_shell_window_actions::{WindowActionsCtx, decode_data_url, fallback_action_descriptor, open_artifact_relay_target, request_media_frames, shell_sync_owner_matches};
-#[cfg(any(not(target_arch = "wasm32"), any(test, feature = "testkit")))]
-use semio_framework_os_renderer_wgpu_shell_window_actions::{approx_sampled_timestamp_ms, ffmpeg_frame_extraction_args};
+use semio_framework_os_renderer_wgpu_shell_window_actions::{
+    WindowActionsCtx, approx_sampled_timestamp_ms, decode_data_url, fallback_action_descriptor, ffmpeg_frame_extraction_args, open_artifact_relay_target, request_media_frames, shell_sync_owner_matches,
+};
 use semio_framework_os_renderer_wgpu_shell_windows::{PanelAnchor, section_fixtures};
-#[cfg(test)]
+use semio_framework_os_renderer_wgpu_test_support::shell_source;
 use semio_framework_os_renderer_wgpu_ui_engine_tests::fixture_original_turn;
 use semio_framework_ui_draw_contract::DrawList;
 use semio_framework_ui_locale::{Locale, Terminology};
@@ -50,7 +53,6 @@ use std::sync::atomic::Ordering;
 use store_sync::PresenceWindowView;
 use ui_contract::{SurfaceId, UI_DOCUMENT_LEASE_ALIASES, UI_DOCUMENT_LEASE_SLOTS, UiDocumentLease, UiFixedList, UiText};
 use ui_wgpu::wgpu::{ActionDescriptor, InputState, PointerModifiers, Rect};
-use semio_framework_os_renderer_wgpu_test_support::shell_source;
 
 #[cfg(all(test, not(target_arch = "wasm32")))]
 #[path = "../../../🧱️elements/🖼️IconRenderHost/🧪️tests/📤️export-batch/🦀️.rs"]

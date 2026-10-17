@@ -41,6 +41,31 @@ def trait_context(before, after):
     return False
 
 
+def statement_head(masked_prefix):
+    cut = max(masked_prefix.rfind(";"), masked_prefix.rfind("{"), masked_prefix.rfind("}"))
+    return masked_prefix[cut + 1:]
+
+
+def deep_trait_context(masked_prefix, after):
+    """Like trait_context but sees the whole statement head across lines (where clauses that continue on later lines, generics lists spanning lines)."""
+    b = masked_prefix.rstrip()
+    if trait_context(b.split("\n")[-1] or b[-400:], after):
+        return True
+    if b.endswith(":") and not b.endswith("::"):
+        head = statement_head(b[:-1])
+        if re.search(r"\bwhere\b", head):
+            return True
+        stack = []
+        for i, ch in enumerate(head):
+            if ch == "<":
+                stack.append(i)
+            elif ch == ">" and (i == 0 or head[i - 1] != "-") and stack:
+                stack.pop()
+        if stack and re.search(r"(?:\bfn\s+\w+|\bimpl|\bstruct\s+\w+|\benum\s+\w+|\btrait\s+\w+|\btype\s+\w+|\bunion\s+\w+|\bfor)\s*$", head[:stack[0]]):
+            return True
+    return False
+
+
 def split_path(line, hs):
     """Given the line text and the 0-based start of the highlighted segment, return (start, end) of the whole path incl. generic args, or None."""
     s = hs
@@ -123,7 +148,7 @@ def fix_from_diag(d):
     path = lt[s:e]
     if not re.match(r"^(::)?[A-Za-z_]", path):
         return None
-    if not (d["code"] == "E0405" or trait_context(lt[:s], lt[e:])):
+    if not (d["code"] in ("E0405", "E0404") or d.get("ctx_trait") or trait_context(lt[:s], lt[e:])):
         return None
     return lt, path
 
@@ -139,8 +164,9 @@ def apply(text, fixes):
     for line in text.split("\n"):
         if line in by:
             for pt in by[line]:
-                if pt in line:
-                    line = line.replace(pt, replacement(pt), 1)
+                rx = re.compile(r"(?<![A-Za-z0-9_$:])" + re.escape(pt) + r"(?![A-Za-z0-9_])")
+                if rx.search(line):
+                    line = rx.sub(lambda m_: replacement(pt), line, count=1)
                     n += 1
         out.append(line)
     return "\n".join(out), n
@@ -202,7 +228,7 @@ def neutralize_aliases(text, broken):
     m = mask(text)
     edits = []
     for s, e, p in trait_position_spans(m):
-        head = p.lstrip(":").split("::")[0]
+        head = re.split(r"[<:\s]", p.lstrip(":").strip())[0]
         if head in broken:
             edits.append((s, e, next_name()))
     out, last, n = [], 0, 0

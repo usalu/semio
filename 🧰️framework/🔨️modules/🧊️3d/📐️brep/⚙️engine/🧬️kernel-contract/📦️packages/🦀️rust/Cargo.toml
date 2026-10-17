@@ -1,0 +1,30 @@
+[package]
+workspace = "../../../../../../.."
+name = "semio-framework-3d-brep-kernel-contract"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Contract of the 3D kernel's B-Rep interface - the geometry handle, kind, topology and error vocabulary and the model-free synchronous BrepKernel trait the arena-backed engine implements"
+
+[package.metadata.semio]
+role = "framework"
+id = "3d-brep-kernel-contract"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-3d-brep-representation.workspace = true
+semio-framework-mesh-engine.workspace = true
+semio-framework-value.workspace = true
+semio-framework-value-derive.workspace = true
+
+[dev-dependencies]

@@ -17,6 +17,9 @@ path = "../../🦀️.rs"
 
 [dependencies]
 semio-framework = { workspace = true }
+semio-framework-action-bus = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🎯️action-bus/📦️packages/🦀️rust" }
+semio-framework-onboarding = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🎓️onboarding/📦️packages/🦀️rust" }
+semio-framework-time-travel-actions = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/⏪️time-travel/🕹️actions/📦️packages/🦀️rust" }
 semio-framework-2d = { workspace = true }
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-async = { workspace = true }
@@ -74,7 +77,7 @@ semio-s-artifact-puzzle-3d-mutations-catalog = { workspace = true, features = ["
 semio-s-artifact-puzzle-3d-mutations-object = { workspace = true, features = ["testing"] }
 semio-s-artifact-puzzle-3d-mutations-selection = { workspace = true, features = ["testing"] }
 semio-s-artifact-puzzle-3d-mutations-vortex = { workspace = true, features = ["testing"] }
-semio-s-artifact-puzzle-3d-precompute = { workspace = true }
+semio-s-artifact-puzzle-3d-precompute = { workspace = true, features = ["testkit"] }
 semio-s-artifact-puzzle-3d-precompute-brush = { workspace = true, features = ["testing"] }
 semio-s-plugin-puzzle-jobs = { workspace = true, features = ["testing"] }
 semio-s-plugin-puzzle-retained = { workspace = true, features = ["testing"] }

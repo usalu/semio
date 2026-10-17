@@ -170,9 +170,7 @@ pub fn demo_flow_snapshot() -> SemioFlowSnapshot {
 //#endregion 🔖️Demo
 
 //#region 🔖️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🔖️Tests
 
 

@@ -20,7 +20,8 @@
     ".": {
       "types": "./dist/🟦️.d.ts",
       "import": "./dist/🟦️.js"
-    }
+    },
+    "./standards/rfc1950/subsets/any/io/binary/snapshot/compression": "./🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🚪️io/💾️binary/📸️snapshot/🗜️compression/🟦️.ts"
   },
   "dependencies": {},
   "license": "LGPL-3.0-or-later",

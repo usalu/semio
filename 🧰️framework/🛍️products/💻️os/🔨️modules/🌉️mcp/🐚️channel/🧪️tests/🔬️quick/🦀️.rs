@@ -1,5 +1,6 @@
 //! 🧱️ Shell_channel_quick of the shell-channel crate: The live-shell artifact channel and context resolution.
 
+use semio_framework_test_fixtures::fixture_text;
 use std::time::Duration;
 use std::time::Instant;
 use crate::shell_channel::{ChannelKind, SHELL_CHANNEL_PAYLOAD_VERSION, SessionChannelBinding, ShellArtifactChannel, decode_app_frame, decode_base64, encode_app_command};
@@ -13,13 +14,10 @@ use semio_framework_os_mcp_port::channel_port::{AppCommand, AppFrame, ArtifactCh
 use semio_framework_os_mcp_port::policy::AgentPrincipal;
 
 /// 🧪️ Reads a committed fixture from the package directory at run time instead of embedding it in the test binary.
-fn fixture_text(relative: &str) -> &'static str {
-    Box::leak(std::fs::read_to_string(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative)).expect(relative).into_boxed_str())
-}
 
 
 fn fixtures() -> Vec<serde_json::Value> {
-    serde_json::from_str(fixture_text("../../../🐚️channel/🧪️tests/🧫️fixtures/🗿️app-payloads.json")).expect("the shared shell-channel payload fixture parses")
+    serde_json::from_str(fixture_text!("../../../🐚️channel/🧪️tests/🧫️fixtures/🗿️app-payloads.json")).expect("the shared shell-channel payload fixture parses")
 }
 
 fn fixture(kind: &str) -> serde_json::Value {

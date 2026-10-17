@@ -1,6 +1,7 @@
 use crate::{standards::riff_pcm::subsets::any::schema::snapshot::validate_wav_serialization, standards::riff_pcm::subsets::any::schema::snapshot::RiffChunk, standards::riff_pcm::subsets::any::schema::snapshot::WavChunkRef, standards::riff_pcm::subsets::any::schema::snapshot::WavData, standards::riff_pcm::subsets::any::schema::snapshot::WavFmt, standards::riff_pcm::subsets::any::schema::snapshot::WavSnapshot};
 use crate::apply_mutation;
 use crate::standards::riff_pcm::subsets::any::io::*;
+use semio_framework_test_fixtures::fixture_text;
 
 /// 🌱 Real ~1s 440Hz mono 8kHz 16-bit PCM fixture — byte-identical to the artifact's own
 /// `📚️examples/🎬️demo/🖼️assets/🔊️example.wav` (per ticket `fixtures/wav/NOTES.md`), duplicated
@@ -11,12 +12,12 @@ fn real_fixture() -> Vec<u8> {
 }
 
 fn serialization_boundary(name: &str) -> usize {
-    let fixture: serde_json::Value = serde_json::from_str(runtime_fixture_text("../../../../../🧪️tests/🧫️fixtures/🧭️serialization-boundaries/🔣️.json")).expect("serialization boundary fixture is JSON");
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../🧪️tests/🧫️fixtures/🧭️serialization-boundaries/🔣️.json")).expect("serialization boundary fixture is JSON");
     fixture[name].as_u64().unwrap_or_else(|| panic!("serialization boundary {name:?} is an unsigned integer")) as usize
 }
 
 fn serialization_boundary_text(name: &str) -> String {
-    let fixture: serde_json::Value = serde_json::from_str(runtime_fixture_text("../../../../../🧪️tests/🧫️fixtures/🧭️serialization-boundaries/🔣️.json")).expect("serialization boundary fixture is JSON");
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../🧪️tests/🧫️fixtures/🧭️serialization-boundaries/🔣️.json")).expect("serialization boundary fixture is JSON");
     fixture[name].as_str().unwrap_or_else(|| panic!("serialization boundary {name:?} is text")).to_string()
 }
 
@@ -131,7 +132,7 @@ async fn extensible_fmt_chunk_round_trips_ext_bytes() {
 #[semio_framework_async_macros::async_test]
 async fn complete_chunk_sequence_preserves_order_and_duplicate_canonical_chunks() {
     use std::io::Cursor;
-    let snapshot: WavSnapshot = semio_framework_pack_json::from_json_str(runtime_fixture_text("../../../../../🧪️tests/🧫️fixtures/🧭️preserve-chunk-sequence/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("neutral ordered-chunk fixture decodes");
+    let snapshot: WavSnapshot = semio_framework_pack_json::from_json_str(fixture_text!("../../../../../🧪️tests/🧫️fixtures/🧭️preserve-chunk-sequence/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("neutral ordered-chunk fixture decodes");
     let encoded = encode_wav(&snapshot);
     let mut cursor = Cursor::new(&encoded);
     let riff = riff::Chunk::read(&mut cursor, 0).expect("riff oracle reads WAVE container");
@@ -272,9 +273,4 @@ async fn unrepresentable_serialization_states_are_refused_before_writing() {
         assert_eq!(error.code, code);
         assert!(try_encode_wav(snapshot).expect_err("invalid serialization state must not write bytes").contains(code));
     }
-}
-
-fn runtime_fixture_text(relative: &str) -> &'static str {
-    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative);
-    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display())).into_boxed_str())
 }

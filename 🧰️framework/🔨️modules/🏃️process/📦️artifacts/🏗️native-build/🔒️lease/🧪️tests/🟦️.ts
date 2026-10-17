@@ -8,6 +8,8 @@ import corpus from "./🧫️fixtures/🔣️.json" with { type: "json" };
 import schema from "../🧬️schema/🔣️.json" with { type: "json" };
 import casesSchema from "../🧬️schema/🧪️cases.json" with {type:"json"};
 import { cargoBuildLeaseIdentityV1 } from "../🟦️.ts";
+import { receiveScriptProcessInvocation } from "../../../../🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+import { scriptCompilerAdmissionControlV1 } from "../../../../🏗️build/🎟️capacity/🟦️.ts";
 
 /** 🚦️ Verifies portable profile identities and actual cross-process ownership, cancellation and crash recovery. */
 export async function proveCargoBuildLeasesV1(artifactRoot: string): Promise<void> {
@@ -68,7 +70,6 @@ finally { clearTimeout(timeout); process.stdin.destroy(); }
       const second=start("prototype","node",row.secondAccess,row.secondBuild,row.secondTarget);
       if(row.action==="parallel"){await until(second,"held");const oracle=start("prototype","node","oracle",row.firstTarget,row.firstTarget);assert.equal(await oracle.done,0,oracle.error);await release(second);await release(first);}
       else{await until(second,"waiting");assert.equal(second.output.includes("held"),false);if(row.action==="cancel-second"){second.process.stdin.write("cancel\n");second.process.stdin.end();assert.equal(await second.done,0,second.error);assert.equal(second.output.includes("held"),false);await release(first);}else{await release(first);await until(second,"held");await release(second);}}
-      console.log("[DEBUG] Cargo physical target cohort "+row.name+" exactBothStores=true terminalRelease=true");
     }
     for(const row of corpus.fairness){
       const first=start(row.profile,process.execPath,"compile");await until(first,"held");
@@ -76,10 +77,8 @@ finally { clearTimeout(timeout); process.stdin.destroy(); }
       const late=start(row.profile,process.execPath,"compile");await until(late,"waiting");assert.equal(late.output.includes("held"),false);
       await release(first);await until(writer,"held");assert.equal(late.output.includes("held"),false);
       await release(writer);await until(late,"held");await release(late);
-      console.log("[DEBUG] Cargo shared cohort "+row.name+" originalWriterBarrier=true lateCompilerWaits=true terminalRelease=true");
     }
-    console.log("[DEBUG] Cargo same-profile compiler concurrency=true independentNodeSQLiteExclusive=denied maintenanceCancellation=true crashRecovery=true");
     const { testResourceLeases } = await import("../../../../🔒️leases/🧪️tests/🔒️resource-leases/🟦️.ts");
-    await testResourceLeases(leases);
+    await receiveScriptProcessInvocation(process.env, original => testResourceLeases(leases, scriptCompilerAdmissionControlV1(original, "test:resource-leases", 0), original));
   } finally { for (const child of children) if (child.process.exitCode === null) child.process.kill("SIGKILL"); await Promise.all(children.map(child => child.done)); rmSync(root, { recursive: true, force: true });rmSync(leases,{recursive:true,force:true}); }
 }

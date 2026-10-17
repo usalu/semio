@@ -25,7 +25,8 @@ import { CARD_CHIP_WRAP, CardAction, CardIcon, Missing, PageFrame, QuizCard, Rec
 import { HOME_PAGES, shownLeaderboard, type HeldLeaderboard, type QuizState } from "../🧭️session/🧮️state/🟦️.ts";
 import { type QuizSession } from "../🧭️session/🟦️.ts";
 import { type RefreshOutcome } from "../🧭️session/📋️session-model/🟦️.ts";
-import { OnlineMark, PRESENCE_ANCHORS, PanePeers, usePresenceView } from "../👥️presence/🟦️.tsx";
+import { OnlineMark, PanePeers, usePresenceView } from "../👥️presence/🟦️.tsx";
+import { PRESENCE_ANCHORS } from "../👥️presence/👁️view/🟦️.ts";
 
 /** ⏱️ How often the leaderboard is asked for while visible and the proctor answers. */
 export const LEADERBOARD_POLL_MS = 10_000;

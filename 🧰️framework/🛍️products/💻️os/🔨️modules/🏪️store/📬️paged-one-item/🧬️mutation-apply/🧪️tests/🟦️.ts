@@ -13,5 +13,4 @@ test("structural mutation cases agree with an independent array oracle",()=>{
   const restored=row.inverse.reduce((nodes:Node[],inverse:Row)=>apply(nodes,inverse),post);
   expect(restored).toEqual(fixture.base.nodes);
  }
- console.log("[DEBUG] independent JS array oracle reproduces every post document and restores the base with the ordered inverse rows");
 });

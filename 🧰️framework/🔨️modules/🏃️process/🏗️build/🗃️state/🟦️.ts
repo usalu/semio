@@ -1,4 +1,4 @@
-import { withCompilerCapacityScopeV1, type CompilerAdmissionControl } from "../🎟️capacity/🟦️.ts";
+import { withCompilerCapacityScopeV1, type CompilerAdmissionControl,type CompilerCapacityRequestV1,readCompilerCapacityRequestV1 } from "../🎟️capacity/🟦️.ts";
 import{requireIssuedResourceControlV1,requireIssuedResourceControlRefinementV1,withIssuedResourceOperationV1,withRequestedIssuedResourceControlV1}from"../../🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import{readNativeStorageReservationPolicyV1,type NativeStorageReservationV1}from"../../📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
 import{requireNativeStoragePathV1}from"../../📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
@@ -15,7 +15,7 @@ export type CompilerStateOwner = Readonly<{ root: string; owner: string; compile
 
 /** 🔑️ Partitions state by compiler, configuration, platform, architecture, owner and intent. */
 export function compilerStateDirectory(options: CompilerStateOwner): string {
-  const failures = validateJsonSchemaSubset(schema, Object.fromEntries(Object.entries(options).filter(([key, value]) => !["control", "storage", "storageControl", "environment", "capacity", "requestedParallelism", "files"].includes(key) && value !== undefined)));
+  const failures = validateJsonSchemaSubset(schema, Object.fromEntries(Object.entries(options).filter(([key, value]) => !["control", "storage", "storageControl", "environment", "capacity", "files"].includes(key) && value !== undefined)));
   if (failures.length) throw Error("Invalid compiler state owner: " + failures.join("; "));
   const mode = readBuildMode(options.mode), platform = options.platform ?? process.platform, architecture = options.architecture ?? process.arch;
   const identity = createHash("sha256").update(JSON.stringify([options.owner, options.compiler, options.configuration, platform, architecture])).digest("hex").slice(0, 24);
@@ -27,13 +27,13 @@ export function compilerStateDirectory(options: CompilerStateOwner): string {
 export function compilerStateResourceV1(directory:string):string{return "compiler-state:v1:"+(parseInt(createHash("sha256").update(requireMaterializedPathV1(resolve(directory))).digest("hex").slice(0,4),16)%schema.definitions.Protocol.const.writerShards);}
 
 /** 🔒️ Serializes access to owned mutable compiler state while retaining warm intermediates. */
-export async function withCompilerState<T>(options: CompilerStateOwner & { readonly control: CompilerAdmissionControl; readonly storage:NativeStorageReservationV1; readonly storageControl:CompilerAdmissionControl; readonly files: readonly string[]; readonly environment?: Readonly<Record<string, string | undefined>>; readonly capacity?: boolean; readonly requestedParallelism?: 1 }, operation: (directory: string, environment: Readonly<Record<string, string | undefined>>, control:CompilerAdmissionControl) => Promise<T>): Promise<T> {
+export async function withCompilerState<T>(options: CompilerStateOwner & { readonly control: CompilerAdmissionControl; readonly storage:NativeStorageReservationV1; readonly storageControl:CompilerAdmissionControl; readonly files: readonly string[]; readonly environment?: Readonly<Record<string, string | undefined>>; readonly capacity: CompilerCapacityRequestV1|null }, operation: (directory: string, environment: Readonly<Record<string, string | undefined>>, control:CompilerAdmissionControl) => Promise<T>): Promise<T> {
   const initialControl=options.control;requireIssuedResourceControlV1(initialControl);
   const storageControl=options.storageControl;requireIssuedResourceControlV1(storageControl);requireIssuedResourceControlRefinementV1(storageControl,initialControl);
   const storage=options.storage,policy=readNativeStorageReservationPolicyV1(storage,storageControl);
   if(typeof operation!=="function")throw Error("Actual compiler state operation required");
   const files=[...options.files];if(validateJsonSchemaSubset(schema.definitions.Materialization,{files}).length)throw Error("Complete compiler materialized paths required");
-  const directory=compilerStateDirectory(options),environment=Object.freeze({...options.environment??process.env}),leaseDirectory=policy.leaseDirectory,requestedParallelism=options.requestedParallelism,capacity=options.capacity!==false;
+  const directory=compilerStateDirectory(options),environment=Object.freeze({...options.environment??process.env}),leaseDirectory=policy.leaseDirectory,capacity=options.capacity===null?null:readCompilerCapacityRequestV1(options.capacity);
   requireNativeStoragePathV1(policy.root,resolve(options.root));requireNativeStoragePathV1(policy.root,directory);
   for (const file of files) {
     const path = requireMaterializedPathV1(join(directory, file)), child = relative(directory, path);
@@ -47,6 +47,6 @@ export async function withCompilerState<T>(options: CompilerStateOwner & { reado
     checkResourceLeaseControl(control);await storage.recheck();checkResourceLeaseControl(control);requireNativeStoragePathV1(policy.root,directory);await mkdir(directory,{recursive:true});checkResourceLeaseControl(control);requireNativeStoragePathV1(policy.root,directory);
     return operation(directory,environment,control);
   };
-  const accepted=capacity?withCompilerCapacityScopeV1({directory:leaseDirectory,control:initialControl,environment,...(requestedParallelism===undefined?{}:{requestedParallelism})},(facts,control)=>run(Object.freeze({...environment,SEMIO_COMPILER_PARALLELISM:String(facts.parallelism),GOMAXPROCS:String(facts.parallelism)}),control)):withRequestedIssuedResourceControlV1(initialControl,0,control=>run(environment,control));
+  const accepted=capacity?withCompilerCapacityScopeV1({directory:leaseDirectory,control:initialControl,environment,request:capacity},(facts,control)=>run(Object.freeze({...environment,SEMIO_COMPILER_PARALLELISM:String(facts.parallelism),GOMAXPROCS:String(facts.parallelism)}),control)):withRequestedIssuedResourceControlV1(initialControl,0,control=>run(environment,control));
   return withIssuedResourceOperationV1(initialControl,async()=>{let value:T|undefined,failed=false,failure:unknown;try{value=await accepted;await storage.recheck();checkResourceLeaseControl(initialControl);}catch(error){failed=true;failure=error;}try{lease?.release();}catch(error){if(failed&&!Object.is(failure,error))throw new AggregateError([failure,error],"Compiler state work and writer release failed");throw error;}if(failed)throw failure;return value as T;});
 }

@@ -2,7 +2,7 @@ import{test,expect}from"bun:test";
 import Ajv from"ajv";
 import{Database}from"bun:sqlite";
 import ts from"typescript";
-import{readFileSync}from"node:fs";
+import{readdirSync,readFileSync}from"node:fs";
 import{preparePrintMaterialV1,withPreparedPrintMaterialV1}from"../📤️producer/🟦️.ts";
 import{createHash}from"node:crypto";
 import{printPinnedMaterialPolicyV1,printBundlePlanV1,tectonicDistributionV1,readPrintResponseV1}from"../🟦️.ts";
@@ -37,7 +37,7 @@ import "../../🧵️worker/🧪️tests/🟦️.ts";
 
 import "../../../🔨️modules/📊️visualization-gallery/🧪️testing/📏️measurement/📥️pdf/🧪️tests/🟦️.ts";
 
-test("actual pipeline verification has carried scope and no free compiler or environment output roots",()=>{const url=new URL("../../../🎮️commands/🧪️print-pipeline-verification/🧪️tests/🖨️pipeline/🟦️.ts",import.meta.url),source=ts.createSourceFile(url.pathname,readFileSync(url,"utf8"),ts.ScriptTarget.Latest,true),calls:string[]=[];function visit(node:ts.Node):void{if(ts.isCallExpression(node))calls.push(node.expression.getText(source));ts.forEachChild(node,visit);}visit(source);expect(calls.includes("compilePrintTexOnce")).toBe(false);expect(calls.includes("printFontSearchPaths")).toBe(false);expect(source.text.includes("SEMIO_PRINT_OUTPUT_DIR")).toBe(false);expect(source.text.includes("SEMIO_PRINT_API_PUBLICATION_REUSE")).toBe(false);expect(source.text.includes("withPrintPipelineVerificationV1")).toBe(true);});
+test("actual pipeline verification has carried scope and no free compiler or environment output roots",()=>{const pipelineUrl=new URL("../../../🎮️commands/🧪️print-pipeline-verification/🧪️tests/🖨️pipeline/🟦️.ts",import.meta.url),source=ts.createSourceFile(pipelineUrl.pathname,[pipelineUrl,...readdirSync(new URL("./",pipelineUrl),{withFileTypes:true}).filter(entry=>entry.isDirectory()).map(entry=>new URL(entry.name+"/🟦️.ts",pipelineUrl))].map(part=>readFileSync(part,"utf8")).join("\n"),ts.ScriptTarget.Latest,true),calls:string[]=[];function visit(node:ts.Node):void{if(ts.isCallExpression(node))calls.push(node.expression.getText(source));ts.forEachChild(node,visit);}visit(source);expect(calls.includes("compilePrintTexOnce")).toBe(false);expect(calls.includes("printFontSearchPaths")).toBe(false);expect(source.text.includes("SEMIO_PRINT_OUTPUT_DIR")).toBe(false);expect(source.text.includes("SEMIO_PRINT_API_PUBLICATION_REUSE")).toBe(false);expect(source.text.includes("withPrintPipelineVerificationV1")).toBe(true);});
 
 import{readPrintBundleRangeV1}from"../🟦️.ts";
 import rangeCases from"../../../🔨️modules/🖨️tectonic-template-compilation/📚️bundle/🧫️cases.json"with{type:"json"};

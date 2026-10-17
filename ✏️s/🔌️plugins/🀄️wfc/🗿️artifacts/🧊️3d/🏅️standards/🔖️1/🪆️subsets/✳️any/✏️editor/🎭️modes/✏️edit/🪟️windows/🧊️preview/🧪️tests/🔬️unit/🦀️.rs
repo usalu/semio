@@ -1,7 +1,12 @@
 //! 🧪️ The World3d preview: the mesh catalogue is per TILE (never per slot), instances carry the
 //! slot's own box, and an unresolvable tile still gets a body.
 
-use super::*;
+use crate::{editor::wfc3d::modes::edit::tools::fill, editor::wfc3d::modes::edit::tools::fill::Wfc3dFillTickPayload};
+use crate::editor::wfc3d::transient::Wfc3dTransient;
+use crate::{schema::snapshot::TileMedia3d, schema::snapshot::Wfc3dSnapshot};
+use semio_framework_plugin::SurfaceKind;
+use serde_json::json;
+use crate::editor::wfc3d::modes::edit::windows::preview::*;
 use crate::editor::wfc3d::transient::solved_transient;
 use serde_json::Value;
 

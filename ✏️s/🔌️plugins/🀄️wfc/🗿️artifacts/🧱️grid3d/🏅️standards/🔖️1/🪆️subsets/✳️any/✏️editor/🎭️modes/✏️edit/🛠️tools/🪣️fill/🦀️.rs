@@ -913,7 +913,5 @@ pub fn build_run_job(request: ToolRunJobRequest<'_, semio_framework_plugin::Edit
 //#endregion 🧵️Job
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

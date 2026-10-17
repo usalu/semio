@@ -29,6 +29,10 @@ type stdioPdf17BaseInferenceGuardSizeBounds = { readonly minItems?: number; read
 
 export const stdioPdf17BaseInferenceGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : stdioPdf17BaseInferenceGuardReject(at, "value is not an object");
+export const stdioPdf17BaseInferenceGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) stdioPdf17BaseInferenceGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const stdioPdf17BaseInferenceGuardArray = (value: unknown, at: string, bounds: stdioPdf17BaseInferenceGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return stdioPdf17BaseInferenceGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) stdioPdf17BaseInferenceGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -59,14 +63,14 @@ export const stdioPdf17BaseInferenceGuardConstant = <T extends string | number |
 //#endregion 🚪️Parsers
 
 export function parsePdf17Inference(value: unknown, at = "$"): Pdf17Inference {
-  const row = stdioPdf17BaseInferenceGuardObject(value, at);
+  const row = stdioPdf17BaseInferenceGuardClosed(stdioPdf17BaseInferenceGuardObject(value, at), at, ["outline"]);
   return {
     outline: parsePdf17Outline(row["outline"], `${at}.outline`),
   };
 }
 
 export function parsePdf17Outline(value: unknown, at = "$"): Pdf17Outline {
-  const row = stdioPdf17BaseInferenceGuardObject(value, at);
+  const row = stdioPdf17BaseInferenceGuardClosed(stdioPdf17BaseInferenceGuardObject(value, at), at, ["pageCount", "wordCount", "title"]);
   return {
     pageCount: stdioPdf17BaseInferenceGuardInteger(row["pageCount"], `${at}.pageCount`),
     wordCount: stdioPdf17BaseInferenceGuardInteger(row["wordCount"], `${at}.wordCount`),

@@ -58,7 +58,6 @@ test("descriptor text bounds every arriving chunk and releases its stream", asyn
     await expect(Reflect.apply(readDescriptorText, undefined, [response, () => {}, policy, undefined])).rejects.toThrow(/descriptor text policy/u);
     expect(response.body!.locked).toBe(false);
   }
-  console.log("[DEBUG] Whole descriptor stream byte/code-unit vectors agree with iconv-lite and Ajv; overflowing input stops at its first offending chunk");
 });
 
 test("descriptor stream cancellation and rejected asynchronous progress retain original reasons", async () => {
@@ -79,7 +78,6 @@ test("descriptor stream cancellation and rejected asynchronous progress retain o
   await expect(reading).rejects.toBe(reason);
   expect(cancelled).toBe(reason);
   expect(pending.body!.locked).toBe(false);
-  console.log("[DEBUG] Original cancellation and asynchronous progress refusal cancel and unlock the actual response stream");
 });
 
 test("descriptor cancellation interrupts a pending progress publication", async () => {
@@ -98,7 +96,6 @@ test("descriptor cancellation interrupts a pending progress publication", async 
     expect(progressReleased).toBe(false);
     expect(cancelled).toBe(reason);
     expect(response.body!.locked).toBe(false);
-    console.log("[DEBUG] Original cancellation interrupts pending progress publication and releases the response reader");
   } finally {
     clearTimeout(release);
     releaseProgress();
@@ -116,7 +113,6 @@ test("descriptor header refusal cancels its unread response body", async () => {
     await expect(fetchDescriptorManifest(fixture.pluginId, "/future/module.js", undefined, () => { throw reason; })).rejects.toBe(reason);
     expect(cancelled).toBe(reason);
     expect(response.body!.locked).toBe(false);
-    console.log("[DEBUG] Original descriptor header publication refusal cancels the unread body");
   } finally { globalThis.fetch = originalFetch; }
 });
 
@@ -171,6 +167,5 @@ test("an explicit future receipt source binds package identity with the original
     controller.abort(reason);
     await expect(fetchDescriptor(fixture.pluginId, moduleUrl, source, controller.signal, heartbeat)).rejects.toBe(reason);
     expect(reads).toBe(1);
-    console.log("[DEBUG] Neutral receipt source identity, original signal/progress, foreign refusal and cancellation checked");
   } finally { globalThis.fetch = originalFetch; }
 });

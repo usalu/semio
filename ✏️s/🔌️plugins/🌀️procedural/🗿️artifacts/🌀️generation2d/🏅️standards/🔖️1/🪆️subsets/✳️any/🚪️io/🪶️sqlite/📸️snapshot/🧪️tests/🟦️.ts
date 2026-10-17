@@ -4,17 +4,17 @@ import {Database} from "bun:sqlite";
 import {generation2dSnapshotToSqliteDatabase,generation2dSnapshotFromSqliteDatabase,GENERATION2D_SQLITE_SCHEMA} from "../🟦️.ts";
 import {exportSqliteDatabase,importSqliteDatabase} from "@semio-tech/framework/io/sqlite-snapshot";
 import corpus from"./🧫️fixtures/🔣️.json";
-import{proceduralSnapshotFixture}from"../../../../../../../../../../🫀️foundation/🧬️generation/🪶️sqlite/🧪️tests/🧰️support/🟦️.ts";
+import{proceduralSnapshotFixture}from"@semio-tech/procedural-js/foundation/generation/sqlite/testing/support";
 
-import {GenerationValue} from "../../../../../../../../../../🫀️foundation/🧬️generation/🧬️schema/📸️snapshot/🟦️.ts";
+import {GenerationValue} from "@semio-tech/procedural-js/foundation/generation/schema/snapshot";
 import{parseGeneration2dArtifact}from"../../../../🧬️schema/🟦️.ts";
 import Ajv from"ajv";
 import artifactSchema from"../../../../🧬️schema/🔣️.json";
-import{diff as moveNodeDiff}from"../../../../../../../../../🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚚️move-nodes/🔺️diff/🟦️.ts";
+import{diff as moveNodeDiff}from"@semio-tech/procedural-generation3d/standards/1/subsets/any/schema/mutations/move-nodes/diff";
 import {binary64,binary64Value} from "@semio-tech/framework/value/ieee754";
 import type{CreateWidget}from"../../../../🧬️schema/🧬️mutations/🌱️create-widget/🦠️mutation/🟦️.ts";
 import{generation2dGestureLeafTwinSelfTests}from"../../../../🧬️schema/🧬️mutations/🧪️tests/🧪️gesture-leaves/🟦️.ts";
-import{diff as create3dWidgetDiff}from"../../../../../../../../../🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱️create-widget/🔺️diff/🟦️.ts";
+import{diff as create3dWidgetDiff}from"@semio-tech/procedural-generation3d/1/subsets/any/schema/mutations/create-widget/diff";
 
 test("Generation declared camera schema admits independently specified complete IEEE words",()=>{const ajv=new Ajv({strict:false}),validate=ajv.compile({$defs:artifactSchema.$defs,$ref:"#/$defs/CameraJson"});for(const word of corpus.words){const v={bits:word};expect(validate({x:v,y:v,zoom:v})).toBe(true);}});
 test("Generation native UTF8 domain excludes lossy owned string and dictionary key states",()=>{const source=proceduralSnapshotFixture(corpus),bad=String.fromCharCode(0xd800);expect(Buffer.from(bad).toString()).not.toBe(bad);expect(()=>parseGeneration2dArtifact({...source,hostSnapshot:{...source.hostSnapshot,schema:bad}})).toThrow();expect(()=>parseGeneration2dArtifact({...source,generation:{generations:[{id:"",name:"",values:{[bad]:{kind:"null"}}}]}})).toThrow();});
@@ -38,7 +38,7 @@ test("procedural owned field shapes reject unsupported inactive or extraneous st
 test("projection admits the closed owned shape under bounded cancellation",async()=>{const s=proceduralSnapshotFixture(corpus);await expect(generation2dSnapshotToSqliteDatabase({...s,extra:true} as typeof s)).rejects.toThrow("unsupported procedural owned field");const large={...s,generation:{generations:[{id:"",name:"",values:Object.fromEntries(Array.from({length:1024},(_,i)=>[String(i),{kind:"null" as const}]))}]}};const controller=new AbortController();let checkpoints=0;await expect(generation2dSnapshotToSqliteDatabase(large,{signal:controller.signal,onProgress:p=>{if(p.phase==="projectSnapshot"&&p.completed===256){checkpoints++;controller.abort();}}})).rejects.toHaveProperty("kind","canceled");expect(checkpoints).toBe(1);});
 
 
-import semanticCells from "../../../../../../../../../../🫀️foundation/🧬️generation/🪶️sqlite/🧪️tests/🧫️fixtures/📏️semantic-cells.json";
+import { generationSqliteSemanticCellsFixture as semanticCells } from "@semio-tech/procedural-js/foundation/generation/sqlite/testing/fixtures";
 test("complete SQL semantic cells match both independently owned native families",async()=>{
  for(const c of semanticCells.cases){
   const s=proceduralSnapshotFixture(corpus);if(c.word!==null)s.hostSnapshot.camera.x={bits:BigInt("0x"+c.word)};

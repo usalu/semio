@@ -8,15 +8,7 @@ use crate::SOURCING_DIALECT;
 use crate::editor::sourcing as editor;
 use crate::viewer::sourcing as viewer;
 use semio_framework_plugin::app::declarations::{editor_surface, viewer_surface, SchemaDeclaration, SubsetDeclaration};
-use semio_framework_plugin::ExampleSource;
 use std::sync::OnceLock;
-
-/// 📚️ The subset's registered examples — the one source the manifest picker, the `setActiveExample`
-/// argument form and its handler all resolve ids against.
-pub fn examples() -> &'static [ExampleSource] {
-    static EXAMPLES: OnceLock<Vec<ExampleSource>> = OnceLock::new();
-    EXAMPLES.get_or_init(|| vec![crate::examples::demo::source()]).as_slice()
-}
 
 fn inference_descriptors() -> &'static [::semio_framework_schema_registry::ArtifactInferenceDescriptor] {
     static DESCRIPTORS: OnceLock<Vec<::semio_framework_schema_registry::ArtifactInferenceDescriptor>> = OnceLock::new();
@@ -31,6 +23,6 @@ pub fn subset<A: crate::SourcingApplication>() -> SubsetDeclaration<A> {
         io: io::io(),
         viewer: viewer_surface::<viewer::SourcingViewer, A>(viewer::create_sourcing_viewer()),
         editor: editor_surface::<editor::SourcingCurationApp, A>(editor::create_sourcing_curation_app()),
-        examples: examples(),
+        examples: editor::base::examples(),
     }
 }

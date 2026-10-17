@@ -19,7 +19,10 @@
     "./🧵️.css": "./🧵️.css",
     "./🌐️globals-ui.css": "./🌐️globals-ui.css",
     "./🌓️theme.css": "./🌓️theme.css",
-    "./postcss.config": "./🟦️.mts"
+    "./postcss.config": "./🟦️.mts",
+    "./appearance": "./🌓️appearance/🟦️.ts",
+    "./build-tooling": "./🛠️build-tooling/🟦️.ts",
+    "./source": "./📥️source/🟦️.ts"
   },
   "targets": {
     "lint": {

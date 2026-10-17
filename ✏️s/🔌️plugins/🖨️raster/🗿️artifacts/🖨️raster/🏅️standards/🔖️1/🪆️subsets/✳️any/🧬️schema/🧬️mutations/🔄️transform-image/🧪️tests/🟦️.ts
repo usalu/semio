@@ -24,9 +24,9 @@ test("every committed transform-image mutation is accepted by the schema and the
 });
 
 test("what the transform-image schema refuses the twin refuses",()=>{
-  const crop={mutation:"transformImage",layerId:"paint",operation:"crop",x:1,y:1,width:3,height:2,bilinear:false};
-  const turn={mutation:"transformImage",layerId:"paint",operation:"rotateClockwise",x:0,y:0,width:0,height:0,bilinear:false};
-  const resize={mutation:"transformImage",layerId:"paint",operation:"resize",x:0,y:0,width:12,height:8,bilinear:true};
+  const crop={mutation:"transformImage",layerId:"paint",operation:"crop" as const,x:1,y:1,width:3,height:2,bilinear:false};
+  const turn={mutation:"transformImage",layerId:"paint",operation:"rotateClockwise" as const,x:0,y:0,width:0,height:0,bilinear:false};
+  const resize={mutation:"transformImage",layerId:"paint",operation:"resize" as const,x:0,y:0,width:12,height:8,bilinear:true};
   for(const valid of [crop,turn,resize]){expect(validate(valid)).toBe(true);const {mutation:_,...payload}=valid;expect(parseTransformImage(valid)).toEqual(payload);}
   for(const [what,broken] of [
     ["unknown operation",{...turn,operation:"skew"}],

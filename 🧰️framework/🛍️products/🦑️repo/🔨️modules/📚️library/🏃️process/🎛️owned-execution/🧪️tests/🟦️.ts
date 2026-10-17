@@ -31,6 +31,5 @@ for(const row of corpus.cases)test("Repository original receiving "+row.name,asy
  if(row.mode==="zero")expect(String(refusal)).toMatch(/(repository command policy|Finite original.*child|child.*authority)/iu);
  if(row.mode==="lines")expect(String(refusal)).toContain("output line limit");
  if(row.mode==="normal"){expect(published).toBe(true);expect(readFileSync(marker,"utf8")).toBe("ready");expect(events).toEqual(["loading","yield","complete","yield"]);}else if(["cancel","reject","zero"].includes(row.mode))expect(existsSync(marker)).toBe(false);
- console.log("[DEBUG] repository-receiving "+JSON.stringify({case:row.name,outcome,oracle:oracle.stdout,published,events}));
  rmSync(directory,{recursive:true,force:true});
 },15000);

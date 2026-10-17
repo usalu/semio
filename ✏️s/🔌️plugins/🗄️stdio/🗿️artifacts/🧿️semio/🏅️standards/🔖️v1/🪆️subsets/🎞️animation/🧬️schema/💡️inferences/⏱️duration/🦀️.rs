@@ -40,8 +40,5 @@ pub fn compute_semio_animation_duration(snapshot: &SemioAnimationSnapshot) -> Se
 }
 //#endregion 🔖️Duration
 
-#[cfg(test)]
-//#region 🧪️Tests
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

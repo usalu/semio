@@ -1,0 +1,24 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-s-artifact-stdio-semio-base-examples-2"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "📚️ The stdio semio family's shared examples: one demo source per subset domain, each a real printed snapshot. (part 2)"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-plugin = { workspace = true }
+semio-framework-ui-locale = { workspace = true }
+
+[dev-dependencies]
+semio-s-artifact-stdio-semio-snapshot = { path = "../../../../🧬️schema/📸️snapshot/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-async-macros = { workspace = true }

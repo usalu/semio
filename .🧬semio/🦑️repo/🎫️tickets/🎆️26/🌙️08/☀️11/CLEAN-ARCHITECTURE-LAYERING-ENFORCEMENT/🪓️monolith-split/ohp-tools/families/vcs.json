@@ -1,0 +1,15 @@
+{
+ "name": "vcs",
+ "crates": [
+  "semio-s-artifact-vcs-vcs",
+  "semio-s-artifact-vcs-vcs-editor",
+  "semio-s-artifact-vcs-vcs-inferences",
+  "semio-s-artifact-vcs-vcs-mutations",
+  "semio-s-artifact-vcs-vcs-schema",
+  "semio-s-artifact-vcs-vcs-tests",
+  "semio-s-artifact-vcs-vcs-v1",
+  "semio-s-artifact-vcs-vcs-viewer",
+  "semio-vcs-mutation-bridge"
+ ],
+ "note": "ORACLE-HARVEST-PLUGINS: ✏️s/🔌️plugins/🌿️vcs"
+}

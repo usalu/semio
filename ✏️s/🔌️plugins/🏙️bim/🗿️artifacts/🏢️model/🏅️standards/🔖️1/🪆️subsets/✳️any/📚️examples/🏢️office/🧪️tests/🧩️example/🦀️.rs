@@ -1,6 +1,7 @@
-use super::{ASSET_DIR, PRIMARY_TEXT, SNAPSHOT_JSON};
+use super::{ASSET_DIR, PRIMARY_TEXT};
 use crate::examples::checks::Asset;
 use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, OpeningKind};
+const SNAPSHOT_JSON: &str = include_str!("../../../../🖼️assets/🏢️office/📸️snapshot.json");
 
 const ASSET: Asset = Asset { dir: ASSET_DIR, text: PRIMARY_TEXT, json: SNAPSHOT_JSON };
 

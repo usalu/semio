@@ -37,7 +37,7 @@ class CustodyNativeScript extends OwnershipScript {
   if(segments.length)throw Error("test-custody-native accepts no arguments");await super.run([]);
   const cargo=readCargoTestPolicyV1(process.env);
   const receipts=await runExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),preparation:configuredRepositoryCargoPreparationPolicyV1(),manifestPaths:{"semio-framework-dsl-record-derive":resolve(this.root,"Cargo.toml"),"semio-framework-dsl-record":resolve(this.root,"../../../📦️packages/🦀️rust/Cargo.toml")},invocation:this.invocation,policy:configuredExactCargoLawPolicyV1(),cwd:this.repoRoot,env:{...process.env,CARGO_BUILD_BUILD_DIR:cargo.buildDirectory},groups:[{package:"semio-framework-dsl-record-derive",target:{kind:"lib"},laws:["tests::original_optional_custody_is_excluded_from_wire_but_retired_as_owned_native_field","tests::original_empty_enums_match_dereferenced_uninhabited_values_in_all_borrowed_methods"]},{package:"semio-framework-dsl-record",target:{kind:"test",name:"native_retirement"},laws:["original_optional_custody_native_record_wire_source_identity_and_paid_retirement","original_empty_enum_native_projection_and_receiving_compile_without_values"]}]});
-  for(const receipt of receipts)console.log(`[DEBUG] optionalCustodyNative=${JSON.stringify(receipt)}`);
+  for(const receipt of receipts){}
  }
 }
 

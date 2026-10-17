@@ -5,36 +5,39 @@
 
 //#region 🏛️OwnershipFacet
 #[cfg(any(test, feature = "artifact-app-testing"))]
-#[path = "../../🧪️tests/🧰️ui-action-collection/🦀️.rs"]
-pub mod ui_action_laws;
+pub use semio_framework_plugin_testing_acceptance::ui_action_laws as ui_action_laws;
 //#endregion 🏛️OwnershipFacet
 //#region 📄️DeclarationFixtureMutationMount
-#[cfg(test)]
-#[path = "../../🧪️tests/🛰️declaration-channels/🦀️.rs"]
-pub(crate) mod declaration_fixture_mutations;
+
 //#endregion 📄️DeclarationFixtureMutationMount
 //#region 🏛️OwnershipFacet
 #[cfg(test)]
-#[path = "../../🧪️tests/📢️publication-fixtures/🦀️.rs"]
-pub(crate) mod publication_fixture;
+pub(crate) use semio_framework_plugin_testing_fixtures_publication::publication_fixture as publication_fixture;
 #[cfg(test)]
-#[path = "../../🧪️tests/📢️publication-owners/🦀️.rs"]
-pub(crate) mod window_transient_owners;
+pub(crate) use semio_framework_plugin_testing_fixtures_publication::window_transient_owners as window_transient_owners;
 #[cfg(test)]
-#[path = "../../🧪️tests/🖥️test-app-mutations/🦀️.rs"]
-pub(crate) mod test_app_mutation_fixture;
+pub(crate) use semio_framework_plugin_testing_fixtures::test_app_mutation_fixture as test_app_mutation_fixture;
 #[cfg(test)]
-#[path = "../../🧪️tests/📡️contributed-mutation-wire/🦀️.rs"]
-pub(crate) mod contributed_mutation_wire;
+pub(crate) use semio_framework_plugin_testing_fixtures::contributed_mutation_wire as contributed_mutation_wire;
 //#endregion 🏛️OwnershipFacet
 //#region 🧵️InstanceFacet
-#[path = "../../🧵️instance/🦀️.rs"]
-pub(crate) mod artifact_instance;
-#[path = "../../🏗️builder/🦀️.rs"]
-pub(crate) mod builder;
+pub(crate) extern crate semio_framework_plugin_instance_app as artifact_instance;
+pub(crate) extern crate semio_framework_plugin_builder as builder;
 //#endregion 🧵️InstanceFacet
 //#region ⚖️AppLaws
 #[cfg(any(test, feature = "artifact-app-testing"))]
-#[path = "../../🧪️testing/🦀️.rs"]
-pub(crate) mod app_testing;
+pub(crate) mod app_testing {
+    pub use semio_framework_plugin_testing_laws::*;
+}
 //#endregion ⚖️AppLaws
+
+
+
+
+
+
+
+
+
+
+

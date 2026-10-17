@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "dataOnly": true,
+  "locations": [
+    "source",
+    "output",
+    "dep-info",
+    "incremental",
+    "dependency-output",
+    "dependency-directory",
+    "temporary",
+    "execution"
+  ],
+  "bindingLikeLiterals": [
+    "/repo space/tmp/consumed.d",
+    "/repo space/out",
+    "C:\\repo space\\tmp",
+    "--emit=link,dep-info=/repo space/tmp/consumed.d",
+    "${workspace}/src/lib.rs"
+  ],
+  "forgedPlans": [
+    "copy",
+    "proxy"
+  ]
+}

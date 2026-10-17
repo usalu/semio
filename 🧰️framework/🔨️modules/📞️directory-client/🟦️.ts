@@ -12,14 +12,12 @@ import type { DirectoryEvent, DirectoryStreamMessage } from "../📇️directory
 import { type DirectorySessionAuthorityV1 } from "../📇️directory/🧬️schema/🪪️session-authority-v1/🟦️.ts";
 import { closeHubSocketV1 } from "../📇️directory/🔌️client/🚪️socket-close/🟦️.ts";
 import { DirectoryHttpError } from "../💡️inference/🔌️service/🛂️worker-host/🟦️.ts";
-import type { DirectoryCommandErrorCodeV1, DirectoryCommandReceiptV1, DirectoryCommandRequestV1, DirectoryEventPageV1 } from "../📇️directory/🧬️schema/🟦️.ts";
-import {
-  DIRECTORY_COMMAND_RECEIPT_MAX_BYTES,
-  DIRECTORY_EVENT_PAGE_MAX_BYTES,
-  DIRECTORY_PREFERENCE_PAGE_PATH_V1,
-  DIRECTORY_SPACE_ADMINISTRATION_CURSOR_MAX_BYTES,
-  directoryCommandErrorFromStatus
-} from "../📇️directory/🧬️schema/🟦️.ts";
+import type { DirectoryEventPageV1 } from "../📇️directory/🧬️schema/📄️event-page/🟦️.ts";
+import type { DirectoryCommandErrorCodeV1, DirectoryCommandReceiptV1, DirectoryCommandRequestV1 } from "../📇️directory/🧬️schema/🎫️command/🟦️.ts";
+import { DIRECTORY_PREFERENCE_PAGE_PATH_V1 } from "../📇️directory/🧬️schema/📜️event/🟦️.ts";
+import { DIRECTORY_EVENT_PAGE_MAX_BYTES } from "../📇️directory/🧬️schema/📄️event-page/🟦️.ts";
+import { DIRECTORY_COMMAND_RECEIPT_MAX_BYTES, directoryCommandErrorFromStatus } from "../📇️directory/🧬️schema/🎫️command/🟦️.ts";
+import { DIRECTORY_SPACE_ADMINISTRATION_CURSOR_MAX_BYTES } from "../📇️directory/🧬️schema/📋️admin-page/🟦️.ts";
 import { encodeClientFrame } from "@semio-tech/framework-replication";
 import type { DirectorySpaceAdministrationPageV1, DirectorySpaceListEntryV1, DocumentScope } from "../📇️directory/🟦️.ts";
 import { DIRECTORY_SPACE_ADMINISTRATION_PAGE_MAX_BYTES } from "../📇️directory/🟦️.ts";

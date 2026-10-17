@@ -12,21 +12,22 @@ use crate::schema::snapshot::SemioBrepSnapshot;
 use crate::io::text::snapshot::decode_semio_brep_snapshot_json;
 use pack::value::ToValue;
 use protocol::Mutation;
+use semio_framework_test_fixtures::fixture_text;
 
-const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✂️delete-edge/🚫️removes/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✂️delete-edge/🚫️removes/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✂️delete-edge/🚫️removes/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✂️delete-edge/🚫️removes/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✂️delete-edge/🚫️removes/🎯️outcome/🔣️.json");
+static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧪️tests/🧫️fixtures/🧬️mutations/✂️delete-edge/🚫️removes/📸️snapshot/⬅️before/🔣️.json"));
+static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧪️tests/🧫️fixtures/🧬️mutations/✂️delete-edge/🚫️removes/📸️snapshot/➡️after/🔣️.json"));
+static MUTATION: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧪️tests/🧫️fixtures/🧬️mutations/✂️delete-edge/🚫️removes/🦠️mutation/🔣️.json"));
+static DIFF: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧪️tests/🧫️fixtures/🧬️mutations/✂️delete-edge/🚫️removes/🔺️diff/🔣️.json"));
+static OUTCOME: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧪️tests/🧫️fixtures/🧬️mutations/✂️delete-edge/🚫️removes/🎯️outcome/🔣️.json"));
 
 fn before() -> SemioBrepSnapshot {
-    decode_semio_brep_snapshot_json(BEFORE).expect("delete-edge before snapshot decodes")
+    decode_semio_brep_snapshot_json((*BEFORE)).expect("delete-edge before snapshot decodes")
 }
 fn expected_after() -> SemioBrepSnapshot {
-    decode_semio_brep_snapshot_json(AFTER).expect("delete-edge after snapshot decodes")
+    decode_semio_brep_snapshot_json((*AFTER)).expect("delete-edge after snapshot decodes")
 }
 fn mutation() -> SemioBrepMutation {
-    decode_semio_brep_mutation_json(MUTATION).expect("delete-edge mutation decodes")
+    decode_semio_brep_mutation_json((*MUTATION)).expect("delete-edge mutation decodes")
 }
 
 /// ▶️ Only `e4` goes; both of its vertices and the loop that referenced it survive.
@@ -63,21 +64,21 @@ async fn the_undo_create_edge_restores_the_full_captured_edge() {
 /// 🔣️ Snapshots and the `{"DeleteEdge":{"id":"e4"}}` payload are canonical fixed points.
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
-    for (label, text) in [("before", BEFORE), ("after", AFTER)] {
+    for (label, text) in [("before", (*BEFORE)), ("after", (*AFTER))] {
         let decoded = decode_semio_brep_snapshot_json(text).expect("snapshot decodes");
         let reencoded = semio_framework_pack_json::from_dsl_value(&decoded.to_value());
         let original = semio_framework_pack_json::parse(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot reparses");
         assert_eq!(reencoded, original, "delete-edge/removes-the-closing-edge-and-keeps-its-two-vertices: committed {label} JSON is not canonical");
     }
     let reencoded = semio_framework_pack_json::from_dsl_value(&mutation().to_value());
-    let original = semio_framework_pack_json::parse(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("delete-edge mutation reparses");
+    let original = semio_framework_pack_json::parse((*MUTATION), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("delete-edge mutation reparses");
     assert_eq!(reencoded, original, "delete-edge/removes-the-closing-edge-and-keeps-its-two-vertices: committed mutation JSON is not canonical");
 }
 
 /// 🎯️ Declared `applied`: the edge exists, so mutation.target-missing must not fire
 #[semio_framework_async_macros::async_test]
 async fn declared_outcome_holds_as_committed() {
-    let outcome = semio_framework_pack_json::parse(OUTCOME, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("outcome decodes");
+    let outcome = semio_framework_pack_json::parse((*OUTCOME), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("outcome decodes");
     assert_eq!(outcome.get("status").and_then(semio_framework_pack_json::Value::as_str), Some("applied"), "delete-edge/removes-the-closing-edge-and-keeps-its-two-vertices: this case is declared applied");
     let produced = mutation().diff(&before());
     assert!(produced.messages().is_empty(), "deleting an existing edge must raise no diagnostics — this leaf has no cascade to report");
@@ -89,7 +90,7 @@ async fn produces_committed_diff() {
     let base = before();
     let outcome = <SemioBrepMutation as Mutation<SemioBrepSnapshot>>::diff(&mutation(), &base);
     let produced = semio_framework_pack_json::from_dsl_value(&outcome.diff().to_value());
-    let committed = semio_framework_pack_json::parse(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
+    let committed = semio_framework_pack_json::parse((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
     assert_eq!(produced, committed, "delete-edge/removes-the-closing-edge-and-keeps-its-two-vertices: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
 
@@ -97,21 +98,21 @@ async fn produces_committed_diff() {
 /// allowed to touch appears in it at all.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical_and_narrowly_scoped() {
-    let decoded = decode_semio_brep_diff_json(DIFF).expect("committed delete-edge diff decodes");
+    let decoded = decode_semio_brep_diff_json((*DIFF)).expect("committed delete-edge diff decodes");
 
     let edges = decoded.edges.as_ref().expect("delete-edge must write the edges triple");
     assert_eq!(edges.removed, vec!["e4".to_string()], "the removal is addressed by edge id");
     assert!(edges.modified.is_empty() && edges.added.is_empty(), "a removal neither modifies nor adds");
     assert!(decoded.vertices.is_none() && decoded.loops.is_none() && decoded.faces.is_none() && decoded.shells.is_none() && decoded.solids.is_none(), "delete-edge cascades nowhere — no other collection may appear");
     let reencoded = semio_framework_pack_json::from_dsl_value(&decoded.to_value());
-    let original = semio_framework_pack_json::parse(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff reparses");
+    let original = semio_framework_pack_json::parse((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff reparses");
     assert_eq!(reencoded, original, "delete-edge/removes-the-closing-edge-and-keeps-its-two-vertices: committed diff JSON is not canonical");
 }
 
 /// 🩹 Applying the committed diff to `before` yields `after`.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded = decode_semio_brep_diff_json(DIFF).expect("committed delete-edge diff decodes");
+    let decoded = decode_semio_brep_diff_json((*DIFF)).expect("committed delete-edge diff decodes");
     let produced = protocol::apply_diff(&decoded, &before()).expect("committed delete-edge diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "delete-edge/removes-the-closing-edge-and-keeps-its-two-vertices: committed diff did not carry before to after");
 }

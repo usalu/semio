@@ -137,7 +137,7 @@ fn resolve_unique_mesh_target(snapshot: &SemioMeshSnapshot, mesh_id: &str, primi
     Ok((mesh_index, primitive_index))
 }
 
-fn move_vertex_mutation(snapshot: &SemioMeshSnapshot, args: &SemioMeshSetVertexArgs) -> Result<Option<SemioMeshMutation>, Fault> {
+pub fn move_vertex_mutation(snapshot: &SemioMeshSnapshot, args: &SemioMeshSetVertexArgs) -> Result<Option<SemioMeshMutation>, Fault> {
     let (mesh_index, primitive_index) = resolve_unique_mesh_target(snapshot, &args.mesh_id, &args.primitive_id)?;
     let primitive = &snapshot.meshes[mesh_index].primitives[primitive_index];
     let current = primitive.positions.get(args.vertex_index).ok_or_else(|| Fault::from(format!("vertex {} does not exist in primitive '{}'", args.vertex_index, args.primitive_id)))?;
@@ -243,8 +243,7 @@ fn semio_mesh_set_vertex_work(_tool_id: &'static str) -> Box<dyn ArtifactCommand
 }
 //#endregion 🔖️Command
 
-#[path = "🧭️edit-rules/🦀️.rs"]
-pub mod edit_rules;
+pub use semio_s_artifact_stdio_semio_mesh_io::editor::edit_rules;
 
 //#region 🔖️Editor
 #[derive(Default, Clone, Copy)]

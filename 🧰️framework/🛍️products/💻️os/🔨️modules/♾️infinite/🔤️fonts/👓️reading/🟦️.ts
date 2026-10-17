@@ -1,6 +1,6 @@
 import{requireIssuedResourceControlInvocationV1,type ScriptInvocation}from"../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import type{ResourceLeaseControl}from"@semio-tech/process/leases";
-import{fontAssetPublicationRootV1}from"../../../../../../🔨️modules/🖼️canvas/🔤️fonts/📦️publication/🟦️.ts";
+import{fontAssetPublicationRootV1}from"@semio-tech/framework-canvas-ts/fonts/publication";
 import{validateJsonSchemaSubset}from"@semio-tech/schema-validator-ts";
 import{withRepositoryCacheStoreV1}from"../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
 import{withRepositoryArtifactV1,withRepositoryArtifactTaskV1,type RepositoryArtifactV1}from"../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/👓️reading/🟦️.ts";

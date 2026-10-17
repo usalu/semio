@@ -1,0 +1,116 @@
+{
+  "cases": [
+    {
+      "name": "zero",
+      "bytes": 0,
+      "maximumBytes": 0,
+      "retainText": false,
+      "accepted": true
+    },
+    {
+      "name": "exact",
+      "bytes": 8,
+      "maximumBytes": 8,
+      "retainText": false,
+      "accepted": true
+    },
+    {
+      "name": "over-request",
+      "bytes": 8,
+      "maximumBytes": 7,
+      "retainText": false,
+      "accepted": false
+    },
+    {
+      "name": "source-maximum",
+      "bytes": 8388608,
+      "maximumBytes": 8388608,
+      "retainText": false,
+      "accepted": true
+    },
+    {
+      "name": "over-source",
+      "bytes": 8388609,
+      "maximumBytes": 8388608,
+      "retainText": false,
+      "accepted": false
+    },
+    {
+      "name": "text-maximum",
+      "bytes": 65536,
+      "maximumBytes": 65536,
+      "retainText": true,
+      "accepted": true
+    },
+    {
+      "name": "over-text-request",
+      "bytes": 0,
+      "maximumBytes": 65537,
+      "retainText": true,
+      "accepted": false
+    },
+    {
+      "name": "negative",
+      "bytes": 0,
+      "maximumBytes": -1,
+      "retainText": false,
+      "accepted": false
+    },
+    {
+      "name": "expanded",
+      "bytes": 0,
+      "maximumBytes": 8388609,
+      "retainText": false,
+      "accepted": false
+    },
+    {
+      "name": "fractional",
+      "bytes": 0,
+      "maximumBytes": 0.5,
+      "retainText": false,
+      "accepted": false
+    }
+  ],
+  "physical": [
+    {
+      "name": "parent-link",
+      "primary": "ancestry"
+    },
+    {
+      "name": "leaf-link",
+      "primary": "leaf"
+    },
+    {
+      "name": "hard-link",
+      "primary": "leaf"
+    },
+    {
+      "name": "body-and-close",
+      "primary": "body"
+    },
+    {
+      "name": "undefined-and-close",
+      "primary": "undefined"
+    },
+    {
+      "name": "close",
+      "primary": "close"
+    },
+    {
+      "name": "short-read",
+      "primary": "short"
+    },
+    {
+      "name": "extra-eof",
+      "primary": "eof"
+    },
+    {
+      "name": "file-change",
+      "primary": "changed"
+    },
+    {
+      "name": "parent-change",
+      "primary": "changed"
+    }
+  ]
+}

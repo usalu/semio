@@ -1,4 +1,11 @@
-use super::*;
+use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfDictEntry, PdfObject, PdfPredictor, PdfStreamFilter};
+#[allow(unused_imports)]
+use crate::standards::v1_7::subsets::base::modules::lexer::{dict_get, is_ws, hex_val};
+#[allow(unused_imports)]
+use crate::standards::v1_7::subsets::base::io::error::{malformed, PResult, PdfEngineError};
+#[allow(unused_imports)]
+use crate::standards::v1_7::subsets::base::schema::snapshot::PdfCcittParameters;
+use crate::standards::v1_7::subsets::base::modules::filters::*;
 
 fn pseudo_random(len: usize, seed: u32) -> Vec<u8> {
     let mut state = seed;

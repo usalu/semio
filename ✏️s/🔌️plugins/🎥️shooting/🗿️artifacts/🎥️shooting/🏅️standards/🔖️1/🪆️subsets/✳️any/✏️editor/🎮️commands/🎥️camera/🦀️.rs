@@ -5,7 +5,7 @@
 //! label `SaveCamera` stores is the text the scene window's camera field submits — typing it publishes nothing.
 
 use crate::editor::shooting::config::{ShootingConfig, ShootingConfigMutation};
-use crate::editor::shooting::ShootingDispatchCtx;
+use crate::editor::shooting::ui_helpers_and_io::ShootingDispatchCtx;
 use crate::mutations::create_saved_camera::CreateSavedCamera;
 use crate::mutations::replace_shot_camera::ReplaceShotCamera;
 use crate::standards::v1::subsets::any::schema::mutations::ShootingMutation;
@@ -37,7 +37,7 @@ pub mod set_shot_camera {
 //#region 🔖️SaveCamera
 pub mod save_camera {
     use super::*;
-    use crate::standards::v1::subsets::any::schema::next_shooting_id;
+    use crate::next_shooting_id;
 
     /// 💾️ Saves the live viewport camera under `label` (the submitted camera field; `Camera N` when blank).
     #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
@@ -96,7 +96,5 @@ pub mod set_camera {
 //#endregion 🔖️SetCamera
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

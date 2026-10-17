@@ -1,16 +1,12 @@
 //! 📏 GLTF proportion indicators.
 
-#[path = "🖼️aspect-ratios/🦀️.rs"]
-pub mod aspect_ratios;
-#[path = "↔️elongation/🦀️.rs"]
-pub mod elongation;
-#[path = "📃️flatness/🦀️.rs"]
-pub mod flatness;
-#[path = "📏️slenderness/🦀️.rs"]
-pub mod slenderness;
+pub use semio_s_artifact_stdio_gltf_inferences_aspect_ratios::standards::v2_0::subsets::any::schema::inferences::proportion::aspect_ratios;
+pub use semio_s_artifact_stdio_gltf_inferences_aspect_ratios::standards::v2_0::subsets::any::schema::inferences::proportion::elongation;
+pub use semio_s_artifact_stdio_gltf_inferences_flatness::standards::v2_0::subsets::any::schema::inferences::proportion::flatness;
+pub use semio_s_artifact_stdio_gltf_inferences_flatness::standards::v2_0::subsets::any::schema::inferences::proportion::slenderness;
 
-use super::super::modules::measurement_contracts::*;
-use super::geometry_core::GltfGeometryContext;
+use crate::standards::v2_0::subsets::any::schema::modules::measurement_contracts::*;
+use crate::standards::v2_0::subsets::any::schema::inferences::geometry_core::GltfGeometryContext;
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]

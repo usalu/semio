@@ -146,8 +146,4 @@ export function renderMedia(view: MediaView): BuiltNode {
   return leafNode(MEDIA_WINDOW_KIND_ID, { type: "extension", extension: MEDIA_TRANSPORT_EXTENSION_ID, props });
 }
 
-if (import.meta.vitest) {
-  const { registerTests1 } = await import("./🧪️tests/🧪️rendermedia/🟦️.ts");
-  await registerTests1(import.meta.vitest, { parseMediaTransportProps, renderMedia }, { directory: import.meta.dir, url: import.meta.url });
-}
 // #endregion 🎬️MediaWindowKit

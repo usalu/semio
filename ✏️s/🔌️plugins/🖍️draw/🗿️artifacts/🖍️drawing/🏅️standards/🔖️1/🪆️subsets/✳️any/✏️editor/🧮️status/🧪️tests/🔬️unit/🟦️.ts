@@ -23,7 +23,6 @@ test("drawing selection status projects bilingual live counts with an independen
   }
  }
  expect(witnesses).toBe(16);
- process.stderr.write(`[DEBUG] Draw live count text matched ${witnesses} neutral bilingual transitions and independent i18next plural/interpolation output\n`);
 });
 
 test("drawing status refuses invalid counts without choosing an ambient locale",()=>{

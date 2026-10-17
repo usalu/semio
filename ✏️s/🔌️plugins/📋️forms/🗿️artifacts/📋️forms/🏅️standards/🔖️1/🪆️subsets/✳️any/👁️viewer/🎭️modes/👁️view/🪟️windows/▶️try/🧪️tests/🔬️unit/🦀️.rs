@@ -1,4 +1,6 @@
-use super::*;
+use semio_framework_plugin::SurfaceKind;
+use crate::viewer::forms::modes::view::windows::try_wizard::{text};
+use crate::viewer::forms::modes::view::windows::try_wizard::*;
 
 #[semio_framework_async_macros::async_test]
 async fn definition_declares_a_canvas2d_try_window() {

@@ -8,8 +8,9 @@
     "job": ["👷️job/🛬️lifted/⏯️tool-run/🦀️.rs"]
   },
   "mounts": {
-    "⏪️time-travel/🦀️.rs": ["🪟️panel/🔢️pointer/🦀️.rs", "🪟️panel/🖼️sections/🦀️.rs", "../🎮️command/🛬️lifted/⏪️time-travel/🦀️.rs"],
-    "⏯️tool-run/🦀️.rs": ["../👷️job/🛬️lifted/⏯️tool-run/🦀️.rs"]
+    "⏪️time-travel/🪟️panel/🦀️.rs": ["🛬️lifted/🎮️command/🦀️.rs", "🔢️pointer/🦀️.rs", "🖼️sections/🦀️.rs"],
+    "🎮️command/🦀️.rs": ["🛬️lifted/⏪️time-travel/🦀️.rs"],
+    "👷️job/🦀️.rs": ["🛬️lifted/⏯️tool-run/🦀️.rs"]
   },
   "items": [
     { "name": "TimeTravelLedger", "kind": "struct", "crate": "time-travel" },

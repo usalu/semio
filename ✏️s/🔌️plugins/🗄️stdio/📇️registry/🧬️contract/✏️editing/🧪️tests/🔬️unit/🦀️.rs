@@ -14,7 +14,6 @@ fn retained_copy_original_backing_uses_shared_four_axis_allocator_law(){
   for _ in 0..2{let(step,heap)=observe_heap_allocations_on_this_thread(||retained_copy_close_step(&mut bytes,&mut reserved,&mut complete,RetainedCloneGrant{maximum_release_bytes:0,maximum_depth:1,..grant}));assert_eq!(heap,Default::default());if matches!(step,semio_framework_job::InteractiveJobCloseStep::Complete{..}){break;}}
   assert!(bytes.is_empty()&&bytes.capacity()==0&&!reserved&&!complete);
  }
- println!("[DEBUG] shared original retained copy 4 cases verify original allocation capacity, no prefix truncation, denied axes and separate zero-heap terminal flags");
 }
 
 use semio_framework_plugin::plugin_app_close_prelude::store as fixture_store;

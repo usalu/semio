@@ -3,6 +3,7 @@
 //! meanwhile (`Preview`: marks painted over the window, never part of the document). A tool is a small statechart: `event` advances it, `preview` projects it.
 
 use super::plane::P;
+use crate::editor::bim::marks::{Mark, Preview, Shape, Style};
 use super::snap::{snap, SnapHit, SnapKind, SnapRequest};
 use crate::editor::bim::entities::id_taken;
 use crate::editor::bim::kit::IdMint;
@@ -208,92 +209,14 @@ impl Step {
 //#endregion 🔖️Step
 
 //#region 🔖️Preview
-/// 🖌️ How a mark is drawn.
-#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue)]
-pub enum Style {
-    Ghost,
-    Guide,
-    Snap,
-    Handle,
-    Warning,
-    Selection,
-}
-
-/// 🔷️ What a mark is.
-#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue)]
-pub enum Shape {
-    Path,
-    Dot,
-    Label,
-    Snap,
-}
-
-/// 🫧️ One mark over a window: a path (flat `x, y` pairs), a dot, a text label at the first point or a snap marker named by its kind in `text`.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, ToValue, FromValue)]
-#[value(rename_all = "camelCase")]
-pub struct Mark {
-    pub shape: Shape,
-    pub style: Style,
-    pub closed: bool,
-    pub points: Vec<f64>,
-    pub text: String,
-}
-
-impl Mark {
-    pub fn path(points: &[P], closed: bool, style: Style) -> Self {
-        Self { shape: Shape::Path, style, closed, points: points.iter().flatten().copied().collect(), text: String::new() }
-    }
-
-    pub fn dot(at: P, style: Style) -> Self {
-        Self { shape: Shape::Dot, style, closed: false, points: at.to_vec(), text: String::new() }
-    }
-
-    pub fn label(at: P, text: impl Into<String>) -> Self {
-        Self { shape: Shape::Label, style: Style::Guide, closed: false, points: at.to_vec(), text: text.into() }
-    }
-
-    pub fn snap(hit: &SnapHit) -> Self {
-        Self { shape: Shape::Snap, style: Style::Snap, closed: false, points: hit.point.to_vec(), text: format!("{:?}", hit.kind).to_lowercase() }
-    }
-
-    pub fn corners(&self) -> Vec<P> {
-        self.points.chunks_exact(2).map(|pair| [pair[0], pair[1]]).collect()
-    }
-}
-
-/// 🫧️ The marks a tool shows over its window.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, ToValue, FromValue)]
-#[value(rename_all = "camelCase")]
-pub struct Preview {
-    pub marks: Vec<Mark>,
-}
-
-impl Preview {
-    pub fn of(marks: Vec<Mark>) -> Self {
-        Self { marks }
-    }
-
-    pub fn is_empty(&self) -> bool {
-        self.marks.is_empty()
-    }
-
-    /// 🔤️ The preview as the text a window transient carries (empty for no marks).
-    pub fn to_text(&self) -> String {
-        if self.marks.is_empty() { String::new() } else { semio_framework_pack_json::to_json_string(self) }
-    }
-
-    /// 🔤️ The preview a window transient carries; text that does not decode is no preview.
-    pub fn from_text(text: &str) -> Self {
-        if text.is_empty() {
-            return Self::default();
-        }
-        semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_default()
-    }
-}
-
 /// 📏️ A length label at the middle of a segment, in metres with two decimals.
 pub fn length_label(a: P, b: P) -> Mark {
     Mark::label(super::plane::mid(a, b), format!("{:.2} m", super::plane::dist(a, b)))
+}
+
+/// 🧲️ The marker a snap hit shows: a snap mark named by the kind of the hit.
+pub fn snap_mark(hit: &SnapHit) -> Mark {
+    Mark { shape: Shape::Snap, style: Style::Snap, closed: false, points: hit.point.to_vec(), text: format!("{:?}", hit.kind).to_lowercase() }
 }
 //#endregion 🔖️Preview
 

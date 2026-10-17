@@ -1,0 +1,7 @@
+# Windows Readonly Host Boundary Review
+
+Six current held files independently match bounded nofollow FD/pre-open/post/named stamps and SHA in `🗑️generated/windows-host-low-independent.json`. Root volume owner retains strict exact GUID-volume mapping; distinct host owner only admits the closed existing metadata/backing roster and snapshots immutable primitive input. Same native handle supplies full128 ID, legacy ID, EOF/allocation, security and stream facts. Footer/record extents, EOF tail, named reopen and before/after checks remain explicit; mounted backing permits write sharing privately but never delete sharing. No native ACL modification is introduced.
+
+Retained facts() recaptures actual native metadata rather than returning cached rows. Nested directory/backing/record descriptors share existing32-custody bound while each descriptor’s pending read/cursor remains one. Host ancestors deliberately compare full facts and can conservatively refuse unrelated sibling changes. No unproved parent reparse exception is admitted; legitimate nested parent mount support remains an explicit integration gap. Post-close observer checks remain outside known-closed descriptor custody.
+
+No new concrete blocker found in this contained readonly/extraction slice. Producer reports actual40760=0 (4laws27162assertions/95rows) and strict46548=0 (four roots); this audit did not rerun them. No shared publisher integration, Windows ABI/NTFS/privilege/ARM64 or physical qualification follows from these Source/model gates.

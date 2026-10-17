@@ -1,11 +1,15 @@
 use super::{oracle_apply_mutation, oracle_round_trip, project_ifc_4_any};
+use semio_framework_test_fixtures::{fixture_bytes, fixture_text};
 use semio_repo_test_host::{parse_json, Json};
 
-const FIXTURE: &[u8] = include_bytes!("../../../🧪️tests/🧫️fixtures/🏢️nakagin-capsule-tower/🏢️nakagin-capsule-tower.ifc");
+fn fixture() -> &'static [u8] {
+    static CELL: std::sync::OnceLock<Vec<u8>> = std::sync::OnceLock::new();
+    CELL.get_or_init(|| fixture_bytes!("../../../🏅️standards/4️⃣4/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🏢️nakagin-capsule-tower/🏢️nakagin-capsule-tower.ifc").to_vec()).as_slice()
+}
 
 /// 🧾️ The case's own `Examples` rows — the `IfcValue` leaf wire payloads the scenarios run.
 fn feature_rows() -> Vec<(String, Json)> {
-    semio_repo_test_host::law::feature_rows(include_str!("../../../🧪️tests/🏗️mutate-ifc-4/🥒️.feature"))
+    semio_repo_test_host::law::feature_rows(&fixture_text!("../../../🏅️standards/4️⃣4/🪆️subsets/✳️any/🧪️tests/🏗️mutate-ifc-4/🥒️.feature").to_owned())
 }
 fn row(kind: &str) -> Json {
     feature_rows().into_iter().find(|(id, _)| id == kind).unwrap_or_else(|| panic!("no {kind} row")).1
@@ -57,7 +61,7 @@ const ORIGINAL_PROXY: &str = r#"{"index": 16975, "entity": {"id": 16976, "name":
 
 #[test]
 fn parses_the_real_fixture_and_projects_it() {
-    let projection = project_ifc_4_any(FIXTURE).expect("project real fixture");
+    let projection = project_ifc_4_any(fixture()).expect("project real fixture");
     assert_eq!(entity_count(&projection), 24792.0);
     match projection.get("fileSchema") {
         Some(Json::Array(items)) => assert_eq!(items, &vec![Json::String("IFC4".to_string())]),
@@ -71,27 +75,27 @@ fn parses_the_real_fixture_and_projects_it() {
 /// projection.
 #[test]
 fn every_feature_row_is_applied_from_its_wire_payload_and_moves_the_projection() {
-    let baseline = project_ifc_4_any(&oracle_round_trip(FIXTURE).unwrap()).unwrap();
+    let baseline = project_ifc_4_any(&oracle_round_trip(fixture()).unwrap()).unwrap();
     let rows = feature_rows();
     assert_eq!(rows.len(), 10, "one row per declared IfcMutation kind");
     for (kind, params) in rows {
-        let mutated = oracle_apply_mutation(FIXTURE, &spec(&kind, params)).unwrap_or_else(|error| panic!("{kind} failed: {error}"));
+        let mutated = oracle_apply_mutation(fixture(), &spec(&kind, params)).unwrap_or_else(|error| panic!("{kind} failed: {error}"));
         assert_ne!(project_ifc_4_any(&mutated).unwrap(), baseline, "{kind} left the projection unchanged");
     }
 }
 
 #[test]
 fn round_trip_is_not_byte_identical_but_reparses() {
-    let output = oracle_round_trip(FIXTURE).expect("identity round trip");
-    assert_ne!(output, FIXTURE, "our own writer must not reproduce the source writer's exact bytes");
-    assert_eq!(project_ifc_4_any(&output).unwrap(), project_ifc_4_any(FIXTURE).unwrap());
+    let output = oracle_round_trip(fixture()).expect("identity round trip");
+    assert_ne!(output, fixture(), "our own writer must not reproduce the source writer's exact bytes");
+    assert_eq!(project_ifc_4_any(&output).unwrap(), project_ifc_4_any(fixture()).unwrap());
 }
 
 /// 🏗️ `insert-entity`/`remove-entity` on real building entities: adds a fresh `IFCCARTESIANPOINT`,
 /// then undoes it — exercised on the real entity graph rather than a synthetic one.
 #[test]
 fn insert_and_remove_entity_round_trip_on_the_real_graph() {
-    let inserted = oracle_apply_mutation(FIXTURE, &spec("insert-entity", row("insert-entity"))).expect("insert-entity");
+    let inserted = oracle_apply_mutation(fixture(), &spec("insert-entity", row("insert-entity"))).expect("insert-entity");
     let projection = project_ifc_4_any(&inserted).expect("project inserted");
     assert_eq!(entity_count(&projection), 24793.0);
     assert_eq!(args_of(&projection, 90001.0), vec![projected("aggregate", Json::Array(vec![projected("real", Json::Number(1000.0)), projected("real", Json::Number(2000.0)), projected("real", Json::Number(3000.0))]))]);
@@ -109,9 +113,9 @@ fn insert_and_remove_entity_round_trip_on_the_real_graph() {
 /// (`schema::diff::diff_remove_entity`) do not cascade either.
 #[test]
 fn remove_and_reinsert_the_real_referenced_entity_16976() {
-    let referencing = project_ifc_4_any(FIXTURE).unwrap();
+    let referencing = project_ifc_4_any(fixture()).unwrap();
     assert!(args_reference(&args_of(&referencing, 16991.0), 16976.0), "real #16991 must reference #16976 before removal");
-    let removed = oracle_apply_mutation(FIXTURE, &spec("remove-entity", row("remove-entity"))).expect("remove-entity");
+    let removed = oracle_apply_mutation(fixture(), &spec("remove-entity", row("remove-entity"))).expect("remove-entity");
     let projection = project_ifc_4_any(&removed).expect("project removed");
     assert_eq!(entity_count(&projection), 24791.0);
     assert!(find_entity(&projection, 16976.0).is_none());
@@ -122,49 +126,49 @@ fn remove_and_reinsert_the_real_referenced_entity_16976() {
 
 #[test]
 fn set_entity_name_round_trips_on_the_real_proxy_16976() {
-    let mutated = oracle_apply_mutation(FIXTURE, &spec("set-entity-name", row("set-entity-name"))).expect("set-entity-name");
+    let mutated = oracle_apply_mutation(fixture(), &spec("set-entity-name", row("set-entity-name"))).expect("set-entity-name");
     let projection = project_ifc_4_any(&mutated).expect("project");
     assert_eq!(find_entity(&projection, 16976.0).unwrap().get("name"), Some(&Json::String("RENAMED_PROXY".to_string())));
     let restored = oracle_apply_mutation(&mutated, &wire("set-entity-name", r#"{"id": 16976, "name": "IFCBUILDINGELEMENTPROXY"}"#)).expect("inverse");
-    assert_eq!(project_ifc_4_any(&restored).unwrap(), project_ifc_4_any(FIXTURE).unwrap());
+    assert_eq!(project_ifc_4_any(&restored).unwrap(), project_ifc_4_any(fixture()).unwrap());
 }
 
 #[test]
 fn entity_16976_real_args_are_as_expected() {
-    let args = args_of(&project_ifc_4_any(FIXTURE).expect("project"), 16976.0);
+    let args = args_of(&project_ifc_4_any(fixture()).expect("project"), 16976.0);
     assert_eq!(args.len(), 9, "real IFCBUILDINGELEMENTPROXY carries 9 positional args");
     assert_eq!(args[2], projected("string", Json::String("b".to_string())), "arg index 2 is the real Name attribute 'b'");
 }
 
 #[test]
 fn set_insert_remove_entity_arg_round_trip_on_16976() {
-    let set_mutated = oracle_apply_mutation(FIXTURE, &spec("set-entity-arg", row("set-entity-arg"))).expect("set-entity-arg");
+    let set_mutated = oracle_apply_mutation(fixture(), &spec("set-entity-arg", row("set-entity-arg"))).expect("set-entity-arg");
     let set_restored = oracle_apply_mutation(&set_mutated, &wire("set-entity-arg", r#"{"id": 16976, "index": 2, "value": {"kind": "string", "value": "b"}}"#)).expect("inverse set-entity-arg");
-    assert_eq!(project_ifc_4_any(&set_restored).unwrap(), project_ifc_4_any(FIXTURE).unwrap());
+    assert_eq!(project_ifc_4_any(&set_restored).unwrap(), project_ifc_4_any(fixture()).unwrap());
 
-    let inserted = oracle_apply_mutation(FIXTURE, &spec("insert-entity-arg", row("insert-entity-arg"))).expect("insert-entity-arg");
+    let inserted = oracle_apply_mutation(fixture(), &spec("insert-entity-arg", row("insert-entity-arg"))).expect("insert-entity-arg");
     let args = args_of(&project_ifc_4_any(&inserted).expect("project inserted-arg"), 16976.0);
     assert_eq!(args.len(), 10);
     assert_eq!(args[9], projected("enum", Json::String("T".to_string())));
     let removed_back = oracle_apply_mutation(&inserted, &wire("remove-entity-arg", r#"{"id": 16976, "index": 9}"#)).expect("inverse insert-entity-arg");
-    assert_eq!(project_ifc_4_any(&removed_back).unwrap(), project_ifc_4_any(FIXTURE).unwrap());
+    assert_eq!(project_ifc_4_any(&removed_back).unwrap(), project_ifc_4_any(fixture()).unwrap());
 
-    let real_removed = oracle_apply_mutation(FIXTURE, &spec("remove-entity-arg", row("remove-entity-arg"))).expect("remove-entity-arg");
+    let real_removed = oracle_apply_mutation(fixture(), &spec("remove-entity-arg", row("remove-entity-arg"))).expect("remove-entity-arg");
     assert_eq!(args_of(&project_ifc_4_any(&real_removed).expect("project"), 16976.0).len(), 8);
     let reinserted = oracle_apply_mutation(&real_removed, &wire("insert-entity-arg", r#"{"id": 16976, "index": 8, "value": {"kind": "unset"}}"#)).expect("inverse remove-entity-arg");
-    assert_eq!(project_ifc_4_any(&reinserted).unwrap(), project_ifc_4_any(FIXTURE).unwrap());
+    assert_eq!(project_ifc_4_any(&reinserted).unwrap(), project_ifc_4_any(fixture()).unwrap());
 }
 
 #[test]
 fn set_file_description_name_and_schema_round_trip() {
-    let pristine = project_ifc_4_any(FIXTURE).unwrap();
+    let pristine = project_ifc_4_any(fixture()).unwrap();
     let inverses = [
         ("set-file-description", r#"{"values": [{"kind": "aggregate", "value": [{"kind": "string", "value": "ViewDefinition[DesignTransferView]"}]}, {"kind": "string", "value": "2;1"}]}"#),
         ("set-file-name", r#"{"values": [{"kind": "string", "value": "/dev/null"}, {"kind": "string", "value": "2026-03-20T21:51:27+00:00"}, {"kind": "aggregate", "value": [{"kind": "string", "value": ""}]}, {"kind": "aggregate", "value": [{"kind": "string", "value": ""}]}, {"kind": "string", "value": "IfcOpenShell 0.8.4.post1"}, {"kind": "string", "value": "IfcOpenShell 0.8.4.post1"}, {"kind": "string", "value": "Nobody"}]}"#),
         ("set-file-schema", r#"{"values": [{"kind": "aggregate", "value": [{"kind": "string", "value": "IFC4"}]}]}"#),
     ];
     for (kind, inverse) in inverses {
-        let mutated = oracle_apply_mutation(FIXTURE, &spec(kind, row(kind))).unwrap_or_else(|error| panic!("{kind}: {error}"));
+        let mutated = oracle_apply_mutation(fixture(), &spec(kind, row(kind))).unwrap_or_else(|error| panic!("{kind}: {error}"));
         assert_ne!(project_ifc_4_any(&mutated).unwrap(), pristine, "{kind} must MOVE the projection -- this assertion is what caught the projection being blind to the header entirely");
         let restored = oracle_apply_mutation(&mutated, &wire(kind, inverse)).unwrap_or_else(|error| panic!("inverse {kind}: {error}"));
         assert_eq!(project_ifc_4_any(&restored).unwrap(), pristine, "{kind} and its inverse must restore the header");
@@ -173,5 +177,5 @@ fn set_file_description_name_and_schema_round_trip() {
 
 #[test]
 fn unknown_kind_is_an_error_not_a_silent_no_op() {
-    assert!(oracle_apply_mutation(FIXTURE, &wire("no-mutation", "{}")).is_err());
+    assert!(oracle_apply_mutation(fixture(), &wire("no-mutation", "{}")).is_err());
 }

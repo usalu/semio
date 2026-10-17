@@ -19,7 +19,7 @@ type Fixture = {
   paths: { entry: string; manifest: string; facadeManifest: string; neutralTests: string };
 };
 
-const root = resolve(import.meta.dir, "../../../../../../../.."), owner = "🧰️framework/🔨️modules/📡️replication/📡️wire/🎮️command/📥️ingress", digest = (value: string) => createHash("sha256").update(value).digest("hex");
+const root = resolve(import.meta.dir, "../../../../../../../.."), frameworkWorkspace = "🧰️framework", owner = "🧰️framework/🔨️modules/📡️replication/📡️wire/🎮️command/📥️ingress", digest = (value: string) => createHash("sha256").update(value).digest("hex");
 
 /** 🏛️ Admits public neutral ownership, declared bounds, dependency authority and native law mounts. */
 export async function inspectPagedCommandIngressOwnership(repository: string, read: Reader = path => readFileSync(join(repository, path), "utf8")): Promise<{ types: number; constants: number; laws: number; closure: number }> {
@@ -81,7 +81,7 @@ export async function inspectPagedCommandIngressOwnership(repository: string, re
     expect(modulePath(testMounts[0]!)).toBe("🧪️tests/🔬️unit/🦀️.rs");
     expect(attributes(testMounts[0]!).map(attribute => attribute.namedChildren[0]!.text).sort()).toEqual(["cfg", "path"]);
     expect(attributes(testMounts[0]!).map(tokens)).toContain("cfg(test)");
-    const workspace = parseToml(read("Cargo.toml")) as any, closure = new Map<string, ClosureRow>();
+    const workspace = parseToml(read(`${frameworkWorkspace}/Cargo.toml`)) as any, closure = new Map<string, ClosureRow>();
     const manifest = (path: string): any => { const source = read(path), first = parseToml(source), second = Bun.TOML.parse(source); expect<object>(first).toEqual(second); return first; };
     const visit = (path: string) => {
       if (closure.has(path)) return;
@@ -91,7 +91,7 @@ export async function inspectPagedCommandIngressOwnership(repository: string, re
         const inherited = typeof declaration === "object" && declaration.workspace === true, edge = inherited ? workspace.workspace.dependencies[name] : declaration;
         expect(edge, `unresolved dependency ${path}:${name}`).toBeDefined();
         if (typeof edge !== "object" || !edge.path) { expect((edge.package ?? name).startsWith("semio-")).toBe(false); continue; }
-        const target = relative(repository, resolve(repository, inherited ? "" : dirname(path), edge.path, "Cargo.toml")).split("\\").join("/");
+        const target = relative(repository, resolve(repository, inherited ? frameworkWorkspace : dirname(path), edge.path, "Cargo.toml")).split("\\").join("/");
         row.edges.push({ scope, name, manifest: target }); visit(target);
       }
       row.edges.sort((a, b) => `${a.scope}:${a.name}`.localeCompare(`${b.scope}:${b.name}`));
@@ -99,7 +99,7 @@ export async function inspectPagedCommandIngressOwnership(repository: string, re
     visit(fixture.paths.manifest);
     expect([...closure.values()].sort((a, b) => a.manifest.localeCompare(b.manifest))).toEqual(fixture.closure);
     expect([...closure.values()].filter(row => !row.manifest.startsWith("🧰️framework/🔨️modules/"))).toEqual([]);
-    expect(workspace.workspace.members).toContain(dirname(fixture.paths.manifest));
+    expect(workspace.workspace.members).toContain(relative(frameworkWorkspace, dirname(fixture.paths.manifest)).split("\\").join("/"));
     expect(manifest(fixture.paths.manifest).package.name).toBe("semio-framework-replication-command-ingress");
     expect(resolve(repository, dirname(fixture.paths.manifest), manifest(fixture.paths.manifest).lib.path)).toBe(resolve(repository, owner, "🦀️.rs"));
     expect(manifest(fixture.paths.facadeManifest).dependencies["semio-framework-replication-command-ingress"]).toBeDefined();
@@ -140,10 +140,9 @@ test("canonical package membership and executable routes retain the complete nat
   expect(workspace.workspaces.some((pattern: string) => !pattern.startsWith("!") && new Bun.Glob(pattern).match(pkg))).toBe(true);
   expect(workspace.workspaces.some((pattern: string) => pattern.startsWith("!") && new Bun.Glob(pattern.slice(1)).match(pkg))).toBe(false);
   expect(registration.name).toBe(project.name);
-  expect(registration.nx.includedScripts).toEqual([]);
   for (const gate of ["test-command-ingress-ownership", "test-command-ingress-native"]) {
     expect(project.targets[gate].options.command).toBe(`bun ./📜️script.ts ${gate}`);
-    expect(registration.scripts[gate]).toBe(`nx run ${project.name}:${gate}`);
+    expect(registration.scripts[gate]).toBe(`bun --cwd "../../../../.." repo run ${project.name}:${gate}`);
     expect(project.targets[gate].cache).toBe(false);
     const inputs = project.targets[gate].inputs as string[];
     expect(inputs).toContain(`{workspaceRoot}/${owner}/**/*`);
@@ -181,6 +180,5 @@ test("schema-authored source witnesses admit private evolution and reject public
     const read: Reader = path => changes.get(path) ?? readFileSync(join(root, path), "utf8");
     if (row.accepted) expect(await inspectPagedCommandIngressOwnership(root, read)).toEqual({ types: 14, constants: 5, laws: 4, closure: fixture.closure.length });
     else await expect(inspectPagedCommandIngressOwnership(root, read)).rejects.toThrow();
-    console.log(`[DEBUG] command ingress source witness ${row.id}: ${row.accepted ? "admitted" : "refused"}`);
   }
 });

@@ -109,8 +109,25 @@ export function parseJsonDiff(value: unknown, at = "$"): JsonDiff {
   };
 }
 
+export function parseJsonMember(value: unknown, at = "$"): JsonMember {
+  const row = stdioJsonRfc8259BaseDiffGuardObject(value, at);
+  return {
+    key: stdioJsonRfc8259BaseDiffGuardString(row["key"], `${at}.key`),
+    value: parseJsonValue(row["value"], `${at}.value`),
+  };
+}
+
 export function parseJsonValue(value: unknown, at = "$"): JsonValue {
-  return parseJsonValue(value, `${at}`);
+  const row = stdioJsonRfc8259BaseDiffGuardObject(value, at);
+  const kind = stdioJsonRfc8259BaseDiffGuardMember(row["kind"], `${at}.kind`, ["null", "bool", "number", "string", "array", "object"] as const);
+  switch (kind) {
+    case "null": return { kind };
+    case "bool": return { kind, value: stdioJsonRfc8259BaseDiffGuardBoolean(row["value"], `${at}.value`) };
+    case "number": return { kind, lexeme: stdioJsonRfc8259BaseDiffGuardString(row["lexeme"], `${at}.lexeme`) };
+    case "string": return { kind, value: stdioJsonRfc8259BaseDiffGuardString(row["value"], `${at}.value`) };
+    case "array": return { kind, items: stdioJsonRfc8259BaseDiffGuardArray(row["items"], `${at}.items`).map((item, index) => parseJsonValue(item, `${at}.items[${index}]`)) };
+    case "object": return { kind, members: stdioJsonRfc8259BaseDiffGuardArray(row["members"], `${at}.members`).map((item, index) => parseJsonMember(item, `${at}.members[${index}]`)) };
+  }
 }
 
 export function parseJsonArrayDiff(value: unknown, at = "$"): JsonArrayDiff {

@@ -35,7 +35,6 @@ test("detached daemon root custody follows exact acquisition and terminal transi
  for(const row of fixture.cases){const lifetime=createNxDaemonLifetimeV1(fixture.birth);let accepted=true;for(const event of row.events){expect(validateEvent(event)).toBe(true);try{lifetime.record(event as NxDaemonLifetimeEventV1);}catch{accepted=false;break;}}
   const state=lifetime.snapshot(),actual={accepted,phase:String(state.phase),parentHeld:state.parentHeld,loans:state.loans.length,workers:state.workers.length,requests:state.requests.length},expected={accepted:row.accepted,phase:row.phase,parentHeld:row.parentHeld,loans:row.loans,workers:row.workers,requests:row.requests};expect(actual).toEqual(expected);expect(sqliteOracle(row.events)).toEqual(expected);
  }
- console.log("[DEBUG] Daemon neutral lifecycle/SQLite transition agreement "+fixture.cases.length+" cases; model is not service authority or physical image proof");
 });
 
 /** 🚧️ Wire values cannot smuggle runtime authority, alternate scopes or malformed lifecycle messages. */

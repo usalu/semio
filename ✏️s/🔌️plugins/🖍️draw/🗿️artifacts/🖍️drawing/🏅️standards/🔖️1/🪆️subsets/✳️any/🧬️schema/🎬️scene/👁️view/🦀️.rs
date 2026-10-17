@@ -45,6 +45,3 @@ pub fn view<'a>(plan:&'a DocumentScenePlan,node:&'a DocumentSceneNode)->Result<O
 pub fn bounds(artboard:Option<&semio_s_artifact_draw_drawing_model::DrawingArtboard>,nodes:&[PreparedSceneNode<'_>])->[f64;4]{let mut bounds=artboard.filter(|board|board.width>0.0&&board.height>0.0).map(|board|[0.0,0.0,board.width,board.height]);for node in nodes.iter().filter(|node|node.visible&&node.opacity>0.0&&node.groups.iter().all(|group|group.opacity>0.0)){if let Some(next)=node.bounds(){bounds=Some(union(bounds,next));}}bounds.unwrap_or([0.0,0.0,1024.0,1024.0])}
 pub fn union(old:Option<[f64;4]>,next:[f64;4])->[f64;4]{old.map_or(next,|old|[old[0].min(next[0]),old[1].min(next[1]),old[2].max(next[2]),old[3].max(next[3])])}
 
-#[cfg(test)]
-#[path="🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;

@@ -1,7 +1,12 @@
 //! 🎟️ Original typed child schema and source retain exact native preparation receipts.
-use super::*;
-use crate::app_emission::Emit;
-use crate::test_app_mutation_fixture::{SetCount,TestMutation,TestSnapshot};
+use semio_framework_os_kernel::{ArtifactOwnedValueRetirementFactory, ErasedSnapshotRetirement};
+use semio_framework_plugin_decl_emission::child_emit_preparation::{ChildEmitPreparation, ChildEmitPreparationStep};
+use semio_framework_diagnostic::FaultFrom;
+use semio_framework_value::retained_clone::RetainedCloneGrant;
+use semio_framework_plugin_decl_emission::Emit;
+use semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::document::mutations::set_count::SetCount;
+use semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::document::mutations::TestMutation;
+use semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::document::TestSnapshot;
 #[test]
 fn original_child_preparation_preserves_native_receipts_and_cancellation(){
  let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:65536,maximum_release_bytes:262144,maximum_depth:64};
@@ -11,6 +16,6 @@ fn original_child_preparation_preserves_native_receipts_and_cancellation(){
    let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||source.prepare_child_one(grant).unwrap());let progress=step.progress();assert!(progress.fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));born+=heap.requested_bytes;released+=heap.released_bytes;ready=matches!(step,ChildEmitPreparationStep::Ready(_));turns+=1;assert!(turns<100000);
   }
   loop{let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||source.close_child_one(grant).unwrap());let Some(step)=step else{assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));break;};let progress=step.progress().unwrap_or_default();assert!(progress.fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));born+=heap.requested_bytes;released+=heap.released_bytes;turns+=1;assert!(turns<100000);}
-  let((),heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(source));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(born,released);println!("[DEBUG] original child preparation count={count} cancel={cut} turns={turns} sameTypedPointer physical={released} terminalDrop0");
+  let((),heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(source));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(born,released);
  }}
 }

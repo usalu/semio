@@ -1,0 +1,59 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📐️projection/🟦️.tsx",
+ "importers": "auto",
+ "children": [
+  {
+   "dir": "🧮️projection-pose",
+   "doc": "/** 🧮️ World projection poses: the command, mode kind and field of view, the family, defaults, content bounds and their key, the cardinal, corner and orientation looks, half extent, ortho zoom, framing, the pose, orbit constraints and the gumball plane. */",
+   "lines": [
+    [
+     245,
+     548
+    ]
+   ],
+   "names": [
+    "worldProjectionSnapZoom"
+   ]
+  },
+  {
+   "dir": "🔄️projection-matrices",
+   "doc": "/** 🔄️ World projection matrices: the oblique shear, the goal and morph matrices, the transition pose and the gizmo face view. */",
+   "lines": [
+    [
+     549,
+     640
+    ]
+   ]
+  },
+  {
+   "dir": "🧭️projection-gizmo-specs",
+   "doc": "/** 🧭️ World projection specs of the gizmo: the gizmo spec and hit, the orbit view and its spec, and the kind switch spec. */",
+   "lines": [
+    [
+     641,
+     775
+    ]
+   ]
+  },
+  {
+   "dir": "🎬️projection-rig",
+   "doc": "/** 🎬️ The world projection rig: the rig, applier and matrix driver, the curvilinear unprojection, its shaders and capture target, and the curvilinear pass. */",
+   "lines": [
+    [
+     776,
+     981
+    ]
+   ]
+  },
+  {
+   "dir": "🏷️projection-templates",
+   "doc": "/** 🏷️ World projection templates: the template descriptors and tree, the template id codec, and the labels and icon ids of the projection specs. */",
+   "lines": [
+    [
+     983,
+     1163
+    ]
+   ]
+  }
+ ]
+}

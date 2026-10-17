@@ -4,9 +4,12 @@
 //!
 //! 🪟️ All four sections are windowed: each publishes its full `total` and materialises only the
 //! host's slice (see `📌️panels/🗿️artifact` for the windowing law).
+use crate::editor::puzzle5d::interaction::ui_label;
 
 use crate::editor::puzzle5d::terminology::Puzzle5dLabels;
-use crate::editor::puzzle5d::{puzzle5d_inferred_kind_rows, ui_label, Puzzle5dScene, PUZZLE5D_PLAY_CONTROLLER_ID};
+use crate::editor::puzzle5d::catalog::{catalog_kind_label, puzzle5d_inferred_kind_rows};
+use crate::editor::puzzle5d::view::Puzzle5dScene;
+use crate::editor::puzzle5d::entities::PUZZLE5D_PLAY_CONTROLLER_ID;
 use semio_framework_plugin::tree_item_desc;
 use semio_framework_plugin::tree_item_with_action_draggable;
 use semio_framework_plugin::ActionFactory;
@@ -49,17 +52,6 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Rows
-/// 🏷️ One catalogue entry's display name: its authored `label`, else its `name`, else its id.
-pub fn catalog_kind_label(entry: &Value) -> String {
-    entry
-        .get("label")
-        .and_then(|value| value.as_str())
-        .filter(|value| !value.is_empty())
-        .or_else(|| entry.get("name").and_then(|value| value.as_str()).filter(|value| !value.is_empty()))
-        .or_else(|| entry.get("id").and_then(|value| value.as_str()))
-        .unwrap_or("kind")
-        .into()
-}
 
 /// 🖱️ The catalogue drop payload. `kindId` is what the board pane's drop reads; `objectKind`/`meshUrl`
 /// are what the world pane's engine-side ghost reader resolves a live mesh preview from, so one row
@@ -136,7 +128,5 @@ pub fn render(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels, windows: &TreeW
 //#endregion 🔖️Render
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

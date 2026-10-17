@@ -21,9 +21,9 @@ test("native Architect sparse collection roles preserve schema and independent S
   expect(ajv.compile(deltaSchema)(fixture.delta)).toBe(true);
   const db = new Database(":memory:");
   db.run("CREATE TABLE owners(id TEXT PRIMARY KEY, ordinal INTEGER NOT NULL)");
-  fixture.ids.forEach((id:string, ordinal:number) => db.run("INSERT INTO owners VALUES (?,?)", id, ordinal));
-  fixture.delta.removed.forEach((id:string) => db.run("DELETE FROM owners WHERE id=?", id));
-  fixture.delta.reordered.forEach((id:string, ordinal:number) => db.run("UPDATE owners SET ordinal=? WHERE id=?", ordinal, id));
+  fixture.ids.forEach((id:string, ordinal:number) => db.run("INSERT INTO owners VALUES (?,?)", [id, ordinal]));
+  fixture.delta.removed.forEach((id:string) => db.run("DELETE FROM owners WHERE id=?", [id]));
+  fixture.delta.reordered.forEach((id:string, ordinal:number) => db.run("UPDATE owners SET ordinal=? WHERE id=?", [ordinal, id]));
   expect(db.query("SELECT id FROM owners ORDER BY ordinal").all().map((row:any) => row.id)).toEqual(fixture.expected);
   db.close();
   const source = readFileSync(resolve(root, "🦀️.rs"), "utf8");
@@ -32,5 +32,4 @@ test("native Architect sparse collection roles preserve schema and independent S
     const derive = prefix.slice(prefix.lastIndexOf("#[derive("));
     expect(derive).toContain("semio_framework_dsl_record_derive::DslRecord");
   }
-  console.log("[DEBUG] Architect sparse native roles preserve Ajv delta and SQLite removal/order", fixture.expected);
 });

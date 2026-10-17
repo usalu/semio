@@ -17,5 +17,9 @@
       },
       "x-semio-state": "artifact"
     }
-  }
+  },
+  "required": [
+    "bytes",
+    "schema"
+  ]
 }

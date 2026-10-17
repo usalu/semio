@@ -30,6 +30,10 @@ type stdioSemioV1AnimationInferenceGuardSizeBounds = { readonly minItems?: numbe
 
 export const stdioSemioV1AnimationInferenceGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : stdioSemioV1AnimationInferenceGuardReject(at, "value is not an object");
+export const stdioSemioV1AnimationInferenceGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) stdioSemioV1AnimationInferenceGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const stdioSemioV1AnimationInferenceGuardArray = (value: unknown, at: string, bounds: stdioSemioV1AnimationInferenceGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return stdioSemioV1AnimationInferenceGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) stdioSemioV1AnimationInferenceGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -60,14 +64,14 @@ export const stdioSemioV1AnimationInferenceGuardConstant = <T extends string | n
 //#endregion 🚪️Parsers
 
 export function parseSemioAnimationInference(value: unknown, at = "$"): SemioAnimationInference {
-  const row = stdioSemioV1AnimationInferenceGuardObject(value, at);
+  const row = stdioSemioV1AnimationInferenceGuardClosed(stdioSemioV1AnimationInferenceGuardObject(value, at), at, ["duration"]);
   return {
     duration: parseSemioAnimationDuration(row["duration"], `${at}.duration`),
   };
 }
 
 export function parseSemioAnimationDuration(value: unknown, at = "$"): SemioAnimationDuration {
-  const row = stdioSemioV1AnimationInferenceGuardObject(value, at);
+  const row = stdioSemioV1AnimationInferenceGuardClosed(stdioSemioV1AnimationInferenceGuardObject(value, at), at, ["durationSeconds", "timelineCount", "channelCount", "keyframeCount"]);
   return {
     durationSeconds: stdioSemioV1AnimationInferenceGuardNumber(row["durationSeconds"], `${at}.durationSeconds`, {"minimum": 0}),
     timelineCount: stdioSemioV1AnimationInferenceGuardInteger(row["timelineCount"], `${at}.timelineCount`, {"minimum": 0}),

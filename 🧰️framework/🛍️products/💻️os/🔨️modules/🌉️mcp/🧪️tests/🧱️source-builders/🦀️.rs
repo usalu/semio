@@ -36,6 +36,7 @@ use semio_framework::manifest::WindowKindDefinition;
 use semio_framework::manifest::WindowKinds;
 use semio_framework::manifest;
 use semio_framework_artifact_reference::ArtifactDialect;
+use semio_framework_test_fixtures::fixture_text;
 use semio_framework_ui::wgpu::SurfaceKind;
 use semio_framework_ui_locale::LocalizedLabel;
 use crate::core_capabilities::core_tool_capabilities;
@@ -43,9 +44,6 @@ use semio_framework_os_mcp_catalog::catalog::CatalogSource;
 use semio_framework_os_mcp_catalog::conformance::EvalCase;
 
 /// 🧪️ Reads a committed fixture from the package directory at run time instead of embedding it in the test binary.
-fn fixture_text(relative: &str) -> &'static str {
-    Box::leak(std::fs::read_to_string(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative)).expect(relative).into_boxed_str())
-}
 
 
 //#region 🔖️Helpers
@@ -53,7 +51,7 @@ fn fixture_text(relative: &str) -> &'static str {
 /// 🧱️ A schema-authored neutral package exercises retained catalog and inference discovery.
 pub fn catalog_contract_descriptor() -> (PackageDescriptor, Vec<u8>) {
     use semio_framework_value::ToValue;
-    let json = fixture_text("../../../../../../../🔨️modules/🛂️manifest/🧪️tests/🧫️fixtures/📦️catalog-package/🔣️.json");
+    let json = fixture_text!("../../../../../../../🔨️modules/🛂️manifest/🧪️tests/🧫️fixtures/📦️catalog-package/🔣️.json");
     let descriptor: PackageDescriptor = semio_framework_pack_json::from_json_str(json, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("catalog package contract");
     assert_eq!(descriptor, serde_json::from_str::<PackageDescriptor>(json).expect("independent catalog package parser"));
     let bytes = semio_framework_os_kernel::os_pack::pack_rt::encode_wire_value(&descriptor.to_value());

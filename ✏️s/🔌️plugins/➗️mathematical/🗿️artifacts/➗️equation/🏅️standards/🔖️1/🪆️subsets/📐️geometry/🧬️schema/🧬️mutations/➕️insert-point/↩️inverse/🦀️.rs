@@ -2,13 +2,16 @@
 //! index-keyed addressing law.
 
 use crate::standards::v1::subsets::geometry::schema::mutations::remove_point;
-use crate::{EquationMutation, EquationSnapshot};
+use crate::EquationSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &super::InsertPoint, base: &EquationSnapshot) -> Result<Vec<EquationMutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op>(payload: &super::InsertPoint, base: &EquationSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError>
+where
+    Op: From<crate::standards::v1::subsets::geometry::schema::mutations::remove_point::RemovePoint>,
+{
     Ok((|| {
     let index = payload.index.min(base.geometry.points.len());
-    vec![EquationMutation::RemovePoint(remove_point::RemovePoint { index })]
+    vec![Op::from(remove_point::RemovePoint { index })]
 
     })())
 }

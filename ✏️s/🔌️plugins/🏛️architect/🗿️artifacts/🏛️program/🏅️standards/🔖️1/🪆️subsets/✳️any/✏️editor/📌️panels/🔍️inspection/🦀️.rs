@@ -1,6 +1,6 @@
 //! 🔍️ Architect inspection panel — the document-wide register summary.
 
-use crate::editor::architect::ui_label;
+use crate::editor::architect::base::ui_label;
 use crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot;
 use semio_framework_plugin::tree_item_desc;
 use semio_framework_plugin::ui_node_list;
@@ -50,11 +50,5 @@ pub fn render(program: &ProgramSnapshot) -> UiAssemblyResult<semio_framework_plu
 //#endregion 🔖️Render
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️semantic-contract/🦀️.rs"]
-mod semantic_contract;

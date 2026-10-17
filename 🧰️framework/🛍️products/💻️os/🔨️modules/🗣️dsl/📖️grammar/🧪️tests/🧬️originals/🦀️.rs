@@ -1,9 +1,10 @@
 //! 🧬️ Verifies the complete immutable original grammar input cohort alongside the current tree sweep.
 use super::*;
+use semio_framework_test_fixtures::fixture_path;
 
 #[test]
 fn all_original_503_shipped_grammar_inputs_parse_and_compile_with_explicit_os_composition() {
-    let fixture = std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../📖️grammar/🧪️tests/🧬️originals/🧫️fixtures/🔣️.json")).expect("original grammar capture fixture, read at run time");
+    let fixture = std::fs::read_to_string(fixture_path!("../../../../📖️grammar/🧪️tests/🧬️originals/🧫️fixtures/🔣️.json")).expect("original grammar capture fixture, read at run time");
     let capture: serde_json::Value = serde_json::from_str(&fixture).expect("capture JSON");
     let inputs = capture["inputs"].as_array().expect("captured inputs");
     let rows = capture["shippedGrammarLawInputs"].as_array().expect("shipped grammar inputs");

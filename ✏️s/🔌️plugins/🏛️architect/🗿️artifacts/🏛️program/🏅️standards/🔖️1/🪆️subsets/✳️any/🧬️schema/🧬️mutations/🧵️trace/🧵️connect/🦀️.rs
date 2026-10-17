@@ -4,7 +4,7 @@
 //! Phase 2). Behavior unchanged from the wave-2 pass — pure directory/module restructuring.
 
 use crate::standards::v1::subsets::any::schema::kernel::TraceLink;
-use crate::standards::v1::subsets::any::schema::{diff::ProgramDiff, mutations::ProgramMutation, snapshot::ProgramSnapshot};
+use crate::standards::v1::subsets::any::schema::{diff::ProgramDiff, snapshot::ProgramSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 
 /// 🔌️ Upserts a trace edge by its own id: adds it if new, replaces its full content if present.
@@ -20,12 +20,15 @@ pub struct ConnectTrace {
     #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     pub index: Option<usize>,
 }
-impl MutationKind<ProgramSnapshot, ProgramMutation> for ConnectTrace {
+impl<Op> MutationKind<ProgramSnapshot, Op> for ConnectTrace
+where
+    Op: protocol::Mutation<ProgramSnapshot, Diff = ProgramDiff> + From<ConnectTrace> + From<crate::standards::v1::subsets::any::schema::mutations::disconnect_trace::DisconnectTrace>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "connect", entity: "trace", kind: "connect-trace", record: "ConnectedTrace" };
     fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &ProgramSnapshot) -> Result<Vec<ProgramMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &ProgramSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

@@ -1,6 +1,6 @@
 mod tests {
     use super::*;
-    use crate::standards::v1::subsets::any::schema::registers::{RegisterKey, RegisterRow};
+    use crate::standards::v1::subsets::any::schema::registers::catalog::{RegisterKey, RegisterRow};
     use crate::standards::v1::subsets::any::schema::snapshot::sample_plugin;
     use crate::standards::v1::subsets::any::io::export::serializers::artifacts::csv::v_rfc4180::any::export_registers_csv;
     use crate::standards::v1::subsets::any::io::export::serializers::artifacts::tsv::v_iana::any::export_registers_tsv;

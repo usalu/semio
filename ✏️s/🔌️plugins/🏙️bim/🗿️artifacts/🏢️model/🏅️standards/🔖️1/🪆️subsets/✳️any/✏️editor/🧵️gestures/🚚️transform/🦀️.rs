@@ -4,7 +4,8 @@
 //! inference, so they are never part of the set.
 
 use super::plane::{angle, dist, flatten, point2, quantised, rotate_about, same, translate, P};
-use super::session::{length_label, Mark, Pointer, Preview, Step, Style, Tool, ToolContext, ToolEvent, PICK_PIXELS};
+use super::session::{length_label, Pointer, Step, Tool, ToolContext, ToolEvent, PICK_PIXELS};
+use crate::editor::bim::marks::{Mark, Preview, Style};
 use crate::editor::bim::entities::kind_holding;
 use crate::editor::bim::modes::edit::windows::plan;
 use crate::standards::v1::subsets::any::schema::inferences::plan_linework::PlanVertex;

@@ -1,0 +1,32 @@
+[
+  {
+    "bytes": 262144,
+    "files": 32,
+    "lines": 4000,
+    "accepted": true
+  },
+  {
+    "bytes": 262145,
+    "files": 32,
+    "lines": 4000,
+    "accepted": false
+  },
+  {
+    "bytes": 262144,
+    "files": 33,
+    "lines": 4000,
+    "accepted": false
+  },
+  {
+    "bytes": 262144,
+    "files": 32,
+    "lines": 4001,
+    "accepted": false
+  },
+  {
+    "bytes": 596878,
+    "files": 15,
+    "lines": 5708,
+    "accepted": false
+  }
+]

@@ -5,20 +5,18 @@
  * switched the icons on — the learner's choice, kept on the device, and until they choose every device but one that
  * asks for reduced motion.
  *
- * @see ../../🎯️targets/⚛️react/🎨️.css
+ * @see ../../🎯️targets/⚛️react/🎨️styles/🎞️icon-motion/🎨️.css
  * @see https://www.w3.org/WAI/WCAG22/Understanding/animation-from-interactions.html
  */
 
 import { fireEvent, render, screen } from "@testing-library/react";
-import { readFileSync } from "node:fs";
-import { dirname, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
 import { describe, expect, it, vi } from "vitest";
 import { MOTIONS, type Sheet } from "@semio-tech/quiz";
 import { ICON_HOSTS, ICON_LOOP_MS, IconLabel, PreferencesPanel, TaskGlyph, TaskView, effectiveIconMotion, playTappedIcons, localStore, memoryStorageOrigin, quizText, readPreferences, textPresentation, withIcons } from "@semio-tech/quiz-react";
+import { quizStylesheet } from "@semio-tech/quiz-react/stylesheet";
 import sheets from "../🧫️fixtures/🃏️sheet-assembly/🔣️.json";
 
-const css = readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "../../🎯️targets/⚛️react/🎨️.css"), "utf8");
+const css = quizStylesheet;
 const glyph = (container: HTMLElement): HTMLElement | null => container.querySelector<HTMLElement>(".quiz-glyph");
 
 describe("task icons", () => {

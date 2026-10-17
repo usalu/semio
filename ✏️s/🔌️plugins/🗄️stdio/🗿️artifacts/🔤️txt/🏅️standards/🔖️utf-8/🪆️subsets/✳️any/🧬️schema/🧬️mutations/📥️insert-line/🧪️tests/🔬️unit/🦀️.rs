@@ -4,10 +4,11 @@ use crate::standards::v_utf_8::subsets::any::schema::mutations::{RemoveLineMutat
 use crate::standards::v_utf_8::subsets::any::schema::mutations::insert_line::*;
 use crate::schema::snapshot::LineEnding;
 use protocol::{Mutation, MutationKind, MutationLeaf, OpBinary, OpText};
+use semio_framework_test_fixtures::fixture_text;
 
 #[test]
 fn canonical_leaf_metadata_matches_descriptor_and_provenance() {
-    let expected: serde_json::Value = serde_json::from_str(include_str!("../../🔣️.json")).expect("valid canonical insert-line descriptor");
+    let expected: serde_json::Value = serde_json::from_str(fixture_text!("../../../../🧬️mutations/📥️insert-line/🔣️.json")).expect("valid canonical insert-line descriptor");
     assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&(<InsertLineMutation as MutationLeaf>::DESCRIPTOR))).expect("serializable descriptor"), expected);
     let provenance = <InsertLineMutation as MutationLeaf>::PROVENANCE;
     assert_eq!(provenance.mutation_root, "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/🧬️mutations");

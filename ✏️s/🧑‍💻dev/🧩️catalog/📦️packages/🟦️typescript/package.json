@@ -1,0 +1,16 @@
+{
+  "name": "@semio-tech/s-dev-catalog-ts",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./🟦️.ts",
+    "./browser-host": "./🌐️browser-host/🟦️.ts",
+    "./browser-host/staging": "./🌐️browser-host/🏗️staging/🟦️.ts",
+    "./builder": "./🏗️builder/🟦️.ts",
+    "./generated": "./🤖️generated/🟦️.ts",
+    "./generated/playgrounds": "./🤖️generated/🎮️playgrounds/🟦️.ts",
+    "./generated/plugins": "./🤖️generated/🧩️plugins/🟦️.ts",
+    "./publication": "./📣️publication/🟦️.ts",
+    "./session": "./🎮️session/🟦️.ts"
+  }
+}

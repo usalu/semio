@@ -1,7 +1,9 @@
 //! 🧪️ Viewer surface laws: the app id is canonical, the surface is structurally read-only, and it
 //! boots on the same example the editor does.
 
-use super::*;
+use crate::viewer::wfc3d::modes::view::windows::preview;
+use crate::{WFC3D_DIALECT, WFC3D_DOCUMENT_SCHEMA};
+use crate::viewer::wfc3d::*;
 use semio_framework_plugin::ArtifactViewer;
 
 #[test]

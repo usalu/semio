@@ -11,9 +11,9 @@ import{resolve,join}from"node:path";
 import{pathToFileURL}from"node:url";
 import fixture from"./🔣️.json"with{type:"json"};
 import schema from"../🧬️schema/🔣️.json"with{type:"json"};
-import{runtimeAssetStageTrees}from"../../../../../../../../🔨️modules/🖼️canvas/🔌️runtime-assets/🚚️staging/🟦️.ts";
+import{runtimeAssetStageTrees}from"@semio-tech/framework-canvas-ts/runtime-assets/staging";
 import publication from"../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/💾️storage/🧬️schema/🔣️.json"with{type:"json"};
-import { infiniteFontsReadingSchema as fonts } from "../../../../../♾️infinite/🧪️tests/🧫️fixtures/🟦️.ts";
+import { infiniteFontsReadingSchema as fonts } from "@semio-tech/framework-os/modules/infinite/testing/fixtures";
 const workspace=resolve(import.meta.dir,"../../../../../../../../.."),producer=resolve(import.meta.dir,"../🟦️.ts");
 test("neutral OS Vite artifact DATA matches neutral publication budgets and independent SQLite inventory",async()=>{
  const oracle=new Ajv({strict:true}),db=new Database(":memory:"),products=resolve(workspace,".fixture-products");
@@ -36,11 +36,9 @@ test("neutral OS Vite artifact DATA matches neutral publication budgets and inde
   }
   for(const row of fixture.invalid)expect(()=>frameworkOsViteArtifactInputsV1(products,row)).toThrow();
  }finally{db.close();}
- console.log("[DEBUG] Neutral OS font/conditional renderer/six Canvas DATA inventories agree with independent SQLite and canonical publisher/reader budgets; no lease or physical runtime claim");
 });
 test("neutral actual OS and app Vite callers explicitly carry their domain input inventory",()=>{
  for(const row of fixture.callers){const source=readFileSync(resolve(workspace,row.path),"utf8"),tree=ts.createSourceFile(row.path,source,ts.ScriptTarget.Latest,true),calls:ts.CallExpression[]=[];const visit=(node:ts.Node):void=>{if(ts.isCallExpression(node)&&node.expression.getText(tree)===row.call)calls.push(node);ts.forEachChild(node,visit);};visit(tree);expect(calls.length,row.path).toBe(row.count);for(const call of calls){const argument=call.arguments[row.call==="runViteBunxDev"?4:0];expect(argument?.getText(tree),row.path).toContain("artifactInputs:");if(row.inputs==="bundle-engines"){expect(argument?.getText(tree),row.path).toContain("flowBrowserPackageRequestV1(");expect(argument?.getText(tree),row.path).toContain("frameworkOsEngineDeliveriesV1(");continue;}expect(argument?.getText(tree),row.path).toContain("frameworkOsViteArtifactInputsV1(");if(row.engines==="contribution")expect(argument?.getText(tree),row.path).toContain("frameworkOsEngineFacetV1(contribution?.browserSessionFactories??[])");else expect(argument?.getText(tree),row.path).toContain('engines:"'+row.engines+'"');expect(argument?.getText(tree),row.path).toContain('command:"'+(row.call==="buildViteArtifact"?"build":"serve")+'"');} }
- console.log("[DEBUG] Independent TypeScript AST checks every actual enumerated domain Vite build/serve caller; runtime lifetimes require actual physical qualification");
 });
 
 test("neutral config products-root DATA has no physical owner import",async()=>{
@@ -71,7 +69,6 @@ import { artifactsPublicationSourcesSchemaUrl } from "@semio-tech/process/testin
 test("neutral distribution publication receipt is finite DATA and agrees with Ajv and SQLite",()=>{
  const oracle=new Ajv({strict:true}),db=new Database(":memory:");try{for(const mode of["prototype","release"]as const){const value={version:1,mode,owner:compileReceiptSchema.definitions.Protocol.const.owner,manifestSha256:new Bun.CryptoHasher("sha256").update("actual output witness").digest("hex")},text=JSON.stringify(value);expect(oracle.validate(compileReceiptSchema,value)).toBe(true);expect(JSON.stringify(readDistributionCompileReceiptV1(text,mode))).toBe((db.query("select json(?) wire").get(text)as{wire:string}).wire);for(const candidate of[{...value,owner:"foreign"},{...value,manifestSha256:"a"},{...value,path:"/unpaid"},{...value,version:2}]){expect(oracle.validate(compileReceiptSchema,candidate)).toBe(false);expect(()=>readDistributionCompileReceiptV1(JSON.stringify(candidate),mode)).toThrow();}expect(()=>readDistributionCompileReceiptV1(text,mode==="prototype"?"release":"prototype")).toThrow();expect(()=>readDistributionCompileReceiptV1(" ".repeat(compileReceiptSchema.definitions.Protocol.const.maximumReceiptBytes)+text,mode)).toThrow();}}
  finally{db.close();}
- console.log("[DEBUG] Closed digest receipt parity with independent Ajv/SQLite; receipt never grants a reader or compiler resource");
 });
 
 test("neutral model product boundary refuses forged custody and copies closed selected-mode DATA",async()=>{

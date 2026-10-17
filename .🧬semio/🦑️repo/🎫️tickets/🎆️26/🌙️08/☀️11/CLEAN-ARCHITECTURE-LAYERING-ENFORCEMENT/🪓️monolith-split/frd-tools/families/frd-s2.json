@@ -1,0 +1,21 @@
+{
+ "name": "frd-s2",
+ "crates": [
+  "semio-framework-test-fixtures",
+  "semio-s-artifact-stdio-bmp",
+  "semio-s-artifact-stdio-csv-snapshot",
+  "semio-s-artifact-stdio-docx-base",
+  "semio-s-artifact-stdio-gif-schema-2",
+  "semio-s-artifact-stdio-gltf-mutations-mutations",
+  "semio-s-artifact-stdio-jpg-schema",
+  "semio-s-artifact-stdio-semio-mesh-io",
+  "semio-s-artifact-stdio-semio-object-editor",
+  "semio-s-artifact-stdio-stl",
+  "semio-s-artifact-stdio-svg-schema-3",
+  "semio-s-artifact-stdio-tiff-mutation-regressions",
+  "semio-s-artifact-stdio-xml-tests-2",
+  "semio-s-artifact-stdio-zip-inferences",
+  "semio-s-artifact-stdio-zip-tests"
+ ],
+ "note": "FRD sample, no baseline"
+}

@@ -2,7 +2,7 @@
 
 use crate::editor::rewriting::{TrinityRewritingCommand, TrinityRewritingPlayApp};
 use crate::standards::v1::subsets::any::schema::mutations::RewriteRuleMutation;
-use crate::RewritingSnapshot;
+use crate::standards::v1::subsets::any::schema::snapshot::RewritingSnapshot;
 use semio_framework_plugin::app::{ArtifactOwnedToolJobContext, ArtifactOwnedToolJobRequest};
 use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework_plugin::{
@@ -39,8 +39,8 @@ fn reduce(
 ) -> Result<Emit<RewriteRuleMutation, NoConfigMutation, NoDraftMutation>, Fault> {
     let view = context.and_then(|context| context.view_state.as_ref());
     match command {
-        TrinityRewritingCommand::SetViewport { surface_id, viewport } => crate::editor::rewriting::commands::set_viewport(surface_id, viewport, view),
-        TrinityRewritingCommand::SetLodMode { value } => crate::editor::rewriting::commands::set_lod_mode(value, view),
+        TrinityRewritingCommand::SetViewport { surface_id, viewport } => crate::editor::rewriting::commands::set_viewport::set_viewport(surface_id, viewport, view),
+        TrinityRewritingCommand::SetLodMode { value } => crate::editor::rewriting::commands::set_lod_mode::set_lod_mode(value, view),
         _ => Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "the rewriting window reducer received a command outside its tool roster")),
     }
 }
@@ -79,9 +79,9 @@ impl ToolJobFactory for RewritingWindowConfigJobFactory {
         &mut self,
         _operation: semio_framework_job::Operation,
         payload: Self::Payload,
-        input: semio_framework::action_bus::RetainedToolWireInput,
-        checkpoint: Option<semio_framework::action_bus::RetainedToolWireInput>,
-    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework::action_bus::RetainedToolWireInput, Option<semio_framework::action_bus::RetainedToolWireInput>)> {
+        input: semio_framework_action_bus::RetainedToolWireInput,
+        checkpoint: Option<semio_framework_action_bus::RetainedToolWireInput>,
+    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework_action_bus::RetainedToolWireInput, Option<semio_framework_action_bus::RetainedToolWireInput>)> {
         if input.declared_bytes() > RAW_BYTES || checkpoint.is_some() {
             return Err((ToolJobFactoryError::new("Rewriting window command rejects oversized wire or a checkpoint"), input, checkpoint));
         }
@@ -92,7 +92,7 @@ impl ToolJobFactory for RewritingWindowConfigJobFactory {
 impl ArtifactOwnedToolJobFactory for RewritingWindowConfigJobFactory {
     type Owner = EditorApp<TrinityRewritingPlayApp>;
     const TOOL_IDS: &'static [&'static str] = TOOL_IDS;
-    const DOCUMENT_SCHEMA: &'static str = crate::REWRITE_RULE_SCHEMA;
+    const DOCUMENT_SCHEMA: &'static str = crate::standards::v1::subsets::any::schema::model::REWRITE_RULE_SCHEMA;
     const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] =
         &[ArtifactToolPublicationContract { tool_id: "nodeGraphViewport", lanes: &[ArtifactToolPublicationLane::WindowConfig] }, ArtifactToolPublicationContract { tool_id: "setLodMode", lanes: &[ArtifactToolPublicationLane::WindowConfig] }];
 }

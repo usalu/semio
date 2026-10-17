@@ -1,0 +1,66 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖋️InkCanvasHost/🟦️.tsx",
+ "importers": "auto",
+ "children": [
+  {
+   "dir": "🧾️ink-model",
+   "doc": "/** 🧾️ InkCanvasHost model: the ink document, item, event and gesture types and the scene and selection id parsers. */",
+   "lines": [
+    [
+     35,
+     183
+    ]
+   ]
+  },
+  {
+   "dir": "📐️ink-geometry",
+   "doc": "/** 📐️ InkCanvasHost geometry: the host id counter, the world snapping, the screen and world conversion, the item and selection bounds, the resize and scale math, the hit tests and the stroke erasure. */",
+   "lines": [
+    [
+     187,
+     429
+    ]
+   ]
+  },
+  {
+   "dir": "🌳️ink-document-ops",
+   "doc": "/** 🌳️ InkCanvasHost document operations: the text and html conversion of paragraphs, the clipboard payload, the item cloning and creation by kind and the local application of canvas events to the item tree. */",
+   "lines": [
+    [
+     431,
+     615
+    ]
+   ]
+  },
+  {
+   "dir": "🧱️ink-block-views",
+   "doc": "/** 🧱️ InkCanvasHost block views: the math renderer port with its KaTeX default and the text, table, image, math and stroke block views. */",
+   "lines": [
+    [
+     619,
+     830
+    ]
+   ]
+  },
+  {
+   "dir": "🪟️ink-overlays",
+   "doc": "/** 🪟️ InkCanvasHost overlays: the selection chrome with its resize handles, the viewport grid and the text and table cell editor overlays. */",
+   "lines": [
+    [
+     834,
+     960
+    ]
+   ]
+  },
+  {
+   "dir": "🧲️ink-host-state",
+   "doc": "/** 🧲️ InkCanvasHost state shapes: the drag, text edit and table edit state types and the host constants. */",
+   "lines": [
+    [
+     964,
+     985
+    ]
+   ]
+  }
+ ]
+}

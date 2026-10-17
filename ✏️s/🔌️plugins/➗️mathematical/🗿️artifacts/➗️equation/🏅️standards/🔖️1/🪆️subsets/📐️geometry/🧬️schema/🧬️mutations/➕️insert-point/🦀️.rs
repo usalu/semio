@@ -1,7 +1,7 @@
 //! ➕️ `insert-point` — places a new point into the geometry playground's anonymous, index-keyed
 //! point cloud. `index` is FINAL-state, per the addressing convention for index-keyed collections.
 
-use crate::{EquationMutation, EquationSnapshot};
+use crate::EquationSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Payload
@@ -15,13 +15,16 @@ pub struct InsertPoint {
     pub y: f64,
 }
 
-impl protocol::MutationKind<EquationSnapshot, EquationMutation> for InsertPoint {
+impl<Op> protocol::MutationKind<EquationSnapshot, Op> for InsertPoint
+where
+    Op: protocol::Mutation<EquationSnapshot, Diff = crate::EquationDiff> + From<InsertPoint> + From<crate::standards::v1::subsets::geometry::schema::mutations::remove_point::RemovePoint>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "point", kind: "insert-point", record: "InsertedPoint" };
 
-    fn diff(&self, base: &EquationSnapshot) -> protocol::MutationOutcome<<EquationMutation as protocol::Mutation<EquationSnapshot>>::Diff> {
+    fn diff(&self, base: &EquationSnapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<EquationSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &EquationSnapshot) -> Result<Vec<EquationMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EquationSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

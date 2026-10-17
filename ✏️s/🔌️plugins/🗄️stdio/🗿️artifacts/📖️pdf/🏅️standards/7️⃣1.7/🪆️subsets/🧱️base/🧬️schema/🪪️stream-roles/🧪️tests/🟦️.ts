@@ -26,7 +26,6 @@ test("PDF roles admit the same logical values as independent JSON Schema", () =>
   const foreign = {...fixture.fontRole,value:{...fixture.fontRole.value,program:{...fixture.fontRole.value.program,data:[0,255]}}};
   expect(independent(foreign)).toBe(false);expect(()=>parsePdfAdmittedStreamRole(foreign)).toThrow();
   expect(Object.keys(fixture)).toHaveLength(12);
-  console.log("[DEBUG] PDF twelve admitted semantic roles agree with Ajv and refuse native font-byte leakage");
 });
 
 test("PDF role identities distinguish generations and changed inputs require semantic payloads", () => {
@@ -47,7 +46,6 @@ test("PDF role identities distinguish generations and changed inputs require sem
   expect(() => validateRoleInputs(base, next, [role], [role,role])).toThrow("duplicated");
   next[0]!.id.gen = 3;
   expect(() => validateRoleInputs(base, next, [role], [role])).toThrow();
-  console.log("[DEBUG] PDF pure identity lookup and explicit semantic role refusal confirmed");
 });
 
 
@@ -63,7 +61,6 @@ test("PDF role GraphQL and protobuf facets retain typed word and reference contr
   const reference=root.lookupType("semio.s_stdio_pdf_1_7.snapshot.PdfArtifactRef");
   const artifact=fixture.referenceRole.value.reference;
   expect(reference.toObject(reference.decode(reference.encode(reference.create(artifact)).finish()))).toEqual(artifact);
-  console.log("[DEBUG] PDF GraphQL role input/output and independent protobuf exact u32/artifact-reference laws completed");
 });
 
 test("PDF graph mutation protobuf facets carry exact admitted role words",async()=>{
@@ -77,7 +74,6 @@ test("PDF graph mutation protobuf facets carry exact admitted role words",async(
     expect(output.admittedStreamRoles.modified[0]!.value.value.sampledWords.samples).toEqual(fixture.sampledRole.value.samples);
     expect(output.id).toEqual(input.id);
   }
-  console.log("[DEBUG] PDF insert/remove/set-object protobuf payloads preserve exact admitted role words");
 });
 
 test("PDF neutral multiobject replay law has current role-aware receiving syntax",async()=>{
@@ -94,7 +90,6 @@ test("PDF neutral multiobject replay law has current role-aware receiving syntax
   }finally{parser.delete();}
   expect(replay.nativeOperatorNames).toEqual(fixture.role.value.content.map(operator=>operator.op==="save"?"q":"Q"));
   const retained=replay.owners.filter(owner=>owner.num!==replay.owners[0]!.num);expect(retained).toEqual([replay.expectedRetainedOwner]);
-  console.log("[DEBUG] PDF neutral replay contract, independently parsed Rust receiving bodies and logical deletion witness verified; native execution pending");
 });
 
 test("PDF graph role deletion cannot erase native replacement obligations",()=>{
@@ -113,5 +108,4 @@ test("PDF graph role deletion cannot erase native replacement obligations",()=>{
   expect(()=>validateRoleTransition([native,page],[native,removedConsumption],[consumed],[],[])).not.toThrow();
   const changedNative=structuredClone(native);if(changedNative.value.kind!=="stream")throw Error("fixture");changedNative.value.data.push(0);
   expect(()=>validateRoleTransition([native,page],[changedNative,removedConsumption],[consumed],[],[])).toThrow("replacement");
-  console.log("[DEBUG] PDF actual role-transition implementation permits owner+role deletion and refuses changed native bytes hidden by role removal");
 });

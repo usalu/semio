@@ -14,7 +14,6 @@ test("original job close separates exact independent grants and preserves termin
   const pending={phase:"pending",progress:fixture.progress},complete=applyPatch(structuredClone(pending),[{op:"replace",path:"/phase",value:"complete"}],true).newDocument;
   expect(complete.progress).toEqual(pending.progress);expect(fixture.close.terminal).toBe("original-owner-empty");expect(fixture.close.blocked).toBe("registered-wake");
   expect(fixture.close.refusal).toBe("original-owner-retained");expect(fixture.close.demand).toBe("result-for-copy-capacity-release-depth");
-  console.log("[DEBUG] original job full grants retain physical release65536 with copy3 and exact terminal progress");
 });
 
 test("worker physical demand preserves caller authority and independent allocation state", async () => {
@@ -43,19 +42,17 @@ test("worker physical demand preserves caller authority and independent allocati
   expect(source.includes("pub fn child_retirement_demands(&self,maximum_copy_bytes:usize)->Result<RetirementDemand,ValueError>")).toBe(true);
   expect(source.includes("pub fn next_child_close_demands")).toBe(false);
   expect(source.includes("Arc::into_inner(payload_ledger)")).toBe(true);
-  console.log("[DEBUG] worker close demand: six physical extents preserve exact caller release grant");
 });
 
 test("worker close receipt preserves all admitted currencies at pending and completion",async()=>{
  const db=new Database(":memory:");db.run("CREATE TABLE receipt(items INTEGER,body INTEGER,capacity INTEGER,release INTEGER)");
- db.run("INSERT INTO receipt VALUES(?,?,?,?)",fixture.progress.copiedItems,fixture.progress.copiedBytes,fixture.progress.retainedCapacityBytes,fixture.progress.releasedBytes);
- const expected=db.query("SELECT items AS copiedItems,body AS copiedBytes,capacity AS retainedCapacityBytes,release AS releasedBytes FROM receipt").get();
+ db.run("INSERT INTO receipt VALUES(?,?,?,?)",[fixture.progress.copiedItems,fixture.progress.copiedBytes,fixture.progress.retainedCapacityBytes,fixture.progress.releasedBytes]);
+ const expected=db.query<{copiedItems:number;copiedBytes:number;retainedCapacityBytes:number;releasedBytes:number},[]>("SELECT items AS copiedItems,body AS copiedBytes,capacity AS retainedCapacityBytes,release AS releasedBytes FROM receipt").get();
  expect(expected).toEqual(fixture.progress);
  const changed=applyPatch({kind:"pending",progress:fixture.progress},[{op:"replace",path:"/kind",value:"complete"}],true).newDocument;
- expect(changed.progress).toEqual(expected);db.close();
+ expect<typeof expected>(changed.progress).toEqual(expected);db.close();
  const source=await Bun.file(new URL("../../🦀️.rs",import.meta.url)).text();
  expect(source.includes("impl WorkerJobCloseStep {")).toBe(true);
- console.log("[DEBUG] worker pending/complete original full receipt items1/copy3/capacity128/release65536 conserved by SQLite/RFC6902");
 });
 
 
@@ -77,7 +74,7 @@ test("actual worker callers preserve independent page and parent authority polic
 });
 
 test("retained fixture Box/Arc and parked queue expose physical ownership before caller funding",async()=>{
- const db=new Database(":memory:");try{db.run("CREATE TABLE owners(bytes INTEGER,credit INTEGER,shared INTEGER)");for(const row of fixture.hostileOwners){db.run("DELETE FROM owners");db.run("INSERT INTO owners VALUES(?,?,?)",row.allocationBytes,row.callerRelease,Number(row.shared));const oracle=db.query("SELECT CASE WHEN credit>=bytes AND shared=0 THEN bytes ELSE 0 END AS releasedBytes, credit<bytes AS retained FROM owners").get() as {releasedBytes:number,retained:number};expect(row.releasedBytes).toBe(oracle.releasedBytes);expect(row.retained).toBe(Boolean(oracle.retained));const after=applyPatch({retained:true,releasedBytes:0},row.retained?[]:[{op:"replace",path:"/retained",value:false},{op:"replace",path:"/releasedBytes",value:row.releasedBytes}],true).newDocument;expect(after).toEqual({retained:row.retained,releasedBytes:row.releasedBytes});}}finally{db.close();}
+ const db=new Database(":memory:");try{db.run("CREATE TABLE owners(bytes INTEGER,credit INTEGER,shared INTEGER)");for(const row of fixture.hostileOwners){db.run("DELETE FROM owners");db.run("INSERT INTO owners VALUES(?,?,?)",[row.allocationBytes,row.callerRelease,Number(row.shared)]);const oracle=db.query("SELECT CASE WHEN credit>=bytes AND shared=0 THEN bytes ELSE 0 END AS releasedBytes, credit<bytes AS retained FROM owners").get() as {releasedBytes:number,retained:number};expect(row.releasedBytes).toBe(oracle.releasedBytes);expect(row.retained).toBe(Boolean(oracle.retained));const after=applyPatch({retained:true,releasedBytes:0},row.retained?[]:[{op:"replace",path:"/retained",value:false},{op:"replace",path:"/releasedBytes",value:row.releasedBytes}],true).newDocument;expect(after).toEqual({retained:row.retained,releasedBytes:row.releasedBytes});}}finally{db.close();}
  const owner=await Bun.file(new URL("../🔬️retained-ownership/🦀️.rs",import.meta.url)).text();
  const hostile=owner.slice(owner.indexOf("impl InteractiveJob for HostileJob"),owner.indexOf("fn mounted_admitted"));
  expect(hostile.includes("fn next_close_copy_byte_demand")).toBe(true);expect(hostile.includes("Arc::into_inner")).toBe(true);

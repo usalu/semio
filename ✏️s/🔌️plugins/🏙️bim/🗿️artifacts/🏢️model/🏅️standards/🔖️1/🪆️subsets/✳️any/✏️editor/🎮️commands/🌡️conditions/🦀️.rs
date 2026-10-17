@@ -3,7 +3,7 @@
 //! conditions. Both are one gesture and so one history row, and both refuse as a whole instead of touching part of the targets.
 
 use crate::editor::bim::kit::fault;
-use crate::editor::bim::BimDispatchCtx;
+use crate::editor::bim::dispatch_context::BimDispatchCtx;
 use crate::standards::v1::subsets::any::schema::mutations::remove_space_conditions::RemoveSpaceConditions;
 use crate::standards::v1::subsets::any::schema::mutations::set_space_conditions::SetSpaceConditions;
 use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};

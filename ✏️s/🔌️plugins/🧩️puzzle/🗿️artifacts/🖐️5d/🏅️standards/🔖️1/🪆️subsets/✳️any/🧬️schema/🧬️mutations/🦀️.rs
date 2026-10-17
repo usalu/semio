@@ -120,134 +120,51 @@ pub const KINDS: &[&str] = &[
 //#endregion 🏷️Kinds
 //#endregion 🔖️Mutations
 
-pub use super::add_part_grip::{add_part_grip, AddPartGrip};
-pub use super::change_description::{change_description, ChangeDescription};
-pub use super::change_domain::{change_domain, ChangeDomain};
-pub use super::change_fastener_kind::{change_fastener_kind, ChangeFastenerKind};
-pub use super::change_part_2d_hidden::{change_part_2d_hidden, ChangePart2dHidden};
-pub use super::change_part_2d_icon::{change_part_2d_icon, ChangePart2dIcon};
-pub use super::change_part_2d_locked::{change_part_2d_locked, ChangePart2dLocked};
-pub use super::change_part_3d_mesh::{change_part_3d_mesh, ChangePart3dMesh};
-pub use super::change_part_anchor::{change_part_anchor, ChangePartAnchor};
-pub use super::change_target_volume_hidden::{change_target_volume_hidden, ChangeTargetVolumeHidden};
-pub use super::change_target_volume_locked::{change_target_volume_locked, ChangeTargetVolumeLocked};
-pub use super::change_part_kind::{change_part_kind, ChangePartKind};
-pub use super::connect_grips::{connect_grips, ConnectGrips};
-pub use super::connect_kind_compatibility::{connect_kind_compatibility, ConnectKindCompatibility};
-pub use super::create_part::{create_part, CreatePart};
-pub use super::create_target_volume::{create_target_volume, CreateTargetVolume};
-pub use super::delete_part::{delete_part, DeletePart};
-pub use super::delete_target_volume::{delete_target_volume, DeleteTargetVolume};
-pub use super::disconnect_grips::{disconnect_grips, DisconnectGrips};
-pub use super::disconnect_kind_compatibility::{disconnect_kind_compatibility, DisconnectKindCompatibility};
-pub use super::drag_selection_2d::{drag_selection_2d, DragSelection2d};
-pub use super::drag_selection_3d::{drag_selection_3d, DragSelection3d};
-pub use super::edit_part_2d_text::{edit_part_2d_text, EditPart2dText};
-pub use super::edit_part_3d_label::{edit_part_3d_label, EditPart3dLabel};
-pub use super::move_part_2d::{move_part_2d, MovePart2d};
-pub use super::move_part_3d::{move_part_3d, MovePart3d};
-pub use super::move_target_volume::{move_target_volume, MoveTargetVolume};
-pub use super::remove_part_grip::{remove_part_grip, RemovePartGrip};
-pub use super::rename_puzzle5d::{rename_puzzle5d, RenamePuzzle5d};
-pub use super::replace_fastener_geometry::{replace_fastener_geometry, ReplaceFastenerGeometry};
-pub use super::replace_kind_catalogs::{replace_kind_catalogs, ReplaceKindCatalogs};
-pub use super::replace_part_2d_geometry::{replace_part_2d_geometry, ReplacePart2dGeometry};
-pub use super::replace_part_grip::{replace_part_grip, ReplacePartGrip};
-pub use super::rotate_part_3d::{rotate_part_3d, RotatePart3d};
-pub use super::rotate_selection_3d::{rotate_selection_3d, RotateSelection3d};
-pub use super::rotate_target_volume::{rotate_target_volume, RotateTargetVolume};
-pub use super::scale_part_3d::{scale_part_3d, ScalePart3d};
-pub use super::scale_selection_3d::{scale_selection_3d, ScaleSelection3d};
-pub use super::scale_target_volume::{scale_target_volume, ScaleTargetVolume};
+pub use crate::standards::v1::subsets::any::schema::mutations::add_part_grip::{add_part_grip, AddPartGrip};
+pub use crate::standards::v1::subsets::any::schema::mutations::change_description::ChangeDescription;
+pub use crate::standards::v1::subsets::any::schema::mutations::change_domain::ChangeDomain;
+pub use crate::standards::v1::subsets::any::schema::mutations::change_fastener_kind::ChangeFastenerKind;
+pub use crate::standards::v1::subsets::any::schema::mutations::change_part_2d_hidden::ChangePart2dHidden;
+pub use crate::standards::v1::subsets::any::schema::mutations::change_part_2d_icon::ChangePart2dIcon;
+pub use crate::standards::v1::subsets::any::schema::mutations::change_part_2d_locked::ChangePart2dLocked;
+pub use crate::standards::v1::subsets::any::schema::mutations::change_part_3d_mesh::ChangePart3dMesh;
+pub use crate::standards::v1::subsets::any::schema::mutations::change_part_anchor::ChangePartAnchor;
+pub use crate::standards::v1::subsets::any::schema::mutations::change_target_volume_hidden::ChangeTargetVolumeHidden;
+pub use crate::standards::v1::subsets::any::schema::mutations::change_target_volume_locked::ChangeTargetVolumeLocked;
+pub use crate::standards::v1::subsets::any::schema::mutations::change_part_kind::ChangePartKind;
+pub use crate::standards::v1::subsets::any::schema::mutations::connect_grips::ConnectGrips;
+pub use crate::standards::v1::subsets::any::schema::mutations::connect_kind_compatibility::{connect_kind_compatibility, ConnectKindCompatibility};
+pub use crate::standards::v1::subsets::any::schema::mutations::create_part::{create_part, CreatePart};
+pub use crate::standards::v1::subsets::any::schema::mutations::create_target_volume::{create_target_volume, CreateTargetVolume};
+pub use crate::standards::v1::subsets::any::schema::mutations::delete_part::DeletePart;
+pub use crate::standards::v1::subsets::any::schema::mutations::delete_target_volume::DeleteTargetVolume;
+pub use crate::standards::v1::subsets::any::schema::mutations::disconnect_grips::DisconnectGrips;
+pub use crate::standards::v1::subsets::any::schema::mutations::disconnect_kind_compatibility::DisconnectKindCompatibility;
+pub use crate::standards::v1::subsets::any::schema::mutations::drag_selection_2d::DragSelection2d;
+pub use crate::standards::v1::subsets::any::schema::mutations::drag_selection_3d::DragSelection3d;
+pub use crate::standards::v1::subsets::any::schema::mutations::edit_part_2d_text::EditPart2dText;
+pub use crate::standards::v1::subsets::any::schema::mutations::edit_part_3d_label::EditPart3dLabel;
+pub use crate::standards::v1::subsets::any::schema::mutations::move_part_2d::MovePart2d;
+pub use crate::standards::v1::subsets::any::schema::mutations::move_part_3d::MovePart3d;
+pub use crate::standards::v1::subsets::any::schema::mutations::move_target_volume::MoveTargetVolume;
+pub use crate::standards::v1::subsets::any::schema::mutations::remove_part_grip::RemovePartGrip;
+pub use crate::standards::v1::subsets::any::schema::mutations::rename_puzzle5d::RenamePuzzle5d;
+pub use crate::standards::v1::subsets::any::schema::mutations::replace_fastener_geometry::ReplaceFastenerGeometry;
+pub use crate::standards::v1::subsets::any::schema::mutations::replace_kind_catalogs::{replace_kind_catalogs, ReplaceKindCatalogs};
+pub use crate::standards::v1::subsets::any::schema::mutations::replace_part_2d_geometry::ReplacePart2dGeometry;
+pub use crate::standards::v1::subsets::any::schema::mutations::replace_part_grip::{replace_part_grip, ReplacePartGrip};
+pub use crate::standards::v1::subsets::any::schema::mutations::rotate_part_3d::RotatePart3d;
+pub use crate::standards::v1::subsets::any::schema::mutations::rotate_selection_3d::RotateSelection3d;
+pub use crate::standards::v1::subsets::any::schema::mutations::rotate_target_volume::RotateTargetVolume;
+pub use crate::standards::v1::subsets::any::schema::mutations::scale_part_3d::ScalePart3d;
+pub use crate::standards::v1::subsets::any::schema::mutations::scale_selection_3d::ScaleSelection3d;
+pub use crate::standards::v1::subsets::any::schema::mutations::scale_target_volume::ScaleTargetVolume;
 pub use {semio_s_artifact_puzzle_3d_mutations_selection::puzzle3d_selection_items as puzzle5d_selection_items, semio_s_artifact_puzzle_3d_mutations_selection::puzzle3d_selection_number as puzzle5d_selection_number, semio_s_artifact_puzzle_3d_mutations_selection::puzzle3d_selection_triple as puzzle5d_selection_triple, semio_s_artifact_puzzle_3d_mutations_selection::puzzle3d_targets_invariant as puzzle5d_targets_invariant, semio_s_artifact_puzzle_3d_model::quat_from_axis_angle, semio_s_artifact_puzzle_3d_model::quat_mul};
+pub use semio_s_artifact_puzzle_5d_kind_catalogs::standards::v1::subsets::any::schema::mutations::support;
+pub use support::{PUZZLE5D_FLAT_TO_WORLD, puzzle5d_scaled};
 
 
-//#region 🔖️SelectionTransform
-/// 🎛️ The ONE board↔world scale this artifact places and moves paired parts with — the linear inverse of
-/// `🧬️schema/💡️inferences/🎛️flat-position`'s plan projection, so a flat point and a world origin stay one
-/// consistent pair whichever pane the gesture came from. A flat unit is one board pixel; 48 of them make
-/// one world metre (the board's own default part box, `part_2d.width`/`height`).
-pub const PUZZLE5D_FLAT_TO_WORLD: f64 = 1.0 / 48.0;
 
-/// 🧭️ The members of a parametric selection leaf's target set the transform acts on, in document order, with the
-/// `mutation.partial` warnings of the ones it skips. `targets` is classified by document membership against `base`: a
-/// part id goes through `parts` (its board projection for a 2d leaf, its world projection for a 3d one), a
-/// target-volume id through `volumes` (none for the board, which paints no volume), each record transformed IN PLACE.
-/// An empty or repeated target set is the Fatal `mutation.invariant` the payload schema's `minItems`/`uniqueItems`
-/// forbid. Absent ids, locked records (a part's `2d.locked`) and records the leaf does not reach are skipped with one
-/// warning per reason (in that order, ids in payload order); nothing left is `mutation.target-missing`.
-pub struct Puzzle5dSelection<'a> {
-    pub parts: Vec<&'a crate::Puzzle5dPart>,
-    pub volumes: Vec<&'a crate::Puzzle5dTargetVolume>,
-    pub warnings: Vec<protocol::MutationMessage>,
-}
-
-/// 🗃️ Classifies a selection leaf's `targets` against `base`; `Err` is the leaf's final refusal outcome.
-pub fn puzzle5d_selection<'a>(base: &'a Puzzle5dSnapshot, targets: &[String], volumes_reached: bool) -> Result<Puzzle5dSelection<'a>, protocol::MutationOutcome<Puzzle5dDiff>> {
-    if let Err(reason) = puzzle5d_targets_invariant(targets) {
-        return Err(protocol::MutationOutcome::fatal("mutation.invariant", reason, targets.to_vec()));
-    }
-    let (mut missing, mut locked, mut unreached, mut survivors) = (Vec::<String>::new(), Vec::<String>::new(), Vec::<String>::new(), std::collections::BTreeSet::<&str>::new());
-    for id in targets {
-        match (base.parts.iter().find(|entry| &entry.id == id), base.target_volumes.iter().find(|entry| &entry.id == id)) {
-            (Some(entry), _) if entry.part_2d.locked != Some(true) => {
-                survivors.insert(id.as_str());
-            }
-            (Some(_), _) => locked.push(id.clone()),
-            (None, Some(entry)) if entry.locked => locked.push(id.clone()),
-            (None, Some(_)) if !volumes_reached => unreached.push(id.clone()),
-            (None, Some(_)) => {
-                survivors.insert(id.as_str());
-            }
-            (None, None) => missing.push(id.clone()),
-        }
-    }
-    if survivors.is_empty() {
-        return Err(protocol::MutationOutcome::error("mutation.target-missing", format!("none of the {} target(s) is an unlocked part or target volume this transform reaches", targets.len()), targets.to_vec()));
-    }
-    let warnings = [(missing, "not in this puzzle"), (locked, "locked"), (unreached, "target volumes live in the world, not on the board")]
-        .into_iter()
-        .filter(|(ids, _)| !ids.is_empty())
-        .map(|(ids, reason)| protocol::MutationMessage::warning("mutation.partial", format!("{} of {} target(s) skipped ({reason}): {}", ids.len(), targets.len(), ids.join(", "))).at(ids))
-        .collect();
-    Ok(Puzzle5dSelection {
-        parts: base.parts.iter().filter(|entry| survivors.contains(entry.id.as_str())).collect(),
-        volumes: base.target_volumes.iter().filter(|entry| volumes_reached && survivors.contains(entry.id.as_str())).collect(),
-        warnings,
-    })
-}
-
-/// 📦️ The outcome of a selection leaf's per-member patches: the sparse diff plus the classification warnings, or the
-/// `mutation.no-op` warning (after them) when no surviving member changes.
-pub fn puzzle5d_selection_outcome(
-    selection: Puzzle5dSelection<'_>,
-    targets: &[String],
-    parts: Vec<crate::standards::v1::subsets::any::schema::diff::Puzzle5dPartModification>,
-    volumes: Vec<crate::standards::v1::subsets::any::schema::diff::Puzzle5dTargetVolumeModification>,
-) -> protocol::MutationOutcome<Puzzle5dDiff> {
-    use crate::standards::v1::subsets::any::schema::diff::{Puzzle5dPartsDelta, Puzzle5dTargetVolumesDelta};
-    if parts.is_empty() && volumes.is_empty() {
-        return protocol::MutationOutcome::new(Puzzle5dDiff::default()).absorb_messages(selection.warnings.into_iter().chain([protocol::MutationMessage::warning("mutation.no-op", "no changes to apply").at(targets.to_vec())]));
-    }
-    protocol::MutationOutcome::new(Puzzle5dDiff {
-        parts: (!parts.is_empty()).then(|| Puzzle5dPartsDelta { modified: parts, ..Default::default() }),
-        target_volumes: (!volumes.is_empty()).then(|| Puzzle5dTargetVolumesDelta { modified: volumes, ..Default::default() }),
-        ..Default::default()
-    })
-    .absorb_messages(selection.warnings)
-}
-
-/// 📏️ A pose scale multiplied per axis by `factors`, always as a per-axis triple: a uniform scalar broadcasts
-/// first and an absent scale reads as `[1, 1, 1]`.
-pub fn puzzle5d_scaled(scale: Option<crate::Puzzle5dScale>, factors: [f64; 3]) -> crate::Puzzle5dScale {
-    let current = match scale {
-        Some(crate::Puzzle5dScale::Uniform(value)) => [value; 3],
-        Some(crate::Puzzle5dScale::Vec3(value)) => value,
-        None => [1.0; 3],
-    };
-    crate::Puzzle5dScale::Vec3([current[0] * factors[0], current[1] * factors[1], current[2] * factors[2]])
-}
-//#endregion 🔖️SelectionTransform
 
 
 
@@ -263,14 +180,191 @@ pub fn inverse_puzzle5d_mutation(projection: &Puzzle5dSnapshot, mutation: &Puzzl
 
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-#[cfg(test)]
-#[path = "🧪️tests/🧪️selection-time-travel/🦀️.rs"]
-mod selection_time_travel;
+
+
 
 #[cfg(test)]
 #[path = "🧪️tests/🔬️committed-fixtures/🦀️.rs"]
 mod committed_fixtures;
 //#endregion 🧪️Tests
+
+//#region 🔖️ConcreteBuilders
+/// 🏗️ Builder of the `change_description` leaf for this aggregate; the leaf builder stays generic over its aggregate.
+pub fn change_description(new_description: String) -> Puzzle5dMutation {
+    crate::standards::v1::subsets::any::schema::mutations::change_description::change_description::<Puzzle5dMutation>(new_description)
+}
+
+/// 🏗️ Builder of the `change_domain` leaf for this aggregate; the leaf builder stays generic over its aggregate.
+pub fn change_domain(new_domain: String) -> Puzzle5dMutation {
+    crate::standards::v1::subsets::any::schema::mutations::change_domain::change_domain::<Puzzle5dMutation>(new_domain)
+}
+
+/// 🏗️ Builder of the `change_fastener_kind` leaf for this aggregate; the leaf builder stays generic over its aggregate.
+pub fn change_fastener_kind(id: String, new_fastener_kind: Option<String>) -> Puzzle5dMutation {
+    crate::standards::v1::subsets::any::schema::mutations::change_fastener_kind::change_fastener_kind::<Puzzle5dMutation>(id, new_fastener_kind)
+}
+
+/// 🏗️ Builder of the `change_part_2d_hidden` leaf for this aggregate; the leaf builder stays generic over its aggregate.
+pub fn change_part_2d_hidden(id: String, new_hidden: Option<bool>) -> Puzzle5dMutation {
+    crate::standards::v1::subsets::any::schema::mutations::change_part_2d_hidden::change_part_2d_hidden::<Puzzle5dMutation>(id, new_hidden)
+}
+
+/// 🏗️ Builder of the `change_part_2d_icon` leaf for this aggregate; the leaf builder stays generic over its aggregate.
+pub fn change_part_2d_icon(id: String, new_icon_kind: Option<String>) -> Puzzle5dMutation {
+    crate::standards::v1::subsets::any::schema::mutations::change_part_2d_icon::change_part_2d_icon::<Puzzle5dMutation>(id, new_icon_kind)
+}
+
+/// 🏗️ Builder of the `change_part_2d_locked` leaf for this aggregate; the leaf builder stays generic over its aggregate.
+pub fn change_part_2d_locked(id: String, new_locked: Option<bool>) -> Puzzle5dMutation {
+    crate::standards::v1::subsets::any::schema::mutations::change_part_2d_locked::change_part_2d_locked::<Puzzle5dMutation>(id, new_locked)
+}
+
+/// 🏗️ Builder of the `change_part_3d_mesh` leaf for this aggregate; the leaf builder stays generic over its aggregate.
+pub fn change_part_3d_mesh(id: String, new_mesh_url: Option<String>) -> Puzzle5dMutation {
+    crate::standards::v1::subsets::any::schema::mutations::change_part_3d_mesh::change_part_3d_mesh::<Puzzle5dMutation>(id, new_mesh_url)
+}
+
+/// 🏗️ Builder of the `change_part_anchor` leaf for this aggregate; the leaf builder stays generic over its aggregate.
+pub fn change_part_anchor(id: String, new_anchor: crate::standards::v1::subsets::any::schema::document_records::Puzzle5dPartAnchor) -> Puzzle5dMutation {
+    crate::standards::v1::subsets::any::schema::mutations::change_part_anchor::change_part_anchor::<Puzzle5dMutation>(id, new_anchor)
+}
+
+/// 🏗️ Builder of the `change_part_kind` leaf for this aggregate; the leaf builder stays generic over its aggregate.
+pub fn change_part_kind(id: String, new_part_kind: Option<String>) -> Puzzle5dMutation {
+    crate::standards::v1::subsets::any::schema::mutations::change_part_kind::change_part_kind::<Puzzle5dMutation>(id, new_part_kind)
+}
+
+/// 🏗️ Builder of the `change_target_volume_hidden` leaf for this aggregate; the leaf builder stays generic over its aggregate.
+pub fn change_target_volume_hidden(id: String, new_hidden: bool) -> Puzzle5dMutation {
+    crate::standards::v1::subsets::any::schema::mutations::change_target_volume_hidden::change_target_volume_hidden::<Puzzle5dMutation>(id, new_hidden)
+}
+
+/// 🏗️ Builder of the `change_target_volume_locked` leaf for this aggregate; the leaf builder stays generic over its aggregate.
+pub fn change_target_volume_locked(id: String, new_locked: bool) -> Puzzle5dMutation {
+    crate::standards::v1::subsets::any::schema::mutations::change_target_volume_locked::change_target_volume_locked::<Puzzle5dMutation>(id, new_locked)
+}
+
+/// 🏗️ Builder of the `connect_grips` leaf for this aggregate; the leaf builder stays generic over its aggregate.
+pub fn connect_grips(id: String, source: String, target: String, fastener_kind: Option<String>, gap: f64, shift: f64, rise: f64, rotation: f64, turn: f64, tilt: f64, x: f64, y: f64, index: Option<usize>) -> Puzzle5dMutation {
+    crate::standards::v1::subsets::any::schema::mutations::connect_grips::connect_grips::<Puzzle5dMutation>(id, source, target, fastener_kind, gap, shift, rise, rotation, turn, tilt, x, y, index)
+}
+
+/// 🏗️ Builder of the `delete_part` leaf for this aggregate; the leaf builder stays generic over its aggregate.
+pub fn delete_part(id: String) -> Puzzle5dMutation {
+    crate::standards::v1::subsets::any::schema::mutations::delete_part::delete_part::<Puzzle5dMutation>(id)
+}
+
+/// 🏗️ Builder of the `delete_target_volume` leaf for this aggregate; the leaf builder stays generic over its aggregate.
+pub fn delete_target_volume(id: String) -> Puzzle5dMutation {
+    crate::standards::v1::subsets::any::schema::mutations::delete_target_volume::delete_target_volume::<Puzzle5dMutation>(id)
+}
+
+/// 🏗️ Builder of the `disconnect_grips` leaf for this aggregate; the leaf builder stays generic over its aggregate.
+pub fn disconnect_grips(id: String) -> Puzzle5dMutation {
+    crate::standards::v1::subsets::any::schema::mutations::disconnect_grips::disconnect_grips::<Puzzle5dMutation>(id)
+}
+
+/// 🏗️ Builder of the `disconnect_kind_compatibility` leaf for this aggregate; the leaf builder stays generic over its aggregate.
+pub fn disconnect_kind_compatibility(source: String, target: String) -> Puzzle5dMutation {
+    crate::standards::v1::subsets::any::schema::mutations::disconnect_kind_compatibility::disconnect_kind_compatibility::<Puzzle5dMutation>(source, target)
+}
+
+/// 🏗️ Builder of the `drag_selection_2d` leaf for this aggregate; the leaf builder stays generic over its aggregate.
+pub fn drag_selection_2d(targets: Vec<String>, dx: f64, dy: f64) -> Puzzle5dMutation {
+    crate::standards::v1::subsets::any::schema::mutations::drag_selection_2d::drag_selection_2d::<Puzzle5dMutation>(targets, dx, dy)
+}
+
+/// 🏗️ Builder of the `drag_selection_3d` leaf for this aggregate; the leaf builder stays generic over its aggregate.
+pub fn drag_selection_3d(targets: Vec<String>, offset: [f64; 3]) -> Puzzle5dMutation {
+    crate::standards::v1::subsets::any::schema::mutations::drag_selection_3d::drag_selection_3d::<Puzzle5dMutation>(targets, offset)
+}
+
+/// 🏗️ Builder of the `edit_part_2d_text` leaf for this aggregate; the leaf builder stays generic over its aggregate.
+pub fn edit_part_2d_text(id: String, new_text: Option<String>) -> Puzzle5dMutation {
+    crate::standards::v1::subsets::any::schema::mutations::edit_part_2d_text::edit_part_2d_text::<Puzzle5dMutation>(id, new_text)
+}
+
+/// 🏗️ Builder of the `edit_part_3d_label` leaf for this aggregate; the leaf builder stays generic over its aggregate.
+pub fn edit_part_3d_label(id: String, new_label: Option<String>) -> Puzzle5dMutation {
+    crate::standards::v1::subsets::any::schema::mutations::edit_part_3d_label::edit_part_3d_label::<Puzzle5dMutation>(id, new_label)
+}
+
+/// 🏗️ Builder of the `move_part_2d` leaf for this aggregate; the leaf builder stays generic over its aggregate.
+pub fn move_part_2d(id: String, new_x: f64, new_y: f64) -> Puzzle5dMutation {
+    crate::standards::v1::subsets::any::schema::mutations::move_part_2d::move_part_2d::<Puzzle5dMutation>(id, new_x, new_y)
+}
+
+/// 🏗️ Builder of the `move_part_3d` leaf for this aggregate; the leaf builder stays generic over its aggregate.
+pub fn move_part_3d(id: String, new_origin: [f64; 3]) -> Puzzle5dMutation {
+    crate::standards::v1::subsets::any::schema::mutations::move_part_3d::move_part_3d::<Puzzle5dMutation>(id, new_origin)
+}
+
+/// 🏗️ Builder of the `move_target_volume` leaf for this aggregate; the leaf builder stays generic over its aggregate.
+pub fn move_target_volume(id: String, new_origin: [f64; 3]) -> Puzzle5dMutation {
+    crate::standards::v1::subsets::any::schema::mutations::move_target_volume::move_target_volume::<Puzzle5dMutation>(id, new_origin)
+}
+
+/// 🏗️ Builder of the `remove_part_grip` leaf for this aggregate; the leaf builder stays generic over its aggregate.
+pub fn remove_part_grip(part_id: String, grip_id: String) -> Puzzle5dMutation {
+    crate::standards::v1::subsets::any::schema::mutations::remove_part_grip::remove_part_grip::<Puzzle5dMutation>(part_id, grip_id)
+}
+
+/// 🏗️ Builder of the `rename_puzzle5d` leaf for this aggregate; the leaf builder stays generic over its aggregate.
+pub fn rename_puzzle5d(new_label: Option<String>) -> Puzzle5dMutation {
+    crate::standards::v1::subsets::any::schema::mutations::rename_puzzle5d::rename_puzzle5d::<Puzzle5dMutation>(new_label)
+}
+
+/// 🏗️ Builder of the `replace_fastener_geometry` leaf for this aggregate; the leaf builder stays generic over its aggregate.
+pub fn replace_fastener_geometry(geometry: ReplaceFastenerGeometry) -> Puzzle5dMutation {
+    crate::standards::v1::subsets::any::schema::mutations::replace_fastener_geometry::replace_fastener_geometry::<Puzzle5dMutation>(geometry)
+}
+
+/// 🏗️ Builder of the `replace_part_2d_geometry` leaf for this aggregate; the leaf builder stays generic over its aggregate.
+pub fn replace_part_2d_geometry(id: String, new_shape: Option<String>, new_radius: Option<f64>, new_width: Option<f64>, new_height: Option<f64>) -> Puzzle5dMutation {
+    crate::standards::v1::subsets::any::schema::mutations::replace_part_2d_geometry::replace_part_2d_geometry::<Puzzle5dMutation>(id, new_shape, new_radius, new_width, new_height)
+}
+
+/// 🏗️ Builder of the `rotate_part_3d` leaf for this aggregate; the leaf builder stays generic over its aggregate.
+pub fn rotate_part_3d(id: String, new_orientation: Option<[f64; 4]>) -> Puzzle5dMutation {
+    crate::standards::v1::subsets::any::schema::mutations::rotate_part_3d::rotate_part_3d::<Puzzle5dMutation>(id, new_orientation)
+}
+
+/// 🏗️ Builder of the `rotate_selection_3d` leaf for this aggregate; the leaf builder stays generic over its aggregate.
+pub fn rotate_selection_3d(targets: Vec<String>, axis: [f64; 3], angle: f64) -> Puzzle5dMutation {
+    crate::standards::v1::subsets::any::schema::mutations::rotate_selection_3d::rotate_selection_3d::<Puzzle5dMutation>(targets, axis, angle)
+}
+
+/// 🏗️ Builder of the `rotate_target_volume` leaf for this aggregate; the leaf builder stays generic over its aggregate.
+pub fn rotate_target_volume(id: String, new_orientation: Option<[f64; 4]>) -> Puzzle5dMutation {
+    crate::standards::v1::subsets::any::schema::mutations::rotate_target_volume::rotate_target_volume::<Puzzle5dMutation>(id, new_orientation)
+}
+
+/// 🏗️ Builder of the `scale_part_3d` leaf for this aggregate; the leaf builder stays generic over its aggregate.
+pub fn scale_part_3d(id: String, new_scale: Option<crate::standards::v1::subsets::any::schema::document_records::Puzzle5dScale>) -> Puzzle5dMutation {
+    crate::standards::v1::subsets::any::schema::mutations::scale_part_3d::scale_part_3d::<Puzzle5dMutation>(id, new_scale)
+}
+
+/// 🏗️ Builder of the `scale_selection_3d` leaf for this aggregate; the leaf builder stays generic over its aggregate.
+pub fn scale_selection_3d(targets: Vec<String>, factors: [f64; 3]) -> Puzzle5dMutation {
+    crate::standards::v1::subsets::any::schema::mutations::scale_selection_3d::scale_selection_3d::<Puzzle5dMutation>(targets, factors)
+}
+
+/// 🏗️ Builder of the `scale_target_volume` leaf for this aggregate; the leaf builder stays generic over its aggregate.
+pub fn scale_target_volume(id: String, new_scale: Option<crate::standards::v1::subsets::any::schema::document_records::Puzzle5dScale>) -> Puzzle5dMutation {
+    crate::standards::v1::subsets::any::schema::mutations::scale_target_volume::scale_target_volume::<Puzzle5dMutation>(id, new_scale)
+}
+//#endregion 🔖️ConcreteBuilders
+
+//#region 🧩️ArtifactItems6
+pub mod artifact_items_6 {
+pub use crate::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation;
+pub use crate::standards::v1::subsets::any::schema::snapshot::Puzzle5dSnapshot;
+
+/// ▶️ Applies one mutation to a projection through the central applier (`vcs::apply_mutation`): the step of the editor tools' charts and of the mutation tests.
+pub fn apply_puzzle5d_mutation(projection: &mut Puzzle5dSnapshot, mutation: &Puzzle5dMutation) -> protocol::MutationApplyResult<()> {
+    let (next, _) = vcs::apply_mutation(projection, mutation)?;
+    *projection = next;
+    Ok(())
+}
+}
+//#endregion 🧩️ArtifactItems6

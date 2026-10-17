@@ -5,7 +5,8 @@
   "type": "module",
   "description": "Puzzle 2D artifact-owned browser session factories.",
   "exports": {
-    ".": "./🟦️.ts"
+    ".": "./🟦️.ts",
+    "./standards/1/subsets/any/schema/diff": "./🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts"
   },
   "dependencies": {
     "@semio-tech/framework-renderer-react": "workspace:*"

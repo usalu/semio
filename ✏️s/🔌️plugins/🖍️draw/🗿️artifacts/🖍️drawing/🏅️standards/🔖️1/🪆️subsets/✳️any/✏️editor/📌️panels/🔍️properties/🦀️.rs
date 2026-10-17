@@ -1,6 +1,6 @@
 //! 🔍️ Selection-aware, localized layer inspection through undoable semantic commands.
 #[path="🎬️actions/🦀️.rs"]
-mod selection_actions;
+pub mod selection_actions;
 use crate::terminology::DrawingPlayLabels;
 use crate::{drawing_play_action, ui_value_list, ui_value_map, ui_value_text, ui_value_number};
 use semio_s_artifact_draw_drawing_model::{selected_drawing_layers, layer_base};
@@ -24,7 +24,7 @@ use semio_framework_plugin::UiText;
 use semio_framework_ui_contract as ui;
 
 pub const DRAWING_PLAY_BODY_PROPERTIES: &str = "drawing.play.properties";
-const ROOT: &str = "drawing-inspector";
+pub const ROOT: &str = "drawing-inspector";
 
 pub fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
@@ -151,7 +151,7 @@ fn field_row(document: &DrawingSnapshot, field: &Field, selected: &[&DrawingLaye
     ui::tree_item(ui::Label(text(field.label.as_str())?)).try_id(format!("{ROOT}.{}", field.key)).map_err(|_| error())?.try_child(control).map_err(|_| error())?.try_build().map_err(|_| error())
 }
 
-fn node_row(layer_id: &(impl std::fmt::Display + ?Sized), index: usize, segment: &PathSegment, join_target: Option<usize>, disabled: bool, labels: &DrawingPlayLabels) -> UiAssemblyResult<BuiltNode> {
+pub fn node_row(layer_id: &(impl std::fmt::Display + ?Sized), index: usize, segment: &PathSegment, join_target: Option<usize>, disabled: bool, labels: &DrawingPlayLabels) -> UiAssemblyResult<BuiltNode> {
     let id = format!("{ROOT}.node.{index}");
     let mut row = ui::tree_item(ui::Label(text(&format!("{} {}", labels.anchor.as_str(), index + 1))?)).try_id(&id).map_err(|_| error())?;
     let mut points = Vec::new();
@@ -242,7 +242,7 @@ fn fill_input(layer_id: &(impl std::fmt::Display + ?Sized), id: &str, label: Lab
     input.try_on_with(Trigger::Commit,action,args.ok_or_else(error)?).map_err(|_| error())?.try_build().map_err(|_| error())
 }
 
-fn fill_controls(layer_id: &(impl std::fmt::Display + ?Sized), fill: Option<&FillStyle>, disabled: bool, labels: &DrawingPlayLabels) -> UiAssemblyResult<BuiltNode> {
+pub fn fill_controls(layer_id: &(impl std::fmt::Display + ?Sized), fill: Option<&FillStyle>, disabled: bool, labels: &DrawingPlayLabels) -> UiAssemblyResult<BuiltNode> {
     let kind = match fill { None => "none",Some(FillStyle::Solid { .. }) => "solid",Some(FillStyle::LinearGradient { .. }) => "linearGradient",Some(FillStyle::RadialGradient { .. }) => "radialGradient" };
     let args = ui_value_map([("layerId",ui_value_text(layer_id)?),("edit",ui_value_map([("kind",ui_value_text("type")?),("value",ui_value_text(kind)?)])?)])?;
     let (action,args) = drawing_play_action("editFill",Some(args))?;
@@ -277,7 +277,7 @@ fn fill_controls(layer_id: &(impl std::fmt::Display + ?Sized), fill: Option<&Fil
     row.try_build().map_err(|_| error())
 }
 
-fn stop_row(layer_id: &(impl std::fmt::Display + ?Sized), index: usize, stop: &semio_s_artifact_draw_drawing_model::GradientStop, removable: bool, disabled: bool, labels: &DrawingPlayLabels) -> UiAssemblyResult<BuiltNode> {
+pub fn stop_row(layer_id: &(impl std::fmt::Display + ?Sized), index: usize, stop: &semio_s_artifact_draw_drawing_model::GradientStop, removable: bool, disabled: bool, labels: &DrawingPlayLabels) -> UiAssemblyResult<BuiltNode> {
     let id = format!("{ROOT}.fill.stop.{index}");
     let mut row = ui::tree_item(ui::Label(text(&format!("{} {}",labels.gradient_stop.as_str(),index+1))?)).default_open(true).try_id(&id).map_err(|_| error())?;
     for (kind,label,input,value) in [("color",labels.fill,InputKind::Color,color_text(stop.color)?),("alpha",labels.opacity,InputKind::Number,stop.color[3].to_string()),("offset",labels.stop_position,InputKind::Number,stop.offset.to_string())] {
@@ -358,7 +358,4 @@ pub fn render(document: &DrawingSnapshot, ids: &[String], labels: &DrawingPlayLa
     tree.build()
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🎛️selection/🦀️.rs"]
-mod tests;
                                                                                                            

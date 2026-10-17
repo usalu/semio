@@ -21,9 +21,9 @@ use semio_s_artifact_draw_drawing_structure::remove_image_asset::mutation::Remov
 //#region 🔖️Mutations
 #[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
 #[value(tag = "mutation", rename_all = "camelCase")]
-#[cfg_attr(test, serde(tag = "mutation", rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testkit"), serde(tag = "mutation", rename_all = "camelCase"))]
 #[mutations(snapshot = DrawingSnapshot, diff = semio_s_artifact_draw_drawing_diff::DrawingDiff, schema = "drawing.drawing")]
 pub enum DrawingMutation {
     SetLayerVisible(SetLayerVisible),

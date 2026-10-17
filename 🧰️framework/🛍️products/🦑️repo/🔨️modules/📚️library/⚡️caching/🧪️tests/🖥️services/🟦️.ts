@@ -118,7 +118,7 @@ else {
       assert.equal(await (await fetch("http://127.0.0.1:" + port)).text(), "first");
       put("state/finish-first", "done"); assert.equal(await first, 0);
     } else {
-      if (scenario.cancelFirst) { children[0].kill("SIGTERM"); assert.equal(await first, contract.cancellationExitCode); }
+      if (scenario.cancelFirst) { const initial=children[0];assert.ok(initial,"Actual first owned child required");initial.kill("SIGTERM"); assert.equal(await first, contract.cancellationExitCode); }
       else { put("state/finish-first", "done"); assert.equal(await first, 0); }
       const port = readFileSync(join(root, "state/ready-second"), "utf8");
       if (scenario.vite) assert.deepEqual(await (await fetch("http://127.0.0.1:" + port + "/__semio/nx-service")).json(), JSON.parse(readFileSync(join(root, "state/session-second"), "utf8")));

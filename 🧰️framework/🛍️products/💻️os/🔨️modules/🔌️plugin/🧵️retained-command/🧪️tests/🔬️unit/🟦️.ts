@@ -3,6 +3,5 @@ import {pluginTestRunnerSelfTests} from "../../../📦️packages/🦀️rust/�
 
 test("plugin runner forwards exact library and integration targets against Node's independent argument parser",async()=>{
  expect(await pluginTestRunnerSelfTests()).toBe(10);
- console.log("[DEBUG] Plugin exact-target invocation independent parser cases=10");
 });
 

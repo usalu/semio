@@ -5,8 +5,14 @@
     "test": "bun --cwd \"../../../../..\" repo run semio-framework-canvas:test"
   },
   "devDependencies": {
+    "@semio-tech/assets": "workspace:*",
+    "@semio-tech/framework-kernel": "workspace:*",
     "@semio-tech/process": "workspace:*",
     "@semio-tech/schema-validator-ts": "workspace:*",
     "@semio-tech/value-ts": "workspace:*"
+  },
+  "dependencies": {
+    "@semio-tech/framework-actor": "workspace:*",
+    "@semio-tech/framework-compiler-ts": "workspace:*"
   }
 }

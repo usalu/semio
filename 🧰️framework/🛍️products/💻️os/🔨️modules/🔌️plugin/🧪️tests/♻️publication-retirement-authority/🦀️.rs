@@ -5,19 +5,34 @@
 //! incomplete `close_step` of a faulted `Closing` publication with
 //! `<lane> publication is retiring a rejected authority`, so the host saw
 //! `typed-operation failed: …` on every turn of the drain and `invokeExtension` never completed.
-#[cfg(test)] use crate::typed_operation::MountedTypedCommandFullOperation;
+#[cfg(test)]
+use semio_framework_plugin_retained_command::typed_operation::MountedTypedCommandFullOperation;
 
-use super::{
-    ArtifactApp, ArtifactMutationOutcome, ArtifactView, ConfigView, DraftView, InteractionView, PendingArtifactStorePublication, PendingPublicationOutcome, UiAssemblyResult, WindowConfigMutation, WindowConfigOwner,
-    WindowConfigOwnerRegistry, WindowTransientMutation, WindowTransientOwner, WindowTransientOwnerBundle, WindowTransientOwnerRegistry,
-};
-use crate::app_testing::artifact_app_laws;
-use crate::app_testing::artifact_app_laws::close_registered_fixture_app;
-use semio_framework_plugin_ownership::store_lifecycle::{bounded_config_store_disposer, bounded_config_store_one_item_preparation_factory, bounded_config_store_owners, bounded_document_store_disposer, bounded_document_store_owners};
-use crate::window_surface::built_text_to_component_tree;
-use crate::publication_fixture::{ChangePublicationPresence, ChangePublicationTransient, PublicationPresence, PublicationPresenceMutation, PublicationTransient, PublicationTransientMutation};
-use crate::store;
-use crate::test_app_mutation_fixture::{ChangeTestConfigSelection, SetCount, TestConfig, TestConfigMutation, TestMutation, TestSnapshot};
+use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_framework_plugin_decl_emission::ArtifactMutationOutcome;
+use semio_framework_plugin_decl_views::{ArtifactView, ConfigView, DraftView, InteractionView};
+use semio_framework_plugin_composition_publication::PendingArtifactStorePublication;
+use semio_framework_plugin_retained_command::typed_operation::PendingPublicationOutcome;
+use semio_framework_plugin_interaction::UiAssemblyResult;
+use semio_framework_plugin_window_config::{WindowConfigMutation, WindowConfigOwner, WindowConfigOwnerRegistry};
+use semio_framework_plugin_window_transient::window_transient::{WindowTransientMutation, WindowTransientOwner, WindowTransientOwnerBundle, WindowTransientOwnerRegistry};
+use semio_framework_plugin_testing_laws::artifact_app_laws;
+use semio_framework_plugin_testing_laws::artifact_app_laws::close_registered_fixture_app;
+use semio_framework_plugin_ownership::store_lifecycle::{bounded_config_store_disposer, bounded_config_store_one_item_preparation_factory, bounded_document_store_disposer};
+use semio_framework_plugin_window_transient::built_text_to_component_tree;
+use semio_framework_plugin_testing_fixtures_publication::publication_fixture::presence::mutations::change_publication_presence::ChangePublicationPresence;
+use semio_framework_plugin_testing_fixtures_publication::publication_fixture::transient::mutations::change_publication_transient::ChangePublicationTransient;
+use semio_framework_plugin_testing_fixtures_publication::publication_fixture::presence::PublicationPresence;
+use semio_framework_plugin_testing_fixtures_publication::publication_fixture::presence::mutations::PublicationPresenceMutation;
+use semio_framework_plugin_testing_fixtures_publication::publication_fixture::transient::PublicationTransient;
+use semio_framework_plugin_testing_fixtures_publication::publication_fixture::transient::mutations::PublicationTransientMutation;
+use semio_framework_os_kernel as store;
+use semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::config::mutations::change_test_config_selection::ChangeTestConfigSelection;
+use semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::document::mutations::set_count::SetCount;
+use semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::config::TestConfig;
+use semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::config::mutations::TestConfigMutation;
+use semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::document::mutations::TestMutation;
+use semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::document::TestSnapshot;
 use semio_framework::{Fault, ViewModel, ViewWindowInstance};
 use semio_framework_2d::compute::EngineHandles;
 use std::sync::Arc;
@@ -38,10 +53,10 @@ fn mounted_original_close_fault_retains_refused_payload_and_retires_actual_frame
   });
   let pointer=original.message.as_ptr();let original_live=birth.requested_bytes-birth.released_bytes;
   let operation=semio_framework_job::Operation::new(semio_framework_job::allocate_operation_id(),semio_framework_job::RevisionId(0),semio_framework_job::Generation(0),17);
-  let mut mounted=crate::typed_operation::MountedTypedCommandFullOperation::<RetirementApp>{
-   verb:String::new(),meta:crate::app_emission::ActionMeta{actor:Default::default(),instance_id:7,view_state:None},operation,canonical_revision:[0;32],artifact_generation:0,config_generation:0,draft_generation:0,presence_generation:0,transient_generation:0,
+  let mut mounted=semio_framework_plugin_retained_command::typed_operation::MountedTypedCommandFullOperation::<RetirementApp>{
+   verb:String::new(),meta:semio_framework_plugin_decl_emission::ActionMeta{actor:Default::default(),instance_id:7,view_state:None},operation,canonical_revision:[0;32],artifact_generation:0,config_generation:0,draft_generation:0,presence_generation:0,transient_generation:0,
    window_config_authority:None,window_transient_authority:None,publication_lanes:&[],session:None,session_rejected:None,reserved_producer:None,completion:None,completion_retirement:None,publication_retirement:None,output_retirement:None,raw_input:None,output_chunks:None,cancellation_lease:None,cancellation_retirement:None,worker_semantic_pending:false,worker_outcome_pending:false,worker_fault_capture:None,identity:None,identity_progress:semio_framework_value::native_encoding::NativeEncodeProgress{completed:0,total:0,owned_bytes:0},worker_resume_pending:false,terminal_seen:true,publication:None,pending_artifact_publication:None,pending_publication_outcome:PendingPublicationOutcome::new(),pending_window_config_receipt:None,pending_child_publication:None,owned_child_group:None,owned_child_committed:false,owned_child_result_pending:false,captured_child_content:None,captured_child_content_generation:0,result_page:None,result_page_presented:false,result_sequence:0,publication_progress:0,publication_checkpoint:None,publication_ownership_progress:None,original_retirement_receipt:None,actor_capture:None,publication_attempt:0,ui_pending:false,progress:None,progress_pending:false,user_cancel_requested:false,published_artifact:false,published_config:false,published_window_config:false,command_logged:true,interaction_revalidated:false,
-   terminal_fault:row["existingCode"].as_str().map(|code|super::super::completion_fault::borrowed_report(FaultOrigin::Framework,code,semio_framework_diagnostic::Severity::Error,"earlier original terminal report",false)),retained_close_fault:Some(original),retained_close_fault_retirement:None,retained_close_fault_refusal:None,stage:crate::store_publication::MountedTypedCommandFullOperationStage::Retiring
+   terminal_fault:row["existingCode"].as_str().map(|code|semio_framework_plugin_decl_app::borrowed_report(FaultOrigin::Framework,code,semio_framework_diagnostic::Severity::Error,"earlier original terminal report",false)),retained_close_fault:Some(original),retained_close_fault_retirement:None,retained_close_fault_refusal:None,stage:semio_framework_plugin_composition_publication::MountedTypedCommandFullOperationStage::Retiring
   };
   let mut capacity=0;let mut released=0;let mut frame_released=false;
   for _ in 0..32768{
@@ -57,7 +72,6 @@ fn mounted_original_close_fault_retains_refused_payload_and_retires_actual_frame
   }
   assert!(frame_released&&mounted.terminal_is_empty());assert_eq!(released,original_live+capacity);let report=mounted.terminal_fault.as_ref().unwrap();let mut frame=[0;480];let len=report.framed_page_bytes(&mut frame);let independent:serde_json::Value=serde_json::from_slice(&frame[..len]).unwrap();assert_eq!(independent["code"],row["existingCode"].as_str().unwrap_or(row["code"].as_str().unwrap()));if row["existingCode"].is_null(){assert_eq!(independent["message"],row["message"]);}
  }
- println!("[DEBUG] actual mounted Fault originals preserve String/Box/cause/params through every denied axis and funded body plus separate frame release; existing bounded cause remains authoritative");
 }
 
 const RETIREMENT_AUTHORITY_FIXTURE_JSON: &str = include_str!("../🧫️fixtures/♻️publication-retirement-authority/🔣️.json");
@@ -65,13 +79,15 @@ const RETIREMENT_AUTHORITY_FIXTURE_JSON: &str = include_str!("../🧫️fixtures
 /// 🪟️ The one window kind both window lanes of this fixture partition under.
 const RETIREMENT_WINDOW_KIND: &str = "publication-retirement-window";
 
-fn fixture() -> serde_json::Value {
+#[doc(hidden)]
+pub fn fixture() -> serde_json::Value {
     let fixture: serde_json::Value = serde_json::from_str(RETIREMENT_AUTHORITY_FIXTURE_JSON).expect("publication retirement authority fixture parses");
     assert_eq!(fixture["schema"], "framework.plugin.publication-retirement-authority.v1");
     fixture
 }
 
-fn grant(fixture: &serde_json::Value) -> store::os_store::one_item::ArtifactStoreOneItemGrant {
+#[doc(hidden)]
+pub fn grant(fixture: &serde_json::Value) -> store::os_store::one_item::ArtifactStoreOneItemGrant {
     let bytes=fixture["grant"]["maximumBytes"].as_u64().expect("fixture grant bytes")as usize;
     store::os_store::one_item::ArtifactStoreOneItemGrant{maximum_items:fixture["grant"]["maximumItems"].as_u64().expect("fixture grant items")as usize,maximum_copy_bytes:bytes,maximum_capacity_bytes:bytes,maximum_release_bytes:bytes,maximum_depth:128}
 }
@@ -121,20 +137,20 @@ impl WindowConfigOwner for RetirementWindowConfigOwner {
     const MAXIMUM_PUBLICATION_BYTES: usize = 1_024;
     type State = TestConfig;
     type Mutation = TestConfigMutation;
-    type Edit=crate::component::test_app_mutation_fixture::config::preparation::SelectionRetainedEdit;
+    type Edit=semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::config::preparation::SelectionRetainedEdit;
     const MAXIMUM_PREPARATION_DEPTH:usize=64;
-    fn build_retained_edit()->std::sync::Arc<Self::Edit>{std::sync::Arc::new(crate::component::test_app_mutation_fixture::config::preparation::SelectionRetainedEdit)}
+    fn build_retained_edit()->std::sync::Arc<Self::Edit>{std::sync::Arc::new(semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::config::preparation::SelectionRetainedEdit)}
 
     fn build_store_owners() -> Result<store::os_store::document_store_owners::DocumentStoreOwners<Self::State, Self::Mutation>, semio_framework_value::ValueError> {
-        crate::window_config::bounded_window_config_store_owners::<Self>()
+        semio_framework_plugin_window_config::bounded_window_config_store_owners::<Self>()
     }
 
     fn build_one_item_preparation_factory() -> Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::State, Self::Mutation>> {
-        crate::window_config::bounded_window_config_preparation_factory::<Self>()
+        semio_framework_plugin_window_config::bounded_window_config_preparation_factory::<Self>()
     }
 
     fn build_store_disposer() -> Box<dyn semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer<store::ConfigStore<Self::State, Self::Mutation>>> {
-        crate::window_config::bounded_window_config_store_disposer::<Self>()
+        semio_framework_plugin_window_config::bounded_window_config_store_disposer::<Self>()
     }
 }
 
@@ -146,7 +162,7 @@ impl WindowTransientOwner for RetirementWindowTransientOwner {
     type Mutation = PublicationTransientMutation;
 
     fn build_owners() -> WindowTransientOwnerBundle<Self::State, Self::Mutation> {
-        crate::window_transient_owners::owners()
+        semio_framework_plugin_testing_fixtures_publication::window_transient_owners::owners()
     }
 }
 //#endregion ♻️RetirementFixtureLeaves
@@ -158,7 +174,7 @@ impl WindowTransientOwner for RetirementWindowTransientOwner {
 struct RetirementApp;
 
 impl ArtifactApp for RetirementApp {
-    const DIALECT: crate::Dialect = crate::Dialect { artifact_kind: "s.test.publication-retirement", standard: crate::StandardId("1"), subset: crate::SubsetId::ANY };
+    const DIALECT: semio_framework_artifact_reference::Dialect = semio_framework_artifact_reference::Dialect { artifact_kind: "s.test.publication-retirement", standard: semio_framework_artifact_reference::StandardId("1"), subset: semio_framework_artifact_reference::SubsetId::ANY };
     const APP_ID: &'static str = "testkit-publication-retirement";
     const DOCUMENT_SCHEMA: &'static str = "semio.testkit-publication-retirement/v1";
     type Snapshot = TestSnapshot;
@@ -214,11 +230,11 @@ impl ArtifactApp for RetirementApp {
     }
 
     fn build_presence_store_disposer() -> Option<Box<dyn semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
-        Some(crate::bounded_presence_store_disposer::<Self::Presence,Self::PresenceMutation>())
+        Some(semio_framework_plugin_decl_views::presence_retirement::bounded_presence_store_disposer::<Self::Presence,Self::PresenceMutation>())
     }
 
     fn build_transient_store_disposer() -> Option<Box<dyn semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
-        Some(crate::bounded_transient_store_disposer::<Self::Transient,Self::TransientMutation>())
+        Some(semio_framework_plugin_ownership::transient_publication::bounded_transient_store_disposer::<Self::Transient,Self::TransientMutation>())
     }
 
     fn build_presence_local_root_retirement_factory() -> Option<Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
@@ -258,19 +274,20 @@ impl ArtifactApp for RetirementApp {
 //#region ♻️RetirementDrivers
 /// 🔭️ Drives ONE rejected publication through the shared retirement law and reports how many
 /// incomplete turns it answered with `Ok` before its terminal turn.
-fn mounted_rejection(app:&crate::artifact_instance::VcsArtifactApp<RetirementApp>,pending:PendingArtifactStorePublication<RetirementApp>)->crate::typed_operation::MountedTypedCommandFullOperation<RetirementApp>{
+fn mounted_rejection(app:&semio_framework_plugin_instance_app::VcsArtifactApp<RetirementApp>,pending:PendingArtifactStorePublication<RetirementApp>)->semio_framework_plugin_retained_command::typed_operation::MountedTypedCommandFullOperation<RetirementApp>{
  let revision=app.stores.store.content_revision_now();
  let operation=semio_framework_job::Operation::new(semio_framework_job::OperationId(1),semio_framework_job::RevisionId(u64::from_be_bytes(revision[..8].try_into().unwrap())),semio_framework_job::Generation(app.stores.store.generation_now()),17);
- let lease=app.tools.tool_cancellations.clone().begin(crate::tool_cancellation::ToolOperationKey{app_instance_id:7,document:crate::tool_cancellation::ArtifactDocumentAuthority(7),operation_id:operation.operation,base_revision:operation.base_revision,generation:operation.generation}).expect("original cancellation lease");
- crate::typed_operation::MountedTypedCommandFullOperation{
-  verb:String::new(),meta:crate::app_emission::ActionMeta{actor:Default::default(),instance_id:7,view_state:None},operation,canonical_revision:revision,artifact_generation:app.stores.store.generation_now(),config_generation:app.stores.config_store.generation_now(),draft_generation:app.stores.draft_store.generation_now(),presence_generation:app.stores.presence_store.generation_now(),transient_generation:app.stores.transient_store.generation_now(),
-  window_config_authority:None,window_transient_authority:None,publication_lanes:&[],session:None,session_rejected:None,reserved_producer:None,completion:None,completion_retirement:None,publication_retirement:None,output_retirement:None,raw_input:None,output_chunks:None,cancellation_lease:Some(lease),worker_semantic_pending:false,worker_outcome_pending:false,worker_fault_capture:None,identity:None,identity_progress:semio_framework_value::native_encoding::NativeEncodeProgress{completed:0,total:0,owned_bytes:0},worker_resume_pending:false,terminal_seen:true,publication:None,pending_artifact_publication:Some(pending),pending_publication_outcome:PendingPublicationOutcome::new(),pending_window_config_receipt:None,cancellation_retirement:None,pending_child_publication:None,owned_child_group:None,owned_child_committed:false,owned_child_result_pending:false,captured_child_content:None,captured_child_content_generation:0,result_page:None,result_page_presented:false,result_sequence:0,publication_progress:0,publication_checkpoint:None,publication_ownership_progress:None,original_retirement_receipt:None,actor_capture:None,publication_attempt:0,ui_pending:false,progress:None,progress_pending:false,user_cancel_requested:false,published_artifact:false,published_config:false,published_window_config:false,command_logged:true,interaction_revalidated:false,retained_close_fault: None,retained_close_fault_retirement:None,retained_close_fault_refusal:None, terminal_fault:None,stage:crate::store_publication::MountedTypedCommandFullOperationStage::Publishing
+ let lease=app.tools.tool_cancellations.clone().begin(semio_framework_plugin_operation::ToolOperationKey{app_instance_id:7,document:semio_framework_plugin_operation::ArtifactDocumentAuthority(7),operation_id:operation.operation,base_revision:operation.base_revision,generation:operation.generation}).expect("original cancellation lease");
+ semio_framework_plugin_retained_command::typed_operation::MountedTypedCommandFullOperation{
+  verb:String::new(),meta:semio_framework_plugin_decl_emission::ActionMeta{actor:Default::default(),instance_id:7,view_state:None},operation,canonical_revision:revision,artifact_generation:app.stores.store.generation_now(),config_generation:app.stores.config_store.generation_now(),draft_generation:app.stores.draft_store.generation_now(),presence_generation:app.stores.presence_store.generation_now(),transient_generation:app.stores.transient_store.generation_now(),
+  window_config_authority:None,window_transient_authority:None,publication_lanes:&[],session:None,session_rejected:None,reserved_producer:None,completion:None,completion_retirement:None,publication_retirement:None,output_retirement:None,raw_input:None,output_chunks:None,cancellation_lease:Some(lease),worker_semantic_pending:false,worker_outcome_pending:false,worker_fault_capture:None,identity:None,identity_progress:semio_framework_value::native_encoding::NativeEncodeProgress{completed:0,total:0,owned_bytes:0},worker_resume_pending:false,terminal_seen:true,publication:None,pending_artifact_publication:Some(pending),pending_publication_outcome:PendingPublicationOutcome::new(),pending_window_config_receipt:None,cancellation_retirement:None,pending_child_publication:None,owned_child_group:None,owned_child_committed:false,owned_child_result_pending:false,captured_child_content:None,captured_child_content_generation:0,result_page:None,result_page_presented:false,result_sequence:0,publication_progress:0,publication_checkpoint:None,publication_ownership_progress:None,original_retirement_receipt:None,actor_capture:None,publication_attempt:0,ui_pending:false,progress:None,progress_pending:false,user_cancel_requested:false,published_artifact:false,published_config:false,published_window_config:false,command_logged:true,interaction_revalidated:false,retained_close_fault: None,retained_close_fault_retirement:None,retained_close_fault_refusal:None, terminal_fault:None,stage:semio_framework_plugin_composition_publication::MountedTypedCommandFullOperationStage::Publishing
  }
 }
-fn granted(demand:semio_framework_value::RetirementDemand)->semio_framework_value::retained_clone::RetainedCloneGrant{
+#[doc(hidden)]
+pub fn granted(demand:semio_framework_value::RetirementDemand)->semio_framework_value::retained_clone::RetainedCloneGrant{
  semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth}
 }
-async fn drive_rejected_retirement(app:&mut crate::artifact_instance::VcsArtifactApp<RetirementApp>,pending:PendingArtifactStorePublication<RetirementApp>,row:&serde_json::Value)->usize{
+async fn drive_rejected_retirement(app:&mut semio_framework_plugin_instance_app::VcsArtifactApp<RetirementApp>,pending:PendingArtifactStorePublication<RetirementApp>,row:&serde_json::Value)->usize{
  let lane=pending.lane().0;
  let reason=row["supersededFault"].as_str().unwrap();
  assert!(pending.is_closing());
@@ -279,7 +296,7 @@ async fn drive_rejected_retirement(app:&mut crate::artifact_instance::VcsArtifac
  let mut mounted=mounted_rejection(app,pending);
  let mut turns=0;
  for _ in 0..8192{
-  app.typed_ctx().publish_mounted_typed_operation_unit(&mut mounted, crate::app_testing::artifact_app_laws::fixture_mounted_policy().maintenance).expect("publication pauses until retained outcome delivery");
+  app.typed_ctx().publish_mounted_typed_operation_unit(&mut mounted, semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy().maintenance).expect("publication pauses until retained outcome delivery");
   if !mounted.pending_publication_outcome.pending()&&mounted.pending_artifact_publication.is_none(){break;}
   assert!(mounted.result_page.is_none(),"no premature terminal while original publication body or frame remains");
   let demand=mounted.granted_retirement_demands(512).expect("actual frontier quote");
@@ -299,14 +316,14 @@ async fn drive_rejected_retirement(app:&mut crate::artifact_instance::VcsArtifac
  }
  assert!(mounted.pending_artifact_publication.is_none()&&!mounted.pending_publication_outcome.pending(),"original body and frame close before delivery");
  assert_eq!(generations,(app.stores.store.generation_now(),app.stores.config_store.generation_now(),app.stores.draft_store.generation_now(),app.stores.presence_store.generation_now(),app.stores.transient_store.generation_now()),"rejected private candidate never commits");
- if lane==crate::tool_contract::TypedOperationResultLane::WindowTransient{
+ if lane==semio_framework_plugin_decl_app::tool_contract::TypedOperationResultLane::WindowTransient{
   assert!(mounted.terminal_fault.is_none()&&mounted.result_page.is_none(),"window transient retains its deliberate lenient policy");
-  mounted.stage=crate::store_publication::MountedTypedCommandFullOperationStage::Retiring;
+  mounted.stage=semio_framework_plugin_composition_publication::MountedTypedCommandFullOperationStage::Retiring;
  }else{
-  app.typed_ctx().publish_mounted_typed_operation_unit(&mut mounted, crate::app_testing::artifact_app_laws::fixture_mounted_policy().maintenance).expect("one final fault after physical retirement");
+  app.typed_ctx().publish_mounted_typed_operation_unit(&mut mounted, semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy().maintenance).expect("one final fault after physical retirement");
   let page=mounted.take_result_page().expect("single final fault");
-  assert_eq!(page.lane,crate::tool_contract::TypedOperationResultLane::Fault);
-  let fault=crate::tool_contract::decode_typed_operation_fault_page(page.bytes());
+  assert_eq!(page.lane,semio_framework_plugin_decl_app::tool_contract::TypedOperationResultLane::Fault);
+  let fault=semio_framework_plugin_decl_app::tool_contract::decode_typed_operation_fault_page(page.bytes());
   assert_eq!(fault.code.0,"interactive-job.publication-rejected");
   assert_eq!(fault.message,reason);
   assert!(mounted.take_result_page().is_none(),"fault terminal cannot repeat before ACK");
@@ -358,14 +375,15 @@ fn document_mutation(value: i32) -> TestMutation {
     SetCount { value }.into()
 }
 
-fn admit_window_config_publication(registry: &mut WindowConfigOwnerRegistry, operation: semio_framework_job::OperationId, authority: &crate::component::window_config::WindowConfigAuthority, mutation: WindowConfigMutation, grant: semio_framework_value::RetainedCloneGrant) -> Box<dyn crate::component::window_config::ErasedWindowConfigPublication> {
+fn admit_window_config_publication(registry: &mut WindowConfigOwnerRegistry, operation: semio_framework_job::OperationId, authority: &semio_framework_plugin_window_config::WindowConfigAuthority, mutation: WindowConfigMutation, grant: semio_framework_value::RetainedCloneGrant) -> Box<dyn semio_framework_plugin_window_config::ErasedWindowConfigPublication> {
     let (actor, _) = registry.local_actor_id().0.admit_clone(grant).unwrap();
     let mut actor = Some(semio_framework_value::retirement::controlled::ControlledRetirement::new(actor).map_err(|(error, _)| error).unwrap());
     let mut mutations = vec![mutation];
     registry.admit_begin(operation, &mut actor, &mut mutations, authority, grant).unwrap().expect("window config publication admitted").0
 }
 
-fn config_mutation(value: &str) -> TestConfigMutation {
+#[doc(hidden)]
+pub fn config_mutation(value: &str) -> TestConfigMutation {
     ChangeTestConfigSelection { selected: Some(value.to_string()) }.into()
 }
 //#endregion ♻️RetirementDrivers
@@ -374,7 +392,7 @@ fn config_mutation(value: &str) -> TestConfigMutation {
 /// still co-own the root the superseding write displaced.
 #[semio_framework_async_macros::async_test]
 async fn every_publication_lane_retires_a_rejected_authority_without_faulting_each_turn() {
-    let mut original_caller=crate::app_testing::artifact_app_laws::OriginalFixtureCaller::admit().expect("original caller policy admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+    let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original caller policy admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
     let fixture = fixture();
     let grant = grant(&fixture);
     let rows = fixture["lanes"].as_array().expect("fixture lanes").clone();
@@ -382,7 +400,7 @@ async fn every_publication_lane_retires_a_rejected_authority_without_faulting_ea
     assert_eq!(rows.len(), 7, "the law covers every publication lane");
     assert_eq!(fixture["law"]["incompleteRetirementTurnIsOk"], true);
     let operation = semio_framework_job::OperationId(1);
-    let mut app = artifact_app_laws::new_app::<RetirementApp>(protocol::ActorId("fixture".into()), crate::app_testing::artifact_app_laws::fixture_mounted_policy(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await;
+    let mut app = semio_framework_plugin_testing_laws::artifact_app_laws::new_app::<RetirementApp>(protocol::ActorId("fixture".into()), semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity()).await;
     let view = retirement_view();
     let window_config_authority = app.stores.window_config_store.capture(Some(&view)).await.expect("window config capture").expect("registered window config owner");
     let window_transient_authority = app.stores.window_transient_store.capture(Some(&view)).expect("window transient capture").expect("registered window transient owner");
@@ -395,7 +413,7 @@ async fn every_publication_lane_retires_a_rejected_authority_without_faulting_ea
                     .stores.store
                     .begin_apply_batch(operation, app.stores.store.generation_now(), app.stores.store.content_revision_now(), "fixture".into(), vec![document_mutation(1)], store::os_store::store_schema::HistoryLane::Document, app.stores.artifact_one_item_factory.as_ref(), None)
                     .unwrap_or_else(|rejected| panic!("artifact publication admitted: {}", rejected.into_owners().0));
-                crate::with_authoring_identity!(|identity| app.stores.store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![document_mutation(9)], transaction: None }, &mut identity).await).expect("superseding document write");
+                semio_framework_plugin_testing_laws::with_authoring_identity!(|identity| app.stores.store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![document_mutation(9)], transaction: None }, &mut identity).await).expect("superseding document write");
                 let mut publication = publication;
                 assert!(app.stores.store.advance_apply_batch(&mut publication, grant).is_err(), "the superseded document publication is rejected");
                 PendingArtifactStorePublication::Artifact(publication)
@@ -414,7 +432,7 @@ async fn every_publication_lane_retires_a_rejected_authority_without_faulting_ea
                         None,
                     )
                     .unwrap_or_else(|rejected| panic!("config publication admitted: {}", rejected.into_owners().0));
-                crate::with_authoring_identity!(|identity| app.stores.config_store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![config_mutation("superseding")], transaction: None }, &mut identity).await).expect("superseding config write");
+                semio_framework_plugin_testing_laws::with_authoring_identity!(|identity| app.stores.config_store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![config_mutation("superseding")], transaction: None }, &mut identity).await).expect("superseding config write");
                 let mut publication = publication;
                 assert!(app.stores.config_store.advance_apply_batch(&mut publication, grant).is_err(), "the superseded config publication is rejected");
                 PendingArtifactStorePublication::Config(publication)
@@ -433,7 +451,7 @@ async fn every_publication_lane_retires_a_rejected_authority_without_faulting_ea
                         None,
                     )
                     .unwrap_or_else(|rejected| panic!("draft publication admitted: {}", rejected.into_owners().0));
-                crate::with_authoring_identity!(|identity| app.stores.draft_store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![config_mutation("superseding")], transaction: None }, &mut identity).await).expect("superseding draft write");
+                semio_framework_plugin_testing_laws::with_authoring_identity!(|identity| app.stores.draft_store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![config_mutation("superseding")], transaction: None }, &mut identity).await).expect("superseding draft write");
                 let mut publication = publication;
                 assert!(app.stores.draft_store.advance_apply_batch(&mut publication, grant).is_err(), "the superseded draft publication is rejected");
                 PendingArtifactStorePublication::Draft(publication)
@@ -504,7 +522,7 @@ async fn every_publication_lane_retires_a_rejected_authority_without_faulting_ea
         }
     }
     drop((window_config_authority, window_transient_authority));
-    close_registered_fixture_app(&mut app, crate::app_testing::artifact_app_laws::fixture_mounted_policy(),cx).expect("original fixture terminal close");
+    close_registered_fixture_app(&mut app, semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(),cx).expect("original fixture terminal close");
 
     }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original caller paid terminal retirement");result
 }
@@ -513,14 +531,14 @@ async fn every_publication_lane_retires_a_rejected_authority_without_faulting_ea
 /// window-transient emission branch refreshes it before it begins.
 #[semio_framework_async_macros::async_test]
 async fn window_transient_re_begin_needs_the_refreshed_live_generation() {
-    let mut original_caller=crate::app_testing::artifact_app_laws::OriginalFixtureCaller::admit().expect("original caller policy admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+    let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original caller policy admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
     let fixture = fixture();
     let grant = grant(&fixture);
     let expected = fixture["windowTransientReBegin"].clone();
     assert_eq!(expected["windowKindId"], RETIREMENT_WINDOW_KIND);
     let window_id = expected["windowId"].as_str().expect("fixture window id");
     let operation = semio_framework_job::OperationId(2);
-    let mut app = artifact_app_laws::new_app::<RetirementApp>(protocol::ActorId("fixture".into()), crate::app_testing::artifact_app_laws::fixture_mounted_policy(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await;
+    let mut app = semio_framework_plugin_testing_laws::artifact_app_laws::new_app::<RetirementApp>(protocol::ActorId("fixture".into()), semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity()).await;
     let view = retirement_view();
     let mut authority = app.stores.window_transient_store.capture(Some(&view)).expect("window transient capture").expect("registered window transient owner");
     let captured_generation = authority.generation;
@@ -556,7 +574,7 @@ async fn window_transient_re_begin_needs_the_refreshed_live_generation() {
         let demand=app.stores.window_transient_store.refresh_demands(&authority,512).expect("original refresh demand");
         let turn=granted(demand);
         let step=app.stores.window_transient_store.refresh(&mut authority,turn).expect("window transient authority refreshes onto the live generation");
-        let progress=match step { crate::component::window_mutation::WindowAuthorityRefreshStep::Pending(progress)=>progress, crate::component::window_mutation::WindowAuthorityRefreshStep::Ready(progress)=>{refreshed=true;progress} };
+        let progress=match step { semio_framework_plugin_window_config::window_mutation::refresh::WindowAuthorityRefreshStep::Pending(progress)=>progress, semio_framework_plugin_window_config::window_mutation::refresh::WindowAuthorityRefreshStep::Ready(progress)=>{refreshed=true;progress} };
         assert!(progress.fits(turn));
         if refreshed {break;}
     }
@@ -579,7 +597,7 @@ async fn window_transient_re_begin_needs_the_refreshed_live_generation() {
     assert!(re_begun.terminal_is_empty());
     drop(authority);
     eprintln!("window transient retired a rejected authority over {turns} Ok turns, refused a stale re-begin, and admitted the refreshed one at generation {}", app.stores.window_transient_store.capture(Some(&view)).unwrap().unwrap().generation);
-    close_registered_fixture_app(&mut app, crate::app_testing::artifact_app_laws::fixture_mounted_policy(),cx).expect("original fixture terminal close");
+    close_registered_fixture_app(&mut app, semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(),cx).expect("original fixture terminal close");
 
     }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original caller paid terminal retirement");result
 }
@@ -590,8 +608,8 @@ async fn window_transient_re_begin_needs_the_refreshed_live_generation() {
 /// (the refusal used to consume the mutation, and the retry then completed without it).
 #[semio_framework_async_macros::async_test]
 async fn a_refused_window_transient_emission_keeps_its_mutation_and_faults() {
-    let mut original_caller=crate::app_testing::artifact_app_laws::OriginalFixtureCaller::admit().expect("original caller policy admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
-    let mut app = artifact_app_laws::new_app::<RetirementApp>(protocol::ActorId("fixture".into()), crate::app_testing::artifact_app_laws::fixture_mounted_policy(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await;
+    let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original caller policy admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+    let mut app = semio_framework_plugin_testing_laws::artifact_app_laws::new_app::<RetirementApp>(protocol::ActorId("fixture".into()), semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity()).await;
     let authority = app.stores.window_transient_store.capture(Some(&retirement_view())).expect("window transient capture").expect("registered window transient owner");
     let generation = authority.generation;
     let revision = app.stores.store.content_revision_now();
@@ -604,12 +622,12 @@ async fn a_refused_window_transient_emission_keeps_its_mutation_and_faults() {
     let lease = app
         .tools.tool_cancellations
         .clone()
-        .begin(crate::tool_cancellation::ToolOperationKey { app_instance_id: 7, document: crate::tool_cancellation::ArtifactDocumentAuthority(7), operation_id: operation.operation, base_revision: operation.base_revision, generation: operation.generation })
+        .begin(semio_framework_plugin_operation::ToolOperationKey { app_instance_id: 7, document: semio_framework_plugin_operation::ArtifactDocumentAuthority(7), operation_id: operation.operation, base_revision: operation.base_revision, generation: operation.generation })
         .expect("cancellation lease");
     let misaddressed = WindowTransientMutation::of::<RetirementWindowTransientOwner>("publication-retirement-window-right", ChangePublicationTransient { revision: 3 }.into());
-    let mut mounted = crate::typed_operation::MountedTypedCommandFullOperation::<RetirementApp> {
+    let mut mounted = semio_framework_plugin_retained_command::typed_operation::MountedTypedCommandFullOperation::<RetirementApp> {
         verb: "setTransient".into(),
-        meta: crate::app_emission::ActionMeta { actor: "fixture".into(), instance_id: 7, view_state: Some(retirement_view()) },
+        meta: semio_framework_plugin_decl_emission::ActionMeta { actor: "fixture".into(), instance_id: 7, view_state: Some(retirement_view()) },
         operation,
         canonical_revision: revision,
         artifact_generation: operation.generation.0,
@@ -619,7 +637,7 @@ async fn a_refused_window_transient_emission_keeps_its_mutation_and_faults() {
         transient_generation: 0,
         window_config_authority: None,
         window_transient_authority: Some(authority),
-        publication_lanes: &[crate::tool_contract::ArtifactToolPublicationLane::WindowTransient],
+        publication_lanes: &[semio_framework_plugin_decl_app::tool_contract::ArtifactToolPublicationLane::WindowTransient],
         session: None,
         session_rejected: None,
         reserved_producer: None, completion: None,
@@ -629,13 +647,13 @@ async fn a_refused_window_transient_emission_keeps_its_mutation_and_faults() {
         identity: None, identity_progress: semio_framework_value::native_encoding::NativeEncodeProgress { completed: 0, total: 0, owned_bytes: 0 },
         worker_semantic_pending: false, worker_outcome_pending: false, worker_fault_capture: None,
         terminal_seen: true, worker_resume_pending: false,
-        publication: Some(crate::tool_contract::ArtifactToolCompletionValue::Emit(Ok(crate::app_emission::Emit::default()), crate::app_emission::EphemeralEmit { window_transient: vec![misaddressed], ..Default::default() })),
+        publication: Some(semio_framework_plugin_decl_app::tool_contract::ArtifactToolCompletionValue::Emit(Ok(semio_framework_plugin_decl_emission::Emit::default()), semio_framework_plugin_decl_app::app_emission::EphemeralEmit { window_transient: vec![misaddressed], ..Default::default() })),
         pending_artifact_publication: None, pending_publication_outcome:PendingPublicationOutcome::new(),pending_window_config_receipt:None,cancellation_retirement:None,
         pending_child_publication: None,
         owned_child_group: None,
         owned_child_committed: false,
         owned_child_result_pending: false,
-        captured_child_content: Some(Arc::new(crate::child_view::ChildContentView::EMPTY)),
+        captured_child_content: Some(Arc::new(semio_framework_plugin_decl_views::child_view::ChildContentView::EMPTY)),
         captured_child_content_generation: 0,
         result_page: None,
         result_page_presented: false,
@@ -654,12 +672,12 @@ async fn a_refused_window_transient_emission_keeps_its_mutation_and_faults() {
         interaction_revalidated: false,
         terminal_fault: None,
         retained_close_fault: None,retained_close_fault_retirement:None,retained_close_fault_refusal:None,
-        stage: crate::store_publication::MountedTypedCommandFullOperationStage::Publishing,
+        stage: semio_framework_plugin_composition_publication::MountedTypedCommandFullOperationStage::Publishing,
     };
     for attempt in 0..3 {
-        let refused = app.typed_ctx().publish_mounted_typed_operation_unit(&mut mounted, crate::app_testing::artifact_app_laws::fixture_mounted_policy().maintenance).expect_err("a misaddressed window transient is refused");
+        let refused = app.typed_ctx().publish_mounted_typed_operation_unit(&mut mounted, semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy().maintenance).expect_err("a misaddressed window transient is refused");
         assert_eq!(refused.code.0, "window-transient.address", "attempt {attempt}: the refusal is the registry's typed fault");
-        let Some(crate::tool_contract::ArtifactToolCompletionValue::Emit(Ok(_), ephemeral)) = mounted.publication.as_ref() else { panic!("the emit stays installed") };
+        let Some(semio_framework_plugin_decl_app::tool_contract::ArtifactToolCompletionValue::Emit(Ok(_), ephemeral)) = mounted.publication.as_ref() else { panic!("the emit stays installed") };
         assert_eq!(ephemeral.window_transient.iter().map(WindowTransientMutation::window_id).collect::<Vec<_>>(), ["publication-retirement-window-right"], "attempt {attempt}: the refused mutation is kept, never dropped");
         assert!(mounted.pending_artifact_publication.is_none() && mounted.result_page.is_none(), "attempt {attempt}: nothing was published or answered");
     }
@@ -667,7 +685,7 @@ async fn a_refused_window_transient_emission_keeps_its_mutation_and_faults() {
     mounted.publication = None;
     mounted.window_transient_authority = None;
     drop(mounted);
-    close_registered_fixture_app(&mut app, crate::app_testing::artifact_app_laws::fixture_mounted_policy(),cx).expect("original fixture terminal close");
+    close_registered_fixture_app(&mut app, semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(),cx).expect("original fixture terminal close");
 
     }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original caller paid terminal retirement");result
 }

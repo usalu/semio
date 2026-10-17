@@ -557,7 +557,6 @@ for (const locale of ["en", "de"] as const) for (const gesture of commitLaw.gest
     expect(intents).toHaveLength(commitLaw.counts.repeated);
     view.unmount();
   }
-  console.log(`[DEBUG] scalar commits ${locale}/${gesture}: controls=${commitLaw.scalars.length} actualUiNodeView=true independentAccessibleNames=true`);
 });
 
 for (const locale of ["en", "de"] as const) it(`retains ordered collection commands in ${locale}`, () => {
@@ -578,7 +577,6 @@ for (const locale of ["en", "de"] as const) it(`retains ordered collection comma
     if (editable) expect(intents[0].input).toBe(row.input);
     view.unmount();
   }
-  console.log(`[DEBUG] collection commands ${locale}: rows=${commitLaw.collection.length} actualUiNodeView=true`);
 });
 
 for (const locale of ["en", "de"] as const) it(`retains metadata actions and read-only status diagnostics in ${locale}`, () => {
@@ -625,5 +623,4 @@ for (const locale of ["en", "de"] as const) it(`retains metadata actions and rea
     expect(intents).toHaveLength(law.readOnlyActionCount);
     view.unmount();
   }
-  console.log(`[DEBUG] metadata ${locale}: actualUiNodeView=true facets=${law.facets.length} statusDiagnostics=${law.statuses.length} independentAccessibleNames=true`);
 });

@@ -1,4 +1,7 @@
-use super::*;
+use crate::VcsSnapshot;
+use semio_framework_plugin::HistoryView;
+use crate::viewer::vcs::modes::view::windows::history::{VCS_UNTITLED_LABEL, history_tree_view};
+use crate::viewer::vcs::modes::view::windows::history::*;
 
 #[semio_framework_async_macros::async_test]
 async fn definition_declares_a_tree_window() {

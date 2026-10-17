@@ -3,6 +3,7 @@ import {test,expect} from "bun:test";
 import {readFileSync} from "node:fs";
 import {resolve} from "node:path";
 import {Database} from "bun:sqlite";
+import {readModuleTreeSource} from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 
 import TOML from "@iarna/toml";
 import fixture from "../🧫️fixtures/⚠️refusal/🔣️.json";
@@ -20,7 +21,7 @@ test("all owned callback and retained-allocation kinds have independent closed p
 });
 
 test("controlled signatures and retained faults use the actual Value owner without text erasure",()=>{
- const owner=resolve(import.meta.dir,"../..");const source=readFileSync(resolve(owner,"🦀️.rs"),"utf8");
+ const owner=resolve(import.meta.dir,"../..");const source=readModuleTreeSource(resolve(owner,"🦀️.rs"));
  for(const signature of ["fn admit(&mut self,bytes:usize)->Result<(),ValueError>","fn checkpoint(&mut self,progress:DeflateEncodeProgress)->Result<(),ValueError>","pub fn deflate_controlled<C:DeflateEncodeControl>(raw:&[u8],control:&mut C)->Result<Vec<u8>,ValueError>","pub kind: ValueRefusalKind,"])expect(source).toContain(signature);
  expect(source).not.toContain("into_message()");
  const manifestSource=readFileSync(resolve(owner,"📦️packages/🦀️rust/Cargo.toml"),"utf8");const manifest=Bun.TOML.parse(manifestSource) as {dependencies:Record<string,unknown>};

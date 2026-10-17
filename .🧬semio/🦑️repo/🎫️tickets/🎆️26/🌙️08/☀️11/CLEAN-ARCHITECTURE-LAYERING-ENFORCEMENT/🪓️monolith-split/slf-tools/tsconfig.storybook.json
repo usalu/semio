@@ -1,0 +1,6 @@
+{
+  "extends": "/Users/ueli/Documents/semio/tsconfig.json",
+  "compilerOptions": { "noEmit": true},
+  "include": [],
+  "files": ["/Users/ueli/Documents/semio/.storybook/main.ts"]
+}

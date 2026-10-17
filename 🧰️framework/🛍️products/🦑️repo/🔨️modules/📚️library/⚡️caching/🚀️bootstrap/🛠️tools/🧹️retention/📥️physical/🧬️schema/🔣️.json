@@ -59,6 +59,9 @@
         "maximumPublications": 64,
         "readerSources": [
           "package.json",
+          "🧰️framework/📦️packages/🟦️typescript/package.json",
+          "🧰️framework/📦️packages/🟦️typescript/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts",
+          "🧰️framework/📦️packages/🟦️typescript/📁️filesystem/🧾️observation/🟦️.ts",
           "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/📥️capture/📡️channel/🧬️schema/🔣️.json",
           "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/📥️capture/📥️input/🟦️.ts",
           "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/📥️capture/📥️input/🧬️schema/🔣️.json",
@@ -86,15 +89,20 @@
           "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/🟦️.ts",
           "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/🧬️schema/🔣️.json",
           "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/🧾️metadata/🟦️.ts",
+          "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌱️birth/🟦️.ts",
+          "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌱️birth/🧬️schema/🔣️.json",
+          "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌱️birth/🧾️claim/🟦️.ts",
+          "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌱️birth/🧾️claim/🧬️schema/🔣️.json",
           "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🍎️image/📥️information/🟦️.ts",
           "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🍎️image/🟦️.ts",
           "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🐧️image/🟦️.ts",
           "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📥️borrower/🟦️.ts",
+          "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🔒️mapping/🟦️.ts",
           "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts",
           "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧬️schema/🔣️.json",
           "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧱️fixed/🎛️command/🟦️.ts",
-          "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧱️fixed/🎛️command/🧬️schema/🔣️.json",
           "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧱️fixed/🎛️kernel/🟦️.ts",
+          "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧱️fixed/👓️observation/🟦️.ts",
           "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧱️fixed/📥️allocation/🟦️.ts",
           "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧱️fixed/📥️allocation/🧬️schema.json",
           "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧱️fixed/📥️receipt/🟦️.ts",
@@ -112,6 +120,7 @@
           "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧹️cleanup/🎛️command/🧬️schema/🔣️.json",
           "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧹️cleanup/📋️state/🟦️.ts",
           "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧹️cleanup/📋️state/🧬️schema/🔣️.json",
+          "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧹️cleanup/📥️operation/🤲️lifetime/🟦️.ts",
           "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧹️cleanup/📥️operation/🧬️schema/🔣️.json",
           "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧹️cleanup/📥️receiver/🧬️schema/🔣️.json",
           "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧹️cleanup/🧬️schema/📥️continuation.json",
@@ -121,6 +130,8 @@
           "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🎟️admission/📖️read/🟦️.ts",
           "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🎟️admission/📖️read/🧬️schema/🔣️.json",
           "🧰️framework/🔨️modules/🏃️process/📦️artifacts/💾️cache/⚙️policy/🟦️.ts",
+          "🧰️framework/🔨️modules/🏃️process/📦️artifacts/💾️cache/🏗️producer/🟦️.ts",
+          "🧰️framework/🔨️modules/🏃️process/📦️artifacts/💾️cache/🏗️producer/🧬️schema/🔣️.json",
           "🧰️framework/🔨️modules/🏃️process/📦️artifacts/💾️cache/💾️volume/🟦️.ts",
           "🧰️framework/🔨️modules/🏃️process/📦️artifacts/💾️cache/📂️descriptors/🟦️.ts",
           "🧰️framework/🔨️modules/🏃️process/📦️artifacts/💾️cache/📋️model/📨️receiver/🟦️.ts",
@@ -138,13 +149,13 @@
           "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️execution/🟦️.ts",
           "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts",
           "🧰️framework/🔨️modules/🏃️process/🔒️leases/♻️retirement/🟦️.ts",
+          "🧰️framework/🔨️modules/🏃️process/🔒️leases/♻️retirement/🧬️schema/🔣️.json",
+          "🧰️framework/🔨️modules/🏃️process/🔒️leases/♻️retirement/🧭️continuation/🟦️.ts",
+          "🧰️framework/🔨️modules/🏃️process/🔒️leases/♻️retirement/🧭️continuation/🧬️schema/🔣️.json",
           "🧰️framework/🔨️modules/🏃️process/🔒️leases/📦️bounded/🧬️schema/🔣️.json",
           "🧰️framework/🔨️modules/🏃️process/🔒️leases/📦️metadata/🟦️.ts",
           "🧰️framework/🔨️modules/🏃️process/🔒️leases/📦️metadata/🧬️schema/🔣️.json",
           "🧰️framework/🔨️modules/🏃️process/🔒️leases/🟦️.ts",
-          "🧰️framework/🔨️modules/🏃️process/🔒️leases/🧬️schema/♻️retirement.json",
-          "🧰️framework/🔨️modules/🏃️process/🔒️leases/🧬️schema/🎟️custody.json",
-          "🧰️framework/🔨️modules/🏃️process/🔒️leases/🧬️schema/🎟️retention.json",
           "🧰️framework/🔨️modules/🏃️process/🔒️leases/🧬️schema/📜️ticket.json",
           "🧰️framework/🔨️modules/🏃️process/🔒️leases/🧹️cleanup/🧬️schema/🔣️.json",
           "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🏃️execution/🟦️.ts",
@@ -184,7 +195,6 @@
           "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📥️use/🧬️schema/📥️witness.json",
           "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/🎟️capacity/📋️policy.json",
           "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/🎟️capacity/📥️physical/🟦️.ts",
-          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/🎟️capacity/🟦️.ts",
           "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/🎟️capacity/🧬️schema.json",
           "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/🎟️capacity/🧮️formula/🟦️.ts",
           "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️snapshot/🟦️.ts",
@@ -220,6 +230,7 @@
           "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🩹️patch/🧬️schema/🔣️.json",
           "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts",
           "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧬️schema/🔣️.json",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🔏️revision/🟨️.mjs",
           "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📥️caller.json",
           "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔌️nx-plugin/📤️arguments/🧬️schema/📥️native-caller.json"
         ],
@@ -376,6 +387,1780 @@
           "minimum": 0,
           "maximum": 9007199254740991
         }
+      }
+    },
+    "SelectedIntent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "mode",
+        "identities"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "mode": {
+          "const": "selected-generations"
+        },
+        "identities": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 64,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          }
+        }
+      }
+    },
+    "ReadContextCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "operation",
+        "fault",
+        "accepted",
+        "events"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "operation": {
+          "enum": [
+            "project",
+            "check",
+            "recheck",
+            "image"
+          ]
+        },
+        "fault": {
+          "enum": [
+            "none",
+            "copy-store",
+            "owner-closed",
+            "wrong-control",
+            "read",
+            "image"
+          ]
+        },
+        "accepted": {
+          "type": "boolean"
+        },
+        "events": {
+          "type": "array",
+          "maxItems": 8,
+          "items": {
+            "enum": [
+              "custody",
+              "read",
+              "image"
+            ]
+          }
+        }
+      }
+    },
+    "ReadCustodyCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "registered",
+        "live",
+        "sameStore",
+        "sameReservation",
+        "workspace",
+        "id",
+        "root",
+        "accepted"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "registered": {
+          "type": "boolean"
+        },
+        "live": {
+          "type": "boolean"
+        },
+        "sameStore": {
+          "type": "boolean"
+        },
+        "sameReservation": {
+          "type": "boolean"
+        },
+        "workspace": {
+          "type": "boolean"
+        },
+        "id": {
+          "type": "boolean"
+        },
+        "root": {
+          "type": "boolean"
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "BinaryReadCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "fault",
+        "accepted"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "fault": {
+          "enum": [
+            "none",
+            "bytes",
+            "inode",
+            "receipt",
+            "symlink"
+          ]
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "CopiedReadCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "fault",
+        "accepted"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "fault": {
+          "enum": [
+            "none",
+            "unknown",
+            "hardlink",
+            "mutated-after",
+            "foreign-context",
+            "copied-inventory"
+          ]
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "FundedReadCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "fault",
+        "accepted"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "fault": {
+          "enum": [
+            "none",
+            "reservation",
+            "port",
+            "backing",
+            "root",
+            "phase",
+            "closed"
+          ]
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "TreeReadCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "fault",
+        "accepted"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "fault": {
+          "enum": [
+            "none",
+            "unknown-parent",
+            "root-symlink",
+            "root-replacement",
+            "child-replacement",
+            "escaped",
+            "unawaited"
+          ]
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "IndexReadCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "fault",
+        "accepted"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "fault": {
+          "enum": [
+            "none",
+            "bytes",
+            "extra",
+            "writable",
+            "symlink",
+            "raw-index",
+            "identity",
+            "sort"
+          ]
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "DerivativeReadCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "fault",
+        "accepted",
+        "callback"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "fault": {
+          "enum": [
+            "none",
+            "identity",
+            "authorizer",
+            "source-index",
+            "shared-inode",
+            "namespace-extra",
+            "pristine-mutation",
+            "body-undefined",
+            "body-frozen",
+            "escaped",
+            "base-busy"
+          ]
+        },
+        "accepted": {
+          "type": "boolean"
+        },
+        "callback": {
+          "type": "boolean"
+        }
+      }
+    },
+    "GenerationReadEvidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "identity",
+        "directory",
+        "kind",
+        "binaryDigest",
+        "objects"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "identity": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "directory": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "kind": {
+          "enum": [
+            "copied-artifact",
+            "shared-pristine"
+          ]
+        },
+        "binaryDigest": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          ]
+        },
+        "objects": {
+          "type": "array",
+          "maxItems": 256,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          }
+        }
+      }
+    },
+    "ReadCloseCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "body",
+        "close"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "body": {
+          "enum": [
+            "value",
+            "undefined",
+            "frozen"
+          ]
+        },
+        "close": {
+          "enum": [
+            "none",
+            "distinct",
+            "same"
+          ]
+        }
+      }
+    },
+    "WitnessReadCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "fault",
+        "accepted"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "fault": {
+          "enum": [
+            "none",
+            "malformed",
+            "symlink",
+            "hardlink",
+            "root",
+            "nonce",
+            "directory",
+            "changed-after",
+            "copied-context",
+            "roster-added"
+          ]
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "WitnessReadEvidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "directory",
+        "rows"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "directory": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "rows": {
+          "type": "array",
+          "maxItems": 1024,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "path",
+              "identity",
+              "sha256",
+              "stamp"
+            ],
+            "properties": {
+              "path": {
+                "type": "string",
+                "maxLength": 256
+              },
+              "identity": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              },
+              "sha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              },
+              "stamp": {
+                "type": "string",
+                "maxLength": 256
+              }
+            }
+          }
+        }
+      }
+    },
+    "ActivationReadCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "target",
+        "metadata",
+        "changed",
+        "copied",
+        "accepted"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "target": {
+          "enum": [
+            "canonical",
+            "foreign",
+            "malformed",
+            "missing"
+          ]
+        },
+        "metadata": {
+          "type": "boolean"
+        },
+        "changed": {
+          "type": "boolean"
+        },
+        "copied": {
+          "type": "boolean"
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "ActivationReadEvidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "path",
+        "identity",
+        "generation"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "path": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "identity": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "generation": {
+          "$ref": "#/definitions/GenerationReadEvidence"
+        }
+      }
+    },
+    "InventoryReadRow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "kind",
+        "stamp",
+        "children",
+        "target",
+        "sha256"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "kind": {
+          "enum": [
+            "directory",
+            "file",
+            "link"
+          ]
+        },
+        "stamp": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "children": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "array",
+              "maxItems": 200000,
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              }
+            }
+          ]
+        },
+        "target": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string",
+              "maxLength": 256
+            }
+          ]
+        },
+        "sha256": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          ]
+        }
+      }
+    },
+    "ObjectReadCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "fault",
+        "accepted",
+        "released"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "fault": {
+          "enum": [
+            "none",
+            "shared",
+            "receipt",
+            "bytes",
+            "symlink",
+            "changed-after",
+            "copied-proof",
+            "foreign-context"
+          ]
+        },
+        "accepted": {
+          "type": "boolean"
+        },
+        "released": {
+          "type": "boolean"
+        }
+      }
+    },
+    "ObjectReadEvidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "sha256",
+        "bytes",
+        "path",
+        "receiptPath",
+        "stamp",
+        "receiptStamp",
+        "receiptSha256"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "receiptSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 134217728
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "receiptPath": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "stamp": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "receiptStamp": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        }
+      }
+    },
+    "SelectedCommand": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "operation",
+        "selection",
+        "parent",
+        "artifact"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "operation": {
+          "enum": [
+            "observe",
+            "retire"
+          ]
+        },
+        "selection": {
+          "$ref": "#/definitions/SelectedIntent"
+        },
+        "parent": {
+          "$ref": "https://semio.tech/framework/process/native-storage/v1#/definitions/ProtectedMaintenanceRequest"
+        },
+        "artifact": {
+          "allOf": [
+            {
+              "$ref": "https://semio.tech/framework/process/native-storage/v1#/definitions/ProtectedArtifactExpectation"
+            },
+            {
+              "type": "object",
+              "required": [
+                "action",
+                "allocation"
+              ],
+              "properties": {
+                "action": {
+                  "const": "retain-allocation-payload"
+                },
+                "allocation": {
+                  "type": "object",
+                  "required": [
+                    "owner"
+                  ],
+                  "properties": {
+                    "owner": {
+                      "const": "repository:tooling-store"
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "SelectedCommandCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "fault",
+        "accepted"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "fault": {
+          "enum": [
+            "none",
+            "observe",
+            "extra",
+            "operation",
+            "selection-mode",
+            "duplicate",
+            "parent-purpose",
+            "action",
+            "owner",
+            "getter",
+            "proxy"
+          ]
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "SelectedPhysicalCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "fault",
+        "completed"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "fault": {
+          "enum": [
+            "none",
+            "initial-unknown",
+            "late-unknown",
+            "changed-file",
+            "copied-owner",
+            "copied-control",
+            "row-drift",
+            "late-row-drift",
+            "cancelled"
+          ]
+        },
+        "completed": {
+          "type": "boolean"
+        }
+      }
+    },
+    "SelectedOwnerCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "operation",
+        "fault",
+        "completed"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "operation": {
+          "enum": [
+            "observe",
+            "retire"
+          ]
+        },
+        "fault": {
+          "enum": [
+            "none",
+            "active",
+            "policy",
+            "registry-busy",
+            "generation-busy",
+            "artifact",
+            "activation",
+            "late-cas",
+            "undefined-close",
+            "windows",
+            "copied-original",
+            "copied-control",
+            "arity",
+            "receipt"
+          ]
+        },
+        "completed": {
+          "type": "boolean"
+        }
+      }
+    },
+    "SelectedInputCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "fault",
+        "accepted"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "fault": {
+          "enum": [
+            "none",
+            "hash",
+            "symlink",
+            "oversize",
+            "changed",
+            "foreign",
+            "command",
+            "utf8"
+          ]
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "SelectedLaunchCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "mode",
+        "fault",
+        "accepted"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "mode": {
+          "enum": [
+            "--selected-observe",
+            "--selected-retire"
+          ]
+        },
+        "fault": {
+          "enum": [
+            "none",
+            "mode",
+            "count",
+            "sha",
+            "operation",
+            "owner",
+            "input"
+          ]
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "SelectedScopeCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "primary",
+        "old",
+        "abort",
+        "rescue"
+      ],
+      "properties": {
+        "id": {
+          "enum": [
+            "success",
+            "undefined",
+            "frozen",
+            "old"
+          ]
+        },
+        "primary": {
+          "enum": [
+            "none",
+            "undefined",
+            "frozen"
+          ]
+        },
+        "old": {
+          "type": "boolean"
+        },
+        "abort": {
+          "type": "boolean"
+        },
+        "rescue": {
+          "type": "boolean"
+        }
+      }
+    },
+    "SelectedPlanRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "purpose",
+        "parent"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "purpose": {
+          "const": "plan-selected-tooling-generations"
+        },
+        "parent": {
+          "$ref": "https://semio.tech/framework/process/native-storage/v1#/definitions/ProtectedMaintenanceRequest"
+        },
+        "selection": {
+          "$ref": "#/definitions/SelectedIntent"
+        }
+      }
+    },
+    "SelectedPlanProtocol": {
+      "const": {
+        "maximumRoles": 32,
+        "directoryRoles": [
+          "b",
+          "bazel",
+          "binaryen",
+          "bun",
+          "dashboard-cli",
+          "downloads",
+          "g",
+          "i",
+          "nx",
+          "o",
+          "r",
+          "rc",
+          "sdk",
+          "tmp",
+          "u",
+          "use"
+        ],
+        "fileRoles": [
+          "h.json",
+          "storage-events.jsonl",
+          "tooling.json"
+        ],
+        "maximumGenerations": 64,
+        "service": ".fseventsd",
+        "fixtureDirectoryRoles": [
+          "rg"
+        ],
+        "stagingNamePattern": "^\\.stage-[A-Za-z0-9]{6}$",
+        "fixtureStagingNamePattern": "^\\.stage-drv-(?:a|b|drain)-[A-Za-z0-9]{6}$"
+      }
+    },
+    "SelectedPlanCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "fault",
+        "accepted"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "fault": {
+          "enum": [
+            "none",
+            "extra",
+            "purpose",
+            "parent",
+            "getter",
+            "proxy",
+            "copied-original",
+            "copied-control",
+            "windows",
+            "row",
+            "charge",
+            "receipt",
+            "registry-busy",
+            "generation-busy",
+            "unknown-role",
+            "unknown-generation",
+            "changed",
+            "journal",
+            "namespace",
+            "only-active",
+            "undefined-close",
+            "staging",
+            "staging-drift",
+            "selected",
+            "selected-active",
+            "selected-missing",
+            "selected-unqualified",
+            "selected-preserves-unqualified"
+          ]
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "SelectedCensusCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "fault",
+        "accepted"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "fault": {
+          "enum": [
+            "none",
+            "entry",
+            "duplicate",
+            "missing",
+            "unmounted",
+            "declaration",
+            "directory",
+            "unsafe-integer",
+            "receipt",
+            "identity-entry",
+            "identity-short",
+            "identity-extra",
+            "identity-bad"
+          ]
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "SelectedPlanLaunchCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "fault",
+        "accepted"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "fault": {
+          "enum": [
+            "none",
+            "input",
+            "owner",
+            "busy",
+            "operation",
+            "hash",
+            "identity"
+          ]
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "SelectedPlanRoleDiagnosticProtocol": {
+      "const": {
+        "version": 1,
+        "maximumBytes": 65536,
+        "maximumRoles": 32,
+        "maximumNameUnits": 256
+      }
+    },
+    "SelectedPlanRoleDiagnostic": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "purpose",
+        "root",
+        "names",
+        "selected",
+        "rootStamp",
+        "reasons",
+        "authority",
+        "publicationRetirementDispatches"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "purpose": {
+          "const": "unqualified-current-tools-role-data"
+        },
+        "root": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "names": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 32,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256,
+            "pattern": "^[^/\\\\\u0000]+$"
+          }
+        },
+        "selected": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "name",
+            "kind",
+            "stamp"
+          ],
+          "properties": {
+            "name": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256,
+              "pattern": "^[^/\\\\\u0000]+$"
+            },
+            "kind": {
+              "enum": [
+                "file",
+                "directory",
+                "link",
+                "other"
+              ]
+            },
+            "stamp": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 512
+            }
+          }
+        },
+        "rootStamp": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "reasons": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 7,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "unknown-role",
+              "foreign-device",
+              "symbolic-link",
+              "expected-directory",
+              "expected-file",
+              "multiple-links",
+              "unqualified-service"
+            ]
+          }
+        },
+        "authority": {
+          "const": false
+        },
+        "publicationRetirementDispatches": {
+          "const": 0
+        }
+      }
+    },
+    "SelectedPlanRoleDiagnosticCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode",
+        "delivery",
+        "accepted"
+      ],
+      "properties": {
+        "mode": {
+          "enum": [
+            "unknown",
+            "foreign-device",
+            "link",
+            "wrong-directory",
+            "wrong-file",
+            "multiple-links",
+            "unqualified-service",
+            "too-many",
+            "long-name",
+            "bad-stamp",
+            "no-reasons",
+            "unknown-reason",
+            "missing-name",
+            "duplicate-names",
+            "long-root",
+            "newline-name"
+          ]
+        },
+        "delivery": {
+          "enum": [
+            "normal",
+            "undefined",
+            "frozen"
+          ]
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "SelectedPlanProducerRoleCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "fault",
+        "accepted"
+      ],
+      "properties": {
+        "name": {
+          "enum": [
+            "bazel",
+            "binaryen",
+            "dashboard-cli",
+            "downloads",
+            "rc",
+            "state",
+            "rg"
+          ]
+        },
+        "fault": {
+          "enum": [
+            "none",
+            "file",
+            "link",
+            "foreign"
+          ]
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "SelectedPlanGenerationDiagnosticProtocol": {
+      "const": {
+        "maximumNames": 64,
+        "maximumNameUnits": 256,
+        "maximumBytes": 65536
+      }
+    },
+    "SelectedPlanGenerationDiagnostic": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "purpose",
+        "root",
+        "identities",
+        "authority",
+        "publicationRetirementDispatches"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "purpose": {
+          "const": "unqualified-current-tools-generation-names-data"
+        },
+        "root": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "identities": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 64,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          }
+        },
+        "authority": {
+          "const": false
+        },
+        "publicationRetirementDispatches": {
+          "const": 0
+        }
+      }
+    },
+    "SelectedPlanGenerationDiagnosticCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode",
+        "delivery",
+        "accepted"
+      ],
+      "properties": {
+        "mode": {
+          "enum": [
+            "unknown",
+            "newline",
+            "valid",
+            "empty",
+            "too-many",
+            "long-name",
+            "duplicate",
+            "long-root",
+            "empty-name"
+          ]
+        },
+        "delivery": {
+          "enum": [
+            "normal",
+            "undefined",
+            "frozen"
+          ]
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "SelectedPlanStagingCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "fault",
+        "accepted"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "fault": {
+          "enum": [
+            "none",
+            "file",
+            "link",
+            "foreign",
+            "parent-link",
+            "parent-foreign",
+            "parent-drift"
+          ]
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "GenerationAuthenticationDiagnosticProtocol": {
+      "const": {
+        "maximumBytes": 65536,
+        "maximumInputs": 64
+      }
+    },
+    "GenerationAuthenticationDiagnostic": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "purpose",
+        "directory",
+        "identity",
+        "computedIdentity",
+        "reason",
+        "inputMetadata",
+        "authority",
+        "publicationRetirementDispatches"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "purpose": {
+          "const": "unqualified-current-tools-generation-authentication-data"
+        },
+        "directory": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "identity": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "computedIdentity": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "reason": {
+          "enum": [
+            "install-identity",
+            "marker-version",
+            "marker-digest",
+            "authorizer-receipt"
+          ]
+        },
+        "inputMetadata": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 64,
+          "uniqueItems": true,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "sha256"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "pattern": "^(?:package[.]json|bun[.]lock|patches[/][a-f0-9]{64}[.]patch|[.]semio-authorizer-source[.]json|[.]semio-authorizer-compiler[.]json|[.]semio-sdk-material[.]json|[.]semio-nx-tooling[.]json)$"
+              },
+              "sha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              }
+            }
+          }
+        },
+        "authority": {
+          "const": false
+        },
+        "publicationRetirementDispatches": {
+          "const": 0
+        }
+      }
+    },
+    "GenerationAuthenticationDiagnosticCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode",
+        "delivery",
+        "reported"
+      ],
+      "properties": {
+        "mode": {
+          "enum": [
+            "install-identity",
+            "marker-version",
+            "marker-digest",
+            "authorizer-receipt",
+            "bad-identity",
+            "too-many-inputs",
+            "bad-input",
+            "duplicate-input",
+            "long-directory"
+          ]
+        },
+        "delivery": {
+          "enum": [
+            "normal",
+            "undefined",
+            "frozen"
+          ]
+        },
+        "reported": {
+          "type": "boolean"
+        }
+      }
+    },
+    "SelectedPlanSelectorCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fault",
+        "accepted"
+      ],
+      "properties": {
+        "fault": {
+          "enum": [
+            "all",
+            "one",
+            "active",
+            "missing",
+            "null",
+            "bad",
+            "duplicate",
+            "unsorted",
+            "proxy",
+            "getter",
+            "array-proxy",
+            "extra",
+            "root-extra",
+            "index-getter"
+          ]
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "BindingReadEvidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "purpose",
+        "path",
+        "identity",
+        "link",
+        "generationStamp",
+        "ancestors",
+        "containers"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "purpose": {
+          "const": "preserve-current-tooling-binding"
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "identity": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "link": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "path",
+            "target",
+            "stamp"
+          ],
+          "properties": {
+            "path": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            "target": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4096
+            },
+            "stamp": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 512
+            }
+          }
+        },
+        "generationStamp": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "ancestors": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 64,
+          "items": {
+            "$ref": "#/definitions/BindingDirectoryIdentity"
+          }
+        },
+        "containers": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "$ref": "#/definitions/BindingDirectoryIdentity"
+          }
+        }
+      }
+    },
+    "BindingDirectoryIdentity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "identity"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "identity": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        }
+      }
+    },
+    "BindingCaptureCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fault",
+        "captured",
+        "rechecked"
+      ],
+      "properties": {
+        "fault": {
+          "enum": [
+            "none",
+            "invalid-current-metadata",
+            "foreign-target",
+            "link-directory",
+            "source-parent-alias",
+            "store-parent-alias",
+            "generation-link",
+            "generation-file",
+            "leaf-change",
+            "generation-change",
+            "container-change",
+            "clone",
+            "context-clone",
+            "foreign-control"
+          ]
+        },
+        "captured": {
+          "type": "boolean"
+        },
+        "rechecked": {
+          "type": "boolean"
+        }
+      }
+    },
+    "GenerationIntegrityReadEvidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "identity",
+        "directory",
+        "kind",
+        "binaryDigest",
+        "objects",
+        "purpose"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "identity": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "directory": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "kind": {
+          "enum": [
+            "copied-artifact",
+            "shared-pristine"
+          ]
+        },
+        "binaryDigest": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          ]
+        },
+        "objects": {
+          "type": "array",
+          "maxItems": 256,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          }
+        },
+        "purpose": {
+          "const": "retire-owned-current-tooling-generation"
+        }
+      }
+    },
+    "GenerationIntegrityCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fault",
+        "captured",
+        "rechecked",
+        "strictAccepted"
+      ],
+      "properties": {
+        "fault": {
+          "enum": [
+            "opaque",
+            "valid",
+            "source-drift",
+            "output-drift",
+            "marker-drift",
+            "directory-drift",
+            "copy",
+            "context-copy",
+            "strict-substitution",
+            "changed-metadata"
+          ]
+        },
+        "captured": {
+          "type": "boolean"
+        },
+        "rechecked": {
+          "type": "boolean"
+        },
+        "strictAccepted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "ReadContextOwner": {
+      "const": {
+        "version": 1,
+        "module": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🛠️tools/🟦️.ts",
+        "exports": [
+          "withRepositoryToolingOperationV1",
+          "repositoryToolingRetirementReadContextV1",
+          "repositoryToolingReadContextV1",
+          "nativeFundedToolingReadContextV1"
+        ],
+        "authority": "same-private-registry-and-genuine-funding-checks-no-projected-effect-port"
       }
     }
   }

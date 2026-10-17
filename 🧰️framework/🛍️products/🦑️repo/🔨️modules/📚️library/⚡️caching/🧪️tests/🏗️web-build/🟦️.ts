@@ -39,7 +39,7 @@ export async function proveWebBuild(workspace: string, output: string, invocatio
   const fixture = JSON.parse(readFileSync(join(import.meta.dir, "🧫️cases.json"), "utf8"));
   const { semioViteBuild } = await import("../../../../../../../🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🎚️mode/🟦️.ts");
   for (const row of fixture.modes) {
-    const policy = semioViteBuild(undefined, row.mode), extension = extensionBuildConfig(workspace, "entry.ts", "out", "extension.cjs", false, row.mode), coordinator = coordinatorBuildPolicy(row.mode, 2);
+    const policy = semioViteBuild(undefined, row.mode), extension = extensionBuildConfig(workspace, "entry.ts", "out", "extension.cjs", row.mode), coordinator = coordinatorBuildPolicy(row.mode, 2);
     assert.equal(extension.build.minify, row.minify); assert.equal(extension.build.sourcemap, row.sourcemap);
     assert.equal(policy.rollupOptions.treeshake, row.mode === "release"); assert.equal(extension.build.rollupOptions.treeshake, row.mode === "release");
     assert.equal(coordinator.output, `.cache/b/p/m/next/${row.mode}/out`); assert.equal(coordinator.optimization.minimize, row.mode === "release"); assert.equal(coordinator.workers, 2);
@@ -69,7 +69,7 @@ export async function proveWebBuild(workspace: string, output: string, invocatio
     assert.equal(oracle.build.rollupOptions.treeshake, row.mode === "release");
   }
   for (const row of fixture.modes) {
-    const extension = extensionBuildConfig(workspace, "entry.ts", "out", "extension.cjs", false, row.mode),plugin=extension.plugins[0];if(!plugin)throw Error("Actual extension Source transform required");const transformed = await plugin.transform(fixture.extensionSource, "fixture.ts");
+    const extension = extensionBuildConfig(workspace, "entry.ts", "out", "extension.cjs", row.mode),plugin=extension.plugins[0];if(!plugin)throw Error("Actual extension Source transform required");const transformed = await plugin.transform(fixture.extensionSource, "fixture.ts");
     assert.ok(transformed); assert.ok(transformed.code.includes("retainedPrototypeDeclaration")); assert.equal(transformed.code.includes("test-only"), false);
     const oracle = await require("esbuild").transform(transformed.code, { loader: "ts", format: "cjs", minify: row.mode === "release" });
     assert.ok(oracle.code.includes("retained"));
@@ -99,7 +99,6 @@ export async function proveWebBuild(workspace: string, output: string, invocatio
     for (const name of fixture.nextPublication.expected) assert.ok(publication.has(name), name);
     assert.equal(JSON.parse(readFileSync(publication.get("standalone/payload.json")!, "utf8")).answer, 42);
   }
-  console.log("[DEBUG] Next standalone publication contains the actual installed SDK trace closure in both modes");
   const bunPackage = join(temporary, "bun-package"); await mkdir(bunPackage); await writeFile(join(bunPackage, "entry.ts"), fixture.bunPackage.source); await writeFile(join(bunPackage, "payload.txt"), fixture.bunPackage.payload);
   for (const row of fixture.modes) {
     const result = await bundleVirtualJavaScript({ version: 1, kind: "bun-package", mode: row.mode, entrypoint: join(bunPackage, "entry.ts") }, { workspace, invocation, control:createRequestedIssuedResourceControlV1(phaseControl,120000) });
@@ -108,7 +107,6 @@ export async function proveWebBuild(workspace: string, output: string, invocatio
     const oracleFile = join(bunPackage, `${row.mode}-oracle.js`); await writeFile(oracleFile, oracle.outputFiles[0].text); assert.equal((await import(oracleFile)).answer, fixture.bunPackage.answer);
     assert.equal(!!result.sourceMap, row.sourcemap);
   }
-  console.log("[DEBUG] Essential Bun text-import artifact matches independent esbuild loader oracle in both modes");
   const largeEntry = join(bunPackage, "large.ts"), largeOracle = join(bunPackage, "large-oracle.js");
   await writeFile(largeEntry, 'export const payload = "' + "q".repeat(fixture.largePrototype.characters) + '"; export const payloadLength = payload.length;');
   await withWebCompilerFixtureV1(workspace,invocation,phaseControl,"prototype",async(destination,sink)=>withWholeHostCompilerCapacity(leaseDirectory, createRequestedIssuedResourceControlV1(sink.control,600_000), async environment => {
@@ -122,7 +120,6 @@ export async function proveWebBuild(workspace: string, output: string, invocatio
     const manifestBytes = readFileSync(responsePath), manifest = JSON.parse(manifestBytes.toString("utf8")); assert.ok(manifestBytes.byteLength <= fixture.largePrototype.maximumManifestBytes); assert.equal(require("jsonschema").validate(manifest, bunWorkerSchema.definitions.Response).valid, true);
     const files = await readBunBundleFiles(request, responsePath, invocation.control.signal); await writeFile(files.source, "tampered"); await assert.rejects(readBunBundleFiles(request, responsePath, invocation.control.signal), /custody|digest/);
   }));
-  console.log(`[DEBUG] Prototype Bun artifact exceeds16MiB (${fixture.largePrototype.characters} payload characters), matches esbuild; bounded manifest schema and actual digest tampering refusal verified`);
   const wasmOwner = join(temporary, "wasm-owner"), packageRoot = join(temporary, "node_modules/@semio-tech/fixture-wasm");
   await mkdir(packageRoot, { recursive: true });
   await writeFile(join(packageRoot, "package.json"), JSON.stringify({ name: "@semio-tech/fixture-wasm", type: "module", module: "fixture.js", semioWasmOwner: { version: 1, sourceOwner: relative(workspace, wasmOwner).replaceAll("\\", "/"), mode: "release", output: "dist/wasm/release" } }));
@@ -147,7 +144,6 @@ export async function proveWebBuild(workspace: string, output: string, invocatio
     await assert.rejects(bundleVirtualJavaScript(request, { workspace, invocation, control:createRequestedIssuedResourceControlV1(phaseControl,120000), signal: cancellation.signal, onLine: line => { if (line.includes("[bun-worker] compiling")) { compiling = true; setTimeout(() => cancellation.abort(), 20); } } }));
     assert.equal(compiling, true);
     await withWholeHostCompilerCapacity(leaseDirectory, createRequestedIssuedResourceControlV1(phaseControl,10_000), async () => {});
-    console.log("[DEBUG] Actual Bun virtual-source compilation cancelled after worker start; process tree exited and host capacity released");
     const loadNextConfig = require("next/dist/server/config").default;
     for (const row of fixture.modes) {
       const coordinator = coordinatorBuildPolicy(row.mode, 2), nextRoot = join(temporary, `next-${row.mode}`);
@@ -162,7 +158,6 @@ export async function proveWebBuild(workspace: string, output: string, invocatio
       const emitted = readFileSync(join(destination, "assets", js), "utf8");
       assert.ok(emitted.includes(row.mode)); assert.equal(emitted.includes("active-projection"), false);
       sizes.set(row.mode, Buffer.byteLength(emitted));
-      console.log(`[DEBUG] Vite ${row.mode}: bytes=${sizes.get(row.mode)} elapsedMs=${Date.now() - started}`);
     }
     assert.ok(sizes.get("release")! < sizes.get("prototype")!);
     for (const row of fixture.modes) {
@@ -189,7 +184,6 @@ export async function proveWebBuild(workspace: string, output: string, invocatio
         await new Promise(accept => setTimeout(accept, 100)); assert.equal(warmCompleted, false);
       });
       const warmResponse = await warmRequest; assert.equal(warmResponse.status, 200); assert.ok((await warmResponse.text()).includes("warm-update"));
-      console.log("[DEBUG] Concurrent Vite listeners served module transforms; idle listeners released host admission, cached responses stayed available, and warm transforms queued behind another graph");
     } finally { serving.forEach(controller => controller.abort()); await Promise.all(listeners); }
     const warmService = new AbortController();
     let warmed!: Promise<void>;
@@ -198,23 +192,21 @@ export async function proveWebBuild(workspace: string, output: string, invocatio
       warmed.catch(reject);
     });
     warmService.abort(); await warmed;
-    console.log("[DEBUG] Concurrent isolated Vite listeners and warm optimizer snapshot publication verified");
     const state = { root: stateRoot, owner: fixture.owner, compiler: "test:1", configuration: config, mode: "prototype" as const };
     assert.equal(require("jsonschema").validate(state, stateSchema).valid, true);
     assert.notEqual(compilerStateDirectory(state), compilerStateDirectory({ ...state, mode: "release" }));
     assert.notEqual(compilerStateDirectory(state), compilerStateDirectory({ ...state, owner: "fixture:other" }));
     assert.notEqual(compilerStateDirectory(state), compilerStateDirectory({ ...state, compiler: "test:2" }));
-    const order: string[] = [], arrivalSignal = invocation.control.signal, arrivalOwner = { ...state, owner: "fixture:opposite-state-arrival", configuration: temporary, control: createRequestedIssuedResourceControlV1(phaseControl,600_000), storage:stateStore.storage,storageControl:stateStore.control, files: ["probe"] };
-    const host = await acquireCompilerCapacityLeaseV1({ directory: leaseDirectory, control: createRequestedIssuedResourceControlV1(phaseControl,600_000) });
+    const order: string[] = [], arrivalSignal = invocation.control.signal, arrivalOwner = { capacity:{kind:"whole-host" as const}, ...state, owner: "fixture:opposite-state-arrival", configuration: temporary, control: createRequestedIssuedResourceControlV1(phaseControl,600_000), storage:stateStore.storage,storageControl:stateStore.control, files: ["probe"] };
+    const host = await acquireCompilerCapacityLeaseV1({request:{kind:"whole-host"}, directory: leaseDirectory, control: createRequestedIssuedResourceControlV1(phaseControl,600_000) });
     const independent = withCompilerState(arrivalOwner, async () => { order.push("independent"); });
     try {
       await new Promise(accept => setTimeout(accept, 100));
       await withCompilerState({ ...arrivalOwner, environment: { ...process.env, SEMIO_COMPILER_CAPACITY_HELD: "true", SEMIO_COMPILER_PARALLELISM: String(host.parallelism) } }, async () => { order.push("inherited"); });
     } finally { host.release(); }
     await independent; assert.deepEqual(order, fixture.lockOrder);
-    console.log("[DEBUG] Opposite-arrival inherited and independent compiler graphs completed in host-before-state order");
     let active = 0, maximum = 0;
-    await Promise.all([0, 1].map(() => withCompilerState({ ...state, control: createRequestedIssuedResourceControlV1(phaseControl,10_000), storage:stateStore.storage,storageControl:stateStore.control, files: ["probe"] }, async directory => {
+    await Promise.all([0, 1].map(() => withCompilerState({capacity:{kind:"whole-host"}, ...state, control: createRequestedIssuedResourceControlV1(phaseControl,10_000), storage:stateStore.storage,storageControl:stateStore.control, files: ["probe"] }, async directory => {
       active++; maximum = Math.max(maximum, active);
       await writeFile(join(directory, "probe"), String(active));
       await new Promise(resolve => setTimeout(resolve, 25)); active--;
@@ -223,9 +215,9 @@ export async function proveWebBuild(workspace: string, output: string, invocatio
     const cancelled = new AbortController(); cancelled.abort();
     assert.equal(invocation.control.signal.aborted, false);
     const cancelledControl = createRequestedIssuedResourceControlV1(phaseControl,30_000,cancelled.signal);
-    await assert.rejects(acquireCompilerCapacityLeaseV1({ directory: leaseDirectory, control: cancelledControl }), /abort/i);
+    await assert.rejects(acquireCompilerCapacityLeaseV1({request:{kind:"whole-host"}, directory: leaseDirectory, control: cancelledControl }), /abort/i);
     assert.equal(invocation.control.signal.aborted, false);
-    await assert.rejects(async () => withCompilerState({ ...state, control: createRequestedIssuedResourceControlV1(phaseControl,10_000,cancelled.signal), storage:stateStore.storage,storageControl:stateStore.control, files: ["probe"] }, async () => assert.fail("Cancelled compiler admitted")));
+    await assert.rejects(async () => withCompilerState({capacity:{kind:"whole-host"}, ...state, control: createRequestedIssuedResourceControlV1(phaseControl,10_000,cancelled.signal), storage:stateStore.storage,storageControl:stateStore.control, files: ["probe"] }, async () => assert.fail("Cancelled compiler admitted")));
     const watchedSource = join(temporary, "watch.ts"), watchedOutput = join(temporary, "watch-output"), watchStop = new AbortController();
     await writeFile(watchedSource, fixture.watch.source);
     let published = 0, requested = 0, initialReady!: () => void, updatedReady!: () => void, queuedReady!: () => void, failureReady!: () => void, recoveryReady!: () => void;
@@ -248,7 +240,6 @@ export async function proveWebBuild(workspace: string, output: string, invocatio
       await writeFile(watchedSource, fixture.watch.updatedSource); await Promise.race([recovered, watching]);
     } finally { watchStop.abort(); await assert.rejects(watching); }
     await withWholeHostCompilerCapacity(leaseDirectory, createRequestedIssuedResourceControlV1(phaseControl,600_000), async () => {});
-    console.log("[DEBUG] Actual Rollup watch published warm update matching esbuild, waited behind another graph, released failed rebuild capacity, recovered, held no idle capacity, and cancelled its child tree");
     const project = join(app, "tsconfig.json");
     await writeFile(project, JSON.stringify({ compilerOptions: { target: "ES2022", module: "ESNext", types: [], noEmit: true, strict: true, skipLibCheck: true }, files: ["value.ts"] }));
     await writeFile(join(app, "value.ts"), 'export const value: number = 42;');
@@ -259,7 +250,6 @@ export async function proveWebBuild(workspace: string, output: string, invocatio
       const lines: string[] = [], started = Date.now();
       await typecheckProject({ workspace, stateRoot, storage:stateStore.storage,storageControl:stateStore.control,control:phaseControl, invocation, cwd: app, project, owner: "fixture:web-typecheck", mode: "prototype", timeoutMs: 30_000, args: ["--extendedDiagnostics"], execution: { onLine: line => lines.push(line) } });
       diagnostics.push(lines);
-      console.log(`[DEBUG] TypeScript ${label}: elapsedMs=${Date.now() - started} ${lines.filter(line => /Check time|Total time/.test(line)).join("; ")}`);
     }
     const[coldDiagnostics,warmDiagnostics]=diagnostics;if(!coldDiagnostics||!warmDiagnostics)throw Error("Actual cold and warm TypeScript diagnostics required");
     assert.ok(coldDiagnostics.some(line => /^Check time:/.test(line)));
@@ -272,7 +262,7 @@ export async function proveWebBuild(workspace: string, output: string, invocatio
     for (const row of fixture.modes) {
       await withWebCompilerFixtureV1(workspace,invocation,phaseControl,row.mode,async(_destination,sink)=>{
       const declarationRoot=sink.directory,typeRoot=join(declarationRoot,"🧬️types");
-      const phase = createRequestedIssuedResourceControlV1(sink.control,30_000), lease = await acquireCompilerCapacityLeaseV1({ directory: leaseDirectory, control: phase, environment: process.env, requestedParallelism: 1 });
+      const phase = createRequestedIssuedResourceControlV1(sink.control,30_000), lease = await acquireCompilerCapacityLeaseV1({ directory: leaseDirectory, control: phase, environment: process.env, request:{kind:"exact",parallelism:1} });
       try {
         const declarations = emitTypeScriptDeclarations(join(declarationsSource, "entry.ts"), workspace);
         assert(declarations.has("🟦️.d.ts"));
@@ -284,13 +274,11 @@ export async function proveWebBuild(workspace: string, output: string, invocatio
         await writeFile(configuration, JSON.stringify({ compilerOptions: { strict: true, noEmit: true, target: "ES2022", module: "ESNext", moduleResolution: "Bundler", types: [], resolveJsonModule: true, allowSyntheticDefaultImports: true, skipLibCheck: true }, files: ["consumer.ts"] }));
         await runOwnedCommand(process.execPath, [require.resolve("typescript/bin/tsc"), "-p", configuration], declarationRoot, `declaration-consumer:${row.mode}`, compilerAdmissionBudgetV1(phase), { signal: phase.signal, env: { ...process.env, SEMIO_COMPILER_CAPACITY_HELD: "true", SEMIO_COMPILER_PARALLELISM: "1" } });
         for (const file of readdirSync(typeRoot)) assert.ok(join(typeRoot, file).length <= 256);
-        console.log(`[DEBUG] Flattened ${row.mode} declarations: ${declarations.size} modules, local type/ambient/JSON imports consumed by independent tsc`);
       } finally { lease.release(); }
       });
     }
     await writeFile(join(app, "value.ts"), 'export const value: number = "bad";');
     await assert.rejects(() => typecheckProject({ workspace, stateRoot, storage:stateStore.storage,storageControl:stateStore.control,control:phaseControl, invocation, cwd: app, project, owner: "fixture:web-typecheck", mode: "prototype", timeoutMs: 30_000 }));
-    console.log("[DEBUG] Browser prototype/release artifacts, concurrent publication, cancellation, TypeScript warm reuse and error invalidation verified");
   } finally { await rm(temporary, { recursive: true, force: true }); }
 
  });

@@ -1,6 +1,6 @@
 /** 🧬️ CAD document composed from four model slots and ordered drawing/topology children. */
-import { parseArtifactChild, type ArtifactChild } from "../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts";
-export type { ArtifactChild } from "../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts";
+import { parseArtifactChild, type ArtifactChild } from "@semio-tech/framework-os/modules/store/child/schema";
+export type { ArtifactChild } from "@semio-tech/framework-os/modules/store/child/schema";
 
 export type CadChild<S extends "model" | "drawing" | "brep"> = ArtifactChild & { target: ArtifactChild["target"] & { dialect: { artifactKind: "s.stdio.semio"; standard: "v1"; subset: S } } };
 export type CadBrepChild = CadChild<"brep">;

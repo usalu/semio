@@ -22,6 +22,10 @@ type block5dPresenceGuardSizeBounds = { readonly minItems?: number; readonly max
 
 export const block5dPresenceGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : block5dPresenceGuardReject(at, "value is not an object");
+export const block5dPresenceGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) block5dPresenceGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const block5dPresenceGuardArray = (value: unknown, at: string, bounds: block5dPresenceGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return block5dPresenceGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) block5dPresenceGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -52,7 +56,7 @@ export const block5dPresenceGuardConstant = <T extends string | number | boolean
 //#endregion 🚪️Parsers
 
 export function parseBlock5dPresence(value: unknown, at = "$"): Block5dPresence {
-  const row = block5dPresenceGuardObject(value, at);
+  const row = block5dPresenceGuardClosed(block5dPresenceGuardObject(value, at), at, ["selectedIds"]);
   return {
     selectedIds: block5dPresenceGuardArray(row["selectedIds"], `${at}.selectedIds`).map((item, index) => block5dPresenceGuardString(item, `${at}.selectedIds[${index}]`)),
   };

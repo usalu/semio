@@ -1,6 +1,6 @@
 //! 🪦️ `delete-target-volume` command.
 
-use crate::editor::puzzle5d::Puzzle5dActionCtx;
+use crate::editor::puzzle5d::interaction::Puzzle5dActionCtx;
 use semio_framework_pack_json::Value;
 
 /// 🪦️ Drops one target volume by id with one `delete-target-volume`, when the base holds it. A locked volume is still

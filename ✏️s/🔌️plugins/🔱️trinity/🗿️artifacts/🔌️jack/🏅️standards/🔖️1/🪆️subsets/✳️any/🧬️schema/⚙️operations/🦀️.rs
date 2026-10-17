@@ -1,7 +1,10 @@
 //! ⚙️ Jack artifact mutation validation, application, inversion and store behavior.
 
 use crate::standards::v1::subsets::any::schema::mutations::TrinityGraphMutation;
-use crate::{EntityRef, Graph, GraphEffect, JackSnapshot, PropertyBag, PropertyValue, TRINITY_GRAPH_SCHEMA};
+use crate::standards::v1::subsets::any::schema::graph::{EntityRef, GraphEffect, TRINITY_GRAPH_SCHEMA};
+use crate::standards::v1::subsets::any::schema::memory::Graph;
+use crate::standards::v1::subsets::any::schema::snapshot::JackSnapshot;
+use semio_framework_graph_manifest::{PropertyBag, PropertyValue};
 use protocol::Mutation;
 use store::{os_store::document_materialize::create_document_envelope, os_store::store_schema::ArtifactCommand, os_store::store_schema::ArtifactEnvelope, ArtifactStore};
 
@@ -58,18 +61,18 @@ impl Drop for OwnedTrinityGraphStore {
 
 //#region 🔖️Validation
 /// 🛡️ Pre-flight validation of one parent-lane operation against `snapshot` — the query must fit its document bound.
-pub fn validate_trinity_graph_operation(operation: &TrinityGraphMutation, _snapshot: &JackSnapshot) -> Result<(), crate::TrinityRamError> {
+pub fn validate_trinity_graph_operation(operation: &TrinityGraphMutation, _snapshot: &JackSnapshot) -> Result<(), crate::standards::v1::subsets::any::schema::errors::TrinityRamError> {
     let TrinityGraphMutation::SetQuery(payload) = operation;
-    if payload.value.len() > crate::JACK_QUERY_MAXIMUM_BYTES {
-        return Err(crate::TrinityRamError::QueryTooLarge { bytes: payload.value.len(), maximum: crate::JACK_QUERY_MAXIMUM_BYTES });
+    if payload.value.len() > crate::standards::v1::subsets::any::schema::graph::JACK_QUERY_MAXIMUM_BYTES {
+        return Err(crate::standards::v1::subsets::any::schema::errors::TrinityRamError::QueryTooLarge { bytes: payload.value.len(), maximum: crate::standards::v1::subsets::any::schema::graph::JACK_QUERY_MAXIMUM_BYTES });
     }
     Ok(())
 }
 
 /// 🛡️ Manifest/reference validation of one query effect against the working `graph` — cross-checks the compile-time
 /// `Manifest`, so a query never publishes a content leaf of an undeclared kind or a dangling endpoint.
-pub fn validate_graph_effect(effect: &GraphEffect, graph: &Graph) -> Result<(), crate::TrinityRamError> {
-    use crate::TrinityRamError;
+pub fn validate_graph_effect(effect: &GraphEffect, graph: &Graph) -> Result<(), crate::standards::v1::subsets::any::schema::errors::TrinityRamError> {
+    use crate::standards::v1::subsets::any::schema::errors::TrinityRamError;
     match effect {
         GraphEffect::CreateNode(node) => {
             if graph.nodes.contains_key(&node.id) {
@@ -96,8 +99,8 @@ pub fn validate_graph_effect(effect: &GraphEffect, graph: &Graph) -> Result<(), 
             }
             validate_edge_kind_trinity(&graph.manifest, &edge.kind)?;
             validate_edge_properties_trinity(&graph.manifest, &edge.kind, &edge.properties)?;
-            let source_node = crate::port_node_id(&edge.source).ok_or_else(|| TrinityRamError::InvalidSourcePortKey(edge.source.clone()))?;
-            let target_node = crate::port_node_id(&edge.target).ok_or_else(|| TrinityRamError::InvalidTargetPortKey(edge.target.clone()))?;
+            let source_node = crate::standards::v1::subsets::any::schema::graph::port_node_id(&edge.source).ok_or_else(|| TrinityRamError::InvalidSourcePortKey(edge.source.clone()))?;
+            let target_node = crate::standards::v1::subsets::any::schema::graph::port_node_id(&edge.target).ok_or_else(|| TrinityRamError::InvalidTargetPortKey(edge.target.clone()))?;
             if !graph.nodes.contains_key(source_node) {
                 return Err(TrinityRamError::SourceNodeNotFound(source_node.to_string()));
             }
@@ -117,7 +120,7 @@ pub fn validate_graph_effect(effect: &GraphEffect, graph: &Graph) -> Result<(), 
 }
 
 /// ▶️ Validates then applies query effects to `graph`, failing atomically on the first invalid one.
-pub fn apply_graph_effects(graph: &mut Graph, effects: &[GraphEffect]) -> Result<(), crate::TrinityRamError> {
+pub fn apply_graph_effects(graph: &mut Graph, effects: &[GraphEffect]) -> Result<(), crate::standards::v1::subsets::any::schema::errors::TrinityRamError> {
     for effect in effects {
         validate_graph_effect(effect, graph)?;
         match effect {
@@ -148,16 +151,16 @@ pub fn apply_graph_effects(graph: &mut Graph, effects: &[GraphEffect]) -> Result
     Ok(())
 }
 
-fn validate_entity(graph: &Graph, entity: &EntityRef) -> Result<(), crate::TrinityRamError> {
+fn validate_entity(graph: &Graph, entity: &EntityRef) -> Result<(), crate::standards::v1::subsets::any::schema::errors::TrinityRamError> {
     match entity {
-        EntityRef::Node(id) if !graph.nodes.contains_key(id) => Err(crate::TrinityRamError::NodeNotFound(id.clone())),
-        EntityRef::Edge(id) if !graph.edges.contains_key(id) => Err(crate::TrinityRamError::EdgeNotFound(id.clone())),
+        EntityRef::Node(id) if !graph.nodes.contains_key(id) => Err(crate::standards::v1::subsets::any::schema::errors::TrinityRamError::NodeNotFound(id.clone())),
+        EntityRef::Edge(id) if !graph.edges.contains_key(id) => Err(crate::standards::v1::subsets::any::schema::errors::TrinityRamError::EdgeNotFound(id.clone())),
         _ => Ok(()),
     }
 }
 
-fn validate_set_data_property(graph: &Graph, entity: &EntityRef, key: &str, value: &PropertyValue) -> Result<(), crate::TrinityRamError> {
-    use crate::TrinityRamError;
+fn validate_set_data_property(graph: &Graph, entity: &EntityRef, key: &str, value: &PropertyValue) -> Result<(), crate::standards::v1::subsets::any::schema::errors::TrinityRamError> {
+    use crate::standards::v1::subsets::any::schema::errors::TrinityRamError;
     let (defs, path_prefix) = match entity {
         EntityRef::Node(id) => {
             let node = graph.nodes.get(id).ok_or_else(|| TrinityRamError::NodeNotFound(id.clone()))?;
@@ -179,39 +182,40 @@ fn validate_set_data_property(graph: &Graph, entity: &EntityRef, key: &str, valu
     validate_property_bag_trinity(&path_prefix, defs, &bag)
 }
 
-fn validate_node_kind_trinity(manifest: &crate::Manifest, kind: &str) -> Result<(), crate::TrinityRamError> {
+fn validate_node_kind_trinity(manifest: &crate::standards::v1::subsets::any::schema::manifest::Manifest, kind: &str) -> Result<(), crate::standards::v1::subsets::any::schema::errors::TrinityRamError> {
     if manifest.node_kind(kind).is_some() {
         Ok(())
     } else {
-        Err(crate::TrinityRamError::UnknownNodeKind { kind: kind.to_string() })
+        Err(crate::standards::v1::subsets::any::schema::errors::TrinityRamError::UnknownNodeKind { kind: kind.to_string() })
     }
 }
 
-fn validate_edge_kind_trinity(manifest: &crate::Manifest, kind: &str) -> Result<(), crate::TrinityRamError> {
+fn validate_edge_kind_trinity(manifest: &crate::standards::v1::subsets::any::schema::manifest::Manifest, kind: &str) -> Result<(), crate::standards::v1::subsets::any::schema::errors::TrinityRamError> {
     if manifest.edge_kind(kind).is_some() {
         Ok(())
     } else {
-        Err(crate::TrinityRamError::UnknownEdgeKind { kind: kind.to_string() })
+        Err(crate::standards::v1::subsets::any::schema::errors::TrinityRamError::UnknownEdgeKind { kind: kind.to_string() })
     }
 }
 
-fn validate_port_kind_trinity(manifest: &crate::Manifest, kind: &str) -> Result<(), crate::TrinityRamError> {
+fn validate_port_kind_trinity(manifest: &crate::standards::v1::subsets::any::schema::manifest::Manifest, kind: &str) -> Result<(), crate::standards::v1::subsets::any::schema::errors::TrinityRamError> {
     if manifest.port_kind(kind).is_some() {
         Ok(())
     } else {
-        Err(crate::TrinityRamError::UnknownPortKind { kind: kind.to_string() })
+        Err(crate::standards::v1::subsets::any::schema::errors::TrinityRamError::UnknownPortKind { kind: kind.to_string() })
     }
 }
 
-fn validate_edge_properties_trinity(manifest: &crate::Manifest, kind: &str, properties: &PropertyBag) -> Result<(), crate::TrinityRamError> {
+fn validate_edge_properties_trinity(manifest: &crate::standards::v1::subsets::any::schema::manifest::Manifest, kind: &str, properties: &PropertyBag) -> Result<(), crate::standards::v1::subsets::any::schema::errors::TrinityRamError> {
     let Some(def) = manifest.edge_kind(kind) else {
         return validate_edge_kind_trinity(manifest, kind);
     };
     validate_property_bag_trinity(&format!("edges/{kind}/properties"), &def.properties, properties)
 }
 
-fn validate_property_bag_trinity(path: &str, defs: &[crate::PropertyDef], bag: &PropertyBag) -> Result<(), crate::TrinityRamError> {
-    use crate::{PropertyKind, TrinityRamError};
+fn validate_property_bag_trinity(path: &str, defs: &[semio_framework_graph_manifest::PropertyDef], bag: &PropertyBag) -> Result<(), crate::standards::v1::subsets::any::schema::errors::TrinityRamError> {
+    use semio_framework_graph_manifest::PropertyKind;
+use crate::standards::v1::subsets::any::schema::errors::TrinityRamError;
     for def in defs {
         if def.kind == PropertyKind::Derived {
             continue;
@@ -231,7 +235,7 @@ fn validate_property_bag_trinity(path: &str, defs: &[crate::PropertyDef], bag: &
     Ok(())
 }
 
-fn property_value_matches_type_trinity(value: &PropertyValue, def: &crate::PropertyDef) -> bool {
+fn property_value_matches_type_trinity(value: &PropertyValue, def: &semio_framework_graph_manifest::PropertyDef) -> bool {
     match value {
         PropertyValue::Null => def.value_type.id() == "null",
         PropertyValue::Bool(_) => def.value_type.id() == "boolean",
@@ -253,7 +257,13 @@ fn property_value_matches_type_trinity(value: &PropertyValue, def: &crate::Prope
 //#endregion 🔖️Validation
 
 //#region 🔖️BatchHelpers
-pub use crate::apply_trinity_graph_mutation;
+/// ▶️ Diff-based apply of one mutation — thin `Mutation::diff` + `protocol::apply_diff` delegate through the central applier.
+pub fn apply_trinity_graph_mutation(snapshot: &mut JackSnapshot, mutation: &TrinityGraphMutation) -> protocol::MutationApplyResult<()> {
+    let outcome = protocol::Mutation::diff(mutation, snapshot);
+    let next = protocol::apply_diff(outcome.diff(), snapshot)?;
+    *snapshot = next;
+    Ok(())
+}
 
 pub fn inverse_trinity_graph_mutation(projection: &JackSnapshot, mutation: &TrinityGraphMutation) -> Result<Vec<TrinityGraphMutation>, semio_framework_value::ValueError> {
     Ok({
@@ -263,7 +273,7 @@ pub fn inverse_trinity_graph_mutation(projection: &JackSnapshot, mutation: &Trin
 }
 
 /// ▶️ Validates then applies a batch of operations, failing atomically on the first invalid one.
-pub fn apply_trinity_graph_mutations(snapshot: JackSnapshot, operations: &[TrinityGraphMutation]) -> Result<JackSnapshot, crate::TrinityRamError> {
+pub fn apply_trinity_graph_mutations(snapshot: JackSnapshot, operations: &[TrinityGraphMutation]) -> Result<JackSnapshot, crate::standards::v1::subsets::any::schema::errors::TrinityRamError> {
     let mut snapshot = snapshot;
     for operation in operations {
         validate_trinity_graph_operation(operation, &snapshot)?;
@@ -273,7 +283,7 @@ pub fn apply_trinity_graph_mutations(snapshot: JackSnapshot, operations: &[Trini
 }
 
 /// ▶️ Validates a batch incrementally, then dispatches it as one VCS edit.
-pub async fn dispatch_trinity_graph_mutations(store: &mut TrinityGraphStore, operations: Vec<TrinityGraphMutation>, identity: &mut ::store::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), crate::TrinityRamError> {
+pub async fn dispatch_trinity_graph_mutations(store: &mut TrinityGraphStore, operations: Vec<TrinityGraphMutation>, identity: &mut ::store::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), crate::standards::v1::subsets::any::schema::errors::TrinityRamError> {
     if operations.is_empty() {
         return Ok(());
     }
@@ -282,12 +292,9 @@ pub async fn dispatch_trinity_graph_mutations(store: &mut TrinityGraphStore, ope
         validate_trinity_graph_operation(operation, &snapshot)?;
         apply_trinity_graph_mutation(&mut snapshot, operation)?;
     }
-    store.dispatch(ArtifactCommand::Apply { mutations: operations, transaction: None }, identity).await.map_err(crate::TrinityRamError::from).map(|_| ())
+    store.dispatch(ArtifactCommand::Apply { mutations: operations, transaction: None }, identity).await.map_err(crate::standards::v1::subsets::any::schema::errors::TrinityRamError::from).map(|_| ())
 }
 //#endregion 🔖️BatchHelpers
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

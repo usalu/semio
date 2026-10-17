@@ -12,7 +12,8 @@
     "selectedReferenceIds",
     "cameraPosition",
     "cameraTarget",
-    "cameraZoom"
+    "cameraZoom",
+    "activeUtilityId"
   ],
   "properties": {
     "selectedObjectIds": {
@@ -81,6 +82,10 @@
       "x-semio-state": "presence"
     },
     "activeToolId": {
+      "type": "string",
+      "x-semio-state": "presence"
+    },
+    "activeUtilityId": {
       "type": "string",
       "x-semio-state": "presence"
     }

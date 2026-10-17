@@ -1,0 +1,1 @@
+{"name": "stdio30", "crates": ["obj-3-0-any-fixture-generator", "semio-s-artifact-stdio-obj", "semio-s-artifact-stdio-obj-diff", "semio-s-artifact-stdio-obj-inferences", "semio-s-artifact-stdio-obj-io-registry", "semio-s-artifact-stdio-obj-mutations", "semio-s-artifact-stdio-obj-schema", "semio-s-artifact-stdio-obj-test-oracle", "tobj-obj-reader"], "note": "stdio 🗽️obj"}

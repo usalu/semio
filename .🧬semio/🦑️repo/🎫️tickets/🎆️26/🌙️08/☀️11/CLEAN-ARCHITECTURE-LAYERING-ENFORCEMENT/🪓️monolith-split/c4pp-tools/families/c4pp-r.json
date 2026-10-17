@@ -1,0 +1,11 @@
+{
+ "name": "c4pp",
+ "crates": [
+  "semio-framework-os-renderer-wgpu-shell-tests-chrome-1",
+  "semio-framework-os-renderer-wgpu-kernel-runtime",
+  "semio-framework-os-renderer-wgpu-engine-attach-tests-2",
+  "semio-framework-os-renderer-wgpu-ui-engine-tests",
+  "semio-framework-os-renderer-wgpu-dock"
+ ],
+ "note": "CENSUS4-PARTIAL: the five renderer crates that mount the five split test files (include! fragments)"
+}

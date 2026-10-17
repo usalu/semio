@@ -442,7 +442,15 @@ pub const INK_EVENT_JSON_BYTE_CAPACITY: usize = ui_wgpu::wgpu::action::ACTION_ST
 
 pub struct InkInteractionDocument {
     pub source: String,
+    #[cfg(any(test, feature = "testkit"))]
+    #[doc(hidden)]
+    pub spans: Box<[Option<(u16, u16)>; INK_INTERACTION_ITEM_CAPACITY]>,
+    #[cfg(not(any(test, feature = "testkit")))]
     pub(crate) spans: Box<[Option<(u16, u16)>; INK_INTERACTION_ITEM_CAPACITY]>,
+    #[cfg(any(test, feature = "testkit"))]
+    #[doc(hidden)]
+    pub span_len: usize,
+    #[cfg(not(any(test, feature = "testkit")))]
     pub(crate) span_len: usize,
     pub schema: String,
     pub id: String,

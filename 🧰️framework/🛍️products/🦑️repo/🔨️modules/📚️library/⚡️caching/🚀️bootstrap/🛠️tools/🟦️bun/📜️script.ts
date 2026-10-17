@@ -1,4 +1,4 @@
-import{withRepositoryToolingOperationV1}from"../🔒️scope/🟦️.ts";
+import{withRepositoryToolingOperationV1}from"../../../💾️storage/🔒️enforcement/🛠️tools/🟦️.ts";
 import{checkResourceLeaseControl,type ResourceLeaseControl}from"../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
 import type{ToolingHeadroomRefusalV1}from"../🧹️retention/📏️headroom/🟦️.ts";
 import {withManagedToolingProvisionV1,type ManagedToolingPublisherV1} from "../🧹️retention/📥️physical/🟦️.ts";
@@ -12,7 +12,8 @@ import { dirname, join } from "node:path";
 import { inflateRawSync } from "node:zlib";
 import {captureOwnedCommandV1} from "../../../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
 import {readNativeCallerAuthorityV1} from "../../../📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
-import manifest from "./🔣️.json" with {type:"json"};
+import manifestSchema from "./🧬️schema/🔣️.json" with {type:"json"};
+const manifest=manifestSchema.definitions.Release.const;
 import { withResourceLeases } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 
 type BunDistribution = { platform: string; arch: string; musl: boolean; archive: string; bytes: number; sha256: string };

@@ -30,6 +30,10 @@ type stdioPly10AnyInferenceGuardSizeBounds = { readonly minItems?: number; reado
 
 export const stdioPly10AnyInferenceGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : stdioPly10AnyInferenceGuardReject(at, "value is not an object");
+export const stdioPly10AnyInferenceGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) stdioPly10AnyInferenceGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const stdioPly10AnyInferenceGuardArray = (value: unknown, at: string, bounds: stdioPly10AnyInferenceGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return stdioPly10AnyInferenceGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) stdioPly10AnyInferenceGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -60,17 +64,17 @@ export const stdioPly10AnyInferenceGuardConstant = <T extends string | number | 
 //#endregion 🚪️Parsers
 
 export function parsePlyInference(value: unknown, at = "$"): PlyInference {
-  const row = stdioPly10AnyInferenceGuardObject(value, at);
+  const row = stdioPly10AnyInferenceGuardClosed(stdioPly10AnyInferenceGuardObject(value, at), at, ["bounds"]);
   return {
     bounds: parsePlyBounds(row["bounds"], `${at}.bounds`),
   };
 }
 
 export function parsePlyBounds(value: unknown, at = "$"): PlyBounds {
-  const row = stdioPly10AnyInferenceGuardObject(value, at);
+  const row = stdioPly10AnyInferenceGuardClosed(stdioPly10AnyInferenceGuardObject(value, at), at, ["min", "max", "vertexCount", "faceCount"]);
   return {
-    min: stdioPly10AnyInferenceGuardArray(row["min"], `${at}.min`, {"minItems": 3, "maxItems": 3}).map((item, index) => stdioPly10AnyInferenceGuardNumber(item, `${at}.min[${index}]`)),
-    max: stdioPly10AnyInferenceGuardArray(row["max"], `${at}.max`, {"minItems": 3, "maxItems": 3}).map((item, index) => stdioPly10AnyInferenceGuardNumber(item, `${at}.max[${index}]`)),
+    min: ((items0) => [stdioPly10AnyInferenceGuardNumber(items0[0], `${at}.min[0]`), stdioPly10AnyInferenceGuardNumber(items0[1], `${at}.min[1]`), stdioPly10AnyInferenceGuardNumber(items0[2], `${at}.min[2]`)])(stdioPly10AnyInferenceGuardArray(row["min"], `${at}.min`, {"minItems": 3, "maxItems": 3})),
+    max: ((items0) => [stdioPly10AnyInferenceGuardNumber(items0[0], `${at}.max[0]`), stdioPly10AnyInferenceGuardNumber(items0[1], `${at}.max[1]`), stdioPly10AnyInferenceGuardNumber(items0[2], `${at}.max[2]`)])(stdioPly10AnyInferenceGuardArray(row["max"], `${at}.max`, {"minItems": 3, "maxItems": 3})),
     vertexCount: stdioPly10AnyInferenceGuardInteger(row["vertexCount"], `${at}.vertexCount`, {"minimum": 0}),
     faceCount: stdioPly10AnyInferenceGuardInteger(row["faceCount"], `${at}.faceCount`, {"minimum": 0}),
   };

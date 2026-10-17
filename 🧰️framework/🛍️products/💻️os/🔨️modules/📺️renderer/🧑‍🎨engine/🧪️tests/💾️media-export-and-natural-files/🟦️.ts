@@ -1,5 +1,17 @@
 /** 💾 Media export download and natural file codecs. */
-import { DOWNLOAD_MEDIA_EXPORT_REVOKE_MS, downloadMediaExport, naturalFileFormatV1, naturalFileNameV1, naturalMediaDescriptorMatchesV1, openNaturalFileOwnerV1, readBlobBytesBoundedV1, requestFileSelectionV1, mediaExportEncodingText } from "../../🧱️elements/🛠️ShellHelpers/🟦️.tsx";
+import {
+  DOWNLOAD_MEDIA_EXPORT_REVOKE_MS,
+  downloadMediaExport,
+  readBlobBytesBoundedV1,
+  requestFileSelectionV1,
+  mediaExportEncodingText
+} from "../../🧱️elements/🛠️ShellHelpers/🔩️plumbing/📥️downloads-and-file-requests/🟦️.ts";
+import {
+  naturalFileFormatV1,
+  naturalFileNameV1,
+  naturalMediaDescriptorMatchesV1,
+  openNaturalFileOwnerV1
+} from "../../🧱️elements/🛠️ShellHelpers/🧾️transfer-checkin-tutorial/🟦️.ts";
 import { OPEN_ARTIFACT_FILE_ACTION_ID, SAVE_ARTIFACT_FILE_ACTION_ID } from "@semio-tech/framework";
 import naturalFileLifecycleFixture from "../../../../🔌️plugin/🧪️tests/🧫️fixtures/📄️natural-file-lifecycle/🔣️.json" with { type: "json" };
 import { cleanup } from "@semio-tech/ui-react/test";

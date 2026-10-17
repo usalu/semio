@@ -1,0 +1,64 @@
+/** 🧬️ Canonical mutation fixtures must agree with the public tagged wire schema. */
+import { expect, it } from "bun:test";
+import { semioSchemaAjvV1 } from "@semio-tech/framework/schema/oracles/validator";
+import { fileURLToPath } from "node:url";
+import aggregate from "../../🔣️.json";
+import documentSchema from "../../../🔣️.json";
+import fixture from "../../../../../🎨️style/🧪️tests/🧫️fixtures/🧬️mutations/📝️update-text/🔣️.json";
+
+it("validates every canonical tagged mutation through the aggregate schema", async () => {
+  const ajv = semioSchemaAjvV1({allErrors: true}).addSchema(documentSchema);
+  const cwd = fileURLToPath(new URL("../../../../..", import.meta.url));
+  for await (const path of new Bun.Glob("*/🧬️schema/🧬️mutations/*/🧬️schema/🔣️.json").scan({cwd, absolute: true})) ajv.addSchema(await Bun.file(path).json());
+  const validate = ajv.compile(aggregate);
+  for (const edit of fixture.edits) expect(validate({mutation: "updateText", layerId: "text", ...edit})).toBe(true);
+  for (const size of fixture.invalidSizes) expect(validate({mutation: "updateText", layerId: "text", content: "changed", size})).toBe(false);
+  let count = 0;
+  for await (const path of new Bun.Glob("*/🧪️tests/🧫️fixtures/🧬️mutations/*/*/🦠️mutation/🔣️.json").scan({cwd, absolute: true})) {
+    const mutation = await Bun.file(path).json();
+    expect(validate(mutation), `${mutation.mutation}: ${ajv.errorsText(validate.errors)}`).toBe(true);
+    expect(validate({...mutation, mutation: "unknown"})).toBe(false);
+    expect(validate({...mutation, unexpected: true})).toBe(false);
+    count += 1;
+  }
+  expect(count).toBe(aggregate.oneOf.length);
+});
+
+import diffSchema from "../../../🔺️diff/🔣️.json";
+import fieldCases from "../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎛️field-patch/🔣️.json";
+import blendSchema from "../../../../../🎨️style/🧬️schema/🧬️mutations/🌓️set-layer-blend-mode/🧬️schema/🔣️.json";
+import {diff as blendDiff} from "../../../../../🎨️style/🧬️schema/🧬️mutations/🌓️set-layer-blend-mode/🔺️diff/🟦️.ts";
+import {binary64} from "@semio-tech/framework/value/ieee754";
+import {parseDrawingLayerNode} from "../../../🟦️.ts";
+import {parseDrawingLayerPatch} from "../../../🔺️diff/🟦️.ts";
+
+it("mutation blend vocabulary is strict while owned layer blend identifiers are literal strings", () => {
+  const ajv = semioSchemaAjvV1({allErrors:true});
+  const validateMutation = ajv.compile(blendSchema);
+  const validateDocument = ajv.compile(documentSchema);
+  ajv.addSchema(diffSchema);
+  const validatePatch = ajv.compile({$ref:`${diffSchema.$id}#/$defs/DrawingLayerPatch`});
+  expect(validatePatch({blendMode:null})).toBe(true);
+  expect(parseDrawingLayerPatch({blendMode:null}).blendMode).toBeUndefined();
+  for (const {patch,accepted} of fieldCases.filter(({patch}) => patch.field === "blendMode")) {
+    const mutation = {mutation:"setLayerBlendMode",layerId:"shape",blendMode:patch.value};
+    const base={id:"layer",name:"Layer",visible:true,locked:false,opacity:binary64(1),blendMode:"normal",transform:{x:binary64(0),y:binary64(0),scaleX:binary64(1),scaleY:binary64(1),shear:binary64(0),rotation:binary64(0)},attributes:{fillRule:"evenodd"}};
+    const leaf = {...base,kind:"shape",shapeKind:"owner-defined",blendMode:patch.value};
+    const root = {...base,kind:"group",isolation:false,children:[{...base,kind:"group",isolation:false,children:[leaf]}]};
+    const document = {schema:"drawing.document",id:"blend",assets:{},layers:[root]};
+    expect(validateMutation(mutation)).toBe(accepted);
+    expect(validateMutation({layerId:"shape",blendMode:patch.value})).toBe(false);
+    expect(validatePatch({blendMode:patch.value})).toBe(accepted);
+    expect(validateDocument({schema:document.schema,id:document.id,assets:{},layers:[{kind:"group",children:[{kind:"shape",blendMode:patch.value}]}]})).toBe(typeof patch.value==="string");
+    if(typeof patch.value==="string"){const parsedRoot=parseDrawingLayerNode(root);expect(root).toMatchObject(parsedRoot);expect(parsedRoot).toMatchObject(root);}
+    else expect(()=>parseDrawingLayerNode(root)).toThrow();
+    if (accepted) {
+      const reparsedRoot=parseDrawingLayerNode(root);expect(root).toMatchObject(reparsedRoot);expect(reparsedRoot).toMatchObject(root);
+      expect(patch.value).toBe(parseDrawingLayerPatch({blendMode:patch.value}).blendMode!);
+      expect(patch.value).toBe(blendDiff(mutation as never).layers.modified[0]!.patch.blendMode);
+    } else {
+      expect(() => parseDrawingLayerPatch({blendMode:patch.value})).toThrow();
+      expect(() => blendDiff(mutation as never)).toThrow();
+    }
+  }
+});

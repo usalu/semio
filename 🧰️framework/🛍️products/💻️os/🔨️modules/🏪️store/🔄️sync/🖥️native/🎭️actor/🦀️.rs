@@ -1,7 +1,7 @@
 //! 🎭️ The native document actor: one finite-turn actor per open document on the process WorkerPool, its runner, and the native `ArtifactHost` that owns them.
 
 use semio_framework_os_store_sync::{ARTIFACT_BOOTSTRAP_DEADLINE_MS, ArtifactActorConfig, ArtifactActorMsg, ArtifactChannelsOf, ArtifactDocumentKey, ArtifactEvent, ArtifactHostCore, ArtifactHostState, ArtifactMailboxClose, ArtifactMailboxReceiver, ArtifactSyncStatus, CommandAckOutcome, CommandRejectionCode, CommandRejectionDetail, DOCUMENT_LINK_SHORTAGE_POLICY, DocumentBackboneRetentionV1, DocumentLink, DocumentLinkEvent, OpenDocument, PersistenceBinding, PresenceHeartbeatProducer, RemoteState, actor_identity_admission_admits, actor_seed, add_actor_identity_progress, admit_remote_envelopes, artifact_mailbox_pair, canonical_pair_baseline, decode_document_backbone_message_exact, document_admission_refuses_access, document_archive_hash, document_link_terminal_message, document_pack_schema_hash, frontier_reaches, history_edit_from_envelope, hub_ws_url, next_timestamp, note_authored_envelopes, now_ms, presence_from_bytes, presence_to_bytes, rebootstrap_control, rollback_envelope, settle_committed_envelopes, spr_events, spr_op_ids, stamp_session, transition_refusal, validate_artifact_bootstrap_identity, wire_envelopes_with_original_actor};
-use semio_framework_os_spr::{AckStage, ApplyOutcome, ArtifactBootstrap, ArtifactBootstrapAssembler, ArtifactBootstrapControl, ArtifactBootstrapLimits, ArtifactBootstrapPair, ArtifactBootstrapProgress, Bootstrap, ClientFrame, Lane, MutationEnvelope, MutationMessage, PresencePeer, PresenceToolRun, RuntimeFrontierSummary, ServerFrame, decode_envelopes, decode_server_frame, encode_client_frame, encode_envelopes};
+use semio_framework_os_spr::{AckStage, ApplyOutcome, ArtifactBootstrap, ArtifactBootstrapAssembler, ArtifactBootstrapControl, ArtifactBootstrapLimits, ArtifactBootstrapPair, ArtifactBootstrapProgress, Bootstrap, ClientFrame, Lane, MutationEnvelope, MutationMessage, OpBinary, PresencePeer, PresenceToolRun, RuntimeFrontierSummary, ServerFrame, decode_envelopes, decode_server_frame, encode_client_frame, encode_envelopes};
 use semio_framework_os_store_text_io::ArtifactPackFiles;
 use semio_framework_os_store_backbone::{BackboneMessage, ChannelBackbone, ChannelBackboneRemote};
 use crate::lifted_sync::{FolderEventLogStorage, FolderTextStorage};
@@ -1240,38 +1240,38 @@ impl ArtifactActor {
         self.remote.push(BackboneMessage::Mutations { envelopes: encode_envelopes(&self.outbox) }).await
     }
 
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testing"))]
     pub async fn inject_hub_frame(&mut self, frame: ServerFrame) {
         self.on_hub_frame(frame).await;
     }
 
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testing"))]
     pub async fn handle_test_cmd(&mut self, message: ArtifactActorMsg) -> bool {
         self.handle_cmd(message).await
     }
 
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testing"))]
     pub fn inject_bootstrap_local_replay_failure(&mut self) {
         self.fail_bootstrap_local_replay_once = true;
     }
 
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testing"))]
     pub fn cancel_test_bootstrap(&mut self) {
         self.abort_artifact_bootstrap();
     }
 
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testing"))]
     pub fn queue_test_outbox(&mut self, envelopes: Vec<MutationEnvelope>) {
         self.queue_outbox(envelopes);
     }
 
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testing"))]
     pub fn install_test_socket_actor(&mut self, actor: &str) {
         let(original,receipt)=semio_framework_value::SharedUtf8::admit(actor.to_owned(),self.actor_identity_grant).unwrap_or_else(|(error,_)|panic!("original fixture actor admission: {error}"));add_actor_identity_progress(&mut self.actor_identity_progress,receipt);self.socket_actor = Some(original);
         self.socket_actor_confirmed = false;
     }
 
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testing"))]
     pub async fn connect_test_socket(&mut self, url: &str, actor: &str) {
         let (stream, _) = tokio_tungstenite::connect_async(url).await.expect("test socket connects");
         let (write, read) = stream.split();
@@ -1293,22 +1293,22 @@ impl ArtifactActor {
         .await;
     }
 
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testing"))]
     pub fn socket_epoch_test_state(&self) -> (Option<String>, bool, usize, Vec<String>) {
         (self.socket_actor.as_ref().map(|actor|actor.as_str().to_owned()), self.socket_actor_confirmed, self.pending_batches.len(), self.outbox.iter().map(|envelope| envelope.actor.0.as_str().to_owned()).collect())
     }
 
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testing"))]
     pub async fn fail_test_connection(&mut self) {
         self.on_hub_message(None).await;
     }
 
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testing"))]
     pub async fn fail_test_bootstrap(&mut self) {
         self.fail_artifact_bootstrap("injected bootstrap failure").await;
     }
 
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testing"))]
     pub async fn run_test_connect_attempt(&mut self) {
         self.start_connect_hub().await;
         if let Some(future) = self.connect_future.take() {
@@ -1317,32 +1317,32 @@ impl ArtifactActor {
         }
     }
 
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testing"))]
     pub async fn relay_test_envelope(&mut self, envelope: MutationEnvelope) {
         self.relay_operations_to_hub(std::slice::from_ref(&envelope)).await;
     }
 
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testing"))]
     pub async fn handle_test_document_archive(&mut self, archive: Vec<u8>) {
         let _ = self.handle_cmd(ArtifactActorMsg::LocalDocumentArchive { archive }).await;
     }
 
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testing"))]
     pub fn current_archive_test(&self) -> Option<Vec<u8>> {
         self.current_archive.clone()
     }
 
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testing"))]
     pub async fn setup_test(&mut self) {
         self.setup().await;
     }
 
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testing"))]
     pub fn folder_writes_test(&self) -> usize {
         self.folder_writes
     }
 
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testing"))]
     pub fn bootstrap_test_state(&self) -> (Option<Vec<u8>>, Option<Vec<u8>>, Option<RuntimeFrontierSummary>, Option<RuntimeFrontierSummary>, Option<String>, Option<String>, RemoteState, Vec<String>, bool) {
         (
             self.current_pack.clone(),
@@ -1357,7 +1357,7 @@ impl ArtifactActor {
         )
     }
 
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testing"))]
     pub fn parity_test_state(&self) -> (Option<String>, Option<String>, RemoteState, Vec<String>, usize, bool, bool, Vec<String>) {
         (
             self.resume_token.clone(),

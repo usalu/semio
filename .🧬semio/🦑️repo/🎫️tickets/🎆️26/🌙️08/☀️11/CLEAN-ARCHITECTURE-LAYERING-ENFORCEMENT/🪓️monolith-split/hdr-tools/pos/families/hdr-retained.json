@@ -1,0 +1,6 @@
+{
+ "name": "hdr-retained",
+ "crates": ["semio-framework-ui-retained-tree", "semio-framework-ui-retained-tree-tree"],
+ "base": {"rev": "b84bf526c7ba26f99c4054b47da1c1a4d5064e3d", "crates": ["semio-framework-ui-retained-tree"]},
+ "note": "HDR: retained tree module carved out of ui-retained-tree"
+}

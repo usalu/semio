@@ -1,4 +1,5 @@
-use super::*;
+use crate::standards::v1_7::subsets::x::schema::mutations::set_trim_box::SetTrimBox;
+use crate::standards::v1_7::subsets::x::io::text::mutations::set_trim_box::*;
 
 #[test]
 fn owned_payload_round_trips() {

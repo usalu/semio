@@ -1,6 +1,5 @@
 //! 🆕 Note mutation — `CreateAsset`: brings a new id-keyed image asset into existence.
 
-use crate::schema::mutations::NoteMutation;
 use crate::{NoteDiff, NoteSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -21,17 +20,23 @@ pub struct CreateAsset {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn create_asset(key: String, asset: crate::NoteImageAsset) -> NoteMutation {
-    NoteMutation::CreateAsset(CreateAsset { key, asset })
+pub fn create_asset<Op>(key: String, asset: crate::NoteImageAsset) -> Op
+where
+    Op: From<crate::standards::v1::subsets::asset::schema::mutations::create_asset::CreateAsset>,
+{
+    Op::from(CreateAsset { key, asset })
 }
 
-impl MutationKind<NoteSnapshot, NoteMutation> for CreateAsset {
+impl<Op> MutationKind<NoteSnapshot, Op> for CreateAsset
+where
+    Op: protocol::Mutation<NoteSnapshot, Diff = NoteDiff> + From<CreateAsset> + From<crate::standards::v1::subsets::asset::schema::mutations::delete_asset::DeleteAsset>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "asset", kind: "create-asset", record: "CreatedAsset" };
 
     fn diff(&self, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &NoteSnapshot) -> Result<Vec<NoteMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &NoteSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

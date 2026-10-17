@@ -44,7 +44,6 @@ fn guest_utility_assignments_preserve_armed_tools_and_window_scope() {
             }
         }
     }
-    eprintln!("[DEBUG] Native guest utility assignments and user presses preserve eight neutral window-scoped cases");
 }
 
 fn chip_of(name: &str) -> WindowPaneChip {

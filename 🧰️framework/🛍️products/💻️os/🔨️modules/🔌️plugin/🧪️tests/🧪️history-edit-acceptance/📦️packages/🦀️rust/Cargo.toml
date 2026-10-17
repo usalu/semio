@@ -19,9 +19,37 @@ maxActiveLines = 4000
 workspace = true
 
 [lib]
-path = "🦀️.rs"
+path = "../../🦀️.rs"
 
 [dependencies]
 semio-framework-plugin-testing-laws = { path = "../../../../🧪️testing/📦️packages/🦀️rust" }
+semio-framework = { path = "../../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
+semio-framework-diagnostic = { path = "../../../../../../../../🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
+semio-framework-job = { path = "../../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust", package = "semio-framework-job", features = ["testkit"] }
+semio-framework-pack-json = { path = "../../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-framework-plugin-app-builder = { path = "../../../../🏗️builder/🧩️app/📦️packages/🦀️rust" }
+semio-framework-plugin-command = { path = "../../../../🎮️command/📦️packages/🦀️rust" }
+semio-framework-plugin-decl-app = { path = "../../../../📜️declaration/🧩️app/📦️packages/🦀️rust" }
+semio-framework-plugin-decl-emission = { path = "../../../../📜️declaration/📨️emission/📦️packages/🦀️rust" }
+semio-framework-plugin-decl-surface = { path = "../../../../📜️declaration/🪟️surface/📦️packages/🦀️rust" }
+semio-framework-plugin-instance-app = { path = "../../../../🧵️instance/📦️packages/🦀️rust" }
+semio-framework-plugin-mounted-owner = { path = "../../../../🏇️mounted-owner/📦️packages/🦀️rust" }
+semio-framework-plugin-ownership = { path = "../../../../🏛️ownership/🧱️owner/📦️packages/🦀️rust" }
+semio-framework-plugin-reactor-app = { path = "../../../../⚛️reactor/🔌️app/📦️packages/🦀️rust" }
+semio-framework-plugin-time-travel = { path = "../../../../⏪️time-travel/📦️packages/🦀️rust" }
+semio-framework-plugin-window-config = { path = "../../../../🪟️window/🎚️config/📦️packages/🦀️rust" }
+semio-framework-plugin-window-transient = { path = "../../../../🪟️window/📦️packages/🦀️rust" }
+semio-framework-schema = { path = "../../../../../../../../🔨️modules/🧬️schema/📦️packages/🦀️rust", package = "semio-framework-schema" }
+semio-framework-time-travel = { workspace = true }
+semio_framework_ui_contract = { path = "../../../../../../../../🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
+semio-framework-ui-layout = { path = "../../../../../../../../🔨️modules/🖱️ui/📜️declaration/📐️layout/📦️packages/🦀️rust" }
+semio-framework-ui-locale = { path = "../../../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
+serde_json = "1.0.140"
 
 [dev-dependencies]
+semio-framework-trace = { workspace = true }
+semio-framework-plugin-testing-laws = { path = "../../../../🧪️testing/📦️packages/🦀️rust", features = ["artifact-app-testing"] }
+
+[features]
+artifact-app-testing = []

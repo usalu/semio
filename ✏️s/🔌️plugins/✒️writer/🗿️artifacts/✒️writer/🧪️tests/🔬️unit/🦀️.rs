@@ -1,4 +1,5 @@
 use super::*;
+use semio_framework_test_fixtures::fixture_text;
 
 #[semio_framework_async_macros::async_test]
 async fn artifact_kind_keeps_the_media_schema_matching_the_store_schema() {
@@ -25,7 +26,7 @@ async fn writer_child_restore_projection_accepts_the_exact_owned_document() {
 /// retained handles make a strong count of 3, and both retained handles are the same allocation.
 #[semio_framework_async_macros::async_test]
 async fn child_local_text_fixture_proves_bounded_identity_isolation_aba_and_wire_omission() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/⚖️writer-child-local-text-law.json")).expect("language-neutral writer child fixture");
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../🧪️tests/🧫️fixtures/⚖️writer-child-local-text-law.json")).expect("language-neutral writer child fixture");
     let cases = fixture["cases"].as_array().expect("fixture cases");
     assert_eq!(fixture["schemaVersion"], 1);
     assert_eq!(cases.len(), fixture["maximumCases"].as_u64().expect("bounded maximum") as usize);

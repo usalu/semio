@@ -33,7 +33,6 @@ export async function proveNextRuntime(workspace: string, output: string, invoca
     for (const asset of assets) { const response = await fetch(new URL(asset, address), { signal: invocation.control.signal }); assert.equal(response.status, fixture.nextRuntime.status, asset); bytes += (await response.arrayBuffer()).byteLength; }
     assert.ok(lines.some(line => line.includes("Next.js " + manifest.version)));
     await mkdir(output, { recursive: true }); await writeFile(join(output, `next-${mode}-runtime.html`), html);
-    console.log(`[DEBUG] Next ${mode} standalone SDK=${manifest.version} HTTP=${response.status} HTML=${html.length} assets=${assets.length} assetBytes=${bytes}`);
   } finally { controller.abort(); await completed; }
   assert.ok(lines.some(line => line.includes("local modules without ancestor fallback")));
   })));
@@ -60,8 +59,6 @@ export async function proveNextDevRuntime(workspace: string, output: string, inv
     });
     const response = await cold; assert.equal(response.status, fixture.nextRuntime.status); assert.equal(await response.text(), fixture.nextRuntime.coldBody);
     await mkdir(output, { recursive: true }); await writeFile(join(output, `next-${mode}-dev-runtime.html`), html);
-    console.log(`[DEBUG] Next ${mode} actual dev HTTP200 assets=${assets.length}, idle admission returned, cached HTTP stayed fast under held host, cold route queued then compiled`);
   } finally { stop.abort(); await completed; }
   await withWholeHostCompilerCapacity(join(workspace, ".cache/b/l/m/data"), scriptCompilerAdmissionControlV1(invocation, "next:cancel-probe", 600_000), async () => {});
-  console.log("[DEBUG] Next actual development process tree cancelled and host admission reacquired");
 }

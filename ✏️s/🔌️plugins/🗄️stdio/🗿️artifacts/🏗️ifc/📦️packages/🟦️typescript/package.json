@@ -23,6 +23,9 @@
     }
   },
   "dependencies": {},
+  "devDependencies": {
+    "@semio-tech/stdio-registry-ts": "workspace:*"
+  },
   "license": "LGPL-3.0-or-later",
   "repository": {
     "type": "git",

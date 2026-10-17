@@ -12,6 +12,5 @@ test("Remodeling content witnesses obey strict independent field and word laws",
   else if(chunk.elementType==="u8"){if(!Array.isArray(chunk.values))throw Error("Byte witness requires values");expect(Array.from(bytes.subarray(offset))).toEqual(chunk.values);}
   else{if(typeof chunk.values!=="string")throw Error("Text witness requires content");expect(new TextDecoder("utf-8",{fatal:true,ignoreBOM:true}).decode(bytes.subarray(offset))).toBe(chunk.values);}
  }
- console.log("[DEBUG] Remodeling all twelve independent field octet laws matched");
 });
 

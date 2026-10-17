@@ -10,10 +10,11 @@ use super::*;
 use crate::viewer_domain::viewer_laws::context::{self, app};
 use semio_framework_plugin::app::TypedOperationResultLane;
 use semio_framework_plugin::{ActionMeta, PluginApp, ViewModel, ViewWindowInstance};
+use semio_framework_test_fixtures::repo_text;
 
 /// ⚖️ The ONE language-agnostic addressing fixture both surfaces answer, with a third-party twin at
 /// `✏️editor/🧪️tests/🔬️tick-addressing/contract.ts`.
-const TICK_ADDRESSING_FIXTURE_JSON: &str = include_str!("../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🪟️tick-addressing.json");
+fn tick_addressing_fixture_json() -> &'static str { repo_text!("✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🪟️tick-addressing.json") }
 
 #[derive(serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -54,7 +55,7 @@ struct DispatchCase {
 }
 
 fn fixture() -> TickAddressingFixture {
-    let fixture: TickAddressingFixture = serde_json::from_str(TICK_ADDRESSING_FIXTURE_JSON).expect("tick addressing fixture");
+    let fixture: TickAddressingFixture = serde_json::from_str(tick_addressing_fixture_json()).expect("tick addressing fixture");
     assert_eq!(fixture.format, "semio.generation3d.tick-addressing");
     assert_eq!(fixture.version, 1);
     fixture

@@ -1,25 +1,26 @@
+import{captureBoundedSourceRevisionV1}from"../🔏️revision/🟨️.mjs";
+import{fileURLToPath}from"node:url";
 import {join,resolve,dirname,relative,sep,isAbsolute} from "node:path";
 import {randomBytes,createHash} from "node:crypto";
 import {AsyncLocalStorage} from "node:async_hooks";
 import {statSync,lstatSync,mkdirSync,rmSync,statfsSync} from "node:fs";
 import {readdir,lstat,unlink} from "node:fs/promises";
-import {withRepositoryCacheStoreV1} from "../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
-import {checkScriptInvocation,requireIssuedResourceControlInvocationV1,requireIssuedResourceControlRefinementV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import policy from "../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🔣️policy.json" with {type:"json"};
+import {withRepositoryCacheStoreV1,withRequiredRepositoryCacheStoreConsumerV1,requireCurrentRepositoryCacheStoreV1} from "../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
+import {checkScriptInvocation,requireIssuedResourceControlV1,requireIssuedResourceControlInvocationV1,requireIssuedResourceControlRefinementV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {openBuildGraphOptionalLedgerV1} from "./📒️ledger/🟨️.mjs";
-import ledgerSchema from "./🧬️schema/📒️ledger.json" with {type:"json"};
-import schema from "./🧬️schema/🔣️.json" with {type:"json"};
-import quotaSchema from "./🧬️schema/💾️quota.json" with {type:"json"};
-import datasetSchema from "./🧬️schema/📦️dataset.json" with {type:"json"};
 import {validateJsonSchemaSubset} from "../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
 import {acquireQueuedResourceLease,checkResourceLeaseControl} from "../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
 import {openRepositoryCachePartitionV1,repositoryLeaseDirectoryV1} from "../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts";
 import {requireNativeStoragePathV1} from "../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
+const graphConsumerURLsV1=[new URL(import.meta.url),new URL("./🧬️schema/🔣️.json",import.meta.url),new URL("../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🔣️policy.json",import.meta.url)],graphConsumerCapturesV1=graphConsumerURLsV1.map((url,index)=>index===0?captureBoundedSourceRevisionV1(fileURLToPath(url),8388608):captureBoundedSourceRevisionV1(fileURLToPath(url),65536,true)),graphConsumerRevisionsV1=graphConsumerCapturesV1.map(row=>row.sha256),schema=JSON.parse(graphConsumerCapturesV1[1].text??""),policy=JSON.parse(graphConsumerCapturesV1[2].text??"");
+/** 🧷️ Refuses stale Graph mapping, privately captured policies or its defining Store owner. */
+export function requireCurrentRepositoryBuildGraphConsumerV1(){requireCurrentRepositoryCacheStoreV1();if(graphConsumerURLsV1.some((url,index)=>captureBoundedSourceRevisionV1(fileURLToPath(url),index===0?8388608:65536).sha256!==graphConsumerRevisionsV1[index]))throw Error("Stale loaded Graph consumer implementation; restart required");}
+const ledgerSchema=schema.definitions.OptionalLedger,quotaSchema=schema.definitions.OptionalQuota,datasetSchema=schema.definitions.InferenceDataset;
 const writers=new AsyncLocalStorage(),datasets=new AsyncLocalStorage(),selections=new AsyncLocalStorage();
 
 /** 🧮️ Reserves exact temporary peaks before optional retained cache bytes. */
 export function createBuildGraphOptionalQuotaV1(state,check=()=>{}){
- if(validateJsonSchemaSubset(quotaSchema,state).length||state.usedBytes>state.maximumBytes||state.minimumAvailableBytes>state.availableBytes)throw Error("Closed optional graph cache quota required");
+ if(validateJsonSchemaSubset(quotaSchema,state,schema).length||state.usedBytes>state.maximumBytes||state.minimumAvailableBytes>state.availableBytes)throw Error("Closed optional graph cache quota required");
  let used=state.usedBytes,available=state.availableBytes,pending=0;
  return Object.freeze({get usedBytes(){return used;},get pendingBytes(){return pending;},reserve(request){
   check();if(!request||Object.keys(request).sort().join()!=="peakBytes,retainedDeltaBytes"||!Number.isSafeInteger(request.peakBytes)||request.peakBytes<0||!Number.isSafeInteger(request.retainedDeltaBytes)||request.retainedDeltaBytes>request.peakBytes||used+request.retainedDeltaBytes<0)throw Error("Exact optional graph publication peak required");
@@ -35,12 +36,12 @@ export function isBuildGraphOptionalCachePathV1(path){
 
 /** 🗂️ Restricts isolated writers to immutable closures and their own inference directory. */
 export function buildGraphWriterDirectoryAdmittedV1(scope,namespace){
- if(validateJsonSchemaSubset(ledgerSchema.definitions.WriterDirectory,{scope,namespace},ledgerSchema).length)throw Error("Closed isolated graph writer directory required");return namespace!=="admission";
+ if(validateJsonSchemaSubset(ledgerSchema.definitions.WriterDirectory,{scope,namespace},schema).length)throw Error("Closed isolated graph writer directory required");return namespace!=="admission";
 }
 
 /** 🧷️ Refuses another writer's mutable optional cache namespace. */
 export function buildGraphWriterOptionalPathAdmittedV1(scope,path){
- if(validateJsonSchemaSubset(ledgerSchema.definitions.WriterScope,scope,ledgerSchema).length||typeof path!=="string")throw Error("Closed isolated graph optional path required");return path.startsWith((scope.kind==="selection"?"selections":"contexts")+"/"+scope.identity+"/")&&isBuildGraphOptionalCachePathV1(path);
+ if(validateJsonSchemaSubset(ledgerSchema.definitions.WriterScope,scope,schema).length||typeof path!=="string")throw Error("Closed isolated graph optional path required");return path.startsWith((scope.kind==="selection"?"selections":"contexts")+"/"+scope.identity+"/")&&isBuildGraphOptionalCachePathV1(path);
 }
 
 /** 🪪️ Projects the retained writer namespace without accepting a caller supplied authority. */
@@ -67,12 +68,12 @@ export function buildGraphOptionalRetirementDueV1(usedBytes,availableBytes){
 
 /** 🚰️ Applies the same pressure recovery to every producer kind. */
 export function buildGraphWriterMaintenanceDueV1(request){
- if(validateJsonSchemaSubset(ledgerSchema.definitions.Maintenance,request,ledgerSchema).length)throw Error("Closed graph writer pressure required");return buildGraphOptionalRetirementDueV1(request.usedBytes,request.availableBytes);
+ if(validateJsonSchemaSubset(ledgerSchema.definitions.Maintenance,request,schema).length)throw Error("Closed graph writer pressure required");return buildGraphOptionalRetirementDueV1(request.usedBytes,request.availableBytes);
 }
 
 /** 🧹️ Reclaims explicit optional leaves under actual exclusive custody and defers while readers remain. */
 export async function prepareBuildGraphOptionalHeadroomV1(image,control,request){
- if(validateJsonSchemaSubset(quotaSchema.definitions.Headroom,request,quotaSchema).length)throw Error("Closed optional graph headroom request required");const minimumAvailableBytes=request.minimumAvailableBytes;
+ if(validateJsonSchemaSubset(quotaSchema.definitions.Headroom,request,schema).length)throw Error("Closed optional graph headroom request required");const minimumAvailableBytes=request.minimumAvailableBytes;
  await image.recheck();const initial=await optionalInventoryV1(image,control),policy=quotaSchema.policy,space=statfsSync(image.root),used=initial.reduce((sum,row)=>sum+row.bytes,0);
  if(used<=policy.lowWaterBytes&&space.bavail*space.bsize>=minimumAvailableBytes)return false;
  const result=await image.withExclusiveMaintenance({version:1,wait:false},async()=>{await image.recheck();const entries=await optionalInventoryV1(image,control);let remaining=entries.reduce((sum,row)=>sum+row.bytes,0);for(const row of entries.sort((a,b)=>a.modified-b.modified||Buffer.compare(Buffer.from(a.path),Buffer.from(b.path)))){const free=statfsSync(image.root);if(remaining<=policy.lowWaterBytes&&free.bavail*free.bsize>=minimumAvailableBytes)break;await image.recheck();const actual=await lstat(requireNativeStoragePathV1(image.root,row.path));if(!actual.isFile()||actual.isSymbolicLink()||actual.nlink!==1||actual.dev!==row.device||actual.ino!==row.inode||actual.size!==row.bytes)throw Error("Quiescent optional graph cache identity changed");await unlink(row.path);remaining-=row.bytes;await control.publish({resource:"repository:graph-cache-retirement",mode:"exclusive",elapsedMs:0});await control.yieldContinuation();}const free=statfsSync(image.root);if(remaining>policy.maximumBytes||free.bavail*free.bsize<minimumAvailableBytes)throw Error("Graph cache cannot admit original required publication headroom: "+JSON.stringify({retainedOptionalBytes:remaining,availableBytes:free.bavail*free.bsize,requiredAvailableBytes:minimumAvailableBytes}));console.log("[DEBUG] Original exclusive graph image retired only optional cache leaves "+JSON.stringify({beforeBytes:entries.reduce((sum,row)=>sum+row.bytes,0),retainedBytes:remaining,availableBytes:free.bavail*free.bsize}));return true;});return result.acquired;
@@ -82,10 +83,13 @@ export async function prepareBuildGraphOptionalHeadroomV1(image,control,request)
 /** 🚰️ Preserves the ordinary producer low-water and mandatory publication floor. */
 export async function maintainBuildGraphOptionalCachesV1(image,control){return prepareBuildGraphOptionalHeadroomV1(image,control,{minimumAvailableBytes:quotaSchema.policy.minimumAvailableBytes});}
 
+/** 📊️ Copies only the current writer's finite accounting DATA while its original custody remains live. */
+export function buildGraphWriterOptionalQuotaFactsV1(workspace){requireRepositoryBuildGraphWriterV1(workspace);const quota=writers.getStore().optionalQuota;return Object.freeze({version:1,usedBytes:quota.usedBytes,pendingBytes:quota.pendingBytes});}
+
 /** 📦️ Admits optional cache bytes only within the current original serial writer. */
 export function withBuildGraphOptionalPublicationV1(path,plan,write){
  const scope=writers.getStore();if(!scope){if(path.split(sep).join("/").includes("/.cache/b/g/m/"))throw Error("Original optional graph writer required");write();return true;}
- requireRepositoryBuildGraphWriterV1(scope.workspace);requireNativeStoragePathV1(scope.store.root,resolve(path));const name=relative(join(scope.store.root,"inference"),resolve(path)).split(sep).join("/");if(!isBuildGraphOptionalCachePathV1(name))throw Error("Explicit optional graph cache leaf required");const isolated=isolatedGraphWriterScopeV1(scope);if(isolated&&!buildGraphWriterOptionalPathAdmittedV1(isolated,name))throw Error("Original isolated graph optional namespace required");const free=statfsSync(scope.store.root);if(free.bavail*free.bsize-plan.peakBytes<quotaSchema.policy.minimumAvailableBytes)return false;const reservation=scope.store.optionalQuota.reserve(plan);if(!reservation)return false;try{if(!scope.ledger.publish(plan,write))return false;reservation.commit();return true;}finally{reservation.release();}
+ requireRepositoryBuildGraphWriterV1(scope.workspace);requireNativeStoragePathV1(scope.store.root,resolve(path));const name=relative(join(scope.store.root,"inference"),resolve(path)).split(sep).join("/");if(!isBuildGraphOptionalCachePathV1(name))throw Error("Explicit optional graph cache leaf required");const isolated=isolatedGraphWriterScopeV1(scope);if(isolated&&!buildGraphWriterOptionalPathAdmittedV1(isolated,name))throw Error("Original isolated graph optional namespace required");const free=statfsSync(scope.store.root);if(free.bavail*free.bsize-plan.peakBytes<quotaSchema.policy.minimumAvailableBytes)return false;const reservation=scope.optionalQuota.reserve(plan);if(!reservation)return false;try{if(!scope.ledger.publish(plan,write))return false;reservation.commit();return true;}finally{reservation.release();}
 }
 
 /** 🔌️ Closes retained cache descriptors before releasing original image custody. */
@@ -110,12 +114,15 @@ export function buildGraphWriterResourceV1(workspace,kind,identity){
  const shard=createHash("sha256").update(kind+":"+identity).digest()[0]%ledgerSchema.protocol.writerShards;return "repository-graph-facts:"+resolve(workspace)+":shard:"+shard;
 }
 
+/** 📥️ Retains an already-issued Graph reader through its actual private dataset mapping and consumer frame. */
+export function withRepositoryBuildGraphConsumerV1(workspace,control,body){requireIssuedResourceControlV1(control);checkResourceLeaseControl(control);requireCurrentRepositoryBuildGraphConsumerV1();return withRequiredRepositoryCacheStoreConsumerV1(graphDatasetWorkspaceV1(workspace),"graph",control,async(store,actual)=>{requireCurrentRepositoryBuildGraphConsumerV1();const value=await body(store,actual);requireCurrentRepositoryBuildGraphConsumerV1();return value;});}
+
 /** 🎟️ Holds enforcing storage before any synchronous graph fact producer runs. */
 export async function withRepositoryBuildGraphFactStoreV1(workspace,invocation,phaseControl,body){return withGraphFactWriterV1(workspace,invocation,phaseControl,body);}
 
 /** 🔒️ Retains one physical inference namespace while shared quota commits stay short. */
 async function withGraphFactWriterV1(workspace,invocation,phaseControl,body,namespace){
- requireIssuedResourceControlInvocationV1(phaseControl,invocation);checkResourceLeaseControl(phaseControl);
+ requireCurrentRepositoryBuildGraphConsumerV1();requireIssuedResourceControlInvocationV1(phaseControl,invocation);checkResourceLeaseControl(phaseControl);
  const current=writers.getStore(),owner=graphDatasetWorkspaceV1(workspace);
  if(current?.workspace===owner&&current.store.invocation===invocation&&(!namespace||current.namespace===namespace)){requireRepositoryBuildGraphWriterV1(workspace);requireIssuedResourceControlRefinementV1(current.phaseControl,phaseControl);const nested={...current,live:true,phaseControl};try{return await writers.run(nested,async()=>{checkResourceLeaseControl(phaseControl);const value=await body(current.store,phaseControl);requireRepositoryBuildGraphWriterV1(workspace);return value;});}finally{nested.live=false;}}
  if(datasets.getStore()||current?.workspace===owner&&current.store.invocation!==invocation)throw Error("Original graph writer invocation identity changed");
@@ -136,7 +143,7 @@ async function withGraphFactWriterV1(workspace,invocation,phaseControl,body,name
      try{
       checkActual();const observed=ledger.observe(),space=statfsSync(original.root);
       if(!current&&!maintained&&buildGraphOptionalRetirementDueV1(observed.usedBytes,space.bavail*space.bsize)){retry=true;return;}
-      const optionalQuota=current?.store.invocation===invocation?current.store.optionalQuota:createBuildGraphOptionalQuotaV1({maximumBytes:quotaSchema.policy.maximumBytes,usedBytes:observed.usedBytes,availableBytes:space.bavail*space.bsize,minimumAvailableBytes:quotaSchema.policy.minimumAvailableBytes},()=>{checkActual();requireRepositoryBuildGraphWriterV1(workspace);}),store=Object.freeze({...original,optionalQuota}),scope={workspace:resolve(workspace),store,device:status.dev,inode:status.ino,live:true,handles:new Set(),ledger,namespace,phaseControl:actualControl};
+      const optionalQuota=current?.store.invocation===invocation?current.optionalQuota:createBuildGraphOptionalQuotaV1({maximumBytes:quotaSchema.policy.maximumBytes,usedBytes:observed.usedBytes,availableBytes:space.bavail*space.bsize,minimumAvailableBytes:quotaSchema.policy.minimumAvailableBytes},()=>{checkActual();requireRepositoryBuildGraphWriterV1(workspace);}),store=original,scope={workspace:resolve(workspace),store,device:status.dev,inode:status.ino,live:true,handles:new Set(),ledger,optionalQuota,namespace,phaseControl:actualControl};
       try{return await writers.run(scope,async()=>{let failed=false;try{const value=await body(store,actualControl);checkActual();return value;}catch(error){failed=true;throw error;}finally{let closeFailed=false,failure;for(const close of scope.handles)try{close();}catch(error){if(!closeFailed){closeFailed=true;failure=error;}}if(closeFailed&&!failed)throw failure;}});}finally{scope.live=false;}
      }catch(error){failed=true;throw error;}finally{try{ledger.close();}catch(error){if(!failed)throw error;}}
     });
@@ -149,7 +156,7 @@ async function withGraphFactWriterV1(workspace,invocation,phaseControl,body,name
 
 /** 🔒️ Refuses graph fact publication outside live original fixed-volume custody. */
 export function requireRepositoryBuildGraphWriterV1(workspace){
- const current=writers.getStore();if(!current?.live||current.workspace!==graphDatasetWorkspaceV1(workspace))throw Error("Original bounded graph writer custody required");checkScriptInvocation(current.store.invocation);requireIssuedResourceControlInvocationV1(current.phaseControl,current.store.invocation);requireIssuedResourceControlRefinementV1(current.store.control,current.phaseControl);checkResourceLeaseControl(current.phaseControl);const actual=statSync(current.store.root);if(actual.dev!==current.device||actual.ino!==current.inode)throw Error("Original bounded graph writer volume changed");
+ requireCurrentRepositoryBuildGraphConsumerV1();const current=writers.getStore();if(!current?.live||current.workspace!==graphDatasetWorkspaceV1(workspace))throw Error("Original bounded graph writer custody required");checkScriptInvocation(current.store.invocation);requireIssuedResourceControlInvocationV1(current.phaseControl,current.store.invocation);requireIssuedResourceControlRefinementV1(current.store.control,current.phaseControl);checkResourceLeaseControl(current.phaseControl);const actual=statSync(current.store.root);if(actual.dev!==current.device||actual.ino!==current.inode)throw Error("Original bounded graph writer volume changed");
 }
 
 /** 📁️ Admits the closed fact directory on the original mounted device before a writer follows it. */
@@ -170,7 +177,7 @@ export async function withRepositoryBuildGraphSelectionV1(workspace,invocation,p
 
 /** 🧬️ Admits a portable dataset identity without accepting filesystem or ambient authority. */
 export function readBuildInferenceDatasetV1(value){
- if(validateJsonSchemaSubset(datasetSchema,value).length)throw Error("Closed original inference dataset required");return Object.freeze({version:1,identity:value.identity,sourceRoot:value.sourceRoot});
+ if(validateJsonSchemaSubset(datasetSchema,value,schema).length)throw Error("Closed original inference dataset required");return Object.freeze({version:1,identity:value.identity,sourceRoot:value.sourceRoot});
 }
 
 /** 🧷️ Holds one logical inference namespace inside the actual original graph backing. */

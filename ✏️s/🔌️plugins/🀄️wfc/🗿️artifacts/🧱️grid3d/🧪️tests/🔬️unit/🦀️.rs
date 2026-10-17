@@ -2,6 +2,7 @@
 //! buildable, and the example registry is append-only.
 
 use crate::{artifact_kind, definition, WFC_GRID3D_DIALECT, WFC_GRID3D_DOCUMENT_SCHEMA};
+use semio_framework_test_fixtures::fixture_path;
 
 #[test]
 fn the_dialect_and_the_document_schema_are_the_same_string() {
@@ -153,7 +154,7 @@ fn every_committed_vector_applies_to_the_base_and_inverts_back() {
 #[ignore]
 fn debug_emit_mutation_fixtures() {
         use protocol::Mutation;
-    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🧬️mutations");
+    let root = fixture_path!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧬️mutations");
     let base = fixture_base();
     for (kind, case, mutation) in fixture_vectors() {
         let directory = root.join(kind).join(case);
@@ -178,7 +179,7 @@ fn debug_emit_mutation_fixtures() {
 #[test]
 #[ignore]
 fn debug_emit_example_assets() {
-    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples");
+    let root = fixture_path!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples");
     for (directory, snapshot) in [("🧱️blocks", crate::examples::blocks::snapshot as fn() -> crate::Grid3dSnapshot), ("🪠️pipes-3d", crate::examples::pipes_3d::snapshot)] {
         let asset = root.join(directory).join("🖼️assets").join(directory).join("🗣️.dsl.semio");
         std::fs::create_dir_all(asset.parent().expect("asset directory")).expect("asset directory");

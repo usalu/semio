@@ -41,7 +41,6 @@ fn generated_inputs_retain_every_shared_macro_expression_and_utf16_position() {
         let expressions: Vec<&str> = actual.iter().flat_map(|row| row.inputs.iter().map(|input| input.expression.as_str())).collect();
         let expected: Vec<&str> = case["expressions"].as_array().unwrap().iter().map(|value| value.as_str().unwrap()).collect();
         assert_eq!(expressions, expected, "{id}");
-        eprintln!("[DEBUG] Rust generated input {id}: {actual:?}");
     }
 }
 
@@ -52,12 +51,10 @@ fn unresolved_quote_origins_refuse_and_local_authored_macro_is_never_a_generator
         let error = inspect_rust_generated_token_outputs(case["source"].as_str().unwrap()).unwrap_err();
         assert_eq!(error.kind, RustGeneratorErrorKind::UnresolvedOrigin);
         assert_eq!(error.code(), "unresolved-generator-origin");
-        eprintln!("[DEBUG] Rust generated refusal {}: {error}", case["id"].as_str().unwrap());
     }
     for case in fixture["authoredMacros"].as_array().unwrap() {
         assert!(inspect_rust_generated_token_outputs(case["source"].as_str().unwrap()).unwrap().is_empty());
         assert!(case["source"].as_str().unwrap().contains("include_str!($path)"));
-        eprintln!("[DEBUG] Rust authored local quote remains an authored macro {}", case["id"].as_str().unwrap());
     }
 }
 

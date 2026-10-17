@@ -36,32 +36,24 @@ import {
   type OrbitCameraViewId,
   type WorldCanvasProps
 } from "@semio-tech/infinite-world-r3f";
-import { solidRef, type FaceInfo, type MeshTransfer, type Vec3 } from "../../../../../../../../../../⚙️engine/📔️registry/🟦️.ts";
-import { type ModelEntityKind } from "../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️.ts";
-import { type InteractionSpec } from "../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🎰️interaction-spec/🟦️.ts";
-import { defaultModelDefinitionId } from "../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/📥️definition-catalog/🟦️.ts";
-import { Model } from "../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🧊️model/🟦️.ts";
-import { type InteractionEvent, type SelectionTarget } from "../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🪪️selection/🟦️.ts";
-import { type SpatialPreviewKernel, type ModelDiff } from "../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️.ts";
-import { type DisplayModel, cadGumballConfigVisible, type CadGumballConfig } from "../../🎬️actions/🟦️.ts";
-import { createInteractionRuntime, type InteractionRuntime, type InteractionRuntimeOptions, type InteractionSnapshot } from "../../🗿️artifact/🟦️.ts";
+import { solidRef, type FaceInfo, type MeshTransfer, type Vec3 } from "@semio-tech/cad-engine-ts/registry";
+import { type ModelEntityKind } from "@semio-tech/s-spatial-kernel-ts/geometry";
+import { type InteractionSpec } from "@semio-tech/s-spatial-kernel-ts/geometry/interaction-spec";
+import { defaultModelDefinitionId } from "@semio-tech/s-spatial-kernel-ts/geometry/definition-catalog";
+import { Model } from "@semio-tech/s-spatial-kernel-ts/geometry/model";
+import { type InteractionEvent, type SelectionTarget } from "@semio-tech/s-spatial-kernel-ts/geometry/selection";
+import { type SpatialPreviewKernel, type ModelDiff } from "@semio-tech/s-spatial-kernel-ts/spatial";
+import { type DisplayModel } from "../../🎬️actions/🟦️.ts";
+import { cadGumballConfigVisible, type CadGumballConfig } from "../../🎬️actions/🧲️selection-targets/🟦️.ts";
+import { type InteractionRuntimeOptions, type InteractionSnapshot } from "../../🗿️artifact/📨️interaction-model/🟦️.ts";
+import { createInteractionRuntime, type InteractionRuntime } from "../../🗿️artifact/🏃️interaction-runtime/🟦️.ts";
 import { bindScenePreviewKernel, r3fPreviewKernel, type SolidRef, useThree } from "../🔌️ports/🟦️.ts";
 import { spatialSceneColors } from "../🎨️style/🟦️.ts";
-import {
-  boundsFromMeshTransfers,
-  boundsFromSpatialPickGeometry,
-  CommittedMeshLayer,
-  createSpatialPickEvent,
-  type FactoryFaceMeshRow,
-  FactoryFaceSurfaceLayer,
-  geometryPreviewTransformFromDisplay,
-  mergeSpatialSceneBounds,
-  meshTransferContentKey,
-  resolveSpatialSceneVisibility,
-  type SpatialPickGeometry,
-  type SpatialPickKindToggles,
-  type SpatialSelectionRequest
-} from "../🧲️geometry-targets/🟦️.tsx";
+import { CommittedMeshLayer, FactoryFaceSurfaceLayer } from "../🧲️geometry-targets/🟦️.tsx";
+import { geometryPreviewTransformFromDisplay } from "../🧲️geometry-targets/📐️preview-layout/🟦️.ts";
+import { resolveSpatialSceneVisibility, type SpatialPickGeometry, type SpatialPickKindToggles, type SpatialSelectionRequest } from "../🧲️geometry-targets/🎯️pick-model/🟦️.ts";
+import { boundsFromSpatialPickGeometry, createSpatialPickEvent, mergeSpatialSceneBounds } from "../🧲️geometry-targets/🧬️geometry-index/🟦️.ts";
+import { boundsFromMeshTransfers, type FactoryFaceMeshRow, meshTransferContentKey } from "../🧲️geometry-targets/🧊️mesh-transfers/🟦️.ts";
 import { InteractionDisplay, type SpatialDisplayItemRenderer } from "../🖼️display/🟦️.tsx";
 import {
   defaultInteractionSpatialViewTheme,

@@ -14,8 +14,8 @@ export default {
     root: testRoot,
     name: "@semio-tech/plugin-extension-store",
     environment: "node",
-    include: [],
-    includeSource: ["📥️installation/🟦️.ts", "🟦️.ts"],
+    include: ["🧪️tests/🧪️authored-extension-installation-identity/🟦️.ts"],
+    includeSource: ["🟦️.ts"],
     passWithNoTests: false,
   },
 };

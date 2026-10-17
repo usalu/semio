@@ -127,7 +127,6 @@ test("owned timeout and stop drain descendant-created groups and inherited pipes
           await Promise.race([work, Bun.sleep(row.settleMs)]);
           for (let attempt = 0; attempt < 20 && pids.some(alive); attempt++) await Bun.sleep(25);
           const result = { settled, survivors: pids.filter(alive).length, unrelatedAlive: alive(unrelated.pid!), reason: failure.includes(row.expected.reason) ? row.expected.reason : failure };
-          console.log(`[DEBUG] owned groups implementation=${implementation} mode=${row.mode} result=${JSON.stringify(result)}`);
           expect(pids.length).toBe(2);
           expect(result).toEqual(row.expected);
         } finally {
@@ -161,7 +160,6 @@ test("original owned child close preserves exact status signal and drained outpu
       expect(expected.stdout).toBe(row.stdout+"\n");expect(expected.stderr).toBe(row.stderr+"\n");
       if(expected.signal!==null)expect(failure).toContain("was killed by "+expected.signal);
       else if(expected.code!==0)expect(failure).toContain("failed ("+expected.code+")");else expect(failure).toBeNull();
-      console.log("[DEBUG] Original owned child case="+row.name+" code="+expected.code+" signal="+expected.signal+" completeUtf8Output=true refusedSignalSuccess=true");
     }
   }finally{rmSync(root,{recursive:true,force:true});}
 },30000);

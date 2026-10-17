@@ -1,7 +1,9 @@
 import { BROWSER_ACTOR_CHILD_LIMITS, BROWSER_ACTOR_CHILD_LOAD_STAGES, BROWSER_ACTOR_CHILD_SCHEMA, childBindingMatches, childRecord, childRejectionReason, childSha256, measureChildValue, type BrowserActorChildBinding, type BrowserActorChildLoadStageV1, type BrowserActorChildRejectionV1 } from "../../../../../../../🔨️modules/🌐️browser-bundle/🧵️child/🧬️schema/🟦️.ts";
 
 type Actor = { invoke(path: string[], args: unknown[]): Promise<unknown>; close(): Promise<void> };
-const child = globalThis as unknown as DedicatedWorkerGlobalScope;
+/** 🧵️ The members of the dedicated worker scope this child reads and assigns (the program is not compiled with the `webworker` library). */
+type DedicatedWorkerScope = { onmessage: ((event: MessageEvent) => void) | null; close(): void };
+const child = globalThis as unknown as DedicatedWorkerScope;
 let port: MessagePort | null = null, binding: BrowserActorChildBinding | null = null;
 let actor: Actor | null = null, phase: "boot" | "ready" | "loading" | "active" | "closed" = "boot";
 let sequence = 0, busy = false, actorId = "", moduleUrl: string | null = null;

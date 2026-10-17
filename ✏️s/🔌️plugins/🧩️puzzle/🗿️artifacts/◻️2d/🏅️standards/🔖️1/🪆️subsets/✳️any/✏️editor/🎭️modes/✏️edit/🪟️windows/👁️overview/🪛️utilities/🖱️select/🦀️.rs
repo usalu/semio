@@ -11,8 +11,6 @@
 //! mutations are (design `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/📋️design.md` §5, §8).
 #![allow(unexpected_cfgs)]
 
-use crate::editor::puzzle2d::commands::proximity_connect::puzzle2d_proximity_pairs;
-use crate::standards::v1::subsets::any::schema::mutations::apply_puzzle2d_mutation;
 use {crate::editor::puzzle2d::snapshot::board_snapshot_nodes, crate::editor::puzzle2d::snapshot::puzzle2d_occupied_handles, crate::editor::puzzle2d::snapshot::puzzle2d_push_edge, crate::editor::puzzle2d::snapshot::PUZZLE2D_PROXIMITY_GESTURE_MAX};
 use {crate::standards::v1::subsets::any::schema::mutations::connect_handles_in_proximity, crate::standards::v1::subsets::any::schema::mutations::drag_selection, crate::standards::v1::subsets::any::schema::puzzle2d_handle_distance, crate::standards::v1::subsets::any::schema::mutations::rotate_selection, crate::standards::v1::subsets::any::schema::mutations::scale_selection, crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation};
 
@@ -26,7 +24,7 @@ use semio_framework_tool_machine::{GestureChart, GesturePhase, ToolMachineRunner
 use semio_framework_pack_json::{json,Value};
 use std::sync::Arc;
 
-pub const UTILITY_ID: &str = "select";
+pub const UTILITY_ID: &str = crate::editor::puzzle2d::config::PUZZLE2D_SELECT_UTILITY_ID;
 
 /// 🪪️ The editor app id every select-tool transaction's `tool` is scoped by: `<appId>#<verb>`.
 pub const PUZZLE2D_EDITOR_APP_ID: &str = "s.puzzle.puzzle2d@1/*#editor";
@@ -412,7 +410,5 @@ pub fn puzzle2d_minted_edge_id(document: &Puzzle2dSnapshot, source: &str, target
 //#endregion 🛠️SelectTool
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "../../../../../../🧪️tests/🧪️select-tool/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

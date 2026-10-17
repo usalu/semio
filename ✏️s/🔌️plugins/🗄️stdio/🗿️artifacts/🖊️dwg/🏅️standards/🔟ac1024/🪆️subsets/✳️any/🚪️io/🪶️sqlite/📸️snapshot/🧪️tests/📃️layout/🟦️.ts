@@ -16,6 +16,5 @@ test("DWG paper layout named vectors, enums and optional handles are queryable a
     expect(n.query("PRAGMA integrity_check").get()).toEqual({integrity_check:"ok"});expect(n.query("PRAGMA foreign_key_check").all()).toEqual([]);expect(await read()).toEqual(layout);
     n.run("UPDATE dwg_layout SET plot_area='layout',standard_scale='custom',named_ucs_handle_high=4294967295,named_ucs_handle_low=4294967295");const edited=await read();expect(edited.plotArea).toBe("layout");expect(edited.standardScale).toBe("custom");expect(edited.namedUcsHandle).toBe(max);
     n.run("UPDATE dwg_layout_coordinate SET ordinal=0 WHERE id=2");expect(n.query("PRAGMA integrity_check").get()).toEqual({integrity_check:"ok"});await expect(read()).rejects.toThrow();
-    console.log("[DEBUG] DWG named paper vectors, optional word pairs and plot enums independently verified");
   }finally{n.close();}
 },20000);

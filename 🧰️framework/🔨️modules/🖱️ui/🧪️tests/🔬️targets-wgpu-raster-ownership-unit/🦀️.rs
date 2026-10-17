@@ -50,7 +50,6 @@ fn original_raster_lease_full_grant_closes_final_pool_with_physical_receipts() {
         }
         assert!(lease.terminal_is_empty());assert_eq!(released,source_births+retained_births);assert!(refusals>0);
         let (_,births,frees)=measured(||drop(lease));assert_eq!((births,frees),(0,0));
-        eprintln!("[DEBUG] original raster final lease pixels={bytes} capacity={capacity} copy={copy} births={retained_births} released={released} source={source_births} refused={refusals} turns={turns} terminalDropFree=0");
     }}
 }
 

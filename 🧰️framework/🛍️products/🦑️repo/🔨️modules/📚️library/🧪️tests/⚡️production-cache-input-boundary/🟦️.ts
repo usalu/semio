@@ -7,6 +7,7 @@ import { join, resolve } from "node:path";
 import Ajv from "ajv";
 import { minimatch } from "minimatch";
 import { filterUsingGlobPatterns, getTargetInputs } from "nx/src/hasher/task-hasher";
+import { createScriptProcessEnvelope, withScriptInvocationSignalV1, withScriptProcessEnvelope } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import cachePlugin, { cacheInternals } from "../../🏗️build/🕸️graph/📥️inference/🟨️.mjs";
 
 type Vector = Readonly<{
@@ -18,6 +19,29 @@ type Vector = Readonly<{
   nativeVocabulary: readonly { id: string; root: string; inputs: Record<string, string[]>; target: string; samples: readonly { path: string; selected: boolean }[]; refused: boolean }[];
   samples: readonly Readonly<{ id: string; role: "fixture" | "test" | "asset" | "code"; path: string; production: boolean; test: boolean }>[];
 }>;
+
+type NamedInputs = NonNullable<Parameters<typeof getTargetInputs>[1]["data"]["namedInputs"]>;
+type InputRow = NamedInputs[string][number];
+/** 🧭️ Admits one inferred named-input row as the Nx input definition it declares. */
+function nxInputRow(row: unknown): InputRow {
+  if (typeof row === "string") return row;
+  if (typeof row === "object" && row !== null) {
+    if ("fileset" in row && typeof row.fileset === "string") return { fileset: row.fileset };
+    if ("input" in row && typeof row.input === "string") return "projects" in row && (typeof row.projects === "string" || (Array.isArray(row.projects) && row.projects.every((member) => typeof member === "string"))) ? { input: row.input, projects: row.projects } : { input: row.input };
+    if ("env" in row && typeof row.env === "string") return { env: row.env };
+    if ("runtime" in row && typeof row.runtime === "string") return { runtime: row.runtime };
+  }
+  throw Error("Inferred named input must be a string or a fileset, input, env or runtime definition");
+}
+function nxNamedInputs(inputs: Readonly<Record<string, readonly unknown[]>>): NamedInputs {
+  return Object.fromEntries(Object.entries(inputs).map(([name, rows]) => [name, rows.map(nxInputRow)]));
+}
+
+/** 🔐️ Publishes through the caller-owned process authority the production Script entrypoint issues, with the test's own narrowed cancellation. */
+function publish(workspace: string, signal: AbortSignal = new AbortController().signal, progress?: (directories: number) => void): Promise<void> {
+  const envelope = createScriptProcessEnvelope({ version: 1, owner: "repository:nx:collection-boundary-test", maximumElapsedMilliseconds: 0 }, {}, Date.now());
+  return withScriptProcessEnvelope(envelope, (original) => withScriptInvocationSignalV1(original, signal, (invocation) => bootstrap.publishNxCollectionBoundary(workspace, invocation, progress)));
+}
 
 const root = resolve(import.meta.dir, "../../../../../../..");
 const library = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library";
@@ -38,7 +62,7 @@ test("production cache inputs exclude fixtures while test inputs retain them", a
   expect(vector["version"]).toEqual(1);
   expect(vector.samples.every((sample) => existsSync(join(root, sample.path)))).toBe(true);
   const projectJson = JSON.parse(readFileSync(join(root, vector.projectRoot, "📋️project.json"), "utf8"));
-  const namedInputs = await cacheInternals.projectInputs(projectJson, vector.projectRoot, root, new Map());
+  const namedInputs = nxNamedInputs(await cacheInternals.projectInputs(projectJson, vector.projectRoot, root, new Map()));
   const project = {
     name: vector.projectName,
     type: "lib" as const,
@@ -69,7 +93,7 @@ test("production cache inputs exclude fixtures while test inputs retain them", a
   expect(namedInputs.production).toContain("!{workspaceRoot}/**/!(🔨️modules)/{🧫️fixtures,🧫️examples,🧪️fixtures,🧪️examples}/**/*");
   expect(nxJson.namedInputs.production).toContain("!{projectRoot}/**/!(🔨️modules)/{🧫️fixtures,🧫️examples,🧪️fixtures,🧪️examples}/**/*");
   const nativeJson = JSON.parse(readFileSync(join(root, vector.nativeProject.root, "📋️project.json"), "utf8"));
-  const nativeNamedInputs = await cacheInternals.projectInputs(nativeJson, vector.nativeProject.root, root, new Map());
+  const nativeNamedInputs = nxNamedInputs(await cacheInternals.projectInputs(nativeJson, vector.nativeProject.root, root, new Map()));
   const nativeProject = {
     name: vector.nativeProject.name,
     type: "lib" as const,
@@ -112,7 +136,7 @@ test("native input vocabulary is total while owner overrides and unknown refusal
 /** 🧫️ Original Nx hashing and independent minimatch agree on collection ancestry. */
 test("exact example collection boundary preserves domain module names", async() => {
   const json = JSON.parse(readFileSync(join(root, vector.projectRoot, "📋️project.json"), "utf8"));
-  const namedInputs = await cacheInternals.projectInputs(json, vector.projectRoot, root, new Map());
+  const namedInputs = nxNamedInputs(await cacheInternals.projectInputs(json, vector.projectRoot, root, new Map()));
   const project = { name: vector.projectName, type: "lib" as const, data: { root: vector.projectRoot, namedInputs, targets: { production: { inputs: ["production"] }, test: { inputs: ["default"] } } } };
   const files = vector.collectionBoundaries.map((row) => ({ file: `${vector.projectRoot}/${row.path}`, hash: row.path }));
   for (const target of ["production", "test"] as const) {
@@ -124,7 +148,6 @@ test("exact example collection boundary preserves domain module names", async() 
   const productionProject = `${vector.projectRoot}/📋️project.json`;
   const example = vector.nativeProject.fixturePath;
   expect(cacheInternals.inferenceCandidates([example, productionProject], root)).toEqual([productionProject]);
-  console.log("[DEBUG] actual Nx production/test input selection and minimatch agree on four collection roots, genuine module names and nested examples; physical inference refuses testing examples");
 });
 
 
@@ -148,8 +171,6 @@ test("core project discovery excludes examples and preserves exact domain manife
   const { manifestBasenames, ...omittedBasenames } = policy;
   expect(validate(omittedBasenames)).toBe(false);
   expect(validate({ ...policy, manifestBasenames: ["schema.json"] })).toBe(false);
-  const publish = (bootstrap as Record<string, unknown>).publishNxCollectionBoundary as (root: string, signal?: AbortSignal, progress?: (directories: number) => void) => Promise<void>;
-  expect(typeof publish).toBe("function");
   const parent = process.env.SEMIO_TEST_ARTIFACT_DIR ?? tmpdir(); mkdirSync(parent, { recursive: true });
   const workspace = mkdtempSync(join(realpathSync(parent), "nc-"));
   const files: { path: string; ignored: boolean }[] = [];
@@ -188,7 +209,6 @@ test("core project discovery excludes examples and preserves exact domain manife
   expect(readFileSync(join(workspace, ".nxignore"), "utf8")).toBe(peer);
   await publish(workspace);
   expect(readFileSync(join(workspace, ".nxignore"), "utf8")).toContain("# concurrent peer input");
-  console.log("[DEBUG] canonical core Nx gitignore rejects four example collections, retains exact genuine module manifests and nested collection refusal, preserves unrelated rules, is idempotent; pre/mid-scan abort and real-ancestor refusal preserve original bytes; stale exceptions disappear and current peer edits are retained");
 });
 
 
@@ -201,7 +221,6 @@ test("publisher refuses when its queued module path becomes a symlink", async ()
     mkdirSync(directory, { recursive: true }); writeFileSync(join(directory, "project.json"), JSON.stringify({ name: "neutral", targets: {} }));
   }
   const original = "# original unrelated authority\n"; writeFileSync(join(workspace, ".nxignore"), original);
-  const publish = (bootstrap as Record<string, unknown>).publishNxCollectionBoundary as (root: string, signal?: AbortSignal, progress?: (directories: number) => void) => Promise<void>;
   let replaced = false;
   await expect(publish(workspace, undefined, (count) => {
     if (count === 2 && !replaced) {
@@ -211,5 +230,4 @@ test("publisher refuses when its queued module path becomes a symlink", async ()
   })).rejects.toThrow("real");
   expect(replaced).toBe(true);
   expect(readFileSync(join(workspace, ".nxignore"), "utf8")).toBe(original);
-  console.log("[DEBUG] original queued module authority refuses symlink replacement before exact-file publication; original ignore bytes retained");
 });

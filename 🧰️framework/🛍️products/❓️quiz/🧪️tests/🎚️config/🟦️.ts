@@ -13,9 +13,7 @@ const suite = (path: string): string => relative(root, resolve(here, path)).repl
 export default {
   root,
   resolve: {
-    alias: {
-      "@semio-tech/quiz": resolve(root, "🟦️.ts"),
-    },
+    alias: [{ find: /^@semio-tech\/quiz$/u, replacement: resolve(root, "🟦️.ts") }],
   },
   test: {
     root,
@@ -25,6 +23,9 @@ export default {
     include: [
       "../🌀️mt19937-generator/🟦️.ts",
       "../🧗️challenge-ladder/🟦️.ts",
+      "../💡️challenge-sorting-hints/🟦️.ts",
+      "../🧲️challenge-matching-hints/🟦️.ts",
+      "../🗂️challenge-classification-hints/🟦️.ts",
       "../🎴️sheet-randomization/🟦️.ts",
       "../🩺️document-validation/🟦️.ts",
       "../⚖️partial-credit-scoring/🟦️.ts",

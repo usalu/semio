@@ -34,6 +34,5 @@ test("DWG named objects, graph topology, associative state and eight expression 
     expect(BigInt(fixture.unsignedMaximum)).toBe(max);
     native.run("UPDATE dwg_associative_variable SET name='edited'; UPDATE dwg_evaluation_graph_edge SET reference_count=17 WHERE ordinal=1");const edited=await read(native);const variable=edited[12]!;expect(variable.kind).toBe("associativeVariable");if(variable.kind!=="associativeVariable")throw new Error("variable kind");expect(variable.value.name).toBe("edited");
     native.run("INSERT INTO dwg_evaluation_point_group_10_coordinate(evaluation_expression_id,ordinal,coordinate_class,coordinate_ieee754_bits,coordinate) VALUES(15,0,'negative_zero',-9223372036854775808,NULL)");expect(native.query("PRAGMA integrity_check").get()).toEqual({integrity_check:"ok"});await expect(read(native)).rejects.toThrow();
-    console.log("[DEBUG] DWG named objects, graph edges, associative joins and exact eight expression variants verified");
   }finally{native.close();}
 },20000);

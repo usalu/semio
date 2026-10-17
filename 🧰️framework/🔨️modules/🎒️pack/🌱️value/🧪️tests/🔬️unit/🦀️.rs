@@ -537,7 +537,6 @@ fn schema_map_keys_are_canonical_and_intrinsic_objects_preserve_occurrences() {
     assert_ne!(literal_controlled(&original),literal_controlled(&reordered));
     assert_eq!(literal_plain(&original),literal_controlled(&original));
     assert_eq!(decode_record_body_exact(&literal_controlled(&original),&literal_spec,&DecodeOptions::default()).expect("literal occurrence roundtrip"),record(FieldValue::Value(original)));
-    eprintln!("[DEBUG] schema map byte ordering and intrinsic duplicate literal occurrences match independent neutral contract");
 }
 //#endregion 🔖️SchemaMapAndLiteralOrder
 

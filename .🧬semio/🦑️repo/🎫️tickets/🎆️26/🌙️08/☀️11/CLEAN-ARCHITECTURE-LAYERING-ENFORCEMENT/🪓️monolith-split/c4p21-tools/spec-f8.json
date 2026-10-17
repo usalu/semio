@@ -1,0 +1,26 @@
+{
+ "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🏛️mutate-energy-model-1/🔧️zone-systems/🐍️.py",
+ "snapshot": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/🗑️generated/c4p21-snap/f8.py",
+ "alias": "mutate_energy_model_1_zone_systems",
+ "pieces": [
+  {
+   "key": "zone_equipment",
+   "first": "create_zone_equipment",
+   "last": "_invert_change_room_air_model"
+  },
+  {
+   "key": "air_handling",
+   "dir": "🌬️air-loops-and-setpoints",
+   "doc": "Setpoint manager and air loop kinds.",
+   "first": "create_setpoint_manager",
+   "last": "_invert_remove_air_loop_terminal_zone"
+  },
+  {
+   "key": "plant_oa",
+   "dir": "🏭️plant-loops-and-outdoor-air",
+   "doc": "Plant loop and outdoor air system kinds.",
+   "first": "create_plant_loop",
+   "last": "_invert_change_outdoor_air_system_economizer_enabled"
+  }
+ ]
+}

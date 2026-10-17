@@ -16,11 +16,11 @@ use crate::Puzzle2dSnapshot;
 #[dsl(keyword = "change-node-anchor")]
 pub struct ChangeNodeAnchor {
     pub id: PagedUtf8<{ usize::MAX }>,
-    pub new_anchor: crate::standards::v1::subsets::any::schema::Puzzle2dNodeAnchor,
+    pub new_anchor: crate::standards::v1::subsets::any::schema::records::Puzzle2dNodeAnchor,
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_node_anchor<Op: From<ChangeNodeAnchor>>(id: PagedUtf8<{ usize::MAX }>, new_anchor: crate::standards::v1::subsets::any::schema::Puzzle2dNodeAnchor) -> Op {
+pub fn change_node_anchor<Op: From<ChangeNodeAnchor>>(id: PagedUtf8<{ usize::MAX }>, new_anchor: crate::standards::v1::subsets::any::schema::records::Puzzle2dNodeAnchor) -> Op {
     Op::from(ChangeNodeAnchor { id, new_anchor })
 }
 

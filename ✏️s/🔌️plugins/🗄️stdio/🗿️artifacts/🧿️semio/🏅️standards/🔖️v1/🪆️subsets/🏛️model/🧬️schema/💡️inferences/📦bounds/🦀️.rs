@@ -58,8 +58,5 @@ pub fn compute_semio_model_bounds(snapshot: &SemioModelSnapshot) -> SemioModelBo
 }
 //#endregion 🔖️Bounds
 
-#[cfg(test)]
-//#region 🧪️Tests
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

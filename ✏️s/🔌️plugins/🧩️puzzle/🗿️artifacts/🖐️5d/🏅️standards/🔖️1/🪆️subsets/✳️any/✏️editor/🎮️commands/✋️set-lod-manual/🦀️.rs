@@ -1,6 +1,7 @@
 //! 🔭️ `set-lod-manual` command — the manual detail override, clamped into the slider's own band.
 
-use crate::editor::puzzle5d::{Puzzle5dActionCtx, PUZZLE5D_LOD_SLIDER_MAX, PUZZLE5D_LOD_SLIDER_MIN};
+use crate::editor::puzzle5d::interaction::Puzzle5dActionCtx;
+use crate::editor::puzzle5d::entities::{PUZZLE5D_LOD_SLIDER_MAX, PUZZLE5D_LOD_SLIDER_MIN};
 use semio_framework_pack_json::Value;
 
 pub fn set_lod_manual(ctx: &mut Puzzle5dActionCtx<'_>, args: Option<&Value>) {

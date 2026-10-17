@@ -1,8 +1,8 @@
 //! 💾️ move-page native binary payload owner.
 
 use crate::standards::v1_4::subsets::base::schema::mutations::PdfMutation;
-use crate::standards::v1_4::subsets::base::io::binary::mutations::{put_index, Reader};
-use crate::standards::v1_4::subsets::base::schema::mutations::MovePage;
+use crate::standards::v1_4::subsets::base::io::binary::mutations::wire::{put_index, Reader};
+use crate::standards::v1_4::subsets::base::schema::mutations::move_page::MovePage;
 
 //#region 🔖️Codec
 pub const TAG: u8 = dsl::protocol_record::tag_u8(include_str!("../📡️.protocol.semio"), "move-page");

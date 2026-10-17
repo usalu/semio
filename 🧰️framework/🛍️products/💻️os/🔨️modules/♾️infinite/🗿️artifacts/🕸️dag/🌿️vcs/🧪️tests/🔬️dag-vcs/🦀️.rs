@@ -28,7 +28,6 @@ async fn dag_document_vcs_replays_node_operations() {
     assert_eq!(serde_json::to_value(store.local_actor_id()).unwrap(), fixture["openedActor"]);
     assert_eq!(semio_framework_pack_json::to_json_string(store.local_actor_id()), serde_json::to_string(&fixture["openedActor"]).unwrap());
     assert_eq!(store.envelope().vcs.edits.last().unwrap().actor.as_deref(), fixture["openedActor"].as_str());
-    println!("[DEBUG] Original DAG store and authored edit retain exact opened actor={}", store.local_actor_id().0);
     close_dag_test_store(store);
 }
 

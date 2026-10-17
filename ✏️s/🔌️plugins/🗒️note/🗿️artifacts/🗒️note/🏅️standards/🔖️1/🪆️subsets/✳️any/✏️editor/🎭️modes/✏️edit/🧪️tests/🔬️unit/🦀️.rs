@@ -1,4 +1,13 @@
-use super::*;
+use crate::editor::note::modes::edit::windows::{composite, navigator};
+#[allow(unused_imports)]
+use semio_framework_plugin::create_default_layout;
+#[allow(unused_imports)]
+use semio_framework_ui_locale::LocalizedLabel;
+#[allow(unused_imports)]
+use semio_framework_plugin::ModeDefinition;
+#[allow(unused_imports)]
+use semio_framework_plugin::WindowLayout;
+use crate::editor::note::modes::edit::*;
 
 #[semio_framework_async_macros::async_test]
 async fn the_default_layout_lists_both_edit_windows() {

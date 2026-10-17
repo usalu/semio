@@ -1,6 +1,6 @@
 //! 🗣️ Direct binary codec for `set-lang`.
 
-use crate::standards::v1_7::subsets::ua::schema::mutations::SetLang;
+use crate::standards::v1_7::subsets::ua::schema::mutations::set_lang::SetLang;
 
 //#region 🔖️Identity
 pub const TAG: u8 = 4;
@@ -21,7 +21,5 @@ pub fn decode(bytes: &[u8]) -> Result<SetLang, String> {
 //#endregion 🔖️Codec
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

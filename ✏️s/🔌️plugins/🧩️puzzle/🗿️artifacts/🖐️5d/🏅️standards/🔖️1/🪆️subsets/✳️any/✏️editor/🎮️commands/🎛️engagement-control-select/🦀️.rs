@@ -1,6 +1,6 @@
 //! 🎛️ `engagement-control-select` command.
 
-use crate::editor::puzzle5d::Puzzle5dActionCtx;
+use crate::editor::puzzle5d::interaction::Puzzle5dActionCtx;
 use semio_framework_pack_json::Value;
 
 /// 🎚️ The brush placement picker's select — its option values are `puzzle5d.brush.candidate.<index>`.

@@ -1,4 +1,5 @@
-use super::*;
+use crate::schema::snapshot::SemioKitSnapshot;
+use crate::schema::inferences::entries::*;
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
 use crate::schema::snapshot::{SemioKitConnection, SemioKitDesign, SemioKitPiece, SemioKitType, STDIO_SEMIOKIT_DOCUMENT_SCHEMA};
 

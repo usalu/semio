@@ -57,7 +57,7 @@ function descriptorAppsByDirectory(repoRoot: string): ReadonlyMap<string, { read
  * pin (`appRole`, a role-bearing `appId` lock), a chrome suppression or a filter that hides the pane's
  * own plugin would each make `…#viewer` unreachable while every other law here stays green. A new prop
  * therefore has to be added here deliberately, with the viewer law below re-run. */
-const PLAY_PANE_SHELL_PROPS: readonly string[] = ["appId", "brand", "catalog", "defaults", "locks", "pluginFilter", "plugins", "shellId", "storageNamespace", "suppressAutoIntroduction", "surfaceSessionFactories"];
+const PLAY_PANE_SHELL_PROPS: readonly string[] = ["appId", "brand", "catalog", "defaults", "hostPorts", "locks", "pluginFilter", "plugins", "shellId", "storageNamespace", "suppressAutoIntroduction", "surfaceSessionFactories"];
 
 export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: any, repoRoot: string): Promise<void> {
   const { PLAYGROUND_BUILD_TARGETS, PLAY_RUNTIME_PANES, PLAY_RUNTIME_TARGETS, PLAY_HOST_VARIANT, playExpectedVariants, playRuntimeComponentIds, isIconName } = dependencies;

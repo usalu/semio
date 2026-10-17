@@ -3,9 +3,9 @@ import {test,expect} from "bun:test";
 import {Database} from "bun:sqlite";
 import {readFileSync,readdirSync} from "node:fs";
 import {semioSchemaAjvV1} from "@semio-tech/schema-ts/oracles/validator";
-import * as owner from "../../../🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🟦️.ts";
+import * as owner from "@semio-tech/trinity-rewriting/source";
 import { artifactReferenceSchema } from "@semio-tech/schema-ts/artifact-reference";
-import {exportSqliteDatabase,importSqliteDatabase,type SqliteDatabase} from "../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import {exportSqliteDatabase,importSqliteDatabase,type SqliteDatabase} from "@semio-tech/framework-sqlite-snapshot-ts";
 const trinityTests=new URL("../../../🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/",import.meta.url);
 const fixture=JSON.parse(readFileSync(new URL("./🧫️fixtures/🔣️.json",trinityTests),"utf8"));
 const sql=readFileSync(new URL("../🗄️.sql",trinityTests),"utf8");
@@ -37,7 +37,7 @@ test("Rewriting editor initial owner preserves the independent nine-node six-edg
  expect(initial.child.edges.map((edge:any)=>[edge.source.value+"@"+edge.sourcePort,edge.target.value+"@"+edge.targetPort])).toEqual([["7dc5b737-3b6b-4068-b315-b7bacc91c2e1@c5465220-19ba-4443-8f1d-617c832dd13c","5f0266bc-856b-4ef2-9eb0-16ef5e1fb952@7be6cfda-db1b-47e4-bcea-cd011e516e2e"],["7dc5b737-3b6b-4068-b315-b7bacc91c2e1@d25a91ed-b124-4e5b-8e7e-af832541c953","17d5dec8-87b2-44a9-84ff-93b7e7419bdd@7be6cfda-db1b-47e4-bcea-cd011e516e2e"],["5f0266bc-856b-4ef2-9eb0-16ef5e1fb952@e0fb5d49-9286-4a6d-88b0-043f389c6898","596f3f60-b634-467b-8acc-7d5b649ae0d1@7be6cfda-db1b-47e4-bcea-cd011e516e2e"],["596f3f60-b634-467b-8acc-7d5b649ae0d1@e0fb5d49-9286-4a6d-88b0-043f389c6898","f2edea5c-960e-46bd-932d-aae5ecad72d8@e0fb5d49-9286-4a6d-88b0-043f389c6898"],["f2edea5c-960e-46bd-932d-aae5ecad72d8@c5465220-19ba-4443-8f1d-617c832dd13c","6947a41b-8c6d-4291-bdd8-96cd535c78fc@4ba51a88-2a7f-4b78-b119-0f02eacdb702"],["17d5dec8-87b2-44a9-84ff-93b7e7419bdd@f1a2b3c4-d5e6-7890-abcd-ef1234567890","b9f4e3d2-5c6d-7e8f-90a1-b2c3d4e5f6a7@e5f6a7b8-c9d0-1234-ef56-7890abcdef01"]]);
  expect(initial.child.edges.every((edge:any)=>edge.kind==="Connection"&&edge.label==="")).toBe(true);
  expect(initial.child.edges.map((edge:any)=>edge.properties.map((property:any)=>[property.key,property.value.kind,property.value.lexeme]))).toEqual([["270.0","-1.2","1.2"],["90.0","1.2","1.2"],["0.0","0.0","1.2"],["0.0","0.0","7.2"],["90.0","0.0","1.6"],["0.0","1.2","0.0"]].map(([rotation,u,v])=>[["gap","float","0.0"],["rise","float","0.0"],["rotation","float",rotation],["shift","float","0.0"],["tilt","float","0.0"],["turn","float","0.0"],["u","float",u],["v","float",v]]));
- const graph=await import("../../../🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🚪️io/📝️text/📸️snapshot/🔣️json/🟦️.ts"),sql=await import("../../../🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🚪️io/🪶️sqlite/📸️snapshot/🟦️.ts");
+ const graph=await import("@semio-tech/stdio-semio/standards/v1/subsets/graph/io/text/snapshot/json"),sql=await import("@semio-tech/stdio-semio/standards/v1/subsets/graph/io/sqlite/snapshot");
  const typed=graph.parseSemioGraphJsonValue(initial.child),database=Database.deserialize(await exportSqliteDatabase(await sql.semioGraphSnapshotToSqliteDatabase(typed)));
  try{expect((database.query("SELECT COUNT(*) AS count FROM semio_graph_node").get()as{count:number}).count).toBe(9);expect((database.query("SELECT COUNT(*) AS count FROM semio_graph_edge").get()as{count:number}).count).toBe(6);expect(database.query("PRAGMA foreign_key_check").all()).toEqual([]);expect(graph.semioGraphJsonValue(await sql.semioGraphSnapshotFromSqliteDatabase(await importSqliteDatabase(database.serialize())))).toEqual(initial.child);}
  finally{database.close();}
@@ -48,8 +48,8 @@ test("Rewriting Nakagin scenario parents retain complete separately owned typed 
  for(const relative of read("./🧫️fixtures/🌳️typed/🔣️.json").schemaDocuments)ajv.addSchema(read(relative));
  const parentSchema=ajv.compile(read("../../../../🧬️schema/🔣️.json"));
  const graphSchema=ajv.compile(read("../../../../🧬️schema/📸️snapshot/🌳️typed/🪆️child/🔣️.json"));
- const graph=await import("../../../🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🚪️io/📝️text/📸️snapshot/🔣️json/🟦️.ts");
- const graphSql=await import("../../../🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🚪️io/🪶️sqlite/📸️snapshot/🟦️.ts");
+ const graph=await import("@semio-tech/stdio-semio/standards/v1/subsets/graph/io/text/snapshot/json");
+ const graphSql=await import("@semio-tech/stdio-semio/standards/v1/subsets/graph/io/sqlite/snapshot");
  for(const[folder,id,nodes,edges,ports]of[
   ["","nakagin-rewriting-content",180,179,364],
   ["🏢️nakagin-ground-floor/","nakagin-ground-floor-rewriting-content",2,1,2]
@@ -101,8 +101,8 @@ test("Rewriting full child lease frame retains rich owner words across publicati
  expect(contract["contractId"]).toEqual("rewriting-full-child-frame-lifetime");expect(contract["slot"]).toEqual("workingGraph");expect(contract["target"]["dialect"]["artifactKind"]).toEqual("s.stdio.semio");expect(contract["target"]["dialect"]["standard"]).toEqual("v1");expect(contract["target"]["dialect"]["subset"]).toEqual("graph");expect(contract["retainedTailBytes"]).toEqual(65536);expect(contract["borrowedCaptureAllocationBytes"]).toEqual(0);expect(contract["closeGrants"]).toEqual([0,1]);expect(contract["refusals"]).toEqual(["wrongParent","missingSlot","missingTarget","wrongDialect"]);expect(contract["intrinsicKinds"]).toEqual(["bool","bytes","float","int","list","map","null","ref","str"]);expect(contract["childId"]).toEqual("logical !@/\u0000引用😀");
  
  const vector=read("./🧫️fixtures/🌳️typed/🔣️.json"),graphSchema=ajv.getSchema(graphSpec.$id)!;
- const graph=await import("../../../🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🚪️io/📝️text/📸️snapshot/🔣️json/🟦️.ts");
- const graphSql=await import("../../../🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🚪️io/🪶️sqlite/📸️snapshot/🟦️.ts");
+ const graph=await import("@semio-tech/stdio-semio/standards/v1/subsets/graph/io/text/snapshot/json");
+ const graphSql=await import("@semio-tech/stdio-semio/standards/v1/subsets/graph/io/sqlite/snapshot");
  const child=structuredClone(vector.childSnapshot);child.nodes[0].properties.push(...contract.intrinsicValues);
  const old=graph.parseSemioGraphJsonValue(child),current=graph.parseSemioGraphJsonValue(child);
  current.nodes[0]!.label=contract.nextLiteral+"x".repeat(contract.retainedTailBytes);
@@ -145,7 +145,7 @@ test("Rewriting full child lease frame retains rich owner words across publicati
 });
 test("Rewriting composed graph retains rich typed node port and edge ownership",async()=>{
  const vector=await Bun.file(new URL("./🧫️fixtures/🌳️typed/🔣️.json",trinityTests)).json();expect(vector.childSnapshot).toBeDefined();const schema=await Bun.file(new URL("../../../../🧬️schema/📸️snapshot/🌳️typed/🪆️child/🔣️.json",trinityTests)).json(),ajv=semioSchemaAjvV1({allErrors:true}),validate=ajv.compile(schema);expect(validate(vector.childSnapshot)).toBe(true);expect(validate({...vector.childSnapshot,nodes:[{...vector.childSnapshot.nodes[0],bodyJson:"{}"}]})).toBe(false);expect(validate({...vector.childSnapshot,edges:[{...vector.childSnapshot.edges[0],metadataJson:"{}"}]})).toBe(false);
- const typed=JSON.parse(JSON.stringify(vector.childSnapshot),(key,value)=>key==="bits"?BigInt("0x"+value):value),api=await import("../../../🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🚪️io/🪶️sqlite/📸️snapshot/🟦️.ts");const db=Database.deserialize(await exportSqliteDatabase(await api.semioGraphSnapshotToSqliteDatabase(typed)));
+ const typed=JSON.parse(JSON.stringify(vector.childSnapshot),(key,value)=>key==="bits"?BigInt("0x"+value):value),api=await import("@semio-tech/stdio-semio/standards/v1/subsets/graph/io/sqlite/snapshot");const db=Database.deserialize(await exportSqliteDatabase(await api.semioGraphSnapshotToSqliteDatabase(typed)));
  try{
   expect(db.query("PRAGMA foreign_key_check").all()).toEqual([]);
   for(const[table,key]of [["semio_graph_node","nodeCount"],["semio_graph_port","portCount"],["semio_graph_edge","edgeCount"],["semio_graph_port_property","portPropertyCount"],["semio_graph_edge_property","edgePropertyCount"]])expect((db.query("SELECT COUNT(*) AS count FROM "+table).get() as {count:number}).count).toBe(vector.childOracle[key]);
@@ -197,8 +197,8 @@ test("Rewriting all twenty-eight scenario owners declare complete before after a
   }
  }
  expect(pairs).toBe(40);expect(children.size).toBe(21);
- const api=await import("../../../🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🚪️io/📝️text/📸️snapshot/🔣️json/🟦️.ts");
- const sql=await import("../../../🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🚪️io/🪶️sqlite/📸️snapshot/🟦️.ts");
+ const api=await import("@semio-tech/stdio-semio/standards/v1/subsets/graph/io/text/snapshot/json");
+ const sql=await import("@semio-tech/stdio-semio/standards/v1/subsets/graph/io/sqlite/snapshot");
  await Promise.all(Array.from(children.values(),async child=>{
   const typed=api.parseSemioGraphJsonValue(child),db=Database.deserialize(await exportSqliteDatabase(await sql.semioGraphSnapshotToSqliteDatabase(typed)));
   try{expect(db.query("PRAGMA foreign_key_check").all()).toEqual([]);expect(api.semioGraphJsonValue(await sql.semioGraphSnapshotFromSqliteDatabase(await importSqliteDatabase(db.serialize())))).toEqual(child);}

@@ -1,3 +1,4 @@
+import{testMethodV1,testStringsV1,testRecordV1}from"../📋️values/🟦️.ts";
 import assert from "node:assert/strict";
 import { mkdtempSync, readFileSync, writeFileSync, rmSync } from "node:fs";
 import { createRequire } from "node:module";
@@ -11,8 +12,8 @@ export async function testCommandImportClosure(workspace: string, output: string
   const { cacheInternals,createScriptInputCache } = await import("../../../🏗️build/🕸️graph/📥️inference/🟨️.mjs"), root = mkdtempSync(join(output, "command-imports-"));
   try {
     for (const [path, source] of Object.entries(fixture.files)) writeFileSync(join(root, path), source as string);
-    const entry = join(root, fixture.entry), normalize = (paths: string[]) => paths.map(path => path.replace("{workspaceRoot}/", "")).sort();
-    const original = normalize(await cacheInternals.relativeScriptInputs([entry], root));
+    const entry = join(root, fixture.entry), normalize = (paths: readonly string[]) => paths.map(path => path.replace("{workspaceRoot}/", "")).sort();
+    const original = normalize(testStringsV1(await testMethodV1(cacheInternals,"relativeScriptInputs",[entry], root)));
     assert.deepEqual(original, fixture.runtimeInputs.toSorted());
     const build = () => require("esbuild").build({ entryPoints: [entry], absWorkingDir: root, bundle: true, write: false, platform: "node", format: "esm", packages: "external", metafile: true, logLevel: "silent" });
     const oracle = (result: any) => Object.keys(result.metafile.inputs).map(path => relative(root, resolve(root, path))).sort();
@@ -25,21 +26,21 @@ export async function testCommandImportClosure(workspace: string, output: string
     assert.deepEqual(original, oracle(built)); assert.deepEqual(executeBundle(built), fixture.execution);
     const pass = createScriptInputCache();
     for (let index = 0; index < fixture.discovery.repetitions; index++) for (const path of fixture.discovery.entries) {
-      const inputs = await cacheInternals.relativeScriptInputs([join(root, path)], root, pass);
-      assert.deepEqual(normalize(inputs), normalize(await cacheInternals.relativeScriptInputs([join(root, path)], root)));
-      assert.equal(await cacheInternals.relativeScriptInputs([join(root,path)],root,pass),inputs);
+      const inputs = testStringsV1(await testMethodV1(cacheInternals,"relativeScriptInputs",[join(root, path)], root, pass));
+      assert.deepEqual(normalize(inputs), normalize(testStringsV1(await testMethodV1(cacheInternals,"relativeScriptInputs",[join(root, path)], root))));
+      assert.equal(testStringsV1(await testMethodV1(cacheInternals,"relativeScriptInputs",[join(root,path)],root,pass)),inputs);
     }
-    assert.ok(pass.files.size<=fixture.discovery.maximumMemoizedSourceFiles);
+    const cacheFiles=testRecordV1(pass).files;assert.ok(cacheFiles instanceof Map);assert.ok(cacheFiles.size<=fixture.discovery.maximumMemoizedSourceFiles);
     const nodeClosure = execute(pathToFileURL(resolve(import.meta.dir, "../../../🏗️build/🕸️graph/📥️inference/🟨️.mjs")).href, `(await api.cacheInternals.relativeScriptInputs([${JSON.stringify(entry)}], ${JSON.stringify(root)})).map(path => path.replace("{workspaceRoot}/", "")).sort()`);
     assert.deepEqual(nodeClosure, original, "Node-hosted Nx must resolve the same TypeScript imports as Bun and esbuild");
     writeFileSync(join(root, "🟦️.ts"), fixture.changedSource); writeFileSync(join(root, "replacement.ts"), fixture.replacement);
-    const changed = normalize(await cacheInternals.relativeScriptInputs([entry], root));
-    assert.deepEqual(normalize(await cacheInternals.relativeScriptInputs([entry], root,createScriptInputCache())), changed, "A new graph pass must observe changed transitive imports");
+    const changed = normalize(testStringsV1(await testMethodV1(cacheInternals,"relativeScriptInputs",[entry], root)));
+    assert.deepEqual(normalize(testStringsV1(await testMethodV1(cacheInternals,"relativeScriptInputs",[entry], root,createScriptInputCache()))), changed, "A new graph pass must observe changed transitive imports");
     const rebuilt = await build();
     assert.deepEqual(changed, oracle(rebuilt)); assert.deepEqual(executeBundle(rebuilt), fixture.changedExecution);
     assert.ok(changed.includes("replacement.ts")); assert.ok(!changed.includes("value.ts"));
     const factory = join(root, fixture.factory.entry); writeFileSync(factory, fixture.factory.source);
-    assert.deepEqual(normalize(await cacheInternals.relativeScriptInputs([factory], root)), fixture.factory.runtimeInputs);
+    assert.deepEqual(normalize(testStringsV1(await testMethodV1(cacheInternals,"relativeScriptInputs",[factory], root))), fixture.factory.runtimeInputs);
     assert.equal(execute(pathToFileURL(factory).href, "api.value"), fixture.factory.result);
   } finally { rmSync(root, { recursive: true, force: true }); }
 }

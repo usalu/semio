@@ -38,6 +38,13 @@ pub fn flatten_ink_items(blocks: &[Value]) -> Vec<&Value> {
     out
 }
 
+#[cfg(any(test, feature = "testkit"))]
+pub fn ink_items_at_point<'a>(blocks: &'a [Value], overrides: &BTreeMap<String, Value>, x: f64, y: f64) -> Vec<&'a Value> {
+    let mut flat = flatten_ink_items(blocks);
+    flat.reverse();
+    flat.into_iter().filter(|block| ink_effective_bounds(block, overrides).contains_point(x, y)).collect()
+}
+
 pub fn ink_selection_bounds(blocks: &[Value], overrides: &BTreeMap<String, Value>, ids: &[String]) -> Option<InkBoundsF> {
     let id_set: HashSet<&str> = ids.iter().map(String::as_str).collect();
     let selected: Vec<InkBoundsF> = flatten_ink_items(blocks).into_iter().filter(|block| id_set.contains(ink_item_id(block))).map(|block| ink_effective_bounds(block, overrides)).collect();
@@ -344,12 +351,6 @@ pub fn render_ink_canvas(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut F
 }
 
 //#endregion InkCanvasRender
-
-//#region RasterFrameCostTests
-#[cfg(test)]
-#[path = "../../../🧪️tests/🔬️wgpu-raster-frame-cost/🦀️.rs"]
-mod raster_frame_cost_tests;
-//#endregion RasterFrameCostTests
 
 //#region InkCanvasTests
 #[cfg(test)]

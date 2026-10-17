@@ -1,7 +1,6 @@
 //! 🗑️ Direct rewriting mutation — `RemoveRuleLayoutPoint`: takes one key out of the `rule_layout` map.
 use crate::standards::v1::subsets::any::schema::diff::RewritingDiff;
-use crate::standards::v1::subsets::any::schema::mutations::RewriteRuleMutation;
-use crate::RewritingSnapshot;
+use crate::standards::v1::subsets::any::schema::snapshot::RewritingSnapshot;
 
 //#region 🔖️Mutation
 /// 🗑️ `remove-rule-layout-point` payload.
@@ -15,17 +14,23 @@ pub struct RemoveRuleLayoutPoint {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn remove_rule_layout_point(key: String) -> RewriteRuleMutation {
-    RewriteRuleMutation::RemoveRuleLayoutPoint(RemoveRuleLayoutPoint { key })
+pub fn remove_rule_layout_point<Op>(key: String) -> Op
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::remove_rule_layout_point::RemoveRuleLayoutPoint>,
+{
+    Op::from(RemoveRuleLayoutPoint { key })
 }
 
-impl protocol::MutationKind<RewritingSnapshot, RewriteRuleMutation> for RemoveRuleLayoutPoint {
+impl<Op> protocol::MutationKind<RewritingSnapshot, Op> for RemoveRuleLayoutPoint
+where
+    Op: protocol::Mutation<RewritingSnapshot, Diff = RewritingDiff> + From<RemoveRuleLayoutPoint> + From<crate::standards::v1::subsets::any::schema::mutations::change_rule_layout_point::ChangeRuleLayoutPoint>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "rule-layout-point", kind: "remove-rule-layout-point", record: "RemovedRuleLayoutPoint" };
 
     fn diff(&self, base: &RewritingSnapshot) -> protocol::MutationOutcome<RewritingDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &RewritingSnapshot) -> Result<Vec<RewriteRuleMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &RewritingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

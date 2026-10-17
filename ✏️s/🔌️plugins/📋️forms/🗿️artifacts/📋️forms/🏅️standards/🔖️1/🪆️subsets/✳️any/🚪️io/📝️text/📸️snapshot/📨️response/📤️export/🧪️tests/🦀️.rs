@@ -1,8 +1,10 @@
-use super::*;
+use crate::schema::response::FormsResponse;
+use crate::standards::v1::subsets::any::io::text::snapshot::response::export::*;
+use semio_framework_test_fixtures::fixture_text;
 
 #[test]
 fn exports_match_shared_vectors_and_independent_csv() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../🚪️io/📝️text/📸️snapshot/📨️response/📤️export/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     for test in fixture["cases"].as_array().unwrap() {
         let responses: Vec<FormsResponse> = semio_framework_pack_json::from_json_str(&test["responses"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         let expected: Vec<Vec<String>> = serde_json::from_value(test["rows"].clone()).unwrap();

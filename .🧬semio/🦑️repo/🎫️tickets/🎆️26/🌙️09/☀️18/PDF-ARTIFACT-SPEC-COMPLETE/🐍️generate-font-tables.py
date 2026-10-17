@@ -1,18 +1,19 @@
 """🔤️ Generates the standard-14 AFM metrics, the Annex D encodings and the Adobe Glyph List as Rust
-tables for `📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🔨️modules/🔤️fonts/🅰️tables/🦀️.rs`.
+tables for `📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🔨️modules/🔤️fonts/🅰️tables/🦀️.rs` (metrics, encodings) and
+`…/fonts/🔡️glyph-list/🦀️.rs` (Adobe Glyph List).
 
 Sources (third-party, test/generation-time only — never a runtime dependency):
   * Adobe Core 14 AFM files as redistributed by matplotlib (`mpl-data/fonts/pdfcorefonts`).
   * fontTools: `fontTools.agl` (AGL + AGLFN), `fontTools.encodings.StandardEncoding`/`MacRoman`.
   * Python's cp1252 codec for WinAnsiEncoding (ISO 32000-1 Annex D.2 notes applied).
 
-Usage: .venv/bin/python3 🐍️generate-font-tables.py <afm-dir> <out.rs>
+Usage: .venv/bin/python3 🐍️generate-font-tables.py <afm-dir> <tables.rs> <glyph-list.rs>
 """
 import sys, glob, os, codecs
 from fontTools import agl
 from fontTools.encodings import StandardEncoding, MacRoman
 
-afm_dir, out_path = sys.argv[1], sys.argv[2]
+afm_dir, out_path, agl_path = sys.argv[1], sys.argv[2], sys.argv[3]
 
 FONTS = ["Courier", "Courier-Bold", "Courier-Oblique", "Courier-BoldOblique", "Helvetica", "Helvetica-Bold", "Helvetica-Oblique", "Helvetica-BoldOblique", "Times-Roman", "Times-Bold", "Times-Italic", "Times-BoldItalic", "Symbol", "ZapfDingbats"]
 
@@ -48,29 +49,11 @@ def rs_str(s):
     return '"' + s.replace("\\", "\\\\").replace('"', '\\"') + '"'
 
 out = []
-out.append("//! 🅰️ Generated tables: Adobe Core 14 AFM metrics, ISO 32000-1 Annex D encodings and the Adobe")
-out.append("//! Glyph List. Regenerate with the ticket script `🐍️generate-font-tables.py` (26/09/18/PDF-ARTIFACT-")
+out.append("//! 🅰️ Generated tables: Adobe Core 14 AFM metrics, ISO 32000-1 Annex D encodings. The Adobe Glyph List is the")
+out.append("//! sibling `🔡️glyph-list`. Regenerate with the ticket script `🐍️generate-font-tables.py` (26/09/18/PDF-ARTIFACT-")
 out.append("//! SPEC-COMPLETE); sources are the Adobe AFM files redistributed by matplotlib and fontTools' AGL.")
 out.append("")
-out.append("/// 📏 Metrics of one standard-14 font (AFM units, 1/1000 em).")
-out.append("pub struct StandardFontMetrics {")
-out.append("    pub name: &'static str,")
-out.append("    pub family: &'static str,")
-out.append("    pub bbox: [f64; 4],")
-out.append("    pub ascender: f64,")
-out.append("    pub descender: f64,")
-out.append("    pub cap_height: f64,")
-out.append("    pub x_height: f64,")
-out.append("    pub italic_angle: f64,")
-out.append("    pub stem_v: f64,")
-out.append("    pub fixed_pitch: bool,")
-out.append("    pub bold: bool,")
-out.append("    pub symbolic: bool,")
-out.append("    /// Glyph name → advance width, sorted by name for binary search.")
-out.append("    pub widths: &'static [(&'static str, u16)],")
-out.append("    /// Built-in encoding: character code → glyph name (Symbol/ZapfDingbats only carry their own).")
-out.append("    pub builtin_encoding: &'static [(u8, &'static str)],")
-out.append("}")
+out.append("use crate::standards::v1_7::subsets::base::modules::fonts::metrics::StandardFontMetrics;")
 out.append("")
 out.append("pub const STANDARD_FONTS: &[StandardFontMetrics] = &[")
 for font in FONTS:
@@ -150,9 +133,12 @@ for name, uv in agl.AGL2UV.items():
 entries = sorted(full.items())
 def rs_text(t):
     return '"' + "".join(f"\\u{{{ord(c):X}}}" for c in t) + '"'
-out.append("/// 🔤 The Adobe Glyph List: glyph name → Unicode text (one scalar, or a sequence), sorted by name for binary search.")
-out.append("pub const ADOBE_GLYPH_LIST: &[(&str, &str)] = &[" + ", ".join(f"({rs_str(n)}, {rs_text(uv)})" for n, uv in entries) + "];")
-out.append("")
 with open(out_path, "w", encoding="utf-8") as f:
     f.write("\n".join(out))
-print(f"wrote {out_path}: {len(entries)} AGL entries, {len(FONTS)} fonts")
+agl_out = ["//! 🔡️ Adobe Glyph List: glyph name to Unicode text, sorted by name for binary search. Generated with the ticket script `🐍️generate-font-tables.py` (26/09/18/PDF-ARTIFACT-SPEC-COMPLETE) from fontTools' AGL.", ""]
+agl_out.append("/// 🔤 The Adobe Glyph List: glyph name → Unicode text (one scalar, or a sequence), sorted by name for binary search.")
+agl_out.append("pub const ADOBE_GLYPH_LIST: &[(&str, &str)] = &[" + ", ".join(f"({rs_str(n)}, {rs_text(uv)})" for n, uv in entries) + "];")
+agl_out.append("")
+with open(agl_path, "w", encoding="utf-8") as f:
+    f.write("\n".join(agl_out))
+print(f"wrote {out_path} and {agl_path}: {len(entries)} AGL entries, {len(FONTS)} fonts")

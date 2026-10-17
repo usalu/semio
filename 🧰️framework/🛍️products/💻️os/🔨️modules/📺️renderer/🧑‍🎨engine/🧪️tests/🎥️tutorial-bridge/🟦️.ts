@@ -6,8 +6,14 @@ import { applyPatch } from "fast-json-patch";
 import { describe, expect, it, vi } from "vitest";
 import { ANCHORS, composeTutorialUi, createTutorialClock } from "@semio-tech/ui-react";
 import { createMemoryStoragePort, type TutorialDefinition, type TutorialUiChange, type TutorialUiSnapshot } from "@semio-tech/framework";
-import { createLocalInteractionStoreV1, initialShellState, shellReducer, type LocalInteractionStoreV1, type ShellAction } from "../../🧱️elements/🐚️Shell/🟦️.tsx";
-import { applyTutorialUiChangeToShell, applyTutorialUiSnapshotToShell, captureTutorialUiSnapshot, type TutorialUiBridgeContext } from "../../🧱️elements/🛠️ShellHelpers/🟦️.tsx";
+import { type ShellAction } from "../../🧱️elements/🐚️Shell/🎛️shell-actions/🟦️.ts";
+import { createLocalInteractionStoreV1, initialShellState, shellReducer, type LocalInteractionStoreV1 } from "../../🧱️elements/🐚️Shell/🕹️shell-store/🟦️.ts";
+import {
+  applyTutorialUiChangeToShell,
+  applyTutorialUiSnapshotToShell,
+  captureTutorialUiSnapshot,
+  type TutorialUiBridgeContext
+} from "../../🧱️elements/🛠️ShellHelpers/🧾️transfer-checkin-tutorial/🟦️.ts";
 import fixture from "../🧫️fixtures/🎥️tutorial-bridge/🔣️.json" with { type: "json" };
 
 const project = (snapshot: TutorialUiSnapshot) => ({

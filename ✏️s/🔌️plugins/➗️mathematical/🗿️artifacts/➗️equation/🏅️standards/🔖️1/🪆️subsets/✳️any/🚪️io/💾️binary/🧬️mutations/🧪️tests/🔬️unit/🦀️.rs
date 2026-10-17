@@ -1,3 +1,6 @@
+use crate::op::EquationMutation;
+#[allow(unused_imports)]
+use protocol::OpBinary;
 use crate::standards::v1::subsets::any::io::binary::mutations::*;
 use crate::EquationSnapshot;
 

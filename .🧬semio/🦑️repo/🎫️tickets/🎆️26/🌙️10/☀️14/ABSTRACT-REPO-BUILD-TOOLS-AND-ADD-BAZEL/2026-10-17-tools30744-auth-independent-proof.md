@@ -1,0 +1,7 @@
+# Tools Authentication 30744 Independent Failure Proof
+
+Three saved files match stable nofollow FD/name seven-field metadata, bytes and SHA256: actual diagnostic log, census96079 and ts-u5AY15 request. Receipt: `🗑️generated/tools30744-independent-failure-hold.json`. Request census SHA matches saved bytes.
+
+Root reports natural1. Captured DATA identifies generation3abdf882ae2d6ea08b27c81c46b37b71c1076f586517c86417694185dad56741 with equal computed installation identity, seven metadata hashes and reason authorizer-receipt. authority:false/dispatches:0 are explicit; unchanged authentication refusal follows. This does not identify which authorizer receipt constituent failed, validate the generation, grant cleanup or establish inactivity. No completed plan/commands are recorded. No protected read or Native operation was performed here.
+
+Root proposes explicit selected-identity plan DATA. That can remain a clean current-owner scope if default all still fails on unqualified metadata, every selected identity must be present/fully authenticate, all raw names/staging/activation/witness/current-row and registry/all-generation gates remain exact, and unselected payload is untouched. Choosing a scope must precede metadata reads; catching an authentication error and skipping the generation would be a different, unsound admission change. No implementation of that proposal is accepted by this proof.

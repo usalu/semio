@@ -1,6 +1,5 @@
 //! ↔️ Note mutation — `ResizeBlock`: changes a block's extent.
 
-use crate::schema::mutations::NoteMutation;
 use crate::{NoteDiff, NoteSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -21,17 +20,23 @@ pub struct ResizeBlock {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn resize_block(id: String, new_width: f64, new_height: f64) -> NoteMutation {
-    NoteMutation::ResizeBlock(ResizeBlock { id, new_width, new_height })
+pub fn resize_block<Op>(id: String, new_width: f64, new_height: f64) -> Op
+where
+    Op: From<crate::standards::v1::subsets::block::schema::mutations::resize_block::ResizeBlock>,
+{
+    Op::from(ResizeBlock { id, new_width, new_height })
 }
 
-impl MutationKind<NoteSnapshot, NoteMutation> for ResizeBlock {
+impl<Op> MutationKind<NoteSnapshot, Op> for ResizeBlock
+where
+    Op: protocol::Mutation<NoteSnapshot, Diff = NoteDiff> + From<ResizeBlock>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "resize", entity: "block", kind: "resize-block", record: "ResizedBlock" };
 
     fn diff(&self, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &NoteSnapshot) -> Result<Vec<NoteMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &NoteSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

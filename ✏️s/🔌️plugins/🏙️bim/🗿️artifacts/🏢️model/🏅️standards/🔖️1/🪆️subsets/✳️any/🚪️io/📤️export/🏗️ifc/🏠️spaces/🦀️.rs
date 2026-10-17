@@ -1,9 +1,9 @@
 //! 🏠️ Spaces as `IfcSpace`: the inferred room outline (islands as voids) extruded by the clear height from the room's floor, aggregated under its storey.
 //! `Name` is the space number, `LongName` its name, `Description` its usage.
 
-use super::frames::{ccw, cw};
-use super::writer::{en, opt_text, real, rf};
-use super::{Export, Quantity};
+use crate::standards::v1::subsets::any::io::export::ifc::frames::{ccw, cw};
+use crate::standards::v1::subsets::any::io::export::ifc::writer::{en, opt_text, real, rf};
+use crate::standards::v1::subsets::any::io::export::ifc::context::{Export, Quantity};
 use crate::standards::v1::subsets::any::schema::inferences::finishes::FinishSurface;
 use crate::standards::v1::subsets::any::schema::inferences::quantities::ElementQuantity;
 use crate::standards::v1::subsets::any::schema::inferences::spaces::SpaceStatus;
@@ -41,15 +41,15 @@ pub fn emit(x: &mut Export<'_>) {
         if !resolved {
             x.skip("space", id, &format!("its outline is not resolved ({:?})", room.status));
         }
-        let args = vec![opt_text(id), rf(placement), shape.map_or(super::writer::unset(), rf), opt_text(&row.name), en("ELEMENT"), en("INTERNAL"), real(room.floor_z)];
+        let args = vec![opt_text(id), rf(placement), shape.map_or(crate::standards::v1::subsets::any::io::export::ifc::writer::unset(), rf), opt_text(&row.name), en("ELEMENT"), en("INTERNAL"), real(room.floor_z)];
         let entity = x.ifc.rooted("IFCSPACE", id, &row.number, &row.usage, args);
         x.links.elements.insert(id.clone(), entity);
         x.links.aggregated.entry(storey.ifc).or_default().push(entity);
         x.phase(id, entity);
         if !matches!(row.boundary, crate::standards::v1::subsets::any::schema::snapshot::SpaceBoundary::Explicit { .. }) {
-            x.links.authoring.push((entity, vec![(BOUNDARY_ROW, super::data::label(&semio_framework_pack_json::to_json_string(&row.boundary)))]));
+            x.links.authoring.push((entity, vec![(BOUNDARY_ROW, crate::standards::v1::subsets::any::io::export::ifc::writer::label(&semio_framework_pack_json::to_json_string(&row.boundary)))]));
         }
-        super::zoning::finishes(x, id, entity);
+        crate::standards::v1::subsets::any::io::export::ifc::zoning::finishes(x, id, entity);
         if resolved {
             x.quantify(entity, "Qto_SpaceBaseQuantities", id, |row| {
                 vec![Quantity::Length("Height", row.height), Quantity::Area("GrossFloorArea", row.gross_area), Quantity::Area("NetFloorArea", row.net_area), Quantity::Volume("GrossVolume", row.gross_volume), Quantity::Length("GrossPerimeter", row.perimeter), Quantity::Area("GrossWallArea", row.perimeter * row.height), Quantity::Area("NetWallArea", finish_area(row, FinishSurface::Wall)), Quantity::Area("NetCeilingArea", finish_area(row, FinishSurface::Ceiling))]

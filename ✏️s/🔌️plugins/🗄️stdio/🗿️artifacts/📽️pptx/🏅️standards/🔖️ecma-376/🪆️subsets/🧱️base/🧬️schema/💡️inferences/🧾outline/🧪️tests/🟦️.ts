@@ -3,7 +3,7 @@ import Ajv from "ajv";
 import {Database} from "bun:sqlite";
 import * as outlineOwner from "../🟦️.ts";
 import pptxSchema from "../../../📸️snapshot/🔣️.json";
-import xmlSchema from "../../../../../../../../../📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🔣️.json";
+import { baseSnapshotSchema as xmlSchema } from "@semio-tech/stdio-xml/standards/1.0/subsets/base/schema/snapshot";
 test("PPTX outline reads actual OPC XML and refuses missing retained authority",async()=>{
  const fixture=await Bun.file(new URL("../../../../🧪️tests/🧫️fixtures/💡️inferences/🧾outline/🔣️.json",import.meta.url)).json();
  

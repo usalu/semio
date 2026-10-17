@@ -9,7 +9,6 @@
 use semio_s_artifact_raster_raster_diff::{canvas, painted, painted_diff, Painted, Refusal};
 use crate::paint_stroke::{painted_inverse, refused, selection_invariant, selection_mask, RasterSelectionSpan};
 use semio_s_artifact_raster_raster_diff::RasterDiff;
-#[cfg(test)] use semio_s_artifact_raster_raster_mutations::RasterMutation;
 use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
 use semio_framework_pixels::editing::{PixelEditJob, PixelOperation};
 use semio_framework_pixels::RasterImage;
@@ -195,7 +194,4 @@ impl<Op> protocol::MutationKind<RasterSnapshot, Op> for ApplyFilter where Op: pr
 //#endregion 🔖️Kind
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

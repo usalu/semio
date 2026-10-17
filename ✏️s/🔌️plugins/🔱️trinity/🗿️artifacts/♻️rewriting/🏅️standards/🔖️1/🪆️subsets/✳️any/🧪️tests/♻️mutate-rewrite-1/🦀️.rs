@@ -8,6 +8,7 @@ const KINDS: &[&str] = &["edit-working-graph", "edit-lhs", "edit-rhs", "change-p
 #[cfg(feature = "sut")]
 mod subject {
     use super::owner;
+    use semio_s_artifact_trinity_jack_semio_content::SemioJackContentOwner;
     use semio_framework_value::FromValue;
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_artifact_trinity_rewriting::standards::v1::subsets::any::io::text::mutations::{apply_rewriting_mutation_reporting, decode_rewriting_mutation_json, inverse_rewriting_mutation_steps};
@@ -47,7 +48,7 @@ mod subject {
     fn bind_replacement(ctx: &Context, mutation: &mut RewriteRuleMutation, role: &str) -> Result<(), String> {
         if let RewriteRuleMutation::EditWorkingGraph(edit) = mutation {
             let child = semio_s_artifact_stdio_semio_graph::io::text::snapshot::decode_semio_graph_snapshot_json(&owner::declared_text(ctx, role)?).map_err(|error| error.into_message())?;
-            semio_s_artifact_trinity_jack::materialize_jack_snapshot(&mut edit.new_working_graph.content, child);
+            semio_s_artifact_trinity_jack_semio_content::materialize_jack_snapshot(&mut edit.new_working_graph.content, child);
         }
         Ok(())
     }
@@ -131,8 +132,8 @@ mod subject {
         for (parent, expected) in [(ground.get(), (2, 1, 2)), (tower.get(), (180, 179, 364))] {
             if child_facts(parent)? != expected { return Err("complete committed Nakagin child cardinalities differ".into()); }
             let mut reread = decode_rewriting_snapshot_json(&encode_rewriting_snapshot_json(parent).map_err(|error| error.into_message())?).map_err(|error| error.into_message())?.guard_decoded();
-            let child = semio_s_artifact_trinity_jack::jack_content_for_handle(&parent.working_graph.content).map_err(|error| error.into_message())?;
-            semio_s_artifact_trinity_jack::materialize_jack_snapshot(&mut reread.get_mut().working_graph.content, child.snapshot().clone());
+            let child = semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::content::jack_content_for_handle(&parent.working_graph.content).map_err(|error| error.into_message())?;
+            semio_s_artifact_trinity_jack_semio_content::materialize_jack_snapshot(&mut reread.get_mut().working_graph.content, child.snapshot().clone());
             owner::restores(parent, reread.get())?;
         }
         if ground.get().working_graph.root_node_id != tower.get().working_graph.root_node_id { return Err("both declared Nakagin roots must remain identical".into()); }

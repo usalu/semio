@@ -115,9 +115,8 @@ function quizReleaseDocumentVitePlugin(proctorOrigin: string): OwnedBuildPlugin 
  * with the site host; assets resolve from the domain root and land in the package's `dist`. The dev
  * server bakes nothing and proxies the gateway routes to the dev proctor on `PROCTOR_PORT` (default 8791), so dev and
  * tests stay same-origin; a proctor that goes away while a socket is proxied never takes the dev server along, whatever
- * the runtime. `TEACHING_ARCHITECTURE_QUIZ_CACHE` moves Vite's dependency cache, so a throw-away dev server
- * never rewrites the one a developer's own server reads, and `TEACHING_ARCHITECTURE_QUIZ_WATCH=off` stops it watching the
- * sources, so an edit never reloads the pages a test drives.
+ * the runtime. Vite's dependency cache is the one the repository issues for the build mode, and
+ * `TEACHING_ARCHITECTURE_QUIZ_WATCH=off` stops the dev server watching the sources, so an edit never reloads the pages a test drives.
  * @see ../../🚀️deploy/🔣️.json — the site and proctor hosts
  * @see ../../🚀️deploy/🟦️.ts — `publish`, which verifies and stages this build for the CDN
  * @see ../../🧱️stack/🟦️.ts — the local stack that starts this server beside the proctor */
@@ -125,7 +124,7 @@ export default defineOwnedBuildConfigFactory(({ command, mode }) => ({
   root: siteRoot,
   base: "/",
   publicDir: false,
-  cacheDir: viteCacheDirectory(process.env.TEACHING_ARCHITECTURE_QUIZ_CACHE ?? resolve(repoRoot, ".🧬semio/🦑️repo/⚡️cache/vite/architecture-quiz"), { ...process.env, SEMIO_BUILD_MODE: readBuildMode(mode) }, import.meta.url),
+  cacheDir: viteCacheDirectory(repoRoot, { ...process.env, SEMIO_BUILD_MODE: readBuildMode(mode) }),
   plugins: [
       canonicalWasmBuildVitePlugin(repoRoot, readBuildMode(mode)),
     semioServeCloseVitePlugin(),

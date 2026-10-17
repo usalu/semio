@@ -89,7 +89,7 @@ impl PendingRasterQueue {
         self.take_checked_out(token)
     }
 
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testkit"))]
     pub fn close_all(&mut self) {
         while let Some(mut producer) = self.pop_front_for_close() {
             producer.begin_close();
@@ -146,8 +146,8 @@ pub enum PendingRasterUploadStep {
 }
 
 pub struct PendingRasterCheckedOut {
-    pub(crate) surface: AdmittedSurfaceToken,
-    pub(crate) queue: PendingRasterQueueToken,
+    pub surface: AdmittedSurfaceToken,
+    pub queue: PendingRasterQueueToken,
     pub(crate) active: bool,
 }
 

@@ -19,6 +19,5 @@ test("Incremental compaction rescans under compiler ownership and preserves curr
   const cancelled=new AbortController(),waiting=(api as any).compactCargoIncrementalSessionsV1({...options,control:phaseCompilerAdmissionControlV1(cancelled.signal,30000,()=>undefined,()=>new Promise(done=>setImmediate(done))),dryRun:false});await Bun.sleep(fixture.cancellation.delayMs);cancelled.abort();await expect(waiting).rejects.toMatchObject({name:fixture.cancellation.errorName});expect(fg.sync("**/data",{cwd:build})).toHaveLength(fixture.sessions.length);held.release();held=undefined;
   const result=await(api as any).compactCargoIncrementalSessionsV1({...options,dryRun:false});expect(result.paths).toEqual(fixture.removed);expect(result.bytes).toBe(3);expect(fg.sync("**/s-*/data",{cwd:build}).map(path=>path.slice(0,-5)).sort()).toEqual([...fixture.retained].sort());
   for(const path of fixture.removed)expect(existsSync(join(build,path))).toBe(false);for(const path of fixture.retained)expect(readFileSync(join(build,path,"data")).length).toBeGreaterThan(0);
-  console.log("[DEBUG] Incremental compaction compiler exclusion=true dryRun=unchanged staleRemoved=1 newestWorkingForeign=retained");
  }finally{controller.abort();held?.release();await run?.catch(()=>{});rmSync(root,{recursive:true,force:true});rmSync(leases,{recursive:true,force:true});}
 },30000);

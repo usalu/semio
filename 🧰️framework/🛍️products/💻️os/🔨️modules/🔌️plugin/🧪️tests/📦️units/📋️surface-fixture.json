@@ -1,0 +1,1460 @@
+{
+  "version": 1,
+  "package": "semio-framework-plugin-surface-fixture",
+  "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🪟️surface-fixture/🦀️.rs",
+  "original": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs",
+  "metadataTarget": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧩️private-child-metadata/🦀️.rs",
+  "metadataLaw": "child_emission_private_input_metadata_and_genesis_retain_exact_request_and_original_batch",
+  "files": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs",
+      "sha256": "14e1734a1605dcc6ff398ac7f3953c4d3f40be5c444e3c837002fe2787f9a6b9",
+      "bytes": 114867,
+      "assertions": 158,
+      "functions": [
+        {
+          "name": "child_emission_private_input_metadata_and_genesis_retain_exact_request_and_original_batch",
+          "sha256": "27417694ef18870888ec868adbfdefe09e7603c52d971cda231ec12a108ac372",
+          "assertions": 35,
+          "law": true,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧩️private-child-metadata/🦀️.rs"
+        },
+        {
+          "name": "to_sqlite_database",
+          "sha256": "b5bc60754593cbd1cf4212d84cfdd38a3f233773b82695b1e8eb64b4d7846263",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "from_sqlite_database",
+          "sha256": "e5625109f7e2181fabdb1e0ca084e68f070919556c2d73a798a3b25b0cc43d1e",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "visit_child_refs",
+          "sha256": "873840fe69a6520c505583b551c10c0d6d50576c570825a131e2e4b33d781fc9",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "parse_dsl",
+          "sha256": "6889ae426d2abdc8299c851796611f09f04cd08c20d20d1f659f2af37a199f4e",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "print_dsl",
+          "sha256": "b23d32b5f33c7e1e316433b3d4dbae36e4aefee95d955e87aa3b456a76dfeeb7",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "encode_pack_with",
+          "sha256": "1fbfc7aaa0d2b27f672437f1eb847cb6d31b0ca27cf1a57f0ec8e9993f680597",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "decode_pack_with",
+          "sha256": "4519af6a4c1f32c642212ee599aa923de0898f604733bd4e929bdba5813d534b",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_codec",
+          "sha256": "746e0b63630a3ebce3669d868b39950f0ec4cf7fd05cc8c19474854672f4afec",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "inverse",
+          "sha256": "9ec3452405a412d75fcccb893cab3b924795d1fbf10c380f5260ed6f35bffbf9",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "is_empty",
+          "sha256": "c1a91024f86da766141eee013351538320b03b5b8339c1e3ff818df55e58f98d",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "apply",
+          "sha256": "8fffa538fa140d38ffa4cb03ad407580765c1d0bc216de4bc3533222c5a6ee78",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "absorb",
+          "sha256": "c6ba74ede8d188e6aa348d90ee14cb4e863192bc08beaf5fdd38376bfa0cd5d3",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "parse_op",
+          "sha256": "e364e6cafef482a2721d32cbfa58e0c8dc84875857c49799b83d38a232ed1dff",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "print_op",
+          "sha256": "a2b4d3c5244b944e9f60b2773f80b22c725950aa21af8401911caaf83b233030",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "encode_op",
+          "sha256": "32ba89baa9a022de3027b712221535f0e9044e392a0f1fe83d18825d6e806b08",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "decode_op",
+          "sha256": "390b5f76f3ca9129ec1488784a9bf7826cb486c508c916af7d7fac8ce3a2df02",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "encode_op",
+          "sha256": "00af3a78a6c4ab7ba38956cf50ab00a6fc285a7b443582d646f82edc4c4f10a1",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "decode_op",
+          "sha256": "5971291fe3941d7c5c7c6aa6ae1b4e84d308d310873d3df22d423617df0983fb",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "step",
+          "sha256": "7fca7c00a2c6909441b25b64217669b67b65c8c0ae598a97a0f196026fb8bf35",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "borrow_outcome",
+          "sha256": "c7e1f38badfa514c848ca8a5a39d8d76b9648fcc755432f4082a1a64731b7bf8",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "begin_close",
+          "sha256": "64f67a436e53b945e783cbb4815a484a91fdd1f3c21f1e13ee16a21b1c38eee4",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "close_step",
+          "sha256": "732ba3051a2d87b2911350ea1c297651ef62037e6978cc82e20d3211199af769",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "next_close_copy_byte_demand",
+          "sha256": "4f273fda762cb2e8925d1de37c3d74ed0329b83dea84a6b061f0c09d93534c46",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "next_close_capacity_byte_demand",
+          "sha256": "7af017a46c979bc9cfb08b3288f567fe2f98dda22581b3807257b63c79a9b9e5",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "next_close_release_byte_demand",
+          "sha256": "a8ae9c134de0511b971b02bbf0eea824f4d418d563ce3cc267d54cbf333cbab1",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "next_close_depth_demand",
+          "sha256": "ec4992bd98e27a9c17ba37d922ef07316615c230b05f66daff204438022ba6b2",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "terminal_is_empty",
+          "sha256": "7c90df96d15b5f418ef18103d2149e89c62e5a9490ef21e2c2e602d6bab82e55",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "keys",
+          "sha256": "7b4254af5266ab34276814fb34ece0d05ba7d866c5438467ad7b9ff553fab60d",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "payload_schema_id",
+          "sha256": "568932b14647c8ad963679b089aa76e5743f7b67c597c7d36e9b9a65b4007b29",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "classification",
+          "sha256": "6c0f2ec9570d99856d15323d9756a00afe3a1d1f99670302aa35fb51047dde0b",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "execution_contract",
+          "sha256": "8b3206ea12d5540475af80424bf69839cec1bfb1eacfea44c125e9388d858a98",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "create_job",
+          "sha256": "bdcd650e6239bcbc425989c7dff8437d4c5164d1f16cf7e3004d0af48e5ef220",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "create_job_from_wire_pages_with_payload",
+          "sha256": "7f0dd5f0be5999abdda95cbfcf862023e705cbc36bf883b609f81d91dc55c26d",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "latest_wins_target",
+          "sha256": "8e81695a0a44dc8f9a6795a4cdaf806fa614669c12d469e60404b7149ad1c588",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "build_latest_wins_command_disposer",
+          "sha256": "a0d553dbb08f6da2f89242100790d15bbabc3ad0a2189468810df8b805b2f626",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "surface_manifest",
+          "sha256": "24fcc07eb25d3567a7f1cd18db5771f5bbb19d94ebcb9670652fdb2afded8e74",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "new",
+          "sha256": "b617e43fcb014363215e49746f87e39d27f8138c84ee010ddd8905c3950ad233",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "progress",
+          "sha256": "e33c32c8c9c389c5c62d4ed364589b39cd908017b8c69c2f0d5c1392fdee0df9",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "advance",
+          "sha256": "5ecf130f980d8f888e05bda645d395f97b62c176f016bedf8ac719c4c635581d",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "begin_close",
+          "sha256": "22510170ebceccda0ffc51470f0b740628b6736edbcf57201bf8b40abfc0381e",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "close_step",
+          "sha256": "a17f30f4ae454076eda39fcf886143c63f1c8b2540151c7ac65b7a402283b4ec",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "retirement_demands",
+          "sha256": "7eb4d008809337012a09d74d202c54073d9adc4cff6573ab72aa836beac8aa63",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "terminal_is_empty",
+          "sha256": "2ddef40c5cd4608d062ae86e5272e7a7548a3c9f442289acf38f145de6bbfa38",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "owned_mutation_batch_birth_bytes",
+          "sha256": "413d9b7fc885fdaf8653ca24ffc24781f6477c009d07f9cfe7b434dd1439fff4",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "admit_owned_mutation_batch",
+          "sha256": "9bed1e1ab66958845acb5d57aac6c81d430c16925c7713121d170408826d93a3",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "natural_file_codec",
+          "sha256": "4a89419bce4c3f649c26bf3de9fba0cff60232dd8138a770af1b02e7d8902ef5",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "encode_natural_file",
+          "sha256": "22de667e269a5baa8dbcef5ae84814577f7089e590e6aa47f71c0943a619681e",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "decode_natural_file",
+          "sha256": "5fb3e51d8bcdf7aa28b24e4acd6c05f6b2c389bf711589140b53477962af571c",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "build_natural_file_decode_owner",
+          "sha256": "27c1f764ce3a7c452b4248d4f4cb4add0502387fa84684ba72845698537f52c3",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "build_instance_operation_owner",
+          "sha256": "1f676b6ae34c3ea769be7459999ded4c349d85c35996e05a165d0f46983a9e6a",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "export_media_with_request_context",
+          "sha256": "55e061e786cc99b3eb015d90894a1f05106c11393f76e46ffd7194cf9fb667df",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "command_id",
+          "sha256": "9192383e0c0775006687eea62fa1219f13eb5a3aede8a225a908b6721b6e928d",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "register_tool_job_factories",
+          "sha256": "6cd5a74152759af4ac6d92bb01dc84a691bbaeb0e9c0c2ea0b2b80ebf7cd7613",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "build_tool_job",
+          "sha256": "0e7b5ac2e7b73f46825b2df35531c55862827aa8c8e958ea69a246e563fa920f",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "build_artifact_store_one_item_preparation_factory",
+          "sha256": "560e8983afccd4080aef2793ed4df98dfe57d10bf1cbee357b4f21142bb99f60",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "document_store_owners_source_demands",
+          "sha256": "9b96f5cef08a597f3dff8b5ac691c918e3b356ae18e83a1a80068e21816a956d",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "build_document_store_owners",
+          "sha256": "df89e7ed4badc5598303f6786f8539d3a80ed41e7aee11464de700a448d6e516",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "build_document_store_disposer",
+          "sha256": "0d9204a0780f275456200238c69cbab9d17924d7ddbf2e6063adbbd31231b508",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "build_config_store_disposer",
+          "sha256": "c1f5e2e3a9e99afd582f5180176e06ff3e006d49602fa506ffea2f99b32e39c5",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "build_draft_store_disposer",
+          "sha256": "55a6e68ef291a9213b3e881844091b89eb56533754700e1439ec05d7b06fcea3",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "build_presence_local_root_retirement_factory",
+          "sha256": "6a6e3130cbd3438fe2324db69d4f4540f91d77d0f2c6697f17345493abfe466c",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "build_presence_peer_retirement_factory",
+          "sha256": "cacdf1735cec1fad1f084c5c2e20a39d8711490a487150f37bccce3e3438d89e",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "build_transient_local_root_retirement_factory",
+          "sha256": "fab2b08fe32759a7dd551038a983b38ba374c468147fc20252633c32cd573cbf",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "build_presence_store_disposer",
+          "sha256": "476d1677ce9e82110e5060117a73ce5cb0734325de364ff626df17024840ae9e",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "build_transient_store_disposer",
+          "sha256": "dffb9e2dbb1103bb40661fc1b9a53126ba6d8d859612cf925bec1e6ea4dbc668",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "initial_snapshot",
+          "sha256": "ddc7f30a23b7849ea00f853ff47af9888f577abc0733291122f5e27324f3a44a",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "handle",
+          "sha256": "3695510ee44ff11e44ab171bcf69a62bbc0c4cc51104d51f862675facf1cff89",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "render",
+          "sha256": "c20ec5c33bb581af5e65e2418b987d39944fed109540f9b3dc86ce7c555691d9",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "owned_mutation_batch_birth_bytes",
+          "sha256": "413d9b7fc885fdaf8653ca24ffc24781f6477c009d07f9cfe7b434dd1439fff4",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "admit_owned_mutation_batch",
+          "sha256": "9bed1e1ab66958845acb5d57aac6c81d430c16925c7713121d170408826d93a3",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "build_instance_operation_owner",
+          "sha256": "1ed75d74b5fa2f43285f1c489c5cd6b88acddb1f112a03f8de7670c76b36d543",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "export_media_with_request_context",
+          "sha256": "55e061e786cc99b3eb015d90894a1f05106c11393f76e46ffd7194cf9fb667df",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "mounted_job_maintenance_demands",
+          "sha256": "f3287eed807de5d62fbf9459335e7869c7590340c72b22a45791704143244a65",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "mounted_job_maintenance_step",
+          "sha256": "3d53dc7654c6c134aae6f938ebcc2dfb46dcb8249a765fb63f8611f8965413c8",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "mounted_job_close_step",
+          "sha256": "2ca234dd3f6d6606fc08cad960bebbf8b0e7fa3f0fb80916b2088359b87ad64a",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "mounted_jobs_terminal_is_empty",
+          "sha256": "03f1432551a38d56542e223b8a544945336bc4c75bf5bc958ea675dfe9993ee8",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "config_schema",
+          "sha256": "108a6de19211585b7faad48655b39e9f0d21c29abb43cad0538acbc1578d2a24",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "command_id",
+          "sha256": "f7894b89693483173618c3bc47a5c98db5a33c0e0d2f329747572e9ae85a9761",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "build_document_store_disposer",
+          "sha256": "0d9204a0780f275456200238c69cbab9d17924d7ddbf2e6063adbbd31231b508",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "build_config_store_disposer",
+          "sha256": "c1f5e2e3a9e99afd582f5180176e06ff3e006d49602fa506ffea2f99b32e39c5",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "build_presence_local_root_retirement_factory",
+          "sha256": "6a6e3130cbd3438fe2324db69d4f4540f91d77d0f2c6697f17345493abfe466c",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "build_presence_peer_retirement_factory",
+          "sha256": "cacdf1735cec1fad1f084c5c2e20a39d8711490a487150f37bccce3e3438d89e",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "build_transient_local_root_retirement_factory",
+          "sha256": "fab2b08fe32759a7dd551038a983b38ba374c468147fc20252633c32cd573cbf",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "build_presence_store_disposer",
+          "sha256": "476d1677ce9e82110e5060117a73ce5cb0734325de364ff626df17024840ae9e",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "build_transient_store_disposer",
+          "sha256": "dffb9e2dbb1103bb40661fc1b9a53126ba6d8d859612cf925bec1e6ea4dbc668",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "initial_snapshot",
+          "sha256": "ddc7f30a23b7849ea00f853ff47af9888f577abc0733291122f5e27324f3a44a",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "handle",
+          "sha256": "a921924948270c993e295dd71e2cec3c1a1d6029018c3b4de6279ad655c2b723",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "render",
+          "sha256": "c20ec5c33bb581af5e65e2418b987d39944fed109540f9b3dc86ce7c555691d9",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "viewer_never_mutates_the_document_or_draft_store",
+          "sha256": "e30d630a6ae1fa96ea5be1b0081e7f24d58d3159639a79ac3f81b90dc7d87ab7",
+          "assertions": 0,
+          "law": true,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "bounded_viewer_fixture_preserves_declared_lifecycle_hooks",
+          "sha256": "9ac27f21ac38dc59663bf2362b3ea11ce3936df25ae7b4edd28046e690838cda",
+          "assertions": 7,
+          "law": true,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "editor_and_viewer_share_one_dialect",
+          "sha256": "2a82cc230ce970043b61f600c8bbe3d0c041f6897bb6bd790ef74bd052107ece",
+          "assertions": 0,
+          "law": true,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "new_viewer_constructs_a_registry_less_wrapper",
+          "sha256": "cd4d0927cb6131f533143d871c26af666513ec8bbdcfd2210f9015ef855c3968",
+          "assertions": 1,
+          "law": true,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "editor_fixture_still_mutates_normally",
+          "sha256": "99aaa63c1fae88d62101de02628fa6a363249540ceb9cb895b5a63409088fd6e",
+          "assertions": 2,
+          "law": true,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "registered_editor_consumes_intrinsic_natural_bytes_through_the_real_media_route",
+          "sha256": "210a99a959eaaa07f487ef33619c2d8cf0db2f4993f9a0b483b116aeca9e8acb",
+          "assertions": 3,
+          "law": true,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "surface_natural_file_reserved_job",
+          "sha256": "51cd01197cd553a19aba40f8648d50bb543bdf067d8dbfc06f9114feab6f9c30",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "surface_natural_file_step",
+          "sha256": "509eac255e5cb6a2bbf7189aa056e50f3d91122f82e59042eeeeb206d3f9fdf3",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "surface_natural_file_outcome",
+          "sha256": "bf47fb2fbb92ed2fa6ca86cdd46a625f8baa5d56853e70cea25aef7e199761c5",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "close_surface_natural_file_job",
+          "sha256": "c0d1b3fc6ac07c0eea843658c5dc85a4123bdc9ddfa2688e24a54bec7c6ceeed",
+          "assertions": 8,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "natural_file_reserved_job_accounts_cancels_refuses_and_retires_boundedly",
+          "sha256": "07f62506ac6af85ea755bf779a1be313c61f7df3b16b96178b490c0e90eb383b",
+          "assertions": 2,
+          "law": true,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "natural_file_monolithic_decoder_refuses_and_retires_on_original_caller",
+          "sha256": "5dbeb0d16b2c37d1015e9a987e70f83d8adbab1891804ce63793830f847cc8ca",
+          "assertions": 3,
+          "law": true,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "natural_file_controlled_decoder_crosses_turns_and_retires_its_owner",
+          "sha256": "fe223df969a4c1239407bdaf525224e4e8971ab88c0d6506694c8ae298847ad8",
+          "assertions": 7,
+          "law": true,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "surface_editor_controller_is_the_derived_id",
+          "sha256": "49b73e9baf82845ef4d4ede440823981c3e5d6c58223d399664ff696c9145821",
+          "assertions": 2,
+          "law": true,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "editor_fixture_without_a_manifest_declaration_fails_closed",
+          "sha256": "de6dfd2b38bb4a78f4afcafdef4dc63f80e223008bb6bbff9f8868b66cb5f960",
+          "assertions": 3,
+          "law": true,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "handle_action_invocation_accepts_the_real_canonical_surface_app_id",
+          "sha256": "5814cbcc063d41e53c15299c01de6d6cb73e85e013b27553f88eedf99b765280",
+          "assertions": 3,
+          "law": true,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "editor_app_envelopes_carry_the_real_canonical_surface_app_id",
+          "sha256": "d1fd01e611e3eb6b8da2b8c18d9be2f02ca16a90e445a4a9132de9068f907cc8",
+          "assertions": 4,
+          "law": true,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "viewer_app_envelopes_carry_the_real_canonical_surface_app_id",
+          "sha256": "2018423f75c62a7bb54575c53f4425715ea1190dc5911b1c9c2da626f3318fba",
+          "assertions": 4,
+          "law": true,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "the_codec_table_mirrors_and_passes_through_a_populated_pair_without_aborting",
+          "sha256": "76d4209da4b22b6651d56c332beded9a32e499e9eaf18dec24e78480f5e2f095",
+          "assertions": 3,
+          "law": true,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "viewer_rejects_every_contract_mutating_verb",
+          "sha256": "a5f5da0343e8247afa6b4f4dd15e30a55524ef09347b18a79d45fb914fbe6614",
+          "assertions": 4,
+          "law": true,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "retained_command_work_borrows_original_fuel_and_fallback_charges_once",
+          "sha256": "6c666079c9058bccbd13066df8e6c4e1cc1ed80f37c6c50927a14191de7690fe",
+          "assertions": 10,
+          "law": true,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "tool_id",
+          "sha256": "e2e0afaefe53e17fd5902d684b370fc581dd355334d0fb7801e8634cbc5b561a",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "extent",
+          "sha256": "463dd57b0833b82c6c8e588ee749386e9228b36f145dfb18b181cc2bbd01eb52",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "step",
+          "sha256": "8b8e777d3bd13c8df0fb1e96f6bb01829a1f45b09f322762833dad39848b5c0f",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "begin_close",
+          "sha256": "c97663148173697c0f051c6df489578b2b12a525c5fca8ba66a7d702e4eb8090",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "close_step",
+          "sha256": "2c45226f481705040c618c799e705aa0e669f1479c2afb012cc69c3d5313b484",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "next_close_copy_byte_demand",
+          "sha256": "a710892351f49d8bab3bb8e7146a2708f314dbc11d52035c5b35ef92220e9639",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "next_close_capacity_byte_demand",
+          "sha256": "719bea23e8b2f29df921307b5ab5f957ba14a11b329268ae05bc9558ae118c51",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "next_close_release_byte_demand",
+          "sha256": "a76f0658a01c944f3365d24087f23ac2c98e02ac984af54628cc812066407662",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "next_close_depth_demand",
+          "sha256": "c8a111c53400ca9f8f2ece2f39f1de409f76bd6cc73777f77cd83ecfba02acb4",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "terminal_frame_release_bytes",
+          "sha256": "326e2e592f149867c7413cc9486d49671fe5eb4e10bd1669dad39d34971fca85",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "terminal_is_empty",
+          "sha256": "de79c77f43dbbfb9d3d13f7d0410fea6635f3ae14e2b6d47723b074e516eeb37",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "surface_owned_mutation_admission_forwards_exact_birth_and_preserves_every_denied_original",
+          "sha256": "db4b3f04ac11a6de73506c498ac96c94c6d54047160c76186cf44597200401d2",
+          "assertions": 13,
+          "law": true,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "verify",
+          "sha256": "a68e8798d01070b94fc7da320cfddb9fd1bf18f0f1c66799438792ca622ab824",
+          "assertions": 13,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "child_emission_private_typed_lanes_stage_three_original_batches_and_retire_all_cancelled_sources",
+          "sha256": "d133a84d039b81ffa30e9f101144020a17697c02dfe6609bebaa57686c2f4a78",
+          "assertions": 28,
+          "law": true,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        },
+        {
+          "name": "child_emission_private_group_row_frames_preserve_original_sources_on_every_input_cancel",
+          "sha256": "62273d90cb88def46713715860ab7e9be3ced7e2c75f3e0848ee31ca3cf4b54b",
+          "assertions": 16,
+          "law": true,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🧬️mutation-fixtures/🪟️surface/🧬️mutations/🦀️.rs",
+      "sha256": "4c7199168fd8a73f1828ab128cc282391f3c4cc3db92365fba5bd7cedc48a009",
+      "bytes": 1469,
+      "assertions": 0,
+      "functions": [
+        {
+          "name": "parse_op",
+          "sha256": "7f9cc7957fa35f35465edff7463d16a30ec48b6fa19a43e13393f8ea77d6847c",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🧬️mutation-fixtures/🪟️surface/🧬️mutations/🦀️.rs"
+        },
+        {
+          "name": "print_op",
+          "sha256": "73c0e09b5ad3ac079b9fe72c7c1736ad995bbc867cc08554aa3088b1427e85af",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🧬️mutation-fixtures/🪟️surface/🧬️mutations/🦀️.rs"
+        },
+        {
+          "name": "encode_op",
+          "sha256": "fbf1a48dbaeb68ca79a91a9f86aa3432b88cdfa22ce0a96ecfc3654a137dd39f",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🧬️mutation-fixtures/🪟️surface/🧬️mutations/🦀️.rs"
+        },
+        {
+          "name": "decode_op",
+          "sha256": "10ea8dc248f93fae6728011e0ccf24aee81c08d626a6904b8e729d5002b50967",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🧬️mutation-fixtures/🪟️surface/🧬️mutations/🦀️.rs"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🧬️mutation-fixtures/🪟️surface/🧬️mutations/📝️set-surface-count/🦀️.rs",
+      "sha256": "dc8bf8596f0e7380540d28c37e5fd3c044228aa9c4cd60ea684775cbd71289d8",
+      "bytes": 2901,
+      "assertions": 0,
+      "functions": [
+        {
+          "name": "parse_op",
+          "sha256": "49123b8eb9c7d1946206411226e98683c5c773b614238d6c9d1bff22550b8af7",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🧬️mutation-fixtures/🪟️surface/🧬️mutations/📝️set-surface-count/🦀️.rs"
+        },
+        {
+          "name": "print_op",
+          "sha256": "fa9bb9436ee67f3d6674666515d33ce40b8416f65edcca4766bb14e827e7e73e",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🧬️mutation-fixtures/🪟️surface/🧬️mutations/📝️set-surface-count/🦀️.rs"
+        },
+        {
+          "name": "encode_op",
+          "sha256": "9ad2c75ef688eaf34d50a9da30d4f4c67041cb546273809eb8d9dad0f400d84c",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🧬️mutation-fixtures/🪟️surface/🧬️mutations/📝️set-surface-count/🦀️.rs"
+        },
+        {
+          "name": "decode_op",
+          "sha256": "b99fdbd183eb049a723293f79751e850f159e1b6ea2815ff263fe6eca65e7cc9",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🧬️mutation-fixtures/🪟️surface/🧬️mutations/📝️set-surface-count/🦀️.rs"
+        },
+        {
+          "name": "diff",
+          "sha256": "810eff98c741f66836619c813e11550fed175a973aef252f4b54358e94ca3040",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🧬️mutation-fixtures/🪟️surface/🧬️mutations/📝️set-surface-count/🦀️.rs"
+        },
+        {
+          "name": "inverse",
+          "sha256": "c87cc85a21e0e5fbc4e1cf63a6f48b8c4b46299b6a32056109b7884288423eb5",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🧬️mutation-fixtures/🪟️surface/🧬️mutations/📝️set-surface-count/🦀️.rs"
+        },
+        {
+          "name": "label",
+          "sha256": "aed69f89670d93d43e2e4b59a32d2812d06ad7a4b2fdbdcce5b6a739a6fedd67",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🧬️mutation-fixtures/🪟️surface/🧬️mutations/📝️set-surface-count/🦀️.rs"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🎞️media-owner-context/🦀️.rs",
+      "sha256": "8c70f4ee5d5302024f08f04791e16fd598f6001c326776c434544e094147e9d8",
+      "bytes": 10952,
+      "assertions": 27,
+      "functions": [
+        {
+          "name": "as_any_mut",
+          "sha256": "df8e39bb1cd1c1d462ce7d49db35504ea607791507c08558e24c6770d5a0e6c2",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🎞️media-owner-context/🦀️.rs"
+        },
+        {
+          "name": "retirement_demands",
+          "sha256": "a49b378d92baf154703162e3afdffab43ca6874d4ee75fa5b13bef4312f0a957",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🎞️media-owner-context/🦀️.rs"
+        },
+        {
+          "name": "maintenance_step",
+          "sha256": "f7b08e56744eed6367c46a7ac664bfda869bb119d1e2099fe198b00e7e8cbdfb",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🎞️media-owner-context/🦀️.rs"
+        },
+        {
+          "name": "close_step",
+          "sha256": "7e65e9534afd57a55f321108b269d0d89e7a1e19baba49946946669defb22490",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🎞️media-owner-context/🦀️.rs"
+        },
+        {
+          "name": "terminal_is_empty",
+          "sha256": "56976410fedc159b277cf6ec290af894cb3dc8c0407a22df233fc3d48d9b12f9",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🎞️media-owner-context/🦀️.rs"
+        },
+        {
+          "name": "owner",
+          "sha256": "393085a85dd96df74e1d53bc325c5d1139cb852edbec9ea3cbd8d54951d7fd8e",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🎞️media-owner-context/🦀️.rs"
+        },
+        {
+          "name": "close_owner",
+          "sha256": "4d854e1f3e0436eda2fc6b9fc7ed2d8482c756e93d13e5ee022a4ac1cf08d3c7",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🎞️media-owner-context/🦀️.rs"
+        },
+        {
+          "name": "export",
+          "sha256": "256aec14880b8382ced9f0bfeb606c547baeeca1c2a3b22ae755a73b75b14e87",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🎞️media-owner-context/🦀️.rs"
+        },
+        {
+          "name": "payload",
+          "sha256": "af0687b17f08b22bda0a473492fddd44e430ae0c281b6f8a7bfc23fd8d920105",
+          "assertions": 1,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🎞️media-owner-context/🦀️.rs"
+        },
+        {
+          "name": "media_export_request_context_preserves_exact_supplied_owner",
+          "sha256": "c5c680a74fe13a492438559d3171abbd9d40e828191af23bf0afd363cdb8e5f3",
+          "assertions": 26,
+          "law": true,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🎞️media-owner-context/🦀️.rs"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-job-close/🦀️.rs",
+      "sha256": "fe61079eafdde1c6f1148f9cae1132421577d63e31d61bfcdd17952dc22dce0d",
+      "bytes": 10174,
+      "assertions": 1,
+      "functions": [
+        {
+          "name": "new",
+          "sha256": "0700ebd0c8ed1708c7324b262e7ff6c6ebc8a0afcfe299f233631c9604b4621e",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-job-close/🦀️.rs"
+        },
+        {
+          "name": "with_context",
+          "sha256": "1ded161b118a355ed35934196dce3dcbf6602ca16a972566a23e8d489926b781",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-job-close/🦀️.rs"
+        },
+        {
+          "name": "pending_emission",
+          "sha256": "3a8ffee5ba175c8c3e43b21e53a5e34d2d697296cc606e84424285a13eff5104",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-job-close/🦀️.rs"
+        },
+        {
+          "name": "completion_is_delivered",
+          "sha256": "990424ede84c7dbe9d9d5a618e9ef00f6aaad73679b03ad85e99ca985128200f",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-job-close/🦀️.rs"
+        },
+        {
+          "name": "pending_is_empty",
+          "sha256": "411dc2a64d986517bf40e6a12330790a7a34921343eeb893b5eff90799c4a975",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-job-close/🦀️.rs"
+        },
+        {
+          "name": "prepare_emission",
+          "sha256": "2ab48932fc6a81b9fd5f773899ba07e36c147ce6c0e2997dd43cddc9ba817699",
+          "assertions": 1,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-job-close/🦀️.rs"
+        },
+        {
+          "name": "completion_demand",
+          "sha256": "4f93baf0734e1a1fb7858bc7e7615417d63aaa34e70538fcb1de26ede18f0e44",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-job-close/🦀️.rs"
+        },
+        {
+          "name": "complete",
+          "sha256": "879bb7b22b43c713afe6af3e51c5f78cff239cff6284b77201fb332ada972b84",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-job-close/🦀️.rs"
+        },
+        {
+          "name": "begin_close",
+          "sha256": "46ab8555cbb9a580b6d7e7eba652277334c7b1d7c44de7662b6166853ea9291a",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-job-close/🦀️.rs"
+        },
+        {
+          "name": "terminal_is_empty",
+          "sha256": "12cf909e5f4bacc45ea405715c0f3adf250903b75ea4b4990321b2af534c1915",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-job-close/🦀️.rs"
+        },
+        {
+          "name": "command_is_released",
+          "sha256": "50f24599f04bc10ed349bd74abbbd9e13d65edbf66896dbc1cf5e23103b5b869",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-job-close/🦀️.rs"
+        },
+        {
+          "name": "demand",
+          "sha256": "97ebd12a78916689e5114529326bf923e205a78ed08f6700f8f1093e63ba5292",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-job-close/🦀️.rs"
+        },
+        {
+          "name": "close_step",
+          "sha256": "0502e234c133b6c34bde5beded80a1d7bee714af6da34c83dbe11b13cfe4d912",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-job-close/🦀️.rs"
+        },
+        {
+          "name": "job_quote",
+          "sha256": "ff431e5352f41157a59da2b4749e2d1cc8c18236bc05ae1afc032d6fc468d576",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-job-close/🦀️.rs"
+        },
+        {
+          "name": "retire_completion",
+          "sha256": "2a039e9c4c8284cc38a76465dfbb9b030920b657cc9af1ea2dbe8b0b2851c860",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-job-close/🦀️.rs"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-no-state/🦀️.rs",
+      "sha256": "372f3a6164fea491eb4a39bb75b66c3be35402ed6eee0baf88a30407ec22a68f",
+      "bytes": 1296,
+      "assertions": 0,
+      "functions": [
+        {
+          "name": "presence_store_disposer",
+          "sha256": "8672ada264b3b75a56d64d1c19d85dd45720b6d5a700eae4a6dd32b11b8cf87a",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-no-state/🦀️.rs"
+        },
+        {
+          "name": "transient_store_disposer",
+          "sha256": "3720302735fa3e87f726b0fca13a197218fa30cd6dd56333683ed2e743e98eb7",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-no-state/🦀️.rs"
+        },
+        {
+          "name": "presence_peer_retirement_factory",
+          "sha256": "8da06449b97b08dbd8ee82f44dba00caa6319c2985fe6c589dbf15eee3f0230d",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-no-state/🦀️.rs"
+        },
+        {
+          "name": "presence_local_root_retirement_factory",
+          "sha256": "d5badebb133e9d81409abff42b71e2dc305aeb6ed17ac29aa3883b65658bec52",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-no-state/🦀️.rs"
+        },
+        {
+          "name": "transient_local_root_retirement_factory",
+          "sha256": "761d2f5ea4a6370b2a84a04145c7af96c8f046ffc5b84e76031cd76e648e5b91",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-no-state/🦀️.rs"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-wire/🦀️.rs",
+      "sha256": "d5fca65ba226cc7137bc180f1f79792758677eb64921972feda15c9778435238",
+      "bytes": 8090,
+      "assertions": 0,
+      "functions": [
+        {
+          "name": "wire_source",
+          "sha256": "fc45b2f10ae23505db160a7880b8d18cb45211b521780bfe87c1c687a2f99ef4",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-wire/🦀️.rs"
+        },
+        {
+          "name": "wire_schema",
+          "sha256": "0c59bfbe04f4bf66450431c648a20df44835060d510b990d6d3a5c62bcf60903",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-wire/🦀️.rs"
+        },
+        {
+          "name": "preparation_factory",
+          "sha256": "14bf335ac9460490b200503c0bf827c81aa44c12151b86200b41750eec922d8d",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-wire/🦀️.rs"
+        },
+        {
+          "name": "wired_birth_demand",
+          "sha256": "c0bb02cf13b82fa6558f0b192462e48acdd3f4292f1c2096aeba44a2c9593d04",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-wire/🦀️.rs"
+        },
+        {
+          "name": "document_store_owners_source_demands",
+          "sha256": "8616d39962851565df768cfd8c47b2b3e84b053938e198a7b918a1614515bc2b",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-wire/🦀️.rs"
+        },
+        {
+          "name": "admit_document_store_owners",
+          "sha256": "7eecf50658ff0546c2203972eed246577076788ebd590d32b7b0919cbeed9fbd",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-wire/🦀️.rs"
+        },
+        {
+          "name": "funded_document_store_owners",
+          "sha256": "d7e75e65702e11d3e0093a7516e71d86efcd02973703768348b6732d22468cff",
+          "assertions": 0,
+          "law": false,
+          "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-wire/🦀️.rs"
+        }
+      ]
+    }
+  ],
+  "aggregate": {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures/🦀️.rs",
+    "lawName": "committed_wire_witnesses_are_the_canonical_wire",
+    "sha256": "cc7c2c9daf9121bf5de0cc537b9eda0882d833c452ccf0c1a6ffcd7aa723ca06"
+  },
+  "macro": {
+    "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📣️macros/📜️wp2-declaration/🦀️.rs",
+    "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/🧩️app/📣️proofs/🦀️.rs",
+    "sha256": "933cca2ca22439de997c15334a5d28a2652cd354b1ec5ab02bca3ed022ec7986",
+    "scopeReplacements": 6
+  },
+  "publicCodecTypes": [
+    "SurfaceSnapshot",
+    "SurfaceDiff",
+    "SurfaceMutation",
+    "SetSurfaceCount"
+  ],
+  "dependencies": [
+    {
+      "name": "semio-framework",
+      "path": "🧰️framework/📦️packages/🦀️rust/Cargo.toml",
+      "features": []
+    },
+    {
+      "name": "semio-framework-2d",
+      "path": "🧰️framework/🔨️modules/◻️2d/📦️packages/🦀️rust/Cargo.toml",
+      "features": []
+    },
+    {
+      "name": "semio-framework-artifact-reference",
+      "path": "🧰️framework/🔨️modules/🗿️artifact-reference/📦️packages/🦀️rust/Cargo.toml",
+      "features": []
+    },
+    {
+      "name": "semio-framework-async-macros",
+      "path": "🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust/Cargo.toml",
+      "features": []
+    },
+    {
+      "name": "semio-framework-diagnostic",
+      "path": "🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🦀️rust/Cargo.toml",
+      "features": []
+    },
+    {
+      "name": "semio-framework-dsl-record",
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust/Cargo.toml",
+      "features": []
+    },
+    {
+      "name": "semio-framework-dsl-record-derive",
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust/Cargo.toml",
+      "features": []
+    },
+    {
+      "name": "semio-framework-job",
+      "path": "🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust/Cargo.toml",
+      "features": []
+    },
+    {
+      "name": "semio-framework-os-kernel",
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/Cargo.toml",
+      "features": [
+        "mutation-testing"
+      ]
+    },
+    {
+      "name": "semio-framework-pack-json",
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust/Cargo.toml",
+      "features": []
+    },
+    {
+      "name": "semio-framework-plugin-app-builder",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️builder/🧩️app/📦️packages/🦀️rust/Cargo.toml",
+      "features": [
+        "artifact-app-testing"
+      ]
+    },
+    {
+      "name": "semio-framework-plugin-composition-publication",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📬️publication/📦️packages/🦀️rust/Cargo.toml",
+      "features": []
+    },
+    {
+      "name": "semio-framework-plugin-decl-app",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/🧩️app/📦️packages/🦀️rust/Cargo.toml",
+      "features": [
+        "artifact-app-testing"
+      ]
+    },
+    {
+      "name": "semio-framework-plugin-decl-emission",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/📨️emission/📦️packages/🦀️rust/Cargo.toml",
+      "features": []
+    },
+    {
+      "name": "semio-framework-plugin-decl-surface",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/🪟️surface/📦️packages/🦀️rust/Cargo.toml",
+      "features": [
+        "artifact-app-testing"
+      ]
+    },
+    {
+      "name": "semio-framework-plugin-decl-views",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/👁️view/📦️packages/🦀️rust/Cargo.toml",
+      "features": []
+    },
+    {
+      "name": "semio-framework-plugin-document-media",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🗃️document/📦️packages/🦀️rust/Cargo.toml",
+      "features": [
+        "artifact-app-testing"
+      ]
+    },
+    {
+      "name": "semio-framework-plugin-ownership",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏛️ownership/🧱️owner/📦️packages/🦀️rust/Cargo.toml",
+      "features": []
+    },
+    {
+      "name": "semio-framework-plugin-reactor-app",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🔌️app/📦️packages/🦀️rust/Cargo.toml",
+      "features": []
+    },
+    {
+      "name": "semio-framework-plugin-retained-command",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/📦️packages/🦀️rust/Cargo.toml",
+      "features": [
+        "artifact-app-testing"
+      ]
+    },
+    {
+      "name": "semio-framework-plugin-testing-laws",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/📦️packages/🦀️rust/Cargo.toml",
+      "features": [
+        "artifact-app-testing"
+      ]
+    },
+    {
+      "name": "semio-framework-plugin-window-transient",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/📦️packages/🦀️rust/Cargo.toml",
+      "features": []
+    },
+    {
+      "name": "semio-framework-schema",
+      "path": "🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust/Cargo.toml",
+      "features": []
+    },
+    {
+      "name": "semio-framework-schema-composition",
+      "path": "🧰️framework/🔨️modules/🧬️schema/🧩️composition/📦️packages/🦀️rust/Cargo.toml",
+      "features": []
+    },
+    {
+      "name": "semio-framework-trace",
+      "path": "🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust/Cargo.toml",
+      "features": []
+    },
+    {
+      "name": "semio-framework-ui-contract",
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust/Cargo.toml",
+      "features": []
+    },
+    {
+      "name": "semio-framework-ui-locale",
+      "path": "🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust/Cargo.toml",
+      "features": []
+    },
+    {
+      "name": "semio-framework-ui-runtime",
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust/Cargo.toml",
+      "features": []
+    },
+    {
+      "name": "semio-framework-value",
+      "path": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml",
+      "features": []
+    },
+    {
+      "name": "semio-framework-value-derive",
+      "path": "🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust/Cargo.toml",
+      "features": []
+    }
+  ]
+}

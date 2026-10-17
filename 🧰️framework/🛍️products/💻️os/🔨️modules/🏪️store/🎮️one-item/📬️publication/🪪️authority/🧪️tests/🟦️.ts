@@ -17,7 +17,6 @@ test("Store publication authority exposes original native semantic fields", () =
   expect(db.query("SELECT original FROM publication").get()).toEqual({ original });
   expect(Buffer.from(JSON.parse(original).actor).equals(Buffer.from(fixture.authority.actor))).toBe(true);
   db.close();
-  console.log("[DEBUG] independent Node exact original publication UTF8 and SQLite immutable field conservation agree with shared semantic authority fixture");
   const source = readFileSync(new URL("🦀️.rs", root), "utf8");
   expect(source).toContain("impl crate::command::ArtifactCanonicalEditAuthority for ArtifactStoreOneItemLiveAuthority");
   expect(source).toContain("&self.actor");

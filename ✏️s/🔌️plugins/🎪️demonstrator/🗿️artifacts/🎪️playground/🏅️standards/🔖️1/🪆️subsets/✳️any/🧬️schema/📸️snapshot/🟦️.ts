@@ -23,6 +23,10 @@ type demonstratorPlaygroundSnapshotGuardSizeBounds = { readonly minItems?: numbe
 
 export const demonstratorPlaygroundSnapshotGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : demonstratorPlaygroundSnapshotGuardReject(at, "value is not an object");
+export const demonstratorPlaygroundSnapshotGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) demonstratorPlaygroundSnapshotGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const demonstratorPlaygroundSnapshotGuardArray = (value: unknown, at: string, bounds: demonstratorPlaygroundSnapshotGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return demonstratorPlaygroundSnapshotGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) demonstratorPlaygroundSnapshotGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -60,8 +64,7 @@ export const demonstratorPlaygroundSnapshotGuardConstant = <T extends string | n
 //#endregion 🚪️Parsers
 
 export function parsePlaygroundSnapshot(value: unknown, at = "$"): PlaygroundSnapshot {
-  const row = demonstratorPlaygroundSnapshotGuardObject(value, at);
-  if (Reflect.ownKeys(row).some(key => key !== "schema")) demonstratorPlaygroundSnapshotGuardReject(at, "snapshot has unknown persisted fields");
+  const row = demonstratorPlaygroundSnapshotGuardClosed(demonstratorPlaygroundSnapshotGuardObject(value, at), at, ["schema"]);
   return {
     schema: demonstratorPlaygroundSnapshotGuardString(row["schema"], `${at}.schema`),
   };

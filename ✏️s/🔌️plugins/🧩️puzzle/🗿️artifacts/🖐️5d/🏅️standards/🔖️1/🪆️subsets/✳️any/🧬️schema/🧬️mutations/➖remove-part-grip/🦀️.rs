@@ -1,7 +1,6 @@
 //! ➖ Puzzle5d mutation — `RemovePartGrip`: detaches a rim grip from a part (captures cascade —
 //! any fastener whose `source`/`target` referenced this grip is severed too).
 use crate::standards::v1::subsets::any::schema::diff::Puzzle5dDiff;
-use crate::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation;
 use crate::Puzzle5dSnapshot;
 
 //#region 🔖️Mutation
@@ -19,17 +18,23 @@ pub struct RemovePartGrip {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn remove_part_grip(part_id: String, grip_id: String) -> Puzzle5dMutation {
-    Puzzle5dMutation::RemovePartGrip(RemovePartGrip { part_id, grip_id })
+pub fn remove_part_grip<Op>(part_id: String, grip_id: String) -> Op
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::remove_part_grip::RemovePartGrip>,
+{
+    Op::from(RemovePartGrip { part_id, grip_id })
 }
 
-impl protocol::MutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for RemovePartGrip {
+impl<Op> protocol::MutationKind<Puzzle5dSnapshot, Op> for RemovePartGrip
+where
+    Op: protocol::Mutation<Puzzle5dSnapshot, Diff = Puzzle5dDiff> + From<RemovePartGrip> + From<crate::standards::v1::subsets::any::schema::mutations::add_part_grip::AddPartGrip> + From<crate::standards::v1::subsets::any::schema::mutations::connect_grips::ConnectGrips>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "part-grip", kind: "remove-part-grip", record: "RemovedPartGrip" };
 
     fn diff(&self, base: &Puzzle5dSnapshot) -> protocol::MutationOutcome<Puzzle5dDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Puzzle5dSnapshot) -> Result<Vec<Puzzle5dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Puzzle5dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

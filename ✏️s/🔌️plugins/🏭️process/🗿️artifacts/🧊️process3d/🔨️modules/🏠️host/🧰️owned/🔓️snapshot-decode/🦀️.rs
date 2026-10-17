@@ -199,7 +199,7 @@ impl Drop for Process3dSnapshotDecodeAuthority {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum Process3dSnapshotDecodeState {
+pub(super) enum Process3dSnapshotDecodeState {
     AwaitToken,
     Ingest,
     Drive,

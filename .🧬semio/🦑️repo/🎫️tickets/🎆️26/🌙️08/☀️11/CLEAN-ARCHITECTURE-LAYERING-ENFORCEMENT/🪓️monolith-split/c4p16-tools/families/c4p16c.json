@@ -1,0 +1,15 @@
+{
+ "name": "c4p16c",
+ "crates": [
+  "semio-s-artifact-stdio-zip",
+  "semio-s-artifact-stdio-zip-test-oracle"
+ ],
+ "note": "CENSUS4-PKG-16 split family c4p16c",
+ "base": {
+  "rev": "b84bf526c7b",
+  "crates": [
+   "semio-s-artifact-stdio-zip",
+   "semio-s-artifact-stdio-zip-test-oracle"
+  ]
+ }
+}

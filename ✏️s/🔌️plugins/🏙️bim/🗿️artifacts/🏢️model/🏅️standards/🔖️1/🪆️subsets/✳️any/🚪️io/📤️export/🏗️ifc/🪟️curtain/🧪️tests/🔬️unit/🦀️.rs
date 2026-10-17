@@ -1,5 +1,5 @@
 use super::*;
-use crate::standards::v1::subsets::any::io::export::ifc::testkit::{count, document, house, real, rows, string};
+use crate::standards::v1::subsets::any::io::export::ifc::testkit::{count, document, framed, house, real, rows, string};
 
 #[test]
 fn a_curtain_wall_aggregates_its_mullions_and_its_panels() {
@@ -23,15 +23,6 @@ fn the_curtain_wall_reports_its_length_height_and_side_area() {
 }
 
 use crate::standards::v1::subsets::any::schema::snapshot::{CurtainPanel, CurtainPanelOverride, ModelSnapshot};
-
-/// 🪟️ The house whose curtain wall has a door in its first cell and an open second cell.
-pub(crate) fn framed() -> ModelSnapshot {
-    let mut model = house();
-    let door_type = model.door_types.keys().next().cloned().expect("a door type");
-    model.curtain_panel_overrides.insert("ov-door".into(), CurtainPanelOverride { curtain: "cw-1".into(), u: 0, v: 0, panel: CurtainPanel::Door { door_type } });
-    model.curtain_panel_overrides.insert("ov-open".into(), CurtainPanelOverride { curtain: "cw-1".into(), u: 1, v: 0, panel: CurtainPanel::Empty });
-    model
-}
 
 #[test]
 fn a_door_panel_is_an_ifc_door_of_the_curtain_wall_and_an_open_cell_adds_nothing() {

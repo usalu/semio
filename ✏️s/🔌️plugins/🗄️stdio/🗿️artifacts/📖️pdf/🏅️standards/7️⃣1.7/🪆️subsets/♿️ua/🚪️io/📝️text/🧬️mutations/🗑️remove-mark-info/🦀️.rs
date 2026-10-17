@@ -1,6 +1,6 @@
 //! 🗑️ Direct text codec for `remove-mark-info`.
 
-use crate::standards::v1_7::subsets::ua::schema::mutations::RemoveMarkInfo;
+use crate::standards::v1_7::subsets::ua::schema::mutations::remove_mark_info::RemoveMarkInfo;
 
 //#region 🔖️Identity
 pub const OPCODE: &str = "remove-mark-info";
@@ -20,7 +20,5 @@ pub fn parse(text: &str) -> Result<RemoveMarkInfo, String> {
 //#endregion 🔖️Codec
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

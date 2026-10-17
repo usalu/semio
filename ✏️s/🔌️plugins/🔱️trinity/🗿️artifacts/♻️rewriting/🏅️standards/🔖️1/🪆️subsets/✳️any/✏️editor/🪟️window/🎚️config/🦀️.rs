@@ -1,7 +1,7 @@
 //! 🎚️ Reusable configuration contract for Rewriting graph windows.
 
 #[path = "🧬️schema/🦀️.rs"]
-mod schema;
+pub mod schema;
 pub use schema::{RewritingWindowConfig, RewritingWindowConfigDiff};
 
 impl pack::snapshot::ArtifactDsl for RewritingWindowConfig {
@@ -72,7 +72,7 @@ macro_rules! window_owner {
     ($name:ident, $kind:ident) => {
         pub struct $name;
         impl semio_framework_plugin::WindowConfigOwner for $name {
-            const WINDOW_KIND_ID: &'static str = super::$kind;
+            const WINDOW_KIND_ID: &'static str = crate::editor::rewriting::ids::$kind;
             const SCHEMA: &'static str = "trinity.rewritingwindowcfg";
             const MAXIMUM_PUBLICATION_BYTES: usize = 4096;
             type State = RewritingWindowConfig;
@@ -120,17 +120,15 @@ pub fn addressed(view: &semio_framework_plugin::ViewModel, mutation: RewritingWi
     let window_id = view.window_id.as_deref().ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("trinity.rewriting.window-required"), "Rewriting view changes require a concrete window"))?;
     let kind = view.window_instances.iter().find(|window| window.id == window_id).map(|window| window.window_kind_id.as_str());
     match kind {
-        Some(super::TRINITY_REWRITING_PLAY_WINDOW_BEFORE) => Ok(WindowConfigMutation::of::<BeforeWindowConfigOwner>(window_id, mutation)),
-        Some(super::TRINITY_REWRITING_PLAY_WINDOW_AFTER) => Ok(WindowConfigMutation::of::<AfterWindowConfigOwner>(window_id, mutation)),
-        Some(super::TRINITY_REWRITING_PLAY_WINDOW_LHS) => Ok(WindowConfigMutation::of::<LhsWindowConfigOwner>(window_id, mutation)),
-        Some(super::TRINITY_REWRITING_PLAY_WINDOW_RHS) => Ok(WindowConfigMutation::of::<RhsWindowConfigOwner>(window_id, mutation)),
+        Some(crate::editor::rewriting::ids::TRINITY_REWRITING_PLAY_WINDOW_BEFORE) => Ok(WindowConfigMutation::of::<BeforeWindowConfigOwner>(window_id, mutation)),
+        Some(crate::editor::rewriting::ids::TRINITY_REWRITING_PLAY_WINDOW_AFTER) => Ok(WindowConfigMutation::of::<AfterWindowConfigOwner>(window_id, mutation)),
+        Some(crate::editor::rewriting::ids::TRINITY_REWRITING_PLAY_WINDOW_LHS) => Ok(WindowConfigMutation::of::<LhsWindowConfigOwner>(window_id, mutation)),
+        Some(crate::editor::rewriting::ids::TRINITY_REWRITING_PLAY_WINDOW_RHS) => Ok(WindowConfigMutation::of::<RhsWindowConfigOwner>(window_id, mutation)),
         _ => Err(Fault::new(FaultOrigin::App, FaultCode::new("trinity.rewriting.graph-window-required"), "Rewriting view changes require a graph window")),
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️window-config-ownership/🦀️.rs"]
-mod tests;
+
 
 #[path = "🧵️job/🦀️.rs"]
 pub mod job;

@@ -17,7 +17,7 @@ import { AGENT_BRIDGE_OFFER_ENDPOINT, BRIDGE_DISCOVERY_MIN_INTERVAL_MS, bridgePr
 export { AGENT_BRIDGE_OFFER_ENDPOINT, AGENT_BRIDGE_OFFER_SCHEMA_V1, AGENT_BRIDGE_RENDEZVOUS_SCHEMA_VERSION, agentBridgeOfferAnswerV1, agentBridgeOfferPathV1, agentBridgeOfferScopeFromDelegationsV1, parseAgentBridgeOfferRecordV2, parseAgentBridgeOfferScopeV1, selectAgentBridgeOfferV1, type AgentBridgeOfferRecordV2, type AgentBridgeOfferScopeKindV2, type AgentBridgeOfferScopeV1, BRIDGE_DISCOVERY_MAX_INTERVAL_MS, BRIDGE_DISCOVERY_MIN_INTERVAL_MS, bridgeProtocols, fetchAgentBridgeConfig, isAdmissibleBridgeUrl, nextBridgeDiscoveryIntervalMs, parseAgentBridgeOffer, sameAgentBridgeOffer, type AgentBridgeConfig, type AgentBridgeOfferAnswerV1, type BridgeOfferFetch } from "./🛰️offer/🟦️.ts";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { registerUiTranslationBundles } from "@semio-tech/ui-react";
-import { defaultShellState, reduce, type ReduceResult, type ShellCommand, type ShellState } from "../../../../🖥️shell/🟦️.ts";
+import { defaultShellState, reduce, type ReduceResult, type ShellCommand, type ShellState } from "@semio-tech/framework/shell";
 import {
   BRIDGE_VERSION,
   NO_BRIDGE_FLAGS,

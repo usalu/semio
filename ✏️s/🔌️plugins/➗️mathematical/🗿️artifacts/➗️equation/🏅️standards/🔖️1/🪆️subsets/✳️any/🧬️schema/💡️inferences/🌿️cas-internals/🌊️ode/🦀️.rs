@@ -7,7 +7,7 @@
 
 use crate::cas::expr::{Expr, Kind, RelationalOperator};
 use crate::cas::fnkind::FnKind;
-use crate::polynomial::PolyU;
+use crate::polynomial::univariate::PolyU;
 use number::{Integer, Rational};
 
 // #region 🔖️OdeSolution

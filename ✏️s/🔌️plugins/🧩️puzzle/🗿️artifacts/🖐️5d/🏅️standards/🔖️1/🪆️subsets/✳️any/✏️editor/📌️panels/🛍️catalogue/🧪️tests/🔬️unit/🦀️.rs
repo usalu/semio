@@ -1,5 +1,44 @@
-use super::*;
-use crate::editor::puzzle5d::unit_tests::context::*;
+use crate::editor::puzzle5d::terminology::Puzzle5dLabels;
+use crate::editor::puzzle5d::view::Puzzle5dScene;
+use semio_framework_plugin::BuiltNode;
+use semio_framework_plugin::TreeWindows;
+use semio_framework_pack_json::{json, Value};
+#[allow(unused_imports)]
+use crate::editor::puzzle5d::interaction::ui_label;
+#[allow(unused_imports)]
+use crate::editor::puzzle5d::catalog::{catalog_kind_label, puzzle5d_inferred_kind_rows};
+#[allow(unused_imports)]
+use crate::editor::puzzle5d::entities::PUZZLE5D_PLAY_CONTROLLER_ID;
+#[allow(unused_imports)]
+use semio_framework_plugin::tree_item_desc;
+#[allow(unused_imports)]
+use semio_framework_plugin::tree_item_with_action_draggable;
+#[allow(unused_imports)]
+use semio_framework_plugin::ActionFactory;
+#[allow(unused_imports)]
+use semio_framework_ui_locale::LocalizedLabel;
+#[allow(unused_imports)]
+use semio_framework_plugin::PanelGroup;
+#[allow(unused_imports)]
+use semio_framework_plugin::PanelTabDefinition;
+#[allow(unused_imports)]
+use semio_framework_plugin::PanelTabKind;
+#[allow(unused_imports)]
+use semio_framework_plugin::PanelTreeBuilder;
+#[allow(unused_imports)]
+use semio_framework_plugin::PluginAssemblyError;
+#[allow(unused_imports)]
+use semio_framework_plugin::UiMapBuilder;
+#[allow(unused_imports)]
+use semio_framework_plugin::UiText;
+#[allow(unused_imports)]
+use semio_framework_plugin::UiValue;
+#[allow(unused_imports)]
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
+#[allow(unused_imports)]
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL;
+use crate::editor::puzzle5d::panels::catalogue::*;
+use crate::editor::puzzle5d::testkit::*;
 
 #[test]
 fn catalogue_tree_lists_all_four_kind_sections() {
@@ -36,7 +75,7 @@ fn labels() -> &'static Puzzle5dLabels {
 /// 🏗️ A document whose `kindCatalogs.parts` carries `kinds` rows.
 fn scaled_scene(kinds: usize) -> Puzzle5dScene {
     let rows: Vec<Value> = (0..kinds).map(|index| json!({ "id": format!("kind-{index}"), "name": format!("Kind {index}") })).collect();
-    let mut document = crate::editor::puzzle5d::empty_document();
+    let mut document = crate::editor::puzzle5d::entities::empty_document();
     document.kind_catalogs = Some(json!({ "parts": rows, "grips": [], "fasteners": [], "ropes": [] }));
     Puzzle5dScene { document, runtime: crate::editor::puzzle5d::config::Puzzle5dRuntime::default(), active_utility: String::new(), interaction: Default::default() }
 }
@@ -120,17 +159,17 @@ fn a_catalogue_window_materialises_its_slice_with_row_activations_intact() {
 #[test]
 fn a_catalogue_less_document_offers_the_kinds_it_already_names() {
     drain_retired_ui_owners();
-    let mut document = crate::editor::puzzle5d::empty_document();
+    let mut document = crate::editor::puzzle5d::entities::empty_document();
     document.parts = ["capsule", "core", "capsule"]
         .iter()
         .enumerate()
-        .map(|(index, kind)| crate::editor::puzzle5d::Puzzle5dPart {
+        .map(|(index, kind)| crate::editor::puzzle5d::entities::Puzzle5dPart {
             id: format!("part-{index}"),
             part_kind: (*kind).into(),
             anchor: Default::default(),
-            part_2d: crate::editor::puzzle5d::Puzzle5dPart2d { radius: 12.0, ..Default::default() },
+            part_2d: crate::editor::puzzle5d::entities::Puzzle5dPart2d { radius: 12.0, ..Default::default() },
             part_3d: Default::default(),
-            grips: vec![crate::editor::puzzle5d::Puzzle5dGrip { id: "g0".into(), grip_kind: "socket".into(), grip_2d: Default::default(), grip_3d: Default::default() }],
+            grips: vec![crate::editor::puzzle5d::entities::Puzzle5dGrip { id: "g0".into(), grip_kind: "socket".into(), grip_2d: Default::default(), grip_3d: Default::default() }],
         })
         .collect();
     assert!(document.kind_catalogs.is_none(), "this law measures the catalogue-less path");
@@ -154,7 +193,7 @@ fn a_catalogue_less_document_offers_the_kinds_it_already_names() {
 fn an_authored_catalogue_slice_wins_over_the_inference() {
     drain_retired_ui_owners();
     let mut scene = scaled_scene(3);
-    scene.document.parts = vec![crate::editor::puzzle5d::Puzzle5dPart {
+    scene.document.parts = vec![crate::editor::puzzle5d::entities::Puzzle5dPart {
         id: "part-0".into(),
         part_kind: "not-in-the-catalogue".into(),
         anchor: Default::default(),

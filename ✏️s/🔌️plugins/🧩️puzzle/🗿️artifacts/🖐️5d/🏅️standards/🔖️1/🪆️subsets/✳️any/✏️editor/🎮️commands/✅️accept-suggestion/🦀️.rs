@@ -1,7 +1,8 @@
 //! ✅️ `accept-suggestion` command.
-
 use crate::editor::puzzle5d::precompute::brush::puzzle5d_brush_placement;
-use crate::editor::puzzle5d::{puzzle5d_paste_mutations, Puzzle5dActionCtx, Puzzle5dFreshIds, PUZZLE5D_GRANULARITY_PART};
+
+use crate::editor::puzzle5d::entities::{puzzle5d_paste_mutations, Puzzle5dFreshIds, PUZZLE5D_GRANULARITY_PART};
+use crate::editor::puzzle5d::interaction::Puzzle5dActionCtx;
 use semio_framework_pack_json::Value;
 
 /// ✅️ Places the `index`-th (else the hovered) free candidate the brush suggestions run found for the menu's

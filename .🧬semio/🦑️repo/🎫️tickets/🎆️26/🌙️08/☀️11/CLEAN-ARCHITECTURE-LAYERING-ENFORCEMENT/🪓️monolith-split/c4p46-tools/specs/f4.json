@@ -1,0 +1,78 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛠️ShellHelpers/🔩️plumbing/🟦️.ts",
+ "importers": "auto",
+ "children": [
+  {
+   "dir": "🆔️action-ids",
+   "doc": "/** 🆔️ Shell plumbing, action ids: the note world-navigation and shell-command action ids, the framework-reserved action id set, the undeclared-action diagnostic, the note shell-command action builder, the shell and manifest label texts and the tutorial-recording exclusion set. */",
+   "lines": [
+    [
+     77,
+     88
+    ],
+    [
+     204,
+     321
+    ],
+    [
+     516,
+     519
+    ]
+   ]
+  },
+  {
+   "dir": "🔀️example-switching",
+   "doc": "/** 🔀️ Shell plumbing, example switching: the active-example action id, whether an app switches or offers examples, the active-example action builder and the remembered and navbar example ids read back from dispatches and history upserts. */",
+   "lines": [
+    [
+     199,
+     202
+    ],
+    [
+     323,
+     386
+    ]
+   ]
+  },
+  {
+   "dir": "🎮️leftover-views",
+   "doc": "/** 🎮️ Shell plumbing, leftover interaction views: the interaction view, state and world gumball pose a program leaves behind in its output. */",
+   "lines": [
+    [
+     388,
+     514
+    ]
+   ]
+  },
+  {
+   "dir": "👥️presence-identity",
+   "doc": "/** 👥️ Shell plumbing, presence identity: the presence storage key and timing constants, the ephemeral snapshot bound and peer fields and the packed client identity. */",
+   "lines": [
+    [
+     521,
+     635
+    ]
+   ]
+  },
+  {
+   "dir": "📥️downloads-and-file-requests",
+   "doc": "/** 📥️ Shell plumbing, downloads and file requests: the media-export and data-url downloads, the backbone file and folder path requests, the file open and selection requests and the bounded blob reads. */",
+   "lines": [
+    [
+     700,
+     936
+    ]
+   ]
+  },
+  {
+   "dir": "🚀️effect-dispatch",
+   "doc": "/** 🚀️ Shell plumbing, effect dispatch: the host effect dispatcher that encodes action and command invocations. */",
+   "lines": [
+    [
+     938,
+     1004
+    ]
+   ]
+  }
+ ]
+}

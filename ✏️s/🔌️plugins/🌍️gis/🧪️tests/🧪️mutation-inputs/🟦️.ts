@@ -20,7 +20,7 @@ const visit = (path: string): void => {
 };
 visit(resolve(root, "🗿️artifacts"));
 const validator = new Validator();
-validator.setSchemas(Object.fromEntries(documents));
+validator.schemas = Object.fromEntries(documents);
 
 for (const row of fixture.cases) test(`GIS ${row.kind} publishes editable localized inputs`, () => {
   const schema = JSON.parse(readFileSync(resolve(root, row.schema), "utf8"));
@@ -28,7 +28,7 @@ for (const row of fixture.cases) test(`GIS ${row.kind} publishes editable locali
   const audit = mutationInputAudit(schema, id => documents.get(id));
   expect(audit.findings).toEqual([]);
   expect(audit.inputs.map(input => input.id)).toEqual(row.inputs);
-  for (const input of audit.inputs) expect(input.label.native).toMatchObject({ en: expect.any(String), de: expect.any(String) });
+  for (const input of audit.inputs) expect(input.label).toMatchObject({ native: { en: expect.any(String), de: expect.any(String) } });
   const index = audit.inputs.find(input => input.id === "/index" || input.id === "/toIndex");
   if (index) expect(argControl(index).kind).toBe("stepper");
 });

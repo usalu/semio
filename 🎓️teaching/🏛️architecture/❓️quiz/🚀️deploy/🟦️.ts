@@ -40,14 +40,20 @@ import { connect } from "node:tls";
 import { gzipSync } from "node:zlib";
 import { cargoTargetDirectory } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
 import { workspaceCargoVersion } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts";
-import { runRepositoryCommand as runOwnedCommand } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts";
-import { PRESENCE_PROTOCOL, decodeCommandOutcome, decodePresenceFrame, encodeCommandEnvelope, encodePresenceFrame, encodeQueryEnvelope, presenceSocketUrl, type PresenceFrame } from "../../../../🧰️framework/🛍️products/🖥️server/🟦️.ts";
+import { runRepositoryCommand as runOwnedCommand, type RepositoryCommandPolicyV1 } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts";
+import type { ScriptInvocation } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { PRESENCE_PROTOCOL, type PresenceFrame } from "../../../../🧰️framework/🛍️products/🖥️server/🧬️wire-types/🟦️.ts";
+import { decodeCommandOutcome, decodePresenceFrame, encodeCommandEnvelope, encodePresenceFrame, encodeQueryEnvelope } from "../../../../🧰️framework/🛍️products/🖥️server/🔤️codec/🟦️.ts";
+import { presenceSocketUrl } from "../../../../🧰️framework/🛍️products/🖥️server/🛣️routes-and-sockets/🟦️.ts";
 import type { IdentityClaim } from "../../../../🧰️framework/🛍️products/❓️quiz/🧬️schema/🟦️.ts";
 import { TEACHING_WORKSPACE } from "../../../🛂️proctor/🏗️bootstrap/🟦️.ts";
 import catalog from "../🔣️.json" with { type: "json" };
 import deployment from "./🔣️.json" with { type: "json" };
 
 //#region 🔣️Constants
+/** ⏱️ The command policy of every deploy child: no deadline of its own beyond the invocation, ordinary unbounded output. */
+const QUIZ_COMMAND_POLICY: RepositoryCommandPolicyV1 = { version: 1, maximumElapsedMilliseconds: 0, output: null };
+
 /** 🌐️ The host the CDN serves the site at. */
 export const QUIZ_SITE_HOST = deployment.site.host;
 
@@ -215,9 +221,9 @@ export function sourceRevision(repoRoot: string): Readonly<{ revision: string; c
  * catalog and every quiz it names and exits non-zero with the issues. The release profile and a private target directory keep
  * the check off the debug executable a running dev proctor holds open (Windows refuses to replace a running image, and
  * uplifted binaries are hard links into the shared build directory). */
-export async function checkQuizCatalog(repoRoot: string): Promise<void> {
+export async function checkQuizCatalog(invocation: ScriptInvocation, repoRoot: string): Promise<void> {
   const env = { ...process.env, CARGO_TARGET_DIR: `${cargoTargetDirectory(repoRoot)}-architecture-quiz` };
-  await runOwnedCommand("cargo", ["run", "--release", "--quiet", "--package", "teaching-proctor", "--bin", "proctor", "--", "check", resolve(repoRoot, CATALOG)], join(repoRoot, TEACHING_WORKSPACE), "architecture-quiz:check", undefined, { env });
+  await runOwnedCommand(invocation, "cargo", ["run", "--release", "--quiet", "--package", "teaching-proctor", "--bin", "proctor", "--", "check", resolve(repoRoot, CATALOG)], join(repoRoot, TEACHING_WORKSPACE), "architecture-quiz:check", QUIZ_COMMAND_POLICY, { env });
 }
 //#endregion 🧰️Tools
 
@@ -406,13 +412,13 @@ async function imageLabels(reference: string, signal?: AbortSignal): Promise<Rec
 /** 🏗️ `docker-image-build [--tag <tag>] [--jobs <n>]` — `docker build` of the proctor image from the repository root with
  * the workspace version, the commit and the commit time as OCI labels, streaming every BuildKit step; `--jobs` caps the
  * builder's parallel compiler jobs. */
-export async function buildQuizImage(repoRoot: string, segments: readonly string[]): Promise<void> {
+export async function buildQuizImage(invocation: ScriptInvocation, repoRoot: string, segments: readonly string[]): Promise<void> {
   const reference = `${QUIZ_IMAGE_REPOSITORY}:${flag(segments, "--tag") ?? "latest"}`;
   const jobs = flag(segments, "--jobs");
   const { revision, created } = sourceRevision(repoRoot);
   const labels = { VERSION: workspaceCargoVersion(repoRoot), REVISION: revision, CREATED: created };
   say(`docker ${await dockerServerVersion()}; building ${reference} (${labels.VERSION}, ${revision})`);
-  await runOwnedCommand("docker", ["build", "--progress=plain", ...Object.entries({ ...labels, ...(jobs ? { CARGO_BUILD_JOBS: jobs } : {}) }).flatMap(([name, value]) => ["--build-arg", `${name}=${value}`]), "--file", DOCKERFILE, "--tag", reference, "."], repoRoot, "architecture-quiz:docker-image-build");
+  await runOwnedCommand(invocation, "docker", ["build", "--progress=plain", ...Object.entries({ ...labels, ...(jobs ? { CARGO_BUILD_JOBS: jobs } : {}) }).flatMap(([name, value]) => ["--build-arg", `${name}=${value}`]), "--file", DOCKERFILE, "--tag", reference, "."], repoRoot, "architecture-quiz:docker-image-build", QUIZ_COMMAND_POLICY);
   say(`${reference} ${await dockerOk(["image", "inspect", "--format", "{{.Id}} {{.Os}}/{{.Architecture}} {{.Size}} bytes", reference])}`);
 }
 
@@ -949,7 +955,7 @@ export function deployCheckSteps(targets: Readonly<Record<string, unknown>>): re
  * no drift from `🔣️.json`, the package's sources against the compiler, the catalog valid in the Rust core, the site
  * built and verified as the CDN artifact, the image built, the image check, the stack check, and the package's
  * end-to-end gate. Nothing is pushed or uploaded. */
-export async function checkQuizDeployment(repoRoot: string, bundleRoot: string, build: () => Promise<void>, segments: readonly string[]): Promise<void> {
+export async function checkQuizDeployment(invocation: ScriptInvocation, repoRoot: string, bundleRoot: string, build: () => Promise<void>, segments: readonly string[]): Promise<void> {
   const tagged = flag(segments, "--tag") ? ["--tag", flag(segments, "--tag")!] : [];
   const jobs = flag(segments, "--jobs") ? ["--jobs", flag(segments, "--jobs")!] : [];
   const targets = (JSON.parse(readFileSync(join(bundleRoot, "📋️project.json"), "utf8")) as { targets: Record<string, unknown> }).targets;
@@ -958,13 +964,13 @@ export async function checkQuizDeployment(repoRoot: string, bundleRoot: string, 
       const drift = deploymentDrift(repoRoot);
       if (drift.length > 0) throw new Error(`the deployment drifted:\n- ${drift.join("\n- ")}`);
     },
-    "sources type-checked": () => runOwnedCommand("bun", ["repo", "run", `${PROJECT}:typecheck`], repoRoot, "architecture-quiz:typecheck"),
-    "catalog valid in the Rust core": () => checkQuizCatalog(repoRoot),
+    "sources type-checked": () => runOwnedCommand(invocation, "bun", ["repo", "run", `${PROJECT}:typecheck`], repoRoot, "architecture-quiz:typecheck", QUIZ_COMMAND_POLICY),
+    "catalog valid in the Rust core": () => checkQuizCatalog(invocation, repoRoot),
     "site built and verified as the CDN artifact": () => publishQuizSite(bundleRoot, build),
-    "proctor image built": () => buildQuizImage(repoRoot, [...tagged, ...jobs]),
+    "proctor image built": () => buildQuizImage(invocation, repoRoot, [...tagged, ...jobs]),
     "proctor image checked": () => checkQuizImage(repoRoot, tagged),
     "stack checked": () => checkQuizStack(tagged),
-    "end-to-end gate": () => runOwnedCommand("bun", ["repo", "run", `${PROJECT}:test-e2e`], repoRoot, "architecture-quiz:test-e2e"),
+    "end-to-end gate": () => runOwnedCommand(invocation, "bun", ["repo", "run", `${PROJECT}:test-e2e`], repoRoot, "architecture-quiz:test-e2e", QUIZ_COMMAND_POLICY),
   };
   const steps = deployCheckSteps(targets);
   const { signal, release } = interruption();

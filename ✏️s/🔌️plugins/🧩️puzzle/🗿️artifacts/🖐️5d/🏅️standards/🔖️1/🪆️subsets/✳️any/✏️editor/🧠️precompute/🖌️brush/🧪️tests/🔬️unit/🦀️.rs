@@ -2,8 +2,8 @@ use crate::editor::puzzle5d::modes::edit::windows::board2d::utilities::brush::UT
 use crate::editor::puzzle5d::modes::edit::windows::world3d;
 use crate::editor::puzzle5d::precompute::fill::tests::{committed, host_turn, tool_run_action, FILL_RUN_TURNS};
 use crate::editor::puzzle5d::precompute::PUZZLE5D_PLANNER_TRACE_TWIN_BIT;
-use crate::editor::puzzle5d::puzzle5d_grip_full_id;
-use crate::editor::puzzle5d::unit_tests::context::{app_with_registry, close_app, dispatch, dispatch_armed, projection_of, window_view, Puzzle5dApp};
+use crate::editor::puzzle5d::entities::puzzle5d_grip_full_id;
+use crate::editor::puzzle5d::testkit::{app_with_registry, close_app, dispatch, dispatch_armed, projection_of, window_view, Puzzle5dApp};
 use semio_framework_plugin::kernel::Effect;
 use semio_framework_plugin::{ArtifactApp, PluginApp};
 use semio_framework_tool_run::{ToolRunTraceDelta, ToolRunTraceStore, ToolRunTraceSubject, ToolRunVerdict};
@@ -86,7 +86,7 @@ fn select_view() -> semio_framework_plugin::ViewModel {
 
 /// 🎣️ The world pane's published `suggestionMenu` record, read off a real render of the world body.
 fn suggestion_menu(app: &mut Puzzle5dApp) -> serde_json::Value {
-    let rendered = crate::editor::puzzle5d::unit_tests::context::render_body_with_view(app, world3d::BODY_KEY, &select_view());
+    let rendered = crate::editor::puzzle5d::testkit::render_body_with_view(app, world3d::BODY_KEY, &select_view());
     let scene: serde_json::Value = serde_json::from_str(&rendered).expect("world scene json");
     let interaction: serde_json::Value = serde_json::from_str(scene["scene"]["interactionJson"].as_str().expect("the world scene carries interactionJson")).expect("interactionJson parses");
     interaction["suggestionMenu"].clone()

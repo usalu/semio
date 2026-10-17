@@ -1,11 +1,12 @@
 //! 🧪️ Neutral precise sample paint, metadata retention and inverse laws.
 use crate::schema::{diff::BmpDiff,operations::{bmp_revision,paint_direct_region_controlled,paint_indexed_region_controlled},snapshot::{BmpSnapshot,BmpPixels,BmpColor,BmpRegion}};
 use protocol::{DiffAlgebra,MutationDiff};
+use semio_framework_test_fixtures::fixture_text;
 use semio_framework_value::FromValue;
 
 #[test]
 fn neutral_native_sample_paints_preserve_metadata_and_inverse() {
-    let fixture: serde_json::Value = serde_json::from_str(runtime_fixture_text("../../../../🧪️tests/🧫️fixtures/🧬️owned-native-samples/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️owned-native-samples/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap() {
         let base = BmpSnapshot::from_value(semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse_bytes(row["snapshot"].to_string().as_bytes(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap())).unwrap();
         base.validate().unwrap();
@@ -31,11 +32,5 @@ fn neutral_native_sample_paints_preserve_metadata_and_inverse() {
         match &next.image.pixels { BmpPixels::Indexed { indices } => assert_eq!(serde_json::json!(indices),row["expectedIndices"]),BmpPixels::Direct { samples } => assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(samples)).unwrap(),row["expectedSamples"]) }
         assert_eq!(progress.first(),Some(&(0,region.height as usize))); assert_eq!(progress.last(),Some(&(region.height as usize,region.height as usize)));
         let error = paint_indexed_region_controlled(&base,"stale",region,0,&mut |_,_|true).unwrap_err(); assert!(error.contains("stale"));
-        eprintln!("[DEBUG] bmp owned native case={} samples={} inverse=exact",row["name"],base.image.width * base.image.height);
     }
-}
-
-fn runtime_fixture_text(relative: &str) -> &'static str {
-    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative);
-    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display())).into_boxed_str())
 }

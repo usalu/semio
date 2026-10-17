@@ -5,79 +5,32 @@ export { parseDirectorySpaceAdministrationPageV1 } from "./🚪️io/📝️text
  * asserted in `../../🟦️.ts`'s `🔖️Directory` region, the only file this package's vitest
  * config scans for `import.meta.vitest` suites). */
 
-export type {
-  AdminConnectionSnapshotV1,
-  AdminIntentOutcomeV1,
-  AdminIntentReceiptV1,
-  AdminIntentResultV1,
-  AdminIntentStateV1,
-  AdminIntentV1,
-  AdminOperationAuditPhaseV1,
-  AdminOperationAuditV1,
-  AdminOperationProgressV1,
-  AdminOperationStatusV1,
-  AdminPageV1,
-  AdminRecordedConnectionV1,
-  ArtifactBlobRef,
-  ArtifactCheckpoint,
-  ArtifactFrontier,
-  ArtifactHash,
-  ArtifactRetention,
-  PublishedArtifactBlob,
-  PublishedArtifactCheckpoint,
-  CheckpointId,
-  ConnectionView,
-  DirectoryActor,
-  DirectoryActorKind,
-  DirectoryCommand,
-  DirectoryConnectionPhase,
-  DirectoryEvent,
-  DirectoryEventBody,
-  DirectoryEventInviteRedeemed,
-  DirectoryEventDocumentAnnounced,
-  DirectoryEventDocumentIndexed,
-  DirectoryIndexedDocumentViewV1,
-  DocumentIndexEntryV1,
-  DirectoryEventArtifactCheckpointPublished,
-  DirectoryEventArtifactRetentionAdvanced,
-  DirectoryEventMemberRemoved,
-  DirectoryEventMemberUpserted,
-  DirectoryEventSpaceArchived,
-  DirectoryEventSpaceCreated,
-  DirectoryEventSpaceDeleted,
-  DirectoryEventSpaceRenamed,
-  DirectoryEventSpaceVisibilityChanged,
-  DirectoryEventUserCreated,
-  DirectorySpaceAdministrationCapabilitiesV1,
-  DirectorySpaceAdministrationInviteRowV1,
-  DirectorySpaceAdministrationMemberRowV1,
-  DirectorySpaceAdministrationPageV1,
-  DirectorySpaceAdministrationSectionV1,
-  DirectorySpaceAdministrationWindowV1,
-  DirectorySpaceKind,
-  DirectorySpaceRole,
-  DirectorySpaceVisibility,
-  DirectoryStreamMessage,
-  DocumentDescriptor,
-  DocumentFrontier,
-  DocumentOwner,
-  DocumentScope,
-  DocumentView,
-  Hlc,
-  InviteView,
-  MemberView,
-  DirectorySpaceListEntryV1,
-  MemberSpaceViewV1,
-  PublicDocumentCatalogEntryV1,
-  PublicSpaceViewV1,
-  SpaceView,
-  UserView
-} from "./🧬️schema/🟦️.ts";
+export type { DirectoryActor, DirectoryActorKind, DirectorySpaceKind, DirectorySpaceRole, DirectorySpaceVisibility, Hlc } from "./🧬️schema/🟦️.ts";
+export type { DirectoryEvent, DirectoryEventBody, DirectoryEventInviteRedeemed, DirectoryEventDocumentAnnounced, DirectoryEventDocumentIndexed, DirectoryIndexedDocumentViewV1, DocumentIndexEntryV1, DirectoryEventArtifactCheckpointPublished, DirectoryEventArtifactRetentionAdvanced, DirectoryEventMemberRemoved, DirectoryEventMemberUpserted, DirectoryEventSpaceArchived, DirectoryEventSpaceCreated, DirectoryEventSpaceDeleted, DirectoryEventSpaceRenamed, DirectoryEventSpaceVisibilityChanged, DirectoryEventUserCreated } from "./🧬️schema/📜️event/🟦️.ts";
+export type { DirectoryCommand } from "./🧬️schema/🎫️command/🟦️.ts";
+export type { AdminIntentV1 } from "./🧬️schema/🛠️admin/🟦️.ts";
+export type { SpaceView } from "./🧬️schema/👀️views/🟦️.ts";
+export type { AdminConnectionSnapshotV1, AdminIntentOutcomeV1, AdminIntentReceiptV1, AdminIntentResultV1, AdminIntentStateV1, AdminOperationAuditPhaseV1, AdminOperationAuditV1, AdminOperationProgressV1, AdminOperationStatusV1, AdminPageV1, AdminRecordedConnectionV1 } from "./🧬️schema/🛠️admin/🟦️.ts";
+export type { CheckpointId, ConnectionView, DocumentDescriptor, DocumentFrontier, DocumentOwner, DirectorySpaceListEntryV1, MemberSpaceViewV1, PublicDocumentCatalogEntryV1, PublicSpaceViewV1 } from "./🧬️schema/👀️views/🟦️.ts";
+export type { DirectorySpaceAdministrationMemberRowV1, DirectorySpaceAdministrationSectionV1 } from "./🧬️schema/📋️admin-page/🟦️.ts";
+export type { MemberView, UserView } from "./🧬️schema/👀️views/🟦️.ts";
+export type { DirectorySpaceAdministrationCapabilitiesV1, DirectorySpaceAdministrationInviteRowV1, DirectorySpaceAdministrationPageV1, DirectorySpaceAdministrationWindowV1 } from "./🧬️schema/📋️admin-page/🟦️.ts";
+export type { ArtifactBlobRef, PublishedArtifactBlob, PublishedArtifactCheckpoint } from "./🧬️schema/🧊️artifact-checkpoints/🟦️.ts";
+export type { ArtifactCheckpoint, ArtifactRetention, DocumentView, InviteView } from "./🧬️schema/🧊️artifact-checkpoints/🟦️.ts";
+export type { DirectoryConnectionPhase } from "./🧬️schema/🌊️stream/🟦️.ts";
+export type { DirectoryStreamMessage } from "./🧬️schema/🌊️stream/🟦️.ts";
+export type { ArtifactFrontier, ArtifactHash, DocumentScope } from "../📄️document/🪪️scope/🟦️.ts";
 
-export { validateDocumentDescriptorV1, DIRECTORY_SPACE_ADMINISTRATION_CURSOR_MAX_BYTES, DIRECTORY_SPACE_ADMINISTRATION_PAGE_MAX_BYTES, DIRECTORY_SPACE_ADMINISTRATION_PAGE_MAX_ROWS, DIRECTORY_SPACE_ADMINISTRATION_PAGE_SCHEMA } from "./🧬️schema/🟦️.ts";
+export { DIRECTORY_SPACE_ADMINISTRATION_CURSOR_MAX_BYTES, DIRECTORY_SPACE_ADMINISTRATION_PAGE_MAX_BYTES, DIRECTORY_SPACE_ADMINISTRATION_PAGE_MAX_ROWS, DIRECTORY_SPACE_ADMINISTRATION_PAGE_SCHEMA } from "./🧬️schema/📋️admin-page/🟦️.ts";
+export { validateDocumentDescriptorV1 } from "./🧬️schema/🧊️artifact-checkpoints/🟦️.ts";
 
-import type { DirectoryCommand, DirectoryEvent, DirectoryEventBody, DirectoryStreamMessage, DocumentDescriptor, MemberView, SpaceView, UserView } from "./🧬️schema/🟦️.ts";
-import { validDocumentIndexEntryV1, type DirectoryIndexedDocumentViewV1 } from "./🧬️schema/🟦️.ts";
+import type { DirectoryEvent, DirectoryEventBody } from "./🧬️schema/📜️event/🟦️.ts";
+import type { DirectoryCommand } from "./🧬️schema/🎫️command/🟦️.ts";
+import type { SpaceView } from "./🧬️schema/👀️views/🟦️.ts";
+import type { DocumentDescriptor } from "./🧬️schema/👀️views/🟦️.ts";
+import type { MemberView, UserView } from "./🧬️schema/👀️views/🟦️.ts";
+import type { DirectoryStreamMessage } from "./🧬️schema/🌊️stream/🟦️.ts";
+import { validDocumentIndexEntryV1, type DirectoryIndexedDocumentViewV1 } from "./🧬️schema/📜️event/🟦️.ts";
 
 //#region 🔖️ReadModel
 /** 🏠️ One projected space: its `SpaceView` plus the current member roster. */

@@ -7,7 +7,8 @@ import { fileURLToPath } from "node:url";
 import { createWgpuBrowserConfig } from "../🟦️.ts";
 import { ACTIVATION_RECEIPT_FILE, developmentRuntimeRoot, builtPluginModulesRootIn } from "../../../../../../🧑‍💻dev/♻️activation/🟦️.ts";
 import { semioAssetsVitePlugin, semioServeCloseVitePlugin } from "../../../../../../../../../🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts";
-import { semioBackboneVitePlugin, semioSourceFreshnessVitePlugins } from "../../../../../../🧑‍💻dev/🔌️vite-plugins/🟦️.ts";
+import { semioBackboneVitePlugin } from "../../../../../../🧑‍💻dev/🔌️vite-plugins/🧱️backbone-vite-plugin/🟦️.ts";
+import { semioSourceFreshnessVitePlugins } from "../../../../../../🧑‍💻dev/🔌️vite-plugins/🔖️source-freshness/🟦️.ts";
 import { readBuildMode } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
@@ -25,7 +26,7 @@ export function wgpuCompletedFrameworkRootsV1(profile: "prototype" | "release") 
     workerRoot: resolve(root, "../🎞️frame-worker/🤖️generated"),
   };
 }
-export function createCompletedWgpuConfigurationV1(options: { readonly variant: string | undefined; readonly nativeCatalog?: NativeCatalogV1; readonly catalog: import("../../../../../../🔌️plugin/📇️registry/🟦️.ts").PluginCatalogRowsV1; readonly assets: readonly import("../../../../../../../../../🔨️modules/🖼️assets/🔍️resolver/🧭️dispatch/🟦️.ts").AssetDeliveryDeclarationV1[] }) {
+export function createCompletedWgpuConfigurationV1(options: { readonly variant: string | undefined; readonly nativeCatalog?: NativeCatalogV1; readonly catalog: import("@semio-tech/framework/plugin-catalog").PluginCatalogRowsV1; readonly assets: readonly import("../../../../../../../../../🔨️modules/🖼️assets/🔍️resolver/🧭️dispatch/🟦️.ts").AssetDeliveryDeclarationV1[] }) {
   const variant = options.variant;
   const profile = wgpuCompletedProfileV1();
   const moduleRoot = builtPluginModulesRootIn(workspace,profile);

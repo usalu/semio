@@ -1,0 +1,24 @@
+{
+ "name": "fbbase",
+ "crates": [
+  "semio-framework-3d-brep-engine",
+  "semio-framework-3d-brep-vector",
+  "semio-framework-3d-brep-tolerance",
+  "semio-framework-3d-brep-polynomial",
+  "semio-framework-3d-brep-surface",
+  "semio-framework-3d-brep-curve",
+  "semio-framework-3d-brep-representation",
+  "semio-framework-3d-brep-queries",
+  "semio-framework-3d-brep-analysis",
+  "semio-framework-3d-brep-intersect",
+  "semio-framework-3d-brep-tessellation",
+  "semio-framework-3d-brep-validation",
+  "semio-framework-3d-brep-construction",
+  "semio-framework-3d-brep-boolean",
+  "semio-framework-3d-brep-sweep",
+  "semio-framework-3d-brep-offset",
+  "semio-framework-3d-testing-support",
+  "semio-framework-mesh-component-references"
+ ],
+ "note": "FB baseline: the brep stack under the engine, absolute run"
+}

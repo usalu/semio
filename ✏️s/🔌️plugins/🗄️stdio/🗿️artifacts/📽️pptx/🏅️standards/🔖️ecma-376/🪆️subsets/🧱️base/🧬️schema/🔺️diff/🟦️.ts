@@ -1,6 +1,6 @@
 import type { OpcPart, OpcRelationship, PptxXmlPart } from '../📸️snapshot/🟦️.ts';
 import { parseOpcPart, parseOpcRelationship, parsePptxXmlPart } from '../📸️snapshot/🟦️.ts';
-import { parseXmlDiff, type XmlDiff } from '../../../../../../../📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/🔺️diff/🟦️.ts';
+import { parseXmlDiff, type XmlDiff } from '@semio-tech/stdio-xml/standards/1.0/subsets/base/schema/diff';
 
 export interface OpcContentTypeRow { name: string; contentType: string }
 export interface OpcOwnerRow { owner: string; relationships: OpcRelationship[] }

@@ -44,5 +44,4 @@ assert.equal(testingSchemaExists(new URL("../../🧬️schema/🎟️contributio
  assert.equal(instance.includes("maximum_items: usize, maximum_bytes: usize"),false);assertions++;
  const fields=source.match(/struct FlowInstanceOperationOwner\s*\{([^}]+)\}/)?.[1];assert(fields,"Actual instance operation fields required");assert.deepEqual([...fields.matchAll(/^\s*(\w+)\s*:/gm)].map(match=>match[1]),fixture.instanceOwnerFields);assertions++;
  for(const mutant of [receiver.replace("cx.consume_retained(progress)","cx.consume_retained(Default::default())"),receiver.replace("error.retained_progress()","Default::default()"),receiver.replace("progress==Default::default()","true")]){assert.equal(mutant.includes("cx.consume_retained(progress)")&&mutant.includes("error.retained_progress()")&&mutant.includes("progress==Default::default()"),false);assertions++;}
- console.log("[DEBUG] original Flow contributions receiving cases="+fixture.cases.length+" assertions="+assertions+" canonicalGrantAjv=true schemaAuthority=absent SQLiteReference=true sourceReceivingOnly=true");
 }

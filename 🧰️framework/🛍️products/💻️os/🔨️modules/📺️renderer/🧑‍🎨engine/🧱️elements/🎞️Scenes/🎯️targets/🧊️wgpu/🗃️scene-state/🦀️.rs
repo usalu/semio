@@ -227,10 +227,10 @@ pub struct GraphTimelineAccessibilityControl {
 
 #[derive(Clone, Debug)]
 struct SceneAccessibilityPresentation<T> {
-    pub(crate) candidate: Option<Vec<T>>,
+    pub candidate: Option<Vec<T>>,
     pub(crate) candidate_epoch: Option<u64>,
-    pub(crate) queued_candidate: Option<Vec<T>>,
-    pub(crate) accepted: Vec<T>,
+    pub queued_candidate: Option<Vec<T>>,
+    pub accepted: Vec<T>,
 }
 
 impl<T> Default for SceneAccessibilityPresentation<T> {
@@ -240,7 +240,7 @@ impl<T> Default for SceneAccessibilityPresentation<T> {
 }
 
 impl<T> SceneAccessibilityPresentation<T> {
-    pub(crate) fn stage(&mut self, controls: Vec<T>) {
+    pub fn stage(&mut self, controls: Vec<T>) {
         if self.candidate_epoch.is_some() {
             self.queued_candidate = Some(controls);
         } else {
@@ -276,36 +276,36 @@ pub struct SceneSurfaceState {
     pub(crate) mount_owner: Option<crate::element_contracts::ScenePointerTarget>,
     pub(crate) engine_token: Option<EngineSurfaceToken>,
     pub(crate) scroll_offsets: BTreeMap<String, f32>,
-    pub(crate) viewport: Viewport,
+    pub viewport: Viewport,
     pub(crate) canvas_camera_owner: Option<crate::element_contracts::ScenePointerTarget>,
-    pub(crate) canvas_framing_revision: Option<u32>,
-    pub(crate) drag: Option<SceneDrag>,
-    pub(crate) pointer_was_down: bool,
-    pub(crate) last_click_ms: f64,
-    pub(crate) last_click_target: Option<String>,
+    pub canvas_framing_revision: Option<u32>,
+    pub drag: Option<SceneDrag>,
+    pub pointer_was_down: bool,
+    pub last_click_ms: f64,
+    pub last_click_target: Option<String>,
     /// 🖱️ The list-surface control the pointer last resolved over — this module's own hover
     /// authority, because a `ComponentScene` leaf registers exactly one retained hit target for the
     /// WHOLE surface (`retained_scene_hit`), so `InputState::hovered_id` can never name a row.
-    pub(crate) hovered_control_id: Option<String>,
+    pub hovered_control_id: Option<String>,
     #[cfg(test)]
     node_positions: BTreeMap<String, (f32, f32)>,
     pub(crate) selected_ids: BTreeSet<String>,
-    pub(crate) paint_stroke_active: bool,
-    pub(crate) vfs_expanded_ids: BTreeSet<String>,
+    pub paint_stroke_active: bool,
+    pub vfs_expanded_ids: BTreeSet<String>,
     pub(crate) vfs_selection_anchor: Option<String>,
-    pub(crate) map_marquee_points: Vec<(f32, f32)>,
-    pub(crate) map_marquee_active: bool,
-    pub(crate) map_last_hover_json: Option<String>,
-    pub(crate) map_interaction_owner: Option<crate::element_contracts::ScenePointerTarget>,
-    pub(crate) map_hover_owner: Option<crate::element_contracts::ScenePointerTarget>,
-    pub(crate) touch_gesture: GestureRecognizer,
-    pub(crate) ink_camera: Option<(f64, f64, f64)>,
-    pub(crate) ink_overrides: BTreeMap<String, Value>,
+    pub map_marquee_points: Vec<(f32, f32)>,
+    pub map_marquee_active: bool,
+    pub map_last_hover_json: Option<String>,
+    pub map_interaction_owner: Option<crate::element_contracts::ScenePointerTarget>,
+    pub map_hover_owner: Option<crate::element_contracts::ScenePointerTarget>,
+    pub touch_gesture: GestureRecognizer,
+    pub ink_camera: Option<(f64, f64, f64)>,
+    pub ink_overrides: BTreeMap<String, Value>,
     /// 🌊️ A move, resize, stroke or erase has streamed into the plugin's open ink transaction since the press — what a
     /// pointer cancel must abort.
-    pub(crate) ink_gesture_open: bool,
-    pub(crate) ink_marquee_points: Vec<(f32, f32)>,
-    pub(crate) ink_edit: Option<InkEditState>,
+    pub ink_gesture_open: bool,
+    pub ink_marquee_points: Vec<(f32, f32)>,
+    pub ink_edit: Option<InkEditState>,
     pub text_editor_ui: TextEditorUiState,
     pub host_temporal: HostTemporalPresentation,
     pub table_accessibility: SceneAccessibilityPresentation<TableStepperAccessibilityCell>,
@@ -318,10 +318,10 @@ pub struct SceneSurfaceState {
     pub graph_timeline_accessibility: SceneAccessibilityPresentation<GraphTimelineAccessibilityControl>,
     /// 📏️ The label track this surface's last GraphTimeline paint measured — the one geometry its hit test reads.
     pub graph_timeline_label_track: f32,
-    pub(crate) last_pointer_pos: (f32, f32),
+    pub last_pointer_pos: (f32, f32),
     /// 🕒️ Controller for the mounted surface's settled camera publication.
-    pub(crate) camera_dispatch_controller_id: Option<String>,
-    pub(crate) canvas_click: Option<CanvasClick>,
+    pub camera_dispatch_controller_id: Option<String>,
+    pub canvas_click: Option<CanvasClick>,
 }
 
 pub(crate) enum SceneValueRetirement {
@@ -794,7 +794,7 @@ pub struct CanvasGesture {
 }
 
 pub struct CanvasGestureSlots {
-    pub(crate) slots: Box<[Option<CanvasGesture>; crate::element_contracts::SCENE_POINTER_OWNER_CAPACITY]>,
+    pub slots: Box<[Option<CanvasGesture>; crate::element_contracts::SCENE_POINTER_OWNER_CAPACITY]>,
 }
 
 impl Default for CanvasGestureSlots {
@@ -812,7 +812,7 @@ impl CanvasGestureSlots {
         self.slots.iter_mut().flatten().find(|gesture| gesture.pointer_id == pointer_id)
     }
 
-    pub(crate) fn has_capacity_for(&self, pointer_id: ui_render::PointerId) -> bool {
+    pub fn has_capacity_for(&self, pointer_id: ui_render::PointerId) -> bool {
         self.get(pointer_id).is_some() || self.slots.iter().any(Option::is_none)
     }
 
@@ -823,7 +823,7 @@ impl CanvasGestureSlots {
         true
     }
 
-    pub(crate) fn take(&mut self, pointer_id: ui_render::PointerId) -> Option<CanvasGesture> {
+    pub fn take(&mut self, pointer_id: ui_render::PointerId) -> Option<CanvasGesture> {
         self.slots.iter_mut().find(|slot| slot.as_ref().is_some_and(|gesture| gesture.pointer_id == pointer_id)).and_then(Option::take)
     }
 }
@@ -1244,7 +1244,7 @@ impl GumballHandle {
         }
     }
 
-    fn enabled(self, config: &GumballConfig) -> bool {
+    pub fn enabled(self, config: &GumballConfig) -> bool {
         match self {
             Self::MoveX | Self::MoveY => config.move_axes,
             Self::ScaleX | Self::ScaleY => config.scale_axes,
@@ -1331,16 +1331,16 @@ pub fn total(gesture: &GumballGesture, view: &GumballView, x: f64, y: f64) -> Op
 /// the gesture and the last local pointer (the ghost's anchor).
 #[derive(Clone, Debug)]
 pub struct GumballSlot {
-    pointer_id: ui_render::PointerId,
-    window_id: String,
-    host_id: String,
-    document_generation: u64,
-    controller_id: String,
-    surface_id: String,
-    view: GumballView,
-    gesture: GumballGesture,
-    pointer: (f64, f64),
-    cancellation_requested: bool,
+    pub pointer_id: ui_render::PointerId,
+    pub window_id: String,
+    pub host_id: String,
+    pub document_generation: u64,
+    pub controller_id: String,
+    pub surface_id: String,
+    pub view: GumballView,
+    pub gesture: GumballGesture,
+    pub pointer: (f64, f64),
+    pub cancellation_requested: bool,
 }
 
 thread_local! {
@@ -1398,36 +1398,36 @@ pub struct CanvasGradientStopJson {
 #[serde(rename_all = "camelCase")]
 pub(crate) struct CanvasStrokeJson {
     #[serde(default)]
-    pub(crate) color: Option<Vec<f64>>,
+    pub color: Option<Vec<f64>>,
     #[serde(default)]
-    pub(crate) width: Option<f64>,
+    pub width: Option<f64>,
     #[serde(default)]
-    pub(crate) dash: Option<Vec<f64>>,
+    pub dash: Option<Vec<f64>>,
     #[serde(default)]
-    pub(crate) cap: Option<String>,
+    pub cap: Option<String>,
     #[serde(default)]
-    pub(crate) join: Option<String>,
+    pub join: Option<String>,
 }
 
 #[derive(Deserialize, Clone, Default)]
 #[serde(rename_all = "camelCase")]
 pub(crate) struct CanvasImageFieldJson {
     #[serde(default)]
-    pub(crate) src: Option<String>,
+    pub src: Option<String>,
     #[serde(default)]
-    pub(crate) width: Option<f64>,
+    pub width: Option<f64>,
     #[serde(default)]
-    pub(crate) height: Option<f64>,
+    pub height: Option<f64>,
 }
 
 #[derive(Deserialize, Clone, Default)]
 #[serde(rename_all = "camelCase")]
 pub(crate) struct CanvasTextFieldJson {
     #[serde(default)]
-    pub(crate) content: Option<String>,
+    pub content: Option<String>,
     #[serde(default)]
-    pub(crate) size: Option<f64>,
-    pub(crate) font_family: TextFace,
+    pub size: Option<f64>,
+    pub font_family: TextFace,
 }
 
 #[derive(Deserialize)]

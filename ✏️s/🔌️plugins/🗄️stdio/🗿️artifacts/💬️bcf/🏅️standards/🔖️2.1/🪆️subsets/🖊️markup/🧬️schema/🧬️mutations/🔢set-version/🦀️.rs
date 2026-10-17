@@ -7,7 +7,7 @@ use super::*;
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetVersion {
-    pub(crate) version: String,
+    pub version: String,
 }
 
 impl protocol::MutationKind<BcfSnapshot, BcfMutation> for SetVersion {

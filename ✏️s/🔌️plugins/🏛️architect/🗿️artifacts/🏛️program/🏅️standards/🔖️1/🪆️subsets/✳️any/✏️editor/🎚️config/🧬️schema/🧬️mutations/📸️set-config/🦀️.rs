@@ -1,6 +1,6 @@
 //! 🧬️ Set Config in the architect.config channel.
 
-use super::*;
+use crate::editor::architect::config::component::mutations::*;
 
 /// 📸️ Sets the named config fields to absolute values; a field left `None` stays untouched.
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -27,7 +27,10 @@ impl SetConfig {
     }
 }
 
-impl protocol::MutationKind<ArchitectConfig, ArchitectConfigMutation> for SetConfig {
+impl<Op> protocol::MutationKind<ArchitectConfig, Op> for SetConfig
+where
+    Op: protocol::Mutation<ArchitectConfig, Diff = ArchitectConfigDiff> + From<SetConfig>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "config", kind: "set-config", record: "SetConfig" };
     fn diff(&self, base: &ArchitectConfig) -> protocol::MutationOutcome<ArchitectConfigDiff> {
         let changes = self.changes(base);
@@ -36,9 +39,9 @@ impl protocol::MutationKind<ArchitectConfig, ArchitectConfigMutation> for SetCon
         }
         protocol::MutationOutcome::new(changes)
     }
-    fn inverse(&self, base: &ArchitectConfig) -> Result<Vec<ArchitectConfigMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &ArchitectConfig) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         let changes = self.changes(base);
-        Ok(vec![ArchitectConfigMutation::SetConfig(Self {
+        Ok(vec![Op::from(Self {
             search_query: changes.search_query.map(|_| base.search_query.clone()),
             search_history_json: changes.search_history_json.map(|_| base.search_history_json.clone()),
             last_result_json: changes.last_result_json.map(|_| base.last_result_json.clone()),

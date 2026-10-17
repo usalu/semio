@@ -242,8 +242,3 @@ fn widen_up(x: f64, ulps: u32) -> f64 {
     v
 }
 // #endregion 🔖️Interval
-
-// #region 🔖️Tests
-#[cfg(test)]
-include!("../🧪️tests/🔬️interval-unit/🦀️.rs");
-// #endregion 🔖️Tests

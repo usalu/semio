@@ -1,0 +1,17 @@
+{
+ "name": "ftcm",
+ "crates": [
+  "semio-framework-mesh-engine",
+  "semio-framework-artifact-space-collection",
+  "semio-framework-os-space-testing-sqlite-native-caller",
+  "semio-framework-io-sqlite-snapshot-testing-backing"
+ ],
+ "base": {
+  "rev": "1bae6115bc5",
+  "crates": [
+   "semio-framework-mesh-engine",
+   "semio-framework-artifact-space-collection"
+  ]
+ },
+ "note": "FTC mesh-engine, space-collection (inputs read at run time) + the DM2 sqlite test helpers"
+}

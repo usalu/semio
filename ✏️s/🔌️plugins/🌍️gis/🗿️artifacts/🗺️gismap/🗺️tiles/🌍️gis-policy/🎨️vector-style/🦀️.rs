@@ -7,7 +7,7 @@ use semio_framework_surface::tiled_map::{MapClassRank, MapClassRanks, MapClassSp
 
 // #region 🔖️VectorStyle
 /// 🔢️ Draw rank of an OpenMapTiles source layer missing from [`gis_map_source_layers`].
-pub(super) const GIS_MAP_DEFAULT_DRAW_RANK: u8 = 15;
+pub const GIS_MAP_DEFAULT_DRAW_RANK: u8 = 15;
 
 /// 🛣️ Road stroke multiplier of the region band.
 const GIS_MAP_ROAD_REGION_SCALE: f64 = 0.4;

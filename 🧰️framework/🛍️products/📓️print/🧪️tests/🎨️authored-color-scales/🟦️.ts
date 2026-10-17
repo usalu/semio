@@ -1,8 +1,8 @@
 /** 🎨️ Declarative color scale output compared with independent D3 scales and interpolation. */
 import { defineTestAdapter } from "@semio-tech/framework/test/adapter";
-import { buildVizScale } from "../../🧬️schema/💡️inferences/📐scale/🟦️.ts";
+import { buildVizScale } from "@semio-tech/print-viz-inference/scale";
 import { renderVizPresetTikz } from "../../🚪️io/📝️text/💡️inferences/📚️catalogue/🟦️.ts";
-import {vizParseColor} from "../../🧬️schema/💡️inferences/🎨theme/🟦️.ts";
+import {vizParseColor} from "@semio-tech/print-viz-inference/theme";
 import colorContract from "../../🧬️schema/📸️snapshot/📊️chart/🎨️color/🔣️.json";
 import type { VizScaleSpec } from "../../🧬️schema/📸️snapshot/📊️chart/🟦️.ts";
 import vectors from "./🔣️.json";
@@ -10,7 +10,7 @@ import unknownVectors from "./❔️unknown.json";
 import niceVectors from "./✨️nice.json";
 import missingRenderVectors from "./❔️render.json";
 import chartSchema from "../../🧬️schema/🔣️.json";
-import { validateVizChartSpecification } from "../../🧬️schema/💡️inferences/✅️validation/🟦️.ts";
+import { validateVizChartSpecification } from "@semio-tech/print-viz-inference/validation";
 import {inferVizChart} from "../../🔨️modules/🏠️host/💡️inferences/🟦️.ts";;
 import type { VizChartSpecification } from "../../🧬️schema/📸️snapshot/📊️chart/🟦️.ts";
 

@@ -5,7 +5,7 @@
 //! FIPS 180-4), zero runtime dependencies.
 
 use crate::standards::v1_7::subsets::base::modules::lexer::{dict_get, dict_i64, dict_name};
-use crate::standards::v1_7::subsets::base::io::{PResult, PdfEngineError};
+use crate::standards::v1_7::subsets::base::io::error::{PResult, PdfEngineError};
 use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfDictEntry, PdfEncryption, PdfEncryptionAlgorithm, PdfObject};
 use semio_framework_hash::Sha256;
 
@@ -560,7 +560,7 @@ impl Decryptor {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn map_object(&self, value: PdfObject, num: u32, gen: u16, decrypt: bool) -> PdfObject {
         match value {
-            PdfObject::Text(text) if !self.identity_strings&&!decrypt => PdfObject::Str(self.encrypt_bytes(&crate::standards::v1_7::subsets::base::io::encode_text_string(&text),num,gen)),
+            PdfObject::Text(text) if !self.identity_strings&&!decrypt => PdfObject::Str(self.encrypt_bytes(&crate::standards::v1_7::subsets::base::io::text_string::encode_text_string(&text),num,gen)),
             PdfObject::Date(date) if !self.identity_strings&&!decrypt => PdfObject::Str(self.encrypt_bytes(crate::standards::v1_7::subsets::base::io::text::snapshot::date::print_pdf_date(&date).as_bytes(),num,gen)),
             PdfObject::Str(bytes) if !self.identity_strings => PdfObject::Str(if decrypt { self.decrypt_bytes(&bytes, num, gen) } else { self.encrypt_bytes(&bytes, num, gen) }),
             PdfObject::Array(items) => PdfObject::Array(items.into_iter().map(|item| self.map_object(item, num, gen, decrypt)).collect()),
@@ -768,7 +768,5 @@ pub fn seal_standard_security(parameters: &PdfEncryption, document_id: &[u8], se
 //#endregion 🔖️StandardSecurityHandler
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

@@ -10,7 +10,8 @@ import fixture from "../🧫️fixtures/📝️explicit-draft/🔣️.json";
 import law from "../🧫️fixtures/📝️explicit-draft/⚖️lifecycle.json";
 import retention from "../🧫️fixtures/📝️explicit-draft/🧭️retention.json";
 import { LocalDocumentOwnerContext, LocalDocumentOwnerRegistryV1, LocalDocumentWindowContext, type LocalDocumentOwnerV1 } from "../../../🗣️Interpreter/🧭️local-document-owner/🟦️.ts";
-import { retainedTextEditorDraftCountV1, TextEditorHost } from "../../🟦️.tsx";
+import { TextEditorHost } from "../../🟦️.tsx";
+import { retainedTextEditorDraftCountV1 } from "../../📌️retained-drafts/🟦️.ts";
 
 beforeEach(() => { vi.spyOn(nodeGraph, "useClient").mockReturnValue(false); });
 afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.unstubAllGlobals(); });

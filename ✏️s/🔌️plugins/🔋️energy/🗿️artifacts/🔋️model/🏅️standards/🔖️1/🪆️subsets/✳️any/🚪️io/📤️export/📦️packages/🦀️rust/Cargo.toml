@@ -30,4 +30,5 @@ semio-s-plugin-energy-engine-schedule = { workspace = true }
 
 [dev-dependencies]
 semio-framework-async-macros = { workspace = true }
+semio-framework-test-fixtures = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-s-plugin-energy-engine-bestest = { workspace = true }

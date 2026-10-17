@@ -1,7 +1,7 @@
 // 🌳 `SvgSnapshot.doc` wraps an `XmlDocument`, and `SvgDiff`/`SvgNodeDiff` diff that same node
 // tree directly, per the plan's spec-mandated-reuse rule -- svg embeds xml's NODE model (real
 // import, the canonical shape), but declares its own DIFF types below.
-import { parseXmlDeclaration, parseXmlDoctype, type XmlDeclaration, type XmlDoctype } from '../../../../../../../📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🟦️.ts';
+import { parseXmlDeclaration, parseXmlDoctype, type XmlDeclaration, type XmlDoctype } from '@semio-tech/stdio-xml/standards/1.0/subsets/base/schema/snapshot';
 export type { XmlDeclaration, XmlDoctype };
 import {parseSvgNode,parseSvgAttributeValue,type SvgNode,type SvgAttributeValue}from "../📸️snapshot/🧩️document/🟦️.ts";
 export type {SvgNode};
@@ -144,9 +144,9 @@ export function parseSvgAttrAdded(value: unknown, at = "$"): SvgAttrAdded {
 export function parseSvgAttributesDiff(value: unknown, at = "$"): SvgAttributesDiff {
   const row = stdioSvg11BaseDiffGuardObject(value, at);
   return {
-    removed: row["removed"] === undefined ? undefined : stdioSvg11BaseDiffGuardArray(row["removed"], `${at}.removed`).map((item, index) => stdioSvg11BaseDiffGuardString(item, `${at}.removed[${index}]`)),
-    modified: row["modified"] === undefined ? undefined : stdioSvg11BaseDiffGuardArray(row["modified"], `${at}.modified`).map((item, index) => parseSvgAttrModified(item, `${at}.modified[${index}]`)),
-    added: row["added"] === undefined ? undefined : stdioSvg11BaseDiffGuardArray(row["added"], `${at}.added`).map((item, index) => parseSvgAttrAdded(item, `${at}.added[${index}]`)),
+    removed: stdioSvg11BaseDiffGuardArray(row["removed"], `${at}.removed`).map((item, index) => stdioSvg11BaseDiffGuardString(item, `${at}.removed[${index}]`)),
+    modified: stdioSvg11BaseDiffGuardArray(row["modified"], `${at}.modified`).map((item, index) => parseSvgAttrModified(item, `${at}.modified[${index}]`)),
+    added: stdioSvg11BaseDiffGuardArray(row["added"], `${at}.added`).map((item, index) => parseSvgAttrAdded(item, `${at}.added[${index}]`)),
   };
 }
 
@@ -169,9 +169,9 @@ export function parseSvgChildAdded(value: unknown, at = "$"): SvgChildAdded {
 export function parseSvgChildrenDiff(value: unknown, at = "$"): SvgChildrenDiff {
   const row = stdioSvg11BaseDiffGuardObject(value, at);
   return {
-    removed: row["removed"] === undefined ? undefined : stdioSvg11BaseDiffGuardArray(row["removed"], `${at}.removed`).map((item, index) => stdioSvg11BaseDiffGuardInteger(item, `${at}.removed[${index}]`, {"minimum": 0})),
-    modified: row["modified"] === undefined ? undefined : stdioSvg11BaseDiffGuardArray(row["modified"], `${at}.modified`).map((item, index) => parseSvgChildModified(item, `${at}.modified[${index}]`)),
-    added: row["added"] === undefined ? undefined : stdioSvg11BaseDiffGuardArray(row["added"], `${at}.added`).map((item, index) => parseSvgChildAdded(item, `${at}.added[${index}]`)),
+    removed: stdioSvg11BaseDiffGuardArray(row["removed"], `${at}.removed`).map((item, index) => stdioSvg11BaseDiffGuardInteger(item, `${at}.removed[${index}]`, {"minimum": 0})),
+    modified: stdioSvg11BaseDiffGuardArray(row["modified"], `${at}.modified`).map((item, index) => parseSvgChildModified(item, `${at}.modified[${index}]`)),
+    added: stdioSvg11BaseDiffGuardArray(row["added"], `${at}.added`).map((item, index) => parseSvgChildAdded(item, `${at}.added[${index}]`)),
   };
 }
 
@@ -188,4 +188,16 @@ export function parseSvgElementDiff(value: unknown, at = "$"): SvgElementDiff {
     attributes: row["attributes"] === undefined ? undefined : parseSvgAttributesDiff(row["attributes"], `${at}.attributes`),
     children: row["children"] === undefined ? undefined : parseSvgChildrenDiff(row["children"], `${at}.children`),
   };
+}
+
+export type NullableXmlDeclaration = Readonly<Record<string, unknown>> | null;
+
+export function parseNullableXmlDeclaration(value: unknown, at = "$"): NullableXmlDeclaration {
+  return (value === null ? null : stdioSvg11BaseDiffGuardObject(value, `${at}`));
+}
+
+export type NullableXmlDoctype = XmlDoctype | null;
+
+export function parseNullableXmlDoctype(value: unknown, at = "$"): NullableXmlDoctype {
+  return (value === null ? null : parseXmlDoctype(value, `${at}`));
 }

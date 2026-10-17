@@ -1,0 +1,27 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-s-artifact-draw-drawing-style-tests"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Companion test crate of semio-s-artifact-draw-drawing-style: the eight mutation fixture laws of the style leaves"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dev-dependencies]
+semio-framework-async-macros = { workspace = true }
+semio-framework-diagnostic = { workspace = true }
+semio-framework-os-kernel = { workspace = true, features = ["mutation-testing", "protocol-laws"] }
+semio-framework-test-fixtures = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
+semio-s-artifact-draw-drawing-diff = { workspace = true, features = ["testkit"] }
+semio-s-artifact-draw-drawing-model = { workspace = true, features = ["testkit"] }
+semio-s-artifact-draw-drawing-mutations = { workspace = true, features = ["testkit"] }
+semio-s-artifact-draw-drawing-style = { workspace = true, features = ["testkit"] }
+serde_json = { workspace = true }

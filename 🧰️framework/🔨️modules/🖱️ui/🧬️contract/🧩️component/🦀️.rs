@@ -720,10 +720,6 @@ pub fn dial_position(angle: f64) -> f64 {
     turns - turns.floor()
 }
 
-/// 🔬️ The largest [`InputProps::precision`]/[`NumberStepperProps::precision`] a renderer honours —
-/// the fraction digits an `f64` still carries meaningfully.
-pub const UI_NUMBER_PRECISION_MAX: u16 = 15;
-
 /// 👆️ Resolves a raw pointer value (the [`slider_axis_value`] under the pointer): clamped to the bounds,
 /// quantized onto the `step` ladder from `min` (cleaned to the decimals of `min` and `step`), then pulled onto the
 /// nearest snap when it lies within [`SLIDER_SNAP_RADIUS`] of the axis — measured on the log axis for `log` — the

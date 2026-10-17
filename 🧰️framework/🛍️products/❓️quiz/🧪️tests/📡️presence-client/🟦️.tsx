@@ -49,8 +49,8 @@ import {
   type QuizState,
   type QuizStep,
 } from "@semio-tech/quiz-react";
-import semioCursor from "../../../../🔨️modules/🖼️assets/👆️cursor/🖱️default/☀️light.svg?raw";
-import stylesheet from "../../🎯️targets/⚛️react/🎨️.css?raw";
+import { defaultCursorLightSvg as semioCursor } from "@semio-tech/assets/cursor/default/light";
+import { quizStylesheet as stylesheet } from "@semio-tech/quiz-react/stylesheet";
 import vectors from "../🧫️fixtures/📡️presence-client/🔣️.json";
 
 //#region 🔌️FakeSockets

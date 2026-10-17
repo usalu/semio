@@ -3,11 +3,11 @@
 //! its axis or is cut back by the columns it joins is the faceted brep of its inferred solid with an `Axis` curve (an `IfcTrimmedCurve` for an arc); IFC has no slot for the authored lean, offsets
 //! or axis, so such a column and beam carry their authored record as the `Column` and `Beam` rows of their `Semio_Authoring` set (canonical JSON) and an import restores them exactly.
 
-use super::brep::{body_kind, brep_definition, mesh_item, mesh_where};
-use super::data::label;
-use super::frames::{ccw, profile_top};
-use super::writer::{en, V};
-use super::{Export, Quantity};
+use crate::standards::v1::subsets::any::io::export::ifc::brep::{body_kind, brep_definition, mesh_item, mesh_where};
+use crate::standards::v1::subsets::any::io::export::ifc::writer::label;
+use crate::standards::v1::subsets::any::io::export::ifc::frames::{ccw, profile_top};
+use crate::standards::v1::subsets::any::io::export::ifc::writer::{en, V};
+use crate::standards::v1::subsets::any::io::export::ifc::context::{Export, Quantity};
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::columns::footprint;
 use crate::standards::v1::subsets::any::schema::snapshot::{Axis, Profile, Vertex};
 

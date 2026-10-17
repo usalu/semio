@@ -12,6 +12,6 @@ use {semio_framework_artifact_reference::StandardId};
 /// function's own D2-capability-claim-repairs comment for why the extension is `trinity`, not
 /// `jack`), matching `🗒️note`/`🖍️draw`'s identical documented deviation. `extensions: ["trinity"]`
 /// is the real, carried-over value (the codec row's own claim).
-pub fn standard<PA: crate::ArtifactApps<C>,C:crate::JackComposition>() -> StandardDeclaration<PA> {
+pub fn standard<PA: crate::standards::v1::subsets::any::registration::ArtifactApps<C>,C:crate::standards::v1::subsets::any::schema::composition::JackComposition>() -> StandardDeclaration<PA> {
     StandardDeclaration { id: StandardId("1"), media: MediaDeclaration { mimes: &["application/vnd.semio.jack+json"], extensions: &["trinity"] }, subsets: vec![subsets::any::subset::<PA,C>()] }
 }

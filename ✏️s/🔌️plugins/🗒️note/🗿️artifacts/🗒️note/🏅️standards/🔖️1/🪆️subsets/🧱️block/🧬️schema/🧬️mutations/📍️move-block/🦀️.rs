@@ -1,6 +1,5 @@
 //! 📍 Note mutation — `MoveBlock`: absolute reposition of a block.
 
-use crate::schema::mutations::NoteMutation;
 use crate::{NoteDiff, NoteSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -21,17 +20,23 @@ pub struct MoveBlock {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn move_block(id: String, new_x: f64, new_y: f64) -> NoteMutation {
-    NoteMutation::MoveBlock(MoveBlock { id, new_x, new_y })
+pub fn move_block<Op>(id: String, new_x: f64, new_y: f64) -> Op
+where
+    Op: From<crate::standards::v1::subsets::block::schema::mutations::move_block::MoveBlock>,
+{
+    Op::from(MoveBlock { id, new_x, new_y })
 }
 
-impl MutationKind<NoteSnapshot, NoteMutation> for MoveBlock {
+impl<Op> MutationKind<NoteSnapshot, Op> for MoveBlock
+where
+    Op: protocol::Mutation<NoteSnapshot, Diff = NoteDiff> + From<MoveBlock>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "move", entity: "block", kind: "move-block", record: "MovedBlock" };
 
     fn diff(&self, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &NoteSnapshot) -> Result<Vec<NoteMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &NoteSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

@@ -91,7 +91,7 @@ pub struct World3dScene {
     /// 🧲️ The SUB-OBJECT pick targets this surface hit-tests against, as a JSON array of
     /// `{kind, id, point, points, typology, selectable, style}` — the wire half of the CAD picking
     /// engine's `SpatialPickTarget`/`target_style`
-    /// (`✏️editor/⚙️engine/🧲️picking/🦀️.rs`), and the one lane that lets a renderer resolve a
+    /// (`✏️editor/⚙️engine/🧲️picking/`), and the one lane that lets a renderer resolve a
     /// click to a `vertex`/`edge`/`face`/`object` instead of only to the whole instance.
     ///
     /// 🩸️ Before ticket 26/09/17 packet W14g the overlay rode `engagement_preview_json`, which is a

@@ -6,7 +6,7 @@ import { testInputRootFixture } from "../../🪪️root/🧪️tests/🔬️inpu
 import { testInputWriterFixture } from "../../✍️writer/🧪️tests/🔬️input-writer/🟦️.ts";
 import { testInputCommitObserverFixture } from "../../🔗️commit/🧪️tests/🔬️input-commit-observer/🟦️.ts";
 import { testWatchdogTailFixture } from "../../../../../../⏱️trace/⏱️clock/🏁️tail/🧪️tests/🔬️watchdog-tail/🟦️.ts";
-import { valueSchemaUrl } from "../../../../../../🌱️value/🧪️tests/🧫️fixtures/🟦️.ts";
+import { valueSchemaUrl } from "@semio-tech/value-ts/testing/fixtures";
 
 /** 🎟️ The input-admission ledger: which pointer and key turns are admitted, refused or coalesced. */
 type InputAdmissionFixture = {

@@ -125,12 +125,13 @@ export function buildSlices(tree: DeclTree, readonlyFileTexts: (absolute: string
       if (!decl.testOnly || decl.file === null || decl.node.inline || subtreeCoupled(decl) || !decl.parentId) return false;
       const parent = tree.decls.get(decl.parentId)!;
       if (parent.testOnly) return false;
+      if (parent.parentId === null && !parent.node.inline) return false;
       const text = readonlyFileTexts(decl.file);
       if (text === null) return false;
-      if (detaching.size && [...detaching].some((name) => new RegExp(`\\b${name}\\b`, "u").test(text))) return parent.node.inline;
+      if (detaching.size && parent.node.inline && [...detaching].some((name) => new RegExp(`\\b${name}\\b`, "u").test(text))) return true;
       if (!options.detachAllTests) return false;
       const hostText = readonlyFileTexts(decl.declFile) ?? "";
-      const privateUse = hostPrivate(hostText, identifierSet(text), declaredNames(text), text);
+      const privateUse = hostPrivate(hostText, identifierSet(text), declaredNames(text), text, parent.eff);
       if (privateUse.items.length || privateUse.relative.length || privateUse.carry.length) return false;
       return true;
     })();
@@ -150,7 +151,7 @@ export function buildSlices(tree: DeclTree, readonlyFileTexts: (absolute: string
       const component = kids.find((kid) => kid.isComponent);
       if (component) for (const kid of kids) if (kid.testOnly) union.union(component.id, kid.id);
     } else {
-      for (const kid of kids) if (kid.testOnly || subtreeCoupled(kid) || kid.node.inline) { trace(`union ${kid.id} into ${parent.id} (${kid.testOnly ? "test" : kid.node.inline ? "inline" : "super"})`); union.union(parent.id, kid.id); }
+      for (const kid of kids) if (kid.testOnly || subtreeCoupled(kid) || kid.node.inline || kid.node.attributeTexts.some((text) => /^macro_use\b/u.test(text.trim()))) { trace(`union ${kid.id} into ${parent.id} (${kid.testOnly ? "test" : kid.node.inline ? "inline" : kid.node.attributeTexts.some((text) => /^macro_use\b/u.test(text.trim())) ? "macro_use" : "super"})`); union.union(parent.id, kid.id); }
     }
   }
   const groups = new Map<string, ModuleDecl[]>();

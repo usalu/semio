@@ -1,7 +1,6 @@
 //! 🎬️ Authoritative PDF/E mutation for inserting a Movie or Sound annotation.
 
-use super::remove_media_annotation::RemoveMediaAnnotation;
-use super::PdfEMutation;
+use crate::standards::v1_7::subsets::e::schema::mutations::remove_media_annotation::RemoveMediaAnnotation;
 use crate::standards::v1_7::subsets::base::schema::conformance_support as support;
 use crate::standards::v1_7::subsets::base::schema::diff::{self, PdfDiff};
 use crate::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot;
@@ -19,7 +18,10 @@ pub struct InsertMediaAnnotation {
     pub placements: Vec<support::ObjectPlacement>,
 }
 
-impl MutationKind<PdfSnapshot, PdfEMutation> for InsertMediaAnnotation {
+impl<Op> MutationKind<PdfSnapshot, Op> for InsertMediaAnnotation
+where
+    Op: protocol::Mutation<PdfSnapshot, Diff = PdfDiff> + From<InsertMediaAnnotation> + From<crate::standards::v1_7::subsets::e::schema::mutations::remove_media_annotation::RemoveMediaAnnotation>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "insert", entity: "media-annotation", kind: "insert-media-annotation", record: "Insert" };
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
@@ -27,9 +29,9 @@ impl MutationKind<PdfSnapshot, PdfEMutation> for InsertMediaAnnotation {
         MutationOutcome::new(diff::graph_edit(rows))
     }
 
-    fn inverse(&self, _base: &PdfSnapshot) -> Result<Vec<PdfEMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, _base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
-        vec![PdfEMutation::RemoveMediaAnnotation(RemoveMediaAnnotation { subtype: self.subtype.clone(), title: self.title.clone() })]
+        vec![Op::from(RemoveMediaAnnotation { subtype: self.subtype.clone(), title: self.title.clone() })]
     
     })())
 }
@@ -45,9 +47,7 @@ impl MutationKind<PdfSnapshot, PdfEMutation> for InsertMediaAnnotation {
 //#endregion 🔖️Mutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
 
 //#region 🔖️Facets

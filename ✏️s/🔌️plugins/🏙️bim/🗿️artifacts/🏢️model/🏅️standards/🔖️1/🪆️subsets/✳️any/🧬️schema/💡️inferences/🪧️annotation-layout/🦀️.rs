@@ -13,7 +13,7 @@ use super::super::diagnostics::{Diagnostic, DiagnosticCode};
 use super::super::element_solids::{dep_object, dep_value};
 use super::super::wall_layout::WallLayout;
 use crate::standards::v1::subsets::any::schema::snapshot::{AnnotationAnchor, DimensionUnit, ModelSnapshot, Point2, Terminator};
-use anchors::{Reason, EPS};
+use crate::standards::v1::subsets::any::schema::inferences::annotation_layout::anchors::{Reason, EPS};
 use semio_framework_value::DslValue;
 use std::collections::{BTreeMap, BTreeSet};
 

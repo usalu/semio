@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
-import { CARGO_CONTRACT_NAME, JsonMap, STDIO_RELATIVE_ROOT, StdioArtifactPackageRecord, canonicalStdioArtifactNames, readStdioJson, slashStdioPath } from "../../../../🔌️plugins/🗄️stdio/🗿️artifacts/📇️inventory/🟦️.ts";
+import { CARGO_CONTRACT_NAME, JsonMap, STDIO_RELATIVE_ROOT, StdioArtifactPackageRecord, canonicalStdioArtifactNames, readStdioJson, slashStdioPath } from "@semio-tech/stdio-inventory-ts";
 
 import { CARGO_COMPOSITION_NAME, COMPOSITION_TYPESCRIPT_NAME, COMPOSITION_TYPESCRIPT_ROOT } from "../🪪️identity/🟦️.ts";
 

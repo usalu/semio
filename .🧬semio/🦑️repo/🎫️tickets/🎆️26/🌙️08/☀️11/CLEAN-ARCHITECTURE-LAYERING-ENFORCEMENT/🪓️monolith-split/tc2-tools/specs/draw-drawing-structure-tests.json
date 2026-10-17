@@ -1,0 +1,27 @@
+{
+ "parent": "semio-s-artifact-draw-drawing-structure",
+ "name": "semio-s-artifact-draw-drawing-structure-tests",
+ "dir": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🧱️structure/🧪️tests/🥣️companion",
+ "files": [
+  "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🧱️structure/🧬️schema/🧬️mutations/➕️create-layer/🧪️tests/➕️appends/🦀️.rs",
+  "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🧱️structure/🧬️schema/🧬️mutations/📋️duplicate-layer/🧪️tests/🚫️rejects/🦀️.rs",
+  "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🧱️structure/🧬️schema/🧬️mutations/🔃reorder-layer/🧪️tests/⬆️moves/🦀️.rs",
+  "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🧱️structure/🧬️schema/🧬️mutations/🗑️delete-layer/🧪️tests/🚫️removes/🦀️.rs"
+ ],
+ "testkit": [
+  "semio-s-artifact-draw-drawing-model",
+  "semio-s-artifact-draw-drawing-diff",
+  "semio-s-artifact-draw-drawing-geometry",
+  "semio-s-artifact-draw-drawing-mutations",
+  "semio-s-artifact-draw-drawing-transform",
+  "semio-s-artifact-draw-drawing-style",
+  "semio-s-artifact-draw-drawing-structure",
+  "semio-s-artifact-draw-drawing-metadata",
+  "semio-s-artifact-draw-drawing-scene",
+  "semio-s-artifact-draw-drawing-editor-interaction",
+  "semio-s-artifact-draw-drawing-editor"
+ ],
+ "emoji": "🥣️",
+ "summary": "the four mutation fixture laws of the structure leaves.",
+ "description": "Companion test crate of semio-s-artifact-draw-drawing-structure: the four mutation fixture laws of the structure leaves"
+}

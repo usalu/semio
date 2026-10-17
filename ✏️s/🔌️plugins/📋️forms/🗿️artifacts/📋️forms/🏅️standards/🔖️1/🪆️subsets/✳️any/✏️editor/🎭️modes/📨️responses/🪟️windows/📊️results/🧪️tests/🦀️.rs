@@ -1,11 +1,15 @@
-use super::*;
+use crate::{schema::response::FormsAnswer, schema::response::FormsResponse};
+use crate::FormsSnapshot;
+use semio_framework_plugin::TreeWindows;
+use crate::editor::forms::modes::responses::results::*;
 use crate::editor::forms::terminology::forms_play_labels;
 use semio_framework_plugin::plugin_app_close_prelude::Component;
 use semio_framework_plugin::{TreeWindowRequest, ViewModel};
+use semio_framework_test_fixtures::fixture_text;
 
 #[test]
 fn shared_response_fixture_renders_original_labels_and_values() {
-    let input: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🚪️io/📝️text/📸️snapshot/📨️response/📤️export/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+    let input: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../🚪️io/📝️text/📸️snapshot/📨️response/📤️export/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let mut snapshot = FormsSnapshot::default();
     snapshot.responses = semio_framework_pack_json::from_json_str(&input["cases"][1]["responses"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let view = ViewModel { tree_viewport_rows: Some(32), ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };

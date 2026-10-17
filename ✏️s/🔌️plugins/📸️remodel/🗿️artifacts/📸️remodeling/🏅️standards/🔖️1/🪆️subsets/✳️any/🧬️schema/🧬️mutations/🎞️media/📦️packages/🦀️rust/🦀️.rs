@@ -34,33 +34,6 @@ pub mod standards {
                             pub mod inverse;
                         }
                         #[path = "."]
-                        pub mod change_stream_sync {
-                            #[path = "../../../⏱️change-stream-sync/🦀️.rs"]
-                            mod component;
-                            #[path = "../../../⏱️change-stream-sync/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "../../../⏱️change-stream-sync/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                        }
-                        #[path = "."]
-                        pub mod add_stream_frame {
-                            #[path = "../../../➕add-stream-frame/🦀️.rs"]
-                            mod component;
-                            #[path = "../../../➕add-stream-frame/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "../../../➕add-stream-frame/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                        }
-                        #[path = "."]
-                        pub mod remove_stream_frame {
-                            #[path = "../../../➖remove-stream-frame/🦀️.rs"]
-                            mod component;
-                            #[path = "../../../➖remove-stream-frame/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "../../../➖remove-stream-frame/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                        }
-                        #[path = "."]
                         pub mod replace_stream_source {
                             #[path = "../../../🔁replace-stream/🦀️.rs"]
                             mod component;
@@ -69,42 +42,8 @@ pub mod standards {
                             #[path = "../../../🔁replace-stream/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                         }
-                        #[path = "."]
-                        pub mod create_asset {
-                            #[path = "../../../🧷create-asset/🦀️.rs"]
-                            mod component;
-                            #[path = "../../../🧷create-asset/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "../../../🧷create-asset/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                        }
-                        #[path = "."]
-                        pub mod delete_asset {
-                            #[path = "../../../🗞️delete-asset/🦀️.rs"]
-                            mod component;
-                            #[path = "../../../🗞️delete-asset/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "../../../🗞️delete-asset/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                        }
-                        #[path = "."]
-                        pub mod append_content {
-                            #[path = "../../../📦append-content/🦀️.rs"]
-                            mod component;
-                            #[path = "../../../📦append-content/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "../../../📦append-content/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                        }
-                        #[path = "."]
-                        pub mod remove_content {
-                            #[path = "../../../🔪remove-content/🦀️.rs"]
-                            mod component;
-                            #[path = "../../../🔪remove-content/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "../../../🔪remove-content/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                        }
+                        pub use semio_s_artifact_remodel_remodeling_mut_media_2::standards::v1::subsets::any::schema::mutations::{change_stream_sync, create_asset, delete_asset, append_content, remove_content};
+                        pub use semio_s_artifact_remodel_remodeling_mut_media_3::standards::v1::subsets::any::schema::mutations::{add_stream_frame, remove_stream_frame};
                     }
                 }
             }

@@ -30,13 +30,13 @@ impl Patch<WallSweep> for WallSweepPatch {
         Self { host: restore(&self.host, &base.host), side: restore(&self.side, &base.side), profile: restore(&self.profile, &base.profile), height: restore(&self.height, &base.height), inset: restore(&self.inset, &base.inset), material: restore(&self.material, &base.material), name: restore(&self.name, &base.name) }
     }
     fn merge(&mut self, later: Self) {
-        merge_slot!(&mut self.host, later.host);
-        merge_slot!(&mut self.side, later.side);
-        merge_slot!(&mut self.profile, later.profile);
-        merge_slot!(&mut self.height, later.height);
-        merge_slot!(&mut self.inset, later.inset);
-        merge_slot!(&mut self.material, later.material);
-        merge_slot!(&mut self.name, later.name);
+        merge_slot(&mut self.host, later.host);
+        merge_slot(&mut self.side, later.side);
+        merge_slot(&mut self.profile, later.profile);
+        merge_slot(&mut self.height, later.height);
+        merge_slot(&mut self.inset, later.inset);
+        merge_slot(&mut self.material, later.material);
+        merge_slot(&mut self.name, later.name);
     }
     fn minimal(&self, base: &WallSweep) -> Self {
         Self { host: changed(&self.host, &base.host), side: changed(&self.side, &base.side), profile: changed(&self.profile, &base.profile), height: changed(&self.height, &base.height), inset: changed(&self.inset, &base.inset), material: changed(&self.material, &base.material), name: changed(&self.name, &base.name) }
@@ -95,11 +95,11 @@ impl Patch<Project> for ProjectPatch {
         Self { name: restore(&self.name, &base.name), description: restore(&self.description, &base.description), author: restore(&self.author, &base.author), organization: restore(&self.organization, &base.organization), phase_names: restore(&self.phase_names, &base.phase_names) }
     }
     fn merge(&mut self, later: Self) {
-        merge_slot!(&mut self.name, later.name);
-        merge_slot!(&mut self.description, later.description);
-        merge_slot!(&mut self.author, later.author);
-        merge_slot!(&mut self.organization, later.organization);
-        merge_slot!(&mut self.phase_names, later.phase_names);
+        merge_slot(&mut self.name, later.name);
+        merge_slot(&mut self.description, later.description);
+        merge_slot(&mut self.author, later.author);
+        merge_slot(&mut self.organization, later.organization);
+        merge_slot(&mut self.phase_names, later.phase_names);
     }
     fn minimal(&self, base: &Project) -> Self {
         Self { name: changed(&self.name, &base.name), description: changed(&self.description, &base.description), author: changed(&self.author, &base.author), organization: changed(&self.organization, &base.organization), phase_names: changed(&self.phase_names, &base.phase_names) }
@@ -154,12 +154,12 @@ impl Patch<Site> for SitePatch {
         Self { name: restore(&self.name, &base.name), latitude: restore(&self.latitude, &base.latitude), longitude: restore(&self.longitude, &base.longitude), elevation: restore(&self.elevation, &base.elevation), true_north: restore(&self.true_north, &base.true_north), boundary: restore(&self.boundary, &base.boundary) }
     }
     fn merge(&mut self, later: Self) {
-        merge_slot!(&mut self.name, later.name);
-        merge_slot!(&mut self.latitude, later.latitude);
-        merge_slot!(&mut self.longitude, later.longitude);
-        merge_slot!(&mut self.elevation, later.elevation);
-        merge_slot!(&mut self.true_north, later.true_north);
-        merge_slot!(&mut self.boundary, later.boundary);
+        merge_slot(&mut self.name, later.name);
+        merge_slot(&mut self.latitude, later.latitude);
+        merge_slot(&mut self.longitude, later.longitude);
+        merge_slot(&mut self.elevation, later.elevation);
+        merge_slot(&mut self.true_north, later.true_north);
+        merge_slot(&mut self.boundary, later.boundary);
     }
     fn minimal(&self, base: &Site) -> Self {
         Self { name: changed(&self.name, &base.name), latitude: changed(&self.latitude, &base.latitude), longitude: changed(&self.longitude, &base.longitude), elevation: changed(&self.elevation, &base.elevation), true_north: changed(&self.true_north, &base.true_north), boundary: changed(&self.boundary, &base.boundary) }
@@ -215,11 +215,11 @@ impl Patch<Building> for BuildingPatch {
         Self { site: restore(&self.site, &base.site), name: restore(&self.name, &base.name), origin: restore(&self.origin, &base.origin), rotation: restore(&self.rotation, &base.rotation), elevation: restore(&self.elevation, &base.elevation) }
     }
     fn merge(&mut self, later: Self) {
-        merge_slot!(&mut self.site, later.site);
-        merge_slot!(&mut self.name, later.name);
-        merge_slot!(&mut self.origin, later.origin);
-        merge_slot!(&mut self.rotation, later.rotation);
-        merge_slot!(&mut self.elevation, later.elevation);
+        merge_slot(&mut self.site, later.site);
+        merge_slot(&mut self.name, later.name);
+        merge_slot(&mut self.origin, later.origin);
+        merge_slot(&mut self.rotation, later.rotation);
+        merge_slot(&mut self.elevation, later.elevation);
     }
     fn minimal(&self, base: &Building) -> Self {
         Self { site: changed(&self.site, &base.site), name: changed(&self.name, &base.name), origin: changed(&self.origin, &base.origin), rotation: changed(&self.rotation, &base.rotation), elevation: changed(&self.elevation, &base.elevation) }
@@ -272,11 +272,11 @@ impl Patch<Storey> for StoreyPatch {
         Self { building: restore(&self.building, &base.building), name: restore(&self.name, &base.name), level: restore(&self.level, &base.level), height: restore(&self.height, &base.height), cut_height: restore_assigned(&self.cut_height, &base.cut_height) }
     }
     fn merge(&mut self, later: Self) {
-        merge_slot!(&mut self.building, later.building);
-        merge_slot!(&mut self.name, later.name);
-        merge_slot!(&mut self.level, later.level);
-        merge_slot!(&mut self.height, later.height);
-        merge_slot!(&mut self.cut_height, later.cut_height);
+        merge_slot(&mut self.building, later.building);
+        merge_slot(&mut self.name, later.name);
+        merge_slot(&mut self.level, later.level);
+        merge_slot(&mut self.height, later.height);
+        merge_slot(&mut self.cut_height, later.cut_height);
     }
     fn minimal(&self, base: &Storey) -> Self {
         Self { building: changed(&self.building, &base.building), name: changed(&self.name, &base.name), level: changed(&self.level, &base.level), height: changed(&self.height, &base.height), cut_height: changed_assigned(&self.cut_height, &base.cut_height) }
@@ -327,10 +327,10 @@ impl Patch<GridLine> for GridLinePatch {
         Self { building: restore(&self.building, &base.building), label: restore(&self.label, &base.label), start: restore(&self.start, &base.start), end: restore(&self.end, &base.end) }
     }
     fn merge(&mut self, later: Self) {
-        merge_slot!(&mut self.building, later.building);
-        merge_slot!(&mut self.label, later.label);
-        merge_slot!(&mut self.start, later.start);
-        merge_slot!(&mut self.end, later.end);
+        merge_slot(&mut self.building, later.building);
+        merge_slot(&mut self.label, later.label);
+        merge_slot(&mut self.start, later.start);
+        merge_slot(&mut self.end, later.end);
     }
     fn minimal(&self, base: &GridLine) -> Self {
         Self { building: changed(&self.building, &base.building), label: changed(&self.label, &base.label), start: changed(&self.start, &base.start), end: changed(&self.end, &base.end) }
@@ -390,16 +390,16 @@ impl Patch<Space> for SpacePatch {
         Self { storey: restore(&self.storey, &base.storey), number: restore(&self.number, &base.number), name: restore(&self.name, &base.name), boundary: restore(&self.boundary, &base.boundary), usage: restore(&self.usage, &base.usage), phase: restore(&self.phase, &base.phase), zone: restore_assigned(&self.zone, &base.zone), floor_finish: restore_assigned(&self.floor_finish, &base.floor_finish), wall_finish: restore_assigned(&self.wall_finish, &base.wall_finish), ceiling_finish: restore_assigned(&self.ceiling_finish, &base.ceiling_finish) }
     }
     fn merge(&mut self, later: Self) {
-        merge_slot!(&mut self.storey, later.storey);
-        merge_slot!(&mut self.number, later.number);
-        merge_slot!(&mut self.name, later.name);
-        merge_slot!(&mut self.boundary, later.boundary);
-        merge_slot!(&mut self.usage, later.usage);
-        merge_slot!(&mut self.phase, later.phase);
-        merge_slot!(&mut self.zone, later.zone);
-        merge_slot!(&mut self.floor_finish, later.floor_finish);
-        merge_slot!(&mut self.wall_finish, later.wall_finish);
-        merge_slot!(&mut self.ceiling_finish, later.ceiling_finish);
+        merge_slot(&mut self.storey, later.storey);
+        merge_slot(&mut self.number, later.number);
+        merge_slot(&mut self.name, later.name);
+        merge_slot(&mut self.boundary, later.boundary);
+        merge_slot(&mut self.usage, later.usage);
+        merge_slot(&mut self.phase, later.phase);
+        merge_slot(&mut self.zone, later.zone);
+        merge_slot(&mut self.floor_finish, later.floor_finish);
+        merge_slot(&mut self.wall_finish, later.wall_finish);
+        merge_slot(&mut self.ceiling_finish, later.ceiling_finish);
     }
     fn minimal(&self, base: &Space) -> Self {
         Self { storey: changed(&self.storey, &base.storey), number: changed(&self.number, &base.number), name: changed(&self.name, &base.name), boundary: changed(&self.boundary, &base.boundary), usage: changed(&self.usage, &base.usage), phase: changed(&self.phase, &base.phase), zone: changed_assigned(&self.zone, &base.zone), floor_finish: changed_assigned(&self.floor_finish, &base.floor_finish), wall_finish: changed_assigned(&self.wall_finish, &base.wall_finish), ceiling_finish: changed_assigned(&self.ceiling_finish, &base.ceiling_finish) }
@@ -463,9 +463,9 @@ impl Patch<Zone> for ZonePatch {
         Self { name: restore(&self.name, &base.name), category: restore(&self.category, &base.category), occupancy_density: restore(&self.occupancy_density, &base.occupancy_density) }
     }
     fn merge(&mut self, later: Self) {
-        merge_slot!(&mut self.name, later.name);
-        merge_slot!(&mut self.category, later.category);
-        merge_slot!(&mut self.occupancy_density, later.occupancy_density);
+        merge_slot(&mut self.name, later.name);
+        merge_slot(&mut self.category, later.category);
+        merge_slot(&mut self.occupancy_density, later.occupancy_density);
     }
     fn minimal(&self, base: &Zone) -> Self {
         Self { name: changed(&self.name, &base.name), category: changed(&self.category, &base.category), occupancy_density: changed(&self.occupancy_density, &base.occupancy_density) }
@@ -510,10 +510,10 @@ impl Patch<AreaScheme> for AreaSchemePatch {
         Self { name: restore(&self.name, &base.name), measure: restore(&self.measure, &base.measure), usages: restore(&self.usages, &base.usages), zones: restore(&self.zones, &base.zones) }
     }
     fn merge(&mut self, later: Self) {
-        merge_slot!(&mut self.name, later.name);
-        merge_slot!(&mut self.measure, later.measure);
-        merge_slot!(&mut self.usages, later.usages);
-        merge_slot!(&mut self.zones, later.zones);
+        merge_slot(&mut self.name, later.name);
+        merge_slot(&mut self.measure, later.measure);
+        merge_slot(&mut self.usages, later.usages);
+        merge_slot(&mut self.zones, later.zones);
     }
     fn minimal(&self, base: &AreaScheme) -> Self {
         Self { name: changed(&self.name, &base.name), measure: changed(&self.measure, &base.measure), usages: changed(&self.usages, &base.usages), zones: changed(&self.zones, &base.zones) }

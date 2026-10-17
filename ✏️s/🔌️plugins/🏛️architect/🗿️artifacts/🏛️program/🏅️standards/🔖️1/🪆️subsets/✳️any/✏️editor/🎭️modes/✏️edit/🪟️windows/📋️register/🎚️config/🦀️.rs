@@ -234,7 +234,3 @@ pub fn addressed(view: &semio_framework_plugin::ViewModel, active_register: Stri
         ArchitectRegisterWindowConfigMutation::SetActiveRegister(SetActiveRegister { active_register }),
     ))
 }
-
-#[cfg(test)]
-#[path = "🧪️tests/🔬️window-ownership/🦀️.rs"]
-mod window_ownership_tests;

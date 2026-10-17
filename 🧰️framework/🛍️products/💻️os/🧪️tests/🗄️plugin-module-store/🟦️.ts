@@ -20,7 +20,8 @@ import {
   storePluginModuleBlobV1,
   type PluginModuleCacheV1,
 } from "../../🔨️modules/🔌️plugin/📇️registry/🌎️hub-source/🗄️store/🟦️.ts";
-import { createHubPluginSource, HUB_PLUGIN_MODULE_ROUTE, TrustedPluginModuleTransientError, type HubPluginSourceNoticeV1, type PluginModuleLocksV1 } from "../../🔨️modules/🔌️plugin/📇️registry/🌎️hub-source/🟦️.ts";
+import { createHubPluginSource, HUB_PLUGIN_MODULE_ROUTE, TrustedPluginModuleTransientError, type PluginModuleLocksV1 } from "../../🔨️modules/🔌️plugin/📇️registry/🌎️hub-source/🟦️.ts";
+import type { HubPluginSourceNoticeV1 } from "@semio-tech/framework/plugin-module/hub-source/port";
 import { PLUGIN_MODULE_TRANSFER_RETRY_V1 } from "@semio-tech/framework/plugin-module/hub-source/schema";
 import { TrustedPluginModuleRefusalV1 } from "@semio-tech/framework/plugin-module";
 import { semioSchemaAjvV1 } from "@semio-tech/schema-ts/oracles/validator";

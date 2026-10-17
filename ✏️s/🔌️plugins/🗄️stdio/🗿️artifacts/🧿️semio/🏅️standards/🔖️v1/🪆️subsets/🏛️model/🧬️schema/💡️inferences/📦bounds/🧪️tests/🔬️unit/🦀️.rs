@@ -1,4 +1,6 @@
-use super::*;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3;
+use crate::schema::snapshot::SemioModelSnapshot;
+use crate::schema::inferences::bounds::*;
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioQuaternion;
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
 use crate::schema::snapshot::{ElementClass, GeometryRef, SemioModelElement, SpatialKind, SpatialNode, STDIO_SEMIOMODEL_DOCUMENT_SCHEMA};

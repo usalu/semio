@@ -1,16 +1,16 @@
 
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import boardSource from "../../🧱️elements/🖥️Board2dHost/🟦️.tsx?raw";
-import inkSource from "../../🧱️elements/🖋️InkCanvasHost/🟦️.tsx?raw";
 import nodeGraphSource from "../../🧱️elements/🕸️NodeGraph/🧭️wasm-graph-surface/🟦️.tsx?raw";
 import paintSource from "../../🧱️elements/🖌️Paint2dHost/🟦️.tsx?raw";
 import textEditorSource from "../../🧱️elements/✏️TextEditor/🟦️.tsx?raw";
-import tiledMapSource from "../../🧱️elements/🧭️TiledMapHost/🟦️.tsx?raw";
 import fixture from "../🧫️fixtures/🛑️scene-pointer-cancellation/🔣️.json";
 import { readModuleTreeSource } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
 
 const engineSource = (path: string): string => readModuleTreeSource(fileURLToPath(new URL(path, import.meta.url)));
+const boardSource = engineSource("../../🧱️elements/🖥️Board2dHost/🟦️.tsx");
+const inkSource = engineSource("../../🧱️elements/🖋️InkCanvasHost/🟦️.tsx");
+const tiledMapSource = engineSource("../../🧱️elements/🧭️TiledMapHost/🟦️.tsx");
 const engineCanvasSource = engineSource("../../🧱️elements/⚙️EngineCanvas/🎯️targets/🧊️wgpu/🦀️.rs");
 const interpreterSource = engineSource("../../🧱️elements/🗣️Interpreter/🎯️targets/🧊️wgpu/🦀️.rs");
 const scenesSource = engineSource("../../🧱️elements/🎞️Scenes/🎯️targets/🧊️wgpu/🦀️.rs");

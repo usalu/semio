@@ -8,12 +8,13 @@
 //! rest of the artifact's schema, not behind an engine facade.
 
 use crate::standards::v1::subsets::any::schema::next_id;
-use crate::{Puzzle5dFastener, Puzzle5dPart, Puzzle5dSnapshot};
+use crate::{Puzzle5dSnapshot};
+use crate::standards::v1::subsets::any::schema::document_records::{Puzzle5dFastener, Puzzle5dPart};
 use std::collections::{HashMap, HashSet};
 
 //#region 🔖️GripRefs
 /// 🧩️ The part id a `"part_id:grip_id"` full grip reference belongs to.
-fn owning_part_id(grip_ref: &str) -> &str {
+pub fn owning_part_id(grip_ref: &str) -> &str {
     grip_ref.split(':').next().unwrap_or(grip_ref)
 }
 
@@ -137,7 +138,7 @@ pub fn find_replaceable_kinds(projection: &Puzzle5dSnapshot, part_id: &str) -> V
     let Some(part) = projection.parts.iter().find(|part| part.id == part_id) else {
         return Vec::new();
     };
-    let Some(catalogs) = crate::kind_catalogs_of(&projection.kind_catalogs, &projection.kind_catalogs_extra) else {
+    let Some(catalogs) = crate::standards::v1::subsets::any::schema::kind_catalogs::kind_catalogs_of(&projection.kind_catalogs, &projection.kind_catalogs_extra) else {
         return Vec::new();
     };
     let grip_kinds: HashSet<&str> = part.grips.iter().filter_map(|grip| grip.grip_kind.as_deref()).collect();
@@ -162,7 +163,5 @@ pub fn find_replaceable_kinds(projection: &Puzzle5dSnapshot, part_id: &str) -> V
 //#endregion 🔖️CopyPasteTranslate
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

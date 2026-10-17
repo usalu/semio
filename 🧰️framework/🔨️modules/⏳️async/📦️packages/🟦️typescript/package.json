@@ -6,7 +6,12 @@
   "type": "module",
   "private": true,
   "exports": {
-    ".": "./🟦️.ts"
+    ".": "./🟦️.ts",
+    "./continuation": "./🪃️continuation/🟦️.ts",
+    "./event-wait": "./🔔️event-wait/🟦️.ts",
+    "./jittered-backoff": "./🔁️jittered-backoff/🟦️.ts",
+    "./latest-wins": "./🥇️latest-wins/🟦️.ts",
+    "./lease-pool": "./🎟️lease-pool/🟦️.ts"
   },
   "license": "LGPL-3.0-or-later",
   "repository": {

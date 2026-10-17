@@ -548,7 +548,5 @@ pub fn body_from_snapshot(snapshot: &SemioBrepSnapshot) -> Result<Body, KernelEr
 //#endregion 🔖️FromSnapshot
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

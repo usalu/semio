@@ -7,9 +7,11 @@ import "./🎨️.css";
 
 import type { AppRole } from "@semio-tech/framework";
 import { resolvePlaygroundBoot } from "@semio-tech/framework";
-import { admitPluginCatalogV1, pluginCatalogV1, type PluginCatalogRowsV1, type PluginCatalogAdmissionV1 } from "../🔌️plugin/📇️registry/🟦️.ts";
+import { admitPluginCatalogV1, pluginCatalogV1 } from "../🔌️plugin/📇️registry/🟦️.ts";
+import type { PluginCatalogRowsV1, PluginCatalogAdmissionV1 } from "@semio-tech/framework/plugin-catalog";
 import { resolveShellBrandById } from "./🏷️brand/🟦️.ts";
 import { resolveBootQueryAppRole, resolveBootQueryExampleId } from "./🔗️boot-query/🟦️.ts";
+import { createFrameworkOsHostPortsV1 } from "./🪝️host-ports/🟦️.ts";
 
 /** 🚀️ Boots the selected playground with its owner's browser contributions. */
 export async function bootFrameworkOsDev(options: { readonly catalogRows: PluginCatalogRowsV1; readonly variant: string; readonly admission: PluginCatalogAdmissionV1; readonly backboneWorkerFactory?: import("@semio-tech/framework-renderer-react").FrameworkOsBootExecution["backboneWorkerFactory"]; readonly documentServices?: import("@semio-tech/framework-renderer-react").FrameworkOsBootExecution["documentServices"]; readonly brands: readonly import("@semio-tech/framework").ShellBrand[]; readonly surfaceSessionFactories?: import("@semio-tech/framework-renderer-react").FrameworkOsBootOptions["surfaceSessionFactories"] }) {
@@ -58,7 +60,7 @@ if (typeof document !== "undefined" && document.getElementById("root") != null )
   const plugins = boot.plugins;
   if (renderer !== "wgpu") {
     const { bootFrameworkOs } = await import("@semio-tech/framework-renderer-react");
-    return bootFrameworkOs({ catalog: rows, plugin: pluginFilter, plugins, surfaceSessionFactories: options.surfaceSessionFactories, appId, appRole, locks, defaults, brand }, { backboneWorkerFactory: options.backboneWorkerFactory, documentServices: options.documentServices }).catch((error) => {
+    return bootFrameworkOs({ catalog: rows, plugin: pluginFilter, plugins, surfaceSessionFactories: options.surfaceSessionFactories, appId, appRole, locks, defaults, brand }, { backboneWorkerFactory: options.backboneWorkerFactory, documentServices: options.documentServices, hostPorts: createFrameworkOsHostPortsV1() }).catch((error) => {
       console.error("[TRACE] os-dev react boot failed", error);
       throw error;
     });

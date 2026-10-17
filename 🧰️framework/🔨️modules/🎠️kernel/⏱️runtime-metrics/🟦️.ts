@@ -3,7 +3,7 @@
  * 🧱️ Child module of `🎠️kernel`; importers import this module directly, and the kernel package entry {@link ../📦️packages/🟦️typescript/🟦️.ts} lists its public names.
  */
 
-import { ShardClient } from "../../🎭️actor/📮️shard-client/🟦️.ts";
+import { ShardClient } from "@semio-tech/framework-actor/shard-client";
 
 // #region 🎠️Kernel
 //#region 🐚️ActivationRegistry

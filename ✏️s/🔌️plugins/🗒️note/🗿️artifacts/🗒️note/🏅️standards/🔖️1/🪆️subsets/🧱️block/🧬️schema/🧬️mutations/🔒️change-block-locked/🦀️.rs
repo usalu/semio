@@ -1,6 +1,5 @@
 //! 🔒 Note mutation — `ChangeBlockLocked`: sets a block's locked state.
 
-use crate::schema::mutations::NoteMutation;
 use crate::{NoteDiff, NoteSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -20,17 +19,23 @@ pub struct ChangeBlockLocked {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_block_locked(id: String, new_locked: bool) -> NoteMutation {
-    NoteMutation::ChangeBlockLocked(ChangeBlockLocked { id, new_locked })
+pub fn change_block_locked<Op>(id: String, new_locked: bool) -> Op
+where
+    Op: From<crate::standards::v1::subsets::block::schema::mutations::change_block_locked::ChangeBlockLocked>,
+{
+    Op::from(ChangeBlockLocked { id, new_locked })
 }
 
-impl MutationKind<NoteSnapshot, NoteMutation> for ChangeBlockLocked {
+impl<Op> MutationKind<NoteSnapshot, Op> for ChangeBlockLocked
+where
+    Op: protocol::Mutation<NoteSnapshot, Diff = NoteDiff> + From<ChangeBlockLocked>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "block-locked", kind: "change-block-locked", record: "ChangedBlockLocked" };
 
     fn diff(&self, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &NoteSnapshot) -> Result<Vec<NoteMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &NoteSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

@@ -13,13 +13,11 @@ pub fn measure(snapshot: &ShootingSnapshot, labels: &ShootingLabels) -> WindowMe
         label: Some(labels.measure_shadow.into()),
         pressed: snapshot.scene.shadow.enabled,
         text: None,
-        on_change: crate::editor::shooting::shooting_window_action("setShadowEnabled", None),
+        on_change: crate::editor::shooting::ui_helpers_and_io::shooting_window_action("setShadowEnabled", None),
     }
 }
 //#endregion 🔖️Measure
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

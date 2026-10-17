@@ -1,0 +1,23 @@
+// 🔬 c4p32: runs the tool-job census building blocks of `verify interactivity tool-jobs` on the plugin production sources and prints the evidence of the lowpoly and forms editor roots. usage: bun tooljob-probe.ts <tag>
+import { toolJobPluginProductionSources, toolJobProofCatalogFailures } from "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/🏭️factory/🟦️.ts";
+import { toolJobStaticRows, toolJobDispositions, toolJobProofs, toolJobAppOwnedRows, toolJobScanThenMonolithRows } from "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/📋️inventory/🟦️.ts";
+const root = "/Users/ueli/Documents/semio";
+const sources = toolJobPluginProductionSources(root);
+const rows = toolJobStaticRows(sources);
+const dispositions = toolJobDispositions(sources);
+const proofs = toolJobProofs(sources);
+const appOwned = toolJobAppOwnedRows(sources);
+const failures = toolJobProofCatalogFailures(sources, rows, dispositions, proofs);
+const scan = toolJobScanThenMonolithRows(sources, proofs);
+const mine = (file: string) => /🎥️shooting\/🗿️artifacts\/🎥️shooting\/(🏅️standards\/🔖️1\/🪆️subsets\/✳️any\/✏️editor\/)?🦀️\.rs$|🏗️fem\/🗿️artifacts\/🧊️3d\/.*✏️editor\/(🧵️session\/)?🦀️\.rs$|🏙️bim\/🗿️artifacts\/🏢️model\/.*(✏️editor|🧩️entities|🗣️terminology|🧱️building-elements)\/🦀️\.rs$/.test(file);
+const tag = process.argv[2] ?? "x";
+const out: string[] = [];
+out.push(`# tool-job probe ${tag}: production sources ${sources.size}, rows ${rows.length}, dispositions ${dispositions.size}, proofs ${proofs.length}, app-owned ${appOwned.length}, failures ${failures.length}, scan-then-monolith ${scan.length}`);
+for (const [file, text] of sources) if (mine(file)) out.push(`source ${file.split("/").slice(-9).join("/")} bytes=${text.length} lines=${text.split("\n").length}`);
+for (const r of rows) if (mine(r.file)) out.push(`row ${r.file.split("/")[2]}\t${r.id}\t${r.source}`);
+for (const [k, v] of dispositions) if (mine(k.split("\0")[0]!)) out.push(`disposition ${k.split("\0")[0]!.split("/")[2]}\t${k.split("\0")[1]}\t${v}`);
+for (const p of proofs) if (mine(p.sourceFile) || mine(p.ownerFile)) out.push(`proof ${p.sourceFile.split("/")[2]}\towner=${p.ownerFile.split("/")[2]}\t${p.toolId}\t${p.execution}\t${p.values.join(",")}\t${p.factory}`);
+for (const a of appOwned) if (mine(a.ownerFile)) out.push(`appOwned ${a.ownerFile.split("/")[2]}\t${a.toolId}\tready=${a.publicationReady}`);
+for (const f of failures) if (/shooting|fem|bim/.test(f)) out.push(`failure ${f.slice(0, 300)}`);
+for (const s of scan) if (mine(s.file)) out.push(`scan ${s.file.split("/")[2]}\t${s.id}\t${s.helper}`);
+console.log(out.join("\n"));

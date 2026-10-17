@@ -1,7 +1,8 @@
 use super::*;
 use crate::editor_domain::editor_laws::context::{empty_history_view, retire_flow_eval_session};
+use semio_framework_test_fixtures::repo_text;
 
-const PREVIEW_EVAL_RUN_FIXTURE_JSON: &str = include_str!("../../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/⏯️preview-eval-run.json");
+fn preview_eval_run_fixture_json() -> &'static str { repo_text!("✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/⏯️preview-eval-run.json") }
 
 /// ⚖️ LAW: the editor's release hop emits exactly the fixture's two kernel release invocations when the
 /// geometry extension is contributed, and nothing when it is not — the same answer the shared
@@ -9,7 +10,7 @@ const PREVIEW_EVAL_RUN_FIXTURE_JSON: &str = include_str!("../../../../../../../.
 #[test]
 fn the_release_hop_emits_the_declared_kernel_release_through_the_command_row() {
     let _serial = crate::editor_domain::editor_laws::serial_execution::lock();
-    let fixture: serde_json::Value = serde_json::from_str(PREVIEW_EVAL_RUN_FIXTURE_JSON).expect("fixture");
+    let fixture: serde_json::Value = serde_json::from_str(preview_eval_run_fixture_json()).expect("fixture");
     let snapshot = semio_s_artifact_procedural_3d_model::default_snapshot();
     let config = Generation3dConfig::default();
     let history = empty_history_view();

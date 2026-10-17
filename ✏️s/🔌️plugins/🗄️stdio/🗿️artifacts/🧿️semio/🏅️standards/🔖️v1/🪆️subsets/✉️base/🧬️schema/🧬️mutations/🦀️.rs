@@ -50,42 +50,24 @@ use {semio_s_artifact_stdio_semio_video_mutations::schema::mutations::SemioVideo
 use protocol::Mutation;
 
 //#region 🔖️Mutation
-#[path = "🎞️apply-animation/🦀️.rs"]
-pub mod apply_animation;
-#[path = "🔊apply-audio/🦀️.rs"]
-pub mod apply_audio;
-#[path = "🧱apply-brep/🦀️.rs"]
-pub mod apply_brep;
-#[path = "📐apply-cad/🦀️.rs"]
-pub mod apply_cad;
-#[path = "📃apply-document/🦀️.rs"]
-pub mod apply_document;
-#[path = "🖊️apply-drawing/🦀️.rs"]
-pub mod apply_drawing;
-#[path = "🔀apply-flow/🦀️.rs"]
-pub mod apply_flow;
-#[path = "🌐apply-graph/🦀️.rs"]
-pub mod apply_graph;
-#[path = "🖼️apply-image/🦀️.rs"]
-pub mod apply_image;
-#[path = "🧰apply-kit/🦀️.rs"]
-pub mod apply_kit;
-#[path = "🕸️apply-mesh/🦀️.rs"]
-pub mod apply_mesh;
-#[path = "🏛️apply-model/🦀️.rs"]
-pub mod apply_model;
-#[path = "📦apply-object/🦀️.rs"]
-pub mod apply_object;
-#[path = "📽️apply-presentation/🦀️.rs"]
-pub mod apply_presentation;
-#[path = "🗂️apply-table/🦀️.rs"]
-pub mod apply_table;
-#[path = "🔤apply-text/🦀️.rs"]
-pub mod apply_text;
-#[path = "🔢apply-value/🦀️.rs"]
-pub mod apply_value;
-#[path = "🎬apply-video/🦀️.rs"]
-pub mod apply_video;
+pub use semio_s_artifact_stdio_semio_schema::schema::mutations::apply_animation;
+pub use semio_s_artifact_stdio_semio_mut_family::schema::mutations::apply_audio;
+pub use semio_s_artifact_stdio_semio_mut_family::schema::mutations::apply_brep;
+pub use semio_s_artifact_stdio_semio_mut_family::schema::mutations::apply_cad;
+pub use semio_s_artifact_stdio_semio_mut_family::schema::mutations::apply_document;
+pub use semio_s_artifact_stdio_semio_mut_family::schema::mutations::apply_drawing;
+pub use semio_s_artifact_stdio_semio_mut_family::schema::mutations::apply_flow;
+pub use semio_s_artifact_stdio_semio_mut_family::schema::mutations::apply_graph;
+pub use semio_s_artifact_stdio_semio_mut_family::schema::mutations::apply_image;
+pub use semio_s_artifact_stdio_semio_mut_family::schema::mutations::apply_kit;
+pub use semio_s_artifact_stdio_semio_mut_family_2::schema::mutations::apply_mesh;
+pub use semio_s_artifact_stdio_semio_mut_family_2::schema::mutations::apply_model;
+pub use semio_s_artifact_stdio_semio_mut_family_2::schema::mutations::apply_object;
+pub use semio_s_artifact_stdio_semio_mut_family_2::schema::mutations::apply_presentation;
+pub use semio_s_artifact_stdio_semio_mut_family_2::schema::mutations::apply_table;
+pub use semio_s_artifact_stdio_semio_mut_family_2::schema::mutations::apply_text;
+pub use semio_s_artifact_stdio_semio_mut_family_2::schema::mutations::apply_value;
+pub use semio_s_artifact_stdio_semio_mut_family_2::schema::mutations::apply_video;
 /// 🔧️ Adjacently tagged (`tag = "mutation"`, `content = "payload"`), NOT internally tagged like
 /// every one of the 18 wrapped subset enums' own `#[value(tag = "mutation", ...)]` — an
 /// internally-tagged wrapper here would collide key-for-key with a wrapped variant's OWN
@@ -184,7 +166,7 @@ pub fn semio_subset_tag(snapshot: &SemioSnapshot) -> &'static str {
 /// representative variants) — full dispatch-table coverage for this facet's grammar/protocol
 /// conformance-law tests. Single source of truth shared with `🎹️composer/🦀️.rs`'s
 /// `ops_grammar_conformance_law`/`protocol_walk_law`.
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_mutation_cases() -> Vec<SemioMutation> {
     vec![
@@ -213,63 +195,6 @@ mod tests;
 //#endregion 🔖️Tests
 
 //#region 🧪️FixtureCases
-#[cfg(test)]
-#[path = "🖼️apply-image/🧪️tests/🚫️refuses/🦀️.rs"]
-mod apply_image_refuses_a_value_envelope;
-#[cfg(test)]
-#[path = "🌐apply-graph/🧪️tests/↩️inverts/🦀️.rs"]
-mod apply_graph_inverts;
-#[cfg(test)]
-#[path = "🎞️apply-animation/🧪️tests/↩️inverts/🦀️.rs"]
-mod apply_animation_inverts;
-#[cfg(test)]
-#[path = "🎬apply-video/🧪️tests/↩️inverts/🦀️.rs"]
-mod apply_video_inverts;
-#[cfg(test)]
-#[path = "🏛️apply-model/🧪️tests/↩️inverts/🦀️.rs"]
-mod apply_model_inverts;
-#[cfg(test)]
-#[path = "📃apply-document/🧪️tests/↩️inverts/🦀️.rs"]
-mod apply_document_inverts;
-#[cfg(test)]
-#[path = "📐apply-cad/🧪️tests/↩️inverts/🦀️.rs"]
-mod apply_cad_inverts;
-#[cfg(test)]
-#[path = "📦apply-object/🧪️tests/↩️inverts/🦀️.rs"]
-mod apply_object_inverts;
-#[cfg(test)]
-#[path = "📽️apply-presentation/🧪️tests/↩️inverts/🦀️.rs"]
-mod apply_presentation_inverts;
-#[cfg(test)]
-#[path = "🔀apply-flow/🧪️tests/↩️inverts/🦀️.rs"]
-mod apply_flow_inverts;
-#[cfg(test)]
-#[path = "🔊apply-audio/🧪️tests/↩️inverts/🦀️.rs"]
-mod apply_audio_inverts;
-#[cfg(test)]
-#[path = "🔢apply-value/🧪️tests/↩️inverts/🦀️.rs"]
-mod apply_value_inverts;
-#[cfg(test)]
-#[path = "🔤apply-text/🧪️tests/↩️inverts/🦀️.rs"]
-mod apply_text_inverts;
-#[cfg(test)]
-#[path = "🕸️apply-mesh/🧪️tests/↩️inverts/🦀️.rs"]
-mod apply_mesh_inverts;
-#[cfg(test)]
-#[path = "🖊️apply-drawing/🧪️tests/↩️inverts/🦀️.rs"]
-mod apply_drawing_inverts;
-#[cfg(test)]
-#[path = "🗂️apply-table/🧪️tests/↩️inverts/🦀️.rs"]
-mod apply_table_inverts;
-#[cfg(test)]
-#[path = "🧰apply-kit/🧪️tests/↩️inverts/🦀️.rs"]
-mod apply_kit_inverts;
-#[cfg(test)]
-#[path = "🧱apply-brep/🧪️tests/↩️inverts/🦀️.rs"]
-mod apply_brep_inverts;
-#[cfg(test)]
-#[path = "🖼️apply-image/🧪️tests/↩️inverts/🦀️.rs"]
-mod apply_image_inverts;
 //#endregion 🧪️FixtureCases
 
 #[cfg(test)]

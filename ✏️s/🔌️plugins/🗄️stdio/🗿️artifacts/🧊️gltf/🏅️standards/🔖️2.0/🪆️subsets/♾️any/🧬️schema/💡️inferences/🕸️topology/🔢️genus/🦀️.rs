@@ -1,9 +1,9 @@
 //! 💡️ genus atomic glTF inference leaf.
-use super::super::super::modules::{
+use crate::standards::v2_0::subsets::any::schema::modules::{
     inference_measures::{exact, unavailable},
     measurement_contracts::*,
 };
-use super::super::{geometry_core::GltfGeometryContext, GltfEntityIndicators, GltfInferenceLeaf, GltfInferenceLeafDescriptor, GLTF_GEOMETRY_READS};
+use crate::standards::v2_0::subsets::any::schema::inferences::geometry_core::GltfGeometryContext;
 
 pub struct GltfGenusInference;
 
@@ -17,7 +17,7 @@ pub fn descriptor() -> GltfInferenceLeafDescriptor {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<u64> {
+pub fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<u64> {
     context
         .topology
         .genus
@@ -30,10 +30,24 @@ pub fn unavailable_measure(ids: &[String]) -> GltfMeasure<u64> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn encode_result(indicators: &GltfEntityIndicators) -> semio_framework_value::DslValue {
-    semio_framework_value::ToValue::to_value(&indicators.topology.genus)
+pub fn encode_result(measure: &GltfMeasure<u64>) -> semio_framework_value::DslValue {
+    semio_framework_value::ToValue::to_value(measure)
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+//#region 🧾️InferenceDescriptor
+/// 🧾️ Registry descriptor of this inference leaf; its companion documents are embedded from this leaf's own folder.
+pub fn inference_descriptor() -> semio_framework_schema_registry::ArtifactInferenceDescriptor {
+    semio_framework_schema_registry::ArtifactInferenceDescriptor {
+        id: "s.stdio.gltf.inference.genus.v1",
+        inference: semio_framework_schema_registry::FacetLeaves {
+            rust: include_str!("🦀️.rs"),
+            typescript: include_str!("🟦️.ts"),
+            graphql: include_str!("🔗️.graphql"),
+            json_schema: include_str!("🔣️.json"),
+            proto: include_str!("🛰️.proto"),
+        },
+    }
+}
+//#endregion 🧾️InferenceDescriptor
+
+

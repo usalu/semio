@@ -8,7 +8,7 @@ import fixture from "../🧫️fixtures/🌈️scanline/🔣️.json";
 
 import {pngSnapshotToSqliteDatabase,pngSnapshotFromSqliteDatabase} from "../../🟦️.ts";
 import {parsePngNative,encodePngNative} from "../../🧩️chunks/🟦️.ts";
-import {parseCompression,encodeCompression} from "../../../../../../../../../../🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🚪️io/💾️binary/📸️snapshot/🗜️compression/🟦️.ts";
+import {parseCompression,encodeCompression} from "@semio-tech/stdio-deflate/standards/rfc1950/subsets/any/io/binary/snapshot/compression";
 import dynamicFixture from "../🧫️fixtures/🗜️compression/🔣️.json";
 
 import {exportSqliteDatabase,importSqliteDatabase} from "@semio-tech/framework";

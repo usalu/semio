@@ -330,6 +330,13 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
 //#endregion 🔖️CommandEnvelopeTests
 //#endregion 🔖️DslAndOpText
 
+fn close_turn(owner: &mut ModuleGeometryOwner, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> PluginLifecycleStep {
+    let mut sequence = 0;
+    let mut recipient = semio_framework_value::retained_clone::RetainedCloneProgress::default();
+    let mut cx = semio_framework_job::StepContext::new(semio_framework_job::OperationId(1), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(1, u64::MAX, grant), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut recipient);
+    owner.close_step(&mut cx, grant).unwrap()
+}
+
 fn quoted_close_grant(owner: &ModuleGeometryOwner, copy_bytes: usize) -> semio_framework_value::retained_clone::RetainedCloneGrant {
     let demand = owner.retirement_demands(copy_bytes).expect("instance geometry quotes its next close turn");
     semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes.max(copy_bytes), maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) }
@@ -343,7 +350,7 @@ fn instance_geometry_admits_session_shell_before_terminal() {
     let mut owner = ModuleGeometryOwner::new();
     for _ in 0..1_000_000 {
         let grant = quoted_close_grant(&owner, complete_bytes);
-        let step = owner.close_step(grant).unwrap();
+        let step = close_turn(&mut owner, grant);
         assert!(step.progress().is_none_or(|progress| progress.fits(grant)));
         if matches!(step, PluginLifecycleStep::Complete(_)) || (owner.registry.is_none() && owner.registry_retirement.terminal_is_empty() && Session::terminal_is_empty(&owner.session)) { break; }
     }
@@ -352,13 +359,13 @@ fn instance_geometry_admits_session_shell_before_terminal() {
     if !owner.terminal_is_empty() {
         let full = quoted_close_grant(&owner, complete_bytes);
         let tiny = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_release_bytes: 0, ..full };
-        assert!(matches!(owner.close_step(tiny).unwrap(), PluginLifecycleStep::Progress(progress) if progress == Default::default()));
+        assert!(matches!(close_turn(&mut owner, tiny), PluginLifecycleStep::Progress(progress) if progress == Default::default()));
         assert_eq!(!owner.terminal_is_empty(), admission["retainedOnTinyByteGrant"].as_bool().unwrap());
-        let PluginLifecycleStep::Progress(progress) = owner.close_step(full).unwrap() else { panic!("granted instance shell retirement reports physical release"); };
+        let PluginLifecycleStep::Progress(progress) = close_turn(&mut owner, full) else { panic!("granted instance shell retirement reports physical release"); };
         assert_eq!(progress.copied_items, 1);
         assert_eq!(progress.released_bytes > 0 && owner.terminal_is_empty(), admission["releasedByCompletionByteGrant"].as_bool().unwrap());
     }
-    assert!(matches!(owner.close_step(Default::default()).unwrap(), PluginLifecycleStep::Complete(_)));
+    assert!(matches!(close_turn(&mut owner, Default::default()), PluginLifecycleStep::Complete(_)));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -419,10 +426,11 @@ async fn instance_geometry_replays_durable_sources_and_preserves_preview_authori
     }
     snapshot.retire_cold();
     for owner in [&mut first, &mut second] {
-        assert!(matches!(owner.close_step(semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 0, ..quoted_close_grant(owner, 65_536) }).unwrap(), PluginLifecycleStep::Progress(progress) if progress == Default::default()));
+        let paused = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 0, ..quoted_close_grant(owner, 65_536) };
+        assert!(matches!(close_turn(owner, paused), PluginLifecycleStep::Progress(progress) if progress == Default::default()));
         for _ in 0..1_000_000 {
             let grant = quoted_close_grant(owner, 65_536);
-            if matches!(owner.close_step(grant).unwrap(), PluginLifecycleStep::Complete(_)) { break; }
+            if matches!(close_turn(owner, grant), PluginLifecycleStep::Complete(_)) { break; }
         }
         assert!(owner.terminal_is_empty(), "instance geometry retirement completes");
     }

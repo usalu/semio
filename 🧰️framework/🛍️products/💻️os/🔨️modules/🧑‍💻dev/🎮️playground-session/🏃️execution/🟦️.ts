@@ -45,12 +45,10 @@ export class PlaygroundSessionGenerateScript extends BundleScript {
     const expected = renderPlaygroundSessionTypeScript(this.request.variant || undefined, await this.readProjectionV1());
     if (segments[0] === "check") {
       if (!existsSync(this.playgroundSessionPath) || readFileSync(this.playgroundSessionPath, "utf8") !== expected) throw new Error("Generated playground session is stale");
-      console.log("[DEBUG] playground session generated source is fresh");
       return;
     }
     mkdirSync(dirname(this.playgroundSessionPath), { recursive: true });
     writeFileSync(this.playgroundSessionPath, expected);
-    console.log(`[DEBUG] playground session generated source refreshed -> ${this.playgroundSessionPath}`);
   }
 }
 

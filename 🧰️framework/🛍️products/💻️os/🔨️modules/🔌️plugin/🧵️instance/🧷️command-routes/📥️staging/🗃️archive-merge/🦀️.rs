@@ -1,14 +1,25 @@
 //! 🏐️ Staged `archive-merge` members of the `instance-commands` use cases, as methods of the borrowed bundle (WP7 of the instance family).
 //!
 //! 🗃️ The whole-document archive merge.
-use super::*;
-use crate::tool_jobs::time_travel;
+use semio_framework_plugin_document_media::ActiveDocumentArchiveLoadState;
+use semio_framework_plugin_decl_app::{ArtifactApp, DOCUMENT_LOAD_FAILED_CODE, DOCUMENT_LOAD_MEMBERS_DIFFER_CODE, DOCUMENT_LOAD_OPERATION_UNKNOWN_CODE, DOCUMENT_LOAD_OTHER_DOCUMENT_CODE, document_load_fault};
+use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use pack::snapshot::ArtifactPack;
+use crate::command_bundle::CommandCtx;
+use semio_framework_plugin_decl_emission::Emit;
+use semio_framework::{Fault, FaultFrom};
+use std::future::Future;
+use semio_framework_plugin_instance_extension::InstanceExtension;
+use store::{MemberFactory, Mutation, SpaceMember};
+use protocol::OpText;
+use semio_framework_plugin_reactor_app::PluginApp;
+use semio_framework_ui_contract::*;
 
 impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceExtension> CommandCtx<'ctx, A, M, X> {
     /// 🔀️ Merges a decoded read-back into the live document (design §22.22) in the host's own poll turn and requests the
     /// operation's terminal: `Ready` with what it took (`completed == total`) and is ahead by, or the fault that
     /// refused it. Nothing is replaced.
-    pub(super) async fn merge_document_archive(&mut self, operation: u64, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<(), Fault> {
+    pub async fn merge_document_archive(&mut self, operation: u64, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<(), Fault> {
         let merged = self.merge_decoded_document_archive(operation, identity, cx).await;
         let active = self.ingest.document_archive_loads.get_mut(operation).ok_or_else(|| document_load_fault(DOCUMENT_LOAD_OPERATION_UNKNOWN_CODE, "recursive document archive merge authority changed during its merge"))?;
         match merged {

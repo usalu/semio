@@ -1,0 +1,184 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "ordering",
+    "cases",
+    "maximumDatabaseBytes",
+    "pageSize",
+    "expectedCatalogPages",
+    "failures",
+    "crashes",
+    "unknownCloseLoanDenied",
+    "foreignExclusiveLockFree",
+    "journalHeadroomReleased",
+    "confirmedCloseLoanAccepted",
+    "preservationConcurrency"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "ordering": {
+      "type": "array",
+      "minItems": 6,
+      "maxItems": 6,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "names",
+          "after",
+          "expected"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "names": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "after": {
+            "type": "string"
+          },
+          "expected": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "kind",
+          "blockers",
+          "maximumPerTurn",
+          "turns"
+        ],
+        "properties": {
+          "kind": {
+            "enum": [
+              "claims",
+              "resources"
+            ]
+          },
+          "blockers": {
+            "enum": [
+              256,
+              8192
+            ]
+          },
+          "maximumPerTurn": {
+            "enum": [
+              256,
+              8192
+            ]
+          },
+          "turns": {
+            "const": 2
+          }
+        }
+      }
+    },
+    "maximumDatabaseBytes": {
+      "const": 16384
+    },
+    "pageSize": {
+      "const": 4096
+    },
+    "expectedCatalogPages": {
+      "const": 3
+    },
+    "failures": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "mode",
+          "committed",
+          "gap"
+        ],
+        "properties": {
+          "mode": {
+            "enum": [
+              "beforecommit-error",
+              "rollback-after-update",
+              "aftercommit-undefined",
+              "beforebegin-error",
+              "afterclose-error"
+            ]
+          },
+          "committed": {
+            "type": "boolean"
+          },
+          "gap": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "crashes": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "mode",
+          "committed",
+          "successfulTurns"
+        ],
+        "properties": {
+          "mode": {
+            "enum": [
+              "crash-beforecommit",
+              "crash-aftercommit"
+            ]
+          },
+          "committed": {
+            "type": "boolean"
+          },
+          "successfulTurns": {
+            "enum": [
+              1,
+              2
+            ]
+          }
+        }
+      }
+    },
+    "unknownCloseLoanDenied": {
+      "const": true
+    },
+    "foreignExclusiveLockFree": {
+      "const": true
+    },
+    "journalHeadroomReleased": {
+      "const": true
+    },
+    "confirmedCloseLoanAccepted": {
+      "const": true
+    },
+    "preservationConcurrency": {
+      "const": 8
+    }
+  }
+}

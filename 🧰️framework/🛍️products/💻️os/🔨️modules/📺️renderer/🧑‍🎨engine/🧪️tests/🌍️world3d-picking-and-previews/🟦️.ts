@@ -2,9 +2,12 @@
 import * as flowSessionLoader from "../../🧱️elements/🪪️WasmSessionLoader/🟦️.tsx";
 import { cleanup } from "@semio-tech/ui-react/test";
 import { afterEach, describe, expect, it } from "vitest";
-import { worldHoverPaintIdV1 } from "../../🧱️elements/🌐️World3dHost/🟦️.tsx";
+import { worldHoverPaintIdV1 } from "../../🧱️elements/🌐️World3dHost/🧱️instance-layers/🪟️instance-chrome-store/🟦️.ts";
 import type { GumballPose } from "../../../../../../../🔨️modules/🖱️ui/🧱️elements/🎬️Scene/🟦️.tsx";
-import { resolveClickInstanceIdFromProjected, world3dInstancePickUsesInteractionDomain, world3dMarqueePointerCaptureArmed, world3dProjectedAabbContainsClick, world3dFrameCameraFromBounds, world3dFrameCameraFromInstances, world3dSuggestionsGestureArmed, world3dRetainLocalVortexHover, mergeWorldSelectionWithLeftoverV1, gumballPreviewOwnedWorldPoint, gumballPreviewOwnedWorldDirection, worldGumballOwnerPoses, worldVorticesWithGumballPreview, worldAttractionsWithGumballPreview, world3dSuggestionsGestureConsumesContextMenu, world3dSuggestionsRightDownRoutesOnWindowCapture } from "../../🧱️elements/🌐️World3dHost/🟦️.tsx";
+import { resolveClickInstanceIdFromProjected, world3dMarqueePointerCaptureArmed, world3dProjectedAabbContainsClick } from "../../🧱️elements/🌐️World3dHost/🎯️marquee-and-bridges/🟦️.tsx";
+import { world3dInstancePickUsesInteractionDomain, world3dSuggestionsGestureArmed, world3dRetainLocalVortexHover, mergeWorldSelectionWithLeftoverV1, world3dSuggestionsGestureConsumesContextMenu, world3dSuggestionsRightDownRoutesOnWindowCapture } from "../../🧱️elements/🌐️World3dHost/🔗️instance-selection/🟦️.ts";
+import { world3dFrameCameraFromBounds, world3dFrameCameraFromInstances } from "../../🧱️elements/🌐️World3dHost/🔭️scene-schema/🟦️.ts";
+import { gumballPreviewOwnedWorldPoint, gumballPreviewOwnedWorldDirection, worldGumballOwnerPoses, worldVorticesWithGumballPreview, worldAttractionsWithGumballPreview } from "../../🧱️elements/🌐️World3dHost/🧮️gumball-math/🟦️.ts";
 import { canvasLayerDisplayLabel, worldToScreenLogical, readCanvas2dSurfaceColors, boardDropPreviewJson, boardScreenToWorld, boardWorldToScreen, registerBoard2dPeer, unregisterBoard2dPeer, raycastGroundPoint, clearWorldCatalogueDropPreview, getWorldCatalogueDropPreview, clearWorldSelectionPreview, getWorldSelectionPreview, clearWorldGumballTransformPreview, getWorldGumballTransformPreview, setWorldGumballTransformPreview, subscribeWorldGumballTransformPreview, pushBoardDropPreview, registerWorldCatalogueDropHost, setWorldCatalogueDropPreview, subscribeWorldCatalogueDropPreview, setWorldSelectionPreview, subscribeWorldSelectionPreview, worldCatalogueDropHostContainsPoint, gumballTransformDeltaBetweenPoses } from "../../🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx";
 import "../🧰️engine-contract-helpers/🟦️.ts";
 

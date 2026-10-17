@@ -23,3 +23,6 @@ semio-s-artifact-cad-cad-catalog-energy = { workspace = true }
 semio-s-artifact-cad-cad-catalog-fem = { workspace = true }
 semio-s-artifact-cad-cad-catalog-shape = { workspace = true }
 semio-s-artifact-cad-cad-catalog-structure = { workspace = true }
+
+[dev-dependencies]
+semio-framework-test-fixtures = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }

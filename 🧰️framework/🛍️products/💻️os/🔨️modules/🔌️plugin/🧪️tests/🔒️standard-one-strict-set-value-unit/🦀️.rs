@@ -1,13 +1,17 @@
-use super::super::super::tests::{assert_codecs, assert_laws, assert_metadata};
-use super::*;
+use crate::declaration_fixture_mutations::tests::{assert_codecs, assert_laws, assert_metadata};
+use semio_framework_test_fixtures::fixture_text;
+use semio_framework_value_derive::{FromValue, ToValue};
+use crate::declaration_fixture_mutations::std1_strict::set_value::SetValue;
+use crate::declaration_fixture_mutations::std1_strict::Std1StrictMutation;
 
-fn operation(value: i32) -> Std1StrictMutation {
+#[doc(hidden)]
+pub fn operation(value: i32) -> Std1StrictMutation {
     Std1StrictMutation::SetValue(SetValue { value })
 }
 
 #[test]
 fn actual_leaf_descriptor_and_provenance() {
-    assert_metadata::<Std1StrictSnapshot, Std1StrictMutation, SetValue>(include_str!("../../🧪️testing/🛰️declaration-channels/1standard/🔒️strict/🧬️mutations/📝️set-value/🔣️.json"), operation);
+    assert_metadata::<Std1StrictSnapshot, Std1StrictMutation, SetValue>(fixture_text!("../../../../🧪️testing/🛰️declaration-channels/1standard/🔒️strict/🧬️mutations/📝️set-value/🔣️.json"), operation);
 }
 
 #[test]

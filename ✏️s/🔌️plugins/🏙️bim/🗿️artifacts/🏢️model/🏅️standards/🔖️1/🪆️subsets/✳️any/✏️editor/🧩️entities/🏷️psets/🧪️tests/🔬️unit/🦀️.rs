@@ -1,5 +1,8 @@
-use super::super::{kind_holding, kind_of, EntityKind, ENTITIES};
-use super::*;
+use crate::editor::bim::entities::{kind_holding, kind_of, EntityKind, ENTITIES};
+use crate::editor::bim::entities::psets::{create_classification_system, create_property_template, parse_targets, targets_text};
+use crate::editor::bim::entities::FieldRow;
+use crate::standards::v1::subsets::any::schema::mutations::ModelMutation;
+use crate::standards::v1::subsets::any::schema::snapshot::{ClassificationSystem, ModelSnapshot, PropertyTemplate, TemplateTarget};
 use crate::standards::v1::subsets::any::schema::snapshot::{ClassificationItem, PropertyDef, PropertyKind};
 
 fn model() -> ModelSnapshot {

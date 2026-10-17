@@ -1,5 +1,4 @@
 //! 🔗️ Direct Writer mutation — `ChangeUri` sets the document's addressable location.
-use crate::schema::mutations::WriterMutation;
 use crate::WriterDiff;
 use crate::WriterSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
@@ -19,18 +18,24 @@ pub struct ChangeUri {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_uri(new_uri: String) -> WriterMutation {
-    WriterMutation::ChangeUri(ChangeUri { new_uri })
+pub fn change_uri<Op>(new_uri: String) -> Op
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::change_uri::ChangeUri>,
+{
+    Op::from(ChangeUri { new_uri })
 }
 
-impl MutationKind<WriterSnapshot, WriterMutation> for ChangeUri {
+impl<Op> MutationKind<WriterSnapshot, Op> for ChangeUri
+where
+    Op: protocol::Mutation<WriterSnapshot, Diff = WriterDiff> + From<ChangeUri>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "uri", kind: "change-uri", record: "ChangedUri" };
 
     fn diff(&self, base: &WriterSnapshot) -> protocol::MutationOutcome<WriterDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &WriterSnapshot) -> Result<Vec<WriterMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &WriterSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

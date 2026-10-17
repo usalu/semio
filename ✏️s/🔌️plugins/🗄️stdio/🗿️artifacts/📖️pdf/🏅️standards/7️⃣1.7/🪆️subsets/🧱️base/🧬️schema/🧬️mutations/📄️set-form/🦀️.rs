@@ -1,6 +1,5 @@
 //! 📄️ Authoritative PDF mutation payload, diff, inverse, and tests for `set-form`.
 
-use super::PdfMutation;
 use crate::standards::v1_7::subsets::base::schema::diff::{self, PdfDiff};
 use crate::standards::v1_7::subsets::base::schema::snapshot::*;
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
@@ -16,7 +15,10 @@ pub struct SetForm {
     pub index: Option<usize>,
 }
 
-impl MutationKind<PdfSnapshot, PdfMutation> for SetForm {
+impl<Op> MutationKind<PdfSnapshot, Op> for SetForm
+where
+    Op: protocol::Mutation<PdfSnapshot, Diff = PdfDiff> + From<SetForm> + From<crate::standards::v1_7::subsets::base::schema::mutations::remove_form::RemoveForm>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "form", kind: "set-form", record: "Set" };
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
@@ -24,10 +26,10 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetForm {
         MutationOutcome::new(diff::diff_set_form(base, self.form.clone(), self.index))
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
         let _ = base;
-        match base.forms.iter().find(|item| item.id == self.form.id) { Some(previous) => vec![PdfMutation::SetForm(SetForm { form: previous.clone(), index: None })], None => vec![PdfMutation::RemoveForm(super::remove_form::RemoveForm { id: self.form.id.clone() })] }
+        match base.forms.iter().find(|item| item.id == self.form.id) { Some(previous) => vec![Op::from(SetForm { form: previous.clone(), index: None })], None => vec![Op::from(crate::standards::v1_7::subsets::base::schema::mutations::remove_form::RemoveForm { id: self.form.id.clone() })] }
     
     })())
 }
@@ -44,8 +46,6 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetForm {
 //#endregion 🔖️Mutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
 

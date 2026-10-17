@@ -1,13 +1,35 @@
 //! 🐀️ Borrowed bundle of the `instance-commands` use cases: `CommandCtx` (WP7 of the instance family).
 //!
 //! 🧺️ The fields carry the names of the composer fields they borrow, so a method body written for the composer reads the same; `X` is the registered `InstanceExtension` list.
-use super::*;
+use semio_framework_plugin_instance_stores::stores_components::{ActionIngress, InstanceStores, LocalInteraction, PeerRoster};
+use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use pack::snapshot::ArtifactPack;
+use semio_framework_plugin_instance_children::children_components::ChildComposition;
+use semio_framework_plugin_instance_history::history_components::{CommandHistory, HostEvents, Transactions};
+use semio_framework_plugin_instance_dispatch::dispatch_bundle::DispatchCtx;
+use semio_framework_plugin_decl_emission::Emit;
+use semio_framework_plugin_instance_docs::docs_components::{EnvelopeJobs, MediaTransfers};
+use semio_framework_plugin_instance_extension::{ExtensionCtx, InstanceExtension};
+use semio_framework::FaultFrom;
+use std::future::Future;
+use store::{MemberFactory, Mutation, SpaceMember};
+use protocol::OpText;
+use semio_framework_plugin_instance_jobs::jobs_components::{PendingReserved, ToolOperations};
+use semio_framework_plugin_reactor_app::PluginApp;
+use semio_framework_plugin_instance_render::render_bundle::RenderCtx;
+use semio_framework_plugin_time_travel_turns::time_travel_bundle::TimeTravelCtx;
+use semio_framework_plugin_time_travel::TimeTravelLedger;
+use semio_framework_plugin_tool_run::tool_jobs_tool_machine::ToolMachineRuntime;
+use semio_framework_plugin_tool_run::ToolRunLedger;
+use semio_framework_plugin_instance_typed_ops::typed_bundle::TypedCtx;
+use semio_framework_ui_contract::*;
 use std::marker::PhantomData;
 
 /// 🧺️ The exclusive borrows the `commands` use cases need; built by the composer (`VcsArtifactApp::command_ctx`) or reborrowed by a higher bundle.
 pub struct CommandCtx<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X> {
     pub app: &'ctx mut A,
-    pub mounted_policy: crate::MountedOwnerPolicyV1,
+    pub mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1,
     pub stores: &'ctx mut InstanceStores<A>,
     pub roster: &'ctx mut PeerRoster<A>,
     pub ingress: &'ctx mut ActionIngress,

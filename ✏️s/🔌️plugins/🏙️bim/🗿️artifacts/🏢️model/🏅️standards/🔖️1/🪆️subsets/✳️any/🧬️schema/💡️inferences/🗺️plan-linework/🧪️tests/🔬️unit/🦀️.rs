@@ -1,10 +1,11 @@
 use super::*;
-use crate::standards::v1::subsets::any::schema::inferences::storey_levels::compute_storey_levels;
+use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_storey_levels;
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::{kinds, plan, ModelInferenceSession, ModelNode};
 use crate::standards::v1::subsets::any::schema::{snapshot::{Axis, OpeningKind, Phase, Point2, TopConstraint}, inferences::ModelInference};
 use protocol::Inference;
 use std::collections::BTreeSet;
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
+use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_plan_linework;
 
 const HOUSE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🗺️plan-linework/🏡️house/📸️snapshot/🔣️.json");
 const CURVED: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🗺️plan-linework/🌀️curved/📸️snapshot/🔣️.json");

@@ -32,7 +32,7 @@ use semio_s_artifact_draw_drawing_host_arena::DrawingLayerAddress;
 use semio_s_artifact_draw_drawing_host_arena::DrawingLayerLocator;
 use semio_s_artifact_draw_drawing_host_arena::DrawingLayerCloneWorkAuthority;
 #[path="📋️metadata/🦀️.rs"]
-mod metadata;
+pub mod metadata;
 struct TreeCursor{address:DrawingLayerAddress,children:[usize;MAX_DEPTH],base:usize,entered:bool,complete:bool,all_roots:bool}
 impl TreeCursor{
     fn new(address:DrawingLayerAddress,all_roots:bool)->Self{Self{base:address.length,address,children:[0;MAX_DEPTH],entered:false,complete:false,all_roots}}

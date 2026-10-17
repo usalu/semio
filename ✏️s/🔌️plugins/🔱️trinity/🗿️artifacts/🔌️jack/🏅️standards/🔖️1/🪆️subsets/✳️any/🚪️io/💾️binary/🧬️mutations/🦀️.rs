@@ -3,8 +3,7 @@
 /// 🧾️ Direct-owner binary tags in aggregate declaration order.
 pub const BINARY_TAG_REGISTRY: &[(&str, u8)] = &[("SetQuery", set_query::BINARY_TAG)];
 
-#[path = "🔎️set-query/🦀️.rs"]
-pub mod set_query;
+pub use semio_s_artifact_trinity_jack_model::standards::v1::subsets::any::io::binary::mutations::set_query;
 
 
 //#region 📡️SemioProtocol
@@ -68,6 +67,6 @@ use crate::standards::v1::subsets::any::io::text::mutations::{TrinityGraphOperat
 use crate::standards::v1::subsets::any::schema::operations::{TrinityGraphEnvelope, TrinityGraphStore, OwnedTrinityGraphStore};
 pub async fn new_trinity_graph_store(envelope: TrinityGraphEnvelope, actor: protocol::ActorId) -> Result<OwnedTrinityGraphStore, store::VcsError> {
     let mut store = TrinityGraphStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, actor).await?;
-    store::install_unscheduled_catalog(&mut store, store::os_store::document_store_owners::funded_bounded_artifact_store_owners::<crate::JackSnapshot, TrinityGraphMutation>())?;
+    store::install_unscheduled_catalog(&mut store, store::os_store::document_store_owners::funded_bounded_artifact_store_owners::<crate::standards::v1::subsets::any::schema::snapshot::JackSnapshot, TrinityGraphMutation>())?;
     Ok(OwnedTrinityGraphStore(store))
 }

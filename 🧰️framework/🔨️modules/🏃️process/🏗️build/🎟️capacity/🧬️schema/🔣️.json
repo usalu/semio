@@ -34,14 +34,56 @@
       }
     },
     "Request": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "requestedParallelism": {
-          "type": "integer",
-          "minimum": 1
+      "anyOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "parallelism"
+          ],
+          "properties": {
+            "kind": {
+              "const": "exact"
+            },
+            "parallelism": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "maximumParallelism"
+          ],
+          "properties": {
+            "kind": {
+              "const": "available"
+            },
+            "maximumParallelism": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "whole-host"
+            }
+          }
         }
-      }
+      ]
     }
   }
 }

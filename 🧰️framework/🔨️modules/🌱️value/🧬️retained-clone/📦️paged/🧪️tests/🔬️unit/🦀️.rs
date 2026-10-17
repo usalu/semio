@@ -38,7 +38,6 @@ fn paged_native_ordered_list_edits_move_one_slot_and_preserve_cancelled_owners()
             retire_owner(list, 1, 4096);
         }
     }
-    eprintln!("[DEBUG] native paged insert/remove admitted one ordered slot and conserved all cancelled owners");
 }
 
 #[test]
@@ -100,7 +99,6 @@ fn paged_native_utf8_append_has_real_turns_and_exact_partial_cancellation() {
         let (_, allocation) = observe_retirement_allocations(|| drop(owner));
         assert_eq!(allocation, (0, 0));
     }
-    eprintln!("[DEBUG] native UTF8 append constructor/zero grants remained allocation-free; every actual partial-close birth/release and native destination retirement admitted within4096");
 }
 
 #[test]
@@ -138,7 +136,6 @@ fn paged_native_object_keys_clone_without_contiguous_key_capacity() {
     assert_eq!(serde_json::Value::from(copied.to_value()), expected);
     close_cursor::<PagedMap<u64, {usize::MAX}>>(&mut cursor, 1, 4096);
     retire_owner(copied, 1, 4096);
-    eprintln!("[DEBUG] native paged object long keys match Serde and exact 4096-byte turns");
 }
 
 fn grant(fixture: &serde_json::Value) -> RetainedCloneGrant {
@@ -221,7 +218,6 @@ fn paged_octets_copy_and_retire_by_credited_bytes_under_single_item_grants() {
         assert_eq!(retirement.next_release_byte_demand().unwrap(), demand);
         assert!(!retirement.terminal_is_empty());
     }
-    eprintln!("[DEBUG] paged octet physical frontier demand={demand}; original64 denied with exact owner retained and heap0/0");
     for turn in preparation_turns + 1..=maximum_turns {
         let funded = RetainedCloneGrant { maximum_capacity_bytes: retirement.next_capacity_byte_demand(grant.maximum_copy_bytes).unwrap(), maximum_release_bytes: retirement.next_release_byte_demand().unwrap(), maximum_depth: retirement.next_depth_demand().unwrap(), ..grant };
         let step = retirement.step(funded).expect("paged octet demand-aware retirement");
@@ -397,5 +393,4 @@ fn paged_native_combined_grants_and_identifier_order_follow_neutral_law() {
             close_cursor::<PagedUtf8<{usize::MAX}>>(&mut cursor, 1, bytes);
         }
     }
-    eprintln!("[DEBUG] paged native long identifiers, alternating total4096 clone, cancellation and serde law verified");
 }

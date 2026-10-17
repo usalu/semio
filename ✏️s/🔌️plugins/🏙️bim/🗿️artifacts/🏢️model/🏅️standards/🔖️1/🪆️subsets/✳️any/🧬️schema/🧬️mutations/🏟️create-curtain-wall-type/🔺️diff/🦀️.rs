@@ -3,7 +3,7 @@
 //! materials exist.
 
 use super::super::elements;
-use super::super::wall_geometry::curtain_type_flaw;
+use crate::standards::v1::subsets::any::schema::mutations::wall_geometry::curtain_type_flaw;
 use super::CreateCurtainWallType;
 use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};

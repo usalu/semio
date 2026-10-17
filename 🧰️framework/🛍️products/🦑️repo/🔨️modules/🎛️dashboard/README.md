@@ -8,10 +8,10 @@ process lifecycle and reconnect. It works without an editor.
 
 The dashboard is the only control plane for developers, editors and agents. Everything runnable is a
 registry command (below); the interactive view and the command line start commands the same way,
-through the same workspace daemon, so a task started in one is the task the other shows. No editor or
-agent launch file exists: nothing generates, reads, gates or documents one.
+through the same workspace daemon, so a task started in one is the task the other shows. Editor launch
+configurations select the same declared commands.
 
-Start with `bun run dashboard` (the root script is the build runner bootstrap; it runs the installed native
+Start with `bun repo run @semio-tech/repo-dashboard-rs:run --output=stream` (the root script is the build runner bootstrap; it runs the installed native
 executable `semio`). The first start builds and installs the executable once. Installation builds and
 publishes an immutable executable with visible progress and cancellation (`Ctrl+C`), and records beside it
 a digest of the sources it was built from: the names, sizes and modification times of the files below the
@@ -22,7 +22,7 @@ executable directly, without provisioning tools, hashing the binary or computing
 differs, the start first rebuilds and reinstalls with the same visible progress and says why; a failed or
 cancelled rebuild stops the start instead of running an outdated executable, except for the verbs that only observe or
 end what already runs (`tasks`, `logs`, `stop`, `kill`, `open`, `daemon stop`, `daemon status`): a broken working
-tree must never keep a developer from stopping the daemon. `bun run dashboard:install` republishes on demand and
+tree must never keep a developer from stopping the daemon. `bun repo run @semio-tech/repo-dashboard-rs:build --exclude-dependencies --skip-cache --output=stream` republishes on demand and
 prints the executable path for direct native invocation.
 
 The first view immediately shows task controls. English, dark appearance, native terminology,
@@ -96,9 +96,9 @@ Independent daemon tasks clear the inherited `SEMIO_BUILD_INVOCATION_PID` before
 ### ⌨️ The Command Line
 
 The binary `semio` drives the same registry and daemon without a view (`semio` without a verb is the
-dashboard; `semio --help` prints the usage). `semio …` is shorthand for `bun run dashboard …`: the devcontainer
+dashboard; `semio --help` prints the usage). `semio …` is shorthand for `bun repo run @semio-tech/repo-dashboard-rs:run --output=stream -- …`: the devcontainer
 puts a `semio` shim on `PATH`, a native host does not, so there `semio run os-hub:dev --detach --wait-ready` is typed
-`bun run dashboard run os-hub:dev --detach --wait-ready`; the tables below use the short form.
+`bun repo run @semio-tech/repo-dashboard-rs:run --output=stream -- run os-hub:dev --detach --wait-ready`; the tables below use the short form.
 
 | Verb | Does |
 | --- | --- |
@@ -138,8 +138,8 @@ tasks (`semio commands workspace` lists them). Git workflow routes (`commit`, `m
 implementation layer of the agent skills and are run by them as `bun ./📜️script.ts …`. Any other verb is an
 error that prints the usage and exits with status 2.
 
-Agents and editors start servers with `bun run dashboard run <id> --detach --wait-ready`, read the printed
-address and attach browser previews to it; find ids with `bun run dashboard commands <words> --json`.
+Agents and editors start servers with `bun repo run @semio-tech/repo-dashboard-rs:run --output=stream -- run <id> --detach --wait-ready`, read the printed
+address and attach browser previews to it; find ids with `bun repo run @semio-tech/repo-dashboard-rs:run --output=stream -- commands <words> --json`.
 
 ### 🧩 VSCode Launch Projection
 

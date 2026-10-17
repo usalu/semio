@@ -1,6 +1,6 @@
 //! 📥️ Items of `store` that belong to `os-store-engine` (PLAN-OS-KERNEL-CRATES.md, Appendix C): lifted out of `🏪️store/🦀️.rs`.
 use semio_framework_os_store_text_io::ArtifactStoreSnapshot as _;
-use semio_framework_value::{ArtifactOwnedValueRetirementFactory, ErasedSnapshotRetirement, SnapshotRetirementFactory};
+use semio_framework_value::{ArtifactOwnedValueRetirementFactory, ErasedSnapshotRetirement};
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 use semio_framework_os_store_replay::replay_preparation;
 use replay_preparation::ArtifactReplayPreparationProgress;
@@ -13,12 +13,11 @@ use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::marker::PhantomData;
 use std::sync::Arc;
-use semio_framework_os_store_read::{ArtifactDerivedHistoryPreview, ArtifactDerivedReplay, ArtifactDerivedSnapshot, ErasedSnapshotRead, SnapshotRead, artifact_retirement_box_close_step, retire_document_envelope};
+use semio_framework_os_store_read::{ArtifactDerivedHistoryPreview, ArtifactDerivedReplay, ArtifactDerivedSnapshot, ErasedSnapshotRead, SnapshotRead, retire_document_envelope};
 use semio_framework_os_store_engine_owners::DocumentStoreOwners;
 use semio_framework_os_store_read::{ARTIFACT_STORE_UNSCHEDULED_CLOSE_STEPS, ArtifactStoreCursorDisposerPhase, ArtifactStoreDisplacedRetirements, ArtifactStoreMutationDagRetirement, ArtifactStoreRevisionAccumulatorRetirement, ArtifactStoreStringRetirement, ArtifactStoreStringVectorRetirement, ArtifactStoreSupersessionRetirement, SnapshotReadLeaseRegistryOwner};
 use semio_framework_os_store_read::history_read_admission::PreparedHistoryReadRetirement;
 use semio_framework_os_store_retirement::resident_backing;
-use semio_framework_os_spr::conflict::ProtocolConflictRetirement as ArtifactStoreConflictRetirement;
 use semio_framework_value::retirement::frame::admit_retirement_frame as admit_artifact_retirement;
 use semio_framework_value::factory::FactorySharedRetirement as ReturnedSnapshotReadRetirement;
 use semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority;
@@ -38,19 +37,18 @@ use semio_framework_os_store_text_io::ArtifactStoreSnapshot;
 use semio_framework_os_store_engine_core::lifted_document_materialize::now_iso;
 use semio_framework_os_store_initialization_runtime::lifted_document_materialize::now_ms;
 use semio_framework_os_store_initialization_runtime::lifted_document_materialize::fresh_replica_clock;
-use semio_framework_os_store_engine_live::lifted_document_materialize::stamp_primary_operation_identity;
 use semio_framework_os_store_text_io::text_format::{ParsedDocumentText, parse_decoded_document_spr};
-use semio_framework_os_store_text_io::text_format::{canonical_conflict_actors, conflict_messages_for_edits, mutation_ids, validate_durable_history, validate_history_lanes};
+use semio_framework_os_store_text_io::text_format::{mutation_ids, validate_durable_history, validate_history_lanes};
 use semio_framework_os_store_command::parse_command;
 use semio_framework_os_store_command::retire_command;
-use semio_framework_os_store_ledger::{edit_from_operation_envelope, fold_envelope_history};
-use semio_framework_os_store_ledger::{ArtifactStoreHistoryCommitReservation, ArtifactStorePendingReportRetirement, CursorRevisionAccumulator, CursorRevisionRecord, PendingCommandReport, StackMirrorDirt, retire_replayed_projection, retire_scratch_edits, retire_scratch_operations, retire_supersede_inputs, stamp_edit_semantics, validate_composition_pins};
+use semio_framework_os_store_ledger::fold_envelope_history;
+use semio_framework_os_store_ledger::{ArtifactStoreHistoryCommitReservation, ArtifactStorePendingReportRetirement, CursorRevisionAccumulator, PendingCommandReport, StackMirrorDirt, retire_replayed_projection, retire_supersede_inputs, validate_composition_pins};
 use semio_framework_os_store_one_item_batch::lifted_one_item_publication::{ArtifactStoreBatchAdmissionRejected, ArtifactStoreBatchPublication};
-use semio_framework_os_store_one_item_publication::{ArtifactStoreOneItemAdvance, ArtifactStoreOneItemLiveAuthority, ArtifactStoreOneItemPreparation, ArtifactStoreOneItemPreparationFactory, ArtifactStoreOneItemPublicationPhase};
-use semio_framework_os_store_one_item_publication::{ArtifactStoreBatchItemAuthority, ArtifactStoreBatchItemRequest, ArtifactStoreBatchSourceOf};
+use semio_framework_os_store_one_item_publication::{ArtifactStoreOneItemAdvance, ArtifactStoreOneItemLiveAuthority, ArtifactStoreOneItemPreparationFactory};
+use semio_framework_os_store_one_item_publication::{ArtifactStoreBatchItemAuthority, ArtifactStoreBatchSourceOf};
 use semio_framework_os_store_one_item_batch::lifted_one_item_publication::ArtifactStoreBatchStage;
 use semio_framework_os_store_operation_wire::{ArtifactOperationWire, ArtifactPreparedOperationCursor, ArtifactPreparedOperationProgress, ArtifactPreparedOperationError};
-use semio_framework_os_store_one_item::{ARTIFACT_STORE_ONE_ITEM_ID_BYTES, ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES, ArtifactStoreOneItemFootprint, ArtifactStoreOneItemGrant, ArtifactStoreOneItemPreparationStep, validate_original_preparation_step};
+use semio_framework_os_store_one_item::{ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES, ArtifactStoreOneItemGrant, LaneItemReceipt};
 use semio_framework_os_store_initialization_runtime::native_publication_producer::ArtifactStorePublication;
 use semio_framework_os_store_replay::{EditReplay, EditReplayResult, EffectiveSupersessions, PairMerge, ReplayEdits, ReplayMode, ReplayProgress, ReplayStep};
 use semio_framework_os_store_replay::{PREFIX_SNAPSHOT_RING_CAPACITY, PrefixSnapshot, REPROJECTION_OWNER_SLOTS, fold_effective_edit, retire_shared_projection, same_effective_inputs};
@@ -642,7 +640,7 @@ where
     /// `Repin` transition so every replica and every reload derives the same identity.
     #[must_use]
     pub async fn set_checkpoint_composition_pins(&mut self, checkpoint_id: &str, pins: Vec<semio_framework_os_vcs::CompositionPin>) -> Result<ArtifactProjectionInvalidation, VcsError> {
-use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactReferenceText as _};
+use semio_framework_artifact_reference::io::text::artifact_reference::ArtifactReferenceText as _;
 
         self.ensure_durable_group_idle()?;
         validate_composition_pins(&pins).await?;
@@ -729,7 +727,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         for demand in [self.log.applied_edit_ids.next_empty_page_release_byte_demand(), self.log.redo_edit_ids.next_empty_page_release_byte_demand(), self.cursor.revision_accumulator.applied.next_empty_page_release_byte_demand(), self.cursor.revision_accumulator.redo.next_empty_page_release_byte_demand()] {
             if let Some(bytes) = demand.filter(|bytes| *bytes != 0) { return Ok(bytes); }
         }
-        for bytes in [resident_backing::deque_demand(&self.owners.displaced_retirements.owners), resident_backing::vec_demand(&self.live.prefix_ring), resident_backing::deque_demand(&self.wire.member_inbox), resident_backing::vec_demand(&self.replay.pending_report.messages), resident_backing::vec_demand(&self.replay.pending_report.outbound), self.replay.pending_report.edit_ids.as_ref().map_or(0, resident_backing::vec_demand)] {
+        let (report_messages, report_outbound, report_edit_ids) = self.replay.pending_report.resident_backings();
+        for bytes in [resident_backing::deque_demand(&self.owners.displaced_retirements.owners), resident_backing::vec_demand(&self.live.prefix_ring), resident_backing::deque_demand(&self.wire.member_inbox), resident_backing::vec_demand(report_messages), resident_backing::vec_demand(report_outbound), report_edit_ids.map_or(0, resident_backing::vec_demand)] {
             if bytes != 0 { return Ok(bytes); }
         }
         Ok(self.owners.snapshot_read_leases.empty_backing_demands()?.release_bytes)
@@ -751,9 +750,10 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         if resident_backing::deque_demand(&self.owners.displaced_retirements.owners) != 0 { return resident_backing::close_deque(&mut self.owners.displaced_retirements.owners, grant); }
         if self.live.prefix_ring.capacity() != 0 { return resident_backing::close_vec(&mut self.live.prefix_ring, grant); }
         if self.wire.member_inbox.capacity() != 0 { return resident_backing::close_deque(&mut self.wire.member_inbox, grant); }
-        if self.replay.pending_report.messages.capacity() != 0 { return resident_backing::close_vec(&mut self.replay.pending_report.messages, grant); }
-        if self.replay.pending_report.outbound.capacity() != 0 { return resident_backing::close_vec(&mut self.replay.pending_report.outbound, grant); }
-        if let Some(ids) = self.replay.pending_report.edit_ids.as_mut().filter(|ids| ids.capacity() != 0) { return resident_backing::close_vec(ids, grant); }
+        let (report_messages, report_outbound, report_edit_ids) = self.replay.pending_report.resident_backings_mut();
+        if report_messages.capacity() != 0 { return resident_backing::close_vec(report_messages, grant); }
+        if report_outbound.capacity() != 0 { return resident_backing::close_vec(report_outbound, grant); }
+        if let Some(ids) = report_edit_ids.filter(|ids| ids.capacity() != 0) { return resident_backing::close_vec(ids, grant); }
         self.owners.snapshot_read_leases.close_empty_backing_step(grant)
     }
 
@@ -913,9 +913,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
                 && self.log.envelope.lanes.is_empty());
         let runtime_shell_is_empty = self.wire.backbone.is_none()
             && self.wire.member_inbox.capacity() == 0
-            && self.replay.pending_report.edit_ids.is_none()
-            && self.replay.pending_report.messages.is_empty()
-            && self.replay.pending_report.outbound.is_empty()
+            && self.replay.pending_report.is_idle()
             && self.live.supersessions.is_empty()
             && self.live.prefix_ring.is_empty();
         envelope_shell_is_empty && runtime_shell_is_empty && self.wire.durable_group_root.is_none() && self.log.dag.terminal_is_empty() && self.owners.displaced_retirements.terminal_is_empty()
@@ -939,26 +937,17 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         fold_history(envelope, applied_edit_ids, supersessions).await
     }
 
-    /// 🎯️ HIGH-2 (`26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS` J1
-    /// robustness pass): strict counterpart to a `filter_map` over `edits` — a `ConflictId` is
-    /// content-addressed from a mutation-id set, so silently skipping an id missing from `edits`
-    /// (the old `filter_map` behaviour) can leave `quarantined_ids`/`degraded_ids` non-empty while
-    /// the resolved edit list is empty, minting a `ConflictId` from zero mutation ids — a content
-    /// address that addresses no content, so two unrelated conflicts can collide on it. `edits` is
-    /// always `edits_by_id` here, and every id passed in already came out of
-    /// `replay_suffix_partitioned`'s own `committed_ids`/`quarantined_ids` — which, since HIGH-1,
-    /// only ever contains ids it already found in `edits` — so this should never actually fail in
-    /// production; it exists so a future refactor that breaks that invariant fails loudly instead of
-    /// quietly minting a garbage conflict id.
+    /// 🪞️ Delegates to [`semio_framework_os_store_engine_bundle::edits_for_ids`]: the strict id-to-edit resolution of the merge.
+    #[inline]
     pub fn edits_for_ids(ids: &[String], edits: &HashMap<String, Edit<Mutation>>) -> Result<Vec<Edit<Mutation>>, VcsError> {
-        ids.iter().map(|id| edits.get(id).cloned().ok_or_else(|| VcsError::UnknownEdit(id.clone()))).collect()
+        semio_framework_os_store_engine_bundle::edits_for_ids(ids, edits)
     }
 
     /// 🌀️ The unawaited future borrows `command`, which is then moved into `dispatch_inner`
     /// below — awaited immediately instead of deferred to avoid a move-while-borrowed (E0505).
     ///
     /// Undo/redo shrink `applied_edit_ids`; Apply/AppendTransaction append past `before`; a merge that
-    /// rebased mid-history overrides this tail-diff guess via `pending_report.edit_ids`.
+    /// rebased mid-history overrides this tail-diff guess via `PendingCommandReport::declare_edit_ids`.
     pub async fn dispatch(&mut self, command: ArtifactCommand<Mutation>, identity: &mut EntityIdentityAuthority<'_>) -> Result<CommandReceipt, VcsError>
     where
         P: Sync,
@@ -971,8 +960,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         self.dispatch_inner(command, identity).await?;
         self.cursor.last_projection_cause = projection_cause;
         self.flush_outbound().await?;
-        let edit_ids = self.replay.pending_report.edit_ids.take().unwrap_or_else(|| if self.log.applied_edit_ids.len() >= before { self.log.applied_edit_ids.cloned_from(before) } else { Vec::new() });
-        Ok(CommandReceipt { edit_ids, generation: self.generation(), messages: std::mem::take(&mut self.replay.pending_report.messages), worst: self.replay.pending_report.worst.take() })
+        let (edit_ids, messages, worst) = self.replay.pending_report.take_receipt(|| if self.log.applied_edit_ids.len() >= before { self.log.applied_edit_ids.cloned_from(before) } else { Vec::new() });
+        Ok(CommandReceipt { edit_ids, generation: self.generation(), messages, worst })
     }
 
     pub async fn dispatch_apply_exact(&mut self, mutations: Vec<Mutation>, identity: &mut EntityIdentityAuthority<'_>) -> Result<CommandReceipt, VcsError>
@@ -986,333 +975,20 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         self.apply_command(mutations, HistoryLane::Document, None, identity).await?;
         self.cursor.last_projection_cause = Some(ArtifactProjectionCause::Apply);
         self.flush_outbound().await?;
-        let edit_ids = self.replay.pending_report.edit_ids.take().unwrap_or_else(|| self.log.applied_edit_ids.cloned_from(before));
-        Ok(CommandReceipt { edit_ids, generation: self.generation(), messages: std::mem::take(&mut self.replay.pending_report.messages), worst: self.replay.pending_report.worst.take() })
+        let (edit_ids, messages, worst) = self.replay.pending_report.take_receipt(|| self.log.applied_edit_ids.cloned_from(before));
+        Ok(CommandReceipt { edit_ids, generation: self.generation(), messages, worst })
     }
 
     //#region 📬️OneItemPublication
-    /// ⏭️ Advances at most one preparation, fold, cursor, preflight, or atomic move-publication
-    /// unit. Exactly one admitted mutation is folded into the staged edit per fold turn; the
-    /// post-snapshot each item produced is an already-built `Arc` and is moved into the stage.
+    /// 🪞️ Delegates to [`semio_framework_os_store_engine_bundle::advance_apply_batch`]: advances at most one preparation, fold, cursor, preflight or atomic move-publication unit of the batched publication.
+    #[inline]
     pub fn advance_apply_batch(&mut self, publication: &mut ArtifactStoreBatchPublication<P, Mutation>, grant: ArtifactStoreOneItemGrant) -> Result<ArtifactStoreOneItemAdvance, VcsError>
     where
         P: Sync,
     {
-        self.ensure_durable_group_idle()?;
-        if publication.group_preparation.is_some() { return Err(VcsError::ValidationFailed("group-preparing batch requires its exact common publication decision".into())); }
-        if publication.phase == ArtifactStoreOneItemPublicationPhase::Complete {
-            return Ok(ArtifactStoreOneItemAdvance::Complete);
-        }
-        if publication.phase == ArtifactStoreOneItemPublicationPhase::Closing {
-            return Ok(ArtifactStoreOneItemAdvance::Blocked);
-        }
-        if publication.phase == ArtifactStoreOneItemPublicationPhase::AwaitingAck {
-            return Ok(ArtifactStoreOneItemAdvance::AwaitingAck(publication.receipt.expect("awaiting-ACK publication retains its receipt")));
-        }
-        if publication.cancel_requested {
-            publication.begin_close();
-            return Ok(ArtifactStoreOneItemAdvance::Blocked);
-        }
-        if self.cursor.generation != publication.expected_generation || self.cursor.content_revision != publication.expected_revision {
-            publication.fault = Some(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"batched publication became stale before commit"));
-            publication.phase = ArtifactStoreOneItemPublicationPhase::Fault;
-            publication.begin_close();
-            return Err(VcsError::ValidationFailed("batched publication became stale before commit".into()));
-        }
-        if !grant.permits_one() {
-            return Ok(ArtifactStoreOneItemAdvance::Blocked);
-        }
-        let item_grant = ArtifactStoreOneItemGrant { maximum_items: grant.maximum_items.min(1), ..grant };
-        match publication.phase {
-            ArtifactStoreOneItemPublicationPhase::Preparing => {
-                if !publication.source_census_finished {
-                    let copy=size_of::<ArtifactStoreOneItemFootprint>()+size_of::<usize>();
-                    if item_grant.maximum_copy_bytes<copy||item_grant.maximum_depth==0{return Ok(ArtifactStoreOneItemAdvance::Blocked);}
-                    match publication.source.as_mut().ok_or_else(|| VcsError::ValidationFailed("batched publication lost its retained census source".into()))?.census_one(publication.lane).map_err(VcsError::ValidationFailed)? {
-                        Some(footprint) => { publication.footprint = footprint; publication.source_census_finished = true; },
-                        None => { publication.source_census_completed = publication.source_census_completed.saturating_add(1); },
-                    }
-                    return Ok(ArtifactStoreOneItemAdvance::PreparationProgress(publication.progress(),RetainedCloneProgress{copied_items:1,copied_bytes:copy,..Default::default()}));
-                }
-                if publication.item_closing {
-                    if let Some(stage)=publication.stage.as_mut(){if stage.retiring.is_some(){let step=artifact_retirement_box_close_step(&mut stage.retiring,item_grant.retained_grant()).map_err(|error|VcsError::ValidationFailed(error.into_message()))?;return Ok(ArtifactStoreOneItemAdvance::PreparationProgress(publication.progress(),step.progress()));}}
-                    if publication.preparation.is_none(){return Err(VcsError::ValidationFailed("staged batch item lost its original preparation before closure".into()));}
-                    let step=Self::spend_item_close_grant(&mut publication.preparation,item_grant).map_err(|error|VcsError::ValidationFailed(error.into_message()))?;
-                    if matches!(step,RetainedCloneStep::Complete(_)){publication.item_closing=false;}
-                    return Ok(ArtifactStoreOneItemAdvance::PreparationProgress(publication.progress(),step.progress()));
-                }
-                if publication.stage.as_ref().is_some_and(|stage|stage.folding.is_some()){return self.fold_batch_item(publication,item_grant);}
-                if publication.preparation.is_none() {
-                    let staged_root = publication.stage.as_ref().and_then(|stage| stage.post.clone());
-                    let remaining = publication.source.as_ref().ok_or_else(|| VcsError::ValidationFailed("batched publication lost its admitted item source".into()))?.remaining();
-                    if remaining == 0 {
-                        if publication.stage.is_none() {
-                            return Err(VcsError::ValidationFailed("batched publication staged no edit before its cursor turn".into()));
-                        }
-                        let copy=size_of::<ArtifactStoreOneItemPublicationPhase>();if item_grant.maximum_copy_bytes<copy||item_grant.maximum_depth==0{return Ok(ArtifactStoreOneItemAdvance::Blocked);}
-                        publication.phase = ArtifactStoreOneItemPublicationPhase::PreparingCursor;
-                        return Ok(ArtifactStoreOneItemAdvance::PreparationProgress(publication.progress(),RetainedCloneProgress{copied_items:1,copied_bytes:copy,..Default::default()}));
-                    }
-                    let refused = |error: ValueError| VcsError::ValidationFailed(error.into_message());
-                    let demand = publication.source.as_ref().expect("validated batched publication item source").next_begin_demand(publication.lane).map_err(refused)?;
-                    if demand.admit(item_grant.retained_grant()).is_err() { return Ok(ArtifactStoreOneItemAdvance::Blocked); }
-                    let original_issuer_copy=size_of::<Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>>()+size_of::<Arc<dyn SnapshotRetirementFactory<P>>>();
-                    if item_grant.maximum_copy_bytes<original_issuer_copy{return Ok(ArtifactStoreOneItemAdvance::Blocked);}
-                    let mutation_retirement=self.owners.mutation_retirement_factory.as_ref().ok_or_else(||VcsError::ValidationFailed("batched preparation lost its installed mutation issuer".into()))?;
-                    let snapshot_retirement=self.owners.snapshot_retirement_factory.as_ref().ok_or_else(||VcsError::ValidationFailed("batched preparation lost its installed snapshot issuer".into()))?;
-                    let authority = Arc::clone(publication.authority.as_ref().ok_or_else(|| VcsError::ValidationFailed("batched publication lost its live authority".into()))?);
-                    let base = self.batch_item_base(staged_root.as_ref())?;
-                    let request = ArtifactStoreBatchItemRequest { operation: publication.operation, generation: authority.generation(), base_revision: authority.base_revision(), lane: publication.lane, authority, base, mutation_retirement:Arc::clone(mutation_retirement),snapshot_retirement:Arc::clone(snapshot_retirement) };
-                    let source = publication.source.as_mut().expect("validated batched publication item source");
-                    match source.begin_next(request, ArtifactStoreOneItemGrant{maximum_copy_bytes:item_grant.maximum_copy_bytes-original_issuer_copy,..item_grant}) {
-                        Ok((preparation, progress)) => {
-                            publication.preparation = Some(preparation);
-                            let progress=RetainedCloneProgress{copied_bytes:progress.copied_bytes.checked_add(original_issuer_copy).ok_or_else(||VcsError::ValidationFailed("batched preparation original issuer copy receipt overflow".into()))?,..progress};
-                            if let Err(error)=semio_framework_value::retained_clone::admit_retained_clone_progress(item_grant.retained_grant(), progress, "batched preparation birth") { publication.fault=Some(error.with_retained_progress(progress));publication.begin_close();return Ok(ArtifactStoreOneItemAdvance::PreparationRefused); }
-                            return Ok(ArtifactStoreOneItemAdvance::PreparationProgress(publication.progress(),progress));
-                        }
-                        Err((error, request)) => {
-                            let ArtifactStoreBatchItemRequest { authority, base, mutation_retirement, snapshot_retirement, .. } = request;
-                            publication.refused_base = Some(base);
-                            publication.refused_authority = Some(authority);
-                            let mutation: Arc<dyn semio_framework_value::FactoryRetirement> = mutation_retirement;
-                            let snapshot: Arc<dyn semio_framework_value::FactoryRetirement> = snapshot_retirement;
-                            publication.refused_issuers = [Some(semio_framework_value::FactoryAuthority::new(mutation)), Some(semio_framework_value::FactoryAuthority::new(snapshot))];
-                            let original_progress = error.retained_progress();
-                            let copied_bytes = match original_progress.copied_bytes.checked_add(original_issuer_copy) {
-                                Some(bytes) => bytes,
-                                None => { publication.fault = Some(error); publication.begin_close(); return Ok(ArtifactStoreOneItemAdvance::PreparationRefused); }
-                            };
-                            let progress = RetainedCloneProgress { copied_bytes, ..original_progress };
-                            publication.fault = Some(error.with_retained_progress(progress));
-                            publication.begin_close();
-                            return Ok(ArtifactStoreOneItemAdvance::PreparationRefused);
-                        }
-                    }
-                    return Ok(ArtifactStoreOneItemAdvance::Progress(publication.progress()));
-                }
-                let owner = publication.preparation.as_mut().expect("validated batched publication item preparation");
-                if owner.prepared().is_none() {
-                    let result=owner.advance(item_grant).and_then(|step|validate_original_preparation_step(step,item_grant,owner.prepared().is_some()));
-                    let step=match result {Ok(step)=>step,Err(reason)=>{publication.fault=Some(reason);publication.begin_close();return Ok(ArtifactStoreOneItemAdvance::PreparationRefused)}};
-                    return match step {
-                        ArtifactStoreOneItemPreparationStep::Progress(checkpoint, ownership) => Ok(ArtifactStoreOneItemAdvance::PreparationProgress(checkpoint, ownership)),
-                        ArtifactStoreOneItemPreparationStep::Prepared(checkpoint, ownership) => {
-                            Ok(ArtifactStoreOneItemAdvance::PreparationProgress(checkpoint,ownership))
-                        }
-                        ArtifactStoreOneItemPreparationStep::Blocked => Ok(ArtifactStoreOneItemAdvance::Blocked),
-                    };
-                }
-                self.fold_batch_item(publication, item_grant)
-            }
-            ArtifactStoreOneItemPublicationPhase::PreparingCursor => {
-                let stage = publication.stage.as_ref().ok_or_else(|| VcsError::ValidationFailed("batched cursor preparation lost its staged edit".into()))?;
-                let authority = publication.authority.as_ref().ok_or_else(|| VcsError::ValidationFailed("batched cursor preparation lost its live authority".into()))?;
-                if stage.edit.as_ref().expect("live staged edit owner").id.is_empty() || stage.edit.as_ref().expect("live staged edit owner").id.len() > ARTIFACT_STORE_ONE_ITEM_ID_BYTES || authority.base_applied_edit_count() != self.log.applied_edit_ids.len() {
-                    return Err(VcsError::ValidationFailed("domain-prepared batched candidate failed its live cursor authority".into()));
-                }
-                let envelope=&mut **self.log.envelope;
-                if let Some(edit_id) = envelope.open_transaction.as_ref().filter(|open|publication.transaction.as_ref().is_some_and(|transaction|open.transaction.id==transaction.id)&&self.log.applied_edit_ids.last()==Some(&open.edit_id)).map(|open|open.edit_id.as_str()) {
-                    let existing = envelope.vcs.edits.iter_mut().find(|edit| edit.id == edit_id).ok_or_else(|| VcsError::ValidationFailed("batched cursor preparation lost its open edit".into()))?;
-                    let capacity = existing.inverse.len().checked_add(stage.edit.as_ref().expect("live staged edit owner").inverse.len()).ok_or_else(|| VcsError::ValidationFailed("batched inverse capacity overflow".into()))?;
-                    if let Some(bytes) = existing.inverse.next_capacity_allocation_bytes(capacity).map_err(|error| VcsError::ValidationFailed(error.reason.into()))? {
-                        let depth=existing.inverse.next_reserve_depth_demand().map_err(|error|VcsError::ValidationFailed(error.reason.into()))?;
-                        if bytes>grant.maximum_capacity_bytes||grant.maximum_depth<depth{return Ok(ArtifactStoreOneItemAdvance::Blocked);}
-                        let step = existing.inverse.reserve_capacity_one(capacity, grant.maximum_capacity_bytes).map_err(|error| VcsError::ValidationFailed(error.reason.into()))?;
-                        if !step.progressed || step.allocated_bytes > grant.maximum_capacity_bytes {
-                            return Err(VcsError::ValidationFailed("batched inverse backing failed its exact allocation admission".into()));
-                        }
-                        return Ok(ArtifactStoreOneItemAdvance::PreparationProgress(publication.progress(),RetainedCloneProgress{copied_items:1,retained_capacity_bytes:step.allocated_bytes,..Default::default()}));
-                    }
-                }
-                let copy=size_of::<ArtifactStoreOneItemPublicationPhase>();if grant.maximum_copy_bytes<copy||grant.maximum_depth==0{return Ok(ArtifactStoreOneItemAdvance::Blocked);}
-                publication.phase = ArtifactStoreOneItemPublicationPhase::PreflightingCommit;
-                Ok(ArtifactStoreOneItemAdvance::PreparationProgress(publication.progress(),RetainedCloneProgress{copied_items:1,copied_bytes:copy,..Default::default()}))
-            }
-            ArtifactStoreOneItemPublicationPhase::PreflightingCommit => {
-                let stage = publication.stage.as_mut().ok_or_else(|| VcsError::ValidationFailed("batched commit preflight lost its staged edit".into()))?;
-                let authority = publication.authority.as_ref().ok_or_else(|| VcsError::ValidationFailed("batched commit preflight lost its live authority".into()))?;
-                let refusal=|error:ValueError|VcsError::ValidationFailed(error.into_message());
-                if let Some(owner)=stage.digest_owner.as_mut(){
-                    if owner.ready(){let Some((edit,digest,ownership))=owner.take_edit(grant.retained_grant()).map_err(refusal)?else{return Ok(ArtifactStoreOneItemAdvance::Blocked);};stage.edit=Some(edit);stage.digest=digest;return Ok(ArtifactStoreOneItemAdvance::PreparationProgress(publication.progress(),ownership));}
-                    if owner.terminal_is_empty(){let released=size_of_val(owner.as_ref());if grant.maximum_release_bytes<released||grant.maximum_depth==0{return Ok(ArtifactStoreOneItemAdvance::Blocked);}stage.digest_owner=None;stage.digest_complete=true;return Ok(ArtifactStoreOneItemAdvance::PreparationProgress(publication.progress(),RetainedCloneProgress{copied_items:1,released_bytes:released,..Default::default()}));}
-                    let step=owner.advance_digest(grant.retained_grant()).map_err(refusal)?;let ownership=semio_framework_value::retained_clone::admit_retained_clone_progress(grant.retained_grant(),step.progress(),"original batch digest normal step").map_err(refusal)?;return Ok(if ownership==Default::default(){ArtifactStoreOneItemAdvance::Blocked}else{ArtifactStoreOneItemAdvance::PreparationProgress(publication.progress(),ownership)});
-                }
-
-                let meta = stage.edit.as_ref().expect("live staged edit owner").mutation_meta.first().ok_or_else(|| VcsError::ValidationFailed("batched edit lacks its exact authority metadata".into()))?;
-                if publication.lane != HistoryLane::Document
-                    || stage.folded != publication.admitted_items
-                    || stage.edit.as_ref().expect("live staged edit owner").sequence_number != authority.next_sequence_number()
-                    || stage.edit.as_ref().expect("live staged edit owner").forwards.len() != publication.admitted_items
-                    || stage.edit.as_ref().expect("live staged edit owner").mutation_meta.len() != publication.admitted_items
-                    || stage.edit.as_ref().expect("live staged edit owner").id != stage.applied_edit_id
-                    || stage.edit.as_ref().expect("live staged edit owner").id != stage.tail_edit_id
-                    || stage.edit.as_ref().expect("live staged edit owner").actor.as_deref() != Some(authority.actor())
-                    || !stage.local_actor.as_ref().is_some_and(|actor|actor.eq_str(&authority.actor()))
-                    || stage.next_clock != authority.next_clock()
-                    || meta.author_id.as_ref().map(|actor| actor.0.as_str()) != Some(authority.actor())
-                    || meta.timestamp != authority.next_clock()
-                    || stage.post.is_none()
-                    || (self.wire.backbone.is_some() && !publication.outbound)
-                {
-                    return Err(VcsError::ValidationFailed("batched prepared candidate failed its exact fixed commit contract".into()));
-                }
-                let rows = stage.edit.as_ref().expect("live staged edit owner").inverse.len().saturating_add(stage.edit.as_ref().expect("live staged edit owner").forwards.len());
-                if rows > publication.footprint.work_items {
-                    return Err(VcsError::TooLarge { rows, capacity: publication.footprint.work_items });
-                }
-                let amending = self.batch_amend_target_ref(publication.transaction.as_ref()).is_some();
-                if !amending && (!self.log.applied_edit_ids.admits_one() || !self.cursor.revision_accumulator.applied.admits_one() || self.log.envelope.cursor.as_ref().is_none_or(|cursor| !cursor.applied_edit_ids.admits_one())) {
-                    return Err(VcsError::HistoryFull { capacity: self.log.applied_edit_ids.len() });
-                }
-                if self.cursor.generation == u64::MAX {
-                    return Err(VcsError::ValidationFailed("batched store generation is exhausted".into()));
-                }
-                if !stage.digest_complete{
-                    let admitted=match self.owners.one_item_preparation_factory.as_ref(){Some(factory)=>factory.begin_batch_digest(&mut stage.edit,grant.retained_grant()),None=>self.log.operation_wire.as_ref().ok_or_else(||VcsError::ValidationFailed("batch original canonical digest authority is absent".into()))?.begin_batch_digest(&mut stage.edit,grant.retained_grant())};
-                    let Some((owner,ownership))=admitted.map_err(refusal)?else{return Ok(ArtifactStoreOneItemAdvance::Blocked);};stage.digest_owner=Some(owner);return Ok(ArtifactStoreOneItemAdvance::PreparationProgress(publication.progress(),ownership));
-                }
-                let copy=size_of::<ArtifactStoreOneItemPublicationPhase>();if grant.maximum_copy_bytes<copy||grant.maximum_depth==0{return Ok(ArtifactStoreOneItemAdvance::Blocked);}
-                self.owners.displaced_retirements.reserve(12)?;
-                if self.owners.snapshot_retirement_factory.is_none() || self.owners.mutation_retirement_factory.is_none() {
-                    return Err(VcsError::ValidationFailed("batched commit lacks exact snapshot or mutation retirement authority".into()));
-                }
-                publication.phase = ArtifactStoreOneItemPublicationPhase::Publishing;
-                Ok(ArtifactStoreOneItemAdvance::PreparationProgress(publication.progress(),RetainedCloneProgress{copied_items:1,copied_bytes:copy,..Default::default()}))
-            }
-            ArtifactStoreOneItemPublicationPhase::Publishing => {
-                if let Some(edit_id) = self.batch_amend_target(publication.transaction.as_ref()) {
-                    let stage = publication.take_stage().ok_or_else(|| VcsError::ValidationFailed("batched publication lost its staged edit at atomic transfer".into()))?;
-                    let ArtifactStoreBatchStage { edit, post, next_clock, local_actor: _, unit_flags, .. } = *stage;
-                    let edit = edit.expect("live staged edit owner");
-                    let post = post.ok_or_else(|| VcsError::ValidationFailed("batched publication lost its staged post root at atomic transfer".into()))?;
-                    let generation_before = self.cursor.generation;
-                    let revision_before = self.cursor.content_revision;
-                    let appended = edit.forwards.len();
-                    let closes = publication.transaction.is_some() && !publication.transaction_open;
-                    let mut offset = 0;
-                    if let Some(existing) = self.log.envelope.vcs.edits.iter_mut().find(|candidate| candidate.id == edit_id) {
-                        offset = existing.forwards.len();
-                        publication.announce_from = if closes { 0 } else { existing.forwards.len() };
-                        existing.forwards.extend(edit.forwards);
-                        existing.inverse.extend(edit.inverse);
-                        existing.mutation_meta.extend(edit.mutation_meta);
-                        existing.finished_at = if closes { Some(now_iso()) } else { edit.finished_at };
-                        if closes {
-                            stamp_primary_operation_identity(existing);
-                        }
-                        publication.announce_items = existing.forwards.len() - publication.announce_from;
-                    } else {
-                        return Err(VcsError::ValidationFailed("batched transaction append lost its open edit".into()));
-                    }
-                    if closes {
-                        self.log.envelope.open_transaction = None;
-                    } else if publication.transaction_open {
-                        publication.outbound = false;
-                    }
-                    self.replace_pending_report_retained(PendingCommandReport::default())?;
-    
-                    self.replace_redo_edit_ids_retained(Vec::new())?;
-                    self.replace_current_retained(post)?;
-                    self.log.clock = next_clock;
-                    let digest = CursorRevisionAccumulator::hash_record(b"edit-id", &[edit_id.as_bytes()]);
-                    self.cursor.revision_accumulator.unit_flags.extend(unit_flags.into_iter().map(|(index, flag)| ((digest, offset + index), flag)));
-                    self.bump()?;
-                    self.continue_pending_replay_across_append(revision_before, &edit_id, appended);
-                    self.cursor.last_projection_cause = Some(ArtifactProjectionCause::Apply);
-                    let receipt = LaneItemReceipt { generation_before, generation_after: self.cursor.generation };
-                    publication.expected_generation = self.cursor.generation;
-                    publication.expected_revision = self.cursor.content_revision;
-                    publication.receipt = Some(receipt);
-                    publication.published = true;
-                    publication.phase = ArtifactStoreOneItemPublicationPhase::AwaitingAck;
-                    return Ok(ArtifactStoreOneItemAdvance::Published(receipt));
-                }
-                let reservation = self.reserve_edit_history_slot()?;
-                let stage = publication.take_stage().ok_or_else(|| VcsError::ValidationFailed("batched publication lost its staged edit at atomic transfer".into()))?;
-                let ArtifactStoreBatchStage { edit, post, next_clock, local_actor: _, applied_edit_id, tail_edit_id, digest, unit_flags, .. } = *stage;
-                let edit = edit.expect("live staged edit owner");
-                let digest = if edit.forwards.len() > 1 { CursorRevisionAccumulator::effective_edit_digest::<P, Mutation>(&edit, CursorRevisionAccumulator::edit_digest(&*edit), &self.live.supersessions) } else { digest };
-                publication.announce_from = 0;
-                publication.announce_items = publication.admitted_items;
-                let post = post.ok_or_else(|| VcsError::ValidationFailed("batched publication lost its staged post root at atomic transfer".into()))?;
-                let generation_before = self.cursor.generation;
-                let pre_snapshot = Arc::clone(&self.live.current);
-                let cursor = self.log.envelope.cursor.as_mut().ok_or_else(|| VcsError::ValidationFailed("batched publication lost its live cursor authority".into()))?;
-                let retired_cursor_redo = std::mem::take(&mut cursor.redo_edit_ids);
-                cursor.applied_edit_ids.push(edit.id.clone());
-                if !retired_cursor_redo.is_empty() || retired_cursor_redo.capacity() != 0 {
-                    self.owners.displaced_retirements.push_reserved(Box::new(ArtifactStoreStringVectorRetirement::new(retired_cursor_redo)));
-                }
-                self.replace_pending_report_retained(PendingCommandReport::default())?;
-
-                self.replace_tail_undo_cache_retained(Some((tail_edit_id, Arc::clone(&pre_snapshot))))?;
-                self.log.applied_edit_ids.push(applied_edit_id);
-                self.replace_redo_edit_ids_retained(Vec::new())?;
-                self.replace_current_retained(post)?;
-                self.log.edit_sequence = edit.sequence_number;
-                self.log.clock = next_clock;
-                let edit_id_digest = CursorRevisionAccumulator::hash_record(b"edit-id", &[edit.id.as_bytes()]);
-                let previous = self.cursor.revision_accumulator.applied.last().map_or(self.cursor.revision_accumulator.identity_digest, |record| record.prefix_digest);
-                let prefix_digest = CursorRevisionAccumulator::hash_record(b"applied", &[&previous, &digest]);
-                let opened = publication.transaction.clone().filter(|_| publication.transaction_open).map(|transaction| OpenToolTransaction { transaction, edit_id: edit.id.clone() });
-                self.cursor.revision_accumulator.index_applied_edit::<P, Mutation>(self.log.applied_edit_ids.len() - 1, &edit);
-                self.cursor.revision_accumulator.unit_flags.extend(unit_flags.into_iter().map(|(index, flag)| ((edit_id_digest, index), flag)));
-                let ledger_key = self.insert_reserved_edit_history(reservation, *edit)?;
-                if opened.is_some() {
-                    publication.outbound = false;
-                    self.log.envelope.open_transaction = opened;
-                }
-                self.cursor.revision_accumulator.applied.push(CursorRevisionRecord { ledger_key: Some(ledger_key), id_digest: edit_id_digest, edit_digest: digest, prefix_digest });
-                let retired_redo = std::mem::take(&mut self.cursor.revision_accumulator.redo);
-                if !retired_redo.is_empty() || retired_redo.capacity() != 0 {
-                    self.owners.displaced_retirements.push_reserved(Box::new(ArtifactStoreRevisionAccumulatorRetirement::new(CursorRevisionAccumulator {
-                        identity_digest: self.cursor.revision_accumulator.identity_digest,
-                        applied: semio_framework_os_vcs::HistoryPageStack::new(),
-                        redo: retired_redo,
-                        applied_tail_chains: None,
-                        mutation_positions: protocol::HistoryFoldIndex::new(),
-                        indexed_edits: protocol::HistoryFoldIndex::new(),
-                        unit_flags: protocol::HistoryFoldIndex::new(),
-                    })));
-                }
-                self.cursor.generation += 1;
-                self.cursor.content_revision = self.cursor.revision_accumulator.revision(self.log.current_checkpoint_id.as_deref());
-                assert!(self.owners.snapshot_read_leases.publish_authority(self.cursor.generation, self.cursor.content_revision), "single-owner batched publication must advance its exact snapshot authority");
-                self.cursor.last_projection_cause = Some(ArtifactProjectionCause::Apply);
-                let receipt = LaneItemReceipt { generation_before, generation_after: self.cursor.generation };
-                publication.expected_generation = self.cursor.generation;
-                publication.expected_revision = self.cursor.content_revision;
-                publication.receipt = Some(receipt);
-                publication.published = true;
-                publication.phase = ArtifactStoreOneItemPublicationPhase::AwaitingAck;
-                Ok(ArtifactStoreOneItemAdvance::Published(receipt))
-            }
-            ArtifactStoreOneItemPublicationPhase::Fault => Ok(ArtifactStoreOneItemAdvance::PreparationRefused),
-            ArtifactStoreOneItemPublicationPhase::AwaitingAck | ArtifactStoreOneItemPublicationPhase::Closing | ArtifactStoreOneItemPublicationPhase::Complete => unreachable!("handled batched terminal control phase"),
-        }
+        semio_framework_os_store_engine_bundle::advance_apply_batch(&mut self.parts(), publication, grant)
     }
 
-    /// 🧹️ Preserves the original preparation receipt before admitting its final owned Box frame.
-    fn spend_item_close_grant(owner: &mut Option<Box<dyn ArtifactStoreOneItemPreparation<P, Mutation>>>, grant: ArtifactStoreOneItemGrant) -> Result<RetainedCloneStep, ValueError> {
-        use semio_framework_value::retained_clone::{RetainedCloneStep, RetainedCloneProgress};
-        let Some(current) = owner.as_mut() else { return Ok(RetainedCloneStep::Complete(Default::default())); };
-        if !current.terminal_is_empty() {
-            if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
-            let depth = current.next_close_depth_demand()?.checked_add(1).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "batch preparation Box depth overflow"))?;
-            if grant.maximum_depth < depth { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "batch preparation exceeds admitted Box depth")); }
-            let child_grant = ArtifactStoreOneItemGrant { maximum_depth: grant.maximum_depth - 1, ..grant };
-            let step = current.close_step(child_grant)?;
-            let step = semio_framework_value::retained_clone::admit_retained_clone_close(child_grant.retained_grant(), step, current.terminal_is_empty(), "batch original item preparation")?;
-            return Ok(RetainedCloneStep::Progress(step.progress()));
-        }
-        if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
-        if grant.maximum_depth == 0 { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "batch preparation Box requires admitted depth")); }
-        let bytes = size_of_val(current.as_ref());
-        if bytes > grant.maximum_release_bytes { return Ok(RetainedCloneStep::Progress(Default::default())); }
-        drop(owner.take());
-        Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, released_bytes: bytes, ..Default::default() }))
-    }
 
     //#endregion 📬️OneItemPublication
     pub async fn apply_one(&mut self, expected_generation: u64, mutation: Mutation, lane: HistoryLane, identity: &mut EntityIdentityAuthority<'_>) -> Result<(CommandReceipt, LaneItemReceipt), VcsError>
@@ -1330,8 +1006,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         self.apply_command(vec![mutation], lane, None, identity).await?;
         self.cursor.last_projection_cause = Some(ArtifactProjectionCause::Apply);
         self.flush_outbound().await?;
-        let edit_ids = self.replay.pending_report.edit_ids.take().unwrap_or_else(|| self.log.applied_edit_ids.cloned_from(before));
-        let receipt = CommandReceipt { edit_ids, generation: self.cursor.generation, messages: std::mem::take(&mut self.replay.pending_report.messages), worst: self.replay.pending_report.worst.take() };
+        let (edit_ids, messages, worst) = self.replay.pending_report.take_receipt(|| self.log.applied_edit_ids.cloned_from(before));
+        let receipt = CommandReceipt { edit_ids, generation: self.cursor.generation, messages, worst };
         Ok((receipt, LaneItemReceipt { generation_before, generation_after: self.cursor.generation }))
     }
 
@@ -1386,7 +1062,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
             self.log.dag.seed_applied(identity).map_err(|error| VcsError::ValidationFailed(error.to_string()))?;
         }
         self.log.clock = clock;
-        self.replay.pending_report.outbound.extend(envelopes);
+        self.replay.pending_report.author_outbound(envelopes);
         self.bump()
     }
 
@@ -1439,7 +1115,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         self.live.fold_frontier = Some(key);
         self.log.dag.seed_applied(envelope.mutation_id.clone()).map_err(|error| VcsError::ValidationFailed(error.to_string()))?;
         self.log.clock = clock;
-        self.replay.pending_report.outbound.push(envelope);
+        self.replay.pending_report.author_outbound(std::iter::once(envelope));
         self.bump()?;
         self.live.tail_step_generation = Some(self.cursor.generation);
         Ok(())
@@ -1612,7 +1288,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         self.author_supersession(scope, inputs, target, slot.take(), identity).await?;
         self.cursor.last_projection_cause = Some(ArtifactProjectionCause::Replay);
         self.flush_outbound().await?;
-        Ok(CommandReceipt { edit_ids: Vec::new(), generation: self.generation(), messages: std::mem::take(&mut self.replay.pending_report.messages), worst: self.replay.pending_report.worst.take() })
+        let (messages, worst) = self.replay.pending_report.take_messages_and_worst();
+        Ok(CommandReceipt { edit_ids: Vec::new(), generation: self.generation(), messages, worst })
     }
 
     /// ✍️ The one authoring path of every supersession: builds its transitions (`Document`/`Alternative`: one `Supersede`;
@@ -1856,366 +1533,10 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         report
     }
 
-    /// 🕸️ Feeds a remote {@link MutationEnvelope} through the causal DAG, applying it (and any
-    /// now-unblocked dependents) into the edit timeline. Closes the sync gap between
-    /// `framework/sync`'s `MutationDag` and the vcs edit history. Sole public remote write gate —
-    /// parallel to `dispatch` for causal envelopes. Implements the ticket's 9-step algorithm
-    /// (`26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS` §C6): buffer in the
-    /// dag, drain whatever it (and anything it unblocks) makes ready, HLC-sort that batch into
-    /// `applied_edit_ids`, replay only the divergent suffix, then either commit atomically (dag,
-    /// history, ledger, `applied_edit_ids` all move together) or quarantine the whole batch as an
-    /// `Open` `Conflict` — state and the dag's own applied-set never move on rejection.
-    ///
-    /// 1
-    ///
-    /// 2
-    ///
-    /// 3 — an edit's HLC is its first forward op's stamped meta timestamp.
-    ///
-    /// 🌀️ `HybridLogicalTimestamp::cmp_key` is async (📡️replication); `sort_by_key`/
-    /// `partition_point`/`position` all need sync predicates (R10 shape 1), so every key below
-    /// is resolved via an explicit `.await` first, then compared as a plain `(u64, u64, u64)`.
-    ///
-    /// Binary search replicating `partition_point`'s algorithm (assumes `applied_edit_ids` is
-    /// already HLC-sorted, exactly as `partition_point` itself would have assumed).
-    ///
-    /// 4 — stable HLC merge of `batch` into `applied_edit_ids[k..]`.
-    ///
-    /// 5
-    ///
-    /// 6 — walk order[k..] one edit at a time (H1 determinism fix): an already-committed edit
-    /// that this rewind proves invalid gets the SAME accept/quarantine verdict a fresh arrival
-    /// in true HLC order would have given it, instead of the whole suffix being judged
-    /// atomically. See `replay_suffix_partitioned`'s doc for why this makes the merge a pure
-    /// function of the envelope SET and `self.merge_policy`, never of arrival order.
-    ///
-    /// 7
-    ///
-    /// 🎯️ MEDIUM-3: `degraded_ids` only needs `committed_ids`/`replayed` (both already computed
-    /// above, before any mutation) — hoisted from below `# 9` so the open-conflict capacity check
-    /// can see BOTH conflicts this call might mint before touching any store field, keeping the
-    /// whole call atomic on a refusal exactly like a policy rejection already is.
-    /// 🌀️ `worst_level` is async; `Iterator::filter`'s closure is sync (R10 shape 1), so it's
-    /// hoisted into an explicit loop.
-    ///
-    /// 8 — quarantine: every edit whose OWN outcome the policy rejects — whether newly-arrived
-    /// this call or retroactively invalidated by this rewind — is pulled out of history. Its
-    /// forward ops/`MutationMeta` are left untouched wherever they already live in `vcs.edits`
-    /// (never rewritten, exactly like `Undo`); only its id drops out of `applied_edit_ids`, so
-    /// a future `resolve_conflict`/redelivery still finds its established payload.
-    ///
-    /// 🎯️ HIGH-2: `edits_for_ids` errors loudly instead of silently filtering — see its doc.
-    ///
-    /// 🌀️ The unawaited future would borrow `envelopes`, which is moved into `kind` below —
-    /// awaited immediately instead of deferred to avoid a move-while-borrowed (E0505).
-    ///
-    /// 🌀️ `mutation_ids_for_edit` is async (📡️replication); `flat_map`'s closure is sync
-    /// (R10 shape 1), so it's hoisted into an explicit loop.
-    ///
-    /// 🎯️ H1: `hlc`/`timestamp` come from the quarantined edits' OWN stamped HLCs, never
-    /// `self.clock` — `self.clock.merge` ticks its `logical` counter on every call, so its
-    /// running value depends on how many merges happened and in what order, not just on
-    /// this envelope set; hashing that into `ConflictId` reintroduced arrival-order
-    /// dependence even after state/`applied_edit_ids` converged.
-    /// 🌀️ `HybridLogicalTimestamp::cmp_key` is async; `max_by_key` needs a sync key extractor
-    /// (R10 shape 1), so the max is found by an explicit fold over resolved keys instead.
-    ///
-    /// `>=` (not `>`): `Iterator::max_by_key`'s documented tie-break keeps the LAST
-    /// equally-maximum element, so ties must still overwrite.
-    ///
-    /// 9 — commit the survivors: history, ledger, `applied_edit_ids`, `current` together. The
-    /// dag (decided right after the capacity check above) only advanced when nothing in this
-    /// suffix was quarantined, so a quarantined-but-not-yet-committed envelope can still be
-    /// retried on redelivery.
-    ///
-    /// 🎯️ HIGH-2: `edits_for_ids` errors loudly instead of silently filtering — see its doc.
-    /// Reads from `edits_by_id` (not `self.envelope.vcs.edits`): both already contain every
-    /// `degraded_ids` entry at this point, but `edits_by_id` doesn't depend on the `vcs.edits`
-    /// push above having already run, so this block's own correctness never depends on
-    /// sequencing against that mutation.
-    ///
-    /// 🌀️ `mutation_ids_for_edit` is async (📡️replication); `flat_map`'s closure is sync
-    /// (R10 shape 1), so it's hoisted into an explicit loop.
-    ///
-    /// 🎯️ H1: same reasoning as the quarantine conflict above — derive from the degraded
-    /// edits' own HLCs, not the arrival-order-dependent `self.clock`.
-    /// 🌀️ `HybridLogicalTimestamp::cmp_key` is async; `max_by_key` needs a sync key extractor
-    /// (R10 shape 1), so the max is found by an explicit fold over resolved keys instead.
-    ///
-    /// `>=`: `Iterator::max_by_key` keeps the LAST equally-maximum element on a tie.
+    /// 🪞️ Delegates to [`semio_framework_os_store_engine_bundle::ingest_remote_merge`]: feeds one remote envelope through the causal DAG and merges it into the edit timeline.
+    #[inline]
     async fn ingest_remote_merge(&mut self, envelope: semio_framework_os_spr::MutationEnvelope) -> Result<semio_framework_os_spr::MergeReport, VcsError> {
-        self.ensure_durable_group_idle()?;
-        let no_op_report = |policy: semio_framework_os_spr::MergePolicy, insertion_index: usize| semio_framework_os_spr::MergeReport { policy, accepted: true, insertion_index: insertion_index as u32, replayed: Vec::new(), worst: None, conflict: None };
-        self.owners.displaced_retirements.reserve(2)?;
-        let mut candidate_dag = (*self.log.dag).clone();
-        let insertion = match candidate_dag.insert(envelope.clone()) {
-            Ok(insertion) => insertion,
-            Err(rejected) => {
-                self.owners.displaced_retirements.push_reserved(Box::new(ArtifactStoreConflictRetirement::causal_envelope(rejected.envelope)));
-                self.owners.displaced_retirements.push_reserved(Box::new(ArtifactStoreMutationDagRetirement::new(candidate_dag)));
-                return Err(VcsError::Backbone(rejected.error.to_string()));
-            }
-        };
-        if let semio_framework_os_spr::InsertResult::AlreadyApplied(rejected) = insertion {
-            let equivalent = self.assert_equivalent_remote_mutation(&envelope);
-            self.owners.displaced_retirements.push_reserved(Box::new(ArtifactStoreConflictRetirement::causal_envelope(rejected)));
-            self.owners.displaced_retirements.push_reserved(Box::new(ArtifactStoreMutationDagRetirement::new(candidate_dag)));
-            equivalent?;
-            return Ok(no_op_report(self.log.merge_policy, self.log.applied_edit_ids.len()));
-        }
-        let mut batch: Vec<Edit<Mutation>> = Vec::new();
-        let mut ready_transitions: Vec<semio_framework_os_spr::MutationEnvelope> = Vec::new();
-        loop {
-            let ready_envelope = match candidate_dag.take_next_applied() {
-                semio_framework_os_spr::MutationDagAppliedStep::Envelope(envelope) => envelope,
-                semio_framework_os_spr::MutationDagAppliedStep::SeededIdentity => continue,
-                semio_framework_os_spr::MutationDagAppliedStep::Complete => break,
-            };
-            if semio_framework_os_spr::is_history_transition(&ready_envelope) {
-                ready_transitions.push(ready_envelope);
-                continue;
-            }
-            let admitted = match edit_from_operation_envelope::<Mutation>(&ready_envelope).await {
-                Ok(mut edit) => {
-                    edit.actor = Some(ready_envelope.actor.0.clone());
-                    stamp_edit_semantics::<P, Mutation>(&mut edit, &self.log.envelope.schema);
-                    match self.log.envelope.vcs.edits.find_near(|existing| existing.id == edit.id) {
-                        Some(existing) => {
-                            let verdict = self.assert_equivalent_remote_envelope(existing, &ready_envelope).map(|()| None);
-                            retire_scratch_edits::<P, Mutation>([edit]);
-                            verdict
-                        }
-                        None if batch.iter().any(|existing: &Edit<Mutation>| existing.id == edit.id) => {
-                            let error = VcsError::ValidationFailed(format!("remote ingest repeats authoritative edit {}", edit.id));
-                            retire_scratch_edits::<P, Mutation>([edit]);
-                            Err(error)
-                        }
-                        None => Ok(Some(edit)),
-                    }
-                }
-                Err(error) => Err(error),
-            };
-            let edit = match admitted {
-                Ok(Some(edit)) => edit,
-                Ok(None) => continue,
-                Err(error) => {
-                    retire_scratch_edits::<P, Mutation>(batch);
-                    return self.refuse_with_candidate_dag(candidate_dag, error);
-                }
-            };
-            self.log.clock.merge(&ready_envelope.timestamp);
-            batch.push(edit);
-        }
-        if batch.is_empty() {
-            if ready_transitions.is_empty() {
-                self.replace_causal_dag_retained(candidate_dag)?;
-                return Ok(no_op_report(self.log.merge_policy, self.log.applied_edit_ids.len()));
-            }
-            self.cursor.last_projection_cause = None;
-            let replayed = match self.admit_remote_transitions(ready_transitions).await {
-                Ok(replayed) => replayed,
-                Err(error) => return self.refuse_with_candidate_dag(candidate_dag, error),
-            };
-            self.replace_causal_dag_retained(candidate_dag)?;
-            self.replay.pending_report.edit_ids = Some(Vec::new());
-            self.bump()?;
-            self.cursor.last_projection_cause = Some(self.cursor.last_projection_cause.filter(|cause| *cause == ArtifactProjectionCause::Replay).unwrap_or(ArtifactProjectionCause::RemoteIngest));
-            let worst = replayed.iter().flat_map(|entry| entry.messages.iter()).map(|message| message.level).max();
-            return Ok(semio_framework_os_spr::MergeReport { policy: self.log.merge_policy, accepted: true, insertion_index: self.log.applied_edit_ids.len() as u32, replayed, worst, conflict: None });
-        }
-        let edit_hlc = |edit: &Edit<Mutation>| edit.mutation_meta.first().map_or_else(|| HybridLogicalTimestamp { actor: 0, physical_ms: 0, logical: 0 }, |meta| meta.timestamp);
-        batch.sort_by_key(|edit| edit_hlc(edit).cmp_key());
-        let batch_keys: Vec<(u64, u64, u64)> = batch.iter().map(|edit| edit_hlc(edit).cmp_key()).collect();
-        let known_hlc = |edit_id: &str, edits: &ArtifactHistoryLedger<Edit<Mutation>>| edits.find_near(|edit| edit.id == *edit_id).map(edit_hlc);
-        let min_batch_key = batch_keys[0];
-        let mut lo = 0usize;
-        let mut hi = self.log.applied_edit_ids.len();
-        while lo < hi {
-            let mid = lo + (hi - lo) / 2;
-            let candidate_key = known_hlc(&self.log.applied_edit_ids[mid], &self.log.envelope.vcs.edits).map(|hlc| hlc.cmp_key());
-            let still_before = candidate_key.is_none_or(|key| key < min_batch_key);
-            if still_before {
-                lo = mid + 1;
-            } else {
-                hi = mid;
-            }
-        }
-        let mut k = lo;
-        for edit in &batch {
-            for dependency in edit.mutation_meta.first().map(|meta| meta.dependencies.clone()).unwrap_or_default() {
-                if let Some(position) = self.log.applied_edit_ids.iter().position(|id| *id == dependency.0) {
-                    k = k.max(position + 1);
-                }
-            }
-        }
-        let mut order: Vec<String> = self.log.applied_edit_ids.to_vec();
-        for (edit, &hlc_key) in batch.iter().zip(batch_keys.iter()) {
-            let mut insert_at = order.len();
-            for offset in k..order.len() {
-                let existing_key = known_hlc(&order[offset], &self.log.envelope.vcs.edits).map(|existing| existing.cmp_key());
-                if existing_key.is_some_and(|key| key > hlc_key) {
-                    insert_at = offset;
-                    break;
-                }
-            }
-            order.insert(insert_at, edit.id.clone());
-        }
-        let base = if k == self.log.applied_edit_ids.len() {
-            Arc::clone(&*self.live.current)
-        } else {
-            match Self::fold_history(&self.log.envelope, &order[..k], &self.live.supersessions).await {
-                Ok(base) => Arc::new(base),
-                Err(error) => {
-                    retire_scratch_edits::<P, Mutation>(batch);
-                    return self.refuse_with_candidate_dag(candidate_dag, error);
-                }
-            }
-        };
-        let mut edits_by_id: HashMap<String, Edit<Mutation>> = self.log.envelope.vcs.edits.iter().map(|edit| (edit.id.clone(), edit.clone())).collect();
-        for edit in &batch {
-            edits_by_id.insert(edit.id.clone(), edit.clone());
-        }
-        let replay = StoreReplay::<P, Mutation>::replay_suffix_partitioned(base, &order, k, &edits_by_id, &self.log.envelope.schema, &self.live.supersessions, self.log.merge_policy);
-        let (state, committed_ids, quarantined_ids, rebased_inverse, replayed) = match replay {
-            Ok(mut replay) => {
-                let taken = (replay.take_state().expect("a finished merge replay holds its projection"), replay.take_committed(), replay.take_quarantined(), replay.take_rebased_undo_rows(), replay.take_replayed());
-                let _ = self.retire_replay_result(replay);
-                taken
-            }
-            Err(error) => {
-                retire_scratch_edits::<P, Mutation>(batch);
-                retire_scratch_edits::<P, Mutation>(edits_by_id.into_values());
-                return self.refuse_with_candidate_dag(candidate_dag, error);
-            }
-        };
-        let document_id = ArtifactId(self.log.envelope.id.clone());
-        let schema = SchemaId(self.log.envelope.schema.clone());
-        let mut degraded_ids: Vec<String> = Vec::new();
-        for id in &committed_ids {
-            let is_degraded = match replayed.iter().find(|entry| &entry.edit_id == id) {
-                Some(entry) => semio_framework_os_spr::worst_level(&entry.messages).is_some_and(|level| level >= semio_framework_diagnostic::Severity::Warning),
-                None => false,
-            };
-            if is_degraded {
-                degraded_ids.push(id.clone());
-            }
-        }
-        if let Err(error) = self.ensure_open_conflict_capacity(usize::from(!quarantined_ids.is_empty()) + usize::from(!degraded_ids.is_empty())) {
-            retire_shared_projection::<P, Mutation>(state);
-            retire_scratch_edits::<P, Mutation>(batch);
-            retire_scratch_edits::<P, Mutation>(edits_by_id.into_values());
-            for (_, inverse) in rebased_inverse {
-                retire_scratch_operations::<P, Mutation>(inverse);
-            }
-            return self.refuse_with_candidate_dag(candidate_dag, error);
-        }
-        if quarantined_ids.is_empty() {
-            self.replace_causal_dag_retained(candidate_dag)?;
-        } else {
-            self.owners.displaced_retirements.reserve(1)?;
-            self.owners.displaced_retirements.push_reserved(Box::new(ArtifactStoreMutationDagRetirement::new(candidate_dag)));
-        }
-        let mut quarantine_conflict_id = None;
-        if !quarantined_ids.is_empty() {
-            let quarantined_edits = Self::edits_for_ids(&quarantined_ids, &edits_by_id)?;
-            let mut envelopes: Vec<semio_framework_os_spr::MutationEnvelope> = Vec::new();
-            for edit in &quarantined_edits {
-                envelopes.extend(semio_framework_os_spr::mutation_envelope_from_edit::<P, Mutation>(edit, &document_id, &schema).map_err(|error| VcsError::Serialize(error.to_string()))?);
-            }
-            let conflict_actors = canonical_conflict_actors(envelopes.iter().map(|envelope| envelope.actor.clone())).await;
-            let mut quarantine_mutation_ids: Vec<MutationId> = Vec::new();
-            for edit in &quarantined_edits {
-                quarantine_mutation_ids.extend(semio_framework_os_spr::mutation_ids_for_edit(edit));
-            }
-            let quarantine_messages = conflict_messages_for_edits(&quarantined_edits, &replayed).await?;
-            let kind = semio_framework_os_spr::ConflictKind::Quarantined { envelopes };
-            let mut conflict_hlc = self.log.clock;
-            let mut conflict_hlc_key: Option<(u64, u64, u64)> = None;
-            for edit in &quarantined_edits {
-                let hlc = edit_hlc(edit);
-                let key = hlc.cmp_key();
-                if conflict_hlc_key.is_none_or(|current| key >= current) {
-                    conflict_hlc_key = Some(key);
-                    conflict_hlc = hlc;
-                }
-            }
-            let id = semio_framework_os_spr::ConflictId::new(&kind, &ArtifactId(self.log.envelope.id.clone()), &quarantine_mutation_ids, &conflict_hlc).await;
-            self.log.envelope.conflicts.push(semio_framework_os_spr::Conflict { id: id.clone(), kind, status: semio_framework_os_spr::ConflictStatus::Open, messages: quarantine_messages, actors: conflict_actors, timestamp: conflict_hlc });
-            self.prune_resolved_conflicts()?;
-            for quarantined_id in &quarantined_ids {
-                self.replace_edit_messages(quarantined_id, Vec::new())?;
-            }
-            retire_scratch_edits::<P, Mutation>(quarantined_edits);
-            quarantine_conflict_id = Some(id);
-        }
-        for edit in &batch {
-            if committed_ids.contains(&edit.id) && !self.log.envelope.vcs.edits.iter().any(|existing| existing.id == edit.id) {
-                let reservation = self.reserve_edit_history_slot()?;
-                self.insert_reserved_edit_history(reservation, edit.clone())?;
-            }
-        }
-        for (edit_id, inverse) in rebased_inverse {
-            match self.log.envelope.vcs.edits.iter_mut().find(|edit| edit.id == edit_id) {
-                Some(edit) => retire_scratch_operations::<P, Mutation>(std::mem::replace(&mut edit.inverse, inverse)),
-                None => retire_scratch_operations::<P, Mutation>(inverse),
-            }
-        }
-        self.replace_applied_edit_ids_retained(self.log.applied_edit_ids.iter().take(k).cloned().chain(committed_ids.iter().cloned()).collect())?;
-        for edit_messages in &replayed {
-            if committed_ids.contains(&edit_messages.edit_id) {
-                self.replace_edit_messages(&edit_messages.edit_id, edit_messages.messages.clone())?;
-            }
-        }
-        let positions: HashMap<&str, usize> = self.log.applied_edit_ids.iter().enumerate().map(|(index, edit_id)| (edit_id.as_str(), index)).collect();
-        for edit in self.log.envelope.vcs.edits.iter_mut() {
-            if let Some(index) = positions.get(edit.id.as_str()) {
-                edit.sequence_number = *index as i32 + 1;
-            }
-        }
-        drop(positions);
-        self.log.edit_sequence = self.log.applied_edit_ids.len() as i32;
-        self.replace_tail_undo_cache_retained(None)?;
-        self.replace_current_retained(state)?;
-        self.cursor.revision_dirty_from = Some(self.cursor.revision_dirty_from.map_or(k, |dirty| dirty.min(k)));
-        let mut degraded_conflict_id = None;
-        if !degraded_ids.is_empty() {
-            let degraded_edits = Self::edits_for_ids(&degraded_ids, &edits_by_id)?;
-            let degraded_messages = conflict_messages_for_edits(&degraded_edits, &replayed).await?;
-            let degraded_actors = canonical_conflict_actors(degraded_edits.iter().filter_map(|edit| edit.actor.clone()).map(ActorId));
-            let mut degraded_mutation_ids: Vec<MutationId> = Vec::new();
-            for edit in &degraded_edits {
-                degraded_mutation_ids.extend(semio_framework_os_spr::mutation_ids_for_edit(edit));
-            }
-            let kind = semio_framework_os_spr::ConflictKind::Degraded { edit_ids: degraded_ids.clone() };
-            let mut conflict_hlc = self.log.clock;
-            let mut conflict_hlc_key: Option<(u64, u64, u64)> = None;
-            for edit in &degraded_edits {
-                let hlc = edit_hlc(edit);
-                let key = hlc.cmp_key();
-                if conflict_hlc_key.is_none_or(|current| key >= current) {
-                    conflict_hlc_key = Some(key);
-                    conflict_hlc = hlc;
-                }
-            }
-            let id = semio_framework_os_spr::ConflictId::new(&kind, &ArtifactId(self.log.envelope.id.clone()), &degraded_mutation_ids, &conflict_hlc).await;
-            self.log.envelope.conflicts.push(semio_framework_os_spr::Conflict { id: id.clone(), kind, status: semio_framework_os_spr::ConflictStatus::Open, messages: degraded_messages, actors: degraded_actors.await, timestamp: conflict_hlc });
-            self.prune_resolved_conflicts()?;
-            retire_scratch_edits::<P, Mutation>(degraded_edits);
-            degraded_conflict_id = Some(id);
-        }
-        self.cursor.last_projection_cause = None;
-        let mut replayed = replayed;
-        if !ready_transitions.is_empty() || !self.log.envelope.transitions.is_empty() {
-            replayed.extend(self.admit_remote_transitions(ready_transitions).await?);
-        }
-        let worst = replayed.iter().flat_map(|edit_messages| edit_messages.messages.iter()).map(|message| message.level).max();
-        self.replay.pending_report.edit_ids = Some(batch.iter().filter(|edit| committed_ids.contains(&edit.id)).map(|edit| edit.id.clone()).collect());
-        self.bump()?;
-        self.cursor.last_projection_cause = Some(self.cursor.last_projection_cause.filter(|cause| *cause == ArtifactProjectionCause::Replay).unwrap_or(ArtifactProjectionCause::RemoteIngest));
-        let accepted = batch.iter().all(|edit| committed_ids.contains(&edit.id));
-        retire_scratch_edits::<P, Mutation>(batch);
-        retire_scratch_edits::<P, Mutation>(edits_by_id.into_values());
-        Ok(semio_framework_os_spr::MergeReport { policy: self.log.merge_policy, accepted, insertion_index: k as u32, replayed, worst, conflict: quarantine_conflict_id.or(degraded_conflict_id) })
+        semio_framework_os_store_engine_bundle::ingest_remote_merge(&mut self.parts(), envelope).await
     }
 
     /// 📥️ Pumps every queued inbound message from the attached backbone into the timeline.
@@ -2965,7 +2286,8 @@ where
     Mutation: Clone + ToValue + FromValue + self::Mutation<P>,
 {
     fn resident_backings_terminal_is_empty(&self) -> bool {
-        self.log.dag.backing_is_empty() && self.log.applied_edit_ids.capacity() == 0 && self.log.redo_edit_ids.capacity() == 0 && self.cursor.revision_accumulator.applied.capacity() == 0 && self.cursor.revision_accumulator.redo.capacity() == 0 && self.owners.displaced_retirements.owners.capacity() == 0 && self.live.prefix_ring.capacity() == 0 && self.wire.member_inbox.capacity() == 0 && self.replay.pending_report.messages.capacity() == 0 && self.replay.pending_report.outbound.capacity() == 0 && self.replay.pending_report.edit_ids.as_ref().is_none_or(|ids| ids.capacity() == 0) && self.owners.snapshot_read_leases.empty_backing_demands().is_ok_and(|demand| demand.release_bytes == 0)
+        let (report_messages, report_outbound, report_edit_ids) = self.replay.pending_report.resident_backings();
+        self.log.dag.backing_is_empty() && self.log.applied_edit_ids.capacity() == 0 && self.log.redo_edit_ids.capacity() == 0 && self.cursor.revision_accumulator.applied.capacity() == 0 && self.cursor.revision_accumulator.redo.capacity() == 0 && self.owners.displaced_retirements.owners.capacity() == 0 && self.live.prefix_ring.capacity() == 0 && self.wire.member_inbox.capacity() == 0 && report_messages.capacity() == 0 && report_outbound.capacity() == 0 && report_edit_ids.is_none_or(|ids| ids.capacity() == 0) && self.owners.snapshot_read_leases.empty_backing_demands().is_ok_and(|demand| demand.release_bytes == 0)
     }
 }
 
@@ -3018,10 +2340,7 @@ where
             && self.owners.snapshot_read_leases.closed()
             && !self.factory_aliases_present()
             && self.owners.factory_retirement_tickets.terminal_is_empty()
-            && self.replay.pending_report.edit_ids.is_none()
-            && self.replay.pending_report.messages.is_empty()
-            && self.replay.pending_report.outbound.is_empty()
-            && self.replay.pending_report.worst.is_none()
+            && self.replay.pending_report.is_idle()
             && self.wire.durable_group_root.is_none();
         assert!(terminal || std::thread::panicking(), "artifact store reached Drop without its exact terminal-empty shallow-shell witness");
         unsafe {

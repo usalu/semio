@@ -114,10 +114,10 @@ pub fn picks(snapshot: &ModelSnapshot, set: &ClashSet) -> (Vec<String>, Vec<Stri
     let mut a = Vec::new();
     let mut b = Vec::new();
     for (id, class) in crate::standards::v1::subsets::any::schema::snapshot::classified(snapshot) {
-        if set.a.picks(snapshot, &id, class) {
+        if crate::standards::v1::subsets::any::schema::snapshot::selector_picks(&set.a, snapshot, &id, class) {
             a.push(id.clone());
         }
-        if set.b.picks(snapshot, &id, class) {
+        if crate::standards::v1::subsets::any::schema::snapshot::selector_picks(&set.b, snapshot, &id, class) {
             b.push(id);
         }
     }

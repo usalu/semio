@@ -5,7 +5,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import _ from "lodash";
 import Ajv from "ajv";
-import { valueOrderedRetirementSchemaUrl } from "../../../../../../🔨️modules/🌱️value/🧪️tests/🧫️fixtures/🟦️.ts";
+import { valueOrderedRetirementSchemaUrl } from "@semio-tech/value-ts/testing/fixtures";
 
 //#region ✂️BackboneDetachOracle
 export function testBackboneDetachFixture(): void {
@@ -29,6 +29,5 @@ export function testBackboneDetachFixture(): void {
     const observed = { refused, panicked: false, descriptorPreserved: _.eq(next.descriptor, before.descriptor), generationPreserved: next.generation === before.generation, backbonePreserved: _.eq(next.backbone, before.backbone), payloadPreserved: _.eq(next.payload, before.payload) && next.payload.equals(before.payload) };
     assert.deepEqual(observed, row.expected);
   }
-  console.log("[DEBUG] original detach examples / independent genuine Grant Ajv omissions / Lodash identity / Buffer refusal conservation");
 }
 //#endregion ✂️BackboneDetachOracle

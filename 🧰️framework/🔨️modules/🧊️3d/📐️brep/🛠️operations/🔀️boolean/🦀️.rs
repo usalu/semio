@@ -1822,7 +1822,6 @@ fn local_point_in_solid(body: &Body, solid: SolidId, point: Pnt3, tol: f64) -> R
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn classify_face_against_solid(body: &Body, face: FaceId, other: SolidId, tol: f64) -> Result<PointClassification, KernelError> {
     let Some(p) = interior_point_of_face(body, face, tol) else {
-        debug_dump_face(body, face);
         return Err(KernelError::Boolean(BooleanError::ClassificationAmbiguous(format!("no interior UV sample found for face {face}"))));
     };
     local_point_in_solid(body, other, p, tol)
@@ -2480,18 +2479,3 @@ mod tests;
 #[cfg(test)]
 #[path = "🧪️tests/🔬️differential/🦀️.rs"]
 mod differential;
-
-// [DEBUG] temporary face dump
-fn debug_dump_face(body: &Body, face: FaceId) {
-    let Some(data) = body.faces.get(face) else { return };
-    eprintln!("[DEBUG] face {face} flipped={} surface={:?}", data.flipped, body.surfaces.get(data.surface).map(|s| format!("{s:?}").chars().take(40).collect::<String>()));
-    for loop_id in data.outer.into_iter().chain(data.inners.iter().copied()) {
-        eprintln!("[DEBUG]  loop {loop_id} outer={}", Some(loop_id) == data.outer);
-        for cid in body.loop_coedges(loop_id) {
-            let co = body.coedges.get(cid).unwrap();
-            let (a, b) = body.coedge_endpoints(cid).unwrap();
-            let uv = co.pcurve.and_then(|id| body.curves2.get(id)).map(|c| { let (t0, t1) = if co.forward { co.prange } else { (co.prange.1, co.prange.0) }; (c.eval(t0), c.eval(t1)) });
-            eprintln!("[DEBUG]   {} edge={} fwd={} v{}->v{} uv={:?}", cid, co.edge, co.forward, a.raw_index(), b.raw_index(), uv.map(|(p, q)| ((p.x, p.y), (q.x, q.y))));
-        }
-    }
-}

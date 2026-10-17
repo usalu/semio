@@ -31,7 +31,5 @@ pub fn vcs_play_labels(view_state: &semio_framework_plugin::ViewModel) -> &'stat
 //#endregion 🔖️Resolvers
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

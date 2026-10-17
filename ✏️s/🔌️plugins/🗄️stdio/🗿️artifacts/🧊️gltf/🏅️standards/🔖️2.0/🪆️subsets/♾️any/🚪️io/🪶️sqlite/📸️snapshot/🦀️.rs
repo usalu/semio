@@ -1,31 +1,32 @@
 //! 🧊️ Explicit GLTF semantic entities retain independently owned document and buffer state.
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v2_0::subsets::any::schema::snapshot::*;
+use crate::standards::v2_0::subsets::any::schema::snapshot_root::GltfSnapshot;
 use {semio_framework_os_kernel::os_store::serialization::ArtifactSqliteSnapshotHost,semio_framework_artifact_reference::ArtifactDialect,semio_framework_os_kernel::io_schema::IoError,semio_framework_os_kernel::io_schema::IoOutcome,semio_framework_os_kernel::sqlite_snapshot::SqliteDatabase,semio_framework_os_kernel::sqlite_snapshot::SqliteRow,semio_framework_os_kernel::sqlite_snapshot::SqliteValue,semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl,semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotPhase,semio_framework_os_kernel::sqlite_snapshot::validate_sqlite_database_schema,semio_framework_os_kernel::sqlite_snapshot::artifact::Cell,semio_framework_os_kernel::sqlite_snapshot::artifact::Projection,semio_framework_os_kernel::sqlite_snapshot::artifact::Reconstruction,semio_framework_os_kernel::sqlite_snapshot::artifact::FloatColumn,semio_framework_os_kernel::sqlite_snapshot::artifact::FloatRow,semio_framework_os_kernel::sqlite_snapshot::artifact::insert_ieee754,semio_framework_os_kernel::sqlite_snapshot::artifact::insert_key_ieee754};
 
 #[path="📄️document/💰️backing/🦀️.rs"]mod document;
 #[path="🌳️node/💰️backing/🦀️.rs"]mod node;
 #[path="🏔️mesh/💰️backing/🦀️.rs"]mod mesh;
 #[path="📦️buffer/💰️backing/🦀️.rs"]mod buffer;
-#[path="🖌️material/💰️backing/🦀️.rs"]mod material;
+#[path="🖌️material/💰️backing/🦀️.rs"]pub mod material;
 #[path="🖼️texture/💰️backing/🦀️.rs"]mod texture;
 #[path="🦴️skin/💰️backing/🦀️.rs"]mod skin;
 #[path="🎬️animation/💰️backing/🦀️.rs"]mod animation;
-#[path="🎥️camera/💰️backing/🦀️.rs"]mod camera;
-#[path="🧩️extras/💰️backing/🦀️.rs"]mod extras;
-#[path="📏️encoding/💰️backing/🦀️.rs"]mod encoding;
+#[path="🎥️camera/💰️backing/🦀️.rs"]pub mod camera;
+#[path="🧩️extras/💰️backing/🦀️.rs"]pub mod extras;
+#[path="📏️encoding/💰️backing/🦀️.rs"]pub mod encoding;
 
 pub const SQLITE_SCHEMA:&str=concat!(include_str!("📄️document/🗄️.sql"),"\n",include_str!("🧩️extras/🗄️.sql"),"\n",include_str!("🌳️node/🗄️.sql"),"\n",include_str!("🏔️mesh/🗄️.sql"),"\n",include_str!("📦️buffer/🗄️.sql"),"\n",include_str!("🖌️material/🗄️.sql"),"\n",include_str!("🖼️texture/🗄️.sql"),"\n",include_str!("🦴️skin/🗄️.sql"),"\n",include_str!("🎬️animation/🗄️.sql"),"\n",include_str!("🎥️camera/🗄️.sql"));
 
-fn text(value:&Option<String>)->Cell<'_>{value.as_deref().map_or(Cell::Null,Cell::Text)}
-fn word(value:u64)->[Cell<'static>;2]{[Cell::Integer((value>>32) as i64),Cell::Integer((value&0xffff_ffff) as i64)]}
+pub fn text(value:&Option<String>)->Cell<'_>{value.as_deref().map_or(Cell::Null,Cell::Text)}
+pub fn word(value:u64)->[Cell<'static>;2]{[Cell::Integer((value>>32) as i64),Cell::Integer((value&0xffff_ffff) as i64)]}
 fn optional_word(value:Option<u64>)->[Cell<'static>;2]{value.map_or([Cell::Null,Cell::Null],word)}
 fn index(value:usize)->[Cell<'static>;2]{word(value as u64)}
 fn optional_index(value:Option<usize>)->[Cell<'static>;2]{optional_word(value.map(|value|value as u64))}
 fn id(value:Option<i64>)->Cell<'static>{value.map_or(Cell::Null,Cell::Integer)}
 fn ordinal(value:usize)->Result<Cell<'static>, ValueError>{Ok(Cell::Integer(i64::try_from(value).map_err(|error| ValueError::new(ValueRefusalKind::WorkLimit, error.to_string()))?))}
 
-struct Write<'c,'p>{projection:Projection<'c,'p>,json_next:i64}
+pub struct Write<'c,'p>{projection:Projection<'c,'p>,json_next:i64}
 impl<'c,'p> Write<'c,'p>{
  fn new(control:&'c mut SqliteSnapshotControl<'p>)->Result<Self, ValueError>{Ok(Self{projection:Projection::new(SQLITE_SCHEMA,control)?,json_next:1})}
  fn extras(&mut self,extensions:&Option<GltfJson>,extras:&Option<GltfJson>)->Result<[Cell<'static>;2], ValueError>{let extension=extras::project(self,extensions.as_ref())?;let extra=extras::project(self,extras.as_ref())?;Ok([id(extension),id(extra)])}
@@ -50,14 +51,14 @@ const WIDTHS:&[(&str,usize)]=&[
 ];
 fn owned<T:semio_framework_dsl_record::DslField>(value:T)->semio_framework_dsl_record::__rt::DecodedFieldOwner<T>{semio_framework_dsl_record::__rt::DecodedFieldOwner::new(value,T::retire_decoded)}
 fn owned_option<T:semio_framework_dsl_record::DslField>(value:Option<T>)->semio_framework_dsl_record::__rt::DecodedFieldOwner<Option<T>>{semio_framework_dsl_record::__rt::DecodedFieldOwner::new(value,|value|{if let Some(value)=value{T::retire_decoded(value);}})}
-#[path="💰️backing/🦀️.rs"]mod backing;
-use backing::Read;
+#[path="💰️backing/🦀️.rs"]pub mod backing;
+use crate::standards::v2_0::subsets::any::io::sqlite::snapshot::backing::Read;
 #[path="🚦️native/🦀️.rs"]mod native;
 
 use semio_framework_os_kernel::sqlite_snapshot::{ValueError, ValueRefusalKind};
 impl ArtifactSqliteSnapshotHost for GltfSnapshot{
- fn decode_sqlite_snapshot_native(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{native::decode(payload,crate::standards::v2_0::subsets::any::io::binary::snapshot::owned_pack::controlled_spec_producer(),crate::standards::v2_0::subsets::any::io::binary::snapshot::owned_pack::reconstruct_record_controlled,control,native_control.native())}
- fn encode_sqlite_snapshot_native(&self,encoding:semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io::IoPayload,ValueError>{encoding::native_footprint(self,control)?;crate::standards::v2_0::subsets::any::io::binary::snapshot::owned_pack::encode_native(self,encoding,control,native_owner)}
+ fn decode_sqlite_snapshot_native(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{native::decode(payload,crate::standards::v2_0::subsets::any::io::binary::snapshot::owned_pack::controlled_spec_producer(),crate::standards::v2_0::subsets::any::io::snapshot_codecs::pack_codec::reconstruct_record_controlled,control,native_control.native())}
+ fn encode_sqlite_snapshot_native(&self,encoding:semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io::IoPayload,ValueError>{encoding::native_footprint(self,control)?;crate::standards::v2_0::subsets::any::io::snapshot_codecs::pack_codec::encode_native(self,encoding,control,native_owner)}
  fn retire_sqlite_snapshot(self){<GltfDocument as semio_framework_dsl_record::DslField>::retire_decoded(self.document);}
  
  fn preflight_sqlite_snapshot_encoding(&self,_encoding:semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{encoding::native_footprint(self,control)}
@@ -93,6 +94,4 @@ fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotCont
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;
+

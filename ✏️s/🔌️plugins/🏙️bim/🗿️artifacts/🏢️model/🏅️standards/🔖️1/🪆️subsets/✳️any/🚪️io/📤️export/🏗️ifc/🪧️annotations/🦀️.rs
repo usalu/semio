@@ -4,9 +4,10 @@
 //! importer finds it again; the derived measured total of a dimension is the element quantity `Semio_DimensionValue`.
 //! 📎 https://standards.buildingsmart.org/IFC/RELEASE/IFC2x3/TC1/HTML/ifcproductextension/lexical/ifcannotation.htm
 
-use super::data::{label, number};
-use super::writer::{en, opt_text, real, refs, rf, text, unset, V};
-use super::{Export, Quantity};
+use crate::standards::v1::subsets::any::io::export::ifc::data::{number};
+use crate::standards::v1::subsets::any::io::export::ifc::writer::label;
+use crate::standards::v1::subsets::any::io::export::ifc::writer::{en, opt_text, real, refs, rf, text, unset, V};
+use crate::standards::v1::subsets::any::io::export::ifc::context::{Export, Quantity};
 use crate::standards::v1::subsets::any::schema::inferences::annotation_layout::text_width;
 use crate::standards::v1::subsets::any::schema::inferences::plan_linework::{PlanLinework, PlanVertex};
 

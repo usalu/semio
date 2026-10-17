@@ -1,6 +1,6 @@
 //! 🔺️ `create-block` — sparse diff construction: one added question (and the order when it is not appended) in the touched step.
 
-use super::mutation::CreateBlock;
+use crate::standards::v1::subsets::any::schema::mutations::create_block::mutation::CreateBlock;
 use crate::schema::diff::{FormsQuestionsDelta, FormsStepPatch, FormsStepsDelta};
 use crate::{forms_steps, FormsDiff, FormsSnapshot};
 

@@ -39,7 +39,8 @@
       "items": {
         "$ref": "#/$defs/Puzzle2dTargetRegion"
       },
-      "x-semio-state": "artifact"
+      "x-semio-state": "artifact",
+      "default": []
     },
     "meta": {
       "$ref": "#/$defs/Puzzle2dMeta",
@@ -234,10 +235,12 @@
           "type": "string"
         },
         "hidden": {
-          "type": "boolean"
+          "type": "boolean",
+          "default": false
         },
         "locked": {
-          "type": "boolean"
+          "type": "boolean",
+          "default": false
         }
       }
     },

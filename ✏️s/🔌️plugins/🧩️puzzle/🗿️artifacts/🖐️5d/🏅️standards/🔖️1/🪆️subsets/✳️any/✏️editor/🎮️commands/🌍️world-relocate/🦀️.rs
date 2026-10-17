@@ -1,7 +1,7 @@
 //! 🌍️ `world-relocate` command.
-
 use crate::editor::puzzle5d::modes::edit::windows::world3d::utilities::transform::puzzle5d_relocate_record;
-use crate::editor::puzzle5d::Puzzle5dActionCtx;
+
+use crate::editor::puzzle5d::interaction::Puzzle5dActionCtx;
 use semio_framework_pack_json::Value;
 
 /// 🚚️ Drops one part at an explicit world origin as ONE transform-tool transaction: the `drag-selection3d`

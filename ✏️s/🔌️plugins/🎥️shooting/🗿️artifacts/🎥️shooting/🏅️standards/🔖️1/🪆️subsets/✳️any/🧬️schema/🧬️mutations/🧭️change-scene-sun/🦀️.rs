@@ -1,7 +1,6 @@
 //! 🧭️ Shooting mutation payload — `ChangeSceneSunAzimuth`. One of the scene's independently-settable fields.
 
 use crate::diff::ShootingDiff;
-use crate::mutations::ShootingMutation;
 use crate::ShootingSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 
@@ -15,12 +14,15 @@ pub struct ChangeSceneSunAzimuth {
     pub new_azimuth: f64,
 }
 
-impl MutationKind<ShootingSnapshot, ShootingMutation> for ChangeSceneSunAzimuth {
+impl<Op> MutationKind<ShootingSnapshot, Op> for ChangeSceneSunAzimuth
+where
+    Op: protocol::Mutation<ShootingSnapshot, Diff = ShootingDiff> + From<ChangeSceneSunAzimuth>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "scene-sun-azimuth", kind: "change-scene-sun-azimuth", record: "ChangedSceneSunAzimuth" };
     fn diff(&self, base: &ShootingSnapshot) -> protocol::MutationOutcome<ShootingDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &ShootingSnapshot) -> Result<Vec<ShootingMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &ShootingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

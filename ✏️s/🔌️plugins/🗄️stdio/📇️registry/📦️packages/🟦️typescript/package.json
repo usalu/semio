@@ -1,0 +1,9 @@
+{
+  "name": "@semio-tech/stdio-registry-ts",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./schema": "./🧬️schema/🟦️.ts",
+    "./contract/part21/testing/fixtures/sqlite-cohort": "./🧬️contract/📐️part21/🧪️testing/🧫️fixtures/🚦️sqlite-cohort/🟦️.ts"
+  }
+}

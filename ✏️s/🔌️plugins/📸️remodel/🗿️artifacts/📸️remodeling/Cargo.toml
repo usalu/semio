@@ -3,8 +3,6 @@ cargo-features = [ "trim-paths" ]
 [workspace]
 resolver = "2"
 members = [
-  "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️vectors/📦️packages/🦀️rust",
-  "📦️packages/🦀️rust",
   "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🌟️feature/📦️packages/🦀️rust",
   "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🌫️dense/📦️packages/🦀️rust",
   "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎥️video/🎞️h264/📦️packages/🦀️rust",
@@ -50,7 +48,17 @@ members = [
   "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎞️media/📦️packages/🦀️rust",
   "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎯️calibration/📦️packages/🦀️rust",
   "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
+  "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔧️params-3/📦️packages/🦀️rust",
+  "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️vectors/📦️packages/🦀️rust",
+  "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧰️calib-2/📦️packages/🦀️rust",
+  "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧲️results-2/📦️packages/🦀️rust",
   "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧵️results/📦️packages/🦀️rust",
+  "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧶️calib-3/📦️packages/🦀️rust",
+  "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪙️params-2/📦️packages/🦀️rust",
+  "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪛️results-3/📦️packages/🦀️rust",
+  "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪜️media-2/📦️packages/🦀️rust",
+  "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪝️media-3/📦️packages/🦀️rust",
+  "📦️packages/🦀️rust",
 ]
 exclude = [
   "**/👽️guest/**",
@@ -257,14 +265,38 @@ path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️
 [workspace.dependencies.semio-s-artifact-remodel-remodeling-mut-results]
 path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧵️results/📦️packages/🦀️rust"
 
+[workspace.dependencies.semio-s-artifact-remodel-remodeling-mut-results-3]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪛️results-3/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-remodel-remodeling-mut-results-2]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧲️results-2/📦️packages/🦀️rust"
+
 [workspace.dependencies.semio-s-artifact-remodel-remodeling-mut-media]
 path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎞️media/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-remodel-remodeling-mut-media-3]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪝️media-3/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-remodel-remodeling-mut-media-2]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪜️media-2/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-s-artifact-remodel-remodeling-mut-calib]
 path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎯️calibration/📦️packages/🦀️rust"
 
+[workspace.dependencies.semio-s-artifact-remodel-remodeling-mut-calib-3]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧶️calib-3/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-remodel-remodeling-mut-calib-2]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧰️calib-2/📦️packages/🦀️rust"
+
 [workspace.dependencies.semio-s-artifact-remodel-remodeling-mut-params]
 path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚙️params/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-remodel-remodeling-mut-params-3]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔧️params-3/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-remodel-remodeling-mut-params-2]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪙️params-2/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-s-artifact-remodel-remodeling-mutations]
 path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust"

@@ -161,16 +161,11 @@ impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot
 //#endregion 🔖️Presence
 
 #[path = "🧬️schema/🧬️mutations/🦀️.rs"]
-mod mutations;
+pub mod mutations;
 pub use mutations::*;
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️contract-vectors/🦀️.rs"]
-mod contract_vectors;
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 
-#[path = "🚪️io/🦀️.rs"]
-pub mod io;
+
+
+

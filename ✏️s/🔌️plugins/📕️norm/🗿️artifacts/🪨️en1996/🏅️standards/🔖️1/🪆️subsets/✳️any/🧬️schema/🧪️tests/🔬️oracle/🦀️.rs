@@ -1,6 +1,7 @@
 //! 🐍️ Python oracle + JSON-schema validation for EN 1996 examples.
 
 use crate::evaluate_building;
+use semio_framework_test_fixtures::manifest_dir;
 use semio_s_artifact_norm_en1996_model::En1996Snapshot;
 use std::process::Command;
 
@@ -20,7 +21,7 @@ fn write_report_json(doc: &En1996Snapshot, path: &PathBuf) {
 #[test]
 fn python_oracle_matches_compliant_and_noncompliant() {
     let oracle = {
-        let mut p = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        let mut p = manifest_dir!();
         p.push("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles/⚖️compliance/🐍️.py");
         p
     };
@@ -51,7 +52,7 @@ fn python_oracle_matches_compliant_and_noncompliant() {
 #[test]
 fn json_schema_validates_example_snapshots() {
     let schema = {
-        let mut p = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        let mut p = manifest_dir!();
         p.push("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json");
         p
     };

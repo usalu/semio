@@ -48,7 +48,6 @@ fn member_catalog_constructor_birth_and_retirement_match_original_system_allocat
         assert_eq!(physical, born);
         let (_, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| drop(owners));
         assert_eq!((allocated, released), (0, 0));
-        println!("[DEBUG] original member catalog bounded={bounded} sourcebirth={} fundedticketbirth={} fundedphysical={physical} turns={turns} neutral0/onebelow preserved terminalDrop=0", birth.capacity_bytes, born - birth.capacity_bytes);
     }
 }
 
@@ -80,6 +79,5 @@ fn member_catalog_initial_open_cancellation_pays_original_catalog_and_page_befor
     let (_, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| drop(open));
     assert_eq!((allocated, released), (0, 0), "original page release is already paid in its exact current turn");
     caller.close();
-    println!("[DEBUG] original member begin sourcebirth={} originalrequest={outstanding} allfundedbirth={born} exactfundedphysical={physical} turns={turns} terminalDrop=0", birth.capacity_bytes);
 }
 

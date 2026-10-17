@@ -1,0 +1,49 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/👥️two-human/🟦️.ts",
+ "importers": "auto",
+ "children": [
+  {
+   "dir": "🔑️sessions",
+   "doc": "/** 🔑️ The browser sessions of the two-human harness: one human per isolated profile, boot and sign-in, dialogs, windowed table rows and the status line. */",
+   "lines": [
+    [
+     29,
+     196
+    ]
+   ]
+  },
+  {
+   "dir": "🏠️space-creation-and-edits",
+   "doc": "/** 🏠️ The Space app steps of the two-human harness: mounting and settling the shell, opening the Space and its rows, creating a document, and reading, editing and undoing its text with the hub head as witness. */",
+   "lines": [
+    [
+     198,
+     457
+    ]
+   ],
+   "names": [
+    "EDIT_ARGS"
+   ]
+  },
+  {
+   "dir": "📋️run-types",
+   "doc": "/** 📋️ The run shapes of the two-human harness: the journey kinds, the run options, one kind's timings and row, and the report. */",
+   "lines": [
+    [
+     761,
+     790
+    ]
+   ]
+  },
+  {
+   "dir": "🧭️journeys",
+   "doc": "/** 🧭️ The per-kind journeys of the two-human harness: the editor, the viewer and the cross-undo journey over one document, and the shared space seeded through the hub. */",
+   "lines": [
+    [
+     459,
+     758
+    ]
+   ]
+  }
+ ]
+}

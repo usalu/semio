@@ -1,2 +1,2 @@
 /** 📖️ SDK entry `@semio-tech/framework/test/source-text`: explicit public surface of the framework module that plugins build on. */
-export { frameworkSourcePath, frameworkSourceUrl, readFrameworkSourceJson, readFrameworkSourceText } from "../../../../🔨️modules/🧪️test/📖️source-text/🟦️.ts";
+export { fixtureUrl, frameworkSourcePath, frameworkSourceUrl, readFrameworkSourceJson, readFrameworkSourceText, readStoreSourceText } from "../../../../🔨️modules/🧪️test/📖️source-text/🟦️.ts";

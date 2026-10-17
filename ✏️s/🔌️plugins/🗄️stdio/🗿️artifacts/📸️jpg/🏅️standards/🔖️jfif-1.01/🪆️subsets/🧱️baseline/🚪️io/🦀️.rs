@@ -15,7 +15,7 @@ pub fn check_baseline_content(snapshot:&crate::JpgSnapshot)->Vec<semio_framework
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
     use super::check_baseline_content;
-    use crate::standards::v_jfif_1_01::subsets::document::io::JpgComposer as JpgAnyComposer;
+    use crate::standards::v_jfif_1_01::subsets::document::io::facets::JpgComposer as JpgAnyComposer;
     use crate::JpgSnapshot;
     use semio_framework_diagnostic::Diagnostic;
 use semio_framework_diagnostic::FaultCode;
@@ -100,7 +100,7 @@ use semio_framework_diagnostic::TextSpan;
     /// 📌️ Registers this subset's `SubsetValidator` with the generic io registry (D5's
     /// validate-on-build hook). Called from the jfif-1.01 standard's own `⚙️engine::register()`. The
     /// `ComposerEntry` itself is registered separately by the standard-level composer aggregator
-    /// (`crate::standards::v_jfif_1_01::subsets::document::io::io_registry::entries()`), matching how `🧾️document`'s
+    /// (`crate::standards::v_jfif_1_01::subsets::baseline::io::io_registry::entries()`), matching how `🧾️document`'s
     /// own entry is registered.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn register() {
@@ -116,7 +116,7 @@ pub use derived_composition::*;
 
 pub mod derived_construction {
     use super::check_baseline_content;
-    use crate::standards::v_jfif_1_01::subsets::document::io::JpgBuilder as JpgAnyBuilder;
+    use crate::standards::v_jfif_1_01::subsets::document::io::facets::JpgBuilder as JpgAnyBuilder;
     use crate::{JpgDiff, JpgMutation, JpgSnapshot};
     use semio_framework_plugin::ArtifactBuilder;
 
@@ -171,8 +171,8 @@ pub mod derived_construction {
 pub use derived_construction::*;
 
 pub mod derived_analysis {
-    use crate::standards::v_jfif_1_01::subsets::document::io::JpgAnalyzer as JpgAnyAnalyzer;
-    pub use crate::standards::v_jfif_1_01::subsets::document::io::JpgParts;
+    use crate::standards::v_jfif_1_01::subsets::document::io::facets::JpgAnalyzer as JpgAnyAnalyzer;
+    pub use crate::standards::v_jfif_1_01::subsets::document::io::facets::JpgParts;
     #[cfg(test)] use crate::JpgSnapshot;
     #[cfg(test)] use semio_framework_diagnostic::Diagnostic;
 #[cfg(test)] use semio_framework_diagnostic::FaultCode;
@@ -235,3 +235,19 @@ semio_framework_plugin::derive_artifact_facets!(
     analyzer: JpgBaselineAnalyzer,
     composer: JpgBaselineComposer,
 );
+
+//#region 🚪️DerivedIoRegistry
+pub mod io_registry {
+    use super::JpgBaselineComposer;
+    use crate::standards::v_jfif_1_01::subsets::document::io::facets::JpgComposer as JpgRawAnyComposer;
+    use semio_framework_plugin::{composer_entry_of, io::ComposerEntry};
+    use std::sync::OnceLock;
+
+    static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
+
+    // 🚫️async: E1 pure table accessor consumed by OnceLock::get_or_init's sync closure — see R9
+    pub fn entries() -> &'static [ComposerEntry] {
+        ENTRIES.get_or_init(|| vec![composer_entry_of::<JpgRawAnyComposer>(), composer_entry_of::<JpgBaselineComposer>()]).as_slice()
+    }
+}
+//#endregion 🚪️DerivedIoRegistry

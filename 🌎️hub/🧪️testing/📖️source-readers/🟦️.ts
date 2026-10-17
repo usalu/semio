@@ -2,7 +2,7 @@
  * @see ../../📦️packages/🦀️rust/📜️script.ts
  */
 import { type ExactCargoLawGroup } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
-import { listModuleTree, readModuleTreeSource } from "../../../🧰️framework/🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
+import { listModuleTree, readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 
@@ -80,9 +80,9 @@ export function hubLawGroups(laws: ReadonlyArray<readonly [string, string]>, car
   });
 }
 
-/** 🔏️ The trusted-catalog crate root together with the contract and descriptor roots it was carved into. */
+/** 🔏️ The module trees of the trusted-catalog crate root and of the contract and descriptor roots it was carved into, each root followed by the children it mounts. */
 export function readTrustedCatalogSource(repoRoot: string): string {
-  return ["🦀️.rs", "📜️contract/🦀️.rs", "🧾️descriptor/🦀️.rs"].map((file) => readFileSync(join(repoRoot, "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog", file), "utf8")).join("\n");
+  return ["🦀️.rs", "📜️contract/🦀️.rs", "🧾️descriptor/🦀️.rs"].map((file) => readModuleTreeSource(join(repoRoot, "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog", file))).join("\n");
 }
 
 /** 🏃️ The inference runtime module trees together with the committer and contract crates it was carved into. */
@@ -106,7 +106,7 @@ export function readNeo4jDirectorySource(repoRoot: string): string {
 /** 🧪️ The shared fixtures and the unit laws of the `os-hub` route laws crates, concatenated. */
 export function readHubBinTestSource(repoRoot: string): string {
   const base = join(repoRoot, "🌎️hub/🧪️tests/🔬️bin-unit");
-  return ["🧰️testkit/🦀️.rs", "🚀️boot/🔬️unit/🦀️.rs", "🧭️open-plan/🔬️unit/🦀️.rs", "📇️directory/🔬️unit/🦀️.rs", "👥️presence/🔬️unit/🦀️.rs", "🔐️session/🔬️unit/🦀️.rs", "🎲️hostile-input/🔬️unit/🦀️.rs"].map((file) => readFileSync(join(base, file), "utf8")).join("\n");
+  return ["🧰️testkit/🦀️.rs", "🚀️boot/🔬️unit/🦀️.rs", "🧭️open-plan/🔬️unit/🦀️.rs", "📇️directory/🔬️unit/🦀️.rs", "👥️presence/🔬️unit/🦀️.rs", "🔐️session/🔬️unit/🦀️.rs", "🎲️hostile-input/🔬️unit/🦀️.rs"].map((file) => readModuleTreeSource(join(base, file))).join("\n");
 }
 
 /** 🦀️ Every Rust file of one module, so a law stays findable wherever the test layout puts it —

@@ -13,13 +13,11 @@ pub fn measure(snapshot: &ShootingSnapshot, labels: &ShootingLabels) -> WindowMe
         label: Some(labels.measure_sun.into()),
         pressed: snapshot.scene.sun.enabled,
         text: None,
-        on_change: crate::editor::shooting::shooting_window_action("toggleSun", None),
+        on_change: crate::editor::shooting::ui_helpers_and_io::shooting_window_action("toggleSun", None),
     }
 }
 //#endregion 🔖️Measure
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

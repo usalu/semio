@@ -1,0 +1,23 @@
+{
+ "name": "c4p15",
+ "crates": [
+  "semio-hub-trusted-catalog",
+  "semio-hub-trusted-catalog-descriptor",
+  "semio-hub-inference-ledger",
+  "semio-hub-trusted-catalog-laws",
+  "semio-hub-directory-laws",
+  "semio-hub-inference-laws"
+ ],
+ "base": {
+  "rev": "b84bf526c7b",
+  "crates": [
+   "semio-hub-trusted-catalog",
+   "semio-hub-trusted-catalog-descriptor",
+   "semio-hub-inference-ledger",
+   "semio-hub-trusted-catalog-laws",
+   "semio-hub-directory-laws",
+   "semio-hub-inference-laws"
+  ]
+ },
+ "note": "CENSUS4-PKG-15: hub production roots and unit-test roots split into children"
+}

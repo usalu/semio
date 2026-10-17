@@ -19,7 +19,7 @@ impl Puzzle2dPlaySnapshot {
     }
 
     /// 🧬️ A root produced by typed mutation application; its `Value` projection is deferred.
-    pub(crate) fn from_typed(typed: Puzzle2dSnapshot) -> Self {
+    pub fn from_typed(typed: Puzzle2dSnapshot) -> Self {
         Self { typed: std::sync::Arc::new(typed), value: std::sync::OnceLock::new() }
     }
 
@@ -188,7 +188,7 @@ impl semio_framework_value::retirement::RetireOwned for Puzzle2dPlaySnapshot {
 }
 
 //#region 🚪️Codecs
-use store::{os_store::serialization::ArtifactSqliteSnapshotHost, sqlite_snapshot::{SqliteDatabase, SqliteSnapshotControl, SnapshotEncoding}};
+use store::{os_store::serialization::ArtifactSqliteSnapshotHost, sqlite_snapshot::SqliteDatabase, sqlite_snapshot::SqliteSnapshotControl};
 use semio_framework_value::{ValueError, ValueRefusalKind};
 use crate::standards::v1::subsets::any::io::sqlite::snapshot::{semantic_cells, restore_authority};
 
@@ -261,19 +261,11 @@ fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotCont
 //#endregion 🚪️Codecs
 
 use crate::editor::puzzle2d::config::PUZZLE2D_LOD_MODE_AUTOMATIC;
-use {crate::editor::puzzle2d::commands::apply_board_events, crate::editor::puzzle2d::commands::set_brush_kind_weights, crate::editor::puzzle2d::commands::set_grid_factor, crate::editor::puzzle2d::commands::set_grid_snap_enabled, crate::editor::puzzle2d::commands::set_grid_visible, crate::editor::puzzle2d::commands::set_suggestion_offset};
 use crate::editor::puzzle2d::config::Puzzle2dPlayRuntime;
 use {crate::editor::puzzle2d::engine::handle_position_on_circle, crate::editor::puzzle2d::engine::handle_position_on_rectangle, crate::editor::puzzle2d::engine::BoardHost, crate::editor::puzzle2d::engine::Point, crate::editor::puzzle2d::engine::Puzzle2dExtension};
-use crate::editor::puzzle2d::modes::edit::windows::overview::utilities::select as select_utility;
-use crate::editor::puzzle2d::modes::edit::windows::selection;
-use {crate::editor::puzzle2d::panels::artifact, crate::editor::puzzle2d::panels::inspection};
-use crate::editor::puzzle2d::terminology::puzzle2d_localized;
-use crate::editor::puzzle2d::window::self;
-use crate::editor::puzzle2d::snapshot::Puzzle2dPlaySnapshot;
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
-use crate::editor::puzzle2d::recorder::Puzzle2dRecorder;
 use semio_framework::kernel::UiDirtyScope;
-use {semio_framework_plugin::kernel::ClipboardError, semio_framework_plugin::kernel::ClipboardFragment, semio_framework_plugin::kernel::Effect, semio_framework_plugin::kernel::PastePlacement};
+use semio_framework_plugin::kernel::Effect;
 use semio_framework_plugin::ActionArgDef;
 use semio_framework_plugin::ActionArgOption;
 use semio_framework_plugin::ActionDescriptor;
@@ -293,10 +285,9 @@ use semio_framework_plugin::SelectionSpec;
 use semio_framework_plugin::INTERACTION_SELECT_ACTION_ID;
 use semio_framework_plugin::app::InteractionView;
 use {semio_framework_pack_json::json, semio_framework_pack_json::Value};
-#[cfg(test)] use semio_framework_pack_json::Object;
-use {std::collections::BTreeSet, std::collections::HashSet};
-use crate::editor::puzzle2d::{PUZZLE2D_TOOL_JOB_IDS, Puzzle2dActionCtx, recorder, snapshot};
-use engine::board_set_grid_visible;
+#[cfg(test)] use {std::collections::BTreeSet, std::collections::HashSet};
+use crate::editor::puzzle2d::snapshot;
+use crate::editor::puzzle2d::engine::board_set_grid_visible;
 
 pub const PUZZLE2D_PLAY_CONTROLLER_ID: &str = "puzzle2d-play";
 
@@ -514,7 +505,7 @@ pub fn empty_board_snapshot() -> Value {
 /// whose bounded retirement authority would trap the guest when dropped.
 pub fn puzzle2d_load_document_effect(document: &crate::Puzzle2dSnapshot) -> Effect {
     let pack = <crate::Puzzle2dSnapshot as pack::snapshot::ArtifactPack>::encode_pack(document);
-    let spr = ::semio_framework_async::poll::resolve_ready(store::os_store::text_format::empty_document_spr("puzzle2d", crate::standards::v1::subsets::any::schema::PUZZLE_2D_SCHEMA));
+    let spr = ::semio_framework_async::poll::resolve_ready(store::os_store::text_format::empty_document_spr("puzzle2d", crate::standards::v1::subsets::any::schema::records::PUZZLE_2D_SCHEMA));
     Effect::LoadDocument { pack, spr }
 }
 
@@ -533,7 +524,7 @@ pub fn puzzle2d_interaction_select(granularity: &str, id: &str) -> ActionDescrip
 /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the `vortex` domain declaration —
 /// the deleted `Puzzle2dConfig::selected_ids` flat bag collapses into one framework-owned domain,
 /// whose topology the app supplies (`interaction_topology`): nodes, their handles, edges and target regions.
-fn puzzle2d_interaction_definition() -> InteractionDefinition {
+pub fn puzzle2d_interaction_definition() -> InteractionDefinition {
     InteractionDefinition {
         id: PUZZLE2D_INTERACTION_DOMAIN.into(),
         label: LocalizedLabel::native("Vortex", "Vortex"),
@@ -556,7 +547,7 @@ fn puzzle2d_interaction_definition() -> InteractionDefinition {
 
 /// 🧰️ Resolves the canonical host-owned utility for the current window.
 pub fn puzzle2d_active_utility(view_state: Option<&semio_framework_plugin::ViewModel>) -> &str {
-    view_state.and_then(|view| view.active_utility_id.as_deref()).filter(|utility| !utility.is_empty()).unwrap_or(select_utility::UTILITY_ID)
+    view_state.and_then(|view| view.active_utility_id.as_deref()).filter(|utility| !utility.is_empty()).unwrap_or(crate::editor::puzzle2d::config::PUZZLE2D_SELECT_UTILITY_ID)
 }
 
 /// 🎥️ The camera lives on `Puzzle2dConfig` — session-only view state, never a snapshot field.
@@ -601,7 +592,7 @@ fn manifest_catalog_rows(kinds: &[semio_framework_graph_manifest::KindDef]) -> V
 /// its flattened `presentation`. Port kinds without a `presentation.color` are dropped because the
 /// engine rejects a colourless handle kind outright, which would discard the whole catalog push.
 pub fn manifest_board_kind_catalogs_json(manifest_id: &str) -> Option<String> {
-    let manifest = crate::graph_manifest::manifest_by_id(manifest_id)?;
+    let manifest = crate::standards::v1::subsets::any::schema::graph_manifest::manifest_by_id(manifest_id)?;
     let visual_port_kinds: Vec<semio_framework_graph_manifest::KindDef> = manifest.port_kinds.iter().filter(|kind| kind.presentation.as_ref().is_some_and(|p| p.get("color").is_some())).cloned().collect();
     Some(
         json!({
@@ -874,7 +865,7 @@ pub fn puzzle2d_node_kind_options() -> Vec<ActionArgOption> {
 
 /// 🗂️ The one `kind` select both the standalone `addNode` arg form and the Add Node dialog declare —
 /// built twice from the same catalog so the two forms can never drift apart.
-fn puzzle2d_node_kind_arg() -> ActionArgDef {
+pub fn puzzle2d_node_kind_arg() -> ActionArgDef {
     let options = puzzle2d_node_kind_options();
     let default = options.first().map(|option| option.value.clone()).unwrap_or_default();
     ActionArgDef::select("kind", puzzle2d_localized(|l| l.kind), options).required().default_value(&default)
@@ -1004,7 +995,7 @@ pub fn puzzle2d_kind_ids(snapshot: &Value, field: &str) -> Vec<String> {
     entries.iter().filter_map(|entry| entry.get("id").and_then(|value| value.as_str()).map(str::to_string)).collect()
 }
 
-fn new_node_id(prefix: &str) -> String {
+pub fn new_node_id(prefix: &str) -> String {
     use std::sync::atomic::{AtomicU64, Ordering};
     static NEXT: AtomicU64 = AtomicU64::new(1);
     format!("{prefix}-{}", NEXT.fetch_add(1, Ordering::Relaxed))
@@ -1074,7 +1065,7 @@ pub fn set_runtime_camera(runtime: &mut Puzzle2dPlayRuntime, camera: &Value) {
 /// 📐️ The value one inspector row asks an entity's `field` to take: an absolute `value` wins,
 /// otherwise a numeric `delta` rides on that entity's own current reading — offset-preserving across
 /// a multi-select whose members start apart.
-fn patched_field_value(entity: &Value, field: &str, value: Option<&Value>, delta: Option<&Value>) -> Option<Value> {
+pub fn patched_field_value(entity: &Value, field: &str, value: Option<&Value>, delta: Option<&Value>) -> Option<Value> {
     if let Some(absolute) = value {
         return Some(absolute.clone());
     }
@@ -1125,7 +1116,7 @@ pub fn puzzle2d_area_brush_extent_world(runtime: &Puzzle2dPlayRuntime) -> (f64, 
 }
 
 /// 🎲️ Re-mints a node id when it collides with an existing one — client-side brush serials restart every session.
-fn unique_node_id(snapshot: &Value, candidate: String) -> String {
+pub fn unique_node_id(snapshot: &Value, candidate: String) -> String {
     if board_snapshot_nodes(snapshot).iter().any(|node| node.get("id").and_then(|value| value.as_str()) == Some(candidate.as_str())) {
         new_node_id("node")
     } else {
@@ -1133,7 +1124,7 @@ fn unique_node_id(snapshot: &Value, candidate: String) -> String {
     }
 }
 
-fn unique_edge_id(snapshot: &Value, candidate: String) -> String {
+pub fn unique_edge_id(snapshot: &Value, candidate: String) -> String {
     if board_snapshot_edges(snapshot).iter().any(|edge| edge.get("id").and_then(|value| value.as_str()) == Some(candidate.as_str())) {
         new_node_id("edge")
     } else {
@@ -1145,7 +1136,7 @@ fn unique_edge_id(snapshot: &Value, candidate: String) -> String {
 /// already addresses ([`Puzzle2dRecorder::place_brush`]'s `target`). The engine's `brushPlace` payload
 /// describes handles by kind/angle/radius only; an id-less handle is not a `Puzzle2dHandle` at all, so
 /// the placed node would make the whole board fail to decode.
-fn puzzle2d_placed_handles(node_id: &str, handles: Option<&Value>) -> Value {
+pub fn puzzle2d_placed_handles(node_id: &str, handles: Option<&Value>) -> Value {
     let rows = handles.and_then(Value::as_array).map(|rows| rows.iter().enumerate().map(|(index, handle)| {
         let mut handle = handle.clone();
         if let Some(object) = handle.as_object_mut() {
@@ -1256,7 +1247,7 @@ pub const PUZZLE2D_CLIPBOARD_SCHEMA: &str = "puzzle.2d.clipboard.v1";
 /// `duplicateSelection` uses, so a pasted copy never lands exactly on its source.
 pub const PUZZLE2D_PASTE_OFFSET: f64 = 24.0;
 
-fn puzzle2d_clipboard_media_type() -> MediaType {
+pub fn puzzle2d_clipboard_media_type() -> MediaType {
     MediaType { class: MediaClass::TwoD, form: MediaForm::Design }
 }
 
@@ -1301,61 +1292,13 @@ pub fn puzzle2d_selection_is_locked(snapshot: &Value, node_ids: &[String]) -> bo
     })
 }
 
-/// 📋️ The copied nodes with their handles, plus every edge whose BOTH endpoints were copied, as a
-/// snapshot-shaped fragment.
-pub fn puzzle2d_copy_fragment_from(snapshot: &Value, node_ids: &[String]) -> Result<ClipboardFragment, ClipboardError> {
-    if node_ids.is_empty() {
-        return Err(ClipboardError::EmptySelection);
-    }
-    let ids: HashSet<&str> = node_ids.iter().map(String::as_str).collect();
-    let nodes: Vec<Value> = board_snapshot_nodes(snapshot).iter().filter(|node| node.get("id").and_then(Value::as_str).is_some_and(|id| ids.contains(id))).cloned().collect();
-    if nodes.is_empty() {
-        return Err(ClipboardError::EmptySelection);
-    }
-    let handle_ids: HashSet<&str> = nodes.iter().flat_map(|node| node.get("handles").and_then(Value::as_array).into_iter().flatten()).filter_map(|handle| handle.get("id").and_then(Value::as_str)).collect();
-    let endpoint_copied = |endpoint: Option<&str>| endpoint.is_some_and(|id| handle_ids.contains(id) || ids.contains(id));
-    let edges: Vec<Value> = board_snapshot_edges(snapshot)
-        .iter()
-        .filter(|edge| endpoint_copied(edge.get("source").and_then(Value::as_str)) && endpoint_copied(edge.get("target").and_then(Value::as_str)))
-        .cloned()
-        .collect();
-    let label = format!("{} nodes", nodes.len());
-    let clip = json!({ "schema": PUZZLE2D_CLIPBOARD_SCHEMA, "nodes": nodes, "edges": edges });
-    Ok(ClipboardFragment { schema: PUZZLE2D_CLIPBOARD_SCHEMA.into(), media_type: puzzle2d_clipboard_media_type(), dsl_text: clip.to_string(), pack_bytes: None, source_app: PUZZLE2D_PLAY_CONTROLLER_ID.into(), label })
-}
 
-/// ✂️ Copy-then-delete as ONE mutation list: a `delete-node` per cut node (each severs the edges on its handles) and a
-/// `disconnect-handles` per edge still hanging off a cut id, so a cut is a single history edit one undo restores.
-pub fn puzzle2d_cut_operations_from(snapshot: &Puzzle2dPlaySnapshot, node_ids: &[String]) -> Vec<Puzzle2dMutation> {
-    let mut recorder = Puzzle2dRecorder::new(snapshot);
-    recorder.cut(node_ids);
-    recorder.into_rows()
-}
 
-/// 📋️ Clones a copied fragment with fresh node, handle and edge ids: the edges between copied nodes
-/// come back rewired onto the clones, and every clone is offset so it never lands under its source. The mutation list is
-/// a `create-node` per clone and a `connect-handles` per rewired edge. Returns it and the pasted node ids the caller
-/// re-selects.
-pub fn puzzle2d_paste_operations_on(snapshot: &Puzzle2dPlaySnapshot, fragment: &ClipboardFragment, placement: &PastePlacement) -> Result<(Vec<Puzzle2dMutation>, Vec<String>), ClipboardError> {
-    let expected = puzzle2d_clipboard_media_type();
-    if fragment.media_type != expected {
-        return Err(ClipboardError::IncompatibleMediaType(fragment.media_type.clone()));
-    }
-    let clip: Value = semio_framework_pack_json::parse(&fragment.dsl_text,semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| ClipboardError::ParseFailed(error.to_string()))?;
-    let nodes = board_snapshot_nodes(&clip);
-    if nodes.is_empty() {
-        return Err(ClipboardError::EmptySelection);
-    }
-    let [offset_x, offset_y] = placement.position.map_or([PUZZLE2D_PASTE_OFFSET, PUZZLE2D_PASTE_OFFSET], |position| [position[0], position[1]]);
-    let mut recorder = Puzzle2dRecorder::new(snapshot);
-    let pasted = recorder.clone_fragment(nodes, board_snapshot_edges(&clip), (offset_x, offset_y));
-    Ok((recorder.into_rows(), pasted))
-}
 
 /// 🧱️ The expensive half of syncing `host` from `envelope`: a full `clear_scene()` + rebuild of
 /// every node/handle/edge plus the kind-catalog/kind-compat re-push. Only needed when the snapshot
 /// content actually changed — gated by `last_synced_fixture` in `handle`.
-fn sync_host_fixture_content(host: &mut BoardHost, envelope: &Puzzle2dScene) {
+pub fn sync_host_fixture_content(host: &mut BoardHost, envelope: &Puzzle2dScene) {
     let _ = {let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(64*1024*1024,&mut accepted);semio_framework_os_infinite::board::io::text::snapshot_assembly::load_board_snapshot_json(&mut host.scene, &mut host.focus, &mut host.style, &mut host.outbox,&envelope.board_snapshot.to_string(),&mut control)};
     if let Some(json) = board_kind_catalogs_json_or_inferred(&envelope.board_snapshot) {
         let _ = host.style.set_board_kind_catalogs_from_json(&json);
@@ -1370,7 +1313,7 @@ fn sync_host_fixture_content(host: &mut BoardHost, envelope: &Puzzle2dScene) {
 /// 🪶️ The cheap half of syncing `host` from `envelope`: plain setters mirroring ephemeral view state
 /// (selection/utility/grid/LOD/…) — must run on every action regardless of whether the snapshot
 /// content changed, since this state itself changes every action.
-fn sync_host_runtime_state(host: &mut BoardHost, envelope: &Puzzle2dScene, selected_ids: &[String]) {
+pub fn sync_host_runtime_state(host: &mut BoardHost, envelope: &Puzzle2dScene, selected_ids: &[String]) {
     host.scene.set_size(BOARD_DEFAULT_WIDTH, BOARD_DEFAULT_HEIGHT, 1.0);
     set_selection_ids(&mut host.scene, &mut host.focus, &mut host.outbox, selected_ids);
     host.set_active_utility(&envelope.active_utility);
@@ -1409,57 +1352,13 @@ fn sync_host_from_envelope(host: &mut BoardHost, envelope: &Puzzle2dScene) {
     sync_host_runtime_state(host, envelope, &[]);
 }
 
-/// 🪞️ Replays the board host's owned events: a board-tool row (an area painted, a brush stamped, a wire dropped or cut, a
-/// delete) is recorded as the concrete kinds it consists of, a candidate page is window-transient runtime state, and a
-/// guest-side host never receives a pointer, so it never records a gesture. Selection is framework-owned and camera is
-/// deliberately NOT mirrored: every action that moves the camera already writes the config's camera fields directly.
-pub fn apply_host_events(host: &mut BoardHost, recorder: &mut Puzzle2dRecorder, runtime: &mut Puzzle2dPlayRuntime) {
-    let events_raw = drain_board_events_json(host);
-    apply_board_events::replay_board_events(&events_raw, recorder, runtime);
-}
 
-/// 🖌️ Re-enters the board host's brush slot on the handle this window transient remembers. The guest
-/// host is rebuilt from the document on EVERY dispatch (`puzzle2d_dispatch_emit`), so the slot
-/// `openHandleSuggestions` opened is gone by the next verb — every candidate verb after it restores the
-/// slot before it reads an index. The rebuild is deterministic (same snapshot, same kind catalogs, same
-/// weights), so the candidate page is the one the client painted and the index the popup names is the
-/// candidate that gets placed. An open popup claims the slot's hover; the armed brush only targets it.
-/// `requested` is the handle the CALLER named — the popup's own rows carry it, so a client that still
-/// has the menu on screen never depends on the transient having round-tripped back to the guest yet.
-pub fn puzzle2d_restore_brush_slot(ctx: &mut Puzzle2dActionCtx<'_>, requested: Option<&str>) -> Option<String> {
-    let popup = ctx.scene.runtime.suggestion_menu.as_ref().map(|menu| menu.handle_id.clone()).filter(|handle_id| !handle_id.is_empty());
-    let named = requested.filter(|handle_id| !handle_id.is_empty()).map(str::to_string);
-    let opened = named.clone().or_else(|| popup.clone());
-    let handle_id = opened.clone().or_else(|| Some(ctx.scene.runtime.brush_candidate_source_handle_id.clone()).filter(|handle_id| !handle_id.is_empty()))?;
-    let mut host = ctx.host.borrow_mut();
-    if named.is_some() || popup.is_some() {
-        host.brush_open_slot(&handle_id);
-    } else {
-        host.brush_target_slot(Some(&handle_id));
-    }
-    Some(handle_id)
-}
-
-/// 📨️ Retires the board host's bounded owned-event queue into its public JSON envelope.
-pub fn drain_board_events_json(host: &mut BoardHost) -> String {
-    let mut output = String::from("[");
-    let mut first = true;
-    while let Some(event) = host.outbox.pop_owned_event() {
-        if !first {
-            output.push(',');
-        }
-        first = false;
-        event.write_json(&mut output);
-    }
-    output.push(']');
-    output
-}
 
 /// 🐢️ Narrow `UiDirtyScope` shared by pure view/selection/camera actions that only touch the 3
 /// canvas panes (never a panel or engagement/measure/utility refresh).
 pub fn puzzle2d_window_only_scope() -> UiDirtyScope {
     UiDirtyScope::Partial {
-        window_bodies: apply_board_events::PUZZLE2D_WINDOW_BODY_KEYS.iter().map(|body_key| body_key.to_string()).collect(),
+        window_bodies: crate::editor::puzzle2d::config::PUZZLE2D_WINDOW_BODY_KEYS.iter().map(|body_key| body_key.to_string()).collect(),
         panel_bodies: Vec::new(),
         utilities: false,
         tools: false,
@@ -1473,7 +1372,7 @@ pub fn puzzle2d_window_only_scope() -> UiDirtyScope {
 /// brush weights, LOD/grid settings, engagement text input) but never touch document content.
 pub fn puzzle2d_window_and_engagements_scope() -> UiDirtyScope {
     UiDirtyScope::Partial {
-        window_bodies: apply_board_events::PUZZLE2D_WINDOW_BODY_KEYS.iter().map(|body_key| body_key.to_string()).collect(),
+        window_bodies: crate::editor::puzzle2d::config::PUZZLE2D_WINDOW_BODY_KEYS.iter().map(|body_key| body_key.to_string()).collect(),
         panel_bodies: Vec::new(),
         utilities: false,
         tools: false,
@@ -1487,7 +1386,7 @@ pub fn puzzle2d_window_and_engagements_scope() -> UiDirtyScope {
 /// weights, suggestion offset) but that never touch document content or the engagement bar.
 pub fn puzzle2d_window_and_measures_scope() -> UiDirtyScope {
     UiDirtyScope::Partial {
-        window_bodies: apply_board_events::PUZZLE2D_WINDOW_BODY_KEYS.iter().map(|body_key| body_key.to_string()).collect(),
+        window_bodies: crate::editor::puzzle2d::config::PUZZLE2D_WINDOW_BODY_KEYS.iter().map(|body_key| body_key.to_string()).collect(),
         panel_bodies: Vec::new(),
         utilities: false,
         tools: false,
@@ -1501,8 +1400,8 @@ pub fn puzzle2d_window_and_measures_scope() -> UiDirtyScope {
 /// layers/properties panels (which highlight the selection) and the engagement bar.
 pub fn puzzle2d_select_scope() -> UiDirtyScope {
     UiDirtyScope::Partial {
-        window_bodies: apply_board_events::PUZZLE2D_WINDOW_BODY_KEYS.iter().map(|body_key| body_key.to_string()).collect(),
-        panel_bodies: vec![artifact::PUZZLE2D_PLAY_BODY_LAYERS.to_string(), inspection::PUZZLE2D_PLAY_BODY_PROPERTIES.to_string()],
+        window_bodies: crate::editor::puzzle2d::config::PUZZLE2D_WINDOW_BODY_KEYS.iter().map(|body_key| body_key.to_string()).collect(),
+        panel_bodies: vec![crate::editor::puzzle2d::config::PUZZLE2D_PLAY_BODY_LAYERS.to_string(), crate::editor::puzzle2d::config::PUZZLE2D_PLAY_BODY_PROPERTIES.to_string()],
         utilities: false,
         tools: false,
         engagements: true,
@@ -1533,7 +1432,7 @@ macro_rules! puzzle2d_command_variants {
             /// 🏷️ The action id this variant was declared under — used both for `command_id()`
             /// (command-log labeling / registry kind-discipline) and to reconstruct the exact
             /// `action: &str` `handle` dispatches on.
-            pub(crate) fn action_id(&self) -> &'static str {
+            pub fn action_id(&self) -> &'static str {
                 match self {
                     $(Puzzle2dCommand::$Variant { .. } => $id),*
                 }
@@ -1545,7 +1444,7 @@ macro_rules! puzzle2d_command_variants {
                 }
             }
 
-            pub(crate) fn args(&self) -> Option<&Value> {
+            pub fn args(&self) -> Option<&Value> {
                 match self {
                     $(Puzzle2dCommand::$Variant { args, .. } => args.as_ref()),*
                 }
@@ -1572,7 +1471,7 @@ macro_rules! puzzle2d_command_variants {
                 Self::try_from_action(action,args,window_id)
             }
             #[cfg(test)]
-            pub(crate) fn from_action(action: &str, args: Option<Value>, window_id: Option<String>) -> Self {
+            pub fn from_action(action: &str, args: Option<Value>, window_id: Option<String>) -> Self {
                 Self::try_from_action(action, args, window_id)
                     .unwrap_or_else(|| panic!("unknown puzzle2d action id in test: {action}"))
             }
@@ -1652,3 +1551,165 @@ impl protocol::OpBinary for Puzzle2dCommand {
         Self::from_host_value(&value).ok_or_else(||protocol::ProtocolError::Pack(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,"invalid puzzle2d command"))))
     }
 }
+
+//#region 🧵️RetainedCommands
+/// 🧵️ The 2D editor actions that carry an exact app-owned tool proof. Only these may declare
+/// [`InteractiveJobClassification::Migrated`] — UI dispatch resolves a controller/owner/factory/tool
+/// /schema proof for every migrated verb, and one without a registered factory is refused outright.
+pub const PUZZLE2D_RETAINED_TOOL_IDS: &[&str] = &[
+    "setActiveExample",
+    "forceLayout",
+    "addNode",
+    "applyBoardEvents",
+    "reorganize",
+    "closeHandleSuggestions",
+    "acceptSuggestion",
+    "cycleBrushCandidate",
+    "cycleBrushCandidateBack",
+    "openHandleSuggestions",
+    "hoverSuggestion",
+    "targetBrushSuggestions",
+    "deleteSelection",
+    "duplicateSelection",
+    "engagementAbort",
+    "engagementControlSelect",
+    "engagementInput",
+    "engagementSubmit",
+    "focusSelection",
+    "lodScaleJson",
+    "patchInspectorNodes",
+    "redrawHandles",
+    "selectSameKind",
+    "setBrushKindWeights",
+    "setBrushNodeSize",
+    "setCamera",
+    "setFillCount",
+    "setGridFactor",
+    "setGridSnapEnabled",
+    "setGridVisible",
+    "setSelectableKind",
+    "setBrushPlacementContactTolerance",
+    "setBrushPlacementOverlapBudget",
+    "engagementRepeatLast",
+    "openAddNodeDialog",
+    "setLodModeForPane",
+    "translateSelection",
+    "rotateSelection",
+    "scaleSelection",
+    "exportSnapshot",
+    "importSnapshot",
+    "openImportSnapshot",
+    "setSelectionFlag",
+    "setSelectionHidden",
+    "setSelectionLocked",
+    "setSuggestionOffset",
+    "setTransformGumballFlag",
+    "addTargetRegion",
+    "deleteTargetRegion",
+    "relocateTargetRegion",
+    "setTargetRegionFlag",
+    "setTargetRegionHidden",
+    "setTargetRegionLocked",
+    "setAreaBrushSize",
+    "createEdge",
+    "deleteEdge",
+    "proximityConnect",
+    "setProximityRadius",
+];
+/// 🧭️ The two framework-injected host-configuration verbs. They are `InteractiveJobClassification::Migrated`
+/// in the manifest and [`Puzzle2dPlayApp::host_configuration_mutation`] resolves each to one Config
+/// mutation, so they need a generated tool id — without which `validate_tool_job_rows` refuses
+/// [`Puzzle2dHostConfigurationProofs`]' generic bounded proofs and `dispatch_action` fails closed.
+/// They carry NO app-owned factory, so they stay out of [`PUZZLE2D_RETAINED_TOOL_IDS`], which is what
+/// keys [`Puzzle2dRetainedCommandJobFactory`] and what the retained-jobs snapshot pins.
+pub const PUZZLE2D_HOST_CONFIGURATION_TOOL_IDS: &[&str] = &["setActiveTool", "setActiveUtility"];
+/// 🗂️ Every generated tool id this app declares: the app-owned retained verbs plus the two
+/// host-configuration verbs. `OpBinary::TOOL_JOB_IDS` — the list the framework joins against the
+/// migrated manifest rows.
+pub const PUZZLE2D_TOOL_JOB_IDS: [&str; PUZZLE2D_RETAINED_TOOL_IDS.len() + PUZZLE2D_HOST_CONFIGURATION_TOOL_IDS.len()] = {
+    let mut ids = [""; PUZZLE2D_RETAINED_TOOL_IDS.len() + PUZZLE2D_HOST_CONFIGURATION_TOOL_IDS.len()];
+    let mut index = 0;
+    while index < PUZZLE2D_RETAINED_TOOL_IDS.len() {
+        ids[index] = PUZZLE2D_RETAINED_TOOL_IDS[index];
+        index += 1;
+    }
+    let mut host = 0;
+    while host < PUZZLE2D_HOST_CONFIGURATION_TOOL_IDS.len() {
+        ids[index + host] = PUZZLE2D_HOST_CONFIGURATION_TOOL_IDS[host];
+        host += 1;
+    }
+    ids
+};
+/// 🎬️ The retained verbs whose whole completion is [`puzzle2d_dispatch_emit`] — one `🎮️commands/*`
+/// arm run over a rebuilt scene/board host, then the same document delta and config snapshot
+/// `handle` derives. Everything outside this list carries a bespoke `Work` (
+/// `forceLayout`/`reorganize`) or an isolated reducer (`addNode`, `setActiveExample`).
+pub const PUZZLE2D_GENERIC_TOOL_IDS: &[&str] = &[
+    "closeHandleSuggestions",
+    "acceptSuggestion",
+    "cycleBrushCandidate",
+    "cycleBrushCandidateBack",
+    "openHandleSuggestions",
+    "hoverSuggestion",
+    "targetBrushSuggestions",
+    "deleteSelection",
+    "duplicateSelection",
+    "engagementAbort",
+    "engagementControlSelect",
+    "engagementInput",
+    "engagementSubmit",
+    "focusSelection",
+    "patchInspectorNodes",
+    "selectSameKind",
+    "setBrushKindWeights",
+    "setBrushNodeSize",
+    "setCamera",
+    "setFillCount",
+    "setGridFactor",
+    "setGridSnapEnabled",
+    "setGridVisible",
+    "setSelectableKind",
+    "setBrushPlacementContactTolerance",
+    "setBrushPlacementOverlapBudget",
+    "engagementRepeatLast",
+    "openAddNodeDialog",
+    "setLodModeForPane",
+    "setSelectionFlag",
+    "setSelectionHidden",
+    "setSelectionLocked",
+    "setSuggestionOffset",
+    "setTransformGumballFlag",
+    "addTargetRegion",
+    "deleteTargetRegion",
+    "relocateTargetRegion",
+    "setTargetRegionFlag",
+    "setTargetRegionHidden",
+    "setTargetRegionLocked",
+    "setAreaBrushSize",
+    "translateSelection",
+    "rotateSelection",
+    "scaleSelection",
+    "importSnapshot",
+    "openImportSnapshot",
+    "createEdge",
+    "deleteEdge",
+    "proximityConnect",
+    "setProximityRadius",
+];
+
+pub fn puzzle2d_scene_for(snapshot: Value, runtime: Puzzle2dPlayRuntime, active_utility: &str) -> Puzzle2dScene {
+    Puzzle2dScene { board_snapshot: snapshot, runtime, active_utility: active_utility.into(), interaction: Puzzle2dInteractionSnapshot::default() }
+}
+
+pub fn puzzle2d_scene_with(snapshot: Value, runtime: Puzzle2dPlayRuntime, active_utility: &str, interaction: Puzzle2dInteractionSnapshot) -> Puzzle2dScene {
+    Puzzle2dScene { board_snapshot: snapshot, runtime, active_utility: active_utility.into(), interaction }
+}
+
+//#region 🧩️EditorContract
+/// 🧩️ The puzzle2d editor contract: every editor whose lanes are puzzle2d's play snapshot, mutation union, config,
+/// presence and command vocabulary. The action dispatch and the retained works are written against it, so they sit
+/// below the one concrete editor that implements it.
+pub trait Puzzle2dEditor: semio_framework_plugin::ArtifactEditor<Snapshot = Puzzle2dPlaySnapshot, Mutation = Puzzle2dMutation, Config = crate::editor::puzzle2d::config::Puzzle2dConfig, ConfigMutation = crate::editor::puzzle2d::config::Puzzle2dConfigMutation, Draft = semio_framework_plugin::NoDraft, DraftMutation = semio_framework_plugin::NoDraftMutation, Presence = crate::editor::puzzle2d::presence::Puzzle2dPresence, PresenceMutation = crate::editor::puzzle2d::presence::Puzzle2dPresenceMutation, Transient = semio_framework_plugin::NoTransient, TransientMutation = semio_framework_plugin::NoTransientMutation, Command = Puzzle2dCommand> {}
+
+impl<A> Puzzle2dEditor for A where A: semio_framework_plugin::ArtifactEditor<Snapshot = Puzzle2dPlaySnapshot, Mutation = Puzzle2dMutation, Config = crate::editor::puzzle2d::config::Puzzle2dConfig, ConfigMutation = crate::editor::puzzle2d::config::Puzzle2dConfigMutation, Draft = semio_framework_plugin::NoDraft, DraftMutation = semio_framework_plugin::NoDraftMutation, Presence = crate::editor::puzzle2d::presence::Puzzle2dPresence, PresenceMutation = crate::editor::puzzle2d::presence::Puzzle2dPresenceMutation, Transient = semio_framework_plugin::NoTransient, TransientMutation = semio_framework_plugin::NoTransientMutation, Command = Puzzle2dCommand> {}
+//#endregion 🧩️EditorContract

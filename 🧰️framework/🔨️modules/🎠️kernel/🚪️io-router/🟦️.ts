@@ -4,7 +4,7 @@
  */
 
 import { type ArtifactDialect } from "@semio-tech/schema-ts/artifact-reference";
-import { dialectCoordinate, type IoFidelity, type IoEntryDescriptor, type IoRoute } from "../../🚪️io/🧬️schema/🟦️.ts";
+import { dialectCoordinate, type IoFidelity, type IoEntryDescriptor, type IoRoute } from "@semio-tech/framework-io-schema-ts";
 import { dialectEquals } from "../🔀️dialect-equality/🟦️.ts";
 
 // #region 🎠️Kernel

@@ -1,6 +1,5 @@
 //! 🪄️ Authoritative PDF mutation payload, diff, inverse, and tests for `replace-page`.
 
-use super::PdfMutation;
 use crate::standards::v1_7::subsets::base::schema::diff::{self, PdfDiff};
 use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfPage, PdfSnapshot};
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
@@ -15,7 +14,10 @@ pub struct ReplacePage {
     pub page: PdfPage,
 }
 
-impl MutationKind<PdfSnapshot, PdfMutation> for ReplacePage {
+impl<Op> MutationKind<PdfSnapshot, Op> for ReplacePage
+where
+    Op: protocol::Mutation<PdfSnapshot, Diff = PdfDiff> + From<ReplacePage>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "replace", entity: "page", kind: "replace-page", record: "Replace" };
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
@@ -25,8 +27,8 @@ impl MutationKind<PdfSnapshot, PdfMutation> for ReplacePage {
         MutationOutcome::new(diff::diff_replace_page(base, self.index, &self.page))
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfMutation>, semio_framework_value::ValueError> {
-        Ok(base.pages.get(self.index).map(|page| PdfMutation::ReplacePage(ReplacePage { index: self.index, page: page.clone() })).into_iter().collect())
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+        Ok(base.pages.get(self.index).map(|page| Op::from(ReplacePage { index: self.index, page: page.clone() })).into_iter().collect())
     }
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
@@ -41,8 +43,6 @@ impl MutationKind<PdfSnapshot, PdfMutation> for ReplacePage {
 //#endregion 🔖️Mutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
 

@@ -1,6 +1,6 @@
 //! 🧽️ Direct text codec for `remove-output-intent`.
 
-use crate::standards::v1_7::subsets::vt::schema::mutations::RemoveOutputIntent;
+use crate::standards::v1_7::subsets::vt::schema::mutations::remove_output_intent::RemoveOutputIntent;
 
 //#region 🔖️Identity
 pub const OPCODE: &str = "remove-output-intent";
@@ -21,7 +21,5 @@ pub fn parse(text: &str) -> Result<RemoveOutputIntent, String> {
 //#endregion 🔖️Codec
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

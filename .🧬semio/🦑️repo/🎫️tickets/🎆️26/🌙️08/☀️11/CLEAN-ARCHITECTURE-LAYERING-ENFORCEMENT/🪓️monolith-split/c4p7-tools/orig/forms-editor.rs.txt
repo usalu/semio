@@ -1,0 +1,1440 @@
+//! 📋️ Forms editor — the `ArtifactEditor` impl (dispatch-only), the aggregated command enum and the
+//! manifest stitch.
+//!
+//! Everything substantive lives in a taxonomy node: command bodies in `🎮️commands/*`, window renders in
+//! `🎭️modes/📝️blueprint/🪟️windows/*`, panel trees in `📌️panels/*`, labels in `🦀️terminology.rs`, view
+//! state in `🦀️config.rs`, shared document compute in the artifact's `🧬️schema`, this app's own IO
+//! surface in the `🔖️Io` region below. This file is a routing table:
+//! `handle` → `FormsCommand::dispatch`, `render` → body-key → node, plus the app-level `🔖️Contributions`
+//! region — host-declared plugin contributions (`config.contributions_json`) are consumed by THREE
+//! taxonomy nodes (the blueprint builder's palette, the try wizard, and the inspection panel), and every
+//! helper in that region takes `&FormsConfig` (an app-only view-state type) or an app-level
+//! `ProgramContributionEntry`, so per the DocumentHelpers placement rule they stay here rather than in the
+//! artifact's `🧬️schema`.
+
+#[path = "❓️questions/🦀️.rs"]
+pub mod questions;
+
+use crate::editor::forms::commands::{
+    add_question, add_question_option, add_step, add_vector_field, drop_question_kind, export_snapshot, move_question, move_step, next_step, patch_question_options, patch_questions, patch_step, patch_vector_field, previous_step, remove_question,
+    remove_question_option, remove_step, remove_vector_field, reset_try, set_active_example, set_contributions, set_spec_json, set_try_value, set_try_value_step, set_try_values, submit, update_form,
+};
+use crate::editor::forms::config::{FormsConfig, FormsConfigMutation};
+use crate::editor::forms::modes::{blueprint, fill, responses};
+use crate::editor::forms::commands::{export_responses, discard_response};
+use crate::editor::forms::modes::blueprint::windows::{builder, try_wizard as try_window};
+use crate::editor::forms::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
+use crate::editor::forms::terminology::{forms_play_labels, FormsLabels};
+use crate::op::FormMutation;
+use crate::{forms_steps, FormQuestion, FormsSnapshot, FORMS_DOCUMENT_SCHEMA, FORM_BUILTIN_KINDS};
+use semio_framework_pack_json::{Object, Value};
+#[cfg(test)] use semio_framework_pack_json::{object};
+use semio_framework::{ToolExecutionContract, ToolFactoryKey, ToolJobFactoryError};
+use semio_framework_plugin::app::{Dialect, InteractionView};
+use semio_framework_plugin::retained_command::{ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload};
+use semio_framework_plugin::ActionArgDef;
+use semio_framework_plugin::ActionArgOption;
+use semio_framework_plugin::ActionDefinition;
+use semio_framework_plugin::ActionKind;
+use semio_framework_plugin::AppDefinition;
+use semio_framework_plugin::AppOperationContext;
+use semio_framework_plugin::ArtifactEditor;
+use semio_framework_plugin::ArtifactOwnedToolJobRequest;
+use semio_framework_plugin::ArtifactToolFactoryRegistry;
+use semio_framework_plugin::ArtifactToolPublicationContract;
+use semio_framework_plugin::ArtifactToolPublicationLane;
+use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::CommandDefinition;
+use semio_framework_plugin::ConfigView;
+use semio_framework_plugin::DomainTopology;
+use semio_framework_plugin::DraftView;
+use semio_framework_plugin::Editor;
+use semio_framework_plugin::EditorApp;
+use semio_framework_plugin::Emit;
+use semio_framework_plugin::Fault;
+use semio_framework_plugin::GranularityDefinition;
+use semio_framework_plugin::HierarchyProvider;
+use semio_framework_plugin::HoverSpec;
+use semio_framework_plugin::IconName;
+use semio_framework_plugin::InteractionDefinition;
+use semio_framework_plugin::InteractionRef;
+use semio_framework_plugin::InteractionTopology;
+use semio_framework_plugin::InteractiveJobClassification;
+use semio_framework_ui_locale::Label;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::MediaClass;
+use semio_framework_plugin::MediaError;
+use semio_framework_plugin::MediaForm;
+use semio_framework_plugin::MediaPayload;
+use semio_framework_plugin::MediaType;
+use semio_framework_plugin::MergeMode;
+use semio_framework_plugin::NoDraft;
+use semio_framework_plugin::NoDraftMutation;
+use semio_framework_plugin::SelectionMethod;
+use semio_framework_plugin::SelectionMode;
+use semio_framework_plugin::SelectionSpec;
+use semio_framework_plugin::TopologyNode;
+use semio_framework_2d::compute::EngineHandles;
+
+//#region 🔖️Constants
+pub const FORMS_PLAY_APP_ID: &str = "forms-play";
+pub use builder::FORMS_PLAY_BODY_BLUEPRINT;
+pub use catalogue_panel::FORMS_PLAY_BODY_CATALOGUE;
+pub use document_panel::FORMS_PLAY_BODY_ARTIFACT;
+pub use inspection_panel::FORMS_PLAY_BODY_INSPECTION;
+pub use try_window::FORMS_PLAY_BODY_TRY;
+
+/// 🎯️ An `ActionDescriptor` addressed at this app — the single factory every taxonomy node's chrome
+/// (`🪟️windows/*`, `📌️panels/*`) builds its `on_change`/item actions with.
+pub fn forms_action(action: &str, args: Option<semio_framework_plugin::UiValue>) -> semio_framework_plugin::UiAssemblyResult<(semio_framework_plugin::ActionId, Option<semio_framework_plugin::UiValue>)> {
+    semio_framework_plugin::ActionFactory::new(FORMS_PLAY_APP_ID).action(action, args)
+}
+
+/// 🏷️ Admits display text into a bounded semantic label.
+pub fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_ui_contract::Label> {
+    value.as_ref().try_into().map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "forms label admission failed"))
+}
+
+/// 🎟️ Propagates a rejected semantic UI admission.
+pub fn ui_admit<T, E>(value: Result<T, E>) -> semio_framework_plugin::UiAssemblyResult<T> {
+    value.map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "forms UI admission failed"))
+}
+
+/// 🔤️ Admits text used by semantic controls.
+pub fn ui_text_value(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiText> {
+    semio_framework_plugin::UiText::try_from_str(value.as_ref()).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "forms text admission failed"))
+}
+
+/// 🧱️ Admits one fixed UI text action value without JSON staging.
+pub fn ui_value_text(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
+    semio_framework_plugin::UiText::try_from_str(value.as_ref()).map(semio_framework_plugin::UiValue::Text).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI text admission failed"))
+}
+
+/// 🔘️ Admits one boolean UI action value.
+pub fn ui_value_bool(value: bool) -> semio_framework_plugin::UiValue {
+    semio_framework_plugin::UiValue::Bool(value)
+}
+
+/// 🔢️ Admits one numeric UI action value.
+pub fn ui_value_number(value: impl Into<f64>) -> semio_framework_plugin::UiValue {
+    semio_framework_plugin::UiValue::Number(value.into())
+}
+
+/// 📚️ Admits one fixed UI list action value without dynamic staging.
+pub fn ui_value_list(values: impl IntoIterator<Item = semio_framework_plugin::UiValue>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
+    let mut builder = semio_framework_plugin::UiListBuilder::try_new().ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list admission failed"))?;
+    for value in values {
+        builder.push(value).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list item admission failed"))?;
+    }
+    Ok(semio_framework_plugin::UiValue::List(builder.finish()))
+}
+
+/// 🗺️ Admits one ordered fixed UI map action value without JSON staging.
+pub fn ui_value_map(values: impl IntoIterator<Item = (&'static str, semio_framework_plugin::UiValue)>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
+    let mut builder = semio_framework_plugin::UiMapBuilder::try_new().ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map admission failed"))?;
+    for (key, value) in values {
+        builder.push(key.to_owned(), value).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map entry admission failed"))?;
+    }
+    Ok(semio_framework_plugin::UiValue::Map(builder.finish()))
+}
+
+//#endregion 🔖️Constants
+
+//#region 🔖️Interaction
+/// 🕹️ "fields" — the single FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14) interaction domain
+/// this app declares: `HierarchyProvider::Topology` over the document's own step/question nesting
+/// (steps are the "section" granularity, questions are the "field" granularity), transitive (selecting/
+/// hovering a step covers its questions).
+pub const FORMS_INTERACTION_FIELDS: &str = "fields";
+pub const FORMS_INTERACTION_GRANULARITY_FIELD: &str = "field";
+pub const FORMS_INTERACTION_GRANULARITY_SECTION: &str = "section";
+
+/// 🌳️ `fields` domain topology from the document's own step/question nesting — step ids are the SAME
+/// row-id-prefixed ids the document panel tree renders (`forms_play_step_tree_id`), question ids are
+/// raw question ids (matching both the document panel tree's item ids and every question-editing
+/// command's own id vocabulary), so `validate_state` prunes deleted steps/questions and range/
+/// transitive selection walk the real document structure.
+fn forms_fields_topology(spec: &FormsSnapshot) -> DomainTopology {
+    let mut ordered = Vec::new();
+    for step in forms_steps(spec) {
+        let step_id = crate::schema::forms_play_step_tree_id(&step.id);
+        ordered.push(TopologyNode { id: step_id.clone(), granularity: FORMS_INTERACTION_GRANULARITY_SECTION.into(), parent: None });
+        for question in step.blocks {
+            ordered.push(TopologyNode { id: question.id, granularity: FORMS_INTERACTION_GRANULARITY_FIELD.into(), parent: Some(step_id.clone()) });
+        }
+    }
+    DomainTopology { ordered }
+}
+//#endregion 🔖️Interaction
+
+//#region 🔖️Values
+/// 🔠️ Materializes the independently stored answer leaves for rendering and validation.
+pub fn try_values_map(transient: &try_window::transient::FormsTryWindowTransient) -> Object {
+    transient
+        .try_values
+        .iter_chunks()
+        .into_iter()
+        .map(|(key, chunks)| {
+            let raw = chunks.iter().fold(String::new(), |mut raw, chunk| {
+                raw.push_str(chunk);
+                raw
+            });
+            (key, semio_framework_pack_json::parse(&raw, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or(Value::Null))
+        })
+        .collect()
+}
+
+pub fn effective_try_values(spec: &FormsSnapshot, transient: &try_window::transient::FormsTryWindowTransient) -> Object {
+    crate::standards::v1::subsets::any::io::text::snapshot::initial_try_values(spec, &try_values_map(transient))
+}
+
+/// 🔠️ Parses a command's JSON-blob payload field (`value_json`/`values_json`/…), falling back to
+/// `Value::Null` on malformed or absent JSON — every one of these fields is best-effort text carried
+/// across the wire, not a validated protocol.
+pub fn parse_value_json(value_json: &str) -> Value {
+    semio_framework_pack_json::parse(value_json, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or(Value::Null)
+}
+//#endregion 🔖️Values
+
+//#region 🔖️Contributions
+pub use semio_framework::ProgramContributionEntry;
+
+pub fn forms_parse_contributions(config: &FormsConfig) -> Vec<ProgramContributionEntry> {
+    semio_framework::parse_contributions(&config.contributions_json)
+}
+
+pub use forms_parse_contributions as parse_contributions;
+
+use questions::extensions::QuestionKindContribution;
+
+const FORMS_QUESTION_KIND_TOPIC: &str = "forms.questionKind";
+
+/// 🎯️ A resolved question-kind contribution's routing fields, sourced from the open `forms.questionKind`
+/// topic shape.
+struct QuestionKindRoute {
+    app_id: String,
+    params_body_key: String,
+    preview_body_key: String,
+}
+
+fn question_kind_route_from_topic(topic_contribution: &semio_framework_plugin::TopicContribution, kind: &str) -> Option<QuestionKindRoute> {
+    if topic_contribution.topic != FORMS_QUESTION_KIND_TOPIC {
+        return None;
+    }
+    let payload = topic_contribution.decode::<QuestionKindContribution>().ok()?;
+    (payload.question_kind == kind).then_some(QuestionKindRoute { app_id: payload.app_id, params_body_key: payload.params_body_key, preview_body_key: payload.preview_body_key })
+}
+
+/// 🗂️ Reads the open `TopicContribution` (`"forms.questionKind"` topic) shape per entry.
+fn find_question_kind_contribution<'a>(contributions: &'a [ProgramContributionEntry], kind: &str) -> Option<(&'a str, QuestionKindRoute)> {
+    contributions.iter().find_map(|entry| {
+        let route = entry.topic_contribution.as_ref().and_then(|topic_contribution| question_kind_route_from_topic(topic_contribution, kind))?;
+        Some((entry.plugin_id.as_str(), route))
+    })
+}
+
+/// 🧩️ Renders a contributed (extension) question kind as a pair of external slots (params editor +
+/// preview), or an "Extension unavailable" diagnostic when no contribution is registered for it. Shared
+/// by the try wizard and the inspection panel's kind-specific editor fields.
+pub fn render_extension_question(question: &FormQuestion, values: &Object, contributions: &[ProgramContributionEntry], surface: questions::extensions::ExtensionSurface<'_>, interactive: bool, labels: &FormsLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    use semio_framework_ui_contract::{self as ui, Buildable, HasBase, HasChildren};
+    let key = format!("{}.extension", question.id);
+    let Some((plugin_id, route)) = find_question_kind_contribution(contributions, &question.kind) else {
+        return ui_admit(ui_admit(ui::text(ui_label(format!("{}: {}", labels.extension_unavailable.as_str(), question.kind))?).try_id(&key))?.try_build());
+    };
+    let payload = questions::extensions::render_payload(question, values, FORMS_PLAY_APP_ID, surface, interactive).to_string();
+    let mut column = ui_admit(ui::column().try_id(&key))?;
+    for body_key in [&route.params_body_key, &route.preview_body_key] {
+        let props = ui_value_map([("bodyKey", ui_value_text(body_key)?), ("paramsJson", ui_value_text(&payload)?)])?;
+        let slot = ui_admit(ui::extension(ui_text_value(format!("{plugin_id}/{}", route.app_id))?).props(props).try_id(format!("{}.{}", question.id, body_key)))?;
+        column = ui_admit(column.try_child(slot))?;
+    }
+    ui_admit(column.try_build())
+}
+
+/// 🗂️ Every kind offered by the catalogue/inspector kind selector: the built-in kinds (labeled from
+/// `labels`) followed by every contributed extension kind. Shared by the blueprint builder's palette, the
+/// catalogue panel, and the inspection panel's kind select.
+pub fn catalogue_kinds(contributions: &[ProgramContributionEntry], view: &semio_framework_plugin::ViewModel) -> Vec<(String, String, IconName)> {
+    let labels = forms_play_labels(view);
+    let mut kinds: Vec<(String, String, IconName)> = FORM_BUILTIN_KINDS
+        .iter()
+        .map(|kind| {
+            let (label, icon): (&str, &str) = match *kind {
+                "text" => (labels.kind_text.as_str(), "type"),
+                "longText" => (labels.kind_long_text.as_str(), "align-left"),
+                "number" => (labels.kind_number.as_str(), "hash"),
+                "slider" => (labels.kind_slider.as_str(), "sliders-horizontal"),
+                "boolean" => (labels.kind_boolean.as_str(), "toggle-left"),
+                "single" => (labels.kind_single.as_str(), "circle-dot"),
+                "multi" => (labels.kind_multi.as_str(), "list-checks"),
+                "date" => (labels.kind_date.as_str(), "calendar"),
+                "color" => (labels.kind_color.as_str(), "palette"),
+                "image" => (labels.kind_image.as_str(), "image"),
+                "file" => (labels.kind_file.as_str(), "file"),
+                "vector" => (labels.kind_vector.as_str(), "move-3d"),
+                "note" => (labels.kind_note.as_str(), "sticky-note"),
+                other => (other, "help-circle"),
+            };
+            (kind.to_string(), label.into(), icon.into())
+        })
+        .collect();
+    for entry in contributions {
+        let topic_kind = entry
+            .topic_contribution
+            .as_ref()
+            .filter(|topic_contribution| topic_contribution.topic == FORMS_QUESTION_KIND_TOPIC)
+            .and_then(|topic_contribution| topic_contribution.decode::<QuestionKindContribution>().ok())
+            .map(|payload| (payload.question_kind, payload.label.resolve(view.terminology, view.locale).to_string(), IconName::from(payload.icon_id.as_str())));
+        if let Some(kind) = topic_kind {
+            kinds.push(kind);
+        }
+    }
+    kinds
+}
+//#endregion 🔖️Contributions
+
+//#region 🔖️ActionBridge
+/// 🌉️ `{action, args}` → `FormsCommand`. Keys arrive camelCase from the shells (`exampleId`,
+/// `windowKindId`), the block-list host emits its own generic verbs (`addBlock`/`removeBlock`/
+/// `moveBlock` over `blockId`/`toStepId`), and a `Trigger::Change` control's live value is merged
+/// under `value` by `merge_ui_values` — the `*_json` string fields the payloads carry are printed from
+/// that value here when no explicit `valueJson`/`valuesJson` text was sent.
+mod args_bridge {
+    use super::*;
+    use semio_framework_plugin::{FaultCode, FaultOrigin};
+
+    fn snake(key: &str) -> String {
+        let mut out = String::with_capacity(key.len() + 4);
+        for ch in key.chars() {
+            if ch.is_ascii_uppercase() {
+                out.push('_');
+                out.push(ch.to_ascii_lowercase());
+            } else {
+                out.push(ch);
+            }
+        }
+        out
+    }
+
+    fn camel(key: &str) -> String {
+        let mut out = String::with_capacity(key.len());
+        let mut upper = false;
+        for ch in key.chars() {
+            if ch == '_' {
+                upper = true;
+            } else if upper {
+                out.push(ch.to_ascii_uppercase());
+                upper = false;
+            } else {
+                out.push(ch);
+            }
+        }
+        out
+    }
+
+    fn put(entries: &mut Vec<(String, semio_framework_value::DslValue)>, key: &str, value: semio_framework_value::DslValue) {
+        entries.retain(|(existing, _)| existing != key);
+        entries.push((key.to_string(), value));
+    }
+
+    /// 🔢️ The host's JSON round trip turns every integer into `Number::Float` (`generation: 1` arrives
+    /// as `Float(1.0)`), and the `u64`/`i64` codecs decode EXACT integers only — restore the integer
+    /// variant for whole, finite floats so the payloads' counters (`generation`, `index`, `input_index`,
+    /// `vector_index`, …) decode; `f64` fields accept any `Number` variant, so nothing else changes.
+    fn integral(value: semio_framework_value::DslValue) -> semio_framework_value::DslValue {
+        match value {
+            semio_framework_value::DslValue::Number(semio_framework_value::Number::Float(float)) if float.is_finite() && float.fract() == 0.0 && float.abs() < 9.007_199_254_740_992e15 => {
+                if float >= 0.0 { semio_framework_value::DslValue::Number(semio_framework_value::Number::UInt(float as u64)) } else { semio_framework_value::DslValue::Number(semio_framework_value::Number::Int(float as i64)) }
+            }
+            semio_framework_value::DslValue::Array(items) => semio_framework_value::DslValue::Array(items.into_iter().map(integral).collect()),
+            semio_framework_value::DslValue::Object(entries) => semio_framework_value::DslValue::Object(entries.into_iter().map(|(key, value)| (key, integral(value))).collect()),
+            other => other,
+        }
+    }
+
+    /// 🔁️ Emits every key of `args` under BOTH spellings (the Try-window payloads decode camelCase
+    /// wire names, the document payloads snake_case; `FromValue` ignores keys it does not know),
+    /// applies `aliases` (snake_case source → destination), and prints `json` sources (a snake_case
+    /// key holding any JSON value) into their string destination when that field is absent.
+    fn fold(args: Option<&semio_framework_value::DslValue>, aliases: &[(&str, &str)], json: &[(&str, &str)]) -> semio_framework_value::DslValue {
+        let mut entries: Vec<(String, semio_framework_value::DslValue)> = Vec::new();
+        if let Some(semio_framework_value::DslValue::Object(object)) = args {
+            for (key, value) in object {
+                let mut key = snake(key);
+                if let Some((_, to)) = aliases.iter().find(|(from, _)| *from == key) {
+                    key = (*to).to_string();
+                }
+                let value = integral(value.clone());
+                put(&mut entries, &camel(&key), value.clone());
+                put(&mut entries, &key, value);
+            }
+        }
+        for (from, into) in json {
+            if entries.iter().any(|(key, _)| key == into) {
+                continue;
+            }
+            if let Some((_, value)) = entries.iter().find(|(key, _)| key == from).cloned() {
+                let text = semio_framework_value::DslValue::String(semio_framework_pack_json::to_json_string(&value));
+                put(&mut entries, &camel(into), text.clone());
+                put(&mut entries, into, text);
+            }
+        }
+        semio_framework_value::DslValue::Object(entries)
+    }
+
+    fn decode<T: semio_framework_value::FromValue>(action: &str, value: semio_framework_value::DslValue) -> Result<T, Fault> {
+        T::from_value(value).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("app.command.invalid-args"), format!("forms action '{action}' arguments do not decode: {error}")))
+    }
+
+    pub fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<FormsCommand, Fault> {
+        const VALUE_JSON: &[(&str, &str)] = &[("value", "value_json")];
+        let plain = || fold(args, &[], &[]);
+        Ok(match action {
+            "setTryValue" => FormsCommand::SetTryValue(decode(action, fold(args, &[], VALUE_JSON))?),
+            set_try_value::SET_TRY_VALUE_STEP_ACTION_ID => FormsCommand::SetTryValueStep(decode(action, fold(args, &[], VALUE_JSON))?),
+            "setTryValues" => FormsCommand::SetTryValues(decode(action, fold(args, &[], &[("values", "values_json"), ("value", "values_json")]))?),
+            "resetTry" => FormsCommand::ResetTry(decode(action, plain())?),
+            "previousStep" => FormsCommand::PreviousStep(decode(action, plain())?),
+            "nextStep" => FormsCommand::NextStep(decode(action, plain())?),
+            "submit" => FormsCommand::Submit(decode(action, plain())?),
+            "setContributions" => FormsCommand::SetContributions(decode(action, plain())?),
+            "addStep" => FormsCommand::AddStep(decode(action, plain())?),
+            "patchStep" => FormsCommand::PatchStep(decode(action, plain())?),
+            "removeStep" => FormsCommand::RemoveStep(decode(action, plain())?),
+            "moveStep" => FormsCommand::MoveStep(decode(action, plain())?),
+            "updateForm" => FormsCommand::UpdateForm(decode(action, fold(args, &[("value", "title")], &[]))?),
+            "addBlock" => FormsCommand::AddQuestion(decode(action, plain())?),
+            "removeBlock" => FormsCommand::RemoveQuestion(decode(action, fold(args, &[("block_id", "question_id")], &[]))?),
+            "patchQuestions" => FormsCommand::PatchQuestions(decode(action, fold(args, &[], VALUE_JSON))?),
+            "patchQuestionOptions" => FormsCommand::PatchQuestionOptions(decode(action, fold(args, &[], VALUE_JSON))?),
+            "addQuestionOption" => FormsCommand::AddQuestionOption(decode(action, plain())?),
+            "removeQuestionOption" => FormsCommand::RemoveQuestionOption(decode(action, plain())?),
+            "patchVectorField" => FormsCommand::PatchVectorField(decode(action, fold(args, &[], VALUE_JSON))?),
+            "addVectorField" => FormsCommand::AddVectorField(decode(action, plain())?),
+            "removeVectorField" => FormsCommand::RemoveVectorField(decode(action, plain())?),
+            "moveBlock" => {
+                // 🧱️ The block-list host sends `{blockId, fromStepId, toStepId, index}`; `position` is
+                // only consulted when `index` is absent, so it defaults to "after".
+                let mut folded = fold(args, &[("block_id", "question_id")], &[]);
+                if let semio_framework_value::DslValue::Object(entries) = &mut folded {
+                    if !entries.iter().any(|(key, _)| key == "position") {
+                        entries.push(("position".into(), semio_framework_value::DslValue::String("after".into())));
+                    }
+                }
+                FormsCommand::MoveQuestion(decode(action, folded)?)
+            }
+            "dropQuestionKind" => FormsCommand::DropQuestionKind(decode(action, fold(args, &[("block_id", "target_id"), ("position", "drop_position")], &[]))?),
+            "setSpecJson" => FormsCommand::SetSpecJson(decode(action, fold(args, &[], &[("document", "json"), ("value", "json")]))?),
+            "setActiveExample" => FormsCommand::SetActiveExample(decode(action, fold(args, &[("id", "example_id"), ("value", "example_id")], &[]))?),
+            "exportSnapshot" => FormsCommand::ExportSnapshot(decode(action, plain())?),
+            "exportResponses" => FormsCommand::ExportResponses(decode(action, plain())?),
+            "discardResponse" => FormsCommand::DiscardResponse(decode(action, plain())?),
+            _ => return Err(Fault::new(FaultOrigin::App, FaultCode::new("app.command.unsupported"), format!("the forms editor has no command for action '{action}'"))),
+        })
+    }
+}
+//#endregion 🔖️ActionBridge
+
+//#region 🔖️Commands
+semio_framework_plugin::app_commands! {
+    /// 🎯️ `FormsPlayApp::Command` — the SOLE dispatch surface for forms' own behavior, assembled from the
+    /// `🎮️commands/*` payload modules. Each row states BOTH the manifest action id (`command_id()`, the
+    /// camelCase id declared in `🔖️Manifest` below) and the `dsl` wire keyword (the kebab-case
+    /// `#[dsl(key = ..)]` the codec uses) — they are genuinely different vocabularies, and
+    /// appending is safe, reordering is a wire-format break.**
+    pub enum FormsCommand for FormsSnapshot, FormMutation, FormsConfig, FormsConfigMutation {
+        "setTryValue" as "try-value" => set_try_value::SetTryValue,
+        "setTryValues" as "try-values" => set_try_values::SetTryValues,
+        "resetTry" as "reset-try" => reset_try::ResetTry,
+        "previousStep" as "previous-step" => previous_step::PreviousStep,
+        "nextStep" as "next-step" => next_step::NextStep,
+        "submit" as "submit" => submit::Submit,
+        "setContributions" as "contributions" => set_contributions::SetContributions,
+        "addStep" as "add-step" => add_step::AddStep,
+        "patchStep" as "patch-step" => patch_step::PatchStep,
+        "removeStep" as "remove-step" => remove_step::RemoveStep,
+        "moveStep" as "move-step" => move_step::MoveStep,
+        "updateForm" as "update-form" => update_form::UpdateForm,
+        "addBlock" as "add-question" => add_question::AddQuestion,
+        "removeBlock" as "remove-question" => remove_question::RemoveQuestion,
+        "patchQuestions" as "patch-questions" => patch_questions::PatchQuestions,
+        // 🩹️ `patchQuestionOptions`..`removeVectorField` (rows 18-23) come BEFORE `moveQuestion`/
+        // `dropQuestionKind` (rows 24-25) here, even though all 5 live in the same `🎮️commands/*` files —
+        // this row order is the pre-migration `forms_protocol::FormsCommand`'s exact binary variant
+        // ordinal and must not be re-sorted by file grouping (see the doc comment above: reordering is a
+        // wire-format break no round-trip test catches, since every row still round-trips fine on its own).
+        "patchQuestionOptions" as "patch-question-options" => patch_question_options::PatchQuestionOptions,
+        "addQuestionOption" as "add-question-option" => add_question_option::AddQuestionOption,
+        "removeQuestionOption" as "remove-question-option" => remove_question_option::RemoveQuestionOption,
+        "patchVectorField" as "patch-vector-field" => patch_vector_field::PatchVectorField,
+        "addVectorField" as "add-vector-field" => add_vector_field::AddVectorField,
+        "removeVectorField" as "remove-vector-field" => remove_vector_field::RemoveVectorField,
+        "moveBlock" as "move-question" => move_question::MoveQuestion,
+        "dropQuestionKind" as "drop-question-kind" => drop_question_kind::DropQuestionKind,
+        "setSpecJson" as "spec-json" => set_spec_json::SetSpecJson,
+        "setActiveExample" as "active-example" => set_active_example::SetActiveExample,
+        "exportSnapshot" as "export-snapshot" => export_snapshot::ExportSnapshot,
+        "setTryValueStep" as "try-value-step" => set_try_value_step::SetTryValueStep,
+        "exportResponses" as "export-responses" => export_responses::ExportResponses,
+        "discardResponse" as "discard-response" => discard_response::DiscardResponse,
+    }
+}
+
+// 🧷️ `app_commands!` addresses each payload module by a single identifier, so every `🎮️commands/*`
+// payload module is imported here under its own flat name.
+
+//#endregion 🔖️Commands
+
+//#region 🔖️Io
+/// 🔌️ Forms' typed media I/O surface (`AppDefinition.io`) — the implicit `document:in`/`document:out`
+/// pair (keyed by the `forms.form` document schema) plus the WORKFLOWS-END-TO-END-TYPED-PORTS
+/// `dictionary:out` port: the form's currently-configured default field values (see
+/// `crate::standards::v1::subsets::any::io::text::snapshot::initial_try_values`), re-exported as a typed `form.dictionary` intrinsic
+/// object keyed by question id — the layout app's `fields:in` counterpart. Relocated from the deleted
+/// artifact `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES): this is the app's
+/// own IO surface, not artifact behaviour.
+pub fn forms_io() -> semio_framework_plugin::AppIo {
+    semio_framework_plugin::AppIo {
+        artifact_schema: FORMS_DOCUMENT_SCHEMA.into(),
+        artifact_media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
+        ports: vec![semio_framework_plugin::MediaPortSpec {
+            id: "dictionary:out".into(),
+            label: "Dictionary".into(),
+            direction: semio_framework_plugin::MediaPortDirection::Out,
+            media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
+            kind_id: Some("form.dictionary".into()),
+            required: false,
+            multiplicity: semio_framework::PortMultiplicity::Many,
+        }],
+        export_formats: Vec::new(),
+        import_formats: Vec::new(),
+        artifact: semio_framework_plugin::ArtifactPresentation { id: "form.dictionary".into(), name: "Form".into(), dimension: "data".into(), component_kind: "forms".into() },
+    }
+}
+//#endregion 🔖️Io
+
+//#region 🧵️RetainedCommands
+/// 🧾️ Every Forms tool id in `FormsCommand` declaration order, kept exact against the generated
+/// command catalog, proof rows, and publication contracts by the exhaustiveness law below.
+const FORMS_RETAINED_TOOL_IDS: &[&str] = &[
+    "setTryValue",
+    "setTryValues",
+    "resetTry",
+    "previousStep",
+    "nextStep",
+    "submit",
+    "setContributions",
+    "addStep",
+    "patchStep",
+    "removeStep",
+    "moveStep",
+    "updateForm",
+    "addBlock",
+    "removeBlock",
+    "patchQuestions",
+    "patchQuestionOptions",
+    "addQuestionOption",
+    "removeQuestionOption",
+    "patchVectorField",
+    "addVectorField",
+    "removeVectorField",
+    "moveBlock",
+    "dropQuestionKind",
+    "setSpecJson",
+    "setActiveExample",
+    "exportSnapshot",
+    "setTryValueStep",
+    "exportResponses",
+    "discardResponse",
+];
+const FORMS_RETAINED_PAYLOAD_SCHEMA: &str = "forms.tool-command.v1";
+const FORMS_RETAINED_RAW_BYTES: usize = 16_384;
+const FORMS_STORE_MUTATION_MAXIMUM_BYTES: usize = store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES;
+
+fn forms_bounded_contract() -> ToolExecutionContract {
+    ToolExecutionContract::bounded_first_step(FORMS_RETAINED_RAW_BYTES, 64, 64, 4_096, 7_500)
+}
+
+struct FormsWindowCommandWork {
+    tool_id: &'static str,
+    completed: bool,
+    response_export: Option<crate::standards::v1::subsets::any::io::text::snapshot::response::export::ResponseExport>,
+}
+
+impl FormsWindowCommandWork {
+    fn new(tool_id: &'static str) -> Self { Self { tool_id, completed: false, response_export: None } }
+}
+
+fn forms_try_view<'a>(view: &'a semio_framework_plugin::ViewModel, window_id: &str, window_kind_id: &str) -> Result<&'a semio_framework_plugin::ViewModel, Fault> {
+    if view.window_id.as_deref() != Some(window_id)
+        || window_kind_id != try_window::FORMS_PLAY_WINDOW_TRY
+        || !view.window_instances.iter().any(|window| window.id == window_id && window.window_kind_id == window_kind_id)
+    {
+        return Err(Fault::from("forms-try-window-route-stale"));
+    }
+    Ok(view)
+}
+
+impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<FormsPlayApp>> for FormsWindowCommandWork {
+    fn tool_id(&self) -> &'static str { self.tool_id }
+
+    fn extent(
+        &self,
+        command: &FormsCommand,
+        snapshot: &FormsSnapshot,
+        _interaction: &protocol::InteractionState,
+        context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<FormsPlayApp>>>,
+    ) -> Option<usize> {
+        if self.completed || command.command_id() != self.tool_id { return None; }
+        match command {
+            FormsCommand::ExportResponses(_) => Some(crate::standards::v1::subsets::any::io::text::snapshot::response::export::ResponseExport::work_items(&snapshot.responses)),
+            FormsCommand::SetTryValue(_)
+            | FormsCommand::SetTryValues(_)
+            | FormsCommand::SetTryValueStep(_)
+            | FormsCommand::ResetTry(_)
+            | FormsCommand::PreviousStep(_)
+            | FormsCommand::NextStep(_)
+            | FormsCommand::Submit(_) => context?.view_state.as_ref().map(|_| 1),
+            _ => Some(1),
+        }
+    }
+
+    fn step(
+        &mut self,
+        input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<FormsPlayApp>>,
+    _cx: &mut semio_framework_job::StepContext<'_>,
+    ) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<FormsPlayApp>>, Fault> {
+        use semio_framework_plugin::retained_command::ArtifactCommandWorkStep;
+        if self.completed || input.command.command_id() != self.tool_id { return Err(Fault::from("forms-window-work-terminal")); }
+        let doc = ArtifactView::with_operation(input.snapshot, input.history, input.operation.clone());
+        let cfg = ConfigView { snapshot: input.config, window: input.context.and_then(|context| context.window_config.as_ref()) };
+        let mut emit = Emit::default();
+        let mut transient = None;
+        match input.command {
+            FormsCommand::ExportResponses(payload) => {
+                if self.response_export.is_none() {
+                    self.response_export = Some(crate::standards::v1::subsets::any::io::text::snapshot::response::export::ResponseExport::new(&payload.format).map_err(Fault::from)?);
+                }
+                let Some(data) = self.response_export.as_mut().expect("admitted response exporter").advance(&input.snapshot.responses) else {
+                    return Ok(ArtifactCommandWorkStep::Progress { stage: "forms-export-responses", preview: br#"{"en":"Exporting answers","de":"Antworten werden exportiert"}"# });
+                };
+                emit = export_responses::download(payload, input.snapshot, data)?;
+            }
+            FormsCommand::SetTryValue(payload) => {
+                let context = input.context.ok_or_else(|| Fault::from("forms-try-window-context-required"))?;
+                let view = forms_try_view(context.view_state.as_ref().ok_or_else(|| Fault::from("forms-try-window-view-required"))?, &payload.window_id, &payload.window_kind_id)?;
+                let lease = try_window::transient::FormsTryWindowLease::capture(context.window_transient.as_ref())?;
+                let output = set_try_value::start_window(payload, input.operation, &try_window::transient::from_snapshot(context.window_transient.as_ref()), &lease)?;
+                emit = output.emit;
+                transient = output.transient.map(|state| try_window::transient::addressed(view, state)).transpose()?;
+            }
+            FormsCommand::SetTryValues(payload) => {
+                let context = input.context.ok_or_else(|| Fault::from("forms-try-window-context-required"))?;
+                let view = forms_try_view(context.view_state.as_ref().ok_or_else(|| Fault::from("forms-try-window-view-required"))?, &payload.window_id, &payload.window_kind_id)?;
+                let lease = try_window::transient::FormsTryWindowLease::capture(context.window_transient.as_ref())?;
+                let output = set_try_values::start_window(payload, input.operation, &try_window::transient::from_snapshot(context.window_transient.as_ref()), &lease)?;
+                emit = output.emit;
+                transient = output.transient.map(|state| try_window::transient::addressed(view, state)).transpose()?;
+            }
+            FormsCommand::SetTryValueStep(payload) => {
+                let context = input.context.ok_or_else(|| Fault::from("forms-try-window-context-required"))?;
+                let view = forms_try_view(context.view_state.as_ref().ok_or_else(|| Fault::from("forms-try-window-view-required"))?, &payload.window_id, &payload.window_kind_id)?;
+                let lease = try_window::transient::FormsTryWindowLease::capture(context.window_transient.as_ref())?;
+                let output = set_try_value::advance_window(payload, input.operation, &try_window::transient::from_snapshot(context.window_transient.as_ref()), &lease)?;
+                emit = output.emit;
+                transient = output.transient.map(|state| try_window::transient::addressed(view, state)).transpose()?;
+            }
+            FormsCommand::ResetTry(payload) => {
+                let context = input.context.ok_or_else(|| Fault::from("forms-try-window-context-required"))?;
+                let view = forms_try_view(context.view_state.as_ref().ok_or_else(|| Fault::from("forms-try-window-view-required"))?, &payload.window_id, &payload.window_kind_id)?;
+                let lease = try_window::transient::FormsTryWindowLease::capture(context.window_transient.as_ref())?;
+                let (output, config) = reset_try::handle_window(payload, input.operation, &lease)?;
+                emit = output.emit;
+                emit.window_config_mutations.extend(try_window::config::addressed(view, &try_window::config::from_snapshot(context.window_config.as_ref()), config)?);
+                transient = output.transient.map(|state| try_window::transient::addressed(view, state)).transpose()?;
+            }
+            FormsCommand::PreviousStep(payload) => {
+                let context = input.context.ok_or_else(|| Fault::from("forms-try-window-context-required"))?;
+                let view = forms_try_view(context.view_state.as_ref().ok_or_else(|| Fault::from("forms-try-window-view-required"))?, &payload.window_id, &payload.window_kind_id)?;
+                let next = previous_step::handle_window(payload, &try_window::config::from_snapshot(context.window_config.as_ref()))?;
+                emit.window_config_mutations.extend(try_window::config::addressed(view, &try_window::config::from_snapshot(context.window_config.as_ref()), next)?);
+            }
+            FormsCommand::NextStep(payload) => {
+                let context = input.context.ok_or_else(|| Fault::from("forms-try-window-context-required"))?;
+                let view = forms_try_view(context.view_state.as_ref().ok_or_else(|| Fault::from("forms-try-window-view-required"))?, &payload.window_id, &payload.window_kind_id)?;
+                let next = next_step::handle_window(payload, input.snapshot, &try_window::config::from_snapshot(context.window_config.as_ref()), &try_window::transient::from_snapshot(context.window_transient.as_ref()))?;
+                emit.window_config_mutations.extend(try_window::config::addressed(view, &try_window::config::from_snapshot(context.window_config.as_ref()), next)?);
+            }
+            FormsCommand::Submit(payload) => {
+                let context = input.context.ok_or_else(|| Fault::from("forms-try-window-context-required"))?;
+                let view = forms_try_view(context.view_state.as_ref().ok_or_else(|| Fault::from("forms-try-window-view-required"))?, &payload.window_id, &payload.window_kind_id)?;
+                let (output, config) = submit::handle_window(input.snapshot, &try_window::config::from_snapshot(context.window_config.as_ref()), &try_window::transient::from_snapshot(context.window_transient.as_ref()), input.operation.canonical_base_revision_hex())?;
+                emit = output;
+                emit.window_config_mutations.extend(try_window::config::addressed(view, &try_window::config::from_snapshot(context.window_config.as_ref()), config)?);
+            }
+            _ => emit = input.command.dispatch(&doc, &cfg)?,
+        }
+        self.completed = true;
+        match transient {
+            Some(mutation) => Ok(ArtifactCommandWorkStep::CompleteWithEphemeral {
+                emit,
+                ephemeral: semio_framework_plugin::EphemeralEmit { presence: Vec::new(), transient: Vec::new(), window_transient: vec![mutation] },
+            }),
+            None => Ok(ArtifactCommandWorkStep::Complete(emit)),
+        }
+    }
+
+    fn begin_close(&mut self) {
+        if let Some(work) = self.response_export.as_mut() { work.cancel(); }
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.response_export.as_ref().is_none_or(|work| work.is_empty())
+    }
+}
+
+struct FormsBoundedCommandJobFactory {
+    keys: Vec<ToolFactoryKey>,
+}
+
+impl FormsBoundedCommandJobFactory {
+    fn new(controller_id: &str) -> Self {
+        Self { keys: FORMS_RETAINED_TOOL_IDS.iter().map(|tool_id| ToolFactoryKey::new(controller_id, *tool_id)).collect() }
+    }
+}
+
+impl semio_framework::ToolJobFactory for FormsBoundedCommandJobFactory {
+    type Payload = ArtifactRetainedCommandPayload<EditorApp<FormsPlayApp>>;
+    type Job = ArtifactRetainedCommandJob<EditorApp<FormsPlayApp>>;
+
+    fn keys(&self) -> &[ToolFactoryKey] {
+        &self.keys
+    }
+
+    fn payload_schema_id(&self) -> &str {
+        FORMS_RETAINED_PAYLOAD_SCHEMA
+    }
+
+    fn classification(&self) -> InteractiveJobClassification {
+        InteractiveJobClassification::Migrated
+    }
+
+    fn execution_contract(&self) -> ToolExecutionContract {
+        forms_bounded_contract()
+    }
+
+    fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> {
+        Ok(ArtifactRetainedCommandJob::new(payload))
+    }
+
+    fn create_job_from_wire_pages_with_payload(
+        &mut self,
+        _operation: semio_framework_job::Operation,
+        payload: Self::Payload,
+        input: semio_framework_action_bus::RetainedToolWireInput,
+        checkpoint: Option<semio_framework_action_bus::RetainedToolWireInput>,
+    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework_action_bus::RetainedToolWireInput, Option<semio_framework_action_bus::RetainedToolWireInput>)> {
+        if input.declared_bytes() > FORMS_RETAINED_RAW_BYTES || checkpoint.is_some() {
+            return Err((ToolJobFactoryError::new("Forms retained command rejects oversized wire or unsupported checkpoint owner"), input, checkpoint));
+        }
+        Ok(ArtifactRetainedCommandJob::from_wire(payload, input))
+    }
+}
+
+impl semio_framework_plugin::ArtifactOwnedToolJobFactory for FormsBoundedCommandJobFactory {
+    type Owner = EditorApp<FormsPlayApp>;
+    const TOOL_IDS: &'static [&'static str] = FORMS_RETAINED_TOOL_IDS;
+    const DOCUMENT_SCHEMA: &'static str = FORMS_DOCUMENT_SCHEMA;
+    const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[
+        ArtifactToolPublicationContract { tool_id: "setTryValue", lanes: &[ArtifactToolPublicationLane::WindowTransient] },
+        ArtifactToolPublicationContract { tool_id: "setTryValues", lanes: &[ArtifactToolPublicationLane::WindowTransient] },
+        ArtifactToolPublicationContract { tool_id: "resetTry", lanes: &[ArtifactToolPublicationLane::WindowConfig, ArtifactToolPublicationLane::WindowTransient] },
+        ArtifactToolPublicationContract { tool_id: "previousStep", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
+        ArtifactToolPublicationContract { tool_id: "nextStep", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
+        ArtifactToolPublicationContract { tool_id: "submit", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::WindowConfig] },
+        ArtifactToolPublicationContract { tool_id: "setContributions", lanes: &[ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "addStep", lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: "patchStep", lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: "removeStep", lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: "moveStep", lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: "updateForm", lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: "addBlock", lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: "removeBlock", lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: "patchQuestions", lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: "patchQuestionOptions", lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: "addQuestionOption", lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: "removeQuestionOption", lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: "patchVectorField", lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: "addVectorField", lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: "removeVectorField", lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: "moveBlock", lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: "dropQuestionKind", lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: "setSpecJson", lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: "exportSnapshot", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+        ArtifactToolPublicationContract { tool_id: "setTryValueStep", lanes: &[ArtifactToolPublicationLane::WindowTransient] },
+        ArtifactToolPublicationContract { tool_id: "exportResponses", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+        ArtifactToolPublicationContract { tool_id: "discardResponse", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ];
+}
+//#endregion 🧵️RetainedCommands
+
+//#region 📬️StorePreparation
+
+fn forms_store_mutation_retained_bytes<M: protocol::OpBinary>(mutation: &M) -> Result<usize, String> {
+    protocol::OpBinary::encode_op(mutation).map(|bytes| bytes.len()).map_err(|_| "forms-store-mutation-encode-failed".to_string())
+}
+
+fn admit_forms_store_mutation<P, M: protocol::OpBinary + protocol::Mutation<P>>(mutation: &M) -> Result<store::os_store::one_item::ArtifactStoreOneItemFootprint, String> {
+    let retained_bytes = forms_store_mutation_retained_bytes(mutation)?;
+    if retained_bytes > FORMS_STORE_MUTATION_MAXIMUM_BYTES {
+        return Err("forms-store-mutation-envelope".into());
+    }
+    Ok(store::os_store::one_item::ArtifactStoreOneItemFootprint::for_leaf::<P, M>(mutation, retained_bytes))
+}
+
+fn prepare_forms_store_mutation<P, M>(base: &P, mutation: &M) -> Result<(P, Vec<M>), String>
+where
+    M: protocol::Mutation<P> + protocol::OpBinary,
+{
+    admit_forms_store_mutation::<P, M>(mutation)?;
+    let inverse = protocol::Mutation::inverse(mutation, base).map_err(semio_framework_value::ValueError::into_message)?;
+    if inverse.iter().any(|step| admit_forms_store_mutation::<P, M>(step).is_err()) {
+        return Err("forms-store-inverse-mutation-envelope".into());
+    }
+    let diff = protocol::Mutation::diff(mutation, base).into_parts().0;
+    let post = protocol::apply_diff(&diff, base).map_err(|_| "forms-store-diff-apply-failed".to_string())?;
+    Ok((post, inverse))
+}
+
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
+struct FormsStorePreparationFactory<P, M> {
+    prefix: &'static str,
+    marker: std::marker::PhantomData<fn() -> (P, M)>,
+}
+
+impl<P, M> FormsStorePreparationFactory<P, M> {
+    fn new(prefix: &'static str) -> Self {
+        Self { prefix, marker: std::marker::PhantomData }
+    }
+}
+
+struct FormsStorePreparation<P: 'static, M: 'static> {
+    owners: store::OneItemOwners<P, M>,
+    prefix: &'static str,
+    retained_bytes: usize,
+    checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint,
+    cancelled: bool,
+}
+
+impl<P, M> store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<P, M> for FormsStorePreparationFactory<P, M>
+where
+    P: Clone + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
+    M: protocol::Mutation<P> + protocol::OpBinary + semio_framework_value::retirement::RetireOwned + store::ArtifactCanonicalJsonTree + Send + Sync + 'static,
+{
+    fn begin_batch_digest(&self, edit: &mut Option<Box<protocol::Edit<M>>>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<Option<(Box<dyn store::ArtifactStoreBatchDigest<M>>, semio_framework_value::retained_clone::RetainedCloneProgress)>, semio_framework_value::ValueError> { store::admit_artifact_batch_digest(edit, grant) }
+
+    fn preflight(&self, mutation: &M, lane: store::os_store::store_schema::HistoryLane) -> Result<store::os_store::one_item::ArtifactStoreOneItemFootprint, String> {
+        if lane != store::os_store::store_schema::HistoryLane::Document {
+            return Err("forms-store-lane".into());
+        }
+        admit_forms_store_mutation::<P, M>(mutation)
+    }
+
+    fn begin_demand(&self, _mutation: &M, _lane: store::os_store::store_schema::HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
+        Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: size_of::<FormsStorePreparation<P, M>>(), depth: 1 })
+    }
+
+    fn begin(&self, request: store::os_store::one_item_publication::ArtifactStoreOneItemPreparationRequest<P, M, M>, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<(Box<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<P, M>>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError, store::os_store::one_item_publication::ArtifactStoreOneItemPreparationRequest<P, M, M>)> {
+        let demand = match self.begin_demand(&request.mutation, request.lane) { Ok(demand) => demand, Err(error) => return Err((error, request)) };
+        let progress = match demand.admit(grant.retained_grant()) { Ok(progress) => progress, Err(error) => return Err((error, request)) };
+        let retained_bytes = forms_store_mutation_retained_bytes(&request.mutation).unwrap_or(FORMS_STORE_MUTATION_MAXIMUM_BYTES.saturating_add(1));
+        if request.lane != store::os_store::store_schema::HistoryLane::Document
+            || request.operation != request.authority.operation()
+            || request.generation != request.authority.generation()
+            || request.base_revision != request.authority.base_revision()
+            || request.authority.actor().len() > store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_ID_BYTES
+            || retained_bytes > FORMS_STORE_MUTATION_MAXIMUM_BYTES
+        {
+            return Err((semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "preparation rejected original publication authority"), request));
+        }
+        Ok((Box::new(FormsStorePreparation {
+            owners: store::OneItemOwners::from_request(request),
+            prefix: self.prefix,
+            retained_bytes,
+            checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint::default(),
+            cancelled: false,
+        }), progress))
+    }
+}
+
+impl<P, M> store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<P, M> for FormsStorePreparation<P, M>
+where
+    P: Clone + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
+    M: protocol::Mutation<P> + protocol::OpBinary + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
+{
+    fn advance(&mut self, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<store::os_store::one_item::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
+        if !grant.permits_one() || self.cancelled || self.owners.is_closing() {
+            return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked);
+        }
+        if self.owners.refused.is_some() {
+            return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "preparation retains its original semantic refusal"));
+        }
+        if self.owners.prepared.is_some() {
+            return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, Default::default()));
+        }
+        if grant.maximum_copy_bytes < self.retained_bytes {
+            return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked);
+        }
+        let base = self.owners.base.as_ref().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "forms-store-base-owner-missing"))?;
+        let mutation = self.owners.mutation.as_ref().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "forms-store-mutation-owner-missing"))?;
+        let (post, inverse) = prepare_forms_store_mutation(base.get(), mutation).map_err(|_| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "forms-store-preparation-refused"))?;
+        let authority = self.owners.authority.as_ref().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "forms-store-authority-missing"))?;
+        let forward = self.owners.mutation.take().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "forms-store-mutation-owner-missing"))?;
+        let prepared = match authority.prepare_one_item(authority.next_edit(forward, inverse), std::sync::Arc::new(post)) {
+            Ok(prepared) => prepared,
+            Err((error, edit, post)) => {
+                *self.owners.refused = Some((edit, post));
+                return Err(error);
+            }
+        };
+        self.checkpoint = store::os_store::one_item::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: self.retained_bytes as u64, digest: prepared.edit_digest() };
+        *self.owners.prepared = Some(prepared);
+        Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, copied_bytes: self.retained_bytes, ..Default::default() }))
+    }
+
+    fn checkpoint(&self) -> store::os_store::one_item::ArtifactStoreOneItemCheckpoint { self.checkpoint }
+    fn prepared(&self) -> Option<&store::os_store::one_item_publication::ArtifactStoreOneItemPrepared<P, M>> { self.owners.prepared.as_ref() }
+    fn take_prepared(&mut self) -> Option<store::os_store::one_item_publication::ArtifactStoreOneItemPrepared<P, M>> { self.owners.prepared.take() }
+    fn cancel(&mut self) { self.cancelled = true; }
+    fn begin_close(&mut self) { self.owners.begin_close(); }
+    fn close_step(&mut self, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> { self.owners.close_step(grant.retained_grant()) }
+    fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.owners.close_demands(0)?.copy_bytes) }
+    fn next_close_capacity_byte_demand(&self, maximum_copy_bytes: usize) -> Result<usize, semio_framework_value::ValueError> { Ok(self.owners.close_demands(maximum_copy_bytes)?.capacity_bytes) }
+    fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.owners.close_demands(0)?.release_bytes) }
+    fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.owners.close_demands(0)?.depth) }
+    fn terminal_is_empty(&self) -> bool { self.owners.terminal_is_empty() }
+}
+//#endregion 📬️StorePreparation
+
+//#region 🔖️FormsPlayApp
+/// 🧪️ B1: unit struct — every former `FormsPlayRuntime` field now lives in `FormsConfig`, written through
+/// `FormsConfigMutation`s.
+#[derive(Default)]
+pub struct FormsPlayApp;
+
+impl ArtifactEditor for FormsPlayApp {
+    type Snapshot = FormsSnapshot;
+    type Members = semio_s_artifact_stdio_semio::SemioMembers;
+    type Mutation = FormMutation;
+    type Config = FormsConfig;
+    type ConfigMutation = FormsConfigMutation;
+    type Draft = NoDraft;
+    type DraftMutation = NoDraftMutation;
+    type Presence = semio_framework_plugin::NoPresence;
+    type PresenceMutation = semio_framework_plugin::NoPresenceMutation;
+    type Transient = semio_framework_plugin::NoTransient;
+    type TransientMutation = semio_framework_plugin::NoTransientMutation;
+
+    type Command = FormsCommand;
+
+    const DIALECT: Dialect = crate::FORMS_DIALECT;
+    /// 🧬️ The crate's one loaded-parent child projection (`crate::forms_child_restore_projection`).
+    fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Result<Option<Vec<u8>>,semio_framework_value::ValueError> {
+ Ok((||{
+        crate::forms_genesis_child_pack(snapshot, slot, child_id)
+    
+})())
+}
+
+    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<semio_framework_composition_admission::ChildRestoreProjection<'_>, Fault> {
+        crate::forms_child_restore_projection(snapshot)
+    }
+    const DOCUMENT_SCHEMA: &'static str = FORMS_DOCUMENT_SCHEMA;
+
+    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
+        Some(std::sync::Arc::new(FormsStorePreparationFactory::<FormsSnapshot, FormMutation>::new("forms-artifact-retained")))
+    }
+
+    fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
+        Some(std::sync::Arc::new(FormsStorePreparationFactory::<FormsConfig, FormsConfigMutation>::new("forms-config-retained")))
+    }
+
+    fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
+        Some(semio_framework_plugin::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
+    }
+
+    fn build_config_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
+        Some(semio_framework_plugin::bounded_config_store_disposer::<Self::Config, Self::ConfigMutation>())
+    }
+
+    fn build_draft_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
+        Some(semio_framework_plugin::no_draft_store_disposer())
+    }
+
+    fn build_presence_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
+        Some(semio_framework_plugin::no_presence_store_disposer())
+    }
+
+    fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
+        Some(semio_framework_plugin::no_presence_local_root_retirement_factory())
+    }
+
+    fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
+        Some(semio_framework_plugin::no_presence_peer_retirement_factory())
+    }
+
+    fn build_transient_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
+        Some(semio_framework_plugin::no_transient_store_disposer())
+    }
+
+    fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> {
+        Some(semio_framework_plugin::no_transient_local_root_retirement_factory())
+    }
+
+    fn register_window_config_owners(registry: &mut semio_framework_plugin::WindowConfigOwnerRegistry) -> Result<(), Fault> {
+        try_window::config::register(registry)
+    }
+
+    fn register_window_transient_owners(registry: &mut semio_framework_plugin::WindowTransientOwnerRegistry) -> Result<(), Fault> {
+        try_window::transient::register(registry)
+    }
+
+    fn retained_window_transient_target(command: &Self::Command) -> Option<(&str, &'static str)> {
+        let target = match command {
+            FormsCommand::SetTryValue(payload) => (&payload.window_id, &payload.window_kind_id),
+            FormsCommand::SetTryValues(payload) => (&payload.window_id, &payload.window_kind_id),
+            FormsCommand::SetTryValueStep(payload) => (&payload.window_id, &payload.window_kind_id),
+            FormsCommand::ResetTry(payload) => (&payload.window_id, &payload.window_kind_id),
+            FormsCommand::PreviousStep(payload) => (&payload.window_id, &payload.window_kind_id),
+            FormsCommand::NextStep(payload) => (&payload.window_id, &payload.window_kind_id),
+            FormsCommand::Submit(payload) => (&payload.window_id, &payload.window_kind_id),
+            _ => return None,
+        };
+        (!target.0.is_empty() && target.1 == try_window::FORMS_PLAY_WINDOW_TRY).then_some((target.0.as_str(), try_window::FORMS_PLAY_WINDOW_TRY))
+    }
+
+    fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
+        let controller = registry.controller_id().to_string();
+        registry.register(FormsBoundedCommandJobFactory::new(&controller))
+    }
+
+    fn build_tool_job(request: ArtifactOwnedToolJobRequest<EditorApp<Self>>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
+        if !FORMS_RETAINED_TOOL_IDS.contains(&request.tool_id.as_str()) {
+            return Ok(None);
+        }
+        if request.command.command_id() != request.tool_id {
+            return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "the forms command does not match its exact registered tool"));
+        }
+        let tool_id = request.command.command_id();
+        let maximum_work_items = if tool_id == "exportResponses" { crate::standards::v1::subsets::any::io::text::snapshot::response::export::ResponseExport::work_items(&request.snapshot.responses) } else { 1 };
+        let work = Box::new(FormsWindowCommandWork::new(tool_id));
+        let operation_context = AppOperationContext {
+            app_instance_id: request.app_instance_id,
+            parent_document_id: request.parent_document_id.clone(),
+            operation_id: request.operation.operation.0,
+            generation: request.operation.generation.0,
+            canonical_base_revision: request.canonical_base_revision,
+            retained: request.retained,
+            authoring_seed: request.authoring_seed.clone(),
+        };
+        let payload = ArtifactRetainedCommandPayload::new(
+            semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {
+                command: *request.command,
+                snapshot: request.snapshot,
+                snapshot_read: request.snapshot_read,
+                config: request.config,
+                history: request.history,
+                interaction_state: request.interaction_state,
+                interaction_hover: request.interaction_hover,
+                context: Some(request.context),
+                operation: operation_context,
+                completion: request.completion,
+            },
+            FormsCommand::command_id,
+            FORMS_RETAINED_RAW_BYTES,
+            maximum_work_items,
+            work,
+        );
+        Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
+    }
+
+    semio_framework_plugin::bounded_first_step_tool_proofs! {
+        owner: EditorApp<FormsPlayApp>,
+        owner_file: "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+        controller: "s.forms.forms@1/*#editor",
+        artifact_schema: "forms.form",
+        factory: "FormsBoundedCommandJobFactory",
+        factory_type: FormsBoundedCommandJobFactory,
+        tools: {
+            "setTryValue" => forms_bounded_contract(),
+            "setTryValues" => forms_bounded_contract(),
+            "resetTry" => forms_bounded_contract(),
+            "previousStep" => forms_bounded_contract(),
+            "nextStep" => forms_bounded_contract(),
+            "submit" => forms_bounded_contract(),
+            "setContributions" => forms_bounded_contract(),
+            "addStep" => forms_bounded_contract(),
+            "patchStep" => forms_bounded_contract(),
+            "removeStep" => forms_bounded_contract(),
+            "moveStep" => forms_bounded_contract(),
+            "updateForm" => forms_bounded_contract(),
+            "addBlock" => forms_bounded_contract(),
+            "removeBlock" => forms_bounded_contract(),
+            "patchQuestions" => forms_bounded_contract(),
+            "patchQuestionOptions" => forms_bounded_contract(),
+            "addQuestionOption" => forms_bounded_contract(),
+            "removeQuestionOption" => forms_bounded_contract(),
+            "patchVectorField" => forms_bounded_contract(),
+            "addVectorField" => forms_bounded_contract(),
+            "removeVectorField" => forms_bounded_contract(),
+            "moveBlock" => forms_bounded_contract(),
+            "dropQuestionKind" => forms_bounded_contract(),
+            "setSpecJson" => forms_bounded_contract(),
+            "setActiveExample" => forms_bounded_contract(),
+            "exportSnapshot" => forms_bounded_contract(),
+            "exportResponses" => forms_bounded_contract(),
+            "discardResponse" => forms_bounded_contract(),
+            "setTryValueStep" => forms_bounded_contract(),
+        }
+    }
+
+    fn app_schema() -> Option<::semio_framework_schema_registry::AppSchemaDescriptor> {
+        Some(crate::editor::forms::config::schema::app_schema_descriptor())
+    }
+
+    fn initial_snapshot() -> FormsSnapshot {
+        crate::schema::empty_forms_snapshot()
+    }
+
+    fn io() -> Option<semio_framework_plugin::AppIo> {
+        Some(forms_io())
+    }
+
+    /// 🏷️ The manifest action id each command was declared under — supplied wholesale by
+    /// declaration (host-pushed, not user-facing actions).
+    fn command_id(command: &FormsCommand) -> &'static str {
+        command.command_id()
+    }
+
+    /// 🎯️ Host-action bridge into the closed `FormsCommand` enum (ticket
+    /// 26/09/16/FORMS-PLUGIN-END-TO-END). The React/wgpu shells still speak `{action, args}` with
+    /// camelCase argument keys; every `🎮️commands/*` payload derives `FromValue` over its own
+    /// snake_case field names, so this boundary folds the keys and decodes — the default trait impl
+    /// refuses every app action outright, which left `setActiveExample`/`addStep`/… dead in the shell.
+    fn command_from_action(action: &str, args: &mut Option<semio_framework_value::DslValue>, original_fault: &mut Option<Fault>) -> Result<Self::Command, Fault> {
+        if let Some(fault) = original_fault.take() { return Err(fault); }
+        let args = args.as_ref();
+        args_bridge::command_from_action(action, args)
+    }
+
+    fn handle(
+        command: &FormsCommand,
+        doc: &ArtifactView<'_, FormsSnapshot>,
+        cfg: &ConfigView<'_, FormsConfig>,
+        _interaction: &InteractionView<'_>,
+        view_state: Option<&semio_framework_plugin::ViewModel>,
+        _draft: &DraftView<'_, Self::Draft>,
+        _engines: &EngineHandles,
+    ) -> Result<Emit<FormMutation, FormsConfigMutation, Self::DraftMutation>, Fault> {
+        match (command, view_state) {
+            (FormsCommand::PreviousStep(payload), Some(view)) => {
+                forms_try_view(view, &payload.window_id, &payload.window_kind_id)?;
+                let mut emit = Emit::default();
+                emit.window_config_mutations.extend(try_window::config::addressed(view, &try_window::config::current(cfg), previous_step::handle_window(payload, &try_window::config::current(cfg))?)?);
+                Ok(emit)
+            }
+            (FormsCommand::NextStep(_), _)
+            | (FormsCommand::SetTryValue(_), _)
+            | (FormsCommand::SetTryValues(_), _)
+            | (FormsCommand::SetTryValueStep(_), _)
+            | (FormsCommand::ResetTry(_), _) => Err(Fault::from("forms-try-window-retained-context-required")),
+            _ => command.dispatch(doc, cfg),
+        }
+    }
+
+    /// 🕹️ `fields` domain: `HierarchyProvider::Topology` from the document's own step/question nesting —
+    /// see `forms_fields_topology`'s doc comment.
+    fn interaction_topology(doc: &ArtifactView<'_, FormsSnapshot>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<InteractionTopology, semio_framework_value::ValueError> {
+ Ok((||{
+        let mut domains = std::collections::BTreeMap::new();
+        domains.insert(FORMS_INTERACTION_FIELDS.to_string(), forms_fields_topology(doc.snapshot));
+        InteractionTopology { domains }
+    
+})())
+}
+
+    //#region 🔖️Media
+    /// 🎞️ WORKFLOWS-END-TO-END-TYPED-PORTS port recipe: `document:out` replicates the trait default
+    /// exactly (overriding `export_media` for `dictionary:out` forfeits the default's dispatch);
+    /// `dictionary:out` re-exports the form's currently-configured default field values as a
+    /// typed `form.dictionary` intrinsic object keyed by question id — no `cfg` parameter reaches this method, so
+    /// this is the form's authored defaults, not a live in-progress Try-wizard session (which lives
+    /// in the exact Try window config and transient owners).
+    fn export_media(port: &str, doc: &ArtifactView<'_, FormsSnapshot>) -> Result<semio_framework_plugin::Media, MediaError> {
+        match port {
+            "artifact:out" => {
+                let bytes = pack::snapshot::ArtifactPack::encode_pack(doc.snapshot);
+                Ok(semio_framework_plugin::Media {
+                    media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
+                    payload: MediaPayload::Structured { schema: FORMS_DOCUMENT_SCHEMA.into(), json: store::pack_rt::pack_value_to_base64(&bytes) },
+                })
+            }
+            "dictionary:out" => {
+                let dictionary=crate::schema::configured_dictionary(doc.snapshot).map_err(|error|MediaError::Payload(port.to_string(),error.into_message()))?;
+                Ok(semio_framework_plugin::Media { media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value }, payload: MediaPayload::Intrinsic { schema: "form.dictionary".into(), value:dictionary.into_intrinsic() } })
+            }
+            _ => Err(MediaError::NotImplemented),
+        }
+    }
+    //#endregion 🔖️Media
+
+    fn render(body_key: &str, doc: &ArtifactView<'_, FormsSnapshot>, cfg: &ConfigView<'_, FormsConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+        let spec = doc.snapshot;
+        let config = cfg.snapshot;
+        let labels = forms_play_labels(view_state);
+        let node = match body_key {
+            FORMS_PLAY_BODY_BLUEPRINT => builder::render(spec, config, view_state, None),
+            responses::results::BODY => responses::results::render(spec, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, responses::results::BODY)),
+            FORMS_PLAY_BODY_TRY => try_window::render(spec, config, &try_window::config::current(cfg), &try_window::transient::FormsTryWindowTransient::default(), labels, view_state),
+            FORMS_PLAY_BODY_ARTIFACT => document_panel::render(spec, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, FORMS_PLAY_BODY_ARTIFACT)),
+            FORMS_PLAY_BODY_CATALOGUE => catalogue_panel::render(config, view_state, &semio_framework_plugin::TreeWindows::for_body(view_state, FORMS_PLAY_BODY_CATALOGUE)),
+            FORMS_PLAY_BODY_INSPECTION => inspection_panel::render(spec, config, &[], view_state, &semio_framework_plugin::TreeWindows::for_body(view_state, FORMS_PLAY_BODY_INSPECTION)),
+            _ => return semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
+        }?;
+        Ok(semio_framework_plugin::built_to_component_tree(node))
+    }
+
+    fn render_with_request_context(
+        _owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
+        body_key: &str,
+        doc: &ArtifactView<'_, FormsSnapshot>,
+        cfg: &ConfigView<'_, FormsConfig>,
+        view_state: &semio_framework_plugin::ViewModel,
+        transient: &semio_framework_plugin::TransientView<'_, semio_framework_plugin::NoTransient>,
+        interaction: &InteractionView<'_>,
+        cx:&mut semio_framework_plugin::StepContext<'_>,
+    ) -> semio_framework_plugin::OriginalRenderResult<semio_framework_plugin::ComponentTree> {
+        let rendered:semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree>=(||{
+        let spec = doc.snapshot;
+        let config = cfg.snapshot;
+        let labels = forms_play_labels(view_state);
+        let node = match body_key {
+            FORMS_PLAY_BODY_BLUEPRINT => builder::render(spec, config, view_state, interaction.selection(FORMS_INTERACTION_FIELDS).ids.first().map(String::as_str)),
+            responses::results::BODY => responses::results::render(spec, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, responses::results::BODY)),
+            FORMS_PLAY_BODY_TRY => try_window::render(spec, config, &try_window::config::current(cfg), &try_window::transient::current(transient), labels, view_state),
+            FORMS_PLAY_BODY_ARTIFACT => document_panel::render(spec, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, FORMS_PLAY_BODY_ARTIFACT)),
+            FORMS_PLAY_BODY_CATALOGUE => catalogue_panel::render(config, view_state, &semio_framework_plugin::TreeWindows::for_body(view_state, FORMS_PLAY_BODY_CATALOGUE)),
+            FORMS_PLAY_BODY_INSPECTION => inspection_panel::render(spec, config, &interaction.selection(FORMS_INTERACTION_FIELDS).ids, view_state, &semio_framework_plugin::TreeWindows::for_body(view_state, FORMS_PLAY_BODY_INSPECTION)),
+            _ => return semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
+        }?;
+        Ok(semio_framework_plugin::built_to_component_tree(node))
+
+        })();
+        rendered.map(Some).map_err(Into::into)
+        }
+}
+//#endregion 🔖️FormsPlayApp
+
+//#region 🔖️Manifest
+/// 🧱️ The manifest stitch: one call per taxonomy node, each sourced from that node's own `definition()`.
+/// Only the leaf action/keybinding declarations (which have no dedicated `_def` passthrough) are written
+/// out inline.
+///
+/// 🚧️ SDK GAP (contract §2.4, w0-f-report Gap 4): `EditorBuilder` has no `.example(...)`/`.workflow(...)`
+/// methods — the three example registrations (`default`/`onboarding`/`building-component`) and the
+/// `"forms"` workflow tag the pre-migration `App`-based manifest carried are dropped here, not ported.
+/// The subset's own `📚️examples/🎬️demo` facet is the likely intended replacement mechanism; flagged
+/// for the coordinator, not fixed locally.
+pub fn create_forms_app() -> AppDefinition {
+    Editor::builder(crate::FORMS_DIALECT)
+        .command(CommandDefinition { in_palette: false, ..CommandDefinition::bounded_catalog("setContributions", LocalizedLabel::native("Set Contributions", "Beiträge festlegen"), "host", ActionKind::View).with_args([ActionArgDef::text("json", LocalizedLabel::native("Contributions", "Beiträge"))]) })
+            .document(["semio", "forms"])
+            .artifact_kind(crate::artifact_kind())
+            .icon_id("forms")
+            .mode_def(blueprint::definition())
+            .mode_def(fill::definition())
+            .mode_def(responses::definition())
+            .named_layout(fill::layout())
+            .named_layout(responses::layout())
+            .default_mode_id(blueprint::FORMS_PLAY_MODE_BLUEPRINT)
+            .window_kind_def(builder::definition())
+            .window_kind_def(try_window::definition())
+            .window_kind_def(responses::results::definition())
+            .default_layout(blueprint::layout())
+            .panel_tab_def(document_panel::definition())
+            .panel_tab_def(catalogue_panel::definition())
+            .panel_tab_def(inspection_panel::definition())
+            .mutation("addStep", LocalizedLabel::native("Add Step", "Schritt hinzufügen"))
+            .mutation("addBlock", LocalizedLabel::native("Add Question", "Frage hinzufügen"))
+            .mutation("removeBlock", LocalizedLabel::native("Remove Question", "Frage entfernen"))
+            .mutation("patchQuestions", LocalizedLabel::native("Patch Questions", "Fragen aktualisieren"))
+            .mutation("patchQuestionOptions", LocalizedLabel::native("Patch Question Options", "Fragenoptionen aktualisieren"))
+            .mutation("addQuestionOption", LocalizedLabel::native("Add Question Option", "Fragenoption hinzufügen"))
+            .mutation("removeQuestionOption", LocalizedLabel::native("Remove Question Option", "Fragenoption entfernen"))
+            .mutation("patchVectorField", LocalizedLabel::native("Patch Vector Field", "Vektorfeld aktualisieren"))
+            .mutation("addVectorField", LocalizedLabel::native("Add Vector Field", "Vektorfeld hinzufügen"))
+            .mutation("removeVectorField", LocalizedLabel::native("Remove Vector Field", "Vektorfeld entfernen"))
+            .mutation("moveBlock", LocalizedLabel::native("Move Question", "Frage verschieben"))
+            .mutation("moveStep", LocalizedLabel::native("Move Step", "Schritt verschieben"))
+            .mutation("removeStep", LocalizedLabel::native("Remove Step", "Schritt entfernen"))
+            .mutation("patchStep", LocalizedLabel::native("Patch Step", "Schritt aktualisieren"))
+            .mutation("updateForm", LocalizedLabel::native("Update Form", "Formular aktualisieren"))
+            .mutation("dropQuestionKind", LocalizedLabel::native("Drop Question Kind", "Frageart ablegen"))
+            .action_audience("dropQuestionKind", semio_framework_plugin::CapabilityAudience::Agent)
+            .action_with(ActionDefinition::new("setActiveExample", LocalizedLabel::native("Use Form Template", "Formularvorlage verwenden"), ActionKind::Mutation, "panel-left"))
+            .mutation("setSpecJson", LocalizedLabel::native("Import Form Design JSON", "Formularentwurf aus JSON importieren"))
+            .view_action("setTryValue", LocalizedLabel::native("Set Try Value", "Testwert festlegen"))
+            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog(set_try_value::SET_TRY_VALUE_STEP_ACTION_ID, LocalizedLabel::native("Set Try Value Step", "Testwert-Schritt festlegen"), ActionKind::View) })
+            .action_interactive_job("setTryValue", InteractiveJobClassification::Migrated)
+            .action_interactive_job(set_try_value::SET_TRY_VALUE_STEP_ACTION_ID, InteractiveJobClassification::Migrated)
+            .view_action("setTryValues", LocalizedLabel::native("Set Try Values", "Testwerte festlegen"))
+            .view_action("resetTry", LocalizedLabel::native("Reset Try", "Test zurücksetzen"))
+            .view_action("previousStep", LocalizedLabel::native("Previous Step", "Vorheriger Schritt"))
+            .view_action("nextStep", LocalizedLabel::native("Next Step", "Nächster Schritt"))
+            .mutation("submit", LocalizedLabel::native("Submit", "Absenden"))
+            .shell_action("exportSnapshot", LocalizedLabel::native("Export Form", "Formular exportieren"))
+            .shell_action("exportResponses", LocalizedLabel::native("Export Responses", "Antworten exportieren"))
+            .mutation("discardResponse", LocalizedLabel::native("Remove Response", "Antwort entfernen"))
+            .action_args("exportResponses", vec![ActionArgDef::select("format", LocalizedLabel::native("Format", "Format"), vec![ActionArgOption::new("json", LocalizedLabel::data("JSON")), ActionArgOption::new("csv", LocalizedLabel::data("CSV"))]).default_value(&"json")])
+            .action_describe("exportResponses", LocalizedLabel::native("Downloads stored submissions with their original labels and typed answer values.", "Lädt gespeicherte Antworten mit ihren ursprünglichen Bezeichnungen und typisierten Werten herunter."))
+            .action_describe("discardResponse", LocalizedLabel::native("Removes one saved response. Undo restores it.", "Entfernt eine gespeicherte Antwort. Rückgängig stellt sie wieder her."))
+            // 💬️ Agent-facing descriptions (ticket 26/09/18 slice M5a) — EN first, DE second.
+            .action_describe("addStep", LocalizedLabel::native("Appends a new step (a page of questions) to the form.", "Fügt dem Formular einen neuen Schritt (eine Seite mit Fragen) hinzu."))
+            .action_use_when("addStep", vec!["add a page to the form".into(), "new step".into()])
+            .action_describe("patchStep", LocalizedLabel::native("Changes a page title or description.", "Ändert den Titel oder die Beschreibung einer Seite."))
+            .action_describe("removeStep", LocalizedLabel::native("Removes one step and every question on it from the form.", "Entfernt einen Schritt samt allen darauf liegenden Fragen aus dem Formular."))
+            .action_describe("moveStep", LocalizedLabel::native("Reorders one step within the form.", "Ordnet einen Schritt im Formular um."))
+            .action_describe("addBlock", LocalizedLabel::native("Adds a new question of the given kind to a step of the form.", "Fügt einem Schritt des Formulars eine neue Frage der angegebenen Art hinzu."))
+            .action_use_when("addBlock", vec!["add a question".into(), "add a multiple choice field".into(), "add a text input to the form".into()])
+            .action_describe("removeBlock", LocalizedLabel::native("Removes one question from the form by id.", "Entfernt eine Frage anhand ihrer Id aus dem Formular."))
+            .action_describe("patchQuestions", LocalizedLabel::native("Sets one named property on one or more questions — label, help text, required flag, kind or validation.", "Setzt eine benannte Eigenschaft auf einer oder mehreren Fragen — Beschriftung, Hilfetext, Pflichtfeld, Art oder Validierung."))
+            .action_use_when("patchQuestions", vec!["rename a question".into(), "make this question required".into()])
+            .action_describe("moveBlock", LocalizedLabel::native("Reorders one question, within its step or onto another one.", "Ordnet eine Frage um — innerhalb ihres Schritts oder auf einen anderen."))
+            .action_describe("dropQuestionKind", LocalizedLabel::native("Creates a question of the given kind at a drop target in the form outline.", "Erzeugt eine Frage der angegebenen Art an einer Ablagestelle in der Formularübersicht."))
+            .action_describe("addQuestionOption", LocalizedLabel::native("Adds one selectable option to a choice question.", "Fügt einer Auswahlfrage eine auswählbare Option hinzu."))
+            .action_describe("removeQuestionOption", LocalizedLabel::native("Removes one selectable option from a choice question.", "Entfernt eine auswählbare Option aus einer Auswahlfrage."))
+            .action_describe("patchQuestionOptions", LocalizedLabel::native("Sets one named property on a choice question's options.", "Setzt eine benannte Eigenschaft auf den Optionen einer Auswahlfrage."))
+            .action_describe("addVectorField", LocalizedLabel::native("Adds one component field to a vector-valued question.", "Fügt einer vektorwertigen Frage ein Komponentenfeld hinzu."))
+            .action_describe("removeVectorField", LocalizedLabel::native("Removes one component field from a vector-valued question.", "Entfernt ein Komponentenfeld aus einer vektorwertigen Frage."))
+            .action_describe("patchVectorField", LocalizedLabel::native("Sets one named property of a vector-valued question's component field.", "Setzt eine benannte Eigenschaft eines Komponentenfelds einer vektorwertigen Frage."))
+            .action_describe("updateForm", LocalizedLabel::native("Changes the form title.", "Ändert den Formulartitel."))
+            .action_describe("setActiveExample", LocalizedLabel::native("Replaces the form design with a template. Existing answers stay with this form.", "Ersetzt den Formularentwurf durch eine Vorlage. Vorhandene Antworten bleiben in diesem Formular."))
+            .action_describe("setSpecJson", LocalizedLabel::native("Imports the title and questions from a saved Forms JSON document. Existing answers stay with this form.", "Importiert Titel und Fragen aus einem gespeicherten Forms-JSON-Dokument. Vorhandene Antworten bleiben in diesem Formular."))
+            .action_describe("exportSnapshot", LocalizedLabel::native("Downloads a Forms document containing its design and saved answers.", "Lädt ein Forms-Dokument mit Entwurf und gespeicherten Antworten herunter."))
+            .action_describe("submit", LocalizedLabel::native("Submits the answers currently entered in the form preview.", "Sendet die aktuell in der Formularvorschau eingegebenen Antworten ab."))
+            // ⚠️ Discards content no later verb reconstructs — the gateway asks a human first.
+            .action_destructive("removeBlock")
+            .action_destructive("discardResponse")
+            .action_destructive("removeQuestionOption")
+            .action_destructive("removeStep")
+            .action_destructive("removeVectorField")
+            .action_destructive("setActiveExample")
+            .action_destructive("setSpecJson")
+            // 🖱️ Preview-runner input plumbing — the form preview feeds these, agents never do.
+            .action_audience("setTryValue", semio_framework_plugin::CapabilityAudience::Input)
+            .action_audience(set_try_value::SET_TRY_VALUE_STEP_ACTION_ID, semio_framework_plugin::CapabilityAudience::Input)
+            .action_audience("setTryValues", semio_framework_plugin::CapabilityAudience::Input)
+            .action_audience("resetTry", semio_framework_plugin::CapabilityAudience::Chrome)
+            .action_audience("previousStep", semio_framework_plugin::CapabilityAudience::Chrome)
+            .action_audience("nextStep", semio_framework_plugin::CapabilityAudience::Chrome)
+            .action_interactive_job("setTryValues", InteractiveJobClassification::Migrated)
+            .action_interactive_job("resetTry", InteractiveJobClassification::Migrated)
+            .action_interactive_job("previousStep", InteractiveJobClassification::Migrated)
+            .action_interactive_job("nextStep", InteractiveJobClassification::Migrated)
+            .action_interactive_job("submit", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setContributions", InteractiveJobClassification::Migrated)
+            .action_interactive_job("addStep", InteractiveJobClassification::Migrated)
+            .action_interactive_job("patchStep", InteractiveJobClassification::Migrated)
+            .action_interactive_job("removeStep", InteractiveJobClassification::Migrated)
+            .action_interactive_job("moveStep", InteractiveJobClassification::Migrated)
+            .action_interactive_job("updateForm", InteractiveJobClassification::Migrated)
+            .action_interactive_job("addBlock", InteractiveJobClassification::Migrated)
+            .action_interactive_job("removeBlock", InteractiveJobClassification::Migrated)
+            .action_interactive_job("patchQuestions", InteractiveJobClassification::Migrated)
+            .action_interactive_job("patchQuestionOptions", InteractiveJobClassification::Migrated)
+            .action_interactive_job("addQuestionOption", InteractiveJobClassification::Migrated)
+            .action_interactive_job("removeQuestionOption", InteractiveJobClassification::Migrated)
+            .action_interactive_job("patchVectorField", InteractiveJobClassification::Migrated)
+            .action_interactive_job("addVectorField", InteractiveJobClassification::Migrated)
+            .action_interactive_job("removeVectorField", InteractiveJobClassification::Migrated)
+            .action_interactive_job("moveBlock", InteractiveJobClassification::Migrated)
+            .action_interactive_job("dropQuestionKind", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setSpecJson", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setActiveExample", InteractiveJobClassification::Migrated)
+            .action_interactive_job("exportSnapshot", InteractiveJobClassification::Migrated)
+            .action_interactive_job("exportResponses", InteractiveJobClassification::Migrated)
+            .action_interactive_job("discardResponse", InteractiveJobClassification::Migrated)
+            // 📝️ Staged argument forms for the panel-visible create/switch actions.
+            .action_args("addBlock", vec![
+                ActionArgDef::select(
+                    "kind",
+                    LocalizedLabel::native("Kind", "Art"),
+                    FORM_BUILTIN_KINDS.iter().map(|kind| ActionArgOption::new(*kind, LocalizedLabel::data(*kind))).collect(),
+                )
+                .default_value(&"text"),
+            ])
+            .action_args("setActiveExample", vec![
+                ActionArgDef::select("exampleId", LocalizedLabel::native("Template", "Vorlage"), vec![
+                    ActionArgOption::new("", LocalizedLabel::native("Blank Form", "Leeres Formular")),
+                    ActionArgOption::new("default", LocalizedLabel::native("Contact", "Kontakt")),
+                    ActionArgOption::new("onboarding", LocalizedLabel::native("Onboarding", "Einführung")),
+                    ActionArgOption::new("building-component", LocalizedLabel::native("Building Component", "Baukomponente")),
+                ]).default_value(&"default"),
+            ])
+            .action_args("setSpecJson", vec![ActionArgDef::text("json", LocalizedLabel::native("Spec JSON", "Spezifikations-JSON"))])
+            .keybinding("mod+z", "undo")
+            .keybinding("mod+shift+z", "redo")
+            // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the "fields" interaction
+            // domain — two granularities ("field" default, "section"), `HierarchyProvider::Topology`
+            // from the document's own step/question nesting (`forms_fields_topology`/
+            // `FormsPlayApp::interaction_topology`), both hover and selection transitive (selecting/
+            // hovering a step covers its questions). Selection is pick-only (no canvas marquee surface
+            // exists for this domain today); the framework auto-injects interactionSelect/
+            // interactionHover/clearSelection/selectAll/setSelectionMode/setInteractionGranularity.
+            .interaction(InteractionDefinition {
+                id: FORMS_INTERACTION_FIELDS.into(),
+                label: LocalizedLabel::native("Fields", "Felder"),
+                granularities: vec![
+                    GranularityDefinition { id: FORMS_INTERACTION_GRANULARITY_FIELD.into(), label: LocalizedLabel::native("Field", "Feld"), icon_id: "help-circle".into() },
+                    GranularityDefinition { id: FORMS_INTERACTION_GRANULARITY_SECTION.into(), label: LocalizedLabel::native("Section", "Abschnitt"), icon_id: "list-tree".into() },
+                ],
+                hierarchy: HierarchyProvider::Topology,
+                hover: HoverSpec { transitive: true, ..HoverSpec::default() },
+                selection: SelectionSpec {
+                    modes: vec![SelectionMode::Multiple, SelectionMode::Single],
+                    methods: vec![SelectionMethod::Pick],
+                    merges: vec![MergeMode::Replace, MergeMode::Additive, MergeMode::Subtractive, MergeMode::Invertive, MergeMode::Range],
+                    transitive: true,
+                    broadcast: true,
+                },
+            })
+            .window_kind_interactions(builder::FORMS_PLAY_WINDOW_BLUEPRINT, vec![InteractionRef::new(FORMS_INTERACTION_FIELDS)])
+            // 🎯️ Typed channel surface (WORKFLOWS-END-TO-END-TYPED-PORTS) — `config_spec()`/`forms_io()`
+            // are this same information's single source of truth, reused here rather than duplicated.
+            .config(FormsPlayApp::config_spec())
+            .io(forms_io())
+            .build_definition()
+}
+//#endregion 🔖️Manifest
+
+//#region 🧪️UnitTests
+/// 🧪️ Shared test scaffolding for every taxonomy node's own `🧪️Tests` region — a component file must be
+/// able to drive the whole app without re-deriving the harness.
+#[cfg(test)]
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+pub(crate) mod unit_tests;
+
+#[cfg(test)]
+#[path = "🧪️tests/🧪️field-transactions/🦀️.rs"]
+mod field_transaction_tests;
+//#endregion 🧪️UnitTests
+
+//#region 🪢️TaxonomyMounts
+#[path = "📚️examples/🎬️demo-session/🦀️.rs"]
+pub mod demo_session;
+#[cfg(test)]
+#[path = "📚️examples/🎬️demo-session/🧪️tests/🧩️example/🦀️.rs"]
+mod example;
+//#endregion 🪢️TaxonomyMounts

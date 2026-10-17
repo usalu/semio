@@ -51,7 +51,8 @@ import {
 import { agentDelegationListFixture as delegationListVectors, directorySchema, mcpClientConfigFixture as mcpClientLaw } from "../../../../../../📇️directory/🧪️tests/🧫️fixtures/🟦️.ts";
 import { AgentDelegations, agentDelegationInstantV1 } from "../../🟦️.tsx";
 import Ajv from "ajv";
-import { useHubConnection, type HubConnectionPortV1 } from "../../../🔗️HubConnection/🟦️.tsx";
+import { useHubConnection } from "../../../🔗️HubConnection/🟦️.tsx";
+import { type HubConnectionPortV1 } from "../../../🔗️HubConnection/🔌️connection-contract/🟦️.ts";
 import { type HubConnectionStorageV1 } from "@semio-tech/framework/directory/sign-in";
 // #endregion 🔌️Adapters
 

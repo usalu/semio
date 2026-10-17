@@ -37,6 +37,6 @@ fn original_typed_step_receiving_preserves_final_native_arguments_and_every_inte
   }
   typed.cancel();while !typed.terminal_is_empty(){let d=typed.close_demands().unwrap();if d.release_bytes>0{let(result,heap)=observe(||typed.close_step(RetainedCloneGrant{maximum_release_bytes:d.release_bytes-1,..g}).unwrap());assert!(result.is_none());assert_eq!(heap,(0,0));}let(p,heap)=observe(||typed.close_step(g).unwrap().unwrap());assert_eq!((p.retained_capacity_bytes,p.released_bytes),heap);assert_eq!(p.copied_bytes,0);assert!(p.fits(g));assert_eq!(typed.take_receipt().unwrap(),(g,p));physical.0+=heap.0;physical.1+=heap.1;}
   lower.cancel();while !lower.terminal_is_empty(){if lower.token().is_some(){lower.take_token_into(&mut pending,g).unwrap();lower.take_receipt().unwrap();pending=None;}let(_,heap)=observe(||lower.close_step(g).unwrap());let(issued,p)=lower.take_receipt().unwrap();assert_eq!(issued,g);assert!(p.fits(g));assert_eq!((p.retained_capacity_bytes,p.released_bytes),heap);physical.0+=heap.0;physical.1+=heap.1;}
-  assert_eq!(physical.0,physical.1);let((),heap)=observe(||{drop(typed);drop(lower)});assert_eq!(heap,(0,0));println!("[DEBUG] original step cut={stop} typedTokens={accepted} argumentCopy={copied} exactNativeBirthRelease={} fixed17 sameArgs metadata0 terminalDrop0",physical.0);
+  assert_eq!(physical.0,physical.1);let((),heap)=observe(||{drop(typed);drop(lower)});assert_eq!(heap,(0,0));
  }
 }

@@ -1,0 +1,15 @@
+# Two Known Private Recovery Inputs
+
+The private helper now declares two exact known fixtures. The canonically settled `pf-q157nV` is statically closed. Only retained `pf-dH731i` is eligible for a new ordinary-parent recovery, with original creation SHA256 `d7dbbba0fc02044d4fa4ee54fb24458ef827f2d5bd00b55789c03d6db86359b8` and complete saved allocation facts. No prefix recovery, historical authority adoption or general cleanup entry was added.
+
+Selection rejects the closed or unknown fixture before filesystem/provenance reads. The active fixture also refuses any named `recovery-settled.json` entry, including a symlink, before reading creation provenance or opening Native storage. The existing bounded4096-byte creation read, full current policy/protocol checks, fresh genuine Original, ordinary parent recovery, payload/raw-journal verification and canonical child/parent retirement remain required.
+
+The schema and four language-neutral selection vectors preceded implementation. Semantic RED72331 exposed the old flat declaration. Full Source51924 then exposed an unsupported tuple-array keyword in the repository schema subset: Ajv accepted the draft07 tuple, while the actual subset refused it. The fixture schema was rewritten using supported `oneOf` item alternatives plus both `contains` obligations and exact cardinality2. The production validator was not changed. This preserves the same two closed alternatives without imposing order.
+
+Full actual Source77310 returned0:19passed,4intentional worker skips,0failed,1238assertions in39.72seconds. Its six genuine finite worker preflights also settled. The31 full-fact/protocol refusal cases retain independent Ajv/SQLite tree-equivalence checks. The four new selection vectors independently match SQLite and prove zero creation reads/declarations on refusals. Native effects are0 in these Source tests. Earlier cascading Original-admission failures followed the first failing assertion and are retained in their logs.
+
+The four-file frozen manifest is `🗑️generated/coordination-17/recovery-exact-list-final-hashes.json`. Scoped whitespace check returned0. Final strict68181 returned0 over all eight explicit roots and genuine worker preflights. Low independently confirmed all four named/FD seven-field stamps, sizes and SHA256 values with no discrepancies in `🗑️generated/recovery-exact-list-independent-hold.json`. A serial physical recovery of the second fixture has started; no physical success is claimed here.
+
+## Actual Recovery65287
+
+The exact `--recover pf-dH731i` process returned0. Its emitted receipt binds the original creation SHA and allocation, a fresh ordinary parent request,65536-byte payload SHA256 `62973580cb0d8f44b830898e019c50399ddc804352fbade1f66ee187e9617871` and693-byte raw journal SHA256 `fe641426cb107003c92366a1a1bcf4593bda03a9cb732444a82553bacbb649be`. Canonical child and parent retirement completed, with `childAbsent`, `parentAbsent` and `allOwnedClosed` true. Independent saved-evidence binding and only the exact known parent absence check are pending. A new complete `--run` has started. Neither private acceptance qualifies the public build matrix.

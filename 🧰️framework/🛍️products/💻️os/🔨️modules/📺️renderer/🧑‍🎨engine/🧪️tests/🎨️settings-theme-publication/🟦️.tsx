@@ -11,6 +11,7 @@ import { Input } from "../../../../../../../🔨️modules/🖱️ui/🧱️elem
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../../../../../🔨️modules/🖱️ui/🧱️elements/🔽️Select/🟦️.tsx";
 import { Tree } from "../../../../../../../🔨️modules/🖱️ui/🧱️elements/🌳️Tree/🟦️.tsx";
 import { parseUiTheme } from "../../../../../../../🔨️modules/🖱️ui/🎨️styling/🌓️theme/🟦️.ts";
+import { readModuleTreeSource } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
 
 const engineRoot = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const fixture = JSON.parse(readFileSync(join(engineRoot, "🧪️tests/🧫️fixtures", "🎨️settings-theme-publication", "🔣️.json"), "utf8"));
@@ -138,7 +139,7 @@ const observe = (view: ReturnType<typeof render>, controlId: string) => {
 
 describe("🎨️ Theme retained preference publication", () => {
   test("the language-neutral workflow satisfies its strict schema and names actual React controls", () => {
-    const source = readFileSync(join(engineRoot, "🧱️elements", "📌️ChromePanels", "🟦️.tsx"), "utf8");
+    const source = readModuleTreeSource(join(engineRoot, "🧱️elements", "📌️ChromePanels", "🟦️.tsx"));
     for (const step of fixture.workflow) {
       const reactAction = step.action === "resetThemeId" ? "resetTheme" : step.action === "deleteThemeId" ? "deleteTheme" : step.action === "applyImportedTheme" ? "importTheme" : step.action;
       expect(source, step.action).toContain(reactAction);

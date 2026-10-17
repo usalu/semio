@@ -32,6 +32,10 @@ type stdioDeflateRfc1950AnyInferenceGuardSizeBounds = { readonly minItems?: numb
 
 export const stdioDeflateRfc1950AnyInferenceGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : stdioDeflateRfc1950AnyInferenceGuardReject(at, "value is not an object");
+export const stdioDeflateRfc1950AnyInferenceGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) stdioDeflateRfc1950AnyInferenceGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const stdioDeflateRfc1950AnyInferenceGuardArray = (value: unknown, at: string, bounds: stdioDeflateRfc1950AnyInferenceGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return stdioDeflateRfc1950AnyInferenceGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) stdioDeflateRfc1950AnyInferenceGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -62,14 +66,14 @@ export const stdioDeflateRfc1950AnyInferenceGuardConstant = <T extends string | 
 //#endregion 🚪️Parsers
 
 export function parseDeflateInference(value: unknown, at = "$"): DeflateInference {
-  const row = stdioDeflateRfc1950AnyInferenceGuardObject(value, at);
+  const row = stdioDeflateRfc1950AnyInferenceGuardClosed(stdioDeflateRfc1950AnyInferenceGuardObject(value, at), at, ["window"]);
   return {
     window: parseDeflateWindow(row["window"], `${at}.window`),
   };
 }
 
 export function parseDeflateWindow(value: unknown, at = "$"): DeflateWindow {
-  const row = stdioDeflateRfc1950AnyInferenceGuardObject(value, at);
+  const row = stdioDeflateRfc1950AnyInferenceGuardClosed(stdioDeflateRfc1950AnyInferenceGuardObject(value, at), at, ["windowSize", "compressionLevelHint", "hasPresetDictionary", "payloadSize", "contentDigest"]);
   return {
     windowSize: stdioDeflateRfc1950AnyInferenceGuardInteger(row["windowSize"], `${at}.windowSize`, {"minimum": 0}),
     compressionLevelHint: stdioDeflateRfc1950AnyInferenceGuardMember(row["compressionLevelHint"], `${at}.compressionLevelHint`, ["Fastest", "Fast", "Default", "Maximum"] as const),

@@ -1,46 +1,21 @@
 //! 🏗️ Typestate `PluginBuilder` — missing label/version is a compile error.
 
-use crate::app_builder::App;
-use crate::app_contract::ArtifactApp;
-use crate::plugin_app::PluginApp;
-use crate::artifact_registration::ArtifactContribution;
-use crate::artifact_declaration::{ArtifactDeclaration, FlowExtensionDeclaration, HostMediaHandlerDeclaration};
-use crate::artifact_identity::ArtifactDefinitionRegistry;
+extern crate semio_framework_os_kernel as protocol;
+use semio_framework_plugin_app_builder::App;
+use semio_framework_plugin_registration::{PluginDescriptorRegistration, PluginDescriptorParts};
+use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_framework_plugin_reactor_app::PluginApp;
+use semio_framework_plugin_decl_registry::artifact_registration::ArtifactContribution;
+use semio_framework_plugin_decl_registry::{ArtifactDeclaration, FlowExtensionDeclaration, HostMediaHandlerDeclaration};
+use semio_framework_plugin_identity::ArtifactDefinitionRegistry;
 use semio_framework_plugin_ownership::sdk_fault::PluginAssemblyError;
-use crate::artifact_inference::ArtifactInferenceServiceMetadata;
-use crate::plugin_program::{Plugin, PluginCommandHandler};
-use semio_framework::{
-    kernel::{ActivationEvent, CapabilityRequest, CapabilityRequirement, QuotaSchema},
-    AssetDeclaration, CommandDefinition, ExecutionMode, ExtensionPointDeclaration,
-};
+use semio_framework_plugin_decl_registry::ArtifactInferenceServiceMetadata;
+use semio_framework_plugin_plugin_program::{Plugin, PluginCommandHandler};
+use semio_framework::kernel::{ActivationEvent, CapabilityRequest, CapabilityRequirement, QuotaSchema};
+use semio_framework::{AssetDeclaration, CommandDefinition, ExecutionMode, ExtensionPointDeclaration};
 use std::collections::{BTreeMap, BTreeSet};
 use std::marker::PhantomData;
 
-/// 📏️ Field-by-field `QuotaSchema` merge — `incoming`'s `Some` fields win, `None` fields defer to
-/// `base`. Mirrors `📓️design-abi.md` §5's own `QuotaTree` inherit rule (`None` at any level defers
-/// to the next), applied here across repeated `PluginBuilder::quota(..)` calls on one builder
-/// instance instead of across the os → plugin → extension → instance tree.
-fn merge_quota_schema(base: QuotaSchema, incoming: QuotaSchema) -> QuotaSchema {
-    QuotaSchema {
-        memory_bytes: incoming.memory_bytes.or(base.memory_bytes),
-        fuel_per_turn: incoming.fuel_per_turn.or(base.fuel_per_turn),
-        turn_deadline_ms: incoming.turn_deadline_ms.or(base.turn_deadline_ms),
-        tables: incoming.tables.or(base.tables),
-        mailbox_len: incoming.mailbox_len.or(base.mailbox_len),
-        message_bytes: incoming.message_bytes.or(base.message_bytes),
-        outstanding_requests: incoming.outstanding_requests.or(base.outstanding_requests),
-        timers: incoming.timers.or(base.timers),
-        storage_bytes: incoming.storage_bytes.or(base.storage_bytes),
-        network_bytes_per_min: incoming.network_bytes_per_min.or(base.network_bytes_per_min),
-        ui_nodes: incoming.ui_nodes.or(base.ui_nodes),
-        patch_bytes: incoming.patch_bytes.or(base.patch_bytes),
-        patch_hz: incoming.patch_hz.or(base.patch_hz),
-        blob_resident_bytes: incoming.blob_resident_bytes.or(base.blob_resident_bytes),
-        gpu_ms_per_frame: incoming.gpu_ms_per_frame.or(base.gpu_ms_per_frame),
-        background_ms_per_min: incoming.background_ms_per_min.or(base.background_ms_per_min),
-        log_bytes_per_min: incoming.log_bytes_per_min.or(base.log_bytes_per_min),
-    }
-}
 
 /// 🏷️ Builder has plugin id only — next call must be `.label(...)`.
 pub struct NeedsLabel;
@@ -54,19 +29,19 @@ pub struct Ready;
 /// `Box<dyn Fn() -> Box<dyn PluginApp> + Send>`'s capturing closures throughout with the same
 /// `AppFactory<PA>` (definition + bare fn pointer) shape `crate::declarations::SurfaceDeclaration`
 /// already uses (see that struct's doc for why a bare, non-capturing `fn` cannot close over `def`).
-pub struct PluginBuilder<State, PA: PluginApp = crate::plugin_app::NoPluginApp> {
-    plugin_id: String,
-    package_id: Option<String>,
-    label: Option<String>,
-    version: Option<String>,
+pub struct PluginBuilder<State, PA: PluginApp = semio_framework_plugin_reactor_app::NoPluginApp> {
+    pub plugin_id: String,
+    pub package_id: Option<String>,
+    pub label: Option<String>,
+    pub version: Option<String>,
     artifacts: Vec<ArtifactDeclaration>,
     /// 🏠️ Declarations of kinds another package owns, hosted in this plugin's guest — see [`Self::host_artifact`].
     hosted_artifacts: Vec<ArtifactDeclaration>,
     /// 📚️ Shared schema documents of a plugin submodule — see [`Self::schema_documents`].
-    schema_documents: Vec<(String, ::semio_framework_schema_registry::ScopeSchemaExports)>,
-    artifact_definitions: Vec<crate::artifact_identity::ArtifactDefinition>,
-    pub(crate) capabilities: Vec<CapabilityRequirement>,
-    commands: Vec<(CommandDefinition, PluginCommandHandler)>,
+    pub schema_documents: Vec<(String, ::semio_framework_schema_registry::ScopeSchemaExports)>,
+    pub artifact_definitions: Vec<semio_framework_plugin_identity::ArtifactDefinition>,
+    pub capabilities: Vec<CapabilityRequirement>,
+    pub commands: Vec<(CommandDefinition, PluginCommandHandler)>,
     /// 💼️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-jobs-runtime, design-abi.md §4/§6) —
     /// `.job(kind, factory)` declarations, folded into
     /// `⚛️reactor/💼️jobs::register_bounded_job_kind` at the end of `try_build()` ("registered on
@@ -74,43 +49,38 @@ pub struct PluginBuilder<State, PA: PluginApp = crate::plugin_app::NoPluginApp> 
     /// on `Plugin` itself — the job registry is a thread-local keyed by `kind`, not a
     /// `Plugin`-scoped table, since `step_job`/`start_job` never carry a plugin id to look one up
     /// by.
-    jobs: Vec<(&'static str, crate::reactor::jobs::BoundedJobFactory)>,
+    pub jobs: Vec<(&'static str, semio_framework_plugin_reactor_jobs::BoundedJobFactory)>,
     /// 🧭️ Metadata-only routes whose executable is an ActionBus-owned cold job rather than a
     /// synchronous `ArtifactInferenceService` facade.
-    routed_inferences: Vec<ArtifactInferenceServiceMetadata>,
-    artifact_kinds: Vec<semio_framework::ArtifactKindSpec>,
-    host_media_handlers: Vec<HostMediaHandlerDeclaration>,
-    flow_extensions: Vec<FlowExtensionDeclaration>,
-    foreign_document_codecs: Vec<crate::artifact_declaration::DocumentCodecSpec>,
+    pub routed_inferences: Vec<ArtifactInferenceServiceMetadata>,
+    pub artifact_kinds: Vec<semio_framework::ArtifactKindSpec>,
+    pub host_media_handlers: Vec<HostMediaHandlerDeclaration>,
+    pub flow_extensions: Vec<FlowExtensionDeclaration>,
+    pub foreign_document_codecs: Vec<semio_framework_plugin_decl_registry::DocumentCodecSpec>,
     /// 🔗️ Direct plugin dependencies — contract freeze §3/§4; gate-checked in `try_build` via
     /// `crate::app::register_contributions`.
-    dependencies: Vec<semio_framework::PluginDependency>,
+    pub dependencies: Vec<semio_framework::PluginDependency>,
     /// 🗂️ Contributions onto artifact kinds owned by a dependency — resolved against `plugin_id` in
     /// `try_build`, once it is known to be final.
-    contributions: Vec<ArtifactContribution>,
-    topic_contributions: Vec<semio_framework::TopicContribution>,
+    pub contributions: Vec<ArtifactContribution>,
+    pub topic_contributions: Vec<semio_framework::TopicContribution>,
     /// 📖️ One non-capturing `(artifact_schema, kinds)` provider per `.document_app_mutation_roster::
     /// <A>()`/`.viewer_mutation_roster::<V>()`/`.editor_mutation_roster::<E>()` call — committed into
     /// the process-wide owner mutation roster by `try_build`.
     owner_mutation_rosters: Vec<semio_framework_plugin_ownership::store_lifecycle::OwnerMutationRoster>,
-    app_defs: Vec<(App, crate::plugin_program::AppFactory<PA>)>,
-    app_schema_descriptors: Vec<fn() -> Option<::semio_framework_schema_registry::AppSchemaDescriptor>>,
+    pub app_defs: Vec<(App, semio_framework_plugin_decl_registry::plugin_program::AppFactory<PA>)>,
+    pub app_schema_descriptors: Vec<fn() -> Option<::semio_framework_schema_registry::AppSchemaDescriptor>>,
     document_app_ids: Vec<String>,
     /// 🌳️ Ticket 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM W1-C — the new declaration tree,
     /// walked by `.declare_artifact(...)`/`try_build()` alongside (never instead of) `artifacts`
     /// above, which stays bound to the OLD `ArtifactDeclaration` type (debt D1).
-    declared_artifacts: Vec<crate::declarations::ArtifactDeclaration<PA>>,
+    declared_artifacts: Vec<semio_framework_plugin_decl_registry::declarations::ArtifactDeclaration<PA>>,
     /// 🚀️ Ticket 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME E2 (`📓️design-abi.md` §3) —
     /// `.activation(..)`/`.extension_point(..)`/`.requests(..)`/`.quota(..)`/`.execution(..)`/
     /// `.asset(..)`'s own storage, installed into `plugin_runtime::PluginDescriptorExtras` at the
     /// end of `try_build()` for `describe::describe_plugin()` to read — see that install call's own
     /// doc for why this is a side channel rather than new `Plugin`/`PluginManifest` fields.
-    activation_events: Vec<ActivationEvent>,
-    capability_requests: Vec<CapabilityRequest>,
-    extension_points: Vec<ExtensionPointDeclaration>,
-    execution: ExecutionMode,
-    quotas: QuotaSchema,
-    assets: Vec<AssetDeclaration>,
+    descriptor: PluginDescriptorRegistration,
     _state: PhantomData<State>,
 }
 
@@ -142,12 +112,7 @@ impl<PA: PluginApp> PluginBuilder<NeedsLabel, PA> {
             app_schema_descriptors: Vec::new(),
             document_app_ids: Vec::new(),
             declared_artifacts: Vec::new(),
-            activation_events: Vec::new(),
-            capability_requests: Vec::new(),
-            extension_points: Vec::new(),
-            execution: ExecutionMode::default(),
-            quotas: QuotaSchema::default(),
-            assets: Vec::new(),
+            descriptor: PluginDescriptorRegistration::default(),
             _state: PhantomData,
         }
     }
@@ -179,12 +144,7 @@ impl<PA: PluginApp> PluginBuilder<NeedsLabel, PA> {
             app_schema_descriptors: self.app_schema_descriptors,
             document_app_ids: self.document_app_ids,
             declared_artifacts: self.declared_artifacts,
-            activation_events: self.activation_events,
-            capability_requests: self.capability_requests,
-            extension_points: self.extension_points,
-            execution: self.execution,
-            quotas: self.quotas,
-            assets: self.assets,
+            descriptor: self.descriptor,
             _state: PhantomData,
         }
     }
@@ -218,12 +178,7 @@ impl<PA: PluginApp> PluginBuilder<NeedsVersion, PA> {
             app_schema_descriptors: self.app_schema_descriptors,
             document_app_ids: self.document_app_ids,
             declared_artifacts: self.declared_artifacts,
-            activation_events: self.activation_events,
-            capability_requests: self.capability_requests,
-            extension_points: self.extension_points,
-            execution: self.execution,
-            quotas: self.quotas,
-            assets: self.assets,
+            descriptor: self.descriptor,
             _state: PhantomData,
         }
     }
@@ -268,7 +223,7 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
     }
 
     /// 🧾️ Registers one definition-only artifact through the same typed preflight registry.
-    pub fn artifact_definition(mut self, definition: crate::artifact_identity::ArtifactDefinition) -> Self {
+    pub fn artifact_definition(mut self, definition: semio_framework_plugin_identity::ArtifactDefinition) -> Self {
         self.artifact_definitions.push(definition);
         self
     }
@@ -279,7 +234,7 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
     /// both types share the bare name `ArtifactDeclaration` at their own module scope. `try_build()`
     /// walks every declared tree and registers it atomically (preflight across every channel, then
     /// commit), additive alongside every old registration path — see `crate::declarations`.
-    pub fn declare_artifact(mut self, declaration: crate::declarations::ArtifactDeclaration<PA>) -> Self {
+    pub fn declare_artifact(mut self, declaration: semio_framework_plugin_decl_registry::declarations::ArtifactDeclaration<PA>) -> Self {
         self.declared_artifacts.push(declaration);
         self
     }
@@ -310,7 +265,7 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
     /// effect names. `try_build()` folds every declared entry into
     /// `⚛️reactor/💼️jobs::register_bounded_job_kind` at bundle-install time — see that field's own
     /// doc comment for why the registry lives there rather than on `Plugin`.
-    pub fn job(mut self, kind: &'static str, factory: crate::reactor::jobs::BoundedJobFactory) -> Self {
+    pub fn job(mut self, kind: &'static str, factory: semio_framework_plugin_reactor_jobs::BoundedJobFactory) -> Self {
         self.jobs.push((kind, factory));
         self
     }
@@ -345,7 +300,7 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
     where
         A::Mutation: Sync,
     {
-        self.foreign_document_codecs.push(crate::artifact_declaration::DocumentCodecSpec::foreign::<A>(schema));
+        self.foreign_document_codecs.push(semio_framework_plugin_decl_registry::DocumentCodecSpec::foreign::<A>(schema));
         self
     }
 
@@ -390,19 +345,19 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
     /// `crate::declarations::editor_surface`'s inner `factory` uses.
     pub fn document_app<A: ArtifactApp>(mut self, app: App) -> Self
     where
-        PA: From<crate::artifact_instance::VcsArtifactApp<A>>,
+        PA: From<semio_framework_plugin_instance_app::VcsArtifactApp<A>>,
     {
         fn app_schema<A: ArtifactApp>() -> Option<::semio_framework_schema_registry::AppSchemaDescriptor> {
             ::semio_framework_async::poll::resolve_ready(A::app_schema())
         }
-        fn factory<A: ArtifactApp, PA: PluginApp + From<crate::artifact_instance::VcsArtifactApp<A>>>(def: &semio_framework::AppDefinition, actor: protocol::ActorId, mounted_policy: crate::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> PA {
-            PA::from(::semio_framework_async::poll::resolve_ready(crate::artifact_instance::VcsArtifactApp::with_registry(A::default(), crate::window_kits::AppActionRegistry::from_definition(def), actor, mounted_policy, identity)))
+        fn factory<A: ArtifactApp, PA: PluginApp + From<semio_framework_plugin_instance_app::VcsArtifactApp<A>>>(def: &semio_framework::AppDefinition, actor: protocol::ActorId, mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> PA {
+            PA::from(::semio_framework_async::poll::resolve_ready(semio_framework_plugin_instance_app::VcsArtifactApp::with_registry(A::default(), semio_framework_plugin_window_kits::AppActionRegistry::from_definition(def), actor, mounted_policy, identity)))
         }
         let mut app = app;
-        crate::declarations::stamp_fault_notices::<A>(&mut app.definition);
+        semio_framework_plugin_decl_registry::declarations::stamp_fault_notices::<A>(&mut app.definition);
         let definition = app.definition.clone();
         self.document_app_ids.push(definition.id.clone());
-        self.app_defs.push((app, crate::plugin_program::AppFactory { definition, create: factory::<A, PA>, document_schema: A::DOCUMENT_SCHEMA, codec: crate::surface_contract::artifact_codec_table::<A>() }));
+        self.app_defs.push((app, semio_framework_plugin_decl_registry::plugin_program::AppFactory { definition, create: factory::<A, PA>, document_schema: A::DOCUMENT_SCHEMA, codec: semio_framework_plugin_decl_surface::artifact_codec_table::<A>() }));
         self.app_schema_descriptors.push(app_schema::<A>);
         self
     }
@@ -455,26 +410,26 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
     /// 🔒️ Contract §2.3 clause 4 — a viewer's document store attaches Read only, never Write.
     pub fn viewer<V>(mut self, mut def: semio_framework::AppDefinition) -> Self
     where
-        V: crate::surface_contract::ArtifactViewer,
-        PA: From<crate::artifact_instance::VcsArtifactApp<crate::surface_contract::ViewerApp<V>, V::Members>>,
+        V: semio_framework_plugin_decl_surface::ArtifactViewer,
+        PA: From<semio_framework_plugin_instance_app::VcsArtifactApp<semio_framework_plugin_decl_surface::ViewerApp<V>, V::Members>>,
     {
         use semio_framework::kernel::{ArtifactKind, Rights, Scope};
-        fn app_schema<V: crate::surface_contract::ArtifactViewer>() -> Option<::semio_framework_schema_registry::AppSchemaDescriptor> {
+        fn app_schema<V: semio_framework_plugin_decl_surface::ArtifactViewer>() -> Option<::semio_framework_schema_registry::AppSchemaDescriptor> {
             V::app_schema()
         }
-        fn factory<V, PA>(def: &semio_framework::AppDefinition, actor: protocol::ActorId, mounted_policy: crate::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> PA
+        fn factory<V, PA>(def: &semio_framework::AppDefinition, actor: protocol::ActorId, mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> PA
         where
-            V: crate::surface_contract::ArtifactViewer,
-            PA: PluginApp + From<crate::artifact_instance::VcsArtifactApp<crate::surface_contract::ViewerApp<V>, V::Members>>,
+            V: semio_framework_plugin_decl_surface::ArtifactViewer,
+            PA: PluginApp + From<semio_framework_plugin_instance_app::VcsArtifactApp<semio_framework_plugin_decl_surface::ViewerApp<V>, V::Members>>,
         {
-            PA::from(::semio_framework_async::poll::resolve_ready(crate::artifact_instance::VcsArtifactApp::<crate::surface_contract::ViewerApp<V>, V::Members>::with_registry(crate::surface_contract::ViewerApp::<V>::default(), crate::window_kits::AppActionRegistry::from_definition(def), actor, mounted_policy, identity)))
+            PA::from(::semio_framework_async::poll::resolve_ready(semio_framework_plugin_instance_app::VcsArtifactApp::<semio_framework_plugin_decl_surface::ViewerApp<V>, V::Members>::with_registry(semio_framework_plugin_decl_surface::ViewerApp::<V>::default(), semio_framework_plugin_window_kits::AppActionRegistry::from_definition(def), actor, mounted_policy, identity)))
         }
         if def.io.artifact_schema.is_empty() {
             def.io.artifact_schema = V::DOCUMENT_SCHEMA.to_string();
         }
-        crate::declarations::stamp_fault_notices::<crate::surface_contract::ViewerApp<V>>(&mut def);
+        semio_framework_plugin_decl_registry::declarations::stamp_fault_notices::<semio_framework_plugin_decl_surface::ViewerApp<V>>(&mut def);
         let app = App { definition: def.clone(), examples: Vec::new() };
-        self.app_defs.push((app, crate::plugin_program::AppFactory { definition: def, create: factory::<V, PA>, document_schema: V::DOCUMENT_SCHEMA, codec: crate::surface_contract::artifact_codec_table::<crate::surface_contract::ViewerApp<V>>() }));
+        self.app_defs.push((app, semio_framework_plugin_decl_registry::plugin_program::AppFactory { definition: def, create: factory::<V, PA>, document_schema: V::DOCUMENT_SCHEMA, codec: semio_framework_plugin_decl_surface::artifact_codec_table::<semio_framework_plugin_decl_surface::ViewerApp<V>>() }));
         self.app_schema_descriptors.push(app_schema::<V>);
         self.capability(CapabilityRequirement { artifact: ArtifactKind::Document, rights: Rights::Read, scope: Scope::App })
     }
@@ -487,11 +442,11 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
     /// `.viewer::<V>(def)` alone, they just do not contribute a roster row.
     ///
     /// 🚫️async: E4 fn-pointer slot — see `document_app`'s `owner_mutation_roster` doc.
-    pub fn viewer_mutation_roster<V: crate::surface_contract::ArtifactViewer>(mut self) -> Self
+    pub fn viewer_mutation_roster<V: semio_framework_plugin_decl_surface::ArtifactViewer>(mut self) -> Self
     where
         V::Mutation: protocol::SemanticMutation<V::Snapshot>,
     {
-        fn owner_mutation_roster<V: crate::surface_contract::ArtifactViewer>() -> (&'static str, &'static [protocol::SemanticDescriptor], &'static [&'static str])
+        fn owner_mutation_roster<V: semio_framework_plugin_decl_surface::ArtifactViewer>() -> (&'static str, &'static [protocol::SemanticDescriptor], &'static [&'static str])
         where
             V::Mutation: protocol::SemanticMutation<V::Snapshot>,
         {
@@ -508,9 +463,9 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
     /// with this surface's dialect by `register_app_factory`, and every surface of that dialect
     /// (its viewer included) resolves them through `manifest::examples_for_app`, which feeds the
     /// navbar dropdown. A plugin does not pass the list.
-    pub fn editor<E: crate::surface_contract::ArtifactEditor>(self, def: semio_framework::AppDefinition) -> Self
+    pub fn editor<E: semio_framework_plugin_decl_surface::ArtifactEditor>(self, def: semio_framework::AppDefinition) -> Self
     where
-        PA: From<crate::artifact_instance::VcsArtifactApp<crate::surface_contract::EditorApp<E>, E::Members>>,
+        PA: From<semio_framework_plugin_instance_app::VcsArtifactApp<semio_framework_plugin_decl_surface::EditorApp<E>, E::Members>>,
     {
         self.editor_app::<E>(def, E::examples())
     }
@@ -524,26 +479,26 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
     /// empty, so an app that already set a different `io.artifact_schema` keeps its own choice.
     ///
     /// 🔒️ Contract §2.3 clause 4 — an editor's document store attaches both Read and Write.
-    fn editor_app<E: crate::surface_contract::ArtifactEditor>(mut self, mut def: semio_framework::AppDefinition, examples: Vec<crate::app_builder::ExampleSource>) -> Self
+    fn editor_app<E: semio_framework_plugin_decl_surface::ArtifactEditor>(mut self, mut def: semio_framework::AppDefinition, examples: Vec<semio_framework_plugin_app_builder::ExampleSource>) -> Self
     where
-        PA: From<crate::artifact_instance::VcsArtifactApp<crate::surface_contract::EditorApp<E>, E::Members>>,
+        PA: From<semio_framework_plugin_instance_app::VcsArtifactApp<semio_framework_plugin_decl_surface::EditorApp<E>, E::Members>>,
     {
         use semio_framework::kernel::{ArtifactKind, Rights, Scope};
-        fn app_schema<E: crate::surface_contract::ArtifactEditor>() -> Option<::semio_framework_schema_registry::AppSchemaDescriptor> {
+        fn app_schema<E: semio_framework_plugin_decl_surface::ArtifactEditor>() -> Option<::semio_framework_schema_registry::AppSchemaDescriptor> {
             E::app_schema()
         }
-        fn factory<E: crate::surface_contract::ArtifactEditor, PA: PluginApp + From<crate::artifact_instance::VcsArtifactApp<crate::surface_contract::EditorApp<E>, E::Members>>>(def: &semio_framework::AppDefinition, actor: protocol::ActorId, mounted_policy: crate::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> PA {
-            PA::from(::semio_framework_async::poll::resolve_ready(crate::artifact_instance::VcsArtifactApp::<crate::surface_contract::EditorApp<E>, E::Members>::with_registry(crate::surface_contract::EditorApp::<E>::default(), crate::window_kits::AppActionRegistry::from_definition(def), actor, mounted_policy, identity)))
+        fn factory<E: semio_framework_plugin_decl_surface::ArtifactEditor, PA: PluginApp + From<semio_framework_plugin_instance_app::VcsArtifactApp<semio_framework_plugin_decl_surface::EditorApp<E>, E::Members>>>(def: &semio_framework::AppDefinition, actor: protocol::ActorId, mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> PA {
+            PA::from(::semio_framework_async::poll::resolve_ready(semio_framework_plugin_instance_app::VcsArtifactApp::<semio_framework_plugin_decl_surface::EditorApp<E>, E::Members>::with_registry(semio_framework_plugin_decl_surface::EditorApp::<E>::default(), semio_framework_plugin_window_kits::AppActionRegistry::from_definition(def), actor, mounted_policy, identity)))
         }
         if def.io.artifact_schema.is_empty() {
             def.io.artifact_schema = E::DOCUMENT_SCHEMA.to_string();
         }
         if let Some(codec) = E::natural_file_codec() {
-            crate::app_contract::mount_natural_file_actions(&mut def, codec);
+            semio_framework_plugin_decl_app::mount_natural_file_actions(&mut def, codec);
         }
-        crate::declarations::stamp_fault_notices::<crate::surface_contract::EditorApp<E>>(&mut def);
+        semio_framework_plugin_decl_registry::declarations::stamp_fault_notices::<semio_framework_plugin_decl_surface::EditorApp<E>>(&mut def);
         let app = App { definition: def.clone(), examples };
-        self.app_defs.push((app, crate::plugin_program::AppFactory { definition: def, create: factory::<E, PA>, document_schema: E::DOCUMENT_SCHEMA, codec: crate::surface_contract::artifact_codec_table::<crate::surface_contract::EditorApp<E>>() }));
+        self.app_defs.push((app, semio_framework_plugin_decl_registry::plugin_program::AppFactory { definition: def, create: factory::<E, PA>, document_schema: E::DOCUMENT_SCHEMA, codec: semio_framework_plugin_decl_surface::artifact_codec_table::<semio_framework_plugin_decl_surface::EditorApp<E>>() }));
         self.app_schema_descriptors.push(app_schema::<E>);
         self.capability(CapabilityRequirement { artifact: ArtifactKind::Document, rights: Rights::Read, scope: Scope::App }).capability(CapabilityRequirement { artifact: ArtifactKind::Document, rights: Rights::Write, scope: Scope::App })
     }
@@ -551,11 +506,11 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
     /// 🗂️ Opt-in: registers `E`'s owner-mutation roster — see `viewer_mutation_roster`.
     ///
     /// 🚫️async: E4 fn-pointer slot — see `document_app`'s `owner_mutation_roster` doc.
-    pub fn editor_mutation_roster<E: crate::surface_contract::ArtifactEditor>(mut self) -> Self
+    pub fn editor_mutation_roster<E: semio_framework_plugin_decl_surface::ArtifactEditor>(mut self) -> Self
     where
         E::Mutation: protocol::SemanticMutation<E::Snapshot>,
     {
-        fn owner_mutation_roster<E: crate::surface_contract::ArtifactEditor>() -> (&'static str, &'static [protocol::SemanticDescriptor], &'static [&'static str])
+        fn owner_mutation_roster<E: semio_framework_plugin_decl_surface::ArtifactEditor>() -> (&'static str, &'static [protocol::SemanticDescriptor], &'static [&'static str])
         where
             E::Mutation: protocol::SemanticMutation<E::Snapshot>,
         {
@@ -569,19 +524,15 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
     //#region 🔖️Descriptor
     /// 🚀️ Declares one activation event — when the host should spin up an instance of this plugin
     /// (`📓️design-abi.md` §2/§3). Repeatable; idempotent for a byte-identical event.
-    pub fn activation(mut self, event: ActivationEvent) -> Self {
-        if !self.activation_events.contains(&event) {
-            self.activation_events.push(event);
-        }
+pub fn activation(mut self, event: ActivationEvent) -> Self {
+        self.descriptor.activation(event);
         self
     }
 
     /// 🧩️ Publishes one extension point other packages may attach to (`📓️design-abi.md` §5) —
     /// replaces the old Cargo `consumes` tag. Repeatable; idempotent for a byte-identical row.
-    pub fn extension_point(mut self, declaration: ExtensionPointDeclaration) -> Self {
-        if !self.extension_points.contains(&declaration) {
-            self.extension_points.push(declaration);
-        }
+pub fn extension_point(mut self, declaration: ExtensionPointDeclaration) -> Self {
+        self.descriptor.extension_point(declaration);
         self
     }
 
@@ -589,33 +540,29 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
     /// (`📓️design-abi.md` §5) — the NEW broker-scoped `kernel::CapabilityRequest`, not the older
     /// kernel-level `CapabilityRequirement` `.capability(..)` declares. Repeatable; idempotent for a
     /// byte-identical ask.
-    pub fn requests(mut self, request: CapabilityRequest) -> Self {
-        if !self.capability_requests.contains(&request) {
-            self.capability_requests.push(request);
-        }
+pub fn requests(mut self, request: CapabilityRequest) -> Self {
+        self.descriptor.requests(request);
         self
     }
 
     /// 📏️ Merges one resource ceiling into this plugin's own (`📓️design-abi.md` §5) — only
     /// `schema`'s `Some` fields override; repeated calls layer without clobbering fields a previous
     /// call already set (see `merge_quota_schema`).
-    pub fn quota(mut self, schema: QuotaSchema) -> Self {
-        self.quotas = merge_quota_schema(self.quotas, schema);
+pub fn quota(mut self, schema: QuotaSchema) -> Self {
+        self.descriptor.quota(schema);
         self
     }
 
     /// 🚦️ Sets how this plugin's actor runs — default `Isolated` (`📓️design-abi.md` §5).
-    pub fn execution(mut self, mode: ExecutionMode) -> Self {
-        self.execution = mode;
+pub fn execution(mut self, mode: ExecutionMode) -> Self {
+        self.descriptor.execution(mode);
         self
     }
 
     /// 📦️ Declares one asset bundled with this plugin, preloaded into `kernel::Event::InstanceOpen.
     /// assets` (`📓️design-abi.md` §2). Repeatable; idempotent for a byte-identical declaration.
-    pub fn asset(mut self, declaration: AssetDeclaration) -> Self {
-        if !self.assets.contains(&declaration) {
-            self.assets.push(declaration);
-        }
+pub fn asset(mut self, declaration: AssetDeclaration) -> Self {
+        self.descriptor.asset(declaration);
         self
     }
 
@@ -624,7 +571,7 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
     /// port installs them once the host delivered them with the instance open. Plugins whose guests link Canvas call it once.
     #[cfg(feature = "canvas-runtime-assets")]
     pub fn canvas_runtime_assets(mut self) -> Self {
-        semio_framework_canvas_assets::register_guest_asset_reader(crate::reactor::package_asset);
+        semio_framework_canvas_assets::register_guest_asset_reader(semio_framework_plugin_reactor_core::package_asset);
         for declaration in semio_framework_canvas_assets::guest_asset_declarations() {
             self = self.asset(AssetDeclaration {
                 name: declaration.name,
@@ -678,12 +625,7 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
             mut app_schema_descriptors,
             document_app_ids,
             declared_artifacts,
-            activation_events,
-            capability_requests,
-            extension_points,
-            execution,
-            quotas,
-            assets,
+            descriptor,
             _state: _,
         } = self;
         let label = label.ok_or_else(|| PluginAssemblyError::new("plugin-assembly.label", "typestate-ready builder has no label"))?;
@@ -699,14 +641,14 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
         {
             return Err(PluginAssemblyError::new("plugin-assembly.package-id", "component package identity must exactly match semio:<plugin-id> in canonical lowercase form"));
         }
-        crate::declarations::preflight_artifact_declarations(&plugin_id, &declared_artifacts)?;
-        let declared_registration = crate::declarations::project_artifact_declarations(&declared_artifacts);
+        semio_framework_plugin_extension::preflight_artifact_declarations(&plugin_id, &declared_artifacts)?;
+        let declared_registration = semio_framework_plugin_decl_registry::declarations::project_artifact_declarations(&declared_artifacts);
         app_defs.extend(declared_registration.app_defs);
         app_schema_descriptors.extend(declared_registration.app_schema_descriptors);
         capabilities.extend(declared_registration.capabilities);
         let mut definitions = ArtifactDefinitionRegistry::new();
         for definition in artifact_definitions {
-            crate::artifact_identity::preflight_artifact_identity(&plugin_id, definition.identity().as_str())?;
+            semio_framework_plugin_identity::preflight_artifact_identity(&plugin_id, definition.identity().as_str())?;
             definitions.register(definition).map_err(PluginAssemblyError::definition)?;
         }
         for declaration in &artifacts {
@@ -756,7 +698,7 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
                 app_schemas.push(descriptor);
             }
         }
-        let plan = crate::artifact_registration::ArtifactRegistrationPlan::from_declarations(&artifacts, &hosted_artifacts, app_schemas, &foreign_document_codecs, &plugin_id, host_media_handlers, flow_extensions, routed_inferences);
+        let plan = semio_framework_plugin_decl_registry::artifact_registration::ArtifactRegistrationPlan::from_declarations(&artifacts, &hosted_artifacts, app_schemas, &foreign_document_codecs, &plugin_id, host_media_handlers, flow_extensions, routed_inferences);
         let (mut runtime, registry_plan) = plan.into_runtime(definitions)?;
 
         let mut contribution_descriptors = Vec::with_capacity(contributions.len());
@@ -768,11 +710,11 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
             contributed_inference_services.extend(inference_services);
             contributed_mutation_runtime.extend(mutation_runtime);
         }
-        crate::artifact_registration::register_contributions(&plugin_id, &dependencies, &contribution_descriptors).map_err(|error| PluginAssemblyError::new("plugin-assembly.contribution-gate", error.to_string()))?;
+        semio_framework_plugin_decl_registry::artifact_registration::register_contributions(&plugin_id, &dependencies, &contribution_descriptors).map_err(|error| PluginAssemblyError::new("plugin-assembly.contribution-gate", error.to_string()))?;
         runtime.extend_contributions(contributed_inference_services, &owner_mutation_rosters, contributed_mutation_runtime)?;
 
-        crate::declarations::commit_artifact_declarations(&plugin_id, &declared_artifacts)?;
-        runtime.retain_document_bindings(crate::declarations::artifact_declaration_bindings(&plugin_id, &declared_artifacts));
+        semio_framework_plugin_extension::commit_artifact_declarations(&plugin_id, &declared_artifacts)?;
+        runtime.retain_document_bindings(semio_framework_plugin_decl_registry::declarations::artifact_declaration_bindings(&plugin_id, &declared_artifacts));
         runtime.share_schema_documents(schema_documents.into_iter().map(|(_, documents)| documents).collect());
         runtime.publish_declared_catalogs()?;
 
@@ -791,7 +733,7 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
             plugin = plugin.plugin_command(command, handler);
         }
         for (kind, factory) in jobs {
-            if !crate::reactor::jobs::register_bounded_job_kind(kind, factory){return Err(PluginAssemblyError::new("plugin-assembly.job-capacity","original job kind registry has no free declaration slot"))}
+            if !semio_framework_plugin_reactor_jobs::register_bounded_job_kind(kind, factory){return Err(PluginAssemblyError::new("plugin-assembly.job-capacity","original job kind registry has no free declaration slot"))}
         }
         for kind in artifact_kinds {
             plugin = plugin.artifact_kind(kind);
@@ -799,38 +741,20 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
         for (app, factory) in app_defs {
             plugin = plugin.register_app_factory(app, factory);
         }
-        if let Some(breach) = crate::artifact_registration::surface_dependency_breaches(&plugin.manifest).into_iter().next() {
+        if let Some(breach) = semio_framework_plugin_decl_registry::artifact_registration::surface_dependency_breaches(&plugin.manifest).into_iter().next() {
             return Err(PluginAssemblyError::new("plugin-assembly.surface-dependency-gate", breach));
         }
-        crate::artifact_registration::host_foreign_surface_kinds(&mut plugin.manifest);
+        semio_framework_plugin_decl_registry::artifact_registration::host_foreign_surface_kinds(&mut plugin.manifest);
         let assembly = semio_framework_schema_registry::assembly::begin().map_err(|error| PluginAssemblyError::new("plugin-assembly.unavailable", error.to_string()))?;
-        crate::artifact_registration::commit_artifact_registration_plan(&assembly, registry_plan)?;
-        Ok(plugin.with_descriptor_extras(crate::plugin_runtime::PluginDescriptorExtras { package_id, activation_events, capability_requests, extension_points, execution, quotas, assets }))
+        semio_framework_plugin_decl_registry::artifact_registration::commit_artifact_registration_plan(&assembly, registry_plan)?;
+        let PluginDescriptorParts{activation_events,capability_requests,extension_points,execution,quotas,assets}=descriptor.into_parts();
+        Ok(plugin.with_descriptor_extras(semio_framework_plugin_plugin_program::PluginDescriptorExtras { package_id, activation_events, capability_requests, extension_points, execution, quotas, assets }))
     }
 }
 
 //#region 🧪️DependencyContributionFixtureMount
-#[cfg(test)]
-#[path = "🧪️tests/🪪️artifact-admission/🦀️.rs"]
-mod artifact_admission_tests;
 
-#[cfg(test)]
-#[path = "🧪️tests/🔗️dependency-contribution/🦀️.rs"]
-mod dependency_fixture;
 //#endregion 🧪️DependencyContributionFixtureMount
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️plugin-builder-dependency/🦀️.rs"]
-mod plugin_builder_dependency_tests;
 
-/// 🧪️ Ticket 26/08/17/SHARED-PRESENCE-SESSION-COLORS-AND-UNIVERSAL-ARTIFACT-CREATION contract §C8.2 —
-/// `PluginBuilder::editor::<E>`/`viewer::<V>` stamp `def.io.artifact_schema` from `E::DOCUMENT_SCHEMA`/
-/// `V::DOCUMENT_SCHEMA` when the app left it empty, so "which document schema does this surface open"
-/// is schema-first instead of the `artifact_kinds[0].schema` convention.
-#[cfg(test)]
-#[path = "🧪️tests/🔬️schema-stamping/🦀️.rs"]
-mod schema_stamping_tests;
 
-#[cfg(test)]
-#[path = "🧪️tests/🧾️document-authority/🦀️.rs"]
-mod schema_document_authority_tests;

@@ -449,9 +449,3 @@ export function semioExtensionStoreVitePlugin<HttpServer>(options: { readonly in
 }
 //#endregion 🔌️ExtensionStoreVitePlugin
 
-//#region 🧪️Tests
-if (import.meta.vitest) {
-  const { registerTests1 } = await import("../🧪️tests/🧪️authored-extension-installation-identity/🟦️.ts");
-  await registerTests1(import.meta.vitest, { EXTENSION_COMPONENT_FILE, EXTENSION_INSTALL_PATH, EXTENSION_MANIFEST_ZIP_ENTRY_EMOJI, EXTENSION_PACKAGE_ENVELOPE_TOKEN, MODULE_EXTENSION_ROUTE, createExtensionStore, semioExtensionStoreVitePlugin, decodeOwnedZip, decodePackValue, existsSync, extensionPackageContentHash, installationDirectoryCollision, installationDirectoryEmoji, join, mkdtempSync, packExtensionPackage, readFileSync, rmSync, tmpdir, unpackExtensionPackage, wrapExtensionPackageEnvelope }, { directory: import.meta.dir, url: import.meta.url });
-}
-//#endregion 🧪️Tests

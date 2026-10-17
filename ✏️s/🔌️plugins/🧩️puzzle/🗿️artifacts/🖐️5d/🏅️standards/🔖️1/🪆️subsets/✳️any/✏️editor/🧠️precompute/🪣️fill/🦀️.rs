@@ -4,7 +4,8 @@
 
 use crate::editor::puzzle5d::modes::edit::tools::fill::TOOL_ID;
 use crate::editor::puzzle5d::precompute::{editor_part, puzzle3d_config, puzzle3d_object, puzzle3d_snapshot, puzzle3d_target_volume, puzzle5d_authored_kind_catalogs, Puzzle5dPlannerBoard, Puzzle5dPlannerToolRunJob};
-use crate::editor::puzzle5d::{Puzzle5dDocument, Puzzle5dPlayApp};
+use crate::editor::puzzle5d::interaction::Puzzle5dEditor;
+use crate::editor::puzzle5d::entities::Puzzle5dDocument;
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation;
 use semio_framework_plugin::{EditorApp, Fault, ToolRunJob, ToolRunJobRequest};
 use semio_s_artifact_puzzle_3d_editor_modes::tools::fill as fill3d;
@@ -15,16 +16,16 @@ use std::sync::Arc;
 //#region 🔖️Build
 /// 🧵️ Builds the fill run (`Run`) or finalize revalidation (`Revalidate`) job for the framework ledger; `None`
 /// for any other tool.
-pub fn build_run_job(request: ToolRunJobRequest<'_, EditorApp<Puzzle5dPlayApp>>) -> Result<Option<ToolRunJob>, Fault> {
+pub fn build_run_job<A: Puzzle5dEditor>(request: ToolRunJobRequest<'_, EditorApp<A>>) -> Result<Option<ToolRunJob>, Fault> {
     Ok(fill_run_job(request)?.map(|job| Box::new(job) as ToolRunJob))
 }
 
 /// 🧵️ The unboxed job behind [`build_run_job`].
-pub(crate) fn fill_run_job(request: ToolRunJobRequest<'_, EditorApp<Puzzle5dPlayApp>>) -> Result<Option<Puzzle5dPlannerToolRunJob>, Fault> {
+pub fn fill_run_job<A: Puzzle5dEditor>(request: ToolRunJobRequest<'_, EditorApp<A>>) -> Result<Option<Puzzle5dPlannerToolRunJob>, Fault> {
     if request.tool_id != TOOL_ID {
         return Ok(None);
     }
-    let document: Puzzle5dDocument = crate::editor::puzzle5d::puzzle5d_document_from_snapshot(request.snapshot.typed()).map_err(|error| Fault::from(format!("puzzle5d-fill-run-document: {error}")))?;
+    let document: Puzzle5dDocument = crate::editor::puzzle5d::entities::puzzle5d_document_from_snapshot(request.snapshot.typed()).map_err(|error| Fault::from(format!("puzzle5d-fill-run-document: {error}")))?;
     let provisional = puzzle3d_ops(request.provisional)?;
     let board = Puzzle5dPlannerBoard::new(&document, request.provisional)?;
     let snapshot = Arc::new(puzzle3d_snapshot(&document, puzzle5d_authored_kind_catalogs(&request.snapshot)?)?);
@@ -72,22 +73,20 @@ fn puzzle3d_ops(provisional: &[Puzzle5dMutation]) -> Result<Vec<Puzzle3dMutation
 
 /// 🧊️ One schema target volume as the editor's own document type — the same `serde_json` hop
 /// `editor_part` takes for a part, so the planner bridge reads one shape whichever side minted it.
-fn editor_target_volume(volume: &crate::Puzzle5dTargetVolume) -> Result<crate::editor::puzzle5d::Puzzle5dTargetVolume, Fault> {
-    <crate::editor::puzzle5d::Puzzle5dTargetVolume as semio_framework_value::FromValue>::from_value(semio_framework_value::ToValue::to_value(volume)).map_err(|error| Fault::from(format!("puzzle5d-planner-target-volume: {error}")))
+fn editor_target_volume(volume: &crate::standards::v1::subsets::any::schema::document_records::Puzzle5dTargetVolume) -> Result<crate::editor::puzzle5d::entities::Puzzle5dTargetVolume, Fault> {
+    <crate::editor::puzzle5d::entities::Puzzle5dTargetVolume as semio_framework_value::FromValue>::from_value(semio_framework_value::ToValue::to_value(volume)).map_err(|error| Fault::from(format!("puzzle5d-planner-target-volume: {error}")))
 }
 
 /// 📏️ A schema-side `Puzzle5dScale` as the planner's own scale union.
-fn puzzle3d_scale(scale: crate::Puzzle5dScale) -> semio_s_artifact_puzzle_3d_model::Puzzle3dScale {
+fn puzzle3d_scale(scale: crate::standards::v1::subsets::any::schema::document_records::Puzzle5dScale) -> semio_s_artifact_puzzle_3d_model::Puzzle3dScale {
     match scale {
-        crate::Puzzle5dScale::Uniform(factor) => semio_s_artifact_puzzle_3d_model::Puzzle3dScale::Uniform(factor),
-        crate::Puzzle5dScale::Vec3(axes) => semio_s_artifact_puzzle_3d_model::Puzzle3dScale::Vec3(axes),
+        crate::standards::v1::subsets::any::schema::document_records::Puzzle5dScale::Uniform(factor) => semio_s_artifact_puzzle_3d_model::Puzzle3dScale::Uniform(factor),
+        crate::standards::v1::subsets::any::schema::document_records::Puzzle5dScale::Vec3(axes) => semio_s_artifact_puzzle_3d_model::Puzzle3dScale::Vec3(axes),
     }
 }
 
 //#endregion 🔖️Build
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-pub(crate) mod tests;
+
 //#endregion 🧪️Tests

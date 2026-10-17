@@ -1,6 +1,6 @@
 //! 🎬️ Direct binary codec for `insert-media-annotation`.
 
-use crate::standards::v1_7::subsets::vt::schema::mutations::InsertMediaAnnotation;
+use crate::standards::v1_7::subsets::vt::schema::mutations::insert_media_annotation::InsertMediaAnnotation;
 
 //#region 🔖️Identity
 pub const TAG: u8 = 12;
@@ -21,7 +21,5 @@ pub fn decode(bytes: &[u8]) -> Result<InsertMediaAnnotation, String> {
 //#endregion 🔖️Codec
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

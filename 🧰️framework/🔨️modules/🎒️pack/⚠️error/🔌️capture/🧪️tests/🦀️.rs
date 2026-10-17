@@ -44,7 +44,6 @@ fn pre_reserved_transport_shared_cell_keeps_concrete_identity_category_retry_and
  drop(error);assert_eq!(releases.load(Ordering::SeqCst),0);
  drop(copy);assert_eq!(releases.load(Ordering::SeqCst),1);
  assert_eq!(admission.committed_bytes(),11+allocated);
- eprintln!("[DEBUG] native transport draft retained one concrete source in {allocated} physical cell bytes");
 }
 
 #[test]
@@ -84,5 +83,4 @@ fn provider_admission_refusals_prevent_io_and_unused_reserves_roll_back(){
  assert_eq!(undergrant.kind,ValueRefusalKind::InvariantViolated);assert_eq!(admission.committed_bytes(),0);
  let overgrant=reserve_with::<Sentinel,_,_>(&mut admission,PackTransportCategory::NativeIo,PackRetryDisposition::Never,|_,_|true,|storage|storage.try_reserve_exact(3).is_ok()).err().unwrap();
  assert_eq!(overgrant.kind,ValueRefusalKind::OwnershipLimit);assert_eq!(overgrant.allocated_bytes,0);assert!(overgrant.physical_bytes>=size*3);assert_eq!(admission.committed_bytes(),0);
- eprintln!("[DEBUG] native transport draft covered pre-operation admission, actual-capacity refusal and rollback");
 }

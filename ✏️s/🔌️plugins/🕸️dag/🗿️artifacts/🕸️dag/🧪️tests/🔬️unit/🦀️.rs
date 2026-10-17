@@ -1,4 +1,5 @@
 use super::*;
+use semio_s_artifact_stdio_semio_graph::schema::snapshot::SemioGraphSnapshot;
 
 #[semio_framework_async_macros::async_test]
 async fn artifact_kind_declares_the_graph_dag_component_kind() {

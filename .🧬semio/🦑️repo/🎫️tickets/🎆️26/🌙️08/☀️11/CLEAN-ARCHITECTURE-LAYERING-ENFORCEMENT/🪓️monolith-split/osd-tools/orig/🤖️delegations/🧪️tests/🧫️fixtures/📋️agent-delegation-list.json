@@ -1,0 +1,160 @@
+{
+  "schema": "semio.os.agent-delegation-list-vectors/v1",
+  "description": "GET /auth/agent-delegations?space=<id> answers -> the live agent principals a shell names in its agent-bridge offer scope: parseAgentDelegationListV1 (🤖️delegations/🟦️.ts; a malformed row is dropped, never the listing) followed by ShellHost's offer-scope filter (not revoked, expiresAtMs > nowMs), principal = agent:<delegationId>. Answered by the TypeScript law (🤖️AgentDelegations component tests) and the Rust twin's law (📇️directory/🔌️client unit tests, live_agent_principals).",
+  "cases": [
+    {
+      "name": "live rows name their agents in listing order",
+      "nowMs": 1000,
+      "body": {
+        "schema": "semio.hub.auth.agent-delegation-list/v1",
+        "delegations": [
+          {
+            "delegationId": "d-2",
+            "agentLabel": "agent d-2",
+            "spaceId": "space-a",
+            "audience": "edit",
+            "createdAtMs": 100,
+            "expiresAtMs": 5000,
+            "revoked": false
+          },
+          {
+            "delegationId": "d-1",
+            "agentLabel": "agent d-1",
+            "spaceId": "space-a",
+            "audience": "read",
+            "createdAtMs": 100,
+            "expiresAtMs": 5000,
+            "revoked": false
+          }
+        ]
+      },
+      "principals": [
+        "agent:d-2",
+        "agent:d-1"
+      ]
+    },
+    {
+      "name": "a revoked delegation names no agent",
+      "nowMs": 1000,
+      "body": {
+        "schema": "semio.hub.auth.agent-delegation-list/v1",
+        "delegations": [
+          {
+            "delegationId": "d-1",
+            "agentLabel": "agent d-1",
+            "spaceId": "space-a",
+            "audience": "edit",
+            "createdAtMs": 100,
+            "expiresAtMs": 5000,
+            "revoked": false
+          },
+          {
+            "delegationId": "d-2",
+            "agentLabel": "agent d-2",
+            "spaceId": "space-a",
+            "audience": "edit",
+            "createdAtMs": 100,
+            "expiresAtMs": 5000,
+            "revoked": true
+          }
+        ]
+      },
+      "principals": [
+        "agent:d-1"
+      ]
+    },
+    {
+      "name": "an expired delegation names no agent",
+      "nowMs": 5000,
+      "body": {
+        "schema": "semio.hub.auth.agent-delegation-list/v1",
+        "delegations": [
+          {
+            "delegationId": "d-1",
+            "agentLabel": "agent d-1",
+            "spaceId": "space-a",
+            "audience": "edit",
+            "createdAtMs": 100,
+            "expiresAtMs": 5000,
+            "revoked": false
+          },
+          {
+            "delegationId": "d-2",
+            "agentLabel": "agent d-2",
+            "spaceId": "space-a",
+            "audience": "edit",
+            "createdAtMs": 100,
+            "expiresAtMs": 5001,
+            "revoked": false
+          }
+        ]
+      },
+      "principals": [
+        "agent:d-2"
+      ]
+    },
+    {
+      "name": "a malformed row is dropped, never the listing",
+      "nowMs": 1000,
+      "body": {
+        "schema": "semio.hub.auth.agent-delegation-list/v1",
+        "delegations": [
+          {
+            "delegationId": "d-1",
+            "agentLabel": "agent d-1",
+            "spaceId": "space-a",
+            "audience": "admin",
+            "createdAtMs": 100,
+            "expiresAtMs": 5000,
+            "revoked": false
+          },
+          {
+            "delegationId": "d-2",
+            "agentLabel": "agent d-2",
+            "spaceId": "space-a",
+            "audience": "edit",
+            "createdAtMs": 1.5,
+            "expiresAtMs": 5000,
+            "revoked": false
+          },
+          {
+            "delegationId": "",
+            "agentLabel": "x",
+            "spaceId": "space-a",
+            "audience": "edit",
+            "createdAtMs": 100,
+            "expiresAtMs": 5000,
+            "revoked": false
+          },
+          {
+            "delegationId": "d-4",
+            "agentLabel": "line\nbreak",
+            "spaceId": "space-a",
+            "audience": "edit",
+            "createdAtMs": 100,
+            "expiresAtMs": 5000,
+            "revoked": false
+          },
+          {
+            "delegationId": "d-5",
+            "agentLabel": "agent d-5",
+            "spaceId": "space-a",
+            "audience": "edit",
+            "createdAtMs": 100,
+            "expiresAtMs": 5000,
+            "revoked": false
+          }
+        ]
+      },
+      "principals": [
+        "agent:d-5"
+      ]
+    },
+    {
+      "name": "a body that is not a listing names none",
+      "nowMs": 1000,
+      "bodyText": "<html>proxy error</html>",
+      "principals": []
+    }
+  ]
+}

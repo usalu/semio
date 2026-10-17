@@ -1,5 +1,5 @@
-import { buildBoxInteractionSpec } from "../../../🗿️artifact/🟦️.ts";
-import { preciseSpatialKernelMath } from "../../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🧮️preview/🟦️.ts";
+import { buildBoxInteractionSpec } from "../../../🗿️artifact/📚️interaction-catalog/🟦️.ts";
+import { preciseSpatialKernelMath } from "@semio-tech/s-spatial-kernel-ts/preview";
 import type { ActionsTestDependencies } from "../../🟦️.ts";
 import type { Vec3 } from "@semio-tech/framework/3d";
 

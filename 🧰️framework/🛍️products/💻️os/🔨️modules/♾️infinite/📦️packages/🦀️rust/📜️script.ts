@@ -6,7 +6,7 @@ import { join, resolve, relative } from "node:path";
 import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runRepositoryCargoTests } from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
 import { stageRepositoryArtifacts, withRepositoryArtifactDestinationV1 } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️.ts";
-import { FONT_ASSET, validateFontAsset } from "../../../../../../🔨️modules/🖼️canvas/🔤️fonts/🟦️.ts";
+import { FONT_ASSET, validateFontAsset } from "../../../../../../🔨️modules/🖼️canvas/📦️packages/🟦️typescript/🔤️fonts/🟦️.ts";
 
 import { withRepositoryCacheStoreV1 } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
 import { withArtifactScratchV1, withArtifactDestinationTaskV1 } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/💾️storage/🟦️.ts";
@@ -16,7 +16,7 @@ import { scriptInvocationEnvironment } from "../../../../../../🔨️modules/�
 import { readBuildMode } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 import { scriptCompilerAdmissionControlV1, acquireCompilerCapacityLeaseV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import { captureOwnedCommandResultV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️owned-execution/🟦️.ts";
-import { fontAssetPublicationRootV1 } from "../../../../../../🔨️modules/🖼️canvas/🔤️fonts/📦️publication/🟦️.ts";
+import { fontAssetPublicationRootV1 } from "../../../../../../🔨️modules/🖼️canvas/📦️packages/🟦️typescript/🔤️fonts/📦️publication/🟦️.ts";
 
 import fontStorageSchema from "../../🔤️fonts/👓️reading/🧬️schema/🔣️.json" with { type: "json" };
 const fontProtocol = fontStorageSchema.definitions.Protocol.const;
@@ -31,7 +31,7 @@ class FontsScript extends BundleScript {
     await withRepositoryCacheStoreV1(workspace, "products", this.invocation, phaseControl,products => withRepositoryCacheStoreV1(workspace, "diagnostics", this.invocation, products.control,diagnostics => withArtifactScratchV1({ workspace, invocation: this.invocation, storage: diagnostics.storage, control: diagnostics.control, phaseControl, request: { version: 1, mode, owner } }, destination => withArtifactDestinationTaskV1(destination, this.invocation, async sink => {
       const asset = join(sink.directory, FONT_ASSET);
       await withRepositoryPublishedCargoExecutableV1(manifest, FONT_TOOL + (process.platform === "win32" ? ".exe" : ""), workspace, mode, this.invocation, sink.control, async (artifact, control) => {
-        const environment = scriptInvocationEnvironment(this.invocation, { ...artifact.environment, ...sink.environment }), lease = await acquireCompilerCapacityLeaseV1({ directory: join(workspace, ".cache/b/l/m/data"), control, environment, requestedParallelism: 1 });
+        const environment = scriptInvocationEnvironment(this.invocation, { ...artifact.environment, ...sink.environment }), lease = await acquireCompilerCapacityLeaseV1({ directory: join(workspace, ".cache/b/l/m/data"), control, environment, request:{kind:"exact",parallelism:1} });
         try {
           const result = await captureOwnedCommandResultV1(artifact.path, [asset], ROOT, { control, env: environment, output: { maximumBytes: Math.min(1048576, authority.transport.maximumBytes), maximumLines: Math.min(65536, authority.transport.maximumLines) } });
           if (result.status !== 0 || result.signal !== null) throw Error("Font asset tool failed: " + result.stderr.slice(-65536));
@@ -41,7 +41,6 @@ class FontsScript extends BundleScript {
       if (!facts.isFile() || facts.isSymbolicLink() || facts.nlink !== 1 || facts.size > fontProtocol.maximumAssetBytes) throw Error("Finite physical font output required");
       const bytes = await readFile(asset, { signal: sink.control.signal }), count = validateFontAsset(bytes);
       await withRepositoryArtifactDestinationV1({ workspace, invocation: this.invocation, storage: products.storage, control: products.control, phaseControl: sink.control, directory: fontAssetPublicationRootV1(products.root, mode) }, target => stageRepositoryArtifacts(target, fontProtocol.owner, new Map([[FONT_ASSET, asset]])));
-      console.log(`[DEBUG] Staged ${count} bounded fonts (${bytes.byteLength} bytes) mode=${mode}`);
     }))));
   }
 }

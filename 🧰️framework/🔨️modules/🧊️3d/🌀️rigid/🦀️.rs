@@ -3,7 +3,9 @@
 //! used to reach for directly (`parry3d::na::{Vector3,Point3,UnitQuaternion,Quaternion,
 //! Isometry3}`). Mirrors `nalgebra`'s `rotation_between`/`Isometry3` semantics geometrically;
 //! pinned against `parry3d`'s `nalgebra` re-export as a dev-dependency oracle in
-//! `🧿️collision`'s test module (same crate, different file — Rust dev-deps are crate-wide).
+//! the separate `semio-framework-3d-collision` crate's test module, which owns that oracle.
+
+extern crate semio_framework_value_derive as value_derive;
 
 //#region 🔖️Vector3
 // 🧬️ `value_derive::{ToValue, FromValue}` additive (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS,
@@ -255,6 +257,7 @@ impl Isometry3 {
 }
 //#endregion 🔖️Isometry3
 
+
 #[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+#[path="🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;

@@ -1,4 +1,5 @@
 /** 🧫 The kernel module's public fixture entry: the language-neutral corpora its consumers read, exposed by name under one import so no consumer spells the owner's internal folders. */
+import { fixtureUrl } from "@semio-tech/framework/test/source-text";
 export const loadContentInputBuilderDocument = () => import("../../📤️return/📦️content/📥️input/🏗️builder/📜️contract/🔣️.json").then(module => module.default);
 export const loadContentInputBuilderFixture = () => import("../../📤️return/📦️content/📥️input/🏗️builder/🧪️tests/🧫️fixtures/🔣️.json").then(module => module.default);
 export const loadContentInputPayloadDocument = () => import("../../📤️return/📦️content/📥️input/📦️payload/📜️contract/🔣️.json").then(module => module.default);
@@ -9,10 +10,12 @@ export const loadContentInputAuthorityFixture = () => import("../../📤️retur
 export const loadKernelPollCompositionDocument = () => import("../../📥️poll/🏘️composition/📜️contract/🔣️.json").then(module => module.default);
 export const loadKernelPollCompositionFixture = () => import("../../📥️poll/🏘️composition/🧪️tests/🧫️fixtures/🔣️.json").then(module => module.default);
 export const loadKernelPollCompositionSchema = () => import("../../📥️poll/🏘️composition/🧬️schema/🔣️.json").then(module => module.default);
-export const videoRenderProgramFixtureUrl = new URL("./🎞️video-render-program/🔣️.json", import.meta.url);
+export const videoRenderProgramFixtureUrl = fixtureUrl(import.meta.url, "./🎞️video-render-program/🔣️.json");
 export { default as kernelDescriptorLoadFixture } from "./📇️descriptor-load/🔣️.json" with { type: "json" };
 export const loadKernelExternalSlotsFixture = () => import("./🧩️external-slots/🔣️.json").then(module => module.default);
 export const loadKernelHostSlotsFixture = () => import("./🧩️host-slots/🔣️.json").then(module => module.default);
 export { default as routerPluginFaultsFixture } from "./🧫️app-router-plugin-faults/🔣️.json" with { type: "json" };
 export { default as kernelHistoryPatchSchema } from "../../🧬️schema/🔣️history-patch/🔣️.json" with { type: "json" };
 export const loadKernelHistoryPatchSchema = () => import("../../🧬️schema/🔣️history-patch/🔣️.json").then(module => module.default);
+export const loadKernelSourceWatchFixture = () => import("./📡️source-watch.json").then(module => module.default);
+export const loadKernelSchema = () => import("../../🧬️schema/🔣️.json").then(module => module.default);

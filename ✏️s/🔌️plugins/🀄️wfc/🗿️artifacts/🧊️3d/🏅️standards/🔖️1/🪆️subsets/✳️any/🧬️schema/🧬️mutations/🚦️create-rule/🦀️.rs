@@ -2,7 +2,6 @@
 //! FINAL-state insertion index.
 
 use crate::diff::Wfc3dDiff;
-use crate::mutations::Wfc3dMutation;
 use crate::schema::snapshot::{GraphRule, Wfc3dSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -16,17 +15,23 @@ pub struct CreateRule {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn create_rule(index: usize, rule: GraphRule) -> Wfc3dMutation {
-    Wfc3dMutation::CreateRule(CreateRule { index, rule })
+pub fn create_rule<Op>(index: usize, rule: GraphRule) -> Op
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::create_rule::CreateRule>,
+{
+    Op::from(CreateRule { index, rule })
 }
 
-impl MutationKind<Wfc3dSnapshot, Wfc3dMutation> for CreateRule {
+impl<Op> MutationKind<Wfc3dSnapshot, Op> for CreateRule
+where
+    Op: protocol::Mutation<Wfc3dSnapshot, Diff = Wfc3dDiff> + From<CreateRule> + From<crate::standards::v1::subsets::any::schema::mutations::delete_rule::DeleteRule>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "rule", kind: "create-rule", record: "CreatedRule" };
 
     fn diff(&self, base: &Wfc3dSnapshot) -> protocol::MutationOutcome<Wfc3dDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Wfc3dSnapshot) -> Result<Vec<Wfc3dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Wfc3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

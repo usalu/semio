@@ -196,7 +196,6 @@ fn validation_same_parameter_retains_all_original_adaptive_passes_and_verdict() 
     let parameter = probe["worstParameter"].as_f64().unwrap();
     assert!(verdict.message.starts_with(&format!("pcurve and 3D curve disagree by {deviation} at s={parameter} ")), "{verdict:?}");
     assert_eq!(samples, probe["totalBodySamples"].as_u64().unwrap() as usize);
-    eprintln!("[DEBUG] original adaptive same-parameter samples={samples} worstDeviation={deviation} worstParameter={parameter} maximumPerTurn=1");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -308,7 +307,6 @@ fn validation_cold_planning_collects_original_ids_only_after_grants() {
     assert_eq!(serde_json::to_value(&codes).unwrap(), fixture["expected"]["issueCodes"]);
     let volume = mass_properties::solid_signed_volume(&body, solid, 1e-3).unwrap();
     assert!((volume - fixture["expected"]["volume"].as_f64().unwrap()).abs() < 1e-10);
-    eprintln!("[DEBUG] cold validation original volume={volume} issues={}", issues.len());
 }
 
 
@@ -333,7 +331,6 @@ fn validation_loop_probe_spends_only_the_original_granted_coedge_work() {
     }
     assert_eq!(probes, fixture["expected"]["faces"].as_u64().unwrap() as usize * 3);
     assert!(job.run_to_completion(&body).is_empty());
-    eprintln!("[DEBUG] original validation loop probes={probes} maximumPerTurn={maximum}");
 }
 
 #[test]
@@ -357,7 +354,6 @@ fn validation_valence_spends_only_the_original_granted_coedge_work() {
     }
     assert_eq!(probes, fixture["expected"]["edges"].as_u64().unwrap() as usize * fixture["expected"]["faces"].as_u64().unwrap() as usize * 3);
     assert!(job.run_to_completion(&body).is_empty());
-    eprintln!("[DEBUG] original validation valence probes={probes} maximumPerTurn={maximum}");
 }
 
 #[test]
@@ -381,7 +377,6 @@ fn validation_pcurve_presence_spends_only_the_original_granted_coedge_work() {
     }
     assert_eq!(probes, fixture["expected"]["faces"].as_u64().unwrap() as usize * 3);
     assert!(job.run_to_completion(&body).is_empty());
-    eprintln!("[DEBUG] original validation pcurve presence probes={probes} maximumPerTurn={maximum}");
 }
 
 #[test]
@@ -405,7 +400,6 @@ fn validation_tolerance_spends_only_the_original_granted_containment_work() {
     }
     assert_eq!(probes, fixture["expected"]["edges"].as_u64().unwrap() as usize * 2 + fixture["expected"]["faces"].as_u64().unwrap() as usize * 3);
     assert!(job.run_to_completion(&body).is_empty());
-    eprintln!("[DEBUG] original validation tolerance probes={probes} maximumPerTurn={maximum}");
 }
 
 #[test]
@@ -429,7 +423,6 @@ fn validation_same_parameter_spends_only_the_original_granted_geometry_sample() 
     }
     assert_eq!(samples, fixture["expected"]["faces"].as_u64().unwrap() as usize * 3 * (fixture["budget"]["sameParameterBaseSamples"].as_u64().unwrap() as usize + 1));
     assert!(job.run_to_completion(&body).is_empty());
-    eprintln!("[DEBUG] original validation same-parameter samples={samples} maximumPerTurn={maximum}");
 }
 
 #[test]
@@ -460,7 +453,7 @@ fn original_validation_planning_quotes_actual_backing_before_entity_copy() {
         if stop.is_null(){assert_eq!(job.edges.len(),fixture["expected"]["edges"].as_u64().unwrap()as usize*count);assert_eq!(job.faces.len(),fixture["expected"]["faces"].as_u64().unwrap()as usize*count);assert_eq!(job.shells.len(),count);assert!(job.edges.iter().copied().eq(body.edges.iter().map(|(id,_)|id)));assert!(job.faces.iter().copied().eq(body.faces.iter().map(|(id,_)|id)));for shell in job.shells.iter(){assert_eq!(shell.faces,body.shells.get(shell.shell).unwrap().faces);}assert!(reserves>0&&copies>0);}
         let edge_pointer=job.edges.as_ptr();let(mut closing,heap)=observe(||ControlledRetirement::new(job).unwrap_or_else(|_|panic!("original validation planning close")));assert_eq!(heap,(0,0));assert_eq!(closing.original().unwrap().edges.as_ptr(),edge_pointer);
         while !closing.terminal_is_empty(){let copy=closing.next_copy_byte_demand().unwrap();let demand=closing.selected_demand(copy).unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};let(step,heap)=observe(||closing.step(grant).unwrap());assert!(step.progress().fits(grant));assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));born+=heap.0;freed+=heap.1;}
-        let(_,heap)=observe(||drop(closing));assert_eq!(heap,(0,0));assert_eq!(born,freed);eprintln!("[DEBUG] Original validation planning sourceTetrahedra={count} stop={stop} sourcePointer=true turns={turns} deniedAxes={denials} reserves={reserves} copies={copies} born={born} released={freed} terminalDrop=0");
+        let(_,heap)=observe(||drop(closing));assert_eq!(heap,(0,0));assert_eq!(born,freed);
     }
     }
 }
@@ -487,7 +480,7 @@ fn original_validation_loop_frontier_quotes_source_and_diagnostic_events(){
         if stop.is_null(){assert_eq!(job.phase,BodyValidationPhase::EdgeValence);assert!(backing>0);if broken{let finding=job.issues.iter().next().unwrap();assert_eq!(job.issues.len(),1);assert_eq!(finding.entity,law["brokenNeighbor"]["entity"]);assert_eq!(finding.code,law["brokenNeighbor"]["code"]);assert_eq!(finding.message,law["brokenNeighbor"]["message"]);assert!(texts>0);}else{assert!(job.issues.is_empty());}}
         let pointer=job.ring.as_ptr();let(mut close,heap)=observe(||ControlledRetirement::new(job).unwrap_or_else(|_|panic!("original loop custody")));assert_eq!(heap,(0,0));assert_eq!(close.original().unwrap().ring.as_ptr(),pointer);
         while !close.terminal_is_empty(){let copy=close.next_copy_byte_demand().unwrap();let demand=close.selected_demand(copy).unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};let(step,heap)=observe(||close.step(grant).unwrap());assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));born+=heap.0;freed+=heap.1;}
-        let(_,heap)=observe(||drop(close));assert_eq!(heap,(0,0));assert_eq!(born,freed);eprintln!("[DEBUG] Original validation loops sourceTetrahedra={count} broken={broken} stop={stop} turns={turns} denials={denies} backingEvents={backing} textEvents={texts} born={born} released={freed} terminalDrop=0");
+        let(_,heap)=observe(||drop(close));assert_eq!(heap,(0,0));assert_eq!(born,freed);
     }}}
 }
 
@@ -512,7 +505,7 @@ fn original_validation_topology_frontier_quotes_each_probe_and_utf8_finding(){
   if stop.is_null(){if malformed{let missing=job.issues.iter().find(|i|i.code=="missing-pcurve").unwrap();assert_eq!(missing.entity,law["missingPcurve"]["entity"]);assert_eq!(missing.message,law["missingPcurve"]["message"]);let tolerance=job.issues.iter().find(|i|i.entity==law["tolerance"]["entity"]&&i.message==law["tolerance"]["message"]).unwrap();assert_eq!(tolerance.code,law["tolerance"]["code"]);assert!(utf8>0);}else{assert!(job.issues.is_empty());}}
   let(mut close,h)=observe(||ControlledRetirement::new(job).unwrap_or_else(|_|panic!("original topology custody")));assert_eq!(h,(0,0));
   while !close.terminal_is_empty(){let d=close.selected_demand(close.next_copy_byte_demand().unwrap()).unwrap();let g=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth};let(s,h)=observe(||close.step(g).unwrap());assert_eq!(h,(s.progress().retained_capacity_bytes,s.progress().released_bytes));born+=h.0;freed+=h.1;}
-  let(_,h)=observe(||drop(close));assert_eq!(h,(0,0));assert_eq!(born,freed);eprintln!("[DEBUG] Original topology malformed={malformed} stop={stop} turns={turns} denied={denials} utf8={utf8} born={born} released={freed} terminalDrop0");
+  let(_,h)=observe(||drop(close));assert_eq!(h,(0,0));assert_eq!(born,freed);
  }}
 }
 
@@ -542,6 +535,6 @@ fn original_validation_same_parameter_retains_scratch_samples_and_one_original_c
   semio_framework_async::poll::resolve_ready(caller.cancel().cancel());let close_policy=grant(&law["policy"]);let mut source=Some(job);
   let(r,h)=observe(||caller.turn(close_policy,|cx|{cx.consume_retained(Progress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);match ControlledRetirement::new(source.take().unwrap()){Ok(close)=>Ok(close),Err((error,original))=>{source=Some(original);Err(error.into())}}}));let mut close=r.unwrap();assert!(source.is_none());assert_eq!(h,(0,0));assert_eq!(caller.receipt(),Progress{copied_items:1,..Default::default()});
   while !close.terminal_is_empty(){let(r,h)=observe(||caller.turn(close_policy,|cx|{let g=cx.retained_grant();let d=close.selected_demand(g.maximum_copy_bytes)?;assert!(d.copy_bytes<=g.maximum_copy_bytes&&d.capacity_bytes<=g.maximum_capacity_bytes&&d.release_bytes<=g.maximum_release_bytes&&d.depth<=g.maximum_depth);cx.consume_fuel(1);let r=close.step(g).map_err(|error|OriginalTurnFailure::debit_original(error.with_retained_progress(close.step_progress()),cx))?.progress();cx.consume_retained(r)?;Ok(r)}));let r=r.unwrap();assert_eq!(r,caller.receipt());assert_eq!(h,(r.retained_capacity_bytes,r.released_bytes));}
-  let(_,h)=observe(||drop(close));assert_eq!(h,(0,0));let cumulative=caller.cumulative_receipt();let roots=caller.born_bytes();assert_eq!(cumulative.retained_capacity_bytes,cumulative.released_bytes+roots);let(released,h)=observe(||caller.retire(close_policy));assert_eq!(released,roots);assert_eq!(h,(0,roots));eprintln!("[DEBUG] original same-parameter body{width} malformed={malformed} stop={stop} samples={samples} events={events} denied={denied} SAME caller and actual scratch conservation/Drop0");
+  let(_,h)=observe(||drop(close));assert_eq!(h,(0,0));let cumulative=caller.cumulative_receipt();let roots=caller.born_bytes();assert_eq!(cumulative.retained_capacity_bytes,cumulative.released_bytes+roots);let(released,h)=observe(||caller.retire(close_policy));assert_eq!(released,roots);assert_eq!(h,(0,roots));
  }}}
 }

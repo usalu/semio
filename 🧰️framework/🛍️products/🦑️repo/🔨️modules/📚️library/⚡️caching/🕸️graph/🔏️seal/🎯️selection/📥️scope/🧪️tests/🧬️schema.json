@@ -1,0 +1,74 @@
+{
+  "$id": "semio:selected-task-control:v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "refusals",
+    "order",
+    "descriptorCancellation"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "refusals": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "kind",
+          "reads",
+          "planned",
+          "refused",
+          "exact"
+        ],
+        "properties": {
+          "kind": {
+            "enum": [
+              "copied",
+              "retired",
+              "cancelled"
+            ]
+          },
+          "reads": {
+            "const": 0
+          },
+          "planned": {
+            "const": 0
+          },
+          "refused": {
+            "const": true
+          },
+          "exact": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "order": {
+      "const": [
+        "accepted",
+        "reader-close",
+        "scope-drained"
+      ]
+    },
+    "descriptorCancellation": {
+      "const": {
+        "source": "pub fn exact_source(){}\n",
+        "expected": {
+          "opened": 1,
+          "closed": 1,
+          "exact": true,
+          "custody": {
+            "active": 0,
+            "unresolved": 0
+          }
+        }
+      }
+    }
+  }
+}

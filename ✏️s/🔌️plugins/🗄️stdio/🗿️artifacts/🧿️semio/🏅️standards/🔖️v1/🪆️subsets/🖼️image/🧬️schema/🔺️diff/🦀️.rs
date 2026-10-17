@@ -326,7 +326,7 @@ fn frames_inverse(base: &[SemioImageFrame], diff: &SemioImageFramesDiff) -> Semi
     inverse_indexed(base, diff, |item, d| d.inverse(item))
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn frames_absorb(d1: SemioImageFramesDiff, d2: SemioImageFramesDiff) -> SemioImageFramesDiff {
+pub fn frames_absorb(d1: SemioImageFramesDiff, d2: SemioImageFramesDiff) -> SemioImageFramesDiff {
     absorb_indexed(
         d1,
         d2,
@@ -521,7 +521,7 @@ impl DiffAlgebra<SemioImageSnapshot> for SemioImageDiff {
 //#region 🔖️Demo
 /// 🌱 Representative `SemioImageDiff` cases built declaratively (empty/no-op, every scalar with the `icc` tri-state and a frame row triple, a
 /// bare icc set) — single source of truth for `diff_grammar_conformance_law`/`protocol_walk_law` in `🎹️composer/🦀️.rs`.
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_diff_cases() -> Vec<SemioImageDiff> {
     let frames = SemioImageFramesDiff {

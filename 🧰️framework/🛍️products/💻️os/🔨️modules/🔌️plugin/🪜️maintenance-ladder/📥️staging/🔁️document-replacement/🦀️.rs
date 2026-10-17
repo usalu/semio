@@ -1,17 +1,33 @@
 //! 🫚️ Staged slice of the `document-replacement` band of the mounted artifact instance: its `instance-ladders` members (WP6 step S0 of the instance family).
-use super::*;
+use semio_framework_plugin_ownership::bounded_ownership::{ARTIFACT_LIVE_OUTPUT_SLOTS, ArtifactFixedRegistry, PluginLifecycleStep};
+use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use pack::snapshot::ArtifactPack;
+use semio_framework_plugin_decl_emission::Emit;
+use semio_framework::{Fault, FaultFrom};
+use std::future::Future;
+use semio_framework_plugin_instance_extension::InstanceExtension;
+use crate::ladder_bundle::{LadderCtx, LadderRef};
+use store::{MemberFactory, Mutation, SpaceMember};
+use protocol::OpText;
+use semio_framework_plugin_reactor_app::PluginApp;
+use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
+use semio_framework_value::{RetirementDemand, ValueError};
+use semio_framework_plugin_window_transient::window_transient::WindowTransientOwnerRegistry;
+use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
+use semio_framework_ui_contract::*;
 
 /// 🔁️ Shared document replacement invalidates concrete window transients and retains displaced owners.
 impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceExtension> LadderCtx<'ctx, A, M, X> {
     /// 🪟️ Preserves the caller's original full policy through every displaced document generation.
-    pub(crate) fn retire_document_windows_step(&mut self, grant: RetainedCloneGrant, closing: bool) -> Result<PluginLifecycleStep, Fault> {
+    pub fn retire_document_windows_step(&mut self, grant: RetainedCloneGrant, closing: bool) -> Result<PluginLifecycleStep, Fault> {
         let cursor = if closing { &mut self.close.close_window_retirement_cursor } else { &mut self.maintenance.maintenance_window_retirement_cursor };
         retire_document_window_registry_step(&mut self.stores.retired_window_transient_stores, cursor, grant, closing)
     }
 }
 
 impl<'v, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceExtension> LadderRef<'v, A, M, X> {
-    pub(crate) fn prepare_document_window_reset(&self) -> Result<WindowTransientOwnerRegistry, Fault> {
+    pub fn prepare_document_window_reset(&self) -> Result<WindowTransientOwnerRegistry, Fault> {
         if self.close.close_started {
             return Err(plugin_sdk_fault("a closing app cannot replace its document window owners"));
         }
@@ -25,14 +41,15 @@ impl<'v, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceEx
     }
 
     /// 📏️ Quotes the next displaced document window retirement under the same cursor [`Self::retire_document_windows_step`] advances.
-    pub(crate) fn document_windows_retirement_demands(&self, body: usize, closing: bool) -> Result<RetirementDemand, ValueError> {
+    pub fn document_windows_retirement_demands(&self, body: usize, closing: bool) -> Result<RetirementDemand, ValueError> {
         let cursor = if closing { self.close.close_window_retirement_cursor } else { self.maintenance.maintenance_window_retirement_cursor };
         retire_document_window_registry_demands(&self.stores.retired_window_transient_stores, cursor, body, closing)
     }
 }
 
 /// ♻️ Advances one displaced document's windows fairly even while another owner is blocked.
-pub(crate) fn retire_document_window_registry_step(registries: &mut ArtifactFixedRegistry<WindowTransientOwnerRegistry>, cursor: &mut usize, grant: RetainedCloneGrant, closing: bool) -> Result<PluginLifecycleStep, Fault> {
+#[doc(hidden)]
+pub fn retire_document_window_registry_step(registries: &mut ArtifactFixedRegistry<WindowTransientOwnerRegistry>, cursor: &mut usize, grant: RetainedCloneGrant, closing: bool) -> Result<PluginLifecycleStep, Fault> {
     let demand=retire_document_window_registry_demands(registries,*cursor,grant.maximum_copy_bytes,closing).map_err(|error|plugin_sdk_fault(error.into_message()))?;
     if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(PluginLifecycleStep::Progress(Default::default()));}
     let Some((index,generation))=registries.next_id_from(*cursor)else{
@@ -58,7 +75,8 @@ pub(crate) fn retire_document_window_registry_step(registries: &mut ArtifactFixe
 }
 
 /// 📏️ Borrows one original generation or its exact final empty registry allocation.
-pub(crate) fn retire_document_window_registry_demands(registries:&ArtifactFixedRegistry<WindowTransientOwnerRegistry>,cursor:usize,body:usize,closing:bool)->Result<RetirementDemand,ValueError>{
+#[doc(hidden)]
+pub fn retire_document_window_registry_demands(registries:&ArtifactFixedRegistry<WindowTransientOwnerRegistry>,cursor:usize,body:usize,closing:bool)->Result<RetirementDemand,ValueError>{
     if let Some((_,generation))=registries.next_id_from(cursor){let original=registries.get(generation).expect("selected original window transient generation remains owned");return if original.terminal_is_empty(){Ok(RetirementDemand{copy_bytes:size_of::<WindowTransientOwnerRegistry>(),depth:1,..Default::default()})}else{original.retirement_demands(body)};}
     let release_bytes=if closing{registries.empty_backing_byte_demand().unwrap_or(0)}else{0};
     Ok(RetirementDemand{release_bytes,depth:usize::from(release_bytes!=0),..Default::default()})

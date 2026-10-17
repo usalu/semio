@@ -3,12 +3,13 @@
 //! binds its input/abort actions to). The Utility Options every window exposes for the shared
 //! brush/fill utilities live in `☑️options/*`; genuinely per-window chrome lives under that window's
 //! own `☑️options/`.
+use crate::editor::puzzle5d::entities::puzzle5d_action;
 
 use crate::editor::puzzle5d::commands::engagement_submit::PUZZLE5D_ENGAGEMENT_VERBS;
 use crate::editor::puzzle5d::modes::edit::tools::fill;
-use crate::editor::puzzle5d::modes::edit::windows::{board2d, world3d};
+use crate::editor::puzzle5d::entities::{PUZZLE5D_BOARD_WINDOW_KIND_ID, PUZZLE5D_WORLD_WINDOW_KIND_ID};
 use crate::editor::puzzle5d::terminology::Puzzle5dLabels;
-use crate::editor::puzzle5d::{puzzle5d_action, Puzzle5dScene};
+use crate::editor::puzzle5d::view::Puzzle5dScene;
 use semio_framework_plugin::create_default_layout;
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::ModeDefinition;
@@ -28,14 +29,14 @@ pub fn definition() -> ModeDefinition {
 
 /// 🪟️ 2D-first 40/60 split — board pane on the left (diagram 40%), world pane on the right (scene 60%).
 pub fn layout() -> WindowLayout {
-    create_default_layout(&[board2d::WINDOW_KIND_ID.into(), world3d::WINDOW_KIND_ID.into()], "row", Some(&[40.0, 60.0]), Some(&["Puzzle 2D".into(), "Puzzle 3D".into()]))
+    create_default_layout(&[PUZZLE5D_BOARD_WINDOW_KIND_ID.into(), PUZZLE5D_WORLD_WINDOW_KIND_ID.into()], "row", Some(&[40.0, 60.0]), Some(&["Puzzle 2D".into(), "Puzzle 3D".into()]))
 }
 //#endregion 🔖️Definition
 
 //#region 🔖️Engagement
 /// 🧭️ Whether the engagement HUD should mark an active session for the given utility.
 fn puzzle5d_engagement_session_active(window: &str, active_utility: &str) -> bool {
-    if window == world3d::WINDOW_KIND_ID {
+    if window == PUZZLE5D_WORLD_WINDOW_KIND_ID {
         matches!(active_utility, "brush" | "fill" | "worldRelocate")
     } else {
         active_utility != "select"
@@ -77,7 +78,5 @@ pub fn puzzle5d_engagement(envelope: &Puzzle5dScene, window: &str, labels: &Puzz
 //#endregion 🔖️Engagement
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

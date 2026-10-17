@@ -1,6 +1,7 @@
 //! 🥶️ EN 1993 thin walled mutation leaves.
 
 //#region 🪢️Mounts
+#![allow(async_fn_in_trait)]
 #[path = "../➕️insert-cold-formed-member/🦀️.rs"]
 pub mod insert_cold_formed_member;
 #[path = "../➕️insert-plated-panel/🦀️.rs"]
@@ -21,7 +22,6 @@ pub mod update_plated_inputs;
 pub mod update_silo_shell_inputs;
 //#endregion 🪢️Mounts
 
-#![allow(async_fn_in_trait)]
 
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;

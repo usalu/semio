@@ -2,8 +2,14 @@
 //! TypeScript twin runs on the shared pixel corpus); a filter's inverse restores the exact prior image; a filter edited in
 //! history re-derives its pixels — and its downstream — from its base; the store folds it like the leaf.
 
-use super::*;
-use crate::paint_stroke::{paint_stroke, RasterBrush, RasterStrokePoint};
+use semio_s_artifact_raster_raster_mutations_pixels::paint_stroke::RasterSelectionSpan;
+use semio_s_artifact_raster_raster_diff::RasterDiff;
+use semio_s_artifact_raster_raster_mutations::RasterMutation;
+use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
+use semio_framework_pixels::editing::{PixelEditJob, PixelOperation};
+use semio_framework_pixels::RasterImage;
+use semio_s_artifact_raster_raster_mutations_pixels::apply_filter::*;
+use semio_s_artifact_raster_raster_mutations_pixels::paint_stroke::{paint_stroke, RasterBrush, RasterStrokePoint};
 use semio_s_artifact_raster_raster_mutations::inverse_raster_mutation;
 use semio_s_artifact_raster_raster_mutations::text::apply_raster_mutation;
 use semio_s_artifact_raster_raster_model::find_layer;

@@ -1,9 +1,9 @@
-use crate::editor::sequence::unit_tests::context::{dispatch, live_host_snapshot, new_app, new_app_with_registry_wired, select_steps};
-use crate::editor::sequence::SequenceCommand;
+use crate::editor_unit_tests::context::{dispatch, live_host_snapshot, new_app, new_app_with_registry_wired, select_steps};
+use crate::editor::sequence::retained::SequenceCommand;
 
-use super::add_step::AddStep;
-use super::delete_selection::DeleteSelection;
-use super::remove_step::RemoveStep;
+use crate::editor::sequence::commands::step::add_step::AddStep;
+use crate::editor::sequence::commands::step::delete_selection::DeleteSelection;
+use crate::editor::sequence::commands::step::remove_step::RemoveStep;
 
 #[semio_framework_async_macros::async_test]
 async fn add_step_command_appends_step() {

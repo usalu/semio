@@ -1,6 +1,6 @@
 //! 🫳️ Bake two adjacent normal-blend siblings into one undoable pixel layer.
 use crate::config::{RasterConfig, RasterConfigMutation};
-use semio_s_artifact_raster_raster_model::{find_layer, locate_layer, layer_node_id, layer_name, layer_visible, layer_blend_mode};
+use semio_s_artifact_raster_raster_model::{layer_node_id, layer_name};
 use semio_s_artifact_raster_raster_model::RasterLayerNode;
 use semio_s_artifact_raster_raster_mutations::RasterMutation;
 use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
@@ -13,24 +13,14 @@ use super::flatten_layers::{baked_layer,asset_keys_except};
 #[dsl(keyword="merge-down")]
 #[value(rename_all="camelCase")]
 pub struct MergeDown {pub layer_id:String}
-pub fn plan<'a>(document:&'a RasterSnapshot,layer_id:&str)->Result<(Option<String>,usize,&'a [RasterLayerNode]),Fault> {
-    if layer_id.trim().is_empty()||layer_id.chars().count()>128 {return Err(Fault::from("raster.merge-target-invalid"));}
-    let (parent,index)=locate_layer(&document.layers,layer_id).ok_or_else(||Fault::from("raster.merge-target-missing"))?;
-    if index==0 {return Err(Fault::from("raster.merge-no-lower-layer"));}
-    let siblings=match parent.as_deref().and_then(|id|find_layer(&document.layers,id)) {Some(RasterLayerNode::Group {children,..})=>children.as_slice(),_=>document.layers.as_slice()};
-    let pair=&siblings[index-1..=index];
-    if pair.iter().any(|layer|!layer_visible(layer)||layer_blend_mode(layer)!="normal"||matches!(layer,RasterLayerNode::Adjustment {..})) {return Err(Fault::from("raster.merge-backdrop-dependent"));}
-    for layer in pair {semio_s_artifact_raster_raster_model::require_layer_edit(&document.layers,layer_node_id(layer),true).map_err(Fault::from)?;}
-    Ok((parent,index-1,pair))
-}
 pub fn prepare(command:&MergeDown,document:&RasterSnapshot)->Result<RasterStackPreparation,Fault> {
-    let (_,_,layers)=plan(document,&command.layer_id)?;
+    let (_,_,layers)=crate::merge_down_plan(document,&command.layer_id)?;
     RasterStackPreparation::from_layers(document,layers).map_err(Fault::from)
 }
 pub fn publish(image:EncodedPngImage,origin:[f64;2],command:&MergeDown,document:&RasterSnapshot)->Result<Emit<RasterMutation,RasterConfigMutation>,Fault> {
     use semio_s_artifact_raster_raster_mutations_pixels::{add_layer_asset, remove_layer_asset};
     use semio_s_artifact_raster_raster_mutations_layers::{create_layer, delete_layer};
-    let (parent_id,index,layers)=plan(document,&command.layer_id)?;
+    let (parent_id,index,layers)=crate::merge_down_plan(document,&command.layer_id)?;
     let (mut layer,key,asset)=baked_layer(image,origin,layer_name(&layers[1]),"merge");
     if let RasterLayerNode::Pixel {id,..}=&mut layer {*id=command.layer_id.clone();}
     let ids:std::collections::BTreeSet<_>=layers.iter().map(layer_node_id).collect();
@@ -44,6 +34,3 @@ pub fn publish(image:EncodedPngImage,origin:[f64;2],command:&MergeDown,document:
     Ok(Emit::mutations(mutations))
 }
 pub fn handle(_payload:&MergeDown,_doc:&ArtifactView<'_,RasterSnapshot>,_cfg:&ConfigView<'_,RasterConfig>)->Result<Emit<RasterMutation,RasterConfigMutation>,Fault> {Err(Fault::from("raster.merge-requires-retained-work"))}
-#[cfg(test)]
-#[path="🧪️tests/🦀️.rs"]
-mod tests;

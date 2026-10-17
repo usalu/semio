@@ -119,16 +119,16 @@ fn the_thin_projections_equal_the_whole_inference() {
     use super::super::super::{curtain_layout, diagnostics, element_solids, opening_frames, plan_linework, quantities, spaces, stair_runs, storey_levels, wall_layout};
     for snapshot in [full(), decode(JOINS)] {
         let whole = ModelInference::infer(&snapshot).expect("infers");
-        assert_eq!(storey_levels::compute_storey_levels(&snapshot), whole.storey_levels);
-        assert_eq!(wall_layout::compute_wall_layout(&snapshot), whole.wall_layout);
-        assert_eq!(curtain_layout::compute_curtain_layout(&snapshot), whole.curtain_layout);
-        assert_eq!(stair_runs::compute_stair_runs(&snapshot), whole.stair_runs);
-        assert_eq!(spaces::compute_spaces(&snapshot), whole.spaces);
-        assert_eq!(opening_frames::compute_opening_frames(&snapshot), whole.opening_frames);
-        assert_eq!(element_solids::compute_element_solids(&snapshot), whole.element_solids);
-        assert_eq!(plan_linework::compute_plan_linework(&snapshot), whole.plan_linework);
-        assert_eq!(diagnostics::compute_diagnostics(&snapshot), whole.diagnostics);
-        assert_eq!(quantities::compute_quantities(&snapshot, &whole), whole.quantities);
+        assert_eq!(crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_storey_levels(&snapshot), whole.storey_levels);
+        assert_eq!(crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_wall_layout(&snapshot), whole.wall_layout);
+        assert_eq!(crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_curtain_layout(&snapshot), whole.curtain_layout);
+        assert_eq!(crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_stair_runs(&snapshot), whole.stair_runs);
+        assert_eq!(crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_spaces(&snapshot), whole.spaces);
+        assert_eq!(crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_opening_frames(&snapshot), whole.opening_frames);
+        assert_eq!(crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_element_solids(&snapshot), whole.element_solids);
+        assert_eq!(crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_plan_linework(&snapshot), whole.plan_linework);
+        assert_eq!(crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_diagnostics(&snapshot), whole.diagnostics);
+        assert_eq!(crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_quantities(&snapshot, &whole), whole.quantities);
     }
 }
 

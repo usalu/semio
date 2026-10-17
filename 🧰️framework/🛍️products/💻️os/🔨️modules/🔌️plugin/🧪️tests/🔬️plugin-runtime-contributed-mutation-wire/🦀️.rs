@@ -1,14 +1,16 @@
 mod contributed_mutation_wire_tests {
     use super::*;
-    use crate::contributed_mutation_wire::{AddValue, WireTestMutation, WireTestSnapshot};
+    use semio_framework_plugin_testing_fixtures::contributed_mutation_wire::mutations::add_value::AddValue;
+use semio_framework_plugin_testing_fixtures::contributed_mutation_wire::mutations::WireTestMutation;
+use semio_framework_plugin_testing_fixtures::contributed_mutation_wire::WireTestSnapshot;
     use pack::snapshot::ArtifactPack;
     use store::OpBinary;
 
     async fn commit_test_contribution(artifact_kind: &str, target_artifact_schema: &str, contributor: &str, delta: i32) -> String {
-        let contribution = crate::artifact_registration::ArtifactContribution::builder(artifact_kind).await.mutation::<WireTestSnapshot, WireTestMutation, AddValue>(target_artifact_schema, 1, 1).await.build();
+        let contribution = semio_framework_plugin_decl_registry::artifact_registration::ArtifactContribution::builder(artifact_kind).await.mutation::<WireTestSnapshot, WireTestMutation, AddValue>(target_artifact_schema, 1, 1).await.build();
         let (descriptor, _inferences, mutation_runtime) = contribution.resolve(contributor);
         let mutation_id = descriptor.mutations[0].mutation_id.clone();
-        crate::artifact_registration::commit_contributed_mutation_services(mutation_runtime).await.expect("commit contributed mutation services");
+        semio_framework_plugin_decl_registry::artifact_registration::commit_contributed_mutation_services(mutation_runtime).await.expect("commit contributed mutation services");
         let _ = delta;
         mutation_id
     }
@@ -16,15 +18,15 @@ mod contributed_mutation_wire_tests {
     #[semio_framework_async_macros::async_test]
     async fn artifact_mutation_plan_rejects_a_mismatched_artifact_kind() {
         let mutation_id = commit_test_contribution("s.wiretest.kind-mismatch", "wiretest.kind-mismatch.document", "wiretest-contributor-a", 5).await;
-        let payload = crate::artifact_registration::encode_contributed_wire(&AddValue { delta: 5 }).await;
-        let request = crate::artifact_registration::WireArtifactMutationPlanRequest { artifact_kind: "s.wiretest.wrong-kind".into(), mutation_id, revision: 7, generation: 3, snapshot_pack: WireTestSnapshot { value: 10 }.encode_pack(), payload };
+        let payload = semio_framework_plugin_decl_registry::artifact_registration::encode_contributed_wire(&AddValue { delta: 5 }).await;
+        let request = semio_framework_plugin_decl_registry::artifact_registration::WireArtifactMutationPlanRequest { artifact_kind: "s.wiretest.wrong-kind".into(), mutation_id, revision: 7, generation: 3, snapshot_pack: WireTestSnapshot { value: 10 }.encode_pack(), payload };
         let error = wire_artifact_mutation_plan(&encode_wire_serialized(&request)).await.expect_err("mismatched artifact_kind must be rejected");
         assert!(error.message.contains("artifact-mutation.artifact-kind-mismatch"), "unexpected message: {}", error.message);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn artifact_mutation_plan_rejects_an_unregistered_mutation_id() {
-        let request = crate::artifact_registration::WireArtifactMutationPlanRequest {
+        let request = semio_framework_plugin_decl_registry::artifact_registration::WireArtifactMutationPlanRequest {
             artifact_kind: "s.wiretest.unregistered".into(),
             mutation_id: "wiretest.unregistered.document#nobody:add-value".into(),
             revision: 1,
@@ -39,10 +41,10 @@ mod contributed_mutation_wire_tests {
     #[semio_framework_async_macros::async_test]
     async fn artifact_mutation_plan_echoes_identity_and_runs_the_registered_plan() {
         let mutation_id = commit_test_contribution("s.wiretest.echo", "wiretest.echo.document", "wiretest-contributor-b", 5).await;
-        let payload = crate::artifact_registration::encode_contributed_wire(&AddValue { delta: 5 }).await;
-        let request = crate::artifact_registration::WireArtifactMutationPlanRequest { artifact_kind: "s.wiretest.echo".into(), mutation_id: mutation_id.clone(), revision: 42, generation: 9, snapshot_pack: WireTestSnapshot { value: 10 }.encode_pack(), payload };
+        let payload = semio_framework_plugin_decl_registry::artifact_registration::encode_contributed_wire(&AddValue { delta: 5 }).await;
+        let request = semio_framework_plugin_decl_registry::artifact_registration::WireArtifactMutationPlanRequest { artifact_kind: "s.wiretest.echo".into(), mutation_id: mutation_id.clone(), revision: 42, generation: 9, snapshot_pack: WireTestSnapshot { value: 10 }.encode_pack(), payload };
         let encoded = wire_artifact_mutation_plan(&encode_wire_serialized(&request)).await.expect("matching artifact_kind must be accepted");
-        let result: crate::artifact_registration::WireArtifactMutationPlanResult = decode_wire_serialized(&encoded).await.expect("result decodes");
+        let result: semio_framework_plugin_decl_registry::artifact_registration::WireArtifactMutationPlanResult = decode_wire_serialized(&encoded).await.expect("result decodes");
         assert_eq!(result.artifact_kind, "s.wiretest.echo");
         assert_eq!(result.mutation_id, mutation_id);
         assert_eq!(result.revision, 42);

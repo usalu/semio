@@ -1,0 +1,158 @@
+{
+ "$schema": "http://json-schema.org/draft-07/schema#",
+ "type": "object",
+ "additionalProperties": false,
+ "required": [
+  "cases",
+  "io",
+  "corruption",
+  "pageQuota"
+ ],
+ "properties": {
+  "cases": {
+   "type": "array",
+   "items": {
+    "$ref": "#/definitions/Case"
+   }
+  },
+  "io": {
+   "type": "array",
+   "items": {
+    "$ref": "#/definitions/IO"
+   }
+  },
+  "corruption": {
+   "type": "array",
+   "minItems": 6,
+   "maxItems": 6,
+   "items": {
+    "enum": [
+     "header",
+     "foreign-schema",
+     "counter",
+     "fractional",
+     "index",
+     "extent"
+    ]
+   }
+  },
+  "pageQuota": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "payloadBytes",
+    "code",
+    "synchronous"
+   ],
+   "properties": {
+    "payloadBytes": {
+     "const": 33554432
+    },
+    "code": {
+     "const": 13
+    },
+    "synchronous": {
+     "const": 3
+    }
+   }
+  }
+ },
+ "definitions": {
+  "Case": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "name",
+    "cached",
+    "below",
+    "nodes",
+    "kind"
+   ],
+   "properties": {
+    "name": {
+     "type": "string"
+    },
+    "cached": {
+     "type": "array",
+     "items": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 2
+     }
+    },
+    "below": {
+     "type": "boolean"
+    },
+    "nodes": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 6
+    },
+    "kind": {
+     "enum": [
+      "admitted",
+      "pressure"
+     ]
+    }
+   }
+  },
+  "IO": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "name",
+    "seed",
+    "changed",
+    "warm",
+    "below",
+    "nodes",
+    "kind",
+    "callbacks",
+    "retained"
+   ],
+   "properties": {
+    "name": {
+     "type": "string"
+    },
+    "seed": {
+     "type": "array",
+     "items": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 2
+     }
+    },
+    "changed": {
+     "type": "boolean"
+    },
+    "warm": {
+     "type": "boolean"
+    },
+    "below": {
+     "type": "boolean"
+    },
+    "nodes": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 6
+    },
+    "kind": {
+     "enum": [
+      "admitted",
+      "pressure"
+     ]
+    },
+    "callbacks": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 2
+    },
+    "retained": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 6
+    }
+   }
+  }
+ }
+}

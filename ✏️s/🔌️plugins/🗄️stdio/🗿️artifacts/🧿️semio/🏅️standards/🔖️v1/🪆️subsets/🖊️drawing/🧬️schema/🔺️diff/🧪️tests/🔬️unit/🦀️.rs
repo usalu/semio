@@ -1,4 +1,6 @@
-use super::*;
+use crate::schema::snapshot::DrawStyle;
+use crate::schema::diff::{apply_named, absorb_named, apply_style_diff, absorb_style_diff};
+use crate::schema::diff::*;
 use protocol::{DiffBinary,DiffText};
 
 #[semio_framework_async_macros::async_test]

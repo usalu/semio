@@ -39,6 +39,4 @@ impl Serializer<FormsSnapshot> for FormsIntoCsv {
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

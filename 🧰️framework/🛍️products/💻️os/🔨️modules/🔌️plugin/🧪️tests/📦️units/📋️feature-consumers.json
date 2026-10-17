@@ -1,0 +1,751 @@
+{
+  "version": 1,
+  "consumer": "semio-framework-plugin-testing-laws",
+  "dependencies": [
+    "semio-framework",
+    "semio-framework-2d",
+    "semio-framework-artifact-reference",
+    "semio-framework-composition-admission",
+    "semio-framework-diagnostic",
+    "semio-framework-job",
+    "semio-framework-os-kernel",
+    "semio-framework-pack-json",
+    "semio-framework-plugin-app-builder",
+    "semio-framework-plugin-builder",
+    "semio-framework-plugin-composition-publication",
+    "semio-framework-plugin-decl-app",
+    "semio-framework-plugin-decl-emission",
+    "semio-framework-plugin-decl-registry",
+    "semio-framework-plugin-decl-surface",
+    "semio-framework-plugin-decl-views",
+    "semio-framework-plugin-declared-verdict",
+    "semio-framework-plugin-extension",
+    "semio-framework-plugin-instance-app",
+    "semio-framework-plugin-instance-children",
+    "semio-framework-plugin-instance-ladders",
+    "semio-framework-plugin-instance-stores",
+    "semio-framework-plugin-interaction",
+    "semio-framework-plugin-job",
+    "semio-framework-plugin-mounted-owner",
+    "semio-framework-plugin-operation",
+    "semio-framework-plugin-ownership",
+    "semio-framework-plugin-plugin-program",
+    "semio-framework-plugin-reactor-app",
+    "semio-framework-plugin-reactor-lifecycle",
+    "semio-framework-plugin-reactor-tasks",
+    "semio-framework-plugin-runtime-exchange",
+    "semio-framework-plugin-runtime-ops",
+    "semio-framework-plugin-testing-caller",
+    "semio-framework-plugin-window-config",
+    "semio-framework-plugin-window-kits",
+    "semio-framework-plugin-window-transient",
+    "semio-framework-schema",
+    "semio-framework-schema-composition",
+    "semio-framework-ui-contract",
+    "semio-framework-ui-layout",
+    "semio-framework-ui-locale",
+    "semio-framework-ui-runtime",
+    "semio-framework-ui-scene",
+    "semio-framework-value",
+    "serde_json"
+  ],
+  "absentRootCount": 62,
+  "roots": [
+    {
+      "path": "Cargo.lock",
+      "present": true
+    },
+    {
+      "path": "✏️s/Cargo.lock",
+      "present": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/✒️writer/🏭️bridge/Cargo.lock",
+      "present": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/Cargo.lock",
+      "present": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/➗️mathematical/🏭️bridge/Cargo.lock",
+      "present": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/Cargo.lock",
+      "present": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🏭️bridge/Cargo.lock",
+      "present": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/Cargo.lock",
+      "present": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/Cargo.lock",
+      "present": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/Cargo.lock",
+      "present": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/Cargo.lock",
+      "present": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/Cargo.lock",
+      "present": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌀️procedural/🏭️bridge/Cargo.lock",
+      "present": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/Cargo.lock",
+      "present": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/Cargo.lock",
+      "present": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌀️procedural/🫀️foundation/Cargo.lock",
+      "present": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🏭️bridge/Cargo.lock",
+      "present": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/Cargo.lock",
+      "present": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🏗️bim/Cargo.lock",
+      "present": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📃️list/Cargo.lock",
+      "present": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/Cargo.lock",
+      "present": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📖️dictionary/Cargo.lock",
+      "present": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📝️text/Cargo.lock",
+      "present": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🔤️primitive/Cargo.lock",
+      "present": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🖍️draw/Cargo.lock",
+      "present": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🧠️logic/Cargo.lock",
+      "present": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🧮️math/Cargo.lock",
+      "present": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌍️gis/🏭️bridge/Cargo.lock",
+      "present": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/Cargo.lock",
+      "present": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/Cargo.lock",
+      "present": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌿️vcs/🏭️bridge/Cargo.lock",
+      "present": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/Cargo.lock",
+      "present": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🎞️animate/🏭️bridge/Cargo.lock",
+      "present": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/Cargo.lock",
+      "present": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🎥️shooting/🏭️bridge/Cargo.lock",
+      "present": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/Cargo.lock",
+      "present": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🎪️demonstrator/🏭️bridge/Cargo.lock",
+      "present": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/Cargo.lock",
+      "present": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🎬️sequence/🏭️bridge/Cargo.lock",
+      "present": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/Cargo.lock",
+      "present": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏗️fem/Cargo.lock",
+      "present": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏗️fem/🏭️bridge/Cargo.lock",
+      "present": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/Cargo.lock",
+      "present": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/Cargo.lock",
+      "present": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏙️bim/🏭️bridge/Cargo.lock",
+      "present": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/Cargo.lock",
+      "present": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏛️architect/🏭️bridge/Cargo.lock",
+      "present": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/Cargo.lock",
+      "present": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏭️process/🏭️bridge/Cargo.lock",
+      "present": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/Cargo.lock",
+      "present": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏭️process/🧩️extensions/🔩️metal/Cargo.lock",
+      "present": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏭️process/🧩️extensions/🤖️robotic/Cargo.lock",
+      "present": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏭️process/🧩️extensions/🧱️concrete/Cargo.lock",
+      "present": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏭️process/🧩️extensions/🪵️wood/Cargo.lock",
+      "present": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/💠️lowpoly/🏭️bridge/Cargo.lock",
+      "present": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/Cargo.lock",
+      "present": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/💡️reasoning/🏭️bridge/Cargo.lock",
+      "present": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/Cargo.lock",
+      "present": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/📋️forms/🏭️bridge/Cargo.lock",
+      "present": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/Cargo.lock",
+      "present": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🏭️bridge/Cargo.lock",
+      "present": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/Cargo.lock",
+      "present": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/📐️cad/🏭️bridge/Cargo.lock",
+      "present": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/Cargo.lock",
+      "present": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏛️aec-building-structure/Cargo.lock",
+      "present": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building/Cargo.lock",
+      "present": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/📐️cad/🧩️extensions/📐️spatial-shape/Cargo.lock",
+      "present": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/Cargo.lock",
+      "present": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/Cargo.lock",
+      "present": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/🏭️bridge/Cargo.lock",
+      "present": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/Cargo.lock",
+      "present": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/Cargo.lock",
+      "present": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/Cargo.lock",
+      "present": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/Cargo.lock",
+      "present": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏋️en1991/Cargo.lock",
+      "present": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/Cargo.lock",
+      "present": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/Cargo.lock",
+      "present": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📇️iso16757/Cargo.lock",
+      "present": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🔩️en1993/Cargo.lock",
+      "present": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994/Cargo.lock",
+      "present": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧱️din4108/Cargo.lock",
+      "present": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/Cargo.lock",
+      "present": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995/Cargo.lock",
+      "present": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/Cargo.lock",
+      "present": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🫨️en1998/Cargo.lock",
+      "present": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/📖️playbook/🏭️bridge/Cargo.lock",
+      "present": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/Cargo.lock",
+      "present": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/Cargo.lock",
+      "present": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/📜️imperative/🏭️bridge/Cargo.lock",
+      "present": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/Cargo.lock",
+      "present": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/📜️imperative/🧩️extensions/🎮️control/Cargo.lock",
+      "present": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/📜️imperative/🧩️extensions/📝️text/Cargo.lock",
+      "present": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/📜️imperative/🧩️extensions/📣️effect/Cargo.lock",
+      "present": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/📜️imperative/🧩️extensions/🧠️logic/Cargo.lock",
+      "present": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/📜️imperative/🧩️extensions/🧮️math/Cargo.lock",
+      "present": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/📸️remodel/🏭️bridge/Cargo.lock",
+      "present": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/Cargo.lock",
+      "present": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔋️energy/Cargo.lock",
+      "present": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔋️energy/🏭️bridge/Cargo.lock",
+      "present": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/Cargo.lock",
+      "present": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔱️trinity/🏭️bridge/Cargo.lock",
+      "present": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/Cargo.lock",
+      "present": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/Cargo.lock",
+      "present": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🕸️dag/🏭️bridge/Cargo.lock",
+      "present": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/Cargo.lock",
+      "present": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🏭️bridge/Cargo.lock",
+      "present": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/Cargo.lock",
+      "present": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖨️raster/🏭️bridge/Cargo.lock",
+      "present": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/Cargo.lock",
+      "present": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/Cargo.lock",
+      "present": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/Cargo.lock",
+      "present": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/Cargo.lock",
+      "present": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/Cargo.lock",
+      "present": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/Cargo.lock",
+      "present": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/Cargo.lock",
+      "present": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/Cargo.lock",
+      "present": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/Cargo.lock",
+      "present": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/Cargo.lock",
+      "present": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/Cargo.lock",
+      "present": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/Cargo.lock",
+      "present": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/Cargo.lock",
+      "present": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/Cargo.lock",
+      "present": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/Cargo.lock",
+      "present": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/Cargo.lock",
+      "present": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/Cargo.lock",
+      "present": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/Cargo.lock",
+      "present": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/Cargo.lock",
+      "present": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/Cargo.lock",
+      "present": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/Cargo.lock",
+      "present": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/Cargo.lock",
+      "present": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/Cargo.lock",
+      "present": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/Cargo.lock",
+      "present": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/Cargo.lock",
+      "present": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/Cargo.lock",
+      "present": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/Cargo.lock",
+      "present": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/Cargo.lock",
+      "present": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/Cargo.lock",
+      "present": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/Cargo.lock",
+      "present": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/Cargo.lock",
+      "present": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/Cargo.lock",
+      "present": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/Cargo.lock",
+      "present": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/Cargo.lock",
+      "present": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧱️ply/Cargo.lock",
+      "present": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/Cargo.lock",
+      "present": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/Cargo.lock",
+      "present": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🏭️bridge/Cargo.lock",
+      "present": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/Cargo.lock",
+      "present": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗒️note/🏭️bridge/Cargo.lock",
+      "present": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/Cargo.lock",
+      "present": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/Cargo.lock",
+      "present": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🏭️bridge/Cargo.lock",
+      "present": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/Cargo.lock",
+      "present": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/Cargo.lock",
+      "present": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/Cargo.lock",
+      "present": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧱️block/🏭️bridge/Cargo.lock",
+      "present": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/Cargo.lock",
+      "present": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/Cargo.lock",
+      "present": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/Cargo.lock",
+      "present": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🪐️space/🏭️bridge/Cargo.lock",
+      "present": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/Cargo.lock",
+      "present": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/Cargo.lock",
+      "present": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🪐️space/🫀️core/Cargo.lock",
+      "present": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🪵️sourcing/🏭️bridge/Cargo.lock",
+      "present": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/Cargo.lock",
+      "present": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🧱️slabs/Cargo.lock",
+      "present": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪟️windows/Cargo.lock",
+      "present": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪵️beams/Cargo.lock",
+      "present": false
+    },
+    {
+      "path": "✏️s/🧑‍💻dev/🌊️flow/Cargo.lock",
+      "present": false
+    },
+    {
+      "path": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/Cargo.lock",
+      "present": false
+    },
+    {
+      "path": "✏️s/🧑‍💻dev/💡️services/Cargo.lock",
+      "present": false
+    },
+    {
+      "path": "✏️s/🧑‍💻dev/📐️cad/Cargo.lock",
+      "present": false
+    },
+    {
+      "path": "✏️s/🧑‍💻dev/🧩️composition/Cargo.lock",
+      "present": false
+    },
+    {
+      "path": "✏️s/🧑‍💻dev/🧹️fixture-sweep/Cargo.lock",
+      "present": false
+    },
+    {
+      "path": "🌎️hub/Cargo.lock",
+      "present": true
+    }
+  ]
+}

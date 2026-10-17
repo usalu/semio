@@ -1,5 +1,10 @@
+use crate::CurationSnapshot;
+#[allow(unused_imports)]
+use framework_schema::ArtifactSchema;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::entries::compute_curation_entries;
 
-use super::*;
+use crate::standards::v1::subsets::any::schema::inferences::*;
 use crate::CuratedItem;
 use protocol::Inference;
 

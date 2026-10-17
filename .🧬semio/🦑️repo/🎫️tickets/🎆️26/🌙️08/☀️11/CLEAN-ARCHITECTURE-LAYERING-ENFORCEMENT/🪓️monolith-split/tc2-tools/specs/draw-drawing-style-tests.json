@@ -1,0 +1,31 @@
+{
+ "parent": "semio-s-artifact-draw-drawing-style",
+ "name": "semio-s-artifact-draw-drawing-style-tests",
+ "dir": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🎨️style/🧪️tests/🥣️companion",
+ "files": [
+  "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🎨️style/🧬️schema/🧬️mutations/🌀️set-layer-fill-rule/🧪️tests/🔬️unit/🦀️.rs",
+  "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🎨️style/🧬️schema/🧬️mutations/🌓️set-layer-blend-mode/🧪️tests/✖️normal/🦀️.rs",
+  "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🎨️style/🧬️schema/🧬️mutations/🌫️set-layer-opacity/🧪️tests/🌫️dims/🦀️.rs",
+  "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🎨️style/🧬️schema/🧬️mutations/🎨️replace-layer-fill/🧪️tests/🌈️solid/🦀️.rs",
+  "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🎨️style/🧬️schema/🧬️mutations/📝️update-text/🧪️tests/🔬️unit/🦀️.rs",
+  "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🎨️style/🧬️schema/🧬️mutations/🖊️replace-layer-stroke/🧪️tests/🖊️adds/🦀️.rs",
+  "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🎨️style/🧬️schema/🧬️mutations/🖼️update-image/🧪️tests/🔬️unit/🦀️.rs",
+  "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🎨️style/🧬️schema/🧬️mutations/🧩️set-group-isolation/🧪️tests/🔬️unit/🦀️.rs"
+ ],
+ "testkit": [
+  "semio-s-artifact-draw-drawing-model",
+  "semio-s-artifact-draw-drawing-diff",
+  "semio-s-artifact-draw-drawing-geometry",
+  "semio-s-artifact-draw-drawing-mutations",
+  "semio-s-artifact-draw-drawing-transform",
+  "semio-s-artifact-draw-drawing-style",
+  "semio-s-artifact-draw-drawing-structure",
+  "semio-s-artifact-draw-drawing-metadata",
+  "semio-s-artifact-draw-drawing-scene",
+  "semio-s-artifact-draw-drawing-editor-interaction",
+  "semio-s-artifact-draw-drawing-editor"
+ ],
+ "emoji": "🥣️",
+ "summary": "the eight mutation fixture laws of the style leaves.",
+ "description": "Companion test crate of semio-s-artifact-draw-drawing-style: the eight mutation fixture laws of the style leaves"
+}

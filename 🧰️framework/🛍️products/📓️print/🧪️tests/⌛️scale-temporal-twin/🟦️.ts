@@ -18,9 +18,12 @@ import base from "../⏳️scale-temporal/🟦️.ts";
 const DECIMALS = 6;
 
 /** 🔢️ Rounds the twin's numbers onto the emission grid the LaTeX probe writes on. */
-function grid(values: readonly number[]): number[] {
+function grid(values: readonly unknown[]): number[] {
   const factor = 10 ** DECIMALS;
-  return values.map((value) => Math.round(value * factor) / factor + 0);
+  return values.map((value) => {
+    if (typeof value !== "number") throw new Error(`a scale mapped to ${String(value)}, not to a number`);
+    return Math.round(value * factor) / factor + 0;
+  });
 }
 
 /** ⏱️ An ISO timestamp read as UTC, the only reading the library knows. */

@@ -4,7 +4,7 @@
 //! Refused: an empty selection, unknown ids, elements without a placement, an opening without its host, a blank prefix, a minted id that
 //! is taken and a vector that is not finite.
 
-use super::super::modify::{self, Map};
+use crate::standards::v1::subsets::any::schema::mutations::modify::{self, Map};
 use super::CopyElements;
 use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};

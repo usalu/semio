@@ -12,7 +12,10 @@ pub struct RemoveElementPayload {
     pub index: usize,
 }
 
-impl protocol::MutationKind<SvgSnapshot, super::SvgMutation> for RemoveElementPayload {
+impl<Op> protocol::MutationKind<SvgSnapshot, Op> for RemoveElementPayload
+where
+    Op: protocol::Mutation<SvgSnapshot, Diff = SvgDiff> + From<RemoveElementPayload> + From<crate::standards::v1_1::subsets::base::schema::mutations::insert_element::InsertElementPayload>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "element", kind: "remove-element", record: "RemovedElement" };
 
     fn diff(&self, _base: &SvgSnapshot) -> protocol::MutationOutcome<SvgDiff> {
@@ -20,10 +23,10 @@ impl protocol::MutationKind<SvgSnapshot, super::SvgMutation> for RemoveElementPa
         protocol::MutationOutcome::new(diff_at_path(parent, SvgNodeDiff::Element(SvgElementDiff { children: Some(SvgChildrenDiff { removed: vec![*index], ..Default::default() }), ..Default::default() })))
     }
 
-    fn inverse(&self, base: &SvgSnapshot) -> Result<Vec<super::SvgMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &SvgSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         let Self { parent, index } = self;
         Ok(match node_at(&base.doc, parent) {
-            Ok(SvgNode::Element { children, .. }) => children.get(*index).map(|node| super::SvgMutation::InsertElement(super::InsertElementPayload { parent: parent.clone(), index: *index, node: node.clone() })).into_iter().collect(),
+            Ok(SvgNode::Element { children, .. }) => children.get(*index).map(|node| Op::from(crate::standards::v1_1::subsets::base::schema::mutations::InsertElementPayload { parent: parent.clone(), index: *index, node: node.clone() })).into_iter().collect(),
             _ => Vec::new(),
         })
     }
@@ -36,6 +39,4 @@ impl protocol::MutationKind<SvgSnapshot, super::SvgMutation> for RemoveElementPa
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

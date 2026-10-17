@@ -33,5 +33,4 @@ test("repository Go executable integration has one Specific owner and leaves the
   expect(fixture.protocol).toBe(vectors.protocol);
   expect(fixture.serverName).toBe(vectors.serverName);
   expect(fixture.health).toBe(vectors.health);
-  console.log("[DEBUG] Actual TypeScript owner census and original repository Go/MCP/coordinator fixture agree with the deletion ownership vectors");
 });

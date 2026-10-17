@@ -32,7 +32,7 @@ import type { CompareHint, Hint, SheetSortingTask, Slug, SortingAnswer } from "@
 import { localized } from "../🌐️i18n/🟦️.ts";
 import { BodyButton, IconLabel, LiveRegion, useAnnouncement } from "../🪟️chrome/🟦️.tsx";
 import { DragGrip, GuessField, HintNote, ICON_BUTTON_CLASS, LockedNote, compareText, describedBy, elementId, exampleGuess, hintName, useFocusAfterRender, useHintAnnouncement, type TaskViewProps } from "../🧩️task/🟦️.tsx";
-import { PRESENCE_ANCHORS } from "../👥️presence/🟦️.tsx";
+import { PRESENCE_ANCHORS } from "../👥️presence/👁️view/🟦️.ts";
 import { formatQuantity } from "../📏️quantity/🟦️.ts";
 import { petProp, usePetTopic } from "../🐾️pets/🟦️.tsx";
 

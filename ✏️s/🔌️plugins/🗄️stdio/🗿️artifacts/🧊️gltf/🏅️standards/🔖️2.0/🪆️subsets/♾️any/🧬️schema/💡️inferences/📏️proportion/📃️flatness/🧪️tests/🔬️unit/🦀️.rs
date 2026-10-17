@@ -1,4 +1,5 @@
 use super::*;
+use semio_framework_test_fixtures::fixture_text;
 
 #[derive(value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
@@ -28,10 +29,10 @@ async fn descriptor_is_versioned_and_cacheable() {
 
 #[semio_framework_async_macros::async_test]
 async fn shared_vectors_execute_the_rust_leaf() {
-    let contract: Contract = semio_framework_pack_json::from_json_str(include_str!("../../../../../../🧪️tests/🧫️fixtures/💡️inferences/📏️proportion/📃️flatness/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let contract: Contract = semio_framework_pack_json::from_json_str(fixture_text!("../../../../../../🧪️tests/🧫️fixtures/💡️inferences/📏️proportion/📃️flatness/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     for vector in contract.vectors {
         let result = if vector.context.valid {
-            let policy = super::super::super::geometry_core::policy();
+            let policy = crate::standards::v2_0::subsets::any::schema::inferences::geometry_core::policy();
             let context = GltfGeometryContext::new(&vector.context.points, &vector.context.triangles, &policy).unwrap();
             infer(&context)
         } else {

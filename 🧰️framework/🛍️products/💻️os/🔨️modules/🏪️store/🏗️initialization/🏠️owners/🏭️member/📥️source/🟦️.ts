@@ -1,6 +1,6 @@
 import {compileJsonSchemaSubset} from "@semio-tech/schema-validator-ts";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
-import {rustTokens,rustTokenPairs,rustTokenText,type RustToken} from "../../../../../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/🟦️.ts";
+import {rustTokens,rustTokenPairs,rustTokenText,type RustToken} from "@semio-tech/compiler-syntax-rust-ts";
 import declaration from "./🔣️.json" with {type:"json"};
 
 export type MemberProducerSourceRole=keyof typeof declaration.roles;

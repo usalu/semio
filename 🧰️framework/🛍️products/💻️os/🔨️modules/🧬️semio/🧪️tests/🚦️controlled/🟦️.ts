@@ -45,5 +45,4 @@ test("original controlled binary envelope refuses through canonical literal Valu
  }
  const source=await Bun.file(new URL("../../🦀️.rs",import.meta.url)).text();const binary=source.slice(source.indexOf("pub fn unwrap_binary_controlled"),source.indexOf("fn parse_binary_token"));
  expect(binary).toContain("Result<&'input[u8],ValueError>");expect(binary).not.toContain("SemioError");expect(binary).not.toContain(".into()");expect(binary).not.toContain("format!");for(const row of envelopeFixture.binaryRefusals)expect(binary).toContain(`ValueError::literal(ValueRefusalKind::InvalidValue,"${row.message}")`);
- console.error("[DEBUG] Original controlled envelope per-refusal canonical Ajv and independent Buffer bytes agree; zero-allocation native System law remains separately required");
 });

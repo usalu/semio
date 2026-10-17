@@ -1,0 +1,32 @@
+# Current Domain Observation and Administrative Composition
+
+## Released Source Scope
+
+The existing Graph owner now admits closed immutable current observation DATA against its previously released intent/plan: current true repository declaration, exact per-role parent/child roots and lease directories, full current backing/kernel associations, current journal backing/policy/raw digest/byte count, stable bounded namespace descriptor bytes and seven metadata fields, selected producer-log SHA, closed selected Products fixture topology and State exclusion. Current live domain artifact rows are classified without inventing historical ChildRequest funding. Image retirement refuses any live artifact row. The unresolved real domain artifact-row settlement remains a concrete blocker to pool/Graph retirement; this release neither clears nor claims settlement of that row.
+
+The existing explicit repository publication owner adds maintainRepositoryGraphCacheImageV1. It authenticates the genuine Original/control and exact original setup-all purpose before opening; derives current host policy from actual repository declarations; obtains actual lease infrastructure, nonwaiting pool/namespace gates, opaque common maintenance parent/container owners and nonwaiting current journal observations; admits complete DATA using the Graph reader; rechecks descriptor/producer/fixture observations; closes the selected observational scope before invoking exactly one fixed canonical publish or retire command under its actual immediate parent. Child lease namespaces remain role-specific. It exposes no generic privileged callback, Native image handle, reservation writer, fake parent, Data-to-authority conversion or funded-child adoption. Administrative imports remain in the existing explicit publication owner, outside ordinary Graph static imports.
+
+The new private file reader bounds single-link nofollow UTF-8 reads, compares named/descriptor identity before and after, and retains arbitrary primary plus distinct close failure. New image metadata and fixture directory readers now retain both failures as well. All owner/gate/infrastructure close paths preserve exact primary failures and retain failed handles rather than asserting closure.
+
+Existing ordinary Graph producer/read bodies and existing repository publication/protected-parent bodies were left unchanged by this additive batch. The preceding pure-reader report separately records its earlier filesystem-aware helper error and correction; its five-file manifest is superseded only for the files extended here. No new TypeScript file or runtime external dependency was added.
+
+## Actual RED and GREEN
+
+Schema-first observation/caller vectors preceded production functions. Initial observation missing-export semantic RED is retained as Generated/graph-maintenance-observation-red.log. The additional directory close-law semantic RED is Generated/graph-maintenance-directory-close-red.log: six prior tests pass, then exact image reader fails the undefined-primary-plus-close Aggregate assertion (terminal1, two Bun scope failure labels). A preceding attempt while the common contract export was unsettled failed module loading and is a harness/integration failure, not semantic evidence. The earlier EEXIST collision in own Source fixture folders was also a harness failure; folders now use unique vector indexes.
+
+Final genuine graph-purpose --maintenance-strict session49060 completed0: TypeScript strict authored owner/test/helper roots (the imported administrative owner is checked transitively), zero diagnostics; then7pass,14filtered,0fail,340 assertions in2.46s. Scoped git diff --check completed0. The unchanged finite60000ms Original and existing generic EN/DE ticket helper cover both --maintenance-source and --maintenance-strict.
+
+There are26 portable intent cases,25 namespace observation cases,13 pool/Products observation cases,6 command cases,8 exact administrative AST traces,9 bounded file cases and6 directory-close cases executed against both exact directory reader bodies. Independent Ajv validates closed DTOs/cases; SQLite derives admission, role counts, exact topology/row decisions and caller ordering; genuine owned Node independently derives path/hash and reads metadata/SHA for own Generated files. Getter/proxy/copy and arbitrary undefined/frozen/aggregate primary refusals are exercised. The actual recovery of Native authority, Native commands and mapping/ledger effects remain explicit Source ports in the AST composition test; this is Source qualification, not physical acceptance.
+
+## Runtime Limits and Next Gate
+
+No Native command, protected directory read, image mount/publication/retirement or actual allocation settlement was performed in this batch. Actual filesystem tests touched only newly owned Generated ordinary files. The nofollow file reader fails closed where the native framework does not expose O_NOFOLLOW; no Windows physical acceptance is claimed. The administrative composition has not physically qualified current Graph12/Products5 images. Core fixed artifact-row terminal settlement, full fresh source-closure qualification, independent final review and coordinator-controlled physical proof remain required before those claims.
+
+## Settled Six-file Manifest
+
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🟦️.ts` — 73509B SHA256 `9b85728901da1fd72679cf56a9901643f2b606f648625e7cc175bf96f1ac149c`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧬️schema/🔣️.json` — 22646B SHA256 `c34a031bb85b4d2432b2154c010983578b27c55d6610f4abef44330112b2c6e4`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧪️tests/🟦️.ts` — 51363B SHA256 `0b633672b2fafc1d6f94f8533949dc137cd47466a0e713a431a07790738bd77d`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧪️tests/🔣️.json` — 422629B SHA256 `d65b518ac75c217a5686111952a10c43d3607d696381df8adc30ec3755059689`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/🟦️.ts` — 26897B SHA256 `806af7d1f850432b684509c28e94b9de6129708a6ad46a714cb04abe811e56a1`
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️14/ABSTRACT-REPO-BUILD-TOOLS-AND-ADD-BAZEL/graph-purpose/📜️script.ts` — 2698B SHA256 `c6a3527a74761078dcb0d5bb3dfa32090375599f480df900955f598c0f6e79d4`

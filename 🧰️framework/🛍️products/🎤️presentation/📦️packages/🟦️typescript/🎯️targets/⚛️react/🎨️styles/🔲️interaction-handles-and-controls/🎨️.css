@@ -1,0 +1,250 @@
+/* 🔲️ The resize handles, the action buttons, the enlarge control, the pdf page navigation and the slide reset control. */
+
+/* #region 🔖️Interaction */
+.reveal .presentation-interaction-handle {
+	position: absolute;
+	z-index: 4;
+	width: var(--size-tiny);
+	height: var(--size-tiny);
+	margin: calc(-1 * var(--spacing-single)) 0 0 calc(-1 * var(--spacing-single));
+	border-radius: var(--spacing-single);
+	background: var(--color-primary);
+	border: var(--stroke-hairline) solid var(--base);
+	pointer-events: auto;
+	box-sizing: border-box;
+}
+
+.reveal .presentation-interaction-handle--nw {
+	left: 0;
+	top: 0;
+	transform: translate(-50%, -50%);
+	margin: 0;
+	cursor: nwse-resize;
+}
+
+.reveal .presentation-interaction-handle--n {
+	left: 50%;
+	top: 0;
+	transform: translate(-50%, -50%);
+	margin: 0;
+	cursor: ns-resize;
+}
+
+.reveal .presentation-interaction-handle--ne {
+	left: 100%;
+	top: 0;
+	transform: translate(-50%, -50%);
+	margin: 0;
+	cursor: nesw-resize;
+}
+
+.reveal .presentation-interaction-handle--e {
+	left: 100%;
+	top: 50%;
+	transform: translate(-50%, -50%);
+	margin: 0;
+	cursor: ew-resize;
+}
+
+.reveal .presentation-interaction-handle--se {
+	left: 100%;
+	top: 100%;
+	transform: translate(-50%, -50%);
+	margin: 0;
+	cursor: nwse-resize;
+}
+
+.reveal .presentation-interaction-handle--s {
+	left: 50%;
+	top: 100%;
+	transform: translate(-50%, -50%);
+	margin: 0;
+	cursor: ns-resize;
+}
+
+.reveal .presentation-interaction-handle--sw {
+	left: 0;
+	top: 100%;
+	transform: translate(-50%, -50%);
+	margin: 0;
+	cursor: nesw-resize;
+}
+
+.reveal .presentation-interaction-handle--w {
+	left: 0;
+	top: 50%;
+	transform: translate(-50%, -50%);
+	margin: 0;
+	cursor: ew-resize;
+}
+
+.reveal .presentation-interactive-disposition > .presentation-interaction-actions {
+	position: absolute;
+	top: var(--spacing-single);
+	right: var(--spacing-single);
+	z-index: 90;
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	gap: var(--spacing-single);
+	pointer-events: none;
+}
+
+.reveal .presentation-interactive-disposition--enlarged > .presentation-interaction-actions {
+	z-index: 90;
+}
+
+.reveal .presentation-interaction-enlarge,
+.reveal .presentation-interaction-reset {
+	position: static;
+	pointer-events: auto;
+	width: 1.5rem;
+	height: 1.5rem;
+	padding: 0;
+	border: var(--stroke-hairline) solid var(--border-normal-color);
+	border-radius: var(--spacing-single);
+	background: var(--panel);
+	color: var(--foreground);
+	font-size: 0.75rem;
+	line-height: 1;
+	cursor: pointer;
+	transition:
+		background-color 0.15s ease,
+		color 0.15s ease,
+		border-color 0.15s ease;
+}
+
+.reveal .presentation-interaction-enlarge:hover,
+.reveal .presentation-interaction-reset:hover {
+	background: var(--hover-panel);
+	color: var(--foreground);
+	border-color: var(--border-normal-color);
+}
+
+.reveal
+	.presentation-interactive-disposition--kind-pdf.presentation-interactive-disposition--enlarged
+	.presentation-morph-anchor {
+	position: relative;
+}
+
+.reveal
+	.presentation-interactive-disposition--kind-pdf.presentation-interactive-disposition--enlarged
+	.presentation-pdf-page-nav,
+.reveal
+	.presentation-interactive-disposition--kind-pdf.presentation-interactive-disposition--selected
+	.presentation-pdf-page-nav {
+	position: absolute;
+	left: 50%;
+	bottom: 0.75rem;
+	z-index: 3;
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	gap: 0.5rem;
+	transform: translateX(-50%);
+	pointer-events: auto;
+}
+
+.reveal .presentation-pdf-page-nav__button {
+	width: 2rem;
+	height: 2rem;
+	padding: 0;
+	border: var(--stroke-hairline) solid var(--border-normal-color);
+	border-radius: var(--spacing-single);
+	background: color-mix(in oklab, var(--panel) 92%, transparent);
+	color: var(--foreground);
+	font-size: 1.125rem;
+	line-height: 1;
+	cursor: pointer;
+	transition:
+		background-color 0.15s ease,
+		color 0.15s ease,
+		border-color 0.15s ease,
+		opacity 0.15s ease;
+}
+
+.reveal .presentation-pdf-page-nav__button:hover:not(:disabled) {
+	background: var(--hover-panel);
+	color: var(--foreground);
+	border-color: var(--border-normal-color);
+}
+
+.reveal .presentation-pdf-page-nav__button:disabled {
+	opacity: 0.35;
+	cursor: default;
+}
+
+.reveal .presentation-interaction-slide-reset-host {
+	position: absolute;
+	top: 0;
+	right: 0;
+	z-index: 70;
+	width: 5rem;
+	height: 5rem;
+	pointer-events: none;
+}
+
+.reveal .presentation-interaction-slide-reset {
+	position: absolute;
+	top: var(--spacing-single);
+	right: var(--spacing-single);
+	z-index: 1;
+	width: 1.5rem;
+	height: 1.5rem;
+	padding: 0;
+	border: var(--stroke-hairline) solid var(--border-normal-color);
+	border-radius: var(--spacing-single);
+	background: var(--panel);
+	color: var(--foreground);
+	font-size: 0.75rem;
+	line-height: 1;
+	cursor: pointer;
+	opacity: 1;
+	pointer-events: auto;
+	transition:
+		background-color 0.15s ease,
+		color 0.15s ease,
+		border-color 0.15s ease;
+}
+
+.reveal
+	.presentation-interactive-disposition--kind-video:not(.presentation-interactive-disposition--selected):not(
+		.presentation-interactive-disposition--enlarged
+	)
+	.presentation-media-video,
+.reveal
+	.presentation-interactive-disposition--kind-pdf:not(.presentation-interactive-disposition--selected):not(
+		.presentation-interactive-disposition--enlarged
+	)
+	.presentation-media-pdf,
+.reveal
+	.presentation-interactive-disposition--kind-pdf:not(.presentation-interactive-disposition--selected):not(
+		.presentation-interactive-disposition--enlarged
+	)
+	.presentation-media-pdf
+	canvas {
+	pointer-events: none;
+}
+
+.reveal .presentation-interaction-slide-reset-host:hover .presentation-interaction-slide-reset,
+.reveal .presentation-interaction-slide-reset-host:focus-within .presentation-interaction-slide-reset,
+.reveal
+	.presentation-interaction-slide-reset-host.presentation-interaction-slide-reset-host--near
+	.presentation-interaction-slide-reset {
+	opacity: 1;
+	pointer-events: auto;
+}
+
+.reveal .presentation-interaction-slide-reset-host:hover .presentation-interaction-slide-reset:hover,
+.reveal
+	.presentation-interaction-slide-reset-host.presentation-interaction-slide-reset-host--near
+	.presentation-interaction-slide-reset:hover,
+.reveal
+	.presentation-interaction-slide-reset-host:focus-within
+	.presentation-interaction-slide-reset:hover {
+	background: var(--hover-panel);
+	color: var(--foreground);
+	border-color: var(--border-normal-color);
+}
+
+/* #endregion 🔖️Interaction */

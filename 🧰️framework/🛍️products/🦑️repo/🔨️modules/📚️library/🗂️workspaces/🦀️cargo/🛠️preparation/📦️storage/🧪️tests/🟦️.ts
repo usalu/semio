@@ -5,5 +5,5 @@ import fixture from "./🧫️fixtures/🔣️.json";
 import {parseCargoPreparationStorageV1} from "../🟦️.ts";
 
 test("preparation storage owns an explicit queue-safe bounded physical directory",()=>{
- const validate=new Ajv({strict:true}).compile(schema);for(const row of fixture.accepted){expect(validate(row)).toBe(true);expect(parseCargoPreparationStorageV1(row)).toEqual(row);}for(const row of fixture.rejected){expect(validate(row)).toBe(false);expect(()=>parseCargoPreparationStorageV1(row)).toThrow();}expect(()=>parseCargoPreparationStorageV1({...fixture.accepted[0],directory:"/"+"x".repeat(schema.properties.directory.maxLength)})).toThrow();console.log("[DEBUG] mandatory queue-safe preparation storage agrees with independent Ajv portable vectors and UTF16 capacity");
+ const validate=new Ajv({strict:true}).compile(schema);for(const row of fixture.accepted){expect(validate(row)).toBe(true);expect<typeof row>(parseCargoPreparationStorageV1(row)).toEqual(row);}for(const row of fixture.rejected){expect(validate(row)).toBe(false);expect(()=>parseCargoPreparationStorageV1(row)).toThrow();}expect(()=>parseCargoPreparationStorageV1({...fixture.accepted[0],directory:"/"+"x".repeat(schema.properties.directory.maxLength)})).toThrow();
 });

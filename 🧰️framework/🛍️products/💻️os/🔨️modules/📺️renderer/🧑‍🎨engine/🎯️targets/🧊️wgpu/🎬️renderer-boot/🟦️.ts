@@ -1,5 +1,5 @@
 import {emptyNativeCatalogV1,readNativeCatalogV1,type NativeCatalogV1} from "../../../../../🔌️plugin/📇️registry/📥️runtime/🟦️.ts";
-import type { PluginCatalogRowsV1 } from "../../../../../🔌️plugin/📇️registry/🟦️.ts";
+import type { PluginCatalogRowsV1 } from "@semio-tech/framework/plugin-catalog";
 import { resolveEmbeddedWgpuBoot } from "./🧩️selection/🟦️.ts";
 // #region 🧲️Header
 /** 🧊️ `@semio-tech/framework-renderer-wgpu` — raw wgpu WASM renderer boot for declarative Rust program UI trees. */

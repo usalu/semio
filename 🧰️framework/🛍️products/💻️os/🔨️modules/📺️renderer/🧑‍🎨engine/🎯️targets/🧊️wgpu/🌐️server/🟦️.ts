@@ -2,7 +2,7 @@ import {RUNTIME_ASSET_CHANNELS} from "../../../../../../../../🔨️modules/�
 import {frameworkOsViteArtifactPathsV1} from "../../../../../🧑‍💻dev/🏗️builder/🌐️vite/📥️artifacts/🟦️.ts";
 import {repositoryCachePartitionRootDataV1} from "../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📂️paths/🟦️.ts";
 import {emptyNativeCatalogV1,readNativeCatalogV1,type NativeCatalogV1} from "../../../../../🔌️plugin/📇️registry/📥️runtime/🟦️.ts";
-import type { PluginCatalogRowsV1 } from "../../../../../🔌️plugin/📇️registry/🟦️.ts";
+import type { PluginCatalogRowsV1 } from "@semio-tech/framework/plugin-catalog";
 import { createAssetBuildPluginsV1, type AssetDeliveryModeV1, type AssetDeliveryDeclarationV1 } from "../../../../../../../../🔨️modules/🖼️assets/🔍️resolver/🧭️dispatch/🟦️.ts";
 import { PLAYGROUND_ASSET_PROVIDERS_V1 } from "../../../../../🔌️plugin/📇️registry/🎮️playground/🖼️assets/🧩️composition/🟦️.ts";
 import { MODULE_ROUTES, MODULE_VENDOR_DIRECTORY } from "../../../../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
@@ -13,7 +13,7 @@ import { existsSync, readFileSync, watch, type FSWatcher } from "node:fs";
 import { basename, dirname, join, resolve } from "node:path";
 import { semioEmojiIndexHtmlVitePlugin, staticDirVitePlugin } from "../../../../../../../../🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts";
 import type { OwnedBuildConfig, OwnedBuildPlugin } from "../../../../../../../../🔨️modules/🖱️ui/🎯️targets/⚛️react/🛠️build-tooling/🟦️.ts";
-import { semioAgentBridgeRendezvousVitePlugin } from "../../../../../🧑‍💻dev/🔌️vite-plugins/🟦️.ts";
+import { semioAgentBridgeRendezvousVitePlugin } from "../../../../../🧑‍💻dev/🔌️vite-plugins/🛰️agent-bridge-rendezvous/🟦️.ts";
 
 export type WgpuBrowserConfiguration = {
   readonly catalog: PluginCatalogRowsV1;

@@ -30,6 +30,10 @@ type stdioBcf21MarkupInferenceGuardSizeBounds = { readonly minItems?: number; re
 
 export const stdioBcf21MarkupInferenceGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : stdioBcf21MarkupInferenceGuardReject(at, "value is not an object");
+export const stdioBcf21MarkupInferenceGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) stdioBcf21MarkupInferenceGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const stdioBcf21MarkupInferenceGuardArray = (value: unknown, at: string, bounds: stdioBcf21MarkupInferenceGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return stdioBcf21MarkupInferenceGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) stdioBcf21MarkupInferenceGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -60,14 +64,14 @@ export const stdioBcf21MarkupInferenceGuardConstant = <T extends string | number
 //#endregion 🚪️Parsers
 
 export function parseBcfInference(value: unknown, at = "$"): BcfInference {
-  const row = stdioBcf21MarkupInferenceGuardObject(value, at);
+  const row = stdioBcf21MarkupInferenceGuardClosed(stdioBcf21MarkupInferenceGuardObject(value, at), at, ["topicStats"]);
   return {
     topicStats: parseBcfTopicStats(row["topicStats"], `${at}.topicStats`),
   };
 }
 
 export function parseBcfTopicStats(value: unknown, at = "$"): BcfTopicStats {
-  const row = stdioBcf21MarkupInferenceGuardObject(value, at);
+  const row = stdioBcf21MarkupInferenceGuardClosed(stdioBcf21MarkupInferenceGuardObject(value, at), at, ["topicCount", "commentCount", "viewpointCount", "authorCount"]);
   return {
     topicCount: stdioBcf21MarkupInferenceGuardInteger(row["topicCount"], `${at}.topicCount`, {"minimum": 0}),
     commentCount: stdioBcf21MarkupInferenceGuardInteger(row["commentCount"], `${at}.commentCount`, {"minimum": 0}),

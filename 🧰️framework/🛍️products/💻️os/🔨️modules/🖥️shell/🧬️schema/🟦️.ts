@@ -1,6 +1,6 @@
 /** 🧬️ `os.shell` schema module, TypeScript face. `🔣️.json` (draft-07) is the authority; this file
  * is its hand-written consumer: it re-exports the owned type mirror the Rust registry in `🦀️.rs`
- * renders into `../🤖️generated/🟦️.ts`, and adds one `parse<ExportId>()` per `$defs` export that
+ * renders into `🧰️framework/🔨️modules/🐚️shell/🤖️generated/🟦️.ts` (beside the TypeScript reducer), and adds one `parse<ExportId>()` per `$defs` export that
  * validates an untrusted value against that very document at runtime.
  *
  * The validator below covers exactly the draft-07 vocabulary `🔣️.json` uses (`$ref`, `type`,
@@ -13,12 +13,12 @@
  * @see ./🦀️.rs
  */
 import { OsConfigSchemaError, parseUiLocale } from "@semio-tech/framework/config/schema";
-import type { ActiveSession, Anchor, AppRole, ArtifactSyncStatus, ByAnchor, Conflict, DialogState, DockUiState, ExtraWindowInstance, IconName, InferencePortStatus, LayoutNode, LoadedPlugin, MergePolicy, NoticeKind, PluginPanelStatus, PluginSupervisorState, ShellCapability, ShellCommand, ShellError, ShellEvent, ShellScope, ShellState, SplitOrientation, SyncCardKind, TransientNotice } from "../🤖️generated/🟦️.js";
+import type { ActiveSession, Anchor, AppRole, ArtifactSyncStatus, ByAnchor, Conflict, DialogState, DockUiState, ExtraWindowInstance, IconName, InferencePortStatus, LayoutNode, LoadedPlugin, MergePolicy, NoticeKind, PluginPanelStatus, PluginSupervisorState, ShellCapability, ShellCommand, ShellError, ShellEvent, ShellScope, ShellState, SplitOrientation, SyncCardKind, TransientNotice } from "../../../../../🔨️modules/🐚️shell/🤖️generated/🟦️.js";
 import schemaDocument from "./🔣️.json" with { type: "json" };
 
 export { OsConfigSchemaError, parseUiAppearance, parseUiChromeLayout, parseUiDriver, parseUiLocale, parseUiPreferences, parseUiTheme } from "@semio-tech/framework/config/schema";
 export type { UiAppearance, UiChromeLayout, UiDriver, UiLocale, UiPreferences, UiTheme } from "@semio-tech/framework/config/schema";
-export * from "../🤖️generated/🟦️.js";
+export * from "../../../../../🔨️modules/🐚️shell/🤖️generated/🟦️.js";
 
 //#region 🪪️Authority
 /** 🪪️ The `$id` `🔣️.json` declares — the identity every consumer resolves `#/$defs/<ExportId>` against. */

@@ -1,6 +1,5 @@
 //! 🧺️ Authoritative PDF mutation payload, diff, inverse, and tests for `remove-catalog-entry`.
 
-use super::PdfMutation;
 use crate::standards::v1_7::subsets::base::schema::diff::{self, PdfDiff};
 use crate::standards::v1_7::subsets::base::schema::snapshot::*;
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
@@ -14,7 +13,10 @@ pub struct RemoveCatalogEntry {
     pub key: String,
 }
 
-impl MutationKind<PdfSnapshot, PdfMutation> for RemoveCatalogEntry {
+impl<Op> MutationKind<PdfSnapshot, Op> for RemoveCatalogEntry
+where
+    Op: protocol::Mutation<PdfSnapshot, Diff = PdfDiff> + From<RemoveCatalogEntry> + From<crate::standards::v1_7::subsets::base::schema::mutations::set_catalog_entry::SetCatalogEntry>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "remove", entity: "catalog-entry", kind: "remove-catalog-entry", record: "Remove" };
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
@@ -22,10 +24,10 @@ impl MutationKind<PdfSnapshot, PdfMutation> for RemoveCatalogEntry {
         MutationOutcome::new(diff::diff_remove_catalog_entry(base, &self.key))
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
         let _ = base;
-        base.catalog_extra.iter().position(|entry| entry.key == self.key).map(|position| PdfMutation::SetCatalogEntry(super::set_catalog_entry::SetCatalogEntry { key: self.key.clone(), value: base.catalog_extra[position].value.clone(), index: Some(position) })).into_iter().collect()
+        base.catalog_extra.iter().position(|entry| entry.key == self.key).map(|position| Op::from(crate::standards::v1_7::subsets::base::schema::mutations::set_catalog_entry::SetCatalogEntry { key: self.key.clone(), value: base.catalog_extra[position].value.clone(), index: Some(position) })).into_iter().collect()
     
     })())
 }
@@ -42,8 +44,6 @@ impl MutationKind<PdfSnapshot, PdfMutation> for RemoveCatalogEntry {
 //#endregion 🔖️Mutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
 

@@ -1,5 +1,6 @@
 use super::*;
 use crate::{FromValue, client::{DirectoryWsConnection, DirectoryWsPoll, HttpResponse, TransportError}};
+use semio_framework_test_fixtures::fixture_text;
 use std::sync::{Arc, Mutex};
 
 #[derive(Clone)]
@@ -21,7 +22,7 @@ impl DirectoryTransport for TestTransport {
     fn issue_socket_grant(&self, _: &OperationContext, _: &str, _: &str, _: &[u8], _: u64) -> Result<HttpResponse, TransportError> { unreachable!() }
     fn open_ws(&self, _: &OperationContext, _: &str, _: &[String], _: u64) -> Result<Self::Ws, TransportError> { unreachable!() }
 }
-fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap() }
+fn fixture() -> serde_json::Value { serde_json::from_str(fixture_text!("../../../../🌐️document-http/🧪️tests/🧫️fixtures/🔣️.json")).unwrap() }
 fn declaration(value: &serde_json::Value) -> DocumentHttpPortDeclarationV1 { DocumentHttpPortDeclarationV1::from_value(semio_framework_pack_json::from_json_str(&value.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()).unwrap() }
 fn context() -> OperationContext { OperationContext { actor: 0, generation: 0, trace: semio_framework_async::TraceId(0), lane: 0, deadline_ms: None, cancel: semio_framework_async::CancelToken::root_now(), capability: None } }
 
@@ -75,7 +76,7 @@ fn schema_vectors_match_owned_validator() {
 #[test]
 fn decoded_replies_obey_the_same_node_bounds_as_owner_inputs() {
     let fixture=fixture();let mut owner=declaration(&fixture["neutral"]);
-    owner.operations[0].output_schema=serde_json::from_str::<serde_json::Value>(include_str!("../🧪️testing/📤️reply-node-bounds/🧬️schema/🔣️.json")).unwrap()["$defs"]["OwnerReply"].to_string();
+    owner.operations[0].output_schema=serde_json::from_str::<serde_json::Value>(fixture_text!("../../../../🌐️document-http/🧪️testing/📤️reply-node-bounds/🧬️schema/🔣️.json")).unwrap()["$defs"]["OwnerReply"].to_string();
     owner.operations[0].response_max_bytes=64*1024;
     let port=CompiledDocumentHttpPortV1::compile("neutral",owner).unwrap();
     for vector in fixture["replyNodeBounds"]["vectors"].as_array().unwrap() {

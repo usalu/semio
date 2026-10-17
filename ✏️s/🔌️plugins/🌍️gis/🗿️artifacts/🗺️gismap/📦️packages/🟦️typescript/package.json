@@ -24,7 +24,15 @@
     ".": {
       "types": "./dist/🟦️.d.ts",
       "import": "./dist/🟦️.js"
-    }
+    },
+    "./inference/client": "./💡️inference/🔌️client/🟦️.ts",
+    "./inference/client/io": "./💡️inference/🔌️client/🚪️io/🟦️.ts",
+    "./inference/mcp/testing/oracle": "./💡️inference/🌉️mcp/🧪️testing/🔬️oracle/🟦️.ts",
+    "./inference/presentation": "./💡️inference/🪟️presentation/🟦️.ts",
+    "./inference/schema": "./💡️inference/🧬️schema/🟦️.ts",
+    "./inference/worker": "./💡️inference/👷️worker/🟦️.ts",
+    "./testing/map-create-region-group": "./🧪️testing/🧩️map-create-region-group/🟦️.ts",
+    "./tiles": "./🗺️tiles/🟦️.ts"
   },
   "types": "./dist/🟦️.d.ts",
   "sideEffects": false,

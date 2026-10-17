@@ -12,7 +12,10 @@ pub struct SetElementNamePayload {
     pub name: String,
 }
 
-impl protocol::MutationKind<SvgSnapshot, super::SvgMutation> for SetElementNamePayload {
+impl<Op> protocol::MutationKind<SvgSnapshot, Op> for SetElementNamePayload
+where
+    Op: protocol::Mutation<SvgSnapshot, Diff = SvgDiff> + From<SetElementNamePayload>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "element-name", kind: "set-element-name", record: "SetElementName" };
 
     fn diff(&self, _base: &SvgSnapshot) -> protocol::MutationOutcome<SvgDiff> {
@@ -20,10 +23,10 @@ impl protocol::MutationKind<SvgSnapshot, super::SvgMutation> for SetElementNameP
         protocol::MutationOutcome::new(diff_at_path(path, SvgNodeDiff::Element(SvgElementDiff { name: Some(name.clone()), ..Default::default() })))
     }
 
-    fn inverse(&self, base: &SvgSnapshot) -> Result<Vec<super::SvgMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &SvgSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         let Self { path, .. } = self;
         Ok(match node_at(&base.doc, path) {
-            Ok(SvgNode::Element { name, .. }) => vec![super::SvgMutation::SetElementName(Self { path: path.clone(), name: name.clone() })],
+            Ok(SvgNode::Element { name, .. }) => vec![Op::from(Self { path: path.clone(), name: name.clone() })],
             _ => Vec::new(),
         })
     }
@@ -36,6 +39,4 @@ impl protocol::MutationKind<SvgSnapshot, super::SvgMutation> for SetElementNameP
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

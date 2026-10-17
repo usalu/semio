@@ -1,7 +1,16 @@
-use super::*;
-use crate::editor::puzzle5d::{capsule_dream_example_document, concrete_forest_example_document, find_part_by_grip_full_id, nakagin_example_document, Puzzle5dPart, PUZZLE5D_PROXIMITY_RADIUS};
+use crate::editor::puzzle5d::entities::{puzzle5d_grip_full_id, world_grip_position, Puzzle5dDocument};
+#[allow(unused_imports)]
+use crate::editor::puzzle5d::precompute::geometry::distance_squared;
+#[allow(unused_imports)]
+use crate::editor::puzzle5d::entities::Puzzle5dGrip;
+#[allow(unused_imports)]
+use std::collections::HashSet;
+use crate::editor::puzzle5d::view::engine_grip_kind;
+use crate::editor::puzzle5d::commands::proximity_connect::*;
+use crate::editor::puzzle5d::entities::{capsule_dream_example_document, concrete_forest_example_document, find_part_by_grip_full_id, nakagin_example_document, Puzzle5dPart, PUZZLE5D_PROXIMITY_RADIUS};
+use semio_framework_test_fixtures::fixture_text;
 
-const PROXIMITY_FIXTURE: &str = include_str!("../🧫️fixtures/🔣️.json");
+static PROXIMITY_FIXTURE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🎮️commands/📡️proximity-connect/🧪️tests/🧫️fixtures/🔣️.json"));
 
 /// 🐢️ The search as it shipped before the spatial index — a scan of every grip of every part with a fastener
 /// scan and two whole-document grip lookups per grip in reach — kept verbatim as the differential oracle.
@@ -56,7 +65,7 @@ fn example(id: &str) -> Puzzle5dDocument {
 /// one part).
 #[test]
 fn proximity_search_matches_the_scan_at_maximum_document_size() {
-    let fixture: serde_json::Value = serde_json::from_str(PROXIMITY_FIXTURE).expect("proximity fixture parses");
+    let fixture: serde_json::Value = serde_json::from_str((*PROXIMITY_FIXTURE)).expect("proximity fixture parses");
     let radius = fixture["radius"].as_f64().expect("radius");
     assert_eq!(radius, PUZZLE5D_PROXIMITY_RADIUS);
     let peers = |document: &Puzzle5dDocument, part_id: &str, gated: bool| puzzle5d_proximity_peers(document, part_id, radius, gated).map(|(_, peers)| peers.into_iter().map(|peer| peer.grip).collect::<Vec<_>>()).unwrap_or_default();

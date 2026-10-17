@@ -255,9 +255,7 @@ pub fn relations(snapshot: &Wfc2dSnapshot) -> Vec<String> {
 //#endregion 🔖️Addressing
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
 
 

@@ -1,5 +1,5 @@
 use super::*;
-use crate::editor::bim::unit_tests::support::{ctx, demo, run};
+use crate::editor::bim::fixture::support::{ctx, demo, run};
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::instance as inference;
 
 #[semio_framework_async_macros::async_test]

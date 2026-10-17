@@ -1,0 +1,27 @@
+# Independent Graph Writer Identity Audit
+
+## Findings
+
+1. **Evidence identity drift, not an identified writer defect.** `.vscode/launch.json:1` no longer matches the report's changed-source identity: same 8,751,975 bytes, observed SHA-256 `4014e4699bfbbf94a387066adf45792f7b8eec46d6c785ca55a1de064cd13811` versus recorded `0eefafaf3bc82a041b3a9879e605068cb847c21a722aa5f72b433b39f783869a`. The source epoch is therefore bounded and non-atomic. Before/after inventories accompany this audit; shared wrapper/backend/launch edits require their own qualification.
+2. **Positive Native/pressure acceptance remains unproved.** `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🟦️.ts:844` now genuinely requests optional publication, but its sparse leaf reserves the remaining quota and expects admission. No fixture body ran in the cited Source cohort. No physical headroom, 1 GiB sparse admission, fallback, retirement, Native identity, recovery, or platform conclusion follows.
+3. **Exit provenance is externally collected, not independently established by strict text.** `🗑️generated/graph-writer-identity-types3-prototype.log:1` and release counterpart contain normal extended diagnostics without diagnostic errors, but no independent tool exit record. This auditor cannot observe the originating handles. The report explicitly attributes terminal exits to collected handles; retained log text alone cannot reprove those exits or terminality.
+
+No additional Source semantic defect found in this bounded identity/private-quota change. Findings above limit evidence acceptance rather than alleging a bypass.
+
+## Source Examination
+
+`🏗️build/📥️inputs/💾️storage/🟨️.mjs:142` binds `store=original`; callback at143 passes that binding. Initial writer scope owns optionalQuota. Nested branch at123 passes `current.store`, preserves the private quota through scope spread, and requires genuine refinement. The quota's original check closure calls current genuine writer checking at reservation time. `:86` requires the live writer before private access and freezes exactly version/usedBytes/pendingBytes DATA. `:91` retains current writer, Native path, isolated namespace, free-space, private quota reservation, same ledger publication, commit and release ordering. `:155` checks original invocation/refinement/liveness/device identity. The adjacent declaration names RepositoryCacheStoreV1 for callbacks and has no copied-store interface or public store quota field. The pure quota model remains an explicit DATA API; it grants no original Native writer authority.
+
+The schema's WriterFacts is closed and declares all three fields. Actual identity tests parse the implementation/declaration, call the missing-writer observation negative, validate neutral facts with Ajv and exercise the real pure quota with independent SQLite accounting. Checked testValueV1 rejects actual undefined only; the JSON/SQLite rows preserve present null/false/zero/empty/object values. These tests do not manufacture or qualify an accepted Native writer. Existing extracted fake store/Native fixtures were read as unqualified fixtures; no fixture body was executed here.
+
+Exactly 50 wrapper insertions were reversed in memory using the retained diagnostic JSON's UTF16 starts and lengths, including nested spans. This recovered SHA-256 `c1c09cbbfeef0060600ce4c4b1c929fb6b88160da192e925b8741666571a7f17` exactly; all 50 original expressions matched their precise retained spans. This independently confirms those 50 repairs only add required-value calls, with no removed assertions, new non-null assertions/casts, or changed surrounding expression semantics. The extra pre-existing required-value call and import remain in the reconstructed pre-insertion source. No Source copy was written.
+
+Wrapper `typescript-artifact/📜️script.ts:60` retains the original strict roots and strict/noUnchecked/noEmit flags, appends identity/full graph/phase roots, and retains itself for twelve total roots. Only three ordinary Source/pure test files are selected. The terminal green log text shows 4/67 +3/107 +3/34 =10 tests/208 assertions in both modes. Source RED and intermediate failures remain retained. No compiler, Cargo, SDK, esbuild, Native fixture, browser, network, metadata, cache, or OS-sampling operation was run by this auditor. No Git, ticket, goal, Source or AGENTS mutation was performed.
+
+## Acceptance Boundary
+
+The exact genuine callback object and private optional accounting change is supported at Source/pure-law level. This does not close actual coupled mandatory Graph inventory retirement, complete hash-to-task reader interval retention, Native writer/pressure, physical bounds/recovery, performance, concurrent behavior, platform qualification, default SDK or publication HOLD. The separately reported entered-funding copied-request identity issue belongs to its executor's correction and is not proved resolved by this quota audit.
+
+## Inventory
+
+The before inventory covers all 10 changed +19 observed Source files, all nine logs and the diagnostic JSON (39 identities). All except launch matched the cited epoch at opening. The report itself matched supplied SHA-256 `f057af517f92750d7b543a22604fda29a3f7c023964b1f91de10ff4f96c9cbb7`. See `audit-graph-writer-identity-before.md` and `audit-graph-writer-identity-after.md` for complete exact identities. Hash observations are sequential, not a lock of a shared filesystem.

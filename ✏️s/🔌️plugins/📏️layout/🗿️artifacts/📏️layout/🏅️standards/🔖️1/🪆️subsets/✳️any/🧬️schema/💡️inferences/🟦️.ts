@@ -30,6 +30,10 @@ type layoutLayoutInferenceGuardSizeBounds = { readonly minItems?: number; readon
 
 export const layoutLayoutInferenceGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : layoutLayoutInferenceGuardReject(at, "value is not an object");
+export const layoutLayoutInferenceGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) layoutLayoutInferenceGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const layoutLayoutInferenceGuardArray = (value: unknown, at: string, bounds: layoutLayoutInferenceGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return layoutLayoutInferenceGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) layoutLayoutInferenceGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -60,17 +64,17 @@ export const layoutLayoutInferenceGuardConstant = <T extends string | number | b
 //#endregion 🚪️Parsers
 
 export function parseLayoutInference(value: unknown, at = "$"): LayoutInference {
-  const row = layoutLayoutInferenceGuardObject(value, at);
+  const row = layoutLayoutInferenceGuardClosed(layoutLayoutInferenceGuardObject(value, at), at, ["topology"]);
   return {
     topology: parseLayoutTopology(row["topology"], `${at}.topology`),
   };
 }
 
 export function parseLayoutTopology(value: unknown, at = "$"): LayoutTopology {
-  const row = layoutLayoutInferenceGuardObject(value, at);
+  const row = layoutLayoutInferenceGuardClosed(layoutLayoutInferenceGuardObject(value, at), at, ["topoOrder", "depth", "cycleFree", "nodeCount"]);
   return {
     topoOrder: layoutLayoutInferenceGuardArray(row["topoOrder"], `${at}.topoOrder`).map((item, index) => layoutLayoutInferenceGuardString(item, `${at}.topoOrder[${index}]`)),
-    depth: layoutLayoutInferenceGuardObject(row["depth"], `${at}.depth`),
+    depth: Object.fromEntries(Object.entries(layoutLayoutInferenceGuardObject(row["depth"], `${at}.depth`)).map(([key0, value0]) => [key0, layoutLayoutInferenceGuardInteger(value0, `${at}.depth.${key0}`)])),
     cycleFree: layoutLayoutInferenceGuardBoolean(row["cycleFree"], `${at}.cycleFree`),
     nodeCount: layoutLayoutInferenceGuardInteger(row["nodeCount"], `${at}.nodeCount`),
   };

@@ -28,8 +28,8 @@ import { describe, expect, it } from "vitest";
 
 import workerFreshness from "../🧫️fixtures/👷️worker-freshness/🔣️.json" with { type: "json" };
 import { createServer, type ViteDevServer } from "vite";
-import { semioServeCloseVitePlugin } from "../../../../../../🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts";
-import { semioSourceFreshnessVitePlugins } from "../../🔌️vite-plugins/🟦️.ts";
+import { semioServeCloseVitePlugin } from "@semio-tech/ui-styling/builder/vite";
+import { semioSourceFreshnessVitePlugins } from "../../🔌️vite-plugins/🔖️source-freshness/🟦️.ts";
 
 type HotUpdateFixture = {
   readonly boundMs: number;

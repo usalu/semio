@@ -1,4 +1,4 @@
-use super::*;
+use crate::standards::v2_0::subsets::any::schema::inferences::size::overall_size::*;
 #[semio_framework_async_macros::async_test]
 async fn descriptor_is_versioned_and_cacheable() {
     assert_eq!(descriptor().id, "s.stdio.gltf.inference.overall-size.v1");

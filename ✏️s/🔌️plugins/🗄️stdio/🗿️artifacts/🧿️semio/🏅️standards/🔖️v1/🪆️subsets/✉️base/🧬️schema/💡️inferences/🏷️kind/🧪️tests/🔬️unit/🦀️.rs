@@ -1,4 +1,9 @@
-use super::*;
+use crate::schema::snapshot::SemioSnapshot;
+#[allow(unused_imports)]
+use crate::schema::snapshot::subset_ordinal;
+#[allow(unused_imports)]
+use crate::schema::snapshot::subset_tag;
+use crate::schema::inferences::kind::*;
 use crate::schema::snapshot::{SemioSubsetSnapshot, STDIO_SEMIO_DOCUMENT_SCHEMA};
 use semio_s_artifact_stdio_semio_image::schema::snapshot::SemioImageSnapshot;
 

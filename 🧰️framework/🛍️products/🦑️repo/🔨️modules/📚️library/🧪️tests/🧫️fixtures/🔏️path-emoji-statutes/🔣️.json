@@ -1645,10 +1645,6 @@
           "reserved": true
         },
         {
-          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/🤖️generated/🟦️.ts",
-          "nodeKind": "file"
-        },
-        {
           "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🧫️fixtures/📤️macro-exports/🔣️.json",
           "nodeKind": "file"
         },

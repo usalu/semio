@@ -1,7 +1,7 @@
 //! ➕ Puzzle5d mutation — `AddPartGrip`: attaches a new rim grip to a part.
 use crate::standards::v1::subsets::any::schema::diff::Puzzle5dDiff;
-use crate::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation;
-use crate::{Puzzle5dGrip, Puzzle5dSnapshot};
+use crate::{Puzzle5dSnapshot};
+use crate::standards::v1::subsets::any::schema::document_records::{Puzzle5dGrip};
 
 //#region 🔖️Mutation
 /// ➕ `add-part-grip` payload — owner part id + new grip payload at an optional FINAL-state
@@ -21,17 +21,23 @@ pub struct AddPartGrip {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn add_part_grip(part_id: String, grip: Puzzle5dGrip, index: Option<usize>) -> Puzzle5dMutation {
-    Puzzle5dMutation::AddPartGrip(AddPartGrip { part_id, grip, index })
+pub fn add_part_grip<Op>(part_id: String, grip: Puzzle5dGrip, index: Option<usize>) -> Op
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::add_part_grip::AddPartGrip>,
+{
+    Op::from(AddPartGrip { part_id, grip, index })
 }
 
-impl protocol::MutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for AddPartGrip {
+impl<Op> protocol::MutationKind<Puzzle5dSnapshot, Op> for AddPartGrip
+where
+    Op: protocol::Mutation<Puzzle5dSnapshot, Diff = Puzzle5dDiff> + From<AddPartGrip> + From<crate::standards::v1::subsets::any::schema::mutations::remove_part_grip::RemovePartGrip>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "part-grip", kind: "add-part-grip", record: "AddedPartGrip" };
 
     fn diff(&self, base: &Puzzle5dSnapshot) -> protocol::MutationOutcome<Puzzle5dDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Puzzle5dSnapshot) -> Result<Vec<Puzzle5dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Puzzle5dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

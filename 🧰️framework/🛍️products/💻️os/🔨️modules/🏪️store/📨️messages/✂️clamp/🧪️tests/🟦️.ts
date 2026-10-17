@@ -93,5 +93,4 @@ test("📏️ settlement copy1/7 keeps whole physical release4096 authority", ()
   state=applyPatch(state,[{op:"replace",path:"/allocation",value:0}],true,false).newDocument;
   expect(state).toEqual({copied:extent,allocation:0});
  }
- console.log("[DEBUG] independent TextEncoder/JSON Patch oracle retains whole1000-byte owner across copy1/7 and underfunded physical release");
 });

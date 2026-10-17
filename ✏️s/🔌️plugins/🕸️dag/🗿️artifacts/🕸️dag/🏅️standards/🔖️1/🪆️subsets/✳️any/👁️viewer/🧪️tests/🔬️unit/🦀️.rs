@@ -1,4 +1,11 @@
-use super::*;
+use crate::viewer::dag::modes::view::windows::main;
+use crate::{default_snapshot, DAG_DIALECT};
+use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::ArtifactViewer;
+use semio_framework_plugin::ConfigView;
+use semio_framework_plugin::NoConfig;
+use semio_framework_plugin::Viewer;
+use crate::viewer::dag::*;
 
 #[semio_framework_async_macros::async_test]
 async fn create_dag_viewer_builds_a_definition_for_the_viewer_role() {

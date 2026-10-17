@@ -40,7 +40,7 @@ use crate::io::text::snapshot::enc_vertex;
 use protocol::command::DiffAlgebra;
 use protocol::MutationDiff;
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn print_brep_diff(d: &SemioBrepDiff) -> String {
+pub fn print_brep_diff(d: &SemioBrepDiff) -> String {
     let mut tokens: Vec<String> = Vec::new();
     if let Some(v) = &d.vertices {
         tokens.push(format!("vertices={}", enc_named_triple(v, |k: &String| enc_str(k), enc_vertex_diff, |a| enc_named_added(a, enc_vertex))));
@@ -64,7 +64,7 @@ pub(crate) fn print_brep_diff(d: &SemioBrepDiff) -> String {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn parse_brep_diff(line: &str) -> Result<SemioBrepDiff, String> {
+pub fn parse_brep_diff(line: &str) -> Result<SemioBrepDiff, String> {
     let mut d = SemioBrepDiff::default();
     if line.is_empty() {
         return Ok(d);
@@ -98,12 +98,12 @@ fn parse_diff(line: &str) -> Result<Self, semio_framework_diagnostic::TextError>
 }
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn hex_encode(bytes: &[u8]) -> String {
+pub fn hex_encode(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
+pub fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     if !s.len().is_multiple_of(2) {
         return Err(format!("odd hex length: {s:?}"));
     }
@@ -111,27 +111,27 @@ pub(crate) fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_str(s: &str) -> String {
+pub fn enc_str(s: &str) -> String {
     hex_encode(s.as_bytes())
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_str(s: &str) -> Result<String, String> {
+pub fn dec_str(s: &str) -> Result<String, String> {
     String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn parse_f64(s: &str) -> Result<f64, String> {
+pub fn parse_f64(s: &str) -> Result<f64, String> {
     semio_s_artifact_stdio_semio_base::schema::geometry::native::parse(s)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn parse_u32(s: &str) -> Result<u32, String> {
+pub fn parse_u32(s: &str) -> Result<u32, String> {
     s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_bool(b: bool) -> &'static str {
+pub fn enc_bool(b: bool) -> &'static str {
     if b {
         "1"
     } else {
@@ -140,7 +140,7 @@ pub(crate) fn enc_bool(b: bool) -> &'static str {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn parse_bool(s: &str) -> Result<bool, String> {
+pub fn parse_bool(s: &str) -> Result<bool, String> {
     match s {
         "1" => Ok(true),
         "0" => Ok(false),
@@ -149,22 +149,22 @@ pub(crate) fn parse_bool(s: &str) -> Result<bool, String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_list<T>(items: &[T], enc: impl Fn(&T) -> String) -> String {
+pub fn enc_list<T>(items: &[T], enc: impl Fn(&T) -> String) -> String {
     format!("[{}]", items.iter().map(enc).collect::<Vec<_>>().join(","))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Vec<T>, String> {
+pub fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Vec<T>, String> {
     split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec).collect()
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_point3(p: &SemioPoint3) -> String {
+pub fn enc_point3(p: &SemioPoint3) -> String {
     format!("[{},{},{}]", NativeF64(p.x), NativeF64(p.y), NativeF64(p.z))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_point3(s: &str) -> Result<SemioPoint3, String> {
+pub fn dec_point3(s: &str) -> Result<SemioPoint3, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [x, y, z] = parts.as_slice() else { return Err(format!("point3: expected 3 fields, got {}", parts.len())) };
     Ok(SemioPoint3 { x: parse_f64(x)?, y: parse_f64(y)?, z: parse_f64(z)? })
@@ -174,7 +174,7 @@ pub(crate) fn dec_point3(s: &str) -> Result<SemioPoint3, String> {
 /// `N[controlPoints,weights,degree,knots]` — single-letter tag prefix, same convention as bcf's
 /// `enc_camera`/svg's `enc_xml_node`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_curve(c: &BrepCurve) -> String {
+pub fn enc_curve(c: &BrepCurve) -> String {
     match c {
         BrepCurve::Line { origin, direction } => format!("L[{},{}]", enc_point3(origin), enc_point3(direction)),
         BrepCurve::Circle { center, axis, radius } => format!("C[{},{},{}]", enc_point3(center), enc_point3(axis), NativeF64(*radius)),
@@ -186,7 +186,7 @@ pub(crate) fn enc_curve(c: &BrepCurve) -> String {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_curve(s: &str) -> Result<BrepCurve, String> {
+pub fn dec_curve(s: &str) -> Result<BrepCurve, String> {
     let (tag, rest) = s.split_at(1);
     let inner = strip_brackets(rest)?;
     let parts = split_top_level(inner, ',');
@@ -215,7 +215,7 @@ pub(crate) fn dec_curve(s: &str) -> Result<BrepCurve, String> {
 /// (cone) / `S[center,radius]` (sphere) / `T[center,axis,majorRadius,minorRadius]` (torus) /
 /// `N[controlPoints,weights,uCount,vCount,degreeU,degreeV,knotsU,knotsV]`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_surface(s: &BrepSurface) -> String {
+pub fn enc_surface(s: &BrepSurface) -> String {
     match s {
         BrepSurface::Plane { origin, normal } => format!("P[{},{}]", enc_point3(origin), enc_point3(normal)),
         BrepSurface::Cylinder { origin, axis, radius } => format!("C[{},{},{}]", enc_point3(origin), enc_point3(axis), NativeF64(*radius)),
@@ -237,7 +237,7 @@ pub(crate) fn enc_surface(s: &BrepSurface) -> String {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_surface(s: &str) -> Result<BrepSurface, String> {
+pub fn dec_surface(s: &str) -> Result<BrepSurface, String> {
     let (tag, rest) = s.split_at(1);
     let inner = strip_brackets(rest)?;
     let parts = split_top_level(inner, ',');
@@ -282,114 +282,114 @@ pub(crate) fn dec_surface(s: &str) -> Result<BrepSurface, String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_loop_edge(le: &BrepLoopEdge) -> String {
+pub fn enc_loop_edge(le: &BrepLoopEdge) -> String {
     format!("[{},{}]", enc_str(&le.edge), enc_bool(le.orientation))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_loop_edge(s: &str) -> Result<BrepLoopEdge, String> {
+pub fn dec_loop_edge(s: &str) -> Result<BrepLoopEdge, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [edge, orientation] = parts.as_slice() else { return Err(format!("loop edge: expected 2 fields, got {}", parts.len())) };
     Ok(BrepLoopEdge { edge: dec_str(edge)?, orientation: parse_bool(orientation)? })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_shell_face(sf: &BrepShellFace) -> String {
+pub fn enc_shell_face(sf: &BrepShellFace) -> String {
     format!("[{},{}]", enc_str(&sf.face), enc_bool(sf.orientation))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_shell_face(s: &str) -> Result<BrepShellFace, String> {
+pub fn dec_shell_face(s: &str) -> Result<BrepShellFace, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [face, orientation] = parts.as_slice() else { return Err(format!("shell face: expected 2 fields, got {}", parts.len())) };
     Ok(BrepShellFace { face: dec_str(face)?, orientation: parse_bool(orientation)? })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_solid_shell(ss: &BrepSolidShell) -> String {
+pub fn enc_solid_shell(ss: &BrepSolidShell) -> String {
     format!("[{},{}]", enc_str(&ss.shell), enc_bool(ss.is_void))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_solid_shell(s: &str) -> Result<BrepSolidShell, String> {
+pub fn dec_solid_shell(s: &str) -> Result<BrepSolidShell, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [shell, is_void] = parts.as_slice() else { return Err(format!("solid shell: expected 2 fields, got {}", parts.len())) };
     Ok(BrepSolidShell { shell: dec_str(shell)?, is_void: parse_bool(is_void)? })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_loop(l: &BrepLoop) -> String {
+pub fn enc_loop(l: &BrepLoop) -> String {
     format!("[{},{}]", enc_str(&l.id), enc_list(&l.edges, enc_loop_edge))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_loop(s: &str) -> Result<BrepLoop, String> {
+pub fn dec_loop(s: &str) -> Result<BrepLoop, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [id, edges] = parts.as_slice() else { return Err(format!("loop: expected 2 fields, got {}", parts.len())) };
     Ok(BrepLoop { id: dec_str(id)?, edges: dec_list(edges, dec_loop_edge)? })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_shell(sh: &BrepShell) -> String {
+pub fn enc_shell(sh: &BrepShell) -> String {
     format!("[{},{}]", enc_str(&sh.id), enc_list(&sh.faces, enc_shell_face))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_shell(s: &str) -> Result<BrepShell, String> {
+pub fn dec_shell(s: &str) -> Result<BrepShell, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [id, faces] = parts.as_slice() else { return Err(format!("shell: expected 2 fields, got {}", parts.len())) };
     Ok(BrepShell { id: dec_str(id)?, faces: dec_list(faces, dec_shell_face)? })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_solid(so: &BrepSolid) -> String {
+pub fn enc_solid(so: &BrepSolid) -> String {
     format!("[{},{}]", enc_str(&so.id), enc_list(&so.shells, enc_solid_shell))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_solid(s: &str) -> Result<BrepSolid, String> {
+pub fn dec_solid(s: &str) -> Result<BrepSolid, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [id, shells] = parts.as_slice() else { return Err(format!("solid: expected 2 fields, got {}", parts.len())) };
     Ok(BrepSolid { id: dec_str(id)?, shells: dec_list(shells, dec_solid_shell)? })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_vertex_diff(d: &BrepVertexDiff) -> String {
+pub fn enc_vertex_diff(d: &BrepVertexDiff) -> String {
     format!("[{},{}]", encode_option(&d.point, enc_point3), encode_option(&d.tol, |v: &f64| NativeF64(*v).to_string()))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_vertex_diff(s: &str) -> Result<BrepVertexDiff, String> {
+pub fn dec_vertex_diff(s: &str) -> Result<BrepVertexDiff, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [point, tol] = parts.as_slice() else { return Err(format!("vertex diff: expected 2 fields, got {}", parts.len())) };
     Ok(BrepVertexDiff { point: decode_option(point, dec_point3)?, tol: decode_option(tol, parse_f64)? })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_edge_diff(d: &BrepEdgeDiff) -> String {
+pub fn enc_edge_diff(d: &BrepEdgeDiff) -> String {
     format!("[{},{},{},{}]", encode_option(&d.start_vertex, |v: &String| enc_str(v)), encode_option(&d.end_vertex, |v: &String| enc_str(v)), encode_option(&d.curve, enc_curve), encode_option(&d.tol, |v: &f64| NativeF64(*v).to_string()))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_edge_diff(s: &str) -> Result<BrepEdgeDiff, String> {
+pub fn dec_edge_diff(s: &str) -> Result<BrepEdgeDiff, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [start_vertex, end_vertex, curve, tol] = parts.as_slice() else { return Err(format!("edge diff: expected 4 fields, got {}", parts.len())) };
     Ok(BrepEdgeDiff { start_vertex: decode_option(start_vertex, dec_str)?, end_vertex: decode_option(end_vertex, dec_str)?, curve: decode_option(curve, dec_curve)?, tol: decode_option(tol, parse_f64)? })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_loop_diff(d: &BrepLoopDiff) -> String {
+pub fn enc_loop_diff(d: &BrepLoopDiff) -> String {
     format!("[{}]", encode_option(&d.edges, |v: &Vec<BrepLoopEdge>| enc_list(v, enc_loop_edge)))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_loop_diff(s: &str) -> Result<BrepLoopDiff, String> {
+pub fn dec_loop_diff(s: &str) -> Result<BrepLoopDiff, String> {
     let inner = strip_brackets(s)?;
     Ok(BrepLoopDiff { edges: decode_option(inner, |s| dec_list(s, dec_loop_edge))? })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_face_diff(d: &BrepFaceDiff) -> String {
+pub fn enc_face_diff(d: &BrepFaceDiff) -> String {
     format!(
         "[{},{},{},{},{}]",
         encode_option(&d.outer_loop, |v: &String| enc_str(v)),
@@ -401,7 +401,7 @@ pub(crate) fn enc_face_diff(d: &BrepFaceDiff) -> String {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_face_diff(s: &str) -> Result<BrepFaceDiff, String> {
+pub fn dec_face_diff(s: &str) -> Result<BrepFaceDiff, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [outer_loop, inner_loops, surface, orientation, tol] = parts.as_slice() else { return Err(format!("face diff: expected 5 fields, got {}", parts.len())) };
     Ok(BrepFaceDiff {
@@ -414,23 +414,23 @@ pub(crate) fn dec_face_diff(s: &str) -> Result<BrepFaceDiff, String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_shell_diff(d: &BrepShellDiff) -> String {
+pub fn enc_shell_diff(d: &BrepShellDiff) -> String {
     format!("[{}]", encode_option(&d.faces, |v: &Vec<BrepShellFace>| enc_list(v, enc_shell_face)))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_shell_diff(s: &str) -> Result<BrepShellDiff, String> {
+pub fn dec_shell_diff(s: &str) -> Result<BrepShellDiff, String> {
     let inner = strip_brackets(s)?;
     Ok(BrepShellDiff { faces: decode_option(inner, |s| dec_list(s, dec_shell_face))? })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_solid_diff(d: &BrepSolidDiff) -> String {
+pub fn enc_solid_diff(d: &BrepSolidDiff) -> String {
     format!("[{}]", encode_option(&d.shells, |v: &Vec<BrepSolidShell>| enc_list(v, enc_solid_shell)))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_solid_diff(s: &str) -> Result<BrepSolidDiff, String> {
+pub fn dec_solid_diff(s: &str) -> Result<BrepSolidDiff, String> {
     let inner = strip_brackets(s)?;
     Ok(BrepSolidDiff { shells: decode_option(inner, |s| dec_list(s, dec_solid_shell))? })
 }

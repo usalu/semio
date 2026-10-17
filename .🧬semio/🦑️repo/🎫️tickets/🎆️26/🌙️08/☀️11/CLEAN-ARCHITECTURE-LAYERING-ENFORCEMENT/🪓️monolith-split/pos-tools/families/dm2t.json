@@ -1,0 +1,18 @@
+{
+ "name": "dm2t",
+ "crates": [
+  "semio-framework-test-transient-preparation-law",
+  "semio-s-artifact-writer-writer",
+  "semio-s-artifact-reasoning-wires",
+  "semio-s-artifact-forms-forms"
+ ],
+ "base": {
+  "rev": "1bae6115bc5",
+  "crates": [
+   "semio-s-artifact-writer-writer",
+   "semio-s-artifact-reasoning-wires",
+   "semio-s-artifact-forms-forms"
+  ]
+ },
+ "note": "DM2 transient-preparation-law owner and its three consumers"
+}

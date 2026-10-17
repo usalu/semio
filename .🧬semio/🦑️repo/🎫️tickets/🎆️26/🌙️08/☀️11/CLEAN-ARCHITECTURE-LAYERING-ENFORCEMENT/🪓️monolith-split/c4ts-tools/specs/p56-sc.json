@@ -1,0 +1,55 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📐️schema-contracts/🟦️.ts",
+ "importers": "auto",
+ "childrenImportParent": true,
+ "children": [
+  {
+   "dir": "🏗️scope-eligibility-and-tree",
+   "doc": "/** 🏗️ Which scopes may own a schema: fixture-owned paths, the owner levels and their eligibility, the declared dialect, schema definition reading and the schema tree on disk. */",
+   "lines": [
+    [
+     434,
+     499
+    ],
+    [
+     530,
+     562
+    ]
+   ]
+  },
+  {
+   "dir": "🩺️placement-diagnostics",
+   "doc": "/** 🩺️ The placement diagnostics of the schema contract layer: forbidden placements, module directories on disk, measurement disagreements, owner eligibility and fixture isolation. */",
+   "lines": [
+    [
+     564,
+     737
+    ]
+   ]
+  },
+  {
+   "dir": "📤️export-completeness",
+   "doc": "/** 📤️ The named schema exports of a scope: the export files, the declared formats, the completeness diagnostics and the declaration parsers of every format. */",
+   "lines": [
+    [
+     739,
+     754
+    ],
+    [
+     776,
+     972
+    ]
+   ]
+  },
+  {
+   "dir": "🔗️reference-diagnostics",
+   "doc": "/** 🔗️ The reference diagnostics of the schema contract layer: JSON pointers, `$ref` resolution and the whole schema contract diagnostic of a tree. */",
+   "lines": [
+    [
+     974,
+     1115
+    ]
+   ]
+  }
+ ]
+}

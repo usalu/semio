@@ -7,15 +7,17 @@ import { BundleScript, ScriptRouter } from "../../../../../../🧰️framework/�
 import { runScriptMain } from "../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
 
 //#region 🧪️Validation
+const PACKAGES = ["semio-s-plugin-wfc-engine", "semio-s-plugin-wfc-engine-foundation", "semio-s-plugin-wfc-engine-job", "semio-s-plugin-wfc-engine-kernel", "semio-s-plugin-wfc-engine-lattice", "semio-s-plugin-wfc-engine-oracle", "semio-s-plugin-wfc-engine-solve"].flatMap(name => ["-p", name]);
+
 class CheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    await runCargo(["check", "-p", "semio-s-plugin-wfc-engine", "--lib", "--tests", ...segments], this.repoRoot);
+    await runCargo(["check", ...PACKAGES, "--lib", "--tests", ...segments], this.repoRoot);
   }
 }
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    await runCargo(["test", "-p", "semio-s-plugin-wfc-engine", "--lib", ...rest], this.repoRoot);
+    await runCargo(["test", ...PACKAGES, "--lib", ...rest], this.repoRoot);
   }
 }
 const router = new ScriptRouter(import.meta.dir).register("check", CheckScript).register("test", TestScript);

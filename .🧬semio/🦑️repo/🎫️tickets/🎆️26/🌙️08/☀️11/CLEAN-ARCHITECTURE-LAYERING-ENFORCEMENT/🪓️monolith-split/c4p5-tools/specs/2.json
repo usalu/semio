@@ -1,0 +1,130 @@
+{
+ "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⏳️precompute/🪣️fill/🦀️.rs",
+ "original": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/🗑️generated/c4p5-orig/2.rs",
+ "stage": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/🗑️generated/c4p5-stage",
+ "descendants": [],
+ "chunks": [
+  {
+   "name": "fill_contract",
+   "folder": "🛑️fill-contract",
+   "doc": "🛑️ Fill contract: why a plan stops, the step context a planner transition runs under, the run events and the placed collision entry.",
+   "segments": [
+    {
+     "lines": [
+      30,
+      115
+     ]
+    }
+   ]
+  },
+  {
+   "name": "weighted_draw",
+   "folder": "🎲️weighted-draw",
+   "doc": "🎲️ Weighted draw: the Fenwick tree over vortex weights and the weighted pick and draw that consume the per-run random stream.",
+   "segments": [
+    {
+     "lines": [
+      117,
+      197
+     ]
+    }
+   ]
+  },
+  {
+   "name": "builder_state",
+   "folder": "🏗️builder-state",
+   "doc": "🏗️ Builder state: the job stages and phases, the fixed owners, the scene and catalog views, the preparation capacity refusal, `FillBuilder` and its retained brush weights.",
+   "segments": [
+    {
+     "lines": [
+      199,
+      510
+     ]
+    }
+   ]
+  },
+  {
+   "name": "retirement",
+   "folder": "♻️retirement",
+   "doc": "♻️ Retirement: the incremental release of every owner a `FillBuilder` still holds when it closes, one bounded unit per call.",
+   "segments": [
+    {
+     "lines": [
+      512,
+      955
+     ]
+    }
+   ]
+  },
+  {
+   "name": "builder_preparation",
+   "folder": "🧱️builder-preparation",
+   "doc": "🧱️ Builder preparation: `begin_preparation`, the close accounting and the cooperative preparation transitions that install the scene, catalogs, meshes, entries, spatial index and lookups.",
+   "segments": [
+    {
+     "lines": [
+      957,
+      1573
+     ]
+    }
+   ]
+  },
+  {
+   "name": "interactive_fill",
+   "folder": "🧵️interactive-fill",
+   "doc": "🧵️ Interactive fill: target and candidate selection, the broad and narrow phase, acceptance, the resets and the planner transition under any step context.",
+   "segments": [
+    {
+     "lines": [
+      1576,
+      2377
+     ],
+     "before": [
+      "//#region 🧵️InteractiveFillJob"
+     ],
+     "after": [
+      "//#endregion 🧵️InteractiveFillJob"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "fill_run",
+   "folder": "⏯️fill-run",
+   "doc": "⏯️ Fill run: the tool run job that steps the planner, publishes every verdict as a trace upsert and keeps accepted placements as provisional ops.",
+   "segments": [
+    {
+     "lines": [
+      2382,
+      3061
+     ],
+     "before": [
+      "//#region ⏯️FillRunJob"
+     ],
+     "after": [
+      "//#endregion ⏯️FillRunJob"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "fill_revalidation",
+   "folder": "🔍️fill-revalidation",
+   "doc": "🔍️ Fill revalidation: the finalize job that re-checks the provisional placements against the committed document and re-appends the survivors.",
+   "segments": [
+    {
+     "lines": [
+      3063,
+      3411
+     ],
+     "before": [
+      "//#region ⏯️FillRunJob"
+     ],
+     "after": [
+      "//#endregion ⏯️FillRunJob"
+     ]
+    }
+   ]
+  }
+ ]
+}

@@ -35,4 +35,5 @@ semio-s-artifact-procedural-3d-mut-generations = { workspace = true }
 semio-s-artifact-procedural-3d-mut-synapses = { workspace = true }
 semio-s-artifact-procedural-3d-mut-widgets = { workspace = true }
 semio-s-artifact-procedural-3d-testkit = { workspace = true }
+semio-s-artifact-procedural-3d-model = { workspace = true, features = ["testkit"] }
 

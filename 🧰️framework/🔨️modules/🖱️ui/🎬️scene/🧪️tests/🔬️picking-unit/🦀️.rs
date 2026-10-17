@@ -456,5 +456,4 @@ fn screen_select_original_vertices_skips_surface_samples() {
     mesh_test_attempt(||mesh3d_begin_close(mesh)).unwrap();
     while !close_mesh(mesh).unwrap() {}
     assert!(mesh3d_terminal_is_empty(mesh));
-    eprintln!("[DEBUG] originalVertexScreenSelection methods=2 surfaceSamplesExcluded=true terminalEmpty=true");
 }

@@ -1,4 +1,6 @@
-use super::*;
+use crate::ZipSnapshot;
+use semio_framework_plugin::TreeWindows;
+use crate::viewer::zip::iso21320::modes::view::windows::main::*;
 use crate::schema::snapshot::ZipEntry;
 
 #[semio_framework_async_macros::async_test]

@@ -60,7 +60,7 @@ fn decomposition_exports_one_component_per_unit_of_fuel() {
 fn the_label_is_the_root_label_of_the_value() {
     let input = cube(2.0);
     let (_, evaluation) = run("brep.topology.label", vec![("shape", GeometryValue::Shape(input.clone()))], 1);
-    assert_eq!*(evaluation.outputs.get("label").unwrap(), GeometryValue::Text(input.label().expect("label").0.to_string()));
+    assert_eq!(*evaluation.outputs.get("label").unwrap(), GeometryValue::Text(input.label().expect("label").0.to_string()));
 }
 
 #[test]

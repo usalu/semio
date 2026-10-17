@@ -3,22 +3,10 @@
 // its `#[path]` and `include!` literals resolve against this folder (`📥️mounts/<hub>/`), hence the `../../` prefix of the renderer folder.
 // Carving a crate removes its unit here and puts `extern crate <crate> as <old module name>;` in its place (PLAN-RENDERER-WGPU-CRATES.md, section 10.3).
 
-#[cfg(test)]
-use semio_framework_os_renderer_wgpu_ui_engine_tests::fixture_original_turn;
-
-#[cfg(test)]
-include!("../../../../../🧪️tests/🧊️wgpu-renderer-standalone/🦀️.rs");
-
-#[cfg(test)]
-include!("../../../../../🧪️tests/🐕️wgpu-present-stall-watch/🦀️.rs");
-
 #[path = "../../../../../🧱️elements/🗣️Interpreter/🎯️targets/🧊️wgpu/🦀️.rs"]
 pub mod interpreter;
 
-
 pub(crate) use semio_framework_os_renderer_wgpu_runtime_mailbox::*;
-
-
 
 pub(crate) use semio_framework_os_renderer_wgpu_frame_presentation::*;
 
@@ -27,21 +15,12 @@ pub(crate) use semio_framework_os_renderer_wgpu_app_runtime::*;
 pub(crate) use semio_framework_os_renderer_wgpu_native_probe::*;
 
 //#region 🔖️AsyncBoundaryTests
-#[cfg(test)]
-#[path = "../../../../../🧪️tests/🔬️wgpu-renderer-async-boundary/🦀️.rs"]
-mod async_boundary_tests;
 //#endregion 🔖️AsyncBoundaryTests
 
 //#region 🔖️FrameActionLedgerTests
-#[cfg(test)]
-#[path = "../../../../../🧪️tests/🧾️frame-action-ledger/🦀️.rs"]
-mod frame_action_ledger_tests;
 //#endregion 🔖️FrameActionLedgerTests
 
 //#region 🔖️WheelApplicationPointTests
-#[cfg(test)]
-#[path = "../../../../../🧪️tests/🖱️wheel-application-point/🦀️.rs"]
-mod wheel_application_point_tests;
 //#endregion 🔖️WheelApplicationPointTests
 
 //#region 🔖️OsHostDecomposition
@@ -75,32 +54,18 @@ pub(crate) use semio_framework_os_renderer_wgpu_browser_worker::*;
 //#endregion 🔖️OsHostDecomposition
 
 //#region 🧵️FrameCoreTestHosts
-#[cfg(all(test, not(target_arch = "wasm32")))]
-#[path = "../../../../../../../../../../🔨️modules/🖱️ui/🖥️host/📥️input/🎟️admission/🔗️commit/📥️enqueue/🧪️tests/📥️enqueue/🦀️.rs"]
-mod runtime_publication_tests_host;
 //#endregion 🧵️FrameCoreTestHosts
 //#region 🧵️FrameCoreTestHosts
 //#endregion 🧵️FrameCoreTestHosts
 //#region 🧵️FrameCoreTestHosts
-#[cfg(all(test, not(target_arch = "wasm32")))]
-#[path = "../../🪶️sqlite/🧪️tests/🦀️.rs"]
-mod native_socket_sqlite_tests_host;
 //#endregion 🧵️FrameCoreTestHosts
 //#region 🧵️FrameCoreTestHosts
 //#endregion 🧵️FrameCoreTestHosts
 //#region 🧵️FrameCoreOsHostTestHost
-#[cfg(test)]
-include!("../../../../../🧪️tests/🧊️wgpu-os-host-standalone/🦀️.rs");
 //#endregion 🧵️FrameCoreOsHostTestHost
 //#region 🧷️InterpreterTestHosts
 // 🧪️ Test hosts of the interpreter laws that name the monolith (scenes, engine canvas, the frame fixtures): the `ui-engine` crates are built with their `testkit` feature in this test unit, and the law files keep the namespace they were written against.
-#[cfg(all(test, not(target_arch = "wasm32")))]
-#[path = "🧪️test-hosts/🧷️interpreter-command-wiring/🦀️.rs"]
-mod interpreter_command_wiring_host;
 
-#[cfg(test)]
-#[path = "🧪️test-hosts/🔎️interpreter-introspection/🦀️.rs"]
-mod interpreter_introspection_host;
 //#endregion 🧷️InterpreterTestHosts
 pub(crate) use semio_framework_os_renderer_wgpu_frame_actions::*;
 pub(crate) use semio_framework_os_renderer_wgpu_frame_transaction::*;

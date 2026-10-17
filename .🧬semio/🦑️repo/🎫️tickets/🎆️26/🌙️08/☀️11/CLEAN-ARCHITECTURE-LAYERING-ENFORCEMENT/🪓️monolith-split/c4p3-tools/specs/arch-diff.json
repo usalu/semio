@@ -1,0 +1,47 @@
+{
+ "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts",
+ "importers": "auto",
+ "children": [
+  {
+   "dir": "🩹️patch-types",
+   "doc": "/** 🩹️ ProgramSnapshot diff schema: the opaque sparse patch type of every register row family and of the three singleton edits. */",
+   "re": [
+    "^[A-Z]\\w*Patch$"
+   ]
+  },
+  {
+   "dir": "🧱️deltas-program-structure",
+   "doc": "/** 🧱️ ProgramSnapshot diff schema: the sparse deltas of the stakeholder, user, activity, function, element, quantity, relationship, adjacency, process, flow and access-rule registers. */",
+   "lines": [
+    [
+     156,
+     463
+    ]
+   ]
+  },
+  {
+   "dir": "📋️deltas-requirements",
+   "doc": "/** 📋️ ProgramSnapshot diff schema: the sparse deltas of the operational, resource, safety, site, service, schedule, sustainability, cost and delivery requirement registers. */",
+   "lines": [
+    [
+     464,
+     1163
+    ]
+   ]
+  },
+  {
+   "dir": "🗃️deltas-records",
+   "doc": "/** 🗃️ ProgramSnapshot diff schema: the sparse deltas of the risk, decision, quality, compliance, collaboration, audit, knowledge and benchmark registers and of the three singleton edits. */",
+   "lines": [
+    [
+     1164,
+     1947
+    ],
+    [
+     2895,
+     2965
+    ]
+   ]
+  }
+ ]
+}

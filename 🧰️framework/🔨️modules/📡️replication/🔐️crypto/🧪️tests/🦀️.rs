@@ -16,5 +16,4 @@ async fn crypto_ports_use_actual_borrowed_inputs_and_the_single_protocol_error()
  assert_eq!(RecordHasher::hash(&probe,&message),message);assert!(std::ptr::eq(Signer::scheme(&probe).await.as_ptr(),probe.scheme.as_ptr()));assert!(std::ptr::eq(Signer::key_id(&probe).await.as_ptr(),probe.key.as_ptr()));
  let signature=Signer::sign(&probe,&message).await.unwrap();assert_eq!(signature,message);assert_eq!(signature.iter().map(|byte|format!("{byte:02x}")).collect::<String>(),row["signature"].as_str().unwrap());assert!(SignatureVerifier::verify(&probe,probe.scheme,probe.key,&message,&signature).await.unwrap());assert!(!SignatureVerifier::verify(&probe,probe.scheme,"other",&message,&signature).await.unwrap());
  let copied=Box::new(message);let error:ProtocolError=Signer::sign(&probe,&copied).await.unwrap_err();assert_eq!(error,ProtocolError::SignatureInvalid{commit_seq:17});
- println!("[DEBUG] Actual independent crypto crate ports retain exact borrowed inputs, caller-owned scheme/key and the canonical lower ProtocolError identity");
 }

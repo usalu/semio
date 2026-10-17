@@ -1,6 +1,5 @@
 //! 🚮 `delete-material` — removes an id-keyed material. Does NOT cascade to clear `material_id` references on primitives that pointed at it — `material_id` is a soft `Option<String>` reference with no membership-cascade verb (same category of honest gap brep's own `loop.edges` exclusion documents), and this matches the PRE-EXISTING behaviour of the old `RemoveMaterial` variant exactly, not a new gap introduced by this wave.
 
-use crate::schema::mutations::SemioMeshMutation;
 use crate::schema::snapshot::SemioMeshSnapshot;
 
 //#region 🔖️Payload
@@ -11,13 +10,16 @@ pub struct DeleteMaterial {
     pub id: String,
 }
 
-impl protocol::MutationKind<SemioMeshSnapshot, SemioMeshMutation> for DeleteMaterial {
+impl<Op> protocol::MutationKind<SemioMeshSnapshot, Op> for DeleteMaterial
+where
+    Op: protocol::Mutation<SemioMeshSnapshot, Diff = crate::schema::diff::SemioMeshDiff> + From<DeleteMaterial> + From<crate::schema::mutations::create_material::CreateMaterial>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "material", kind: "delete-material", record: "DeletedMaterial" };
 
-    fn diff(&self, base: &SemioMeshSnapshot) -> protocol::MutationOutcome<<SemioMeshMutation as protocol::Mutation<SemioMeshSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioMeshSnapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<SemioMeshSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &SemioMeshSnapshot) -> Result<Vec<SemioMeshMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &SemioMeshSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

@@ -1,7 +1,6 @@
 //! 📍 Releases one pre-assigned cell back to the solver.
 
 use crate::diff::Grid2dDiff;
-use crate::mutations::Grid2dMutation;
 use crate::schema::snapshot::Grid2dSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -17,17 +16,23 @@ pub struct UnpinCell {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn unpin_cell(x: u32, y: u32) -> Grid2dMutation {
-    Grid2dMutation::UnpinCell(UnpinCell { x, y })
+pub fn unpin_cell<Op>(x: u32, y: u32) -> Op
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::unpin_cell::UnpinCell>,
+{
+    Op::from(UnpinCell { x, y })
 }
 
-impl MutationKind<Grid2dSnapshot, Grid2dMutation> for UnpinCell {
+impl<Op> MutationKind<Grid2dSnapshot, Op> for UnpinCell
+where
+    Op: protocol::Mutation<Grid2dSnapshot, Diff = Grid2dDiff> + From<UnpinCell> + From<crate::standards::v1::subsets::any::schema::mutations::pin_cell::PinCell>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "clear", entity: "cell-pin", kind: "unpin-cell", record: "ClearedCellPin" };
 
     fn diff(&self, base: &Grid2dSnapshot) -> protocol::MutationOutcome<Grid2dDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Grid2dSnapshot) -> Result<Vec<Grid2dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Grid2dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

@@ -1,6 +1,6 @@
 /** 📷️ Bounded first-party PNG RGBA emission with exact preallocated output and private publication. */
 import {validateImage,type PixelImage} from "../../✍️editing/🟦️.ts";
-import {UnitRetirement,type WorkRetirement} from "../../../◻️2d/🧹️retire/🟦️.ts";
+import {UnitRetirement,type WorkRetirement} from "@semio-tech/framework-2d-js/retire";
 export interface PngEncodeProgress{completed:number;total:number;work:number;done:boolean}
 const be=(out:Uint8Array,at:number,value:number)=>{out[at]=value>>>24;out[at+1]=value>>>16;out[at+2]=value>>>8;out[at+3]=value;};
 const table=Uint32Array.from({length:256},(_,value)=>{let crc=value;for(let bit=0;bit<8;bit++)crc=(crc>>>1)^((crc&1)?0xedb88320:0);return crc>>>0;});

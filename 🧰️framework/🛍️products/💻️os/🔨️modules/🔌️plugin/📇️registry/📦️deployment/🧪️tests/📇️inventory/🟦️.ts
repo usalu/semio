@@ -21,7 +21,7 @@ describe("explicit deployment inventory", () => {
     const validShape = shape(row.input);
     const modules = row.input.modules;
     const ids = new Set(modules.map((entry) => entry.pluginId));
-    const emojis = modules.map((entry) => [...(entry.directoryName ?? "").matchAll(emojiRegex())].map((match) => match[0].replaceAll("\uFE0F", "")).join(""));
+    const emojis = modules.map((entry) => [...("directoryName" in entry ? entry.directoryName : "").matchAll(emojiRegex())].map((match) => match[0].replaceAll("\uFE0F", "")).join(""));
     const oracle = validShape && ids.size === modules.length && new Set(emojis).size === modules.length;
     expect(oracle).toBe(row.accepted);
     if (!row.accepted) {
@@ -44,11 +44,15 @@ describe("explicit deployment inventory", () => {
     const accepted = corpus.cases.filter((entry) => entry.accepted);
     expect(accepted.some((entry) => entry.input.modules.length === 0)).toBe(true);
     for (const row of accepted) {
-      const entries: DeployedRegistryEntryV1[] = row.input.modules.map(({ pluginId, directoryName }) => parseDeployedRegistryEntryV1({
-        pluginId, directoryName, packageId: `semio:${pluginId}`, packageName: `future-${pluginId}`,
-        cratePath: `future/${pluginId}/📦️packages/🦀️rust`, wasmOut: `future_${pluginId}.wasm`, role: "plugin",
-        capabilities: [], contributes: [], consumes: [], dependsOn: [], activationEvents: [], extensionPoints: [], executionMode: "isolated",
-      }));
+      const entries: DeployedRegistryEntryV1[] = row.input.modules.map((module) => {
+        if (!("directoryName" in module)) throw new Error("accepted inventory modules name their directory");
+        const { pluginId, directoryName } = module;
+        return parseDeployedRegistryEntryV1({
+          pluginId, directoryName, packageId: `semio:${pluginId}`, packageName: `future-${pluginId}`,
+          cratePath: `future/${pluginId}/📦️packages/🦀️rust`, wasmOut: `future_${pluginId}.wasm`, role: "plugin",
+          capabilities: [], contributes: [], consumes: [], dependsOn: [], activationEvents: [], extensionPoints: [], executionMode: "isolated",
+        });
+      });
       const source = emitTypeScript(entries, entries.map(({pluginId,directoryName}) => ({pluginId,directoryName})));
       const assertion = `\nif(JSON.stringify(COMPONENT_MODULE_DIRECTORIES)!==${JSON.stringify(JSON.stringify(row.input.modules))})throw Error("Inventory drift");\nlet actual=null;try{actual=pluginModuleUrl(${JSON.stringify(row.query)})}catch{}\nif(actual!==${JSON.stringify(row.expected === null ? null : `/🔌️plugin-modules/${row.expected}/🌉️bridge.js`)})throw Error("Owner route drift");\nconsole.log("[DEBUG] Independent generated inventory ${row.id}");`;
       const executable = source.replace('"../../📦️deployment/🟦️.ts"', JSON.stringify(runtimePath)).replace("\"../../../../../../../🔨️modules/🪪️identity/📁️installation/🟦️.ts\"", JSON.stringify(resolve(resolveDir, "../../../../../../../🔨️modules/🪪️identity/📁️installation/🟦️.ts"))) + assertion;

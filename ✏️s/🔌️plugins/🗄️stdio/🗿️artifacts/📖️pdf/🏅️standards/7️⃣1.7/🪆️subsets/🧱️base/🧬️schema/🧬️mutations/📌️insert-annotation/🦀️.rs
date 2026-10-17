@@ -1,6 +1,5 @@
 //! 📌️ Authoritative PDF mutation payload, diff, inverse, and tests for `insert-annotation`.
 
-use super::PdfMutation;
 use crate::standards::v1_7::subsets::base::schema::diff::{self, PdfDiff};
 use crate::standards::v1_7::subsets::base::schema::snapshot::*;
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
@@ -16,7 +15,10 @@ pub struct InsertAnnotation {
     pub annotation: PdfAnnotation,
 }
 
-impl MutationKind<PdfSnapshot, PdfMutation> for InsertAnnotation {
+impl<Op> MutationKind<PdfSnapshot, Op> for InsertAnnotation
+where
+    Op: protocol::Mutation<PdfSnapshot, Diff = PdfDiff> + From<InsertAnnotation> + From<crate::standards::v1_7::subsets::base::schema::mutations::remove_annotation::RemoveAnnotation>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "insert", entity: "annotation", kind: "insert-annotation", record: "Insert" };
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
@@ -24,10 +26,10 @@ impl MutationKind<PdfSnapshot, PdfMutation> for InsertAnnotation {
         MutationOutcome::new(diff::diff_insert_annotation(self.index, self.at, self.annotation.clone()))
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
         let _ = base;
-        vec![PdfMutation::RemoveAnnotation(super::remove_annotation::RemoveAnnotation { index: self.index, at: self.at })]
+        vec![Op::from(crate::standards::v1_7::subsets::base::schema::mutations::remove_annotation::RemoveAnnotation { index: self.index, at: self.at })]
     
     })())
 }
@@ -44,8 +46,6 @@ impl MutationKind<PdfSnapshot, PdfMutation> for InsertAnnotation {
 //#endregion 🔖️Mutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
 

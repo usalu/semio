@@ -1,0 +1,21 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-framework-plugin-registration"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+autotests = false
+[lints]
+workspace = true
+[package.metadata.semio]
+role = "framework"
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+[lib]
+path = "../../🦀️.rs"
+[dependencies]
+semio-framework = { path = "../../../../../../../../📦️packages/🦀️rust" }
+[dev-dependencies]
+serde_json.workspace = true

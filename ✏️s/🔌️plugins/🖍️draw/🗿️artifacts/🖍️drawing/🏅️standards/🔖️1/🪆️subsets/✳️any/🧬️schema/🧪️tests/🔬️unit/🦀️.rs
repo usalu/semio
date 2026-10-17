@@ -2,6 +2,7 @@ use crate::default_drawing_document;
 use crate::create_drawing_path_layer;
 use super::*;
 use crate::DrawingCircle;
+use semio_framework_test_fixtures::fixture_text;
 
 #[semio_framework_async_macros::async_test]
 async fn default_document_has_path_layer() {
@@ -560,7 +561,7 @@ fn duplicated_group_remaps_internal_boolean_references() {
 
 #[test]
 fn text_line_layout_matches_the_shared_fixture() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/📝️text/🧪️tests/🧫️fixtures/🔣️.json" )).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/📝️text/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     for case in fixture["cases"].as_array().unwrap() {
         let content = case["content"].as_str().unwrap();
         let size = case["size"].as_f64().unwrap();

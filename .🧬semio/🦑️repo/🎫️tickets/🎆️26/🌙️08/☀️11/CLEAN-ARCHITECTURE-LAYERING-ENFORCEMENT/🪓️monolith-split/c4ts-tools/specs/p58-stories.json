@@ -1,0 +1,12 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🐾️pets/🎯️targets/⚛️react/📖️stories/🟦️.tsx",
+ "importers": [],
+ "children": [
+  {"dir": "🔤️language-and-menagerie", "doc": "/** 🔤️ The language of the stories page and its menagerie source: the English and German labels, the names of the ways of getting around, the browser's language and the first valid menagerie found in the handed-over document. */", "lines": [[44,335]]},
+  {"dir": "🎬️studio", "doc": "/** 🎬️ The studio of the stories page: the controls of a specimen, a scene and its layout, the poses and frames of a specimen, the particles it throws and the drawing of a specimen and its props. */", "lines": [[339,637]]},
+  {"dir": "🎚️controls", "doc": "/** 🎚️ The small controls of the stories page: slider, toggle, choice and action button. */", "lines": [[641,685]]},
+  {"dir": "🐾️species-gallery", "doc": "/** 🐾️ The species page of the stories gallery: every scene of a species on a light and a dark ground, its clips, states, tricks and gear, and the gallery of all species. */", "lines": [[689,905]]},
+  {"dir": "🎛️director-and-inspector", "doc": "/** 🎛️ The director and inspector of the stories sandbox: the forced states, tricks and moods folded into the stage, the inspector that reads every frame and the synthetic pointer that carries a pet. */", "lines": [[909,1095]]},
+  {"dir": "🏟️sandbox", "doc": "/** 🏟️ The sandbox page of the stories gallery: the mock cards, the readout and inspection panels and the sandbox in which the cast of a scene lives through the real pet layer. */", "lines": [[1099,1349]]}
+ ]
+}

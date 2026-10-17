@@ -23,5 +23,4 @@ fn flow_source_read_comparison_matches_original_serde_oracle_and_retains_frontie
   }
   assert!(compare.terminal_is_empty());assert_eq!(born,freed);assert_eq!(semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(compare)).1.released_bytes,0);a.retire_cold();b.retire_cold();
  }
- println!("[DEBUG] Flow source comparison: independent serde outputs and exact funded frontier denials/close");
 }

@@ -1,4 +1,5 @@
 //! 🔋️ Actual Energy declaration admission against the shared language-neutral model corpus.
+use semio_framework_test_fixtures::fixture_path;
 use semio_framework_test_original_snapshot_owners as original_owners;
 use ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot as _;
 use pack::snapshot::ArtifactSqliteSnapshot as _;
@@ -85,7 +86,7 @@ fn sqlite_snapshot_energy_all_literal_link_pin_variants_have_exact_unsigned64_na
 fn energy_closed_extent(source:&EnergyModelSnapshot,key:&str){
  use std::{io::Write,process::{Command,Stdio}};
  use store::sqlite_snapshot::{SnapshotEncoding,export_sqlite_database};
- let directory=std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/📏️cells");
+ let directory=fixture_path!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/📏️cells");
  let database=energy_project(source);
  let bytes=export_sqlite_database(&database,SqliteDatabaseLimits::default(),&mut |_|true).unwrap();
  let script=r#"import{Database}from'bun:sqlite';import{deepStrictEqual,ok}from'node:assert';

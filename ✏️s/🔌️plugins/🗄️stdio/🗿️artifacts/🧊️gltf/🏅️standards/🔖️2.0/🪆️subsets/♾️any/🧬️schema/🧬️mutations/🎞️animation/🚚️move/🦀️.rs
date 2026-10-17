@@ -32,7 +32,10 @@ pub fn plan(p: &GltfMoveAnimationPayload, base: &GltfSnapshot) -> Result<GltfDif
     Ok(diff)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn inverse(p: &GltfMoveAnimationPayload, base: &GltfSnapshot) -> Vec<super::GltfMutation> {
+pub fn inverse<Op>(p: &GltfMoveAnimationPayload, base: &GltfSnapshot) -> Vec<Op>
+where
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::remove_used_extension::RemoveUsedExtensionMutation>,
+{
     if validate(p, base).is_err() {
         return Vec::new();
     }
@@ -49,11 +52,17 @@ pub enum MoveAnimationMutation {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn mutation(payload: GltfMoveAnimationPayload) -> super::GltfMutation {
-    super::GltfMutation::MoveAnimation(MoveAnimationMutation::Apply(payload))
+pub fn mutation<Op>(payload: GltfMoveAnimationPayload) -> Op
+where
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::move_animation::MoveAnimationMutation>,
+{
+    Op::from(MoveAnimationMutation::Apply(payload))
 }
 
-impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for MoveAnimationMutation {
+impl<Op> protocol::MutationKind<GltfSnapshot, Op> for MoveAnimationMutation
+where
+    Op: protocol::Mutation<GltfSnapshot, Diff = GltfDiff> + From<MoveAnimationMutation>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "move", entity: "animation", kind: "move-animation", record: "MovedAnimation" };
 
     fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<GltfDiff> {
@@ -65,7 +74,7 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for MoveAnimation
         }
     }
 
-    fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<super::GltfMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         match self {
             Self::Apply(payload) => Ok(inverse(payload, base)),
         }
@@ -82,7 +91,5 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for MoveAnimation
 //#endregion 🧬️DirectMutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/⏫️promotes-the-bob-104b5a/🦀️.rs"]
-mod case_promotes_the_bob_104b5a;
+
 //#endregion 🧪️Tests

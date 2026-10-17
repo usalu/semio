@@ -1,4 +1,5 @@
-use super::*;
+use crate::viewer::wires::modes::view::windows::canvas;
+use crate::viewer::wires::modes::view::*;
 
 #[semio_framework_async_macros::async_test]
 async fn the_default_layout_lists_the_canvas_window() {

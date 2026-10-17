@@ -1,7 +1,7 @@
 //! 🔺️ Sparse declarative set-design-option diff.
 use super::SetDesignOption;
 use crate::*;
-use super::super::option_rules;
+use crate::standards::v1::subsets::any::schema::authored::option_rules;
 use protocol::{MutationOutcome, OutcomeCode};
 pub fn diff(payload: &SetDesignOption, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {
     let Some(record) = base.design_options.get(&payload.id) else { return MutationOutcome::refuse(OutcomeCode::TargetMissing, "Record is missing.", [payload.id.clone()]); };

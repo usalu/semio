@@ -37,6 +37,10 @@ framework_editor = { path = "../../../../../../../../../../🔨️modules/✍️
 infinite_canvas = { path = "../../../../../../../♾️infinite/📦️packages/🦀️rust", package = "semio-framework-os-infinite" }
 semio-framework-canvas = { path = "../../../../../../../../../../🔨️modules/🖼️canvas/📦️packages/🦀️rust" }
 semio-framework-io-base64 = { path = "../../../../../../../../../../🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust", package = "semio-framework-io-base64" }
+semio-framework-os-infinite-board-dag-graph = { path = "../../../../../../../♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🕸️graph/📦️packages/🦀️rust" }
+semio-framework-os-infinite-board-dag-host = { path = "../../../../../../../♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🧭️host/📦️packages/🦀️rust" }
+semio-framework-os-infinite-board-normal-focus = { path = "../../../../../../../♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/🎯️focus/📦️packages/🦀️rust" }
+semio-framework-os-infinite-board-normal-gestures = { path = "../../../../../../../♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/🕹️gestures/📦️packages/🦀️rust" }
 semio-framework-os-node-graph = { path = "../../../../../🧱️elements/🕸️NodeGraph/📦️packages/🦀️rust" }
 semio-framework-surface = { path = "../../../../../../../../../../🔨️modules/🗺️surface/📦️packages/🦀️rust" }
 semio-framework-tool-run = { workspace = true }

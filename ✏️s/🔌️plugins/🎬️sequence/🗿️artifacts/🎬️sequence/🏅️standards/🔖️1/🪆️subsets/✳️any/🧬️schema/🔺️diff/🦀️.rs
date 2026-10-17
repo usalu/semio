@@ -46,6 +46,4 @@ impl DiffAlgebra<SequenceSnapshot> for SequenceDiff {
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

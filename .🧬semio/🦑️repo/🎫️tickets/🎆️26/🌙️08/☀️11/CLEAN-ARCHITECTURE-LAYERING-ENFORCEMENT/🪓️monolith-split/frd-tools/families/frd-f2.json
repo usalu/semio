@@ -1,0 +1,21 @@
+{
+ "name": "frd-f2",
+ "crates": [
+  "semio-framework-test-fixtures",
+  "semio-framework-artifact-infinite-dag",
+  "semio-framework-os-infinite-world-cursors",
+  "semio-framework-os-kernel-dsl-derive-tests",
+  "semio-framework-os-mcp-inference-hub",
+  "semio-framework-os-renderer-wgpu",
+  "semio-framework-os-renderer-wgpu-engine-attach-tests",
+  "semio-framework-os-renderer-wgpu-test-support",
+  "semio-framework-plugin-host-guest-laws",
+  "semio-framework-plugin-publication-mounted-tests",
+  "semio-framework-plugin-tests-01",
+  "semio-framework-plugin-tests-03-2",
+  "semio-framework-tool-machine-tests",
+  "semio-framework-ui-prepared",
+  "semio-framework-ui-retained-tree"
+ ],
+ "note": "FRD sample, no baseline"
+}

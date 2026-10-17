@@ -433,5 +433,9 @@
         "offline": false
       }
     }
-  }
+  },
+  "systemModules": [
+    "bun:ffi",
+    "bun:sqlite"
+  ]
 }

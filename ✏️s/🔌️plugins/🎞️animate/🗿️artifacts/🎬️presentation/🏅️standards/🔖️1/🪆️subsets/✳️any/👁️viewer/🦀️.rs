@@ -126,3 +126,16 @@ pub fn create_animate_presentation_viewer() -> semio_framework_plugin::AppDefini
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🧩️ArtifactItems2
+pub mod artifact_items_2 {
+/// 🪪️ Ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §1 — the one canonical
+/// `(artifact_kind, standard, subset)` coordinate shared by BOTH `✏️editor::animate::AnimatePresentationPlayApp`
+/// and `👁️viewer::animate::AnimatePresentationViewer`. Lives at the ARTIFACT level (not under either surface
+/// module) specifically so the viewer can read it without ever importing through the editor. Matches
+/// `definition()`'s own `s.presentation.schema.artifact` capability descriptor (`s.animate.presentation`) and this
+/// file's own `🏅️standards/🔖️1/🪆️subsets/✳️any` location — canonical surface id `s.animate.presentation@1/*#editor`
+/// / `s.animate.presentation@1/*#viewer`.
+pub const ANIMATE_DIALECT: semio_framework_artifact_reference::Dialect = semio_framework_artifact_reference::Dialect { artifact_kind: "s.animate.presentation", standard: semio_framework_artifact_reference::StandardId("1"), subset: semio_framework_artifact_reference::SubsetId::ANY };
+}
+//#endregion 🧩️ArtifactItems2

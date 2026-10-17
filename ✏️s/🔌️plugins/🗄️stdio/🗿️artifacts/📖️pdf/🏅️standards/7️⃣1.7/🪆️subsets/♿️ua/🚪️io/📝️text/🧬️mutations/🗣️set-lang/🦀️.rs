@@ -1,6 +1,6 @@
 //! 🗣️ Direct text codec for `set-lang`.
 
-use crate::standards::v1_7::subsets::ua::schema::mutations::SetLang;
+use crate::standards::v1_7::subsets::ua::schema::mutations::set_lang::SetLang;
 
 //#region 🔖️Identity
 pub const OPCODE: &str = "set-lang";
@@ -20,7 +20,5 @@ pub fn parse(text: &str) -> Result<SetLang, String> {
 //#endregion 🔖️Codec
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

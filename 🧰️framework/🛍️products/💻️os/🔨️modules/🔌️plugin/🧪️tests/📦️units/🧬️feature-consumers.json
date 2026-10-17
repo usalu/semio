@@ -1,0 +1,52 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "consumer",
+    "dependencies",
+    "absentRootCount",
+    "roots"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "consumer": {
+      "const": "semio-framework-plugin-testing-laws"
+    },
+    "dependencies": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string"
+      }
+    },
+    "absentRootCount": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "roots": {
+      "type": "array",
+      "minItems": 174,
+      "maxItems": 174,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path",
+          "present"
+        ],
+        "properties": {
+          "path": {
+            "type": "string"
+          },
+          "present": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

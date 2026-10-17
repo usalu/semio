@@ -16,7 +16,4 @@ pub fn handle(_payload: &EngagementSubmit, _doc: &ArtifactView<'_, WriterSnapsho
 }
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

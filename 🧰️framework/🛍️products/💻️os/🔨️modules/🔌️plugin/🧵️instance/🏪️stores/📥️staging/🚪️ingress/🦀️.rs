@@ -1,23 +1,41 @@
 //! 📂️ Staged slice of the `ingress` band of the mounted artifact instance: its `instance-stores` members (WP6 step S0 of the instance family).
 //!
 //! 🚪️ Ingress of the mounted artifact instance: framework-reserved job driving, constructors, store-constructor units, envelope ingress and decode, document archive genesis and merge, child members and packs.
-use super::*;
-use crate::tool_jobs::time_travel;
+use semio_framework_plugin_ownership::bounded_ownership::ARTIFACT_LIVE_OUTPUT_SLOTS;
+use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_framework_artifact_reference::{ArtifactDialect, ArtifactRef};
+use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use pack::snapshot::ArtifactPack;
+use semio_framework_plugin_operation::original_catalog_constructor::{ArtifactStoreConstructorKind, ArtifactStoreConstructorPhase};
+use crate::stores_components::{ConstructorState, InstanceStores, LocalInteraction, PeerRoster};
+use semio_framework_plugin_decl_emission::Emit;
+use semio_framework::{Fault, FaultCode, FaultFrom, FaultOrigin, ViewModel};
+use semio_framework_plugin_job::reserved_jobs::FrameworkReservedCommitPermit;
+use std::future::Future;
+use store::{MemberFactory, Mutation, SpaceMember};
+use protocol::OpText;
+use semio_framework_plugin_peer::{PeerPresenceRootRetirement, PeerRosterCandidate, ValidatedPeerRosterCommit};
+use semio_framework_plugin_reactor_app::PluginApp;
+use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
+use semio_framework_value::{RetirementDemand, ValueError};
+use semio_framework_plugin_window_transient::window_transient::WindowTransientSnapshot;
+use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
+use semio_framework_ui_contract::*;
 
 impl<A: ArtifactApp> ConstructorState<A> {
-    pub(crate) fn has_constructor_receipt(&self)->bool { self.constructor_terminal_receipt.is_some() || (self.constructor_recipient_admitted && unsafe { self.constructor_receipts.assume_init_ref() }.iter().any(Option::is_some)) }
+    pub fn has_constructor_receipt(&self)->bool { self.constructor_terminal_receipt.is_some() || (self.constructor_recipient_admitted && unsafe { self.constructor_receipts.assume_init_ref() }.iter().any(Option::is_some)) }
 
-    pub(crate) fn constructor_receipt(&self)->Option<&(ArtifactStoreConstructorKind,ArtifactStoreConstructorPhase,RetainedCloneGrant,RetainedCloneProgress)> { if let Some(receipt)=self.constructor_terminal_receipt.as_ref(){return Some(receipt)} if !self.constructor_recipient_admitted{return None} unsafe {self.constructor_receipts.assume_init_ref()}.iter().find_map(Option::as_ref) }
+    pub fn constructor_receipt(&self)->Option<&(ArtifactStoreConstructorKind,ArtifactStoreConstructorPhase,RetainedCloneGrant,RetainedCloneProgress)> { if let Some(receipt)=self.constructor_terminal_receipt.as_ref(){return Some(receipt)} if !self.constructor_recipient_admitted{return None} unsafe {self.constructor_receipts.assume_init_ref()}.iter().find_map(Option::as_ref) }
 
-    pub(crate) fn take_constructor_receipt(&mut self)->Option<(ArtifactStoreConstructorKind,ArtifactStoreConstructorPhase,RetainedCloneGrant,RetainedCloneProgress)> { if self.constructor_terminal_receipt.is_some(){return self.constructor_terminal_receipt.take()} if !self.constructor_recipient_admitted{return None} unsafe {self.constructor_receipts.assume_init_mut()}.iter_mut().find_map(Option::take) }
+    pub fn take_constructor_receipt(&mut self)->Option<(ArtifactStoreConstructorKind,ArtifactStoreConstructorPhase,RetainedCloneGrant,RetainedCloneProgress)> { if self.constructor_terminal_receipt.is_some(){return self.constructor_terminal_receipt.take()} if !self.constructor_recipient_admitted{return None} unsafe {self.constructor_receipts.assume_init_mut()}.iter_mut().find_map(Option::take) }
 
-    pub(crate) fn store_constructor_is_pending(&self)->bool { (!self.constructor_recipient_admitted&&!self.constructor_recipient_retired) || self.has_constructor_receipt() || self.constructor_lane<4 }
+    pub fn store_constructor_is_pending(&self)->bool { (!self.constructor_recipient_admitted&&!self.constructor_recipient_retired) || self.has_constructor_receipt() || self.constructor_lane<4 }
 
-    pub(crate) fn constructor_terminal_is_empty(&self)->bool{self.constructor_recipient_retired&&!self.has_constructor_receipt()&&self.constructor_document.terminal_is_empty()&&self.constructor_config.terminal_is_empty()&&self.constructor_draft.terminal_is_empty()&&self.constructor_interaction.terminal_is_empty()}
+    pub fn constructor_terminal_is_empty(&self)->bool{self.constructor_recipient_retired&&!self.has_constructor_receipt()&&self.constructor_document.terminal_is_empty()&&self.constructor_config.terminal_is_empty()&&self.constructor_draft.terminal_is_empty()&&self.constructor_interaction.terminal_is_empty()}
 }
 
 impl<A: ArtifactApp> InstanceStores<A> {
-    pub(crate) async fn validate_framework_reserved_commit(&self, refusal: Option<Fault>, verb: &str, permit: &FrameworkReservedCommitPermit) -> Result<(), Fault> {
+    pub async fn validate_framework_reserved_commit(&self, refusal: Option<Fault>, verb: &str, permit: &FrameworkReservedCommitPermit) -> Result<(), Fault> {
         if let Some(fault) = refusal {
             return Err(fault);
         }
@@ -33,7 +51,7 @@ impl<A: ArtifactApp> InstanceStores<A> {
         Ok(())
     }
 
-    pub(crate) fn drive_store_constructor_unit(&mut self, constructor: &mut ConstructorState<A>,grant:RetainedCloneGrant)->Result<bool,ValueError> {self.drive_store_constructor_unit_in_phase(constructor, grant, ArtifactStoreConstructorPhase::Preparation)}
+    pub fn drive_store_constructor_unit(&mut self, constructor: &mut ConstructorState<A>,grant:RetainedCloneGrant)->Result<bool,ValueError> {self.drive_store_constructor_unit_in_phase(constructor, grant, ArtifactStoreConstructorPhase::Preparation)}
 
     pub(crate) fn drive_store_constructor_unit_in_phase(&mut self, constructor: &mut ConstructorState<A>,grant:RetainedCloneGrant,phase:ArtifactStoreConstructorPhase)->Result<bool,ValueError> {
         if constructor.has_constructor_receipt(){return Ok(true)}
@@ -51,7 +69,7 @@ impl<A: ArtifactApp> InstanceStores<A> {
             0=>{let receipt=constructor.constructor_document.advance(&mut self.store,child,A::build_document_store_owners)?;(ArtifactStoreConstructorKind::Document,receipt,constructor.constructor_document.terminal_is_empty())},
             1=>{let receipt=constructor.constructor_config.advance(&mut self.config_store,child,A::build_config_store_owners)?;(ArtifactStoreConstructorKind::Config,receipt,constructor.constructor_config.terminal_is_empty())},
             2=>{let receipt=constructor.constructor_draft.advance(&mut self.draft_store,child,A::build_draft_store_owners)?;(ArtifactStoreConstructorKind::Draft,receipt,constructor.constructor_draft.terminal_is_empty())},
-            _=>{let receipt=constructor.constructor_interaction.advance(&mut self.interaction_store,child,|grant|Some(crate::local_interaction::retirement::interaction_store_owners(grant)))?;(ArtifactStoreConstructorKind::Interaction,receipt,constructor.constructor_interaction.terminal_is_empty())},
+            _=>{let receipt=constructor.constructor_interaction.advance(&mut self.interaction_store,child,|grant|Some(semio_framework_plugin_interaction::retirement::interaction_store_owners(grant)))?;(ArtifactStoreConstructorKind::Interaction,receipt,constructor.constructor_interaction.terminal_is_empty())},
         };
         if receipt==Default::default(){return Ok(true)}
         if !receipt.fits(child){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original catalog parent exceeded its full grant"))}
@@ -60,17 +78,17 @@ impl<A: ArtifactApp> InstanceStores<A> {
         unsafe{constructor.constructor_receipts.assume_init_mut()[0]=Some((kind,phase,grant,receipt));}Ok(true)
     }
 
-    pub(crate) fn constructor_close_demands(&self, constructor: &ConstructorState<A>,body:usize)->Result<RetirementDemand,ValueError>{
+    pub fn constructor_close_demands(&self, constructor: &ConstructorState<A>,body:usize)->Result<RetirementDemand,ValueError>{
         if constructor.has_constructor_receipt(){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original constructor receipt awaits its recipient"))}
         if constructor.constructor_recipient_retired{return Ok(Default::default())}
         if !constructor.constructor_recipient_admitted{return Ok(RetirementDemand{copy_bytes:0,depth:1,..Default::default()})}
         if constructor.constructor_lane>=4{return Ok(RetirementDemand{copy_bytes:0,depth:1,..Default::default()})}
         let parent=0usize;
-        let mut demand=match constructor.constructor_lane{0=>constructor.constructor_document.demands(body.saturating_sub(parent),self.store.owned_disposer_installed(),A::document_store_owners_source_demands)?,1=>constructor.constructor_config.demands(body.saturating_sub(parent),self.config_store.owned_disposer_installed(),A::config_store_owners_source_demands)?,2=>constructor.constructor_draft.demands(body.saturating_sub(parent),self.draft_store.owned_disposer_installed(),A::draft_store_owners_source_demands)?,_=>constructor.constructor_interaction.demands(body.saturating_sub(parent),self.interaction_store.owned_disposer_installed(),crate::local_interaction::retirement::interaction_store_owners_source_demands)?};
+        let mut demand=match constructor.constructor_lane{0=>constructor.constructor_document.demands(body.saturating_sub(parent),self.store.owned_disposer_installed(),A::document_store_owners_source_demands)?,1=>constructor.constructor_config.demands(body.saturating_sub(parent),self.config_store.owned_disposer_installed(),A::config_store_owners_source_demands)?,2=>constructor.constructor_draft.demands(body.saturating_sub(parent),self.draft_store.owned_disposer_installed(),A::draft_store_owners_source_demands)?,_=>constructor.constructor_interaction.demands(body.saturating_sub(parent),self.interaction_store.owned_disposer_installed(),semio_framework_plugin_interaction::retirement::interaction_store_owners_source_demands)?};
         demand.copy_bytes=demand.copy_bytes.checked_add(parent).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"constructor close parent quote overflow"))?;demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"constructor close parent depth overflow"))?;Ok(demand)
     }
 
-    pub(crate) fn close_store_constructor_unit(&mut self, constructor: &mut ConstructorState<A>,grant:RetainedCloneGrant)->Result<bool,ValueError>{
+    pub fn close_store_constructor_unit(&mut self, constructor: &mut ConstructorState<A>,grant:RetainedCloneGrant)->Result<bool,ValueError>{
         let phase=ArtifactStoreConstructorPhase::Close;
         if constructor.has_constructor_receipt(){return Ok(true)}
         if constructor.constructor_recipient_retired{return Ok(false)}
@@ -108,11 +126,11 @@ impl<A: ArtifactApp> InstanceStores<A> {
         Ok(self.window_config_store.capture(Some(view_state)).await?.map(|authority| authority.generation))
     }
 
-    pub(crate) fn peer_roster_slot(generation: u64) -> usize {
+    pub fn peer_roster_slot(generation: u64) -> usize {
         generation as usize % ARTIFACT_LIVE_OUTPUT_SLOTS
     }
 
-    pub(crate) fn declared_child_reference(&self, slot: &str, child_id: &str, dialect: &ArtifactDialect) -> Result<ArtifactRef, Fault> {
+    pub fn declared_child_reference(&self, slot: &str, child_id: &str, dialect: &ArtifactDialect) -> Result<ArtifactRef, Fault> {
         let projection = semio_framework_composition_admission::ChildRestoreProjection::from_snapshot(self.store.snapshot_ref()).map_err(|error| plugin_sdk_fault(format!("child member projection failed: {error}")))?;
         let fields = (0..projection.len()).filter_map(|index| projection.get(index)).find(|(declared, fields)| *declared == slot && fields.child_id == child_id).map(|(_, fields)| fields).ok_or_else(|| plugin_sdk_fault("child member identity is not declared by the current parent"))?;
         if fields.artifact_kind != dialect.artifact_kind || fields.standard != dialect.standard || fields.subset != dialect.subset {
@@ -125,7 +143,7 @@ impl<A: ArtifactApp> InstanceStores<A> {
     /// that dispatch because the checkpoint does not exist until then, and `composition_pins`
     /// participates in `content_addressed_checkpoint_id`, so the pins must be present on the
     /// envelope that gets persisted.
-    pub(crate) async fn stamp_checkpoint_composition_pins(&mut self, pins: Vec<vcs::CompositionPin>) -> Result<(), Fault> {
+    pub async fn stamp_checkpoint_composition_pins(&mut self, pins: Vec<vcs::CompositionPin>) -> Result<(), Fault> {
         if pins.is_empty() {
             return Ok(());
         }
@@ -155,7 +173,7 @@ impl<A: ArtifactApp> PeerRoster<A> {
         orphaned
     }
 
-    pub(crate) fn validate_peer_roster_publication(&self, stores: &InstanceStores<A>, seq: u64, generation: u64, cancel: &semio_framework_job::CancelToken) -> Result<ValidatedPeerRosterCommit, Fault> {
+    pub fn validate_peer_roster_publication(&self, stores: &InstanceStores<A>, seq: u64, generation: u64, cancel: &semio_framework_job::CancelToken) -> Result<ValidatedPeerRosterCommit, Fault> {
         let slot = InstanceStores::<A>::peer_roster_slot(generation);
         if self.peer_roster_reservations[slot] != Some((generation, seq))
             || generation != self.peer_roster_processed_generation.checked_add(1).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.peer-roster-generation"), "peer roster publication generation exhausted"))?
@@ -175,7 +193,7 @@ impl<A: ArtifactApp> PeerRoster<A> {
 
     #[expect(clippy::result_large_err, reason = "Refusal returns the original fixed-capacity input so its caller can retry or retire that exact owner without an extra allocation.")]
     #[expect(clippy::needless_pass_by_value, reason = "This non-Copy token conveys one-use admission authority and must be consumed by the commit, even though its identity fields are scalar.")]
-    pub(crate) fn publish_peer_roster_candidate_admitted(&mut self, stores: &mut InstanceStores<A>, admission: ValidatedPeerRosterCommit, candidate: PeerRosterCandidate<A::Presence>) -> Result<(), PeerRosterCandidate<A::Presence>> {
+    pub fn publish_peer_roster_candidate_admitted(&mut self, stores: &mut InstanceStores<A>, admission: ValidatedPeerRosterCommit, candidate: PeerRosterCandidate<A::Presence>) -> Result<(), PeerRosterCandidate<A::Presence>> {
         let PeerRosterCandidate { seq, generation: candidate_generation, cancel, own_color, now_ms, root, typed } = candidate;
         let ValidatedPeerRosterCommit { generation } = admission;
         let _ = now_ms;
@@ -205,13 +223,13 @@ impl<A: ArtifactApp> LocalInteraction<A> {
     /// registry's one-slot-per-step cleanup cursor is bounded by the registry's fixed capacity
     /// and would otherwise put a whole capacity's worth of probes inside a host continuation
     /// budget before a read could publish its terminal reply.
-    pub(crate) fn advance_local_interaction_query_one(&mut self, grant: store::os_store::one_item::ArtifactStoreOneItemGrant, output_width: usize) -> Result<(), Fault> {
+    pub fn advance_local_interaction_query_one(&mut self, grant: store::os_store::one_item::ArtifactStoreOneItemGrant, output_width: usize) -> Result<(), Fault> {
         if self.local_interaction_query_receipt.is_some(){return Ok(())}
         let Some(query)=self.local_interaction_query.as_mut()else{return Ok(())};
         let result=if query.is_closing(){
             let before=query.retired_bytes();let result=query.close_step(grant.retained_grant());self.local_interaction_retired_bytes+=(query.retired_bytes()-before)as u128;result.map(|step|step.progress())
         }else{
-            query.advance(grant,output_width).map(|step|{if let crate::local_interaction::live::LocalInteractionLiveStep::Advanced{emitted_bytes,retired_bytes,..}=step{self.local_interaction_emitted_bytes+=emitted_bytes as u128;self.local_interaction_retired_bytes+=retired_bytes as u128;}step.progress()})
+            query.advance(grant,output_width).map(|step|{if let semio_framework_plugin_interaction::live::LocalInteractionLiveStep::Advanced{emitted_bytes,retired_bytes,..}=step{self.local_interaction_emitted_bytes+=emitted_bytes as u128;self.local_interaction_retired_bytes+=retired_bytes as u128;}step.progress()})
         };
         let progress=match &result{Ok(progress)=>*progress,Err(error)=>error.retained_progress()};
         if progress!=Default::default(){self.local_interaction_query_receipt=Some((grant.retained_grant(),progress));}

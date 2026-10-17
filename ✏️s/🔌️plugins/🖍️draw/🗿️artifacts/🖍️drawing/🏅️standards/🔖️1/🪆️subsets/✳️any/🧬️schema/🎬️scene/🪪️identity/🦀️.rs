@@ -8,6 +8,3 @@ impl SceneIdentity{
 pub fn parse_scene_identity_u64(value:&str)->Option<u64>{if value.is_empty()||value.len()>20||value.len()>1&&value.starts_with('0')||!value.bytes().all(|byte|byte.is_ascii_digit()){return None;}value.parse().ok()}
 #[path="🚦️admission/🦀️.rs"]
 pub mod admission;
-#[cfg(test)]
-#[path="🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;

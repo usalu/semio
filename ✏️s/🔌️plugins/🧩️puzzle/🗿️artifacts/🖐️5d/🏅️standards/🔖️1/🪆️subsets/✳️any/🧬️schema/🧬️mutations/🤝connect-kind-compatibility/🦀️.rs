@@ -1,7 +1,7 @@
 //! 🤝 Puzzle5d mutation — `ConnectKindCompatibility`: allows one grip-kind-id pair to fasten.
 use crate::standards::v1::subsets::any::schema::diff::Puzzle5dDiff;
-use crate::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation;
-use crate::{Puzzle5dCompatSpecificity, Puzzle5dSnapshot};
+use crate::{Puzzle5dSnapshot};
+use crate::standards::v1::subsets::any::schema::document_records::{Puzzle5dCompatSpecificity};
 
 //#region 🔖️Mutation
 /// 🤝 `connect-kind-compatibility` payload. A duplicate `(source, target)` pair is a no-op.
@@ -22,17 +22,23 @@ pub struct ConnectKindCompatibility {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn connect_kind_compatibility(source: String, target: String, bidirectional: bool, important: bool, specificity: Puzzle5dCompatSpecificity, index: Option<usize>) -> Puzzle5dMutation {
-    Puzzle5dMutation::ConnectKindCompatibility(ConnectKindCompatibility { source, target, bidirectional, important, specificity, index })
+pub fn connect_kind_compatibility<Op>(source: String, target: String, bidirectional: bool, important: bool, specificity: Puzzle5dCompatSpecificity, index: Option<usize>) -> Op
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::connect_kind_compatibility::ConnectKindCompatibility>,
+{
+    Op::from(ConnectKindCompatibility { source, target, bidirectional, important, specificity, index })
 }
 
-impl protocol::MutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for ConnectKindCompatibility {
+impl<Op> protocol::MutationKind<Puzzle5dSnapshot, Op> for ConnectKindCompatibility
+where
+    Op: protocol::Mutation<Puzzle5dSnapshot, Diff = Puzzle5dDiff> + From<ConnectKindCompatibility> + From<crate::standards::v1::subsets::any::schema::mutations::disconnect_kind_compatibility::DisconnectKindCompatibility>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "connect", entity: "kind-compatibility", kind: "connect-kind-compatibility", record: "ConnectedKindCompatibility" };
 
     fn diff(&self, base: &Puzzle5dSnapshot) -> protocol::MutationOutcome<Puzzle5dDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Puzzle5dSnapshot) -> Result<Vec<Puzzle5dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Puzzle5dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

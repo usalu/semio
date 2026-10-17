@@ -1,6 +1,5 @@
 //! 🔏️ Authoritative PDF mutation payload, diff, inverse, and tests for `set-mark-info`.
 
-use super::PdfMutation;
 use crate::standards::v1_7::subsets::base::schema::diff::{self, PdfDiff};
 use crate::standards::v1_7::subsets::base::schema::snapshot::*;
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
@@ -14,7 +13,10 @@ pub struct SetMarkInfo {
     pub info: Option<PdfMarkInfo>,
 }
 
-impl MutationKind<PdfSnapshot, PdfMutation> for SetMarkInfo {
+impl<Op> MutationKind<PdfSnapshot, Op> for SetMarkInfo
+where
+    Op: protocol::Mutation<PdfSnapshot, Diff = PdfDiff> + From<SetMarkInfo>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "mark-info", kind: "set-mark-info", record: "Set" };
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
@@ -22,10 +24,10 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetMarkInfo {
         MutationOutcome::new(diff::diff_set_mark_info(base, self.info.clone()))
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
         let _ = base;
-        vec![PdfMutation::SetMarkInfo(SetMarkInfo { info: base.mark_info.clone() })]
+        vec![Op::from(SetMarkInfo { info: base.mark_info.clone() })]
     
     })())
 }
@@ -42,8 +44,6 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetMarkInfo {
 //#endregion 🔖️Mutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
 

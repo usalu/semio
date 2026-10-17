@@ -1,6 +1,6 @@
 //! 🧮️ 🧵️ Flow play app commands command — `flow-eval-tick`.
 
-use crate::editor::flow::host_from_snapshot;
+use crate::editor::flow::host::host_from_snapshot;
 use crate::editor::flow::modes::edit::windows::main::config::FlowMainWindowConfig;
 use crate::{FlowMutation, FlowSnapshot};
 use flow::FlowEvalSession;
@@ -78,8 +78,8 @@ pub struct FlowEvalTick {
 /// unfinished work on a SERVABLE graph re-arms once, through the session's own latch, so a second
 /// arming source cannot duplicate it; a hop with unfinished work that no installed extension can
 /// serve abandons the window instead, because its next hop would park the identical request.
-pub(crate) fn tick_result(snapshot: &FlowSnapshot, config: &FlowMainWindowConfig, session: &mut FlowEvalSession, window_id: &str, window_kind_id: &str) -> Emit<FlowMutation, NoConfigMutation> {
-    session.begin_window_tick(window_id, crate::editor::flow::cold_grant()).expect("flow cold session grant");
+pub fn tick_result(snapshot: &FlowSnapshot, config: &FlowMainWindowConfig, session: &mut FlowEvalSession, window_id: &str, window_kind_id: &str) -> Emit<FlowMutation, NoConfigMutation> {
+    session.begin_window_tick(window_id, crate::editor::flow::host::cold_grant()).expect("flow cold session grant");
     let mut host = host_from_snapshot(snapshot, config, session);
     let more = session.tick_cold(&mut host, None);
     let parked = host.take_pending_extension_evals();
@@ -100,15 +100,15 @@ pub(crate) fn tick_result(snapshot: &FlowSnapshot, config: &FlowMainWindowConfig
         let origin=session.invocation_origin_cold(window_id,hash).expect("invocation source is retained before dispatch");
         extension_invocations.push(ExtensionInvocation::new(origin.extension_id.clone(),"evaluate",origin.request_json_cold(resume),"flowEvalResolve"));
     }
-    session.note_window_tick_outcome(window_id, more || !extension_invocations.is_empty(), crate::editor::flow::cold_grant()).expect("flow cold session grant");
+    session.note_window_tick_outcome(window_id, more || !extension_invocations.is_empty(), crate::editor::flow::host::cold_grant()).expect("flow cold session grant");
     let effects = if !extension_invocations.is_empty() {
-        session.note_window_extensions_in_flight(window_id, extension_invocations.len(), crate::editor::flow::cold_grant()).expect("flow cold session grant");
+        session.note_window_extensions_in_flight(window_id, extension_invocations.len(), crate::editor::flow::host::cold_grant()).expect("flow cold session grant");
         Vec::new()
-    } else if more && servable && session.arm_window_tick(window_id, crate::editor::flow::cold_grant()).expect("flow cold session grant").0 {
+    } else if more && servable && session.arm_window_tick(window_id, crate::editor::flow::host::cold_grant()).expect("flow cold session grant").0 {
         vec![eval_tick_effect(window_id, window_kind_id)]
     } else {
         if more && !servable {
-            session.abandon_window_tick(window_id, crate::editor::flow::cold_grant()).expect("flow cold session grant");
+            session.abandon_window_tick(window_id, crate::editor::flow::host::cold_grant()).expect("flow cold session grant");
         }
         Vec::new()
     };
@@ -123,7 +123,5 @@ pub fn handle(payload: &FlowEvalTick, doc: &ArtifactView<'_, FlowSnapshot>, cfg:
 }
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

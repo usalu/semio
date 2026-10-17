@@ -29,6 +29,10 @@ type stdioDocxEcma376BaseInferenceGuardSizeBounds = { readonly minItems?: number
 
 export const stdioDocxEcma376BaseInferenceGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : stdioDocxEcma376BaseInferenceGuardReject(at, "value is not an object");
+export const stdioDocxEcma376BaseInferenceGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) stdioDocxEcma376BaseInferenceGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const stdioDocxEcma376BaseInferenceGuardArray = (value: unknown, at: string, bounds: stdioDocxEcma376BaseInferenceGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return stdioDocxEcma376BaseInferenceGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) stdioDocxEcma376BaseInferenceGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -59,14 +63,14 @@ export const stdioDocxEcma376BaseInferenceGuardConstant = <T extends string | nu
 //#endregion 🚪️Parsers
 
 export function parseDocxInference(value: unknown, at = "$"): DocxInference {
-  const row = stdioDocxEcma376BaseInferenceGuardObject(value, at);
+  const row = stdioDocxEcma376BaseInferenceGuardClosed(stdioDocxEcma376BaseInferenceGuardObject(value, at), at, ["outline"]);
   return {
     outline: parseDocxOutline(row["outline"], `${at}.outline`),
   };
 }
 
 export function parseDocxOutline(value: unknown, at = "$"): DocxOutline {
-  const row = stdioDocxEcma376BaseInferenceGuardObject(value, at);
+  const row = stdioDocxEcma376BaseInferenceGuardClosed(stdioDocxEcma376BaseInferenceGuardObject(value, at), at, ["paragraphCount", "tableCount", "wordCount"]);
   return {
     paragraphCount: stdioDocxEcma376BaseInferenceGuardInteger(row["paragraphCount"], `${at}.paragraphCount`),
     tableCount: stdioDocxEcma376BaseInferenceGuardInteger(row["tableCount"], `${at}.tableCount`),

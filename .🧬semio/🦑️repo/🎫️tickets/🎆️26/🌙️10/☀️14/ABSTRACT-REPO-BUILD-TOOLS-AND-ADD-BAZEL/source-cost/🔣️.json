@@ -41,5 +41,597 @@
     "files": 10189,
     "links": 34,
     "origin": "public-nx-sdk-phases.log exact captured/copied counts; not current disk census"
+  },
+  "controlLineage": {
+    "protocol": {
+      "version": 1,
+      "scope": "source-only-genuine-controls-and-modeled-private-publisher-admission",
+      "maximumOriginalMilliseconds": 120000,
+      "maximumPhaseMilliseconds": 55000,
+      "maximumTestMilliseconds": 65000,
+      "controlCalls": 4096,
+      "publisherObserverCalls": 4096,
+      "progressEvents": 256,
+      "continuations": 64,
+      "maximumSynchronousCallsPerGroup": 64,
+      "cleanupReserveMilliseconds": 10000,
+      "nativeEffects": 0,
+      "productionEdits": false
+    },
+    "variants": [
+      {
+        "id": "flat",
+        "controlDepth": 1,
+        "funding": "none"
+      },
+      {
+        "id": "child",
+        "controlDepth": 2,
+        "funding": "none"
+      },
+      {
+        "id": "grandchild",
+        "controlDepth": 3,
+        "funding": "none"
+      },
+      {
+        "id": "scratch-funded",
+        "controlDepth": 2,
+        "funding": "actual-artifact-scratch"
+      }
+    ],
+    "faultCases": [
+      {
+        "id": "ordinary",
+        "fault": "none",
+        "expectedAdmission": true,
+        "expectedEffects": "bounded",
+        "expectedPrimary": "value",
+        "cleanupFault": "none"
+      },
+      {
+        "id": "copied-control",
+        "fault": "copied-control",
+        "expectedAdmission": false,
+        "expectedEffects": "zero",
+        "expectedPrimary": "exact-refusal",
+        "cleanupFault": "none"
+      },
+      {
+        "id": "cancel-before",
+        "fault": "cancel-before",
+        "expectedAdmission": false,
+        "expectedEffects": "zero",
+        "expectedPrimary": "exact-abort-reason",
+        "cleanupFault": "none"
+      },
+      {
+        "id": "cancel-after-first-group",
+        "fault": "cancel-after-first-group",
+        "expectedAdmission": false,
+        "expectedEffects": "first-group-only",
+        "expectedPrimary": "exact-abort-reason",
+        "cleanupFault": "none"
+      },
+      {
+        "id": "undefined-body",
+        "fault": "undefined-body",
+        "expectedAdmission": false,
+        "expectedEffects": "zero",
+        "expectedPrimary": "exact-body-value",
+        "cleanupFault": "none"
+      },
+      {
+        "id": "frozen-body",
+        "fault": "frozen-body",
+        "expectedAdmission": false,
+        "expectedEffects": "zero",
+        "expectedPrimary": "exact-body-value",
+        "cleanupFault": "none"
+      },
+      {
+        "id": "expired",
+        "fault": "expired",
+        "expectedAdmission": false,
+        "expectedEffects": "zero",
+        "expectedPrimary": "deadline-refusal",
+        "cleanupFault": "none"
+      },
+      {
+        "id": "undefined-body-cleanup",
+        "fault": "undefined-body-cleanup",
+        "expectedAdmission": false,
+        "expectedEffects": "zero",
+        "expectedPrimary": "body-first-cleanup-aggregate",
+        "cleanupFault": "after-real-remove-frozen"
+      },
+      {
+        "id": "frozen-body-cleanup",
+        "fault": "frozen-body-cleanup",
+        "expectedAdmission": false,
+        "expectedEffects": "zero",
+        "expectedPrimary": "body-first-cleanup-aggregate",
+        "cleanupFault": "after-real-remove-frozen"
+      }
+    ]
+  },
+  "controlPrecedence": {
+    "protocol": {
+      "version": 1,
+      "scope": "genuine-cancellation-precedence-no-filesystem-effects",
+      "maximumOriginalMilliseconds": 120000,
+      "maximumPhaseMilliseconds": 10000,
+      "nativeEffects": 0
+    },
+    "cases": [
+      {
+        "id": "none",
+        "order": [],
+        "expectedIssuedFirst": "none",
+        "expectedGenericFirst": "none"
+      },
+      {
+        "id": "child",
+        "order": [
+          "child"
+        ],
+        "expectedIssuedFirst": "child",
+        "expectedGenericFirst": "child"
+      },
+      {
+        "id": "parent",
+        "order": [
+          "parent"
+        ],
+        "expectedIssuedFirst": "parent",
+        "expectedGenericFirst": "parent"
+      },
+      {
+        "id": "child-then-parent",
+        "order": [
+          "child",
+          "parent"
+        ],
+        "expectedIssuedFirst": "parent",
+        "expectedGenericFirst": "child"
+      },
+      {
+        "id": "parent-then-child",
+        "order": [
+          "parent",
+          "child"
+        ],
+        "expectedIssuedFirst": "parent",
+        "expectedGenericFirst": "parent"
+      },
+      {
+        "id": "same-reason",
+        "order": [
+          "child",
+          "parent"
+        ],
+        "expectedIssuedFirst": "shared",
+        "expectedGenericFirst": "shared"
+      }
+    ]
+  },
+  "controlNames": {
+    "protocol": {
+      "version": 1,
+      "scope": "actual-pure-directory-selection-utf8-attribution-no-filesystem-effects",
+      "window": 64,
+      "widths": [
+        64,
+        128,
+        256,
+        512,
+        2048
+      ],
+      "maximumNameUnits": 256,
+      "maximumUtf8BytesPerName": 768,
+      "maximumRetainedLogicalNames": 64,
+      "nativeEffects": 0,
+      "maximumPhaseMilliseconds": 10000,
+      "maximumSelectedKeyBytes": 49152,
+      "maximumAllKeyBytes": 50688
+    },
+    "cases": [
+      {
+        "id": "ascii",
+        "names": [
+          "z",
+          "a",
+          "A",
+          "aa",
+          "0",
+          "b"
+        ],
+        "expected": "complete"
+      },
+      {
+        "id": "unicode",
+        "names": [
+          "\u00e9",
+          "e\u0301",
+          "a",
+          "\ud83d\ude00",
+          "\u00df",
+          "\u4e2d",
+          "Z",
+          "\ud83d\ude80",
+          "\u03a9"
+        ],
+        "expected": "complete"
+      },
+      {
+        "id": "replacement-ties",
+        "names": [
+          "\ud800",
+          "\ufffd",
+          "\udc00",
+          "a",
+          "\ud801"
+        ],
+        "expected": "complete"
+      },
+      {
+        "id": "duplicate",
+        "names": [
+          "b",
+          "a",
+          "a"
+        ],
+        "expected": "duplicate"
+      },
+      {
+        "id": "empty",
+        "names": [],
+        "expected": "complete"
+      },
+      {
+        "id": "maximum-units",
+        "names": [
+          "\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9",
+          "\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00",
+          "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d"
+        ],
+        "expected": "complete"
+      }
+    ]
+  },
+  "controlIdentity": {
+    "protocol": {
+      "maximumPhaseMilliseconds": 55000,
+      "maximumRows": 129,
+      "maximumAncestors": 64,
+      "maximumDirectories": 65,
+      "maximumRepeats": 8,
+      "rootMicroIterations": 4096,
+      "nativeEffects": 0,
+      "productionEdits": false
+    },
+    "cases": [
+      {
+        "id": "chain-0",
+        "rows": 0,
+        "repeats": 3,
+        "contents": "mixed",
+        "field": "none",
+        "delta": 0,
+        "fault": "none",
+        "expected": "success"
+      },
+      {
+        "id": "chain-1",
+        "rows": 1,
+        "repeats": 3,
+        "contents": "mixed",
+        "field": "none",
+        "delta": 0,
+        "fault": "none",
+        "expected": "success"
+      },
+      {
+        "id": "chain-14",
+        "rows": 14,
+        "repeats": 3,
+        "contents": "mixed",
+        "field": "none",
+        "delta": 0,
+        "fault": "none",
+        "expected": "success"
+      },
+      {
+        "id": "chain-64",
+        "rows": 64,
+        "repeats": 3,
+        "contents": "mixed",
+        "field": "none",
+        "delta": 0,
+        "fault": "none",
+        "expected": "success"
+      },
+      {
+        "id": "chain-129",
+        "rows": 129,
+        "repeats": 3,
+        "contents": "mixed",
+        "field": "none",
+        "delta": 0,
+        "fault": "none",
+        "expected": "success"
+      },
+      {
+        "id": "max-physical-129",
+        "rows": 129,
+        "repeats": 3,
+        "contents": "physical-bound",
+        "field": "none",
+        "delta": 0,
+        "fault": "none",
+        "expected": "success"
+      },
+      {
+        "id": "identity-dev",
+        "rows": 1,
+        "repeats": 3,
+        "contents": "identity",
+        "field": "dev",
+        "delta": 1,
+        "fault": "none",
+        "expected": "physical-change"
+      },
+      {
+        "id": "identity-ino",
+        "rows": 1,
+        "repeats": 3,
+        "contents": "identity",
+        "field": "ino",
+        "delta": 1,
+        "fault": "none",
+        "expected": "physical-change"
+      },
+      {
+        "id": "identity-mode",
+        "rows": 1,
+        "repeats": 3,
+        "contents": "identity",
+        "field": "mode",
+        "delta": 1,
+        "fault": "none",
+        "expected": "physical-change"
+      },
+      {
+        "id": "identity-uid",
+        "rows": 1,
+        "repeats": 3,
+        "contents": "identity",
+        "field": "uid",
+        "delta": 1,
+        "fault": "none",
+        "expected": "physical-change"
+      },
+      {
+        "id": "identity-gid",
+        "rows": 1,
+        "repeats": 3,
+        "contents": "identity",
+        "field": "gid",
+        "delta": 1,
+        "fault": "none",
+        "expected": "physical-change"
+      },
+      {
+        "id": "identity-size",
+        "rows": 1,
+        "repeats": 3,
+        "contents": "identity",
+        "field": "size",
+        "delta": 1,
+        "fault": "none",
+        "expected": "success"
+      },
+      {
+        "id": "identity-nlink",
+        "rows": 1,
+        "repeats": 3,
+        "contents": "identity",
+        "field": "nlink",
+        "delta": 1,
+        "fault": "none",
+        "expected": "success"
+      },
+      {
+        "id": "identity-mtimeNs",
+        "rows": 1,
+        "repeats": 3,
+        "contents": "identity",
+        "field": "mtimeNs",
+        "delta": 1,
+        "fault": "none",
+        "expected": "success"
+      },
+      {
+        "id": "identity-ctimeNs",
+        "rows": 1,
+        "repeats": 3,
+        "contents": "identity",
+        "field": "ctimeNs",
+        "delta": 1,
+        "fault": "none",
+        "expected": "success"
+      },
+      {
+        "id": "identity-same-field",
+        "rows": 1,
+        "repeats": 3,
+        "contents": "identity",
+        "field": "dev",
+        "delta": 0,
+        "fault": "none",
+        "expected": "success"
+      },
+      {
+        "id": "identity-pre-io-undefined",
+        "rows": 1,
+        "repeats": 3,
+        "contents": "identity",
+        "field": "none",
+        "delta": 0,
+        "fault": "pre-io-undefined",
+        "expected": "undefined"
+      },
+      {
+        "id": "identity-post-check-frozen",
+        "rows": 1,
+        "repeats": 3,
+        "contents": "identity",
+        "field": "none",
+        "delta": 0,
+        "fault": "post-check-frozen",
+        "expected": "frozen"
+      },
+      {
+        "id": "identity-lstat-frozen",
+        "rows": 1,
+        "repeats": 3,
+        "contents": "identity",
+        "field": "none",
+        "delta": 0,
+        "fault": "lstat-frozen",
+        "expected": "frozen"
+      },
+      {
+        "id": "stamp-dev",
+        "rows": 1,
+        "repeats": 3,
+        "contents": "stamp",
+        "field": "dev",
+        "delta": 1,
+        "fault": "none",
+        "expected": "physical-change"
+      },
+      {
+        "id": "stamp-ino",
+        "rows": 1,
+        "repeats": 3,
+        "contents": "stamp",
+        "field": "ino",
+        "delta": 1,
+        "fault": "none",
+        "expected": "physical-change"
+      },
+      {
+        "id": "stamp-mode",
+        "rows": 1,
+        "repeats": 3,
+        "contents": "stamp",
+        "field": "mode",
+        "delta": 1,
+        "fault": "none",
+        "expected": "physical-change"
+      },
+      {
+        "id": "stamp-uid",
+        "rows": 1,
+        "repeats": 3,
+        "contents": "stamp",
+        "field": "uid",
+        "delta": 1,
+        "fault": "none",
+        "expected": "success"
+      },
+      {
+        "id": "stamp-gid",
+        "rows": 1,
+        "repeats": 3,
+        "contents": "stamp",
+        "field": "gid",
+        "delta": 1,
+        "fault": "none",
+        "expected": "success"
+      },
+      {
+        "id": "stamp-size",
+        "rows": 1,
+        "repeats": 3,
+        "contents": "stamp",
+        "field": "size",
+        "delta": 1,
+        "fault": "none",
+        "expected": "physical-change"
+      },
+      {
+        "id": "stamp-nlink",
+        "rows": 1,
+        "repeats": 3,
+        "contents": "stamp",
+        "field": "nlink",
+        "delta": 1,
+        "fault": "none",
+        "expected": "physical-change"
+      },
+      {
+        "id": "stamp-mtimeNs",
+        "rows": 1,
+        "repeats": 3,
+        "contents": "stamp",
+        "field": "mtimeNs",
+        "delta": 1,
+        "fault": "none",
+        "expected": "physical-change"
+      },
+      {
+        "id": "stamp-ctimeNs",
+        "rows": 1,
+        "repeats": 3,
+        "contents": "stamp",
+        "field": "ctimeNs",
+        "delta": 1,
+        "fault": "none",
+        "expected": "physical-change"
+      },
+      {
+        "id": "stamp-same-field",
+        "rows": 1,
+        "repeats": 3,
+        "contents": "stamp",
+        "field": "dev",
+        "delta": 0,
+        "fault": "none",
+        "expected": "success"
+      },
+      {
+        "id": "stamp-pre-io-undefined",
+        "rows": 1,
+        "repeats": 3,
+        "contents": "stamp",
+        "field": "none",
+        "delta": 0,
+        "fault": "pre-io-undefined",
+        "expected": "undefined"
+      },
+      {
+        "id": "stamp-post-check-frozen",
+        "rows": 1,
+        "repeats": 3,
+        "contents": "stamp",
+        "field": "none",
+        "delta": 0,
+        "fault": "post-check-frozen",
+        "expected": "frozen"
+      },
+      {
+        "id": "stamp-lstat-frozen",
+        "rows": 1,
+        "repeats": 3,
+        "contents": "stamp",
+        "field": "none",
+        "delta": 0,
+        "fault": "lstat-frozen",
+        "expected": "frozen"
+      }
+    ]
   }
 }

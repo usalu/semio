@@ -35,7 +35,6 @@ fn original_foreign_output_preserves_immutable_policy_and_every_cancelled_backin
   let mut wire=serde_json::json!({"target":{"artifactId":output.target.artifact_id,"artifactKind":output.target.artifact_kind},"mutationId":output.mutation_id.0,"payload":output.payload,"label":output.label});if let Some(dialect)=&output.target.dialect{wire["target"]["dialect"]=serde_json::json!(dialect);}let mut expected=row.clone();expected.as_object_mut().unwrap().remove("id");assert_eq!(wire,expected);
   cursor.begin_close();assert_eq!(close(&mut cursor,grant),0);let mut retirement=ForeignStepRetirement::admit(output,grant).ok().unwrap().0;assert_eq!(close(&mut retirement,grant),allocated);
  }
- eprintln!("[DEBUG] original foreign outputs2 fixed five-axis policy, System/Serde identity, every48 cancel cuts, exact backing birth/release and allocation-free handoff");
 }
 
 #[test]
@@ -56,7 +55,6 @@ fn original_foreign_collection_keeps_each_refused_row_and_real_backing_receipt()
   }
   assert!(owner.terminal_is_empty());assert_eq!(released,live);let(_,born,freed)=observe(||drop(owner));assert_eq!((born,freed),(0,0));
  }
- eprintln!("[DEBUG] original foreign sequence2 fixed five-axis policy, denied original row identity, paid real contiguous transfers and every prefix System release conserved");
 }
 
 #[test]
@@ -78,7 +76,6 @@ fn original_indexed_foreign_preparation_retains_every_cancelled_partial_and_sequ
  let mut cursor=ForeignStepsPreparation::empty();let mut live=0;
  for _ in 0..160{let source=originals.get(cursor.source_index()).map(ForeignStepSource::borrowed);let(step,born,freed)=observe(||cursor.advance_source(source,grant).unwrap());assert_eq!(born,step.progress().retained_capacity_bytes);assert_eq!(freed,step.progress().released_bytes);live+=born;live-=freed;if matches!(step,RetainedCloneStep::Complete(_)){break;}}
  assert!(cursor.is_complete());let((rows,p),born,freed)=observe(||cursor.take_prepared(grant).unwrap());assert_eq!((born,freed),(0,0));assert!(p.fits(grant));assert_eq!(rows,originals);let mut owner=ForeignStepsOwner{values:ManuallyDrop::new(rows),child:None,closing:false};owner.begin_close();let mut released=0;for _ in 0..64{if owner.terminal_is_empty(){break;}let(step,born,freed)=observe(||owner.close_step(grant).unwrap());assert_eq!(born,0);assert_eq!(freed,step.progress().released_bytes);released+=freed;}assert!(owner.terminal_is_empty());assert_eq!(released,live);
- eprintln!("[DEBUG] original indexed foreign sequence2 immutable grant, independent Serde values,120 cancel cuts, original source identity and actual System birth/release conserved");
 }
 
 #[test]
@@ -104,5 +101,4 @@ fn original_foreign_source_boundaries_preserve_paid_rows_and_every_cancel_cut(){
   if source+1==batches.len()&&cursor.is_complete(){let((rows,p),born,freed)=observe(||cursor.take_prepared(grant).unwrap());assert_eq!((born,freed),(0,0));assert!(p.fits(grant));assert_eq!(rows,expected);let mut rows=ForeignStepsOwner{values:ManuallyDrop::new(rows),child:None,closing:false};rows.begin_close();for _ in 0..80{if rows.terminal_is_empty(){break;}let(step,born,freed)=observe(||rows.close_step(grant).unwrap());assert_eq!(born,0);assert_eq!(freed,step.progress().released_bytes);live-=freed;}assert!(rows.terminal_is_empty());}
   cursor.begin_close();for _ in 0..80{if cursor.terminal_is_empty(){break;}let(step,born,freed)=observe(||cursor.close_step(grant).unwrap());assert_eq!(born,0);assert_eq!(freed,step.progress().released_bytes);live-=freed;}assert!(cursor.terminal_is_empty());assert_eq!(live,0);let(_,born,freed)=observe(||drop(cursor));assert_eq!((born,freed),(0,0));
  }
- eprintln!("[DEBUG] original foreign3 source boundaries immutable caller policy, empty forward and order preserved,180 cancellation cuts and exact original System backings conserved");
 }

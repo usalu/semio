@@ -45,9 +45,6 @@ impl ScenePaintJob{
 }
 semio_framework_2d::physical_work_retirement!(ScenePaintRetirement,ScenePaintJob,&'static str,|_:&str|"Painted scene physical close refused");
 semio_framework_value::artifact_retire_leaf!(PreparedSceneCounts,ScenePaintProgress);
-#[cfg(test)]
-#[path="🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 
 #[path="🎯️query/🦀️.rs"]
 pub mod query;

@@ -1,10 +1,13 @@
+use crate::{forms_steps, FormsSnapshot};
 use crate::standards::v1::subsets::any::io::text::snapshot::building_component_spec;
 use crate::standards::v1::subsets::any::io::text::snapshot::{initial_try_values,value_to_dsl,dsl_to_value,dsl_string_value,dsl_f64_value,json_string_value,json_f64_value};
 use semio_framework_pack_json::Value;
 use crate::standards::v1::subsets::any::io::text::snapshot::onboarding_example_json;
 use crate::standards::v1::subsets::any::io::text::snapshot::onboarding_example_spec;
 use crate::standards::v1::subsets::any::io::text::snapshot::default_example_json;
-use super::*;
+use crate::standards::v1::subsets::any::schema::*;
+use crate::mutations::{question_edit_mutations, update_block_operations};
+use crate::op::FormMutation;
 use semio_framework_pack_json::object;
 
 #[semio_framework_async_macros::async_test]
@@ -45,7 +48,7 @@ async fn a_re_seeded_question_is_one_whole_replace_block() {
 }
 
 fn apply_form_edit_mutation(spec: &FormsSnapshot, operation: &FormMutation) -> FormsSnapshot {
-    crate::central_apply::apply_form_edit_mutation(spec, operation).expect("valid mutation diff")
+    crate::mutations::apply::apply_form_edit_mutation(spec, operation).expect("valid mutation diff")
 }
 
 #[semio_framework_async_macros::async_test]

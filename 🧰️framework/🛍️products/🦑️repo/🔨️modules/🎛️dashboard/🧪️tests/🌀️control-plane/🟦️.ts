@@ -37,7 +37,8 @@ test("Ajv independently validates the shared dashboard protocol vectors", () => 
 test("Nx independently schedules every inferred command discovery vector", async () => {
   const {createTaskGraph} = await import("nx/src/tasks-runner/create-task-graph.js");
   const {graph,expected} = JSON.parse(readFileSync(new URL("../🧫️fixtures/🌳️inferred-targets/🔣️.json",import.meta.url),"utf8"));
-  const reference={nodes:Object.fromEntries(Object.entries(graph.projects).map(([name,data])=>[name,{name,type:"lib",data}])),dependencies:Object.fromEntries(Object.keys(graph.projects).map(name=>[name,[]]))};
+  type ProjectData=Parameters<typeof createTaskGraph>[0]["nodes"][string]["data"];
+  const reference={nodes:Object.fromEntries(Object.entries<ProjectData>(graph.projects).map(([name,data])=>[name,{name,type:"lib" as const,data}])),dependencies:Object.fromEntries(Object.keys(graph.projects).map(name=>[name,[]]))};
   const tasks = expected.flatMap((id:string) => { const split=id.lastIndexOf(":"); return Object.keys(createTaskGraph(reference,{},[id.slice(0,split)],[id.slice(split+1)],undefined,{}).tasks); }).sort();
   expect(tasks).toEqual(expected);
 });
@@ -46,7 +47,7 @@ test("Nx independently schedules every configured renderer language selection", 
   const fixture=JSON.parse(readFileSync(new URL("../🧫️fixtures/🗣️launch-axes/🔣️.json",import.meta.url),"utf8"));
   const {createTaskGraph}=await import("nx/src/tasks-runner/create-task-graph.js");
   const targets=Object.fromEntries(fixture.renderers.map((row:{target:string})=>[row.target,{executor:"nx:run-commands",options:{command:"bun fixture"}}]));
-  const graph={nodes:{"@semio-tech/framework-os-dev":{name:"@semio-tech/framework-os-dev",type:"lib",data:{root:"dev",targets}}},dependencies:{"@semio-tech/framework-os-dev":[]}};
+  const graph={nodes:{"@semio-tech/framework-os-dev":{name:"@semio-tech/framework-os-dev",type:"lib" as const,data:{root:"dev",targets}}},dependencies:{"@semio-tech/framework-os-dev":[]}};
   for(const row of fixture.renderers)for(const locale of fixture.locales)for(const terminology of fixture.terminologies){
     const expected={SEMIO_LOCKED_LOCALE:locale,SEMIO_LOCKED_TERMINOLOGY:terminology};
     const tasks=createTaskGraph(graph,{},["@semio-tech/framework-os-dev"],[row.target],undefined,expected).tasks;

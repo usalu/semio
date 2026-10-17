@@ -25,7 +25,7 @@ import {
   uiDirtyScopeWantsWindowBody,
   type UiDirtySection
 } from "@semio-tech/framework";
-import { type ExtraWindowInstance } from "../../🐚️Shell/🟦️.tsx";
+import { type ExtraWindowInstance } from "../../🐚️Shell/🗃️state-shapes/🟦️.ts";
 
 //#region ShellHelpers
 /** 🐢️ Structural equality over plain JSON-shaped values (the shape every `UiNode`/`WindowEngagement`/`WindowMeasure` program payload takes) — no cycles, no non-JSON types. */

@@ -17,7 +17,7 @@
 //! …mutations::{apply_form_edit_mutation, inverse_form_mutation, FormMutation}; }` re-export is
 //! outside this facet's edit boundary and would otherwise fail to compile.
 
-use crate::{FormsDiff, FormsSnapshot};
+use crate::{FormQuestion, FormsDiff, FormsSnapshot};
 use protocol::Mutation;
 
 #[path = "📨️commit-response/🦀️.rs"]
@@ -33,17 +33,17 @@ pub mod discard_response;
 #[value(tag = "mutation", rename_all = "camelCase")]
 #[mutations(snapshot = FormsSnapshot, diff = FormsDiff, schema = "s.forms.forms")]
 pub enum FormMutation {
-    CreateStep(super::create_step::mutation::CreateStep),
-    DeleteStep(super::delete_step::mutation::DeleteStep),
-    ReorderStep(super::reorder_step::mutation::ReorderStep),
-    RenameStep(super::rename_step::mutation::RenameStep),
-    ChangeStepDescription(super::change_step_description::mutation::ChangeStepDescription),
-    CreateBlock(super::create_block::mutation::CreateBlock),
-    DeleteBlock(super::delete_block::mutation::DeleteBlock),
-    MoveBlockToStep(super::move_block_to_step::mutation::MoveBlockToStep),
-    ReplaceBlock(super::replace_block::mutation::ReplaceBlock),
-    ChangeBlockField(super::change_block_field::mutation::ChangeBlockField),
-    ChangeFormTitle(super::change_form_title::mutation::ChangeFormTitle),
+    CreateStep(crate::standards::v1::subsets::any::schema::mutations::create_step::mutation::CreateStep),
+    DeleteStep(crate::standards::v1::subsets::any::schema::mutations::delete_step::mutation::DeleteStep),
+    ReorderStep(crate::standards::v1::subsets::any::schema::mutations::reorder_step::mutation::ReorderStep),
+    RenameStep(crate::standards::v1::subsets::any::schema::mutations::rename_step::mutation::RenameStep),
+    ChangeStepDescription(crate::standards::v1::subsets::any::schema::mutations::change_step_description::mutation::ChangeStepDescription),
+    CreateBlock(crate::standards::v1::subsets::any::schema::mutations::create_block::mutation::CreateBlock),
+    DeleteBlock(crate::standards::v1::subsets::any::schema::mutations::delete_block::mutation::DeleteBlock),
+    MoveBlockToStep(crate::standards::v1::subsets::any::schema::mutations::move_block_to_step::mutation::MoveBlockToStep),
+    ReplaceBlock(crate::standards::v1::subsets::any::schema::mutations::replace_block::mutation::ReplaceBlock),
+    ChangeBlockField(crate::standards::v1::subsets::any::schema::mutations::change_block_field::mutation::ChangeBlockField),
+    ChangeFormTitle(crate::standards::v1::subsets::any::schema::mutations::change_form_title::mutation::ChangeFormTitle),
     CommitResponse(commit_response::mutation::CommitResponse),
     DiscardResponse(discard_response::mutation::DiscardResponse),
 }
@@ -59,14 +59,28 @@ pub fn inverse_form_mutation(spec: &FormsSnapshot, mutation: &FormMutation) -> R
 }
 //#endregion 🔖️CompatDelegates
 
-//#region 🔖️PlaybookBridge
-/// 🌉️ Playbook kernel helpers still typed on `PlaybookSpec` — reads `steps` through the
-/// working-scene accessor (`crate::forms_steps`) now that `FormsSnapshot` no
-/// longer carries a bare `steps` field (ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM).
-pub fn as_playbook_spec(snapshot: &FormsSnapshot) -> semio_framework_artifact_playbook_playbook::PlaybookSpec {
-    semio_framework_artifact_playbook_playbook::PlaybookSpec { schema: snapshot.schema.clone(), id: snapshot.id.clone(), version: snapshot.version.clone(), title: snapshot.title.clone(), steps: crate::forms_steps(snapshot) }
+//#region 🔖️QuestionEdits
+/// 🎛️ The leaves that carry `before` to `after` inside `step_id` — the single seam every inspector/command question edit
+/// flows through (design §17.1 of ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING): one ABSOLUTE `change-block-field` per
+/// field that differs, so history edits exactly that value; a changed id or kind (a re-seeded question) is the one
+/// whole-question `replace-block`. Nothing when the edit changes nothing.
+pub fn question_edit_mutations(step_id: &str, before: &FormQuestion, after: &FormQuestion) -> Vec<FormMutation> {
+    use crate::mutations::change_block_field::mutation::{BlockField, ChangeBlockField};
+    if before.id != after.id || before.kind != after.kind {
+        return vec![FormMutation::ReplaceBlock(crate::mutations::replace_block::mutation::ReplaceBlock { step_id: step_id.to_string(), block: after.clone() })];
+    }
+    BlockField::changes(before, after).into_iter().map(|change| FormMutation::ChangeBlockField(ChangeBlockField { block_id: after.id.clone(), change })).collect()
 }
-//#endregion 🔖️PlaybookBridge
+
+/// ✏️ Locates `question_id` in `spec`, applies `mutate` to a clone, and returns the [`question_edit_mutations`] that record
+/// the edit. Returns `None` if the question no longer exists.
+pub fn update_block_operations(spec: &FormsSnapshot, question_id: &str, mutate: impl FnOnce(&mut FormQuestion)) -> Option<Vec<FormMutation>> {
+    let location = crate::schema::locate_question(spec, question_id)?;
+    let mut question = location.question.clone();
+    mutate(&mut question);
+    Some(question_edit_mutations(&location.step_id, &location.question, &question))
+}
+//#endregion 🔖️QuestionEdits
 
 //#region 🔖️Kinds
 /// 🏷️ Kebab-case spelling of every [`FormMutation`] variant, in declaration order — the vocabulary the
@@ -97,13 +111,9 @@ pub fn inverse_form_mutation_steps(mutation: &FormMutation, base: &FormsSnapshot
 //#endregion 🔖️Kinds
 
 //#region 🧪️KindsCatalog
-#[cfg(test)]
-#[path = "🧪️tests/🔬️kinds-catalog/🦀️.rs"]
-mod kinds_catalog;
+
 //#endregion 🧪️KindsCatalog
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

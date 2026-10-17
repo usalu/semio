@@ -359,9 +359,9 @@ export function runNativeBuildDriverV1(options: NativeBuildDriverOptionsV1): Pro
   requireMaterializedPathV1(unitHistoryPathV1(options.cacheRoot));
   const generation = nativeBuildGenerationV1(options.generation, options.cacheRoot, options.shared), startedMs = Date.now(), cache = stageCacheV1(generation.stages);
   const signal = options.control.signal, children = new Set<ChildProcess>(), stages: StageRecordV1[] = [], runs: BuildScriptRunV1[] = [], staged: string[] = [], failures: { pass: string; package: string }[] = [];
-  let stopped: Error | undefined;
-  const stop = (reason: Error): void => { stopped ??= reason; for (const child of children) terminateOwnedChildTree(child); };
-  const check = (): void => { if (stopped) throw stopped; checkResourceLeaseControl(options.control); };
+  let stopped=false,stopReason:unknown;
+  const stop = (reason:unknown):void => {if(!stopped){stopped=true;stopReason=reason;}for(const child of children)terminateOwnedChildTree(child);};
+  const check = ():void => {if(stopped)throw stopReason;checkResourceLeaseControl(options.control);};
   const admission=options.control,inputContinuations=new CargoInputContinuationTransactionV1(options.control),planContinuations=new CargoInputContinuationTransactionV1(options.control);
   let deadline: ReturnType<typeof setTimeout> | undefined;
   const watchDeadline = (): void => {
@@ -376,7 +376,7 @@ export function runNativeBuildDriverV1(options: NativeBuildDriverOptionsV1): Pro
   log(`[native-build] ${generation.kind} generation ${generation.root}: ${plan.passes.length} pass(es), ${components.length} component build(s), ${jobs.length} job(s)`);
   let primaryFailed=false,dispose:undefined|(()=>Promise<void>);
   try {
-  return await withCompilerCapacityConsumptionV1({directory:options.leaseDirectory,control:admission,environment:options.environment},async(capacity,cpuControl)=>{
+  return await withCompilerCapacityConsumptionV1({request:{kind:"whole-host"},directory:options.leaseDirectory,control:admission,environment:options.environment},async(capacity,cpuControl)=>{
   const tokens = Math.min(options.tokens ?? capacity.parallelism, capacity.parallelism);
   options = { ...options, environment: { ...options.environment, SEMIO_COMPILER_PARALLELISM: String(tokens) } };
   const cargoHome = resolve(options.environment.CARGO_HOME ?? join(homedir(), ".cargo")), roots: CargoProvenanceRootsV1 = { repository: options.cwd, build: generation.build, cargoHome };
@@ -460,10 +460,10 @@ export function runNativeBuildDriverV1(options: NativeBuildDriverOptionsV1): Pro
     if (stallReason) return;
     stallReason = `Native build stalled: no unit started or finished for ${Math.round(idleMs / 1000)} s with ${children.size} child process(es) and no rustc running; samples in ${generation.logs}`;
     const failure=Error(stallReason),pids=Object.freeze([...children].flatMap(child=>child.pid===undefined?[]:[child.pid]));
-    stallWork=withRequestedIssuedResourceControlV1(cpuControl,0,async actual=>{
+    try{stallWork=withRequestedIssuedResourceControlV1(cpuControl,0,async actual=>{
      try{if(pids.length>TELEMETRY_POLICY_V1.maximumStallSamples)throw Error("Bounded owned stall sample roster required");if(process.platform==="darwin")for(const pid of pids)await withRequestedIssuedResourceControlV1(actual,TELEMETRY_POLICY_V1.maximumStallSampleMilliseconds,async sampleControl=>{const result=await captureOwnedCommandResultV1("sample",[String(pid),"3"],options.cwd,{control:sampleControl,output:{maximumBytes:TELEMETRY_POLICY_V1.maximumOutputBytes,maximumLines:TELEMETRY_POLICY_V1.maximumOutputLines}});if(result.signal!==null)throw Error("Owned stall sample terminated by signal");checkResourceLeaseControl(sampleControl);writeFileSync(join(generation.logs,`stall-${pid}.txt`),result.stdout+result.stderr);});}
-     finally{stop(failure);}
-    });void stallWork.catch(()=>{});
+     catch(error){stop(error);throw error;}finally{stop(failure);}
+    });}catch(error){stallWork=Promise.reject(error);stop(error);}void stallWork.catch(()=>{});
   }, Math.min(policy.watchdogMs, options.stallMs ?? policy.stallMs));
   let graphOperations:CargoGraphOperationsV1|undefined;
   let outcome: NativeBuildOutcomeV1 | undefined, custodyClosed = false, resourcesClosing:Promise<Awaited<ReturnType<typeof timeline.stop>>>|undefined;

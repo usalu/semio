@@ -8,6 +8,9 @@
 //! here -- a `serde_json::Value`-style `Map` would have silently collapsed them on parse.
 
 pub use crate::standards::v_rfc8259::subsets::base::schema::*;
+
+pub use semio_s_artifact_stdio_json_schema::standards::v_rfc8259::subsets::i_json::schema::conformance;
+pub use conformance::*;
 //#region 🏗️DerivedConstruction
 
 //#endregion 🏗️DerivedConstruction

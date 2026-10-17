@@ -2,7 +2,15 @@
 //! twin verifies on the shared pixel corpus); a stroke's inverse restores the exact prior image; a stroke edited in history
 //! re-derives its pixels — and its downstream — from its base; the store folds it exactly like the leaf.
 
-use super::*;
+use semio_s_artifact_raster_raster_diff::painted;
+use semio_s_artifact_raster_raster_diff::RasterDiff;
+use semio_s_artifact_raster_raster_model::find_layer;
+use semio_s_artifact_raster_raster_model::RasterLayerNode;
+use semio_s_artifact_raster_raster_mutations::RasterMutation;
+use semio_s_artifact_stdio_semio_image::schema::snapshot::SemioImageSnapshot;
+use semio_framework_pixels::editing::paint_stroke_in_place;
+use semio_framework_pixels::RasterImage;
+use semio_s_artifact_raster_raster_mutations_pixels::paint_stroke::*;
 use semio_s_artifact_raster_raster_mutations::inverse_raster_mutation;
 use semio_s_artifact_raster_raster_mutations::text::apply_raster_mutation;
 use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;

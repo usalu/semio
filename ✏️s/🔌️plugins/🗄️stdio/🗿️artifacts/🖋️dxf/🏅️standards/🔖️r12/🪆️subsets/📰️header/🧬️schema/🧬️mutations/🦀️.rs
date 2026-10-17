@@ -201,9 +201,8 @@ pub const KINDS: &[&str] = &[
 /// tree end-to-end. The single source of truth reused by `op_text_binary_roundtrip_law` below AND
 /// by `⚙️engine/🦀️.rs`'s `ops_grammar_conformance_law`/`protocol_walk_law` conformance
 /// tests, so a new variant only needs adding here once.
-#[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn demo_mutation_cases() -> Vec<DxfMutation> {
+pub fn demo_mutation_cases() -> Vec<DxfMutation> {
     use crate::schema::snapshot::{DxfOtherTable, DxfTables, DxfTag, DxfValue, DxfVertex};
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -262,9 +261,7 @@ pub(crate) fn demo_mutation_cases() -> Vec<DxfMutation> {
 //#endregion 🔖️DemoCases
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
 
 //#region 🧪️FixtureCases

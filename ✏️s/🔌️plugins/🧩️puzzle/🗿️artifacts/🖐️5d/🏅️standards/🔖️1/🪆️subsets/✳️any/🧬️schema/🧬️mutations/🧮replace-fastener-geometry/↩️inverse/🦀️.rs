@@ -1,9 +1,11 @@
 //! ↩️ Inverse for `ReplaceFastenerGeometry` — restores the BASE field value. Missing target ⇒ `Vec::new()`.
-use crate::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation;
 use crate::Puzzle5dSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &super::ReplaceFastenerGeometry, base: &Puzzle5dSnapshot) -> Result<Vec<Puzzle5dMutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op>(payload: &super::ReplaceFastenerGeometry, base: &Puzzle5dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError>
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::replace_fastener_geometry::ReplaceFastenerGeometry>,
+{
     Ok((|| {
     let Some(item) = base.fasteners.iter().find(|entry| entry.id == payload.id) else {
         return Vec::new();

@@ -102,5 +102,4 @@ test("original MCP inference caller keeps finite work and a bounded physical pol
   expect(db.query("SELECT (?1<=?2) AS permitted,?2-?1 AS unused").get(source.workUnits,source.turn.work.fuel)).toEqual({permitted:1,unused:53});
   expect(db.query("SELECT (?1<=?2) AS permitted").get(source.turn.work.fuel+1,source.turn.work.fuel)).toEqual({permitted:0});
  }finally{db.close()}
- console.log("[DEBUG] Ajv/SQLite MCP declared clock1671/deadline1000000/fuel64, exact source64/copy4096, loan1/copy3/work11; missing/extra/over-budget denied; no clock authenticity claim");
 });

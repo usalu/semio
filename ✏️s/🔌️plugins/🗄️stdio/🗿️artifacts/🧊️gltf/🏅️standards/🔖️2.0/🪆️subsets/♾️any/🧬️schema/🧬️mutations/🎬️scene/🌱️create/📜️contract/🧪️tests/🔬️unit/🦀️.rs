@@ -1,9 +1,10 @@
 use crate::standards::v2_0::subsets::any::schema::mutations::contract_tests::{assert_laws, decode, scene_snapshot};
 use crate::standards::v2_0::subsets::any::schema::mutations::create_scene as mutation;
+use semio_framework_test_fixtures::fixture_text;
 
 #[test]
 fn canonical_vectors_execute_direct_mutation_and_codec_laws() {
-    let contract: serde_json::Value = serde_json::from_str(include_str!("../../🔣️.json")).unwrap();
+    let contract: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../🎬️scene/🌱️create/📜️contract/🔣️.json")).unwrap();
     assert_eq!(contract["id"], mutation::ID);
     let vectors = contract["vectors"].as_array().unwrap();
     assert!(!vectors.is_empty());

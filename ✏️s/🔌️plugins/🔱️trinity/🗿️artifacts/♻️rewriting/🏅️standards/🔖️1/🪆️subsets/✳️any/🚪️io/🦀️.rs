@@ -9,7 +9,7 @@ pub fn export_stdio_kinds() -> &'static [&'static str] {
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
     use crate::standards::v1::subsets::any::io::RewritingAnalyzer;
-    use crate::RewritingSnapshot;
+    use crate::standards::v1::subsets::any::schema::snapshot::RewritingSnapshot;
     use {semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposeSource,semio_framework_plugin::io::Composition,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.trinity.rewriting", standard: StandardId("1"), subset: SubsetId("*") };
@@ -88,7 +88,7 @@ pub mod io_registry {
     const REWRITING_DIALECT: Dialect = Dialect { artifact_kind: "s.trinity.rewriting", standard: StandardId("1"), subset: SubsetId("*") };
     const REWRITING_JSON_BRIDGE_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };
 
-    fn rebuild_native_snapshot(sources: &[ErasedComposeSource]) -> Result<crate::RewritingSnapshot, ComposeError> {
+    fn rebuild_native_snapshot(sources: &[ErasedComposeSource]) -> Result<crate::standards::v1::subsets::any::schema::snapshot::RewritingSnapshot, ComposeError> {
         if let Some(source) = sources.iter().find(|s| s.dialect == REWRITING_DIALECT) {
             let builder = match &source.payload {
                 IoPayload::Text(t) => RewritingAnyBuilder::from_text(t).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?,
@@ -147,11 +147,12 @@ pub mod binary;
 #[path = "📝️text/🦀️.rs"]
 pub mod text;
 
-#[path = "🪶️sqlite/🦀️.rs"]
-pub mod sqlite;
+
 
 pub mod derived_construction {
-    use crate::{RewriteRuleMutation, RewritingDiff, RewritingSnapshot};
+    use crate::standards::v1::subsets::any::schema::mutations::RewriteRuleMutation;
+use crate::standards::v1::subsets::any::schema::diff::RewritingDiff;
+use crate::standards::v1::subsets::any::schema::snapshot::RewritingSnapshot;
     use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
@@ -201,7 +202,7 @@ pub mod derived_construction {
 pub use derived_construction::*;
 
 pub mod derived_analysis {
-    use crate::RewritingSnapshot;
+    use crate::standards::v1::subsets::any::schema::snapshot::RewritingSnapshot;
     use {semio_framework_plugin::io::Analysis,semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     #[derive(Clone, Debug, Default)]

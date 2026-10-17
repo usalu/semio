@@ -1,7 +1,7 @@
-import type { XmlDocument } from '../../../../../../../📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🟦️.ts';
+import type { XmlDocument } from '@semio-tech/stdio-xml/standards/1.0/subsets/base/schema/snapshot';
 
-import type {OpcPackage} from '../../../../../../../🎒️zip/📦️opc/🟦️.ts';
-export type {OpcPart,OpcRelationship,OpcPackage} from '../../../../../../../🎒️zip/📦️opc/🟦️.ts';
+import type {OpcPackage} from '@semio-tech/stdio-zip/opc';
+export type {OpcPart,OpcRelationship,OpcPackage} from '@semio-tech/stdio-zip/opc';
 export type XlsxCellValue =
   | { kind: 'number'; value: number }
   | { kind: 'sharedString'; value: number }

@@ -5,7 +5,7 @@
 //! `.pack.semio`/`.patch.semio` encodings are derived from it by `fixtures generate`.
 //!
 //! ⚠️ Why this tree pins the NO-OP branch rather than a real attachment: an applied
-//! `add-layer-asset` runs the payload's bytes through `crate::mint_raster_asset_child`,
+//! `add-layer-asset` runs the payload's bytes through `semio_s_artifact_raster_raster_mutations_pixels::mint_raster_asset_child`,
 //! which mints the composed child handle as `format!("raster-asset-{hash:016x}")` from a
 //! `std::collections::hash_map::DefaultHasher` digest of the decoded `SemioImageSnapshot`'s pack
 //! bytes. A hand-authored `➡️after` would therefore have to forge a value from `std`'s deliberately
@@ -18,20 +18,20 @@ use semio_s_artifact_raster_raster_mutations::text::apply_raster_mutation;
 use semio_s_artifact_raster_raster_diff::RasterDiff;
 use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
 
-const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🖇️add-layer-asset/🖼️declines/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🖇️add-layer-asset/🖼️declines/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🖇️add-layer-asset/🖼️declines/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🖇️add-layer-asset/🖼️declines/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🖇️add-layer-asset/🖼️declines/🎯️outcome/🔣️.json");
+static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🖇️add-layer-asset/🖼️declines/📸️snapshot/⬅️before/🔣️.json"));
+static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🖇️add-layer-asset/🖼️declines/📸️snapshot/➡️after/🔣️.json"));
+static MUTATION: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🖇️add-layer-asset/🖼️declines/🦠️mutation/🔣️.json"));
+static DIFF: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🖇️add-layer-asset/🖼️declines/🔺️diff/🔣️.json"));
+static OUTCOME: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🖇️add-layer-asset/🖼️declines/🎯️outcome/🔣️.json"));
 
 fn before() -> RasterSnapshot {
-    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes")
+    semio_framework_pack_json::from_json_str((*BEFORE), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes")
 }
 fn expected_after() -> RasterSnapshot {
-    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after snapshot decodes")
+    semio_framework_pack_json::from_json_str((*AFTER), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after snapshot decodes")
 }
 fn mutation() -> RasterMutation {
-    semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation decodes")
+    semio_framework_pack_json::from_json_str((*MUTATION), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation decodes")
 }
 /// 🧹️ This leaf's committed documents carry a populated `assets` pool, so every snapshot a test
 /// materializes reaches the artifact's own retirement seam instead of `RasterOwnedMap`'s
@@ -81,7 +81,7 @@ async fn inverse_restores_before() {
 /// is the committed mutation payload.
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
-    for (side, text) in [("before", BEFORE), ("after", AFTER)] {
+    for (side, text) in [("before", (*BEFORE)), ("after", (*AFTER))] {
         let decoded: RasterSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
         let reencoded = semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&decoded));
         let original = semio_framework_pack_json::parse(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot reparses");
@@ -89,7 +89,7 @@ async fn committed_json_is_canonical() {
         assert!(semio_framework_pack_json::value_eq_ignoring_object_order(&reencoded, &original), "add-layer-asset/declines-to-reattach-an-asset-already-on-the-document: committed {side} JSON is not canonical");
     }
     let reencoded = semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&mutation()));
-    let original = semio_framework_pack_json::parse(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation reparses");
+    let original = semio_framework_pack_json::parse((*MUTATION), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation reparses");
     assert!(semio_framework_pack_json::value_eq_ignoring_object_order(&reencoded, &original), "add-layer-asset/declines-to-reattach-an-asset-already-on-the-document: committed mutation JSON is not canonical");
 }
 
@@ -97,7 +97,7 @@ async fn committed_json_is_canonical() {
 /// `mutation.no-op` WARNING — a no-op is never a rejection, the document stays valid.
 #[semio_framework_async_macros::async_test]
 async fn declared_outcome_holds() {
-    let outcome = semio_framework_pack_json::parse(OUTCOME, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("outcome decodes");
+    let outcome = semio_framework_pack_json::parse((*OUTCOME), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("outcome decodes");
     assert_eq!(outcome.get("status").and_then(semio_framework_pack_json::Value::as_str), Some("no-op"), "add-layer-asset/declines-to-reattach-an-asset-already-on-the-document declares a no-op outcome");
     let base = before();
     assert!(base.assets.contains_key("cover-art"), "add-layer-asset/declines-to-reattach-an-asset-already-on-the-document: the before-snapshot must already carry the key, or the no-op guard would not fire");
@@ -123,7 +123,7 @@ async fn produces_committed_diff() {
     let produced = <RasterMutation as protocol::Mutation<RasterSnapshot>>::diff(&mutation(), &base);
     retire(base);
     let encoded = semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(produced.diff()));
-    let committed = semio_framework_pack_json::parse(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
+    let committed = semio_framework_pack_json::parse((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
     assert!(semio_framework_pack_json::value_eq_ignoring_object_order(&encoded, &committed), "add-layer-asset/declines-to-reattach-an-asset-already-on-the-document: produced diff differs from the committed 🔺️diff/🔣️.json");
     assert_eq!(produced.diff(), &RasterDiff::default(), "add-layer-asset/declines-to-reattach-an-asset-already-on-the-document: a no-op add must produce the artifact's Default diff");
     assert!(produced.diff().assets.is_none(), "add-layer-asset/declines-to-reattach-an-asset-already-on-the-document: the assets delta is what re-mints a handle — it must stay unwritten");
@@ -133,9 +133,9 @@ async fn produces_committed_diff() {
 /// 🔣️ The committed diff is itself canonical and decodes to the artifact's own diff type.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
-    let decoded: RasterDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
+    let decoded: RasterDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
     let reencoded = semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&decoded));
-    let original = semio_framework_pack_json::parse(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff reparses");
+    let original = semio_framework_pack_json::parse((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff reparses");
     assert!(semio_framework_pack_json::value_eq_ignoring_object_order(&reencoded, &original), "add-layer-asset/declines-to-reattach-an-asset-already-on-the-document: committed diff JSON is not canonical");
 }
 
@@ -143,7 +143,7 @@ async fn committed_diff_is_canonical() {
 /// complete description of the change, not a summary of it.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: RasterDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
+    let decoded: RasterDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
     let base = before();
     let produced = protocol::apply_diff(&decoded, &base).expect("committed diff applies to the before-snapshot");
     let after = expected_after();
@@ -158,4 +158,9 @@ async fn committed_diff_applies_to_after() {
 #[semio_framework_async_macros::async_test]
 async fn inverse_sums_to_the_negative_diff() {
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law_cold(&mutation(), &before(), <semio_s_artifact_raster_raster_diff::RasterDiff as protocol::MutationDiff<semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot>>::retire_projection, <semio_s_artifact_raster_raster_diff::RasterDiff as protocol::MutationDiff<semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot>>::retire_cold).await;
+}
+
+fn runtime_fixture_text(relative: &str) -> &'static str {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative);
+    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display())).into_boxed_str())
 }

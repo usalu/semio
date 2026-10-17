@@ -1,5 +1,5 @@
 /** 💡️ Semantic chart inference results, work controls and field dependencies. */
-import type { VizChartSnapshot } from "../📸️snapshot/🟦️.ts";
+import type { VizChartSnapshot } from "@semio-tech/print/schema/snapshot";
 import type { VizRenderPlan, renderVizScenePlan } from "./🖼️render/🟦️.ts";
 import type { VizChartDiagnostic } from "./✅️validation/🟦️.ts";
 import { admitVizChartSpecification } from "./✅️validation/🟦️.ts";

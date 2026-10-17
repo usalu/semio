@@ -1,6 +1,25 @@
 //! 📎️ `insert-clip-path-shape` — authored as its own mutation leaf. It builds its own sparse diff and concrete inverse from its payload and reads of `base`.
 
-use super::*;
+#[allow(unused_imports)]
+use crate::standards::v1_1::subsets::basic::schema::mutations::support::CODE_REJECTED;
+#[allow(unused_imports)]
+use crate::schema::diff::SvgDiff;
+#[allow(unused_imports)]
+use crate::schema::snapshot::SvgNode;
+#[allow(unused_imports)]
+use crate::SvgSnapshot;
+#[allow(unused_imports)]
+use crate::standards::v1_1::subsets::basic::schema::mutations::support::carries_text;
+#[allow(unused_imports)]
+use crate::standards::v1_1::subsets::basic::schema::mutations::support::insert_child_diff;
+#[allow(unused_imports)]
+use crate::standards::v1_1::subsets::basic::schema::mutations::support::path_of_id;
+#[allow(unused_imports)]
+use crate::standards::v1_1::subsets::basic::schema::mutations::remove_element;
+#[allow(unused_imports)]
+use crate::standards::v1_1::subsets::basic::schema::mutations::support::resolve_clip_path;
+#[allow(unused_imports)]
+use crate::standards::v1_1::subsets::basic::schema::mutations::support::subtree_profile_violation;
 
 //#region 🔖️Payload
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree)]
@@ -13,7 +32,10 @@ pub struct InsertClipPathShape {
     pub(crate) node: SvgNode,
 }
 
-impl protocol::MutationKind<SvgSnapshot, SvgBasicMutation> for InsertClipPathShape {
+impl<Op> protocol::MutationKind<SvgSnapshot, Op> for InsertClipPathShape
+where
+    Op: protocol::Mutation<SvgSnapshot, Diff = SvgDiff> + From<InsertClipPathShape> + From<crate::standards::v1_1::subsets::basic::schema::mutations::remove_element::RemoveElement>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "clip-path-shape", kind: "insert-clip-path-shape", record: "InsertClipPathShape" };
 
     fn diff(&self, base: &SvgSnapshot) -> protocol::MutationOutcome<SvgDiff> {
@@ -31,10 +53,10 @@ impl protocol::MutationKind<SvgSnapshot, SvgBasicMutation> for InsertClipPathSha
             }
         }
     }
-    fn inverse(&self, base: &SvgSnapshot) -> Result<Vec<SvgBasicMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &SvgSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         let Self { clip_path_id, index, .. } = self;
         Ok(match path_of_id(base, clip_path_id) {
-            Some(target) => vec![SvgBasicMutation::RemoveElement(remove_element::RemoveElement { parent: target, index: *index })],
+            Some(target) => vec![Op::from(remove_element::RemoveElement { parent: target, index: *index })],
             None => Vec::new(),
         })
     }

@@ -41,8 +41,3 @@ pub fn apply_frame_ids(doc: &ArtifactView<'_, LayoutSnapshot>, selected: &[Strin
     Ok(Emit::mutations(mutations))
 }
 
-//#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests

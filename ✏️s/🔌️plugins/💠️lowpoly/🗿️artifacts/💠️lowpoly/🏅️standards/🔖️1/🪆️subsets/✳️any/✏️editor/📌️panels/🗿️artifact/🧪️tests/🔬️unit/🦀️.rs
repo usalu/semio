@@ -1,3 +1,4 @@
+use semio_framework_3d::mesh::{MeshModelingOps};
 extern crate semio_framework_os_kernel as protocol;
 #[path = "../../../../🧪️tests/🧰️support/🦀️.rs"]
 mod context;

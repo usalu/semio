@@ -1023,6 +1023,12 @@ pub struct ContributedMachineCatalog {
     icon_id: String,
     machines: Vec<WorkshopMachine>,
 }
+impl ContributedMachineCatalog {
+    /// 🧩️ Seals one contributed catalog from the identity and machine list the topic contribution decoded.
+    pub fn new(catalog_id: String, label: String, icon_id: String, machines: Vec<WorkshopMachine>) -> Self {
+        Self { catalog_id, label, icon_id, machines }
+    }
+}
 impl MachineCatalog for ContributedMachineCatalog {
     fn catalog_id(&self) -> &str {
         &self.catalog_id

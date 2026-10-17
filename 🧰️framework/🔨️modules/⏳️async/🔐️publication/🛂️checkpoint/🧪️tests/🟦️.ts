@@ -34,5 +34,4 @@ test("independent Node ancestry observations produce the exact checkpoint fixtur
   expect(child.error).toBeUndefined();
   expect(child.status, child.stderr).toBe(0);
   expect(JSON.parse(child.stdout)).toEqual(corpus.cases.map(row => ({ id: row.id, observation: row.expected })));
-  console.log("[DEBUG] Publication checkpoint independent Node cases=" + corpus.cases.length);
 });

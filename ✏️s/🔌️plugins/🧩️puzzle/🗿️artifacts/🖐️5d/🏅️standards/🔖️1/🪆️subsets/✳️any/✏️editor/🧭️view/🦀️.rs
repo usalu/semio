@@ -1,6 +1,11 @@
 //! 🧭️ View of the puzzle 5d editor: the transient scene bundle, the interaction snapshot, the scene projection and gumball helpers and the engine grip kind. See [`super`].
 
-use super::*;
+use crate::editor::puzzle5d::config::Puzzle5dRuntime;
+use crate::editor::puzzle5d::entities::{PUZZLE5D_FILL_TOOL_ID, PUZZLE5D_TRANSFORM_UTILITY_ID};
+use semio_framework_plugin::app::InteractionView;
+use semio_framework_value::FromValue;
+use semio_framework_pack_json::Value;
+use crate::editor::puzzle5d::entities::{PUZZLE5D_DEFAULT_UTILITY, PUZZLE5D_GRANULARITY_FASTENER, PUZZLE5D_GRANULARITY_GRIP, PUZZLE5D_GRANULARITY_PART, PUZZLE5D_GRANULARITY_TARGET_VOLUME, PUZZLE5D_HOVER_CHANNEL, PUZZLE5D_INTERACTION_DOMAIN, Puzzle5dDocument, Puzzle5dGrip, Puzzle5dPart, empty_document, puzzle5d_grip_full_id};
 
 //#region 🔖️Scene
 /// 🧾️ Transient render/mutation bundle pairing the persisted projection (the bare `Puzzle5dDocument`
@@ -141,14 +146,14 @@ pub fn scene_from_projection_with_interaction(projection: &Value, runtime: Puzzl
 /// 🛠️ Whether the host has the mode-level fill TOOL armed (`ViewModel::active_tool_id`), which outranks every
 /// window utility: fill keeps its viewport interaction in both panes while it is the armed tool.
 pub fn puzzle5d_fill_tool_active(view_state: Option<&semio_framework_plugin::ViewModel>) -> bool {
-    view_state.and_then(|state| state.active_tool_id.as_deref()) == Some(fill_tool::TOOL_ID)
+    view_state.and_then(|state| state.active_tool_id.as_deref()) == Some(PUZZLE5D_FILL_TOOL_ID)
 }
 
 /// 🧰️ Resolves the host-owned armed gesture for a concrete window: the mode-level tool first (a tool and a
 /// utility are mutually exclusive in the shell, and fill wins), then that window's utility, then the surface's.
 pub fn puzzle5d_scene_active_utility(view_state: Option<&semio_framework_plugin::ViewModel>, window_id: Option<&str>) -> String {
     if puzzle5d_fill_tool_active(view_state) {
-        return fill_tool::TOOL_ID.to_string();
+        return PUZZLE5D_FILL_TOOL_ID.to_string();
     }
     window_id
         .and_then(|window_id| view_state.and_then(|state| state.active_utility_by_window_id.get(window_id)))
@@ -172,7 +177,7 @@ pub fn puzzle5d_scene_mode(active_utility: &str) -> &str {
 
 /// 🎚️ The gumball handle the world engine draws when the transform utility is active.
 pub fn puzzle5d_transform_handle(active_utility: &str) -> Option<&'static str> {
-    (active_utility == world3d::utilities::transform::UTILITY_ID).then_some("transform")
+    (active_utility == PUZZLE5D_TRANSFORM_UTILITY_ID).then_some("transform")
 }
 
 /// 🧭️ Whether the active utility is the transform gumball.

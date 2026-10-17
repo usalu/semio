@@ -4,7 +4,11 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { planArtifactCrates } from "../../🏗️authoring/📦️crate-tree/🟦️.ts";
-import { convertMutationLeaves, findMutationAggregates, pruneUseLeaves } from "../../🏗️authoring/📦️crate-tree/🧬️mutation-families/🟦️.ts";
+import { isMutationCrateLabel, mutationCrateLabel, mutationFamilyOf } from "../../🏗️authoring/📦️crate-tree/🗺️plan/🟦️.ts";
+import { inherentSelf } from "../../🏗️authoring/📦️crate-tree/🧬️mutation-families/🧰️support-hoist/🟦️.ts";
+import { aggregateScope, convertMutationLeaves, decoupleFromAggregate, findMutationAggregates } from "../../🏗️authoring/📦️crate-tree/🧬️mutation-families/🟦️.ts";
+import { hoistAggregateSupport } from "../../🏗️authoring/📦️crate-tree/🧬️mutation-families/🧰️support-hoist/🟦️.ts";
+import { pruneUseLeaves } from "../../🏗️authoring/📦️crate-tree/🧬️mutation-families/🌳️use-tree/🟦️.ts";
 import { collectDecls } from "../../🏗️authoring/📦️crate-tree/🧱️decl-tree/🟦️.ts";
 
 const base = "🧬️schema/🧬️mutations";
@@ -177,6 +181,45 @@ describe("mutation leaves generic over their aggregate", () => {
     }
   });
 
+  test("keeps a companion that is already generic over its aggregate and carries its where-bounds onto the leaf impl", () => {
+    const delta = leaf("delta", "Delta", "", "");
+    const root = tree({
+      "🦀️.rs": files["🦀️.rs"]!.replace(mount("gamma", false), `${mount("gamma", false)}\n${mount("delta", false)}`),
+      [`${base}/🦀️.rs`]: files[`${base}/🦀️.rs`]!.replace("    Gamma(Gamma),", "    Gamma(Gamma),\n    Delta(Delta),").replace("pub use crate::schema::mutations::gamma::{gamma, Gamma};", "pub use crate::schema::mutations::gamma::{gamma, Gamma};\npub use crate::schema::mutations::delta::{delta, Delta};"),
+      ...delta,
+      [`${base}/delta/↩️inverse/🦀️.rs`]: "use super::Delta;\nuse crate::schema::Snap;\npub fn inverse<Op>(payload: &Delta, base: &Snap) -> Result<Vec<Op>, semio_framework_value::ValueError>\nwhere\n    Op: crate::schema::Restoring + From<crate::schema::mutations::alpha::Alpha>,\n{\n    Ok(Op::restoring(&payload.id, base))\n}\n",
+    });
+    try {
+      const rootText = readFileSync(join(root, "🦀️.rs"), "utf8");
+      const result = convertMutationLeaves(join(root, "🦀️.rs"), rootText, read);
+      expect(result.converted).toContain("Delta");
+      expect(result.edits.has(join(root, base, "delta/↩️inverse/🦀️.rs"))).toBe(false);
+      const impl = result.edits.get(join(root, base, "delta/🦀️.rs"))!;
+      expect(impl).toMatch(/Op: protocol::Mutation<Snap, Diff = Diff> \+ From<Delta>/u);
+      expect(impl).toContain("crate::schema::Restoring");
+      expect(impl).toContain("From<crate::schema::mutations::alpha::Alpha>");
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("leaves an aggregate concrete when its module is private, because no absolute path can name its leaves", () => {
+    const root = mkdtempSync(join(tmpdir(), "semio-mutation-private-"));
+    try {
+      const layout: Record<string, string> = {
+        "🦀️.rs": '#[path = "agg/🦀️.rs"]\nmod mutations;\n',
+        "agg/🦀️.rs": 'use crate::{Diff, Snap};\n#[path = "leaf/🦀️.rs"]\nmod leaf;\n#[derive(Clone, Debug, PartialEq, dsl::Mutations)]\n#[mutations(snapshot = Snap, diff = Diff, schema = "demo.demo")]\npub enum DemoMutation {\n    Alpha(leaf::Alpha),\n}\n',
+        "agg/leaf/🦀️.rs": 'use super::*;\n#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf)]\n#[mutation_leaf(contract = ::protocol)]\npub struct Alpha { pub id: String }\n',
+      };
+      for (const [path, content] of Object.entries(layout)) { mkdirSync(dirname(join(root, path)), { recursive: true }); writeFileSync(join(root, path), content); }
+      const result = convertMutationLeaves(join(root, "🦀️.rs"), layout["🦀️.rs"]!, read);
+      expect(result.converted).toEqual([]);
+      expect(result.notes.some((note) => note.includes("DemoMutation stays concrete: its module is private"))).toBe(true);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
   test("imports the builder of another leaf from that leaf instead of from the aggregate", () => {
     const inverse = [
       "use super::Beta;",
@@ -196,6 +239,59 @@ describe("mutation leaves generic over their aggregate", () => {
       expect(betaInverse).toContain("use crate::schema::mutations::alpha::{self, alpha};");
       expect(betaInverse).toContain("Op::from(Beta { id: payload.id.clone() })");
       if (rustfmt) expect(parses(betaInverse)).toBe(true);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("writes the sibling leaf payload that an inverse builds as an absolute path, not through super::super", () => {
+    const inverse = [
+      "use super::Beta;",
+      "use crate::schema::mutations::DemoMutation;",
+      "use crate::schema::Snap;",
+      "pub fn inverse(payload: &Beta, _base: &Snap) -> Result<Vec<DemoMutation>, semio_framework_value::ValueError> {",
+      "    Ok(vec![DemoMutation::Alpha(super::super::alpha::Alpha { id: payload.id.clone() })])",
+      "}",
+      "",
+    ].join("\n");
+    const root = tree({ [`${base}/beta/↩️inverse/🦀️.rs`]: inverse });
+    try {
+      const result = convertMutationLeaves(join(root, "🦀️.rs"), files["🦀️.rs"]!, read);
+      const betaInverse = result.edits.get(join(root, base, "beta/↩️inverse/🦀️.rs"))!;
+      expect(betaInverse).not.toContain("super::super");
+      expect(betaInverse).toContain("Op::from(crate::schema::mutations::alpha::Alpha { id: payload.id.clone() })");
+      if (rustfmt) expect(parses(betaInverse)).toBe(true);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("names a leaf-family crate after its family and never after its first leaf", () => {
+    const leafEff = (leaf: string): string[] => ["schema", "mutations", leaf];
+    expect(mutationFamilyOf(leafEff("insert_element"))).toBe("insert_element");
+    expect(mutationFamilyOf(["schema", "mutations"])).toBeNull();
+    expect(mutationFamilyOf(["schema", "snapshot"])).toBeNull();
+    expect(mutationFamilyOf(["standards", "v1", "subsets", "any", "schema", "mutations", "alpha"])).toBe("any");
+    expect(mutationCrateLabel(["alpha"])).toBe("mut-alpha");
+    expect(mutationCrateLabel(["insert_element", "set_name", "remove_element"])).toBe("mut-family");
+    expect(mutationCrateLabel(["insert_element", "set_name", null])).toBe("mut-family");
+    expect(mutationCrateLabel([...Array.from({ length: 26 }, (_, i) => `leaf_${i}`), null])).toBe("mut-family");
+    expect(mutationCrateLabel(["any", "any", null])).toBe("mut-any");
+    expect(mutationCrateLabel([null, "alpha"])).toBeNull();
+    expect(mutationCrateLabel([null, null, "alpha"])).toBeNull();
+    expect(mutationCrateLabel([null])).toBeNull();
+    expect(isMutationCrateLabel("mut-family")).toBe(true);
+    expect(isMutationCrateLabel("insert-element")).toBe(false);
+  });
+
+  test("labels every family crate of a planned artifact with the mut- family label", async () => {
+    const root = tree();
+    try {
+      const small = { target: { files: 4, bytes: 230000, lines: 3500 }, hard: { files: 32, bytes: 262144, lines: 4000 } };
+      const family = await planArtifactCrates(root, "📦️packages/🦀️rust", { ...small, mutationFamilies: "on" });
+      const leafCrates = family.crates.filter((crate) => crate.slices.every((slice) => slice.attach.every((decl) => decl.eff.includes("mutations") && decl.eff.at(-1) !== "mutations")));
+      expect(leafCrates.length).toBeGreaterThan(0);
+      for (const crate of leafCrates) expect(crate.name).toMatch(/^demo-mut-mut-[a-z0-9-]+$/u);
     } finally {
       rmSync(root, { recursive: true, force: true });
     }
@@ -260,5 +356,140 @@ describe("mutation leaves generic over their aggregate", () => {
     } finally {
       rmSync(root, { recursive: true, force: true });
     }
+  });
+  test("turns the sibling imports of a converted leaf into absolute paths so the leaf no longer reaches its aggregate through super", () => {
+    const direct = (name: string, struct: string, other: string, otherStruct: string): Record<string, string> => ({
+      [`${base}/${name}/🦀️.rs`]: [
+        `//! ${name} leaf`,
+        `use super::${other}::${otherStruct};`,
+        "use crate::schema::mutations::DemoMutation;",
+        "use crate::schema::{Diff, Snap};",
+        "use protocol::{MutationKind, SemanticDescriptor};",
+        "",
+        "#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf)]",
+        "#[mutation_leaf(contract = ::protocol)]",
+        `pub struct ${struct} { pub id: String }`,
+        "",
+        `impl MutationKind<Snap, DemoMutation> for ${struct} {`,
+        "    const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: \"x\", entity: \"y\", kind: \"z\", record: \"R\" };",
+        "    fn diff(&self, _base: &Snap) -> protocol::MutationOutcome<Diff> { protocol::MutationOutcome::empty() }",
+        "    fn inverse(&self, _base: &Snap) -> Result<Vec<DemoMutation>, semio_framework_value::ValueError> {",
+        `        Ok(vec![DemoMutation::${otherStruct}(${otherStruct} { id: self.id.clone() })])`,
+        "    }",
+        "}",
+        "",
+      ].join("\n"),
+    });
+    const aggregate = [
+      "//! aggregate",
+      "use crate::schema::{Diff, Snap};",
+      "",
+      `#[path = "delta/🦀️.rs"]`,
+      "pub mod delta;",
+      `#[path = "epsilon/🦀️.rs"]`,
+      "pub mod epsilon;",
+      "pub use delta::Delta;",
+      "pub use epsilon::Epsilon;",
+      "",
+      "#[derive(Clone, Debug, PartialEq, dsl::Mutations)]",
+      "#[mutations(snapshot = Snap, diff = Diff, schema = \"demo.demo\")]",
+      "pub enum DemoMutation {",
+      "    Delta(Delta),",
+      "    Epsilon(Epsilon),",
+      "}",
+      "",
+    ].join("\n");
+    const root = tree({
+      ...direct("delta", "Delta", "epsilon", "Epsilon"),
+      ...direct("epsilon", "Epsilon", "delta", "Delta"),
+      [`${base}/🦀️.rs`]: aggregate,
+      "🦀️.rs": files["🦀️.rs"]!.replace(/\n        #\[path = "\."\]\n        pub mod (alpha|beta|gamma) \{[\s\S]*?\n        \}/gu, ""),
+    });
+    try {
+      const rootText = read(join(root, "🦀️.rs"))!;
+      const result = convertMutationLeaves(join(root, "🦀️.rs"), rootText, read);
+      expect(result.converted).toEqual(expect.arrayContaining(["Delta", "Epsilon"]));
+      const delta = result.edits.get(join(root, base, "delta/🦀️.rs"))!;
+      expect(delta).not.toMatch(/\bsuper::/u);
+      expect(delta).toContain("use crate::schema::mutations::epsilon::Epsilon;");
+      expect(delta).not.toContain("component");
+      expect(delta).toContain("From<crate::schema::mutations::epsilon::Epsilon>");
+      if (rustfmt) expect(parses(delta)).toBe(true);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+  test("hosts the helpers its leaves call in a support module and keeps the items that mention the aggregate or a child module", () => {
+    const aggregate = [
+      "use crate::schema::{Diff, Snap};",
+      "use protocol::Mutation;",
+      "",
+      "#[path = \"🎬alpha/🦀️.rs\"]",
+      "pub mod alpha;",
+      "pub enum DemoMutation { Alpha(alpha::Alpha) }",
+      "",
+      "//#region 🔖️Helpers",
+      "/// 🧱️ Wraps a diff.",
+      "// 🚫️async: pure",
+      "fn wrap(diff: Diff) -> Diff { diff }",
+      "pub const LIMIT: usize = 4;",
+      "fn at(base: &Snap, index: usize) -> Option<usize> { if index < LIMIT { Some(index + wrap_len(base)) } else { None } }",
+      "fn wrap_len(_base: &Snap) -> usize { 1 }",
+      "fn builds_alpha() -> alpha::Alpha { alpha::Alpha }",
+      "fn mentions(mutation: &DemoMutation) -> bool { matches!(mutation, DemoMutation::Alpha(_)) }",
+      "//#endregion 🔖️Helpers",
+      "",
+    ].join("\n");
+    const leaf = "use super::*;\npub fn diff(base: &Snap) -> Option<usize> { at(base, 1) }\n";
+    const scope = aggregateScope(aggregate, ["schema", "mutations"], false);
+    const result = hoistAggregateSupport({ aggregateFile: join(tmpdir(), "r4-hoist-fixture", "🦀️.rs"), aggregateText: aggregate, aggregateName: "DemoMutation", leafTexts: [leaf], scope })!;
+    expect(result.moved).toEqual(["LIMIT", "at", "wrap_len"]);
+    expect(result.aggregateText).toContain("pub mod support;");
+    expect(result.aggregateText).toMatch(/pub use support::\{LIMIT\};/u);
+    expect(result.aggregateText).toMatch(/\nuse support::\{at, wrap_len\};/u);
+    expect(result.aggregateText).toContain("fn builds_alpha()");
+    expect(result.aggregateText).toContain("fn mentions(");
+    expect(result.aggregateText).toContain("fn wrap(");
+    expect(result.aggregateText).not.toContain("fn at(");
+    expect(result.supportText).toContain("pub fn at(base: &Snap, index: usize)");
+    expect(result.supportText).toContain("pub fn wrap_len(");
+    expect(result.supportText).toContain("use crate::schema::Snap;");
+    expect(result.supportText).not.toContain("builds_alpha");
+    expect(result.supportFile.endsWith("/🦀️.rs")).toBe(true);
+    if (rustfmt) for (const text of [result.aggregateText, result.supportText]) expect(parses(text)).toBe(true);
+  });
+});
+
+describe("leaf decoupling and inherent impl hosting", () => {
+  const aggregate = ["use crate::schema::{Diff, Snap};", "use protocol::Mutation;", "use semio_base::IndexAdded as Added;", "pub mod alpha;", "pub const KINDS: &[&str] = &[];", "mod hidden;", ""].join("\n");
+  const scope = aggregateScope(aggregate, ["schema", "mutations"], true);
+
+  test("replaces the super glob by the absolute imports of the names the file uses", () => {
+    const leaf = "use super::*;\n\npub fn diff(base: &Snap) -> Diff { alpha::run(base); Added::default() }\n";
+    const result = decoupleFromAggregate(leaf, 1, scope)!;
+    expect(result.coupled).toEqual([]);
+    expect(result.text).not.toContain("use super::*");
+    expect(result.text).toContain("use crate::schema::Snap;");
+    expect(result.text).toContain("use crate::schema::Diff;");
+    expect(result.text).toContain("use crate::schema::mutations::alpha;");
+    expect(result.text).toContain("use semio_base::IndexAdded as Added;");
+    expect(result.text).not.toContain("Mutation;");
+  });
+
+  test("keeps the glob and names the items a leaf takes from the aggregate itself", () => {
+    const leaf = "use super::*;\n\npub fn all() -> usize { KINDS.len() }\n";
+    const result = decoupleFromAggregate(leaf, 1, scope)!;
+    expect(result.coupled).toEqual(["KINDS"]);
+    expect(result.text).toBe(leaf);
+  });
+
+  test("ignores files whose glob does not reach the aggregate", () => {
+    expect(decoupleFromAggregate("use super::*;\n", 2, scope)).toBeNull();
+  });
+
+  test("reads the type of an inherent impl header and ignores trait impls", () => {
+    expect(inherentSelf("impl DocBlockPath ")).toBe("DocBlockPath");
+    expect(inherentSelf("impl<T: Clone> Wrapper<T> where T: Debug ")).toBe("Wrapper");
+    expect(inherentSelf("impl Default for DocBlockPath ")).toBeNull();
   });
 });

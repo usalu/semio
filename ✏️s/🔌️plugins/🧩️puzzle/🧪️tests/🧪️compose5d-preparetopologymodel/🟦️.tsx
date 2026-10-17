@@ -1,6 +1,8 @@
 type TestSource = { readonly directory: string; readonly url: string };
 
-export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: any, source: TestSource): Promise<void> {
+type Dependencies = Pick<typeof import("../../🎯️targets/⚛️5d-react/🟦️.tsx"), "PUZZLE_5D_TOPOLOGY_ICON_WIDTH" | "compose5d" | "prepareTopologyModel">;
+
+export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Dependencies, source: TestSource): Promise<void> {
   const { PUZZLE_5D_TOPOLOGY_ICON_WIDTH, compose5d, prepareTopologyModel } = dependencies;
 
   const { describe, it, expect } = vitest;

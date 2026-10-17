@@ -1,4 +1,17 @@
-use super::*;
+use crate::schema::snapshot::SemioObjectSnapshot;
+use crate::schema::mutations::create_brep;
+use crate::schema::mutations::create_mesh;
+use crate::schema::mutations::create_properties;
+use crate::schema::mutations::delete_brep;
+use crate::schema::mutations::delete_mesh;
+use crate::schema::mutations::delete_properties;
+use crate::schema::mutations::move_object;
+use crate::schema::mutations::rotate_object;
+use crate::schema::mutations::scale_object;
+use semio_framework_test_fixtures::fixture_text;
+#[allow(unused_imports)]
+use crate::schema::diff::SemioObjectDiff;
+use crate::schema::mutations::*;
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3;
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioQuaternion;
 use crate::schema::snapshot::demo_object_snapshot;
@@ -127,7 +140,7 @@ async fn kinds_match_the_enum_and_the_catalog() {
     for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
         assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
     }
-    let manifest = include_str!("../../../../🔮️oracles/🔣️.json");
+    let manifest = fixture_text!("../../../🔮️oracles/🔣️.json");
     for kind in KINDS {
         assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
     }

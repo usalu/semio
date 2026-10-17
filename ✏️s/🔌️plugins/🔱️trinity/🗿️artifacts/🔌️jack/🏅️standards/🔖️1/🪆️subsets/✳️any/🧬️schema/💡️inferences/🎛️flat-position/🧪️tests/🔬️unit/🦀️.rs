@@ -1,6 +1,11 @@
-use crate::JackWorkingScene;
-use super::*;
-use crate::{Camera, Manifest, Port, PortDirection, PropertyBag, Node, Edge, PropertyValue};
+use crate::standards::v1::subsets::any::schema::snapshot::JackSnapshot;
+#[allow(unused_imports)]
+use semio_framework_value::ValueError;
+use crate::standards::v1::subsets::any::schema::content::JackWorkingScene;
+use crate::standards::v1::subsets::any::schema::inferences::flat_position::*;
+use crate::standards::v1::subsets::any::schema::graph::{Camera, Port, Node, Edge};
+use crate::standards::v1::subsets::any::schema::manifest::Manifest;
+use semio_framework_graph_manifest::{PortDirection, PropertyBag, PropertyValue};
 
 //#region 🧸️Fixtures
 fn mini_fixture() -> JackSnapshot {
@@ -175,6 +180,6 @@ async fn flat_position_handles_cycles_without_looping() {
 
 #[semio_framework_async_macros::async_test]
 async fn flat_position_empty_snapshot_yields_default() {
-    assert_eq!(compute_flat_position(&<crate::test_support::FixtureComposition as crate::JackComposition>::initial_snapshot()).expect("valid retained child inference fixture"), JackFlatPosition::default());
+    assert_eq!(compute_flat_position(&<crate::test_support::FixtureComposition as crate::standards::v1::subsets::any::schema::composition::JackComposition>::initial_snapshot()).expect("valid retained child inference fixture"), JackFlatPosition::default());
 }
 //#endregion 🧪️FlatPositionLaws

@@ -45,7 +45,8 @@ import {
 } from "@semio-tech/framework/config/mutations";
 // #endregion 🔌️Adapters
 import { type SpaceAdministrationIntentV1 } from "../../🛂️SpaceAdministration/🟦️.tsx";
-import { parseShellRoute, useUIHistory } from "../../🛠️ShellHelpers/🟦️.tsx";
+import { parseShellRoute } from "../../🛠️ShellHelpers/🛣️route-and-chrome/🟦️.tsx";
+import { useUIHistory } from "../../🛠️ShellHelpers/🔩️plumbing/🟦️.ts";
 import { isPluginInstanceRetiredV1, setPluginRuntimeActor } from "../../🔌️PluginRuntime/🟦️.tsx";
 import { type InferencePortUiAction } from "../🪪️host-bootstrap/🟦️.tsx";
 import { applyDirectoryEventPageBootstrapV1, openDirectoryHomeOwnerV1, directoryHomeOwnerAppV1 } from "../📇️directory-bootstrap/🟦️.tsx";

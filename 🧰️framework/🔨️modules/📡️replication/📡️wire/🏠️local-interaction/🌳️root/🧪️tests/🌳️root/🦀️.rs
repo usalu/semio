@@ -18,7 +18,7 @@ fn local_interaction_root_composes_real_typed_payload_and_physical_retirement() 
                 for denied in [RetainedCloneGrant {maximum_capacity_bytes:grant.maximum_capacity_bytes.saturating_sub(1),..grant},RetainedCloneGrant {maximum_release_bytes:grant.maximum_release_bytes.saturating_sub(1),..grant}]{if denied.maximum_capacity_bytes==grant.maximum_capacity_bytes&&denied.maximum_release_bytes==grant.maximum_release_bytes{continue;}let(step,birth,free)=semio_framework_trace_memory_testing::observe_backing(||owner.step(denied).unwrap());assert_eq!(step.progress(),RetainedCloneProgress::default());assert_eq!((birth,free),(0,0));}
                 let(step,birth,free)=semio_framework_trace_memory_testing::observe_backing(||owner.step(grant).unwrap());let progress=step.progress();assert!(progress.fits(grant));assert_eq!(birth,progress.retained_capacity_bytes);assert_eq!(free,progress.released_bytes);total=total.checked_add(progress).unwrap();
             }
-            assert_eq!(total.released_bytes,original+total.retained_capacity_bytes);eprintln!("[DEBUG] actual local interaction typed {} copy{} turns{} original{} born{} physically released{}",name,maximum_copy_bytes,turns,original,total.retained_capacity_bytes,total.released_bytes);
+            assert_eq!(total.released_bytes,original+total.retained_capacity_bytes);
         }
     }
 }

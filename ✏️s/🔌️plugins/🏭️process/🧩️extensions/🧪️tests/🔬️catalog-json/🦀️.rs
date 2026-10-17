@@ -11,5 +11,4 @@ pub fn verify(catalog_id: &str, json: &str) {
     let owned = semio_framework_pack_json::parse(json, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let first_party: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_string(&owned)).unwrap();
     assert_eq!(first_party, independent);
-    eprintln!("[DEBUG] {catalog_id} catalog JSON matches neutral machine order/counts and serde_json exact tree: {} machines", rows.len());
 }

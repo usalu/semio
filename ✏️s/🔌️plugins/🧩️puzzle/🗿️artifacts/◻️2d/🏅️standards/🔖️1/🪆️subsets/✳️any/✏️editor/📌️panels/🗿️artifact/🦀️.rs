@@ -12,9 +12,10 @@
 //! `interactionSelect` binding [`PanelTreeBuilder::interaction_domain`] stamps, and every row is
 //! keyed by its raw entity id, so a pick costs nothing of the argument arena.
 
+use crate::editor::puzzle2d::config::PUZZLE2D_PLAY_BODY_LAYERS;
 use crate::editor::puzzle2d::terminology::Puzzle2dLabels;
-use {crate::editor::puzzle2d::snapshot::board_snapshot_edges, crate::editor::puzzle2d::snapshot::board_snapshot_nodes, crate::editor::puzzle2d::snapshot::snapshot_target_regions, crate::editor::puzzle2d::snapshot::puzzle2d_node_display_label, crate::editor::puzzle2d::ui_label, crate::editor::puzzle2d::snapshot::Puzzle2dScene, crate::editor::puzzle2d::snapshot::PUZZLE2D_GRANULARITY_EDGE, crate::editor::puzzle2d::snapshot::PUZZLE2D_GRANULARITY_NODE, crate::editor::puzzle2d::snapshot::PUZZLE2D_GRANULARITY_TARGET_REGION, crate::editor::puzzle2d::snapshot::PUZZLE2D_INTERACTION_DOMAIN, crate::editor::puzzle2d::snapshot::PUZZLE2D_PLAY_CONTROLLER_ID};
-use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase, RowActionPlacement};
+use {crate::editor::puzzle2d::snapshot::board_snapshot_edges, crate::editor::puzzle2d::snapshot::board_snapshot_nodes, crate::editor::puzzle2d::snapshot::snapshot_target_regions, crate::editor::puzzle2d::snapshot::puzzle2d_node_display_label, crate::editor::puzzle2d::interaction::ui_label, crate::editor::puzzle2d::snapshot::Puzzle2dScene, crate::editor::puzzle2d::snapshot::PUZZLE2D_GRANULARITY_EDGE, crate::editor::puzzle2d::snapshot::PUZZLE2D_GRANULARITY_NODE, crate::editor::puzzle2d::snapshot::PUZZLE2D_GRANULARITY_TARGET_REGION, crate::editor::puzzle2d::snapshot::PUZZLE2D_INTERACTION_DOMAIN, crate::editor::puzzle2d::snapshot::PUZZLE2D_PLAY_CONTROLLER_ID};
+use semio_framework_plugin::plugin_app_close_prelude::RowActionPlacement;
 use semio_framework_plugin::row_action;
 use semio_framework_plugin::row_target;
 use semio_framework_plugin::BuiltNode;
@@ -36,7 +37,6 @@ use semio_framework_ui_contract as ui;
 use semio_framework_pack_json::Value;
 
 //#region 🔖️Constants
-pub const PUZZLE2D_PLAY_BODY_LAYERS: &str = "puzzle2d.play.layers";
 pub const ROOT: &str = "puzzle2d-play-document";
 pub const NODES_SECTION: &str = "puzzle2d-play-document.nodes";
 pub const EDGES_SECTION: &str = "puzzle2d-play-document.edges";
@@ -189,7 +189,5 @@ pub fn render(envelope: &Puzzle2dScene, labels: &Puzzle2dLabels, windows: &TreeW
 //#endregion 🔖️Render
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

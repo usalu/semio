@@ -48,5 +48,4 @@ for(const item of literalCases.cases)test("long received authored SQL "+item.nam
 test("long literal received schema cancels at its bounded public validation frontier",async()=>{
  const sql=literalSql(literalCases.literalTail),database=parseSqliteDatabaseSchema(sql),abort=new AbortController();let reached=false;
  await expect(validateSqliteDatabaseSchemaControlled(database,sql,{signal:abort.signal,onProgress:p=>{expect(Number.isSafeInteger(p.completed)&&Number.isSafeInteger(p.total)).toBe(true);if(p.phase==="validateSchema"&&p.total===sql.length&&p.completed===literalCases.schemaFrontier){reached=true;abort.abort();}}})).rejects.toHaveProperty("kind",literalCases.cancellation);expect(reached).toBe(true);
- console.log("[DEBUG] Long literal authored schema cancellation frontier="+literalCases.schemaFrontier);
 });

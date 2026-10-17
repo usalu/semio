@@ -3,7 +3,7 @@
 #![allow(clippy::result_large_err)]
 
 use crate::editor::animate::config::{PresentationConfig, PresentationConfigMutation};
-use crate::editor::animate::{interaction_select_effect, new_tile_id, PresentationDispatchCtx};
+use crate::editor::animate::support::{interaction_select_effect, new_tile_id, PresentationDispatchCtx};
 use crate::mutations::create_tile::CreateTile;
 use crate::standards::v1::subsets::any::schema::mutations::PresentationMutation;
 use crate::{FigureTileDraft, FigureTileFrame, PresentationSnapshot};
@@ -29,7 +29,5 @@ pub fn handle(payload: &AddTile, doc: &ArtifactView<'_, PresentationSnapshot>, _
 }
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

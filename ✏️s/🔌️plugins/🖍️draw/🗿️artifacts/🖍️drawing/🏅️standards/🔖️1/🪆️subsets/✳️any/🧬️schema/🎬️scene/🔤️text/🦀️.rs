@@ -31,6 +31,3 @@ impl DocumentTextJob{
 }
 semio_framework_2d::physical_work_retirement!(DocumentTextRetirement,DocumentTextJob,DocumentSceneError,|error:&str|invalid(error));
 
-#[cfg(test)]
-#[path="🧪️tests/🦀️.rs"]
-mod tests;

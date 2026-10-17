@@ -33,17 +33,17 @@ use crate::schema::snapshot::{Grid2dSnapshot, WfcDirection2d};
 
 
 
-pub(crate) const MAX_GRID2D_TILES: usize = 4_096;
-pub(crate) const MAX_GRID2D_RULES: usize = 262_144;
-pub(crate) const MAX_GRID2D_CELLS: usize = 262_144;
-pub(crate) const MAX_GRID2D_ID_BYTES: usize = 1_024;
-pub(crate) const MAX_GRID2D_OUTPUT_BYTES: usize = 1 << 20;
-pub(crate) const PARENT_PREVIEW_UNIT_INTERVAL: u64 = 16;
-pub(crate) const PARENT_PREVIEW_TIME_INTERVAL_MS: u64 = 16;
+pub const MAX_GRID2D_TILES: usize = 4_096;
+pub const MAX_GRID2D_RULES: usize = 262_144;
+pub const MAX_GRID2D_CELLS: usize = 262_144;
+pub const MAX_GRID2D_ID_BYTES: usize = 1_024;
+pub const MAX_GRID2D_OUTPUT_BYTES: usize = 1 << 20;
+pub const PARENT_PREVIEW_UNIT_INTERVAL: u64 = 16;
+pub const PARENT_PREVIEW_TIME_INTERVAL_MS: u64 = 16;
 
 /// 🧭️ The four-neighbour stencil's relation slots, in `Stencil2d::VonNeumann::offsets()` order —
 /// `[(1,0), (-1,0), (0,1), (0,-1)]`, i.e. RIGHT, LEFT, BOTTOM, TOP with `y` growing downward.
-pub(crate) fn relation_slot(direction: WfcDirection2d) -> usize {
+pub fn relation_slot(direction: WfcDirection2d) -> usize {
     match direction {
         WfcDirection2d::Right => 0,
         WfcDirection2d::Left => 1,

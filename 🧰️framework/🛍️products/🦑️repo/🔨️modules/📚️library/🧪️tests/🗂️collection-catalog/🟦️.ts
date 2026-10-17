@@ -7,7 +7,7 @@ import { describe, expect, test } from "bun:test";
 import Ajv from "ajv";
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
-import { generateCollectionCatalogV1, parseCollectionCatalogV1 } from "../../🏗️authoring/🗂️collection-catalog/🟦️.ts";
+import { generateCollectionCatalogV1, parseCollectionCatalogV1, renderCollectionCatalogRustV1 } from "../../🏗️authoring/🗂️collection-catalog/🟦️.ts";
 
 const REPO = join(import.meta.dir, "../../../../../../..");
 const ANY = join(REPO, "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any");
@@ -40,6 +40,15 @@ describe("collection catalog", () => {
 
   test("keeps the generated Rust and TypeScript catalog fresh", () => {
     expect(generateCollectionCatalogV1(SNAPSHOT, "check")).toEqual([]);
+  });
+
+  test("cuts the generated Rust catalog into a root that mounts cohesive children, one first emoji each, with one conversion per collection", () => {
+    const files = renderCollectionCatalogRustV1(parseCollectionCatalogV1(json(SNAPSHOT)));
+    expect(files.map((file) => file.folder)).toEqual([null, "🪪️key-descriptors", "🔎️key-base-access", "🧾️row-operations", "🔁️row-conversions"]);
+    for (const file of files) expect(file.text.split("\n").length).toBeLessThan(1000);
+    for (const file of files.slice(1)) expect(files[0]!.text).toContain(`#[path = "${file.folder}/🦀️.rs"]`);
+    expect(new Set(files.map((file) => file.text.split(" ")[1])).size).toBe(files.length);
+    expect(files.map((file) => file.text).join("\n").match(/^impl From<\w+> for RegisterRow \{$/gmu)).toHaveLength(64);
   });
 
   test("Ajv accepts every committed register-row payload against its leaf schema", async () => {

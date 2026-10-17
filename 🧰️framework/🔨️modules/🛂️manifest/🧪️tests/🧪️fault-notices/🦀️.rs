@@ -23,7 +23,6 @@ fn every_corpus_table_answers_exactly_its_refusals() {
         let errors: Vec<Value> = validate_fault_notices(&notices(table)).iter().map(projected).collect();
         assert_eq!(Value::Array(errors), table["errors"], "{}", table["id"]);
     }
-    println!("[DEBUG] fault notice corpus: {} tables answered their exact refusals", corpus["tables"].as_array().unwrap().len());
 }
 
 #[test]

@@ -12,5 +12,5 @@ test("original fixture completion preserves the rejected source and closes every
   if(row.faultCode===null){expect(completed.completion).toBe(pending);expect(completed.pending).toBeNull()}else{expect(completed.pending).toBe(pending);expect(completed.fault).toBe(row.faultCode)}
   const closed=applyPatch(completed,[{op:"replace",path:"/pending",value:null},{op:"replace",path:"/completion",value:null},{op:"replace",path:"/fault",value:null}],true,true).newDocument;expect(closed).toEqual({pending:null,completion:null,fault:null});
  }
- expect(fixture.terminalDropBytes).toBe(0);expect(fixture.sameRecipient).toBe(true);console.log("[DEBUG] original fixture pending emission source/rejection/close neutral cases=3");
+ expect(fixture.terminalDropBytes).toBe(0);expect(fixture.sameRecipient).toBe(true);
 });

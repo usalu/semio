@@ -15,7 +15,8 @@ const SNAPSHOT: &str = "shared://💡️inferences/🔗️wall-joins/📸️snap
 mod subject {
     use super::SNAPSHOT;
     use semio_repo_test_host::{parse_json, Context, Outcome};
-    use semio_s_artifact_bim_model::standards::v1::subsets::any::io::text::snapshot::{decode_model_snapshot_json, encode_inference_projection_json};
+    use semio_s_artifact_bim_model::standards::v1::subsets::any::io::text::snapshot::decode_model_snapshot_json;
+    use semio_s_artifact_bim_model::standards::v1::subsets::any::io::text::projection::encode_inference_projection_json;
 
     /// 🧱️ The wall layout table: faces, joins, footprints and quantities.
     pub fn wall_joins(ctx: &Context) -> Result<Outcome, String> {

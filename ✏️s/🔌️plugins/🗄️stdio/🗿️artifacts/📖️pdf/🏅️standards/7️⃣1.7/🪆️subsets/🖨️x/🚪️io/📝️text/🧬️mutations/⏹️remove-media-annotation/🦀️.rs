@@ -1,6 +1,6 @@
 //! ⏹️ Direct text codec for `remove-media-annotation`.
 
-use crate::standards::v1_7::subsets::x::schema::mutations::RemoveMediaAnnotation;
+use crate::standards::v1_7::subsets::x::schema::mutations::remove_media_annotation::RemoveMediaAnnotation;
 
 //#region 🔖️Identity
 pub const OPCODE: &str = "remove-media-annotation";
@@ -21,7 +21,5 @@ pub fn parse(text: &str) -> Result<RemoveMediaAnnotation, String> {
 //#endregion 🔖️Codec
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

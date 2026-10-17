@@ -95,7 +95,7 @@ fn normalize_quaternion(q: SemioQuaternion) -> SemioQuaternion {
 /// ↻️ Rotates `v` by unit quaternion `q` — `v + 2*q.xyz × (q.xyz × v + q.w*v)` (the standard
 /// avoid-quaternion-inverse rotation formula).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn rotate_point(q: SemioQuaternion, v: SemioPoint3) -> SemioPoint3 {
+pub fn rotate_point(q: SemioQuaternion, v: SemioPoint3) -> SemioPoint3 {
     let qv = (q.x, q.y, q.z);
     let cross1 = cross(qv, (v.x, v.y, v.z));
     let t = (cross1.0 + q.w * v.x, cross1.1 + q.w * v.y, cross1.2 + q.w * v.z);
@@ -175,7 +175,5 @@ fn walk(node: &DrawNode, layer: usize, path: &mut Vec<usize>, parent_key: Option
 //#endregion 🔖️InferredField
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

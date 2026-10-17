@@ -1,7 +1,6 @@
 //! 🔀 Shooting mutation payload — `ReorderAssets`. Repositions an asset within the display-ordered `assets` list.
 
 use crate::diff::ShootingDiff;
-use crate::mutations::ShootingMutation;
 use crate::ShootingSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 
@@ -16,12 +15,15 @@ pub struct ReorderAssets {
     pub to_index: usize,
 }
 
-impl MutationKind<ShootingSnapshot, ShootingMutation> for ReorderAssets {
+impl<Op> MutationKind<ShootingSnapshot, Op> for ReorderAssets
+where
+    Op: protocol::Mutation<ShootingSnapshot, Diff = ShootingDiff> + From<ReorderAssets>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "reorder", entity: "assets", kind: "reorder-assets", record: "ReorderedAssets" };
     fn diff(&self, base: &ShootingSnapshot) -> protocol::MutationOutcome<ShootingDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &ShootingSnapshot) -> Result<Vec<ShootingMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &ShootingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

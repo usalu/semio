@@ -44,14 +44,21 @@ fn snapshot_languages()->&'static[semio_framework_dsl::LanguageSpec]{
  ]).as_slice()
 }
 
-#[path = "💾️binary/🦀️.rs"]
-pub mod binary;
+pub mod binary {
+    pub use semio_s_artifact_reasoning_wires_snapshot_2::standards::v1::subsets::any::io::binary::*;
+    pub use semio_s_artifact_reasoning_wires_inferences::standards::v1::subsets::any::io::binary::diff;
+    pub use semio_s_artifact_reasoning_wires_inferences::standards::v1::subsets::any::io::binary::inferences;
+    pub use semio_s_artifact_reasoning_wires_schema::standards::v1::subsets::any::io::binary::mutations;
+}
 
-#[path = "📝️text/🦀️.rs"]
-pub mod text;
+pub mod text {
+    pub use semio_s_artifact_reasoning_wires_snapshot_2::standards::v1::subsets::any::io::text::*;
+    pub use semio_s_artifact_reasoning_wires_inferences::standards::v1::subsets::any::io::text::diff;
+    pub use semio_s_artifact_reasoning_wires_inferences::standards::v1::subsets::any::io::text::inferences;
+    pub use semio_s_artifact_reasoning_wires_schema::standards::v1::subsets::any::io::text::mutations;
+}
 
-#[path = "🪶️sqlite/🦀️.rs"]
-pub mod sqlite;
+
 
 pub mod derived_construction {
     use crate::schema::diff::WiresDiff;

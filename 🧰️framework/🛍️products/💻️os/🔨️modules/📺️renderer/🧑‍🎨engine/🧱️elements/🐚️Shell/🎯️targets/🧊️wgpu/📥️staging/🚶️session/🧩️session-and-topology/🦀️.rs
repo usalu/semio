@@ -264,7 +264,7 @@ impl<'ctx> SessionCtx<'ctx> {
     }
 
     /// 🪟️ The host-owned fields every refresh restamps onto the session's view state — including the tree windows this shell's
-    /// observer measured (`tree_windows`/`tree_viewport_rows`, [`tree_windows::TreeWindowScheduler::view_state_fields`]), the
+    /// observer measured (`tree_windows`/`tree_viewport_rows`, [`semio_framework_os_renderer_wgpu_shell_dock::TreeWindowScheduler::view_state_fields`]), the
     /// same pair React's `TreeWindowHostV1::viewStateFields` stamps (`🛠️ShellHelpers/🟦️.tsx`).
     pub fn live_view_state(&self, session: &ActiveSession) -> ViewModel {
         let mut view_state = session.view_state.clone();

@@ -1,0 +1,25 @@
+{
+ "name": "architect",
+ "crates": [
+  "semio-architect-mutation-bridge",
+  "semio-s-artifact-architect-program",
+  "semio-s-artifact-architect-program-architect",
+  "semio-s-artifact-architect-program-catalog",
+  "semio-s-artifact-architect-program-config",
+  "semio-s-artifact-architect-program-context-requirements",
+  "semio-s-artifact-architect-program-inferences",
+  "semio-s-artifact-architect-program-mut-any",
+  "semio-s-artifact-architect-program-mutations",
+  "semio-s-artifact-architect-program-panels",
+  "semio-s-artifact-architect-program-presence",
+  "semio-s-artifact-architect-program-program-structure",
+  "semio-s-artifact-architect-program-registers",
+  "semio-s-artifact-architect-program-schema",
+  "semio-s-artifact-architect-program-snapshot",
+  "semio-s-artifact-architect-program-tests",
+  "semio-s-artifact-architect-program-tests-2",
+  "semio-s-artifact-architect-program-tests-3",
+  "semio-s-artifact-architect-program-tests-exchange"
+ ],
+ "note": "ORACLE-HARVEST-PLUGINS: ✏️s/🔌️plugins/🏛️architect"
+}

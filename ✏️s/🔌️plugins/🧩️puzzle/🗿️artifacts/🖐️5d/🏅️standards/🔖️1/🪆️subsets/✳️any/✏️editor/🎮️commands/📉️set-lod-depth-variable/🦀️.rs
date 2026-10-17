@@ -1,6 +1,6 @@
 //! 🔭️ `set-lod-depth-variable` command — whether detail falls off with distance from the camera.
 
-use crate::editor::puzzle5d::Puzzle5dActionCtx;
+use crate::editor::puzzle5d::interaction::Puzzle5dActionCtx;
 use semio_framework_pack_json::Value;
 
 pub fn set_lod_depth_variable(ctx: &mut Puzzle5dActionCtx<'_>, args: Option<&Value>) {

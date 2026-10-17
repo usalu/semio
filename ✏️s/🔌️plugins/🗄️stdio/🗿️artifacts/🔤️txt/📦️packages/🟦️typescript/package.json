@@ -20,7 +20,8 @@
     ".": {
       "types": "./dist/🟦️.d.ts",
       "import": "./dist/🟦️.js"
-    }
+    },
+    "./standards/utf-8/subsets/any/io/sqlite/snapshot": "./🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🟦️.ts"
   },
   "dependencies": {},
   "license": "LGPL-3.0-or-later",

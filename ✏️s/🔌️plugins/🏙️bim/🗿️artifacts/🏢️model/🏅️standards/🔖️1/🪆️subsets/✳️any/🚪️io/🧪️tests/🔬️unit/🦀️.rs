@@ -84,7 +84,7 @@ fn the_ifc4_entry_turns_a_packed_model_into_the_ifc4_bytes() {
 #[test]
 fn sweeps_attached_walls_and_reveals_survive_the_pack_and_the_text_carrier_and_the_ifc_round_trip() {
     use crate::standards::v1::subsets::any::io::export::ifc::testkit::attic;
-    use crate::standards::v1::subsets::any::io::import::ifc::attach::tests::with_depth;
+    use crate::standards::v1::subsets::any::io::export::ifc::testkit::with_depth;
     use crate::standards::v1::subsets::any::io::text::snapshot as text;
     use crate::standards::v1::subsets::any::schema::snapshot::TopConstraint;
     let model = attic();

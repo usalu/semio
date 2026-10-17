@@ -17,7 +17,7 @@ export default {
     name: "@semio-tech/repo-coordinator",
     mode: "test",
     environment: "node",
-    include: [resolve(root, "../*/🟦️.ts")],
+    include: [resolve(root, "../../🧪️tests/🔬️schema/🟦️.ts"), resolve(root, "../../🧪️tests/🔬️server-persistence/🟦️.ts")],
     passWithNoTests: false,
     coverage: { include: ["app/**/*.ts", "app/**/*.tsx"] },
   },

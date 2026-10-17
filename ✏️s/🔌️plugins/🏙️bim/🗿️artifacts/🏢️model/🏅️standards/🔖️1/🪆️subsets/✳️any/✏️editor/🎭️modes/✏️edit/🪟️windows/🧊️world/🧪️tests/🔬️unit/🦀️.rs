@@ -1,3 +1,4 @@
+use crate::editor::bim::modes::edit::windows::world::config::BimWorldWindowConfig;
 use super::*;
 use protocol::Inference;
 use serde_json::Value;

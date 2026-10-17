@@ -93,6 +93,10 @@
                     },
                     "args": {
                       "$ref": "#/$defs/LiteralArguments"
+                    },
+                    "program": {
+                      "type": "string",
+                      "minLength": 1
                     }
                   },
                   "additionalProperties": true,
@@ -110,6 +114,38 @@
                             "commands": false
                           },
                           "type": "object"
+                        }
+                      ]
+                    },
+                    {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "program": false
+                          }
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "command": false
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "program": false
+                          }
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "commands": false
+                          }
                         }
                       ]
                     }
@@ -275,8 +311,59 @@
       "properties": {
         "selection": {
           "oneOf": [
-            {"type":"object","required":["kind"],"properties":{"kind":{"const":"all"}},"additionalProperties":false},
-            {"type":"object","required":["kind","tasks"],"properties":{"kind":{"const":"tasks"},"tasks":{"type":"array","minItems":1,"maxItems":65536,"uniqueItems":true,"items":{"type":"object","required":["project","target"],"properties":{"project":{"type":"string","minLength":1},"target":{"type":"string","minLength":1},"configuration":{"type":"string","minLength":1}},"additionalProperties":false}}},"additionalProperties":false}
+            {
+              "type": "object",
+              "required": [
+                "kind"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "all"
+                }
+              },
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "required": [
+                "kind",
+                "tasks"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "tasks"
+                },
+                "tasks": {
+                  "type": "array",
+                  "minItems": 1,
+                  "maxItems": 65536,
+                  "uniqueItems": true,
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "project",
+                      "target"
+                    ],
+                    "properties": {
+                      "project": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "target": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "configuration": {
+                        "type": "string",
+                        "minLength": 1
+                      }
+                    },
+                    "additionalProperties": false
+                  }
+                }
+              },
+              "additionalProperties": false
+            }
           ]
         },
         "registry": {
@@ -397,7 +484,8 @@
         },
         "args": {
           "$ref": "#/$defs/LiteralArguments"
-        }
+        },
+        "program": false
       },
       "additionalProperties": true,
       "allOf": [
@@ -433,6 +521,44 @@
         "wasm": {
           "type": "boolean"
         }
+      }
+    },
+    "BuildTool": {
+      "type": "string",
+      "enum": [
+        "nx",
+        "bazel"
+      ]
+    },
+    "BuildPolicy": {
+      "type": "object",
+      "required": [
+        "version",
+        "defaultTool"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "defaultTool": {
+          "$ref": "#/$defs/BuildTool"
+        }
+      },
+      "additionalProperties": true
+    },
+    "BuildPolicyAuthority": {
+      "const": {
+        "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔣️policy.json",
+        "maximumBytes": 65536,
+        "windows": {
+          "shareMode": 1,
+          "openFlags": 2097152,
+          "reparseAttribute": 1024
+        },
+        "launchers": [
+          "📜️script.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts"
+        ]
       }
     }
   }

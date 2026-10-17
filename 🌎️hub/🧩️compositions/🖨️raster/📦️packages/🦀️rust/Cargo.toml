@@ -19,6 +19,8 @@ path = "🦀️.rs"
 semio-framework-pack = { path = "../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-s-artifact-raster-raster = { workspace = true }
+semio-s-artifact-raster-raster-editor = { workspace = true }
+semio-s-artifact-raster-raster-viewer = { workspace = true }
 semio-framework-value-derive = { path = "../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
 semio-s-artifact-stdio-bmp = { workspace = true }
 semio-s-artifact-stdio-dwg = { workspace = true }

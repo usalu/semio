@@ -4,7 +4,7 @@
 //! `SetWallEndJoin` per wall end whose join preference the mirror traded. Empty when the mirror is refused or changes nothing.
 
 use super::super::delete_elements::DeleteElements;
-use super::super::modify::{self, WallEnd};
+use crate::standards::v1::subsets::any::schema::mutations::modify::{self, WallEnd};
 use super::super::place_elements::PlaceElements;
 use super::super::set_wall_end_join::SetWallEndJoin;
 use super::diff::map_of;

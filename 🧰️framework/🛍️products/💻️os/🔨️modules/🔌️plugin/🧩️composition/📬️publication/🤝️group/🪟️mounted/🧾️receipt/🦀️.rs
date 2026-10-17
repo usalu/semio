@@ -28,9 +28,10 @@ pub fn mounted_nested_retirement_demand(mut demand: RetirementDemand, layers: us
     Ok(demand)
 }
 
-pub(crate) const MOUNTED_RECEIPT_MAXIMUM_BYTES: usize = 1_048_576;
+pub const MOUNTED_RECEIPT_MAXIMUM_BYTES: usize = 1_048_576;
 
-pub(crate) struct MountedReceiptBytes {
+#[doc(hidden)]
+pub struct MountedReceiptBytes {
     pub bytes: ManuallyDrop<Vec<u8>>,
     pub candidate: ManuallyDrop<Option<Vec<u8>>>,
     pub copied: usize,
@@ -43,7 +44,7 @@ impl MountedReceiptBytes {
     pub fn new() -> Self { Self::from_original(Vec::new()) }
     pub fn from_original(bytes: Vec<u8>) -> Self { Self { bytes: ManuallyDrop::new(bytes), candidate: ManuallyDrop::new(None), copied: 0, required: None, closing: false, closed: false } }
     pub fn as_slice(&self) -> &[u8] { self.bytes.as_slice() }
-    pub(crate) fn ready_for(&self, additional: usize) -> bool { !self.closed && !self.closing && self.candidate.is_none() && self.bytes.capacity() - self.bytes.len() >= additional }
+    pub fn ready_for(&self, additional: usize) -> bool { !self.closed && !self.closing && self.candidate.is_none() && self.bytes.capacity() - self.bytes.len() >= additional }
     /// 📐️ Queries one whole replacement capacity while retaining the original byte allocation.
     pub fn next_capacity_byte_demand(&self, additional: usize) -> Result<usize, ValueError> {
         if self.closed || self.closing { return Err(ValueError::new(ValueRefusalKind::InvariantViolated, "mounted receipt byte owner is closed")); }
@@ -52,7 +53,7 @@ impl MountedReceiptBytes {
         Ok(if self.candidate.is_some() || self.bytes.capacity() >= required { 0 } else { required.max(self.bytes.capacity().saturating_mul(2)).max(64).min(MOUNTED_RECEIPT_MAXIMUM_BYTES) })
     }
     /// 🪵️ Exposes the exact old allocation only after its initialized prefix has been copied.
-    pub(crate) fn next_growth_release_byte_demand(&self) -> usize { if self.candidate.is_some() && self.copied == self.bytes.len() { self.bytes.capacity() } else { 0 } }
+    pub fn next_growth_release_byte_demand(&self) -> usize { if self.candidate.is_some() && self.copied == self.bytes.len() { self.bytes.capacity() } else { 0 } }
     /// 🌱️ Separates whole birth, bounded prefix copying, and whole original retirement into distinct turns.
     pub fn reserve_step(&mut self, additional: usize, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         let capacity = self.next_capacity_byte_demand(additional)?;
@@ -80,7 +81,7 @@ impl MountedReceiptBytes {
         Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: bytes, ..Default::default() }))
     }
     /// ✍️ Appends one original borrowed prefix into already funded storage.
-    pub(crate) fn append_step(&mut self, source: &[u8], grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    pub fn append_step(&mut self, source: &[u8], grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         if self.closed || self.closing || self.candidate.is_some() { return Err(ValueError::new(ValueRefusalKind::InvariantViolated, "mounted receipt append requires its exact settled backing")); }
         let count = source.len().min(grant.maximum_copy_bytes).min(64).min(self.bytes.capacity() - self.bytes.len());
         if grant.maximum_items == 0 || count == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
@@ -110,7 +111,8 @@ impl MountedReceiptBytes {
 
 impl Drop for MountedReceiptBytes { fn drop(&mut self) { assert!(std::thread::panicking() || self.terminal_is_empty(), "mounted receipt byte owner requires exact transfer or whole funded close"); } }
 
-pub(crate) struct MountedPreparedOperationBytes {
+#[doc(hidden)]
+pub struct MountedPreparedOperationBytes {
     pub cursor: store::ArtifactPreparedOperationCursor,
     pub output: MountedReceiptBytes,
     pub pending: [u8; 64],
@@ -125,7 +127,7 @@ pub(crate) struct MountedPreparedOperationBytes {
 impl MountedPreparedOperationBytes {
     pub fn new() -> Self { Self { cursor: Default::default(), output: MountedReceiptBytes::new(), pending: [0; 64], pending_len: 0, pending_offset: 0, encoded_complete: false, cursor_closed: false, failed: false, closing: false } }
     pub fn next_capacity_byte_demand(&self) -> Result<usize, ValueError> { if self.pending_offset < self.pending_len { self.output.next_capacity_byte_demand(self.pending_len - self.pending_offset) } else { self.cursor.next_capacity_byte_demand() } }
-    pub(crate) fn next_growth_release_byte_demand(&self) -> Result<usize, ValueError> { if self.pending_offset < self.pending_len { Ok(self.output.next_growth_release_byte_demand()) } else if !self.cursor_closed { self.cursor.next_close_byte_demand() } else { Ok(0) } }
+    pub fn next_growth_release_byte_demand(&self) -> Result<usize, ValueError> { if self.pending_offset < self.pending_len { Ok(self.output.next_growth_release_byte_demand()) } else if !self.cursor_closed { self.cursor.next_close_byte_demand() } else { Ok(0) } }
     pub fn is_complete(&self) -> bool { !self.failed && !self.closing && self.encoded_complete && self.cursor_closed && self.pending_len == self.pending_offset }
     /// 🧵️ Retains the exact encoded prefix before copying it into independently admitted output backing.
     pub fn advance(&mut self, source: store::ArtifactPreparedOperationSource<'_>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
@@ -181,9 +183,11 @@ impl MountedPreparedOperationBytes {
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]
-enum MountedOperationFramingPhase { Count, Encoding, Length, Payload, Release, Complete }
+#[doc(hidden)]
+pub enum MountedOperationFramingPhase { Count, Encoding, Length, Payload, Release, Complete }
 
-pub(crate) struct MountedPreparedOperationsBytes {
+#[doc(hidden)]
+pub struct MountedPreparedOperationsBytes {
     pub output: MountedReceiptBytes,
     pub operation: Option<MountedPreparedOperationBytes>,
     pub encoded: ManuallyDrop<Option<Vec<u8>>>,
@@ -270,13 +274,14 @@ impl MountedPreparedOperationsBytes {
 
 impl Drop for MountedPreparedOperationsBytes { fn drop(&mut self) { assert!(std::thread::panicking() || self.terminal_is_empty(), "mounted operation framing retains every original owner until funded transfer or close"); } }
 
-pub(crate) struct MountedKernelMutationReceiptSource<'a> {
+#[doc(hidden)]
+pub struct MountedKernelMutationReceiptSource<'a> {
     pub document: ArtifactHandle,
     pub mutation_id: &'a str,
     pub invocation_id: &'a str,
     pub schema: &'a str,
-    pub(crate) schema_separator: &'a str,
-    pub(crate) schema_suffix: &'a str,
+    pub schema_separator: &'a str,
+    pub schema_suffix: &'a str,
     pub author: &'a str,
     pub dependencies: &'a [MutationId],
     pub inverse: &'a [u8],
@@ -291,9 +296,11 @@ impl MountedKernelMutationReceiptSource<'_> {
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]
-enum MountedKernelReceiptPhase { Strings, Inverse, DependencyBacking, Dependencies, Author, Complete }
+#[doc(hidden)]
+pub enum MountedKernelReceiptPhase { Strings, Inverse, DependencyBacking, Dependencies, Author, Complete }
 
-pub(crate) struct MountedKernelMutationReceipt {
+#[doc(hidden)]
+pub struct MountedKernelMutationReceipt {
     pub identity: [(usize, usize); 8],
     pub document: ArtifactHandle,
     pub base_version: ArtifactVersion,
@@ -425,7 +432,8 @@ impl MountedKernelMutationReceipt {
 
 impl Drop for MountedKernelMutationReceipt { fn drop(&mut self) { assert!(std::thread::panicking() || self.terminal_is_empty(), "mounted host receipt retains every original causal field until funded transfer or close"); } }
 
-pub(crate) struct MountedArtifactHandleIssuer {
+#[doc(hidden)]
+pub struct MountedArtifactHandleIssuer {
     pub identity: Option<(usize, usize)>,
     pub offset: usize,
     pub first: u64,
@@ -453,6 +461,3 @@ impl MountedArtifactHandleIssuer {
     pub fn take(&mut self, grant: RetainedCloneGrant) -> Option<ArtifactHandle> { if !self.ready() || grant.maximum_items == 0 { return None; } self.closed = true; Some(ArtifactHandle((u128::from(self.first) << 64) | u128::from(self.second))) }
     pub fn close_step(&mut self, grant: RetainedCloneGrant) -> RetainedCloneStep { if self.closed { return RetainedCloneStep::Complete(Default::default()); } if grant.maximum_items == 0 { return RetainedCloneStep::Progress(Default::default()); } self.identity = None; self.closed = true; RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() }) }
 }
-
-#[cfg(test)]
-include!("🧪️tests/🦀️.rs");

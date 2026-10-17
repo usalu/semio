@@ -1,20 +1,22 @@
-use super::super::{TestConfig, TestConfigDiff, TestConfigMutation};
+use crate::test_app_mutation_fixture::config::{TestConfig, TestConfigDiff};
+use crate::test_app_mutation_fixture::config::mutations::TestConfigMutation;
 use protocol::{MutationKind, MutationOutcome, OpText, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 fn required_nullable<'de, D: serde::Deserializer<'de>>(deserializer: D) -> Result<Option<String>, D::Error> {
     <Option<String> as serde::Deserialize>::deserialize(deserializer)
 }
+#[doc(hidden)]
 #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, ToValue, FromValue, dsl::MutationLeaf, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = store)]
 #[mutation_leaf(contract=::protocol)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub(crate) struct ChangeTestConfigSelection {
+pub struct ChangeTestConfigSelection {
     #[serde(deserialize_with = "required_nullable")]
     pub selected: Option<String>,
 }
 semio_framework_value::artifact_retire_struct!(ChangeTestConfigSelection { selected });
 impl ChangeTestConfigSelection {
-    const OPCODE: &'static str = "change-test-config-selection";
+    pub const OPCODE: &'static str = "change-test-config-selection";
 }
 impl OpText for ChangeTestConfigSelection {
     fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
@@ -59,6 +61,7 @@ impl MutationKind<TestConfig, TestConfigMutation> for ChangeTestConfigSelection 
     }
 }
 
+#[doc(hidden)]
 #[cfg(test)]
 #[path = "../../../../../🧪️tests/🎚️test-app-config-selection-unit/🦀️.rs"]
-mod tests;
+pub mod tests;

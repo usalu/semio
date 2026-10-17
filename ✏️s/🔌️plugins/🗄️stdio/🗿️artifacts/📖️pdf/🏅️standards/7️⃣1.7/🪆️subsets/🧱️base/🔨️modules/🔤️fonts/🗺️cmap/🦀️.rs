@@ -167,7 +167,7 @@ pub fn parse_to_unicode(body: &[u8]) -> PdfToUnicode {
                         }
                         out.mappings.push(PdfToUnicodeMapping::Char { code: code_of(code), text: utf16_text(dst) });
                     } else if let [PdfObject::Str(code), PdfObject::Name(name)] = pair {
-                        if let Some(text) = super::glyph_name_to_unicode(name) {
+                        if let Some(text) = crate::standards::v1_7::subsets::base::modules::fonts::glyph_name_to_unicode(name) {
                             out.mappings.push(PdfToUnicodeMapping::Char { code: code_of(code), text });
                         }
                     }
@@ -453,7 +453,5 @@ pub fn to_unicode_reverse(map: &PdfToUnicode, text: &str) -> Option<u32> {
 //#endregion 🔖️Codes
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

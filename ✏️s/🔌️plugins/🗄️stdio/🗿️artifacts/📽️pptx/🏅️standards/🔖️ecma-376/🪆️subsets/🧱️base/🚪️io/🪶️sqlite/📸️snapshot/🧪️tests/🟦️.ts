@@ -7,7 +7,7 @@ import Ajv from 'ajv';
 import Ajv2020 from 'ajv/dist/2020';
 import { exportSqliteDatabase, importSqliteDatabase } from "@semio-tech/framework";
 import schema from "../../../../🧬️schema/📸️snapshot/🔣️.json";
-import xmlSchema from "../../../../../../../../../📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🔣️.json";
+import { baseSnapshotSchema as xmlSchema } from "@semio-tech/stdio-xml/standards/1.0/subsets/base/schema/snapshot";
 import { parsePptxSnapshot, type PptxSnapshot } from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import { PPTX_SQLITE_SCHEMA, pptxSnapshotFromSqliteDatabase, pptxSnapshotToSqliteDatabase } from "../../../../../../../../🟦️.ts";
 import authority from "./🧫️fixtures/🧭️authority/🔣️.json";
@@ -17,7 +17,7 @@ import constructionFidelity from "../../../../🧪️tests/🧫️fixtures/🏗�
 
 import literalNative from "../../../../🧪️tests/🧫️fixtures/📸️snapshot/🧩️native-literals/🔣️.json";
 
-import { parseXmlDocument } from "../../../../../../../../../📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🟦️.ts";
+import { parseXmlDocument } from "@semio-tech/stdio-xml/standards/1.0/subsets/base/schema/snapshot";
 import profiles from "../../../../🧪️tests/🧫️fixtures/📸️snapshot/🛡️profile/🔣️.json";
 
 import * as profileOwner from "../../../../../../../../🟦️.ts";

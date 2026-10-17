@@ -1,4 +1,5 @@
-use super::*;
+use crate::JpgSnapshot;
+use crate::standards::v_jfif_1_01::subsets::document::schema::inferences::*;
 use protocol::Inference;
 
 #[semio_framework_async_macros::async_test]

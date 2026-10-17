@@ -2,7 +2,7 @@
 //! their property and classification entries, which is exactly what the copy created. Empty when the copy is refused.
 
 use super::super::delete_elements::DeleteElements;
-use super::super::modify::{self, Map};
+use crate::standards::v1::subsets::any::schema::mutations::modify::{self, Map};
 use super::CopyElements;
 use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
 

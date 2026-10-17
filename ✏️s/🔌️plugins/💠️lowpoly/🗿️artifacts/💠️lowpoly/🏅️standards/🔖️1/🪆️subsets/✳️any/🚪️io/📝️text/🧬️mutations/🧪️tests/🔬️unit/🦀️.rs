@@ -1,3 +1,4 @@
+use semio_framework_3d::mesh::{MeshModelingOps};
 use crate::standards::v1::subsets::any::io::component::text::mutations::*;
 use semio_s_artifact_lowpoly_lowpoly_mut_geometry::{create_mesh, delete_mesh};
 use semio_s_artifact_lowpoly_lowpoly_mut_objects::{create_object, delete_object, rename_object};

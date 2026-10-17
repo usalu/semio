@@ -52,11 +52,13 @@ pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
 }
 //#endregion 🔖️IoDeclaration
 
-#[path = "💾️binary/🦀️.rs"]
-pub mod binary;
 
-#[path = "📝️text/🦀️.rs"]
-pub mod text;
 
-#[path = "🪶️sqlite/🦀️.rs"]
-pub mod sqlite;
+pub mod text {
+    pub use semio_s_artifact_dag_dag_tests::standards::v1::subsets::any::io::text::*;
+    pub use semio_s_artifact_dag_dag_diff::standards::v1::subsets::any::io::text::diff;
+    pub use semio_s_artifact_dag_dag_config::standards::v1::subsets::any::io::text::inferences;
+    pub use semio_s_artifact_dag_dag_schema::standards::v1::subsets::any::io::text::mutations;
+}
+
+

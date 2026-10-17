@@ -122,7 +122,6 @@ fn every_stdio_package_ships_exactly_its_declared_bounded_fleet() {
         assert!(descriptor.manifest.apps.len() <= SHIPPED_APP_CEILING, "{} ships {} apps over the per-component ceiling of {SHIPPED_APP_CEILING}", package.id, descriptor.manifest.apps.len());
         let dependencies = descriptor.manifest.dependencies.iter().map(|dependency| dependency.plugin_id.as_str()).collect::<Vec<_>>();
         assert_eq!(dependencies, if package.id == "stdio" { Vec::<&str>::new() } else { vec!["stdio"] }, "{} runtime dependencies", package.id);
-        eprintln!("[DEBUG] outward-stdio-component id={} apps={} editors={}", package.id, descriptor.manifest.apps.len(), declared.len());
     }
 }
 
@@ -290,9 +289,7 @@ fn every_registered_snapshot_contract_resolves_in_each_package_process() {
     let failures = PACKAGE_IDS
         .into_iter()
         .filter_map(|id| {
-            eprintln!("[DEBUG] primary shipped schema contract package={id} started");
             let run = std::process::Command::new(&binary).args(["package_contract_probe", "--exact", "--ignored", "--nocapture", "--test-threads", "1"]).env(CONTRACT_PROBE_PACKAGE, id).output().expect("the contract probe runs");
-            eprintln!("[DEBUG] primary shipped schema contract package={id} completed status={}", run.status);
             if run.status.success() { eprint!("{}{}", String::from_utf8_lossy(&run.stdout), String::from_utf8_lossy(&run.stderr)); }
             (!run.status.success()).then(|| format!("{id} alone registers an unresolvable snapshot contract:\n{}\n{}", String::from_utf8_lossy(&run.stdout), String::from_utf8_lossy(&run.stderr)))
         })
@@ -311,9 +308,7 @@ fn package_contract_probe() {
     let contracts = semio_framework_schema_registry::with_artifact_schema_catalog(|entries| entries.iter().map(|entry| entry.id).collect::<Vec<_>>());
     assert!(!contracts.is_empty(), "{id} registers the snapshot contracts of the kinds it opens");
     let unresolved = contracts.iter().filter_map(|contract| {
-        eprintln!("[DEBUG] primary shipped schema contract package={id} contract={contract} started");
         let result = semio_framework_schema::structural_validator_for(contract, "snapshot");
-        eprintln!("[DEBUG] primary shipped schema contract package={id} contract={contract} completed accepted={}", result.is_ok());
         result.err().map(|error| format!("{contract}: {error}"))
     }).collect::<Vec<_>>();
     assert!(unresolved.is_empty(), "{id} alone registers {} unresolvable snapshot contracts: {unresolved:#?}", unresolved.len());
@@ -389,11 +384,9 @@ async fn sqlite_snapshot_primary_declared_owner_census() {
             Some(provider) => {
                 if provider.snapshot_type.is_none() { failures.push(format!("{kind} schema={schema}: absent concrete Snapshot TypeId")); }
                 if provider.schema.trim().is_empty() { failures.push(format!("{kind} schema={schema}: empty handwritten SQL schema")); }
-                eprintln!("[DEBUG] primary-stdio-snapshot-owner kind={kind} schema={schema} owner={owner} sql_bytes={} concrete_type={}", provider.schema.len(), provider.snapshot_type.is_some());
             }
         }
     }
-    eprintln!("[DEBUG] primary-stdio-snapshot-census definitions={} assemblies={} runtime={} metadata_only={} distinct_schema_owners={} refusals={}", definitions.len(), assemblies.len(), assemblies.len()-metadata_only, metadata_only, rows.len(), failures.len());
     assert!(failures.is_empty(), "{} declared Snapshot owner refusals:\n{}", failures.len(), failures.join("\n"));
 }
 
@@ -536,9 +529,7 @@ async fn sqlite_snapshot_primary_declared_binding_census() {
                 result => failures.push(format!("{label}: absent exact bidirectional SQLite route: {result:?}")),
             }
         }
-        eprintln!("[DEBUG] primary-stdio-snapshot-binding dialect={label} concrete_type={:?} sql_bytes={}", expected_provider.snapshot_type, expected_provider.schema.len());
     }
-    eprintln!("[DEBUG] primary-stdio-snapshot-binding-census declared={} refusals={}", expected.len(), failures.len());
     assert!(failures.is_empty(), "{} installed binding refusals:\n{}", failures.len(), failures.join("\n"));
 }
 /// 🪶️ Independently reads every domain row of one actual exported SQLite file.
@@ -578,12 +569,10 @@ where S: pack::snapshot::ArtifactPack + pack::snapshot::ArtifactDsl + PartialEq 
         let encoding = match &payload { IoPayload::Binary(_) => "binary", IoPayload::Text(_) => "text" };
         assert_eq!(evidence["metadata"], serde_json::json!([{"artifact_kind":native.artifact_kind,"standard":native.standard,"subset":native.subset,"schema_version":law["schemaVersion"],"native_encoding":encoding}]));
         assert_eq!(io_identify(&file).await, vec![(sqlite.clone(), Confidence::High)]);
-        let byte_length = bytes.len();
         let restored = semio_s_artifact_stdio_contract::testing::io_run(&import, file, Default::default(), &mut |_| true).await.expect("actual public SQLite import").value;
         assert_eq!(restored, payload, "complete native wire");
         let decoded = match restored { IoPayload::Binary(bytes) => S::decode_pack(&bytes).unwrap(), IoPayload::Text(text) => S::parse_dsl(&text).unwrap() };
         assert_eq!(decoded, snapshot, "full concrete Snapshot equality");
-        eprintln!("[DEBUG] primary-stdio-public-snapshot dialect={} native={} bytes={} complete_domain_rows=true full_owner=true", coordinate(&native), encoding, byte_length);
     }
 }
 
@@ -661,5 +650,4 @@ async fn sqlite_snapshot_primary_geojson_public_payload() {
             assert!(semio_s_artifact_stdio_contract::testing::io_run(&export, payload, Default::default(), &mut |_| true).await.is_err(), "valid JSON that violates GeoJSON must be refused by the actual public route");
         }
     }
-    eprintln!("[DEBUG] primary-stdio-geojson invalid-native-forms=2 refused-by-public-route=true");
 }

@@ -3,7 +3,7 @@ use semio_framework_value::{ErasedSnapshotRetirement,NativeEncodeControl,ValueEr
 
 pub struct OperationWireRows{pub rows:Option<Vec<Vec<u8>>>,pub active:Option<Vec<u8>>}
 impl OperationWireRows{
-    pub(crate) fn new()->Self{Self{rows:None,active:None}}
+    pub fn new()->Self{Self{rows:None,active:None}}
     pub fn initialize(&mut self,count:usize,control:&mut NativeEncodeControl<'_>)->Result<(),ValueError>{self.rows=Some(control.allocate_vec(count)?);Ok(())}
     pub fn active(&mut self)->&mut Vec<u8>{self.active.get_or_insert_with(Vec::new)}
     pub fn append(&mut self){self.rows.as_mut().expect("admitted wire rows").push(self.active.take().expect("admitted active wire row"));}

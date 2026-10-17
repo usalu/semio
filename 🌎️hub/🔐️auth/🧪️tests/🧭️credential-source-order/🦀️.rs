@@ -1,3 +1,4 @@
+use semio_framework_test_fixtures::fixture_path;
 use serde_json::Value;
 use std::fs::read_to_string;
 use std::path::{Path, PathBuf};
@@ -19,7 +20,7 @@ impl<'ast> Visit<'ast> for CallNames {
 }
 
 fn repo_root() -> PathBuf {
-    option_env!("SEMIO_REPO_ROOT").map(PathBuf::from).unwrap_or_else(|| PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.."))
+    option_env!("SEMIO_REPO_ROOT").map(PathBuf::from).unwrap_or_else(|| fixture_path!("../../.."))
 }
 
 fn source(path: impl AsRef<Path>) -> String {

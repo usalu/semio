@@ -1,5 +1,5 @@
 /** ✒️ Owned VML drawing mutation payload. */
-import { parseXmlDocument, type XmlDocument } from "../../../../../../../../📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🟦️.ts";
+import { parseXmlDocument, type XmlDocument } from "@semio-tech/stdio-xml/standards/1.0/subsets/base/schema/snapshot";
 export interface InsertVmlPart { readonly path: string; readonly document: XmlDocument; readonly index?: number; readonly override_index?: number }
 export function parseInsertVmlPart(value: unknown): InsertVmlPart {
   if (value === null || typeof value !== "object" || Array.isArray(value)) throw new Error("expected VML payload");

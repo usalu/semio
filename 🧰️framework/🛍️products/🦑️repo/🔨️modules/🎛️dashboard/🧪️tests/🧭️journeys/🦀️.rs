@@ -2,6 +2,8 @@
 //! The binary is the real `semio`; `portable-pty` is the terminal driver and `vt100` the screen model, so
 //! every assertion reads what a person would read on the screen.
 
+use semio_framework_test_fixtures::repo_root;
+
 #[path = "🧰️steps/🦀️.rs"]
 mod steps;
 #[path = "🖥️terminal/🦀️.rs"]
@@ -18,13 +20,12 @@ fn the_terminal_driver_preserves_committed_unicode_text() {
     let ws = Workspace::new("unicode-probe");
     let mut term = terminal::Terminal::spawn(&workspace::which("bun"), &["-e", "process.stdin.setRawMode(true);process.stdin.on('data',data=>process.stdout.write(data));console.log('ready');"], &ws.root, &ws.env(), 20, 120);
     term.wait_for("ready", Duration::from_secs(3)).unwrap();
-    let repository = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).ancestors().find(|folder| folder.join("nx.json").is_file()).unwrap();
+    let repository = repo_root!();
     let vectors: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(repository.join("🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧪️tests/🧫️fixtures/⌨️input-decoding/🔣️.json")).unwrap()).unwrap();
     for vector in vectors["consoleCommits"].as_array().unwrap() {
         let text = vector["text"].as_str().unwrap();
         term.type_text(text);
         term.wait_for(text, Duration::from_secs(3)).unwrap();
-        println!("[DEBUG] independent raw terminal driver preserved {text:?}");
     }
 }
 
@@ -72,7 +73,6 @@ fn launcher_text_editing_follows_the_visible_hardware_cursor() {
     let task = wait_task(&ws, "edited text task", |task| command_id(task) == "tool:journey-fixture/text");
     let logs = ws.ok(&["logs", task["session"].as_str().unwrap()]);
     assert!(logs.contains("ENV mark=!Z QA界"), "the process received another value: {logs}");
-    println!("[DEBUG] independent VT100 cursor positions: end={end:?} left={left:?} pasted={pasted:?}; task output received !Z QA界");
 }
 
 #[test]
@@ -93,7 +93,6 @@ fn a_configured_command_starts_with_one_click() {
     term.wait_for("ENV mark=SINGLE-CLICK", SLOW).unwrap();
     let started: Vec<_> = tasks(&ws).into_iter().filter(|task| command_id(task) == "tool:journey-fixture/text").collect();
     assert_eq!(started.len(), 1);
-    println!("[DEBUG] one start-action click launched exactly one task with SINGLE-CLICK");
 }
 
 #[test]
@@ -250,7 +249,6 @@ fn rendered_form_text_remains_inside_its_window() {
     for (row, text) in rows.iter().enumerate().take(last).skip(first) {
         assert!(text.starts_with('┃') && text.trim_end().ends_with('┃'), "form row {row} escaped its window: {text:?}\n{}", term.text());
     }
-    println!("[DEBUG] every configuration body row remained inside its window borders");
 }
 #[test]
 fn a_control_space_prefix_arms_the_next_key() {
@@ -261,7 +259,6 @@ fn a_control_space_prefix_arms_the_next_key() {
     term.wait_for("waiting for the next key", SLOW).unwrap_or_else(|screen| panic!("control-space did not arm the prefix: {screen}"));
     term.type_text("n");
     term.wait_for("commands", SLOW).unwrap();
-    println!("[DEBUG] control-space armed the configured prefix and opened the launcher");
 }
 #[test]
 fn hover_and_selection_are_visible_and_select_the_clicked_command() {
@@ -288,7 +285,6 @@ fn hover_and_selection_are_visible_and_select_the_clicked_command() {
     if term.text().contains("[ Start ]") { term.send(terminal::ENTER); }
     term.wait_for("journey server listening", SLOW).unwrap();
     assert_eq!(tasks(&ws).iter().filter(|task| command_id(task) == "tool:journey-fixture/serve-a").count(), 1);
-    println!("[DEBUG] VT100 cell attributes independently showed hover and selection; the clicked command started once");
 }
 #[test]
 fn the_launcher_uses_all_available_window_space() {
@@ -301,5 +297,4 @@ fn the_launcher_uses_all_available_window_space() {
     std::thread::sleep(Duration::from_millis(300));
     let leaves = term.rows().iter().filter(|row| row.contains("tool:journey-fixture/") && !row.contains("┃/")).count();
     assert_eq!(leaves, 13, "hidden form reserved launcher space:\n{}", term.text());
-    println!("[DEBUG] all thirteen command leaves fit inside the available launcher window");
 }

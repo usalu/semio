@@ -43,7 +43,7 @@ pub mod import_registers_csv {
             other => return Err(Fault::new(FaultOrigin::App, FaultCode::new("architect.import-strategy-unknown"), format!("importRegistersCsv has no merge strategy \"{other}\""))),
         };
         let import = import_registers_csv(doc.snapshot, &payload.payload, strategy).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("architect.import-csv-invalid"), format!("importRegistersCsv cannot read the CSV starting {:?}: {error:?}", payload.payload.chars().take(48).collect::<String>())))?;
-        Ok(Emit { effects: vec![crate::editor::architect::reset_document_effect(&import.snapshot)], ..Default::default() })
+        Ok(Emit { effects: vec![crate::editor::architect::base::reset_document_effect(&import.snapshot)], ..Default::default() })
     }
 }
 
@@ -129,6 +129,6 @@ pub mod import_program {
 
     pub fn handle(payload: &ImportProgram, _doc: &ArtifactView<'_, ProgramSnapshot>, _cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
         let next_program = crate::standards::v1::subsets::any::io::text::snapshot::parse(&payload.payload).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("architect.import-program-invalid"), format!("importProgram cannot read the ProgramSnapshot DSL starting {:?}: {error:?}", payload.payload.chars().take(48).collect::<String>())))?;
-        Ok(Emit { effects: vec![crate::editor::architect::reset_document_effect(&next_program)], ..Default::default() })
+        Ok(Emit { effects: vec![crate::editor::architect::base::reset_document_effect(&next_program)], ..Default::default() })
     }
 }

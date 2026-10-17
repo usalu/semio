@@ -1,0 +1,73 @@
+{
+ "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎟️session/🦀️.rs",
+ "original": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/🗑️generated/c4p5-orig/4.rs",
+ "stage": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/🗑️generated/c4p5-stage",
+ "descendants": [],
+ "chunks": [
+  {
+   "name": "engine_bridge",
+   "folder": "🌉️engine-bridge",
+   "doc": "🌉️ Engine bridge: the typed translation of the transient scene into the precompute `SceneConfig` and the sync and drive calls that feed one precompute session.",
+   "segments": [
+    {
+     "lines": [
+      38,
+      205
+     ]
+    }
+   ]
+  },
+  {
+   "name": "action_context",
+   "folder": "🎬️action-context",
+   "doc": "🎬️ Action context: everything one command arm may read or write while the dispatch prologue and epilogue stay in the dispatcher.",
+   "segments": [
+    {
+     "lines": [
+      207,
+      379
+     ]
+    }
+   ]
+  },
+  {
+   "name": "context_menu",
+   "folder": "🖱️context-menu",
+   "doc": "🖱️ Context menu: the localized row builder, the surface selection and the object, vortex, volume and reference menu items.",
+   "segments": [
+    {
+     "lines": [
+      381,
+      561
+     ]
+    }
+   ]
+  },
+  {
+   "name": "session_registry",
+   "folder": "🗃️session-registry",
+   "doc": "🗃️ Session registry: the process-wide slots that keep one document instance's session across calls, the instance operation owner and the session itself.",
+   "segments": [
+    {
+     "lines": [
+      568,
+      900
+     ]
+    }
+   ]
+  },
+  {
+   "name": "instance_residency",
+   "folder": "🏘️instance-residency",
+   "doc": "🏘️ Instance residency: the per-object instance record text, its fingerprints and delta, the scene geometry fingerprint and the world mesh lane.",
+   "segments": [
+    {
+     "lines": [
+      905,
+      1283
+     ]
+    }
+   ]
+  }
+ ]
+}

@@ -34,6 +34,7 @@ semio-s-artifact-stdio-pptx-base-model = { workspace = true }
 semio-s-artifact-stdio-pptx-base-mutations = { workspace = true }
 
 [dev-dependencies]
+semio-framework-test-fixtures = { path = "../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-contract = { workspace = true, features = ["testing"] }
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 zip = { version = "6", default-features = false, features = ["deflate"] }

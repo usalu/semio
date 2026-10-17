@@ -100,7 +100,7 @@ export async function testBrowserDistribution(workspace: string, outputDirectory
       const client = await (await fetch(new URL(lifecycle.hmr.clientPath, url), { signal: AbortSignal.timeout(5000) })).text();
       assert.ok(client.includes("const hmrPort = null;"), "HMR must use the allocated HTTP listener");
       const token = client.match(/const wsToken = ("[^"]+");/); assert.ok(token, "Vite client must expose its HMR token");
-      const websocketUrl = new URL(url); websocketUrl.protocol = "ws:"; websocketUrl.searchParams.set("token", JSON.parse(token[1]));
+      const websocketUrl = new URL(url); websocketUrl.protocol = "ws:"; websocketUrl.searchParams.set("token", JSON.parse((()=>{const value=token[1];assert.ok(value,"Actual Vite HMR token capture required");return value;})()));
       socket = new WebSocket(websocketUrl, lifecycle.hmr.protocol);
       const messages: { type: string }[] = [];
       socket.addEventListener("message", message => messages.push(JSON.parse(String(message.data))));

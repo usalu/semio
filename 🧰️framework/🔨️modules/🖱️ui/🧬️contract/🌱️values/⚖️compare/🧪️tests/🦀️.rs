@@ -1,6 +1,7 @@
 use super::*;
+use semio_framework_test_fixtures::fixture_text;
 use std::mem::size_of;
-fn fixture()->serde_json::Value{serde_json::from_str(include_str!("../../../⚖️compare/🧪️tests/🧫️fixtures/🔣️.json")).unwrap()}
+fn fixture()->serde_json::Value{serde_json::from_str(fixture_text!("../../../⚖️compare/🧪️tests/🧫️fixtures/🔣️.json")).unwrap()}
 #[test]
 fn retained_component_compare_frame_storage_matches_exact_bounded_domains() {
     let fixture = fixture();
@@ -22,5 +23,4 @@ fn retained_component_compare_frame_storage_matches_exact_bounded_domains() {
     for position in [2 * UI_TEXT_MAX_BYTES + 1, usize::from(u16::MAX) + 1, usize::MAX] {
         assert!(ValueFrame::checked_position(position).is_err());
     }
-    eprintln!("[DEBUG] comparison-frame bytes={} depth={}",size_of::<ValueFrame>(),UI_VALUE_NESTING_DEPTH);
 }

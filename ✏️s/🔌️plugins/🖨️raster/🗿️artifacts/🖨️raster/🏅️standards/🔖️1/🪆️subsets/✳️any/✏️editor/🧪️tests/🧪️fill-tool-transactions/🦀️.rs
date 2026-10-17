@@ -4,8 +4,8 @@
 //! leaf's seed, tolerance and colour through the real `historyEdit*` verbs, and the overwritten head equals the fresh fold
 //! of the edited log — the region re-flooded and re-filled on its base by the one shared engine.
 
-use super::unit_tests::context::{app, dispatch, raster_view_state, RasterAppFixture};
-use super::*;
+use crate::unit_tests::context::{app, dispatch, raster_view_state, RasterAppFixture};
+use semio_s_artifact_raster_raster_editor::*;
 use semio_s_artifact_raster_raster_mutations::text::apply_raster_mutation;
 use semio_s_artifact_raster_raster_mutations::RasterMutation;
 use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
@@ -53,7 +53,7 @@ pub async fn blank_layer(app: &mut RasterAppFixture) -> String {
     let before = app.snapshot().expect("boot head");
     let known: Vec<String> = semio_s_artifact_raster_raster_model::flatten_raster_layers(&before.layers).iter().map(|layer| semio_s_artifact_raster_raster_model::layer_node_id(layer).to_string()).collect();
     retire(before);
-    dispatch(app, RasterCommand::AddLayer(crate::commands::add_layer::AddLayer { kind: "pixel".into() })).await;
+    dispatch(app, RasterCommand::AddLayer(semio_s_artifact_raster_raster_editor::commands::add_layer::AddLayer { kind: "pixel".into() })).await;
     let after = app.snapshot().expect("head with the new layer");
     let id = semio_s_artifact_raster_raster_model::flatten_raster_layers(&after.layers).iter().map(|layer| semio_s_artifact_raster_raster_model::layer_node_id(layer).to_string()).find(|id| !known.contains(id)).expect("the added layer");
     retire(after);
@@ -66,13 +66,13 @@ async fn a_bucket_click_is_one_transaction_whose_seed_tolerance_and_colour_time_
     let layer = blank_layer(&mut app).await;
     let base = app.snapshot().expect("the base the fill lands on");
     let rows_before = document_rows(&mut app).await.len();
-    dispatch(&mut app, RasterCommand::SetFillTolerance(crate::commands::set_fill_tolerance::SetFillTolerance { value: 7 })).await;
+    dispatch(&mut app, RasterCommand::SetFillTolerance(semio_s_artifact_raster_raster_editor::commands::set_fill_tolerance::SetFillTolerance { value: 7 })).await;
     assert_eq!(document_rows(&mut app).await.len(), rows_before, "the session tolerance is never a history row");
-    dispatch(&mut app, RasterCommand::FillRegion(crate::commands::fill_region::FillRegion { layer_id: layer.clone(), x: 1.25, y: 2.75 })).await;
+    dispatch(&mut app, RasterCommand::FillRegion(semio_s_artifact_raster_raster_editor::commands::fill_region::FillRegion { layer_id: layer.clone(), x: 1.25, y: 2.75 })).await;
     let rows = document_rows(&mut app).await;
     assert_eq!(rows.len(), rows_before + 1, "one click, one row");
     let row = rows.last().expect("the bucket row");
-    assert_eq!(row.transaction.as_ref().map(|transaction| transaction.tool.as_str()), Some(crate::commands::fill_region::RASTER_FILL_TOOL_ID), "the row is the bucket's tool transaction");
+    assert_eq!(row.transaction.as_ref().map(|transaction| transaction.tool.as_str()), Some(semio_s_artifact_raster_raster_editor::commands::fill_region::RASTER_FILL_TOOL_ID), "the row is the bucket's tool transaction");
     assert_eq!(row.mutations.len(), 1);
     assert!(row.mutations[0].editable, "the fill-region leaf is editable");
     let fill = row.mutations[0].mutation_id.clone();

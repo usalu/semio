@@ -1,4 +1,9 @@
-use super::*;
+use semio_framework_ui_locale::Locale;
+#[allow(unused_imports)]
+use semio_framework_ui_locale::LabelText;
+#[allow(unused_imports)]
+use semio_framework_ui_locale::LocalizedLabel;
+use crate::editor::puzzle2d::terminology::*;
 use semio_framework_ui_locale::Terminology;
 
 #[test]

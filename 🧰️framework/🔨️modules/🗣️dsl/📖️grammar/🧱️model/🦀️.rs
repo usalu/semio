@@ -1,6 +1,6 @@
 //! 🧱️ The `.grammar` / `.protocol` data model: dialects, productions, symbols, framing, blocks, primitives and the walk trace.
 
-use crate::LexOptions;
+use semio_framework_dsl_lexical::lexer::LexOptions;
 
 //#region 🔖️Model
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -254,3 +254,17 @@ pub struct ProtocolMismatch {
     pub message: String,
 }
 //#endregion 📡️ProtocolModel
+
+/// 📏 The fixed byte width of a primitive, or none when its width depends on the data.
+pub fn prim_fixed_width(prim: &Prim) -> Option<usize> {
+    match prim {
+        Prim::U8 => Some(1),
+        Prim::U16 | Prim::U16Be => Some(2),
+        Prim::U32 | Prim::I32 | Prim::F32 | Prim::U32Be | Prim::I32Be | Prim::F32Be => Some(4),
+        Prim::U64 | Prim::I64 | Prim::F64 | Prim::U64Be | Prim::I64Be | Prim::F64Be => Some(8),
+        Prim::Fixed(n) => Some(*n),
+        Prim::MarkerScan(_) => Some(1),
+        Prim::Endian(arms) => Some(arms.first().map_or(0, |(k, _)| k.len())),
+        Prim::Varint | Prim::Zigzag | Prim::Tag | Prim::Bytes | Prim::Utf8 | Prim::Array(_, _) | Prim::Ref(_) => None,
+    }
+}

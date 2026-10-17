@@ -1,6 +1,6 @@
 //! 🏳️ Direct text codec for `set-output-intent`.
 
-use crate::standards::v1_7::subsets::vt::schema::mutations::SetOutputIntent;
+use crate::standards::v1_7::subsets::vt::schema::mutations::set_output_intent::SetOutputIntent;
 
 //#region 🔖️Identity
 pub const OPCODE: &str = "set-output-intent";
@@ -20,7 +20,5 @@ pub fn parse(text: &str) -> Result<SetOutputIntent, String> {
 //#endregion 🔖️Codec
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

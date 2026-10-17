@@ -1,4 +1,3 @@
 //! 🏠️ Host services for the artifact.
 
-#[path="💡️inferences/🦀️.rs"]
-pub mod inferences;
+pub use semio_s_artifact_wfc_bitmap_inferences::host::inferences;

@@ -21,19 +21,19 @@ impl DocumentBrowserActorByteLengthV1 {
     }
 }
 
-impl crate::ToValue for DocumentBrowserActorByteLengthV1 {
-    fn to_value(&self) -> crate::DslValue {
-        crate::DslValue::uint(self.0)
+impl semio_framework_value::ToValue for DocumentBrowserActorByteLengthV1 {
+    fn to_value(&self) -> semio_framework_value::DslValue {
+        semio_framework_value::DslValue::uint(self.0)
     }
 }
 
-impl crate::FromValue for DocumentBrowserActorByteLengthV1 {
-    fn from_value(value: crate::DslValue) -> Result<Self, crate::ValueError> {
+impl semio_framework_value::FromValue for DocumentBrowserActorByteLengthV1 {
+    fn from_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
         let number = value
             .as_f64()
             .filter(|number| number.is_finite() && number.fract() == 0.0 && *number >= 1.0 && *number <= DOCUMENT_BROWSER_ACTOR_MAX_BYTES as f64)
-            .ok_or_else(|| crate::ValueError::new(protocol::value::ValueRefusalKind::InvalidValue,"expected an exact bounded browser actor length"))?;
-        Self::new(number as u64).map_err(|_| crate::ValueError::new(protocol::value::ValueRefusalKind::InvalidValue,"invalid browser actor length"))
+            .ok_or_else(|| semio_framework_value::ValueError::new(protocol::value::ValueRefusalKind::InvalidValue,"expected an exact bounded browser actor length"))?;
+        Self::new(number as u64).map_err(|_| semio_framework_value::ValueError::new(protocol::value::ValueRefusalKind::InvalidValue,"invalid browser actor length"))
     }
 }
 

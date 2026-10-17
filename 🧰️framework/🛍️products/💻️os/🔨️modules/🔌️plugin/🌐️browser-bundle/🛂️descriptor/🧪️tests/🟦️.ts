@@ -20,6 +20,6 @@ test("actor exports derive from the owned WIT and independent JCO types",async()
  expect(expected).toEqual(corpus.expected);
  expect(ACTOR_COMPONENT_EXPORTS).toEqual(expected);
  expect(parseActorComponentExports(readFileSync(wit,"utf8"))).toEqual(expected);
- console.log("[DEBUG] actor contract: "+Object.keys(expected).length+" interfaces, JCO and native projection agree");
 });
-for(const row of corpus.cases)test("actor WIT projection "+Object.keys(row.expected).join(","),()=>expect(parseActorComponentExports(row.source)).toEqual(row.expected));
+const projection=(row:Readonly<Record<string,string[]|undefined>>):Record<string,string[]>=>{const present:Record<string,string[]>={};for(const [name,exports] of Object.entries(row))if(exports!==undefined)present[name]=exports;return present;};
+for(const row of corpus.cases)test("actor WIT projection "+Object.keys(row.expected).join(","),()=>expect(parseActorComponentExports(row.source)).toEqual(projection(row.expected)));

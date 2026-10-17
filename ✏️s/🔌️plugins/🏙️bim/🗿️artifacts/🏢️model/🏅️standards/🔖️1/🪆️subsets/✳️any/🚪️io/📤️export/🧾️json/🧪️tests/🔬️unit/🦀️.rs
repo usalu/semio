@@ -1,5 +1,10 @@
 use super::codec::{items_of, member, number_of, read_value, text_of};
-use super::*;
+use super::{JSON_DIALECT, ModelIntoJson, adjudicated_json, codec, diagnostics_json, finding_value, severity_token};
+use crate::standards::v1::subsets::any::schema::inferences::diagnostics::Diagnostic;
+use semio_s_artifact_stdio_json::schema::snapshot::JsonValue;
+use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
+use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_framework_os_kernel::io::io_mechanism::Serializer;
 use crate::standards::v1::subsets::any::io::text::inferences::diagnostics::table_json;
 use crate::standards::v1::subsets::any::schema::inferences::diagnostics::DiagnosticCode;
 use protocol::Inference;

@@ -14,10 +14,10 @@ class OriginalReceivingSource extends BundleScript{
 }
 /** 🦀️ Original mounted JSON receiving laws under the mandatory caller process. */
 class OriginalReceivingNative extends OriginalReceivingSource{
- async run(args:string[]):Promise<void>{await super.run(args);await runArtifactRustTests("semio-s-artifact-stdio-json",this.repoRoot,["--lib","json_original_receiving_","--no-fail-fast"],this.invocation.control);}
+ async run(args:string[]):Promise<void>{await super.run(args);await runArtifactRustTests("semio-s-artifact-stdio-json",this.repoRoot,["--lib","json_original_receiving_","--no-fail-fast"],this.invocation);}
 }
 /** 🧬️ Current owning original schema proof without source copies or fresh authority. */
 class NativeSchemaScript extends BundleScript{
- async run(args:string[]):Promise<void>{if(args.length)throw Error("native JSON schema accepts no arguments");await runArtifactRustTests("semio-s-artifact-stdio-json",this.repoRoot,["--lib","sqlite_snapshot_json_owned_record_identity_matches_handwritten_definition","--no-fail-fast"],this.invocation.control);}
+ async run(args:string[]):Promise<void>{if(args.length)throw Error("native JSON schema accepts no arguments");await runArtifactRustTests("semio-s-artifact-stdio-json",this.repoRoot,["--lib","sqlite_snapshot_json_owned_record_identity_matches_handwritten_definition","--no-fail-fast"],this.invocation);}
 }
-await runArtifactRustPackageMain(import.meta.dir,"semio-s-artifact-stdio-json",{commands:{"native-schema-check":NativeSchemaScript,"test-original-receiving-source":OriginalReceivingSource,"test-original-receiving-native":OriginalReceivingNative},snapshotSqliteTests:["../../🏅️standards/🔖️rfc8259/🪆️subsets/🌍️geojson/🧬️schema/🧪️tests/🪶️sqlite/🟦️.ts", "../../🏅️standards/🔖️rfc8259/🪆️subsets/🛜️i-json/🧬️schema/🧪️tests/🪶️sqlite/🟦️.ts","../../🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"]});
+await runArtifactRustPackageMain(import.meta.dir,"semio-s-artifact-stdio-json",{ packages: ["semio-s-artifact-stdio-json", "semio-s-artifact-stdio-json-mutations", "semio-s-artifact-stdio-json-mutations-2", "semio-s-artifact-stdio-json-number", "semio-s-artifact-stdio-json-schema", "semio-s-artifact-stdio-json-schema-2", "semio-s-artifact-stdio-json-tests"],commands:{"native-schema-check":NativeSchemaScript,"test-original-receiving-source":OriginalReceivingSource,"test-original-receiving-native":OriginalReceivingNative},snapshotSqliteTests:["../../🏅️standards/🔖️rfc8259/🪆️subsets/🌍️geojson/🧬️schema/🧪️tests/🪶️sqlite/🟦️.ts", "../../🏅️standards/🔖️rfc8259/🪆️subsets/🛜️i-json/🧬️schema/🧪️tests/🪶️sqlite/🟦️.ts","../../🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"]});

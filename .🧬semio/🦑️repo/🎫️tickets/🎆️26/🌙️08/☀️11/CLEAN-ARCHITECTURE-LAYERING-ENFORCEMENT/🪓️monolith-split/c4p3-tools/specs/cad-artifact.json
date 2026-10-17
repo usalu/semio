@@ -1,0 +1,36 @@
+{
+ "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🗿️artifact/🟦️.ts",
+ "importers": "auto",
+ "children": [
+  {
+   "dir": "📨️interaction-model",
+   "doc": "/** 📨️ CAD editor artifact: the model document, the interaction messages and responses, the document history, the interaction snapshot and the runtime options. */",
+   "lines": [
+    [
+     29,
+     177
+    ]
+   ]
+  },
+  {
+   "dir": "📚️interaction-catalog",
+   "doc": "/** 📚️ CAD editor artifact: the selection operation catalog, the shipped spatial interaction catalog, the interaction registry and the compiled interaction builders. */",
+   "lines": [
+    [
+     900,
+     1067
+    ]
+   ]
+  },
+  {
+   "dir": "🏃️interaction-runtime",
+   "doc": "/** 🏃️ CAD editor artifact: the pointer context helpers and the interaction runtime state machine with its factory. */",
+   "lines": [
+    [
+     179,
+     865
+    ]
+   ]
+  }
+ ]
+}

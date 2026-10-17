@@ -1,6 +1,6 @@
 //! 🛬️ Direct text codec for `remove-launch-action`.
 
-use crate::standards::v1_7::subsets::x::schema::mutations::RemoveLaunchAction;
+use crate::standards::v1_7::subsets::x::schema::mutations::remove_launch_action::RemoveLaunchAction;
 
 //#region 🔖️Identity
 pub const OPCODE: &str = "remove-launch-action";
@@ -21,7 +21,5 @@ pub fn parse(text: &str) -> Result<RemoveLaunchAction, String> {
 //#endregion 🔖️Codec
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

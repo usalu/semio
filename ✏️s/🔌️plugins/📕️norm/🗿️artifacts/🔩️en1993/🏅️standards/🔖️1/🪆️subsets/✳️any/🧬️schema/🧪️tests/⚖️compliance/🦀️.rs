@@ -1,5 +1,6 @@
 //! ⚖️ EN 1993 compliance numeric worked examples (SI).
 
+use semio_framework_test_fixtures::fixture_path;
 use semio_s_plugin_norm_compliance::{AnnexChoice, CheckStatus};
 use crate::{check_full_steel_structure, part_1_1, part_1_2, part_1_8, part_1_9, AnnexParams};
 use semio_s_artifact_norm_en1993_model::En1993Snapshot;
@@ -243,8 +244,7 @@ fn slip_resistant_category_c_produces_slip_check() {
 fn python_oracle_and_jsonschema_agree_within_half_percent() {
     use std::path::PathBuf;
     use std::process::Command;
-    let any = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../🏅️standards/🔖️1/🪆️subsets/✳️any")
+    let any = fixture_path!("../../../../..")
         .canonicalize()
         .expect("family any root");
     let oracle = any.join("🔮️oracles/⚖️compliance/🐍️.py");

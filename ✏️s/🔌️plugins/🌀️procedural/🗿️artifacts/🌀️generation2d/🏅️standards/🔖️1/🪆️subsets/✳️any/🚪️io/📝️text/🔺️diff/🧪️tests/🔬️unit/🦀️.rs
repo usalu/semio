@@ -23,7 +23,6 @@ fn generation2d_original_diff_record_preserves_sparse_domain_fields_and_serde_or
             assert_eq!(record.fields.contains_key(&id), !case["value"][key].is_null());
         }
         semio_framework_dsl_record::native_encoding::retire_field(semio_framework_dsl_record::FieldValue::Record(record));
-        eprintln!("[DEBUG] original generation2d diff record case={} exactSparseFields=true textBinary=true independentSerdeJson=true", case["id"]);
     }
     assert!(Generation2dDiff::from_value(semio_framework_value::DslValue::Object(vec![("widgets".into(), semio_framework_value::DslValue::String("wrong field shape".into()))])).is_err());
 }

@@ -25,7 +25,7 @@ class DeletionProofScript extends BundleScript {
     const members = new Map<string, Owner>();
     const owner = (manifestPath: string): Owner => {
       const scope = cargoWorkspaceForManifest(this.repoRoot, relative(this.repoRoot, manifestPath).split("\\").join("/"));
-      return { path: dirname(manifestPath), manifest: Bun.TOML.parse(readFileSync(manifestPath, "utf8")), workspace: Bun.TOML.parse(readFileSync(resolve(this.repoRoot, scope.manifest), "utf8")).workspace, directory: resolve(this.repoRoot, scope.directory) };
+      return { path: dirname(manifestPath), manifest: Bun.TOML.parse(readFileSync(manifestPath, "utf8")), workspace: Object.fromEntries(Object.entries(Bun.TOML.parse(readFileSync(resolve(this.repoRoot, scope.manifest), "utf8")))).workspace, directory: resolve(this.repoRoot, scope.directory) };
     };
     for (const row of cargoRepositoryPackages(this.repoRoot)) members.set(row.name, owner(resolve(this.repoRoot, row.manifest)));
     const closure = new Map<string, Owner>();

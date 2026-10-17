@@ -27,7 +27,7 @@ use std::collections::BTreeMap;
 /// 🌉 Structural walk of `EquationNode` → `(variable name, degree -> integer coefficient)` — `None`
 /// the instant the tree leaves this wave's scope (rational coefficient, second variable, non-integer
 /// exponent, or any `Fn`/`Piecewise`/etc node — `EquationNode` can't even represent those yet).
-fn extract_integer_polynomial(node: &EquationNode) -> Option<(String, BTreeMap<u32, number::Integer>)> {
+pub fn extract_integer_polynomial(node: &EquationNode) -> Option<(String, BTreeMap<u32, number::Integer>)> {
     fn walk(node: &EquationNode, var: &mut Option<String>) -> Option<BTreeMap<u32, number::Integer>> {
         match &node.kind {
             EquationNodeKind::Integer { lexeme } => Some(BTreeMap::from([(0u32, lexeme.parse().ok()?)])),

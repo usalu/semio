@@ -7,6 +7,7 @@ use semio_framework::kernel::RequestOutcome;
 use semio_framework_plugin_actor_host::requests;
 use semio_framework_plugin_reactor_turn as turn;
 
+#[doc(hidden)]
 #[cfg(test)]
 #[path="../../../../../⚛️reactor/🔄️turn/📥️receiving/📦️completed/🧪️tests/🦀️.rs"]
-mod tests;
+pub mod tests;

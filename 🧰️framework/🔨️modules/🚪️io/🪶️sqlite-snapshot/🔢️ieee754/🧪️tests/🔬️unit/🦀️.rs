@@ -1,6 +1,7 @@
 //! 🔢️ Authored IEEE 754 field tests of the artifact snapshot reader.
 use super::*;
 use super::super::{SqliteDatabaseLimits,export_sqlite_database,import_sqlite_database};
+use semio_framework_test_fixtures::fixture_text;
 const SQL:&str="CREATE TABLE typed_scalar (id INTEGER PRIMARY KEY, value64 REAL, value32 REAL, value64_ieee754_bits INTEGER, value64_numeric_class TEXT, value32_ieee754_bits INTEGER, value32_numeric_class TEXT)";
 const COLUMNS:&[FloatColumn]=&[FloatColumn::Binary64(1),FloatColumn::Binary32(2)];
 fn bits()->(Vec<u64>,Vec<u32>){(vec![0,0x8000000000000000,1,0x000fffffffffffff,0x7ff0000000000000,0xfff0000000000000,0x7ff8000000000011,0x7ff0000000000007],vec![0,0x80000000,1,0x007fffff,0x7f800000,0xff800000,0x7fc00011,0x7f800007])}
@@ -14,14 +15,13 @@ fn authored_ieee_fields_reject_inconsistent_class_bits_query_and_optional_presen
 fn authored_ieee_integer_queries_reject_rounding_against_independent_sqlite(){
     use std::io::Write;
     use std::process::{Command,Stdio};
-    let input=include_str!("../🧫️fixtures/🎯️integer-query.json");
+    let input=fixture_text!("../../../../🔢️ieee754/🧪️tests/🧫️fixtures/🎯️integer-query.json");
     let script="import{Database}from'bun:sqlite';const{cases}=await Bun.stdin.json(),db=new Database(':memory:',{safeIntegers:true}),view=new DataView(new ArrayBuffer(8));db.run('CREATE TABLE exact_integer(id INTEGER PRIMARY KEY,value)');for(const[i,c]of cases.entries()){const value=BigInt(c.integer);db.run('INSERT INTO exact_integer VALUES(?,?)',[i+1,value]);if(db.query('SELECT value FROM exact_integer WHERE id=?').get(i+1).value!==value)throw Error('integer identity');view.setBigUint64(0,BigInt('0x'+c.binary64Bits));if((BigInt(view.getFloat64(0))===value)!==c.accept64)throw Error('binary64 oracle');view.setUint32(0,parseInt(c.binary32Bits,16));if((BigInt(view.getFloat32(0))===value)!==c.accept32)throw Error('binary32 oracle');}db.close();await Bun.write(Bun.stdout,String(cases.length));";
     let mut child=Command::new("bun").args(["-e",script]).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();
     child.stdin.take().unwrap().write_all(input.as_bytes()).unwrap();
     let output=child.wait_with_output().unwrap();
     assert!(output.status.success(),"{}",String::from_utf8_lossy(&output.stderr));
     assert_eq!(String::from_utf8_lossy(&output.stdout).trim(),"8");
-    eprintln!("[DEBUG] Independent SQLite and DataView validated eight exact integer query cases");
     let fixture:serde_json::Value=serde_json::from_str(input).unwrap();
     for case in fixture["cases"].as_array().unwrap(){
         let integer=case["integer"].as_str().unwrap().parse::<i64>().unwrap();

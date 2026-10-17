@@ -143,8 +143,8 @@ fn every_challenge_deals_its_own_sheet_and_earns_its_own_points() {
 
 /// 🧾️ The receipts the proctor serving `data` keeps for `learner`: one per accepted command, none per refusal.
 fn receipts(data: &Path, learner: &str) -> u64 {
-    let database = proctor::storage::Database::open_read_only(data).expect("a read-only handle beside the serving proctor");
-    database.erasure(&[proctor::actors::learner_key(TENANT, learner)]).expect("the rows of the learner").actors[0].receipts
+    let database = teaching_proctor_base::storage::Database::open_read_only(data).expect("a read-only handle beside the serving proctor");
+    database.erasure(&[teaching_proctor_domain::actors::learner_key(TENANT, learner)]).expect("the rows of the learner").actors[0].receipts
 }
 
 /// 📐️ The concordance score of authored `values` in ascending order when only the pairs of items `known` keep their

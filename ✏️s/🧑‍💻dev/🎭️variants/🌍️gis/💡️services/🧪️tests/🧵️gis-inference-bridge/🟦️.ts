@@ -20,15 +20,15 @@ import { mkdtempSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
-import { INFERENCE_JOB_TOOLS, approvalRequestSchema, proveMcpInferenceBridgeFixture, proveOsMirrorsHubApprovalAuthority } from "../../../../../../🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🌉️mcp/🧪️tests/🔬️oracle/🟦️.ts";
-import { isValidJsonSchema2020_12 } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧬️schema-validation/🟦️.ts";
-import { requireMcpBinary, spawnRawMcp, type RawMcpProcess } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🟦️.ts";
+import { INFERENCE_JOB_TOOLS, approvalRequestSchema, proveMcpInferenceBridgeFixture, proveOsMirrorsHubApprovalAuthority } from "@semio-tech/gis-gismap-js/inference/mcp/testing/oracle";
+import { isValidJsonSchema2020_12 } from "@semio-tech/framework-os-mcp/schema-validation";
+import { requireMcpBinary, spawnRawMcp, type RawMcpProcess } from "@semio-tech/framework-os-mcp";
 import { getWorkspaceRoot } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 
 const repoRoot = getWorkspaceRoot();
 const hostManifest="🌎️hub/🧩️compositions/🌍️gis/📦️packages/🦀️rust/Cargo.toml";
 const host=parsePlaygroundsForCrate(resolve(repoRoot,hostManifest),"gis",hostManifest.slice(0,-"/Cargo.toml".length),repoRoot).find(row=>row.variant==="gis2d")?.mcpHost;
-const selected=playgroundNativeHostArtifactV1(repoRoot,host,"dev");
+const selected=playgroundNativeHostArtifactV1(repoRoot,host,"prototype");
 if(!selected)throw Error("GIS owner MCP executable must be declared by its real playground composition");
 const bin = requireMcpBinary(repoRoot,{...process.env,SEMIO_OS_MCP_BIN:selected});
 

@@ -1,7 +1,6 @@
 //! ✂️ Authoritative PDF/A mutation for removing an attached file relationship.
 
-use super::set_af_relationship::SetAfRelationship;
-use super::PdfAMutation;
+use crate::standards::v1_7::subsets::a::schema::mutations::set_af_relationship::SetAfRelationship;
 use crate::standards::v1_7::subsets::base::schema::conformance_support as support;
 use crate::standards::v1_7::subsets::base::schema::diff::{self, PdfDiff};
 use crate::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot;
@@ -16,7 +15,10 @@ pub struct RemoveAfRelationship {
     pub file_name: String,
 }
 
-impl MutationKind<PdfSnapshot, PdfAMutation> for RemoveAfRelationship {
+impl<Op> MutationKind<PdfSnapshot, Op> for RemoveAfRelationship
+where
+    Op: protocol::Mutation<PdfSnapshot, Diff = PdfDiff> + From<RemoveAfRelationship> + From<crate::standards::v1_7::subsets::a::schema::mutations::set_af_relationship::SetAfRelationship>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "remove", entity: "af-relationship", kind: "remove-af-relationship", record: "Remove" };
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
@@ -24,10 +26,10 @@ impl MutationKind<PdfSnapshot, PdfAMutation> for RemoveAfRelationship {
         MutationOutcome::new(diff::graph_edit(rows))
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfAMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         Ok({
             let Some(id) = support::file_spec_named(base, &self.file_name) else { return Ok(Vec::new()) };
-            support::object(base, id).and_then(|value| support::dict_name(value, "AFRelationship")).map(|relationship| PdfAMutation::SetAfRelationship(SetAfRelationship { file_name: self.file_name.clone(), relationship: relationship.to_string(), entry_index: support::entry_position(base, id, "AFRelationship") })).into_iter().collect()
+            support::object(base, id).and_then(|value| support::dict_name(value, "AFRelationship")).map(|relationship| Op::from(SetAfRelationship { file_name: self.file_name.clone(), relationship: relationship.to_string(), entry_index: support::entry_position(base, id, "AFRelationship") })).into_iter().collect()
         })
     }
 
@@ -42,7 +44,5 @@ impl MutationKind<PdfSnapshot, PdfAMutation> for RemoveAfRelationship {
 //#endregion 🔖️Mutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

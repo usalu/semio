@@ -14,7 +14,7 @@ test("fill editing preserves stops, geometry, alpha and source on rejection", ()
     if (entry.error) expect(() => editFill(source, entry.edit as FillEdit)).toThrow();
     else {
       const result = editFill(source, entry.edit as FillEdit);
-      expect<unknown>(result).toEqual(entry.after);
+      expect<typeof entry.after>(result).toEqual(entry.after);
       if (entry.edit.kind === "addStop" && source && "stops" in source && result && "stops" in result) {
         const [left,right] = source.stops;
         const color = new Vector4(...left!.color).lerp(new Vector4(...right!.color), (entry.edit.offset!-left!.offset)/(right!.offset-left!.offset)).toArray();
@@ -34,7 +34,7 @@ test("fill editing preserves stops, geometry, alpha and source on rejection", ()
         expect(result).toEqual(oracle.fill);
       }
     }
-    expect<unknown>(source).toEqual(entry.before);
+    expect<typeof entry.before>(source).toEqual(entry.before);
   }
 });
 
@@ -78,7 +78,7 @@ test("prepared fill sampling matches shared cases and independent SVG pixels",as
         compared++;
       }
     }
-    expect<unknown>(fill).toEqual(entry.fill);
+    expect<typeof entry.fill>(fill).toEqual(entry.fill);
   }
 });
 
@@ -134,5 +134,4 @@ test("prepared paint retirement drains actual copied stop owners and composes th
   const sample=source.samples![0]!,[x,y]=sample.point,pixel=await sharp(Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="1" height="1" viewBox="${x} ${y} 1 1">${referencePaint(fill,[x!,y!,1,1])}</svg>`)).ensureAlpha().raw().toBuffer(),expected=new PreparedFill(fill).sample([x!+.5,y!+.5]);expect(Math.abs(pixel[3]!/255-expected[3])).toBeLessThanOrEqual(2/255);for(let c=0;c<3;c++)expect(Math.abs(pixel[c]!*pixel[3]!/255-expected[c]!*expected[3]*255)).toBeLessThanOrEqual(2);comparisons++;
   if(fill.kind!=="solid"){const ramp=new GradientRamp(fill.stops),color=ramp.sample(.5),owner=ramp.intoRetirement();expect(()=>ramp.sample(.5)).toThrow(/transferred/);expect(()=>ramp.constantColor()).toThrow(/transferred/);expect(()=>ramp.intoRetirement()).toThrow(/transferred/);let work=0;for(let at=0;at<=row.work.ramp.typescript;at++){const p=owner.advance(grant);expect(validProgress(p)).toBe(true);expect(p.work-work).toBeLessThanOrEqual(grant);work=p.work;if(p.done)break;}expect(work).toBe(row.work.ramp.typescript);expect(owner.terminalIsEmpty()).toBe(true);expect(color).toEqual(new GradientRamp(fill.stops).sample(.5));}
  }
- process.stderr.write(`[DEBUG] Actual paint retirement: ${comparisons} neutral/grant SVG comparisons; copied stop owners drained through genuine ramp composition, including 4096 stops\n`);
 });

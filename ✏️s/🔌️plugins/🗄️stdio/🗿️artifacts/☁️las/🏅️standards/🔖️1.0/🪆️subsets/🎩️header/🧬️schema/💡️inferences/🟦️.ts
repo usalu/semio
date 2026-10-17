@@ -33,6 +33,10 @@ type stdioLas10HeaderInferenceGuardSizeBounds = { readonly minItems?: number; re
 
 export const stdioLas10HeaderInferenceGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : stdioLas10HeaderInferenceGuardReject(at, "value is not an object");
+export const stdioLas10HeaderInferenceGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) stdioLas10HeaderInferenceGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const stdioLas10HeaderInferenceGuardArray = (value: unknown, at: string, bounds: stdioLas10HeaderInferenceGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return stdioLas10HeaderInferenceGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) stdioLas10HeaderInferenceGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -63,14 +67,14 @@ export const stdioLas10HeaderInferenceGuardConstant = <T extends string | number
 //#endregion 🚪️Parsers
 
 export function parseLasInference(value: unknown, at = "$"): LasInference {
-  const row = stdioLas10HeaderInferenceGuardObject(value, at);
+  const row = stdioLas10HeaderInferenceGuardClosed(stdioLas10HeaderInferenceGuardObject(value, at), at, ["bounds"]);
   return {
     bounds: parseLasBounds(row["bounds"], `${at}.bounds`),
   };
 }
 
 export function parseLasBounds(value: unknown, at = "$"): LasBounds {
-  const row = stdioLas10HeaderInferenceGuardObject(value, at);
+  const row = stdioLas10HeaderInferenceGuardClosed(stdioLas10HeaderInferenceGuardObject(value, at), at, ["minX", "minY", "minZ", "maxX", "maxY", "maxZ", "pointCount"]);
   return {
     minX: stdioLas10HeaderInferenceGuardNumber(row["minX"], `${at}.minX`),
     minY: stdioLas10HeaderInferenceGuardNumber(row["minY"], `${at}.minY`),

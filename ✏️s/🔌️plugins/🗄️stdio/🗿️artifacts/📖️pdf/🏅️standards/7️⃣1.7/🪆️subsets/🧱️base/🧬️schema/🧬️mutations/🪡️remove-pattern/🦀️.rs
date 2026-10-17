@@ -1,6 +1,5 @@
 //! 🪡️ Authoritative PDF mutation payload, diff, inverse, and tests for `remove-pattern`.
 
-use super::PdfMutation;
 use crate::standards::v1_7::subsets::base::schema::diff::{self, PdfDiff};
 use crate::standards::v1_7::subsets::base::schema::snapshot::*;
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
@@ -14,7 +13,10 @@ pub struct RemovePattern {
     pub id: String,
 }
 
-impl MutationKind<PdfSnapshot, PdfMutation> for RemovePattern {
+impl<Op> MutationKind<PdfSnapshot, Op> for RemovePattern
+where
+    Op: protocol::Mutation<PdfSnapshot, Diff = PdfDiff> + From<RemovePattern> + From<crate::standards::v1_7::subsets::base::schema::mutations::set_pattern::SetPattern>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "remove", entity: "pattern", kind: "remove-pattern", record: "Remove" };
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
@@ -22,10 +24,10 @@ impl MutationKind<PdfSnapshot, PdfMutation> for RemovePattern {
         MutationOutcome::new(diff::diff_remove_pattern(base, &self.id))
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
         let _ = base;
-        base.patterns.iter().position(|item| item.id == self.id).map(|index| PdfMutation::SetPattern(super::set_pattern::SetPattern { pattern: base.patterns[index].clone(), index: Some(index) })).into_iter().collect()
+        base.patterns.iter().position(|item| item.id == self.id).map(|index| Op::from(crate::standards::v1_7::subsets::base::schema::mutations::set_pattern::SetPattern { pattern: base.patterns[index].clone(), index: Some(index) })).into_iter().collect()
     
     })())
 }
@@ -42,8 +44,6 @@ impl MutationKind<PdfSnapshot, PdfMutation> for RemovePattern {
 //#endregion 🔖️Mutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
 

@@ -1,6 +1,6 @@
 //! 🪧️ Direct binary codec for `set-display-doc-title`.
 
-use crate::standards::v1_7::subsets::ua::schema::mutations::SetDisplayDocTitle;
+use crate::standards::v1_7::subsets::ua::schema::mutations::set_display_doc_title::SetDisplayDocTitle;
 
 //#region 🔖️Identity
 pub const TAG: u8 = 6;
@@ -21,7 +21,5 @@ pub fn decode(bytes: &[u8]) -> Result<SetDisplayDocTitle, String> {
 //#endregion 🔖️Codec
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

@@ -5,7 +5,6 @@
 #[path = "🎚️config/🦀️.rs"]
 pub mod config;
 
-use self::config::BimPlanWindowConfig;
 use crate::editor::bim::interaction::BIM_ELEMENT_DOMAIN;
 use crate::editor::bim::kit::{canvas_surface, meta_record, path, path_record, text_record, Paint, Rgba};
 use crate::editor::bim::terminology::BimLabels;
@@ -66,7 +65,7 @@ pub fn plan_views(snapshot: &ModelSnapshot) -> Vec<String> {
 }
 
 /// 🗺️ The plan view a plan window shows: its configured one while it still is a plan or ceiling plan view, else the first one in browser order; none when the model has no plan view.
-pub fn active_view(snapshot: &ModelSnapshot, config: &BimPlanWindowConfig) -> Option<String> {
+pub fn active_view(snapshot: &ModelSnapshot, config: &config::BimPlanWindowConfig) -> Option<String> {
     if snapshot.views.get(&config.view).is_some_and(|view| view.kind.is_plan() && view.storey.as_ref().is_some_and(|storey| snapshot.storeys.contains_key(storey))) {
         return Some(config.view.clone());
     }
@@ -74,7 +73,7 @@ pub fn active_view(snapshot: &ModelSnapshot, config: &BimPlanWindowConfig) -> Op
 }
 
 /// 🪜️ The storey a plan window cuts: the storey of its view, so every drawing tool places on it.
-pub fn active_storey(snapshot: &ModelSnapshot, config: &BimPlanWindowConfig) -> Option<String> {
+pub fn active_storey(snapshot: &ModelSnapshot, config: &config::BimPlanWindowConfig) -> Option<String> {
     active_view(snapshot, config).and_then(|id| snapshot.views.get(&id)).and_then(|view| view.storey.clone())
 }
 //#endregion 🔖️View
@@ -125,13 +124,13 @@ pub fn records(plan: &PlanLinework, selection: &[String], hover: &[String], util
 }
 
 /// 🗺️ Renders the plan window: the configured storey's linework, or an empty surface when the model has no storey or no linework yet.
-pub fn render(snapshot: &ModelSnapshot, inference: &ModelInference, config: &BimPlanWindowConfig, selection: &[String], hover: &[String], utility: &str, revision: u32, labels: &BimLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(snapshot: &ModelSnapshot, inference: &ModelInference, config: &config::BimPlanWindowConfig, selection: &[String], hover: &[String], utility: &str, revision: u32, labels: &BimLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     render_over(snapshot, inference, config, selection, hover, utility, revision, labels, &[])
 }
 
 /// 🗺️ [`render`] with the records of the authoring overlay (handles, snap markers, the gesture preview) painted last, over everything.
 #[allow(clippy::too_many_arguments)]
-pub fn render_over(snapshot: &ModelSnapshot, inference: &ModelInference, config: &BimPlanWindowConfig, selection: &[String], hover: &[String], utility: &str, revision: u32, labels: &BimLabels, overlay: &[DslValue]) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render_over(snapshot: &ModelSnapshot, inference: &ModelInference, config: &config::BimPlanWindowConfig, selection: &[String], hover: &[String], utility: &str, revision: u32, labels: &BimLabels, overlay: &[DslValue]) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let view = active_view(snapshot, config);
     let filtered = view.as_ref().and_then(|view| inference.view_linework.get(view)).map(|drawing| {
         let mut lines = drawing.lines.clone();

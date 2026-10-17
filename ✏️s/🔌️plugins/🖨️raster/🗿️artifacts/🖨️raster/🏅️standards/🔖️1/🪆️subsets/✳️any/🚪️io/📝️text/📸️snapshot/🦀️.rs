@@ -22,9 +22,6 @@ pub fn print_dsl(document: &RasterSnapshot) -> String {
 }
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests
 
 //#region 🚚️Carrier
@@ -76,8 +73,6 @@ impl pack::snapshot::ArtifactDsl for RasterSnapshot {
 #[allow(unused_imports)]
 mod mutations_codec {
 use super::*;
-use crate::snapshot::RasterSnapshot;
-
 use crate::snapshot::RasterSnapshot;
 
 

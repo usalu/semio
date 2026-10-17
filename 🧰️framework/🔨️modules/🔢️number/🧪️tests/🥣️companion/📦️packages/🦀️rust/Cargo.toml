@@ -1,0 +1,28 @@
+[package]
+workspace = "../../../../../.."
+name = "semio-framework-number-tests"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Companion tests of number: the unit laws of the algebra, primes, rational, interval, modular and traits modules against the public API"
+publish = false
+
+[package.metadata.semio]
+role = "framework"
+id = "number-tests"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-number = { path = "../../../../📦️packages/🦀️rust" }
+
+[dev-dependencies]

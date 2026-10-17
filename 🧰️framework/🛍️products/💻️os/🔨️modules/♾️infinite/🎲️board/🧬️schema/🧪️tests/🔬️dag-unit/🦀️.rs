@@ -3,12 +3,9 @@
 use semio_framework_os_infinite_board_schema::DagScreenHit;
 use semio_framework_pack_json::JsonMemberPolicy;
 use semio_framework_os_infinite_directed_presentation::*;
+use semio_framework_test_fixtures::fixture_text;
 
 /// 📖️ Reads one test input at run time (relative to the package manifest) so it does not count as an embedded compile input.
-fn read_static(path_from_manifest: &str) -> &'static str {
-    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(path_from_manifest);
-    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("test input {}: {error}", path.display())).into_boxed_str())
-}
 
 #[test]
 fn dag_node_spec_serde_round_trip_kinds() {
@@ -184,7 +181,7 @@ fn cluster_node_round_trips_serde() {
 #[test]
 fn screen_hit_projection_matches_neutral_and_serde_classification() {
     use DagScreenHit;
-    let law:serde_json::Value=serde_json::from_str(read_static("../../../🔌️ports/➡️directed/🕸️dag/🧪️tests/🔬️unit/🧫️screen-hit.json")).unwrap();
+    let law:serde_json::Value=serde_json::from_str(fixture_text!("../../../🔌️ports/➡️directed/🕸️dag/🧪️tests/🔬️unit/🧫️screen-hit.json")).unwrap();
     for case in law["cases"].as_array().unwrap(){
         let reference:DagScreenHit=serde_json::from_value(case["hit"].clone()).unwrap();
         let original:DagScreenHit=semio_framework_pack_json::from_json_str(&case["hit"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
@@ -194,5 +191,4 @@ fn screen_hit_projection_matches_neutral_and_serde_classification() {
         let emitted:serde_json::Value=serde_json::from_str(&semio_framework_pack_json::to_json_string(&original)).unwrap();
         assert_eq!(emitted,case["hit"]);
     }
-    eprintln!("[DEBUG] all neutral screen hit domains share the serde classification");
 }

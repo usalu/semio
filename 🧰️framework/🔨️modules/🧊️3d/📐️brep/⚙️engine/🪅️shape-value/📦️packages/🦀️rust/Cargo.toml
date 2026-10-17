@@ -1,0 +1,36 @@
+[package]
+workspace = "../../../../../../.."
+name = "semio-framework-3d-brep-shape-value"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Owned standalone B-Rep geometry value of the 3D kernel - a minimal body holding exactly the entity closure of one shape's roots, its root reference, every persistent label and a session-free tessellation job"
+
+[package.metadata.semio]
+role = "framework"
+id = "3d-brep-shape-value"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-3d-brep-curve.workspace = true
+semio-framework-3d-brep-kernel-contract.workspace = true
+semio-framework-3d-brep-representation.workspace = true
+semio-framework-3d-brep-surface.workspace = true
+semio-framework-3d-brep-tessellation.workspace = true
+semio-framework-3d-brep-vector.workspace = true
+semio-framework-hash.workspace = true
+semio-framework-pack-json = { path = "../../../../../../🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-framework-value.workspace = true
+semio-framework-value-derive.workspace = true
+
+[dev-dependencies]

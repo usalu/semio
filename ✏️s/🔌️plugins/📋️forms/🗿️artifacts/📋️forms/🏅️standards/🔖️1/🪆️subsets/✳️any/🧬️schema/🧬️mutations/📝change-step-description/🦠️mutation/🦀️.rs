@@ -3,7 +3,7 @@
 //! (whole-struct patch) into two granular semantic mutations — title is meaningfully set alone
 //! (`rename`), and so is description (`change`), so neither is an inseparable `update` facet.
 
-use crate::{FormMutation, FormsDiff, FormsSnapshot};
+use crate::{FormsDiff, FormsSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 
 //#region 🔖️Mutation
@@ -17,14 +17,17 @@ pub struct ChangeStepDescription {
     pub new_description: Option<String>,
 }
 
-impl MutationKind<FormsSnapshot, FormMutation> for ChangeStepDescription {
+impl<Op> MutationKind<FormsSnapshot, Op> for ChangeStepDescription
+where
+    Op: protocol::Mutation<FormsSnapshot, Diff = FormsDiff> + From<ChangeStepDescription>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "step-description", kind: "change-step-description", record: "ChangedStepDescription" };
     fn diff(&self, base: &FormsSnapshot) -> protocol::MutationOutcome<FormsDiff> {
-        super::diff::diff(self, base)
+        crate::standards::v1::subsets::any::schema::mutations::change_step_description::diff::diff(self, base)
     }
-    fn inverse(&self, base: &FormsSnapshot) -> Result<Vec<FormMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &FormsSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
-        super::inverse::inverse(self, base)?
+        crate::standards::v1::subsets::any::schema::mutations::change_step_description::inverse::inverse(self, base)?
     
     })
 }

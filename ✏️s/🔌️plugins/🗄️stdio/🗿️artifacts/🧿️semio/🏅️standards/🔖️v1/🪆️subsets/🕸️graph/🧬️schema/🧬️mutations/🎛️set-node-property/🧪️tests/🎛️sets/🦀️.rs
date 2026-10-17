@@ -7,12 +7,13 @@ use crate::schema::diff::SemioGraphDiff;
 use crate::schema::mutations::SemioGraphMutation;
 use crate::schema::snapshot::SemioGraphSnapshot;
 use protocol::Mutation;
+use semio_framework_test_fixtures::fixture_text;
 
-const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎛️set-node-property/🎛️sets/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎛️set-node-property/🎛️sets/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎛️set-node-property/🎛️sets/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎛️set-node-property/🎛️sets/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎛️set-node-property/🎛️sets/🎯️outcome/🔣️.json");
+static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎛️set-node-property/🎛️sets/📸️snapshot/⬅️before/🔣️.json"));
+static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎛️set-node-property/🎛️sets/📸️snapshot/➡️after/🔣️.json"));
+static MUTATION: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎛️set-node-property/🎛️sets/🦠️mutation/🔣️.json"));
+static DIFF: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎛️set-node-property/🎛️sets/🔺️diff/🔣️.json"));
+static OUTCOME: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎛️set-node-property/🎛️sets/🎯️outcome/🔣️.json"));
 
 fn decode<T: semio_framework_value::FromValue>(text: &str) -> T {
     semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("set-node-property fixture decodes")
@@ -27,17 +28,17 @@ fn json(text: &str) -> serde_json::Value {
 /// ▶️ The property takes the value in place; every other field, property and edge is untouched.
 #[semio_framework_async_macros::async_test]
 async fn sets_the_property_value_in_place() {
-    let base = snapshot(BEFORE);
-    let produced = protocol::apply_diff(decode::<SemioGraphMutation>(MUTATION).diff(&base).diff(), &base).expect("set-node-property applies to its committed before-snapshot");
-    assert_eq!(produced, snapshot(AFTER), "set-node-property/sets: applied state differs from the committed after-snapshot");
+    let base = snapshot((*BEFORE));
+    let produced = protocol::apply_diff(decode::<SemioGraphMutation>((*MUTATION)).diff(&base).diff(), &base).expect("set-node-property applies to its committed before-snapshot");
+    assert_eq!(produced, snapshot((*AFTER)), "set-node-property/sets: applied state differs from the committed after-snapshot");
     assert_eq!(produced.edges, base.edges, "setting a property must not disturb any edge");
 }
 
 /// ↩️ The undo is one `set-node-property` back to the base value, and it restores the before-snapshot.
 #[semio_framework_async_macros::async_test]
 async fn the_undo_sets_the_base_value_back() {
-    let base = snapshot(BEFORE);
-    let mutation: SemioGraphMutation = decode(MUTATION);
+    let base = snapshot((*BEFORE));
+    let mutation: SemioGraphMutation = decode((*MUTATION));
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     let undo = mutation.inverse(&base).expect("set-node-property inverse");
     assert!(matches!(undo.as_slice(), [SemioGraphMutation::SetNodeProperty(_)]), "{undo:?}");
@@ -51,21 +52,21 @@ async fn the_undo_sets_the_base_value_back() {
 /// 🔣️ Snapshots and the committed payload are canonical fixed points.
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
-    for text in [BEFORE, AFTER] {
+    for text in [(*BEFORE), (*AFTER)] {
         assert_eq!(json(&crate::io::text::snapshot::encode_semio_graph_snapshot_json(&snapshot(text)).expect("snapshot encodes")), json(text), "set-node-property/sets: a committed snapshot is not canonical");
     }
-    assert_eq!(json(&semio_framework_pack_json::to_json_string(&decode::<SemioGraphMutation>(MUTATION))), json(MUTATION), "set-node-property/sets: the committed mutation is not canonical");
+    assert_eq!(json(&semio_framework_pack_json::to_json_string(&decode::<SemioGraphMutation>((*MUTATION)))), json((*MUTATION)), "set-node-property/sets: the committed mutation is not canonical");
 }
 
 /// 🎯️ Declared `applied`: node and key exist and the value differs, so no guard fires; the committed diff is produced.
 #[semio_framework_async_macros::async_test]
 async fn declared_outcome_and_diff_hold() {
-    let base = snapshot(BEFORE);
-    assert_eq!(json(OUTCOME)["status"], "applied");
-    let outcome = <SemioGraphMutation as Mutation<SemioGraphSnapshot>>::diff(&decode(MUTATION), &base);
+    let base = snapshot((*BEFORE));
+    assert_eq!(json((*OUTCOME))["status"], "applied");
+    let outcome = <SemioGraphMutation as Mutation<SemioGraphSnapshot>>::diff(&decode((*MUTATION)), &base);
     assert!(outcome.messages().is_empty(), "{:?}", outcome.messages());
-    assert_eq!(json(&semio_framework_pack_json::to_json_string(outcome.diff())), json(DIFF), "set-node-property/sets: produced diff differs from the committed diff");
-    assert_eq!(protocol::apply_diff(&decode::<SemioGraphDiff>(DIFF), &base).expect("committed diff applies"), snapshot(AFTER));
+    assert_eq!(json(&semio_framework_pack_json::to_json_string(outcome.diff())), json((*DIFF)), "set-node-property/sets: produced diff differs from the committed diff");
+    assert_eq!(protocol::apply_diff(&decode::<SemioGraphDiff>((*DIFF)), &base).expect("committed diff applies"), snapshot((*AFTER)));
 }
 
 /// 🚧️ The guard branches report their frozen codes.
@@ -74,7 +75,7 @@ async fn guard_branches_report_their_frozen_codes() {
     use crate::schema::mutations::set_node_property::SetNodeProperty;
     use crate::schema::snapshot::GraphNodeId;
     use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValue;
-    let base = snapshot(BEFORE);
+    let base = snapshot((*BEFORE));
     let codes = |node: &str, key: &str, value: &str| -> Vec<String> {
         let leaf = SemioGraphMutation::SetNodeProperty(SetNodeProperty { node_id: GraphNodeId::new(node), key: key.into(), value: SemioValue::Str { value: value.into() } });
         leaf.diff(&base).messages().iter().map(|message| message.code.0.to_string()).collect()

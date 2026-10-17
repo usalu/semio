@@ -13,21 +13,35 @@ pub struct Block5dConfig {
 /// 📎 `s.block.5d`'s config+presence schema descriptor — returned, not self-registered; `ArtifactEditor::app_schema`
 /// (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W1c) hands it to `register_document_app` for registration.
 pub fn app_schema_descriptor() -> ::semio_framework_schema_registry::AppSchemaDescriptor {
+    ::semio_framework_schema_registry::register_schema_leaf_documents(&[
+        ::semio_framework_schema_registry::SchemaLeafDocument { scope: "s.block.5d", export: "config", format: ::semio_framework_schema_registry::SchemaFormat::Rust, path: "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🦀️.rs" },
+        ::semio_framework_schema_registry::SchemaLeafDocument { scope: "s.block.5d", export: "config", format: ::semio_framework_schema_registry::SchemaFormat::Typescript, path: "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🟦️.ts" },
+        ::semio_framework_schema_registry::SchemaLeafDocument { scope: "s.block.5d", export: "config", format: ::semio_framework_schema_registry::SchemaFormat::Graphql, path: "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🔗️.graphql" },
+        ::semio_framework_schema_registry::SchemaLeafDocument { scope: "s.block.5d", export: "config", format: ::semio_framework_schema_registry::SchemaFormat::Protobuf, path: "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🛰️.proto" },
+        ::semio_framework_schema_registry::SchemaLeafDocument { scope: "s.block.5d", export: "presence", format: ::semio_framework_schema_registry::SchemaFormat::Rust, path: "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema/🦀️.rs" },
+        ::semio_framework_schema_registry::SchemaLeafDocument { scope: "s.block.5d", export: "presence", format: ::semio_framework_schema_registry::SchemaFormat::Typescript, path: "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema/🟦️.ts" },
+        ::semio_framework_schema_registry::SchemaLeafDocument { scope: "s.block.5d", export: "presence", format: ::semio_framework_schema_registry::SchemaFormat::Graphql, path: "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema/🔗️.graphql" },
+        ::semio_framework_schema_registry::SchemaLeafDocument { scope: "s.block.5d", export: "presence", format: ::semio_framework_schema_registry::SchemaFormat::Protobuf, path: "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema/🛰️.proto" },
+    ]);
+    #[cfg(target_arch = "wasm32")]
+    semio_framework_schema_registry::install_default_schema_leaf_reader(semio_framework_plugin::reactor::package_asset, "");
+    #[cfg(not(target_arch = "wasm32"))]
+    semio_framework_schema_registry::install_default_schema_leaf_reader(semio_framework_plugin::reactor::package_asset, env!("CARGO_MANIFEST_DIR"));
     ::semio_framework_schema_registry::AppSchemaDescriptor {
         id: "s.block.5d",
         config: ::semio_framework_schema_registry::FacetLeaves {
-            rust: include_str!("🦀️.rs"),
-            typescript: include_str!("🟦️.ts"),
-            graphql: include_str!("🔗️.graphql"),
+            rust: "",
+            typescript: "",
+            graphql: "",
             json_schema: include_str!("🔣️.json"),
-            proto: include_str!("🛰️.proto"),
+            proto: "",
         },
         presence: ::semio_framework_schema_registry::FacetLeaves {
-            rust: include_str!("../../👥️presence/🧬️schema/🦀️.rs"),
-            typescript: include_str!("../../👥️presence/🧬️schema/🟦️.ts"),
-            graphql: include_str!("../../👥️presence/🧬️schema/🔗️.graphql"),
+            rust: "",
+            typescript: "",
+            graphql: "",
             json_schema: include_str!("../../👥️presence/🧬️schema/🔣️.json"),
-            proto: include_str!("../../👥️presence/🧬️schema/🛰️.proto"),
+            proto: "",
         },
     }
 }

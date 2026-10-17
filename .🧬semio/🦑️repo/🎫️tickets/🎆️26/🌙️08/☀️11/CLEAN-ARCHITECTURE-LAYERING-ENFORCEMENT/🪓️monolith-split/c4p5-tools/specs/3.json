@@ -1,0 +1,40 @@
+{
+ "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⏳️precompute/🪣️fill/🧪️tests/🔬️unit/🦀️.rs",
+ "original": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/🗑️generated/c4p5-orig/3.rs",
+ "stage": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/🗑️generated/c4p5-stage",
+ "chunks": [
+  {
+   "name": "🧮️planner-laws",
+   "folder": "🧮️planner-laws",
+   "doc": "🧮️ Planner laws: the constructor cap and plus-one handback, the fixed collection pages, the cooperative transitions, the work and watchdog ceilings, the capacity law and the Nakagin-scale plan.",
+   "ranges": [
+    [
+     69,
+     704
+    ]
+   ]
+  },
+  {
+   "name": "⏯️fill-run-laws",
+   "folder": "⏯️fill-run-laws",
+   "doc": "⏯️ Fill run laws: the language-neutral run fixture, the parry3d oracle, the trace delivery, the interactive ceilings, resume and checkpoint replay, the capacity danger step, revalidation and the own-mesh bodies.",
+   "ranges": [
+    [
+     706,
+     1644
+    ]
+   ]
+  },
+  {
+   "name": "🛑️run-end-laws",
+   "folder": "🛑️run-end-laws",
+   "doc": "🛑️ Run end laws: rule refusals as warnings and the declared visible end of every case and own-mesh variant.",
+   "ranges": [
+    [
+     1646,
+     1745
+    ]
+   ]
+  }
+ ]
+}

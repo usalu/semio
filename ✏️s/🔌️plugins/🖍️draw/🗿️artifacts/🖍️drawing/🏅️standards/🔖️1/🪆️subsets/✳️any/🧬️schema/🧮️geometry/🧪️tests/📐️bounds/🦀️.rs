@@ -1,8 +1,9 @@
 //! 📐️ Shared geometry fixtures for exact Bézier extrema and affine composition.
 use super::*;
+use semio_framework_test_fixtures::fixture_text;
 #[test]
 fn geometry_fixtures() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🧮️geometry/📐️bounds/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../🧪️tests/🧫️fixtures/🧮️geometry/📐️bounds/🔣️.json")).unwrap();
     for case in fixture["curves"].as_array().unwrap() {
         let points: [[f64; 2]; 4] = serde_json::from_value(case["points"].clone()).unwrap();
         let expected: [f64; 4] = serde_json::from_value(case["bounds"].clone()).unwrap();
@@ -19,7 +20,7 @@ fn geometry_fixtures() {
 
 #[test]
 fn path_editing_geometry_fixtures() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🧮️geometry/✏️editing/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../🧪️tests/🧫️fixtures/🧮️geometry/✏️editing/🔣️.json")).unwrap();
     for case in fixture["splits"].as_array().unwrap() {
         let actual = super::split_cubic(serde_json::from_value(case["points"].clone()).unwrap(), case["t"].as_f64().unwrap());
         let expected: Option<[[[f64; 2]; 4]; 2]> = serde_json::from_value(case["expected"].clone()).unwrap();

@@ -1,18 +1,15 @@
 //! 🧪️ normal-fill tests (🔬️board-host): compiled against the `testkit` surface of the board crates.
 
 use semio_framework_os_infinite_board_normal_fill::{BOARD_FILL_COMMIT_BYTES, BOARD_FILL_COMMIT_PAGE_COUNT, BOARD_FILL_KIND_HANDLE_CAPACITY, BOARD_FILL_PAGE_ITEMS, BOARD_FILL_PLACEMENT_CAPACITY, BOARD_FILL_SOURCE_CAPACITY, BoardFillCheckpoint, BoardFillCommitCandidate, BoardFillCommitEncoder, BoardFillCommitPlacement, BoardFillFixedPages, BoardFillJob, BoardFillJobState, BoardFillPlacement, BoardFillSnapshot, BoardFillSnapshotCapture, BoardFillSnapshotIngress, BoardFillSource, BoardFillVirtualHandle, NEUTRAL_BOARD_NAMING};
+use semio_framework_test_fixtures::fixture_text;
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
 
 /// 📖️ Reads one test input at run time (relative to the package manifest) so it does not count as an embedded compile input.
-fn read_static(path_from_manifest: &str) -> &'static str {
-    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(path_from_manifest);
-    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("test input {}: {error}", path.display())).into_boxed_str())
-}
 
 #[cfg(test)]
 #[allow(non_snake_case)]
 fn BOARD_HOST_SOURCE() -> &'static str {
-    read_static("../../🦀️.rs")
+    fixture_text!("../../🦀️.rs")
 }
 
 #[cfg(test)]
@@ -50,7 +47,7 @@ fn BOARD_HOST_SOURCE() -> &'static str {
     #[test]
     fn board_fill_descriptor_retirement_needs_original_release_and_depth_authority() {
         use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress};
-        let law:serde_json::Value=serde_json::from_str(read_static("../../../🧪️tests/🔬️board-host-standalone/🧫️descriptor.json")).unwrap();
+        let law:serde_json::Value=serde_json::from_str(fixture_text!("../../../🧪️tests/🔬️board-host-standalone/🧫️descriptor.json")).unwrap();
         let mut pages=BoardFillFixedPages::<u64,4>::new();
         let identity=pages.pages.as_ptr();
         let bytes=std::mem::size_of_val(pages.pages.as_ref());
@@ -69,7 +66,6 @@ fn BOARD_HOST_SOURCE() -> &'static str {
         let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(reference));
         assert_eq!(heap.released_bytes,step.progress().released_bytes);
         assert_eq!(serde_json::json!({"copiedItems":step.progress().copied_items,"birthBytes":0,"releaseMatchesOriginal":heap.released_bytes==bytes,"terminal":pages.terminal_is_empty()}),law["accepted"]);
-        eprintln!("[DEBUG] original fill descriptor release={bytes} denied turns preserve pointer and backing");
     }
 
 #[cfg(test)]
@@ -220,5 +216,4 @@ fn empty_fill_capture_and_ingress_keep_every_original_descriptor_until_admitted(
     }
     assert!(ingress.terminal_is_empty());
     assert_eq!(released,birth.requested_bytes);
-    eprintln!("[DEBUG] empty fill ingress and capture retain all descriptor custody until exact physical release");
 }

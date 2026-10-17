@@ -1,7 +1,7 @@
 //! 🎯️ `set-selectable-kind` command — which `vortex` granularity a pick may even reach, per window
 //! instance. The 2d twin of puzzle3d's `setSelectableKind` over `objects`/`vortices`/`attractions`.
 
-use {crate::editor::puzzle2d::snapshot::puzzle2d_window_and_measures_scope, crate::editor::puzzle2d::Puzzle2dActionCtx, crate::editor::puzzle2d::snapshot::PUZZLE2D_GRANULARITY_EDGE, crate::editor::puzzle2d::snapshot::PUZZLE2D_GRANULARITY_HANDLE, crate::editor::puzzle2d::snapshot::PUZZLE2D_GRANULARITY_NODE};
+use {crate::editor::puzzle2d::snapshot::puzzle2d_window_and_measures_scope, crate::editor::puzzle2d::interaction::Puzzle2dActionCtx, crate::editor::puzzle2d::snapshot::PUZZLE2D_GRANULARITY_EDGE, crate::editor::puzzle2d::snapshot::PUZZLE2D_GRANULARITY_HANDLE, crate::editor::puzzle2d::snapshot::PUZZLE2D_GRANULARITY_NODE};
 use semio_framework_pack_json::Value;
 
 /// 🗂️ `kind` names one granularity (`node` / `handle` / `edge`, plurals accepted for symmetry with

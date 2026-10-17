@@ -1,5 +1,5 @@
 /** 🔺️ Procedure durable delta with exact child-slot replacement. */
-import { parseArtifactChild } from "../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts";
+import { parseArtifactChild } from "@semio-tech/framework-os/modules/store/child/schema";
 import { type ArtifactChild } from "../🟦️.ts";
 
 export interface ProcedureDiff {

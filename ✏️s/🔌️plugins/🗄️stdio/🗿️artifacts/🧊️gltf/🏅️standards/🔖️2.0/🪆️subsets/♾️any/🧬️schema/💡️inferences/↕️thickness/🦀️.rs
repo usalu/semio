@@ -9,8 +9,8 @@ pub mod thickness_distribution;
 #[path = "↔️thickness-variability/🦀️.rs"]
 pub mod thickness_variability;
 
-use super::super::modules::measurement_contracts::*;
-use super::geometry_core::{statistics, thickness_samples, GltfGeometryContext};
+use crate::standards::v2_0::subsets::any::schema::modules::measurement_contracts::*;
+use crate::standards::v2_0::subsets::any::schema::inferences::geometry_core::{statistics, thickness_samples, GltfGeometryContext};
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
@@ -24,7 +24,7 @@ pub struct GltfThicknessIndicators {
 pub struct GltfThicknessInference;
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn samples(context: &GltfGeometryContext<'_>) -> Vec<f64> {
+pub fn samples(context: &GltfGeometryContext<'_>) -> Vec<f64> {
     if context.topology.watertight && context.topology.manifold {
         thickness_samples(&context.points, &context.faces, context.policy.sampling_budget as usize, context.policy.absolute_length_tolerance)
     } else {
@@ -33,7 +33,7 @@ pub(crate) fn samples(context: &GltfGeometryContext<'_>) -> Vec<f64> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn distribution(context: &GltfGeometryContext<'_>) -> GltfStatistics {
+pub fn distribution(context: &GltfGeometryContext<'_>) -> GltfStatistics {
     statistics(&samples(context), &context.policy.histogram_edges)
 }
 

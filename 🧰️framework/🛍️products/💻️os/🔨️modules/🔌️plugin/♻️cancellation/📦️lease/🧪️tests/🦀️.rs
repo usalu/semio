@@ -30,6 +30,6 @@ fn original_cancellation_lease_detaches_scopes_and_returns_each_actual_child(){
   let(result,heap)=observe(||original_lease_cursor_release(&mut frame_owner,release));assert_eq!(result.unwrap().released_bytes,frame);assert!(frame_owner.is_none());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,frame));
   let mut alias=Some(ManuallyDrop::into_inner(original_claim));let mut active=None;while alias.is_some()||active.is_some(){let demand=plugin_typed_owner_demand(&alias,&active,7).unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};let(step,heap)=observe(||plugin_typed_owner_step(&mut alias,&mut active,grant));let progress=step.unwrap().progress();assert_eq!(progress.retained_capacity_bytes,heap.requested_bytes);assert_eq!(progress.released_bytes,heap.released_bytes);}
   if let Some(sibling)=sibling{close_original(&mut ToolCancellationLeaseRetirement::new(sibling),&canonical);}
-  assert_eq!(canonical.active.load(std::sync::atomic::Ordering::Acquire),0);eprintln!("[DEBUG] original cancellation lease {} child custody completed; canonical owner remains unsupported",row["name"]);
+  assert_eq!(canonical.active.load(std::sync::atomic::Ordering::Acquire),0);
  }
 }

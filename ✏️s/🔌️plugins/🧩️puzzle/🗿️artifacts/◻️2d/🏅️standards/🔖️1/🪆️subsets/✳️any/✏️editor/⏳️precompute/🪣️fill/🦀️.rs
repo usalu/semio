@@ -26,12 +26,12 @@ use std::sync::Arc;
 
 //#region 🔖️Limits
 /// 🚰️ Estimated pending tick bytes past which a run job flushes, so one tick stays within one job payload page.
-pub(crate) const FILL_RUN_TICK_FLUSH_BYTES: usize = 8 * 1024;
+pub const FILL_RUN_TICK_FLUSH_BYTES: usize = 8 * 1024;
 /// 🧬️ Provisional ops one placement appends: `create_node` then `connect_handles`.
-pub(crate) const FILL_RUN_OPS_PER_PLACEMENT: usize = 2;
+pub const FILL_RUN_OPS_PER_PLACEMENT: usize = 2;
 /// 🎯️ Target regions one run reads as its placement constraint. A board is painted by hand, so this
 /// admits far more than any authored document holds while keeping the run's own owner fixed.
-pub(crate) const FILL_RUN_TARGET_REGION_SLOTS: usize = 256;
+pub const FILL_RUN_TARGET_REGION_SLOTS: usize = 256;
 const FILL_RUN_CAPTURE_UNITS: usize = 256;
 const FILL_RUN_SEARCH_BATCH: usize = 64;
 const FILL_RUN_DEADLINE_CHECK: usize = 16;
@@ -284,7 +284,7 @@ impl FillRunCheckpoint {
 
 //#region 🧱️Placement
 /// 🆔️ Stable provisional entity of a placed node: the first eight little-endian bytes of its id digest.
-pub(crate) fn fill_run_entity(node_id: &semio_framework_value::paged::PagedUtf8<{ usize::MAX }>) -> u64 {
+pub fn fill_run_entity(node_id: &semio_framework_value::paged::PagedUtf8<{ usize::MAX }>) -> u64 {
     use semio_framework_value::paged::Utf8Text;
     let mut hasher=semio_framework_hash::Hasher::new();
     for index in 0..node_id.text_chunk_count(){hasher.update(node_id.text_chunk(index).expect("native text chunk").as_bytes());}
@@ -295,7 +295,7 @@ pub(crate) fn fill_run_entity(node_id: &semio_framework_value::paged::PagedUtf8<
 /// rows of its manifest (`board_kind_catalogs_json`), else the kinds the placed nodes imply
 /// (`inferred_node_kind_rows` — Concrete Forest names no manifest and carries no catalog, and a fill
 /// that finds no kind places nothing).
-fn fill_kind_rows(document: &Value) -> Vec<Value> {
+pub fn fill_kind_rows(document: &Value) -> Vec<Value> {
     if let Some(rows) = crate::editor::puzzle2d::snapshot::kind_catalog_entries(document, "nodes").filter(|rows| !rows.is_empty()) {
         return rows.to_vec();
     }
@@ -318,10 +318,10 @@ fn fill_placement_mutations(placement: &BoardFillPlacement) -> Result<[Puzzle2dM
     let handles = (0..placement.handle_count())
         .map(|index| {
             let (id, handle_kind, angle, radius) = placement.handle(index).ok_or("puzzle2d-fill-apply-handle")?;
-            Ok(crate::standards::v1::subsets::any::schema::Puzzle2dHandle { id: id.into(), handle_kind: Some(handle_kind.into()), angle, radius, ..Default::default() })
+            Ok(crate::standards::v1::subsets::any::schema::records::Puzzle2dHandle { id: id.into(), handle_kind: Some(handle_kind.into()), angle, radius, ..Default::default() })
         })
         .collect::<Result<semio_framework_value::list::PagedList<_, { usize::MAX }>, &'static str>>()?;
-    let node = crate::standards::v1::subsets::any::schema::Puzzle2dNode {
+    let node = crate::standards::v1::subsets::any::schema::records::Puzzle2dNode {
         id: placement.node_id.as_str().into(),
         node_kind: Some(placement.node_kind.as_str().into()),
         shape: Some(placement.shape.into()),
@@ -332,7 +332,7 @@ fn fill_placement_mutations(placement: &BoardFillPlacement) -> Result<[Puzzle2dM
         height: rectangle.then_some(placement.height),
         text: Some(placement.node_id.as_str().into()),
         icon_kind: placement.icon_kind.as_ref().map(|icon| icon.as_str().into()),
-        anchor: crate::standards::v1::subsets::any::schema::Puzzle2dNodeAnchor::Fixed,
+        anchor: crate::standards::v1::subsets::any::schema::records::Puzzle2dNodeAnchor::Fixed,
         handles,
         ..Default::default()
     };
@@ -343,7 +343,7 @@ fn fill_placement_mutations(placement: &BoardFillPlacement) -> Result<[Puzzle2dM
 /// 🎯️ The normalized bounds of every visible target region the document declares, capped at
 /// [`FILL_RUN_TARGET_REGION_SLOTS`] — a document painted past that ceiling constrains fill by its
 /// first regions rather than faulting the run, and the excess is visible in the board itself.
-pub(crate) fn fill_visible_region_bounds(snapshot: &Value) -> Vec<[f64; 4]> {
+pub fn fill_visible_region_bounds(snapshot: &Value) -> Vec<[f64; 4]> {
     crate::editor::puzzle2d::snapshot::snapshot_target_regions(snapshot)
         .iter()
         .filter(|region| region.get("hidden").and_then(Value::as_bool) != Some(true))
@@ -354,13 +354,13 @@ pub(crate) fn fill_visible_region_bounds(snapshot: &Value) -> Vec<[f64; 4]> {
 
 /// 🎯️ Whether a placement's own footprint lies fully inside ANY visible target region. An empty set
 /// is unconstrained, so a board with no region fills exactly as it did before regions existed.
-pub(crate) fn fill_regions_admit(regions: &[[f64; 4]], bounds: [f64; 4]) -> bool {
+pub fn fill_regions_admit(regions: &[[f64; 4]], bounds: [f64; 4]) -> bool {
     regions.is_empty() || regions.iter().any(|region| bounds[0] >= region[0] && bounds[1] >= region[1] && bounds[2] <= region[2] && bounds[3] <= region[3])
 }
 
 /// 📦️ Axis-aligned collision footprint `[min_x, min_y, max_x, max_y]` of a board node, exactly as the fill
 /// capture feeds it to the engine: a circle spans `radius · scale`, a rectangle half its scaled extents.
-pub(crate) fn fill_node_bounds(x: f64, y: f64, scale: Option<f64>, rectangle: bool, radius_or_width: Option<f64>, height: Option<f64>) -> [f64; 4] {
+pub fn fill_node_bounds(x: f64, y: f64, scale: Option<f64>, rectangle: bool, radius_or_width: Option<f64>, height: Option<f64>) -> [f64; 4] {
     let finite = |value: Option<f64>| value.filter(|value| value.is_finite()).unwrap_or(1.0).max(f64::EPSILON);
     let scale = finite(scale);
     let (half_x, half_y) = if rectangle { (finite(radius_or_width) * scale * 0.5, finite(height) * scale * 0.5) } else { (finite(radius_or_width) * scale, finite(radius_or_width) * scale) };
@@ -372,7 +372,7 @@ pub(crate) fn fill_node_bounds(x: f64, y: f64, scale: Option<f64>, rectangle: bo
 /// `Puzzle2dConfig`): a positive contact tolerance GROWS both footprints so a placement that merely
 /// grazes a neighbour is refused, a positive overlap budget SHRINKS them so a dense board can be
 /// packed deliberately. `slack` is clamped so a budget can never shrink a footprint past its centre.
-fn fill_bounds_overlap_with(left: [f64; 4], right: [f64; 4], slack: f64) -> bool {
+pub fn fill_bounds_overlap_with(left: [f64; 4], right: [f64; 4], slack: f64) -> bool {
     let inset = |bounds: [f64; 4]| {
         let half_x = (bounds[2] - bounds[0]) * 0.5;
         let half_y = (bounds[3] - bounds[1]) * 0.5;
@@ -390,7 +390,7 @@ fn fill_run_fault(code: &str) -> JobTurn {
 }
 
 /// ⏱️ The engine search runs under a fuel-only clock: the run job enforces the wall deadline between batches.
-fn fill_run_monotonic_zero() -> Option<u64> {
+pub fn fill_run_monotonic_zero() -> Option<u64> {
     Some(0)
 }
 //#endregion 🧱️Placement
@@ -1084,7 +1084,7 @@ struct FillRunReplay {
 /// a new requested count replays the same search (seeded by the run id, serial after the document's fill
 /// ids) without trace or ops, keeps every provisional placement it re-derives byte-identically, retracts
 /// the rest and continues live — so a raised count continues and a lowered one retracts the tail.
-pub(crate) struct Puzzle2dFillRunJob {
+pub struct Puzzle2dFillRunJob {
     close_owners: crate::puzzle_job::WorkClosing<Puzzle2dFillRunOwners>,
     owners_staged: bool,
     retiring_placement: Option<BoardFillPlacement>,
@@ -1123,7 +1123,7 @@ pub(crate) struct Puzzle2dFillRunJob {
 impl Puzzle2dFillRunJob {
     /// 🎬️ A run over `document` toward `requested` placements. `checkpoint` and `provisional` are the
     /// ledger's resume state (both empty for a fresh run).
-    pub(crate) fn new(identity: ToolRunIdentity, document: Arc<Puzzle2dPlaySnapshot>, suggestion_offset: f64, requested: u32, checkpoint: Option<&[u8]>, provisional: &[Puzzle2dMutation]) -> Result<Self, &'static str> {
+    pub fn new(identity: ToolRunIdentity, document: Arc<Puzzle2dPlaySnapshot>, suggestion_offset: f64, requested: u32, checkpoint: Option<&[u8]>, provisional: &[Puzzle2dMutation]) -> Result<Self, &'static str> {
         let expected = provisional.iter().map(|op| protocol::OpBinary::encode_op(op).map_err(|_| "puzzle2d-fill-run-op-encode")).collect::<Result<Vec<_>, _>>()?;
         let retire = match checkpoint {
             Some(bytes) => FillRunCheckpoint::decode(bytes).ok_or("puzzle2d-fill-run-checkpoint")?.placements,
@@ -1174,11 +1174,11 @@ impl Puzzle2dFillRunJob {
     }
 
     /// 📟️ `[tested, accepted, collisions, rejected]`, in [`FillRunCounter::ALL`] order.
-    pub(crate) fn counters(&self) -> [u64; 4] {
+    pub fn counters(&self) -> [u64; 4] {
         [self.tested, self.placements.len() as u64, self.collisions, self.rejected]
     }
 
-    pub(crate) fn checkpoint(&self) -> FillRunCheckpoint {
+    pub fn checkpoint(&self) -> FillRunCheckpoint {
         FillRunCheckpoint { requested: self.requested, tested: self.tested, collisions: self.collisions, rejected: self.rejected, next_key: self.next_key, placements: self.placements.clone() }
     }
 
@@ -1652,7 +1652,7 @@ struct Puzzle2dFillRevalidateOwners {
     conflicts: Vec<bool>,
 }
 
-pub(crate) struct Puzzle2dFillRevalidateJob {
+pub struct Puzzle2dFillRevalidateJob {
     close_owners: crate::puzzle_job::WorkClosing<Puzzle2dFillRevalidateOwners>,
     outbox: crate::puzzle_job::JobOutbox,
     writer: ToolRunTickWriter,
@@ -1672,7 +1672,7 @@ pub(crate) struct Puzzle2dFillRevalidateJob {
 }
 
 impl Puzzle2dFillRevalidateJob {
-    pub(crate) fn new(identity: ToolRunIdentity, head: Arc<Puzzle2dPlaySnapshot>, provisional: &[Puzzle2dMutation], checkpoint: Option<&[u8]>, placement_slack: f64) -> Self {
+    pub fn new(identity: ToolRunIdentity, head: Arc<Puzzle2dPlaySnapshot>, provisional: &[Puzzle2dMutation], checkpoint: Option<&[u8]>, placement_slack: f64) -> Self {
         let keys = checkpoint.and_then(FillRunCheckpoint::decode).map(|checkpoint| checkpoint.placements).unwrap_or_default();
         Self {
             close_owners: Default::default(),
@@ -1693,7 +1693,7 @@ impl Puzzle2dFillRevalidateJob {
         }
     }
 
-    fn placement(&self, index: usize) -> Option<(&crate::standards::v1::subsets::any::schema::Puzzle2dNode, &semio_framework_value::paged::PagedUtf8<{ usize::MAX }>)> {
+    fn placement(&self, index: usize) -> Option<(&crate::standards::v1::subsets::any::schema::records::Puzzle2dNode, &semio_framework_value::paged::PagedUtf8<{ usize::MAX }>)> {
         match self.ops.get(index * FILL_RUN_OPS_PER_PLACEMENT..(index + 1) * FILL_RUN_OPS_PER_PLACEMENT)? {
             [Puzzle2dMutation::CreateNode(create), Puzzle2dMutation::ConnectHandles(connect)] => Some((&create.node, &connect.source)),
             _ => None,
@@ -1872,7 +1872,5 @@ impl InteractiveJob for Puzzle2dFillRevalidateJob {
 //#endregion 🔍️RevalidateJob
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

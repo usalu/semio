@@ -29,6 +29,10 @@ type stdioStepAp214BaseInferenceGuardSizeBounds = { readonly minItems?: number; 
 
 export const stdioStepAp214BaseInferenceGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : stdioStepAp214BaseInferenceGuardReject(at, "value is not an object");
+export const stdioStepAp214BaseInferenceGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) stdioStepAp214BaseInferenceGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const stdioStepAp214BaseInferenceGuardArray = (value: unknown, at: string, bounds: stdioStepAp214BaseInferenceGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return stdioStepAp214BaseInferenceGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) stdioStepAp214BaseInferenceGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -59,17 +63,17 @@ export const stdioStepAp214BaseInferenceGuardConstant = <T extends string | numb
 //#endregion 🚪️Parsers
 
 export function parseStepInference(value: unknown, at = "$"): StepInference {
-  const row = stdioStepAp214BaseInferenceGuardObject(value, at);
+  const row = stdioStepAp214BaseInferenceGuardClosed(stdioStepAp214BaseInferenceGuardObject(value, at), at, ["bounds"]);
   return {
     bounds: parseStepBounds(row["bounds"], `${at}.bounds`),
   };
 }
 
 export function parseStepBounds(value: unknown, at = "$"): StepBounds {
-  const row = stdioStepAp214BaseInferenceGuardObject(value, at);
+  const row = stdioStepAp214BaseInferenceGuardClosed(stdioStepAp214BaseInferenceGuardObject(value, at), at, ["min", "max", "pointCount"]);
   return {
-    min: stdioStepAp214BaseInferenceGuardArray(row["min"], `${at}.min`, {"minItems": 3, "maxItems": 3}).map((item, index) => stdioStepAp214BaseInferenceGuardNumber(item, `${at}.min[${index}]`)),
-    max: stdioStepAp214BaseInferenceGuardArray(row["max"], `${at}.max`, {"minItems": 3, "maxItems": 3}).map((item, index) => stdioStepAp214BaseInferenceGuardNumber(item, `${at}.max[${index}]`)),
+    min: ((items0) => [stdioStepAp214BaseInferenceGuardNumber(items0[0], `${at}.min[0]`), stdioStepAp214BaseInferenceGuardNumber(items0[1], `${at}.min[1]`), stdioStepAp214BaseInferenceGuardNumber(items0[2], `${at}.min[2]`)])(stdioStepAp214BaseInferenceGuardArray(row["min"], `${at}.min`, {"minItems": 3, "maxItems": 3})),
+    max: ((items0) => [stdioStepAp214BaseInferenceGuardNumber(items0[0], `${at}.max[0]`), stdioStepAp214BaseInferenceGuardNumber(items0[1], `${at}.max[1]`), stdioStepAp214BaseInferenceGuardNumber(items0[2], `${at}.max[2]`)])(stdioStepAp214BaseInferenceGuardArray(row["max"], `${at}.max`, {"minItems": 3, "maxItems": 3})),
     pointCount: stdioStepAp214BaseInferenceGuardInteger(row["pointCount"], `${at}.pointCount`, {"minimum": 0}),
   };
 }

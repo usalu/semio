@@ -1,4 +1,5 @@
 use semio_framework_os_kernel::{sqlite_snapshot::SnapshotEncoding, sqlite_snapshot::SqliteSnapshotPhase, sqlite_snapshot::ValueRefusalKind};
+use semio_framework_test_fixtures::fixture_text;
 #[allow(unused_imports)]
 use crate::standards::mpeg1_layer3::subsets::any::schema::snapshot::*;
 #[allow(unused_imports)]
@@ -11,11 +12,11 @@ use crate::standards::mpeg1_layer3::subsets::any::schema::snapshot::Mp3Snapshot;
 use crate::standards::mpeg1_layer3::subsets::any::io::sqlite::snapshot::*;
 use semio_framework_os_kernel::{sqlite_snapshot::{export_sqlite_database,import_sqlite_database,SqliteDatabaseLimits,SqliteSnapshotControl,SqliteValue},os_store::serialization::ArtifactSqliteSnapshotHost};
 
-fn fixture()->Mp3Snapshot{semio_framework_pack_json::from_json_str(runtime_fixture_text("../../🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()}
+fn fixture()->Mp3Snapshot{semio_framework_pack_json::from_json_str(fixture_text!("../../🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()}
 #[test]
 fn sqlite_snapshot_mp3_owned_controlled_native_decoder_admits_and_cancels_physical_bytes(){
  use semio_framework_os_kernel::{io::IoPayload,sqlite_snapshot::SqliteSnapshotPhase};
- let neutral:serde_json::Value=serde_json::from_str(runtime_fixture_text("../../🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🎛️control.json")).unwrap();
+ let neutral:serde_json::Value=serde_json::from_str(fixture_text!("../../🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🎛️control.json")).unwrap();
  let limits=SqliteDatabaseLimits::default();let snapshot=fixture();
  for payload in[IoPayload::Binary(pack::snapshot::ArtifactPack::encode_pack(&snapshot)),IoPayload::Text(pack::snapshot::ArtifactDsl::print_dsl(&snapshot))]{
   assert_eq!(semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| Mp3Snapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,limits), native_owner)).unwrap(),snapshot);
@@ -55,7 +56,7 @@ fn roundtrip(snapshot:&Mp3Snapshot)->Mp3Snapshot{let database=snapshot.to_sqlite
 
 #[test]
 fn sqlite_snapshot_mp3_complete_neutral_corpus_and_optional_empty_tags(){
- let snapshot=fixture();assert_eq!(roundtrip(&snapshot),snapshot);let oracle:serde_json::Value=serde_json::from_str(&semio_framework_pack_json::to_json_string(&semio_framework_value::ToValue::to_value(&snapshot))).unwrap();assert_eq!(oracle,serde_json::from_str::<serde_json::Value>(runtime_fixture_text("../../🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json")).unwrap());
+ let snapshot=fixture();assert_eq!(roundtrip(&snapshot),snapshot);let oracle:serde_json::Value=serde_json::from_str(&semio_framework_pack_json::to_json_string(&semio_framework_value::ToValue::to_value(&snapshot))).unwrap();assert_eq!(oracle,serde_json::from_str::<serde_json::Value>(fixture_text!("../../🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json")).unwrap());
  for present in [false,true]{let snapshot=Mp3Snapshot{schema:"".into(),id3v2:present.then_some(Id3v2Tag{frames:Vec::new()}),frames:Vec::new(),id3v1:present.then_some(Id3v1Tag::default())};assert_eq!(roundtrip(&snapshot),snapshot);}
 }
 
@@ -106,16 +107,11 @@ fn mp3_independent_complete_extent(snapshot:&Mp3Snapshot)->serde_json::Value{
 }
 #[test]
 fn sqlite_snapshot_mp3_complete_independent_native_semantic_limits(){
- use store::sqlite_snapshot::SnapshotEncoding;let controls:serde_json::Value=serde_json::from_str(runtime_fixture_text("../../🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🎛️control.json")).unwrap();let contract=&controls["semanticCells"];
+ use store::sqlite_snapshot::SnapshotEncoding;let controls:serde_json::Value=serde_json::from_str(fixture_text!("../../🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🎛️control.json")).unwrap();let contract=&controls["semanticCells"];
  for case in contract["cases"].as_array().unwrap(){let mut source=fixture();if case["id"]=="absent"{source.frames.clear();source.id3v1=None;source.id3v2=None;}else if case["id"]=="presentEmpty"{source.frames.clear();source.id3v2.as_mut().unwrap().frames.clear();source.id3v1=Some(crate::standards::mpeg1_layer3::subsets::any::schema::snapshot::Id3v1Tag::default());}let extent=mp3_independent_complete_extent(&source);assert_eq!(extent["rows"],case["rows"]);assert_eq!(extent["valueBytes"],case["valueBytes"]);assert_eq!(extent["schemaBytes"],contract["schemaBytes"]);assert_eq!(extent["tableWidths"],contract["tableWidths"]);let limits=SqliteDatabaseLimits{max_rows:case["rows"].as_u64().unwrap()as usize,max_value_bytes:case["valueBytes"].as_u64().unwrap()as usize,max_schema_bytes:contract["schemaBytes"].as_u64().unwrap()as usize,max_tables:8,max_columns:15,..SqliteDatabaseLimits::default()};
   source.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap();
   for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{source.preflight_sqlite_snapshot_encoding(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap();let payload=semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| source.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,limits), native_owner)).unwrap();assert_eq!(semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| Mp3Snapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,limits), native_owner)).unwrap(),source);
    for short in[SqliteDatabaseLimits{max_rows:limits.max_rows-1,..limits},SqliteDatabaseLimits{max_value_bytes:limits.max_value_bytes-1,..limits},SqliteDatabaseLimits{max_schema_bytes:limits.max_schema_bytes-1,..limits},SqliteDatabaseLimits{max_tables:7,..limits},SqliteDatabaseLimits{max_columns:14,..limits}]{assert!(source.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,short)).is_err(),"relational copied limits {short:?}");assert!(source.preflight_sqlite_snapshot_encoding(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,short)).is_err(),"preflight copied limits {encoding:?} {short:?}");assert!(semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| source.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,short), native_owner)).is_err(),"encoder copied limits {encoding:?} {short:?}");assert!(semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| Mp3Snapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,short), native_owner)).is_err(),"decoder copied limits {encoding:?} {short:?}");}
   }
- }eprintln!("[DEBUG] all eight MP3 tag/header/octet tables and absent/present-empty branches preserve exact native semantic limits");
-}
-
-fn runtime_fixture_text(relative: &str) -> &'static str {
-    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative);
-    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display())).into_boxed_str())
+ }
 }

@@ -28,14 +28,17 @@ pub fn plan(p: &GltfBindPrimitiveMaterialPayload, base: &GltfSnapshot) -> Result
     Ok(GltfDiff { meshes: primitive_patch(p.mesh, p.primitive, GltfPrimitiveDiff { material: (value != base.document.meshes[p.mesh].primitives[p.primitive].material).then(|| value), ..Default::default() }), ..Default::default() })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn inverse(p: &GltfBindPrimitiveMaterialPayload, base: &GltfSnapshot) -> Vec<super::GltfMutation> {
+pub fn inverse<Op>(p: &GltfBindPrimitiveMaterialPayload, base: &GltfSnapshot) -> Vec<Op>
+where
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::remove_used_extension::RemoveUsedExtensionMutation>,
+{
     if validate(p, base).is_err() {
         return Vec::new();
     }
     match base.document.meshes[p.mesh].primitives[p.primitive].material {
         Some(current) if current == p.material => Vec::new(),
         Some(current) => vec![mutation(GltfBindPrimitiveMaterialPayload { mesh: p.mesh, primitive: p.primitive, material: current })],
-        None => vec![super::unbind_primitive_material::mutation(super::unbind_primitive_material::GltfUnbindPrimitiveMaterialPayload { mesh: p.mesh, primitive: p.primitive })],
+        None => vec![crate::standards::v2_0::subsets::any::schema::mutations::unbind_primitive_material::mutation(crate::standards::v2_0::subsets::any::schema::mutations::unbind_primitive_material::GltfUnbindPrimitiveMaterialPayload { mesh: p.mesh, primitive: p.primitive })],
     }
 }
 
@@ -49,11 +52,17 @@ pub enum BindPrimitiveMaterialMutation {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn mutation(payload: GltfBindPrimitiveMaterialPayload) -> super::GltfMutation {
-    super::GltfMutation::BindPrimitiveMaterial(BindPrimitiveMaterialMutation::Apply(payload))
+pub fn mutation<Op>(payload: GltfBindPrimitiveMaterialPayload) -> Op
+where
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::bind_primitive_material::BindPrimitiveMaterialMutation>,
+{
+    Op::from(BindPrimitiveMaterialMutation::Apply(payload))
 }
 
-impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for BindPrimitiveMaterialMutation {
+impl<Op> protocol::MutationKind<GltfSnapshot, Op> for BindPrimitiveMaterialMutation
+where
+    Op: protocol::Mutation<GltfSnapshot, Diff = GltfDiff> + From<BindPrimitiveMaterialMutation>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "bind", entity: "primitive-material", kind: "bind-primitive-material", record: "BoundPrimitiveMaterial" };
 
     fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<GltfDiff> {
@@ -65,7 +74,7 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for BindPrimitive
         }
     }
 
-    fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<super::GltfMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         match self {
             Self::Apply(payload) => Ok(inverse(payload, base)),
         }
@@ -82,7 +91,5 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for BindPrimitive
 //#endregion 🧬️DirectMutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔗️binds-the-steel-1cd6cc/🦀️.rs"]
-mod case_binds_the_steel_1cd6cc;
+
 //#endregion 🧪️Tests

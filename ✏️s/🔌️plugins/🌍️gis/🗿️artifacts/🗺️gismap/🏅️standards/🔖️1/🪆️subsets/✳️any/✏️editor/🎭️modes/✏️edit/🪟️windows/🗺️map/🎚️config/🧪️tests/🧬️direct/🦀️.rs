@@ -1,14 +1,19 @@
 //! 🧪️ Direct configuration identity, sparse composition and exact map-entry inverse laws.
 
-use super::*;
+use semio_framework_test_fixtures::fixture_text;
+use semio_framework_value_derive::{FromValue, ToValue};
+use std::collections::BTreeMap;
+#[allow(unused_imports)]
+use serde::{Deserialize, Serialize};
+use crate::editor::gis2d::modes::edit::windows::map::config::*;
 use protocol::{Mutation, MutationLeaf, OpBinary, OpText};
 
 //#region 🧪️DirectContracts
 fn fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../🧫️fixtures/🧬️mutations/🪟️map-window-config-direct/🔣️.json")).expect("configuration law fixture")
+    serde_json::from_str(fixture_text!("../../🧪️tests/🧫️fixtures/🧬️mutations/🪟️map-window-config-direct/🔣️.json")).expect("configuration law fixture")
 }
 
-pub(crate) fn assert_leaf<T>(sample: usize, wrap: fn(T) -> MapWindowConfigMutation, descriptor: &str)
+pub fn assert_leaf<T>(sample: usize, wrap: fn(T) -> MapWindowConfigMutation, descriptor: &str)
 where
     T: MutationLeaf + semio_framework_value::ToValue + semio_framework_value::FromValue + PartialEq + std::fmt::Debug,
 {

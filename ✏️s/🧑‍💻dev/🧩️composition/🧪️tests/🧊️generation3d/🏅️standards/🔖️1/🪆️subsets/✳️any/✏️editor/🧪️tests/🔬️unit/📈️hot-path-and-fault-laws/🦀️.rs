@@ -1,3 +1,5 @@
+use semio_framework_test_fixtures::repo_text;
+
 /// 📈️ Hot path and fault laws: the boot budget, window action declarations, the evaluate fault law and staged argument labels.
 
 //#region 📈️HotPathBudget
@@ -275,7 +277,7 @@ async fn every_emitted_action_is_declared_on_its_window_kind() {
 /// `💥️extension-evaluate-fault/🟦️.ts` of the generation3d editor tests.
 #[semio_framework_async_macros::async_test]
 async fn an_evaluate_fault_outranks_the_addressing_miss_and_a_contribution_install_clears_it() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🧫️fixtures/💥️extension-evaluate-fault.json")).expect("the evaluate-fault fixture parses");
+    let fixture: serde_json::Value = serde_json::from_str(repo_text!("✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🧫️fixtures/💥️extension-evaluate-fault.json")).expect("the evaluate-fault fixture parses");
     let extension_id = fixture["extensionId"].as_str().expect("extensionId").to_string();
     let address = || Ok::<String, semio_framework_os_flow::FlowExtensionAddressMiss>(extension_id.clone());
     let mut owner = Generation3dInstanceOperationOwner::new();

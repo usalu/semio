@@ -1,7 +1,29 @@
 //! 🎟️ Original actor and transaction custody outlives every denied ToolRun publication.
-use super::*;
-use semio_framework_value::{SharedUtf8,retirement::{RetireOwned,controlled::ControlledRetirement}};
-use std::mem::{size_of,ManuallyDrop};
+use semio_framework_plugin_decl_app::ArtifactApp;
+#[cfg(test)]
+use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+#[cfg(test)]
+use semio_framework_plugin_decl_app::tool_contract::ArtifactOwnedToolJobFactory;
+use pack::snapshot::ArtifactPack;
+use semio_framework_plugin_decl_emission::Emit;
+use semio_framework::FaultFrom;
+use semio_framework_value_derive::{FromValue, ToValue};
+use store::{Mutation, MutationDiff};
+use protocol::{OpBinary, OpText};
+#[cfg(test)]
+use semio_framework_plugin_reactor_app::PluginApp;
+use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, admit_retained_clone_close};
+use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind};
+use semio_framework_ui_scene::SceneDoc;
+use crate::{ToolRunMemberEmissionOwner, ToolRunMemberOwners, tool_grant_funds};
+use semio_framework_plugin_decl_views::tool_run_contract::ToolRunRetargetableJob;
+#[cfg(any(test, feature = "artifact-app-testing"))]
+use semio_framework_plugin_window_config::WindowConfigOwner;
+use semio_framework_ui_contract::*;
+use semio_framework_value::SharedUtf8;
+use semio_framework_value::retirement::RetireOwned;
+use semio_framework_value::retirement::controlled::ControlledRetirement;
+use std::mem::{size_of, ManuallyDrop};
 pub(crate) struct ToolRunPublicationIngress{pub actor:Option<ControlledRetirement<SharedUtf8>>,pub transaction:ManuallyDrop<Option<protocol::TransactionRef>>,transaction_close:Option<ControlledRetirement<protocol::TransactionRef>>}
 impl Default for ToolRunPublicationIngress{fn default()->Self{Self{actor:None,transaction:ManuallyDrop::new(None),transaction_close:None}}}
 fn original_control_demand<T:RetireOwned>(owner:&ControlledRetirement<T>,body:usize)->Result<RetirementDemand,ValueError>{if owner.terminal_is_empty(){return Ok(RetirementDemand{copy_bytes:size_of::<Option<ControlledRetirement<T>>>(),depth:1,..Default::default()});}Ok(RetirementDemand{copy_bytes:owner.next_copy_byte_demand()?,capacity_bytes:owner.next_capacity_byte_demand(body)?,release_bytes:owner.next_release_byte_demand()?,depth:owner.next_depth_demand()?.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"original ToolRun ingress child depth overflow"))?})}
@@ -32,6 +54,7 @@ impl ToolRunPublicationIngress{
  }
 }
 impl Drop for ToolRunPublicationIngress{fn drop(&mut self){assert!(self.terminal_is_empty()||std::thread::panicking(),"original ToolRun publication ingress requires granted terminal closure");}}
+#[doc(hidden)]
 #[cfg(test)]
 #[path="🧪️tests/🦀️.rs"]
-mod tests;
+pub mod tests;

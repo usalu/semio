@@ -14,5 +14,4 @@ test("Original local continuation keeps independent authority and exact semantic
  const db=new Database(":memory:");try{db.exec("CREATE TABLE receipt(sequence INTEGER PRIMARY KEY,bytes INTEGER NOT NULL)");db.query("INSERT INTO receipt VALUES(?,?)").run(1,fixture.initialBytes);db.query("INSERT INTO receipt VALUES(?,?)").run(2,bytes);expect(db.query("SELECT SUM(bytes) FROM receipt").values()).toEqual([[fixture.initialBytes+fixture.textBytes]]);}finally{db.close();}
  expect(fixture.deniedGrant).toEqual({maximumItems:0,maximumCopyBytes:0,maximumCapacityBytes:0,maximumReleaseBytes:0,maximumDepth:0});
  expect(fixture.rejectedWork.attempted>fixture.rejectedWork.declared).toBe(true);expect(fixture.invalidReceipt.completed>fixture.invalidReceipt.total).toBe(true);expect(fixture.recipientRelease).toBe("originalGrantWitness");
- console.error("[DEBUG] Original local continuation plain policy and UTF8 cumulative receipt compared with canonical per-grant Ajv, SQLite, Buffer and JSON; Native proof executes separately");
 });

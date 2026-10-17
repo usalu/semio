@@ -1,0 +1,84 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/rust-rlib-command-data-tests-v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "cases",
+    "refusals",
+    "dataOnly",
+    "fanIn"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "dataOnly": {
+      "const": true
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "mode",
+          "platform",
+          "selected",
+          "incremental"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "mode": {
+            "enum": [
+              "prototype",
+              "release"
+            ]
+          },
+          "platform": {
+            "enum": [
+              "posix",
+              "win32"
+            ]
+          },
+          "selected": {
+            "enum": [
+              "base",
+              "consumer"
+            ]
+          },
+          "incremental": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "refusals": {
+      "const": [
+        "extra",
+        "proxy",
+        "accessor",
+        "sparse",
+        "dependency-proxy",
+        "dependency-accessor",
+        "missing-dependency",
+        "wrong-dependency",
+        "duplicate-dependency",
+        "relative-path",
+        "nonnormal-path",
+        "incremental-mismatch",
+        "output-path"
+      ]
+    },
+    "fanIn": {
+      "const": 4096
+    }
+  }
+}

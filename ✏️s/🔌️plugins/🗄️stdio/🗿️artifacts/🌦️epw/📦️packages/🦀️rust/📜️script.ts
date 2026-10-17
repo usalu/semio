@@ -11,6 +11,6 @@ class OriginalReceivingSource extends BundleScript{
 }
 /** 🦀️ Runs actual EPW physical receiving laws under the same original finite invocation. */
 class OriginalReceivingNative extends OriginalReceivingSource{
- async run(args:string[]):Promise<void>{await super.run(args);await runArtifactRustTests("semio-s-artifact-stdio-epw",this.repoRoot,["--lib","sqlite_snapshot_epw_original_receiving_","--no-fail-fast"],this.invocation.control);}
+ async run(args:string[]):Promise<void>{await super.run(args);await runArtifactRustTests("semio-s-artifact-stdio-epw",this.repoRoot,["--lib","sqlite_snapshot_epw_original_receiving_","--no-fail-fast"],this.invocation);}
 }
 await runArtifactRustPackageMain(import.meta.dir,"semio-s-artifact-stdio-epw",{ packages: ["semio-s-artifact-stdio-epw", "semio-s-artifact-stdio-epw-editor", "semio-s-artifact-stdio-epw-io-registry", "semio-s-artifact-stdio-epw-mutations", "semio-s-artifact-stdio-epw-schema", "semio-s-artifact-stdio-epw-snapshot", "semio-s-artifact-stdio-epw-tests"],commands:{"test-original-receiving-source":OriginalReceivingSource,"test-original-receiving-native":OriginalReceivingNative},twins:[{name:"epw-definition",run:runDefinitionChecks}],snapshotSqliteTests:["../../🏅️standards/🔖️energyplus/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"]});

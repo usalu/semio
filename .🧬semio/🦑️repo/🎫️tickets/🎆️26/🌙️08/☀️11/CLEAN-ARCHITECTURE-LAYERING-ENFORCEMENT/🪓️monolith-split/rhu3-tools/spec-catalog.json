@@ -1,0 +1,8 @@
+{
+ "moves": [
+  {"from": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🟦️.ts", "to": "🧰️framework/🔨️modules/🗂️plugin-catalog/🟦️.ts"},
+  {"from": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧬️schema/🟦️.ts", "to": "🧰️framework/🔨️modules/🗂️plugin-catalog/🧬️schema/🟦️.ts"},
+  {"from": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧬️schema/🔣️.json", "to": "🧰️framework/🔨️modules/🗂️plugin-catalog/🧬️schema/🔣️.json"}
+ ],
+ "snapshot": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/🗑️generated/rhu3-snap-catalog.json"
+}

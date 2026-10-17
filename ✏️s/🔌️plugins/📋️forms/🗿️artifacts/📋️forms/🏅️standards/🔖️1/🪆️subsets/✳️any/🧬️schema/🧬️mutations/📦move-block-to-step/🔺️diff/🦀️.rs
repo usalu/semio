@@ -1,7 +1,7 @@
 //! 🔺️ `move-block-to-step` — sparse diff construction: a question reorder inside one step, or
 //! a question removal in the source step plus an addition in the destination step.
 
-use super::mutation::MoveBlockToStep;
+use crate::standards::v1::subsets::any::schema::mutations::move_block_to_step::mutation::MoveBlockToStep;
 use crate::schema::diff::{FormsQuestionsDelta, FormsStepPatch, FormsStepsDelta};
 use crate::{forms_steps, FormsDiff, FormsSnapshot};
 

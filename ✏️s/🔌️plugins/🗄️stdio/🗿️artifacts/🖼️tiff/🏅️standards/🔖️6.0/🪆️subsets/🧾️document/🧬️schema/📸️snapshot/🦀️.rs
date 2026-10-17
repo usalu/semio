@@ -124,3 +124,14 @@ impl TiffSnapshot {
     pub fn height(&self) -> Option<u32> { self.tag(TAG_IMAGE_LENGTH).and_then(|tag| tag.values.first_u32()) }
     pub fn validate(&self) -> Result<(), String> { if self.schema != STDIO_TIFF_DOCUMENT_SCHEMA { return Err("tiff: undeclared semantic schema".into()); } for ifd in &self.ifds { ifd.validate()?; } Ok(()) }
 }
+
+pub trait NativeFieldType {
+ fn from_u16(code:u16)->Result<Self,String> where Self:Sized;
+ fn to_u16(self)->u16;
+ fn element_size(self)->usize;
+}
+impl NativeFieldType for TiffFieldType {
+ fn from_u16(code:u16)->Result<Self,String>{Ok(match code{1=>Self::Byte,2=>Self::Ascii,3=>Self::Short,4=>Self::Long,5=>Self::Rational,6=>Self::SByte,7=>Self::Undefined,8=>Self::SShort,9=>Self::SLong,10=>Self::SRational,11=>Self::Float,12=>Self::Double,_=>return Err("tiff: unknown native field type".into())})}
+ fn to_u16(self)->u16{match self{Self::Byte=>1,Self::Ascii=>2,Self::Short=>3,Self::Long=>4,Self::Rational=>5,Self::SByte=>6,Self::Undefined=>7,Self::SShort=>8,Self::SLong=>9,Self::SRational=>10,Self::Float=>11,Self::Double=>12}}
+ fn element_size(self)->usize{match self{Self::Byte|Self::Ascii|Self::SByte|Self::Undefined=>1,Self::Short|Self::SShort=>2,Self::Long|Self::SLong|Self::Float=>4,Self::Rational|Self::SRational|Self::Double=>8}}
+}

@@ -1,5 +1,5 @@
 /** 📸️ Persisted Equation state: the parent-owned graph and point cloud, their derived child handles and the explicitly labeled expression vocabulary. */
-import { parseArtifactChild, type ArtifactChild } from "../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts";
+import { parseArtifactChild, type ArtifactChild } from "@semio-tech/framework-os/modules/store/child/schema";
 export type EquationNodeKind = { kind:"integer";lexeme:string } | {kind:"rational";numer:string;denom:string} | {kind:"symbol";name:string} | {kind:"add";terms:EquationNode[]} | {kind:"mul";factors:EquationNode[]} | {kind:"pow";base:EquationNode;exponent:EquationNode};
 export interface EquationNode { label:bigint;kind:EquationNodeKind }
 export interface EquationExprSnapshot { expr:EquationNode;nextLabel:bigint }

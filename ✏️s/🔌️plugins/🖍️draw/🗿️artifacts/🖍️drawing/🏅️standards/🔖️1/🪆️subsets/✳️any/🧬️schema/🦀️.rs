@@ -54,9 +54,9 @@ pub fn empty_drawing_snapshot() -> DrawingSnapshot {
 //#region 🔖️Artifact
 /// 🧬️ drawing document artifact state.
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, ArtifactSchema)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
 #[artifact_schema(id = "s.draw.drawing")]
 pub struct DrawingArtifact {
     #[state(artifact)]
@@ -190,438 +190,23 @@ pub struct DrawingCanvasLayerRecord {
 
 //#region 🔖️Tree
 
+#[path = "🏭️layer-factories/🦀️.rs"]
+mod layer_factories;
+pub use layer_factories::*;
 
-/// 📄️ Parses the handcrafted DSL fixture once per call — used both for `setActiveExample`'s in-plugin
-/// document load and to bridge into the framework's still-JSON-only `App::example`/render-override
-/// surfaces, so `SEMIO_DRAW_EXAMPLE_TEXT` stays the single source of truth for the fixture.
-
-
-pub fn default_layer_base(identity: DrawingIdentity, name: &str) -> DrawingLayerBase {
-    DrawingLayerBase { id: identity.into_key(), name: name.into(), visible: true, locked: false, opacity: 1.0, blend_mode: "normal".into(), transform: default_drawing_transform(), attributes: DrawingAttributes::default() }
-}
-
-
-pub fn create_drawing_group_layer(identity: DrawingIdentity, name: &str) -> DrawingLayerNode {
-    DrawingLayerNode::Group(DrawingGroupBody {
-        isolation:false,
-        base: DrawingLayerBase {
-            id: identity.into_key(),
-            name: name.into(),
-            visible: true,
-            locked: false,
-            opacity: 1.0,
-            blend_mode: "normal".into(),
-            transform: default_drawing_transform(),
-            attributes: DrawingAttributes::default(),
-        },
-        children: Default::default(),
-    })
-}
-
-pub fn create_drawing_boolean_layer(identity: DrawingIdentity, name: &str, operation: &str, children: semio_framework_value::list::PagedList<semio_framework_value::paged::PagedUtf8<{usize::MAX}>, {usize::MAX}>) -> DrawingLayerNode {
-    DrawingLayerNode::Boolean(DrawingBooleanBody {
-        base: DrawingLayerBase {
-            id: identity.into_key(),
-            name: name.into(),
-            visible: true,
-            locked: false,
-            opacity: 1.0,
-            blend_mode: "normal".into(),
-            transform: default_drawing_transform(),
-            attributes: DrawingAttributes::default(),
-        },
-        operation: operation.into(),
-        children,
-    })
-}
-
-pub fn create_drawing_trace_layer(identity: DrawingIdentity, name: &str, source_key: &str) -> DrawingLayerNode {
-    DrawingLayerNode::Trace(DrawingTraceBody {
-        base: DrawingLayerBase {
-            id: identity.into_key(),
-            name: name.into(),
-            visible: true,
-            locked: false,
-            opacity: 1.0,
-            blend_mode: "normal".into(),
-            transform: default_drawing_transform(),
-            attributes: DrawingAttributes::default(),
-        },
-        source_key: source_key.into(),
-        params: default_drawing_trace_params(),
-    })
-}
-
-pub fn create_drawing_shape_layer_rect(identity: DrawingIdentity, name: &str) -> DrawingLayerNode {
-    DrawingLayerNode::Shape(DrawingShapeBody {
-        base: DrawingLayerBase {
-            id: identity.into_key(),
-            name: name.into(),
-            visible: true,
-            locked: false,
-            opacity: 1.0,
-            blend_mode: "normal".into(),
-            transform: default_drawing_transform(),
-            attributes: DrawingAttributes::default(),
-        },
-        shape_kind: "rect".into(),
-        rect: Some(DrawingRect { x: 0.0, y: 0.0, width: 128.0, height: 96.0 }),
-        ellipse: None,
-        circle: None,
-        line: None,
-        polygon: None,
-    })
-}
-
-pub fn create_drawing_text_layer(identity: DrawingIdentity, name: &str) -> DrawingLayerNode {
-    DrawingLayerNode::Text(DrawingTextBody {
-        base: DrawingLayerBase {
-            id: identity.into_key(),
-            name: name.into(),
-            visible: true,
-            locked: false,
-            opacity: 1.0,
-            blend_mode: "normal".into(),
-            transform: default_drawing_transform(),
-            attributes: DrawingAttributes { fill_rule: crate::fill_rule::FillRule::Evenodd, fill: Some(FillStyle::Solid { color: [0.0, 0.0, 0.0, 1.0] }), stroke: None },
-        },
-        x: 0.0,
-        y: 0.0,
-        content: "Text".into(),
-        size: 24.0,
-        font_family:crate::DrawingFontFamily::Anta,
-    })
-}
-
-pub fn create_drawing_image_layer(identity: DrawingIdentity, name: &str, image_key: &str) -> DrawingLayerNode {
-    DrawingLayerNode::Image(DrawingImageBody {
-        base: DrawingLayerBase {
-            id: identity.into_key(),
-            name: name.into(),
-            visible: true,
-            locked: false,
-            opacity: 1.0,
-            blend_mode: "normal".into(),
-            transform: default_drawing_transform(),
-            attributes: DrawingAttributes::default(),
-        },
-        image_key: image_key.into(),
-        width: 256.0,
-        height: 256.0,
-    })
-}
-
-
-pub fn layer_id(layer: &DrawingLayerNode) -> &semio_framework_value::paged::PagedUtf8<{usize::MAX}> {
-    match layer {
-        DrawingLayerNode::Shape(shape) => &shape.base.id,
-        DrawingLayerNode::Path(path) => &path.base.id,
-        DrawingLayerNode::Text(text) => &text.base.id,
-        DrawingLayerNode::Image(image) => &image.base.id,
-        DrawingLayerNode::Group(group) => &group.base.id,
-        DrawingLayerNode::Boolean(boolean) => &boolean.base.id,
-        DrawingLayerNode::Trace(trace) => &trace.base.id,
-    }
-}
-
-pub fn layer_base(layer: &DrawingLayerNode) -> &DrawingLayerBase {
-    match layer {
-        DrawingLayerNode::Shape(shape) => &shape.base,
-        DrawingLayerNode::Path(path) => &path.base,
-        DrawingLayerNode::Text(text) => &text.base,
-        DrawingLayerNode::Image(image) => &image.base,
-        DrawingLayerNode::Group(group) => &group.base,
-        DrawingLayerNode::Boolean(boolean) => &boolean.base,
-        DrawingLayerNode::Trace(trace) => &trace.base,
-    }
-}
-
-pub fn layer_kind_label(layer: &DrawingLayerNode) -> String {
-    match layer {
-        DrawingLayerNode::Shape(shape) => format!("shape:{}", shape.shape_kind),
-        DrawingLayerNode::Path(_) => "path".into(),
-        DrawingLayerNode::Text(_) => "text".into(),
-        DrawingLayerNode::Image(_) => "image".into(),
-        DrawingLayerNode::Group(_) => "group".into(),
-        DrawingLayerNode::Boolean(_) => "boolean".into(),
-        DrawingLayerNode::Trace(_) => "trace".into(),
-    }
-}
-
-pub fn find_drawing_layer<'a>(doc: &'a DrawingSnapshot, layer_id: &(impl semio_framework_value::paged::Utf8Text + ?Sized)) -> Option<&'a DrawingLayerNode> {
-    for layer in &doc.layers {
-        if let Some(found) = find_drawing_layer_in_node(layer, layer_id) {
-            return Some(found);
-        }
-    }
-    None
-}
-
-fn find_drawing_layer_in_node<'a>(node: &'a DrawingLayerNode, target_id: &(impl semio_framework_value::paged::Utf8Text + ?Sized)) -> Option<&'a DrawingLayerNode> {
-    if layer_id(node).eq_text(target_id) {
-        return Some(node);
-    }
-    if let DrawingLayerNode::Group(group) = node {
-        for child in &group.children {
-            if let Some(found) = find_drawing_layer_in_node(child, target_id) {
-                return Some(found);
-            }
-        }
-    }
-    None
-}
-
-pub fn selected_drawing_layers<'a>(document: &'a DrawingSnapshot, ids: &[String]) -> Vec<&'a DrawingLayerNode> {
-    flatten_drawing_layers(&document.layers).into_iter().filter(|layer| ids.iter().any(|id| id == &layer_base(layer).id || id == &drawing_play_layers_tree_row_id(layer))).collect()
-}
-
-/// 🔒️ A lock on any ancestor protects its complete subtree from interactive edits.
-pub fn drawing_layer_is_locked(document: &DrawingSnapshot, id: &(impl semio_framework_value::paged::Utf8Text + ?Sized)) -> bool {
-    fn visit(layers: &semio_framework_value::list::PagedList<DrawingLayerNode, {usize::MAX}>, id: &(impl semio_framework_value::paged::Utf8Text + ?Sized), inherited: bool) -> Option<bool> {
-        for layer in layers {
-            let locked = inherited || layer_base(layer).locked;
-            if layer_id(layer).eq_text(id) { return Some(locked); }
-            if let DrawingLayerNode::Group(group) = layer {
-                if let Some(found) = visit(&group.children, id, locked) { return Some(found); }
-            }
-        }
-        None
-    }
-    visit(&document.layers, id, false).unwrap_or(false)
-}
-
-pub fn flatten_drawing_layers(layers: &semio_framework_value::list::PagedList<DrawingLayerNode, {usize::MAX}>) -> Vec<&DrawingLayerNode> {
-    let mut out = Vec::new();
-    fn walk<'a>(nodes: &'a semio_framework_value::list::PagedList<DrawingLayerNode, {usize::MAX}>, out: &mut Vec<&'a DrawingLayerNode>) {
-        for node in nodes {
-            out.push(node);
-            if let DrawingLayerNode::Group(group) = node {
-                walk(&group.children, out);
-            }
-        }
-    }
-    walk(layers, &mut out);
-    out
-}
+#[path = "🌳️layer-tree/🦀️.rs"]
+mod layer_tree;
+pub use layer_tree::*;
 
 pub use crate::affine::{drawing_transform_to_matrix, drawing_matrix_to_transform};
-
-pub fn drawing_play_layers_tree_row_id(layer: &DrawingLayerNode) -> String {
-    let segment = match layer {
-        DrawingLayerNode::Group(_) => "group",
-        DrawingLayerNode::Boolean(_) => "boolean",
-        DrawingLayerNode::Trace(_) => "trace",
-        DrawingLayerNode::Path(_) => "path",
-        DrawingLayerNode::Shape(_) => "shape",
-        DrawingLayerNode::Text(_) => "text",
-        DrawingLayerNode::Image(_) => "image",
-    };
-    format!("drawing-play-layers.{segment}.{}", layer_id(layer))
-}
-
-pub fn drawing_play_boolean_child_row_id(boolean_id: &(impl semio_framework_value::paged::Utf8Text + std::fmt::Display + ?Sized), child_id: &(impl std::fmt::Display + ?Sized)) -> String {
-    format!("drawing-play-layers.boolean-child.{}.{boolean_id}{child_id}", boolean_id.text_bytes())
-}
-
-pub fn drawing_play_layer_id_from_tree_row_id(row_id: &str) -> Option<String> {
-    let (kind, id) = row_id.strip_prefix("drawing-play-layers.")?.split_once('.')?;
-    if kind == "boolean-child" {
-        let (length, ids) = id.split_once('.')?;
-        let child = ids.get(length.parse::<usize>().ok()?..)?;
-        return (!child.is_empty()).then(|| child.to_string());
-    }
-    if !matches!(kind, "group" | "boolean" | "trace" | "path" | "shape" | "text" | "image") || id.is_empty() { return None; }
-    Some(id.to_string())
-}
-
-
-pub fn clone_drawing_layer_node(node: &DrawingLayerNode, name_suffix: &str, identities: &semio_framework_value::list::PagedList<DrawingIdentityAssignment,{usize::MAX}>) -> Result<DrawingLayerNode,semio_framework_value::ValueError> {
-    fn identify(node: &mut DrawingLayerNode, identities: &semio_framework_value::list::PagedList<DrawingIdentityAssignment,{usize::MAX}>, ids: &mut BTreeMap<semio_framework_value::paged::PagedUtf8<{usize::MAX}>, semio_framework_value::paged::PagedUtf8<{usize::MAX}>>) -> Result<(),semio_framework_value::ValueError> {
-        let base=layer_base_mut(node);let old=base.id.clone();
-        let mut matches=identities.iter().filter(|assignment|assignment.source==old);
-        let assignment=matches.next().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"Drawing clone identity missing"))?;
-        if matches.next().is_some()||assignment.target.is_empty()||assignment.target==old||ids.contains_key(&old)||ids.values().any(|target|*target==assignment.target){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"Drawing clone identity repeated or invalid"));}
-        base.id=assignment.target.clone();ids.insert(old,base.id.clone());
-        if let DrawingLayerNode::Group(group)=node{for child in &mut group.children{identify(child,identities,ids)?;}}Ok(())
-    }
-    fn references(node:&mut DrawingLayerNode,ids:&BTreeMap<semio_framework_value::paged::PagedUtf8<{usize::MAX}>,semio_framework_value::paged::PagedUtf8<{usize::MAX}>>){
-        match node{DrawingLayerNode::Boolean(boolean)=>{for child in &mut boolean.children{if let Some(id)=ids.get(child){*child=id.clone();}}},DrawingLayerNode::Group(group)=>{for child in &mut group.children{references(child,ids);}},_=>{}}
-    }
-    let mut cloned=node.clone();let mut ids=BTreeMap::new();identify(&mut cloned,identities,&mut ids)?;
-    if identities.len()!=ids.len()||ids.values().any(|target|ids.contains_key(target)){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"Drawing clone identity census differs"));}
-    layer_base_mut(&mut cloned).name.push_str(name_suffix);references(&mut cloned,&ids);Ok(cloned)
-}
-
-pub fn layer_base_mut(layer: &mut DrawingLayerNode) -> &mut DrawingLayerBase {
-    match layer {
-        DrawingLayerNode::Shape(shape) => &mut shape.base,
-        DrawingLayerNode::Path(path) => &mut path.base,
-        DrawingLayerNode::Text(text) => &mut text.base,
-        DrawingLayerNode::Image(image) => &mut image.base,
-        DrawingLayerNode::Group(group) => &mut group.base,
-        DrawingLayerNode::Boolean(boolean) => &mut boolean.base,
-        DrawingLayerNode::Trace(trace) => &mut trace.base,
-    }
-}
-
-pub fn mutate_drawing_layer(doc: &DrawingSnapshot, target_id: &(impl semio_framework_value::paged::Utf8Text + ?Sized), mutator: impl FnMut(&mut DrawingLayerNode)) -> DrawingSnapshot {
-    let mut next = doc.clone();
-    let mut mutator = mutator;
-    update_layer_in_tree(&mut next.layers, target_id, &mut mutator);
-    next
-}
-
-pub fn update_layer_in_tree(layers: &mut semio_framework_value::list::PagedList<DrawingLayerNode, {usize::MAX}>, target_id: &(impl semio_framework_value::paged::Utf8Text + ?Sized), mutator: &mut impl FnMut(&mut DrawingLayerNode)) -> bool {
-    for layer in layers.iter_mut() {
-        if layer_id(layer).eq_text(target_id) {
-            mutator(layer);
-            return true;
-        }
-        if let DrawingLayerNode::Group(group) = layer {
-            if update_layer_in_tree(&mut group.children, target_id, mutator) {
-                return true;
-            }
-        }
-    }
-    false
-}
-
-pub fn remove_layer_from_tree(layers: &mut semio_framework_value::list::PagedList<DrawingLayerNode, {usize::MAX}>, target_id: &(impl semio_framework_value::paged::Utf8Text + ?Sized)) -> bool {
-    if let Some(index) = layers.iter().position(|layer| layer_id(layer).eq_text(target_id)) {
-        layers.remove(index);
-        return true;
-    }
-    for layer in layers.iter_mut() {
-        if let DrawingLayerNode::Group(group) = layer {
-            if remove_layer_from_tree(&mut group.children, target_id) {
-                return true;
-            }
-        }
-    }
-    false
-}
-
-pub fn extract_layer_node(layers: &mut semio_framework_value::list::PagedList<DrawingLayerNode, {usize::MAX}>, target_id: &(impl semio_framework_value::paged::Utf8Text + ?Sized)) -> Option<DrawingLayerNode> {
-    if let Some(index) = layers.iter().position(|layer| layer_id(layer).eq_text(target_id)) {
-        return Some(layers.remove(index));
-    }
-    for layer in layers.iter_mut() {
-        if let DrawingLayerNode::Group(group) = layer {
-            if let Some(node) = extract_layer_node(&mut group.children, target_id) {
-                return Some(node);
-            }
-        }
-    }
-    None
-}
-
-pub fn insert_layer(layers: &mut semio_framework_value::list::PagedList<DrawingLayerNode, {usize::MAX}>, parent_id: Option<&str>, index: usize, node: DrawingLayerNode) {
-    if let Some(parent_id) = parent_id {
-        if !insert_layer_in_parent(layers, parent_id, index, node.clone()) {
-            layers.push(node);
-        }
-    } else {
-        let at = index.min(layers.len());
-        layers.insert(at, node);
-    }
-}
-
-fn insert_layer_in_parent(layers: &mut semio_framework_value::list::PagedList<DrawingLayerNode, {usize::MAX}>, parent_id: &str, index: usize, node: DrawingLayerNode) -> bool {
-    for layer in layers.iter_mut() {
-        if let DrawingLayerNode::Group(group) = layer {
-            if group.base.id == parent_id {
-                let at = index.min(group.children.len());
-                group.children.insert(at, node);
-                return true;
-            }
-            if insert_layer_in_parent(&mut group.children, parent_id, index, node.clone()) {
-                return true;
-            }
-        }
-    }
-    false
-}
-
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
-#[value(rename_all = "camelCase")]
-pub struct DrawingLayerLocation {
-    #[value(skip_serializing_if = "Option::is_none")]
-    pub parent_id: Option<semio_framework_value::paged::PagedUtf8<{usize::MAX}>>,
-    pub index: usize,
-}
-
-pub fn find_drawing_layer_location(doc: &DrawingSnapshot, target_id: &(impl semio_framework_value::paged::Utf8Text + ?Sized)) -> Option<DrawingLayerLocation> {
-    fn search(layers: &semio_framework_value::list::PagedList<DrawingLayerNode, {usize::MAX}>, parent_id: Option<semio_framework_value::paged::PagedUtf8<{usize::MAX}>>, target_id: &(impl semio_framework_value::paged::Utf8Text + ?Sized)) -> Option<DrawingLayerLocation> {
-        for (index, layer) in layers.iter().enumerate() {
-            if layer_id(layer).eq_text(target_id) {
-                return Some(DrawingLayerLocation { parent_id, index });
-            }
-            if let DrawingLayerNode::Group(group) = layer {
-                if let Some(found) = search(&group.children, Some(group.base.id.clone()), target_id) {
-                    return Some(found);
-                }
-            }
-        }
-        None
-    }
-    search(&doc.layers, None, target_id)
-}
-
-pub fn create_layer_by_kind(identity: DrawingIdentity, kind: &str) -> DrawingLayerNode {
-    if let Some(shape_kind) = kind.strip_prefix("shape:") {
-        return match shape_kind {
-            "rect" => create_drawing_shape_layer_rect(identity, "Rectangle"),
-            "ellipse" => DrawingLayerNode::Shape(DrawingShapeBody {
-                base: default_layer_base(identity, "Ellipse"),
-                shape_kind: "ellipse".into(),
-                rect: None,
-                ellipse: Some(DrawingEllipse { cx: 0.0, cy: 0.0, rx: 64.0, ry: 48.0 }),
-                circle: None,
-                line: None,
-                polygon: None,
-            }),
-            "line" => DrawingLayerNode::Shape(DrawingShapeBody { base: default_layer_base(identity, "Line"), shape_kind: "line".into(), rect: None, ellipse: None, circle: None, line: Some(DrawingLine { x1: 0.0, y1: 0.0, x2: 128.0, y2: 0.0 }), polygon: None }),
-            "polygon" => DrawingLayerNode::Shape(DrawingShapeBody {
-                base: default_layer_base(identity, "Polygon"),
-                shape_kind: "polygon".into(),
-                rect: None,
-                ellipse: None,
-                circle: None,
-                line: None,
-                polygon: Some(DrawingPolygon { points: vec![[0.0, 0.0], [64.0, 0.0], [32.0, 48.0]].into() }),
-            }),
-            _ => create_drawing_shape_layer_rect(identity, "Shape"),
-        };
-    }
-    match kind {
-        "path" => create_drawing_path_layer(identity, "Path", Vec::new().into()),
-        "text" => create_drawing_text_layer(identity, "Text"),
-        "image" => create_drawing_image_layer(identity, "Image", "image-source"),
-        "group" => create_drawing_group_layer(identity, "Group"),
-        "boolean" => create_drawing_boolean_layer(identity, "Boolean", "union", Vec::new().into()),
-        "trace" => create_drawing_trace_layer(identity, "Trace", "trace-source"),
-        _ => create_drawing_path_layer(identity, "Path", Vec::new().into()),
-    }
-}
-
 
 //#endregion 🔖️Tree
 
 //#region 🔖️SegmentGeometry
 
-
-pub fn drawing_layer_descendant_leaf_ids(layer: &DrawingLayerNode) -> Vec<String> {
-    match layer {
-        DrawingLayerNode::Group(group) => group.children.iter().flat_map(drawing_layer_descendant_leaf_ids).collect(),
-        _ => vec![layer_id(layer).to_string()],
-    }
-}
-
-
 //#endregion 🔖️SegmentGeometry
 
 //#region 🔖️KernelResolve
-
 
 /// 🖼️ Project intrinsic ordered RGBA samples into the first-party raster vocabulary.
 pub fn drawing_image_samples(asset: &DrawingImageAsset) -> Option<semio_framework_pixels::RasterImage> {
@@ -630,7 +215,6 @@ pub fn drawing_image_samples(asset: &DrawingImageAsset) -> Option<semio_framewor
     let pixels=asset.samples.iter().flat_map(|sample|sample.iter().copied()).collect();
     Some(semio_framework_pixels::RasterImage{width:asset.width,height:asset.height,pixels})
 }
-
 
 //#endregion 🔖️KernelResolve
 
@@ -677,7 +261,6 @@ pub mod fill;
 #[path = "🎨️fill/🌀️rule/🦀️.rs"]
 pub mod fill_rule;
 
-
 #[path="📝️text/🔤️family/🦀️.rs"]
 pub mod font_family;
 
@@ -697,9 +280,9 @@ pub const DRAWING_UTILITY_IDS: &[&str] = &["selectMarquee", "selectLasso", "sele
 // same reasoning as `note`'s `NoteImageAsset`.
 #[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
 pub struct DrawingTransform {
     pub x: f64,
     pub y: f64,
@@ -717,9 +300,9 @@ pub struct DrawingTransform {
 // verified for `note`'s `NoteImageAsset` nested inside a `Map` value slot.
 #[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
 pub struct GradientStop {
     pub offset: f64,
     pub color: [f64; 4],
@@ -727,9 +310,9 @@ pub struct GradientStop {
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
 #[value(tag = "kind", rename_all = "camelCase")]
-#[cfg_attr(test, serde(tag = "kind", rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testkit"), serde(tag = "kind", rename_all = "camelCase"))]
 pub enum FillStyle {
     Solid {
         color: [f64; 4],
@@ -753,46 +336,46 @@ pub enum FillStyle {
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
 pub struct StrokeStyle {
     pub color: [f64; 4],
     pub width: f64,
     pub cap: StrokeCap,
     pub join: StrokeJoin,
     #[value(skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(test, serde(skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(skip_serializing_if = "Option::is_none"))]
     pub dash: Option<semio_framework_value::list::PagedList<f64, {usize::MAX}>>,
 }
 
 #[derive(Clone, Debug, Default, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
 pub struct DrawingAttributes {
     #[value(default)]
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default))]
     pub fill_rule: FillRule,
     // `fill` is a sum type (`FillStyle` has several tagged variants), so it uses
     // `#[dsl(statements, block)]` — see `dsl::DslVariants`'s doc comment on `OptionStatements`.
     // `stroke` is a single record type, so a plain `#[dsl(block)]` scalar Option suffices.
     #[value(skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(test, serde(skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(skip_serializing_if = "Option::is_none"))]
     #[dsl(statements, block)]
     pub fill: Option<FillStyle>,
     #[value(skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(test, serde(skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(skip_serializing_if = "Option::is_none"))]
     #[dsl(block)]
     pub stroke: Option<StrokeStyle>,
 }
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
 pub struct DrawingTraceParams {
     pub threshold: f64,
     pub simplify_epsilon: f64,
@@ -800,9 +383,9 @@ pub struct DrawingTraceParams {
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
 pub struct DrawingImageAsset {
     pub width: u32,
     pub height: u32,
@@ -811,9 +394,9 @@ pub struct DrawingImageAsset {
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
 pub struct DrawingLayerBase {
     pub id: semio_framework_value::paged::PagedUtf8<{usize::MAX}>,
     pub name: semio_framework_value::paged::PagedUtf8<{usize::MAX}>,
@@ -824,16 +407,16 @@ pub struct DrawingLayerBase {
     #[dsl(block)]
     pub transform: DrawingTransform,
     #[value(default)]
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default))]
     #[dsl(block)]
     pub attributes: DrawingAttributes,
 }
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
 pub struct DrawingRect {
     pub x: f64,
     pub y: f64,
@@ -843,9 +426,9 @@ pub struct DrawingRect {
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
 pub struct DrawingEllipse {
     pub cx: f64,
     pub cy: f64,
@@ -855,9 +438,9 @@ pub struct DrawingEllipse {
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
 pub struct DrawingCircle {
     pub cx: f64,
     pub cy: f64,
@@ -866,9 +449,9 @@ pub struct DrawingCircle {
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
 pub struct DrawingLine {
     pub x1: f64,
     pub y1: f64,
@@ -878,9 +461,9 @@ pub struct DrawingLine {
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
 pub struct DrawingPolygon {
     pub points: semio_framework_value::list::PagedList<[f64; 2], {usize::MAX}>,
 }
@@ -892,46 +475,46 @@ pub struct DrawingPolygon {
 // `ToValue`/`FromValue` tree) and `#[dsl(block)]` (the text/binary DSL grammar has no
 // flatten-splice primitive; a bare nested `base { ... }` line is its declarative equivalent).
 #[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
 #[dsl(keyword = "shape")]
 pub struct DrawingShapeBody {
     #[value(flatten)]
-    #[cfg_attr(test, serde(flatten))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(flatten))]
     #[dsl(block)]
     pub base: DrawingLayerBase,
     pub shape_kind: semio_framework_value::paged::PagedUtf8<{usize::MAX}>,
     #[value(skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(test, serde(skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(skip_serializing_if = "Option::is_none"))]
     #[dsl(block)]
     pub rect: Option<DrawingRect>,
     #[value(skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(test, serde(skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(skip_serializing_if = "Option::is_none"))]
     #[dsl(block)]
     pub ellipse: Option<DrawingEllipse>,
     #[value(skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(test, serde(skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(skip_serializing_if = "Option::is_none"))]
     #[dsl(block)]
     pub circle: Option<DrawingCircle>,
     #[value(skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(test, serde(skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(skip_serializing_if = "Option::is_none"))]
     #[dsl(block)]
     pub line: Option<DrawingLine>,
     #[value(skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(test, serde(skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(skip_serializing_if = "Option::is_none"))]
     #[dsl(block)]
     pub polygon: Option<DrawingPolygon>,
 }
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
 #[dsl(keyword = "path")]
 pub struct DrawingPathBody {
     #[value(flatten)]
-    #[cfg_attr(test, serde(flatten))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(flatten))]
     #[dsl(block)]
     pub base: DrawingLayerBase,
     #[dsl(statements, block)]
@@ -939,13 +522,13 @@ pub struct DrawingPathBody {
 }
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
 #[dsl(keyword = "text")]
 pub struct DrawingTextBody {
     #[value(flatten)]
-    #[cfg_attr(test, serde(flatten))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(flatten))]
     #[dsl(block)]
     pub base: DrawingLayerBase,
     pub x: f64,
@@ -956,13 +539,13 @@ pub struct DrawingTextBody {
 }
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
 #[dsl(keyword = "image")]
 pub struct DrawingImageBody {
     #[value(flatten)]
-    #[cfg_attr(test, serde(flatten))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(flatten))]
     #[dsl(block)]
     pub base: DrawingLayerBase,
     pub image_key: semio_framework_value::paged::PagedUtf8<{usize::MAX}>,
@@ -971,17 +554,17 @@ pub struct DrawingImageBody {
 }
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
 #[dsl(keyword = "group")]
 pub struct DrawingGroupBody {
     #[value(flatten)]
-    #[cfg_attr(test, serde(flatten))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(flatten))]
     #[dsl(block)]
     pub base: DrawingLayerBase,
     #[value(default,skip_serializing_if="group_isolation_disabled")]
-    #[cfg_attr(test,serde(default,skip_serializing_if="group_isolation_disabled"))]
+    #[cfg_attr(any(test, feature = "testkit"),serde(default,skip_serializing_if="group_isolation_disabled"))]
     pub isolation:bool,
     #[dsl(statements, block)]
     pub children: semio_framework_value::list::PagedList<DrawingLayerNode, {usize::MAX}>,
@@ -990,13 +573,13 @@ pub struct DrawingGroupBody {
 fn group_isolation_disabled(value:&bool)->bool {!*value}
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
 #[dsl(keyword = "boolean")]
 pub struct DrawingBooleanBody {
     #[value(flatten)]
-    #[cfg_attr(test, serde(flatten))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(flatten))]
     #[dsl(block)]
     pub base: DrawingLayerBase,
     pub operation: semio_framework_value::paged::PagedUtf8<{usize::MAX}>,
@@ -1004,13 +587,13 @@ pub struct DrawingBooleanBody {
 }
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
 #[dsl(keyword = "trace")]
 pub struct DrawingTraceBody {
     #[value(flatten)]
-    #[cfg_attr(test, serde(flatten))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(flatten))]
     #[dsl(block)]
     pub base: DrawingLayerBase,
     pub source_key: semio_framework_value::paged::PagedUtf8<{usize::MAX}>,
@@ -1064,30 +647,30 @@ flattened_layer_body_tree!(DrawingTraceBody { source_key: "sourceKey", params: "
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
 #[value(tag = "kind")]
-#[cfg_attr(test, serde(tag = "kind"))]
+#[cfg_attr(any(test, feature = "testkit"), serde(tag = "kind"))]
 pub enum DrawingLayerNode {
     #[value(rename = "shape")]
-    #[cfg_attr(test, serde(rename = "shape"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(rename = "shape"))]
     Shape(DrawingShapeBody),
     #[value(rename = "path")]
-    #[cfg_attr(test, serde(rename = "path"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(rename = "path"))]
     Path(DrawingPathBody),
     #[value(rename = "text")]
-    #[cfg_attr(test, serde(rename = "text"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(rename = "text"))]
     Text(DrawingTextBody),
     #[value(rename = "image")]
-    #[cfg_attr(test, serde(rename = "image"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(rename = "image"))]
     Image(DrawingImageBody),
     #[value(rename = "group")]
-    #[cfg_attr(test, serde(rename = "group"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(rename = "group"))]
     Group(DrawingGroupBody),
     #[value(rename = "boolean")]
-    #[cfg_attr(test, serde(rename = "boolean"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(rename = "boolean"))]
     Boolean(DrawingBooleanBody),
     #[value(rename = "trace")]
-    #[cfg_attr(test, serde(rename = "trace"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(rename = "trace"))]
     Trace(DrawingTraceBody),
 }
 
@@ -1099,9 +682,9 @@ pub enum DrawingLayerNode {
 // comma/space-mixed-delimited between commands.
 #[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
 #[value(tag = "kind", rename_all = "camelCase")]
-#[cfg_attr(test, serde(tag = "kind", rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testkit"), serde(tag = "kind", rename_all = "camelCase"))]
 pub enum PathSegment {
     #[dsl(key = "M")]
     Move {
@@ -1142,7 +725,7 @@ pub enum PathSegment {
         rotation: f64,
         #[dsl(positional)]
         #[value(rename = "largeArc")]
-        #[cfg_attr(test, serde(rename = "largeArc"))]
+        #[cfg_attr(any(test, feature = "testkit"), serde(rename = "largeArc"))]
         large_arc: bool,
         #[dsl(positional)]
         sweep: bool,
@@ -1154,9 +737,9 @@ pub enum PathSegment {
 }
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
 pub struct DrawingArtboard {
     pub width: f64,
     pub height: f64,

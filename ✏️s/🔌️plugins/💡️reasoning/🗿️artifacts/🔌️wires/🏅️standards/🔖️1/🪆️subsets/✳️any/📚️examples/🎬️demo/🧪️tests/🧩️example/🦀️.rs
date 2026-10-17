@@ -3,7 +3,7 @@
 /// seven topics and the nine relationships between them.
 #[semio_framework_async_macros::async_test]
 async fn the_assets_carry_the_whole_metabolism_graph() {
-    let text = include_str!("../../../../🖼️assets/🎬️demo/🗣️.dsl.semio");
+    let text = runtime_fixture_text("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🖼️assets/🎬️demo/🗣️.dsl.semio");
     let snapshot = <crate::WiresSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text).expect("demo parent parses");
     let pack = crate::genesis_wires_child_pack(&snapshot, crate::WIRES_CONTENT_SLOT, &snapshot.content.child_id).expect("the demo names its bundled board");
     let content = <crate::SemioGraphSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&pack).expect("board pack");
@@ -19,7 +19,7 @@ async fn the_assets_carry_the_whole_metabolism_graph() {
 #[semio_framework_async_macros::async_test]
 async fn inference_determinism_law() {
     use protocol::Inference;
-    let text = include_str!("../../../../🖼️assets/🎬️demo/🗣️.dsl.semio");
+    let text = runtime_fixture_text("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🖼️assets/🎬️demo/🗣️.dsl.semio");
     let snapshot = <crate::WiresSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text).expect("demo fixture parses");
     let inference = crate::standards::v1::subsets::any::schema::inferences::WiresInference::infer(&snapshot).expect("parent-only inference");
     assert_eq!(inference, crate::standards::v1::subsets::any::schema::inferences::WiresInference::infer(&snapshot).expect("parent-only inference"));
@@ -31,3 +31,8 @@ async fn inference_default_law() {
     assert_eq!(crate::standards::v1::subsets::any::schema::inferences::WiresInference::infer(&crate::empty_wires_snapshot()).expect("parent-only inference"), crate::standards::v1::subsets::any::schema::inferences::WiresInference::default());
 }
 //#endregion 🧪️InferenceLaws
+
+fn runtime_fixture_text(relative: &str) -> &'static str {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative);
+    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display())).into_boxed_str())
+}

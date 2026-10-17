@@ -1,6 +1,6 @@
 #[test]
 fn mounted_child_group_identity_preserves_original_inputs_and_physical_grants() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = crate::fixture_json("🪪️identity/🧪️tests/🧫️fixtures/🔣️.json");
     let grant = |items, capacity, release| RetainedCloneGrant { maximum_items: items, maximum_copy_bytes: 64, maximum_capacity_bytes: capacity, maximum_release_bytes: release, maximum_depth: 64 };
     for row in fixture["cases"].as_array().unwrap() {
         let revision: [u8; 32] = std::array::from_fn(|index| u8::from_str_radix(&row["revision"].as_str().unwrap()[index * 2..index * 2 + 2], 16).unwrap());
@@ -45,6 +45,5 @@ fn mounted_child_group_identity_preserves_original_inputs_and_physical_grants() 
             }
             assert!(cancelled.terminal_is_empty());
         }
-        println!("[DEBUG] original mounted group ID case={} Node/Python SHA256 fixture matched; whole70 birth, copy64, original transfer, seven cancelled frontiers exact native heap parity", row["id"]);
     }
 }

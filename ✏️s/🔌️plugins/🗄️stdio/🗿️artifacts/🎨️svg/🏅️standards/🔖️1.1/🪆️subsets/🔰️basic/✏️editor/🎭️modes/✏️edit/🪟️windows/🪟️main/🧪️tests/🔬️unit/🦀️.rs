@@ -1,4 +1,11 @@
-use super::*;
+use crate::standards::v1_1::subsets::basic::schema::snapshot::SvgSnapshot;
+#[allow(unused_imports)]
+use crate::standards::v1_1::subsets::base::io::text::snapshot::write_svg_xml;
+#[allow(unused_imports)]
+use semio_framework_plugin::{app::ImageView, app::ImageWindowKit};
+#[allow(unused_imports)]
+use semio_framework_plugin::{BuiltNode, WindowKindDefinition, WindowKit};
+use crate::editor::svg_basic::modes::edit::windows::main::*;
 
 #[semio_framework_async_macros::async_test]
 async fn definition_uses_the_frozen_window_kit_kind_id() {

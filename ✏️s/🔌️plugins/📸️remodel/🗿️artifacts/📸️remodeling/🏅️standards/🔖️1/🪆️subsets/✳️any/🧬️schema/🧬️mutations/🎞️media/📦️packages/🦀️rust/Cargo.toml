@@ -16,6 +16,8 @@ workspace = true
 path = "🦀️.rs"
 
 [dependencies]
+semio-s-artifact-remodel-remodeling-mut-media-3 = { workspace = true }
+semio-s-artifact-remodel-remodeling-mut-media-2 = { workspace = true }
 semio-framework-dsl-record = { workspace = true }
 semio-framework-dsl-record-derive = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
@@ -34,10 +36,6 @@ semio-framework-diagnostic = { workspace = true }
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 semio-s-artifact-remodel-remodeling-mutations = { workspace = true }
 semio-s-artifact-remodel-remodeling-mut-vectors = { workspace = true }
-
-[[test]]
-name = "assets"
-path = "🧪️tests/🔬️assets/🦀️.rs"
 
 [[test]]
 name = "streams"

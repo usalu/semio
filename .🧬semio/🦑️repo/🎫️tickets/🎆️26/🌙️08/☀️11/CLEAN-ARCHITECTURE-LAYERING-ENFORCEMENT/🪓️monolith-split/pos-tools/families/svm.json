@@ -1,0 +1,23 @@
+{
+ "name": "svm",
+ "crates": [
+  "semio-framework-schema",
+  "semio-framework-schema-validator",
+  "semio-framework-value-derive",
+  "semio-framework-value-resident",
+  "semio-framework-math-sampling-processors",
+  "semio-framework-math-sampling-constraints"
+ ],
+ "base": {
+  "rev": "1bae6115bc5",
+  "crates": [
+   "semio-framework-schema",
+   "semio-framework-schema-validator",
+   "semio-framework-value-derive",
+   "semio-framework-value-resident",
+   "semio-framework-math-sampling-processors",
+   "semio-framework-math-sampling-constraints"
+  ]
+ },
+ "note": "SCHEMA-VALUE-MATH-SPLITS"
+}

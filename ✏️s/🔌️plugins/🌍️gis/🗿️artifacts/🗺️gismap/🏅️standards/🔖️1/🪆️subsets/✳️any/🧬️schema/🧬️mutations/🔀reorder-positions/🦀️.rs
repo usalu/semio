@@ -2,7 +2,6 @@
 //! by id (id-keyed collection, so addressing is `id`+`to_index`, not a bare index pair).
 
 use crate::diff::GisMapDiff;
-use crate::mutations::GisMapMutation;
 use crate::GisMapSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -24,14 +23,17 @@ pub struct ReorderPositions {
     pub to_index: usize,
 }
 
-impl MutationKind<GisMapSnapshot, GisMapMutation> for ReorderPositions {
+impl<Op> MutationKind<GisMapSnapshot, Op> for ReorderPositions
+where
+    Op: protocol::Mutation<GisMapSnapshot, Diff = GisMapDiff> + From<ReorderPositions>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "reorder", entity: "positions", kind: "reorder-positions", record: "ReorderedPositions" };
 
     fn diff(&self, base: &GisMapSnapshot) -> protocol::MutationOutcome<GisMapDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &GisMapSnapshot) -> Result<Vec<GisMapMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &GisMapSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         super::inverse::inverse(self, base)
     }
 

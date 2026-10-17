@@ -1,6 +1,6 @@
 //! 🔺️ `rename-step` / `change-step-description` — sparse diff construction.
 
-use super::mutation::ChangeStepDescription;
+use crate::standards::v1::subsets::any::schema::mutations::change_step_description::mutation::ChangeStepDescription;
 use crate::schema::diff::{FormsOptionalText, FormsStepPatch, FormsStepsDelta};
 use crate::{forms_steps, FormsDiff, FormsSnapshot};
 

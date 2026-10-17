@@ -1,4 +1,7 @@
-use super::*;
+use crate::{schema::snapshot::DxfEntity, schema::snapshot::DxfCircle, schema::snapshot::DxfLine, schema::snapshot::DxfOther, schema::snapshot::DxfSnapshot};
+#[allow(unused_imports)]
+use crate::{schema::snapshot::DxfArc, schema::snapshot::DxfInsert, schema::snapshot::DxfPolyline, schema::snapshot::DxfSolid, schema::snapshot::DxfText};
+use crate::standards::v_r12::subsets::any::schema::inferences::bounds::*;
 use crate::schema::snapshot::DxfBlock;
 
 #[semio_framework_async_macros::async_test]

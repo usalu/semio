@@ -1,0 +1,439 @@
+{
+ "$schema": "http://json-schema.org/draft-07/schema#",
+ "type": "object",
+ "additionalProperties": false,
+ "required": [
+  "combine",
+  "retirement",
+  "io",
+  "production",
+  "interruption",
+  "concurrent",
+  "limits",
+  "publication",
+  "collection"
+ ],
+ "properties": {
+  "combine": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "name",
+     "extra",
+     "nodes"
+    ],
+    "properties": {
+     "name": {
+      "type": "string"
+     },
+     "extra": {
+      "type": "boolean"
+     },
+     "nodes": {
+      "enum": [
+       3,
+       6
+      ]
+     }
+    }
+   }
+  },
+  "retirement": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "name",
+     "order",
+     "nodes",
+     "below",
+     "kind",
+     "victims"
+    ],
+    "properties": {
+     "name": {
+      "type": "string"
+     },
+     "order": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+       "enum": [
+        "o0",
+        "o1",
+        "o2",
+        "w0",
+        "w1",
+        "w2"
+       ]
+      }
+     },
+     "nodes": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 6
+     },
+     "below": {
+      "enum": [
+       0,
+       1
+      ]
+     },
+     "kind": {
+      "enum": [
+       "retained",
+       "retired",
+       "too-large"
+      ]
+     },
+     "victims": {
+      "type": "array",
+      "items": {
+       "enum": [
+        "o0",
+        "o1",
+        "o2"
+       ]
+      }
+     }
+    }
+   }
+  },
+  "io": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "name",
+     "missing",
+     "bytes",
+     "tooLarge",
+     "retired",
+     "keptOld"
+    ],
+    "properties": {
+     "name": {
+      "type": "string"
+     },
+     "missing": {
+      "type": "boolean"
+     },
+     "bytes": {
+      "type": "boolean"
+     },
+     "tooLarge": {
+      "type": "boolean"
+     },
+     "retired": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 2
+     },
+     "keptOld": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 3
+     }
+    }
+   }
+  },
+  "production": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "preparation",
+    "publication",
+    "retirement",
+    "maintenanceMustNotCall",
+    "publicationMustNotCall"
+   ],
+   "properties": {
+    "preparation": {
+     "type": "string",
+     "minLength": 1
+    },
+    "publication": {
+     "type": "string",
+     "minLength": 1
+    },
+    "retirement": {
+     "type": "string",
+     "minLength": 1
+    },
+    "maintenanceMustNotCall": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     },
+     "minItems": 1
+    },
+    "publicationMustNotCall": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     },
+     "minItems": 1
+    }
+   }
+  },
+  "interruption": {
+   "type": "array",
+   "minItems": 1,
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "name",
+     "stage",
+     "cancel",
+     "oldPresent"
+    ],
+    "properties": {
+     "name": {
+      "type": "string"
+     },
+     "stage": {
+      "enum": [
+       "before",
+       "after",
+       "sql"
+      ]
+     },
+     "cancel": {
+      "type": "boolean"
+     },
+     "oldPresent": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 3
+     }
+    }
+   }
+  },
+  "concurrent": {
+   "type": "array",
+   "minItems": 1,
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "name",
+     "variant",
+     "kinds",
+     "callbacks",
+     "nodes"
+    ],
+    "properties": {
+     "name": {
+      "type": "string"
+     },
+     "variant": {
+      "type": "boolean"
+     },
+     "kinds": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+       "enum": [
+        "admitted",
+        "pressure"
+       ]
+      }
+     },
+     "callbacks": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+       "enum": [
+        0,
+        1
+       ]
+      }
+     },
+     "nodes": {
+      "const": 6
+     }
+    }
+   }
+  },
+  "limits": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "graphBytes",
+    "workingSetBytes",
+    "cases"
+   ],
+   "properties": {
+    "graphBytes": {
+     "const": 268435456
+    },
+    "workingSetBytes": {
+     "const": 1073741824
+    },
+    "cases": {
+     "type": "array",
+     "minItems": 1,
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "graphs",
+       "accepted"
+      ],
+      "properties": {
+       "graphs": {
+        "type": "array",
+        "minItems": 1,
+        "maxItems": 5,
+        "items": {
+         "type": "integer",
+         "minimum": 1,
+         "maximum": 268435456
+        }
+       },
+       "accepted": {
+        "type": "boolean"
+       }
+      }
+     }
+    }
+   }
+  },
+  "publication": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "entry",
+    "failures",
+    "maximumLeaseDatabases",
+    "forbiddenLeasePrefix",
+    "generations"
+   ],
+   "properties": {
+    "entry": {
+     "const": "publishRustUnitDescriptorFilesV3"
+    },
+    "failures": {
+     "type": "array",
+     "minItems": 4,
+     "maxItems": 4,
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "name",
+       "body",
+       "cleanup",
+       "files"
+      ],
+      "properties": {
+       "name": {
+        "type": "string"
+       },
+       "body": {
+        "enum": [
+         "error",
+         "undefined",
+         "none"
+        ]
+       },
+       "cleanup": {
+        "enum": [
+         "error",
+         "undefined"
+        ]
+       },
+       "files": {
+        "enum": [
+         0,
+         1
+        ]
+       }
+      }
+     }
+    },
+    "maximumLeaseDatabases": {
+     "const": 3
+    },
+    "forbiddenLeasePrefix": {
+     "const": "rust-descriptor:"
+    },
+    "generations": {
+     "const": 4
+    }
+   }
+  },
+  "collection": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "entry",
+    "cases",
+    "guards"
+   ],
+   "properties": {
+    "entry": {
+     "const": "withRustUnitDescriptorWorkingSetCollectionV3"
+    },
+    "cases": {
+     "type": "array",
+     "minItems": 3,
+     "maxItems": 3,
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "name",
+       "requests",
+       "extra",
+       "nodes",
+       "unawaited"
+      ],
+      "properties": {
+       "name": {
+        "type": "string"
+       },
+       "requests": {
+        "const": 24
+       },
+       "extra": {
+        "type": "boolean"
+       },
+       "nodes": {
+        "enum": [
+         3,
+         6
+        ]
+       },
+       "unawaited": {
+        "type": "boolean"
+       }
+      }
+     }
+    },
+    "guards": {
+     "type": "array",
+     "minItems": 5,
+     "maxItems": 5,
+     "uniqueItems": true,
+     "items": {
+      "enum": [
+       "copied-control",
+       "cancelled",
+       "escaped",
+       "ambiguous",
+       "body-undefined"
+      ]
+     }
+    }
+   }
+  }
+ }
+}

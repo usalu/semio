@@ -30,6 +30,3 @@ impl RetireOwned for ScenePlanCloseJob{
  fn retirement_birth_bytes(&self)->Option<usize>{self.owner.retirement_birth_bytes()}
  fn controlled_retirement_supported()->bool{true}
 }
-#[cfg(test)]
-#[path="🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;

@@ -1,0 +1,23 @@
+{
+ "name": "dm2k",
+ "crates": [
+  "semio-framework-native-build-compiler-resources",
+  "semio-framework-value-derive",
+  "semio-framework-os-kernel-dsl-derive",
+  "semio-framework-process-routing-workspace",
+  "semio-framework-os-run",
+  "semio-framework-os-store-sync",
+  "semio-repo-test-host"
+ ],
+ "base": {
+  "rev": "1bae6115bc5",
+  "crates": [
+   "semio-framework-value-derive",
+   "semio-framework-os-kernel-dsl-derive",
+   "semio-framework-os-run",
+   "semio-framework-os-store-sync",
+   "semio-repo-test-host"
+  ]
+ },
+ "note": "DM2 compiler-resources and routing-workspace owners with consumers"
+}

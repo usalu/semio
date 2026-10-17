@@ -78,6 +78,3 @@ impl PreparedFill {
 }
 physical_work_retirement!(PreparedFillRetirement,PreparedFill,&'static str,|_:&str|"Paint retirement refused its physical grant");
 
-#[cfg(test)]
-#[path="🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;

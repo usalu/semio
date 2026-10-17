@@ -1,7 +1,7 @@
 //! 🎮️ Borrowed move semantics produce a scalar plan before inverse or diagnostic ownership.
 
-use super::MoveNode;
-use crate::{Puzzle2dSnapshot, standards::v1::subsets::any::schema::snapshot::lookup::{Puzzle2dLookupCursor, Puzzle2dLookupScope, Puzzle2dLookupStep}};
+use crate::standards::v1::subsets::any::schema::mutations::move_node::MoveNode;
+use crate::{Puzzle2dSnapshot, standards::v1::subsets::any::schema::lookup::{Puzzle2dLookupCursor, Puzzle2dLookupScope, Puzzle2dLookupStep}};
 use semio_framework_value::{ValueError, ValueRefusalKind, retained_clone::{RetainedCloneBinding, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneRef, RetainedCloneStep}};
 
 #[path = "↩️inverse/🦀️.rs"]
@@ -104,6 +104,4 @@ impl Puzzle2dMoveNodePreparationCursor {
     pub fn terminal_is_empty(&self) -> bool { self.closing && self.output.is_none() && self.lookup.terminal_is_empty() && self.source.is_none() && self.mutation.is_none() }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;
+

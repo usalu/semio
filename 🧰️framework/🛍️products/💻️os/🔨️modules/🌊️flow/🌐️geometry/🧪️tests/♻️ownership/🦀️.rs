@@ -64,7 +64,6 @@ fn original_geometry_port_full_grant_retains_child_and_terminal_box() {
         }
         assert!(box_released);assert!(refused>0);assert_eq!(logical,fixture["expected"]["utf8Bytes"].as_u64().unwrap() as usize);assert_eq!(released,source_births+cursor_births);
         let (_,births,frees)=observe_backing(||drop(retirement));assert_eq!((births,frees),(0,0));
-        eprintln!("[DEBUG] original GeometryPort sameBox=true sourcePointer={pointer:p} copy={copy} actualSource={source_births} actualCursor={cursor_births} actualReleased={released} refused={refused} turns={turns} outerBoxSeparate=true terminalDropFree=0");
     }
 }
 
@@ -80,7 +79,7 @@ fn original_geometry_port_retain_returns_exact_refused_source() {
     let incoming=fixture["refusedHandles"].as_array().unwrap().iter().map(|handle|handle.as_str().unwrap().to_string()).collect::<Vec<_>>();let incoming_pointer=incoming.as_ptr();let incoming_key=incoming[0].as_ptr();let (refused,birth,release)=observe_backing(||port.begin_retain(incoming));let (_,incoming)=refused.err().unwrap();assert_eq!((birth,release),(0,0));assert_eq!(incoming.as_ptr(),incoming_pointer);assert_eq!(incoming[0].as_ptr(),incoming_key);drop(incoming);
     let zero=RetainedCloneGrant {maximum_items:0,maximum_copy_bytes:0,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:0};let(step,birth,release)=observe_backing(||port.retain_step(zero).unwrap());assert_eq!(step.progress(),Default::default());assert_eq!((birth,release),(0,0));
     let(mut admitted,mut physical,mut turns)=(0,0,0);while !port.retain_terminal_is_empty() {let copy=port.next_retain_copy_byte_demand().unwrap();let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:port.next_retain_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:port.next_retain_release_byte_demand().unwrap(),maximum_depth:port.next_retain_depth_demand().unwrap()};let(step,birth,release)=observe_backing(||port.retain_step(grant).unwrap());assert!(step.progress().fits(grant));assert_eq!((birth,release),(step.progress().retained_capacity_bytes,step.progress().released_bytes));admitted+=birth;physical+=release;turns+=1;assert!(turns<10000);}
-    assert_eq!(born+admitted,physical);let(_,birth,release)=observe_backing(||drop(port));assert_eq!((birth,release),(0,0));eprintln!("[DEBUG] Original geometry retain exactSource=true refusedSameVector=true source={born} admitted={admitted} physical={physical} turns={turns} terminalDrop=0");
+    assert_eq!(born+admitted,physical);let(_,birth,release)=observe_backing(||drop(port));assert_eq!((birth,release),(0,0));
 }
 
 /// 🛑️ Cancellation flags the original owner without effects and then closes its exact payload under caller grants.
@@ -94,6 +93,6 @@ fn original_geometry_port_cancel_retains_actual_payload_until_funded_closure(){
         let zero=RetainedCloneGrant {maximum_items:0,maximum_copy_bytes:0,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:0};let(step,birth,release)=observe_backing(||port.cancel_step(zero).unwrap());assert_eq!(step.progress(),Default::default());assert_eq!((birth,release),(0,0));assert!(!port.cancel_terminal_is_empty());
         let copy=copy.as_u64().unwrap()as usize;let(mut born,mut freed,mut turns)=(0,0,0);
         while !port.cancel_terminal_is_empty(){let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:port.next_cancel_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:port.next_cancel_release_byte_demand().unwrap(),maximum_depth:port.next_cancel_depth_demand().unwrap()};for denied in [(grant.maximum_capacity_bytes>0).then_some(RetainedCloneGrant{maximum_capacity_bytes:grant.maximum_capacity_bytes.saturating_sub(1),..grant}),(grant.maximum_release_bytes>0).then_some(RetainedCloneGrant{maximum_release_bytes:grant.maximum_release_bytes.saturating_sub(1),..grant})].into_iter().flatten(){let(step,birth,release)=observe_backing(||port.cancel_step(denied).unwrap());assert_eq!(step.progress(),Default::default());assert_eq!((birth,release),(0,0));assert!(!port.cancel_terminal_is_empty());}let(step,birth,release)=observe_backing(||port.cancel_step(grant).unwrap());assert!(step.progress().fits(grant));assert_eq!((birth,release),(step.progress().retained_capacity_bytes,step.progress().released_bytes));born+=birth;freed+=release;turns+=1;assert!(turns<100000);}
-        assert_eq!(source+born,freed);let(_,birth,release)=observe_backing(||drop(port));assert_eq!((birth,release),(0,0));eprintln!("[DEBUG] Original geometry cancel source={source} admitted={born} physical={freed} copy={copy} turns={turns} beginEffects=0 terminalDrop=0");
+        assert_eq!(source+born,freed);let(_,birth,release)=observe_backing(||drop(port));assert_eq!((birth,release),(0,0));
     }
 }

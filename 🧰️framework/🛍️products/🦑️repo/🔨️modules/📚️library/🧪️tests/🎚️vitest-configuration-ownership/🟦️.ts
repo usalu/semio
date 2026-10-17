@@ -12,14 +12,15 @@ type Owner = Readonly<{ configurationRoot: string; previousPath: string; ownerPa
 type Fixture = Readonly<{
   schemaVersion: 1;
   owners: readonly Owner[];
-  selector: Readonly<{ libraryDeclaration: string; relativeOwnerSuffix: string; editorSetting: string; editorPattern: string }>;
+  gatePolicy: Readonly<{ cacheRoot: string; coverageDirectory: string; toolPath: string; runtime: string; coverageRuntime: string; budgetMs: number }>;
+  selector: Readonly<{ libraryDeclaration: string; libraryDeclarationFile: string; relativeOwnerSuffix: string; ownerPattern: string; editorSetting: string; editorPattern: string }>;
   directoryContexts: readonly Readonly<{ name: string; parentKind: string; kind: string }>[];
   registration: Readonly<{ target: string }>;
 }>;
 
 const libraryRoot = resolve(import.meta.dir, "../..");
 const repoRoot = resolve(import.meta.dir, "../../../../../../..");
-const fixture = JSON.parse(readFileSync(resolve(libraryRoot, "🧫️fixtures/🎚️vitest-configuration-ownership/🔣️.json"), "utf8")) as Fixture;
+const fixture = JSON.parse(readFileSync(resolve(libraryRoot, "🧪️tests/🧫️fixtures/🎚️vitest-configuration-ownership/🔣️.json"), "utf8")) as Fixture;
 
 
 function portable(value: unknown): unknown {
@@ -104,14 +105,30 @@ function walkProductFiles(visit: (path: string) => void): void {
  * 🩸️ Loaded by plain `import()`, not `vite.loadConfigFromFile`. Both yield the same object — Vite's
  * loader esbuild-bundles the file and evaluates it, and `defineConfig` is the identity function, so the
  * module's default export *is* the user config — but the bundle step costs seconds per owner and,
- * across 46 owners under fleet load, pushed this gate past the 120 s `runRepositoryTestCommand` ceiling while
+ * across 58 owners under fleet load, pushed this gate past the 120 s `runRepositoryTestCommand` ceiling while
  * proving nothing the import does not. An owner exporting a config *function* is called with the same
  * `test`-mode environment Vitest passes. */
-async function ownerConfiguration(ownerPath: string): Promise<Record<string, any>> {
-  const module = (await import(pathToFileURL(ownerPath).href)) as { default?: unknown };
-  const exported = module.default;
-  const resolved = typeof exported === "function" ? await (exported as (environment: unknown) => unknown)({ command: "serve", mode: "test", isSsrBuild: false, isPreview: false }) : exported;
-  return resolved as Record<string, any>;
+async function ownerConfiguration(ownerPath: string, cwd: string): Promise<Record<string, any>> {
+  const previous = process.env.SEMIO_VITEST_POLICY;
+  process.env.SEMIO_VITEST_POLICY = gatePolicy(cwd);
+  try {
+    const module = (await import(pathToFileURL(ownerPath).href)) as { default?: unknown };
+    const exported = module.default;
+    const resolved = typeof exported === "function" ? await (exported as (environment: unknown) => unknown)({ command: "serve", mode: "test", isSsrBuild: false, isPreview: false }) : exported;
+    return resolved as Record<string, any>;
+  } finally {
+    if (previous === undefined) delete process.env.SEMIO_VITEST_POLICY;
+    else process.env.SEMIO_VITEST_POLICY = previous;
+  }
+}
+
+/** 🔐️ The explicit Vitest policy every owner is loaded under. An owner reads its cache leaf through `testCacheDirectoryV1` and
+ * refuses to load without a policy (`Explicit Vitest policy required`), so the gate is the policy's caller: the roots sit inside the
+ * repository, which makes `portable()` fold them to `./…` and keeps every `cacheDir` of the projection machine-independent. Owners are
+ * loaded one after the other because the policy lives in the process environment while a module evaluates. */
+function gatePolicy(cwd: string): string {
+  const policy = fixture.gatePolicy;
+  return JSON.stringify({ version: 1, cwd, toolPath: resolve(repoRoot, policy.toolPath), runtime: policy.runtime, coverageRuntime: policy.coverageRuntime, cacheRoot: resolve(repoRoot, policy.cacheRoot), coverageDirectory: resolve(repoRoot, policy.coverageDirectory), budgetMs: policy.budgetMs });
 }
 
 /** 🕳️ Owner patterns that select nothing on disk — the suite an owner believes it runs and does not.
@@ -159,6 +176,7 @@ function nxInputPatterns(projectPath: string): string[] {
  * have no `📜️script.ts` above them — the bundle that imports them is the `📦️packages/🟦️typescript` of the
  * nearest semantic ancestor. */
 function routerRoot(path: string): string {
+  if (path.includes("/📚️library/🎛️commands/")) return repoRoot;
   let candidate = dirname(path);
   while (candidate !== repoRoot) {
     if (existsSync(join(candidate, "📜️script.ts"))) return candidate;
@@ -174,8 +192,8 @@ describe("Vitest configuration ownership", () => {
     
     expect(fixture["schemaVersion"]).toEqual(1);
     
-    expect(fixture.owners).toHaveLength(46);
-    expect(new Set(fixture.owners.map(({ ownerPath }) => ownerPath)).size).toBe(46);
+    expect(fixture.owners).toHaveLength(57);
+    expect(new Set(fixture.owners.map(({ ownerPath }) => ownerPath)).size).toBe(57);
     const taxonomy = loadCatalogTaxonomy();
     for (const row of fixture.directoryContexts) expect(semanticDirectoryKindId(row.name, taxonomy, { parentKindId: row.parentKind }), `${row.parentKind}/${row.name}`).toBe(row.kind);
   }, 30_000);
@@ -183,17 +201,17 @@ describe("Vitest configuration ownership", () => {
   test("requires anonymous semantic owners and removes every fixed predecessor", () => {
     for (const owner of fixture.owners) {
       expect(owner.ownerPath.includes("/📦️packages/"), owner.ownerPath).toBe(false);
-      expect(owner.ownerPath.endsWith(fixture.selector.relativeOwnerSuffix), owner.ownerPath).toBe(true);
+      expect(owner.ownerPath.endsWith(fixture.selector.relativeOwnerSuffix) || new RegExp(fixture.selector.ownerPattern, "u").test(owner.ownerPath), owner.ownerPath).toBe(true);
       expect(existsSync(resolve(repoRoot, owner.ownerPath)), owner.ownerPath).toBe(true);
       expect(existsSync(resolve(repoRoot, owner.previousPath)), owner.previousPath).toBe(false);
     }
   });
 
   test("loads every explicit owner and preserves its behavioral projection", async () => {
-    await Promise.all(fixture.owners.map(async (owner) => {
+    for (const owner of fixture.owners) {
       const ownerPath = resolve(repoRoot, owner.ownerPath);
       const expectedRoot = resolve(repoRoot, owner.configurationRoot);
-      const config = await ownerConfiguration(ownerPath);
+      const config = await ownerConfiguration(ownerPath, expectedRoot);
       expect(config, owner.ownerPath).not.toBeNull();
       expect(config.root, owner.ownerPath).toBe(expectedRoot);
       expect(config.test?.root, owner.ownerPath).toBe(expectedRoot);
@@ -204,8 +222,8 @@ describe("Vitest configuration ownership", () => {
       expect(patternsSelectingNothing(config, expectedRoot), owner.ownerPath).toEqual([]);
       const declared = [...(config.test?.include ?? []), ...(config.test?.includeSource ?? [])].length;
       expect(declared > 0 || owner.configurationRoot === ".", `${owner.ownerPath} collects nothing`).toBe(true);
-    }));
-  }, 180_000);
+    }
+  }, 600_000);
 
   test("requires every runVitest call to select an anonymous semantic configuration", () => {
     const missing: string[] = [];
@@ -219,7 +237,7 @@ describe("Vitest configuration ownership", () => {
       const source = ts.createSourceFile(path, content, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
       const roots = new Map<string, string>();
       const visit = (node: ts.Node) => {
-        if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name) && node.initializer && ts.isCallExpression(node.initializer) && node.initializer.expression.getText(source) === "join" && node.initializer.arguments[0]?.getText(source) === "this.root" && ts.isStringLiteral(node.initializer.arguments[1])) roots.set(node.name.text, resolve(routerRoot(path), node.initializer.arguments[1].text));
+        if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name) && node.initializer && ts.isCallExpression(node.initializer) && node.initializer.expression.getText(source) === "join" && ["this.root", "this.repoRoot"].includes(node.initializer.arguments[0]?.getText(source) ?? "") && ts.isStringLiteral(node.initializer.arguments[1])) roots.set(node.name.text, resolve(node.initializer.arguments[0]?.getText(source) === "this.repoRoot" ? repoRoot : routerRoot(path), node.initializer.arguments[1].text));
         if (ts.isCallExpression(node) && ts.isIdentifier(node.expression) && node.expression.text === "runVitest") {
           const argument = node.arguments[2];
           if (!argument) missing.push(relative(repoRoot, path));
@@ -228,7 +246,8 @@ describe("Vitest configuration ownership", () => {
             const bundle = node.arguments[0];
             let bundleRoot: string | undefined;
             if (bundle?.getText(source) === "this.root") bundleRoot = routerRoot(path);
-            else if (bundle && ts.isCallExpression(bundle) && bundle.expression.getText(source) === "join" && bundle.arguments[0]?.getText(source) === "this.root" && ts.isStringLiteral(bundle.arguments[1])) bundleRoot = resolve(routerRoot(path), bundle.arguments[1].text);
+            else if (bundle?.getText(source) === "this.repoRoot") bundleRoot = repoRoot;
+            else if (bundle && ts.isCallExpression(bundle) && bundle.expression.getText(source) === "join" && ["this.root", "this.repoRoot"].includes(bundle.arguments[0]?.getText(source) ?? "") && ts.isStringLiteral(bundle.arguments[1])) bundleRoot = resolve(bundle.arguments[0]!.getText(source) === "this.repoRoot" ? repoRoot : routerRoot(path), bundle.arguments[1].text);
             else if (bundle && ts.isIdentifier(bundle)) bundleRoot = roots.get(bundle.text);
             const selected = bundleRoot && relative(repoRoot, resolve(bundleRoot, argument.text)).replaceAll("\\", "/");
             if (!selected || !ownerPaths.has(selected)) wrong.push(`${relative(repoRoot, path)}: ${argument.text} -> ${selected ?? "unresolved"}`);
@@ -241,7 +260,7 @@ describe("Vitest configuration ownership", () => {
     walkProductFiles(visitSource);
     expect(missing).toEqual([]);
     expect(wrong).toEqual([]);
-    const library = readFileSync(resolve(libraryRoot, "🟦️.ts"), "utf8");
+    const library = readFileSync(resolve(libraryRoot, fixture.selector.libraryDeclarationFile), "utf8");
     expect(library).toContain(fixture.selector.libraryDeclaration);
   }, 60_000);
 
@@ -276,6 +295,6 @@ describe("Vitest configuration ownership", () => {
     const project = JSON.parse(readFileSync(resolve(packageRoot, "📋️project.json"), "utf8"));
     expect(project.targets[fixture.registration.target]?.options?.command).toBe("bun ./📜️script.ts test vitest-configuration-ownership");
     const manifest = JSON.parse(readFileSync(resolve(packageRoot, "package.json"), "utf8"));
-    expect(manifest.scripts[fixture.registration.target]).toBe(`nx run @semio-tech/repo-lib:${fixture.registration.target}`);
+    expect(manifest.scripts[fixture.registration.target]).toBe(`bun --cwd "../../../../../../.." repo run @semio-tech/repo-lib:${fixture.registration.target}`);
   });
 });

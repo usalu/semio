@@ -36,7 +36,6 @@ fn intrinsic_borrowed_object_order_preserves_original_payload_and_every_equal_ke
         let mut output=semio_framework_replication_codec::io::binary::operation_bytes::OwnedOperationBytes::try_new(expected.len(),65536).unwrap();let mut allow=|_|true;let mut control=NativeEncodeControl::new(16_777_216,&mut allow);
         assert_eq!(record::encode_projected_record_body_into(&spec,&source,&EncodeOptions::default(),&mut output,&mut control).unwrap(),expected.len());assert!(output.iter().eq(expected.iter().copied()),"{}",row["id"]);close_output(&mut output);assert_eq!(tagged(&value),row["source"]);
     }
-    eprintln!("[DEBUG] borrowed intrinsic occurrence order5 original payloads retained duplicate occurrences");
 }
 
 #[test]
@@ -50,7 +49,6 @@ fn intrinsic_static_borrowed_object_order_keeps_paid_scratch_until_physical_clos
         let(result,birth,free)=crate::test_allocation::observe_backing(||capsule.write_body(&options,&mut output,&mut control));assert_eq!(result.unwrap(),expected.len());assert_eq!(birth,capsule.allocated_bytes()+output.allocated_bytes());assert_eq!(free,0);assert_eq!(control.owned_bytes(),birth);assert!(output.iter().eq(expected.iter().copied()),"{}",row["id"]);
         let scratch=capsule.allocated_bytes();let mut retired=0;for _ in 0..32768{let(step,birth,free)=crate::test_allocation::observe_backing(||capsule.retire_one(1,4096).unwrap());assert_eq!(birth,0);assert_eq!(free,step.2);assert!(step.1<=1&&free<=4096);retired+=free;if !step.0{break}}assert_eq!(retired,scratch);assert_eq!(capsule.allocated_bytes(),0);close_output(&mut output);assert_eq!(tagged(&value),row["source"]);
     }
-    eprintln!("[DEBUG] static borrowed intrinsic occurrence order5 retained original payloads exact paid scratch release");
 }
 
 #[test]
@@ -70,7 +68,6 @@ fn intrinsic_boundary_original_object_order_preserves_every_equal_key_occurrence
         let oracle:serde_json::Value=serde_json::from_str(&semio_framework_pack_json::to_json_string(&source)).unwrap();
         assert_eq!(oracle,serde_json::Value::from(&source),"{}",row["id"]);
     }
-    eprintln!("[DEBUG] intrinsic original object order5 neutral vectors body/document/serde oracle preserved duplicate occurrences");
 }
 
 #[test]
@@ -85,7 +82,6 @@ fn intrinsic_boundary_literal_body_and_document_match_the_owned_schema(){
         let mut decode=NativeDecodeControl::new(usize::MAX,&mut allow_decode);let decoded=intrinsic::decode_document(&document,&input,&mut decode).unwrap();assert_eq!(tagged(&decoded),row["value"]);
         let semantic:serde_json::Value=serde_json::from_str(&semio_framework_pack_json::to_json_string(&decoded)).unwrap();assert_eq!(semantic,serde_json::Value::from(&value));
     }
-    eprintln!("[DEBUG] canonical intrinsic Pack literal/body/document/serde oracle cases={}",fixture["cases"].as_array().unwrap().len());
 }
 
 #[test]
@@ -99,7 +95,6 @@ fn intrinsic_object_order_scratch_is_paid_by_exact_cumulative_caller_authority()
         let mut cumulative=NativeEncodeControl::new(requested*2-1,&mut allow);assert_eq!(intrinsic::encode_body(&value,&options,&mut cumulative).unwrap(),expected);assert_eq!(intrinsic::encode_body(&value,&options,&mut cumulative).unwrap_err().kind(),ValueRefusalKind::OwnershipLimit);
         let mut deny=|_|false;let mut canceled=NativeEncodeControl::new(16_777_216,&mut deny);assert_eq!(intrinsic::encode_body(&value,&options,&mut canceled).unwrap_err().kind(),ValueRefusalKind::Canceled);assert_eq!(canceled.owned_bytes(),0);assert_eq!(tagged(&value),row["source"]);
     }
-    eprintln!("[DEBUG] intrinsic object order5 actual index/frontier/output allocations exactly charged; short cumulative and canceled authority refused");
 }
 
 #[test]
@@ -126,6 +121,5 @@ fn intrinsic_boundary_settles_actual_requests_and_cumulative_cancellation(){
         let mut short=NativeDecodeControl::new(requested-1,&mut allow);let error=if document{intrinsic::decode_document(&bytes,&input,&mut short)}else{intrinsic::decode_body(&bytes,&input,&mut short)}.unwrap_err();assert_eq!(error.kind(),ValueRefusalKind::OwnershipLimit);
         let mut cumulative=NativeDecodeControl::new(requested*2-1,&mut allow);let first=if document{intrinsic::decode_document(&bytes,&input,&mut cumulative)}else{intrinsic::decode_body(&bytes,&input,&mut cumulative)}.unwrap();assert_eq!(first,value);let error=if document{intrinsic::decode_document(&bytes,&input,&mut cumulative)}else{intrinsic::decode_body(&bytes,&input,&mut cumulative)}.unwrap_err();assert_eq!(error.kind(),ValueRefusalKind::OwnershipLimit);
         let mut deny=|_|false;let mut canceled=NativeDecodeControl::new(usize::MAX,&mut deny);let error=if document{intrinsic::decode_document(&bytes,&input,&mut canceled)}else{intrinsic::decode_body(&bytes,&input,&mut canceled)}.unwrap_err();assert_eq!(error.kind(),ValueRefusalKind::Canceled);assert_eq!(canceled.owned_bytes(),0);
-        eprintln!("[DEBUG] intrinsic Pack document={document} caller ownership requests={requested} exact/short/cancel executed");
     }
 }

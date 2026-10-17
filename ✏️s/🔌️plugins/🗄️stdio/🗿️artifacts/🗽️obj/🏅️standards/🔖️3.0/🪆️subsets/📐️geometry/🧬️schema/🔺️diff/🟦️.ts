@@ -76,6 +76,10 @@ type stdioObj30GeometryDiffGuardSizeBounds = { readonly minItems?: number; reado
 
 export const stdioObj30GeometryDiffGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : stdioObj30GeometryDiffGuardReject(at, "value is not an object");
+export const stdioObj30GeometryDiffGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) stdioObj30GeometryDiffGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const stdioObj30GeometryDiffGuardArray = (value: unknown, at: string, bounds: stdioObj30GeometryDiffGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return stdioObj30GeometryDiffGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) stdioObj30GeometryDiffGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -141,7 +145,7 @@ export function parseObjUnknownStatement(value: unknown, at = "$"): ObjUnknownSt
 }
 
 export function parseObjVertexModified(value: unknown, at = "$"): ObjVertexModified {
-  const row = stdioObj30GeometryDiffGuardObject(value, at);
+  const row = stdioObj30GeometryDiffGuardClosed(stdioObj30GeometryDiffGuardObject(value, at), at, ["index", "diff"]);
   return {
     index: stdioObj30GeometryDiffGuardInteger(row["index"], `${at}.index`),
     diff: parseObjVertexDiff(row["diff"], `${at}.diff`),
@@ -157,7 +161,7 @@ export function parseObjVertexAdded(value: unknown, at = "$"): ObjVertexAdded {
 }
 
 export function parseObjVerticesDiff(value: unknown, at = "$"): ObjVerticesDiff {
-  const row = stdioObj30GeometryDiffGuardObject(value, at);
+  const row = stdioObj30GeometryDiffGuardClosed(stdioObj30GeometryDiffGuardObject(value, at), at, ["removed", "modified", "added"]);
   return {
     removed: row["removed"] === undefined ? [] : stdioObj30GeometryDiffGuardArray(row["removed"], `${at}.removed`).map((item, index) => stdioObj30GeometryDiffGuardInteger(item, `${at}.removed[${index}]`)),
     modified: row["modified"] === undefined ? [] : stdioObj30GeometryDiffGuardArray(row["modified"], `${at}.modified`).map((item, index) => parseObjVertexModified(item, `${at}.modified[${index}]`)),
@@ -166,7 +170,7 @@ export function parseObjVerticesDiff(value: unknown, at = "$"): ObjVerticesDiff 
 }
 
 export function parseObjTexCoordModified(value: unknown, at = "$"): ObjTexCoordModified {
-  const row = stdioObj30GeometryDiffGuardObject(value, at);
+  const row = stdioObj30GeometryDiffGuardClosed(stdioObj30GeometryDiffGuardObject(value, at), at, ["index", "diff"]);
   return {
     index: stdioObj30GeometryDiffGuardInteger(row["index"], `${at}.index`),
     diff: parseObjTexCoordDiff(row["diff"], `${at}.diff`),
@@ -182,7 +186,7 @@ export function parseObjTexCoordAdded(value: unknown, at = "$"): ObjTexCoordAdde
 }
 
 export function parseObjTexCoordsDiff(value: unknown, at = "$"): ObjTexCoordsDiff {
-  const row = stdioObj30GeometryDiffGuardObject(value, at);
+  const row = stdioObj30GeometryDiffGuardClosed(stdioObj30GeometryDiffGuardObject(value, at), at, ["removed", "modified", "added"]);
   return {
     removed: row["removed"] === undefined ? [] : stdioObj30GeometryDiffGuardArray(row["removed"], `${at}.removed`).map((item, index) => stdioObj30GeometryDiffGuardInteger(item, `${at}.removed[${index}]`)),
     modified: row["modified"] === undefined ? [] : stdioObj30GeometryDiffGuardArray(row["modified"], `${at}.modified`).map((item, index) => parseObjTexCoordModified(item, `${at}.modified[${index}]`)),
@@ -200,7 +204,7 @@ export function parseObjNormalDiff(value: unknown, at = "$"): ObjNormalDiff {
 }
 
 export function parseObjNormalModified(value: unknown, at = "$"): ObjNormalModified {
-  const row = stdioObj30GeometryDiffGuardObject(value, at);
+  const row = stdioObj30GeometryDiffGuardClosed(stdioObj30GeometryDiffGuardObject(value, at), at, ["index", "diff"]);
   return {
     index: stdioObj30GeometryDiffGuardInteger(row["index"], `${at}.index`),
     diff: parseObjNormalDiff(row["diff"], `${at}.diff`),
@@ -216,7 +220,7 @@ export function parseObjNormalAdded(value: unknown, at = "$"): ObjNormalAdded {
 }
 
 export function parseObjNormalsDiff(value: unknown, at = "$"): ObjNormalsDiff {
-  const row = stdioObj30GeometryDiffGuardObject(value, at);
+  const row = stdioObj30GeometryDiffGuardClosed(stdioObj30GeometryDiffGuardObject(value, at), at, ["removed", "modified", "added"]);
   return {
     removed: row["removed"] === undefined ? [] : stdioObj30GeometryDiffGuardArray(row["removed"], `${at}.removed`).map((item, index) => stdioObj30GeometryDiffGuardInteger(item, `${at}.removed[${index}]`)),
     modified: row["modified"] === undefined ? [] : stdioObj30GeometryDiffGuardArray(row["modified"], `${at}.modified`).map((item, index) => parseObjNormalModified(item, `${at}.modified[${index}]`)),
@@ -225,14 +229,14 @@ export function parseObjNormalsDiff(value: unknown, at = "$"): ObjNormalsDiff {
 }
 
 export function parseObjFaceDiff(value: unknown, at = "$"): ObjFaceDiff {
-  const row = stdioObj30GeometryDiffGuardObject(value, at);
+  const row = stdioObj30GeometryDiffGuardClosed(stdioObj30GeometryDiffGuardObject(value, at), at, ["vertices"]);
   return {
     vertices: row["vertices"] === undefined ? undefined : stdioObj30GeometryDiffGuardArray(row["vertices"], `${at}.vertices`).map((item, index) => parseObjFaceVertex(item, `${at}.vertices[${index}]`)),
   };
 }
 
 export function parseObjFaceModified(value: unknown, at = "$"): ObjFaceModified {
-  const row = stdioObj30GeometryDiffGuardObject(value, at);
+  const row = stdioObj30GeometryDiffGuardClosed(stdioObj30GeometryDiffGuardObject(value, at), at, ["index", "diff"]);
   return {
     index: stdioObj30GeometryDiffGuardInteger(row["index"], `${at}.index`),
     diff: parseObjFaceDiff(row["diff"], `${at}.diff`),
@@ -248,7 +252,7 @@ export function parseObjFaceAdded(value: unknown, at = "$"): ObjFaceAdded {
 }
 
 export function parseObjFacesDiff(value: unknown, at = "$"): ObjFacesDiff {
-  const row = stdioObj30GeometryDiffGuardObject(value, at);
+  const row = stdioObj30GeometryDiffGuardClosed(stdioObj30GeometryDiffGuardObject(value, at), at, ["removed", "modified", "added"]);
   return {
     removed: row["removed"] === undefined ? [] : stdioObj30GeometryDiffGuardArray(row["removed"], `${at}.removed`).map((item, index) => stdioObj30GeometryDiffGuardInteger(item, `${at}.removed[${index}]`)),
     modified: row["modified"] === undefined ? [] : stdioObj30GeometryDiffGuardArray(row["modified"], `${at}.modified`).map((item, index) => parseObjFaceModified(item, `${at}.modified[${index}]`)),
@@ -264,7 +268,7 @@ export function parseObjGroupDiff(value: unknown, at = "$"): ObjGroupDiff {
 }
 
 export function parseObjGroupModified(value: unknown, at = "$"): ObjGroupModified {
-  const row = stdioObj30GeometryDiffGuardObject(value, at);
+  const row = stdioObj30GeometryDiffGuardClosed(stdioObj30GeometryDiffGuardObject(value, at), at, ["name", "diff"]);
   return {
     name: stdioObj30GeometryDiffGuardString(row["name"], `${at}.name`),
     diff: parseObjGroupDiff(row["diff"], `${at}.diff`),
@@ -272,7 +276,7 @@ export function parseObjGroupModified(value: unknown, at = "$"): ObjGroupModifie
 }
 
 export function parseObjGroupAdded(value: unknown, at = "$"): ObjGroupAdded {
-  const row = stdioObj30GeometryDiffGuardObject(value, at);
+  const row = stdioObj30GeometryDiffGuardClosed(stdioObj30GeometryDiffGuardObject(value, at), at, ["index", "group"]);
   return {
     index: stdioObj30GeometryDiffGuardInteger(row["index"], `${at}.index`),
     group: parseObjGroup(row["group"], `${at}.group`),
@@ -280,7 +284,7 @@ export function parseObjGroupAdded(value: unknown, at = "$"): ObjGroupAdded {
 }
 
 export function parseObjGroupsDiff(value: unknown, at = "$"): ObjGroupsDiff {
-  const row = stdioObj30GeometryDiffGuardObject(value, at);
+  const row = stdioObj30GeometryDiffGuardClosed(stdioObj30GeometryDiffGuardObject(value, at), at, ["removed", "modified", "added"]);
   return {
     removed: row["removed"] === undefined ? [] : stdioObj30GeometryDiffGuardArray(row["removed"], `${at}.removed`).map((item, index) => stdioObj30GeometryDiffGuardString(item, `${at}.removed[${index}]`)),
     modified: row["modified"] === undefined ? [] : stdioObj30GeometryDiffGuardArray(row["modified"], `${at}.modified`).map((item, index) => parseObjGroupModified(item, `${at}.modified[${index}]`)),
@@ -289,7 +293,7 @@ export function parseObjGroupsDiff(value: unknown, at = "$"): ObjGroupsDiff {
 }
 
 export function parseObjObjectAdded(value: unknown, at = "$"): ObjObjectAdded {
-  const row = stdioObj30GeometryDiffGuardObject(value, at);
+  const row = stdioObj30GeometryDiffGuardClosed(stdioObj30GeometryDiffGuardObject(value, at), at, ["index", "object"]);
   return {
     index: stdioObj30GeometryDiffGuardInteger(row["index"], `${at}.index`),
     object: parseObjObject(row["object"], `${at}.object`),
@@ -297,7 +301,7 @@ export function parseObjObjectAdded(value: unknown, at = "$"): ObjObjectAdded {
 }
 
 export function parseObjObjectsDiff(value: unknown, at = "$"): ObjObjectsDiff {
-  const row = stdioObj30GeometryDiffGuardObject(value, at);
+  const row = stdioObj30GeometryDiffGuardClosed(stdioObj30GeometryDiffGuardObject(value, at), at, ["removed", "modified", "added"]);
   return {
     removed: row["removed"] === undefined ? [] : stdioObj30GeometryDiffGuardArray(row["removed"], `${at}.removed`).map((item, index) => stdioObj30GeometryDiffGuardString(item, `${at}.removed[${index}]`)),
     modified: row["modified"] === undefined ? [] : stdioObj30GeometryDiffGuardArray(row["modified"], `${at}.modified`).map((item, index) => parseObjGroupModified(item, `${at}.modified[${index}]`)),
@@ -328,7 +332,7 @@ export function parseObjTexCoordDiff(value: unknown, at = "$"): ObjTexCoordDiff 
 
 /** 🔺️ Parses the owned sparse diff and exact unsigned source-position domain. */
 export function parseObjDiff(value: unknown, at = "$"): ObjDiff {
-  const row = stdioObj30GeometryDiffGuardObject(value, at);
+  const row = stdioObj30GeometryDiffGuardClosed(stdioObj30GeometryDiffGuardObject(value, at), at, ["vertices", "texcoords", "normals", "faces", "groups", "objects", "mtllib", "usemtl", "smoothingGroups", "unknownStatements"]);
   return {
     vertices: row["vertices"] === undefined ? undefined : parseObjVerticesDiff(row["vertices"], `${at}.vertices`),
     texcoords: row["texcoords"] === undefined ? undefined : parseObjTexCoordsDiff(row["texcoords"], `${at}.texcoords`),
@@ -336,7 +340,7 @@ export function parseObjDiff(value: unknown, at = "$"): ObjDiff {
     faces: row["faces"] === undefined ? undefined : parseObjFacesDiff(row["faces"], `${at}.faces`),
     groups: row["groups"] === undefined ? undefined : parseObjGroupsDiff(row["groups"], `${at}.groups`),
     objects: row["objects"] === undefined ? undefined : parseObjObjectsDiff(row["objects"], `${at}.objects`),
-    mtllib: row["mtllib"] === undefined || row["mtllib"] === null ? row["mtllib"] : stdioObj30GeometryDiffGuardString(row["mtllib"], `${at}.mtllib`),
+    mtllib: row["mtllib"] === undefined ? undefined : (row["mtllib"] === null ? null : stdioObj30GeometryDiffGuardString(row["mtllib"], `${at}.mtllib`)),
     usemtl: row["usemtl"] === undefined ? undefined : stdioObj30GeometryDiffGuardArray(row["usemtl"], `${at}.usemtl`).map((item, index) => parseObjUsemtlRange(item, `${at}.usemtl[${index}]`)),
     smoothingGroups: row["smoothingGroups"] === undefined ? undefined : stdioObj30GeometryDiffGuardArray(row["smoothingGroups"], `${at}.smoothingGroups`).map((item, index) => parseObjSmoothingRange(item, `${at}.smoothingGroups[${index}]`)),
     unknownStatements: row["unknownStatements"] === undefined ? undefined : stdioObj30GeometryDiffGuardArray(row["unknownStatements"], `${at}.unknownStatements`).map((item, index) => parseObjUnknownStatement(item, `${at}.unknownStatements[${index}]`)),

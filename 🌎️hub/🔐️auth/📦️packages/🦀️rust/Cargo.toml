@@ -29,6 +29,7 @@ semio-framework-hash = { path = "../../../../🧰️framework/🔨️modules/�
 directory = { path = "../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
 
 [dev-dependencies]
+semio-framework-test-fixtures = { path = "../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 syn = { version = "2", features = ["full", "visit"] }
 semio-framework-schema = { workspace = true }
 tokio = { version = "1", features = ["full", "test-util"] }

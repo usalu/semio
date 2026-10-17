@@ -3,14 +3,14 @@
  */
 import { type CompilerAdmissionControl } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import { type FileObservationControlV1 } from "@semio-tech/framework/filesystem/observation";
-import { COMPONENT_MODULE_DIRECTORIES } from "../../../../✏️s/🧑‍💻dev/🧩️catalog/🤖️generated/🧩️plugins/🟦️.ts";
+import { COMPONENT_MODULE_DIRECTORIES } from "@semio-tech/s-dev-catalog-ts/generated/plugins";
 import { createHash } from "node:crypto";
 import { closeSync, existsSync, fsyncSync, lstatSync, mkdirSync, openSync, readdirSync, rmSync, writeFileSync, writeSync, type Stats } from "node:fs";
 import { dirname, join } from "node:path";
 import { captureOwnedCommandResultV1 } from "@semio-tech/process/owned-execution";
 import { blake3Hex } from "@semio-tech/framework/hash";
-import { decodePackValue, encodePackValue, packValueToExactJson } from "../../../../🧰️framework/🛍️products/💻️os/🟦️.ts";
-import { DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🔏️document-open/🟦️.ts";
+import { decodePackValue, encodePackValue, packValueToExactJson } from "@semio-tech/framework-os";
+import { DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES } from "@semio-tech/framework-os/modules/directory/schema/document-open";
 import { DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES, type DocumentExecutionProtocolV1 } from "@semio-tech/framework/directory/schema";
 import { type FreshBuildControlV1, type FreshComponentReceiptV1 } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🧾️source-epoch/🟦️.ts";
 import { COMPONENT_RECEIPT_FILE, componentReceiptBindsV1, componentReceiptValueV1, encodeComponentReceiptV1, type ComponentReceiptV1 } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏷️component-receipt/🟦️.ts";

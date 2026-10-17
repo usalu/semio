@@ -50,6 +50,7 @@ semio-framework-time-travel-actions = { path = "../../🔨️modules/⏪️time-
 semio-framework-tool-run-actions = { path = "../../🔨️modules/⏯️tool-run/🕹️actions/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-framework-test-fixtures = { path = "../../🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 serde_json = { workspace = true }
 semio-framework-async = { workspace = true }
 

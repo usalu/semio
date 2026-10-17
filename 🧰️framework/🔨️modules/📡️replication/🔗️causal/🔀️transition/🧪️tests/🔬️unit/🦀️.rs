@@ -552,7 +552,6 @@ fn bounded_history_fold_obeys_the_neutral_law() {
         assert!(closed && job.terminal_is_empty());
         assert_eq!(job.completed(), done);
     }
-    eprintln!("[DEBUG] Bounded fold preserves the neutral event semantics under grants1/2/7 and cancellation retires without executing more history");
 }
 
 /// 🔤️ Byte grants preserve every transition variant and UTF-8 refusal, including split scalars.
@@ -587,7 +586,6 @@ fn bounded_history_transition_decoding_obeys_the_neutral_law() {
             assert!(job.terminal_is_empty());
         }
     }
-    eprintln!("[DEBUG] Bounded transition decoder preserves all seven variants and neutral UTF-8/trailing refusals under byte grants1/7/4096");
 }
 
 /// 📦️ Quarantine decoding preserves opaque payloads and rejects flags/trailing bytes under the same granted neutral law.
@@ -634,7 +632,6 @@ fn bounded_history_envelope_decoding_obeys_the_neutral_law() {
             assert_eq!(job.completed(), completed);
         }
     }
-    eprintln!("[DEBUG] Quarantined envelope decoder preserves exact payload bytes and UTF-8 under bounded grants, with terminal cancellation cleanup");
 }
 
 #[test]
@@ -692,6 +689,5 @@ fn history_fold_terminal_output_preserves_actual_cleanup_receipt() {
         assert_eq!(total_released, held + total_born);
         let (_, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| drop(job));
         assert_eq!((allocated, released), (0, 0));
-        eprintln!("[DEBUG] fold outcome rejected={} final control release={} total={} original={} refusal remains original until paid", refused, outcome.released_bytes, total_released, held);
     }
 }

@@ -9,6 +9,7 @@ import "@semio-tech/framework-os-dev";
 import { resolvePlaygroundBoot } from "@semio-tech/framework";
 import { composeSpecificOsCatalogV1 } from "../../🟦️.ts";
 import { FrameworkOsShell } from "@semio-tech/framework-renderer-react";
+import { createFrameworkOsHostPortsV1 } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🪝️host-ports/🟦️.ts";
 import * as React from "react";
 import { createRoot } from "react-dom/client";
 
@@ -26,6 +27,9 @@ type MultiHarnessPane = (typeof MULTI_HARNESS_PANES)[number];
  * `🟦️.ts`'s own `VITE_SEMIO_APP_ROLE` resolution so both dev entry points agree on the same
  * default-editor, viewer-on-request rule. */
 const MULTI_HARNESS_APP_ROLE: "viewer" | "editor" = import.meta.env.VITE_SEMIO_APP_ROLE === "viewer" ? "viewer" : "editor";
+
+/** 🪝️ The ports every harness pane's shell reads, bound once like a page's composition root. */
+const MULTI_HARNESS_HOST_PORTS = createFrameworkOsHostPortsV1();
 //#endregion 🐚️MultiShellHarnessPanes
 
 function MultiShellHarnessPane({ pane }: { readonly pane: MultiHarnessPane }): React.ReactElement {
@@ -44,7 +48,7 @@ function MultiShellHarnessPane({ pane }: { readonly pane: MultiHarnessPane }): R
       </div>
       <div style={{ flex: "1 1 0", minHeight: 0, position: "relative" }}>
         {mounted ? (
-          <FrameworkOsShell catalog={catalog} shellId={pane.shellId} storageNamespace={pane.shellId} pluginFilter={boot.variant} plugins={boot.plugins} appId={boot.defaultAppId} appRole={MULTI_HARNESS_APP_ROLE} locks={{ locale: pane.locale, appearance: pane.appearance }} />
+          <FrameworkOsShell catalog={catalog} shellId={pane.shellId} storageNamespace={pane.shellId} pluginFilter={boot.variant} plugins={boot.plugins} appId={boot.defaultAppId} appRole={MULTI_HARNESS_APP_ROLE} locks={{ locale: pane.locale, appearance: pane.appearance }} hostPorts={MULTI_HARNESS_HOST_PORTS} />
         ) : null}
       </div>
     </div>

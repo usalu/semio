@@ -25,7 +25,6 @@ fn inserted_step_cursor_matches_neutral_json_oracle() {
         let actual: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&emit.config_mutations)).unwrap();
         let oracle = if next == cursor { serde_json::json!([]) } else { serde_json::json!([{ "SetCursor": { "value": case["next"] } }]) };
         assert_eq!(actual, oracle);
-        eprintln!("[DEBUG] Process cursor insertion count={count} cursor={cursor:?} next={next:?}");
     }
 }
 
@@ -48,7 +47,6 @@ fn tagged_field_borrowed_schema_matches_neutral_cases() {
         let expected: Vec<_> = fixture["variants"][key].as_array().unwrap().iter().map(|value| value.as_str().unwrap()).collect();
         assert_eq!(borrowed_names, expected);
         assert_eq!(owned_names, expected);
-        eprintln!("[DEBUG] Process3D borrowed schema {key}: {} literal variants", expected.len());
     }
 }
 
@@ -71,7 +69,6 @@ fn delete_step_binary_matches_neutral_leb128_oracle() {
         let mut extra = actual.clone();
         extra.push(0);
         assert!(decode_op(&extra).is_err());
-        eprintln!("[DEBUG] Process3D binary delete-step {} UTF-8 bytes: {} frame bytes", id.len(), actual.len());
     }
 }
 

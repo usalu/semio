@@ -1,6 +1,6 @@
 //! 🚪️ Physical Directory wire admission, canonical emission and bounded receipts.
 
-use super::super::super::schema::document_check_in::*;
+use super::*;
 
 impl DocumentCheckInV1 {
     /// 📤️ Canonical json.

@@ -70,14 +70,7 @@ use semio_framework_diagnostic::TextSpan;
 pub use derived_composition::*;
 //#endregion 🎹️DerivedComposition
 
-#[path = "📝️text/🦀️.rs"]
-pub mod text;
-
-#[path="."]
-pub mod sqlite {
-    #[path="🪶️sqlite/📸️snapshot/🦀️.rs"]
-    pub mod snapshot;
-}
+pub use semio_s_artifact_stdio_json_mutations::standards::v_rfc8259::subsets::geojson::io::text;
 
 pub mod derived_construction {
     use crate::standards::v_rfc8259::subsets::geojson::schema::check_geojson_conformance;

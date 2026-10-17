@@ -9,15 +9,17 @@ import { getWorkspaceRoot } from "../../../../../🧰️framework/🛍️product
 import { examplesForApp, normalizeManifestExamples, type PluginManifest } from "@semio-tech/framework/manifest";
 import { installedScope, sourceDeploymentOwnersV1 } from "../🧩️scope/🟦️.ts";
 import { resolveFrameworkOsCatalogConfigurationV1 } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧩️catalog/🟦️.ts";
+import { admitPluginCatalogV1, pluginCatalogV1 } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🟦️.ts";
+const catalogAdmissionPort = { admit: admitPluginCatalogV1, catalogOf: pluginCatalogV1 };
 import { readGeneratedCatalogProjection } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📖️catalog-view/🟦️.ts";
 const composition = composeSpecificOsCatalogV1("http://localhost/", { maxBytes: 2097152, maxRows: 512, maxEdges: 4096, maxWork: 65536, deadlineMs: performance.now() + 30000, now: () => performance.now(), cancelled: () => false, progress: () => {} });
 const catalog = composition.catalog;
 describe("Specific original catalog completion", () => {
   it("independently enumerates every current deployed source identity and verifies each committed descriptor pair", async () => {
     const operation = new AbortController(), started = Date.now();
-    const audit = auditPluginCatalogSources(getWorkspaceRoot(), { cancelled: () => operation.signal.aborted || Date.now() - started >= installedScope.sourceCensus.maxMs, progress: (completed, total) => console.log(`[DEBUG] Specific descriptor audit ${completed}/${total}`) });
+    const audit = auditPluginCatalogSources(getWorkspaceRoot(), { cancelled: () => operation.signal.aborted || Date.now() - started >= installedScope.sourceCensus.maxMs, progress: (completed, total) => {} });
     const missing = audit.issues.filter(({ code }) => code === "descriptor-pair-missing").map(({ pluginId }) => pluginId).sort();
-    const owners = await sourceDeploymentOwnersV1({ signal: operation.signal, progress: completed => console.log(`[DEBUG] Specific source census ${completed}`) });
+    const owners = await sourceDeploymentOwnersV1({ signal: operation.signal, progress: completed => {} });
     expect(audit.manifestCount).toBe(owners.length);
     expect(audit.entries.map(row => row.pluginId).sort()).toEqual(owners);
     expect(audit.order).toHaveLength(owners.length);
@@ -86,7 +88,7 @@ describe("Specific original catalog completion", () => {
   });
 
   it("sourcing editor surface resolves the demo row the ShellHost navbar picker reads", () => {
-    const descriptorPath = join(getWorkspaceRoot(), "🌎️hub/🧩️compositions/🪵️sourcing/🔣️.json");
+    const descriptorPath = join(getWorkspaceRoot(), "🌎️hub/🧩️compositions/🪵️sourcing/🧩️component/🔣️.json");
     const descriptor = JSON.parse(readFileSync(descriptorPath, "utf8")) as { manifest?: PluginManifest };
     const manifest = descriptor.manifest;
     expect(manifest?.pluginId).toBe("sourcing");
@@ -110,7 +112,7 @@ describe("Specific original catalog completion", () => {
     const installed = new Set(composition.rows.targets.map(row => row.pluginId));
     for (const row of PLAYGROUND_BUILD_TARGETS.filter(row => !installed.has(row.pluginId))) {
       const operation = new AbortController();
-      expect(() => resolveFrameworkOsCatalogConfigurationV1(composition.rows, row.variant, { maxBytes: 2097152, maxRows: 512, maxEdges: 4096, maxWork: 65536, deadlineMs: performance.now() + 30000, now: () => performance.now(), cancelled: () => operation.signal.aborted, progress: event => console.log(`[DEBUG] withheld ${row.variant} ${event.completed}/${event.total}`) }), row.variant).toThrow();
+      expect(() => resolveFrameworkOsCatalogConfigurationV1(catalogAdmissionPort, composition.rows, row.variant, { maxBytes: 2097152, maxRows: 512, maxEdges: 4096, maxWork: 65536, deadlineMs: performance.now() + 30000, now: () => performance.now(), cancelled: () => operation.signal.aborted, progress: event => {} }), row.variant).toThrow();
     }
   });
 

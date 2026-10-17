@@ -5,6 +5,9 @@
  */
 import * as coordinate from "../../../../🧭coordinate/🟦️.ts";
 import * as hierarchy from "../../../../🌳hierarchy/🟦️.ts";
+import { vizCluster, vizTree } from "../../../../🌳hierarchy/🌲️tidy-tree-and-cluster/🟦️.ts";
+import { vizPartition, vizTreemap } from "../../../../🌳hierarchy/🧱️treemap-tilings-and-partition/🟦️.ts";
+import { vizPack, vizPackEnclose } from "../../../../🌳hierarchy/🫧️circle-packing/🟦️.ts";
 import type { Level, VizKernelCheck } from "../🧰️probe-kit/🟦️.ts";
 
 const FRAME = { x0: 10, y0: 20, x1: 170, y1: 120 } as const;
@@ -174,25 +177,25 @@ export async function hierarchyChecks(level: Level): Promise<VizKernelCheck[]> {
     {
       module: "hierarchy",
       name: "tree-normalised",
-      subject: () => ownNodes(hierarchy.vizTree(ownRoot(), { size: [120, 80] }), ["x", "y"]),
+      subject: () => ownNodes(vizTree(ownRoot(), { size: [120, 80] }), ["x", "y"]),
       oracle: () => d3Nodes(d3Hierarchy.tree().size([120, 80])(d3Root() as never) as never, ["x", "y"]),
     },
     {
       module: "hierarchy",
       name: "tree-node-size",
-      subject: () => ownNodes(hierarchy.vizTree(ownRoot(), { nodeSize: [12, 30] }), ["x", "y"]),
+      subject: () => ownNodes(vizTree(ownRoot(), { nodeSize: [12, 30] }), ["x", "y"]),
       oracle: () => d3Nodes(d3Hierarchy.tree().nodeSize([12, 30])(d3Root() as never) as never, ["x", "y"]),
     },
     {
       module: "hierarchy",
       name: "cluster",
-      subject: () => ownNodes(hierarchy.vizCluster(ownRoot(), { size: [120, 80] }), ["x", "y"]),
+      subject: () => ownNodes(vizCluster(ownRoot(), { size: [120, 80] }), ["x", "y"]),
       oracle: () => d3Nodes(d3Hierarchy.cluster().size([120, 80])(d3Root() as never) as never, ["x", "y"]),
     },
     ...tilings.map((tile) => ({
       module: "hierarchy",
       name: `treemap-${tile}`,
-      subject: () => ownNodes(hierarchy.vizTreemap(ownRoot(), { size: [160, 100], tile, paddingInner: 1, paddingOuter: 2 }), ["x0", "y0", "x1", "y1"]),
+      subject: () => ownNodes(vizTreemap(ownRoot(), { size: [160, 100], tile, paddingInner: 1, paddingOuter: 2 }), ["x0", "y0", "x1", "y1"]),
       oracle: () =>
         d3Nodes(
           d3Hierarchy
@@ -207,25 +210,25 @@ export async function hierarchyChecks(level: Level): Promise<VizKernelCheck[]> {
     {
       module: "hierarchy",
       name: "treemap-rounded",
-      subject: () => ownNodes(hierarchy.vizTreemap(ownRoot(), { size: [160, 100], round: true }), ["x0", "y0", "x1", "y1"]),
+      subject: () => ownNodes(vizTreemap(ownRoot(), { size: [160, 100], round: true }), ["x0", "y0", "x1", "y1"]),
       oracle: () => d3Nodes(d3Hierarchy.treemap().size([160, 100]).round(true)(d3Root() as never) as never, ["x0", "y0", "x1", "y1"]),
     },
     {
       module: "hierarchy",
       name: "partition",
-      subject: () => ownNodes(hierarchy.vizPartition(ownRoot(), { size: [160, 100], padding: 1 }), ["x0", "y0", "x1", "y1"]),
+      subject: () => ownNodes(vizPartition(ownRoot(), { size: [160, 100], padding: 1 }), ["x0", "y0", "x1", "y1"]),
       oracle: () => d3Nodes(d3Hierarchy.partition().size([160, 100]).padding(1)(d3Root() as never) as never, ["x0", "y0", "x1", "y1"]),
     },
     {
       module: "hierarchy",
       name: "pack",
-      subject: () => ownNodes(hierarchy.vizPack(ownRoot(), { size: [160, 160] }), ["x", "y", "r"]),
+      subject: () => ownNodes(vizPack(ownRoot(), { size: [160, 160] }), ["x", "y", "r"]),
       oracle: () => d3Nodes(d3Hierarchy.pack().size([160, 160])(d3Root() as never) as never, ["x", "y", "r"]),
     },
     {
       module: "hierarchy",
       name: "pack-padded",
-      subject: () => ownNodes(hierarchy.vizPack(ownRoot(), { size: [160, 160], padding: 3 }), ["x", "y", "r"]),
+      subject: () => ownNodes(vizPack(ownRoot(), { size: [160, 160], padding: 3 }), ["x", "y", "r"]),
       oracle: () => d3Nodes(d3Hierarchy.pack().size([160, 160]).padding(3)(d3Root() as never) as never, ["x", "y", "r"]),
     },
     {
@@ -239,7 +242,7 @@ export async function hierarchyChecks(level: Level): Promise<VizKernelCheck[]> {
           { x: 6, y: -8, r: 4 },
           { x: 1, y: 1, r: 9 },
         ];
-        return hierarchy.vizPackEnclose(circles);
+        return vizPackEnclose(circles);
       },
       oracle: () =>
         d3Hierarchy.packEnclose([

@@ -1,0 +1,3 @@
+/** 📦️ Public entry `@semio-tech/framework/products/repo/modules/dashboard/installation`: the explicit surface that importers outside the module use. */
+export { captureDashboardSources, dashboardInstalled, dashboardInvocation, dashboardPackageRoot, digestDashboardSources, installDashboard, installedDashboard, launchDashboard, mayRunStale, staleDashboard, withInstalledDashboardV1 } from "../../../../../../../🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️installation/🟦️.ts";
+export type { DashboardExecutionOptions, DashboardSources } from "../../../../../../../🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️installation/🟦️.ts";

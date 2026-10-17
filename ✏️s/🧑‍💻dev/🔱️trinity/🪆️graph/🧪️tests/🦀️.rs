@@ -4,40 +4,40 @@ use super::*;
 #[path="🪆️content/🦀️.rs"]mod content_laws;
 #[path="✏️editor/🦀️.rs"]mod editor_laws;
 #[path="🗂️layout/🦀️.rs"]mod layout_laws;
-use jack::{JackContentVisual,JackContentProjection,JackGraphQuery};
+use semio_s_artifact_trinity_jack_graph_query::{JackContentVisual, JackGraphQuery};
+use jack::standards::v1::subsets::any::schema::content_read::JackContentProjection;
 use pack::snapshot::ArtifactPack;
 
-fn rich_snapshot(parent:&jack::JackSnapshot)->SemioGraphSnapshot{
- let owner=jack::jack_content_for_handle(&parent.content).expect("retained original owner");
+fn rich_snapshot(parent:&jack::standards::v1::subsets::any::schema::snapshot::JackSnapshot)->SemioGraphSnapshot{
+ let owner=jack::standards::v1::subsets::any::schema::content::jack_content_for_handle(&parent.content).expect("retained original owner");
  SemioGraphSnapshot::decode_pack(&owner.read().genesis_pack().expect("original pack")).expect("original rich pack")
 }
 
 #[test]
 fn native_admission_refusal_returns_the_original_rich_owner(){
  let fixture:semio_framework_pack_json::Value=semio_framework_pack_json::from_str(include_str!("../../../../🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧪️tests/🧫️fixtures/🪆️query/🔣️.json")).unwrap();
- let identity:jack::JackContentChild=semio_framework_value::FromValue::from_value(semio_framework_pack_json::to_dsl_value(&fixture["identity"])).unwrap();
+ let identity:jack::standards::v1::subsets::any::schema::content::JackContentChild=semio_framework_value::FromValue::from_value(semio_framework_pack_json::to_dsl_value(&fixture["identity"])).unwrap();
  let parent=SemioJackComposition::initial_snapshot();
  let original=rich_snapshot(&parent);
  let pack=original.encode_pack();
  for coordinate in 0..5{
-  let exact=jack::JackContentChild::new(identity.child_id.clone(),identity.target.clone());
-  let mut selected=jack::JackContentChild::new(identity.child_id.clone(),identity.target.clone());
+  let exact=jack::standards::v1::subsets::any::schema::content::JackContentChild::new(identity.child_id.clone(),identity.target.clone());
+  let mut selected=jack::standards::v1::subsets::any::schema::content::JackContentChild::new(identity.child_id.clone(),identity.target.clone());
   match coordinate{0=>selected.child_id.push('!'),1=>selected.target.artifact_id.push('!'),2=>selected.target.dialect.artifact_kind.push('!'),3=>selected.target.dialect.standard.push('!'),4=>selected.target.dialect.subset.push('!'),_=>unreachable!()}
   let source=Box::new(content::SemioJackOwnedContent::new(exact,original.clone()));
-  let failure=jack::jack_content_with_owner(selected,source).err().expect("different exact coordinate refuses admission");
+  let failure=jack::standards::v1::subsets::any::schema::content::jack_content_with_owner(selected,source).err().expect("different exact coordinate refuses admission");
   let(error,returned,source)=failure.into_parts();
   assert_eq!(source.genesis_pack().unwrap(),pack);
-  assert_ne!(jack::jack_content_identity(&returned),source.identity());
-  let exact=jack::JackContentChild::new(identity.child_id.clone(),identity.target.clone());
-  let retained=jack::jack_content_with_owner(exact,source).expect("original source admits its original address");
-  jack::retire_owned_to_terminal(retained).unwrap();
-  jack::retire_owned_to_terminal(returned).unwrap();
-  jack::retire_owned_to_terminal(error).unwrap();
+  assert_ne!(jack::standards::v1::subsets::any::schema::content::jack_content_identity(&returned),source.identity());
+  let exact=jack::standards::v1::subsets::any::schema::content::JackContentChild::new(identity.child_id.clone(),identity.target.clone());
+  let retained=jack::standards::v1::subsets::any::schema::content::jack_content_with_owner(exact,source).expect("original source admits its original address");
+  jack::standards::v1::subsets::any::schema::content::retire_owned_to_terminal(retained).unwrap();
+  jack::standards::v1::subsets::any::schema::content::retire_owned_to_terminal(returned).unwrap();
+  jack::standards::v1::subsets::any::schema::content::retire_owned_to_terminal(error).unwrap();
  }
- jack::retire_owned_to_terminal(original).unwrap();
- jack::retire_owned_to_terminal(parent).unwrap();
- jack::retire_owned_to_terminal(identity).unwrap();
- println!("[DEBUG] All five refused coordinates returned the original rich source, selected address and cause for terminal retirement");
+ jack::standards::v1::subsets::any::schema::content::retire_owned_to_terminal(original).unwrap();
+ jack::standards::v1::subsets::any::schema::content::retire_owned_to_terminal(parent).unwrap();
+ jack::standards::v1::subsets::any::schema::content::retire_owned_to_terminal(identity).unwrap();
 }
 
 #[test]
@@ -51,16 +51,15 @@ fn native_composition_retains_original_rich_genesis(){
  let rich=SemioGraphSnapshot{nodes:vec![SemioGraphNode{id:GraphNodeId::new(node["id"].as_str().unwrap()),kind:"rich".into(),label:String::new(),ports:vec![SemioGraphPort{name:"both@port".into(),kind:SemioGraphPortKind::InOut,category:"rich".into(),properties:vec![]}],properties:vec![SemioValueEntry{key:"int".into(),value:SemioValue::Int{lexeme:"18446744073709551615".into()}},SemioValueEntry{key:"bytes".into(),value:SemioValue::Bytes{value:vec![0,255]}},SemioValueEntry{key:"reference".into(),value:SemioValue::Ref{id:ValueId::new("original")}}],..Default::default()}],..Default::default()};
  let original_pack=SemioGraphSnapshot::encode_pack(&rich);
  let content=content::jack_content_child_with_snapshot(rich);
- let parent=jack::JackSnapshot{content,..Default::default()};
- let owner=jack::jack_content_for_handle(&parent.content).unwrap();
+ let parent=jack::standards::v1::subsets::any::schema::snapshot::JackSnapshot{content,..Default::default()};
+ let owner=jack::standards::v1::subsets::any::schema::content::jack_content_for_handle(&parent.content).unwrap();
  assert_eq!(owner.read().genesis_pack().unwrap(),original_pack);
  assert_eq!(owner.read().node_view(0).unwrap().presented_label(),node["expectedLabel"].as_str().unwrap());
  assert!(owner.read().port_view(0,0).unwrap().inbound&&owner.read().port_view(0,0).unwrap().outbound);
- assert_eq!(owner.read().identity(),jack::jack_content_identity(&parent.content));
+ assert_eq!(owner.read().identity(),jack::standards::v1::subsets::any::schema::content::jack_content_identity(&parent.content));
  assert!(owner.read().query_node(0,4096).is_err());
  drop(owner);
- jack::retire_owned_to_terminal(parent).unwrap();
- println!("[DEBUG] Native composition preserved Int, Bytes, Ref, InOut and literal identity in the original rich genesis pack");
+ jack::standards::v1::subsets::any::schema::content::retire_owned_to_terminal(parent).unwrap();
 }
 
 #[test]
@@ -71,18 +70,17 @@ fn native_composition_parameterizes_actual_registered_members(){
  use semio_framework_plugin::{artifact_app_laws,App,EditorApp,ArtifactApp};
  use store::SpaceMember;
  type Editor=EditorApp<jack::editor::jack::TrinityJackPlayApp<SemioJackComposition>>;
- let mut app=semio_framework_async::poll::resolve_ready(artifact_app_laws::new_app_with_registry_and_members::<Editor,semio_s_artifact_stdio_semio::SemioMembers>(||App{definition:jack::editor::jack::create_trinity_jack_app(),examples:Vec::new()},store::ActorId(store::LOCAL_ACTOR_ID.into()),jack::trinity_mounted_owner_policy(),&mut artifact_app_laws::fixture_identity()));
+ let mut app=semio_framework_async::poll::resolve_ready(artifact_app_laws::new_app_with_registry_and_members::<Editor,semio_s_artifact_stdio_semio::SemioMembers>(||App{definition:jack::editor::jack::create_trinity_jack_app(),examples:Vec::new()},store::ActorId(store::LOCAL_ACTOR_ID.into()),jack::standards::v1::subsets::any::schema::content::trinity_mounted_owner_policy(),&mut artifact_app_laws::fixture_identity()));
  let parent=app.snapshot().unwrap();
  let child=semio_framework_async::poll::resolve_ready(app.child_store("content",&parent.content.child_id)).expect("actual rich member store");
  let bytes=semio_framework_async::poll::resolve_ready(child.document_pack_bytes()).expect("actual rich child pack");
  let rich=SemioGraphSnapshot::decode_pack(&bytes).unwrap();
  assert_eq!((rich.nodes.len(),rich.edges.len()),(9,6));
  assert_eq!(rich.nodes[0].label,"b");
- jack::retire_owned_to_terminal(rich).unwrap();
+ jack::standards::v1::subsets::any::schema::content::retire_owned_to_terminal(rich).unwrap();
  drop(child);
- artifact_app_laws::close_registered_fixture_app(&mut app,jack::trinity_mounted_owner_policy(),cx).expect("original paid close");
+ artifact_app_laws::close_registered_fixture_app(&mut app,jack::standards::v1::subsets::any::schema::content::trinity_mounted_owner_policy(),cx).expect("original paid close");
  let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).unwrap();
- println!("[DEBUG] Native registered Jack app opened the authored rich Semio member and reached terminal close");
 }
 
 #[test]
@@ -107,7 +105,7 @@ fn native_action_ingress_retains_original_sources_through_paid_close(){
   if let Some(fault)=returned{let mut source=Some(ActionIngressSource{action:None,args:None,prepared:None,assembled:None,fault:Some(fault)});let mut owner=ActionIngressRecord::receive(&mut source,&mut original_caller,cx).unwrap().unwrap();owner.finish_parser();close(&mut owner,cx);let(_,physical)=heap(||drop(owner));assert_eq!((physical.requested_bytes,physical.released_bytes),(0,0));}
   assert_eq!(cx.original_recipient_identity(),recipient);
  }
- let fuel=cx.fuel_remaining();drop(context);caller.retire(fuel).unwrap();println!("[DEBUG] Actual original action slots retained original and prepared backing, whole domain/cause pointers, zero admission/close allocations and exact physical retirement receipts");
+ let fuel=cx.fuel_remaining();drop(context);caller.retire(fuel).unwrap();
 }
 
 #[test]
@@ -137,7 +135,6 @@ fn native_parsed_command_moves_original_address_backing_without_allocation(){
  }
  for _ in 0..semio_framework_plugin::artifact_app_laws::OriginalFixtureCaller::maximum_turns(){if issuer.terminal_is_empty(){break}let(result,physical)=heap(||issuer.close_step(cx));let progress=result.unwrap().progress();assert_eq!((physical.requested_bytes,physical.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));}
  assert!(issuer.terminal_is_empty());drop(issuer);let fuel=cx.fuel_remaining();drop(context);caller.retire(fuel).unwrap();
- println!("[DEBUG] Native parsed command exact original backing moved with zero allocation and paid original source closure");
 }
 
 #[test]
@@ -149,8 +146,8 @@ fn native_jack_record_reconstruction_moves_original_fields_through_paid_close(){
  let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/📸️snapshot/🫴️receiving/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
  let mut expected=SemioJackComposition::initial_snapshot();
  expected.name=fixture["source"]["name"].as_str().unwrap().into();
- expected.manifest.node_kinds.push(jack::NodeKindDef{name:"nested original".into(),properties:vec![jack::PropertyDef{name:"schema original".into(),kind:jack::PropertyKind::Derived,value_type:semio_framework_value::ValueType::List(Box::new(semio_framework_value::ValueType::Schema("s.fixture.original".into()))),expr:Some("original expression".into())}],port_kinds:vec!["original port".into()]});
- let bytes=expected.encode_pack();let(_,body)=store::semio_format::unwrap_binary(&bytes).unwrap();let(record,_)=store::pack_rt::decode_document(&body,&jack::JackSnapshot::record_spec().unwrap(),&Default::default()).unwrap();
+ expected.manifest.node_kinds.push(jack::standards::v1::subsets::any::schema::manifest::NodeKindDef{name:"nested original".into(),properties:vec![semio_framework_graph_manifest::PropertyDef{name:"schema original".into(),kind:semio_framework_graph_manifest::PropertyKind::Derived,value_type:semio_framework_value::ValueType::List(Box::new(semio_framework_value::ValueType::Schema("s.fixture.original".into()))),expr:Some("original expression".into())}],port_kinds:vec!["original port".into()]});
+ let bytes=expected.encode_pack();let(_,body)=store::semio_format::unwrap_binary(&bytes).unwrap();let(record,_)=store::pack_rt::decode_document(&body,&jack::standards::v1::subsets::any::schema::snapshot::JackSnapshot::record_spec().unwrap(),&Default::default()).unwrap();
  let semio_framework_dsl_record::FieldValue::Text(text)=record.get(1).unwrap()else{panic!("original native name is text")};let pointer=text.as_ptr()as usize;
  let mut source=Some(record);let policy=&fixture["nativePolicy"];let mut cursor=JackRecordReconstruction::empty(JackRecordReconstructionPolicy{maximum_rows:policy["maximumRows"].as_u64().unwrap()as usize,maximum_type_depth:policy["maximumTypeDepth"].as_u64().unwrap()as usize});
  let mut caller=semio_framework_plugin::artifact_app_laws::OriginalFixtureCaller::admit().unwrap();let mut context=caller.context();let cx=&mut context;
@@ -165,5 +162,5 @@ fn native_jack_record_reconstruction_moves_original_fields_through_paid_close(){
  for _ in 0..semio_framework_plugin::artifact_app_laws::OriginalFixtureCaller::maximum_turns(){if cursor.terminal_is_empty(){break}let demand=cursor.close_demands(cx.retained_grant().maximum_copy_bytes).unwrap();let(step,physical)=heap(||semio_framework_job::close_original_retained_step(cx,demand,|grant|cursor.close_step(grant)));let progress=step.unwrap().progress();assert_eq!((physical.requested_bytes,physical.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));}assert!(cursor.terminal_is_empty());drop(cursor);
  for _ in 0..semio_framework_plugin::artifact_app_laws::OriginalFixtureCaller::maximum_turns(){if issuer.terminal_is_empty(){break}issuer.close_step(cx).unwrap();}assert!(issuer.terminal_is_empty());drop(issuer);
  let mut expected=Some(expected);let mut closing=None;for _ in 0..semio_framework_plugin::artifact_app_laws::OriginalFixtureCaller::maximum_turns(){if expected.is_none()&&closing.is_none(){break}let demand=if expected.is_some(){artifact_retirement_owned_birth_demands(&expected).unwrap()}else{artifact_retirement_box_demands(&closing,cx.retained_grant().maximum_copy_bytes).unwrap()};semio_framework_job::close_original_retained_step(cx,demand,|grant|if expected.is_some(){artifact_retirement_admit_owned(&mut expected,&mut closing,grant)}else{artifact_retirement_box_close_step(&mut closing,grant)}).unwrap();}
- let fuel=cx.fuel_remaining();drop(context);caller.retire(fuel).unwrap();println!("[DEBUG] Jack canonical owned fields and semantic type reconstruction originalTextPointer=true exactParent=true oneInstructionTurns={turns} actualBirthRelease=true deniedCandidateCloseRetains=true paidPartialSourceClose=true");
+ let fuel=cx.fuel_remaining();drop(context);caller.retire(fuel).unwrap();
 }

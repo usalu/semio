@@ -27,5 +27,4 @@ test("🧵️ borrowed diagnostic text agrees with JSON quoting, UTF8 prefixes a
     expect(candidate.code).toBe(row.code);
     expect(baseline).toEqual({level:row.level,code:row.code,message:"",target:[]});
   }
-  console.log(`[DEBUG] borrowed diagnostics ${law.cases.length} rows match JSON quoting, UTF8 and RFC6902; native producer and source custody remain separately required`);
 });

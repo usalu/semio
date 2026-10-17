@@ -1,7 +1,30 @@
-use super::*;
+use crate::editor::puzzle2d::snapshot::Puzzle2dPlaySnapshot;
+use crate::puzzle_job::JobTurn;
+use semio_framework_job::{InteractiveJob, StepBudget};
+use semio_framework_tool_run::{ToolRunIdentity, ToolRunProgress, ToolRunState, ToolRunStepArg, ToolRunStepKind, ToolRunVerdict, TOOL_RUN_REASON_CONFLICT};
+use semio_framework_pack_json::Value;
+use std::collections::HashSet;
+use std::sync::Arc;
+#[allow(unused_imports)]
+use crate::editor::puzzle2d::engine::{BoardFillCandidateEvent, BoardFillCandidateVerdict, BoardFillCaptureFault, BoardFillIngressHandleText, BoardFillIngressKindText, BoardFillIngressRuleText, BoardFillIngressTemplateText, BoardFillJob, BoardFillPlacement, BoardFillSnapshot, BoardFillSnapshotIngress, BoardFillStage};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::mutations::{};
+#[allow(unused_imports)]
+use crate::editor::puzzle2d::engine::board_host::PUZZLE_2D_BOARD_NAMING;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::mutations::{connect_handles, create_node};
+#[allow(unused_imports)]
+use semio_framework_job::{Generation, InteractiveJobCloseStep, JobOutcomeBorrow, Operation, OperationId, RevisionId, StepContext};
+#[allow(unused_imports)]
+use semio_framework_tool_run::{ToolRunCounter, ToolRunStepRing, ToolRunTickWriter, ToolRunTraceSubject};
+use crate::editor::puzzle2d::precompute::fill::{fill_kind_rows, fill_bounds_overlap_with, fill_run_monotonic_zero};
+use crate::editor::puzzle2d::precompute::fill::*;
 use crate::editor::puzzle2d::config::PUZZLE2D_DEFAULT_SUGGESTION_OFFSET;
-use crate::editor::puzzle2d::unit_tests::context::*;
+use crate::editor::puzzle2d::testkit::*;
 use crate::editor::puzzle2d::modes::edit::tools::fill;
+use semio_framework_test_fixtures::fixture_text;
 use {crate::editor::puzzle2d::snapshot::board_snapshot_nodes, crate::editor::puzzle2d::snapshot::PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID};
 use geo::{coord, Intersects, Rect};
 use semio_framework_job::{INTERACTIVE_LANE_FUEL, INTERACTIVE_LANE_WALL_US};
@@ -10,10 +33,10 @@ use semio_framework_tool_run::{ToolRunId, ToolRunStep, ToolRunTick, ToolRunTrace
 use semio_framework_pack_json::json;
 use std::collections::BTreeMap;
 
-const FILL_RUN_FIXTURE: &str = include_str!("../🧫️fixtures/🎞️fill-run.json");
+static FILL_RUN_FIXTURE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../⏳️precompute/🪣️fill/🧪️tests/🧫️fixtures/🎞️fill-run.json"));
 
 fn snapshot() -> Value {
-    let snapshot: Value = semio_framework_pack_json::from_json_str(FILL_RUN_FIXTURE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("fill run snapshot parses");
+    let snapshot: Value = semio_framework_pack_json::from_json_str((*FILL_RUN_FIXTURE), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("fill run snapshot parses");
     assert_eq!(snapshot["schema"], "s.puzzle2d.fill-run.v1");
     snapshot
 }

@@ -32,12 +32,12 @@ use semio_framework_async::CancelToken;
 use server::contract::{ActorKey, IdempotencyKey};
 use server::storage::{AuthorityStore, StorageProfile};
 
-use crate::actors::{enrollment_receipt, handle_key, learner_key, HANDLE, LEARNER, RUN_SUBMITTED};
-use crate::catalog::{load_catalog, CatalogError, LoadedCatalog};
-use crate::config::ProctorConfig;
+use teaching_proctor_domain::actors::{enrollment_receipt, handle_key, learner_key, HANDLE, LEARNER, RUN_SUBMITTED};
+use teaching_proctor_base::catalog::{load_catalog, CatalogError, LoadedCatalog};
+use teaching_proctor_base::config::ProctorConfig;
 use crate::instance::Proctor;
-use crate::projections::{CatchUp, Progress};
-use crate::storage::{Database, Erasure, Removed, SqliteAuthorityStore, DATABASE_FILE};
+use teaching_proctor_domain::projections::{CatchUp, Progress};
+use teaching_proctor_base::storage::{Database, Erasure, Removed, SqliteAuthorityStore, DATABASE_FILE};
 
 /// 📖️ The one-line usage.
 pub const USAGE: &str = "usage: proctor serve | proctor check <catalog 🔣️.json> | proctor rebuild | proctor health | proctor backup <directory/|file|-> | proctor restore <file|-> | proctor erase (--handle <handle>|--tag <tag>|--learner <id>) [--dry-run] | proctor prune --older-than <age: 90m|36h|7d|2w> [--dry-run]";

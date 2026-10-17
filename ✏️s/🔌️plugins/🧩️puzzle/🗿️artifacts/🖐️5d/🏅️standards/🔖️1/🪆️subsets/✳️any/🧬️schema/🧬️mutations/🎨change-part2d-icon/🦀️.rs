@@ -1,6 +1,5 @@
 //! Puzzle5d mutation — `ChangePart2dIcon`: changes a part's 2D-projection icon.
 use crate::standards::v1::subsets::any::schema::diff::Puzzle5dDiff;
-use crate::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation;
 use crate::Puzzle5dSnapshot;
 
 //#region 🔖️Mutation
@@ -17,13 +16,16 @@ pub struct ChangePart2dIcon {
     pub new_icon_kind: Option<String>,
 }
 
-impl protocol::MutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for ChangePart2dIcon {
+impl<Op> protocol::MutationKind<Puzzle5dSnapshot, Op> for ChangePart2dIcon
+where
+    Op: protocol::Mutation<Puzzle5dSnapshot, Diff = Puzzle5dDiff> + From<ChangePart2dIcon>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "part", kind: "change-part2d-icon", record: "ChangedPart2dIcon" };
 
     fn diff(&self, base: &Puzzle5dSnapshot) -> protocol::MutationOutcome<Puzzle5dDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Puzzle5dSnapshot) -> Result<Vec<Puzzle5dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Puzzle5dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     
@@ -39,6 +41,9 @@ impl protocol::MutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for ChangePart2d
 //#endregion 🔖️Mutation
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_part_2d_icon(id: String, new_icon_kind: Option<String>) -> Puzzle5dMutation {
-    Puzzle5dMutation::ChangePart2dIcon(ChangePart2dIcon { id, new_icon_kind })
+pub fn change_part_2d_icon<Op>(id: String, new_icon_kind: Option<String>) -> Op
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::change_part_2d_icon::ChangePart2dIcon>,
+{
+    Op::from(ChangePart2dIcon { id, new_icon_kind })
 }

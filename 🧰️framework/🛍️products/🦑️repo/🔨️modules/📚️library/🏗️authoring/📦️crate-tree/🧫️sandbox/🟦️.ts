@@ -1,6 +1,6 @@
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawnSync } from "node:child_process";
 import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { dirname, join, relative, resolve } from "node:path";
+import { dirname, join, posix, relative, resolve } from "node:path";
 import { rustTokens } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/🟦️.ts";
 import { carveWrites } from "../🟦️.ts";
 import { allItems, crateIdent, crateRelativeChains, implHeader, measureRustCrate, readCargoLib, type ArtifactCratePlan } from "../🗺️plan/🟦️.ts";
@@ -17,6 +17,7 @@ export type CarveVerification = {
   orphan: unknown[];
   glue: string[];
   unresolvedCrates: Record<string, string[]>;
+  inheritedUnresolvedCrates: string[];
   oracle: Record<string, { original: number; candidate: number; onlyOriginal: number; onlyCandidate: number; sampleOnlyCandidate: string[]; sampleOnlyOriginal: string[] }> | null;
   layout: Record<string, { union: number; combined: number; onlyCombined: number; sampleOnlyCombined: string[] }> | null;
 };
@@ -61,10 +62,30 @@ export function rewriteForCombined(text: string, module: string, crateModules: R
   return out;
 }
 
-/** 🔗️ Whether a diagnostic is about anything but an external crate that the sandbox does not link. */
-export const external = (line: string): boolean => !line.includes("unlinked crate");
+/** 🔗️ Whether a diagnostic is about anything but an external crate that the sandbox does not link (an associated type looked up on a generic parameter bound by such a crate's trait is one of them: the base crate aborts at resolution before it type-checks, a carved crate with no unresolved item header does not): a path through the extern prelude (`::semio_ext::x`) names such a crate in the 2021 edition, and rustc reports it as "cannot find `semio_ext` in the crate root". */
+export const external = (line: string): boolean => !line.includes("unlinked crate") && !/\tcannot find `[A-Za-z0-9_]+` in the crate root\t/u.test(line) && !/^E0432\tunresolved import `semio_[A-Za-z0-9_]+`(?:\t|$)/u.test(line) && !/^E0220\tassociated type `[A-Za-z0-9_]+` not found for `[A-Z][A-Za-z0-9_]*`(?:\t|$)/u.test(line);
 
-export const normalizeCombined = (line: string): string => line.replace(/crate::__c_[a-z0-9_]+/gu, "crate").replace(/__c_[a-z0-9_]+(::)?/gu, "");
+/** 📍️ Drops the file and label of the diagnostics about unresolved derive helper attributes and derive macros (the sandbox links no macro crate, so every derive reports them): an item that moves to another file keeps its count but changes its location. The label of a type or value that is not found in scope is dropped too: a type that an unlinked macro would have generated is reported with or without a suggestion depending on the imports around it, which the carve legitimately changes. */
+export const placeless = (line: string): string => {
+  if (/^[^\t]*\tcannot find (?:attribute|derive macro) /u.test(line)) return line.split("\t").slice(0, 2).join("\t");
+  return /^[^\t]*\tcannot find (?:type|struct, variant or union type|value|function) `[^`]+` in this scope\t/u.test(line) ? line.split("\t").slice(0, 3).join("\t") : line;
+};
+
+/** 🧩️ The names a stripped diagnostic reports as unresolved (an import, a type, a value or a function), as the last segment of each backticked path; empty for any other diagnostic. */
+export function unresolvedSubjects(line: string): string[] {
+  const match = /^E0(?:412|422|425|432|433)\t(?:unresolved imports? |cannot find (?:type|value|struct, variant or union type|function|trait|macro) )(.*)$/u.exec(line);
+  if (!match) return [];
+  const subject = match[1]!.split(": ")[0]!.split(" in this scope")[0]!.split(" in module")[0]!;
+  return [...subject.matchAll(/`([^`]+)`/gu)].map((entry) => entry[1]!.split("::").pop()!);
+}
+
+/** 🧩️ Drops the carved diagnostics that only re-word an unresolved name the base tree already fails to resolve: a name an unexpanded macro defines is reported as `unresolved import` in one layout and as `cannot find .. in this scope` in the other, so the two spellings must not count as a regression. */
+export function dropBaseUnresolvedNames(baseLines: readonly string[], carvedLines: readonly string[]): string[] {
+  const known = new Set(baseLines.flatMap(unresolvedSubjects));
+  return carvedLines.filter((line) => { const subjects = unresolvedSubjects(line); return !subjects.length || !subjects.every((name) => known.has(name)); });
+}
+
+export const normalizeCombined = (line: string): string => line.replace(/crate::__c_[a-z0-9_]+/gu, "crate").replace(/__c_[a-z0-9_]+(::)?/gu, "").replace(/<sandbox>(?:\/\.\.)+/gu, "<sandbox>/..");
 
 /** 🪞️ Rewrites the imports of the combined layout that name a crate without a following path: `use <crate> as name;` and `use crate as name;`, which the token rewrite of `rewriteForCombined` leaves alone. */
 export function rewriteCrateAliases(text: string, module: string, crateModules: ReadonlyMap<string, string>): string {
@@ -77,9 +98,9 @@ export function rewriteCrateAliases(text: string, module: string, crateModules: 
 export type SiblingCrate = Readonly<{ name: string; dir: string; entry: string; idents: readonly string[] }>;
 
 /** 🔗️ Collects the path dependencies of the given crate manifests that live outside the artifact: plugin-local ones transitively, any other repository crate only as a direct dependency. These are the sibling crates an artifact crate may now depend on instead of mounting their sources; the caller keeps the ones whose sources the base tree compiled in-crate. */
-export function siblingPathCrates(repoRoot: string, pluginDir: string, artifactDir: string, manifests: readonly string[]): SiblingCrate[] {
+export function siblingPathCrates(repoRoot: string, pluginDir: string, artifactDir: string, manifests: readonly string[], workspaceDir: string = artifactDir): SiblingCrate[] {
   const found = new Map<string, { name: string; entry: string; idents: Set<string> }>();
-  const inherited = (Bun.TOML.parse(readFileSync(join(repoRoot, artifactDir, "Cargo.toml"), "utf8")) as { workspace?: { dependencies?: Record<string, { path?: string }> } }).workspace?.dependencies ?? {};
+  const inherited = (Bun.TOML.parse(readFileSync(join(repoRoot, workspaceDir, "Cargo.toml"), "utf8")) as { workspace?: { dependencies?: Record<string, { path?: string }> } }).workspace?.dependencies ?? {};
   const queue = [...manifests];
   const seen = new Set(queue);
   while (queue.length) {
@@ -92,7 +113,7 @@ export function siblingPathCrates(repoRoot: string, pluginDir: string, artifactD
       if (typeof spec !== "object" || spec === null) continue;
       const viaWorkspace = spec.workspace === true && typeof inherited[key]?.path === "string";
       if (typeof spec.path !== "string" && !viaWorkspace) continue;
-      const directory = relativePosix(repoRoot, viaWorkspace ? resolve(repoRoot, artifactDir, inherited[key]!.path!) : resolve(repoRoot, dirname(manifest), spec.path!));
+      const directory = relativePosix(repoRoot, viaWorkspace ? resolve(repoRoot, workspaceDir, inherited[key]!.path!) : resolve(repoRoot, dirname(manifest), spec.path!));
       const next = `${directory}/Cargo.toml`;
       const local = directory.startsWith(`${pluginDir}/`);
       if (directory.startsWith(`${artifactDir}/`) || directory.startsWith("..") || !existsSync(join(repoRoot, next))) continue;
@@ -151,11 +172,13 @@ export async function verifyCarveInSandbox(plan: ArtifactCratePlan, sandboxRoot:
   });
   const grammar = loadCatalogTaxonomy().packageGlueGrammar.rust!;
   const unresolvedCrates: Record<string, string[]> = {};
+  const originalDeclared = new Set(Object.keys((Bun.TOML.parse(readFileSync(resolve(repoRoot, plan.packageDir, "Cargo.toml"), "utf8")) as { dependencies?: object }).dependencies ?? {}).map((key) => key.replaceAll("-", "_")));
+  const inheritedUnresolvedCrates = [...new Set([...plan.tree.source.matchAll(/extern crate ([A-Za-z0-9_]+)(?: as [A-Za-z0-9_]+)?;/gu)].map((match) => match[1]!))].filter((name) => !originalDeclared.has(name)).sort();
   for (const crate of crateInfos) {
     const declared = new Set(Object.keys({ ...((Bun.TOML.parse(readFileSync(join(sandboxRoot, plan.crates.find((entry) => entry.name === crate.name)!.packageDir, "Cargo.toml"), "utf8")) as { dependencies?: object }).dependencies ?? {}) }).map((key) => key.replaceAll("-", "_")));
     const aliases = [...crate.rootText.matchAll(/extern crate ([A-Za-z0-9_]+)(?: as ([A-Za-z0-9_]+))?;/gu)].map((match) => match[2] ?? match[1]!);
     const used = new Set([...rustcUnresolvedCrates(crate.rootFile, crate.name, []).unresolved, ...rustcUnresolvedCrates(crate.rootFile, crate.name, ["--test"]).unresolved]);
-    unresolvedCrates[crate.name] = [...used].filter((name) => !declared.has(name) && !aliases.includes(name));
+    unresolvedCrates[crate.name] = [...used].filter((name) => !declared.has(name) && !aliases.includes(name) && !inheritedUnresolvedCrates.includes(name));
   }
   const report: CarveVerification = {
     census,
@@ -164,6 +187,7 @@ export async function verifyCarveInSandbox(plan: ArtifactCratePlan, sandboxRoot:
     orphan: checkOrphanRules(crateInfos.map((crate) => ({ name: crate.name, sources: new Map([...crate.sourceFiles].filter(([path]) => crate.lib.has(path))) })), implHeader, allItems),
     glue: crateInfos.map((crate) => { const verdict = classifyPackageSource(crate.rootText, grammar); return verdict.role === "declaration" ? "" : `${crate.name}: ${verdict.role} (${verdict.evidence})`; }).filter(Boolean),
     unresolvedCrates,
+    inheritedUnresolvedCrates,
     oracle: null,
     layout: null,
   };
@@ -185,8 +209,8 @@ export async function verifyCarveInSandbox(plan: ArtifactCratePlan, sandboxRoot:
       const before = runResolutionOracle(originalRoot, join(originalRoot, plan.rootFile), rustName, flags);
       const after = runResolutionOracle(unionRoot, join(unionRoot, plan.rootFile), rustName, flags);
       unionDiagnostics.set(flags.join(" "), after.diagnostics);
-      const strip = (all: string[]): string[] => { const list = all.filter(external); return [...new Set(flags.includes("--test") ? list.map((line) => line.split("\t").slice(0, 2).join("\t")) : list)].filter((line) => !line.includes("aborting due to")); };
-      const delta = diffDiagnostics(strip(before.diagnostics), strip(after.diagnostics));
+      const strip = (all: string[]): string[] => { const list = all.filter(external).map(placeless); return [...new Set(flags.includes("--test") ? list.map((line) => line.split("\t").slice(0, 2).join("\t")) : list)].filter((line) => !line.includes("aborting due to")); };
+      const delta = diffDiagnostics(strip(before.diagnostics), dropBaseUnresolvedNames(strip(before.diagnostics), strip(after.diagnostics)));
       report.oracle[flags.join(" ") || "native"] = { original: before.diagnostics.length, candidate: after.diagnostics.length, onlyOriginal: delta.onlyOriginal.length, onlyCandidate: delta.onlyCandidate.length, sampleOnlyCandidate: delta.onlyCandidate.slice(0, 12).map((line) => { const at = after.diagnostics.findIndex((entry) => strip([entry])[0] === line); return at >= 0 ? `${line}  @ ${after.locations[at] ?? ""}` : line; }), sampleOnlyOriginal: delta.onlyOriginal.slice(0, 12) };
     }
 
@@ -228,7 +252,7 @@ export async function verifyCarveInSandbox(plan: ArtifactCratePlan, sandboxRoot:
       const baseline = runResolutionOracle(originalRoot, join(originalRoot, "__combined.rs"), "combined", flags);
       const carvedRun = runResolutionOracle(combinedRoot, join(combinedRoot, "__combined.rs"), "combined", flags);
       const strip = (list: string[], normalize: boolean): string[] => [...new Set(list.filter(external).map((line) => (normalize ? normalizeCombined(line) : line)).map((line) => line.split("\t").slice(0, 2).join("\t")))].filter((line) => !line.includes("aborting due to"));
-      const delta = diffDiagnostics(strip(baseline.diagnostics, true), strip(carvedRun.diagnostics, true));
+      const delta = diffDiagnostics(strip(baseline.diagnostics, true), dropBaseUnresolvedNames(strip(baseline.diagnostics, true), strip(carvedRun.diagnostics, true)));
       report.layout[flags.join(" ") || "native"] = { union: baseline.diagnostics.length, combined: carvedRun.diagnostics.length, onlyCombined: delta.onlyCandidate.length, sampleOnlyCombined: delta.onlyCandidate.slice(0, 40).map((line) => { const at = carvedRun.diagnostics.findIndex((entry) => strip([entry], true)[0] === line); return at >= 0 ? `${line}  @ ${carvedRun.locations[at] ?? ""}` : line; }) };
     }
     if (!options.keep) rmSync(combinedRoot, { recursive: true, force: true });
@@ -239,20 +263,55 @@ export async function verifyCarveInSandbox(plan: ArtifactCratePlan, sandboxRoot:
 /** 🧱️ A Cargo package of one artifact tree: the packages below `📦️packages/🦀️rust` of the artifact, minus the oracle and bridge packages, with the absolute library entry resolved against `root`. */
 export type ArtifactCrate = Readonly<{ dir: string; name: string; entry: string }>;
 
-/** 📋️ Lists the library packages of an artifact tree under `root`; the same rule reads the working tree and the pre-carve archive, so both sides of the layout differential see the crates they own. */
+/** 📋️ Lists the library packages of an artifact tree under `root` (a package that declares no `[lib]` and has no `src/lib.rs`, such as a binary-only tool, is not one); the same rule reads the working tree and the pre-carve archive, so both sides of the layout differential see the crates they own. */
 export function artifactCrates(root: string, artifactDir: string): ArtifactCrate[] {
   const found: ArtifactCrate[] = [];
   for (const manifest of new Bun.Glob("**/📦️packages/🦀️rust/Cargo.toml").scanSync({ cwd: join(root, artifactDir) })) {
     if (manifest.startsWith("🔮️oracles") || manifest.includes("🏭️bridge/")) continue;
     const path = join(artifactDir, manifest);
     if (!/^\[package\]/mu.test(readFileSync(join(root, path), "utf8"))) continue;
-    found.push({ dir: dirname(path), ...readCargoLib(join(root, path)) });
+    const lib = readCargoLib(join(root, path));
+    if ((Bun.TOML.parse(readFileSync(join(root, path), "utf8")) as { lib?: unknown }).lib === undefined && !existsSync(lib.entry)) continue;
+    found.push({ dir: dirname(path), ...lib });
   }
   return found;
 }
 
 /** 🚧️ Whether a rustc message is a tree-structure error (a syntax error, a misplaced inner attribute or a module file that does not exist): rustc stops at it before it resolves a single name, so a tree that has one cannot serve as a baseline. */
 export const treeError = (message: string): boolean => /^(an inner attribute is not permitted|couldn't find file|file not found for module|circular modules|couldn't read|expected |unexpected |this file contains an unclosed|unclosed delimiter|mismatched closing delimiter)/u.test(message);
+
+/** 🔝️ Moves the single-line inner attributes (`#![..]`) and the inner doc lines (`//!`) that sit behind an item to the head of the file, in their order: rustc refuses an inner attribute after a `use` or `extern crate`. Items are never moved, a file without a misplaced line comes back unchanged. */
+export function hoistInnerAttributes(text: string): string {
+  const lines = text.split("\n");
+  let first = -1;
+  let block = false;
+  for (let index = 0; index < lines.length && first < 0; index += 1) {
+    const line = lines[index]!.trim();
+    if (block) { block = !line.includes("*/"); continue; }
+    if (line.startsWith("/*")) { block = !line.includes("*/"); continue; }
+    if (line === "" || (line.startsWith("//") && !line.startsWith("///")) || line.startsWith("#![")) continue;
+    first = index;
+  }
+  if (first < 0) return text;
+  const item = /^(?:pub(?:\([^)]*\))?\s+)?(?:mod|fn|const|static|struct|enum|trait|impl|type|macro_rules!|unsafe|async)\b|^#\[(?:path|derive|cfg_attr|macro_use)/u;
+  const lifted: number[] = [];
+  let stop = false;
+  for (let index = first; index < lines.length; index += 1) {
+    const line = lines[index]!;
+    if (!stop && item.test(line)) stop = true;
+    if (/^#!\[.*\]\s*$/u.test(line) && index < 400) lifted.push(index);
+    else if (!stop && line.startsWith("//!")) lifted.push(index);
+  }
+  if (!lifted.length) return text;
+  const skip = new Set(lifted);
+  const rest = lines.filter((_, index) => !skip.has(index));
+  return [...rest.slice(0, first), ...lifted.map((index) => lines[index]!), ...rest.slice(first)].join("\n");
+}
+
+/** 🪝️ The repository paths of the module files that `text` (the source of `file`) mounts with a flat `#[path = "<relative>"]` attribute: rustc stops at the first missing module file, so the base healing copies the whole mounted subtree at once instead of one file per round. A mount inside an inline module is resolved against the wrong directory and is skipped by the caller when the file does not exist. */
+export function mountedPathFiles(file: string, text: string): string[] {
+  return [...text.matchAll(/#\[path\s*=\s*"([^"]+\.rs)"\]/gu)].map((match) => posix.normalize(posix.join(posix.dirname(file), match[1]!)));
+}
 
 /** 🧩️ One crate of the synthetic layout: the module that mounts it, the repository paths of its sources and its library root. */
 export type OwnedCrate = Readonly<{ module: string; paths: readonly string[]; root: string }>;
@@ -273,11 +332,31 @@ export function mountCrates(root: string, owned: readonly OwnedCrate[], crateMod
   writeFileSync(join(root, "__combined.rs"), `${mounts.join("\n")}\n`);
 }
 
+/** 🧼️ Removes from `sandbox` the files of `artifactDir` that the pre-carve tree of `baseRef` does not have and that git does not ignore: the sandbox starts as a copy of the working tree, so a crate the carve added would otherwise stay and be taken for a hand-built crate of the base. Ignored files (generated sources) stay, because the base compiles against them as well. */
+export function pruneNonBaseFiles(repoRoot: string, sandbox: string, artifactDir: string, baseRef: string): string[] {
+  const archived = new Set(execFileSync("git", ["-c", "core.quotepath=false", "-c", "core.fsmonitor=false", "ls-tree", "-r", "--name-only", "-z", baseRef, "--", artifactDir], { cwd: repoRoot, encoding: "utf8", maxBuffer: 1 << 28 }).split("\0").filter(Boolean));
+  const extra: string[] = [];
+  const walk = (directory: string): void => {
+    for (const entry of readdirSync(join(sandbox, directory), { withFileTypes: true })) {
+      const path = `${directory}/${entry.name}`;
+      if (entry.isDirectory()) walk(path);
+      else if (!archived.has(path)) extra.push(path);
+    }
+  };
+  if (existsSync(join(sandbox, artifactDir))) walk(artifactDir);
+  if (!extra.length) return [];
+  const ignored = new Set(spawnSync("git", ["-c", "core.quotepath=false", "-c", "core.fsmonitor=false", "check-ignore", "-z", "--stdin"], { cwd: repoRoot, input: `${extra.join("\0")}\0`, encoding: "utf8", maxBuffer: 1 << 28 }).stdout.split("\0").filter(Boolean));
+  const removed = extra.filter((path) => !ignored.has(path));
+  for (const path of removed) rmSync(join(sandbox, path), { force: true });
+  return removed;
+}
+
 /** 🧾️ Result of the layout differential of an applied carve: diagnostics only the mounted crates have, per cfg. */
-export type AppliedLayoutReport = { crates: number; siblings: string[]; healedBase: string[]; layout: Record<string, { base: number; combined: number; onlyCombined: number; sampleOnlyCombined: string[] }> };
+export type AppliedLayoutReport = { crates: number; baseCrates: number; siblings: string[]; healedBase: string[]; layout: Record<string, { base: number; combined: number; onlyCombined: number; sampleOnlyCombined: string[] }> };
 
 /** 🧾️ Gate for an applied carve: mounts the crates of the working tree as modules of one synthetic crate and compares the rustc resolution diagnostics (lib and test) with the pre-carve tree of `baseRef`. Zero `onlyCombined` means the carve introduced no unresolved name. */
 export async function verifyAppliedLayout(repoRoot: string, artifactDir: string, sandboxRoot: string, baseRef = "HEAD", keep = false, sampleLimit = 12): Promise<AppliedLayoutReport> {
+  const baseDirectory = baseRef.startsWith("dir:") ? resolve(baseRef.slice("dir:".length)) : null;
   const pluginDir = artifactDir.split("/").length >= 3 ? artifactDir.split("/").slice(0, 3).join("/") : artifactDir;
   const named = artifactCrates(repoRoot, artifactDir);
   const facadeDirectory = `${artifactDir}/📦️packages/🦀️rust`;
@@ -306,13 +385,15 @@ export async function verifyAppliedLayout(repoRoot: string, artifactDir: string,
     rmSync(base, { recursive: true, force: true });
     buildSandbox(repoRoot, base, directories);
     mkdirSync(base, { recursive: true });
-    execFileSync("sh", ["-c", `cd '${repoRoot}' && git -c core.quotepath=false archive ${baseRef} '${pluginDir}' | tar -x -C '${base}'`]);
+    if (baseDirectory) { rmSync(join(base, artifactDir), { recursive: true, force: true }); cpSync(join(baseDirectory, artifactDir), join(base, artifactDir), { recursive: true }); }
+    else execFileSync("sh", ["-c", `cd '${repoRoot}' && git -c core.quotepath=false archive ${baseRef} '${pluginDir}' | tar -x -C '${base}'`]);
+    if (!baseDirectory) pruneNonBaseFiles(repoRoot, base, artifactDir, baseRef);
     for (const directory of mountedOutsideDirectories(repoRoot, pluginDir, base)) {
       if (existsSync(join(base, directory))) continue;
       mkdirSync(dirname(join(base, directory)), { recursive: true });
       cpSync(resolve(repoRoot, directory), join(base, directory), { recursive: true, filter: (path) => !/\/(node_modules|target|dist)(\/|$)/u.test(path) });
     }
-    for (const [path, text] of healed) writeFileSync(join(base, path), text);
+    for (const [path, text] of healed) { mkdirSync(dirname(join(base, path)), { recursive: true }); writeFileSync(join(base, path), text); }
     const carvedAtBase = baseCarved();
     const roots: ArtifactCrate[] = [...carvedAtBase, { dir: facadeDirectory, name: facade.name, entry: join(base, relativeEntry(facade)) }];
     const files = new Set(roots.flatMap((crate) => closureFiles(base, baseEntry(crate))));
@@ -332,35 +413,55 @@ export async function verifyAppliedLayout(repoRoot: string, artifactDir: string,
     return files;
   };
   const baseFiles = await prepareBase(new Map());
-  const siblings = siblingPathCrates(repoRoot, pluginDir, artifactDir, crates.map((crate) => `${crate.dir}/Cargo.toml`)).filter((sibling) => { const roots = [dirname(relative(repoRoot, sibling.entry)), dirname(dirname(sibling.dir))].map((root) => `${root.replaceAll("\\", "/")}/`); return [...baseFiles].some((file) => roots.some((root) => file.startsWith(root))); }).map((sibling) => ({ ...sibling, files: closureFiles(repoRoot, relative(repoRoot, sibling.entry).replaceAll("\\", "/")) })).filter((sibling) => sibling.files.some((file) => baseFiles.has(file)));
+  const workspaceDir = relativePosix(repoRoot, resolve(repoRoot, facadeDirectory, (Bun.TOML.parse(readFileSync(join(repoRoot, facadeDirectory, "Cargo.toml"), "utf8")) as { package?: { workspace?: string } }).package?.workspace ?? "../.."));
+  const siblings = siblingPathCrates(repoRoot, pluginDir, artifactDir, crates.map((crate) => `${crate.dir}/Cargo.toml`), workspaceDir).filter((sibling) => { const roots = [dirname(relative(repoRoot, sibling.entry)), dirname(dirname(sibling.dir))].map((root) => `${root.replaceAll("\\", "/")}/`); return [...baseFiles].some((file) => roots.some((root) => file.startsWith(root))); }).map((sibling) => ({ ...sibling, files: closureFiles(repoRoot, relative(repoRoot, sibling.entry).replaceAll("\\", "/")) })).filter((sibling) => sibling.files.some((file) => baseFiles.has(file)));
   buildSandbox(repoRoot, combined, [...new Set([...directories, ...siblings.flatMap((sibling) => sibling.files.filter((file) => !file.startsWith(`${pluginDir}/`)).map((file) => dirname(file)))])]);
   const crateModules = new Map<string, string>([...carved.map((crate) => [crateIdent(crate.name), `__c_${crateIdent(crate.name)}`] as const), ...siblings.flatMap((sibling) => sibling.idents.map((ident) => [ident, `__c_${crateIdent(sibling.name)}`] as const))]);
   const owned = [...carved.map((crate) => ({ module: crateModules.get(crateIdent(crate.name))!, paths: measured.get(crate.name)!, root: relativeEntry(crate) })), { module: `__c_${crateIdent(facade.name)}`, paths: measured.get(facade.name)!, root: relativeEntry(facade) }, ...siblings.map((sibling) => ({ module: `__c_${crateIdent(sibling.name)}`, paths: sibling.files, root: relative(repoRoot, sibling.entry).replaceAll("\\", "/") }))];
   mountCrates(combined, owned, crateModules);
   patchSandboxSources(combined, prefixes);
-  const testingFlags = siblings.some((sibling) => Object.hasOwn((Bun.TOML.parse(readFileSync(join(repoRoot, sibling.dir, "Cargo.toml"), "utf8")) as { features?: Record<string, unknown> }).features ?? {}, "testing")) ? ["--cfg", 'feature="testing"'] : [];
+  const declaresFeature = (feature: string): boolean => [...siblings.map((sibling) => sibling.dir), ...crates.map((crate) => crate.dir)].some((dir) => Object.hasOwn((Bun.TOML.parse(readFileSync(join(repoRoot, dir, "Cargo.toml"), "utf8")) as { features?: Record<string, unknown> }).features ?? {}, feature));
+  const testingFlags = ["testing", "testkit"].filter(declaresFeature).flatMap((feature) => ["--cfg", `feature="${feature}"`]);
   const flagSets = [[], ["--test", ...testingFlags]] as string[][];
+  const archivedAt = (file: string): boolean => { if (baseDirectory) return existsSync(join(baseDirectory, file)); try { execFileSync("git", ["-c", "core.quotepath=false", "cat-file", "-e", `${baseRef}:${file}`], { cwd: repoRoot, stdio: "pipe" }); return true; } catch { return false; } };
   const healed = new Map<string, string>();
-  for (let round = 0; round < 16; round += 1) {
+  for (let round = 0; round < 64; round += 1) {
     const fresh = new Map<string, string>();
     for (const flags of flagSets) for (const diagnostic of runResolutionOracle(base, join(base, "__combined.rs"), "combined", flags).diagnostics) {
       const [, message = "", file = ""] = diagnostic.split("\t");
+      const missing = /^couldn't find file `([^`]+)`/u.exec(message)?.[1]?.replace(`${base}/`, "").replace("<sandbox>/", "");
+      if (missing && !healed.has(missing) && existsSync(join(repoRoot, missing)) && !existsSync(join(base, missing)) && !archivedAt(missing)) fresh.set(missing, readFileSync(join(repoRoot, missing), "utf8"));
       if (!treeError(message) || !file || healed.has(file) || !existsSync(join(repoRoot, file))) continue;
       const current = readFileSync(join(repoRoot, file), "utf8");
       let archived: string | null = null;
-      try { archived = execFileSync("git", ["-c", "core.quotepath=false", "show", `${baseRef}:${file}`], { cwd: repoRoot, encoding: "utf8", maxBuffer: 1 << 28 }); } catch { archived = null; }
-      if (current !== archived) fresh.set(file, current);
+      if (baseDirectory) archived = existsSync(join(baseDirectory, file)) ? readFileSync(join(baseDirectory, file), "utf8") : null;
+      else try { archived = execFileSync("git", ["-c", "core.quotepath=false", "show", `${baseRef}:${file}`], { cwd: repoRoot, encoding: "utf8", maxBuffer: 1 << 28 }); } catch { archived = null; }
+      if (current === archived) continue;
+      if (archived !== null && /^(an inner attribute is not permitted|expected outer doc comment)/u.test(message)) {
+        if (hoistInnerAttributes(current) === current && hoistInnerAttributes(archived) !== archived) fresh.set(file, hoistInnerAttributes(archived));
+        continue;
+      }
+      fresh.set(file, current);
     }
     if (!fresh.size) break;
+    for (const pending = [...fresh.keys()]; pending.length;) {
+      const file = pending.pop()!;
+      for (const mounted of mountedPathFiles(file, fresh.get(file)!)) {
+        if (fresh.has(mounted) || healed.has(mounted) || !existsSync(join(repoRoot, mounted)) || existsSync(join(base, mounted)) || archivedAt(mounted)) continue;
+        fresh.set(mounted, readFileSync(join(repoRoot, mounted), "utf8"));
+        pending.push(mounted);
+      }
+    }
     for (const [file, text] of fresh) healed.set(file, text);
     await prepareBase(healed);
   }
-  const report: AppliedLayoutReport = { crates: carved.length, siblings: siblings.map((sibling) => sibling.name), healedBase: [...healed.keys()], layout: {} };
+  const report: AppliedLayoutReport = { crates: carved.length, baseCrates: baseCarved().length, siblings: siblings.map((sibling) => sibling.name), healedBase: [...healed.keys()], layout: {} };
   for (const flags of flagSets) {
     const baseline = runResolutionOracle(base, join(base, "__combined.rs"), "combined", flags);
     const carvedRun = runResolutionOracle(combined, join(combined, "__combined.rs"), "combined", flags);
     const strip = (list: string[]): string[] => [...new Set(list.filter(external).map(normalizeCombined).map((line) => line.split("\t").slice(0, 2).join("\t")))].filter((line) => !line.includes("aborting due to"));
-    const delta = diffDiagnostics(strip(baseline.diagnostics), strip(carvedRun.diagnostics));
+    const baselineLines = strip(baseline.diagnostics);
+    const delta = diffDiagnostics(baselineLines, dropBaseUnresolvedNames(baselineLines, strip(carvedRun.diagnostics)));
     report.layout[flags.includes("--test") ? "--test" : "native"] = { base: baseline.diagnostics.length, combined: carvedRun.diagnostics.length, onlyCombined: delta.onlyCandidate.length, sampleOnlyCombined: delta.onlyCandidate.slice(0, sampleLimit).map((line) => { const at = carvedRun.diagnostics.findIndex((entry) => strip([entry])[0] === line); return at >= 0 ? `${line}  @ ${carvedRun.locations[at] ?? ""}` : line; }) };
   }
   if (!keep) {

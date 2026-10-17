@@ -28,5 +28,4 @@ pub fn decode_op(bytes: &[u8]) -> Result<PlaygroundMutation, protocol::ProtocolE
 mod tests;
 //#endregion 🧪️Tests
 
-#[path = "✒️change-schema/🦀️.rs"]
-pub mod change_schema;
+pub use semio_s_artifact_demonstrator_playground_schema::standards::v1::subsets::any::io::binary::mutations::change_schema;

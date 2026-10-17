@@ -47,6 +47,7 @@ impl pack::snapshot::ArtifactDsl for GisTerrainSnapshot{
 #[allow(unused_imports)]
 mod snapshot_codec {
 use super::*;
+use semio_s_artifact_gis_gisterrain_terrain_descriptor::standards::v1::subsets::any::schema::terrain_descriptor::GIS_3D_TERRAIN_TILE_URL_TEMPLATE;
 use crate::standards::v1::subsets::any::schema::snapshot::*;
 use crate::{gis_terrain_mesh_child_handle, gis_terrain_mesh_content_key};
 use ::semio_framework_schema::ArtifactSchema;
@@ -80,56 +81,56 @@ use semio_s_artifact_stdio_semio_base::io::text::codec::split_top_level;
 use semio_s_artifact_stdio_semio_base::io::text::codec::strip_brackets;
 use semio_s_artifact_stdio_semio_mesh::schema::snapshot::SemioMeshSnapshot;
 
-pub(crate) fn hex_encode(bytes: &[u8]) -> String {
+pub fn hex_encode(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
 
-pub(crate) fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
+pub fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     if !s.len().is_multiple_of(2) {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
 
-pub(crate) fn enc_str(s: &str) -> String {
+pub fn enc_str(s: &str) -> String {
     hex_encode(s.as_bytes())
 }
 
-pub(crate) fn dec_str(s: &str) -> Result<String, String> {
+pub fn dec_str(s: &str) -> Result<String, String> {
     String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
 }
 
-pub(crate) fn enc_ref(r: &semio_framework_artifact_reference::ArtifactRef) -> String {
+pub fn enc_ref(r: &semio_framework_artifact_reference::ArtifactRef) -> String {
 use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactReferenceText as _};
 
     enc_str(&r.to_uri())
 }
 
-pub(crate) fn dec_ref(s: &str) -> Result<semio_framework_artifact_reference::ArtifactRef, String> {
+pub fn dec_ref(s: &str) -> Result<semio_framework_artifact_reference::ArtifactRef, String> {
 use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactReferenceText as _};
 
     semio_framework_artifact_reference::ArtifactRef::parse_uri(&dec_str(s)?)
 }
 
 /// 🪪️ `[<hex child_id>,<hex target-uri>]` — the two-string handle, real and complete, never content.
-pub(crate) fn enc_child<S>(c: &store::os_store::artifact_child::ArtifactChild<S>) -> String {
+pub fn enc_child<S>(c: &store::os_store::artifact_child::ArtifactChild<S>) -> String {
     format!("[{},{}]", enc_str(&c.child_id), enc_ref(&c.target))
 }
 
-pub(crate) fn dec_child<S>(s: &str) -> Result<store::os_store::artifact_child::ArtifactChild<S>, String> {
+pub fn dec_child<S>(s: &str) -> Result<store::os_store::artifact_child::ArtifactChild<S>, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [child_id, target] = parts.as_slice() else { return Err(format!("child handle: expected 2 fields, got {}", parts.len())) };
     Ok(store::os_store::artifact_child::ArtifactChild::new(dec_str(child_id)?, dec_ref(target)?))
 }
 
-pub(crate) fn enc_child_opt<S>(c: &Option<store::os_store::artifact_child::ArtifactChild<S>>) -> String {
+pub fn enc_child_opt<S>(c: &Option<store::os_store::artifact_child::ArtifactChild<S>>) -> String {
     match c {
         Some(c) => enc_child(c),
         None => "[]".to_string(),
     }
 }
 
-pub(crate) fn dec_child_opt<S>(s: &str) -> Result<Option<store::os_store::artifact_child::ArtifactChild<S>>, String> {
+pub fn dec_child_opt<S>(s: &str) -> Result<Option<store::os_store::artifact_child::ArtifactChild<S>>, String> {
     if s == "[]" {
         return Ok(None);
     }
@@ -169,7 +170,7 @@ pub use snapshot_wire_codec::*;
 #[allow(unused_imports)]
 mod snapshot_wire2_codec {
 use super::*;
-use crate::standards::v1::subsets::any::schema::*;
+use crate::standards::v1::subsets::any::schema::imported_map;
 use crate::standards::v1::subsets::any::io::text::snapshot::REUSE_TERRAIN_EXAMPLE_TEXT;
 use crate::{gis_terrain_mesh_child_handle, gis_terrain_mesh_content_key, GisTerrainSnapshot};
 use ::semio_framework_schema::ArtifactSchema;
@@ -197,7 +198,7 @@ pub fn default_terrain_document() -> GisTerrainSnapshot {
 
 #[derive(ToValue)]
 #[value(rename_all = "camelCase")]
-pub(crate) struct TerrainSceneStyleJson<'a> {
+pub struct TerrainSceneStyleJson<'a> {
     tile_url_template: &'a str,
     project_origin_lon: f64,
     project_origin_lat: f64,
@@ -226,7 +227,7 @@ pub fn build_terrain_scene_json(descriptor: &TerrainDescriptorJson) -> String {
 pub use snapshot_wire2_codec::*;
 
 mod imported_map_json {
-use crate::schema::{ImportedMap,ImportedProperty};
+use crate::schema::imported_map::{ImportedMap, ImportedProperty};
 use semio_framework_value::{DslValue,Number};
 impl ImportedMap {
  /// 📥️ JSON boundary normalizes missing collections to empty and rejects explicit null.
@@ -237,7 +238,30 @@ impl ImportedMap {
 }
 
 /// 🗺️ Admits bundled scenery before the semantic descriptor projection.
-pub fn fixture_descriptor(document:&GisTerrainSnapshot)->crate::schema::TerrainDescriptorJson {
- let map=crate::schema::ImportedMap::from_json(include_str!("../../../🖼️assets/🎬️demo/🌍️scenery.json")).expect("handcrafted terrain scenery map");
- crate::standards::v1::subsets::any::schema::inferences::parse_descriptor(document,&map)
+pub fn fixture_descriptor(document:&GisTerrainSnapshot)->crate::schema::terrain_descriptor::TerrainDescriptorJson {
+ let map=crate::schema::imported_map::ImportedMap::from_json(include_str!("../../../🖼️assets/🎬️demo/🌍️scenery.json")).expect("handcrafted terrain scenery map");
+ parse_descriptor(document,&map)
+}
+
+use crate::schema::terrain_descriptor::{TerrainDescriptorJson, TerrainPositionData, TerrainProjectOrigin};
+/// 📌️ Pin projection requires an identifier; durable map admission remains independent.
+fn map_positions(map:&crate::schema::imported_map::ImportedMap)->Vec<TerrainPositionData>{
+    map.positions.iter().filter_map(|entry|Some(TerrainPositionData{id:entry.get("id")?.as_str()?.to_string(),lon:entry.get("lon")?.as_f64()?,lat:entry.get("lat")?.as_f64()?,label:entry.get("label").and_then(|value|value.as_str()).map(str::to_string),icon:entry.get("icon").and_then(|value|value.as_str()).map(str::to_string)})).collect()
+}
+/// 🔌️ The optional imported map contributes an independent pin overlay.
+fn imported_positions(document: &GisTerrainSnapshot) -> Vec<TerrainPositionData> {
+    let Some(map) = &document.imported_map else { return Vec::new(); };
+    map_positions(map)
+}
+
+/// 🏔️ The full rendering descriptor (project origin + fixture pins + `map:in` overlay pins +
+/// exaggeration) for the given document — `exaggeration` always mirrors the LIVE document, and the
+/// bundled fixture's own `gisterrain exaggeration=...` header only ever seeds it once via
+/// `crate::schema::default_terrain_document`.
+pub fn parse_descriptor(document:&GisTerrainSnapshot,map:&crate::schema::imported_map::ImportedMap)->TerrainDescriptorJson {
+    let origin=map.properties.iter().find(|member|member.name=="projectOrigin").map(|member|&member.value);
+    let project_origin=TerrainProjectOrigin{lon:origin.and_then(|value|value.get("lon")).and_then(|value|value.as_f64()).unwrap_or(0.0),lat:origin.and_then(|value|value.get("lat")).and_then(|value|value.as_f64()).unwrap_or(0.0)};
+    let mut descriptor=TerrainDescriptorJson{schema:crate::GIS_3D_TERRAIN_SCHEMA.into(),project_origin,positions:map_positions(map),exaggeration:document.exaggeration};
+    descriptor.positions.extend(imported_positions(document));
+    descriptor
 }

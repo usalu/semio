@@ -1,14 +1,29 @@
-use super::*;
-use crate::standards::v1::subsets::any::schema::mutations::{change_parameter_binding,change_rule_layout_point,edit_working_graph,edit_lhs,edit_rhs,remove_parameter_binding,remove_rule_layout_point};
+use crate::standards::v1::subsets::any::schema::mutations::RewriteRuleMutation;
+use crate::standards::v1::subsets::any::schema::snapshot::RewritingSnapshot;
+use crate::standards::v1::subsets::any::schema::mutations::register_rewrite_rule_mutation_descriptors;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::errors::TrinityRewritingError;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::model::REWRITE_RULE_SCHEMA;
+#[allow(unused_imports)]
+use store::{os_store::document_materialize::create_document_envelope, os_store::store_schema::ArtifactCommand, os_store::store_schema::ArtifactEnvelope, ArtifactStore};
+use crate::standards::v1::subsets::any::schema::operations::*;
+use crate::standards::v1::subsets::any::schema::mutations::change_parameter_binding::change_parameter_binding;
+use crate::standards::v1::subsets::any::schema::mutations::change_rule_layout_point::change_rule_layout_point;
+use crate::standards::v1::subsets::any::schema::mutations::edit_working_graph::edit_working_graph;
+use crate::standards::v1::subsets::any::schema::mutations::edit_lhs::edit_lhs;
+use crate::standards::v1::subsets::any::schema::mutations::edit_rhs::edit_rhs;
+use crate::standards::v1::subsets::any::schema::mutations::remove_parameter_binding::remove_parameter_binding;
+use crate::standards::v1::subsets::any::schema::mutations::remove_rule_layout_point::remove_rule_layout_point;
 
-use crate::LayoutPoint;
+use crate::standards::v1::subsets::any::schema::model::LayoutPoint;
 use ::store::os_store::test_support::{assert_document_pack_round_trip, assert_document_text_round_trip, assert_op_line_round_trip};
 use protocol::os_spr::protocol_laws::{assert_mutation_diff_absorb_law, assert_mutation_inverse_law, assert_outcome_policy_matrix};
 use semio_framework_graph_manifest::PropertyValue;
 
 
 fn sample_rule_state() -> RewritingSnapshot {
-    let mut state = crate::editor::rewriting::fixture_rule_state();
+    let mut state = crate::standards::v1::subsets::any::schema::test_support::fixture_rule_state();
     state.working_graph.name = "x \"quoted\"\nline".into();
     state.parameter_bindings.insert("count".into(), PropertyValue::Number(3.0));
     state.rule_layout.insert("a".into(), LayoutPoint::from((10.5, -20.25)));
@@ -17,7 +32,7 @@ fn sample_rule_state() -> RewritingSnapshot {
 
 #[semio_framework_async_macros::async_test]
 async fn op_text_round_trip_edit_lhs() {
-    assert_op_line_round_trip(&edit_lhs(crate::standards::v1::subsets::any::schema::Lhs::default()));
+    assert_op_line_round_trip(&edit_lhs(crate::standards::v1::subsets::any::schema::rule::Lhs::default()));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -34,7 +49,7 @@ async fn op_text_round_trip_remove_rule_layout_point() {
 async fn document_text_round_trip_rewrite_rule_store() {
     let base = sample_rule_state();
     let mut store = new_rewrite_rule_store(create_rewrite_rule_envelope("test", base.clone()), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store");
-    dispatch_rewrite_rule_mutations(&mut store, vec![edit_lhs(crate::standards::v1::subsets::any::schema::Lhs::default())]).await.unwrap();
+    dispatch_rewrite_rule_mutations(&mut store, vec![edit_lhs(crate::standards::v1::subsets::any::schema::rule::Lhs::default())]).await.unwrap();
     assert_document_text_round_trip(&store).await;
     assert_document_pack_round_trip(&store).await;
 }
@@ -53,7 +68,7 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
 
     let base = sample_rule_state();
     let mut store = new_rewrite_rule_store(create_rewrite_rule_envelope("test", base.clone()), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store");
-    dispatch_rewrite_rule_mutations(&mut store, vec![edit_lhs(crate::standards::v1::subsets::any::schema::Lhs::default())]).await.unwrap();
+    dispatch_rewrite_rule_mutations(&mut store, vec![edit_lhs(crate::standards::v1::subsets::any::schema::rule::Lhs::default())]).await.unwrap();
     let edit: &Edit<RewriteRuleMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
     ::store::os_store::test_support::assert_command_envelope_round_trip::<RewritingSnapshot, RewriteRuleMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone())).await;
 }
@@ -63,8 +78,8 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
 async fn edit_mutations_inverse_law() {
     let base = sample_rule_state();
     assert_mutation_inverse_law(&base, &edit_working_graph({ let mut graph = base.working_graph.clone(); graph.name = "replacement 世界".into(); graph })).await;
-    assert_mutation_inverse_law(&base, &edit_lhs(crate::standards::v1::subsets::any::schema::Lhs::default())).await;
-    assert_mutation_inverse_law(&base, &edit_rhs(crate::standards::v1::subsets::any::schema::Rhs::default())).await;
+    assert_mutation_inverse_law(&base, &edit_lhs(crate::standards::v1::subsets::any::schema::rule::Lhs::default())).await;
+    assert_mutation_inverse_law(&base, &edit_rhs(crate::standards::v1::subsets::any::schema::rule::Rhs::default())).await;
 }
 
 #[semio_framework_async_macros::async_test]

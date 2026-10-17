@@ -3,13 +3,14 @@
 //! 🧭️ The tests read the tool machines through their public API and the `testkit` hooks; every fixture is read at run time from the tool-machine module directory, so no document is compiled into the test closure.
 #![cfg(test)]
 
+use semio_framework_test_fixtures::fixture_path;
 use std::{collections::HashMap, path::{Path, PathBuf}, sync::{Mutex, OnceLock}};
 
 pub use semio_framework_tool_machine::*;
 
 pub fn module_directory() -> &'static Path {
     static DIRECTORY: OnceLock<PathBuf> = OnceLock::new();
-    DIRECTORY.get_or_init(|| Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../.."))
+    DIRECTORY.get_or_init(|| fixture_path!("../../../.."))
 }
 
 fn leaked(relative: &str) -> &'static [u8] {

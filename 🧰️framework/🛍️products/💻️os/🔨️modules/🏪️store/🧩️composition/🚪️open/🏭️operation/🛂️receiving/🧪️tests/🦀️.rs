@@ -54,6 +54,5 @@ fn original_member_history_receiving_reborrows_actual_caller_retains_pages_and_p
   let((step,receipt),born,released)=measure(||caller.run(grant,|parent,cx|loan.close_step(parent,cx).unwrap()));exact(grant,receipt,born,released);assert_eq!(step.progress(),receipt);assert!(loan.terminal_is_empty());assert_eq!((born,released),(0,0));drop(loan);
   let mut input_releases=0;for _ in 0..caller.maximum_turns(){if pages.terminal_is_empty(){break}let((step,receipt),born,released)=measure(||caller.run(grant,|_,cx|{let raw=if pages.close_take_page().is_some(){Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}))}else{pages.close_backing_step(grant)};semio_framework_os_store_member_open::receive_member_close(cx,raw).unwrap()}));exact(grant,receipt,born,released);assert_eq!(born,0);assert_eq!(step.progress(),receipt);input_releases+=released;}
   assert!(pages.terminal_is_empty());assert_eq!(input_born,input_releases);caller.close();
-  eprintln!("[DEBUG] Actual Member History cut{cut} originalPages={input_born} decodeBorn={births} decodeReleased={releases} caller1/4096/65536/65536/64 sameOwnedLoan=true originalDeadlineFuel=true terminalDrop0=true");
  }
 }

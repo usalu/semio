@@ -1,0 +1,28 @@
+[package]
+workspace = "../../../../../../../../../../.."
+name = "semio-framework-os-renderer-wgpu-thread-isolation"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Per-thread isolation switch and cell store of the process-wide renderer state, enabled by test targets through a dependency-free feature"
+publish = false
+
+[package.metadata.semio]
+role = "framework"
+id = "os-renderer-wgpu-thread-isolation"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[features]
+isolated = []
+
+[dependencies]

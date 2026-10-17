@@ -1,3 +1,5 @@
+use semio_framework_test_fixtures::repo_text;
+
 /// 🚪️ Archive and brep laws: the archive import door, hub genesis and the brep measurement and scoped selection laws.
 
 //#region 🚪️ArchiveImportDoor
@@ -65,7 +67,7 @@ async fn mesh_brep_measurement_outputs_are_selected_read_only_in_every_locale() 
     use semio_s_artifact_procedural_3d_model::with_host;
     let _serial = test_serial();
     let _unlinked = crate::flow_operators::UnlinkedFlowExtensions::contributed();
-    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎚️set-widget-input/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: Value = serde_json::from_str(repo_text!("✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎚️set-widget-input/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let publication = &fixture["measurementPublication"];
     let mut app = app().await;
     let mut snapshot = semio_s_artifact_procedural_3d_model::empty_generation3d_snapshot();
@@ -106,7 +108,6 @@ async fn mesh_brep_measurement_outputs_are_selected_read_only_in_every_locale() 
             assert!(!output.to_string().contains("setWidgetInput"));
             assert_eq!(context::snapshot(&app),committed,"{id}: reading the query preserves the document");
         }
-        println!("[DEBUG] BRep query {id}={value} selected read-only in EN/DE through the registered app");
     }
     semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);
 }
@@ -117,7 +118,7 @@ async fn mesh_brep_live_scoped_selection_edits_the_evaluated_solid_and_restores_
     use semio_s_artifact_procedural_3d_mut_widgets::change_widget_input::WidgetInputValue;
     let _serial = test_serial();
     let _unlinked = crate::flow_operators::UnlinkedFlowExtensions::contributed();
-    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎚️set-widget-input/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: Value = serde_json::from_str(repo_text!("✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎚️set-widget-input/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let publication = &fixture["measurementPublication"];
     let live = &fixture["liveAnalyticPublication"];
     let source = live["source"].as_str().unwrap();
@@ -227,8 +228,6 @@ async fn mesh_brep_live_scoped_selection_edits_the_evaluated_solid_and_restores_
         let restored_row = PluginApp::history_snapshot(&mut *app).await.expect("restored original history").upserts.into_iter().find(|entry| entry.seq == history_row.seq).expect("the original edit remains represented in history");
         assert_eq!(restored_row.author.as_deref(), Some(opened_actor.as_str()), "{verb}: original history retains the opening actor");
         assert_eq!(app.test_parent_store_mut().local_actor_id().0, opened_actor);
-        println!("[DEBUG] live BRep history verb={verb} author={opened_actor} sourceExtent={original_extent:?} independentParry=true");
     }
-    println!("[DEBUG] live BRep selected shell label={label} handle={handle} revision={revision} volume={original}->{edited} history=undo/redo");
     semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);
 }

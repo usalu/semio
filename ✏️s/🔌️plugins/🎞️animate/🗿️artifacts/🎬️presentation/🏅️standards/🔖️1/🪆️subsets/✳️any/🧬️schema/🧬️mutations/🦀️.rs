@@ -10,14 +10,14 @@ use protocol::Mutation;
 // ticket, SEMANTIC-MUTATIONS-OVERHAUL wave-C, owns `🦀️.rs` for this plugin), matching the shape
 // sibling plugins (`gis`, `cad`, `fem`) use. `use super::<kind>;` below just brings each sibling
 // into this file's scope so the enum body can reference `<kind>::mutation::<Type>`.
-use super::create_tile;
-use super::delete_tile;
-use super::delete_tiles;
-use super::rename_tile;
-use super::reorder_tiles;
-use super::replace_source;
-use super::resize_source_frame;
-use super::resize_tile_crop;
+use crate::standards::v1::subsets::any::schema::mutations::create_tile;
+use crate::standards::v1::subsets::any::schema::mutations::delete_tile;
+use crate::standards::v1::subsets::any::schema::mutations::delete_tiles;
+use crate::standards::v1::subsets::any::schema::mutations::rename_tile;
+use crate::standards::v1::subsets::any::schema::mutations::reorder_tiles;
+use crate::standards::v1::subsets::any::schema::mutations::replace_source;
+use crate::standards::v1::subsets::any::schema::mutations::resize_source_frame;
+use crate::standards::v1::subsets::any::schema::mutations::resize_tile_crop;
 //#endregion 🔖️MutationLeaves
 
 //#region 🔖️Mutations

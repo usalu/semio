@@ -37,7 +37,7 @@ const grid = (value: number): number => {
 
 // #region 🔮️Oracles
 /** 🔮️ d3-array's bin with a threshold count, split into the three projected sequences. */
-function bins(count: number): { projection: ProbeProjection } {
+function bins(count: number): ProbeProjection {
   const layout = bin().thresholds(count)([...SAMPLE]);
   return {
     "bin-lower": layout.map((b) => grid(b.x0!)),

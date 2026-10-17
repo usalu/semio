@@ -78,7 +78,6 @@ fn private_child_metadata_copies_all_thirty_one_original_fields_and_admits_each_
         assert_eq!(parts.group_id.as_deref(), transaction.as_ref().map(|transaction| transaction.id.as_str()));
         assert_eq!(parts.publication_actor.as_str(), source.actor);
         assert_eq!(parts.registry_owner, parts.owner);
-        println!("[DEBUG] private child metadata case={} fields=31 transaction-present={} UTF8-originals=true admitted-turns={turns} max-copy=64", row["id"], transaction.is_some());
       }
     }
 }
@@ -113,7 +112,6 @@ fn private_child_metadata_cancellation_retains_every_original_allocation_until_w
         if metadata.terminal_is_empty() { break; }
     }
     assert!(metadata.terminal_is_empty());
-    println!("[DEBUG] private child metadata six cancellation phases: all capacities remain underfunded and exact paid releases match native allocator events");
 }
 
 #[test]
@@ -170,7 +168,6 @@ fn private_parent_metadata_shares_exact_bounded_birth_copy_and_typed_transfer() 
             if restored.terminal_is_empty() { break; }
         }
         assert!(restored.terminal_is_empty());
-        println!("[DEBUG] parent metadata transaction-present={} fields=4 max-copy=64 transfer-birth=0 exact-close=true", transaction.is_some());
     }
 }
 
@@ -196,7 +193,6 @@ fn private_parent_metadata_cancellation_never_frees_a_fractionally_funded_origin
         }
         assert!(issuer.terminal_is_empty());
     }
-    println!("[DEBUG] parent metadata five cancellation phases preserve whole physical allocations under denied grants");
 }
 
 #[test]
@@ -239,7 +235,6 @@ fn private_publication_metadata_preserves_group_id_independently_of_transaction(
             assert!(parent_metadata.terminal_is_empty() && child_metadata.terminal_is_empty());
         }
     }
-    println!("[DEBUG] common parent/child group identities: nine optional transaction/group combinations; fields4/31 original; copy64; same-turn allocator birth parity; no synthesized transaction");
 }
 
 #[test]
@@ -283,5 +278,4 @@ fn private_parent_metadata_carries_the_original_admitted_actor_lease_without_rec
     assert!(restored.terminal_is_empty());
     assert_eq!(original_actor.as_ptr(), original_pointer);
     assert_eq!(original_actor.as_str(), fixture["actor"].as_str().unwrap());
-    eprintln!("[DEBUG] Original metadata actor lease retains original admitted UTF8 pointer; independent Serde agrees; every denied and accepted turn matches actual heap receipts");
 }

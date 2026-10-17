@@ -1,0 +1,256 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "schema://framework.ui/StylingPythonV1",
+  "definitions": {
+    "Policy": {
+      "const": {
+        "version": 1,
+        "owner": "ui-styling-python",
+        "outputNamespace": "python/ui-styling",
+        "maximumInputFiles": 4,
+        "maximumInputBytes": 4194304,
+        "maximumWheelBytes": 67108864,
+        "maximumWheelNameBytes": 200,
+        "maximumCommandOutputBytes": 1048576,
+        "maximumCommandOutputLines": 8192,
+        "maximumWheelEntries": 4,
+        "uvVersion": "0.11.6",
+        "pythonVersion": "3.14",
+        "packageRoot": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🐍️python",
+        "maximumToolBytes": 134217728,
+        "maximumReadyBytes": 4096,
+        "environmentKeys": [
+          "PATH",
+          "HOME",
+          "USERPROFILE",
+          "SYSTEMROOT",
+          "WINDIR",
+          "COMSPEC",
+          "PATHEXT",
+          "LANG",
+          "LC_ALL",
+          "LC_CTYPE",
+          "TZ",
+          "SOURCE_DATE_EPOCH",
+          "SSL_CERT_FILE",
+          "SSL_CERT_DIR",
+          "REQUESTS_CA_BUNDLE",
+          "CURL_CA_BUNDLE",
+          "HTTP_PROXY",
+          "HTTPS_PROXY",
+          "ALL_PROXY",
+          "NO_PROXY",
+          "TERM",
+          "CI",
+          "NO_COLOR",
+          "FORCE_COLOR",
+          "LD_LIBRARY_PATH",
+          "DYLD_LIBRARY_PATH",
+          "DYLD_FALLBACK_LIBRARY_PATH",
+          "LIBRARY_PATH"
+        ],
+        "maximumEnvironmentFiles": 32768,
+        "maximumEnvironmentEntries": 65536,
+        "maximumEnvironmentBytes": 536870912,
+        "maximumEnvironmentDepth": 64,
+        "maximumEnvironmentPathUnits": 256
+      }
+    },
+    "Request": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "operation",
+        "mode"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "operation": {
+          "enum": [
+            "deps",
+            "build",
+            "test"
+          ]
+        },
+        "mode": {
+          "enum": [
+            "prototype",
+            "release"
+          ]
+        }
+      }
+    },
+    "WheelName": {
+      "type": "string",
+      "minLength": 5,
+      "maxLength": 200,
+      "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.+-]*\\.whl$"
+    },
+    "Lifetime": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "compileBusy",
+        "consumerFree",
+        "inputHeld",
+        "outputHeld",
+        "drained",
+        "freeAfter"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "compileBusy": {
+          "type": "boolean"
+        },
+        "consumerFree": {
+          "type": "boolean"
+        },
+        "inputHeld": {
+          "type": "boolean"
+        },
+        "outputHeld": {
+          "type": "boolean"
+        },
+        "drained": {
+          "type": "boolean"
+        },
+        "freeAfter": {
+          "type": "boolean"
+        }
+      }
+    },
+    "Manifest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "build-system",
+        "project",
+        "dependency-groups",
+        "tool"
+      ],
+      "properties": {
+        "build-system": {
+          "const": {
+            "requires": [
+              "hatchling==1.27.0"
+            ],
+            "build-backend": "hatchling.build"
+          }
+        },
+        "project": {
+          "const": {
+            "name": "semio-framework-ui-styling",
+            "version": "0.1.0",
+            "requires-python": ">=3.12",
+            "dependencies": []
+          }
+        },
+        "dependency-groups": {
+          "const": {
+            "build": [
+              "hatchling==1.27.0"
+            ]
+          }
+        },
+        "tool": {
+          "const": {
+            "semio": {
+              "role": "framework",
+              "id": "ui-styling-py"
+            },
+            "hatch": {
+              "build": {
+                "targets": {
+                  "wheel": {
+                    "packages": [
+                      "🎨️styling"
+                    ],
+                    "force-include": {
+                      "../../🔤️tokens/🐍️.py": "🎨️styling/🐍️.py"
+                    }
+                  }
+                }
+              }
+            },
+            "uv": {
+              "package": true
+            }
+          }
+        }
+      }
+    },
+    "Ready": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "identity",
+        "interpreterSha256",
+        "interpreterVersionSha256",
+        "environmentSha256"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "identity": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "interpreterSha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "interpreterVersionSha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "environmentSha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      }
+    },
+    "Inventory": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "sha256",
+        "files",
+        "entries",
+        "bytes"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "files": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 32768
+        },
+        "entries": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65536
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 536870912
+        }
+      }
+    }
+  }
+}

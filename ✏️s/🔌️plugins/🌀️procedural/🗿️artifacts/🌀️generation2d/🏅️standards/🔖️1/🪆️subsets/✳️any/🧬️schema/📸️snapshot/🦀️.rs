@@ -32,10 +32,10 @@ impl Generation2dSnapshot {
 /// 📸️ A projection read that CLOSES itself — the ONE shape a test holds an owned
 /// [`Generation2dSnapshot`] in, the 2d twin of `Generation3dSnapshotRead`
 /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 pub struct Generation2dSnapshotRead(Option<Generation2dSnapshot>);
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 impl Generation2dSnapshotRead {
     pub fn new(snapshot: Generation2dSnapshot) -> Self {
         Self(Some(snapshot))
@@ -47,7 +47,7 @@ impl Generation2dSnapshotRead {
     }
 }
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 impl std::ops::Deref for Generation2dSnapshotRead {
     type Target = Generation2dSnapshot;
     fn deref(&self) -> &Self::Target {
@@ -55,14 +55,14 @@ impl std::ops::Deref for Generation2dSnapshotRead {
     }
 }
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 impl std::ops::DerefMut for Generation2dSnapshotRead {
     fn deref_mut(&mut self) -> &mut Self::Target {
         self.0.as_mut().expect("a projection read is inhabited until it is taken or dropped")
     }
 }
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 impl Drop for Generation2dSnapshotRead {
     fn drop(&mut self) {
         if let Some(snapshot) = self.0.take() {
@@ -71,21 +71,21 @@ impl Drop for Generation2dSnapshotRead {
     }
 }
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 impl PartialEq for Generation2dSnapshotRead {
     fn eq(&self, other: &Self) -> bool {
         **self == **other
     }
 }
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 impl PartialEq<Generation2dSnapshot> for Generation2dSnapshotRead {
     fn eq(&self, other: &Generation2dSnapshot) -> bool {
         **self == *other
     }
 }
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 impl std::fmt::Debug for Generation2dSnapshotRead {
     fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Debug::fmt(&**self, formatter)

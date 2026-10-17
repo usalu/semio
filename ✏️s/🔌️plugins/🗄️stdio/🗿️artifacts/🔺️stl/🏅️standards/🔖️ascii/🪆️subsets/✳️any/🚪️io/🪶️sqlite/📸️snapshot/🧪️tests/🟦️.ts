@@ -77,7 +77,6 @@ test("STL exact scalar words survive independent SQLite affinity, edits and malf
       await expect(stlSnapshotFromSqliteDatabase(await importSqliteDatabase(new Uint8Array(db.serialize())))).rejects.toThrow();
     }finally{db.close();}
   }
-  console.log("[DEBUG] STL exact binary words and independent SQLite identity laws");
 });
 test("STL exact owned dialect, document identity and cancellation laws", async()=>{
   const database=await stlSnapshotToSqliteDatabase(input);
@@ -113,5 +112,5 @@ test("STL complete independent cells preserve copied limits and required empty m
  expect(normSemanticContract["schemaBytes"]).toEqual(1483);expect(normSemanticContract["tableWidths"]).toEqual({"stl_facet":12,"stl_solid":3,"stl_vertex":12});expect(normSemanticContract["cases"]).toEqual([{"id":"originalSharedSourceNative","rows":9,"valueBytes":762},{"id":"emptyCollectionsRetainMetadata","rows":1,"valueBytes":42}]);
  for(const item of normSemanticContract.cases){const source=structuredClone(input);if(item.id!=="originalSharedSourceNative"){source.triangles=[];}const database=await normSemanticProject(source),bytes=await normSemanticExport(database);expect(normIndependentExtent(bytes)).toEqual({rows:item.rows,valueBytes:item.valueBytes,schemaBytes:normSemanticContract.schemaBytes,tableWidths:normSemanticContract.tableWidths});const limits={maxRows:item.rows,maxValueBytes:item.valueBytes,maxSchemaBytes:normSemanticContract.schemaBytes,maxTables:3,maxColumns:12};expect(await normSemanticProject(source,limits)).toEqual(database);expect(await normSemanticRestore(await normSemanticImport(bytes),limits)).toEqual(source);
   for(const short of[{...limits,maxRows:item.rows-1},{...limits,maxValueBytes:item.valueBytes-1},{...limits,maxSchemaBytes:limits.maxSchemaBytes-1},{...limits,maxTables:2},{...limits,maxColumns:11}]){await expect(normSemanticProject(source,short)).rejects.toThrow();await expect(normSemanticRestore(database,short)).rejects.toThrow();}
- }console.log("[DEBUG] STL complete independent SQLite cells and metadata preserve full and empty semantic limits");
+ }
 });

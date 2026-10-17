@@ -7,6 +7,7 @@
 //! one. The default below is the very directory the verb computes, derived from the crate manifest,
 //! so every runner observes the same law.
 
+use semio_framework_test_fixtures::fixture_path;
 use std::path::PathBuf;
 
 /// 🗂️ The artifact root a fixture stages under: `SEMIO_TEST_ARTIFACT_DIR` when a runner named
@@ -21,11 +22,11 @@ pub fn test_artifact_root() -> PathBuf {
 
 /// 📖️ A file of the hub workspace read when the law runs instead of being embedded into the test binary; `relative` is relative to the hub workspace root. The text lives as long as the process, like an embedded constant.
 pub fn hub_source(relative: &str) -> &'static str {
-    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../..").join(relative);
+    let path = fixture_path!("../../../..").join(relative);
     Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("hub source {relative}: {error}")).into_boxed_str())
 }
 
-/// 🌳️ A hub Rust source together with every module it mounts through `#[path = "…"]`, parent first and then each child in declaration order, with the `🧪️tests` mounts left out; `relative` is relative to the hub workspace root. Source-text laws read a split file through this so they keep seeing what the unsplit file held.
+/// 🌳️ A hub Rust source together with every module it mounts through `#[path = "…"]` and every fragment it splices through `include!("…");`, parent first and then each child in declaration order, with the `🧪️tests` mounts left out; `relative` is relative to the hub workspace root. Source-text laws read a split file through this so they keep seeing what the unsplit file held.
 pub fn hub_module_tree(relative: &str) -> &'static str {
     fn walk(path: &std::path::Path, text: &mut String) {
         let source = std::fs::read_to_string(path).unwrap_or_else(|error| panic!("hub source {}: {error}", path.display()));
@@ -33,7 +34,8 @@ pub fn hub_module_tree(relative: &str) -> &'static str {
         text.push('\n');
         let directory = path.parent().expect("hub source directory");
         for line in source.lines() {
-            if let Some(child) = line.trim().strip_prefix("#[path = \"").and_then(|rest| rest.strip_suffix("\"]")) {
+            let mounted = line.trim().strip_prefix("#[path = \"").and_then(|rest| rest.strip_suffix("\"]")).or_else(|| line.trim().strip_prefix("include!(\"").and_then(|rest| rest.strip_suffix("\");")));
+            if let Some(child) = mounted {
                 if !child.contains("🧪️tests") {
                     walk(&directory.join(child), text);
                 }
@@ -41,6 +43,6 @@ pub fn hub_module_tree(relative: &str) -> &'static str {
         }
     }
     let mut text = String::new();
-    walk(&std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../..").join(relative), &mut text);
+    walk(&fixture_path!("../../../..").join(relative), &mut text);
     Box::leak(text.into_boxed_str())
 }

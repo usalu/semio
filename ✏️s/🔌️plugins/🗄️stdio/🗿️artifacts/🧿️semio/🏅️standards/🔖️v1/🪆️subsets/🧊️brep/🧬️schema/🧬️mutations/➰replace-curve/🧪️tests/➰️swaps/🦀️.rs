@@ -12,21 +12,22 @@ use crate::schema::snapshot::SemioBrepSnapshot;
 use crate::io::text::snapshot::decode_semio_brep_snapshot_json;
 use pack::value::ToValue;
 use protocol::Mutation;
+use semio_framework_test_fixtures::fixture_text;
 
-const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/➰replace-curve/➰️swaps/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/➰replace-curve/➰️swaps/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/➰replace-curve/➰️swaps/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/➰replace-curve/➰️swaps/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/➰replace-curve/➰️swaps/🎯️outcome/🔣️.json");
+static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧪️tests/🧫️fixtures/🧬️mutations/➰replace-curve/➰️swaps/📸️snapshot/⬅️before/🔣️.json"));
+static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧪️tests/🧫️fixtures/🧬️mutations/➰replace-curve/➰️swaps/📸️snapshot/➡️after/🔣️.json"));
+static MUTATION: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧪️tests/🧫️fixtures/🧬️mutations/➰replace-curve/➰️swaps/🦠️mutation/🔣️.json"));
+static DIFF: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧪️tests/🧫️fixtures/🧬️mutations/➰replace-curve/➰️swaps/🔺️diff/🔣️.json"));
+static OUTCOME: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧪️tests/🧫️fixtures/🧬️mutations/➰replace-curve/➰️swaps/🎯️outcome/🔣️.json"));
 
 fn before() -> SemioBrepSnapshot {
-    decode_semio_brep_snapshot_json(BEFORE).expect("replace-curve before snapshot decodes")
+    decode_semio_brep_snapshot_json((*BEFORE)).expect("replace-curve before snapshot decodes")
 }
 fn expected_after() -> SemioBrepSnapshot {
-    decode_semio_brep_snapshot_json(AFTER).expect("replace-curve after snapshot decodes")
+    decode_semio_brep_snapshot_json((*AFTER)).expect("replace-curve after snapshot decodes")
 }
 fn mutation() -> SemioBrepMutation {
-    decode_semio_brep_mutation_json(MUTATION).expect("replace-curve mutation decodes")
+    decode_semio_brep_mutation_json((*MUTATION)).expect("replace-curve mutation decodes")
 }
 
 /// ▶️ The edge's curve becomes a circle; its endpoints and every sibling edge stay put.
@@ -62,21 +63,21 @@ async fn the_undo_replace_curve_restores_the_original_line() {
 /// 🔣️ Snapshots and the payload are canonical — `BrepCurve` is internally tagged on `kind` and carries `rename_all_fields`, so both its VARIANTS and its members are camelCase (`radiusMajor`, `controlPoints`), the spelling `📸️snapshot/🔣️.json` declares. This vector's `circle` arm has only single-word members, so it reads the same either way; the mismatch the missing `rename_all_fields` used to cause was invisible here and was found by the cross-language differential in `🧪️tests/🧊️mutate-semio-brep`.
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
-    for (label, text) in [("before", BEFORE), ("after", AFTER)] {
+    for (label, text) in [("before", (*BEFORE)), ("after", (*AFTER))] {
         let decoded = decode_semio_brep_snapshot_json(text).expect("snapshot decodes");
         let reencoded = semio_framework_pack_json::from_dsl_value(&decoded.to_value());
         let original = semio_framework_pack_json::parse(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot reparses");
         assert_eq!(reencoded, original, "replace-curve/swaps-the-first-edges-line-for-a-circular-arc: committed {label} JSON is not canonical");
     }
     let reencoded = semio_framework_pack_json::from_dsl_value(&mutation().to_value());
-    let original = semio_framework_pack_json::parse(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("replace-curve mutation reparses");
+    let original = semio_framework_pack_json::parse((*MUTATION), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("replace-curve mutation reparses");
     assert_eq!(reencoded, original, "replace-curve/swaps-the-first-edges-line-for-a-circular-arc: committed mutation JSON is not canonical");
 }
 
 /// 🎯️ Declared `applied`: the edge exists and the new curve genuinely differs, so neither target-missing nor no-op may fire
 #[semio_framework_async_macros::async_test]
 async fn declared_outcome_holds_as_committed() {
-    let outcome = semio_framework_pack_json::parse(OUTCOME, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("outcome decodes");
+    let outcome = semio_framework_pack_json::parse((*OUTCOME), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("outcome decodes");
     assert_eq!(outcome.get("status").and_then(semio_framework_pack_json::Value::as_str), Some("applied"), "replace-curve/swaps-the-first-edges-line-for-a-circular-arc: this case is declared applied");
     let produced = mutation().diff(&before());
     assert!(produced.messages().is_empty(), "replacing a curve with a genuinely different one must raise no diagnostics");
@@ -88,7 +89,7 @@ async fn produces_committed_diff() {
     let base = before();
     let outcome = <SemioBrepMutation as Mutation<SemioBrepSnapshot>>::diff(&mutation(), &base);
     let produced = semio_framework_pack_json::from_dsl_value(&outcome.diff().to_value());
-    let committed = semio_framework_pack_json::parse(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
+    let committed = semio_framework_pack_json::parse((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
     assert_eq!(produced, committed, "replace-curve/swaps-the-first-edges-line-for-a-circular-arc: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
 
@@ -96,7 +97,7 @@ async fn produces_committed_diff() {
 /// allowed to touch appears in it at all.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical_and_narrowly_scoped() {
-    let decoded = decode_semio_brep_diff_json(DIFF).expect("committed replace-curve diff decodes");
+    let decoded = decode_semio_brep_diff_json((*DIFF)).expect("committed replace-curve diff decodes");
 
     let edges = decoded.edges.as_ref().expect("replace-curve must write the edges triple");
     assert!(edges.removed.is_empty() && edges.added.is_empty(), "a replace is a per-field modification, never a remove-and-re-add");
@@ -104,14 +105,14 @@ async fn committed_diff_is_canonical_and_narrowly_scoped() {
     assert!(edges.modified[0].diff.start_vertex.is_none() && edges.modified[0].diff.end_vertex.is_none(), "the per-edge diff must leave both endpoint fields unset");
     assert!(decoded.vertices.is_none() && decoded.loops.is_none() && decoded.faces.is_none() && decoded.shells.is_none() && decoded.solids.is_none(), "no other collection may appear in the diff");
     let reencoded = semio_framework_pack_json::from_dsl_value(&decoded.to_value());
-    let original = semio_framework_pack_json::parse(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff reparses");
+    let original = semio_framework_pack_json::parse((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff reparses");
     assert_eq!(reencoded, original, "replace-curve/swaps-the-first-edges-line-for-a-circular-arc: committed diff JSON is not canonical");
 }
 
 /// 🩹 Applying the committed diff to `before` yields `after`.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded = decode_semio_brep_diff_json(DIFF).expect("committed replace-curve diff decodes");
+    let decoded = decode_semio_brep_diff_json((*DIFF)).expect("committed replace-curve diff decodes");
     let produced = protocol::apply_diff(&decoded, &before()).expect("committed replace-curve diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "replace-curve/swaps-the-first-edges-line-for-a-circular-arc: committed diff did not carry before to after");
 }

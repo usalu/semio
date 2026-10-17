@@ -1,0 +1,7 @@
+# Derivative Helper Admission Boundary Review
+
+Bound saved2497-byte failure log with nofollow descriptor, stable descriptor/name seven-field metadata and SHA-256. Receipt: `🗑️generated/derivative-admission-independent-hold.json`. Actual stack reaches pending publication guard in inspectPersistentReceiver via openPersistentNativeImageBodyV1. This is not a completed derivative Source test verdict.
+
+Current original-fixtures helper always creates build bootstrap capabilities before its finite envelope/launch callback; selected Source filtering does not by itself imply workspace-only admission. The reached persistent opener validates real Native envelope/paths, captures parent identities/registers receiver and acquires actual shared persistentGuard before inspecting the existing image. inspect then checks ancestor identities/existence and rejects pending slot before reading receipt/backing/root or dispatching an image command for this receiver. Shared guard acquisition can touch lease/SQLite infrastructure; do not call this zero-effects.
+
+The bounded stack does not prove no earlier partition admissions or all cleanup outcomes. No terminal wrapper/individual custody receipt is present here, so no global custody-closed claim. No new retry/Native/protected read performed. Future Source-only derivative gate should use a genuinely workspace-only envelope/AST path, not this capability bootstrap route when physical admission is unintended.

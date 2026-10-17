@@ -1,25 +1,10 @@
-use crate::standards::v1::subsets::any::io::export::ifc::testkit::{count, document, house, real, rows, string};
+use crate::standards::v1::subsets::any::io::export::ifc::testkit::{count, document, house, real, rows, string, zoned};
 use super::report_json;
 use crate::standards::v1::subsets::any::io::export::ifc::export_ifc2x3;
 use crate::standards::v1::subsets::any::schema::{snapshot::{AreaMeasure, AreaScheme, ModelSnapshot, Zone}, inferences::ModelInference};
 use protocol::Inference;
 use semio_s_artifact_stdio_contract::part21::{Part21Document, Part21Instance};
 use std::collections::BTreeMap;
-
-/// 🏘️ The house with two zones, two area schemes and finished spaces: the living room in the day zone, the bedroom in the night zone.
-pub fn zoned() -> ModelSnapshot {
-    let mut model = house();
-    model.zones.insert("z-day".into(), Zone { name: "Day zone".into(), category: "Ventilation".into(), occupancy_density: 0.1 });
-    model.zones.insert("z-night".into(), Zone { name: "Night zone".into(), category: "Fire compartment".into(), occupancy_density: 0.05 });
-    model.zones.insert("z-empty".into(), Zone { name: "Empty zone".into(), category: "Tenant".into(), occupancy_density: 0.0 });
-    let living = model.spaces.get_mut("sp-1").expect("the living room");
-    (living.zone, living.floor_finish, living.wall_finish, living.ceiling_finish) = (Some("z-day".into()), Some("m-wood".into()), Some("m-brick".into()), Some("m-conc".into()));
-    let bedroom = model.spaces.get_mut("sp-2").expect("the bedroom");
-    (bedroom.zone, bedroom.floor_finish) = (Some("z-night".into()), Some("m-wood".into()));
-    model.area_schemes.insert("as-nsa".into(), AreaScheme { name: "Net use area".into(), measure: AreaMeasure::Net, usages: vec!["living".into(), "bedroom".into()], zones: Vec::new() });
-    model.area_schemes.insert("as-day".into(), AreaScheme { name: "Day zone area".into(), measure: AreaMeasure::Gross, usages: Vec::new(), zones: vec!["z-day".into()] });
-    model
-}
 
 fn instance_of<'a>(document: &'a Part21Document, entity: &'a str, name: &str) -> &'a Part21Instance {
     rows(document, entity).into_iter().find(|(_, args)| string(args, 2).as_deref() == Some(name)).map(|(instance, _)| instance).unwrap_or_else(|| panic!("no {entity} named {name}"))

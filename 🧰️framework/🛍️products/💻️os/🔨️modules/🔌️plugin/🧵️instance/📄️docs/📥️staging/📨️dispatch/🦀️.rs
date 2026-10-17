@@ -1,13 +1,23 @@
 //! ✉️ Staged slice of the `dispatch` band of the mounted artifact instance: its `instance-docs` members (WP6 step S0 of the instance family).
 //!
 //! 📨️ Dispatch of the mounted artifact instance: test snapshot helpers, command log, history view, patch and refresh, preview, `dispatch_emit` and transaction groups.
-use super::*;
-use crate::tool_jobs::time_travel;
+use semio_framework::{ActionKind, Fault, FaultCode, FaultFrom, FaultOrigin};
+use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use pack::snapshot::ArtifactPack;
+use semio_framework::kernel::Effect;
+use semio_framework_plugin_decl_emission::Emit;
+use std::future::Future;
+use crate::docs_components::MediaTransfers;
+use store::{MemberFactory, Mutation, SpaceMember};
+use protocol::OpText;
+use semio_framework_plugin_reactor_app::PluginApp;
+use semio_framework_ui_contract::*;
 
 impl<A: ArtifactApp> MediaTransfers<A> {
     /// 🧹️ Test-only probe: whether a cancelled segmented output still waits in bounded cleanup.
     #[cfg(test)]
-    pub(crate) fn test_segmented_closure_contains(&self, operation_id: u64) -> bool {
+    pub fn test_segmented_closure_contains(&self, operation_id: u64) -> bool {
         self.segmented_closures.contains(operation_id)
     }
 
@@ -34,7 +44,7 @@ impl<A: ArtifactApp> MediaTransfers<A> {
     /// value — there is no "missing arg" to materialize).
     ///
     /// 🚫️async: E1 pure error constructor consumed pervasively by sync closures — see R9.
-    pub(crate) fn transaction_fault(origin: FaultOrigin, code: &'static str, message: impl Into<String>) -> Fault {
+    pub fn transaction_fault(origin: FaultOrigin, code: &'static str, message: impl Into<String>) -> Fault {
         Fault::new(origin, FaultCode::new(code), message)
     }
 
@@ -45,12 +55,12 @@ impl<A: ArtifactApp> MediaTransfers<A> {
     /// fail-closed gate on the defect this lane replaces: an app that smuggles a hand-built
     /// `Effect::InvokeExtension` into `emit.effects` is rejected outright rather than having its
     /// result silently dropped at `Event::Completed` for an id that owns no registry slot.
-    pub(crate) fn mint_extension_invocations(instance: u32, emit: &mut Emit<A::Mutation, A::ConfigMutation, A::DraftMutation>) -> Result<(), Fault> {
+    pub fn mint_extension_invocations(instance: u32, emit: &mut Emit<A::Mutation, A::ConfigMutation, A::DraftMutation>) -> Result<(), Fault> {
         if emit.effects.iter().any(|effect| matches!(effect, Effect::InvokeExtension { .. })) {
             return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.unminted-extension-invocation"), "Effect::InvokeExtension carries a registry-minted request id — emit it through Emit::extension_invocations instead"));
         }
         for invocation in std::mem::take(&mut emit.extension_invocations) {
-            crate::reactor::queue_extension_invocation(instance, &invocation)?;
+            semio_framework_plugin_reactor_tasks::tasks_extension_continuation::queue_extension_invocation(instance, &invocation)?;
         }
         Ok(())
     }
@@ -79,7 +89,7 @@ impl<A: ArtifactApp> MediaTransfers<A> {
     /// caller gets back. An unresolved verb (registry-less construction, an ad-hoc port id) is not a
     /// declared `View`, so it is not refused here.
     /// 🚫️async: E1 pure classification over an already-resolved kind
-    pub(crate) fn require_operation_emitting_kind(&self, verb: &str, declared_kind: Option<ActionKind>) -> Result<(), Fault> {
+    pub fn require_operation_emitting_kind(&self, verb: &str, declared_kind: Option<ActionKind>) -> Result<(), Fault> {
         match declared_kind {
             Some(kind @ (ActionKind::View | ActionKind::Shell)) => Err(Fault::from(format!("{kind:?}-kind command '{verb}' must not emit operations"))),
             _ => Ok(()),

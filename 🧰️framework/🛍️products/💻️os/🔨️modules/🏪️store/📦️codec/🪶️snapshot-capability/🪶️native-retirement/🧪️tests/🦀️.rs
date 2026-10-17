@@ -98,12 +98,12 @@ fn from_sqlite_database(database: &SqliteDatabase, control: &mut SqliteSnapshotC
 
 #[test]
 fn sqlite_snapshot_codec_native_retirement_covers_success_cancellation_and_refusal() {
- let snapshot_policy:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();let snapshot_caller_grant:semio_framework_value::RetainedCloneGrant=serde_json::from_value(snapshot_policy["original"]["grant"].clone()).unwrap();let snapshot_native_maximum=snapshot_policy["original"]["nativeMaximumBytes"].as_u64().unwrap()as usize;let snapshot_original_live=std::cell::Cell::new(true);
+ let snapshot_policy:serde_json::Value=crate::fixture_json(file!(), "🧫️fixtures/🔣️.json");let snapshot_caller_grant:semio_framework_value::RetainedCloneGrant=serde_json::from_value(snapshot_policy["original"]["grant"].clone()).unwrap();let snapshot_native_maximum=snapshot_policy["original"]["nativeMaximumBytes"].as_u64().unwrap()as usize;let snapshot_original_live=std::cell::Cell::new(true);
 let mut snapshot_decoding_progress=|_|snapshot_original_live.get();let mut snapshot_decoding_recipient=semio_framework_value::native_decoding::NativeDecodeRetirementRecipient::new();let mut snapshot_decoding_native=semio_framework_value::NativeDecodeControl::new(snapshot_native_maximum,&mut snapshot_decoding_progress);snapshot_decoding_native.install_retirement_recipient(&mut snapshot_decoding_recipient).unwrap();let mut snapshot_decoding_owner=crate::os_store::NativeSnapshotDecodeOwner::new(&mut snapshot_decoding_native,snapshot_caller_grant);
 let mut snapshot_encoding_progress=|_|snapshot_original_live.get();let mut snapshot_encoding_recipient=semio_framework_value::native_encoding::NativeEncodeRetirementRecipient::new();let mut snapshot_encoding_native=semio_framework_value::NativeEncodeControl::new(snapshot_native_maximum,&mut snapshot_encoding_progress);snapshot_encoding_native.install_retirement_recipient(&mut snapshot_encoding_recipient).unwrap();let mut snapshot_encoding_owner=crate::os_store::NativeSnapshotEncodeOwner::new(&mut snapshot_encoding_native,snapshot_caller_grant);
 
     use std::{io::Write, process::{Command, Stdio}};
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = crate::fixture_json(file!(), "🧫️fixtures/🔣️.json");
     
     let script = "import {Database} from 'bun:sqlite';const x=JSON.parse(await Bun.stdin.text());const db=Database.deserialize(Buffer.from(x.sqlite,'base64'));if(db.query('PRAGMA integrity_check').get().integrity_check!=='ok')throw Error('integrity');if(db.query('SELECT value FROM retained_value WHERE id=1').get().value!==7)throw Error('owner value');await Bun.write(Bun.stdout,'ok');db.close();";
     let sqlite = crate::sqlite_snapshot::export_sqlite_database(&value_database(7), SqliteDatabaseLimits::default(), &mut |_| true).unwrap();
@@ -129,20 +129,19 @@ let mut snapshot_encoding_progress=|_|snapshot_original_live.get();let mut snaps
             }
         }));
         assert!(result.is_ok(), "{} skipped owner retirement", case["id"]);
-        let result=result.unwrap();if let Err(error)=&result{eprintln!("[DEBUG] Original SQLite codec semantic case={} kind={:?} cause={}",case["id"],error.cause.kind,error.cause.message)}assert_eq!(result.is_ok(), case["succeeds"].as_bool().unwrap(), "{}: {:?}", case["id"],result);
+        let result=result.unwrap();if let Err(error)=&result{}assert_eq!(result.is_ok(), case["succeeds"].as_bool().unwrap(), "{}: {:?}", case["id"],result);
         RETIREMENTS.with(|count| assert_eq!(count.get() as u64, case["retirements"].as_u64().unwrap(), "{}", case["id"]));
     }
 
 drop(snapshot_decoding_owner);while snapshot_decoding_native.has_retirement_owner(){snapshot_decoding_native.close_retirement_recipient(snapshot_caller_grant).unwrap();}
 drop(snapshot_encoding_owner);while snapshot_encoding_native.has_retirement_owner(){snapshot_encoding_native.close_retirement_recipient(snapshot_caller_grant).unwrap();}
- eprintln!("[DEBUG] Original SQLite codec completed twelve binary/text success, cancellation, subset and encoding refusal laws with genuine declared scalar retirement and independent Bun SQLite output");
 }
 
 #[test]
 fn sqlite_snapshot_codec_original_input_and_retained_result_have_exact_custody(){
- let policy:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
+ let policy:serde_json::Value=crate::fixture_json(file!(), "🧫️fixtures/🔣️.json");
  let full:semio_framework_value::RetainedCloneGrant=serde_json::from_value(policy["original"]["grant"].clone()).unwrap();
- let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();let codec=<RetainedSnapshot as semio_framework_os_kernel::os_store::ArtifactSqliteSnapshotOperations>::sqlite_codec();
+ let fixture:serde_json::Value=crate::fixture_json(file!(), "🧫️fixtures/🔣️.json");let codec=<RetainedSnapshot as semio_framework_os_kernel::os_store::ArtifactSqliteSnapshotOperations>::sqlite_codec();
  let dialect=semio_framework_artifact_reference::ArtifactDialect{artifact_kind:"fixture.retained".into(),standard:"1".into(),subset:"*".into()};
  for case in fixture["custodyCases"].as_array().unwrap().iter().filter(|case|case["id"].as_str().unwrap().starts_with("import")){
   let mut input=Some(value_database(7));let pointer=input.as_ref().unwrap().tables.as_ptr();let original=std::cell::Cell::new(true);let mut observer=|_|original.get();
@@ -162,7 +161,6 @@ fn sqlite_snapshot_codec_original_input_and_retained_result_have_exact_custody()
  while native.has_retirement_owner(){let(step,born,released)=semio_framework_trace_memory_testing::observe_backing(||native.close_retirement_recipient(full).unwrap());assert_eq!(born,step.progress().retained_capacity_bytes);assert_eq!(released,step.progress().released_bytes);assert_ne!(step.progress(),Default::default());}
  let case=fixture["custodyCases"].as_array().unwrap().iter().find(|case|case["id"]=="original-semantic-error").unwrap();let dialect=semio_framework_artifact_reference::ArtifactDialect{subset:case["subset"].as_str().unwrap().into(),..dialect};let mut owner=crate::os_store::NativeSnapshotDecodeOwner::new(&mut native,full);
  let error=(codec.export)("fixture.retained/v1",&dialect,&payload,&mut control,&mut owner).unwrap_err();assert_eq!(error.cause.message,case["cause"].as_str().unwrap());assert!(matches!(error.cause.message,std::borrow::Cow::Borrowed("declared semantic owner refusal")));drop(owner);assert!(!native.has_retirement_owner());
- eprintln!("[DEBUG] Original SQLite codec retains original caller database backing on frame admission refusal and retains admitted typed frames/results under zero release authority; real allocator births/releases equal authentic receipts on every funded terminal turn");
 }
 
 #[derive(semio_framework_value::RetireOwned)]
@@ -183,7 +181,7 @@ fn from_sqlite_database(_:&SqliteDatabase,_:&mut SqliteSnapshotControl<'_>)->Res
 
 #[test]
 fn sqlite_snapshot_codec_default_refusals_preserve_zero_original_authority(){
- let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();let grant:semio_framework_value::RetainedCloneGrant=serde_json::from_value(fixture["original"]["defaultRefusalGrant"].clone()).unwrap();let database=SqliteDatabase{tables:Vec::new()};let payload=crate::io_schema::IoPayload::Binary(Vec::new());let dialect=semio_framework_artifact_reference::ArtifactDialect{artifact_kind:"default.receiving".into(),standard:"1".into(),subset:"*".into()};let snapshot=DefaultReceivingSnapshot;
+ let fixture:serde_json::Value=crate::fixture_json(file!(), "🧫️fixtures/🔣️.json");let grant:semio_framework_value::RetainedCloneGrant=serde_json::from_value(fixture["original"]["defaultRefusalGrant"].clone()).unwrap();let database=SqliteDatabase{tables:Vec::new()};let payload=crate::io_schema::IoPayload::Binary(Vec::new());let dialect=semio_framework_artifact_reference::ArtifactDialect{artifact_kind:"default.receiving".into(),standard:"1".into(),subset:"*".into()};let snapshot=DefaultReceivingSnapshot;
  for case in fixture["defaultRefusalCases"].as_array().unwrap(){
   let live=!case["nativeCancelled"].as_bool().unwrap();let mut decode_observer=|_|live;let mut encode_observer=|_|live;let mut sql_observer=|_|true;let mut decode=semio_framework_value::NativeDecodeControl::new(case["nativeMaximumBytes"].as_u64().unwrap()as usize,&mut decode_observer);let mut encode=semio_framework_value::NativeEncodeControl::new(case["nativeMaximumBytes"].as_u64().unwrap()as usize,&mut encode_observer);let mut decoding=crate::os_store::NativeSnapshotDecodeOwner::new(&mut decode,grant);let mut encoding=crate::os_store::NativeSnapshotEncodeOwner::new(&mut encode,grant);let mut control=SqliteSnapshotControl::new(&mut sql_observer,Default::default());
   let(result,born,released)=semio_framework_trace_memory_testing::observe_backing(||match case["operation"].as_str().unwrap(){
@@ -191,7 +189,6 @@ fn sqlite_snapshot_codec_default_refusals_preserve_zero_original_authority(){
   });
   let error=result.unwrap_err();assert_eq!(born,case["allocatedBytes"].as_u64().unwrap()as usize,"{}",case["operation"]);assert_eq!(released,case["releasedBytes"].as_u64().unwrap()as usize);assert_eq!(format!("{:?}",error.kind),case["kind"].as_str().unwrap());assert_eq!(error.message,case["cause"].as_str().unwrap());assert!(matches!(error.message,std::borrow::Cow::Borrowed(_)));assert_eq!(decoding.progress(),Default::default());assert_eq!(encoding.progress(),Default::default());drop(decoding);drop(encoding);assert_eq!(decode.owned_bytes(),case["ownedBytes"].as_u64().unwrap()as usize);assert_eq!(encode.owned_bytes(),case["ownedBytes"].as_u64().unwrap()as usize);
  }
- eprintln!("[DEBUG] Original SQLite codec default receiving refusals preserve seven declared exact literal/canceled outcomes with zero actual allocation/release and unchanged original native/body authority");
 }
 
 #[derive(Debug, PartialEq, semio_framework_value::RetireOwned)]
@@ -228,7 +225,7 @@ fn from_sqlite_database(_:&SqliteDatabase,_:&mut SqliteSnapshotControl<'_>)->Res
 
 #[test]
 fn sqlite_snapshot_codec_default_receiving_runs_authored_models_into_the_operation_workspace(){
- let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();let grant:semio_framework_value::RetainedCloneGrant=serde_json::from_value(fixture["original"]["grant"].clone()).unwrap();let maximum=fixture["original"]["nativeMaximumBytes"].as_u64().unwrap()as usize;
+ let fixture:serde_json::Value=crate::fixture_json(file!(), "🧫️fixtures/🔣️.json");let grant:semio_framework_value::RetainedCloneGrant=serde_json::from_value(fixture["original"]["grant"].clone()).unwrap();let maximum=fixture["original"]["nativeMaximumBytes"].as_u64().unwrap()as usize;
  let mut bare_callback=|_|true;let mut bare=SqliteSnapshotControl::new(&mut bare_callback,Default::default());
  assert_eq!(AuthoredSnapshot{value:7}.to_sqlite_database(&mut bare).unwrap_err().message,"SQLite snapshot has no explicit retirement recipient","the authored model itself needs a recipient the codec's operation workspace must supply");
  for stop in[usize::MAX,0,1,2]{
@@ -244,12 +241,11 @@ fn sqlite_snapshot_codec_default_receiving_runs_authored_models_into_the_operati
   if stop==usize::MAX{assert_eq!(result.unwrap(),AuthoredSnapshot{value:7});}else{assert_eq!(result.unwrap_err().kind,ValueRefusalKind::Canceled,"stop={stop}");}
   while encode.has_retirement_owner(){encode.close_retirement_recipient(grant).unwrap();}
  }
- eprintln!("[DEBUG] Default receiving runs the authored projection and reconstruction into the operation workspace: success and every cancellation point leave only closable owners");
 }
 
 #[test]
 fn sqlite_snapshot_codec_default_receiving_validators_apply_the_authored_subset_policy_after_native_cancellation(){
- let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();let grant:semio_framework_value::RetainedCloneGrant=serde_json::from_value(fixture["original"]["grant"].clone()).unwrap();let maximum=fixture["original"]["nativeMaximumBytes"].as_u64().unwrap()as usize;
+ let fixture:serde_json::Value=crate::fixture_json(file!(), "🧫️fixtures/🔣️.json");let grant:semio_framework_value::RetainedCloneGrant=serde_json::from_value(fixture["original"]["grant"].clone()).unwrap();let maximum=fixture["original"]["nativeMaximumBytes"].as_u64().unwrap()as usize;
  let database=value_database(7);
  for (subset,live,accepted) in[("*",true,true),("reject",true,false),("*",false,false)]{
   let dialect=semio_framework_artifact_reference::ArtifactDialect{artifact_kind:"default.receiving".into(),standard:"1".into(),subset:subset.into()};
@@ -260,13 +256,12 @@ fn sqlite_snapshot_codec_default_receiving_validators_apply_the_authored_subset_
   {let mut owner=crate::os_store::NativeSnapshotEncodeOwner::new(&mut encode,grant);assert_eq!(AuthoredValidator.validate_sqlite_snapshot_subset_encoding(&dialect,&database,&mut control,&mut owner).is_ok(),accepted,"encode {subset} live={live}");}
   while decode.has_retirement_owner(){decode.close_retirement_recipient(grant).unwrap();}while encode.has_retirement_owner(){encode.close_retirement_recipient(grant).unwrap();}
  }
- eprintln!("[DEBUG] Default receiving validators delegate to the authored subset policy and observe native cancellation first");
 }
 
 #[test]
 fn sqlite_snapshot_codec_relocation_retains_every_original_across_partial_moves(){
  use crate::sqlite_snapshot::artifact::receiving::{Port,Direction,relocate_vector};
- let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();let full:semio_framework_value::RetainedCloneGrant=serde_json::from_value(fixture["original"]["grant"].clone()).unwrap();
+ let fixture:serde_json::Value=crate::fixture_json(file!(), "🧫️fixtures/🔣️.json");let full:semio_framework_value::RetainedCloneGrant=serde_json::from_value(fixture["original"]["grant"].clone()).unwrap();
  for case in fixture["relocationCases"].as_array().unwrap(){
   RETIREMENTS.with(|count|count.set(0));let values=case["values"].as_array().unwrap();let mut input=Some(OriginalRelocation{original:values.iter().map(|value|RetainedSnapshot{value:value.as_i64().unwrap(),retired:false}).collect(),replacement:Vec::new()});
   let work=std::cell::Cell::new(0usize);let completed=std::cell::Cell::new(false);let mut sql_observer=|event:crate::sqlite_snapshot::SqliteSnapshotProgress|{if event.phase==SqliteSnapshotPhase::ProjectSnapshot&&event.total==0{work.set(work.get()+1);return case["refuseWorkAt"].as_u64().is_none_or(|limit|work.get()!=limit as usize)}true};let mut native_observer=|_|true;
@@ -279,5 +274,4 @@ fn sqlite_snapshot_codec_relocation_retains_every_original_across_partial_moves(
   assert!(result.is_err());assert_eq!(completed.get(),case["completed"].as_bool().unwrap());assert!(input.is_none());assert_eq!(born,owner.progress().retained_capacity_bytes);assert_eq!(released,owner.progress().released_bytes);assert_eq!(released,0);drop(owner);assert!(native.has_retirement_owner());
   while native.has_retirement_owner(){let(step,born,released)=semio_framework_trace_memory_testing::observe_backing(||native.close_retirement_recipient(full).unwrap());assert_eq!(born,step.progress().retained_capacity_bytes);assert_eq!(released,step.progress().released_bytes);assert_ne!(step.progress(),Default::default());}RETIREMENTS.with(|count|assert_eq!(count.get(),values.len()));
  }
- eprintln!("[DEBUG] Original SQLite vector relocation preserves every original scalar and both backing fields on partial move/reversal refusal; allocator births/releases equal original receipts and funded terminal turns retire all original owners");
 }

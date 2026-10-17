@@ -1,7 +1,8 @@
 use super::*;
 use crate::standards::v1::subsets::any::schema::snapshot::TopConstraint;
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::{compute_element_solids, fixtures::case, ElementSolid};
-use crate::standards::v1::subsets::any::schema::inferences::wall_layout::compute_wall_layout;
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::{fixtures::case, ElementSolid};
+use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_element_solids;
+use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_wall_layout;
 use semio_framework_geometry::mesh::TriMesh;
 use std::collections::BTreeMap;
 

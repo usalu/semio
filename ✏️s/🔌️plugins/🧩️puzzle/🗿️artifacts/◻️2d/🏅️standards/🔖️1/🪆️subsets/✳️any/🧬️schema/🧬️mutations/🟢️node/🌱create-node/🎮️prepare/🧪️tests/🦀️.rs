@@ -1,8 +1,16 @@
 //! 🧪️ Borrowed create plans match literal invariant priority without owning mutation payloads.
 
-use super::*;
+use crate::standards::v1::subsets::any::schema::mutations::create_node::CreateNode;
+use crate::Puzzle2dSnapshot;
+use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::lookup::{Puzzle2dLookupCursor, Puzzle2dLookupScope, Puzzle2dLookupStep};
+#[allow(unused_imports)]
+use semio_framework_value::{ValueError, ValueRefusalKind, retained_clone::RetainedCloneBinding, retained_clone::RetainedCloneRef, retained_clone::RetainedCloneStep};
+use crate::standards::v1::subsets::any::schema::preparation::create_node_preparation::*;
+use semio_framework_test_fixtures::fixture_text;
 use semio_framework_value::paged::PagedUtf8;
-use crate::test_source_custody;
+use crate::standards::v1::subsets::any::schema::testkit as test_source_custody;
 
 fn close(cursor: &mut Puzzle2dCreateNodePreparationCursor) {
     cursor.begin_close();
@@ -21,17 +29,17 @@ fn close(cursor: &mut Puzzle2dCreateNodePreparationCursor) {
 #[test]
 fn history_edit_puzzle2d_borrowed_create_preparation_preserves_invariant_priority_and_indexed_placement() {
     assert!(std::mem::size_of::<Puzzle2dCreateNodePreparationCursor>() <= 4096);
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌱create-node/🎮️prepare/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌱create-node/🎮️prepare/🔣️.json")).unwrap();
     let controls = &corpus["control"];
     let text = |value: &serde_json::Value| { let value = value.as_str().unwrap(); match value.strip_prefix("$large:") { Some(suffix) => PagedUtf8::<{usize::MAX}>::from(format!("{}{suffix}", controls["largePrefix"].as_str().unwrap().repeat(controls["largeRepeats"].as_u64().unwrap() as usize))), None => value.into() } };
     let grant = RetainedCloneGrant::one_payload_turn(32,64);
     for case in corpus["cases"].as_array().unwrap() {
         let mut snapshot = Puzzle2dSnapshot::default();
-        snapshot.nodes = case["nodes"].as_array().unwrap().iter().map(|id| crate::standards::v1::subsets::any::schema::Puzzle2dNode { id: text(id), ..Default::default() }).collect();
+        snapshot.nodes = case["nodes"].as_array().unwrap().iter().map(|id| crate::standards::v1::subsets::any::schema::records::Puzzle2dNode { id: text(id), ..Default::default() }).collect();
         let mut wire = case["mutation"]["node"].clone();
         for name in ["x", "y"] { if wire[name].is_string() { wire[name] = serde_json::json!(0); } }
         if let Some(handles) = wire.get_mut("handles").and_then(serde_json::Value::as_array_mut) { for handle in handles { if handle["angle"].is_string() { handle["angle"] = serde_json::json!(0); } } }
-        let mut node: crate::standards::v1::subsets::any::schema::Puzzle2dNode = serde_json::from_value(wire).unwrap();
+        let mut node: crate::standards::v1::subsets::any::schema::records::Puzzle2dNode = serde_json::from_value(wire).unwrap();
         node.id = text(&case["mutation"]["node"]["id"]);
         for name in ["x", "y"] { if let Some(scalar) = case["mutation"]["node"][name].as_str() { let value = if scalar == "nan" { f64::NAN } else { f64::INFINITY }; if name == "x" { node.x = value; } else { node.y = value; } } }
         if let Some(handles) = case["mutation"]["node"].get("handles").and_then(serde_json::Value::as_array) { for (index, handle) in handles.iter().enumerate() { if handle["angle"] == "nan" { node.handles.get_mut(index).unwrap().angle = f64::NAN; } } }
@@ -75,6 +83,5 @@ fn history_edit_puzzle2d_borrowed_create_preparation_preserves_invariant_priorit
         assert_eq!(cancelled.take(), None);
         if case["id"] == "large-prefix" { let mut cancelled = Puzzle2dCreateNodePreparationCursor::default(); for turn in 0..30 { let permit=if turn%2==0{grant}else{RetainedCloneGrant::one_release_turn(4096,64)};assert!(matches!(cancelled.advance(source.borrow(&snapshot), mutation.borrow(&payload), permit).unwrap(), Puzzle2dCreateNodePreparationStep::Pending(_))); } close(&mut cancelled); }
         test_source_custody::close(&mut source);test_source_custody::close(&mut mutation);
-        eprintln!("[DEBUG] Puzzle2d create {} retained invariant priority, literal placement and original native owners with zero heap birth/copy/alias closure", case["id"].as_str().unwrap());
     }
 }

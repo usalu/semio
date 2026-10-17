@@ -24,7 +24,6 @@ it("selects each explicit first-party catalog family with valid CSS font syntax"
     const fontFamily=row.name as NonNullable<Parameters<typeof drawSceneNode>[1]["text"]>["fontFamily"];
     drawSceneNode(ctx as unknown as CanvasRenderingContext2D,{text:{content:row.character,size:catalogFixture.size,fontFamily},fill:{kind:"solid",color:[0,0,0,1]}},new Map());
     style.font=ctx.font;expect(style.fontSize).toBe(`${catalogFixture.size}px`);expect(style.fontFamily.replaceAll('"',"")).toBe(row.name);expect(ctx.fillText).toHaveBeenCalledTimes(1);
-    console.log(`[DEBUG] Browser canvas explicit family=${row.name} font=${ctx.font} CSSOM accepted`);
   }
   dom.window.close();
 });

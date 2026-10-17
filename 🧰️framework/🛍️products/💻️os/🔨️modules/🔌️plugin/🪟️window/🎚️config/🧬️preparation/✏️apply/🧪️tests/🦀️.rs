@@ -273,7 +273,6 @@ where S: RetainedClone + serde::Serialize + serde::de::DeserializeOwned, M: Wind
         }
         turns.push((named["name"].as_str().unwrap().to_owned(), run.turns));
     }
-    eprintln!("[DEBUG] window config apply {} floor={floor} turns={turns:?}; clone, exchange, inverse and partial custody conserved", case["name"]);
 }
 
 #[test]
@@ -307,7 +306,6 @@ fn window_config_apply_pages_long_text_across_small_grants() {
     assert_eq!(tight.inverse, large.inverse);
     assert_eq!(tight.inverse, json!([{ "kind": "set-active-register", "activeRegister": "main" }]));
     assert!(tight.turns > large.turns, "a small copy grant pages the payload over more turns ({} vs {})", tight.turns, large.turns);
-    eprintln!("[DEBUG] window config apply long text floor={floor} tightTurns={} largeTurns={}", tight.turns, large.turns);
 }
 
 #[test]
@@ -324,7 +322,6 @@ fn window_config_apply_refuses_invalid_lane_payload_and_exchange() {
     let grant = RetainedCloneGrant { maximum_copy_bytes: 1 << 16, ..WIDE };
     let refused = drive::<TextState, TextMutation>(&base, &|| infinite.clone(), grant, None).unwrap_err();
     assert_eq!(refused.kind, ValueRefusalKind::InvalidValue);
-    eprintln!("[DEBUG] window config apply exchange refusal keeps the payload in custody and retires it: {}", refused.message);
 }
 
 #[test]

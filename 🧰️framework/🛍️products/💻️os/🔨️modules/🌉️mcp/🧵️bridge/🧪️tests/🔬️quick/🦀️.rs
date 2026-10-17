@@ -1,5 +1,6 @@
 //! 🧱️ Bridge_quick of the bridge crate: Shell bridge connection handle, outbox and agent conversation.
 
+use semio_framework_test_fixtures::fixture_text;
 use std::sync::Arc;
 use std::sync::atomic::Ordering;
 use crate::session::{BRIDGE_BROADCAST_MAX_RECIPIENTS, BRIDGE_OUTBOX_MAX_BYTES, BRIDGE_OUTBOX_MAX_ITEMS, BRIDGE_OUTBOX_MAX_PAGES, BRIDGE_OUTBOX_PAGE_BYTES, BridgeBroadcastCompletion, BridgeBroadcastCursor, BridgeBroadcastStep, BridgeEncodedFrame, BridgeHandle, BridgeOutbox, BridgeRecipientState, ShellConnectionId};
@@ -7,9 +8,6 @@ use semio_framework_os_mcp_bridge_codec::bridge::{ApprovalDecision, BRIDGE_INBOU
 use semio_framework_os_mcp_foundation::errors::GatewayErrorCode;
 
 /// 🧪️ Reads a committed fixture from the package directory at run time instead of embedding it in the test binary.
-fn fixture_text(relative: &str) -> &'static str {
-    Box::leak(std::fs::read_to_string(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative)).expect(relative).into_boxed_str())
-}
 
 
 fn bounded_shell_decode(bytes: &[u8]) -> Result<ShellToGateway, ShellDecodeFault> {
@@ -472,7 +470,7 @@ fn terminal_broadcast_close_returns_one_exact_original_and_cancels_recipient_cre
 /// codec. The TS twin runs the mirror-image check against the SAME file.
 #[test]
 fn every_fixture_round_trips_through_the_rust_codec() {
-    let raw = fixture_text("../../../🧵️bridge/🧪️tests/🧫️fixtures/📨️frames.json");
+    let raw = fixture_text!("../../../🧵️bridge/🧪️tests/🧫️fixtures/📨️frames.json");
     let rows: Vec<serde_json::Value> = serde_json::from_str(raw).expect("🧫️fixtures/📨️frames.json must parse");
     assert!(!rows.is_empty(), "fixture file must not be empty");
     let mut shell_to_gateway_count = 0;

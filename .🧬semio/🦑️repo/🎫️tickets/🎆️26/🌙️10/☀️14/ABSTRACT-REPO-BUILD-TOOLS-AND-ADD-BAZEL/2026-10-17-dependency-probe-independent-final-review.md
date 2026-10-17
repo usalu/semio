@@ -1,0 +1,9 @@
+# Dependency Probe Independent Final Review
+
+All ten current manifest inputs match by nofollow regular-file descriptor, stable descriptor/name seven-field metadata, exact bytes and SHA-256. The launch file was streamed under16MiB; other inputs are bounded Source. Receipt: `🗑️generated/dependency-probe-ten-independent-hold.json`. This is a sequential point-time hold.
+
+The preliminary authority review remains clean: actual whole-row parent/Core token, registry EX and complete ALL custody surround the fixed probe; staging/strict freshness occurs outside short read custody, each scope gets the exact issued fresh-root check, and actual installed-path validation is inside a fresh genuine read context. Fixed environment anchors and hidden-config absence are rechecked around the child. A failed staged-root collision refuses without overwrite/reuse. No ordinary binding or ready receipt is minted; result installedQualified remains false, bindingsChanged zero and whole allocation retained.
+
+The fixed actual Bun invocation uses shared authored arguments/environment and the existing finite Native child grant with narrowed capture bounds. Source failure cancellation is inside the issued scope and preserves arbitrary primary values. No public caller runner, program, environment, pathname or effect callback is admitted. No material Source blocker identified.
+
+Bazel reports current full storage27laws1884assert, six-root strict0, and genuine Root0 probe Source5laws683assert plus three joined worker terminals. The real Generated environment-anchor replacement and exact undefined/frozen/cancellation closure laws are recorded in its report. These gates were not rerun here. Native/installer ports remain explicitly modeled; no actual funded installer, layout repair, readiness, public build or Windows mapped-image qualification is inferred.

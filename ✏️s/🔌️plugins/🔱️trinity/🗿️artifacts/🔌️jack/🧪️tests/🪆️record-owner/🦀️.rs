@@ -1,6 +1,9 @@
 //! 🔌️ Actual Jack containers compose Graph fields through the canonical Record identity.
 use semio_framework_dsl_record::DslField;
-use crate::{Edge,NodeKindDef,EdgeKindDef,PortKindDef,PortDirection,PropertyBag,PropertyDef,PropertyKind,Manifest,JackSnapshot};
+use crate::standards::v1::subsets::any::schema::graph::Edge;
+use crate::standards::v1::subsets::any::schema::manifest::{NodeKindDef, EdgeKindDef, PortKindDef, Manifest};
+use semio_framework_graph_manifest::{PortDirection, PropertyBag, PropertyDef, PropertyKind};
+use crate::standards::v1::subsets::any::schema::snapshot::JackSnapshot;
 
 fn property()->PropertyDef{PropertyDef{name:"label".into(),kind:PropertyKind::Data,value_type:semio_framework_value::ValueType::Text,expr:None}}
 fn round_trip<T:DslField+PartialEq+std::fmt::Debug>(value:T){let encoded=<T as DslField>::to_value(&value);let decoded=<T as DslField>::from_value(&encoded).expect("canonical nested owner binding");assert_eq!(value,decoded);}

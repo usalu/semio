@@ -11,22 +11,14 @@ extern crate semio_framework_value_derive as value_derive;
 //#region 🪢️Mounts
 #[path = "../🚶change-assumed-bridge-footway/🦀️.rs"]
 pub mod change_assumed_bridge_footway;
-#[path = "../🚛change-assumed-bridge-lm2/🦀️.rs"]
-pub mod change_assumed_bridge_lm2;
 #[path = "../🚛change-assumed-bridge-lm3/🦀️.rs"]
 pub mod change_assumed_bridge_lm3;
-#[path = "../👥change-assumed-bridge-lm4/🦀️.rs"]
-pub mod change_assumed_bridge_lm4;
 #[path = "../🌾change-assumed-bridge-tandem/🦀️.rs"]
 pub mod change_assumed_bridge_tandem;
-#[path = "../🛣️change-assumed-bridge-udl/🦀️.rs"]
-pub mod change_assumed_bridge_udl;
 #[path = "../🌉change-bridge-lane/🦀️.rs"]
 pub mod change_bridge_lane;
-#[path = "../↔️change-bridge-lane-width/🦀️.rs"]
-pub mod change_bridge_lane_width;
 #[path = "../📦change-bridge-load-group/🦀️.rs"]
 pub mod change_bridge_load_group;
-#[path = "../🏗️change-bridge-span/🦀️.rs"]
-pub mod change_bridge_span;
 //#endregion 🪢️Mounts
+
+pub use semio_s_artifact_norm_en1991_mut_traffic_2::{change_assumed_bridge_lm2, change_assumed_bridge_lm4, change_assumed_bridge_udl, change_bridge_lane_width, change_bridge_span};

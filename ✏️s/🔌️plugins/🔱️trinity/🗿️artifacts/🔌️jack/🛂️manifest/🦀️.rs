@@ -1,5 +1,5 @@
 //! 📜️ Jack manifest projection owned by the Jack artifact.
-use crate::{GraphManifest, PortDirection, PropertyDef};
+use semio_framework_graph_manifest::{GraphManifest, PortDirection, PropertyDef};
 
 /// 🔺️ Trinity-shaped manifest projection for jack/ram consumers.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
@@ -59,7 +59,7 @@ impl Manifest {
 
     /// 📜️ Nakagin capsule tower compile-time manifest.
     pub fn nakagin_default() -> Self {
-        Self::from_graph(&crate::graph_manifest::nakagin::nakagin_manifest())
+        Self::from_graph(&crate::standards::v1::subsets::any::schema::graph_manifest::nakagin::nakagin_manifest())
     }
 }
 
@@ -85,3 +85,8 @@ impl Manifest {
         }
     }
 }
+
+semio_framework_value::artifact_retire_struct!(Manifest {node_kinds,edge_kinds,port_kinds});
+semio_framework_value::artifact_retire_struct!(NodeKindDef {name,properties,port_kinds});
+semio_framework_value::artifact_retire_struct!(EdgeKindDef {name,properties});
+semio_framework_value::artifact_retire_struct!(PortKindDef {name,direction,properties});

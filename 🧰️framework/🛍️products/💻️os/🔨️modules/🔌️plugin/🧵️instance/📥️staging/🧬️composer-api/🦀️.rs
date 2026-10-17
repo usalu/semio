@@ -1,5 +1,25 @@
 //! 🧬 The composer API of the mounted artifact instance: the public readers and entry points that delegate to a component.
-use super::*;
+use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_framework_artifact_reference::ArtifactDialect;
+use semio_framework_plugin_document_media::{ArtifactEnvelopeDecodeOperationHandle, ArtifactEnvelopeDecodeOperationPoll};
+use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use pack::snapshot::ArtifactPack;
+use store::{ArtifactStore, MemberFactory, Mutation, SpaceMember};
+use semio_framework_plugin_operation::original_catalog_constructor::{ArtifactStoreConstructorKind, ArtifactStoreConstructorPhase};
+use semio_framework_plugin_decl_views::child_view::ChildContentView;
+use semio_framework_plugin_child::{ChildMemberRegistrationError, OwnedDocumentMemberIngress};
+use semio_framework_plugin_decl_emission::Emit;
+use semio_framework::{Fault, FaultFrom, ViewModel};
+use semio_framework_plugin_job::reserved_jobs::FrameworkReservedCommitProgress;
+use std::future::Future;
+use semio_framework_plugin_instance_extension::InstanceExtension;
+use protocol::OpText;
+use semio_framework_plugin_reactor_app::PluginApp;
+use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
+use semio_framework_plugin_operation::ToolCancellationHandle;
+use crate::VcsArtifactApp;
+use semio_framework_plugin_window_transient::window_transient::WindowTransientSnapshot;
+use semio_framework_ui_contract::*;
 
 impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A, M> {
     /// 📸️ Materializes and returns the current snapshot — the typed counterpart to
@@ -39,11 +59,11 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
         self.interaction.interaction_state(&self.stores).await
     }
 
-    pub(super) fn take_constructor_receipt(&mut self)->Option<(ArtifactStoreConstructorKind,ArtifactStoreConstructorPhase,RetainedCloneGrant,RetainedCloneProgress)> {
+    pub fn take_constructor_receipt(&mut self)->Option<(ArtifactStoreConstructorKind,ArtifactStoreConstructorPhase,RetainedCloneGrant,RetainedCloneProgress)> {
         self.constructor.take_constructor_receipt()
     }
 
-    pub(super) fn store_constructor_is_pending(&self)->bool {
+    pub fn store_constructor_is_pending(&self)->bool {
         self.constructor.store_constructor_is_pending()
     }
 
@@ -109,7 +129,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
     /// store replacement it will hand to does not exist yet, and reading that absent job here
     /// turned every in-progress decode into a terminal `Fault` for all eight plugin loops
     /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-    pub fn advance_artifact_envelope_load(&mut self, handle: ArtifactEnvelopeDecodeOperationHandle,cx:&mut semio_framework_job::StepContext<'_>) -> Result<ArtifactEnvelopeDecodeOperationPoll, crate::PluginLifecycleFailure> {
+    pub fn advance_artifact_envelope_load(&mut self, handle: ArtifactEnvelopeDecodeOperationHandle,cx:&mut semio_framework_job::StepContext<'_>) -> Result<ArtifactEnvelopeDecodeOperationPoll, semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
         self.ingest.advance_artifact_envelope_load(&mut self.stores, &mut self.child_composition, handle, cx)
     }
 
@@ -150,7 +170,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
 
     /// 🏗️ Atomically transfers one decoded envelope into the app-owned retained store
     /// initializer. Capacity or factory rejection leaves the completed record in its exact slot.
-    pub fn try_begin_artifact_store_replacement(&mut self, handle: ArtifactEnvelopeDecodeOperationHandle,cx:&mut semio_framework_job::StepContext<'_>) -> Result<bool, crate::PluginLifecycleFailure> {
+    pub fn try_begin_artifact_store_replacement(&mut self, handle: ArtifactEnvelopeDecodeOperationHandle,cx:&mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
         self.ingest.try_begin_artifact_store_replacement(&mut self.stores, &mut self.child_composition, handle, cx)
     }
 
@@ -193,7 +213,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
     /// 🎰️ How many of the fixed residue classes currently own a live typed operation or segmented
     /// output — the exact complement of what [`Self::admit_typed_operation_slot`] can still hand out,
     /// so `0` is the only value that proves every admitted slot reached its release path.
-    pub(super) fn live_typed_operation_slots(&self) -> usize {
+    pub fn live_typed_operation_slots(&self) -> usize {
         self.media.live_typed_operation_slots(&self.pending, &self.tools)
     }
 

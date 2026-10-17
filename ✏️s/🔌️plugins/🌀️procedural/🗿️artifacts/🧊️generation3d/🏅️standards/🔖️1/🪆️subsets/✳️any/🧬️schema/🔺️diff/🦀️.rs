@@ -549,17 +549,17 @@ impl Generation3dDiff {
 /// 🔺️ A sparse-delta read that CLOSES itself — the ONE shape a test holds an owned
 /// [`Generation3dDiff`] in, the diff twin of `Generation3dSnapshotRead`
 /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 pub struct Generation3dDiffRead(Option<Generation3dDiff>);
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 impl Generation3dDiffRead {
     pub fn new(diff: Generation3dDiff) -> Self {
         Self(Some(diff))
     }
 }
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 impl std::ops::Deref for Generation3dDiffRead {
     type Target = Generation3dDiff;
     fn deref(&self) -> &Self::Target {
@@ -567,7 +567,7 @@ impl std::ops::Deref for Generation3dDiffRead {
     }
 }
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 impl Drop for Generation3dDiffRead {
     fn drop(&mut self) {
         if let Some(diff) = self.0.take() {
@@ -576,7 +576,7 @@ impl Drop for Generation3dDiffRead {
     }
 }
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 impl std::fmt::Debug for Generation3dDiffRead {
     fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Debug::fmt(&**self, formatter)

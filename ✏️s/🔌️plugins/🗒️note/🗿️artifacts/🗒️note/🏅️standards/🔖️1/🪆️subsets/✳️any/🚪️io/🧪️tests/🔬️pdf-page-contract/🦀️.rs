@@ -1,4 +1,32 @@
-use super::*;
+use crate::NoteBlockNode;
+use semio_framework_plugin::app::IoPayload;
+use semio_framework_test_fixtures::fixture_text;
+use serde_json::Value;
+#[allow(unused_imports)]
+use crate::{NoteSnapshot, NoteTextParagraph, NoteTextRun};
+#[allow(unused_imports)]
+use {semio_framework_plugin::app::io_dispatch, semio_framework_artifact_reference::Dialect, semio_framework_plugin::app::ErasedComposeSource, semio_framework_plugin::app::IoDirection, semio_framework_plugin::app::IoKey, semio_framework_artifact_reference::StandardId, semio_framework_artifact_reference::SubsetId};
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_dwg_geometry::standards::v_ac1024::subsets::any::schema::geometry::DwgDrawing;
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_dwg_geometry::standards::v_ac1024::subsets::any::schema::geometry::DwgGeometry;
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3;
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioQuaternion;
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioRgba;
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_semio_drawing::io as semio_drawing_composer;
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_semio_drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, DrawStyle, PathSegment, SemioDrawingSnapshot, STDIO_SEMIODRAWING_DOCUMENT_SCHEMA};
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::io::text::snapshot::write_svg_xml;
+use crate::standards::v1::subsets::any::io::*;
 use semio_framework_os_kernel::io::io_mechanism::{Deserializer, Serializer};
 use semio_framework::io_schema::IoPayload as ForeignPayload;
 use semio_s_artifact_stdio_pdf::standards::v1_4::subsets::base::{
@@ -8,7 +36,7 @@ use semio_s_artifact_stdio_pdf::standards::v1_4::subsets::base::{
 
 #[semio_framework_async_macros::async_test]
 async fn note_pdf14_page_contract_matches_the_json_oracle() {
-    let fixture: Value = serde_json::from_str(include_str!("../🧫️fixtures/📖️pdf14-pages.json")).expect("neutral PDF vectors");
+    let fixture: Value = serde_json::from_str(fixture_text!("../../🪆️subsets/✳️any/🚪️io/🧪️tests/🧫️fixtures/📖️pdf14-pages.json")).expect("neutral PDF vectors");
     for row in fixture["cases"].as_array().expect("cases") {
         let pdf: PdfSnapshot = semio_framework_pack_json::from_json_str(&serde_json::json!({"schema": semio_s_artifact_stdio_pdf::standards::v1_4::subsets::base::schema::STDIO_PDF_DOCUMENT_SCHEMA, "pages": row["pages"]}).to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("owned PDF snapshot");
         let bytes = encode_pdf(&pdf).expect("PDF 1.4 writer");

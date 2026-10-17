@@ -36,3 +36,6 @@ semio-framework-value-derive = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+
+[dev-dependencies]
+semio-framework-test-fixtures = { path = "../../../../../../../🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }

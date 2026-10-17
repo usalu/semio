@@ -16,7 +16,8 @@
 use crate::apply_puzzle5d_mutation;
 use crate::editor::puzzle5d::config::Puzzle5dRuntime;
 use crate::editor::puzzle5d::terminology::Puzzle5dLabels;
-use crate::editor::puzzle5d::{puzzle5d_action, puzzle5d_grip_full_id, quat_rotate_vector, PUZZLE5D_PLAY_CONTROLLER_ID};
+use crate::editor::puzzle5d::entities::{puzzle5d_action, puzzle5d_axis_index, puzzle5d_grip_full_id, quat_rotate_vector, PUZZLE5D_PLAY_CONTROLLER_ID};
+use semio_framework_pack_json::Value;
 use crate::standards::v1::subsets::any::schema::mutations::{connect_grips,drag_selection_2d,drag_selection_3d,rotate_selection_3d,scale_selection_3d,Puzzle5dMutation};
 
 use crate::Puzzle5dSnapshot;
@@ -29,7 +30,7 @@ use semio_framework_tool_machine::{GestureChart, GesturePhase, ToolYield};
 use {semio_s_artifact_puzzle_3d_editor_transform::puzzle3d_unique_targets, semio_s_artifact_puzzle_3d_editor_transform::Puzzle3dSelectionMotion, semio_s_artifact_puzzle_3d_editor_transform::Puzzle3dSelectionRecord};
 use std::sync::Arc;
 
-pub const UTILITY_ID: &str = "transform";
+pub const UTILITY_ID: &str = crate::editor::puzzle5d::entities::PUZZLE5D_TRANSFORM_UTILITY_ID;
 
 /// 🪪️ The editor app id every transform-tool transaction's `tool` is scoped by: `<appId>#<verb>`.
 pub const PUZZLE5D_EDITOR_APP_ID: &str = "s.puzzle.puzzle5d@1/*#editor";
@@ -367,7 +368,26 @@ pub fn puzzle5d_minted_fastener_id(document: &Puzzle5dSnapshot, source: &str, ta
 //#endregion 🛠️TransformTool
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "../../../../../../🧪️tests/🧪️transform-tool/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
+
+/// 🧲️ The motion an inspector stepper nudge states — `patchPart{field: x|y|origin.x|y|z, delta}` without an
+/// absolute `value` — the inspector edits that are gestures, so they commit the transform tool's
+/// `drag-selection2d` (board `x`/`y`) or `drag-selection3d` (world origin) instead of absolute poses. `None` for
+/// every other edit.
+pub fn puzzle5d_inspector_nudge(args: Option<&Value>) -> Option<Puzzle5dSelectionMotion> {
+    let args = args?;
+    if args.get("value").is_some_and(|value| !value.is_null()) {
+        return None;
+    }
+    let delta = args.get("delta").and_then(Value::as_f64).filter(|delta| delta.is_finite())?;
+    match args.get("field").and_then(Value::as_str)? {
+        "x" => Some(Puzzle5dSelectionMotion::Board { dx: delta, dy: 0.0 }),
+        "y" => Some(Puzzle5dSelectionMotion::Board { dx: 0.0, dy: delta }),
+        field => {
+            let mut offset = [0.0; 3];
+            offset[puzzle5d_axis_index(field, "origin")?] = delta;
+            Some(Puzzle5dSelectionMotion::World(semio_s_artifact_puzzle_3d_editor_transform::Puzzle3dSelectionMotion::Drag { offset }))
+        }
+    }
+}

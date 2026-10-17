@@ -3,7 +3,6 @@
 //! collection), so this is `create`/`delete`, not `insert`/`remove`.
 
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
-use crate::schema::mutations::SemioGraphMutation;
 use crate::schema::snapshot::{GraphNodeId, SemioGraphPort, SemioGraphSnapshot};
 use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValueEntry;
 
@@ -29,13 +28,16 @@ pub struct CreateNode {
     pub at: Option<usize>,
 }
 
-impl protocol::MutationKind<SemioGraphSnapshot, SemioGraphMutation> for CreateNode {
+impl<Op> protocol::MutationKind<SemioGraphSnapshot, Op> for CreateNode
+where
+    Op: protocol::Mutation<SemioGraphSnapshot, Diff = crate::schema::diff::SemioGraphDiff> + From<CreateNode> + From<crate::schema::mutations::delete_node::DeleteNode>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "node", kind: "create-node", record: "CreatedNode" };
 
-    fn diff(&self, base: &SemioGraphSnapshot) -> protocol::MutationOutcome<<SemioGraphMutation as protocol::Mutation<SemioGraphSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioGraphSnapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<SemioGraphSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &SemioGraphSnapshot) -> Result<Vec<SemioGraphMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &SemioGraphSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

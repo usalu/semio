@@ -3,7 +3,8 @@
 //! numeric queries (sign, refinement, `f64` approximation) that need real algebra to answer.
 
 use crate::cas::expr::{Expr, Kind};
-use crate::polynomial::{AlgebraicReal, PolyU};
+use crate::polynomial::algebraic::AlgebraicReal;
+use crate::polynomial::univariate::PolyU;
 use number::{Integer, Natural, Rational};
 
 // #region 🔖️Conversion
@@ -29,7 +30,7 @@ pub fn root_of_expr(coeffs: Vec<Rational>, index: u32) -> Expr {
 
 /// 🌱️ Builds one `RootOf` expression per real root of `poly` (ascending order).
 pub fn real_roots_of(poly: &PolyU<Integer>) -> Vec<Expr> {
-    let n_roots = crate::polynomial::isolate_real_roots(poly).len();
+    let n_roots = crate::polynomial::roots::isolate_real_roots(poly).len();
     let coeffs: Vec<Rational> = poly.coeffs().iter().map(|c| Rational::from_integer(c.clone())).collect();
     (0..n_roots as u32).map(|i| root_of_expr(coeffs.clone(), i)).collect()
 }

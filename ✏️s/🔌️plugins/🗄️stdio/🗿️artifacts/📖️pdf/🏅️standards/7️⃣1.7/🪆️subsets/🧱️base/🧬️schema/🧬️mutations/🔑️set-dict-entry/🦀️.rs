@@ -1,7 +1,6 @@
 //! 🔑️ Authoritative PDF mutation payload, diff, inverse, and tests for `set-dict-entry`.
 
-use super::remove_dict_entry::RemoveDictEntry;
-use super::PdfMutation;
+use crate::standards::v1_7::subsets::base::schema::mutations::remove_dict_entry::RemoveDictEntry;
 use crate::standards::v1_7::subsets::base::schema::diff::{self, PdfDiff, PdfPathSegment};
 use crate::standards::v1_7::subsets::base::schema::snapshot::{ObjRef, PdfDictEntry, PdfObject, PdfSnapshot};
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
@@ -20,18 +19,21 @@ pub struct SetDictEntry {
     pub index: Option<usize>,
 }
 
-impl MutationKind<PdfSnapshot, PdfMutation> for SetDictEntry {
+impl<Op> MutationKind<PdfSnapshot, Op> for SetDictEntry
+where
+    Op: protocol::Mutation<PdfSnapshot, Diff = PdfDiff> + From<SetDictEntry> + From<crate::standards::v1_7::subsets::base::schema::mutations::remove_dict_entry::RemoveDictEntry>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "dict-entry", kind: "set-dict-entry", record: "Set" };
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
         MutationOutcome::new(diff::graph_edit(diff::diff_set_dict_entry(base, self.id, &self.path, &self.key, self.value.clone(), self.index)))
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
         match original_dict_value(base, self.id, &self.path, &self.key) {
-            Some((_, value)) => vec![PdfMutation::SetDictEntry(SetDictEntry { id: self.id, path: self.path.clone(), key: self.key.clone(), value, index: None })],
-            None => vec![PdfMutation::RemoveDictEntry(RemoveDictEntry { id: self.id, path: self.path.clone(), key: self.key.clone() })],
+            Some((_, value)) => vec![Op::from(SetDictEntry { id: self.id, path: self.path.clone(), key: self.key.clone(), value, index: None })],
+            None => vec![Op::from(RemoveDictEntry { id: self.id, path: self.path.clone(), key: self.key.clone() })],
         }
     
     })())
@@ -68,8 +70,6 @@ fn original_dict_value(base: &PdfSnapshot, id: ObjRef, path: &[PdfPathSegment], 
 //#endregion 🔖️Mutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
 

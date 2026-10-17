@@ -1,4 +1,4 @@
-import type {PluginCatalogRowsV1,PluginCatalogRowV1} from "../🟦️.ts";
+import type {PluginCatalogRowsV1,PluginCatalogRowV1} from "@semio-tech/framework/plugin-catalog";
 import contract from "../🛂️descriptor-verification/🧬️schema/🔣️.json";
 import { validateJsonSchemaSubset } from "@semio-tech/schema-validator-ts";
 import { jsonDocumentDuplicateKeys } from "../../../../../🦑️repo/🔨️modules/📚️library/🧬️schema/🔣️json-document/🟦️.ts";

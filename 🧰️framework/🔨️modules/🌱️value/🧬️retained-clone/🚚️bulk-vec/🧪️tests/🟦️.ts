@@ -17,5 +17,4 @@ test("bulk bitwise vector clone chunks agree with an independent page-wise typed
     expect(turns).toBeLessThanOrEqual(law.overheadTurns+Math.max(Math.ceil(count*law.elementBytes/law.pageBytes),law.emptyCompletionTurns));
     if(count===2097152){expect(bytes.byteLength).toBe(4*1024*1024);expect(turns).toBe(law.maximumTurnsForFourMebibytes);expect(count*law.elementwiseTurnsPerElement/turns).toBeGreaterThan(400000);}
   }
-  console.log("[DEBUG] Bulk vector clone chunk arithmetic and sample bytes agree with an independent typed-array page copy");
 });

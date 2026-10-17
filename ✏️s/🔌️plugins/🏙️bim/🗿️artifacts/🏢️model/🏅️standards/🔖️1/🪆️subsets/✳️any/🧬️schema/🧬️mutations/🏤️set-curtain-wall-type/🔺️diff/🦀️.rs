@@ -1,7 +1,7 @@
 //! 🔺️ Diff constructor for `SetCurtainWallType`: a sparse curtain wall type patch of exactly the provided fields that differ. Provided grid rules, mullion
 //! sections, default panel and materials follow the create rules; a patch that changes nothing is a no-op. Every curtain wall of the type follows by inference.
 
-use super::super::wall_geometry::{grid_flaw, material_flaw, panel_flaw, profile_flaw, Flaw};
+use crate::standards::v1::subsets::any::schema::mutations::wall_geometry::{grid_flaw, material_flaw, panel_flaw, profile_flaw, Flaw};
 use super::SetCurtainWallType;
 use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff, Patch}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};

@@ -24,7 +24,6 @@ test("UI testing example folders belong beneath actual tests folders", () => {
     expect([...file].length).toBeLessThanOrEqual(256);
     expect(file.length).toBeLessThanOrEqual(256);
   }
-  console.log(`[DEBUG] UI placement agrees with fast-glob for ${actual.length} physically owned testing examples`);
 });
 
 test("UI native testing example includes resolve to physical test owners", () => {
@@ -41,12 +40,10 @@ test("UI native testing example includes resolve to physical test owners", () =>
     }
   }
   expect(count).toBeGreaterThan(50);
-  console.log(`[DEBUG] UI native include source resolves ${count} test-only physical readers`);
 });
 
 test("UI moved built retirement examples retain their original behavior", () => {
   testBuiltTreeRetirementFixture();
-  console.log("[DEBUG] UI moved built retirement reader and authored oracle completed");
 });
 
 test("UI direct TypeScript example URLs resolve to physical test owners", () => {
@@ -63,12 +60,10 @@ test("UI direct TypeScript example URLs resolve to physical test owners", () => 
     }
   }
   expect(count).toBeGreaterThan(20);
-  console.log(`[DEBUG] UI direct TypeScript example URLs resolve ${count} physical readers`);
 });
 
 test("UI moved storage and surface examples retain their authored oracles", () => {
   const list = fixedListStorageSelfTests(), surface = surfaceOwnershipSelfTests();
   expect(list).toBe(75);
   expect(surface).toBeGreaterThan(32);
-  console.log(`[DEBUG] UI moved storage/surface fixture oracles completed: ${list}/${surface} authored cases`);
 });

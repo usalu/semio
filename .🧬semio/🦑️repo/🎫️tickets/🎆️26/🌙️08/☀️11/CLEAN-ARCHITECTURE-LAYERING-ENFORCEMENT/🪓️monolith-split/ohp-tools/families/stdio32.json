@@ -1,0 +1,1 @@
+{"name": "stdio32", "crates": ["semio-s-artifact-stdio-ply", "semio-s-artifact-stdio-ply-inferences", "semio-s-artifact-stdio-ply-inferences-tests", "semio-s-artifact-stdio-ply-io-registry", "semio-s-artifact-stdio-ply-mutations", "semio-s-artifact-stdio-ply-schema", "semio-s-artifact-stdio-ply-test-oracle"], "note": "stdio 🧱️ply"}

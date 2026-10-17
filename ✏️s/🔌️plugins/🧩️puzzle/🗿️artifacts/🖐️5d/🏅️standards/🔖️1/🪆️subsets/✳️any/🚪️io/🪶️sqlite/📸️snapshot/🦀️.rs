@@ -1,7 +1,8 @@
 //! 🧩️ Complete Puzzle5d entities and literal owned relationships.
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v1::subsets::any::schema::snapshot::Puzzle5dSnapshot;
-use crate::*;
+use crate::standards::v1::subsets::any::schema::document_records::{Puzzle5dAttribute, Puzzle5dAuthor, Puzzle5dCompatSpecificity, Puzzle5dFastener, Puzzle5dGrip, Puzzle5dGrip2d, Puzzle5dGrip3d, Puzzle5dGripTemplate, Puzzle5dKindCompatibility, Puzzle5dMeta, Puzzle5dPart, Puzzle5dPart2d, Puzzle5dPart3d, Puzzle5dPartAnchor, Puzzle5dRepresentation, Puzzle5dScale, Puzzle5dTargetVolume};
+use crate::standards::v1::subsets::any::schema::kind_catalogs::{Puzzle5dCatalogFastenerKindExtra, Puzzle5dCatalogGripKindExtra, Puzzle5dCatalogPartKindExtra, Puzzle5dCatalogRopeKindExtra, Puzzle5dKindCatalogsExtra};
 use std::collections::{BTreeMap,BTreeSet};
 use store::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{SqliteDatabase,SqliteRow,SqliteValue,SqliteSnapshotControl,SqliteSnapshotPhase,SnapshotEncoding,artifact::{Cell,Projection,Reconstruction}}};
 use semio_framework_value::{ValueError,ValueRefusalKind};
@@ -154,20 +155,4 @@ fn reconstruct(d:&SqliteDatabase,c:&mut SqliteSnapshotControl<'_>)->Result<Puzzl
  for row in rows.take(23,doc.rowid,c)?{let mut value=Cursor::new(row,3,c);let id=value.text()?;let origin=value.xyz()?;let orientation=value.orientation()?;let hidden=value.boolean()?;let locked=value.boolean()?;value.done()?;let scale=rows.scale(24,row.rowid,c)?;target_volumes.push(Puzzle5dTargetVolume{id,origin,orientation,scale,hidden,locked});}
  rows.finish(c)?;Ok(Puzzle5dSnapshot{schema,domain,label,meta,kind_catalogs,kind_catalogs_extra,kind_compatibility,parts,fasteners,target_volumes})
 }
-impl ArtifactSqliteSnapshotHost for Puzzle5dPlaySnapshot{
- 
- 
- 
- fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,c:&mut SqliteSnapshotControl<'_>,native_control:&mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{Puzzle5dSnapshot::decode_sqlite_snapshot_native(payload,c,native_control).map(Self::from_typed)}
- fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,c:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,ValueError>{self.typed().encode_sqlite_snapshot_native(encoding,c,native_owner)}
- fn validate_sqlite_snapshot_subset(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,d:&SqliteDatabase,c:&mut SqliteSnapshotControl<'_>)->store::io_schema::IoResult<()>{self.typed().validate_sqlite_snapshot_subset(dialect,d,c)}
-}
-impl pack::snapshot::ArtifactSqliteSnapshot for Puzzle5dPlaySnapshot {
-const SQLITE_SCHEMA:&'static str=Puzzle5dSnapshot::SQLITE_SCHEMA;
-fn to_sqlite_database(&self,c:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{self.typed().to_sqlite_database(c)}
-fn from_sqlite_database(d:&SqliteDatabase,c:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{Puzzle5dSnapshot::from_sqlite_database(d,c).map(Self::from_typed)}
-}
 
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;

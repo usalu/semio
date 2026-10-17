@@ -27,7 +27,6 @@ test("original JSON operation declares every normal and retirement authority", (
   } finally {
     database.close();
   }
-  console.log("[DEBUG] JSON original operation canonical Grant25 missing-axis refusals and independent SQLite five-axis/UTF8 laws passed");
 });
 
 test("the defining JSON operation binds the original control and retained source", () => {
@@ -56,7 +55,6 @@ test("JSON outcomes retain their original UTF8 owners behind borrowed views", ()
   }
   const source = readFileSync(resolve(import.meta.dir, "../🦀️.rs"), "utf8");
   expect(source.includes("Result<Option<&V>,&JsonError>")).toBe(true);
-  console.log("[DEBUG] JSON value and duplicate-key diagnostic original UTF8 custody matches independent SQLite corpus");
 });
 
 test("current Pack JSON examples have no whole-trial schema authority",async()=>{const{existsSync}=await import("node:fs");expect(existsSync(new URL("../🧬️schema/🔣️.json",import.meta.url))).toBe(false);});

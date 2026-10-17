@@ -66,7 +66,7 @@ mod tests;
 //#endregion 🧪️Tests
 
 //#region 🔖️FastenedLayout
-use {crate::standards::v1::subsets::any::schema::Puzzle2dNode, crate::standards::v1::subsets::any::schema::Puzzle2dNodeAnchor};
+use {crate::standards::v1::subsets::any::schema::records::Puzzle2dNode, crate::standards::v1::subsets::any::schema::records::Puzzle2dNodeAnchor};
 /// 🔗️ Rehomed from the deleted `⚙️engine/📐️layout` (ticket
 /// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W1e): compose-parity fastened layout, pure derived
 /// compute over a `Puzzle2dSnapshot` — sole consumer is `🎛️flat-position`'s own `compute_flat_position`

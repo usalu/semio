@@ -1,8 +1,24 @@
 //! 🧪️ Native deletion preserves first-ID semantics and meters all partial owner retirement.
 
-use super::*;
+use crate::standards::v1::subsets::any::schema::mutations::DeleteNode;
+use crate::standards::v1::subsets::any::schema::snapshot::Puzzle2dSnapshot;
+use crate::standards::v1::subsets::any::schema::records::{Puzzle2dEdge, Puzzle2dNode};
+use semio_framework_value::{ValueError, retirement::controlled::ControlledRetirement, retained_clone::RetainedCloneGrant, retained_clone::RetainedCloneProgress, retained_clone::RetainedCloneStep};
+use std::mem::size_of;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::preparation::native_preparation_child::Puzzle2dCloseAxis;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::preparation::delete_node_preparation::{Puzzle2dDeleteNodePreparationCursor, Puzzle2dDeleteNodePreparationStep};
+#[allow(unused_imports)]
+use semio_framework_value::{ValueRefusalKind, list::PagedList, list::PagedListEditCursor, retained_clone::RetainedCloneBinding, retained_clone::RetainedFieldCursor, retained_clone::RetainedCloneCursor, retained_clone::RetainedCloneRef, retained_clone::paged::PagedUtf8BoundedOrdCursor, retained_clone::ordered_map::BoundedOrdCursor, retained_clone::ordered_map::BoundedOrdGrant, retained_clone::ordered_map::BoundedOrdProgress, retained_clone::ordered_map::BoundedOrdStep};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::preparation::native_preparation_child::Puzzle2dPreparationChild;
+#[allow(unused_imports)]
+use std::{mem::ManuallyDrop, ops::Deref, ops::DerefMut};
+use crate::standards::v1::subsets::any::schema::preparation::delete_node_preparation::candidate::*;
+use semio_framework_test_fixtures::fixture_text;
 use semio_framework_value::paged::PagedUtf8;
-use crate::test_source_custody;
+use crate::standards::v1::subsets::any::schema::testkit as test_source_custody;
 
 fn grant(turn: usize) -> RetainedCloneGrant { match turn % 3 { 0 => RetainedCloneGrant::one_capacity_turn(4096, 128), 1 => RetainedCloneGrant::one_payload_turn(4096, 128), _ => RetainedCloneGrant::one_release_turn(4096, 128) } }
 
@@ -38,14 +54,14 @@ fn retire(snapshot: Puzzle2dSnapshot) {
 #[test]
 fn history_edit_puzzle2d_native_delete_candidate_preserves_first_ids_refusal_and_controlled_cancellation() {
     assert!(size_of::<Puzzle2dDeleteNodeCandidateCursor>() <= 4096);
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗑️delete-node/🎮️prepare/🔣️.json")).unwrap();
-    let extra: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗑️delete-node/🎮️prepare/📸️candidate/🔣️.json")).unwrap();
-    let full: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗑️delete-node/🎮️prepare/🔣️.json")).unwrap();
+    let extra: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗑️delete-node/🎮️prepare/📸️candidate/🔣️.json")).unwrap();
+    let full: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let text = |value: &serde_json::Value| { let value = value.as_str().unwrap();match value.strip_prefix("$large:") { Some(suffix) => PagedUtf8::<{usize::MAX}>::from(format!("{}{suffix}", corpus["control"]["largePrefix"].as_str().unwrap().repeat(corpus["control"]["largeRepeats"].as_u64().unwrap() as usize))), None => value.into() } };
     let mut count = 0;
     for case in corpus["cases"].as_array().unwrap().iter().chain(extra["cases"].as_array().unwrap()) {
         let mut snapshot: Puzzle2dSnapshot = serde_json::from_value(full["snapshot"].clone()).unwrap();
-        snapshot.nodes = case["nodes"].as_array().unwrap().iter().map(|node| Puzzle2dNode { id: text(&node["id"]), text: Some("retained\0😀".into()), handles: node["handles"].as_array().unwrap().iter().map(|id| crate::standards::v1::subsets::any::schema::Puzzle2dHandle { id: text(id), angle: 0.25, ..Default::default() }).collect(), ..Default::default() }).collect();
+        snapshot.nodes = case["nodes"].as_array().unwrap().iter().map(|node| Puzzle2dNode { id: text(&node["id"]), text: Some("retained\0😀".into()), handles: node["handles"].as_array().unwrap().iter().map(|id| crate::standards::v1::subsets::any::schema::records::Puzzle2dHandle { id: text(id), angle: 0.25, ..Default::default() }).collect(), ..Default::default() }).collect();
         snapshot.edges = case["edges"].as_array().unwrap().iter().enumerate().map(|(index, edge)| Puzzle2dEdge { id: text(&edge["id"]), source: text(&edge["source"]), target: text(&edge["target"]), gap: -3.0, shift: index as f64, source_tip: Some("é\0😀".into()), visible: Some(index % 2 == 0), locked: Some(index % 2 != 0), ..Default::default() }).collect();
         let payload = DeleteNode { id: text(&case["target"]) };
         let original = serde_json::to_value(&snapshot).unwrap();let original_payload = serde_json::to_value(&payload).unwrap();
@@ -88,7 +104,6 @@ fn history_edit_puzzle2d_native_delete_candidate_preserves_first_ids_refusal_and
         let (_, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| drop(cursor));assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
         test_source_custody::close(&mut source);test_source_custody::close(&mut mutation);
         count += 1;
-        eprintln!("[DEBUG] Puzzle2d DeleteNode candidate {} preserved exact first-ID removal/refusal and full untouched owners with zero-heap construction and granted cascade/clone/removal retirement", case["id"].as_str().unwrap());
     }
     assert_eq!(count, 11);
 }

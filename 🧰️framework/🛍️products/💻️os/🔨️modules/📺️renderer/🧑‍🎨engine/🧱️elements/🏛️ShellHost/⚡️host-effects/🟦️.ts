@@ -21,36 +21,40 @@ import {
 } from "../🗂️local-catalog/🟦️.ts";
 import { retireLocalDocument } from "@semio-tech/framework/config/mutations";
 import { sharedDocumentOpeningRoleV1 } from "../🧭️opening/🟦️.ts";
-import { type ActiveSession, resolveBootExampleId } from "../../🐚️Shell/🟦️.tsx";
+import { type ActiveSession } from "../../🐚️Shell/📦️program-sessions/🟦️.ts";
+import { resolveBootExampleId } from "../../🐚️Shell/🔒️boot-and-locks/🟦️.ts";
+import { SET_ACTIVE_EXAMPLE_ACTION_ID } from "../../🛠️ShellHelpers/🔩️plumbing/🔀️example-switching/🟦️.ts";
+import { isShellOwnedCommandId } from "../../🛠️ShellHelpers/🔩️plumbing/🆔️action-ids/🟦️.ts";
+import { documentTransferNoticeCodeV1, documentLoadCancelledV1 } from "../../🛠️ShellHelpers/🧾️transfer-checkin-tutorial/🟦️.ts";
 import {
-  SET_ACTIVE_EXAMPLE_ACTION_ID,
-  isShellOwnedCommandId,
-  documentTransferNoticeCodeV1,
   downloadMediaExportBytes,
-  typedOperationCompletionRefreshV1,
-  hostEffectRefreshScopeV1,
-  hostEffectsRewriteGuestRenderInputsV1,
-  documentLoadCancelledV1,
-  drainSegmentedMediaExport,
   downloadDataUrl,
   downloadMediaExport,
   mediaExportEncodingText,
   shellSegmentedDownloadSinkFactory,
-  makeEffectDispatchOne,
+  requestFileOpen
+} from "../../🛠️ShellHelpers/🔩️plumbing/📥️downloads-and-file-requests/🟦️.ts";
+import {
+  typedOperationCompletionRefreshV1,
+  hostEffectRefreshScopeV1,
+  hostEffectsRewriteGuestRenderInputsV1
+} from "../../🛠️ShellHelpers/🔄️ui-refresh/🟦️.ts";
+import { drainSegmentedMediaExport, SEGMENTED_DOWNLOAD_MARKER_PREFIX } from "../../📤️SegmentedDownload/🟦️.ts";
+import { makeEffectDispatchOne } from "../../🛠️ShellHelpers/🔩️plumbing/🚀️effect-dispatch/🟦️.ts";
+import {
   operationProgressPartsV1,
   type OperationProgressV1,
+  programHistoryProjectionsWithLoadV1
+} from "../../🛠️ShellHelpers/🔩️plumbing/🟦️.ts";
+import {
   importOpenedFilesV1,
-  programHistoryProjectionsWithLoadV1,
-  parsePanelState,
-  requestFileOpen,
-  clipboardWriteFragmentFromEffect,
-  resolveManifestLabel,
   requestMediaFramesSourceV1,
   runMediaFramesV1,
-  scheduleDispatchAction,
-  SEGMENTED_DOWNLOAD_MARKER_PREFIX,
-  viewStateWithSpacePanel
-} from "../../🛠️ShellHelpers/🟦️.tsx";
+  scheduleDispatchAction
+} from "../../🛠️ShellHelpers/🎞️media-import/🟦️.ts";
+import { parsePanelState, viewStateWithSpacePanel } from "../../🛠️ShellHelpers/📌️panel/🟦️.ts";
+import { clipboardWriteFragmentFromEffect } from "../../🛠️ShellHelpers/🪟️window-panes/📋️clipboard-activation/🟦️.ts";
+import { resolveManifestLabel } from "../../🛠️ShellHelpers/🏷️labels/🟦️.tsx";
 // #endregion 🔌️Adapters
 import { isPluginInstanceRetiredV1 } from "../../🔌️PluginRuntime/🟦️.tsx";
 import { reduceArtifactCreationProgressUiV1 } from "../🌱️artifact-creation/🟦️.tsx";
@@ -89,7 +93,7 @@ export function useApplyHostEffects(core: ShellCoreAfterSpawnedSession) {
     spaceDirectoryHistoriesRef, adoptSharedSpaceAccess, loadedPluginsRef, ensureBackboneWorker, writeLocalDocumentRef,
     recordLocalCatalogRef, navigateShellUri, spawnedAppsRef, spawnedRosterKey, activeToolIdRef, writeUtilityRegister,
     clearAllWindowUtilities, writeToolRegister, activeWindowIdRef, shellStateRef, resolvedTargetViewState,
-    applyHostEffectsRef, refreshUi, refreshSpawnedUi, ensureSpawnedPlugin, requestServiceOperation
+    applyHostEffectsRef, refreshUi, refreshSpawnedUi, ensureSpawnedPlugin, requestServiceOperation, hostPorts
   } = core;
   const applyHostEffects = useCallback(
     async (effects: readonly Effect[], baseSession: ActiveSession, uiScope: UiDirtyScope | undefined, effectOwner: ReturnType<typeof captureEffectOwner>) => {
@@ -358,7 +362,7 @@ export function useApplyHostEffects(core: ShellCoreAfterSpawnedSession) {
               const openingArgs = spaceIndexOpeningArgsV1(argsRecord, indexScope, SPACE_INDEX_DOCUMENT_ID);
               const sharedSpaceId = typeof openingArgs?.spaceId === "string" ? openingArgs.spaceId : null;
               const sharedHistory = sharedSpaceId === null ? undefined : [...spaceDirectoryHistoriesRef.current.values()].find((history) => history.spaceId === sharedSpaceId);
-              const accessRole = sharedHistory === undefined || !identityRef.current ? null : sharedDocumentOpeningRoleV1(sharedHistory.events(), sharedHistory.spaceId, identityRef.current.userId);
+              const accessRole = sharedHistory === undefined || !identityRef.current ? null : sharedDocumentOpeningRoleV1(sharedHistory.events(), sharedHistory.spaceId, identityRef.current.userId, hostPorts?.documentAccess);
               if (sharedSpaceId !== null) adoptSharedSpaceAccess(sharedSpaceId, accessRole);
               if (accessRole === "viewer" && actionId === "os.open-artifact-with" && (openingArgs?.role === "editor" || openingArgs?.role === 1)) {
                 refuseReplay("view-only-access", "a read-only member asked to edit", args);
@@ -566,7 +570,7 @@ export function useApplyHostEffects(core: ShellCoreAfterSpawnedSession) {
         await refreshUi(nextSession, refreshScope, undefined, leftoverReplaceRefreshBodiesV1(), hostEffectsRewriteGuestRenderInputsV1(effects) || nextViewState !== baseSession.viewState);
       }
     },
-    [catalog,captureDialogOrigin, captureEffectOwner, dropForSealedInstance, isCurrentEffectOwner, loadDocumentPair, makeOwnedDialog, refreshHistorySnapshot, clearAllWindowUtilities, ensureSpawnedPlugin, loadedPlugins, navigateShellUri, refreshSpawnedUi, refreshUi, requestServiceOperation, resolvedTargetViewState, session, writeUtilityRegister, writeToolRegister, spacePrograms, hostMode],
+    [catalog,captureDialogOrigin, captureEffectOwner, dropForSealedInstance, isCurrentEffectOwner, loadDocumentPair, makeOwnedDialog, refreshHistorySnapshot, clearAllWindowUtilities, ensureSpawnedPlugin, loadedPlugins, navigateShellUri, refreshSpawnedUi, refreshUi, requestServiceOperation, resolvedTargetViewState, session, writeUtilityRegister, writeToolRegister, spacePrograms, hostMode, hostPorts?.documentAccess],
   );
   core.applyHostEffects = applyHostEffects;
   // 🔁️ What the ui-refresh lane applies for a pass that asked for effects of its own, outside that pass.

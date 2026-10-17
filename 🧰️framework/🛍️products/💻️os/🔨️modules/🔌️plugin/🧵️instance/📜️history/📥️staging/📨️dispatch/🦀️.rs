@@ -1,14 +1,31 @@
 //! 🪬️ Staged slice of the `dispatch` band of the mounted artifact instance: its `instance-history` members (WP6 step S0 of the instance family).
 //!
 //! 📨️ Dispatch of the mounted artifact instance: test snapshot helpers, command log, history view, patch and refresh, preview, `dispatch_emit` and transaction groups.
-use super::*;
-use crate::tool_jobs::time_travel;
+#[cfg(any(test, feature = "artifact-app-testing"))]
+use std::sync::Arc;
+use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use pack::snapshot::ArtifactPack;
+use std::collections::{BTreeSet, HashSet};
+use crate::history_components::CommandHistory;
+use semio_framework_plugin_command::{CommandLogAppend, HistoryViewPatch, HistoryViewStamp};
+use semio_framework_plugin_decl_views::history_view::{CommandLogEntry, HistoryView};
+use semio_framework_plugin_decl_emission::{Emit, TransactionPhase};
+use semio_framework::{Fault, FaultFrom};
+use std::future::Future;
+use semio_framework_plugin_instance_stores::stores_components::InstanceStores;
+use store::{MemberFactory, Mutation, SpaceMember};
+use protocol::OpText;
+use semio_framework_plugin_reactor_app::PluginApp;
+use semio_framework_value::retained_clone::RetainedCloneGrant;
+use semio_framework_ui_contract::*;
+use semio_framework_plugin_time_travel as time_travel;
 
 impl<A: ArtifactApp> CommandHistory<A> {
     /// 🧾️ Appends one entry to the session command log. `timestamp: None` stamps "now"
     /// (live dispatch); `Some(..)` preserves an edit's original `started_at` (backfill). Always a
     /// fresh row (`count: 1`) — folding consecutive `View`/`🐚️Shell` dispatches is `record_command`'s job.
-    pub(crate) fn push_log_entry(&mut self, append: CommandLogAppend<'_>) {
+    pub fn push_log_entry(&mut self, append: CommandLogAppend<'_>) {
         let CommandLogAppend { action_id, label, kind, edit_id, transition_id, timestamp, inverse } = append;
         self.next_command_seq += 1;
         let mut record = Some(CommandLogEntry {
@@ -36,7 +53,7 @@ impl<A: ArtifactApp> CommandHistory<A> {
     /// ([`time_travel::history_store_change`]) — found from the log's tail — and the shell rows an undo or redo of theirs
     /// flipped. `None` when the change is not such a patch (rows retired, a member came or went, a history edit, a replay,
     /// a checkout …): the view then rebuilds.
-    pub(crate) fn history_view_patch(&self, stores: &InstanceStores<A>, before: &HistoryViewStamp, after: &HistoryViewStamp, members: &[(String, time_travel::HistoryStoreStamp, Option<Vec<(String, Option<usize>)>>)]) -> Option<HistoryViewPatch> {
+    pub fn history_view_patch(&self, stores: &InstanceStores<A>, before: &HistoryViewStamp, after: &HistoryViewStamp, members: &[(String, time_travel::HistoryStoreStamp, Option<Vec<(String, Option<usize>)>>)]) -> Option<HistoryViewPatch> {
         if before.supersede_records != after.supersede_records || before.members.len() != members.len() || before.members.iter().zip(members).any(|((held, _), (member, _, _))| held != member) {
             return None;
         }
@@ -75,14 +92,14 @@ impl<A: ArtifactApp> CommandHistory<A> {
 
     /// ↩️ The history body's undo and redo availability: a document edit, a composed member's applied tail, a live shell
     /// row (`inverse_rows` of them, the undone ones aside) or a history edit to undo; a redo of any of them.
-    pub(crate) fn history_view_stacks(&self, stores: &InstanceStores<A>, child_applied_tails: &HashSet<String>, child_has_redo_tail: bool, inverse_rows: usize) -> (bool, bool) {
+    pub fn history_view_stacks(&self, stores: &InstanceStores<A>, child_applied_tails: &HashSet<String>, child_has_redo_tail: bool, inverse_rows: usize) -> (bool, bool) {
         let can_undo = !stores.store.applied_edit_ids().is_empty() || !child_applied_tails.is_empty() || inverse_rows > self.shell_undone.len() || self.supersede_can_undo(stores);
         let can_redo = !stores.store.redo_edit_ids().is_empty() || child_has_redo_tail || !self.shell_redo.is_empty() || self.supersede_redo_target(stores).is_some();
         (can_undo, can_redo)
     }
 
     /// 🎯️ Shares immutable cache inputs with a command job without cloning the document or history.
-    pub(crate) fn command_cache_inputs(&self) -> (std::sync::Arc<A::Snapshot>, std::sync::Arc<A::Config>, std::sync::Arc<HistoryView>) {
+    pub fn command_cache_inputs(&self) -> (std::sync::Arc<A::Snapshot>, std::sync::Arc<A::Config>, std::sync::Arc<HistoryView>) {
         let (_, snapshot, config, history) = self.cache.as_ref().expect("cache refreshed before command scheduling");
         (std::sync::Arc::clone(snapshot), std::sync::Arc::clone(config), std::sync::Arc::clone(history))
     }
@@ -93,7 +110,7 @@ impl<A: ArtifactApp> CommandHistory<A> {
     /// one-page publication continues with the emission's other lanes; a closing commit with operations and every stream
     /// are left to the batched route. A commit carrying composed-child emissions keeps its ref: the child group stamps it
     /// on every member op (design §12), so a child-only tool transaction is still one transaction row.
-    pub(crate) fn close_streamed_transaction_unit(&mut self, stores: &mut InstanceStores<A>, emit: &mut Emit<A::Mutation, A::ConfigMutation, A::DraftMutation>) -> Result<(), Fault> {
+    pub fn close_streamed_transaction_unit(&mut self, stores: &mut InstanceStores<A>, emit: &mut Emit<A::Mutation, A::ConfigMutation, A::DraftMutation>) -> Result<(), Fault> {
         let Some(transaction) = emit.transaction.as_ref() else { return Ok(()) };
         let abort = emit.transaction_phase == TransactionPhase::Abort;
         if !abort && (emit.transaction_phase == TransactionPhase::Stream || !emit.artifact_mutations.is_empty()) {

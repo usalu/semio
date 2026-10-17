@@ -46,7 +46,4 @@ pub use mutation::MoveLayer;
 pub mod diff;
 #[path = "↩️inverse/🦀️.rs"]
 pub mod inverse;
-#[cfg(test)]
-#[path = "🧪️tests/📍️slides/🦀️.rs"]
-mod tests_slides_the_stamp_layer_off_the_origin;
 //#endregion 🪢️TaxonomyMounts

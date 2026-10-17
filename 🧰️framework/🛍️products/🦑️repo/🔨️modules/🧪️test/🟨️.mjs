@@ -347,8 +347,8 @@ async function invokeCurrentImplementationV1(kind, args) {
   return kind === "nodes" ? current.default.createNodesV2[1](...args) : current.createDependencies(...args);
 }
 
-export function createDependencies(...args) {
-  return invokeCurrentImplementation("dependencies", args);
+export function createDependencies(options, context) {
+  return invokeCurrentImplementation("dependencies", [options, context]);
 }
 
 /**

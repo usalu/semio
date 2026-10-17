@@ -2,11 +2,13 @@
 
 use semio_framework_ui_contract::{BuiltNode, BuiltTreeRetirement, Component, TextProps, UiValue, UiValueRetirement, UI_BUILT_CHILD_RETIRE_SLOTS};
 
-fn node() -> BuiltNode {
+#[doc(hidden)]
+pub fn node() -> BuiltNode {
     BuiltNode::try_new("K", Component::Text(TextProps { value: "V".try_into().unwrap(), emphasize: None, data_attributes: None })).unwrap()
 }
 
-fn close(owner: &mut BuiltTreeRetirement) {
+#[doc(hidden)]
+pub fn close(owner: &mut BuiltTreeRetirement) {
     for _ in 0..1_000_000 {
         if owner.close_step(1, 4096).unwrap().complete {
             break;
@@ -36,7 +38,7 @@ fn fixture_projection_retires_exact_tree_before_return_error_or_panic() {
         root.bindings.try_push(serde_json::from_value(payloads["binding"].clone()).unwrap()).unwrap();
         root.menu = Some(serde_json::from_value(payloads["menu"].clone()).unwrap());
         let outcome = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-            super::artifact_app_laws::observe_and_retire_fixture_tree(super::ComponentTree::new(root), |_| -> Result<&str, &str> {
+            semio_framework_plugin_testing_laws::artifact_app_laws::observe_and_retire_fixture_tree(semio_framework_ui_runtime::ComponentTree::new(root), |_| -> Result<&str, &str> {
                 match mode {
                     "success" => Ok("observed"),
                     "rejection" => Err("rejected"),

@@ -321,10 +321,11 @@ pub fn run(root: &Path, argv: &[String]) -> i32 {
 fn start(connection: &mut Connection, group: SpawnGroup, arguments: &Arguments) -> Result<i32, String> {
     let (detach, wait_ready, json) = (arguments.has("detach"), arguments.has("wait-ready"), arguments.has("json"));
     let timeout = arguments.seconds(READY_TIMEOUT_SECONDS);
-    let group = sized(group);
+    let mut group = sized(group);
+    ipc::bind_build_tools(connection.root(), connection.build_tool(), group.members.iter_mut().chain(group.requires.iter_mut()).map(|member| &mut member.command)).map_err(|error| error.to_string())?;
     let waiting = if wait_ready { Wait::Ready } else { Wait::Accepted };
     let existing = daemon_control::tasks(connection, QUERY).map_err(|error| error.to_string())?;
-    let running: Vec<Option<&SessionInfo>> = group.members.iter().map(|member| existing.iter().filter(|session| session.status.live() && same_launch(&session.command, &member.command)).max_by_key(|session| session.started_ms)).collect();
+    let running: Vec<Option<&SessionInfo>> = group.members.iter().map(|member| existing.iter().filter(|session| session.status.live() && same_launch(&session.command, &member.command, connection.root())).max_by_key(|session| session.started_ms)).collect();
     let mut last = String::new();
     let mut progress = |session: &SessionInfo| {
         let line = format!("{} {}", label_text(session), status_text(session));
@@ -355,9 +356,9 @@ fn start(connection: &mut Connection, group: SpawnGroup, arguments: &Arguments) 
 }
 
 /// ♻️ Whether a running task is the launch being asked for: same command, same words and same chosen
-/// parameters. The daemon normalises working directory and environment, so those are not compared.
-fn same_launch(running: &SessionCommand, asked: &SessionCommand) -> bool {
-    running.command_id == asked.command_id && running.cmd == asked.cmd && running.args == asked.args && running.label.parameters == asked.label.parameters
+/// parameters and effective backend. The daemon normalises working directory and unrelated environment.
+fn same_launch(running: &SessionCommand, asked: &SessionCommand, root: &Path) -> bool {
+    running.command_id == asked.command_id && running.cmd == asked.cmd && running.args == asked.args && running.label.parameters == asked.label.parameters && running.same_build_tool(asked, root)
 }
 
 fn wait_for(connection: &mut Connection, ids: &[String], wait: Wait, timeout: Duration) -> Result<Vec<SessionInfo>, String> {

@@ -1,7 +1,21 @@
 //! 🧪️ Owned inverse payloads preserve the neutral literal identifier and exact granted layouts.
 
-use super::*;
-use crate::test_source_custody;
+use crate::standards::v1::subsets::any::schema::mutations::MoveNode;
+use crate::standards::v1::subsets::any::schema::snapshot::Puzzle2dSnapshot;
+use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
+use semio_framework_value::{ValueError, list::PagedList, paged::PagedUtf8, retirement::controlled::ControlledRetirement, retained_clone::RetainedCloneGrant, retained_clone::RetainedCloneProgress, retained_clone::RetainedCloneStep};
+use std::mem::size_of;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::preparation::native_preparation_child::Puzzle2dCloseAxis;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::preparation::move_node_preparation::{Puzzle2dMoveNodePlan, Puzzle2dMoveNodePreparationCursor, Puzzle2dMoveNodePreparationStep};
+#[allow(unused_imports)]
+use semio_framework_value::{ValueRefusalKind, retained_clone::RetainedClone, retained_clone::RetainedCloneBinding, retained_clone::RetainedCloneCursor, retained_clone::RetainedCloneRef};
+#[allow(unused_imports)]
+use std::{mem::ManuallyDrop, ops::Deref, ops::DerefMut};
+use crate::standards::v1::subsets::any::schema::preparation::move_node_preparation::inverse::*;
+use crate::standards::v1::subsets::any::schema::testkit as test_source_custody;
+use semio_framework_test_fixtures::fixture_text;
 
 fn grant(turn: usize) -> RetainedCloneGrant { match turn % 3 { 0 => RetainedCloneGrant::one_capacity_turn(4096, 64), 1 => RetainedCloneGrant::one_payload_turn(4096, 64), _ => RetainedCloneGrant::one_release_turn(4096, 64) } }
 
@@ -40,12 +54,12 @@ fn retire(inverse: PagedList<Puzzle2dMutation, {usize::MAX}>) {
 #[test]
 fn history_edit_puzzle2d_owned_move_inverse_preserves_literal_ids_and_controlled_cancellation() {
     assert!(size_of::<Puzzle2dMoveNodeInverseCursor>() <= 4096);
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📍move-node/🎮️prepare/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📍move-node/🎮️prepare/🔣️.json")).unwrap();
     let text = |value: &serde_json::Value| { let value = value.as_str().unwrap(); match value.strip_prefix("$large:") { Some(suffix) => PagedUtf8::<{usize::MAX}>::from(format!("{}{suffix}", corpus["control"]["largePrefix"].as_str().unwrap().repeat(corpus["control"]["largeRepeats"].as_u64().unwrap() as usize))), None => value.into() } };
     let scalar = |value: &serde_json::Value| match value.as_str() { Some("nan") => f64::NAN, Some("positive-infinity") => f64::INFINITY, None => value.as_f64().unwrap(), _ => panic!("unknown authored scalar") };
     for case in corpus["cases"].as_array().unwrap() {
         let mut snapshot = Puzzle2dSnapshot::default();
-        snapshot.nodes = case["nodes"].as_array().unwrap().iter().map(|row| crate::standards::v1::subsets::any::schema::Puzzle2dNode { id: text(&row["id"]), x: scalar(&row["x"]), y: scalar(&row["y"]), ..Default::default() }).collect();
+        snapshot.nodes = case["nodes"].as_array().unwrap().iter().map(|row| crate::standards::v1::subsets::any::schema::records::Puzzle2dNode { id: text(&row["id"]), x: scalar(&row["x"]), y: scalar(&row["y"]), ..Default::default() }).collect();
         let payload = MoveNode { id: text(&case["mutation"]["id"]), new_x: scalar(&case["mutation"]["newX"]), new_y: scalar(&case["mutation"]["newY"]) };
         let original = serde_json::to_value(&snapshot).unwrap();
         let bits = [payload.new_x.to_bits(), payload.new_y.to_bits()];
@@ -89,6 +103,5 @@ fn history_edit_puzzle2d_owned_move_inverse_preserves_literal_ids_and_controlled
             assert!(cancelled.take().is_none());
         }
         test_source_custody::close(&mut source);test_source_custody::close(&mut mutation);
-        eprintln!("[DEBUG] Puzzle2d owned MoveNode inverse {} retained literal ID, zero-heap construction and granted native closure", case["id"].as_str().unwrap());
     }
 }

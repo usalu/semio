@@ -1,6 +1,6 @@
 //! 🏷️ Typed literal inverses retain only their original native identifier ownership.
 
-use super::Puzzle2dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
 use semio_framework_value::{ValueError, ValueRefusalKind, list::PagedList, paged::PagedUtf8, retirement::controlled::ControlledRetirement, retained_clone::{RetainedClone, RetainedCloneBinding, RetainedCloneCursor, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneRef, RetainedCloneStep}};
 use std::{mem::{ManuallyDrop, size_of}, ops::{Deref, DerefMut}};
 

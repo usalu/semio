@@ -1,0 +1,46 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🧭️TiledMapHost/🟦️.tsx",
+ "importers": "auto",
+ "children": [
+  {
+   "dir": "📐️map-parsing",
+   "doc": "/** 📐️ TiledMapHost parsing: the camera, visible tile, layer id, hovered feature and overlay index shapes, the map constants and their parsers, the feature selection and hover action args and the interaction sync resolution. */",
+   "lines": [
+    [
+     40,
+     217
+    ]
+   ]
+  },
+  {
+   "dir": "🎨️map-theme",
+   "doc": "/** 🎨️ TiledMapHost theme: the CSS color parsing and the canvas theme JSON the vello map renderer reads. */",
+   "lines": [
+    [
+     221,
+     272
+    ]
+   ]
+  },
+  {
+   "dir": "🗃️tile-cache",
+   "doc": "/** 🗃️ TiledMapHost tile cache primitives: the byte-bounded LRU, the bounded set and the leading and trailing debounce. */",
+   "lines": [
+    [
+     276,
+     380
+    ]
+   ]
+  },
+  {
+   "dir": "🖼️map-renderer",
+   "doc": "/** 🖼️ TiledMapHost renderer: the `MapRenderer` that drives the map session, fetches and caches raster and vector tiles and uploads them. */",
+   "lines": [
+    [
+     384,
+     720
+    ]
+   ]
+  }
+ ]
+}

@@ -28,6 +28,4 @@ impl Deserializer<WriterSnapshot> for MdIntoWriter {
 }
 //#endregion 🔖️Deserializer
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

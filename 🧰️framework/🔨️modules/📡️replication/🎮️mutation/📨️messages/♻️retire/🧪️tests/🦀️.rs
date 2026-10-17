@@ -44,7 +44,6 @@ fn message_ledger_retirement_releases_actual_capacity_under_separate_axes() {
             }
         }
     }
-    println!("[DEBUG] native message ledger constructor/demands0heap, undergrants0effects, exact physical capacity release and terminal0heap verified");
 }
 
 #[test]
@@ -85,7 +84,6 @@ fn message_ledger_retirement_nested_edits_release_original_scaffolds_under_separ
             }
         }
     }
-    println!("[DEBUG] native nested edit ledgers move original owners, require parent-plus-child depth, return every vector/string capacity and finish with0heap Drop");
 }
 
 #[test]
@@ -110,5 +108,4 @@ fn message_ledger_retirement_replay_outcome_releases_both_original_identities() 
         assert_eq!(returned,held);
         let(_,heap)=observe_heap_allocations_on_this_thread(||drop(cursor));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
     }
-    println!("[DEBUG] native replay outcome constructor0heap, both identity capacities released under exact grants, original messages retired and terminal Drop0heap");
 }

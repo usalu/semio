@@ -1,6 +1,7 @@
 //! 🧪️ Genuine Wasmtime component coverage for emitted and returned patch ownership.
 
 use semio_framework::kernel::{ActorInstanceLifecycleAck, ActorInstanceLifecycleReceipt, ActorInstanceLifetime, ActorInstanceOpenRequest, ActorUiPatchReceipt, AppInstanceId, QuotaSchema};
+use semio_framework_test_fixtures::fixture_path;
 use semio_framework_ui_contract::{UiNodeId, UiPatchOp};
 use semio_framework::kernel::{Budget, Event, TurnResult};
 use semio_framework_plugin_host_guest_runtime::{GuestInstance, PackageRef, WasmtimeRuntime};
@@ -17,7 +18,7 @@ const SESSION: u64 = 810_041;
 const SCALE_COMPONENT: &str = "../../../../../../../🧪️testing/⚖️scale/📦️packages/🦀️rust/dist/component/semio_framework_os_scale_fixture.wasm";
 
 fn fixture_bytes() -> Vec<u8> {
-    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(SCALE_COMPONENT);
+    let path = fixture_path!(SCALE_COMPONENT);
     std::fs::read(&path).unwrap_or_else(|error| panic!("registered scale component {} is not materialized (run @semio-tech/framework-os-scale-fixture:build-wasm): {error}", path.display()))
 }
 

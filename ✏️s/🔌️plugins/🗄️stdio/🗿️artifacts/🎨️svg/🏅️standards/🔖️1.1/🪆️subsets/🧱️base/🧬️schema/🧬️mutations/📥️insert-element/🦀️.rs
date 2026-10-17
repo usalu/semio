@@ -13,7 +13,10 @@ pub struct InsertElementPayload {
     pub node: SvgNode,
 }
 
-impl protocol::MutationKind<SvgSnapshot, super::SvgMutation> for InsertElementPayload {
+impl<Op> protocol::MutationKind<SvgSnapshot, Op> for InsertElementPayload
+where
+    Op: protocol::Mutation<SvgSnapshot, Diff = SvgDiff> + From<InsertElementPayload> + From<crate::standards::v1_1::subsets::base::schema::mutations::remove_element::RemoveElementPayload>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "element", kind: "insert-element", record: "InsertedElement" };
 
     fn diff(&self, _base: &SvgSnapshot) -> protocol::MutationOutcome<SvgDiff> {
@@ -21,9 +24,9 @@ impl protocol::MutationKind<SvgSnapshot, super::SvgMutation> for InsertElementPa
         protocol::MutationOutcome::new(diff_at_path(parent, SvgNodeDiff::Element(SvgElementDiff { children: Some(SvgChildrenDiff { added: vec![SvgChildAdded { index: *index, item: node.clone() }], ..Default::default() }), ..Default::default() })))
     }
 
-    fn inverse(&self, _base: &SvgSnapshot) -> Result<Vec<super::SvgMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, _base: &SvgSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         let Self { parent, index, .. } = self;
-        Ok(vec![super::SvgMutation::RemoveElement(super::RemoveElementPayload { parent: parent.clone(), index: *index })])
+        Ok(vec![Op::from(crate::standards::v1_1::subsets::base::schema::mutations::RemoveElementPayload { parent: parent.clone(), index: *index })])
     }
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
@@ -34,6 +37,4 @@ impl protocol::MutationKind<SvgSnapshot, super::SvgMutation> for InsertElementPa
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

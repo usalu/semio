@@ -46,5 +46,4 @@ fn controlled_diagnostic_text_error_retains_explicit_kind_and_span_corpus() {
     let mut child = Command::new("bun").args(["-e", script]).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();
     child.stdin.take().unwrap().write_all(serde_json::json!({"diagnosticSchema":diagnostic_schema,"valueSchema":value_schema,"fixture":fixture}).to_string().as_bytes()).unwrap();
     let output = child.wait_with_output().unwrap(); assert!(output.status.success(), "{}", String::from_utf8_lossy(&output.stderr)); assert_eq!(serde_json::from_slice::<Vec<serde_json::Value>>(&output.stdout).unwrap(), outputs);
-    println!("[DEBUG] TextError preserves explicit eight-kind authority and actual spans through constructors, Diagnostic conversion and controlled wire against Ajv and SQLite");
 }

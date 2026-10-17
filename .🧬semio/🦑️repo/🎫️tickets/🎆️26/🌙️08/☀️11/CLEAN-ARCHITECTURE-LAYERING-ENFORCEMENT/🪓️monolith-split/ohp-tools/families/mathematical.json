@@ -1,0 +1,19 @@
+{
+ "name": "mathematical",
+ "crates": [
+  "equation-1-any-json-engine",
+  "semio-equation-oracle-probe",
+  "semio-mathematical-mutation-bridge",
+  "semio-s-artifact-mathematical-equation",
+  "semio-s-artifact-mathematical-equation-editor",
+  "semio-s-artifact-mathematical-equation-examples",
+  "semio-s-artifact-mathematical-equation-inferences",
+  "semio-s-artifact-mathematical-equation-leaf-tests",
+  "semio-s-artifact-mathematical-equation-mut-family",
+  "semio-s-artifact-mathematical-equation-mutations",
+  "semio-s-artifact-mathematical-equation-schema",
+  "semio-s-artifact-mathematical-equation-snapshot",
+  "semio-s-artifact-mathematical-equation-update-graph-algorithm"
+ ],
+ "note": "ORACLE-HARVEST-PLUGINS: ✏️s/🔌️plugins/➗️mathematical"
+}

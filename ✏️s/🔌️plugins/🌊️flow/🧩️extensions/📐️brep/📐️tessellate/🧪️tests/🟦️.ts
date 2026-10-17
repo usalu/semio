@@ -29,5 +29,4 @@ test("original tessellation keeps strict business source until complete canonica
   const normal = guest.slice(guest.indexOf("fn invoke(&self, capability:"), guest.indexOf("fn inference_context", guest.indexOf("fn invoke(&self, capability:")));
   expect(normal).toContain('"tessellate" => self.context.tessellate_raw(request, cx)');
   expect(normal).not.toContain("tessellate_step_envelope_json");
-  console.log("[DEBUG] Ajv, independent JSON/BigInt and UTF8 chunks preserve original request5 and reject early terminal publication; native ownership qualification is separate");
 });

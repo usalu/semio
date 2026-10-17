@@ -494,7 +494,6 @@ fn generated_diffs_are_sparse_and_the_wire_round_trips() {
         assert_ne!(bytes,serde_json::to_vec(&row["value"]).unwrap());
         assert_eq!(ProbeConfigSet::decode_op(&bytes).unwrap(),mutation);
     }
-    eprintln!("[DEBUG] authored field-set text and structured Pack bytes preserve schema vectors against serde_json value and text oracles");
 
     use semio_framework_os_spr::{apply_diff, DiffAlgebra, Mutation, MutationDiff, OpBinary, OpText};
     let base = probe_config();

@@ -2,9 +2,9 @@
 use crate::DrawingShapeBody;
 #[derive(Clone,Copy,Debug,PartialEq,Eq,semio_framework_value::RetainedClone,semio_framework_value::RetireOwned,semio_framework_value::ToValue,semio_framework_value::FromValue,semio_framework_dsl_record_derive::DslScalar, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test,derive(serde::Serialize,serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"),derive(serde::Serialize,serde::Deserialize))]
 #[value(rename_all="camelCase")]
-#[cfg_attr(test,serde(rename_all="camelCase"))]
+#[cfg_attr(any(test, feature = "testkit"),serde(rename_all="camelCase"))]
 pub enum ShapeCoordinateField {RectX,RectY,RectWidth,RectHeight,EllipseCx,EllipseCy,EllipseRx,EllipseRy,CircleCx,CircleCy,CircleR,LineX1,LineY1,LineX2,LineY2,PolygonX,PolygonY}
 impl ShapeCoordinateField {
     pub fn as_str(self)->&'static str {match self {Self::RectX=>"rectX",Self::RectY=>"rectY",Self::RectWidth=>"rectWidth",Self::RectHeight=>"rectHeight",Self::EllipseCx=>"ellipseCx",Self::EllipseCy=>"ellipseCy",Self::EllipseRx=>"ellipseRx",Self::EllipseRy=>"ellipseRy",Self::CircleCx=>"circleCx",Self::CircleCy=>"circleCy",Self::CircleR=>"circleR",Self::LineX1=>"lineX1",Self::LineY1=>"lineY1",Self::LineX2=>"lineX2",Self::LineY2=>"lineY2",Self::PolygonX=>"polygonX",Self::PolygonY=>"polygonY"}}
@@ -63,6 +63,3 @@ pub fn set_shape_coordinate(shape:&mut DrawingShapeBody,field:ShapeCoordinateFie
     };*target=value;Ok(())
 }
 
-#[cfg(test)]
-#[path="🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;

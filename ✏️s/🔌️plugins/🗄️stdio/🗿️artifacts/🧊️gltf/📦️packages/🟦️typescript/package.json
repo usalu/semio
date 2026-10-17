@@ -20,9 +20,14 @@
     ".": {
       "types": "./dist/🟦️.d.ts",
       "import": "./dist/🟦️.js"
-    }
+    },
+    "./standards/2.0/subsets/any/io/text/snapshot/json": "./🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/📝️text/📸️snapshot/🔣️json/🟦️.ts",
+    "./standards/2.0/subsets/any/schema/snapshot": "./🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/📸️snapshot/🟦️.ts"
   },
   "dependencies": {},
+  "devDependencies": {
+    "@semio-tech/stdio-registry-ts": "workspace:*"
+  },
   "license": "LGPL-3.0-or-later",
   "repository": {
     "type": "git",

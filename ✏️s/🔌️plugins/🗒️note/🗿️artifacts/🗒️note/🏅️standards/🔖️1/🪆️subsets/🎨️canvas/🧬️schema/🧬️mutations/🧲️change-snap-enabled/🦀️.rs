@@ -1,6 +1,5 @@
 //! 🧲 Note mutation — `ChangeSnapEnabled`: sets snap-to-grid enabled.
 
-use crate::schema::mutations::NoteMutation;
 use crate::{NoteDiff, NoteSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -19,17 +18,23 @@ pub struct ChangeSnapEnabled {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_snap_enabled(new_enabled: Option<bool>) -> NoteMutation {
-    NoteMutation::ChangeSnapEnabled(ChangeSnapEnabled { new_enabled })
+pub fn change_snap_enabled<Op>(new_enabled: Option<bool>) -> Op
+where
+    Op: From<crate::standards::v1::subsets::canvas::schema::mutations::change_snap_enabled::ChangeSnapEnabled>,
+{
+    Op::from(ChangeSnapEnabled { new_enabled })
 }
 
-impl MutationKind<NoteSnapshot, NoteMutation> for ChangeSnapEnabled {
+impl<Op> MutationKind<NoteSnapshot, Op> for ChangeSnapEnabled
+where
+    Op: protocol::Mutation<NoteSnapshot, Diff = NoteDiff> + From<ChangeSnapEnabled>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "snap-enabled", kind: "change-snap-enabled", record: "ChangedSnapEnabled" };
 
     fn diff(&self, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &NoteSnapshot) -> Result<Vec<NoteMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &NoteSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     
@@ -39,7 +44,7 @@ impl MutationKind<NoteSnapshot, NoteMutation> for ChangeSnapEnabled {
         match self.new_enabled {
             Some(true) => semio_framework_ui_locale::LocalizedLabel::native("Enable snapping", "Fangfunktion einschalten"),
             Some(false) => semio_framework_ui_locale::LocalizedLabel::native("Disable snapping", "Fangfunktion ausschalten"),
-            None => crate::schema::mutations::note_setting_label(("snapping", "Fangfunktion"), None),
+            None => crate::schema::note_setting_label(("snapping", "Fangfunktion"), None),
         }
     }
     fn target(&self) -> Vec<String> {

@@ -1,7 +1,6 @@
 //! ✏️ Shooting mutation payload — `RenameAsset`. Changes an asset's identity `name` field.
 
 use crate::diff::ShootingDiff;
-use crate::mutations::ShootingMutation;
 use crate::ShootingSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 
@@ -16,12 +15,15 @@ pub struct RenameAsset {
     pub new_name: String,
 }
 
-impl MutationKind<ShootingSnapshot, ShootingMutation> for RenameAsset {
+impl<Op> MutationKind<ShootingSnapshot, Op> for RenameAsset
+where
+    Op: protocol::Mutation<ShootingSnapshot, Diff = ShootingDiff> + From<RenameAsset>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "rename", entity: "asset", kind: "rename-asset", record: "RenamedAsset" };
     fn diff(&self, base: &ShootingSnapshot) -> protocol::MutationOutcome<ShootingDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &ShootingSnapshot) -> Result<Vec<ShootingMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &ShootingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

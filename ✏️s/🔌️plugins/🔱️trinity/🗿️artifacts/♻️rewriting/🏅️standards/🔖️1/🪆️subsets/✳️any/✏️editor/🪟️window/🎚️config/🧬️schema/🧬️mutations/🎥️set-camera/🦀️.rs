@@ -8,7 +8,7 @@ use super::{RewritingWindowConfig, RewritingWindowConfigDiff, RewritingWindowCon
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetCamera {
     #[dsl(block)]
-    pub camera: Option<semio_s_artifact_trinity_jack::Camera>,
+    pub camera: Option<semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::graph::Camera>,
 }
 
 impl protocol::MutationKind<RewritingWindowConfig, RewritingWindowConfigMutation> for SetCamera {

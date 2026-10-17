@@ -1,0 +1,60 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/🟦️.ts",
+ "importers": "auto",
+ "childrenImportParent": true,
+ "allowManual": [
+  "dynamic import of parent"
+ ],
+ "children": [
+  {
+   "dir": "🚦️goal-gate",
+   "doc": "/** 🚦️ The goal gate: running the repository goal plan against one hub and one serve, provisioning their requirements, the summary tables and the `AcceptanceScript` command. */",
+   "lines": [
+    [
+     278,
+     698
+    ]
+   ]
+  },
+  {
+   "dir": "🧮️placeholder-and-job-census",
+   "doc": "/** 🧮️ The source census of Rust production code: tracked sources, comment stripping, placeholder macros and interactive job declarations. */",
+   "lines": [
+    [
+     702,
+     814
+    ]
+   ]
+  },
+  {
+   "dir": "📝️docstring-and-debug-census",
+   "doc": "/** 📝️ The docstring censuses (openers, emoji reuse) and the debug-tag census of the tracked sources. */",
+   "lines": [
+    [
+     816,
+     996
+    ]
+   ]
+  },
+  {
+   "dir": "🔌️interface-import-census",
+   "doc": "/** 🔌️ The interface-import census: which packages a test domain may import and where it imports an interface-owned package directly. */",
+   "lines": [
+    [
+     997,
+     1060
+    ]
+   ]
+  },
+  {
+   "dir": "🪢️artifact-neutrality",
+   "doc": "/** 🪢️ The artifact neutrality census: doc-comment stripping, framework artifact names and the tool machine vocabulary of the utilities. */",
+   "lines": [
+    [
+     1064,
+     1197
+    ]
+   ]
+  }
+ ]
+}

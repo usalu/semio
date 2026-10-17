@@ -107,8 +107,7 @@ mod json_serializers_tests;
 #[path = "💾️binary/🦀️.rs"]
 pub mod binary;
 
-#[path = "📝️text/🦀️.rs"]
-pub mod text;
+pub use semio_s_artifact_norm_vdi3805_io_text as text;
 
 #[path = "🪶️sqlite/🦀️.rs"]
 pub mod sqlite;

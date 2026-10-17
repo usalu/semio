@@ -10,9 +10,11 @@ import absence from "../🚮️absence/🔣️.json" with { type: "json" };
 import absenceSchema from "../🚮️absence/🧬️.json" with { type: "json" };
 
 import TOML from "@iarna/toml";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 
 type Case = Readonly<{id: string; mode: string; names?: Readonly<{spec: string; to: string; from: string}>; members: readonly string[]; traits: readonly string[]}>;
 const owner = resolve(import.meta.dir, "../.."), read = (path: string): string => readFileSync(resolve(owner, path), "utf8");
+const readTree = (path: string): string => readModuleTreeSource(resolve(owner, path));
 
 /** 🚮️ Actual generic native receivers survive removal of product sources and preserve owned law selection. */
 test("generic derivation native commands survive product removal", async () => {
@@ -26,7 +28,6 @@ test("generic derivation native commands survive product removal", async () => {
   expect(Object.keys(bundled.metafile!.inputs).every(path => path.startsWith("🧰️framework/🔨️modules/"))).toBe(true);
   const source = read(absence.entry);
   for (const name of [...absence.packages, ...absence.laws]) expect(source).toContain(name);
-  console.log("[DEBUG] original generic derive native command closure productRemoval=true twoOriginalLawGroups=true");
 });
 
 test("language-neutral emission modes require explicit projection names and exclude product fronts", () => {
@@ -50,7 +51,7 @@ test("the generic emitter is an actual proc macro owner with private third-party
 
 test("every public compiler front uses the owned system token boundary", () => {
   expect(existsSync(resolve(owner, "🦀️.rs")), "actual generic emitter definitions").toBe(true);
-  const source = read("🦀️.rs");
+  const source = readTree("🦀️.rs");
   for (const name of ["derive_record", "derive_scalar", "derive_enum", "record_binding", "record_projection", "variant_binding"]) expect(source).toContain(`pub fn ${name}(input: TokenStream) -> TokenStream`);
   for (const spelling of ["::semio_framework_os_kernel", "::store::", "DslArtifact", "DslDiff", "DslOps", "pub use syn", "pub use quote"]) expect(source).not.toContain(spelling);
 });
@@ -62,7 +63,7 @@ test("a required inline tagged owner has exactly one native variant without boxi
   const native = read("../🧪️tests/🏷️required-inline/🦀️.rs");
   expect(native).toContain("serde_json::from_value::<InlineStatement>");
   expect(native).toContain('corpus["invalid"].as_array().unwrap()');
-  const source = read("🦀️.rs");
+  const source = readTree("🦀️.rs");
   expect(source).toContain("RequiredInlineStatements(Box<Type>)");
   expect(source).toContain("FieldKind::RequiredInlineStatements");
   expect(fixture.fieldKinds.map(row => row.role)).toEqual(["RequiredInlineStatements", "RequiredStatements", "OptionStatements", "VecStatements"]);
@@ -70,7 +71,7 @@ test("a required inline tagged owner has exactly one native variant without boxi
 
 /** 🫴️ Declares original optional custody independently of public wire fields. */
 test("original optional custody stays native while wire omits its source",()=>{
- const fixture=JSON.parse(read("../../🧪️tests/🧫️fixtures/✨️derive/🫴️custody/🔣️.json")),source=read("🦀️.rs");expect(fixture.wireKeys).toEqual(["visible","count"]);expect(fixture.nativeFields).toEqual(["visible","source","count"]);expect(fixture.absentDecodedCustody).toBeNull();
+ const fixture=JSON.parse(read("../../🧪️tests/🧫️fixtures/✨️derive/🫴️custody/🔣️.json")),source=readTree("🦀️.rs");expect(fixture.wireKeys).toEqual(["visible","count"]);expect(fixture.nativeFields).toEqual(["visible","source","count"]);expect(fixture.absentDecodedCustody).toBeNull();
  for(const row of fixture.cases){const {source:_,wire:expectedWire,...wire}=row;expect(wire).toEqual(row.wire);expect(JSON.parse(JSON.stringify(row.wire))).toEqual(row.wire);}
  expect(source).toContain('meta.path.is_ident("skip")');expect(source).toContain("if plan.skip");expect(source).toContain("filter(|plan|!plan.skip)");expect(read("🧪️tests/🦀️.rs")).toContain("original_optional_custody_is_excluded_from_wire_but_retired_as_owned_native_field");
 });
@@ -87,5 +88,4 @@ test("empty generic variant contracts retain zero and inhabited owner roles",()=
  expect(new Ajv2020({strict:true}).validate(schema,corpus)).toBe(true);expect(corpus.cases.length).toBe(6);
  expect(corpus.cases.filter((row:{borrowedEmptyMatches:number})=>row.borrowedEmptyMatches>0).map((row:{mode:string})=>row.mode)).toEqual(["Variants","Scalar","Receiving"]);
  expect(read("🧪️tests/🦀️.rs")).toContain("empty_enum_borrowed_and_receiving_emission_matches_independent_syntax");
- console.log("[DEBUG] Empty generic variant contracts Ajv=true sixRoles=true originalNativeLawDeclared=true");
 });

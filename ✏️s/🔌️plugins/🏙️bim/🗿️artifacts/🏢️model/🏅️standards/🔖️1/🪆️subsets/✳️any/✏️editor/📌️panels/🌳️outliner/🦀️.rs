@@ -100,7 +100,7 @@ pub fn leaf(builder: semio_framework_ui_contract::TreeItemBuilder) -> UiAssembly
     builder.default_open(false).try_build().map_err(|_| crate::editor::bim::kit::ui_capacity_error())
 }
 
-fn entity_item(snapshot: &ModelSnapshot, row: &EntityKind, id: &str, description: Option<&str>) -> UiAssemblyResult<semio_framework_ui_contract::TreeItemBuilder> {
+pub fn entity_item(snapshot: &ModelSnapshot, row: &EntityKind, id: &str, description: Option<&str>) -> UiAssemblyResult<semio_framework_ui_contract::TreeItemBuilder> {
     item(id, &(row.name)(snapshot, id).unwrap_or_else(|| id.to_string()), row.icon, Some(row.kind), description)
 }
 

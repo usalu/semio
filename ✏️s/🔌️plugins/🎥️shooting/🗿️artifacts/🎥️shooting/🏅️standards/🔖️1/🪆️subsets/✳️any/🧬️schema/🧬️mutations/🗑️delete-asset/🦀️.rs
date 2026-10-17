@@ -1,7 +1,6 @@
 //! 🗑️ Shooting mutation payload — `DeleteAsset`. Removes an asset by id; inverse recreates it (with its captured base position).
 
 use crate::diff::ShootingDiff;
-use crate::mutations::ShootingMutation;
 use crate::ShootingSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 
@@ -15,12 +14,15 @@ pub struct DeleteAsset {
     pub id: String,
 }
 
-impl MutationKind<ShootingSnapshot, ShootingMutation> for DeleteAsset {
+impl<Op> MutationKind<ShootingSnapshot, Op> for DeleteAsset
+where
+    Op: protocol::Mutation<ShootingSnapshot, Diff = ShootingDiff> + From<DeleteAsset> + From<crate::standards::v1::subsets::any::schema::mutations::create_asset::CreateAsset>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "asset", kind: "delete-asset", record: "DeletedAsset" };
     fn diff(&self, base: &ShootingSnapshot) -> protocol::MutationOutcome<ShootingDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &ShootingSnapshot) -> Result<Vec<ShootingMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &ShootingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

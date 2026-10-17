@@ -12,7 +12,14 @@
     "./lifetime/patch": "./🚪️lifetime/🩹️patch/🟦️.ts",
     "./retained-turn": "./🎟️retained-turn/🟦️.ts",
     "./codec": "./🧬️codec/🟦️.ts",
-    "./liveness": "./🫀️liveness/🟦️.ts"
+    "./liveness": "./🫀️liveness/🟦️.ts",
+    "./cold-pair": "./📥️cold-pair/🟦️.ts",
+    "./retained-turn/bootstrap": "./🎟️retained-turn/🏛️bootstrap/🟦️.ts",
+    "./retained-turn/bootstrap/testing/fixtures": "./🎟️retained-turn/🏛️bootstrap/🧪️testing/🧫️fixtures/🟦️.ts",
+    "./shard-client": "./📮️shard-client/🟦️.ts",
+    "./testing/fixtures": "./🧪️testing/🧫️fixtures/🟦️.ts",
+    "./turn-scheduler": "./🧵️turn-scheduler/🟦️.ts",
+    "./wire-turn": "./🖼️wire-turn/🟦️.ts"
   },
   "scripts": {
     "test": "bun --cwd \"../../../../..\" repo run @semio-tech/framework-actor:test"
@@ -31,6 +38,7 @@
   },
   "dependencies": {
     "@semio-tech/framework": "workspace:*",
+    "@semio-tech/framework-kernel": "workspace:*",
     "@semio-tech/value-ts": "workspace:*"
   }
 }

@@ -110,6 +110,5 @@ fn original_dynamic_value_clone_fullgrant_and_original_custody(){
         close_cursor(&mut cursor,copy,&mut born,&mut freed);assert_eq!(observe(||drop(cursor)).1,(0,0));
         if let Some(output)=output {close_output(output,copy,&mut born,&mut freed);}
         close_source(&mut source,copy,&mut born,&mut freed);assert_eq!(observe(||drop(source)).1,(0,0));assert_eq!(born,freed,"[DEBUG] Original dynamic physical owner conservation {name} copy={copy} cancel={cancelled:?}");
-        println!("[DEBUG] Original dynamic value {name} closeCopy={copy} cancel={cancelled:?} sourceIdentity=true fiveAxes=true physical={born} terminalDrop=0");
     }}}
 }

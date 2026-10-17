@@ -11,7 +11,6 @@ test("geometry compute capabilities have independent neutral ownership witnesses
   for(const item of fixture.cases){expect(pure.includes(`id:"${item.id}"`)).toBe(item.owner==="semantic");expect(item.owner==="semantic"?admitted.includes(`id: "${item.id}"`):admitted.replaceAll(" ","").includes(`id:"${item.id}"`)).toBe(item.owner==="native");}
   expect(source).not.toMatch(/mod (?:brep_interchange|mesh_interchange);/);
   expect(primitive).not.toMatch(/PolygonSourcePreparation|fn construct\(/);
-  console.log("[DEBUG] Procedural neutral capability ownership matches plain neutral examples and actual relocated native bodies");
 });
 test("semantic inference and engine forward their explicit compute capability",async()=>{
   const field=await Bun.file(new URL("🦀️.rs",geometry)).text(),engine=await Bun.file(new URL("🚂️engine/🦀️.rs",geometry)).text();
@@ -19,5 +18,4 @@ test("semantic inference and engine forward their explicit compute capability",a
   expect(field).toContain("dyn compute::GeometryComputeContext");
   expect(engine).toContain("Arc::clone(&self.computes)");
   expect(engine).not.toContain("io::geometry::context()");
-  console.log("[DEBUG] Procedural production field and engine explicitly forward injected compute capabilities");
 });

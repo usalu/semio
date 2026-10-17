@@ -1,0 +1,34 @@
+[package]
+workspace = "../../../../../.."
+name = "semio-framework-tool-run-tests"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Companion tests of tool-run: lifecycle, trace and tick laws against the shared fixtures, and the original native receiving, writer and retirement laws"
+publish = false
+
+[package.metadata.semio]
+role = "framework"
+id = "tool-run-tests"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-tool-run = { path = "../../../../📦️packages/🦀️rust", features = ["testkit"] }
+
+[dev-dependencies]
+semio-framework-pack = { workspace = true }
+semio-framework-replication = { workspace = true }
+semio-framework-trace = { workspace = true }
+semio-framework-ui-locale = { path = "../../../../../🖱️ui/🌐️locale/📦️packages/🦀️rust" }
+semio-framework-value = { workspace = true }
+serde_json = { workspace = true }

@@ -85,7 +85,7 @@ impl<'ctx> SessionCtx<'ctx> {
     /// (React's `canUninstall`), a plugin mid-install offers nothing, a failed extension cannot be enabled.
     ///
     /// 🪟️ The roster is ONE windowed Tree section (`framework.marketplace.source.local`): the rows the tree window observer
-    /// reported for it ([`tree_windows::TreeWindowScheduler::window_of`]) — one viewport of rows before the first report —
+    /// reported for it ([`semio_framework_os_renderer_wgpu_shell_dock::TreeWindowScheduler::window_of`]) — one viewport of rows before the first report —
     /// materialise inside [`MARKETPLACE_WINDOW_NODE_BUDGET`], and the retained layout pitches the rest as spacers, so a roster of
     /// any length stays inside the retained node ceiling and scrolls to its last row. Store-owned extensions stay nested under
     /// their declared host, including failed loads, so install failures never erase inventory.

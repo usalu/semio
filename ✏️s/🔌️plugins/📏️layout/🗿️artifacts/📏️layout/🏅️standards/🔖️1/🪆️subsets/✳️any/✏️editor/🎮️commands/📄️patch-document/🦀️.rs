@@ -133,6 +133,3 @@ pub fn handle(payload: &PatchDocument, doc: &ArtifactView<'_, LayoutSnapshot>, _
     Ok(Emit::mutations(vec![mutation]))
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;

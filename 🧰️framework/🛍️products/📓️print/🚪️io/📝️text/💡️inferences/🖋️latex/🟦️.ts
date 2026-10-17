@@ -1,7 +1,7 @@
 /** 🖋️ Emits native TikZ text from the canonical typed chart plan. */
-import { planVizChart, expandVizPathCommands, type VizRenderPlan, type VizRenderItem } from "../../../../🧬️schema/💡️inferences/🖼️render/🟦️.ts";
-import { vizParseColor } from "../../../../🧬️schema/💡️inferences/🎨theme/🟦️.ts";
-import type { VizPathCommand } from "../../../../🧬️schema/💡️inferences/✒️mark/🟦️.ts";
+import { planVizChart, expandVizPathCommands, type VizRenderPlan, type VizRenderItem } from "@semio-tech/print-viz-inference/render";
+import { vizParseColor } from "@semio-tech/print-viz-inference/theme";
+import type { VizPathCommand } from "@semio-tech/print-viz-inference/mark";
 import type { VizPoint, VizChartSpecification } from "../../../../🧬️schema/📸️snapshot/📊️chart/🟦️.ts";
 import { printFontTexSelector } from "../../../../🔨️modules/🔤print-font-catalog/📏️metrics/🟦️.ts";
 function tikzNumber(value: number): string {

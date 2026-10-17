@@ -44,7 +44,7 @@ def module_text(name, suffix, host_parent, files, include_files, tests, folder, 
         write(pth, t)
         tmp.append(pth)
     aliases, lines, unresolved = full_imports(suffix, tmp)
-    imports_ = merge_import_blocks(lines, simplify=False, own=lib_name(suffix))
+    imports_ = merge_import_blocks(lines, simplify=True, own=lib_name(suffix))
     return texts, aliases, imports_, unresolved
 
 
@@ -67,10 +67,14 @@ def engine_attach():
     parts = [first, "//!", "//! 🧭️ Each facade keeps its module name and test namespace here (`scenes`, `engine_canvas`): the standalone law files are included unchanged, the other laws are mounted from their place in the EngineCanvas tree.", "", "#![cfg(test)]", ""]
     aliases = list(dict.fromkeys(sc_alias + eg_alias))
     parts += aliases
-    parts += ["", '#[path = "."]', "mod scenes {"] + ["    " + l for l in (sc_imports + ["use super::engine_canvas;"])] + ["", f'    include!("{os.path.relpath(SC_STANDALONE, folder)}");', "}", "", '#[path = "."]', "mod engine_canvas {"] + ["    " + l for l in eg_imports] + ["", f'    include!("{os.path.relpath(EG_STANDALONE, folder)}");', ""]
+    parts += ["", '#[path = "."]', "mod scenes {"] + indent(sc_imports + ["use super::engine_canvas;"]) + ["", f'    include!("{os.path.relpath(SC_STANDALONE, folder)}");', "}", "", '#[path = "."]', "mod engine_canvas {"] + indent(eg_imports) + ["", f'    include!("{os.path.relpath(EG_STANDALONE, folder)}");', ""]
     parts += [mount_lines(folder, rows, "    "), "}", ""]
     root = "\n".join(parts)
     return folder, root, {**sc_texts, **eg_texts}, [SC_STANDALONE, EG_STANDALONE], tests
+
+
+def indent(blocks, pad="    "):
+    return [pad + ln if ln.strip() else ln for blk in blocks for ln in blk.split("\n")]
 
 
 def clean_cfg_(cfg):
@@ -94,4 +98,13 @@ def ui_engine():
 if __name__ == "__main__":
     if not ONLY or "engine-attach" in ONLY:
         folder, root, texts, includes, tests = engine_attach()
-        print(root[:6000])
+        print("engine-attach-tests root lines", len(root.split("\n")))
+        if not APPLY:
+            print(root[:7000])
+        else:
+            for f, text in texts.items():
+                edit(f, text)
+            edit(folder + "/🦀️.rs", root)
+            mp = folder + "/📦️packages/🦀️rust/Cargo.toml"
+            added = manifest.add_deps(mp, used_idents(root) | set().union(*[used_idents(x) for x in texts.values()]))
+            print("deps added:", added)

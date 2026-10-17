@@ -1,6 +1,6 @@
 # 🧩️ Result SHARED-FILES-3: one owning crate for the generation-native template, the generation3d test supports and the framework test helpers (slice `sf3`)
 
-Executor: Sonnet 5.5, foreground, no sub-agents, no git-modifying command, no ticket tool. Run 2026-10-16 15:10 to about 18:30 CEST under machine load 44 to 62. Folder `F` = `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split`. Tools: `F/sf3-tools/` (kept; `touched.txt` lists the 358 written paths). Logs: `F/🗑️generated/sf3-*`. Pre-edit copies of every edited source live in the session scratchpad (`sf3pre`, `sf3pre3d`, `sf3pre3d-consumers`, `sf3-native-pre`, `sf3pre-dsl`), because ticket path plus repo path exceeds the length limit.
+Executor: Sonnet 5.5, foreground, no sub-agents, no git-modifying command, no ticket tool. Run 2026-10-16 15:10 to 19:10 CEST under machine load 44 to 62. Folder `F` = `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split`. Tools: `F/sf3-tools/` (kept; `touched.txt` lists the 358 written paths). Logs: `F/🗑️generated/sf3-*`. Pre-edit copies of every edited source live in the session scratchpad (`sf3pre`, `sf3pre3d`, `sf3pre3d-consumers`, `sf3-native-pre`, `sf3pre-dsl`), because ticket path plus repo path exceeds the length limit.
 
 ## 0. Verdict
 
@@ -12,7 +12,7 @@ Executor: Sonnet 5.5, foreground, no sub-agents, no git-modifying command, no ti
 | of which in the areas I touched | 17 | **0** |
 | New crates | 0 | 13 (8 os/framework crates with `📋️project.json`, owner row, member and 6 launch routes each; 5 plugin crates) |
 | Consumer packages re-pointed from `#[path]` mount to a dev-dependency | 0 | 77 (framework helpers and space helpers) + 30 test files of the generation3d supports |
-| `new crates <pkg> --check-applied --base=f856dff0813` | generation2d exit 1 (3 shared files) | generation2d **exit 0**, generation3d **exit 0**; all 65 touched plugin artifacts in section 4.7 |
+| `new crates <pkg> --check-applied --base=f856dff0813` | generation2d exit 1 (3 shared files) | generation2d **exit 0**, generation3d **exit 0**; 57 of the 65 touched plugin artifacts exit 0, the other 8 for reasons outside my edits (section 4.7) |
 
 | # | Target | Result |
 |---|---|---|
@@ -101,7 +101,79 @@ Each helper file is the lib root of its crate (`📦️packages/🦀️rust`, `[
 4. **Call-site arity** (`arity_check.py`): 138 consumer calls of the changed support functions pass exactly the declared number of arguments; 0 mismatches; the internal calls of the four supports too.
 5. **Line-multiset proof of the template move** (`lossless_native.py`): old template + 2d records block 425 lines, new crate 470; removed 41 / added 86 lines, all explained: 4 mount lines → `mod` lines, `Controlled*` names → `K::…`, struct fields widened to `pub(crate)`, `GenerationFields` and the trait, signature generics, the dropped `fn error`, and `rows::owned` taking host and state. Log `sf3-lossless-native.log`.
 6. **Dependency direction**: manifest-only closure (`[dependencies]`) of the four supports: 25 to 27 packages each, reaching none of the 28 consumer packages (brep-*, mesh-*, math-*, analysis-*, phased-job, io-geometry), `io-text` or `geometry`. The seven framework helper crates have lock-based reachability 0 to their consumers (`g1`, `g6`). The core, generation2d and generation3d workspaces: `publish-check` strict **current** (generation2d/3d after one `publish-write`, which only re-sorted `members`; set identical, rest of the manifest identical); `🧰️framework/Cargo.toml` members were unsorted and re-sorted the same way (332 members, set identical).
-7. **`new crates <pkg> --check-applied --base=f856dff0813`** for the 65 plugin artifacts whose files I touched: @@CHECKS@@
+7. **`new crates <pkg> --check-applied --base=f856dff0813`** for the 65 plugin artifacts whose files I touched: **57 of 65 exit 0, including generation2d and generation3d; in all 57 reports `shared` and `admission` are empty and `onlyCombined` is 0 in lib and test.** Command per artifact, from the repo root: `nice bun ./📜️script.ts new crates <artifact>/📦️packages/🦀️rust --check-applied --base=f856dff0813 --sandbox=<dir outside the repository>` (three workers, `F/sf3-tools/check-all.sh`, logs `F/🗑️generated/sf3-ck-<hash>.log`, summary `sf3-check-summary.txt`; `Siblings` = the path crates of the helpers mounted as modules by the gate). The 8 exit-1 artifacts, none caused by my edits (`shared` and `admission` are 0 wherever a report exists):
+
+* `layout` (`Missing Rust source input …/🖌️render/🧪️tests/🧫️fixtures/🔤️text-fonts/🔣️.json`), `trinity/jack` (`…/🐚️shell/📦️packages/🦀️rust/src/lib.rs`), `draw/drawing` (`…/🎬️surface-behavior/🔣️.json`): the gate's source reader stops on an absent file in the original tree; no report is produced (same class as `pch` for puzzle 2d).
+* `bim/model` (native +43), `imperative/procedure` (+6 native, +11 test), `stdio/pdf` (+1, +1), `puzzle/2d` (+1 test), `space/space` (+10 native, +14 test): the extra names are unresolved names in files I did not touch and that postdate the base commit (bim `🧬️mutations/🧭️create-design-option`, procedure `✏️editor`, pdf `🧬️schema`, puzzle `✏️editor/⚙️engine/🎲️board-host` unit test, space `✏️editor/🎮️commands/📇fold-directory-events`; `semio_framework_async` / `schema_registry` / `os_kernel` roots missing in the sandbox). My only `.rs` edits in these artifacts are `cfg(test)` mount swaps in their sqlite snapshot test files, which cannot change the native layout. `pch` recorded the same drift for space against this base.
+
+| Artifact | Exit | s | Native base / combined / extra | Test base / combined / extra | Hidden | Shared | Siblings |
+|---|---:|---:|---|---|---:|---:|---:|
+| `✒️writer/✒️writer` | 0 | 358 | 399 / 404 / 0 | 646 / 646 / 0 | 0 | 0 | 1 |
+| `➗️mathematical/➗️equation` | 0 | 358 | 1340 / 1345 / 0 | 2616 / 2616 / 0 | 0 | 0 | 1 |
+| `🀄️wfc/◻️2d` | 0 | 342 | 1336 / 1341 / 0 | 2558 / 2553 / 0 | 0 | 0 | 2 |
+| `🀄️wfc/🔲️grid2d` | 0 | 329 | 1294 / 1299 / 0 | 2356 / 2351 / 0 | 0 | 0 | 2 |
+| `🀄️wfc/🖼️bitmap` | 0 | 340 | 1383 / 1388 / 0 | 2135 / 2135 / 0 | 0 | 0 | 1 |
+| `🀄️wfc/🧊️3d` | 0 | 358 | 1348 / 1353 / 0 | 2462 / 2462 / 0 | 0 | 0 | 1 |
+| `🀄️wfc/🧱️grid3d` | 0 | 274 | 1254 / 1259 / 0 | 2286 / 2286 / 0 | 0 | 0 | 1 |
+| `🌀️procedural/🌀️generation2d` | 0 | 34 | 11 / 11 / 0 | 11 / 11 / 0 | 0 | 0 | 0 |
+| `🌀️procedural/🧊️generation3d` | 0 | 38 | 52 / 52 / 0 | 52 / 52 / 0 | 0 | 0 | 0 |
+| `🌊️flow/🌊️flow` | 0 | 353 | 1529 / 1534 / 0 | 2629 / 2629 / 0 | 0 | 0 | 1 |
+| `🌍️gis/🏔️gisterrain` | 0 | 160 | 889 / 896 / 0 | 1451 / 1447 / 0 | 0 | 0 | 2 |
+| `🌍️gis/🗺️gismap` | 0 | 560 | 2270 / 2284 / 0 | 4324 / 4356 / 0 | 0 | 0 | 1 |
+| `🌿️vcs/🌿️vcs` | 0 | 196 | 1001 / 1006 / 0 | 1644 / 1644 / 0 | 0 | 0 | 1 |
+| `🎞️animate/🎬️presentation` | 0 | 256 | 1494 / 1499 / 0 | 2335 / 2335 / 0 | 0 | 0 | 1 |
+| `🎥️shooting/🎥️shooting` | 0 | 522 | 1755 / 1760 / 0 | 3944 / 3944 / 0 | 0 | 0 | 1 |
+| `🎪️demonstrator/🎪️playground` | 0 | 50 | 440 / 445 / 0 | 648 / 648 / 0 | 0 | 0 | 1 |
+| `🎬️sequence/🎬️sequence` | 0 | 247 | 1283 / 1288 / 0 | 1852 / 1852 / 0 | 0 | 0 | 1 |
+| `🏗️fem/◻️2d` | 0 | 634 | 2490 / 2495 / 0 | 1064 / 1064 / 0 | 0 | 0 | 1 |
+| `🏗️fem/🧊️3d` | 0 | 606 | 2262 / 2267 / 0 | 948 / 948 / 0 | 0 | 0 | 1 |
+| `🏙️bim/🏢️model` | 1 | 2649 | 6054 / 7662 / 43 | 16119 / 15550 / 0 | 0 | 0 | 1 |
+| `🏛️architect/🏛️program` | 0 | 853 | 4221 / 4266 / 0 | 6790 / 6831 / 0 | 0 | 0 | 1 |
+| `🏭️process/🧊️process3d` | 0 | 418 | 2397 / 2397 / 0 | 3078 / 3078 / 0 | 0 | 0 | 0 |
+| `💠️lowpoly/💠️lowpoly` | 0 | 216 | 2706 / 2697 / 0 | 2980 / 2971 / 0 | 0 | 0 | 0 |
+| `💡️reasoning/🔌️wires` | 0 | 96 | 1076 / 1081 / 0 | 1816 / 1806 / 0 | 0 | 0 | 1 |
+| `📋️forms/📋️forms` | 0 | 308 | 1730 / 1737 / 0 | 3238 / 3228 / 0 | 0 | 0 | 2 |
+| `📏️layout/📏️layout` | 1 | 2 | ? / ? / ? | ? / ? / ? | 0 | 0 | 0 | no report: Missing Rust source input: ✏️s/🧰️framework/🔨️modules/🖱️ui/🖌️render/🧪️tests/🧫️fixtures/🔤️text-fonts/🔣️.json
+| `📐️cad/📐️cad` | 0 | 209 | 2459 / 2459 / 0 | 3224 / 3224 / 0 | 0 | 0 | 0 |
+| `📕️norm/⚖️en1990` | 0 | 129 | 508 / 513 / 0 | 767 / 767 / 0 | 0 | 0 | 1 |
+| `📕️norm/⚡️din18599` | 0 | 134 | 512 / 517 / 0 | 774 / 769 / 0 | 0 | 0 | 1 |
+| `📕️norm/🌍️en1997` | 0 | 100 | 455 / 460 / 0 | 662 / 662 / 0 | 0 | 0 | 1 |
+| `📕️norm/🌬️din16798` | 0 | 213 | 509 / 514 / 0 | 721 / 721 / 0 | 0 | 0 | 1 |
+| `📕️norm/🏋️en1991` | 0 | 252 | 1174 / 1179 / 0 | 1557 / 1557 / 0 | 0 | 0 | 1 |
+| `📕️norm/🏛️en1992` | 0 | 128 | 542 / 547 / 0 | 782 / 782 / 0 | 0 | 0 | 1 |
+| `📕️norm/🏭️vdi3805` | 0 | 246 | 608 / 613 / 0 | 999 / 999 / 0 | 0 | 0 | 1 |
+| `📕️norm/📇️iso16757` | 0 | 255 | 918 / 923 / 0 | 1394 / 1394 / 0 | 0 | 0 | 1 |
+| `📕️norm/🔩️en1993` | 0 | 211 | 798 / 803 / 0 | 1090 / 1090 / 0 | 0 | 0 | 1 |
+| `📕️norm/🧩️en1994` | 0 | 121 | 511 / 516 / 0 | 747 / 747 / 0 | 0 | 0 | 1 |
+| `📕️norm/🧱️din4108` | 0 | 221 | 572 / 577 / 0 | 850 / 850 / 0 | 0 | 0 | 1 |
+| `📕️norm/🪨️en1996` | 0 | 183 | 743 / 748 / 0 | 1026 / 1026 / 0 | 0 | 0 | 1 |
+| `📕️norm/🪵️en1995` | 0 | 148 | 770 / 775 / 0 | 1098 / 1098 / 0 | 0 | 0 | 1 |
+| `📕️norm/🪶️en1999` | 0 | 164 | 450 / 455 / 0 | 643 / 643 / 0 | 0 | 0 | 1 |
+| `📕️norm/🫨️en1998` | 0 | 126 | 585 / 590 / 0 | 838 / 838 / 0 | 0 | 0 | 1 |
+| `📖️playbook/📖️playbook` | 0 | 231 | 1872 / 840 / 0 | 3603 / 1262 / 0 | 0 | 0 | 1 |
+| `📜️imperative/📜️procedure` | 1 | 429 | 529 / 1057 / 6 | 844 / 1502 / 11 | 0 | 0 | 6 |
+| `📸️remodel/📸️remodeling` | 0 | 426 | 3179 / 3180 / 0 | 4102 / 4098 / 0 | 0 | 0 | 1 |
+| `🔋️energy/🔋️model` | 0 | 1288 | 3707 / 3712 / 0 | 3929 / 3928 / 0 | 0 | 0 | 1 |
+| `🔱️trinity/♻️rewriting` | 0 | 127 | 1400 / 1405 / 0 | 2504 / 2504 / 0 | 0 | 0 | 1 |
+| `🔱️trinity/🔌️jack` | 1 | 5 | ? / ? / ? | ? / ? / ? | 0 | 0 | 0 | no report: Missing Rust source input: ✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🐚️shell/📦️packages/🦀️rust/src/lib.rs
+| `🕸️dag/🕸️dag` | 0 | 102 | 1028 / 1033 / 0 | 1536 / 1536 / 0 | 0 | 0 | 1 |
+| `🖍️draw/🖍️drawing` | 1 | 2 | ? / ? / ? | ? / ? / ? | 0 | 0 | 0 | no report: Missing Rust source input: ✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🧰️framework/🛍️products/💻️os/🔨️modules/📺️rende
+| `🗄️stdio/📕️xlsx` | 0 | 383 | 1265 / 1265 / 0 | 1476 / 1476 / 0 | 0 | 0 | 0 |
+| `🗄️stdio/📖️pdf` | 1 | 2220 | 6558 / 6588 / 1 | 8611 / 8640 / 1 | 0 | 0 | 1 |
+| `🗄️stdio/📜️docx` | 0 | 350 | 1578 / 1578 / 0 | 1931 / 1931 / 0 | 0 | 0 | 0 |
+| `🗄️stdio/📽️pptx` | 0 | 514 | 1265 / 1265 / 0 | 1448 / 1448 / 0 | 0 | 0 | 0 |
+| `🗄️stdio/🔊️wav` | 0 | 209 | 1750 / 799 / 0 | 3086 / 1237 / 0 | 0 | 0 | 1 |
+| `🗄️stdio/🧿️semio` | 0 | 2007 | 8772 / 8197 / 0 | 9703 / 10238 / 0 | 0 | 0 | 1 |
+| `🗒️note/🗒️note` | 0 | 270 | 2042 / 2049 / 0 | 4326 / 4326 / 0 | 0 | 0 | 2 |
+| `🧩️puzzle/◻️2d` | 1 | 581 | 1250 / 1255 / 0 | 1644 / 1646 / 1 | 0 | 0 | 4 |
+| `🧩️puzzle/🖐️5d` | 0 | 413 | 3885 / 3896 / 0 | 7897 / 7902 / 0 | 0 | 0 | 4 |
+| `🧱️block/◻️2d` | 0 | 124 | 1490 / 1495 / 0 | 2052 / 2053 / 0 | 0 | 0 | 1 |
+| `🧱️block/🖐️5d` | 0 | 57 | 1860 / 1865 / 0 | 2517 / 2518 / 0 | 0 | 0 | 1 |
+| `🧱️block/🧊️3d` | 0 | 87 | 2245 / 2250 / 0 | 3101 / 3102 / 0 | 0 | 0 | 1 |
+| `🪐️space/🏠️home` | 0 | 140 | 1305 / 1310 / 0 | 2058 / 2058 / 0 | 0 | 0 | 1 |
+| `🪐️space/🪐️space` | 1 | 71 | 580 / 797 / 10 | 978 / 1315 / 14 | 0 | 0 | 1 |
+| `🪵️sourcing/🗂️curation` | 0 | 63 | 1440 / 1445 / 0 | 2286 / 2286 / 0 | 0 | 0 | 1 |
+
 8. **Other gates.** `python3 F/dm2-tools/checks.py F/sf3-tools/touched.txt` (358 paths: 146 `.rs`, 127 `Cargo.toml`, 73 `Cargo.lock`, 11 JSON/JSONC, 1 TS): TOML and JSON parse failures **0**; rustfmt parse failures 1 (foreign, section 7); `#[path]`/`include!` literals checked 485, 4 reported missing, all written with `\u{…}` escapes the checker does not decode (they exist); longest path 248 bytes / 166 characters (three pre-existing `⚖️retirement-law` test files; every file I created is below 240 bytes). `.vscode/launch.json` and `.vscode/🧩️launch.seed.jsonc` parse as JSON (7,891,931 and 6,181,197 bytes). Lock check (`sf3-tools/lockcheck.ts`, against `git show HEAD:<lock>`): 73 locks, packages and dependency lists sorted, every token resolves, **0 new problems**. Owners scan (`owners-tools/scan.ts`): 2,547 packages, 2,693 owners, `missing` = 1, the peer's unregistered reader crate; none of my 13 crates. Taxonomy (`frs-tools/taxcheck.ts`, whole ancestor chain of 15 new folders): 0 unresolved. `bun test ./🧪️tests/📏️lib-wiring-budget/🟦️.ts` (library root): 2 pass, 1 fail with three breaches in files I did not touch (energy `viewer` 512 lines, `simulation-session` 1,620, remodeling `vectors` root 208); my new plugin roots are 48 and 6 lines.
 
 ## 5. Census rows

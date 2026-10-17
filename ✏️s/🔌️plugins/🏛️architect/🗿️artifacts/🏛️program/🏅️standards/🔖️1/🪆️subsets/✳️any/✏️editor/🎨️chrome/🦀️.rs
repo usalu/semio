@@ -36,7 +36,5 @@ pub fn entity_name_from_json(value: &Value) -> String {
 //#endregion 🔖️Labels
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

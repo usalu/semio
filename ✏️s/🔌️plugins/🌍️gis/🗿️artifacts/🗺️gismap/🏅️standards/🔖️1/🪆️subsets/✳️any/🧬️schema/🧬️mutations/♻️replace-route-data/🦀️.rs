@@ -3,7 +3,6 @@
 //! isn't expressible — this is a `replace`, per the taxonomy's "large structured sub-payload" rule).
 
 use crate::diff::GisMapDiff;
-use crate::mutations::GisMapMutation;
 use crate::GisMapSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -25,14 +24,17 @@ pub struct ReplaceRouteData {
     pub new_data: semio_framework_value::DslValue,
 }
 
-impl MutationKind<GisMapSnapshot, GisMapMutation> for ReplaceRouteData {
+impl<Op> MutationKind<GisMapSnapshot, Op> for ReplaceRouteData
+where
+    Op: protocol::Mutation<GisMapSnapshot, Diff = GisMapDiff> + From<ReplaceRouteData>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "replace", entity: "route-data", kind: "replace-route-data", record: "ReplacedRouteData" };
 
     fn diff(&self, base: &GisMapSnapshot) -> protocol::MutationOutcome<GisMapDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &GisMapSnapshot) -> Result<Vec<GisMapMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &GisMapSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         super::inverse::inverse(self, base)
     }
 

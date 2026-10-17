@@ -69,10 +69,7 @@ pub fn semio_model_artifact_inference_descriptor() -> semio_framework_schema_reg
 }
 //#endregion 🔖️Descriptor
 
-#[cfg(test)]
-//#region 🧪️Tests
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
 
 //#region 🔁️Re-exports

@@ -1,0 +1,10 @@
+{
+ "name": "c4p23",
+ "crates": [
+  "semio-s-artifact-raster-raster",
+  "semio-s-artifact-stdio-contract-editing",
+  "semio-s-artifact-stdio-contract-editing-patch",
+  "semio-s-artifact-stdio-contract-editing-details"
+ ],
+ "note": "CENSUS4-PKG-23: raster artifact schema/diff/io/unit-test files and the stdio contract editing, patch and details crates; absolute runs (--no-base), compared as multisets before and after (pre / post)"
+}

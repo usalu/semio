@@ -1,6 +1,6 @@
 /** 🔩 `AddAttribute` mutation payload — mirrors `🦀️.rs`. */
 
-import type { BlockAttribute } from "../../../../../../../../../🟦️";
+import type { BlockAttribute } from "@semio-tech/block-js";
 
 export interface AddAttribute {
   attribute: BlockAttribute;

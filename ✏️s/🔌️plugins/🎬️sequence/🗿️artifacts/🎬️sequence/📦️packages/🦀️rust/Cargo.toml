@@ -19,7 +19,14 @@ path = "../../🦀️.rs"
 name = "retirement_law"
 path = "../../🧪️tests/⚖️retirement-law/🦀️.rs"
 
+[features]
+testkit = ["semio-s-artifact-sequence-sequence-schema/testkit", "semio-s-artifact-sequence-sequence-editor/testkit", "semio-s-artifact-sequence-sequence-inferences/testkit", "semio-s-artifact-sequence-sequence-tests/testkit", "semio-s-artifact-sequence-sequence-v1/testkit"]
 [dependencies]
+semio-s-artifact-sequence-sequence-schema = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust" }
+semio-s-artifact-sequence-sequence-editor = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔄️layout/📦️packages/🦀️rust" }
+semio-s-artifact-sequence-sequence-inferences = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦️packages/🦀️rust" }
+semio-s-artifact-sequence-sequence-tests = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧪️tests/🔬️unit/📦️packages/🦀️rust" }
+semio-s-artifact-sequence-sequence-v1 = { path = "../../🏅️standards/🔖️1/📦️packages/🦀️rust" }
 semio-framework-job-publication = { path = "../../../../../../../🧰️framework/🔨️modules/🧵️job/📬️outcome/📤️publication/📦️packages/🦀️rust" }
 semio-framework-composition-admission = { path = "../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧩️composition/📥️admission/📦️packages/🦀️rust" }
 semio-framework-os-infinite-directed-presentation = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🧬️schema/🖼️presentation/📦️packages/🦀️rust" }
@@ -51,6 +58,8 @@ semio-framework-graph-manifest = { path = "../../../../../../../🧰️framework
 semio-framework-os-kernel = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
 neural_engine = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📦️packages/🦀️rust", package = "semio-framework-os-kernel-neural-engine" }
 semio-framework = { path = "../../../../../../../🧰️framework/📦️packages/🦀️rust", package = "semio-framework" }
+semio-framework-abi = { path = "../../../../../../../🧰️framework/🔨️modules/🌉️abi/📦️packages/🦀️rust" }
+semio-framework-action-bus = { path = "../../../../../../../🧰️framework/🔨️modules/🎯️action-bus/📦️packages/🦀️rust" }
 imperative_engine = { path = "../../../../../../../✏️s/🔨️modules/📜️imperative/📦️packages/🦀️rust", package = "semio-s-imperative" }
 semio-framework-os-infinite = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust" }
 semio-framework-canvas = { path = "../../../../../../../🧰️framework/🔨️modules/🖼️canvas/📦️packages/🦀️rust" }
@@ -61,6 +70,12 @@ semio-framework-value-derive = { path = "../../../../../../../🧰️framework/�
 serde.workspace = true
 
 [dev-dependencies]
+semio-framework-test-fixtures = { path = "../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
+semio-s-artifact-sequence-sequence-schema = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-sequence-sequence-editor = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔄️layout/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-sequence-sequence-inferences = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-sequence-sequence-tests = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧪️tests/🔬️unit/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-sequence-sequence-v1 = { path = "../../🏅️standards/🔖️1/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-trace = { path = "../../../../../../../🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust" }
 serde_json.workspace = true
 semio-framework-plugin = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", features = ["artifact-app-testing"], package = "semio-framework-plugin" }

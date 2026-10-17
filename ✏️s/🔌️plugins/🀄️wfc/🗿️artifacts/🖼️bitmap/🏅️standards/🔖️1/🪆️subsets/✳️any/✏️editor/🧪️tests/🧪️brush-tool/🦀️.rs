@@ -5,7 +5,8 @@
 //! trace; two strokes are two transactions; and a stroke edited in history replays its downstream exactly like a fresh
 //! fold of the edited log.
 
-use super::*;
+use semio_framework_tool_machine::{GesturePhase, ToolAbortReason};
+use crate::editor::bitmap::modes::edit::windows::input::utilities::brush::*;
 use crate::editor::bitmap::modes::edit::windows::input::WFC_BITMAP_WINDOW_INPUT;
 use crate::editor::bitmap::{BitmapEditor, BitmapEditorCommand};
 use crate::mutations::{paint_input_stroke, set_input_pixels, BitmapMutation, BitmapStrokePoint};
@@ -18,7 +19,7 @@ fn point(x: u32, y: u32) -> BitmapStrokePoint {
 }
 
 fn base() -> BitmapSnapshot {
-    crate::tests::fixtures::base()
+    BitmapSnapshot::reference_scene()
 }
 
 fn request(points: &[(u32, u32)], color: u32) -> BrushToolRequest {

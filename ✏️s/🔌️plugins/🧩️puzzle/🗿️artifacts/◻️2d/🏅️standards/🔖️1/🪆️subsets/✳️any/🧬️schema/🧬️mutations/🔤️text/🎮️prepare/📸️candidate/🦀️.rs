@@ -1,5 +1,7 @@
 //! 📸️ Optional text candidates retain paged snapshots and retire replaced field owners before publication.
-use super::{ChangeNodeIcon,EditTargetRegionLabel,Puzzle2dTextIntent,Puzzle2dTextDisposition,Puzzle2dTextPlan,Puzzle2dTextPreparationCursor,Puzzle2dTextPreparationStep,Puzzle2dSnapshot};
+use super::{Puzzle2dTextIntent, Puzzle2dTextDisposition, Puzzle2dTextPlan, Puzzle2dTextPreparationCursor, Puzzle2dTextPreparationStep};
+use crate::standards::v1::subsets::any::schema::mutations::{ChangeNodeIcon, EditTargetRegionLabel};
+use crate::standards::v1::subsets::any::schema::snapshot::Puzzle2dSnapshot;
 use semio_framework_value::{paged::PagedUtf8,ValueError,ValueRefusalKind,retirement::controlled::ControlledRetirement,retained_clone::{RetainedClone,RetainedCloneBinding,RetainedCloneCursor,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneRef,RetainedCloneStep,RetainedFieldCursor}};
 use std::{mem::{ManuallyDrop,size_of},ops::{Deref,DerefMut}};
 type OptionalText=Option<PagedUtf8<{usize::MAX}>>;
@@ -89,7 +91,5 @@ impl<T:Puzzle2dTextCandidateIntent>Puzzle2dTextCandidateCursor<T>{
 }
 impl<T:Puzzle2dTextCandidateIntent>Drop for Puzzle2dTextCandidateCursor<T>{fn drop(&mut self){let empty=self.terminal_is_empty();assert!(std::thread::panicking()||empty,"optional text candidate abandoned before controlled closure");if empty{unsafe{ManuallyDrop::drop(&mut self.state)}}}}
 fn refusal(message:&str)->ValueError{ValueError::new(ValueRefusalKind::InvariantViolated,message)}
-fn payload(bytes:usize)->RetainedCloneStep{RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,retained_capacity_bytes:0,released_bytes:0})}
-#[cfg(test)]
-#[path="🧪️tests/🦀️.rs"]
-mod tests;
+pub fn payload(bytes:usize)->RetainedCloneStep{RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,retained_capacity_bytes:0,released_bytes:0})}
+

@@ -7,7 +7,7 @@
 //! a typed shape for — `working_graph`/`lhs`/`rhs` are opaque JSON blobs, not
 //! structured graph data this artifact's own snapshot exposes).
 
-use crate::RewritingSnapshot;
+use crate::standards::v1::subsets::any::schema::snapshot::RewritingSnapshot;
 use ::semio_framework_schema::ArtifactSchema;
 
 use super::bounds::compute_bounds;
@@ -57,10 +57,7 @@ pub fn rewriting_artifact_inference_descriptor() -> ::semio_framework_schema_reg
 }
 //#endregion 🔖️Descriptor
 
-#[cfg(test)]
-//#region 🧪️Tests
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
 
 //#region 🔁️Re-exports

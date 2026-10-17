@@ -4033,17 +4033,16 @@ dependencies = [
 name = "semio-framework-3d"
 version = "0.1.0"
 dependencies = [
- "parry3d",
  "semio-framework-3d-brep-vector",
- "semio-framework-3d-testing-support",
- "semio-framework-async-macros",
+ "semio-framework-3d-collision",
+ "semio-framework-3d-mesh-clipping",
+ "semio-framework-3d-mesh-contract",
+ "semio-framework-3d-mesh-document",
+ "semio-framework-3d-mesh-reconstruction",
+ "semio-framework-3d-rigid",
  "semio-framework-mesh-engine",
- "semio-framework-pack-json",
- "semio-framework-trace",
  "semio-framework-value",
  "semio-framework-value-derive",
- "serde",
- "serde_json",
 ]
 
 [[package]]
@@ -4333,6 +4332,86 @@ dependencies = [
  "semio-framework-async-macros",
  "semio-framework-geometry",
  "semio-framework-number",
+ "semio-framework-value",
+ "semio-framework-value-derive",
+]
+
+[[package]]
+name = "semio-framework-3d-collision"
+version = "0.1.0"
+dependencies = [
+ "parry3d",
+ "semio-framework-3d-rigid",
+ "semio-framework-value",
+ "semio-framework-value-derive",
+]
+
+[[package]]
+name = "semio-framework-3d-mesh-clipping"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-3d-mesh-contract",
+ "semio-framework-mesh-engine",
+ "semio-framework-value",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-framework-3d-mesh-contract"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-value",
+ "semio-framework-value-derive",
+ "serde",
+]
+
+[[package]]
+name = "semio-framework-3d-mesh-document"
+version = "0.1.0"
+dependencies = [
+ "parry3d",
+ "semio-framework-3d-mesh-contract",
+ "semio-framework-3d-testing-support",
+ "semio-framework-mesh-engine",
+ "semio-framework-pack-json",
+ "semio-framework-value",
+ "semio-framework-value-derive",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-framework-3d-mesh-reconstruction"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-3d-mesh-contract",
+ "semio-framework-3d-mesh-document",
+ "semio-framework-3d-testing-support",
+ "semio-framework-mesh-engine",
+ "semio-framework-value",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-framework-3d-mesh-tests"
+version = "0.1.0"
+dependencies = [
+ "parry3d",
+ "semio-framework-3d",
+ "semio-framework-3d-mesh-reconstruction",
+ "semio-framework-3d-testing-support",
+ "semio-framework-async-macros",
+ "semio-framework-mesh-engine",
+ "semio-framework-pack-json",
+ "semio-framework-trace",
+ "semio-framework-value",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-framework-3d-rigid"
+version = "0.1.0"
+dependencies = [
  "semio-framework-value",
  "semio-framework-value-derive",
 ]
@@ -5107,9 +5186,11 @@ name = "semio-framework-io-sqlite-snapshot-tests"
 version = "0.1.0"
 dependencies = [
  "semio-framework-diagnostic",
+ "semio-framework-io-control",
  "semio-framework-io-schema",
  "semio-framework-io-sqlite-snapshot",
  "semio-framework-trace-memory-testing",
+ "semio-framework-value",
  "serde_json",
 ]
 
@@ -5598,6 +5679,13 @@ name = "semio-framework-number"
 version = "0.1.0"
 
 [[package]]
+name = "semio-framework-number-tests"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-number",
+]
+
+[[package]]
 name = "semio-framework-onboarding"
 version = "0.1.0"
 dependencies = [
@@ -5893,6 +5981,101 @@ dependencies = [
  "semio-framework-io-base64",
  "semio-framework-io-binary-source",
  "semio-framework-value",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-framework-plugin-child-group-wire-laws"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-artifact-reference",
+ "semio-framework-diagnostic",
+ "semio-framework-dsl-record",
+ "semio-framework-dsl-record-derive",
+ "semio-framework-os-kernel",
+ "semio-framework-pack-json",
+ "semio-framework-plugin-decl-emission",
+ "semio-framework-schema-composition",
+ "semio-framework-trace",
+ "semio-framework-ui-locale",
+ "semio-framework-value",
+ "semio-framework-value-derive",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-framework-plugin-surface-carrier-laws"
+version = "0.1.0"
+dependencies = [
+ "semio-framework",
+ "semio-framework-async-macros",
+ "semio-framework-plugin-testing-laws",
+ "semio-framework-plugin-window-transient",
+ "semio-framework-trace",
+ "semio-framework-ui-contract",
+ "semio-framework-ui-scene",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-framework-plugin-surface-fixture"
+version = "0.1.0"
+dependencies = [
+ "semio-framework",
+ "semio-framework-2d",
+ "semio-framework-artifact-reference",
+ "semio-framework-async-macros",
+ "semio-framework-diagnostic",
+ "semio-framework-dsl-record",
+ "semio-framework-dsl-record-derive",
+ "semio-framework-job",
+ "semio-framework-os-kernel",
+ "semio-framework-pack-json",
+ "semio-framework-plugin-app-builder",
+ "semio-framework-plugin-composition-publication",
+ "semio-framework-plugin-decl-app",
+ "semio-framework-plugin-decl-emission",
+ "semio-framework-plugin-decl-surface",
+ "semio-framework-plugin-decl-views",
+ "semio-framework-plugin-document-media",
+ "semio-framework-plugin-ownership",
+ "semio-framework-plugin-reactor-app",
+ "semio-framework-plugin-retained-command",
+ "semio-framework-plugin-testing-laws",
+ "semio-framework-plugin-window-transient",
+ "semio-framework-schema",
+ "semio-framework-schema-composition",
+ "semio-framework-trace",
+ "semio-framework-ui-contract",
+ "semio-framework-ui-locale",
+ "semio-framework-ui-runtime",
+ "semio-framework-value",
+ "semio-framework-value-derive",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-framework-plugin-composition-publication"
+version = "0.1.0"
+dependencies = [
+ "semio-framework",
+ "semio-framework-artifact-reference",
+ "semio-framework-composition-admission",
+ "semio-framework-job",
+ "semio-framework-os-kernel",
+ "semio-framework-plugin-child",
+ "semio-framework-plugin-composition-emission",
+ "semio-framework-plugin-decl-app",
+ "semio-framework-plugin-decl-emission",
+ "semio-framework-plugin-decl-views",
+ "semio-framework-plugin-ownership",
+ "semio-framework-plugin-window-config",
+ "semio-framework-plugin-window-transient",
+ "semio-framework-trace",
+ "semio-framework-value",
+ "semio-framework-value-derive",
  "serde_json",
 ]
 

@@ -4,8 +4,8 @@
  * `🔨️modules/🧩️runtime/🟦️.ts`. */
 // #endregion 🧲️Header
 
-import type {OwnedBuildPlugin} from "../../../../../../🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🛠️build-tooling/🟦️.ts";
-import { observeActivationReceipts } from "../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🟦️.ts";
+import type {OwnedBuildPlugin} from "@semio-tech/ui-react/build-tooling";
+import { observeActivationReceipts } from "@semio-tech/framework-os-dev/activation";
 import { demonstratorActivationLaneReceiptDirectories, publishDemonstratorUnionReceipt } from "../🟦️.ts";
 
 /** 👀️ Republishes the union receipt whenever ANY lane completes a new activation.

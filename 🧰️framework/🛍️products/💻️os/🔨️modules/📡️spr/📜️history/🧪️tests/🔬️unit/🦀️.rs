@@ -956,7 +956,7 @@ fn retained_native_history_fold_obeys_the_neutral_law() {
             let mut reached = false;
             for turn in 0..100000 {
                 match job.step(job.next_step_grant(work.as_u64().unwrap() as usize, bytes.as_u64().unwrap() as usize).unwrap(), &mut || false).unwrap() {
-                    protocol::HistoryFoldJobStep::Pending { completed: next, progress, .. } => { assert!(next >= completed && next-completed <= work.as_u64().unwrap()); if turn % 20000 == 19999 { eprintln!("[DEBUG] fold turn {turn} completed {next} progress {progress:?} grant {:?}", job.next_step_grant(work.as_u64().unwrap() as usize, bytes.as_u64().unwrap() as usize)); } completed = next; },
+                    protocol::HistoryFoldJobStep::Pending { completed: next, progress, .. } => { assert!(next >= completed && next-completed <= work.as_u64().unwrap()); if turn % 20000 == 19999 {  } completed = next; },
                     protocol::HistoryFoldJobStep::Ready { value: (fold, transitions, replay_order, conflicts), .. } => {
                         assert_eq!(conflicts.len(), source.conflicts.len());
                         if !conflicts.is_empty() {
@@ -985,5 +985,4 @@ fn retained_native_history_fold_obeys_the_neutral_law() {
         assert_eq!(source.fold().unwrap(), expected);
     }
     }
-    eprintln!("[DEBUG] Native persisted fold normalizes immutable owners under work/byte grants and cancellation preserves the complete source history");
 }

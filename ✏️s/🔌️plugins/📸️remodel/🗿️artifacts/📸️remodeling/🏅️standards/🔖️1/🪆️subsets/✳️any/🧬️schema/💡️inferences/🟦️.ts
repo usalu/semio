@@ -14,6 +14,8 @@ export interface RemodelingBounds {
 export interface RemodelingInference {
   /** @derived */
   bounds: RemodelingBounds;
+  /** @derived */
+  relativeCameraPoses: Readonly<Record<string, RemodelingPoseDelta>>;
 }
 
 //#region 🚪️Parsers
@@ -34,6 +36,10 @@ type remodelRemodelingInferenceGuardSizeBounds = { readonly minItems?: number; r
 
 export const remodelRemodelingInferenceGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : remodelRemodelingInferenceGuardReject(at, "value is not an object");
+export const remodelRemodelingInferenceGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) remodelRemodelingInferenceGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const remodelRemodelingInferenceGuardArray = (value: unknown, at: string, bounds: remodelRemodelingInferenceGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return remodelRemodelingInferenceGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) remodelRemodelingInferenceGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -63,24 +69,8 @@ export const remodelRemodelingInferenceGuardConstant = <T extends string | numbe
   value === expected ? expected : remodelRemodelingInferenceGuardReject(at, `value is not ${String(expected)}`);
 //#endregion 🚪️Parsers
 
-export function parseRemodelingInference(value: unknown, at = "$"): RemodelingInference {
-  const row = remodelRemodelingInferenceGuardObject(value, at);
-  return {
-    bounds: parseRemodelingBounds(row["bounds"], `${at}.bounds`),
-    relativeCameraPoses: remodelRemodelingInferenceGuardObject(row["relativeCameraPoses"], `${at}.relativeCameraPoses`),
-  };
-}
-
-export function parseRemodelingBoundingBox(value: unknown, at = "$"): RemodelingBoundingBox {
-  const row = remodelRemodelingInferenceGuardObject(value, at);
-  return {
-    min: remodelRemodelingInferenceGuardArray(row["min"], `${at}.min`, {"minItems": 3, "maxItems": 3}).map((item, index) => remodelRemodelingInferenceGuardNumber(item, `${at}.min[${index}]`)),
-    max: remodelRemodelingInferenceGuardArray(row["max"], `${at}.max`, {"minItems": 3, "maxItems": 3}).map((item, index) => remodelRemodelingInferenceGuardNumber(item, `${at}.max[${index}]`)),
-  };
-}
-
 export function parseRemodelingBounds(value: unknown, at = "$"): RemodelingBounds {
-  const row = remodelRemodelingInferenceGuardObject(value, at);
+  const row = remodelRemodelingInferenceGuardClosed(remodelRemodelingInferenceGuardObject(value, at), at, ["boundingBox", "vertexCount", "faceCount"]);
   return {
     boundingBox: parseRemodelingBoundingBox(row["boundingBox"], `${at}.boundingBox`),
     vertexCount: remodelRemodelingInferenceGuardInteger(row["vertexCount"], `${at}.vertexCount`, {"minimum": 0}),
@@ -94,9 +84,25 @@ export interface RemodelingPoseDelta {
 }
 
 export function parseRemodelingPoseDelta(value: unknown, at = "$"): RemodelingPoseDelta {
-  const row = remodelRemodelingInferenceGuardObject(value, at);
+  const row = remodelRemodelingInferenceGuardClosed(remodelRemodelingInferenceGuardObject(value, at), at, ["translationDelta", "rotationAngleRad"]);
   return {
-    translationDelta: remodelRemodelingInferenceGuardArray(row["translationDelta"], `${at}.translationDelta`, {"minItems": 3, "maxItems": 3}).map((item, index) => remodelRemodelingInferenceGuardNumber(item, `${at}.translationDelta[${index}]`)),
+    translationDelta: ((items0) => [remodelRemodelingInferenceGuardNumber(items0[0], `${at}.translationDelta[0]`), remodelRemodelingInferenceGuardNumber(items0[1], `${at}.translationDelta[1]`), remodelRemodelingInferenceGuardNumber(items0[2], `${at}.translationDelta[2]`)])(remodelRemodelingInferenceGuardArray(row["translationDelta"], `${at}.translationDelta`, {"minItems": 3, "maxItems": 3})),
     rotationAngleRad: remodelRemodelingInferenceGuardNumber(row["rotationAngleRad"], `${at}.rotationAngleRad`),
+  };
+}
+
+export function parseRemodelingInference(value: unknown, at = "$"): RemodelingInference {
+  const row = remodelRemodelingInferenceGuardClosed(remodelRemodelingInferenceGuardObject(value, at), at, ["bounds", "relativeCameraPoses"]);
+  return {
+    bounds: parseRemodelingBounds(row["bounds"], `${at}.bounds`),
+    relativeCameraPoses: Object.fromEntries(Object.entries(remodelRemodelingInferenceGuardObject(row["relativeCameraPoses"], `${at}.relativeCameraPoses`)).map(([key0, value0]) => [key0, parseRemodelingPoseDelta(value0, `${at}.relativeCameraPoses.${key0}`)])),
+  };
+}
+
+export function parseRemodelingBoundingBox(value: unknown, at = "$"): RemodelingBoundingBox {
+  const row = remodelRemodelingInferenceGuardClosed(remodelRemodelingInferenceGuardObject(value, at), at, ["min", "max"]);
+  return {
+    min: ((items0) => [remodelRemodelingInferenceGuardNumber(items0[0], `${at}.min[0]`), remodelRemodelingInferenceGuardNumber(items0[1], `${at}.min[1]`), remodelRemodelingInferenceGuardNumber(items0[2], `${at}.min[2]`)])(remodelRemodelingInferenceGuardArray(row["min"], `${at}.min`, {"minItems": 3, "maxItems": 3})),
+    max: ((items0) => [remodelRemodelingInferenceGuardNumber(items0[0], `${at}.max[0]`), remodelRemodelingInferenceGuardNumber(items0[1], `${at}.max[1]`), remodelRemodelingInferenceGuardNumber(items0[2], `${at}.max[2]`)])(remodelRemodelingInferenceGuardArray(row["max"], `${at}.max`, {"minItems": 3, "maxItems": 3})),
   };
 }

@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { isToolRunActionLegal, isToolRunTerminal, TOOL_RUN_ACTION_IDS, TOOL_RUN_DISMISS_ACTION_ID, TOOL_RUN_EVENT_KEYS, TOOL_RUN_START_ACTION_ID, TOOL_RUN_STATES, ToolRunMachine, type ToolRunEffect, type ToolRunEvent, type ToolRunEventKey, type ToolRunState } from "../../../../../../🔨️modules/⏯️tool-run/🟦️.ts";
+import { isToolRunTerminal, TOOL_RUN_EVENT_KEYS, TOOL_RUN_STATES, ToolRunMachine, type ToolRunEffect, type ToolRunEvent, type ToolRunEventKey, type ToolRunState } from "../../../../../../🔨️modules/⏯️tool-run/🚦️lifecycle/🟦️.ts";
+import { isToolRunActionLegal, TOOL_RUN_ACTION_IDS, TOOL_RUN_DISMISS_ACTION_ID, TOOL_RUN_START_ACTION_ID } from "../../../../../../🔨️modules/⏯️tool-run/🏷️actions-labels/🟦️.ts";
 
 /** 🛑️ Third-party twin of the TERMINAL QUIET LAW (`🧫️fixtures/⏯️tool-run/🔣️.json`, `terminalQuiet`) — the
  * Rust law drives a real ledger over 64 driver turns and counts the effects a terminal run hands the host;

@@ -73,13 +73,10 @@ pub fn geometry_id<'a>(segments:impl IntoIterator<Item=&'a PathSegment>)->Option
     Some(hasher.finalize().to_hex())
 }
 
-#[cfg(test)]
-#[path="🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 
 #[derive(Clone,Copy,Debug,PartialEq,Default)]
-#[cfg_attr(test,derive(serde::Deserialize))]
-#[cfg_attr(test,serde(rename_all="camelCase"))]
+#[cfg_attr(any(test, feature = "testkit"),derive(serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"),serde(rename_all="camelCase"))]
 pub enum PointPickMode {#[default] Replace,Toggle,Add}
 
 /// 🖱️ A press on a selected point retains its drag group; modified presses change membership.

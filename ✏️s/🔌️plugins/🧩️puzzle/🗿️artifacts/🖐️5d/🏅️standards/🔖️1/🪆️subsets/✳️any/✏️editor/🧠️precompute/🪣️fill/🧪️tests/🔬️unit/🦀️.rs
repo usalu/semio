@@ -1,16 +1,33 @@
-use super::*;
+use crate::editor::puzzle5d::modes::edit::tools::fill::TOOL_ID;
+use crate::editor::puzzle5d::precompute::editor_part;
+use crate::editor::puzzle5d::entities::Puzzle5dDocument;
+use crate::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation;
+use semio_framework_plugin::{EditorApp, Fault, ToolRunJobRequest};
+use semio_s_artifact_puzzle_3d_editor_modes::tools::fill as fill3d;
+use std::sync::Arc;
+#[allow(unused_imports)]
+use crate::editor::puzzle5d::precompute::{puzzle3d_config, puzzle3d_object, puzzle3d_target_volume, puzzle5d_authored_kind_catalogs, Puzzle5dPlannerBoard};
+#[allow(unused_imports)]
+use crate::editor::puzzle5d::interaction::Puzzle5dEditor;
+#[allow(unused_imports)]
+use semio_framework_plugin::ToolRunJob;
+#[allow(unused_imports)]
+use {semio_s_artifact_puzzle_3d_mutations_volume::change_target_volume_hidden::mutation::change_target_volume_hidden, semio_s_artifact_puzzle_3d_mutations_volume::change_target_volume_locked::mutation::change_target_volume_locked, semio_s_artifact_puzzle_3d_mutations_vortex::connect_vortices::mutation::connect_vortices, semio_s_artifact_puzzle_3d_mutations_object::create_object::mutation::create_object, semio_s_artifact_puzzle_3d_mutations_volume::create_target_volume::mutation::create_target_volume, semio_s_artifact_puzzle_3d_mutations_volume::delete_target_volume::mutation::delete_target_volume, semio_s_artifact_puzzle_3d_mutations_volume::move_target_volume::mutation::move_target_volume, semio_s_artifact_puzzle_3d_mutations_volume::rotate_target_volume::mutation::rotate_target_volume, semio_s_artifact_puzzle_3d_mutations_volume::scale_target_volume::mutation::scale_target_volume, semio_s_artifact_puzzle_3d_mutations::Puzzle3dMutation};
+use crate::editor::puzzle5d::Puzzle5dPlayApp;
+use crate::editor::puzzle5d::precompute::fill::*;
 use crate::editor::puzzle5d::config::Puzzle5dConfig;
 use crate::editor::puzzle5d::precompute::{puzzle3d_snapshot, puzzle5d_placement_entity, Puzzle5dPlannerToolRunJob, PUZZLE5D_PLACEMENT_OPS, PUZZLE5D_PLANNER_TRACE_SHAPE_CIRCLE, PUZZLE5D_PLANNER_TRACE_TWIN_BIT};
-use crate::editor::puzzle5d::puzzle5d_grip_full_id;
+use crate::editor::puzzle5d::entities::puzzle5d_grip_full_id;
 use crate::puzzle_job::JobTurn;
 use semio_framework_job::InteractiveJob;
+use semio_framework_test_fixtures::fixture_text;
 use semio_framework_tool_run::{ToolRunTick, ToolRunTraceOp, ToolRunTraceSubject, ToolRunVerdict};
 use semio_s_artifact_puzzle_3d_editor_config::Puzzle3dConfig;
 use std::collections::HashMap;
 use crate::editor::puzzle5d::modes::edit::tools::fill::run_definition;
 use crate::editor::puzzle5d::modes::edit::windows::{board2d, world3d as world3d_window};
-use crate::editor::puzzle5d::unit_tests::context::{app_with_registry, close_app, dispatch, meta, projection_of, render_body, window_view, Puzzle5dApp};
-use crate::editor::puzzle5d::{capsule_dream_example_document, concrete_forest_example_document, nakagin_example_document};
+use crate::editor::puzzle5d::testkit::{app_with_registry, close_app, dispatch, meta, projection_of, render_body, window_view, Puzzle5dApp};
+use crate::editor::puzzle5d::entities::{capsule_dream_example_document, concrete_forest_example_document, nakagin_example_document};
 use crate::editor::puzzle5d::snapshot::Puzzle5dPlaySnapshot;
 use semio_framework_job::StepBudget;
 use semio_framework_plugin::{ActionMeta, ArtifactApp, ArtifactInstanceOperationOwnerHandle, PluginApp, ToolRunJobPort, ToolRunJobPurpose, ToolRunTraceKeys};
@@ -19,11 +36,11 @@ use semio_s_artifact_puzzle_3d_editor::Puzzle3dPlayApp;
 use semio_s_artifact_puzzle_3d_model::FillRunReason;
 use std::time::{Duration, Instant};
 
-const FILL_RUN_FIXTURE: &str = include_str!("../🧫️fixtures/🎞️fill-run.json");
+static FILL_RUN_FIXTURE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧠️precompute/🪣️fill/🧪️tests/🧫️fixtures/🎞️fill-run.json"));
 pub(crate) const FILL_RUN_TURNS: usize = 262_144;
 
 fn fixture() -> serde_json::Value {
-    serde_json::from_str(FILL_RUN_FIXTURE).expect("fill run fixture parses")
+    serde_json::from_str((*FILL_RUN_FIXTURE)).expect("fill run fixture parses")
 }
 
 fn example(id: &str) -> Puzzle5dDocument {
@@ -63,10 +80,10 @@ const PUZZLE5D_FILL_LAW_BOX_SCALE: f32 = 4.0;
 /// lock reads as "not resident" — hence the bounded retry rather than one call.
 fn seed_planner_meshes(document: &Puzzle5dDocument) {
     use semio_s_artifact_puzzle_3d_precompute::derive_brush_mesh;
-    let fallback = semio_framework_plugin::mesh_from_kind(crate::editor::puzzle5d::PUZZLE5D_FALLBACK_MESH_KIND);
+    let fallback = semio_framework_plugin::mesh_from_kind(crate::editor::puzzle5d::entities::PUZZLE5D_FALLBACK_MESH_KIND);
     let positions: Vec<f32> = fallback.positions.iter().map(|value| value * PUZZLE5D_FILL_LAW_BOX_SCALE).collect();
-    let mut urls = crate::editor::puzzle5d::collect_mesh_urls(document);
-    urls.push(crate::editor::puzzle5d::PUZZLE5D_FALLBACK_MESH_KIND.to_string());
+    let mut urls = crate::editor::puzzle5d::entities::collect_mesh_urls(document);
+    urls.push(crate::editor::puzzle5d::entities::PUZZLE5D_FALLBACK_MESH_KIND.to_string());
     urls.sort();
     urls.dedup();
     for url in urls {
@@ -88,7 +105,7 @@ fn job(document: &Puzzle5dDocument, requested: u32, purpose: ToolRunJobPurpose, 
         definition: &definition,
         purpose,
         identity: identity(),
-        snapshot: Arc::new(Puzzle5dPlaySnapshot::new(crate::editor::puzzle5d::puzzle5d_snapshot_from_document(document).expect("typed host document admits"))),
+        snapshot: Arc::new(Puzzle5dPlaySnapshot::new(crate::editor::puzzle5d::entities::puzzle5d_snapshot_from_document(document).expect("typed host document admits"))),
         config: Arc::new(Puzzle5dConfig { fill_count: requested, ..Puzzle5dConfig::default() }),
         window_id: None,
         window_config: None,
@@ -219,10 +236,10 @@ fn zzz_write_fill_run_fixture() {
             )
         })
         .collect();
-    let (head, rest) = FILL_RUN_FIXTURE.split_once("  \"cases\": [").expect("the fixture has a cases array");
+    let (head, rest) = (*FILL_RUN_FIXTURE).split_once("  \"cases\": [").expect("the fixture has a cases array");
     let (_, tail) = rest.split_once("\n  ],\n  \"laws\"").expect("the cases array precedes the laws");
     let printed = format!("{head}  \"cases\": [\n{}\n  ],\n  \"laws\"{tail}", cases.join(",\n"));
-    std::fs::write(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧠️precompute/🪣️fill/🧫️fixtures/🎞️fill-run.json"), printed).expect("write 🎞️fill-run.json");
+    std::fs::write(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../🧠️precompute/🪣️fill/🧫️fixtures/🎞️fill-run.json"), printed).expect("write 🎞️fill-run.json");
 }
 
 /// ⚖️ LAW (language-neutral fixture): every seeded example run reaches the fixture's exact verdict prefix,
@@ -475,7 +492,7 @@ fn start(app: &mut Puzzle5dApp) -> serde_json::Value {
     // need the same process-wide mesh identities seeded — see `seed_planner_meshes`. Without them every
     // candidate reads `mesh-unavailable` and the run completes having placed nothing
     // (`PresenceToolRun { state: Complete, completed: 0, total: Some(40) }`).
-    seed_planner_meshes(&crate::editor::puzzle5d::default_document());
+    seed_planner_meshes(&crate::editor::puzzle5d::entities::default_document());
     tool_run_action(app, TOOL_RUN_START_ACTION_ID, serde_json::json!({ TOOL_RUN_ARG_TOOL_ID: TOOL_ID }))
 }
 
@@ -642,4 +659,3 @@ fn a_document_past_the_planner_capacity_refuses_with_a_visible_danger_step() {
     assert!(mirror.ops.is_empty(), "a refused run places nothing");
 }
 //#endregion ⏯️App
-

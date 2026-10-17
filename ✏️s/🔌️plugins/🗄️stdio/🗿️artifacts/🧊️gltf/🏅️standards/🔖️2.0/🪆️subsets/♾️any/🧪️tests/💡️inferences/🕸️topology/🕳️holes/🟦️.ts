@@ -8,5 +8,4 @@ for (const vector of vectors.vectors) {
   const result = inferGltfHoles(vector.context as GltfTsGeometryContext);
   if ((result.value ?? null) !== vector.value || result.availability !== vector.availability) throw new Error(vector.name);
 }
-  console.log("[DEBUG] Original GLTF 💡️inferences/🕸️topology/🕳️holes vectors=" + vectors.vectors.length);
 });

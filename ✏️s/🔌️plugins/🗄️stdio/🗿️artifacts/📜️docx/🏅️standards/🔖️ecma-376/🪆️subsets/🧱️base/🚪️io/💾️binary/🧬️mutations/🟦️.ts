@@ -1,4 +1,4 @@
-import {parseXmlDocumentJson,xmlDocumentJsonValue} from "../../../../../../../../📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🚪️io/📝️text/📸️snapshot/🔣️json/🟦️.ts";
+import {parseXmlDocumentJson,xmlDocumentJsonValue} from "@semio-tech/stdio-xml/standards/1.0/subsets/base/io/text/snapshot/json";
 /** 💾️ Authored SetPart record framing over the first-party pack value codec. */
 import {encodePackValue,decodePackValue,packUInt,isPackInteger} from "@semio-tech/framework/packs";
 import {parseDocxSetPart} from "../../../🧬️schema/🧬️mutations/📦set-part/🟦️.ts";

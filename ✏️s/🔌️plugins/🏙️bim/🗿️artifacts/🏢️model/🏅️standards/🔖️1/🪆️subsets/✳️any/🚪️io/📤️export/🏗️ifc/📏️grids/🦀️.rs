@@ -1,15 +1,15 @@
 //! 📏️ Grid lines as one `IfcGrid` per building. Both axis directions are required, so lines closer to the y axis are U axes, the others V axes; when one direction is empty the first axis of the other is listed in both in IFC 2x3, and in IFC4 (an axis is part
 //! of exactly one list) repeated as a second `IfcGridAxis` that the importer leaves out because the id list names each line once. Each `IfcGridAxis` carries the line label and a two-point polyline.
 
-use super::writer::{flag, opt_text, refs, rf, unset, Schema};
-use super::Export;
+use crate::standards::v1::subsets::any::io::export::ifc::writer::{flag, opt_text, refs, rf, unset, Schema};
+use crate::standards::v1::subsets::any::io::export::ifc::Export;
 
 /// 📏️ Writes the grid of every building that has grid lines.
 pub fn emit(x: &mut Export<'_>) {
     let model = x.model;
     for (building_id, building) in &x.buildings.clone() {
         let (mut vertical, mut horizontal) = (Vec::new(), Vec::new());
-        let mut drawn: std::collections::BTreeMap<u64, Vec<super::writer::V>> = std::collections::BTreeMap::new();
+        let mut drawn: std::collections::BTreeMap<u64, Vec<crate::standards::v1::subsets::any::io::export::ifc::writer::V>> = std::collections::BTreeMap::new();
         for (id, line) in model.grids.iter().filter(|(_, line)| line.building == *building_id) {
             let (from, to) = (x.ifc.point2([line.start.x, line.start.y]), x.ifc.point2([line.end.x, line.end.y]));
             let curve = x.ifc.add("IFCPOLYLINE", vec![refs(&[from, to])]);

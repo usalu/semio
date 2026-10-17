@@ -1,6 +1,5 @@
 //! 🧻️ Authoritative PDF mutation payload, diff, inverse, and tests for `remove-content`.
 
-use super::PdfMutation;
 use crate::standards::v1_7::subsets::base::schema::diff::{self, PdfDiff};
 use crate::standards::v1_7::subsets::base::schema::snapshot::*;
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
@@ -16,7 +15,10 @@ pub struct RemoveContent {
     pub count: usize,
 }
 
-impl MutationKind<PdfSnapshot, PdfMutation> for RemoveContent {
+impl<Op> MutationKind<PdfSnapshot, Op> for RemoveContent
+where
+    Op: protocol::Mutation<PdfSnapshot, Diff = PdfDiff> + From<RemoveContent> + From<crate::standards::v1_7::subsets::base::schema::mutations::insert_content::InsertContent>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "remove", entity: "content", kind: "remove-content", record: "Remove" };
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
@@ -24,10 +26,10 @@ impl MutationKind<PdfSnapshot, PdfMutation> for RemoveContent {
         MutationOutcome::new(diff::diff_remove_content(self.index, self.at, self.count))
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
         let _ = base;
-        base.pages.get(self.index).filter(|page| self.at + self.count <= page.content.len()).map(|page| PdfMutation::InsertContent(super::insert_content::InsertContent { index: self.index, at: self.at, content: page.content[self.at..self.at + self.count].to_vec() })).into_iter().collect()
+        base.pages.get(self.index).filter(|page| self.at + self.count <= page.content.len()).map(|page| Op::from(crate::standards::v1_7::subsets::base::schema::mutations::insert_content::InsertContent { index: self.index, at: self.at, content: page.content[self.at..self.at + self.count].to_vec() })).into_iter().collect()
     
     })())
 }
@@ -44,8 +46,6 @@ impl MutationKind<PdfSnapshot, PdfMutation> for RemoveContent {
 //#endregion 🔖️Mutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
 

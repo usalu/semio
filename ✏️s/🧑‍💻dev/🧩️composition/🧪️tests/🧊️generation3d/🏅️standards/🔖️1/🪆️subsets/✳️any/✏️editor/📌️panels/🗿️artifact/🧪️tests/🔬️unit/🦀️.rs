@@ -1,12 +1,13 @@
 use super::*;
 use crate::editor_domain::editor_laws::context;
 use crate::editor_domain::editor_laws::context::{app_with_registry, render as render_body};
+use semio_framework_test_fixtures::repo_text;
 use semio_s_artifact_procedural_3d_model::dag_host_snapshot_to_workflow;
 use semio_s_artifact_procedural_3d_model::with_host;
 use semio_framework_plugin::{TreeWindowRequest, TreeWindows, ViewModel};
 use semio_framework_ui::wgpu::{NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord};
 
-const DOCUMENT_ROWS_LAW: &str = include_str!("../../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🗿️artifact/🧪️tests/🧫️fixtures/🔬️unit/🔣️.json");
+fn document_rows_law() -> &'static str { repo_text!("✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🗿️artifact/🧪️tests/🧫️fixtures/🔬️unit/🔣️.json") }
 
 #[semio_framework_async_macros::async_test]
 async fn document_lists_widgets() {

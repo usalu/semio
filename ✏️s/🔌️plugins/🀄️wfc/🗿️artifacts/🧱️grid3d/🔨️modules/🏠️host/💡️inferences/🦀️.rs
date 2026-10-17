@@ -140,7 +140,7 @@ pub struct Grid3dInferenceJob {
 }
 
 impl Grid3dInferenceJob {
-    pub(crate) fn new(mut operation: semio_framework_job::Operation, request: Grid3dInferenceRequest) -> Result<Self, String> {
+    pub fn new(mut operation: semio_framework_job::Operation, request: Grid3dInferenceRequest) -> Result<Self, String> {
         let snapshot = request.resolve_snapshot()?;
         let cells = cell_count(&snapshot);
         if snapshot.tiles.len() > MAX_GRID3D_TILES
@@ -930,6 +930,4 @@ impl store::InferredField<Grid3dSnapshot> for Grid3dEntropy {
         shannon_entropy_over_tiles(snapshot)
     }
 }
-#[cfg(test)]
-#[path="🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

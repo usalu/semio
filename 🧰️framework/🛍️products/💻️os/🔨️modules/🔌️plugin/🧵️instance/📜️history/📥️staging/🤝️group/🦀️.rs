@@ -1,17 +1,36 @@
 //! 🎼️ Staged slice of the `group` band of the mounted artifact instance: its `instance-history` members (WP6 step S0 of the instance family).
 //!
 //! 🤝️ The instance's private child group publication and mounted command log turns.
-use super::*;
-use crate::child_content::MountedChildGroupIdentitySource;
-use crate::child_content::*;
-use crate::child_content::mounted_child_group_receipt_group::{MountedGroupMemberReceipts,MountedCommandEntry,MountedCommandEntrySource};
-use super::docs_maintenance_ladder::{item, removed};
+use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_framework::Fault;
+use semio_framework_plugin_publication_mounted::command_mounted::MountedCommandPrune;
+use semio_framework_value::retained_clone::RetainedCloneGrant;
+use semio_framework_value::retained_clone::RetainedCloneProgress;
+use semio_framework_value::RetirementDemand;
+use semio_framework_value::ValueError;
+use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
+use semio_framework_plugin_decl_emission::Emit;
+use semio_framework::FaultFrom;
+use store::MemberFactory;
+use store::SpaceMember;
+use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use pack::snapshot::ArtifactPack;
+use crate::history_components::CommandHistory;
+use std::future::Future;
+use semio_framework_plugin_instance_stores::stores_components::InstanceStores;
+use store::Mutation;
+use protocol::OpText;
+use semio_framework_plugin_reactor_app::PluginApp;
+use semio_framework_plugin_ownership::bounded_ownership::{PluginLifecycleStep, plugin_retirement_fault, plugin_turn_admitted};
+use semio_framework_ui_contract::*;
+use semio_framework_plugin_decl_views::child_view::ChildContentRetainers;
+use semio_framework_os_kernel as store;
 
 impl<A: ArtifactApp> CommandHistory<A> {
-    pub(crate) fn command_prune_requested(&self) -> bool { self.command_prune_generation != self.command_prune_processed }
+    pub fn command_prune_requested(&self) -> bool { self.command_prune_generation != self.command_prune_processed }
 
     /// 📏️ Quotes the next prune turn: a cancellation or begin hand-off, a funded hidden owner release, or one bounded comparison.
-    pub(crate) fn command_prune_demands(&self, closing: bool, _body: usize) -> Result<RetirementDemand, ValueError> {
+    pub fn command_prune_demands(&self, closing: bool, _body: usize) -> Result<RetirementDemand, ValueError> {
         let item = RetirementDemand { depth: 1, ..Default::default() };
         if closing && (self.pending_command_prune.is_some() || self.command_prune_requested()) { return Ok(item); }
         if self.pending_command_prune.is_none() && !self.command_log.pruned_terminal_is_empty() {
@@ -22,7 +41,7 @@ impl<A: ArtifactApp> CommandHistory<A> {
     }
 
     /// 🧹️ Advances one original metadata comparison, checked visibility decision or funded hidden owner.
-    pub(crate) fn advance_command_prune_step(&mut self, stores: &mut InstanceStores<A>, grant: RetainedCloneGrant, closing: bool) -> Result<PluginLifecycleStep, Fault> {
+    pub fn advance_command_prune_step(&mut self, stores: &mut InstanceStores<A>, grant: RetainedCloneGrant, closing: bool) -> Result<PluginLifecycleStep, Fault> {
         let pending = PluginLifecycleStep::Progress(RetainedCloneProgress::default());
         if grant.maximum_items == 0 { return Ok(pending); }
         let demand = self.command_prune_demands(closing, grant.maximum_copy_bytes).map_err(plugin_retirement_fault)?;

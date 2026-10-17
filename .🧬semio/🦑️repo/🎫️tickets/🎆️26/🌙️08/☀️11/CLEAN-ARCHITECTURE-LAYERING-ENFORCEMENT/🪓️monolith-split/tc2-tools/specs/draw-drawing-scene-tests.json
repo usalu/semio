@@ -1,0 +1,44 @@
+{
+  "parent": "semio-s-artifact-draw-drawing-scene",
+  "name": "semio-s-artifact-draw-drawing-scene-tests",
+  "dir": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🧪️tests/🥣️companion",
+  "files": [
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🎨️paint/📋️prepare/🎯️query/🧪️tests/🔬️unit/🦀️.rs",
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🎨️paint/📋️prepare/🧪️tests/🔬️unit/🦀️.rs",
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🎨️paint/🧪️tests/🔬️unit/🦀️.rs",
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/👁️view/🧪️tests/🔬️unit/🦀️.rs",
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare/🧪️tests/🔬️unit/🦀️.rs",
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📍️placement/🧪️tests/🔬️unit/🦀️.rs",
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📷️raster/🧪️tests/🔬️unit/🦀️.rs",
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔀️booleans/🧪️tests/🔬️unit/🦀️.rs",
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔍️trace/🧪️tests/🔬️unit/🦀️.rs",
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🧪️tests/🦀️.rs",
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🧹️retire/🧪️tests/🔬️unit/🦀️.rs",
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🪪️identity/🚦️admission/🧪️tests/🔬️unit/🦀️.rs",
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🪪️identity/🧪️tests/🔬️unit/🦀️.rs",
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/🎯️picking/🎨️paint/🧪️tests/🔬️unit/🦀️.rs"
+  ],
+  "testkit": [
+    "semio-s-artifact-draw-drawing-model",
+    "semio-s-artifact-draw-drawing-diff",
+    "semio-s-artifact-draw-drawing-geometry",
+    "semio-s-artifact-draw-drawing-mutations",
+    "semio-s-artifact-draw-drawing-transform",
+    "semio-s-artifact-draw-drawing-style",
+    "semio-s-artifact-draw-drawing-structure",
+    "semio-s-artifact-draw-drawing-metadata",
+    "semio-s-artifact-draw-drawing-scene",
+    "semio-s-artifact-draw-drawing-editor-interaction",
+    "semio-s-artifact-draw-drawing-editor"
+  ],
+  "emoji": "🥣️",
+  "summary": "the unit laws of the drawing scene preparation, painting, raster, boolean, trace, text and view modules.",
+  "description": "Companion test crate of semio-s-artifact-draw-drawing-scene: the unit laws of the drawing scene preparation, painting, raster, boolean, trace, text and view modules",
+  "crate_map": {
+    "schema::scene_trace::": "semio_s_artifact_draw_drawing_scene::trace::",
+    "schema::scene_booleans::": "semio_s_artifact_draw_drawing_scene::booleans::",
+    "schema::scene_identity::": "semio_s_artifact_draw_drawing_scene::identity::",
+    "DrawingSnapshot": "semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot",
+    "DrawingFontFamily::": "semio_s_artifact_draw_drawing_model::font_family::DrawingFontFamily::"
+  }
+}

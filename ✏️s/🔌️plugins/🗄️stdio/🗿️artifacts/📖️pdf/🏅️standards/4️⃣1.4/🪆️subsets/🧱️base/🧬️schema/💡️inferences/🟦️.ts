@@ -29,6 +29,10 @@ type stdioPdf14BaseInferenceGuardSizeBounds = { readonly minItems?: number; read
 
 export const stdioPdf14BaseInferenceGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : stdioPdf14BaseInferenceGuardReject(at, "value is not an object");
+export const stdioPdf14BaseInferenceGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) stdioPdf14BaseInferenceGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const stdioPdf14BaseInferenceGuardArray = (value: unknown, at: string, bounds: stdioPdf14BaseInferenceGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return stdioPdf14BaseInferenceGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) stdioPdf14BaseInferenceGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -59,14 +63,14 @@ export const stdioPdf14BaseInferenceGuardConstant = <T extends string | number |
 //#endregion 🚪️Parsers
 
 export function parsePdfInference(value: unknown, at = "$"): PdfInference {
-  const row = stdioPdf14BaseInferenceGuardObject(value, at);
+  const row = stdioPdf14BaseInferenceGuardClosed(stdioPdf14BaseInferenceGuardObject(value, at), at, ["outline"]);
   return {
     outline: parsePdfOutline(row["outline"], `${at}.outline`),
   };
 }
 
 export function parsePdfOutline(value: unknown, at = "$"): PdfOutline {
-  const row = stdioPdf14BaseInferenceGuardObject(value, at);
+  const row = stdioPdf14BaseInferenceGuardClosed(stdioPdf14BaseInferenceGuardObject(value, at), at, ["pageCount", "wordCount", "charCount"]);
   return {
     pageCount: stdioPdf14BaseInferenceGuardInteger(row["pageCount"], `${at}.pageCount`),
     wordCount: stdioPdf14BaseInferenceGuardInteger(row["wordCount"], `${at}.wordCount`),

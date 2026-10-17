@@ -5,7 +5,7 @@
 //! fresh content-addressed handle and seeding the working-scene cache so the diff is resolvable
 //! immediately (see `🗿️artifacts/🖐️5d/🦀️.rs`'s `🔖️KindCatalogComposition` region).
 use crate::standards::v1::subsets::any::schema::diff::Puzzle5dDiff;
-use crate::split_and_seed_kind_catalogs;
+use crate::standards::v1::subsets::any::schema::kind_catalogs::split_and_seed_kind_catalogs;
 use crate::Puzzle5dSnapshot;
 
 //#region 🔖️Diff

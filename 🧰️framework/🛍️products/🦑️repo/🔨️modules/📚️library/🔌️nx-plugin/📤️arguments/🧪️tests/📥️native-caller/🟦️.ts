@@ -63,7 +63,6 @@ test("actual dispatcher issues two distinct selected dependencies without rebasi
  const input=inputs(),before=JSON.stringify(input.original),validate=new Ajv({strict:true}).addSchema(cargoExecutionSchema).compile(nativeSchema),observed:any[]=[];
  for(const row of fixture.commands){let plan:any;await api.executeOwnerArgumentsV1(optionsFor(input,row),input.context,async(value:any)=>{plan=value;return {success:true};});const issued=JSON.parse(plan.env.SEMIO_SCRIPT_PROCESS_INVOCATION);expect(issued.policy).toEqual(input.original.policy);expect(issued.deadlineEpochMilliseconds).toBe(input.original.deadlineEpochMilliseconds);expect(validate(issued.capabilities),JSON.stringify(validate.errors)).toBe(true);expect(issued.capabilities.transport).toEqual(input.original.capabilities.native.transport);expect(issued.capabilities.child).toEqual(input.original.capabilities.native.child);expect(issued.capabilities.network).toEqual(input.original.capabilities.native.network);expect(issued.capabilities.artifactDirectory).toBe("/repo/artifacts");const command=issued.capabilities.command;observed.push([command.manifest,command.workingDirectory,command.program,command.arguments]);}
  expect(observed).toEqual(fixture.expectedCommands);expect(JSON.stringify(input.original)).toBe(before);
- console.log("[DEBUG] actual Nx dispatcher original dependency commands=2 parentDeadline=unchanged capabilities=closed schemaOracle=Ajv");
 });
 test("actual Nx dependency forwards only its original literal arguments",async()=>{
  const input=inputs(fixture.forwardedArguments,true),row=fixture.commands[0];let observed:any;
@@ -82,7 +81,6 @@ test("actual dispatcher refuses foreign or altered native authority before deleg
  if(refusal==="capability-override")options.env.SEMIO_SCRIPT_CAPABILITIES=JSON.stringify({allowAll:true});
  await expect(api.executeOwnerArgumentsV1(options,input.context,async()=>{calls++;return {success:true};})).rejects.toThrow();expect(calls,refusal).toBe(0);
  }
- console.log(`[DEBUG] actual Nx dispatcher original refusals=${fixture.refusals.length} delegated=0`);
 });
 
 test("native dispatch preserves authentic zero and nullable original parent authority",async()=>{
@@ -98,7 +96,6 @@ test("native dispatch preserves authentic zero and nullable original parent auth
   else{await expect(invoke()).rejects.toThrow();expect(calls).toBe(0);}
   expect(JSON.stringify(input.original)).toBe(before);
  }
- console.log("[DEBUG] Original zero/null and finite parent policies preserved exactly; independently issued native child remains finite; mixed authority refused before delegation");
 });
 
 test("production native caller binds canonical artifacts and actual selected argv without changing the parent",async()=>{
@@ -116,12 +113,10 @@ test("production native caller binds canonical artifacts and actual selected arg
   expect(oracle.exitCode).toBe(0);expect(issued.capabilities.native.artifactDirectory).toBe(JSON.parse(new TextDecoder().decode(oracle.stdout)));
   expect(JSON.stringify(original)).toBe(before);expect(environment.SEMIO_SCRIPT_PROCESS_INVOCATION).toBe(before);expect(observed.SEMIO_SCRIPT_CAPABILITIES).toBeUndefined();
  }
- console.log("[DEBUG] Original fixture owns native child resources and exact selected argv; original zero/null parent remains unchanged, independent Ajv/Node path oracle");
 });
 test("actual run-many dispatcher retains the installed Nx project and target selection",async()=>{
  const input=inputs();input.original.capabilities.arguments=["nx","run-many","--target=test","--projects=app"];input.original.capabilities.selection=[...input.original.capabilities.arguments];
  for(const row of fixture.commands){let calls=0;await api.executeOwnerArgumentsV1(optionsFor(input,row),input.context,async()=>{calls++;return {success:true};});expect(calls).toBe(1);}
- console.log("[DEBUG] Installed Nx run-many selection admits only actual selected root dependencies");
 });
 
 test("original Nx launch issues authority for each actual provision user and watcher child",async()=>{
@@ -136,7 +131,6 @@ test("original Nx launch issues authority for each actual provision user and wat
   for(const selected of fixture.launchCases){const caller=processApi.createScriptProcessEnvelope(original.policy,{...original.capabilities,selection:["nx",...selected],native:structuredClone(fixture.launchResources)},Date.now()),declaredEnvironment={...environment,SEMIO_SCRIPT_PROCESS_INVOCATION:JSON.stringify(caller)};execute.call({root:"/repo"},selected,false,declaredEnvironment);const issued=JSON.parse(observed.options.env.SEMIO_SCRIPT_PROCESS_INVOCATION);expect(new Ajv({strict:true}).compile(schema)(issued.capabilities)).toBe(true);expect(issued.capabilities.selection).toEqual(["nx",...selected]);expect(issued.capabilities.arguments).toEqual(original.capabilities.arguments);expect(issued.policy).toEqual(original.policy);expect(issued.deadlineEpochMilliseconds).toBeNull();expect(observed.args).toEqual(["nx-cli",...selected]);}
   expect(children.length).toBe(fixture.launchCases.length);
  }
- console.log("[DEBUG] Original launch body through Bun and independent TypeScript compilers retains parent while issuing each actual provision, alias and watcher selected argv; real child verification remains separate");
 });
 
 test("actual caller never fabricates native authority or selects another original command",async()=>{
@@ -154,7 +148,6 @@ test("actual caller never fabricates native authority or selects another origina
   else expect(invoke).toThrow();
   expect(JSON.stringify(original)).toBe(before);expect(environment.SEMIO_SCRIPT_PROCESS_INVOCATION).toBe(before);
  }
- console.log("[DEBUG] Actual explicit caller resources and selected argv preserve original provenance; non-native launch fabricates no native grant; missing/foreign selected authority refused");
 });
 
 test("actual normal Nx launch preserves ordinary original envelopes without native-only admission",async()=>{
@@ -166,7 +159,6 @@ test("actual normal Nx launch preserves ordinary original envelopes without nati
   const output=producer.nativeNxChildEnvironmentV1("/repo",original,["exec","--projects=workspace","--excludeTaskDependencies","--skip-nx-cache","--","bun","original-input"],environment),issued=JSON.parse(output.SEMIO_SCRIPT_PROCESS_INVOCATION!);
   expect(processApi.readScriptProcessEnvelope(issued,now)).toBe(issued);expect(issued).toEqual(original);expect(output.ORIGINAL_NORMAL_INPUT).toBe(environment.ORIGINAL_NORMAL_INPUT);expect(output.CARGO_TARGET_DIR).toBeUndefined();expect(output.CARGO_NET_OFFLINE).toBeUndefined();expect(issued.capabilities.native).toBeUndefined();expect(issued.capabilities.selection).toBeUndefined();expect(JSON.stringify(original)).toBe(before);expect(environment.SEMIO_SCRIPT_PROCESS_INVOCATION).toBe(before);
  }
- console.log("[DEBUG] Actual non-native Nx exec preserves ordinary original capability/policy/deadline/inputs; Generic owner receives the independent Ajv examples; no native-only request or Cargo/native authority fabricated");
 });
 
 test("trusted outer Nx issuer owns production policy and declares child selections before handoff",async()=>{
@@ -180,7 +172,6 @@ test("trusted outer Nx issuer owns production policy and declares child selectio
   const bound=processApi.createScriptProcessEnvelope(parent.policy,{workspaceRoot:capabilities.workspaceRoot,buildMode:capabilities.buildMode,arguments:capabilities.arguments,native:capabilities.native,selection:capabilities.selection},Date.now());expect(producer.issueSelectedNxCallerEnvelopeV1("/repo",bound,row.selected)).toBe(bound);expect(()=>producer.issueSelectedNxCallerEnvelopeV1("/repo",bound,["run","undeclared:foreign"])).toThrow();
   const oracle=Bun.spawnSync(["node","-e","process.stdout.write(JSON.stringify(require('node:path').resolve(process.argv[1],process.argv[2])))","--","/repo",row.artifact]);expect(oracle.exitCode).toBe(0);expect(capabilities.native.artifactDirectory).toBe(JSON.parse(new TextDecoder().decode(oracle.stdout)));
  }
- console.log("[DEBUG] Trusted outer issuer reads genuine production policy before original envelope; explicit child command list narrows declared selections without fabricating or rebasing caller authority; Ajv and Node independently agree");
 });
 
 /** 🧵️ The private native argument handoff reaches a real process without shell interpolation. */
@@ -196,7 +187,6 @@ test("actual native private argument transport preserves selected child argv",as
  const oracle=Bun.spawnSync(["node","-e",code,"--",marker,...arguments_],{env:transported.environment});
  expect(actual.exitCode,new TextDecoder().decode(actual.stderr)).toBe(0);expect(oracle.exitCode,new TextDecoder().decode(oracle.stderr)).toBe(0);
  expect(JSON.parse(new TextDecoder().decode(actual.stdout))).toEqual(arguments_);expect(JSON.parse(new TextDecoder().decode(oracle.stdout))).toEqual(arguments_);
- console.log("[DEBUG] Native private envelope preserves literal selected arguments in actual Bun and independent Node child argv; outer wrapper command remains static");
 });
 
 /** 🪢️ Exercises the defining owner-command through a real independent Node child. */
@@ -215,7 +205,6 @@ test("actual native owner process receives original build mode policy and deadli
    const observed=JSON.parse(readFileSync(output,"utf8"));expect(schemaOracle(observed.capabilities),JSON.stringify(schemaOracle.errors)).toBe(true);expect(observed.capabilities).toEqual(capabilities);expect(observed.policy).toEqual(original.policy);expect(observed.deadlineEpochMilliseconds).toBeLessThanOrEqual(original.deadlineEpochMilliseconds);expect(observed.deadlineEpochMilliseconds).toBeGreaterThan(Date.now());expect(JSON.stringify(original)).toBe(before);
   }
  }finally{if(saved===undefined)delete process.env.SEMIO_SCRIPT_PROCESS_INVOCATION;else process.env.SEMIO_SCRIPT_PROCESS_INVOCATION=saved;rmSync(directory,{recursive:true,force:true});}
- console.log("[DEBUG] Actual native owner-command preserves original mode and closed capability/policy in independent Node child; deadline remains bounded; foreign inherited envelope cannot replace original authority");
 });
 
 import "../../../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🧪️tests/🟦️.ts";

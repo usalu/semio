@@ -1,0 +1,119 @@
+{
+ "cases": [
+  {
+   "name": "cold",
+   "cached": [],
+   "below": false,
+   "nodes": 3,
+   "kind": "admitted"
+  },
+  {
+   "name": "warm",
+   "cached": [
+    0,
+    1,
+    2
+   ],
+   "below": false,
+   "nodes": 3,
+   "kind": "admitted"
+  },
+  {
+   "name": "partial",
+   "cached": [
+    0
+   ],
+   "below": false,
+   "nodes": 3,
+   "kind": "admitted"
+  },
+  {
+   "name": "bytes",
+   "cached": [],
+   "below": true,
+   "nodes": 3,
+   "kind": "pressure"
+  },
+  {
+   "name": "nodes",
+   "cached": [],
+   "below": false,
+   "nodes": 2,
+   "kind": "pressure"
+  }
+ ],
+ "io": [
+  {
+   "name": "cold",
+   "seed": [],
+   "changed": false,
+   "warm": false,
+   "below": false,
+   "nodes": 3,
+   "kind": "admitted",
+   "callbacks": 1,
+   "retained": 3
+  },
+  {
+   "name": "warm",
+   "seed": [],
+   "changed": false,
+   "warm": true,
+   "below": false,
+   "nodes": 3,
+   "kind": "admitted",
+   "callbacks": 2,
+   "retained": 3
+  },
+  {
+   "name": "changed",
+   "seed": [
+    0,
+    1,
+    2
+   ],
+   "changed": true,
+   "warm": false,
+   "below": false,
+   "nodes": 6,
+   "kind": "admitted",
+   "callbacks": 1,
+   "retained": 6
+  },
+  {
+   "name": "bytes",
+   "seed": [],
+   "changed": false,
+   "warm": false,
+   "below": true,
+   "nodes": 3,
+   "kind": "pressure",
+   "callbacks": 0,
+   "retained": 0
+  },
+  {
+   "name": "nodes",
+   "seed": [],
+   "changed": false,
+   "warm": false,
+   "below": false,
+   "nodes": 2,
+   "kind": "pressure",
+   "callbacks": 0,
+   "retained": 0
+  }
+ ],
+ "corruption": [
+  "header",
+  "foreign-schema",
+  "counter",
+  "fractional",
+  "index",
+  "extent"
+ ],
+ "pageQuota": {
+  "payloadBytes": 33554432,
+  "code": 13,
+  "synchronous": 3
+ }
+}

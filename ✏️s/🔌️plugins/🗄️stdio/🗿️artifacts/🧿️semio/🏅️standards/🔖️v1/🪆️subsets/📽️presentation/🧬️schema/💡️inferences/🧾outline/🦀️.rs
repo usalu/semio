@@ -142,8 +142,5 @@ pub fn compute_semio_presentation_outline(snapshot: &SemioPresentationSnapshot) 
 }
 //#endregion 🔖️Outline
 
-#[cfg(test)]
-//#region 🧪️Tests
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

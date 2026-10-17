@@ -1,6 +1,6 @@
-import{mcpJsonPathV1,mcpJsonArrayV1}from"../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📡️stdio/🎫️session/📋️data/🟦️.ts";
+import{mcpJsonPathV1,mcpJsonArrayV1}from"@semio-tech/framework-os-mcp/stdio/session/data";
 import{receiveScriptProcessInvocation,createIssuedResourceControlV1,withRequestedIssuedResourceControlV1}from"../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import{withDelegatedMcpClientSessionV1,withMcpDelegationCleanupV1}from"../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📡️stdio/🎫️session/📦️published/🟦️.ts";
+import{withDelegatedMcpClientSessionV1,withMcpDelegationCleanupV1}from"@semio-tech/framework-os-mcp/stdio/session/published";
 import { directoryCommandRequestJson, sealDirectoryCommandRequestV1 } from "@semio-tech/framework/directory/io/text";
 import { serviceMcpTestArtifactRoot } from "../📁️artifact-root/🟦️.ts";
 /** 🧩️ The plugin-coverage lane-parity sweep: every installed plugin package over the semio MCP.
@@ -32,11 +32,11 @@ import { appendFileSync, chmodSync, existsSync, mkdirSync, mkdtempSync, writeFil
 import { randomBytes } from "node:crypto";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { AcceptancePreconditionMissing, hubCredentialFromEnv, isAcceptancePreconditionMissing, requireMcpBinary, spawnRawMcp } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🟦️.ts";
-import { sealSpaceArtifactCreateV1 } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🌱️space-artifact-creation-v1/🟦️.ts";
+import { AcceptancePreconditionMissing, hubCredentialFromEnv, isAcceptancePreconditionMissing, requireMcpBinary, spawnRawMcp } from "@semio-tech/framework-os-mcp";
+import { sealSpaceArtifactCreateV1 } from "@semio-tech/framework-os/modules/directory/schema/space-artifact-creation-v1";
 
 import { createSpaceCommandV1 } from "@semio-tech/framework/directory/spaces";
-import { acceptanceCheckResult, publishAcceptanceCheckResult, withAcceptanceRecord } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/🟦️.ts";
+import { acceptanceCheckResult, publishAcceptanceCheckResult, withAcceptanceRecord } from "@semio-tech/repo-test/acceptance/orchestration";
 
 await receiveScriptProcessInvocation(process.env,async original=>{
 const phaseControl=createIssuedResourceControlV1(original,"mcp:plugin-coverage",120000);

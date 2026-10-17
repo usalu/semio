@@ -1,10 +1,25 @@
+use crate::SHomeSnapshot;
+use crate::{editor::home::commands::apply_directory_event_page, editor::home::commands::apply_local_catalog_document};
+use crate::{editor::home::commands::bind_space_file, editor::home::commands::create_studio, editor::home::commands::import_space, editor::home::commands::open_space, editor::home::commands::persist_locally};
+use crate::{editor::home::commands::copy_invite_link, editor::home::commands::create_space, editor::home::commands::delete_space, editor::home::commands::manage_space, editor::home::commands::presence_heartbeat, editor::home::commands::share_space};
+use crate::{editor::home::commands::delete_virtual_file_system_node, editor::home::commands::go_home, editor::home::commands::navigate_virtual_file_system_node};
+use crate::{editor::home::config::home_retained_contract, editor::home::config::HomeConfig, editor::home::config::HomeConfigMutation};
+use crate::editor::home::transient::HomeTransient;
+use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::ConfigView;
+use semio_framework_plugin::DslValue;
+use semio_framework_plugin::Editor;
+use semio_framework_plugin::EditorApp;
+use semio_framework_plugin::Fault;
+use crate::editor::home::{HOME_RETAINED_TOOL_IDS, HOME_RETAINED_RAW_BYTES, HOME_RETAINED_SCALAR_BYTES, HOME_RETAINED_WORK_ITEMS, HOME_RETAINED_PUBLICATION_CONTRACTS, home_retained_extent};
+use semio_framework_test_fixtures::fixture_text;
 
-use super::*;
+use crate::editor::home::*;
 
 //#region 🧪️RetainedCommandEnvelope
 #[test]
 fn retained_command_fixture_matches_exact_routes_and_serde_json_boundaries() {
-    let fixture: semio_framework_pack_json::Value = semio_framework_pack_json::parse(include_str!("../🧫️fixtures/🧫️retained-command-limits/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("language-neutral retained fixture");
+    let fixture: semio_framework_pack_json::Value = semio_framework_pack_json::parse(fixture_text!("../../../✏️editor/🧪️tests/🧫️fixtures/🧫️retained-command-limits/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("language-neutral retained fixture");
     let migrated: Vec<&str> = fixture["routes"].as_array().expect("routes").iter().filter(|row| row["disposition"] == "Migrated").map(|row| row["id"].as_str().expect("route id")).collect();
     assert_eq!(migrated, HOME_RETAINED_TOOL_IDS);
     assert_eq!(HOME_RETAINED_PUBLICATION_CONTRACTS.len(), migrated.len());
@@ -561,4 +576,4 @@ async fn the_import_commit_asks_the_host_to_keep_the_imported_studio() {
 }
 //#endregion 🗃️LocalCatalogLane
 
-semio_framework_plugin::history_edit_acceptance_law!("space", super::HomeApp, || semio_framework_plugin::App { definition: semio_framework_plugin::app::history_edit_acceptance::block_on_acceptance(super::create_home_app()), examples: Vec::new() }, "../../🏅️standards/🔖️1/🪆️subsets/✳️any");
+semio_framework_plugin::history_edit_acceptance_law!("space", crate::editor::home::HomeApp, || semio_framework_plugin::App { definition: semio_framework_plugin::app::history_edit_acceptance::block_on_acceptance(crate::editor::home::create_home_app()), examples: Vec::new() }, "../../🏅️standards/🔖️1/🪆️subsets/✳️any");

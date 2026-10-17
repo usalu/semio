@@ -2,7 +2,6 @@
 //! structured-payload reasoning as `replace-curve`: a NURBS surface's control-point grid is edited
 //! piecewise by the editor, so `replace`, never `change`.
 
-use crate::schema::mutations::SemioBrepMutation;
 use crate::schema::snapshot::{BrepSurface, SemioBrepSnapshot};
 
 //#region 🔖️Payload
@@ -14,13 +13,16 @@ pub struct ReplaceSurface {
     pub new_surface: BrepSurface,
 }
 
-impl protocol::MutationKind<SemioBrepSnapshot, SemioBrepMutation> for ReplaceSurface {
+impl<Op> protocol::MutationKind<SemioBrepSnapshot, Op> for ReplaceSurface
+where
+    Op: protocol::Mutation<SemioBrepSnapshot, Diff = crate::schema::diff::SemioBrepDiff> + From<ReplaceSurface>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "surface", kind: "replace-surface", record: "ReplacedSurface" };
 
-    fn diff(&self, base: &SemioBrepSnapshot) -> protocol::MutationOutcome<<SemioBrepMutation as protocol::Mutation<SemioBrepSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioBrepSnapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<SemioBrepSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &SemioBrepSnapshot) -> Result<Vec<SemioBrepMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &SemioBrepSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

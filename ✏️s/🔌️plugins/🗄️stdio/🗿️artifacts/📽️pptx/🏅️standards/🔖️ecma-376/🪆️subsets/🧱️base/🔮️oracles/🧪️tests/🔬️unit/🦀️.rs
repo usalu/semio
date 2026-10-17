@@ -1,18 +1,25 @@
 
 use super::*;
+use semio_framework_test_fixtures::{fixture_bytes, fixture_text};
 use semio_repo_test_host::law::feature_rows;
 
 /// 🧫️ The real committed package `🧱️mutate-pptx-ecma-376` runs on — the seven-slide subset derived
 /// once from a real 62-slide conference deck, with real titles, real placeholders and real
 /// `a:xfrm` geometry in EMUs.
-const FIXTURE: &[u8] = include_bytes!("../../../🧪️tests/🧫️fixtures/📽️.pptx");
+fn fixture() -> &'static [u8] {
+    static CELL: std::sync::OnceLock<Vec<u8>> = std::sync::OnceLock::new();
+    CELL.get_or_init(|| fixture_bytes!("../../../🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/📽️.pptx").to_vec()).as_slice()
+}
 
 /// 🪢️ The four kinds that write the package plumbing (`[Content_Types].xml`, the `*.rels` parts); the slide/shape projection does not reach them, so they are proven by
 /// the cases below through `project_pptx_plumbing`.
 const PLUMBING_KINDS: [&str; 4] = ["set-relationship", "remove-relationship", "set-content-type", "remove-content-type"];
 
 /// 🧾️ The case's own `Examples` rows, read rather than restated — see [`semio_repo_test_host::law::feature_rows`].
-const FEATURE: &str = include_str!("../../../🧪️tests/🧱️mutate-pptx-ecma-376/🥒️.feature");
+fn feature() -> &'static str {
+    static CELL: std::sync::OnceLock<String> = std::sync::OnceLock::new();
+    CELL.get_or_init(|| fixture_text!("../../../🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧪️tests/🧱️mutate-pptx-ecma-376/🥒️.feature").to_owned()).as_str()
+}
 
 fn spec(kind: &str, params: &Json) -> Json {
     Json::Object(vec![("kind".to_string(), Json::String(kind.to_string())), ("params".to_string(), params.clone())])
@@ -25,16 +32,16 @@ fn spec(kind: &str, params: &Json) -> Json {
 /// it, which is precisely what the projection reports.
 #[test]
 fn every_declared_kind_is_observable_and_its_inverse_restores_the_presentation() {
-    let base = project_pptx_mutation(FIXTURE).expect("the independent reader projects the real deck");
-    let rows = feature_rows(FEATURE);
+    let base = project_pptx_mutation(fixture()).expect("the independent reader projects the real deck");
+    let rows = feature_rows(feature());
     assert_eq!(rows.len(), KINDS.len() - PLUMBING_KINDS.len(), "the feature must carry exactly one Examples row per declared kind but the plumbing kinds proven below");
     for (kind, params) in &rows {
         assert!(KINDS.contains(&kind.as_str()), "the feature exercises {kind:?}, which the pptx-ecma-376-base catalog does not declare");
         let forward = spec(kind, params);
-        let mutated = oracle_apply_mutation(FIXTURE, &forward).unwrap_or_else(|error| panic!("{kind}: {error}"));
+        let mutated = oracle_apply_mutation(fixture(), &forward).unwrap_or_else(|error| panic!("{kind}: {error}"));
         let moved = project_pptx_mutation(&mutated).unwrap_or_else(|error| panic!("{kind}: projecting the result failed: {error}"));
         assert_ne!(moved, base, "{kind} left the compared projection untouched, so its scenario would pass whether or not the mutation ran");
-        let restored = oracle_apply_mutation_inverse(FIXTURE, &forward).unwrap_or_else(|error| panic!("{kind}: inverse: {error}"));
+        let restored = oracle_apply_mutation_inverse(fixture(), &forward).unwrap_or_else(|error| panic!("{kind}: inverse: {error}"));
         assert_eq!(project_pptx_mutation(&restored).unwrap(), base, "{kind}: applying the mutation and then its own inverse must restore the deck's projection");
     }
 }
@@ -43,23 +50,23 @@ fn every_declared_kind_is_observable_and_its_inverse_restores_the_presentation()
 /// regenerates every slide-related OPC part from the typed slide/shape list and rezips.
 #[test]
 fn the_round_trip_is_projection_stable_and_not_a_byte_passthrough() {
-    let rebuilt = oracle_round_trip(FIXTURE).expect("the reference re-serializes the deck");
-    assert_ne!(rebuilt.as_slice(), FIXTURE, "the slide parts and the archive are both rebuilt from the parsed model; identical bytes would mean the input was smuggled");
-    assert_eq!(project_pptx_mutation(&rebuilt).unwrap(), project_pptx_mutation(FIXTURE).unwrap());
+    let rebuilt = oracle_round_trip(fixture()).expect("the reference re-serializes the deck");
+    assert_ne!(rebuilt.as_slice(), fixture(), "the slide parts and the archive are both rebuilt from the parsed model; identical bytes would mean the input was smuggled");
+    assert_eq!(project_pptx_mutation(&rebuilt).unwrap(), project_pptx_mutation(fixture()).unwrap());
 }
 
 #[test]
 fn unknown_kind_is_an_error_never_a_silent_no_op() {
     let unknown = spec("not-a-real-kind", &Json::Object(Vec::new()));
-    assert!(oracle_apply_mutation(FIXTURE, &unknown).is_err());
-    assert!(oracle_apply_mutation_inverse(FIXTURE, &unknown).is_err());
-    assert!(oracle_apply_mutation(FIXTURE, &Json::Object(vec![("params".to_string(), Json::Object(Vec::new()))])).is_err(), "a spec with no kind at all is an error too");
+    assert!(oracle_apply_mutation(fixture(), &unknown).is_err());
+    assert!(oracle_apply_mutation_inverse(fixture(), &unknown).is_err());
+    assert!(oracle_apply_mutation(fixture(), &Json::Object(vec![("params".to_string(), Json::Object(Vec::new()))])).is_err(), "a spec with no kind at all is an error too");
 }
 
 /// 📇️ [`KINDS`] against the catalog that declares it.
 #[test]
 fn kinds_matches_the_catalog() {
-    let manifest = include_str!("../../🔣️.json");
+    let manifest = fixture_text!("../../../🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🔮️oracles/🔣️.json").to_owned();
     for kind in KINDS {
         assert!(manifest.contains(&format!("\"{kind}\"")), "the pptx-ecma-376-base catalog is missing {kind:?}");
     }
@@ -94,7 +101,7 @@ fn owner_rows(plumbing: &Json, owner: &str) -> Vec<String> {
 /// restores the deck's projection exactly -- positions included.
 #[test]
 fn every_plumbing_kind_is_observable_places_its_row_and_its_inverse_restores_the_package() {
-    let base = project_pptx_plumbing(FIXTURE).expect("the independent reader projects the real deck's plumbing");
+    let base = project_pptx_plumbing(fixture()).expect("the independent reader projects the real deck's plumbing");
     let plumbing = &base;
     let first_root = owner_rows(&base, "").first().cloned().expect("the package root owns a relationship");
     let (first_override, _) = pair(&plumbing.array("overrides")[0]);
@@ -110,14 +117,14 @@ fn every_plumbing_kind_is_observable_places_its_row_and_its_inverse_restores_the
     for forward in &cases {
         let kind = forward.str("kind");
         assert!(PLUMBING_KINDS.contains(&kind.as_str()), "{kind} is not a plumbing kind");
-        let mutated = oracle_apply_mutation(FIXTURE, forward).unwrap_or_else(|error| panic!("{kind}: {error}"));
+        let mutated = oracle_apply_mutation(fixture(), forward).unwrap_or_else(|error| panic!("{kind}: {error}"));
         assert_ne!(project_pptx_plumbing(&mutated).unwrap(), base, "{kind} left the compared plumbing untouched");
-        let restored = oracle_apply_mutation_inverse(FIXTURE, forward).unwrap_or_else(|error| panic!("{kind}: inverse: {error}"));
+        let restored = oracle_apply_mutation_inverse(fixture(), forward).unwrap_or_else(|error| panic!("{kind}: inverse: {error}"));
         assert_eq!(project_pptx_plumbing(&restored).unwrap(), base, "{kind}: the inverse must restore the plumbing, positions included");
     }
-    let placed = project_pptx_plumbing(&oracle_apply_mutation(FIXTURE, &cases[0]).unwrap()).unwrap();
+    let placed = project_pptx_plumbing(&oracle_apply_mutation(fixture(), &cases[0]).unwrap()).unwrap();
     assert_eq!(owner_rows(&placed, "").first().map(String::as_str), Some("rIdOracleLink"), "index 0 puts the relationship first");
-    let appended = project_pptx_plumbing(&oracle_apply_mutation(FIXTURE, &cases[1]).unwrap()).unwrap();
+    let appended = project_pptx_plumbing(&oracle_apply_mutation(fixture(), &cases[1]).unwrap()).unwrap();
     assert_eq!(owner_rows(&appended, "").last().map(String::as_str), Some("rIdOracleLink"), "no index appends the relationship");
 }
 
@@ -128,6 +135,6 @@ fn plumbing_kinds_refuse_a_missing_target() {
     let missing_owner = spec("remove-relationship", &object(vec![("owner", text("ppt/nothing.xml")), ("id", text("rId1"))]));
     let missing_entry = spec("remove-content-type", &object(vec![("isOverride", Json::Bool(false)), ("name", text("nothing"))]));
     for forward in [missing_relationship, missing_owner, missing_entry] {
-        assert!(oracle_apply_mutation(FIXTURE, &forward).is_err(), "{} must refuse", forward.str("kind"));
+        assert!(oracle_apply_mutation(fixture(), &forward).is_err(), "{} must refuse", forward.str("kind"));
     }
 }

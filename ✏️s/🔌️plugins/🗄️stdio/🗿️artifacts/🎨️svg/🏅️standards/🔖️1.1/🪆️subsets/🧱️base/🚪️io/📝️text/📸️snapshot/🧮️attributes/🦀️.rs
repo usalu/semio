@@ -848,9 +848,7 @@ pub fn native_svg_document(doc:&SvgDocument)->XmlDocument {
     XmlDocument{declaration:doc.declaration.clone(),doctype:doc.doctype.clone(),prolog:doc.prolog.iter().map(native_svg_node).collect(),root:doc.root.as_ref().map(native_svg_node),epilog:doc.epilog.iter().map(native_svg_node).collect()}
 }
 
-#[cfg(test)]
-#[path="🧪️tests/🦀️.rs"]
-mod tests;
+
 
 #[path="🚦️controlled/🦀️.rs"]
 mod controlled;

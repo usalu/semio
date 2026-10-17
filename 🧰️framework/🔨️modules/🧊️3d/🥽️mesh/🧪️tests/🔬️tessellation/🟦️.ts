@@ -53,7 +53,7 @@ test("original tessellation metadata capture borrows independent authored attrib
   geometry.setAttribute("position",new Float32BufferAttribute(law.positions.flat(),3));
   for(const attribute of law.metadataCapture.attributes)geometry.setAttribute(attribute.name,new Float32BufferAttribute(attribute.values.flat(),attribute.values[0].length));
   const originals=new Map(law.metadataCapture.attributes.map(attribute=>[attribute.name,geometry.getAttribute(attribute.name).array]));
-  for(const attribute of law.metadataCapture.attributes){expect(geometry.getAttribute(attribute.name).array).toBe(originals.get(attribute.name));expect(Array.from(geometry.getAttribute(attribute.name).array)).toEqual(attribute.values.flat());}
+  for(const attribute of law.metadataCapture.attributes){const expectedAt56x115 = originals.get(attribute.name); expect<typeof expectedAt56x115>(geometry.getAttribute(attribute.name).array).toBe(expectedAt56x115);expect(Array.from(geometry.getAttribute(attribute.name).array)).toEqual(attribute.values.flat());}
   expect(originals.size).toBe(law.metadataCapture.attributes.length);
   geometry.dispose();
 });
@@ -104,7 +104,7 @@ test("original tessellation projects independent authored samples through origin
   for(const attribute of law.metadataCapture.attributes){const values=law.attributeProjection.sourceIndices.flatMap(index=>attribute.values[index]);geometry.setAttribute(attribute.name,new Float32BufferAttribute(values,attribute.values[0].length));}
   const originals=new Map(law.metadataCapture.attributes.map(attribute=>[attribute.name,geometry.getAttribute(attribute.name).array]));
   const output=geometry.toNonIndexed();
-  for(const attribute of law.metadataCapture.attributes){expect(Array.from(output.getAttribute(attribute.name).array)).toEqual(law.attributeProjection.outputIndices.flatMap(index=>attribute.values[index]));expect(geometry.getAttribute(attribute.name).array).toBe(originals.get(attribute.name));}
+  for(const attribute of law.metadataCapture.attributes){expect(Array.from(output.getAttribute(attribute.name).array)).toEqual(law.attributeProjection.outputIndices.flatMap(index=>attribute.values[index]));const expectedAt107x264 = originals.get(attribute.name); expect<typeof expectedAt107x264>(geometry.getAttribute(attribute.name).array).toBe(expectedAt107x264);}
   expect(law.attributeProjection.atomicIndexBytes).toBe(Uint32Array.BYTES_PER_ELEMENT);
   output.dispose();geometry.dispose();
 });

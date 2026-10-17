@@ -46,5 +46,4 @@ test("member opening admits original sources then funds tickets before snapshot 
   expect(source.includes("owners.constructor_is_complete()")).toBe(true);
   expect(source.includes("owners.admit_constructor(grant)")).toBe(true);
   expect(source.includes("self.owners.take().expect(")).toBe(true);
-  console.log("[DEBUG] Node storage/RFC6902 original source ingress and independently funded factory ticket phases preserve total physical ownership; System equality required separately");
 });

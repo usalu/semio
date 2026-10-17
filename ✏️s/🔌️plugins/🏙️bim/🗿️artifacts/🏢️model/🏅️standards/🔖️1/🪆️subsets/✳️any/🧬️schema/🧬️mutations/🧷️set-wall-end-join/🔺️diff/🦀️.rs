@@ -2,7 +2,7 @@
 //! Restating the current preference is a no-op. Nothing derived is written: the wall layout of the wall and of the walls it touches
 //! follows by inference.
 
-use super::super::modify::WallEnd;
+use crate::standards::v1::subsets::any::schema::mutations::modify::WallEnd;
 use super::SetWallEndJoin;
 use crate::standards::v1::subsets::any::schema::{diff::{Assigned, Entry, ModelDiff, patches::WallPatch}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};

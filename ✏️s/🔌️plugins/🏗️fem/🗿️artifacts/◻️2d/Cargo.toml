@@ -18,6 +18,7 @@ members = [
     "🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🪜️mutations-2/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/📈️analysis/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
@@ -208,6 +209,9 @@ path = "🏅️standards/🔖️1/🪆️subsets/🌐️any/🚪️io/📦️pac
 
 [workspace.dependencies.semio-s-artifact-fem-2d-load]
 path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-fem-2d-load-2]
+path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🪜️mutations-2/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-s-artifact-fem-2d-material]
 path = "🏅️standards/🔖️1/🪆️subsets/🧱️material/🧬️schema/🧬️mutations/📦️packages/🦀️rust"

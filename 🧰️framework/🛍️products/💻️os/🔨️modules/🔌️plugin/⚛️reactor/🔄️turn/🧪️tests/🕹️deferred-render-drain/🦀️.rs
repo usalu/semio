@@ -5,9 +5,11 @@
 //! is the ordinary case, so the drain behind it is the only thing that ever makes the re-render happen —
 //! and it used to take exactly ONE deferred surface per turn, i.e. one host round trip per refused
 //! body. Wave B48, ticket 26/09/02/PUZZLE-3D-END-TO-END.
-use super::*;
+use semio_framework_plugin_reactor_patches as patches;
+use semio_framework_ui_contract as ui_contract;
 
-fn surface_id(text: &str) -> ui_contract::SurfaceId {
+#[doc(hidden)]
+pub fn surface_id(text: &str) -> ui_contract::SurfaceId {
     ui_contract::SurfaceId::try_from(text.to_string()).expect("fixture surface id fits the fixed text capacity")
 }
 
@@ -23,7 +25,7 @@ fn surface_id(text: &str) -> ui_contract::SurfaceId {
 /// `selectedIds:[]` for 150 s after a pick that settled).
 #[test]
 fn one_turn_redirties_every_acknowledged_deferred_surface() {
- let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original deferred-render fixture caller");
+ let mut original_caller=semio_framework_plugin_testing_laws::OriginalFixtureCaller::admit().expect("independently authored original deferred-render fixture caller");
  let mut original_context=original_caller.context();let cx=&mut original_context;
  let result=(||{
     let patches = patches::PatchTracker::new();
@@ -49,7 +51,7 @@ fn one_turn_redirties_every_acknowledged_deferred_surface() {
 /// neither lose an entry nor conjure one.
 #[test]
 fn a_drain_over_an_empty_deferred_ring_dirties_nothing() {
- let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original deferred-render fixture caller");
+ let mut original_caller=semio_framework_plugin_testing_laws::OriginalFixtureCaller::admit().expect("independently authored original deferred-render fixture caller");
  let mut original_context=original_caller.context();let cx=&mut original_context;
  let result=(||{
     let patches = patches::PatchTracker::new();

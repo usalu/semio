@@ -1,0 +1,5 @@
+# Prepared Parent Negative Worker Reuse
+
+Best existing pattern is runDependencyProducerCompletionWorkerV1 at EOF of ticket tooling-diagnostic/📜️script.ts. It receives inherited Original exactly once, awaits the actual issued helper scope, catches outside receiveScriptProcessInvocation, then records Original settled after real retained FD closure. Exact undefined/frozen primary and abort-before-close-before-settle are checked without admitting further work to the failed Original.
+
+Adapt the isolated actor to actual prepared parent body/real withRequested issued child failure; let failure escape the received Original before emitting bounded worker receipt, then deliberately end worker status1. Outer captureOwnedCommandResultV1 observes1/null/closed receipt/PID absence under its own unchanged actual Original. DS main tests lines161/164 supply the existing isolated Bun worker capture/wire/SQLite/PID oracle pattern. Do not catch an actual requested-child failure and then issue another negative case inside the same failed Original. No Source implementation or effect performed by this recommendation.

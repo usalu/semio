@@ -237,7 +237,6 @@ export async function registerExtensionInvocationWireTests(vitest: PluginRuntime
             } finally { unsubscribe(); }
           }, { jobs: { step: () => ({ status: row.outcome as "done" | "failed", value: new Uint8Array([1]) }) } });
         }
-        console.info("[DEBUG] Isolated job publication: four exact-authority fixtures complete without another input");
       });
 
       it("starts an isolated job, steps it to its terminal and feeds job-completed back into the actor", async () => {

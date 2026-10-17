@@ -1,4 +1,12 @@
-use super::*;
+use crate::editor::flow::modes::edit::windows::main::config::FlowMainWindowConfig;
+use semio_framework_plugin::WindowMeasure;
+#[allow(unused_imports)]
+use crate::editor::flow::terminology::FlowPlayLabels;
+#[allow(unused_imports)]
+use crate::editor::flow::base::FLOW_PLAY_APP_ID;
+#[allow(unused_imports)]
+use semio_framework_plugin::ActionDescriptor;
+use crate::editor::flow::modes::edit::windows::main::options::proximity::*;
 use crate::editor::flow::terminology::flow_play_labels;
 use crate::schema::FLOW_DEFAULT_PROXIMITY_DISTANCE;
 

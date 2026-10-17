@@ -15,6 +15,9 @@ role = "extension"
 [lib]
 path = "🦀️.rs"
 
+[features]
+testkit = []
+
 [dependencies]
 semio-framework-3d-brep-vector = { path = "../../../../../../../🧰️framework/🔨️modules/🧊️3d/📐️brep/📸️representation/➡️vector/📦️packages/🦀️rust" }
 semio-framework-3d-brep-tessellation = { path = "../../../../../../../🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🧩tessellation/📦️packages/🦀️rust" }
@@ -37,6 +40,7 @@ pack = { path = "../../../../../../../🧰️framework/🔨️modules/🎒️pac
 semio-framework-plugin = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", package = "semio-framework-plugin" }
 semio-framework = { path = "../../../../../../../🧰️framework/📦️packages/🦀️rust", package = "semio-framework" }
 semio-s-artifact-stdio-step-geometry = { workspace = true }
+semio-s-plugin-flow-brep-mesh = { path = "../../🥽️mesh/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 parry3d = "0.17"

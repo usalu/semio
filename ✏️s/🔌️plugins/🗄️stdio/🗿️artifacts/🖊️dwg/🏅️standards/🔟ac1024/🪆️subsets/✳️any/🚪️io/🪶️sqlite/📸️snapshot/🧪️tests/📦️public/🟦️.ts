@@ -8,5 +8,4 @@ test("DWG built package exposes the complete typed relational provider",async()=
   const restored:DwgSnapshot=await dwgSnapshotFromSqliteDatabase(database);expect(restored).toEqual(snapshot);
   await dwgSnapshotValidateSqliteSubset(restored,{artifactKind:"s.stdio.dwg",standard:"ac1018",subset:"*"},database);
   await dwgSnapshotValidateSqliteSubset(restored,{artifactKind:"s.stdio.dwg",standard:"ac1024",subset:"*"},database);
-  console.log("[DEBUG] Built DWG package public types and both version relational APIs verified");
 },60000);

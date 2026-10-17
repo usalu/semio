@@ -18,14 +18,14 @@ pub fn renderer_worker_pool() -> semio_framework_async::WorkerPool {
 
 #[cfg(not(target_arch = "wasm32"))]
 pub struct RendererIoHandle {
-    slot: usize,
+    pub slot: usize,
     pub generation: u64,
     completed: bool,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
 impl RendererIoHandle {
-    fn try_take(&mut self) -> Option<Result<semio_framework_os_services::NativeIoValue, String>> {
+    pub fn try_take(&mut self) -> Option<Result<semio_framework_os_services::NativeIoValue, String>> {
         let result = renderer_io_with_node(self.slot, self.generation, |node| {
             let result = node.result.take()?;
             node.result_taken = true;
@@ -96,6 +96,10 @@ pub const RENDERER_IO_EXHAUSTED: u8 = 3;
 #[cfg(not(target_arch = "wasm32"))]
 pub struct RendererIoSlot {
     generation: AtomicU64,
+    #[cfg(any(test, feature = "testkit"))]
+    #[doc(hidden)]
+    pub state: std::sync::atomic::AtomicU8,
+    #[cfg(not(any(test, feature = "testkit")))]
     state: std::sync::atomic::AtomicU8,
     node: std::sync::atomic::AtomicPtr<RendererIoNode>,
     cancel_requested: AtomicBool,
@@ -111,6 +115,10 @@ impl RendererIoSlot {
 #[cfg(not(target_arch = "wasm32"))]
 pub struct RendererIoNode {
     session: Option<semio_framework_job_worker::WorkerJobSession<semio_framework_os_services::NativeIoJob>>,
+    #[cfg(any(test, feature = "testkit"))]
+    #[doc(hidden)]
+    pub rejected: Option<semio_framework_job_worker::WorkerJobSessionAdmissionRejected<semio_framework_os_services::NativeIoJob>>,
+    #[cfg(not(any(test, feature = "testkit")))]
     rejected: Option<semio_framework_job_worker::WorkerJobSessionAdmissionRejected<semio_framework_os_services::NativeIoJob>>,
     ticket: Option<semio_framework_job_worker::WorkerJobTicket>,
     result: Option<Result<semio_framework_os_services::NativeIoValue, String>>,
@@ -276,6 +284,12 @@ pub fn renderer_io_with_node<R>(index: usize, generation: u64, use_node: impl Fn
 #[cfg(not(target_arch = "wasm32"))]
 pub fn renderer_io_generation_live(index: usize, generation: u64) -> bool {
     RENDERER_IO_SLOTS.get(index).is_some_and(|slot| slot.generation.load(Ordering::Acquire) == generation && matches!(slot.state.load(Ordering::Acquire), RENDERER_IO_LIVE | RENDERER_IO_CHECKED_OUT) && !slot.node.load(Ordering::Acquire).is_null())
+}
+
+/// 🔭️ Whether any mounted native I/O session is still live or checked out, so a headless entry point knows when to stop pumping.
+#[cfg(not(target_arch = "wasm32"))]
+pub fn renderer_io_sessions_pending() -> bool {
+    RENDERER_IO_SLOTS.iter().any(|slot| matches!(slot.state.load(Ordering::Acquire), RENDERER_IO_LIVE | RENDERER_IO_CHECKED_OUT))
 }
 
 #[cfg(not(target_arch = "wasm32"))]

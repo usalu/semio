@@ -1,6 +1,5 @@
 //! 🧹️ Direct clear-page-text payload, sparse diff, concrete inverse, and laws.
 
-use super::PdfA1Mutation;
 use crate::standards::v1_4::subsets::base::schema::diff::{PdfDiff, PdfPageDiff, PdfPageModified, PdfPagesDiff};
 use crate::standards::v1_4::subsets::base::schema::snapshot::PdfSnapshot;
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
@@ -20,7 +19,10 @@ impl ClearPageText {
     }
 }
 
-impl MutationKind<PdfSnapshot, PdfA1Mutation> for ClearPageText {
+impl<Op> MutationKind<PdfSnapshot, Op> for ClearPageText
+where
+    Op: protocol::Mutation<PdfSnapshot, Diff = PdfDiff> + From<ClearPageText> + From<crate::standards::v1_4::subsets::a::schema::mutations::set_page_text::SetPageText>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "clear", entity: "page", kind: "clear-page-text", record: "ClearedPageText" };
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
@@ -30,12 +32,12 @@ impl MutationKind<PdfSnapshot, PdfA1Mutation> for ClearPageText {
         MutationOutcome::new(PdfDiff { pages: Some(PdfPagesDiff { modified: vec![PdfPageModified { index: 0, diff: PdfPageDiff { text: Some(String::new()), ..Default::default() } }], ..Default::default() }) })
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfA1Mutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
         if !self.valid(base) {
             return Vec::new();
         }
-        vec![PdfA1Mutation::SetPageText(super::SetPageText { text: base.pages[0].text.clone() })]
+        vec![Op::from(crate::standards::v1_4::subsets::a::schema::mutations::SetPageText { text: base.pages[0].text.clone() })]
     
     })())
 }
@@ -51,7 +53,5 @@ impl MutationKind<PdfSnapshot, PdfA1Mutation> for ClearPageText {
 //#endregion 🔖️Behavior
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

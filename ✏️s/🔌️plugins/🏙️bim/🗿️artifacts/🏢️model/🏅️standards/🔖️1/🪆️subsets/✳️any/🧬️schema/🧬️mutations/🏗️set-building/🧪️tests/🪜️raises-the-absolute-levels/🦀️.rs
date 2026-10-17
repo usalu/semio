@@ -1,18 +1,11 @@
 //! 🪜️ `set-building` / `raises-the-absolute-levels`: inference level. The building elevation is a datum of the parametric chain: changing it moves the
 //! absolute elevation of every storey it carries by the same amount (`storey-levels`) and leaves the building-relative elevations alone.
 
-use crate::standards::v1::subsets::any::schema::inferences::storey_levels::compute_storey_levels;
+use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_storey_levels;
 use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 use protocol::Mutation;
 
-const CASE: Case = Case {
-    dir: "🏗️set-building/✅️raises-the-datum",
-    before: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏗️set-building/✅️raises-the-datum/📸️snapshot/⬅️before/🔣️.json"),
-    after: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏗️set-building/✅️raises-the-datum/📸️snapshot/➡️after/🔣️.json"),
-    mutation: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏗️set-building/✅️raises-the-datum/🦠️mutation/🔣️.json"),
-    diff: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏗️set-building/✅️raises-the-datum/🔺️diff/🔣️.json"),
-    outcome: include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏗️set-building/✅️raises-the-datum/🎯️outcome/🔣️.json"),
-};
+static CASE: std::sync::LazyLock<Case> = std::sync::LazyLock::new(|| Case::load("🏗️set-building/✅️raises-the-datum"));
 
 fn close(left: f64, right: f64) -> bool {
     (left - right).abs() <= 1e-9 * right.abs().max(1.0)

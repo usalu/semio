@@ -13,16 +13,14 @@ export default defineConfig({
   root: testRoot,
   cacheDir: repoCacheDirectory(repoRoot, "vite", "os-shell"),
   resolve: {
-    alias: {
-      "@semio-tech/framework-os-shell": resolve(root, "🟦️.ts"),
-    },
+    alias: [{ find: /^@semio-tech\/framework-os-shell$/u, replacement: resolve(root, "🟦️.ts") }],
   },
   test: {
     root: testRoot,
     name: "@semio-tech/framework-os-shell",
     environment: "node",
     include: ["../../🧪️tests/🧪️semio-tech-framework-os-shell-reduce/🟦️.ts", "../../🧬️schema/🧪️tests/🧪️os-shell-schema-module/🟦️.ts"],
-    coverage: { include: ["../../🟦️.ts", "../../🧬️schema/🟦️.ts"] },
+    coverage: { include: ["../../../../../../🔨️modules/🐚️shell/🟦️.ts", "../../🧬️schema/🟦️.ts"] },
     passWithNoTests: false,
   },
 });

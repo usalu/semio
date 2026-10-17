@@ -32,11 +32,14 @@ pub fn plan(p: &GltfDeleteBufferPayload, base: &GltfSnapshot) -> Result<GltfDiff
     Ok(diff)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn inverse(p: &GltfDeleteBufferPayload, base: &GltfSnapshot) -> Vec<super::GltfMutation> {
+pub fn inverse<Op>(p: &GltfDeleteBufferPayload, base: &GltfSnapshot) -> Vec<Op>
+where
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::remove_used_extension::RemoveUsedExtensionMutation>,
+{
     if validate(p, base).is_err() {
         return Vec::new();
     }
-    let mut rows = vec![super::create_buffer::mutation(super::create_buffer::GltfCreateBufferPayload { position: p.index, bytes: base.buffers[p.index].clone(), buffer: Some(Box::new(base.document.buffers[p.index].clone())) })];
+    let mut rows = vec![crate::standards::v2_0::subsets::any::schema::mutations::create_buffer::mutation(crate::standards::v2_0::subsets::any::schema::mutations::create_buffer::GltfCreateBufferPayload { position: p.index, bytes: base.buffers[p.index].clone(), buffer: Some(Box::new(base.document.buffers[p.index].clone())) })];
 
     rows.reverse();
     rows
@@ -52,11 +55,17 @@ pub enum DeleteBufferMutation {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn mutation(payload: GltfDeleteBufferPayload) -> super::GltfMutation {
-    super::GltfMutation::DeleteBuffer(DeleteBufferMutation::Apply(payload))
+pub fn mutation<Op>(payload: GltfDeleteBufferPayload) -> Op
+where
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::delete_buffer::DeleteBufferMutation>,
+{
+    Op::from(DeleteBufferMutation::Apply(payload))
 }
 
-impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for DeleteBufferMutation {
+impl<Op> protocol::MutationKind<GltfSnapshot, Op> for DeleteBufferMutation
+where
+    Op: protocol::Mutation<GltfSnapshot, Diff = GltfDiff> + From<DeleteBufferMutation>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "buffer", kind: "delete-buffer", record: "DeletedBuffer" };
 
     fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<GltfDiff> {
@@ -68,7 +77,7 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for DeleteBufferM
         }
     }
 
-    fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<super::GltfMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         match self {
             Self::Apply(payload) => Ok(inverse(payload, base)),
         }
@@ -85,10 +94,6 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for DeleteBufferM
 //#endregion 🧬️DirectMutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🚫️removes-the-two-156f9d/🦀️.rs"]
-mod case_removes_the_two_156f9d;
-#[cfg(test)]
-#[path = "🧪️tests/🔬️middle-row/🦀️.rs"]
-mod case_middle_row;
+
+
 //#endregion 🧪️Tests

@@ -160,9 +160,6 @@ pub fn print_dsl(projection: &EquationSnapshot) -> String {
 //#endregion 🔖️DslText
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests
 
 #[allow(unused_imports)]

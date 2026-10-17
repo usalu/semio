@@ -1,5 +1,6 @@
 use super::*;
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::{compute_element_solids, fixtures::case, ElementSolid};
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::{fixtures::case, ElementSolid};
+use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_element_solids;
 use std::collections::BTreeMap;
 
 fn solids(name: &str) -> (ModelSnapshot, BTreeMap<String, ElementSolid>) {

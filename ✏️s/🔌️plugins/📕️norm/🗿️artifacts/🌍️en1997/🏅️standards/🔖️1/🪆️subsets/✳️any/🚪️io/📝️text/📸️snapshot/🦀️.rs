@@ -36,7 +36,7 @@ pub type En1997SnapshotText = String;
 
 #[allow(unused_imports)]
 mod snapshot_codec {
-use crate::text::snapshot::*;
+use crate::snapshot::*;
 use semio_s_artifact_norm_en1997_model::*;
 use semio_s_plugin_norm_compliance::AnnexChoice;
 use semio_s_artifact_norm_en1997_model::{Pile, RetainingWall, Slope, SoilLayer, SpreadFoundation, UpliftCase};
@@ -58,17 +58,17 @@ pub fn encode_en1997_dsl(snapshot: &En1997Snapshot) -> String {
     pack::snapshot::ArtifactDsl::print_dsl(snapshot)
 }
 }
-pub use crate::text::snapshot::snapshot_codec::*;
+pub use crate::snapshot::snapshot_codec::*;
 
 #[allow(unused_imports)]
 mod snapshot_wire_codec {
-use crate::text::snapshot::*;
+use crate::snapshot::*;
 use semio_s_artifact_norm_en1997_model::*;
 use semio_s_plugin_norm_compliance::AnnexChoice;
 use semio_s_artifact_norm_en1997_model::{Pile, RetainingWall, Slope, SoilLayer, SpreadFoundation, UpliftCase};
 use framework_schema::ArtifactSchema;
 
 }
-#[cfg(test)] pub use crate::text::snapshot::snapshot_wire_codec::*;
+#[cfg(test)] pub use crate::snapshot::snapshot_wire_codec::*;
 
 semio_s_plugin_norm_compliance::impl_norm_artifact_record!(@text En1997Snapshot, extension="en1997", envelope_id="norm.en1997");

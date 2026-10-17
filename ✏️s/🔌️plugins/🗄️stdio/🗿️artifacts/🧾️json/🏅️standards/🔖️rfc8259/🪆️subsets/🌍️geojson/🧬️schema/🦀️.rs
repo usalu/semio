@@ -195,14 +195,12 @@ pub fn check_geojson_conformance(snapshot:&JsonSnapshot)->Vec<semio_framework_di
 //#endregion 🧬️DerivedArtifactFacets
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
 
 #[path="🛡️conformance/🦀️.rs"]
 mod conformance;
-pub use conformance::{GeoJsonConformanceControl,check_geojson_conformance_with_control};
+pub use conformance::{GeoJsonConformanceControl,check_geojson_conformance_controlled,check_geojson_conformance_with_control};
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn fail<T>(path: &str, message: impl Into<String>) -> Result<T, GeoJsonError> {

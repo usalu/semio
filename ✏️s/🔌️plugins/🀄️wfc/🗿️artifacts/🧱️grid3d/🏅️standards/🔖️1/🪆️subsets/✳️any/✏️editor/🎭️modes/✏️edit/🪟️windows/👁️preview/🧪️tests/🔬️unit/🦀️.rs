@@ -2,7 +2,9 @@
 //! makes the delta incremental instead of a second copy of the full set, and the status line stays
 //! short enough to admit.
 
-use super::*;
+use crate::editor::grid3d::window::Grid3dWindowConfig;
+use crate::host::inferences::solve;
+use crate::editor::grid3d::modes::edit::windows::preview::*;
 use crate::schema::inferences::Grid3dAssignment;
 use crate::standards::v1::subsets::any::io::text::inferences::scene_projection::preview_instances_json;
 

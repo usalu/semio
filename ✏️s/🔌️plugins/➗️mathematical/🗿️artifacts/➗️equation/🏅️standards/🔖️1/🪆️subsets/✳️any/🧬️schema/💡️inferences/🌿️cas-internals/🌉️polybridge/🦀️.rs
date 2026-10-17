@@ -4,7 +4,8 @@
 //! types over those generators, and reconstruct canonical `Expr`s from the result.
 
 use crate::cas::expr::{Expr, Kind};
-use crate::polynomial::{MonomialOrder, PolyM, PolyU};
+use crate::polynomial::multivariate::{MonomialOrder, PolyM};
+use crate::polynomial::univariate::PolyU;
 use number::{Integer, Natural, Rational};
 
 // #region 🔖️PolyMap
@@ -140,7 +141,7 @@ pub fn as_poly_uni(e: &Expr, x: &Expr) -> Option<PolyU<Rational>> {
 
 pub fn polyu_to_expr(p: &PolyU<Rational>, x: &Expr) -> Expr {
     let map = PolyMap { gens: vec![x.clone()] };
-    let terms: Vec<(crate::polynomial::Monomial, Rational)> = p.coeffs().iter().enumerate().map(|(i, c)| (crate::polynomial::Monomial::new(vec![i as u32]), c.clone())).collect();
+    let terms: Vec<(crate::polynomial::multivariate::Monomial, Rational)> = p.coeffs().iter().enumerate().map(|(i, c)| (crate::polynomial::multivariate::Monomial::new(vec![i as u32]), c.clone())).collect();
     from_poly(&PolyM::from_terms(terms, 1, MonomialOrder::Lex), &map)
 }
 // #endregion 🔖️ExprToPoly
@@ -248,14 +249,14 @@ pub fn polym_to_polyu(p: &PolyM<Rational>, var: usize) -> Option<PolyU<Rational>
 }
 
 pub fn polyu_to_polym(p: &PolyU<Rational>, var: usize, nvars: usize) -> PolyM<Rational> {
-    let terms: Vec<(crate::polynomial::Monomial, Rational)> = p
+    let terms: Vec<(crate::polynomial::multivariate::Monomial, Rational)> = p
         .coeffs()
         .iter()
         .enumerate()
         .map(|(i, c)| {
             let mut exps = vec![0u32; nvars];
             exps[var] = i as u32;
-            (crate::polynomial::Monomial::new(exps), c.clone())
+            (crate::polynomial::multivariate::Monomial::new(exps), c.clone())
         })
         .collect();
     PolyM::from_terms(terms, nvars, MonomialOrder::Lex)
@@ -293,7 +294,7 @@ pub fn factor_poly_u(p: &PolyU<Rational>) -> (Rational, Vec<(PolyU<Rational>, u3
     let scale = Rational::from_integer(Integer::from_natural(denom_lcm));
     let int_coeffs: Vec<Integer> = p.coeffs().iter().map(|c| c.mul(&scale).trunc()).collect();
     let int_poly = PolyU::from_coeffs(int_coeffs);
-    let (content, factors) = crate::polynomial::factor_integer_poly(&int_poly);
+    let (content, factors) = crate::polynomial::factor::factor_integer_poly(&int_poly);
     let mut overall = Rational::from_integer(content).div(&scale).expect("clearing scale is nonzero by construction");
     let mut result = Vec::with_capacity(factors.len());
     for (f, mult) in factors {

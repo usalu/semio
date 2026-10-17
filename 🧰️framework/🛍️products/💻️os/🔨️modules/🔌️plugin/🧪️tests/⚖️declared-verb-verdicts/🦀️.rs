@@ -35,7 +35,8 @@ mod declared_verb_verdict_tests {
         }
     }
 
-    fn outcome(value: &serde_json::Value) -> DeclaredVerbOutcome {
+    #[doc(hidden)]
+pub fn outcome(value: &serde_json::Value) -> DeclaredVerbOutcome {
         let text = |value: &serde_json::Value, key: &str| value[key].as_str().expect("fixture outcome text").to_string();
         if let Some(refusal) = value.get("unreachable") {
             return DeclaredVerbOutcome::Unreachable { code: text(refusal, "code"), detail: text(refusal, "detail"),failure:None };
@@ -57,7 +58,8 @@ mod declared_verb_verdict_tests {
         })
     }
 
-    fn probe(value: &serde_json::Value) -> DeclaredVerbProbe {
+    #[doc(hidden)]
+pub fn probe(value: &serde_json::Value) -> DeclaredVerbProbe {
         let kind = match value["kind"].as_str() {
             Some("mutation") => semio_framework::ActionKind::Mutation,
             Some("view") => semio_framework::ActionKind::View,

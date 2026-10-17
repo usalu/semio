@@ -71,13 +71,13 @@ fn layer_icon(layer: &DrawingLayerNode) -> &str {
 /// 🌳️ One row of the layer tree's single logical roster: the fixed "add" buttons first, then either
 /// the document's top-level layers or the empty-state hint. ONE windowed section over the whole
 /// roster, so the host scrolls a thousand-layer document without the panel ever truncating it.
-enum LayersRow<'a> {
+pub enum LayersRow<'a> {
     Add(&'static str, LabelText, &'static str, &'static str),
     Empty,
     Layer(&'a DrawingLayerNode),
 }
 
-fn layers_rows<'a>(document: &'a DrawingSnapshot, labels: &DrawingPlayLabels) -> Vec<LayersRow<'a>> {
+pub fn layers_rows<'a>(document: &'a DrawingSnapshot, labels: &DrawingPlayLabels) -> Vec<LayersRow<'a>> {
     let mut rows = vec![
         LayersRow::Add("drawing-play-layers.add.path", labels.add_path, "pen-tool", "path"),
         LayersRow::Add("drawing-play-layers.add.rect", labels.add_rectangle, "square", "shape:rect"),
@@ -180,8 +180,3 @@ pub fn render(document: &DrawingSnapshot, labels: &DrawingPlayLabels, windows: &
 }
 //#endregion 🔖️Render
 
-//#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests

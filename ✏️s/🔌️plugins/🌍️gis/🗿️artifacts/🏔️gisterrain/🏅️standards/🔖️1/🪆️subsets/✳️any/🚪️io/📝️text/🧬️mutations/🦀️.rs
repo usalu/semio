@@ -23,11 +23,9 @@ impl protocol::OpText for GisTerrainMutation {
 
 //#endregion 🔖️HandcraftedOpCodecs
 
-#[path = "📥change-imported-features/🦀️.rs"]
-pub mod change_imported_features;
+pub use semio_s_artifact_gis_gisterrain_terrain_descriptor::standards::v1::subsets::any::io::text::mutations::change_imported_features;
 
-#[path = "🎚️change-exaggeration/🦀️.rs"]
-pub mod change_exaggeration;
+pub use semio_s_artifact_gis_gisterrain_terrain_descriptor::standards::v1::subsets::any::io::text::mutations::change_exaggeration;
 
 /// 📜️ Describes the artifact mutation dialect.
 pub const MUTATION_GRAMMAR_SEMIO: &str = include_str!("📖️mutations.grammar.semio");

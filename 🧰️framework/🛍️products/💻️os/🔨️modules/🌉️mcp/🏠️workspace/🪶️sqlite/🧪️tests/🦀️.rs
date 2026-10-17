@@ -1,6 +1,7 @@
 //! 🧱️ Probe_sqlite_tests of the probe-document crate: The probe artifact document: JSON and SQLite snapshot codecs.
 
 use pack::snapshot::ArtifactSqliteSnapshot as _;
+use semio_framework_test_fixtures::fixture_text;
 use semio_framework_value::FromValue as _;
 use semio_framework_value::ToValue as _;
 use semio_framework_value::retirement::RetireOwned as _;
@@ -11,14 +12,11 @@ use store::sqlite_snapshot::SqliteValue;
 use crate::probe_document::ProbeSnapshot;
 
 /// 🧪️ Reads a committed fixture from the package directory at run time instead of embedding it in the test binary.
-fn fixture_text(relative: &str) -> &'static str {
-    Box::leak(std::fs::read_to_string(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative)).expect(relative).into_boxed_str())
-}
 
 
 #[test]
 fn probe_sqlite_original_first_party_tree_matches_neutral_node_entities(){
- let fixture:serde_json::Value=serde_json::from_str(fixture_text("../../../🏠️workspace/🪶️sqlite/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../🏠️workspace/🪶️sqlite/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
  assert!(ProbeSnapshot::controlled_retirement_supported());
  for sample in fixture["cases"].as_array().unwrap(){
   let wire=sample["wire"].as_str().unwrap();
@@ -38,5 +36,4 @@ fn probe_sqlite_original_first_party_tree_matches_neutral_node_entities(){
   assert_eq!(serde_json::from_str::<serde_json::Value>(&rebuilt.print_dsl()).unwrap(),oracle);
  }
  for wire in fixture["rejectedWire"].as_array().unwrap(){assert!(ProbeSnapshot::parse_dsl(wire.as_str().unwrap()).is_err());}
- eprintln!("[DEBUG] Probe first-party moved trees preserve neutral ordered relational nodes and exact Serde numeric semantics");
 }

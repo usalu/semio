@@ -1,0 +1,31 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🧭️TiledMapHost/🟦️.tsx",
+ "fn": "TiledMapHost",
+ "propsType": "ComponentSceneHostProps",
+ "coreType": "MapCore",
+ "region": "TiledMapHost",
+ "parentTail": 52,
+ "hooks": [
+  {
+   "dir": "🧰️map-state",
+   "name": "useMapState",
+   "upto": 34,
+   "doc": "/** 🧰️ TiledMapHost state: the scene, shell scope and window instance, the container, canvas, renderer and popup refs, the marquee and context menu state, the labels, the parsed overlay index and hovered feature, the dispatchers and the camera, hit-query and container-size helpers. */",
+   "docFn": "/** 🧰️ Holds the refs, state, labels, parsed lanes and helper callbacks of the map window. */"
+  },
+  {
+   "dir": "🎞️map-render-effects",
+   "name": "useMapRenderEffects",
+   "upto": 47,
+   "doc": "/** 🎞️ TiledMapHost render effects: the layout effect that creates the renderer and session, the scene-sync effects that feed the renderer, the popup placement effect and the wheel zoom handler. */",
+   "docFn": "/** 🎞️ Creates the renderer, keeps it in step with the scene lanes and installs the wheel zoom. */"
+  },
+  {
+   "dir": "👆️map-pointer",
+   "name": "useMapPointer",
+   "upto": 52,
+   "doc": "/** 👆️ TiledMapHost pointer: the pointer state, the marquee reset, the feature selection emitter and the canvas pointer, context menu and gesture effect. */",
+   "docFn": "/** 👆️ Wires the canvas pointer gestures, marquee selection, hover and context menu. */"
+  }
+ ]
+}

@@ -1,9 +1,14 @@
 //! 🧪️ Original completion aliases and vacant allocations obey the shared custody corpus.
-use super::*;
+use semio_framework_test_fixtures::fixture_text;
+
+#[allow(unused_imports)] use semio_framework_plugin::{ArtifactToolCompletionValue,ArtifactCompletionFault,ArtifactDownloadOutput,EditorApp,Emit,EphemeralEmit,NoConfigMutation,NoDraftMutation,VacantVec,VacantDeque,CompletionEffect};
+#[allow(unused_imports)] use semio_framework_value::{ValueError,ValueRefusalKind,ErasedSnapshotRetirement,retirement::{RetireOwned,RetirementCursor,RetirementStep,controlled::{ControlledRetirement,admit_typed_controlled_retirement}},retained_clone::{RetainedCloneGrant,RetainedCloneProgress}};
+#[allow(unused_imports)] use std::mem::ManuallyDrop;
+#[allow(unused_imports)] use semio_s_artifact_draw_drawing_editor::completion::*;
 use semio_framework_plugin::{ArtifactToolCompletion,Effect};
 use semio_framework_value::retained_clone::RetainedCloneStep;
 
-fn corpus()->serde_json::Value{serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap()}
+fn corpus()->serde_json::Value{serde_json::from_str(fixture_text!("../../../../📬️completion/🧪️tests/🧫️fixtures/🔣️.json")).unwrap()}
 fn settle(owner:&mut dyn ErasedSnapshotRetirement)->usize{
  let mut released=0;
  for _ in 0..100000{

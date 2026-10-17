@@ -59,7 +59,6 @@ fn canonical_pack_producer_authority_is_required_and_preserves_owned_causes() {
   }
   if let PackRefusal::RetainedAllocation{allocated_bytes,..}=&error{assert_eq!(*allocated_bytes as u64,row["allocatedBytes"].as_u64().unwrap());}
  }
- eprintln!("[DEBUG] canonical Pack projected {} source-authored causes",fixture["cases"].as_array().unwrap().len());
 }
 
 #[test]
@@ -87,5 +86,4 @@ fn canonical_pack_borrowed_factories_preserve_real_paged_metadata() {
   assert_eq!(serde_json::json!({"kind":Some(error.kind()).map(ValueRefusalKind::as_str),"allocatedBytes":actual_bytes}),serde_json::json!({"kind":row["expectedKind"],"allocatedBytes":row["allocatedBytes"]}));
   assert!(std::error::Error::source(&error).is_none());
  }
- eprintln!("[DEBUG] canonical Pack borrowed factories checked 9 real PagedList metadata cases");
 }

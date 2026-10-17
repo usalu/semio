@@ -337,6 +337,35 @@
           "kind": "source"
         }
       ]
+    },
+    {
+      "name": "an included file resolves its module mounts from its own directory",
+      "cfg": [],
+      "entry": "lib.rs",
+      "files": {
+        "lib.rs": "include!(\"sub/inc.rs\");",
+        "sub/inc.rs": "#[path = \"..\"] mod outer { #[path = \"x.rs\"] mod laws; } mod y;",
+        "x.rs": "pub struct X;",
+        "sub/y.rs": "pub struct Y;"
+      },
+      "expected": [
+        {
+          "path": "lib.rs",
+          "kind": "source"
+        },
+        {
+          "path": "sub/inc.rs",
+          "kind": "source"
+        },
+        {
+          "path": "sub/y.rs",
+          "kind": "source"
+        },
+        {
+          "path": "x.rs",
+          "kind": "source"
+        }
+      ]
     }
   ]
 }

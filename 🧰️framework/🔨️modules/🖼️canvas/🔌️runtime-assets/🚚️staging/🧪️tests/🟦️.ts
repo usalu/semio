@@ -30,7 +30,6 @@ test("neutral Canvas assets have one stable managed tree per mode and no source-
       expect(() => (runtimeAssetStageTrees as (...args: unknown[]) => unknown)(root, mode)).toThrow();
     }
     for (const directory of fixture.invalidRoots) expect(() => (runtimeAssetStageTrees as (...args: unknown[]) => unknown)(directory, "prototype")).toThrow();
-    console.log("[DEBUG] Canvas publication paths match independent SQLite containment and closed schema modes without opening storage");
   } finally { database.close(); }
 });
 
@@ -49,5 +48,4 @@ test("neutral Canvas Nx cache outputs select the actual mode through the existin
     expect(actual.every((path: string) => !path.includes(mode === "prototype" ? "/release/" : "/prototype/"))).toBe(true);
   }
   expect(project.targets["stage-runtime-assets"].inputs).toContain("sharedGlobals");
-  console.log("[DEBUG] Installed Nx isolated pure output interpolation agrees with mode-specific managed Canvas layout");
 });

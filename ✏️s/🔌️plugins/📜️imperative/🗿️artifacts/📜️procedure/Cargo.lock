@@ -2335,6 +2335,7 @@ dependencies = [
  "semio-framework-plugin-reactor-tasks",
  "semio-framework-plugin-reactor-turn",
  "semio-framework-plugin-reactor-wit-bridge",
+ "semio-framework-plugin-registration",
  "semio-framework-plugin-retained-command",
  "semio-framework-plugin-runtime-exchange",
  "semio-framework-plugin-runtime-instances",
@@ -2683,6 +2684,17 @@ dependencies = [
  "semio-framework-value",
  "semio-framework-value-derive",
  "serde_json",
+]
+
+[[package]]
+name = "semio-framework-plugin-declared-verdict"
+version = "0.1.0"
+dependencies = [
+ "semio-framework",
+ "semio-framework-pack-json",
+ "semio-framework-plugin-ownership",
+ "semio-framework-schema",
+ "semio-framework-ui-locale",
 ]
 
 [[package]]
@@ -3415,6 +3427,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-framework-plugin-registration"
+version = "0.1.0"
+dependencies = [
+ "semio-framework",
+]
+
+[[package]]
 name = "semio-framework-plugin-retained-command"
 version = "0.1.0"
 dependencies = [
@@ -3528,14 +3547,65 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-framework-plugin-testing-caller"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-job",
+ "semio-framework-value",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "semio-framework-plugin-testing-laws"
 version = "0.1.0"
 dependencies = [
+ "semio-framework",
+ "semio-framework-2d",
+ "semio-framework-artifact-reference",
+ "semio-framework-composition-admission",
+ "semio-framework-diagnostic",
+ "semio-framework-job",
+ "semio-framework-os-kernel",
+ "semio-framework-pack-json",
+ "semio-framework-plugin-app-builder",
  "semio-framework-plugin-builder",
+ "semio-framework-plugin-composition-publication",
+ "semio-framework-plugin-decl-app",
+ "semio-framework-plugin-decl-emission",
  "semio-framework-plugin-decl-registry",
+ "semio-framework-plugin-decl-surface",
+ "semio-framework-plugin-decl-views",
+ "semio-framework-plugin-declared-verdict",
  "semio-framework-plugin-extension",
  "semio-framework-plugin-instance-app",
+ "semio-framework-plugin-instance-children",
+ "semio-framework-plugin-instance-ladders",
+ "semio-framework-plugin-instance-stores",
+ "semio-framework-plugin-interaction",
+ "semio-framework-plugin-job",
+ "semio-framework-plugin-mounted-owner",
+ "semio-framework-plugin-operation",
+ "semio-framework-plugin-ownership",
  "semio-framework-plugin-plugin-program",
+ "semio-framework-plugin-reactor-app",
+ "semio-framework-plugin-reactor-lifecycle",
+ "semio-framework-plugin-reactor-tasks",
+ "semio-framework-plugin-runtime-exchange",
+ "semio-framework-plugin-runtime-ops",
+ "semio-framework-plugin-testing-caller",
+ "semio-framework-plugin-window-config",
+ "semio-framework-plugin-window-kits",
+ "semio-framework-plugin-window-transient",
+ "semio-framework-schema",
+ "semio-framework-schema-composition",
+ "semio-framework-ui-contract",
+ "semio-framework-ui-layout",
+ "semio-framework-ui-locale",
+ "semio-framework-ui-runtime",
+ "semio-framework-ui-scene",
+ "semio-framework-value",
+ "serde_json",
 ]
 
 [[package]]
@@ -4821,6 +4891,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework",
  "semio-framework-2d",
+ "semio-framework-action-bus",
  "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-async-macros",
@@ -5170,6 +5241,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework",
  "semio-framework-2d",
+ "semio-framework-action-bus",
  "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-diagnostic",
@@ -5292,6 +5364,7 @@ dependencies = [
 name = "semio-s-artifact-stdio-contract-editing"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-action-bus",
  "semio-framework-artifact-reference",
  "semio-framework-diagnostic",
  "semio-framework-job",
@@ -5471,6 +5544,7 @@ name = "semio-s-artifact-stdio-csv-io-registry"
 version = "0.1.0"
 dependencies = [
  "semio-framework-2d",
+ "semio-framework-action-bus",
  "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-diagnostic",
@@ -5596,6 +5670,7 @@ name = "semio-s-artifact-stdio-json"
 version = "0.1.0"
 dependencies = [
  "semio-framework-2d",
+ "semio-framework-action-bus",
  "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-diagnostic",
@@ -5786,6 +5861,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework",
  "semio-framework-2d",
+ "semio-framework-action-bus",
  "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-diagnostic",
@@ -5819,6 +5895,7 @@ name = "semio-s-artifact-stdio-semio"
 version = "0.1.0"
 dependencies = [
  "semio-framework-2d",
+ "semio-framework-action-bus",
  "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-diagnostic",
@@ -5872,6 +5949,7 @@ name = "semio-s-artifact-stdio-semio-animation"
 version = "0.1.0"
 dependencies = [
  "semio-framework-2d",
+ "semio-framework-action-bus",
  "semio-framework-artifact-reference",
  "semio-framework-diagnostic",
  "semio-framework-job",
@@ -5896,6 +5974,7 @@ name = "semio-s-artifact-stdio-semio-audio"
 version = "0.1.0"
 dependencies = [
  "semio-framework-2d",
+ "semio-framework-action-bus",
  "semio-framework-artifact-reference",
  "semio-framework-diagnostic",
  "semio-framework-job",
@@ -6023,6 +6102,7 @@ name = "semio-s-artifact-stdio-semio-cad"
 version = "0.1.0"
 dependencies = [
  "semio-framework-2d",
+ "semio-framework-action-bus",
  "semio-framework-artifact-reference",
  "semio-framework-diagnostic",
  "semio-framework-job",
@@ -6048,6 +6128,7 @@ name = "semio-s-artifact-stdio-semio-document"
 version = "0.1.0"
 dependencies = [
  "semio-framework-2d",
+ "semio-framework-action-bus",
  "semio-framework-artifact-reference",
  "semio-framework-diagnostic",
  "semio-framework-job",
@@ -6072,6 +6153,7 @@ name = "semio-s-artifact-stdio-semio-drawing"
 version = "0.1.0"
 dependencies = [
  "semio-framework-2d",
+ "semio-framework-action-bus",
  "semio-framework-artifact-reference",
  "semio-framework-diagnostic",
  "semio-framework-job",
@@ -6098,6 +6180,7 @@ name = "semio-s-artifact-stdio-semio-flow"
 version = "0.1.0"
 dependencies = [
  "semio-framework-2d",
+ "semio-framework-action-bus",
  "semio-framework-artifact-reference",
  "semio-framework-diagnostic",
  "semio-framework-job",
@@ -6123,6 +6206,7 @@ name = "semio-s-artifact-stdio-semio-graph"
 version = "0.1.0"
 dependencies = [
  "semio-framework-2d",
+ "semio-framework-action-bus",
  "semio-framework-artifact-reference",
  "semio-framework-diagnostic",
  "semio-framework-job",
@@ -6148,6 +6232,7 @@ name = "semio-s-artifact-stdio-semio-image"
 version = "0.1.0"
 dependencies = [
  "semio-framework-2d",
+ "semio-framework-action-bus",
  "semio-framework-artifact-reference",
  "semio-framework-diagnostic",
  "semio-framework-job",
@@ -6172,6 +6257,7 @@ name = "semio-s-artifact-stdio-semio-kit"
 version = "0.1.0"
 dependencies = [
  "semio-framework-2d",
+ "semio-framework-action-bus",
  "semio-framework-artifact-reference",
  "semio-framework-diagnostic",
  "semio-framework-job",
@@ -6227,6 +6313,7 @@ name = "semio-s-artifact-stdio-semio-model"
 version = "0.1.0"
 dependencies = [
  "semio-framework-2d",
+ "semio-framework-action-bus",
  "semio-framework-artifact-reference",
  "semio-framework-diagnostic",
  "semio-framework-job",
@@ -6251,6 +6338,7 @@ name = "semio-s-artifact-stdio-semio-object"
 version = "0.1.0"
 dependencies = [
  "semio-framework-2d",
+ "semio-framework-action-bus",
  "semio-framework-artifact-reference",
  "semio-framework-diagnostic",
  "semio-framework-job",
@@ -6279,6 +6367,7 @@ name = "semio-s-artifact-stdio-semio-presentation"
 version = "0.1.0"
 dependencies = [
  "semio-framework-2d",
+ "semio-framework-action-bus",
  "semio-framework-artifact-reference",
  "semio-framework-diagnostic",
  "semio-framework-job",
@@ -6304,6 +6393,7 @@ name = "semio-s-artifact-stdio-semio-table"
 version = "0.1.0"
 dependencies = [
  "semio-framework-2d",
+ "semio-framework-action-bus",
  "semio-framework-artifact-reference",
  "semio-framework-diagnostic",
  "semio-framework-job",
@@ -6413,6 +6503,7 @@ name = "semio-s-artifact-stdio-semio-text"
 version = "0.1.0"
 dependencies = [
  "semio-framework-2d",
+ "semio-framework-action-bus",
  "semio-framework-artifact-reference",
  "semio-framework-diagnostic",
  "semio-framework-job",
@@ -6487,6 +6578,7 @@ name = "semio-s-artifact-stdio-semio-value"
 version = "0.1.0"
 dependencies = [
  "semio-framework-2d",
+ "semio-framework-action-bus",
  "semio-framework-artifact-reference",
  "semio-framework-diagnostic",
  "semio-framework-job",
@@ -6563,6 +6655,7 @@ name = "semio-s-artifact-stdio-semio-video"
 version = "0.1.0"
 dependencies = [
  "semio-framework-2d",
+ "semio-framework-action-bus",
  "semio-framework-artifact-reference",
  "semio-framework-diagnostic",
  "semio-framework-job",
@@ -6800,6 +6893,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework",
  "semio-framework-2d",
+ "semio-framework-action-bus",
  "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-diagnostic",

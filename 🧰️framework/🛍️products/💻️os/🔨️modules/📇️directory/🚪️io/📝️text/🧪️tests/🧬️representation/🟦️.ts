@@ -26,7 +26,6 @@ test("event page keeps the neutral canonical receipt and refuses padding and dup
   expect(await wire.parseDirectoryEventPageV1(source)).toEqual(fixture.valid);
   await expect(wire.parseDirectoryEventPageV1(source + " ")).rejects.toThrow();
   await expect(wire.parseDirectoryEventPageV1(source.replace('{"schema":', '{"schema":"duplicate","schema":'))).rejects.toThrow();
-  console.log("[DEBUG] Directory IO page: independentAjv=true independentNodeCrypto=true");
 });
 
 test("command request and receipt retain all neutral digests and refusal cases", async () => {
@@ -49,7 +48,6 @@ test("command request and receipt retain all neutral digests and refusal cases",
   }
   for (const row of fixture.rejectedRequests) expect(accepts(() => wire.parseDirectoryCommandRequestV1(row.source))).toBe(false);
   for (const row of fixture.rejectedReceipts) await expect(wire.parseDirectoryCommandReceiptV1(row.source, requests.get(row.requestName)!)).rejects.toThrow();
-  console.log(`[DEBUG] Directory IO command: requests=${fixture.requests.length} receipts=${fixture.receipts.length} independentAjv=true independentNodeCrypto=true`);
 });
 
 test("session authority retains the independent schema and exact wire grammar", () => {
@@ -61,7 +59,6 @@ test("session authority retains the independent schema and exact wire grammar", 
     expect(accepts(() => parseDirectorySessionAuthorityJsonV1(JSON.stringify(row.value)))).toBe(row.accepted);
   }
   for (const row of fixture.raw) expect(accepts(() => parseDirectorySessionAuthorityJsonV1(row.source))).toBe(row.accepted);
-  console.log(`[DEBUG] Directory IO session: rows=${fixture.rows.length} raw=${fixture.raw.length} independentAjv=true`);
 });
 
 test("artifact creation uses the existing neutral request status and catalogue vectors", () => {
@@ -83,7 +80,6 @@ test("artifact creation uses the existing neutral request status and catalogue v
     expect(accepts(() => parse(row.source))).toBe(row.accepted);
     cases++;
   }
-  console.log(`[DEBUG] Directory IO creation: neutralCases=${cases} independentAjv=true`);
 });
 
 test("check-in wire and direct typed projection preserve the neutral corpus against Ajv", () => {
@@ -103,5 +99,4 @@ test("check-in wire and direct typed projection preserve the neutral corpus agai
   }
   for (const row of fixture.invalid.requests) expect(checkin.parseDocumentCheckInV1(row.source)).toBeNull();
   for (const row of fixture.invalid.statuses) expect(checkin.parseDocumentCheckInStatusV1(row.source)).toBeNull();
-  console.log("[DEBUG] Directory IO check-in: directTypedProjection=true independentAjv=true");
 });

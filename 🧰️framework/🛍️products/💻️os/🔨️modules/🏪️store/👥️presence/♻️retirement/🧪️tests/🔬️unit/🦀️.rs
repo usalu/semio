@@ -233,7 +233,6 @@ fn retained_presence_local_capture_cancel_closes_mounted_worker_while_store_rema
     }
     assert!(close.terminal_is_empty());
     assert_eq!(serde_json::json!(count.load(std::sync::atomic::Ordering::Relaxed)), law["expectedFinalSnapshots"]);
-    eprintln!("[DEBUG] original mounted Presence capture returns matching cancel alias exactly once without heap effects; caller root releases separately with exact System receipt; Store remains open until its own retirement");
 }
 
 #[test]
@@ -315,7 +314,6 @@ fn sealed_peer_read_captures_and_returns_the_same_original_root_factory_pair(){
     let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||store.capture_peer_root(grant));let(mut read,progress)=result.unwrap();assert!(progress.fits(grant));assert_eq!((progress.retained_capacity_bytes,progress.released_bytes),(heap.requested_bytes,heap.released_bytes));assert_eq!(read.root()as*const _,root);assert_eq!(read.root().peers().map(|(actor,value)|serde_json::json!({"actor":actor,"value":value.0})).collect::<Vec<_>>(),vec![law["peer"].clone()]);
     for axis in law["refusals"].as_array().unwrap(){let denied=match axis.as_str().unwrap(){"items"=>RetainedCloneGrant{maximum_items:0,..grant},"copy"=>RetainedCloneGrant{maximum_copy_bytes:0,..grant},"depth"=>RetainedCloneGrant{maximum_depth:0,..grant},_=>unreachable!()};let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||read.into_retirement(denied));let(error,same)=result.err().expect("original read transfer refuses without moving source");assert!(matches!(error.kind,semio_framework_value::ValueRefusalKind::WorkLimit|semio_framework_value::ValueRefusalKind::DepthLimit|semio_framework_value::ValueRefusalKind::OwnershipLimit));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(same.root()as*const _,root);read=same;}
     let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||read.into_retirement(grant));let(mut retirement,progress)=result.ok().unwrap();assert!(progress.fits(grant));assert_eq!((progress.retained_capacity_bytes,progress.released_bytes),(heap.requested_bytes,heap.released_bytes));assert_eq!(Arc::as_ptr(retirement.root.as_ref().unwrap()),root);assert_eq!(Arc::as_ptr(retirement.factory.as_ref().unwrap()),factory);finish(&mut retirement);assert_eq!(count.load(std::sync::atomic::Ordering::Relaxed),0);let mut close=store.begin_retirement(Arc::new(Value(0)),|value|value.0==0).ok().unwrap();finish(&mut close);assert_eq!(count.load(std::sync::atomic::Ordering::Relaxed),1);assert!(publication.terminal_is_empty());
-    println!("[DEBUG] sealed peer read preserves original root/factory pair and actual payload through every grant refusal; original alias and final Store custody close independently");
 }
 
 #[test]
@@ -394,7 +392,6 @@ fn original_peer_publication_refuses_before_birth_and_settles_actual_original_re
         finish(&mut close);
         assert_eq!(count.load(std::sync::atomic::Ordering::Relaxed), 1);
     }
-    eprintln!("[DEBUG] original peer actor pointer and typed presence survive every prebirth refusal; actual original native Arc birth and independent receipt conserve allocation and closure");
 }
 
 #[test]
@@ -456,7 +453,6 @@ fn retained_presence_peer_commit_rejects_foreign_and_stale_roots_without_losing_
             assert_eq!(blocked, Some(true));
         }
         assert_eq!(count.load(std::sync::atomic::Ordering::SeqCst) as u64, law["expectedSnapshots"].as_u64().unwrap());
-        eprintln!("[DEBUG] exact peer commit case={} accepted={accepted}, unchanged={unchanged}, base-retirement-blocked={blocked:?}, snapshots={}", law["name"], count.load(std::sync::atomic::Ordering::SeqCst));
     }
 }
 
@@ -553,7 +549,6 @@ fn retained_presence_overlapping_rosters_retire_shared_entries_once_across_worke
         }
         assert!(close.terminal_is_empty());
         assert_eq!(count.load(std::sync::atomic::Ordering::Relaxed), 3);
-        eprintln!("[DEBUG] overlapping immutable peer roots retired each payload once across workers race={race}, actor_bytes={bytes}");
     }
 }
 
@@ -615,7 +610,6 @@ fn retained_presence_store_close_keeps_captured_readers_and_retires_nonempty_pee
         assert_eq!(actor_bytes, case["expectedActorBytes"].as_u64().unwrap() as usize);
         assert!(released > actor_bytes);
         assert_eq!((blocked_local, blocked_peers), (shared, shared));
-        eprintln!("[DEBUG] original Presence roots transfer allocation identity into retirement; Store detaches both Options and rejects late writes; captured readers retain original values until physical close");
     }
 }
 

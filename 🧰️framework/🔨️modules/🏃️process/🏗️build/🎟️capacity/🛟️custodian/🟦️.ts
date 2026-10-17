@@ -48,7 +48,7 @@ export async function servePaidProcessCustodianV1():Promise<void>{
      finally{running-=job.parallelism;}
     });pending.add(work);void work.finally(()=>pending.delete(work)).catch(()=>{});
    });
-   capacity=await acquireCompilerCapacityLeaseV1({directory:plan.directory,control:admission,environment:{},requestedParallelism:plan.parallelism});
+   capacity=await acquireCompilerCapacityLeaseV1({directory:plan.directory,control:admission,environment:{},request:{kind:"exact",parallelism:plan.parallelism}});
    const abort=()=>stop(true);control.signal.addEventListener("abort",abort,{once:true});if(control.signal.aborted)abort();
    send({version:1,kind:"ready",parallelism:capacity.parallelism});
    try{await stopped;}finally{control.signal.removeEventListener("abort",abort);}

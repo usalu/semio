@@ -2,7 +2,7 @@
 //! Physical dir name (`➕add-step`, wired by `🦀️.rs`, out of this facet's edit boundary) predates
 //! the semantic rename; the Rust module is still `add_step`, the type/variant/kind are `create-step`.
 
-use crate::{FormMutation, FormStep, FormsDiff, FormsSnapshot};
+use crate::{FormStep, FormsDiff, FormsSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 
 //#region 🌱️CreateStep
@@ -18,15 +18,18 @@ pub struct CreateStep {
     pub index: Option<usize>,
 }
 
-impl MutationKind<FormsSnapshot, FormMutation> for CreateStep {
+impl<Op> MutationKind<FormsSnapshot, Op> for CreateStep
+where
+    Op: protocol::Mutation<FormsSnapshot, Diff = FormsDiff> + From<CreateStep> + From<crate::standards::v1::subsets::any::schema::mutations::delete_step::mutation::DeleteStep>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "step", kind: "create-step", record: "CreatedStep" };
 
     fn diff(&self, base: &FormsSnapshot) -> protocol::MutationOutcome<FormsDiff> {
-        super::diff::diff_create_step(self, base)
+        crate::standards::v1::subsets::any::schema::mutations::create_step::diff::diff_create_step(self, base)
     }
-    fn inverse(&self, base: &FormsSnapshot) -> Result<Vec<FormMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &FormsSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
-        super::inverse::inverse_create_step(self, base)?
+        crate::standards::v1::subsets::any::schema::mutations::create_step::inverse::inverse_create_step(self, base)?
     
     })
 }

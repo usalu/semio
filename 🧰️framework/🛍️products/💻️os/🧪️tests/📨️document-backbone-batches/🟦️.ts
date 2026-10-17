@@ -1,11 +1,11 @@
 /** 📨️ Document backbone batches: grant actor isolation, retained bytes, refused and transient batches and rebootstrap fencing. */
 import type { BackboneWorkerTestDependencies } from "../../🔨️modules/🏪️store/👷️worker/🟦️.ts";
-import { workerLawFakesV1, FakeHubWebSocket, flushSocketGrantTurns } from "../🧰️worker-law-fakes/🟦️.ts";
+import { workerLawFakesV1, FakeHubWebSocket, flushSocketGrantTurns, WORKER_LAW_ACTOR_IDENTITY_GRANT } from "../🧰️worker-law-fakes/🟦️.ts";
 import type { TestSource } from "../🧰️worker-law-fakes/🟦️.ts";
 
 type ArtifactState = import("../../🔨️modules/🏪️store/👷️worker/🟦️.ts").ArtifactState;
 type BackboneWorkerResponse = import("../../🟦️.ts").BackboneWorkerResponse;
-type MutationEnvelope = import("../../../../🔨️modules/📡️replication/🟦️.ts").MutationEnvelope;
+type MutationEnvelope = import("@semio-tech/framework-replication").MutationEnvelope;
 type Vitest = NonNullable<ImportMeta["vitest"]>;
 
 export async function registerDocumentBackboneBatchTests(vitest: Vitest, dependencies: BackboneWorkerTestDependencies, source: TestSource): Promise<void> {
@@ -64,11 +64,12 @@ export async function registerDocumentBackboneBatchTests(vitest: Vitest, depende
             inverse: { schema: value.inverse.inverseDiff.schemaId, payload: encodePackValue(value.inverse.inverseDiff.payload) },
             timestamp: { actor: 7n, physical_ms: 9_007_199_254_740_992n, logical: 11n },
             transaction: null,
+            verb: null, line: null,
           }]),
         }),
       });
       try {
-        for (const documentId of ["doc-a", "doc-b"]) openArtifact({ documentId, schema: "demo/v1", bindings: [{ kind: "hub", dataClass: "persistedShared", baseUrl: "http://hub.test", spaceId: "space-1" }], actor: "caller-selected-actor" });
+        for (const documentId of ["doc-a", "doc-b"]) openArtifact({ documentId, schema: "demo/v1", bindings: [{ kind: "hub", dataClass: "persistedShared", baseUrl: "http://hub.test", spaceId: "space-1" }], actor: "caller-selected-actor", actorIdentityGrant: WORKER_LAW_ACTOR_IDENTITY_GRANT });
         await flushSocketGrantTurns();
         const [socketA, socketB] = FakeHubWebSocket.instances;
         socketA!.open();
@@ -133,6 +134,7 @@ export async function registerDocumentBackboneBatchTests(vitest: Vitest, depende
               inverse: { schema: "demo/v1", payload: encodePackValue(null) },
               timestamp: { actor: 1n, physical_ms: 2n, logical: 3n },
               transaction: null,
+              verb: null, line: null,
             }]),
           });
           if (message.byteLength === target) return message;
@@ -144,7 +146,7 @@ export async function registerDocumentBackboneBatchTests(vitest: Vitest, depende
       const outcomes: BackboneWorkerResponse[] = [];
       testSeams.workerPostTestSink = (message) => outcomes.push(message);
       try {
-        openArtifact({ documentId, schema: "demo/v1", bindings: [{ kind: "hub", dataClass: "persistedShared", baseUrl: "http://hub.test", spaceId: "space-1" }], actor: "caller" });
+        openArtifact({ documentId, schema: "demo/v1", bindings: [{ kind: "hub", dataClass: "persistedShared", baseUrl: "http://hub.test", spaceId: "space-1" }], actor: "caller", actorIdentityGrant: WORKER_LAW_ACTOR_IDENTITY_GRANT });
         await flushSocketGrantTurns();
         const socket = FakeHubWebSocket.instances[0]!;
         socket.open();
@@ -194,11 +196,11 @@ export async function registerDocumentBackboneBatchTests(vitest: Vitest, depende
           FakeHubWebSocket.instances = [];
           const edit = (id: string) => encodeBackboneMessage({
             kind: "mutations",
-            envelopes: encodeDocumentBackboneEnvelopeBatchExact([{ mutation_id: id, document_id: row.documentId, actor: "caller", dependencies: [], observed: null, target: [], diff: { schema: "demo/v1", payload: encodePackValue(id) }, inverse: { schema: "demo/v1", payload: encodePackValue(null) }, timestamp: { actor: 1n, physical_ms: 2n, logical: 3n }, transaction: null }]),
+            envelopes: encodeDocumentBackboneEnvelopeBatchExact([{ mutation_id: id, document_id: row.documentId, actor: "caller", dependencies: [], observed: null, target: [], diff: { schema: "demo/v1", payload: encodePackValue(id) }, inverse: { schema: "demo/v1", payload: encodePackValue(null) }, timestamp: { actor: 1n, physical_ms: 2n, logical: 3n }, transaction: null, verb: null, line: null }]),
           });
           const outcomes: BackboneWorkerResponse[] = [];
           testSeams.workerPostTestSink = (message) => outcomes.push(message);
-          openArtifact({ documentId: row.documentId, schema: "demo/v1", bindings: [{ kind: "hub", dataClass: "persistedShared", baseUrl: "http://hub.test", spaceId: "space-1" }], actor: "caller" });
+          openArtifact({ documentId: row.documentId, schema: "demo/v1", bindings: [{ kind: "hub", dataClass: "persistedShared", baseUrl: "http://hub.test", spaceId: "space-1" }], actor: "caller", actorIdentityGrant: WORKER_LAW_ACTOR_IDENTITY_GRANT });
           await flushSocketGrantTurns();
           const socket = FakeHubWebSocket.instances[0]!;
           socket.open();
@@ -241,7 +243,7 @@ export async function registerDocumentBackboneBatchTests(vitest: Vitest, depende
       const documentId = "doc-ack-transient";
       const edit = (id: string, padding = 0) => encodeBackboneMessage({
         kind: "mutations",
-        envelopes: encodeDocumentBackboneEnvelopeBatchExact([{ mutation_id: id, document_id: documentId, actor: "caller", dependencies: [], observed: null, target: [], diff: { schema: "demo/v1", payload: encodePackValue(id + "x".repeat(padding)) }, inverse: { schema: "demo/v1", payload: encodePackValue(null) }, timestamp: { actor: 1n, physical_ms: 2n, logical: 3n }, transaction: null }]),
+        envelopes: encodeDocumentBackboneEnvelopeBatchExact([{ mutation_id: id, document_id: documentId, actor: "caller", dependencies: [], observed: null, target: [], diff: { schema: "demo/v1", payload: encodePackValue(id + "x".repeat(padding)) }, inverse: { schema: "demo/v1", payload: encodePackValue(null) }, timestamp: { actor: 1n, physical_ms: 2n, logical: 3n }, transaction: null, verb: null, line: null }]),
       });
       const sentIds = (socket: FakeHubWebSocket) => socket.sent.flatMap((bytes) => {
         const decoded = decodeClientFrame(bytes).frame;
@@ -253,7 +255,7 @@ export async function registerDocumentBackboneBatchTests(vitest: Vitest, depende
       testSeams.workerPostTestSink = (message) => outcomes.push(message);
       const randomSpy = vi.spyOn(Math, "random").mockReturnValue(0.5);
       try {
-        openArtifact({ documentId, schema: "demo/v1", bindings: [{ kind: "hub", dataClass: "persistedShared", baseUrl: "http://hub.test", spaceId: "space-1" }], actor: "caller" });
+        openArtifact({ documentId, schema: "demo/v1", bindings: [{ kind: "hub", dataClass: "persistedShared", baseUrl: "http://hub.test", spaceId: "space-1" }], actor: "caller", actorIdentityGrant: WORKER_LAW_ACTOR_IDENTITY_GRANT });
         await flushSocketGrantTurns();
         const socket = FakeHubWebSocket.instances[0]!;
         socket.open();
@@ -377,7 +379,7 @@ export async function registerDocumentBackboneBatchTests(vitest: Vitest, depende
       testSeams.documentSocketGrantTestIssue = async () => ({ schema: "semio.hub.document-socket-grant/v1", protocol: "semio.session.v1", actorId: actor, expiresAtMs: Number.MAX_SAFE_INTEGER });
       const edit = (documentId: string, id: string) => encodeBackboneMessage({
         kind: "mutations",
-        envelopes: encodeDocumentBackboneEnvelopeBatchExact([{ mutation_id: id, document_id: documentId, actor: "caller", dependencies: [], observed: null, target: [], diff: { schema: "demo/v1", payload: encodePackValue(id) }, inverse: { schema: "demo/v1", payload: encodePackValue(null) }, timestamp: { actor: 1n, physical_ms: 2n, logical: 3n }, transaction: null }]),
+        envelopes: encodeDocumentBackboneEnvelopeBatchExact([{ mutation_id: id, document_id: documentId, actor: "caller", dependencies: [], observed: null, target: [], diff: { schema: "demo/v1", payload: encodePackValue(id) }, inverse: { schema: "demo/v1", payload: encodePackValue(null) }, timestamp: { actor: 1n, physical_ms: 2n, logical: 3n }, transaction: null, verb: null, line: null }]),
       });
       const hello = (socket: FakeHubWebSocket) => {
         const decoded = decodeClientFrame(socket.sent[0]!).frame;
@@ -390,7 +392,7 @@ export async function registerDocumentBackboneBatchTests(vitest: Vitest, depende
       vi.useFakeTimers();
       try {
         const documentId = "doc-retire-mounted";
-        openArtifact({ documentId, schema: "demo/v1", bindings: [{ kind: "hub", dataClass: "persistedShared", baseUrl: "http://hub.test", spaceId: "space-1" }], actor: "caller" });
+        openArtifact({ documentId, schema: "demo/v1", bindings: [{ kind: "hub", dataClass: "persistedShared", baseUrl: "http://hub.test", spaceId: "space-1" }], actor: "caller", actorIdentityGrant: WORKER_LAW_ACTOR_IDENTITY_GRANT });
         await flushSocketGrantTurns();
         const socket = FakeHubWebSocket.instances.at(-1)!;
         socket.open();
@@ -417,7 +419,7 @@ export async function registerDocumentBackboneBatchTests(vitest: Vitest, depende
         closeArtifact(documentId, "space-1");
 
         const plainId = "doc-retire-unmounted";
-        openArtifact({ documentId: plainId, schema: "demo/v1", bindings: [{ kind: "hub", dataClass: "persistedShared", baseUrl: "http://hub.test", spaceId: "space-1" }], actor: "caller" });
+        openArtifact({ documentId: plainId, schema: "demo/v1", bindings: [{ kind: "hub", dataClass: "persistedShared", baseUrl: "http://hub.test", spaceId: "space-1" }], actor: "caller", actorIdentityGrant: WORKER_LAW_ACTOR_IDENTITY_GRANT });
         await flushSocketGrantTurns();
         const plainSocket = FakeHubWebSocket.instances.at(-1)!;
         plainSocket.open();
@@ -477,7 +479,7 @@ export async function registerDocumentBackboneBatchTests(vitest: Vitest, depende
       // callback down to its initializer, which makes the optional call below a call on `never`.
       const mirrorRetirement: { release: (() => void) | null } = { release: null };
       try {
-        openArtifact({ documentId, schema: "demo/v1", bindings: [{ kind: "hub", dataClass: "persistedShared", baseUrl: "http://hub.test", spaceId: "space-1" }], actor: "caller" });
+        openArtifact({ documentId, schema: "demo/v1", bindings: [{ kind: "hub", dataClass: "persistedShared", baseUrl: "http://hub.test", spaceId: "space-1" }], actor: "caller", actorIdentityGrant: WORKER_LAW_ACTOR_IDENTITY_GRANT });
         await flushSocketGrantTurns();
         const state = artifactState(documentId, "space-1")!;
         const frontier = installVerifiedDocumentBackbonePair(state);

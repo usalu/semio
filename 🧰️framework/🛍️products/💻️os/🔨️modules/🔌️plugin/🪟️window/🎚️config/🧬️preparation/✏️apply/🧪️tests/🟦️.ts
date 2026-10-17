@@ -14,5 +14,4 @@ test("field-set apply cases agree with an independent exchange oracle",()=>{
   expect(back.post).toEqual(row.base);
   expect(back.inverse).toEqual(row.mutation);
  }
- console.log("[DEBUG] independent JS exchange oracle reproduces every post state and inverse row of the Rust apply edit fixture");
 });

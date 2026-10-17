@@ -1,6 +1,16 @@
 //! 🧱️ Sequence editor core: ids and constants, the typed media I/O surface, camera conversions and the fault vocabulary.
 
-use super::*;
+use semio_framework_plugin::{AppIo, ArtifactView, Emit, Fault, NoConfigMutation};
+use semio_framework_plugin::app::ChildEmitPreparation;
+use neural_engine::ColdOwner;
+use semio_framework_os_infinite_directed_presentation::DagCamera;
+use semio_framework_ui_locale::LocalizedLabel;
+use crate::{SEQUENCE_DOCUMENT_SCHEMA, SequenceCamera, SequenceHostSnapshot, SequenceSnapshot, SequenceWorkingScene};
+use semio_s_artifact_stdio_semio_flow::schema::mutations::SemioFlowMutation;
+use semio_s_artifact_stdio_semio_flow::schema::snapshot::SemioFlowSnapshot;
+use crate::mutations::SequenceMutation;
+use std::collections::VecDeque;
+use crate::editor::sequence::edit_rules;
 
 //#region 🔖️Constants
 pub const SEQUENCE_PLAY_APP_ID: &str = "s.sequence.sequence@1/*#editor";
@@ -206,7 +216,7 @@ impl std::error::Error for SequenceCoreError {
 
 /// 🚧️ One named refusal of the sequence editor: `code` is a row of [`sequence_fault_notices`] (or a framework code), `detail`
 /// the English diagnostic the logs keep; the person reads the notice.
-pub(crate) fn sequence_fault(code: &'static str, detail: impl Into<String>) -> Fault {
+pub fn sequence_fault(code: &'static str, detail: impl Into<String>) -> Fault {
     Fault::new(semio_framework_plugin::FaultOrigin::App, code, detail)
 }
 

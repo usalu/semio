@@ -27,6 +27,7 @@
     "**/📤️dist/**",
     "**/out/**",
     "**/coverage/**",
+    "**/next-env.d.ts",
     "**/target/**",
     "**/🎯️target/**",
     "**/.nx/**",
@@ -39,6 +40,7 @@
     "**/🧩️extension-modules/**",
     "**/📺️renderer-modules/**",
     "**/🌐️browser-bundles/**",
+    "**/🧫️fixtures/📁️some/**",
     ".🧬semio/🦑️repo/🎫️tickets/**"
   ]
 }

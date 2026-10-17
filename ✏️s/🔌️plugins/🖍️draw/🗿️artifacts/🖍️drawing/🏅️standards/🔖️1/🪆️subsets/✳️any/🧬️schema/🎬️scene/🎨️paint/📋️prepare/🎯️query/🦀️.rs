@@ -71,6 +71,3 @@ pub fn prepared_selection_bounds(scene:&PreparedScene,ids:&[String])->Result<Opt
  for(index,node)in scene.plan.nodes.iter().enumerate(){if !visible(node)||crate::preparation::selection::scene_selection_relation(&node.source_path,node.locked_ancestors,&selected).map_err(|error|error.to_string())?.bounds_selection.is_none(){continue;}if let Some(next)=scene.geometry[index].bounds.or(scene.geometry[index].geometry_bounds){bounds=Some(crate::view::union(bounds,next));}}
  Ok(bounds)
 }
-#[cfg(test)]
-#[path="🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;

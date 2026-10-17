@@ -2,6 +2,7 @@
 
 use semio_framework_os_kernel as protocol;
 use semio_framework_pack_json::{from_json_str, parse, JsonMemberPolicy, Value};
+use semio_framework_test_fixtures::fixture_path;
 use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
 use semio_s_artifact_remodel_remodeling_model_diff::standards::v1::subsets::any::schema::diff::RemodelingDiff;
 use semio_s_artifact_remodel_remodeling_mutations::standards::v1::subsets::any::schema::mutations::RemodelingMutation;
@@ -21,7 +22,7 @@ pub struct Vector {
 
 /// 📂️ The fixture mirror of this subset's `🧬️mutations` facet, seen from a mutation group package.
 fn fixture_root() -> PathBuf {
-    Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations")
+    fixture_path!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations")
 }
 
 fn read(path: &Path) -> String {

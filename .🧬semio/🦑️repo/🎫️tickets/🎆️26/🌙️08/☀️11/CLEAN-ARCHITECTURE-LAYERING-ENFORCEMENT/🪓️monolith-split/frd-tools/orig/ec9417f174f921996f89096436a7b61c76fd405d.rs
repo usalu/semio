@@ -1,0 +1,167 @@
+//! 🧪️ `🛰️rendezvous` — the local bridge rendezvous: offer round-trip, owner-only permissions,
+//! self-cleanup on drop, stale-session sweeping, and admission-proof freshness. Every test drives the
+//! REAL directory layout under its OWN temporary root (never a process-global `HOME`, which sibling
+//! tests read concurrently) and never a mocked filesystem.
+
+use std::path::Path;
+use std::path::PathBuf;
+use crate::rendezvous::{BridgeOffer, BridgeOfferScope, OsSessionRecord, RENDEZVOUS_SCHEMA_VERSION, live_os_sessions_in, mint_admission_proof, now_ms, offers_dir_in, publish_offer_in, sessions_dir_in};
+
+/// 🧪️ Reads a committed fixture from the package directory at run time instead of embedding it in the test binary.
+fn fixture_text(relative: &str) -> &'static str {
+    Box::leak(std::fs::read_to_string(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative)).expect(relative).into_boxed_str())
+}
+
+
+/// 📂️ A rendezvous root of this test's own, removed when the test ends.
+struct TemporaryRoot(PathBuf);
+
+impl TemporaryRoot {
+    fn new(label: &str) -> Self {
+        let directory = std::env::temp_dir().join(format!("semio-mcp-rendezvous-{label}-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&directory);
+        std::fs::create_dir_all(&directory).expect("temporary rendezvous root");
+        Self(directory)
+    }
+
+    fn path(&self) -> &Path {
+        &self.0
+    }
+}
+
+impl Drop for TemporaryRoot {
+    fn drop(&mut self) {
+        let _ = std::fs::remove_dir_all(&self.0);
+    }
+}
+
+fn offer_for(pid: u32) -> BridgeOffer {
+    BridgeOffer {
+        schema_version: RENDEZVOUS_SCHEMA_VERSION,
+        url: format!("ws://127.0.0.1:6301/bridge?pid={pid}"),
+        admission_proof: mint_admission_proof(),
+        principal: "agent:local".to_string(),
+        pid,
+        published_at_ms: 1_700_000_000_000,
+        scope: BridgeOfferScope::Local,
+    }
+}
+
+/// 🔐️ The offer files the scoped-offer law selects between (`🔗️AgentBridge/🧫️fixtures/🛰️offer-answers/🔣️.json` `select`,
+/// ticket 26/09/23 G12 session 14c) are exactly this gateway's records: each decodes and re-encodes to the same JSON, and a
+/// record of another version, with an extra field or a scope missing its space is refused.
+#[test]
+fn the_scoped_offer_records_are_this_gateways_offer_files() {
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text("../../../../📺️renderer/🧑‍🎨engine/🧱️elements/🔗️AgentBridge/🧪️tests/🧫️fixtures/🛰️offer-answers/🔣️.json")).expect("offer fixture parses");
+    let records = fixture["select"]["records"].as_array().expect("select records");
+    assert!(records.len() >= 6);
+    for record in records {
+        let offer: BridgeOffer = serde_json::from_value(record.clone()).unwrap_or_else(|error| panic!("{record}: {error}"));
+        assert_eq!(offer.schema_version, RENDEZVOUS_SCHEMA_VERSION);
+        assert_eq!(serde_json::to_value(&offer).expect("offer encodes"), *record);
+    }
+    assert!(records.iter().any(|record| record["scope"] == serde_json::json!({ "kind": "local" })));
+    let mut extra = records[0].clone();
+    extra["token"] = serde_json::json!("secret");
+    assert!(serde_json::from_value::<BridgeOffer>(extra).is_err());
+    let mut unscoped = records[0].clone();
+    unscoped["scope"] = serde_json::json!({ "kind": "hub", "hubOrigin": "http://127.0.0.1:7800" });
+    assert!(serde_json::from_value::<BridgeOffer>(unscoped).is_err());
+}
+
+fn write_session(root: &Path, record: &OsSessionRecord) {
+    let directory = sessions_dir_in(root);
+    std::fs::create_dir_all(&directory).expect("sessions directory");
+    std::fs::write(directory.join(format!("{}.json", record.pid)), serde_json::to_vec(record).expect("session record")).expect("write session record");
+}
+
+#[test]
+fn a_published_offer_round_trips_and_is_owner_only() {
+    let root = TemporaryRoot::new("offer");
+    let published = publish_offer_in(root.path(), offer_for(4242)).expect("offer publishes");
+    let bytes = std::fs::read(published.path()).expect("offer file readable");
+    let decoded: BridgeOffer = serde_json::from_slice(&bytes).expect("offer decodes");
+    assert_eq!(decoded, *published.offer());
+    assert_eq!(decoded.schema_version, RENDEZVOUS_SCHEMA_VERSION);
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        let mode = std::fs::metadata(published.path()).expect("offer metadata").permissions().mode() & 0o777;
+        assert_eq!(mode, 0o600, "a bridge offer carries an admission proof and must never be group/world readable");
+    }
+    assert!(!offers_dir_in(root.path()).join("4242.json.partial").exists(), "the atomic temp file is renamed away, never left behind");
+}
+
+#[test]
+fn dropping_a_published_offer_removes_the_file() {
+    let root = TemporaryRoot::new("drop");
+    let path = {
+        let published = publish_offer_in(root.path(), offer_for(4243)).expect("offer publishes");
+        published.path().to_path_buf()
+    };
+    assert!(!path.exists(), "a gateway that exits must not leave a dead ws:// address behind");
+}
+
+#[test]
+fn publishing_an_offer_sweeps_the_offers_of_gateways_that_are_gone() {
+    let root = TemporaryRoot::new("offer-sweep");
+    let directory = offers_dir_in(root.path());
+    std::fs::create_dir_all(&directory).expect("offers directory");
+    let alive = BridgeOffer { published_at_ms: now_ms(), ..offer_for(std::process::id()) };
+    let dead = BridgeOffer { published_at_ms: now_ms(), ..offer_for(0x7FFF_FFF0) };
+    for offer in [&alive, &dead] {
+        std::fs::write(directory.join(format!("{}.json", offer.pid)), serde_json::to_vec(offer).expect("offer")).expect("write offer");
+    }
+    std::fs::write(directory.join("garbage.json"), b"not an offer").expect("write garbage");
+    let published = publish_offer_in(root.path(), offer_for(4244)).expect("offer publishes");
+    assert!(published.path().exists(), "the publisher's own offer is written after the sweep");
+    assert!(directory.join(format!("{}.json", alive.pid)).exists(), "a live gateway's offer is kept");
+    assert!(!directory.join("garbage.json").exists(), "an unreadable offer is swept");
+    #[cfg(unix)]
+    assert!(!directory.join(format!("{}.json", dead.pid)).exists(), "a gateway that is gone leaves no offer behind for a shell to dial");
+    #[cfg(not(unix))]
+    assert!(directory.join(format!("{}.json", dead.pid)).exists(), "without a process probe a young offer is believed");
+}
+
+#[test]
+fn live_sessions_keep_this_process_and_sweep_a_dead_pid() {
+    let root = TemporaryRoot::new("sessions");
+    let alive = OsSessionRecord { schema_version: RENDEZVOUS_SCHEMA_VERSION, session_id: "shell-alive".into(), pid: std::process::id(), shell_kind: "react".into(), started_at_ms: 2 };
+    let dead = OsSessionRecord { schema_version: RENDEZVOUS_SCHEMA_VERSION, session_id: "shell-dead".into(), pid: 0x7FFF_FFF0, shell_kind: "react".into(), started_at_ms: 1 };
+    write_session(root.path(), &alive);
+    write_session(root.path(), &dead);
+    let live = live_os_sessions_in(root.path());
+    #[cfg(unix)]
+    {
+        assert_eq!(live.len(), 1, "exactly the record whose process is alive survives");
+        assert_eq!(live[0].session_id, "shell-alive");
+        assert!(!sessions_dir_in(root.path()).join(format!("{}.json", dead.pid)).exists(), "a stale record is swept, never believed");
+    }
+    #[cfg(not(unix))]
+    assert_eq!(live.len(), 2, "without a process probe both young records are believed");
+}
+
+#[test]
+fn no_session_directory_is_an_empty_discovery_not_an_error() {
+    let root = TemporaryRoot::new("empty");
+    assert!(live_os_sessions_in(root.path()).is_empty());
+}
+
+#[test]
+fn a_malformed_session_record_is_swept() {
+    let root = TemporaryRoot::new("malformed");
+    std::fs::create_dir_all(sessions_dir_in(root.path())).expect("sessions directory");
+    let path = sessions_dir_in(root.path()).join("9999.json");
+    std::fs::write(&path, b"{ not json").expect("write malformed record");
+    assert!(live_os_sessions_in(root.path()).is_empty());
+    assert!(!path.exists());
+}
+
+#[test]
+fn admission_proofs_are_fresh_per_mint() {
+    let first = mint_admission_proof();
+    let second = mint_admission_proof();
+    assert_eq!(first.len(), 32);
+    assert!(first.chars().all(|character| character.is_ascii_hexdigit()));
+    assert_ne!(first, second, "an admission proof is minted per process, never a derived constant");
+}

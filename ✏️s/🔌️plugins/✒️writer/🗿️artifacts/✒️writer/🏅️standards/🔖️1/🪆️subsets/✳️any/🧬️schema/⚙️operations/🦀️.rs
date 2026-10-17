@@ -3,7 +3,7 @@
 use crate::schema::mutations::WriterMutation;
 #[cfg(test)]
 use crate::schema::mutations::{ChangeLanguage, ChangeUri, EditText, RenameWriter};
-#[cfg(test)] use crate::WriterDiff;
+
 use crate::WriterSnapshot;
 use protocol::Mutation;
 
@@ -36,7 +36,5 @@ pub fn inverse_writer_mutation_steps(mutation: &WriterMutation, base: &WriterSna
 //#endregion ⚙️Operations
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

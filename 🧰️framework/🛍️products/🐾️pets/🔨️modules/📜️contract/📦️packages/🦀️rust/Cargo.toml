@@ -22,12 +22,14 @@ workspace = true
 path = "../../🦀️.rs"
 
 [features]
-testkit = ["dep:serde_json"]
+testkit = ["dep:serde_json", "dep:semio-framework-test-fixtures"]
 
 [dependencies]
+semio-framework-test-fixtures = { path = "../../../../../../🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust", optional = true }
 serde = { workspace = true }
 # 🎯️ `float_roundtrip`: without it serde_json reads a long decimal one unit in the last place off, while JSON.parse and Python round correctly; the test kit feeds the unit tests the very doubles the other languages read.
 serde_json = { workspace = true, features = ["float_roundtrip"], optional = true }
 
 [dev-dependencies]
+semio-framework-test-fixtures = { path = "../../../../../../🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 serde_json = { workspace = true, features = ["float_roundtrip"] }

@@ -183,9 +183,9 @@ impl SemioObjectSnapshot {
 /// 🌱 The demo `s.stdio.semio.object` — a non-identity transform plus all three child handles
 /// populated (real child_id/target pairs, never embedded content). Single source of truth for
 /// `📚️examples/📦️crate/🖼️assets/…` and this facet's own conformance-law tests.
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn demo_object_snapshot() -> SemioObjectSnapshot {
+pub fn demo_object_snapshot() -> SemioObjectSnapshot {
     use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3;
     use semio_s_artifact_stdio_semio_base::schema::geometry::SemioQuaternion;
     let dialect = |subset: &str| semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: subset.into() };
@@ -200,9 +200,7 @@ pub(crate) fn demo_object_snapshot() -> SemioObjectSnapshot {
 //#endregion 🔖️Demo
 
 //#region 🔖️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🔖️Tests
 
 

@@ -1,18 +1,34 @@
 //! 🏅️ Staged `retirement` members of the `instance-typed-ops` use cases, as methods of the borrowed bundle (WP7 of the instance family).
 //!
 //! ♻️ Typed operation retirement under the granted lifecycle step.
-use super::*;
-use crate::tool_jobs::time_travel;
-use super::docs_maintenance_ladder::item;
+use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use pack::snapshot::ArtifactPack;
+use semio_framework_plugin_decl_emission::Emit;
+use semio_framework::{Fault, FaultCode, FaultFrom, FaultOrigin};
+use std::future::Future;
+use semio_framework_plugin_job::{INTERACTIVE_TURN_WORKER_PUMPS, INTERACTIVE_TURN_WORKER_WALL_US};
+use semio_framework_plugin_instance_extension::InstanceExtension;
+use store::{MemberFactory, Mutation, SpaceMember};
+use semio_framework_plugin_retained_command::typed_operation::MountedTypedCommandFullOperation;
+use semio_framework_plugin_composition_publication::MountedTypedCommandFullOperationStage;
+use protocol::OpText;
+use semio_framework_plugin_reactor_app::PluginApp;
+use semio_framework_plugin_ownership::bounded_ownership::{PluginLifecycleStep, plugin_grant_funds, plugin_retirement_fault};
+use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
+use crate::typed_bundle::TypedCtx;
+use semio_framework_value::ValueError;
+use semio_framework_ui_contract::*;
+use semio_framework_plugin_instance_docs::docs_maintenance_ladder::item;
 
 impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceExtension> TypedCtx<'ctx, A, M, X> {
     #[inline(never)]
-    pub(crate) fn retire_typed_operation_unit(&mut self,operation_id:u64,cx:&mut semio_framework_job::StepContext<'_>)->Result<PluginLifecycleStep,crate::PluginLifecycleFailure>{
+    pub fn retire_typed_operation_unit(&mut self,operation_id:u64,cx:&mut semio_framework_job::StepContext<'_>)->Result<PluginLifecycleStep,semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{
         let grant=cx.retained_grant();let demand=self.tools.typed_operation_retirement_demands(&*self.child_composition, operation_id, grant.maximum_copy_bytes)?;
         semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|same,actual|self.retire_typed_operation_granted(operation_id,same,actual).map(|step|(step,false)))
     }
 
-    fn retire_typed_operation_granted(&mut self,operation_id:u64,cx:&mut semio_framework_job::StepContext<'_>,grant:RetainedCloneGrant)->Result<PluginLifecycleStep,crate::PluginLifecycleFailure>{
+    fn retire_typed_operation_granted(&mut self,operation_id:u64,cx:&mut semio_framework_job::StepContext<'_>,grant:RetainedCloneGrant)->Result<PluginLifecycleStep,semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{
         self.as_render().request_gesture_cancellation(operation_id);
         let item = RetainedCloneProgress { copied_items: 1, ..Default::default() };
         if self.tools.tool_operations.get(operation_id).is_some_and(MountedTypedCommandFullOperation::close_fault_pending){return self.tools.tool_operations.get_mut(operation_id).unwrap().close_fault_step(grant).map(|step|PluginLifecycleStep::Progress(step.progress())).map_err(Into::into);}
@@ -54,21 +70,21 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
     /// unit per rotation on the shared live-cleanup job, so a sustained action rate filled all
     /// [`ARTIFACT_LIVE_OUTPUT_SLOTS`] classes and every later action was refused
     /// `interactive-job.typed-operation-capacity`.
-    pub(super) fn retire_typed_operation_run(&mut self,operation_id:u64,cx:&mut semio_framework_job::StepContext<'_>)->Result<(),crate::PluginLifecycleFailure>{
+    pub(super) fn retire_typed_operation_run(&mut self,operation_id:u64,cx:&mut semio_framework_job::StepContext<'_>)->Result<(),semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{
         let started_us=cx.now_us();
         for _ in 0..INTERACTIVE_TURN_WORKER_PUMPS {
             if !self.tools.tool_operations.get(operation_id).is_some_and(|operation| operation.stage == MountedTypedCommandFullOperationStage::Retiring) {
                 return Ok(());
             }
             if self.tools.tool_operations.get(operation_id).is_some_and(|operation|operation.granted_retirement_ready()&&operation.granted_retirement_pending()){
-                let grant=crate::plugin_runtime::original_plugin_turn_grant(self.mounted_policy.close,cx.retained_grant());
+                let grant=semio_framework_plugin_reactor_app::original_plugin_turn_grant(self.mounted_policy.close,cx.retained_grant());
                 let demand=self.tools.tool_operations.get(operation_id).unwrap().granted_retirement_demands(grant.maximum_copy_bytes)?;let step=semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|same,actual|{let step=self.tools.tool_operations.get_mut(operation_id).unwrap().granted_retirement_step(same,actual)?;Ok((PluginLifecycleStep::Progress(step.progress()),false))})?;let step=RetainedCloneStep::Progress(step.progress().unwrap_or_default());
                 if !step.progress().fits(grant){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original typed operation retirement exceeded its issuer grant").with_retained_progress(step.progress()).into());}
                 let progress=step.progress();if progress==RetainedCloneProgress::default(){return Ok(());}
                 let owner=self.tools.tool_operations.get_mut(operation_id).unwrap();assert!(owner.original_retirement_receipt.is_none(),"original mounted Close receipt cannot be overwritten before acknowledgement");owner.original_retirement_receipt=Some((grant,progress));return Ok(());
 
             }
-            let grant = crate::plugin_runtime::original_plugin_turn_grant(self.mounted_policy.close, cx.retained_grant());
+            let grant = semio_framework_plugin_reactor_app::original_plugin_turn_grant(self.mounted_policy.close, cx.retained_grant());
             let demand = self.tools.typed_operation_retirement_demands(&*self.child_composition, operation_id, grant.maximum_copy_bytes)?;
             if !plugin_grant_funds(demand, grant) {
                 return Ok(());

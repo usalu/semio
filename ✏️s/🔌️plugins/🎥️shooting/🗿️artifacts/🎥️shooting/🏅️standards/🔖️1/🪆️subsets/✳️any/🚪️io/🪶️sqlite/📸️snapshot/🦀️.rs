@@ -85,6 +85,3 @@ impl ShootingSnapshot{
  fn admit_sqlite_values(&self,control:&mut SqliteSnapshotControl<'_>,phase:SqliteSnapshotPhase)->Result<(),ValueError>{let mut out=RowWriter::borrowed(control,phase)?;self.write_sqlite_rows(&mut out)?;out.finish_borrowed()}
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;

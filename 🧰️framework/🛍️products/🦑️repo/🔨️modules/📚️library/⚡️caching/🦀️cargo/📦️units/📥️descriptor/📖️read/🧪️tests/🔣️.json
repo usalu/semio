@@ -1,0 +1,213 @@
+{
+ "cases": [
+  {
+   "name": "current",
+   "accepted": true,
+   "units": [
+    "base",
+    "consumer"
+   ],
+   "stage": "read"
+  },
+  {
+   "name": "exact-limit",
+   "accepted": true,
+   "units": [
+    "base",
+    "consumer"
+   ],
+   "stage": "read"
+  },
+  {
+   "name": "oversized",
+   "accepted": false,
+   "units": [],
+   "stage": "read"
+  },
+  {
+   "name": "wrong-hash",
+   "accepted": false,
+   "units": [],
+   "stage": "read"
+  },
+  {
+   "name": "cross-mode",
+   "accepted": false,
+   "units": [],
+   "stage": "read"
+  },
+  {
+   "name": "other-namespace",
+   "accepted": false,
+   "units": [],
+   "stage": "read"
+  },
+  {
+   "name": "extra-field",
+   "accepted": false,
+   "units": [],
+   "stage": "read"
+  },
+  {
+   "name": "empty",
+   "accepted": false,
+   "units": [],
+   "stage": "read"
+  },
+  {
+   "name": "too-many",
+   "accepted": false,
+   "units": [],
+   "stage": "read"
+  },
+  {
+   "name": "duplicate",
+   "accepted": false,
+   "units": [],
+   "stage": "read"
+  },
+  {
+   "name": "missing",
+   "accepted": false,
+   "units": [],
+   "stage": "read"
+  },
+  {
+   "name": "cycle",
+   "accepted": false,
+   "units": [],
+   "stage": "read"
+  },
+  {
+   "name": "deep",
+   "accepted": false,
+   "units": [],
+   "stage": "prepare"
+  },
+  {
+   "name": "unit-mode",
+   "accepted": false,
+   "units": [],
+   "stage": "read"
+  },
+  {
+   "name": "copied-control",
+   "accepted": false,
+   "units": [],
+   "stage": "read"
+  },
+  {
+   "name": "cancelled",
+   "accepted": false,
+   "units": [],
+   "stage": "read"
+  },
+  {
+   "name": "accessor",
+   "accepted": false,
+   "units": [],
+   "stage": "read"
+  },
+  {
+   "name": "proxy",
+   "accepted": false,
+   "units": [],
+   "stage": "read"
+  },
+  {
+   "name": "captured-request",
+   "accepted": true,
+   "units": [
+    "base",
+    "consumer"
+   ],
+   "stage": "read"
+  },
+  {
+   "name": "depth-limit",
+   "accepted": true,
+   "units": [
+    "u62",
+    "u63"
+   ],
+   "stage": "read"
+  },
+  {
+   "name": "missing-file",
+   "accepted": false,
+   "units": [],
+   "stage": "read"
+  },
+  {
+   "name": "retired-control",
+   "accepted": false,
+   "units": [],
+   "stage": "read"
+  },
+  {
+   "name": "normalized",
+   "accepted": true,
+   "units": [
+    "base",
+    "consumer"
+   ],
+   "stage": "read"
+  },
+  {
+   "name": "noncanonical",
+   "accepted": false,
+   "units": [],
+   "stage": "read"
+  }
+ ],
+ "probes": [
+  {
+   "name": "current",
+   "accepted": true,
+   "matches": true,
+   "oracleMatches": true
+  },
+  {
+   "name": "missing",
+   "accepted": true,
+   "matches": false,
+   "oracleMatches": false
+  },
+  {
+   "name": "mismatch",
+   "accepted": false,
+   "matches": null,
+   "oracleMatches": false
+  },
+  {
+   "name": "oversized",
+   "accepted": false,
+   "matches": null,
+   "oracleMatches": false
+  },
+  {
+   "name": "symlink",
+   "accepted": false,
+   "matches": null,
+   "oracleMatches": true
+  },
+  {
+   "name": "hardlink",
+   "accepted": false,
+   "matches": null,
+   "oracleMatches": true
+  },
+  {
+   "name": "copied-node",
+   "accepted": false,
+   "matches": null,
+   "oracleMatches": true
+  },
+  {
+   "name": "copied-control",
+   "accepted": false,
+   "matches": null,
+   "oracleMatches": true
+  }
+ ]
+}

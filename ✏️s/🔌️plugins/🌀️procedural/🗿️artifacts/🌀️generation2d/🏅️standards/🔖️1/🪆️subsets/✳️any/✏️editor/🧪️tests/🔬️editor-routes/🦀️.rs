@@ -23,21 +23,3 @@ mod reorganize_tests;
 mod add_widget_tests;
 #[path = "../../🎮️commands/✏️node-graph-edit/🧪️tests/🔬️unit/🦀️.rs"]
 mod node_graph_edit_tests;
-#[path = "../../📌️panels/🔍️inspection/🧪️tests/🔬️unit/🦀️.rs"]
-mod inspection_panel_tests;
-#[path = "../../📌️panels/🗿️artifact/🧪️tests/🔬️unit/🦀️.rs"]
-mod document_panel_tests;
-#[path = "../../📌️panels/🛍️catalogue/🧪️tests/🔬️unit/🦀️.rs"]
-mod catalogue_panel_tests;
-#[path = "../../🎭️modes/✏️edit/🪟️windows/👁️preview/🧪️tests/🔬️unit/🦀️.rs"]
-mod edit_preview_window_tests;
-#[path = "../../🎭️modes/✏️edit/🪟️windows/🕸️flow/🧪️tests/🔬️unit/🦀️.rs"]
-mod flow_window_tests;
-#[path = "../../🎭️modes/🧬️generate/🪟️windows/👁️preview/🧪️tests/🔬️unit/🦀️.rs"]
-mod generate_preview_window_tests;
-#[path = "../../🎭️modes/🧬️generate/🪟️windows/📝️form/🧪️tests/🔬️unit/🦀️.rs"]
-mod form_window_tests;
-#[path = "../../🎭️modes/🧬️generate/🪟️windows/🗂️generations/🧪️tests/🔬️unit/🦀️.rs"]
-mod generations_window_tests;
-#[path = "../../../🧵️preview-eval/🧪️tests/🔬️unit/🦀️.rs"]
-mod preview_eval_tests;

@@ -22,7 +22,7 @@ thread_local! {
 }
 
 /// 🌉️ The native host receives one original feature body before any linear-memory envelope copy.
-pub fn flow_bridge_poll_on_original_caller(cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<(semio_framework::abi::AbiHandle,FlowFeatureStep)>,FlowFailure>{BRIDGE.with(|bridge|match bridge.try_borrow_mut(){Ok(mut bridge)=>bridge.poll_on_original_caller(cx),Err(_)=>Ok(None)})}
+pub fn flow_bridge_poll_on_original_caller(cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<(semio_framework_abi::AbiHandle,FlowFeatureStep)>,FlowFailure>{BRIDGE.with(|bridge|match bridge.try_borrow_mut(){Ok(mut bridge)=>bridge.poll_on_original_caller(cx),Err(_)=>Ok(None)})}
 
 #[unsafe(no_mangle)]
 pub extern "C" fn flow_bridge_allocate(length: usize) -> *mut u8 {

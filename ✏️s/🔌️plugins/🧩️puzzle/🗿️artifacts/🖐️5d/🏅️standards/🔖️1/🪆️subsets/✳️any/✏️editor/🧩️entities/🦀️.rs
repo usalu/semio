@@ -1,11 +1,26 @@
 //! 🧩️ Entities of the puzzle 5d editor: the reserved sizes and scoped ids, the structural-twin document model (grips, fasteners, parts, target volumes) and the grip, mesh and geometry helpers that read it. See [`super`].
 
-use super::*;
+use crate::editor::puzzle5d::snapshot::Puzzle5dPlaySnapshot;
+use crate::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation;
+use crate::Puzzle5dSnapshot;
+use semio_framework_plugin::{kernel::PasteAnchor, kernel::PastePlacement};
+use semio_framework_plugin::ActionDescriptor;
+use semio_framework_plugin::InteractionTarget;
+use semio_framework_plugin::INTERACTION_SELECT_ACTION_ID;
+use semio_framework_value::{FromValue, ToValue};
+use semio_framework_pack_json::Value;
+use std::collections::HashSet;
+use std::sync::LazyLock;
 
 //#region 🔖️Constants
 pub const PUZZLE5D_PLAY_APP_ID: &str = "puzzle5d-play";
 pub const PUZZLE5D_PLAY_CONTROLLER_ID: &str = "puzzle5d-play";
-pub const PUZZLE5D_PLAY_WINDOWS: [&str; 2] = [board2d::WINDOW_KIND_ID, world3d::WINDOW_KIND_ID];
+pub const PUZZLE5D_BOARD_WINDOW_KIND_ID: &str = "puzzle5d-2d";
+pub const PUZZLE5D_WORLD_WINDOW_KIND_ID: &str = "puzzle5d-3d";
+pub const PUZZLE5D_BRUSH_UTILITY_ID: &str = "brush";
+pub const PUZZLE5D_FILL_TOOL_ID: &str = "fill";
+pub const PUZZLE5D_TRANSFORM_UTILITY_ID: &str = "transform";
+pub const PUZZLE5D_PLAY_WINDOWS: [&str; 2] = [PUZZLE5D_BOARD_WINDOW_KIND_ID, PUZZLE5D_WORLD_WINDOW_KIND_ID];
 pub const PUZZLE5D_SCHEMA: &str = "puzzle.5d";
 pub const PUZZLE5D_BOARD_SNAPSHOT_SCHEMA: &str = "board.ports.directed.v1";
 pub const PUZZLE5D_EXAMPLE_CONCRETE_FOREST: &str = "concrete-forest";
@@ -81,21 +96,21 @@ pub const PUZZLE5D_CHUNK_SIZE_MAX: f64 = 512.0;
 pub static CONCRETE_FOREST_EXAMPLE_JSON: LazyLock<String> = LazyLock::new(|| crate::examples::puzzle5d::concrete_forest::SOURCE.document_json().to_string());
 pub static NAKAGIN_EXAMPLE_JSON: LazyLock<String> = LazyLock::new(|| crate::examples::puzzle5d::nakagin_capsule_tower::SOURCE.document_json().to_string());
 pub static CAPSULE_DREAM_EXAMPLE_JSON: LazyLock<String> = LazyLock::new(|| crate::examples::puzzle5d::capsule_dream::SOURCE.document_json().to_string());
-pub(super) static CONCRETE_FOREST_EXAMPLE_DOCUMENT: LazyLock<Puzzle5dDocument> = LazyLock::new(|| document_from_json(CONCRETE_FOREST_EXAMPLE_JSON.as_str()));
-pub(super) static NAKAGIN_EXAMPLE_DOCUMENT: LazyLock<Puzzle5dDocument> = LazyLock::new(|| document_from_json(NAKAGIN_EXAMPLE_JSON.as_str()));
-pub(super) static CAPSULE_DREAM_EXAMPLE_DOCUMENT: LazyLock<Puzzle5dDocument> = LazyLock::new(|| document_from_json(CAPSULE_DREAM_EXAMPLE_JSON.as_str()));
-pub(super) static EMPTY_EXAMPLE_DOCUMENT: LazyLock<Puzzle5dDocument> = LazyLock::new(empty_document);
+pub static CONCRETE_FOREST_EXAMPLE_DOCUMENT: LazyLock<Puzzle5dDocument> = LazyLock::new(|| document_from_json(CONCRETE_FOREST_EXAMPLE_JSON.as_str()));
+pub static NAKAGIN_EXAMPLE_DOCUMENT: LazyLock<Puzzle5dDocument> = LazyLock::new(|| document_from_json(NAKAGIN_EXAMPLE_JSON.as_str()));
+pub static CAPSULE_DREAM_EXAMPLE_DOCUMENT: LazyLock<Puzzle5dDocument> = LazyLock::new(|| document_from_json(CAPSULE_DREAM_EXAMPLE_JSON.as_str()));
+pub static EMPTY_EXAMPLE_DOCUMENT: LazyLock<Puzzle5dDocument> = LazyLock::new(empty_document);
 
 
-pub(super) const PUZZLE5D_RESERVED_RAW_BYTES: usize = 65_536;
-pub(super) const PUZZLE5D_RESERVED_OUTPUT_BYTES: usize = 1_048_576;
-pub(super) const PUZZLE5D_RESERVED_PAGE_BYTES: usize = 4_096;
-pub(super) const PUZZLE5D_IMPORT_MEDIA_BYTES: usize = semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
-pub(super) const PUZZLE5D_IMPORT_SEMANTIC_ITEMS: usize = 32;
-pub(super) const PUZZLE5D_IMPORT_DECODED_ITEMS: usize = PUZZLE5D_IMPORT_SEMANTIC_ITEMS * PUZZLE5D_IMPORT_SEMANTIC_ITEMS + PUZZLE5D_IMPORT_SEMANTIC_ITEMS * 5;
-pub(super) const PUZZLE5D_IMPORT_MUTATION_ITEMS: usize = PUZZLE5D_IMPORT_SEMANTIC_ITEMS * 2 + 1;
-pub(super) const PUZZLE5D_IMPORT_MUTATIONS_PER_PAGE: usize = semio_framework_job::JOB_PAYLOAD_PAGE_BYTES / size_of::<Puzzle5dMutation>();
-pub(super) const PUZZLE5D_IMPORT_MUTATION_PAGES: usize = PUZZLE5D_IMPORT_MUTATION_ITEMS.div_ceil(PUZZLE5D_IMPORT_MUTATIONS_PER_PAGE);
+pub const PUZZLE5D_RESERVED_RAW_BYTES: usize = 65_536;
+pub const PUZZLE5D_RESERVED_OUTPUT_BYTES: usize = 1_048_576;
+pub const PUZZLE5D_RESERVED_PAGE_BYTES: usize = 4_096;
+pub const PUZZLE5D_IMPORT_MEDIA_BYTES: usize = semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
+pub const PUZZLE5D_IMPORT_SEMANTIC_ITEMS: usize = 32;
+pub const PUZZLE5D_IMPORT_DECODED_ITEMS: usize = PUZZLE5D_IMPORT_SEMANTIC_ITEMS * PUZZLE5D_IMPORT_SEMANTIC_ITEMS + PUZZLE5D_IMPORT_SEMANTIC_ITEMS * 5;
+pub const PUZZLE5D_IMPORT_MUTATION_ITEMS: usize = PUZZLE5D_IMPORT_SEMANTIC_ITEMS * 2 + 1;
+pub const PUZZLE5D_IMPORT_MUTATIONS_PER_PAGE: usize = semio_framework_job::JOB_PAYLOAD_PAGE_BYTES / size_of::<Puzzle5dMutation>();
+pub const PUZZLE5D_IMPORT_MUTATION_PAGES: usize = PUZZLE5D_IMPORT_MUTATION_ITEMS.div_ceil(PUZZLE5D_IMPORT_MUTATIONS_PER_PAGE);
 
 pub fn puzzle5d_action(action: &str, args: Option<Value>) -> ActionDescriptor {
     ActionDescriptor { controller_id: PUZZLE5D_PLAY_CONTROLLER_ID.into(), action: action.into(), args: args.map(|value| semio_framework_pack_json::to_dsl_value(&value)) }
@@ -114,8 +129,8 @@ pub struct Puzzle5dFreshIds {
     occupied_parts: HashSet<String>,
     occupied_fasteners: HashSet<String>,
     occupied_target_volumes: HashSet<String>,
-    pub(super) part_cursor: u64,
-    pub(super) fastener_cursor: u64,
+    pub part_cursor: u64,
+    pub fastener_cursor: u64,
     target_volume_cursor: u64,
 }
 
@@ -363,13 +378,13 @@ pub fn default_document() -> Puzzle5dDocument {
 /// 🔎️ Reads a fixed-length `[f64; 3]` coordinate triple straight off a dsl `Value::Array` —
 /// the direct replacement for the old `puzzle5d_record_from_projection::<[f64; 3]>(value.clone())` round
 /// trip, which this file's own `Value` no longer supports (no `Deserialize`).
-pub(crate) fn puzzle5d_value_as_f64_3(value: &Value) -> Option<[f64; 3]> {
+pub fn puzzle5d_value_as_f64_3(value: &Value) -> Option<[f64; 3]> {
     let values = value.as_array()?;
     Some([values.first()?.as_f64()?, values.get(1)?.as_f64()?, values.get(2)?.as_f64()?])
 }
 
 /// 🔎️ The `[f64; 4]` sibling of [`puzzle5d_value_as_f64_3`] (quaternion orientation reads).
-pub(super) fn puzzle5d_value_as_f64_4(value: &Value) -> Option<[f64; 4]> {
+pub fn puzzle5d_value_as_f64_4(value: &Value) -> Option<[f64; 4]> {
     let values = value.as_array()?;
     Some([values.first()?.as_f64()?, values.get(1)?.as_f64()?, values.get(2)?.as_f64()?, values.get(3)?.as_f64()?])
 }
@@ -383,16 +398,16 @@ fn puzzle5d_projection_value<T:std::borrow::Borrow<semio_framework_value::DslVal
     semio_framework_pack_json::from_dsl_value(value.borrow())
 }
 
-pub(super) fn puzzle5d_editor_projection(snapshot: &Puzzle5dPlaySnapshot) -> Value {
+pub fn puzzle5d_editor_projection(snapshot: &Puzzle5dPlaySnapshot) -> Value {
     value_from_document(&puzzle5d_document_from_snapshot(snapshot.typed()).expect("admitted typed snapshot has a host projection"))
 }
 
 /// 🌱️ Admits a native host projection through the owned record contract.
-pub(super) fn puzzle5d_record_from_projection<T: FromValue>(value: Value) -> Result<T, semio_framework_value::ValueError> {
+pub fn puzzle5d_record_from_projection<T: FromValue>(value: Value) -> Result<T, semio_framework_value::ValueError> {
     T::from_value(semio_framework_pack_json::to_dsl_value(&value))
 }
 
-pub(super) fn puzzle5d_paste_placement(args: &Value) -> Result<PastePlacement, semio_framework_value::ValueError> {
+pub fn puzzle5d_paste_placement(args: &Value) -> Result<PastePlacement, semio_framework_value::ValueError> {
     let refusal = || semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "puzzle5d paste placement is malformed");
     let anchor = match args.get("anchor").map(|value| value.as_str().ok_or_else(refusal)).transpose()?.unwrap_or("original") {
         "original" => PasteAnchor::Original, "middle" => PasteAnchor::Middle, "centroid" => PasteAnchor::Centroid,
@@ -413,16 +428,16 @@ pub fn puzzle5d_snapshot_from_document(document: &Puzzle5dDocument) -> Result<Pu
     if document.schema != PUZZLE5D_SCHEMA {
         return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "puzzle5d document schema is not admitted"));
     }
-    let catalogs = document.kind_catalogs.as_ref().map(|value| crate::Puzzle5dKindCatalogs::from_value(value.to_value())).transpose()?;
-    let (kind_catalogs, kind_catalogs_extra) = crate::split_and_seed_kind_catalogs(catalogs);
+    let catalogs = document.kind_catalogs.as_ref().map(|value| crate::standards::v1::subsets::any::schema::document_records::Puzzle5dKindCatalogs::from_value(value.to_value())).transpose()?;
+    let (kind_catalogs, kind_catalogs_extra) = crate::standards::v1::subsets::any::schema::kind_catalogs::split_and_seed_kind_catalogs(catalogs);
     Ok(Puzzle5dSnapshot {
         schema: document.schema.clone(), domain: document.domain.clone(), label: document.label.clone(),
-        meta: document.meta.as_ref().map(|value| crate::Puzzle5dMeta::from_value(value.to_value())).transpose()?.unwrap_or_default(),
+        meta: document.meta.as_ref().map(|value| crate::standards::v1::subsets::any::schema::document_records::Puzzle5dMeta::from_value(value.to_value())).transpose()?.unwrap_or_default(),
         kind_catalogs, kind_catalogs_extra,
-        kind_compatibility: document.kind_compatibility.as_ref().map(|value| Vec::<crate::Puzzle5dKindCompatibility>::from_value(value.to_value())).transpose()?.unwrap_or_default(),
-        parts: document.parts.iter().map(|part| crate::Puzzle5dPart::from_value(part.to_value())).collect::<Result<_, _>>()?,
-        fasteners: document.fasteners.iter().map(|fastener| crate::Puzzle5dFastener::from_value(fastener.to_value())).collect::<Result<_, _>>()?,
-        target_volumes: document.target_volumes.iter().map(|volume| crate::Puzzle5dTargetVolume::from_value(volume.to_value())).collect::<Result<_, _>>()?,
+        kind_compatibility: document.kind_compatibility.as_ref().map(|value| Vec::<crate::standards::v1::subsets::any::schema::document_records::Puzzle5dKindCompatibility>::from_value(value.to_value())).transpose()?.unwrap_or_default(),
+        parts: document.parts.iter().map(|part| crate::standards::v1::subsets::any::schema::document_records::Puzzle5dPart::from_value(part.to_value())).collect::<Result<_, _>>()?,
+        fasteners: document.fasteners.iter().map(|fastener| crate::standards::v1::subsets::any::schema::document_records::Puzzle5dFastener::from_value(fastener.to_value())).collect::<Result<_, _>>()?,
+        target_volumes: document.target_volumes.iter().map(|volume| crate::standards::v1::subsets::any::schema::document_records::Puzzle5dTargetVolume::from_value(volume.to_value())).collect::<Result<_, _>>()?,
     })
 }
 
@@ -430,7 +445,7 @@ pub fn puzzle5d_snapshot_from_document(document: &Puzzle5dDocument) -> Result<Pu
 pub fn puzzle5d_document_from_snapshot(snapshot: &Puzzle5dSnapshot) -> Result<Puzzle5dDocument, semio_framework_value::ValueError> {
     let mut value = semio_framework_pack_json::from_dsl_value(&snapshot.to_value());
     if let Some(object) = value.as_object_mut() {
-        match crate::kind_catalogs_of(&snapshot.kind_catalogs, &snapshot.kind_catalogs_extra) {
+        match crate::standards::v1::subsets::any::schema::kind_catalogs::kind_catalogs_of(&snapshot.kind_catalogs, &snapshot.kind_catalogs_extra) {
             Some(catalogs) => { object.insert("kindCatalogs", semio_framework_pack_json::from_dsl_value(&catalogs.to_value())); }
             None => { object.remove("kindCatalogs"); }
         }
@@ -447,7 +462,7 @@ fn value_from_document(document: &Puzzle5dDocument) -> Value {
 pub fn puzzle5d_paste_mutations(parts: Vec<Puzzle5dPart>, fasteners: Vec<Puzzle5dFastener>) -> Result<Vec<Puzzle5dMutation>, semio_framework_value::ValueError> {
     let mut mutations = Vec::with_capacity(parts.len() + fasteners.len());
     for part in parts {
-        let typed = <crate::Puzzle5dPart as FromValue>::from_value(ToValue::to_value(&part))?;
+        let typed = <crate::standards::v1::subsets::any::schema::document_records::Puzzle5dPart as FromValue>::from_value(ToValue::to_value(&part))?;
         mutations.push(crate::standards::v1::subsets::any::schema::mutations::create_part(typed, None));
     }
     for fastener in fasteners {
@@ -504,27 +519,6 @@ pub fn puzzle5d_axis_index(field: &str, base: &str) -> Option<usize> {
     }
 }
 
-/// 🧲️ The motion an inspector stepper nudge states — `patchPart{field: x|y|origin.x|y|z, delta}` without an
-/// absolute `value` — the inspector edits that are gestures, so they commit the transform tool's
-/// `drag-selection2d` (board `x`/`y`) or `drag-selection3d` (world origin) instead of absolute poses. `None` for
-/// every other edit.
-pub(crate) fn puzzle5d_inspector_nudge(args: Option<&Value>) -> Option<world3d::utilities::transform::Puzzle5dSelectionMotion> {
-    use world3d::utilities::transform::Puzzle5dSelectionMotion;
-    let args = args?;
-    if args.get("value").is_some_and(|value| !value.is_null()) {
-        return None;
-    }
-    let delta = args.get("delta").and_then(Value::as_f64).filter(|delta| delta.is_finite())?;
-    match args.get("field").and_then(Value::as_str)? {
-        "x" => Some(Puzzle5dSelectionMotion::Board { dx: delta, dy: 0.0 }),
-        "y" => Some(Puzzle5dSelectionMotion::Board { dx: 0.0, dy: delta }),
-        field => {
-            let mut offset = [0.0; 3];
-            offset[puzzle5d_axis_index(field, "origin")?] = delta;
-            Some(Puzzle5dSelectionMotion::World(semio_s_artifact_puzzle_3d_editor_transform::Puzzle3dSelectionMotion::Drag { offset }))
-        }
-    }
-}
 
 pub fn resolve_part_mesh_url(part: &Puzzle5dPart, kind_catalogs: Option<&Value>) -> Option<String> {
     if let Some(url) = part.part_3d.mesh_url.as_ref().filter(|url| !url.is_empty()) {
@@ -671,29 +665,4 @@ pub fn target_volume_flat_rect(volume: &Puzzle5dTargetVolume) -> [f64; 4] {
 
 pub use crate::standards::v1::subsets::any::schema::mutations::PUZZLE5D_FLAT_TO_WORLD;
 
-/// 🎨️ Palette drop: creates a free paired part at the flat drop point, deriving the volume origin from the nearest peer part's offset.
-pub fn add_palette_part(envelope: &mut Puzzle5dScene, part_kind: &str, x: f64, y: f64) {
-    let flat_to_world = PUZZLE5D_FLAT_TO_WORLD;
-    let origin = envelope
-        .document
-        .parts
-        .first()
-        .map_or([x * flat_to_world, -y * flat_to_world, 0.0], |peer| [peer.part_3d.origin[0] + (x - peer.part_2d.x) * flat_to_world, peer.part_3d.origin[1] - (y - peer.part_2d.y) * flat_to_world, peer.part_3d.origin[2]]);
-    let id = Puzzle5dFreshIds::from_document(&envelope.document).next_part();
-    let mesh_url = resolve_part_kind_mesh_url(part_kind, envelope.document.kind_catalogs.as_ref());
-    let grips = grips_from_templates(&envelope.document, part_kind);
-    // 🏷️ Stamped at creation, not derived at paint: the outliner, the 3D instance and a later export
-    // must all read the SAME authored name, and only this moment knows how many peers of this kind
-    // the document already holds.
-    let label = puzzle5d_next_part_label(&envelope.document.parts, &envelope.document, part_kind);
-    envelope.document.parts.push(Puzzle5dPart {
-        id: id,
-        anchor: Default::default(),
-        part_kind: part_kind.into(),
-        part_2d: Puzzle5dPart2d { x, y, shape: "circle".into(), radius: PUZZLE5D_DEFAULT_PART_RADIUS, width: None, height: None, text: part_kind.into(), icon_kind: None, hidden: None, locked: None },
-        part_3d: Puzzle5dPart3d { origin, mesh_url, orientation: Some([0.0, 0.0, 0.0, 1.0]), scale: None, label: Some(label) },
-        grips,
-    });
-    let _ = id;
-}
 //#endregion 🔖️Document

@@ -1,7 +1,9 @@
 //! 🧪️ `s.wfc.grid2d.solve` laws — determinism under a fixed seed, the unsatisfiable verdict, the
 //! masked-cell omission and the entropy map's own shape.
 
-use super::*;
+use crate::schema::snapshot::Grid2dSnapshot;
+use crate::host::inferences::*;
+use crate::standards::v1::subsets::any::schema::inferences::{shannon_entropy_over_tiles, Grid2dContradiction, Grid2dEntropy, Grid2dSolve, Grid2dSolveResult};
 use semio_framework_job::InteractiveJob;
 use crate::schema::snapshot::{WfcAdjacencyRule2d, WfcCell2d, WfcDirection2d, WfcPinnedCell2d, WfcTile2d, WfcTileMedia2d};
 

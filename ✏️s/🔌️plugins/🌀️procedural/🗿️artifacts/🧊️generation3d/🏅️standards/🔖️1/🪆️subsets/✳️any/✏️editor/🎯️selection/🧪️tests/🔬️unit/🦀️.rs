@@ -9,7 +9,6 @@ fn exact_analytic_labels_require_current_source_membership() {
         let actual = validate_analytic_source(&ids, case["revision"].as_str().unwrap(), case["handle"].as_str().unwrap(), &references);
         if case["accepted"] == true { assert_eq!(serde_json::to_value(actual.unwrap()).unwrap(), fixtures["analyticGroups"][0]["labels"]); } else { assert!(actual.is_err()); }
     }
-    println!("[DEBUG] Analytic component admission currentRevision=currentHandle exactLabels=uint64 sourceMembership=unique");
 }
 
 #[test]
@@ -25,5 +24,4 @@ fn analytic_highlight_remaps_exact_labels_and_refuses_changed_source() {
     assert!(remapped.interaction_id().ends_with(&format!("~{}~{}~{}",source.handle,source.label,source.revision)));
     let changed = semio_framework_pack_json::parse(&serde_json::json!([{ "id": target.instance, "meshId": "mesh", "componentSource": {"handle":"c".repeat(64),"revision":source.revision} }]).to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     assert!(projected_target(target, &changed, &meshes).is_none());
-    println!("[DEBUG] Analytic highlight exactLabel remappedGroup=0 staleSource=refused");
 }

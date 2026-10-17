@@ -5,6 +5,8 @@ resolver = "2"
 members = [
     "📦️packages/🦀️rust",
     "🧩️component/📦️packages/🦀️rust",
+    "🥽️mesh/📦️packages/🦀️rust",
+    "🧪️tests/🔬️unit/📦️packages/🦀️rust",
 ]
 exclude = [
     "**/🏅️standards/**",

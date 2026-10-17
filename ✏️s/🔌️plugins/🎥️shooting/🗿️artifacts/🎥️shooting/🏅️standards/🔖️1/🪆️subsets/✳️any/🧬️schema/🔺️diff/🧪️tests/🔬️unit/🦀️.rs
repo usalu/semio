@@ -1,4 +1,12 @@
-use super::*;
+use crate::{ShootingAsset, ShootingAssetPatch, ShootingScenePatch, ShootingSnapshot};
+use protocol::DiffAlgebra;
+#[allow(unused_imports)]
+use crate::{ShootingAssigned, ShootingEmblemChild, ShootingSavedCamera, ShootingSavedCameraPatch, ShootingShot, ShootingShotPatch};
+#[allow(unused_imports)]
+use protocol::{ApplyCapability, Identified, MutationApplyError, MutationApplyResult, MutationDiff, Patchable};
+#[allow(unused_imports)]
+use schema::ArtifactSchema;
+use crate::standards::v1::subsets::any::schema::diff::*;
 use crate::ShootingSceneLighting;
 use protocol::os_spr::protocol_laws::{assert_diff_algebra_inverse_law, assert_mutation_diff_absorb_law};
 

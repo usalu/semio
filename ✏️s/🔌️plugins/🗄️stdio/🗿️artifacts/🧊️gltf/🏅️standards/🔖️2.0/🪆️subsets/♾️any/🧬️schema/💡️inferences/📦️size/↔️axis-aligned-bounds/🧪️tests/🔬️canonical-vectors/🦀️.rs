@@ -1,3 +1,5 @@
+use semio_framework_test_fixtures::fixture_text;
+
 #[derive(value_derive::FromValue)]
 struct Value {
     min: [f64; 3],
@@ -14,7 +16,7 @@ struct Contract {
 }
 #[semio_framework_async_macros::async_test]
 async fn shared_analytic_unavailable_and_deterministic_bounds_vectors_are_typed() {
-    let contract: Contract = semio_framework_pack_json::from_json_str(include_str!("../../../../../../🧪️tests/🧫️fixtures/💡️inferences/📦️size/↔️axis-aligned-bounds/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let contract: Contract = semio_framework_pack_json::from_json_str(fixture_text!("../../../../🧪️tests/🧫️fixtures/💡️inferences/📦️size/↔️axis-aligned-bounds/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     assert_eq!(contract.vectors[0].value.as_ref().unwrap().dimensions, [3.0, 4.0, 5.0]);
     assert_eq!(contract.vectors[0].value.as_ref().unwrap().min, [1.0, 2.0, 3.0]);
     assert_eq!(contract.vectors[0].value.as_ref().unwrap().max, [4.0, 6.0, 8.0]);

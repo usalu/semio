@@ -1,0 +1,19 @@
+{
+ "name": "rslf",
+ "crates": [
+  "semio-framework",
+  "semio-framework-action-bus",
+  "semio-framework-time-travel-actions",
+  "semio-framework-tool-run-actions"
+ ],
+ "base": {
+  "rev": "b84bf526c7ba",
+  "crates": [
+   "semio-framework",
+   "semio-framework-action-bus",
+   "semio-framework-time-travel-actions",
+   "semio-framework-tool-run-actions"
+  ]
+ },
+ "note": "RUST-LEFTOVERS F-04: the facade root with the producers of its reserved contributions"
+}

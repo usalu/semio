@@ -1,6 +1,5 @@
 //! 🏗️ `create-shell` — brings a new id-keyed shell into existence with its full initial `faces` membership list (referencing already-existing faces) — the whole initial payload, per `create`'s canonical-args shape, since no per-membership verb exists to grow a shell's face list after creation. A duplicate `id` already present in `base` is a no-op.
 
-use crate::schema::mutations::SemioBrepMutation;
 use crate::schema::snapshot::{BrepShellFace, SemioBrepSnapshot};
 
 //#region 🔖️Payload
@@ -15,13 +14,16 @@ pub struct CreateShell {
     pub at: Option<usize>,
 }
 
-impl protocol::MutationKind<SemioBrepSnapshot, SemioBrepMutation> for CreateShell {
+impl<Op> protocol::MutationKind<SemioBrepSnapshot, Op> for CreateShell
+where
+    Op: protocol::Mutation<SemioBrepSnapshot, Diff = crate::schema::diff::SemioBrepDiff> + From<CreateShell> + From<crate::schema::mutations::delete_shell::DeleteShell>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "shell", kind: "create-shell", record: "CreatedShell" };
 
-    fn diff(&self, base: &SemioBrepSnapshot) -> protocol::MutationOutcome<<SemioBrepMutation as protocol::Mutation<SemioBrepSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioBrepSnapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<SemioBrepSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &SemioBrepSnapshot) -> Result<Vec<SemioBrepMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &SemioBrepSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

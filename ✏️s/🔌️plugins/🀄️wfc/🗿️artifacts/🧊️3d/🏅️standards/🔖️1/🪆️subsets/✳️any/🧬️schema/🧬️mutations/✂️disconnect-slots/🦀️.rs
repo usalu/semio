@@ -1,7 +1,6 @@
 //! ✂️ `wfc3d` mutation — `DisconnectSlots`: removes an id-addressed adjacency edge.
 
 use crate::diff::Wfc3dDiff;
-use crate::mutations::Wfc3dMutation;
 use crate::schema::snapshot::Wfc3dSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -14,17 +13,23 @@ pub struct DisconnectSlots {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn disconnect_slots(id: String) -> Wfc3dMutation {
-    Wfc3dMutation::DisconnectSlots(DisconnectSlots { id })
+pub fn disconnect_slots<Op>(id: String) -> Op
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::disconnect_slots::DisconnectSlots>,
+{
+    Op::from(DisconnectSlots { id })
 }
 
-impl MutationKind<Wfc3dSnapshot, Wfc3dMutation> for DisconnectSlots {
+impl<Op> MutationKind<Wfc3dSnapshot, Op> for DisconnectSlots
+where
+    Op: protocol::Mutation<Wfc3dSnapshot, Diff = Wfc3dDiff> + From<DisconnectSlots> + From<crate::standards::v1::subsets::any::schema::mutations::connect_slots::ConnectSlots>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "disconnect", entity: "slots", kind: "disconnect-slots", record: "DisconnectedSlots" };
 
     fn diff(&self, base: &Wfc3dSnapshot) -> protocol::MutationOutcome<Wfc3dDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Wfc3dSnapshot) -> Result<Vec<Wfc3dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Wfc3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

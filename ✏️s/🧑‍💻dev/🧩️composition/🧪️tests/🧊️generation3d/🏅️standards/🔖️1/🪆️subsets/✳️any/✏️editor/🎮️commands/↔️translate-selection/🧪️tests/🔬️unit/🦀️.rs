@@ -1,5 +1,6 @@
 use super::*;
 use crate::editor_domain::editor_laws::context::{app, dispatch};
+use semio_framework_test_fixtures::repo_text;
 use semio_s_artifact_procedural_3d_editor::Generation3dCommand;
 use semio_s_artifact_procedural_3d_model::widget_id;
 use semio_framework_artifact_flow_flow::Widget;
@@ -142,14 +143,14 @@ fn an_open_gesture_previews_exactly_what_its_release_commits() {
         snapshot.retire_cold();
     }
 }
-/// 🛠️ LAW — the World3d live-consumer API end to end (`🌐️World3dHost/🧫️fixtures/🛠️gumball-live-protocol.json`, audit S2):
+/// 🛠️ LAW — the World3d live-consumer API end to end (`🌐️World3dHost/🧪️tests/🧫️fixtures/🛠️gumball-live-protocol.json`, audit S2):
 /// every verb dispatch the host owes for a scripted gesture, sent with its wire args exactly as the host sends them (the
 /// pinned targets swapped for generation3d's `extrude` shape), publishes exactly the fixture's guest edits and moves the shape
 /// by its offset — a streamed gesture is ONE edit, an aborted one leaves zero trace, one that never moved publishes nothing.
 #[semio_framework_async_macros::async_test]
 async fn the_world3d_gumball_live_protocol_lands_as_its_guest_edits() {
     let _serial = crate::editor_domain::editor_laws::serial_execution::lock();
-    let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🧫️fixtures/🛠️gumball-live-protocol.json"))).expect("the protocol fixture parses");
+    let fixture: serde_json::Value = serde_json::from_str(repo_text!("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🧪️tests/🧫️fixtures/🛠️gumball-live-protocol.json")).expect("the protocol fixture parses");
     let offset_of = |app: &context::Generation3dApp| crate::gumball_param_vector(&context::snapshot(app).host_snapshot, "extrude__gumball_translate", "offset", [0.0; 3]);
     let mut consumed = 0;
     for case in fixture["cases"].as_array().expect("cases").iter().filter(|case| case.get("guest").is_some()) {

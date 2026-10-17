@@ -1,10 +1,10 @@
 //! 💡️ orientation-consistency atomic glTF inference leaf.
-use super::super::super::modules::{
+use crate::standards::v2_0::subsets::any::schema::modules::{
     inference_measures::{exact, unavailable},
     measurement_contracts::*,
     mesh_topology::Topology,
 };
-use super::super::{geometry_core::GltfGeometryContext, GltfEntityIndicators, GltfInferenceLeaf, GltfInferenceLeafDescriptor, GLTF_GEOMETRY_READS};
+use crate::standards::v2_0::subsets::any::schema::inferences::geometry_core::GltfGeometryContext;
 
 pub struct GltfOrientationConsistencyInference;
 
@@ -19,16 +19,16 @@ pub fn descriptor() -> GltfInferenceLeafDescriptor {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn infer_pair(pair: &super::super::geometry_core::GltfPairGeometry) -> GltfMeasure<f64> {
+pub fn infer_pair(pair: &crate::standards::v2_0::subsets::any::schema::inferences::geometry_core::GltfPairGeometry) -> GltfMeasure<f64> {
     unavailable(GltfUnit::Unitless, GltfAvailability::Unavailable, Vec::new(), pair.sample_count, None)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn unavailable_for_assembly(sample_count: usize, topology: Topology) -> GltfMeasure<f64> {
+pub fn unavailable_for_assembly(sample_count: usize, topology: Topology) -> GltfMeasure<f64> {
     unavailable(GltfUnit::Unitless, GltfAvailability::Unavailable, Vec::new(), sample_count, Some(topology))
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<f64> {
+pub fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<f64> {
     exact(if context.topology.oriented { 1.0 } else { 0.0 }, GltfUnit::Unitless, context.sample_count, Some(context.topology))
 }
 
@@ -38,10 +38,24 @@ pub fn unavailable_measure(ids: &[String]) -> GltfMeasure<f64> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn encode_result(indicators: &GltfEntityIndicators) -> semio_framework_value::DslValue {
-    semio_framework_value::ToValue::to_value(&indicators.orientation.orientation_consistency)
+pub fn encode_result(measure: &GltfMeasure<f64>) -> semio_framework_value::DslValue {
+    semio_framework_value::ToValue::to_value(measure)
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+//#region 🧾️InferenceDescriptor
+/// 🧾️ Registry descriptor of this inference leaf; its companion documents are embedded from this leaf's own folder.
+pub fn inference_descriptor() -> semio_framework_schema_registry::ArtifactInferenceDescriptor {
+    semio_framework_schema_registry::ArtifactInferenceDescriptor {
+        id: "s.stdio.gltf.inference.orientation-consistency.v1",
+        inference: semio_framework_schema_registry::FacetLeaves {
+            rust: include_str!("🦀️.rs"),
+            typescript: include_str!("🟦️.ts"),
+            graphql: include_str!("🔗️.graphql"),
+            json_schema: include_str!("🔣️.json"),
+            proto: include_str!("🛰️.proto"),
+        },
+    }
+}
+//#endregion 🧾️InferenceDescriptor
+
+

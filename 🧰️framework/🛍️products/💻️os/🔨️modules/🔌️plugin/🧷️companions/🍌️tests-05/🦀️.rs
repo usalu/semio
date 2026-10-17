@@ -1,5 +1,15 @@
-//! 🍌️ Companion test crate tests-05 of the plugin SDK partition (hosts: document-media, publication-mounted).
+//! 🍌️ Companion test crate tests-05 of the plugin SDK partition: hosts the test roots `fixture_projection_retirement_tests`, `reactor_turn_test_hosts`, `plugin_runtime_plugin_builder_contract_support_1`.
 //!
-//! 🧭️ WP3 skeleton of `semio-framework-plugin`: the sources move in with the work package.
-//!
-//! 🧪️ WP3 measurement: the test closure of `publication-mounted` is 28 files / 289,230 bytes / 2,334 lines (12 test files, 10 embedded fixtures), over the 262,144-byte gate, so its `🧪️tests` files are hosted here when the crate is carved; this crate therefore depends on `composition-publication` and `publication-mounted` as well.
+//! 🧭️ The test sources stay where they are and are mounted here with `#[path]`; every name they use from the former facade root is spelled with the crate that owns it.
+
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as pack;
+
+#[cfg(test)]
+
+#[path = "../../🧪️tests/🌲️fixture-projection/🦀️.rs"]
+pub mod fixture_projection_retirement_tests;
+#[path = "../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs"]
+pub mod plugin_runtime_plugin_builder_contract_support_1;
+

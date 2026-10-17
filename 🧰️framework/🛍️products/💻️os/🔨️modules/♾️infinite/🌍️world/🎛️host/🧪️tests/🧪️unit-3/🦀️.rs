@@ -3,6 +3,7 @@
 use semio_framework_os_infinite_world_model::{tool_run_trace, World3dBuildContext, World3dScalarFieldStatus, WorldCursorWakeAuthority, WorldDrawRebuildStep};
 use semio_framework_os_infinite_world_components::{TerrainTileMeshPayload, WorldMeshBuffers};
 use semio_framework_os_infinite_world_scene::{step_world3d_terrain_retirement, WorldTerrainMeshPublicationStep};
+use semio_framework_test_fixtures::fixture_text;
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 use semio_framework_os_infinite_world_scene::World3dShadowProfile;
 use semio_framework_os_infinite_world_bridge::{apply_world3d_pick_filter, begin_world3d_dynamic_retirement, step_world3d_scene_bridge_close, sync_world3d_scene_selection, world3d_draw_rebuild_terminal_is_empty, World3dSceneBridgeCursor, World3dSceneBridgePhase, World3dSceneBridgeStep, World3dSceneMeshEntry, World3dSnapshotApplyStep};
@@ -18,16 +19,12 @@ use ui_wgpu::wgpu::{ScenePass3d, SceneSectionRole3d};
 use serde_json::json;
 
 /// 📖️ Reads one test input at run time (relative to the package manifest) so it does not count as an embedded compile input.
-fn read_static(path_from_manifest: &str) -> &'static str {
-    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(path_from_manifest);
-    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("test input {}: {error}", path.display())).into_boxed_str())
-}
 
 /// 📖️ Reads several test inputs at run time and joins them into the one text the unsplit sources formed.
 fn read_joined(paths: &[&str]) -> &'static str {
     let mut joined = String::new();
     for path in paths {
-        joined.push_str(read_static(path));
+        joined.push_str(fixture_text!(path));
     }
     Box::leak(joined.into_boxed_str())
 }
@@ -166,7 +163,7 @@ pub(crate) fn drive_scene_bridge(state: &mut World3dState, scene: &UiComponentSc
 //#region 🔖️Modelling
 #[allow(non_snake_case)]
 fn MODELLING_FIXTURE() -> &'static str {
-    read_static("../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧪️tests/🧫️fixtures/📏️world3d-modelling/🔣️.json")
+    fixture_text!("../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧪️tests/🧫️fixtures/📏️world3d-modelling/🔣️.json")
 }
 
 fn modelling_fixture() -> serde_json::Value {
@@ -259,7 +256,6 @@ fn painted_pass(scene: &UiComponentSceneNode, state: &mut World3dState, theme: &
     for turn in 0..4_096 {
         let (draw, _) = paint_world(scene, state, &mut gpu, theme, bounds);
         if draw.scene_passes.last().is_some_and(&ready) {
-            println!("[DEBUG] Original modelling pass ready on bounded turn={turn}");
             return draw;
         }
     }
@@ -628,7 +624,6 @@ fn on_a_real_gpu_a_section_removes_the_far_half_and_the_cap_closes_the_cut_witho
         pixels
     };
     let Some(whole) = render(None, top_camera) else {
-        println!("[DEBUG] sectionGpuAdapterUnavailable");
         return;
     };
     let open = render(section(false), top_camera).expect("same adapter");
@@ -651,7 +646,6 @@ fn on_a_real_gpu_a_section_removes_the_far_half_and_the_cap_closes_the_cut_witho
     assert_ne!(pixel(&side_whole, SIZE, x, upper), side_background, "the upper half of the cube is drawn without the section");
     assert_eq!(pixel(&side_cut, SIZE, x, upper), side_background, "the section removes the side its normal points to");
     assert_eq!(pixel(&side_cut, SIZE, x, lower), pixel(&side_whole, SIZE, x, lower), "the kept half is untouched");
-    println!("[DEBUG] sectionGpu adapter=true clipped=true capped=true stencilRestored=true");
 }
 //#endregion 🔖️ModellingWgpu
 
@@ -683,7 +677,7 @@ fn terrain_retirement_zero_grant_preserves_original_owner_without_bool_bridge() 
 }
 
 fn world_original_fixture_grant()->semio_framework_value::RetainedCloneGrant{
-    let law:serde_json::Value=serde_json::from_str(read_static("../../../🧪️tests/🔬️unit/🧫️retained-attributes.json")).unwrap();let axes=&law["grant"];
+    let law:serde_json::Value=serde_json::from_str(fixture_text!("../../../🧪️tests/🔬️unit/🧫️retained-attributes.json")).unwrap();let axes=&law["grant"];
     semio_framework_value::RetainedCloneGrant{maximum_items:axes["items"].as_u64().unwrap()as usize,maximum_copy_bytes:axes["copyBytes"].as_u64().unwrap()as usize,maximum_capacity_bytes:axes["capacityBytes"].as_u64().unwrap()as usize,maximum_release_bytes:axes["releaseBytes"].as_u64().unwrap()as usize,maximum_depth:axes["depth"].as_u64().unwrap()as usize}
 }
 
@@ -710,5 +704,5 @@ fn scene_bridge_cursor_close_preserves_original_mesh_attribute_custody_and_physi
         let(receipt,heap)=with_world_step_context(1,|context|{let(_,heap)=observe(||step_world3d_scene_bridge_close(&mut state.bridge,context));(context.retained_progress(),heap)});
         assert_eq!((heap.requested_bytes,heap.released_bytes),(receipt.retained_capacity_bytes,receipt.released_bytes));born+=heap.requested_bytes;released+=heap.released_bytes;turns+=1;assert!(turns<16384);
     }
-    assert_eq!(born,released);eprintln!("[DEBUG] original scene cursor funded close conserves {born} physical bytes and original mesh attribute backing in {turns} turns");
+    assert_eq!(born,released);
 }

@@ -12,7 +12,6 @@ test("borrowed semantic schema fragments reproduce original forward and inverse 
  expect(JSON.parse(JSON.stringify({schema:forward.toString()})).schema).toBe("semio.fixture.operation");
  const source=await Bun.file(new URL("../🦀️.rs",import.meta.url)).text();
  expect(source.includes("pub(crate) schema_separator: &'a str")).toBe(true);
- console.log("[DEBUG] Node Buffer/JSON original semantic schema fragments and independent inverse suffix; no intermediate schema String in mounted production");
 });
 
 test("original mounted receipt bytes preserve denied backing and bounded exact copies", async () => {
@@ -38,7 +37,6 @@ test("original mounted receipt bytes preserve denied backing and bounded exact c
   
   const source = await Bun.file(new URL("../🦀️.rs", import.meta.url)).text();
   expect(source.includes("struct MountedReceiptBytes")).toBe(true);
-  console.log("[DEBUG] Node Buffer + TextEncoder + RFC6902: four original UTF8 receipt vectors, copy64, original empty8194 backing, unchanged1048576 admission");
 });
 
 test("prestage operation bytes match the independently serialized original before receipt acknowledgment", async () => {
@@ -53,7 +51,6 @@ test("prestage operation bytes match the independently serialized original befor
   }
   const source = await Bun.file(new URL("../🦀️.rs", import.meta.url)).text();
   expect(source.includes("struct MountedPreparedOperationBytes")).toBe(true);
-  console.log("[DEBUG] Node JSON + Buffer raw/hex operation oracle: original four receipts, actual header1/7, copy64, complete original payload prestaged before acknowledgment");
 });
 
 test("complete inverse operation framing retains every original length and payload", async () => {
@@ -70,7 +67,6 @@ test("complete inverse operation framing retains every original length and paylo
   }
   const source = await Bun.file(new URL("../🦀️.rs", import.meta.url)).text();
   expect(source.includes("struct MountedPreparedOperationsBytes")).toBe(true);
-  console.log("[DEBUG] Node Buffer original operation list framing: zero, one, four operations, raw and hex, exact varint lengths and complete payloads before common decision");
 });
 
 test("host mutation and inverse receipts preserve original causal metadata and independent ownership", async () => {
@@ -85,7 +81,6 @@ test("host mutation and inverse receipts preserve original causal metadata and i
   for (const value of [meta.mutationId, meta.invocationId, kernel.schema, kernel.inverseSchema, meta.author, ...meta.dependencies]) expect(Buffer.from(value).equals(new TextEncoder().encode(value))).toBe(true);
   const source = await Bun.file(new URL("../🦀️.rs", import.meta.url)).text();
   expect(source.includes("struct MountedKernelMutationReceipt")).toBe(true);
-  console.log("[DEBUG] Node JSON/Buffer + RFC6902 host receipt oracle: original IDs, exact schema, all three causal dependency owners, author, base version and HLC retained before common publication");
 });
 
 test("child document handles hash every original UTF8 byte in bounded turns", async () => {
@@ -99,5 +94,4 @@ test("child document handles hash every original UTF8 byte in bounded turns", as
   }
   const source = await Bun.file(new URL("../🦀️.rs", import.meta.url)).text();
   expect(source.includes("struct MountedArtifactHandleIssuer")).toBe(true);
-  console.log("[DEBUG] Node Buffer + BigInt child document handle oracle: all original UTF8 bytes, exact two 64-bit lanes, copy64, zero additional heap authority");
 });

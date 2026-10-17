@@ -1,0 +1,4 @@
+kind,id,relative,bytesHex,sha256,messageContains
+text,utf8-text,../../🧪️tests/🧫️fixtures/🔤️.txt,46697874757265207265616465723a20c3bc6ec3af636f646520e29c9320f09fa7b20a7365636f6e64206c696e650a,2279ef25102a66f5a8be4b10a4b2008db5cefe932d3ec500b3d868d734aa7a17,
+binary,binary-not-utf8,../../🧪️tests/🧫️fixtures/💾️.bin,00ff10807f0a0dc328,4d0326e784f1a58e0e7c3910fba16fcbac344a0c49063375bd6d2475c8e5493f,valid UTF-8
+refuse,missing-file,../../🧪️tests/🧫️fixtures/missing.txt,,,fixture|missing.txt|CARGO_MANIFEST_DIR

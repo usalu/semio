@@ -338,7 +338,7 @@ async function generateOne(t: NonNullable<typeof toolkit>, recipe: Recipe, outDi
     };
     const footprintArea = shoelace(recipe.outline) - recipe.holes.reduce((sum, hole) => sum + shoelace(hole), 0);
     measurements.analyticVolume = footprintArea * recipe.thickness;
-    measurements.analyticVolumeRelativeError = Math.abs((measurements.volume as number) - measurements.analyticVolume) / Math.max(measurements.analyticVolume, Number.EPSILON);
+    measurements.analyticVolumeRelativeError = Math.abs((measurements.volume as number) - (measurements.analyticVolume as number)) / Math.max(measurements.analyticVolume as number, Number.EPSILON);
   }
 
   const metricsBody = `${JSON.stringify(measurements, null, 2)}\n`;

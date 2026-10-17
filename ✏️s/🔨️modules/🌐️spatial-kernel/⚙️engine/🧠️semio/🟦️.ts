@@ -4,7 +4,7 @@
 
 // #region 🔌️Adapters
 import { spatialKernelCommandFor } from "../🗺️spatial/🟦️.ts";
-import { SemioGeometrySession } from "./🌊️session/🟦️.ts";
+import { SemioGeometrySession } from "@semio-tech/s-spatial-kernel-semio-session-ts";
 import { kernelGeometry, type EdgeCurve, type EdgeGroup, type FaceGroup, type MeshTransfer, type Vec3, solidRef } from "@semio-tech/framework-3d-js";
 import { Model } from "../📐️geometry/🧊️model/🟦️.ts";
 import { applyModelDiff, isEmptyModelDiff, type ModelDiff, type SpatialKernel } from "../🗺️spatial/🟦️.ts";

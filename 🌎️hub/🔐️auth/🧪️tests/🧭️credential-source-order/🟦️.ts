@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { readMcpGatewaySource } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🟦️.ts";
-import { readModuleTreeSource } from "../../../../🧰️framework/🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
+import { readMcpGatewaySource } from "@semio-tech/framework-os-mcp";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 
 type NativeCredentialSourcePopulation = Readonly<{ entrypoint: string; credential: string; runner: string; project: string }>;
 type McpCredentialSourcePopulation = Readonly<{ entrypoint: string; workspace: string; remote: string; directory: string; runner: string; project: string }>;

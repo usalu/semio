@@ -39,29 +39,27 @@ pub fn definition() -> WindowKindDefinition {
 //#region 🔖️Render
 /// 🕹️ Projects the framework-owned selection into the blueprint's selected card.
 pub fn render(spec: &FormsSnapshot, config: &FormsConfig, view: &semio_framework_plugin::ViewModel, selected: Option<&str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    let contributions = crate::editor::forms::parse_contributions(config);
-    let palette = crate::editor::forms::catalogue_kinds(&contributions, view).into_iter()
+    let contributions = crate::editor::forms::contributions::parse_contributions(config);
+    let palette = crate::editor::forms::contributions::catalogue_kinds(&contributions, view).into_iter()
         .map(|(kind,label,icon)| semio_framework_plugin::BlockListPaletteEntry {block_kind:kind,label,icon_id:icon.as_str().to_owned()}).collect();
     let steps = spec.definition.steps.iter().map(|step| semio_framework_plugin::BlockListStep {
         id:step.id.clone(),title:step.title.clone(),description:step.description.clone(),
-        target:Some(semio_framework_plugin::BlockListSelectionTarget {granularity:crate::editor::forms::FORMS_INTERACTION_GRANULARITY_SECTION.into(),id:crate::schema::forms_play_step_tree_id(&step.id)}),
+        target:Some(semio_framework_plugin::BlockListSelectionTarget {granularity:crate::editor::forms::support::FORMS_INTERACTION_GRANULARITY_SECTION.into(),id:crate::schema::forms_play_step_tree_id(&step.id)}),
         blocks:step.blocks.iter().map(|question| semio_framework_plugin::BlockListBlock {
             id:question.id.clone(),label:question.label.clone(),kind:question.kind.clone(),description:question.description.clone(),
-            target:Some(semio_framework_plugin::BlockListSelectionTarget {granularity:crate::editor::forms::FORMS_INTERACTION_GRANULARITY_FIELD.into(),id:question.id.clone()}),
+            target:Some(semio_framework_plugin::BlockListSelectionTarget {granularity:crate::editor::forms::support::FORMS_INTERACTION_GRANULARITY_FIELD.into(),id:question.id.clone()}),
         }).collect(),
     }).collect();
     let scene = semio_framework_plugin::BlockListScene {
         steps,palette,
         selected_id: selected.map(|id| id.strip_prefix("step:").unwrap_or(id).into()),
         dragging_id: None,
-        domain_id: Some(crate::editor::forms::FORMS_INTERACTION_FIELDS.into()),
+        domain_id: Some(crate::editor::forms::support::FORMS_INTERACTION_FIELDS.into()),
     };
     semio_framework_plugin::scene_surface(FORMS_PLAY_SURFACE_BLUEPRINT, semio_framework_ui_contract::SurfaceKind::BlockList, &scene)
 }
 //#endregion 🔖️Render
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

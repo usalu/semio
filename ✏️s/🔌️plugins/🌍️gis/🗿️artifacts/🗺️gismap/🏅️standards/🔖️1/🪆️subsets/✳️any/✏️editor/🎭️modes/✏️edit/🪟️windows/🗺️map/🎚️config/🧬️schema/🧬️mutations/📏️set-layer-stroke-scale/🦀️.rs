@@ -1,6 +1,6 @@
 //! 📏️ Exact stroke-scale override assignment or removal for one map layer.
 
-use super::super::{MapWindowConfig, MapWindowConfigDelta, MapWindowConfigDiff, MapWindowConfigMutation};
+use crate::editor::gis2d::modes::edit::windows::map::config::component::{MapWindowConfig, MapWindowConfigDelta, MapWindowConfigDiff};
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -18,7 +18,10 @@ pub struct SetLayerStrokeScale {
 //#endregion 🧬️Payload
 
 //#region ⚙️Behavior
-impl MutationKind<MapWindowConfig, MapWindowConfigMutation> for SetLayerStrokeScale {
+impl<Op> MutationKind<MapWindowConfig, Op> for SetLayerStrokeScale
+where
+    Op: protocol::Mutation<MapWindowConfig, Diff = MapWindowConfigDiff> + From<SetLayerStrokeScale>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "layer-stroke-scale", kind: "set-layer-stroke-scale", record: "SetLayerStrokeScale" };
     fn diff(&self, base: &MapWindowConfig) -> MutationOutcome<MapWindowConfigDiff> {
         if self.value.is_some_and(|value| !value.is_finite()) {
@@ -29,7 +32,7 @@ impl MutationKind<MapWindowConfig, MapWindowConfigMutation> for SetLayerStrokeSc
         }
         MutationOutcome::new(MapWindowConfigDelta { layer_stroke_scale: [(self.layer_id.clone(), self.value)].into(), ..Default::default() }.into())
     }
-    fn inverse(&self, base: &MapWindowConfig) -> Result<Vec<MapWindowConfigMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &MapWindowConfig) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
         vec![Self { layer_id: self.layer_id.clone(), value: base.layer_stroke_scale.get(&self.layer_id).copied() }.into()]
     

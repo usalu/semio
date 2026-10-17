@@ -18,7 +18,7 @@ fn artifact_store_resident_paged_source_preserves_original_pages_order_and_funde
         for index in 0..prefix{let mut receiving=None;for denied in [RetainedCloneGrant{maximum_items:0,..grant},RetainedCloneGrant{maximum_copy_bytes:0,..grant},RetainedCloneGrant{maximum_depth:0,..grant}]{let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.take_next_into(&mut receiving,denied));assert_eq!(result.unwrap(),Some(Default::default()));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert!(receiving.is_none());assert_eq!(owner.peek().unwrap().as_ptr(),pointers[index]);assert_eq!(owner.backing_bytes(),backing);}let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.take_next_into(&mut receiving,grant));let progress=result.unwrap().unwrap();assert_eq!(progress.copied_items,1);assert!(progress.copied_bytes>=size_of::<String>());assert!(progress.fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(receiving.as_ref().unwrap(),&values[index]);assert_eq!(receiving.as_ref().unwrap().as_ptr(),pointers[index]);assert_eq!(owner.backing_bytes(),backing);published.push(receiving.take().unwrap());}
         assert_eq!(published,values[..prefix]);let(complete,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.publication_complete());assert_eq!(complete,prefix==values.len());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.close_step(Default::default()).unwrap());assert_eq!(step.progress(),Default::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(owner.backing_bytes(),backing);let(mut born,mut released)=(0,0);
         for _ in 0..law["maximumCloseTurns"].as_u64().unwrap(){if owner.terminal_is_empty(){break}let demand=owner.demands(grant.maximum_copy_bytes).unwrap();for denied in [RetainedCloneGrant{maximum_items:0,..grant},RetainedCloneGrant{maximum_copy_bytes:demand.copy_bytes.saturating_sub(1),..grant},RetainedCloneGrant{maximum_capacity_bytes:demand.capacity_bytes.saturating_sub(1),..grant},RetainedCloneGrant{maximum_release_bytes:demand.release_bytes.saturating_sub(1),..grant},RetainedCloneGrant{maximum_depth:demand.depth.saturating_sub(1),..grant}]{if denied.maximum_items!=0&&(demand.copy_bytes==0&&denied.maximum_copy_bytes!=grant.maximum_copy_bytes||demand.capacity_bytes==0&&denied.maximum_capacity_bytes!=grant.maximum_capacity_bytes||demand.release_bytes==0&&denied.maximum_release_bytes!=grant.maximum_release_bytes){continue}let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.close_step(denied));if denied.maximum_depth<demand.depth&&denied.maximum_items>0{assert_eq!(result.unwrap_err().kind,semio_framework_value::ValueRefusalKind::DepthLimit)}else{assert_eq!(result.unwrap().progress(),Default::default())}assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(owner.demands(grant.maximum_copy_bytes).unwrap(),demand);}let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.close_step(grant).unwrap());assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));born+=heap.requested_bytes;released+=heap.released_bytes;assert!(owner.publication_complete());}
-        assert!(owner.terminal_is_empty());let((),heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(owner));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));let(mut retirement,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||semio_framework_value::retirement::controlled::ControlledRetirement::new(published).ok().unwrap());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));for _ in 0..law["maximumCloseTurns"].as_u64().unwrap(){if retirement.terminal_is_empty(){break}let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||retirement.step(grant).unwrap());assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));born+=heap.requested_bytes;released+=heap.released_bytes;}assert!(retirement.terminal_is_empty());assert_eq!(born+initial,released);eprintln!("[DEBUG] original paged source prefix={prefix} backing={backing} initial={initial} born={born} released={released}; constructor/transfer/denial/terminalDrop0 and complete typed page custody");
+        assert!(owner.terminal_is_empty());let((),heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(owner));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));let(mut retirement,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||semio_framework_value::retirement::controlled::ControlledRetirement::new(published).ok().unwrap());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));for _ in 0..law["maximumCloseTurns"].as_u64().unwrap(){if retirement.terminal_is_empty(){break}let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||retirement.step(grant).unwrap());assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));born+=heap.requested_bytes;released+=heap.released_bytes;}assert!(retirement.terminal_is_empty());assert_eq!(born+initial,released);
     }
 }
 
@@ -75,7 +75,6 @@ fn artifact_store_resident_empty_backings_retain_undergrant_and_report_actual_fr
         physical += demand.release_bytes;
     }
     assert_eq!(physical, SNAPSHOT_READ_LEASE_CAPACITY * (size_of::<semio_framework_os_store_read::SnapshotReadLeaseSlot>() + size_of::<u64>()));
-    eprintln!("[DEBUG] Store resident original backing paged release independent of copy/capacity: reader slots={} physical={physical}", SNAPSHOT_READ_LEASE_CAPACITY);
 }
 
 #[test]
@@ -117,7 +116,6 @@ fn artifact_store_resident_detached_dag_forwards_exact_backing_then_cursor_termi
         }
         let (_, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| drop(retirement));
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, law["terminalDropBytes"].as_u64().unwrap() as usize));
-        eprintln!("[DEBUG] Store original DAG seed={seed} bounded copy=1 independent whole backing releases={total} turns={turns} terminalDrop0heap");
     }
 }
 #[test]
@@ -133,7 +131,6 @@ fn artifact_store_resident_registry_terminal_drop_has_no_unreported_native_lock_
     let (_, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| drop(registry.take()));
     assert_eq!(heap.requested_bytes, 0);
     assert_eq!(heap.released_bytes, fixture["registryFinalDropBytes"].as_u64().unwrap() as usize);
-    eprintln!("[DEBUG] snapshot registry terminal inline lock after exact slot close: birth={} physical={}", heap.requested_bytes, heap.released_bytes);
 }
 
 #[test]
@@ -159,7 +156,6 @@ fn artifact_store_resident_registry_lock_matches_standard_contention_and_poison_
     assert!(matches!(oracle.try_lock(), Err(std::sync::TryLockError::Poisoned(_))));
     assert!(matches!(registry.state.try_lock(), Err(std::sync::TryLockError::Poisoned(_))));
     assert_eq!(fixture["registryLockStates"][2], "poisoned");
-    eprintln!("[DEBUG] registry inline lock states equal std::sync::Mutex: available,busy,poisoned");
 }
 
 #[test]
@@ -203,7 +199,6 @@ fn artifact_store_resident_registry_arc_frame_retains_original_alias_until_whole
     assert_eq!(pages, SNAPSHOT_READ_LEASE_CAPACITY * size_of::<u64>());
     let (_, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| drop(owner));
     assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
-    eprintln!("[DEBUG] registry original Arc frame={} shared/one-below retained; exact free={} finalDrop=0", extent, extent);
 }
 
 
@@ -245,9 +240,7 @@ fn artifact_store_resident_uninstalled_catalog_terminal_drop_has_no_unreported_f
         turns += 1;
         assert!(turns <= 64);
     }
-    eprintln!("[DEBUG] original catalog controlled turns={} physical={} final terminal drop follows", turns, released);
     let (_, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| drop(owners));
-    eprintln!("[DEBUG] uninstalled catalog terminal original System birth={} physical={}", heap.requested_bytes, heap.released_bytes);
     assert_eq!(heap.requested_bytes, 0);
     assert_eq!(heap.released_bytes, fixture["catalogTerminalDropBytes"].as_u64().unwrap() as usize);
 }
@@ -275,7 +268,6 @@ fn artifact_store_resident_consumed_envelope_keeps_catalog_until_exact_terminal_
         turns += 1;
         assert!(turns <= 1024);
     }
-    eprintln!("[DEBUG] consumed envelope and original catalog exact physical={} turns={} terminal owner absent", total, turns);
 }
 
 #[test]
@@ -310,7 +302,6 @@ fn artifact_store_resident_metadata_string_reports_whole_physical_allocation_onl
         assert_eq!(physical, extent + born);
         let (_, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| drop(owner));
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
-        eprintln!("[DEBUG] metadata String same whole payload={extent} actual births={born} full physical={physical} bounded copy1 turns={turns}");
     }
 }
 
@@ -363,7 +354,6 @@ fn artifact_store_resident_metadata_wrappers_forward_exact_original_string_exten
             assert!(turns < extent * 4 + 1000);
         }
         assert_eq!(string_extents, fixture["metadataWrapperStringCounts"][row].as_u64().unwrap() as usize, "{name} releases each genuine original String backing whole");
-        eprintln!("[DEBUG] metadata wrapper={name} originalString={extent} copyBudget=1 exact System receipt, staged group and terminal ticket ownership closed in {turns} turns");
     }
 }
 #[test]
@@ -407,7 +397,6 @@ fn artifact_store_string_history_full_grant_reports_original_physical_heap() {
     let (_, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| drop(owner));
     assert_eq!((heap.requested_bytes, heap.released_bytes), (0, law["terminalDropBytes"].as_u64().unwrap() as usize));
     assert!(physical >= count * bytes);
-    eprintln!("[DEBUG] original Store string history fullgrant turns={turns} physical={physical} copyBudget=1 terminalDrop=0 System receipt parity");
 }
 
 #[test]
@@ -461,5 +450,4 @@ fn artifact_store_original_source_iterator_reports_original_whole_backing_after_
     assert_eq!(freed, original.requested_bytes + born);
     let (_, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| drop(owner));
     assert_eq!((heap.requested_bytes, heap.released_bytes), (0, law["terminalDropBytes"].as_u64().unwrap() as usize));
-    eprintln!("[DEBUG] Original source iterator prefix pointer preserved; physical={physical} born={born} freed={freed} final={terminal_receipt}");
 }

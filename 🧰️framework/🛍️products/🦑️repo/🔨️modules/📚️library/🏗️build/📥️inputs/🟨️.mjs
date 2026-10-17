@@ -1,3 +1,4 @@
+import{captureSourceInputInventoryV1,captureCargoLockInventoryV1}from"./📋️data/📥️load/🟨️.mjs";
 import {repositoryBuildGraphWriterDirectoryV1} from "./💾️storage/🟨️.mjs";
 import { createHash, randomUUID } from "node:crypto";
 import { mkdirSync, writeFileSync, readFileSync, lstatSync, renameSync, rmSync, existsSync as persistedExists } from "node:fs";
@@ -64,7 +65,7 @@ function publishInputClosureV1(path,contract){
 
 /** 🔒️ A lock projection is batched by the same native hasher without compiler subprocesses. */
 export function cargoLockInput(manifest, workspaceRoot) {
-  const contract = JSON.stringify({ version: 1, manifest }), key = createHash("sha256").update(contract).digest("hex"), directory = repositoryBuildGraphWriterDirectoryV1(workspaceRoot,"build-lock-closures"), path = join(directory, `${key}.json`);
+  const captured = captureCargoLockInventoryV1({ version: 1, manifest },workspaceRoot), contract = captured.text, key = createHash("sha256").update(contract).digest("hex"), directory = repositoryBuildGraphWriterDirectoryV1(workspaceRoot,"build-lock-closures"), path = join(directory, `${key}.json`);
   publishInputClosureV1(path,contract);
   return { env: `SEMIO_CARGO_LOCK_${key}` };
 }
@@ -91,8 +92,8 @@ export function compactSourceInputs(inputs, workspaceRoot, root = ".") {
     exact = exact.filter((input, index) => !excluded[index]);
   }
   if (exact.length < 1) return residual;
-  const helpers = ["./💾️storage/🟨️.mjs", "./💾️storage/🧬️schema/🔣️.json", "../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🔣️policy.json", "./🧮️digest/🟨️.mjs", "./🧮️digest/🔣️schema.json", "./🔒️lock/📥️read/🟨️.mjs", "./🔒️lock/🟨️.mjs"].map(path => relative(workspaceRoot, fileURLToPath(new URL(path, import.meta.url))).split("\\").join("/"));
-  const files = [...new Set([...exact.map(input => input.slice("{workspaceRoot}/".length)), ...helpers])].sort(), contract = JSON.stringify({ version: 1, files });
+  const helpers = ["./🟨️.mjs", "./🔏️revision/🟨️.mjs", "./🔏️revision/🧬️schema/🔣️.json", "./📋️data/🟨️.mjs", "./📋️data/📥️load/🟨️.mjs", "./📋️data/🧬️schema/🔣️.json", "./🧮️digest/📥️read/🟨️.mjs", "./🧮️digest/📥️read/🧬️schema/🔣️.json", "./🔒️lock/🔣️schema.json", "./💾️storage/🟨️.mjs", "./💾️storage/📒️ledger/🟨️.mjs", "./💾️storage/🧬️schema/🔣️.json", "../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🔣️policy.json", "./🧮️digest/🟨️.mjs", "./🧮️digest/🔣️schema.json", "./🔒️lock/📥️read/🟨️.mjs", "./🔒️lock/🟨️.mjs"].map(path => relative(workspaceRoot, fileURLToPath(new URL(path, import.meta.url))).split("\\").join("/"));
+  const files = [...new Set([...exact.map(input => input.slice("{workspaceRoot}/".length)), ...helpers])].sort(), captured = captureSourceInputInventoryV1({ version: 1, files },workspaceRoot), contract = captured.text;
   const key = createHash("sha256").update(contract).digest("hex"), directory = repositoryBuildGraphWriterDirectoryV1(workspaceRoot,"build-input-closures"), manifest = join(directory, `${key}.json`);
   publishInputClosureV1(manifest,contract);
   const script = fileURLToPath(new URL("./🧮️digest/🟨️.mjs", import.meta.url)), schema = fileURLToPath(new URL("./🧮️digest/🔣️schema.json", import.meta.url));

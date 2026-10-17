@@ -92,8 +92,6 @@ use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapsh
 
 #[allow(unused_imports)]
 mod snapshot_wire3_codec {
-use crate::standards::v1_1::subsets::base::schema::mutation_support::*;
-use crate::schema::diff::{diff_at_path, SvgAttrAdded, SvgAttrModified, SvgAttributesDiff, SvgDiff, SvgElementDiff, SvgNodeDiff};
 use crate::schema::snapshot::node_at;
 use crate::SvgSnapshot;
 use crate::schema::snapshot::{SvgDocument, SvgNode};
@@ -156,6 +154,4 @@ impl crate::SvgSnapshot {
 pub mod attributes;
 pub use attributes::*;
 
-#[cfg(test)]
-#[path="🧪️tests/🔬️component/🦀️.rs"]
-mod component_tests;
+

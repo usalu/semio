@@ -19,11 +19,11 @@ import { join } from "node:path";
 import type { Readable } from "node:stream";
 import { randomBytes } from "node:crypto";
 import { cargoTargetDirectory } from "../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
-import { decodeServerFrame, encodeClientFrame } from "../../🧰️framework/🔨️modules/📡️replication/🟦️.ts";
-import { parseDocumentSocketGrantReceiptV1 } from "../../🧰️framework/🛍️products/💻️os/🟦️.ts";
+import { decodeServerFrame, encodeClientFrame } from "@semio-tech/framework-replication";
+import { parseDocumentSocketGrantReceiptV1 } from "@semio-tech/framework-os";
 import { createSpaceCommandV1 } from "@semio-tech/framework/directory/spaces";
 
-import { sealSpaceArtifactCreateV1 } from "../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🌱️space-artifact-creation-v1/🟦️.ts";
+import { sealSpaceArtifactCreateV1 } from "@semio-tech/framework-os/modules/directory/schema/space-artifact-creation-v1";
 import { isDiscoverySkipDirectory } from "../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts";
 
 export { getWorkspaceRoot } from "../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";

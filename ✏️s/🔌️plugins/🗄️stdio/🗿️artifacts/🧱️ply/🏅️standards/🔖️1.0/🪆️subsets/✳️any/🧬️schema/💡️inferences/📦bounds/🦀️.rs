@@ -91,8 +91,3 @@ pub fn compute_ply_bounds(snapshot: &PlySnapshot) -> PlyBounds {
 }
 //#endregion 🔖️Bounds
 
-#[cfg(test)]
-//#region 🧪️Tests
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests

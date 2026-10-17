@@ -35,14 +35,14 @@ export function bundleJavaScript(options: JavaScriptBundle): Promise<void> {
    });return;
   }
   const require=createRequire(join(options.workspace,"package.json")),policy=buildModePolicy(options.mode),args=[require.resolve("esbuild/bin/esbuild"),source,"--bundle",`--tree-shaking=${policy.optimize}`,"--format=esm","--target=es2022",`--platform=${options.platform}`,`--outfile=${output}`,...(policy.optimize?["--minify"]:[]),...(policy.sourceMap?["--sourcemap=external"]:[]),...["bun",...(options.external??[])].map(value=>`--external:${value}`)];
-  await withCompilerCapacityScopeV1({directory:join(options.workspace,".cache/b/l/m/data"),control,environment},async(lease,control)=>{
+  await withCompilerCapacityScopeV1({request:{kind:"whole-host"},directory:join(options.workspace,".cache/b/l/m/data"),control,environment},async(lease,control)=>{
   await runOwnedCommand(process.execPath,args,options.workspace,"javascript:esbuild",compilerAdmissionBudgetV1(control),{env:{...environment,SEMIO_COMPILER_PARALLELISM:String(lease.parallelism),GOMAXPROCS:String(lease.parallelism)},signal:control.signal});const bytes=(await lstat(output)).size+(policy.sourceMap?(await lstat(output+".map")).size:0);if(bytes>536870912)throw Error("Bundle output byte capacity exceeded");});
  });
 }
 
 /** 🎟️ Admits compilers with an unbounded worker pool only while all host workers are reserved. */
 export function withWholeHostCompilerCapacity<T>(directory:string,control:CompilerAdmissionControl,operation:(environment:Readonly<Record<string,string|undefined>>,control:CompilerAdmissionControl)=>Promise<T>,environment:Readonly<Record<string,string|undefined>>=process.env):Promise<T>{
- requireIssuedResourceControlV1(control);const capturedEnvironment=Object.freeze({...environment});return withCompilerCapacityScopeV1({directory,control,environment:capturedEnvironment},async(facts,actualControl)=>{if(facts.parallelism!==availableParallelism())throw Error("Unbounded compiler requires the complete host worker reservation");const childEnvironment:Record<string,string|undefined>={...capturedEnvironment,SEMIO_COMPILER_PARALLELISM:String(facts.parallelism),GOMAXPROCS:String(facts.parallelism)};delete childEnvironment.SEMIO_COMPILER_CAPACITY_HELD;return operation(Object.freeze(childEnvironment),actualControl);});
+ requireIssuedResourceControlV1(control);const capturedEnvironment=Object.freeze({...environment});return withCompilerCapacityScopeV1({request:{kind:"whole-host"},directory,control,environment:capturedEnvironment},async(facts,actualControl)=>{if(facts.parallelism!==availableParallelism())throw Error("Unbounded compiler requires the complete host worker reservation");const childEnvironment:Record<string,string|undefined>={...capturedEnvironment,SEMIO_COMPILER_PARALLELISM:String(facts.parallelism),GOMAXPROCS:String(facts.parallelism)};delete childEnvironment.SEMIO_COMPILER_CAPACITY_HELD;return operation(Object.freeze(childEnvironment),actualControl);});
 }
 
 type BunCompileOptions = Readonly<{ workspace: string; invocation: ScriptInvocation; control: CompilerAdmissionControl; signal?: AbortSignal; environment?: Readonly<Record<string, string | undefined>>; onLine?: (line: string) => void }>;

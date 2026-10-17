@@ -17,7 +17,7 @@ fn base() -> FormsSnapshot {
 #[semio_framework_async_macros::async_test]
 async fn inverse_diffs_sum_to_the_negative_diff() {
     for id in ["r1", "r2", "r3"] {
-        let mutation = FormMutation::DiscardResponse(super::mutation::DiscardResponse { id: id.into() });
+        let mutation = FormMutation::DiscardResponse(crate::standards::v1::subsets::any::schema::mutations::discard_response::mutation::DiscardResponse { id: id.into() });
         protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base(), &mutation).await;
         protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base()).await;
     }

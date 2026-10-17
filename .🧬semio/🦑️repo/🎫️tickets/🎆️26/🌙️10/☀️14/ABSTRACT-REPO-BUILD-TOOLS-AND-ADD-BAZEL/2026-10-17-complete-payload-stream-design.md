@@ -1,0 +1,53 @@
+# Complete Current Payload Streaming: Prospective Contract
+
+This is a Source design and arithmetic model, not an implementation or physical retry. Products57381 refused the existing `captureArtifactRetirementTreeV1` aggregate32 read-attempt guard before a command was emitted. The log does not identify the failing file, its size or the complete payload; none is inferred here. The previous independent review is `2026-10-17-products57381-read-work-source-review.md`.
+
+## Decision
+
+Keep the old strict32-read default and all its current callers exactly strict. Add a separately named fixed Core observation/terminal purpose, `current-bounded-complete-payload-stream`, for complete current application payloads whose legitimate bytes exceed that small diagnostic guard. This is preferable to domain subdivision: the existing terminal command must authenticate and remove the complete owner-closed payload and prove an empty final application tree. A partial selection would introduce omitted-reference/outer-roster authority that the current owner does not have. It is also preferable to increasing Cleanup.maximumReadWork, which would silently enlarge journal and other unrelated callers.
+
+The stream remains read authority until the existing fixed typed terminal command separately authenticates its real domain owner, whole current funding or explicit independent-leaf relation, and full payload CAS. The new name does not confer writer, allocation settlement, image disposal, old ownership or arbitrary callback authority.
+
+## Bounds With Short Reads
+
+Let B be the exact private authentic maximum logical bytes. For a real sole committed artifact allocation, B is min(actual mounted-scope filesystemBytes, actual current full committed allocation.bytes), after unchanged policy/backing/raw-journal/row verification. For an explicit independent leaf, B is actual mounted-scope filesystemBytes under the exact current independent declaration and actual absent-or-zero journal observation. Journal absence never becomes a historical allocation. These branches remain distinct.
+
+Every accepted positive read returns at least1 byte, every file terminates on its first EOF, aggregate logical bytes remain <=B, and the unchanged complete roster has at most64 entries/files. Therefore successful positive reads <=B, EOF reads <=64, and total actual file-read attempts <=BigInt(B)+64. This bound is valid even when the system returns1 byte per successful call. `ceil(B/65536)+64` is invalid for arbitrary short reads and will not be used. BigInt private arithmetic avoids B+64 safe-integer overflow; wire byte bounds remain the existing exact safe integers.
+
+Retain64KiB maximum read requests,64 entries,64 depth,256 path units and32 descriptor owners. A file is rejected before opening if its declared size or the cumulative complete payload exceeds B. A positive read beyond the exact named extent refuses immediately; early EOF refuses the final extent/hash check. A zero-byte file still costs one EOF attempt. No failed attempt is silently retried. Metadata/directory enumeration remains the existing fully bounded traversal, separate from file read calls.
+
+Divide attempts into private quanta of at most the existing32 read attempts. A quantum is an implementation scheduling boundary under the same actual Original/control/parent/token: it creates no new envelope, child funding, timer, renewable timeout or caller-configurable budget. Keep all current per-read pre/post cancellation/refinement/physical-port checks. Publish/yield on the same actual control for every attempted read, including EOF in the new purpose, then recheck before another attempt. There is no continued work after cancellation or expired finite caller admission. All original root/dir rosters, file FD/name7 fences, same-device/single-link rules, service authentication, journal preservation and final complete root/service checks remain; none is replaced by a byte counter.
+
+## Closed API and Full-CAS Seam
+
+Use separate explicitly named Core capture/retire exports or an equally closed literal selector, not a public numeric budget/provider. The preferred implementation is adjacent to the existing platform/contract/schema definitions, adding no Source input files. Existing strict APIs retain exact arity/wire shape/32 behavior. New streamed DATA has a distinct closed codec carrying capture purpose and a canonical observation-authority descriptor: actual policy kind, exact current backing/policy/journal/full-row digest (or actual independent journal-presence descriptor) and privately derived B. All values are rederived from genuine scope/token; carried DATA is never a capability.
+
+The capture and the matching fixed terminal command must select the same streamed purpose. The terminal command reauthenticates the current genuine parent, nonwaiting journal/mapping EX, complete current policy/backing/journal/row and domain owner, rederives B, and recaptures the entire tree with that purpose before any deletion. Root/entry7/hash/order and observation-authority descriptor must all match. Actual read counts may differ because short-read scheduling is not stable payload identity; diagnostic cost counters are not part of equality and grant no capacity. Strict and streamed payloads must not be interchangeable. Final zero-tree recapture uses the same purpose and all existing durability/private-completion/journal terminal laws.
+
+The independent namespace/leaf route preserves absent versus present-zero journal and allocationRetired:false. The real committed-artifact route still settles only its exact sole row after actual canonical payload completion. No generic domain callback, fabricated reservation, NativeImage/Store facade, funded-child reconstruction or namespace-name adoption is added.
+
+## First Contained Batch: Already-Observed Refusal DATA
+
+Before implementing the new path, add a closed failure cause only at the existing strict guard using its already captured root, current relative path, named7/size, offset, accumulated logical bytes, attemptedWork, maximumReadWork32 and chunkBytes65536. It must retain the same failure message/point and perform no extra file read, namespace search, callback or admission. The existing helper should project only this validated bounded cause without masking the exact primary or reopening failed Original admission. This identifies the actual file context while preserving the old refusal; it does not authorize a new budget or establish complete payload provenance. Root alone may then run a fresh protected diagnostic.
+
+## Schema-First Models and Implementation Tests
+
+Prospective closed schema and26 hand-authored DATA cases are `payload-streaming/🔣️schema.json` and `payload-streaming/🧪️cases.json`. Actual Ajv validation, independent SQLite integer/JSON aggregate counts and a BigInt arithmetic model all agree on26 cases (13 accepted model decisions). Receipt: `🗑️generated/bazel-planner/payload-stream-model-receipt.json`. These model final admission/bounds only; they are not runtime control, current production IO-order or physical eligibility evidence.
+
+Cases cover empty payload,64 empty files,31 versus32 full chunks plus EOF,2MiB+1, multiple medium files, one-byte short reads, exact byte+EOF bound, allocation/scope minima, overflow and independent absence without invented funding. Production TDD must additionally cover:
+
+- Genuine Root0 and finite/cancelled controls, same Original before/after every quantum, cancellation at read32 before next actual IO, undefined/frozen primary plus distinct close failure, accepted unawaited drain and expired descendants.
+- Actual owner AST with real Generated FD/name7/hash reads and Python hashlib/stat results; exact unchanged strict32 semantic RED and >32 complete streamed GREEN under the new private purpose, one-byte short-read instrumentation and complete independent SQLite read counters.
+- Unknown64th/65th rows, symlink/hardlink/foreign device, path256, depth64, late root/name/FD/extent/roster/service drift; no omitted entries or new allowlist.
+- Forged/copied/foreign/expired token, altered B/row/policy/backing/journal-presence/purpose, strict-versus-streamed mismatch, stale source payload and domain rejection all refuse before effects.
+- Actual fixed terminal re-observation uses the same purpose/fullCAS; partial deletion/fsync/journal failure remains unresolved with no fabricated rollback or allocation closure.
+
+Low should review the closed authority and mathematical bound before production changes. Then qualify the narrow refusal cause first, followed by the new Core capture codec/owner/terminal integration and real domain issuer selection in separate Source RED/GREEN/strict checkpoints. Root owns every Native diagnostic and eventual physical maintenance run. Existing Generic retention5 inputs remain frozen during this design.
+
+## Actual Diagnostic and Final API Decision
+
+Root actual Products96908 was a pool-level capture, not a Native namespace: cached relative path `nx/graphs/aaaaaaaaaaaaaaaaaaaa/312b3d659b3b52d00344/file-map.json`, named26214185bytes, offset1966080, completed prior logical454bytes, attempted33/max32/chunk65536. The current whole pool owner and full inventory still need all ordinary admission checks; this diagnostic supplies no deletion or historical allocation authority.
+
+Choose closed optional literal selection on the existing capture and fixed terminal APIs, with default strict call arities/wire payload unchanged. A streamed tree has the same complete payload DATA shape but is additionally minted into a private WeakMap bound to the exact actual live scope, explicit stream purpose and rederived canonical current authority descriptor/B. A copied/serialized/strict tree cannot satisfy streamed terminal issuance. Actual maintenance freshly captures under its own new live scope, compares the complete expected tree, then passes that exact newly issued object to the fixed terminal command. No command or wire marker can issue the private proof. Re-observation under the same purpose rechecks raw journal, full policy/backing/current row or distinct independent absent/zero journal, and the same byte bound before fullCAS. Closure and the existing one-terminal-command rule invalidate use. Low reviewed this refinement as sound with these conditions.
+
+The Graph/helper command carries a closed `capturePurpose` only in distinct streamed plan/maintain selection. Existing strict/publication/exact/prepared commands cannot accidentally select it. The fixed administrative owner still repeats all current role/source/descriptor/fixture/funding admission. No Source file is added to the512/256 closures.

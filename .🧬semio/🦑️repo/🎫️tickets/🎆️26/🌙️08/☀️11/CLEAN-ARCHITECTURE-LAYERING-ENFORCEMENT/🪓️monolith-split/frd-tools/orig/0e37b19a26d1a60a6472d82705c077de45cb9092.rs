@@ -1,0 +1,205 @@
+use super::*;
+use semio_s_artifact_stdio_semio_table_model::schema::snapshot::SemioTableCellKind;
+use semio_s_artifact_stdio_semio_table_model::schema::snapshot::SemioTableColumn;
+use semio_s_artifact_stdio_semio_table_model::schema::snapshot::SemioTableRow;
+use semio_s_artifact_stdio_semio_table_model::schema::snapshot::STDIO_SEMIOTABLE_DOCUMENT_SCHEMA;
+use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValue;
+use protocol::{Mutation, SemanticMutation};
+
+// 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+fn fixture() -> SemioTableSnapshot {
+    SemioTableSnapshot {
+        schema: STDIO_SEMIOTABLE_DOCUMENT_SCHEMA.into(),
+        columns: vec![SemioTableColumn { name: "label".into(), kind: SemioTableCellKind::Str }, SemioTableColumn { name: "score".into(), kind: SemioTableCellKind::Float }],
+        rows: vec![
+            SemioTableRow { cells: vec![SemioValue::Str { value: "a".into() }, SemioValue::Float { lexeme: "1.000".into() }] },
+            SemioTableRow { cells: vec![SemioValue::Str { value: "b".into() }, SemioValue::Float { lexeme: "2.000".into() }] },
+        ],
+    }
+}
+
+// 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+fn round_trip(base: &SemioTableSnapshot, operation: &SemioTableMutation) -> SemioTableSnapshot {
+    let forward = protocol::apply_diff(operation.diff(base).diff(), base).expect("apply must succeed for a well-formed fixture");
+    let backwards = operation.inverse(base).expect("valid retained mutation inverse fixture");
+    let mut restored = forward.clone();
+    // 🔧️ Each inverse's diff must be computed against the CURRENT (`restored`) state, not the
+    // stale pre-operation `base` — a whole-list-replace diff shape reconstructs the entire
+    // collection from whatever base it is given, so diffing against the wrong base silently
+    // discards the forward mutation's effect instead of undoing it (see `🔤️text`'s own fix).
+    for back in backwards.iter().rev() {
+        restored = protocol::apply_diff(back.diff(&restored).diff(), &restored).expect("apply must succeed for a well-formed fixture");
+    }
+    assert_eq!(&restored, base, "inverse must exactly restore the pre-operation fixture");
+    forward
+}
+
+/// 🧪️ CRITICAL alignment invariant: creating a column inserts a `Null` cell at the same index
+/// into EVERY row.
+#[semio_framework_async_macros::async_test]
+async fn create_column_keeps_rows_aligned() {
+    let base = fixture();
+    let create = SemioTableMutation::CreateColumn(create_column::CreateColumn { name: "notes".into(), kind: SemioTableCellKind::Str, index: Some(1) });
+    let after = round_trip(&base, &create);
+    assert_eq!(after.columns.len(), base.columns.len() + 1);
+    assert_eq!(after.columns[1].name, "notes");
+    for (row, base_row) in after.rows.iter().zip(&base.rows) {
+        assert_eq!(row.cells.len(), after.columns.len());
+        assert_eq!(row.cells[1], SemioValue::Null);
+        assert_eq!(row.cells[0], base_row.cells[0]);
+        assert_eq!(row.cells[2], base_row.cells[1]);
+    }
+}
+
+/// 🧪️ CRITICAL alignment invariant: deleting a column removes the aligned cell from EVERY
+/// row, and the cascade-capturing inverse restores the exact original per-row cell values (not
+/// just `Null`).
+#[semio_framework_async_macros::async_test]
+async fn delete_column_captures_full_row_cascade_for_inverse() {
+    let base = fixture();
+    let delete = SemioTableMutation::DeleteColumn(delete_column::DeleteColumn { name: "label".into() });
+    let after = round_trip(&base, &delete);
+    assert_eq!(after.columns.len(), 1);
+    assert_eq!(after.columns[0].name, "score");
+    for row in &after.rows {
+        assert_eq!(row.cells.len(), 1);
+    }
+
+    let undo = delete.inverse(&base).expect("valid retained mutation inverse fixture");
+    assert_eq!(undo.len(), 1 + base.rows.len(), "expected one CreateColumn plus one EditCell per row");
+    assert!(matches!(&undo[0], SemioTableMutation::CreateColumn(_)));
+    for m in &undo[1..] {
+        assert!(matches!(m, SemioTableMutation::EditCell(_)));
+    }
+}
+
+#[semio_framework_async_macros::async_test]
+async fn delete_column_of_an_absent_name_has_an_empty_inverse() {
+    let base = fixture();
+    let delete = SemioTableMutation::DeleteColumn(delete_column::DeleteColumn { name: "missing".into() });
+    assert!(delete.inverse(&base).expect("valid retained mutation inverse fixture").is_empty());
+    assert_eq!(protocol::apply_diff(delete.diff(&base).diff(), &base).expect("apply must succeed for a well-formed fixture"), base, "an absent-name delete is a no-op");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn rename_column_round_trips() {
+    let base = fixture();
+    let rename = SemioTableMutation::RenameColumn(rename_column::RenameColumn { name: "label".into(), new_name: "title".into() });
+    let after = round_trip(&base, &rename);
+    assert_eq!(after.columns[0].name, "title");
+    assert_eq!(after.rows, base.rows, "rename must not touch rows");
+}
+
+/// 🧪️ CRITICAL alignment invariant: reordering a column applies the identical remove-then-
+/// insert to every row's cells.
+#[semio_framework_async_macros::async_test]
+async fn reorder_columns_keeps_rows_aligned() {
+    let base = fixture();
+    let reorder = SemioTableMutation::ReorderColumns(reorder_columns::ReorderColumns { name: "score".into(), to_index: 0 });
+    let after = round_trip(&base, &reorder);
+    assert_eq!(after.columns[0].name, "score");
+    assert_eq!(after.columns[1].name, "label");
+    for (row, base_row) in after.rows.iter().zip(&base.rows) {
+        assert_eq!(row.cells[0], base_row.cells[1]);
+        assert_eq!(row.cells[1], base_row.cells[0]);
+    }
+}
+
+#[semio_framework_async_macros::async_test]
+async fn insert_remove_row_round_trips() {
+    let base = fixture();
+    let new_row = SemioTableRow { cells: vec![SemioValue::Str { value: "c".into() }, SemioValue::Float { lexeme: "3.000".into() }] };
+
+    let insert = SemioTableMutation::InsertRow(insert_row::InsertRow { index: 1, row: new_row.clone() });
+    let after_insert = round_trip(&base, &insert);
+    assert_eq!(after_insert.rows.len(), base.rows.len() + 1);
+    assert_eq!(after_insert.rows[1], new_row);
+
+    let undo = insert.inverse(&base).expect("valid retained mutation inverse fixture");
+    assert_eq!(undo, vec![SemioTableMutation::RemoveRow(remove_row::RemoveRow { index: 1 })]);
+
+    let remove = SemioTableMutation::RemoveRow(remove_row::RemoveRow { index: 0 });
+    let after_remove = round_trip(&base, &remove);
+    assert_eq!(after_remove.rows.len(), base.rows.len() - 1);
+    assert_eq!(after_remove.rows[0], base.rows[1]);
+}
+
+#[semio_framework_async_macros::async_test]
+async fn remove_row_of_an_out_of_range_index_has_an_empty_inverse() {
+    let base = fixture();
+    let remove = SemioTableMutation::RemoveRow(remove_row::RemoveRow { index: 99 });
+    assert!(remove.inverse(&base).expect("valid retained mutation inverse fixture").is_empty(), "removing an absent index has nothing to undo");
+    assert_eq!(protocol::apply_diff(remove.diff(&base).diff(), &base).expect("apply must succeed for a well-formed fixture"), base, "an out-of-range remove is a no-op");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn reorder_rows_round_trips() {
+    let base = fixture();
+    let reorder = SemioTableMutation::ReorderRows(reorder_rows::ReorderRows { from: 0, to: 1 });
+    let after = round_trip(&base, &reorder);
+    assert_eq!(after.rows[0], base.rows[1]);
+    assert_eq!(after.rows[1], base.rows[0]);
+}
+
+#[semio_framework_async_macros::async_test]
+async fn edit_cell_round_trips() {
+    let base = fixture();
+    let edit = SemioTableMutation::EditCell(edit_cell::EditCell { row_index: 0, column_name: "score".into(), new_value: SemioValue::Float { lexeme: "9.000".into() } });
+    let after = round_trip(&base, &edit);
+    assert_eq!(after.rows[0].cells[1], SemioValue::Float { lexeme: "9.000".into() });
+    assert_eq!(after.columns, base.columns, "edit-cell must not touch columns");
+
+    let missing = SemioTableMutation::EditCell(edit_cell::EditCell { row_index: 99, column_name: "score".into(), new_value: SemioValue::Null });
+    assert!(missing.inverse(&base).expect("valid retained mutation inverse fixture").is_empty(), "editing an absent row has nothing to undo");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn semantic_kinds_cover_every_variant() {
+    assert_eq!(SemioTableMutation::kinds().len(), 9);
+    let mutation = SemioTableMutation::RemoveRow(remove_row::RemoveRow { index: 2 });
+    assert_eq!(mutation.semantics().kind, "remove-row");
+    assert_eq!(mutation.semantics().record, "RemovedRow");
+    assert_eq!(mutation.target(), vec!["2".to_string()]);
+}
+
+/// 🏷️ `KINDS` (this facet's own const, consumed by `mutate-semio-table`'s adapter) must name
+/// every declared variant, in the exact order and spelling `#[derive(dsl::Mutations)]` assigns —
+/// the framework never parses Rust, so this is what keeps the catalog honest.
+#[semio_framework_async_macros::async_test]
+async fn kinds_match_the_enum_and_the_catalog() {
+    let descriptors = SemioTableMutation::kinds();
+    assert_eq!(KINDS.len(), descriptors.len(), "KINDS must name exactly one entry per declared variant");
+    for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
+        assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
+    }
+    let manifest = runtime_fixture_text("../../../../🔮️oracles/🔣️.json");
+    for kind in KINDS {
+        assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
+    }
+}
+
+/// 🎯️ Position law: removing ANY row (first, middle, last) is undone at its original index, and the inverse sums to the negative diff.
+#[semio_framework_async_macros::async_test]
+async fn remove_row_inverts_at_every_position() {
+    let base = semio_s_artifact_stdio_semio_table_model::schema::snapshot::demo_table_snapshot();
+    assert!(base.rows.len() >= 3, "the law needs a middle row");
+    for index in 0..base.rows.len() {
+        protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&SemioTableMutation::RemoveRow(remove_row::RemoveRow { index }), &base).await;
+    }
+}
+
+/// 🎯️ Position law: moving a row between ANY two positions is undone exactly.
+#[semio_framework_async_macros::async_test]
+async fn reorder_rows_inverts_between_every_pair_of_positions() {
+    let base = semio_s_artifact_stdio_semio_table_model::schema::snapshot::demo_table_snapshot();
+    for from in 0..base.rows.len() {
+        for to in 0..base.rows.len() {
+            protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&SemioTableMutation::ReorderRows(reorder_rows::ReorderRows { from, to }), &base).await;
+        }
+    }
+}
+
+fn runtime_fixture_text(relative: &str) -> &'static str {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative);
+    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display())).into_boxed_str())
+}

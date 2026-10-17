@@ -7,7 +7,7 @@ use graph_core::{EdgeId, EdgeRef, GraphView, NodeId};
 // #region 🔖️Shared
 /// 🔗️ Picks the first (lowest `EdgeId`) edge connecting `u` to `v`; safe to `expect` because every caller only invokes this for a pair already reported by `out_neighbors`/`neighbors`, which guarantees at least one connecting edge exists.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn any_edge<G: GraphView>(graph: &G, u: NodeId, v: NodeId) -> EdgeRef {
+pub fn any_edge<G: GraphView>(graph: &G, u: NodeId, v: NodeId) -> EdgeRef {
     graph.edges_between(u, v).next().expect("out_neighbors/neighbors only report pairs with a connecting edge")
 }
 
@@ -363,7 +363,5 @@ pub fn bfs_beam_edges<G: GraphView>(graph: &G, source: NodeId, width: usize, val
 // #endregion 🔖️Beam
 
 // #region 🔖️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 // #endregion 🔖️Tests

@@ -1,6 +1,6 @@
 //! 🗂️ `duplicate-selection` command.
 
-use {crate::editor::puzzle2d::snapshot::puzzle2d_selection_write, crate::editor::puzzle2d::Puzzle2dActionCtx};
+use {crate::editor::puzzle2d::snapshot::puzzle2d_selection_write, crate::editor::puzzle2d::interaction::Puzzle2dActionCtx};
 
 /// 👯️ Records a `create-node` per selected node (an offset copy with a fresh id, stamped with the next free display label
 /// for its kind) and a `connect-handles` per edge between the copies, and re-selects the clones through an

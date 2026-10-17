@@ -3,8 +3,8 @@ import {Database} from "bun:sqlite";
 import {readFileSync} from "node:fs";
 import {resolve} from "node:path";
 import fixture from "../🧪️tests/🧫️fixtures/🔣️.json";
-import sourceFixture from "../../../🧪️tests/🧫️fixtures/🫳️read-source.json";
-import retirementFixture from "../../../🧪️tests/🧫️fixtures/🎟️borrowed-retirement/🔣️.json";
+import { readSourceFixture as sourceFixture } from "@semio-tech/framework-pack-json-ts/testing/fixtures";
+import { borrowedRetirementFixture as retirementFixture } from "@semio-tech/framework-pack-json-ts/testing/fixtures/borrowed-retirement";
 
 test("complete source policy matches independent UTF8 admission",()=>{
   const database=new Database(":memory:");
@@ -16,7 +16,6 @@ test("complete source policy matches independent UTF8 admission",()=>{
       expect(JSON.parse(row.source)).toBeDefined();
     }
   }finally{database.close();}
-  console.log("[DEBUG] JSON complete source policy5 matches independent SQLite UTF8; wholeCorpus=false originalNativePolicyLaws=preserved");
 });
 
 test("original source constructor requires the complete policy without a second API",()=>{
@@ -31,5 +30,4 @@ test("original owning fixtures carry complete literal policies through the canon
     expect(Buffer.byteLength(original.source,"utf8")<=original.readLimits.maximumBytes).toBe(true);
   }
   expect(Buffer.byteLength(JSON.stringify("x".repeat(sourceFixture.largeStringBytes)),"utf8")<=sourceFixture.readLimits.maximumBytes).toBe(true);
-  console.log("[DEBUG] Original source and retirement fixtures retain literal complete policies and original8194 source extent");
 });

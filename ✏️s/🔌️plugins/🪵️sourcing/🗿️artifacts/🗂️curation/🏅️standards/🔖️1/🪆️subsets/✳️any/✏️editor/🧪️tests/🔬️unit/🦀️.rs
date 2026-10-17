@@ -1,6 +1,9 @@
+use semio_framework_test_fixtures::fixture_text;
+
 pub(crate) mod context {
     
-    use super::super::*;
+    use semio_framework_plugin::EditorApp;
+    use crate::editor::sourcing::{SourcingCurationApp, SourcingCurationCommand, create_sourcing_curation_app};
     use semio_framework_plugin::artifact_app_laws::{meta, new_app_with_registry_and_members as new_app_with_registry_impl};
     use semio_framework_plugin::{App, EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
     
@@ -155,13 +158,20 @@ pub(crate) mod context {
 }
 
 
-use super::*;
+use semio_framework_plugin::{ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactToolPublicationLane, MediaClass, MediaForm, MediaPayload};
+use crate::{CurationSnapshot, SOURCING_CURATION_SCHEMA};
+use crate::editor::sourcing::config::{SetContributionsEdit, SetFilterModulesEdit, SetFilterQueryEdit, SourcingCurationConfig, SourcingCurationConfigMutation};
+use crate::editor::sourcing::modes::edit::windows::{curated, grid, pool, preview};
+use crate::editor::sourcing::commands::{curation_add, curation_remove, curation_set_count, drop_on_curated, drop_on_pool, load_document_json, set_active_example, set_contributions, set_filter_min_availability, set_filter_module, set_filter_query, set_filter_typology, sort_table, stock_from_catalogue};
+use crate::editor::sourcing::modes::edit;
+use crate::editor::sourcing::{SOURCING_CURATION_BOUNDED_TOOL_IDS, SOURCING_CURATION_CONFIG_GRANT_BYTES, SOURCING_CURATION_CONFIG_STORE_MAXIMUM_BYTES, SOURCING_CURATION_CONFIG_STORE_MAXIMUM_ITEMS, SOURCING_CURATION_RETAINED_RAW_BYTES, SourcingCurationApp, SourcingCurationBoundedCommandJobFactory, SourcingCurationCommand, create_sourcing_curation_app, prepare_sourcing_curation_config, sourcing_curation_config_mutation_retained_bytes};
+use crate::editor::sourcing::base::{sourcing_curation_io, DEMO_STOCK_EXAMPLE_ID, EMPTY_EXAMPLE_ID, SOURCING_CURATION_CONFIG_CONTRIBUTIONS_BYTES, SOURCING_CURATION_CONFIG_TEXT_BYTES};
 use semio_framework_plugin::plugin_app_close_prelude::TypedOperationResultLane;
 
 //#region 🧪️RetainedConfigOracle
 #[semio_framework_async_macros::async_test]
 async fn retained_example_load_publishes_authored_stock_and_closes_exact_owners() {
-    let oracle: Vec<crate::ObjectKind> = semio_framework_pack_json::from_json_str(include_str!("../../../🧪️tests/🧫️fixtures/📦️expected-stock.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let oracle: Vec<crate::ObjectKind> = semio_framework_pack_json::from_json_str(fixture_text!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/📦️expected-stock.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     for example_id in [DEMO_STOCK_EXAMPLE_ID, EMPTY_EXAMPLE_ID] {
         let mut app = new_app().await;
         app.bind_instance_id(7).await;
@@ -218,7 +228,7 @@ async fn retained_example_load_publishes_authored_stock_and_closes_exact_owners(
 /// authored stock rather than trap the instance.
 #[semio_framework_async_macros::async_test]
 async fn example_load_settles_through_the_host_document_archive_door() {
-    let oracle: Vec<crate::ObjectKind> = semio_framework_pack_json::from_json_str(include_str!("../../../🧪️tests/🧫️fixtures/📦️expected-stock.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let oracle: Vec<crate::ObjectKind> = semio_framework_pack_json::from_json_str(fixture_text!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/📦️expected-stock.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let mut app = new_app().await;
     app.bind_instance_id(7).await;
     app.dispatch_typed(SourcingCurationCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: DEMO_STOCK_EXAMPLE_ID.into() }), &semio_framework_plugin::ActionMeta { actor: "fixture".into(), instance_id: 7, view_state: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.unwrap();
@@ -373,7 +383,7 @@ fn the_real_demonstrator_pack_is_admitted_by_the_registered_contributions_wire()
     assert!(sourcing_curation_config_mutation_retained_bytes(&SourcingCurationConfigMutation::SetContributions(SetContributionsEdit { json: distilled })).is_ok());
 }
 //#endregion 🧪️RetainedConfigOracle
-use crate::editor::sourcing::unit_tests::context::{dispatch, new_app, sourcing_manifest_for_tests};
+use crate::editor_unit_tests::context::{dispatch, new_app, sourcing_manifest_for_tests};
 use semio_framework_plugin::artifact_app_laws;
 use semio_framework_plugin::{EditorApp, PluginApp};
 
@@ -660,7 +670,7 @@ async fn the_manifest_stitches_every_taxonomy_node() {
 
 #[test]
 fn retained_table_lanes_restore_complete_neutral_owner() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../\u{1f9ea}\u{fe0f}tests/\u{1f9eb}\u{fe0f}fixtures/\u{1f69a}\u{fe0f}retained-table/\u{1f523}\u{fe0f}.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🚚️retained-table/🔣️.json")).unwrap();
     let scene = semio_framework_plugin::TableScene::base(fixture["columnsJson"].as_str().unwrap(), fixture["rowsJson"].as_str().unwrap());
     let node = semio_framework_plugin::scene_surface("neutral-retained-table", semio_framework_plugin::plugin_app_close_prelude::SurfaceKind::Table, &scene).unwrap();
     assert_eq!(node.children.len(), 2);
@@ -680,5 +690,4 @@ fn retained_table_lanes_restore_complete_neutral_owner() {
     assert_eq!(restored.rows_json, scene.rows_json);
     assert_eq!(serde_json::from_str::<serde_json::Value>(&restored.columns_json).unwrap(), fixture["columns"]);
     assert_eq!(serde_json::from_str::<serde_json::Value>(&restored.rows_json).unwrap(), fixture["rows"]);
-    eprintln!("[DEBUG] Curation retained table complete owner lanes=2 rows=3 bytes={} exact_utf8_digest=true", restored.rows_json.len());
 }

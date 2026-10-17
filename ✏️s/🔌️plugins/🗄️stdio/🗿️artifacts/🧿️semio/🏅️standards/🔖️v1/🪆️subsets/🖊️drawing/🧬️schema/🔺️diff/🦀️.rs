@@ -351,7 +351,7 @@ fn absorb_indexed<T: Clone, D: Clone>(d1: IndexedTripleDiff<D, T>, d2: &IndexedT
 /// 🏷️ Generic `NamedTripleDiff<K,D,T>` apply/between/inverse/absorb for `styles` -- key (not
 /// position) is the stable identity, mirroring svg's name-keyed attribute-triple absorb.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn apply_named<K: PartialEq, D, T: Clone>(items: &[T], diff: &NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> &K, apply_item: impl Fn(&T, &D) -> T) -> Vec<T> {
+pub fn apply_named<K: PartialEq, D, T: Clone>(items: &[T], diff: &NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> &K, apply_item: impl Fn(&T, &D) -> T) -> Vec<T> {
     let mut out: Vec<T> = items
         .iter()
         .filter(|it| !diff.removed.iter().any(|k| k == key_of(it)))
@@ -383,7 +383,7 @@ fn inverse_named<K: PartialEq + Clone, D, T: Clone>(base: &[T], diff: &NamedTrip
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn absorb_named<K, D, T>(d1: NamedTripleDiff<K, D, T>, d2: NamedTripleDiff<K, D, T>, absorb_item: impl Fn(D, D) -> D, apply_item: impl Fn(&T, &D) -> T, key_of: impl Fn(&T) -> K) -> NamedTripleDiff<K, D, T>
+pub fn absorb_named<K, D, T>(d1: NamedTripleDiff<K, D, T>, d2: NamedTripleDiff<K, D, T>, absorb_item: impl Fn(D, D) -> D, apply_item: impl Fn(&T, &D) -> T, key_of: impl Fn(&T) -> K) -> NamedTripleDiff<K, D, T>
 where
     K: PartialEq + Clone + std::hash::Hash + Eq,
     D: Clone,
@@ -523,7 +523,7 @@ fn absorb_canvas_diff(a: &DrawCanvasDiff, b: &DrawCanvasDiff) -> DrawCanvasDiff 
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn apply_style_diff(style: &DrawStyle, diff: &DrawStyleDiff) -> DrawStyle {
+pub fn apply_style_diff(style: &DrawStyle, diff: &DrawStyleDiff) -> DrawStyle {
     DrawStyle { name: style.name.clone(), fill: diff.fill.unwrap_or(style.fill), stroke: diff.stroke.unwrap_or(style.stroke), stroke_width: diff.stroke_width.unwrap_or(style.stroke_width), opacity: diff.opacity.unwrap_or(style.opacity) }
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -531,7 +531,7 @@ fn inverse_style_diff(base: &DrawStyle, diff: &DrawStyleDiff) -> DrawStyleDiff {
     DrawStyleDiff { fill: diff.fill.map(|_| base.fill), stroke: diff.stroke.map(|_| base.stroke), stroke_width: diff.stroke_width.map(|_| base.stroke_width), opacity: diff.opacity.map(|_| base.opacity) }
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn absorb_style_diff(a: &DrawStyleDiff, b: &DrawStyleDiff) -> DrawStyleDiff {
+pub fn absorb_style_diff(a: &DrawStyleDiff, b: &DrawStyleDiff) -> DrawStyleDiff {
     DrawStyleDiff { fill: b.fill.or(a.fill), stroke: b.stroke.or(a.stroke), stroke_width: b.stroke_width.or(a.stroke_width), opacity: b.opacity.or(a.opacity) }
 }
 
@@ -765,9 +765,9 @@ pub fn diff_scale_node(snapshot: &SemioDrawingSnapshot, np: &NodePath, new_scale
 //#region 🔖️Demo
 
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn sweep_a() -> SemioDrawingSnapshot {
+pub fn sweep_a() -> SemioDrawingSnapshot {
     use crate::schema::snapshot::STDIO_SEMIODRAWING_DOCUMENT_SCHEMA;
     SemioDrawingSnapshot {
         schema: STDIO_SEMIODRAWING_DOCUMENT_SCHEMA.into(),
@@ -795,9 +795,9 @@ pub(crate) fn sweep_a() -> SemioDrawingSnapshot {
     }
 }
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn sweep_b() -> SemioDrawingSnapshot {
+pub fn sweep_b() -> SemioDrawingSnapshot {
     use crate::schema::snapshot::STDIO_SEMIODRAWING_DOCUMENT_SCHEMA;
     SemioDrawingSnapshot {
         schema: STDIO_SEMIODRAWING_DOCUMENT_SCHEMA.into(),
@@ -827,9 +827,9 @@ pub(crate) fn sweep_b() -> SemioDrawingSnapshot {
 
 /// 🌱 Representative `SemioDrawingDiff` cases built declaratively (empty/no-op, a removed style and a removed layer row) — single source of truth for `diff_grammar_conformance_law`/`protocol_walk_law` in
 /// `🎹️composer/🦀️.rs`.
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn demo_diff_cases() -> Vec<SemioDrawingDiff> {
+pub fn demo_diff_cases() -> Vec<SemioDrawingDiff> {
     vec![
         SemioDrawingDiff::default(),
         SemioDrawingDiff { canvas: Some(Default::default()), styles: Some(NamedTripleDiff { removed: vec!["stroke".to_string()], ..Default::default() }), layers: Some(IndexedTripleDiff { removed: vec![0], ..Default::default() }) },
@@ -853,9 +853,9 @@ pub use semio_s_artifact_stdio_semio_base::schema::triples::NamedTripleDiff;
 /// `🎹️composer/🦀️.rs`'s conformance-law tests can build representative diffs from them
 /// (a private item of `#[cfg(test)] mod tests` below is not visible to the sibling `composer`
 /// module — same real, first-hit variant of this pattern brep's own report flags).
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn transform(tx: f64) -> SemioTransform {
+pub fn transform(tx: f64) -> SemioTransform {
     SemioTransform {
         translation: semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3 { x: tx, y: 0.0, z: 0.0 },
         rotation: semio_s_artifact_stdio_semio_base::schema::geometry::SemioQuaternion::default(),

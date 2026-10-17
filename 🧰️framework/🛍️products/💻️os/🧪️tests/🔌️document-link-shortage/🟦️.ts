@@ -4,6 +4,7 @@
  * expiry and revocation rule (ticket 26/09/23 audit P2-2). The terminal texts equal React's execution-target
  * status texts, which the worker already shows. */
 import { semioSchemaAjvV1 } from "@semio-tech/schema-ts/oracles/validator";
+import { loadLinkShortageV1Fixture, loadDocumentLinkShortageSchema } from "../../🔨️modules/🏪️store/🧪️tests/🧫️fixtures/🟦️.ts";
 export async function registerDocumentLinkShortageTests(
   vitest: NonNullable<ImportMeta["vitest"]>,
   twin: {
@@ -18,8 +19,8 @@ export async function registerDocumentLinkShortageTests(
   },
 ): Promise<void> {
   const { describe, it, expect } = vitest;
-  const { default: fixture } = await import("../../🔨️modules/🏪️store/🧪️tests/🧫️fixtures/document-link-shortage-v1/🔣️.json");
-  const { default: schema } = await import("../../🔨️modules/🏪️store/🔄️sync/🧬️schema/document-link-shortage/🔣️.json");
+  const fixture = await loadLinkShortageV1Fixture();
+  const schema = await loadDocumentLinkShortageSchema();
   const { DOCUMENT_EXECUTION_TARGET_STATUS_TEXT_V1 } = await import("@semio-tech/framework/directory/schema");
 
   describe("DocumentLinkShortage", () => {

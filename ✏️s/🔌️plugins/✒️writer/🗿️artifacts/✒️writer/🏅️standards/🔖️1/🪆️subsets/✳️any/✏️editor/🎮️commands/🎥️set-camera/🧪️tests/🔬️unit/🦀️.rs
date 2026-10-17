@@ -1,5 +1,5 @@
-use super::SetCamera;
-use crate::editor::writer::unit_tests::context::{dispatch, main_window_view, new_app};
+use crate::editor::writer::commands::set_camera::SetCamera;
+use crate::editor_unit_tests::context::{dispatch, main_window_view, new_app};
 use crate::editor::writer::{WriterCommand, WRITER_PLAY_BODY_MAIN};
 use crate::WriterCamera;
 use semio_framework_plugin::PluginApp;

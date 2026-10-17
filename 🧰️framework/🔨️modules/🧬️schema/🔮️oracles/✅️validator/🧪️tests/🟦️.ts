@@ -43,7 +43,6 @@ test("actual format policy matches shared asserted and annotation-only format ca
     for (const value of row.valid) expect(validate(value), row.id).toBe(true);
     for (const value of row.invalid) expect(validate(value.instance), row.id).toBe(false);
   }
-  console.log("[DEBUG] actual semantic validator policy replayed shared draft-07 payload cases");
 });
 
 test("a scope export validates exactly the hand-listed rows, keeps every annotation and resolves its declared dependency", () => {

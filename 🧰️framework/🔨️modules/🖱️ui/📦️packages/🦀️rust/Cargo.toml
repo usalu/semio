@@ -169,6 +169,7 @@ wgpu = { version = "29.0.4", default-features = false, features = ["std", "metal
 arboard = { version = "3", optional = true }
 
 [dev-dependencies]
+semio-framework-test-fixtures = { path = "../../../🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-framework-ui-wgpu-render = { path = "../../🎯️targets/🧊️wgpu/🖍️draw/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-job-worker = { path = "../../../🧵️job/👷️worker/📦️packages/🦀️rust", features = ["testkit"] }
 

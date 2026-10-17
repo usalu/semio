@@ -139,6 +139,4 @@ impl semio_framework_plugin::WindowTransientOwner for JackEditorWindowTransientO
 #[path = "🚪️io/🦀️.rs"]
 pub mod io;
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️selection/🦀️.rs"]
-mod selection_tests;
+

@@ -6,27 +6,11 @@
 //! real `*_protocol` crate's own Command enum tests use (see e.g. `flow_protocol`'s
 //! `flow_command_text_binary_round_trips_document_mutating_variants`).
 
-use super::child_emit_preparation::{ChildEmitPreparation, ChildEmitPreparationStep, OwnedChildEmit};
-use super::window_config::WindowConfigMutation;
-use super::window_transient::WindowTransientMutation;
-use semio_framework::kernel::UiDirtyScope;
-use semio_framework::{kernel::{AppEvent, Effect, SchemaId}, Fault, FaultCode, FaultOrigin, ViewModel};
+use semio_framework::Fault;
 use semio_framework_value_derive::{FromValue, ToValue};
-use serde::Serialize;
 use std::future::Future;
+use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_framework_plugin_decl_views::NoConfigMutation;
 #[allow(unused_imports)]
-use std::pin::Pin;
-use semio_framework_artifact_reference::ArtifactRef;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_artifact_reference::ArtifactDialect;
-use semio_framework_value::{RetirementDemand, ValueError, retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}};
-use std::mem::ManuallyDrop;
-use semio_framework_value::retirement::controlled::ControlledRetirement;
-use crate::app_contract::ArtifactApp;
-use crate::app_views::NoConfigMutation;
-use crate::app_views::NoDraftMutation;
-use semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep;
-use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
-#[allow(unused_imports)]
-use crate::app_emission::*;
+use semio_framework_plugin_decl_emission::{Emit, ToolCommandCatalog};
 include!("../../../../🧪️tests/🔬️app-app-commands/🦀️.rs");

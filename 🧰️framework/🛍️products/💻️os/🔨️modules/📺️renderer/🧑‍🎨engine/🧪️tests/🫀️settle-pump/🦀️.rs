@@ -52,7 +52,7 @@ fn the_frame_owes_a_settle_step_exactly_while_a_chain_is_live() {
     assert!(rows.len() >= 7, "the oracle carries every term of the predicate");
     for row in rows {
         let id = row["id"].as_str().expect("every row is named");
-        let answer = shell::settle_pump_owes(
+        let answer = semio_framework_os_renderer_wgpu_shell_pointer::settle_pump_owes(
             row["settling"].as_bool().expect("settling"),
             row["session"].as_bool().expect("session"),
             row["armedWork"].as_bool().expect("armedWork"),
@@ -69,11 +69,11 @@ fn a_producer_is_funded_while_it_advances_and_driven_to_a_terminal_state_when_it
     let fixture = fixture();
     let stall_steps = fixture["stallSteps"].as_u64().expect("the fixture declares the stall budget");
     let terminal_drives = fixture["terminalDrives"].as_u64().expect("the fixture declares the terminal-drive budget");
-    assert_eq!(stall_steps, u64::from(shell::SHELL_SETTLE_STALL_STEPS), "the oracle and the shell price the stall identically");
-    assert_eq!(terminal_drives, u64::from(shell::SHELL_SETTLE_TERMINAL_DRIVES), "the oracle and the shell price the terminal drives identically");
+    assert_eq!(stall_steps, u64::from(semio_framework_os_renderer_wgpu_shell_window_actions::SHELL_SETTLE_STALL_STEPS), "the oracle and the shell price the stall identically");
+    assert_eq!(terminal_drives, u64::from(semio_framework_os_renderer_wgpu_shell_window_actions::SHELL_SETTLE_TERMINAL_DRIVES), "the oracle and the shell price the terminal drives identically");
     for row in fixture["watchRows"].as_array().expect("the fixture declares its watch rows") {
         let id = row["id"].as_str().expect("every row is named");
-        let mut watch = shell::ShellSettleWatch::default();
+        let mut watch = semio_framework_os_renderer_wgpu_shell_surfaces::ShellSettleWatch::default();
         let mut funds = 0u64;
         let mut terminals = 0u64;
         let mut stands = 0u64;
@@ -81,14 +81,14 @@ fn a_producer_is_funded_while_it_advances_and_driven_to_a_terminal_state_when_it
         let mut step = 0u64;
         for entry in row["statuses"].as_array().expect("every watch row publishes statuses") {
             let json = entry["json"].as_str().expect("every status entry carries one published statusJson");
-            let status = shell::world3d_compute_status(Some(json));
+            let status = semio_framework_os_renderer_wgpu_shell_surfaces::world3d_compute_status(Some(json));
             assert!(status.computing, "{id}: every watched status says its producer is working");
             for _ in 0..entry["repeat"].as_u64().unwrap_or(1) {
                 step += 1;
-                match shell::settle_watch_verdict(&mut watch, &status) {
-                    shell::ShellSettleVerdict::Fund => funds += 1,
-                    shell::ShellSettleVerdict::Stand => stands += 1,
-                    shell::ShellSettleVerdict::Terminal => {
+                match semio_framework_os_renderer_wgpu_shell_actions::settle_watch_verdict(&mut watch, &status) {
+                    semio_framework_os_renderer_wgpu_shell_window_actions::ShellSettleVerdict::Fund => funds += 1,
+                    semio_framework_os_renderer_wgpu_shell_window_actions::ShellSettleVerdict::Stand => stands += 1,
+                    semio_framework_os_renderer_wgpu_shell_window_actions::ShellSettleVerdict::Terminal => {
                         terminals += 1;
                         first_terminal.get_or_insert(step);
                     }

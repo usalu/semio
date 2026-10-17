@@ -8,7 +8,7 @@ extern crate semio_s_artifact_energy_model_diff as diff;
 extern crate semio_s_plugin_energy_engine_model as model;
 extern crate semio_s_artifact_energy_model_snapshot as snapshot;
 
-use crate::snapshot::{EnergyModelSnapshot, EnergyStructureChild, EnergyZonesChild, ENERGY_MODEL_ARTIFACT_SCHEMA_ID, ENERGY_MODEL_DOCUMENT_SCHEMA};
+use crate::snapshot::{EnergyModelSnapshot, EnergyStructureChild, EnergyZonesChild, ENERGY_MODEL_DOCUMENT_SCHEMA};
 use framework_schema::ArtifactSchema;
 use semio_framework_value::{DslValue, FromValue, ToValue, ValueError};
 
@@ -127,24 +127,9 @@ impl EnergyModelArtifact {
 }
 //#endregion 🔖️Conversions
 
-//#region 🔖️Descriptor
-/// 🧬️ Descriptor for `s.energy.model` — twenty handcrafted schema leaves.
-pub fn energy_model_artifact_schema_descriptor() -> semio_framework_schema_registry::ArtifactSchemaDescriptor {
-    semio_framework_schema_registry::ArtifactSchemaDescriptor {
-        id: ENERGY_MODEL_ARTIFACT_SCHEMA_ID,
-        artifact: semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
-        snapshot: crate::snapshot::FACET,
-        diff: crate::diff::FACET,
-        mutations: semio_framework_schema_registry::FacetLeaves {
-            rust: include_str!("🧬️mutations/🦀️.rs"),
-            typescript: include_str!("🧬️mutations/🟦️.ts"),
-            graphql: include_str!("🧬️mutations/🔗️.graphql"),
-            json_schema: include_str!("🧬️mutations/🔣️.json"),
-            proto: include_str!("🧬️mutations/🛰️.proto"),
-        },
-    }
-}
-//#endregion 🔖️Descriptor
+#[path = "🧾️descriptor/🦀️.rs"]
+mod descriptor;
+pub use descriptor::energy_model_artifact_schema_descriptor;
 //#region 🏗️DerivedConstruction
 
 //#endregion 🏗️DerivedConstruction

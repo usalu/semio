@@ -1,0 +1,12 @@
+{
+  "name": "@semio-tech/framework-pack-ts",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./format/testing/oracles/leb": "./📐️format/🧪️testing/🔮️oracles/🔢️leb/🟦️.ts",
+    "./testing/fixtures": "./🧪️testing/🧫️fixtures/🟦️.ts"
+  },
+  "devDependencies": {
+    "@semio-tech/framework": "workspace:*"
+  }
+}

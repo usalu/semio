@@ -14,16 +14,34 @@ pub fn engine_surface_law_guard() -> std::sync::MutexGuard<'static, ()> {
     ENGINE_SURFACE_LAW_LOCK.lock().unwrap_or_else(std::sync::PoisonError::into_inner)
 }
 
+/// 🎟️ The retained grant one engine close step is funded with: far above any fixture scene's copy, capacity and release demand.
+const ENGINE_CLOSE_GRANT: semio_framework_job::RetainedCloneGrant = semio_framework_job::RetainedCloneGrant {
+    maximum_items: 1 << 16,
+    maximum_copy_bytes: 1 << 24,
+    maximum_capacity_bytes: 1 << 24,
+    maximum_release_bytes: 1 << 24,
+    maximum_depth: 256,
+};
+
 /// 🧪️ Runs one bounded step of the engine close ladder under a funded original caller context.
 pub fn with_engine_close_context<T>(fuel: u64, step: impl FnOnce(&mut semio_framework_job::StepContext<'_>) -> T) -> T {
     let mut sequence = 0;
+    let mut retained_progress = semio_framework_job::RetainedCloneProgress::default();
     let mut context = semio_framework_job::StepContext::new(
         semio_framework_job::OperationId(1),
         semio_framework_job::Generation(1),
-        semio_framework_job::StepBudget::new(fuel, u64::MAX),
+        semio_framework_job::StepBudget::new(fuel, u64::MAX, ENGINE_CLOSE_GRANT),
         semio_framework_job::root_cancel_token(),
         semio_framework_job::default_now_us,
         &mut sequence,
+        &mut retained_progress,
     );
     step(&mut context)
+}
+
+/// 📦️ Runs one funded close step of a prepared engine canvas packet and reports whether it reached its exact terminal release.
+pub fn close_engine_canvas_packet_step(packet: &mut crate::prepared_engine_canvas::EngineCanvasPacket) -> bool {
+    with_engine_close_context(1, |context| {
+        matches!(packet.close_step(context).expect("packet close stays inside its funded original context"), semio_framework_job::InteractiveJobCloseStep::Complete { .. })
+    })
 }

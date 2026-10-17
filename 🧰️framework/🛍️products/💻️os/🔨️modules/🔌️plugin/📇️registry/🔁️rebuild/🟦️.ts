@@ -12,7 +12,7 @@ import rebuildSchema from "./🧬️schema/🔣️.json";
 export const REBUILD_STAGES = Object.freeze(rebuildSchema.$defs.RebuildStepV1.properties.stage.enum) as readonly ("inputs" | "descriptors" | "registry" | "guests" | "catalog")[];
 /** 🚦️ Serializes descriptor, registry, staging and catalog publication. */
 export const WASM_BUILD_LEASE = "wasm-build";
-/** 🪜️ One owner-authored Nx operation. */
+/** 🪜️ One owner-authored repo operation. */
 export type RebuildStepV1 = Readonly<{ id: string; stage: (typeof REBUILD_STAGES)[number]; command: readonly string[] }>;
 /** 🧊️ One portable workspace-owned guest compilation check. */
 export type GuestFrameworkCheckV1 = Readonly<{ target: "wasm32-wasip2" | "wasm32-unknown-unknown"; workspace: string; packages: readonly string[]; features: readonly string[] }>;
@@ -30,7 +30,7 @@ export function parseRebuildPlanV1(value: unknown): RebuildPlanV1 {
   let stage = 0;
   const steps = value.steps.map(value => {
     const schema = rebuildSchema.$defs.RebuildStepV1;
-    if (!record(value) || !keys(value, schema.required) || typeof value.id !== "string" || !new RegExp(schema.properties.id.pattern, "u").test(value.id) || !Array.isArray(value.command) || value.command.length < schema.properties.command.minItems || value.command[0] !== "nx" || value.command.some(part => typeof part !== "string" || !part.length)) throw Error("rebuild step requires exact keys, a valid id and an nx command");
+    if (!record(value) || !keys(value, schema.required) || typeof value.id !== "string" || !new RegExp(schema.properties.id.pattern, "u").test(value.id) || !Array.isArray(value.command) || value.command.length < schema.properties.command.minItems || value.command[0] !== "repo" || value.command.some(part => typeof part !== "string" || !part.length)) throw Error("rebuild step requires exact keys, a valid id and a repo command");
     const next = REBUILD_STAGES.indexOf(value.stage as RebuildStepV1["stage"]);
     if (ids.has(value.id) || next < stage) throw Error(`rebuild chain step ${value.id} is duplicated or out of stage order`);
     ids.add(value.id);

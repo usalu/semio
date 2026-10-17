@@ -1,4 +1,16 @@
-use super::*;
+use crate::editor::xml_valid::modes::edit::windows::main;
+use crate::schema::snapshot::XmlNode;
+use crate::standards::v1_0::subsets::valid::schema::valid_mutations::set_text::SetText;
+use crate::standards::v1_0::subsets::valid::schema::XmlValidMutation;
+use crate::{XmlSnapshot, STDIO_XML_DOCUMENT_SCHEMA};
+use semio_framework_plugin::ArtifactEditor;
+use semio_framework_plugin::Editor;
+use semio_framework_plugin::EditorApp;
+use semio_framework_plugin::Fault;
+use semio_framework_plugin::InteractiveJobClassification;
+use semio_s_artifact_stdio_contract::editing::SnapshotEditEvent;
+use crate::editor::xml_valid::{decode_node_id, resolve_node, XML_VALID_KIT_ACTION_ID, xml_valid_example_snapshot, xml_valid_command_from_action, xml_valid_emit};
+use crate::editor::xml_valid::*;
 
 #[test]
 fn set_node_requires_a_complete_address_and_allows_an_explicit_empty_text_node() {

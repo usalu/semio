@@ -49,7 +49,7 @@ pub fn render(program: &ProgramSnapshot, cfg: &config::ArchitectRegisterWindowCo
     let register = cfg.active_register.as_str();
     let entities = register_entities(program, register);
     if entities.is_empty() {
-        return semio_framework_plugin::built_text_node(Label::data(format!("No entities in register '{register}'."))).map_err(|_| crate::editor::architect::ui_capacity_error());
+        return semio_framework_plugin::built_text_node(Label::data(format!("No entities in register '{register}'."))).map_err(|_| crate::editor::architect::base::ui_capacity_error());
     }
 
     let steps: Vec<BlockListStep> = entities
@@ -71,7 +71,4 @@ pub fn render(program: &ProgramSnapshot, cfg: &config::ArchitectRegisterWindowCo
 //#endregion 🔖️Render
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

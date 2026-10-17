@@ -2,14 +2,14 @@
  * @see ../../📦️packages/🦀️rust/📜️script.ts
  */
 import { scriptCompilerAdmissionControlV1 as exactCargoCallerControlV1 } from "@semio-tech/process/compiler-capacity";
-import { unsignedLebOracleV1 } from "../../../🧰️framework/🔨️modules/🎒️pack/📐️format/🧪️tests/🔮️oracles/🔢️leb/🟦️.ts";
+import { unsignedLebOracleV1 } from "@semio-tech/framework-pack-ts/format/testing/oracles/leb";
 import { configuredExactCargoLawPolicyV1 } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
 import { buildBudgetMs } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
-import { readModuleTreeSource } from "../../../🧰️framework/🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { decodePresencePeer, encodePresencePeer, PRESENCE_PRINCIPAL_KINDS, type ArtifactPresencePeer, type ArtifactPresencePrincipalKind } from "../../../🧰️framework/🔨️modules/📡️replication/🟦️.ts";
+import { decodePresencePeer, encodePresencePeer, PRESENCE_PRINCIPAL_KINDS, type ArtifactPresencePeer, type ArtifactPresencePrincipalKind } from "@semio-tech/framework-replication";
 import { runCargo, runRepositoryExactCargoLaws, runCmd, runProbe, orchestratorBudgetOpts, configuredRepositoryCargoPreparationPolicyV1 } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { hubSchemaExport } from "../../📦️packages/🟦️typescript/🟦️.ts";
@@ -368,8 +368,8 @@ async function proveDirectorySpaceAdministrationPageV1(repoRoot: string): Promis
   if (validatePage({ ...memberShaped, capabilities: { renameSpace: true, setVisibility: true, deleteSpace: true, upsertMember: true, removeMember: true, createInvite: true, revokeInvite: true } }))
     throw new Error("component schema admitted capability flags on a member page");
 
-  const contract = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🦀️.rs"), "utf8");
-  const typescript = readFileSync(join(repoRoot, "🧰️framework/🔨️modules/📇️directory/🧬️schema/🟦️.ts"), "utf8");
+  const contract = readModuleTreeSource(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🦀️.rs"));
+  const typescript = readModuleTreeSource(join(repoRoot, "🧰️framework/🔨️modules/📇️directory/🧬️schema/🟦️.ts"));
   const hub = readHubBinSource(repoRoot);
   const sqlite = readDirectoryBackendSource(repoRoot, "🪶️sqlite");
   const postgres = readDirectoryBackendSource(repoRoot, "🐘️postgres");
@@ -590,7 +590,7 @@ async function provePresenceLeaseFixture(repoRoot: string): Promise<number> {
     if (sourceClosed(source)) throw new Error(`presence lease source oracle admitted removed fence ${index}`);
   });
   const shell = readModuleTreeSource(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx"));
-  const helpers = readModuleTreeSource(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛠️ShellHelpers/🟦️.tsx"));
+  const helpers = readModuleTreeSource(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛠️ShellHelpers/🔩️plumbing/👥️presence-identity/🟦️.ts"));
   if (!helpers.includes("PRESENCE_HEARTBEAT_INTERVAL_MS = 5000") || !shell.includes("window.setInterval(beat, PRESENCE_HEARTBEAT_INTERVAL_MS)") || !shell.includes("window.clearInterval(timer)"))
     throw new Error("browser presence schedule is not a bounded five-second lifecycle");
   const checks = fixture.vectors.length + schemaHostiles.length + summaryHostiles.length + sourceHostiles.length + 1;

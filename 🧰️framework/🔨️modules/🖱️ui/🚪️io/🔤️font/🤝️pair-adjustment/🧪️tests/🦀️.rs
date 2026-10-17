@@ -13,5 +13,4 @@ fn font_pair_rejects_malformed_borrowed_sources_without_effects() {
         assert_eq!(serde_json::to_value(error.kind).unwrap(),row["kind"]);assert!(matches!(error.message,std::borrow::Cow::Borrowed(_)));
         assert_eq!((births,frees),(0,0));assert_eq!(original.as_ptr(),pointer);
     }
-    eprintln!("[DEBUG] font pair original typed malformedSources5 query/output schema vectors14 independentSerde=true denialBirth0 denialRelease0 borrowedRefusals=true originalPointers=true");
 }

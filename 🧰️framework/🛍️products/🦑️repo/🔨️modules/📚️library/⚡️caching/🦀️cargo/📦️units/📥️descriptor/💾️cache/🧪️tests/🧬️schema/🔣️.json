@@ -1,0 +1,395 @@
+{
+ "$schema": "http://json-schema.org/draft-07/schema#",
+ "type": "object",
+ "additionalProperties": false,
+ "required": [
+  "cases",
+  "refusals",
+  "ioCases",
+  "namespace",
+  "handoff",
+  "recoveryCases",
+  "failures",
+  "concurrent",
+  "capacity",
+  "readerProtection",
+  "joiningReader",
+  "leaseFailures"
+ ],
+ "properties": {
+  "cases": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "name",
+     "cached",
+     "bytes",
+     "nodes",
+     "kind"
+    ],
+    "properties": {
+     "name": {
+      "type": "string"
+     },
+     "cached": {
+      "type": "array",
+      "items": {
+       "type": "integer",
+       "minimum": 0,
+       "maximum": 2
+      }
+     },
+     "bytes": {
+      "enum": [
+       "exact",
+       "below"
+      ]
+     },
+     "nodes": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 3
+     },
+     "kind": {
+      "enum": [
+       "admitted",
+       "pressure"
+      ]
+     }
+    }
+   }
+  },
+  "refusals": {
+   "type": "array",
+   "items": {
+    "enum": [
+     "copied-state",
+     "proxy",
+     "accessor",
+     "sparse",
+     "duplicate",
+     "wrong-bytes",
+     "foreign-mode"
+    ]
+   }
+  },
+  "ioCases": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "name",
+     "warm",
+     "pressure",
+     "callbacks",
+     "seed",
+     "kind"
+    ],
+    "properties": {
+     "name": {
+      "type": "string"
+     },
+     "warm": {
+      "type": "boolean"
+     },
+     "pressure": {
+      "type": "boolean"
+     },
+     "callbacks": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 1
+     },
+     "seed": {
+      "enum": [
+       "none",
+       "nodes",
+       "unknown"
+      ]
+     },
+     "kind": {
+      "enum": [
+       "admitted",
+       "pressure",
+       "recovery"
+      ]
+     }
+    }
+   }
+  },
+  "namespace": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "borrowHeld",
+    "released",
+    "upgradeRefused"
+   ],
+   "properties": {
+    "borrowHeld": {
+     "const": true
+    },
+    "released": {
+     "const": true
+    },
+    "upgradeRefused": {
+     "const": true
+    }
+   }
+  },
+  "handoff": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "prepared",
+    "childRead",
+    "writerBlocked"
+   ],
+   "properties": {
+    "prepared": {
+     "const": true
+    },
+    "childRead": {
+     "const": true
+    },
+    "writerBlocked": {
+     "const": true
+    }
+   }
+  },
+  "recoveryCases": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "name",
+     "staged",
+     "nodes"
+    ],
+    "properties": {
+     "name": {
+      "type": "string"
+     },
+     "staged": {
+      "type": "boolean"
+     },
+     "nodes": {
+      "const": 3
+     }
+    }
+   }
+  },
+  "failures": {
+   "type": "array",
+   "items": {
+    "enum": [
+     "body-error",
+     "body-undefined",
+     "cancel-recovery",
+     "cancel-before-reserve"
+    ]
+   }
+  },
+  "concurrent": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "name",
+     "kinds"
+    ],
+    "properties": {
+     "name": {
+      "enum": [
+       "same",
+       "different"
+      ]
+     },
+     "kinds": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+       "enum": [
+        "admitted",
+        "pressure"
+       ]
+      }
+     }
+    }
+   }
+  },
+  "capacity": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "nodes",
+    "bytesPerNode"
+   ],
+   "properties": {
+    "nodes": {
+     "const": 65536
+    },
+    "bytesPerNode": {
+     "const": 1
+    }
+   }
+  },
+  "readerProtection": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "blocked",
+    "drained",
+    "recovered"
+   ],
+   "properties": {
+    "blocked": {
+     "const": true
+    },
+    "drained": {
+     "const": true
+    },
+    "recovered": {
+     "const": true
+    }
+   }
+  },
+  "joiningReader": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "entered",
+    "maintenanceCompleted"
+   ],
+   "properties": {
+    "entered": {
+     "const": true
+    },
+    "maintenanceCompleted": {
+     "const": true
+    }
+   }
+  },
+  "leaseFailures": {
+   "type": "array",
+   "minItems": 11,
+   "maxItems": 11,
+   "items": {
+    "$ref": "#/definitions/LeaseFailureCase"
+   }
+  }
+ },
+ "definitions": {
+  "LeaseFailureCase": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "name",
+    "operation",
+    "stage",
+    "primary",
+    "secondary",
+    "releases",
+    "laterSecondary"
+   ],
+   "properties": {
+    "name": {
+     "type": "string"
+    },
+    "operation": {
+     "enum": [
+      "set",
+      "catalog",
+      "recovery",
+      "transaction"
+     ]
+    },
+    "stage": {
+     "enum": [
+      "body",
+      "success",
+      "acquisition"
+     ]
+    },
+    "primary": {
+     "enum": [
+      "error",
+      "undefined",
+      "none"
+     ]
+    },
+    "secondary": {
+     "enum": [
+      "error",
+      "undefined"
+     ]
+    },
+    "releases": {
+     "type": "array",
+     "items": {
+      "enum": [
+       "a",
+       "b",
+       "catalog",
+       "rollback",
+       "database"
+      ]
+     }
+    },
+    "laterSecondary": {
+     "enum": [
+      "error",
+      "none"
+     ]
+    }
+   }
+  },
+  "LeaseFailureResult": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "name",
+    "failed",
+    "exact",
+    "releases",
+    "freed",
+    "distinct"
+   ],
+   "properties": {
+    "name": {
+     "type": "string"
+    },
+    "failed": {
+     "type": "boolean"
+    },
+    "exact": {
+     "type": "boolean"
+    },
+    "releases": {
+     "type": "array",
+     "items": {
+      "enum": [
+       "a",
+       "b",
+       "catalog",
+       "rollback",
+       "database"
+      ]
+     }
+    },
+    "freed": {
+     "type": "boolean"
+    },
+    "distinct": {
+     "type": "boolean"
+    }
+   }
+  }
+ }
+}

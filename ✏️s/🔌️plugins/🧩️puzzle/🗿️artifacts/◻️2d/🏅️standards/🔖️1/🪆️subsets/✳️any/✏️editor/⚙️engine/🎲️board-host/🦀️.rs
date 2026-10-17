@@ -2,7 +2,6 @@
 //! plugin's metabolism icon table, plus the scene-sync, camera/LOD, hit-test, selection and
 //! area-select laws they must satisfy.
 
-use crate::editor::puzzle2d::engine::icons::puzzle_themed_icon_lookup;
 use crate::editor::puzzle2d::engine::{BoardFillStage, BoardHost, BoardNaming};
 
 /// 🪧️ The ids this plugin's boards mint and the labels its fill job reports: persisted document ids
@@ -65,9 +64,28 @@ pub fn puzzle_board_host_normal() -> BoardHost {
     h
 }
 
+/// 📨️ Retires the board host's bounded owned-event queue into its public JSON envelope.
+pub fn drain_board_events_json(host: &mut BoardHost) -> String {
+    let mut output = String::from("[");
+    let mut first = true;
+    while let Some(event) = host.outbox.pop_owned_event() {
+        if !first {
+            output.push(',');
+        }
+        first = false;
+        event.write_json(&mut output);
+    }
+    output.push(']');
+    output
+}
+
 //#region 🧪️Tests
+#[cfg(any(test, feature = "testkit"))]
+#[path = "🧪️tests/🧰️testkit/🦀️.rs"]
+pub mod testkit;
+
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
-pub(crate) mod unit_tests;
+pub mod unit_tests;
 
 //#endregion 🧪️Tests

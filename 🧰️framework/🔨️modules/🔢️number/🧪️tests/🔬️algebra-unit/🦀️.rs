@@ -1,6 +1,6 @@
 mod tests {
     use super::*;
-    use crate::{integer::Integer, modular::ModInt, rational::Rational};
+    use semio_framework_number::{Integer, ModInt, Rational};
 
     fn rat(n: i64, d: i64) -> Rational {
         Rational::from_i64(n, d).unwrap()

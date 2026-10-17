@@ -1,14 +1,20 @@
 //#region 🧪️ContributedMutationWireLaws
 //! 🧪️ Direct contributed-wire mutation laws and codec provenance.
 
-use super::*;
+use crate::contributed_mutation_wire::mutations::add_value::AddValue;
+use semio_framework_test_fixtures::fixture_text;
+use semio_framework_value_derive::{FromValue, ToValue};
+use crate::contributed_mutation_wire::{WireTestDiff, WireTestSnapshot};
+use crate::contributed_mutation_wire::mutations::WireTestMutation;
 use protocol::{CompositeMutationKind, Mutation, MutationDiff, MutationLeaf, OpBinary};
 
-fn cases() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../🧪️testing/📡️contributed-mutation-wire/🔣️.json")).expect("contributed wire neutral cases")
+#[doc(hidden)]
+pub fn cases() -> serde_json::Value {
+    serde_json::from_str(fixture_text!("../../../📡️contributed-mutation-wire/🔣️.json")).expect("contributed wire neutral cases")
 }
 
-fn operation(delta: i32) -> WireTestMutation {
+#[doc(hidden)]
+pub fn operation(delta: i32) -> WireTestMutation {
     WireTestMutation::AddValue(AddValue { delta })
 }
 
@@ -16,7 +22,7 @@ fn operation(delta: i32) -> WireTestMutation {
 fn descriptor_and_provenance_are_direct() {
     assert_eq!(
         serde_json::Value::from(semio_framework_value::ToValue::to_value(&AddValue::DESCRIPTOR)),
-        serde_json::from_str::<serde_json::Value>(include_str!("../../🧪️testing/📡️contributed-mutation-wire/🧬️mutations/➕️add-value/🔣️.json")).expect("owned descriptor JSON")
+        serde_json::from_str::<serde_json::Value>(fixture_text!("../../../📡️contributed-mutation-wire/🧬️mutations/➕️add-value/🔣️.json")).expect("owned descriptor JSON")
     );
     assert!(AddValue::DESCRIPTOR.validate().is_ok());
     assert_eq!(<WireTestMutation as Mutation<WireTestSnapshot>>::DESCRIPTORS, &[AddValue::DESCRIPTOR]);
@@ -96,8 +102,9 @@ fn serde_binary_and_composite_plan_match_the_leaf() {
 }
 
 /// 🧾️ The committed wire witnesses decode through the aggregate's `FromValue` and re-encode to exactly the committed JSON.
+#[doc(hidden)]
 #[test]
-fn committed_wire_witnesses_are_the_canonical_wire() {
-    ::store::os_store::test_support::assert_wire_witness::<WireTestMutation>(include_str!("../../🧪️testing/📡️contributed-mutation-wire/🧬️mutations/➕️add-value/🧪️tests/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
+pub fn committed_wire_witnesses_are_the_canonical_wire() {
+    ::store::os_store::test_support::assert_wire_witness::<WireTestMutation>(fixture_text!("../../../📡️contributed-mutation-wire/🧬️mutations/➕️add-value/🧪️tests/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
 }
 //#endregion 🧪️ContributedMutationWireLaws

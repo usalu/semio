@@ -25,12 +25,11 @@ test("CAD retained media source pricing preserves exact UTF-8 bytes and ordered 
  const positions:number[]=[];
  object.traverse(node=>{if(node instanceof Mesh){const attribute=node.geometry.getAttribute("position");for(let index=0;index<attribute.count;index++)positions.push(attribute.getX(index),attribute.getY(index),attribute.getZ(index));}});
  expect(positions).toEqual([0,0,0,2,0,0,0,3,0]);
- console.log(`[DEBUG] CAD retained media TextEncoder/SQLite oracle bytes=${encoded.length} checksum=${checksum} nodes=${nodes.join(",")}`);
 });
 
 import nativeSchema from"../../../../🧬️schema/📸️snapshot/🔣️.json";
 import artifactSchema from"../../../../🧬️schema/🔣️.json";
-import childSchema from"../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔣️.json";
+import { storeChildSchema as childSchema } from "@semio-tech/framework-os/modules/store/child/schema";
 import { ioSchema as ioSchema } from "@semio-tech/framework/io/schema";
 import * as owner from"../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import {binary64} from "@semio-tech/framework/value/ieee754";
@@ -120,21 +119,22 @@ test("CAD intrinsic geometry media preserves the declared file payload through i
 
 for (const row of (await import("./🧫️fixtures/🧵️paged-text.json")).default.cases) test("CAD paged UTF-8 census SQLite oracle " + row.id, () => {
  const text = row.segments.join("").repeat(row.repeat), database = new Database(":memory:");
- try { const result = database.query("SELECT length(CAST(? AS BLOB)) AS bytes").get(text) as {bytes:number}; expect(result.bytes).toBe(row.textBytes); expect(new TextEncoder().encode(text).length).toBe(result.bytes); console.log(`[DEBUG] CAD paged UTF-8 SQLite oracle ${row.id} bytes=${result.bytes}`); }
+ try { const result = database.query("SELECT length(CAST(? AS BLOB)) AS bytes").get(text) as {bytes:number}; expect(result.bytes).toBe(row.textBytes); expect(new TextEncoder().encode(text).length).toBe(result.bytes);  }
  finally { database.close(); }
 });
 
 
 test("CAD ordered brep children preserve complete topology identities through SQLite",async()=>{
  const expected=snapshot(),data=await bytes(expected),db=Database.deserialize(data,{safeIntegers:true});
- try{expect(db.query("SELECT ordinal,child_id,artifact_id,artifact_kind,standard,subset FROM cad_brep_child ORDER BY ordinal").all()).toEqual(fixture.snapshot.breps.map((child,ordinal)=>({ordinal:BigInt(ordinal),child_id:child.childId,artifact_id:child.target.artifactId,artifact_kind:child.target.dialect.artifactKind,standard:child.target.dialect.standard,subset:child.target.dialect.subset})));expect((await restore(data)).breps).toEqual(expected.breps);console.log("[DEBUG] CAD ordered brep SQLite oracle rows="+expected.breps.length);}
+ try{expect(db.query("SELECT ordinal,child_id,artifact_id,artifact_kind,standard,subset FROM cad_brep_child ORDER BY ordinal").all()).toEqual(fixture.snapshot.breps.map((child,ordinal)=>({ordinal:BigInt(ordinal),child_id:child.childId,artifact_id:child.target.artifactId,artifact_kind:child.target.dialect.artifactKind,standard:child.target.dialect.standard,subset:child.target.dialect.subset})));expect((await restore(data)).breps).toEqual(expected.breps);}
  finally{db.close();}
 });
 test("CAD brep snapshot and sparse diff admit only declared topology dialects",async()=>{
  const {parseCadDiff}=await import("../../../../🧬️schema/🔺️diff/🟦️.ts");
- expect<unknown>(owner.parseCadSnapshot(fixture.snapshot).breps).toEqual(fixture.snapshot.breps);
- const diff={breps:{values:fixture.snapshot.breps}};expect<unknown>(parseCadDiff(diff)).toEqual(diff);
- for(const subset of ["model","drawing"]){const bad=structuredClone(fixture.snapshot);bad.breps[0]!.target.dialect.subset=subset;expect(()=>owner.parseCadSnapshot(bad)).toThrow();expect(()=>parseCadDiff({breps:{values:bad.breps}})).toThrow();}
+ expect<typeof fixture.snapshot.breps>(owner.parseCadSnapshot(fixture.snapshot).breps).toEqual(fixture.snapshot.breps);
+ const bredDelta=(rows:typeof fixture.snapshot.breps)=>({breps:{removed:[],inserted:rows.map((row,index)=>({index,row})),moved:[]}});
+ const diff=bredDelta(fixture.snapshot.breps),parsedDiff=parseCadDiff(diff);expect(parsedDiff).toEqual<typeof diff>(diff);
+ for(const subset of ["model","drawing"]){const bad=structuredClone(fixture.snapshot);bad.breps[0]!.target.dialect.subset=subset;expect(()=>owner.parseCadSnapshot(bad)).toThrow();expect(()=>parseCadDiff(bredDelta(bad.breps))).toThrow();}
  const missing=structuredClone(fixture.snapshot) as Record<string,unknown>;delete missing.breps;expect(()=>owner.parseCadSnapshot(missing)).toThrow();
 });
 for(const phase of ["projectSnapshot","reconstructSnapshot"] as const)test("CAD interior ordered-brep cancellation in "+phase,async()=>{
@@ -155,7 +155,6 @@ test("CAD ordered brep event payload matches independent JSON schema admission",
  for(const index of fixture.brepMutation.validIndices){const valid={...create,index};expect(ajv.validate(createSchema.$id,{mutation,...valid})).toBe(true);expect(mutations.parseCreateBrep(valid)).toEqual(valid);}
  for(const index of fixture.brepMutation.invalidIndices){const bad={...create,index};expect(ajv.validate(createSchema.$id,{mutation,...bad})).toBe(false);expect(()=>mutations.parseCreateBrep(bad)).toThrow();}
  for(const subset of fixture.brepMutation.invalidSubsets){const bad=structuredClone(create);bad.target.dialect.subset=subset;expect(ajv.validate(createSchema.$id,{mutation,...bad})).toBe(false);expect(()=>mutations.parseCreateBrep(bad)).toThrow();}
- console.log("[DEBUG] CAD ordered brep payload independent AJV admission index="+create.index);
 });
 
 
@@ -177,7 +176,6 @@ test("CAD GraphQL siblings declare neutral persisted topology and canonical even
  expect(validateSchema(schema)).toEqual([]);
  for(const name of fixture.publicSchemas.mutationTypes){const type=document.definitions.find(def=>def.kind===Kind.OBJECT_TYPE_DEFINITION&&def.name.value===name);if(!type||type.kind!==Kind.OBJECT_TYPE_DEFINITION)throw new Error("CAD GraphQL event missing "+name);expect(type.fields?.map(field=>field.name.value)).toEqual(["mutation",...fixture.publicSchemas.mutationFields[name as keyof typeof fixture.publicSchemas.mutationFields]]);}
 
- console.log("[DEBUG] CAD GraphQL independent parser fields="+fixture.publicSchemas.fields.length+" mutationTypes="+fixture.publicSchemas.mutationTypes.length);
 });
 
 
@@ -192,5 +190,4 @@ test("CAD Protobuf siblings resolve canonical imports and exact neutral event ta
  expect(mutation.oneofs.mutation!.oneof).toEqual(fixture.publicSchemas.mutationTypes.map(name=>name[0]!.toLowerCase()+name.slice(1)));
  for(const [index,name]of fixture.publicSchemas.mutationTypes.entries()){const field=mutation.fieldsArray[index]!;expect(field.id).toBe(index+1);expect(field.type).toBe(name);const payload=root.lookupType("semio.s.cad.cad.mutation."+name);expect(payload.fieldsArray.map(field=>field.name)).toEqual(fixture.publicSchemas.mutationFields[name as keyof typeof fixture.publicSchemas.mutationFields]);expect(payload.fieldsArray.map(field=>field.id)).toEqual(Array.from({length:payload.fieldsArray.length},(_,index)=>index+1));}
  expect(root.lookupType("semio.s.cad.cad.mutation.CreateBrep").fields.index!.type).toBe("uint32");
- console.log("[DEBUG] CAD Protobuf independent resolved oracle eventTypes="+mutation.fieldsArray.length+" indexMaximum="+fixture.publicSchemas.indexMaximum);
 });

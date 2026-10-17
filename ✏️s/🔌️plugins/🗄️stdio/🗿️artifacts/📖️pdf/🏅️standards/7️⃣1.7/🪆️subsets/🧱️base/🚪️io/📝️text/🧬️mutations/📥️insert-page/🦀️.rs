@@ -3,7 +3,7 @@
 pub const OPCODE: &str = "insert-page";
 pub const TEXT_OPCODE: &str = OPCODE;
 
-use crate::standards::v1_7::subsets::base::schema::mutations::InsertPage;
+use crate::standards::v1_7::subsets::base::schema::mutations::insert_page::InsertPage;
 
 /// 🖨️ Prints this direct payload through its schema-derived JSON representation.
 pub fn print(payload: &InsertPage) -> Result<String, String> {

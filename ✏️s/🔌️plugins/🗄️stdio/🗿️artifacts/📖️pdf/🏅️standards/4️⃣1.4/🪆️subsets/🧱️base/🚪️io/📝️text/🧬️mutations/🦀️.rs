@@ -21,17 +21,6 @@ pub const REGISTRY: &[(&str, Printer, Parser)] = &[
 //#endregion 🔖️Registry
 
 //#region 🔖️Framing
-pub(super) fn hex(bytes: &[u8]) -> String {
-    bytes.iter().map(|byte| format!("{byte:02x}")).collect()
-}
-
-pub(super) fn unhex(text: &str) -> Result<Vec<u8>, String> {
-    if !text.len().is_multiple_of(2) || !text.bytes().all(|byte| byte.is_ascii_hexdigit()) {
-        return Err("Invalid hexadecimal payload".into());
-    }
-    text.as_bytes().as_chunks::<2>().0.iter().map(|pair| u8::from_str_radix(std::str::from_utf8(pair).map_err(|error| error.to_string())?, 16).map_err(|error| error.to_string())).collect()
-}
-
 impl OpText for PdfMutation {
     fn print_op(&self) -> String {
         REGISTRY.iter().find_map(|(opcode, print, _)| print(self).map(|payload| format!("{opcode} payload={payload}"))).expect("Every mutation has one direct text owner")
@@ -44,6 +33,8 @@ impl OpText for PdfMutation {
     }
 }
 //#endregion 🔖️Framing
+
+pub use semio_s_artifact_stdio_pdf_snapshot::standards::v1_4::subsets::base::io::text::mutations::wire;
 
 #[path = "🔀️move-page/🦀️.rs"]
 pub mod move_page;

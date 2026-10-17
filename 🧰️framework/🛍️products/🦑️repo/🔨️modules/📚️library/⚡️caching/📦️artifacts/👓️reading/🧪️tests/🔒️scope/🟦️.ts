@@ -21,7 +21,6 @@ test("neutral repository readers retain supplied actual storage and accepted con
   for (const name of fixture.exports) expect(names).toContain(name);
   for (const call of fixture.requiredCalls) expect(calls).toContain(call);
   expect(calls).not.toContain("withRepositoryCacheStoreV1");
-  console.log("[DEBUG] Independent TypeScript AST identifies actual caller-supplied storage, original controls and accepted reader drainage");
 });
 
 

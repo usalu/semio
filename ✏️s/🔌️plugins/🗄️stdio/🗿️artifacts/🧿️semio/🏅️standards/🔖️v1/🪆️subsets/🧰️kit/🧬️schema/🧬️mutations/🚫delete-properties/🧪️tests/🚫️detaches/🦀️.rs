@@ -16,21 +16,22 @@ use crate::schema::diff::SemioKitDiff;
 use crate::schema::mutations::SemioKitMutation;
 use crate::schema::snapshot::SemioKitSnapshot;
 use protocol::Mutation;
+use semio_framework_test_fixtures::fixture_text;
 
-const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🚫delete-properties/🚫️detaches/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🚫delete-properties/🚫️detaches/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🚫delete-properties/🚫️detaches/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🚫delete-properties/🚫️detaches/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🚫delete-properties/🚫️detaches/🎯️outcome/🔣️.json");
+static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🚫delete-properties/🚫️detaches/📸️snapshot/⬅️before/🔣️.json"));
+static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🚫delete-properties/🚫️detaches/📸️snapshot/➡️after/🔣️.json"));
+static MUTATION: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🚫delete-properties/🚫️detaches/🦠️mutation/🔣️.json"));
+static DIFF: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🚫delete-properties/🚫️detaches/🔺️diff/🔣️.json"));
+static OUTCOME: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🚫delete-properties/🚫️detaches/🎯️outcome/🔣️.json"));
 
 fn before() -> SemioKitSnapshot {
-    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("delete-properties before snapshot decodes")
+    semio_framework_pack_json::from_json_str((*BEFORE), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("delete-properties before snapshot decodes")
 }
 fn expected_after() -> SemioKitSnapshot {
-    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("delete-properties after snapshot decodes")
+    semio_framework_pack_json::from_json_str((*AFTER), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("delete-properties after snapshot decodes")
 }
 fn mutation() -> SemioKitMutation {
-    semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("delete-properties mutation decodes")
+    semio_framework_pack_json::from_json_str((*MUTATION), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("delete-properties mutation decodes")
 }
 
 /// ▶️ The properties handle is cleared; the type catalogue, designs and both child collections all
@@ -68,16 +69,16 @@ async fn the_undo_create_properties_reattaches_the_captured_handle() {
 /// diff's explicit `null`.
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
-    for (label, text) in [("before", BEFORE), ("after", AFTER)] {
+    for (label, text) in [("before", (*BEFORE)), ("after", (*AFTER))] {
         let decoded: SemioKitSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
         let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "delete-properties/detaches-the-properties-child-and-leaves-every-other-collection-alone: committed {label} JSON is not canonical");
     }
-    let after_json: serde_json::Value = serde_json::from_str(AFTER).expect("after reparses");
+    let after_json: serde_json::Value = serde_json::from_str((*AFTER)).expect("after reparses");
     assert!(after_json.get("properties").is_none(), "a cleared snapshot slot is an ABSENT key, never an explicit null");
     let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&(mutation()))).expect("delete-properties mutation encodes");
-    let original: serde_json::Value = serde_json::from_str(MUTATION).expect("delete-properties mutation reparses");
+    let original: serde_json::Value = serde_json::from_str((*MUTATION)).expect("delete-properties mutation reparses");
     assert_eq!(reencoded, original, "delete-properties/detaches-the-properties-child-and-leaves-every-other-collection-alone: committed mutation JSON is not canonical");
 }
 
@@ -85,7 +86,7 @@ async fn committed_json_is_canonical() {
 /// not fire.
 #[semio_framework_async_macros::async_test]
 async fn declared_outcome_holds_without_a_target_missing_rejection() {
-    let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
+    let outcome: serde_json::Value = serde_json::from_str((*OUTCOME)).expect("outcome decodes");
     assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("applied"), "delete-properties/detaches-the-properties-child-and-leaves-every-other-collection-alone: this case is declared applied");
     let produced = mutation().diff(&before());
     assert!(produced.messages().is_empty(), "clearing a populated slot must raise no diagnostics");
@@ -100,7 +101,7 @@ async fn produces_committed_diff() {
     let outcome = <SemioKitMutation as Mutation<SemioKitSnapshot>>::diff(&mutation(), &base);
     assert!(matches!(outcome.diff().properties, Some(None)), "the in-memory diff must be Some(None) — write the slot, clear it");
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
-    let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
+    let committed: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff decodes");
     assert_eq!(produced, committed, "delete-properties/detaches-the-properties-child-and-leaves-every-other-collection-alone: produced diff differs from the committed 🔺️diff/🔣️.json");
     assert_eq!(committed.as_object().map(|map| map.len()), Some(1), "exactly one key — no other kit slot may appear");
     assert!(committed.get("properties").expect("the committed diff names the properties slot").is_null(), "a cleared DIFF slot is an explicit null, never an absent key");
@@ -112,11 +113,11 @@ async fn produces_committed_diff() {
 /// exact shape of the collapse.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_json_pins_the_option_option_collapse() {
-    let decoded: SemioKitDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed delete-properties diff decodes");
+    let decoded: SemioKitDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed delete-properties diff decodes");
     assert!(decoded.properties.is_none(), "decoding {{\"properties\":null}} yields the OUTER None — the clear intent is lost on the JSON round trip");
     assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("re-encode"), serde_json::json!({}), "so re-encoding the decoded value drops the key entirely");
     let authored = SemioKitDiff { properties: Some(None), ..Default::default() };
-    let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
+    let committed: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff reparses");
     assert_eq!(
         serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&authored)).expect("authored diff encodes"),
         committed,
@@ -132,7 +133,7 @@ async fn authored_diff_applies_to_after_while_the_decoded_one_is_inert() {
     let authored = SemioKitDiff { properties: Some(None), ..Default::default() };
     let produced = protocol::apply_diff(&authored, &before()).expect("the Some(None) diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "delete-properties/detaches-the-properties-child-and-leaves-every-other-collection-alone: the Some(None) diff did not carry before to after");
-    let decoded: SemioKitDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed delete-properties diff decodes");
+    let decoded: SemioKitDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed delete-properties diff decodes");
     let inert = protocol::apply_diff(&decoded, &before()).expect("the collapsed diff still applies, it just does nothing");
     assert_eq!(inert, before(), "the JSON-decoded diff is inert — that is exactly the limitation being pinned");
 }

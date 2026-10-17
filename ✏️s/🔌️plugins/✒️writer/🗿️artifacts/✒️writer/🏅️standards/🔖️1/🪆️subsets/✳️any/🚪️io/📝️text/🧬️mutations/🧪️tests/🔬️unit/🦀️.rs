@@ -1,3 +1,4 @@
+use crate::schema::mutations::WriterMutation;
 use crate::standards::v1::subsets::any::io::text::mutations::*;
 use crate::mutations::{EditText, RenameWriter, ChangeUri, ChangeLanguage};
 

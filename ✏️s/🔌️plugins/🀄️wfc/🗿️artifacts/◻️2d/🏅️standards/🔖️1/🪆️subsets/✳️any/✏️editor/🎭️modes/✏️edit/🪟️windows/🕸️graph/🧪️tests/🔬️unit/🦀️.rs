@@ -1,6 +1,8 @@
 //! 🧪️ The reusable `wfc-graph` window — projection, ports and the copy contract `wfc3d` depends on.
 
-use super::{definition, graph_records, render, GraphCamera, GraphEdgeView, GraphSlotView, SlotGraphView, WFC_GRAPH_BODY, WFC_GRAPH_PORT_IN, WFC_GRAPH_PORT_OUT, WFC_GRAPH_WINDOW};
+use semio_framework::InteractiveJobClassification;
+use crate::editor::wfc2d::modes::edit::windows::graph::{action};
+use crate::editor::wfc2d::modes::edit::windows::graph::{definition, graph_records, render, GraphCamera, GraphEdgeView, GraphSlotView, SlotGraphView, WFC_GRAPH_BODY, WFC_GRAPH_PORT_IN, WFC_GRAPH_PORT_OUT, WFC_GRAPH_WINDOW};
 
 /// 🧩️ A local view with no artifact behind it at all — the point of the trait is that this compiles.
 struct TwoSlots;

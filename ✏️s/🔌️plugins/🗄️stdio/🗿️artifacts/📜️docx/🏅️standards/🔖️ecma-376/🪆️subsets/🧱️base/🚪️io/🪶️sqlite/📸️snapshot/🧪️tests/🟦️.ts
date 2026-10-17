@@ -4,11 +4,11 @@ import{Database}from"bun:sqlite";
 import Ajv from"ajv";
 import fixture from"./🧫️fixtures/🔣️.json";
 import schema from"../../../../🧬️schema/📸️snapshot/🔣️.json";
-import xmlSchema from"../../../../../../../../../📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🔣️.json";
+import { baseSnapshotSchema as xmlSchema } from "@semio-tech/stdio-xml/standards/1.0/subsets/base/schema/snapshot";
 import{DOCX_SQLITE_SCHEMA,docxSnapshotToSqliteDatabase,docxSnapshotFromSqliteDatabase}from"../../../../../../../../🟦️.ts";
 import type{DocxSnapshot}from"../../../../../../../../🟦️.ts";
 import{exportSqliteDatabase,importSqliteDatabase}from"@semio-tech/framework";
-import{materializeRetainedXmlDocument,parseRetainedXmlDocument,parseXmlDocument,retainXmlDocument}from"../../../../../../../../../📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🟦️.ts";
+import{materializeRetainedXmlDocument,parseRetainedXmlDocument,parseXmlDocument,retainXmlDocument}from"@semio-tech/stdio-xml/standards/1.0/subsets/base/schema/snapshot";
 import profiles from"../../../../🧪️tests/🧫️fixtures/📸️snapshot/🛡️profile/🔣️.json";
 
 import Ajv2020 from"ajv/dist/2020";

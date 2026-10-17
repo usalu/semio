@@ -1,5 +1,5 @@
 //! rewriting <- txt
-use crate::RewritingSnapshot;
+use crate::standards::v1::subsets::any::schema::snapshot::RewritingSnapshot;
 use semio_s_artifact_stdio_txt::{TxtSnapshot, STDIO_TXT_DOCUMENT_SCHEMA};
 
 pub fn register() {}

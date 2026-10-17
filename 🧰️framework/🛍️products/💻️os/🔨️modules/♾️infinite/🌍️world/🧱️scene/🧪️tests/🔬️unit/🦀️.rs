@@ -3,6 +3,7 @@
 use semio_framework_os_infinite_world_model::{World3dBuildContext, WORLD_INTERACTION_ID_BYTE_CAPACITY, WORLD_INTERACTION_MESH_CAPACITY, world_mesh_ownership_grant, world_scene_raster_pool, WorldCursorWakeAuthority, WorldDynamicFault, WorldEnvironmentRecord, WorldEnvironmentShadowRecord, WorldEnvironmentSunRecord, WorldInteractionMeshRegistry};
 use semio_framework_os_infinite_world_components::{placeholder_triangle, placeholder_triangle_normal, TerrainTileMeshPayload, WorldPlaceholderKind, WorldPlaceholderMeshCursor, WorldPlaceholderMeshStep};
 use semio_framework_os_infinite_world_scene::{append_lod_grid_lines, bounded_reference_image, chunk_center, chunk_distance_visible, chunk_key_indices, collect_world3d_asset_bytes, decode_reference_image_bytes, environment_light_dir, GUMBALL_PLANE_MESH, hypsometric_color, mesh_style_paint, MeshStyleKind, MeshStyleState, parse_color, resolve_mesh_style, retain_ensured_world_draws, terrain_tile_url, world3d_style_paint, WORLD_ASSET_REQUEST_CAPACITY, WORLD_ASSET_RESPONSE_BYTE_CAPACITY, WORLD_ASSET_RESPONSE_PAGE_BYTES, WORLD_GRID_MAX_DIVISIONS, WorldAssetFault, WorldAssetIoAuthority, WorldAssetMetadataId, WorldAssetRequestKind, WorldAssetResponsePage, WorldTerrainMeshCursor, WorldTerrainMeshPhase, WorldTerrainMeshStep};
+use semio_framework_test_fixtures::fixture_text;
 #[cfg(any(test, feature = "testkit"))]
 use semio_framework_os_infinite_world_scene::{build_terrain_tile_mesh_oracle, placeholder_mesh, TerrainMeshOracleData};
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
@@ -16,23 +17,27 @@ use ui_wgpu::wgpu::SceneRasterMeshSeal;
 use ui_styling::metrics::tool_run;
 
 /// 📖️ Reads one test input at run time (relative to the package manifest) so it does not count as an embedded compile input.
-fn read_static(path_from_manifest: &str) -> &'static str {
-    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(path_from_manifest);
-    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("test input {}: {error}", path.display())).into_boxed_str())
-}
 
-/// 📖️ Reads several test inputs at run time and joins them into the one text the unsplit sources formed.
-fn read_joined(paths: &[&str]) -> &'static str {
-    let mut joined = String::new();
-    for path in paths {
-        joined.push_str(read_static(path));
+/// 🌳️ Reads one world crate root and splices every split-out child (a `#[path]` module re-exported with a glob) in at its mount, so the text keeps the item order of the unsplit file.
+fn read_world_tree(path_from_manifest: &str) -> String {
+    let directory = path_from_manifest.trim_end_matches("🦀️.rs");
+    let lines: Vec<&str> = fixture_text!(path_from_manifest).lines().collect();
+    let mut text = String::new();
+    for (index, line) in lines.iter().enumerate() {
+        text.push_str(line);
+        text.push('\n');
+        if index >= 2 && line.contains("use ") && line.ends_with("::*;") && lines[index - 2].starts_with("#[path = \"") {
+            let child = lines[index - 2].trim_start_matches("#[path = \"").trim_end_matches("\"]");
+            text.push_str(&read_world_tree(&format!("{directory}{child}")));
+        }
     }
-    Box::leak(joined.into_boxed_str())
+    text
 }
 
 #[allow(non_snake_case)]
 fn WORLD_SOURCE() -> &'static str {
-    read_joined(&["../../../🗃️model/🦀️.rs", "../../../🧩️components/🦀️.rs", "../../../🧲️cursors/🦀️.rs", "../../🦀️.rs", "../../../🌉️bridge/🦀️.rs", "../../../🧵️interaction/🦀️.rs", "../../../🎛️host/🦀️.rs"])
+    let joined: String = ["../../../🗃️model/🦀️.rs", "../../../🧩️components/🦀️.rs", "../../../🧲️cursors/🦀️.rs", "../../🦀️.rs", "../../../🌉️bridge/🦀️.rs", "../../../🧵️interaction/🦀️.rs", "../../../🎛️host/🦀️.rs"].iter().map(|root| read_world_tree(root)).collect();
+    Box::leak(joined.into_boxed_str())
 }
 
 fn test_scene_raster_lease(width: u32, height: u32, profile: SceneRasterProfile, mesh: Option<SceneRasterMeshSeal>, fill: u8) -> SceneRasterLease {
@@ -324,7 +329,7 @@ fn chunk_distance_visible_uses_hysteresis() {
 //#region GlbAssetTests
 #[test]
 fn asset_request_cancellation_is_exact_and_cannot_cancel_a_reused_slot() {
-    let fixture: serde_json::Value = serde_json::from_str(read_static("../../../🧪️tests/🧫️fixtures/📤️asset-cancellation/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../🧪️tests/🧫️fixtures/📤️asset-cancellation/🔣️.json")).unwrap();
     for stage in fixture["stages"].as_array().unwrap() {
         let mut lane = WorldAssetIoAuthority::default();
         let first = lane.reserve_request(1, 0, WorldAssetRequestKind::Glb, fixture["requests"][0].as_str().unwrap()).unwrap();
@@ -582,7 +587,7 @@ fn environment_shadow_requires_the_configured_sun_and_ignores_react_dead_control
 
 #[test]
 fn neutral_shadow_fixture_maps_to_world_draw_roles_and_exact_profiles() {
-    let fixture: serde_json::Value = serde_json::from_str(read_static("../../../🧪️tests/🧫️fixtures/🌑️scene-shadow-parity/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../🧪️tests/🧫️fixtures/🌑️scene-shadow-parity/🔣️.json")).unwrap();
     assert_eq!(World3dShadowProfile::World.map_size(), fixture["profiles"]["world"]["mapSize"].as_u64().unwrap() as u32);
     assert_eq!(World3dShadowProfile::IconPng.map_size(), fixture["profiles"]["iconPng"]["mapSize"].as_u64().unwrap() as u32);
     for row in fixture["roles"].as_array().unwrap() {
@@ -611,7 +616,7 @@ fn svg_icon_profile_is_flat_lit_while_world_and_png_remain_raster_pbr() {
 
 #[test]
 fn svg_icon_flat_lighting_matches_the_neutral_three_fixture() {
-    let fixture: serde_json::Value = serde_json::from_str(read_static("../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🎨️icon-svg-lighting/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🎨️icon-svg-lighting/🔣️.json")).unwrap();
     let to_srgb = |value: f32| if value < 0.0031308 { value * 12.92 } else { 1.055 * value.powf(0.41666) - 0.055 };
     for row in fixture["cases"].as_array().unwrap() {
         let vector = |field: &str| Vec3::new(row[field][0].as_f64().unwrap() as f32, row[field][1].as_f64().unwrap() as f32, row[field][2].as_f64().unwrap() as f32).normalize();
@@ -939,6 +944,6 @@ fn terrain_owner_yield_and_copy_1_3_64_keep_the_original_write_cursor() {
 }
 
 fn world_original_fixture_grant()->semio_framework_value::RetainedCloneGrant{
-    let law:serde_json::Value=serde_json::from_str(read_static("../../../🧪️tests/🔬️unit/🧫️retained-attributes.json")).unwrap();let axes=&law["grant"];
+    let law:serde_json::Value=serde_json::from_str(fixture_text!("../../../🧪️tests/🔬️unit/🧫️retained-attributes.json")).unwrap();let axes=&law["grant"];
     semio_framework_value::RetainedCloneGrant{maximum_items:axes["items"].as_u64().unwrap()as usize,maximum_copy_bytes:axes["copyBytes"].as_u64().unwrap()as usize,maximum_capacity_bytes:axes["capacityBytes"].as_u64().unwrap()as usize,maximum_release_bytes:axes["releaseBytes"].as_u64().unwrap()as usize,maximum_depth:axes["depth"].as_u64().unwrap()as usize}
 }

@@ -9,6 +9,10 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), "../../📦️pack
 const repoRoot = resolve(root, "../../../../../../../../../..");
 
 const wasmEngineStub = resolve(repoRoot, "./🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts");
+/** 🎯️ A bare package name matched exactly, so `@semio-tech/<package>/<subpath>` keeps resolving through that package's own `exports` map. */
+const exactPackage = (name: string) => new RegExp(`^${name.replace(/[.*+?^${}()|[\]\\/]/g, "\\$&")}$`, "u");
+/** 🌳️ A bare package name and its whole subpath tree, for the wasm engine packages that one stub module stands in for. */
+const packageTree = (name: string) => new RegExp(`^${name.replace(/[.*+?^${}()|[\]\\/]/g, "\\$&")}(?:/.*)?$`, "u");
 const testLevel = process.env.SEMIO_TEST_LEVEL ?? "fundamental";
 const includeBackboneWorker = process.env.SEMIO_INCLUDE_BACKBONE_WORKER === "1";
 const includeAgentBridge = process.env.SEMIO_INCLUDE_AGENT_BRIDGE === "1";
@@ -27,6 +31,9 @@ const elementSuite = (element: string, name: string, extension = "ts") =>
 const uiSuite = (name: string, extension = "ts") => resolve(repoRoot, `./🧰️framework/🔨️modules/🖱️ui/🧪️tests/${name}/🟦️.${extension}`);
 const engineTestSuites = [
   engineSuite("🪆️embedded-mount"),
+  engineSuite("🔌️plugin-runtime-suite", "tsx"),
+  engineSuite("🎚️ui-preferences-suite"),
+  engineSuite("🪝️host-ports"),
   engineSuite("♿️action-argument-gate"),
   engineSuite("🧭️current-contracts"),
   engineSuite("📄️surface-document"),
@@ -177,6 +184,13 @@ const engineTestSuites = [
   elementSuite("🛠️ShellHelpers", "🪟️tree-windows", "tsx"),
   elementSuite("🛠️ShellHelpers/⏯️tool-run-panel", "🧩️component", "tsx"),
   elementSuite("🛠️ShellHelpers/⏪️time-travel", "🧩️component", "tsx"),
+  elementSuite("🛠️ShellHelpers/⏪️time-travel", "🕰️history-body", "tsx"),
+  elementSuite("🛠️ShellHelpers/⏪️time-travel", "📝️draft-editor", "tsx"),
+  elementSuite("🛠️ShellHelpers/⏪️time-travel", "📌️frozen-and-restored", "tsx"),
+  elementSuite("🛠️ShellHelpers/⏪️time-travel", "🛰️shell-reveal", "tsx"),
+  elementSuite("🛠️ShellHelpers/⏪️time-travel", "🧷️refresh-and-mutation-pages", "tsx"),
+  elementSuite("🛠️ShellHelpers/⏪️time-travel", "🧺️list-notices-and-document-load", "tsx"),
+  elementSuite("🛠️ShellHelpers/⏪️time-travel", "📡️reprojection-status", "tsx"),
   elementSuite("🛠️ShellHelpers/⏪️time-travel", "📐️geometry", "tsx"),
   elementSuite("🛠️ShellHelpers", "🧪️staged-arg-controls", "tsx"),
   elementSuite("🕸️NodeGraph", "🖱️scroll-gesture"),
@@ -240,12 +254,10 @@ const engineTestSuites = [
 const playwrightEngineTestSuites = [engineSuite("📚️storybook-hosts-no-wasm"), engineSuite("📚️storybook-hosts-wasm")] as const;
 const rootPolicySelfTestSuites = ["interactivity-live-reconcile", "interactivity-mounted-engine-surface-lifetime", "interactivity-mounted-frame-transaction"].map((id) => resolve(repoRoot, `./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️${id}/🟦️.ts`));
 const quickTestSuite = resolve(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/⚡️quick/🟦️.ts");
-const agentBridgeTestSuite = resolve(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔗️AgentBridge/🧪️tests/🧩️component/🟦️.ts");
+const agentBridgeTestSuites = ["🔭️config-discovery", "🧬️frame-codec", "🛠️tool-call-lifecycle", "🚏️artifact-routes", "🤝️handshake-ladder"].map((name) => resolve(repoRoot, `./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔗️AgentBridge/🧪️tests/${name}/🟦️.ts`));
 const longInSourceSuites = [
   resolve(repoRoot, "./🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🧾️typed/🟦️.ts"),
   resolve(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗣️Interpreter/🟦️.tsx"),
-  resolve(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🟦️.tsx"),
-  resolve(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎚️UiPreferences/🟦️.ts"),
 ] as const;
 const exhaustiveInSourceSuites = [
   ...longInSourceSuites,
@@ -257,19 +269,19 @@ export default defineConfig({
   cacheDir: testCacheDirectoryV1(process.env, "renderer-react"),
   resolve: {
     alias: [
-      { find: "@semio-tech/ui-react/test", replacement: resolve(repoRoot, "./🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🖌️render/🟦️.ts") },
-      { find: "@semio-tech/ui-react", replacement: resolve(repoRoot, "./🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx") },
-      { find: "@semio-tech/assets", replacement: resolve(repoRoot, "./🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/🟦️.ts") },
-      { find: "@semio-tech/ui-styling", replacement: resolve(repoRoot, "./🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript") },
-      { find: "@semio-tech/framework-os", replacement: resolve(repoRoot, "./🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🟦️.ts") },
-      { find: "@semio-tech/framework-os-node-graph-rs", replacement: wasmEngineStub },
-      { find: "@semio-tech/framework-surface-rs", replacement: wasmEngineStub },
-      { find: "@semio-tech/framework-editor-rs", replacement: wasmEngineStub },
-      { find: /^@semio-tech\/framework$/u, replacement: resolve(repoRoot, "./🧰️framework/📦️packages/🟦️typescript/🟦️.ts") },
-      { find: "@semio-tech/canvas-react-renderer", replacement: resolve(repoRoot, "./🧰️framework/🔨️modules/🖼️canvas/🎨️react-renderer/📦️packages/🟦️typescript/🟦️.tsx") },
-      { find: "@semio-tech/infinite-world-r3f", replacement: resolve(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript/🟦️.tsx") },
+      { find: exactPackage("@semio-tech/ui-react/test"), replacement: resolve(repoRoot, "./🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🖌️render/🟦️.ts") },
+      { find: exactPackage("@semio-tech/ui-react"), replacement: resolve(repoRoot, "./🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx") },
+      { find: exactPackage("@semio-tech/assets"), replacement: resolve(repoRoot, "./🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/🟦️.ts") },
+      { find: exactPackage("@semio-tech/ui-styling"), replacement: resolve(repoRoot, "./🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript") },
+      { find: exactPackage("@semio-tech/framework-os"), replacement: resolve(repoRoot, "./🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🟦️.ts") },
+      { find: packageTree("@semio-tech/framework-os-node-graph-rs"), replacement: wasmEngineStub },
+      { find: packageTree("@semio-tech/framework-surface-rs"), replacement: wasmEngineStub },
+      { find: packageTree("@semio-tech/framework-editor-rs"), replacement: wasmEngineStub },
+      { find: exactPackage("@semio-tech/framework"), replacement: resolve(repoRoot, "./🧰️framework/📦️packages/🟦️typescript/🟦️.ts") },
+      { find: exactPackage("@semio-tech/canvas-react-renderer"), replacement: resolve(repoRoot, "./🧰️framework/🔨️modules/🖼️canvas/🎨️react-renderer/📦️packages/🟦️typescript/🟦️.tsx") },
+      { find: exactPackage("@semio-tech/infinite-world-r3f"), replacement: resolve(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript/🟦️.tsx") },
       { find: "@semio-tech/flow-core/🌐️flow-browser.js", replacement: resolve(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🌐️browser/🏃️runtime/🟨️.js") },
-      { find: "@semio-tech/flow-core", replacement: wasmEngineStub },
+      { find: packageTree("@semio-tech/flow-core"), replacement: wasmEngineStub },
     ],
   },
   test: {
@@ -279,7 +291,7 @@ export default defineConfig({
     env: { SEMIO_PROCEDURAL_COMPOSITION_DESCRIPTOR: resolve(repoRoot, "./🌎️hub/🧩️compositions/🌀️procedural/🧩️component/🔣️.json") },
     coverage: { include: ["../../🟦️.tsx"] },
     exclude: [...configDefaults.exclude, ...playwrightEngineTestSuites, ...rootPolicySelfTestSuites],
-    include: (includeAgentBridge ? [agentBridgeTestSuite] : testLevel === "fundamental" || testLevel === "quick" ? [quickTestSuite] : [...engineTestSuites]).map(path => path.replaceAll("\\", "/")),
+    include: (includeAgentBridge ? agentBridgeTestSuites : testLevel === "fundamental" || testLevel === "quick" ? [quickTestSuite] : [...engineTestSuites]).map(path => path.replaceAll("\\", "/")),
     testNamePattern: testLevel === "fundamental" ? /validates the language-neutral renderer resident capacity with the Node oracle/ : undefined,
     // 🧪️ In-source (`import.meta.vitest`) suites in the `🧑‍🎨engine/🧱️elements/` co-location dirs —
     // NOT under this package's own `root`, so the default `include` glob never finds them. Fundamental

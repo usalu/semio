@@ -82,14 +82,5 @@ export function parseJsonMember(value: unknown, at = "$"): JsonMember {
 
 /** 🧾️ Validate the owned JSON value union while retaining exact number lexemes and member order. */
 export function parseJsonValue(value: unknown, at = "$"): JsonValue {
-  const row = stdioJsonRfc8259BaseSnapshotGuardObject(value, at);
-  const kind = stdioJsonRfc8259BaseSnapshotGuardMember(row["kind"], `${at}.kind`, ["null", "bool", "number", "string", "array", "object"] as const);
-  switch (kind) {
-    case "null": return { kind };
-    case "bool": return { kind, value: stdioJsonRfc8259BaseSnapshotGuardBoolean(row["value"], `${at}.value`) };
-    case "number": return { kind, lexeme: stdioJsonRfc8259BaseSnapshotGuardString(row["lexeme"], `${at}.lexeme`) };
-    case "string": return { kind, value: stdioJsonRfc8259BaseSnapshotGuardString(row["value"], `${at}.value`) };
-    case "array": return { kind, items: stdioJsonRfc8259BaseSnapshotGuardArray(row["items"], `${at}.items`).map((item, index) => parseJsonValue(item, `${at}.items[${index}]`)) };
-    case "object": return { kind, members: stdioJsonRfc8259BaseSnapshotGuardArray(row["members"], `${at}.members`).map((item, index) => parseJsonMember(item, `${at}.members[${index}]`)) };
-  }
+  return ((row0) => { switch (stdioJsonRfc8259BaseSnapshotGuardMember(row0["kind"], `${at}.kind`, ["null", "bool", "number", "string", "array", "object"] as const)) { case "null": return { kind: "null" }; case "bool": return { kind: "bool", value: stdioJsonRfc8259BaseSnapshotGuardBoolean(row0["value"], `${at}.value`) }; case "number": return { kind: "number", lexeme: stdioJsonRfc8259BaseSnapshotGuardString(row0["lexeme"], `${at}.lexeme`) }; case "string": return { kind: "string", value: stdioJsonRfc8259BaseSnapshotGuardString(row0["value"], `${at}.value`) }; case "array": return { kind: "array", items: stdioJsonRfc8259BaseSnapshotGuardArray(row0["items"], `${at}.items`).map((item1, index1) => parseJsonValue(item1, `${at}.items[${index1}]`)) }; case "object": return { kind: "object", members: stdioJsonRfc8259BaseSnapshotGuardArray(row0["members"], `${at}.members`).map((item1, index1) => parseJsonMember(item1, `${at}.members[${index1}]`)) }; } })(stdioJsonRfc8259BaseSnapshotGuardObject(value, `${at}`));
 }

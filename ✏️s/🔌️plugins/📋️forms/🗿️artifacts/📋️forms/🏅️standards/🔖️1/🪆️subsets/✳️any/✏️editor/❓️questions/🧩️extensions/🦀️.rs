@@ -21,16 +21,14 @@ pub fn render_payload(question: &FormQuestion, values: &Object, controller_id: &
         ExtensionSurface::Try { window_id } => {
             payload.insert("surface", Value::from("try"));
             payload.insert("windowId", Value::from(window_id));
-            payload.insert("windowKindId", Value::from(crate::editor::forms::modes::blueprint::windows::try_wizard::FORMS_PLAY_WINDOW_TRY));
+            payload.insert("windowKindId", Value::from(crate::editor::forms::support::FORMS_PLAY_WINDOW_TRY));
         }
     }
     payload.insert("interactive", Value::from(interactive));
     Value::Object(payload)
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;
+
 
 /// 🗂️ Schema-owned provider metadata for every contributed question kind.
 #[derive(Clone, Debug, semio_framework_value::ToValue, semio_framework_value::FromValue)]

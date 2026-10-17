@@ -2,11 +2,12 @@
 
 use crate::{PresentationDiff, PresentationSnapshot};
 use crate::standards::v1::subsets::any::schema::PresentationArtifact;
+use semio_framework_test_fixtures::fixture_text;
 use store::{pack::snapshot::ArtifactDsl, pack::snapshot::ArtifactPack};
 
 #[test]
 fn presentation_document_contract_round_trips_children_and_rejects_foreign_owners() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🔬️contract/🪪️document-contract/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../🧪️tests/🧫️fixtures/🔬️contract/🪪️document-contract/🔣️.json")).unwrap();
     let default = PresentationSnapshot::default();
     assert_eq!(default.presentation.child_id, default.presentation.target.artifact_id);
     assert_eq!(default.animation.child_id, default.animation.target.artifact_id);

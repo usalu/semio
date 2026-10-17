@@ -1,4 +1,5 @@
-use super::*;
+use crate::viewer::playground::modes::view::windows::main;
+use crate::viewer::playground::modes::view::*;
 
 #[test]
 fn the_view_layout_lists_the_one_read_only_window() {

@@ -3,7 +3,8 @@
 //! `content: Option<JackContentChild>` is the always-present composed child slot; scene edits never pass through it, they
 //! are child-lane leaves of the shared graph vocabulary (design §20.15).
 
-use crate::{Camera, JackContentChild};
+use crate::standards::v1::subsets::any::schema::graph::Camera;
+use crate::standards::v1::subsets::any::schema::content::JackContentChild;
 use ::semio_framework_schema::ArtifactSchema;
 
 //#region 🔖️Diff
@@ -20,7 +21,7 @@ pub struct JackDiff {
     #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "deserialize_double_option")]
     pub manifest_id: Option<Option<String>>,
     #[state(artifact)]
-    pub manifest: Option<crate::Manifest>,
+    pub manifest: Option<crate::standards::v1::subsets::any::schema::manifest::Manifest>,
     #[state(artifact)]
     pub camera: Option<Camera>,
     #[state(artifact)]
@@ -39,7 +40,7 @@ fn deserialize_double_option<T: semio_framework_value::FromValue>(value: semio_f
     <Option<T> as semio_framework_value::FromValue>::from_value(value).map(Some)
 }
 
-use crate::JackSnapshot;
+use crate::standards::v1::subsets::any::schema::snapshot::JackSnapshot;
 use protocol::{DiffAlgebra, MutationDiff};
 
 impl MutationDiff<JackSnapshot> for JackDiff {
@@ -108,6 +109,3 @@ impl DiffAlgebra<JackSnapshot> for JackDiff {
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;

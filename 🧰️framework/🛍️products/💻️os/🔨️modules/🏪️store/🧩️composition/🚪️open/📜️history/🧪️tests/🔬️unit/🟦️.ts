@@ -18,5 +18,4 @@ test("retained member logical ownership census includes the explicit opened acto
   expect(factory.retiredBytes).toBe(factory.inputBytes + factoryIdentity + utf8(factory.openedActor));
   expect(factory.caseRetirement["selected-flow"]).toBe(factory.retiredBytes);
   expect(factory.caseRetirement["selected-text"]).toBe(factory.retiredBytes);
-  console.log(`[DEBUG] retained logical input census: wire=255 frame=2 identity=${identity} opened-actor=${utf8(history.openedActor)} exact-logical-total=${255 + 2 + identity + utf8(history.openedActor)}; physical allocation release is independently observed in native tests`);
 });

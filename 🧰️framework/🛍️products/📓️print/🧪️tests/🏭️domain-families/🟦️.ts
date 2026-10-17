@@ -8,7 +8,7 @@ import { join } from "node:path";
 import { readFileSync } from "node:fs";
 import { descending, extent, sort } from "d3-array";
 import { defineTestAdapter, type AdapterContext } from "@semio-tech/framework/test/adapter";
-import { compileVizProbeDocument, roundProbeNumbers, type ProbeProjection, type ProbeRecord, type VizProbeStatement } from "../../🔨️modules/🧪️viz-probe/🟦️.ts";
+import { compileVizProbeDocumentInContext, roundProbeNumbers, type ProbeProjection, type ProbeRecord, type VizProbeStatement } from "../../🔨️modules/🧪️viz-probe/🟦️.ts";
 // #endregion 🔌️Adapters
 
 // #region 🧫️Vectors
@@ -80,9 +80,8 @@ function signatures(records: readonly ProbeRecord[]): Map<string, string[]> {
 async function coverage(ctx: AdapterContext): Promise<{ projection: ProbeProjection }> {
   const families = rows(ctx).map((row) => row.family!);
   const entries = kinds(families);
-  const records = await compileVizProbeDocument(
-    { case: CASE, scenario: ctx.scenario.id, packages: PACKAGES, body: coverageStatements(entries) },
-    { workDir: ctx.workDir },
+  const records = await compileVizProbeDocumentInContext(ctx,
+    { case: CASE, scenario: ctx.scenario.id, packages: PACKAGES, body: coverageStatements(entries) }
   );
   const streams = signatures(roundProbeNumbers(records, DECIMALS));
   const measured: number[] = [];
@@ -115,9 +114,8 @@ function termStatements(ctx: AdapterContext): VizProbeStatement[] {
 
 /** 🎯️ The glyph body height of every placed word, in placement order. */
 async function termSizes(ctx: AdapterContext): Promise<{ projection: ProbeProjection }> {
-  const records = await compileVizProbeDocument(
-    { case: CASE, scenario: ctx.scenario.id, packages: PACKAGES, body: termStatements(ctx) },
-    { workDir: ctx.workDir },
+  const records = await compileVizProbeDocumentInContext(ctx,
+    { case: CASE, scenario: ctx.scenario.id, packages: PACKAGES, body: termStatements(ctx) }
   );
   const values = roundProbeNumbers(records, DECIMALS)
     .filter((record) => record.key === "geometry/word")

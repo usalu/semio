@@ -4,7 +4,6 @@
 //! taxonomy's rule 1 `update` exception boundary.
 
 use crate::diff::PresentationDiff;
-use crate::mutations::PresentationMutation;
 use crate::{FigureTileSource, PresentationSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 
@@ -21,14 +20,17 @@ pub struct ReplaceSource {
     pub new_source: FigureTileSource,
 }
 
-impl MutationKind<PresentationSnapshot, PresentationMutation> for ReplaceSource {
+impl<Op> MutationKind<PresentationSnapshot, Op> for ReplaceSource
+where
+    Op: protocol::Mutation<PresentationSnapshot, Diff = PresentationDiff> + From<ReplaceSource>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "replace", entity: "source", kind: "replace-source", record: "ReplacedSource" };
 
     fn diff(&self, base: &PresentationSnapshot) -> protocol::MutationOutcome<PresentationDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &PresentationSnapshot) -> Result<Vec<PresentationMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &PresentationSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

@@ -1,4 +1,4 @@
-import base from "../../../../../../🧰️framework/🛍️products/💻️os/🧪️tests/🎚️config/🟦️.ts";
+import base from "@semio-tech/framework-os/testing/config";
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vitest/config";
 import { frameworkSourceUrl } from "@semio-tech/framework/test/source-text";

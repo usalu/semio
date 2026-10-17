@@ -12,13 +12,12 @@ test("sentinel examples have no production asset or runtime authority reader",()
  const forbidden=new Set(["serializedSentinelCases","planSerializedEvidenceRemovals","TRANSACTION_SENTINEL_CASES_CATALOG_PATH"]),found:string[]=[];
  function visit(node:ts.Node){if(ts.isIdentifier(node)&&forbidden.has(node.text))found.push(node.text);ts.forEachChild(node,visit);}visit(ast);expect(found).toEqual([]);
  expect(source.includes('kind: "serialized-path-sentinel"')).toBe(false);
- console.log("[DEBUG] Sentinel examples are plain test inputs; serialized trial authority is absent");
 });
 for(const row of cases.virtualPathPolicyCases)test("platform path rule "+row.id,()=>{
  const segments=row.inputPath.replaceAll("\\","/").split("/"),reserved=segments.some(segment=>minimatch(segment.toUpperCase(),"{CON,PRN,AUX,NUL,COM[1-9],LPT[1-9]}{,.*}")),trailing=segments.some(segment=>segment.endsWith(".")||segment.endsWith(" "));
- const independent=[...(reserved?["windows-reserved-name"]:[]),...(trailing?["trailing-dot-or-space"]:[])];expect(independent).toContain(row.expectedViolationCode);expect(normalization.taxonomyPlatformPathViolationCodes(row.inputPath)).toEqual(independent);expect(row.physicalSourcePath).toBeNull();console.log("[DEBUG] Platform sentinel "+row.id+" agrees with minimatch");
+ const independent=[...(reserved?["windows-reserved-name"]:[]),...(trailing?["trailing-dot-or-space"]:[])];expect(independent).toContain(row.expectedViolationCode);expect(normalization.taxonomyPlatformPathViolationCodes(row.inputPath)).toEqual(independent);expect(row.physicalSourcePath).toBeNull();
 });
 for(const row of cases.symlinkFlavorCases)test("repository local symlink rule "+row.id,()=>{
  const api=/^[A-Za-z]:|^\\\\/u.test(row.repositoryRoot)?win32:posix,relative=api.relative(row.repositoryRoot,row.target),independent=!api.isAbsolute(relative)&&relative!==".."&&!relative.startsWith(".."+api.sep);
- expect(independent).toBe(row.owned);expect(normalization.repositoryLocalSymlinkTargetPath(row.repositoryRoot,row.target)!==null).toBe(independent);console.log("[DEBUG] Symlink sentinel "+row.id+" agrees with Node path");
+ expect(independent).toBe(row.owned);expect(normalization.repositoryLocalSymlinkTargetPath(row.repositoryRoot,row.target)!==null).toBe(independent);
 });

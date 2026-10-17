@@ -23,6 +23,4 @@ impl Deserializer<WriterSnapshot> for PdfIntoWriter {
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

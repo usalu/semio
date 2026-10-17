@@ -19,7 +19,7 @@ use semio_framework_2d::compute::EngineHandles;
 /// 🔒️ The whole list must stay config-only. A viewer's publication contracts may never name
 /// `ArtifactToolPublicationLane::Artifact`, and `setCamera` names `WindowConfig` — the lane that writes
 /// ONE window instance's own retained state and nothing else.
-const GIS_MAP_VIEW_TOOL_IDS: &[&str] = &[map::SET_CAMERA_ACTION_ID];
+pub const GIS_MAP_VIEW_TOOL_IDS: &[&str] = &[map::SET_CAMERA_ACTION_ID];
 const GIS_MAP_VIEW_PAYLOAD_SCHEMA: &str = "gis.map.view-command.v1";
 /// 🎒️ Real bound for one viewer gesture's wire payload: a camera is three doubles, so 8 KiB is a real
 /// ceiling rather than a rubber stamp.
@@ -81,7 +81,7 @@ impl protocol::OpBinary for GisMapViewCommand {
 /// 🔒️ The emitted `Emit` carries `window_config_mutations` and NOTHING else — no artifact mutation, no
 /// config mutation, no effect — the runtime half of the read-only guarantee whose compile-time half
 /// is `ViewEmit`.
-fn camera_emit(command: &GisMapViewCommand, view_state: Option<&semio_framework_plugin::ViewModel>) -> Result<Emit<crate::standards::v1::subsets::any::schema::mutations::GisMapMutation, NoConfigMutation, NoDraftMutation>, Fault> {
+pub fn camera_emit(command: &GisMapViewCommand, view_state: Option<&semio_framework_plugin::ViewModel>) -> Result<Emit<crate::standards::v1::subsets::any::schema::mutations::GisMapMutation, NoConfigMutation, NoDraftMutation>, Fault> {
     let GisMapViewCommand::SetCamera { camera } = command;
     let view = view_state.ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("gis.map.viewer.window-required"), "a camera change requires a concrete map window"))?;
     if camera.is_empty() {
@@ -103,7 +103,7 @@ fn camera_emit(command: &GisMapViewCommand, view_state: Option<&semio_framework_
 /// 🪪️ The bridge from a dispatched action's args to the typed command. The host's `camera` object is
 /// validated and canonicalized to the exact JSON string `TiledMapScene::camera_json` consumes, so a
 /// malformed gesture is refused at `camera_emit` rather than silently ignored.
-fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<GisMapViewCommand, Fault> {
+pub fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<GisMapViewCommand, Fault> {
     if action != map::SET_CAMERA_ACTION_ID {
         return Err(Fault::new(FaultOrigin::App, FaultCode::new("app.command.unsupported"), format!("the gis map viewer has no command for action '{action}'")));
     }
@@ -149,7 +149,7 @@ fn gis_map_view_reduce(
     camera_emit(command, context.and_then(|context| context.view_state.as_ref()))
 }
 
-struct GisMapViewCommandJobFactory {
+pub struct GisMapViewCommandJobFactory {
     keys: Vec<ToolFactoryKey>,
 }
 
@@ -182,9 +182,9 @@ impl semio_framework_plugin::ToolJobFactory for GisMapViewCommandJobFactory {
         &mut self,
         _operation: semio_framework_job::Operation,
         payload: Self::Payload,
-        input: semio_framework_plugin::action_bus::RetainedToolWireInput,
-        checkpoint: Option<semio_framework_plugin::action_bus::RetainedToolWireInput>,
-    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework_plugin::action_bus::RetainedToolWireInput, Option<semio_framework_plugin::action_bus::RetainedToolWireInput>)> {
+        input: semio_framework_action_bus::RetainedToolWireInput,
+        checkpoint: Option<semio_framework_action_bus::RetainedToolWireInput>,
+    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework_action_bus::RetainedToolWireInput, Option<semio_framework_action_bus::RetainedToolWireInput>)> {
         if input.declared_bytes() > GIS_MAP_VIEW_RAW_BYTES || checkpoint.is_some() {
             return Err((ToolJobFactoryError::new("the bounded gis map view command rejects an oversized wire or checkpoint owner"), input, checkpoint));
         }
@@ -236,7 +236,7 @@ impl ArtifactViewer for GisMapViewer {
 
     fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Result<Option<Vec<u8>>,semio_framework_value::ValueError> {
  Ok((||{
-        crate::genesis_gis_map_child_pack(snapshot, slot, child_id)
+        crate::standards::v1::subsets::any::map_composition::genesis_gis_map_child_pack(snapshot, slot, child_id)
     
 })())
 }

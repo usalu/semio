@@ -40,7 +40,9 @@ import {
 import { emptyDirectoryReadModel, foldAll } from "@semio-tech/framework/directory";
 import type { DirectoryEvent } from "@semio-tech/framework/directory/schema";
 import { SpaceBrowser, spaceBrowserPresencePeersV1 } from "../../🟦️.tsx";
-import { createHubConnectionFetchPortV1, parseHubSpaceMemberRowsV1, useHubConnection, type HubConnectionPortV1, type HubSpaceMemberRowV1 } from "../../../🔗️HubConnection/🟦️.tsx";
+import { useHubConnection } from "../../../🔗️HubConnection/🟦️.tsx";
+import { type HubConnectionPortV1, type HubSpaceMemberRowV1 } from "../../../🔗️HubConnection/🔌️connection-contract/🟦️.ts";
+import { createHubConnectionFetchPortV1, parseHubSpaceMemberRowsV1 } from "../../../🔗️HubConnection/🛰️fetch-port/🟦️.ts";
 import { type HubConnectionStorageV1, type HubSignInTransportV1 } from "@semio-tech/framework/directory/sign-in";
 // #endregion 🔌️Adapters
 

@@ -9,6 +9,7 @@ import { getWorkspaceRoot } from "../../../../../🧰️framework/🛍️product
 import { defineLint } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { runVitest } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { readModuleTreeSource } from "../../../../../🧰️framework/🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
 import { runRepoScriptMain } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 
 /** 🔌️Dependency-boundary lint across the folded domain files (former per-package `policyFile` checks merged: renderer + stately each carried their own single-file variant). Scoped to the artifact-engine home of the compute modules; `📺️renderer` moved to the app's own `⚙️engine` as app-surface UI and is out of this compute-boundary lint's scope. */
@@ -37,9 +38,9 @@ class FixtureScript extends BundleScript {
 
 class GenerateScript extends BundleScript {
   async run(extra: string[]): Promise<void> {
-    const { bootstrapCadModules } = await import("../../../../🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️.ts");
-    const { defaultModelDefinitionId } = await import("../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/📥️definition-catalog/🟦️.ts");
-    const { buildSpatialStatelyMachineCatalogView } = await import("../../../../🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎰️stately/🟦️.ts");
+    const { bootstrapCadModules } = await import("../../../../🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📦️packages/🟦️typescript/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️.ts");
+    const { defaultModelDefinitionId } = await import("../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📦️packages/🟦️typescript/📐️geometry/📥️definition-catalog/🟦️.ts");
+    const { buildSpatialStatelyMachineCatalogView } = await import("../../../../🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📦️packages/🟦️typescript/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎰️stately/🟦️.ts");
     bootstrapCadModules();
     let outPath = join(this.repoRoot, "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🔣️machine.json");
     let modelDefinitionId = defaultModelDefinitionId();
@@ -85,7 +86,7 @@ class RetainedAuditScript extends BundleScript {
     const fixturePath = resolve(this.root, "../../../../🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🗄️retained-jobs/🔣️.json");
     const ownerPath = resolve(this.root, "../../../../🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs");
     const fixture = (await Bun.file(fixturePath).json()) as RetainedAuditFixture;
-    const owner = await Bun.file(ownerPath).text();
+    const owner = readModuleTreeSource(ownerPath);
 
     const commandBlock = owner.slice(owner.indexOf("semio_framework_plugin::app_commands!"), owner.indexOf("/// 🌉️ Converts"));
     const commandIds = [...commandBlock.matchAll(/^\s*"([^"]+)"\s+as\s+/gm)].map((match) => match[1]!);

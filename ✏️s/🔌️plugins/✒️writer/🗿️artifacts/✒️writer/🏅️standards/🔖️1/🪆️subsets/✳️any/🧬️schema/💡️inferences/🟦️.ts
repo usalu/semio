@@ -29,6 +29,10 @@ type writerWriterInferenceGuardSizeBounds = { readonly minItems?: number; readon
 
 export const writerWriterInferenceGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : writerWriterInferenceGuardReject(at, "value is not an object");
+export const writerWriterInferenceGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) writerWriterInferenceGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const writerWriterInferenceGuardArray = (value: unknown, at: string, bounds: writerWriterInferenceGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return writerWriterInferenceGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) writerWriterInferenceGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -59,14 +63,14 @@ export const writerWriterInferenceGuardConstant = <T extends string | number | b
 //#endregion 🚪️Parsers
 
 export function parseWriterInference(value: unknown, at = "$"): WriterInference {
-  const row = writerWriterInferenceGuardObject(value, at);
+  const row = writerWriterInferenceGuardClosed(writerWriterInferenceGuardObject(value, at), at, ["outline"]);
   return {
     outline: parseWriterOutline(row["outline"], `${at}.outline`),
   };
 }
 
 export function parseWriterOutline(value: unknown, at = "$"): WriterOutline {
-  const row = writerWriterInferenceGuardObject(value, at);
+  const row = writerWriterInferenceGuardClosed(writerWriterInferenceGuardObject(value, at), at, ["sectionOutline", "wordCount", "lineCount"]);
   return {
     sectionOutline: writerWriterInferenceGuardArray(row["sectionOutline"], `${at}.sectionOutline`).map((item, index) => writerWriterInferenceGuardString(item, `${at}.sectionOutline[${index}]`)),
     wordCount: writerWriterInferenceGuardInteger(row["wordCount"], `${at}.wordCount`),

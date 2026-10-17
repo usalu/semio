@@ -18,12 +18,10 @@ test("bounded inventory preparation preserves original time, cancellation and aw
  const finite={policy:{version:1 as const,owner:"original-finite-caller",maximumElapsedMilliseconds:2000},capabilities:{},control:{signal:controller.signal,remainingMilliseconds:()=>250.5,publish:async()=>{},yieldContinuation:async()=>{}}};expect(targetExecutionPreparationControlV1(finite,{version:1,maximumElapsedMilliseconds:120000},()=>time).remaining()).toBe(250.5);
  let release!:()=>void;const suspended={...invocation,control:{...invocation.control,publish:()=>new Promise<void>(resolve=>{release=resolve;})}},pending=targetExecutionPreparationControlV1(suspended,{version:1,maximumElapsedMilliseconds:10},()=>time).advance("suspended");await expect(pending).rejects.toThrow("deadline exhausted");release();
  const reason=new Error("original inventory cancelled");controller.abort(reason);expect(()=>control.check()).toThrow(reason);
- console.log("[DEBUG] complete preparation policy cases agree with independent Ajv; original fractional time/signal/progress/yield remain exact");
 });
 test("closed source and native execution declarations match the independent schema oracle",async()=>{
  const {cacheInternals}=await import("../../../🏗️build/🕸️graph/📥️inference/🟨️.mjs"),validate=new Ajv({strict:true,allErrors:true}).compile(schema);
  for(const row of fixture.contracts){expect(validate(row.value),row.id).toBe(row.valid);const target={metadata:{semio:{execution:row.value}}};if(row.valid)expect(cacheInternals.targetExecutionKindV1(target)).toBe((row.value as {kind:string}).kind);else expect(()=>cacheInternals.targetExecutionKindV1(target),row.id).toThrow("Repository target execution contract refused");}
- console.log(`[DEBUG] all ${fixture.contracts.length} complete execution declaration cases agree with independent Ajv`);
 });
 test("generated Cargo commands declare compilation versus development-test ownership",async()=>{
  const {cacheInternals}=await import("../../../🏗️build/🕸️graph/📥️inference/🟨️.mjs"),projectRoot="🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust",targets=await cacheInternals.cargoTargets(projectRoot,root);
@@ -32,7 +30,6 @@ test("generated Cargo commands declare compilation versus development-test owner
   expect(target.metadata?.semio?.execution).toEqual({version:1,kind:"native",scope:name==="test"?"test":"production"});
   expect(target.options.command).toContain(`native cargo ${name} --manifest`);
  }
- console.log("[DEBUG] every generated Cargo leaf names its production or complete development-test input scope");
 });
 test("every actual generated command family admits its authored execution service through the independent schema",async()=>{
  const {cacheInternals}=await import("../../../🏗️build/🕸️graph/📥️inference/🟨️.mjs"),validate=new Ajv({strict:true,allErrors:true}).compile(schema),path=process.env.SEMIO_TARGET_EXECUTION_INVENTORY_FILE,digest=process.env.SEMIO_TARGET_EXECUTION_INVENTORY_SHA256;
@@ -43,7 +40,6 @@ test("every actual generated command family admits its authored execution servic
   expect(Object.keys(targets).length,family).toBeGreaterThan(0);
   for(const [name,target] of Object.entries(targets)){const declaration=target.metadata?.semio?.execution;expect(validate(declaration),`${family}:${name}`).toBe(true);expect(cacheInternals.targetExecutionKindV1(target)).toBe(declaration.kind);count++;}
  }
- console.log(`[DEBUG] all ${count} targets in ${Object.keys(capture.value.groups).length} actual received command families admit explicit execution ownership against independent Ajv`);
 });
 test("the actual plugin keeps source commands literal and native commands under their required graph owners",async()=>{
  const {default:plugin,cacheInternals}=await import("../../../🏗️build/🕸️graph/📥️inference/🟨️.mjs");
@@ -65,5 +61,4 @@ test("the actual plugin keeps source commands literal and native commands under 
  expect(sourceSelected).toHaveLength(1);expect(nativeSelected).toHaveLength(1);
  expect(sourceTasks.dependencies[sourceSelected[0].id]).toEqual([]);
  for(const dependency of native.dependsOn)expect(nativeTasks.dependencies[nativeSelected[0].id]).toContain(dependency);
- console.log(`[DEBUG] actual source command has no native wrapper or generator predecessors; strict native owner retains all ${native.dependsOn.length} predecessors through installed Nx`);
 });

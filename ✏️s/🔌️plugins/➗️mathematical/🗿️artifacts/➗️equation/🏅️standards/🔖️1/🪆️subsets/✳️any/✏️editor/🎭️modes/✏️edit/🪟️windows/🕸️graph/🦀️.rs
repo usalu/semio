@@ -52,7 +52,5 @@ pub fn render(graph: &EquationGraph, camera: &EquationCamera) -> UiAssemblyResul
 //#endregion 🔖️Render
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

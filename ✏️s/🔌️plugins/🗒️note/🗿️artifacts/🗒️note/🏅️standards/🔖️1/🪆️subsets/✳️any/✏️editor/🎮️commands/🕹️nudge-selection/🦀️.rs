@@ -22,7 +22,7 @@ fn nudge_targets(document: &NoteSnapshot, selected_ids: &[String]) -> Vec<String
 /// ⌨️ One keyboard nudge of `verb` by `(dx, dy)`: ONE ink tool transaction of ONE `drag-blocks` over every unlocked
 /// selected block — an open canvas gesture it interrupts is aborted `captureLost`; nothing selected, all locked or a
 /// zero step leaves zero trace.
-pub(crate) fn nudge(doc: &ArtifactView<'_, NoteSnapshot>, ctx: &mut crate::editor::note::NoteDispatchCtx, verb: &str, dx: f64, dy: f64) -> Result<Emit<NoteMutation, NoConfigMutation>, Fault> {
+pub(crate) fn nudge(doc: &ArtifactView<'_, NoteSnapshot>, ctx: &mut crate::editor::note::dispatch_ctx::NoteDispatchCtx, verb: &str, dx: f64, dy: f64) -> Result<Emit<NoteMutation, NoConfigMutation>, Fault> {
     let ids = nudge_targets(doc.snapshot, &ctx.selected_block_ids);
     if ids.is_empty() || !dx.is_finite() || !dy.is_finite() || (dx, dy) == (0.0, 0.0) {
         return Ok(Emit::default());
@@ -38,6 +38,6 @@ pub struct NudgeSelection {
     pub dy: f64,
 }
 
-pub fn handle(payload: &NudgeSelection, doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, semio_framework_plugin::NoConfig>, ctx: &mut crate::editor::note::NoteDispatchCtx) -> Result<Emit<NoteMutation, NoConfigMutation>, Fault> {
+pub fn handle(payload: &NudgeSelection, doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, semio_framework_plugin::NoConfig>, ctx: &mut crate::editor::note::dispatch_ctx::NoteDispatchCtx) -> Result<Emit<NoteMutation, NoConfigMutation>, Fault> {
     nudge(doc, ctx, "nudgeSelection", payload.dx, payload.dy)
 }

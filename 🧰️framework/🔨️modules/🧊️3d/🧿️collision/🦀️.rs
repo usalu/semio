@@ -13,7 +13,9 @@
 //! (how far one surface dives into another solid): the nearest-surface distance of a point, BVH best-first, and the part of a
 //! triangle that lies behind another triangle's outward face inside its prism.
 
-use crate::rigid::{Isometry3, Point3, Vector3};
+extern crate semio_framework_value_derive as value_derive;
+use semio_framework_3d_rigid::{Isometry3, Point3, Vector3};
+#[cfg(test)] use semio_framework_3d_rigid as rigid;
 
 //#region 🔖️Aabb3
 // 🧬️ `value_derive::{ToValue, FromValue}` additive (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS,
@@ -685,6 +687,7 @@ pub fn contains_point_fast(pose: Isometry3, mesh: &TriMesh, point: Point3) -> bo
 }
 //#endregion 🔖️Queries
 
+
 #[cfg(test)]
-#[path = "🧪️tests/🧿️collision/🦀️.rs"]
+#[path="🧪️tests/🧿️collision/🦀️.rs"]
 mod tests;

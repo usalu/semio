@@ -4,9 +4,9 @@
  * @see ../../🎨print-design-token-paints/🟦️.ts
  * @see ../../../🖋️latex/semio-viz-theme.sty
  */
-import colorContract from "../../📸️snapshot/📊️chart/🎨️color/🔣️.json";
-import { oklabMix } from "../../../../../🔨️modules/🖱️ui/🎨️styling/🌗️mixing/🟦️.ts";
-import { loadPrintDesignTokens, renderPrintLatexTokenStylesheet, renderVisualizationPalette, type PrintTheme } from "../../../🔨️modules/🎨print-design-token-paints/🧮️resolution/🟦️.ts";
+import { chartColorSchema as colorContract } from "@semio-tech/print/schema/snapshot/chart/color";
+import { oklabMix } from "@semio-tech/ui-styling/mixing";
+import { loadPrintDesignTokens, renderPrintLatexTokenStylesheet, renderVisualizationPalette, type PrintTheme } from "@semio-tech/print/modules/print-design-token-paints/resolution";
 
 //#region 🔖️Palette
 /** 🎨️ An sRGB colour with an alpha channel, in the byte range the scene graph uses. */

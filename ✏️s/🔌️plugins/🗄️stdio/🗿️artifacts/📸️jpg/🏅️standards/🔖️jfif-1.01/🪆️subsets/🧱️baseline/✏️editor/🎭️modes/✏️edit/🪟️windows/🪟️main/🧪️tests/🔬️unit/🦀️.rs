@@ -1,4 +1,5 @@
-use super::*;
+use crate::standards::v_jfif_1_01::subsets::baseline::schema::snapshot::JpgSnapshot;
+use crate::editor::jpg_baseline::modes::edit::windows::main::*;
 
 #[semio_framework_async_macros::async_test]
 async fn definition_uses_the_frozen_window_kit_kind_id() {

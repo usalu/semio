@@ -2,10 +2,26 @@ import {Database} from "bun:sqlite";
 import {test, expect} from "bun:test";
 import {readFileSync} from "node:fs";
 import {resolve, join} from "node:path";
-import {applyPatch} from "fast-json-patch";
+import {applyPatch,type Operation} from "fast-json-patch";
 import {createHash} from "node:crypto";
 import {semioSchemaAjvV1} from "@semio-tech/framework/schema/oracles/validator";
 import { frameworkSourcePath } from "@semio-tech/framework/test/source-text";
+import { readRetirementCopyDemandLaw, retirementCopyDemand } from "@semio-tech/framework/value/retirement/testing/fixtures";
+import { readModuleTreeSource, sliceModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
+
+const OWNER_ROOTS=["🦀️.rs","🏟️arena/🦀️.rs","🔏️digest/🦀️.rs"];
+
+/** 📖️ The Rust text of the drawing host owner: its own root and the arena and digest crates it was carved into, each with the child modules it mounts. */
+const ownerSource=(owner:string):string=>OWNER_ROOTS.map(root=>readModuleTreeSource(join(owner,root))).join("");
+
+/** ✂️ One marker-delimited item of the drawing host owner, taken from the crate that holds `from`. */
+const ownerSlice=(owner:string,from:string,to?:string):string=>{
+  const root=OWNER_ROOTS.map(name=>join(owner,name)).find(path=>readModuleTreeSource(path).includes(from));
+  if(root===undefined)throw Error("Owner marker missing: "+from);
+  return sliceModuleTreeSource(root,from,to);
+};
+
+const patched=(document:Record<string,any>,operations:Operation[]):Record<string,any>=>applyPatch(document,operations,true,false).newDocument;
 
 test("Drawing initializer closes the original catalog one exactly admitted page at a time",()=>{
   const owner=resolve(import.meta.dir,"../..");
@@ -15,31 +31,29 @@ test("Drawing initializer closes the original catalog one exactly admitted page 
   try{
     database.exec("CREATE TABLE pages (ordinal INTEGER PRIMARY KEY, lane TEXT UNIQUE NOT NULL, bytes INTEGER NOT NULL)");
     law.lanes.forEach((lane:string,index:number)=>database.query("INSERT INTO pages VALUES (?,?,?)").run(index,lane,128+index));
-    let state={pages:law.lanes.map((lane:string,index:number)=>({lane,bytes:128+index}))};
+    let state:Record<string,any>={pages:law.lanes.map((lane:string,index:number)=>({lane,bytes:128+index}))};
     for(const lane of law.lanes){
       const row=database.query("SELECT ordinal,lane,bytes FROM pages ORDER BY ordinal LIMIT 1").get() as {ordinal:number,lane:string,bytes:number};
       expect(row.lane).toBe(lane);
       for(const grant of [0,row.bytes-1])expect(database.query("SELECT CASE WHEN ? >= bytes THEN bytes ELSE 0 END AS released FROM pages WHERE ordinal=?").get(grant,row.ordinal)).toEqual({released:0});
       expect(database.query("SELECT CASE WHEN ? >= bytes THEN bytes ELSE 0 END AS released FROM pages WHERE ordinal=?").get(row.bytes,row.ordinal)).toEqual({released:row.bytes});
       database.query("DELETE FROM pages WHERE ordinal=?").run(row.ordinal);
-      state=applyPatch(state,[{op:"remove",path:"/pages/0"}],true,false).newDocument;
+      state=patched(state,[{op:"remove",path:"/pages/0"}]);
       expect(state.pages.map((page:any)=>page.lane)).toEqual(database.query("SELECT lane FROM pages ORDER BY ordinal").all().map((page:any)=>page.lane));
     }
     expect(state).toEqual({pages:[]});
   }finally{database.close();}
-  const host=readFileSync(join(owner,"🦀️.rs"),"utf8");
-  const initializer=host.slice(host.indexOf("struct DrawingStoreInitializationAuthority"),host.indexOf("pub fn drawing_document_store_initialization_job"));
+  const initializer=ownerSlice(owner,"struct DrawingStoreInitializationAuthority","pub fn drawing_document_store_initialization_job");
   expect(initializer.includes("drop(self.owner_catalog.take())")).toBe(false);
-  expect(initializer.includes("close_initialization_catalog(&mut self.owner_catalog, 1, maximum_bytes)")).toBe(true);
-  expect(initializer.includes("close_initialization_catalog(&mut self.owner_catalog, maximum_items, maximum_bytes)")).toBe(true);
-  expect(initializer.includes("PluginCloseStep::Pending { released_items, released_bytes }")).toBe(true);
+  expect(initializer.includes("let child = RetainedCloneGrant { maximum_items: 1,")).toBe(true);
+  expect(initializer.includes("close_initialization_catalog(&mut self.owner_catalog, child)")).toBe(true);
+  expect(initializer.includes("RetainedCloneStep::Progress(step.progress())")).toBe(true);
   const source=readFileSync(join(directory,"🦀️.rs"),"utf8");
-  expect(source.includes("catalog.close_step(1, maximum_bytes)")).toBe(true);
+  expect(source.includes("catalog.close_step(grant)")).toBe(true);
   expect(source.includes("if !catalog.terminal_is_empty()")).toBe(true);
-  console.log("[DEBUG] Drawing initializer catalog SQLite exact first-page admission and RFC6902 resident-page order agree; original catalog birth is cold and uncredited");
 });
 
-test("Drawing initializer transfers original active owners into inline typed retirement",()=>{
+test("Drawing initializer holds original owners in typed pending retirement and hands them to the active retirement through artifact_retirement_admit_owned",()=>{
   const owner=resolve(import.meta.dir,"../..");
   const law=JSON.parse(readFileSync(join(owner, "♻️retirement/🧪️tests/🧫️fixtures/🔣️.json"),"utf8"));
   const database=new Database(":memory:");
@@ -48,17 +62,17 @@ test("Drawing initializer transfers original active owners into inline typed ret
     law.initializerOwners.forEach((kind:string,index:number)=>database.query("INSERT INTO pending VALUES (?,?,?)").run(index,kind,128));
     expect(database.query("SELECT kind, backingBytes FROM pending ORDER BY ordinal").all()).toEqual(law.initializerOwners.map((kind:string)=>({kind,backingBytes:128})));
     for(const kind of law.initializerOwners){
-      const state=applyPatch({pending:{kind,backingBytes:128}},[{op:"move",from:"/pending",path:"/active"}],true,false).newDocument;
+      const state=patched({pending:{kind,backingBytes:128}},[{op:"move",from:"/pending",path:"/active"}]);
       expect(state).toEqual({active:{kind,backingBytes:128}});
-      expect(applyPatch(state,[{op:"remove",path:"/active"}],true,false).newDocument).toEqual({});
+      expect(patched(state,[{op:"remove",path:"/active"}])).toEqual({});
     }
   }finally{database.close();}
-  const host=readFileSync(join(owner,"🦀️.rs"),"utf8");
-  const initializer=host.slice(host.indexOf("struct DrawingStoreInitializationAuthority"),host.indexOf("pub fn drawing_document_store_initialization_job"));
-  expect(initializer.includes("active: std::mem::ManuallyDrop<Option<DrawingOwnedRetirement>>")).toBe(true);
+  const initializer=ownerSlice(owner,"struct DrawingStoreInitializationAuthority","pub fn drawing_document_store_initialization_job");
+  expect(initializer.includes("retire_pending: std::mem::ManuallyDrop<Option<DrawingRetirementOwner>>")).toBe(true);
+  for(const kind of law.initializerOwners)expect(initializer.includes(`*self.retire_pending = Some(DrawingRetirementOwner::${kind}(`)).toBe(true);
+  expect(initializer.includes("artifact_retirement_admit_owned(&mut self.retire_pending, &mut self.active, child)")).toBe(true);
   expect(initializer.includes("Box::new(DrawingOwnedRetirement")).toBe(false);
   expect(initializer.includes("ArtifactOwnedValueRetirementFactory::retire_owned")).toBe(false);
-  console.log("[DEBUG] Drawing initializer SQLite/RFC6902 retain the exact original Snapshot/HistoryId under one typed active owner until terminal; outer lifecycle demands remain separately required");
 });
 
 test("Drawing native retirement retains typed variants under independent physical grants",()=>{
@@ -74,42 +88,40 @@ test("Drawing native retirement retains typed variants under independent physica
     for(const bytes of law.backingBytes){
       expect(database.query("SELECT CASE WHEN ? >= bytes THEN bytes ELSE 0 END AS released FROM backing WHERE bytes=?").get(Math.max(0,bytes-1),bytes)).toEqual({released:0});
       expect(database.query("SELECT CASE WHEN ? >= bytes THEN bytes ELSE 0 END AS released FROM backing WHERE bytes=?").get(bytes,bytes)).toEqual({released:bytes});
-      const transferred=applyPatch({input:{backingBytes:bytes}},[{op:"move",from:"/input",path:"/retirement"}],true,false).newDocument;
+      const transferred=patched({input:{backingBytes:bytes}},[{op:"move",from:"/input",path:"/retirement"}]);
       expect(transferred).toEqual({retirement:{backingBytes:bytes}});
-      expect(applyPatch(transferred,[{op:"remove",path:"/retirement"}],true,false).newDocument).toEqual({});
+      expect(patched(transferred,[{op:"remove",path:"/retirement"}])).toEqual({});
     }
   }finally{database.close();}
   const source=readFileSync(join(directory,"🦀️.rs"),"utf8");
-  expect(source.includes("DrawingDecodedFieldRetirement<DrawingRetirementOwner>")).toBe(true);
+  expect(source.includes("#[derive(semio_framework_value::RetireOwned)]")).toBe(true);
+  expect(source.includes("pub enum DrawingRetirementOwner")).toBe(true);
+  for(const variant of law.variants)expect(source.includes(`    ${variant}(`)).toBe(true);
   expect(source.includes("owned_retirement(")).toBe(false);
-  expect(source.includes("self.owner.next_grant()")).toBe(true);
-  const helper=readFileSync(join(owner,"🦀️.rs"),"utf8");
+  const helper=ownerSource(owner);
+  expect(helper.includes("pub struct DrawingDecodedFieldRetirement<T: semio_framework_value::retirement::RetireOwned>")).toBe(true);
+  expect(helper.includes("pub fn next_grant(&self)")).toBe(true);
   for(const axis of law.axes)expect(helper.includes(`next_${axis}_byte_demand`)).toBe(true);
-  console.log("[DEBUG] Drawing native retirement nine typed variants, SQLite exact/undergrant backing and RFC6902 unique terminal transfer agree; native heap execution remains required");
 });
 
 test("Drawing decoded field close admits payload work separately from physical backing",()=>{
   const owner=resolve(import.meta.dir,"../..");
-  const contract=frameworkSourcePath("🔨️modules/🌱️value/♻️retirement/🧪️tests/🧫️fixtures/📏️copy-demand");
-  const law=JSON.parse(readFileSync(join(contract,"🔣️.json"),"utf8"));
+  const law=readRetirementCopyDemandLaw();
   const database=new Database(":memory:");
   try{
     database.exec("CREATE TABLE grants (bytes INTEGER PRIMARY KEY)");
     law.grants.forEach((bytes:number)=>database.query("INSERT INTO grants VALUES (?)").run(bytes));
     for(const row of law.cases){
       expect(database.query("SELECT MIN(bytes) AS bytes FROM grants WHERE bytes >= ?").get(row.minimumCopyBytes)).toEqual({bytes:row.minimumCopyBytes});
-      const bytes=row.kind==="text"?new TextEncoder().encode(row.value).length:row.kind==="u32-list"?Uint32Array.from(row.value).byteLength:Uint32Array.of(row.value).byteLength;
-      expect(bytes).toBe(row.totalCopyBytes);
-      const moved=applyPatch({field:{value:row.value,backingBytes:128}},[{op:"move",from:"/field",path:"/retirement"}],true,false).newDocument;
-      const processed=applyPatch(moved,[{op:"remove",path:"/retirement/value"}],true,false).newDocument;
+      expect(retirementCopyDemand(row)).toEqual({minimumCopyBytes:row.minimumCopyBytes,totalCopyBytes:row.totalCopyBytes});
+      const moved=patched({field:{value:row.value,backingBytes:128}},[{op:"move",from:"/field",path:"/retirement"}]);
+      const processed=patched(moved,[{op:"remove",path:"/retirement/value"}]);
       expect(processed.retirement.backingBytes).toBe(128);
     }
   }finally{database.close();}
-  const host=readFileSync(join(owner,"🦀️.rs"),"utf8");
-  const close=host.slice(host.indexOf("impl<T: semio_framework_value::retirement::RetireOwned> DrawingDecodedFieldRetirement"),host.indexOf("macro_rules! drawing_owned_field_close_capacity"));
+  const close=ownerSlice(owner,"impl<T: semio_framework_value::retirement::RetireOwned> DrawingDecodedFieldRetirement","macro_rules! drawing_owned_field_close_capacity");
   expect(close.includes("next_copy_byte_demand()")).toBe(true);
-  expect(close.includes("maximum_copy_bytes: copy")).toBe(true);
-  console.log("[DEBUG] Drawing decoded field SQLite admits the independent minimum payload work; platform typed bytes and RFC6902 preserve physical backing until separately granted release");
+  expect(close.includes("maximum_copy_bytes: demand.copy_bytes")).toBe(true);
 });
 
 test("Drawing duplicate cancellation preserves the caller grant and physical axes",()=>{
@@ -120,14 +132,12 @@ test("Drawing duplicate cancellation preserves the caller grant and physical axe
     database.exec("CREATE TABLE grants (bytes INTEGER PRIMARY KEY)");
     law.duplicateClose.grants.forEach((bytes:number)=>database.query("INSERT INTO grants VALUES (?)").run(bytes));
     expect(database.query("SELECT bytes, MIN(bytes,4096) AS admitted FROM grants ORDER BY bytes").all()).toEqual(law.duplicateClose.grants.map((bytes:number)=>({bytes,admitted:Math.min(bytes,4096)})));
-    expect(applyPatch({copy:0,capacity:0,release:0},[{op:"replace",path:"/copy",value:7},{op:"replace",path:"/copy",value:0},{op:"replace",path:"/release",value:7}],true,false).newDocument).toEqual({copy:0,capacity:0,release:7});
+    expect(patched({copy:0,capacity:0,release:0},[{op:"replace",path:"/copy",value:7},{op:"replace",path:"/copy",value:0},{op:"replace",path:"/release",value:7}])).toEqual({copy:0,capacity:0,release:7});
   }finally{database.close();}
-  const host=readFileSync(join(owner,"🦀️.rs"),"utf8");
-  const rewrite=host.slice(host.indexOf("impl DrawingDuplicateRewriteAuthority"),host.indexOf("enum DrawingMutationCandidatePhase"));
-  expect(rewrite.includes("fn close_granted(")).toBe(true);
+  const rewrite=ownerSlice(owner,"impl DrawingDuplicateRewriteAuthority");
+  expect(rewrite.includes("pub fn close_step(&mut self, grant: RetainedCloneGrant)")).toBe(true);
   expect(rewrite.includes("maximum_bytes.max(demand)")).toBe(false);
   expect(rewrite.includes("retire_displaced_granted(grant)")).toBe(true);
-  console.log("[DEBUG] Drawing duplicate cancellation SQLite exact grant admission and RFC6902 distinct copy/release axes agree; native physical heap witness remains required");
 });
 
 test("Drawing duplicate rewrite preserves root names and internal reference ownership",()=>{
@@ -144,9 +154,9 @@ test("Drawing duplicate rewrite preserves root names and internal reference owne
   const source=input.layers[1];
   const duplicated=structuredClone(source);
   duplicated.id="copied-group";duplicated.name+=" copy";duplicated.children[0].id="copied-text";duplicated.children[1].id="copied-boolean";duplicated.children[1].children=["copied-text","external"];
-  const applied=applyPatch(input,[{op:"add",path:"/layers/2",value:duplicated}],true,false).newDocument;
+  const applied=patched(input,[{op:"add",path:"/layers/2",value:duplicated}]);
   expect(validate(applied)).toBe(true);expect(applied.layers[1]).toEqual(source);expect(duplicated.children[0].name).toBe(source.children[0].name);
-  expect(applyPatch(applied,[{op:"remove",path:"/layers/2"}],true,false).newDocument).toEqual(input);
+  expect(patched(applied,[{op:"remove",path:"/layers/2"}])).toEqual(input);
   const database=new Database(":memory:");
   try{
     database.exec("CREATE TABLE identities (original TEXT PRIMARY KEY, copied TEXT NOT NULL); CREATE TABLE refs (ordinal INTEGER PRIMARY KEY, target TEXT NOT NULL)");
@@ -154,13 +164,11 @@ test("Drawing duplicate rewrite preserves root names and internal reference owne
     boolean.children.forEach((id:string,index:number)=>database.query("INSERT INTO refs VALUES (?,?)").run(index,id));
     expect(database.query("SELECT COALESCE(identities.copied,refs.target) AS target FROM refs LEFT JOIN identities ON identities.original=refs.target ORDER BY ordinal").all().map((row:any)=>row.target)).toEqual(duplicated.children[1].children);
   }finally{database.close();}
-  const host=readFileSync(join(owner,"🦀️.rs"),"utf8");
-  const rewrite=host.slice(host.indexOf("struct DrawingDuplicateRewriteAuthority"),host.indexOf("enum DrawingMutationCandidatePhase"));
+  const rewrite=ownerSlice(owner,"struct DrawingDuplicateRewriteAuthority","enum DrawingMutationCandidatePhase");
   expect(rewrite.includes("DrawingDuplicateIdentityCursor")).toBe(true);
   expect(rewrite.includes("DrawingDuplicateReferenceSearch")).toBe(true);
   expect(rewrite.includes("PagedUtf8AppendCursor")).toBe(true);
   expect(rewrite.includes("semio.drawing.duplicate-id.v1")).toBe(false);
-  console.log("[DEBUG] Drawing duplicate root-only name and internal-only reference remap agree with strict snapshot schema/Ajv, SQLite left-join and RFC6902 source/restoration");
 });
 
 test("Drawing decoded field close admits actual typed retirement births and releases",()=>{
@@ -172,15 +180,16 @@ test("Drawing decoded field close admits actual typed retirement births and rele
     law.decodedFieldClose.physicalBackingCapacities.forEach((capacity:number,index:number)=>database.query("INSERT INTO backing VALUES (?,?)").run(index,capacity));
     expect(database.query("SELECT SUM(capacity) AS bytes FROM backing").get()).toEqual({bytes:law.decodedFieldClose.physicalBackingCapacities.reduce((total:number,bytes:number)=>total+bytes,0)});
     expect(database.query("SELECT capacity FROM backing ORDER BY ordinal DESC").all().map((row:any)=>row.capacity)).toEqual([...law.decodedFieldClose.physicalBackingCapacities].reverse());
-    const transferred=applyPatch({field:{chunks:law.decodedFieldClose.physicalBackingCapacities}},[{op:"move",from:"/field",path:"/retirement"}],true,false).newDocument;
+    const transferred=patched({field:{chunks:law.decodedFieldClose.physicalBackingCapacities}},[{op:"move",from:"/field",path:"/retirement"}]);
     expect(transferred.field).toBeUndefined();expect(transferred.retirement.chunks).toEqual(law.decodedFieldClose.physicalBackingCapacities);
   }finally{database.close();}
-  const host=readFileSync(join(owner,"🦀️.rs"),"utf8");
+  const host=ownerSource(owner);
   expect(host.includes("struct DrawingDecodedFieldRetirement")).toBe(true);
-  const authorities=host.slice(host.indexOf("macro_rules! drawing_owned_field_close_capacity"),host.indexOf("struct DrawingRejectedConflictAuthority"));
-  expect(authorities.includes("DrawingDecodedFieldRetirement<$value>")).toBe(true);
+  const authorities=ownerSlice(owner,"macro_rules! drawing_owned_field_close_capacity","struct DrawingRejectedConflictAuthority");
+  expect(authorities.includes("artifact_retirement_owned_birth_demands(&self.value)")).toBe(true);
+  expect(authorities.includes("artifact_retirement_box_demands(owner, maximum_copy_bytes)")).toBe(true);
+  expect(authorities.includes("artifact_retirement_admit_owned(&mut self.value, &mut self.retirement, grant)")).toBe(true);
   expect(authorities.includes("usize::from(self.retirement.is_some()) * DRAWING_OWNED_FIELD_BYTES")).toBe(false);
-  console.log("[DEBUG] Drawing decoded native field close SQLite physical-backing ledger and RFC6902 single ownership move conserve spare/empty/full backing; native granted birth/release witness required");
 });
 
 test("Drawing duplicate identity consumes admitted native target keys",()=>{
@@ -192,17 +201,16 @@ test("Drawing duplicate identity consumes admitted native target keys",()=>{
       const material=id+law.duplicateIdentity.suffix;
       const result=database.query("SELECT CAST(? || ? AS BLOB) AS material").get(id,law.duplicateIdentity.suffix) as {material:Uint8Array};
       expect(Buffer.from(result.material)).toEqual(Buffer.from(material,"utf8"));
-      const restored=applyPatch({id},[{op:"replace",path:"/id",value:material},{op:"replace",path:"/id",value:id}],true,false).newDocument;
+      const restored=patched({id},[{op:"replace",path:"/id",value:material},{op:"replace",path:"/id",value:id}]);
       expect(restored).toEqual({id});
     }
   }finally{database.close();}
-  const schema=readFileSync(resolve(owner,"../../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs"),"utf8");
+  const schema=readModuleTreeSource(resolve(owner,"../../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs"));
   expect(schema.includes("base.id=assignment.target.clone()")).toBe(true);
   expect(schema.includes("create_drawing_id")).toBe(false);
   expect(law.duplicateIdentity.nameSuffixOnlyOnRoot).toBe(true);expect(law.duplicateIdentity.internalReferencesRemapped).toBe(true);
   const source=readFileSync(join(owner,"📐️footprint/🦀️.rs"),"utf8");
   expect(source.includes("struct DrawingDuplicateIdentityCursor")).toBe(true);
-  console.log("[DEBUG] Drawing duplicate neutral Unicode/NUL/long ID+suffix material agrees with SQLite BLOB and RFC6902; physical IO neutral SHA256 witnesses separately verify commitments");
 });
 
 test("Drawing sparse path patches preserve native array ownership and semantic restoration",()=>{
@@ -215,9 +223,9 @@ test("Drawing sparse path patches preserve native array ownership and semantic r
   const validate=semioSchemaAjvV1({allErrors:true}).addSchema(JSON.parse(readFileSync(join(root,"🔣️.json"),"utf8"))).compile(JSON.parse(readFileSync(join(root,"📸️snapshot/🔣️.json"),"utf8")));
   expect(validate(before)).toBe(true);expect(validate(after)).toBe(true);
   const segments=delta.layers.modified[0].patch.pathSegments;
-  const applied=applyPatch(before,[{op:"replace",path:"/layers/0/segments",value:segments}],true,false).newDocument;
+  const applied=patched(before,[{op:"replace",path:"/layers/0/segments",value:segments}]);
   expect(applied).toEqual(after);
-  const restored=applyPatch(applied,[{op:"replace",path:"/layers/0/segments",value:before.layers[0].segments}],true,false).newDocument;
+  const restored=patched(applied,[{op:"replace",path:"/layers/0/segments",value:before.layers[0].segments}]);
   expect(restored).toEqual(before);
   const database=new Database(":memory:");
   try{
@@ -226,10 +234,9 @@ test("Drawing sparse path patches preserve native array ownership and semantic r
     expect(database.query("SELECT json FROM segments ORDER BY ordinal").all().map((value:any)=>JSON.parse(value.json))).toEqual(segments);
   }finally{database.close();}
   const source=readFileSync(join(root,"🔺️diff/🦀️.rs"),"utf8");
-  expect(source.includes("pub path_segments: Option<PagedList<crate::PathSegment, {usize::MAX}>>")).toBe(true);
-  const host=readFileSync(join(owner,"🦀️.rs"),"utf8");
+  expect(source.includes("pub path_segments: Option<PagedList<semio_s_artifact_draw_drawing_model::PathSegment, {usize::MAX}>>")).toBe(true);
+  const host=ownerSource(owner);
   expect(host.includes("retired.extend(std::mem::replace(&mut path.segments")).toBe(false);
-  console.log("[DEBUG] Drawing sparse path native array owner agrees with existing snapshot schema/Ajv, SQLite ordinals and RFC6902 exact before/after/restoration");
 });
 
 test("Drawing native identifier equality reads separate bounded chunk owners",()=>{
@@ -242,17 +249,15 @@ test("Drawing native identifier equality reads separate bounded chunk owners",()
       const result=database.query("SELECT CAST(? AS BLOB) = CAST(? AS BLOB) AS equal").get(value.left,value.right) as {equal:number};
       expect(Boolean(result.equal)).toBe(value.equal);
       expect(Buffer.from(value.left,"utf8").equals(Buffer.from(value.right,"utf8"))).toBe(value.equal);
-      const restored=applyPatch({id:value.left},[{op:"replace",path:"/id",value:value.right},{op:"replace",path:"/id",value:value.left}],true,false).newDocument;
+      const restored=patched({id:value.left},[{op:"replace",path:"/id",value:value.right},{op:"replace",path:"/id",value:value.left}]);
       expect(restored).toEqual({id:value.left});
     }
   }finally{database.close();}
   const source=readFileSync(join(owner,"📐️footprint/🦀️.rs"),"utf8");
   expect(source.includes("struct DrawingTextEqualityCursor")).toBe(true);
-  const host=readFileSync(join(owner,"🦀️.rs"),"utf8");
-  const locator=host.slice(host.indexOf("struct DrawingLayerLocator"),host.indexOf("enum DrawingContainerRebuildMove"));
+  const locator=ownerSlice(owner,"struct DrawingLayerLocator","enum DrawingContainerRebuildMove");
   expect(locator.includes("DrawingTextEqualityCursor")).toBe(true);
   expect(locator.includes("target: &str")).toBe(false);
-  console.log("[DEBUG] Drawing native ID equality SQLite BLOB/Node Buffer/RFC6902 agree on exact Unicode/NUL/empty/late-mismatch identities without String reconstruction");
 });
 
 test("Drawing text mutation candidates adopt one native copy and retire the displaced field",()=>{
@@ -262,7 +267,7 @@ test("Drawing text mutation candidates adopt one native copy and retire the disp
   const root=resolve(owner,"../../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema");
   const validate=semioSchemaAjvV1({allErrors:true}).addSchema(JSON.parse(readFileSync(join(root,"🔣️.json"),"utf8"))).compile(JSON.parse(readFileSync(join(root,"📸️snapshot/🔣️.json"),"utf8")));
   const long=law.text.repeat(law.repeat)+"\0";
-  const candidate=applyPatch(input,[{op:"replace",path:"/layers/1/children/0/name",value:long}],true,false).newDocument;
+  const candidate=patched(input,[{op:"replace",path:"/layers/1/children/0/name",value:long}]);
   expect(validate(input)).toBe(true);expect(validate(candidate)).toBe(true);
   const database=new Database(":memory:");
   try{
@@ -272,13 +277,12 @@ test("Drawing text mutation candidates adopt one native copy and retire the disp
     expect(database.query("SELECT text FROM owners WHERE role = ?").get("candidate")).toEqual({text:long});
     expect(database.query("SELECT text FROM owners WHERE role = ?").get("source")).toEqual({text:input.layers[1].children[0].name});
   }finally{database.close();}
-  const restored=applyPatch(candidate,[{op:"replace",path:"/layers/1/children/0/name",value:input.layers[1].children[0].name}],true,false).newDocument;
+  const restored=patched(candidate,[{op:"replace",path:"/layers/1/children/0/name",value:input.layers[1].children[0].name}]);
   expect(restored).toEqual(input);
-  const host=readFileSync(join(owner,"🦀️.rs"),"utf8");
+  const host=ownerSource(owner);
   expect(host.includes("fn write_overlay_string")).toBe(false);
   expect(host.includes("clone_text_work.step")).toBe(true);
   expect(host.includes("fn adopt_native_text")).toBe(true);
-  console.log("[DEBUG] Drawing native text candidate schema/Ajv/SQLite/RFC6902 preserve long UTF8 and displaced owner identity without writing through whole String overlays");
 });
 
 test("Drawing root and asset census reads original native field owners once",()=>{
@@ -290,7 +294,7 @@ test("Drawing root and asset census reads original native field owners once",()=
   input.id=input.title=long;input.assets={[long]:{width:long.length,height:1,samples:Array.from({length:long.length},()=>[1,2,3,4])}};
   const validate=semioSchemaAjvV1({allErrors:true}).addSchema(JSON.parse(readFileSync(join(root,"🔣️.json"),"utf8"))).compile(JSON.parse(readFileSync(join(root,"📸️snapshot/🔣️.json"),"utf8")));
   expect(validate(input)).toBe(true);
-  const copied=applyPatch({},[{op:"add",path:"/snapshot",value:structuredClone(input)}],true,false).newDocument.snapshot;
+  const copied=patched({},[{op:"add",path:"/snapshot",value:structuredClone(input)}]).snapshot;
   expect(copied).toEqual(input);expect(validate(copied)).toBe(true);
   const database=new Database(":memory:");
   try{
@@ -306,11 +310,9 @@ test("Drawing root and asset census reads original native field owners once",()=
   const source=readFileSync(join(owner,"📐️footprint/🦀️.rs"),"utf8");
   expect(source.includes("struct DrawingRecordFootprintCursor")).toBe(true);
   expect(source.includes("assets.retained_entries().allocated_bytes()")).toBe(true);
-  const host=readFileSync(join(owner,"🦀️.rs"),"utf8");
-  const census=host.slice(host.indexOf("struct DrawingSnapshotBoundsAuthority"),host.indexOf("struct DrawingNativeCloneAuthority"));
+  const census=ownerSlice(owner,"struct DrawingSnapshotBoundsAuthority","struct DrawingNativeCloneAuthority");
   expect(census.includes("DrawingRecordFootprintCursor")).toBe(true);
   expect(census.includes("fn string_owner")).toBe(false);
-  console.log("[DEBUG] Drawing root/asset native census SQLite/Ajv/RFC6902 conserve each original field and native entry owner without duplicated inline backing");
 });
 
 test("Drawing direct layer footprint keeps native owner backing separate from nested group fields",()=>{
@@ -322,7 +324,7 @@ test("Drawing direct layer footprint keeps native owner backing separate from ne
   nested.id=nested.name=nested.content=law.text.repeat(law.repeat)+"\0";
   const validate=semioSchemaAjvV1({allErrors:true}).addSchema(JSON.parse(readFileSync(join(root,"🔣️.json"),"utf8"))).compile(JSON.parse(readFileSync(join(root,"📸️snapshot/🔣️.json"),"utf8")));
   expect(validate(input)).toBe(true);
-  const copied=applyPatch({},[{op:"add",path:"/snapshot",value:structuredClone(input)}],true,false).newDocument.snapshot;
+  const copied=patched({},[{op:"add",path:"/snapshot",value:structuredClone(input)}]).snapshot;
   expect(copied).toEqual(input);expect(validate(copied)).toBe(true);
   const database=new Database(":memory:");
   try{
@@ -340,10 +342,8 @@ test("Drawing direct layer footprint keeps native owner backing separate from ne
   expect(source.includes("struct DrawingLayerFootprintCursor")).toBe(true);
   expect(source.includes("DrawingTextFootprintCursor")).toBe(true);
   expect(source.includes("to_string_owner")).toBe(false);
-  const host=readFileSync(join(owner,"🦀️.rs"),"utf8");
-  const work=host.slice(host.indexOf("struct DrawingLayerCloneWorkAuthority"),host.indexOf("fn drawing_fill_clone_work_totals"));
+  const work=ownerSlice(owner,"struct DrawingLayerCloneWorkAuthority","fn drawing_fill_clone_work_totals");
   expect(work.includes("DrawingLayerFootprintCursor")).toBe(true);
-  console.log("[DEBUG] Drawing direct native layer footprint SQLite field selection and schema/Ajv/RFC6902 preserve nested long UTF8 without counting descendant fields twice");
 });
 
 test("Drawing native text digest preserves the exact semantic field stream over bounded chunks",()=>{
@@ -356,12 +356,10 @@ test("Drawing native text digest preserves the exact semantic field stream over 
   const incremental=createHash("sha256").update(prefix);
   for(let offset=0;offset<bytes.length;offset+=law.bodyBytes)incremental.update(bytes.subarray(offset,Math.min(offset+law.bodyBytes,bytes.length)));
   expect(incremental.digest("hex")).toBe(whole);
-  console.log(`[DEBUG] Drawing independent native text digest tag=${law.textDigest.tag} bytes=${bytes.length} sha256=${whole}`);
   const source=readFileSync(join(owner,"📐️footprint/🦀️.rs"),"utf8");
   expect(source.includes("struct DrawingTextDigestCursor")).toBe(true);
   expect(whole).toBe(law.textDigest.sha256);
-  const host=readFileSync(join(owner,"🦀️.rs"),"utf8");
-  const observer=host.slice(host.indexOf("fn observe_owned_string"),host.indexOf("fn observe(",host.indexOf("fn observe_owned_string")));
+  const observer=ownerSlice(owner,"fn observe_owned_string","fn observe(");
   expect(observer.includes("DrawingTextDigestCursor")).toBe(true);
   expect(observer.includes("value.as_bytes()")).toBe(false);
 });
@@ -379,7 +377,7 @@ test("Drawing retained text footprint reads original chunk backing without mater
       expect((database.query("SELECT SUM(capacity) AS bytes FROM chunks WHERE ordinal <= ?").get(index) as {bytes:number}).bytes).toBe(total);
     }
     expect(total).toBeGreaterThan(law.bodyBytes);
-    const moved=applyPatch({source:{chunks:law.ownedChunkCapacities}},[{op:"copy",from:"/source",path:"/candidate"}],true,false).newDocument;
+    const moved=patched({source:{chunks:law.ownedChunkCapacities}},[{op:"copy",from:"/source",path:"/candidate"}]);
     expect(moved.source.chunks).toEqual(moved.candidate.chunks);
   }finally{database.close();}
   const source=readFileSync(join(owner,"📐️footprint/🦀️.rs"),"utf8");
@@ -387,7 +385,6 @@ test("Drawing retained text footprint reads original chunk backing without mater
   expect(source.includes("chunks.allocated_bytes()")).toBe(true);
   expect(source.includes("chunk.capacity()")).toBe(true);
   expect(source.includes("to_string_owner")).toBe(false);
-  console.log("[DEBUG] Drawing retained text footprint independent SQLite/RFC6902 preserve empty/spare/full chunk capacities without native text materialization");
 });
 
 test("Drawing typed field clone uses semantic arrays and text without whole reservations",()=>{
@@ -401,18 +398,17 @@ test("Drawing typed field clone uses semantic arrays and text without whole rese
   input.layers[1].children[0].content=law.text.repeat(law.repeat)+"\0";
   const validate=semioSchemaAjvV1({allErrors:true}).addSchema(JSON.parse(readFileSync(join(schemaRoot,"🔣️.json"),"utf8"))).compile(JSON.parse(readFileSync(join(schemaRoot,"📸️snapshot/🔣️.json"),"utf8")));
   expect(validate(input)).toBe(true);
-  const copied=applyPatch({},[{op:"add",path:"/snapshot",value:structuredClone(input)}],true,false).newDocument.snapshot;
+  const copied=patched({},[{op:"add",path:"/snapshot",value:structuredClone(input)}]).snapshot;
   expect(copied).toEqual(input);expect(validate(copied)).toBe(true);
   expect(copied.layers[0].attributes.fill.stops.length).toBe(law.repeat);
   expect(new TextEncoder().encode(copied.layers[1].children[0].content).length).toBeGreaterThan(law.bodyBytes);
-  const host=readFileSync(join(owner,"🦀️.rs"),"utf8");
+  const host=ownerSource(owner);
   expect(host.includes("struct DrawingNativeCloneAuthority<T: RetainedClone>")).toBe(true);
   for(const leaf of ["FillStyle","StrokeStyle","DrawingNativeText","DrawingNativeSegments"])
     expect(host.includes(`DrawingNativeCloneAuthority<${leaf}>`)).toBe(true);
   expect(host.includes("target.try_reserve_exact(stops.len())")).toBe(false);
-  const cloneBody=host.slice(host.indexOf("struct DrawingNativeCloneAuthority"),host.indexOf("struct DrawingCloneWorkTotals"));
+  const cloneBody=ownerSlice(owner,"struct DrawingNativeCloneAuthority","struct DrawingCloneWorkTotals");
   expect(cloneBody.includes("try_reserve_exact")).toBe(false);
-  console.log("[DEBUG] Drawing native typed field owners preserve semantic long text and gradient arrays under Ajv/RFC6902 without whole allocation reservations");
 });
 
 test("Drawing native asset cursor follows retained entry ordinals without copying keys",()=>{
@@ -427,11 +423,10 @@ test("Drawing native asset cursor follows retained entry ordinals without copyin
     expect(database.query("SELECT key FROM assets WHERE ordinal = ?").get(keys.length)).toBeNull();
     expect(new TextEncoder().encode(keys[2]).length).toBeGreaterThan(law.bodyBytes);
   }finally{database.close();}
-  const source=readFileSync(join(owner,"🦀️.rs"),"utf8");
-  const cursor=source.slice(source.indexOf("struct DrawingAssetBoundsCursor"),source.indexOf("struct DrawingSnapshotBoundsAuthority"));
+  const source=ownerSource(owner);
+  const cursor=ownerSlice(owner,"struct DrawingAssetBoundsCursor","struct DrawingSnapshotBoundsAuthority");
   expect(cursor.includes("assets.entry_at(self.index)")).toBe(true);
   expect(cursor.includes("BTreeMap")).toBe(false);expect(cursor.includes("key_len")).toBe(false);
-  console.log("[DEBUG] Drawing native asset entry ordinals agree with independent SQLite for empty/long UTF8/NUL keys without key materialization");
 });
 
 test("Drawing initial snapshot copying retains native paged assets and separate grants",()=>{
@@ -443,24 +438,23 @@ test("Drawing initial snapshot copying retains native paged assets and separate 
   const schema=resolve(owner,"../../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema");
   const validate=semioSchemaAjvV1({allErrors:true}).addSchema(JSON.parse(readFileSync(join(schema,"🔣️.json"),"utf8"))).compile(JSON.parse(readFileSync(join(schema,"📸️snapshot/🔣️.json"),"utf8")));
   expect(validate(input)).toBe(true);
-  const copied=applyPatch({},[{op:"add",path:"/snapshot",value:structuredClone(input)}],true,false).newDocument.snapshot;
+  const copied=patched({},[{op:"add",path:"/snapshot",value:structuredClone(input)}]).snapshot;
   expect(copied).toEqual(input);expect(validate(copied)).toBe(true);
   expect(copied.assets[long].samples.length*law.recordFootprint.assetSampleComponents).toBeGreaterThan(law.bodyBytes);
-  expect(applyPatch({snapshot:copied},[{op:"remove",path:"/snapshot"}],true,false).newDocument).toEqual({});
-  const source=readFileSync(join(owner,"🦀️.rs"),"utf8");
+  expect(patched({snapshot:copied},[{op:"remove",path:"/snapshot"}])).toEqual({});
+  const source=ownerSource(owner);
   expect(source).toContain("CloneInitialSnapshot");
   expect(source).toContain("initial_snapshot_clone");
   expect(source).toContain("RetainedCloneGrant::one_release_turn");
   expect(source.includes("data.try_reserve_exact(asset.data.len())")).toBe(false);
   expect(source.includes("DrawingStoreInitializationPhase::CloneInitialAsset")).toBe(false);
-  console.log("[DEBUG] Drawing initial snapshot neutral schema/Ajv and RFC6902 preserve long native asset keys and data before paged clone adoption");
 });
 
 test("Drawing closure moves inline owners under copy and frees pages under release",()=>{
   const owner=resolve(import.meta.dir,"../..");
   const law=JSON.parse(readFileSync(frameworkSourcePath("🔨️modules/🌱️value/🧬️retained-clone/🧪️tests/🧫️fixtures/📏️release-authority/🔣️.json"),"utf8"));
   const original={active:{byte:law.inputByte},closing:null,page:{bytes:law.physicalCursorBytes}};
-  const moved=applyPatch(original,[{op:"move",from:"/active",path:"/closing"}],true,false).newDocument;
+  const moved=patched(original,[{op:"move",from:"/active",path:"/closing"}]);
   const database=new Database(":memory:");
   try{
     database.exec("CREATE TABLE owner (name TEXT PRIMARY KEY, bytes INTEGER NOT NULL)");
@@ -469,7 +463,7 @@ test("Drawing closure moves inline owners under copy and frees pages under relea
     expect(moved.closing).toEqual({byte:law.inputByte});
     expect(moved.page).toEqual(original.page);
     expect(law.oneBelowReleaseBytes).toBeLessThan(moved.page.bytes);
-    const closed=applyPatch(moved,[{op:"remove",path:"/page"}],true,false).newDocument;
+    const closed=patched(moved,[{op:"remove",path:"/page"}]);
     database.query("DELETE FROM owner WHERE name = ?").run("page");
     expect(database.query("SELECT COUNT(*) AS count FROM owner").get()).toEqual({count:0});
     expect(closed).toEqual({closing:{byte:law.inputByte}});
@@ -496,28 +490,26 @@ test("Drawing native paged owner preserves semantic snapshot and UTF-8 keys", ()
   const validate = semioSchemaAjvV1({allErrors:true}).addSchema(documentSchema).compile(snapshotSchema);
   expect(validate(input)).toBe(true);
   expect(new TextEncoder().encode(text).length).toBeGreaterThan(law.bodyBytes);
-  const copied = applyPatch({}, [{op:"add",path:"/snapshot",value:structuredClone(input)}], true, false).newDocument.snapshot;
+  const copied = patched({}, [{op:"add",path:"/snapshot",value:structuredClone(input)}]).snapshot;
   expect(copied).toEqual(JSON.parse(JSON.stringify(input)));
-  const host = readFileSync(join(owner,"🦀️.rs"),"utf8");
-  const layerClone = host.slice(host.indexOf("struct DrawingNativeCloneAuthority"),host.indexOf("struct DrawingCloneWorkTotals"));
+  const layerClone = ownerSlice(owner,"struct DrawingNativeCloneAuthority","struct DrawingCloneWorkTotals");
   expect(layerClone.includes("cursor: T::Cursor")).toBe(true);
   expect(layerClone.includes("DrawingNativeCloneAuthority<DrawingLayerNode>")).toBe(true);
   expect(layerClone.includes("cursor.advance")).toBe(true);
-  expect(layerClone.includes("close_granted")).toBe(true);
+  expect(layerClone.includes("pub fn close_step(&mut self,grant:RetainedCloneGrant)")).toBe(true);
   expect(layerClone.includes("Vec::with_capacity")).toBe(false);
   expect(validate(copied)).toBe(true);
   expect(validate({...copied, assets:{[text]:{mime:"image/png",data:7}}})).toBe(false);
   expect(validate({...copied, layers:{}})).toBe(false);
-  const retired = applyPatch({snapshot:copied}, [{op:"remove",path:"/snapshot"}], true, false).newDocument;
+  const retired = patched({snapshot:copied}, [{op:"remove",path:"/snapshot"}]);
   expect(Object.keys(retired).length === 0).toBe(law.terminalEmpty);
   expect(input.id === text && Object.keys(input.assets)[0] === text).toBe(law.originalUnchanged);
   for (const pause of law.cancelAt) {
     const partial = {snapshot:structuredClone(copied), pause};
-    const closed = applyPatch(partial, [{op:"remove", path:"/snapshot"}], true, false).newDocument;
+    const closed = patched(partial, [{op:"remove", path:"/snapshot"}]);
     expect(closed).toEqual({pause});
     expect(validate(input)).toBe(true);
   }
-  console.log("[DEBUG] Drawing native paged owner admitted by semantic snapshot schema/Ajv; JSON Patch/UTF-8 conserve long text and object keys");
 });
 
 
@@ -558,7 +550,6 @@ test("Drawing paged borrowed lookup follows first native depth-first identity", 
     expect(law.lookup.ownedProjection.targetReborrowedEachTurn).toBe(true);
     const retained = readFileSync(resolve(owner, "../../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔎️lookup/🔗️owned/🦀️.rs"), "utf8");
     expect(retained.includes("pub struct DrawingOwnedLayerLookupCursor")).toBe(true);
-    console.log("[DEBUG] Drawing borrowed lookup SQLite orders first duplicate/native depth-first IDs and retains long UTF8/NUL keys");
   } finally {database.close();}
 });
 
@@ -594,7 +585,7 @@ test("Drawing borrowed rename preparation preserves first-target inverse and nat
       expect(found?.name ?? null).toBe(row.inverseName === "long" ? long : row.inverseName);
       expect(found ? found.path.split("/").filter(part => /^\d+$/u.test(part)).map(Number) : null).toEqual(row.path);
       expect(!found ? "missing" : found.name === name ? "no-op" : "changed").toBe(row.disposition);
-      if (found && row.disposition === "changed") {const changed = applyPatch(structuredClone(input), [{op:"replace",path:found.path + "/name",value:name}], true, false).newDocument;expect(validate(changed)).toBe(true);const restored = applyPatch(changed, [{op:"replace",path:found.path + "/name",value:found.name}], true, false).newDocument;expect(restored).toEqual(input);}
+      if (found && row.disposition === "changed") {const changed = patched(structuredClone(input), [{op:"replace",path:found.path + "/name",value:name}]);expect(validate(changed)).toBe(true);const restored = patched(changed, [{op:"replace",path:found.path + "/name",value:found.name}]);expect(restored).toEqual(input);}
       if (row.repeatNewName) expect(new TextEncoder().encode(name).length).toBeGreaterThan(law.bodyBytes);
       if (row.repeatTarget) expect(new TextEncoder().encode(target).length).toBeGreaterThan(law.bodyBytes);
     }
@@ -614,6 +605,5 @@ test("Drawing borrowed rename preparation preserves first-target inverse and nat
     const retained = readFileSync(resolve(owner, "../../../🏅️standards/🔖️1/🪆️subsets/🏷️metadata/🧬️schema/🧬️mutations/✏️rename-layer/🎮️prepare/🔗️owned/🦀️.rs"), "utf8");
     expect(retained.includes("pub struct DrawingOwnedRenamePreparationCursor")).toBe(true);
     expect(retained.includes("pub fn path_index")).toBe(true);
-    console.log("[DEBUG] Drawing rename SQLite first identity/old name and independent RFC6902 restoration preserve empty/long UTF8, no-op and missing inputs");
   } finally {database.close();}
 });

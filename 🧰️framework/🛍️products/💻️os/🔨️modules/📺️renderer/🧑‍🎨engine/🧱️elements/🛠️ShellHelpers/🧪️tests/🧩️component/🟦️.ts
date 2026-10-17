@@ -15,7 +15,8 @@ import {
   segmentedDownloadSinkFactory,
   type SegmentedDownloadSink,
 } from "../../../📤️SegmentedDownload/🟦️.ts";
-import { buildActionCategoryTree, type ResolvedActionDefinition } from "../../🟦️.tsx";
+import { buildActionCategoryTree } from "../../🪟️window-panes/🟦️.tsx";
+import { type ResolvedActionDefinition } from "../../🏷️labels/🟦️.tsx";
 // #endregion 🔌️Adapters
 
 //#region 🧱️Fixtures

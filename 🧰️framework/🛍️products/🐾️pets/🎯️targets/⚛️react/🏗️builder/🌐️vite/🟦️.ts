@@ -4,7 +4,8 @@ import { existsSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineConfig, type Plugin } from "vite";
-import { semioEmojiIndexHtmlVitePlugin, semioServeCloseVitePlugin } from "../../../../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts";
+import { semioEmojiIndexHtmlVitePlugin, semioServeCloseVitePlugin } from "../../../../../../🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/🏗️builder/🌐️vite/🟦️.ts";
+import { hostBuildPlugins } from "../../../../../../🔨️modules/🖱️ui/🎯️targets/⚛️react/🛠️build-tooling/🟦️.ts";
 // #endregion 🔌️Adapters
 
 const target = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
@@ -97,7 +98,7 @@ export default defineConfig({
   base: "/",
   publicDir: false,
   cacheDir: resolve(bundleRoot, `node_modules/.vite/stories-${port}`),
-  plugins: [semioServeCloseVitePlugin(), semioEmojiIndexHtmlVitePlugin(storiesRoot), menagerieVitePlugin(process.env.PETS_MENAGERIE), directorVitePlugin(), react()],
+  plugins: [...hostBuildPlugins([semioServeCloseVitePlugin(), semioEmojiIndexHtmlVitePlugin(storiesRoot)]), menagerieVitePlugin(process.env.PETS_MENAGERIE), directorVitePlugin(), react()],
   server: { fs: { allow: [repoRoot] } },
   resolve: {
     alias: [

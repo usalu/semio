@@ -90,7 +90,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       geometry.dispose();
       const domains=JSON.parse(readFileSync(new URL("../🖱️ui/🎬️scene/🧪️tests/🧫️fixtures/🎯️component-source/🔣️.json",source.url),"utf8")).zeroIndex;
       for(const row of domains.accepted){const render=new BufferGeometry().setAttribute("position",new Float32BufferAttribute(row.positions.concat(row.edges.flat()).flat(),3));render.computeBoundingBox();expect(render.boundingBox!.min.toArray()).toEqual(row.bounds[0]);expect(render.boundingBox!.max.toArray()).toEqual(row.bounds[1]);if(row.kind==="zeroVertexWire"){expect(row.positions.length).toBe(0);expect(row.vertexIds.length).toBe(0);expect(row.edges.length).toBeGreaterThan(0);}render.dispose();}
-      console.log("[DEBUG] originalAnalyticWire independentThree=true topologyVertices=4 edges=4 triangles=0");
     });
     it("preserves exact multi-object component selection with independent Lodash merges", () => {
       const fixture = JSON.parse(readFileSync(new URL("../🖱️ui/🎬️scene/🧪️tests/🧫️fixtures/🎯️component-selection-merges/🔣️.json",source.url),"utf8"));
@@ -124,7 +123,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(-intersection.z).toBeCloseTo(nearClip.closestDepth,10);
       const nearCamera=new PerspectiveCamera(nearClip.camera.fov,1,nearClip.camera.near,nearClip.camera.far);nearCamera.lookAt(new Vector3(...nearClip.camera.target));nearCamera.updateMatrixWorld();
       for(const rectangle of nearClip.marquees){const xs=rectangle.points.map((point:number[])=>point[0]),ys=rectangle.points.map((point:number[])=>point[1]);for(const endpoint of [intersection,new Vector3(...nearClip.b)]){const projected=endpoint.clone().project(nearCamera),x=(projected.x+1)*200,y=(1-projected.y)*200;expect(x>=Math.min(...xs)&&x<=Math.max(...xs)&&y>=Math.min(...ys)&&y<=Math.max(...ys)).toBe(true);}}
-      console.log(`[DEBUG] originalClippedSegmentWitness independentThreePlaneLine=true cases=${clipped.cases.length} nearWorldDepth=true clippedMarquees=true`);
       let originalAnchor: Vector3 | undefined;
       for(const row of fixture.gumball.pivotCases){
         const pivot = new Vector3(...row.pivot);
@@ -155,7 +153,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(union(wide.slice(0,64),wide.slice(64))).toEqual(wide);
       expect(uniq(wide).length).toBe(fixture.gumball.wideSelection.count);
       expect(wide.reduce((bytes,id)=>bytes+new TextEncoder().encode(id).length,0)).toBeLessThan(16384);
-      console.log("[DEBUG] componentSelectionMerge modes=4 independentLodash=true exactSourceLabels=true nonactiveFaceChanges=2 wideTargets=80");
     });
     it("merges complete original face edge and vertex provenance", () => {
       const fixture = JSON.parse(readFileSync(new URL("./📐️brep/⚙️engine/🧪️tests/🧫️fixtures/🔗️mesh-transfer-merge/🔣️.json", source.url),"utf8"));
@@ -181,7 +178,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       for(let offset=0;offset<merged.edges.length;offset+=6)length+=new Vector3().fromArray(merged.edges,offset).distanceTo(new Vector3().fromArray(merged.edges,offset+3));
       expect(area).toBe(fixture.expected.area);expect(length).toBe(fixture.expected.edgeLength);
       geometry.dispose();
-      console.log(`[DEBUG] originalTransferMerge domains=3 independentThreeArea=${area} edgeLength=${length}`);
     });
     it("validates original vertex selection with independent Three geometry", () => {
       const fixture = JSON.parse(readFileSync(new URL("../🖱️ui/🎬️scene/🧪️tests/🧫️fixtures/🎯️vertex-selection/🔣️.json", source.url), "utf8"));
@@ -195,7 +191,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       }
       expect([...original].sort()).toEqual(fixture.expected);
       geometry.dispose();
-      console.log("[DEBUG] originalVertexSelection independentThree=true surfaceSamplesExcluded=true");
     });
     it("rejects malformed original vertex ranges before rendering", () => {
       const fixture = JSON.parse(readFileSync(new URL("./📐️brep/⚙️engine/🧪️tests/🧫️fixtures/🎯️vertex-provenance/🔣️.json",source.url),"utf8"));
@@ -225,7 +220,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         expect(geometry.getAttribute("position").count).toBe(surfaceCount + row.points.length);
         for (const [index,point] of row.points.entries()) expect(new Vector3().fromBufferAttribute(geometry.getAttribute("position"),surfaceCount+index).distanceTo(new Vector3(...point))).toBe(0);
         geometry.dispose();
-        console.log(`[DEBUG] originalVertexTransfer kind=${row.kind} points=${row.points.length} independentThree=true`);
       }
     });
     it("preserves analytic face and edge picking references without narrowing labels", () => {
@@ -249,7 +243,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       }
       expect(area).toBe(fixture.expected.area);
       geometry.dispose();
-      console.log(`[DEBUG] BRep analytic preview references domains=2 independentThreeArea=${area}`);
     });
     it("rejects incomplete, overlapping and malformed analytic picking ranges", () => {
       const fixture=JSON.parse(readFileSync(new URL("./📐️brep/⚙️engine/🧪️tests/🧫️fixtures/🎯️component-picking/🔣️.json",source.url),"utf8"));

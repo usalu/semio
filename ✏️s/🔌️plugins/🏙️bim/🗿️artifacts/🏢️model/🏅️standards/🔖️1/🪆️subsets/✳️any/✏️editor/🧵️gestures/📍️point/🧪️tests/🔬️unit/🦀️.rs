@@ -1,4 +1,4 @@
-use crate::editor::bim::gestures::tests::fixture::{model, room, Rig};
+use crate::editor::bim::fixture::{model, room, Rig};
 use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::{Point2, SpaceBoundary, StairFlight, TopConstraint}};
 
 #[semio_framework_async_macros::async_test]

@@ -17,20 +17,14 @@ impl protocol::OpBinary for XmlMutation {
     }
 }
 
-#[path = "📥️insert-element/🦀️.rs"]
-pub mod insert_element;
 
-#[path = "🗑️remove-element/🦀️.rs"]
-pub mod remove_element;
 
-#[path = "📜️set-doctype/🦀️.rs"]
-pub mod set_doctype;
 
-#[path = "✍️set-text/🦀️.rs"]
-pub mod set_text;
 
-#[path = "🏷️set-attribute/🦀️.rs"]
-pub mod set_attribute;
 
-#[path = "📣️set-declaration/🦀️.rs"]
-pub mod set_declaration;
+
+
+
+
+
+

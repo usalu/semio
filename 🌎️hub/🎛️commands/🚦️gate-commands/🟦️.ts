@@ -184,7 +184,7 @@ export class HostileInputCheckScript extends BundleScript {
     const range = flagValue(segments, "--seed-range")?.match(/^(\d+)\.\.(\d+)$/u);
     const seeds: number[] = range ? Array.from({ length: Math.max(0, Number(range[2]) - Number(range[1]) + 1) }, (_, index) => Number(range[1]) + index) : (flagValue(segments, "--seeds")?.split(",").map(Number) ?? (fixture.generative.seeds as number[]));
     if (seeds.length === 0 || seeds.some((seed) => !Number.isSafeInteger(seed) || seed < 0)) throw new Error("hostile-input-check needs non-negative integer seeds: --seeds <n,…> | --seed-range <from>..<to>");
-    const { acceptanceCheckResult, publishAcceptanceCheckResult, runLawProcess, withAcceptanceRecord } = await import("../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/🟦️.ts");
+    const { acceptanceCheckResult, publishAcceptanceCheckResult, runLawProcess, withAcceptanceRecord } = await import("@semio-tech/repo-test/acceptance/orchestration");
     const startedAt = new Date();
     let cancelled = false;
     const interrupt = (): void => {

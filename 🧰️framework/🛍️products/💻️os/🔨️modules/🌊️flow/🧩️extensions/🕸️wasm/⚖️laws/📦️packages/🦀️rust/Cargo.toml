@@ -28,6 +28,7 @@ neural_engine = { path = "../../../../../../🧠️neural/⚙️engine/📦️pa
 
 [dev-dependencies]
 semio-framework-job = { workspace = true, features = ["testkit"] }
+semio-framework-test-fixtures = { path = "../../../../../../../../../🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-framework-trace = { path = "../../../../../../../../../🔨️modules/⏱️trace/📦️packages/🦀️rust" }
 semio-framework-dsl-record = { path = "../../../../../../../../../🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
 semio-framework-pack-json = { path = "../../../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }

@@ -7,7 +7,6 @@ fn canonical_kind_matches_shared_neutral_corpus() {
         let kind = row["kind"].as_str().unwrap();
         assert_eq!(is_canonical_artifact_kind(kind), row["accepted"].as_bool().unwrap(), "{kind:?}");
     }
-    println!("[DEBUG] Actual Rust kind predicate agrees with shared independent grammar corpus");
 }
 
 #[test]
@@ -19,5 +18,4 @@ fn borrowed_reference_preserves_original_identity_addresses() {
     assert_eq!(copied, reference);
     assert!(std::ptr::eq(copied.artifact_id.as_ptr(), id.as_ptr()));
     assert!(std::ptr::eq(copied.artifact_kind.as_ptr(), kind.as_ptr()));
-    println!("[DEBUG] Actual borrowed reference copies only original identity views");
 }

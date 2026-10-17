@@ -56,13 +56,8 @@ store::config_diff! { record: FormsConfig, diff: FormsConfigDiff, fields: { cont
 mod mutations;
 pub use mutations::*;
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️contract-vectors/🦀️.rs"]
-mod contract_vectors;
 
-#[path = "🚪️io/🦀️.rs"]
-pub mod io;
+
+
+

@@ -1,7 +1,6 @@
 //! 🪟️ Exact-instance persisted and ephemeral ownership for Puzzle 2D panes.
 
 use crate::editor::puzzle2d::config::Puzzle2dSuggestionMenu;
-use crate::editor::puzzle2d::modes::edit::windows::{detail, overview, selection};
 use std::collections::BTreeMap;
 
 /// 🎚️ ONE exact Puzzle 2D pane's persisted-local options. `WindowConfigOwner::State` requires
@@ -595,7 +594,7 @@ fn puzzle2d_window_transient_retained_bytes(transient: &Puzzle2dWindowTransient)
     Some(bytes)
 }
 
-fn puzzle2d_window_transient_preflight(mutation: &Puzzle2dWindowTransientMutation) -> Result<store::os_store::one_item::ArtifactStoreOneItemFootprint, String> {
+pub fn puzzle2d_window_transient_preflight(mutation: &Puzzle2dWindowTransientMutation) -> Result<store::os_store::one_item::ArtifactStoreOneItemFootprint, String> {
     let Puzzle2dWindowTransientMutation::Snapshot { transient } = mutation;
     let retained_bytes = puzzle2d_window_transient_retained_bytes(transient).ok_or_else(|| "Puzzle 2D window transient exceeds its exact retained publication envelope".to_string())?;
     Ok(store::os_store::one_item::ArtifactStoreOneItemFootprint::for_ephemeral_item(retained_bytes))
@@ -834,11 +833,8 @@ pub fn split(runtime: &crate::editor::puzzle2d::config::Puzzle2dPlayRuntime, win
     )
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 
 //#region 🪢️TaxonomyMounts
-#[path = "🧬️schema/🦀️.rs"]
-pub mod schema;
+
 //#endregion 🪢️TaxonomyMounts

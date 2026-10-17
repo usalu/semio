@@ -1,4 +1,10 @@
-use super::*;
+use semio_framework_os_renderer_wgpu_scene_feeds::{accepted_vfs_accessibility_controls, acknowledge_vfs_accessibility_candidates, seal_vfs_accessibility_candidates, stage_vfs_accessibility_controls};
+use crate::scene_double_click_action;
+use semio_framework_os_renderer_wgpu_scene_state::{SceneListHit, SceneModifiers, VfsAccessibilityControl, VfsAccessibilityControlKind, VfsAccessibilityFocusTarget};
+use semio_framework_os_renderer_wgpu_scene_text_vfs::{VfsAccessibilityKeyOutcome, VfsDescriptorValue, VfsSchema, build_vfs_visible_rows, vfs_accessibility_activate, vfs_accessibility_apply_key, vfs_avatar_initials, vfs_descriptor_label, vfs_descriptor_value, vfs_double_click_action, vfs_glyph_icon, vfs_hit, vfs_row_id, vfs_temporal_request};
+use serde_json::{Value, json};
+use std::collections::BTreeSet;
+use ui_wgpu::wgpu::{ActionDescriptor, Rect, SurfaceKind, Theme, UiComponentSceneNode, UiPresence};
 
 /// 🗂️ A configured `fileNodeKinds[kindId].icon` must win over the kind-name fallback table —
 /// previously `vfs_glyph_icon` only checked `.is_some()` and always returned `"folder"` for any

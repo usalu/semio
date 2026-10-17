@@ -3,9 +3,9 @@
 #[allow(unused_imports)]
 mod mutations_codec {
 use super::*;
-use crate::editor::architect::config::component::mutations::*;
-use crate::editor::architect::config::component::*;
-use crate::editor::architect::config::component::mutations::SetConfig;
+use crate::editor::architect::config::mutations::*;
+use crate::editor::architect::config::*;
+use crate::editor::architect::config::mutations::SetConfig;
 
 impl protocol::OpBinary for ArchitectConfigMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {

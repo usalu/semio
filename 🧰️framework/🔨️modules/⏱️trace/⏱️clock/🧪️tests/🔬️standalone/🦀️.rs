@@ -1,4 +1,5 @@
 use super::*;
+use semio_framework_test_fixtures::fixture_text;
 
 #[test]
 fn microsecond_clock_installation_is_exact_and_repeatable() {
@@ -8,7 +9,7 @@ fn microsecond_clock_installation_is_exact_and_repeatable() {
     fn foreign() -> Option<u64> {
         Some(900)
     }
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧵️job/⏱️budget/🕰️clock.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../🧵️job/⏱️budget/🕰️clock.json")).unwrap();
     for law in fixture["installation"].as_array().unwrap() {
         let authority = OnceLock::new();
         let clock = |name: &str| if name == "browser" { browser as fn() -> Option<u64> } else { foreign as fn() -> Option<u64> };
@@ -23,7 +24,7 @@ fn microsecond_clock_installation_is_exact_and_repeatable() {
 
 #[test]
 fn microsecond_watchdog_boundary_is_strictly_below_eight_ms() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧵️job/⏱️budget/🕰️clock.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../🧵️job/⏱️budget/🕰️clock.json")).unwrap();
     for law in fixture["watchdog"].as_array().unwrap() {
         let elapsed = law["elapsedMicroseconds"].as_str().unwrap().parse().unwrap();
         assert_eq!(interactive_step_contract_violated(elapsed), law["violated"].as_bool().unwrap());

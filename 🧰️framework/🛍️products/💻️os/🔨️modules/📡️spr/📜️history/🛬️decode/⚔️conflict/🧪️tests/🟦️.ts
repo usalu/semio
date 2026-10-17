@@ -14,7 +14,6 @@ test("original conflict receives actors original edit references envelopes and m
  const actual={id:id(),kind:source[at++],status:source[at++],actors:list(id),hlt:[scalar(),scalar(),scalar()],editIds:list(id),envelopesHex:list(()=>raw().toString("hex")),messages:list(()=>({level:source[at++],code:id(),message:raw().toString("utf8"),target:list(()=>raw().toString("utf8")),opIndex:source[at++]?scalar():null}))};
  expect(actual).toEqual(row.expected);expect(at).toBe(source.length);expect(db.query("select json(?) as value").get(JSON.stringify(actual))).toEqual({value:JSON.stringify(row.expected)});
  }}finally{db.close()}
- console.log("[DEBUG] Original Conflict Buffer/SQLite independent controls agree on all scalar, actor, prior-edit, envelope and typed message fields");
  const path=new URL("../🦀️.rs",import.meta.url);expect(existsSync(path)).toBe(true);if(!existsSync(path))return;const source=readFileSync(path,"utf8");
  for(const proof of["pub struct RetainedHistoryConflictDecode","RetainedHistoryMessageDecode","RetainedHistoryIdDecode","RetainedHistoryRecords","HistoryReadLimits","control.charge","pub fn take_ready_into","pub fn take_partial_into"]){expect(source.includes(proof)).toBe(true)}
  for(const cold of["read_conflict(","source.to_vec()","HistoryReadLimits::default","prior.to_vec()"]){expect(source.includes(cold)).toBe(false)}

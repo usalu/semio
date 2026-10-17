@@ -1,3 +1,4 @@
+use semio_framework_test_fixtures::{fixture_bytes, fixture_text};
 use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::*;
 use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::{PptxParagraph, PptxRun, PptxShape, PptxSlide, PptxTransform};
 use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::construction::minimal::build_minimal_pptx;
@@ -8,7 +9,7 @@ use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapsh
 use semio_s_artifact_stdio_zip::opc::{self, OpcPackage, RELS_CONTENT_TYPE, REL_TYPE_OFFICE_DOCUMENT};
 
 fn construction_fidelity_fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🏗️typed-construction-fidelity/🔣️.json")).expect("schema-first typed-construction fixture")
+    serde_json::from_str(&fixture_text!("../../🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/🏗️typed-construction-fidelity/🔣️.json").to_owned()).expect("schema-first typed-construction fixture")
 }
 
 fn construction_fidelity_snapshot(fixture: &serde_json::Value) -> PptxSnapshot {
@@ -369,7 +370,7 @@ async fn repeated_materialization_is_deterministic() {
 /// alignment padding, stored timestamps) is not the writer's, so every pipeline is held byte-exact to
 /// the export of its import, and that export to re-import as the same logical presentation.
 async fn exact_pptx_bytes() -> Vec<u8> {
-    include_bytes!("../../../🧪️tests/🧫️fixtures/📽️.pptx").to_vec()
+    fixture_bytes!("../../🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/📽️.pptx").to_vec()
 }
 
 async fn local_member_names(bytes: &[u8]) -> Vec<String> {
@@ -607,6 +608,8 @@ async fn fixture_survives_logical_io_persistence_diff_and_mutation_pipelines() {
 /// this artifact's OWN early-warning, plus direct coverage of the mutations/diff facets the
 /// framework's `m5` auto-discovery does not reach at all.
 mod conformance_laws {
+    use semio_framework_test_fixtures::{fixture_bytes, fixture_text};
+
     use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::*;
     use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::{diff, mutations, snapshot};
     use protocol::{DiffBinary,DiffCodec,DiffText, OpBinary, OpText};
@@ -696,18 +699,18 @@ mod conformance_laws {
     /// (see this ticket's own recon note on the pre-FG-wave state of these two files).
     #[semio_framework_async_macros::async_test]
     async fn fixture_honesty_law() {
-        const FIXTURE_DSL: &str = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio");
-        const FIXTURE_PACK: &[u8] = include_bytes!("../../../📚️examples/🎬️demo/🖼️assets/🎒️.pack.semio");
+        let fixture_dsl = fixture_text!("../../🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio").to_owned();
+        let fixture_pack = fixture_bytes!("../../🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/📚️examples/🎬️demo/🖼️assets/🎒️.pack.semio").to_vec();
 
         let demo = demo_pptx_snapshot().await;
 
-        let parsed = <PptxSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(FIXTURE_DSL).expect("parse shipped .dsl.semio fixture");
+        let parsed = <PptxSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(&fixture_dsl).expect("parse shipped .dsl.semio fixture");
         assert_eq!(parsed, demo, "shipped .dsl.semio fixture does not parse back to demo_pptx_snapshot().await");
-        assert_eq!(pack::snapshot::ArtifactDsl::print_dsl(&demo), FIXTURE_DSL, "print_dsl(demo_pptx_snapshot().await) drifted from the shipped .dsl.semio fixture");
+        assert_eq!(pack::snapshot::ArtifactDsl::print_dsl(&demo), fixture_dsl, "print_dsl(demo_pptx_snapshot().await) drifted from the shipped .dsl.semio fixture");
 
-        let decoded = <PptxSnapshot as pack::snapshot::ArtifactPack>::decode_pack(FIXTURE_PACK).expect("decode shipped .pack.semio fixture");
+        let decoded = <PptxSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&fixture_pack).expect("decode shipped .pack.semio fixture");
         assert_eq!(decoded, demo, "shipped .pack.semio fixture does not decode back to demo_pptx_snapshot().await");
-        assert_eq!(pack::snapshot::ArtifactPack::encode_pack(&demo), FIXTURE_PACK, "encode_pack(demo_pptx_snapshot().await) drifted from the shipped .pack.semio fixture");
+        assert_eq!(pack::snapshot::ArtifactPack::encode_pack(&demo), fixture_pack, "encode_pack(demo_pptx_snapshot().await) drifted from the shipped .pack.semio fixture");
     }
 }
 //#endregion 🔖️ConformanceLaws

@@ -1,7 +1,7 @@
 //! ➖️ `remove-point` — takes a point out of the geometry playground's point cloud. `index` is
 //! BASE-state, per the addressing convention for index-keyed collections.
 
-use crate::{EquationMutation, EquationSnapshot};
+use crate::EquationSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Payload
@@ -13,13 +13,16 @@ pub struct RemovePoint {
     pub index: usize,
 }
 
-impl protocol::MutationKind<EquationSnapshot, EquationMutation> for RemovePoint {
+impl<Op> protocol::MutationKind<EquationSnapshot, Op> for RemovePoint
+where
+    Op: protocol::Mutation<EquationSnapshot, Diff = crate::EquationDiff> + From<RemovePoint> + From<crate::standards::v1::subsets::geometry::schema::mutations::insert_point::InsertPoint>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "point", kind: "remove-point", record: "RemovedPoint" };
 
-    fn diff(&self, base: &EquationSnapshot) -> protocol::MutationOutcome<<EquationMutation as protocol::Mutation<EquationSnapshot>>::Diff> {
+    fn diff(&self, base: &EquationSnapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<EquationSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &EquationSnapshot) -> Result<Vec<EquationMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EquationSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

@@ -1,9 +1,10 @@
 //! 🧰️ Run-time test inputs of the space collection: fixtures, examples and schemas are read from the artifact directory instead of being compiled into the test closure.
+use semio_framework_test_fixtures::fixture_path;
 use std::{collections::HashMap, path::{Path, PathBuf}, sync::{Mutex, OnceLock}};
 
 pub fn product_directory() -> &'static Path {
     static DIRECTORY: OnceLock<PathBuf> = OnceLock::new();
-    DIRECTORY.get_or_init(|| Path::new(env!("CARGO_MANIFEST_DIR")).join("../.."))
+    DIRECTORY.get_or_init(|| fixture_path!("../.."))
 }
 
 fn leaked(relative: &str) -> &'static [u8] {

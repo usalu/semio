@@ -1,4 +1,4 @@
-use super::*;
+use crate::standards::v6_0::subsets::document::schema::diff::*;
 use protocol::{DiffBinary,DiffCodec,DiffText};
 
 #[test]

@@ -92,5 +92,4 @@ fn dictionary_range_denied_item_depth_and_release_grants_preserve_original_backi
         assert!(!index.closing);
     }
     assert_eq!(retire(&mut index, PAGE_BYTES), PAGE_BYTES);
-    eprintln!("[DEBUG] dictionary index retains original pointer on all refusals and physically releases each whole page exactly");
 }

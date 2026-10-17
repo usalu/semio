@@ -1,3 +1,5 @@
+use semio_framework_test_fixtures::fixture_path;
+
 extern crate semio_framework_os_kernel as protocol;
 use semio_s_artifact_cad_cad_modes::windows::config::*;
 use semio_s_artifact_cad_cad_model::snapshot::CadPaneId;
@@ -27,7 +29,7 @@ fn block_on_cad_window_ownership<F: std::future::Future>(future: F) -> F::Output
 
 #[test]
 fn cad_document_contract_world_window_config_matches_neutral_fixture_and_codecs() {
-    let fixture: serde_json::Value = serde_json::from_str(std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🪟️windows/🎚️config/🧪️tests/🧫️fixtures/🔬️contract/🪪️document/🔣️.json")).expect("../../🪟️windows/🎚️config/🧪️tests/🧫️fixtures/🔬️contract/🪪️document/🔣️.json").leak()).expect("CAD world-window fixture");
+    let fixture: serde_json::Value = serde_json::from_str(std::fs::read_to_string(fixture_path!("../../🪟️windows/🎚️config/🧪️tests/🧫️fixtures/🔬️contract/🪪️document/🔣️.json")).expect("../../🪟️windows/🎚️config/🧪️tests/🧫️fixtures/🔬️contract/🪪️document/🔣️.json").leak()).expect("CAD world-window fixture");
     let base: CadWorldWindowConfig = semio_framework_pack_json::from_json_str(&fixture["valid"][0].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("neutral config");
     assert_eq!(base, CadWorldWindowConfig::default());
     let mut next = base.clone();
@@ -156,7 +158,7 @@ fn cad_document_contract_world_window_runtime_isolates_commands_and_restores_exa
                     Ok(())
                 }
 
-                let fixture: serde_json::Value = serde_json::from_str(std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🪟️windows/🎚️config/🧪️tests/🧫️fixtures/🔬️contract/🪪️document/🔣️.json")).expect("../../🪟️windows/🎚️config/🧪️tests/🧫️fixtures/🔬️contract/🪪️document/🔣️.json").leak()).expect("CAD window fixture");
+                let fixture: serde_json::Value = serde_json::from_str(std::fs::read_to_string(fixture_path!("../../🪟️windows/🎚️config/🧪️tests/🧫️fixtures/🔬️contract/🪪️document/🔣️.json")).expect("../../🪟️windows/🎚️config/🧪️tests/🧫️fixtures/🔬️contract/🪪️document/🔣️.json").leak()).expect("CAD window fixture");
                 let expected = &fixture["ownership"];
                 let left_id = expected["leftId"].as_str().expect("left id");
                 let right_id = expected["rightId"].as_str().expect("right id");

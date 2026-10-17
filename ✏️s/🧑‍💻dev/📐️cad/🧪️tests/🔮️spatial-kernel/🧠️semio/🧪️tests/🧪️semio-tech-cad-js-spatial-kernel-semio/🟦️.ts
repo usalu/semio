@@ -1,8 +1,8 @@
 import Ajv from "ajv";
 import { core } from "../../../../../📦️packages/🟦️typescript/🟦️.ts";
-import { BrepjsKernel } from "../../../🧱️brepjs/🟦️.ts";
-import { Model } from "../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🧊️model/🟦️.ts";
-import { applyModelDiff } from "../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️.ts";
+import { BrepjsKernel } from "../../../🧱️brepjs/📨️worker-and-kernel/🟦️.ts";
+import { Model } from "@semio-tech/s-spatial-kernel-ts/geometry/model";
+import { applyModelDiff } from "@semio-tech/s-spatial-kernel-ts/spatial";
 import type { SemioTestDependencies } from "../../🟦️.ts";
 import type { Vec3 } from "@semio-tech/framework-3d-js";
 
@@ -28,7 +28,7 @@ type AffineKernelOps<S> = { readonly close?: () => Promise<void>; readonly make:
 
 /** 🧠️ The CAD runtime's own path: the Rust `BrepKernel` over the `brep_invoke` wire (`invokeBrep`, Semio session wasm). */
 async function semioAffineOps(fixture: AffineFixture): Promise<AffineKernelOps<string>> {
-  const { SemioGeometrySession } = await import("../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/🟦️.ts");
+  const { SemioGeometrySession } = await import("@semio-tech/s-spatial-kernel-semio-session-ts");
   const session = new SemioGeometrySession();
   const invokeBrep = session.invoke.bind(session);
   const handle = async (method: string, args: Record<string, unknown>) => (await invokeBrep<{ readonly handle: string }>(method, args)).handle;
@@ -140,7 +140,7 @@ async function affineDisagreements<S>(fixture: AffineFixture, ops: AffineKernelO
 
 /** 🔮️ OpenCascade through the owned `brepjs` boundary — the third-party answer to the same vectors. */
 async function openCascadeAffineOps(): Promise<AffineKernelOps<object>> {
-  const occt = await import("../../../../../../../🔌️plugins/📐️cad/⚙️engine/🧱️brepjs/🟦️.ts");
+  const occt = await import("@semio-tech/cad-engine-ts/brepjs");
   const wasmFile = await occt.resolveOwnedOpenCascadeWasmFileUrl();
   await occt.initializeOwnedOpenCascade((path) => (path === "brepjs_single.wasm" ? wasmFile : path));
   const degrees = (radians: number) => (radians * 180) / Math.PI;
@@ -173,7 +173,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   const { SemioBrepKernel } = dependencies;
 
   const { beforeEach, describe, expect, it } = vitest;
-  const { bootstrapCadModules } = await import("../../../../../../../🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️.ts");
+  const { bootstrapCadModules } = await import("@semio-tech/cad-cad-ts/standards/1/subsets/any/editor/engine/runtime");
   bootstrapCadModules();
 
   describe("@semio-tech/cad-js/spatial-kernel/semio", () => {

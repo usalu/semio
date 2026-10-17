@@ -42,7 +42,6 @@ where
     let redo = store::snapshot_clone_preparation::drive_one_item_preparation_law(&factory, current, mutation, grant());
     assert_eq!(*redo.post, expected, "{label}: Redo publishes the same post snapshot");
     assert_eq!(redo.inverse, apply.inverse, "{label}: Redo derives the same inverse rows");
-    eprintln!("[DEBUG] semio {label} apply turns={} undo rows={} redo turns={} retained={}", apply.turns, apply.inverse.len(), redo.turns, apply.retained_capacity_bytes);
 }
 
 fn text(value: &str) -> SemioValue {

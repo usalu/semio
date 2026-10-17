@@ -3,7 +3,6 @@
 //! existing one inverts back to the tile that was there.
 
 use crate::diff::Grid3dDiff;
-use crate::mutations::Grid3dMutation;
 use crate::schema::snapshot::*;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -18,17 +17,23 @@ pub struct PinCell {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn pin_cell(pinned: Grid3dPinnedCell) -> Grid3dMutation {
-    Grid3dMutation::PinCell(PinCell { pinned })
+pub fn pin_cell<Op>(pinned: Grid3dPinnedCell) -> Op
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::pin_cell::PinCell>,
+{
+    Op::from(PinCell { pinned })
 }
 
-impl MutationKind<Grid3dSnapshot, Grid3dMutation> for PinCell {
+impl<Op> MutationKind<Grid3dSnapshot, Op> for PinCell
+where
+    Op: protocol::Mutation<Grid3dSnapshot, Diff = Grid3dDiff> + From<PinCell> + From<crate::standards::v1::subsets::any::schema::mutations::unpin_cell::UnpinCell>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "fix", entity: "cell", kind: "pin-cell", record: "Fixed" };
 
     fn diff(&self, base: &Grid3dSnapshot) -> protocol::MutationOutcome<Grid3dDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Grid3dSnapshot) -> Result<Vec<Grid3dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Grid3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

@@ -1,4 +1,18 @@
-use super::*;
+#[allow(unused_imports)]
+use crate::{editor::animate::config::PresentationConfig, editor::animate::config::PresentationConfigMutation};
+#[allow(unused_imports)]
+use crate::{editor::animate::support::interaction_select_effect, editor::animate::support::new_tile_id, editor::animate::support::PresentationDispatchCtx};
+#[allow(unused_imports)]
+use crate::mutations::create_tile::CreateTile;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::mutations::PresentationMutation;
+#[allow(unused_imports)]
+use crate::{FigureTileDraft, FigureTileFrame, PresentationSnapshot};
+#[allow(unused_imports)]
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+#[allow(unused_imports)]
+use semio_framework_value_derive::{FromValue, ToValue};
+use crate::editor::animate::commands::add_tile::*;
 use crate::editor::animate::commands::{delete_selection, delete_tile, patch_tile_crops, rename_tiles};
 use crate::editor::animate::unit_tests::context::{dispatch, presentation_app, presentation_app_with_registry};
 use crate::editor::animate::PresentationCommand;
@@ -37,7 +51,7 @@ async fn patch_tile_crop_clamps_and_is_reversible() {
 /// `🎮️commands/🚮️delete-selection`'s own tests for the equivalent single-tile case).
 #[semio_framework_async_macros::async_test]
 async fn delete_selection_removes_only_the_selected_tile() {
-    use crate::editor::animate::{PRESENTATION_INTERACTION_DOMAIN, PRESENTATION_INTERACTION_GRANULARITY};
+    use crate::editor::animate::support::{PRESENTATION_INTERACTION_DOMAIN, PRESENTATION_INTERACTION_GRANULARITY};
     use semio_framework_plugin::{PluginApp, INTERACTION_SELECT_ACTION_ID};
     let mut app = presentation_app_with_registry().await;
     seed_2x2(&mut app).await;

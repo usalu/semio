@@ -1,5 +1,9 @@
-use super::*;
-use crate::preparation::{DocumentSceneJob, DocumentSceneLimits};
+use semio_framework_test_fixtures::fixture_text;
+
+#[allow(unused_imports)] use semio_s_artifact_draw_drawing_scene::preparation::{DocumentScenePlan, DocumentSceneError};
+#[allow(unused_imports)] use semio_framework_value::{ValueError,retained_clone::{RetainedCloneGrant,RetainedCloneStep},retirement::{RetireOwned,RetirementCursor,controlled::ControlledRetirement}};
+#[allow(unused_imports)] use semio_s_artifact_draw_drawing_scene::retirement::*;
+use semio_s_artifact_draw_drawing_scene::preparation::{DocumentSceneJob, DocumentSceneLimits};
 use serde_json::Value;
 use std::sync::Arc;
 fn observed<T>(step:impl FnOnce()->T)->(T,(usize,usize)){let(result,allocation)=semio_framework_trace::observe_heap_allocations_on_this_thread(step);assert!(!allocation.overflowed);(result,(allocation.requested_bytes,allocation.released_bytes))}
@@ -21,19 +25,18 @@ fn drain(plan:DocumentScenePlan){
 }
 #[test]
 fn painted_scenes_retirement_funds_original_allocations_and_releases(){
- let sources:Vec<Value>=serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/🎬️scene/📋️prepare/🔣️.json")).unwrap();
- let contract:Value=serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/🎬️scene/🧹️retire/📏️physical/🔣️.json")).unwrap();
+ let sources:Vec<Value>=serde_json::from_str(fixture_text!("../../../../../../🧪️tests/🧫️fixtures/🎬️scene/📋️prepare/🔣️.json")).unwrap();
+ let contract:Value=serde_json::from_str(fixture_text!("../../../../../../🧪️tests/🧫️fixtures/🎬️scene/🧹️retire/📏️physical/🔣️.json")).unwrap();
  for row in contract["cases"].as_array().unwrap(){
   if row["source"].is_null(){drain(DocumentScenePlan::default());}
-  else if row["source"]=="raster"{drain(DocumentScenePlan{assets:vec![crate::raster::RasterSceneAsset{id:"image".into(),image:Arc::new(semio_framework_pixels::RasterImage{width:2,height:2,pixels:vec![255;16]})}],nodes:Vec::new()});}
-  else{for source in &sources{let document:crate::DrawingSnapshot=serde_json::from_value(source["document"].clone()).unwrap();let v=&source["limits"];let mut job=DocumentSceneJob::new(&document,DocumentSceneLimits{max_nodes:v["maxNodes"].as_u64().unwrap()as usize,max_depth:v["maxDepth"].as_u64().unwrap()as usize,max_segments:v["maxSegments"].as_u64().unwrap()as usize,max_references:v["maxReferences"].as_u64().unwrap()as usize,max_source_bytes:v["maxSourceBytes"].as_u64().unwrap()as usize}).unwrap();let mut complete=false;for _ in 0..100000{if job.advance(4096).unwrap().done{complete=true;break;}}assert!(complete,"authored fixture preparation terminates");drain(job.result().unwrap());let(mut closing,output)=job.into_retirement();if let Some(output)=output{drain(output);}crate::draw_scene_physical_close!(closing,1);}}
-  eprintln!("[DEBUG] Native scene physical retirement fixture completed: {}",row["name"]);
+  else if row["source"]=="raster"{drain(DocumentScenePlan{assets:vec![semio_s_artifact_draw_drawing_scene::raster::RasterSceneAsset{id:"image".into(),image:Arc::new(semio_framework_pixels::RasterImage{width:2,height:2,pixels:vec![255;16]})}],nodes:Vec::new()});}
+  else{for source in &sources{let document:semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot=serde_json::from_value(source["document"].clone()).unwrap();let v=&source["limits"];let mut job=DocumentSceneJob::new(&document,DocumentSceneLimits{max_nodes:v["maxNodes"].as_u64().unwrap()as usize,max_depth:v["maxDepth"].as_u64().unwrap()as usize,max_segments:v["maxSegments"].as_u64().unwrap()as usize,max_references:v["maxReferences"].as_u64().unwrap()as usize,max_source_bytes:v["maxSourceBytes"].as_u64().unwrap()as usize}).unwrap();let mut complete=false;for _ in 0..100000{if job.advance(4096).unwrap().done{complete=true;break;}}assert!(complete,"authored fixture preparation terminates");drain(job.result().unwrap());let(mut closing,output)=job.into_retirement();if let Some(output)=output{drain(output);}semio_s_artifact_draw_drawing_scene::draw_scene_physical_close!(closing,1);}}
  }
 }
 #[test]
 fn painted_scenes_retirement_zero_grants_preserve_original_owner(){
  let mut close=ScenePlanCloseJob::new(DocumentScenePlan::default());
  assert_eq!(close.close_step(RetainedCloneGrant::default()).unwrap().progress(),Default::default());assert!(!close.terminal_is_empty());
- crate::draw_scene_physical_close!(close,1);
+ semio_s_artifact_draw_drawing_scene::draw_scene_physical_close!(close,1);
  assert_eq!(close.close_step(RetainedCloneGrant::default()).unwrap().progress(),Default::default());
 }

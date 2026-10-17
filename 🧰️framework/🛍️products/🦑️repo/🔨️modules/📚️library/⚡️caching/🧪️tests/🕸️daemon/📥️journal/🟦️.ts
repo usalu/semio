@@ -79,13 +79,11 @@ export async function proveDaemonJournal(workspace: string, output: string, invo
     await journal.close(); await assert.rejects(journal.capture(scope, control), /closed/);
     journal = await createRepositoryFilesystemJournalV1(root, { ...observation, census: async () => native.allFileData().map((row: { file: string }) => row.file) }, control);
     if (process.platform !== "win32") { await symlink(join(root, "peer"), join(root, "sample/linked")); await new Promise(resolve => setTimeout(resolve, 100)); await assert.rejects(journal.capture({ roots: [], files: ["sample/linked"] }, control), /no-follow/); }
-    console.log("[DEBUG] Native Nx Watcher + WorkspaceContext verified census race, flush, selected/global updates, create/delete, output/ignore exclusion, cancellation and no-follow refusal");
   } finally { await journal?.close(); await watcher.stop(); }
   let receive!: (error: unknown, events: readonly FilesystemJournalChangeV1[]) => void;
   const overflow = await createLiveFilesystemJournalV1({ source: { watch(callback) { receive = callback; return () => {}; }, async census() { return []; }, flush: () => [], async reconcile(event) { return [event.path]; }, async admitScope() {} }, excluded: () => false, isGlobalIdentity: () => false, maximumPaths: 10, maximumEvents: fixture.overflowEvents - 1 }, control);
   receive(null, Array.from({ length: fixture.overflowEvents }, (_, index) => ({ path: `sample/${index}.ts`, type: "create" as const })));
   await assert.rejects(overflow.capture(fixture.request.scope, control), /overflow/); await overflow.close();
-  console.log("[DEBUG] Pinned Nx journal protocol, bounded overflow refusal and independent Ajv witness oracle verified");
   const transportRoot = fullWorkspace ? workspace : join(output, "transport"); if (!fullWorkspace) { await mkdir(transportRoot, { recursive: true }); await writeFile(join(transportRoot, "package.json"), JSON.stringify({ name: "journal-native-fixture", version: "1.0.0", private: true })); await writeFile(join(transportRoot, "nx.json"), JSON.stringify({ plugins: [] })); }
   await rm(join(output, "prior-observer.json"), { force: true });
   for (let generation = 0; generation < (fullWorkspace ? 1 : 2); generation++) await runOwnedCommand(process.execPath, [join(workspace, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📜️script.ts"), "test", "daemon-journal", "transport"], transportRoot, "nx:journal-transport", 90_000, { signal: control.signal, env: scriptInvocationEnvironment(invocation, { ...process.env, SEMIO_DAEMON_FIXTURE_ROOT: transportRoot, SEMIO_DAEMON_FULL_WORKSPACE: fullWorkspace ? "true" : undefined, NX_DAEMON: "true", NX_SOCKET_DIR: undefined, NX_VERBOSE_LOGGING: "true", NX_WORKSPACE_DATA_DIRECTORY: join(output, "rpc-data"), SEMIO_TEST_ARTIFACT_DIR: output }) });
@@ -134,15 +132,13 @@ async function proveDaemonTransport(workspace: string, output: string, invocatio
     assert.equal(response.toolingIdentity, metadata.semioToolingIdentity);
     assert.equal(fixture.toolingLifetime.runningExclusive, "refused");
     await assert.rejects(acquireResourceLease({ directory: join(process.env.NODE_PATH!, "../../../../agents/resource-leases"), resource: fixture.toolingLifetime.resourcePrefix + metadata.semioToolingIdentity, mode: "exclusive", signal: control.signal, control, timeoutMs: 0 }), /timed out/, "Original live daemon must retain its immutable toolkit against pruning");
-    console.log("[DEBUG] Actual Node daemon owner shared toolkit lease refused Bun exclusive retirement");
     const priorPath = join(output, "prior-observer.json");
     let prior: { epoch: string; processId: number } | undefined; try { prior = JSON.parse(await readFile(priorPath, "utf8")); } catch (error) { if ((error as { code?: string }).code !== "ENOENT") throw error; }
-    if (prior) { assert.notEqual(response.witness.epoch, prior.epoch, "Fresh actual daemon observation must retire the previous epoch"); assert.notEqual(metadata.processId, prior.processId); console.log("[DEBUG] Actual daemon/worker retirement and restart produced a fresh observer epoch"); }
+    if (prior) { assert.notEqual(response.witness.epoch, prior.epoch, "Fresh actual daemon observation must retire the previous epoch"); assert.notEqual(metadata.processId, prior.processId);  }
     await writeFile(priorPath, JSON.stringify({ epoch: response.witness.epoch, processId: metadata.processId }));
     if (process.env.SEMIO_DAEMON_FULL_WORKSPACE === "true") {
       assert.ok(response.witness.globalIdentity.paths.length > 1000, "Actual monorepo native observer must include structural graph identity");
       const timings: number[] = []; for (let index = 0; index < 5; index++) { const started = performance.now(), observed = await client.getSemioFilesystemJournalV1(scope, control); assert.ok(observed); assert.equal(observed.witness.epoch, response.witness.epoch); assert.equal(observed.witness.sequence, response.witness.sequence); timings.push(Math.round(performance.now() - started)); }
-      console.log("[DEBUG] Actual monorepo journal coldReadyMs=" + Math.round(performance.now() - started) + " globalPaths=" + response.witness.globalIdentity.paths.length + " warmProbeMs=" + JSON.stringify(timings));
     } else {
     await writeFile(join(cpuDirectory, "cpu-request.json"), JSON.stringify({ version: 1, milliseconds: 2500 }));
     const blockStarted = performance.now();
@@ -153,7 +149,6 @@ async function proveDaemonTransport(workspace: string, output: string, invocatio
     assert.ok(busy && busy.witness.sequence > response.witness.sequence, "Independent native journal must observe mutation while SDK main thread is occupied");
     assert.ok(performance.now() - busyStarted < 1500, "Journal response must avoid the 2500ms occupied SDK main loop");
     await assert.rejects(readFile(join(cpuDirectory, "cpu-finished.json")), /ENOENT/, "Response must precede main-thread CPU completion");
-    console.log("[DEBUG] Immutable journal worker observed source mutation and answered in " + Math.round(performance.now() - busyStarted) + "ms while actual SDK main thread remained occupied");
     }
     const disabled = process.env.NX_DAEMON; process.env.NX_DAEMON = "false";
     assert.equal(await client.getSemioFilesystemJournalV1(scope, control), null); process.env.NX_DAEMON = disabled;
@@ -163,8 +158,6 @@ async function proveDaemonTransport(workspace: string, output: string, invocatio
     const cancelled = new AbortController(); cancelled.abort(Error("RPC caller cancelled"));
     await assert.rejects(client.getSemioFilesystemJournalV1(scope, scriptCompilerAdmissionControlV1(invocation, "nx:rpc-cancel", 1000, cancelled.signal)), /RPC caller cancelled/);
     assert.ok(await client.getSemioFilesystemJournalV1(scope, control), "Caller cancellation must not stop shared daemon");
-    console.log("[DEBUG] Configured bootstrap socket length=" + metadata.socketPath.length + " validated against deployed worker endpoint");
-    console.log("[DEBUG] Actual immutable Nx daemon RPC verified live epoch, effective global census, SDK custody, explicit disable, old-tooling refusal, cancellation and continued service");
   } finally { stop.abort(Error("Private daemon runtime proof finished")); await tracked; await writeFile(join(output, "daemon-runtime.log"), lines.join("\n") + "\n"); }
   if (ownedPid) { const started = performance.now(); while (true) { try { process.kill(ownedPid, 0); } catch (error) { if ((error as { code?: string }).code === "ESRCH") break; throw error; } control.signal.throwIfAborted(); assert.ok(performance.now() - started < 5000, "Owned private daemon must exit before its socket is reused"); await new Promise(resolve => setTimeout(resolve, 10)); } }
   if (oracleResponse) {
@@ -172,7 +165,7 @@ async function proveDaemonTransport(workspace: string, output: string, invocatio
     const toolingIdentity = (oracleResponse as { toolingIdentity: string }).toolingIdentity;
     try {
       const lease = await acquireResourceLease({ directory: join(process.env.NODE_PATH!, "../../../../agents/resource-leases"), resource: fixture.toolingLifetime.resourcePrefix + toolingIdentity, mode: "exclusive", signal: control.signal, control, timeoutMs: 0 });
-      lease.release(); console.log("[DEBUG] Actual daemon retirement released its immutable toolkit lease to Bun exclusive retirement");
+      lease.release(); 
     } catch (error) {
       if (!String(error).includes("Resource lease timed out")) throw error;
       const schema = JSON.parse(await readFile(join(import.meta.dir, "../../../🕸️graph/🔏️seal/📥️membership/📥️journal/👷️worker/🧬️schema/🔣️.json"), "utf8")), validate = new (require("ajv").default)().compile({ $schema: schema.$schema, $defs: schema.$defs, $ref: "#/$defs/Service" }), protectedOwners: number[] = [];
@@ -203,12 +196,11 @@ async function proveDaemonTransport(workspace: string, output: string, invocatio
           const reply=await new Promise<string>((accept,reject)=>{const socket=createConnection({...witness.endpoint,signal:control.signal});let response="",received=0,settled=false;const decoder=new TextDecoder("utf-8",{fatal:true});const finish=(error?:Error)=>{if(settled)return;settled=true;socket.destroy();if(error)reject(error);else accept(response)};socket.setTimeout(timeout,()=>finish(Error("finite toolkit challenge timed out")));socket.once("error",finish);socket.once("connect",()=>socket.write(witness.nonce+"\n"));socket.on("data",part=>{received+=part.length;if(received>65536){finish(Error("finite toolkit challenge response exceeded original bound"));return}try{response+=decoder.decode(part,{stream:true})}catch(error){finish(error as Error)}});socket.once("end",()=>{try{response+=decoder.decode();finish()}catch(error){finish(error as Error)}});socket.once("close",()=>{if(!settled)finish(Error("finite toolkit challenge ended without its owned reply"))})});
           checkResourceLeaseControl(control);if(!reply)continue;const actual=JSON.parse(reply);assert.equal(validateFinite(actual),true);assert.deepEqual(actual,witness);assert.equal(await readFile(file,"utf8"),bytes);process.kill(witness.processId,0);
           const {Database}=await import("bun:sqlite"),database=new Database(resourceLeasePathV1(join(process.env.NODE_PATH!,"../../../../agents/resource-leases"),fixture.toolingLifetime.resourcePrefix+toolingIdentity),{readwrite:true,create:false});try{database.exec("PRAGMA busy_timeout=0");assert.throws(()=>database.exec("BEGIN EXCLUSIVE"),/locked|busy/iu)}finally{database.close()}
-          protectedOwners.push(witness.processId);console.log("[DEBUG] Actual finite immutable toolkit nonce challenge and independent SQL exclusive refusal validated PID="+witness.processId+" identity="+toolingIdentity);
+          protectedOwners.push(witness.processId);
         }catch(error){if(["ENOENT","ESRCH","ECONNREFUSED","ECONNRESET"].includes((error as{code?:string}).code??""))continue;throw error}
       }
       assert.equal(fixture.toolingLifetime.otherLiveOwnerExclusive, "refused");
       assert.ok(protectedOwners.length, "Only an actual live immutable journal owner or challenged original finite SDK owner may preserve toolkit protection after the exact fixture PID exited");
-      console.log("[DEBUG] Exact private daemon exited; actual other live immutable journal or challenged finite original owners=" + JSON.stringify(protectedOwners) + " correctly preserved independent SQL exclusive toolkit refusal");
     }
   }
   const socketPath = require("nx/src/daemon/socket-utils").getFullOsSocketPath();
@@ -227,7 +219,6 @@ async function proveDaemonTransport(workspace: string, output: string, invocatio
   try {
     replaceGeneration = true;
     assert.equal(await client.getSemioFilesystemJournalV1(scope, control), null, "An old in-flight observer response cannot authorize a replacement generation");
-    console.log("[DEBUG] Actual SDK JSON response refused after its service generation changed while in flight");
     delayedReply=true;const started=performance.now();
     const delayed=await client.getSemioFilesystemJournalV1(scope,scriptCompilerAdmissionControlV1(invocation,"nx:rpc-original-delayed",fixture.deadline.deadlineUnixMilliseconds-fixture.deadline.now));
     assert.deepEqual(delayed,oracleResponse,"An authentic response after 1 second remains admitted by its original longer deadline");
@@ -240,6 +231,5 @@ async function proveDaemonTransport(workspace: string, output: string, invocatio
     assert.equal(sockets.size, 0, "Only dedicated request sockets must close after timeout/cancellation");
     assert.equal(slow.listening, true, "Request cancellation preserves service lifetime");
     invocation.control.signal.throwIfAborted();
-    console.log("[DEBUG] Installed Nx client actual delayed and stalled sockets verified original deadline, mid-request cancellation and socket release");
   } finally { for (const socket of sockets) socket.destroy(); await new Promise<void>(accept => slow.close(() => accept())); }
 }

@@ -1,0 +1,67 @@
+{
+ "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📸️remodel/📖️stories/🧭️coordination/🟦️.ts",
+ "importers": [
+  "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📸️remodel/📖️stories/🎭️frames/🧪️.story.tsx",
+  "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📸️remodel/📖️stories/🎭️model/🧪️.story.tsx",
+  "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📸️remodel/📖️stories/🎭️modes/🧪️.story.tsx",
+  "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📸️remodel/📖️stories/🎭️panels/🧪️.story.tsx",
+  "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📸️remodel/📖️stories/🎭️report/🧪️.story.tsx",
+  "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📸️remodel/📖️stories/🎭️viewer/🧪️.story.tsx"
+ ],
+ "children": [
+  {
+   "dir": "📐️scene-model",
+   "doc": "/** 📐️ The typed remodel story model: scene, stream, camera and result shapes plus the editor config the stories fold actions into. */",
+   "lines": [
+    [
+     46,
+     154
+    ],
+    [
+     461,
+     481
+    ]
+   ]
+  },
+  {
+   "dir": "🗂️documents",
+   "doc": "/** 🗂️ The story-local remodel documents: the populated toy scene and the empty default scene. */",
+   "lines": [
+    [
+     156,
+     459
+    ]
+   ]
+  },
+  {
+   "dir": "🗣️labels",
+   "doc": "/** 🗣️ The complete English and German remodel label sets and the locale lookup. */",
+   "lines": [
+    [
+     483,
+     741
+    ]
+   ]
+  },
+  {
+   "dir": "🪟️window-scenes",
+   "doc": "/** 🪟️ The remodel story constants and the per-window scene projections: main and viewer world, frames canvas, report table. */",
+   "lines": [
+    [
+     743,
+     978
+    ]
+   ]
+  },
+  {
+   "dir": "🧩️panel-documents",
+   "doc": "/** 🧩️ The remodel panel tab documents, built as retained nodes from the scene and labels. */",
+   "lines": [
+    [
+     980,
+     1149
+    ]
+   ]
+  }
+ ]
+}

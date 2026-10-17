@@ -121,6 +121,10 @@ type rasterRasterDiffGuardSizeBounds = { readonly minItems?: number; readonly ma
 
 export const rasterRasterDiffGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : rasterRasterDiffGuardReject(at, "value is not an object");
+export const rasterRasterDiffGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) rasterRasterDiffGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const rasterRasterDiffGuardArray = (value: unknown, at: string, bounds: rasterRasterDiffGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return rasterRasterDiffGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) rasterRasterDiffGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -174,7 +178,7 @@ export function parseRasterAssetsDelta(value: unknown, at = "$"): RasterAssetsDe
 }
 
 export function parseRasterLayersDelta(value: unknown, at = "$"): RasterLayersDelta {
-  const row = rasterRasterDiffGuardObject(value, at);
+  const row = rasterRasterDiffGuardClosed(rasterRasterDiffGuardObject(value, at), at, ["removed", "inserted", "moved", "modified"]);
   return {
     removed: rasterRasterDiffGuardArray(row["removed"], `${at}.removed`).map((item, index) => parseRasterLayerRemoval(item, `${at}.removed[${index}]`)),
     inserted: rasterRasterDiffGuardArray(row["inserted"], `${at}.inserted`).map((item, index) => parseRasterLayerInsertion(item, `${at}.inserted[${index}]`)),
@@ -210,7 +214,7 @@ export function parseRasterLayerInsertion(value: unknown, at = "$"): RasterLayer
 }
 
 export function parseRasterLayerRelocation(value: unknown, at = "$"): RasterLayerRelocation {
-  const row = rasterRasterDiffGuardObject(value, at);
+  const row = rasterRasterDiffGuardClosed(rasterRasterDiffGuardObject(value, at), at, ["id", "from", "to"]);
   return {
     id: rasterRasterDiffGuardString(row["id"], `${at}.id`),
     from: parseRasterLayerAddress(row["from"], `${at}.from`),
@@ -232,7 +236,7 @@ export function parseRasterPixelRegion(value: unknown, at = "$"): RasterPixelReg
 }
 
 export function parseRasterLayerModification(value: unknown, at = "$"): RasterLayerModification {
-  const row = rasterRasterDiffGuardObject(value, at);
+  const row = rasterRasterDiffGuardClosed(rasterRasterDiffGuardObject(value, at), at, ["id", "patch"]);
   return {
     id: rasterRasterDiffGuardString(row["id"], `${at}.id`),
     patch: parseRasterLayerPatch(row["patch"], `${at}.patch`),

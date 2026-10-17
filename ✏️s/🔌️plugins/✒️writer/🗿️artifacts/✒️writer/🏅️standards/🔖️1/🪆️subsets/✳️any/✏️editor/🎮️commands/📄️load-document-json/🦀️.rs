@@ -1,6 +1,6 @@
 //! ✍️ ✍️ Writer play app commands command — `load-document-json`.
 
-use crate::editor::writer::reset_document_effect;
+use crate::editor::writer::base::reset_document_effect;
 use crate::op::WriterMutation;
 use crate::WriterSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};

@@ -59,7 +59,7 @@ fn drive(job: &mut WfcJob<GraphTopology>, fuel: u64) -> Seen {
     let mut sequence = job.operation.preview_sequence;
     for _ in 0..60_000_000 {
         let mut sequence_receipt = RetainedCloneProgress::default();
-        let mut context = crate::job::test_step_context(job.operation.operation, job.operation.generation, StepBudget::new(fuel, u64::MAX, HEADLESS_GRANT), root_cancel_token(), &mut sequence, &mut sequence_receipt);
+        let mut context = semio_s_plugin_wfc_engine_oracle::step_context::test_step_context(job.operation.operation, job.operation.generation, StepBudget::new(fuel, u64::MAX, HEADLESS_GRANT), root_cancel_token(), &mut sequence, &mut sequence_receipt);
         let outcome = seen_of(job.step(&mut context));
         if outcome.is_terminal() {
             return outcome;
@@ -72,7 +72,7 @@ fn checkpoint(job: &mut WfcJob<GraphTopology>) -> Vec<u8> {
     let mut sequence = job.operation.preview_sequence;
     for _ in 0..60_000_000 {
         let mut sequence_receipt = RetainedCloneProgress::default();
-        let mut context = crate::job::test_step_context(job.operation.operation, job.operation.generation, StepBudget::new(1, u64::MAX, HEADLESS_GRANT), root_cancel_token(), &mut sequence, &mut sequence_receipt);
+        let mut context = semio_s_plugin_wfc_engine_oracle::step_context::test_step_context(job.operation.operation, job.operation.generation, StepBudget::new(1, u64::MAX, HEADLESS_GRANT), root_cancel_token(), &mut sequence, &mut sequence_receipt);
         let outcome = seen_of(job.step(&mut context));
         if let Seen::Checkpoint(bytes) = outcome {
             return bytes;
@@ -86,7 +86,7 @@ fn terminal_checkpoint(job: &mut WfcJob<GraphTopology>) -> Vec<u8> {
     let mut sequence = job.operation.preview_sequence;
     for _ in 0..60_000_000 {
         let mut sequence_receipt = RetainedCloneProgress::default();
-        let mut context = crate::job::test_step_context(job.operation.operation, job.operation.generation, StepBudget::new(1, u64::MAX, HEADLESS_GRANT), root_cancel_token(), &mut sequence, &mut sequence_receipt);
+        let mut context = semio_s_plugin_wfc_engine_oracle::step_context::test_step_context(job.operation.operation, job.operation.generation, StepBudget::new(1, u64::MAX, HEADLESS_GRANT), root_cancel_token(), &mut sequence, &mut sequence_receipt);
         if let Seen::Complete { state, .. } = seen_of(job.step(&mut context)) {
             return state;
         }
@@ -164,7 +164,7 @@ fn previews_report_monotonic_sequences_and_progress() {
     let mut previews = Vec::new();
     loop {
         let mut sequence_receipt = RetainedCloneProgress::default();
-        let mut context = crate::job::test_step_context(job.operation.operation, job.operation.generation, StepBudget::new(1, u64::MAX, HEADLESS_GRANT), root_cancel_token(), &mut sequence, &mut sequence_receipt);
+        let mut context = semio_s_plugin_wfc_engine_oracle::step_context::test_step_context(job.operation.operation, job.operation.generation, StepBudget::new(1, u64::MAX, HEADLESS_GRANT), root_cancel_token(), &mut sequence, &mut sequence_receipt);
         let outcome = seen_of(job.step(&mut context));
         let preview = match &outcome {
             Seen::Preview(bytes) => Some(semio_framework_pack_json::from_json_str::<WfcPreview>(std::str::from_utf8(bytes).expect("preview UTF-8"), semio_framework_pack_json::JsonMemberPolicy::Reject)),
@@ -202,7 +202,7 @@ fn first_preview_and_continuous_gap_include_bounded_publication() {
     let mut preview_count = 0;
     for _ in 0..100_000 {
         let mut sequence_receipt = RetainedCloneProgress::default();
-        let mut context = crate::job::test_step_context(job.operation.operation, job.operation.generation, StepBudget::new(1, u64::MAX, HEADLESS_GRANT), root_cancel_token(), &mut sequence, &mut sequence_receipt);
+        let mut context = semio_s_plugin_wfc_engine_oracle::step_context::test_step_context(job.operation.operation, job.operation.generation, StepBudget::new(1, u64::MAX, HEADLESS_GRANT), root_cancel_token(), &mut sequence, &mut sequence_receipt);
         units_since_preview += 1;
         let outcome = seen_of(job.step(&mut context));
         match outcome {
@@ -242,7 +242,7 @@ fn checkpoint_resume_preserves_preview_sequence() {
     let mut sequence = 0;
     let resumed = loop {
         let mut sequence_receipt = RetainedCloneProgress::default();
-        let mut context = crate::job::test_step_context(restored.operation.operation, restored.operation.generation, StepBudget::new(1, u64::MAX, HEADLESS_GRANT), root_cancel_token(), &mut sequence, &mut sequence_receipt);
+        let mut context = semio_s_plugin_wfc_engine_oracle::step_context::test_step_context(restored.operation.operation, restored.operation.generation, StepBudget::new(1, u64::MAX, HEADLESS_GRANT), root_cancel_token(), &mut sequence, &mut sequence_receipt);
         let outcome = seen_of(restored.step(&mut context));
         let preview = match &outcome {
             Seen::Preview(bytes) => Some(semio_framework_pack_json::from_json_str::<WfcPreview>(std::str::from_utf8(bytes).expect("preview UTF-8"), semio_framework_pack_json::JsonMemberPolicy::Reject)),
@@ -276,13 +276,13 @@ fn cancellation_and_generation_freshness_do_not_mutate_progress() {
     let cancel = root_cancel_token();
     cancel.cancel_now();
     let mut sequence_receipt = RetainedCloneProgress::default();
-    let mut cancelled = crate::job::test_step_context(job.operation.operation, job.operation.generation, StepBudget::new(10, u64::MAX, HEADLESS_GRANT), cancel, &mut sequence, &mut sequence_receipt);
+    let mut cancelled = semio_s_plugin_wfc_engine_oracle::step_context::test_step_context(job.operation.operation, job.operation.generation, StepBudget::new(10, u64::MAX, HEADLESS_GRANT), cancel, &mut sequence, &mut sequence_receipt);
     assert_eq!(seen_of(job.step(&mut cancelled)), Seen::Cancelled);
     assert_eq!(job.metrics(), before);
     let mut faulted = false;
     for _ in 0..PUBLICATION_STEP_BOUND {
         let mut sequence_receipt = RetainedCloneProgress::default();
-        let mut stale = crate::job::test_step_context(job.operation.operation, Generation(job.operation.generation.0 + 1), StepBudget::new(10, u64::MAX, HEADLESS_GRANT), root_cancel_token(), &mut sequence, &mut sequence_receipt);
+        let mut stale = semio_s_plugin_wfc_engine_oracle::step_context::test_step_context(job.operation.operation, Generation(job.operation.generation.0 + 1), StepBudget::new(10, u64::MAX, HEADLESS_GRANT), root_cancel_token(), &mut sequence, &mut sequence_receipt);
         if matches!(seen_of(job.step(&mut stale)), Seen::Fault(_)) {
             faulted = true;
             break;
@@ -310,7 +310,7 @@ fn cancellation_interrupts_checkpoint_and_commit_materialization_without_progres
             let cancel = root_cancel_token();
             cancel.cancel_now();
             let mut sequence_receipt = RetainedCloneProgress::default();
-            let mut context = crate::job::test_step_context(job.operation.operation, job.operation.generation, StepBudget::new(1, u64::MAX, HEADLESS_GRANT), cancel, &mut sequence, &mut sequence_receipt);
+            let mut context = semio_s_plugin_wfc_engine_oracle::step_context::test_step_context(job.operation.operation, job.operation.generation, StepBudget::new(1, u64::MAX, HEADLESS_GRANT), cancel, &mut sequence, &mut sequence_receipt);
             assert_eq!(seen_of(job.step(&mut context)), Seen::Cancelled);
             let after = match stage {
                 WfcStage::MaterializeCheckpoint => job.checkpoint_build.as_ref().map(|build| build.bytes.len()).unwrap_or(0),
@@ -322,7 +322,7 @@ fn cancellation_interrupts_checkpoint_and_commit_materialization_without_progres
             checked_commit |= stage == WfcStage::MaterializeCommit;
         }
         let mut sequence_receipt = RetainedCloneProgress::default();
-        let mut context = crate::job::test_step_context(job.operation.operation, job.operation.generation, StepBudget::new(1, u64::MAX, HEADLESS_GRANT), root_cancel_token(), &mut sequence, &mut sequence_receipt);
+        let mut context = semio_s_plugin_wfc_engine_oracle::step_context::test_step_context(job.operation.operation, job.operation.generation, StepBudget::new(1, u64::MAX, HEADLESS_GRANT), root_cancel_token(), &mut sequence, &mut sequence_receipt);
         if seen_of(job.step(&mut context)).is_terminal() {
             break;
         }
@@ -348,14 +348,14 @@ fn maximum_checkpoint_restore_is_bounded_and_cancellable_in_every_phase() {
             let token = root_cancel_token();
             token.cancel_now();
             let mut sequence_receipt = RetainedCloneProgress::default();
-            let mut context = crate::job::test_step_context(source.operation.operation, source.operation.generation, StepBudget::new(1, u64::MAX, HEADLESS_GRANT), token, &mut sequence, &mut sequence_receipt);
+            let mut context = semio_s_plugin_wfc_engine_oracle::step_context::test_step_context(source.operation.operation, source.operation.generation, StepBudget::new(1, u64::MAX, HEADLESS_GRANT), token, &mut sequence, &mut sequence_receipt);
             assert_eq!(seen_of(restore.step(&mut context)), Seen::Cancelled);
             let after = (restore.cursor, restore.domains.len(), restore.trail.len(), restore.decisions.len(), restore.observed.len(), restore.domain_cursor, restore.restored.is_some());
             assert_eq!(before, after);
             cancelled.push(stage);
         }
         let mut sequence_receipt = RetainedCloneProgress::default();
-        let mut context = crate::job::test_step_context(source.operation.operation, source.operation.generation, StepBudget::new(1, u64::MAX, HEADLESS_GRANT), root_cancel_token(), &mut sequence, &mut sequence_receipt);
+        let mut context = semio_s_plugin_wfc_engine_oracle::step_context::test_step_context(source.operation.operation, source.operation.generation, StepBudget::new(1, u64::MAX, HEADLESS_GRANT), root_cancel_token(), &mut sequence, &mut sequence_receipt);
         if matches!(seen_of(restore.step(&mut context)), Seen::Complete { .. }) {
             break;
         }
@@ -396,7 +396,7 @@ fn checkpoint_restore_rejects_size_arithmetic_overflow() {
     let mut sequence = 0;
     let outcome = (0..PUBLICATION_STEP_BOUND).find_map(|_| {
         let mut sequence_receipt = RetainedCloneProgress::default();
-        let mut context = crate::job::test_step_context(source.operation.operation, source.operation.generation, StepBudget::new(1, u64::MAX, HEADLESS_GRANT), root_cancel_token(), &mut sequence, &mut sequence_receipt);
+        let mut context = semio_s_plugin_wfc_engine_oracle::step_context::test_step_context(source.operation.operation, source.operation.generation, StepBudget::new(1, u64::MAX, HEADLESS_GRANT), root_cancel_token(), &mut sequence, &mut sequence_receipt);
         Some(seen_of(restore.step(&mut context))).filter(Seen::is_terminal)
     });
     assert_fault(outcome.expect("the fault is published within the bounded publication"), b"wfc-checkpoint-capacity");
@@ -444,7 +444,7 @@ fn every_large_domain_unit_including_checkpoint_stays_below_watchdog() {
     let mut saw_checkpoint = false;
     for _ in 0..6_000_000 {
         let mut sequence_receipt = RetainedCloneProgress::default();
-        let mut context = crate::job::test_step_context(job.operation.operation, job.operation.generation, StepBudget::new(1, u64::MAX, HEADLESS_GRANT), root_cancel_token(), &mut sequence, &mut sequence_receipt);
+        let mut context = semio_s_plugin_wfc_engine_oracle::step_context::test_step_context(job.operation.operation, job.operation.generation, StepBudget::new(1, u64::MAX, HEADLESS_GRANT), root_cancel_token(), &mut sequence, &mut sequence_receipt);
         let start = Instant::now();
         let outcome = seen_of(job.step(&mut context));
         samples.push(start.elapsed());

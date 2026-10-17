@@ -43,7 +43,6 @@ export async function sDevCompositionLawsV1(): Promise<void> {
     const attempted = take(candidates, acquired.length + (acquired.length < candidates.length ? 1 : 0));
     const oracle = concat(map(attempted, owner => `mount:${owner}`), map(reverse(acquired), owner => `dispose:${owner}`));
     assert.deepEqual(events, oracle, `${row.name}: independent locked Lodash retirement`);
-    console.log(`[DEBUG] s-dev-composition ${row.name}: ${JSON.stringify(events)}`);
   }
   const { bootSDevV1 } = await import("../../../🚀️entry/🟦️.ts");
   const catalogSchema = JSON.parse(readFileSync(new URL("../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧬️schema/🔣️.json", import.meta.url), "utf8"));
@@ -55,7 +54,6 @@ export async function sDevCompositionLawsV1(): Promise<void> {
     if (row.accepted) (await boot).dispose();
     else await assert.rejects(boot, /s-dev.missing-installed-inventory/u);
     assert.equal(calls, row.accepted ? 1 : 0);
-    console.log(`[DEBUG] s-dev-admission ${row.name}: accepted=${row.accepted} host=${calls}`);
   }
   const empty = { catalog: { version: 1 as const, targets: [], hosts: [], playgrounds: [] }, plugins: [], documentServices: [], surfaceSessionFactories: [] };
   const browser = new AbortController();
@@ -70,6 +68,5 @@ export async function sDevCompositionLawsV1(): Promise<void> {
   const workers = await installSDevWorkersV1([], { install: async () => { installs++; return { dispose() {} }; } }, { signal: new AbortController().signal, progress: () => {} });
   workers.dispose();
   assert.equal(installs, 0);
-  console.log(`[DEBUG] s-dev-browser empty caller inventory received; abort/dispose retired=${retired}`);
   console.log(`s-dev-composition: ${fixture.cases.length} complete portable lifecycle vectors passed`);
 }

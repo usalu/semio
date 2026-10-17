@@ -47,7 +47,6 @@ fn ordered_map_clone_advance_quotes_balance_original_heap_and_refused_currencies
             assert!(source.terminal_is_empty());
             if let Some(output)=output{let mut owner=ControlledRetirement::new(output).unwrap_or_else(|_|panic!("numeric map controlled authority"));for _ in 0..10000{if owner.terminal_is_empty(){break;}let grant=quote(crate::RetirementDemand{copy_bytes:owner.next_copy_byte_demand().unwrap().max(body),capacity_bytes:owner.next_capacity_byte_demand(body).unwrap(),release_bytes:owner.next_release_byte_demand().unwrap(),depth:owner.next_depth_demand().unwrap()});let(step,heap)=crate::observe_retirement_allocations(||owner.step(grant).unwrap());let receipt=step.progress();assert!(receipt.fits(grant));assert_eq!(heap,(receipt.retained_capacity_bytes,receipt.released_bytes));born+=heap.0;freed+=heap.1;}assert!(owner.terminal_is_empty());}
             let(_,heap)=crate::observe_retirement_allocations(||{drop(cursor);drop(source);});assert_eq!(heap,(0,0));assert_eq!(original.0+born,freed);
-            println!("[DEBUG] Ordered numeric clone count={count} stop={stop:?} original={} born={born} physical={freed}",original.0);
         }
     }
 }
@@ -87,7 +86,7 @@ fn ordered_comparison_custody_refuses_unadmitted_constructor_and_closes_original
         let (mut cursor,receipt)=admitted.unwrap_or_else(|_|panic!("admitted insertion constructor refused"));
         assert_eq!(receipt.retained_capacity_bytes,bytes);assert_eq!(heap,(bytes,0));cursor.begin_close();let mut born=bytes;let mut freed=0;
         for _ in 0..10000 {if cursor.terminal_is_empty(){break;}let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:3,maximum_capacity_bytes:cursor.next_close_capacity_byte_demand(3).unwrap(),maximum_release_bytes:cursor.next_close_release_byte_demand().unwrap(),maximum_depth:cursor.next_close_depth_demand().unwrap()};let (step,heap)=crate::observe_retirement_allocations(||cursor.close_step(grant).unwrap());let p=step.progress();assert!(p.fits(grant));assert_eq!(heap,(p.retained_capacity_bytes,p.released_bytes));born+=p.retained_capacity_bytes;freed+=p.released_bytes;}
-        assert!(cursor.terminal_is_empty());assert_eq!(original+born,freed);println!("[DEBUG] Ordered insertion authority original={original} born={born} physical={freed}");
+        assert!(cursor.terminal_is_empty());assert_eq!(original+born,freed);
     }
 }
 
@@ -492,5 +491,4 @@ fn ordered_wire_cold_context_map_matches_serde_and_bun() {
     let result=oracle.wait_with_output().unwrap();assert!(result.status.success());
     let independent:Vec<serde_json::Value>=serde_json::from_slice(&result.stdout).unwrap();
     assert_eq!(independent,fixture["cases"].as_array().unwrap().iter().map(|case|case["expected"].clone()).collect::<Vec<_>>());
-    println!("[DEBUG] Ordered cold map wire cases=5 original={original} born={allocated} released={released}");
 }

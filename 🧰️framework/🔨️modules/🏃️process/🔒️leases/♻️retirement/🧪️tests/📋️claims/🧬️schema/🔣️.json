@@ -1,0 +1,64 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "maximumClaimsPerTurn",
+    "maximumDirectoryEntries",
+    "cases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "maximumClaimsPerTurn": {
+      "const": 256
+    },
+    "maximumDirectoryEntries": {
+      "const": 65536
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "blockers",
+          "turns",
+          "cancel",
+          "retiredPerTurn"
+        ],
+        "properties": {
+          "name": {
+            "enum": [
+              "idle-after-unfinished-claim-prefix",
+              "cancel-during-unfinished-claim-prefix"
+            ]
+          },
+          "blockers": {
+            "const": 256
+          },
+          "turns": {
+            "enum": [
+              1,
+              2
+            ]
+          },
+          "cancel": {
+            "type": "boolean"
+          },
+          "retiredPerTurn": {
+            "enum": [
+              0,
+              1
+            ]
+          }
+        }
+      }
+    }
+  }
+}

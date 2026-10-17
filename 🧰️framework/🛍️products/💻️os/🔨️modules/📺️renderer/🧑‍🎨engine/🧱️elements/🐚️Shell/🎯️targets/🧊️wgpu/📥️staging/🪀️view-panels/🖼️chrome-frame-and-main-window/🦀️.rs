@@ -16,8 +16,20 @@ pub struct ShellChromeFrameCursor {
     /// immediate-mode chrome phases between them had none. gis2d on wgpu booted `ready`, laid its
     /// document out at the full viewport and painted a uniformly empty canvas for seven minutes
     /// because of exactly that (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY, `📓️w14a-*`).
+    #[cfg(any(test, feature = "testkit"))]
+    #[doc(hidden)]
+    pub parked_opportunities: u64,
+    #[cfg(not(any(test, feature = "testkit")))]
     parked_opportunities: u64,
+    #[cfg(any(test, feature = "testkit"))]
+    #[doc(hidden)]
+    pub parked_reports: u8,
+    #[cfg(not(any(test, feature = "testkit")))]
     parked_reports: u8,
+    #[cfg(any(test, feature = "testkit"))]
+    #[doc(hidden)]
+    pub parked_phase: ShellChromeFramePhase,
+    #[cfg(not(any(test, feature = "testkit")))]
     parked_phase: ShellChromeFramePhase,
 }
 

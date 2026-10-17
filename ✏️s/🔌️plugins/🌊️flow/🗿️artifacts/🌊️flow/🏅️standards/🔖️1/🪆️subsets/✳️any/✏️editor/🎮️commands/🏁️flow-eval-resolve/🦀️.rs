@@ -1,7 +1,7 @@
 //! 🧮️ 🧵️ Flow play app commands command — `flow-eval-resolve`.
 
 use crate::editor::flow::commands::flow_eval_tick::eval_tick_effect;
-use crate::editor::flow::modes::edit::windows::main::FLOW_PLAY_WINDOW_MAIN;
+use crate::editor::flow::base::FLOW_PLAY_WINDOW_MAIN;
 use crate::{FlowMutation, FlowSnapshot};
 use flow::FlowEvalSession;
 use semio_framework_plugin::NoConfig;
@@ -70,9 +70,9 @@ pub fn handle(payload: &FlowEvalResolve, _doc: &ArtifactView<'_, FlowSnapshot>, 
         flow::PreviewEvalOutcome::Working => false,
     };
     if given_up {
-        session.abandon_window_tick(&payload.window_id, crate::editor::flow::cold_grant()).map_err(crate::editor::flow::value_fault)?;
+        session.abandon_window_tick(&payload.window_id, crate::editor::flow::host::cold_grant()).map_err(crate::editor::flow::host::value_fault)?;
     }
-    let armed = session.settle_window_extension(&payload.window_id, crate::editor::flow::cold_grant()).map_err(crate::editor::flow::value_fault)?.0 || session.arm_owed_window_tick(&payload.window_id, crate::editor::flow::cold_grant()).map_err(crate::editor::flow::value_fault)?.0;
+    let armed = session.settle_window_extension(&payload.window_id, crate::editor::flow::host::cold_grant()).map_err(crate::editor::flow::host::value_fault)?.0 || session.arm_owed_window_tick(&payload.window_id, crate::editor::flow::host::cold_grant()).map_err(crate::editor::flow::host::value_fault)?.0;
     let effects = if armed { vec![eval_tick_effect(&payload.window_id, FLOW_PLAY_WINDOW_MAIN)] } else { Vec::new() };
     Ok(Emit { effects, ..Default::default() })
 }

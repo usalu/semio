@@ -17,7 +17,6 @@ fn captured_store_source_preserves_original_read_on_refusal_and_returns_root_to_
         let (owner,receipt)=result.unwrap();assert_eq!((heap.requested_bytes,heap.released_bytes),(receipt.retained_capacity_bytes,receipt.released_bytes));original=owner;if original.is_some(){break;}
     }
     assert!(original.is_some());crate::presence_test_retirement::finish_box(&mut original);assert!(registry.terminal_is_empty());crate::presence_test_retirement::finish_registry(registry);
-    eprintln!("[DEBUG] original Store read source pointer/index/generation retained on denied birth; source born={born} release={released}; original root returned to original pump registry");
 }
 
 
@@ -42,5 +41,4 @@ fn store_read_terminal_registry_receipt_preserves_original_system_release() {
     }
     assert_eq!(cursor.terminal_is_empty(), law["terminalRegistry"]["expectedTerminal"].as_bool().unwrap(), "registry cursor did not reach terminal; last receipts {:?}", receipts);
     assert_eq!(final_release != 0, law["terminalRegistry"]["finalReleaseMustBeReported"].as_bool().unwrap());
-    eprintln!("[DEBUG] original Store read final registry frame release={final_release} preserved through RetirementCursor adapter and System observer");
 }

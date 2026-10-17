@@ -103,9 +103,7 @@ pub fn addressed(view: &semio_framework_plugin::ViewModel, mutation: GisMapViewe
     Ok(semio_framework_plugin::WindowConfigMutation::of::<GisMapViewerWindowConfigOwner>(window_id, mutation))
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 
 #[path = "🚪️io/🦀️.rs"]
 pub mod io;

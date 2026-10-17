@@ -3,7 +3,8 @@ import type{DslValue,FormExpr,FormQuestion}from"../../../../🧬️schema/🧬�
 import{parseCondition,parseFormsDefinition,type FormsDefinition}from"../../../../🧬️schema/📝️definition/🟦️.ts";
 import{parseFormsResponse,type FormsResponse}from"../../../../🧬️schema/📨️response/🟦️.ts";
 import{parseFormsArtifact,type FormsArtifact}from"../../../../🧬️schema/🟦️.ts";
-import{type FormsDiff}from"../../../../🧬️schema/🔺️diff/🟦️.ts";
+import{type FormsDiff,type FormsQuestionsDelta}from"../../../../🧬️schema/🔺️diff/🟦️.ts";
+import type{BlockField}from"../../../../🧬️schema/🧬️mutations/🎛️change-block-field/🦠️mutation/🟦️.ts";
 import{parseFormsValue}from"../../../../🧬️schema/🌱️value/🟦️.ts";
 import {binary64,binary64Value} from "@semio-tech/framework/value/ieee754";
 import{parseSchemaRecord}from"@semio-tech/framework/schema/record";
@@ -74,4 +75,10 @@ export function decodeDocument(value:unknown):Record<string,unknown>{
 /** 🪪️ Decode the explicit Forms JSON document transport. */
 export function parseFormsJsonArtifact(value:unknown):FormsArtifact{return parseFormsArtifact(decodeDocument(value));}
 /** 🪪️ Project only the authored JSON-bearing document fields. */
-export function formsArtifactJson(value:FormsArtifact|FormsDiff):unknown{return{...value,...(value.definition===undefined?{}:{definition:formsDefinitionJson(value.definition)}),...(value.responses===undefined?{}:{responses:value.responses.map(formsResponseJson)})};}
+export function formsArtifactJson(value:FormsArtifact):unknown{return{...value,...(value.definition===undefined?{}:{definition:formsDefinitionJson(value.definition)}),...(value.responses===undefined?{}:{responses:value.responses.map(formsResponseJson)})};}
+/** 🔺️ Project one question-field change of a durable delta into JSON. */
+function formsBlockFieldJson(change:BlockField):unknown{if(change.value===null)return change;switch(change.field){case"default":case"params":return{...change,value:formsValueJsonProjection(change.value)};case"condition":return{...change,value:formsConditionJson(change.value)};default:return change;}}
+/** 🔺️ Project the question rows and field changes of a durable question delta into JSON. */
+function formsQuestionsDeltaJson(delta:FormsQuestionsDelta):unknown{return{...delta,inserted:delta.inserted.map(({index,row})=>({index,row:formsQuestionJson(row)})),modified:delta.modified.map(({id,patch})=>({id,patch:{...patch,changes:patch.changes.map(formsBlockFieldJson)}}))};}
+/** 🔺️ Project the literal payloads of a durable Forms delta into JSON. */
+export function formsDiffJson(value:FormsDiff):unknown{return{...value,...(value.steps===undefined?{}:{steps:{...value.steps,inserted:value.steps.inserted.map(({index,row})=>({index,row:{...row,blocks:row.blocks.map(formsQuestionJson)}})),modified:value.steps.modified.map(({id,patch})=>({id,patch:{...patch,blocks:patch.blocks===null?null:formsQuestionsDeltaJson(patch.blocks)}}))}}),...(value.responses===undefined?{}:{responses:{...value.responses,inserted:value.responses.inserted.map(({index,row})=>({index,row:formsResponseJson(row)}))}})};}

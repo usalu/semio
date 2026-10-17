@@ -324,8 +324,3 @@ impl Field for ModInt {
     }
 }
 // #endregion 🔖️ModInt
-
-// #region 🔖️Tests
-#[cfg(test)]
-include!("../🧪️tests/🔬️modular-unit/🦀️.rs");
-// #endregion 🔖️Tests

@@ -44,8 +44,5 @@ pub fn compute_semio_kit_entries(snapshot: &SemioKitSnapshot) -> SemioKitEntries
 }
 //#endregion 🔖️Entries
 
-#[cfg(test)]
-//#region 🧪️Tests
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

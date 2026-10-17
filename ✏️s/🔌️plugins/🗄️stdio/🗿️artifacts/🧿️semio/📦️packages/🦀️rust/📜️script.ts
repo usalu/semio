@@ -20,7 +20,7 @@ class TextReceivingSource extends BundleScript{
 }
 /** 🦀️ Executes genuine original complete Text receiving in its actual owning package. */
 class TextReceivingNative extends TextReceivingSource{
- async run(args:string[]):Promise<void>{await super.run(args);await runArtifactRustTests("semio-s-artifact-stdio-semio-text",this.repoRoot,["--lib","semio_text_original_receiving_","--no-fail-fast"],this.invocation.control);}
+ async run(args:string[]):Promise<void>{await super.run(args);await runArtifactRustTests("semio-s-artifact-stdio-semio-text",this.repoRoot,["--lib","semio_text_original_receiving_","--no-fail-fast"],this.invocation);}
 }
 
 class CompositionScript extends BundleScript {
@@ -40,7 +40,7 @@ const path=resolve(this.root,"../../🏅️standards/🔖️v1/🪆️subsets/�
 runCmd(process.execPath,["test",path],{cwd:this.repoRoot});
 runCmd(process.execPath,[join(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--resolveJsonModule","--allowImportingTsExtensions","--esModuleInterop","--skipLibCheck",path],{cwd:this.repoRoot});return;
 }if(segments[0]==="value-path"&&segments[1]==="source"){
-if(!existsSync(join(this.repoRoot,"node_modules/protobufjs/minimal.js"))){const{prepareJavascriptDependencies}=await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🟦️.ts"),{withJavascriptDependencyStorageV1}=await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts");await withJavascriptDependencyStorageV1(this.repoRoot,this.invocation,createIssuedResourceControlV1(this.invocation,"cache:entry",0),store=>prepareJavascriptDependencies("sync",this.repoRoot,store));}
+if(!existsSync(join(this.repoRoot,"node_modules/protobufjs/minimal.js"))){const{prepareJavascriptDependencies}=await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🟦️.ts"),{withJavascriptDependencyStorageV1}=await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts");await withJavascriptDependencyStorageV1(this.repoRoot,this.invocation,createIssuedResourceControlV1(this.invocation,"cache:entry",0),(store,control)=>prepareJavascriptDependencies("sync",this.repoRoot,store,control));}
 const path=resolve(this.root,"../../🏅️standards/🔖️v1/🪆️subsets/🔢️value/🚪️io/💾️binary/🧬️mutations/🧭️path");
 runCmd(process.execPath,["test",join(path,"🧪️tests/🟦️.ts")],{cwd:this.repoRoot});
 runCmd(process.execPath,[join(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--resolveJsonModule","--allowImportingTsExtensions","--esModuleInterop","--skipLibCheck",join(path,"🟦️.ts"),join(path,"🧪️tests/🟦️.ts")],{cwd:this.repoRoot});return;

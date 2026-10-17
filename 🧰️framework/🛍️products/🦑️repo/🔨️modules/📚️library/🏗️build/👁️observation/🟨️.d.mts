@@ -1,6 +1,7 @@
 import type * as fs from "node:fs";
 import type {readFile} from "node:fs/promises";
 import type {ResourceLeaseControl} from "@semio-tech/process/leases";
+import type{ExactSourceReadBatchV1,ExactSourceFileV1}from"../📥️inputs/🧮️digest/📥️read/🟨️.mjs";
 
 /** 🧾️ Describes exactly one byte image admitted by the defining observation schema. */
 export type SourceFileFactV1 = Readonly<{size:number;mtimeMs:number;ctimeMs:number;ino:number;sha256:string}>;
@@ -37,13 +38,15 @@ export function observedSourceAnalysisAsyncV1(provider:SourceAnalysisProviderV1,
 /** 🧿️ Seals and fingerprints the original module-load authority without issuing a grant. */
 export function inferenceAuthorityDigestV1():string;
 /** 📦️ Admits one physical project's awaited JSON computation and complete observations. */
-export function observeProjectInferenceV1<T>(options:Readonly<{cachePath:string;key:unknown;owner:string}>,compute:()=>T|PromiseLike<T>):Promise<Awaited<T>>;
+export function observeProjectInferenceV1<T>(options:Readonly<{cachePath:string;key:unknown;owner:string;reusable?:(value:unknown)=>boolean|PromiseLike<boolean>}>,compute:()=>T|PromiseLike<T>):Promise<Awaited<T>>;
 /** 🧵️ Replays complete original observations into every receiving synchronous scope. */
 export function memoizedObservedComputationV1<T>(cache:Map<unknown,unknown>,key:unknown,compute:()=>T):T;
 /** 🌊️ Replays original facts while checking the receiving caller's continuation. */
 export function memoizedObservedAsyncComputationV1<T>(cache:Map<unknown,unknown>,key:unknown,compute:()=>Promise<T>,checkpoint:()=>Promise<void>):Promise<T>;
 /** 🕸️ Preserves every Source fact even when a computation fails. */
 export function captureObservedSourceInputsV1<T>(compute:()=>T|PromiseLike<T>,onFailure?:((observations:SourceObservationV1[],authorityObservations:SourceObservationV1[])=>void)|undefined,includeAuthority?:boolean):Promise<CapturedSourceInputsV1<Awaited<T>>>;
+/** 🔏️ Records actual bounded bytes without accepting a caller-provided digest or file observation. */
+export function observedExactSourceFileV1(batch:ExactSourceReadBatchV1,root:string,name:string):Promise<ExactSourceFileV1|null>;
 /** 📍️ Records the actual system module resolver result or failure. */
 export function observedRequireResolve(from:string|URL,request:string):string;
 /** 🧭️ Returns the original neutral compiler system with observed filesystem ports. */
@@ -59,7 +62,7 @@ export type SourceSettlementRoundV1 = Readonly<{round:number;conflict?:string;fa
 /** ⏳️ Settles mutually consistent original facts under the existing signal and finite round limit. */
 export function settleObservedComputationV1<T>(compute:()=>T|PromiseLike<T>,options?:Readonly<{signal?:AbortSignal;limit?:number;onRound?:(round:SourceSettlementRoundV1)=>void|Promise<void>}>):Promise<Awaited<T>>;
 /** 🗃️ Reuses an inference result only while its complete current facts hold. */
-export function observeInference<T>(options:Readonly<{cachePath:string;key:unknown}>,compute:()=>T|PromiseLike<T>):Promise<Awaited<T>>;
+export function observeInference<T>(options:Readonly<{cachePath:string;key:unknown;reusable?:(value:unknown)=>boolean|PromiseLike<boolean>}>,compute:()=>T|PromiseLike<T>):Promise<Awaited<T>>;
 /** 🪢️ Publishes dependencies only with complete original inference and consumed facts. */
 export function observeDependencies<T>(options:Readonly<{receiptPath:string;recordDirectory?:string}>,compute:()=>T|PromiseLike<T>):Promise<Awaited<T>>;
 /** 🎛️ Receives the original preparation control without constructing operation authority. */
@@ -76,3 +79,5 @@ export function observationsHold(observations:readonly unknown[],limit?:number,s
 export function projectInferenceCountsV1():Record<string,number>;
 /** 📈️ Reports original Source and memo bookkeeping without exposing or discarding facts. */
 export function sourceObservationStatsV1():Readonly<{loadObservations:number;projectImages:number;originalInferencePublications:number;projectObservationRows:number;captureObservations:number;recordStores:number;analysisEntries:number;analysisBytes:number}>;
+
+export function requireCurrentObservationV1():void;

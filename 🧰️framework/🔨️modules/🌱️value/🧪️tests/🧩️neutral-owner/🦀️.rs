@@ -1,4 +1,5 @@
 //! 🧩️ Portable value and retained-owner laws run with product packages physically absent.
+use semio_framework_test_fixtures::fixture_text;
 use semio_framework_value::{DslValue, FromValue, ToValue, RetainedClone, RetireOwned};
 use semio_framework_value::retained_clone::{RetainedClone as RetainedCloneTrait, RetainedCloneBorrowAuthority, RetainedCloneCursor, RetainedCloneGrant, RetainedCloneSource, RetainedCloneStep};
 use serde::{Deserialize, Serialize};
@@ -90,7 +91,7 @@ struct PagedBranch {
 
 #[test]
 fn paged_native_recursive_clone_uses_admitted_lazy_cursor_owners() {
-    let law: serde_json::Value = serde_json::from_str(include_str!("../../📦️paged/🧪️tests/🧫️fixtures/🎮️native-owner/🔣️.json")).unwrap();
+    let law: serde_json::Value = serde_json::from_str(fixture_text!("../../../📦️paged/🧪️tests/🧫️fixtures/🎮️native-owner/🔣️.json")).unwrap();
     let depth = law["treeDepth"].as_u64().unwrap() as usize;
     assert!(std::mem::size_of::<<PagedTree as RetainedCloneTrait>::Cursor>() <= law["maximumCursorBytes"].as_u64().unwrap() as usize);
     let mut tree = PagedTree::Leaf;
@@ -112,12 +113,11 @@ fn paged_native_recursive_clone_uses_admitted_lazy_cursor_owners() {
     assert!(cursor.terminal_is_empty());
     retire(output, 4096);
     drain_source(source);
-    eprintln!("[DEBUG] paged native recursive tree depth={depth} lazy cursor grant4096 and terminal closure verified");
 }
 
 #[test]
 fn paged_native_record_derives_preserve_neutral_serde_and_dsl_shapes() {
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../📦️paged/🧪️tests/🧫️fixtures/🎮️native-owner/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(fixture_text!("../../../📦️paged/🧪️tests/🧫️fixtures/🎮️native-owner/🔣️.json")).unwrap();
     let title = corpus["prefix"].as_str().unwrap().repeat(corpus["prefixRepeat"].as_u64().unwrap() as usize);
     let input = serde_json::json!({"title":title,"rows":[{"label":"Grundstück🧬","count":7,"choice":null},{"label":"Aé","count":9,"choice":"Änderung"}],"objects":{title.clone():{"label":"Grundstück🧬","count":7,"choice":null}}});
     let source: PagedDocument = serde_json::from_value(input.clone()).unwrap();
@@ -145,12 +145,11 @@ fn paged_native_record_derives_preserve_neutral_serde_and_dsl_shapes() {
         retire(value, 4096);
     }
     drain_authority(authority);
-    eprintln!("[DEBUG] paged native record derive serde/DSL/clone/terminal law verified");
 }
 
 #[test]
 fn neutral_record_vectors_match_independent_serde() {
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧩️neutral-owner/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(fixture_text!("../../../🧪️tests/🧫️fixtures/🧩️neutral-owner/🔣️.json")).unwrap();
     for vector in corpus["vectors"].as_array().unwrap() {
         let input = vector["input"].clone();
         let oracle = serde_json::from_value::<Record>(input.clone());
@@ -186,7 +185,7 @@ fn neutral_record_vectors_match_independent_serde() {
 
 #[test]
 fn borrowed_record_clone_matches_neutral_serde_and_exact_cancellation() {
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧩️neutral-owner/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(fixture_text!("../../../🧪️tests/🧫️fixtures/🧩️neutral-owner/🔣️.json")).unwrap();
     let turn = &corpus["grant"];
     let grant = RetainedCloneGrant { maximum_items: turn["maximumItems"].as_u64().unwrap() as usize, maximum_copy_bytes: turn["maximumCopyBytes"].as_u64().unwrap() as usize + RetainedCloneBorrowAuthority::<()>::constructor_copy_bytes(), maximum_capacity_bytes: turn["maximumCapacityBytes"].as_u64().unwrap() as usize, maximum_depth: turn["maximumDepth"].as_u64().unwrap() as usize, maximum_release_bytes: turn["maximumReleaseBytes"].as_u64().unwrap() as usize };
     for row in corpus["vectors"].as_array().unwrap().iter().filter(|row| row["accepted"] == true) {
@@ -218,5 +217,4 @@ fn borrowed_record_clone_matches_neutral_serde_and_exact_cancellation() {
         drain_authority(changed);
         drain_authority(authority);
     }
-    eprintln!("[DEBUG] borrowed record neutral serde/source-address/cancel/terminal laws verified");
 }

@@ -8,7 +8,7 @@ import {nativeOwnerTestManifestRequestV1} from "../../🗺️owner-test-manifest
 const root=resolve(import.meta.dir,"../../../../../../../../../../"),owner=resolve(import.meta.dir,"../.."),general=join(root,"🧰️framework/📦️packages/🦀️rust/📜️script.ts"),processOwner=join(root,"🧰️framework/🔨️modules/🏃️process"),source=readFileSync(general,"utf8");
 const fixture=JSON.parse(readFileSync(join(owner,"🧪️tests/🧫️fixtures/🗺️owner-test-manifests/🔣️.json"),"utf8")) as {cases:{id:string;args:string[];valid:boolean;testManifests?:string[]}[]},schema=JSON.parse(readFileSync(join(owner,"🧬️schema/🗺️owner-test-manifests/🔣️.json"),"utf8")),oracle=new Ajv({strict:true,allErrors:true}).compile(schema);
 test("explicit manifest requests agree with the independent closed-schema oracle",()=>{
- for(const row of fixture.cases){let request;try{request=nativeOwnerTestManifestRequestV1(row.args);}catch{}expect(Boolean(request)).toBe(row.valid);if(request){expect(oracle(request)).toBe(true);expect(request.testManifests).toEqual(row.testManifests!);}console.log(`[DEBUG] native-manifest-request ${row.id} admitted=${Boolean(request)}`);}
+ for(const row of fixture.cases){let request;try{request=nativeOwnerTestManifestRequestV1(row.args);}catch{}expect(Boolean(request)).toBe(row.valid);if(request){expect(oracle(request)).toBe(true);expect(request.testManifests).toEqual(row.testManifests!);}}
  const admitted=nativeOwnerTestManifestRequestV1(fixture.cases[0]!.args);expect(oracle({...admitted,unexpected:true})).toBe(false);
 });
 test("General task ownership follows its neutral imports and exact route roster",()=>{
@@ -17,7 +17,6 @@ test("General task ownership follows its neutral imports and exact route roster"
  expect(imports.some(value=>value.includes("🛍️products"))).toBe(false);
  expect(source.includes("semio-framework-os-")).toBe(false);expect(source.includes('segments[0] === "io"')).toBe(false);
  expect(routes).toContain("test-fixture-ownership-source");expect(routes).toContain("test-artifact-kind-source");expect(routes).not.toContain("test-fixture-ownership");expect(routes).not.toContain("test-artifact-kind");
- console.log(`[DEBUG] general-owner imported=${imports.length} routes=${routes.length}`);
 });
 /** 📥️ Authors one original sixty-second law deadline before route work. */
 function originalGeneralInvocation(commands: string[][]): string {
@@ -40,7 +39,7 @@ function route(command:string[],invocation:string,status=0,processStatus=0){
 test("registered General commands keep neutral package filters and runner budgets",()=>{
  const cases:[string[],string[][]][]=[[["test-action-choices"],[["semio-framework"]]],[["test-core-modules"],[["semio-framework-hash"],["semio-framework-pixels"],["semio-framework-intrinsic-size"],["semio-framework-mesh-engine"]]],[["test-deflate-encoding"],[["semio-framework-deflate"]]],[["test-snapshot-sqlite","native"],[["semio-framework-io-sqlite-snapshot"]]],[["test"],[["semio-framework"]]]];
  const invocation=originalGeneralInvocation([...cases.map(row=>row[0]),["test-artifact-kind-source"],["test-fixture-ownership-source"],["test-host-effect-invocation"]]);
- for(const [command,packages] of cases){const result=route(command,invocation);expect(result.stderr).not.toContain("error:");expect(result.status).toBe(0);expect(result.receipts.filter(row=>row.kind==="cargo").map(row=>row.packages)).toEqual(packages);console.log(`[DEBUG] General route ${command.join(" ")} packages=${packages.length}`);}
+ for(const [command,packages] of cases){const result=route(command,invocation);expect(result.stderr).not.toContain("error:");expect(result.status).toBe(0);expect(result.receipts.filter(row=>row.kind==="cargo").map(row=>row.packages)).toEqual(packages);}
  for(const command of [["test-artifact-kind-source"],["test-fixture-ownership-source"],["test-host-effect-invocation"]]){const result=route(command,invocation);expect(result.status).toBe(0);expect(result.receipts[0].kind).toBe("process");expect(result.receipts[0].budgetMs).toBe(15000);}
 });
 test("package descriptor capture preserves the exact filter boundary and failure exit",()=>{

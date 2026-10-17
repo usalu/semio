@@ -35,32 +35,23 @@ pub fn decode_op(bytes: &[u8]) -> Result<RewriteRuleMutation, protocol::Protocol
     RewriteRuleMutation::decode_op(bytes)
 }
 
-#[path = "📐️change-rule-layout/🦀️.rs"]
-pub mod change_rule_layout_point;
+pub use semio_s_artifact_trinity_rewriting_model::standards::v1::subsets::any::io::binary::mutations::change_rule_layout_point;
 
-#[path = "🫳️drag-rule/🦀️.rs"]
-pub mod drag_rule_nodes;
+pub use semio_s_artifact_trinity_rewriting_model::standards::v1::subsets::any::io::binary::mutations::drag_rule_nodes;
 
-#[path = "👉️edit-rhs/🦀️.rs"]
-pub mod edit_rhs;
+pub use semio_s_artifact_trinity_rewriting_model::standards::v1::subsets::any::io::binary::mutations::edit_rhs;
 
-#[path = "🖼️edit-working-graph/🦀️.rs"]
-pub mod edit_working_graph;
+pub use semio_s_artifact_trinity_rewriting_model::standards::v1::subsets::any::io::binary::mutations::edit_working_graph;
 
-#[path = "🗑️remove-rule-layout/🦀️.rs"]
-pub mod remove_rule_layout_point;
+pub use semio_s_artifact_trinity_rewriting_model::standards::v1::subsets::any::io::binary::mutations::remove_rule_layout_point;
 
-#[path = "🔧️change-parameter/🦀️.rs"]
-pub mod change_parameter_binding;
+pub use semio_s_artifact_trinity_rewriting_model::standards::v1::subsets::any::io::binary::mutations::change_parameter_binding;
 
-#[path = "👈️edit-lhs/🦀️.rs"]
-pub mod edit_lhs;
+pub use semio_s_artifact_trinity_rewriting_model::standards::v1::subsets::any::io::binary::mutations::edit_lhs;
 
-#[path = "🧹️remove-parameter-binding/🦀️.rs"]
-pub mod remove_parameter_binding;
+pub use semio_s_artifact_trinity_rewriting_model::standards::v1::subsets::any::io::binary::mutations::remove_parameter_binding;
 
-#[path = "📍️set-rule-layout/🦀️.rs"]
-pub mod set_rule_layout_points;
+pub use semio_s_artifact_trinity_rewriting_model::standards::v1::subsets::any::io::binary::mutations::set_rule_layout_points;
 
 mod native_codec {
 use crate::standards::v1::subsets::any::schema::mutations::RewriteRuleMutation;

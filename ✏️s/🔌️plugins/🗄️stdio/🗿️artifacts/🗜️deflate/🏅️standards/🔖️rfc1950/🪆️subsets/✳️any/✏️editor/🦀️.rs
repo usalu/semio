@@ -127,7 +127,7 @@ semio_s_artifact_stdio_contract::snapshot_editing_command_roster!(DeflateEditorC
 /// `#`-prefixed and blank lines are ignored (the payload byte-count comment). `None` on any missing
 /// or malformed required key or out-of-schema header nibble — the caller rejects the whole command.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn parse_header_summary(text: &str) -> Option<(u8, u8, crate::schema::snapshot::DeflateLevelHint, Option<u32>)> {
+pub fn parse_header_summary(text: &str) -> Option<(u8, u8, crate::schema::snapshot::DeflateLevelHint, Option<u32>)> {
     let mut fields = std::collections::BTreeMap::new();
     for line in text.lines() {
         let line = line.trim();
@@ -172,7 +172,7 @@ fn deflate_command_id(command: &semio_s_artifact_stdio_contract::editing::Snapsh
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn deflate_text_emit(command: &semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand<DeflateEditorCommand>, snapshot: &DeflateSnapshot) -> Result<Emit<DeflateMutation>, Fault> {
+pub fn deflate_text_emit(command: &semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand<DeflateEditorCommand>, snapshot: &DeflateSnapshot) -> Result<Emit<DeflateMutation>, Fault> {
     let semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native(DeflateEditorCommand::ReplaceText { text }) = command else {
         return Err(Fault::from("stdio-deflate-snapshot-edit-routed-to-native-reducer"));
     };
@@ -244,9 +244,9 @@ impl ToolJobFactory for DeflateTextCommandJobFactory {
         &mut self,
         _operation: semio_framework_job::Operation,
         payload: Self::Payload,
-        input: semio_framework_plugin::action_bus::RetainedToolWireInput,
-        checkpoint: Option<semio_framework_plugin::action_bus::RetainedToolWireInput>,
-    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework_plugin::action_bus::RetainedToolWireInput, Option<semio_framework_plugin::action_bus::RetainedToolWireInput>)> {
+        input: semio_framework_action_bus::RetainedToolWireInput,
+        checkpoint: Option<semio_framework_action_bus::RetainedToolWireInput>,
+    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework_action_bus::RetainedToolWireInput, Option<semio_framework_action_bus::RetainedToolWireInput>)> {
         if input.declared_bytes() > DEFLATE_TEXT_MAXIMUM_RAW_BYTES || checkpoint.is_some() {
             return Err((ToolJobFactoryError::new("stdio deflate text edit rejects oversized wire or checkpoint owner"), input, checkpoint));
         }
@@ -421,7 +421,5 @@ pub fn create_deflate_editor() -> semio_framework_plugin::AppDefinition {
 //#endregion 🔖️Manifest
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

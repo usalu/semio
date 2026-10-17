@@ -9,5 +9,4 @@ pub fn verify(module_id: &str, typology_json: &str, kinds_json: &str) {
     assert_eq!(serde_json::Value::Array(kinds.iter().map(|kind| kind["id"].clone()).collect()), case["kindIds"]);
     assert_eq!(serde_json::Value::Array(kinds.iter().map(|kind| kind["availability"].clone()).collect()), case["availability"]);
     assert!(kinds.iter().all(|kind| kind["moduleId"] == module_id));
-    eprintln!("[DEBUG] Independent serde_json Sourcing catalog {module_id}: exact typology and {} kinds", kinds.len());
 }

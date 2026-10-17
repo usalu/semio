@@ -19,6 +19,10 @@ type imperativeImperativePresenceGuardSizeBounds = { readonly minItems?: number;
 
 export const imperativeImperativePresenceGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : imperativeImperativePresenceGuardReject(at, "value is not an object");
+export const imperativeImperativePresenceGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) imperativeImperativePresenceGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const imperativeImperativePresenceGuardArray = (value: unknown, at: string, bounds: imperativeImperativePresenceGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return imperativeImperativePresenceGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) imperativeImperativePresenceGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -49,5 +53,5 @@ export const imperativeImperativePresenceGuardConstant = <T extends string | num
 //#endregion 🚪️Parsers
 
 export function parseImperativePresence(value: unknown, at = "$"): ImperativePresence {
-  return imperativeImperativePresenceGuardObject(value, `${at}`);
+  return imperativeImperativePresenceGuardClosed(imperativeImperativePresenceGuardObject(value, `${at}`), `${at}`, []);
 }

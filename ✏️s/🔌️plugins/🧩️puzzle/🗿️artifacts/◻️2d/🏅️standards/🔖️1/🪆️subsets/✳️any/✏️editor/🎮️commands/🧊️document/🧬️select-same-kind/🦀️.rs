@@ -1,6 +1,6 @@
 //! 🗂️ `select-same-kind` command.
 
-use {crate::editor::puzzle2d::snapshot::puzzle2d_selection_write, crate::editor::puzzle2d::snapshot::select_same_kind_ids, crate::editor::puzzle2d::Puzzle2dActionCtx};
+use {crate::editor::puzzle2d::snapshot::puzzle2d_selection_write, crate::editor::puzzle2d::snapshot::select_same_kind_ids, crate::editor::puzzle2d::interaction::Puzzle2dActionCtx};
 use semio_framework::kernel::UiDirtyScope;
 
 /// 🧬️ Widens the live `vortex` selection to every node sharing a kind with a selected node — an

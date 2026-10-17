@@ -1,6 +1,7 @@
 /** 🖼️ Resolves chart specifications into typed geometry and owned scene graphs. */
-import type { DrawingScene, SceneNode, PathSegment } from "../../../../../🔨️modules/◻️2d/🟦️.ts";
-import { drawVizSymbol, vizCurve, vizPathRecorder, type VizPathCommand } from "../✒️mark/🟦️.ts";
+import type { DrawingScene, SceneNode, PathSegment } from "@semio-tech/framework-2d-js";
+import { vizPathRecorder, type VizPathCommand } from "../✒️mark/🟦️.ts";
+import { drawVizSymbol, vizCurve } from "../✒️mark/💠️curve-registry-and-symbols/🟦️.ts";
 import { vizArc, vizArea, vizLine, vizLink, vizRibbon, type VizLinkKind } from "../🥧shape/🟦️.ts";
 import { formatVizTime, formatVizValue } from "../🔢format/🟦️.ts";
 import { inferVizLayerTable } from "../🧮transform/🟦️.ts";
@@ -8,11 +9,11 @@ import { vizGeoProjection } from "../🌍geo/🟦️.ts";
 import { buildVizCoordinate, coordinateGeographic } from "../🧭coordinate/🟦️.ts";
 import { buildVizScale, type VizScale } from "../📐scale/🟦️.ts";
 import { vizCategoricalColor, vizParseColor, vizSchemeInterpolator, vizTheme, type VizTheme } from "../🎨theme/🟦️.ts";
-import type { VizChartSpecification, VizCurveKind, VizExtent, VizLayerSpec, VizGuideSpec, VizPoint, VizRow, VizSymbolKind, VizProjectionKind } from "../../📸️snapshot/📊️chart/🟦️.ts";
+import type { VizChartSpecification, VizCurveKind, VizExtent, VizLayerSpec, VizGuideSpec, VizPoint, VizRow, VizSymbolKind, VizProjectionKind } from "@semio-tech/print/schema/snapshot/chart";
 
-import { VIZ_AXIS_DEFAULTS, VIZ_LEGEND_DEFAULTS } from "../../📸️snapshot/📊️chart/🟦️.ts";
+import { VIZ_AXIS_DEFAULTS, VIZ_LEGEND_DEFAULTS } from "@semio-tech/print/schema/snapshot/chart";
 
-import { measurePrintSans, printFontFamily } from "../../../🔨️modules/🔤print-font-catalog/📏️metrics/🟦️.ts";
+import { measurePrintSans, printFontFamily } from "@semio-tech/print/modules/print-font-catalog/metrics";
 
 //#region 🔖️Items
 /** 🖼️ Resolved geometry uses millimetres; text sizes use TeX points. */

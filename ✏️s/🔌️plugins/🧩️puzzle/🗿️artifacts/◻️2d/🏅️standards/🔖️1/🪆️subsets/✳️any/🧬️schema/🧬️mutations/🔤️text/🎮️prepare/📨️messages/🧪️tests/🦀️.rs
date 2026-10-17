@@ -1,7 +1,15 @@
 //! 🧪️ Borrowed diagnostic composition preserves native intent text and physical owner grants.
-use super::*;
-use super::super::{ChangeNodeIcon, EditTargetRegionLabel};
+use semio_framework_diagnostic::Severity;
+use semio_framework_value::paged::Utf8Text;
+use crate::standards::v1::subsets::any::schema::preparation::text_preparation::{Puzzle2dTextDisposition, Puzzle2dTextIntent, Puzzle2dTextPlan};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::lookup::Puzzle2dLookupScope;
+#[allow(unused_imports)]
+use protocol::os_store::{ArtifactMessageFragment, ArtifactMessageSource};
+use crate::standards::v1::subsets::any::schema::preparation::text_preparation::messages::*;
+use crate::standards::v1::subsets::any::schema::mutations::{ChangeNodeIcon, EditTargetRegionLabel};
 use protocol::os_store::ArtifactMessageComposeCursor;
+use semio_framework_test_fixtures::fixture_text;
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 use semio_framework_trace::observe_heap_allocations_on_this_thread;
 
@@ -97,7 +105,7 @@ fn law<T: Puzzle2dTextIntent>(payload: T, plan: Puzzle2dTextPlan, operation: Opt
 
 #[test]
 fn history_edit_puzzle2d_optional_text_diagnostics_borrow_raw_intent_and_compose_under_exact_heap_grants() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔤️text/🎮️prepare/📨️messages/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔤️text/🎮️prepare/📨️messages/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap() {
         let plan = Puzzle2dTextPlan { disposition: if row["expected"].is_null() { Puzzle2dTextDisposition::Changed } else if row["expected"]["level"] == "warning" { Puzzle2dTextDisposition::NoOp } else { Puzzle2dTextDisposition::TargetMissing }, index: row["target"].as_bool().unwrap().then_some(0) };
         let operation = row["operationIndex"].as_u64().map(|value| value as u32);
@@ -119,5 +127,4 @@ fn history_edit_puzzle2d_optional_text_diagnostics_borrow_raw_intent_and_compose
     assert!(full.starts_with(&output.message));
     assert_eq!(output.op_index, Some(u32::MAX));
     close(&mut cursor);
-    eprintln!("[DEBUG] six original optional-text diagnostics preserve verbatim quote/NUL/Unicode, severity and operation indices; 160000byte target skips without copying, UTF8 prefix fits4096, six partial cancellations match actual allocation/release");
 }

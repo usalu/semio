@@ -26,7 +26,6 @@ test("closed historical custody corpus distinguishes real exact scope from copie
  const source=readFileSync(new URL("../🟦️.ts",import.meta.url),"utf8");expect(source).toContain("withRequestedIssuedResourceControlV1");expect(source).toContain("WeakMap");
  const authored={version:1,mode:"prototype",preview:true},selected=history.readHistoricalCargoMaintenanceV1(authored);authored.preview=false;expect(selected.preview).toBe(true);expect(Object.isFrozen(selected)).toBe(true);
  let accesses=0;expect(()=>history.readHistoricalCargoMaintenanceV1({version:1,mode:"prototype",get preview(){accesses++;return true;}})).toThrow("plain");expect(accesses).toBe(0);expect(()=>history.readHistoricalCargoMaintenanceV1(new Proxy({version:1,mode:"prototype",preview:true},{}))).toThrow("plain");
- console.log("[DEBUG] Historical custody corpus agrees with independent SQLite exact-boundary discrimination and Ajv closed admission");
 });
 
 
@@ -40,6 +39,6 @@ test("actual authenticated image scope rejects copies and drains accepted work b
    void withIssuedResourceOperationV1(heldControl,async()=>{await new Promise<void>(accept=>setImmediate(accept));await image.recheck();expect(history.requireHistoricalCargoMaintenanceV1(exact)).toBe(image);events.push("child-settled");});events.push("callback-returning");
   });events.push("owner-returned");expect(events).toEqual(["callback-returning","child-settled","owner-returned"]);expect(leaked).toBeDefined();expect(()=>history.requireHistoricalCargoMaintenanceV1(leaked!)).toThrow("authenticated historical Cargo custody");
   const artifact=join(root,".unissued-historical-custody");expect(existsSync(artifact)).toBe(false);const failed=await captureOwnedCommandResultV1(process.execPath,[join(import.meta.dir,"📜️script.ts")],root,{control:foreign,env:scriptInvocationEnvironment(invocation,process.env),output:{maximumBytes:1048576,maximumLines:8192}});expect(failed.status).toBe(1);expect(failed.stdout).toContain("Actual detached lower historical retirement accepted before callback return");expect(failed.stderr).toContain("Complete Cargo retirement policy required");expect(failed.stderr).not.toContain("silently lost");expect(existsSync(artifact)).toBe(false);await history.withHistoricalCargoImageMaintenanceV1(root,invocation,control,{version:1,mode,preview:true},async image=>{await image.recheck();});
-  await detachedCompactLaw(invocation,root);console.log("[DEBUG] Actual RC6013/charge/imageEX custody matches ten SQLite cases, refuses unowned roots before effects, drains the same issued control and surfaces a genuine detached lower policy failure before effects; EX can be reacquired and retired control refuses reuse");
+  await detachedCompactLaw(invocation,root);
  });
 },120000);

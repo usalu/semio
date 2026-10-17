@@ -1,0 +1,3 @@
+/** 🗺️ Public entry `@semio-tech/s-spatial-kernel-ts/spatial`: the explicit surface that importers outside the module use. */
+export { EMPTY_MODEL_DIFF, appendCommittedMeshFaceToModel, applyModelDiff, isEmptyModelDiff, registerSpatialKernelCommand, spatialKernelCommandFor } from "../../../🗺️spatial/🟦️.ts";
+export type { Aabb, ActionContextPatch, ActionResult, AnchorRecordDiff, EdgeRecordDiff, EntityDiff, FaceRecordDiff, KernelQueryContext, ModelDiff, ShellRecordDiff, SolidRecordDiff, SpatialKernel, SpatialKernelCommand, SpatialPreviewKernel, VertexRecordDiff, WireRecordDiff } from "../../../🗺️spatial/🟦️.ts";

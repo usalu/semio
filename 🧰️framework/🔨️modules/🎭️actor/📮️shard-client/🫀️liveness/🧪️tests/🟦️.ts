@@ -10,5 +10,4 @@ test("canonical shard liveness policy agrees with two independent validators",()
  expect(validate(SHARD_LIVENESS_POLICY)).toBe(true);
  expect(SHARD_LIVENESS_POLICY.progressIntervalMs).toBeLessThan(SHARD_LIVENESS_POLICY.heartbeatTimeoutMs);
  expect(SHARD_LIVENESS_POLICY.pluginLoadIdleTimeoutMs).toBeLessThan(SHARD_LIVENESS_POLICY.pluginLoadCeilingMs);
- console.log("[DEBUG] canonical shard watchdog policy owns six timing values; two independent validators agree");
 });

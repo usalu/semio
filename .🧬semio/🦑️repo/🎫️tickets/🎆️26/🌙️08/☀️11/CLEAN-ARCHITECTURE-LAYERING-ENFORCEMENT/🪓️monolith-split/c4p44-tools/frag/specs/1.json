@@ -1,0 +1,117 @@
+{
+ "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🧪️tests/🔬️quick/🦀️.rs",
+ "original": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/c4p44-tools/orig/wsq.rs",
+ "stage": "/Users/ueli/.cache/c4p44/stage-frag",
+ "chunks": [
+  {
+   "name": "📡️hub-relay-and-workspace-guards",
+   "folder": "📡️hub-relay-and-workspace-guards",
+   "doc": "📡️ Hub relay and workspace guards: the committed fixture reader, the repository root refusal, agent presence, hub document tails, relay queues, terminal links, hub session edit refusal, hub catalog authority and the probe transport.",
+   "ranges": [
+    [
+     46,
+     216
+    ]
+   ]
+  },
+  {
+   "name": "🔐️authenticated-hub-workspace",
+   "folder": "🔐️authenticated-hub-workspace",
+   "doc": "🔐️ Authenticated hub workspace: the empty catalog, the authenticated hub workspace fixture, its snapshot-only resources, retained discovery and the one live link per app bound.",
+   "ranges": [
+    [
+     218,
+     351
+    ]
+   ]
+  },
+  {
+   "name": "🤖️headless-agent-and-pending-exchanges",
+   "folder": "🤖️headless-agent-and-pending-exchanges",
+   "doc": "🤖️ Headless agent and pending exchanges: the headless agent operations, abandoned exchange close, pending response grants and faults, the guest fault wire and the probe codec.",
+   "ranges": [
+    [
+     353,
+     474
+    ]
+   ]
+  },
+  {
+   "name": "📂️folder-workspace-and-probe-documents",
+   "folder": "📂️folder-workspace-and-probe-documents",
+   "doc": "📂️ Folder workspace and probe documents: folder creation, the fresh folder listing, the probe artifact seed, context, resource reads and unknown-handle refusals.",
+   "ranges": [
+    [
+     476,
+     555
+    ]
+   ]
+  },
+  {
+   "name": "🧭️plugin-capability-routing",
+   "folder": "🧭️plugin-capability-routing",
+   "doc": "🧭️ Plugin capability routing: capability resolution, routed channels, multi-app instance slots and the routing channel capability and exchange laws.",
+   "ranges": [
+    [
+     557,
+     737
+    ]
+   ]
+  },
+  {
+   "name": "📖️artifact-resources-and-probe-edits",
+   "folder": "📖️artifact-resources-and-probe-edits",
+   "doc": "📖️ Artifact resources and probe edits: artifact resource validation and schemas, probe mutation commit, undo and redo, the base64 vector and the plugin entry lookup.",
+   "ranges": [
+    [
+     739,
+     800
+    ]
+   ]
+  },
+  {
+   "name": "🧵️document-backbone-egress",
+   "folder": "🧵️document-backbone-egress",
+   "doc": "🧵️ Document backbone egress: the backbone effect addressed to this channel and the committed message without a document actor.",
+   "ranges": [
+    [
+     802,
+     859
+    ]
+   ]
+  },
+  {
+   "name": "🗂️guest-document-codec",
+   "folder": "🗂️guest-document-codec",
+   "doc": "🗂️ Guest document codec: the guest-backed codec refusals, the unregistered route and the two operations the WIT does not carry.",
+   "ranges": [
+    [
+     861,
+     909
+    ]
+   ]
+  },
+  {
+   "name": "🔗️inference-artifact-binding",
+   "folder": "🔗️inference-artifact-binding",
+   "doc": "🔗️ Inference artifact binding: the bound inference rows and commands and the binding field, encoding and contract laws.",
+   "ranges": [
+    [
+     911,
+     997
+    ]
+   ]
+  },
+  {
+   "name": "🏁️child-heads-hub-commit-and-probe-pack",
+   "folder": "🏁️child-heads-hub-commit-and-probe-pack",
+   "doc": "🏁️ Child heads, hub commit and probe pack: composed child heads as inference dependencies, the guest JSON decoder round trip, the isolated compile worker, the hub commit status and the cancelled owners of the original probe pack.",
+   "ranges": [
+    [
+     999,
+     1098
+    ]
+   ]
+  }
+ ]
+}

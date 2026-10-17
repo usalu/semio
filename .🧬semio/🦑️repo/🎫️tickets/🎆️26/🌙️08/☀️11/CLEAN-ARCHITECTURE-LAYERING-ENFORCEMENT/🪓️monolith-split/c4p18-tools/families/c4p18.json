@@ -1,0 +1,31 @@
+{
+ "name": "c4p18",
+ "crates": [
+  "semio-s-artifact-procedural-3d-envelope",
+  "semio-s-artifact-procedural-3d-editor",
+  "semio-s-artifact-procedural-generation3d",
+  "semio-s-artifact-gis-gismap",
+  "semio-s-artifact-gis-gisterrain",
+  "semio-s-artifact-gis-gismap-mcp",
+  "semio-s-artifact-vcs-vcs",
+  "semio-vcs-mutation-bridge",
+  "semio-s-artifact-animate-presentation",
+  "semio-animate-mutation-bridge"
+ ],
+ "base": {
+  "rev": "b84bf526c7b",
+  "crates": [
+   "semio-s-artifact-procedural-3d-envelope",
+   "semio-s-artifact-procedural-3d-editor",
+   "semio-s-artifact-procedural-generation3d",
+   "semio-s-artifact-gis-gismap",
+   "semio-s-artifact-gis-gisterrain",
+   "semio-s-artifact-gis-gismap-mcp",
+   "semio-s-artifact-vcs-vcs",
+   "semio-vcs-mutation-bridge",
+   "semio-s-artifact-animate-presentation",
+   "semio-animate-mutation-bridge"
+  ]
+ },
+ "note": "CENSUS4-PKG-18: generation3d envelope, gismap root/editor/owned, vcs editor and animate presentation engine files split plus direct in-plugin dependents"
+}

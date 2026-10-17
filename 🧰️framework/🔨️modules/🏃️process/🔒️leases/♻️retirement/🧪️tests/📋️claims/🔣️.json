@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "maximumClaimsPerTurn": 256,
+  "maximumDirectoryEntries": 65536,
+  "cases": [
+    {
+      "name": "idle-after-unfinished-claim-prefix",
+      "blockers": 256,
+      "turns": 2,
+      "cancel": false,
+      "retiredPerTurn": 1
+    },
+    {
+      "name": "cancel-during-unfinished-claim-prefix",
+      "blockers": 256,
+      "turns": 1,
+      "cancel": true,
+      "retiredPerTurn": 0
+    }
+  ]
+}

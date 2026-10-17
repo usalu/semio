@@ -40,6 +40,10 @@ type sourcingCurationConfigGuardSizeBounds = { readonly minItems?: number; reado
 
 export const sourcingCurationConfigGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : sourcingCurationConfigGuardReject(at, "value is not an object");
+export const sourcingCurationConfigGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) sourcingCurationConfigGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const sourcingCurationConfigGuardArray = (value: unknown, at: string, bounds: sourcingCurationConfigGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return sourcingCurationConfigGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) sourcingCurationConfigGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -70,9 +74,32 @@ export const sourcingCurationConfigGuardConstant = <T extends string | number | 
 //#endregion 🚪️Parsers
 
 export function parseSourcingCurationConfig(value: unknown, at = "$"): SourcingCurationConfig {
-  const row = sourcingCurationConfigGuardObject(value, at);
+  const row = sourcingCurationConfigGuardClosed(sourcingCurationConfigGuardObject(value, at), at, ["filters", "contributionsJson"]);
   return {
     filters: parseFilters(row["filters"], `${at}.filters`),
     contributionsJson: sourcingCurationConfigGuardString(row["contributionsJson"], `${at}.contributionsJson`),
+  };
+}
+
+export function parseFilters(value: unknown, at = "$"): Filters {
+  const row = sourcingCurationConfigGuardClosed(sourcingCurationConfigGuardObject(value, at), at, ["query", "moduleIds", "typologyPath", "minAvailability", "sort"]);
+  return {
+    query: sourcingCurationConfigGuardString(row["query"], `${at}.query`),
+    moduleIds: sourcingCurationConfigGuardArray(row["moduleIds"], `${at}.moduleIds`).map((item, index) => sourcingCurationConfigGuardString(item, `${at}.moduleIds[${index}]`)),
+    typologyPath: sourcingCurationConfigGuardArray(row["typologyPath"], `${at}.typologyPath`).map((item, index) => sourcingCurationConfigGuardString(item, `${at}.typologyPath[${index}]`)),
+    minAvailability: sourcingCurationConfigGuardInteger(row["minAvailability"], `${at}.minAvailability`, {"minimum": 0}),
+    sort: row["sort"] === undefined ? undefined : (row["sort"] === null ? null : parseTableSort(row["sort"], `${at}.sort`)),
+  };
+}
+
+export function parseSortDirection(value: unknown, at = "$"): SortDirection {
+  return sourcingCurationConfigGuardMember(value, `${at}`, ["asc", "desc"] as const);
+}
+
+export function parseTableSort(value: unknown, at = "$"): TableSort {
+  const row = sourcingCurationConfigGuardClosed(sourcingCurationConfigGuardObject(value, at), at, ["columnId", "direction"]);
+  return {
+    columnId: sourcingCurationConfigGuardString(row["columnId"], `${at}.columnId`),
+    direction: parseSortDirection(row["direction"], `${at}.direction`),
   };
 }

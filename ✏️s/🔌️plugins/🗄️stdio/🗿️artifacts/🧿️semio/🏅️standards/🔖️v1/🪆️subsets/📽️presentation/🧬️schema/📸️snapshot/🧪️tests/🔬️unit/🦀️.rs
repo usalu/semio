@@ -1,4 +1,6 @@
-use super::*;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
+use semio_s_artifact_stdio_semio_document::schema::snapshot::DocBlock;
+use crate::schema::snapshot::*;
 
 #[semio_framework_async_macros::async_test]
 async fn pack_round_trips() {

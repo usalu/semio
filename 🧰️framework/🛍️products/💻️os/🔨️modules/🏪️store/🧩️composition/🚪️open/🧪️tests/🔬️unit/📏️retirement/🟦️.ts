@@ -4,12 +4,12 @@ import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { applyPatch } from "fast-json-patch";
 import Ajv from "ajv";
-import { readModuleTreeSource } from "../../../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 import { retirementContractSchema as retirementContract } from "@semio-tech/value-ts/retirement/contract/schema";
 import { orderedRetirementSchema as orderedRetirement } from "@semio-tech/value-ts/ordered/retirement/schema";
 import fixture from "../../../📏️retirement/🧪️tests/🧫️fixtures/🔣️.json" with { type: "json" };
 import { controlSnapshotReceivingFixtureUrl } from "@semio-tech/framework/io/testing/fixtures";
-import { cloneWireProgressSchemaUrl } from "../../../../../../../../../🔨️modules/🌱️value/🧪️tests/🧫️fixtures/🟦️.ts";
+import { cloneWireProgressSchemaUrl } from "@semio-tech/value-ts/testing/fixtures";
 
 test("erased retirement uses separate fallible demands and a paid terminal box turn", async () => {
   const oracle = new Ajv({ strict: false });
@@ -43,7 +43,6 @@ test("erased retirement uses separate fallible demands and a paid terminal box t
   expect(helpers).toContain("maximum_depth - 1");
   expect(helpers).toContain("admit_retained_clone_close");
   expect(helpers.indexOf("maximum_release_bytes < extent")).toBeLessThan(helpers.indexOf("drop(slot.take())"));
-  console.log("[DEBUG] box retirement oracle: independent native storage extent, four plain grants, child depth debit, fallible demands, separate physical frame release");
 });
 
 test("dictionary index releases its original whole backing page under the release axis", async () => {
@@ -61,7 +60,6 @@ test("dictionary index releases its original whole backing page under the releas
   expect(source).toContain("grant.maximum_release_bytes < PAGE_BYTES");
   expect(source).toContain("next_release_byte_demand");
   expect(source).toContain("RetainedCloneStep");
-  console.log("[DEBUG] dictionary index oracle: independent 1024-byte backing denies partial grants and frees one original whole page");
 });
 
 test("member-open retirement requires the original full allocation including empty capacity", async () => {
@@ -90,7 +88,6 @@ test("member-open retirement requires the original full allocation including emp
   expect(request.includes("closing_identity_field")).toBe(true);
   const oversized = applyPatch({ capacityBytes: fixture.maximumAdmissionBytes }, [{ op: "replace", path: "/capacityBytes", value: fixture.maximumAdmissionBytes + 1 }], true).newDocument;
   expect(Buffer.allocUnsafeSlow(oversized.capacityBytes).buffer.byteLength).toBeGreaterThan(fixture.maximumAdmissionBytes);
-  console.log("[DEBUG] member-open physical retirement oracle: 3 original allocation extents, zero-item and one-byte-under denial, exact full release, empty capacity retained");
 });
 
 test("member-open inline page work and whole backing release remain separate authorities", async () => {
@@ -127,7 +124,6 @@ test("member-open inline page work and whole backing release remain separate aut
   expect(request).toContain("grant.maximum_release_bytes");
   expect(request).toContain("grant.maximum_depth == 0");
   expect(request).not.toContain("SnapshotRetirementStep");
-  console.log("[DEBUG] inline request oracle: four byte corpora, one POD page per work item, zero physical payload free, indivisible original boxed backing");
 });
 
 
@@ -155,7 +151,6 @@ test("uninstalled catalog retains aliases until full child custody and physical 
   expect(concrete).toContain("grant: RetainedCloneGrant");
   expect(concrete).toContain("fn uninstalled_demands");
   expect(concrete).not.toContain("SnapshotRetirementStep");
-  console.log("[DEBUG] uninstalled catalog oracle: aliases retained, exact disposer extent, four child currencies and controlled terminal proof");
 });
 
 
@@ -181,7 +176,6 @@ test("catalog constructor admits exact factory births and retains partial refusa
   expect(admission).toContain("Err((error, progress))");
   expect(admission).toContain("factory_retirement_depth_demand");
   expect(source).toContain("pub struct DocumentStoreOwnersAdmissionError");
-  console.log("[DEBUG] catalog birth oracle: independent three-frame capacity, item/depth preflight and retained partial allocation receipt");
 });
 
 
@@ -202,7 +196,6 @@ test("initialization preserves whole catalog backings until granted typed retire
   expect(runtime).toContain("Err((error, original))");
   expect(runtime).not.toContain("pop_first()");
   expect(runtime).not.toContain("SnapshotRetirementStep");
-  console.log("[DEBUG] initialization oracle: original whole page catalogs, revision trees and shared owner survive admission denial");
 });
 
 
@@ -223,7 +216,6 @@ test("one-item catalog admission makes finite progress without enlarging the sup
   expect(admission).toContain("progress.copied_items == grant.maximum_items");
   expect(admission).toContain("pub fn constructor_is_complete");
   expect(admission).not.toContain("grant.maximum_items < items");
-  console.log("[DEBUG] phased catalog oracle: exact one-item three-turn births, denied grants retain state, no synthetic item envelope");
 });
 
 
@@ -249,7 +241,6 @@ test("member advancement preserves the actual full grant through child retiremen
   const macro = root.slice(root.indexOf("impl $crate::os_store::MemberOpenOperation for $open_name"), root.indexOf("impl $crate::os_store::SpaceMember for $enum_name", root.indexOf("impl $crate::os_store::MemberOpenOperation for $open_name")));
   expect(macro).toContain("open.step_store(cx, grant)");
   expect(macro).not.toContain("maximum_bytes");
-  console.log("[DEBUG] member advancement oracle: original five-axis grant survives actual child call; CPU fuel never becomes memory authority");
 });
 
 test("typed option admission retains the original owner on all denied birth axes", async () => {
@@ -268,7 +259,6 @@ test("typed option admission retains the original owner on all denied birth axes
   expect(body).toContain("*pending = Some(original)");
   expect(body).toContain("grant.maximum_depth - 1");
   expect(body).not.toContain("SnapshotRetirementStep");
-  console.log("[DEBUG] typed option custody oracle: independent single-owner transfer and original restoration for denied birth axes");
 });
 
 test("initial member close keeps original inputs and independent controlled currencies", async () => {
@@ -290,7 +280,6 @@ test("initial member close keeps original inputs and independent controlled curr
   expect(body).not.toContain("SnapshotRetirementStep");
   expect(body).not.toContain("owned_retirement(");
   expect(body).not.toContain(".truncate(");
-  console.log("[DEBUG] initial member closure oracle: original typed custody and four separate currencies, paid whole backing release");
 });
 
 test("envelope custody keeps seven original message arrays and whole metadata owners", async () => {
@@ -315,7 +304,6 @@ test("envelope custody keeps seven original message arrays and whole metadata ow
   expect(body).not.toContain("SnapshotRetirementStep");
   expect(body).not.toContain("take_metadata_string");
   expect(body).not.toContain(".pop()");
-  console.log("[DEBUG] envelope ownership oracle: seven indivisible original arrays and whole metadata custodians, no per-string flattening");
 });
 
 test("member hot retirement preserves pending decoder and original rejected inputs", async () => {
@@ -333,7 +321,6 @@ test("member hot retirement preserves pending decoder and original rejected inpu
   expect(hot).not.toContain("retirement::owned_retirement(");
   expect(hot).not.toContain("bytes.truncate(");
   expect(hot).not.toContain("Box::new(rejected");
-  console.log("[DEBUG] hot member custody: exact rejected originals and decoder auxiliaries survive admission denial");
 });
 
 test("hydration consumes supplied retirement currencies without increasing any caller axis", async () => {
@@ -352,7 +339,6 @@ test("hydration consumes supplied retirement currencies without increasing any c
   expect(helpers).not.toContain("maximum_bytes =");
   expect(helpers).not.toContain("SnapshotRetirementStep");
   expect(root).toContain("match self.step(cx, grant)");
-  console.log("[DEBUG] hydration currency oracle: original capacity/release/copy/depth preserved through current runtime and child calls");
 });
 
 test("catalog source birth precedes allocations and retains unfunded factory tickets", async () => {
@@ -376,7 +362,6 @@ test("catalog source birth precedes allocations and retains unfunded factory tic
   expect(body).toContain("factory_retirement_tickets: semio_framework_value::FactoryChildTickets");
   expect(body).not.toContain("preborn_factory_retirement");
   expect(body).toContain("retained_capacity_bytes: capacity");
-  console.log("[DEBUG] catalog sources: independent four native extents, funded original ingress, factory tickets remain pending for one-item turns");
 });
 
 test("member catalog admission funds ingress before source construction and progresses tickets separately", async () => {
@@ -407,7 +392,6 @@ test("member catalog admission funds ingress before source construction and prog
   expect(operation).toContain("owners.constructor_is_complete()");
   expect(operation).toContain("owners.admit_constructor(grant)");
   expect(operation).not.toContain("Some(P::member_store_owners())");
-  console.log("[DEBUG] caller source admission: original request held across denied ingress, constructor never invoked, each catalog ticket uses its actual next grant");
 });
 
 
@@ -432,7 +416,6 @@ test("retained member open preserves supplied currencies and every original chil
   expect(close).toContain("*self.initial = Some(initial)");
   expect(close).toContain("*self.history = Some(history)");
   expect(close).toContain("RetainedCloneStep::Complete(step.progress())");
-  console.log("[DEBUG] retained member original child admissions and final physical receipt preserve supplied currencies; native System law separately required");
 });
 
 test("optional preparation source birth funds the whole original Arc tree before invocation", async () => {
@@ -453,7 +436,6 @@ test("optional preparation source birth funds the whole original Arc tree before
   expect(body).toContain("owners.one_item_preparation = Some(preparation)");
   expect(body).toContain("retained_capacity_bytes: capacity");
   expect(body).not.toContain("admit_constructor(");
-  console.log("[DEBUG] independent optional source oracle: whole original Arc tree admitted before source callback; retirement tickets remain unfunded");
 });
 
 
@@ -482,7 +464,6 @@ test("original source iterator retains its actual allocation extent through pref
   expect(owner).toContain("maximum_depth: grant.maximum_depth - 1");
   expect(owner).toContain("RetainedCloneStep::Progress(step.progress())");
   expect(owner).not.toContain("SnapshotRetirementStep");
-  console.log("[DEBUG] Buffer/RFC6902 original allocation oracle preserves full-u64 prefix; actual native source retirement remains separately required");
 });
 
 test("original SPR parent retains completed decoder custody and full factory receipts", async () => {
@@ -499,7 +480,6 @@ test("original SPR parent retains completed decoder custody and full factory rec
   expect(owner).toContain("self.factories_close.iter().all(Option::is_none)");
   expect(owner).not.toContain("SnapshotRetirementStep");
   expect(owner).not.toContain("fn next_close_byte_demand");
-  console.log("[DEBUG] Original SPR parent completed controllers retain exact original payload/factory custody; native physical law unqualified");
 });
 
 
@@ -532,7 +512,6 @@ test("source factory tree quotes capacity and depth before its constructor callb
   expect(admission).toContain("additional_birth.depth.max(1)");
   expect(admission).toContain("let depth = additional_birth.depth.max(1)");
   expect(admission).toContain("grant.maximum_depth < depth");
-  console.log("[DEBUG] Node/RFC6902 source tree oracle: original capacity sum and checked wrapper depth precede constructor; native allocation proof required separately");
 });
 
 
@@ -561,7 +540,6 @@ test("bounded config factory admits actual typed owner and preserves full receip
   expect(owner).toContain("admit_shared_retirement(snapshot, grant, false)");
   expect(owner).not.toContain("drop(value)");
   expect(owner).not.toContain("SnapshotRetirementStep");
-  console.log("[DEBUG] AJV/Buffer/RFC6902 config factory oracle keeps one-byte copy independent from whole physical release; original native factory law required separately");
 });
 
 
@@ -610,7 +588,6 @@ test("hydration close preserves original owners and separate physical currencies
     expect(state.terminal).toBe(false);
     expect(state.retained).toBe(original.buffer.byteLength);
   }
-  console.log("[DEBUG] canonical Ajv grant plus Node/RFC6902 original physical backing oracle; ready output retains auxiliary capacity until paid close; native owner/allocator identity proof remains separately required");
 });
 
 test("hydration normal pack retirement retains physical backing until granted", async () => {
@@ -631,7 +608,6 @@ test("hydration normal pack retirement retains physical backing until granted", 
   expect(body.includes("self.pack.take()")).toBe(false);
   expect(body.includes("artifact_retirement_admit_owned")).toBe(true);
   expect(body.includes("grant.maximum_items.min(1)")).toBe(true);
-  console.log("[DEBUG] Buffer/RFC6902 logical shortening retains exact physical allocation; normal Pack owner is admitted before paid retirement");
 });
 
 test("hydration fold consumes supplied independent physical authority", async () => {
@@ -655,7 +631,6 @@ test("hydration fold consumes supplied independent physical authority", async ()
   expect(child.includes("maximum_capacity_bytes:")).toBe(false);
   expect(child.includes("maximum_release_bytes:")).toBe(false);
   expect(body.includes("progress.fits(fold_grant)")).toBe(true);
-  console.log("[DEBUG] RFC6902 independent authority oracle preserves capacity and release; a producer quote cannot increase caller authority");
 });
 
 test("ready config auxiliary owner needs capacity and no transferred catalog", async () => {
@@ -677,7 +652,6 @@ test("ready config auxiliary owner needs capacity and no transferred catalog", a
   expect(close.includes("self.pending_edit.take()")).toBe(true);
   expect(close.includes("controlled!(expected_id)")).toBe(true);
   expect(close.includes("self.actor.0 = value")).toBe(true);
-  console.log("[DEBUG] Buffer/RFC6902 config Ready keeps empty logical String capacity; transferred catalog is required only for its retained children");
 });
 
 
@@ -705,7 +679,6 @@ test("completed original publication retains factory and physical frame custody"
   const publication = root.slice(root.indexOf("    pub fn try_publish_to", registryStart), root.indexOf("    pub fn try_detach", registryStart));
   expect(publication).toContain("state.closing |= 1u64 << index");
   expect(publication.includes("drop(owner)")).toBe(false);
-  console.log("[DEBUG] Buffer/RFC6902 original publication oracle retains factory allocations and routes same source owner to original close pump; native System law remains required");
 });
 
 test("hydration current authored Rust syntax parses against original source", async () => {
@@ -719,10 +692,9 @@ test("hydration current authored Rust syntax parses against original source", as
     expect([...path].length).toBeLessThanOrEqual(256);
     const result = spawnSync("rustfmt", ["--edition", "2024", "--config", "skip_children=true", "--emit", "stdout", path], { encoding: "utf8", timeout: 2000 });
     expect(result.error).toBeUndefined();
-    if (result.status !== 0) console.log("[DEBUG] Rustfmt original-source parse refusal " + result.stderr);
+    if (result.status !== 0) {}
     expect(result.status).toBe(0);
   }
-  console.log("[DEBUG] genuine grant Ajv and installed Rustfmt parse original sources; grammar is not native type or allocator runtime proof");
 });
 
 test("hydration target decoder preserves original supplied physical authority", async () => {
@@ -733,7 +705,6 @@ test("hydration target decoder preserves original supplied physical authority", 
   expect(body.includes("hydration_child_grant(grant, cx.fuel_remaining())")).toBe(true);
   expect(body.includes("progress.fits(decode_grant)")).toBe(true);
   expect(body.includes("progress_fuel(progress)")).toBe(true);
-  console.log("[DEBUG] target decode receiver reuses current independent authority rather than requested frontier authority");
 });
 
 test("history fold terminal output retains actual physical cleanup receipt", async () => {
@@ -765,7 +736,6 @@ test("history fold terminal output retains actual physical cleanup receipt", asy
   const retained = applyPatch({ output: "Rejected", originalCapacity: original.byteLength, released: 0 }, [], true).newDocument;
   expect(retained.originalCapacity).toBe(original.buffer.byteLength);
   expect(retained.released).toBe(0);
-  console.log("[DEBUG] canonical genuine Progress/Ajv and Buffer/RFC6902 preserve terminal physical cleanup for both outcomes");
 });
 
 test("original document Store disposer forwards full grants and terminal receipt", async () => {
@@ -791,7 +761,6 @@ test("original document Store disposer forwards full grants and terminal receipt
   expect(body).toContain("admit_retained_clone_close");
   expect(body).toContain("PluginLifecycleStep::retained(step");
   expect(body).not.toContain("SnapshotRetirementStep");
-  console.log("[DEBUG] original Store disposer independent Node backing release and RFC6902 terminal receipt conserve all currencies");
 });
 
 test("hydration fold outputs retain original custody before receipt refusal", async () => {
@@ -814,7 +783,6 @@ test("hydration fold outputs retain original custody before receipt refusal", as
   expect(config.indexOf("*self.fold_auxiliary = Some((replay_order, conflicts))")).toBeLessThan(config.indexOf("if !progress.fits(grant)"));
   expect(c).toContain("controlled!(fold_auxiliary)");
   expect(c).toContain("&& self.fold_auxiliary.is_none()");
-  console.log("[DEBUG] Buffer/RFC6902 original receiver custody precedes receipt refusal; retained config auxiliary capacities join funded cleanup");
 });
 
 test("member input buffer birth preserves explicit capacity authority before allocation", async () => {
@@ -845,7 +813,6 @@ test("member input buffer birth preserves explicit capacity authority before all
     expect(body).not.toContain("Vec::with_capacity(total)");
     expect(body).toContain("grant.maximum_copy_bytes / 2");
   }
-  console.log("[DEBUG] canonical Grant/Ajv and Buffer/RFC6902 original birth oracle refuses item, capacity and depth independently before native allocation");
 });
 
 test("original evaluation resource scopes preserve complete physical grants", async () => {
@@ -879,7 +846,6 @@ test("original evaluation resource scopes preserve complete physical grants", as
   expect(cancelled).toContain("registry.retiring_backing=Some");
   expect(cancelled).toContain("grant:RetainedCloneGrant");
   expect(sdk).not.toContain("RetirementStep::ProcessedBytes");
-  console.log("[DEBUG] original SDK resource law preserves independent actual source+cursor backing, same scope and complete caller authority");
 });
 
 test("hydration target binding retains original empty physical address backing", async () => {
@@ -893,7 +859,6 @@ test("hydration target binding retains original empty physical address backing",
   const target = h.slice(h.indexOf("Phase::TargetInputs =>"), h.indexOf("Phase::SeedApplied |"));
   expect(target).toContain("std::mem::replace(&mut source[self.record_index].target");
   expect(target).toContain("*self.target_address = Some(original)");
-  console.log("[DEBUG] Node original empty view capacity and RFC6902 binding retain original target allocation until paid canonical owner cleanup");
 });
 
 test("initialization catalog birth admits one exact original lane under supplied currencies", async () => {
@@ -905,7 +870,7 @@ test("initialization catalog birth admits one exact original lane under supplied
   const policy = plain.birthPolicy;
   expect(grants(policy)).toBe(true);
   expect(plain.birthCancelCuts).toEqual(Array.from({ length: plain.lanes.length + 1 }, (_, index) => index));
-  const pages = plain.birthExampleExtents.map((bytes: number) => Buffer.allocUnsafeSlow(bytes));
+  const pages: Buffer[] = plain.birthExampleExtents.map((bytes: number) => Buffer.allocUnsafeSlow(bytes));
   let state = { admitted: 0, born: 0 };
   for (const page of pages) {
     for (const denied of [{ ...policy, maximumItems: 0 }, { ...policy, maximumCapacityBytes: page.byteLength - 1 }, { ...policy, maximumDepth: 0 }]) {
@@ -929,7 +894,6 @@ test("initialization catalog birth admits one exact original lane under supplied
   expect(hydration).toContain("ArtifactStoreInitializationRuntime::new_with_owner_catalog");
   expect(hydration).not.toContain("ArtifactStoreInitializationRuntime::new(");
   expect(hydration).toContain("initialization_catalog");
-  console.log("[DEBUG] initialization admission: independent Node native storage + RFC6902 original state; one admitted lane, zero/partial grants retain, partial catalog remains owned");
 });
 
 test("genesis admission preserves original payload and envelope metadata under supplied grant", async () => {
@@ -958,7 +922,6 @@ test("genesis admission preserves original payload and envelope metadata under s
   expect(bind).toContain("admit_verified_pack(initial, pack, initial_digest, child)");
   expect(bind).toContain("*self.initial = Some(initial)"); expect(bind).toContain("*self.pack = Some(pack)");
   expect(bind.includes("empty_document_envelope_from_genesis_owners::<P, M>(schema, expected.artifact_id")).toBe(true);
-  console.log("[DEBUG] genesis granted original owner admission and Node UTF8/RFC6902 alias identity; native allocator proof remains required");
 });
 
 
@@ -982,7 +945,6 @@ test("original inference retained wallet transports every unequal and zero axis"
   const source = await Bun.file(new URL("../🦀️.rs", root)).text();
   expect(source).toContain("impl crate::ToValue for RetainedCloneGrant");
   expect(source).toContain("impl crate::FromValue for RetainedCloneGrant");
-  console.log("[DEBUG] Ajv/Node u64 wallet oracle preserves every axis, zero grants and full u64 through checked canonical ownership transport");
 });
 
 test("message ledger page birth preserves fixed tickets and partial original backing", async () => {
@@ -1025,7 +987,6 @@ test("message ledger page birth preserves fixed tickets and partial original bac
   const retire = root.slice(root.indexOf("impl ErasedSnapshotRetirement for ArtifactEditMessageLedgerRetirement"), root.indexOf("impl Drop for ArtifactEditMessageLedgerRetirement"));
   expect(retire).toContain("self.original.slots.close_step(grant)");
   expect(retire).not.toContain("release!(slots)");
-  console.log("[DEBUG] genuine Grant/Ajv and original Buffer/RFC6902 paged ledger: unchanged8192 tickets, fixed independent policy, partial pages retain until paid release");
 });
 
 test("envelope birth retains original phased catalogs before hydration advancement", async () => {
@@ -1057,7 +1018,6 @@ test("envelope birth retains original phased catalogs before hydration advanceme
   expect(phase).toContain("admit_document_next(child)");
   expect(phase).toContain("document_admission_is_complete()");
   expect(phase).toContain("progress.fits(child)");
-  console.log("[DEBUG] independent genuine Grant/Ajv + RFC6902 original metadata oracle; envelope phased owners precede hydration advancement, native physical proof remains separate");
 });
 
 
@@ -1080,7 +1040,6 @@ test("original inference reports the actual independent physical receipt", async
   const plugin = await Bun.file(new URL("../../../../../../🔌️plugin/🦀️.rs", import.meta.url)).text();
   expect(plugin.match(/pub retirement_progress: RetainedCloneProgress/g)?.length).toBe(2);
   expect(plugin).toContain("retirement_progress: execution.retirement_progress");
-  console.log("[DEBUG] Ajv and Node receipt oracle preserves original work, copy, capacity and release independently");
 });
 
 
@@ -1107,7 +1066,6 @@ test("original interactive cancellation retains the same deep owner until physic
   expect(inference).toContain("close_step_outcome_slot(&mut self.outcome,self.request.retained)");
   expect(inference).not.toContain("JobPayloadCloseStep");
   expect(inference).toContain("self.retirement_progress.checked_add(progress)");
-  console.log("[DEBUG] original cancellation custody remains parked in its same router slot until actual terminal close");
 });
 
 
@@ -1137,7 +1095,6 @@ test("actual snapshot input step funds original birth and both physical copies",
   const publish = source.slice(source.indexOf("fn publish_input(&mut self,"),source.indexOf("impl<P: semio_framework_value::retirement::RetireOwned,D:MemberSnapshotDecoder<P>>"));
   expect(publish.includes("retained_progress: progress")).toBe(true);
   expect(actual.includes("self.input.try_reserve_exact(expected_bytes)")).toBe(false);
-  console.log("[DEBUG] Actual snapshot input fixed grant/Ajv and original Buffer/RFC6902 oracle pays independent birth and two physical copies, native System proof remains separate");
 });
 
 test("canonical reader ownership preserves the original byte oracle under independent physical policy", async () => {
@@ -1181,7 +1138,6 @@ test("canonical reader ownership preserves the original byte oracle under indepe
     const grammar = spawnSync("rustfmt", ["--edition", "2021", "--emit", "stdout"], { input: source, encoding: "utf8", timeout: 2000 });
     expect(grammar.error, name).toBeUndefined(); expect(grammar.status, name).toBe(0);
   }
-  console.log("[DEBUG] original canonical reader 4925 UTF8 Buffer/TextEncoder/hash oracle preserved; actual LIFO owner closes map before lifetime; genuine five-axis policy independent, actual System native law authored but unrun");
 });
 
 test("member request physical grants remain caller policy independent of the close frontier",async()=>{
@@ -1200,7 +1156,6 @@ test("member request physical grants remain caller policy independent of the clo
  const positive=law.physicalCloseGrant.maximumReleaseBytes;expect(positive).toBeGreaterThan(original.buffer.byteLength);
  const denied=applyPatch(law.physicalCloseGrant,[{op:"replace",path:"/maximumReleaseBytes",value:original.buffer.byteLength-1}],true,false).newDocument;
  expect(denied.maximumReleaseBytes).toBeLessThan(original.buffer.byteLength);expect(denied.maximumDepth).toBe(law.physicalCloseGrant.maximumDepth);expect(view.buffer).toBe(original.buffer);
- console.log("[DEBUG] member request native policy has fixed independent release262144/depth64; frontier observers price negative bounds only, original physical pointer/allocator laws remain native-unrun");
 });
 
 test("snapshot input receipts debit the original context wallet exactly once",async()=>{
@@ -1217,7 +1172,6 @@ test("snapshot input receipts debit the original context wallet exactly once",as
  const expected={...remaining,maximumItems:remaining.maximumItems-receipt.copiedItems,maximumCopyBytes:remaining.maximumCopyBytes-receipt.copiedBytes};
  const oracle=applyPatch(remaining,[{op:"replace",path:"/maximumItems",value:expected.maximumItems},{op:"replace",path:"/maximumCopyBytes",value:expected.maximumCopyBytes}],true,false).newDocument;
  expect(oracle).toEqual(expected);expect(oracle.maximumCapacityBytes).toBe(grant.maximumCapacityBytes);expect(oracle.maximumReleaseBytes).toBe(grant.maximumReleaseBytes);expect(oracle.maximumDepth).toBe(grant.maximumDepth);
- console.log("[DEBUG] Same original context wallet debits genuine supplied input receipt once; immutable caller policy and JSONPatch independent axes preserved, actual native System proof unrun");
 });
 
 
@@ -1239,7 +1193,6 @@ test("member and hydration paid turns preserve the original physical wallet",asy
  expect(hydration.includes("member_open::member_step_grant(cx, grant)")).toBe(true);expect(hydration.includes("member_open::record_member_step(cx, progress)")).toBe(true);
  expect(hydration.includes("match progress_fuel(progress) { Ok(fuel) => cx.consume_fuel(fuel)")).toBe(false);
  for(const [name,input]of [["open",source],["operation",operation],["hydration",hydration]]){const grammar=spawnSync("rustfmt",["--edition","2021","--emit","stdout"],{input,encoding:"utf8",timeout:2000});expect(grammar.error,name).toBeUndefined();expect(grammar.status,name).toBe(0);}
- console.log("[DEBUG] Genuine same-context wallet accepts actual constructor/Fold/catalog/retirement receipts once and intersects all axes before nested work; independent Buffer/RFC6902 full-currency conservation, native whole-turn proof pending");
 });
 
 test("snapshot native consumers retain the genuine caller controls and progress domains",async()=>{
@@ -1252,22 +1205,20 @@ test("snapshot native consumers retain the genuine caller controls and progress 
  const original=decoding.slice(decoding.indexOf("impl ArtifactSqliteSnapshotHost for DecodedBuffers"),decoding.indexOf("fn to_sqlite_database"));expect(original.includes("native: &mut NativeSnapshotDecodeOwner")).toBe(true);expect(original.includes("            native,")).toBe(true);
  const bytes=Buffer.from("雪","utf8");expect(new TextEncoder().encode("雪")).toEqual(new Uint8Array(bytes));expect(JSON.parse(JSON.stringify({bytes:[...bytes],originalControl:true}))).toEqual({bytes:[...bytes],originalControl:true});
  for(const [name,input]of [["snapshot",snapshot],["encoding",encoding],["decoding",decoding]]){const grammar=spawnSync("rustfmt",["--edition","2021","--emit","stdout"],{input,encoding:"utf8",timeout:2000});expect(grammar.error,name).toBeUndefined();expect(grammar.status,name).toBe(0);}
- console.log("[DEBUG] Current exact native progress domains and supplied original codec controls forwarded; independent UTF8 oracle preserved, actual compiler/runtime renewal required");
 });
 
 test("native snapshot encoder keeps one original paid receipt wallet",async()=>{
  const fs=await import("node:fs"),path=await import("node:path");const root=process.cwd();
  const plain=JSON.parse(fs.readFileSync(path.join(root,"🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📏️retirement/🧪️tests/🧫️fixtures/🔣️.json"),"utf8")).physicalWallet;
  const ajv=new Ajv({strict:false});ajv.addSchema(orderedRetirement);ajv.addSchema(retirementContract);expect(ajv.compile({$ref:retirementContract.$id+"#/$defs/Grant"})(plain.grant)).toBe(true);
- let used={copiedItems:0,copiedBytes:0,retainedCapacityBytes:0,releasedBytes:0};let remaining={...plain.grant};const axes=[["maximumItems","copiedItems"],["maximumCopyBytes","copiedBytes"],["maximumCapacityBytes","retainedCapacityBytes"],["maximumReleaseBytes","releasedBytes"]];
- for(const receipt of plain.receipts){const operations=axes.map(([grant,progress])=>({op:"replace",path:"/"+grant,value:remaining[grant]-receipt[progress]}));for(const [grant,progress]of axes){expect(receipt[progress]).toBeLessThanOrEqual(remaining[grant]);used[progress]+=receipt[progress];}remaining=applyPatch(remaining,operations,true,false).newDocument;}
+ let used={copiedItems:0,copiedBytes:0,retainedCapacityBytes:0,releasedBytes:0};let remaining={...plain.grant};const axes:readonly(readonly[string,keyof typeof used])[]=[["maximumItems","copiedItems"],["maximumCopyBytes","copiedBytes"],["maximumCapacityBytes","retainedCapacityBytes"],["maximumReleaseBytes","releasedBytes"]];
+ for(const receipt of plain.receipts){const operations=axes.map(([grant,progress])=>({op:"replace" as const,path:"/"+grant,value:remaining[grant]-receipt[progress]}));for(const [grant,progress]of axes){expect(receipt[progress]).toBeLessThanOrEqual(remaining[grant]);used[progress]+=receipt[progress];}remaining=applyPatch(remaining,operations,true,false).newDocument;}
  expect(Object.values(remaining)).toEqual([0,0,0,0,4]);expect(used.retainedCapacityBytes).toBe(Buffer.allocUnsafeSlow(64).byteLength);expect(used.releasedBytes).toBe(64);
  const source=fs.readFileSync(path.join(root,"🧰️framework/🔨️modules/🚪️io/⏱️control/🛫️snapshot/🦀️.rs"),"utf8");
  expect(source.includes("pub fn remaining_grant")).toBe(true);expect(source.includes("pub fn record_progress")).toBe(true);expect(source.includes("pub fn progress(&self)")).toBe(true);expect(source.includes("self.progress.checked_add(progress)")).toBe(true);expect(source.includes("progress.fits(self.remaining_grant())")).toBe(true);
  for(const [grant,progress]of [["items","copied_items"],["copy_bytes","copied_bytes"],["capacity_bytes","retained_capacity_bytes"],["release_bytes","released_bytes"]])expect(source.includes("self.grant.maximum_"+grant+"-self.progress."+progress)).toBe(true);
  expect(source.includes("progress.copied_items")).toBe(true);expect(source.includes("record_progress(")).toBe(true);
  const grammar=spawnSync("rustfmt",["--edition","2021","--emit","stdout"],{input:source,encoding:"utf8",timeout:2000});expect(grammar.error).toBeUndefined();expect(grammar.status).toBe(0);
- console.log("[DEBUG] Native snapshot original produced receipt wallet conserves independent full-currency policy; normal codec producer/cancel/native allocator proof remains separate");
 });
 
 test("snapshot JSON writer reports actual partial cancellation receipts",async()=>{
@@ -1278,7 +1229,6 @@ test("snapshot JSON writer reports actual partial cancellation receipts",async()
  expect(cursor.includes("let retained_before=self.retained_capacity_bytes()?;")).toBe(true);expect(cursor.includes("self.writer.output.as_ref().map_or(0,|output|output.len())")).toBe(true);
  const publish=cursor.indexOf("retained_capacity_bytes:retained_after-retained_before");expect(publish).toBeGreaterThan(-1);expect(cursor.indexOf("result?;control.step()?",publish)).toBeGreaterThan(publish);
  const grammar=spawnSync("rustfmt",["--edition","2021","--emit","stdout"],{input:source,encoding:"utf8",timeout:2000});expect(grammar.error).toBeUndefined();expect(grammar.status).toBe(0);
- console.log("[DEBUG] JSON writer unchanged independent Serde-compatible JSON/UTF8 oracle; actual partial allocation/copy receipt precedes cancellation, native System proof pending");
 });
 
 test("native snapshot writer keeps its static cursor in the original paid recipient",async()=>{
@@ -1288,7 +1238,6 @@ test("native snapshot writer keeps its static cursor in the original paid recipi
  const writer=snapshot.slice(snapshot.indexOf("fn write_json("),snapshot.indexOf("pub(super) fn encode("));expect(writer.includes("JsonBorrowedWriteCursor::new()")).toBe(true);expect(writer.includes("owner.drive_cursor")).toBe(true);expect(writer.includes("cursor.normal_step_progress()")).toBe(true);expect(writer.includes("256.min(grant.maximum_items)")).toBe(true);expect(writer.includes("JsonWriteCursor::new")).toBe(false);
  const bytes=Buffer.from(JSON.stringify({unchanged:"雪"}));expect(new TextEncoder().encode(JSON.stringify({unchanged:"雪"}))).toEqual(new Uint8Array(bytes));expect(JSON.parse(bytes.toString("utf8"))).toEqual({unchanged:"雪"});
  for(const input of [owner,snapshot]){const grammar=spawnSync("rustfmt",["--edition","2021","--emit","stdout"],{input,encoding:"utf8",timeout:2000});expect(grammar.error).toBeUndefined();expect(grammar.status).toBe(0);}
- console.log("[DEBUG] Original static writer cursor/body/output custody bound to remaining full grant and exact produced receipts; typed projection and native System tests remain separate");
 });
 
 test("native snapshot decoder retains constructor output before cancellation",async()=>{
@@ -1303,7 +1252,6 @@ test("native snapshot decoder retains constructor output before cancellation",as
  expect(binding.indexOf("*snapshot_output = Some")<binding.indexOf("body.allocate_vec_into(")).toBe(true);expect(binding.includes("std::mem::take(bytes)")).toBe(true);expect(binding.includes("Ok(())")).toBe(true);
  expect(source.includes("impl RetireOwned for DecodedBuffers")).toBe(true);expect(source.includes("self.buffers.retirement()")).toBe(true);
  const defining=fs.readFileSync(path.join(root,"🧰️framework/🔨️modules/🌱️value/🛬️decode/🦀️.rs"),"utf8");expect(defining.includes("pub fn copy_bytes_into")).toBe(true);expect(defining.includes("output.extend_from_slice(chunk)")).toBe(true);
- console.log("[DEBUG] Native decoder original typed slot precedes actual buffer births, callerGrant canonical, Buffer/TextEncoder bytes unchanged; native allocator/cancel laws required");
 });
 
 test("named native ownership laws use independent positive grants",async()=>{
@@ -1314,7 +1262,6 @@ test("named native ownership laws use independent positive grants",async()=>{
   const start=source.indexOf("fn "+name);expect(start).toBeGreaterThanOrEqual(0);const end=source.indexOf("\n#[test]",start);const body=source.slice(start,end<0?undefined:end);
   expect(body.includes("let grant = physical_test_close_grant();")).toBe(true);expect(body.includes("maximum_copy_bytes: demand.copy_bytes")).toBe(false);expect(body.includes("maximum_release_bytes: demand.release_bytes")).toBe(false);
  }
- console.log("[DEBUG] Native named positive cleanup uses immutable plain canonical five-axis policy; frontier quotes only fund denial reductions/physical equality, native System laws unrun");
 });
 
 test("member history hydration and durable native closes preserve independent authority",async()=>{
@@ -1324,7 +1271,6 @@ test("member history hydration and durable native closes preserve independent au
  expect(history.includes("super::super::tests::request_close_policy()")).toBe(true);expect(hydration.includes("crate::os_store::component::tests::physical_test_close_grant()")).toBe(true);expect(durable.includes("crate::os_store::component::tests::physical_test_close_grant()")).toBe(true);
  for(const [name,source] of [["history",history],["hydration",hydration],["durable",durable]] as const){const grammar=spawnSync("rustfmt",["--edition","2021","--emit","stdout"],{input:source,encoding:"utf8",timeout:2000});expect(grammar.error,name).toBeUndefined();expect(grammar.status,name).toBe(0);}
  const policy=fixture.physicalCloseGrant;const ajv=new Ajv({strict:false});ajv.addSchema(orderedRetirement);ajv.addSchema(retirementContract);expect(ajv.compile({$ref:retirementContract.$id+"#/$defs/Grant"})(policy)).toBe(true);expect(Buffer.allocUnsafeSlow(policy.maximumReleaseBytes).byteLength).toBe(policy.maximumReleaseBytes);
- console.log("[DEBUG] Native History/Hydration/Durable cleanup positive authority remains immutable original policy; demanded reductions retain negative denial proofs, native allocator assertions unrun");
 });
 
 
@@ -1338,7 +1284,6 @@ test("catalog source native laws use independent positive grants",async()=>{
  }
  const policy=fixture.physicalCloseGrant;const ajv=new Ajv({strict:false});ajv.addSchema(orderedRetirement);ajv.addSchema(retirementContract);expect(ajv.compile({$ref:retirementContract.$id+"#/$defs/Grant"})(policy)).toBe(true);
  expect(Buffer.allocUnsafeSlow(policy.maximumCapacityBytes).byteLength).toBe(policy.maximumCapacityBytes);
- console.log("[DEBUG] Original catalog native positive policy is immutable and canonical; actual allocator/source/refusal pointer laws preserved, native System assertions unrun");
 });
 
 
@@ -1352,7 +1297,6 @@ test("current shared actor native callers retain genuine lease and original buff
  const law=JSON.parse(fs.readFileSync(path.join(base,"🧩️composition/🚪️open/📏️retirement/🧪️tests/🧫️fixtures/🔣️.json"),"utf8"));
  expect(law.physicalCloseGrant.maximumCopyBytes).toBe(4096);
  for(const row of law.cases){const bytes=new TextEncoder().encode(row.text),original=Buffer.allocUnsafeSlow(row.capacityBytes);original.set(bytes);expect(bytes.byteLength).toBe(Buffer.byteLength(row.text,"utf8"));expect(original.byteLength).toBe(row.capacityBytes);expect(original.subarray(0,bytes.length).toString("utf8")).toBe(row.text);}
- console.log("[DEBUG] Shared actor source retains original payload buffer after funded lease transfer; fixed policy/Buffer/TextEncoder oracle preserved, native identity and System law unrun");
 });
 
 test("native body octet spans debit independent policy and retain original cancelled backing",async()=>{
@@ -1366,7 +1310,6 @@ test("native body octet spans debit independent policy and retain original cance
  expect(control.includes("pub fn copy_bytes_into(&mut self,native:")).toBe(true);expect(control.includes("let result=native.copy_bytes_into(bytes,output)")).toBe(true);expect(control.includes("copied_bytes:output.len(),retained_capacity_bytes:output.capacity()")).toBe(true);
  const actual=decoder.slice(decoder.indexOf("fn bind_original_buffers"),decoder.indexOf("impl ArtifactSqliteSnapshotHost for DecodedBuffers"));expect(actual.includes("body.allocate_vec_into(")).toBe(true);expect(actual.includes("body.record_progress(")).toBe(true);expect(actual.includes("std::mem::take(bytes)")).toBe(true);expect(actual.includes("copy_bytes_into")).toBe(false);
  for(const input of [control,decoder]){const parsed=spawnSync("rustfmt",["--edition","2021","--emit","stdout"],{input,encoding:"utf8",timeout:2000});expect(parsed.error).toBeUndefined();expect(parsed.status).toBe(0);}
- console.log("[DEBUG] Native octet body fixed policy/Buffer/TextEncoder/JSONPatch oracle complete; original producer helper route explicit, native System/cancel law unrun");
 });
 
 test("failed native field admission uses genuine bounds and preserves real performed receipts",async()=>{
@@ -1375,7 +1318,6 @@ test("failed native field admission uses genuine bounds and preserves real perfo
  for(const row of neutral.cases){expect(validate(row.receipt)).toBe(true);const total=applyPatch({capacity:0,released:0},[{op:"replace",path:"/capacity",value:row.receipt.retainedCapacityBytes},{op:"replace",path:"/released",value:row.receipt.releasedBytes}],true,false).newDocument;expect(total.capacity).toBe(row.expectedTotalCapacity);expect(total.released).toBe(row.expectedTotalRelease);}
  const original=fs.readFileSync(path.join(base,"🧪️tests/🌴️bin-06/🔬️unit/🦀️.rs"),"utf8");const start=original.indexOf("fn field_close_failure_preserves_real_receipts_through_the_original_decode_job()");const actual=original.slice(start,original.indexOf("\n#[test]",start));expect(actual.includes("fn maximum_retained_close_bytes(&self)->usize { ARTIFACT_ENVELOPE_DECODE_MAXIMUM_RETAINED_FIELD_BYTES }")).toBe(true);expect(actual.includes("assert_eq!(progress.retained_capacity_bytes,allocated)")).toBe(true);expect(actual.includes("assert_eq!(progress.released_bytes,released)")).toBe(true);
  const allocated=Buffer.allocUnsafeSlow(1024);expect(allocated.byteLength).toBe(1024);expect(allocated.byteLength).toBeLessThan(262144*6);
- console.log("[DEBUG] Native field legal defining admission bounds preserve original performed receipts; canonical per-progress Ajv/JSONPatch/Buffer oracle, actual System renewal required");
 });
 
 test("original VCS checkpoint measurement stays borrowed and cannot become consuming authority",async()=>{
@@ -1388,7 +1330,6 @@ test("original VCS checkpoint measurement stays borrowed and cannot become consu
  const producer=fs.readFileSync(path.join(base,"🦀️.rs"),"utf8"),measurement=fs.readFileSync(path.join(base,"🔎️measurement/🦀️.rs"),"utf8"),native=fs.readFileSync(path.join(base,"🧪️tests/🦀️.rs"),"utf8");
  expect(producer.includes("pub fn project_retirement_charge(&self,additional:usize)->Result<measurement::OriginalOperationProjection<'_>,ValueError>")).toBe(true);expect(producer.includes("self.source_owned().and_then")).toBe(true);expect(measurement.includes('output.serialize_field("kind","original-retirement-measurement")')).toBe(true);expect(native.includes("serde_json::from_value::<OriginalOperationReceipt>(scalar).is_err()")).toBe(true);
  for(const input of [producer,measurement,native]){const grammar=spawnSync("rustfmt",["--edition","2021","--emit","stdout"],{input,encoding:"utf8",timeout:2000});expect(grammar.error).toBeUndefined();expect(grammar.status).toBe(0);}
- console.log("[DEBUG] Actual genuine borrowed VCS measurement contract rejects projected DTO as consuming receipt; original maximum/actual charge preserved via JSONPatch/Ajv2020, native renewal required");
 });
 
 
@@ -1413,7 +1354,6 @@ test("native SQLite binding transfers each original octet backing under unchange
  const producer=fs.readFileSync(path.join(base,"🛬️native-decoding/🦀️.rs"),"utf8");
  expect(producer).toContain("FnOnce(&mut RecordValue");
  expect(producer).toContain("construct(record.as_mut().unwrap()");
- console.log("[DEBUG] SQLite binding original Buffer allocation identity, unchanged65536 caller copy authority, paid structural move before original slot transfer");
 });
 
 test("original history mutation ordinals preserve the full unsigned64 domain across JSON",async()=>{
@@ -1431,7 +1371,6 @@ test("original history mutation ordinals preserve the full unsigned64 domain acr
   expect(JSON.parse(JSON.stringify(text))).toBe(text);
  }
  for(const invalid of ["-1","01","18446744073709551616",18446744073709551615])expect(validate(invalid)).toBe(false);
- console.log("[DEBUG] exact u64 history ordinals BigInt/decimal.js/Ajv/native-width independent receiving proof");
 });
 
 
@@ -1445,7 +1384,6 @@ test("selected member snapshot codec owns typed decode without replacing origina
  const end=source.indexOf("impl<P: semio_framework_value::retirement::RetireOwned,D> ProducedMemberSnapshotOpen");const selected=source.slice(start,end);
  expect(start).toBeGreaterThan(0);expect(end).toBeGreaterThan(start);expect(selected.includes("D::decode_snapshot(&self.input)")).toBe(true);expect(selected.includes("P::decode_pack")).toBe(false);
  expect(selected.includes("check_step_authority(cx)")).toBe(true);expect(selected.includes("let caller = cx.retained_grant()")).toBe(true);expect(selected.includes("admit_member_input_buffer")).toBe(true);
- console.log("[DEBUG] Actual member decoder selected by typed producer; original request authority/input receipt source linked; native decode and paid closure remain separate acceptance");
 });
 
 
@@ -1457,5 +1395,4 @@ test("original Store snapshot ports are independent from selected representation
  const initial=source.indexOf("async fn checkpoint_identity");const start=source.indexOf("impl<P, Mutation> ArtifactStore<P, Mutation>",initial);const end=source.indexOf("fn preflight_runtime_seed",start);const owner=source.slice(start,end);
  expect(start).toBeGreaterThan(0);expect(end).toBeGreaterThan(start);expect(owner.includes("ArtifactPack")).toBe(false);expect(owner.includes("ArtifactStoreSnapshot")).toBe(false);
  expect(source.includes("pub fn snapshot_owner")).toBe(true);expect(source.includes("pub fn owned_snapshot_retirement_factory")).toBe(true);
- console.log("[DEBUG] Original Store snapshot/supplier ports share neutral typed owner bounds; publication/Pack operation bounds remain explicit; native source custody is separate acceptance");
 });

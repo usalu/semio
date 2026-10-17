@@ -1,3 +1,4 @@
+use crate::editor::bim::modes::edit::windows::sheet::config::BimSheetWindowConfig;
 //! 🧪️ The sheet window: which sheet it shows, the records of the paper, the viewports and the marks, the placement of a view's records into a window, the picking of viewports and the accessible labels in both languages.
 
 use super::*;

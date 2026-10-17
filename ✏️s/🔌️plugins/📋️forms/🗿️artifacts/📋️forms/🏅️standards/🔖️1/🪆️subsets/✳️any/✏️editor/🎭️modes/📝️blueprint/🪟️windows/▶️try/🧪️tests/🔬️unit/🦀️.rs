@@ -1,4 +1,9 @@
-use super::*;
+use crate::editor::forms::support::FORMS_PLAY_WINDOW_TRY;
+use crate::FormQuestion;
+use semio_framework_pack_json::Object;
+use semio_framework_plugin::SurfaceKind;
+use crate::editor::forms::modes::blueprint::windows::try_wizard::{render_try_question};
+use crate::editor::forms::modes::blueprint::windows::try_wizard::*;
 use crate::editor::forms::unit_tests::context::{building_component_contributions, building_component_question, forms_app, render as render_body};
 use crate::editor::forms::FORMS_PLAY_BODY_TRY as BODY_TRY;
 

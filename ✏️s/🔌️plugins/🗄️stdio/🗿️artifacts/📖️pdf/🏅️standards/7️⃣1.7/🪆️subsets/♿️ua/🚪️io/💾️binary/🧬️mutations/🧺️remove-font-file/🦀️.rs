@@ -1,6 +1,6 @@
 //! 🧺️ Direct binary codec for `remove-font-file`.
 
-use crate::standards::v1_7::subsets::ua::schema::mutations::RemoveFontFile;
+use crate::standards::v1_7::subsets::ua::schema::mutations::remove_font_file::RemoveFontFile;
 
 //#region 🔖️Identity
 pub const TAG: u8 = 10;
@@ -21,7 +21,5 @@ pub fn decode(bytes: &[u8]) -> Result<RemoveFontFile, String> {
 //#endregion 🔖️Codec
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

@@ -1,0 +1,9 @@
+{
+  "name": "@semio-tech/framework-compiler-ts",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./syntax/module-tree": "./📖️syntax/🌳️module-tree/🟦️.ts",
+    "./world": "./🌍️world/🟦️.ts"
+  }
+}

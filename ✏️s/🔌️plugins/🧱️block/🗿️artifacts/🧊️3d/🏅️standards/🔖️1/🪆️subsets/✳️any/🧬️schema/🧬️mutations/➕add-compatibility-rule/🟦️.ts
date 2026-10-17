@@ -1,6 +1,6 @@
 /** ➕ `AddCompatibilityRule` mutation payload — mirrors `🦀️.rs`. */
 
-import type { BlockCompatibilityRule } from "../../../../../../../../../🟦️";
+import type { BlockCompatibilityRule } from "@semio-tech/block-js";
 
 export interface AddCompatibilityRule {
   rule: BlockCompatibilityRule;

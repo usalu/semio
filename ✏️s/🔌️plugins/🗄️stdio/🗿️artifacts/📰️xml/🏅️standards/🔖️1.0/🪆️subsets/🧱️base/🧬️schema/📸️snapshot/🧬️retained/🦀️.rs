@@ -90,7 +90,7 @@ pub struct RetainedXmlDocument {
     pub declaration: Option<RetainedXmlDeclaration>,
 }
 
-fn text(value: &str) -> Result<RetainedXmlText, ValueError> {
+pub fn text(value: &str) -> Result<RetainedXmlText, ValueError> {
     RetainedXmlText::try_from_str(value)
 }
 
@@ -602,6 +602,4 @@ impl RetainedXmlDeclaration {
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

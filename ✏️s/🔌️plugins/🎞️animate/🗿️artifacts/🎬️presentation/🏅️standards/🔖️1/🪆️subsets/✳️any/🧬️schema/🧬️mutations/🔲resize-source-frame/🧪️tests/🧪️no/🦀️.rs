@@ -16,24 +16,25 @@
 
 use crate::mutations::{apply_presentation_mutation, inverse_presentation_mutation, PresentationMutation};
 use crate::{default_figure_tile_source, PresentationDiff, PresentationSnapshot};
+use semio_framework_test_fixtures::fixture_text;
 
-const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔲resize-source-frame/🧪️no/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔲resize-source-frame/🧪️no/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔲resize-source-frame/🧪️no/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔲resize-source-frame/🧪️no/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔲resize-source-frame/🧪️no/🎯️outcome/🔣️.json");
+static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔲resize-source-frame/🧪️no/📸️snapshot/⬅️before/🔣️.json"));
+static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔲resize-source-frame/🧪️no/📸️snapshot/➡️after/🔣️.json"));
+static MUTATION: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔲resize-source-frame/🧪️no/🦠️mutation/🔣️.json"));
+static DIFF: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔲resize-source-frame/🧪️no/🔺️diff/🔣️.json"));
+static OUTCOME: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔲resize-source-frame/🧪️no/🎯️outcome/🔣️.json"));
 
 fn mutation() -> PresentationMutation {
-    semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation decodes")
+    semio_framework_pack_json::from_json_str((*MUTATION), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation decodes")
 }
 fn expected_after() -> PresentationSnapshot {
-    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after snapshot decodes")
+    semio_framework_pack_json::from_json_str((*AFTER), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after snapshot decodes")
 }
 
 /// 🌱 The committed `⬅️before`, with its composed `presentation` child resolved to the plugin's own
 /// default source carrying the committed payload's `newFrame` — the identity the third guard sees.
 fn before() -> PresentationSnapshot {
-    let snapshot: PresentationSnapshot = semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes");
+    let snapshot: PresentationSnapshot = semio_framework_pack_json::from_json_str((*BEFORE), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes");
     let PresentationMutation::ResizeSourceFrame(payload) = mutation() else {
         panic!("no-ops-when-the-frame-is-already-identical's committed mutation must be a resize-source-frame");
     };
@@ -59,7 +60,7 @@ fn applies_to_committed_after() {
 fn produces_committed_diff() {
     let outcome = <PresentationMutation as protocol::Mutation<PresentationSnapshot>>::diff(&mutation(), &before());
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
-    let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
+    let committed: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff decodes");
     assert_eq!(produced, committed, "resize-source-frame/no-ops-when-the-frame-is-already-identical: produced diff differs from the committed 🔺️diff/🔣️.json");
     assert_eq!(outcome.diff(), &PresentationDiff::default(), "a frame-identity resize must carry the identity diff");
 }
@@ -67,9 +68,9 @@ fn produces_committed_diff() {
 /// 🔣️ The committed diff is itself canonical and decodes to presentation's own diff type.
 #[test]
 fn committed_diff_is_canonical() {
-    let decoded: PresentationDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
+    let decoded: PresentationDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
     let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("diff re-encodes");
-    let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
+    let original: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff reparses");
     assert_eq!(reencoded, original, "resize-source-frame/no-ops-when-the-frame-is-already-identical: committed diff JSON is not canonical");
 }
 
@@ -77,7 +78,7 @@ fn committed_diff_is_canonical() {
 /// slot never set.
 #[test]
 fn committed_diff_applies_to_after() {
-    let decoded: PresentationDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
+    let decoded: PresentationDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
     assert!(decoded.presentation.is_none(), "a frame-identity resize must leave the composed deck slot unset");
     let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "resize-source-frame/no-ops-when-the-frame-is-already-identical: committed diff did not carry before to after");
@@ -88,14 +89,14 @@ fn committed_diff_applies_to_after() {
 /// identity branch.
 #[test]
 fn committed_json_is_canonical() {
-    for (label, text) in [("before", BEFORE), ("after", AFTER)] {
+    for (label, text) in [("before", (*BEFORE)), ("after", (*AFTER))] {
         let decoded: PresentationSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
         let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "resize-source-frame/no-ops-when-the-frame-is-already-identical: committed {label} JSON is not canonical");
     }
     let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&mutation())).expect("mutation encodes");
-    let original: serde_json::Value = serde_json::from_str(MUTATION).expect("mutation reparses");
+    let original: serde_json::Value = serde_json::from_str((*MUTATION)).expect("mutation reparses");
     assert_eq!(reencoded, original, "resize-source-frame/no-ops-when-the-frame-is-already-identical: committed mutation JSON is not canonical");
     let PresentationMutation::ResizeSourceFrame(payload) = mutation() else {
         panic!("committed mutation must be a resize-source-frame");
@@ -107,7 +108,7 @@ fn committed_json_is_canonical() {
 /// Fatal `mutation.invariant` this same verb raises for a degenerate rect.
 #[test]
 fn declared_outcome_holds() {
-    let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
+    let outcome: serde_json::Value = serde_json::from_str((*OUTCOME)).expect("outcome decodes");
     assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("no-op"), "resize-source-frame/no-ops-when-the-frame-is-already-identical declares a no-op outcome");
     let declared = outcome.get("messages").and_then(serde_json::Value::as_array).expect("the declared outcome carries messages");
     let produced = <PresentationMutation as protocol::Mutation<PresentationSnapshot>>::diff(&mutation(), &before());

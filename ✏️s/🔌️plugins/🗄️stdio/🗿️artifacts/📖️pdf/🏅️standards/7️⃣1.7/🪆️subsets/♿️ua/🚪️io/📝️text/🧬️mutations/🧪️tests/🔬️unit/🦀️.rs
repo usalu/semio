@@ -1,5 +1,8 @@
+use crate::standards::v1_7::subsets::ua::schema::mutations::PdfUaMutation;
+#[allow(unused_imports)]
+use protocol::OpText;
 use crate::standards::v1_7::subsets::ua::schema::mutations::SetLang;
-use super::*;
+use crate::standards::v1_7::subsets::ua::io::text::mutations::*;
 
 #[test]
 fn framed_payload_round_trips_and_rejects_non_hex() {

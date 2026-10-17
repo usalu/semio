@@ -17,7 +17,7 @@ use std::collections::BTreeMap;
 #[path = "🧱️codec/🦀️.rs"]
 pub mod codec;
 
-use codec::{array, count, document_text, items_of, member, number, number_of, object, read_value, string, text_of};
+use crate::standards::v1::subsets::any::io::export::json::codec::{array, count, document_text, items_of, member, number, number_of, object, read_value, string, text_of};
 
 /// 🪪️ The RFC 8259 dialect this leaf writes.
 pub const JSON_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId::ANY };

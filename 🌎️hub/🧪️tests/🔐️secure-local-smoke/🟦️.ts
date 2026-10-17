@@ -8,7 +8,7 @@ import { terminateOwnedChildTree } from "../../../🧰️framework/🔨️module
 import { randomBytes } from "node:crypto";
 import { existsSync } from "node:fs";
 import { spawn, type ChildProcess } from "node:child_process";
-import { decodeClientFrame, encodeServerFrame, type WireFrontierSummary } from "../../../🧰️framework/🔨️modules/📡️replication/🟦️.ts";
+import { decodeClientFrame, encodeServerFrame, type WireFrontierSummary } from "@semio-tech/framework-replication";
 import { DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1 } from "@semio-tech/framework/directory/schema";
 import { runCargo, runCmd, runProbe, orchestratorBudgetOpts } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";

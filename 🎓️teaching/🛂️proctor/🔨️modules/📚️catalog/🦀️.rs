@@ -140,6 +140,11 @@ fn parse<T: serde::de::DeserializeOwned>(path: &Path, bytes: &[u8]) -> Result<T,
     serde_json::from_slice(bytes).map_err(|error| CatalogError::Malformed { path: path.to_path_buf(), detail: error.to_string() })
 }
 
+#[cfg(any(test, feature = "testkit"))]
+#[doc(hidden)]
+#[path = "🧰️fixtures/🦀️.rs"]
+pub mod fixtures;
+
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
-pub(crate) mod tests;
+mod tests;

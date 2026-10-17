@@ -1,7 +1,18 @@
 //! 🪇️ Staged slice of the `child-test-view` band of the mounted artifact instance: its `instance-children` members (WP6 step S0 of the instance family).
 //!
 //! 🧪️ Fixture seam observes actual child publication and retained store owners.
-use super::*;
+use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use pack::snapshot::ArtifactPack;
+use crate::children_components::ChildComposition;
+use semio_framework_plugin_decl_views::child_view::ChildContentView;
+use semio_framework_plugin_decl_emission::Emit;
+use semio_framework::{Fault, FaultFrom};
+use std::future::Future;
+use store::{MemberFactory, Mutation, SpaceMember};
+use protocol::OpText;
+use semio_framework_plugin_reactor_app::PluginApp;
+use semio_framework_ui_contract::*;
 
 impl<M: SpaceMember + MemberFactory + 'static> ChildComposition<M> {
  #[cfg(any(test,feature="artifact-app-testing"))]

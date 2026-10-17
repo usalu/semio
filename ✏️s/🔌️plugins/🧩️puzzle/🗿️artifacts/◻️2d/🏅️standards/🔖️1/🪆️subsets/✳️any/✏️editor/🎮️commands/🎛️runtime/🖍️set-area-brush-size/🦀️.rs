@@ -1,6 +1,6 @@
 //! 🖍️ `set-area-brush-size` command.
 
-use {crate::editor::puzzle2d::snapshot::puzzle2d_window_and_measures_scope, crate::editor::puzzle2d::Puzzle2dActionCtx};
+use {crate::editor::puzzle2d::snapshot::puzzle2d_window_and_measures_scope, crate::editor::puzzle2d::interaction::Puzzle2dActionCtx};
 use semio_framework_pack_json::Value;
 
 /// 🖍️ One Area Brush extent stepper — `{axis: "w"|"h", value}` in whole grid cells, clamped to at

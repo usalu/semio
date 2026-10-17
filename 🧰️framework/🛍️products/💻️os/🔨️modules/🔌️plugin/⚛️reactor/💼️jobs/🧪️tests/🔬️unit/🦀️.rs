@@ -92,14 +92,12 @@ fn original_job_body_failure_retains_exact_owner_and_error_until_paid_close(){
  let mut bytes=None;for _ in 0..100000{assert!(has_owned_jobs(operation.0,generation.0));match step_fixture(job,WORK_UNITS_EXECUTE).unwrap(){JobStep::Running(None)=>{},JobStep::Failed(output)=>{bytes=Some(output);break},_=>panic!("original body refusal published another outcome")}}
  assert!(!has_owned_jobs(operation.0,generation.0));let output=bytes.as_ref().expect("original body failure reaches publication");let decoded:serde_json::Value=semio_framework_os_kernel::os_pack::pack_rt::decode_wire_value(output).unwrap().into();assert_eq!(decoded["code"],failure["code"]);assert_eq!(decoded["message"],failure["message"]);
  let mut closing=None;let cancel=root_cancel_token();let mut sequence=0;for _ in 0..10000{let mut receipt=Default::default();let mut cx=StepContext::new(operation,generation,StepBudget::new(1,u64::MAX,fixture_grant()),cancel.clone(),||Some(1),&mut sequence,&mut receipt);let(done,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||close_original(&mut bytes,&mut closing,&mut cx));assert_eq!((heap.requested_bytes,heap.released_bytes),(cx.retained_progress().retained_capacity_bytes,cx.retained_progress().released_bytes));if done.unwrap(){break}}assert!(bytes.is_none()&&closing.is_none());let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop((bytes,closing)));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
- eprintln!("[DEBUG] original body failure exactBoxSame=true deepChildrenHeld=true wholeCauseHeld=true actorFenceSystem0=true paidFullClose=true canonicalSerdeView=true terminalDrop0=true");
 }
 
 /// 🧭️ Cancellation after a real body refusal signals that original failed producer before close.
 #[test]
 fn original_job_body_failure_cancellation_signals_same_failed_owner(){
  register_fixture();start_fixture(9004,"test.fixed-original",vec![7;1799],None);admit_body_fixture(9004);assert!(matches!(step_fixture(9004,1).unwrap(),JobStep::Running(None)));let pointer=JOBS.with(|slots|slots.borrow().iter().flatten().find(|slot|slot.job==9004).unwrap().failed_owner.as_ref().unwrap().as_ref()as *const dyn BoundedJob as *const());cancel_fixture(9004);assert!(matches!(step_fixture(9004,1).unwrap(),JobStep::Running(None)));JOBS.with(|slots|{let slots=slots.borrow();let slot=slots.iter().flatten().find(|slot|slot.job==9004).unwrap();assert!(slot.cancellation_signalled);assert_eq!(slot.failed_owner.as_ref().unwrap().as_ref()as *const dyn BoundedJob as *const(),pointer)});assert!(matches!(terminal_fixture(9004),JobStep::Failed(_)));
- eprintln!("[DEBUG] original body error cancellation sameBox=true originalCancelSignalRequired=true paidFullClose=true");
 }
 
 /// 📏️ Original source retirement honors the caller's single CPU unit and complete retained wallet.
@@ -111,7 +109,6 @@ fn original_job_source_close_uses_exact_one_unit_caller_work(){
   let mut terminal=false;for _ in 0..100000{let fuel=work["fuel"].as_u64().unwrap();let mut receipt=Default::default();let mut cx=StepContext::new(operation,generation,StepBudget::new(fuel,2,grant),cancel.clone(),||Some(1),&mut sequence,&mut receipt);let(done,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||close_original(&mut source,&mut closing,&mut cx));let progress=cx.retained_progress();assert!(progress.copied_items<=1);if progress!=RetainedCloneProgress::default(){assert_eq!(cx.fuel_remaining(),0)}assert!(progress.fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));if done.unwrap(){terminal=true;break}}
   assert!(terminal&&source.is_none()&&closing.is_none());let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop((source,closing)));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
  }
- eprintln!("[DEBUG] original source cleanup workLoan=1 denialSystem0=true sameSource=true copy1_3_64=true physicalConservation=true terminalDrop0=true");
 }
 
 /// 🧮️ The normal typed fault encoder and every child close use original caller CPU authority.
@@ -125,7 +122,6 @@ fn original_job_failure_projection_uses_exact_one_unit_caller_work(){
   assert!(reply.terminal_is_empty());let decoded:serde_json::Value=semio_framework_os_kernel::os_pack::pack_rt::decode_wire_value(bytes.as_ref().expect("paid original fault publication")).unwrap().into();assert_eq!(decoded["code"],corpus["bodyFailure"]["code"]);assert_eq!(decoded["message"],corpus["bodyFailure"]["message"]);
   let mut closing=None;for _ in 0..100000{let mut receipt=Default::default();let mut cx=StepContext::new(operation,generation,StepBudget::new(1,2,grant),cancel.clone(),||Some(1),&mut sequence,&mut receipt);let(done,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||close_original(&mut bytes,&mut closing,&mut cx));assert_eq!((heap.requested_bytes,heap.released_bytes),(cx.retained_progress().retained_capacity_bytes,cx.retained_progress().released_bytes));if done.unwrap(){break}}assert!(bytes.is_none()&&closing.is_none());let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop((reply,bytes,closing)));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
  }
- eprintln!("[DEBUG] original failure projection workLoan=1 denialSystem0=true canonicalSerdeView=true copy1_3_64=true physicalConservation=true paidFullClose=true terminalDrop0=true");
 }
 
 /// 🧳️ Checkpoint publication retains its original replay input after actual body admission.

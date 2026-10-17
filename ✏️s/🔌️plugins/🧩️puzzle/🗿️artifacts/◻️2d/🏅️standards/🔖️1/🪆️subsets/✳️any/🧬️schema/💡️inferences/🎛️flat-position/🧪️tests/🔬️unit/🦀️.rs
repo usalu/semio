@@ -1,5 +1,10 @@
-use super::*;
-use {crate::standards::v1::subsets::any::schema::Puzzle2dEdge, crate::standards::v1::subsets::any::schema::Puzzle2dHandle, crate::standards::v1::subsets::any::schema::Puzzle2dNode, crate::standards::v1::subsets::any::schema::Puzzle2dNodeAnchor};
+use crate::Puzzle2dSnapshot;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::fastened_layout_snapshot;
+#[allow(unused_imports)]
+use std::collections::BTreeMap;
+use crate::standards::v1::subsets::any::schema::inferences::flat_position::*;
+use {crate::standards::v1::subsets::any::schema::records::Puzzle2dEdge, crate::standards::v1::subsets::any::schema::records::Puzzle2dHandle, crate::standards::v1::subsets::any::schema::records::Puzzle2dNode, crate::standards::v1::subsets::any::schema::records::Puzzle2dNodeAnchor};
 
 //#region 🧸️Fixtures
 fn parent_child_snapshot() -> Puzzle2dSnapshot {
@@ -7,7 +12,7 @@ fn parent_child_snapshot() -> Puzzle2dSnapshot {
     let p = Puzzle2dNode { id: "p".into(), x: 5.0, y: 7.0, anchor: Puzzle2dNodeAnchor::Fixed, handles: vec![Puzzle2dHandle { id: "h".into(), ..Default::default() }].into(), ..Default::default() };
     let c = Puzzle2dNode { id: "c".into(), anchor: Puzzle2dNodeAnchor::Derived, handles: vec![Puzzle2dHandle { id: "h".into(), ..Default::default() }].into(), ..Default::default() };
     let e = Puzzle2dEdge { id: "e".into(), source: "p:h".into(), target: "c:h".into(), x: 3.0, y: -2.0, ..Default::default() };
-    Puzzle2dSnapshot { schema: crate::standards::v1::subsets::any::schema::PUZZLE_2D_SCHEMA.into(), camera: Default::default(), nodes: vec![p, c].into(), edges: vec![e].into(), target_regions: Default::default(), meta: Default::default() }
+    Puzzle2dSnapshot { schema: crate::standards::v1::subsets::any::schema::records::PUZZLE_2D_SCHEMA.into(), camera: Default::default(), nodes: vec![p, c].into(), edges: vec![e].into(), target_regions: Default::default(), meta: Default::default() }
 }
 //#endregion 🧸️Fixtures
 

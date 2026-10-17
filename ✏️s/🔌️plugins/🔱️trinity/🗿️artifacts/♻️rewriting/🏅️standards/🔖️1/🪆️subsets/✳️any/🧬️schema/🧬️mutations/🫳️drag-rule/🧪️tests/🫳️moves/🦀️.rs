@@ -5,25 +5,25 @@
 
 use crate::standards::v1::subsets::any::schema::diff::RewritingDiff;
 use crate::standards::v1::subsets::any::schema::mutations::RewriteRuleMutation;
-use crate::RewritingSnapshot;
-use crate::{apply_rewrite_rule_mutation, inverse_rewrite_rule_mutation};
+use crate::standards::v1::subsets::any::schema::snapshot::RewritingSnapshot;
+use crate::standards::v1::subsets::any::schema::operations::{apply_rewrite_rule_mutation, inverse_rewrite_rule_mutation};
 
-const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🫳️drag-rule/🫳️moves/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🫳️drag-rule/🫳️moves/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🫳️drag-rule/🫳️moves/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🫳️drag-rule/🫳️moves/🔺️diff/🔣️.json");
-const BEFORE_CHILD:&str=include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🫳️drag-rule/🫳️moves/📸️snapshot/⬅️before/🪆️child/🔣️.json");
-const AFTER_CHILD:&str=include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🫳️drag-rule/🫳️moves/📸️snapshot/➡️after/🪆️child/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🫳️drag-rule/🫳️moves/🎯️outcome/🔣️.json");
+static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🫳️drag-rule/🫳️moves/📸️snapshot/⬅️before/🔣️.json"));
+static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🫳️drag-rule/🫳️moves/📸️snapshot/➡️after/🔣️.json"));
+static MUTATION: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🫳️drag-rule/🫳️moves/🦠️mutation/🔣️.json"));
+static DIFF: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🫳️drag-rule/🫳️moves/🔺️diff/🔣️.json"));
+static BEFORE_CHILD: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🫳️drag-rule/🫳️moves/📸️snapshot/⬅️before/🪆️child/🔣️.json"));
+static AFTER_CHILD: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🫳️drag-rule/🫳️moves/📸️snapshot/➡️after/🪆️child/🔣️.json"));
+static OUTCOME: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🫳️drag-rule/🫳️moves/🎯️outcome/🔣️.json"));
 
 fn before() -> RewritingSnapshot {
-    {let mut value=crate::standards::v1::subsets::any::io::text::snapshot::decode_rewriting_snapshot_json(BEFORE).expect("before snapshot decodes");let child=semio_s_artifact_stdio_semio_graph::io::text::snapshot::decode_semio_graph_snapshot_json(BEFORE_CHILD).expect("declared complete Semio child decodes");semio_s_artifact_trinity_jack::materialize_jack_snapshot(&mut value.working_graph.content,child);value}
+    {let mut value=crate::standards::v1::subsets::any::io::text::snapshot::decode_rewriting_snapshot_json((*BEFORE)).expect("before snapshot decodes");let child=semio_s_artifact_stdio_semio_graph::io::text::snapshot::decode_semio_graph_snapshot_json((*BEFORE_CHILD)).expect("declared complete Semio child decodes");semio_s_artifact_trinity_jack_semio_content::materialize_jack_snapshot(&mut value.working_graph.content,child);value}
 }
 fn expected_after() -> RewritingSnapshot {
-    {let mut value=crate::standards::v1::subsets::any::io::text::snapshot::decode_rewriting_snapshot_json(AFTER).expect("after snapshot decodes");let child=semio_s_artifact_stdio_semio_graph::io::text::snapshot::decode_semio_graph_snapshot_json(AFTER_CHILD).expect("declared complete Semio child decodes");semio_s_artifact_trinity_jack::materialize_jack_snapshot(&mut value.working_graph.content,child);value}
+    {let mut value=crate::standards::v1::subsets::any::io::text::snapshot::decode_rewriting_snapshot_json((*AFTER)).expect("after snapshot decodes");let child=semio_s_artifact_stdio_semio_graph::io::text::snapshot::decode_semio_graph_snapshot_json((*AFTER_CHILD)).expect("declared complete Semio child decodes");semio_s_artifact_trinity_jack_semio_content::materialize_jack_snapshot(&mut value.working_graph.content,child);value}
 }
 fn mutation() -> RewriteRuleMutation {
-    crate::standards::v1::subsets::any::io::text::mutations::decode_rewriting_mutation_json(MUTATION).map(|mut value|{if let RewriteRuleMutation::EditWorkingGraph(payload)=&mut value{let child=semio_s_artifact_stdio_semio_graph::io::text::snapshot::decode_semio_graph_snapshot_json(AFTER_CHILD).expect("declared replacement Semio child decodes");semio_s_artifact_trinity_jack::materialize_jack_snapshot(&mut payload.new_working_graph.content,child);}value}).expect("mutation decodes")
+    crate::standards::v1::subsets::any::io::text::mutations::decode_rewriting_mutation_json((*MUTATION)).map(|mut value|{if let RewriteRuleMutation::EditWorkingGraph(payload)=&mut value{let child=semio_s_artifact_stdio_semio_graph::io::text::snapshot::decode_semio_graph_snapshot_json((*AFTER_CHILD)).expect("declared replacement Semio child decodes");semio_s_artifact_trinity_jack_semio_content::materialize_jack_snapshot(&mut payload.new_working_graph.content,child);}value}).expect("mutation decodes")
 }
 
 /// ▶️ `drag-rule-nodes` carries `before` to exactly the committed `after`.
@@ -51,19 +51,19 @@ async fn inverse_restores_before() {
 /// 🔣️ The committed snapshots and payload are canonical: decode → encode is a fixed point.
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
-    for (label, text) in [("before", BEFORE), ("after", AFTER)] {
+    for (label, text) in [("before", (*BEFORE)), ("after", (*AFTER))] {
         let decoded: RewritingSnapshot = crate::standards::v1::subsets::any::io::text::snapshot::decode_rewriting_snapshot_json(text).expect("snapshot decodes");
         let reencoded = serde_json::from_str::<serde_json::Value>(&crate::standards::v1::subsets::any::io::text::snapshot::encode_rewriting_snapshot_json(&decoded).expect("declared snapshot JSON encodes")).expect("snapshot encodes");
         assert_eq!(reencoded, serde_json::from_str::<serde_json::Value>(text).expect("snapshot reparses"), "drag-rule-nodes/🫳️moves: committed {label} JSON is not canonical");
     }
     let reencoded = serde_json::from_str::<serde_json::Value>(&crate::standards::v1::subsets::any::io::text::mutations::encode_rewriting_mutation_json(&mutation()).expect("declared mutation JSON encodes")).expect("mutation encodes");
-    assert_eq!(reencoded, serde_json::from_str::<serde_json::Value>(MUTATION).expect("mutation reparses"), "drag-rule-nodes/🫳️moves: committed mutation JSON is not canonical");
+    assert_eq!(reencoded, serde_json::from_str::<serde_json::Value>((*MUTATION)).expect("mutation reparses"), "drag-rule-nodes/🫳️moves: committed mutation JSON is not canonical");
 }
 
 /// 🎯️ The declared outcome holds — an applied change with no diagnostics — and the fixture is bound to `drag-rule-nodes`'s descriptor.
 #[semio_framework_async_macros::async_test]
 async fn declared_outcome_holds() {
-    let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
+    let outcome: serde_json::Value = serde_json::from_str((*OUTCOME)).expect("outcome decodes");
     assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("applied"));
     let produced = <RewriteRuleMutation as protocol::Mutation<RewritingSnapshot>>::diff(&mutation(), &before());
     assert!(produced.messages().is_empty(), "drag-rule-nodes/🫳️moves declares no diagnostics, but got {:?}", produced.messages());
@@ -75,14 +75,14 @@ async fn declared_outcome_holds() {
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
     let outcome = <RewriteRuleMutation as protocol::Mutation<RewritingSnapshot>>::diff(&mutation(), &before());
-    let produced = serde_json::from_str::<serde_json::Value>(&crate::standards::v1::subsets::any::schema::diff::encode_rewriting_diff_json(outcome.diff()).expect("declared diff JSON encodes")).expect("produced diff encodes");
-    assert_eq!(produced, serde_json::from_str::<serde_json::Value>(DIFF).expect("committed diff decodes"), "drag-rule-nodes/🫳️moves: the produced diff differs from the committed one");
+    let produced = serde_json::from_str::<serde_json::Value>(&crate::standards::v1::subsets::any::io::text::diff::encode_rewriting_diff_json(outcome.diff()).expect("declared diff JSON encodes")).expect("produced diff encodes");
+    assert_eq!(produced, serde_json::from_str::<serde_json::Value>((*DIFF)).expect("committed diff decodes"), "drag-rule-nodes/🫳️moves: the produced diff differs from the committed one");
 }
 
 /// 🩹️ Applying the committed diff to `before` yields the committed `after`.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: RewritingDiff = crate::standards::v1::subsets::any::schema::diff::decode_rewriting_diff_json(DIFF).map(|mut value|{if let Some(parent)=&mut value.working_graph{let child=semio_s_artifact_stdio_semio_graph::io::text::snapshot::decode_semio_graph_snapshot_json(AFTER_CHILD).expect("declared diff Semio child decodes");semio_s_artifact_trinity_jack::materialize_jack_snapshot(&mut parent.content,child);}value}).expect("committed diff decodes");
+    let decoded: RewritingDiff = crate::standards::v1::subsets::any::io::text::diff::decode_rewriting_diff_json((*DIFF)).map(|mut value|{if let Some(parent)=&mut value.working_graph{let child=semio_s_artifact_stdio_semio_graph::io::text::snapshot::decode_semio_graph_snapshot_json((*AFTER_CHILD)).expect("declared diff Semio child decodes");semio_s_artifact_trinity_jack_semio_content::materialize_jack_snapshot(&mut parent.content,child);}value}).expect("committed diff decodes");
     let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies");
     assert_eq!(produced, expected_after(), "drag-rule-nodes/🫳️moves: the committed diff did not carry before to after");
 }
@@ -92,4 +92,9 @@ async fn committed_diff_applies_to_after() {
 #[semio_framework_async_macros::async_test]
 async fn inverse_sums_to_the_negative_diff() {
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation(), &before()).await;
+}
+
+fn runtime_fixture_text(relative: &str) -> &'static str {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative);
+    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display())).into_boxed_str())
 }

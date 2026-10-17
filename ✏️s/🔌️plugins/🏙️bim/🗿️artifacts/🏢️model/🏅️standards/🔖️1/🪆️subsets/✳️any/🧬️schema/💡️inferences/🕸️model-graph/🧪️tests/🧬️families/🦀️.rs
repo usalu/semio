@@ -179,6 +179,6 @@ fn the_text_projection_of_the_families_is_the_oracle_table() {
     assert_eq!(parsed.as_object().expect("object").len(), 5);
     close(parsed["fam-hea"]["outline_area"].as_f64().expect("area"), HEA_AREA);
     assert_eq!(parsed["fam-table"]["solids"]["s-shelf"]["visible"], false);
-    let projected = crate::standards::v1::subsets::any::io::text::snapshot::encode_inference_projection_json(&table(), "families").expect("the families projection exists");
+    let projected = crate::standards::v1::subsets::any::io::text::projection::encode_inference_projection_json(&table(), "families").expect("the families projection exists");
     assert_eq!(projected, text);
 }

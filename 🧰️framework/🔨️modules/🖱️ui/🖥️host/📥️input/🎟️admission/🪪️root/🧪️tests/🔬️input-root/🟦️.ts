@@ -2,7 +2,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import Ajv from "ajv";
-import { valueSchemaUrl } from "../../../../../../../🌱️value/🧪️tests/🧫️fixtures/🟦️.ts";
+import { valueSchemaUrl } from "@semio-tech/value-ts/testing/fixtures";
 
 /** 🪪️ The input-root admission ledger: root-scoped grants and their publication outcomes. */
 type InputRootFixture = {

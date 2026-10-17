@@ -22,7 +22,6 @@ test("Puzzle2d lookup preserves original topology while closing actual source cu
   const drained=[];for(const role of fixture.order){drained.push((db.query("DELETE FROM close_owner WHERE ordinal=(SELECT MIN(ordinal) FROM close_owner) RETURNING role").get()as {role:string}).role);expect(drained.at(-1)).toBe(role)}
   expect(db.query("SELECT COUNT(*) AS count FROM close_owner").get()).toEqual({count:0});
  }finally{db.close()}
- console.log("[DEBUG] six SQLite first-owner topologies retain original UTF8 IDs; ordered output/comparison/source/target custody closes without conflating copy, capacity and release");
  const source=readFileSync(resolve(import.meta.dir,"../../🦀️.rs"),"utf8");
  for(const marker of["next_close_copy_byte_demand","next_close_capacity_byte_demand","next_close_release_byte_demand","next_close_depth_demand","grant: RetainedCloneGrant","RetainedCloneBinding::close_one"])expect(source).toContain(marker);
  expect(source).not.toContain("SnapshotRetirementStep");
@@ -38,7 +37,6 @@ test("Puzzle2d literal and optional text producers expose the exact active nativ
    expect(db.query("SELECT COUNT(*) AS count FROM owner").get()).toEqual({count:0});
   }
  }finally{db.close()}
- console.log("[DEBUG] SQLite literal inverse and connection edge close original field, displaced output, then immutable mutation custody in exact native frontier order");
  const mutations=resolve(import.meta.dir,"../../../../🧬️mutations");
  for(const path of["🏷️literal-id-inverse/🦀️.rs","🪢️connect-handles/🎮️prepare/🪢️edge/🦀️.rs","🔤️text/↩️inverse/🦀️.rs","🔤️text/🎮️prepare/📸️candidate/🦀️.rs","📍move-node/🎮️prepare/↩️inverse/🦀️.rs","📍move-node/🎮️prepare/📸️candidate/🦀️.rs","🚩️flag/🎮️prepare/↩️inverse/🦀️.rs","🚩️flag/🎮️prepare/📸️candidate/🦀️.rs","🌱create-node/🎮️prepare/📸️candidate/🦀️.rs","🗑️delete-node/🎮️prepare/↩️inverse/🦀️.rs","🗑️delete-node/🎮️prepare/📸️candidate/🦀️.rs","🪢️connect-handles/🎮️prepare/📸️candidate/🦀️.rs","🎮️prepare/🧰️child/🦀️.rs"]){
   const source=readFileSync(resolve(mutations,path),"utf8");
@@ -59,7 +57,6 @@ test("Puzzle2d snapshot clones admit original immutable source custody and close
   fixture.sourceCustody.order.forEach((role,ordinal)=>db.query("INSERT INTO close_owner VALUES(?,?)").run(ordinal,role));
   for(const role of fixture.sourceCustody.order)expect(db.query("DELETE FROM close_owner WHERE ordinal=(SELECT MIN(ordinal) FROM close_owner) RETURNING role").get()).toEqual({role});
  }finally{db.close()}
- console.log("[DEBUG] SQLite source birth admits lease+payload only together; cursor/output aliases close before immutable original source metadata");
  const root=resolve(import.meta.dir,"../../../../../../../../..");
  const helper=readFileSync(resolve(root,"🧪️tests/🔗️source-custody/🦀️.rs"),"utf8");
  expect(helper).toContain("pub(crate) fn admit_source");

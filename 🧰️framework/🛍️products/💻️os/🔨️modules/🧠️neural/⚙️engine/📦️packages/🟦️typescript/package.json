@@ -1,0 +1,11 @@
+{
+  "name": "@semio-tech/neural-engine-ts",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./projection/fixtures": "./📤️projection/🧫️fixtures/🟦️.ts",
+    "./projection/schema": "./📤️projection/🧬️schema/🟦️.ts",
+    "./registry/admission/fixtures": "./📔️registry/🏗️admission/🧫️fixtures/🟦️.ts",
+    "./registry/admission/schema": "./📔️registry/🏗️admission/🧬️schema/🟦️.ts"
+  }
+}

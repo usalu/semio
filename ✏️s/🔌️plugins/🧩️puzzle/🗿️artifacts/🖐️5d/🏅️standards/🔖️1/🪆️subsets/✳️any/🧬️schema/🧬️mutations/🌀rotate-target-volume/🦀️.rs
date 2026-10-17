@@ -1,6 +1,5 @@
 //! 🌀 Puzzle5d mutation — `RotateTargetVolume`: changes a target volume's orientation quaternion.
 use crate::standards::v1::subsets::any::schema::diff::Puzzle5dDiff;
-use crate::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation;
 use crate::Puzzle5dSnapshot;
 
 //#region 🔖️Mutation
@@ -18,17 +17,23 @@ pub struct RotateTargetVolume {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn rotate_target_volume(id: String, new_orientation: Option<[f64; 4]>) -> Puzzle5dMutation {
-    Puzzle5dMutation::RotateTargetVolume(RotateTargetVolume { id, new_orientation })
+pub fn rotate_target_volume<Op>(id: String, new_orientation: Option<[f64; 4]>) -> Op
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::rotate_target_volume::RotateTargetVolume>,
+{
+    Op::from(RotateTargetVolume { id, new_orientation })
 }
 
-impl protocol::MutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for RotateTargetVolume {
+impl<Op> protocol::MutationKind<Puzzle5dSnapshot, Op> for RotateTargetVolume
+where
+    Op: protocol::Mutation<Puzzle5dSnapshot, Diff = Puzzle5dDiff> + From<RotateTargetVolume>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "rotate", entity: "target-volume", kind: "rotate-target-volume", record: "RotatedTargetVolume" };
 
     fn diff(&self, base: &Puzzle5dSnapshot) -> protocol::MutationOutcome<Puzzle5dDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Puzzle5dSnapshot) -> Result<Vec<Puzzle5dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Puzzle5dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

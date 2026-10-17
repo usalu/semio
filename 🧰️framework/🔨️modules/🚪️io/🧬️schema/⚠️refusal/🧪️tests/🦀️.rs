@@ -44,7 +44,6 @@ fn io_owned_cause_retains_kind_and_text_diagnostics() {
         else {assert_eq!(result.unwrap_err().kind.as_str(),row["expectedKind"].as_str().unwrap());}
         drop(control);
         if threshold!=0 {assert!(observed.iter().any(|event|event.total>1&&event.completed>=threshold));}
-        eprintln!("[DEBUG] IO long source {} observed {} controlled frontiers",row["id"].as_str().unwrap(),observed.len());
     }
 }
 
@@ -70,7 +69,6 @@ fn io_cause_controlled_wire_retains_all_authorities_and_source_data() {
     assert_eq!(canonical["properties"]["cause"]["$ref"],"https://semio.tech/schema/value/refusal/codec#/$defs/wire");
     assert_eq!(canonical["properties"]["diagnostics"]["items"]["$ref"],"https://semio.tech/schema/diagnostic/controlled#/$defs/Diagnostic");
     assert!(canonical["properties"].get("message").is_none());
-    eprintln!("[DEBUG] Actual IO schema registry publishes the closed canonical owned cause and diagnostic contract");
     let rows:serde_json::Value=serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/⚠️refusal/🔣️.json")).unwrap();
     for row in rows.as_array().unwrap() {
         let Some(expected)=row.get("expectedWire")else{continue};

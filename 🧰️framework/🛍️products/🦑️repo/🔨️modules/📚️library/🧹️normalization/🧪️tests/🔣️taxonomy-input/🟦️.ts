@@ -95,7 +95,6 @@ for (const row of fixture.cases) test(row.id, async () => {
       if (row.action === "new-root") expect(next.path).not.toBe(first.path);
       expect(await observe(join(repoRoot, taxonomyPath))).toEqual({ kind: "file", hash: expectedHash });
     } else expect(() => loadTaxonomy({ repoRoot, taxonomyPath }), row.id).toThrow();
-    console.log("[DEBUG] taxonomy input oracle; id=" + row.id + "; physical=" + physical.kind + "; accepted=" + row.accepted);
   } finally { rmSync(base, { recursive: true, force: true }); }
 }, 5_000);
 
@@ -139,6 +138,5 @@ for (const compiler of ["Bun", "TypeScript"] as const) for (const row of fixture
       expect((await observe(ancestor)).kind, row.id).toBe(row.physical);
       if (row.accepted) expect(loaded?.input.contentHash).toBe(expectedHash);
       else expect(error).toBeInstanceOf(Error);
-      console.log("[DEBUG] taxonomy witness oracle; provider=" + compiler + "; id=" + row.id + "; accepted=" + row.accepted);
     } finally { rmSync(base, { recursive: true, force: true }); }
 }, 5_000);

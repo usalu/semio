@@ -1,0 +1,80 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "Case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "input",
+        "accepted"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "source",
+            "lock"
+          ]
+        },
+        "input": {},
+        "accepted": {
+          "type": "boolean"
+        },
+        "text": {
+          "type": "string"
+        },
+        "utf8Bytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "Hostile": {
+      "enum": [
+        "proxy",
+        "getter",
+        "sparse",
+        "array-getter",
+        "extra",
+        "null-prototype",
+        "symbol"
+      ]
+    },
+    "Epoch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "loadedSource",
+        "loadedPolicy",
+        "currentSource",
+        "currentPolicy",
+        "accepted"
+      ],
+      "properties": {
+        "loadedSource": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "loadedPolicy": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "currentSource": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "currentPolicy": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

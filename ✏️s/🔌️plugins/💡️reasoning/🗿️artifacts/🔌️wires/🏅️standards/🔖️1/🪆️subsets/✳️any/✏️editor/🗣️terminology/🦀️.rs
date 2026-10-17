@@ -37,7 +37,5 @@ pub fn relationship_kind_display_name(kind: &str, labels: &WiresLabels) -> Strin
 //#endregion 🔖️Resolvers
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

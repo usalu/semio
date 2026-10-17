@@ -54,8 +54,8 @@ pub mod circulation;
 #[path = "🧗️attach/🦀️.rs"]
 pub mod attach;
 
-use frames::Rigid;
-use reader::Doc;
+use crate::standards::v1::subsets::any::io::import::ifc::frames::Rigid;
+use crate::standards::v1::subsets::any::io::import::ifc::reader::Doc;
 
 /// 🏗️ The import under construction: the indexed document, the model being filled and what is known about each imported entity.
 pub struct Import<'a> {

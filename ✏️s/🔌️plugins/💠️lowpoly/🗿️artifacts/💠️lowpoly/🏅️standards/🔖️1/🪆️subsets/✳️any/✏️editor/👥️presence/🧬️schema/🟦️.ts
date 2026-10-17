@@ -52,6 +52,10 @@ type lowpolyLowpolyPresenceGuardSizeBounds = { readonly minItems?: number; reado
 
 export const lowpolyLowpolyPresenceGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : lowpolyLowpolyPresenceGuardReject(at, "value is not an object");
+export const lowpolyLowpolyPresenceGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) lowpolyLowpolyPresenceGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const lowpolyLowpolyPresenceGuardArray = (value: unknown, at: string, bounds: lowpolyLowpolyPresenceGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return lowpolyLowpolyPresenceGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) lowpolyLowpolyPresenceGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -82,7 +86,7 @@ export const lowpolyLowpolyPresenceGuardConstant = <T extends string | number | 
 //#endregion 🚪️Parsers
 
 export function parseLowpolyPresence(value: unknown, at = "$"): LowpolyPresence {
-  const row = lowpolyLowpolyPresenceGuardObject(value, at);
+  const row = lowpolyLowpolyPresenceGuardClosed(lowpolyLowpolyPresenceGuardObject(value, at), at, ["selectionMode", "selectionIds", "selectionTargetsMesh", "selectionTargetsVertex", "selectionTargetsEdge", "selectionTargetsFace", "selectedObjectIds", "hoveredObjectId", "hoveredTargetObjectId", "hoveredTargetMode", "hoveredTargetId", "worldCameraPosition", "worldCameraTarget", "worldCameraFov", "paintUtility", "activeUtilityId"]);
   return {
     selectionMode: lowpolyLowpolyPresenceGuardString(row["selectionMode"], `${at}.selectionMode`),
     selectionIds: lowpolyLowpolyPresenceGuardArray(row["selectionIds"], `${at}.selectionIds`).map((item, index) => lowpolyLowpolyPresenceGuardInteger(item, `${at}.selectionIds[${index}]`, {"minimum": 0})),
@@ -95,10 +99,10 @@ export function parseLowpolyPresence(value: unknown, at = "$"): LowpolyPresence 
     hoveredTargetObjectId: row["hoveredTargetObjectId"] === undefined ? undefined : lowpolyLowpolyPresenceGuardString(row["hoveredTargetObjectId"], `${at}.hoveredTargetObjectId`),
     hoveredTargetMode: row["hoveredTargetMode"] === undefined ? undefined : lowpolyLowpolyPresenceGuardString(row["hoveredTargetMode"], `${at}.hoveredTargetMode`),
     hoveredTargetId: row["hoveredTargetId"] === undefined ? undefined : lowpolyLowpolyPresenceGuardInteger(row["hoveredTargetId"], `${at}.hoveredTargetId`, {"minimum": 0}),
-    worldCameraPosition: lowpolyLowpolyPresenceGuardArray(row["worldCameraPosition"], `${at}.worldCameraPosition`, {"minItems": 3, "maxItems": 3}).map((item, index) => lowpolyLowpolyPresenceGuardNumber(item, `${at}.worldCameraPosition[${index}]`)),
-    worldCameraTarget: lowpolyLowpolyPresenceGuardArray(row["worldCameraTarget"], `${at}.worldCameraTarget`, {"minItems": 3, "maxItems": 3}).map((item, index) => lowpolyLowpolyPresenceGuardNumber(item, `${at}.worldCameraTarget[${index}]`)),
+    worldCameraPosition: ((items0) => [lowpolyLowpolyPresenceGuardNumber(items0[0], `${at}.worldCameraPosition[0]`), lowpolyLowpolyPresenceGuardNumber(items0[1], `${at}.worldCameraPosition[1]`), lowpolyLowpolyPresenceGuardNumber(items0[2], `${at}.worldCameraPosition[2]`)])(lowpolyLowpolyPresenceGuardArray(row["worldCameraPosition"], `${at}.worldCameraPosition`, {"minItems": 3, "maxItems": 3})),
+    worldCameraTarget: ((items0) => [lowpolyLowpolyPresenceGuardNumber(items0[0], `${at}.worldCameraTarget[0]`), lowpolyLowpolyPresenceGuardNumber(items0[1], `${at}.worldCameraTarget[1]`), lowpolyLowpolyPresenceGuardNumber(items0[2], `${at}.worldCameraTarget[2]`)])(lowpolyLowpolyPresenceGuardArray(row["worldCameraTarget"], `${at}.worldCameraTarget`, {"minItems": 3, "maxItems": 3})),
     worldCameraFov: lowpolyLowpolyPresenceGuardNumber(row["worldCameraFov"], `${at}.worldCameraFov`),
-    activeUtilityId: lowpolyLowpolyPresenceGuardString(row["activeUtilityId"], `${at}.activeUtilityId`),
     paintUtility: lowpolyLowpolyPresenceGuardString(row["paintUtility"], `${at}.paintUtility`),
+    activeUtilityId: lowpolyLowpolyPresenceGuardString(row["activeUtilityId"], `${at}.activeUtilityId`),
   };
 }

@@ -1,5 +1,6 @@
-use super::*;
-use crate::editor::writer::unit_tests::context::{new_app, render as render_body};
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_ID;
+use crate::editor::writer::panels::inspection::{WRITER_PLAY_BODY_INSPECTION, definition};
+use crate::editor_unit_tests::context::{new_app, render as render_body};
 
 #[semio_framework_async_macros::async_test]
 async fn definition_binds_the_framework_inspection_tab_to_this_body_key() {

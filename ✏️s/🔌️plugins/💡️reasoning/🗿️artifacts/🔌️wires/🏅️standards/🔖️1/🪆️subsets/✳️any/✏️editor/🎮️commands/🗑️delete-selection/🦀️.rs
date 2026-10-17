@@ -15,7 +15,7 @@ pub struct DeleteSelection {}
 /// 🕹️ The leaves deleting every selected board entity: selected edges first (an edge a deleted node would cascade away is
 /// still deleted by name), then the selected nodes. A selection naming no live node or edge is refused by name rather than
 /// answered with an empty success.
-fn delete_selected(doc: &ArtifactView<'_, WiresSnapshot>, selected: &[String]) -> Result<Emit<WiresMutation, NoConfigMutation>, Fault> {
+pub fn delete_selected(doc: &ArtifactView<'_, WiresSnapshot>, selected: &[String]) -> Result<Emit<WiresMutation, NoConfigMutation>, Fault> {
     let composed = crate::wires_composed_from_children(doc.snapshot, &doc.children)?;
     let edges = selected.iter().filter(|id| board_edge(&composed.board, id).is_some()).map(|id| SemioGraphMutation::DeleteEdge(DeleteEdge { id: GraphEdgeId::new(id.clone()) }));
     let nodes = selected.iter().filter(|id| board_node(&composed.board, id).is_some()).map(|id| SemioGraphMutation::DeleteNode(DeleteNode { id: GraphNodeId::new(id.clone()) }));

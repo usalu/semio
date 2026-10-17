@@ -1,6 +1,14 @@
 //! 📒️ Patch round-trip tests of the record registers: status, workshops, surveys, issues, audit events, templates, knowledge, benchmarks, assumptions, constraints, compliance, approvals, meetings and governance.
 
-use super::*;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::kernel::*;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::registers::kernel::*;
+#[allow(unused_imports)]
+use protocol::Identified;
+#[allow(unused_imports)]
+use protocol::list_delta::RowPatch;
+use crate::standards::v1::subsets::any::schema::registers::records::*;
 
 /// 🧪️ Commits `$patch` onto `$item` the only way a patch is ever committed: as a `modification` of a one-row program through the central applier.
 macro_rules! patch_through_table {

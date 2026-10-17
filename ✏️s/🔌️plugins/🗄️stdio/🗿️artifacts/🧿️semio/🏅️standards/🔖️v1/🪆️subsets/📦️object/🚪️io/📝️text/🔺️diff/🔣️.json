@@ -8,5 +8,8 @@
     "line": {
       "type": "string"
     }
-  }
+  },
+  "required": [
+    "line"
+  ]
 }

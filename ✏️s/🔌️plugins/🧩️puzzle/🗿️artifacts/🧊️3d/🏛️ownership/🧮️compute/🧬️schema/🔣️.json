@@ -22,7 +22,7 @@
     "source": {
       "type": "string",
       "minLength": 1,
-      "const": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⏳️precompute/🦀️.rs"
+      "const": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⏳️precompute/🥽️brush-meshes/🦀️.rs"
     },
     "manifest": {
       "type": "string",

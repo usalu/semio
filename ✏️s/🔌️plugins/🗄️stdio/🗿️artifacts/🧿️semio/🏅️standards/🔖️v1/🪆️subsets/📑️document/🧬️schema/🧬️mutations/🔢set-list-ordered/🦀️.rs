@@ -1,6 +1,13 @@
 //! 🔢 `set-list-ordered` — authored as its own mutation leaf; its diff and inverse live in `🔺️diff` and `↩️inverse`.
 
-use super::*;
+#[allow(unused_imports)]
+use crate::schema::mutations::support::DocBlockPath;
+#[allow(unused_imports)]
+use protocol::Mutation;
+#[allow(unused_imports)]
+use crate::schema::diff::SemioDocumentDiff;
+#[allow(unused_imports)]
+use crate::schema::snapshot::SemioDocumentSnapshot;
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
@@ -11,13 +18,16 @@ pub struct SetListOrdered {
     pub ordered: bool,
 }
 
-impl protocol::MutationKind<SemioDocumentSnapshot, SemioDocumentMutation> for SetListOrdered {
+impl<Op> protocol::MutationKind<SemioDocumentSnapshot, Op> for SetListOrdered
+where
+    Op: protocol::Mutation<SemioDocumentSnapshot, Diff = crate::schema::diff::SemioDocumentDiff> + From<SetListOrdered>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "list-ordered", kind: "set-list-ordered", record: "SetListOrdered" };
 
-    fn diff(&self, base: &SemioDocumentSnapshot) -> protocol::MutationOutcome<<SemioDocumentMutation as Mutation<SemioDocumentSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioDocumentSnapshot) -> protocol::MutationOutcome<<Op as Mutation<SemioDocumentSnapshot>>::Diff> {
         diff::diff(self, base)
     }
-    fn inverse(&self, base: &SemioDocumentSnapshot) -> Result<Vec<SemioDocumentMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &SemioDocumentSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         inverse::inverse(self, base)?
     

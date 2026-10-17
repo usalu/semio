@@ -50,7 +50,6 @@ test("canonical repository records preserve exact JSON bytes and leave input rec
     expect(JSON.stringify(row.input), row.id).toBe(before);
     expect(canonicalJson(JSON.parse(row.canonical)), row.id).toBe(row.canonical);
   }
-  console.log("[DEBUG] canonical JSON oracle; cases=" + corpus.cases.length + "; provider=owned; oracle=jsonc-parser");
 });
 
 test("canonical repository JSON omits undefined object values and refuses nonserializable roots", async () => {
@@ -63,5 +62,4 @@ test("canonical repository JSON omits undefined object values and refuses nonser
       expect(canonicalJson(values[row.kind]), row.id).toBe(oracle(JSON.parse(row.canonical)));
     }
   }
-  console.log("[DEBUG] canonical JSON runtime contract; cases=" + corpus.runtimeCases.length);
 });

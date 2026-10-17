@@ -3,13 +3,15 @@
  * cause's answer is the transient refusal the client resends, every permanent cause and every near miss is not — the client and
  * Ajv agree on each (ticket 26/09/23 C12, run `c12short3`: a transient `DB I/O aggregate admission exhausted` was read as a
  * rejection and every keystroke typed during a connection shortage was rolled back). */
+import { loadReplicationApplyRefusalFixture, loadReplicationApplyRefusalSchema } from "@semio-tech/framework-replication/testing/fixtures";
+
 export async function registerTransientApplyRefusalTests(
   vitest: NonNullable<ImportMeta["vitest"]>,
   twin: { readonly HUB_TRANSIENT_APPLY_REFUSAL_CODE: string; readonly hubTransientApplyRefusalV1: (messages: ArrayLike<number>) => boolean },
 ): Promise<void> {
   const { describe, it, expect } = vitest;
-  const { default: fixture } = await import("../../../../🔨️modules/📡️replication/🚧️apply-refusal/🧪️tests/🧫️fixtures/🔣️.json");
-  const { default: schema } = await import("../../../../🔨️modules/📡️replication/🚧️apply-refusal/🧬️schema/🔣️.json");
+  const fixture = await loadReplicationApplyRefusalFixture();
+  const schema = await loadReplicationApplyRefusalSchema();
   const encode = (messages: unknown[]): Uint8Array => new TextEncoder().encode(JSON.stringify(messages));
 
   describe("TransientApplyRefusal", () => {

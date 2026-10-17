@@ -11,7 +11,7 @@ import { isDeepStrictEqual } from "node:util";
 import { describe, expect, it } from "vitest";
 import { decodePackValue } from "@semio-tech/framework/packs";
 import type { TextEditorScene } from "@semio-tech/framework";
-import { sameScenePackV1, textEditorSyncPackV1 } from "../../🟦️.tsx";
+import { sameScenePackV1, textEditorScenePacket } from "../../📤️outbox-and-scene-packets/🟦️.ts";
 import fixture from "../🧫️fixtures/🪞️echo-pack/🔣️.json";
 // #endregion 🔌️Adapters
 
@@ -22,8 +22,8 @@ describe("🪞️ the text editor syncs an echo of its own state as a byte-ident
   it("names the fixture schema", () => expect(fixture.schema).toBe("semio.renderer.text-editor.echo-pack/v1"));
   for (const row of fixture.cases as readonly EchoPackCase[]) {
     it(row.id, () => {
-      const previous = textEditorSyncPackV1(row.previous, row.external);
-      const echo = textEditorSyncPackV1(row.echo, row.external);
+      const previous = textEditorScenePacket(row.previous, row.external);
+      const echo = textEditorScenePacket(row.echo, row.external);
       expect(isDeepStrictEqual(decodePackValue(echo), row.synced), `${row.id}: synced scene`).toBe(true);
       expect(sameScenePackV1(previous, echo), `${row.id}: same pack`).toBe(row.samePack);
     });

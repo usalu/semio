@@ -1,7 +1,11 @@
 //! 🧪️ The preview pane draws the SOLVED assignment when one is cached and the bare cell grid when
 //! it is not — and never reads the assignment from the document, which does not hold one.
 
-use super::*;
+use crate::schema::inferences::Grid2dInferenceCommit;
+use crate::schema::snapshot::Grid2dSnapshot;
+use semio_framework_plugin::SurfaceKind;
+use serde_json::Value;
+use crate::editor::grid2d::modes::edit::windows::preview::*;
 use crate::editor::grid2d::window::Grid2dWindowConfig;
 use crate::host::inferences::solve_with_clock;
 

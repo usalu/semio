@@ -36,6 +36,4 @@ impl Deserializer<WriterSnapshot> for JsonIntoWriter {
 }
 //#endregion 🔖️Deserializer
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

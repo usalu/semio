@@ -1,4 +1,16 @@
-use super::*;
+use semio_framework_test_fixtures::fixture_path;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioRgba;
+use crate::schema::snapshot::SemioMeshSnapshot;
+use crate::{schema::snapshot::SemioMesh, schema::snapshot::SemioTopology};
+use crate::schema::mutations::change_material_base_color;
+use crate::schema::mutations::create_mesh;
+use crate::schema::mutations::delete_material;
+use crate::schema::mutations::delete_mesh;
+use crate::schema::mutations::move_vertex;
+use crate::schema::mutations::replace_primitive_geometry;
+use crate::schema::mutations::set_primitive_topology;
+use crate::schema::mutations::*;
 use protocol::command::DiffAlgebra;
 use protocol::{Mutation, SemanticMutation};
 
@@ -132,7 +144,7 @@ async fn kinds_match_the_enum_and_the_catalog() {
     for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
         assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
     }
-    let manifest = &std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🔮️oracles/🔣️.json")).expect("the committed fixture is readable");
+    let manifest = &std::fs::read_to_string(fixture_path!("../../../../../🔮️oracles/🔣️.json")).expect("the committed fixture is readable");
     for kind in KINDS {
         assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
     }

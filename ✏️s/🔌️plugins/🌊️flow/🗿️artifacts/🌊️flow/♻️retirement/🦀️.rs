@@ -2,8 +2,7 @@
 use crate::{FlowMutation,FlowSnapshot};
 use std::sync::Arc;
 use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress,ValueError,retirement::{RetireOwned,RetirementCursor}};
-#[path="📸️snapshot/🦀️.rs"]
-mod snapshot;
+pub use semio_s_artifact_flow_flow_schema::standards::v1::subsets::any::schema::retirement::snapshot;
 pub use snapshot::SnapshotRetirementFactory;
 
 pub fn store_owners_source_demands()->Result<semio_framework_value::RetirementDemand,ValueError>{

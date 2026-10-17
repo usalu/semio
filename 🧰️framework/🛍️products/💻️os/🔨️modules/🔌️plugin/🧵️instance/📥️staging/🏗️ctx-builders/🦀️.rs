@@ -1,10 +1,33 @@
 //! 🐂️ The composer's bundle builders: one exclusive builder per use-case crate and one shared builder per crate that has `&self` members (WP7 of the instance family).
 //!
 //! 🏗️ Each builder borrows the composer fields its bundle names; the extension list is fixed here to [`InstanceExtensions`].
-use super::*;
+use semio_framework_plugin_decl_emission::{ActionMeta, Emit};
+#[cfg(any(test, feature = "artifact-app-testing"))]
+use std::sync::Arc;
+use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use pack::snapshot::ArtifactPack;
+use semio_framework_plugin_instance_commands::command_bundle::CommandCtx;
+use semio_framework_plugin_instance_dispatch::dispatch_bundle::DispatchCtx;
+use semio_framework_value::DslValue;
+use semio_framework::kernel::{Effect, InvocationResult};
+use semio_framework_plugin_instance_extension::{ExtensionCtx, ExtensionRef, InstanceExtension};
+use semio_framework::{Fault, FaultFrom};
+use std::future::Future;
+use crate::{InstanceExtensions, VcsArtifactApp};
+use semio_framework_plugin_instance_ladders::ladder_bundle::{LadderCtx, LadderRef};
+use store::{MemberFactory, Mutation, SpaceMember};
+use protocol::OpText;
+use semio_framework_plugin_reactor_app::PluginApp;
+use semio_framework_plugin_instance_render::render_bundle::{RenderCtx, RenderRef};
+use semio_framework_plugin_time_travel_turns::time_travel_bundle::{TimeTravelCtx, TimeTravelRef};
+use semio_framework_plugin_time_travel::TimeTravelLedger;
+use semio_framework_plugin_tool_run_turns::tool_run_bundle::{ToolRunCtx, ToolRunRef};
+use semio_framework_plugin_instance_typed_ops::typed_bundle::TypedCtx;
+use semio_framework_ui_contract::*;
 use std::marker::PhantomData;
-use crate::tool_jobs::time_travel::TimeTravelActionOutcome;
-use crate::tool_jobs::tool_run::ToolRunActionOutcome;
+use semio_framework_plugin_time_travel::TimeTravelActionOutcome;
+use semio_framework_plugin_tool_run::ToolRunActionOutcome;
 
 impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A, M> {
     #[doc(hidden)]

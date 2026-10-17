@@ -2,38 +2,55 @@
 //!
 //! ⏪️ The mounted instance's time-travel turns (history editing sessions, replay and supersession) and the
 //! [`TimeTravelExtension`] that registers them with the instance through [`InstanceExtension`].
-use super::*;
-use crate::tool_jobs::time_travel::*;
-#[cfg(test)] use semio_framework_os_kernel::HistoryPageStack;
-use semio_framework::kernel::{HistoryReprojection, HistoryReprojectionKind};
-use semio_framework::{mutation_input_instance, reference_id_text, registered_input_schema_document, ArgSchema, SnapSource, DIALOG_CHOICE_ARG};
-use semio_framework::history_edit::{HISTORY_EDIT_ACCEPT_ACTION_ID, HISTORY_EDIT_ARG_EDIT, HISTORY_EDIT_ARG_MUTATION_ID, HISTORY_EDIT_ARG_NAME, HISTORY_EDIT_ARG_PATH, HISTORY_EDIT_ARG_STORE, HISTORY_EDIT_ARG_VALUE, HISTORY_EDIT_BACK_ACTION_ID, HISTORY_EDIT_BEGIN_ACTION_ID, HISTORY_EDIT_CANCEL_REPLAY_ACTION_ID, HISTORY_EDIT_CHOICE_OVERWRITE, HISTORY_EDIT_COMMIT_ACTION_ID, HISTORY_EDIT_DISCARD_ACTION_ID, HISTORY_EDIT_EXIT_ACTION_ID, HISTORY_EDIT_FINALIZE_ACTION_ID, HISTORY_EDIT_FINALIZE_DIALOG_ID, HISTORY_EDIT_INPUT_ACTION_ID, HISTORY_EDIT_INPUT_INSERT, HISTORY_EDIT_INPUT_REMOVE, HISTORY_EDIT_RERUN_ACTION_ID, HISTORY_EDIT_RESTORE_ACTION_ID, HISTORY_EDIT_USE_SELECTION_ACTION_ID, HISTORY_EDIT_WITHDRAW_ACTION_ID};
-use semio_framework_time_travel::{
-    is_time_travel_alternative_name, TimeTravelBase, TimeTravelChoice, TimeTravelEffect, TimeTravelEvent, TimeTravelLabel, TimeTravelRefusal, TimeTravelStage, TimeTravelTarget, TIME_TRAVEL_BUSY_CODE,
-    TIME_TRAVEL_COMMIT_FAILED_CODE, TIME_TRAVEL_MEMBER_GONE_CODE,
-    TIME_TRAVEL_REPLAY_FAULTED_CODE,
-};
-use std::collections::VecDeque;
-use std::sync::Arc;
-use semio_framework_value::{RetirementDemand,ValueError,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
-use crate::artifact_instance::InstanceExtension;
-use crate::artifact_instance::{history_changed_event, VcsArtifactApp};
-use crate::app_emission::ActionMeta;
-use crate::command_history::{CommandLogAppend, HISTORY_STEP_BLOCKED_CODE};
-use crate::document_ingress::{ActiveDocumentArchiveLoad, ActiveDocumentArchiveLoadState};
-use crate::interaction_topology::INTERACTION_ACTION_IDS;
-use crate::reserved_jobs::HISTORY_ACTION_IDS;
-use crate::tree_kit::TREE_WINDOW_DEFAULT_ROWS;
-use semio_framework::{ActionKind, ViewModel, REVERT_TO_COMMAND_ACTION_ID};
-use store::{MemberFactory, SpaceMember};
-use crate::app_contract::is_time_travel_action_id;
-use semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority;
+use semio_framework::AppRole;
+use semio_framework_plugin_decl_app::ArtifactApp;
+use std::collections::HashMap;
+use std::collections::HashSet;
+use semio_framework_plugin_command::lifted_command::HistoryMutationPage;
+use semio_framework_plugin_command::lifted_command::HistoryMutationPages;
+use semio_framework_plugin_command::lifted_command::HistoryStoreStamp;
+use semio_framework_plugin_command::lifted_command::MemberEditHistory;
+use semio_framework_plugin_command::lifted_command::MemberHistoryStampVisitor;
+use semio_framework_plugin_command::lifted_command::MemberHistoryVisitor;
+use semio_framework_plugin_command::lifted_command::MemberLedgerTail;
+use semio_framework_plugin_command::lifted_command::MemberLedgerTailVisitor;
+use semio_framework_plugin_command::lifted_command::MemberMutationPageVisitor;
+use store::Mutation;
+use semio_framework_plugin_decl_views::history_view::MutationView;
+use semio_framework_plugin_command::lifted_command::TimeTravelPanel;
+use semio_framework_plugin_command::lifted_command::history_mutation_entry;
+use semio_framework_plugin_command::lifted_command::history_mutation_view_of;
+use semio_framework_plugin_command::lifted_command::history_row_mutation_extent;
+use semio_framework_plugin_command::lifted_command::history_row_window_path;
+use semio_framework_plugin_command::lifted_command::history_row_window_rows;
+use semio_framework_os_kernel as protocol;
+use semio_framework_os_kernel as store;
+use semio_framework_plugin_command::lifted_command::time_travel_mutation_label;
+use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use pack::snapshot::ArtifactPack;
+use semio_framework_plugin_decl_emission::Emit;
+use semio_framework::FaultFrom;
+use protocol::OpText;
+use crate::children_components::ChildComposition;
+use semio_framework_plugin_child::ChildContentRetirement;
+use semio_framework_plugin_decl_views::child_view::ChildContentView;
+use semio_framework_ui_layout::layout::FRAMEWORK_HISTORY_BODY_KEY;
+use semio_framework::Fault;
+use std::future::Future;
+use semio_framework_plugin_decl_views::history_view::HistoryView;
+use semio_framework_plugin_instance_stores::stores_components::InstanceStores;
+use semio_framework_plugin_reactor_app::PluginApp;
+use semio_framework_ui_contract::*;
+use semio_framework_plugin_time_travel::*;
+use semio_framework_plugin_window_kits_rich::tree_kit::TREE_WINDOW_DEFAULT_ROWS;
+use semio_framework::ViewModel;
+use semio_framework_os_kernel::{MemberFactory, SpaceMember};
 
 impl<M: SpaceMember + MemberFactory + 'static> ChildComposition<M> {
     /// 🧩️ The composed members' edits as the history reads them, keyed by edit id (design §12): every edit (the rows a full
     /// history build lists for the owned-child edits it carries, and the edits a reload backfills), or only the `wanted` ones
     /// (the rows an incremental refresh rebuilds, O(those edits)).
-    pub(crate) fn member_edit_histories<A: ArtifactApp>(&self, labelled: &HashMap<&str, &MutationView>, wanted: Option<&HashSet<&str>>) -> HashMap<String, MemberEditHistory> {
+    pub fn member_edit_histories<A: ArtifactApp>(&self, labelled: &HashMap<&str, &MutationView>, wanted: Option<&HashSet<&str>>) -> HashMap<String, MemberEditHistory> {
         let viewer = A::ROLE == AppRole::Viewer;
         let mut histories = HashMap::new();
         if wanted.is_some_and(HashSet::is_empty) {
@@ -49,7 +66,7 @@ impl<M: SpaceMember + MemberFactory + 'static> ChildComposition<M> {
 
     /// 🧾️ Every composed member's [`MemberLedgerTail`] past the lengths and last ids a backfill mark recorded (`known`), keyed
     /// and ordered by member (`<slot>/<childId>`), and whether every member `known` names is still held.
-    pub(crate) fn member_ledger_tails(&self, known: Option<&[(String, usize, Option<String>)]>) -> (Vec<(String, MemberLedgerTail)>, bool) {
+    pub fn member_ledger_tails(&self, known: Option<&[(String, usize, Option<String>)]>) -> (Vec<(String, MemberLedgerTail)>, bool) {
         let mut tails: Vec<(String, MemberLedgerTail)> = self
             .children
             .addressed_entries()
@@ -66,7 +83,7 @@ impl<M: SpaceMember + MemberFactory + 'static> ChildComposition<M> {
 
     /// 🧭️ Every composed member's [`HistoryStoreStamp`], keyed and ordered by member (`<slot>/<childId>`), with the edits a
     /// change since `previous` touched ([`history_store_change`]; `None` for a member that is new or changed otherwise).
-    pub(crate) fn member_history_stamps(&self, previous: &[(String, HistoryStoreStamp)]) -> Vec<(String, HistoryStoreStamp, Option<Vec<(String, Option<usize>)>>)> {
+    pub fn member_history_stamps(&self, previous: &[(String, HistoryStoreStamp)]) -> Vec<(String, HistoryStoreStamp, Option<Vec<(String, Option<usize>)>>)> {
         let mut stamps: Vec<(String, HistoryStoreStamp, Option<Vec<(String, Option<usize>)>>)> = self
             .children
             .addressed_entries()
@@ -81,7 +98,7 @@ impl<M: SpaceMember + MemberFactory + 'static> ChildComposition<M> {
     }
 
     /// 🧹️ Retires a history edit's children view through the child-content retirements, as one admitted generation.
-    pub(crate) fn retire_time_travel_children(&mut self, view: ChildContentView) -> Result<(), Fault> {
+    pub fn retire_time_travel_children(&mut self, view: ChildContentView) -> Result<(), Fault> {
         let generation = self.admit_child_content_publication()?;
         self.child_content_retirements.insert_admitted(generation, ChildContentRetirement::new(view, false));
         self.child_content_generation = generation;
@@ -94,7 +111,7 @@ impl<M: SpaceMember + MemberFactory + 'static> ChildComposition<M> {
     /// order — or of its member edits' for a row of composed-member edits alone — so every mutation of a transaction is
     /// reachable however long it is, while the projection and the wire stay bounded. Each paged row reads only its own edits'
     /// slices (design §20.14), and only when some window reaches past its projection.
-    pub(crate) fn history_mutation_pages<A: ArtifactApp>(&self, stores: &InstanceStores<A>, history: &HistoryView, panel: Option<&TimeTravelPanel>, view: &ViewModel) -> HistoryMutationPages {
+    pub fn history_mutation_pages<A: ArtifactApp>(&self, stores: &InstanceStores<A>, history: &HistoryView, panel: Option<&TimeTravelPanel>, view: &ViewModel) -> HistoryMutationPages {
         let viewport_rows = view.tree_viewport_rows.unwrap_or(TREE_WINDOW_DEFAULT_ROWS) as usize;
         let viewer = A::ROLE == AppRole::Viewer;
         let mut pages = HistoryMutationPages::new();

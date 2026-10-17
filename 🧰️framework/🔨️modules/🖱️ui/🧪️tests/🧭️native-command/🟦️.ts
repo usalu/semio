@@ -4,7 +4,7 @@ import { resolve, join } from "node:path";
 
 import { Command } from "commander";
 import { spawnSync } from "node:child_process";
-import { BundleScript, findWorkspaceRoot } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { BundleScript, findWorkspaceRoot, receiveScriptProcessInvocation } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
 type Call = { kind: string; args: string[]; level?: string; coverage?: boolean; budgetMs?: number };
 type Case = { id: string; argv: string[]; inheritedLevel?: string; calls: Call[]; rejected: boolean; level: string; coverage: boolean };
@@ -79,7 +79,7 @@ for (const row of corpus.cases) test(row.id, async () => {
   delete process.env.SEMIO_COVERAGE;
   process.env.SEMIO_BUILD_BUDGET_MS = "4242";
   let rejected = false;
-  try { await createUiNativeRouter(packageRoot, root).run(row.argv); } catch { rejected = true; }
+  try { await receiveScriptProcessInvocation(process.env, (invocation) => createUiNativeRouter(packageRoot, root).run(row.argv, invocation)); } catch { rejected = true; }
   const actual = { calls, rejected, level: process.env.SEMIO_TEST_LEVEL, coverage: process.env.SEMIO_COVERAGE === "1" };
   expect(actual).toEqual(expected);
   mkdirSync(artifacts, { recursive: true });

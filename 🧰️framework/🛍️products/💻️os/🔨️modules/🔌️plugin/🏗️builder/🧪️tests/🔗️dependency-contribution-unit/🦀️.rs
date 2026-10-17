@@ -1,12 +1,17 @@
 //#region 🧪️DependencyContributionLaws
 //! 🧪️ Builder contribution fixture laws, codecs, and source provenance.
-use super::*;
+use crate::builder_test_hosts::builder_unit_1::dependency_fixture::mutations::add_value::AddValue;
+use crate::builder_test_hosts::builder_unit_1::dependency_fixture::{DependencyTestDiff, DependencyTestSnapshot};
+use crate::builder_test_hosts::builder_unit_1::dependency_fixture::mutations::DependencyTestOp;
+use semio_framework_value_derive::{FromValue, ToValue};
 use protocol::{Mutation, MutationDiff, MutationLeaf, OpBinary, OpText};
 
-fn cases() -> serde_json::Value {
+#[doc(hidden)]
+pub fn cases() -> serde_json::Value {
     serde_json::from_str(include_str!("../../🧪️testing/🔗️dependency-contribution/🔣️.json")).expect("neutral builder fixture cases")
 }
-fn operation(delta: i32) -> DependencyTestOp {
+#[doc(hidden)]
+pub fn operation(delta: i32) -> DependencyTestOp {
     DependencyTestOp::AddValue(AddValue { delta })
 }
 
@@ -20,8 +25,9 @@ pub(super) fn assert_add_value_contract(descriptor: &str) {
     assert_eq!(protocol::apply_diff(operation(5).diff(&base).diff(), &base).expect("direct add"), DependencyTestSnapshot { value: 12 });
 }
 
+#[doc(hidden)]
 #[test]
-fn actual_descriptor_provenance() {
+pub fn actual_descriptor_provenance() {
     let provenance = AddValue::PROVENANCE;
     assert_eq!(provenance.owner, AddValue::DESCRIPTOR.owner);
     assert_eq!(provenance.source_path, format!("{}/🦀️.rs", provenance.owner));
@@ -152,8 +158,9 @@ fn keyword_owned_record_codec_is_forwarded_once() {
 }
 
 /// 🧾️ The committed wire witnesses decode through the aggregate's `FromValue` and re-encode to exactly the committed JSON.
+#[doc(hidden)]
 #[test]
-fn committed_wire_witnesses_are_the_canonical_wire() {
+pub fn committed_wire_witnesses_are_the_canonical_wire() {
     ::store::os_store::test_support::assert_wire_witness::<DependencyTestOp>(include_str!("../../🧪️testing/🔗️dependency-contribution/🧬️mutations/➕️add-value/🧪️tests/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
 }
 //#endregion 🧪️DependencyContributionLaws

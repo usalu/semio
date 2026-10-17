@@ -15,7 +15,7 @@ if (segments[0] === "note-document-contract") {
         await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-note-note", "--lib", "--", "--nocapture"], this.repoRoot);
         return;
       }
-      const { testNoteDocumentContractOracle } = await import("../../../../🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🪪️document/🟦️.ts");
+      const { testNoteDocumentContractOracle } = await import("../../../../🔌️plugins/🗒️note/🗿️artifacts/🗒️note/📦️packages/🟦️typescript/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️testing/🪪️document/🟦️.ts");
       await testNoteDocumentContractOracle();
       const noteRoot = join(this.repoRoot, "✏️s/🔌️plugins/🗒️note");
       const files = ["", "📸️snapshot", "🔺️diff"].map((facet) => join(noteRoot, "🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema", facet, "🟦️.ts"));

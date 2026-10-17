@@ -24,10 +24,10 @@ export interface DocxSnapshot {
   /** @state artifact */ opc: RetainedOpcPackage;
   /** @state artifact */ xmlParts: DocxXmlPart[];
 }
-import type { RetainedXmlDocument,XmlNode,XmlAttr } from '../../../../../../../📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🟦️.ts';
+import type { RetainedXmlDocument,XmlNode,XmlAttr } from '@semio-tech/stdio-xml/standards/1.0/subsets/base/schema/snapshot';
 
-import type{OpcPackage,OpcPart,OpcRelationship}from"../../../../../../../🎒️zip/📦️opc/🟦️.ts";
-import type {RetainedOpcPackage} from "../../../../../../../🎒️zip/📦️opc/🧬️retained/🟦️.ts";
-export type {RetainedOpcPackage} from "../../../../../../../🎒️zip/📦️opc/🧬️retained/🟦️.ts";
-export type{OpcPackage,OpcPart,OpcRelationship}from"../../../../../../../🎒️zip/📦️opc/🟦️.ts";
-export type{RetainedXmlDocument,XmlDocument,XmlNode,XmlAttr}from"../../../../../../../📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🟦️.ts";
+import type{OpcPackage,OpcPart,OpcRelationship}from"@semio-tech/stdio-zip/opc";
+import type {RetainedOpcPackage} from "@semio-tech/stdio-zip/opc/retained";
+export type {RetainedOpcPackage} from "@semio-tech/stdio-zip/opc/retained";
+export type{OpcPackage,OpcPart,OpcRelationship}from"@semio-tech/stdio-zip/opc";
+export type{RetainedXmlDocument,XmlDocument,XmlNode,XmlAttr}from"@semio-tech/stdio-xml/standards/1.0/subsets/base/schema/snapshot";

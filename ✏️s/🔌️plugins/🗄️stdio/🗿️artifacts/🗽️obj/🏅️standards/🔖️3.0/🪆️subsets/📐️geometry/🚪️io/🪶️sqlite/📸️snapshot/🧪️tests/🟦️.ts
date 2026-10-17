@@ -20,9 +20,9 @@ const input: ObjSnapshot = { ...fixture, groups:fixture.groups.map(value=>({...v
 
 test("OBJ canonical membership and range indices own full unsigned64 words",()=>{
   for(const value of sourceIndices.unsigned64Indices.map(BigInt)){
-    for(const parse of[parseObjGroup,parseObjObject])expect<unknown>(parse({name:"exact",faces:[value]}).faces).toEqual([value]);
-    expect<unknown>(parseObjUsemtlRange({faceIndexFrom:value,material:"exact"}).faceIndexFrom).toBe(value);
-    expect<unknown>(parseObjSmoothingRange({faceIndexFrom:value}).faceIndexFrom).toBe(value);
+    for(const parse of[parseObjGroup,parseObjObject])expect(parse({name:"exact",faces:[value]}).faces).toEqual([value]);
+    expect(parseObjUsemtlRange({faceIndexFrom:value,material:"exact"}).faceIndexFrom).toBe(value);
+    expect(parseObjSmoothingRange({faceIndexFrom:value}).faceIndexFrom).toBe(value);
   }
   for(const value of[0,"0",-1n,18446744073709551616n]){
     for(const parse of[parseObjGroup,parseObjObject])expect(()=>parse({name:"exact",faces:[value]})).toThrow("unsigned 64-bit");
@@ -212,5 +212,5 @@ test("OBJ complete independent cells preserve copied limits and required empty m
  expect(normSemanticContract["schemaBytes"]).toEqual(6231);expect(normSemanticContract["tableWidths"]).toEqual({"obj_document":3,"obj_face":3,"obj_face_boundary":4,"obj_face_vertex":9,"obj_group":4,"obj_group_face":6,"obj_material_range":7,"obj_normal":12,"obj_object":4,"obj_object_face":6,"obj_smoothing_range":7,"obj_texcoord":12,"obj_unknown_statement":6,"obj_vertex":15});expect(normSemanticContract["cases"]).toEqual([{"id":"originalSharedSourceNative","rows":34,"valueBytes":1830},{"id":"emptyCollectionsRetainMetadata","rows":2,"valueBytes":60},{"id":"originalSourceEmpty","rows":2,"valueBytes":41}]);
  for(const item of normSemanticContract.cases){const source=structuredClone(input);if(item.id!=="originalSharedSourceNative"){source.vertices=[];source.texcoords=[];source.normals=[];source.faces=[];source.groups=[];source.objects=[];source.usemtl=[];source.smoothingGroups=[];source.unknownStatements=[];if(item.id==="originalSourceEmpty"){source.schema="empty.obj";source.mtllib=undefined;}}const database=await normSemanticProject(source),bytes=await normSemanticExport(database);expect(normIndependentExtent(bytes)).toEqual({rows:item.rows,valueBytes:item.valueBytes,schemaBytes:normSemanticContract.schemaBytes,tableWidths:normSemanticContract.tableWidths});const limits={maxRows:item.rows,maxValueBytes:item.valueBytes,maxSchemaBytes:normSemanticContract.schemaBytes,maxTables:14,maxColumns:15};expect(await normSemanticProject(source,limits)).toEqual(database);expect(await normSemanticRestore(await normSemanticImport(bytes),limits)).toEqual(source);
   for(const short of[{...limits,maxRows:item.rows-1},{...limits,maxValueBytes:item.valueBytes-1},{...limits,maxSchemaBytes:limits.maxSchemaBytes-1},{...limits,maxTables:13},{...limits,maxColumns:14}]){await expect(normSemanticProject(source,short)).rejects.toThrow();await expect(normSemanticRestore(database,short)).rejects.toThrow();}
- }console.log("[DEBUG] OBJ complete independent SQLite cells and metadata preserve full and empty semantic limits");
+ }
 });

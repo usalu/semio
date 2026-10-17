@@ -72,7 +72,7 @@ import {buildComponentClosureV1} from "../../../../../🧰️framework/🛍️pr
 
 import { pluginFileDigest } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/🛂️descriptor/🟦️.ts";
 
-import { ensureAppleDeveloperDir } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/⚙️engine/📤️publication/🟦️.ts";
+import { ensureAppleDeveloperDir } from "@semio-tech/framework-os-dev/engine/publication";
 
 
 
@@ -170,7 +170,7 @@ export async function withTestBrowserHostV1<T>(input:TestBrowserHostStageInputV1
       if(!hostComponent)throw Error("Actual Space model copy required");
       const stageRoot=join(sink.directory,"stage");mkdirSync(stageRoot);const roots=prepareTestBrowserHostRootsV1(stageRoot);
       ensurePreview2ShimVendorAt(join(roots.moduleRoot,PREVIEW2_VENDOR_RELATIVE),repoRoot);const shard=join(roots.moduleRoot,MODULE_SHARD_DIRECTORY);mkdirSync(shard,{recursive:true});writeFileSync(join(shard,SHARD_WORKER_FILE),shardWorkerSource());
-      const capacity=await acquireCompilerCapacityLeaseV1({directory:join(repoRoot,".cache/b/l/m/data"),control:sink.control,environment:sink.environment,requestedParallelism:1});
+      const capacity=await acquireCompilerCapacityLeaseV1({directory:join(repoRoot,".cache/b/l/m/data"),control:sink.control,environment:sink.environment,request:{kind:"exact",parallelism:1}});
       try{
         const environment=Object.freeze({...sink.environment,SEMIO_COMPILER_CAPACITY_HELD:"true",SEMIO_COMPILER_PARALLELISM:String(capacity.parallelism)});
         await materializeTestBrowserPluginV1({target:space,artifact:stagedSpacePath,descriptorPath:spaceDescriptor,receiptPath:spaceReceipt,moduleRoot:roots.moduleRoot,invocation,control:sink.control,environment});

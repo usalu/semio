@@ -3,7 +3,8 @@
 use semio_framework_plugin::NoConfig;
 use semio_framework_plugin::NoConfigMutation;
 use crate::editor::flow::edit_rules::ContentEdit;
-use crate::editor::flow::{flow_composed_content, flow_content_leaves_emit, flow_graph_selection_domains, FLOW_INTERACTION_GRAPH};
+use crate::editor::flow::host::{flow_composed_content, flow_content_leaves_emit};
+use crate::editor::flow::base::{flow_graph_selection_domains, FLOW_INTERACTION_GRAPH};
 use crate::{FlowMutation, FlowSnapshot};
 use flow::FlowEvalSession;
 use semio_framework_plugin::{app::InteractionView, ArtifactView, ConfigView, Emit, Fault};
@@ -39,7 +40,5 @@ pub fn apply(_payload: &DeleteSelection, doc: &ArtifactView<'_, FlowSnapshot>, _
 }
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

@@ -18,5 +18,4 @@ test("durable link schema owns its full native codec independently of Store",()=
  for(const row of fixture.valid)expect(accepts(row)).toBe(true);for(const row of fixture.invalid)expect(accepts(row)).toBe(false);
  const source=readFileSync(join(root,"🦀️.rs"),"utf8"),codec=readFileSync(join(root,"📦️codec/🦀️.rs"),"utf8");expect(source).toContain("artifact_retire_struct!(ArtifactLink");expect(codec).toContain("DslField for LinkPin");expect(codec).toContain("DslField for ArtifactLink");expect(codec).not.toContain("super::super");expect(codec).not.toContain("crate::os_");
  const store=join(root,"../.."),storeSource=readFileSync(join(store,"🦀️.rs"),"utf8"),child=readFileSync(join(store,"🪆️child/🦀️.rs"),"utf8");expect(storeSource).toContain("pub use semio_framework_os_store_link_schema::{ArtifactLink,LinkPin};");expect(storeSource).not.toContain("mod artifact_link_schema");expect(storeSource).not.toContain("DslField for ArtifactLink");expect(child).not.toContain("fn link_pin_");
- console.log("[DEBUG] Link pins and complete native codec have one bounded inward owner; independent Ajv/TOML agree");
 });

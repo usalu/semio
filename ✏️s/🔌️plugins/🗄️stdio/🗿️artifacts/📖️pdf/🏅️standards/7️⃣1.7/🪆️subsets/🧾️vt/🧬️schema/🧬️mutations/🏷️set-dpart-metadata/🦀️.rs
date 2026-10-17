@@ -1,7 +1,6 @@
 //! 🏷️ Authoritative PDF/VT mutation for set dpart metadata.
 
-use super::remove_dpart_metadata::RemoveDpartMetadata;
-use super::PdfVtMutation;
+use crate::standards::v1_7::subsets::vt::schema::mutations::remove_dpart_metadata::RemoveDpartMetadata;
 use crate::standards::v1_7::subsets::base::schema::conformance_support as support;
 use crate::standards::v1_7::subsets::base::schema::diff::{self, PdfDiff};
 use crate::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot;
@@ -18,18 +17,21 @@ pub struct SetDpartMetadata {
     pub entry_index: Option<usize>,
 }
 
-impl MutationKind<PdfSnapshot, PdfVtMutation> for SetDpartMetadata {
+impl<Op> MutationKind<PdfSnapshot, Op> for SetDpartMetadata
+where
+    Op: protocol::Mutation<PdfSnapshot, Diff = PdfDiff> + From<SetDpartMetadata> + From<crate::standards::v1_7::subsets::vt::schema::mutations::remove_dpart_metadata::RemoveDpartMetadata>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "dpart-metadata", kind: "set-dpart-metadata", record: "Set" };
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
         MutationOutcome::new(diff::graph_edit(support::dpart_job_rows(base, Some(&self.job), self.entry_index)))
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfVtMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         Ok({
             match support::dpart_job(base) {
-                Some(job) => vec![PdfVtMutation::SetDpartMetadata(SetDpartMetadata { job, entry_index: None })],
-                None => vec![PdfVtMutation::RemoveDpartMetadata(RemoveDpartMetadata {})],
+                Some(job) => vec![Op::from(SetDpartMetadata { job, entry_index: None })],
+                None => vec![Op::from(RemoveDpartMetadata {})],
             }
         })
     }
@@ -45,9 +47,7 @@ impl MutationKind<PdfSnapshot, PdfVtMutation> for SetDpartMetadata {
 //#endregion 🔖️Mutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
 
 //#region 🔖️Facets

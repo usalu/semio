@@ -1,4 +1,40 @@
-use super::*;
+use semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
+use semio_framework_tool_run::{ToolRunIdentity, ToolRunTick, ToolRunTraceOp, ToolRunTracePage, ToolRunTraceSubject, ToolRunVerdict};
+#[allow(unused_imports)]
+use crate::editor::puzzle5d::view::engine_grip_kind;
+#[allow(unused_imports)]
+use crate::editor::puzzle5d::config::Puzzle5dConfig;
+#[allow(unused_imports)]
+use crate::editor::puzzle5d::precompute::geometry::Puzzle5dPointGrid;
+#[allow(unused_imports)]
+use crate::editor::puzzle5d::entities::{collect_mesh_urls, grips_from_templates, puzzle5d_grip_full_id, resolve_part_mesh_url, world_grip_position, Puzzle5dDocument, Puzzle5dFastener, Puzzle5dGrip, Puzzle5dGrip2d, Puzzle5dGrip3d, Puzzle5dPart, Puzzle5dPart2d, Puzzle5dPart3d, PUZZLE5D_BOARD_PLACEMENT_GAP, PUZZLE5D_DEFAULT_PART_RADIUS, PUZZLE5D_FALLBACK_MESH_KIND};
+#[allow(unused_imports)]
+use crate::editor::puzzle5d::snapshot::Puzzle5dPlaySnapshot;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::mutations::{connect_grips, create_part, Puzzle5dMutation};
+#[allow(unused_imports)]
+use crate::puzzle_job::JobTurn;
+#[allow(unused_imports)]
+use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep, JobOutcomeBorrow, RetainedJobPayload, StepBudget, StepContext};
+#[allow(unused_imports)]
+use semio_framework_plugin::{Fault, ToolRunJob};
+#[allow(unused_imports)]
+use semio_framework_tool_run::TOOL_RUN_TRACE_PAGE_OPS_MAX;
+#[allow(unused_imports)]
+use semio_s_artifact_puzzle_3d_editor_config::Puzzle3dConfig;
+#[allow(unused_imports)]
+use semio_s_artifact_puzzle_3d_editor_modes::windows::main as world3d;
+#[allow(unused_imports)]
+use semio_s_artifact_puzzle_3d_editor::puzzle3d_scene_snapshot_from_document;
+#[allow(unused_imports)]
+use {semio_s_artifact_puzzle_3d_mutations_vortex::connect_vortices::mutation::ConnectVortices, semio_s_artifact_puzzle_3d_mutations::Puzzle3dMutation};
+#[allow(unused_imports)]
+use semio_s_artifact_puzzle_3d_model::BrushPreviewState;
+#[allow(unused_imports)]
+use {semio_s_artifact_puzzle_3d_model::Puzzle3dAttraction, semio_s_artifact_puzzle_3d_model::Puzzle3dCatalogObjectKind, semio_s_artifact_puzzle_3d_model::Puzzle3dCatalogVortexKind, semio_s_artifact_puzzle_3d_model::Puzzle3dCatalogVortexTemplate, semio_s_artifact_puzzle_3d_model::Puzzle3dKindCatalogs, semio_s_artifact_puzzle_3d_model::Puzzle3dMeta, semio_s_artifact_puzzle_3d_model::Puzzle3dObject, semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dPlaySnapshot, semio_s_artifact_puzzle_3d_model::Puzzle3dRepresentation, semio_s_artifact_puzzle_3d_model::Puzzle3dScale, semio_s_artifact_puzzle_3d_model::snapshot::Puzzle3dSnapshot, semio_s_artifact_puzzle_3d_model::Puzzle3dVortex, semio_s_artifact_puzzle_3d_model::PUZZLE_3D_SCHEMA};
+#[allow(unused_imports)]
+use std::collections::{HashMap, VecDeque};
+use crate::editor::puzzle5d::precompute::*;
 use semio_framework_tool_run::{ToolRunId, ToolRunStep, ToolRunStepKind};
 
 fn upsert(key: u64) -> ToolRunTraceOp {

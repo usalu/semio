@@ -105,10 +105,7 @@ export function parsePlyScalarType(value: unknown, at = "$"): PlyScalarType {
 }
 /** 🧩️ Parse one explicitly typed PLY scalar or list declaration. */
 export function parsePlyProperty(value: unknown, at = "$"): PlyProperty {
-  const row = stdioPly10AnySnapshotGuardObject(value, at);
-  const name = stdioPly10AnySnapshotGuardString(row["name"], `${at}.name`);
-  const form = stdioPly10AnySnapshotGuardMember(row["form"], `${at}.form`, ["scalar", "list"] as const);
-  return form === "scalar" ? { form, name, kind: parsePlyScalarType(row["kind"], `${at}.kind`) } : { form, name, countKind: parsePlyScalarType(row["countKind"], `${at}.countKind`), valueKind: parsePlyScalarType(row["valueKind"], `${at}.valueKind`) };
+  return ((row0) => { switch (stdioPly10AnySnapshotGuardMember(row0["form"], `${at}.form`, ["scalar", "list"] as const)) { case "scalar": return { form: "scalar", name: stdioPly10AnySnapshotGuardString(row0["name"], `${at}.name`), kind: parsePlyScalarType(row0["kind"], `${at}.kind`) }; case "list": return { form: "list", name: stdioPly10AnySnapshotGuardString(row0["name"], `${at}.name`), countKind: parsePlyScalarType(row0["countKind"], `${at}.countKind`), valueKind: parsePlyScalarType(row0["valueKind"], `${at}.valueKind`) }; } })(stdioPly10AnySnapshotGuardObject(value, `${at}`));
 }
 
 /** 🔣️ Parse typed primitive values and explicitly tagged list members. */

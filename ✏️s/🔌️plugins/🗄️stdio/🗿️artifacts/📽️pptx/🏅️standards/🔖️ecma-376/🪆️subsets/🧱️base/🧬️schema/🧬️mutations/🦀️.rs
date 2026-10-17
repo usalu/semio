@@ -116,7 +116,7 @@ pub fn kind_of(mutation: &PptxMutation) -> &'static str {
 /// d.apply(snapshot); d` -- the diff is the single semantics source, never a separate imperative
 /// apply path (apply-and-capture is banned).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 pub fn apply_pptx_mutation(snapshot: &mut PptxSnapshot, mutation: &PptxMutation) -> protocol::MutationOutcome<PptxDiff> {
     let outcome = Mutation::diff(mutation, snapshot);
     match protocol::apply_diff(outcome.diff(), snapshot) {

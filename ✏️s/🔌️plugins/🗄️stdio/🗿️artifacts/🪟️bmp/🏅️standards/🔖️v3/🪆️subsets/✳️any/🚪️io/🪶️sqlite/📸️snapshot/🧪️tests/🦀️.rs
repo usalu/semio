@@ -1,5 +1,6 @@
 use crate::standards::v_v3::subsets::any::schema::snapshot::BmpSnapshot;
 use semio_framework_os_kernel::{sqlite_snapshot::SqliteDatabase, sqlite_snapshot::SnapshotEncoding};
+use semio_framework_test_fixtures::fixture_text;
 #[allow(unused_imports)]
 use semio_framework_os_kernel::{sqlite_snapshot::SqliteSnapshotPhase, sqlite_snapshot::ValueError};
 use pack::snapshot::ArtifactSqliteSnapshot as _;
@@ -10,7 +11,7 @@ use semio_framework_os_kernel::{
 };
 
 fn fixture() -> BmpSnapshot {
-    semio_framework_pack_json::from_json_str(runtime_fixture_text("../../🏅️standards/🔖️v3/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()
+    semio_framework_pack_json::from_json_str(fixture_text!("../../🏅️standards/🔖️v3/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()
 }
 
 #[test]
@@ -97,8 +98,3 @@ fn sqlite_snapshot_independent_client_edits_one_sample_without_rebuilding_other_
 
 #[path = "🧬️semantic/🦀️.rs"]
 mod semantic;
-
-fn runtime_fixture_text(relative: &str) -> &'static str {
-    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative);
-    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display())).into_boxed_str())
-}

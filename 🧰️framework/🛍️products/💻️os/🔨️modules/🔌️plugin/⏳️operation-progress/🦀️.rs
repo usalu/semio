@@ -1,6 +1,6 @@
 //! ⏳️ Local operation status and exact cancellation controls shared by artifact editors.
-use crate::app_views::CANCEL_TYPED_OPERATION_ACTION_ID;
-use crate::app_views::ArtifactOperationProgress;
+use semio_framework_plugin_operation::CANCEL_TYPED_OPERATION_ACTION_ID;
+use semio_framework_plugin_operation::ArtifactOperationProgress;
 use semio_framework_plugin_decl_app::ArtifactApp;
 #[cfg(test)]
 use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
@@ -16,7 +16,7 @@ use semio_framework_ui_locale::{Locale, Terminology};
 use store::{Mutation, MutationDiff};
 use protocol::{OpBinary, OpText};
 #[cfg(test)]
-use crate::plugin_app::PluginApp;
+use crate::PluginApp;
 #[cfg(test)]
 use semio_framework_plugin_decl_views::tool_run_contract::ToolRunRetargetableJob;
 use semio_framework_plugin_decl_app::tool_contract::TypedOperationResultLane;

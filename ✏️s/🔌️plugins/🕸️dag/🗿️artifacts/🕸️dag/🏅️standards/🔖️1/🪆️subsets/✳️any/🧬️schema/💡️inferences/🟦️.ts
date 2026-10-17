@@ -30,6 +30,10 @@ type dagDagInferenceGuardSizeBounds = { readonly minItems?: number; readonly max
 
 export const dagDagInferenceGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : dagDagInferenceGuardReject(at, "value is not an object");
+export const dagDagInferenceGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) dagDagInferenceGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const dagDagInferenceGuardArray = (value: unknown, at: string, bounds: dagDagInferenceGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return dagDagInferenceGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) dagDagInferenceGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -60,17 +64,17 @@ export const dagDagInferenceGuardConstant = <T extends string | number | boolean
 //#endregion 🚪️Parsers
 
 export function parseDagInference(value: unknown, at = "$"): DagInference {
-  const row = dagDagInferenceGuardObject(value, at);
+  const row = dagDagInferenceGuardClosed(dagDagInferenceGuardObject(value, at), at, ["topology"]);
   return {
     topology: parseDagTopology(row["topology"], `${at}.topology`),
   };
 }
 
 export function parseDagTopology(value: unknown, at = "$"): DagTopology {
-  const row = dagDagInferenceGuardObject(value, at);
+  const row = dagDagInferenceGuardClosed(dagDagInferenceGuardObject(value, at), at, ["topoOrder", "depth", "cycleFree", "nodeCount"]);
   return {
     topoOrder: dagDagInferenceGuardArray(row["topoOrder"], `${at}.topoOrder`).map((item, index) => dagDagInferenceGuardString(item, `${at}.topoOrder[${index}]`)),
-    depth: Object.fromEntries(Object.entries(dagDagInferenceGuardObject(row["depth"], `${at}.depth`)).map(([key, item]) => [key, dagDagInferenceGuardInteger(item, `${at}.depth[${JSON.stringify(key)}]`, { minimum: 0 })])),
+    depth: Object.fromEntries(Object.entries(dagDagInferenceGuardObject(row["depth"], `${at}.depth`)).map(([key0, value0]) => [key0, dagDagInferenceGuardInteger(value0, `${at}.depth.${key0}`, {"minimum": 0})])),
     cycleFree: dagDagInferenceGuardBoolean(row["cycleFree"], `${at}.cycleFree`),
     nodeCount: dagDagInferenceGuardInteger(row["nodeCount"], `${at}.nodeCount`, {"minimum": 0}),
   };

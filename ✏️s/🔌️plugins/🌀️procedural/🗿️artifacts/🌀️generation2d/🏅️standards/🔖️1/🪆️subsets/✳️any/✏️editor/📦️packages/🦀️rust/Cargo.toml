@@ -20,6 +20,7 @@ semio-framework-job-publication = { path = "../../../../../../../../../../../../
 semio-framework-composition-admission = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧩️composition/📥️admission/📦️packages/🦀️rust" }
 pack = { workspace = true }
 semio-framework = { workspace = true }
+semio-framework-action-bus = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🎯️action-bus/📦️packages/🦀️rust" }
 semio-framework-2d = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/📦️packages/🦀️rust" }
 semio-framework-artifact-flow-flow = { workspace = true }
 semio-framework-artifact-playbook-playbook = { workspace = true }
@@ -54,12 +55,19 @@ semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mu
 semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
 fnv = "1.0.7"
 semio-framework-async-macros = { workspace = true }
+semio-framework-test-fixtures = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-framework-tool-run = { workspace = true }
 semio-framework-ui-contract = { workspace = true }
 serde_json = { workspace = true }
 semio-s-artifact-procedural-2d-io-binary = { workspace = true }
 semio-s-artifact-procedural-2d-testkit = { workspace = true }
+semio-s-artifact-procedural-2d-model = { workspace = true, features = ["testkit"] }
+semio-s-artifact-procedural-2d-host = { workspace = true, features = ["testkit"] }
 
 [[test]]
 name = "editor-routes"
 path = "../../🧪️tests/🔬️editor-routes/🦀️.rs"
+
+[[test]]
+name = "editor-routes_2"
+path = "../../🧪️tests/🔬️editor-routes-2/🦀️.rs"

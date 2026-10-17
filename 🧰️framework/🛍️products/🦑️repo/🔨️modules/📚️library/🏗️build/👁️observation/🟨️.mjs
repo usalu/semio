@@ -1,3 +1,4 @@
+import{captureBoundedSourceRevisionV1}from"../📥️inputs/🔏️revision/🟨️.mjs";
 import {withBuildGraphOptionalPublicationV1,registerBuildGraphOptionalHandleV1} from "../📥️inputs/💾️storage/🟨️.mjs";
 import * as fs from "node:fs";
 import { readFile as readFileAsync, stat as statAsync } from "node:fs/promises";
@@ -8,10 +9,14 @@ import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { openRecordStore, recordKey } from "../../⚡️caching/🗃️records/🟦️.ts";
 import { compileJsonSchemaSubset } from "../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
-import sourceAnalysisSchemaV1 from "./🧬️schema/🔣️.json" with {type:"json"};
+const observationSchemaURLV1=new URL("./🧬️schema/🔣️.json",import.meta.url),observationSchemaCaptureV1=captureBoundedSourceRevisionV1(fileURLToPath(observationSchemaURLV1),65536,true),sourceAnalysisSchemaV1=JSON.parse(observationSchemaCaptureV1.text??""),observationSchemaRevisionV1=observationSchemaCaptureV1.sha256;
+import{requireExactSourceReadBatchV1,readExactSourceFileV1}from"../📥️inputs/🧮️digest/📥️read/🟨️.mjs";
 
 /** 🗃️ This module's own bytes: persisted observations validated by another revision of these rules are a miss. */
-const OBSERVATION_REVISION = createHash("sha256").update(fs.readFileSync(fileURLToPath(import.meta.url))).digest("hex");
+const OBSERVATION_REVISION = captureBoundedSourceRevisionV1(fileURLToPath(import.meta.url),8388608).sha256;
+
+/** 🧷️ Refuses a statically cached observation instance whose executing Source or privately captured schema changed. */
+export function requireCurrentObservationV1(){try{if(captureBoundedSourceRevisionV1(fileURLToPath(import.meta.url),8388608).sha256===OBSERVATION_REVISION&&captureBoundedSourceRevisionV1(fileURLToPath(observationSchemaURLV1),65536).sha256===observationSchemaRevisionV1)return;}catch(cause){throw Object.assign(Error("Stale loaded observation implementation; restart required"),{code:"BUILD_AUTHORITY_CHANGED",cause});}throw Object.assign(Error("Stale loaded observation implementation; restart required"),{code:"BUILD_AUTHORITY_CHANGED"});}
 
 /** ⏱️ Files stamped this close to the start of a computation may still change within one timestamp tick, so their result is never persisted (racy-git rule). */
 const RACY_MS = 2000;
@@ -67,19 +72,19 @@ export function inferenceAuthorityDigestV1(){
 }
 
 /** 📦️ Admits one physical project's own input observations through its own computation, bound to the sealed authority digest. */
-export async function observeProjectInferenceV1({cachePath,key,owner},compute){
+export async function observeProjectInferenceV1({cachePath,key,owner,reusable},compute){
+ requireCurrentObservationV1();requireInferenceReuseV1(reusable);originalInferencePublications.delete(cachePath);usedInference.delete(cachePath);
  const parent=scopes.getStore(),identity=createHash("sha256").update(JSON.stringify([OBSERVATION_REVISION,inferenceAuthorityDigestV1(),key])).digest("hex"),previous=projectImages.get(cachePath);
  const inherit=rows=>{retainSourceFactsV1(rows);retainObservationsV1(parent,rows);};
  if(previous?.identity===identity&&previous.observations.every(row=>projectObservationHoldsV1(row,parent))){
-  inherit(previous.observations);
-  originalInferencePublications.set(cachePath,previous.publication);
-  return JSON.parse(previous.image);
+  const value=JSON.parse(previous.image);
+  if(await inferenceReusableV1(reusable,value)&&current(previous.observations)){inherit(previous.observations);originalInferencePublications.set(cachePath,previous.publication);usedInference.set(cachePath,previous.headerDigest);return value;}
  }
- const value=await observeInferenceComputationV1({cachePath,key},async()=>{projectComputations.set(owner,(projectComputations.get(owner)??0)+1);const image=jsonImage(await compute());if(image===undefined)throw Error("Project inference requires a language-neutral JSON image");return JSON.parse(image);},Boolean(parent&&inferenceValidationScopes.getStore()));
+ const value=await observeInferenceComputationV1({cachePath,key,reusable},async()=>{projectComputations.set(owner,(projectComputations.get(owner)??0)+1);const image=jsonImage(await compute());if(image===undefined)throw Error("Project inference requires a language-neutral JSON image");return JSON.parse(image);},Boolean(parent&&inferenceValidationScopes.getStore()));
  const publication=originalInferencePublications.get(cachePath);
  if(!publication)throw Error("Original project inference observations required");
  inherit(publication.observations);
- projectImages.set(cachePath,{identity,image:JSON.stringify(value),observations:publication.observations,publication});
+ projectImages.set(cachePath,{identity,image:JSON.stringify(value),observations:publication.observations,publication,headerDigest:usedInference.get(cachePath)??null});
  return value;
 }
 
@@ -137,11 +142,14 @@ function consistentObservationsV1(rows){const seen=new Map();for(const row of ro
 
 /** 🕸️ Captures exact inference dependencies independently of nested observation scopes. */
 export async function captureObservedSourceInputsV1(compute,onFailure,includeAuthority=true){
- if(typeof includeAuthority!=="boolean")throw Error("Explicit Source authority capture required");const captured=new Map(),observations=()=>{if(includeAuthority)retainObservationsV1(captured,loadObservations.values());return [...captured.values()];};
+ if(typeof includeAuthority!=="boolean")throw Error("Explicit Source authority capture required");const parent=sourceCaptures.getStore(),captured=new Map(),observations=()=>{if(includeAuthority)retainObservationsV1(captured,loadObservations.values());return [...captured.values()];};
  try{return {value:await sourceCaptures.run(captured,compute),observations:observations(),authorityObservations:[...loadObservations.values()]};}
  catch(error){onFailure?.(observations(),[...loadObservations.values()]);throw error;}
- finally{captured.clear();}
+ finally{retainObservationsV1(parent,captured.values());captured.clear();}
 }
+
+/** 🔏️ Records only the exact bytes read by the original live bounded Source batch. */
+export async function observedExactSourceFileV1(batch,root,name){requireExactSourceReadBatchV1(batch,root);const value=await readExactSourceFileV1(batch,name);requireExactSourceReadBatchV1(batch,root);if(value)record("file",resolve(root,name),{size:value.byteLength,mtimeMs:0,ctimeMs:0,ino:0,sha256:value.sha256});return value;}
 
 /** 🧭️ Normalizes every accepted fs path argument to one absolute key. */
 function absolute(path) {
@@ -477,30 +485,35 @@ export async function settleObservedComputationV1(compute,{signal,limit=64,onRou
  }
 }
 
-export async function observeInference({ cachePath, key }, compute) {
-  return observeInferenceComputationV1({cachePath,key},compute,false);
+function requireInferenceReuseV1(reusable){if(reusable!==undefined&&typeof reusable!=="function")throw Error("Explicit inference reuse predicate required");}
+
+/** 🧷️ Keeps receiving failures outside corrupt-cache miss handling. */
+async function inferenceReusableV1(reusable,value){requireCurrentObservationV1();if(reusable===undefined)return true;const holds=await reusable(value);requireCurrentObservationV1();if(typeof holds!=="boolean")throw Error("Boolean inference reuse result required");return holds;}
+
+export async function observeInference({ cachePath, key, reusable }, compute) {
+  requireCurrentObservationV1();requireInferenceReuseV1(reusable);
+  return observeInferenceComputationV1({cachePath,key,reusable},compute,false);
 }
 
 /** 🧷️ Validates nested project records within one original inference; its outer publication still rechecks every source fact freshly. */
-async function observeInferenceComputationV1({cachePath,key},compute,nestedProject) {
-  loadSealed = true;
+async function observeInferenceComputationV1({cachePath,key,reusable},compute,nestedProject) {
+  requireCurrentObservationV1();loadSealed = true;
+  originalInferencePublications.delete(cachePath);usedInference.delete(cachePath);
   const parent=scopes.getStore();
   const digest = createHash("sha256").update(JSON.stringify([OBSERVATION_REVISION, nestedProject?inferenceAuthorityDigestV1():null, key])).digest("hex"), hints = new Map(), authority=nestedProject?[]:[...loadObservations.values()];
+  let candidate;
   try {
     const text = fs.readFileSync(cachePath, "utf8"), split = text.indexOf("\n"), header = JSON.parse(text.slice(0, split));
     if (header.digest === digest && header.resultSha256 === createHash("sha256").update(text.slice(split + 1)).digest("hex") && Array.isArray(header.observations) && current(header.observations)) {
-      retainSourceFactsV1(header.observations);
-      retainObservationsV1(parent,header.observations);
-      usedInference.set(cachePath, createHash("sha256").update(text.slice(0, split)).digest("hex"));
-      originalInferencePublications.set(cachePath, {path:cachePath,digest,authorityObservations:header.authorityObservations,observations:header.observations});
-      return JSON.parse(text.slice(split + 1));
+      candidate={value:JSON.parse(text.slice(split+1)),header,headerDigest:createHash("sha256").update(text.slice(0,split)).digest("hex")};
     }
     for (const { kind, path, fact } of Array.isArray(header.observations) ? header.observations : []) if (kind === "file" && typeof fact?.sha256 === "string") hints.set(path, fact);
   } catch {}
+  if(candidate&&await inferenceReusableV1(reusable,candidate.value)&&current(candidate.header.observations)){const{header,value,headerDigest}=candidate;retainSourceFactsV1(header.observations);retainObservationsV1(parent,header.observations);usedInference.set(cachePath,headerDigest);originalInferencePublications.set(cachePath,{path:cachePath,digest,authorityObservations:header.authorityObservations,observations:header.observations});return value;}
   const observations = new Map(), started = Date.now();
   const records=observedRecordStoreV1(`${cachePath}.records`);
   const result = await inferenceValidationScopes.run(inferenceValidationScopes.getStore()??observations,()=>recordScopes.run({ records, hints }, () => scopes.run(observations, compute)));
-  records.flush();
+  requireCurrentObservationV1();records.flush();
   if (records.stats.records > 2 * records.stats.accessed) records.retainAccessed();
   const rows = [...authority, ...observations.values()];retainSourceFactsV1(rows);
   retainObservationsV1(parent,rows);
@@ -531,11 +544,12 @@ async function observeInferenceComputationV1({cachePath,key},compute,nestedProje
  * @returns {Promise<T>}
  */
 export async function observeDependencies({ receiptPath, recordDirectory }, compute) {
+  requireCurrentObservationV1();
   const observations = new Map(), started = Date.now(),publicationPath=receiptPath.replace(/\.receipt\.json$/u,".publication.json"),hints=new Map();
   if(recordDirectory)try{const previous=JSON.parse(fs.readFileSync(publicationPath,"utf8"));if(previous.version===1&&previous.revision===OBSERVATION_REVISION&&Array.isArray(previous.observations)&&Number.isSafeInteger(previous.startedAt))for(const row of previous.observations)if(row.kind==="file"&&/^[a-f0-9]{64}$/u.test(row.fact?.sha256??"")&&row.fact.mtimeMs<previous.startedAt-RACY_MS&&row.fact.ctimeMs<previous.startedAt-RACY_MS)hints.set(row.path,row.fact);}catch{}
   const records=recordDirectory?observedRecordStoreV1(recordDirectory):undefined;
   const run=()=>scopes.run(observations,compute),result=await(records?recordScopes.run({records,hints},run):run());
-  records?.flush();if(records&&records.stats.records>2*records.stats.accessed)records.retainAccessed();
+  requireCurrentObservationV1();records?.flush();if(records&&records.stats.records>2*records.stats.accessed)records.retainAccessed();
   const rows = [...observations.values()], inference = [...usedInference].filter(([path]) => dirname(path) === dirname(receiptPath)).sort(([left], [right]) => left < right ? -1 : left > right ? 1 : 0);
   if(!consistentObservationsV1(rows))throw conflictingInferenceErrorV1(rows);
   const racy = rows.some(({ kind, fact }) => {const source=kind==="file"?fact:kind==="analysis"?fact.source:undefined;return source&&(source.mtimeMs>=started-RACY_MS||source.ctimeMs>=started-RACY_MS);});

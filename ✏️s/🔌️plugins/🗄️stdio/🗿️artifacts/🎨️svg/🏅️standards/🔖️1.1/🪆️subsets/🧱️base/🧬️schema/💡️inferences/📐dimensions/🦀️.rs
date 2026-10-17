@@ -29,8 +29,5 @@ pub fn compute_svg_dimensions(snapshot:&crate::SvgSnapshot)->SvgDimensions {
 }
 //#endregion 🔖️Dimensions
 
-#[cfg(test)]
-//#region 🧪️Tests
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

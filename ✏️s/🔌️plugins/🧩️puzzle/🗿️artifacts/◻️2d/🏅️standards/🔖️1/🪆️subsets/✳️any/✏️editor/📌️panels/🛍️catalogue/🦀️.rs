@@ -7,7 +7,7 @@
 //! host's slice (see `📌️panels/🗿️artifact` for the windowing law).
 
 use crate::editor::puzzle2d::terminology::Puzzle2dLabels;
-use {crate::editor::puzzle2d::snapshot::inferred_kind_entries, crate::editor::puzzle2d::snapshot::kind_catalog_entries, crate::editor::puzzle2d::ui_label, crate::editor::puzzle2d::snapshot::Puzzle2dScene, crate::editor::puzzle2d::snapshot::PUZZLE2D_PLAY_CONTROLLER_ID};
+use {crate::editor::puzzle2d::snapshot::inferred_kind_entries, crate::editor::puzzle2d::snapshot::kind_catalog_entries, crate::editor::puzzle2d::interaction::ui_label, crate::editor::puzzle2d::snapshot::Puzzle2dScene, crate::editor::puzzle2d::snapshot::PUZZLE2D_PLAY_CONTROLLER_ID};
 use semio_framework_plugin::tree_item_with_action;
 use semio_framework_plugin::tree_item_with_action_draggable;
 use semio_framework_plugin::ActionFactory;
@@ -116,7 +116,5 @@ pub fn render(envelope: &Puzzle2dScene, labels: &Puzzle2dLabels, windows: &TreeW
 //#endregion 🔖️Render
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

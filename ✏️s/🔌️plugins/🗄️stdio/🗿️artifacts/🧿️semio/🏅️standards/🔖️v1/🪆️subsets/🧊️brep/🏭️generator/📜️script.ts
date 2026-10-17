@@ -562,7 +562,7 @@ function readVarint(bytes: Uint8Array, offset: number): { value: number; next: n
 
 /** 📏️ Independently measures the sparse entity record inside a text or binary diff case. */
 function codecCaseArity(testCase: ToleranceFixture["diffCodecCases"][number]): { entity: string; arity: number } {
-  let entity = testCase.entity;
+  let entity: string = testCase.entity;
   let encoded: string;
   if (testCase.encoding === "text") {
     const [prefix, value] = (testCase.value ?? "").split("=", 2);

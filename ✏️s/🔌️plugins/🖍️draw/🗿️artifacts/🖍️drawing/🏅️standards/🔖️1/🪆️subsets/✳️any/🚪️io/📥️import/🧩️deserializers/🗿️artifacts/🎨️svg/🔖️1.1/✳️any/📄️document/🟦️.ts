@@ -5,7 +5,7 @@ import {binary64} from "@semio-tech/framework/value/ieee754";
 import {drawingPathFromGeometry,type DrawingAttributes,type DrawingColor,type DrawingFill,type DrawingLayerNode,type PathGeometrySegment} from "../../../../../../../../🧬️schema/🟦️.ts";
 import {parseStrokeCap,parseStrokeJoin} from "../../../../../../../../🧬️schema/🖊️stroke/🟦️.ts";
 import {parseFillRule} from "../../../../../../../../🧬️schema/🎨️fill/🌀️rule/🟦️.ts";
-import {drawingMatrixToTransform,drawingTransformToMatrix} from "../../../../../../../../🧬️schema/🧮️geometry/↗️affine/🟦️.ts";
+import {drawingMatrixToTransform,drawingTransformToMatrix,drawingTransformToWords} from "../../../../../../../../🧬️schema/🧮️geometry/↗️affine/🟦️.ts";
 import {multiply,segmentBounds,type Matrix,type Point} from "../../../../../../../../🧬️schema/🧮️geometry/🟦️.ts";
 import {parseEditableSvgPath} from "../🛤️path/🟦️.ts";
 import {parseEditableSvgTransform} from "../↗️transform/🟦️.ts";
@@ -164,7 +164,7 @@ export class SvgImportJob {
     const style=properties(element,work.style),name=element.getAttribute("inkscape:label")||element.getAttribute("id")||(id==="svg"?this.document!.title!:tag);
     let transform=parseEditableSvgTransform(element.getAttribute("transform")??"");
     if(id==="svg")transform=drawingMatrixToTransform(multiply(drawingTransformToMatrix(transform),viewport(element).matrix));
-    const base={id,name,visible:style.display!=="none"&&((tag==="g"||tag==="svg")||!["hidden","collapse"].includes(style.visibility??"visible")),locked:false,opacity:binary64(fraction(style.opacity)),blendMode:blendMode(style["mix-blend-mode"]),transform,attributes:attributes(style.fill?.startsWith("url(")?{...style,fill:"none"}:style)};
+    const base={id,name,visible:style.display!=="none"&&((tag==="g"||tag==="svg")||!["hidden","collapse"].includes(style.visibility??"visible")),locked:false,opacity:binary64(fraction(style.opacity)),blendMode:blendMode(style["mix-blend-mode"]),transform:drawingTransformToWords(transform),attributes:attributes(style.fill?.startsWith("url(")?{...style,fill:"none"}:style)};
     const isolated=isolation(style.isolation);
     let layer:Layer,numeric:PathGeometrySegment[]=[];
     if(tag==="g"||id==="svg"){

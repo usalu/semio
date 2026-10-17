@@ -1,4 +1,13 @@
-use super::*;
+use crate::editor::animate::modes::main::windows::tile_editor;
+#[allow(unused_imports)]
+use semio_framework_plugin::create_default_layout;
+#[allow(unused_imports)]
+use semio_framework_ui_locale::LocalizedLabel;
+#[allow(unused_imports)]
+use semio_framework_plugin::ModeDefinition;
+#[allow(unused_imports)]
+use semio_framework_plugin::WindowLayout;
+use crate::editor::animate::modes::main::*;
 
 #[test]
 fn the_default_layout_lists_the_tile_editor_window() {

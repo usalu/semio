@@ -1,4 +1,8 @@
-use super::*;
+use semio_framework_3d_brep_representation::topology::Body;
+use crate::schema::snapshot::SemioBrepSnapshot;
+use semio_framework_plugin::MeshWindowKit;
+use crate::viewer::modes::view::windows::main::{document_mesh_data};
+use crate::viewer::modes::view::windows::main::*;
 
 #[semio_framework_async_macros::async_test]
 async fn definition_declares_the_shared_mesh_window_kit() {

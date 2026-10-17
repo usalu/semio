@@ -986,7 +986,8 @@
               "en": "Comments and processing instructions before the root element.",
               "de": "Kommentare und Verarbeitungsanweisungen vor dem Wurzelelement."
             }
-          }
+          },
+          "default": []
         },
         "epilog": {
           "type": "array",
@@ -1002,7 +1003,8 @@
               "en": "Comments and processing instructions after the root element.",
               "de": "Kommentare und Verarbeitungsanweisungen nach dem Wurzelelement."
             }
-          }
+          },
+          "default": []
         }
       }
     }

@@ -46,6 +46,5 @@ test("Actor public facets publish only their defining explicit symbol and schema
       if (row.schema && row.schemaExport) expect(runtime[row.schemaExport]).toEqual(JSON.parse(readFileSync(join(owner, row.schema), "utf8")));
     }
   } finally { db.close(); }
-  console.log("[DEBUG] Closed Ajv/SQLite/compiler Actor public facet rosters match actual runtime exports and single defining schema owners");
 });
 

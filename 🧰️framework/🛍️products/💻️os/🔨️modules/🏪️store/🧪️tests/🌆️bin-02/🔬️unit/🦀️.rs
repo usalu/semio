@@ -96,7 +96,6 @@ async fn member_owned_batch_admission_defers_whole_source_census_and_retains_phy
         assert!(request.mutations.terminal_is_empty());
         for _ in 0..65_536 { if matches!(SpaceMember::close_owned_step(&mut member, physical_test_close_grant()).unwrap(), RetainedCloneStep::Complete(_)) { break; } }
         assert!(SpaceMember::close_owned_terminal_is_empty(&member));
-        println!("[DEBUG] owned source cancellation: rows={count} admission-preflights=0 one-preflight-per-turn=true backing={backing} actual-paid-release={released}");
     }
 }
 
@@ -254,7 +253,6 @@ fn member_open_partial_parse_and_initialization_owners_retire_exactly() {
         }
         assert_eq!(snapshots.load(Ordering::SeqCst), row["snapshots"].as_u64().unwrap() as usize, "{}", row["id"]);
         assert_eq!(mutations.load(Ordering::SeqCst), row["mutations"].as_u64().unwrap() as usize, "{}", row["id"]);
-        println!("[DEBUG] member-open rejection={} turns={turns} exact-demands={demands:?} paid-release={released} admission={admission}", row["id"]);
     }
 }
 
@@ -543,7 +541,6 @@ async fn retained_member_common_root_copies_history_under_grant_and_publishes_th
                 }
                 assert!(closed && member.close_owned_terminal_is_empty());
             }
-            eprintln!("[DEBUG] common member roots: history={history} commit={commit} preparation-turns={turns:?} atomic-three-lanes=true exact-caller-grant=true");
         }
     }
     identity.encode(|control| { assert!(control.owned_bytes() <= IDENTITY_CEILING); Ok::<(), semio_framework_value::ValueError>(()) }).expect("same original cumulative identity observation");
@@ -596,7 +593,6 @@ fn factory_preborn_tickets_retire_sole_snapshot_weak_without_losing_upgrade_witn
             let (_, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| drop(snapshot));
             assert_eq!((heap.requested_bytes, heap.released_bytes), (0, demo_snapshot_frame_bytes()));
         }
-        eprintln!("[DEBUG] factory sole typed snapshot Weak live={live} frame={} physical={released} upgrade identity retained; close birth=0", demo_snapshot_frame_bytes());
     }
 }
 
@@ -620,7 +616,6 @@ fn member_demo_preparation_source_prices_original_issuer_frames_and_paid_termina
         assert!(step.progress().fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));released+=step.progress().released_bytes;
     }
     assert!(owner.terminal_is_empty());assert!(released>=source_bytes);
-    eprintln!("[DEBUG] original Demo factory source birth={source_bytes} independently funded; actual captured witness/issuer frames and paid terminal release={released}");
 }
 
 
@@ -700,7 +695,6 @@ async fn derived_child_reads_require_the_exact_store_frontier_and_genuine_operat
     drop(stale);
     close_demo_artifact_store(&mut store);
     close_demo_artifact_store(&mut foreign);
-    eprintln!("[DEBUG] Store-derived provisional and history reads retain their genuine complete owners and refuse foreign or stale authority");
     identity.encode(|control| { assert!(control.owned_bytes() <= IDENTITY_CEILING); Ok::<(), semio_framework_value::ValueError>(()) }).expect("same original cumulative identity observation");
     drop(identity.pause().expect("original Unit cumulative identity receipt"));
 }
@@ -914,14 +908,12 @@ async fn retained_genesis_aliases_retire_each_decoded_allocation_once() {
             assert!(blocked);
             assert!(!SpaceMember::close_owned_terminal_is_empty(&store));
             assert_eq!(genesis.load(std::sync::atomic::Ordering::SeqCst), 0);
-            eprintln!("[DEBUG] retained genesis alias {} blocked on its exact external reader", case["name"].as_str().unwrap());
         }
         drop(read);
         drop(tail);
         close_demo_artifact_store(&mut store);
         assert_eq!(snapshots.load(std::sync::atomic::Ordering::SeqCst) as u64, case["snapshotRetirements"].as_u64().unwrap());
         assert_eq!(genesis.load(std::sync::atomic::Ordering::SeqCst) as u64, case["genesisRetirements"].as_u64().unwrap());
-        eprintln!("[DEBUG] retained genesis alias {} completed exact allocation retirement", case["name"].as_str().unwrap());
     }
 }
 
@@ -932,7 +924,7 @@ fn close_stalls_at_reader_boundary(store: &mut ArtifactStore<DemoSnapshot, DemoM
         store.close_owned_demands(copy).expect("current independent Store close frontier");
         let grant = physical_test_close_grant();
         match store.close_owned_step(grant).expect("store close advances to the reader boundary") {
-            RetainedCloneStep::Progress(progress) if progress == RetainedCloneProgress::default() => { eprintln!("[DEBUG] reader boundary phase={}", store.close_owned_phase_witness()); return true },
+            RetainedCloneStep::Progress(progress) if progress == RetainedCloneProgress::default() => {  return true },
             RetainedCloneStep::Progress(progress) => assert!(progress.fits(grant)),
             RetainedCloneStep::Complete(_) => panic!("a live snapshot read must retain its exact root"),
         }

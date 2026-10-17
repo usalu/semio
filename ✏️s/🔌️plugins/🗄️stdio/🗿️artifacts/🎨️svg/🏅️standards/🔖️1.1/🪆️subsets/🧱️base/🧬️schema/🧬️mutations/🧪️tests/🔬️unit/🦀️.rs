@@ -1,4 +1,8 @@
-use super::*;
+#[allow(unused_imports)]
+use crate::schema::diff::SvgDiff;
+#[allow(unused_imports)]
+use crate::SvgSnapshot;
+use crate::standards::v1_1::subsets::base::schema::mutations::*;
 use protocol::SemanticMutation;
 #[test]
 fn aggregate_roster_is_exact() {

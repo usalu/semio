@@ -20,16 +20,13 @@ test("Process, Hub and additional owner examples belong strictly to neutral test
  for(const path of actual){expect(path.length).toBeLessThanOrEqual(256);expect(Array.from(path).length).toBeLessThanOrEqual(256);}
  const oracle=new Set(independent.map(path=>resolve(path)));let includes=0;
  for(const path of all.filter(path=>path.endsWith(".rs")))for(const match of readFileSync(path,"utf8").matchAll(/include_(?:str|bytes)!\(\s*"([^"]*🧫️fixtures[^"]*)"/g)){const target=resolve(dirname(path),match[1]!);if(owners.some(owner=>relative(products,target)===owner||relative(products,target).startsWith(owner+"/"))){expect(oracle.has(target),path+" -> "+match[1]).toBe(true);includes++;}}
- console.log(`[DEBUG] Node and independent fast-glob agree on ${actual.length} Process, Hub and additional owner examples and ${includes} native fixture includes`);
 },30_000);
 
 test("original product fixture imports resolve against independent physical inventory",()=>{
  const all=[...new Set(owners.flatMap(owner=>files(join(products,owner))))],oracle=new Set(glob.sync(owners.map(owner=>`${owner}/**/🧫️fixtures/**/*`),{cwd:products,absolute:true,onlyFiles:true,followSymbolicLinks:false,ignore:["**/node_modules/**","**/.git/**","**/.nx/**","**/.🧬semio/**","**/🗑️generated/**","**/target/**"]}).map(path=>resolve(path)));let imports=0;
  for(const path of all.filter(path=>/\.tsx?$/.test(path))){const text=readFileSync(path,"utf8");if(!text.includes("🧫️fixtures"))continue;const source=ts.createSourceFile(path,text,ts.ScriptTarget.Latest,true,ts.ScriptKind.TS);function visit(node:ts.Node):void{if((ts.isImportDeclaration(node)||ts.isExportDeclaration(node))&&node.moduleSpecifier&&ts.isStringLiteral(node.moduleSpecifier)&&node.moduleSpecifier.text.includes("🧫️fixtures")){const target=resolve(dirname(path),node.moduleSpecifier.text);if(owners.some(owner=>relative(products,target)===owner||relative(products,target).startsWith(owner+"/"))){expect(oracle.has(target),path+" -> "+node.moduleSpecifier.text).toBe(true);imports++;}}ts.forEachChild(node,visit);}visit(source);}
- console.log(`[DEBUG] ${imports} original product fixture imports agree with independent fast-glob inventory`);
 },30_000);
 
 test("neutral fixture ancestry vectors agree with independent minimatch",()=>{
  for(const row of ancestry.cases){const oracle=minimatch(row.path,"**/🧪️tests/**/🧫️fixtures/**")&&!["🧬️schema","📦️packages","🎯️targets","🧩️implementations"].some(owner=>minimatch(row.path,`**/${owner}/**/🧫️fixtures/**`));expect(oracle,row.id).toBe(row.accepted);expect(belongsToTests(row.path),row.id).toBe(oracle);}
- console.log(`[DEBUG] ${ancestry.cases.length} language-neutral ancestry examples match independent minimatch`);
 });

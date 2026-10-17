@@ -34,11 +34,22 @@ SUPER_REF = re.compile(r"(?<![A-Za-z0-9_$])super::([a-z][a-z0-9_]*)::([A-Za-z_][
 
 
 def host_uses(host_file):
-    """local name -> [(cfg, mapped path tokens)] from the top-level `use` items of a host file."""
+    """local name -> [(cfg, mapped path tokens)] from the top-level `use` items of a host file; paths that start with a module the host itself imports are expanded."""
+    entries = uses(read(host_file), top_only=True)
+    base = {}
+    for cfg, vis, p, local, glob in entries:
+        if not glob and local and p and p[0] not in ("super", "self", "crate"):
+            base.setdefault(local, list(p))
     res = collections.defaultdict(list)
-    for cfg, vis, p, local, glob in uses(read(host_file), top_only=True):
+    for cfg, vis, p, local, glob in entries:
         if glob or not local or not p or p[0] in ("super", "self"):
             continue
+        p = list(p)
+        for _ in range(4):
+            if len(p) > 1 and p[0] in base and base[p[0]] != p and not p[0].startswith(("semio_", "std", "core", "alloc", "ui_", "serde", "flow", "infinite")):
+                p = base[p[0]] + p[1:]
+            else:
+                break
         try:
             if p[0] == "crate":
                 p = X.map_root_path(p)
@@ -269,15 +280,88 @@ def simplify_test_cfg(attrs_text):
     return "\n".join(out), True
 
 
+def _atoms(node, acc):
+    if node[0] == "atom":
+        acc.add(node[1].replace(" ", ""))
+    else:
+        for c in node[1]:
+            _atoms(c, acc)
+
+
+def _eval(node, env):
+    k = node[0]
+    if k == "atom":
+        return env[node[1].replace(" ", "")]
+    vals = [_eval(c, env) for c in node[1]]
+    return (not vals[0]) if k == "not" else all(vals) if k == "all" else any(vals)
+
+
+FIXED_ATOMS = {"test": True, 'feature="testkit"': True}
+
+
+def _cfg_tree(cfg_text):
+    """Parses the cfg predicate of a `#[cfg(...)]` line (several lines are AND-ed); empty text is True."""
+    nodes = []
+    for l in [x.strip() for x in cfg_text.replace("#[cfg(", "\n#[cfg(").split("\n") if x.strip()]:
+        m = re.fullmatch(r"#\[cfg\((.*)\)\]", l)
+        if m:
+            nodes.append(_parse_cfg(m.group(1)))
+    if not nodes:
+        return None
+    return nodes[0] if len(nodes) == 1 else ("all", nodes)
+
+
+def _envs(trees):
+    atoms = set()
+    for tr in trees:
+        if tr is not None:
+            _atoms(tr, atoms)
+    free = sorted(a for a in atoms if a not in FIXED_ATOMS)
+    import itertools
+    for bits in itertools.product([False, True], repeat=len(free)):
+        env = dict(FIXED_ATOMS)
+        env.update(zip(free, bits))
+        for a in atoms:
+            env.setdefault(a, True)
+        yield env
+
+
+def cfg_true(tree, env):
+    return True if tree is None else _eval(tree, env)
+
+
+def cfg_overlap(a, b):
+    return any(cfg_true(a, e) and cfg_true(b, e) for e in _envs([a, b]))
+
+
+def cfg_union(a, b):
+    """cfg text of (a or b) in the simplified test environment; '' when always true."""
+    if a is None or b is None:
+        return None
+    u = ("any", [a, b])
+    if all(_eval(u, e) for e in _envs([a, b])):
+        return None
+    return u
+
+
+def cfg_text(tree):
+    return "" if tree is None else f"#[cfg({_render_cfg(tree)})]"
+
+
 def merge_import_blocks(blocks, simplify=False, exclude_locals=(), own=None):
-    """Parses the use lines of several blocks, dedupes by (cfg, local name) and renders them grouped by (cfg, parent path)."""
+    """Parses the use lines of several blocks, merges equal imports under the union of their cfgs, drops later imports of a name an earlier one binds under an overlapping cfg, and renders them grouped by (cfg, parent path)."""
     text = "\n".join(blocks)
-    entries = []
+    kept = collections.OrderedDict()
+    globs = []
     for cfg, vis, p, local, glob in uses(text):
-        if simplify and cfg:
-            cfg, alive = simplify_test_cfg(cfg)
-            if not alive:
-                continue
+        if cfg:
+            cfg_s = cfg.replace("\n", " ").strip()
+            if simplify:
+                cfg_s, alive = simplify_test_cfg(cfg_s.replace("] #[", "]\n#["))
+                if not alive:
+                    continue
+        else:
+            cfg_s = ""
         if not glob and local in exclude_locals:
             continue
         p = list(p)
@@ -285,28 +369,35 @@ def merge_import_blocks(blocks, simplify=False, exclude_locals=(), own=None):
             p = ["crate"] + p[1:]
             if len(p) == 1:
                 continue
-        entries.append((cfg.replace("\n", " ").strip(), tuple(p), local, glob))
-    seen, groups, order, taken = set(), collections.OrderedDict(), [], {}
-    for cfg, p, local, glob in entries:
-        key = (cfg, p, local, glob)
-        if key in seen:
-            continue
-        seen.add(key)
+        tree = _cfg_tree(cfg_s.replace("] #[", "]\n#[")) if cfg_s else None
         if glob:
-            order.append(("glob", cfg, p))
+            if (tuple(p), cfg_s) not in [(g[0], g[1]) for g in globs]:
+                globs.append((tuple(p), cfg_s))
             continue
-        if taken.get((cfg, local), p) != p:
+        entries = kept.setdefault(local, [])
+        merged = False
+        for e in entries:
+            if e["path"] == tuple(p):
+                e["tree"] = cfg_union(e["tree"], tree)
+                merged = True
+                break
+        if merged:
             continue
-        taken[(cfg, local)] = p
-        groups.setdefault((cfg, p[:-1]), []).append(p[-1] if p[-1] == local else f"{p[-1]} as {local}")
+        if any(cfg_overlap(e["tree"], tree) for e in entries):
+            continue
+        entries.append(dict(path=tuple(p), tree=tree))
+    groups = collections.OrderedDict()
+    for local, entries in kept.items():
+        for e in entries:
+            p = e["path"]
+            groups.setdefault((cfg_text(e["tree"]), p[:-1]), []).append(p[-1] if p[-1] == local else f"{p[-1]} as {local}")
     lines = []
-    locals_seen = {}
     for (cfg, parent), names in sorted(groups.items(), key=lambda kv: ("::".join(kv[0][1]), kv[0][0])):
         names = sorted(set(names))
         body = names[0] if len(names) == 1 else "{" + ", ".join(names) + "}"
         head = "::".join(parent)
         lines.append((cfg + "\n" if cfg else "") + (f"use {head}::{body};" if head else f"use {body};"))
-    for kind, cfg, p in order:
+    for p, cfg in globs:
         lines.append((cfg + "\n" if cfg else "") + f"use {'::'.join(p)}::*;")
     return lines
 

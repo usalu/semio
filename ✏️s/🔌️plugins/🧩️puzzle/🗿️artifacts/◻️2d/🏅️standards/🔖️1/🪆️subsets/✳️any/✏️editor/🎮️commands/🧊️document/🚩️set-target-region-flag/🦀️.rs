@@ -1,7 +1,7 @@
 //! 🚩️ `set-target-region-flag` command, and the two set-verbs an outliner region row names (`setTargetRegionHidden`,
 //! `setTargetRegionLocked`).
 
-use {crate::editor::puzzle2d::snapshot::puzzle2d_selected_target_region_ids, crate::editor::puzzle2d::Puzzle2dActionCtx};
+use {crate::editor::puzzle2d::snapshot::puzzle2d_selected_target_region_ids, crate::editor::puzzle2d::interaction::Puzzle2dActionCtx};
 use semio_framework_pack_json::Value;
 
 /// 🙈️ An explicit `id` (the outliner row toggle and the context menu) flags exactly that region;

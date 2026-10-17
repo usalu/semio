@@ -1,5 +1,6 @@
 
 use super::*;
+use semio_framework_test_fixtures::{fixture_bytes, fixture_text};
 
 /// 🎵️ The real committed fixture — 193,275 bytes of genuinely encoded MPEG-1 Layer III audio,
 /// derived once from the repository's own real camera-captured video and encoded by `lame`, a
@@ -7,7 +8,7 @@ use super::*;
 /// feature description and in the ticket's `mp3-fixture-derive/🐍️derive-real-mp3-fixture.py`.
 /// The gherkin case reads the same file through `ctx.copy_input`.
 fn fixture() -> Vec<u8> {
-    include_bytes!("../../../🧪️tests/🧫️fixtures/🔊️.mp3").to_vec()
+    fixture_bytes!("../../../🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🔊️.mp3").to_vec()
 }
 
 fn spec(kind: &str, params: Json) -> Json {
@@ -69,7 +70,7 @@ fn the_reference_reads_the_text_frames_a_real_encoder_wrote() {
 /// padding-slot change (frames 0 and 1 are 417 bytes, frame 2 is 418), so the packed headers land on both
 /// branches of the frame-size formula.
 fn feature_example_rows() -> Vec<Json> {
-    semio_repo_test_host::law::feature_rows(include_str!("../../../🧪️tests/🎛️mutate-mp3-mpeg1-layer3/🥒️.feature")).into_iter().map(|(kind, params)| spec(&kind, params)).collect()
+    semio_repo_test_host::law::feature_rows(fixture_text!("../../../🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/🧪️tests/🎛️mutate-mp3-mpeg1-layer3/🥒️.feature")).into_iter().map(|(kind, params)| spec(&kind, params)).collect()
 }
 
 #[test]
@@ -106,15 +107,15 @@ fn an_unknown_kind_is_an_error_not_a_silent_no_op() {
 /// reads both files as text and fails the moment any of the three drift apart.
 #[test]
 fn kinds_match_the_catalog_and_the_vocabulary() {
-    let manifest = include_str!("../../🔣️.json");
-    let vocabulary = include_str!("../../../🧬️schema/🧬️mutations/🦀️.rs");
+    let manifest = fixture_text!("../../../🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/🔮️oracles/🔣️.json");
+    let vocabulary = fixture_text!("../../../🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs");
     let variants = ["SetId3v2", "SetFrames", "SetId3v1"];
     assert_eq!(KINDS.len(), variants.len());
     for (kind, variant) in KINDS.iter().zip(variants.iter()) {
         assert!(manifest.contains(&format!("\"{kind}\"")), "catalog is missing kind {kind:?}");
         assert!(vocabulary.contains(&format!("{variant} ")) || vocabulary.contains(&format!("{variant},")) || vocabulary.contains(&format!("{variant} {{")), "Mp3Mutation is missing variant {variant:?} for kind {kind:?}");
     }
-    let feature = include_str!("../../../🧪️tests/🎛️mutate-mp3-mpeg1-layer3/🥒️.feature");
+    let feature = fixture_text!("../../../🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/🧪️tests/🎛️mutate-mp3-mpeg1-layer3/🥒️.feature");
     for kind in KINDS {
         assert!(feature.contains(&format!("| {kind} ")) || feature.contains(&format!("| {kind}\t")) || feature.contains(&format!("| {kind}  ")), "the case's Examples table is missing kind {kind:?}");
     }

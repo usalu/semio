@@ -1,6 +1,7 @@
 //! 🧪️ Laws of the empty wires parent vocabulary (design §20.15): board edits are child-lane graph leaves only.
 
-use super::*;
+use crate::WiresSnapshot;
+use crate::standards::v1::subsets::any::schema::mutations::*;
 
 /// ⚖️ LAW: the parent vocabulary declares no kind and no descriptor, and refuses every operation line and record.
 #[test]

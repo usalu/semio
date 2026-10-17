@@ -1,0 +1,142 @@
+use crate::JsonSnapshot;
+use crate::standards::v_rfc8259::subsets::base::schema::inferences::*;
+use protocol::Inference;
+
+#[semio_framework_async_macros::async_test]
+async fn inference_determinism_law() {
+    let snapshot = JsonSnapshot::default();
+    assert_eq!(JsonInference::infer(&snapshot).expect("valid materialized inference fixture"), JsonInference::infer(&snapshot).expect("valid materialized inference fixture"));
+}
+
+#[semio_framework_async_macros::async_test]
+async fn inference_default_law() {
+    assert_eq!(JsonInference::infer(&JsonSnapshot::default()).expect("valid materialized inference fixture"), JsonInference::default());
+}
+
+//#region 🔖️ConformanceLaws
+/// 🧪️ P2-P1: per-artifact conformance laws (item 6 of the deliverable list) — grammar/protocol
+/// parseability, `Recognizer` against real fixtures AND real `print_op`/`print_diff` output,
+/// `walk_protocol` against real `encode_pack`/`encode_op`/`encode_diff` bytes, and the
+/// fixture-honesty round-trip. Dissolved out of the former `⚙️engine`'s own test region (ticket
+/// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — `m5` auto-discovers the snapshot
+/// grammar+`.dsl.semio`/protocol+`.pack.semio` pairs independently
+/// (`🧪️fixture/🦀️-sweep.rs`'s `m5_auto_discovery`); these tests are this artifact's OWN
+/// early-warning, plus direct coverage of the mutations/diff facets that harness does not
+/// auto-discover at all.
+mod conformance_laws {
+    use super::*;
+    use crate::schema::{diff, mutations, snapshot};
+    use protocol::{DiffBinary,DiffCodec,DiffText, OpBinary, OpText};
+
+    /// ✅️ "committed files parse": all 6 handcrafted `.grammar.semio`/`.protocol.semio` files
+    /// parse under the real dialect — independent of, and cheaper than, the two `recognize`/
+    /// `walk_protocol` laws below (a parse failure here fails fast with a clearer message).
+    #[semio_framework_async_macros::async_test]
+    async fn committed_facet_files_parse() {
+        for (label, text) in [("snapshot grammar", crate::standards::v_rfc8259::subsets::base::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO), ("mutations grammar", crate::standards::v_rfc8259::subsets::base::io::text::mutations::COMPONENT_GRAMMAR_SEMIO), ("diff grammar", crate::standards::v_rfc8259::subsets::base::io::text::diff::COMPONENT_GRAMMAR_SEMIO)] {
+            let grammar = semio_framework_dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
+            assert_eq!(grammar.dialect, semio_framework_dsl::SemioDialect::Grammar, "{label}: expected grammar dialect");
+        }
+        for (label, text) in [("snapshot protocol", crate::standards::v_rfc8259::subsets::base::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO), ("mutations protocol", crate::standards::v_rfc8259::subsets::base::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO), ("diff protocol", crate::standards::v_rfc8259::subsets::base::io::binary::diff::COMPONENT_PROTOCOL_SEMIO)] {
+            semio_framework_dsl::parse_protocol(text).unwrap_or_else(|e| panic!("{label}: parse_protocol failed: {e:?}"));
+        }
+    }
+
+    /// ✅️ `grammar_conformance_law`: the snapshot grammar recognizes real `print_dsl` output for
+    /// the demo (genuinely 3-level-nested) snapshot — same preamble-stripped body reconstruction
+    /// `m5_handcrafted_grammar_conformance`'s own `dsl_body_from_host_snapshot` uses, so this is a
+    /// direct proof this artifact will pass that harness once graduated, not merely an analogue.
+    #[semio_framework_async_macros::async_test]
+    async fn grammar_conformance_law() {
+        let grammar = semio_framework_dsl::parse_grammar(crate::standards::v_rfc8259::subsets::base::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO).expect("parse snapshot grammar");
+        let recognizer = semio_framework_dsl::Recognizer::compile(&grammar, &semio_framework_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_framework_os_kernel::os_dsl::grammar::product_macros()).expect("selected grammar fragments");
+        let text = pack::snapshot::ArtifactDsl::print_dsl(&snapshot::demo_json_snapshot());
+        let (envelope, body) = store::semio_format::split_text_preamble(&text).expect("split preamble");
+        let reconstructed = format!("{}\n{body}", envelope.envelope_id());
+        assert!(recognizer.recognize(&reconstructed).expect("recognize"), "grammar did not recognize demo dsl body:\n{reconstructed}");
+    }
+
+    /// ✅️ `ops_grammar_conformance_law`: the mutations grammar recognizes real `print_op` output
+    /// for every `JsonMutation` variant (`mutations::demo_mutation_cases()`), not just one
+    /// trivial case — incl. nested array/object payload values and a mixed `Key`/`Index` path.
+    #[semio_framework_async_macros::async_test]
+    async fn ops_grammar_conformance_law() {
+        let grammar = semio_framework_dsl::parse_grammar(crate::standards::v_rfc8259::subsets::base::io::text::mutations::COMPONENT_GRAMMAR_SEMIO).expect("parse mutations grammar");
+        let recognizer = semio_framework_dsl::Recognizer::compile(&grammar, &semio_framework_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_framework_os_kernel::os_dsl::grammar::product_macros()).expect("selected grammar fragments");
+        for mutation in mutations::demo_mutation_cases() {
+            let printed = mutation.print_op();
+            assert!(recognizer.recognize(&printed).unwrap_or(false), "mutations grammar did not recognize {printed:?} (from {mutation:?})");
+        }
+    }
+
+    /// ✅️ `diff_grammar_conformance_law`: the diff grammar recognizes real `print_diff` output
+    /// for every representative `JsonDiff` (`diff::demo_diff_cases()`), incl. the empty-line
+    /// (`None`) diff and the `Replace` kind-change fallback.
+    #[semio_framework_async_macros::async_test]
+    async fn diff_grammar_conformance_law() {
+        let grammar = semio_framework_dsl::parse_grammar(crate::standards::v_rfc8259::subsets::base::io::text::diff::COMPONENT_GRAMMAR_SEMIO).expect("parse diff grammar");
+        let recognizer = semio_framework_dsl::Recognizer::compile(&grammar, &semio_framework_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_framework_os_kernel::os_dsl::grammar::product_macros()).expect("selected grammar fragments");
+        for d in diff::demo_diff_cases() {
+            let printed = d.print_diff();
+            assert!(recognizer.recognize(&printed).unwrap_or(false), "diff grammar did not recognize {printed:?} (from {d:?})");
+        }
+    }
+
+    /// ✅️ `protocol_walk_law`: `walk_protocol` against REAL bytes for all three facets —
+    /// snapshot pack (`encode_pack`, envelope-unwrapped first, matching how
+    /// `m5_handcrafted_protocol_conformance` itself feeds `walk_protocol`), every demo mutation's
+    /// `encode_op`, and every demo diff's `encode_diff` — asserting `consumed == bytes.len()`.
+    #[semio_framework_async_macros::async_test]
+    async fn protocol_walk_law() {
+        let pack_spec = semio_framework_dsl::parse_protocol(crate::standards::v_rfc8259::subsets::base::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
+        let packed = pack::snapshot::ArtifactPack::encode_pack(&snapshot::demo_json_snapshot());
+        let (_, inner) = store::semio_format::unwrap_binary(&packed).expect("unwrap semio envelope");
+        let trace = semio_framework_dsl::walk_protocol(&pack_spec, &inner).unwrap_or_else(|e| panic!("walk_protocol(pack) failed @{}: {}", e.offset, e.message));
+        assert_eq!(trace.consumed, inner.len(), "pack walk did not consume every byte");
+
+        let op_spec = semio_framework_dsl::parse_protocol(crate::standards::v_rfc8259::subsets::base::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO).expect("parse mutations protocol");
+        for mutation in mutations::demo_mutation_cases() {
+            let bytes = mutation.encode_op().unwrap_or_else(|e| panic!("encode_op failed for {mutation:?}: {e:?}"));
+            let trace = semio_framework_dsl::walk_protocol(&op_spec, &bytes).unwrap_or_else(|e| panic!("walk_protocol(op) failed for {mutation:?} @{}: {}", e.offset, e.message));
+            assert_eq!(trace.consumed, bytes.len(), "op walk did not consume every byte for {mutation:?}");
+        }
+
+        let diff_spec = semio_framework_dsl::parse_protocol(crate::standards::v_rfc8259::subsets::base::io::binary::diff::COMPONENT_PROTOCOL_SEMIO).expect("parse diff protocol");
+        for d in diff::demo_diff_cases() {
+            let bytes = d.encode_diff().unwrap_or_else(|e| panic!("encode_diff failed for {d:?}: {e:?}"));
+            let trace = semio_framework_dsl::walk_protocol(&diff_spec, &bytes).unwrap_or_else(|e| panic!("walk_protocol(diff) failed for {d:?} @{}: {}", e.offset, e.message));
+            assert_eq!(trace.consumed, bytes.len(), "diff walk did not consume every byte for {d:?}");
+        }
+    }
+
+    /// ✅️ `fixture_honesty_law`: the shipped `.dsl.semio`/`.pack.semio` fixtures are GENUINE
+    /// `print_dsl`/`encode_pack` output of `demo_json_snapshot()` — `parse_dsl(fixture) ==
+    /// demo()`, `print_dsl(demo()) == fixture` (byte-for-byte), and the pack twin — so the
+    /// fixtures can never silently drift back to a fake again.
+    #[semio_framework_async_macros::async_test]
+    async fn fixture_honesty_law() {
+        static FIXTURE_DSL: std::sync::LazyLock<&str> = std::sync::LazyLock::new(|| super::runtime_fixture_text("../../../../📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio"));
+        static FIXTURE_PACK: std::sync::LazyLock<&[u8]> = std::sync::LazyLock::new(|| super::runtime_fixture_bytes("../../../../📚️examples/🎬️demo/🖼️assets/🎒️.pack.semio"));
+
+        let demo = snapshot::demo_json_snapshot();
+
+        let parsed = <JsonSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl((*FIXTURE_DSL)).expect("parse shipped .dsl.semio fixture");
+        assert_eq!(parsed, demo, "shipped .dsl.semio fixture does not parse back to demo_json_snapshot()");
+        assert_eq!(pack::snapshot::ArtifactDsl::print_dsl(&demo), (*FIXTURE_DSL), "print_dsl(demo_json_snapshot()) drifted from the shipped .dsl.semio fixture");
+
+        let decoded = <JsonSnapshot as pack::snapshot::ArtifactPack>::decode_pack((*FIXTURE_PACK)).expect("decode shipped .pack.semio fixture");
+        assert_eq!(decoded, demo, "shipped .pack.semio fixture does not decode back to demo_json_snapshot()");
+        assert_eq!(pack::snapshot::ArtifactPack::encode_pack(&demo), (*FIXTURE_PACK), "encode_pack(demo_json_snapshot()) drifted from the shipped .pack.semio fixture");
+    }
+}
+//#endregion 🔖️ConformanceLaws
+
+fn runtime_fixture_text(relative: &str) -> &'static str {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative);
+    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display())).into_boxed_str())
+}
+
+fn runtime_fixture_bytes(relative: &str) -> &'static [u8] {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative);
+    Box::leak(std::fs::read(&path).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display())).into_boxed_slice())
+}

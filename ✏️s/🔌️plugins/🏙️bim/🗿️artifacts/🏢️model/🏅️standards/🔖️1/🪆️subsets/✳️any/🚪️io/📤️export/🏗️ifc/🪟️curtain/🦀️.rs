@@ -3,10 +3,10 @@
 //! `CurtainWallTypeId`, `CurtainWallType` and `CurtainPanelOverrides` rows of the `Semio_Authoring` set of the `IfcCurtainWall` (canonical JSON) and an import restores them exactly.
 //! 📎 <https://standards.buildingsmart.org/IFC/RELEASE/IFC2x3/TC1/HTML/ifcsharedbldgelements/lexical/ifccurtainwall.htm>
 
-use super::brep::{brep_definition, mesh_where};
-use super::data::label;
-use super::writer::en;
-use super::{Export, Quantity};
+use crate::standards::v1::subsets::any::io::export::ifc::brep::{brep_definition, mesh_where};
+use crate::standards::v1::subsets::any::io::export::ifc::writer::label;
+use crate::standards::v1::subsets::any::io::export::ifc::writer::en;
+use crate::standards::v1::subsets::any::io::export::ifc::context::{Export, Quantity};
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::curtain_walls::filler_cell;
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::parts;
 use crate::standards::v1::subsets::any::schema::snapshot::{CurtainPanel, OpeningKind};
@@ -34,12 +34,12 @@ pub fn emit(x: &mut Export<'_>) {
             continue;
         };
         let placement = x.ifc.place(Some(storey.placement), x.ifc.origin);
-        let wall_tail = x.by(Vec::new(), vec![super::writer::unset()]);
+        let wall_tail = x.by(Vec::new(), vec![crate::standards::v1::subsets::any::io::export::ifc::writer::unset()]);
         let wall = x.product("IFCCURTAINWALL", id, &row.name, placement, None, wall_tail);
         x.contain(&row.storey, id, wall);
         x.quantify(wall, "Qto_CurtainWallQuantities", id, |row| vec![Quantity::Length("Length", row.length), Quantity::Length("Height", row.height), Quantity::Area("GrossSideArea", row.gross_side_area)]);
         let mut members = Vec::new();
-        let piece = |x: &mut Export<'_>, entity: &str, key: String, material: &str, tail: Vec<super::writer::V>, keep: &dyn Fn(&crate::standards::v1::subsets::any::schema::inferences::element_solids::SolidGroup) -> bool| {
+        let piece = |x: &mut Export<'_>, entity: &str, key: String, material: &str, tail: Vec<crate::standards::v1::subsets::any::io::export::ifc::writer::V>, keep: &dyn Fn(&crate::standards::v1::subsets::any::schema::inferences::element_solids::SolidGroup) -> bool| {
             let mesh = mesh_where(solid, storey.elevation, |group, _| keep(group));
             let shape = brep_definition(&mut x.ifc, &mesh)?;
             let part_place = x.ifc.place(Some(storey.placement), x.ifc.origin);
@@ -66,7 +66,7 @@ pub fn emit(x: &mut Export<'_>) {
                     _ => continue,
                 };
                 let size = filler_cell(layout, layer).and_then(|(u, v)| layout.cell(u, v)).unwrap_or((0.0, 0.0));
-                let filler_tail = super::walls::filling_tail(x, &opening, size.1, size.0);
+                let filler_tail = crate::standards::v1::subsets::any::io::export::ifc::walls::filling_tail(x, &opening, size.1, size.0);
                 members.extend(piece(x, entity, format!("{id}:filler{layer}"), material.unwrap_or_default(), filler_tail, &|group| group.layer == layer));
             }
         }

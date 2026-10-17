@@ -9,22 +9,55 @@
 //! walks two programs on one folder through an open history edit.
 //! A child of the history-edit session laws: it drives their toy app and their verbs. The folder actor itself (admission,
 //! own-write echo, read-back) is the store layer's law (`🏪️store/🔄️sync`, `💻️os/🧪️tests/🧪️folder-archive-restore`).
-#[cfg(test)] use semio_framework_plugin_ownership::bounded_ownership::plugin_demand_grant;
+#[cfg(test)]
+use semio_framework_plugin_ownership::bounded_ownership::plugin_demand_grant;
 
-use super::*;
+use semio_framework::kernel::{ActorId, InvocationResult};
+use semio_framework_plugin_abi::{ArtifactAnalysis, ArtifactAnalyzer, ArtifactBuilder, ArtifactChildren, ArtifactComposer, ArtifactComposition, ArtifactDecomposer, ArtifactDeserializer, ArtifactSerializer, DerivedArtifactSpec};
+use semio_framework_plugin_decl_app::{ArtifactApp, NaturalFileDecodeCursor};
+use store::os_store::store_schema::ArtifactCommand;
+use semio_framework_plugin_decl_surface::{ArtifactEditor, ArtifactViewer};
+use semio_framework_plugin_decl_views::tool_contract::ArtifactInstanceOperationOwner;
+use semio_framework_plugin_decl_app::tool_contract::{ArtifactOwnedToolJobFactory, ArtifactReservedJob};
+use pack::snapshot::ArtifactPack;
+use store::{ArtifactStoreInitializationAuthority, MemberFactory, Mutation, SpaceMember};
+use semio_framework_plugin_decl_emission::{AsyncTaskRun, AsyncTaskSource, Emit, ToolCommandCatalog};
+use std::collections::BTreeSet;
+use store::os_store::backbone::{Backbone, BackboneMessage, MemoryBackbone};
+use semio_framework_ui_contract::{Buildable, HasBase, HasChildren, *};
+use semio_framework_value::DslValue;
+use semio_framework_plugin_extension::extension_runtime_lift::extension_retirement::ExtensionResourceOwner;
+use std::future::Future;
+use semio_framework_plugin_window_kits::{LabelAxes, WindowKit};
+#[cfg(test)]
+use semio_framework_ui_locale::{Locale, LocalizedLabel, Terminology};
+use semio_framework_plugin_reactor_app::PluginApp;
+use semio_framework_plugin_plugin_program::PluginProgram;
+use semio_framework_plugin_decl_views::tool_run_contract::ToolRunRetargetableJob;
+use semio_framework_plugin_tests_06::time_travel_support_1::{ToyApp, ToyHistoryApp, close, fixture, head, rejected, render_body, seed_op, text, toy_manifest};
+use semio_framework_plugin_window_config::WindowConfigOwner;
+use semio_framework_plugin_window_transient::window_transient::WindowTransientOwner;
+#[cfg(any(test, feature = "artifact-app-testing"))]
+use semio_framework_plugin_testing_laws::{artifact_app_laws, with_authoring_identity};
+use semio_framework_plugin_actor_host as host;
+use semio_framework_plugin_time_travel as time_travel;
+use semio_framework::*;
 
 const FOLDER_RELOAD_ROUTE_FIXTURE_JSON: &str = include_str!("../🧫️fixtures/🧫️folder-reload-route/🔣️.json");
 
-async fn pump_until(app: &mut ToyApp, what: &str, done: impl Fn(&ToyApp) -> bool) {
-    super::pump_until(app, what, done, crate::app_testing::artifact_app_laws::fixture_mounted_policy(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await
+#[doc(hidden)]
+pub async fn pump_until(app: &mut ToyApp, what: &str, done: impl Fn(&ToyApp) -> bool) {
+    semio_framework_plugin_tests_06::time_travel_support_1::pump_until(app, what, done, semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity()).await
 }
 
-async fn verb(app: &mut ToyApp, fixture: &Value, action: &str, args: Vec<(String, DslValue)>) -> InvocationResult {
-    super::verb(app, fixture, action, args, crate::app_testing::artifact_app_laws::fixture_mounted_policy(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await
+#[doc(hidden)]
+pub async fn verb(app: &mut ToyApp, fixture: &Value, action: &str, args: Vec<(String, DslValue)>) -> InvocationResult {
+    semio_framework_plugin_tests_06::time_travel_support_1::verb(app, fixture, action, args, semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity()).await
 }
 
-async fn run_step(app: &mut ToyApp, fixture: &Value, step: &Value) -> Option<InvocationResult> {
-    super::run_step(app, fixture, step, crate::app_testing::artifact_app_laws::fixture_mounted_policy(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await
+#[doc(hidden)]
+pub async fn run_step(app: &mut ToyApp, fixture: &Value, step: &Value) -> Option<InvocationResult> {
+    semio_framework_plugin_tests_06::time_travel_support_1::run_step(app, fixture, step, semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity()).await
 }
 
 /// 🧫️ The shared route fixture.
@@ -45,7 +78,7 @@ impl RouteFindings {
     }
 
     /// 🟰️ Records a departure of `actual` from `expected`.
-    fn same<T: PartialEq + std::fmt::Debug>(&mut self, actual: &T, expected: &T, what: &str) {
+    pub fn same<T: PartialEq + std::fmt::Debug>(&mut self, actual: &T, expected: &T, what: &str) {
         self.holds(actual == expected, || format!("{what}: {actual:?}, expected {expected:?}"));
     }
 }
@@ -53,33 +86,33 @@ impl RouteFindings {
 /// 🔹️ One mutation row as the history shows it, in every locale.
 #[derive(Debug, PartialEq)]
 struct RouteMutation {
-    id: String,
-    label: (String, String),
-    pub(crate) superseded: bool,
-    withdrawn: bool,
-    editable: bool,
-    worst: Option<semio_framework_diagnostic::Severity>,
-    codes: Vec<String>,
+    pub id: String,
+    pub label: (String, String),
+    pub superseded: bool,
+    pub withdrawn: bool,
+    pub editable: bool,
+    pub worst: Option<semio_framework_diagnostic::Severity>,
+    pub codes: Vec<String>,
 }
 
 /// 🗂️ One document row of the history: an edit or a finalized history edit, never a row of the running program alone.
 #[derive(Debug, PartialEq)]
 struct RouteRow {
-    edit: Option<String>,
-    transition: Option<String>,
-    kind: String,
-    label: (String, String),
-    applied: bool,
-    mutations: Vec<RouteMutation>,
+    pub edit: Option<String>,
+    pub transition: Option<String>,
+    pub kind: String,
+    pub label: (String, String),
+    pub applied: bool,
+    pub mutations: Vec<RouteMutation>,
 }
 
 /// 🧾️ What a host reads from a program to paint its document and history, less what a reload renews (row sequence numbers).
 #[derive(Debug, PartialEq)]
 struct RouteView {
-    head: (i32, String),
-    line: String,
-    alternatives: Vec<String>,
-    rows: Vec<RouteRow>,
+    pub head: (i32, String),
+    pub line: String,
+    pub alternatives: Vec<String>,
+    pub rows: Vec<RouteRow>,
 }
 
 /// 👁️ The [`RouteView`] of `app`, read the way a host does after a load: the history snapshot `ReadHistory` answers.
@@ -160,8 +193,8 @@ fn hold_author(findings: &mut RouteFindings, view: &RouteView, expected: &Value,
 /// host save, and how many of its batches the folder's actor admitted.
 #[derive(Default)]
 struct RouteFolder {
-    archive: Option<Vec<u8>>,
-    admitted: usize,
+    pub archive: Option<Vec<u8>>,
+    pub admitted: usize,
 }
 
 /// 🔌️ Binds `app`'s document port the way `bindDocumentPort` does — a hot attach, which announces nothing already in
@@ -174,14 +207,14 @@ async fn bind_document_port(app: &mut ToyApp, uri: &str) -> MemoryBackbone {
 
 /// 🧩️ A fresh registered program of the toy app authoring as `actor`.
 async fn fresh_program(actor: &str) -> ToyApp {
-    let mut app = artifact_app_laws::new_registered_app::<ToyHistoryApp, _>(toy_manifest(), protocol::ActorId(actor.into()), crate::app_testing::artifact_app_laws::fixture_mounted_policy(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await;
+    let mut app = artifact_app_laws::new_registered_app::<ToyHistoryApp, _>(toy_manifest(), protocol::ActorId(actor.into()), semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity()).await;
     assert_eq!(app.stores.store.local_actor_id().0.as_str(), actor);
     app
 }
 
 /// ✏️ One document edit authored through the program's store, as a committed gesture leaves it.
 async fn author_edit(app: &mut ToyApp, op: &Value) {
-    crate::with_authoring_identity!(|identity| app.stores.store.dispatch(ArtifactCommand::Apply { mutations: vec![seed_op(op)], transaction: None }, &mut identity).await).expect("the edit applies");
+    semio_framework_plugin_testing_laws::with_authoring_identity!(|identity| app.stores.store.dispatch(ArtifactCommand::Apply { mutations: vec![seed_op(op)], transaction: None }, &mut identity).await).expect("the edit applies");
     app.render_ctx().refresh_cache().await.expect("the history backfills the edit");
 }
 
@@ -203,7 +236,8 @@ async fn route_step(findings: &mut RouteFindings, app: &mut ToyApp, fixture: &Va
 /// 📤️ What the host does with everything `app` published since the last call: each batch must name the bound document's
 /// own identity — the folder's actor admits no other — and any admitted batch makes the host save the program's whole
 /// archive as the folder's content. Answers the admitted batches.
-async fn publish(findings: &mut RouteFindings, app: &ToyApp, port: &mut MemoryBackbone, folder: &mut RouteFolder, who: &str) -> Vec<BackboneMessage> {
+#[doc(hidden)]
+pub async fn publish(findings: &mut RouteFindings, app: &ToyApp, port: &mut MemoryBackbone, folder: &mut RouteFolder, who: &str) -> Vec<BackboneMessage> {
     let identity = PluginApp::document_identity(app).expect("a bound program holds a document");
     let mut batches = Vec::new();
     for message in port.receive().await.expect("the document port drains") {
@@ -241,14 +275,15 @@ async fn save_archive(findings: &mut RouteFindings, app: &ToyApp, folder: &mut R
 }
 
 /// 🔀️ Delivers the author's admitted batches to the reader, as a shared transport would, and lets the reader adopt them.
-async fn deliver(batches: Vec<BackboneMessage>, port: &mut MemoryBackbone, to: &mut ToyApp) {
+#[doc(hidden)]
+pub async fn deliver(batches: Vec<BackboneMessage>, port: &mut MemoryBackbone, to: &mut ToyApp) {
     if batches.is_empty() {
         return;
     }
     for message in batches {
         port.send(message).await.expect("a batch reaches the reader");
     }
-    to.tick_backbone(&mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect("the reader ingests the batch");
+    to.tick_backbone(&mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("the reader ingests the batch");
     pump_until(to, "the reader adopts the batch", |app| app.stores.store.reprojection_progress().is_none()).await;
     to.render_ctx().refresh_cache().await.expect("the reader's history backfills");
 }
@@ -274,7 +309,7 @@ async fn drive_archive_host(app: &mut ToyApp, mut host: protocol::DocumentArchiv
             protocol::AppCommand::PollDocumentArchiveLoad { seq, operation } => {
                 polls += 1;
                 assert!(polls < 1_000_000, "the archive operation never reaches a terminal status");
-                PluginApp::poll_document_archive_load(app, operation, &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.map(|status| protocol::AppFrame::DocumentArchiveLoad { in_reply_to: seq, status })
+                PluginApp::poll_document_archive_load(app, operation, &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.map(|status| protocol::AppFrame::DocumentArchiveLoad { in_reply_to: seq, status })
             }
             protocol::AppCommand::AcknowledgeDocumentArchiveLoad { seq, operation } => PluginApp::acknowledge_document_archive_load(app, operation).map(|()| protocol::AppFrame::Done { in_reply_to: seq }),
             other => panic!("the load driver sends admit, poll and acknowledge only, not {other:?}"),
@@ -452,14 +487,14 @@ async fn every_refused_whole_document_load_is_named_and_told_in_every_locale() {
         Ok(()) => findings.0.push("a second load under a live operation was admitted".to_string()),
         Err(fault) => hold_refusal(&mut findings, "a second load under a live operation", &fault, "plugin.document-load.busy", &[]),
     }
-    match PluginApp::poll_document_archive_load(&mut app, 4_242, &mut crate::app_testing::artifact_app_laws::fixture_identity()).await {
+    match PluginApp::poll_document_archive_load(&mut app, 4_242, &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity()).await {
         Ok(status) => findings.0.push(format!("a poll of an operation that does not run answered {status:?}")),
         Err(fault) => hold_refusal(&mut findings, "a poll of an operation that does not run", &fault, "plugin.document-load.operation-unknown", &[]),
     }
     PluginApp::cancel_document_archive_load(&mut app, 90).expect("the admitted load is cancelled");
     let mut polls = 0usize;
     let ended = loop {
-        let status = PluginApp::poll_document_archive_load(&mut app, 90, &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect("the cancelled load is polled");
+        let status = PluginApp::poll_document_archive_load(&mut app, 90, &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("the cancelled load is polled");
         polls += 1;
         assert!(polls < 1_000_000, "the cancelled load never reaches a terminal status");
         if !matches!(status.state, protocol::DocumentArchiveLoadState::Pending | protocol::DocumentArchiveLoadState::Running) {
@@ -498,7 +533,7 @@ async fn a_whole_document_load_reports_the_work_it_did_and_never_goes_back() {
     PluginApp::begin_document_archive_load(&mut target, 61, archive).expect("the archive is admitted");
     let mut statuses: Vec<(u64, u64)> = Vec::new();
     let ended = loop {
-        let status = PluginApp::poll_document_archive_load(&mut target, 61, &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect("the load is polled");
+        let status = PluginApp::poll_document_archive_load(&mut target, 61, &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("the load is polled");
         assert!(statuses.len() < 1_000_000, "the load never reaches a terminal status");
         statuses.push((status.completed, status.total));
         if !matches!(status.state, protocol::DocumentArchiveLoadState::Pending | protocol::DocumentArchiveLoadState::Running) {
@@ -532,7 +567,7 @@ async fn a_cancelled_load_stops_reading_as_loading_at_once_and_retires_without_a
     author_edit(&mut target, &fixture["example"]).await;
     let before = head(&target);
     PluginApp::begin_document_archive_load(&mut target, 62, archive).expect("the archive is admitted");
-    let first = PluginApp::poll_document_archive_load(&mut target, 62, &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect("the load is polled once");
+    let first = PluginApp::poll_document_archive_load(&mut target, 62, &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("the load is polled once");
     findings.holds(matches!(first.state, protocol::DocumentArchiveLoadState::Pending | protocol::DocumentArchiveLoadState::Running), || format!("the load ended within one poll ({:?}), so the cancel has nothing to cancel", first.state));
     findings.holds(target.render_ref().reprojection_status().is_some_and(|status| status.kind == semio_framework::kernel::HistoryReprojectionKind::Load), || "a running load shows no loading row".to_string());
     let cancelled = verb(&mut target, &fixture, semio_framework::history_edit::HISTORY_EDIT_CANCEL_REPLAY_ACTION_ID, Vec::new()).await;
@@ -546,7 +581,7 @@ async fn a_cancelled_load_stops_reading_as_loading_at_once_and_retires_without_a
         turns += 1;
     }
     findings.holds(target.ingest.document_archive_loads.get(62).is_some_and(|load| load.terminal()), || format!("the cancelled load did not retire in {turns} maintenance turns without a host poll"));
-    let status = PluginApp::poll_document_archive_load(&mut target, 62, &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect("the host's next poll");
+    let status = PluginApp::poll_document_archive_load(&mut target, 62, &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("the host's next poll");
     findings.same(&status.state, &protocol::DocumentArchiveLoadState::Cancelled, "what the host's next poll finds");
     PluginApp::acknowledge_document_archive_load(&mut target, 62).expect("the cancelled load is acknowledged");
     findings.same(&head(&target), &before, "the document after the cancelled load");

@@ -42,7 +42,7 @@ semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mu
 semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
 semio-s-artifact-stdio-xlsx-transitional = { workspace = true }
 semio-s-artifact-stdio-xlsx-strict-mutations = { workspace = true }
-semio-s-artifact-stdio-xlsx-base-mutations = { workspace = true }
+semio-s-artifact-stdio-xlsx-base-mutations = { workspace = true, features = ["testkit"] }
 semio-s-artifact-stdio-xlsx-base-model = { workspace = true }
 semio-s-artifact-stdio-xlsx-base-inferences = { workspace = true }
 semio-s-artifact-stdio-xlsx-base = { workspace = true }

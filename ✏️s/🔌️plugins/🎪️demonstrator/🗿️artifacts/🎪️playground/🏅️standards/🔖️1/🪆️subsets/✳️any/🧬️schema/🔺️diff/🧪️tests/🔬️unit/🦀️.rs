@@ -1,4 +1,4 @@
-use super::*;
+use crate::standards::v1::subsets::any::schema::diff::*;
 
 #[test]
 fn empty_diff_is_a_no_operation() {

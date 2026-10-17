@@ -112,7 +112,7 @@ test("every bundle field names a field of the composer struct", () => {
   const composer = mask(readFileSync(join(plugin, "🧵️instance/🦀️.rs"), "utf8"));
   const start = composer.indexOf("pub struct VcsArtifactApp");
   const body = composer.slice(composer.indexOf("{", start), composer.indexOf("\n}\n", start));
-  const fields = new Set([...body.matchAll(/\bpub\(crate\)\s+([a-z_]+)\s*:/gu)].map(m => m[1]));
+  const fields = new Set([...body.matchAll(/\bpub(?:\(crate\))?\s+([a-z_]+)\s*:/gu)].map(m => m[1]));
   expect(fields.size).toBeGreaterThan(15);
   const bundles = rustFiles(plugin).filter(file => file.includes("🧺️bundle") || file.endsWith("🧩️extensions/🦀️.rs"));
   expect(bundles.length).toBeGreaterThanOrEqual(8);

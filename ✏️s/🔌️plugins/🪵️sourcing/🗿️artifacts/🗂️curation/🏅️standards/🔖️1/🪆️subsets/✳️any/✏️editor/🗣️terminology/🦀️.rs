@@ -40,7 +40,5 @@ pub fn sourcing_curation_labels(view_state: &semio_framework_plugin::ViewModel) 
 //#endregion 🔖️Resolvers
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

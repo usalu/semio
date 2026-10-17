@@ -1,6 +1,5 @@
 //! ➕️ Authoritative PDF mutation payload, diff, inverse, and tests for `append-page-content`.
 
-use super::PdfMutation;
 use crate::standards::v1_7::subsets::base::schema::diff::{self, PdfDiff};
 use crate::standards::v1_7::subsets::base::schema::snapshot::*;
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
@@ -15,7 +14,10 @@ pub struct AppendPageContent {
     pub content: Vec<PdfOp>,
 }
 
-impl MutationKind<PdfSnapshot, PdfMutation> for AppendPageContent {
+impl<Op> MutationKind<PdfSnapshot, Op> for AppendPageContent
+where
+    Op: protocol::Mutation<PdfSnapshot, Diff = PdfDiff> + From<AppendPageContent> + From<crate::standards::v1_7::subsets::base::schema::mutations::remove_content::RemoveContent>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "append", entity: "page-content", kind: "append-page-content", record: "Append" };
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
@@ -23,10 +25,10 @@ impl MutationKind<PdfSnapshot, PdfMutation> for AppendPageContent {
         MutationOutcome::new(diff::diff_append_page_content(base, self.index, &self.content))
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
         let _ = base;
-        base.pages.get(self.index).map(|page| PdfMutation::RemoveContent(super::remove_content::RemoveContent { index: self.index, at: page.content.len(), count: self.content.len() })).into_iter().collect()
+        base.pages.get(self.index).map(|page| Op::from(crate::standards::v1_7::subsets::base::schema::mutations::remove_content::RemoveContent { index: self.index, at: page.content.len(), count: self.content.len() })).into_iter().collect()
     
     })())
 }
@@ -43,8 +45,6 @@ impl MutationKind<PdfSnapshot, PdfMutation> for AppendPageContent {
 //#endregion 🔖️Mutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
 

@@ -2,7 +2,6 @@
 //! collection, so addressing is `id`+`to_index`, not a bare index pair).
 
 use crate::diff::PresentationDiff;
-use crate::mutations::PresentationMutation;
 use crate::PresentationSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 
@@ -19,14 +18,17 @@ pub struct ReorderTiles {
     pub to_index: usize,
 }
 
-impl MutationKind<PresentationSnapshot, PresentationMutation> for ReorderTiles {
+impl<Op> MutationKind<PresentationSnapshot, Op> for ReorderTiles
+where
+    Op: protocol::Mutation<PresentationSnapshot, Diff = PresentationDiff> + From<ReorderTiles>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "reorder", entity: "tiles", kind: "reorder-tiles", record: "ReorderedTiles" };
 
     fn diff(&self, base: &PresentationSnapshot) -> protocol::MutationOutcome<PresentationDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &PresentationSnapshot) -> Result<Vec<PresentationMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &PresentationSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

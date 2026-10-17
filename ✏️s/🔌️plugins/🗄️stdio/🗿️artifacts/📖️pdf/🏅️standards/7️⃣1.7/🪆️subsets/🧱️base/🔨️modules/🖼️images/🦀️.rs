@@ -1,10 +1,10 @@
 //! 🖼️ Image XObjects (ISO 32000-1 §8.9.5): lifting a stream into [`PdfImage`] — packed samples
 //! or a retained image codec — and lowering it back, masks and soft masks included.
 
-use super::colour::{extra_entries, lift_colour_space, lower_colour_space, numbers_of, push_opt, raw_stream};
+use crate::standards::v1_7::subsets::base::modules::colour::{extra_entries, lift_colour_space, lower_colour_space, numbers_of, push_opt, raw_stream};
 use crate::standards::v1_7::subsets::base::modules::lexer::{dict_get, dict_i64, dict_name};
-use super::xref::ObjectSink;
-use crate::standards::v1_7::subsets::base::io::{PResult, PdfEngineError};
+use crate::standards::v1_7::subsets::base::modules::xref::ObjectSink;
+use crate::standards::v1_7::subsets::base::io::error::{PResult, PdfEngineError};
 use crate::standards::v1_7::subsets::base::io::foreign_artifacts::{PdfArtifactResourcePort,NativePdfArtifactResources};
 use crate::standards::v1_7::subsets::base::schema::graph_source::ObjectSource;
 use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfDictEntry, PdfImage, PdfImageBody, PdfImageMask, PdfObject, PdfStreamFilter};
@@ -108,7 +108,5 @@ pub fn pack_image_samples(width:u32,height:u32,components:u32,bits:u32,values:&[
 }
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

@@ -1,0 +1,131 @@
+//! 📋️ Manifest: `create_block3d_app` and the manifest stitch.
+
+use super::*;
+
+//#region 🔖️Manifest
+pub fn create_block3d_app() -> semio_framework_plugin::AppDefinition {
+    Editor::builder(BLOCK3D_DIALECT)
+        .document(["semio", "block", "3d"])
+        .artifact_kind(artifact_kind())
+        // 🗂️ The puzzle3d catalog artifact this surface's `"catalog:out"` port produces — see
+        // `block3d_io`/`Block3dPlayApp::export_media`.
+        .artifact_kind(semio_s_plugin_block_catalog::artifact_kind())
+        .icon_id("box")
+        .mode_def(edit_mode::definition())
+        .default_mode_id(edit_mode::BLOCK3D_PLAY_MODE_EDIT)
+        .window_kind_def(world::definition())
+        .utility(UtilityDefinition::new(BLOCK3D_UTILITY_SELECT, LocalizedLabel::native("Select", "Auswählen"), "mouse-pointer"))
+        .utility(UtilityDefinition::new(BLOCK3D_UTILITY_SURFACE_BRUSH, LocalizedLabel::native("Surface brush", "Flächenpinsel"), "paintbrush"))
+        .window_kind_utilities(world::BLOCK3D_WINDOW_WORLD, vec![BLOCK3D_UTILITY_SELECT.into(), BLOCK3D_UTILITY_SURFACE_BRUSH.into()])
+        // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the `vortex` domain
+        // replaces the deleted `setSelection`/`selectVortex`/`hoverVortex` view actions — the
+        // framework auto-injects `interactionSelect`/`interactionHover`/`clearSelection`/`selectAll`/
+        // `setSelectionMode`/`setInteractionGranularity` for it.
+        .interaction(InteractionDefinition {
+            id: BLOCK3D_INTERACTION_VORTEX.into(),
+            label: LocalizedLabel::native("Vortices", "Wirbel"),
+            granularities: vec![
+                GranularityDefinition { id: BLOCK3D_GRANULARITY_VORTEX.into(), label: LocalizedLabel::native("Vortex", "Wirbel"), icon_id: "circle-dot".into() },
+                GranularityDefinition { id: BLOCK3D_GRANULARITY_SURFACE.into(), label: LocalizedLabel::native("Surface", "Fläche"), icon_id: "box".into() },
+            ],
+            hierarchy: HierarchyProvider::Topology,
+            hover: HoverSpec::default(),
+            selection: SelectionSpec { modes: vec![SelectionMode::Multiple, SelectionMode::Single], methods: vec![SelectionMethod::Pick], merges: vec![MergeMode::Replace, MergeMode::Additive], transitive: false, broadcast: true },
+        })
+        .window_kind_interactions(world::BLOCK3D_WINDOW_WORLD, vec![InteractionRef::new(BLOCK3D_INTERACTION_VORTEX)])
+        .default_layout(edit_mode::layout())
+        .panel_tab_def(document_panel::definition())
+        .panel_tab_def(inspection_panel::definition())
+        .mutation("patchObjectKind", LocalizedLabel::native("Patch Object Kind", "Objektart bearbeiten"))
+        .mutation("addRepresentation", LocalizedLabel::native("Add Representation", "Darstellung hinzufügen"))
+        .mutation("removeRepresentation", LocalizedLabel::native("Remove Representation", "Darstellung entfernen"))
+        .action_destructive("removeRepresentation")
+        .mutation("addVortexKind", LocalizedLabel::native("Add Vortex Kind", "Wirbelart hinzufügen"))
+        .mutation("removeVortexKind", LocalizedLabel::native("Remove Vortex Kind", "Wirbelart entfernen"))
+        .action_destructive("removeVortexKind")
+        .mutation("addVortex", LocalizedLabel::native("Add Vortex", "Wirbel hinzufügen"))
+        .mutation("removeVortex", LocalizedLabel::native("Remove Vortex", "Wirbel entfernen"))
+        .action_destructive("removeVortex")
+        .action_with(semio_framework_plugin::ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), semio_framework_plugin::ActionKind::Mutation, "panel-left"))
+        .action_destructive("setActiveExample")
+        .action_destructive("setActiveExample")
+        .mutation("edit", LocalizedLabel::native("Edit", "Bearbeiten"))
+        .view_action("setActiveRepresentation", LocalizedLabel::native("Set Active Representation", "Aktive Darstellung festlegen"))
+        .view_action("setWindowRepresentations", LocalizedLabel::native("Set Window Representations", "Fensterdarstellungen festlegen"))
+        .view_action("toggleWindowRepresentation", LocalizedLabel::native("Toggle Representation", "Darstellung umschalten"))
+        .view_action("setWindowArrangement", LocalizedLabel::native("Set Arrangement", "Anordnung festlegen"))
+        .view_action("setWindowSpacing", LocalizedLabel::native("Set Spacing", "Abstand festlegen"))
+        .view_action("setBrushVortexKind", LocalizedLabel::native("Set Brush Vortex Kind", "Pinsel-Wirbelart festlegen"))
+        .view_action("setBrushRadius", LocalizedLabel::native("Set Brush Radius", "Pinselradius festlegen"))
+        .view_action("setBrushFlip", LocalizedLabel::native("Set Brush Flip", "Pinselrichtung umkehren"))
+        .view_action("worldSurfaceHover", LocalizedLabel::native("Surface Hover", "Flächenhover"))
+        .action_audience("worldSurfaceHover", semio_framework_plugin::CapabilityAudience::Input)
+        .view_action("worldSurfaceLeave", LocalizedLabel::native("Surface Leave", "Fläche verlassen"))
+        .mutation("worldSurfacePlace", LocalizedLabel::native("Place Vortex", "Wirbel platzieren"))
+        .mutation("patchRepresentation", LocalizedLabel::native("Patch Representation", "Darstellung bearbeiten"))
+        // 🎥️ `setCamera` was the one `Block3dCommand` row with no manifest action at all — reachable
+        // only through `dispatch_typed`/binary `OpBinary`, and rejected from the real UI path with
+        // `interactive-job.unknown-key`. It writes `Block3dConfig.camera`, never the document, so it is
+        // a view action like the other camera/window/brush rows.
+        .action_with(semio_framework_plugin::ActionDefinition::new("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"), semio_framework_plugin::ActionKind::View, "camera"))
+        // 🧵️ Grants UI execution authority to every one of this app's 22 command rows. `.mutation(…)`/
+        // `.view_action(…)` build their `ActionDefinition` through `ActionDefinition::bounded_catalog`,
+        // which — per its own doc — is "a catalog row WITHOUT granting UI execution authority": the
+        // classification stays `Unclassified` and `validate_ui_dispatch_classification` rejects every
+        // real `handle_action` dispatch with `interactive-job.not-ui-safe`.
+        .action_interactive_job("patchObjectKind", InteractiveJobClassification::Migrated)
+        .action_interactive_job("addRepresentation", InteractiveJobClassification::Migrated)
+        .action_interactive_job("removeRepresentation", InteractiveJobClassification::Migrated)
+        .action_interactive_job("addVortexKind", InteractiveJobClassification::Migrated)
+        .action_interactive_job("removeVortexKind", InteractiveJobClassification::Migrated)
+        .action_interactive_job("addVortex", InteractiveJobClassification::Migrated)
+        .action_interactive_job("removeVortex", InteractiveJobClassification::Migrated)
+        .action_interactive_job("setActiveExample", InteractiveJobClassification::Migrated)
+        .action_interactive_job("edit", InteractiveJobClassification::Migrated)
+        .action_interactive_job("setActiveRepresentation", InteractiveJobClassification::Migrated)
+        .action_interactive_job("setWindowRepresentations", InteractiveJobClassification::Migrated)
+        .action_interactive_job("toggleWindowRepresentation", InteractiveJobClassification::Migrated)
+        .action_interactive_job("setWindowArrangement", InteractiveJobClassification::Migrated)
+        .action_interactive_job("setWindowSpacing", InteractiveJobClassification::Migrated)
+        .action_interactive_job("setBrushVortexKind", InteractiveJobClassification::Migrated)
+        .action_interactive_job("setBrushRadius", InteractiveJobClassification::Migrated)
+        .action_interactive_job("setBrushFlip", InteractiveJobClassification::Migrated)
+        .action_interactive_job("worldSurfaceHover", InteractiveJobClassification::Migrated)
+        .action_interactive_job("worldSurfaceLeave", InteractiveJobClassification::Migrated)
+        .action_interactive_job("worldSurfacePlace", InteractiveJobClassification::Migrated)
+        .action_interactive_job("setCamera", InteractiveJobClassification::Migrated)
+        .action_interactive_job("patchRepresentation", InteractiveJobClassification::Migrated)
+        .io(block3d_io())
+        // 🚧️ SDK GAP (contract §2.4): `EditorBuilder`/`.editor::<E>(def: AppDefinition)` take a bare
+        // `AppDefinition`, not the old `App { definition, examples }` — there is no `.example(...)`/
+        // `.workflow(...)` on this builder, so the old `BLOCK3D_EXAMPLE_CAPSULE`/`BLOCK3D_EXAMPLE_FOREST_LEFT`
+        // app-level example registrations and the no-op `.workflow("block3d", …)` call are dropped here
+        // (not silently: reported in this packet's migration report). The subset's own
+        // `📚️examples/🌲️hexagonal-cut-concrete-forest-left`/`🏢️nakagin-capsule` facets (artifact-level,
+        // pre-existing, untouched by this packet) and this surface's own `setActiveExample` command
+        // (still real, still DSL-fixture-backed) are the modern, role-agnostic replacements for this.
+        .action_describe("patchObjectKind", LocalizedLabel::native("Sets one field of the 3D block's object kind: its name, label, variant, description or icon.", "Setzt ein Feld der Objektart des 3D-Blocks: Name, Bezeichnung, Variante, Beschreibung oder Symbol."))
+        .action_describe("addRepresentation", LocalizedLabel::native("Adds a new, empty representation (a named mesh view of the object with tags and level of detail) to the 3D block.", "Fügt dem 3D-Block eine neue, leere Darstellung hinzu (eine benannte Netzansicht des Objekts mit Tags und Detailstufe)."))
+        .action_describe("removeRepresentation", LocalizedLabel::native("Removes one representation by id from the 3D block.", "Entfernt eine Darstellung anhand ihrer Id aus dem 3D-Block."))
+        .action_describe("addVortexKind", LocalizedLabel::native("Adds a new vortex kind (a named, coloured connection-point type with a default cable kind) to the 3D block.", "Fügt dem 3D-Block eine neue Wirbelart hinzu (einen benannten, farbigen Anschlusspunkttyp mit Standard-Kabelart)."))
+        .action_describe("removeVortexKind", LocalizedLabel::native("Removes one vortex kind by id from the 3D block.", "Entfernt eine Wirbelart anhand ihrer Id aus dem 3D-Block."))
+        .action_describe("addVortex", LocalizedLabel::native("Adds a new vortex (connection point) of the first vortex kind at the origin, facing up; without any vortex kind nothing happens.", "Fügt einen neuen Wirbel (Anschlusspunkt) der ersten Wirbelart im Ursprung, nach oben gerichtet, hinzu; ohne Wirbelart geschieht nichts."))
+        .action_describe("removeVortex", LocalizedLabel::native("Removes one vortex (connection point) by id from the 3D block.", "Entfernt einen Wirbel (Anschlusspunkt) anhand seiner Id aus dem 3D-Block."))
+        .action_describe("setActiveExample", LocalizedLabel::native("Loads one of the plugin's bundled 3D block examples (such as the Nakagin capsule or a hexagonal cut-concrete forest piece), replacing what differs, by example id.", "Lädt eines der mitgelieferten 3D-Block-Beispiele (etwa die Nakagin-Kapsel oder ein sechseckiges Betonwald-Teil) und ersetzt Abweichendes, anhand der Beispiel-Id."))
+        .action_describe("edit", LocalizedLabel::native("Replaces the whole 3D block document with one parsed from the given JSON text; invalid or identical JSON changes nothing.", "Ersetzt das gesamte 3D-Block-Dokument durch eines aus dem angegebenen JSON-Text; ungültiges oder identisches JSON ändert nichts."))
+        .action_describe("setActiveRepresentation", LocalizedLabel::native("Chooses which representation of the 3D block the editor shows and edits, or none; the document is not changed.", "Wählt, welche Darstellung des 3D-Blocks der Editor zeigt und bearbeitet, oder keine; das Dokument ändert sich nicht."))
+        .action_describe("setWindowRepresentations", LocalizedLabel::native("Sets which representations one 3D window shows, by window id; only that window's view changes.", "Legt fest, welche Darstellungen ein 3D-Fenster zeigt, anhand der Fenster-Id; nur die Ansicht dieses Fensters ändert sich."))
+        .action_describe("toggleWindowRepresentation", LocalizedLabel::native("Shows or hides one representation in one 3D window; only that window's view changes.", "Blendet eine Darstellung in einem 3D-Fenster ein oder aus; nur die Ansicht dieses Fensters ändert sich."))
+        .action_describe("setWindowArrangement", LocalizedLabel::native("Sets how one 3D window arranges the representations it shows, in a row or stacked; only the view changes.", "Legt fest, wie ein 3D-Fenster seine Darstellungen anordnet, in einer Reihe oder gestapelt; nur die Ansicht ändert sich."))
+        .action_describe("setWindowSpacing", LocalizedLabel::native("Sets the spacing between representations laid out side by side in one 3D window; only the view changes.", "Legt den Abstand zwischen nebeneinander angeordneten Darstellungen in einem 3D-Fenster fest; nur die Ansicht ändert sich."))
+        .action_describe("setBrushVortexKind", LocalizedLabel::native("Chooses the vortex kind the placement brush puts onto surfaces; only the editor's brush setting changes.", "Wählt die Wirbelart, die der Platzierungspinsel auf Flächen setzt; nur die Pinseleinstellung des Editors ändert sich."))
+        .action_describe("setBrushRadius", LocalizedLabel::native("Sets the radius of the vortex placement brush; only the editor's brush setting changes.", "Legt den Radius des Wirbel-Platzierungspinsels fest; nur die Pinseleinstellung des Editors ändert sich."))
+        .action_describe("setBrushFlip", LocalizedLabel::native("Sets whether the placement brush flips the direction of vortices it places; only the brush setting changes.", "Legt fest, ob der Platzierungspinsel die Richtung gesetzter Wirbel umkehrt; nur die Pinseleinstellung ändert sich."))
+        .action_describe("patchRepresentation", LocalizedLabel::native("Sets one field of one representation by id: its name, mesh URL, level of detail or description.", "Setzt ein Feld einer Darstellung anhand ihrer Id: Name, Netz-URL, Detailstufe oder Beschreibung."))
+        .action_audience("worldSurfaceLeave", semio_framework_plugin::CapabilityAudience::Input)
+        .action_audience("worldSurfacePlace", semio_framework_plugin::CapabilityAudience::Input)
+        .action_audience("setCamera", semio_framework_plugin::CapabilityAudience::Chrome)
+        .action_destructive("edit")
+        .build_definition()
+}
+//#endregion 🔖️Manifest

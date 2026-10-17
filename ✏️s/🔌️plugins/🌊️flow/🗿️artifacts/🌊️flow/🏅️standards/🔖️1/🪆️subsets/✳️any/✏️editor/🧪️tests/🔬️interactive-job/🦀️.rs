@@ -4,16 +4,152 @@
 //! `interactive-job.catalog-authority`/`interactive-job.catalog-incomplete`
 //! (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
 
-use super::*;
+use crate::editor::flow::commands::{connect_media_ports, evaluate, flow_eval_tick, rename_flow_widget, reorganize, run_extension_action, set_active_example, toggle_extension};
+use crate::editor::flow::modes::edit::windows::main::config::FlowMainWindowConfig;
+use crate::editor::flow::modes::edit::windows::{compiled, main};
+use crate::editor::flow::panels::{catalogue as catalogue_panel, document as document_panel};
+use crate::editor::flow::terminology::flow_play_labels;
+use crate::editor::flow::base::{FLOW_GRAPH_OPERATION_RAW_BYTES, FLOW_PLAY_WINDOW_MAIN, FLOW_STORE_MAX_SCENE_ITEMS};
+use crate::FlowSnapshot;
+use flow::FlowEvalSession;
+use semio_framework_plugin::ArtifactEditor;
+use semio_framework_test_fixtures::fixture_text;
+use serde_json::Value;
+#[allow(unused_imports)]
+use semio_framework_artifact_playbook_playbook::flow_forms::PlaybookFlowFormProducer;
+#[allow(unused_imports)]
+use crate::editor::flow::commands::{add_widget, context_menu_at, delete_selection, disconnect, duplicate_widget, flow_eval_resolve, focus_selection, move_media_node, node_graph_edit, node_graph_viewport, open_spotlight, patch_flow_widgets, remove_widget, replace_image, set_catalogue_sections, set_grid_factor, set_grid_snap_enabled, set_grid_visible, set_lod_mode, set_contributions, set_preview_off, set_proximity_distance, spotlight_commit};
+#[allow(unused_imports)]
+use semio_framework_plugin::{NoConfig, NoConfigMutation};
+#[allow(unused_imports)]
+use crate::editor::flow::modes::generate::commands::{add_generation, remove_generation, rename_generation, select_generation, update_generation_values};
+#[allow(unused_imports)]
+use crate::editor::flow::modes::generate::windows::{form, generations, preview};
+#[allow(unused_imports)]
+use crate::editor::flow::modes::{edit, generate};
+#[allow(unused_imports)]
+use crate::editor::flow::panels::inspection as inspection_panel;
+#[allow(unused_imports)]
+use crate::editor::flow::presence::{FlowPresence, FlowPresenceMutation};
+#[allow(unused_imports)]
+use crate::editor::flow::terminology::FlowPlayLabels;
+#[allow(unused_imports)]
+use crate::editor::flow::base::{flow_graph_edge_target_id, flow_graph_node_target_id, flow_graph_selection_domains, FLOW_GRAPH_EDGE_TARGET_PREFIX, FLOW_GRAPH_NODE_TARGET_PREFIX, FLOW_INTERACTION_GRAPH, FLOW_PLAY_APP_ID, FLOW_STORE_MAX_MUTATION_ITEMS, FLOW_STORE_MAX_TEXT_BYTES};
+#[allow(unused_imports)]
+use crate::editor::flow::base::{FLOW_PLAY_WINDOW_GENERATIONS, FLOW_PLAY_WINDOW_GENERATE_FORM, FLOW_PLAY_WINDOW_GENERATE_PREVIEW};
+#[allow(unused_imports)]
+use crate::editor::flow::host::{cold_grant, flow_content_leaves_emit, flow_removal_leaves, focus_selection_camera, seed_host_catalogue, value_fault};
+#[allow(unused_imports)]
+use crate::editor::flow::host::{host_from_snapshot, sync_host_selection_domains};
+#[allow(unused_imports)]
+use crate::{FlowMutation, FlowWorkingScene, FLOW_DOCUMENT_SCHEMA};
+#[allow(unused_imports)]
+use flow::{flow_host_with_session, FlowHost, FLOW_LOD_MODE_AUTOMATIC};
+#[allow(unused_imports)]
+use semio_framework_artifact_flow_flow::{CameraJson, Widget};
+#[allow(unused_imports)]
+use semio_framework_artifact_flow_flow::{SynapseSpec, WidgetLayout};
+#[allow(unused_imports)]
+use semio_framework_os_infinite_directed_presentation::DagDrawLod;
+#[allow(unused_imports)]
+use semio_framework_plugin::app::{ChildEmitPreparation, InteractionView};
+#[allow(unused_imports)]
+use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload};
+#[allow(unused_imports)]
+use semio_framework_plugin::ActionArgDef;
+#[allow(unused_imports)]
+use semio_framework_plugin::ActionArgOption;
+#[allow(unused_imports)]
+use semio_framework_plugin::ActionDefinition;
+#[allow(unused_imports)]
+use semio_framework_plugin::ActionKind;
+#[allow(unused_imports)]
+use semio_framework_plugin::AppActionRegistry;
+#[allow(unused_imports)]
+use semio_framework_plugin::AppDefinition;
+#[allow(unused_imports)]
+use semio_framework_plugin::ArtifactView;
+#[allow(unused_imports)]
+use semio_framework_plugin::CommandDefinition;
+#[allow(unused_imports)]
+use semio_framework_plugin::ConfigView;
+#[allow(unused_imports)]
+use semio_framework_plugin::ContextMenuItemSpec;
+#[allow(unused_imports)]
+use semio_framework_plugin::ContextMenuRequest;
+#[allow(unused_imports)]
+use semio_framework_artifact_reference::Dialect;
+#[allow(unused_imports)]
+use semio_framework_plugin::DomainTopology;
+#[allow(unused_imports)]
+use semio_framework_plugin::DraftView;
+#[allow(unused_imports)]
+use semio_framework_plugin::Editor;
+#[allow(unused_imports)]
+use semio_framework_plugin::Effect;
+#[allow(unused_imports)]
+use semio_framework_plugin::Emit;
+#[allow(unused_imports)]
+use semio_framework_plugin::Fault;
+#[allow(unused_imports)]
+use semio_framework_plugin::GranularityDefinition;
+#[allow(unused_imports)]
+use semio_framework_plugin::HierarchyProvider;
+#[allow(unused_imports)]
+use semio_framework_plugin::HoverSpec;
+#[allow(unused_imports)]
+use semio_framework_plugin::InteractionDefinition;
+#[allow(unused_imports)]
+use semio_framework_plugin::InteractionRef;
+#[allow(unused_imports)]
+use semio_framework_plugin::InteractionTopology;
+#[allow(unused_imports)]
+use semio_framework_ui_locale::Label;
+#[allow(unused_imports)]
+use semio_framework_ui_locale::LocalizedLabel;
+#[allow(unused_imports)]
+use semio_framework_plugin::MergeMode;
+#[allow(unused_imports)]
+use semio_framework_plugin::NoDraft;
+#[allow(unused_imports)]
+use semio_framework_plugin::NoDraftMutation;
+#[allow(unused_imports)]
+use semio_framework_plugin::SelectionMethod;
+#[allow(unused_imports)]
+use semio_framework_plugin::SelectionMode;
+#[allow(unused_imports)]
+use semio_framework_plugin::SelectionSpec;
+#[allow(unused_imports)]
+use semio_framework_plugin::TopologyNode;
+#[allow(unused_imports)]
+use semio_framework_plugin::WindowMeasure;
+#[allow(unused_imports)]
+use serde_json::json;
+#[allow(unused_imports)]
+use semio_framework::kernel::UiDirtyScope;
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_semio_flow::schema::mutations::{insert_edge, insert_node, SemioFlowMutation};
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_semio_flow::schema::snapshot::{FlowEdge, PortRef, SemioFlowSnapshot};
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_semio_flow::schema::snapshot::FlowNode;
+#[allow(unused_imports)]
+use std::collections::HashMap;
+#[allow(unused_imports)]
+use std::sync::Arc;
+#[allow(unused_imports)]
+use semio_framework_2d::compute::EngineHandles;
+use crate::editor::flow::{FLOW_DIRECT_STORE_TOOL_IDS, FlowDirectStoreJobFactory, FLOW_CHILD_GROUP_TOOL_IDS, FlowChildGroupJobFactory, FLOW_HOST_ONLY_TOOL_IDS, FlowHostEffectJobFactory, FLOW_GRAPH_OPERATION_TOOL_IDS, FLOW_GRAPH_OPERATION_CAPACITY, FlowGraphOperationJobFactory, flow_graph_operation_contract, FLOW_CONTRIBUTIONS_TOOL_IDS, FlowContributionsJobFactory};
+use crate::editor::flow::*;
 use crate::editor::flow::unit_tests::context::flow_app_closing;
 use semio_framework_plugin::ArtifactOwnedToolJobFactory;
 use std::collections::{BTreeMap, BTreeSet};
 
-const FLOW_INTERACTIVE_JOB_FIXTURE: &str = include_str!("../🧫️fixtures/🧮️interactive-job/🔣️.json");
+static FLOW_INTERACTIVE_JOB_FIXTURE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧫️fixtures/🧮️interactive-job/🔣️.json"));
 
 /// 🧫️ The language-agnostic declaration this whole lane is measured against.
 fn fixture() -> Value {
-    serde_json::from_str(FLOW_INTERACTIVE_JOB_FIXTURE).expect("flow interactive-job fixture")
+    serde_json::from_str((*FLOW_INTERACTIVE_JOB_FIXTURE)).expect("flow interactive-job fixture")
 }
 
 /// 🧾️ The declared migrated ids, owned so callers can hold them past the fixture temporary.
@@ -213,7 +349,7 @@ fn booting_renders_and_evaluates_without_dropping_a_live_flow_owner() {
         let tree = project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(body.expect("flow body renders"))).expect("rendered flow body retires");
         assert!(!tree.is_empty());
     }
-    let armed = evaluate::evaluate_result(&snapshot, &config, &mut session, main::FLOW_PLAY_WINDOW_MAIN, main::FLOW_PLAY_WINDOW_MAIN);
+    let armed = evaluate::evaluate_result(&snapshot, &config, &mut session, FLOW_PLAY_WINDOW_MAIN, FLOW_PLAY_WINDOW_MAIN);
     assert!(armed.effects.len() <= 1, "one probe arms at most this window's single flowEvalTick continuation");
     // ♻️ The anti-spin law, stated so it does not depend on WHO ran first: the flow extension
     // registry is process-global, so whether the starter graph's `math.add` is servable depends on
@@ -221,8 +357,8 @@ fn booting_renders_and_evaluates_without_dropping_a_live_flow_owner() {
     // was a claim about a bare registry this law does not own — it passed alone and failed in the
     // suite (ticket 26/09/19/SEMIO-TECH-PLAY-GRID-WITH-EVERY-APP). What must hold either way is that a
     // SECOND probe of the same unchanged snapshot arms nothing: that is the latch the spin fix added.
-    let rearmed = evaluate::evaluate_result(&snapshot, &config, &mut session, main::FLOW_PLAY_WINDOW_MAIN, main::FLOW_PLAY_WINDOW_MAIN);
+    let rearmed = evaluate::evaluate_result(&snapshot, &config, &mut session, FLOW_PLAY_WINDOW_MAIN, FLOW_PLAY_WINDOW_MAIN);
     assert!(rearmed.effects.is_empty(), "a second probe of the same unchanged snapshot must not arm a second tick");
-    let _ = flow_eval_tick::tick_result(&snapshot, &config, &mut session, main::FLOW_PLAY_WINDOW_MAIN, main::FLOW_PLAY_WINDOW_MAIN);
+    let _ = flow_eval_tick::tick_result(&snapshot, &config, &mut session, FLOW_PLAY_WINDOW_MAIN, FLOW_PLAY_WINDOW_MAIN);
     session.retire_cold();
 }

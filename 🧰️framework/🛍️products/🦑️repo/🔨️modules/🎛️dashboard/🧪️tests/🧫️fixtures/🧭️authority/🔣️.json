@@ -7,12 +7,205 @@
     "dashboard:install": "bun repo run @semio-tech/repo-dashboard-rs:build --exclude-dependencies --skip-cache --output=stream"
   },
   "cases": [
-    {"name": "canonical bootstrap", "add": {}, "remove": [], "accepted": true},
-    {"name": "competing developer alias", "add": {"dev": "bun repo run workspace:dev"}, "remove": [], "accepted": false},
-    {"name": "missing dashboard", "add": {}, "remove": ["dashboard"], "accepted": false},
-    {"name": "bypass task owner", "add": {"setup": "bun ./📜️script.ts setup"}, "remove": [], "accepted": false},
-    {"name": "build alias without rebuild", "add": {"dashboard:install": "bun repo run @semio-tech/repo-dashboard-rs:install"}, "remove": [], "accepted": false}
+    {
+      "name": "canonical bootstrap",
+      "add": {},
+      "remove": [],
+      "accepted": true
+    },
+    {
+      "name": "neutral developer task alias",
+      "add": {
+        "dev": "bun repo run workspace:dev"
+      },
+      "remove": [],
+      "accepted": true
+    },
+    {
+      "name": "missing dashboard",
+      "add": {},
+      "remove": [
+        "dashboard"
+      ],
+      "accepted": false
+    },
+    {
+      "name": "bypass task owner",
+      "add": {
+        "setup": "bun ./📜️script.ts setup"
+      },
+      "remove": [],
+      "accepted": false
+    },
+    {
+      "name": "build alias without rebuild",
+      "add": {
+        "dashboard:install": "bun repo run @semio-tech/repo-dashboard-rs:install"
+      },
+      "remove": [],
+      "accepted": false
+    },
+    {
+      "name": "neutral reserved producer alias",
+      "add": {
+        "test-reserved-producer-native": "bun repo run @semio-tech/framework-plugin:test-reserved-producer-native"
+      },
+      "remove": [],
+      "accepted": true
+    },
+    {
+      "name": "neutral configured task alias",
+      "add": {
+        "verify": "bun repo run workspace:test:release --skip-cache --output=stream"
+      },
+      "remove": [],
+      "accepted": true
+    },
+    {
+      "name": "direct Nx alias",
+      "add": {
+        "verify": "bun nx run workspace:test"
+      },
+      "remove": [],
+      "accepted": false
+    },
+    {
+      "name": "direct Bun task alias",
+      "add": {
+        "verify": "bun ./📜️script.ts test"
+      },
+      "remove": [],
+      "accepted": false
+    },
+    {
+      "name": "shell sequence alias",
+      "add": {
+        "verify": "bun repo run workspace:test && bun nx run workspace:build"
+      },
+      "remove": [],
+      "accepted": false
+    },
+    {
+      "name": "shell interpolation alias",
+      "add": {
+        "verify": "bun repo run workspace:test $(whoami)"
+      },
+      "remove": [],
+      "accepted": false
+    },
+    {
+      "name": "newline alias",
+      "add": {
+        "verify": "bun repo run workspace:test\n"
+      },
+      "remove": [],
+      "accepted": false
+    },
+    {
+      "name": "targetless alias",
+      "add": {
+        "verify": "bun repo run workspace"
+      },
+      "remove": [],
+      "accepted": false
+    },
+    {
+      "name": "nonstring alias",
+      "add": {
+        "verify": []
+      },
+      "remove": [],
+      "accepted": false
+    },
+    {
+      "name": "direct Bazel alias",
+      "add": {
+        "verify": "bazel test //:all"
+      },
+      "remove": [],
+      "accepted": false
+    },
+    {
+      "name": "shell pipeline alias",
+      "add": {
+        "verify": "bun repo run workspace:test | cat"
+      },
+      "remove": [],
+      "accepted": false
+    },
+    {
+      "name": "quoted interpolation alias",
+      "add": {
+        "verify": "bun repo run workspace:test \"${HOME}\""
+      },
+      "remove": [],
+      "accepted": false
+    },
+    {
+      "name": "environment assignment alias",
+      "add": {
+        "verify": "SEMIO_BUILD_TOOL=bazel bun repo run workspace:test"
+      },
+      "remove": [],
+      "accepted": false
+    },
+    {
+      "name": "noncanonical double space alias",
+      "add": {
+        "verify": "bun repo run  workspace:test"
+      },
+      "remove": [],
+      "accepted": false
+    }
   ],
-  "editorDirectories": [".vscode", ".claude", ".cursor", ".codex", ".windsurf", ".zed", ".idea", ".fleet", ".run", ".gemini"],
-  "excludedDirectories": [".git", ".🧬semio", "node_modules", "target", "dist", "build", "generated", "cache", "fixtures", ".nx"]
+  "launchFiles": [
+    ".vscode/launch.json",
+    ".vscode/🧩️launch.seed.jsonc"
+  ],
+  "launchCases": [
+    {
+      "command": "bun repo run workspace:test",
+      "accepted": true
+    },
+    {
+      "command": "bun repo run-many --target=test",
+      "accepted": true
+    },
+    {
+      "command": "bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/fixture/📜️script.ts\" --source",
+      "accepted": true
+    },
+    {
+      "command": "bun nx run workspace:test",
+      "accepted": false
+    },
+    {
+      "command": "npx nx run workspace:test",
+      "accepted": false
+    },
+    {
+      "command": "nx run workspace:test",
+      "accepted": false
+    },
+    {
+      "command": "bun repo run workspace:test && nx run workspace:build",
+      "accepted": false
+    },
+    {
+      "command": "bun ./node_modules/nx/bin/nx.js run workspace:test",
+      "accepted": false
+    },
+    {
+      "command": "bazel build //:all",
+      "accepted": false
+    },
+    {
+      "command": "bazelisk test //:all",
+      "accepted": false
+    },
+    {
+      "command": "bun repo run workspace:test --tool=bazel",
+      "accepted": true
+    }
+  ]
 }

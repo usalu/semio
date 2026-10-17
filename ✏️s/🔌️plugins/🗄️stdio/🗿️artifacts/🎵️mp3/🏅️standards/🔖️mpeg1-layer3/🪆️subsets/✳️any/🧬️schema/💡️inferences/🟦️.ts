@@ -29,6 +29,10 @@ type stdioMp3Mpeg1layer3AnyInferenceGuardSizeBounds = { readonly minItems?: numb
 
 export const stdioMp3Mpeg1layer3AnyInferenceGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : stdioMp3Mpeg1layer3AnyInferenceGuardReject(at, "value is not an object");
+export const stdioMp3Mpeg1layer3AnyInferenceGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) stdioMp3Mpeg1layer3AnyInferenceGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const stdioMp3Mpeg1layer3AnyInferenceGuardArray = (value: unknown, at: string, bounds: stdioMp3Mpeg1layer3AnyInferenceGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return stdioMp3Mpeg1layer3AnyInferenceGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) stdioMp3Mpeg1layer3AnyInferenceGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -59,14 +63,14 @@ export const stdioMp3Mpeg1layer3AnyInferenceGuardConstant = <T extends string | 
 //#endregion 🚪️Parsers
 
 export function parseMp3Inference(value: unknown, at = "$"): Mp3Inference {
-  const row = stdioMp3Mpeg1layer3AnyInferenceGuardObject(value, at);
+  const row = stdioMp3Mpeg1layer3AnyInferenceGuardClosed(stdioMp3Mpeg1layer3AnyInferenceGuardObject(value, at), at, ["duration"]);
   return {
     duration: parseMp3Duration(row["duration"], `${at}.duration`),
   };
 }
 
 export function parseMp3Duration(value: unknown, at = "$"): Mp3Duration {
-  const row = stdioMp3Mpeg1layer3AnyInferenceGuardObject(value, at);
+  const row = stdioMp3Mpeg1layer3AnyInferenceGuardClosed(stdioMp3Mpeg1layer3AnyInferenceGuardObject(value, at), at, ["durationSeconds", "frameCount", "channelCount"]);
   return {
     durationSeconds: stdioMp3Mpeg1layer3AnyInferenceGuardNumber(row["durationSeconds"], `${at}.durationSeconds`, {"minimum": 0}),
     frameCount: stdioMp3Mpeg1layer3AnyInferenceGuardInteger(row["frameCount"], `${at}.frameCount`, {"minimum": 0}),

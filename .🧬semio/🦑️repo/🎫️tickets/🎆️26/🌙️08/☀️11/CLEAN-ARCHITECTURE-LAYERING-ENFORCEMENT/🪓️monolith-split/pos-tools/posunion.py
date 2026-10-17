@@ -344,6 +344,15 @@ def rewrite_code(c, text, rel, fam, strip_attrs, notes):
             tgt = c.externs[nm]
             path = f"crate::__m_{ident(tgt[1])}" if tgt[0] == "fam" else f"crate::__ext::{nm}"
             edits.append((um.start(), um.end(), f"{um.group(1)}{path} as {um.group(3) or nm};"))
+    for cm in re.finditer(r"((?:\bpub(?:\s*\([^)]*\))?\s+)?\buse\s+)crate\s+as\s+(\w+)\s*;", m):
+        edits.append((cm.start(), cm.end(), f"{cm.group(1)}crate::{mod} as {cm.group(2)};"))
+    for am in re.finditer(r"\buse\s+(?:::)?(\w+)\s+as\s+(\w+)\s*;", m):
+        tg = c.externs.get(am.group(1))
+        al = am.group(2)
+        if tg and al not in c.externs and al != "_":
+            pre = f"crate::__m_{ident(tg[1])}" if tg[0] == "fam" else f"crate::__ext::{am.group(1)}"
+            for hm in re.finditer(r"(?<![\w$.])(?<!::)\b" + re.escape(al) + r"\b(?=\s*::)", m):
+                edits.append((hm.start(), hm.end(), pre))
     edits.sort(key=lambda e: (e[0], -e[1]))
     out, last = [], 0
     for a, b, rep in edits:
@@ -401,6 +410,9 @@ def build(sb, outdir, crates, strip_attrs):
             dd = os.path.join(base, rd_)
             sb.check(os.path.join(dd, "x"))
             os.makedirs(dd, exist_ok=True)
+        for rel in c.missing:
+            if rel.endswith(".rs"):
+                sb.write(os.path.join(base, rel), "")
         for rel, data in c.files.items():
             dest = os.path.join(base, rel)
             if rel in c.code:

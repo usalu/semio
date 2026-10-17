@@ -4,10 +4,10 @@
 //! the other end, a result that is no axis, and a hosted opening that no longer fits the new length; an end already on the target is
 //! `mutation.no-op`.
 
-use super::super::modify::cut::{trim_extend, TrimFlaw, Trimmed};
-use super::super::modify::WallEnd;
+use crate::standards::v1::subsets::any::schema::mutations::modify::cut::{trim_extend, TrimFlaw, Trimmed};
+use crate::standards::v1::subsets::any::schema::mutations::modify::WallEnd;
 use super::super::placement::width_of;
-use super::super::wall_geometry::{flaw, snap};
+use crate::standards::v1::subsets::any::schema::mutations::wall_geometry::{flaw, snap};
 use super::TrimExtendWall;
 use crate::standards::v1::subsets::any::schema::authored::plan::axis_length;
 use crate::standards::v1::subsets::any::schema::{diff::{Entry, KeyedDelta, ModelDiff, patches::{OpeningPatch, WallPatch}}, snapshot::ModelSnapshot};

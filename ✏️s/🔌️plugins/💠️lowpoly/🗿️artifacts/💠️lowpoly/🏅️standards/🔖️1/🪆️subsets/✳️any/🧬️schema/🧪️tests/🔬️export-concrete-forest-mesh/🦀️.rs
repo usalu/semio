@@ -1,3 +1,4 @@
+use semio_framework_3d::mesh::{MeshModelingOps};
 use semio_framework_3d::mesh::{FaceId, HalfedgeMesh, Vec3 as MeshVec3, VertexId};
 use semio_s_artifact_cad_cad_play::concrete_forest_left_shape_solid_face_loops;
 use std::collections::HashMap;

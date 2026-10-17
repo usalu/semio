@@ -30,6 +30,10 @@ type processProcess3dInferenceGuardSizeBounds = { readonly minItems?: number; re
 
 export const processProcess3dInferenceGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : processProcess3dInferenceGuardReject(at, "value is not an object");
+export const processProcess3dInferenceGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) processProcess3dInferenceGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const processProcess3dInferenceGuardArray = (value: unknown, at: string, bounds: processProcess3dInferenceGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return processProcess3dInferenceGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) processProcess3dInferenceGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -60,7 +64,7 @@ export const processProcess3dInferenceGuardConstant = <T extends string | number
 //#endregion 🚪️Parsers
 
 export function parseProcess3dInference(value: unknown, at = "$"): Process3dInference {
-  const row = processProcess3dInferenceGuardObject(value, at);
+  const row = processProcess3dInferenceGuardClosed(processProcess3dInferenceGuardObject(value, at), at, ["stockBounds", "stepCount"]);
   return {
     stockBounds: parseBoundingBox(row["stockBounds"], `${at}.stockBounds`),
     stepCount: processProcess3dInferenceGuardInteger(row["stepCount"], `${at}.stepCount`, {"minimum": 0}),
@@ -68,11 +72,9 @@ export function parseProcess3dInference(value: unknown, at = "$"): Process3dInfe
 }
 
 export function parseBoundingBox(value: unknown, at = "$"): BoundingBox {
-  const row = processProcess3dInferenceGuardObject(value, at);
-  const min = processProcess3dInferenceGuardArray(row.min, `${at}.min`, {minItems: 3, maxItems: 3});
-  const max = processProcess3dInferenceGuardArray(row.max, `${at}.max`, {minItems: 3, maxItems: 3});
+  const row = processProcess3dInferenceGuardClosed(processProcess3dInferenceGuardObject(value, at), at, ["min", "max"]);
   return {
-    min: [processProcess3dInferenceGuardNumber(min[0], `${at}.min[0]`), processProcess3dInferenceGuardNumber(min[1], `${at}.min[1]`), processProcess3dInferenceGuardNumber(min[2], `${at}.min[2]`)],
-    max: [processProcess3dInferenceGuardNumber(max[0], `${at}.max[0]`), processProcess3dInferenceGuardNumber(max[1], `${at}.max[1]`), processProcess3dInferenceGuardNumber(max[2], `${at}.max[2]`)],
+    min: ((items0) => [processProcess3dInferenceGuardNumber(items0[0], `${at}.min[0]`), processProcess3dInferenceGuardNumber(items0[1], `${at}.min[1]`), processProcess3dInferenceGuardNumber(items0[2], `${at}.min[2]`)])(processProcess3dInferenceGuardArray(row["min"], `${at}.min`, {"minItems": 3, "maxItems": 3})),
+    max: ((items0) => [processProcess3dInferenceGuardNumber(items0[0], `${at}.max[0]`), processProcess3dInferenceGuardNumber(items0[1], `${at}.max[1]`), processProcess3dInferenceGuardNumber(items0[2], `${at}.max[2]`)])(processProcess3dInferenceGuardArray(row["max"], `${at}.max`, {"minItems": 3, "maxItems": 3})),
   };
 }

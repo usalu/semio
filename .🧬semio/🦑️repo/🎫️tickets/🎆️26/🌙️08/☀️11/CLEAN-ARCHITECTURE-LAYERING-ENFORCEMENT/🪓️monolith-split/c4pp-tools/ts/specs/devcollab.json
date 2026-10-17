@@ -1,0 +1,115 @@
+{
+ "file": "/Users/ueli/Documents/semio/🌎️hub/🧪️tests/🤝️dev-collaboration/🟦️.ts",
+ "importers": "auto",
+ "children": [
+  {
+   "dir": "⚙️constants-relay-and-recorder",
+   "doc": "/** ⚙️ Collaboration e2e constants, relay and recorder: the repository root, the port range and boot budgets, the admin token and user credentials, the step names, the link cut schedule, the severable link relay, the frame helpers, the locales and the step recorder with its verdict. */",
+   "lines": [
+    [
+     41,
+     41
+    ],
+    [
+     72,
+     216
+    ]
+   ]
+  },
+  {
+   "dir": "🧭️scope-and-dev-servers",
+   "doc": "/** 🧭️ Collaboration e2e scope and dev servers: the external hub handle, the per-run scope with its output directory, the dev script, the shell runtime activation, the serve lane and the per-user dev server scope. */",
+   "lines": [
+    [
+     218,
+     236
+    ],
+    [
+     246,
+     250
+    ],
+    [
+     329,
+     373
+    ]
+   ]
+  },
+  {
+   "dir": "🏠️hub-start-and-credentials",
+   "doc": "/** 🏠️ Collaboration e2e hub start and credentials: the free port scan, the hub data directory, the hub start, the credential provisioning and the sign in. */",
+   "lines": [
+    [
+     252,
+     313
+    ]
+   ]
+  },
+  {
+   "dir": "🖱️ui-driving-and-row-waits",
+   "doc": "/** 🖱️ Collaboration e2e UI driving and row waits: the toolbar, dialog and option driving, the artifact creation, the row and editor waits, the check-in, the space opening and reopening and the screenshot helper. */",
+   "lines": [
+    [
+     375,
+     650
+    ]
+   ]
+  },
+  {
+   "dir": "👥️presence-and-peer-cursors",
+   "doc": "/** 👥️ Collaboration e2e presence and peer cursors: the presence rows, roster and colors, the peer cursors and the cursor and caret movement assertions. */",
+   "lines": [
+    [
+     652,
+     764
+    ]
+   ]
+  },
+  {
+   "dir": "📡️command-frame-recording",
+   "doc": "/** 📡️ Collaboration e2e command frame recording: the command frame counter, the server frame commands tag, the frame count, the sent command recording and the editor text wait. */",
+   "lines": [
+    [
+     238,
+     244
+    ],
+    [
+     766,
+     836
+    ]
+   ]
+  },
+  {
+   "dir": "🎬️scenario-run",
+   "doc": "/** 🎬️ Collaboration e2e scenario run: the scripted collaboration scenario over two signed-in browsers. */",
+   "lines": [
+    [
+     840,
+     1108
+    ]
+   ]
+  },
+  {
+   "dir": "🔁️restart-and-convergence",
+   "doc": "/** 🔁️ Collaboration e2e restart and convergence: the hub restart step, the editor text read, the convergence wait and the undo step. */",
+   "lines": [
+    [
+     1110,
+     1223
+    ]
+   ]
+  },
+  {
+   "dir": "🧪️collaboration-behaviours",
+   "doc": "/** 🧪️ Collaboration e2e behaviours: the cursor, caret, undo and checkpoint collaboration behaviours checked after the scenario. */",
+   "lines": [
+    [
+     1225,
+     1415
+    ]
+   ]
+  }
+ ],
+ "allowManual": [
+  "gate-commands/🟦️.ts: dynamic import of parent"
+ ]
+}

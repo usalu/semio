@@ -30,11 +30,11 @@ export async function runFileObservationChecksV1():Promise<number>{
     assert.equal(independent,web);assert.deepEqual(expected,row.expected);assert.deepEqual(actual,expected,row.id);assert.equal(progress.at(-1)!.phase,"complete");
     const retained=await readPhysicalFileV1(path,control);validate("retained",{claim:retained.claim,bytes:Array.from(retained.bytes)});assert.equal(retained.claim.sha256,independent);assert.deepEqual(retained.bytes,bytes);retained.bytes.fill(0);assert.deepEqual(readFileSync(path),Buffer.from(bytes));
    }
-   assert(progress.every(step=>step.work<=row.maxWork&&step.bytes<=row.maxBytes));console.log("[DEBUG] physical-file "+JSON.stringify({id:row.id,actual}));
+   assert(progress.every(step=>step.work<=row.maxWork&&step.bytes<=row.maxBytes));
   }
   const path=join(directory,"invalid-control");writeFileSync(path,"a");
   for(const limits of[{maxBytes:-1,maxWork:6,chunkBytes:1},{maxBytes:1,maxWork:0,chunkBytes:1},{maxBytes:1,maxWork:6,chunkBytes:0},{maxBytes:1,maxWork:6,chunkBytes:1048577}])await assert.rejects(()=>observePhysicalFileV1(path,{...limits,cancelled:()=>false,remainingMs:()=>60_000,onProgress:()=>{}}),(error:unknown)=>error instanceof FileObservationErrorV1&&error.code==="invalid-control");
   await assert.rejects(()=>observePhysicalFileV1(join(directory,"missing"),{maxBytes:1,maxWork:6,chunkBytes:1,cancelled:()=>false,remainingMs:()=>60_000,onProgress:()=>{}}),(error:unknown)=>error instanceof FileObservationErrorV1&&error.code==="io");
-  console.log(`[DEBUG] physical-file laws=${fixture.cases.length+9}; Noble/WebCrypto=4; exact retained reads=4; custody mutations=2`);return fixture.cases.length+9;
+  return fixture.cases.length+9;
  }finally{rmSync(directory,{recursive:true,force:true});}
 }

@@ -1,9 +1,6 @@
-import type { PluginCatalog, PluginCatalogTarget, PluginHostConfig, PlaygroundCatalogTarget } from "@semio-tech/framework";
+import type { PluginCatalog } from "@semio-tech/framework";
 import schema from "./🧬️schema/🔣️.json";
-
-export type PluginCatalogRowV1 = PluginCatalogTarget & { readonly moduleUrl: string; readonly dependsOn: readonly string[]; readonly activationEvents: readonly string[]; readonly capabilities: readonly string[] };
-export type PluginCatalogRowsV1 = { readonly version: 1; readonly targets: readonly PluginCatalogRowV1[]; readonly hosts: readonly PluginHostConfig[]; readonly playgrounds: readonly PlaygroundCatalogTarget[] };
-export type PluginCatalogAdmissionV1 = { readonly maxBytes: number; readonly maxRows: number; readonly maxEdges: number; readonly maxWork: number; readonly deadlineMs: number; readonly now: () => number; readonly cancelled: () => boolean; readonly progress: (event: { readonly completed: number; readonly total: number; readonly work: number }) => void };
+import type { PluginCatalogAdmissionV1, PluginCatalogRowV1, PluginCatalogRowsV1 } from "@semio-tech/framework/plugin-catalog";
 export const PLUGIN_CATALOG_POLICY_V1 = Object.freeze(schema["x-semio-admission"]);
 const idPattern = new RegExp(schema.$defs.PluginCatalogIdV1.pattern, "u");
 const refused = (detail: string): never => { throw new Error(`plugin-catalog-invalid: ${detail}`); };

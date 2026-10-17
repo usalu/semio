@@ -74,7 +74,7 @@ fn rotated_proxy_layer(image: &semio_s_artifact_layout_layout_engine::scene::Dis
     let data_url = image.proxy_data_url.as_deref()?;
     let payload = data_url.strip_prefix("data:image/png;base64,")?;
     let bytes = decode_base64(payload).ok()?;
-    let source = semio_s_artifact_stdio_png::standards::v1_2::subsets::any::io::project_png(&bytes).ok()?;
+    let source = semio_framework_pixels::decode_png(&bytes).ok()?;
     let expected = (source.width as usize).checked_mul(source.height as usize)?.checked_mul(4)?;
     if source.width == 0 || source.height == 0 || source.pixels.len() != expected {
         return None;
@@ -123,11 +123,7 @@ fn rotated_proxy_layer(image: &semio_s_artifact_layout_layout_engine::scene::Dis
             pixels[to..to + 4].copy_from_slice(&source.pixels[from..from + 4]);
         }
     }
-    let mut encoded = semio_s_artifact_stdio_png::standards::v1_2::subsets::any::io::PngProjection {width:1,height:1,bit_depth:8,color_type:semio_s_artifact_stdio_png::schema::snapshot::PngColorType::Rgba,interlace:false,plte:None,trns:None,gama:None,chrm:None,srgb:None,phys:None,time:None,bkgd:None,text_chunks:Vec::new(),pixels:Vec::new(),chunk_order:Vec::new(),unknown_chunks:Vec::new()};
-    encoded.width = out_width;
-    encoded.height = out_height;
-    encoded.pixels = pixels;
-    let png = semio_s_artifact_stdio_png::standards::v1_2::subsets::any::io::author_png_projection(&encoded).ok()?;
+    let png = semio_framework_pixels::encode_png(&semio_framework_pixels::RasterImage { width: out_width, height: out_height, pixels }).ok()?;
     Some(json!({
         "id": format!("{}.image", image.object_id),
         "kind": "image",
@@ -139,7 +135,7 @@ fn rotated_proxy_layer(image: &semio_s_artifact_layout_layout_engine::scene::Dis
     }))
 }
 
-fn decode_base64(value: &str) -> Result<Vec<u8>, ()> {
+pub fn decode_base64(value: &str) -> Result<Vec<u8>, ()> {
     if value.len() % 4 != 0 {
         return Err(());
     }
@@ -172,7 +168,7 @@ fn base64_value(byte: u8) -> Result<u8, ()> {
     }
 }
 
-fn base64_encode(bytes: &[u8]) -> String {
+pub fn base64_encode(bytes: &[u8]) -> String {
     const TABLE: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
     let mut out = String::new();
     for chunk in bytes.chunks(3) {
@@ -393,8 +389,3 @@ pub fn canvas_layers(doc: &LayoutSnapshot, config: &LayoutWindowConfig, transien
 }
 //#endregion 🔖️CanvasScene
 
-//#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests

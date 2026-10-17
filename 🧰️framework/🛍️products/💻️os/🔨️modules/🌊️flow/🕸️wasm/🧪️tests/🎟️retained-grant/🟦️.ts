@@ -30,5 +30,4 @@ export async function testFlowRetainedGrant():Promise<void>{
   for(const call of captured){assert.deepEqual(call.args,Array.from(reference),row.name+" "+call.kind+" preserves five independent currencies");assertions++;}
   assert.equal(runtime.terminalIsEmpty(),true);assertions++;
  }
- console.log("[DEBUG] original Flow browser independent retained wallet cases="+fixture.cases.length+" assertions="+assertions+" strictAjv=true nativeUint32ArrayReference=true");
 }

@@ -25,6 +25,7 @@ members = [
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📋️meta/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗿️object-kind/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪜️representations-2/📦️packages/🦀️rust",
     "📦️packages/🦀️rust",
 ]
 exclude = [
@@ -154,6 +155,9 @@ path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️
 
 [workspace.dependencies.semio-s-artifact-block-3d-mut-representations]
 path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎭️representations/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-block-3d-mut-representations-2]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪜️representations-2/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-s-artifact-block-3d-mut-vortex-kinds]
 path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌀️vortex-kinds/📦️packages/🦀️rust"

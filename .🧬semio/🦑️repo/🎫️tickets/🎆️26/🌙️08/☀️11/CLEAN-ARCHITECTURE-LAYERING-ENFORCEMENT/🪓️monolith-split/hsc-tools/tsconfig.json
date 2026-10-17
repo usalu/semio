@@ -1,0 +1,26 @@
+{
+ "extends": "/Users/ueli/Documents/semio/🌎️hub/📦️packages/🟦️typescript/tsconfig.json",
+ "compilerOptions": {
+  "incremental": false,
+  "noEmit": true,
+  "baseUrl": "/Users/ueli/Documents/semio/🌎️hub/📦️packages/🟦️typescript"
+ },
+ "include": [],
+ "files": [
+  "/Users/ueli/Documents/semio/🌎️hub/🏗️bootstrap/🧾️provenance/📦️cargo/🧫️fixture/🟦️.ts",
+  "/Users/ueli/Documents/semio/🌎️hub/🏗️bootstrap/🧾️provenance/📦️cargo/🧫️fixture/📥️reading/🟦️.ts",
+  "/Users/ueli/Documents/semio/🌎️hub/🏗️bootstrap/🧾️provenance/📦️cargo/🧪️tests/🟦️.ts",
+  "/Users/ueli/Documents/semio/🌎️hub/🚀️local-bootstrap/🧰️mcp-process-support/🟦️.ts",
+  "/Users/ueli/Documents/semio/🌎️hub/🧩️compositions/🗄️stdio/🧩️component/🏗️compiler/♻️capture/🧪️tests/🟦️.ts",
+  "/Users/ueli/Documents/semio/🌎️hub/🧩️compositions/🗄️stdio/📥️execution/🟦️.ts",
+  "/Users/ueli/Documents/semio/🌎️hub/🧩️compositions/🗄️stdio/📥️execution/🧪️tests/🟦️.ts",
+  "/Users/ueli/Documents/semio/🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust/📜️script.ts",
+  "/Users/ueli/Documents/semio/🌎️hub/📦️packages/🟦️typescript/📜️script.ts",
+  "/Users/ueli/Documents/semio/🌎️hub/🚀️local-bootstrap/🎛️host/🧪️tests/🟦️.ts",
+  "/Users/ueli/Documents/semio/🌎️hub/🚀️local-bootstrap/🎛️host/🟦️.ts",
+  "/Users/ueli/Documents/semio/🌎️hub/🧪️testing/🎛️run/🟦️.ts",
+  "/Users/ueli/Documents/semio/🌎️hub/🧪️testing/💾️backup-restore/🟦️.ts",
+  "/Users/ueli/Documents/semio/🌎️hub/🧪️testing/💾️backup-restore/🎛️request/🟦️.ts",
+  "/Users/ueli/Documents/semio/🌎️hub/🧪️tests/🎟️carried-phase/🟦️.ts"
+ ]
+}

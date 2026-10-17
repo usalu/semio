@@ -1,5 +1,6 @@
 //! ↩️ Optional text inverses clone only original paged identifiers and prior values.
-use super::{ChangeNodeIcon,EditTargetRegionLabel,Puzzle2dMutation,text_preparation::{Puzzle2dTextIntent,Puzzle2dTextPlan,Puzzle2dTextPreparationCursor,Puzzle2dTextPreparationStep}};
+use crate::standards::v1::subsets::any::schema::mutations::{ChangeNodeIcon,EditTargetRegionLabel,Puzzle2dMutation};
+use crate::standards::v1::subsets::any::schema::preparation::text_preparation::{Puzzle2dTextIntent,Puzzle2dTextPlan,Puzzle2dTextPreparationCursor,Puzzle2dTextPreparationStep};
 use crate::Puzzle2dSnapshot;
 use semio_framework_value::{list::PagedList,paged::PagedUtf8,retirement::controlled::ControlledRetirement,ValueError,ValueRefusalKind,retained_clone::{RetainedClone,RetainedCloneBinding,RetainedCloneCursor,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneRef,RetainedCloneStep}};
 use std::{mem::{ManuallyDrop,size_of},ops::{Deref,DerefMut}};
@@ -104,7 +105,5 @@ impl<T:Puzzle2dTextInverse>Puzzle2dTextInverseCursor<T>{
 }
 impl<T:Puzzle2dTextInverse>Drop for Puzzle2dTextInverseCursor<T>{fn drop(&mut self){let empty=self.terminal_is_empty();assert!(std::thread::panicking()||empty,"optional text inverse abandoned before controlled closure");if empty{unsafe{ManuallyDrop::drop(&mut self.state)}}}}
 fn refusal(message:&str)->ValueError{ValueError::new(ValueRefusalKind::InvariantViolated,message)}
-fn payload(bytes:usize)->RetainedCloneStep{RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,retained_capacity_bytes:0,released_bytes:0})}
-#[cfg(test)]
-#[path="🧪️tests/🦀️.rs"]
-mod tests;
+pub fn payload(bytes:usize)->RetainedCloneStep{RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,retained_capacity_bytes:0,released_bytes:0})}
+

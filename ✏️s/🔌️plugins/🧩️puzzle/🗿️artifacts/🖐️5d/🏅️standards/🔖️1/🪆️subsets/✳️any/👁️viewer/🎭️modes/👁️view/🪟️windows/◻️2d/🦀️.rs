@@ -10,7 +10,8 @@
 //! the engine's own default palette — the same documented simplification the sibling world pane makes
 //! with its fixed camera.
 
-use crate::{Puzzle5dFastener, Puzzle5dPart, Puzzle5dSnapshot};
+use crate::{Puzzle5dSnapshot};
+use crate::standards::v1::subsets::any::schema::document_records::{Puzzle5dFastener, Puzzle5dPart};
 use semio_framework_plugin::Board2dScene;
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::SurfaceKind;
@@ -135,7 +136,7 @@ pub fn board_snapshot_json(document: &Puzzle5dSnapshot) -> String {
     .to_string()
 }
 
-fn board_scene(document: &Puzzle5dSnapshot) -> Board2dScene {
+pub fn board_scene(document: &Puzzle5dSnapshot) -> Board2dScene {
     Board2dScene {
         snapshot_json: board_snapshot_json(document),
         camera_json: camera_value().to_string(),

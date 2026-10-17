@@ -13,14 +13,11 @@ pub use insert_page::InsertPage;
 #[path = "🗑️remove-page/🦀️.rs"]
 pub mod remove_page;
 pub use remove_page::RemovePage;
-#[path = "🔀️move-page/🦀️.rs"]
-pub mod move_page;
+pub use semio_s_artifact_stdio_pdf_tests::standards::v1_4::subsets::base::schema::mutations::move_page;
 pub use move_page::MovePage;
-#[path = "📐️resize-page/🦀️.rs"]
-pub mod resize_page;
+pub use semio_s_artifact_stdio_pdf_tests::standards::v1_4::subsets::base::schema::mutations::resize_page;
 pub use resize_page::ResizePage;
-#[path = "♻️replace-page-text/🦀️.rs"]
-pub mod replace_page_text;
+pub use semio_s_artifact_stdio_pdf_tests::standards::v1_4::subsets::base::schema::mutations::replace_page_text;
 pub use replace_page_text::ReplacePageText;
 //#endregion 🔖️Leaves
 
@@ -127,7 +124,5 @@ pub fn special_edit(event: &SnapshotEditEvent, snapshot: &PdfSnapshot) -> Result
 //#endregion 🔖️Codecs
 
 //#region 🧪️Structure
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Structure

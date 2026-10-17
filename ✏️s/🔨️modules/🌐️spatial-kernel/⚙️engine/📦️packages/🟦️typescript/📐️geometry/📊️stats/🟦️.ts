@@ -1,0 +1,3 @@
+/** 📊️ Public entry `@semio-tech/s-spatial-kernel-ts/geometry/stats`: the explicit surface that importers outside the module use. */
+export { bboxSizesFromPositions, collectFaceRefsForObjects, collectSolidRefsForObjects, collectVertexPositionsForObjects, computeStat, formatStatOutputValue, listModelDefinitionStatDefinitions, listStatDefinitionsForModelDefinition, loadStatDefinition, objectsForStatCompute, parseStatDefinitionSpec, registerStatComputer, statDefinitionAppliesToObject, statDefinitionAppliesToScope } from "../../../../📐️geometry/📊️stats/🟦️.ts";
+export type { StatComputeContext, StatComputer, StatDefinitionSpec, StatOutputSpec } from "../../../../📐️geometry/📊️stats/🟦️.ts";

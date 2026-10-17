@@ -1,0 +1,124 @@
+//! 🧪️ `rename-layout` fixture — `🏷️renames`.
+//!
+//! Proves the document-root `name` scalar is the only thing `rename-layout` touches.
+//!
+//! Source of truth is the committed JSON quartet beside this file (contract D1, ticket
+//! `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`). The `.op.semio`/`.spr.semio`/`.dsl.semio`/
+//! `.pack.semio`/`.patch.semio` encodings are derived from it by `fixtures generate` and are
+//! asserted by the shared codec-matrix harness, not here.
+
+use semio_s_artifact_layout_layout_mutations::LayoutMutation;
+use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
+use protocol::{Mutation, MutationDiff};
+
+const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✏️rename-layout/🏷️renames/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✏️rename-layout/🏷️renames/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✏️rename-layout/🏷️renames/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✏️rename-layout/🏷️renames/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✏️rename-layout/🏷️renames/🎯️outcome/🔣️.json");
+
+fn before() -> LayoutSnapshot {
+    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("rename-layout/renames-the-document: before snapshot decodes")
+}
+fn expected_after() -> LayoutSnapshot {
+    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("rename-layout/renames-the-document: after snapshot decodes")
+}
+fn mutation() -> LayoutMutation {
+    serde_json::from_str(MUTATION).expect("rename-layout/renames-the-document: mutation decodes")
+}
+fn applied() -> LayoutSnapshot {
+    let base = before();
+    protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("rename-layout applies to its committed before-snapshot")
+}
+
+/// ▶️ `rename-layout` replaces the root `name` and leaves every collection alone.
+#[semio_framework_async_macros::async_test]
+async fn rewrites_only_the_document_name() {
+    let after = applied();
+    assert_eq!(after.name, "Renamed Fixture", "rename-layout must set the document name to the payload's new_name");
+    assert_eq!(after.pages.len(), 2, "rename-layout must not add or drop pages");
+    assert_eq!(after.stories.len(), 2, "rename-layout must not touch the stories collection");
+    assert!(after.print_target.is_none(), "rename-layout must not touch the print target");
+    assert_eq!(after, expected_after(), "rename-layout/renames-the-document: applied state differs from the committed after-snapshot");
+}
+
+/// ↩️ The inverse is a `rename-layout` carrying the BASE name captured before the edit.
+#[semio_framework_async_macros::async_test]
+async fn inverse_renames_back_to_fixture_layout() {
+    let base = before();
+    let inverse = mutation().inverse(&base).expect("valid retained mutation inverse fixture");
+    assert_eq!(inverse.len(), 1, "rename-layout inverts to exactly one step");
+    match &inverse[0] {
+        LayoutMutation::RenameLayout(step) => assert_eq!(step.new_name, "Fixture Layout", "the inverse must carry the pre-edit document name"),
+        other => panic!("rename-layout must invert to rename-layout, got {other:?}"),
+    }
+    let mut snapshot = applied();
+    for step in &inverse {
+        snapshot = protocol::apply_diff(step.diff(&snapshot).diff(), &snapshot).expect("rename-layout/renames-the-document: inverse step applies");
+    }
+    assert_eq!(snapshot, base, "rename-layout/renames-the-document: inverse did not restore the before-snapshot");
+}
+
+/// 🔣️ Both committed snapshots and the committed mutation are canonical: decode→encode is a fixed point.
+#[semio_framework_async_macros::async_test]
+async fn committed_json_is_canonical() {
+    for (label, text) in [("before", BEFORE), ("after", AFTER)] {
+        let decoded: LayoutSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("snapshot encodes");
+        let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
+        assert_eq!(reencoded, original, "rename-layout/renames-the-document: committed {label} JSON is not canonical");
+    }
+    let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&mutation())).expect("mutation encodes");
+    let original: serde_json::Value = serde_json::from_str(MUTATION).expect("mutation reparses");
+    assert_eq!(reencoded, original, "rename-layout/renames-the-document: committed mutation JSON is not canonical");
+}
+
+/// 🎯️ The declared outcome matches what `rename-layout`'s own diff builder actually produces.
+#[semio_framework_async_macros::async_test]
+async fn declared_outcome_holds() {
+    let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
+    assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "rename-layout/renames-the-document: this fixture declares an applied outcome");
+    let base = before();
+    let produced = mutation().diff(&base);
+    assert!(produced.messages().is_empty(), "rename-layout/renames-the-document: declared clean-applied but the diff builder reported {:?}", produced.messages());
+    assert_eq!(produced.diff().name.as_deref(), Some("Renamed Fixture"), "rename-layout fills the diff's root `name` field");
+    assert!(produced.diff().pages.is_none(), "rename-layout leaves the pages delta empty");
+}
+
+/// 🔺️ The sparse delta `rename-layout` produces is exactly the committed diff — the most load-bearing
+/// assertion in the fixture, because it pins WHICH fields the mutation may touch, not merely that the
+/// end state matches. Here the ONLY populated field is the root `name` scalar — no collection delta at all.
+#[semio_framework_async_macros::async_test]
+async fn produces_committed_diff() {
+    let base = before();
+    let outcome = mutation().diff(&base);
+    let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
+    let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
+    assert_eq!(produced, committed, "rename-layout/renames-the-document: rename-layout must emit a diff whose sole populated field is the root `name` scalar");
+}
+
+/// 🔣️ The committed diff decodes into `LayoutDiff` and re-encodes byte-for-byte: `LayoutDiff` has
+/// `#[value(rename_all = "camelCase", default)]` with no `skip_serializing_if`, so EVERY field is on
+/// the wire and the untouched ones must be committed as explicit `null`.
+#[semio_framework_async_macros::async_test]
+async fn committed_diff_is_canonical() {
+    let decoded: semio_s_artifact_layout_layout_diff::LayoutDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes into the artifact's diff type");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("committed diff re-encodes");
+    let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
+    assert_eq!(reencoded, original, "rename-layout/renames-the-document: committed diff JSON is not canonical");
+}
+
+/// 🩹 Applying the committed diff directly to `before` yields `after` — the diff is a complete
+/// description of the change `rename-layout` makes, not a summary of it.
+#[semio_framework_async_macros::async_test]
+async fn committed_diff_applies_to_after() {
+    let decoded: semio_s_artifact_layout_layout_diff::LayoutDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes into the artifact's diff type");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    assert_eq!(produced, expected_after(), "rename-layout/renames-the-document: committed diff did not carry before to after");
+}
+
+/// ⚖️ The inverse steps' diffs sum, by `absorb`, to the negative of the forward diff.
+#[semio_framework_async_macros::async_test]
+async fn inverse_diffs_sum_to_negative_diff() {
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation(), &before()).await;
+}

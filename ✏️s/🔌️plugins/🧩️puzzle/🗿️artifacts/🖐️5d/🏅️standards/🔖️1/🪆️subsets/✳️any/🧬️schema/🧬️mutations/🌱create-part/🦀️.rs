@@ -1,7 +1,7 @@
 //! 🌱 Puzzle5d mutation — `CreatePart`: brings a new id-keyed part into existence.
 use crate::standards::v1::subsets::any::schema::diff::Puzzle5dDiff;
-use crate::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation;
-use crate::{Puzzle5dPart, Puzzle5dSnapshot};
+use crate::{Puzzle5dSnapshot};
+use crate::standards::v1::subsets::any::schema::document_records::{Puzzle5dPart};
 
 //#region 🔖️Mutation
 /// 🌱 `create-part` payload — full initial payload at an optional FINAL-state `index` (`None`
@@ -20,17 +20,23 @@ pub struct CreatePart {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn create_part(part: Puzzle5dPart, index: Option<usize>) -> Puzzle5dMutation {
-    Puzzle5dMutation::CreatePart(CreatePart { part, index })
+pub fn create_part<Op>(part: Puzzle5dPart, index: Option<usize>) -> Op
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::create_part::CreatePart>,
+{
+    Op::from(CreatePart { part, index })
 }
 
-impl protocol::MutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for CreatePart {
+impl<Op> protocol::MutationKind<Puzzle5dSnapshot, Op> for CreatePart
+where
+    Op: protocol::Mutation<Puzzle5dSnapshot, Diff = Puzzle5dDiff> + From<CreatePart> + From<crate::standards::v1::subsets::any::schema::mutations::delete_part::DeletePart>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "part", kind: "create-part", record: "CreatedPart" };
 
     fn diff(&self, base: &Puzzle5dSnapshot) -> protocol::MutationOutcome<Puzzle5dDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Puzzle5dSnapshot) -> Result<Vec<Puzzle5dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Puzzle5dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

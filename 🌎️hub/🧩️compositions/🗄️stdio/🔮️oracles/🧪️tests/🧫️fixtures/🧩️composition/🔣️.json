@@ -787,6 +787,7 @@
         }
       ],
       "dependencies": [
+        "flate2",
         "png",
         "semio-repo-test-host"
       ]
@@ -3627,11 +3628,6 @@
       "owner": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model",
       "rewrites": [
         {
-          "previous": "semio_s_plugin_stdio_test_oracle::law",
-          "current": "semio_repo_test_host::law",
-          "package": "semio-repo-test-host"
-        },
-        {
           "previous": "✏️s/🔌️plugins/🗄️stdio/🔮️oracles/⚖️law",
           "current": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/⚖️law",
           "package": "semio-repo-test-host"
@@ -4931,11 +4927,6 @@
           "previous": "semio_s_plugin_stdio_test_oracle::artifacts::jpg",
           "current": "semio_s_artifact_stdio_jpg_test_oracle",
           "package": "semio-s-artifact-stdio-jpg-test-oracle"
-        },
-        {
-          "previous": "semio_s_plugin_stdio_test_oracle::law",
-          "current": "semio_repo_test_host::law",
-          "package": "semio-repo-test-host"
         }
       ],
       "sha256": "75a4f2174e3f15db07a12c5001893341b9ad43c7ddf296018410c83c9605f3cc"
@@ -4948,11 +4939,6 @@
           "previous": "semio_s_plugin_stdio_test_oracle::artifacts::jpg",
           "current": "semio_s_artifact_stdio_jpg_test_oracle",
           "package": "semio-s-artifact-stdio-jpg-test-oracle"
-        },
-        {
-          "previous": "semio_s_plugin_stdio_test_oracle::law",
-          "current": "semio_repo_test_host::law",
-          "package": "semio-repo-test-host"
         }
       ],
       "sha256": "2c663de556e7b2f28c03298cf362ef321615ee03a91a00e8e88a2f4c10b3b3d1"
@@ -5897,11 +5883,6 @@
           "previous": "semio_s_plugin_stdio_test_oracle::artifacts::bmp",
           "current": "semio_s_artifact_stdio_bmp_test_oracle",
           "package": "semio-s-artifact-stdio-bmp-test-oracle"
-        },
-        {
-          "previous": "semio_s_plugin_stdio_test_oracle::law",
-          "current": "semio_repo_test_host::law",
-          "package": "semio-repo-test-host"
         }
       ],
       "sha256": "aa3bfc8080165866f27a2c7836cfc29fddd90a2fd00e809ce849e5e3b52a78e9"

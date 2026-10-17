@@ -115,47 +115,47 @@ export function parseZipEntry(value: unknown, at = "$"): ZipEntry {
   };
 }
 
-export function parseZipExtraField(value: unknown, at = "$."): ZipExtraField {
+export function parseZipExtraField(value: unknown, at = "$"): ZipExtraField {
   const row = stdioZip20BaseSnapshotGuardObject(value, at);
   return {
-    id: stdioZip20BaseSnapshotGuardInteger(row["id"], `${at}.id`, { minimum: 0, maximum: 65535 }),
-    data: stdioZip20BaseSnapshotGuardArray(row["data"], `${at}.data`).map((item, index) => stdioZip20BaseSnapshotGuardInteger(item, `${at}.data[${index}]`, { minimum: 0, maximum: 255 })),
+    id: stdioZip20BaseSnapshotGuardInteger(row["id"], `${at}.id`, {"minimum": 0, "maximum": 65535}),
+    data: stdioZip20BaseSnapshotGuardArray(row["data"], `${at}.data`).map((item, index) => stdioZip20BaseSnapshotGuardInteger(item, `${at}.data[${index}]`, {"minimum": 0, "maximum": 255})),
   };
 }
 
-export function parseZipLocalHeaderMetadata(value: unknown, at = "$."): ZipLocalHeaderMetadata {
+export function parseZipLocalHeaderMetadata(value: unknown, at = "$"): ZipLocalHeaderMetadata {
   const row = stdioZip20BaseSnapshotGuardObject(value, at);
   return {
-    versionNeeded: stdioZip20BaseSnapshotGuardInteger(row["versionNeeded"], `${at}.versionNeeded`, { minimum: 0, maximum: 65535 }),
-    flags: stdioZip20BaseSnapshotGuardInteger(row["flags"], `${at}.flags`, { minimum: 0, maximum: 65535 }),
-    modifiedTime: stdioZip20BaseSnapshotGuardInteger(row["modifiedTime"], `${at}.modifiedTime`, { minimum: 0, maximum: 65535 }),
-    modifiedDate: stdioZip20BaseSnapshotGuardInteger(row["modifiedDate"], `${at}.modifiedDate`, { minimum: 0, maximum: 65535 }),
+    versionNeeded: stdioZip20BaseSnapshotGuardInteger(row["versionNeeded"], `${at}.versionNeeded`, {"minimum": 0, "maximum": 65535}),
+    flags: stdioZip20BaseSnapshotGuardInteger(row["flags"], `${at}.flags`, {"minimum": 0, "maximum": 65535}),
+    modifiedTime: stdioZip20BaseSnapshotGuardInteger(row["modifiedTime"], `${at}.modifiedTime`, {"minimum": 0, "maximum": 65535}),
+    modifiedDate: stdioZip20BaseSnapshotGuardInteger(row["modifiedDate"], `${at}.modifiedDate`, {"minimum": 0, "maximum": 65535}),
     extraFields: stdioZip20BaseSnapshotGuardArray(row["extraFields"], `${at}.extraFields`).map((item, index) => parseZipExtraField(item, `${at}.extraFields[${index}]`)),
-    unicodePathLegacyName: row["unicodePathLegacyName"] === undefined ? undefined : stdioZip20BaseSnapshotGuardArray(row["unicodePathLegacyName"], `${at}.unicodePathLegacyName`).map((item, index) => stdioZip20BaseSnapshotGuardInteger(item, `${at}.unicodePathLegacyName[${index}]`, { minimum: 0, maximum: 255 })),
+    unicodePathLegacyName: row["unicodePathLegacyName"] === undefined ? undefined : stdioZip20BaseSnapshotGuardArray(row["unicodePathLegacyName"], `${at}.unicodePathLegacyName`).map((item, index) => stdioZip20BaseSnapshotGuardInteger(item, `${at}.unicodePathLegacyName[${index}]`, {"minimum": 0, "maximum": 255})),
   };
 }
 
-export function parseZipCentralHeaderMetadata(value: unknown, at = "$."): ZipCentralHeaderMetadata {
+export function parseZipCentralHeaderMetadata(value: unknown, at = "$"): ZipCentralHeaderMetadata {
   const row = stdioZip20BaseSnapshotGuardObject(value, at);
   return {
-    versionMadeBy: stdioZip20BaseSnapshotGuardInteger(row["versionMadeBy"], `${at}.versionMadeBy`, { minimum: 0, maximum: 65535 }),
-    versionNeeded: stdioZip20BaseSnapshotGuardInteger(row["versionNeeded"], `${at}.versionNeeded`, { minimum: 0, maximum: 65535 }),
-    flags: stdioZip20BaseSnapshotGuardInteger(row["flags"], `${at}.flags`, { minimum: 0, maximum: 65535 }),
-    modifiedTime: stdioZip20BaseSnapshotGuardInteger(row["modifiedTime"], `${at}.modifiedTime`, { minimum: 0, maximum: 65535 }),
-    modifiedDate: stdioZip20BaseSnapshotGuardInteger(row["modifiedDate"], `${at}.modifiedDate`, { minimum: 0, maximum: 65535 }),
+    versionMadeBy: stdioZip20BaseSnapshotGuardInteger(row["versionMadeBy"], `${at}.versionMadeBy`, {"minimum": 0, "maximum": 65535}),
+    versionNeeded: stdioZip20BaseSnapshotGuardInteger(row["versionNeeded"], `${at}.versionNeeded`, {"minimum": 0, "maximum": 65535}),
+    flags: stdioZip20BaseSnapshotGuardInteger(row["flags"], `${at}.flags`, {"minimum": 0, "maximum": 65535}),
+    modifiedTime: stdioZip20BaseSnapshotGuardInteger(row["modifiedTime"], `${at}.modifiedTime`, {"minimum": 0, "maximum": 65535}),
+    modifiedDate: stdioZip20BaseSnapshotGuardInteger(row["modifiedDate"], `${at}.modifiedDate`, {"minimum": 0, "maximum": 65535}),
     extraFields: stdioZip20BaseSnapshotGuardArray(row["extraFields"], `${at}.extraFields`).map((item, index) => parseZipExtraField(item, `${at}.extraFields[${index}]`)),
-    unicodePathLegacyName: row["unicodePathLegacyName"] === undefined ? undefined : stdioZip20BaseSnapshotGuardArray(row["unicodePathLegacyName"], `${at}.unicodePathLegacyName`).map((item, index) => stdioZip20BaseSnapshotGuardInteger(item, `${at}.unicodePathLegacyName[${index}]`, { minimum: 0, maximum: 255 })),
+    unicodePathLegacyName: row["unicodePathLegacyName"] === undefined ? undefined : stdioZip20BaseSnapshotGuardArray(row["unicodePathLegacyName"], `${at}.unicodePathLegacyName`).map((item, index) => stdioZip20BaseSnapshotGuardInteger(item, `${at}.unicodePathLegacyName[${index}]`, {"minimum": 0, "maximum": 255})),
     comment: stdioZip20BaseSnapshotGuardString(row["comment"], `${at}.comment`),
-    unicodeCommentLegacy: row["unicodeCommentLegacy"] === undefined ? undefined : stdioZip20BaseSnapshotGuardArray(row["unicodeCommentLegacy"], `${at}.unicodeCommentLegacy`).map((item, index) => stdioZip20BaseSnapshotGuardInteger(item, `${at}.unicodeCommentLegacy[${index}]`, { minimum: 0, maximum: 255 })),
-    internalAttributes: stdioZip20BaseSnapshotGuardInteger(row["internalAttributes"], `${at}.internalAttributes`, { minimum: 0, maximum: 65535 }),
-    externalAttributes: stdioZip20BaseSnapshotGuardInteger(row["externalAttributes"], `${at}.externalAttributes`, { minimum: 0, maximum: 4294967295 }),
+    unicodeCommentLegacy: row["unicodeCommentLegacy"] === undefined ? undefined : stdioZip20BaseSnapshotGuardArray(row["unicodeCommentLegacy"], `${at}.unicodeCommentLegacy`).map((item, index) => stdioZip20BaseSnapshotGuardInteger(item, `${at}.unicodeCommentLegacy[${index}]`, {"minimum": 0, "maximum": 255})),
+    internalAttributes: stdioZip20BaseSnapshotGuardInteger(row["internalAttributes"], `${at}.internalAttributes`, {"minimum": 0, "maximum": 65535}),
+    externalAttributes: stdioZip20BaseSnapshotGuardInteger(row["externalAttributes"], `${at}.externalAttributes`, {"minimum": 0, "maximum": 4294967295}),
   };
 }
 
-export function parseZipEntryMetadata(value: unknown, at = "$."): ZipEntryMetadata {
+export function parseZipEntryMetadata(value: unknown, at = "$"): ZipEntryMetadata {
   const row = stdioZip20BaseSnapshotGuardObject(value, at);
   return {
-    compressionMethod: stdioZip20BaseSnapshotGuardInteger(row["compressionMethod"], `${at}.compressionMethod`, { minimum: 0, maximum: 65535 }),
+    compressionMethod: stdioZip20BaseSnapshotGuardInteger(row["compressionMethod"], `${at}.compressionMethod`, {"minimum": 0, "maximum": 65535}),
     local: parseZipLocalHeaderMetadata(row["local"], `${at}.local`),
     central: parseZipCentralHeaderMetadata(row["central"], `${at}.central`),
     dataDescriptorSignature: stdioZip20BaseSnapshotGuardBoolean(row["dataDescriptorSignature"], `${at}.dataDescriptorSignature`),

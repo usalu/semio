@@ -2,7 +2,9 @@
 //! contradiction instead of panicking or hanging, it respects a pin, and its entropy field tracks the
 //! tile weight distribution.
 
-use super::*;
+use std::collections::BTreeMap;
+use crate::host::inferences::*;
+use crate::standards::v1::subsets::any::schema::inferences::{Wfc3dContradiction, Wfc3dEntropy, Wfc3dSolve, Wfc3dSolveResult, MAX_WFC3D_TILES};
 use crate::schema::snapshot::{GraphRule, Slot3d, SlotEdge, Tile, Wfc3dSnapshot, WFC3D_DOCUMENT_SCHEMA};
 
 //#region 🧸️Fixtures

@@ -26,8 +26,5 @@ pub fn compute_vcs_summary(snapshot: &VcsSnapshot) -> VcsSummary {
 }
 //#endregion 🔖️Summary
 
-#[cfg(test)]
-//#region 🧪️Tests
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

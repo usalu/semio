@@ -39,11 +39,14 @@ pub fn plan(p: &GltfCreateBufferViewPayload, base: &GltfSnapshot) -> Result<Gltf
     Ok(diff)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn inverse(p: &GltfCreateBufferViewPayload, base: &GltfSnapshot) -> Vec<super::GltfMutation> {
+pub fn inverse<Op>(p: &GltfCreateBufferViewPayload, base: &GltfSnapshot) -> Vec<Op>
+where
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::remove_used_extension::RemoveUsedExtensionMutation>,
+{
     if validate(p, base).is_err() {
         return Vec::new();
     }
-    vec![super::delete_buffer_view::mutation(super::delete_buffer_view::GltfDeleteBufferViewPayload { index: p.position })]
+    vec![crate::standards::v2_0::subsets::any::schema::mutations::delete_buffer_view::mutation(crate::standards::v2_0::subsets::any::schema::mutations::delete_buffer_view::GltfDeleteBufferViewPayload { index: p.position })]
 }
 
 //#region 🧬️DirectMutation
@@ -56,11 +59,17 @@ pub enum CreateBufferViewMutation {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn mutation(payload: GltfCreateBufferViewPayload) -> super::GltfMutation {
-    super::GltfMutation::CreateBufferView(CreateBufferViewMutation::Apply(payload))
+pub fn mutation<Op>(payload: GltfCreateBufferViewPayload) -> Op
+where
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::create_buffer_view::CreateBufferViewMutation>,
+{
+    Op::from(CreateBufferViewMutation::Apply(payload))
 }
 
-impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for CreateBufferViewMutation {
+impl<Op> protocol::MutationKind<GltfSnapshot, Op> for CreateBufferViewMutation
+where
+    Op: protocol::Mutation<GltfSnapshot, Diff = GltfDiff> + From<CreateBufferViewMutation>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "buffer-view", kind: "create-buffer-view", record: "CreatedBufferView" };
 
     fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<GltfDiff> {
@@ -72,7 +81,7 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for CreateBufferV
         }
     }
 
-    fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<super::GltfMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         match self {
             Self::Apply(payload) => Ok(inverse(payload, base)),
         }
@@ -89,7 +98,5 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for CreateBufferV
 //#endregion 🧬️DirectMutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️t066/🦀️.rs"]
-mod case_t066;
+
 //#endregion 🧪️Tests

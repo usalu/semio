@@ -1,5 +1,6 @@
 //! 🔬️ Unit tests of the GIS vector style: the water, waterway and country-hole band gates and the source-layer draw order the framework policy reads.
 
+use crate::tile_coordinates::gis_policy::vector_style::{GIS_MAP_DEFAULT_DRAW_RANK};
 use crate::tile_coordinates::gis_policy::gis_map_policy;
 use semio_framework_surface::tiled_map::MapPolicy;
 
@@ -22,6 +23,6 @@ fn source_layers_keep_the_openmaptiles_draw_order() {
     let policy = gis_map_policy();
     let order = ["water", "landcover", "landuse", "park", "transportation", "building", "boundary", "waterway", "aeroway", "countries", "geolines", "place", "transportation_name", "water_name", "poi", "centroids"];
     assert!(order.windows(2).all(|pair| policy.draw_rank(pair[0]) < policy.draw_rank(pair[1])), "draw ranks follow the OpenMapTiles paint order");
-    assert_eq!(policy.draw_rank("unlisted-layer"), super::GIS_MAP_DEFAULT_DRAW_RANK);
+    assert_eq!(policy.draw_rank("unlisted-layer"), crate::tile_coordinates::gis_policy::vector_style::GIS_MAP_DEFAULT_DRAW_RANK);
     assert_eq!(policy.layer_role("aeroway"), None, "aeroway is ordered but never painted");
 }

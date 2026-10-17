@@ -85,7 +85,10 @@ vi.mock("@semio-tech/infinite-world-r3f", async (importOriginal) => {
 });
 
 import { setRuntimeDiagnostics } from "../../../🏛️ShellHost/🟦️.tsx";
-import { World3dHost, world3dComponentInteractionTarget, buildMeshVisuals, disposeMeshVisuals, world3dGumballSelectionArgsV1, getWorldGumballTransformPreview } from "../../🟦️.tsx";
+import { World3dHost } from "../../🟦️.tsx";
+import { buildMeshVisuals, disposeMeshVisuals } from "../../🎨️mesh-render/🔺️mesh-geometry-and-appearance/🟦️.ts";
+import { world3dComponentInteractionTarget } from "../../🔗️instance-selection/🟦️.ts";
+import { world3dGumballSelectionArgsV1, getWorldGumballTransformPreview } from "../../🧮️gumball-math/🟦️.ts";
 import { WindowInstanceIdContext } from "../../../🗣️Interpreter/🌉️scene-host-contract/🟦️.ts";
 import { loadComponentSelectionMergesFixture, loadSceneComponentSourceFixture } from "../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🟦️.ts";
 import { loadEngineVertexProvenanceFixture } from "../../../../../../../../../🔨️modules/🧊️3d/🧪️tests/🧫️fixtures/🟦️.ts";
@@ -276,7 +279,6 @@ describe("exact analytic component interaction targets", () => {
         for (const action of actions) oracle.applyMatrix4(new three.Matrix4().makeTranslation(Number(action.args!.dx), Number(action.args!.dy), Number(action.args!.dz)));
         expect(oracle.toArray()).toEqual(fixture.offset);
         expect(getWorldGumballTransformPreview("trace-app")).toBeNull();
-        console.info(`[DEBUG] React mounted live ${target.mode} gumball: pinned=${JSON.stringify(target.ids)} stream/stream/commit=${actions.length} oracle=${JSON.stringify(oracle.toArray())}`);
       } finally {
         completeFirst();
         view.unmount();
@@ -335,7 +337,6 @@ describe("exact analytic component interaction targets", () => {
       for (const action of actions) oracle.applyMatrix4(new three.Matrix4().makeTranslation(Number(action.args!.dx), Number(action.args!.dy), Number(action.args!.dz)));
       expect(oracle.toArray()).toEqual(refresh.offset);
       expect(getWorldGumballTransformPreview("trace-app")).toBeNull();
-      console.info(`[DEBUG] React mounted live source refresh: revision=${refresh.revision} pinned=${JSON.stringify(targets)} phases=${JSON.stringify(actions.map(action => action.args!.phase))} independentThree=${JSON.stringify(oracle.toArray())}`);
     } finally { view.unmount(); }
   });
   it("paints neutral pure points in default object mode without fabricating surfaces or edges", async () => {
@@ -352,7 +353,6 @@ describe("exact analytic component interaction targets", () => {
       expect(painted[0]!.getIndex()).toBeNull();
       expect(view.container.querySelectorAll("lineSegments")).toHaveLength(0);
       expect(oracle.geometry.getAttribute("position").count).toBe(1);
-      console.info(`[DEBUG] React mounted default Point3d: points=${painted.length} position=${JSON.stringify(point.points[0])} selected=0 triangles=0 edges=0 Three=${oracle.type}`);
     } finally {
       view.unmount();
       oracle.geometry.dispose();
@@ -387,7 +387,6 @@ describe("exact analytic component interaction targets", () => {
             const painted = new three.Color(material!.getAttribute("color")!);
             expect(painted.getHexString(), `${name}/${state.name}: the original semantic line paint follows object chrome`).toBe(oracle.color.getHexString());
             expect(view.container.querySelectorAll("mesh")).toHaveLength(0);
-            console.info(`[DEBUG] React primary ${name}/${state.name}: token=${state.line} color=#${painted.getHexString()} independentThree=#${oracle.color.getHexString()}`);
           } finally { oracle.dispose(); }
         }
       } finally { view.unmount(); }
@@ -419,7 +418,6 @@ describe("exact analytic component interaction targets", () => {
           return fixture.objects[position[0]! / 3];
         }).sort();
         expect(overlays, `${step.merge}: every selected instance paints its selected component`).toEqual(step.selected.map(index => fixture.objects[index]).sort());
-        console.info(`[DEBUG] React component overlay ${step.merge}: ${JSON.stringify(overlays)}`);
       }
       const refusalFixture = (await import("../🧫️fixtures/🎯️analytic-component-target.json")).default;
       for (const row of refusalFixture.overlayRefusals) {
@@ -428,7 +426,6 @@ describe("exact analytic component interaction targets", () => {
         view.rerender(sceneNode(null, { meshesJson: JSON.stringify(currentMeshes), instancesJson: JSON.stringify(instances), selectionJson: JSON.stringify(selection), referencesJson: "[]" }));
         runFrames();
         expect(view.container.querySelectorAll('[opacity="0.62"]'), row.name).toHaveLength(0);
-        console.info(`[DEBUG] React component overlay refuses ${row.name}`);
       }
     } finally {
       view.unmount();
@@ -475,7 +472,6 @@ describe("exact analytic component interaction targets", () => {
         expect(Array.from(visuals.edge?.getAttribute("position").array ?? []), row.kind).toEqual(Array.from(edgeOracle.getAttribute("position").array));
         expect([visuals.geometry!.boundingBox!.min.toArray(), visuals.geometry!.boundingBox!.max.toArray()], row.kind).toEqual(row.bounds);
         expect([oracle.boundingBox!.min.toArray(), oracle.boundingBox!.max.toArray()], row.kind).toEqual(row.bounds);
-        console.info(`[DEBUG] React zero-index ${row.kind}: vertices=${row.vertexIds.length} edges=${row.edgeIds.length} indices=0 bounds=${JSON.stringify(row.bounds)}`);
       } finally {
         disposeMeshVisuals(visuals);
         oracle.dispose();
@@ -488,7 +484,6 @@ describe("exact analytic component interaction targets", () => {
     for (const row of fixture.admission.cases) {
       const target = world3dComponentInteractionTarget(instances, meshes, objectId, row.kind, row.group);
       expect(target, JSON.stringify(row)).toEqual(row.eligible ? { granularity: row.kind, id: `${objectId}.${row.kind}.${row.group}~${fixture.source.handle}~${row.label}~${fixture.source.revision}` } : undefined);
-      console.info(`[DEBUG] React exact component source ${row.kind}/${row.group}: eligible=${row.eligible}`);
     }
   });
 
@@ -543,7 +538,6 @@ describe("exact analytic component interaction targets", () => {
         expect(selection[0]!.args!.domainId).toBe(law.domain);
         expect(hover[0]!.args!.domainId).toBe(law.domain);
         expect(actions.some(action => ["worldPick", "setHover", "gumballSelection"].includes(action.action))).toBe(false);
-        console.info(`[DEBUG] mounted analytic ${row.name}: target=${row.expectedTarget ?? "refused"} overlays=${row.expectedOverlayCount} originalPickHover=true`);
       }
     } finally { view.unmount(); }
   });
@@ -559,7 +553,7 @@ describe("world compute explicit locale", () => {
     for (const row of computeLocaleFixture.locales) {
       const cancel = vi.fn(() => Promise.resolve());
       const scope = createShellScope({storage:createMemoryStoragePort(),initialLocale:new Intl.Locale(row.locale).language as "en" | "de"});
-      const mounted = render(createElement(ShellScopeProvider, {scope}, sceneNode(null, {statusJson:JSON.stringify(computeLocaleFixture.status)}, cancel)));
+      const mounted = render(<ShellScopeProvider scope={scope}>{sceneNode(null, {statusJson:JSON.stringify(computeLocaleFixture.status)}, cancel)}</ShellScopeProvider>);
       const status = mounted.container.querySelector('[data-slot="world-compute-status"]');
       expect(status?.getAttribute("role")).toBe("status");
       expect(status?.getAttribute("aria-busy")).toBe("true");
@@ -574,7 +568,6 @@ describe("world compute explicit locale", () => {
       await act(async () => {button.click();});
       expect(cancel).toHaveBeenCalledTimes(1);
       expect(cancel).toHaveBeenCalledWith({...computeLocaleFixture.dispatch,action:computeLocaleFixture.status.cancelAction,args:{...computeLocaleFixture.dispatch.args,...computeLocaleFixture.status.cancelArgs}});
-      console.debug(`[DEBUG] world compute locale=${row.locale} progress=${computeLocaleFixture.progress} actual DOM cancellation dispatched`);
       mounted.unmount();
       disposeShellI18nInstance(scope.i18n);
     }
@@ -583,7 +576,6 @@ describe("world compute explicit locale", () => {
     for (const locale of computeLocaleFixture.absentLocales) {
       if (locale) {
         expect(() => createShellScope({storage:createMemoryStoragePort(),initialLocale:locale as "en" | "de"})).toThrow("Shell locale requires an explicit supported language source");
-        console.debug(`[DEBUG] world compute unsupported locale=${locale} refused at original shell language admission`);
         continue;
       }
       expect(() => createShellScope({storage:createMemoryStoragePort(),initialLocale:undefined as unknown as "en" | "de"})).toThrow("Shell locale requires an explicit supported language source");

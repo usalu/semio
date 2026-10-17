@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { Database } from "bun:sqlite";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 import fixture from "../../../../🧪️tests/🧫️fixtures/🧮️executor/🪜️resumable-query/🔣️.json";
 
 /** 🔗️ The node half of an `<node>@<port>` endpoint — the whole value when it names no port. */
@@ -10,7 +11,7 @@ const endpointNode = (endpoint: string): string => endpoint.slice(0, endpoint.in
 /** 🔎️ SQLite independently validates the neutral graph-query results and mutation counts. */
 export function testResumableQueryOracle(): void {
   const executor = readFileSync(resolve(import.meta.dir, "../../🦀️.rs"), "utf8");
-  const execution = readFileSync(resolve(import.meta.dir, "../../🪜️execution/🦀️.rs"), "utf8");
+  const execution = readModuleTreeSource(resolve(import.meta.dir, "../../🪜️execution/🦀️.rs"));
   const text = readFileSync(resolve(import.meta.dir, "../../../../🚪️io/📝️text/📸️snapshot/🦀️.rs"), "utf8");
   assert.match(executor, /pub fn execute\(/u);
   assert.doesNotMatch(text, /fn (?:execute|match_patterns|match_pattern|eval_expr|build_return)\(/u);
@@ -99,5 +100,4 @@ export function testResumableQueryOracle(): void {
   } finally {
     retained.close();
   }
-  console.log("[DEBUG] Jack query neutral ownership + graph mutations oracle=SQLite/JSON1");
 }

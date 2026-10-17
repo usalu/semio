@@ -18,6 +18,11 @@ const vector = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures
 
 const dataRoot = join(import.meta.dir, "../🧫️fixtures/🌐️registry-import-language/🧪️imported-data");
 const dataVector = JSON.parse(readFileSync(join(dataRoot, "🔣️.json"), "utf8")) as {
+  schemaVersion: number;
+  contractId: string;
+  selection: string;
+  dataGrammar: string;
+  fallback: string;
   cases: { id: string; path: string; role: "implementation-entry" | "static-import"; source: string; expected?: { kind: "module" | "json-data"; imports: string[] }; error?: string }[];
   graph: { entries: string[]; dataPath: string; files: { path: string; content: string; mode: number }[] };
 };

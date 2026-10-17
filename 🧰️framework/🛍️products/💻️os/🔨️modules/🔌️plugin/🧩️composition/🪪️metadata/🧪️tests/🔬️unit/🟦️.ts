@@ -21,7 +21,6 @@ test("private child metadata admits the independent complete identity corpus", (
   expect(existsSync(path)).toBe(true);
   const source = readFileSync(path, "utf8");
   for (const method of ["PrivateChildMemberMetadataSource", "PrivateChildMemberMetadataIssuer", "next_capacity_byte_demand", "take_ready", "close_granted"]) expect(source.includes(method)).toBe(true);
-  console.log("[DEBUG] Node Buffer/TextEncoder: all21 private child request/key/prepared-read metadata owners match original UTF-8 identities");
 });
 
 test("private child publication metadata retains independent actor and optional transaction identities", () => {
@@ -33,7 +32,6 @@ test("private child publication metadata retains independent actor and optional 
   }
   const source = readFileSync(resolve(import.meta.dir, "../../🦀️.rs"), "utf8");
   for (const field of ["publication_actor", "transaction", "group_id"]) expect(source.includes(field)).toBe(true);
-  console.log("[DEBUG] Node Buffer optional transaction oracle: original actor and identical group/transaction IDs retain UTF-8 identity");
 });
 
 test("private child registry metadata retains the exact independent parent and slot owner", () => {
@@ -44,7 +42,6 @@ test("private child registry metadata retains the exact independent parent and s
     expect({ parent: { artifact_id: fields[0], dialect: { artifact_kind: fields[1], standard: fields[2], subset: fields[3] } }, slot: fields[4], child_id: fields[5] }).toEqual(owner);
   }
   expect(readFileSync(resolve(import.meta.dir, "../../🦀️.rs"), "utf8").includes("registry_owner")).toBe(true);
-  console.log("[DEBUG] Node Buffer: private registry parent/slot/child metadata preserves the exact original six fields");
 });
 
 test("parent publication metadata has the same independent bounded actor and transaction corpus", () => {
@@ -58,7 +55,6 @@ test("parent publication metadata has the same independent bounded actor and tra
   }
   const source = readFileSync(resolve(import.meta.dir, "../../🦀️.rs"), "utf8");
   for (const type of ["PrivatePublicationMetadataSource", "PrivatePublicationMetadataParts", "PrivatePublicationMetadataIssuer"]) expect(source.includes(type)).toBe(true);
-  console.log("[DEBUG] Node Buffer copied the original parent actor/group/transaction/tool in bounded prefixes with optional transaction identity unchanged");
 });
 
 test("common publication group identity is independent of original optional transaction", () => {
@@ -73,12 +69,11 @@ test("common publication group identity is independent of original optional tran
       expect(backing.toString("utf8")).toBe(field);
       return backing.toString("utf8");
     });
-    const result = applyPatch({ transaction: null, group_id: null }, [{ op: "replace", path: "/transaction", value: transaction === null ? null : { id: copied[1], tool: copied[2] } }, { op: "replace", path: "/group_id", value: groupId === null ? null : copied[3] }], true).newDocument;
+    const result = applyPatch<typeof original>({ transaction: null, group_id: null }, [{ op: "replace", path: "/transaction", value: transaction === null ? null : { id: copied[1], tool: copied[2] } }, { op: "replace", path: "/group_id", value: groupId === null ? null : copied[3] }], true).newDocument;
     expect(result).toEqual(original);
   }
   
   const source = readFileSync(resolve(import.meta.dir, "../../🦀️.rs"), "utf8");
   expect(source.includes("pub group_id: Option<&'a str>")).toBe(true);
   expect(source.includes("group_present: Option<bool>")).toBe(true);
-  console.log("[DEBUG] unpooled Buffer + RFC6902: nine independent group/transaction combinations preserve absent, empty, Unicode identities and original optional transaction");
 });

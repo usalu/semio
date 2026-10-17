@@ -1,6 +1,7 @@
 //! 📝️ Direct publication-transient replacement payload and inverse behavior.
 
-use super::super::{PublicationTransient, PublicationTransientMutation};
+use crate::publication_fixture::transient::PublicationTransient;
+use crate::publication_fixture::transient::mutations::PublicationTransientMutation;
 use protocol::{MutationKind, MutationOutcome, OpBinary, OpText, ProtocolError, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -57,8 +58,8 @@ impl OpBinary for ChangePublicationTransient {
 impl MutationKind<PublicationTransient, PublicationTransientMutation> for ChangePublicationTransient {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "publication-transient", kind: "change-publication-transient", record: "ChangedPublicationTransient" };
 
-    fn diff(&self, _base: &PublicationTransient) -> MutationOutcome<super::super::PublicationTransientDiff> {
-        MutationOutcome::new(super::super::PublicationTransientDiff { revision: Some(self.revision) })
+    fn diff(&self, _base: &PublicationTransient) -> MutationOutcome<crate::publication_fixture::transient::PublicationTransientDiff> {
+        MutationOutcome::new(crate::publication_fixture::transient::PublicationTransientDiff { revision: Some(self.revision) })
     }
 
     fn inverse(&self, base: &PublicationTransient) -> Result<Vec<PublicationTransientMutation>, semio_framework_value::ValueError> {

@@ -1,6 +1,6 @@
 import { createServer, type Server } from "node:http";
 import { isDeepStrictEqual } from "node:util";
-import type { OwnedBuildMiddleware, OwnedBuildPlugin } from "../../../🖱️ui/🎯️targets/⚛️react/🛠️build-tooling/🟦️.ts";
+import type { OwnedBuildMiddleware, OwnedBuildPlugin } from "@semio-tech/ui-react/build-tooling";
 import schema from "./🧬️schema/🔣️.json" with { type: "json" };
 
 /** 📨️ Carries one open owner declaration; its provider admits all provider-specific fields. */

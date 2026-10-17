@@ -3,7 +3,7 @@
 pub const OPCODE: &str = "remove-annotation";
 pub const TEXT_OPCODE: &str = OPCODE;
 
-use crate::standards::v1_7::subsets::base::schema::mutations::RemoveAnnotation;
+use crate::standards::v1_7::subsets::base::schema::mutations::remove_annotation::RemoveAnnotation;
 
 /// 🖨️ Prints this direct payload through its schema-derived JSON representation.
 pub fn print(payload: &RemoveAnnotation) -> Result<String, String> {

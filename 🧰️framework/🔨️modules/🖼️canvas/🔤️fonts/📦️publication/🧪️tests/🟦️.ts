@@ -22,6 +22,5 @@ test("neutral Infinite fonts retain managed scratch, actual Rust reader and sele
     expect(outputs.size).toBe(2);
     for (const mode of fixture.invalidModes) expect(() => fontAssetPublicationRootV1(root, mode)).toThrow();
     for (const directory of fixture.invalidRoots) expect(() => fontAssetPublicationRootV1(directory, "prototype")).toThrow();
-    console.log("[DEBUG] Independent TypeScript AST and SQLite verify managed font producer closure and mode-specific publication paths");
   } finally { database.close(); }
 });

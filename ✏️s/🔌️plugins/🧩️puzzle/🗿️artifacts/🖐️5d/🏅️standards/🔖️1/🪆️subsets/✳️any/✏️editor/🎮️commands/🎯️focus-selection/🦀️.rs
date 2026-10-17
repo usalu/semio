@@ -1,6 +1,7 @@
 //! 🎯️ `focus-selection` command.
+use crate::editor::puzzle5d::view::gumball_target_world;
 
-use crate::editor::puzzle5d::{gumball_target_world, Puzzle5dActionCtx};
+use crate::editor::puzzle5d::interaction::Puzzle5dActionCtx;
 
 /// 🔍️ `focusSelection`: recenters both cameras on the selection, preserving the volume camera's orbit
 /// offset. With NOTHING selected it frames the whole document instead of completing silently — a camera

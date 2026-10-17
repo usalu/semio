@@ -230,7 +230,7 @@ fn original_borrowed_font_pair_reader_matches_swash_and_keeps_every_native_sourc
             let(actual,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||original.em(face,left,right));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert!((actual-expected).abs()<0.000001,"original {face:?} {left:?}+{right:?}: {actual} vs independent Swash {expected}");assert_eq!(original.sans.unwrap().data.as_ptr(),source);assert_eq!(original.mono.unwrap().data.as_ptr(),mono);pairs+=1;
         }previous=Some(right);}
     }
-    assert!(pairs>1000);assert!(original.terminal_is_empty());let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(original));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));eprintln!("[DEBUG] actual original borrowed font pair reader pairs={pairs} independentSwash outputs exact original static Sans/Mono pointers construction/work/terminal0heap no opaque per-job shaping cache; fixed4096 Worker/semantic handoff unproven");
+    assert!(pairs>1000);assert!(original.terminal_is_empty());let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(original));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
 }
 
 /// 🤝️ LAW (WG11 T7b): pair kerning is ONE rule for measure, wrap and caret — a run measures as its advances plus each adjacent
@@ -571,7 +571,6 @@ fn actual_font_pair_queries_match_swash_without_retaining_native_cache_storage()
     }
     let (_, births, frees) = measured(|| drop(original));
     assert_eq!((births, frees), (0, 0));
-    println!("[DEBUG] actual original borrowed font pairs={checked} independentSwash=true queryBirths=0 queryFrees=0 terminalDrop=0 originalStaticPointers=true");
 }
 
 use super::text_reference::{reference_break_indices,KERNED_PANGRAM};

@@ -129,7 +129,7 @@ pub enum NativeClipboardOperation {
 /// caller-supplied process `WorkerPool` I/O lane.
 #[cfg(not(target_arch = "wasm32"))]
 pub struct NativeClipboardJob {
-    operation: std::mem::ManuallyDrop<Option<NativeClipboardOperation>>,
+    #[doc(hidden)] pub operation: std::mem::ManuallyDrop<Option<NativeClipboardOperation>>,
     closing: bool,
     completed: bool,
     cancelled: bool,

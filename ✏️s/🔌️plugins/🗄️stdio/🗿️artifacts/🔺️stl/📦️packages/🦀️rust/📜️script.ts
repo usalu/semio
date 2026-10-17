@@ -14,6 +14,6 @@ class OriginalReceivingSource extends BundleScript{
 }
 /** 🦀️ Runs only original STL receiving laws in the mounted owning Rust module. */
 class OriginalReceivingNative extends OriginalReceivingSource{
- async run(args:string[]):Promise<void>{await super.run(args);await runArtifactRustTests("semio-s-artifact-stdio-stl",this.repoRoot,["--lib","stl_original_receiving_","--no-fail-fast"],this.invocation.control);}
+ async run(args:string[]):Promise<void>{await super.run(args);await runArtifactRustTests("semio-s-artifact-stdio-stl",this.repoRoot,["--lib","stl_original_receiving_","--no-fail-fast"],this.invocation);}
 }
 await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-stdio-stl", { packages: ["semio-s-artifact-stdio-stl", "semio-s-artifact-stdio-stl-examples", "semio-s-artifact-stdio-stl-inferences", "semio-s-artifact-stdio-stl-mutations", "semio-s-artifact-stdio-stl-schema", "semio-s-artifact-stdio-stl-viewer"], commands:{"test-original-receiving-source":OriginalReceivingSource,"test-original-receiving-native":OriginalReceivingNative},snapshotSqliteTests: ["../../🏅️standards/🔖️ascii/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"] });

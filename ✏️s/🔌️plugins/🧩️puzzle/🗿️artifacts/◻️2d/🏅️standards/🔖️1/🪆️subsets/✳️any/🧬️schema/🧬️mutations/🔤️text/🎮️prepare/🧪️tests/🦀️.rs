@@ -1,6 +1,14 @@
 //! 🔤️ Native optional text plans preserve exact owners and allocation-free alias retirement.
-use super::*;
-use crate::test_source_custody;
+use crate::standards::v1::subsets::any::schema::mutations::{ChangeNodeIcon, EditTargetRegionLabel};
+use crate::Puzzle2dSnapshot;
+use semio_framework_value::{paged::PagedUtf8, retained_clone::RetainedCloneGrant};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::lookup::{Puzzle2dLookupCursor, Puzzle2dLookupScope, Puzzle2dLookupStep};
+#[allow(unused_imports)]
+use semio_framework_value::{ValueError, ValueRefusalKind, retained_clone::RetainedCloneBinding, retained_clone::RetainedCloneProgress, retained_clone::RetainedCloneRef, retained_clone::RetainedCloneStep, retained_clone::paged::PagedUtf8BoundedOrdCursor, retained_clone::ordered_map::BoundedOrdCursor, retained_clone::ordered_map::BoundedOrdGrant, retained_clone::ordered_map::BoundedOrdStep};
+use crate::standards::v1::subsets::any::schema::preparation::text_preparation::*;
+use crate::standards::v1::subsets::any::schema::testkit as test_source_custody;
+use semio_framework_test_fixtures::fixture_text;
 fn close<T:Puzzle2dTextIntent>(cursor:&mut Puzzle2dTextPreparationCursor<T>){
  cursor.begin_close();for _ in 0..64{if cursor.terminal_is_empty(){return}let copy=cursor.next_close_copy_byte_demand().unwrap();let capacity=cursor.next_close_capacity_byte_demand(copy).unwrap();let release=cursor.next_close_release_byte_demand().unwrap();let depth=cursor.next_close_depth_demand().unwrap();assert!(copy+capacity+release<=4096);let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:capacity,maximum_release_bytes:release,maximum_depth:depth};let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cursor.close_step(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert!(!heap.overflowed);assert!(step.unwrap().progress().fits(grant));}panic!("text aliases did not close")
 }
@@ -15,8 +23,7 @@ fn law<T:Puzzle2dTextIntent+Clone>(snapshot:&Puzzle2dSnapshot,payload:T,target:b
 }
 #[test]
 fn history_edit_puzzle2d_borrowed_optional_text_preparation_matches_original_paged_chunks_and_alias_cancel(){
- let corpus:serde_json::Value=serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔤️text/🎮️prepare/🔣️.json")).unwrap();
- for row in corpus["cases"].as_array().unwrap(){let mut snapshot=Puzzle2dSnapshot::default();let previous=row["before"].as_str().map(PagedUtf8::from);let next=row["next"].as_str().map(PagedUtf8::from);let target=row["target"].as_bool().unwrap();let id=if target{"retained"}else{"missing"}.into();let expected=row["expected"].as_str().unwrap();if row["role"]=="nodeIcon"{snapshot.nodes.push(crate::standards::v1::subsets::any::schema::Puzzle2dNode{id:"retained".into(),icon_kind:previous,..Default::default()});snapshot.nodes.push(crate::standards::v1::subsets::any::schema::Puzzle2dNode{id:"retained".into(),icon_kind:Some("second owner".into()),..Default::default()});law(&snapshot,ChangeNodeIcon{id,new_icon_kind:next},target,expected)}else{snapshot.target_regions.push(crate::standards::v1::subsets::any::schema::Puzzle2dTargetRegion{id:"retained".into(),label:previous,..Default::default()});snapshot.target_regions.push(crate::standards::v1::subsets::any::schema::Puzzle2dTargetRegion{id:"retained".into(),label:Some("second owner".into()),..Default::default()});law(&snapshot,EditTargetRegionLabel{id,new_label:next},target,expected)}}
- let text="😀\0甲".repeat(20000);let mut snapshot=Puzzle2dSnapshot::default();snapshot.nodes.push(crate::standards::v1::subsets::any::schema::Puzzle2dNode{id:"retained".into(),icon_kind:Some(text.clone().into()),..Default::default()});law(&snapshot,ChangeNodeIcon{id:"retained".into(),new_icon_kind:Some(text.into())},true,"noOp");
- eprintln!("[DEBUG] optional icon and region label preserve fourteen native first-owner cases plus160000byte Unicode/NUL equality, zeroheap constructor/advance, source fence and five exact alias cancellation points");
+ let corpus:serde_json::Value=serde_json::from_str(fixture_text!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔤️text/🎮️prepare/🔣️.json")).unwrap();
+ for row in corpus["cases"].as_array().unwrap(){let mut snapshot=Puzzle2dSnapshot::default();let previous=row["before"].as_str().map(PagedUtf8::from);let next=row["next"].as_str().map(PagedUtf8::from);let target=row["target"].as_bool().unwrap();let id=if target{"retained"}else{"missing"}.into();let expected=row["expected"].as_str().unwrap();if row["role"]=="nodeIcon"{snapshot.nodes.push(crate::standards::v1::subsets::any::schema::records::Puzzle2dNode{id:"retained".into(),icon_kind:previous,..Default::default()});snapshot.nodes.push(crate::standards::v1::subsets::any::schema::records::Puzzle2dNode{id:"retained".into(),icon_kind:Some("second owner".into()),..Default::default()});law(&snapshot,ChangeNodeIcon{id,new_icon_kind:next},target,expected)}else{snapshot.target_regions.push(crate::standards::v1::subsets::any::schema::records::Puzzle2dTargetRegion{id:"retained".into(),label:previous,..Default::default()});snapshot.target_regions.push(crate::standards::v1::subsets::any::schema::records::Puzzle2dTargetRegion{id:"retained".into(),label:Some("second owner".into()),..Default::default()});law(&snapshot,EditTargetRegionLabel{id,new_label:next},target,expected)}}
+ let text="😀\0甲".repeat(20000);let mut snapshot=Puzzle2dSnapshot::default();snapshot.nodes.push(crate::standards::v1::subsets::any::schema::records::Puzzle2dNode{id:"retained".into(),icon_kind:Some(text.clone().into()),..Default::default()});law(&snapshot,ChangeNodeIcon{id:"retained".into(),new_icon_kind:Some(text.into())},true,"noOp");
 }

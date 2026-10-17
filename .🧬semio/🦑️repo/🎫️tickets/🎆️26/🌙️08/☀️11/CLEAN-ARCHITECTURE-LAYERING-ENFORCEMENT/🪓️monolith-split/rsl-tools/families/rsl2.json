@@ -1,0 +1,47 @@
+{
+ "name": "rsl2",
+ "crates": [
+  "semio-s-artifact-fem-2d-editor",
+  "semio-s-artifact-fem-3d-editor",
+  "semio-s-artifact-bim-model",
+  "semio-s-artifact-architect-program",
+  "semio-s-artifact-process-process3d-editor",
+  "semio-s-artifact-lowpoly-lowpoly-editor",
+  "semio-s-artifact-reasoning-wires",
+  "semio-s-artifact-forms-forms",
+  "semio-s-artifact-layout-layout-engine-export",
+  "semio-s-artifact-layout-layout-engine-json",
+  "semio-s-artifact-layout-layout-editor",
+  "semio-s-artifact-cad-cad-editor",
+  "semio-s-plugin-norm-app-surface",
+  "semio-s-artifact-norm-vdi3805-editor",
+  "semio-s-artifact-playbook-playbook-inferences",
+  "semio-s-plugin-playbook-procedural",
+  "semio-s-artifact-imperative-procedure-editor",
+  "semio-s-artifact-remodel-remodeling-editor"
+ ],
+ "base": {
+  "rev": "b84bf526c7ba",
+  "crates": [
+   "semio-s-artifact-fem-2d-editor",
+   "semio-s-artifact-fem-3d-editor",
+   "semio-s-artifact-bim-model",
+   "semio-s-artifact-architect-program",
+   "semio-s-artifact-process-process3d-editor",
+   "semio-s-artifact-lowpoly-lowpoly-editor",
+   "semio-s-artifact-reasoning-wires",
+   "semio-s-artifact-forms-forms",
+   "semio-s-artifact-layout-layout-engine-export",
+   "semio-s-artifact-layout-layout-engine-json",
+   "semio-s-artifact-layout-layout-editor",
+   "semio-s-artifact-cad-cad-editor",
+   "semio-s-plugin-norm-app-surface",
+   "semio-s-artifact-norm-vdi3805-editor",
+   "semio-s-artifact-playbook-playbook-inferences",
+   "semio-s-plugin-playbook-procedural",
+   "semio-s-artifact-imperative-procedure-editor",
+   "semio-s-artifact-remodel-remodeling-editor"
+  ]
+ },
+ "note": "RUST-LEFTOVERS F-04(a): consumers re-pointed from facade alias paths"
+}

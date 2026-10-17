@@ -1,7 +1,17 @@
+#[allow(unused_imports)]
+use crate::{gis_terrain_mesh_child_handle, gis_terrain_mesh_content_key, GisTerrainSnapshot};
+#[allow(unused_imports)]
+use ::semio_framework_schema::ArtifactSchema;
+#[allow(unused_imports)]
+use semio_framework_surface::terrain::tiles;
+#[allow(unused_imports)]
+use semio_framework_value_derive::{FromValue, ToValue};
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_semio_mesh::schema::snapshot::SemioMeshSnapshot;
 use crate::standards::v1::subsets::any::io::text::snapshot::build_terrain_scene_json;
 use crate::standards::v1::subsets::any::io::text::snapshot::default_terrain_document;
 use crate::standards::v1::subsets::any::io::text::snapshot::empty_gis_terrain_snapshot;
-use super::*;
+use crate::standards::v1::subsets::any::schema::*;
 
 #[semio_framework_async_macros::async_test]
 async fn build_terrain_scene_json_roundtrips_descriptor_fields() {

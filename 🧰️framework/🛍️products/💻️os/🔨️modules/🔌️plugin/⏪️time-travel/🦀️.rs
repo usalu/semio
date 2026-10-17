@@ -7,36 +7,56 @@
 //! Domain-neutral session: `semio_framework_time_travel`; store read API: `ArtifactStore::{state_before,
 //! begin_report_replay, replay_report, commit_finished_replay}`.
 
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as vcs;
+extern crate semio_framework_os_kernel as pack;
+use semio_framework::ActionArgDef;
+use semio_framework_plugin_decl_app::ArtifactApp;
+use pack::snapshot::ArtifactPack;
+use store::ArtifactStore;
+use std::collections::BTreeMap;
+use std::collections::BTreeSet;
+use semio_framework_value::DslValue;
+use semio_framework_value_derive::FromValue;
+use std::collections::HashMap;
+use std::collections::HashSet;
+use semio_framework::kernel::HybridLogicalTimestamp;
+use semio_framework_ui_locale::LocalizedLabel;
+use store::Mutation;
+use protocol::OpBinary;
+use protocol::OpText;
+use semio_framework_value_derive::ToValue;
+use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_framework_plugin_decl_app::tool_contract::ArtifactOwnedToolJobFactory;
+use semio_framework_plugin_decl_emission::Emit;
+use semio_framework::FaultFrom;
+use store::MutationDiff;
+use semio_framework_plugin_decl_views::tool_run_contract::ToolRunRetargetableJob;
+use semio_framework_plugin_window_config::WindowConfigOwner;
 use semio_framework_ui_contract::*;
-#[cfg(test)] use semio_framework_os_kernel::HistoryPageStack;
-use semio_framework::kernel::{HistoryMutationEntry, HistoryMutationMessage, HistoryReprojection, HistoryReprojectionKind, HistoryTimeTravel, HistoryTimeTravelProblem, HistoryTimeTravelReview, HistoryTimeTravelStage, RequestId};
-use semio_framework::{input_label_glossary, mutation_input_defs, reference_id_text, registered_input_schema_document, ActionArgControl, ActionArgOption, ArgPresentation, ArgSchema, InputSchemaError, OptionSource, SnapSource};
-use semio_framework::history_edit::{HISTORY_EDIT_ACCEPT_ACTION_ID, HISTORY_EDIT_ARG_EDIT, HISTORY_EDIT_ARG_GENERATION, HISTORY_EDIT_ARG_MUTATION_ID, HISTORY_EDIT_ARG_PATH, HISTORY_EDIT_ARG_STORE, HISTORY_EDIT_ARG_VALUE, HISTORY_EDIT_BEGIN_ACTION_ID, HISTORY_EDIT_CANCEL_REPLAY_ACTION_ID, HISTORY_EDIT_DISCARD_ACTION_ID, HISTORY_EDIT_EXIT_ACTION_ID, HISTORY_EDIT_FINALIZE_ACTION_ID, HISTORY_EDIT_INPUT_ACTION_ID, HISTORY_EDIT_INPUT_INSERT, HISTORY_EDIT_INPUT_REMOVE, HISTORY_EDIT_RERUN_ACTION_ID, HISTORY_EDIT_USE_SELECTION_ACTION_ID, HISTORY_EDIT_WITHDRAW_ACTION_ID};
-use semio_framework_time_travel::{
-    TimeTravelBase, TimeTravelEvent, TimeTravelLabel, TimeTravelRefusal, TimeTravelReview, TimeTravelSession, TimeTravelStage, TimeTravelTarget, TIME_TRAVEL_BUSY_CODE, TIME_TRAVEL_EDITOR_CLOSED_CODE, TIME_TRAVEL_INVALID_INPUT_CODE, TIME_TRAVEL_NAME_INVALID_CODE, TIME_TRAVEL_NAME_REQUIRED_CODE, TIME_TRAVEL_NOT_EDITABLE_CODE, TIME_TRAVEL_NOT_WITHDRAWABLE_CODE, TIME_TRAVEL_NO_SELECTION_CODE, TIME_TRAVEL_SCHEMA_UNAVAILABLE_CODE, TIME_TRAVEL_UNKNOWN_INPUT_CODE, TIME_TRAVEL_UNKNOWN_MUTATION_CODE,
-};
+use semio_framework::kernel::{HistoryReprojectionKind, HistoryTimeTravel, HistoryTimeTravelProblem, HistoryTimeTravelReview, HistoryTimeTravelStage, RequestId};
+use semio_framework::{mutation_input_defs, reference_id_text, registered_input_schema_document, ArgSchema, InputSchemaError};
+use semio_framework::history_edit::HISTORY_EDIT_ARG_GENERATION;
+use semio_framework_time_travel::{TimeTravelBase, TimeTravelEvent, TimeTravelLabel, TimeTravelRefusal, TimeTravelReview, TimeTravelSession, TimeTravelStage, TimeTravelTarget, TIME_TRAVEL_BUSY_CODE, TIME_TRAVEL_EDITOR_CLOSED_CODE, TIME_TRAVEL_INVALID_INPUT_CODE, TIME_TRAVEL_NAME_INVALID_CODE, TIME_TRAVEL_NAME_REQUIRED_CODE, TIME_TRAVEL_NOT_EDITABLE_CODE, TIME_TRAVEL_NOT_WITHDRAWABLE_CODE, TIME_TRAVEL_NO_SELECTION_CODE, TIME_TRAVEL_SCHEMA_UNAVAILABLE_CODE, TIME_TRAVEL_UNKNOWN_INPUT_CODE, TIME_TRAVEL_UNKNOWN_MUTATION_CODE};
 use std::collections::VecDeque;
 use std::sync::Arc;
-use semio_framework_value::{RetirementDemand,ValueError,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
+use semio_framework_value::{RetirementDemand, ValueError};
+use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 #[path="♻️retirement/🦀️.rs"]
 mod original_retirement;
-#[path="🧵️instance/🦀️.rs"]
-mod instance_turns;
-pub(crate) use instance_turns::TimeTravelExtension;
 #[cfg(test)]
-pub(crate) use original_retirement::assert_session_original;
+pub use crate::original_retirement::tests::assert_session_original;
 #[cfg(test)]
-pub(crate) use original_retirement::assert_pending_command_original;
+pub use crate::original_retirement::tests::assert_pending_command_original;
 #[cfg(test)]
-pub(crate) use original_retirement::assert_discard_publication_original;
+pub use crate::original_retirement::tests::assert_discard_publication_original;
 #[cfg(test)]
-pub(crate) use original_retirement::native_original_actor_grant;
+pub use crate::original_retirement::tests::native_original_actor_grant;
 
-use semio_framework_plugin_time_travel_panel::panel_pointer as panel_pointer;
-pub use panel_pointer::*;
+pub use semio_framework_plugin_time_travel_panel::panel_pointer::*;
 
-use semio_framework_plugin_time_travel_panel::panel_sections as panel_sections;
-pub use panel_sections::*;
+pub use semio_framework_plugin_time_travel_panel::panel_sections::*;
 
 pub use semio_framework_plugin_command::lifted_command::*;
 
@@ -64,13 +84,16 @@ pub const TIME_TRAVEL_PROGRESS_REFRESH_PERMILLE: u64 = 50;
 const TIME_TRAVEL_DISCARD_OPS_PER_TURN: usize = 64;
 
 /// 🗳️ The request id the finalize prompt opens under; nothing awaits a dialog.
-pub(crate) const TIME_TRAVEL_FINALIZE_REQUEST: RequestId = RequestId(0x7417_0001);
+#[doc(hidden)]
+pub const TIME_TRAVEL_FINALIZE_REQUEST: RequestId = RequestId(0x7417_0001);
 
-pub(crate) fn history_planning_retirement_grant(demand:RetirementDemand)->RetainedCloneGrant {
+#[doc(hidden)]
+pub fn history_planning_retirement_grant(demand:RetirementDemand)->RetainedCloneGrant {
     RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:semio_framework_job::JOB_PAYLOAD_PAGE_BYTES.max(demand.copy_bytes),maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth}
 }
 
-pub(crate) fn history_retirement_frame_grant(bytes:usize)->RetainedCloneGrant {
+#[doc(hidden)]
+pub fn history_retirement_frame_grant(bytes:usize)->RetainedCloneGrant {
     RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:0,maximum_capacity_bytes:bytes,maximum_release_bytes:0,maximum_depth:1}
 }
 //#endregion 🔖️Limits
@@ -136,10 +159,10 @@ pub struct TimeTravelEditor {
     pub position: u32,
     pub op_index: u32,
     pub label: LocalizedLabel,
-    pub(crate) schema: Option<&'static str>,
+    pub schema: Option<&'static str>,
     pub inputs: Vec<ActionArgDef>,
     pub inputs_refused: Option<InputSchemaError>,
-    pub(crate) validator: Result<semio_framework_schema::OwnedJsonSchemaValidator, String>,
+    pub validator: Result<semio_framework_schema::OwnedJsonSchemaValidator, String>,
     pub value: DslValue,
     pub outcome: Vec<protocol::MutationMessage>,
     pub refused: Option<(String, String)>,
@@ -148,7 +171,7 @@ pub struct TimeTravelEditor {
 impl TimeTravelEditor {
     /// 🧯️ Stands in for a payload schema that compiles no validator, for the fail-closed law.
     #[cfg(test)]
-    fn refuse_validator(&mut self, reason: &str) {
+    pub fn refuse_validator(&mut self, reason: &str) {
         self.validator = Err(reason.to_string());
     }
 }
@@ -156,28 +179,31 @@ impl TimeTravelEditor {
 /// 🧩️ The composed member store a session edits (design §12): its owner edge, owner path and dialect, the typed owners of the
 /// edit on that store (created by the first visit, erased here), and the children view every render seam reads while
 /// the member's preview or replayed head is shown.
-pub(crate) struct TimeTravelMemberSubject {
+#[doc(hidden)]
+pub struct TimeTravelMemberSubject {
     pub key: MemberKey,
     pub path: MemberPath,
     pub dialect: ArtifactDialect,
     pub owners: Option<Box<dyn TimeTravelOwners>>,
     pub children: Option<ChildContentView>,
     pub review_children: Option<TimeTravelReviewChildren>,
-    pub(crate) metadata_close: Option<ControlledRetirement<TimeTravelMemberMetadata>>,
-    pub(crate) metadata_retired: bool,
+    pub metadata_close: Option<ControlledRetirement<TimeTravelMemberMetadata>>,
+    pub metadata_retired: bool,
 }
 
+#[doc(hidden)]
 #[derive(semio_framework_value::RetireOwned)]
-pub(crate) struct TimeTravelMemberMetadata {pub(crate) key:MemberKey,pub(crate) path:MemberPath,pub(crate) dialect:ArtifactDialect}
+pub struct TimeTravelMemberMetadata {pub key:MemberKey,pub path:MemberPath,pub dialect:ArtifactDialect}
 
-pub(crate) struct TimeTravelReviewChildren {
-    pub(crate) view: ChildContentView,
-    pub(crate) base: TimeTravelBase,
-    pub(crate) generation: u32,
+#[doc(hidden)]
+pub struct TimeTravelReviewChildren {
+    pub view: ChildContentView,
+    pub base: TimeTravelBase,
+    pub generation: u32,
 }
 
 impl TimeTravelReviewChildren {
-    pub(crate) fn capture(view:&ChildContentView,base:TimeTravelBase,generation:u32,grant:RetainedCloneGrant)->Option<(Self,RetainedCloneProgress)>{
+    pub fn capture(view:&ChildContentView,base:TimeTravelBase,generation:u32,grant:RetainedCloneGrant)->Option<(Self,RetainedCloneProgress)>{
         let copied_bytes=size_of::<Self>();if grant.maximum_items==0||grant.maximum_copy_bytes<copied_bytes||grant.maximum_depth==0{return None}
         Some((Self{view:view.clone(),base,generation},RetainedCloneProgress{copied_items:1,copied_bytes,..Default::default()}))
     }
@@ -185,7 +211,7 @@ impl TimeTravelReviewChildren {
 
 impl TimeTravelMemberSubject {
     /// 🧩️ The member store id the history wire names it by: the text of its owner path (`<slot>/<childId>` for a member of the document).
-    pub(crate) fn store(&self) -> String {
+    pub fn store(&self) -> String {
         self.path.to_string()
     }
 }
@@ -196,43 +222,45 @@ impl TimeTravelMemberSubject {
 /// its finished result (whose head is the reviewing preview and whose report finalizes without replaying again), and
 /// the owners still retiring. Nothing here is persisted or shared; closing the instance discards it.
 pub struct TimeTravelLedger<A: ArtifactApp> {
-    pub(crate) session: TimeTravelSession,
-    pub(crate) pending_command: Option<semio_framework_time_travel::TimeTravelCommandCustody>,
-    pub(crate) discard_cursor: Option<Box<semio_framework_time_travel::TimeTravelDiscardCursor>>,
-    pub(crate) command_retirements: semio_framework_value::retirement_queue::RetirementQueue,
-    pub(crate) command_receipt: Option<(RetainedCloneGrant,RetainedCloneProgress)>,
+    pub session: TimeTravelSession,
+    pub pending_command: Option<semio_framework_time_travel::TimeTravelCommandCustody>,
+    pub discard_cursor: Option<Box<semio_framework_time_travel::TimeTravelDiscardCursor>>,
+    pub command_retirements: semio_framework_value::retirement_queue::RetirementQueue,
+    pub command_receipt: Option<(RetainedCloneGrant,RetainedCloneProgress)>,
     session_retirement: Option<ControlledRetirement<TimeTravelSession>>,
     session_retired: bool,
-    pub(crate) editor: Option<TimeTravelEditor>,
-    pub(crate) document: TimeTravelStoreState<A::Snapshot, A::Mutation>,
-    pub(crate) member: Option<TimeTravelMemberSubject>,
-    retiring: Vec<Box<dyn TimeTravelOwners>>,
-    pub(crate) closing: bool,
-    pub(crate) ui_dirty: bool,
-    pub(crate) document_dirty: bool,
-    pub(crate) refreshed_ms: u64,
-    pub(crate) refreshed_done: u32,
-    pub(crate) patch_due: bool,
-    pub(crate) patch: Option<HistoryPatch>,
-    pub(crate) reprojection_paused: bool,
-    pub(crate) reprojection_fault: Option<(String, HistoryReprojectionKind)>,
-    pub(crate) reprojection_refreshed_ms: u64,
-    pub(crate) deferred_history_row: Option<String>,
-    pub(crate) authoring: Option<SupersedeAuthoring<A::Snapshot, A::Mutation>>,
-    history_unavailable: bool,
-    pub(crate) turn_clock: fn() -> Option<u64>,
+    pub editor: Option<TimeTravelEditor>,
+    pub document: TimeTravelStoreState<A::Snapshot, A::Mutation>,
+    pub member: Option<TimeTravelMemberSubject>,
+    pub retiring: Vec<Box<dyn TimeTravelOwners>>,
+    pub closing: bool,
+    pub ui_dirty: bool,
+    pub document_dirty: bool,
+    pub refreshed_ms: u64,
+    pub refreshed_done: u32,
+    pub patch_due: bool,
+    pub patch: Option<HistoryPatch>,
+    pub reprojection_paused: bool,
+    pub reprojection_fault: Option<(String, HistoryReprojectionKind)>,
+    pub reprojection_refreshed_ms: u64,
+    pub deferred_history_row: Option<String>,
+    pub authoring: Option<SupersedeAuthoring<A::Snapshot, A::Mutation>>,
+    pub history_unavailable: bool,
+    pub turn_clock: fn() -> Option<u64>,
 }
 
 /// ✍️ The undo or redo of a finalize being authored resumably: the Report replay of its inputs over the applied history,
 /// stepped per reactor turn, and how it finalizes (unscoped, or within the history edit's own line).
-pub(crate) struct SupersedeAuthoring<P, Mu: ::protocol::Mutation<P>> {
-    pub(crate) replay: store::os_store::snapshot_read::ArtifactDerivedReplay<P, Mu>,
-    pub(crate) finalization: store::HistoryFinalization,
+#[doc(hidden)]
+pub struct SupersedeAuthoring<P, Mu: ::protocol::Mutation<P>> {
+    pub replay: store::os_store::snapshot_read::ArtifactDerivedReplay<P, Mu>,
+    pub finalization: store::HistoryFinalization,
 }
 
 /// 🧮️ Where authoring the undo or redo of a finalize stands.
+#[doc(hidden)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum SupersedeAuthored {
+pub enum SupersedeAuthored {
     Landed,
     Pending,
     Refused,
@@ -274,7 +302,7 @@ impl<A: ArtifactApp> Default for TimeTravelLedger<A> {
 impl<A: ArtifactApp> TimeTravelLedger<A> {
     /// ⏱️ Replaces the clock every driver turn reads its wall deadline from (laws drive a counted clock).
     #[cfg(test)]
-    pub(crate) fn set_turn_clock(&mut self, clock: fn() -> Option<u64>) {
+    pub fn set_turn_clock(&mut self, clock: fn() -> Option<u64>) {
         self.turn_clock = clock;
     }
 
@@ -296,7 +324,7 @@ impl<A: ArtifactApp> TimeTravelLedger<A> {
 
     /// ✏️ The draft editor for a law that exercises a descriptor the fixture app's leaves do not declare.
     #[cfg(test)]
-    pub(crate) fn editor_mut(&mut self) -> Option<&mut TimeTravelEditor> {
+    pub fn editor_mut(&mut self) -> Option<&mut TimeTravelEditor> {
         self.editor.as_mut()
     }
 
@@ -352,21 +380,21 @@ impl<A: ArtifactApp> TimeTravelLedger<A> {
     }
 
     /// ⏯️ Whether the store the session edits holds a running replay.
-    pub(crate) fn replaying(&self) -> bool {
+    pub fn replaying(&self) -> bool {
         match self.member.as_ref() {
             None => TimeTravelOwners::replaying(&self.document),
             Some(member) => member.owners.as_deref().is_some_and(TimeTravelOwners::replaying),
         }
     }
 
-    pub(crate) fn preview_progress(&self) -> Option<store::os_store::replay::ReplayProgress> {
+    pub fn preview_progress(&self) -> Option<store::os_store::replay::ReplayProgress> {
         match self.member.as_ref() {
             None => self.document.preview_progress(),
             Some(member) => member.owners.as_deref().and_then(TimeTravelOwners::preview_progress),
         }
     }
 
-    fn processed(&self) -> Option<u32> {
+    pub fn processed(&self) -> Option<u32> {
         match self.member.as_ref() {
             None => self.document.processed(),
             Some(member) => member.owners.as_deref().and_then(TimeTravelOwners::processed),
@@ -380,7 +408,7 @@ impl<A: ArtifactApp> TimeTravelLedger<A> {
 
     /// 🧹️ Every typed owner set the ledger holds: the document's, the member's being edited, and the members' still
     /// retiring after the session left them.
-    pub(crate) fn owners(&self) -> impl Iterator<Item = &dyn TimeTravelOwners> {
+    pub fn owners(&self) -> impl Iterator<Item = &dyn TimeTravelOwners> {
         std::iter::once(&self.document as &dyn TimeTravelOwners).chain(self.member.iter().filter_map(|member| member.owners.as_deref())).chain(self.retiring.iter().map(|owners| &**owners))
     }
 
@@ -391,12 +419,12 @@ impl<A: ArtifactApp> TimeTravelLedger<A> {
         self.member.as_ref().is_some_and(|_|self.closing||self.session.stage==TimeTravelStage::Inactive) || self.review_children_pending() || self.command_receipt.is_some() || self.pending_command.is_some() || self.discard_cursor.is_some() || !self.command_retirements.terminal_is_empty() || replaying || self.authoring.is_some() || self.owners().any(TimeTravelOwners::has_pending_work) || self.is_ui_dirty() || self.patch_due || self.patch.is_some()
     }
 
-    pub(crate) fn review_children_pending(&self)->bool{
+    pub fn review_children_pending(&self)->bool{
         self.member.as_ref().is_some_and(|member|match member.review_children.as_ref(){Some(review)=>self.closing||review.base!=self.session.base||!matches!(self.session.stage,TimeTravelStage::Editing|TimeTravelStage::Reviewing)||self.session.stage==TimeTravelStage::Reviewing&&(review.generation!=self.session.generation||member.children.as_ref().is_none_or(|view|!review.view.same_owner(view))),None=>!self.closing&&self.session.stage==TimeTravelStage::Reviewing&&member.children.is_some()})
     }
 
     /// 📨️ Pays the original received command slot while retaining unadmitted input in its caller.
-    pub(crate) fn stage_time_travel_command(&mut self,original:&mut Option<TimeTravelEvent>,grant:RetainedCloneGrant)->Result<Option<RetainedCloneProgress>,ValueError>{
+    pub fn stage_time_travel_command(&mut self,original:&mut Option<TimeTravelEvent>,grant:RetainedCloneGrant)->Result<Option<RetainedCloneProgress>,ValueError>{
         if self.command_receipt.is_some(){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"actor original command receipt awaits its caller"))}
         if self.closing||self.pending_command.is_some(){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"actor already retains an original pending command"))}
         let parent_copy=size_of::<Option<semio_framework_time_travel::TimeTravelCommandCustody>>();
@@ -414,7 +442,7 @@ impl<A: ArtifactApp> TimeTravelLedger<A> {
     }
 
     /// 🫥️ Marks the document as hydrated head-only (`true`) or loaded with its history (`false`).
-    pub(crate) fn set_history_unavailable(&mut self, unavailable: bool) {
+    pub fn set_history_unavailable(&mut self, unavailable: bool) {
         self.history_unavailable = unavailable;
     }
 
@@ -454,17 +482,17 @@ impl<A: ArtifactApp> TimeTravelLedger<A> {
     }
 
     /// ✍️ The accepted drafts keyed by target, the shape every store read takes.
-    pub(crate) fn accepted_drafts(&self) -> protocol::HistoryInputDrafts {
+    pub fn accepted_drafts(&self) -> protocol::HistoryInputDrafts {
         self.session.accepted.iter().map(|draft| (draft.target.mutation.clone(), draft.replacement.clone())).collect()
     }
 
-    pub(crate) fn replace_editor(&mut self, editor: Option<TimeTravelEditor>) {
+    pub fn replace_editor(&mut self, editor: Option<TimeTravelEditor>) {
         self.editor = editor;
     }
 
     /// 🧹️ One bounded retirement unit of the first typed owner set still retiring; `None` when nothing retires. A member
     /// owner set the session already left is dropped once it is terminal-empty.
-    pub(crate) fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
+    pub fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
         let demand=self.pending_command_retirement_demands(body)?;
         if demand!=RetirementDemand::default(){return Ok(demand);}
         let demand=self.session_retirement_demands(body)?;
@@ -476,7 +504,7 @@ impl<A: ArtifactApp> TimeTravelLedger<A> {
         if self.retiring.capacity()!=0{return Ok(RetirementDemand{release_bytes:self.retiring.capacity()*size_of::<Box<dyn TimeTravelOwners>>(),depth:1,..Default::default()});}
         Ok(Default::default())
     }
-    pub(crate) fn retire_step(&mut self, grant: RetainedCloneGrant) -> Result<Option<RetainedCloneStep>, Fault> {
+    pub fn retire_step(&mut self, grant: RetainedCloneGrant) -> Result<Option<RetainedCloneStep>, Fault> {
         if grant.maximum_items==0{return Ok(Some(RetainedCloneStep::Progress(Default::default())));}
         if let Some(step)=self.pending_command_retirement_step(grant).map_err(ValueError::into_fault)?{return Ok(Some(step));}
         if let Some(step)=self.session_retirement_step(grant).map_err(ValueError::into_fault)?{return Ok(Some(step));}
@@ -503,7 +531,7 @@ impl<A: ArtifactApp> TimeTravelLedger<A> {
     /// 👉️ The first mutation, in replay order, whose outcome blocks finalizing (`MergePolicy::Normal`, the floor
     /// `ReplayReport::blocks_finalize` reads): what the status names as the next problem (design §22.2); `None` while the
     /// session's report does not block.
-    fn next_problem(&self) -> Option<String> {
+    pub fn next_problem(&self) -> Option<String> {
         self.session.report.as_ref()?.outcomes.iter().find(|outcome| outcome.worst.is_some_and(|worst| protocol::MergePolicy::Normal.rejects(worst))).map(|outcome| outcome.mutation_id.0.clone())
     }
 
@@ -602,11 +630,13 @@ impl<A: ArtifactApp> TimeTravelLedger<A> {
 //#endregion 🔖️Ledger
 
 //#region 🔖️StoreState
+#[doc(hidden)]
 #[path="🎮️decision/🗑️discard/🦀️.rs"]
-pub(crate) mod discard_decision;
+pub mod discard_decision;
 /// 🧹️ The store-free half of one store's history-edit owners: whether a replay runs, whether owners still retire, the
 /// terminal witness and one bounded retirement unit — callable on a composed member's erased owners without its store.
-pub(crate) trait TimeTravelOwners: Send {
+#[doc(hidden)]
+pub trait TimeTravelOwners: Send {
     fn replaying(&self) -> bool;
     fn preview_progress(&self) -> Option<store::os_store::replay::ReplayProgress>;
     fn processed(&self) -> Option<u32>;
@@ -624,9 +654,10 @@ pub(crate) trait TimeTravelOwners: Send {
 /// edited operation's kind (staged by an open until the session adopts it), the draft preview, the running Report replay,
 /// its finished result and replayed head, the retirements of the snapshots they displaced (taken from the store at once,
 /// so they retire without it) and the operations a draft discarded.
-pub(crate) struct TimeTravelStoreState<P, Mu: ::protocol::Mutation<P>> {
+#[doc(hidden)]
+pub struct TimeTravelStoreState<P, Mu: ::protocol::Mutation<P>> {
     discard_effects: Option<Box<discard_decision::TimeTravelDiscardStoreEffects<P,Mu>>>,
-    label_of: fn(&Mu) -> LocalizedLabel,
+    pub label_of: fn(&Mu) -> LocalizedLabel,
     staged: Option<Mu>,
     kind: Option<Mu>,
     preview: Option<store::os_store::snapshot_read::ArtifactDerivedSnapshot<P>>,
@@ -656,22 +687,25 @@ impl<P,Mu:Mutation<P>> Drop for TimeTravelStoreState<P,Mu>{
 }
 
 /// ⏭️ What one replay slice did: progress, a completed report (the head is swapped in), or a fault.
-pub(crate) enum TimeTravelReplayStep {
+#[doc(hidden)]
+pub enum TimeTravelReplayStep {
     Pending { done: u32, total: u32 },
     Completed(protocol::ReplayReport),
     Faulted,
 }
 
 /// 🖼️ One preview slice leaves progress or publishes a complete selected-mutation projection.
-pub(crate) enum TimeTravelPreviewStep {
+#[doc(hidden)]
+pub enum TimeTravelPreviewStep {
     Pending,
     Completed(Vec<protocol::MutationMessage>),
 }
 
 /// 🌿️ How a finalize ended on its store; a finalize carries the encoded envelopes of every transition it authored (an
 /// overwrite's `Supersede`; an alternative's pending-edit commit, `Branch` and scoped `Supersede`), in authoring order.
+#[doc(hidden)]
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub(crate) enum TimeTravelCommit {
+pub enum TimeTravelCommit {
     Finalized { authored: Vec<u8> },
     Stale,
     Blocked,
@@ -679,7 +713,8 @@ pub(crate) enum TimeTravelCommit {
 }
 
 /// 📨️ One typed history-edit operation against the store a session edits.
-pub(crate) enum TimeTravelStoreCommand {
+#[doc(hidden)]
+pub enum TimeTravelStoreCommand {
     Open { target: MutationId, current: Option<protocol::InputReplacement>, withdraw: bool },
     Adopt(bool),
     Rebuild(DslValue),
@@ -692,7 +727,8 @@ pub(crate) enum TimeTravelStoreCommand {
 }
 
 /// 📬️ What a [`TimeTravelStoreCommand`] answered.
-pub(crate) enum TimeTravelStoreOutput {
+#[doc(hidden)]
+pub enum TimeTravelStoreOutput {
     Opened(Result<(TimeTravelEditor, protocol::InputReplacement), TimeTravelActionRefusal>),
     Rebuilt(Result<protocol::InputReplacement, String>),
     Previewed(TimeTravelPreviewStep),
@@ -703,14 +739,16 @@ pub(crate) enum TimeTravelStoreOutput {
 }
 
 /// 🔎️ One store-only read a session takes synchronously.
-pub(crate) enum TimeTravelStoreQuery {
+#[doc(hidden)]
+pub enum TimeTravelStoreQuery {
     Base,
     Positions(Vec<MutationId>),
     ShownValue(TimeTravelStage),
 }
 
 /// 📬️ What a [`TimeTravelStoreQuery`] answered.
-pub(crate) enum TimeTravelQueryOutput {
+#[doc(hidden)]
+pub enum TimeTravelQueryOutput {
     Base(TimeTravelBase),
     Positions(Option<Vec<TimeTravelTarget>>),
     Value(Option<DslValue>),
@@ -722,14 +760,14 @@ where
     Mu: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ::protocol::Mutation<P> + ::protocol::OpBinary + ::protocol::OpText + Send + 'static,
 {
     /// 🏗️ Owners at rest, labelling the store's operations with `label_of`.
-    fn new(label_of: fn(&Mu) -> LocalizedLabel) -> Self {
+    pub fn new(label_of: fn(&Mu) -> LocalizedLabel) -> Self {
         Self { discard_effects:None,label_of, staged: None, kind: None, preview: None, preview_job: None, preview_input: None, replay: None, finished: None, head: None, snapshot_aliases: ManuallyDrop::new(std::array::from_fn(|_|None)), snapshot_issuers: ManuallyDrop::new(None), snapshot_close: ManuallyDrop::new(None), snapshot_issuer_close: std::array::from_fn(|_|None), retirements: VecDeque::new(), discarded: Vec::new(), discarded_pending: None, discarded_active: None, discarded_factory: None, discarded_factory_close: None }
     }
 
     /// 🪞️ The snapshot the session shows at `stage`: the draft preview while editing; while replaying that preview — or,
     /// for a replay started from a review (Replay again, a restored draft, a moved base), the head reviewed last, so no
     /// window falls back to the committed document in between; the replayed head while reviewing.
-    pub(crate) fn shown(&self, stage: TimeTravelStage) -> Option<&store::os_store::snapshot_read::ArtifactDerivedSnapshot<P>> {
+    pub fn shown(&self, stage: TimeTravelStage) -> Option<&store::os_store::snapshot_read::ArtifactDerivedSnapshot<P>> {
         match stage {
             TimeTravelStage::Inactive => None,
             TimeTravelStage::Editing => self.preview.as_ref(),
@@ -744,7 +782,7 @@ where
         Ok(())
     }
 
-    pub(crate) fn retire(&mut self, store: &ArtifactStore<P, Mu>, snapshot: Option<store::os_store::snapshot_read::ArtifactDerivedSnapshot<P>>) -> Result<(), Fault> {
+    pub fn retire(&mut self, store: &ArtifactStore<P, Mu>, snapshot: Option<store::os_store::snapshot_read::ArtifactDerivedSnapshot<P>>) -> Result<(), Fault> {
         if let Some(snapshot)=snapshot {
             let slot=self.snapshot_aliases.iter_mut().find(|slot|slot.is_none()).expect("original snapshot custody was reserved before source publication");
             *slot=Some(snapshot);
@@ -777,13 +815,13 @@ where
         Ok(())
     }
 
-    fn discard(&mut self, op: Option<Mu>) {
+    pub fn discard(&mut self, op: Option<Mu>) {
         self.discarded.extend(op);
     }
 
     /// 🧽️ Drops what `stage` no longer shows: the kind outside `Editing`, the draft preview once the replay finished or
     /// the session left, the replay outside `Replaying`, every replay owner once it is inactive.
-    pub(crate) fn settle(&mut self, store: &ArtifactStore<P, Mu>, stage: TimeTravelStage) -> Result<(), Fault> {
+    pub fn settle(&mut self, store: &ArtifactStore<P, Mu>, stage: TimeTravelStage) -> Result<(), Fault> {
         self.snapshot_custody_available(2)?;
         if stage != TimeTravelStage::Editing {
             self.cancel_preview(store)?;
@@ -808,7 +846,7 @@ where
     }
 
     /// 🔎️ A store-only read.
-    pub(crate) fn query(owners: Option<&Self>, store: &ArtifactStore<P, Mu>, query: TimeTravelStoreQuery) -> TimeTravelQueryOutput {
+    pub fn query(owners: Option<&Self>, store: &ArtifactStore<P, Mu>, query: TimeTravelStoreQuery) -> TimeTravelQueryOutput {
         match query {
             TimeTravelStoreQuery::Base => TimeTravelQueryOutput::Base(TimeTravelBase { content_revision: store.content_revision() }),
             TimeTravelStoreQuery::Positions(targets) => TimeTravelQueryOutput::Positions(targets.into_iter().map(|target| store.mutation_position(&target).ok().map(|(position, _)| TimeTravelTarget { position: u32::try_from(position).unwrap_or(u32::MAX), mutation: target })).collect()),
@@ -817,7 +855,7 @@ where
     }
 
     /// 📨️ Runs one typed command against `store`.
-    pub(crate) async fn run(&mut self, store: &mut ArtifactStore<P, Mu>, command: TimeTravelStoreCommand) -> Result<TimeTravelStoreOutput, Fault> {
+    pub async fn run(&mut self, store: &mut ArtifactStore<P, Mu>, command: TimeTravelStoreCommand) -> Result<TimeTravelStoreOutput, Fault> {
         Ok(match command {
             TimeTravelStoreCommand::Open { target, current, withdraw } => TimeTravelStoreOutput::Opened(self.open(store, &target, current.as_ref(), withdraw)),
             TimeTravelStoreCommand::Adopt(adopt) => {
@@ -862,7 +900,7 @@ where
     }
 
     /// 🪪️ Commits the original finished replay through the caller's existing identity recipient.
-    pub(crate) async fn commit_finished(&mut self, store: &mut ArtifactStore<P, Mu>, drafts: protocol::HistoryInputDrafts, finalization: store::HistoryFinalization, actor: Option<&str>, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<TimeTravelCommit, Fault> {
+    pub async fn commit_finished(&mut self, store: &mut ArtifactStore<P, Mu>, drafts: protocol::HistoryInputDrafts, finalization: store::HistoryFinalization, actor: Option<&str>, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<TimeTravelCommit, Fault> {
         if self.finished.as_ref().is_none_or(|finished| *finished.drafts() != drafts) {
             self.cancel_finished(store)?;
             return Ok(TimeTravelCommit::Stale);
@@ -892,7 +930,7 @@ where
     /// ([`time_travel_admits_withdrawal`]), and an operation without editable inputs opens on an editor without inputs.
     /// An operation of a cross-document unit takes no supersession in this document alone (`AppliedMutation::unit`, the
     /// store's authoring law): its Withdraw answers the store's own refusal, its inputs are not editable.
-    fn open(&mut self, store: &ArtifactStore<P, Mu>, target: &MutationId, current: Option<&protocol::InputReplacement>, withdraw: bool) -> Result<(TimeTravelEditor, protocol::InputReplacement), TimeTravelActionRefusal> {
+    pub fn open(&mut self, store: &ArtifactStore<P, Mu>, target: &MutationId, current: Option<&protocol::InputReplacement>, withdraw: bool) -> Result<(TimeTravelEditor, protocol::InputReplacement), TimeTravelActionRefusal> {
         let refusal = if withdraw { TimeTravelActionRefusal::NotWithdrawable } else { TimeTravelActionRefusal::NotEditable };
         let row = store.applied_mutation(target).map_err(|_| TimeTravelActionRefusal::UnknownMutation)?;
         if row.unit.is_some() {
@@ -953,7 +991,7 @@ where
     }
 
     /// 🎚️ The validated draft payload `candidate` rebuilt into the edited kind and canonically encoded.
-    fn rebuild(&mut self, store: &ArtifactStore<P, Mu>, candidate: DslValue) -> Result<protocol::InputReplacement, String> {
+    pub fn rebuild(&mut self, store: &ArtifactStore<P, Mu>, candidate: DslValue) -> Result<protocol::InputReplacement, String> {
         let op = self.kind.as_ref().ok_or("the draft editor lost the operation kind it rebuilds")?.with_payload_value(candidate).map_err(|error| error.to_string())?;
         let encoded = <Mu as ::protocol::OpBinary>::encode_op(&op);
         self.discard(Some(op));
@@ -1060,7 +1098,8 @@ where
 
 /// ✍️ One typed history-edit command against a composed member's store (design §12): creates the member's owners on the
 /// first visit, then runs the command on them.
-pub(crate) struct TimeTravelMemberRun<'a> {
+#[doc(hidden)]
+pub struct TimeTravelMemberRun<'a> {
     pub owners: &'a mut Option<Box<dyn TimeTravelOwners>>,
     pub command: TimeTravelStoreCommand,
 }
@@ -1083,7 +1122,8 @@ impl store::MemberStoreVisitorMut for TimeTravelMemberRun<'_> {
 }
 
 /// 🪪️ Finalizes the original composed member replay with the existing caller authority.
-pub(crate) struct TimeTravelMemberCommit<'a, 'identity> {
+#[doc(hidden)]
+pub struct TimeTravelMemberCommit<'a, 'identity> {
     pub owners: &'a mut Option<Box<dyn TimeTravelOwners>>,
     pub drafts: protocol::HistoryInputDrafts,
     pub finalization: store::HistoryFinalization,
@@ -1105,7 +1145,8 @@ impl store::MemberStoreVisitorMut for TimeTravelMemberCommit<'_, '_> {
 }
 
 /// 🧽️ Settles a composed member's owners for `stage` against its store (design §12).
-pub(crate) struct TimeTravelMemberSettle<'a> {
+#[doc(hidden)]
+pub struct TimeTravelMemberSettle<'a> {
     pub owners: &'a mut dyn TimeTravelOwners,
     pub stage: TimeTravelStage,
 }
@@ -1123,7 +1164,8 @@ impl store::MemberStoreVisitor for TimeTravelMemberSettle<'_> {
 }
 
 /// 🔎️ A store-only read of a composed member's store (design §12).
-pub(crate) struct TimeTravelMemberQuery<'a> {
+#[doc(hidden)]
+pub struct TimeTravelMemberQuery<'a> {
     pub owners: Option<&'a dyn TimeTravelOwners>,
     pub query: TimeTravelStoreQuery,
 }
@@ -1146,7 +1188,8 @@ impl store::MemberStoreVisitor for TimeTravelMemberQuery<'_> {
 /// the selected ids typed by the input's id type (ids the type cannot spell are skipped), all of them up to `max_items`
 /// for a many-reference, else the first. Refused `unknown-input` for an input that is no reference or names no domain,
 /// `no-selection` when the domain selects nothing at the input's granularity.
-pub(crate) fn time_travel_selection_value(input: &ActionArgDef, selection: Option<&protocol::DomainSelection>) -> Result<DslValue, TimeTravelActionRefusal> {
+#[doc(hidden)]
+pub fn time_travel_selection_value(input: &ActionArgDef, selection: Option<&protocol::DomainSelection>) -> Result<DslValue, TimeTravelActionRefusal> {
     let ArgSchema::Reference { domain: Some(_), granularity, many, max_items, id_type, .. } = &input.schema else { return Err(TimeTravelActionRefusal::UnknownInput) };
     let selection = selection.filter(|selection| granularity.as_ref().is_none_or(|granularity| *granularity == selection.granularity)).ok_or(TimeTravelActionRefusal::NoSelection)?;
     let mut ids = selection.ids.iter().filter_map(|id| id_type.id_value(id));
@@ -1163,7 +1206,8 @@ pub(crate) fn time_travel_selection_value(input: &ActionArgDef, selection: Optio
 
 //#region 🔖️Driver
 /// 🧿️ The session generation a verb names, in every shape the wire hands it over; `None` addresses the live session.
-pub(crate) fn time_travel_arg_generation(args: Option<&DslValue>) -> Option<u32> {
+#[doc(hidden)]
+pub fn time_travel_arg_generation(args: Option<&DslValue>) -> Option<u32> {
     tool_run::tool_run_arg_u64(args, HISTORY_EDIT_ARG_GENERATION).and_then(|generation| u32::try_from(generation).ok())
 }
 //#endregion 🔖️Driver
@@ -1205,12 +1249,12 @@ pub struct SupersedeRecord {
 /// input it restored), or none for an original input.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct SupersedeLedger {
-    key: (usize, Option<String>),
+    pub key: (usize, Option<String>),
     pub records: Vec<SupersedeRecord>,
-    index: HashMap<String, usize>,
-    originals: HashMap<MutationId, protocol::InputReplacement>,
-    undo: HashMap<semio_framework_value::SharedUtf8, Vec<usize>>,
-    redo: HashMap<semio_framework_value::SharedUtf8, Vec<(usize, usize)>>,
+    pub index: HashMap<String, usize>,
+    pub originals: HashMap<MutationId, protocol::InputReplacement>,
+    pub undo: HashMap<semio_framework_value::SharedUtf8, Vec<usize>>,
+    pub redo: HashMap<semio_framework_value::SharedUtf8, Vec<(usize, usize)>>,
     reverts: HashMap<semio_framework_value::SharedUtf8, HybridLogicalTimestamp>,
 }
 
@@ -1254,7 +1298,7 @@ impl SupersedeLedger {
 
     /// 🎯️ The replacement effective for `target` over the first `before` records in the view of `scope`, with the record
     /// that installed it.
-    fn effective(&self, before: usize, scope: Option<&str>, target: &MutationId) -> Option<(usize, &protocol::InputReplacement)> {
+    pub fn effective(&self, before: usize, scope: Option<&str>, target: &MutationId) -> Option<(usize, &protocol::InputReplacement)> {
         self.records[..before]
             .iter()
             .enumerate()
@@ -1265,7 +1309,7 @@ impl SupersedeLedger {
 
     /// 👑️ The history edit whose input record `index` installs for `target`: the edit itself, a redo's re-authored edit,
     /// an undo's owner of the input it restored; `None` for a restored original input.
-    fn owner(&self, index: usize, target: &MutationId) -> Option<usize> {
+    pub fn owner(&self, index: usize, target: &MutationId) -> Option<usize> {
         let record = &self.records[index];
         match record.role {
             SupersedeRole::Edit => Some(index),
@@ -1280,13 +1324,13 @@ impl SupersedeLedger {
     }
 
     /// ✋️ The inputs history edit `entry` still owns over the first `before` records, in the view of its scope.
-    fn held(&self, entry: usize, before: usize) -> Vec<&MutationId> {
+    pub fn held(&self, entry: usize, before: usize) -> Vec<&MutationId> {
         let scope = self.records[entry].scope.as_deref();
         self.records[entry].inputs.iter().map(|input| &input.target).filter(|target| self.owner_at(before, scope, target) == Some(entry)).collect()
     }
 
     /// ⏪️ The input `target` had before history edit `entry`: the effective one in the view of its scope, else the original.
-    fn before(&self, entry: usize, target: &MutationId) -> Option<protocol::InputReplacement> {
+    pub fn before(&self, entry: usize, target: &MutationId) -> Option<protocol::InputReplacement> {
         match self.effective(entry, self.records[entry].scope.as_deref(), target) {
             Some((_, replacement)) => Some(replacement.clone()),
             None => self.originals.get(target).cloned(),

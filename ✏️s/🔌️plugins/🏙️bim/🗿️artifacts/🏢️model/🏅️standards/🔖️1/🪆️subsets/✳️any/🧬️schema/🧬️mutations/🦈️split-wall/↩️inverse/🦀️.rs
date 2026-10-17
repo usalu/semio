@@ -5,7 +5,7 @@
 use super::super::delete_wall::DeleteWall;
 use super::super::move_opening::MoveOpening;
 use super::super::set_wall_axis::SetWallAxis;
-use super::super::wall_geometry::split;
+use crate::standards::v1::subsets::any::schema::mutations::wall_geometry::split;
 use super::SplitWall;
 use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
 

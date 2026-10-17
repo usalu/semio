@@ -1,5 +1,5 @@
 use super::*;
-use crate::editor::bim::unit_tests::support::{ctx, demo, run};
+use crate::editor::bim::fixture::support::{ctx, demo, run};
 use protocol::Inference;
 
 fn finished(job: &mut ExportJob, snapshot: &ModelSnapshot) -> (Output, Vec<&'static str>) {

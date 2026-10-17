@@ -1,14 +1,34 @@
-use super::*;
+use crate::editor::puzzle5d::terminology::{puzzle5d_fill_run_counters, puzzle5d_fill_run_reasons, puzzle5d_fill_run_stages, Puzzle5dLabels};
+use crate::editor::puzzle5d::view::Puzzle5dScene;
+use semio_framework_plugin::WindowMeasure;
+use semio_framework_tool_run::{JobKindId, ToolRunRebasePolicy, ToolRunReconfigurePolicy};
+#[allow(unused_imports)]
+use crate::editor::puzzle5d::modes::edit::options::brush::distribution_children;
+#[allow(unused_imports)]
+use crate::editor::puzzle5d::terminology::puzzle5d_fill_run_unit;
+#[allow(unused_imports)]
+use crate::editor::puzzle5d::entities::{puzzle5d_action, PUZZLE5D_PLAY_CONTROLLER_ID};
+#[allow(unused_imports)]
+use semio_framework_plugin::ActionDescriptor;
+#[allow(unused_imports)]
+use semio_framework_ui_locale::LocalizedLabel;
+#[allow(unused_imports)]
+use semio_framework_plugin::ToolDefinition;
+#[allow(unused_imports)]
+use semio_framework_plugin::ToolRunView;
+#[allow(unused_imports)]
+use semio_framework_tool_run::{ToolRunDefinition, ToolRunSettingsReads, TOOL_RUN_ABORT_ACTION_ID, TOOL_RUN_ARG_GENERATION, TOOL_RUN_ARG_RUN_ID};
+use crate::editor::puzzle5d::modes::edit::tools::fill::*;
 use crate::editor::puzzle5d::config::Puzzle5dRuntime;
 use crate::editor::puzzle5d::terminology::puzzle5d_labels;
-use crate::editor::puzzle5d::{concrete_forest_example_document, default_document, PUZZLE5D_DEFAULT_FILL_COUNT};
+use crate::editor::puzzle5d::entities::{concrete_forest_example_document, default_document, PUZZLE5D_DEFAULT_FILL_COUNT};
 use semio_framework_tool_run::ToolRunTraceKind;
 
 fn labels() -> &'static Puzzle5dLabels {
     puzzle5d_labels(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).expect("the host's own default axes are authored")
 }
 
-fn scene(document: crate::editor::puzzle5d::Puzzle5dDocument, fill_count: u32) -> Puzzle5dScene {
+fn scene(document: crate::editor::puzzle5d::entities::Puzzle5dDocument, fill_count: u32) -> Puzzle5dScene {
     Puzzle5dScene { document, runtime: Puzzle5dRuntime { fill_count, ..Puzzle5dRuntime::default() }, active_utility: TOOL_ID.into(), interaction: Default::default() }
 }
 

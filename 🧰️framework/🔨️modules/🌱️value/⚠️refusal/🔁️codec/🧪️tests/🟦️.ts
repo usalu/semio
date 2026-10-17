@@ -59,7 +59,6 @@ test("actual controlled refusal codecs preserve all eight causes and reject clos
     assert.deepEqual(value, original);
   }
   for (const value of [{ kind: "null" }, { kind: "boolean", value: true }, { kind: "array", items: [] }] as const) await assert.rejects(codec.decodeValueErrorControlled(value as IntrinsicValue, control()), (error: unknown) => error instanceof ValueError && error.kind === "invalidValue");
-  console.log("[DEBUG] portable controlled refusal transport retains all eight kinds and rejects every closed-record violation");
 });
 test("explicit portable controls retain the original refusal object and own long-copy cancellation", async () => {
   const codec = await load();
@@ -78,5 +77,4 @@ test("explicit portable controls retain the original refusal object and own long
     if (row.cancelAt !== 0) assert.equal(callbacks, row.cancelAt);
   }
   assert.equal(source.kind, "invariantViolated");
-  console.log("[DEBUG] explicit portable refusal control retains original object identity and long-copy cancellation");
 });

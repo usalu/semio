@@ -1,0 +1,2 @@
+/** 🪶️ Public entry `@semio-tech/block-js/schema/document-fields/sqlite`: the explicit surface that importers outside the module use. */
+export { Cursor, Reader, attribute, author, camera2d, camera3d, checkedRows, compatibility, invalid, kind, list, meta, nullable, readAttribute, readAuthor, readCompatibility, readKind, strict, text, vector, word, wordCells } from "../../../../../🧬️schema/🧱️document-fields/🪶️sqlite/🟦️.ts";

@@ -1,5 +1,6 @@
 //! 🐍️ Python balance oracle + third-party JSON-schema validation.
 
+use semio_framework_test_fixtures::fixture_path;
 use semio_s_artifact_norm_din18599_checks::evaluate_document;
 use semio_s_artifact_norm_din18599_io::text::snapshot::encode_din18599_snapshot_json;
 use semio_s_artifact_norm_din18599_model::Din18599Snapshot;
@@ -11,7 +12,7 @@ fn ticket_generated() -> PathBuf {
 }
 
 fn family_any_dir() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️1/🪆️subsets/✳️any")
+    fixture_path!("../../..")
 }
 
 #[test]

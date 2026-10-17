@@ -3,7 +3,7 @@
  * @see ../🧰️probe-kit/🟦️.ts — the check shape
  * @see ../🟦️.ts — the differential check table that assembles the topics
  */
-import * as nativeRender from "../../../../../../🚪️io/📝️text/💡️inferences/🖋️latex/🟦️.ts";
+import * as nativeRender from "@semio-tech/print/io/text/inferences/latex";
 import * as scale from "../../../../📐scale/🟦️.ts";
 import * as theme from "../../../../🎨theme/🟦️.ts";
 import * as render from "../../../../🖼️render/🟦️.ts";
@@ -56,7 +56,7 @@ export function themeChecks(): VizKernelCheck[] {
         return { lightCount: light.categorical.length, darkCount: dark.categorical.length, schemes: Object.keys(light.schemes).sort(), distinct: new Set(light.categorical).size === light.categorical.length, differs: light.categorical.some((color, i) => color !== dark.categorical[i]) };
       },
       oracle: async () => {
-        const paints = await import("../../../../../../🔨️modules/🎨print-design-token-paints/🟦️.ts");
+        const paints = await import("@semio-tech/print/modules/print-design-token-paints");
         const lines = paints.renderVisualizationPalette(paints.loadPrintDesignTokens());
         const light = lines.filter((line) => line.includes("semio-presence-light-"));
         const dark = lines.filter((line) => line.includes("semio-presence-dark-"));

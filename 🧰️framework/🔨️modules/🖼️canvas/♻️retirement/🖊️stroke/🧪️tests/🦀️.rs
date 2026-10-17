@@ -70,7 +70,6 @@ fn original_canvas_stroke_preserves_every_cancelled_dash_and_physical_receipt() 
                 assert!(step.progress().fits(policy));assert_eq!((allocated,released),(step.progress().retained_capacity_bytes,step.progress().released_bytes));assert_ne!(step.progress(),Default::default());born+=allocated;freed+=released;
             }
             assert!(slot.is_none());assert_eq!(born,freed);let(_,allocated,released)=observe_backing(||drop(slot));assert_eq!((allocated,released),(0,0));
-            println!("[DEBUG] Original Canvas Stroke={} cancelledCut={} originalPointerCapacityOrder=true Kurbo=true everyTurnSystem=true bornFreed={born} suppliedPolicy=true terminalShellSeparate=true Drop0",row["id"],cut);
         }
     }
 }

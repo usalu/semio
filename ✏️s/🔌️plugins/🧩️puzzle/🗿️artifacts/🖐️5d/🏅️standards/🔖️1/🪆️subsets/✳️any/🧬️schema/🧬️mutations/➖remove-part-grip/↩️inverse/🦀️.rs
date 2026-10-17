@@ -1,11 +1,13 @@
 //! ↩️ Inverse for `RemovePartGrip` — reconstructs an `add-part-grip` of the captured BASE grip,
 //! then re-`connect-grips`es every fastener BASE shows touching it (severed cascade). Missing
 //! target ⇒ `Vec::new()`.
-use crate::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation;
 use crate::Puzzle5dSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &super::RemovePartGrip, base: &Puzzle5dSnapshot) -> Result<Vec<Puzzle5dMutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op>(payload: &super::RemovePartGrip, base: &Puzzle5dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError>
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::add_part_grip::AddPartGrip> + From<crate::standards::v1::subsets::any::schema::mutations::connect_grips::ConnectGrips>,
+{
     Ok((|| {
     let Some(part) = base.parts.iter().find(|entry| entry.id == payload.part_id) else {
         return Vec::new();

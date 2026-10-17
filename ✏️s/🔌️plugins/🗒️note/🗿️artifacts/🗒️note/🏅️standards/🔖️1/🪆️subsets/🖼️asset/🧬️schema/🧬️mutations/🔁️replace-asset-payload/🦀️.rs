@@ -1,6 +1,5 @@
 //! 🔁 Note mutation — `ReplaceAssetPayload`: whole-value swap of an existing asset's image payload.
 
-use crate::schema::mutations::NoteMutation;
 use crate::{NoteDiff, NoteSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -21,17 +20,23 @@ pub struct ReplaceAssetPayload {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn replace_asset_payload(key: String, new_asset: crate::NoteImageAsset) -> NoteMutation {
-    NoteMutation::ReplaceAssetPayload(ReplaceAssetPayload { key, new_asset })
+pub fn replace_asset_payload<Op>(key: String, new_asset: crate::NoteImageAsset) -> Op
+where
+    Op: From<crate::standards::v1::subsets::asset::schema::mutations::replace_asset_payload::ReplaceAssetPayload>,
+{
+    Op::from(ReplaceAssetPayload { key, new_asset })
 }
 
-impl MutationKind<NoteSnapshot, NoteMutation> for ReplaceAssetPayload {
+impl<Op> MutationKind<NoteSnapshot, Op> for ReplaceAssetPayload
+where
+    Op: protocol::Mutation<NoteSnapshot, Diff = NoteDiff> + From<ReplaceAssetPayload>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "replace", entity: "asset", kind: "replace-asset-payload", record: "ReplacedAsset" };
 
     fn diff(&self, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &NoteSnapshot) -> Result<Vec<NoteMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &NoteSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

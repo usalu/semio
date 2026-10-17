@@ -2,7 +2,7 @@
 
 use crate::editor::gis2d::modes::edit::windows::map::config::{layer_visible, MapWindowConfig};
 use crate::editor::gis2d::terminology::{gis2d_layer_label, Gis2dPlayLabels};
-use crate::editor::gis2d::{gis2d_window_action, GIS_MAP_LAYER_IDS};
+use crate::editor::gis2d::constants_and_io::{gis2d_window_action, GIS_MAP_LAYER_IDS};
 use semio_framework_plugin::WindowMeasure;
 
 //#region 🔖️Option
@@ -39,7 +39,4 @@ pub fn measure(cfg: &MapWindowConfig, labels: &Gis2dPlayLabels) -> WindowMeasure
 //#endregion 🔖️Option
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

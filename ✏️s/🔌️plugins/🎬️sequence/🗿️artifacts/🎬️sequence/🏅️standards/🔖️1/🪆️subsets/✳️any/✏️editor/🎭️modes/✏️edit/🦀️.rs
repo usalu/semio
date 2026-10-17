@@ -10,7 +10,7 @@ use semio_framework_plugin::WindowLayout;
 pub const SEQUENCE_PLAY_MODE_EDIT: &str = "edit";
 
 //#region 🔖️Definition
-/// 🧱️ Stitched into the app manifest by `crate::editor::sequence::create_sequence_app`.
+/// 🧱️ Stitched into the app manifest by `crate::editor::sequence::app::create_sequence_app`.
 pub fn definition() -> ModeDefinition {
     ModeDefinition { id: SEQUENCE_PLAY_MODE_EDIT.into(), label: LocalizedLabel::native("Edit", "Bearbeiten"), icon_id: "pencil".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }
 }

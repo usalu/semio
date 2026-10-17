@@ -128,7 +128,6 @@ impl HistoryState {
 //#region 🔖️HostRouteFolder
 /// 🗃️ A document kept through the dev host's backbone route: its uri, identity and artifact schema, the digest of the
 /// archive last written there and the history cursor it was written at.
-#[cfg(any(target_arch = "wasm32", any(test, feature = "testkit")))]
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct HostRouteFolder {
     pub uri: String,

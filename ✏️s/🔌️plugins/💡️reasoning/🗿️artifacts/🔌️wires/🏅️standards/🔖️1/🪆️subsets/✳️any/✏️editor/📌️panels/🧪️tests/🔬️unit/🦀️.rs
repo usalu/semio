@@ -1,0 +1,255 @@
+//! 🧪️ Aggregated unit tests of the `panels` leaves, one module per leaf.
+
+mod catalogue {
+use super::super::catalogue::*;
+use crate::editor::wires::unit_tests::context::{metabolism_app, render as render_body};
+
+#[semio_framework_async_macros::async_test]
+async fn catalogue_lists_identity_and_relationship_kinds() {
+    let mut app = metabolism_app().await;
+    let json = render_body(&mut app, WIRES_PLAY_BODY_CATALOGUE).await;
+    assert!(json.contains("Identity kinds"));
+    assert!(json.contains("Relationship kinds"));
+    crate::editor::wires::unit_tests::context::close(app);
+}
+
+#[semio_framework_async_macros::async_test]
+async fn definition_binds_the_catalogue_tab_to_this_body_key() {
+    let definition = definition();
+    assert_eq!(definition.body_key.as_deref(), Some(WIRES_PLAY_BODY_CATALOGUE));
+}
+}
+
+mod document {
+use crate::editor::wires::terminology::WiresLabels;
+use crate::WiresComposed;
+use semio_framework_plugin::TreeWindows;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
+use super::super::document::*;
+use crate::editor::wires::unit_tests::context::{metabolism_app, render as render_body};
+use crate::editor::wires::WIRES_PLAY_BODY_ARTIFACT as APP_BODY_ARTIFACT;
+use semio_framework_value::DslValue;
+use semio_framework_plugin::{TreeWindowRequest, ViewModel, TREE_WINDOW_DEFAULT_ROWS};
+
+#[semio_framework_async_macros::async_test]
+async fn document_has_identities_section() {
+    let mut app = metabolism_app().await;
+    let json = render_body(&mut app, APP_BODY_ARTIFACT).await;
+    assert!(json.contains("wires-play-document.identities"));
+    assert!(json.contains("Metabolism"));
+    crate::editor::wires::unit_tests::context::close(app);
+}
+
+#[semio_framework_async_macros::async_test]
+async fn definition_binds_the_framework_document_tab_to_this_body_key() {
+    let definition = definition();
+    assert_eq!(definition.id(), FRAMEWORK_PANEL_TAB_ARTIFACT_ID);
+    assert_eq!(definition.body_key.as_deref(), Some(WIRES_PLAY_BODY_ARTIFACT));
+}
+
+//#region 🪟️WindowLaws
+/// 🪟️ A board an order of magnitude past one viewport — the shape a real reasoning document reaches
+/// and the one this flat tree used to hard-fail on past the fixed child cap.
+fn oversized(identities: usize, relationships: usize) -> crate::WiresComposed {
+    let rows: Vec<DslValue> =
+        (0..identities).map(|index| semio_framework_value::DslValue::object([("nodeId".into(), semio_framework_value::DslValue::String(format!("identity-{index}"))), ("label".into(), semio_framework_value::DslValue::String(format!("Identity {index}")))])).collect();
+    let edges: Vec<DslValue> = (0..relationships).map(|index| semio_framework_value::DslValue::object([("id".into(), semio_framework_value::DslValue::String(format!("edge-{index}")))])).collect();
+    let mut document = crate::empty_wires_snapshot();
+    document.wires_snapshot = semio_framework_value::DslValue::object([
+        ("schema".into(), semio_framework_value::DslValue::String(crate::MINDMAP_WIRES_SCHEMA.into())),
+        ("identities".into(), semio_framework_value::DslValue::Array(rows)),
+    ]);
+    crate::wires_composed(&document, &crate::wires_content_snapshot(&[], &edges))
+}
+
+/// 🪟️ The panel body exactly as the host reads it, for the host-known windows in `requests`.
+fn window_body(document: &crate::WiresComposed, requests: Vec<TreeWindowRequest>) -> String {
+    let view_state = ViewModel { tree_windows: requests, ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
+    let labels = semio_framework_plugin::resolve_labels::<WiresLabels>(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
+    let node = render(document, labels, &TreeWindows::for_body(&view_state, WIRES_PLAY_BODY_ARTIFACT)).expect("wires document tree assembly");
+    semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("wires document tree projection")
+}
+
+fn request(node_key: &str, open: Option<bool>, offset: u32, rows: u32) -> TreeWindowRequest {
+    TreeWindowRequest { body_key: WIRES_PLAY_BODY_ARTIFACT.into(), node_key: node_key.into(), open, offset, rows }
+}
+
+/// 🪟️ Law (a): both sections stamp their FULL extent and the first paint materialises at most one
+/// viewport of rows — no `+N` row and no truncation anywhere.
+#[test]
+fn an_oversized_board_stamps_both_totals_and_never_a_continuation_row() {
+    let document = oversized(300, 180);
+    let json = window_body(&document, vec![request("wires-play-document.relationships", Some(true), 0, 4)]);
+    assert!(json.contains("\"total\":300"), "the identities section stamps its full extent: {json}");
+    assert!(json.contains("\"total\":180"), "the relationships section stamps its full extent: {json}");
+    assert!(!json.contains(".more"), "no continuation row survives: {json}");
+    assert!(!json.contains("\"+"), "no `+N` label survives: {json}");
+    assert!(json.matches("\"key\":\"identity-").count() <= TREE_WINDOW_DEFAULT_ROWS as usize, "first paint materialises about one viewport: {json}");
+}
+
+/// 🪟️ Law (b): the relationships section is authored CLOSED, and a section the host closes behaves the
+/// same — the total is stamped, no child is built.
+#[test]
+fn a_closed_section_stamps_its_total_and_materialises_no_children() {
+    let document = oversized(300, 180);
+    let cold = window_body(&document, Vec::new());
+    assert!(cold.contains("\"total\":180"), "the authored-closed relationships section still stamps its extent: {cold}");
+    assert!(!cold.contains("\"key\":\"edge-"), "an authored-closed section materialises no rows: {cold}");
+    let json = window_body(&document, vec![request("wires-play-document.identities", Some(false), 0, 0)]);
+    assert!(json.contains("\"total\":300"), "a host-closed section still stamps its extent: {json}");
+    assert!(!json.contains("\"key\":\"identity-"), "a host-closed section materialises no rows: {json}");
+}
+
+/// 🪟️ Law (c): a host window materialises exactly `[offset, offset + rows)`, keyed by the BARE identity
+/// id the canvas hit-tests against.
+#[test]
+fn a_host_window_materialises_exactly_its_slice() {
+    let json = window_body(&oversized(300, 0), vec![request("wires-play-document.identities", Some(true), 120, 10)]);
+    assert!(json.contains("\"offset\":120"), "the section reports its offset: {json}");
+    for index in 120..130 {
+        assert!(json.contains(&format!("\"key\":\"identity-{index}\"")), "row {index} is inside the window: {json}");
+    }
+    assert!(!json.contains("\"key\":\"identity-119\""), "the row before the window stays out: {json}");
+    assert!(!json.contains("\"key\":\"identity-130\""), "the row after the window stays out: {json}");
+}
+
+/// 🪟️ Law (d): the tree binds the "graph" domain ONCE and every row carries only its granularity — the
+/// per-row `interactionSelect` `{domainId, merge, method, targets}` argument map is gone.
+#[test]
+fn pick_rows_carry_granularity_while_the_tree_carries_the_one_interaction_select() {
+    let json = window_body(&oversized(4, 3), vec![request("wires-play-document.relationships", Some(true), 0, 3)]);
+    assert!(json.contains("\"interactionDomain\":\"graph\""), "the tree binds the graph domain: {json}");
+    assert_eq!(json.matches("interactionSelect").count(), 1, "exactly one tree-level interactionSelect binding: {json}");
+    assert!(json.contains("\"granularity\":\"node\""), "identity rows are pick targets: {json}");
+    assert!(json.contains("\"granularity\":\"edge\""), "relationship rows are pick targets: {json}");
+    assert!(!json.contains("\"targets\""), "no per-row target argument map survives: {json}");
+}
+//#endregion 🪟️WindowLaws
+}
+
+mod inspection {
+use crate::standards::v1::subsets::any::io::text::snapshot::board_snapshot_json_string;
+use super::super::inspection::*;
+use crate::editor::wires::unit_tests::context::{metabolism_app, render as render_body};
+
+#[semio_framework_async_macros::async_test]
+async fn empty_selection_shows_document_summary() {
+    let mut app = metabolism_app().await;
+    let json = render_body(&mut app, WIRES_PLAY_BODY_PROPERTIES).await;
+    assert!(json.contains("Schema:"));
+    assert!(json.contains("Board nodes:"));
+    crate::editor::wires::unit_tests::context::close(app);
+}
+
+#[semio_framework_async_macros::async_test]
+async fn definition_binds_the_inspection_tab_to_this_body_key() {
+    let definition = definition();
+    assert_eq!(definition.body_key.as_deref(), Some(WIRES_PLAY_BODY_PROPERTIES));
+}
+
+#[semio_framework_async_macros::async_test]
+async fn relationship_kind_labels() {
+    assert_eq!(RelationshipKind::Owns.label(), "owns");
+    assert_eq!(RelationshipKind::Has.label(), "has");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn fixed_identity_set_validation() {
+    let mut ext = DefaultWiresExtension::default();
+    ext.allowed_identities.insert(1);
+    ext.allowed_identities.insert(2);
+    assert!(ext.validate_identity_set(&[1, 2]).is_ok());
+    assert!(ext.validate_identity_set(&[1, 3]).is_err());
+}
+
+#[semio_framework_async_macros::async_test]
+async fn relationship_lookup() {
+    let mut ext = DefaultWiresExtension::default();
+    ext.relationships.insert(7, RelationshipKind::References);
+    assert_eq!(ext.relationship_kind_label(7), Some("references"));
+}
+
+#[semio_framework_async_macros::async_test]
+async fn topic_lookup_stays_local_to_the_wires_extension() {
+    let mut ext = DefaultWiresExtension::default();
+    ext.topics.insert(7, "Context".into());
+    assert_eq!(ext.topic_label(7), Some("Context"));
+}
+
+#[semio_framework_async_macros::async_test]
+async fn metabolism_fixture_hydrates_extension() {
+    let document = crate::standards::v1::subsets::any::io::text::snapshot::metabolism_wires_example_snapshot().expect("valid metabolism fixture mutations");
+    let (_, content) = crate::wires_bundled_contents().iter().find(|(id, _)| id == &document.content.child_id).expect("the demo parent names its bundled board");
+    let json = board_snapshot_json_string(&crate::wires_composed(&document, content).identity_snapshot);
+    let ext = DefaultWiresExtension::from_host_snapshot_json(&json).expect("metabolism fixture");
+    assert_eq!(ext.topics.len(), 7);
+    assert_eq!(ext.relationships.len(), 9);
+    assert_eq!(ext.relationship_kind_label(8), Some("is"));
+    assert!(ext.validate_identity_set(&[1, 2, 3]).is_ok());
+}
+
+
+/// 🏗 DSL txt carrier: serialize then deserialize must restore the snapshot exactly.
+#[semio_framework_async_macros::async_test]
+async fn txt_dsl_carrier_round_trips_exactly() {
+    use crate::standards::v1::subsets::any::io::export::serializers::artifacts as export;
+    use crate::standards::v1::subsets::any::io::import::deserializers::artifacts as import;
+    use semio_framework_os_kernel::io::io_mechanism::{Deserializer, Serializer};
+    use semio_framework::io_schema::IoPayload;
+    let snapshot = crate::empty_wires_snapshot();
+    let exported = export::txt::v_utf_8::any::WiresIntoTxt::serialize(&snapshot, &semio_framework_os_kernel::io::io_mechanism::ArchiveChildren::empty()).await.expect("dsl txt export");
+    let IoPayload::Text(text) = exported.value else { panic!("txt is a text payload") };
+    let back = import::txt::v_utf_8::any::TxtIntoWires::deserialize(&IoPayload::Text(text)).await.expect("dsl txt import");
+    assert_eq!(back.value, snapshot);
+}
+}
+
+mod inspection_2 {
+use semio_framework_pack_json::Value;
+use semio_framework_plugin::BuiltNode;
+use super::super::inspection::*;
+
+fn project(node: BuiltNode) -> serde_json::Value {
+    let text = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("retire semantic tree");
+    serde_json::from_str(&text).expect("independent UI oracle")
+}
+
+#[test]
+fn wires_semantic_panels_match_the_json_oracle() {
+    let vectors: serde_json::Value = serde_json::from_str(runtime_fixture_text("../../📌️panels/🔍️inspection/🧪️tests/🧫️fixtures/🔣️panels.json")).expect("neutral UI vectors");
+    let document = crate::empty_wires_snapshot();
+    let composed = crate::wires_composed(&document, &crate::empty_wires_content());
+    for row in vectors["cases"].as_array().expect("locales") {
+        let labels = semio_framework_plugin::resolve_labels::<crate::editor::wires::terminology::WiresLabels>(&semio_framework_plugin::ViewModel {
+            locale: semio_framework_ui_locale::Locale::from_language_tag(row["locale"].as_str().expect("locale")).expect("declared fixture locale"),
+            ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::from_language_tag(row["locale"].as_str().expect("locale")).expect("declared fixture locale"), semio_framework_ui_locale::Terminology::Native)
+        });
+        let tree = project(crate::editor::wires::panels::document::render(&composed, labels, &semio_framework_plugin::TreeWindows::unhosted()).expect("document"));
+        assert_eq!(tree["children"][0]["component"]["label"], row["identities"]);
+        assert_eq!(tree["children"][1]["component"]["label"], row["relationships"]);
+        let tree = project(crate::editor::wires::panels::catalogue::render(&document.wires_snapshot, labels, &semio_framework_plugin::TreeWindows::unhosted()).expect("catalogue"));
+        assert_eq!(tree["children"][0]["component"]["label"], row["identityKinds"]);
+        assert_eq!(tree["children"][1]["component"]["label"], row["relationshipKinds"]);
+        let tree = project(render(&composed, labels).expect("inspection"));
+        let lines = tree["children"][0]["children"].as_array().expect("summary").iter().map(|node| node["component"]["value"].clone()).collect::<Vec<_>>();
+        assert_eq!(serde_json::Value::Array(lines), row["summary"]);
+    }
+    for node in [
+        crate::editor::wires::modes::edit::windows::canvas::render(&composed.board, &composed.identity_snapshot, &crate::editor::wires::modes::edit::windows::canvas::config::WiresCanvasWindowConfig::default()).expect("editor canvas"),
+        crate::viewer::wires::modes::view::windows::canvas::render(&composed).expect("viewer canvas"),
+    ] {
+        let semio_framework_plugin::Component::Surface(props) = &node.component else { panic!("canvas surface") };
+        let scene: semio_framework_plugin::Canvas2dScene = semio_framework_ui_scene::decode(props).expect("packed canvas");
+        assert_eq!(scene.camera_x, vectors["canvas"]["cameraX"].as_f64().expect("camera x"));
+        assert_eq!(scene.camera_y, vectors["canvas"]["cameraY"].as_f64().expect("camera y"));
+        assert_eq!(scene.zoom, vectors["canvas"]["zoom"].as_f64().expect("zoom"));
+        assert_eq!(serde_json::from_str::<serde_json::Value>(&scene.layers_json).expect("independent layers oracle"), vectors["canvas"]["layers"]);
+        project(node);
+    }
+}
+
+fn runtime_fixture_text(relative: &str) -> &'static str {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative);
+    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display())).into_boxed_str())
+}
+}

@@ -11,7 +11,7 @@ pub struct ArtifactStoreSupersessionRetirement {
 }
 
 impl ArtifactStoreSupersessionRetirement {
-    pub(crate) fn new(supersessions: EffectiveSupersessions) -> Self {
+    pub fn new(supersessions: EffectiveSupersessions) -> Self {
         let owner=semio_framework_value::retirement::controlled::ControlledRetirement::new(supersessions).unwrap_or_else(|_|unreachable!("supersession index declares controlled retirement"));
         Self { owner }
     }

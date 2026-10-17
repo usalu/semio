@@ -52,7 +52,9 @@ vi.mock("@semio-tech/infinite-world-r3f", async (importOriginal) => {
   };
 });
 
-import { buildMeshVisuals, disposeMeshVisuals, World3dHost, type WorldMeshData } from "../../🟦️.tsx";
+import { World3dHost } from "../../🟦️.tsx";
+import { buildMeshVisuals, disposeMeshVisuals } from "../../🎨️mesh-render/🔺️mesh-geometry-and-appearance/🟦️.ts";
+import { type WorldMeshData } from "../../🔭️scene-schema/🟦️.ts";
 import {
   applyWorld3dSectionClipping,
   collectWorld3dSolidMeshes,

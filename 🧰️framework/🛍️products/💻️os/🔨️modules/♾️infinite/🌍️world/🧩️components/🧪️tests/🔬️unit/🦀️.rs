@@ -2,22 +2,19 @@
 
 use semio_framework_os_infinite_world_model::{world_mesh_ownership_grant, world_scene_raster_pool};
 use semio_framework_os_infinite_world_components::{WorldMeshBuffers, WorldMeshInput, WorldPlaceholderMeshCursor, WorldPlaceholderMeshStep};
+use semio_framework_test_fixtures::fixture_text;
 use ui_wgpu::wgpu::{mesh3d_begin_close, mesh3d_close_step, Mesh3dField, Mesh3dLease};
 use semio_framework_value::{RetainedCloneGrant, RetainedCloneProgress};
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 use ui_wgpu::wgpu::{SceneMaterialAlpha3d, SceneMaterialKind3d};
 
 /// 📖️ Reads one test input at run time (relative to the package manifest) so it does not count as an embedded compile input.
-fn read_static(path_from_manifest: &str) -> &'static str {
-    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(path_from_manifest);
-    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("test input {}: {error}", path.display())).into_boxed_str())
-}
 
 /// 📖️ Reads several test inputs at run time and joins them into the one text the unsplit sources formed.
 fn read_joined(paths: &[&str]) -> &'static str {
     let mut joined = String::new();
     for path in paths {
-        joined.push_str(read_static(path));
+        joined.push_str(fixture_text!(path));
     }
     Box::leak(joined.into_boxed_str())
 }
@@ -35,7 +32,7 @@ fn close_oracle_mesh(lease:Mesh3dLease) {
 /// 🎨️ Native publication consumes the same indexed surface fixture as installed Three.js.
 #[test]
 fn authored_inline_surface_preserves_corner_face_channels_five_maps_and_cancellation() {
-    let law:serde_json::Value=serde_json::from_str(read_static("../../../../../../../../🔨️modules/🖱️ui/🖌️render/🧪️tests/🧫️fixtures/🎨️world3d-inline-surface/🔣️.json")).unwrap();
+    let law:serde_json::Value=serde_json::from_str(fixture_text!("../../../../../../../../🔨️modules/🖱️ui/🖌️render/🧪️tests/🧫️fixtures/🎨️world3d-inline-surface/🔣️.json")).unwrap();
     let text=law["mesh"].to_string();
     let mesh=semio_framework_pack_json::from_json_str::<WorldMeshBuffers>(&text,semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let mut cursor=WorldPlaceholderMeshCursor::inline("authored",mesh.clone(),817,1).unwrap();
@@ -87,7 +84,6 @@ fn authored_inline_surface_preserves_corner_face_channels_five_maps_and_cancella
         for turn in 0..32768{if texture_phase(&canceled)==Some(phase){break}assert!(turn<32767);assert!(matches!(canceled.step(),WorldPlaceholderMeshStep::Pending));}
         let mut turns=0;while !canceled.close_step(){turns+=1;assert!(turns<32768)}assert!(canceled.terminal_is_empty());assert!(canceled.texture_job.is_none()&&canceled.texture_retirement.is_none());
     }
-    eprintln!("[DEBUG] authored inline: drawVertices=6 materialGroups=2 fiveMaps=5 roleLeases=2 work={turns}; all publication phases canceled");
     while !appearance.close_step() {}mesh3d_begin_close(lease).unwrap();close_oracle_mesh(lease);
     assert!(cursor.terminal_is_empty());
 }
@@ -96,7 +92,7 @@ fn authored_inline_surface_preserves_corner_face_channels_five_maps_and_cancella
 #[test]
 fn world_inline_source_retirement_preserves_original_owner_and_full_receipts() {
     use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
-    let law:serde_json::Value=serde_json::from_str(read_static("../../../🧪️tests/🧫️fixtures/♻️inline-source-ownership/🔣️.json")).unwrap();
+    let law:serde_json::Value=serde_json::from_str(fixture_text!("../../../🧪️tests/🧫️fixtures/♻️inline-source-ownership/🔣️.json")).unwrap();
     for row in law["cases"].as_array().unwrap() {
         let mut mesh=WorldMeshBuffers::default();
         mesh.positions=row["positions"].as_array().unwrap().iter().map(|value|value.as_f64().unwrap() as f32).collect();
@@ -140,14 +136,13 @@ fn world_inline_source_retirement_preserves_original_owner_and_full_receipts() {
         assert!(release_refusals>0);
         let mut close_turns=0;while !cursor.close_step(){close_turns+=1;assert!(close_turns<32768)}
         assert!(cursor.terminal_is_empty());
-        eprintln!("[DEBUG] inline World source={} sameBox=true sameBuffers=true zeroItemsUnchanged=true zeroDepthUnchanged=true shortCapacityUnchanged=true shortReleaseUnchanged={release_refusals} independentReceipts=true terminalEmpty=true turns={turns}",row["id"]);
     }
 }
 
 /// 🖼️ JPEG authored textures use the same image, role raster, publication and retirement owners.
 #[test]
 fn authored_inline_jpeg_surface_publishes_owned_role_rasters() {
-    let law: serde_json::Value = serde_json::from_str(read_static("../../../../../../../../🔨️modules/🖱️ui/🖌️render/🧪️tests/🧫️fixtures/🎨️world3d-inline-surface/🔣️.json")).unwrap();
+    let law: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../../../🔨️modules/🖱️ui/🖌️render/🧪️tests/🧫️fixtures/🎨️world3d-inline-surface/🔣️.json")).unwrap();
     let row = &law["jpegPublication"];
     let mut mesh = semio_framework_pack_json::from_json_str::<WorldMeshBuffers>(&law["mesh"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let bytes: Vec<u8> = row["bytes"].as_array().unwrap().iter().map(|value| value.as_u64().unwrap() as u8).collect();
@@ -180,5 +175,4 @@ fn authored_inline_jpeg_surface_publishes_owned_role_rasters() {
     mesh3d_begin_close(lease).unwrap();
     close_oracle_mesh(lease);
     assert!(cursor.terminal_is_empty());
-    eprintln!("[DEBUG] JPEG authored surface: intrinsic=2x1 roleRasters=2 maps=5 independentPillow=true independentImage=true work={turns} terminalEmpty=true");
 }

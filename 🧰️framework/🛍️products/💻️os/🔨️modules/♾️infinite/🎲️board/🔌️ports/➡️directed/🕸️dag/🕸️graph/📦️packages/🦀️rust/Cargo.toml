@@ -47,5 +47,4 @@ ui_wgpu = { path = "../../../../../../../../../../../🔨️modules/🖱️ui/�
 ui_wgpu = { path = "../../../../../../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", package = "semio-framework-ui", features = ["wgpu"] }
 
 [dev-dependencies]
-semio-framework-os-infinite-board-dag-graph = { path = ".", features = ["testkit"] }
 semio-framework-os-kernel = { path = "../../../../../../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["mutation-testing"] }

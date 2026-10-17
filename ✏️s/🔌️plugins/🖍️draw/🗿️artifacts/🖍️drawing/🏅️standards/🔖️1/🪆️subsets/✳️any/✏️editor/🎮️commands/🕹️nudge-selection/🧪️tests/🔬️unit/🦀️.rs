@@ -1,5 +1,14 @@
 //! 🧪️ Group ownership, atomic failure and the one-transaction law of document-axis keyboard movement.
-use super::*;
+#[allow(unused_imports)] use semio_s_artifact_draw_drawing_editor_tool::{drawing_rebound_points, drawing_tool_emit, point_selection_effect, DrawingSession, DrawingTool};
+#[allow(unused_imports)] use semio_s_artifact_draw_drawing_editor_interaction::points;
+#[allow(unused_imports)] use semio_s_artifact_draw_drawing_transform::drag_layers::mutation::drag_layers;
+#[allow(unused_imports)] use semio_s_artifact_draw_drawing_transform::drag_path_points::mutation::{drag_path_points, DrawingPathPointTarget};
+#[allow(unused_imports)] use semio_s_artifact_draw_drawing_mutations::DrawingMutation;
+#[allow(unused_imports)] use semio_s_artifact_draw_drawing_model::DrawingLayerNode;
+#[allow(unused_imports)] use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
+#[allow(unused_imports)] use semio_framework_plugin::{ArtifactView,ConfigView,Emit,Fault,NoConfig,NoConfigMutation};
+#[allow(unused_imports)] use std::collections::{BTreeMap,BTreeSet};
+#[allow(unused_imports)] use semio_s_artifact_draw_drawing_editor_commands::nudge_selection::*;
 
 /// ⌨️ The emission of one right-nudge verb of `session`'s selection by `delta`.
 fn plan(document:&DrawingSnapshot,session:&DrawingSession,delta:[f64;2])->Result<Emit<DrawingMutation,NoConfigMutation>,Fault> {
@@ -78,7 +87,6 @@ fn one_nudge_is_one_tool_transaction_of_one_relative_leaf() {
     let label=<DrawingMutation as protocol::SemanticMutation<DrawingSnapshot>>::label(&first.artifact_mutations[0]);
     assert_eq!(label.resolve(semio_framework_ui_locale::Terminology::Native,semio_framework_ui_locale::Locale::En),"Drag 1 layer by (10, -5)");
     assert_eq!(label.resolve(semio_framework_ui_locale::Terminology::Native,semio_framework_ui_locale::Locale::De),"1 Ebene um (10; -5) ziehen");
-    eprintln!("[DEBUG] Drawing nudge emitted one relative leaf in one distinct tool transaction with exact EN/DE labels");
 }
 
 #[test]
@@ -90,7 +98,7 @@ fn a_node_nudge_drags_the_selected_points_and_rebinds_them() {
     let mut session=semio_s_artifact_draw_drawing_editor::identity_test::session("editNodes","");session.interaction.ids=vec!["path".into()];
     session.interaction.points=vec![points::point_id("path",&geometry,1,semio_s_artifact_draw_drawing_geometry::editing::PathPoint::Anchor).unwrap()];
     let emit=plan(&source,&session,[1.0,0.0]).unwrap();
-    assert_eq!(emit.artifact_mutations,vec![drag_path_points(vec![DrawingPathPointTarget {layer_id:"path".into(),index:1,point:crate::schema::geometry::editing::PathPoint::Anchor}].into(),1.0,0.0)]);
+    assert_eq!(emit.artifact_mutations,vec![drag_path_points(vec![DrawingPathPointTarget {layer_id:"path".into(),index:1,point:semio_s_artifact_draw_drawing_geometry::editing::PathPoint::Anchor}].into(),1.0,0.0)]);
     assert!(emit.transaction.is_some());
     let mut moved=source.clone();semio_s_artifact_draw_drawing_mutations::text::apply_drawing_mutation(&mut moved,&emit.artifact_mutations[0]).unwrap();
     let DrawingLayerNode::Path(path)=&moved.layers[0] else {panic!("a path")};

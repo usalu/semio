@@ -1,6 +1,6 @@
 use super::*;
 use crate::standards::v1::subsets::any::io::export::svg::testkit::house;
-use crate::standards::v1::subsets::any::schema::inferences::view_linework::compute_view_linework;
+use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_view_linework;
 
 #[test]
 fn every_drawn_view_gets_a_slot_plans_highest_level_first_then_ceiling_plans_sections_and_elevations() {

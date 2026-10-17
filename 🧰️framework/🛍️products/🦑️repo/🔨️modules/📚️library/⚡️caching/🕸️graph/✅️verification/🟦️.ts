@@ -1,32 +1,33 @@
 import assert from "node:assert/strict";
-import { createRequire } from "node:module";
-import { BundleScript } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import plugin from "../../../🏗️build/🕸️graph/📥️inference/🟨️.mjs";
-import type { InventoryProject } from "../../📇️inventory/🟦️.ts";
-import { sourceFiles } from "../../🔍️discovery/📂️source/🟦️.ts";
+import{readFileSync}from"node:fs";
+import{join}from"node:path";
+import{createHash}from"node:crypto";
+import{BundleScript,createIssuedResourceControlV1,withRequestedIssuedResourceControlV1}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import{checkResourceLeaseControl}from"../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import{loadBuildGraphV1,workspaceBuildFilesV1,buildGraphMembersV1,neutralBuildTargetV1}from"../../../🏗️build/🕸️graph/🟦️.ts";
+import{readBuildGraphSelectionV1,readBuildOwnerRegistryV1}from"../../../🏗️build/🕸️graph/🚪️admission/🟦️.ts";
+import{discoverBuildProjectsV1}from"../../../🏗️build/🕸️graph/📥️inference/🟨️.mjs";
 
-export class GraphScript extends BundleScript {
-  run(): void {
-    const { readCachedProjectGraph } = createRequire(import.meta.url)("@nx/devkit");
-    const graph = readCachedProjectGraph();
-    const edges = Object.values(graph.dependencies).flat() as any[];
-    assert.ok(edges.length > 0, "A monorepo graph must contain dependency edges");
-    for (const edge of edges) assert.ok(graph.nodes[edge.target] || graph.externalNodes?.[edge.target], `Unknown dependency ${edge.target}`);
-    const files = sourceFiles(this.repoRoot);
-    const declared = (plugin.createNodesV2 as any)[1](
-      files.filter((file) => file.endsWith("📋️project.json") || file.endsWith("Cargo.toml")),
-      {},
-      { workspaceRoot: this.repoRoot },
-    ).flatMap(([, result]: any) => Object.values(result.projects)) as InventoryProject[];
-    for (const project of declared) {
-      const resolved = graph.nodes[project.name]?.data;
-      assert.ok(resolved, `Nx omitted ${project.name}`);
-      for (const [name, target] of Object.entries(project.targets)) {
-        const actual = resolved.targets?.[name];
-        assert.ok(actual, `Nx omitted ${project.name}:${name}`);
-        for (const property of ["cache", "outputs", "dependsOn"]) if (Object.hasOwn(target, property)) assert.deepEqual(actual[property], target[property], `Nx precedence changed ${project.name}:${name}.${property}`);
-      }
+/** 🕸️ Verifies neutral graph edges and authored contributions under the actual incoming lifetime. */
+export class GraphScript extends BundleScript{
+ async run():Promise<void>{
+  const phase=createIssuedResourceControlV1(this.invocation,"cache:graph-verification",0);
+  await withRequestedIssuedResourceControlV1(phase,0,async actual=>{
+   const graph=await loadBuildGraphV1(this.repoRoot,this.invocation,actual,{selection:readBuildGraphSelectionV1({kind:"all"})});checkResourceLeaseControl(actual);
+   assert.ok(graph.dependencies.length>0,"A monorepo graph must contain dependency edges");
+   for(const edge of graph.dependencies)assert.ok(graph.projects[edge.target]||graph.externalNodes?.[edge.target],`Unknown dependency ${edge.target}`);
+   const registry=readBuildOwnerRegistryV1(JSON.parse(readFileSync(join(this.repoRoot,"📋️build-owners.json"),"utf8")));
+   assert.equal(createHash("sha256").update(JSON.stringify(registry)).digest("hex"),graph.admission?.registry,"Current declared registry must match the graph admission");
+   checkResourceLeaseControl(actual);const files=buildGraphMembersV1(await workspaceBuildFilesV1(this.repoRoot,this.invocation));checkResourceLeaseControl(actual);
+   const declared=await discoverBuildProjectsV1(files.filter(file=>file.endsWith("📋️project.json")||file.endsWith("Cargo.toml")||file==="bun.lock"||file.endsWith(".patch")),{analyzeLockfile:true,catalogProviders:registry.catalogProviders},{workspaceRoot:this.repoRoot,invocation:this.invocation,phaseControl:actual,registry});checkResourceLeaseControl(actual);
+   for(const[,contribution]of declared)for(const[name,project]of Object.entries(contribution.projects)){
+    checkResourceLeaseControl(actual);const resolved=graph.projects[name];assert.ok(resolved,`Graph omitted ${name}`);
+    for(const[targetName,target]of Object.entries(project.targets)){
+     checkResourceLeaseControl(actual);const expected=neutralBuildTargetV1(target,`${name}:${targetName}`),current=resolved.targets[targetName];assert.ok(current,`Graph omitted ${name}:${targetName}`);
+     for(const property of["cache","outputs","dependsOn"]as const)if(Object.hasOwn(expected,property))assert.deepEqual(current[property],expected[property],`Graph precedence changed ${name}:${targetName}.${property}`);
     }
-    console.log(`[nx-graph] projects=${Object.keys(graph.nodes).length} edges=${edges.length}`);
-  }
+   }
+   checkResourceLeaseControl(actual);console.log(`[build-graph] projects=${Object.keys(graph.projects).length} edges=${graph.dependencies.length}`);
+  });
+ }
 }

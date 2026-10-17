@@ -3,11 +3,11 @@
 //! Selections are mesh element ids validated against the input mesh; edge ids are half-edge handles.
 #![allow(clippy::result_large_err)]
 
+use semio_framework_3d::mesh::{MeshModelingOps};
 use semio_s_artifact_procedural_3d_model::catalogue::Kind;
 use semio_s_artifact_procedural_3d_mesh_support::count;
 use semio_s_artifact_procedural_3d_mesh_support::modeling;
 use semio_s_artifact_procedural_3d_mesh_support::owned_mesh;
-use semio_s_artifact_procedural_3d_mesh_support::picked;
 use semio_s_artifact_procedural_3d_mesh_support::picked_one;
 use semio_s_artifact_procedural_3d_mesh_support::point3;
 use semio_s_artifact_procedural_3d_mesh_support::scalar;
@@ -17,19 +17,11 @@ use semio_s_artifact_procedural_3d_geometry_compute::ComputeEntry;
 use semio_s_artifact_procedural_3d_geometry_compute::WidgetJob;
 use semio_s_artifact_procedural_3d_geometry_inputs::WidgetInputs;
 use semio_s_artifact_procedural_3d_geometry_value::WidgetFault;
-use semio_framework_3d::mesh::{EdgeId, FaceId, VertexId, WeldMode};
+use semio_framework_3d::mesh::{FaceId, WeldMode};
 
-fn edges(inputs: &WidgetInputs, mesh: &semio_framework_3d::mesh::HalfedgeMesh, port: &str) -> Result<Vec<EdgeId>, WidgetFault> {
-    Ok(picked(inputs, port, mesh, Element::Edge)?.into_iter().map(EdgeId).collect())
-}
-
-fn vertices(inputs: &WidgetInputs, mesh: &semio_framework_3d::mesh::HalfedgeMesh, port: &str) -> Result<Vec<VertexId>, WidgetFault> {
-    Ok(picked(inputs, port, mesh, Element::Vertex)?.into_iter().map(VertexId).collect())
-}
-
-fn faces(inputs: &WidgetInputs, mesh: &semio_framework_3d::mesh::HalfedgeMesh, port: &str) -> Result<Vec<FaceId>, WidgetFault> {
-    Ok(picked(inputs, port, mesh, Element::Face)?.into_iter().map(FaceId).collect())
-}
+#[path = "🎯️element-picks/🦀️.rs"]
+mod element_picks;
+use element_picks::{edges, faces, vertices};
 
 fn bevel(kind: &Kind, inputs: WidgetInputs) -> Box<dyn WidgetJob> {
     modeling(kind, move || {

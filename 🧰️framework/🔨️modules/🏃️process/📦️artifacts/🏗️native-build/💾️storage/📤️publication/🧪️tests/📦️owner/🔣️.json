@@ -397,5 +397,425 @@
       "admit": false,
       "unresolved": true
     }
+  ],
+  "dispatches": [
+    {
+      "id": "darwin-mounted-none",
+      "platform": "darwin",
+      "initialState": "mounted",
+      "fault": "none",
+      "admit": true,
+      "count": 5
+    },
+    {
+      "id": "darwin-mounted-reorder",
+      "platform": "darwin",
+      "initialState": "mounted",
+      "fault": "reorder",
+      "admit": false,
+      "count": 0
+    },
+    {
+      "id": "darwin-mounted-exhausted",
+      "platform": "darwin",
+      "initialState": "mounted",
+      "fault": "exhausted",
+      "admit": false,
+      "count": 5
+    },
+    {
+      "id": "darwin-mounted-pending",
+      "platform": "darwin",
+      "initialState": "mounted",
+      "fault": "pending",
+      "admit": false,
+      "count": 0
+    },
+    {
+      "id": "darwin-inactive-none",
+      "platform": "darwin",
+      "initialState": "inactive",
+      "fault": "none",
+      "admit": true,
+      "count": 3
+    },
+    {
+      "id": "darwin-inactive-reorder",
+      "platform": "darwin",
+      "initialState": "inactive",
+      "fault": "reorder",
+      "admit": false,
+      "count": 0
+    },
+    {
+      "id": "darwin-inactive-exhausted",
+      "platform": "darwin",
+      "initialState": "inactive",
+      "fault": "exhausted",
+      "admit": false,
+      "count": 3
+    },
+    {
+      "id": "darwin-inactive-pending",
+      "platform": "darwin",
+      "initialState": "inactive",
+      "fault": "pending",
+      "admit": false,
+      "count": 0
+    },
+    {
+      "id": "linux-mounted-none",
+      "platform": "linux",
+      "initialState": "mounted",
+      "fault": "none",
+      "admit": true,
+      "count": 5
+    },
+    {
+      "id": "linux-mounted-reorder",
+      "platform": "linux",
+      "initialState": "mounted",
+      "fault": "reorder",
+      "admit": false,
+      "count": 0
+    },
+    {
+      "id": "linux-mounted-exhausted",
+      "platform": "linux",
+      "initialState": "mounted",
+      "fault": "exhausted",
+      "admit": false,
+      "count": 5
+    },
+    {
+      "id": "linux-mounted-pending",
+      "platform": "linux",
+      "initialState": "mounted",
+      "fault": "pending",
+      "admit": false,
+      "count": 0
+    },
+    {
+      "id": "linux-inactive-none",
+      "platform": "linux",
+      "initialState": "inactive",
+      "fault": "none",
+      "admit": true,
+      "count": 3
+    },
+    {
+      "id": "linux-inactive-reorder",
+      "platform": "linux",
+      "initialState": "inactive",
+      "fault": "reorder",
+      "admit": false,
+      "count": 0
+    },
+    {
+      "id": "linux-inactive-exhausted",
+      "platform": "linux",
+      "initialState": "inactive",
+      "fault": "exhausted",
+      "admit": false,
+      "count": 3
+    },
+    {
+      "id": "linux-inactive-pending",
+      "platform": "linux",
+      "initialState": "inactive",
+      "fault": "pending",
+      "admit": false,
+      "count": 0
+    },
+    {
+      "id": "win32-mounted-none",
+      "platform": "win32",
+      "initialState": "mounted",
+      "fault": "none",
+      "admit": true,
+      "count": 8
+    },
+    {
+      "id": "win32-mounted-reorder",
+      "platform": "win32",
+      "initialState": "mounted",
+      "fault": "reorder",
+      "admit": false,
+      "count": 0
+    },
+    {
+      "id": "win32-mounted-exhausted",
+      "platform": "win32",
+      "initialState": "mounted",
+      "fault": "exhausted",
+      "admit": false,
+      "count": 8
+    },
+    {
+      "id": "win32-mounted-pending",
+      "platform": "win32",
+      "initialState": "mounted",
+      "fault": "pending",
+      "admit": false,
+      "count": 0
+    },
+    {
+      "id": "win32-inactive-none",
+      "platform": "win32",
+      "initialState": "inactive",
+      "fault": "none",
+      "admit": true,
+      "count": 6
+    },
+    {
+      "id": "win32-inactive-reorder",
+      "platform": "win32",
+      "initialState": "inactive",
+      "fault": "reorder",
+      "admit": false,
+      "count": 0
+    },
+    {
+      "id": "win32-inactive-exhausted",
+      "platform": "win32",
+      "initialState": "inactive",
+      "fault": "exhausted",
+      "admit": false,
+      "count": 6
+    },
+    {
+      "id": "win32-inactive-pending",
+      "platform": "win32",
+      "initialState": "inactive",
+      "fault": "pending",
+      "admit": false,
+      "count": 0
+    }
+  ],
+  "windowsMetadata": [
+    {
+      "action": "pending",
+      "fault": "none",
+      "admit": true
+    },
+    {
+      "action": "published",
+      "fault": "none",
+      "admit": true
+    },
+    {
+      "action": "settled",
+      "fault": "none",
+      "admit": true
+    },
+    {
+      "action": "pending",
+      "fault": "order",
+      "admit": false
+    },
+    {
+      "action": "pending",
+      "fault": "cancel",
+      "admit": false
+    },
+    {
+      "action": "published",
+      "fault": "receipt",
+      "admit": false
+    },
+    {
+      "action": "published",
+      "fault": "undefined",
+      "admit": false
+    },
+    {
+      "action": "settled",
+      "fault": "frozen",
+      "admit": false
+    }
+  ],
+  "windowsCandidates": [
+    {
+      "initialState": "mounted",
+      "fault": "none",
+      "admit": true
+    },
+    {
+      "initialState": "mounted",
+      "fault": "pending",
+      "admit": false
+    },
+    {
+      "initialState": "mounted",
+      "fault": "published",
+      "admit": false
+    },
+    {
+      "initialState": "mounted",
+      "fault": "settled",
+      "admit": false
+    },
+    {
+      "initialState": "inactive",
+      "fault": "none",
+      "admit": true
+    },
+    {
+      "initialState": "inactive",
+      "fault": "pending",
+      "admit": false
+    },
+    {
+      "initialState": "inactive",
+      "fault": "published",
+      "admit": false
+    },
+    {
+      "initialState": "inactive",
+      "fault": "settled",
+      "admit": false
+    }
+  ],
+  "observerChecks": [
+    {
+      "fault": "none",
+      "admit": true,
+      "parents": 3,
+      "observations": 3,
+      "stats": 18
+    },
+    {
+      "fault": "phase-cancel",
+      "admit": false,
+      "parents": 3,
+      "observations": 3,
+      "stats": 18
+    },
+    {
+      "fault": "writer",
+      "admit": false,
+      "parents": 3,
+      "observations": 3,
+      "stats": 18
+    },
+    {
+      "fault": "ancestor-0",
+      "admit": false,
+      "parents": 3,
+      "observations": 3,
+      "stats": 18
+    },
+    {
+      "fault": "ancestor-1",
+      "admit": false,
+      "parents": 3,
+      "observations": 3,
+      "stats": 18
+    },
+    {
+      "fault": "ancestor-2",
+      "admit": false,
+      "parents": 3,
+      "observations": 3,
+      "stats": 18
+    },
+    {
+      "fault": "ancestor-file",
+      "admit": false,
+      "parents": 3,
+      "observations": 3,
+      "stats": 18
+    },
+    {
+      "fault": "ancestor-symlink",
+      "admit": false,
+      "parents": 3,
+      "observations": 3,
+      "stats": 18
+    },
+    {
+      "fault": "folder-cas",
+      "admit": false,
+      "parents": 3,
+      "observations": 3,
+      "stats": 18
+    },
+    {
+      "fault": "backing-dev",
+      "admit": false,
+      "parents": 3,
+      "observations": 3,
+      "stats": 18
+    },
+    {
+      "fault": "backing-ino",
+      "admit": false,
+      "parents": 3,
+      "observations": 3,
+      "stats": 18
+    },
+    {
+      "fault": "backing-size",
+      "admit": false,
+      "parents": 3,
+      "observations": 3,
+      "stats": 18
+    },
+    {
+      "fault": "backing-allocation",
+      "admit": false,
+      "parents": 3,
+      "observations": 3,
+      "stats": 18
+    },
+    {
+      "fault": "backing-links",
+      "admit": false,
+      "parents": 3,
+      "observations": 3,
+      "stats": 18
+    },
+    {
+      "fault": "backing-file",
+      "admit": false,
+      "parents": 3,
+      "observations": 3,
+      "stats": 18
+    },
+    {
+      "fault": "backing-symlink",
+      "admit": false,
+      "parents": 3,
+      "observations": 3,
+      "stats": 18
+    },
+    {
+      "fault": "root-dev",
+      "admit": false,
+      "parents": 3,
+      "observations": 3,
+      "stats": 18
+    },
+    {
+      "fault": "root-ino",
+      "admit": false,
+      "parents": 3,
+      "observations": 3,
+      "stats": 18
+    },
+    {
+      "fault": "root-file",
+      "admit": false,
+      "parents": 3,
+      "observations": 3,
+      "stats": 18
+    },
+    {
+      "fault": "root-symlink",
+      "admit": false,
+      "parents": 3,
+      "observations": 3,
+      "stats": 18
+    }
   ]
 }

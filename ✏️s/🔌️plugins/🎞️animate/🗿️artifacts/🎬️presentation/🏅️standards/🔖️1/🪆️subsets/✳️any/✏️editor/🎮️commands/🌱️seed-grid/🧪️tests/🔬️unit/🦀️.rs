@@ -1,4 +1,20 @@
-use super::*;
+use crate::editor::animate::config::PresentationConfig;
+use crate::editor::animate::support::PresentationDispatchCtx;
+use crate::PresentationSnapshot;
+use semio_framework_plugin::{ArtifactView, ConfigView};
+#[allow(unused_imports)]
+use crate::editor::animate::config::PresentationConfigMutation;
+#[allow(unused_imports)]
+use crate::{editor::animate::support::interaction_select_effect, editor::animate::support::tile_roster_mutations};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::mutations::PresentationMutation;
+#[allow(unused_imports)]
+use crate::{standards::v1::subsets::any::schema::tile_grid::populate_tile_drafts_from_grid, standards::v1::subsets::any::schema::tile_grid::FigureTileGridSeedSpec};
+#[allow(unused_imports)]
+use semio_framework_plugin::{Emit, Fault};
+#[allow(unused_imports)]
+use semio_framework_value_derive::{FromValue, ToValue};
+use crate::editor::animate::commands::seed_grid::*;
 use crate::editor::animate::commands::clear_tiles;
 use crate::editor::animate::unit_tests::context::{dispatch, presentation_app, presentation_app_with_registry};
 use crate::editor::animate::PresentationCommand;
@@ -44,7 +60,7 @@ async fn set_active_example_demo_emits_a_reset_effect_after_seed() {
 /// selection and must leave it empty without bouncing anything to the host.
 #[semio_framework_async_macros::async_test]
 async fn clear_tiles_action_empties_tiles_and_clears_the_selection_inline() {
-    use crate::editor::animate::PRESENTATION_INTERACTION_DOMAIN;
+    use crate::editor::animate::support::PRESENTATION_INTERACTION_DOMAIN;
     use semio_framework_plugin::{artifact_app_laws, Effect, PluginApp};
     let mut app = presentation_app_with_registry().await;
     let instance_id = artifact_app_laws::meta("local").instance_id;

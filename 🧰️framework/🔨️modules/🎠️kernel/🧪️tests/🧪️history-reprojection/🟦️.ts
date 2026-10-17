@@ -19,7 +19,6 @@ describe("history reprojection status", () => {
       expect(expected).toBe(row.text[locale]);
       expect(historyReprojectionStatus(row.reprojection as HistoryReprojection, "native", locale).text).toBe(expected);
       expect(row.reprojection.done).toBeLessThan(row.reprojection.total);
-      console.log(`[DEBUG] replay settlement caption locale=${locale} done=${row.reprojection.done} total=${row.reprojection.total} text=${expected}`);
     }
   });
 

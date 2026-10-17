@@ -1,3 +1,4 @@
+use semio_framework_test_fixtures::fixture_path;
 use semio_s_artifact_norm_en1995_io::text::mutations::encode_en1995_mutation_json;
 use semio_s_artifact_norm_en1995_io::text::mutations::decode_en1995_mutation_json;
 use semio_s_artifact_norm_en1995_mutations::*;
@@ -126,7 +127,7 @@ fn bridges_round_trip_apply_and_invert_every_kind() {
 }
 
 fn fixtures_root() -> std::path::PathBuf {
-    std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🧬️mutations")
+    fixture_path!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧬️mutations")
 }
 
 /// 🗂️ `(kind, fixture scenario folder)` for every kind, named by the committed `en1995-1-any` catalog.

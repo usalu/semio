@@ -1,6 +1,10 @@
-use super::*;
-use crate::modes::edit::windows::blueprint::transient::LayoutWindowTransient;
-use crate::editor::layout::modes::edit::windows::blueprint::transient::LayoutWindowTransientMutation;
+use semio_framework_test_fixtures::fixture_text;
+
+#[allow(unused_imports)] use semio_s_artifact_layout_layout_model::LayoutCamera;
+#[allow(unused_imports)] use semio_framework_value_derive::{FromValue, ToValue};
+#[allow(unused_imports)] use semio_s_artifact_layout_layout_editor_commands::modes::edit::windows::blueprint::config::*;
+use semio_s_artifact_layout_layout_editor_commands::modes::edit::windows::blueprint::transient::LayoutWindowTransient;
+use semio_s_artifact_layout_layout_editor_commands::editor::layout::modes::edit::windows::blueprint::transient::LayoutWindowTransientMutation;
 use protocol::{Mutation, MutationDiff, OpBinary, OpText};
 
 fn block_on_layout_windows<F: std::future::Future>(future: F) -> F::Output {
@@ -21,10 +25,10 @@ fn layout_window_ownership_runtime_isolates_restores_and_resets_exact_windows() 
         .name("layout-window-ownership-law".into())
         .stack_size(8 * 1024 * 1024)
         .spawn(|| block_on_layout_windows(async {
-            use crate::{engagement_input, set_camera};
+            use semio_s_artifact_layout_layout_editor_commands::{engagement_input, set_camera};
             use semio_s_artifact_layout_layout_editor::{create_layout_app, LayoutCommand, LayoutPlayApp};
-            use crate::modes::edit::windows::blueprint::LAYOUT_PLAY_BODY_BLUEPRINT;
-            use crate::editor::layout::modes::edit::windows::blueprint::transient::LayoutBlueprintWindowTransientOwner;
+            use semio_s_artifact_layout_layout_editor_commands::modes::edit::windows::blueprint::LAYOUT_PLAY_BODY_BLUEPRINT;
+            use semio_s_artifact_layout_layout_editor_commands::editor::layout::modes::edit::windows::blueprint::transient::LayoutBlueprintWindowTransientOwner;
             use semio_framework_plugin::{artifact_app_laws, ActionMeta, App, EditorApp, PluginApp, VcsArtifactApp, ViewModel, ViewWindowInstance, WindowConfigOwner};
 
             async fn dispatch(app: &mut VcsArtifactApp<EditorApp<LayoutPlayApp>>, command: LayoutCommand, view: &ViewModel) -> Result<(usize, usize), String> {
@@ -48,7 +52,7 @@ fn layout_window_ownership_runtime_isolates_restores_and_resets_exact_windows() 
                 window_instances: vec![
                     ViewWindowInstance { id: "layout-left".into(), window_kind_id: LayoutBlueprintWindowConfigOwner::WINDOW_KIND_ID.into() },
                     ViewWindowInstance { id: "layout-right".into(), window_kind_id: LayoutBlueprintWindowConfigOwner::WINDOW_KIND_ID.into() },
-                    ViewWindowInstance { id: "layout-preview".into(), window_kind_id: crate::modes::edit::windows::preview::LAYOUT_PLAY_WINDOW_PREVIEW.into() },
+                    ViewWindowInstance { id: "layout-preview".into(), window_kind_id: semio_s_artifact_layout_layout_editor_commands::modes::edit::windows::preview::LAYOUT_PLAY_WINDOW_PREVIEW.into() },
                 ],
                 ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
             };
@@ -112,7 +116,7 @@ fn layout_window_ownership_runtime_isolates_restores_and_resets_exact_windows() 
 
 #[test]
 fn layout_window_ownership_mutations_match_neutral_fixture_and_codecs() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔬️window/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../🎭️modes/✏️edit/🪟️windows/📐️blueprint/🎚️config/🧪️tests/🧫️fixtures/🔬️window/🔣️.json")).unwrap();
     let base_config: LayoutWindowConfig = semio_framework_pack_json::from_json_str(&fixture["baseConfig"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let base_transient: LayoutWindowTransient = semio_framework_pack_json::from_json_str(&fixture["baseTransient"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     for row in fixture["configMutations"].as_array().unwrap() {

@@ -1,7 +1,6 @@
 //! 📐 `resize-node` — a node takes an absolute canvas width and height (taxonomy's `resize` verb: the final size, not a
 //! scale factor). Composed editors (dag, reasoning/wires) keep node sizes on the graph's native `width`/`height`.
 
-use crate::schema::mutations::SemioGraphMutation;
 use crate::schema::snapshot::{GraphNodeId, SemioGraphSnapshot};
 
 //#region 🔖️Payload
@@ -15,13 +14,16 @@ pub struct ResizeNode {
     pub height: f64,
 }
 
-impl protocol::MutationKind<SemioGraphSnapshot, SemioGraphMutation> for ResizeNode {
+impl<Op> protocol::MutationKind<SemioGraphSnapshot, Op> for ResizeNode
+where
+    Op: protocol::Mutation<SemioGraphSnapshot, Diff = crate::schema::diff::SemioGraphDiff> + From<ResizeNode>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "resize", entity: "node", kind: "resize-node", record: "ResizedNode" };
 
-    fn diff(&self, base: &SemioGraphSnapshot) -> protocol::MutationOutcome<<SemioGraphMutation as protocol::Mutation<SemioGraphSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioGraphSnapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<SemioGraphSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &SemioGraphSnapshot) -> Result<Vec<SemioGraphMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &SemioGraphSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         Ok(super::inverse::inverse(self, base))
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {

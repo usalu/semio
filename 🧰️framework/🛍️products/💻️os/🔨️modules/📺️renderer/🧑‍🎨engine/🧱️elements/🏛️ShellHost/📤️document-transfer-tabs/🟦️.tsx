@@ -37,9 +37,10 @@ import {
   useShellKeydown
 } from "@semio-tech/ui-react";
 import { localDocumentOwnerIdentityForSessionV1 } from "../../🗣️Interpreter/🧭️local-document-owner/🟦️.ts";
-import { actionStageKey, type ActiveSession } from "../../🐚️Shell/🟦️.tsx";
+import { type ActiveSession } from "../../🐚️Shell/📦️program-sessions/🟦️.ts";
+import { actionStageKey } from "../../🐚️Shell/🗃️state-shapes/🟦️.ts";
+import { actionRequiresStagedForm } from "../../🛠️ShellHelpers/🪟️window-panes/📝️staged-args/🟦️.tsx";
 import {
-  actionRequiresStagedForm,
   DOCUMENT_ARCHIVE_FILE_EXTENSION,
   DOCUMENT_ARCHIVE_MEDIA_TYPE,
   documentArchiveFileNameV1,
@@ -48,41 +49,48 @@ import {
   naturalMediaDescriptorMatchesV1,
   openNaturalFileOwnerV1,
   bytesOfDataUrlV1,
+  documentTransferNoticeTextV1,
+  documentTransferNoticeCodeV1,
+  type DocumentTransferNoticeV1,
+  type OpenWithEntry
+} from "../../🛠️ShellHelpers/🧾️transfer-checkin-tutorial/🟦️.ts";
+import {
   NATURAL_FILE_BROWSER_MAXIMUM_BYTES_V1,
   NATURAL_FILE_BROWSER_READ_CHUNK_BYTES_V1,
   readBlobBytesBoundedV1,
   requestFileSelectionV1,
-  documentTransferNoticeTextV1,
-  documentTransferNoticeCodeV1,
   downloadMediaExportBytes,
-  type DocumentTransferNoticeV1,
-  buildSpacePanelState,
+  requestFileOpen
+} from "../../🛠️ShellHelpers/🔩️plumbing/📥️downloads-and-file-requests/🟦️.ts";
+import { buildSpacePanelState, parsePanelState, studioPanelFocusingSpawned } from "../../🛠️ShellHelpers/📌️panel/🟦️.ts";
+import {
   controlOwnsKeyboardEvent,
   keyboardEventMatchesChord,
+  resolveKeybindingIntent
+} from "../../🛠️ShellHelpers/🪟️window-panes/⌨️keyboard-chords/🟦️.ts";
+import {
   openArtifactWithText,
-  type OpenWithEntry,
-  panelAnchorForGroup,
-  panelTabDefinitionToNode,
-  type BrowserActorPanelHostV1,
-  parsePanelState,
-  requestFileOpen,
   resolveAppLabel,
-  resolveKeybindingIntent,
-  pasteActionWithRetainedFragment,
-  type ClipboardActionDescriptor,
-  pasteArgsFragment,
   resolveManifestLabel,
   setAsDefaultText,
   shellLabel,
-  integrateAppSettingsPanelTabsIntoFrameworkBranch,
-  partitionFrameworkHistoryPanelTab,
   shellTabIcon,
-  studioPanelFocusingSpawned,
-  surfaceRoleChipText,
-  uiIntentToActionDescriptor
-} from "../../🛠️ShellHelpers/🟦️.tsx";
+  surfaceRoleChipText
+} from "../../🛠️ShellHelpers/🏷️labels/🟦️.tsx";
+import {
+  panelAnchorForGroup,
+  panelTabDefinitionToNode,
+  integrateAppSettingsPanelTabsIntoFrameworkBranch,
+  partitionFrameworkHistoryPanelTab
+} from "../../🛠️ShellHelpers/🛣️route-and-chrome/🟦️.tsx";
+import { type BrowserActorPanelHostV1, uiIntentToActionDescriptor } from "../../🛠️ShellHelpers/🌳️tree-windows/🟦️.tsx";
+import {
+  pasteActionWithRetainedFragment,
+  type ClipboardActionDescriptor,
+  pasteArgsFragment
+} from "../../🛠️ShellHelpers/🪟️window-panes/📋️clipboard-activation/🟦️.ts";
 // #endregion 🔌️Adapters
-import { FRAMEWORK_CHAT_PANEL_ID } from "../../📌️ChromePanels/🟦️.tsx";
+import { FRAMEWORK_CHAT_PANEL_ID } from "../../📌️ChromePanels/🆔️panel-ids/🟦️.ts";
 import { type PluginWasmHandle } from "../../🔌️PluginRuntime/🟦️.tsx";
 import { focusAgentApprovalV1 } from "../../🤖️AgentApprovals/🟦️.tsx";
 import { documentTransferTasksV1, type TaskManagerDocumentTransferV1 } from "../../🧵️TaskManager/🟦️.tsx";

@@ -7,7 +7,7 @@ import { I18nextProvider } from "react-i18next";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import fixture from "../🧫️fixtures/🔣️.json" with { type: "json" };
 import { UIFind, UIFindProvider, UISearch, useUIFind } from "../../🟦️.tsx";
-import { buildOsCommands } from "../../../🛠️ShellHelpers/🟦️.tsx";
+import { buildOsCommands } from "../../../🛠️ShellHelpers/🎛️command-registry/🟦️.tsx";
 
 type FixtureItem = (typeof fixture.items)[number];
 
@@ -79,7 +79,6 @@ describe("ShellSearch React parity oracle", () => {
       fireEvent.keyDown(input, { key: "Escape" });
       await waitFor(() => expect(document.querySelector('[role="combobox"]')).toBeNull());
       expect(document.activeElement).toBe(trigger);
-      console.log(`[DEBUG] scoped ${locale} ${row.surface} restored owner ${row.root}`);
     }
   });
   it("resolves canonical built-in command labels from the active React locale", async () => {

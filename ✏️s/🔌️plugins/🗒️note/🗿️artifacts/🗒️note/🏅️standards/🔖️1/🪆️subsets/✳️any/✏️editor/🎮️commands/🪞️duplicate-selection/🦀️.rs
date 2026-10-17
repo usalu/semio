@@ -38,6 +38,6 @@ fn duplicate_blocks(document: &NoteSnapshot, ids: &[String], id_owner: &mut crat
 #[dsl(keyword = "duplicate-selection")]
 pub struct DuplicateSelection {}
 
-pub fn handle(_payload: &DuplicateSelection, doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, semio_framework_plugin::NoConfig>, ctx: &mut crate::editor::note::NoteDispatchCtx) -> Result<Emit<NoteMutation, semio_framework_plugin::NoConfigMutation>, Fault> {
+pub fn handle(_payload: &DuplicateSelection, doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, semio_framework_plugin::NoConfig>, ctx: &mut crate::editor::note::dispatch_ctx::NoteDispatchCtx) -> Result<Emit<NoteMutation, semio_framework_plugin::NoConfigMutation>, Fault> {
     Ok(duplicate_blocks(doc.snapshot, &ctx.selected_block_ids, &mut ctx.id_owner))
 }

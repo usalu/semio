@@ -32,6 +32,7 @@ semio-framework-diagnostic = { path = "../../../../⚠️diagnostic/📦️packa
 semio-framework-pack-json = { path = "../../../../🎒️pack/🔤️json/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-framework-test-fixtures = { path = "../../../../🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 serde = { version = "1.0", features = ["derive"] }
 semio-framework-pack = { path = "../../../../🎒️pack/📦️packages/🦀️rust" }
 semio-framework-trace = { path = "../../../../⏱️trace/📦️packages/🦀️rust" }
@@ -50,3 +51,19 @@ path = "../../🧪️tests/🛬️decoding/🦀️.rs"
 [[test]]
 name = "native_retirement"
 path = "../../🧪️tests/♻️retirement/🦀️.rs"
+
+[[test]]
+name = "refusal_authority"
+path = "../../🧪️tests/⚠️refusal/🦀️.rs"
+
+[[test]]
+name = "number_refusal"
+path = "../../🧪️tests/🔢️number-refusal/🦀️.rs"
+
+[[test]]
+name = "optional_field"
+path = "../../🧪️tests/🪆️optional-field/🦀️.rs"
+
+[[test]]
+name = "required_inline"
+path = "../../🧪️tests/🏷️required-inline/🦀️.rs"

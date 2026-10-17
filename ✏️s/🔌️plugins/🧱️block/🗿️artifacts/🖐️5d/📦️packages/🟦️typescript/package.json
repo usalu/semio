@@ -20,14 +20,22 @@
     ".": {
       "types": "./dist/🟦️.d.ts",
       "import": "./dist/🟦️.js"
-    }
+    },
+    "./examples/hexagonal-cut-concrete-forest-left/assets/hexagonal-cut-concrete-forest": "./📚️examples/🌲️hexagonal-cut-concrete-forest-left/🖼️assets/🌲️hexagonal-cut-concrete-forest/🟦️.ts",
+    "./examples/nakagin-capsule/assets/nakagin-capsule": "./📚️examples/🏢️nakagin-capsule/🖼️assets/🏢️nakagin-capsule/🟦️.ts"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@semio-tech/block-js": "workspace:*"
+  },
   "license": "LGPL-3.0-or-later",
   "repository": {
     "type": "git",
     "url": "https://github.com/usalu/semio.git",
     "directory": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/📦️packages/🟦️typescript"
   },
-  "bundleKind": "library"
+  "bundleKind": "library",
+  "devDependencies": {
+    "@semio-tech/block-2d": "workspace:*",
+    "@semio-tech/block-3d": "workspace:*"
+  }
 }

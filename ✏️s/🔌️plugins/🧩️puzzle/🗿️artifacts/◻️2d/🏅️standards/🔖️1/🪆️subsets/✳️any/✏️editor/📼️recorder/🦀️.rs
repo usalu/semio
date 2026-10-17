@@ -9,13 +9,16 @@ use crate::editor::puzzle2d::snapshot::Puzzle2dPlaySnapshot;
 use crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff;
 use crate::standards::v1::subsets::any::schema::mutations as kinds;
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
-use {crate::standards::v1::subsets::any::schema::Puzzle2dEdge, crate::standards::v1::subsets::any::schema::Puzzle2dHandle, crate::standards::v1::subsets::any::schema::Puzzle2dNode, crate::Puzzle2dSnapshot, crate::standards::v1::subsets::any::schema::Puzzle2dTargetRegion};
+use {crate::standards::v1::subsets::any::schema::records::Puzzle2dEdge, crate::standards::v1::subsets::any::schema::records::Puzzle2dHandle, crate::standards::v1::subsets::any::schema::records::Puzzle2dNode, crate::Puzzle2dSnapshot, crate::standards::v1::subsets::any::schema::records::Puzzle2dTargetRegion};
 use protocol::{DiffAlgebra, Mutation, MutationDiff};
 use semio_framework_pack_json::{json, Value};
 use semio_framework_value::paged::PagedUtf8;
 use std::cell::OnceCell;
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
+use semio_framework_plugin::{kernel::ClipboardError, kernel::ClipboardFragment, kernel::PastePlacement};
+use crate::{editor::puzzle2d::recorder, editor::puzzle2d::snapshot};
+use crate::editor::puzzle2d::snapshot::{PUZZLE2D_CLIPBOARD_SCHEMA, PUZZLE2D_PASTE_OFFSET, PUZZLE2D_PLAY_CONTROLLER_ID, puzzle2d_clipboard_media_type};
 
 type Text = PagedUtf8<{ usize::MAX }>;
 
@@ -459,7 +462,54 @@ impl Puzzle2dRecorder {
 }
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
+
+/// 📋️ The copied nodes with their handles, plus every edge whose BOTH endpoints were copied, as a
+/// snapshot-shaped fragment.
+pub fn puzzle2d_copy_fragment_from(snapshot: &Value, node_ids: &[String]) -> Result<ClipboardFragment, ClipboardError> {
+    if node_ids.is_empty() {
+        return Err(ClipboardError::EmptySelection);
+    }
+    let ids: HashSet<&str> = node_ids.iter().map(String::as_str).collect();
+    let nodes: Vec<Value> = board_snapshot_nodes(snapshot).iter().filter(|node| node.get("id").and_then(Value::as_str).is_some_and(|id| ids.contains(id))).cloned().collect();
+    if nodes.is_empty() {
+        return Err(ClipboardError::EmptySelection);
+    }
+    let handle_ids: HashSet<&str> = nodes.iter().flat_map(|node| node.get("handles").and_then(Value::as_array).into_iter().flatten()).filter_map(|handle| handle.get("id").and_then(Value::as_str)).collect();
+    let endpoint_copied = |endpoint: Option<&str>| endpoint.is_some_and(|id| handle_ids.contains(id) || ids.contains(id));
+    let edges: Vec<Value> = board_snapshot_edges(snapshot)
+        .iter()
+        .filter(|edge| endpoint_copied(edge.get("source").and_then(Value::as_str)) && endpoint_copied(edge.get("target").and_then(Value::as_str)))
+        .cloned()
+        .collect();
+    let label = format!("{} nodes", nodes.len());
+    let clip = json!({ "schema": PUZZLE2D_CLIPBOARD_SCHEMA, "nodes": nodes, "edges": edges });
+    Ok(ClipboardFragment { schema: PUZZLE2D_CLIPBOARD_SCHEMA.into(), media_type: puzzle2d_clipboard_media_type(), dsl_text: clip.to_string(), pack_bytes: None, source_app: PUZZLE2D_PLAY_CONTROLLER_ID.into(), label })
+}
+/// ✂️ Copy-then-delete as ONE mutation list: a `delete-node` per cut node (each severs the edges on its handles) and a
+/// `disconnect-handles` per edge still hanging off a cut id, so a cut is a single history edit one undo restores.
+pub fn puzzle2d_cut_operations_from(snapshot: &Puzzle2dPlaySnapshot, node_ids: &[String]) -> Vec<Puzzle2dMutation> {
+    let mut recorder = Puzzle2dRecorder::new(snapshot);
+    recorder.cut(node_ids);
+    recorder.into_rows()
+}
+/// 📋️ Clones a copied fragment with fresh node, handle and edge ids: the edges between copied nodes
+/// come back rewired onto the clones, and every clone is offset so it never lands under its source. The mutation list is
+/// a `create-node` per clone and a `connect-handles` per rewired edge. Returns it and the pasted node ids the caller
+/// re-selects.
+pub fn puzzle2d_paste_operations_on(snapshot: &Puzzle2dPlaySnapshot, fragment: &ClipboardFragment, placement: &PastePlacement) -> Result<(Vec<Puzzle2dMutation>, Vec<String>), ClipboardError> {
+    let expected = puzzle2d_clipboard_media_type();
+    if fragment.media_type != expected {
+        return Err(ClipboardError::IncompatibleMediaType(fragment.media_type.clone()));
+    }
+    let clip: Value = semio_framework_pack_json::parse(&fragment.dsl_text,semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| ClipboardError::ParseFailed(error.to_string()))?;
+    let nodes = board_snapshot_nodes(&clip);
+    if nodes.is_empty() {
+        return Err(ClipboardError::EmptySelection);
+    }
+    let [offset_x, offset_y] = placement.position.map_or([PUZZLE2D_PASTE_OFFSET, PUZZLE2D_PASTE_OFFSET], |position| [position[0], position[1]]);
+    let mut recorder = Puzzle2dRecorder::new(snapshot);
+    let pasted = recorder.clone_fragment(nodes, board_snapshot_edges(&clip), (offset_x, offset_y));
+    Ok((recorder.into_rows(), pasted))
+}

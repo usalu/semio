@@ -7,7 +7,6 @@ test("canonical native field derivation retains schema wire order without serial
  const root=new URL("../",import.meta.url);const read=(path:string)=>JSON.parse(readFileSync(new URL(path,root),"utf8"));const fixture=read("🧪️tests/🧫️fixtures/🔣️.json");
  expect(new Ajv2020({strict:true}).compile(read("🧬️schema/🔣️.json"))(fixture)).toBe(true);expect(JSON.stringify({[fixture.tag]:fixture.variant,...fixture.values})).toBe(fixture.expected);
  const db=new Database(":memory:");db.exec("CREATE TABLE fields(ordinal INTEGER PRIMARY KEY,name TEXT,owner INTEGER)");Object.keys(fixture.values).forEach((key,index)=>db.query("INSERT INTO fields VALUES(?,?,1)").run(index,key));expect((db.query("SELECT name FROM fields ORDER BY ordinal").all() as {name:string}[]).map(row=>row.name)).toEqual(Object.keys(JSON.parse(fixture.expected)).slice(1));expect(db.query("SELECT SUM(owner) AS n FROM fields").get()).toEqual({n:3});db.close();
- console.log("[DEBUG] Ajv/JSON tagged record byte oracle and SQLite native schema field ownership/order agree; no whole payload copies");
  const path=new URL("🦀️.rs",root);expect(existsSync(path)).toBe(true);const source=readFileSync(path,"utf8");expect(source).toContain("canonical_tree_child");expect(source).toContain("ArtifactCanonicalJsonTree");expect(source).not.toContain("ToValue::to_value");expect(source).not.toContain("transmute");
 });
 test("canonical native field roles follow independent predicate, octet array and decimal string oracles",()=>{
@@ -21,7 +20,6 @@ test("canonical native field roles follow independent predicate, octet array and
   Object.keys(wire).forEach((name,ordinal)=>db.query("INSERT INTO emitted VALUES(?,?,?)").run(index,ordinal,name));
  });
  const counts=db.query("SELECT row,COUNT(*) AS n FROM emitted GROUP BY row ORDER BY row").all() as {row:number,n:number}[];expect(counts.map(count=>count.n)).toEqual(fixture.roles.map((row:any)=>Object.keys(JSON.parse(row.expected)).length));db.close();
- console.log("[DEBUG] canonical field-role fixture: Ajv schema, JSON.stringify predicate/octet/decimal oracle and SQLite emitted-field order agree");
  const source=readFileSync(new URL("🦀️.rs",root),"utf8");expect(source).toContain("decimal_string");expect(source).toContain("octets_kind");expect(source).not.toContain("transmute");
 });
 test("canonical hex word roles follow an independent IEEE-754 binary32 bit oracle",()=>{
@@ -36,7 +34,6 @@ test("canonical hex word roles follow an independent IEEE-754 binary32 bit oracl
  }
  for(const record of db.query("SELECT word FROM words").all() as {word:string}[])expect(record.word).toMatch(/^[0-9a-f]{8}$/);
  db.close();
- console.log("[DEBUG] canonical hex word fixture: Ajv schema, DataView binary32 bit oracle and SQLite word shape agree");
  const source=readFileSync(new URL("🦀️.rs",root),"utf8");expect(source).toContain("hex_word");expect(source).not.toContain("transmute");
 });
 test("canonical flatten splices the flattened record at its field position per an independent oracle",()=>{
@@ -52,7 +49,6 @@ test("canonical flatten splices the flattened record at its field position per a
  });
  expect((db.query("SELECT COUNT(*) AS n FROM members WHERE owner='header'").get() as {n:number}).n).toBe(fixture.flatten.reduce((n:number,row:any)=>n+1+(row.note!==null?1:0),0));
  db.close();
- console.log("[DEBUG] canonical flatten fixture: Ajv schema, JSON.stringify splice oracle and SQLite member ownership agree");
  const source=readFileSync(new URL("🦀️.rs",root),"utf8");expect(source).toContain("canonical flattened field is not an object");
 });
 test("canonical externally tagged named variants nest their fields under the variant key per an independent oracle",()=>{
@@ -71,6 +67,5 @@ test("canonical externally tagged named variants nest their fields under the var
  }
  expect((db.query("SELECT COUNT(*) AS n FROM shapes WHERE depth=1").get() as {n:number}).n).toBe(fixture.externalVariants.filter((row:any)=>row.variant!=="point").length);
  db.close();
- console.log("[DEBUG] canonical externally tagged variant fixture: Ajv schema, JSON.stringify single-key wrapper oracle and SQLite variant nesting agree");
  const source=readFileSync(new URL("🦀️.rs",root),"utf8");expect(source).toContain("CanonicalView");expect(source).not.toContain("transmute");
 });

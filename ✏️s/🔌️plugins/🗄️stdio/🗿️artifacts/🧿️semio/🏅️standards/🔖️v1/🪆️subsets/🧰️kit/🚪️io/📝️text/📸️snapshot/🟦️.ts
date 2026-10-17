@@ -51,6 +51,6 @@ export const stdioSemioV1KitSnapshotTextGuardConstant = <T extends string | numb
 export function parseSemioKitSnapshotDsl(value: unknown, at = "$"): SemioKitSnapshotDsl {
   const row = stdioSemioV1KitSnapshotTextGuardObject(value, at);
   return {
-    line: row["line"] === undefined ? undefined : stdioSemioV1KitSnapshotTextGuardString(row["line"], `${at}.line`),
+    line: stdioSemioV1KitSnapshotTextGuardString(row["line"], `${at}.line`),
   };
 }

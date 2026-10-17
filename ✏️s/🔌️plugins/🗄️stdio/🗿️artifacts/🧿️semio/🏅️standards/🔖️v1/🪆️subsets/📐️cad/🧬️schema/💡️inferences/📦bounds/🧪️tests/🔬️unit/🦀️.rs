@@ -1,4 +1,6 @@
-use super::*;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
+use crate::{schema::snapshot::CadEntity, schema::snapshot::SemioCadSnapshot};
+use crate::schema::inferences::bounds::*;
 use crate::schema::snapshot::{CadBlock, CadEntityRecord, STDIO_SEMIOCAD_DOCUMENT_SCHEMA};
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9

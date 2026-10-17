@@ -1,4 +1,18 @@
-use super::*;
+use semio_framework_test_fixtures::fixture_text;
+
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::kernel::*;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::registers::*;
+#[allow(unused_imports)]
+use framework_schema::ArtifactSchema;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot;
+#[allow(unused_imports)]
+use protocol::list_delta::RowPatch;
+#[allow(unused_imports)]
+use protocol::{ApplyCapability, MutationApplyResult};
+use crate::standards::v1::subsets::any::schema::diff::*;
 
 use crate::standards::v1::subsets::any::schema::snapshot::sample_plugin;
 use protocol::{apply_diff, DiffAlgebra, MutationDiff};
@@ -111,7 +125,7 @@ async fn apply_addresses_a_rejected_collection_delta_by_its_section() {
 #[test]
 fn architect_native_sparse_diff_preserves_declared_roles_and_exact_text() {
     use semio_framework_dsl_record::{parse_exact, print, JoinMode, ParseOptions};
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🔺️diff/🔗️native-roles/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../🧪️tests/🧫️fixtures/🔺️diff/🔗️native-roles/🔣️.json")).unwrap();
     let delta: ProgramStakeholdersDelta = serde_json::from_value(fixture["delta"].clone()).unwrap();
     for value in [ProgramDiff::default(), ProgramDiff { stakeholders: Some(delta), ..Default::default() }] {
         let record = value.__dsl_to_record();
@@ -123,5 +137,4 @@ fn architect_native_sparse_diff_preserves_declared_roles_and_exact_text() {
             assert!(parse_exact(&format!("{text} unowned 17"), &spec, &ParseOptions::default()).is_err());
         }
     }
-    eprintln!("[DEBUG] Architect native sparse delta roles preserve independent serde fixture and exact terminal grammar");
 }

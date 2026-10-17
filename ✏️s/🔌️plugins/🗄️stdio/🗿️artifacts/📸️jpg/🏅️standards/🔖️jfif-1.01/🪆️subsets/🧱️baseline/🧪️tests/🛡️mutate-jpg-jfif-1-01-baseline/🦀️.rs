@@ -91,7 +91,6 @@ mod subject {
   let expected=row.str("code");
   let codes=check_baseline_facts(&next.baseline_facts()).iter().map(|diagnostic|diagnostic.code.to_string()).collect::<Vec<_>>();
   if (expected.is_empty()&&!codes.is_empty())||(!expected.is_empty()&&!codes.contains(&expected)){return Err(format!("native profile verdict {codes:?} disagrees with {expected:?}"));}
-  eprintln!("[DEBUG] JPEG owned native profile={} codes={codes:?}",row.str("kind"));
   Ok(Outcome::with_raw(now.to_string().into_bytes(),now))
  }
  pub fn restore_profile(ctx:&Context)->Result<Outcome,String>{

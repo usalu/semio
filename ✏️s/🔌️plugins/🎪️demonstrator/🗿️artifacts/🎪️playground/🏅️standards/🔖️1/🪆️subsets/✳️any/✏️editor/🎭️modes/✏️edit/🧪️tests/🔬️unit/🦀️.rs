@@ -1,4 +1,5 @@
-use super::*;
+use crate::editor::playground::modes::edit::windows::main;
+use crate::editor::playground::modes::edit::*;
 
 #[test]
 fn the_edit_layout_lists_the_one_window() {

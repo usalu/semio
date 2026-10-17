@@ -1,8 +1,8 @@
 import { parseSchemaRecord } from "@semio-tech/framework/schema/record";
-import { parseArtifactLink, type ArtifactLink } from "../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️link/🧬️schema/🟦️.ts";
+import { parseArtifactLink, type ArtifactLink } from "@semio-tech/framework-os/modules/store/link/schema";
 import { parseSemioTransform, type SemioTransform } from "../../../✉️base/🧬️schema/🧮️geometry/🟦️.ts";
 import { parseSemioChild, type ArtifactChild } from "../../../✉️base/🧬️schema/🪆️child/🟦️.ts";
-export type { ArtifactLink } from "../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️link/🧬️schema/🟦️.ts";
+export type { ArtifactLink } from "@semio-tech/framework-os/modules/store/link/schema";
 export type { SemioTransform } from "../../../✉️base/🧬️schema/🧮️geometry/🟦️.ts";
 export type { ArtifactChild } from "../../../✉️base/🧬️schema/🪆️child/🟦️.ts";
 

@@ -1,0 +1,302 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "scope",
+    "cases",
+    "namespaceCases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "scope": {
+      "const": "proposal-model-only-no-runtime-authority"
+    },
+    "cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "request",
+          "expected"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "request": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "domain",
+              "intent",
+              "root",
+              "parent",
+              "selection",
+              "evidence",
+              "fixture",
+              "ancestry",
+              "physical",
+              "kernel",
+              "descriptor",
+              "state",
+              "content",
+              "transition",
+              "control",
+              "funding",
+              "ledger",
+              "receipt",
+              "pathUtf16",
+              "namespaces",
+              "entriesPerNamespace",
+              "descendants"
+            ],
+            "properties": {
+              "domain": {
+                "enum": [
+                  "graph-namespace",
+                  "graph-pool",
+                  "products-graph-fixture",
+                  "whole-products"
+                ]
+              },
+              "intent": {
+                "enum": [
+                  "current-owner-maintenance",
+                  "restore-historical-fixture"
+                ]
+              },
+              "root": {
+                "enum": [
+                  "foreign",
+                  "strict-graph",
+                  "strict-products"
+                ]
+              },
+              "parent": {
+                "enum": [
+                  "actual-ex",
+                  "copied",
+                  "read-token"
+                ]
+              },
+              "selection": {
+                "enum": [
+                  "complete-current",
+                  "historical-only",
+                  "name-only"
+                ]
+              },
+              "evidence": {
+                "enum": [
+                  "missing",
+                  "namespace-descriptor",
+                  "owner-prefix",
+                  "pinned-producer-and-current-closed-fixture",
+                  "pool-declaration-and-row"
+                ]
+              },
+              "fixture": {
+                "enum": [
+                  "missing-current-CAS",
+                  "not-applicable",
+                  "private-token-restoration",
+                  "selected-current"
+                ]
+              },
+              "ancestry": {
+                "enum": [
+                  "changed",
+                  "matched"
+                ]
+              },
+              "physical": {
+                "enum": [
+                  "changed",
+                  "matched"
+                ]
+              },
+              "kernel": {
+                "enum": [
+                  "matched",
+                  "unknown"
+                ]
+              },
+              "descriptor": {
+                "enum": [
+                  "changed",
+                  "matched"
+                ]
+              },
+              "state": {
+                "enum": [
+                  "excluded",
+                  "intersection"
+                ]
+              },
+              "content": {
+                "enum": [
+                  "closed",
+                  "unknown"
+                ]
+              },
+              "transition": {
+                "enum": [
+                  "exact-selected-removal",
+                  "extra-child",
+                  "still-mounted",
+                  "unselected-mutation"
+                ]
+              },
+              "control": {
+                "enum": [
+                  "cancelled",
+                  "expired",
+                  "live-finite",
+                  "unbounded"
+                ]
+              },
+              "funding": {
+                "enum": [
+                  "compiler-child",
+                  "domain-artifact",
+                  "none",
+                  "unknown"
+                ]
+              },
+              "ledger": {
+                "enum": [
+                  "foreign",
+                  "matching-current-domain-row",
+                  "policy-mismatch",
+                  "unsettled",
+                  "zero"
+                ]
+              },
+              "receipt": {
+                "enum": [
+                  "changed",
+                  "current",
+                  "opaque-authorized-publication",
+                  "opaque-unapproved"
+                ]
+              },
+              "pathUtf16": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 1000000
+              },
+              "namespaces": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 1000000
+              },
+              "entriesPerNamespace": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 1000000
+              },
+              "descendants": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 1000000
+              }
+            }
+          },
+          "expected": {
+            "enum": [
+              "retire-independent-leaf",
+              "publish-then-retire-independent-leaf",
+              "retire-domain-ledger-then-leaf",
+              "refuse"
+            ]
+          }
+        }
+      }
+    },
+    "namespaceCases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "style",
+          "root",
+          "descriptor",
+          "expectedKey",
+          "expectedDirectory"
+        ],
+        "properties": {
+          "style": {
+            "enum": [
+              "posix",
+              "windows"
+            ]
+          },
+          "root": {
+            "type": "string",
+            "maxLength": 256
+          },
+          "descriptor": {
+            "$ref": "#/definitions/Namespace"
+          },
+          "expectedKey": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{20}$"
+          },
+          "expectedDirectory": {
+            "type": "string",
+            "maxLength": 256
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "Namespace": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "toolingIdentity",
+        "workspaceRoot",
+        "graphIdentity",
+        "implementationIdentity"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "toolingIdentity": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "workspaceRoot": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "graphIdentity": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          ]
+        },
+        "implementationIdentity": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    }
+  }
+}

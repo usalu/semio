@@ -30,7 +30,7 @@ pub fn measure(document: &NoteSnapshot, labels: &NotePlayLabels) -> WindowMeasur
             ready: None,
             loading: None,
             disabled: None,
-            on_change: crate::editor::note::note_action("setPencilWidth", None),
+            on_change: crate::editor::note::support::note_action("setPencilWidth", None),
             waiting: None,
         }],
     }

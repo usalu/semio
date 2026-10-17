@@ -1,0 +1,14 @@
+{
+ "name": "otcps",
+ "crates": [
+  "semio-framework-os-services",
+  "semio-framework-os-services-tests"
+ ],
+ "base": {
+  "rev": "1bae6115bc5",
+  "crates": [
+   "semio-framework-os-services"
+  ]
+ },
+ "note": "OTCP services"
+}

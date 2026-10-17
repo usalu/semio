@@ -1,0 +1,9 @@
+# Leases Current Publication Helper Review
+
+Prepared --publish is an explicit genuine120 setup-all purpose. It captures current receipt/backing/directory/root facts under exact canonical direct SH, closes backing FD and releases SH, then invokes only the exact Repo-owned leases publisher with those CAS facts. Actual provider independently reauthenticates kernel association/descendants/EX and accepts old receipt bytes only as opaque CAS DATA. Ordinary canonical image reopen occurs afterward. No global execution was performed in this audit.
+
+The reopened data directory currently receives directory/nonsymlink lstat checks; requested actual requireNativeStoragePathV1(root,data) or same-device proof before claiming canonical data placement. Snapshot noNativeCommand/noRepair fields describe the prior observation only; --publish itself deliberately performs explicit publication. Descriptor/SH/read errors prevent publication and preserve primary. No raw receipt repair, old creator adoption, quota change, forced detach or broad asset census is introduced.
+
+## Fresh Protected Observation and Final Helper
+
+Current helper now also retains exact SH strongly when lease.release throws, and uses actual Native same-device path guard for reopened data. Root reports strict23952 success. Independent bounded stable receipt read of pid83079 confirms success and actualSharedReleased true, sole schema error missing mountDirectory, six other comparisons true, old receipt CAS9c9bc5ca59ca02e1446699ee31aaa2feb61bd962f1364d8e321dbd273aa066f4, actual backing66060288bytes/allocated under67108864 maximum. Receipt is DATA in `🗑️generated/leases-current-protected-low-independent.json`; this audit did not reopen the asset. No remaining Source blocker found for separately authorized exact leases publication; no ordinary publication success exists yet.

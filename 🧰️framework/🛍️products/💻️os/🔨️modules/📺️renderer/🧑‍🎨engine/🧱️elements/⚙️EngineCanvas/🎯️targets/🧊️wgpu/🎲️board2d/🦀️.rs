@@ -4,6 +4,9 @@
 
 use semio_framework_os_renderer_wgpu_engine_registry::engine_surface_registry::engine_camera_from_json;
 use semio_framework_os_renderer_wgpu_engine_registry::engine_surface_registry::{EngineSurface, ENGINE_SURFACES};
+use semio_framework_os_infinite_board_normal_focus::{commit_wheel, set_camera_silent};
+use semio_framework_os_infinite_board_normal_gestures::{pointer_lane_in_flight, pointer_lane_is_direct};
+use semio_framework_os_infinite_board_normal_host::begin_pointer_commit;
 use super::paint2d::write_interaction_hover;
 use super::tiled_map::board_local_pointer;
 use serde_json::{json, Value};
@@ -465,6 +468,9 @@ fn begin_board_pointer_commit(surface_id: &str, controller_id: &str, plan: infin
 /// an authority still busy past this is stuck, and that is a fault.
 const BOARD_POINTER_SETTLE_STEPS: u64 = 8 * infinite_canvas::BOARD_POINTER_ITEM_CAPACITY as u64 + 64;
 
+/// 🎟️ The retained grant one settle is funded with: one item per step it may spend and depth one. The pointer authority is a fuel-bound state machine that copies, retains and releases no payload bytes, so the byte limits are zero and an authority that ever consumed bytes would be refused instead of overspending.
+const BOARD_POINTER_SETTLE_GRANT: semio_framework_job::RetainedCloneGrant = semio_framework_job::RetainedCloneGrant { maximum_items: BOARD_POINTER_SETTLE_STEPS as usize, maximum_copy_bytes: 0, maximum_capacity_bytes: 0, maximum_release_bytes: 0, maximum_depth: 1 };
+
 /// 🚦️ Brings one board's retained pointer authority to its terminal BEFORE the next input touches the board.
 ///
 /// ⚖️ A retained pointer commit owns the board from `begin_pointer_commit` to its terminal: the engine pins it to the
@@ -485,13 +491,15 @@ pub fn settle_board_pointer_authority_into(surface_id: &str, input: &mut ui_wgpu
         return Ok(());
     }
     let mut sequence = 0;
+    let mut retained_progress = semio_framework_job::RetainedCloneProgress::default();
     let mut context = semio_framework_job::StepContext::new(
         semio_framework_job::OperationId(1),
         semio_framework_job::Generation(1),
-        semio_framework_job::StepBudget::new(BOARD_POINTER_SETTLE_STEPS, u64::MAX),
+        semio_framework_job::StepBudget::new(BOARD_POINTER_SETTLE_STEPS, u64::MAX, BOARD_POINTER_SETTLE_GRANT),
         semio_framework_job::root_cancel_token(),
         semio_framework_job::default_now_us,
         &mut sequence,
+        &mut retained_progress,
     );
     for _ in 0..BOARD_POINTER_SETTLE_STEPS {
         match drive_board_authority_step(surface_id, &mut context) {

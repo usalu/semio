@@ -19,5 +19,13 @@
     { "id": "trailing-slash", "path": "🔨️modules/" },
     { "id": "nul", "path": "🔨️modules/\u0000" }
   ],
-  "json": { "path": "📦️packages/🟦️typescript/package.json", "field": "name", "value": "@semio-tech/framework" }
+  "json": { "path": "📦️packages/🟦️typescript/package.json", "field": "name", "value": "@semio-tech/framework" },
+  "store": {
+    "root": "🛍️products/💻️os/🔨️modules/🏪️store",
+    "rootFile": "🦀️.rs",
+    "carvedDirectories": ["⚙️engine", "🏗️initialization", "🧰️test-support", "🧩️composition", "🧾️document", "🎚️config", "📜️space-history/🏠️space", "📦️codec/🏭️factory"],
+    "liftedSegment": "📥️lifted",
+    "excludedSegments": ["🧪️tests", "🧪️testing", "📦️packages", "node_modules"],
+    "contains": ["pub struct ArtifactStore<P, Mutation>", "pub fn advance_apply_batch<P, Mutation>", "pub trait ArtifactStoreOwnedDisposer"]
+  }
 }

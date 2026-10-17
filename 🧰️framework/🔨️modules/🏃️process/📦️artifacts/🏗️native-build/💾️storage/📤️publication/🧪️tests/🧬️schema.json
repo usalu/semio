@@ -8,7 +8,8 @@
     "failures",
     "request",
     "snapshots",
-    "pending"
+    "pending",
+    "retirementPending"
   ],
   "properties": {
     "version": {
@@ -154,6 +155,40 @@
           },
           "admit": {
             "type": "boolean"
+          }
+        }
+      }
+    },
+    "retirementPending": {
+      "type": "array",
+      "minItems": 19,
+      "maxItems": 19,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "kind",
+          "stage"
+        ],
+        "properties": {
+          "kind": {
+            "enum": [
+              "absent",
+              "directory",
+              "valid-intent",
+              "malformed-intent",
+              "file",
+              "dangling-link",
+              "unreadable"
+            ]
+          },
+          "stage": {
+            "enum": [
+              "complete",
+              "admission",
+              "detach",
+              "delete"
+            ]
           }
         }
       }

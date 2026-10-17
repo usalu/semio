@@ -1,0 +1,80 @@
+[package]
+workspace = "../../../../../../.."
+name = "semio-s-artifact-trinity-jack-jack"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Component crate of semio-s-artifact-trinity-jack: jack"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "🦀️.rs"
+
+[dependencies]
+pack = { workspace = true }
+semio-framework = { workspace = true }
+semio-framework-2d = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/📦️packages/🦀️rust" }
+semio-framework-action-bus = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🎯️action-bus/📦️packages/🦀️rust" }
+semio-framework-artifact-flow-flow = { workspace = true }
+semio-framework-artifact-reference = { workspace = true }
+semio-framework-async = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust" }
+semio-framework-canvas = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🖼️canvas/📦️packages/🦀️rust" }
+semio-framework-composition-admission = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧩️composition/📥️admission/📦️packages/🦀️rust" }
+semio-framework-diagnostic = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
+semio-framework-dispatch-macros = { workspace = true }
+semio-framework-dsl = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🗣️dsl/📦️packages/🦀️rust" }
+semio-framework-dsl-record = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
+semio-framework-dsl-record-derive = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust" }
+semio-framework-geometry = { workspace = true }
+semio-framework-graph-dsl = { workspace = true }
+semio-framework-graph-layout-run = { workspace = true }
+semio-framework-graph-manifest = { workspace = true }
+semio-framework-job = { workspace = true }
+semio-framework-job-fault-publication = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🧵️job/📬️outcome/📤️publication/⚠️fault/📦️packages/🦀️rust" }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-pack-json = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-framework-plugin = { workspace = true }
+semio-framework-schema = { workspace = true }
+semio-framework-schema-composition = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧩️composition/📦️packages/🦀️rust" }
+semio-framework-schema-registry = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/📇️registry/📦️packages/🦀️rust" }
+semio-framework-schema-state = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust" }
+semio-framework-tool-run = { workspace = true }
+semio-framework-ui-contract = { workspace = true }
+semio-framework-ui-locale = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-value-derive = { workspace = true }
+semio-s-artifact-trinity-jack-model = { path = "../../../../../../../🔨️modules/⚠️errors/📦️packages/🦀️rust" }
+semio-s-artifact-trinity-jack-executor = { path = "../../../🧬️schema/🧮️executor/📦️packages/🦀️rust" }
+semio-s-artifact-trinity-jack-graph-query = { path = "../../../🧬️schema/💡️inferences/🪆️graph-query/📦️packages/🦀️rust" }
+semio-s-artifact-trinity-jack-inferences = { path = "../../../🧬️schema/💡️inferences/📦️packages/🦀️rust" }
+semio-s-artifact-trinity-jack-language-service = { path = "../../../🧬️schema/🗣️language-service/📦️packages/🦀️rust" }
+semio-s-artifact-trinity-jack-results-window = { path = "../../🎭️modes/✏️edit/🪟️windows/📊️results/🫧️transient/📦️packages/🦀️rust" }
+semio-s-artifact-trinity-jack-schema = { path = "../../../🧬️schema/📦️packages/🦀️rust" }
+semio-s-artifact-trinity-jack-transient = { path = "../../🫧️transient/📦️packages/🦀️rust" }
+semio-s-artifact-trinity-jack-window-config = { path = "../../🎭️modes/✏️edit/🪟️windows/🌐️graph/🎚️config/📦️packages/🦀️rust" }
+serde_json = { workspace = true }
+
+[features]
+testkit = ["semio-s-artifact-trinity-jack-model/testkit", "semio-s-artifact-trinity-jack-window-config/testkit", "semio-s-artifact-trinity-jack-inferences/testkit", "semio-s-artifact-trinity-jack-language-service/testkit", "semio-s-artifact-trinity-jack-schema/testkit", "semio-s-artifact-trinity-jack-executor/testkit", "semio-s-artifact-trinity-jack-results-window/testkit", "semio-s-artifact-trinity-jack-transient/testkit"]
+
+[dev-dependencies]
+semio-framework-async-macros = { workspace = true }
+semio-framework-graph-layout-run = { workspace = true, features = ["testing"] }
+semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
+semio-framework-test-original-snapshot-owners = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🛬️original-snapshot-owners/📦️packages/🦀️rust" }
+semio-s-artifact-trinity-jack-model = { path = "../../../../../../../🔨️modules/⚠️errors/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-trinity-jack-executor = { path = "../../../🧬️schema/🧮️executor/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-trinity-jack-inferences = { path = "../../../🧬️schema/💡️inferences/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-trinity-jack-language-service = { path = "../../../🧬️schema/🗣️language-service/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-trinity-jack-results-window = { path = "../../🎭️modes/✏️edit/🪟️windows/📊️results/🫧️transient/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-trinity-jack-schema = { path = "../../../🧬️schema/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-trinity-jack-transient = { path = "../../🫧️transient/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-trinity-jack-window-config = { path = "../../🎭️modes/✏️edit/🪟️windows/🌐️graph/🎚️config/📦️packages/🦀️rust", features = ["testkit"] }
+serde = { workspace = true }
+serde_json = { workspace = true }

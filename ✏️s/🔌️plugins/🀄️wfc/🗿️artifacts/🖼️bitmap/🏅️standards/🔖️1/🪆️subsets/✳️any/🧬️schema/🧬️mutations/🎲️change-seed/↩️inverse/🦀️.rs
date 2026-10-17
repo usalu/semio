@@ -1,10 +1,13 @@
 //! ↩️ Inverse for `ChangeSeed` — restores the PRIOR seed from a real BASE lookup (the seed field
 //! always exists, so this is never a no-op).
 
-use crate::mutations::{change_seed, BitmapMutation};
+use crate::standards::v1::subsets::any::schema::mutations::change_seed::change_seed;
 use crate::schema::snapshot::BitmapSnapshot;
 
-pub fn inverse(_payload: &super::ChangeSeed, base: &BitmapSnapshot) -> Result<Vec<BitmapMutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op>(_payload: &super::ChangeSeed, base: &BitmapSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError>
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::change_seed::ChangeSeed>,
+{
     Ok((|| {
     vec![change_seed(base.seed)]
 

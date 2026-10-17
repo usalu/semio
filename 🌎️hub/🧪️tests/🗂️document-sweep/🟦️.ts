@@ -20,15 +20,15 @@
 import {requireIssuedResourceControlInvocationV1,withRequestedIssuedResourceControlV1,type ScriptInvocation} from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import type {ResourceLeaseControl} from "@semio-tech/process/leases";
 import { createHash } from "node:crypto";
-import { ProtectedActorResponseCaptureV1, executeProtectedActorChildV1, type ProtectedActorSelectionV1, protectedActorChildUrlV1, observeNormalDevHubPublicationOwnerV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔎️verification/🧾️publication/🟦️.ts";
+import { ProtectedActorResponseCaptureV1, executeProtectedActorChildV1, type ProtectedActorSelectionV1, protectedActorChildUrlV1, observeNormalDevHubPublicationOwnerV1 } from "@semio-tech/framework-os-dev/verification/publication";
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import type { BrowserContext, Page } from "playwright";
 import { PLAYWRIGHT_MODULE_SPECIFIER } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/📋️plan/🟦️.ts";
-import { ensureParityPlaywrightBrowsersPath } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/⚖️parity/🏃️execution/🟦️.ts";
-import { FAULT, NOISE, awaitBeacon, click, dismissIntroduction, mutateUndoRedo, readMatrixPins, readShell, unfoldActionsRail, withDevServe, type MatrixRenderedEdit } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧮️program-matrix/🟦️.ts";
-import { acceptanceCheckResult, publishAcceptanceCheckResult, withAcceptanceRecord } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/🟦️.ts";
+import { ensureParityPlaywrightBrowsersPath } from "@semio-tech/framework-os-dev/parity/execution";
+import { FAULT, NOISE, awaitBeacon, click, dismissIntroduction, mutateUndoRedo, readMatrixPins, readShell, unfoldActionsRail, withDevServe, type MatrixRenderedEdit } from "@semio-tech/framework-os-dev/testing/program-matrix";
+import { acceptanceCheckResult, publishAcceptanceCheckResult, withAcceptanceRecord } from "@semio-tech/repo-test/acceptance/orchestration";
 
 //#region 🔖️Journey
 type Notice = { code: string; text: string };

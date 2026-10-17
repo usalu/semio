@@ -21,7 +21,6 @@ test("DWG visual operations, material channels/transforms and multiline color en
     expect(n.query("SELECT channel FROM dwg_material_map ORDER BY ordinal").all()).toEqual(fixture.materialMapChannels.map(channel=>({channel})));
     n.run("UPDATE dwg_visual_style_face SET opacity_operation='enable'; UPDATE dwg_material_map SET tiling='clamp' WHERE ordinal=4");const edited=await read(n);expect(edited.visual.properties.faceOpacity).toEqual({value:nan,operation:"enable"});expect(edited.material.bumpMap.tiling).toBe("clamp");
     n.run("UPDATE dwg_material_map_transform_coordinate SET ordinal=0 WHERE id=2");expect(n.query("PRAGMA integrity_check").get()).toEqual({integrity_check:"ok"});await expect(read(n)).rejects.toThrow();
-    console.log("[DEBUG] DWG visual operations, six material channels and multiline colors independently verified");
   }finally{n.close();}
 },20000);
 
@@ -35,6 +34,5 @@ test("DWG table roles/optional edges and multileader component enums roundtrip w
     const rows=n.query(fixture.independentQuery).all() as{role:string;edge:string;horizontal_spacing:number}[];expect(rows.length).toBe(fixture.expectedBorderCount);expect(rows.every(row=>row.horizontal_spacing===fixture.expectedMarginHorizontalSpacing)).toBe(true);
     n.run("UPDATE dwg_mleader_text_style SET left_attachment='middle'; UPDATE dwg_cell_border SET lineweight=17 WHERE id=1");const edited=await read();expect(edited.leader.text.leftAttachment).toBe("middle");expect(edited.table.table.borders.top!.lineweight).toBe(17);
     n.run("UPDATE dwg_cell_border SET ordinal=0 WHERE id=2");expect(n.query("PRAGMA integrity_check").get()).toEqual({integrity_check:"ok"});await expect(read()).rejects.toThrow();
-    console.log("[DEBUG] DWG table border joins and multileader component SQL edits independently verified");
   }finally{n.close();}
 },20000);

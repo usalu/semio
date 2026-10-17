@@ -14,7 +14,7 @@ pub fn reject(code: impl Into<String>, path: impl Into<String>, detail: impl Int
 /// ⚖️ The frozen mutation outcome code a glTF rejection reports as: an address the document lacks is `target-missing`, an
 /// identity it already holds `duplicate-id`, an edit the document's current shape contradicts `target-mismatch`, a payload
 /// malformed on its own `invariant` (`📡️replication/🎮️mutation/🧫️fixtures/🧫️outcome-code`).
-pub(crate) fn rejection_outcome_code(code: &str) -> protocol::OutcomeCode {
+pub fn rejection_outcome_code(code: &str) -> protocol::OutcomeCode {
     match code.strip_prefix("gltf.mutation.").unwrap_or(code) {
         "no-observable-change" => protocol::OutcomeCode::NoOp,
         "gltf.reference.in-use" => protocol::OutcomeCode::TargetReferenced,
@@ -29,7 +29,7 @@ pub(crate) fn rejection_outcome_code(code: &str) -> protocol::OutcomeCode {
 /// 📨️ Converts a glTF mutation rejection into its protocol outcome: the vocabulary code at its level and the rejection path
 /// as the target; a mismatch or invariant keeps the glTF code in front of the detail, since its generic code alone does not
 /// say which law refused.
-pub(crate) fn rejection_outcome(code: &str, path: &str, detail: String) -> protocol::MutationOutcome<semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::diff::GltfDiff> {
+pub fn rejection_outcome(code: &str, path: &str, detail: String) -> protocol::MutationOutcome<semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::diff::GltfDiff> {
     let target = path.split('/').filter(|part| !part.is_empty()).map(str::to_string).collect::<Vec<_>>();
     match rejection_outcome_code(code) {
         protocol::OutcomeCode::NoOp => protocol::MutationOutcome::new(Default::default()).warning("mutation.no-op", detail),

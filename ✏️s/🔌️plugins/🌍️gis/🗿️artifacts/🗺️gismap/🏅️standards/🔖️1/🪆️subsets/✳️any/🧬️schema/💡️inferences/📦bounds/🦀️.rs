@@ -22,7 +22,7 @@ pub struct GisMapBounds {
 }
 
 /// 🗺️ Recursively collects every `{lon, lat}` object and `[number, number]` pair inside `value`.
-pub(crate) fn scan_lon_lat_pairs(value: &semio_framework_value::DslValue, out: &mut Vec<(f64, f64)>) {
+pub fn scan_lon_lat_pairs(value: &semio_framework_value::DslValue, out: &mut Vec<(f64, f64)>) {
     visit_lon_lat_pairs(value, 1, &mut |lon, lat| out.push((lon, lat)), &mut |_| Ok::<(), std::convert::Infallible>(())).expect("infallible coordinate collection");
 }
 
@@ -56,7 +56,7 @@ fn visit_lon_lat_pairs<E>(value: &semio_framework_value::DslValue, depth: u32, p
 }
 
 /// ⏱️ Folds coordinates without retaining a point vector and checks every visited value.
-pub(crate) fn controlled_lon_lat_bounds<E>(snapshot: &GisMapSnapshot, checkpoint: &mut impl FnMut(u32) -> Result<(), E>) -> Result<Option<GisMapBounds>, E> {
+pub fn controlled_lon_lat_bounds<E>(snapshot: &GisMapSnapshot, checkpoint: &mut impl FnMut(u32) -> Result<(), E>) -> Result<Option<GisMapBounds>, E> {
     let mut bounds = None;
     for feature in snapshot.positions.iter().chain(snapshot.routes.iter()).chain(snapshot.regions.iter()) {
         visit_lon_lat_pairs(&feature.data, 1, &mut |lon, lat| include_point(&mut bounds, lon, lat), checkpoint)?;
@@ -72,7 +72,7 @@ fn include_point(bounds: &mut Option<GisMapBounds>, lon: f64, lat: f64) {
 }
 
 /// 📦 Bounding box across every scanned `(lon, lat)` pair, or `None` when nothing scanned.
-pub(crate) fn lon_lat_bounds(pairs: &[(f64, f64)]) -> Option<GisMapBounds> {
+pub fn lon_lat_bounds(pairs: &[(f64, f64)]) -> Option<GisMapBounds> {
     pairs.iter().fold(None, |acc, &(lon, lat)| {
         let mut bounds = acc;
         include_point(&mut bounds, lon, lat);
@@ -81,7 +81,7 @@ pub(crate) fn lon_lat_bounds(pairs: &[(f64, f64)]) -> Option<GisMapBounds> {
 }
 
 /// 🗺️ Scans every feature across `positions`/`routes`/`regions` for coordinate pairs.
-pub(crate) fn all_lon_lat_pairs(snapshot: &GisMapSnapshot) -> Vec<(f64, f64)> {
+pub fn all_lon_lat_pairs(snapshot: &GisMapSnapshot) -> Vec<(f64, f64)> {
     let mut pairs = Vec::new();
     for feature in snapshot.positions.iter().chain(snapshot.routes.iter()).chain(snapshot.regions.iter()) {
         scan_lon_lat_pairs(&feature.data, &mut pairs);

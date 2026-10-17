@@ -1,3 +1,13 @@
+import * as ModuleUnderTest from "../../📥️installation/🟦️.ts";
+import * as Dep0 from "../../../📇️registry/📦️deployment/🟦️.ts";
+import * as Dep1 from "../../🟦️.ts";
+import * as Dep2 from "@semio-tech/framework-os";
+import * as Dep3 from "node:fs";
+import * as Dep4 from "../../../../../../../🔨️modules/🪪️identity/📁️installation/🟦️.ts";
+import * as Dep5 from "node:path";
+import * as Dep6 from "node:os";
+import { resolve } from "node:path";
+import { pathToFileURL } from "node:url";
 type TestSource = { readonly directory: string; readonly url: string };
 
 export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../../../../../../🔨️modules/🪪️identity/📁️installation/🟦️.ts"), "installationDirectoryCollision" | "installationDirectoryEmoji"> & Pick<typeof import("../../../📇️registry/📦️deployment/🟦️.ts"), "MODULE_EXTENSION_ROUTE"> & Pick<typeof import("../../📥️installation/🟦️.ts"), "EXTENSION_COMPONENT_FILE" | "EXTENSION_INSTALL_PATH" | "EXTENSION_MANIFEST_ZIP_ENTRY_EMOJI" | "EXTENSION_PACKAGE_ENVELOPE_TOKEN" | "createExtensionStore" | "semioExtensionStoreVitePlugin" | "extensionPackageContentHash" | "packExtensionPackage" | "unpackExtensionPackage" | "wrapExtensionPackageEnvelope"> & Pick<typeof import("../../🟦️.ts"), "decodeOwnedZip"> & Pick<typeof import("@semio-tech/framework-os"), "decodePackValue"> & Pick<typeof import("node:fs"), "existsSync" | "mkdtempSync" | "readFileSync" | "rmSync"> & Pick<typeof import("node:os"), "tmpdir"> & Pick<typeof import("node:path"), "join">, source: TestSource): Promise<void> {
@@ -139,7 +149,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
    * mount and every request to the store's own endpoint was a 404 (ticket 26/09/23 U5, measured on :6580). Real plugins,
    * vite's ordering rule, one request through the resulting middleware chain. */
   describe("extension store route precedence", () => {
-    const devStreams = async () => ((await import(new URL("../../../🧑‍💻dev/🔌️vite-plugins/🟦️.ts", source.url).href)) as typeof import("../../../../🧑‍💻dev/🔌️vite-plugins/🟦️.ts")).devStreamMuxServer;
+    const devStreams = async () => ((await import(new URL("../../../🧑‍💻dev/🔌️vite-plugins/🔀️stream-mux-server/🟦️.ts", source.url).href)) as typeof import("../../../../🧑‍💻dev/🔌️vite-plugins/🔀️stream-mux-server/🟦️.ts")).devStreamMuxServer;
 
     it("answers its install endpoint before the static extension mount, which still 404s a missing module file", async () => {
       const { staticDirVitePlugin } = (await import(new URL("../../../../../../🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts", source.url).href)) as { staticDirVitePlugin: (repoRoot: string, spec: { readonly kind: "static-dir"; readonly route: string; readonly root: string }) => RoutePlugin[] };
@@ -202,3 +212,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   });
 
 }
+
+const moduleUnderTestUrl = pathToFileURL(resolve(import.meta.dirname, "../../📥️installation/🟦️.ts")).href;
+const moduleUnderTestDirectory = resolve(import.meta.dirname, "../../📥️installation");
+const vitestApi = await import("vitest");
+await registerTests1(vitestApi, { EXTENSION_COMPONENT_FILE: ModuleUnderTest.EXTENSION_COMPONENT_FILE, EXTENSION_INSTALL_PATH: ModuleUnderTest.EXTENSION_INSTALL_PATH, EXTENSION_MANIFEST_ZIP_ENTRY_EMOJI: ModuleUnderTest.EXTENSION_MANIFEST_ZIP_ENTRY_EMOJI, EXTENSION_PACKAGE_ENVELOPE_TOKEN: ModuleUnderTest.EXTENSION_PACKAGE_ENVELOPE_TOKEN, MODULE_EXTENSION_ROUTE: Dep0.MODULE_EXTENSION_ROUTE, createExtensionStore: ModuleUnderTest.createExtensionStore, semioExtensionStoreVitePlugin: ModuleUnderTest.semioExtensionStoreVitePlugin, decodeOwnedZip: Dep1.decodeOwnedZip, decodePackValue: Dep2.decodePackValue, existsSync: Dep3.existsSync, extensionPackageContentHash: ModuleUnderTest.extensionPackageContentHash, installationDirectoryCollision: Dep4.installationDirectoryCollision, installationDirectoryEmoji: Dep4.installationDirectoryEmoji, join: Dep5.join, mkdtempSync: Dep3.mkdtempSync, packExtensionPackage: ModuleUnderTest.packExtensionPackage, readFileSync: Dep3.readFileSync, rmSync: Dep3.rmSync, tmpdir: Dep6.tmpdir, unpackExtensionPackage: ModuleUnderTest.unpackExtensionPackage, wrapExtensionPackageEnvelope: ModuleUnderTest.wrapExtensionPackageEnvelope }, { directory: moduleUnderTestDirectory, url: moduleUnderTestUrl });

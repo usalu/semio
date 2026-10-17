@@ -4,17 +4,62 @@
 //! finalize publishes ONE member edit carrying the run's `TransactionRef` — one editable history row, its state exactly the
 //! fresh fold of the run's ops on the member base, one member undo removing it. Expectations: the `member` section of
 //! `🔌️plugin/🧫️fixtures/⏯️tool-run/🔣️.json`.
-#[cfg(test)] use crate::tool_run_contract::ToolRunJobRequest;
+#[cfg(test)]
+use semio_framework_plugin_decl_app::tool_run_contract::ToolRunJobRequest;
 
-use super::*;
-use crate::test_app_mutation_fixture::SetSlotChildren;
+#[cfg(any(test, feature = "artifact-app-testing"))]
+use semio_framework::kernel::ActorId;
+use semio_framework_plugin_abi::{ArtifactAnalysis, ArtifactAnalyzer, ArtifactBuilder, ArtifactChildren, ArtifactComposer, ArtifactComposition, ArtifactDecomposer, ArtifactDeserializer, ArtifactSerializer, DerivedArtifactSpec};
+use semio_framework_plugin_decl_app::{ArtifactApp, NaturalFileDecodeCursor};
+#[cfg(any(test, feature = "artifact-app-testing"))]
+use store::os_store::store_schema::ArtifactCommand;
+use semio_framework_artifact_reference::ArtifactDialect;
+use semio_framework_plugin_decl_surface::{ArtifactEditor, ArtifactViewer};
+use semio_framework_plugin_decl_views::tool_contract::ArtifactInstanceOperationOwner;
+use semio_framework_plugin_decl_app::tool_contract::{ArtifactOwnedToolJobFactory, ArtifactReservedJob};
+use pack::snapshot::ArtifactPack;
+#[cfg(any(test, feature = "artifact-app-testing"))]
+use semio_framework_artifact_reference::ArtifactRef;
+use store::{ArtifactStore, ArtifactStoreInitializationAuthority, Mutation, MutationDiff};
+use semio_framework_plugin_decl_emission::{AsyncTaskRun, AsyncTaskSource, Emit, ToolCommandCatalog};
+use store::os_store::backbone::Backbone;
+use semio_framework_ui_contract::{Buildable, HasBase, HasChildren, *};
+use semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::config::mutations::change_test_config_selection::ChangeTestConfigSelection;
+use semio_framework_value::DslValue;
+use semio_framework_plugin_extension::extension_runtime_lift::extension_retirement::ExtensionResourceOwner;
+use semio_framework::{Fault, FaultFrom, *};
+use semio_framework_value_derive::{FromValue, ToValue};
+use semio_framework_plugin_window_kits::{LabelAxes, WindowKit};
+#[cfg(test)]
+use semio_framework_ui_locale::{Locale, Terminology};
+use protocol::{OpBinary, OpText};
+use semio_framework_plugin_reactor_app::PluginApp;
+use semio_framework_plugin_plugin_program::PluginProgram;
+use semio_framework_job::StepContext;
+use semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::document::mutations::TestMutation;
+use semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::document::TestSnapshot;
+use semio_framework_tool_run::{ToolRunProgress, ToolRunState, ToolRunStepRing, ToolRunTickWriter};
+use semio_framework_plugin_decl_views::tool_run_contract::ToolRunRetargetableJob;
+use semio_framework_plugin_tests_06::tool_run_support_1::{ToyFixtureCaller, ToyPortJobCustody, ToyRunApp, ToyRunJob, advance_toy, fixture, number, text, toy_fixture_caller_policy, toy_manifest, toy_meta, toy_target};
+#[cfg(any(test, feature = "artifact-app-testing"))]
+use serde_json::Value;
+use semio_framework_plugin_instance_app::VcsArtifactApp;
+use semio_framework_plugin_window_config::WindowConfigOwner;
+use semio_framework_plugin_window_transient::window_transient::WindowTransientOwner;
+#[cfg(any(test, feature = "artifact-app-testing"))]
+use semio_framework_plugin_testing_laws::artifact_app_laws;
+use semio_framework_os_kernel::io;
+use crate::job_tool_run_host_1::tool_run_tests_1::member;
+#[cfg(test)]
+use semio_framework_plugin_testing_fixtures::test_app_mutation_fixture;
+use semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::document::mutations::set_slot_children::SetSlotChildren;
 
 store::space_members! {
     native_producer:&::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer,
     history_limits:semio_framework_os_kernel::os_store::HistoryReadLimits{file_bytes:67108864,frame_body_bytes:1048576,records:8192,maximum_fields:128,maximum_text_bytes:1048576,maximum_binary_bytes:1048576,maximum_json_bytes:1048576,maximum_json_allocation_bytes:8388608,maximum_json_items:65536,maximum_json_depth:64},
     maximum_history_allocation_bytes:8388608,
     pub enum ToolRunMembers, ToolRunMembersOpen {
-        Child("s.test.child", "native", "*", "semio.test/v1") => (TestSnapshot, TestMutation, crate::test_app_mutation_fixture::TestMemberStoreProducer, crate::test_app_mutation_fixture::TestMemberStoreProducer),
+        Child("s.test.child", "native", "*", "semio.test/v1") => (TestSnapshot, TestMutation, semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::TestMemberStoreProducer, semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::TestMemberStoreProducer),
     }
 }
 
@@ -24,17 +69,18 @@ type MemberApp = VcsArtifactApp<ToyRunApp, ToolRunMembers>;
 /// 🧸️ One unit appends `SetCount(base + unit)` and `SetLabel("unit-<unit>")` to the member, `base` being the member's count
 /// in the composed read the job starts from; one unit per step, so progress spans driver turns and a single step is one unit.
 pub(super) struct ToyMemberJob {
-    original:ToyPortJobCustody,
-    base_count: i32,
-    target: u32,
-    done: u32,
-    phase: u8,
-    progress_source: Option<ToolRunProgress>,
-    pub(crate) closing: bool,
+    pub original:ToyPortJobCustody,
+    pub base_count: i32,
+    pub target: u32,
+    pub done: u32,
+    pub phase: u8,
+    pub progress_source: Option<ToolRunProgress>,
+    pub closing: bool,
 }
 
 /// 🏭️ The member job a request describes, continuing after the member ops the run already holds.
-pub(super) fn toy_member_job(request: ToolRunJobRequest<'_, ToyRunApp>) -> Result<ToyMemberJob, Fault> {
+#[doc(hidden)]
+pub fn toy_member_job(request: ToolRunJobRequest<'_, ToyRunApp>) -> Result<ToyMemberJob, Fault> {
     let member = &fixture()["member"];
     let base_count = request.children.typed_read::<TestSnapshot>(text(&member["slot"]), text(&member["childId"]))?.count;
     let done = (request.member_ops.len() / number(&fixture()["opsPerUnit"]) as usize) as u32;
@@ -117,11 +163,12 @@ fn member_key() -> (String, String) {
 }
 
 /// 🧒️ The live owned member store at its default state, under the member owner catalog every product member adopts.
-async fn member_store() -> ToolRunMembers {
+#[doc(hidden)]
+pub async fn member_store() -> ToolRunMembers {
     let mut envelope = store::os_store::document_materialize::create_document_envelope::<TestSnapshot, TestMutation>("semio.test/v1", text(&member_fixture()["childId"]), TestSnapshot::default(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     envelope.dialect = Some(member_dialect());
     let mut child = ArtifactStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, protocol::ActorId(text(&fixture()["actor"]).into())).await.expect("the member store opens");
-    store::install_funded_member_store_owners(&mut child,&crate::test_app_mutation_fixture::TestMemberStoreProducer).expect("the original member catalog is funded and installed");
+    store::install_funded_member_store_owners(&mut child,&semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::TestMemberStoreProducer).expect("the original member catalog is funded and installed");
     ToolRunMembers::Child(Box::new(child))
 }
 
@@ -213,7 +260,7 @@ fn member_close(app: &mut MemberApp, caller:&mut ToyFixtureCaller<'_,'_,'_>) {
 /// composed read the render seams take shows exactly their fresh fold on the member base.
 #[semio_framework_async_macros::async_test]
 async fn member_run_ticks_compose_the_member_on_read_while_both_stores_stay_untouched() {
-    let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+    let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
 
     let (mounted_policy,maximum_identity_bytes)=toy_fixture_caller_policy();
     let mut observer=|_|true;
@@ -246,7 +293,7 @@ async fn member_run_ticks_compose_the_member_on_read_while_both_stores_stay_unto
 /// ⚖️ LAW: a paused member run schedules nothing and every single step adds exactly one unit of member ops.
 #[semio_framework_async_macros::async_test]
 async fn member_run_pause_then_step_drives_exactly_one_unit_per_step() {
-    let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+    let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
 
     let (mounted_policy,maximum_identity_bytes)=toy_fixture_caller_policy();
     let mut observer=|_|true;
@@ -284,7 +331,7 @@ async fn member_run_pause_then_step_drives_exactly_one_unit_per_step() {
 /// the member state are exactly what they were before the run, and the run holds no op.
 #[semio_framework_async_macros::async_test]
 async fn member_run_abort_leaves_both_stores_the_command_log_and_the_history_untouched() {
-    let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+    let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
 
     let (mounted_policy,maximum_identity_bytes)=toy_fixture_caller_policy();
     let mut observer=|_|true;
@@ -318,7 +365,7 @@ async fn member_run_abort_leaves_both_stores_the_command_log_and_the_history_unt
 /// removes the whole run.
 #[semio_framework_async_macros::async_test]
 async fn member_run_finalize_is_one_member_edit_carrying_the_run_transaction_and_one_undo_removes_it() {
-    let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+    let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
 
     let (mounted_policy,maximum_identity_bytes)=toy_fixture_caller_policy();
     let mut observer=|_|true;
@@ -366,7 +413,7 @@ async fn member_run_finalize_is_one_member_edit_carrying_the_run_transaction_and
 /// finalize — and reports the cap as the localized provisional-cap step carrying that ceiling.
 #[semio_framework_async_macros::async_test]
 async fn member_run_holds_at_most_the_member_ceiling_and_reports_the_cap() {
-    let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+    let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
 
     let (mounted_policy,maximum_identity_bytes)=toy_fixture_caller_policy();
     let mut observer=|_|true;

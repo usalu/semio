@@ -53,12 +53,17 @@ import type { RunScreen } from "./🔨️modules/▶️run/🟦️.tsx";
 import type { ResultsScreen } from "./🔨️modules/🏁️results/🟦️.tsx";
 import { LegalFooter, type QuizLegal } from "./🔨️modules/⚖️legal/🟦️.tsx";
 import { BodyButton, CardIcon, ProblemNote, QuizCard, cn, playTappedIcons } from "./🔨️modules/🪟️chrome/🟦️.tsx";
-import { PresenceOverlay, PresenceProvider, PresenceStatus, QuizPresence, presencePlace, presenceSelf, presenceView, presenceDrafts, sheetItemLabels, useDocumentVisible, usePresencePointer, type PresenceConnect } from "./🔨️modules/👥️presence/🟦️.tsx";
+import { PresenceOverlay, PresenceProvider, PresenceStatus, useDocumentVisible, usePresencePointer } from "./🔨️modules/👥️presence/🟦️.tsx";
+import { type PresenceConnect } from "./🔨️modules/👥️presence/🔌️socket/🟦️.ts";
+import { QuizPresence, presencePlace, presenceDrafts, sheetItemLabels } from "./🔨️modules/👥️presence/🧭️rooms/🟦️.ts";
+import { presenceSelf, presenceView } from "./🔨️modules/👥️presence/👁️view/🟦️.ts";
 import { PetsSwitch, QuizPets, QuizPetsProvider, effectivePetMode, switchedPets, usePetsReduced, type QuizPetsSource } from "./🔨️modules/🐾️pets/🟦️.tsx";
 import "./🎨️.css";
 
 //#region 🔁️Reexports
-export { QUIZ_BUNDLE_DE, QUIZ_BUNDLE_EN, QUIZ_LOCALES, REJECTION_LABELS, TASK_KIND_LABELS, applyLocale, isQuizLocale, localized, preferredLocale, quizText, titled } from "./🔨️modules/🌐️i18n/🟦️.ts";
+export { QUIZ_LOCALES, REJECTION_LABELS, TASK_KIND_LABELS, applyLocale, isQuizLocale, localized, preferredLocale, quizText, titled } from "./🔨️modules/🌐️i18n/🟦️.ts";
+export { QUIZ_BUNDLE_EN } from "./🔨️modules/🌐️i18n/🔠️english-bundle/🟦️.ts";
+export { QUIZ_BUNDLE_DE } from "./🔨️modules/🌐️i18n/🔡️german-bundle/🟦️.ts";
 export type { QuizLabelKey, QuizLocale, QuizText } from "./🔨️modules/🌐️i18n/🟦️.ts";
 export { SIGNIFICANT_DIGITS, SI_PREFIXES, ceilSignificant, engineering, floorSignificant, formatClock, formatCount, formatCountdown, formatDate, formatDuration, formatFactor, formatInstant, formatNumber, formatPoints, formatQuantity, formatScore, formatTimes, oneDecimal, parseQuantity, withMinusSign, withUnit } from "./🔨️modules/📏️quantity/🟦️.ts";
 export type { Toward } from "./🔨️modules/📏️quantity/🟦️.ts";
@@ -161,59 +166,13 @@ export type { LeaderboardColumn, LeaderboardKey, LeaderboardSort } from "./🔨�
 export { BadgesCard, BadgesPage, awardOf, badgesEarnedIn } from "./🔨️modules/🏅️badges/🟦️.tsx";
 export { LegalFooter, PrivacyNotice, legalLink } from "./🔨️modules/⚖️legal/🟦️.tsx";
 export type { QuizLegal } from "./🔨️modules/⚖️legal/🟦️.tsx";
-export {
-  EMPTY_PRESENCE_VIEW,
-  MAX_WATCHED_ROOMS,
-  OnlineMark,
-  PEER_LABEL_CLEARANCE_PX,
-  PRESENCE_ANCHORS,
-  PRESENCE_FRAME_HZ,
-  PRESENCE_FRAME_INTERVAL_MS,
-  PRESENCE_STABLE_MS,
-  PanePeers,
-  PresenceList,
-  PresenceOverlay,
-  PresenceProvider,
-  PresenceRoom,
-  PresenceStatus,
-  QuizPresence,
-  THINKING_FRAME_INTERVAL_MS,
-  WATCH_INTERVAL_MS,
-  browserPresenceConnect,
-  cursorAt,
-  homeWatchScopes,
-  paintStyle,
-  peerInk,
-  placePeers,
-  placeText,
-  presenceDrafts,
-  presencePlace,
-  presenceSelf,
-  presenceView,
-  rejoinDelay,
-  sheetItemLabels,
-  useDocumentVisible,
-  usePresencePointer,
-  usePresenceTask,
-  usePresenceView,
-} from "./🔨️modules/👥️presence/🟦️.tsx";
-export type {
-  PeerCursor,
-  PresenceConnect,
-  PresenceDrafts,
-  PresencePlace,
-  PresenceRoomOptions,
-  PresenceSelf,
-  PresenceSocket,
-  PresenceView,
-  QuizPresenceInput,
-  QuizPresenceOptions,
-  QuizPresenceSnapshot,
-  RoomMember,
-  RoomSnapshot,
-  RoomStatus,
-  WatchedState,
-} from "./🔨️modules/👥️presence/🟦️.tsx";
+export { OnlineMark, PEER_LABEL_CLEARANCE_PX, PanePeers, PresenceList, PresenceOverlay, PresenceProvider, PresenceStatus, cursorAt, paintStyle, peerInk, placePeers, useDocumentVisible, usePresencePointer, usePresenceTask, usePresenceView } from "./🔨️modules/👥️presence/🟦️.tsx";
+export { MAX_WATCHED_ROOMS, PRESENCE_FRAME_HZ, PRESENCE_FRAME_INTERVAL_MS, PRESENCE_STABLE_MS, PresenceRoom, THINKING_FRAME_INTERVAL_MS, WATCH_INTERVAL_MS, browserPresenceConnect, rejoinDelay } from "./🔨️modules/👥️presence/🔌️socket/🟦️.ts";
+export { QuizPresence, homeWatchScopes, presenceDrafts, presencePlace, sheetItemLabels } from "./🔨️modules/👥️presence/🧭️rooms/🟦️.ts";
+export { EMPTY_PRESENCE_VIEW, PRESENCE_ANCHORS, placeText, presenceSelf, presenceView } from "./🔨️modules/👥️presence/👁️view/🟦️.ts";
+export type { PresenceConnect, PresenceRoomOptions, PresenceSocket, RoomMember, RoomSnapshot, RoomStatus } from "./🔨️modules/👥️presence/🔌️socket/🟦️.ts";
+export type { PresenceDrafts, PresencePlace, PresenceSelf, QuizPresenceInput, QuizPresenceOptions, QuizPresenceSnapshot, WatchedState } from "./🔨️modules/👥️presence/🧭️rooms/🟦️.ts";
+export type { PeerCursor, PresenceView } from "./🔨️modules/👥️presence/👁️view/🟦️.ts";
 export { AnswerFigure, CROWD_DOTS, CrowdDoor, OTHERS_CHOICES, ScoreFigure, TaskFigures, answerFigure, crowdGate, crowdPlace, crowdShown, keysHidden, livePlace, plotFold, scoreFigure } from "./🔨️modules/🗳️crowd/🟦️.tsx";
 export type { AnswerCell, AnswerColumn, AnswerFigureInput, AnswerFigureModel, AnswerRow, CrowdGate, CrowdPlace, OthersChoice, ScoreFigureModel } from "./🔨️modules/🗳️crowd/🟦️.tsx";
 export { Column, columnShare, formatShare, peakOf } from "./🔨️modules/📊️plot/🟦️.tsx";

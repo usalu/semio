@@ -37,7 +37,7 @@ describe("parseApprovalSummary", () => {
 
   // 🧾️ The same file the wgpu twin `parse_approval_summary` is asserted against, so the two hosts
   // can never disagree about what the gateway sent.
-  const summaryFixture = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../🧫️fixtures/🛡️summary/🔣️.json"), "utf8")) as Record<string, { readonly summary: string; readonly parsed: Record<string, unknown> }> & {
+  const summaryFixture = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../🧫️fixtures/🛡️summary/🔣️.json"), "utf8")) as Record<string, { readonly summary: string; readonly parsed: Record<string, unknown> }> & {
     readonly unusableTimeout: { readonly summary: string };
   };
 
@@ -86,7 +86,7 @@ describe("AgentApprovalAffordance", () => {
 
   // 📝️ The shared fixture's `affordance` rows are the lines BOTH hosts show — the wgpu overlay's
   // `approval_row_lines` asserts the very same list, so the two affordances cannot drift apart.
-  const sharedFixture = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../🧫️fixtures/🛡️summary/🔣️.json"), "utf8")) as Record<string, { readonly summary: string }> & {
+  const sharedFixture = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../🧫️fixtures/🛡️summary/🔣️.json"), "utf8")) as Record<string, { readonly summary: string }> & {
     readonly affordance: readonly { readonly row: string; readonly secondsLeft: number | null; readonly en: readonly string[] }[];
   };
   for (const { row, secondsLeft, en } of sharedFixture.affordance) {

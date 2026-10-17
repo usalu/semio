@@ -1,0 +1,49 @@
+[package]
+workspace = "../../../../.."
+name = "semio-hub-layout-drawing"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Composition of the layout plugin with the Semio drawing standard: the codec bound to the layout background drawing slot, its SQLite component and its external formats"
+
+[lints]
+workspace = true
+
+[package.metadata.semio]
+role = "hub"
+id = "hub-layout-drawing"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-io-ports = { path = "../../../../../../🧰️framework/🔨️modules/🚪️io/🔌️ports/📦️packages/🦀️rust" }
+semio-framework-io-sqlite-snapshot = { path = "../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-pack = { path = "../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
+semio-s-artifact-layout-layout-model = { path = "../../../../../../✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-semio-base = { path = "../../../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-semio-drawing = { path = "../../../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-semio-drawing-export = { path = "../../../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🚪️io/📤️export/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-semio-drawing-import = { path = "../../../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🚪️io/📥️import/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-dwg-geometry = { path = "../../../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/🧮️geometry/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-dwg-read = { path = "../../../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/📥️import/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+semio-s-artifact-layout-layout-io = { path = "../../../../../../✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📦️packages/🦀️rust" }
+semio-framework-async-macros = { path = "../../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
+semio-framework-test-original-snapshot-owners = { path = "../../../../../../🧰️framework/🔨️modules/🧪️test/🛬️original-snapshot-owners/📦️packages/🦀️rust" }
+semio-framework-io-sqlite-snapshot-testing-backing = { path = "../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️testing/💰️backing/📦️packages/🦀️rust" }
+semio-framework-os-kernel = { path = "../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust" }
+semio-framework-plugin = { path = "../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust" }
+semio-framework-artifact-reference = { path = "../../../../../../🧰️framework/🔨️modules/🗿️artifact-reference/📦️packages/🦀️rust" }
+semio-framework-dsl-record = { path = "../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-png = { path = "../../../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/📦️packages/🦀️rust" }
+semio-framework-value-dictionary = { path = "../../../../../../🧰️framework/🔨️modules/🌱️value/🧾️dictionary/📦️packages/🦀️rust" }
+semio-s-artifact-layout-layout = { path = "../../../../../../✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/📦️packages/🦀️rust" }
+serde_json = { workspace = true }

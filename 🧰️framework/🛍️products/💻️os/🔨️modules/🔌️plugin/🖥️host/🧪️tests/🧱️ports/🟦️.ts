@@ -65,6 +65,5 @@ test("native host uses one called runtime with first-party guest ports", async (
       assert.equal(obsolete, undefined, "uncalled alternate backend is not in the public host closure");
     } finally { tree.delete(); }
     assert(!existsSync(join(owner, "⏳️runtime", "🦀️.rs")), "retired alternate implementation has no source continuation");
-    console.log("[DEBUG] actual native host port independentRustParser=true firstPartySignatures=true calledAsyncRuntime=true alternateBackendRetired=true");
   } finally { db.close(); parser.delete(); }
 });

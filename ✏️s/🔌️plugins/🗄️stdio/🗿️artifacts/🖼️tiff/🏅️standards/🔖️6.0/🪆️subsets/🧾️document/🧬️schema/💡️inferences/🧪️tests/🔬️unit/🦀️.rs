@@ -1,4 +1,5 @@
-use super::*;
+use crate::TiffSnapshot;
+use crate::standards::v6_0::subsets::document::schema::inferences::*;
 use protocol::Inference;
 
 #[semio_framework_async_macros::async_test]

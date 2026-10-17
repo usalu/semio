@@ -33,5 +33,5 @@ for (const row of fixture.cases) test(`architect graph tool ${row.name}`, () => 
     } catch { refused = true; }
   }
   expect(refused).toBe("refused" in row && row.refused === true);
-  if (!refused) expect(leaves).toEqual("mutations" in row ? row.mutations : []);
+  if (!refused) expect(leaves).toEqual("mutations" in row ? row.mutations ?? [] : []);
 });

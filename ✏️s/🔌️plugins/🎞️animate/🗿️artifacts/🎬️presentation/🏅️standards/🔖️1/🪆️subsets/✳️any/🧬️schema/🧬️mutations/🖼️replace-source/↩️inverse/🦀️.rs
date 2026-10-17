@@ -1,14 +1,16 @@
 //! ↩️ Inverse reconstruction for `replace-source` — reads the BASE source, never the diff.
 use super::ReplaceSource;
-use crate::mutations::PresentationMutation;
 use crate::PresentationSnapshot;
 
 //#region 🔹Inverse
 /// ↩️ Undo restores `base.source` — captured from pre-state, never from the applied diff.
-pub fn inverse(_payload: &ReplaceSource, base: &PresentationSnapshot) -> Result<Vec<PresentationMutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op>(_payload: &ReplaceSource, base: &PresentationSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError>
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::replace_source::ReplaceSource>,
+{
     Ok((|| {
     let (source, _) = crate::presentation_working_scene(base);
-    vec![PresentationMutation::ReplaceSource(ReplaceSource { new_source: source })]
+    vec![Op::from(ReplaceSource { new_source: source })]
 
     })())
 }

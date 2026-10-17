@@ -1,6 +1,5 @@
 //! Puzzle5d mutation — `EditPart2dText`: replaces a part's 2D-projection authored display text.
 use crate::standards::v1::subsets::any::schema::diff::Puzzle5dDiff;
-use crate::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation;
 use crate::Puzzle5dSnapshot;
 
 //#region 🔖️Mutation
@@ -17,13 +16,16 @@ pub struct EditPart2dText {
     pub new_text: Option<String>,
 }
 
-impl protocol::MutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for EditPart2dText {
+impl<Op> protocol::MutationKind<Puzzle5dSnapshot, Op> for EditPart2dText
+where
+    Op: protocol::Mutation<Puzzle5dSnapshot, Diff = Puzzle5dDiff> + From<EditPart2dText>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "edit", entity: "part", kind: "edit-part2d-text", record: "EditedPart2dText" };
 
     fn diff(&self, base: &Puzzle5dSnapshot) -> protocol::MutationOutcome<Puzzle5dDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Puzzle5dSnapshot) -> Result<Vec<Puzzle5dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Puzzle5dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     
@@ -39,6 +41,9 @@ impl protocol::MutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for EditPart2dTe
 //#endregion 🔖️Mutation
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn edit_part_2d_text(id: String, new_text: Option<String>) -> Puzzle5dMutation {
-    Puzzle5dMutation::EditPart2dText(EditPart2dText { id, new_text })
+pub fn edit_part_2d_text<Op>(id: String, new_text: Option<String>) -> Op
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::edit_part_2d_text::EditPart2dText>,
+{
+    Op::from(EditPart2dText { id, new_text })
 }

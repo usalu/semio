@@ -1,5 +1,6 @@
 use super::*;
 use crate::editor_domain::editor_laws::context::{self, app_with_registry, dispatch};
+use semio_framework_test_fixtures::repo_text;
 use semio_s_artifact_procedural_3d_editor::Generation3dCommand;
 use crate::SnapshotRead;
 use semio_s_artifact_procedural_3d_model::example_snapshot;
@@ -7,10 +8,10 @@ use semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_HEX_COLUMN;
 
 /// 🧫️ The ONE language-agnostic statement of graph keyboard traversal, answered here by the Rust
 /// implementation and independently by `🧪️tests/🔬️unit/🟦️.ts`.
-const GRAPH_KEYBOARD_FIXTURE_JSON: &str = include_str!("../../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧭️graph-keyboard-navigation.json");
+fn graph_keyboard_fixture_json() -> &'static str { repo_text!("✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧭️graph-keyboard-navigation.json") }
 
 fn fixture() -> serde_json::Value {
-    serde_json::from_str(GRAPH_KEYBOARD_FIXTURE_JSON).expect("graph keyboard fixture")
+    serde_json::from_str(graph_keyboard_fixture_json()).expect("graph keyboard fixture")
 }
 
 fn hex_column() -> SnapshotRead {

@@ -1,4 +1,15 @@
-use super::*;
+use crate::editor::modes::edit;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3;
+use crate::schema::mutations::move_vertex::MoveVertex;
+use crate::schema::mutations::SemioBrepMutation;
+use crate::schema::snapshot::SemioBrepSnapshot;
+use semio_framework::DslValue;
+use semio_framework_plugin::ArtifactEditor;
+use semio_framework_plugin::Editor;
+use semio_framework_plugin::EditorApp;
+use semio_s_artifact_stdio_contract::editing;
+use crate::editor::{move_vertex_mutation};
+use crate::editor::*;
 
 #[semio_framework_async_macros::async_test]
 async fn create_editor_builds_a_definition_for_the_editor_role() {

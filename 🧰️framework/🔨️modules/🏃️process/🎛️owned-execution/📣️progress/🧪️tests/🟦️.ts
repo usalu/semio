@@ -25,7 +25,6 @@ for (const row of corpus.cases) test(row.id, async () => {
     expect(oracleCodeValue, oracleStderr).toBe(0);
     const expected = { terminal: row.terminal, publishedBeforeTerminal: row.publishedBeforeTerminal };
     expect(JSON.parse(oracleStdout)).toEqual(expected);
-    console.log("[DEBUG] " + JSON.stringify({ id: row.id, actual, oracle: expected, publications, failure }));
     expect(publications).toBe(1);
     expect(actual).toEqual(expected);
     if (row.rejectPublication) expect(failure).toContain("publisher refused");

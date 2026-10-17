@@ -40,6 +40,4 @@ impl protocol::MutationKind<XmlSnapshot, super::XmlMutation> for RemoveElementMu
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

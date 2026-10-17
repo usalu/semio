@@ -1,11 +1,13 @@
 //! 🧪️ Writer partial updates retain unrelated fields and construct with one-byte copy grants.
 
-use super::*;
+use crate::editor::writer::modes::edit::windows::main::transient::{publication};
+use crate::editor::writer::modes::edit::windows::main::transient::*;
 use semio_framework_plugin::WindowTransientOwner;
+use semio_framework_test_fixtures::fixture_text;
 
 #[test]
 fn writer_window_state_partial_construction_preserves_large_utf8_and_cancels() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧩️partial/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../✏️editor/🎭️modes/✏️edit/🪟️windows/✒️main/🫧️transient/🧪️tests/🧫️fixtures/🧩️partial/🔣️.json")).unwrap();
     let text = fixture["payload"]["text"].as_str().unwrap().repeat(fixture["payload"]["repeat"].as_u64().unwrap() as usize);
     assert_eq!(text.len(), fixture["payload"]["utf8Bytes"].as_u64().unwrap() as usize);
     let owners = WriterMainWindowTransientOwner::build_owners();

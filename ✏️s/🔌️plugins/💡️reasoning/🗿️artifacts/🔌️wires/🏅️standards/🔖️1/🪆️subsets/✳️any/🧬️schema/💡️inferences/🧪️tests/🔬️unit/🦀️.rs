@@ -1,4 +1,4 @@
-use super::*;
+use crate::standards::v1::subsets::any::schema::inferences::*;
 use crate::empty_wires_snapshot;
 use protocol::Inference;
 use semio_framework_value::DslValue;
@@ -21,6 +21,6 @@ async fn a_parent_only_inference_reads_the_empty_topology() {
 #[semio_framework_async_macros::async_test]
 async fn topology_counts_the_composed_board_graph() {
     let composed = crate::wires_composed(&empty_wires_snapshot(), &chain_content());
-    let topology = super::super::topology::compute_wires_topology(&composed.board);
+    let topology = crate::standards::v1::subsets::any::schema::inferences::topology::compute_wires_topology(&composed.board);
     assert_eq!((topology.node_count, topology.edge_count, topology.cycle_free), (2, 1, true));
 }

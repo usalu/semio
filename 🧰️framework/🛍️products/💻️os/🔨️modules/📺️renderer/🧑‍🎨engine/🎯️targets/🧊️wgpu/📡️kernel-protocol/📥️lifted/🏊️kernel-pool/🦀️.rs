@@ -185,7 +185,7 @@ impl KernelRequestQueue {
         .await;
     }
 
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testkit"))]
     pub fn begin_shutdown(&self) -> bool {
         let Ok(mut state) = self.state.try_lock() else {
             return false;
@@ -194,7 +194,7 @@ impl KernelRequestQueue {
         true
     }
 
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testkit"))]
     pub fn shutdown_step(&self, maximum_bytes: usize) -> (bool, usize, usize) {
         let Ok(mut state) = self.state.try_lock() else {
             return (false, 0, 0);

@@ -1,19 +1,24 @@
 //! 🌈️ PDF function domains, samples, nested colour spaces and exact optional ranges.
 use semio_framework_value::{ValueError,ValueRefusalKind};
-use crate::standards::v1_7::subsets::base::io::sqlite::snapshot::*;
+use crate::standards::v1_7::subsets::base::schema::snapshot::model::*;
+use crate::standards::v1_7::subsets::base::io::sqlite::snapshot::reader::{integer, boolean, optional_integer, null_except, Reader};
+use store::sqlite_snapshot::{artifact::{Cell as C}};
+use crate::standards::v1_7::subsets::base::io::sqlite::snapshot::number::{Row, Projection};
+use crate::standards::v1_7::subsets::base::io::sqlite::snapshot::artifact_reference;
+use crate::standards::v1_7::subsets::base::io::sqlite::snapshot::cos;
 
-pub(super) fn write_reals(out: &mut Projection<'_, '_>, table: &str, owner: i64, role: &str, values: &[f64]) -> Result<(),ValueError> {
+pub fn write_reals(out: &mut Projection<'_, '_>, table: &str, owner: i64, role: &str, values: &[f64]) -> Result<(),ValueError> {
     for (ordinal, value) in values.iter().enumerate() { out.insert(table, &[C::Integer(owner), C::Text(role), C::Integer(ordinal as i64), C::Real(*value)])?; }
     Ok(())
 }
 
-pub(super) fn read_reals(reader: &mut Reader<'_, '_, '_>, table: &'static str, owner: i64, role: &'static str) -> Result<Vec<f64>,ValueError> {
+pub fn read_reals(reader: &mut Reader<'_, '_, '_>, table: &'static str, owner: i64, role: &'static str) -> Result<Vec<f64>,ValueError> {
     let mut values = Vec::new();
     for row in reader.children_with_role(table, 1, 3, owner, Some((2, role)))? { let row = reader.take(table, row.rowid, 5)?; values.push(row.real(4)?); }
     Ok(values)
 }
 
-pub(super) fn fixed<const N: usize>(values: Vec<f64>) -> Result<[f64; N],ValueError> { values.try_into().map_err(|_| ValueError::new(ValueRefusalKind::InvalidValue,format!("PDF property requires exactly {N} components"))) }
+pub fn fixed<const N: usize>(values: Vec<f64>) -> Result<[f64; N],ValueError> { values.try_into().map_err(|_| ValueError::new(ValueRefusalKind::InvalidValue,format!("PDF property requires exactly {N} components"))) }
 
 fn write_function_shallow(out: &mut Projection<'_, '_>, function: &PdfFunction) -> Result<i64,ValueError> {
     let mut fields = [C::Null; 8];
@@ -89,20 +94,20 @@ fn read_color_shallow(reader: &mut Reader<'_, '_, '_>, row:Row<'_>, alternate:Op
 }
 
 fn function_children(value:&PdfFunction)->&[PdfFunction]{match value{PdfFunction::Array{functions}|PdfFunction::Stitching{functions,..}=>functions,_=>&[]}}
-pub(super) fn write_function(out:&mut Projection<'_,'_>,function:&PdfFunction)->Result<i64,ValueError>{
+pub fn write_function(out:&mut Projection<'_,'_>,function:&PdfFunction)->Result<i64,ValueError>{
     let key=write_function_shallow(out,function)?;let mut pending=vec![(key,function_children(function).iter().enumerate())];
     while let Some((parent,children))=pending.last_mut(){if let Some((ordinal,child))=children.next(){let parent=*parent;let key=write_function_shallow(out,child)?;out.insert("pdf_function_child",&[C::Integer(parent),C::Integer(ordinal as i64),C::Integer(key)])?;pending.push((key,function_children(child).iter().enumerate()));}else{pending.pop();}}Ok(key)
 }
-pub(super) fn read_function(reader:&mut Reader<'_,'_,'_>,key:i64)->Result<PdfFunction,ValueError>{
+pub fn read_function(reader:&mut Reader<'_,'_,'_>,key:i64)->Result<PdfFunction,ValueError>{
     let function=read_function_shallow(reader,key)?;let children=reader.children("pdf_function_child",1,2,key)?.into_iter();let mut pending=vec![(function,children)];
     loop{let child=pending.last_mut().and_then(|(_,children)|children.next());if let Some(child)=child{let child=reader.take("pdf_function_child",child.rowid,4)?;let key=child.integer(3)?;let function=read_function_shallow(reader,key)?;let children=reader.children("pdf_function_child",1,2,key)?.into_iter();pending.push((function,children));}else{let(function,_)=pending.pop().ok_or_else(||ValueError::new(ValueRefusalKind::InvalidValue,"PDF function stack is empty"))?;if let Some((parent,_))=pending.last_mut(){match parent{PdfFunction::Array{functions}|PdfFunction::Stitching{functions,..}=>functions.push(function),_=>return Err(ValueError::new(ValueRefusalKind::InvalidValue,"PDF scalar function cannot own a child function"))}}else{return Ok(function);}}}
 }
 fn color_alternate(value:&PdfColorSpace)->Option<&PdfColorSpace>{match value{PdfColorSpace::IccBased{alternate,..}=>alternate.as_deref(),PdfColorSpace::Indexed{base,..}=>Some(base),PdfColorSpace::Separation{alternate,..}|PdfColorSpace::DeviceN{alternate,..}=>Some(alternate),PdfColorSpace::Pattern{base}=>base.as_deref(),_=>None}}
-pub(super) fn write_color(out:&mut Projection<'_,'_>,color:&PdfColorSpace)->Result<i64,ValueError>{
+pub fn write_color(out:&mut Projection<'_,'_>,color:&PdfColorSpace)->Result<i64,ValueError>{
     let mut pending=Vec::new();let mut node=color;loop{out.check_rows(pending.len().checked_add(1).ok_or_else(||ValueError::new(ValueRefusalKind::InvalidValue,"PDF colour depth row count overflow"))?)?;out.checkpoint()?;pending.push(node);if let Some(child)=color_alternate(node){node=child;}else{break;}}
     let mut alternate=None;while let Some(node)=pending.pop(){alternate=Some(write_color_shallow(out,node,alternate)?);}alternate.ok_or_else(||ValueError::new(ValueRefusalKind::InvalidValue,"PDF colour projection stack is empty"))
 }
-pub(super) fn read_color(reader:&mut Reader<'_,'_,'_>,key:i64)->Result<PdfColorSpace,ValueError>{
+pub fn read_color(reader:&mut Reader<'_,'_,'_>,key:i64)->Result<PdfColorSpace,ValueError>{
     let mut pending=Vec::new();let mut key=key;loop{let row=reader.take("pdf_color_space",key,14)?;let child=optional_integer(row,7)?;pending.push(row);if let Some(child)=child{key=child;}else{break;}}
     let mut alternate=None;while let Some(row)=pending.pop(){alternate=Some(read_color_shallow(reader,row,alternate)?);}alternate.ok_or_else(||ValueError::new(ValueRefusalKind::InvalidValue,"PDF colour reconstruction stack is empty"))
 }

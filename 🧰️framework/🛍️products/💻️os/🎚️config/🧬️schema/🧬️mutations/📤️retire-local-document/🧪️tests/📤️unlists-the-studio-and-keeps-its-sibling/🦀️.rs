@@ -7,12 +7,13 @@
 //! Source of truth is the committed JSON quintet beside this file (contract D1).
 
 use super::{LocalCatalogDiff, LocalCatalog, LocalCatalogConfigMutation};
+use semio_framework_test_fixtures::fixture_path;
 
-static BEFORE: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🧫️fixtures/🧬️mutations/📤️retire-local-document/📤️unlists-the-studio-and-keeps-its-sibling/📸️snapshot/⬅️before/🔣️.json")).expect("fixture"));
-static AFTER: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🧫️fixtures/🧬️mutations/📤️retire-local-document/📤️unlists-the-studio-and-keeps-its-sibling/📸️snapshot/➡️after/🔣️.json")).expect("fixture"));
-static MUTATION: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🧫️fixtures/🧬️mutations/📤️retire-local-document/📤️unlists-the-studio-and-keeps-its-sibling/🦠️mutation/🔣️.json")).expect("fixture"));
-static DIFF: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🧫️fixtures/🧬️mutations/📤️retire-local-document/📤️unlists-the-studio-and-keeps-its-sibling/🔺️diff/🔣️.json")).expect("fixture"));
-static OUTCOME: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🧫️fixtures/🧬️mutations/📤️retire-local-document/📤️unlists-the-studio-and-keeps-its-sibling/🎯️outcome/🔣️.json")).expect("fixture"));
+static BEFORE: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(fixture_path!("../../../🧫️fixtures/🧬️mutations/📤️retire-local-document/📤️unlists-the-studio-and-keeps-its-sibling/📸️snapshot/⬅️before/🔣️.json")).expect("fixture"));
+static AFTER: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(fixture_path!("../../../🧫️fixtures/🧬️mutations/📤️retire-local-document/📤️unlists-the-studio-and-keeps-its-sibling/📸️snapshot/➡️after/🔣️.json")).expect("fixture"));
+static MUTATION: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(fixture_path!("../../../🧫️fixtures/🧬️mutations/📤️retire-local-document/📤️unlists-the-studio-and-keeps-its-sibling/🦠️mutation/🔣️.json")).expect("fixture"));
+static DIFF: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(fixture_path!("../../../🧫️fixtures/🧬️mutations/📤️retire-local-document/📤️unlists-the-studio-and-keeps-its-sibling/🔺️diff/🔣️.json")).expect("fixture"));
+static OUTCOME: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(fixture_path!("../../../🧫️fixtures/🧬️mutations/📤️retire-local-document/📤️unlists-the-studio-and-keeps-its-sibling/🎯️outcome/🔣️.json")).expect("fixture"));
 
 fn json_value<T: semio_framework_value::ToValue>(value: &T) -> serde_json::Value {
     serde_json::from_str(&semio_framework_pack_json::to_json_string(value)).expect("canonical JSON parses in the independent serde_json oracle")

@@ -5,7 +5,7 @@
 
 use crate::editor::puzzle5d::config::Puzzle5dRuntime;
 use crate::editor::puzzle5d::terminology::Puzzle5dLabels;
-use crate::editor::puzzle5d::{puzzle5d_action, PUZZLE5D_GRIP_DIRECTION_INWARDS, PUZZLE5D_GRIP_DIRECTION_OUTWARDS, PUZZLE5D_GRIP_SHOW_ALWAYS, PUZZLE5D_GRIP_SHOW_SELECTED, PUZZLE5D_PLAY_CONTROLLER_ID};
+use crate::editor::puzzle5d::entities::{puzzle5d_action, PUZZLE5D_GRIP_DIRECTION_INWARDS, PUZZLE5D_GRIP_DIRECTION_OUTWARDS, PUZZLE5D_GRIP_SHOW_ALWAYS, PUZZLE5D_GRIP_SHOW_SELECTED, PUZZLE5D_PLAY_CONTROLLER_ID};
 use semio_framework_plugin::{MeasureSelectItem, WindowMeasure};
 
 /// 🤏️ `puzzle5d-play-world-grip-show` — Always (every part) or Selected (hovered/selected only).

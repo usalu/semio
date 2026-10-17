@@ -3,9 +3,9 @@
 #[allow(unused_imports)]
 mod mutations_codec {
 use super::*;
-use crate::editor::architect::config::component::mutations::*;
-use crate::editor::architect::config::component::*;
-use crate::editor::architect::config::component::mutations::SetConfig;
+use crate::editor::architect::config::mutations::*;
+use crate::editor::architect::config::*;
+use crate::editor::architect::config::mutations::SetConfig;
 
 impl protocol::OpText for ArchitectConfigMutation {
     fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
@@ -29,9 +29,9 @@ impl protocol::OpText for ArchitectConfigMutation {
 #[allow(unused_imports)]
 mod mutations_wire_codec {
 use super::*;
-use crate::editor::architect::config::component::mutations::*;
-use crate::editor::architect::config::component::*;
-use crate::editor::architect::config::component::mutations::SetConfig;
+use crate::editor::architect::config::mutations::*;
+use crate::editor::architect::config::*;
+use crate::editor::architect::config::mutations::SetConfig;
 
 /// 🌉️ The committed-vector report of this state lane for the language-neutral case adapter, which links only this
 /// crate: production dispatch (`Mutation::diff(..).apply_to`) and the mutation's own inverse over `ArchitectConfig`.

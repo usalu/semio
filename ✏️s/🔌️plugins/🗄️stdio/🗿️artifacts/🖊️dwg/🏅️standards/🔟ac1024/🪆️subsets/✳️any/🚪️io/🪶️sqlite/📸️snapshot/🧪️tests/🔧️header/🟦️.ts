@@ -23,7 +23,6 @@ for(const word of words)test("DWG full header preserves independent SQLite IEEE 
       oracle.run("UPDATE dwg_header_units SET unit2_conversion_class='negative_zero',unit2_conversion_ieee754_bits=-9223372036854775808,unit2_conversion=NULL");const expected=structuredClone(input);expected.units.unit2Conversion={bits:0x8000000000000000n};
       expect(await reconstruct(await importSqliteDatabase(oracle.serialize()))).toEqual(expected);
     }finally{oracle.close();}
-  console.log("[DEBUG] DWG TypeScript full typed header preserved exact words, signed widths, ordered spaces and optional unsigned64 references");
 },60000);
 
 test("DWG header semantic space and numeric identity edits reject after valid SQLite integrity",async()=>{

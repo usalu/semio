@@ -1,4 +1,32 @@
-use super::*;
+use semio_framework_plugin::SurfaceKind;
+use semio_framework_plugin::World3dScene;
+#[allow(unused_imports)]
+use crate::{active_shot, is_transparent_shooting_background};
+#[allow(unused_imports)]
+use crate::{shooting_asset_scale, ShootingAsset, ShootingCamera, ShootingShot, ShootingSnapshot};
+#[allow(unused_imports)]
+use semio_framework_pack_json::json;
+#[allow(unused_imports)]
+use semio_framework_pack_json::Value;
+#[allow(unused_imports)]
+use semio_framework_plugin::world3d_mesh_id_from_url;
+#[allow(unused_imports)]
+use semio_framework_plugin::world3d_meshes_json_from_kinds_and_urls;
+#[allow(unused_imports)]
+use semio_framework_plugin::world3d_scene;
+#[allow(unused_imports)]
+use semio_framework_plugin::world3d_selection_json;
+#[allow(unused_imports)]
+use semio_framework_ui_locale::LocalizedLabel;
+#[allow(unused_imports)]
+use semio_framework_plugin::WindowKindDefinition;
+#[allow(unused_imports)]
+use semio_framework_plugin::WindowOptions;
+#[allow(unused_imports)]
+use semio_framework_plugin::WorldSunConfig;
+#[allow(unused_imports)]
+use std::collections::HashSet;
+use crate::viewer::shooting::modes::view::windows::scene::*;
 
 #[semio_framework_async_macros::async_test]
 async fn definition_declares_the_world_3d_surface_and_body_key() {

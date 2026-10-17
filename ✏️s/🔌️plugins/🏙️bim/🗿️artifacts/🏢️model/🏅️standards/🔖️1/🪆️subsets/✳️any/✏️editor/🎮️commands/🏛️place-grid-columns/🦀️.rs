@@ -5,7 +5,7 @@
 use crate::editor::bim::entities::{id_taken, ordered_storeys};
 use crate::editor::bim::kit::{fault, IdMint};
 use crate::editor::bim::modes::edit::windows::plan;
-use crate::editor::bim::BimDispatchCtx;
+use crate::editor::bim::dispatch_context::BimDispatchCtx;
 use crate::standards::v1::subsets::any::schema::{snapshot::{Column, GridLine, ModelSnapshot, Phase, Point2, TopConstraint}, mutations::ModelMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use value_derive::{FromValue, ToValue};

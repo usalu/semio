@@ -1,15 +1,17 @@
 use super::{store,protocol};
+use super::jack;
+use jack::standards::v1::subsets::any::schema::composition::JackComposition;
 use jack::editor::jack::modes::edit::tools::reorganize::*;
 use semio_framework_graph_layout_run::{layout_run_definition,layout_run_entity};
 use semio_framework_tool_run::{ToolRunIdentity,JobKindId};
-use crate::jack::*;
+use jack::standards::v1::subsets::any::schema::graph::{Edge, Node};
+use jack::standards::v1::subsets::any::schema::content_read::JackContentLayout;
+use jack::standards::v1::subsets::any::schema::content::{retire_owned_to_terminal, trinity_mounted_owner_policy};
 use crate::content::*;
 use crate::SemioJackComposition;
 use crate::jack::editor::jack::*;
 use semio_s_artifact_stdio_semio_graph::schema::{snapshot::SemioGraphSnapshot,mutations::SemioGraphMutation};
-use jack::JackContentLayout;
 use jack::editor::jack::{create_trinity_jack_app, TrinityJackPlayApp};
-use jack::{Edge, Node};
 use semio_framework_graph_layout_run::testing::{layout_run_close, layout_run_drive, layout_run_fdg_layout, layout_run_hop_distances, layout_run_normalized_stress, LayoutRunOracleParameters};
 use semio_framework_graph_layout_run::{LayoutRunJob, LayoutRunReason};
 use semio_framework_job::INTERACTIVE_LANE_FUEL;
@@ -51,7 +53,7 @@ fn nakagin() -> SemioJackOwnedContent {
  let parent=SemioJackComposition::initial_snapshot();
  let rich=super::rich_snapshot(&parent);
  let identity=jack_content_handle(&rich);
- jack::retire_owned_to_terminal(parent).expect("parent retirement");
+ jack::standards::v1::subsets::any::schema::content::retire_owned_to_terminal(parent).expect("parent retirement");
  SemioJackOwnedContent::new(identity,rich)
 }
 
@@ -85,7 +87,7 @@ fn reorganize_tool_declares_the_shared_layout_run_definition() {
     let app = create_trinity_jack_app();
     assert!(app.tools.iter().any(|declared| declared.id == TOOL_ID && declared.run.is_some()));
     assert!(app.modes.iter().all(|mode| mode.tools.iter().any(|reference| reference.as_str() == TOOL_ID)));
-    let injected = semio_framework::tool_run::tool_run_action_definitions(&app);
+    let injected = semio_framework_tool_run_actions::tool_run_action_definitions(&app);
     for action in TOOL_RUN_ACTION_IDS {
         assert!(injected.iter().any(|definition| definition.id == action), "{action} is injected");
     }
@@ -195,7 +197,7 @@ fn reorganize_step_stays_below_the_interactive_ceiling_on_the_nakagin_example() 
 
 fn tool_run_action(app: &mut JackApp, action: &str, entries: &[(&str, DslValue)],cx:&mut semio_framework_job::StepContext<'_>) -> DslValue {
     let args = DslValue::Object(entries.iter().map(|(key, value)| ((*key).to_string(), value.clone())).collect());
-    ::semio_framework_async::poll::resolve_ready(semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut *app,action,Some(args),&meta("local"),&mut semio_framework_plugin::artifact_app_laws::fixture_identity(),cx,jack::trinity_mounted_owner_policy().close)).unwrap_or_else(|fault| panic!("{action}: {fault:?}")).output
+    ::semio_framework_async::poll::resolve_ready(semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut *app,action,Some(args),&meta("local"),&mut semio_framework_plugin::artifact_app_laws::fixture_identity(),cx,jack::standards::v1::subsets::any::schema::content::trinity_mounted_owner_policy().close)).unwrap_or_else(|fault| panic!("{action}: {fault:?}")).output
 }
 
 fn run_state(app: &JackApp) -> Option<&'static str> {
@@ -208,7 +210,7 @@ fn pump_until(app: &mut JackApp, what: &str, done: impl Fn(&JackApp) -> bool,cx:
         if done(app) {
             return;
         }
-        PluginApp::maintenance_step(app,cx,jack::trinity_mounted_owner_policy().maintenance).unwrap_or_else(|fault| panic!("{what}: maintenance faulted: {fault:?}"));
+        PluginApp::maintenance_step(app,cx,jack::standards::v1::subsets::any::schema::content::trinity_mounted_owner_policy().maintenance).unwrap_or_else(|fault| panic!("{what}: maintenance faulted: {fault:?}"));
         ::semio_framework_async::poll::resolve_ready(app.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(),cx)).unwrap_or_else(|fault| panic!("{what}: driver turn faulted: {fault:?}"));
         if let Some(page) = app.take_typed_operation_result_page(1) {
             assert_ne!(page.lane, semio_framework_plugin::app::TypedOperationResultLane::Fault, "{what}: typed operation faulted: {}", String::from_utf8_lossy(page.bytes()));
@@ -227,7 +229,7 @@ fn history_len(app: &mut JackApp) -> usize {
 }
 
 fn nakagin_app() -> JackApp {
-    let mut app = ::semio_framework_async::poll::resolve_ready(semio_framework_plugin::artifact_app_laws::new_app_with_registry_and_members::<EditorApp<TrinityJackPlayApp<SemioJackComposition>>, semio_s_artifact_stdio_semio::SemioMembers>(|| App { definition: create_trinity_jack_app(), examples: Vec::new() }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()),jack::trinity_mounted_owner_policy(),&mut semio_framework_plugin::artifact_app_laws::fixture_identity(),cx));
+    let mut app = ::semio_framework_async::poll::resolve_ready(semio_framework_plugin::artifact_app_laws::new_app_with_registry_and_members::<EditorApp<TrinityJackPlayApp<SemioJackComposition>>, semio_s_artifact_stdio_semio::SemioMembers>(|| App { definition: create_trinity_jack_app(), examples: Vec::new() }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()),jack::standards::v1::subsets::any::schema::content::trinity_mounted_owner_policy(),&mut semio_framework_plugin::artifact_app_laws::fixture_identity()));
     ::semio_framework_async::poll::resolve_ready(app.bind_instance_id(meta("local").instance_id));
     app
 }
@@ -263,7 +265,7 @@ fn reorganize_start_complete_finalize_is_one_undo_entry() {
     assert_eq!((history_len(&mut app) - history) as u64, law["historyEntriesAdded"].as_u64().expect("entries"));
     ::semio_framework_async::poll::resolve_ready(semio_framework_plugin::artifact_app_laws::settle_history_verb(&mut app, "undo", meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(),cx));
     assert_eq!(node_positions(&app), before, "one undo restores every committed position");
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app, jack::trinity_mounted_owner_policy(),cx).expect("original paid app close");
+    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app, jack::standards::v1::subsets::any::schema::content::trinity_mounted_owner_policy(),cx).expect("original paid app close");
     let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original paid caller close");
 }
 
@@ -286,6 +288,6 @@ fn aborting_a_reorganize_run_leaves_the_document_byte_identical() {
     assert_eq!((after.pack, after.spr), (pack.pack, pack.spr), "abort leaves the document byte-identical");
     assert_eq!(node_positions(&app), positions, "abort leaves the content child untouched");
     assert_eq!(history_len(&mut app), history);
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app, jack::trinity_mounted_owner_policy(),cx).expect("original paid app close");
+    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app, jack::standards::v1::subsets::any::schema::content::trinity_mounted_owner_policy(),cx).expect("original paid app close");
     let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original paid caller close");
 }

@@ -3,6 +3,7 @@ use super::*;
 use crate::standards::v1::subsets::any::schema::{snapshot::{Axis, Building, Column, ColumnType, Layer, LayerFunction, LocationLine, Material, MaterialCategory, Phase, Profile, Rgb, Site, Slab, SlabType, Space, Storey, TopConstraint, Wall, WallType}, diff::{Entry, ModelDiff, patches::WallPatch}};
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::{compute, kinds, plan, ModelInferenceSession, ModelNode};
 use protocol::Inference;
+use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_spaces;
 
 fn close(left: f64, right: f64) -> bool {
     (left - right).abs() <= 1e-9 * right.abs().max(1.0)

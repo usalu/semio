@@ -34,33 +34,23 @@ impl protocol::OpText for WriterMutation {
 //#endregion 🔖️HandcraftedOpCodecs
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️semio-grammar-conformance/🦀️.rs"]
-mod semio_grammar_conformance;
+
 
 
 pub const TEXT_OPCODE_REGISTRY: &[(&str, &str)] =
     &[("rename-writer", rename_writer::TEXT_OPCODE), ("change-uri", change_uri::TEXT_OPCODE), ("change-language", change_language::TEXT_OPCODE), ("edit-text", edit_text::TEXT_OPCODE), ("splice-text", splice_text::TEXT_OPCODE)];
 
-#[path = "🌐change-language/🦀️.rs"]
-pub mod change_language;
+pub use semio_s_artifact_writer_writer_tests::standards::v1::subsets::any::io::text::mutations::change_language;
 
-#[path = "✏️edit-text/🦀️.rs"]
-pub mod edit_text;
+pub use semio_s_artifact_writer_writer_tests::standards::v1::subsets::any::io::text::mutations::edit_text;
 
-#[path = "✂️splice-text/🦀️.rs"]
-pub mod splice_text;
+pub use semio_s_artifact_writer_writer_tests::standards::v1::subsets::any::io::text::mutations::splice_text;
 
-#[path = "🔗change-uri/🦀️.rs"]
-pub mod change_uri;
+pub use semio_s_artifact_writer_writer_tests::standards::v1::subsets::any::io::text::mutations::change_uri;
 
-#[path = "🏷️rename-writer/🦀️.rs"]
-pub mod rename_writer;
+pub use semio_s_artifact_writer_writer_tests::standards::v1::subsets::any::io::text::mutations::rename_writer;
 
 /// 📜️ Describes the artifact mutation dialect.
 pub const MUTATION_GRAMMAR_SEMIO: &str = include_str!("📖️mutations.grammar.semio");
@@ -74,7 +64,7 @@ use crate::standards::v1::subsets::any::schema::operations::*;
 use crate::schema::mutations::WriterMutation;
 #[cfg(test)]
 use crate::schema::mutations::{ChangeLanguage, ChangeUri, EditText, RenameWriter};
-use crate::WriterDiff;
+
 use crate::WriterSnapshot;
 use protocol::Mutation;
 

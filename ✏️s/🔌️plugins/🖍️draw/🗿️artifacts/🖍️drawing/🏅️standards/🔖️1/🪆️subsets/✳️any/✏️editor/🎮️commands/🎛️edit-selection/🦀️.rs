@@ -2,7 +2,7 @@
 #[path="🗂️stack/🦀️.rs"]
 mod stack;
 #[path="🧩️ungroup/🦀️.rs"]
-mod ungroup;
+pub mod ungroup;
 use semio_s_artifact_draw_drawing_editor_tool::DrawingSession;
 use semio_s_artifact_draw_drawing_model::{drawing_layer_is_locked, find_drawing_layer, find_drawing_layer_location, layer_base, selected_drawing_layers};
 #[cfg(test)] use semio_s_artifact_draw_drawing_model::layer_base_mut;
@@ -140,6 +140,3 @@ pub fn handle(payload: &EditSelection, doc: &ArtifactView<'_, DrawingSnapshot>, 
     Ok(if mutations.is_empty() { Emit::default() } else { Emit::mutations(mutations) })
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;

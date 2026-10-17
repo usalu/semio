@@ -138,7 +138,7 @@ export class Oracle {
     if (kind === "tool") return this.tool(rest).parameters ?? [];
     if (kind === "group") return this.applicableAxes(this.verbOf(this.group(rest).targets[0]), []);
     if (kind === "playground" || kind === "compound") return [];
-    const { project, target } = this.build(id);
+    const { project, target } = this.nx(id);
     const declared = this.declaration(project, target);
     return [...(declared.parameters ?? []), ...this.applicableAxes(this.verbOf(target, declared.verb), declared.parameters ?? [])];
   }
@@ -238,7 +238,7 @@ export class Oracle {
       const targets = declared.targets as string[];
       return { cmd: "bun", args: ["repo", "run-many", "-t", targets.join(","), `--projects=${(declared.projects as string[]).join(",")}`, ...buildFlags, ...(tail.length ? ["--", ...tail] : [])], env: { ...out.env, ...extraEnv }, cwd: "", requires: [], longRunning: false };
     }
-    const { project, target } = this.build(selection.id);
+    const { project, target } = this.nx(selection.id);
     const declared = this.declaration(project, target);
     const env = { ...out.env, ...extraEnv };
     const ready = this.ready(declared.ready, env);

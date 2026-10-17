@@ -1,6 +1,5 @@
 //! 🏗️ `create-face` — brings a new id-keyed face into existence over `surface`, bounded by `outer_loop` (and optional `inner_loops`) — both must already exist in `base`: no `create-loop` verb exists (SMO ruled `Loop`/`Coedge` carry no `PersistentLabel` and are excluded), so loops are established only via `ArtifactStore::reset`/import, never incrementally through this facet. A duplicate `id` already present in `base` is a no-op.
 
-use crate::schema::mutations::SemioBrepMutation;
 use crate::schema::snapshot::{BrepSurface, SemioBrepSnapshot};
 
 //#region 🔖️Payload
@@ -19,13 +18,16 @@ pub struct CreateFace {
     pub at: Option<usize>,
 }
 
-impl protocol::MutationKind<SemioBrepSnapshot, SemioBrepMutation> for CreateFace {
+impl<Op> protocol::MutationKind<SemioBrepSnapshot, Op> for CreateFace
+where
+    Op: protocol::Mutation<SemioBrepSnapshot, Diff = crate::schema::diff::SemioBrepDiff> + From<CreateFace> + From<crate::schema::mutations::delete_face::DeleteFace>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "face", kind: "create-face", record: "CreatedFace" };
 
-    fn diff(&self, base: &SemioBrepSnapshot) -> protocol::MutationOutcome<<SemioBrepMutation as protocol::Mutation<SemioBrepSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioBrepSnapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<SemioBrepSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &SemioBrepSnapshot) -> Result<Vec<SemioBrepMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &SemioBrepSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

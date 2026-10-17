@@ -1,4 +1,5 @@
-use super::*;
+use crate::standards::v1_4::subsets::base::schema::snapshot::PdfSnapshot;
+use crate::standards::v1_4::subsets::base::schema::inferences::outline::*;
 use crate::standards::v1_4::subsets::base::schema::snapshot::PageDoc;
 
 #[semio_framework_async_macros::async_test]

@@ -1,0 +1,114 @@
+//! 🧪️ `remove-design` fixture — `🚫️removes`.
+//!
+//! Transcribed from `../../🔺️diff/🦀️.rs`: an unknown design id is Error
+//! `mutation.target-missing`; otherwise the `designs` list is rebuilt by filtering that id out —
+//! which takes the design's pieces and connections with it, since they live INSIDE the design.
+//! That is why `↩️inverse/🦀️.rs` needs TWO steps: `add-design` only restores the empty
+//! shell, so an `edit-design` carrying the captured content has to follow it.
+
+use crate::schema::diff::SemioKitDiff;
+use crate::schema::mutations::SemioKitMutation;
+use crate::schema::snapshot::SemioKitSnapshot;
+use protocol::Mutation;
+
+static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../../🧪️tests/🧫️fixtures/🧬️mutations/🗑️remove-design/🚫️removes/📸️snapshot/⬅️before/🔣️.json"));
+static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../../🧪️tests/🧫️fixtures/🧬️mutations/🗑️remove-design/🚫️removes/📸️snapshot/➡️after/🔣️.json"));
+static MUTATION: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../../🧪️tests/🧫️fixtures/🧬️mutations/🗑️remove-design/🚫️removes/🦠️mutation/🔣️.json"));
+static DIFF: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../../🧪️tests/🧫️fixtures/🧬️mutations/🗑️remove-design/🚫️removes/🔺️diff/🔣️.json"));
+static OUTCOME: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../../🧪️tests/🧫️fixtures/🧬️mutations/🗑️remove-design/🚫️removes/🎯️outcome/🔣️.json"));
+
+fn before() -> SemioKitSnapshot {
+    semio_framework_pack_json::from_json_str((*BEFORE), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("remove-design before snapshot decodes")
+}
+fn expected_after() -> SemioKitSnapshot {
+    semio_framework_pack_json::from_json_str((*AFTER), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("remove-design after snapshot decodes")
+}
+fn mutation() -> SemioKitMutation {
+    semio_framework_pack_json::from_json_str((*MUTATION), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("remove-design mutation decodes")
+}
+
+/// ▶️ The design and everything nested inside it disappear together.
+#[semio_framework_async_macros::async_test]
+async fn removes_the_design_and_the_pieces_nested_inside_it() {
+    let base = before();
+    assert!(!base.designs[0].pieces.is_empty(), "the fixture needs a non-empty design for the two-step inverse to matter");
+    let produced = protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("remove-design applies to its committed before-snapshot");
+    assert_eq!(produced, expected_after(), "remove-design/removes-the-only-design-together-with-its-pieces: applied state differs from the committed after-snapshot");
+    assert!(produced.designs.is_empty(), "the only design must be gone");
+    assert_eq!(produced.types, base.types, "removing a design must not touch the type catalogue it referenced");
+}
+
+/// ↩️ The undo is TWO steps — `add-design` recreates the empty shell, `edit-design` refills it.
+#[semio_framework_async_macros::async_test]
+async fn the_undo_readds_the_design_then_refills_its_content() {
+    let base = before();
+    let mutation = mutation();
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
+    let undo = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
+    assert_eq!(undo.len(), 2, "an empty add-design alone would lose the pieces — the inverse needs an edit-design too");
+    assert!(matches!(undo[1], SemioKitMutation::AddDesign(_)), "rows are stored reversed: the shell is re-created first, so its row comes last");
+    let SemioKitMutation::EditDesign(refill) = &undo[0] else { panic!("the first stored undo row must be edit-design") };
+    assert_eq!(refill.pieces, base.designs[0].pieces, "the refill must recapture the removed design's own pieces");
+    let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward remove-design applies");
+    for step in undo.iter().rev() {
+        current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("each undo step applies to the running state");
+    }
+    assert_eq!(current, base, "remove-design/removes-the-only-design-together-with-its-pieces: the undo did not restore the before-snapshot");
+}
+
+/// 🔣️ Snapshots and the `{"RemoveDesign":{"id":"d1"}}` payload are canonical fixed points.
+#[semio_framework_async_macros::async_test]
+async fn committed_json_is_canonical() {
+    for (label, text) in [("before", (*BEFORE)), ("after", (*AFTER))] {
+        let decoded: SemioKitSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("snapshot encodes");
+        let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
+        assert_eq!(reencoded, original, "remove-design/removes-the-only-design-together-with-its-pieces: committed {label} JSON is not canonical");
+    }
+    let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&(mutation()))).expect("remove-design mutation encodes");
+    let original: serde_json::Value = serde_json::from_str((*MUTATION)).expect("remove-design mutation reparses");
+    assert_eq!(reencoded, original, "remove-design/removes-the-only-design-together-with-its-pieces: committed mutation JSON is not canonical");
+}
+
+/// 🎯️ Declared `applied`: the design exists, so mutation.target-missing must not fire
+#[semio_framework_async_macros::async_test]
+async fn declared_outcome_holds_as_committed() {
+    let outcome: serde_json::Value = serde_json::from_str((*OUTCOME)).expect("outcome decodes");
+    assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("applied"), "remove-design/removes-the-only-design-together-with-its-pieces: this case is declared applied");
+    let produced = mutation().diff(&before());
+    assert!(produced.messages().is_empty(), "removing an existing design must raise no diagnostics");
+}
+
+/// 🔺️ The sparse delta this mutation produces equals the committed diff. Only the `designs` slot, carrying the emptied list.
+#[semio_framework_async_macros::async_test]
+async fn produces_committed_diff() {
+    let base = before();
+    let outcome = <SemioKitMutation as Mutation<SemioKitSnapshot>>::diff(&mutation(), &base);
+    let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
+    let committed: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff decodes");
+    assert_eq!(produced, committed, "remove-design/removes-the-only-design-together-with-its-pieces: produced diff differs from the committed 🔺️diff/🔣️.json");
+}
+
+/// 🔣️ The committed diff is a decode→encode fixed point, and only the slot this mutation is
+/// allowed to touch appears in it at all.
+#[semio_framework_async_macros::async_test]
+async fn committed_diff_is_canonical_and_narrowly_scoped() {
+    let decoded: SemioKitDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed remove-design diff decodes");
+    assert!(decoded.types.is_none() && decoded.objects.is_none() && decoded.models.is_none() && decoded.properties.is_none() && decoded.representations.is_none(), "no other kit slot may appear in the diff");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("diff re-encodes");
+    let original: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff reparses");
+    assert_eq!(reencoded, original, "remove-design/removes-the-only-design-together-with-its-pieces: committed diff JSON is not canonical");
+}
+
+/// 🩹 Applying the committed diff to `before` yields `after`.
+#[semio_framework_async_macros::async_test]
+async fn committed_diff_applies_to_after() {
+    let decoded: SemioKitDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed remove-design diff decodes");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed remove-design diff applies to the before-snapshot");
+    assert_eq!(produced, expected_after(), "remove-design/removes-the-only-design-together-with-its-pieces: committed diff did not carry before to after");
+}
+
+fn runtime_fixture_text(relative: &str) -> &'static str {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative);
+    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display())).into_boxed_str())
+}

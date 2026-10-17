@@ -3,7 +3,7 @@
 pub const TAG: u8 = dsl::protocol_record::tag_u8(include_str!("../📡️.protocol.semio"), "set-color-space");
 pub const BINARY_TAG: u8 = TAG;
 
-use crate::standards::v1_7::subsets::base::schema::mutations::SetColorSpace;
+use crate::standards::v1_7::subsets::base::schema::mutations::set_color_space::SetColorSpace;
 
 /// 📤️ Encodes this direct payload as canonical schema JSON bytes.
 pub fn encode(payload: &SetColorSpace) -> Result<Vec<u8>, String> {

@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/rust-descriptor-node-composition-tests-v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "iterations", "ownedPlanWalks", "envelopeValidationsPerCapture", "modes", "wireRefusals", "schemaRefusals", "freshWireValidation", "schemaAliasSnapshot"],
+  "properties": {
+    "version": {"const": 1},
+    "iterations": {"const": 4097},
+    "ownedPlanWalks": {"const": 0},
+    "envelopeValidationsPerCapture": {"const": 1},
+    "modes": {"const": ["prototype", "release"]},
+    "wireRefusals": {"const": ["digest", "context", "output", "unit", "extra", "accessor", "proxy"]},
+    "schemaRefusals": {"const": ["sibling", "reference"]},
+    "freshWireValidation": {"const": true},
+    "schemaAliasSnapshot": {"const": true}
+  }
+}

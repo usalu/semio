@@ -1,4 +1,4 @@
-use super::*;
+use crate::editor::wires::window_transient::*;
 
 #[semio_framework_async_macros::async_test]
 async fn wires_pointer_move_uses_only_the_captured_canvas_and_publishes_document_positions() {
@@ -8,7 +8,7 @@ async fn wires_pointer_move_uses_only_the_captured_canvas_and_publishes_document
     fn manifest() -> App {
         App { definition: create_wires_app(), examples: Vec::new() }
     }
-    let vectors: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🧪️tests/🧫️fixtures/🖱️pointer-move.json")).unwrap();
+    let vectors: serde_json::Value = serde_json::from_str(runtime_fixture_text("../../🧪️tests/🧫️fixtures/🖱️pointer-move.json")).unwrap();
     let mut app = artifact_app_laws::new_app_with_registry_and_members::<EditorApp<ReasoningWiresPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
     app.bind_instance_id(1).await;
     let view = ViewModel { window_instances: ["left", "right"].into_iter().map(|id| ViewWindowInstance { id: id.into(), window_kind_id: WIRES_PLAY_WINDOW_CANVAS.into() }).collect(), ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
@@ -134,7 +134,7 @@ async fn wires_pointer_move_document_replacement_clears_only_successful_reload_p
         let projection = artifact_app_laws::project_and_retire_fixture_tree(tree).map_err(str::to_string)?;
         artifact_app_laws::decode_fixture_scene(&projection).map_err(str::to_string)
     }
-    let vectors: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🧪️tests/🧫️fixtures/🖱️pointer-move.json")).unwrap();
+    let vectors: serde_json::Value = serde_json::from_str(runtime_fixture_text("../../🧪️tests/🧫️fixtures/🖱️pointer-move.json")).unwrap();
     let mut app = artifact_app_laws::new_app_with_registry_and_members::<EditorApp<ReasoningWiresPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
     app.bind_instance_id(1).await;
     let view = ViewModel { window_instances: vec![ViewWindowInstance { id: "left".into(), window_kind_id: WIRES_PLAY_WINDOW_CANVAS.into() }], ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
@@ -204,7 +204,7 @@ async fn wires_pointer_move_pending_release_cancels_and_retires_with_small_or_ze
     fn manifest() -> App {
         App { definition: create_wires_app(), examples: Vec::new() }
     }
-    let vectors: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🧪️tests/🧫️fixtures/🖱️pointer-move.json")).unwrap();
+    let vectors: serde_json::Value = serde_json::from_str(runtime_fixture_text("../../🧪️tests/🧫️fixtures/🖱️pointer-move.json")).unwrap();
     let mut app = artifact_app_laws::new_app_with_registry_and_members::<EditorApp<ReasoningWiresPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
     app.bind_instance_id(1).await;
     let view = ViewModel { window_instances: vec![ViewWindowInstance { id: "left".into(), window_kind_id: WIRES_PLAY_WINDOW_CANVAS.into() }], ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
@@ -339,7 +339,7 @@ async fn wires_batched_move_lands_on_its_last_sample_and_a_cancel_moves_nothing(
     fn preview(app: &mut VcsArtifactApp<EditorApp<ReasoningWiresPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>, window: &ViewModel) -> Result<WiresCanvasTransient, String> {
         app.window_transient_snapshot(window).map_err(|error| format!("{error:?}"))?.and_then(|snapshot| snapshot.get::<WiresCanvasTransientOwner>().cloned()).ok_or_else(|| "window transient absent".into())
     }
-    let vectors: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🧪️tests/🧫️fixtures/🖱️pointer-move.json")).unwrap();
+    let vectors: serde_json::Value = serde_json::from_str(runtime_fixture_text("../../🧪️tests/🧫️fixtures/🖱️pointer-move.json")).unwrap();
     let mut app = artifact_app_laws::new_app_with_registry_and_members::<EditorApp<ReasoningWiresPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
     app.bind_instance_id(1).await;
     let view = ViewModel { window_instances: vec![ViewWindowInstance { id: "left".into(), window_kind_id: WIRES_PLAY_WINDOW_CANVAS.into() }], ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
@@ -433,3 +433,8 @@ async fn wires_pointer_wire_requires_samples_and_cancelled() {
     assert!(!released.cancelled);
 }
 //#endregion 🧵️BatchedSamplesAndCancel
+
+fn runtime_fixture_text(relative: &str) -> &'static str {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative);
+    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display())).into_boxed_str())
+}

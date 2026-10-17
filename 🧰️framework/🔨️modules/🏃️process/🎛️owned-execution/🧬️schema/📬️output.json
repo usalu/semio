@@ -18,5 +18,15 @@
       "minimum": 1,
       "maximum": 9007199254740991
     }
+  },
+  "definitions": {
+    "Style": {
+      "type": "string",
+      "enum": [
+        "stream",
+        "stream-without-prefixes",
+        "static"
+      ]
+    }
   }
 }

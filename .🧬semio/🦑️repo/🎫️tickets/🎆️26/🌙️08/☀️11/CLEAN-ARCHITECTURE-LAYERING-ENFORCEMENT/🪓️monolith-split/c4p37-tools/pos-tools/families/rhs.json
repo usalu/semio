@@ -1,0 +1,23 @@
+{
+"name": "rhs",
+"crates": [
+"semio-framework-repo-model",
+"semio-framework-repo-tickets",
+"semio-hub-directory-sqlite",
+"semio-hub-directory-postgres",
+"semio-hub-directory-neo4j",
+"semio-framework-server"
+],
+"base": {
+"rev": "HEAD",
+"crates": [
+"semio-framework-repo-model",
+"semio-framework-repo-tickets",
+"semio-hub-directory-sqlite",
+"semio-hub-directory-postgres",
+"semio-hub-directory-neo4j",
+"semio-framework-server"
+]
+},
+"note": "REPO-HUB-RUST-FILE-SPLITS"
+}

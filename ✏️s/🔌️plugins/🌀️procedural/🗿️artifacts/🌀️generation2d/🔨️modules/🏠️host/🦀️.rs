@@ -1,6 +1,6 @@
 //! 🏠️ Artifact document-store and publication authorities.
-use semio_framework_job_publication::{RetainedJobPublication,JobPublicationKind};
 #![allow(clippy::result_large_err)]
+use semio_framework_job_publication::{RetainedJobPublication,JobPublicationKind};
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
@@ -36,9 +36,9 @@ use semio_s_artifact_procedural_2d_mutations::central_apply::generation2d_copy_g
 use semio_s_artifact_procedural_2d_mutations::central_apply::generation2d_copy_string;
 use semio_s_artifact_procedural_2d_mutations::central_apply::generation2d_copy_synapse;
 use semio_s_artifact_procedural_2d_mutations::central_apply::generation2d_copy_widget;
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 use semio_s_artifact_procedural_2d_mutations::central_apply::generation2d_apply_retained_mutations_for_test;
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 use semio_s_artifact_procedural_2d_mutations::central_apply::generation2d_retire_mutations_cold;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -660,7 +660,7 @@ pub fn generation2d_validate_publication_authority(operation: semio_framework_jo
 /// 🔐️ Fail-closed Generation2d authority used by the shared atomic replacement branch.
 pub fn generation2d_validate_atomic_publication_authority(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, live_generation: semio_framework_job::Generation) -> Result<(), &'static str> {
     let lease = generation2d_publication_lease_by_operation(operation)?.ok_or("generation2d-publication.authority-missing")?;
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testkit"))]
     let lease = {
         let mut lease = lease;
         let mut hostiles = generation2d_publication_hostiles().try_lock().map_err(|_| "generation2d-publication.hostile-contended")?;
@@ -1120,7 +1120,7 @@ pub fn generation2d_document_store_initialization_job(
     semio_framework_plugin::ArtifactStoreInitializationJob::new(Box::new(Generation2dStoreInitializationAuthority::new(envelope, operation, generation, actor)))
 }
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Generation2dPublicationHostile {
     Missing,
@@ -1130,7 +1130,7 @@ pub enum Generation2dPublicationHostile {
     WrongParent,
 }
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 fn generation2d_publication_hostiles() -> &'static std::sync::Mutex<[Option<Generation2dPublicationHostileLease>; GENERATION2D_PUBLICATION_SLOTS]> {
     static HOSTILES: std::sync::OnceLock<std::sync::Mutex<[Option<Generation2dPublicationHostileLease>; GENERATION2D_PUBLICATION_SLOTS]>> = std::sync::OnceLock::new();
     HOSTILES.get_or_init(|| std::sync::Mutex::new([None; GENERATION2D_PUBLICATION_SLOTS]))
@@ -1569,7 +1569,7 @@ impl store::os_store::owned_schema_decode::ArtifactEnvelopeOwnedFieldCatalog<Gen
     }
 }
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 #[derive(Clone, Copy)]
 struct Generation2dPublicationHostileLease {
     operation: u64,
@@ -1577,14 +1577,14 @@ struct Generation2dPublicationHostileLease {
     observed: Option<&'static str>,
 }
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 pub fn generation2d_arm_publication_hostile(operation: semio_framework_job::OperationId, hostile: Generation2dPublicationHostile) {
     let mut hostiles = generation2d_publication_hostiles().try_lock().expect("Generation2d hostile publication authority is uncontended");
     let slot = hostiles.iter_mut().find(|slot| slot.is_none()).expect("Generation2d hostile publication authority has a fixed slot");
     *slot = Some(Generation2dPublicationHostileLease { operation: operation.0, hostile, observed: None });
 }
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 pub fn generation2d_take_publication_hostile_observed(operation: semio_framework_job::OperationId) -> Option<&'static str> {
     let mut hostiles = generation2d_publication_hostiles().try_lock().expect("Generation2d hostile publication authority is uncontended");
     let slot = hostiles.iter_mut().find(|slot| slot.is_some_and(|value| value.operation == operation.0))?;

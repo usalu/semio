@@ -1,5 +1,7 @@
 //! ⚖️ Workflow laws: the schema, snapshot codec and mutation leaf suites over the whole workflow artifact.
 
+use semio_framework_test_fixtures::fixture_path;
+
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
 
@@ -16,7 +18,7 @@ use semio_framework_artifact_workflow_workflow_snapshot::*;
 /// 🧾️ Reads one file below the workflow node at test time instead of compiling it into the suite; the text lives for the whole test process.
 #[cfg(test)]
 fn read_node(path: &str) -> &'static str {
-    let file = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../..").join(path);
+    let file = fixture_path!("../../../..").join(path);
     Box::leak(std::fs::read_to_string(&file).unwrap_or_else(|error| panic!("{}: {error}", file.display())).into_boxed_str())
 }
 

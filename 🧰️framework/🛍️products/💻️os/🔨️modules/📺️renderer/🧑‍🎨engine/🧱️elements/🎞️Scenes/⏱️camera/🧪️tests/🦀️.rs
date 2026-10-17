@@ -45,7 +45,6 @@ fn camera_packed_originals_match_the_independent_corpus_and_exact_heap_receipts(
         assert!(owner.terminal_is_empty());
         let backing = receipt.retained_capacity_bytes;
         assert_eq!(close(cursor, grant), body_bytes + backing);
-        eprintln!("[DEBUG] camera {} exact-body={} original-directory={} terminal=true", row["id"], body_bytes, backing);
     }
 }
 
@@ -219,7 +218,6 @@ fn camera_exact_capacity_restores_originals_and_retains_a_full_cursor_on_refusal
     let (cursor, _) = owner.begin(grant).unwrap();
     close(cursor, grant);
     assert!(owner.terminal_is_empty() && other.terminal_is_empty());
-    eprintln!("[DEBUG] camera exact256 restored original bodies,257th/full-cursor refusal inert, original backing closed");
 }
 
 #[test]
@@ -245,7 +243,6 @@ fn camera_identifier_maximum_plus_one_is_inert_on_a_vacant_original_owner() {
     let (cursor, _) = owner.begin(grant).unwrap();
     close(cursor, grant);
     assert!(owner.terminal_is_empty());
-    eprintln!("[DEBUG] camera both identifier256 boundaries admitted,257-byte denial on vacant owner had zero physical effect");
 }
 
 #[test]

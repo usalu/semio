@@ -1,20 +1,21 @@
 //! 🧪️ `drag-layers` fixture — `✋️drags-a-child`. The committed quintet is computed by an independent Python implementation
 //! (`🧪️w3-t-draw-selection-leaves.py`, ticket `26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING`); these laws hold the Rust leaf to it
 //! byte for byte and pin the partial, target-missing, no-op, invariant and label outcomes.
-use crate::drag_layers::mutation::drag_layers;
+use semio_framework_test_fixtures::fixture_text;
+use semio_s_artifact_draw_drawing_transform::drag_layers::mutation::drag_layers;
 use semio_s_artifact_draw_drawing_mutations::{inverse_drawing_mutation, DrawingMutation};
 use semio_s_artifact_draw_drawing_mutations::text::apply_drawing_mutation;
 use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
 use protocol::{Mutation, SemanticMutation};
 
-const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✋️drag-layers/✋️drags-a-child/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✋️drag-layers/✋️drags-a-child/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✋️drag-layers/✋️drags-a-child/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✋️drag-layers/✋️drags-a-child/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✋️drag-layers/✋️drags-a-child/🎯️outcome/🔣️.json");
+static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧫️fixtures/🧬️mutations/✋️drag-layers/✋️drags-a-child/📸️snapshot/⬅️before/🔣️.json"));
+static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧫️fixtures/🧬️mutations/✋️drag-layers/✋️drags-a-child/📸️snapshot/➡️after/🔣️.json"));
+static MUTATION: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧫️fixtures/🧬️mutations/✋️drag-layers/✋️drags-a-child/🦠️mutation/🔣️.json"));
+static DIFF: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧫️fixtures/🧬️mutations/✋️drag-layers/✋️drags-a-child/🔺️diff/🔣️.json"));
+static OUTCOME: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧫️fixtures/🧬️mutations/✋️drag-layers/✋️drags-a-child/🎯️outcome/🔣️.json"));
 
 fn before() -> DrawingSnapshot {
-    serde_json::from_str(BEFORE).expect("before snapshot decodes")
+    serde_json::from_str(*BEFORE).expect("before snapshot decodes")
 }
 
 fn codes(mutation: &DrawingMutation, base: &DrawingSnapshot) -> Vec<(String, String)> {
@@ -26,27 +27,27 @@ fn codes(mutation: &DrawingMutation, base: &DrawingSnapshot) -> Vec<(String, Str
 #[test]
 fn applies_to_committed_after() {
     let mut snapshot = before();
-    apply_drawing_mutation(&mut snapshot, &serde_json::from_str(MUTATION).expect("mutation decodes")).expect("drag-layers applies");
-    assert_eq!(snapshot, serde_json::from_str::<DrawingSnapshot>(AFTER).expect("after decodes"));
-    assert_eq!(serde_json::from_str::<serde_json::Value>(OUTCOME).unwrap()["status"], "applied");
+    apply_drawing_mutation(&mut snapshot, &serde_json::from_str(*MUTATION).expect("mutation decodes")).expect("drag-layers applies");
+    assert_eq!(snapshot, serde_json::from_str::<DrawingSnapshot>(*AFTER).expect("after decodes"));
+    assert_eq!(serde_json::from_str::<serde_json::Value>(*OUTCOME).unwrap()["status"], "applied");
 }
 
 /// 🔺️ The produced diff is exactly the committed one, and nothing is reported.
 #[test]
 fn produces_committed_diff() {
-    let mutation: DrawingMutation = serde_json::from_str(MUTATION).unwrap();
+    let mutation: DrawingMutation = serde_json::from_str(*MUTATION).unwrap();
     let outcome = mutation.diff(&before());
     assert!(outcome.messages().is_empty(), "{:?}", outcome.messages());
-    assert_eq!(serde_json::to_value(outcome.diff()).unwrap(), serde_json::from_str::<serde_json::Value>(DIFF).unwrap());
-    let decoded: semio_s_artifact_draw_drawing_diff::DrawingDiff = serde_json::from_str(DIFF).unwrap();
-    assert_eq!(protocol::apply_diff(&decoded, &before()).unwrap(), serde_json::from_str::<DrawingSnapshot>(AFTER).unwrap(), "the committed diff alone carries before to after");
+    assert_eq!(serde_json::to_value(outcome.diff()).unwrap(), serde_json::from_str::<serde_json::Value>(*DIFF).unwrap());
+    let decoded: semio_s_artifact_draw_drawing_diff::DrawingDiff = serde_json::from_str(*DIFF).unwrap();
+    assert_eq!(protocol::apply_diff(&decoded, &before()).unwrap(), serde_json::from_str::<DrawingSnapshot>(*AFTER).unwrap(), "the committed diff alone carries before to after");
 }
 
 /// ↩️ The inverse restores every moved transform exactly.
 #[test]
 fn inverse_restores_before() {
     let base = before();
-    let mutation: DrawingMutation = serde_json::from_str(MUTATION).unwrap();
+    let mutation: DrawingMutation = serde_json::from_str(*MUTATION).unwrap();
     let mut snapshot = base.clone();
     apply_drawing_mutation(&mut snapshot, &mutation).unwrap();
     for step in inverse_drawing_mutation(&base, &mutation).expect("valid retained mutation inverse fixture") {
@@ -58,12 +59,12 @@ fn inverse_restores_before() {
 /// 🔣️ The committed JSON is canonical and the leaf round-trips through its text and binary op codecs.
 #[test]
 fn committed_json_is_canonical_and_codecs_round_trip() {
-    for text in [BEFORE, AFTER] {
+    for text in [*BEFORE, *AFTER] {
         let decoded: DrawingSnapshot = serde_json::from_str(text).unwrap();
         assert_eq!(serde_json::to_value(&decoded).unwrap(), serde_json::from_str::<serde_json::Value>(text).unwrap());
     }
-    let mutation: DrawingMutation = serde_json::from_str(MUTATION).unwrap();
-    assert_eq!(serde_json::to_value(&mutation).unwrap(), serde_json::from_str::<serde_json::Value>(MUTATION).unwrap());
+    let mutation: DrawingMutation = serde_json::from_str(*MUTATION).unwrap();
+    assert_eq!(serde_json::to_value(&mutation).unwrap(), serde_json::from_str::<serde_json::Value>(*MUTATION).unwrap());
     store::os_store::test_support::assert_op_text_binary_equivalence(&mutation);
 }
 
@@ -97,7 +98,7 @@ fn a_child_of_a_dragged_group_moves_once() {
 /// 🗣️ The history row label reads the drag in English and German.
 #[test]
 fn label_reads_the_drag() {
-    let mutation: DrawingMutation = serde_json::from_str(MUTATION).unwrap();
+    let mutation: DrawingMutation = serde_json::from_str(*MUTATION).unwrap();
     let label = mutation.label();
     assert_eq!(label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En), "Drag 2 layers by (20, -10)");
     assert_eq!(label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::De), "2 Ebenen um (20; -10) ziehen");
@@ -106,6 +107,6 @@ fn label_reads_the_drag() {
 /// ⚖️ The concrete inverse's diffs sum to exactly the negative of the forward diff, restoring the committed before-document.
 #[semio_framework_async_macros::async_test]
 async fn inverse_sums_to_the_negative_diff() {
-    let mutation: DrawingMutation = serde_json::from_str(MUTATION).unwrap();
+    let mutation: DrawingMutation = serde_json::from_str(*MUTATION).unwrap();
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &before()).await;
 }

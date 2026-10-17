@@ -41,7 +41,7 @@ test("every named item is defined exactly once, in a file of its crate", () => {
   expect(misplaced(fixture.items, fixture.homes)).toEqual([]);
 });
 
-test("the monolith mounts each moved file once and re-exports it", () => {
+test("each crate root mounts each moved file once and publishes it as a public module", () => {
   for (const [parent, children] of Object.entries(fixture.mounts)) {
     const text = read(parent);
     for (const child of children) {
@@ -49,7 +49,7 @@ test("the monolith mounts each moved file once and re-exports it", () => {
       expect(text.split(literal).length - 1, `${parent} mounts ${child}`).toBe(1);
       expect(existsSync(normalize(join(pluginRoot, dirname(parent), child))), child).toBe(true);
     }
-    expect((text.match(/^pub use [a-z_]+::\*;$/gmu) ?? []).length).toBeGreaterThanOrEqual(children.length);
+    expect((text.match(/^pub mod [a-z_]+;$/gmu) ?? []).length).toBeGreaterThanOrEqual(children.length);
   }
 });
 

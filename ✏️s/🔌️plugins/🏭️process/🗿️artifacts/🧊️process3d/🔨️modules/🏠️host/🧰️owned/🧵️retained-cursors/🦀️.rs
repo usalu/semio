@@ -523,7 +523,7 @@ impl Default for Process3dRetainedStringCursor {
 
 impl Process3dRetainedStringCursor {
     #[cfg(test)]
-    fn with_maximum_bytes(maximum_bytes: usize) -> Self {
+    pub(super) fn with_maximum_bytes(maximum_bytes: usize) -> Self {
         let mut cursor = Self::default();
         cursor.maximum_bytes = maximum_bytes;
         cursor

@@ -2,7 +2,6 @@
 //! window. The edge's `relation` names the adjacency class its rules are scoped to.
 
 use crate::diff::Wfc2dDiff;
-use crate::mutations::Wfc2dMutation;
 use crate::schema::snapshot::Wfc2dSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -18,17 +17,23 @@ pub struct ConnectSlots {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn connect_slots(edge: Wfc2dSlotEdge) -> Wfc2dMutation {
-    Wfc2dMutation::ConnectSlots(ConnectSlots { edge })
+pub fn connect_slots<Op>(edge: Wfc2dSlotEdge) -> Op
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::connect_slots::ConnectSlots>,
+{
+    Op::from(ConnectSlots { edge })
 }
 
-impl MutationKind<Wfc2dSnapshot, Wfc2dMutation> for ConnectSlots {
+impl<Op> MutationKind<Wfc2dSnapshot, Op> for ConnectSlots
+where
+    Op: protocol::Mutation<Wfc2dSnapshot, Diff = Wfc2dDiff> + From<ConnectSlots> + From<crate::standards::v1::subsets::any::schema::mutations::disconnect_slots::DisconnectSlots>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "connect", entity: "slots", kind: "connect-slots", record: "ConnectedSlots" };
 
     fn diff(&self, base: &Wfc2dSnapshot) -> protocol::MutationOutcome<Wfc2dDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Wfc2dSnapshot) -> Result<Vec<Wfc2dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Wfc2dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

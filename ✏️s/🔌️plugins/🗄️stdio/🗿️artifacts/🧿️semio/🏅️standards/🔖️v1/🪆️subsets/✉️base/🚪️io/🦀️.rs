@@ -225,14 +225,24 @@ pub mod io_registry {
 }
 //#endregion 🚪️DerivedIoRegistry
 
-#[path = "💾️binary/🦀️.rs"]
-pub mod binary;
+pub mod binary {
+    pub use semio_s_artifact_stdio_semio_schema::io::binary::*;
+    pub use semio_s_artifact_stdio_semio_inferences::io::binary::diff;
+    pub use semio_s_artifact_stdio_semio_inferences::io::binary::inferences;
+    pub use semio_s_artifact_stdio_semio_editor::io::binary::mutations;
+    pub use semio_s_artifact_stdio_semio_snapshot::io::binary::snapshot;
+}
 
-#[path = "📝️text/🦀️.rs"]
-pub mod text;
+pub mod text {
+    pub use semio_s_artifact_stdio_semio_schema::io::text::*;
+    pub use semio_s_artifact_stdio_semio_inferences::io::text::inferences;
+    pub use semio_s_artifact_stdio_semio_editor::io::text::mutations;
+}
 
-#[path = "🪶️sqlite/🦀️.rs"]
-pub mod sqlite;
+pub mod sqlite {
+    pub use semio_s_artifact_stdio_semio_inferences::io::sqlite::*;
+    pub use semio_s_artifact_stdio_semio_snapshot::io::sqlite::snapshot;
+}
 
 pub mod derived_construction {
     use crate::schema::diff::SemioDiff;

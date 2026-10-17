@@ -1,6 +1,6 @@
 //! 🖌️ Product renderer paints obey the shared general palette rule.
 
-use std::path::PathBuf;
+use semio_framework_test_fixtures::manifest_dir;
 
 use semio_framework_ui_testing_paint_policy as paint_policy;
 
@@ -36,7 +36,7 @@ const ALLOWLIST: &[(&str, &str, &str)] = &[
 
 #[test]
 fn no_wgpu_target_paints_a_hand_written_colour_literal() {
-    let mut root = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    let mut root = manifest_dir!();
     for _ in 0..10 { root = root.parent().expect("renderer manifest has ten ancestors to the repository").to_path_buf(); }
     let (scanned, violations) = paint_policy::scan(&root, SCAN_ROOTS, ALLOWLIST);
     assert!(scanned > 0, "no wgpu sources were scanned — the walk is broken");

@@ -1,0 +1,73 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "cases",
+    "methods"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 7,
+      "maxItems": 7,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "fault",
+          "admit"
+        ],
+        "properties": {
+          "fault": {
+            "enum": [
+              "none",
+              "edge",
+              "project",
+              "target",
+              "cache",
+              "outputs",
+              "dependsOn"
+            ]
+          },
+          "admit": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "methods": {
+      "type": "array",
+      "minItems": 10,
+      "maxItems": 10,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "parameters",
+          "asynchronous"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "pattern": "^[a-zA-Z][a-zA-Z0-9]*$",
+            "maxLength": 64
+          },
+          "parameters": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9
+          },
+          "asynchronous": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

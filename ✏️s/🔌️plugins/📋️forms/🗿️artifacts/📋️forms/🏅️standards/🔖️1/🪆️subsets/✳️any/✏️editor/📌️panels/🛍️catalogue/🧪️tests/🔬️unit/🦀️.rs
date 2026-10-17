@@ -1,4 +1,5 @@
-use super::*;
+use crate::editor::forms::panels::catalogue::{FORMS_QUESTION_DRAG_MIME};
+use crate::editor::forms::panels::catalogue::*;
 use crate::editor::forms::unit_tests::context::{forms_app, render as render_body};
 use crate::editor::forms::FORMS_PLAY_BODY_CATALOGUE as BODY_CATALOGUE;
 

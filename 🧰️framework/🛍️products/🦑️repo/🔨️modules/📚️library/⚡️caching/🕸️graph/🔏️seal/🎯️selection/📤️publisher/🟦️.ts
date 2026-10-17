@@ -64,7 +64,7 @@ export async function writeSelectedGraphPublisherReceiptV1(root:string,directory
   validateSelectedGraphValueV1("PublisherReceiptV1",receipt);await publisherInputs(directory,receipt,undefined,root);
   const after=await ports.capture({roots:[],files:[]});if(JSON.stringify(after)!==JSON.stringify(journal)||JSON.stringify(await graphStamps(directory))!==JSON.stringify(graph))throw Error("Original selected graph publication changed during capture");
   check();const encoded=JSON.stringify(receipt);await withNxGraphAuxiliaryCapacityV1(root,ports.environment,{version:1,extraBytes:Math.ceil(Buffer.byteLength(encoded)/4096)*4096},async()=>{check();await writeFile(temporary,encoded,{flag:"wx"});check();await rename(temporary,file);check();});return true;
- }catch(error){signal?.throwIfAborted();if(process.env.SEMIO_BUILD_PROFILE_INPUTS==="1"||process.env.NX_VERBOSE_LOGGING==="true")console.log("[DEBUG] Selected graph publisher refused: "+String(error));return false;}finally{await rm(temporary,{force:true});}
+ }catch(error){signal?.throwIfAborted();if(process.env.SEMIO_BUILD_PROFILE_INPUTS==="1"||process.env.NX_VERBOSE_LOGGING==="true"){}return false;}finally{await rm(temporary,{force:true});}
  },ports.publication);
 }
 
@@ -79,7 +79,7 @@ export async function captureSelectedGraphReuseReceiptV1(root:string,directory:s
   const original=originalFiles(JSON.parse(await readFile(join(directory,"file-map.json"),"utf8"))),source=await createSelectedGraphSourceReceiptV1(root,scope,before,original,ports,signal),facts=await publisherInputs(directory,receipt,scope,root);
   if(!await observationsHold(facts,64,new Set(source.ancestry.map(row=>join(root,row.path))))||!await selectedGraphSourceReceiptHoldsV1(root,source,ports,signal))return null;
   if(JSON.stringify(await graphStamps(directory))!==JSON.stringify(receipt.graph))return null;const proof:SelectedGraphReuseReceiptV1={version:1,toolingIdentity:ports.toolingIdentity,environmentIdentity:receipt.environmentIdentity,publisherSha256:hash(publisherBytes),graph:receipt.graph,source};validateSelectedGraphValueV1("ReuseReceiptV1",proof);return proof;
- }catch(error){signal?.throwIfAborted();if(process.env.SEMIO_BUILD_PROFILE_INPUTS==="1"||process.env.NX_VERBOSE_LOGGING==="true")console.log("[DEBUG] Selected graph reuse refused: "+String(error));return null;}
+ }catch(error){signal?.throwIfAborted();if(process.env.SEMIO_BUILD_PROFILE_INPUTS==="1"||process.env.NX_VERBOSE_LOGGING==="true"){}return null;}
 }
 
 /** ✅️ Public boolean proof delegates to the same exact narrowed custody capture. */

@@ -1,4 +1,7 @@
-use super::*;
+use semio_framework_test_fixtures::fixture_text;
+use semio_framework_value::NativeEncodeControl;
+use crate::standards::v1_0::subsets::base::schema::snapshot::retained::{text};
+use crate::standards::v1_0::subsets::base::schema::snapshot::retained::*;
 use crate::standards::v1_0::subsets::base::io::text::snapshot::{xml_document_from_text, xml_document_to_text_checked};
 use semio_framework_value::{
     retained_clone::{RetainedClone, RetainedCloneCursor, RetainedCloneGrant, RetainedCloneSource, RetainedCloneStep},
@@ -29,7 +32,7 @@ fn close_cursor(cursor: &mut <RetainedXmlDocument as RetainedClone>::Cursor, _gr
 
 #[test]
 fn flat_retained_xml_copy_materialize_and_retire_preserve_shared_vocabulary() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/📸️snapshot/🧬️retained/🔣️.json")).expect("retained XML fixture");
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../🧪️tests/🧫️fixtures/📸️snapshot/🧬️retained/🔣️.json")).expect("retained XML fixture");
     let source = xml_document_from_text(fixture["xml"].as_str().expect("retained XML text")).expect("shared XML parser accepts retained fixture");
     let retained = RetainedXmlDocument::try_from_document(&source).expect("flat retained XML owner");
     assert_eq!(retained.nodes.len(), fixture["expected"]["nodes"].as_u64().unwrap() as usize);

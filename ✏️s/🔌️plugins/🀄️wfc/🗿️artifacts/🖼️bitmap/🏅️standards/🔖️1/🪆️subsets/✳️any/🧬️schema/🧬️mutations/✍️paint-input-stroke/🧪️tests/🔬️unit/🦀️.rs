@@ -1,21 +1,21 @@
 //! 🧪️ `paint-input-stroke` laws beyond the committed quintets: the Bresenham cell walk, every outcome code the leaf
 //! raises, its label in both languages, its text and binary spelling, and its editable payload.
 
-use super::*;
+use crate::mutations::paint_input_stroke::{paint_input_stroke, stroke_cells, BitmapStrokePoint, BITMAP_STROKE_MAXIMUM_POINTS};
 use crate::mutations::BitmapMutation;
-use crate::schema::snapshot::{BitmapSnapshot};
+use crate::schema::snapshot::BitmapSnapshot;
 
 fn point(x: u32, y: u32) -> BitmapStrokePoint {
     BitmapStrokePoint { x, y }
 }
 
 fn base() -> BitmapSnapshot {
-    crate::tests::fixtures::base()
+    BitmapSnapshot::reference_scene()
 }
 
 fn codes(mutation: &BitmapMutation, snapshot: &BitmapSnapshot) -> Vec<(String, String)> {
     let outcome = <BitmapMutation as protocol::Mutation<BitmapSnapshot>>::diff(mutation, snapshot);
-    outcome.messages().iter().map(|message| (crate::standards::v1::subsets::any::io::text::bitmap_json_encode(&message.level).trim_matches('"').to_string(), message.code.0.clone())).collect()
+    outcome.messages().iter().map(|message| (crate::standards::v1::subsets::any::io::text::snapshot::bitmap_json_encode(&message.level).trim_matches('"').to_string(), message.code.0.clone())).collect()
 }
 
 #[test]

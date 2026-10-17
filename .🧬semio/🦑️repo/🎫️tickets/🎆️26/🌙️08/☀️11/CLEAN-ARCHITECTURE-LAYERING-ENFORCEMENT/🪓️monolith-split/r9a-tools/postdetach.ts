@@ -1,0 +1,20 @@
+// 🔭️ Shows `hostPrivate` for a test file AFTER the test-closure transform (what the decl-tree detach check sees).
+import { existsSync, readFileSync } from "node:fs";
+import { resolve } from "node:path";
+import { parseRustSourceTree, identifierSet } from "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️authoring/📦️crate-tree/🌳️module-tree/🟦️.ts";
+import { transformTestClosure, hostPrivate, declaredNames } from "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️authoring/📦️crate-tree/🧪️test-closure/🟦️.ts";
+import { readCargoLib, topLevelNames } from "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️authoring/📦️crate-tree/🗺️plan/🟦️.ts";
+const repoRoot = "/Users/ueli/Documents/semio";
+const [pkg, testRel, hostRel, hostPathArg] = process.argv.slice(2);
+const lib = readCargoLib(resolve(repoRoot, pkg!, "Cargo.toml"));
+const src = readFileSync(lib.entry, "utf8");
+const tree = parseRustSourceTree(src);
+const names = new Set<string>([...topLevelNames(src, tree.items)].filter(([, item]) => item.kind !== "use").map(([name]) => name));
+for (const node of tree.modules) if (!node.inline) names.add(node.name);
+const result = transformTestClosure(repoRoot, lib.entry, src, names, { fixtures: true, aggregate: true, hoist: true, detach: true } as any);
+const abs = (rel: string) => resolve(repoRoot, rel);
+const testText = result.edits.get(abs(testRel!)) ?? readFileSync(abs(testRel!), "utf8");
+const hostText = result.edits.get(abs(hostRel!)) ?? readFileSync(abs(hostRel!), "utf8");
+console.log(testText.split("\n").slice(0, 14).join("\n").slice(0, 1500));
+const path = hostPathArg ? hostPathArg.split(",") : null;
+console.log(JSON.stringify(hostPrivate(hostText, identifierSet(testText), declaredNames(testText), testText, path), null, 1));

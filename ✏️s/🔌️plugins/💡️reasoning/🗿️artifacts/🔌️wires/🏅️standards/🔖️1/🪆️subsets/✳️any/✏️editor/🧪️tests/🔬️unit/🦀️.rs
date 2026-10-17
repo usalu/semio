@@ -1,5 +1,32 @@
-pub(crate) mod context {
-    use super::super::*;
+use crate::editor::wires::commands::add_node;
+use crate::editor::wires::commands::add_relationship;
+use crate::editor::wires::commands::delete_selection;
+use crate::editor::wires::commands::set_active_example;
+use crate::{editor::wires::commands::canvas_pointer_down, editor::wires::commands::canvas_pointer_move, editor::wires::commands::canvas_pointer_up, editor::wires::commands::node_graph_viewport};
+use crate::editor::wires::modes::edit;
+use crate::WiresMutation;
+use crate::WiresSnapshot;
+use semio_framework::kernel::Effect;
+use semio_framework_plugin::ArtifactOwnedToolJobFactory;
+use semio_framework_plugin::EditorApp;
+use semio_framework_plugin::Fault;
+use semio_framework_plugin::HierarchyProvider;
+use crate::editor::wires::{WIRES_RETAINED_TOOL_IDS, WIRES_RETAINED_RAW_BYTES, WIRES_RETAINED_WORK_ITEMS, WIRES_RETAINED_PUBLICATION_CONTRACTS, WiresRetainedCommandJobFactory};
+pub mod context {
+    use crate::editor::wires::*;
+use crate::editor::wires::commands::add_node;
+use crate::editor::wires::commands::add_relationship;
+use crate::editor::wires::commands::delete_selection;
+use crate::editor::wires::commands::set_active_example;
+use crate::{editor::wires::commands::canvas_pointer_down, editor::wires::commands::canvas_pointer_move, editor::wires::commands::canvas_pointer_up, editor::wires::commands::node_graph_viewport};
+use crate::editor::wires::modes::edit;
+use crate::WiresMutation;
+use crate::WiresSnapshot;
+use semio_framework::kernel::Effect;
+use semio_framework_plugin::ArtifactOwnedToolJobFactory;
+use semio_framework_plugin::EditorApp;
+use semio_framework_plugin::Fault;
+use semio_framework_plugin::HierarchyProvider;
     use semio_framework_plugin::artifact_app_laws::{meta, new_app_with_registry_and_members};
     use semio_framework_plugin::{App, EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
     
@@ -170,16 +197,16 @@ pub(crate) mod context {
     }
 }
 
-use super::*;
+use crate::editor::wires::*;
 use crate::editor::wires::unit_tests::context::{metabolism_app, new_app, render};
 use serde_json::Value;
 
-const RETAINED_ROUTES: &str = include_str!("../🧫️fixtures/🛣️retained-command-routes.json");
+static RETAINED_ROUTES: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../🧪️tests/🧫️fixtures/🛣️retained-command-routes.json"));
 
 #[test]
 fn retained_route_fixture_matches_the_exact_factory_and_fail_closed_census() {
     use semio_framework_plugin::ArtifactOwnedToolJobFactory;
-    let fixture: Value = serde_json::from_str(RETAINED_ROUTES).expect("Wires retained route fixture decodes through serde_json");
+    let fixture: Value = serde_json::from_str((*RETAINED_ROUTES)).expect("Wires retained route fixture decodes through serde_json");
     assert_eq!(fixture.get("maximumRawBytes").and_then(Value::as_u64), Some(WIRES_RETAINED_RAW_BYTES as u64));
     assert_eq!(fixture.get("maximumWorkItems").and_then(Value::as_u64), Some(WIRES_RETAINED_WORK_ITEMS as u64));
     let routes = fixture.get("routes").and_then(Value::as_array).expect("routes");
@@ -269,7 +296,7 @@ async fn commands_keep_their_pre_migration_wire_bytes() {
 }
 
 /// 🧾️ One representative value per row, in declaration (= binary ordinal) order.
-pub(super) fn every_command() -> Vec<WiresCommand> {
+pub(crate) fn every_command() -> Vec<WiresCommand> {
     vec![
         WiresCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "metabolism".into() }),
         WiresCommand::AddNode(add_node::AddNode { kind: "identity".into() }),
@@ -450,7 +477,7 @@ async fn two_instances_converge_disjoint_graph_edits_via_backbone() {
 #[semio_framework_async_macros::async_test]
 async fn reset_document_ownership_wires_preserves_pack_with_an_edit_free_history() {
     use pack::snapshot::ArtifactPack;
-    let expected: Value = serde_json::from_str(include_str!("../🧫️fixtures/♻️reset-document.json")).unwrap();
+    let expected: Value = serde_json::from_str(runtime_fixture_text("../../🧪️tests/🧫️fixtures/♻️reset-document.json")).unwrap();
     let source = crate::empty_wires_snapshot();
     let before = serde_json::from_str::<Value>(&semio_framework_pack_json::to_json_string(&source)).unwrap();
     let Effect::LoadDocument { pack, spr } = reset_wires_document_effect(&source) else {
@@ -475,24 +502,24 @@ fn debug_child_seed_settles() {
         let args = semio_framework_value::DslValue::Object(vec![("kind".into(), semio_framework_value::DslValue::String("identity".into()))]);
         let meta = semio_framework_plugin::ActionMeta { view_state: Some(semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)), ..semio_framework_plugin::artifact_app_laws::meta("acceptance") };
         let result = app.handle_action("addNode", Some(&args), &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
-        eprintln!("[DEBUG] addNode admitted {:?} pending={}", result.as_ref().map(|result| result.output.clone()), app.has_pending_typed_operations());
         for turn in 0..4000 {
             if !app.has_pending_typed_operations() {
-                eprintln!("[DEBUG] settled at turn {turn}");
                 break;
             }
             app.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.preparation).await.expect("[DEBUG] advance");
             while app.take_typed_operation_ui_progress().is_some() {}
             if turn == 1000 || turn == 3999 {
                 let page = app.take_typed_operation_result_page(receiver);
-                eprintln!("[DEBUG] turn {turn} pending={} page={:?} effect={:?}", app.has_pending_typed_operations(), page.as_ref().map(|page| page.lane), app.take_typed_operation_effect().is_some());
                 if let Some(page) = page {
-                    eprintln!("[DEBUG] ack {:?}", app.acknowledge_typed_operation_result(page.token));
                 }
             }
         }
-        eprintln!("[DEBUG] final pending={}", app.has_pending_typed_operations());
-        semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app, receiver, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.map(|receipt| eprintln!("[DEBUG] settle receipt lanes {:?}", receipt.lanes)).unwrap_or_else(|fault| eprintln!("[DEBUG] settle fault {fault:?}"));
+        semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app, receiver, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.map(|receipt| {}).unwrap_or_else(|fault| {});
         semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
     });
+}
+
+fn runtime_fixture_text(relative: &str) -> &'static str {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative);
+    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display())).into_boxed_str())
 }

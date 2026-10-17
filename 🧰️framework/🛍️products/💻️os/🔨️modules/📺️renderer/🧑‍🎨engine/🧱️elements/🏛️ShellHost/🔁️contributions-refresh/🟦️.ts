@@ -22,33 +22,29 @@ import {
 } from "@semio-tech/framework";
 import { contributionsReceiverSessionV1, withProgramEntriesV1 } from "../🪟️spawned-program/🟦️.ts";
 import { MEDIA_TRANSPORT_EXTENSION_ID } from "../../🎬️MediaTransportHost/🟦️.tsx";
-import {
-  type ActiveSession,
-  type ExtraWindowInstance,
-  type LoadedProgramState,
-  localProgramsV1,
-  programPluginIdV1,
-  sessionProgramsV1
-} from "../../🐚️Shell/🟦️.tsx";
+import { type ActiveSession, type LoadedProgramState, localProgramsV1, programPluginIdV1, sessionProgramsV1 } from "../../🐚️Shell/📦️program-sessions/🟦️.ts";
+import { type ExtraWindowInstance } from "../../🐚️Shell/🗃️state-shapes/🟦️.ts";
 import type { ViewModel } from "../../🔌️PluginRuntime/🧷️handle-contract/🟦️.ts";
 import { toolRunTraceCursorViewState } from "../../🌐️World3dHost/⏯️tool-run-trace/🟦️.tsx";
 import {
   applyFrameworkLayoutSeed,
+  flattenPanelTabLeaves,
+  withoutUiRefreshSectionsV1,
+  pluginShouldReceiveContributions,
+  retitleWindowLayoutNode
+} from "../../🛠️ShellHelpers/🛣️route-and-chrome/🟦️.tsx";
+import {
   applyUiRefreshResponseToCache,
   buildActiveUtilityByWindowId,
   buildUiRefreshRequest,
   createUiRefreshCoalescerV1,
   type UiRefreshCoalescerV1,
   uiRefreshAlreadyAnsweredV1,
-  flattenPanelTabLeaves,
   mergeRecordPreservingIdentity,
   mergeUiDirtyScopeV1,
-  withoutUiRefreshSectionsV1,
-  pluginShouldReceiveContributions,
   preserveJsonIdentity,
-  retitleWindowLayoutNode,
   sessionWindowInstances
-} from "../../🛠️ShellHelpers/🟦️.tsx";
+} from "../../🛠️ShellHelpers/🔄️ui-refresh/🟦️.ts";
 // #endregion 🔌️Adapters
 import { retireSkippedWindowBodies } from "../🪟️mounted-window-refresh/🟦️.ts";
 import { createContributionsPublisher, type ContributionsPublishOutcome, type ContributionsSessionKey } from "../../🛠️ShellHelpers/🧩️contributions/🟦️.ts";

@@ -1,6 +1,6 @@
 import { parseViewport3dOrbit, type Viewport3dOrbit } from "@semio-tech/framework/ui/viewport/3d/schema";
-import { parseResultMode, type ResultMode } from "../../../../../../../../../../../../../⚙️engine/🖥️app-surface/🧬️schema/👁️result-mode/🟦️.ts";
-import { parseFemResultsAnimation, type FemResultsAnimation } from "../../../../../../../../../../../../../⚙️engine/🖥️app-surface/🧬️schema/🔣️results-animation/🟦️.ts";
+import { parseResultMode, type ResultMode } from "@semio-tech/fem-js/engine/app-surface/schema/result-mode";
+import { parseFemResultsAnimation, type FemResultsAnimation } from "@semio-tech/fem-js/engine/app-surface/schema/results-animation";
 /** 🧬️ Exact FEM 3D results window configuration. */
 export interface Fem3dResultsWindowConfig {
   camera: Viewport3dOrbit;

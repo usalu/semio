@@ -247,6 +247,3 @@ pub fn addressed(view: &semio_framework_plugin::ViewModel, config: LayoutWindowC
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️window/🦀️.rs"]
-mod tests;

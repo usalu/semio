@@ -1,5 +1,80 @@
+use crate::standards::v_r12::subsets::any::schema::mutations::DxfMutation;
+use crate::standards::v_r12::subsets::any::schema::snapshot::DxfSnapshot;
+use semio_framework_plugin::ArtifactEditor;
+use semio_framework_plugin::Editor;
+use semio_s_artifact_stdio_contract::editing;
+#[allow(unused_imports)]
+use crate::editor::dxf::modes::edit;
+#[allow(unused_imports)]
+use crate::editor::dxf::modes::edit::windows::main;
+#[allow(unused_imports)]
+use semio_framework_plugin::app::InteractionView;
+#[allow(unused_imports)]
+use semio_framework_plugin::{retained_command::ArtifactRetainedCommandInputs, retained_command::ArtifactRetainedCommandJob, retained_command::ArtifactRetainedCommandPayload, retained_command::BoundedArtifactCommandWork};
+#[allow(unused_imports)]
+use semio_framework_plugin::AppOperationContext;
+#[allow(unused_imports)]
+use semio_framework_plugin::ArtifactOwnedToolJobFactory;
+#[allow(unused_imports)]
+use semio_framework_plugin::ArtifactOwnedToolJobRequest;
+#[allow(unused_imports)]
+use semio_framework_plugin::ArtifactToolFactoryRegistry;
+#[allow(unused_imports)]
+use semio_framework_plugin::ArtifactToolPublicationContract;
+#[allow(unused_imports)]
+use semio_framework_plugin::ArtifactToolPublicationLane;
+#[allow(unused_imports)]
+use semio_framework_plugin::ArtifactView;
+#[allow(unused_imports)]
+use semio_framework_plugin::ConfigView;
+#[allow(unused_imports)]
+use semio_framework_artifact_reference::Dialect;
+#[allow(unused_imports)]
+use semio_framework_plugin::DraftView;
+#[allow(unused_imports)]
+use semio_framework_plugin::Emit;
+#[allow(unused_imports)]
+use semio_framework_plugin::Fault;
+#[allow(unused_imports)]
+use semio_framework_ui_locale::Label;
+#[allow(unused_imports)]
+use semio_framework_plugin::NoConfig;
+#[allow(unused_imports)]
+use semio_framework_plugin::NoConfigMutation;
+#[allow(unused_imports)]
+use semio_framework_plugin::NoDraft;
+#[allow(unused_imports)]
+use semio_framework_plugin::NoDraftMutation;
+#[allow(unused_imports)]
+use semio_framework_plugin::NoPresence;
+#[allow(unused_imports)]
+use semio_framework_plugin::NoPresenceMutation;
+#[allow(unused_imports)]
+use semio_framework_plugin::NoTransient;
+#[allow(unused_imports)]
+use semio_framework_plugin::NoTransientMutation;
+#[allow(unused_imports)]
+use semio_framework_artifact_reference::StandardId;
+#[allow(unused_imports)]
+use semio_framework_artifact_reference::SubsetId;
+#[allow(unused_imports)]
+use semio_framework_plugin::ToolExecutionContract;
+#[allow(unused_imports)]
+use semio_framework_plugin::ToolFactoryKey;
+#[allow(unused_imports)]
+use semio_framework_plugin::ToolJobFactory;
+#[allow(unused_imports)]
+use semio_framework_plugin::ToolJobFactoryError;
+#[allow(unused_imports)]
+use semio_framework_plugin::ToolOperationSpec;
+#[allow(unused_imports)]
+use semio_framework_plugin::EditorApp;
+#[allow(unused_imports)]
+use semio_framework_plugin::InteractiveJobClassification;
+#[allow(unused_imports)]
+use semio_framework_2d::compute::EngineHandles;
 use crate::apply_mutation;
-use super::*;
+use crate::editor::dxf::*;
 
 #[semio_framework_async_macros::async_test]
 async fn create_editor_builds_a_definition_for_the_editor_role() {
@@ -18,7 +93,7 @@ async fn editor_and_viewer_share_one_dialect() {
     semio_framework_plugin::artifact_app_laws::assert_editor_and_viewer_share_dialect::<DxfAnyEditor, crate::viewer::dxf::DxfAnyViewer>().await;
 }
 
-semio_framework_plugin::history_edit_acceptance_law!("stdio", super::DxfAnyEditor, || semio_framework_plugin::App { definition: super::create_dxf_any_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️r12/🪆️subsets/📰️header");
+semio_framework_plugin::history_edit_acceptance_law!("stdio", crate::editor::dxf::DxfAnyEditor, || semio_framework_plugin::App { definition: crate::editor::dxf::create_dxf_any_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️r12/🪆️subsets/📰️header");
 
 #[semio_framework_async_macros::async_test]
 async fn details_edits_resolve_to_the_kind_of_the_addressed_row() {

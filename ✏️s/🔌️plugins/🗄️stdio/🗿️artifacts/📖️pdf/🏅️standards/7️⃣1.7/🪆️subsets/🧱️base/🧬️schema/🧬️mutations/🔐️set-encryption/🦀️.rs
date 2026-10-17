@@ -1,6 +1,5 @@
 //! 🔐️ Authoritative PDF mutation payload, diff, inverse, and tests for `set-encryption`.
 
-use super::PdfMutation;
 use crate::standards::v1_7::subsets::base::schema::diff::{self, PdfDiff};
 use crate::standards::v1_7::subsets::base::schema::snapshot::*;
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
@@ -14,7 +13,10 @@ pub struct SetEncryption {
     pub encryption: Option<PdfEncryption>,
 }
 
-impl MutationKind<PdfSnapshot, PdfMutation> for SetEncryption {
+impl<Op> MutationKind<PdfSnapshot, Op> for SetEncryption
+where
+    Op: protocol::Mutation<PdfSnapshot, Diff = PdfDiff> + From<SetEncryption>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "encryption", kind: "set-encryption", record: "Set" };
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
@@ -22,10 +24,10 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetEncryption {
         MutationOutcome::new(diff::diff_set_encryption(base, self.encryption.clone()))
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
         let _ = base;
-        vec![PdfMutation::SetEncryption(SetEncryption { encryption: base.encryption.clone() })]
+        vec![Op::from(SetEncryption { encryption: base.encryption.clone() })]
     
     })())
 }
@@ -42,8 +44,6 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetEncryption {
 //#endregion 🔖️Mutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
 

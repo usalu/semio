@@ -6,7 +6,7 @@
  * ONE one-shot pose delta on release (design §5, decision 2026-09-30 21:36). */
 import { useCallback, useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 import { SPATIAL_AXIS_COLOR_REFS } from "@semio-tech/ui-styling";
-import type { CanvasCamera } from "../🟦️.tsx";
+import type { CanvasCamera } from "../📷️camera-math/🟦️.ts";
 
 /** 📏️ Screen pixels from the pivot to the move knobs; the scale knobs sit at three quarters of it on the diagonals. */
 export const CANVAS2D_GUMBALL_HANDLE_LENGTH = 56;

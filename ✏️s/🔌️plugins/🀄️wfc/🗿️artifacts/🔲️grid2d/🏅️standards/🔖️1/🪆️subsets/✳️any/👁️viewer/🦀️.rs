@@ -203,9 +203,9 @@ impl semio_framework::ToolJobFactory for Grid2dViewCommandJobFactory {
         &mut self,
         _operation: semio_framework_job::Operation,
         payload: Self::Payload,
-        input: semio_framework::action_bus::RetainedToolWireInput,
-        checkpoint: Option<semio_framework::action_bus::RetainedToolWireInput>,
-    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework::action_bus::RetainedToolWireInput, Option<semio_framework::action_bus::RetainedToolWireInput>)> {
+        input: semio_framework_action_bus::RetainedToolWireInput,
+        checkpoint: Option<semio_framework_action_bus::RetainedToolWireInput>,
+    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework_action_bus::RetainedToolWireInput, Option<semio_framework_action_bus::RetainedToolWireInput>)> {
         if input.declared_bytes() > GRID2D_VIEW_RETAINED_RAW_BYTES || checkpoint.is_some() {
             return Err((ToolJobFactoryError::new("bounded wfc grid2d view command rejects oversized wire or unsupported checkpoint owner"), input, checkpoint));
         }
@@ -392,3 +392,19 @@ pub fn create_grid2d_viewer() -> semio_framework_plugin::AppDefinition {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🧩️ArtifactItems
+pub mod artifact_items {
+use semio_framework_artifact_reference::{Dialect, StandardId, SubsetId};
+pub use crate::standards::v1::subsets::any::schema::snapshot::WFC_GRID2D_DOCUMENT_SCHEMA;
+
+//#region 🔖️Dialect
+/// 🪪️ The one `Dialect` coordinate every surface (`✏️editor`, `👁️viewer`) of the `✳️any` subset binds
+/// `ArtifactEditor::DIALECT`/`ArtifactViewer::DIALECT` to. Lives at the ARTIFACT root (never under
+/// `editor`/`viewer`) so a viewer file reads it without importing through the mutation-capable
+/// sibling — `policyViewerPurityBreaches` is watching. NOT `artifact_kind()`'s OS-level
+/// `"2d.wfcgrid2d"` id, which is a different, unrelated namespace.
+pub const WFC_GRID2D_DIALECT: Dialect = Dialect { artifact_kind: WFC_GRID2D_DOCUMENT_SCHEMA, standard: StandardId("1"), subset: SubsetId::ANY };
+//#endregion 🔖️Dialect
+}
+//#endregion 🧩️ArtifactItems

@@ -1,7 +1,6 @@
 //! 🧽️ Authoritative PDF/E mutation for removing the catalog output intent.
 
-use super::set_output_intent::SetOutputIntent;
-use super::PdfEMutation;
+use crate::standards::v1_7::subsets::e::schema::mutations::set_output_intent::SetOutputIntent;
 use crate::standards::v1_7::subsets::base::schema::conformance_support as support;
 use crate::standards::v1_7::subsets::base::schema::diff::{self, PdfDiff};
 use crate::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot;
@@ -13,16 +12,19 @@ use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 #[mutation_leaf(contract = ::protocol)]
 pub struct RemoveOutputIntent {}
 
-impl MutationKind<PdfSnapshot, PdfEMutation> for RemoveOutputIntent {
+impl<Op> MutationKind<PdfSnapshot, Op> for RemoveOutputIntent
+where
+    Op: protocol::Mutation<PdfSnapshot, Diff = PdfDiff> + From<RemoveOutputIntent> + From<crate::standards::v1_7::subsets::e::schema::mutations::set_output_intent::SetOutputIntent>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "remove", entity: "output-intent", kind: "remove-output-intent", record: "Remove" };
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
         MutationOutcome::new(diff::graph_edit(support::remove_catalog_entry_owned_rows(base, "OutputIntents")))
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfEMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         Ok({
-            support::output_intent_identifier(base).map(|identifier| PdfEMutation::SetOutputIntent(SetOutputIntent { identifier, placements: support::placements_of(base, &support::output_intent_creation_ids(base)), entry_index: support::catalog_entry_position(base, "OutputIntents") })).into_iter().collect()
+            support::output_intent_identifier(base).map(|identifier| Op::from(SetOutputIntent { identifier, placements: support::placements_of(base, &support::output_intent_creation_ids(base)), entry_index: support::catalog_entry_position(base, "OutputIntents") })).into_iter().collect()
         })
     }
 
@@ -37,9 +39,7 @@ impl MutationKind<PdfSnapshot, PdfEMutation> for RemoveOutputIntent {
 //#endregion 🔖️Mutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
 
 //#region 🔖️Facets

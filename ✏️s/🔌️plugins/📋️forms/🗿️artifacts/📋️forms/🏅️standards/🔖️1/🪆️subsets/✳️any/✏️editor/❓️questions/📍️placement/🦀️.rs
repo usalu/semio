@@ -34,6 +34,4 @@ pub fn create_question_event(definition: &FormsDefinition, question: FormQuestio
     })
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;
+

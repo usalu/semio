@@ -1,5 +1,5 @@
 use super::*;
-use crate::editor::bim::unit_tests::support::{ctx, demo, run};
+use crate::editor::bim::fixture::support::{ctx, demo, run};
 
 #[semio_framework_async_macros::async_test]
 async fn a_submit_outside_the_retained_route_is_refused_because_no_gesture_can_hear_it() {

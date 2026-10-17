@@ -25,7 +25,8 @@ import {
   type AgentDelegationPhaseV1,
   type AgentDelegationRowV1
 } from "@semio-tech/framework/directory/delegations";
-import { hubUiLabel, type HubAgentCredentialV1, type HubAgentMcpClientV1 } from "../🔗️HubConnection/🟦️.tsx";
+import { hubUiLabel } from "../🔗️HubConnection/🌐️ui-labels/🟦️.ts";
+import { type HubAgentCredentialV1, type HubAgentMcpClientV1 } from "../🔗️HubConnection/🔌️connection-contract/🟦️.ts";
 // #endregion 🔌️Adapters
 
 //#region 🔖️Types

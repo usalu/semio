@@ -7,7 +7,7 @@
       "rust": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🎛️retained-control-commit/🦀️.rs",
       "typescript": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🎛️retained-control-commit/🟦️.ts"
     },
-    "reference": "React's retained path — 🗣️Interpreter/🟦️.tsx (dispatchTrigger per view), 📃️UiDocumentStore/🟦️.tsx (emitIntent: no binding for the trigger => no dispatch), 🛠️ShellHelpers/🟦️.tsx (uiInputField + uiIntentPayload)."
+    "reference": "React's retained path — 🗣️Interpreter/🟦️.tsx (dispatchTrigger per view), 📃️UiDocumentStore/🟦️.tsx (emitIntent: no binding for the trigger => no dispatch), 🛠️ShellHelpers/🌳️tree-windows/🟦️.tsx (uiInputField + uiIntentPayload)."
   },
   "rules": {
     "namedByTrigger": "A gesture's scalar payload is named by its TRIGGER, never by the control that fired it: 'delta' for Trigger::Delta, 'value' for every other trigger (uiInputField).",

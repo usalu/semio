@@ -23,6 +23,10 @@ type playbookPlaybookConfigGuardSizeBounds = { readonly minItems?: number; reado
 
 export const playbookPlaybookConfigGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : playbookPlaybookConfigGuardReject(at, "value is not an object");
+export const playbookPlaybookConfigGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) playbookPlaybookConfigGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const playbookPlaybookConfigGuardArray = (value: unknown, at: string, bounds: playbookPlaybookConfigGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return playbookPlaybookConfigGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) playbookPlaybookConfigGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -53,7 +57,7 @@ export const playbookPlaybookConfigGuardConstant = <T extends string | number | 
 //#endregion 🚪️Parsers
 
 export function parsePlaybookConfig(value: unknown, at = "$"): PlaybookConfig {
-  const row = playbookPlaybookConfigGuardObject(value, at);
+  const row = playbookPlaybookConfigGuardClosed(playbookPlaybookConfigGuardObject(value, at), at, ["contributionsJson"]);
   return {
     contributionsJson: playbookPlaybookConfigGuardString(row["contributionsJson"], `${at}.contributionsJson`),
   };

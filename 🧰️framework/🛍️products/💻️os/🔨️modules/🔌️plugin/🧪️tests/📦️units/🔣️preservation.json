@@ -1,0 +1,78 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "original",
+    "originalSha256",
+    "originalAssertions",
+    "laws",
+    "addedAssertions"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "original": {
+      "type": "string"
+    },
+    "originalSha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "originalAssertions": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "laws": {
+      "type": "array",
+      "minItems": 214,
+      "maxItems": 214,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "source",
+          "sha256",
+          "assertions"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "source": {
+            "type": "string",
+            "minLength": 1
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "assertions": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "originalSha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "originalAssertions": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "originalName": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "addedAssertions": {
+      "type": "integer",
+      "minimum": 0
+    }
+  }
+}

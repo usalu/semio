@@ -28,11 +28,9 @@ test("Semio Text every original field, empty group, NUL UTF8 and signed relation
   expect(1+runs.length+Number((db.query("SELECT count(*) count FROM semio_text_mark").get()as{count:number}).count)).toBe(item.rows);
   expect(await reconstruct(await importSqliteDatabase(db.serialize()))).toEqual(input);
  }finally{db.close();}}}
- console.log("[DEBUG] Semio Text all complete fields/3tables, empty groups, all4tags, nonlink hrefs, NUL UTF8 and signed IDs independently witnessed");
 });
 test("Semio Text independent malformed relationships and changed complete fields",async()=>{
  const input=contract.cases[2]!.snapshot as SemioTextSnapshot,original=await project(input);
  for(const edit of contract.edits){const db=Database.deserialize(await exportSqliteDatabase(original));try{db.exec("PRAGMA foreign_keys=OFF;PRAGMA ignore_check_constraints=ON");db.exec(edit.sql);const database=await importSqliteDatabase(db.serialize());if(edit.reconstruct==="invalid")await expect(reconstruct(database)).rejects.toThrow();else expect(await reconstruct(database)).not.toEqual(input);}finally{db.close();}}
- console.log("[DEBUG] Semio Text fourteen independent SQLite malformed/changed field edits preserve complete semantic distinction");
 });
 

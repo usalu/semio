@@ -1,4 +1,4 @@
-use super::MoveNodes;
+use crate::standards::v1::subsets::graph::schema::mutations::move_nodes::MoveNodes;
 use crate::{EquationMutation, EquationSnapshot};
 
 /// ⚖️ Moving a middle subset of nodes inverts to absolute positions whose diffs sum to the negative diff.

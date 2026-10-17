@@ -1,0 +1,66 @@
+{
+ "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts",
+ "importers": "auto",
+ "children": [
+  {
+   "dir": "🪪️entity-foundation",
+   "doc": "/** 🪪️ ProgramSnapshot artifact schema: the program meta, project definition, entity header and the vocabulary every register family shares. */",
+   "names": [
+    "TextField",
+    "TimestampMeta",
+    "ProgramMeta",
+    "Priority",
+    "Ownership",
+    "ProjectDefinition",
+    "LifecycleStatus",
+    "TaggedNote",
+    "EntityHeader",
+    "QuantitySpec",
+    "TraceKind",
+    "TraceLink",
+    "SeparationKind",
+    "ValidationStatus",
+    "AccessLevel",
+    "RiskLevel",
+    "IssueSeverity",
+    "DeliveryPhase"
+   ]
+  },
+  {
+   "dir": "🏗️program-structure",
+   "doc": "/** 🏗️ ProgramSnapshot artifact schema: the stakeholder, user, activity, function, element, quantity, relationship, adjacency, process, flow and access-rule entities. */",
+   "lines": [
+    [
+     102,
+     429
+    ]
+   ]
+  },
+  {
+   "dir": "📋️requirements",
+   "doc": "/** 📋️ ProgramSnapshot artifact schema: the operational, resource, human-factor, safety, security, site, service, schedule, sustainability, cost and delivery requirement entities. */",
+   "lines": [
+    [
+     431,
+     1025
+    ]
+   ]
+  },
+  {
+   "dir": "🗃️decision-records",
+   "doc": "/** 🗃️ ProgramSnapshot artifact schema: the risk, conflict, requirement, decision, quality, compliance, collaboration, audit, knowledge and benchmark entities and the governance record. */",
+   "lines": [
+    [
+     1027,
+     1705
+    ]
+   ]
+  }
+ ],
+ "allowManual": [
+  "export * from parent"
+ ],
+ "allowBare": [
+  "/📸️snapshot/🟦️.ts"
+ ]
+}

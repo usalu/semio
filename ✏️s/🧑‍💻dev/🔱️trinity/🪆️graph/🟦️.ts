@@ -1,6 +1,6 @@
 /** 🔱️ Specific installation interprets Semio graph literals for intrinsic Jack queries. */
-import type {ArtifactChild,JackGraphQuery,JackFlatPositionUv} from "./../../../🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🟦️.ts";
-import type {SemioGraphSnapshot,SemioGraphEdge} from "./../../../🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🟦️.ts";
+import type {ArtifactChild,JackGraphQuery,JackFlatPositionUv} from "@semio-tech/trinity-jack/source";
+import type {SemioGraphSnapshot,SemioGraphEdge} from "@semio-tech/stdio-semio/source";
 import {ValueError} from "../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/⚠️refusal/🟦️.ts";
 function offset(edge:SemioGraphEdge,key:string):number {
  const values=edge.properties.filter(value=>value.key===key);if(values.length>1)throw new ValueError("invalidValue","Jack flattened offset requires unique property key");const value=values[0]?.value;if(value===undefined)return 0;

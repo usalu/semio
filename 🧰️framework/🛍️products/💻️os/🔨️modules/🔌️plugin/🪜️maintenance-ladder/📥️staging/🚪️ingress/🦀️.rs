@@ -1,8 +1,22 @@
 //! 🗜️ Staged slice of the `ingress` band of the mounted artifact instance: its `instance-ladders` members (WP6 step S0 of the instance family).
 //!
 //! 🚪️ Ingress of the mounted artifact instance: framework-reserved job driving, constructors, store-constructor units, envelope ingress and decode, document archive genesis and merge, child members and packs.
-use super::*;
-use crate::tool_jobs::time_travel;
+use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use pack::snapshot::ArtifactPack;
+use semio_framework_plugin_decl_emission::Emit;
+use semio_framework::{Fault, FaultFrom};
+use std::future::Future;
+use semio_framework_plugin_instance_extension::InstanceExtension;
+use crate::ladder_bundle::{LadderCtx, LadderRef};
+use store::{MemberFactory, Mutation, SpaceMember};
+use protocol::OpText;
+use semio_framework_plugin_reactor_app::PluginApp;
+use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
+use semio_framework_value::{RetirementDemand, ValueError};
+use semio_framework_plugin_composition_emission::root::{advance_original_child_root_retirement, original_child_root_retirement_demands};
+use semio_framework_ui_contract::*;
+use semio_framework_plugin_time_travel as time_travel;
 
 impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceExtension> LadderCtx<'ctx, A, M, X> {
     /// 🌳️ Supplies the exact live and saved previews to the common original child disposer.
@@ -13,7 +27,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
     }
 
     /// 🎟️ Advances one child-member retirement under the caller's unchanged grant.
-    pub(super) fn child_member_retirement_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneProgress, Fault> {
+    pub fn child_member_retirement_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneProgress, Fault> {
         self.child_composition.child_member_retirement_unit(grant, self.close.close_child_root_detached).map(|step| step.progress())
     }
 }
@@ -32,19 +46,19 @@ impl<'v, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceEx
     }
 
     /// 📏️ Quotes the next child-root retirement turn; nothing is owed once the registry and its backing are gone.
-    pub(super) fn child_root_retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
+    pub fn child_root_retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
         Ok(self.child_root_retirement_quote(body, self.close.close_child_root_detached)?.unwrap_or_default())
     }
 
     /// 📏️ Quotes the next child-member retirement turn; nothing is owed once the registry and its backing are gone.
-    pub(super) fn child_member_retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
+    pub fn child_member_retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
         Ok(self.child_composition.child_member_retirement_quote(body, self.close.close_child_root_detached)?.unwrap_or_default())
     }
 }
 
 impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceExtension> LadderCtx<'ctx, A, M, X> {
     /// 🎟️ Advances one child-root retirement under the caller's unchanged grant.
-    pub(super) fn child_root_retirement_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneProgress, Fault> {
+    pub fn child_root_retirement_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneProgress, Fault> {
         self.child_root_retirement_unit(grant, self.close.close_child_root_detached).map(|step| step.progress())
     }
 }

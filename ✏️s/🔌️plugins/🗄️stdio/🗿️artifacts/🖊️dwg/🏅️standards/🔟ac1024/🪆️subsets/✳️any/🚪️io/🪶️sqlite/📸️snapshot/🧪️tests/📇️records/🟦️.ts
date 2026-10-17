@@ -14,6 +14,6 @@ test("DWG all seven symbol-table record variants retain every typed scalar, tupl
   try{
     expect(n.query("PRAGMA integrity_check").get()).toEqual({integrity_check:"ok"});expect(n.query("PRAGMA foreign_key_check").all()).toEqual([]);expect(await read()).toEqual(records);expect(n.query("SELECT kind FROM dwg_table_record ORDER BY id").all()).toEqual(fixture.kinds.map(kind=>({kind})));
     n.run(fixture.independentEdit);const edited=await read();const v=edited[5]!,d=edited[6]!;if(v.kind!=="viewport"||d.kind!=="dimensionStyle")throw new Error("recordkind");expect(v.value.gridMajor).toBe(17);expect(d.value.dimensionPostfix).toBe("edited");
-    n.run("UPDATE dwg_linetype_dash SET ordinal=0 WHERE id=2");expect(n.query("PRAGMA integrity_check").get()).toEqual({integrity_check:"ok"});await expect(read()).rejects.toThrow();console.log("[DEBUG] DWG seven symbol records preserve native widths, fixed tuples, exact IEEE and full-u64 references");
+    n.run("UPDATE dwg_linetype_dash SET ordinal=0 WHERE id=2");expect(n.query("PRAGMA integrity_check").get()).toEqual({integrity_check:"ok"});await expect(read()).rejects.toThrow();
   }finally{n.close();}
 },20000);

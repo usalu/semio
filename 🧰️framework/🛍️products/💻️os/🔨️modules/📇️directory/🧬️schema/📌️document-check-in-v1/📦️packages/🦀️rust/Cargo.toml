@@ -1,0 +1,29 @@
+[package]
+workspace = "../../../../../../../../.."
+name = "semio-framework-os-directory-check-in"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Directory document Check In wire contract and its canonical text IO"
+
+[package.metadata.semio]
+role = "framework"
+id = "os-directory-check-in"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-value-derive = { path = "../../../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust" }
+semio-framework-pack-json = { path = "../../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-framework-os-directory-schema = { path = "../../../📦️packages/🦀️rust" }
+serde = { version = "1.0.219", features = ["derive"] }

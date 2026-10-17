@@ -6,11 +6,20 @@
   "description": "@semio-tech/block-js authored owner test infrastructure.",
   "type": "module",
   "private": true,
+  "exports": {
+    ".": "./🟦️.ts",
+    "./schema/document-fields": "./🧬️schema/🧱️document-fields/🟦️.ts",
+    "./schema/document-fields/io/json": "./🧬️schema/🧱️document-fields/🚪️io/🔣️json/🟦️.ts",
+    "./schema/document-fields/scalar": "./🧬️schema/🧱️document-fields/📐️scalar/🟦️.ts",
+    "./schema/document-fields/sqlite": "./🧬️schema/🧱️document-fields/🪶️sqlite/🟦️.ts"
+  },
   "scripts": {
     "test": "bun --cwd \"../../../../..\" repo run @semio-tech/block-js:test",
     "shared-schema": "bun --cwd \"../../../../..\" repo run @semio-tech/block-js:shared-schema"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@semio-tech/s-dev-block-ts": "workspace:*"
+  },
   "devDependencies": {
     "typescript": "^5.9.3",
     "@semio-tech/framework": "workspace:*"

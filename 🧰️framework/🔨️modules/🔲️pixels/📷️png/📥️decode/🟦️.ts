@@ -1,7 +1,7 @@
 /** 📥️ Budgeted PNG reconstruction with private RGBA publication. */
 import type {RetainedCloneGrant,RetainedCloneProgress} from "@semio-tech/value-ts/retained-clone/contract";
 import {validateExtent,type PixelImage} from "../../✍️editing/🟦️.ts";
-import {InflateCursor} from "../../../🗜️deflate/📥️decode/🟦️.ts";
+import {InflateCursor} from "@semio-tech/framework-deflate-ts/decode";
 export type PngDecodeInput={data:Uint8Array;maxPixels:number;maxBytes:number;maxChunks:number};
 export type PngDecodeProgress={phase:"chunks"|"allocation"|"inflating"|"pixels"|"complete"|"transferred";bytes:number;totalBytes:number;pixels:number;totalPixels:number;work:number;done:boolean};
 export type PngDecodeOptions={workGrant:RetainedCloneGrant;signal?:AbortSignal;workBudget?:number;onProgress?:(progress:PngDecodeProgress)=>void};

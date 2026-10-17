@@ -1,7 +1,6 @@
 //! 🆕️ `create-tile` mutation payload — adds a new figure tile crop to `tiles`.
 
 use crate::diff::PresentationDiff;
-use crate::mutations::PresentationMutation;
 use crate::{FigureTileDraft, PresentationSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 
@@ -20,14 +19,17 @@ pub struct CreateTile {
     pub tile: FigureTileDraft,
 }
 
-impl MutationKind<PresentationSnapshot, PresentationMutation> for CreateTile {
+impl<Op> MutationKind<PresentationSnapshot, Op> for CreateTile
+where
+    Op: protocol::Mutation<PresentationSnapshot, Diff = PresentationDiff> + From<CreateTile> + From<crate::standards::v1::subsets::any::schema::mutations::delete_tile::DeleteTile>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "tile", kind: "create-tile", record: "CreatedTile" };
 
     fn diff(&self, base: &PresentationSnapshot) -> protocol::MutationOutcome<PresentationDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &PresentationSnapshot) -> Result<Vec<PresentationMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &PresentationSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

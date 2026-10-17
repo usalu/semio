@@ -18,7 +18,7 @@ async fn gis3d_terrain_change_exaggeration_op_line_round_trips() {
 
 #[semio_framework_async_macros::async_test]
 async fn gis3d_terrain_change_imported_features_op_line_round_trips() {
-    store::os_store::test_support::assert_op_line_round_trip(&GisTerrainMutation::ChangeImportedFeatures(ChangeImportedFeatures { new_imported_map: Some(crate::schema::ImportedMap::from_json(r#"{"positions":[]}"#).unwrap()) }));
+    store::os_store::test_support::assert_op_line_round_trip(&GisTerrainMutation::ChangeImportedFeatures(ChangeImportedFeatures { new_imported_map: Some(crate::schema::imported_map::ImportedMap::from_json(r#"{"positions":[]}"#).unwrap()) }));
 }
 
 #[semio_framework_async_macros::async_test]

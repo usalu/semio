@@ -30,3 +30,42 @@ pub fn layout() -> WindowLayout {
     }
 }
 //#endregion 🔖️Definition
+
+//#region 🧩️ArtifactItems5
+pub mod artifact_items_5 {
+use crate::{STDIO_XML_DOCUMENT_SCHEMA};
+pub use crate::schema::mutations::XmlMutation;
+pub use crate::schema::snapshot::XmlSnapshot;
+
+pub fn native_codec() -> store::os_store::serialization::ArtifactCodec {
+    let mut codec = store::artifact_codec::<XmlSnapshot, XmlMutation>(STDIO_XML_DOCUMENT_SCHEMA);
+    codec.extension = "xml";
+    codec.pack_schema_hash = semio_framework_hash::Sha256::digest(include_bytes!("../../../🚪️io/💾️binary/📸️snapshot/📡️.protocol.semio"));
+    codec
+}
+}
+//#endregion 🧩️ArtifactItems5
+
+//#region 🧩️ArtifactItems6
+pub mod artifact_items_6 {
+use crate::{artifact_kind};
+use crate::{native_codec};
+
+pub fn native_codecs() -> Vec<semio_s_artifact_stdio_contract::NativeCodecFactory> {
+    vec![semio_s_artifact_stdio_contract::NativeCodecFactory { id: "stdio.native.xml.v1", artifact: "xml", kind: artifact_kind, codec: native_codec }]
+}
+}
+//#endregion 🧩️ArtifactItems6
+
+//#region 🧩️ArtifactItems7
+pub mod artifact_items_7 {
+use crate::{native_codecs};
+use crate::{ARTIFACT_DEFINITION_SCHEMA};
+
+pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::PluginAssemblyError> {
+    let factories = native_codecs();
+    let executables = semio_s_artifact_stdio_contract::native_codec_executables(ARTIFACT_DEFINITION_SCHEMA, &factories)?;
+    semio_s_artifact_stdio_contract::definition_from_schema_with_executables(ARTIFACT_DEFINITION_SCHEMA, executables)
+}
+}
+//#endregion 🧩️ArtifactItems7

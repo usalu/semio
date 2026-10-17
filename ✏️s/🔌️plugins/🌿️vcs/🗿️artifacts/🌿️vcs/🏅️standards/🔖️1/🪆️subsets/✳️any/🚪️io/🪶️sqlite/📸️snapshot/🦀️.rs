@@ -7,7 +7,7 @@ fn invalid(message:impl Into<String>)->ValueError{ValueError::new(semio_framewor
 
 
 const TABLES:[(&str,usize);2]=[("vcs_document",6),("vcs_tag",4)];
-fn extent(limits:SqliteDatabaseLimits)->Result<(),ValueError>{let bytes=VcsSnapshot::SQLITE_SCHEMA.split(';').map(str::trim).filter(|sql|!sql.is_empty()).try_fold(0usize,|sum,sql|sum.checked_add(sql.len()).ok_or_else(||invalid("VCS schema byte overflow")))?;let bytes=TABLES.iter().try_fold(bytes,|sum,(name,_)|sum.checked_add(name.len()).ok_or_else(||invalid("VCS table-name byte overflow")))?;if bytes>limits.max_schema_bytes||TABLES.len()>limits.max_tables||TABLES.iter().any(|(_,width)|*width>limits.max_columns)||limits.max_rows<1{return Err(invalid("VCS authored schema extent exceeds caller limits"))}Ok(())}
+pub fn extent(limits:SqliteDatabaseLimits)->Result<(),ValueError>{let bytes=VcsSnapshot::SQLITE_SCHEMA.split(';').map(str::trim).filter(|sql|!sql.is_empty()).try_fold(0usize,|sum,sql|sum.checked_add(sql.len()).ok_or_else(||invalid("VCS schema byte overflow")))?;let bytes=TABLES.iter().try_fold(bytes,|sum,(name,_)|sum.checked_add(name.len()).ok_or_else(||invalid("VCS table-name byte overflow")))?;if bytes>limits.max_schema_bytes||TABLES.len()>limits.max_tables||TABLES.iter().any(|(_,width)|*width>limits.max_columns)||limits.max_rows<1{return Err(invalid("VCS authored schema extent exceeds caller limits"))}Ok(())}
 
 fn visit_rows(snapshot:&VcsSnapshot,out:&mut RowWriter<'_,'_>)->Result<(),ValueError>{
  out.check_rows(snapshot.tags.len().checked_add(1).ok_or_else(||invalid("VCS semantic row count overflow"))?)?;
@@ -75,6 +75,3 @@ fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotCont
  }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;

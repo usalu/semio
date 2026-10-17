@@ -50,6 +50,10 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     capability: { status: "ready", reason: null },
     hostContentHeight: 240,
   });
+  /** 🎞️ The browser oracle admits only the two media kinds the transport host renders. */
+  /** 🎞️ The browser oracle selects one closed millisecond interval. */
+  const selectionPair = (value: readonly number[]): readonly [number, number] => { if (value.length !== 2) throw new Error(`The oracle fixture names ${value.length} selection bounds`); return [value[0]!, value[1]!]; };
+  const mediaKind = (value: string): "audio" | "video" => { if (value === "audio" || value === "video") return value; throw new Error(`The oracle fixture names the media kind ${JSON.stringify(value)}`); };
   const status = (state: "running" | "complete" | "cancelled" | "failed", progress = 0n) => ({ handle, state, applied_progress: progress, checkpoint_available: false, mime_type: fixture.media.mediaType, total_bytes: BigInt(fixture.output.totalBytes), detail: state });
   const makePort = () => {
     const polls = [status("running", 1n), status("running", 2n), status("complete", 2n)];
@@ -174,7 +178,9 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         const page = await browser.newPage();
         await page.setContent('<div id="root"></div>');
         await page.addScriptTag({ content: bundle.outputFiles[0]!.text });
-        await page.evaluate((input) => window.mountMediaTransportOracle(input), fixture);
+        const outputPort = fixture.identity.outputPort;
+        if (outputPort !== "playback:out") throw new Error(`The oracle fixture names the output port ${JSON.stringify(outputPort)}, not playback:out`);
+        await page.evaluate((input) => window.mountMediaTransportOracle(input), { ...fixture, identity: { ...fixture.identity, outputPort: "playback:out" as const }, media: { ...fixture.media, kind: mediaKind(fixture.media.kind), selection: selectionPair(fixture.media.selection) } });
         await page.waitForFunction(() => (document.querySelector("audio")?.readyState ?? 0) >= 1);
         const observed = await page.locator('[data-media-state="ready"]').evaluate((host) => {
           const media = host.querySelector("audio,video") as HTMLMediaElement | null;
@@ -189,9 +195,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
           };
         });
         expect(observed).toEqual({ tag: "AUDIO", autoplay: false, paused: true, labels: ["Seek", "Selection start", "Selection end"], ranges: [["0", "1000", "250"], ["0", "899", "100"], ["101", "1000", "900"]], window: fixture.identity.windowId });
-        const decoded = await page.evaluate(() => { const audio = document.querySelector("audio")!; console.debug(`[DEBUG] React media Chromium decoded ${audio.duration}s initial=${audio.currentTime}s`); return { duration: audio.duration, position: audio.currentTime }; });
+        const decoded = await page.evaluate(() => { const audio = document.querySelector("audio")!;  return { duration: audio.duration, position: audio.currentTime }; });
         expect(decoded).toEqual({ duration: 1, position: 0.25 });
-        console.debug(`[DEBUG] React media Chromium decoded ${decoded.duration}s initial=${decoded.position}s`);
         expect(await page.evaluate(() => window.mediaTransportCalls)).toEqual([
           `submit:${fixture.identity.instanceId}:${fixture.identity.outputPort}:${fixture.identity.parentDocumentId}:${fixture.identity.revision}`,
           "poll:0", "poll:1", "poll:2", "chunk:0", "chunk:1",

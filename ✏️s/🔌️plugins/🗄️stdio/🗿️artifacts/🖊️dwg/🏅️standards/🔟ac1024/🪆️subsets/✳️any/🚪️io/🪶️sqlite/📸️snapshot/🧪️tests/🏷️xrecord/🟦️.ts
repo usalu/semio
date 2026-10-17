@@ -61,7 +61,6 @@ test("DWG eleven XRecord and nine color variants are relational and exact throug
     expect(await read(native)).toEqual({values,colors});
     native.run("UPDATE dwg_xrecord_binary_octet SET value=99 WHERE ordinal=2");native.run("UPDATE dwg_visual_face_monochrome_color SET green=18 WHERE id=4");
     const edited=await read(native);expect(edited.values[8]).toEqual({kind:"binary",groupCode:310,octets:[0,255,99,0]});expect(edited.colors[3]!.value).toEqual({kind:"byColor",red:0,green:18,blue:17});
-    console.log("[DEBUG] DWG explicit XRecord/color SQL queries, edits and IEEE/u64 identities verified");
   }finally{native.close();}
 },30000);
 test("DWG XRecord ownership and incoherent typed fields reject after SQLite editing",async()=>{

@@ -432,7 +432,7 @@ fn render_canvas2d_packet_item(item: &Canvas2dPacketItem<'_>, viewport: &Viewpor
 }
 
 /// 📷️ Resolves one framing revision after layout and publishes its resulting local camera.
-fn apply_canvas_framing(scene: &UiComponentSceneNode, bounds: Rect) -> bool {
+pub fn apply_canvas_framing(scene: &UiComponentSceneNode, bounds: Rect) -> bool {
     let Some(request) = scene.canvas_2d.as_ref().and_then(|canvas| canvas.framing.as_ref()) else { return false };
     if scene_state(&scene.host_id).canvas_framing_revision == Some(request.revision) {
         return false;
@@ -753,7 +753,7 @@ const CANVAS_GRADIENT_MIN_PIECE: f64 = 2.0;
 const CANVAS_GRADIENT_PIECE_LIMIT: usize = 4096;
 
 /// 🫙️ The literal `📐️Canvas2dHost` paints in an empty canvas (`🟦️.tsx:634`).
-const CANVAS_2D_EMPTY_LABEL: &str = "Empty canvas";
+pub const CANVAS_2D_EMPTY_LABEL: &str = "Empty canvas";
 
 /** 🧾️ Reserves the fixed raster ledger before source preparation or the one-backing decoder. */
 /// 🖼️📥️ Queues ONE already-decoded RGBA8 bitmap under its own verbatim `key` — everything
@@ -1041,13 +1041,7 @@ fn canvas_circle_points(cx: f32, cy: f32, radius: f32, segments: usize) -> Vec<[
  * `"rgba(251, 191, 36, 0.95|0.28)"` strings in `canvas-2d-host.tsx` — an amber that isn't backed by
  * any `Theme` token, so it's kept local to this region rather than mapped onto `theme.accent`
  * (which resolves to the app's red/crimson accent and previously made the ring the wrong hue). */
-const CANVAS2D_SELECTION_RING: Rgba = Rgba::new(0.984_314, 0.749_02, 0.141_176, 0.95);
-const CANVAS2D_SELECTION_GLOW: Rgba = Rgba::new(0.984_314, 0.749_02, 0.141_176, 0.28);
+pub const CANVAS2D_SELECTION_RING: Rgba = Rgba::new(0.984_314, 0.749_02, 0.141_176, 0.95);
+pub const CANVAS2D_SELECTION_GLOW: Rgba = Rgba::new(0.984_314, 0.749_02, 0.141_176, 0.28);
 
 //#endregion Canvas2d
-
-//#region Canvas2dTests
-#[cfg(test)]
-#[path = "../../../🧪️tests/🔬️wgpu-canvas2d/🦀️.rs"]
-mod canvas2d_tests;
-//#endregion Canvas2dTests

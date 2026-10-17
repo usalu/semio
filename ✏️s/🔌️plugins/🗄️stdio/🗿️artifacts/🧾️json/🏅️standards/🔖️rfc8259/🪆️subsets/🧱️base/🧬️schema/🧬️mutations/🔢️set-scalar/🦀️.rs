@@ -40,6 +40,4 @@ impl protocol::MutationKind<JsonSnapshot, super::JsonMutation> for SetScalarMuta
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

@@ -49,7 +49,6 @@ test("original job budget consumes only actual independent retained receipts", (
   const source=readFileSync(new URL("../../../🦀️.rs",import.meta.url),"utf8");
   for(const method of ["pub retained: RetainedCloneGrant","pub fn retained_grant","pub fn consume_retained","pub fn retained_progress"])expect(source).toContain(method);
   expect(source).toContain("budget.retained");
-  console.log("[DEBUG] original job neutral retained wallet RFC6902 and UTF8 byte oracle preserve all independent axes beside fuel/deadline");
 });
 
 test("retained context constructor accepts the original full grant and returns its actual birth receipt",()=>{

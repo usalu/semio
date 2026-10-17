@@ -1,4 +1,5 @@
-use super::*;
+use semio_framework_ui_scene::GraphTimelineScene;
+use crate::editor::vcs::modes::edit::windows::history::*;
 use crate::editor::vcs::unit_tests::context::{app, render as render_body};
 
 /// 🗄️ The history window is a PACKED `graph-timeline` surface now — its `HistoryColumn[]` travels as

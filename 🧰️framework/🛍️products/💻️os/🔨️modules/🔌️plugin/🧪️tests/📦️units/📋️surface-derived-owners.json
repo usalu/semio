@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "macroSource": "🧰️framework/🔨️modules/🌱️value/✨️derive/🧵️canonical/🦀️.rs",
+  "trait": "ArtifactCanonicalJsonTree",
+  "consumer": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🪟️surface-fixture/📦️packages/🦀️rust/Cargo.toml",
+  "owners": [
+    {
+      "identifier": "semio_framework_pack_json",
+      "package": "semio-framework-pack-json",
+      "manifest": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust/Cargo.toml",
+      "sources": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🧬️mutation-fixtures/🪟️surface/🧬️mutations/🦀️.rs",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🧬️mutation-fixtures/🪟️surface/🧬️mutations/📝️set-surface-count/🦀️.rs"
+      ]
+    }
+  ]
+}

@@ -1,8 +1,9 @@
 use super::*;
+use semio_framework_test_fixtures::fixture_text;
 
 //#region 🧪️DocumentComparison
 fn fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap()
+    serde_json::from_str(fixture_text!("../../⚖️compare/📃️document/🧪️tests/🧫️fixtures/🔣️.json")).unwrap()
 }
 fn document(component: crate::Component) -> UiDocumentLease {
     let fixture = fixture();
@@ -58,7 +59,7 @@ fn start(lease: UiDocumentLease, component: crate::Component) -> UiDocumentCompo
 #[test]
 fn retained_document_component_compare_reads_exact_lease_without_copy_and_preserves_wire_order() {
     let fixture = fixture();
-    let components: serde_json::Value = serde_json::from_str(include_str!("../../../../♻️retirement/🌳️typed/🧩️components.json")).unwrap();
+    let components: serde_json::Value = serde_json::from_str(fixture_text!("../../♻️retirement/🌳️typed/🧩️components.json")).unwrap();
     for row in components["cases"].as_array().unwrap() {
         for grant in fixture["grants"].as_array().unwrap() {
             let mut keeper = document(serde_json::from_value(row["component"].clone()).unwrap());

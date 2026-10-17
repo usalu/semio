@@ -1,5 +1,5 @@
 /** 📡️ Exact document-port controls and bounded ownership shared by every renderer and actor host. */
-import { decodeBackboneMessage } from "../🟦️.ts";
+import { decodeBackboneMessage } from "../🔀️message/🟦️.ts";
 import { encodePackValue, packUInt } from "../../🎁️packs/🟦️.ts";
 
 export const DOCUMENT_BACKBONE_BINDING_SCHEMA_V1 = "semio.plugin.document-backbone-binding.v1";

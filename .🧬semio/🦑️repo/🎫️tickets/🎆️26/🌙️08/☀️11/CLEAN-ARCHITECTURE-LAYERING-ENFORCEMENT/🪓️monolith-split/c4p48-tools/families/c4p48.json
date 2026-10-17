@@ -1,0 +1,12 @@
+{
+ "name": "c4p48",
+ "crates": [
+  "semio-framework-repo-dashboard-registry",
+  "semio-framework-repo-goals",
+  "semio-framework-repo-graphql-schema",
+  "semio-framework-repo-graphql-fs",
+  "semio-framework-repo-coordinator",
+  "semio-framework-repo-codebase"
+ ],
+ "note": "CENSUS4-PKG-48: the six repo product crates that own the six split files"
+}

@@ -1,13 +1,9 @@
 //! 🚪️ Artifact representation module ownership.
 
-#[path = "📸️snapshot/🦀️.rs"]
-pub mod snapshot;
+pub use semio_s_artifact_gis_gisterrain_schema::standards::v1::subsets::any::io::binary::snapshot;
 
-#[path = "🧬️mutations/🦀️.rs"]
-pub mod mutations;
 
-#[path = "🔺️diff/🦀️.rs"]
-pub mod diff;
 
-#[path = "💡️inferences/🦀️.rs"]
-pub mod inferences;
+
+
+

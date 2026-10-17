@@ -29,5 +29,4 @@ test("actual TextError source boundary preserves original owned ValueError kind 
     sourceSpan.line = 99;
     assert.equal(error.kind, row.kind); assert.equal(error.message, row.message); assert.deepEqual(error.span, row.span); assert.deepEqual(error.toWire(), row.expectedWire); assert.equal(error.toString(), row.expectedDisplay);
   }
-  console.log("[DEBUG] TextError actual portable boundary retains eight kinds, exact span and dotted message without prose classification");
 });

@@ -66,7 +66,6 @@ describe("cli journeys", () => {
     expect(stopped.status).toBe("exited");
     expect(stopped.readyUrl).toBeNull();
     expect(await refused(`http://127.0.0.1:${ws.portA}/health`)).toBe(true);
-    console.log(`[DEBUG] a pending HTTP probe kept control responsive and stopped with ${task.session}`);
   }, 120_000);
   test("A detached server prints its address once it is ready", async () => {
     const ws = await workspace("detached");

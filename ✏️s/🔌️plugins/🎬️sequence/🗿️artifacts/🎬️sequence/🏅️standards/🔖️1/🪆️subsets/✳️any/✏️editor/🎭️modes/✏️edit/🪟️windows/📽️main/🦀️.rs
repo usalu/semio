@@ -1,7 +1,7 @@
 //! 📽️ Sequence play app — the main node-graph window: the editable step/flow canvas.
 
 use super::config::SequenceMainWindowConfig;
-use crate::editor::sequence::host_from_host_snapshot;
+use crate::editor::sequence::host::host_from_host_snapshot;
 use crate::SequenceHostSnapshot;
 use semio_framework_plugin::BuiltNode;
 use semio_framework_ui_locale::LocalizedLabel;
@@ -45,7 +45,7 @@ pub fn definition() -> WindowKindDefinition {
 
 //#region 🔖️Helpers
 /// 🎯️ Single consumer (this window's `render`), so it lives here rather than the artifact engine.
-fn split_endpoint(endpoint: &str) -> (String, String) {
+pub fn split_endpoint(endpoint: &str) -> (String, String) {
     endpoint.split_once('@').map_or_else(|| (endpoint.to_string(), "next".into()), |(node, port)| (node.to_string(), port.to_string()))
 }
 
@@ -96,7 +96,4 @@ pub fn render(host_snapshot: &SequenceHostSnapshot, config: &SequenceMainWindowC
 //#endregion 🔖️Render
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

@@ -190,5 +190,4 @@ export function interactivityToolRunPolicySelfTests(): number {
 if(import.meta.main){
   const cases=interactivityToolRunPolicySelfTests();
   assert.equal(cases,29);
-  console.log(`[DEBUG] Complete Repository ToolRun policy original cases=${cases}`);
 }

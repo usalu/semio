@@ -72,7 +72,5 @@ pub fn render(document: &SemioFlowSnapshot) -> semio_framework_plugin::UiAssembl
 //#endregion 🔖️Render
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

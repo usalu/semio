@@ -8,16 +8,16 @@ use super::*;
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 pub struct SetComment {
-    pub(crate) topic_guid: String,
-    pub(crate) guid: String,
+    pub topic_guid: String,
+    pub guid: String,
     #[value(default, skip_serializing_if = "Option::is_none")]
-    pub(crate) date: Option<String>,
+    pub date: Option<String>,
     #[value(default, skip_serializing_if = "Option::is_none")]
-    pub(crate) author: Option<String>,
+    pub author: Option<String>,
     #[value(default, skip_serializing_if = "Option::is_none")]
-    pub(crate) text: Option<String>,
+    pub text: Option<String>,
     #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "deserialize_double_option")]
-    pub(crate) viewpoint_ref: Option<Option<String>>,
+    pub viewpoint_ref: Option<Option<String>>,
 }
 
 impl protocol::MutationKind<BcfSnapshot, BcfMutation> for SetComment {

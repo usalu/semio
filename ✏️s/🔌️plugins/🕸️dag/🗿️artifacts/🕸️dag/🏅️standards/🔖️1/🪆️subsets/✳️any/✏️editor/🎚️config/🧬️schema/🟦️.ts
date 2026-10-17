@@ -27,6 +27,10 @@ type dagDagConfigGuardSizeBounds = { readonly minItems?: number; readonly maxIte
 
 export const dagDagConfigGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : dagDagConfigGuardReject(at, "value is not an object");
+export const dagDagConfigGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) dagDagConfigGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const dagDagConfigGuardArray = (value: unknown, at: string, bounds: dagDagConfigGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return dagDagConfigGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) dagDagConfigGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -57,7 +61,7 @@ export const dagDagConfigGuardConstant = <T extends string | number | boolean>(v
 //#endregion 🚪️Parsers
 
 export function parseDagConfig(value: unknown, at = "$"): DagConfig {
-  const row = dagDagConfigGuardObject(value, at);
+  const row = dagDagConfigGuardClosed(dagDagConfigGuardObject(value, at), at, ["cameraX", "cameraY", "cameraZoom"]);
   return {
     cameraX: dagDagConfigGuardNumber(row["cameraX"], `${at}.cameraX`),
     cameraY: dagDagConfigGuardNumber(row["cameraY"], `${at}.cameraY`),

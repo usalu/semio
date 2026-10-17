@@ -1,0 +1,30 @@
+{
+ "name": "layout",
+ "crates": [
+  "semio-layout-mutation-bridge",
+  "semio-s-artifact-layout-layout",
+  "semio-s-artifact-layout-layout-descriptor",
+  "semio-s-artifact-layout-layout-descriptor-diff",
+  "semio-s-artifact-layout-layout-diff",
+  "semio-s-artifact-layout-layout-editor",
+  "semio-s-artifact-layout-layout-editor-commands",
+  "semio-s-artifact-layout-layout-editor-commands-tests",
+  "semio-s-artifact-layout-layout-editor-panels",
+  "semio-s-artifact-layout-layout-engine",
+  "semio-s-artifact-layout-layout-engine-export",
+  "semio-s-artifact-layout-layout-engine-json",
+  "semio-s-artifact-layout-layout-examples",
+  "semio-s-artifact-layout-layout-host",
+  "semio-s-artifact-layout-layout-io",
+  "semio-s-artifact-layout-layout-model",
+  "semio-s-artifact-layout-layout-mutations",
+  "semio-s-artifact-layout-layout-mutations-content",
+  "semio-s-artifact-layout-layout-mutations-content-tests-1",
+  "semio-s-artifact-layout-layout-mutations-content-tests-2",
+  "semio-s-artifact-layout-layout-mutations-frames",
+  "semio-s-artifact-layout-layout-mutations-frames-tests-1",
+  "semio-s-artifact-layout-layout-mutations-frames-tests-2",
+  "semio-s-artifact-layout-layout-viewer"
+ ],
+ "note": "ORACLE-HARVEST-PLUGINS: ✏️s/🔌️plugins/📏️layout"
+}

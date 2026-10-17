@@ -3,7 +3,7 @@ import{test,expect}from"bun:test";
 import{Database}from"bun:sqlite";
 import{readFileSync}from"node:fs";
 import{resolve,join}from"node:path";
-import catalog from"../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/📥️artifacts/🕸️engines/📇️catalog.json"with{type:"json"};
+import { artifactsEnginesCatalogSchema as catalog } from "@semio-tech/framework-os-dev/builder/vite/artifacts/engines";
 const workspace=resolve(import.meta.dir,"../../../..");
 test("neutral demonstrator prepare and build targets depend on every engine producer the framework catalog declares",()=>{
  const demo=JSON.parse(readFileSync(resolve(import.meta.dir,"../../📋️project.json"),"utf8")),db=new Database(":memory:");

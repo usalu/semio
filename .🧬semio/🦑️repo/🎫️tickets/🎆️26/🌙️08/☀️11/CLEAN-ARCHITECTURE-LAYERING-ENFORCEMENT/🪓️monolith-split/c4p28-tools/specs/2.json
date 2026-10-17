@@ -1,0 +1,51 @@
+{
+ "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🧰️context/🦀️.rs",
+ "original": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/🗑️generated/c4p28-orig/2.rs",
+ "stage": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/🗑️generated/c4p28-stage",
+ "chunks": [
+  {
+   "name": "🏗️raw-app-fixture",
+   "folder": "🏗️raw-app-fixture",
+   "doc": "🏗️ Raw app fixture: the raw app, the live-cleanup grant, the maintenance stage grants, `Puzzle3dApp` and its close witness, the manifest for tests and the host turn drivers.",
+   "ranges": [
+    [
+     6,
+     363
+    ]
+   ]
+  },
+  {
+   "name": "🎛️settle-and-dispatch-drivers",
+   "folder": "🎛️settle-and-dispatch-drivers",
+   "doc": "🎛️ Settle and dispatch drivers: the settled outcome, the segmented download drain, the history readers and every dispatch, selection and hover driver.",
+   "ranges": [
+    [
+     365,
+     661
+    ]
+   ]
+  },
+  {
+   "name": "🖼️render-and-scene-probes",
+   "folder": "🖼️render-and-scene-probes",
+   "doc": "🖼️ Render and scene probes: the body, panel and window render drivers, the world scene carrier census and the scene field probes.",
+   "ranges": [
+    [
+     663,
+     924
+    ]
+   ]
+  },
+  {
+   "name": "📏️measure-and-tool-run-probes",
+   "folder": "📏️measure-and-tool-run-probes",
+   "doc": "📏️ Measure and tool run probes: the window measure finders, the fill run and brush suggestion pumps, the context menu drivers, the heap witness and the editor source reader.",
+   "ranges": [
+    [
+     926,
+     1190
+    ]
+   ]
+  }
+ ]
+}

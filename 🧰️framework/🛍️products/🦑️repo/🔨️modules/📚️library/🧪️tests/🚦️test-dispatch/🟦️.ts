@@ -22,7 +22,6 @@ beforeAll(async () => {
   probeRoot = mkdtempSync(join(artifacts, "go-cancellation-"));
   mkdirSync(join(probeRoot, "temporary"));
   probeBinary = join(compiledRoot, process.platform === "win32" ? "dispatch.test.exe" : "dispatch.test");
-  console.log("[DEBUG] preparing canonical Go cancellation executable with a separate compiler budget");
   try {
     await runCanonicalGoTests(cli, ["-c", "-o", probeBinary], { env: { ...process.env, GOWORK: join(repo, "go.work"), SEMIO_GO_OVERLAY_OWNER: compiledRoot }, budgetMs: 60_000, packages: ["."], signal: setupCancellation.signal });
 
@@ -32,14 +31,11 @@ beforeAll(async () => {
     throw error;
   }
   expect(existsSync(probeBinary)).toBe(true);
-  console.log("[DEBUG] canonical Go cancellation executable prepared");
 }, 65_000);
 beforeAll(async () => {
-  console.log("[DEBUG] preparing the exact nested Go cancellation package under its stable owned path");
     await runRepositoryTestCommand(probeBinary, ["-test.v", "-test.count=1", "-test.run=^TestCanonicalGoTestDispatcherNestedBudgetPreparation$"], {
       cwd: cli, env: { ...process.env, GOWORK: join(repo, "go.work"), SEMIO_GO_CANCELLATION_ROOT: probeRoot, TMPDIR: join(probeRoot, "temporary"), TMP: join(probeRoot, "temporary"), TEMP: join(probeRoot, "temporary") }, budgetMs: 60_000, signal: setupCancellation.signal, throwOnFailure: true,
     });
-  console.log("[DEBUG] both Go compiler phases completed before the 12000ms timed probe");
 }, 65_000);
 afterAll(() => { setupCancellation.abort(); if (compiledRoot) rmSync(compiledRoot, { recursive: true, force: true }); if (probeRoot) rmSync(probeRoot, { recursive: true, force: true }); });
 

@@ -1,7 +1,6 @@
 //! 🛬️ Authoritative PDF/X mutation for removing a matching launch action.
 
-use super::insert_launch_action::InsertLaunchAction;
-use super::PdfXMutation;
+use crate::standards::v1_7::subsets::x::schema::mutations::insert_launch_action::InsertLaunchAction;
 use crate::standards::v1_7::subsets::base::schema::conformance_support as support;
 use crate::standards::v1_7::subsets::base::schema::diff::{self, PdfDiff};
 use crate::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot;
@@ -16,7 +15,10 @@ pub struct RemoveLaunchAction {
     pub target: String,
 }
 
-impl MutationKind<PdfSnapshot, PdfXMutation> for RemoveLaunchAction {
+impl<Op> MutationKind<PdfSnapshot, Op> for RemoveLaunchAction
+where
+    Op: protocol::Mutation<PdfSnapshot, Diff = PdfDiff> + From<RemoveLaunchAction> + From<crate::standards::v1_7::subsets::x::schema::mutations::insert_launch_action::InsertLaunchAction>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "remove", entity: "launch-action", kind: "remove-launch-action", record: "Remove" };
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
@@ -24,9 +26,9 @@ impl MutationKind<PdfSnapshot, PdfXMutation> for RemoveLaunchAction {
         MutationOutcome::new(diff::graph_edit(rows))
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfXMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         Ok({
-            support::action_with(base, "Launch", "F", &self.target).map(|id| PdfXMutation::InsertLaunchAction(InsertLaunchAction { target: self.target.clone(), placements: support::placements_of(base, &[id]) })).into_iter().collect()
+            support::action_with(base, "Launch", "F", &self.target).map(|id| Op::from(InsertLaunchAction { target: self.target.clone(), placements: support::placements_of(base, &[id]) })).into_iter().collect()
         })
     }
 
@@ -41,9 +43,7 @@ impl MutationKind<PdfSnapshot, PdfXMutation> for RemoveLaunchAction {
 //#endregion 🔖️Mutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
 
 //#region 🔖️Facets

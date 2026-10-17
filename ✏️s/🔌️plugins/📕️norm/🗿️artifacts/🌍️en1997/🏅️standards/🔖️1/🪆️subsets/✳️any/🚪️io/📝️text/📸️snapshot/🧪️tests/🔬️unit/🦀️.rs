@@ -1,4 +1,4 @@
-use crate::text::snapshot::*;
+use crate::snapshot::*;
 
 #[semio_framework_async_macros::async_test]
 async fn document_dsl_round_trips() {

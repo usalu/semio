@@ -55,7 +55,7 @@ const DIRECTIVES: readonly (readonly [string, string])[] = [
 ];
 
 /** 🔮️ Renders the directive list through d3-time-format in the transport encoding the probe uses. */
-function reference(locale: string): { projection: ProbeProjection } {
+function reference(locale: string): ProbeProjection {
   const format = timeFormatLocale(LOCALES[locale]!);
   return Object.fromEntries(DIRECTIVES.map(([specifier, timestamp], index) => [`time/${index}`, [`|${format.utcFormat(specifier)(new Date(`${timestamp}Z`)).replaceAll(" ", "_")}`]]));
 }

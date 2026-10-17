@@ -265,9 +265,7 @@ export {
   translateDispositionRect
 } from "./🔨️modules/🧮️interaction-model/🟦️.ts";
 
-export {
-  usePresentationInteraction
-} from "./🔨️modules/🫳️interaction/🟦️.tsx";
+export { usePresentationInteraction } from "./🔨️modules/🫳️interaction/🎛️interaction-hook/🟦️.ts";
 
 export {
   mountPresentation,

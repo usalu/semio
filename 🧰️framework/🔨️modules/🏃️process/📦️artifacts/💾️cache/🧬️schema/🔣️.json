@@ -30,7 +30,10 @@
         "owner",
         "workspaceOwner",
         "workspaceFile",
-        "outputDirectory"
+        "outputDirectory",
+        "producerFilesystemBytes",
+        "producerMetadataBytes",
+        "catalogueMetadataBytes"
       ],
       "properties": {
         "version": {
@@ -169,6 +172,21 @@
           "minLength": 1,
           "maxLength": 32,
           "pattern": "^[a-z][a-z0-9-]{0,7}(/[a-z][a-z0-9-]{0,7})?$"
+        },
+        "producerFilesystemBytes": {
+          "type": "integer",
+          "minimum": 33554432,
+          "maximum": 1073741824
+        },
+        "producerMetadataBytes": {
+          "type": "integer",
+          "minimum": 65536,
+          "maximum": 65536
+        },
+        "catalogueMetadataBytes": {
+          "type": "integer",
+          "minimum": 1048576,
+          "maximum": 67108864
         }
       }
     },
@@ -520,7 +538,8 @@
         "receipt",
         "dev",
         "ino",
-        "size"
+        "size",
+        "availableBytes"
       ],
       "properties": {
         "version": {
@@ -567,6 +586,11 @@
           "type": "integer",
           "minimum": 0,
           "maximum": 9007199254740991
+        },
+        "availableBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4226809856
         }
       }
     },
@@ -984,6 +1008,368 @@
           }
         },
         "accepted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "CommitCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "globalSequence",
+        "entrySequence",
+        "expectedSequence",
+        "accepted"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "globalSequence": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 16
+        },
+        "entrySequence": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 16
+        },
+        "expectedSequence": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 16
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "PeakObservation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "availableBytes",
+        "creating",
+        "allocations",
+        "promises",
+        "fundedFilesystemBytes"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "availableBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967296
+        },
+        "creating": {
+          "type": "boolean"
+        },
+        "allocations": {
+          "type": "array",
+          "maxItems": 16,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "owner",
+              "bytes"
+            ],
+            "properties": {
+              "owner": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+              },
+              "bytes": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 4294967296
+              }
+            }
+          }
+        },
+        "promises": {
+          "type": "array",
+          "maxItems": 8,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          }
+        },
+        "fundedFilesystemBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4226809856
+        }
+      }
+    },
+    "PeakCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "observation",
+        "admitted"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "observation": {
+          "$ref": "#/definitions/PeakObservation"
+        },
+        "admitted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "ChildRetireCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "state",
+        "digest",
+        "identity",
+        "accepted"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "state": {
+          "enum": [
+            "clean",
+            "dirty",
+            "retiring"
+          ]
+        },
+        "digest": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "identity": {
+          "type": "boolean"
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "SelectedDescriptorGuard": {
+      "type": "object",
+      "required": [
+        "fd",
+        "path",
+        "type"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "fd": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "type": {
+          "enum": [
+            "DIR",
+            "REG"
+          ]
+        }
+      }
+    },
+    "SelectedDescriptorCase": {
+      "type": "object",
+      "required": [
+        "name",
+        "stdout",
+        "guards",
+        "accepted"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "stdout": {
+          "type": "string"
+        },
+        "guards": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/SelectedDescriptorGuard"
+          },
+          "minItems": 1,
+          "maxItems": 3
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "SelectedDescriptorPolicy": {
+      "const": {
+        "version": 1,
+        "maximumBytes": 1048576,
+        "maximumLines": 16384,
+        "maximumGuards": 3,
+        "maximumFieldBytes": 65536
+      }
+    },
+    "SelectedCensusCase": {
+      "type": "object",
+      "required": [
+        "action",
+        "queries",
+        "accepted",
+        "phase"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "action": {
+          "enum": [
+            "success",
+            "foreign",
+            "open-error",
+            "stamp-change",
+            "pre-cancel",
+            "capture-undefined",
+            "layout",
+            "cancel-after-capture",
+            "path-swap",
+            "phase"
+          ]
+        },
+        "queries": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2
+        },
+        "accepted": {
+          "type": "boolean"
+        },
+        "phase": {
+          "enum": [
+            "mounted",
+            "inactive"
+          ]
+        }
+      }
+    },
+    "SelectedDescriptorSelection": {
+      "enum": [
+        "filesystem",
+        "exact-files"
+      ]
+    },
+    "SelectedProcessRefusal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "kind",
+        "selection",
+        "expectedPid",
+        "observedPid",
+        "pidTruncated",
+        "command",
+        "commandTruncated",
+        "setIndex",
+        "duplicateProcess"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "kind": {
+          "const": "selected-process"
+        },
+        "selection": {
+          "$ref": "#/definitions/SelectedDescriptorSelection"
+        },
+        "expectedPid": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "observedPid": {
+          "type": "string",
+          "maxLength": 32
+        },
+        "pidTruncated": {
+          "type": "boolean"
+        },
+        "command": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "commandTruncated": {
+          "type": "boolean"
+        },
+        "setIndex": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 16383
+        },
+        "duplicateProcess": {
+          "type": "boolean"
+        }
+      }
+    },
+    "ObservationQueuePathCase": {
+      "type": "object",
+      "required": [
+        "encoding",
+        "characters",
+        "utf16",
+        "codepoints",
+        "allowed"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "encoding": {
+          "enum": [
+            "hex",
+            "base64url"
+          ]
+        },
+        "characters": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "utf16": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "codepoints": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "allowed": {
           "type": "boolean"
         }
       }

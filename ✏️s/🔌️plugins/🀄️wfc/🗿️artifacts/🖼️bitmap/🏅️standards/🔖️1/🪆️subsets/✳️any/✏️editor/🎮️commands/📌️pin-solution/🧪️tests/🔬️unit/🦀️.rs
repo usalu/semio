@@ -2,7 +2,8 @@
 //! reproduce it, a second commit of the same solve writes nothing, and a contradiction or a foreign
 //! buffer is refused.
 
-use super::*;
+use crate::schema::snapshot::BitmapSnapshot;
+use crate::editor::bitmap::commands::pin_solution::*;
 use crate::standards::v1::subsets::any::io::text::snapshot::encode_base64;
 
 fn commit(snapshot: &BitmapSnapshot, payload: &PinSolution) -> BitmapSnapshot {

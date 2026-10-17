@@ -127,12 +127,12 @@ where
         revision_accumulator.unit_flags.insert((edit_digest, index), presence);
     }
     let previous = revision_accumulator.applied.last().map_or(revision_accumulator.identity_digest, |record| record.prefix_digest);
-    revision_accumulator.applied.push(semio_framework_os_store_ledger::CursorRevisionRecord {
-        ledger_key: None,
-        id_digest: CursorRevisionAccumulator::hash_record(b"edit-id", &[outcome.prepared.edit().id.as_bytes()]),
-        edit_digest: outcome.prepared.edit_digest(),
-        prefix_digest: CursorRevisionAccumulator::hash_record(b"applied", &[&previous, &outcome.prepared.edit_digest()]),
-    });
+    revision_accumulator.applied.push(semio_framework_os_store_ledger::CursorRevisionRecord::new(
+        None,
+        CursorRevisionAccumulator::hash_record(b"edit-id", &[outcome.prepared.edit().id.as_bytes()]),
+        outcome.prepared.edit_digest(),
+        CursorRevisionAccumulator::hash_record(b"applied", &[&previous, &outcome.prepared.edit_digest()]),
+    ));
     if revision_accumulator.revision(store.log.current_checkpoint_id.as_deref()) != outcome.post_revision {
         return reject(DurableOwnedGroupDecisionError::InvalidFrontier, outcome);
     }

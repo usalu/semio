@@ -3,20 +3,37 @@
 //! law reads it here instead of widening it. Moved out of `🧾️document-archive-load-legs` (S3-W2A, 2026-10-02) when the test
 //! there stopped compiling against the private handoff; the law itself is S3-W1G's and unchanged.
 
-use super::*;
-use crate::test_app_mutation_fixture::{TestMutation, TestSnapshot};
+use semio_framework::kernel::ActorId;
+#[cfg(test)]
+use semio_framework_plugin_decl_app::ArtifactApp;
+use store::os_store::store_schema::ArtifactCommand;
+use pack::snapshot::ArtifactPack;
+use store::{ArtifactStore, ArtifactStoreInitializationAuthority, MemberFactory, Mutation, SpaceMember};
+#[cfg(test)]
+use semio_framework_plugin_ownership::store_lifecycle::{ArtifactStoreInitializationJob, bounded_document_store_initialization_job};
+use semio_framework_value::DslValue;
+use std::future::Future;
+use protocol::LOCAL_ACTOR_ID;
+#[cfg(test)]
+use semio_framework_plugin_window_config::WindowConfigOwner;
+#[cfg(test)]
+use semio_framework_plugin_window_transient::window_transient::WindowTransientOwner;
+use store::os_store::document_materialize::create_document_envelope;
+use semio_framework_ui_contract::*;
+use semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::document::mutations::TestMutation;
+use semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::document::TestSnapshot;
 
 /// 📜️ The document schema the reloaded envelope carries — the single-document app shape of `🧾️document-archive-load-legs`.
 const RELOAD_DOCUMENT_SCHEMA: &str = "semio.test.single-document/v1";
 
 /// 🧳️ Retain a real backing allocation through the public erased initializer job.
 struct PhysicalInitializerAuthority {
-    buffer: Option<Vec<u8>>,
+    pub buffer: Option<Vec<u8>>,
 }
 
 impl ArtifactStoreInitializationAuthority<TestSnapshot, TestMutation> for PhysicalInitializerAuthority {
     fn step<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, ValueError> { semio_framework_job::JobOutcomeBorrow::admit_yield(cx) }
-    fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, ValueError> { crate::app_testing::artifact_app_laws::fixture_job_outcome(descriptor) }
+    fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, ValueError> { semio_framework_plugin_testing_laws::artifact_app_laws::fixture_job_outcome(descriptor) }
     fn request_cancel(&mut self) {}
     fn take_candidate(&mut self) -> Option<store::ArtifactStore<TestSnapshot, TestMutation>> { None }
     fn retirement_demands(&self,_body:usize)->Result<RetirementDemand,ValueError>{Ok(self.buffer.as_ref().map_or(Default::default(),|buffer|RetirementDemand{copy_bytes:std::mem::size_of_val(&self.buffer),release_bytes:buffer.capacity(),depth:1,..Default::default()}))}
@@ -61,7 +78,6 @@ fn initializer_job_retains_terminal_authority_until_its_physical_box_is_funded()
         assert_eq!(denied, InteractiveJobCloseStep::Pending{progress:Default::default()});
         assert!(retained);
         assert_eq!(released, InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,copied_bytes:std::mem::size_of::<Option<Box<dyn ArtifactStoreInitializationAuthority<TestSnapshot,TestMutation>>>>(),released_bytes:box_bytes,..Default::default()}});
-        eprintln!("[DEBUG] initializer job physical backing={extent} erased-authority-box={box_bytes} retained-denied-owner=true");
     }
 }
 
@@ -154,15 +170,15 @@ fn close_reload_counted_store(store:&mut store::ArtifactStore<TestSnapshot,Reloa
 /// (canonical initial digest and edit records, audit W1G-2/W1G-4).
 #[semio_framework_async_macros::async_test]
 async fn a_long_history_reloads_one_operation_per_initializer_step() {
-    use crate::test_app_mutation_fixture::SetCount;
-    let law:serde_json::Value=serde_json::from_str(include_str!("../🔬️plugin-runtime-runtime-close-budget/🧫️fixtures/🧾️fixture-caller/🔣️.json")).unwrap();let mut observer=|_|true;let mut identity:semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(law["native"]["maximumIdentityBytes"].as_u64().unwrap()as usize,&mut observer).unwrap();let original=crate::app_testing::artifact_app_laws::fixture_mounted_policy().maintenance;
+    use semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::document::mutations::set_count::SetCount;
+    let law:serde_json::Value=serde_json::from_str(include_str!("../🔬️plugin-runtime-runtime-close-budget/🧫️fixtures/🧾️fixture-caller/🔣️.json")).unwrap();let mut observer=|_|true;let mut identity:semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(law["native"]["maximumIdentityBytes"].as_u64().unwrap()as usize,&mut observer).unwrap();let original=semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy().maintenance;
     let genesis = store::os_store::document_materialize::create_document_envelope::<TestSnapshot, ReloadCountedOp>(RELOAD_DOCUMENT_SCHEMA, "long-reload", TestSnapshot { count: 0, label: "initial".into(), slot: Vec::new() }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     let mut source = Box::pin(store::ArtifactStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(genesis, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))).await.expect("source store");
     source.install_operation_wire(store::ArtifactOperationWire::canonical());
     store::install_unscheduled_catalog(&mut source, store::os_store::document_store_owners::funded_bounded_artifact_store_owners::<TestSnapshot, ReloadCountedOp>()).expect("source owners");
     for value in 1..=240 {
         Box::pin(source.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![ReloadCountedOp(TestMutation::SetCount(SetCount { value }))], transaction: None },&mut identity)).await.expect("source edit");
-        crate::app_testing::artifact_app_laws::drain_store_displaced_retirements(&mut source);
+        semio_framework_plugin_testing_laws::artifact_app_laws::drain_store_displaced_retirements(&mut source);
     }
     let first = source.mutation_ops().expect("source operations")[0].mutation_id.clone();
     let inputs = vec![store::os_store::store_schema::SupersedeInput { target: first, replacement: Some(ReloadCountedOp(TestMutation::SetCount(SetCount { value: 1000 }))) }];
@@ -220,7 +236,6 @@ async fn a_long_history_reloads_one_operation_per_initializer_step() {
     assert!(job.terminal_is_empty(), "the initializer hands its store off and closes");
     assert_eq!(handoff_demand, authority_bytes);
     assert!(authority_bytes <= admission, "initializer frame fits its explicit physical admission ceiling");
-    eprintln!("[DEBUG] bounded reload candidate handoff retains authority-frame={authority_bytes} until its exact physical grant; admission={admission}");
     assert_eq!(reloaded.snapshot().expect("reloaded head"), source.snapshot().expect("source head"));
     assert_eq!(reloaded.snapshot().expect("reloaded head").count, 240);
     assert_eq!(reloaded.supersessions(), source.supersessions());

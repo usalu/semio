@@ -16,5 +16,4 @@ fn paged_text_extent_preserves_neutral_line_and_unicode_semantics() {
         let paged = semio_framework_value::paged::PagedUtf8::<{usize::MAX}>::try_from_str(&text).unwrap();
         assert_eq!(drawing_text_fallback_extent(&paged, row["size"].as_f64().unwrap()), serde_json::from_value::<[f64;2]>(row["extent"].clone()).unwrap());
     }
-    eprintln!("[DEBUG] native paged text extents preserve independent line fixtures and CRLF chunk boundaries");
 }

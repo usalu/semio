@@ -15,6 +15,7 @@ use semio_framework_os_store_space_schema::ArtifactCursor;
 //#region 🔖️EphemeralLanes
 
 use semio_framework_os_store_ephemeral::*;
+use semio_framework_os_io::sqlite_snapshot_operations::ArtifactSqliteSnapshotOperations;
 use semio_framework_os_store_text_io::{ArtifactCodec, ArtifactNativeSnapshotIdentity, ArtifactPackFiles, ArtifactSqliteSnapshotHost};
 #[cfg(not(target_arch = "wasm32"))]
 use semio_framework_os_store_text_io::ArtifactCodecApplyFuture;
@@ -265,10 +266,7 @@ where
         && store.owners.displaced_retirements.terminal_is_empty()
         && store.owners.owned_disposer.is_none()
         && store.owners.owned_disposer_terminal
-        && store.replay.pending_report.edit_ids.is_none()
-        && store.replay.pending_report.messages.is_empty()
-        && store.replay.pending_report.outbound.is_empty()
-        && store.replay.pending_report.worst.is_none()
+        && store.replay.pending_report.is_idle()
         && store.wire.durable_group_root.is_none();
     std::mem::forget(store);
     closed?;

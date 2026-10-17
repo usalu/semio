@@ -12,5 +12,4 @@ fn svg_transform_fixtures_retain_editable_affines() {
         let matrix=semio_s_artifact_draw_drawing_model::affine::drawing_transform_to_matrix(&result.unwrap());
         for (actual,expected) in matrix.iter().zip(case["matrix"].as_array().unwrap()) {assert!((actual-expected.as_f64().unwrap()).abs()<1e-10,"{}",case["name"]);}
     }
-    eprintln!("[DEBUG] native SVG decoded transform operations preserve exact neutral matrices and immutable inputs");
 }

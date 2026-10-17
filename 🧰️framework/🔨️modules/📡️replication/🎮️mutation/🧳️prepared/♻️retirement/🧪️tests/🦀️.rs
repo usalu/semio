@@ -26,6 +26,6 @@ fn prepared_retirement_original_publication_and_independent_refusal_custody(){
   }
   let source:Arc<dyn FactoryRetirement>=factory;let(mut authority,heap)=observe_heap_allocations_on_this_thread(||FactoryAuthority::new(source));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
   while !authority.terminal_is_empty(){let demand=authority.demands(body).unwrap();let current=grant(demand,body);let(step,heap)=observe_heap_allocations_on_this_thread(||authority.step(current).unwrap());assert!(step.progress().fits(current));assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));births+=heap.requested_bytes;releases+=heap.released_bytes;turns+=1;assert!(turns<100000);}
-  assert_eq!(releases,original+births);let(_,heap)=observe_heap_allocations_on_this_thread(||drop((prepared,slot,authority)));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));eprintln!("[DEBUG] Prepared original inverse={} body={body} turns={turns} original={original} births={births} release={releases} terminalDrop=0",row["inverse"]);
+  assert_eq!(releases,original+births);let(_,heap)=observe_heap_allocations_on_this_thread(||drop((prepared,slot,authority)));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
  }}
 }

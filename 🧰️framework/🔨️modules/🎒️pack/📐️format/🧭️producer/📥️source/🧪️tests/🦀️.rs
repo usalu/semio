@@ -41,5 +41,4 @@ fn retained_source_preserves_actual_kind_reason_and_allocation_witness(){
   let actual=match segment.preflight(){Ok(())=>"ready",Err(RetainedPackSegmentAdmission::Fault(error))=>{assert!(std::ptr::eq(error,segment.fault.as_ref().unwrap()));assert_eq!(Some(error.kind()),Some(ValueRefusalKind::Canceled));"fault"},Err(RetainedPackSegmentAdmission::Closed)=>"closed",Err(RetainedPackSegmentAdmission::Complete)=>"complete",Err(RetainedPackSegmentAdmission::Pending)=>"pending",Err(RetainedPackSegmentAdmission::InflaterBackpressure)=>"inflaterBackpressure"};
   assert_eq!(actual,row["expected"].as_str().unwrap());segment.closed=false;while segment.close_step(64,usize::MAX)!=RetainedPackCloseStep::Complete{}
  }
- eprintln!("[DEBUG] native Source precise factories/constructors/cancellation and borrowed admission laws preserve source metadata");
 }

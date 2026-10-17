@@ -63,5 +63,4 @@ test("actual structural validator compiles and runs with every product physicall
   expect(existsSync(join(copy, "🧰️framework/🔨️modules/🧬️schema/⚛️component"))).toBe(false);
   const cargo = { ...process.env, CARGO_TARGET_DIR: join(copy, "target"), CARGO_BUILD_BUILD_DIR: join(copy, "compiler") };
   await runOwnedCommand("cargo", ["test", "--offline", "--manifest-path", join(copy, "Cargo.toml"), "-p", "semio-framework-schema-validator", "--lib", "--", "--nocapture"], copy, "schema-validator:products-absent", 120000, { env: cargo });
-  console.log("[DEBUG] actual structural validator ran with all products physically absent");
 }, 120000);

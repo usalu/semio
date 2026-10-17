@@ -1,0 +1,77 @@
+{
+  "cases": [
+    {
+      "name": "current",
+      "accepted": true
+    },
+    {
+      "name": "exact-receipt-limit",
+      "accepted": true
+    },
+    {
+      "name": "oversized-receipt",
+      "accepted": false
+    },
+    {
+      "name": "unowned",
+      "accepted": false
+    },
+    {
+      "name": "hardlink",
+      "accepted": false
+    },
+    {
+      "name": "symlink",
+      "accepted": false
+    },
+    {
+      "name": "oversized-artifact",
+      "accepted": false,
+      "artifact": {
+        "maximumBytes": 7,
+        "initialBytes": 7,
+        "finalBytes": 8
+      },
+      "message": "Source reducing extent exceeded before read"
+    },
+    {
+      "name": "missing-artifact",
+      "accepted": false
+    },
+    {
+      "name": "wrong-receipt",
+      "accepted": false
+    },
+    {
+      "name": "copied-control",
+      "accepted": false
+    },
+    {
+      "name": "cancelled",
+      "accepted": false
+    },
+    {
+      "name": "oversized-fresh-artifact",
+      "accepted": false,
+      "artifact": {
+        "maximumBytes": 7,
+        "initialBytes": 7,
+        "finalBytes": 8
+      },
+      "message": "Source reducing extent exceeded before read"
+    },
+    {
+      "name": "exact-artifact-limit",
+      "accepted": true,
+      "artifact": {
+        "maximumBytes": 8,
+        "initialBytes": 8,
+        "finalBytes": 8
+      }
+    },
+    {
+      "name": "receipt-hardlink",
+      "accepted": false
+    }
+  ]
+}

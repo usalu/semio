@@ -1,4 +1,5 @@
-use super::*;
+use crate::XmlSnapshot;
+use crate::standards::v1_0::subsets::base::schema::inferences::*;
 use protocol::Inference;
 
 #[semio_framework_async_macros::async_test]

@@ -99,6 +99,7 @@
       "observeDependencies",
       "observeInference",
       "observeProjectInferenceV1",
+      "observedExactSourceFileV1",
       "observedFs",
       "observedRequireResolve",
       "observedSourceAnalysisAsyncV1",

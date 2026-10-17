@@ -4,8 +4,7 @@ use semio_framework_plugin::create_named_layout;
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::ModeDefinition;
 use semio_framework_plugin::NamedLayout;
-#[path = "🪟️windows/📊️results/🦀️.rs"]
-pub mod results;
+pub use semio_s_artifact_forms_forms_diff::editor::forms::modes::responses::results;
 pub const MODE: &str = "responses";
 pub const LAYOUT: &str = "forms-responses";
 

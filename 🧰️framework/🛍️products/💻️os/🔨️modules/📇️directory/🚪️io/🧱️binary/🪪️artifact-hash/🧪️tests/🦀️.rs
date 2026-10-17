@@ -12,7 +12,6 @@ fn artifact_hash_text_matches_the_neutral_vector_and_independent_formatting() {
         assert_eq!(admitted.is_some(), vector["admitted"].as_bool().unwrap());
         if let Some(admitted) = admitted { assert_eq!(admitted, hash); }
     }
-    println!("[DEBUG] Native hash text IO matched four neutral vectors and independent Rust formatting");
 }
 
 #[test]
@@ -23,5 +22,4 @@ fn edited_frontier_admission_has_typed_hash_identity_and_genesis_refusal() {
     assert_eq!(encode_edited_artifact_frontier_v1(&admitted), Some(wire));
     let mut genesis = admitted; genesis.head_edit_ordinal = 0;
     assert!(encode_edited_artifact_frontier_v1(&genesis).is_none());
-    println!("[DEBUG] Native edited frontier conversion admitted typed hash identity and refused genesis");
 }

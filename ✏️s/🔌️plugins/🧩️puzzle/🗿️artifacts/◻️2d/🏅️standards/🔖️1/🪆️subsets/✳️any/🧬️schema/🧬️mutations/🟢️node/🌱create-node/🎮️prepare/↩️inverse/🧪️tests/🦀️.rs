@@ -1,7 +1,15 @@
 //! 🧪️ Literal CreateNode inverse IDs retain unconditional native ownership and cancellation.
 
-use super::*;
-use crate::test_source_custody;
+use crate::standards::v1::subsets::any::schema::mutations::CreateNode;
+use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
+use semio_framework_value::paged::PagedUtf8;
+use semio_framework_value::{list::PagedList, ValueError, retirement::controlled::ControlledRetirement, retained_clone::RetainedCloneGrant, retained_clone::RetainedCloneProgress, retained_clone::RetainedCloneStep};
+use std::mem::size_of;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::preparation::literal_id_inverse::{Puzzle2dLiteralIdInverse, Puzzle2dLiteralIdInverseCursor};
+use crate::standards::v1::subsets::any::schema::preparation::create_node_preparation::inverse::*;
+use crate::standards::v1::subsets::any::schema::testkit as test_source_custody;
+use semio_framework_test_fixtures::fixture_text;
 
 fn grant(turn: usize) -> RetainedCloneGrant { match turn % 3 { 0 => RetainedCloneGrant::one_capacity_turn(4096, 64), 1 => RetainedCloneGrant::one_payload_turn(4096, 64), _ => RetainedCloneGrant::one_release_turn(4096, 64) } }
 
@@ -56,11 +64,11 @@ fn retire(inverse: PagedList<Puzzle2dMutation, {usize::MAX}>) {
 #[test]
 fn history_edit_puzzle2d_owned_create_inverse_preserves_unconditional_literal_intent_and_controlled_cancellation() {
     assert!(size_of::<Puzzle2dCreateNodeInverseCursor>() <= 4096);
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌱create-node/🎮️prepare/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌱create-node/🎮️prepare/🔣️.json")).unwrap();
     let text = |value: &serde_json::Value| { let value = value.as_str().unwrap(); match value.strip_prefix("$large:") { Some(suffix) => PagedUtf8::<{usize::MAX}>::from(format!("{}{suffix}", corpus["control"]["largePrefix"].as_str().unwrap().repeat(corpus["control"]["largeRepeats"].as_u64().unwrap() as usize))), None => value.into() } };
     let mut count = 0;
     for case in corpus["cases"].as_array().unwrap() {
-        let payload = CreateNode { node: crate::standards::v1::subsets::any::schema::Puzzle2dNode { id: text(&case["mutation"]["node"]["id"]), text: Some(PagedUtf8::from("irrelevant immutable payload".repeat(6000))), ..Default::default() }, index: case["mutation"]["index"].as_u64().map(|value| value as usize) };
+        let payload = CreateNode { node: crate::standards::v1::subsets::any::schema::records::Puzzle2dNode { id: text(&case["mutation"]["node"]["id"]), text: Some(PagedUtf8::from("irrelevant immutable payload".repeat(6000))), ..Default::default() }, index: case["mutation"]["index"].as_u64().map(|value| value as usize) };
         let original = serde_json::to_value(&payload).unwrap();
         let mut mutation = test_source_custody::admit();
         let (mut cursor, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(Puzzle2dCreateNodeInverseCursor::default);
@@ -101,7 +109,6 @@ fn history_edit_puzzle2d_owned_create_inverse_preserves_unconditional_literal_in
         }
         test_source_custody::close(&mut mutation);
         count += 1;
-        eprintln!("[DEBUG] Puzzle2d CreateNode inverse {} retained its unconditional DeleteNode intent with ID-only ownership, zero-heap construction and granted cancellation", case["id"].as_str().unwrap());
     }
     assert_eq!(count, 16);
 }

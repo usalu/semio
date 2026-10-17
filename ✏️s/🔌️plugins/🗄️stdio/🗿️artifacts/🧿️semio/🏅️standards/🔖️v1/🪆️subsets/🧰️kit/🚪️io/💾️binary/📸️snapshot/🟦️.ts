@@ -51,9 +51,9 @@ export const stdioSemioV1KitSnapshotBinaryGuardConstant = <T extends string | nu
 export function parseSemioKitSnapshotPackHeader(value: unknown, at = "$"): SemioKitSnapshotPackHeader {
   const row = stdioSemioV1KitSnapshotBinaryGuardObject(value, at);
   return {
-    format: row["format"] === undefined ? undefined : stdioSemioV1KitSnapshotBinaryGuardInteger(row["format"], `${at}.format`),
-    schemaLen: row["schemaLen"] === undefined ? undefined : stdioSemioV1KitSnapshotBinaryGuardInteger(row["schemaLen"], `${at}.schemaLen`),
-    schemaBytes: row["schemaBytes"] === undefined ? undefined : stdioSemioV1KitSnapshotBinaryGuardString(row["schemaBytes"], `${at}.schemaBytes`),
-    payload: row["payload"] === undefined ? undefined : stdioSemioV1KitSnapshotBinaryGuardString(row["payload"], `${at}.payload`),
+    format: stdioSemioV1KitSnapshotBinaryGuardInteger(row["format"], `${at}.format`),
+    schemaLen: stdioSemioV1KitSnapshotBinaryGuardInteger(row["schemaLen"], `${at}.schemaLen`),
+    schemaBytes: stdioSemioV1KitSnapshotBinaryGuardString(row["schemaBytes"], `${at}.schemaBytes`),
+    payload: stdioSemioV1KitSnapshotBinaryGuardString(row["payload"], `${at}.payload`),
   };
 }

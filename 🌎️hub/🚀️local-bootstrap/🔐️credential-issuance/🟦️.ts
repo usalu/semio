@@ -1,6 +1,6 @@
 import {localHubHostPolicyV1,captureLocalHubStartV1,LocalHubHostLedgerV1} from "../🎛️host/🟦️.ts";
 import {checkResourceLeaseControl} from "@semio-tech/process/leases";
-import { LOCAL_SESSION_BROKER_REQUEST_MAX_BYTES, isLocalSessionTokenV1, LOCAL_SESSION_BROKER_FILE, LOCAL_SESSION_BROKER_SCHEMA, LOCAL_SESSION_SCHEMA, parseLocalSessionBrokerRecordV1, parseLocalSessionRequestV1, parseLocalSessionV1, type LocalSessionBrokerRecordV1, type LocalSessionV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🎫️local-session/🗄️broker/🧬️schema/🟦️.ts";
+import { LOCAL_SESSION_BROKER_REQUEST_MAX_BYTES, isLocalSessionTokenV1, LOCAL_SESSION_BROKER_FILE, LOCAL_SESSION_BROKER_SCHEMA, LOCAL_SESSION_SCHEMA, parseLocalSessionBrokerRecordV1, parseLocalSessionRequestV1, parseLocalSessionV1, type LocalSessionBrokerRecordV1, type LocalSessionV1 } from "@semio-tech/framework-os/modules/directory/local-session/broker/schema";
 
 import { randomBytes, timingSafeEqual } from "node:crypto";
 import { existsSync, lstatSync, readFileSync, rmSync, writeFileSync } from "node:fs";

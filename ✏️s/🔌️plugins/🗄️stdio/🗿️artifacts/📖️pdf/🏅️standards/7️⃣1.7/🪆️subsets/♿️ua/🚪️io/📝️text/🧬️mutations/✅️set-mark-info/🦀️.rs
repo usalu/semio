@@ -1,6 +1,6 @@
 //! 🏷️ Direct text codec for `set-mark-info`.
 
-use crate::standards::v1_7::subsets::ua::schema::mutations::SetMarkInfo;
+use crate::standards::v1_7::subsets::ua::schema::mutations::set_mark_info::SetMarkInfo;
 
 //#region 🔖️Identity
 pub const OPCODE: &str = "set-mark-info";
@@ -20,7 +20,5 @@ pub fn parse(text: &str) -> Result<SetMarkInfo, String> {
 //#endregion 🔖️Codec
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

@@ -4,6 +4,11 @@
   "manifest": "✏️s/🔌️plugins/📕️norm/🔮️oracles/🔣️.json",
   "source": "✏️s/🔌️plugins/📕️norm/🔮️oracles/📦️packages/🐍️python/🗣️vocabulary.py",
   "destination": "✏️s/🔌️plugins/📕️norm/🔮️oracles/🏃️execution/🐍️.py",
+  "destinationChildren": [
+    "✏️s/🔌️plugins/📕️norm/🔮️oracles/🏃️execution/📄️document/🐍️.py",
+    "✏️s/🔌️plugins/📕️norm/🔮️oracles/🏃️execution/📝️carrier/🐍️.py",
+    "✏️s/🔌️plugins/📕️norm/🔮️oracles/🏃️execution/🔧️verbs/🐍️.py"
+  ],
   "module": "🐍️",
   "package": "semio_norm_vocabulary",
   "host": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🖥️host/🐍️.py",

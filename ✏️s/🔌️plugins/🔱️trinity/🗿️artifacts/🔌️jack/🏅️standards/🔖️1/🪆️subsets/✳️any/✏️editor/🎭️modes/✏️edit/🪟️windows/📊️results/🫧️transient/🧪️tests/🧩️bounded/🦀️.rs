@@ -1,6 +1,7 @@
 //! 🧪️ Large query output moves once and retires through exact tracked ownership.
 
-use super::*;
+use crate::editor::jack::transient::results_window::{schema};
+use crate::editor::jack::transient::results_window::*;
 use semio_framework_plugin::WindowTransientOwner;
 
 /// 🎟️ One five-currency one-item grant whose byte currencies all equal `bytes`.
@@ -19,8 +20,8 @@ fn close_publication(publication: &mut store::ArtifactEphemeralOneItemPublicatio
         if publication.terminal_is_empty() {
             return;
         }
-        let demand = publication.retirement_demands(crate::JACK_SELF_FUNDED_BODY_BYTES).expect("Jack results publication close quote");
-        let funded = crate::jack_self_funded_grant(demand);
+        let demand = publication.retirement_demands(crate::standards::v1::subsets::any::schema::content::JACK_SELF_FUNDED_BODY_BYTES).expect("Jack results publication close quote");
+        let funded = crate::standards::v1::subsets::any::schema::content::jack_self_funded_grant(demand);
         let grant = store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: funded.maximum_items, maximum_copy_bytes: funded.maximum_copy_bytes, maximum_capacity_bytes: funded.maximum_capacity_bytes, maximum_release_bytes: funded.maximum_release_bytes, maximum_depth: funded.maximum_depth };
         let step = publication.close_step(grant).expect("Jack results publication close");
         assert!(step.progress().fits(funded));
@@ -30,7 +31,7 @@ fn close_publication(publication: &mut store::ArtifactEphemeralOneItemPublicatio
 
 #[test]
 fn results_window_large_output_preserves_alias_cancel_and_bounded_disposal() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧩️bounded-publication/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(runtime_fixture_text("../../../../✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🫧️transient/🧪️tests/🧫️fixtures/🧩️bounded-publication/🔣️.json")).unwrap();
     let payload = fixture["payload"]["text"].as_str().unwrap().repeat(fixture["payload"]["repeat"].as_u64().unwrap() as usize);
     assert!(payload.len() > fixture["payload"]["minimumUtf8Bytes"].as_u64().unwrap() as usize);
     let payload_pointer = payload.as_ptr();
@@ -39,7 +40,7 @@ fn results_window_large_output_preserves_alias_cancel_and_bounded_disposal() {
     let held_base = state.current_read().unwrap();
     let mutation = JackResultsWindowTransientMutation::ReplaceQueryResult(ReplaceQueryResult {
         execution_id: Some(fixture["published"]["queryExecutionId"].as_str().unwrap().into()),
-        result: Some(crate::ast::QueryResult::table(vec![fixture["published"]["column"].as_str().unwrap().into()], vec![vec![crate::PropertyValue::String(payload)]])),
+        result: Some(crate::standards::v1::subsets::any::schema::ast::QueryResult::table(vec![fixture["published"]["column"].as_str().unwrap().into()], vec![vec![semio_framework_graph_manifest::PropertyValue::String(payload)]])),
         error: None,
     });
     let mut publication =
@@ -56,7 +57,7 @@ fn results_window_large_output_preserves_alias_cancel_and_bounded_disposal() {
     }
     let published = state.current_root();
     let result = published.result.as_ref().expect("published query result");
-    let crate::PropertyValue::String(actual) = &result.rows[0][0] else { panic!("published string cell") };
+    let semio_framework_graph_manifest::PropertyValue::String(actual) = &result.rows[0][0] else { panic!("published string cell") };
     assert_eq!(actual.as_ptr(), payload_pointer, "publication must move the large allocation exactly once");
     assert_eq!(published.query_execution_id.as_deref(), fixture["published"]["queryExecutionId"].as_str());
     let kind: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&result.kind)).unwrap();
@@ -89,8 +90,8 @@ fn results_window_large_output_preserves_alias_cancel_and_bounded_disposal() {
         if retirement.terminal_is_empty() {
             break;
         }
-        let demand = retirement.retirement_demands(crate::JACK_SELF_FUNDED_BODY_BYTES).expect("all Jack results aliases were returned");
-        let grant = crate::jack_self_funded_grant(demand);
+        let demand = retirement.retirement_demands(crate::standards::v1::subsets::any::schema::content::JACK_SELF_FUNDED_BODY_BYTES).expect("all Jack results aliases were returned");
+        let grant = crate::standards::v1::subsets::any::schema::content::jack_self_funded_grant(demand);
         assert!(retirement.close_step(grant).unwrap().progress().fits(grant));
     }
     assert!(retirement.terminal_is_empty());
@@ -102,4 +103,9 @@ async fn replace_query_result_inverse_sums_to_the_negative_diff() {
     let base = JackResultsWindowTransient { query_execution_id: Some("run-1".into()), result: None, query_error: Some("old".into()) };
     let mutation: JackResultsWindowTransientMutation = ReplaceQueryResult { execution_id: Some("run-2".into()), result: None, error: None }.into();
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
+}
+
+fn runtime_fixture_text(relative: &str) -> &'static str {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative);
+    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display())).into_boxed_str())
 }

@@ -12,7 +12,6 @@ fn stroke_retirement_transfers_complete_paint_and_drains_each_private_owner_unde
   let mut work=0;for _ in 0..2_000_000{let progress=retirement.advance(grant).unwrap();assert!(progress.work>=work&&progress.work-work<=grant as u64);work=progress.work;if progress.done{break;}}
   assert!(work>0,"{}",case["name"]);assert!(retirement.terminal_is_empty());assert!(retirement.owner.original().is_none());let terminal=retirement.advance(1).unwrap();assert!(terminal.done);assert_eq!(terminal.work,work);
   if let Some(contours)=output.or(external){let expected:Vec<u8>=base["expected"].as_array().unwrap().iter().map(|value|u8::try_from(value.as_u64().unwrap()).unwrap()).collect();let mut coverage=CoverageJob::new(CoverageInput{width:u32::try_from(base["extent"][0].as_u64().unwrap()).unwrap(),height:u32::try_from(base["extent"][1].as_u64().unwrap()).unwrap(),transform:source.transform,rule:CoverageRule::NonZero,contours}).unwrap();while !coverage.advance(4096).unwrap().done{}assert_eq!(coverage.result().unwrap().coverage,expected);}
-  println!("[DEBUG] Actual stroke retirement {} grant={grant} structural_work={work} complete_output={published} terminal_empty=true",case["name"]);
  }}
 }
 fn input(row:&serde_json::Value)->StrokeOutlineInput {

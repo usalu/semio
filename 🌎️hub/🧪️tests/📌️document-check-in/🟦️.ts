@@ -1,4 +1,4 @@
-import { documentCheckInCanonicalJson, parseDocumentCheckInStatusV1, parseDocumentCheckInV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🚪️io/📝️text/📌️document-check-in-v1/🟦️.ts";
+import { documentCheckInCanonicalJson, parseDocumentCheckInStatusV1, parseDocumentCheckInV1 } from "@semio-tech/framework-os/modules/directory/io/text/document-check-in-v1";
 // #region Header
 /**
  * 📌️ Third-party oracle for the Check In contract: every language-neutral vector of

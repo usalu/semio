@@ -13,13 +13,13 @@ import { loadDevContribution, resolveDevContributionFile } from "../../🧩️co
 import { resolveShellBrandById } from "../../🏷️brand/🟦️.ts";
 
 import localHubSchema from "../../🚀️local-hub/🧬️schema/🔣️.json";
-import { localSessionBrokerSchema as brokerSchema } from "../../../📇️directory/🧪️tests/🧫️fixtures/🟦️.ts";
+import { localSessionBrokerSchema as brokerSchema } from "@semio-tech/framework-os/modules/directory/testing/fixtures";
 const ajv = new Ajv({ strict: true }).addKeyword("x-semio-formats").addSchema(brokerSchema).addSchema(localHubSchema);
 const validate = ajv.compile(schema), pathOracle = ajv.compile(schema.$defs.DevContributionPathV1);
 
 describe("owned development contributions", () => {
   it("admits only selected-owner factory engine contributions across Bun, Node and Ajv", () => {
-    const corpus = JSON.parse(readFileSync(resolve(import.meta.dirname, "../../🧫️fixtures/🔗️linked-session-engines.json"), "utf8"));
+    const corpus = JSON.parse(readFileSync(resolve(import.meta.dirname, "../🧫️fixtures/🔗️linked-session-engines.json"), "utf8"));
     const oracle = ajv.compile(schema.properties.browserSessionFactories);
     const root = process.env.SEMIO_TEST_ARTIFACT_DIR;
     if (!root) throw Error("SEMIO_TEST_ARTIFACT_DIR is required");

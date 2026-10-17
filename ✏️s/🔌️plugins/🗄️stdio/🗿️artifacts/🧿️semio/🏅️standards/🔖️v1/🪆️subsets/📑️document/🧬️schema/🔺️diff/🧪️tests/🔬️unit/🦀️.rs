@@ -1,4 +1,4 @@
-use super::*;
+use crate::schema::diff::*;
 use protocol::{DiffBinary,DiffText};
 
 /// 🧪️ `DiffCodec` round-trip laws — exercises the recursive enum tree (`DocBlockDiff`'s

@@ -6,21 +6,18 @@ use framework_schema::ArtifactSchema;
 /// 🧬️ Artifact schema descriptor id.
 pub const PDF_ARTIFACT_SCHEMA_ID: &str = "s.stdio.pdf";
 
-#[path = "🔗️graph-source/🦀️.rs"]
-pub mod graph_source;
+pub use semio_s_artifact_stdio_pdf_diff::standards::v1_7::subsets::base::schema::graph_source;
 
-#[path = "🪪️stream-roles/🦀️.rs"]
-pub mod stream_roles;
+pub use semio_s_artifact_stdio_pdf_diff::standards::v1_7::subsets::base::schema::stream_roles;
 
-#[path = "🔎️graph-projection/🦀️.rs"]
-pub mod graph_projection;
+pub use semio_s_artifact_stdio_pdf_graph_projection::standards::v1_7::subsets::base::schema::graph_projection;
 
-#[path = "🧭️content-mapping/🦀️.rs"]
-pub mod content_mapping;
+pub use semio_s_artifact_stdio_pdf_inferences::standards::v1_7::subsets::base::schema::content_mapping;
 
 //#region 🏅️ConformanceSupport
-#[path = "🏅️conformance-support/🦀️.rs"]
-pub mod conformance_support;
+pub use semio_s_artifact_stdio_pdf_conformance_support::standards::v1_7::subsets::base::schema::conformance_support;
+#[cfg(any(test, feature = "testkit"))]
+pub use semio_s_artifact_stdio_pdf_testkit::standards::v1_7::subsets::base::schema::testkit;
 //#endregion 🏅️ConformanceSupport
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
@@ -196,28 +193,45 @@ pub fn pdf_artifact_schema_descriptor() -> semio_framework_schema_registry::Arti
     semio_framework_schema_registry::install_default_schema_leaf_reader(semio_framework_plugin::reactor::package_asset, "");
     #[cfg(not(target_arch = "wasm32"))]
     semio_framework_schema_registry::install_default_schema_leaf_reader(semio_framework_plugin::reactor::package_asset, env!("CARGO_MANIFEST_DIR"));
+    ::semio_framework_schema_registry::register_schema_leaf_documents(&[
+        ::semio_framework_schema_registry::SchemaLeafDocument { scope: "s.stdio.pdf.1.7", export: "artifact", format: ::semio_framework_schema_registry::SchemaFormat::Rust, path: "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🦀️.rs" },
+        ::semio_framework_schema_registry::SchemaLeafDocument { scope: "s.stdio.pdf.1.7", export: "artifact", format: ::semio_framework_schema_registry::SchemaFormat::JsonSchema, path: "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🔣️.json" },
+        ::semio_framework_schema_registry::SchemaLeafDocument { scope: "s.stdio.pdf.1.7", export: "snapshot", format: ::semio_framework_schema_registry::SchemaFormat::Rust, path: "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🦀️.rs" },
+        ::semio_framework_schema_registry::SchemaLeafDocument { scope: "s.stdio.pdf.1.7", export: "snapshot", format: ::semio_framework_schema_registry::SchemaFormat::Rust, path: "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/📐️model/🦀️.rs" },
+        ::semio_framework_schema_registry::SchemaLeafDocument { scope: "s.stdio.pdf.1.7", export: "snapshot", format: ::semio_framework_schema_registry::SchemaFormat::JsonSchema, path: "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🔣️.json" },
+        ::semio_framework_schema_registry::SchemaLeafDocument { scope: "s.stdio.pdf.1.7", export: "diff", format: ::semio_framework_schema_registry::SchemaFormat::Rust, path: "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🔺️diff/🦀️.rs" },
+        ::semio_framework_schema_registry::SchemaLeafDocument { scope: "s.stdio.pdf.1.7", export: "diff", format: ::semio_framework_schema_registry::SchemaFormat::Rust, path: "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🔺️diff/🔀️tri-state-indexed-and-keyed/🦀️.rs" },
+        ::semio_framework_schema_registry::SchemaLeafDocument { scope: "s.stdio.pdf.1.7", export: "diff", format: ::semio_framework_schema_registry::SchemaFormat::Rust, path: "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🔺️diff/📄️page-info-and-pages/🦀️.rs" },
+        ::semio_framework_schema_registry::SchemaLeafDocument { scope: "s.stdio.pdf.1.7", export: "diff", format: ::semio_framework_schema_registry::SchemaFormat::Rust, path: "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🔺️diff/🌳️value-trees/🦀️.rs" },
+        ::semio_framework_schema_registry::SchemaLeafDocument { scope: "s.stdio.pdf.1.7", export: "diff", format: ::semio_framework_schema_registry::SchemaFormat::Rust, path: "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🔺️diff/🧭️path-addressing-and-validation/🦀️.rs" },
+        ::semio_framework_schema_registry::SchemaLeafDocument { scope: "s.stdio.pdf.1.7", export: "diff", format: ::semio_framework_schema_registry::SchemaFormat::Rust, path: "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🔺️diff/🧾️pdf-diff-aggregate/🦀️.rs" },
+        ::semio_framework_schema_registry::SchemaLeafDocument { scope: "s.stdio.pdf.1.7", export: "diff", format: ::semio_framework_schema_registry::SchemaFormat::Rust, path: "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🔺️diff/🛠️mutation-diff-builders/🦀️.rs" },
+        ::semio_framework_schema_registry::SchemaLeafDocument { scope: "s.stdio.pdf.1.7", export: "diff", format: ::semio_framework_schema_registry::SchemaFormat::JsonSchema, path: "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🔺️diff/🔣️.json" },
+        ::semio_framework_schema_registry::SchemaLeafDocument { scope: "s.stdio.pdf.1.7", export: "mutations", format: ::semio_framework_schema_registry::SchemaFormat::Rust, path: "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🦀️.rs" },
+        ::semio_framework_schema_registry::SchemaLeafDocument { scope: "s.stdio.pdf.1.7", export: "mutations", format: ::semio_framework_schema_registry::SchemaFormat::JsonSchema, path: "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🔣️.json" },
+    ]);
     semio_framework_schema_registry::ArtifactSchemaDescriptor {
         id: "s.stdio.pdf.1.7",
-        artifact: semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: "", graphql: "", json_schema: include_str!("🔣️.json"), proto: "" },
+        artifact: semio_framework_schema_registry::FacetLeaves { rust: "", typescript: "", graphql: "", json_schema: "", proto: "" },
         snapshot: semio_framework_schema_registry::FacetLeaves {
-            rust: include_str!("📸️snapshot/🦀️.rs"),
+            rust: "",
             typescript: "",
             graphql: "",
-            json_schema: include_str!("📸️snapshot/🔣️.json"),
+            json_schema: "",
             proto: "",
         },
         diff: semio_framework_schema_registry::FacetLeaves {
-            rust: include_str!("🔺️diff/🦀️.rs"),
+            rust: "",
             typescript: "",
             graphql: "",
-            json_schema: include_str!("🔺️diff/🔣️.json"),
+            json_schema: "",
             proto: "",
         },
         mutations: semio_framework_schema_registry::FacetLeaves {
-            rust: include_str!("🧬️mutations/🦀️.rs"),
+            rust: "",
             typescript: "",
             graphql: "",
-            json_schema: include_str!("🧬️mutations/🔣️.json"),
+            json_schema: "",
             proto: "",
         },
     }

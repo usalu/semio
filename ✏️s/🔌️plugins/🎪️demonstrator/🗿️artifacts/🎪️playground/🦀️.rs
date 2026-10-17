@@ -6,169 +6,17 @@
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
-#[path = "🌉️apply/🦀️.rs"]
-pub mod central_apply;
 extern crate semio_framework_schema as schema;
 
-use {semio_framework_plugin::ArtifactKindSpec,semio_framework_artifact_reference::Dialect,semio_framework_plugin::MediaClass,semio_framework_plugin::MediaForm,semio_framework_plugin::MediaType,semio_framework_plugin::OsMediaCapability,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+pub use semio_s_artifact_demonstrator_playground_schema::{PLAYGROUND_DOCUMENT_SCHEMA};
 
-pub const PLAYGROUND_DOCUMENT_SCHEMA: &str = "playground.playground";
+pub use semio_s_artifact_demonstrator_playground_editor::{PLAYGROUND_DIALECT};
 
-//#region 🔖️Dialect
-/// 🎯️ Ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §2.1 — the one `Dialect`
-/// coordinate `PlaygroundEditor`/`PlaygroundViewer` (`✏️editor`/`👁️viewer`) both read `DIALECT` off,
-/// lives at the ARTIFACT root (not under either surface) so a viewer file can read it without ever
-/// importing through the sibling editor module. The root, definition and native dialect share
-/// one plugin-owned identity; the document payload schema remains independently named.
-pub const PLAYGROUND_DIALECT: Dialect = Dialect { artifact_kind: "s.demonstrator.playground", standard: StandardId("1"), subset: SubsetId::ANY };
-//#endregion 🔖️Dialect
+pub use semio_s_artifact_demonstrator_playground_editor::{artifact_kind};
 
-//#region 🔖️ArtifactKind
-/// 🗂️ This artifact's `ArtifactKindSpec`.
-pub fn artifact_kind() -> ArtifactKindSpec {
-    ArtifactKindSpec {
-        id: "playground.document".into(),
-        label: semio_framework_ui_locale::LocalizedLabel::native("Playground Document", "Playground-Dokument"),
-        source_format: PLAYGROUND_DOCUMENT_SCHEMA.into(),
-        component_kind: "playground".into(),
-        dimension: "data".into(),
-        media_capability: OsMediaCapability::MeshOnly,
-        media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
-        schema: PLAYGROUND_DOCUMENT_SCHEMA.into(),
-        export_formats: vec![],
-        import_formats: vec![],
-        export_stdio_kinds: vec!["stdio.json".into(), "stdio.zip".into()],
-        import_stdio_kinds: vec!["stdio.json".into(), "stdio.zip".into()],
-    }
-}
-//#endregion 🔖️ArtifactKind
+pub use semio_s_artifact_demonstrator_playground_schema::{PlaygroundCapabilityRow};
 
-type PlaygroundCapabilityRow<'a> = (&'a str, &'a str, &'a str, &'a [(&'a str, &'a str)], Option<(&'a str, &'a str)>);
-
-//#region 🔖️Register
-/// 🔖️ Declares the Playground artifact's owned semantic capabilities.
-pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
-    use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
-
-    let rows: &[PlaygroundCapabilityRow<'_>] = &[
-        ("s.demonstrator.playground.standard.v1", "standard", "1", &[], None),
-        ("s.demonstrator.playground.standard.v1.profile.any", "profile", "any", &[], None),
-        ("s.demonstrator.playground.schema.artifact", "schema", "s.demonstrator.playground", &[("schema", "s.demonstrator.playground")], None),
-        ("s.demonstrator.playground.inference.artifact", "inference", "s.demonstrator.playground.inference", &[("schema", "s.demonstrator.playground.inference")], None),
-        ("s.demonstrator.playground.codec.document.v1", "codec", "playground.playground:playground", &[("codec", "playground.playground"), ("codec-extension", "21:playground.playground:playground")], None),
-        ("s.demonstrator.playground.composer.native", "composer", "s.demonstrator.playground@1/*", &[("dialect", "s.demonstrator.playground@1/*")], None),
-        ("s.demonstrator.playground.composer.format-1", "composer", "s.stdio.zip@2.0/*", &[("dialect", "s.stdio.zip@2.0/*")], None),
-        ("s.demonstrator.playground.composer.format-4", "composer", "s.stdio.json@rfc8259/*", &[("dialect", "s.stdio.json@rfc8259/*")], None),
-        ("s.demonstrator.playground.grammar.1", "grammar", "playground.document", &[("grammar", "playground.document")], None),
-        ("s.demonstrator.playground.grammar.2", "grammar", "playground.op", &[("grammar", "playground.op")], None),
-        ("s.demonstrator.playground.grammar.3", "grammar", "playground.diff", &[("grammar", "playground.diff")], None),
-        ("s.demonstrator.playground.grammar.4", "grammar", "playground.pack", &[("grammar", "playground.pack")], None),
-        ("s.demonstrator.playground.grammar.5", "grammar", "playground.spr", &[("grammar", "playground.spr")], None),
-        ("s.demonstrator.playground.localization.en", "localization", "Playground", &[], Some(("en", "Playground"))),
-        ("s.demonstrator.playground.localization.de", "localization", "Spielplatz", &[], Some(("de", "Spielplatz"))),
-    ];
-    let mut definition = ArtifactDefinition::new(ArtifactIdentity::parse("s.demonstrator.playground")?);
-    for (identity, kind, descriptor, claims, localization) in rows {
-        let mut capability = ArtifactCapability::new(ArtifactIdentity::parse(*identity)?, ArtifactCapabilityKind::parse(*kind)?).descriptor(descriptor.as_bytes())?;
-        for (namespace, value) in *claims {
-            capability = capability.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::parse(*namespace)?, *value)?)?;
-        }
-        if let Some((locale, text)) = localization {
-            capability = capability.localization(ArtifactLocalization::new(ArtifactLocale::parse(*locale)?, *text)?)?;
-        }
-        definition = definition.capability(capability)?;
-    }
-    Ok(definition)
-}
-
-pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
-    semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
-        .schema(standards::v1::subsets::any::schema::playground_artifact_schema_descriptor())
-        .document_codec_bare::<standards::v1::subsets::any::schema::snapshot::PlaygroundSnapshot, standards::v1::subsets::any::schema::mutations::PlaygroundMutation>(PLAYGROUND_DOCUMENT_SCHEMA, PLAYGROUND_DIALECT)
-        .inferences([standards::v1::subsets::any::schema::inferences::playground_artifact_inference_descriptor()])
-        .composers(standards::v1::subsets::any::io::io_registry::entries())
-        .languages(pilot_languages())
-        .try_build()
-}
-
-/// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built once
-/// and leaked to a `&'static` slice since `dsl::passthrough_hooks` isn't `const fn`. Private:
-/// `declaration()` above is its only caller (moved here with it from `⚙️engine`, ticket
-/// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE reloc-g7 revision — kept unexported, not widened).
-fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
-    static LANGUAGES: std::sync::OnceLock<Vec<semio_framework_dsl::LanguageSpec>> = std::sync::OnceLock::new();
-    LANGUAGES.get_or_init(build_pilot_languages).as_slice()
-}
-
-fn build_pilot_languages() -> Vec<semio_framework_dsl::LanguageSpec> {
-    vec![playground_document_language(), playground_op_language(), playground_diff_language(), playground_pack_language(), playground_spr_language()]
-}
-
-fn playground_document_language() -> semio_framework_dsl::LanguageSpec {
-    semio_framework_dsl::LanguageSpec {
-        id: "playground.document",
-        extension: Some("playground"),
-        role: semio_framework_dsl::LanguageRole::Document,
-        grammar: Some(standards::v1::subsets::any::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(standards::v1::subsets::any::io::text::snapshot::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(standards::v1::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(standards::v1::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
-        hooks: semio_framework_dsl::passthrough_hooks("playground.document"),
-    }
-}
-
-fn playground_op_language() -> semio_framework_dsl::LanguageSpec {
-    semio_framework_dsl::LanguageSpec {
-        id: "playground.op",
-        extension: None,
-        role: semio_framework_dsl::LanguageRole::Ops,
-        grammar: Some(standards::v1::subsets::any::io::text::mutations::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(standards::v1::subsets::any::io::text::mutations::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(standards::v1::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(standards::v1::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
-        hooks: semio_framework_dsl::passthrough_hooks("playground.op"),
-    }
-}
-
-fn playground_diff_language() -> semio_framework_dsl::LanguageSpec {
-    semio_framework_dsl::LanguageSpec {
-        id: "playground.diff",
-        extension: None,
-        role: semio_framework_dsl::LanguageRole::Diff,
-        grammar: Some(standards::v1::subsets::any::io::text::diff::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(standards::v1::subsets::any::io::text::diff::COMPONENT_GRAMMAR_PATH),
-        protocol: None,
-        protocol_path: None,
-        hooks: semio_framework_dsl::passthrough_hooks("playground.diff"),
-    }
-}
-
-fn playground_pack_language() -> semio_framework_dsl::LanguageSpec {
-    semio_framework_dsl::LanguageSpec {
-        id: "playground.pack",
-        extension: None,
-        role: semio_framework_dsl::LanguageRole::Pack,
-        grammar: None,
-        grammar_path: None,
-        protocol: Some(standards::v1::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(standards::v1::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
-        hooks: semio_framework_dsl::passthrough_hooks("playground.pack"),
-    }
-}
-
-fn playground_spr_language() -> semio_framework_dsl::LanguageSpec {
-    semio_framework_dsl::LanguageSpec {
-        id: "playground.spr",
-        extension: None,
-        role: semio_framework_dsl::LanguageRole::Spr,
-        grammar: None,
-        grammar_path: None,
-        protocol: Some(standards::v1::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(standards::v1::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
-        hooks: semio_framework_dsl::passthrough_hooks("playground.spr"),
-    }
-}
-//#endregion 🔖️Register
+pub use semio_s_artifact_demonstrator_playground_examples::{build_pilot_languages, declaration, definition, pilot_languages, playground_diff_language, playground_document_language, playground_op_language, playground_pack_language, playground_spr_language};
 
 #[path = "."]
 pub mod standards {
@@ -180,82 +28,50 @@ pub mod standards {
             pub mod any {
                 #[path = "."]
                 pub mod schema {
-                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs"]
-                    mod component;
-                    pub use component::*;
-                    #[path = "."]
-                    pub mod inferences {
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                    #[path = "."]
-                    pub mod snapshot {
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                    #[path = "."]
-                    pub mod diff {
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
+                    pub use semio_s_artifact_demonstrator_playground_schema::standards::v1::subsets::any::schema::*;
+
+                    pub use semio_s_artifact_demonstrator_playground_inferences::standards::v1::subsets::any::schema::inferences;
+                    pub use semio_s_artifact_demonstrator_playground_schema::standards::v1::subsets::any::schema::snapshot;
+                    pub use semio_s_artifact_demonstrator_playground_schema::standards::v1::subsets::any::schema::diff;
                     #[path = "."]
                     pub mod mutations {
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
+                        pub use semio_s_artifact_demonstrator_playground_schema::standards::v1::subsets::any::schema::mutations::*;
+
                         #[path = "."]
                         pub mod change_schema {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✒️change-schema/🦀️.rs"]
-                            mod component;
-                            pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✒️change-schema/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✒️change-schema/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✒️change-schema/🧪️tests/📅️retags/🦀️.rs"]
-                            mod tests_retags_the_playground_artifact_schema;
+                            pub use semio_s_artifact_demonstrator_playground_schema::standards::v1::subsets::any::schema::mutations::change_schema::*;
+
+                            pub use semio_s_artifact_demonstrator_playground_schema::standards::v1::subsets::any::schema::mutations::change_schema::diff;
+                            pub use semio_s_artifact_demonstrator_playground_schema::standards::v1::subsets::any::schema::mutations::change_schema::inverse;
+
                         }
                     }
                 }
                 #[path = "."]
                 pub mod io {
-                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs"]
-                    mod component;
-                    pub use component::*;
+                    pub use semio_s_artifact_demonstrator_playground_examples::standards::v1::subsets::any::io::*;
+pub mod binary {
+    pub use semio_s_artifact_demonstrator_playground_examples::standards::v1::subsets::any::io::binary::*;
+    pub use semio_s_artifact_demonstrator_playground_editor::standards::v1::subsets::any::io::binary::diff;
+    pub use semio_s_artifact_demonstrator_playground_inferences::standards::v1::subsets::any::io::binary::inferences;
+}
+pub mod sqlite {
+    pub use semio_s_artifact_demonstrator_playground_inferences::standards::v1::subsets::any::io::sqlite::*;
+    pub use semio_s_artifact_demonstrator_playground_schema::standards::v1::subsets::any::io::sqlite::snapshot;
+}
+pub mod text {
+    pub use semio_s_artifact_demonstrator_playground_examples::standards::v1::subsets::any::io::text::*;
+    pub use semio_s_artifact_demonstrator_playground_inferences::standards::v1::subsets::any::io::text::inferences;
+}
+
                     #[path = "."]
                     pub mod import {
                         #[path = "."]
                         pub mod deserializers {
                             #[path = "."]
                             pub mod artifacts {
-                                #[path = "."]
-                                pub mod zip {
-                                    #[path = "."]
-                                    pub mod v2_0 {
-                                        #[path = "."]
-                                        pub mod any {
-                                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🎒️zip/🔖️2.0/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
-                                #[path = "."]
-                                pub mod json {
-                                    #[path = "."]
-                                    pub mod v_rfc8259 {
-                                        #[path = "."]
-                                        pub mod any {
-                                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
+                                pub use semio_s_artifact_demonstrator_playground_editor::standards::v1::subsets::any::io::import::deserializers::artifacts::zip;
+                                pub use semio_s_artifact_demonstrator_playground_editor::standards::v1::subsets::any::io::import::deserializers::artifacts::json;
                             }
                         }
                     }
@@ -265,30 +81,8 @@ pub mod standards {
                         pub mod serializers {
                             #[path = "."]
                             pub mod artifacts {
-                                #[path = "."]
-                                pub mod zip {
-                                    #[path = "."]
-                                    pub mod v2_0 {
-                                        #[path = "."]
-                                        pub mod any {
-                                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎒️zip/🔖️2.0/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
-                                #[path = "."]
-                                pub mod json {
-                                    #[path = "."]
-                                    pub mod v_rfc8259 {
-                                        #[path = "."]
-                                        pub mod any {
-                                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
+                                pub use semio_s_artifact_demonstrator_playground_editor::standards::v1::subsets::any::io::export::serializers::artifacts::zip;
+                                pub use semio_s_artifact_demonstrator_playground_editor::standards::v1::subsets::any::io::export::serializers::artifacts::json;
                             }
                         }
                     }
@@ -301,11 +95,9 @@ pub mod standards {
 pub mod examples {
     #[path = "."]
     pub mod demo {
-        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️.rs"]
-        mod component;
-        pub use component::*;
-        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🧩️example/🦀️.rs"]
-        mod tests;
+        pub use semio_s_artifact_demonstrator_playground_inferences::examples::demo::*;
+
+        pub use semio_s_artifact_demonstrator_playground_examples::examples::demo::tests;
     }
 }
 
@@ -313,41 +105,24 @@ pub mod examples {
 pub mod editor {
     #[path = "."]
     pub mod playground {
-        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs"]
-        mod component;
-        pub use component::*;
-        #[path = "."]
-        pub mod presence {
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
-        #[path = "."]
-        pub mod config {
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
+        pub use semio_s_artifact_demonstrator_playground_editor::editor::playground::*;
+
+        pub use semio_s_artifact_demonstrator_playground_inferences::editor::playground::presence;
+        pub use semio_s_artifact_demonstrator_playground_inferences::editor::playground::config;
 
         #[path = "."]
         pub mod commands {
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔧️change-schema/🦀️.rs"]
-            pub mod change_schema;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎨️set-active-example/🦀️.rs"]
-            pub mod set_active_example;
+            pub use semio_s_artifact_demonstrator_playground_editor::editor::playground::commands::change_schema;
+            pub use semio_s_artifact_demonstrator_playground_inferences::editor::playground::commands::set_active_example;
         }
 
         #[path = "."]
         pub mod modes {
             #[path = "."]
             pub mod edit {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🦀️.rs"]
-                mod component;
-                pub use component::*;
+                pub use semio_s_artifact_demonstrator_playground_editor::editor::playground::modes::edit::*;
 
-                #[path = "."]
-                pub mod windows {
-                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️.rs"]
-                    pub mod main;
-                }
+                pub use semio_s_artifact_demonstrator_playground_editor::editor::playground::modes::edit::windows;
             }
         }
     }
@@ -357,33 +132,18 @@ pub mod editor {
 pub mod viewer {
     #[path = "."]
     pub mod playground {
-        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs"]
-        mod component;
-        pub use component::*;
-        #[path = "."]
-        pub mod presence {
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/👥️presence/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
-        #[path = "."]
-        pub mod config {
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎚️config/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
+        pub use semio_s_artifact_demonstrator_playground_editor::viewer::playground::*;
+
+        pub use semio_s_artifact_demonstrator_playground_inferences::viewer::playground::presence;
+        pub use semio_s_artifact_demonstrator_playground_inferences::viewer::playground::config;
 
         #[path = "."]
         pub mod modes {
             #[path = "."]
             pub mod view {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🦀️.rs"]
-                mod component;
-                pub use component::*;
+                pub use semio_s_artifact_demonstrator_playground_editor::viewer::playground::modes::view::*;
 
-                #[path = "."]
-                pub mod windows {
-                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️.rs"]
-                    pub mod main;
-                }
+                pub use semio_s_artifact_demonstrator_playground_editor::viewer::playground::modes::view::windows;
             }
         }
     }
@@ -392,3 +152,7 @@ pub mod viewer {
 pub use crate::standards::v1::subsets::any::io::derived_construction::PlaygroundBuilderConstruction;
 pub use crate::standards::v1::subsets::any::io::derived_analysis::{PlaygroundParts, PlaygroundAnalyzerAnalysis};
 pub use crate::standards::v1::subsets::any::io::{PlaygroundBuilderFacets, PlaygroundBuilder, PlaygroundAnalyzer, PlaygroundComposer};
+
+#[cfg(test)]
+#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs"]
+mod hoisted_snapshot_0;

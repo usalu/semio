@@ -1,5 +1,59 @@
-use super::*;
-use crate::app::*;
+use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_framework_plugin_decl_emission::child_emit_preparation::ChildEmitPreparation;
+use semio_framework_plugin_decl_emission::child_emit_preparation::ChildEmitPreparationStep;
+use semio_framework_plugin_decl_emission::Emit;
+use semio_framework_plugin_instance_ladders::ladders_plugin_app_impl::MAINTENANCE_STAGES;
+use semio_framework_plugin_reactor_app::PluginApp;
+use semio_framework_plugin_builder::Ready;
+use semio_framework_plugin_testing_laws::artifact_app_laws;
+#[cfg(test)]
+use semio_framework_plugin_tests_02::publication_mounted_test_hosts::publication_mounted_unit_2::test_mounted_original_owned_publication;
+use semio_framework_plugin_composition_publication::test_original_pending_child_group_closure;
+use semio_framework_ui_contract::*;
+use semio_framework::*;
+use semio_framework::kernel::*;
+use semio_framework_plugin_abi::ArtifactAnalysis;
+use semio_framework_plugin_abi::ArtifactAnalyzer;
+use semio_framework_plugin_abi::ArtifactBuilder;
+use semio_framework_plugin_abi::ArtifactChildren;
+use semio_framework_plugin_abi::ArtifactComposer;
+use semio_framework_plugin_abi::ArtifactComposition;
+use semio_framework_plugin_abi::ArtifactDecomposer;
+use semio_framework_plugin_abi::ArtifactDeserializer;
+use semio_framework_plugin_decl_surface::ArtifactEditor;
+use semio_framework_plugin_decl_views::tool_contract::ArtifactInstanceOperationOwner;
+use semio_framework_plugin_decl_app::tool_contract::ArtifactOwnedToolJobFactory;
+use semio_framework_plugin_decl_app::tool_contract::ArtifactReservedJob;
+use semio_framework_plugin_abi::ArtifactSerializer;
+use store::ArtifactStoreInitializationAuthority;
+use semio_framework_plugin_decl_surface::ArtifactViewer;
+use semio_framework_plugin_decl_emission::AsyncTaskRun;
+use semio_framework_plugin_decl_emission::AsyncTaskSource;
+use semio_framework_plugin_decl_views::child_view::ChildContentRetainers;
+use semio_framework_plugin_abi::DerivedArtifactSpec;
+use semio_framework_plugin_window_kits::LabelAxes;
+use semio_framework_plugin_decl_app::NaturalFileDecodeCursor;
+use semio_framework_os_kernel::io::SubsetValidator;
+use semio_framework_plugin_decl_emission::ToolCommandCatalog;
+use semio_framework_plugin_decl_views::tool_run_contract::ToolRunRetargetableJob;
+use semio_framework_plugin_window_config::WindowConfigOwner;
+use semio_framework_plugin_window_config::WindowConfigReplaceMutation;
+use semio_framework_plugin_window_kits::WindowKit;
+use semio_framework_plugin_window_transient::window_transient::WindowTransientOwner;
+use pack::snapshot::ArtifactPack;
+use semio_framework_os_kernel::os_store::backbone::Backbone;
+use semio_framework_diagnostic::FaultFrom;
+use semio_framework_value_derive::{FromValue, ToValue};
+use semio_framework_os_kernel::{MemberFactory, Mutation, SpaceMember};
+use semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::document::mutations::set_count::SetCount;
+use semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::document::mutations::set_label::SetLabel;
+use semio_framework_plugin_tests_05::plugin_runtime_plugin_builder_contract_support_1::{TestApp, contract_composed_app_raw, meta, prepare_original_fixture_child, register_test_child};
+use semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::config::mutations::TestConfigMutation;
+use semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::document::mutations::TestMutation;
+use semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::document::TestSnapshot;
+use serde_json::Value;
+use semio_framework_job::InteractiveJob as _;
+use semio_framework_os_kernel as protocol;
 use semio_framework_value::retained_clone::RetainedCloneGrant;
 
 #[test]
@@ -30,14 +84,13 @@ fn mounted_owned_child_original_preparation_preserves_actual_operation_schema() 
         let turn=semio_framework_plugin_ownership::bounded_ownership::plugin_demand_grant(demand);let step=emit.close_child_one(turn).unwrap();if let Some(PluginLifecycleStep::Progress(progress)|PluginLifecycleStep::Complete(progress))=step{assert!(progress.fits(turn));}
     }
     assert_eq!(schema, "count.set-count", "owned typed source carries its first original operation's authored schema before mounted publication");
-    println!("[DEBUG] original owned child schema={schema}, source pointer retained, borrowed schema copies<=64 and whole physical births/releases<=262144 per admitted turn");
 }
 
 #[semio_framework_async_macros::async_test]
 async fn mounted_owned_child_actual_publisher_commits_original_parent_and_children_before_result_ack() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap() {
-        let mut app = contract_composed_app_raw(crate::app_testing::artifact_app_laws::fixture_mounted_policy(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await;
+        let mut app = contract_composed_app_raw(semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity()).await;
         let count = row["children"].as_u64().unwrap() as usize;
         for index in 0..count { register_test_child(&mut app, &format!("child-{}", index + 1)).await; }
         let mut emit: Emit<TestMutation, TestConfigMutation> = Emit::default();
@@ -48,7 +101,7 @@ async fn mounted_owned_child_actual_publisher_commits_original_parent_and_childr
         for _ in 0..100000 { if matches!(prepare_original_fixture_child(&mut emit, 1, 262144).unwrap(), ChildEmitPreparationStep::Ready(_)) { break; } }
         assert_eq!(emit.owned_child_emits.len(), count);
         assert!(emit.child_emits.is_empty());
-        let (mutations, inverse_group, operation,mut caller) = crate::child_content::test_mounted_original_owned_publication(&mut app, emit, meta(), row["parentTouched"].as_bool().unwrap(), |app| (0..count).map(|index| {
+        let (mutations, inverse_group, operation,mut caller) = semio_framework_plugin_tests_02::publication_mounted_test_hosts::publication_mounted_unit_2::test_mounted_original_owned_publication(&mut app, emit, meta(), row["parentTouched"].as_bool().unwrap(), |app| (0..count).map(|index| {
             let TestMembers::Child(child) = &app.child_composition.children.get(&("slot".into(), format!("child-{}", index + 1))).unwrap().member;
             child.snapshot_ref().count != 0
         }).collect()).await;
@@ -71,10 +124,9 @@ async fn mounted_owned_child_actual_publisher_commits_original_parent_and_childr
             assert_eq!(child.snapshot_ref().count, row["childCounts"][index].as_i64().unwrap() as i32);
             assert_eq!(child.snapshot_ref().label, row["childLabel"].as_str().unwrap());
         }
-        println!("[DEBUG] actual mounted original owned group parent={} children={count} operations={} memberEdits={} Child page stable until exact ACK", row["parentTouched"], mutations.len(), inverse_group.member_edits.len());
         drop(mutations);
         drop(inverse_group);
-        let policy=crate::app_testing::artifact_app_laws::fixture_mounted_policy();
+        let policy=semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy();
         for _ in 0..64{for _ in 0..MAINTENANCE_STAGES{let grant=semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1.min(policy.maintenance.maximum_items),..policy.maintenance};caller.turn(grant,|cx|{let demand=app.maintenance_retirement_demands(grant.maximum_copy_bytes)?;semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|same,grant|Ok((PluginApp::maintenance_step(&mut app,same,grant)?,app.maintenance_terminal_is_empty()))).map(|_|()).map_err(Into::into)}).unwrap();}}
         for turn in 0..100000{if app.close_terminal_is_empty(){break}let grant=policy.close;caller.turn(grant,|cx|{let demand=app.close_retirement_demands(grant.maximum_copy_bytes)?;semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|same,grant|Ok((PluginApp::close_step(&mut app,same,grant)?,app.close_terminal_is_empty()))).map(|_|()).map_err(Into::into)}).unwrap();assert!(turn<99999,"original composed fixture full closure");}
         assert!(app.close_terminal_is_empty());caller.retire(policy.close);
@@ -84,5 +136,5 @@ async fn mounted_owned_child_actual_publisher_commits_original_parent_and_childr
 #[test]
 fn original_pending_child_group_close_preserves_all_sources_and_full_grants(){
  let original:serde_json::Value=serde_json::from_str(include_str!("../../🔬️plugin-runtime-runtime-close-budget/🧫️fixtures/🧾️fixture-caller/🔣️.json")).unwrap();let policy=original["native"]["grant"].as_array().unwrap();let grant=RetainedCloneGrant{maximum_items:policy[0].as_u64().unwrap()as usize,maximum_copy_bytes:policy[1].as_u64().unwrap()as usize,maximum_capacity_bytes:policy[2].as_u64().unwrap()as usize,maximum_release_bytes:policy[3].as_u64().unwrap()as usize,maximum_depth:policy[4].as_u64().unwrap()as usize};
- for count in[0,1,17]{crate::store_publication::test_original_pending_child_group_closure::<TestApp>(||{(0..count).map(|_|TestMutation::SetLabel(SetLabel{value:"original 雪".repeat(8192)})).collect()},grant);}
+ for count in[0,1,17]{semio_framework_plugin_composition_publication::test_original_pending_child_group_closure::<TestApp>(||{(0..count).map(|_|TestMutation::SetLabel(SetLabel{value:"original 雪".repeat(8192)})).collect()},grant);}
 }

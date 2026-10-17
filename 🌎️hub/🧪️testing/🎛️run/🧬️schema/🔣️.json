@@ -1,0 +1,57 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/hub/testing/run/schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "scenario",
+    "backend",
+    "arguments",
+    "level"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "scenario": {
+      "enum": [
+        "unit",
+        "two-client-document",
+        "document-growth"
+      ]
+    },
+    "backend": {
+      "enum": [
+        null,
+        "sqlite"
+      ]
+    },
+    "arguments": {
+      "type": "array",
+      "maxItems": 32,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 512
+      }
+    },
+    "level": {
+      "enum": [
+        "fundamental",
+        "quick",
+        "long",
+        "exhaustive"
+      ]
+    }
+  },
+  "definitions": {
+    "Policy": {
+      "const": {
+        "maximumArgumentBytes": 16384,
+        "maximumOutputBytes": 1048576,
+        "maximumOutputLines": 65536
+      }
+    }
+  }
+}

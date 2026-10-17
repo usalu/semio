@@ -1,30 +1,51 @@
 //! 📭️ Staged slice of the `instance-root` band of the mounted artifact instance: its `instance-docs` members (WP6 step S0 of the instance family).
 //!
 //! 🧵️ The mounted artifact instance `VcsArtifactApp`: its state, its turns and its `PluginApp` implementation.
-use super::*;
-use super::docs_maintenance_ladder::{item};
+#[cfg(any(test, feature = "artifact-app-testing"))]
+use std::sync::Arc;
+use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_framework::kernel::ArtifactHandle;
+use semio_framework_plugin_decl_views::media_contract::{ArtifactMediaExportCompletion, ArtifactMediaExportCredit, ArtifactMediaExportHandle, ArtifactOutputChunks};
+use semio_framework_plugin_decl_app::media_contract::ArtifactMediaExportJobRequest;
+use semio_framework_plugin_ownership::store_lifecycle::{ArtifactOwnedDisposer, ArtifactSnapshotCloseLease, ArtifactSnapshotCloseRetention};
+use pack::snapshot::ArtifactPack;
+use semio_framework_plugin_decl_app::tool_contract::ArtifactReservedToolJob;
+use semio_framework_value::retirement::controlled::ControlledRetirement;
+use semio_framework_plugin_decl_emission::{Emit, TransactionPhase};
+use semio_framework::{Fault, FaultCode, FaultFrom, FaultOrigin};
+use std::future::Future;
+use std::mem::ManuallyDrop;
+use store::{MemberFactory, Mutation, SpaceMember};
+use protocol::OpText;
+use semio_framework_plugin_reactor_app::PluginApp;
+use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
+use semio_framework_value::{RetirementDemand, ValueError};
+use semio_framework_plugin_operation::{ToolCancellationLease, ToolOperationKey};
+use semio_framework_ui_contract::*;
+use crate::docs_maintenance_ladder::item;
 
-pub(crate) struct MediaExportPreparation<A:ArtifactApp>{
- pub(crate) canonical_revision:[u8;32],pub(crate) metadata:ManuallyDrop<Option<[Vec<u8>;6]>>,pub(crate) metadata_stage:usize,pub(crate) metadata_close:ManuallyDrop<Option<semio_framework_value::retirement::controlled::ControlledRetirement<[Vec<u8>;6]>>>,
- pub(crate) request_close:ManuallyDrop<Option<crate::media_contract::ArtifactMediaExportRequestRetirement<A>>>,pub(crate) parts:ManuallyDrop<Option<crate::media_export::MediaExportOwnedParts>>,pub(crate) parts_close:ManuallyDrop<Option<semio_framework_value::retirement::controlled::ControlledRetirement<crate::media_export::MediaExportOwnedParts>>>,pub(crate) handle:ManuallyDrop<Option<ArtifactMediaExportHandle>>,pub(crate) handle_close:ManuallyDrop<Option<semio_framework_value::retirement::controlled::ControlledRetirement<ArtifactMediaExportHandle>>>,pub(crate) operation:Option<semio_framework_job::Operation>,pub(crate) body_ready:bool,pub(crate) operation_bound:bool,pub(crate) assembled:bool,pub(crate) published:bool,
- pub(crate) snapshot_source:semio_framework_plugin_ownership::store_lifecycle::ArtifactMediaSnapshotSource<A::Snapshot>,
- pub(crate) snapshot:ManuallyDrop<Option<std::sync::Arc<A::Snapshot>>>,pub(crate) snapshot_lease:ManuallyDrop<Option<ArtifactSnapshotCloseLease<A::Snapshot>>>,pub(crate) snapshot_retention:ManuallyDrop<Option<ArtifactSnapshotCloseRetention>>,
- pub(crate) request:ManuallyDrop<Option<ArtifactMediaExportJobRequest<A>>>,pub(crate) body:ManuallyDrop<Option<Box<dyn crate::tool_contract::ArtifactReservedJob+Send>>>,pub(crate) producer:ManuallyDrop<Option<ArtifactReservedToolJob>>,
- pub(crate) source_identity:(semio_framework_job::OperationId,semio_framework_job::Generation,usize),pub(crate) port_identity:(usize,usize),pub(crate) key:ToolOperationKey,
- pub(crate) lease:Option<ToolCancellationLease>,pub(crate) retirement:Option<Box<crate::tool_cancellation::ToolCancellationLeaseRetirement>>,
- pub(crate) completion:Option<ArtifactMediaExportCompletion>,pub(crate) completion_close:Option<semio_framework_value::retirement::controlled::ControlledRetirement<ArtifactMediaExportCompletion>>,
- pub(crate) credit:Option<ArtifactMediaExportCredit>,pub(crate) credit_close:Option<semio_framework_value::retirement::controlled::ControlledRetirement<ArtifactMediaExportCredit>>,
- pub(crate) chunks:Option<ArtifactOutputChunks>,pub(crate) chunks_close:Option<semio_framework_value::retirement::controlled::ControlledRetirement<ArtifactOutputChunks>>,
+#[doc(hidden)]
+pub struct MediaExportPreparation<A:ArtifactApp>{
+ pub canonical_revision:[u8;32],pub metadata:ManuallyDrop<Option<[Vec<u8>;6]>>,pub(crate) metadata_stage:usize,pub metadata_close:ManuallyDrop<Option<semio_framework_value::retirement::controlled::ControlledRetirement<[Vec<u8>;6]>>>,
+ pub request_close:ManuallyDrop<Option<semio_framework_plugin_decl_app::media_contract::ArtifactMediaExportRequestRetirement<A>>>,pub parts:ManuallyDrop<Option<semio_framework_plugin_document_media::media_export::MediaExportOwnedParts>>,pub(crate) parts_close:ManuallyDrop<Option<semio_framework_value::retirement::controlled::ControlledRetirement<semio_framework_plugin_document_media::media_export::MediaExportOwnedParts>>>,pub handle:ManuallyDrop<Option<ArtifactMediaExportHandle>>,pub handle_close:ManuallyDrop<Option<semio_framework_value::retirement::controlled::ControlledRetirement<ArtifactMediaExportHandle>>>,pub operation:Option<semio_framework_job::Operation>,pub(crate) body_ready:bool,pub(crate) operation_bound:bool,pub assembled:bool,pub published:bool,
+ pub snapshot_source:semio_framework_plugin_ownership::store_lifecycle::ArtifactMediaSnapshotSource<A::Snapshot>,
+ pub snapshot:ManuallyDrop<Option<std::sync::Arc<A::Snapshot>>>,pub(crate) snapshot_lease:ManuallyDrop<Option<ArtifactSnapshotCloseLease<A::Snapshot>>>,pub(crate) snapshot_retention:ManuallyDrop<Option<ArtifactSnapshotCloseRetention>>,
+ pub request:ManuallyDrop<Option<ArtifactMediaExportJobRequest<A>>>,pub body:ManuallyDrop<Option<Box<dyn semio_framework_plugin_decl_app::tool_contract::ArtifactReservedJob+Send>>>,pub producer:ManuallyDrop<Option<ArtifactReservedToolJob>>,
+ pub source_identity:(semio_framework_job::OperationId,semio_framework_job::Generation,usize),pub(crate) port_identity:(usize,usize),pub key:ToolOperationKey,
+ pub lease:Option<ToolCancellationLease>,pub retirement:Option<Box<semio_framework_plugin_operation::ToolCancellationLeaseRetirement>>,
+ pub completion:Option<ArtifactMediaExportCompletion>,pub completion_close:Option<semio_framework_value::retirement::controlled::ControlledRetirement<ArtifactMediaExportCompletion>>,
+ pub credit:Option<ArtifactMediaExportCredit>,pub(crate) credit_close:Option<semio_framework_value::retirement::controlled::ControlledRetirement<ArtifactMediaExportCredit>>,
+ pub chunks:Option<ArtifactOutputChunks>,pub(crate) chunks_close:Option<semio_framework_value::retirement::controlled::ControlledRetirement<ArtifactOutputChunks>>,
 }
 
 impl<A:ArtifactApp> MediaExportPreparation<A>{
- pub(crate) fn retirement_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
+ pub fn retirement_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
   use semio_framework_job::InteractiveJob;
   let one=RetirementDemand{depth:1,..Default::default()};
   if let Some(job)=self.producer.as_ref(){return if job.terminal_is_empty(){Ok(one)}else{Ok(RetirementDemand{copy_bytes:job.next_close_copy_byte_demand()?,capacity_bytes:job.next_close_capacity_byte_demand(body)?,release_bytes:job.next_close_release_byte_demand()?,depth:job.next_close_depth_demand()?.max(1)})}}
   if let Some(job)=self.body.as_ref(){return if job.terminal_is_empty(){Ok(RetirementDemand{release_bytes:size_of_val(&**job),..one})}else{Ok(RetirementDemand{copy_bytes:job.next_close_copy_byte_demand()?,capacity_bytes:job.next_close_capacity_byte_demand(body)?,release_bytes:job.next_close_release_byte_demand()?,depth:job.next_close_depth_demand()?.max(1)})}}
   if let Some(owner)=self.request_close.as_ref(){return if owner.terminal_is_empty(){Ok(one)}else{owner.retirement_demands(body)}}
-  if self.request.is_some(){return Ok(RetirementDemand{copy_bytes:size_of::<crate::media_contract::ArtifactMediaExportRequestRetirement<A>>(),..one})}
+  if self.request.is_some(){return Ok(RetirementDemand{copy_bytes:size_of::<semio_framework_plugin_decl_app::media_contract::ArtifactMediaExportRequestRetirement<A>>(),..one})}
   if self.parts.is_some()||self.parts_close.is_some(){return semio_framework_plugin_ownership::bounded_ownership::plugin_typed_owner_demand(&self.parts,&self.parts_close,body)}
   if self.handle.is_some()||self.handle_close.is_some(){return semio_framework_plugin_ownership::bounded_ownership::plugin_typed_owner_demand(&self.handle,&self.handle_close,body)}
   if self.metadata.is_some()||self.metadata_close.is_some(){return semio_framework_plugin_ownership::bounded_ownership::plugin_typed_owner_demand(&self.metadata,&self.metadata_close,body)}
@@ -42,7 +63,7 @@ impl<A:ArtifactApp> MediaExportPreparation<A>{
   if let Some(job)=self.producer.as_mut(){if job.terminal_is_empty(){self.producer.take();return Ok(Some(item))}job.begin_close();return job.close_step(cx).map(|step|Some(step.progress()))}
   if let Some(job)=self.body.as_mut(){if job.terminal_is_empty(){let bytes=size_of_val(&**job);self.body.take();return Ok(Some(RetainedCloneProgress{released_bytes:bytes,..item}))}job.begin_close();return job.close_step(cx).map(|step|Some(step.progress()))}
   if let Some(owner)=self.request_close.as_mut(){if owner.terminal_is_empty(){self.request_close.take();return Ok(Some(item))}return owner.close_step(grant).map(|step|Some(step.progress())).map_err(Into::into)}
-  if let Some(request)=self.request.take(){*self.request_close=Some(crate::media_contract::ArtifactMediaExportRequestRetirement::new(request));return Ok(Some(RetainedCloneProgress{copied_bytes:size_of::<crate::media_contract::ArtifactMediaExportRequestRetirement<A>>(),..item}))}
+  if let Some(request)=self.request.take(){*self.request_close=Some(semio_framework_plugin_decl_app::media_contract::ArtifactMediaExportRequestRetirement::new(request));return Ok(Some(RetainedCloneProgress{copied_bytes:size_of::<semio_framework_plugin_decl_app::media_contract::ArtifactMediaExportRequestRetirement<A>>(),..item}))}
   if self.parts.is_some()||self.parts_close.is_some(){return semio_framework_plugin_ownership::bounded_ownership::plugin_typed_owner_step(&mut self.parts,&mut self.parts_close,grant).map(|step|Some(step.progress())).map_err(Into::into)}
   if self.handle.is_some()||self.handle_close.is_some(){return semio_framework_plugin_ownership::bounded_ownership::plugin_typed_owner_step(&mut self.handle,&mut self.handle_close,grant).map(|step|Some(step.progress())).map_err(Into::into)}
   if self.metadata.is_some()||self.metadata_close.is_some(){return semio_framework_plugin_ownership::bounded_ownership::plugin_typed_owner_step(&mut self.metadata,&mut self.metadata_close,grant).map(|step|Some(step.progress())).map_err(Into::into)}
@@ -65,7 +86,8 @@ impl<A:ArtifactApp> MediaExportPreparation<A>{
 /// (128-bit, two interleaved 64-bit lanes) rather than `std::collections::hash_map::DefaultHasher`
 /// — the latter's hash is only guaranteed stable for one process/compiler invocation, not the
 /// byte-identical value the SAME child id must always map to.
-pub(crate) async fn artifact_handle_of(artifact_id: &str) -> ArtifactHandle {
+#[doc(hidden)]
+pub async fn artifact_handle_of(artifact_id: &str) -> ArtifactHandle {
     const OFFSET: u64 = 0xcbf2_9ce4_8422_2325;
     const PRIME: u64 = 0x0000_0100_0000_01b3;
     let mut lane0 = OFFSET;
@@ -84,7 +106,8 @@ pub(crate) async fn artifact_handle_of(artifact_id: &str) -> ArtifactHandle {
 /// closed `ViewEmit`, contract §2.2 — this exists so a hand-written runtime `ArtifactApp` impl
 /// that ignores `ViewEmit` is safe too, not "redundant").
 // 🚫️async: E1 pure error constructor consumed pervasively by sync closures — see R9.
-pub(crate) fn viewer_read_only_fault(verb: &str) -> Fault {
+#[doc(hidden)]
+pub fn viewer_read_only_fault(verb: &str) -> Fault {
     Fault::new(FaultOrigin::Framework, FaultCode::new("viewer.read-only"), format!("'{verb}' is not permitted on a viewer instance (contract §2.3)"))
 }
 
@@ -93,7 +116,8 @@ pub(crate) fn viewer_read_only_fault(verb: &str) -> Fault {
 /// grow (design §15). Refused instead of silently losing a stamp or a trace: a stream or abort naming no transaction, a
 /// stream or abort across owned children, a stream carrying operations with foreign steps, and an abort carrying
 /// operations.
-pub(crate) fn tool_transaction_shape_fault(verb: &str, transaction: Option<&protocol::TransactionRef>, phase: TransactionPhase, children: bool, carried: bool, foreign: bool) -> Option<Fault> {
+#[doc(hidden)]
+pub fn tool_transaction_shape_fault(verb: &str, transaction: Option<&protocol::TransactionRef>, phase: TransactionPhase, children: bool, carried: bool, foreign: bool) -> Option<Fault> {
     let refuse = |detail: String| Some(Fault::new(FaultOrigin::Framework, FaultCode::new("toolTransaction.shape"), detail));
     let streamed = matches!(phase, TransactionPhase::Stream | TransactionPhase::Abort);
     match transaction {
@@ -105,7 +129,8 @@ pub(crate) fn tool_transaction_shape_fault(verb: &str, transaction: Option<&prot
     }
 }
 
-pub(crate) fn typed_operation_document_is_fresh(operation: &semio_framework_job::Operation, canonical_revision: [u8; 32], live_revision: [u8; 32], live_generation: u64) -> bool {
+#[doc(hidden)]
+pub fn typed_operation_document_is_fresh(operation: &semio_framework_job::Operation, canonical_revision: [u8; 32], live_revision: [u8; 32], live_generation: u64) -> bool {
     let live_short = semio_framework_job::RevisionId(u64::from_be_bytes(live_revision[..8].try_into().expect("revision lane width")));
     canonical_revision == live_revision && matches!(semio_framework_job::validate_commit(operation, live_short, semio_framework_job::Generation(live_generation)), semio_framework_job::CommitValidation::Accepted)
 }

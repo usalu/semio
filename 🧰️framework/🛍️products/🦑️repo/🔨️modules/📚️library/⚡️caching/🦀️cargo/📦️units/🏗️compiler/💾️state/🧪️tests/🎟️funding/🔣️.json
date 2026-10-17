@@ -1,0 +1,39 @@
+{
+  "cases": [
+    {
+      "name": "state-store",
+      "failure": "Exact live compiler store reader required",
+      "effects": 0
+    },
+    {
+      "name": "state-operation",
+      "failure": "Exact live compiler state loan required",
+      "effects": 0
+    },
+    {
+      "name": "state-funding",
+      "failure": "Exact live compiler state loan required",
+      "effects": 0
+    },
+    {
+      "name": "compile-state",
+      "failure": "Exact live compiler state loan required",
+      "effects": 0
+    },
+    {
+      "name": "compile-store",
+      "failure": "Original issued native storage reservation required",
+      "effects": 0
+    },
+    {
+      "name": "compile-store-prototype",
+      "failure": "Release compiler store funding required",
+      "effects": 0
+    },
+    {
+      "name": "compile-absent",
+      "failure": "Explicit compiler workspace funding required",
+      "effects": 0
+    }
+  ]
+}

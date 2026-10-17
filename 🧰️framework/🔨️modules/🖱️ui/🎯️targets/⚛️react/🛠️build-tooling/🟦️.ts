@@ -3,6 +3,7 @@ import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vitest/config";
 import type { IncomingMessage, ServerResponse } from "node:http";
+import type { Plugin } from "vite";
 //#endregion 🔌️Adapters
 
 //#region 🔖️OwnedBuildContract
@@ -129,3 +130,21 @@ export function defineOwnedBuildConfigFactory<T extends OwnedBuildConfigFactory>
   return factory;
 }
 //#endregion 🏭️Factories
+
+//#region 🧭️HostAdmission
+const HOST_PLUGIN_DATA_MEMBERS: ReadonlySet<string> = new Set(["name", "enforce", "apply"]);
+
+/** 🧭️ Whether an owned plugin has the shape Vite's plugin host reads: a name, and every other member is either data the host defines (`enforce`, `apply`) or a hook function (`transformIndexHtml` may also be a `{ handler }` object). */
+function hasHostPluginShape(plugin: OwnedBuildPlugin): plugin is OwnedBuildPlugin & Plugin {
+  if (typeof plugin.name !== "string" || plugin.name === "") return false;
+  return Object.entries(plugin).every(([member, value]) => HOST_PLUGIN_DATA_MEMBERS.has(member) || typeof value === "function" || (member === "transformIndexHtml" && typeof value === "object" && value !== null && "handler" in value && typeof value.handler === "function"));
+}
+
+/** 🚪️ Hands owned plugins to a Vite plugin list. The plugins are checked at run time against the shape the host reads, so the admission is a narrowing, not an unchecked cast; a plugin that does not fit is refused with its name. */
+export function hostBuildPlugins(plugins: readonly OwnedBuildPlugin[]): Plugin[] {
+  return plugins.map((plugin) => {
+    if (!hasHostPluginShape(plugin)) throw new Error(`Owned build plugin ${JSON.stringify(plugin.name)} does not have the shape the Vite plugin host reads`);
+    return plugin;
+  });
+}
+//#endregion 🧭️HostAdmission

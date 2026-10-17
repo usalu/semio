@@ -37,12 +37,11 @@ test("all native attribute reads bind directly to this defining lower owner",()=
 });
 test("native fixture exposure survives physical deletion of specific trees",async()=>{
  const output=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!output)throw Error("Caller-owned test output required");
- const sandbox = resolve(output, "mesh-attribute-deletion"), native = resolve(sandbox, relative(root, nativePath));
+ const sandbox = resolve(output, "mesh-attribute-deletion"), native = resolve(sandbox, relative(root, nativePath)), assets = [nativePath, fixturePath, polygonPath];
  for(const path of assets){const target=resolve(sandbox,relative(root,path));mkdirSync(dirname(target),{recursive:true});writeFileSync(target,read(path));}
  const node=Bun.which("node");if(!node)throw Error("Node test oracle is required");
  const code="const fs=require('node:fs'),p=require('node:path'),c=require('node:crypto');const source=process.argv[1],fixture=process.argv[2],text=fs.readFileSync(source,'utf8'),routes=[...text.matchAll(/include_str!\\(\"([^\\\"]*🎨️attributes\\/🔣️.json)\"\\)/g)].map(m=>p.resolve(p.dirname(source),m[1]));if(routes.length!==2||routes.some(x=>x!==fixture))throw Error('Noncanonical fixture owner');const bodies=routes.map(x=>fs.readFileSync(x,'utf8'));console.log(JSON.stringify({routes:routes.length,digests:bodies.map(x=>c.createHash('sha256').update(x).digest('hex'))}));";
  let stdout="";await runBudgetedTestCommand(node,["--eval",code,native,resolve(sandbox,relative(root,fixturePath))],{cwd:sandbox,env:process.env,budgetMs:testLevelBudgetMs(),throwOnFailure:true,captureStdout:{limitBytes:4096,onChunk:bytes=>{stdout+=Buffer.from(bytes).toString("utf8");}}});
  expect(JSON.parse(stdout)).toEqual({routes:2,digests:[sha(read(fixturePath)),sha(read(fixturePath))]});
  for(const name of ["✏️s","s","hub","🛍️products"])expect(existsSync(resolve(sandbox,name))).toBe(false);
- console.log("[DEBUG] Neutral mesh attribute inputs survived a source projection with all specific trees absent");
 });

@@ -1,4 +1,5 @@
-use super::*;
+use crate::{editor::vcs::modes::edit::windows::editor, editor::vcs::modes::edit::windows::history};
+use crate::editor::vcs::modes::edit::*;
 
 #[semio_framework_async_macros::async_test]
 async fn the_default_layout_lists_both_edit_windows() {

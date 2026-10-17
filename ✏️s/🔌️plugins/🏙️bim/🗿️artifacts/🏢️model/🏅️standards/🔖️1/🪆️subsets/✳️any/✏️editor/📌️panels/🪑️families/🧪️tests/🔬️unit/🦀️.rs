@@ -1,5 +1,5 @@
 use super::*;
-use crate::editor::bim::entities::components::tests::{furnished, placed};
+use crate::editor::bim::fixture::{furnished, placed};
 use protocol::Inference;
 use semio_framework_plugin::ViewModel;
 use semio_framework_ui_locale::{Locale, Terminology};

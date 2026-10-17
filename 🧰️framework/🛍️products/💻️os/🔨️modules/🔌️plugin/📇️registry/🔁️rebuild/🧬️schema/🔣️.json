@@ -56,7 +56,7 @@
           "minItems": 2,
           "items": [
             {
-              "const": "nx"
+              "const": "repo"
             }
           ],
           "additionalItems": {

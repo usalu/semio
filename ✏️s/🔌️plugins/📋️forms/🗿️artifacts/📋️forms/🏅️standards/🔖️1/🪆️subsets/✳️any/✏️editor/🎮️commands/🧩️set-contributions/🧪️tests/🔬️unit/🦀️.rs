@@ -1,4 +1,4 @@
-use super::*;
+use crate::editor::forms::commands::set_contributions::*;
 use crate::editor::forms::unit_tests::context::{building_component_contributions, dispatch, forms_app, render};
 use crate::editor::forms::{FormsCommand, FORMS_PLAY_BODY_CATALOGUE};
 

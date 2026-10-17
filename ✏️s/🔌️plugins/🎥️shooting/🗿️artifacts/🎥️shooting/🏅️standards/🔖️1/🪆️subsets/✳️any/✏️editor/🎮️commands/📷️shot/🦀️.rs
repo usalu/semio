@@ -1,7 +1,7 @@
 //! 📷️ Shooting play app commands — shot selection, labeling, sticky defaults and bulk field patches.
 
 use crate::editor::shooting::config::{ShootingConfig, ShootingConfigMutation};
-use crate::editor::shooting::ShootingDispatchCtx;
+use crate::editor::shooting::ui_helpers_and_io::ShootingDispatchCtx;
 use crate::mutations::change_shot_format::ChangeShotFormat;
 use crate::mutations::change_shot_height::ChangeShotHeight;
 use crate::mutations::change_shot_shape::ChangeShotShape;
@@ -23,7 +23,7 @@ fn shot_dimension(value: &Value) -> Option<u32> {
     value.as_u64().and_then(|value| u32::try_from(value).ok()).or_else(|| value.as_str()?.parse::<u32>().ok())
 }
 
-fn shot_mutation_for_field(id: String, field: &str, value: &Value) -> Option<ShootingMutation> {
+pub fn shot_mutation_for_field(id: String, field: &str, value: &Value) -> Option<ShootingMutation> {
     match field {
         "label" => value.as_str().map(|v| ShootingMutation::RenameShot(RenameShot { id, new_label: v.into() })),
         "width" => shot_dimension(value).map(|new_width| ShootingMutation::ChangeShotWidth(ChangeShotWidth { id, new_width })),
@@ -35,7 +35,7 @@ fn shot_mutation_for_field(id: String, field: &str, value: &Value) -> Option<Sho
 }
 
 fn active_shot_id(snapshot: &crate::ShootingSnapshot) -> Option<String> {
-    crate::standards::v1::subsets::any::schema::active_shot(snapshot).map(|shot| shot.id.clone())
+    crate::active_shot(snapshot).map(|shot| shot.id.clone())
 }
 
 //#region 🔖️SetActiveShot
@@ -144,7 +144,7 @@ pub mod patch_shots {
 //#region 🔖️AddShot
 pub mod add_shot {
     use super::*;
-    use crate::standards::v1::subsets::any::schema::next_shooting_id;
+    use crate::next_shooting_id;
 
     #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "add-shot")]
@@ -167,11 +167,7 @@ pub mod add_shot {
 //#endregion 🔖️AddShot
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️field-value-contract/🦀️.rs"]
-mod field_value_contract;
+

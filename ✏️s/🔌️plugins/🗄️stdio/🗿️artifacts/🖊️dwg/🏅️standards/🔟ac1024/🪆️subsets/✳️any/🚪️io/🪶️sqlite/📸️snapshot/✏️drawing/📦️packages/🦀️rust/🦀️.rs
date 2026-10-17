@@ -25,24 +25,15 @@ pub mod standards {
                         pub mod snapshot {
                             #[path = "../../../🔧️header/🦀️.rs"]
                             pub mod header;
-                            #[path = "../../🦀️.rs"]
-                            pub mod drawing;
-                            #[path = "../../../🔗️associativity/🦀️.rs"]
-                            pub mod associativity;
                             #[path = "../../../🎬️actions/🦀️.rs"]
                             pub mod actions;
                             #[path = "../../../🖌️styles/👁️visual/🦀️.rs"]
                             pub mod visual_style;
-                            #[path = "../../../🖌️styles/🧱️material/🦀️.rs"]
-                            pub mod material;
                             #[path = "../../../🖌️styles/🗃️table/🦀️.rs"]
                             pub mod table_style;
                             #[path = "../../../📃️layout/🦀️.rs"]
                             pub mod layout;
-                            #[path = "../../../🖌️styles/↗️mleader/🦀️.rs"]
-                            pub mod mleader_style;
-                            #[path = "../../../📏️constraints/🦀️.rs"]
-                            pub mod constraints;
+                            pub use semio_s_artifact_stdio_dwg_sqlite_drawing_2::standards::v_ac1024::subsets::any::io::sqlite::snapshot::{drawing, associativity, material, mleader_style, constraints};
                         }
                     }
                 }

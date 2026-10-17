@@ -29,7 +29,7 @@ mod unit_tests;
 
 #[allow(unused_imports)]
 mod mutations_codec {
-use crate::text::mutations::*;
+use crate::mutations::*;
 use semio_s_artifact_norm_en1995_mutations::*;
 use semio_s_artifact_norm_en1995_diff::En1995Diff;
 use semio_s_artifact_norm_en1995_model::En1995Snapshot;
@@ -110,7 +110,7 @@ pub fn encode_en1995_mutation_json(mutation: &En1995Mutation) -> String {
     semio_framework_pack_json::to_json_string(mutation)
 }
 }
-pub use crate::text::mutations::mutations_codec::*;
+pub use crate::mutations::mutations_codec::*;
 
 /// 📜️ Describes the artifact mutation dialect.
 pub const MUTATION_GRAMMAR_SEMIO: &str = include_str!("📖️mutations.grammar.semio");

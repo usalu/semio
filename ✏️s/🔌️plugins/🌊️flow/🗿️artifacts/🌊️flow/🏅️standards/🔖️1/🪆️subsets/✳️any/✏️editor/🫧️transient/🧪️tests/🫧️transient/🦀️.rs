@@ -1,6 +1,7 @@
 //! 🫧️ Neutral lifecycle trace for the actual Flow empty-transient owner adapter.
 
 use semio_framework_plugin::{ArtifactApp, ArtifactOwnedDisposer, EditorApp, PluginLifecycleStep};
+use semio_framework_test_fixtures::fixture_text;
 use semio_framework_value::RetainedCloneGrant;
 use std::sync::Arc;
 
@@ -14,7 +15,7 @@ fn quoted_grant(disposer: &dyn ArtifactOwnedDisposer<Store>, owner: &Store, item
 #[semio_framework_async_macros::async_test]
 async fn flow_empty_transient_close_matches_neutral_trace_and_exact_owner() {
     type App = EditorApp<crate::editor::flow::FlowPlayApp>;
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🫧️transient-owners/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../🧪️tests/🧫️fixtures/🫧️transient-owners/🔣️.json")).unwrap();
     let mut owner = Store::default();
     let original_root = Arc::downgrade(&owner.current_root());
     let mut disposer = App::build_transient_store_disposer().unwrap();

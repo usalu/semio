@@ -302,7 +302,7 @@ impl protocol::command::DiffAlgebra<SemioGraphSnapshot> for SemioGraphDiff {
 //#region 🔖️Demo
 /// 🌱 Representative `SemioGraphDiff` cases — single source of truth for `diff_grammar_conformance_
 /// law`/`protocol_walk_law` in `🚪️io/🦀️.rs`.
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_diff_cases() -> Vec<SemioGraphDiff> {
     use semio_s_artifact_stdio_semio_base::schema::triples::IndexAdded;
@@ -343,7 +343,5 @@ pub(crate) fn demo_diff_cases() -> Vec<SemioGraphDiff> {
 //#endregion 🔖️Demo
 
 //#region 🔖️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🔖️Tests

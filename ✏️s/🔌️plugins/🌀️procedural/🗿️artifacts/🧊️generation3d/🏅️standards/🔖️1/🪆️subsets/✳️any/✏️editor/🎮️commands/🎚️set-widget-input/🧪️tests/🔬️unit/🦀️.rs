@@ -80,7 +80,6 @@ fn widget_input_language_neutral_cases() {
         if entry["error"] == true { assert!(result.is_err(), "{}", entry["id"]); }
         else { assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&result.unwrap())).unwrap(), entry["expected"], "{}", entry["id"]); }
     }
-    eprintln!("[DEBUG] widgetInputNeutralScalarCases={} PlaneOriginNormalSixCoordinates=true",fixture["cases"].as_array().unwrap().len());
 }
 
 #[test]
@@ -94,7 +93,6 @@ fn widget_input_plane_edit_is_one_absolute_history_leaf_with_full_inverse(){
     base.host_snapshot.widgets.push(widget);let mutation=change_widget_input("cutting-plane","plane",widget_input_of_literal(&edited).unwrap());let inverse=inverse_generation3d_mutation(&base,&mutation).unwrap();assert_eq!(inverse.len(),1);
     let mut applied=base.clone();apply_generation3d_mutation(&mut applied,&mutation).unwrap();let Widget::Neuron{params,..}=&applied.host_snapshot.widgets[0]else{unreachable!("actual input mutation retains its neuron")};assert_eq!(params["plane"].to_value(),edited);assert_eq!(applied.host_snapshot.synapses,base.host_snapshot.synapses);
     for leaf in inverse{apply_generation3d_mutation(&mut applied,&leaf).unwrap();}assert_eq!(applied.host_snapshot,base.host_snapshot);applied.retire_cold();base.retire_cold();
-    eprintln!("[DEBUG] PlaneInputEdit oneAbsoluteChangeWidgetInput=true actualNeuralPlane=true inverseRestoresAllCoordinates=true graphConnectionsPreserved=true");
 }
 
 #[test]

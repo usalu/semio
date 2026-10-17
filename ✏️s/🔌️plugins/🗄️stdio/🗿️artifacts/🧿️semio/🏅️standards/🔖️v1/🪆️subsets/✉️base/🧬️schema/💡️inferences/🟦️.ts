@@ -28,6 +28,10 @@ type stdioSemioV1BaseInferenceGuardSizeBounds = { readonly minItems?: number; re
 
 export const stdioSemioV1BaseInferenceGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : stdioSemioV1BaseInferenceGuardReject(at, "value is not an object");
+export const stdioSemioV1BaseInferenceGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) stdioSemioV1BaseInferenceGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const stdioSemioV1BaseInferenceGuardArray = (value: unknown, at: string, bounds: stdioSemioV1BaseInferenceGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return stdioSemioV1BaseInferenceGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) stdioSemioV1BaseInferenceGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -58,14 +62,14 @@ export const stdioSemioV1BaseInferenceGuardConstant = <T extends string | number
 //#endregion 🚪️Parsers
 
 export function parseSemioInference(value: unknown, at = "$"): SemioInference {
-  const row = stdioSemioV1BaseInferenceGuardObject(value, at);
+  const row = stdioSemioV1BaseInferenceGuardClosed(stdioSemioV1BaseInferenceGuardObject(value, at), at, ["kind"]);
   return {
     kind: parseSemioKind(row["kind"], `${at}.kind`),
   };
 }
 
 export function parseSemioKind(value: unknown, at = "$"): SemioKind {
-  const row = stdioSemioV1BaseInferenceGuardObject(value, at);
+  const row = stdioSemioV1BaseInferenceGuardClosed(stdioSemioV1BaseInferenceGuardObject(value, at), at, ["tag", "ordinal"]);
   return {
     tag: stdioSemioV1BaseInferenceGuardString(row["tag"], `${at}.tag`),
     ordinal: stdioSemioV1BaseInferenceGuardInteger(row["ordinal"], `${at}.ordinal`, {"minimum": 0}),

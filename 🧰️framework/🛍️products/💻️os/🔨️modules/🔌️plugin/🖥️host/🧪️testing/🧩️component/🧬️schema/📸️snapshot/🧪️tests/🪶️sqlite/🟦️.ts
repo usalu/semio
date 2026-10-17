@@ -25,7 +25,7 @@ test("independent SQLite and closed neutral Count corpus preserve every stored f
    expect(database.query("PRAGMA table_info(fixture_counter)").all().map(row=>(row as {name:string}).name)).toEqual(fixture.columns);
    expect(database.query("PRAGMA integrity_check").get()).toEqual({integrity_check:"ok"});expect(database.query("PRAGMA foreign_key_check").all()).toEqual([]);
    const bytes=database.serialize();expect(Buffer.from(bytes.subarray(0,16)).toString("binary")).toBe("SQLite format 3\0");
-   const reopened=Database.deserialize(bytes);try{expect(reopened.query("SELECT id,count FROM fixture_counter").all().map(row=>Object.values(row))).toEqual([fixture.rows[index]!]);}finally{reopened.close();}
+   const reopened=Database.deserialize(bytes);try{expect(reopened.query<object,[]>("SELECT id,count FROM fixture_counter").all().map(row=>Object.values(row))).toEqual([fixture.rows[index]!]);}finally{reopened.close();}
    expect(()=>database.query("INSERT INTO fixture_counter VALUES(2,0)").run()).toThrow();
   }finally{database.close();}
  }

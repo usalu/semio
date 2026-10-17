@@ -1,7 +1,7 @@
 //! 🔺️ `change-block-field` — sparse diff construction: locates the question in whichever step holds it, refuses a value that
 //! breaks the question's own invariants, and emits exactly the one field setting.
 
-use super::mutation::{BlockField, ChangeBlockField};
+use crate::standards::v1::subsets::any::schema::mutations::change_block_field::mutation::{BlockField, ChangeBlockField};
 use crate::schema::diff::{FormsQuestionPatch, FormsQuestionsDelta, FormsStepPatch, FormsStepsDelta};
 use crate::{forms_steps, FormQuestion, FormsDiff, FormsSnapshot};
 

@@ -1,0 +1,9 @@
+# Current Neutral Interface Follow-up
+
+Bounded read-only audit of root package/launch, dashboard source/docs and agent guidance. No runtime, Native/protected operation, broad cache walk or AGENTS edit.
+
+Root package has one intentional Bun bootstrap repo script; setup/dashboard/dashboard:install/test-reserved-producer-native route through bun repo run. Parsed current root launch configurations showed no direct nx-run/bun-run task command candidate in program/args. Root has no project.json; project configs use emoji-named paths. Dashboard IPC current bind_build_tools reads first-party configured default lazily and pins recognized build contexts, rather than hardcoding Nx. Known direct Nx fixture strings are rejection/oracle DATA and not execution leaks. No new material task-execution bypass was established in the bounded source inspected.
+
+Two documentation/guidance surfaces still expose Bun alias spelling rather than the neutral repo command: dashboard README lines14/25 recommends bun run dashboard and bun run dashboard:install; .agents/skills/clean/SKILL.md line35 recommends bun run dashboard daemon stop. The root aliases themselves dispatch neutral tasks, so these are public guidance inconsistencies rather than a demonstrated backend bypass. The clean instruction also needs its intended daemon argument forwarding verified before a replacement is written; no stop command was executed. A consistent long-term guide should refer to the existing registered GUI launch / neutral task entry and native dashboard command authority, preserving necessary single bootstrap/runtime distinctions.
+
+No blanket removal of Bun runtime execution, Nx backend-private adapters or negative fixture names is recommended. Full Cargo/live daemon/Windows and complete public Nx/Bazel ALL task qualification remain separate existing outstanding runtime gates; this bounded audit does not claim every caller or task is physically qualified.

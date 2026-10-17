@@ -219,7 +219,7 @@ function policyParseTsFieldType(typeText: string, optionalMark: boolean): Pick<P
 }
 
 /**
- * 🟦️Extract members of the single exported `interface`, including `/** @state … */` JSDoc.
+ * 🟦️Extract members of the single exported `interface`, including the `@state …` JSDoc tags.
  */
 export function policyExtractTypescriptSchemaFields(text: string): PolicySchemaLeafExtract {
   const ifaceMatch = /\bexport\s+interface\s+([A-Za-z_][A-Za-z0-9_]*)\s*\{/.exec(text);

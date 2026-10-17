@@ -58,7 +58,7 @@ pub fn default_snapshot() -> PresentationSnapshot {
 /// committed `🖼️assets/🎬️demo` asset is this snapshot printed by this crate's own DSL printer.
 pub fn demo_snapshot() -> PresentationSnapshot {
     let source = crate::default_figure_tile_source();
-    let tiles = crate::standards::v1::subsets::any::schema::populate_tile_drafts_from_grid(crate::standards::v1::subsets::any::schema::FigureTileGridSeedSpec { source: &source, rows: 3, columns: 5, gap: 0.0, key_prefix: "tile" });
+    let tiles = crate::standards::v1::subsets::any::schema::tile_grid::populate_tile_drafts_from_grid(crate::standards::v1::subsets::any::schema::tile_grid::FigureTileGridSeedSpec { source: &source, rows: 3, columns: 5, gap: 0.0, key_prefix: "tile" });
     crate::presentation_snapshot_with_tiles(&source, &tiles)
 }
 //#endregion 🔖️Snapshot

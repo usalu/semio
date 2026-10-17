@@ -6,6 +6,7 @@ import assert from "node:assert/strict";
 import { readFileSync, existsSync } from "node:fs";
 import { resolve } from "node:path";
 import { minimatch } from "minimatch";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 
 const owner = resolve(import.meta.dir, "../../..");
 const fixture = JSON.parse(readFileSync(resolve(import.meta.dir, "../../🧪️tests/🧫️fixtures/🏛️ownership/🔣️.json"), "utf8"));
@@ -34,7 +35,6 @@ for (const row of canonical.borrowedTrees as {type: string; owner: string}[]) {
 }
 assert.match(readFileSync(resolve(owner, canonical.sealOwner), "utf8"), /struct ArtifactCanonicalEditSealCursor/);
 assert.doesNotMatch(semantic, /pub use[^;]*ArtifactCanonicalEditSealCursor/);
-console.log(`[DEBUG] replication-io-ownership traits=5 canonicalTrees=${canonical.borrowedTrees.length} boundary=io oracle=minimatch`);
 
 for(const key of ["typescriptBootstrap","typescriptWire"]as const)test(`Original ${key} Implementation Is Owned by IO`,()=>{
  const declared=fixture[key],component=readFileSync(resolve(owner,declared.semanticOwner),"utf8");
@@ -44,7 +44,6 @@ for(const key of ["typescriptBootstrap","typescriptWire"]as const)test(`Original
  const implementation=readFileSync(resolve(owner,declared.owner),"utf8");
  for(const name of declared.functions)assert.match(implementation,new RegExp(`(?:export )?(?:async )?function ${name}\\b`));
  for(const [kind,names]of [["class",declared.classes??[]],["type",declared.types??[]],["interface",declared.interfaces??[]],["const",declared.constants]]as const)for(const name of names){assert.doesNotMatch(component,new RegExp(`(?:export )?${kind} ${name}\\b`));assert.match(implementation,new RegExp(`(?:export )?${kind} ${name}\\b`));}
- console.log(`[DEBUG] ${key} functions=${declared.functions.length} actualOwner=io originalSemanticTypesRemain=true independentPathOracle=minimatch`);
 });
 
 test("Original Bootstrap Corpus Has a Closed Schema and Independent SHA-256",async()=>{
@@ -56,7 +55,6 @@ test("Original Bootstrap Corpus Has a Closed Schema and Independent SHA-256",asy
  const pack=Buffer.from(corpus.payload.packHex,"hex"),spr=Buffer.from(corpus.payload.sprHex,"hex");
  for(const [bytes,expected]of [[pack,corpus.payload.packHash],[spr,corpus.payload.sprHash],[Buffer.concat([pack,spr]),corpus.payload.aggregateHash]]as const){expect(createHash("sha256").update(bytes).digest("hex")).toBe(expected);expect(Buffer.from(await artifactBootstrapSha256(bytes)).toString("hex")).toBe(expected);}
  expect(Buffer.from(await artifactBootstrapAggregateHash(pack,spr)).toString("hex")).toBe(corpus.payload.aggregateHash);
- console.log("[DEBUG] original bootstrap closed first-party/Ajv corpus and independent Node SHA-256 match pack/SPR/aggregate bytes");
 });
 
 const originalProtocol=await import("../../../🟦️.ts"),{registerTests1}=await import("../../../🧪️tests/🧪️artifact-bootstrap-protocol/🟦️.ts");
@@ -76,7 +74,6 @@ test("Original Client and Server Frame Bytes Agree With Independent Protobuf Bod
   const lane=bytes[0]===0?"command":"preview",decoded=side==="client"?codec.decodeClientFrame(bytes):codec.decodeServerFrame(bytes),encoded=side==="client"?codec.encodeClientFrame(frame,lane):codec.encodeServerFrame(frame,lane);
   expect(reader.pos).toBe(bytes.length);expect(decoded).toEqual({lane,frame});expect(Buffer.from(encoded).toString("hex")).toBe(bytes.toString("hex"));expect(Buffer.from(writer.finish()).toString("hex")).toBe(bytes.toString("hex"));
  }
- console.log(`[DEBUG] original frame fixtures=${rows.length} clientAndServer=true independentProtobufDecodeAndEncode=true byteExact=true actualWireIO=true`);
 });
 
 test("Causal Representation Ownership Uses Original Domain Types and Actual Wire Consumers", () => {
@@ -89,7 +86,7 @@ const causalBinary = readFileSync(resolve(owner, causal.binaryOwner), "utf8");
 for (const name of causal.functions as string[]) assert.match(causalBinary, new RegExp(`(?:pub )?fn ${name}\\b`));
 assert.doesNotMatch(causalSemantic, /pub use[^;]*(?:binary::causal|encode_envelope|decode_envelope)/);
 for (const path of causal.consumers as string[]) {
-  const consumer = readFileSync(resolve(owner, path), "utf8");
+  const consumer = readModuleTreeSource(resolve(owner, path));
   assert.doesNotMatch(consumer, /crate::causal::(?:encode|decode)_/);
   assert.match(consumer, /(?:crate::io::binary::causal|semio_framework_replication_causal::binary)::(?:encode|decode)_/);
 }
@@ -97,7 +94,6 @@ assert.equal(minimatch(causal.textOwner, "🚪️io/📝️text/**/*.rs"), true)
 for (const type of causal.valueTypes as string[]) for (const trait of ["ToValue", "FromValue"]) assert.equal(new RegExp(`impl (?:crate::value|semio_framework_value)::${trait} for ${type}\\b`).test(causalSemantic), false, `${trait} ${type}`);
 const causalText = readFileSync(resolve(owner, causal.textOwner), "utf8");
 for (const type of causal.valueTypes as string[]) for (const trait of ["ToValue", "FromValue"]) assert.equal(new RegExp(`impl (?:crate::value|semio_framework_value)::${trait} for ${type}\\b`).test(causalText), true, `${trait} ${type}`);
-console.log(`[DEBUG] causal-codec-ownership functions=${causal.functions.length} semanticTypes=${causal.semanticTypes.length} actualConsumer=true oracle=minimatch`);
 });
 
 test("Neutral Replication Representation Ownership Is Closed and Agrees With Ajv", () => {
@@ -110,7 +106,6 @@ test("Neutral Replication Representation Ownership Is Closed and Agrees With Ajv
   expect(validateJsonSchemaSubset(schema, candidate).length === 0).toBe(accepted);
   expect(Boolean(oracle(candidate))).toBe(accepted);
  }
- console.log("[DEBUG] replication ownership neutral positive and three hostile domains agree first-party/Ajv; native wire behavior remains separately required");
 });
 
 test("Original TypeScript Task Inputs Include Every Extracted IO Source Owner",()=>{
@@ -118,7 +113,6 @@ test("Original TypeScript Task Inputs Include Every Extracted IO Source Owner",(
  expect(project.namedInputs.default).toContain(declared.requiredSourceInput);
  const pattern=declared.requiredSourceInput.replace("{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/","");
  for(const path of [fixture.primitives.binaryOwner,fixture.presence.binaryOwner,fixture.typescriptCausal.binaryOwner,fixture.typescriptBackbone.binaryOwner,fixture.typescriptBootstrap.owner,fixture.typescriptWire.owner])expect(minimatch(path,pattern)).toBe(true);
- console.log("[DEBUG] original TypeScript Nx input covers all six actual IO runtime owners independentPathOracle=minimatch");
 });
 
 test("TypeScript Binary Primitives Are Owned by IO and Real Frame Consumers Import Them", () => {
@@ -130,7 +124,6 @@ test("TypeScript Binary Primitives Are Owned by IO and Real Frame Consumers Impo
  const binary = readFileSync(resolve(owner, primitive.binaryOwner), "utf8");
  for (const name of primitive.functions as string[]) assert.equal(new RegExp(`export function ${name}\\b`).test(binary), true, name);
  assert.match(readFileSync(resolve(owner,fixture.typescriptWire.owner),"utf8"), /import \{[^}]+writeVarintU64[^}]+\} from "\.\.\/🟦️\.ts"/);
- console.log(`[DEBUG] actual TypeScript binary primitives=${primitive.functions.length} owner=io frameConsumer=true independentPathOracle=minimatch`);
 });
 
 
@@ -145,7 +138,6 @@ test("Presence Binary IO Implements Original Semantic Types Outside the Componen
  assert.doesNotMatch(component, /class PresencePeerReader\b/);
  assert.match(binary, /class PresencePeerReader\b/);
  assert.match(binary, /import type \{[^}]*ArtifactPresencePeer[^}]*\} from "\.\.\/\.\.\/\.\.\/🟦️\.ts"/);
- console.log(`[DEBUG] presence binary functions=${presence.functions.length} originalSemanticTypes=${presence.semanticTypes.length} boundary=io oracle=minimatch`);
 });
 
 
@@ -177,7 +169,6 @@ test("Original Binary Primitive Bytes Match the Neutral Corpus and Protobufjs", 
   expect(independent).toEqual(row.value);
   expect(position[0]).toBe(output.length);
  }
- console.log(`[DEBUG] actual binary primitive corpus=${corpus.cases.length} byteExact=true decodePositionExact=true independentProtobufjs=true independentAjv=true`);
 });
 
 
@@ -192,7 +183,6 @@ test("TypeScript Causal Representation Uses IO With Original Semantic Contracts"
  for (const name of causal.functions as string[]) assert.match(binary, new RegExp(`(?:export )?function ${name}\\b`));
  assert.match(binary, new RegExp(`export interface ${causal.codecInterface}\\b`));
  assert.match(readFileSync(resolve(owner,fixture.typescriptWire.owner),"utf8"), /import \{[^}]*encodeExactEnvelope[^}]*\} from "\.\.\/🔗️causal\/🟦️\.ts"/);
- console.log(`[DEBUG] original TS causal codecs=${causal.functions.length} domainTypes=${causal.semanticTypes.length} independentIOPath=minimatch nativeRuntime=false`);
 });
 
 test("Strict Document Backbone Bytes Are Owned by IO and Retention Stays Semantic", () => {
@@ -208,7 +198,6 @@ test("Strict Document Backbone Bytes Are Owned by IO and Retention Stays Semanti
  for(const name of backbone.codecConstants)assert.match(binary,new RegExp(`export const ${name}\\b`));
  assert.match(binary,/import type \{ ExactWireMutationEnvelope \} from "\.\.\/\.\.\/\.\.\/\.\.\/🟦️\.ts"/);
  assert.match(readFileSync(resolve(owner,fixture.typescriptWire.owner),"utf8"),/import \{[^}]*readDocumentBackboneEnvelopeBatchExact[^}]*\} from "\.\.\/🔗️causal\/🧮️backbone\/🟦️\.ts"/);
- console.log(`[DEBUG] original strict backbone functions=${backbone.functions.length} byteOwner=io retentionOwner=semantic independentPathOracle=minimatch`);
 });
 
 test("Strict Backbone IO Preserves Original Thirty-Case Corpus and Independent Protobuf Bytes", async () => {
@@ -237,7 +226,6 @@ test("Strict Backbone IO Preserves Original Thirty-Case Corpus and Independent P
   expect(hex(writer.finish())).toBe(row.rawHex);acceptedCases++;
  }
  expect(acceptedCases).toBe(10);expect(deniedCases).toBe(20);
- console.log(`[DEBUG] original strict backbone corpus=${corpus.cases.length} accepted=${acceptedCases} denied=${deniedCases} exactU64=true failedEmbeddedCursorUnchanged=true independentProtobufjs=true`);
 });
 
 
@@ -265,7 +253,6 @@ test("Extracted Presence IO Preserves the Complete Original Strict Corpus and Pr
   expect(Buffer.from(writer.finish()).toString("hex")).toBe(row.canonicalHex);independentCases++;
  }
  expect(independentCases).toBeGreaterThanOrEqual(8);
- console.log(`[DEBUG] original Presence corpus=${corpus.cases.length} allStrictDenialsPreserveCursor=true byteExact=true independentProtobufCases=${independentCases}`);
 });
 
 test("Original Presence and Backbone vectors have no whole-trial authority", () => {

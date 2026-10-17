@@ -27,7 +27,7 @@ fn original_math_values_construct_actual_outputs_close_inputs_and_conserve_syste
   for _ in 0..100000{if let Some(WidgetStep::Done(result))=accounted(&mut caller,stock,&mut born,&mut released,|cx|job.step_original(cx)){output=Some(result);break}}
   let output=output.expect("actual original scalar output");assert_eq!(output.outputs.get("value").unwrap(),&value(id,&row["output"]));assert!(job.terminal_is_empty());assert!(accounted(&mut caller,stock,&mut born,&mut released,|cx|job.step_original(cx)).is_none());close((construction,job,output),&mut caller,stock,&mut born,&mut released);
  }
- assert_eq!(original_bytes+born,released);println!("[DEBUG] Original math.values cases=8 actualInputsClosed=true actualOutputs=true original={original_bytes} born={born} released={released}");caller.retire(stock);
+ assert_eq!(original_bytes+born,released);caller.retire(stock);
 }
 
 #[test]
@@ -35,7 +35,7 @@ fn original_math_value_cancellation_retains_partial_output_for_paid_close(){
  let law:serde_json::Value=serde_json::from_str(include_str!("🧫️.json")).unwrap();let c=&law["originalCaller"];let stock=grant(c);let mut caller=OriginalJobFixtureCaller::admit(OperationId(c["operation"].as_u64().unwrap()),Generation(c["generation"].as_u64().unwrap()),stock,clock,c["deadlineMicros"].as_u64().unwrap(),c["fuel"].as_u64().unwrap());let catalogue=semio_s_artifact_procedural_3d_io_text::snapshot::catalogue::catalogue();let kind=catalogue.kind("math.number").unwrap();let(inputs,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||semio_s_artifact_procedural_3d_geometry_value::outputs([("value",GeometryValue::Number(2.5))]));let original=heap.requested_bytes;let mut inputs=Some(inputs);let mut construction=WidgetInputsConstruction::default();let mut resolved=None;let mut born=0;let mut released=0;
  for _ in 0..10000{resolved=accounted(&mut caller,stock,&mut born,&mut released,|cx|WidgetInputs::new("cancelled-original-value",kind,&mut inputs,&mut construction,cx));if resolved.is_some(){break}}
  let mut job=accounted(&mut caller,stock,&mut born,&mut released,|cx|OriginalFixedOutputJob::admit(kind,&mut resolved,cx)).unwrap();for _ in 0..100000{if job.state.phase==5{break}assert!(accounted(&mut caller,stock,&mut born,&mut released,|cx|job.step_original(cx)).is_none())}assert_eq!(job.state.phase,5);
- let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||job.cancel());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));let before=caller.cumulative_receipt();assert!(accounted(&mut caller,stock,&mut born,&mut released,|cx|job.step_original(cx)).is_none());assert_eq!(before,caller.cumulative_receipt());close((construction,job),&mut caller,stock,&mut born,&mut released);assert_eq!(original+born,released);println!("[DEBUG] Original math value canceledPartialOutput=true original={original} born={born} released={released}");caller.retire(stock);
+ let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||job.cancel());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));let before=caller.cumulative_receipt();assert!(accounted(&mut caller,stock,&mut born,&mut released,|cx|job.step_original(cx)).is_none());assert_eq!(before,caller.cumulative_receipt());close((construction,job),&mut caller,stock,&mut born,&mut released);assert_eq!(original+born,released);caller.retire(stock);
 }
 
 fn geometry_inputs(row:&serde_json::Value,kind:&str)->Outputs{
@@ -64,7 +64,7 @@ fn original_geometry_fixed_output_reads_actual_mesh_and_nurbs_on_same_caller(){
   if cancel{assert!(output.is_none());let before=caller.cumulative_receipt();assert!(accounted(&mut caller,stock,&mut born,&mut released,|cx|job.step_original(cx)).is_none());assert_eq!(before,caller.cumulative_receipt());close((construction,job),&mut caller,stock,&mut born,&mut released)}
   else{let output=output.unwrap();let key=if name=="mesh"{"position"}else{"point"};let GeometryValue::Point(point)=output.outputs.get(key).unwrap()else{panic!("actual original geometric point")};for(i,v)in point.iter().enumerate(){assert!((v-row["output"][i].as_f64().unwrap()).abs()<law["tolerance"].as_f64().unwrap())}assert!(job.terminal_is_empty());close((construction,job,output),&mut caller,stock,&mut born,&mut released)}
  }
- assert_eq!(original+born,released);println!("[DEBUG] Original BRepNurbsCurvePoint=true MeshVertexPosition=true deniedScratchCapacity=true deniedScratchCopy=true canceledScratch=true original={original} born={born} released={released}");caller.retire(stock);
+ assert_eq!(original+born,released);caller.retire(stock);
 }
 
 #[test]
@@ -82,7 +82,7 @@ fn original_geometry_plane_constructs_actual_topology_and_conserves_cancelled_ba
   if cancel{assert!(output.is_none());close((construction,job),&mut caller,stock,&mut born,&mut released)}
   else{let output=output.unwrap();let GeometryValue::Mesh(mesh)=output.outputs.get("mesh").unwrap()else{panic!("actual original plane mesh")};assert_eq!((mesh.vertex_count(),mesh.face_count(),mesh.halfedge_count()),(4,row["faces"].as_u64().unwrap()as usize,row["halfedges"].as_u64().unwrap()as usize));for i in 0..4{assert_eq!(mesh.vertex_position(semio_framework_3d::mesh::VertexId(i)).unwrap().0.map(f64::from),vector(&row["positions"][i as usize]));assert_eq!(mesh.vertex_normal(semio_framework_3d::mesh::VertexId(i)).unwrap().0.map(f64::from),vector(&row["normal"]))}assert!(job.terminal_is_empty());close((construction,job,output),&mut caller,stock,&mut born,&mut released)}
  }
- assert_eq!(original+born,released);println!("[DEBUG] Original MeshPlane vertices=4 faces=1 halfedges=4 deniedBacking=true canceledBacking=true original={original} born={born} released={released}");caller.retire(stock);
+ assert_eq!(original+born,released);caller.retire(stock);
 }
 
 #[test]
@@ -101,7 +101,7 @@ fn original_geometry_brep_line_constructs_shape_and_conserves_cancelled_shared_r
   if cancel{assert!(output.is_none());close((construction,job),&mut caller,stock,&mut born,&mut released)}
   else{let output=output.unwrap();let GeometryValue::Shape(shape)=output.outputs.get("shape").unwrap()else{panic!("actual original BRep line")};let ShapeRoot::Curve{curve:Curve3::Line{origin,dir},..}=&shape.root else{panic!("actual original line root")};let point=*origin+*dir*row["parameter"].as_f64().unwrap();assert_eq!([point.x,point.y,point.z],vector(&row["output"]));assert!(job.terminal_is_empty());close((construction,job,output),&mut caller,stock,&mut born,&mut released)}
  }
- assert_eq!(original+born,released);println!("[DEBUG] Original BRepLine shape=true deniedSharedBirth=true canceledOriginalRoot=true original={original} born={born} released={released}");caller.retire(stock);
+ assert_eq!(original+born,released);caller.retire(stock);
 }
 
 fn translation_inputs(row:&serde_json::Value)->Outputs{
@@ -127,7 +127,7 @@ fn translation_law(cancel_after:u8){
   {let name=row["attribute"]["name"].as_str().unwrap();let values=&row["attribute"]["values"];let attribute=mesh.attributes().get(name).unwrap();assert_eq!(attribute.values.len(),values.as_array().unwrap().len());for(value,expected)in attribute.values.iter().zip(values.as_array().unwrap()){assert_eq!(value,&semio_framework_value::value::DslValue::from(expected.clone()))}}
   assert_eq!(mesh.materials().get(row["material"]["name"].as_str().unwrap()).unwrap(),&semio_framework_value::value::DslValue::from(row["material"]["value"].clone()));let texture=mesh.textures().get(row["texture"]["name"].as_str().unwrap()).unwrap();assert_eq!(texture.mime,row["texture"]["mime"].as_str().unwrap());assert_eq!(texture.bytes,row["texture"]["bytes"].as_array().unwrap().iter().map(|v|v.as_u64().unwrap()as u8).collect::<Vec<_>>());assert!(job.terminal_is_empty());close((construction,job,output),&mut caller,stock,&mut born,&mut released);
  }
- assert_eq!(original+born,released);println!("[DEBUG] Original MeshTranslation sevenOwnersCopied=true seamsAttributesMaterialsTexturesPreserved=true partialCloneCancel=true original={original} born={born} released={released}");caller.retire(stock);
+ assert_eq!(original+born,released);caller.retire(stock);
 }
 
 #[test]

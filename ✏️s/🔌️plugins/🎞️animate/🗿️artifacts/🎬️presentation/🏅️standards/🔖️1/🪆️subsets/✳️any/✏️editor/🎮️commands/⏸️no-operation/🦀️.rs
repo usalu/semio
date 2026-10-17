@@ -3,7 +3,7 @@
 #![allow(clippy::result_large_err)]
 
 use crate::editor::animate::config::{PresentationConfig, PresentationConfigMutation};
-use crate::editor::animate::PresentationDispatchCtx;
+use crate::editor::animate::support::PresentationDispatchCtx;
 use crate::standards::v1::subsets::any::schema::mutations::PresentationMutation;
 use crate::PresentationSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};

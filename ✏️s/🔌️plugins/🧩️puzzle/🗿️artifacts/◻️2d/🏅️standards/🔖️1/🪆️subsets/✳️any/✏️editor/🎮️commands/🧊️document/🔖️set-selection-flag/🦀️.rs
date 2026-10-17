@@ -1,7 +1,7 @@
 //! 🗂️ `set-selection-flag` command, and the two set-verbs an outliner row names (`setSelectionHidden`,
 //! `setSelectionLocked`).
 
-use crate::editor::puzzle2d::Puzzle2dActionCtx;
+use crate::editor::puzzle2d::interaction::Puzzle2dActionCtx;
 use semio_framework_pack_json::Value;
 
 /// 🙈️ An explicit `ids` list (the outliner tree's inline row toggles) patches exactly those; without

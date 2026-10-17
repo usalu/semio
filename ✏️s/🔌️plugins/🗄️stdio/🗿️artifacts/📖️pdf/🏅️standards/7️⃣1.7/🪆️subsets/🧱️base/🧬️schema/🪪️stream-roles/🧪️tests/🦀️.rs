@@ -1,11 +1,13 @@
-use super::*;
+use crate::standards::v1_7::subsets::base::schema::snapshot::model::{ObjRef, PdfObject, PdfIndirectObject, PdfOp, PdfToUnicode, PdfEmbeddedCMap, PdfFontProgram, PdfImage};
+use crate::standards::v1_7::subsets::base::schema::stream_roles::*;
 use crate::standards::v1_7::subsets::base::io::import::{decode_pdf};
 use crate::standards::v1_7::subsets::base::io::export::{encode_pdf, text_document};
 use crate::standards::v1_7::subsets::base::modules::lift::lift_document_with;
 use crate::standards::v1_7::subsets::base::schema::graph_source::GraphSource;
+use semio_framework_test_fixtures::{fixture_bytes, fixture_text};
 
 fn role() -> PdfAdmittedStreamRole {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🪪️stream-roles/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../🧪️tests/🧫️fixtures/🪪️stream-roles/🔣️.json")).unwrap();
     let owner = ObjRef { num: fixture["role"]["identity"]["owner"]["num"].as_u64().unwrap() as u32, gen: fixture["role"]["identity"]["owner"]["gen"].as_u64().unwrap() as u16 };
     let dependency = &fixture["role"]["dependencies"][1]["owner"];
     PdfAdmittedStreamRole { identity: PdfGraphIdentity { owner, path: vec![PdfGraphPath::Entry { key: "Contents".into() }] }, dependencies: vec![PdfGraphIdentity { owner, path: vec![PdfGraphPath::Entry { key: "Contents".into() }] }, PdfGraphIdentity { owner: ObjRef { num: dependency["num"].as_u64().unwrap() as u32, gen: dependency["gen"].as_u64().unwrap() as u16 }, path: Vec::new() }], value: PdfStreamRoleValue::Operators { content: vec![PdfOp::Save, PdfOp::Restore] } }
@@ -28,7 +30,6 @@ fn pdf_stream_roles_require_exact_generation_and_explicit_replacement() {
     assert!(validate_role_transition(&base,&without_consumption,std::slice::from_ref(&role),&[],&[]).is_err());
     base[0].id.gen += 1;
     assert!(validate_role_inputs(&next, &base, std::slice::from_ref(&role), std::slice::from_ref(&role)).is_err());
-    println!("[DEBUG] PDF stream role exact identity, pure operators and replacement refusal confirmed");
 }
 
 #[test]
@@ -38,7 +39,6 @@ fn pdf_stream_roles_native_page_lift_records_semantic_operators() {
     let lifter = lift_document_with(&snapshot.trailer, &snapshot.declared_version, &mut source);
     assert_eq!(page_content(&lifter.admitted_stream_roles, lifter.page_refs[0]), Some(snapshot.pages[0].content.as_slice()));
     assert!(!lifter.admitted_stream_roles[0].dependencies.is_empty());
-    println!("[DEBUG] PDF native page lift emitted identity-bound semantic operators");
 }
 
 #[test]
@@ -64,7 +64,6 @@ fn pdf_stream_roles_pure_projection_replaces_operators_and_preserves_inverse() {
     let next = protocol::apply_diff(outcome.diff(), &base).unwrap();
     assert_eq!(next.pages[0].content, vec![PdfOp::Save, PdfOp::Restore]);
     assert_eq!(protocol::apply_diff(&outcome.diff().inverse(&base), &next).unwrap(), base);
-    println!("[DEBUG] PDF lopdf page count, pure projection, native-role refusal and exact diff inverse confirmed");
 }
 
 #[test]
@@ -82,7 +81,6 @@ fn pdf_stream_roles_direct_alias_admission_binds_every_structural_owner() {
     let mut ambiguous=GraphSource::with_roles(&objects,&roles);
     assert!(ambiguous.semantic_role(&value,PdfStreamRoleKind::PaletteComponents).is_none());
     assert_eq!(ambiguous.missing_roles.len(),1);
-    println!("[DEBUG] PDF equal direct palettes bind every generation/path and refuse conflicting semantic aliases");
 }
 
 #[test]
@@ -92,7 +90,7 @@ fn pdf_stream_roles_native_colour_admission_uses_components_and_foreign_referenc
     use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfDictEntry, PdfColorSpace, PdfShadingKind};
     let reference=|num|ObjRef {num,gen:2};
     let palette=vec![0,127,255];
-    let profile=include_bytes!("../../../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🌈️x-vt-initial/🌈️sRGB2014.icc").to_vec();
+    let profile=fixture_bytes!("../../../../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🌈️x-vt-initial/🌈️sRGB2014.icc").to_vec();
     let mesh=vec![0,128,255];
     let objects=vec![
         PdfIndirectObject {id:reference(5),value:PdfObject::Stream {dict:vec![PdfDictEntry::new("N",PdfObject::Int(3))],data:profile.clone(),filters:Vec::new()}},
@@ -121,7 +119,6 @@ fn pdf_stream_roles_native_colour_admission_uses_components_and_foreign_referenc
     use crate::standards::v1_7::subsets::base::io::foreign_artifacts::PdfArtifactResourcePort;
     assert_eq!(retained.resolve(&profile_reference).unwrap(),objects[0].value);
     assert_eq!(retained.resolve(&mesh_reference).unwrap(),objects[2].value);
-    println!("[DEBUG] PDF native ICC/mesh reference admission and Indexed components match independent lopdf stream custody");
 }
 
 #[test]
@@ -134,7 +131,7 @@ fn pdf_stream_roles_role_only_projection_and_insert_remove_preserve_replay() {
     let mut changed=role.clone();changed.value=PdfStreamRoleValue::Operators {content:vec![PdfOp::Save,PdfOp::Restore]};
     let diff=PdfDiff {admitted_stream_roles:Some(PdfIndexedDiff {modified:vec![PdfIndexedItem {index,value:changed}],..Default::default()}),..Default::default()};
     let next=protocol::apply_diff(&diff,&base).unwrap();assert_eq!(next.pages[0].content,vec![PdfOp::Save,PdfOp::Restore]);
-    let replay:serde_json::Value=serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🪪️stream-roles/🪢️replay/🔣️.json")).unwrap();
+    let replay:serde_json::Value=serde_json::from_str(fixture_text!("../../../../🧪️tests/🧫️fixtures/🪪️stream-roles/🪢️replay/🔣️.json")).unwrap();
     let expected:Vec<String>=serde_json::from_value(replay["nativeOperatorNames"].clone()).unwrap();
     let native=encode_pdf(&next).unwrap();
     assert_eq!(semio_s_artifact_stdio_pdf_test_oracle::standards::v1_7::subsets::base::reference_page_operator_names(&native).unwrap(),vec![expected]);
@@ -148,14 +145,13 @@ fn pdf_stream_roles_role_only_projection_and_insert_remove_preserve_replay() {
     let mut restored=inserted.clone();
     for inverse in insert.inverse(&base).unwrap() {restored=protocol::apply_diff(inverse.diff(&restored).diff(),&restored).unwrap();}
     assert_eq!(restored,base);
-    println!("[DEBUG] PDF role-only pure projection, indexed insertion/removal inverses confirmed");
 }
 
 #[test]
 fn pdf_stream_roles_sampled_words_match_independent_native_extents() {
     use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfFunction, PdfShading, PdfShadingKind, PdfColorSpace};
     use crate::standards::v1_7::subsets::base::schema::graph_projection::project_graph;
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🚪️io/🪶️sqlite/📸️snapshot/🌈️color/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../../🚪️io/🪶️sqlite/📸️snapshot/🌈️color/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     for case in fixture["sampleWidths"].as_array().unwrap().iter().filter(|case|[12,32].contains(&case["bitsPerSample"].as_u64().unwrap())) {
         let bits=case["bitsPerSample"].as_u64().unwrap() as u32;
         let words:Vec<u32>=serde_json::from_value(case["sampleWords"].clone()).unwrap();
@@ -168,7 +164,6 @@ fn pdf_stream_roles_sampled_words_match_independent_native_extents() {
         let admitted=decode_pdf(&native).unwrap();
         assert!(admitted.admitted_stream_roles.iter().any(|role|matches!(&role.value,PdfStreamRoleValue::SampledWords {samples} if samples==&words)));
         assert_eq!(project_graph(&admitted).unwrap().shadings,admitted.shadings);
-        println!("[DEBUG] PDF sampled semantic words width={bits} match independent native extent and pure role projection");
     }
 }
 
@@ -178,7 +173,7 @@ fn pdf_stream_roles_native_known_payloads_persist_and_project_semantically() {
     use crate::standards::v1_7::subsets::base::schema::graph_projection::project_graph;
     use crate::standards::v1_7::subsets::base::io::foreign_artifacts::admit_pdf_artifact;
     use crate::standards::v1_7::subsets::base::modules::fonts::truetype::synthesize_truetype;
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🪪️stream-roles/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../../🧪️tests/🧫️fixtures/🪪️stream-roles/🔣️.json")).unwrap();
     let payload=|kind:&str|fixture.as_object().unwrap().values().find_map(|value|(value["value"]["kind"]==kind).then(||value["value"].clone())).unwrap();
     let glyphs:Vec<u16>=serde_json::from_value(payload("glyphIds")["glyphs"].clone()).unwrap();
     let attachment:Vec<u8>=serde_json::from_value(payload("attachmentBytes")["bytes"].clone()).unwrap();
@@ -208,6 +203,4 @@ fn pdf_stream_roles_native_known_payloads_persist_and_project_semantically() {
     assert_eq!(projected.fonts,admitted.fonts);assert_eq!(projected.images,admitted.images);assert_eq!(projected.metadata,admitted.metadata);assert_eq!(projected.embedded_files,admitted.embedded_files);assert_eq!(projected.shadings,admitted.shadings);
     use semio_framework_value::{FromValue,ToValue};
     assert_eq!(PdfSnapshot::from_value(admitted.to_value()).unwrap(),admitted);
-    println!("[DEBUG] PDF nine known native stream roles captured typed semantics, independent stream bodies and exact pure/persisted projection");
 }
-

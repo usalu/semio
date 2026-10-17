@@ -55,6 +55,6 @@ export const stdioSemioV1MeshInferenceGuardConstant = <T extends string | number
 export function parseSemioMeshInference(value: unknown, at = "$"): SemioMeshInference {
   const row = stdioSemioV1MeshInferenceGuardObject(value, at);
   return {
-    aabb: stdioSemioV1MeshInferenceGuardObject(row["aabb"], `${at}.aabb`),
+    aabb: Object.fromEntries(Object.entries(stdioSemioV1MeshInferenceGuardObject(row["aabb"], `${at}.aabb`)).map(([key0, value0]) => [key0, ((row1) => ({ min: ((row2) => ({ x: stdioSemioV1MeshInferenceGuardNumber(row2["x"], `${at}.aabb.${key0}.min.x`), y: stdioSemioV1MeshInferenceGuardNumber(row2["y"], `${at}.aabb.${key0}.min.y`), z: stdioSemioV1MeshInferenceGuardNumber(row2["z"], `${at}.aabb.${key0}.min.z`) }))(stdioSemioV1MeshInferenceGuardObject(row1["min"], `${at}.aabb.${key0}.min`)), max: ((row2) => ({ x: stdioSemioV1MeshInferenceGuardNumber(row2["x"], `${at}.aabb.${key0}.max.x`), y: stdioSemioV1MeshInferenceGuardNumber(row2["y"], `${at}.aabb.${key0}.max.y`), z: stdioSemioV1MeshInferenceGuardNumber(row2["z"], `${at}.aabb.${key0}.max.z`) }))(stdioSemioV1MeshInferenceGuardObject(row1["max"], `${at}.aabb.${key0}.max`)) }))(stdioSemioV1MeshInferenceGuardObject(value0, `${at}.aabb.${key0}`))])),
   };
 }

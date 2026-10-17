@@ -142,6 +142,8 @@ async fn inspection_shows_step_count_summary() {
 }
 
 mod inspection_2 {
+use semio_framework_test_fixtures::fixture_text;
+
 use crate::editor::procedure::terminology::ImperativeLabels;
 use super::super::inspection::*;
 
@@ -152,7 +154,7 @@ fn project(node: semio_framework_plugin::BuiltNode) -> serde_json::Value {
 
 #[test]
 fn imperative_semantic_panels_match_the_json_oracle() {
-    let vectors: serde_json::Value = serde_json::from_str(runtime_fixture_text("../../📌️panels/🔍️inspection/🧪️tests/🧫️fixtures/🔣️panels.json")).expect("neutral UI vectors");
+    let vectors: serde_json::Value = serde_json::from_str(fixture_text!("../../📌️panels/🔍️inspection/🧪️tests/🧫️fixtures/🔣️panels.json")).expect("neutral UI vectors");
     let document = crate::procedure_derivable_scene(&crate::ProcedureSnapshot::default()).expect("the default procedure document derives its scene");
     for row in vectors["cases"].as_array().expect("locales") {
         let labels = semio_framework_plugin::resolve_labels::<ImperativeLabels>(&semio_framework_plugin::ViewModel { locale: semio_framework_ui_locale::Locale::from_language_tag(row["locale"].as_str().expect("locale")).expect("declared fixture locale"), ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::from_language_tag(row["locale"].as_str().expect("locale")).expect("declared fixture locale"), semio_framework_ui_locale::Terminology::Native) });
@@ -193,10 +195,5 @@ fn imperative_semantic_panels_match_the_json_oracle() {
         assert_eq!(serde_json::from_str::<serde_json::Value>(scene.settings_json.as_deref().expect("settings")).expect("settings oracle"), vectors["settings"]);
         project(node);
     }
-}
-
-fn runtime_fixture_text(relative: &str) -> &'static str {
-    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative);
-    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display())).into_boxed_str())
 }
 }

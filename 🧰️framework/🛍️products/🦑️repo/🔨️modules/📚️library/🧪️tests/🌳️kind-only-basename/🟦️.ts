@@ -9,6 +9,9 @@ import { cargoPackageRootBuildScriptPath, clearDiscoveryCache, discoverPackagePr
 
 type Finding = Readonly<{ path: string; breachId: string; fileKindId: string | null; expectedBasename: string | null }>;
 type Fixture = Readonly<{
+  schemaVersion: number;
+  contractId: string;
+  semantics: Readonly<Record<string, string>>;
   fileKinds: readonly Readonly<{ id: string; emoji: string; extensionChains: readonly string[]; role: string; implementation: boolean }>[];
   externalContracts: readonly Readonly<{ id: string; path: string; scope: string }>[];
   files: readonly Readonly<{ path: string; content: string }>[];

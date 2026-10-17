@@ -20,12 +20,12 @@ export default defineConfig({
     root: testRoot,
     name: "@semio-tech/machine",
     environment: "node",
-    // 🩹️ In-source (`import.meta.vitest`) suite in `../../🟦️.ts` — see the 3d module's vitest
+    // 🩹️ In-source (`import.meta.vitest`) suite in `../../🧭️testing/🟦️.ts` — see the 3d module's vitest
     // config for why `include` must stay empty for an in-source suite named something other than
     // literally "index.ts".
     include: [],
-    includeSource: ["../../🟦️.ts"],
-    coverage: { include: ["../../🟦️.ts"] },
+    includeSource: ["../../🧭️testing/🟦️.ts"],
+    coverage: { include: ["../../🟦️.ts", "../../🧭️testing/🟦️.ts"] },
     passWithNoTests: false,
   },
 });

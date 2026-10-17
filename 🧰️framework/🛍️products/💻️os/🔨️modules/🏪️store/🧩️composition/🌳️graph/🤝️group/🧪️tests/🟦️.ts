@@ -3,7 +3,7 @@ import Ajv from "ajv";
 import {Database} from "bun:sqlite";
 import {readFileSync,mkdirSync,writeFileSync} from "node:fs";
 import {resolve} from "node:path";
-import { valueOrderedRetirementSchemaUrl } from "../../../../../../../../🔨️modules/🌱️value/🧪️tests/🧫️fixtures/🟦️.ts";
+import { valueOrderedRetirementSchemaUrl } from "@semio-tech/value-ts/testing/fixtures";
 test("ownership group roots match SQLite cycle and atomic publication oracle",()=>{
  const f=JSON.parse(readFileSync(resolve(import.meta.dir,"🧫️fixtures/🔣️.json"),"utf8"));
  const db=new Database(":memory:");db.exec("create table owns(child text primary key,parent text not null,slot text not null)");
@@ -16,7 +16,6 @@ test("ownership group roots match SQLite cycle and atomic publication oracle",()
  db.exec("delete from owns");put.run(...f.emptyAdditionRoot.original);expect(f.emptyAdditionRoot.additions.length).toBe(0);expect(db.query("select parent,slot,child from owns").all().map((r:any)=>[r.parent,r.slot,r.child])).toEqual([f.emptyAdditionRoot.expected]);
  db.close();
  const source=readFileSync(resolve(import.meta.dir,"../../../../🦀️.rs"),"utf8");expect(source.includes("mod composition_group;")).toBe(true);const group=readFileSync(resolve(import.meta.dir,"../🦀️.rs"),"utf8");expect(group.includes("pub fn begin_owns_group")).toBe(true);expect(group.includes("pub fn commit_owns_group")).toBe(true);
- console.log("[DEBUG] SQLite forest oracle: atomic two siblings, 65-hop cycle, pending sibling cycle; commit metadata and original roots unchanged before visibility");
 });
 
 function compileProductionForest(){
@@ -45,12 +44,12 @@ test("ownership forest retirement keeps independent work and physical release ax
  const schema=JSON.parse(readFileSync(valueOrderedRetirementSchemaUrl,"utf8"));const validate=new Ajv().compile(schema.$defs.Grant);
  const rowBytes=f.rowWords*f.wordBytes;expect(rowBytes).toBe(f.retirement.copiedBytes);expect((db.query("select sum(capacity) as total from owner").get() as {total:number}).total).toBe(f.retirement.releasedBytes);
  expect(validate({maximumItems:1,maximumCopyBytes:-1,maximumCapacityBytes:0,maximumReleaseBytes:0,maximumDepth:1})).toBe(false);
- for(const grant of f.grants){expect(validate({maximumItems:grant.items,maximumCopyBytes:grant.copyBytes,maximumCapacityBytes:grant.capacityBytes,maximumReleaseBytes:grant.releaseBytes,maximumDepth:grant.depth})).toBe(true);const accepted=grant.items>=1&&grant.copyBytes>=rowBytes&&grant.depth>=1;expect(accepted).toBe(grant.expectedMove);console.log("[DEBUG] forest common close independent="+JSON.stringify({grant,accepted,copy:rowBytes,release:0}));}
+ for(const grant of f.grants){expect(validate({maximumItems:grant.items,maximumCopyBytes:grant.copyBytes,maximumCapacityBytes:grant.capacityBytes,maximumReleaseBytes:grant.releaseBytes,maximumDepth:grant.depth})).toBe(true);const accepted=grant.items>=1&&grant.copyBytes>=rowBytes&&grant.depth>=1;expect(accepted).toBe(grant.expectedMove);}
  db.close();const source=readFileSync(resolve(import.meta.dir,"../🦀️.rs"),"utf8");expect(source).toContain("pub fn next_close_copy_byte_demand");expect(source).toContain("pub fn next_close_release_byte_demand");expect(source).toContain("grant.maximum_copy_bytes");expect(source).toContain("grant.maximum_release_bytes");expect(source).not.toContain("SnapshotRetirementStep");
 });
 
 test("original adjacency rows match independent SQLite unique-edge ownership",()=>{
- const f=JSON.parse(readFileSync(resolve(import.meta.dir,"🧫️fixtures/🔣️.json"),"utf8")).links;const db=new Database(":memory:");db.exec("create table edge(source text,target text,primary key(source,target))");for(const [source,targets] of f.rows)for(const target of targets)db.query("insert or ignore into edge values(?,?)").run(source,target);expect(db.query("select source,target from edge order by source,target").all().map((r:any)=>[r.source,r.target])).toEqual(f.expected);db.close();console.log("[DEBUG] SQLite original links unique ordered rows="+f.expected.length+" terminalDropRequired="+f.terminalDropBytes);
+ const f=JSON.parse(readFileSync(resolve(import.meta.dir,"🧫️fixtures/🔣️.json"),"utf8")).links;const db=new Database(":memory:");db.exec("create table edge(source text,target text,primary key(source,target))");for(const [source,targets] of f.rows)for(const target of targets)db.query("insert or ignore into edge values(?,?)").run(source,target);expect(db.query("select source,target from edge order by source,target").all().map((r:any)=>[r.source,r.target])).toEqual(f.expected);db.close();
 });
 
 test("forest preparation reserves native capacity independently from copied identifier words",()=>{
@@ -59,5 +58,4 @@ test("forest preparation reserves native capacity independently from copied iden
  const bytes=(db.query("select sum(length(octets)) as bytes from identifier").get() as {bytes:number}).bytes;expect(bytes).toBe(f.bodyBytes);expect(f.count*f.rowWords*f.wordBytes).toBe(f.rowBackingBytes);
  const copied=bytes+f.rowWords*f.wordBytes;expect(copied).toBe(f.copiedBytes);for(const grant of f.grants)expect(grant.copy>=copied&&grant.capacity>=bytes).toBe(grant.expected);
  db.close();const source=readFileSync(resolve(import.meta.dir,"../🦀️.rs"),"utf8");expect(source).toContain("pub fn next_edge_demands");expect(source).toContain("pub fn next_preparation_demands");
- console.log("[DEBUG] SQLite forest preparation copiedWords="+copied+" payload="+bytes+" capacity="+bytes+" structural="+f.rowBackingBytes+" release0");
 });

@@ -12,7 +12,5 @@ pub type ShootingStore = store::ArtifactStore<ShootingSnapshot, ShootingMutation
 //#endregion 🔖️Store
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

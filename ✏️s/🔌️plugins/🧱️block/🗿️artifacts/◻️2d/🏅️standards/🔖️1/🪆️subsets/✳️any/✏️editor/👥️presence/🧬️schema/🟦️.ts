@@ -22,6 +22,10 @@ type block2dPresenceGuardSizeBounds = { readonly minItems?: number; readonly max
 
 export const block2dPresenceGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : block2dPresenceGuardReject(at, "value is not an object");
+export const block2dPresenceGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) block2dPresenceGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const block2dPresenceGuardArray = (value: unknown, at: string, bounds: block2dPresenceGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return block2dPresenceGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) block2dPresenceGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -52,7 +56,7 @@ export const block2dPresenceGuardConstant = <T extends string | number | boolean
 //#endregion 🚪️Parsers
 
 export function parseBlock2dPresence(value: unknown, at = "$"): Block2dPresence {
-  const row = block2dPresenceGuardObject(value, at);
+  const row = block2dPresenceGuardClosed(block2dPresenceGuardObject(value, at), at, ["selectedIds"]);
   return {
     selectedIds: block2dPresenceGuardArray(row["selectedIds"], `${at}.selectedIds`).map((item, index) => block2dPresenceGuardString(item, `${at}.selectedIds[${index}]`)),
   };

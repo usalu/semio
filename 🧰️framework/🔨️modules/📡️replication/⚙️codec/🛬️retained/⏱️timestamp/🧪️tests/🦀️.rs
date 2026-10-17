@@ -10,5 +10,4 @@ fn original_timestamp_native_derivation_keeps_fixed_grant_receipts_and_original_
   }
  }}
  for source in [&[2,0][..],&[1,128][..],&[3,0][..],&[0,2,b'a'][..]]{let(result,heap)=observe(||RetainedWireFieldDecode::new_timestamp(source,(0,source.len()),None));assert!(result.is_err());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));}
- eprintln!("[DEBUG] original tagged timestamps retain original scalar bytes and derive exactly funded2 byte native pieces, preserve unchanged full grants, conserve actual allocation/release receipts and cancel partial receiving owners with terminalDrop0");
 }

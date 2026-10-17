@@ -2,10 +2,10 @@ import type { VizChartTextOutput } from "../../../../🚪️io/📝️text/💡�
 import {vizChartTextOutputToJsonValue} from "../../../../🚪️io/📝️text/💡️inferences/🟦️.ts";
 /** 🧵️ Owned chart inference worker; the canonical pure planners also serve numerical probes. */
 import type { VizChartSnapshot } from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
-import type {  VizChartInferenceProgress } from "../../../../🧬️schema/💡️inferences/🟦️.ts";
-import { planVizChart, renderVizScenePlan } from "../../../../🧬️schema/💡️inferences/🖼️render/🟦️.ts";
+import type {  VizChartInferenceProgress } from "@semio-tech/print-viz-inference";
+import { planVizChart, renderVizScenePlan } from "@semio-tech/print-viz-inference/render";
 import { renderVizTikzPlan } from "../../../../🚪️io/📝️text/💡️inferences/🖋️latex/🟦️.ts";
-import { admitVizChartSpecification } from "../../../../🧬️schema/💡️inferences/✅️validation/🟦️.ts";
+import { admitVizChartSpecification } from "@semio-tech/print-viz-inference/validation";
 import { validateVizChartTextOutput } from "../../../../🚪️io/📝️text/💡️inferences/🟦️.ts";
 import { renderVizPresetTikz } from "../../../../🚪️io/📝️text/💡️inferences/📚️catalogue/🟦️.ts";
 type Message = { readonly kind: "progress"; readonly progress: VizChartInferenceProgress } | { readonly kind: "result"; readonly result: VizChartTextOutput };

@@ -20,7 +20,6 @@ test("window_config_paged_registry_neutral_original_order", () => {
       const result = reservation.get(Number(law.capacityGranted)) as { reserved: number; copiedBytes: number };
       expect({ reserved: Boolean(result.reserved), copiedBytes: result.copiedBytes }).toEqual({ reserved: law.reserved, copiedBytes: law.copiedBytes });
     }
-    console.error("[DEBUG] original window registry strict neutral SQLite order admitted");
   } finally {
     database.close();
   }
@@ -40,7 +39,6 @@ test("window_config_paged_registry_neutral_authored_metadata_capability", () => 
     expect(law.schemaLessProducer).toBe(false);
     expect(law.getterAllocationBytes + law.getterReleaseBytes).toBe(0);
     expect(law.maximumCapacityBytes).toBeGreaterThan(0);
-    console.error("[DEBUG] original Window authored metadata declaration matches independent JSON and SQLite field order");
   } finally {
     database.close();
   }

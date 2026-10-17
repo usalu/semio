@@ -1,6 +1,7 @@
 //! 🧪️ `Grid3dDiff` — apply, absorb and inverse laws over the id-keyed tile rows.
 
-use super::*;
+use crate::{schema::snapshot::Grid3dSnapshot, schema::snapshot::Grid3dTile};
+use crate::standards::v1::subsets::any::schema::diff::*;
 use protocol::{DiffAlgebra, MutationDiff};
 
 fn tile(id: &str, weight: f64) -> Grid3dTile {

@@ -32,6 +32,4 @@ impl Deserializer<WriterSnapshot> for TxtIntoWriter {
 }
 //#endregion 🔖️Deserializer
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

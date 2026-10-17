@@ -20,5 +20,4 @@ export async function verifyStdioCargoPhaseV1(root:string):Promise<void>{
  if(row.capture)assert.deepEqual(await run(root,original),{packages:[]});else await assert.rejects(run(root,original),error=>error===cancelled);
  assert.equal(captures,Number(row.capture));assert.deepEqual(events,database.query("SELECT name FROM phases ORDER BY position").all().map(value=>(value as {name:string}).name));
  }}finally{database.close();}
- console.log("[DEBUG] Stdio Cargo phase Source algorithm and independent SQLite/Ajv oracle verified");
 }

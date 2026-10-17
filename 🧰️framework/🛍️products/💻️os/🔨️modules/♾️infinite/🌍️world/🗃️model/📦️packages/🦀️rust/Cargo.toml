@@ -44,11 +44,12 @@ ui_wgpu = { path = "../../../../../../../../🔨️modules/🖱️ui/📦️pack
 ui_wgpu = { path = "../../../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", package = "semio-framework-ui", features = ["wgpu"] }
 
 [dev-dependencies]
-semio-framework-os-infinite-world-model = { path = ".", features = ["testkit"] }
 semio-framework-job = { workspace = true, features = ["testkit"] }
+semio-framework-test-fixtures = { path = "../../../../../../../../🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-framework-trace = { path = "../../../../../../../../🔨️modules/⏱️trace/📦️packages/🦀️rust" }
 semio-framework-os-kernel = { path = "../../../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["mutation-testing"] }
 
 [[test]]
 name = "world_model_unit"
 path = "../../🧪️tests/🔬️unit/🦀️.rs"
+required-features = ["testkit"]

@@ -2,14 +2,15 @@
 import { expect, test } from "bun:test";
 import { createHash } from "node:crypto";
 import { semioSchemaAjvV1 } from "@semio-tech/schema-ts/oracles/validator";
-import schema from "../../../🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖼️image/🧬️schema/📸️snapshot/🔣️.json";
-import fixture from "../../../🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🔬️contract/🖼️decoded-image/🔣️.json";
-import { parseSemioImageSnapshot } from "../../../🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts";
-import { parseRasterAssetsDelta } from "../../../🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts";
+import { imageSnapshotSchema as schema } from "@semio-tech/stdio-semio/standards/v1/subsets/image/schema/snapshot";
+import { contractDecodedImageFixture as fixture } from "@semio-tech/raster-js/artifacts/raster/standards/1/subsets/any/testing/fixtures/contract/decoded-image";
+import { parseSemioImageSnapshot } from "@semio-tech/raster-js/artifacts/raster/standards/1/subsets/any/schema";
+import { parseRasterAssetsDelta } from "@semio-tech/raster-js/artifacts/raster/standards/1/subsets/any/schema/diff";
 
-const validate = semioSchemaAjvV1({ allErrors: true }).compile(schema);
+const validate = semioSchemaAjvV1({ allErrors: true }).compile<ReturnType<typeof parseSemioImageSnapshot>>(schema);
 for (const row of fixture.cases) test(`decoded image: ${row.id}`, () => {
   expect(validate(row.image)).toBe(true);
+  if (!validate(row.image)) throw new Error(`decoded image ${row.id} violates its schema`);
   const image = parseSemioImageSnapshot(row.image);
   expect(image).toEqual(row.image);
   expect(parseRasterAssetsDelta({ entries: { image } }).entries.image).toEqual(image);
@@ -22,5 +23,4 @@ for (const row of fixture.cases) test(`decoded image: ${row.id}`, () => {
   field(new Uint8Array([Number(image.icc != null)])); if (image.icc) field(new Uint8Array(image.icc)); field(integer(image.metadata.length, 8));
   for (const entry of image.metadata) { field(new TextEncoder().encode(entry.key)); field(new TextEncoder().encode(entry.value)); }
   expect(`image-${hash.digest("hex").slice(0, 16)}`).toBe(row.contentId);
-  console.log(`[DEBUG] decoded image oracle ${row.id} preserved`);
 });

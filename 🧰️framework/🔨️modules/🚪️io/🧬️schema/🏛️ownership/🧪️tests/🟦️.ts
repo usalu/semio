@@ -30,7 +30,6 @@ test("neutral vocabulary references match production contracts and independent l
   
   const db=new Database(":memory:");db.run("CREATE TABLE identity(artifact_id TEXT,kind TEXT,standard TEXT,subset TEXT)");
   try{for(const value of corpus.references){expect(admit(value)).toBe(true);const actual=parseArtifactRef(value);db.run("DELETE FROM identity");db.run("INSERT INTO identity VALUES(?,?,?,?)",[actual.artifactId,actual.dialect.artifactKind,actual.dialect.standard,actual.dialect.subset]);expect(db.query("SELECT artifact_id AS artifactId,kind AS artifactKind,standard,subset FROM identity").get()).toEqual({artifactId:value.artifactId,...value.dialect});}}finally{db.close();}
-  console.error("[DEBUG] Three literal vocabulary identities retained under independent schema and SQLite");
 });
 
 test("actual package has only owned general dependencies and an explicit complete export surface",async()=>{
@@ -45,10 +44,10 @@ test("actual package has only owned general dependencies and an explicit complet
   const entry=await Bun.file(join(pkg,"🦀️.rs")).text();await Parser.init();const parser=new Parser();parser.setLanguage(await Parser.Language.load(join(dirname(Bun.resolveSync("tree-sitter-wasms/package.json",process.cwd())),"out","tree-sitter-rust.wasm")));
   expect(parser.parse(entry).rootNode.hasError()).toBe(false);expect(entry.includes("::*")).toBe(false);
   const exports=entry.slice(entry.indexOf("pub use vocabulary::{")+"pub use vocabulary::{".length,entry.lastIndexOf("};")).split(",").map(value=>value.trim()).filter(Boolean);
-  expect(exports.sort()).toEqual([...corpus.exports].sort());console.error("[DEBUG] Twelve explicit IO vocabulary exports and six first-party dependency owners");
+  expect(exports.sort()).toEqual([...corpus.exports].sort());
 });
 
 test("neutral vocabulary namespace closure resolves only its actual owned dependencies",async()=>{
   const graph=await ownerSources(join(pkg,"🦀️.rs"),[...corpus.normalDependencies,"serde_json"]);
-  expect(graph.unbound).toEqual([]);console.error("[DEBUG] Neutral vocabulary actual module closure "+graph.paths.length+" files, zero unbound external namespaces");
+  expect(graph.unbound).toEqual([]);
 });

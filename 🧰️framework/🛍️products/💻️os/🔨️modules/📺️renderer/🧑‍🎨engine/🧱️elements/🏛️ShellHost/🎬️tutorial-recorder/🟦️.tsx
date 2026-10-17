@@ -32,7 +32,7 @@ import {
   useTutorialClock
 } from "@semio-tech/ui-react";
 // #endregion 🔌️Adapters
-import { resolveManifestLabel, synthesizeLocalizedLabel } from "../../🛠️ShellHelpers/🟦️.tsx";
+import { resolveManifestLabel, synthesizeLocalizedLabel } from "../../🛠️ShellHelpers/🏷️labels/🟦️.tsx";
 
 //#region FrameworkOsShell
 //#region 🎥️TutorialOverlayHosts

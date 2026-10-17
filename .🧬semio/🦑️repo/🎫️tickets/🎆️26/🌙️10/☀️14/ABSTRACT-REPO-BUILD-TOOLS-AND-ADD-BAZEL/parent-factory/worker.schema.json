@@ -1,0 +1,169 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "cases",
+    "closureCases",
+    "diagnosticCases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 6,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "action",
+          "delayMilliseconds",
+          "outcome",
+          "trace"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "action": {
+            "enum": [
+              "immediate",
+              "eof",
+              "cancel",
+              "expiry",
+              "undefined",
+              "frozen"
+            ]
+          },
+          "delayMilliseconds": {
+            "enum": [
+              50,
+              5000
+            ]
+          },
+          "outcome": {
+            "enum": [
+              "terminated",
+              "completed",
+              "cancelled",
+              "expired",
+              "preserved"
+            ]
+          },
+          "trace": {
+            "type": "array",
+            "items": {
+              "enum": [
+                "ready",
+                "closed",
+                "eof",
+                "refused",
+                "terminal"
+              ]
+            }
+          }
+        }
+      }
+    },
+    "closureCases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "primary",
+          "close",
+          "count"
+        ],
+        "properties": {
+          "primary": {
+            "enum": [
+              "none",
+              "undefined",
+              "frozen"
+            ]
+          },
+          "close": {
+            "enum": [
+              "none",
+              "distinct",
+              "same"
+            ]
+          },
+          "count": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2
+          }
+        }
+      }
+    },
+    "diagnosticCases": {
+      "type": "array",
+      "minItems": 11,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "form",
+          "count"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "form": {
+            "enum": [
+              "direct",
+              "aggregate",
+              "nested",
+              "cycle",
+              "undefined",
+              "getter",
+              "proxy",
+              "extra",
+              "oversize",
+              "invalid-number",
+              "frozen-primary"
+            ]
+          },
+          "count": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "Request": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "delayMilliseconds",
+        "waitForStop"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "delayMilliseconds": {
+          "enum": [
+            50,
+            5000
+          ]
+        },
+        "waitForStop": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

@@ -1,2 +1,2 @@
 /** 🧫️ Public entry `@semio-tech/framework/manifest/testing/fixtures`: the explicit surface that importers outside the module use. */
-export { manifestSchema } from "../../../../../🔨️modules/🛂️manifest/🧪️tests/🧫️fixtures/🟦️.ts";
+export { contextIntegerCarriersFixture, loadContextExtensionInputFixture, loadManifestViewContextSchema, loadPagedTextCarrierFixture, loadUiRefreshSectionFixture, manifestActionSemanticsFixture, manifestExamplePickerFixture, manifestFaultNoticesFixture, manifestNumberFacetsFixture, manifestPublicInvocationSchema, manifestSchema, manifestUtilitiesInitialFixture, manifestViewContextSchema } from "../../../../../🔨️modules/🛂️manifest/🧪️tests/🧫️fixtures/🟦️.ts";

@@ -1,6 +1,6 @@
 //! 💞️ `create-edge` command.
 
-use {crate::editor::puzzle2d::snapshot::puzzle2d_handle_kind, crate::editor::puzzle2d::snapshot::puzzle2d_kinds_compatible, crate::editor::puzzle2d::snapshot::puzzle2d_occupied_handles, crate::editor::puzzle2d::Puzzle2dActionCtx};
+use {crate::editor::puzzle2d::snapshot::puzzle2d_handle_kind, crate::editor::puzzle2d::snapshot::puzzle2d_kinds_compatible, crate::editor::puzzle2d::snapshot::puzzle2d_occupied_handles, crate::editor::puzzle2d::interaction::Puzzle2dActionCtx};
 use semio_framework_plugin::kernel::Effect;
 use semio_framework_pack_json::Value;
 
@@ -35,7 +35,5 @@ pub fn create_edge(ctx: &mut Puzzle2dActionCtx<'_>, args: Option<&Value>) {
 }
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

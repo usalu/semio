@@ -10,10 +10,10 @@ const root=findWorkspaceRoot(import.meta.dir),output=process.env.SEMIO_TEST_ARTI
 for(const [index,row] of fixture.cases.entries())test("Artifact command extension: "+row.id,async()=>{
  if(!output)throw Error("SEMIO_TEST_ARTIFACT_DIR must name caller-owned output");
  const started=performance.now(),controller=new AbortController(),invocation:ScriptInvocation={policy:{version:1,...fixture.originalCaller},capabilities:{owner:fixture.originalCaller.owner,command:row.selected},control:{signal:controller.signal,remainingMilliseconds:()=>fixture.originalCaller.maximumElapsedMilliseconds-(performance.now()-started),publish(){},async yieldContinuation(){await setImmediate();}}};
- const result=await executeCommandV1({version:1,cwd:root,command:process.execPath,args:[resolve(import.meta.dir,"📜️script.ts"),row.selected,...row.args],manifests:[],preparation:"none"},{version:1,context:{version:1,cwd:root,cacheRoot:join(output,"command-corpus/cache"),leaseDirectory:join(output,"command-corpus/leases")},budgetMs:10000,maximumOutputBytes:65536,artifactDirectory:join(output,"command-corpus",row.id),retainArtifacts:true,cargoPolicies:[],vitestPolicy:null,cargoArtifactPolicy:null},{environment:{...process.env,SEMIO_COMMAND_VECTOR:String(index)},invocation,onProgress:event=>console.log("[DEBUG] Command extension "+row.id+" "+event.phase)});
+ const result=await executeCommandV1({version:1,cwd:root,command:process.execPath,args:[resolve(import.meta.dir,"📜️script.ts"),row.selected,...row.args],manifests:[],preparation:"none"},{version:1,context:{version:1,cwd:root,cacheRoot:join(output,"command-corpus/cache"),leaseDirectory:join(output,"command-corpus/leases")},budgetMs:10000,maximumOutputBytes:65536,artifactDirectory:join(output,"command-corpus",row.id),retainArtifacts:true,cargoPolicies:[],vitestPolicy:null,cargoArtifactPolicy:null},{environment:{...process.env,SEMIO_COMMAND_VECTOR:String(index)},invocation,onProgress:event=>{}});
  expect(result.reason).toBe("exit");expect(result.status).toBe(row.status);
  const positional=parseArguments([row.selected,...row.args],{configuration:{"parse-numbers":false,"parse-positional-numbers":false}})._;
  expect(positional).toEqual([row.selected,...row.args]);
  if(row.error)expect(result.stderr).toContain(row.error);else expect(JSON.parse(result.stdout)).toEqual({selected:positional[0],args:positional.slice(1)});
 });
-afterAll(()=>console.log("[DEBUG] Six actual command extension cases completed"));
+afterAll(()=>{});

@@ -17,6 +17,13 @@ use semio_framework_ui_render_prepared_shaders::*;
 pub const WORLD_GLOBALS_SLOT_SIZE:u64=256;
 pub const SCENE_MIP_LEVELS:u32=5;
 #[repr(C)]
+#[derive(Clone, Copy, Pod, Zeroable)]
+pub struct WorldLineGpuVertex {
+    pub position: [f32; 3],
+    pub color: [f32; 4],
+}
+
+#[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
 pub struct BlurGlobals {
     pub src_mip: f32,

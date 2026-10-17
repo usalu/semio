@@ -37,6 +37,10 @@ type stdioSemioV1ValueInferenceGuardSizeBounds = { readonly minItems?: number; r
 
 export const stdioSemioV1ValueInferenceGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : stdioSemioV1ValueInferenceGuardReject(at, "value is not an object");
+export const stdioSemioV1ValueInferenceGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) stdioSemioV1ValueInferenceGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const stdioSemioV1ValueInferenceGuardArray = (value: unknown, at: string, bounds: stdioSemioV1ValueInferenceGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return stdioSemioV1ValueInferenceGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) stdioSemioV1ValueInferenceGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -67,14 +71,14 @@ export const stdioSemioV1ValueInferenceGuardConstant = <T extends string | numbe
 //#endregion 🚪️Parsers
 
 export function parseSemioValueInference(value: unknown, at = "$"): SemioValueInference {
-  const row = stdioSemioV1ValueInferenceGuardObject(value, at);
+  const row = stdioSemioV1ValueInferenceGuardClosed(stdioSemioV1ValueInferenceGuardObject(value, at), at, ["census"]);
   return {
     census: parseSemioValueCensus(row["census"], `${at}.census`),
   };
 }
 
 export function parseSemioValueCensus(value: unknown, at = "$"): SemioValueCensus {
-  const row = stdioSemioV1ValueInferenceGuardObject(value, at);
+  const row = stdioSemioV1ValueInferenceGuardClosed(stdioSemioV1ValueInferenceGuardObject(value, at), at, ["nullCount", "boolCount", "intCount", "floatCount", "strCount", "bytesCount", "listCount", "mapCount", "refCount", "nodeCount", "maxDepth"]);
   return {
     nullCount: stdioSemioV1ValueInferenceGuardInteger(row["nullCount"], `${at}.nullCount`, {"minimum": 0}),
     boolCount: stdioSemioV1ValueInferenceGuardInteger(row["boolCount"], `${at}.boolCount`, {"minimum": 0}),

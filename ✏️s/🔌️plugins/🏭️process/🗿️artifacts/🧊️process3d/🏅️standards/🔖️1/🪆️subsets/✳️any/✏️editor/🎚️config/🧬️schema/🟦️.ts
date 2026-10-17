@@ -42,6 +42,10 @@ type process3dConfigGuardSizeBounds = { readonly minItems?: number; readonly max
 
 export const process3dConfigGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : process3dConfigGuardReject(at, "value is not an object");
+export const process3dConfigGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) process3dConfigGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const process3dConfigGuardArray = (value: unknown, at: string, bounds: process3dConfigGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return process3dConfigGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) process3dConfigGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -72,11 +76,11 @@ export const process3dConfigGuardConstant = <T extends string | number | boolean
 //#endregion 🚪️Parsers
 
 export function parseProcess3dConfig(value: unknown, at = "$"): Process3dConfig {
-  const row = process3dConfigGuardObject(value, at);
+  const row = process3dConfigGuardClosed(process3dConfigGuardObject(value, at), at, ["engagementInput", "cameraPosition", "cameraTarget", "cameraFov", "sunEnabled", "sunAzimuth", "sunElevation", "sunIntensity", "sunColor", "contributionsJson", "resolvedUpTo"]);
   return {
     engagementInput: process3dConfigGuardString(row["engagementInput"], `${at}.engagementInput`),
-    cameraPosition: process3dConfigGuardArray(row["cameraPosition"], `${at}.cameraPosition`, {"minItems": 3, "maxItems": 3}).map((item, index) => process3dConfigGuardNumber(item, `${at}.cameraPosition[${index}]`)),
-    cameraTarget: process3dConfigGuardArray(row["cameraTarget"], `${at}.cameraTarget`, {"minItems": 3, "maxItems": 3}).map((item, index) => process3dConfigGuardNumber(item, `${at}.cameraTarget[${index}]`)),
+    cameraPosition: ((items0) => [process3dConfigGuardNumber(items0[0], `${at}.cameraPosition[0]`), process3dConfigGuardNumber(items0[1], `${at}.cameraPosition[1]`), process3dConfigGuardNumber(items0[2], `${at}.cameraPosition[2]`)])(process3dConfigGuardArray(row["cameraPosition"], `${at}.cameraPosition`, {"minItems": 3, "maxItems": 3})),
+    cameraTarget: ((items0) => [process3dConfigGuardNumber(items0[0], `${at}.cameraTarget[0]`), process3dConfigGuardNumber(items0[1], `${at}.cameraTarget[1]`), process3dConfigGuardNumber(items0[2], `${at}.cameraTarget[2]`)])(process3dConfigGuardArray(row["cameraTarget"], `${at}.cameraTarget`, {"minItems": 3, "maxItems": 3})),
     cameraFov: process3dConfigGuardNumber(row["cameraFov"], `${at}.cameraFov`),
     sunEnabled: process3dConfigGuardBoolean(row["sunEnabled"], `${at}.sunEnabled`),
     sunAzimuth: process3dConfigGuardNumber(row["sunAzimuth"], `${at}.sunAzimuth`),
@@ -84,6 +88,6 @@ export function parseProcess3dConfig(value: unknown, at = "$"): Process3dConfig 
     sunIntensity: process3dConfigGuardNumber(row["sunIntensity"], `${at}.sunIntensity`),
     sunColor: process3dConfigGuardString(row["sunColor"], `${at}.sunColor`),
     contributionsJson: process3dConfigGuardString(row["contributionsJson"], `${at}.contributionsJson`),
-    resolvedUpTo: row["resolvedUpTo"] === undefined || row["resolvedUpTo"] === null ? null : process3dConfigGuardInteger(row["resolvedUpTo"], `${at}.resolvedUpTo`, { minimum: 0 }),
+    resolvedUpTo: row["resolvedUpTo"] === undefined ? undefined : (row["resolvedUpTo"] === null ? null : process3dConfigGuardInteger(row["resolvedUpTo"], `${at}.resolvedUpTo`, {"minimum": 0})),
   };
 }

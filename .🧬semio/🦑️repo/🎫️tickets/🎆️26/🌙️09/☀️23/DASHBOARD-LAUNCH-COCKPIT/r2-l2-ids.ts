@@ -1,8 +1,6 @@
 import { spawnSync } from "node:child_process";
 import { readFileSync } from "node:fs";
-import { spawnSync } from "node:child_process";
-const files = spawnSync("git", ["-c", "core.quotepath=false", "ls-files", "--", ":!.🧬semio", "*📋️project.json"], { cwd: "C:/git/semio", encoding: "utf8", maxBuffer: 1 << 28 }).stdout.split("
-").filter(Boolean);
+const files = spawnSync("git", ["-c", "core.quotepath=false", "ls-files", "--", ":!.🧬semio", "*📋️project.json"], { cwd: "C:/git/semio", encoding: "utf8", maxBuffer: 1 << 28 }).stdout.split("\n").filter(Boolean);
 const rows: string[] = [];
 for (const f of files) {
   let j: any;

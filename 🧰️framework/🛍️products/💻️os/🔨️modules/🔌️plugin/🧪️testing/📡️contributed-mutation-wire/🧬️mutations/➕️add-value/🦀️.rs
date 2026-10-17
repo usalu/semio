@@ -1,19 +1,21 @@
 //#region ➕️ContributedWireAddValue
 //! ➕️ Direct value addition for contributed mutation wire planning.
 
-use super::super::{WireTestDiff, WireTestMutation, WireTestSnapshot};
+use crate::contributed_mutation_wire::{WireTestDiff, WireTestSnapshot};
+use crate::contributed_mutation_wire::mutations::WireTestMutation;
 use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 
 // 🌱️ `Serialize`/`Deserialize` stay for `MutationKind`'s own (untouched) supertrait bound below;
 // `ToValue`/`FromValue` are the newer `CompositeMutationKind` supertrait bound (see that trait's
 // own doc) — this fixture implements both traits, so both derive pairs coexist here.
+#[doc(hidden)]
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[serde(deny_unknown_fields)]
 #[value(deny_unknown_fields)]
-pub(crate) struct AddValue {
-    delta: i32,
+pub struct AddValue {
+    pub delta: i32,
 }
 
 impl protocol::MutationKind<WireTestSnapshot, WireTestMutation> for AddValue {
@@ -58,7 +60,8 @@ impl protocol::CompositeMutationKind<WireTestSnapshot, WireTestMutation> for Add
     }
 }
 
+#[doc(hidden)]
 #[cfg(test)]
 #[path = "../../../../🧪️tests/➕️contributed-mutation-wire-add-value-unit/🦀️.rs"]
-mod tests;
+pub mod tests;
 //#endregion ➕️ContributedWireAddValue

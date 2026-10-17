@@ -1,8 +1,19 @@
-use super::*;
+use crate::{MapFeature, MapFeaturePatch};
+use crate::GisMapSnapshot;
+use semio_framework_test_fixtures::fixture_text;
+#[allow(unused_imports)]
+use ::semio_framework_schema::ArtifactSchema;
+#[allow(unused_imports)]
+use semio_framework_value_derive::{FromValue, ToValue};
+#[allow(unused_imports)]
+use protocol::list_delta::RowPatch;
+#[allow(unused_imports)]
+use protocol::MutationDiff;
+use crate::standards::v1::subsets::any::schema::diff::*;
 
 #[semio_framework_async_macros::async_test]
 async fn repeated_feature_patches_match_the_neutral_serde_oracle() {
-    let cases: serde_json::Value = serde_json::from_str(include_str!("../../../../🚪️io/📝️text/🔺️diff/🧪️tests/🧫️fixtures/🔬️unit/🔣️.json")).expect("patch composition fixture");
+    let cases: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../🚪️io/📝️text/🔺️diff/🧪️tests/🧫️fixtures/🔬️unit/🔣️.json")).expect("patch composition fixture");
     for case in cases.as_array().expect("fixture cases") {
         let id = case["id"].as_str().expect("case identity");
         let base = GisMapSnapshot { regions: vec![MapFeature { id: id.into(), data: semio_framework_value::DslValue::from(&case["initial"]) }], ..Default::default() };

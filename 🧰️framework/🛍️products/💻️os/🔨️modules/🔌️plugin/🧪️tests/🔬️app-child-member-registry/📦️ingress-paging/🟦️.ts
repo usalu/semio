@@ -26,5 +26,4 @@ test("original ingress slots retire as indivisible pages then a separate pointer
   expect(source.includes("OWNED_DOCUMENT_INGRESS_PAGE_SLOTS: usize = 8")).toBe(true);
   expect(source.includes("pages: Vec<Option<Box<[std::mem::MaybeUninit<OwnedDocumentMemberIngress>]>>>")).toBe(true);
   expect(source.includes("empty_backing_byte_demand")).toBe(true);
-  console.log("[DEBUG] Node unpooled Buffer + RFC6902: original0/17/1024 ingress slots, exact8-slot physical pages, final pointer backing separate, underfunding preserves original allocations");
 });

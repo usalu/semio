@@ -1,46 +1,57 @@
+import "../♻️reuse/🟦️.ts";
 import { expect, test } from "bun:test";
 import Ajv2020 from "ajv/dist/2020";
-import { readdirSync, readFileSync } from "node:fs";
-import { join, relative, resolve } from "node:path";
+import { readFileSync } from "node:fs";
+import { join, resolve } from "node:path";
+import { spawnSync } from "node:child_process";
+import { parseConfigFileTextToJson } from "typescript";
 
 const root = resolve(import.meta.dir, "../../../../../../.."), dashboard = resolve(import.meta.dir, "../..");
 const read = (path: string) => JSON.parse(readFileSync(path, "utf8"));
 const fixture = read(join(dashboard, "🧪️tests/🧫️fixtures/🧭️authority/🔣️.json"));
-const validate = new Ajv2020({ strict: false, allErrors: true }).compile(read(join(dashboard, "🧬️schema/🧭️authority/🔣️.json")));
-const accepts = (scripts: Record<string, unknown>) => Object.keys(scripts).length === Object.keys(fixture.scripts).length && Object.entries(fixture.scripts).every(([name, command]) => scripts[name] === command);
+const authority = read(join(dashboard, "🧬️schema/🧭️authority/🔣️.json")), oracle = new Ajv2020({ strict: false, allErrors: true });
+const validate = oracle.compile(authority), neutralAlias = new RegExp(authority.properties.scripts.additionalProperties.pattern);
+const accepts = (scripts: Record<string, unknown>) => Object.entries(fixture.scripts).every(([name, command]) => scripts[name] === command) && Object.entries(scripts).every(([name, command]) => Object.hasOwn(fixture.scripts, name) || typeof command === "string" && neutralAlias.test(command));
 
 test("the bootstrap decision matches the independent schema validator for every shared vector", () => {
+  const aliases: string[] = [];
   for (const row of fixture.cases) {
     const scripts = { ...fixture.scripts, ...row.add };
     for (const name of row.remove) delete scripts[name];
     expect(accepts(scripts), row.name).toBe(row.accepted);
     expect(validate({ scripts }), row.name).toBe(row.accepted);
+    if (row.accepted) for (const [name, command] of Object.entries(scripts)) if (!Object.hasOwn(fixture.scripts, name)) {
+      aliases.push(command as string);
+    }
   }
+  const parsed = spawnSync(Bun.which("python3") ?? Bun.which("python") ?? "python3", ["-c", "import json,shlex,sys; print(json.dumps([shlex.split(value) for value in json.load(sys.stdin)]))"], { input: JSON.stringify(aliases), encoding: "utf8", timeout: 5000, maxBuffer: 65536 });
+  expect(parsed.status, parsed.stderr).toBe(0);
+  expect(parsed.signal).toBeNull();
+  expect(JSON.parse(parsed.stdout)).toEqual(aliases.map(command => command.split(" ")));
 });
 
-test("the root manifest keeps only the canonical dashboard bootstrap", () => {
+test("the root manifest keeps canonical bootstraps and neutral task aliases", () => {
   const manifest = read(join(root, "package.json"));
   expect(validate(manifest), JSON.stringify(validate.errors?.slice(0, 8))).toBe(true);
   expect(accepts(manifest.scripts)).toBe(true);
 });
 
-test("every active source directory is free of editor and agent launch configuration", () => {
-  const editors = new Set<string>(fixture.editorDirectories), excluded = new Set<string>(fixture.excludedDirectories);
-  const failures: string[] = [], pending = [{ directory: root, editor: false }];
-  let visited = 0;
-  const key = (name: string) => name.replaceAll("\uFE0F", "").replace(/^[^\p{L}\p{N}.]+/u, "");
-  while (pending.length) {
-    const { directory, editor } = pending.pop()!;
-    if (++visited % 1000 === 0) console.log(`[DEBUG] authority gate inspected ${visited} source directories`);
-    for (const entry of readdirSync(directory, { withFileTypes: true })) {
-      const path = join(directory, entry.name);
-      if (entry.isSymbolicLink()) continue;
-      if (entry.isDirectory() && !excluded.has(key(entry.name)) && (!entry.name.startsWith(".") || editors.has(entry.name))) pending.push({ directory: path, editor: editor || editors.has(entry.name) });
-      if (editor && entry.isFile() && /(?:^|[.️])launch(?:[.][^/]*)?[.]jsonc?$/u.test(entry.name)) failures.push(relative(root, path).replaceAll("\\", "/"));
+test("registered editor launch projections preserve neutral build dispatch", () => {
+  const validateLaunch = oracle.getSchema(`${authority.$id}#/$defs/LaunchCommand`)!;
+  for (const row of fixture.launchCases) expect(validateLaunch(row.command), row.command).toBe(row.accepted);
+  let commands = 0;
+  for (const file of fixture.launchFiles) {
+    const parsed = parseConfigFileTextToJson(file, readFileSync(join(root, file), "utf8"));
+    expect(parsed.error).toBeUndefined();
+    expect(parsed.config.version).toBe("0.2.0");
+    expect(parsed.config.configurations.length).toBeGreaterThan(0);
+    for (const row of parsed.config.configurations) if (typeof row.command === "string") {
+      expect(validateLaunch(row.command), `${file}: ${row.name}`).toBe(true);
+      commands++;
     }
   }
-  expect(failures.sort(), "active launch configurations compete with the dashboard registry").toEqual([]);
-}, 300_000);
+  expect(commands).toBeGreaterThan(0);
+});
 
 test("root runnable commands remain owned by build targets and dashboard declarations", () => {
   const manifest = read(join(root, "📋️project.json"));
@@ -49,7 +60,6 @@ test("root runnable commands remain owned by build targets and dashboard declara
   expect(manifest.metadata.semio.dashboard.parameters.length).toBeGreaterThan(0);
   const registry = readFileSync(join(dashboard, "🎮️registry/🦀️.rs"), "utf8");
   expect(registry).not.toContain("workspace_scripts");
-  console.log(`[DEBUG] authority gate checked ${Object.keys(manifest.targets).length} root build targets`);
 });
 
 test("authored scripts use one declarative build entry", () => {

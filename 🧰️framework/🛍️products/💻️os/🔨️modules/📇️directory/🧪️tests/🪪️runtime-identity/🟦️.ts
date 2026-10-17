@@ -16,6 +16,5 @@ export function testDirectoryRuntimeIdentityFixture(): void {
   assert(_.isEqual(owners.original, owners["foreign-equal-workers"]));
   assert.equal(_.eq(owners.original, owners["foreign-equal-workers"]), false);
   assert.deepEqual(fixture.cases.map((row: { workers: number }) => row.workers), [1, 2, 3]);
-  console.log(`[DEBUG] directory runtime identity independent-comparisons=${fixture.identity.length} workers=${fixture.cases.length}`);
 }
 //#endregion 🪪️RuntimeIdentityOracle

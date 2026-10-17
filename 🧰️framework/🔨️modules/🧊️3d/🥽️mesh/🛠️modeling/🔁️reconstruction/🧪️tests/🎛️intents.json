@@ -1,0 +1,97 @@
+[
+  {
+    "value": {
+      "kind": "Coplanar"
+    },
+    "accepted": true
+  },
+  {
+    "value": {
+      "kind": "DissolveEdges",
+      "edges": [
+        0,
+        1
+      ]
+    },
+    "accepted": true
+  },
+  {
+    "value": {
+      "kind": "DissolveVertices",
+      "vertices": [
+        0
+      ]
+    },
+    "accepted": true
+  },
+  {
+    "value": {
+      "kind": "Vertices",
+      "vertices": [
+        0,
+        1
+      ],
+      "mode": "ByDistance",
+      "threshold": 0.1
+    },
+    "accepted": true
+  },
+  {
+    "value": {
+      "kind": "Grid",
+      "precision": 0.001
+    },
+    "accepted": true
+  },
+  {
+    "value": {
+      "kind": "DissolveEdges",
+      "edges": []
+    },
+    "accepted": false
+  },
+  {
+    "value": {
+      "kind": "Grid",
+      "precision": 0
+    },
+    "accepted": false
+  },
+  {
+    "value": {
+      "kind": "Unknown"
+    },
+    "accepted": false
+  },
+  {
+    "value": {
+      "kind": "Coplanar",
+      "phase": 23
+    },
+    "accepted": false
+  },
+  {
+    "value": {
+      "kind": "Vertices",
+      "vertices": [
+        0,
+        1
+      ],
+      "mode": "Center",
+      "threshold": -1
+    },
+    "accepted": true
+  },
+  {
+    "value": {
+      "kind": "Vertices",
+      "vertices": [
+        0,
+        1
+      ],
+      "mode": "ByDistance",
+      "threshold": -1
+    },
+    "accepted": false
+  }
+]

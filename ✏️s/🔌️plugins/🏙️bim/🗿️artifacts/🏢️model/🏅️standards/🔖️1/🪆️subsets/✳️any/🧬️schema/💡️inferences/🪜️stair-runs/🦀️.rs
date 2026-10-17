@@ -207,16 +207,6 @@ pub fn dependency(stair: &Stair) -> semio_framework_value::DslValue {
 }
 //#endregion 🔖️Geometry
 
-//#region 🔖️Projection
-
-
-/// 🪜️ The run of every stair (the `StairRun` nodes of the model graph).
-#[cfg(test)]
-pub fn compute_stair_runs(snapshot: &ModelSnapshot) -> BTreeMap<String, StairRun> {
-    std::mem::take(&mut super::super::model_graph::infer_selected::<{ super::super::model_graph::kinds::RUNS }>(snapshot).stair_runs)
-}
-//#endregion 🔖️Projection
-
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;

@@ -7,7 +7,7 @@ use semio_framework_canvas as canvas;
 use semio_framework_os_flow_vcs::{FlowRetainedVcs, FlowVcsAuthority, FlowVcsCloseDemands, FlowVcsFault, FlowVcsGrant, FlowVcsHandle, FlowVcsPage, FlowVcsPoll};
 use protocol::{FlowFailure, FlowFeature, FlowFeatureAdmission, FlowFeatureStep, FlowPayloadReader, FlowPayloadWriter};
 use semio_framework_value::{retained_clone::{RetainedCloneStep, RetainedCloneProgress, RetainedCloneGrant, admit_retained_clone_close}, retirement::controlled::ControlledRetirement};
-use semio_framework::abi::{decode_abi_message, encode_abi_message, AbiErrorCode, AbiMessage, AbiPort, AbiPortPoll, AbiWorkBudget};
+use semio_framework_abi::{decode_abi_message, encode_abi_message, AbiErrorCode, AbiMessage, AbiPort, AbiPortPoll, AbiWorkBudget};
 use serde_json::json;
 use std::cell::{Cell, RefCell};
 use std::rc::{Rc, Weak};
@@ -37,10 +37,10 @@ pub enum SurfaceState {
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct FlowSurface {
-    pub(super) id: SurfaceId,
+    pub id: SurfaceId,
     pub generation: SurfaceGeneration,
     pub metrics: CanvasMetrics,
-    pub(super) state: SurfaceState,
+    pub state: SurfaceState,
 }
 
 pub struct FlowDomainAdapter {
@@ -677,7 +677,7 @@ impl FlowOperationObserver {
 pub struct FlowProgramFeature {
     pub domain: Rc<RefCell<FlowDomainAdapter>>,
     pub arguments: FlowArguments,
-    pub(super) action: Box<dyn FlowActionState>,
+    pub action: Box<dyn FlowActionState>,
     pub observer:Rc<FlowOperationObserver>,
     pub admission:FlowFeatureAdmission,
     pub operation:u16,

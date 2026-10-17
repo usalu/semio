@@ -5,7 +5,6 @@
 //! §13.3); its exact undo is one absolute `set-slot-positions`.
 
 use crate::diff::Wfc2dDiff;
-use crate::mutations::Wfc2dMutation;
 use crate::schema::snapshot::Wfc2dSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -22,8 +21,11 @@ pub struct DragSlots {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn drag_slots(targets: Vec<String>, dx: f64, dy: f64) -> Wfc2dMutation {
-    Wfc2dMutation::DragSlots(DragSlots { targets, dx, dy })
+pub fn drag_slots<Op>(targets: Vec<String>, dx: f64, dy: f64) -> Op
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::drag_slots::DragSlots>,
+{
+    Op::from(DragSlots { targets, dx, dy })
 }
 
 impl DragSlots {
@@ -42,13 +44,16 @@ pub fn wfc2d_offset_text(value: f64) -> (String, String) {
     (en, de)
 }
 
-impl MutationKind<Wfc2dSnapshot, Wfc2dMutation> for DragSlots {
+impl<Op> MutationKind<Wfc2dSnapshot, Op> for DragSlots
+where
+    Op: protocol::Mutation<Wfc2dSnapshot, Diff = Wfc2dDiff> + From<DragSlots> + From<crate::standards::v1::subsets::any::schema::mutations::set_slot_positions::SetSlotPositions>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "drag", entity: "slots", kind: "drag-slots", record: "DraggedSlots" };
 
     fn diff(&self, base: &Wfc2dSnapshot) -> protocol::MutationOutcome<Wfc2dDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Wfc2dSnapshot) -> Result<Vec<Wfc2dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Wfc2dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

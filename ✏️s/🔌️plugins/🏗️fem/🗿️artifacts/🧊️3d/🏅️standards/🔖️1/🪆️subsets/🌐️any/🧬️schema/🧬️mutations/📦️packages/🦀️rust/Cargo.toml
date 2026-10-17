@@ -48,6 +48,10 @@ name = "mesh_topology_kinds"
 path = "../../../../../🕸️mesh/🧪️tests/🔬️topology-kinds/🦀️.rs"
 
 [[test]]
+name = "mesh_topology_kinds_2"
+path = "../../../../../🕸️mesh/🧪️tests/🔬️topology-kinds-2/🦀️.rs"
+
+[[test]]
 name = "boundary_kinds"
 path = "../../../../../🛡️boundary/🧪️tests/🔬️support-kinds/🦀️.rs"
 
@@ -78,4 +82,5 @@ semio-framework-async-macros = { workspace = true }
 semio-framework-dsl = { workspace = true }
 semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
 semio-framework-schema-state = { workspace = true }
+semio-framework-test-fixtures = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-s-fem-test-support = { workspace = true }

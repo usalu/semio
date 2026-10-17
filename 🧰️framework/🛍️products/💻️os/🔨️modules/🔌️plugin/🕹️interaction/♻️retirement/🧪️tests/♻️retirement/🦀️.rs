@@ -1,8 +1,9 @@
 //! 🧪️ Actual owned-state retirement laws at production and single-byte grants.
 use super::*;
+use semio_framework_test_fixtures::fixture_path;
 
 fn fixture() -> (serde_json::Value, serde_json::Value) {
-    let cases = serde_json::from_str(&std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧪️tests/🧫️fixtures/🏠️local-interaction/🔣️.json")).expect("fixture read at run time")).unwrap();
+    let cases = serde_json::from_str(&std::fs::read_to_string(fixture_path!("../../../../../../../🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧪️tests/🧫️fixtures/🏠️local-interaction/🔣️.json")).expect("fixture read at run time")).unwrap();
     let retirement = serde_json::from_str(include_str!("../../../../../../../../🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧪️tests/🧫️fixtures/♻️retirement/🔣️.json")).unwrap();
     (cases, retirement)
 }
@@ -19,7 +20,6 @@ fn close(cursor: &mut dyn ErasedSnapshotRetirement, bytes: usize) -> usize {
     for _ in 0..200_000 {
         if cursor.terminal_is_empty(){break}let(step,physical)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cursor.close_step(recipient.remaining_grant()).unwrap());let progress=step.progress();recipient.record_progress(progress).unwrap();physical_matches&=(physical.requested_bytes,physical.released_bytes)==(progress.retained_capacity_bytes,progress.released_bytes);if matches!(step,RetainedCloneStep::Complete(_)){break}
     }
-    eprintln!("[DEBUG] Original interaction retirement workLimit={bytes} originalCompleted={original_completed} actualPhysicalReceipts={physical_matches} releasedUnderOriginalLimit={released} cumulativeOriginalReceipt={:?} terminalEmpty={}",recipient.progress(),cursor.terminal_is_empty());
     assert!(cursor.terminal_is_empty(),"original retirement caller owner did not close");assert!(physical_matches,"retirement receipt differs from actual native allocator/release");assert!(original_completed,"original positive interaction retirement work byte limit {bytes} blocked");assert!(recipient.progress().fits(original));released
 }
 

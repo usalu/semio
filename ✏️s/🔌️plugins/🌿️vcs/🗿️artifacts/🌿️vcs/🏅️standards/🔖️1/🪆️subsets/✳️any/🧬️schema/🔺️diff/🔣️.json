@@ -37,7 +37,11 @@
       "title": "VcsTagsDelta",
       "type": "object",
       "additionalProperties": false,
-      "required": [],
+      "required": [
+        "removed",
+        "inserted",
+        "moved"
+      ],
       "properties": {
         "removed": {
           "type": "array",

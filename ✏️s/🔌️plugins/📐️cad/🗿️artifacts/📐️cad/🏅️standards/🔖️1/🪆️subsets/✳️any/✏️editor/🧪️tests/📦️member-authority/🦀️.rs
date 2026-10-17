@@ -38,7 +38,6 @@ async fn cad_imported_geometry_members_install_exact_typed_publication_authority
             }
             assert!(store.close_owned_terminal_is_empty());
             assert!(admission.is_ok(), "actual installed {} member requires its exact typed preparation authority: {admission:?}",expected["subset"]);
-            println!("[DEBUG] actual installed imported {} member typed birth={} original vector pointer retained, complete bounded owner closure",expected["subset"],admission.unwrap());
         }};
     }
     member!(SemioModelSnapshot,SemioModelMutation,SemioModelMutation::InsertElement(InsertElement { element:imported.element, at: None }),0);

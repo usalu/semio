@@ -75,5 +75,4 @@ test("published numeric value facets match SQLite and survive removal of specifi
   assert(!program.emit(undefined, (path, source) => declarations.set(path, source)).emitSkipped);
   for (const path of paths) assert(declarations.get(path.slice(0, -3) + ".d.ts")?.includes("NumericIndexGrant"), "published declaration retains its first-party grant type");
   assert([...declarations.values()].every(source => !/from\s+["'](?:✏️s|🌎️hub|@semio-tech\/s|@semio-tech\/hub)/u.test(source)));
-  console.log("[DEBUG] published numeric owner and SDK exactIdentity=true boundedOwnership=true independentSQLite=true specificDeletion=true explicitExports=true actualPackageResolution=true declarations=true");
 });

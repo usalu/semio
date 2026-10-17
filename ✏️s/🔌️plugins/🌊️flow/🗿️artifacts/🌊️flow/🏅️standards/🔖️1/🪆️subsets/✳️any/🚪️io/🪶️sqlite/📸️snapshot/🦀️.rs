@@ -23,6 +23,3 @@ fn to_sqlite_database(&self,c:&mut SqliteSnapshotControl<'_>)->Result<SqliteData
 fn from_sqlite_database(d:&SqliteDatabase,c:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{let result=(||->Result<Self,ValueError>{validate_sqlite_database_schema(d,Self::SQLITE_SCHEMA,c.limits())?;c.check_database(d,SqliteSnapshotPhase::ReconstructSnapshot)?;let document=d.table("flow_document")?.single_row()?;let content=d.table("flow_content")?.single_row()?;if document.rowid!=1||content.rowid!=1||document.integer(0)?!=1||content.integer(0)?!=1||document.values.len()!=2||content.values.len()!=6{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"Flow requires exact identity-1 parent and child rows"))}let mut r=Reconstruction::new(c)?;let schema=r.text(document.text(1)?)?;let child_id=r.text(content.text(1)?)?;let artifact_id=r.text(content.text(2)?)?;let artifact_kind=r.text(content.text(3)?)?;let standard=r.text(content.text(4)?)?;let subset=r.text(content.text(5)?)?;r.checkpoint()?;Ok(Self{schema,content:store::os_store::artifact_child::ArtifactChild::new(child_id,semio_framework_artifact_reference::ArtifactRef{artifact_id,dialect:semio_framework_artifact_reference::ArtifactDialect{artifact_kind,standard,subset}})})})();result}
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;

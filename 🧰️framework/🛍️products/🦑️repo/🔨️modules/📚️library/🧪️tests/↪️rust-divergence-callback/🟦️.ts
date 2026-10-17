@@ -72,7 +72,7 @@ function compilerPids(pid: number, observed: Set<number>): number[] {
     : result.stdout.trim().split(/\r?\n/u).filter(Boolean).map((line) => { const [child, parent, group] = line.trim().split(/\s+/u).map(Number); return { pid: child!, parent: parent!, group }; });
   if (process.platform === "win32") {
     let changed = true;
-    while (changed) { changed = false; if (observed.has(row.parent) && !observed.has(row.pid)) { observed.add(row.pid); changed = true; } }
+    while (changed) { changed = false; for (const row of rows) if (observed.has(row.parent) && !observed.has(row.pid)) { observed.add(row.pid); changed = true; } }
   }
   const live = rows.filter((row) => process.platform === "win32" ? observed.has(row.pid) : row.group === pid).map((row) => row.pid);
   for (const child of live) observed.add(child);

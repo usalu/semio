@@ -1,0 +1,89 @@
+//! 📏 `resize-frame` — changes a frame's `bounds.width`/`bounds.height` extent.
+
+
+use semio_s_artifact_layout_layout_diff::{LayoutPagesDelta, PageFramesDelta, PagePatch};
+use crate::standards::v1::subsets::any::schema::diff::LayoutPagesModification;
+use semio_s_artifact_layout_layout_diff::{FramePatch, LayoutDiff};
+use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
+use protocol::{MutationKind, SemanticDescriptor};
+use semio_framework_value_derive::{FromValue, ToValue};
+
+//#region 📏ResizeFrame
+#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[mutation_leaf(contract = ::protocol)]
+#[value(rename_all = "camelCase")]
+pub struct ResizeFrame {
+    pub page_id: String,
+    pub frame_id: String,
+    pub new_width: f64,
+    pub new_height: f64,
+}
+
+impl<Op> MutationKind<LayoutSnapshot, Op> for ResizeFrame where Op: protocol::Mutation<LayoutSnapshot, Diff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::resize_frame::ResizeFrame> {
+    const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "resize", entity: "frame", kind: "resize-frame", record: "ResizedFrame" };
+    fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
+        diff_resize_frame(self, base)
+    }
+    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    Ok({
+        inverse_resize_frame(self, base)?
+    
+    })
+}
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Resize frame \"{}\"", self.frame_id), &format!("Größe von Rahmen \"{}\" ändern", self.frame_id))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.page_id.clone(), self.frame_id.clone()]
+    }
+}
+//#endregion 📏ResizeFrame
+
+//#region 📏ResizeFrame
+pub fn diff_resize_frame(payload: &ResizeFrame, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
+    let Some(page) = base.pages.iter().find(|page| page.id == payload.page_id) else {
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Page \"{}\" does not exist.", payload.page_id), [payload.page_id.clone()]);
+    };
+    if !page.frames.iter().any(|frame| frame.id() == payload.frame_id) {
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Frame \"{}\" does not exist on page \"{}\".", payload.frame_id, payload.page_id), [payload.frame_id.clone()]);
+    }
+    if !payload.new_width.is_finite() || !payload.new_height.is_finite() || payload.new_width <= 0.0 || payload.new_height <= 0.0 {
+        return protocol::MutationOutcome::fatal("mutation.invariant", format!("Frame \"{}\" size must be finite and positive, got ({}, {}).", payload.frame_id, payload.new_width, payload.new_height), [payload.frame_id.clone()]);
+    }
+    protocol::MutationOutcome::new(LayoutDiff {
+        pages: Some(LayoutPagesDelta {
+            modified: vec![LayoutPagesModification {
+                id: payload.page_id.clone(),
+                patch: PagePatch { frames: PageFramesDelta::modification(payload.frame_id.clone(), FramePatch { width: Some(payload.new_width), height: Some(payload.new_height), ..Default::default() }), ..Default::default() },
+            }],
+            ..Default::default()
+        }),
+        ..Default::default()
+    })
+}
+//#endregion 📏ResizeFrame
+
+//#region 📏ResizeFrame
+pub fn inverse_resize_frame<Op: From<crate::resize_frame::ResizeFrame>>(payload: &ResizeFrame, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    Ok((|| {
+    let Some(page) = base.pages.iter().find(|page| page.id == payload.page_id) else {
+        return Vec::new();
+    };
+    let Some(frame) = page.frames.iter().find(|frame| frame.id() == payload.frame_id) else {
+        return Vec::new();
+    };
+    let bounds = frame.bounds();
+    vec![Op::from(ResizeFrame { page_id: payload.page_id.clone(), frame_id: payload.frame_id.clone(), new_width: bounds.width, new_height: bounds.height })]
+
+    })())
+}
+//#endregion 📏ResizeFrame
+
+//#region 🪢️TaxonomyMounts
+#[cfg(test)]
+#[path = "🧪️tests/📐️resizes-the-rect-frame/🦀️.rs"]
+mod tests_resizes_the_rect_frame;
+//#endregion 🪢️TaxonomyMounts

@@ -1,6 +1,5 @@
 //! 🎛️ Authoritative PDF mutation payload, diff, inverse, and tests for `set-ext-g-state`.
 
-use super::PdfMutation;
 use crate::standards::v1_7::subsets::base::schema::diff::{self, PdfDiff};
 use crate::standards::v1_7::subsets::base::schema::snapshot::*;
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
@@ -16,7 +15,10 @@ pub struct SetExtGState {
     pub index: Option<usize>,
 }
 
-impl MutationKind<PdfSnapshot, PdfMutation> for SetExtGState {
+impl<Op> MutationKind<PdfSnapshot, Op> for SetExtGState
+where
+    Op: protocol::Mutation<PdfSnapshot, Diff = PdfDiff> + From<SetExtGState> + From<crate::standards::v1_7::subsets::base::schema::mutations::remove_ext_g_state::RemoveExtGState>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "ext-g-state", kind: "set-ext-g-state", record: "Set" };
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
@@ -24,10 +26,10 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetExtGState {
         MutationOutcome::new(diff::diff_set_ext_g_state(base, self.state.clone(), self.index))
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
         let _ = base;
-        match base.ext_g_states.iter().find(|item| item.id == self.state.id) { Some(previous) => vec![PdfMutation::SetExtGState(SetExtGState { state: previous.clone(), index: None })], None => vec![PdfMutation::RemoveExtGState(super::remove_ext_g_state::RemoveExtGState { id: self.state.id.clone() })] }
+        match base.ext_g_states.iter().find(|item| item.id == self.state.id) { Some(previous) => vec![Op::from(SetExtGState { state: previous.clone(), index: None })], None => vec![Op::from(crate::standards::v1_7::subsets::base::schema::mutations::remove_ext_g_state::RemoveExtGState { id: self.state.id.clone() })] }
     
     })())
 }
@@ -44,8 +46,6 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetExtGState {
 //#endregion 🔖️Mutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
 

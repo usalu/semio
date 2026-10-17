@@ -119,7 +119,6 @@ fn the_request_and_result_fixtures_hold_in_rust_and_the_result_decodes_through_i
     let execution = once(&host, &payload, 1000);
     let stepped = once(&GeometryHost::default(), &payload, 2);
     let faulted = once(&GeometryHost::default(), &request_text(document(2.0, -1.0), None), 1000);
-    eprintln!("[DEBUG] geometry-service-observed-fixture={}", serde_json::json!({"request": serde_json::from_str::<serde_json::Value>(&payload).unwrap(), "complete": json(&execution), "stepped": json(&stepped), "faulted": json(&faulted)}));
     assert_eq!(serde_json::from_str::<serde_json::Value>(&payload).expect("the request is JSON"), fixture["request"], "the committed request is the encoding of the typed request");
     assert_eq!(json(&execution), fixture["complete"], "the committed result is what the service answers");
     let result = typed(&execution);

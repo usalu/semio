@@ -1,7 +1,9 @@
 //! 🧪️ The snapshot's own laws: a fresh document names its schema, the addressing helpers find what
 //! exists and nothing else, and the canonical insertion index keeps a collection sorted.
 
-use super::*;
+use semio_framework_test_fixtures::fixture_text;
+use semio_s_artifact_stdio_semio_mesh::schema::snapshot::SemioMeshSnapshot;
+use crate::standards::v1::subsets::any::schema::snapshot::*;
 
 fn document() -> Wfc3dSnapshot {
     crate::examples::two_room_corridor::snapshot()
@@ -58,7 +60,7 @@ fn every_example_slot_carries_a_positive_box() {
 #[test]
 fn declared_nested_mesh_child_projection_preserves_full_identity_and_inline_media(){
  use semio_framework_schema_composition::{ArtifactCompositionFields,ChildRefFields,ChildRefVisitor};
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/📸️snapshot/🪆️mesh-child/🔣️.json")).expect("closed nested media contract");
+ let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../../🧪️tests/🧫️fixtures/📸️snapshot/🪆️mesh-child/🔣️.json")).expect("closed nested media contract");
  let text=|value:&serde_json::Value|value.as_str().expect("text").to_string();
  let tiles=fixture["tiles"].as_array().expect("tiles").iter().map(|row|{let media=&row["media"];Tile{id:text(&row["id"]),label:None,weight:1.0,media:match media["kind"].as_str().expect("kind"){
  "mesh"=>TileMedia3d::Mesh{positions:media["positions"].as_array().expect("positions").iter().map(|v|v.as_f64().expect("coordinate")).collect(),indices:media["indices"].as_array().expect("indices").iter().map(|v|u32::try_from(v.as_u64().expect("index")).expect("u32")).collect(),color:None},
@@ -72,7 +74,6 @@ fn declared_nested_mesh_child_projection_preserves_full_identity_and_inline_medi
  let slots=Wfc3dSnapshot::child_slots();assert_eq!(slots.len(),1);assert_eq!(slots[0].name,fixture["slot"].as_str().expect("slot"));assert_eq!(slots[0].selection.artifact_kind(),Some(fixture["kind"].as_str().expect("kind")));assert_eq!(slots[0].many,fixture["many"].as_bool().expect("many"));
  let TileMedia3d::Mesh{positions,indices,color}=&document.tiles[0].media else{panic!("original inline branch");};assert_eq!(serde_json::json!(positions),fixture["tiles"][0]["media"]["positions"]);assert_eq!(serde_json::json!(indices),fixture["tiles"][0]["media"]["indices"]);assert_eq!(*color,None);
  let oracle:Vec<serde_json::Value>=fixture["tiles"].as_array().expect("tiles").iter().filter_map(|row|{let media=&row["media"];(media["kind"]=="meshChild").then(||serde_json::json!([fixture["slot"],media["childId"],media["artifactId"],media["artifactKind"],media["standard"],media["subset"]]))}).collect();assert_eq!(serde_json::json!(oracle),serde_json::json!(projection.rows));
- eprintln!("[DEBUG] Declared nested tile media preserves complete mesh child identity and original inline coordinates");
 }
 
 
@@ -95,7 +96,7 @@ fn declared_nested_mesh_child_admission_requires_exact_type_dialect_and_retained
             Ok(())
         }
     }
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/📸️snapshot/🪆️mesh-child/🔣️.json")).expect("closed admission contract");
+    let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../../🧪️tests/🧫️fixtures/📸️snapshot/🪆️mesh-child/🔣️.json")).expect("closed admission contract");
     let row=&fixture["tiles"][1]["media"];
     let text=|value:&serde_json::Value|value.as_str().expect("identity").to_string();
     let child=store::os_store::artifact_child::ArtifactChild::new(text(&row["childId"]),semio_framework_artifact_reference::ArtifactRef{artifact_id:text(&row["artifactId"]),dialect:semio_framework_artifact_reference::ArtifactDialect{artifact_kind:text(&row["artifactKind"]),standard:text(&row["standard"]),subset:text(&row["subset"])}});
@@ -116,6 +117,4 @@ fn declared_nested_mesh_child_admission_requires_exact_type_dialect_and_retained
     let mut source=Source{accepted:Vec::new(),maximum:2};
     assert_eq!(tiles.admit_child_field("tiles",&mut source),Err(Refusal{kind:ValueRefusalKind::InvalidValue,ordinal:1}));
     assert_eq!(source.accepted,vec![fixture["expected"][0].clone()]);
-    eprintln!("[DEBUG] Exact Semio mesh admission retains accepted identity prefix and typed original refusal");
 }
-

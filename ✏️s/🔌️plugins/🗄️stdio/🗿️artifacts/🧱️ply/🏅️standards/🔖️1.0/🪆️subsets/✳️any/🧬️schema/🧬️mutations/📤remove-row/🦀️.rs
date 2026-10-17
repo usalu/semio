@@ -8,8 +8,8 @@ use super::*;
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 pub struct RemoveRow {
-    pub(crate) element_name: String,
-    pub(crate) index: usize,
+    pub element_name: String,
+    pub index: usize,
 }
 
 impl protocol::MutationKind<PlySnapshot, PlyMutation> for RemoveRow {

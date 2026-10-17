@@ -29,11 +29,14 @@ pub fn plan(p: &GltfCreateSamplerPayload, base: &GltfSnapshot) -> Result<GltfDif
     Ok(diff)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn inverse(p: &GltfCreateSamplerPayload, base: &GltfSnapshot) -> Vec<super::GltfMutation> {
+pub fn inverse<Op>(p: &GltfCreateSamplerPayload, base: &GltfSnapshot) -> Vec<Op>
+where
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::remove_used_extension::RemoveUsedExtensionMutation>,
+{
     if validate(p, base).is_err() {
         return Vec::new();
     }
-    vec![super::delete_sampler::mutation(super::delete_sampler::GltfDeleteSamplerPayload { index: p.position })]
+    vec![crate::standards::v2_0::subsets::any::schema::mutations::delete_sampler::mutation(crate::standards::v2_0::subsets::any::schema::mutations::delete_sampler::GltfDeleteSamplerPayload { index: p.position })]
 }
 
 //#region 🧬️DirectMutation
@@ -46,11 +49,17 @@ pub enum CreateSamplerMutation {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn mutation(payload: GltfCreateSamplerPayload) -> super::GltfMutation {
-    super::GltfMutation::CreateSampler(CreateSamplerMutation::Apply(payload))
+pub fn mutation<Op>(payload: GltfCreateSamplerPayload) -> Op
+where
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::create_sampler::CreateSamplerMutation>,
+{
+    Op::from(CreateSamplerMutation::Apply(payload))
 }
 
-impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for CreateSamplerMutation {
+impl<Op> protocol::MutationKind<GltfSnapshot, Op> for CreateSamplerMutation
+where
+    Op: protocol::Mutation<GltfSnapshot, Diff = GltfDiff> + From<CreateSamplerMutation>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "sampler", kind: "create-sampler", record: "CreatedSampler" };
 
     fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<GltfDiff> {
@@ -62,7 +71,7 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for CreateSampler
         }
     }
 
-    fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<super::GltfMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         match self {
             Self::Apply(payload) => Ok(inverse(payload, base)),
         }
@@ -79,7 +88,5 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for CreateSampler
 //#endregion 🧬️DirectMutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🎛️inserts-a-repeat-512dbe/🦀️.rs"]
-mod case_inserts_a_repeat_512dbe;
+
 //#endregion 🧪️Tests

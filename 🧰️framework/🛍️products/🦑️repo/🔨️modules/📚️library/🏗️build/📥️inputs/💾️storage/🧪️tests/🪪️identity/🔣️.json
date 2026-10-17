@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "quota": {
+    "maximumBytes": 8,
+    "usedBytes": 0,
+    "availableBytes": 32,
+    "minimumAvailableBytes": 8
+  },
+  "steps": [
+    {
+      "peakBytes": 3,
+      "retainedDeltaBytes": 2,
+      "commit": true,
+      "usedBytes": 2,
+      "pendingBytes": 0
+    },
+    {
+      "peakBytes": 4,
+      "retainedDeltaBytes": 3,
+      "commit": false,
+      "usedBytes": 2,
+      "pendingBytes": 0
+    }
+  ],
+  "facts": {
+    "version": 1,
+    "usedBytes": 2,
+    "pendingBytes": 0
+  },
+  "requiredValues": [
+    {
+      "value": null,
+      "accepted": true
+    },
+    {
+      "value": false,
+      "accepted": true
+    },
+    {
+      "value": 0,
+      "accepted": true
+    },
+    {
+      "value": "",
+      "accepted": true
+    },
+    {
+      "value": {
+        "a": 1
+      },
+      "accepted": true
+    },
+    {
+      "accepted": false
+    }
+  ]
+}

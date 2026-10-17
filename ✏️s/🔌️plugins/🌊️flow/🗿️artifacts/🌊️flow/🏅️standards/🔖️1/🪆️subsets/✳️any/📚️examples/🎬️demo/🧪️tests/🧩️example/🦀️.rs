@@ -1,4 +1,5 @@
 use semio_framework_artifact_flow_flow::{FlowHostSnapshot, WidgetLayout};
+use semio_framework_test_fixtures::fixture_text;
 
 /// 🎬️ The published `demo`: the default slider → add → preview graph, laid out left to right. Its
 /// widgets live in the composed `content` child, so the asset carries them in the host grammar that
@@ -18,7 +19,7 @@ fn demo_text(host: &FlowHostSnapshot) -> String {
 
 #[semio_framework_async_macros::async_test]
 async fn primary_asset_is_nonempty() {
-    let text = include_str!("../../../../🖼️assets/🎬️demo/🗣️.dsl.semio");
+    let text = fixture_text!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🖼️assets/🎬️demo/🗣️.dsl.semio");
     assert!(text.len() > 8);
 }
 
@@ -32,7 +33,7 @@ async fn demo_example_ships_the_laid_out_default_graph_as_its_content_genesis() 
     let snapshot = crate::examples::demo::snapshot_from_text(crate::examples::demo::PRIMARY_TEXT).expect("demo parses");
     let scene = snapshot.to_host_snapshot();
     let ids: Vec<&str> = scene.widgets.iter().map(crate::schema::widget_id).collect();
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).expect("neutral demo graph");
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🧫️fixtures/🔣️.json")).expect("neutral demo graph");
     assert_eq!(crate::FLOW_DOCUMENT_SCHEMA, fixture["parentSchema"].as_str().unwrap());
     assert_eq!(serde_json::to_value(&ids).expect("independent widget array"), fixture["widgetIds"]);
     assert_eq!(scene.synapses.len() as u64, fixture["synapseCount"].as_u64().unwrap());
@@ -40,7 +41,6 @@ async fn demo_example_ships_the_laid_out_default_graph_as_its_content_genesis() 
     assert_eq!(actual_layout, fixture["layout"]);
     assert!(scene.synapses.iter().all(|synapse| ids.contains(&synapse.from.as_str()) && ids.contains(&synapse.to.as_str())));
     assert!(ids.iter().all(|id| scene.layout.get(*id).is_some()), "every demo widget carries its layout");
-    println!("[DEBUG] Flow handcrafted demo matches independent serde_json: widgets={} synapses={} layouts={}", ids.len(), scene.synapses.len(), scene.layout.len());
     scene.retire_cold();
     assert!(crate::flow_genesis_content_pack(&snapshot, "content", &snapshot.content.child_id).is_some(), "the demo's content child must have a genesis pack, or the canvas loads empty");
 }
@@ -49,7 +49,7 @@ async fn demo_example_ships_the_laid_out_default_graph_as_its_content_genesis() 
 #[semio_framework_async_macros::async_test]
 async fn inference_determinism_law() {
     use protocol::Inference;
-    let text = include_str!("../../../../🖼️assets/🎬️demo/🗣️.dsl.semio");
+    let text = fixture_text!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🖼️assets/🎬️demo/🗣️.dsl.semio");
     let snapshot = crate::examples::demo::snapshot_from_text(text).expect("demo fixture parses");
     let inference = crate::standards::v1::subsets::any::schema::inferences::FlowInference::infer(&snapshot).expect("valid materialized inference fixture");
     assert_eq!(inference, crate::standards::v1::subsets::any::schema::inferences::FlowInference::infer(&snapshot).expect("valid materialized inference fixture"));

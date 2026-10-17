@@ -1,9 +1,9 @@
 use super::*;
 use crate::standards::v1::subsets::any::io::export::gltf::projection::through;
 use crate::standards::v1::subsets::any::io::export::gltf::testkit::house;
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::compute_element_solids;
+use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_element_solids;
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::instance as inference;
-use crate::standards::v1::subsets::any::schema::inferences::storey_levels::compute_storey_levels;
+use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_storey_levels;
 
 fn build(snapshot: &ModelSnapshot) -> (GltfModel, Vec<String>) {
     inference::with_inference(None, snapshot, |inferred| super::build(snapshot, inferred))

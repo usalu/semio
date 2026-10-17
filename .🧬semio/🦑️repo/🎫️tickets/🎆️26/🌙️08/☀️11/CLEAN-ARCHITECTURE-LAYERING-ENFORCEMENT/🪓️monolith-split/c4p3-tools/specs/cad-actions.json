@@ -1,0 +1,61 @@
+{
+ "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎬️actions/🟦️.ts",
+ "importers": "auto",
+ "children": [
+  {
+   "dir": "🧬️action-contract",
+   "doc": "/** 🧬️ CAD editor actions: the serializable action specs, definitions and registry type, and the parsing of the shipped action catalog. */",
+   "lines": [
+    [
+     27,
+     79
+    ],
+    [
+     81,
+     137
+    ],
+    [
+     503,
+     504
+    ]
+   ]
+  },
+  {
+   "dir": "🏃️action-execution",
+   "doc": "/** 🏃️ CAD editor actions: the box and transform helpers, the model-definition capability table, the declarative runtime, the action registry and the selection-apply runner. */",
+   "names": [
+    "runSelectionApply"
+   ],
+   "lines": [
+    [
+     139,
+     554
+    ],
+    [
+     1069,
+     1090
+    ]
+   ]
+  },
+  {
+   "dir": "🧲️selection-targets",
+   "doc": "/** 🧲️ CAD editor actions: the geometry targets of a selection, the gumball configuration, the interaction point snaps and the selection operations. */",
+   "lines": [
+    [
+     556,
+     1066
+    ]
+   ]
+  },
+  {
+   "dir": "🎰️interaction-state",
+   "doc": "/** 🎰️ CAD editor actions: the interaction state engine, the spatial and numeric entry of an interaction, its engagement controls, keybinds and the pure state-engine provider. */",
+   "lines": [
+    [
+     1094,
+     1702
+    ]
+   ]
+  }
+ ]
+}

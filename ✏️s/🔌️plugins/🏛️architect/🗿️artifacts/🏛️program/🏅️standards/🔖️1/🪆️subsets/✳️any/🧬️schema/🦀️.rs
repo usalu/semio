@@ -2,12 +2,9 @@
 
 use crate::standards::v1::subsets::any::schema::kernel::*;
 use crate::standards::v1::subsets::any::schema::registers::*;
-pub use crate::standards::v1::subsets::any::schema::registers::{RegisterKey, RegisterRow};
+pub use crate::standards::v1::subsets::any::schema::registers::catalog::{RegisterKey, RegisterRow};
+use crate::standards::v1::subsets::any::schema::snapshot::ARCHITECT_PROGRAM_SCHEMA;
 use framework_schema::ArtifactSchema;
-use graph::{orient_endpoints, Undirected};
-
-/// 📜️ Persisted architect program document schema identifier.
-pub const ARCHITECT_PROGRAM_SCHEMA: &str = "architect.program";
 
 //#region 🔖️Dialect
 /// 🎯️ Ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET: the one `Dialect` coordinate every
@@ -526,19 +523,6 @@ pub fn schema_leaf_asset_declarations() -> Vec<semio_framework::AssetDeclaration
 
 //#endregion 🧬️DerivedArtifactFacets
 
-//#region 🔖️DocumentHelpers
-/// 📐️ Canonical undirected endpoint order for an adjacency pair — dissolved out of the former
-/// `⚙️engine/↔️adjacency` topic (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES): a
-/// pure document helper with no `&mut` and no app coupling, so it lands on the schema root
-/// alongside the artifact's other handcrafted document primitives.
-pub fn normalize_pair(a: &EntityId, b: &EntityId) -> (EntityId, EntityId) {
-    let (left, right) = orient_endpoints::<&str, Undirected>(&a.0, &b.0);
-    (EntityId(left.to_string()), EntityId(right.to_string()))
-}
-//#endregion 🔖️DocumentHelpers
-
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

@@ -3,8 +3,7 @@
 #[allow(unused_imports)]
 mod mutations_codec {
 use super::*;
-use crate::editor::shooting::config::component::mutations::*;
-use crate::editor::shooting::config::component::*;
+use crate::editor::shooting::config::*;
 
 impl protocol::OpBinary for ShootingConfigMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {

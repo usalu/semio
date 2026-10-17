@@ -1,4 +1,9 @@
-use super::*;
+use crate::{standards::v1::subsets::any::schema::records::Puzzle2dNode, Puzzle2dSnapshot};
+use semio_framework_plugin::MeshWindowKit;
+#[allow(unused_imports)]
+use semio_framework_plugin::{mesh_from_kind, world3d_camera_json, world3d_selection_json, MeshView, WindowKindDefinition, WindowKit};
+use crate::viewer::puzzle2d::modes::view::windows::board::{world_instances_json};
+use crate::viewer::puzzle2d::modes::view::windows::board::*;
 
 #[test]
 fn definition_declares_the_shared_mesh_window_kit() {

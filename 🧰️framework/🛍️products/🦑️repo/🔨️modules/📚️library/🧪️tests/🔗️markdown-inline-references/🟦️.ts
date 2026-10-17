@@ -12,7 +12,7 @@ import ts from "typescript";
 type Token = Readonly<{ adapter: "markdown"; structuredLocation: string; start: number; end: number; value: string }>;
 type Scenario = Readonly<{ id: string; path: string; source: string; oracleScope: "common-subset" | "scanner-only"; reason: string; expected: readonly Token[] }>;
 type Stress = Readonly<{ id: string; unit: string; repeat: number; suffix: string; codeUnits: number; bytes: number; expected: readonly Token[] }>;
-type Vector = Readonly<{ extraction: { required: readonly string[]; optional: readonly string[]; globals: readonly string[] }; oracle: { package: string; version: string; dependencyKind: "devDependencies" }; limits: { childMilliseconds: number; childOutputBytes: number; caseMilliseconds: number; childDescendants: number }; cases: readonly Scenario[]; cacheSequence: readonly string[]; stress: readonly Stress[] }>;
+type Vector = Readonly<{ schemaVersion: number; contractId: string; grammar: Readonly<Record<string, string>>; extraction: { required: readonly string[]; optional: readonly string[]; globals: readonly string[]; missingDependencies: string }; oracle: { package: string; version: string; dependencyKind: "devDependencies"; entry: string; proof: string }; limits: { childMilliseconds: number; childOutputBytes: number; caseMilliseconds: number; childDescendants: number }; cases: readonly Scenario[]; cacheSequence: readonly string[]; stress: readonly Stress[] }>;
 type Operation = (path: string, content: string) => readonly Token[];
 type NativeToken = { type: string; attrGet(name: string): string | null; children?: NativeToken[] | null };
 type Destination = Readonly<{ ok: boolean; str: string; pos: number }>;
@@ -222,10 +222,12 @@ test("Markdown inline references have closed neutral vectors and exact UTF-16 sp
   expect(parse(vectorBytes.toString("utf8"), errors, { disallowComments: true, allowTrailingComma: false })).toEqual(vector);
   expect(errors).toEqual([]);
   expect(new Set(vector.cases.map((row) => row.id)).size).toBe(vector.cases.length);
-  for (const token of row.expected) {
-    expect(row.source.slice(token.start, token.end), row.id).toBe(token.value);
-    expect(token.end, row.id).toBe(token.start + token.value.length);
-    expect(token.structuredLocation, row.id).toBe(location(row.source, token.start, token.structuredLocation.startsWith("html-") ? "html-attribute" : "markdown-link"));
+  for (const row of vector.cases) {
+    for (const token of row.expected) {
+      expect(row.source.slice(token.start, token.end), row.id).toBe(token.value);
+      expect(token.end, row.id).toBe(token.start + token.value.length);
+      expect(token.structuredLocation, row.id).toBe(location(row.source, token.start, token.structuredLocation.startsWith("html-") ? "html-attribute" : "markdown-link"));
+    }
   }
   for (const row of vector.stress) {
     const content = row.unit.repeat(row.repeat) + row.suffix;

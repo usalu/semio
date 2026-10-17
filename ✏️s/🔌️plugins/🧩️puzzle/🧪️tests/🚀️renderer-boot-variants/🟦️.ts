@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 import { parseSurfaceAppId } from "@semio-tech/framework";
-import { PLAYGROUND_BUILD_TARGETS } from "../../../../🧑‍💻dev/🧩️catalog/🤖️generated/🎮️playgrounds/🟦️.ts";
+import { PLAYGROUND_BUILD_TARGETS } from "@semio-tech/s-dev-catalog-ts/generated/playgrounds";
 import corpus from "../🧫️fixtures/🚀️renderer-boot-variants/🔣️.json";
 
 test("puzzle owns all four original renderer variant coordinates", () => {

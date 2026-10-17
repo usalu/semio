@@ -23,6 +23,10 @@ type demonstratorPlaygroundArtifactGuardSizeBounds = { readonly minItems?: numbe
 
 export const demonstratorPlaygroundArtifactGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : demonstratorPlaygroundArtifactGuardReject(at, "value is not an object");
+export const demonstratorPlaygroundArtifactGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) demonstratorPlaygroundArtifactGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const demonstratorPlaygroundArtifactGuardArray = (value: unknown, at: string, bounds: demonstratorPlaygroundArtifactGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return demonstratorPlaygroundArtifactGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) demonstratorPlaygroundArtifactGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -53,7 +57,7 @@ export const demonstratorPlaygroundArtifactGuardConstant = <T extends string | n
 //#endregion 🚪️Parsers
 
 export function parsePlaygroundArtifact(value: unknown, at = "$"): PlaygroundArtifact {
-  const row = demonstratorPlaygroundArtifactGuardObject(value, at);
+  const row = demonstratorPlaygroundArtifactGuardClosed(demonstratorPlaygroundArtifactGuardObject(value, at), at, ["schema"]);
   return {
     schema: demonstratorPlaygroundArtifactGuardString(row["schema"], `${at}.schema`),
   };

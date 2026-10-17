@@ -1,0 +1,19 @@
+# Parent Recovery91721 Output Refusal
+
+Root reports actual terminal1 after mapping repair. Independently nofollowFD-held saved coordination-17/parent-recovery-after-mapping.log: 4724B SHA256 1a36a279dc0927a9dc6282fc8b27a8bf59d30b3b562490ba97a0a280fdb319df, regular/bounded/stable sevenfield metadata. No Native/protected read or retry by reviewer.
+
+Saved trace records same original pf-q157nV allocation and createdSHA, fresh ordinary parent and current payload65536B/hash62973580... plus journal693B/hashf73c544b.... It then reports Owned data capture output limit exceeded, retainedParentHandles1/canonicalRecoveryRequiredtrue. No zerocharge, physicalretire, cleanup or parentclose claim follows. This is distinct from prior16131 exact-body failure; journal observation predates unknown later effects and cannot assert current/historical phase.
+
+Source capture/🟦.ts line78 increments cumulative raw bytes, counts lines across separate stdout/stderr open flags, then refuses when bytes>maximumBytes OR lines>maximumLines. It currently throws the same bare Error for both. Async saved stack identifies only that generic callback; no command or observed counts are present.
+
+Actual canonical retirement candidates include global unfiltered lsof -nP -F0pcfatn (requireNativeSuccessfulChildReadersV1, cleanup/retirement/contract line48), with1048576B/16384line limit, and hdiutil info/detach with1048576B/32768line limits from cleanup command Protocol. Global lsof includes unrelated host descriptors, but this is only a Source plausible candidate, not actual attribution. Do not infer detach timing or increase any cap.
+
+Minimal next diagnostic is closed schema-first frozen cause at the same existing refusal predicate: bounded command identity/argv label, stream, cumulative observedBytes/observedLines and existing maximumBytes/maximumLines, preserving message, first primary, termination and control order. No raw captured payload is necessary. Actual source workers must independently produce byte-only, line-only, both, exactbound, UTF8split/multistream and priorchild/cancel primary cases, compare Ajv/SQLite and ensure process/pipes terminal. Only an observed owned next context can identify which canonical caller contract needs a semantic correction.
+
+## Independent final diagnostic Source review
+
+All five settled report paths independently nofollowFD-held regular/bounded with stable seven-field named/descriptor metadata, sizes/SHA match. Receipt Generated/capture-overflow-independent-final-hold.json. Actual private extracted raw counting loop is equivalent to previous loop; same OR-limit predicate/message/stop location. Frozen cause contains bounded program suffix/truncation, stream/counts/caps only, no argv/output/environment. New Source tests use real child separated/tail capture, closed Ajv diagnostic and independent SQLite per-stream predecessor counting over eight portable vectors. No material defect found in reviewed hunks. High reports strict0 and6tests133assertions9.94s; no Native command attribution or retry permission is created by this Source gate.
+
+## Final helper cause reporter independent hold
+
+All four final reporter manifest files independently nofollowFD-held regular/bounded/stable seven-field metadata with matching size/SHA. Receipt Generated/parent-reporter-independent-final-hold.json. Actual helper reporter inspects own data descriptors only, skips proxies/getters, bounded visited/depth/aggregate traversal with cycle set, copies only closed nine-field overflow diagnostics; original primary is rethrown unchanged. No argv/output/environment added. Reviewed recovery catch uses reporter solely as retained DEBUG DATA. High reports final18pass/4skip1209assert Source0 and eightroot strict0 including final artifact-only helper hunk. No command attribution or physical settlement claim follows until next actual coordinator evidence.

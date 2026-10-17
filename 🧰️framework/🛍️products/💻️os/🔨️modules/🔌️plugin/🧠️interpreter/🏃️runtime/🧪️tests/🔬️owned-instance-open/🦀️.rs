@@ -1,13 +1,14 @@
 //! 🧫️ Owned runtime laws that reach its private state — a poisoned instance and the codec origin — run against the
 //! neutral SDK component the plugin host's test component producer stages.
 use super::*;
+use semio_framework_test_fixtures::manifest_dir;
 
 const FIXTURE_DOCUMENT_SCHEMA: &str = "fixture.neutral-host-fixture.counter";
 
 const MINTED_DOCUMENT_ID: &str = "artifact-0123456789abcdef0123456789abcdef";
 
 fn fixture_component() -> std::path::PathBuf {
-    let mut root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    let mut root = manifest_dir!();
     while !root.join("nx.json").is_file() {
         assert!(root.pop(), "repository root is required");
     }

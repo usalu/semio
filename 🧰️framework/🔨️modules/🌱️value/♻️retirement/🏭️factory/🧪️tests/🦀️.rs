@@ -48,7 +48,6 @@ fn factory_preborn_tickets_consume_concurrent_aliases_and_report_original_physic
         assert_eq!(receipts.iter().map(|row|row.3).sum::<usize>(),fixture["winnerCount"].as_u64().unwrap()as usize);
         assert_eq!(receipts.iter().map(|row|row.2).sum::<usize>(),extent);
         assert_eq!(freed,extent+factory_arc_birth_bytes::<OwnedFactory>()+birth*count+born);
-        eprintln!("[DEBUG] full factory concurrent aliases={count} payload={extent} close births={born} physical={freed} original unique winner");
     }
 }
 
@@ -61,7 +60,6 @@ fn factory_preborn_tickets_never_wait_on_weak_aliases_and_copy_only_body_truthfu
     assert_eq!(step.progress(),Default::default());assert_eq!(heap,(0,0));assert!(weak.upgrade().is_some());drop(weak);
     let (born,freed,copied,winners)=drain(slot,8,0);assert_eq!((born,copied,winners),(0,0,0));
     assert_eq!(freed,arc_extent::<ScalarFactory>()+birth);
-    eprintln!("[DEBUG] full factory original weak lease froze custody; scalar body physical={freed}");
 }
 
 #[derive(crate::FactoryPayloadRetirement)]
@@ -77,7 +75,6 @@ fn factory_preborn_tickets_retire_nested_original_children_without_close_birth()
         let (ticket,birth)=admit(original.clone());assert_eq!(crate::observe_retirement_allocations(||drop(original)).1,(0,0));
         let (born,freed,copies,winners)=drain(Some(ticket),32,extent);assert_eq!((copies,winners),(extent,1));
         assert_eq!(freed,extent+arc_extent::<OwnedFactory>()+2*arc_extent::<NestedFactory>()+birth+born);
-        eprintln!("[DEBUG] full factory nested depth2 payload={extent} admitted tickets={birth} typed close births={born} physical={freed}");
     }
 }
 
@@ -92,7 +89,6 @@ fn factory_preborn_tickets_move_inline_original_payload_into_prefunded_state() {
         let (ticket,birth)=admit(original.clone());assert_eq!(crate::observe_retirement_allocations(||drop(original)).1,(0,0));
         let (born,freed,copies,winners)=drain(Some(ticket),16,extent);assert_eq!((copies,winners),(extent,1));
         assert_eq!(freed,extent+arc_extent::<InlineFactory>()+birth+born);
-        eprintln!("[DEBUG] full factory inline payload={extent} frame={birth} typed close births={born} physical={freed}");
     }
 }
 
@@ -161,12 +157,11 @@ fn original_protocol_ticket_retires_actual_subtrait_object_body_and_box_in_separ
         assert_eq!(freed, backing + shell + born);
         let (_, heap) = crate::observe_retirement_allocations(|| drop(slot));
         assert_eq!(heap, (0, 0));
-        println!("[DEBUG] original protocol ticket case={} original={source_pointer:?} backing={backing} actual-shell={shell} admitted-scaffold={born} physical={freed} zero/one-below0 body4096 terminalDrop0", row["id"]);
     }
 }
 #[test]
 fn original_factory_metadata_handoffs_preserve_fixed_copy_and_all_physical_currency(){
  let closing:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/📬️closing.json")).unwrap();let terminal_copy=closing["headers"].as_array().unwrap().iter().find(|row|row["wordBytes"].as_u64().unwrap()as usize==std::mem::size_of::<usize>()).unwrap()["copyBytes"].as_u64().unwrap()as usize;assert_eq!(terminal_copy,0);
- for levels in [0,1,3]{for copy in [1,3,64]{let((original,extent),heap)=crate::observe_retirement_allocations(||{let mut payload=Vec::with_capacity(137);payload.extend_from_slice("original factory payload 雪🌳️".as_bytes());let leaf=Arc::new(OwnedFactory{payload});let mut extent=arc_extent::<OwnedFactory>()+leaf.payload.capacity();let mut source:Arc<dyn FactoryRetirement>=leaf;for tag in 0..levels{source=Arc::new(NestedFactory{child:source,tag});extent+=arc_extent::<NestedFactory>();}(source,extent)});assert_eq!(heap,(extent,0));let pointer=Arc::as_ptr(&original)as*const()as usize;let(mut owner,heap)=crate::observe_retirement_allocations(||FactoryAuthority::new(original));assert_eq!(heap,(0,0));assert_eq!(owner.factory_address(),pointer);let mut born=0;let mut released=0;let mut idle=0;for turn in 0..1000000{if owner.terminal_is_empty(){break}let metadata_terminal=owner.ticket.as_ref().is_some_and(|ticket|ticket.terminal_is_empty());let d=owner.demands(copy).unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth};for _ in 0..2{let(step,heap)=crate::observe_retirement_allocations(||owner.step(RetainedCloneGrant{maximum_items:0,..grant}).unwrap());assert_eq!(step.progress(),Default::default());assert_eq!(heap,(0,0));}if turn==0{assert_eq!(d.copy_bytes,0);let(step,heap)=crate::observe_retirement_allocations(||owner.step(RetainedCloneGrant{maximum_capacity_bytes:d.capacity_bytes-1,..grant}).unwrap());assert_eq!(step.progress(),Default::default());assert_eq!(heap,(0,0));assert_eq!(owner.factory_address(),pointer);}let used_grant=grant;let(step,heap)=crate::observe_retirement_allocations(||owner.step(used_grant).unwrap());assert!(step.progress().fits(used_grant));if metadata_terminal{assert_eq!(step.progress().copied_bytes,terminal_copy);}assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));born+=heap.0;released+=heap.1;if step.progress()==RetainedCloneProgress::default(){idle+=1}else{idle=0}assert!(idle<64,"original factory metadata stalled copy={copy} turn={turn} demand={d:?}");}assert!(owner.terminal_is_empty());assert_eq!(extent+born,released);assert_eq!(crate::observe_retirement_allocations(||drop(owner)).1,(0,0));eprintln!("[DEBUG] Original factory metadata levels={levels} copy={copy} extent={extent} born={born} release={released} terminalDrop=0");}
+ for levels in [0,1,3]{for copy in [1,3,64]{let((original,extent),heap)=crate::observe_retirement_allocations(||{let mut payload=Vec::with_capacity(137);payload.extend_from_slice("original factory payload 雪🌳️".as_bytes());let leaf=Arc::new(OwnedFactory{payload});let mut extent=arc_extent::<OwnedFactory>()+leaf.payload.capacity();let mut source:Arc<dyn FactoryRetirement>=leaf;for tag in 0..levels{source=Arc::new(NestedFactory{child:source,tag});extent+=arc_extent::<NestedFactory>();}(source,extent)});assert_eq!(heap,(extent,0));let pointer=Arc::as_ptr(&original)as*const()as usize;let(mut owner,heap)=crate::observe_retirement_allocations(||FactoryAuthority::new(original));assert_eq!(heap,(0,0));assert_eq!(owner.factory_address(),pointer);let mut born=0;let mut released=0;let mut idle=0;for turn in 0..1000000{if owner.terminal_is_empty(){break}let metadata_terminal=owner.ticket.as_ref().is_some_and(|ticket|ticket.terminal_is_empty());let d=owner.demands(copy).unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth};for _ in 0..2{let(step,heap)=crate::observe_retirement_allocations(||owner.step(RetainedCloneGrant{maximum_items:0,..grant}).unwrap());assert_eq!(step.progress(),Default::default());assert_eq!(heap,(0,0));}if turn==0{assert_eq!(d.copy_bytes,0);let(step,heap)=crate::observe_retirement_allocations(||owner.step(RetainedCloneGrant{maximum_capacity_bytes:d.capacity_bytes-1,..grant}).unwrap());assert_eq!(step.progress(),Default::default());assert_eq!(heap,(0,0));assert_eq!(owner.factory_address(),pointer);}let used_grant=grant;let(step,heap)=crate::observe_retirement_allocations(||owner.step(used_grant).unwrap());assert!(step.progress().fits(used_grant));if metadata_terminal{assert_eq!(step.progress().copied_bytes,terminal_copy);}assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));born+=heap.0;released+=heap.1;if step.progress()==RetainedCloneProgress::default(){idle+=1}else{idle=0}assert!(idle<64,"original factory metadata stalled copy={copy} turn={turn} demand={d:?}");}assert!(owner.terminal_is_empty());assert_eq!(extent+born,released);assert_eq!(crate::observe_retirement_allocations(||drop(owner)).1,(0,0));}
 }
 }

@@ -57,5 +57,4 @@ await receiveScriptProcessInvocation(process.env,async original=>{
   }finally{if(!caught&&emit){actual.emit('error',Error('watch fixture cleanup'));await watching.catch(()=>{});}}
  }
  await writeFile(join(directory,'law.json'),JSON.stringify({version:1,strictReceiver:true,policy:envelope.policy,deadline:envelope.deadlineEpochMilliseconds,native:(envelope.capabilities as any).native,coalesced:true,childrenDrained:true,parentActive:true,errorDrain:true,undefinedPrimary:true,overflowRefused:true,cancelledChildRejected:true}));
- console.log('[DEBUG] Actual watch strict receiver + same Original policy/deadline/native + coalesced bounded events + cancelled child terminal');
 });

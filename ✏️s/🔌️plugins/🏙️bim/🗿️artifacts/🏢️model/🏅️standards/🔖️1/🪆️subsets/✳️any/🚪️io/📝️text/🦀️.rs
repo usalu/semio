@@ -11,3 +11,6 @@ pub mod diff;
 
 #[path = "💡️inferences/🦀️.rs"]
 pub mod inferences;
+
+#[path = "🔭️projection/🦀️.rs"]
+pub mod projection;

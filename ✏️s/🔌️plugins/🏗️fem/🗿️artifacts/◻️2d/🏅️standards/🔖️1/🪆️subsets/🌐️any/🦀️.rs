@@ -47,31 +47,53 @@ pub fn subset<PA: crate::ArtifactApps>() -> SubsetDeclaration<PA> {
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.fem.fem2d` — twenty handcrafted schema leaves.
 pub fn fem2d_artifact_schema_descriptor() -> ::semio_framework_schema_registry::ArtifactSchemaDescriptor {
+    ::semio_framework_schema_registry::register_schema_leaf_documents(&[
+        ::semio_framework_schema_registry::SchemaLeafDocument { scope: "s.fem.fem2d", export: "artifact", format: ::semio_framework_schema_registry::SchemaFormat::Rust, path: "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/🦀️.rs" },
+        ::semio_framework_schema_registry::SchemaLeafDocument { scope: "s.fem.fem2d", export: "artifact", format: ::semio_framework_schema_registry::SchemaFormat::Typescript, path: "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/🟦️.ts" },
+        ::semio_framework_schema_registry::SchemaLeafDocument { scope: "s.fem.fem2d", export: "artifact", format: ::semio_framework_schema_registry::SchemaFormat::Graphql, path: "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/🔗️.graphql" },
+        ::semio_framework_schema_registry::SchemaLeafDocument { scope: "s.fem.fem2d", export: "artifact", format: ::semio_framework_schema_registry::SchemaFormat::Protobuf, path: "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/🛰️.proto" },
+        ::semio_framework_schema_registry::SchemaLeafDocument { scope: "s.fem.fem2d", export: "snapshot", format: ::semio_framework_schema_registry::SchemaFormat::Rust, path: "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/📸️snapshot/🦀️.rs" },
+        ::semio_framework_schema_registry::SchemaLeafDocument { scope: "s.fem.fem2d", export: "snapshot", format: ::semio_framework_schema_registry::SchemaFormat::Typescript, path: "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/📸️snapshot/🟦️.ts" },
+        ::semio_framework_schema_registry::SchemaLeafDocument { scope: "s.fem.fem2d", export: "snapshot", format: ::semio_framework_schema_registry::SchemaFormat::Graphql, path: "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/📸️snapshot/🔗️.graphql" },
+        ::semio_framework_schema_registry::SchemaLeafDocument { scope: "s.fem.fem2d", export: "snapshot", format: ::semio_framework_schema_registry::SchemaFormat::Protobuf, path: "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/📸️snapshot/🛰️.proto" },
+        ::semio_framework_schema_registry::SchemaLeafDocument { scope: "s.fem.fem2d", export: "diff", format: ::semio_framework_schema_registry::SchemaFormat::Rust, path: "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/🔺️diff/🦀️.rs" },
+        ::semio_framework_schema_registry::SchemaLeafDocument { scope: "s.fem.fem2d", export: "diff", format: ::semio_framework_schema_registry::SchemaFormat::Typescript, path: "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/🔺️diff/🟦️.ts" },
+        ::semio_framework_schema_registry::SchemaLeafDocument { scope: "s.fem.fem2d", export: "diff", format: ::semio_framework_schema_registry::SchemaFormat::Graphql, path: "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/🔺️diff/🔗️.graphql" },
+        ::semio_framework_schema_registry::SchemaLeafDocument { scope: "s.fem.fem2d", export: "diff", format: ::semio_framework_schema_registry::SchemaFormat::Protobuf, path: "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/🔺️diff/🛰️.proto" },
+        ::semio_framework_schema_registry::SchemaLeafDocument { scope: "s.fem.fem2d", export: "mutations", format: ::semio_framework_schema_registry::SchemaFormat::Rust, path: "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/🧬️mutations/🦀️.rs" },
+        ::semio_framework_schema_registry::SchemaLeafDocument { scope: "s.fem.fem2d", export: "mutations", format: ::semio_framework_schema_registry::SchemaFormat::Typescript, path: "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/🧬️mutations/🟦️.ts" },
+        ::semio_framework_schema_registry::SchemaLeafDocument { scope: "s.fem.fem2d", export: "mutations", format: ::semio_framework_schema_registry::SchemaFormat::Graphql, path: "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/🧬️mutations/🔗️.graphql" },
+        ::semio_framework_schema_registry::SchemaLeafDocument { scope: "s.fem.fem2d", export: "mutations", format: ::semio_framework_schema_registry::SchemaFormat::Protobuf, path: "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/🧬️mutations/🛰️.proto" },
+    ]);
+    #[cfg(target_arch = "wasm32")]
+    semio_framework_schema_registry::install_default_schema_leaf_reader(semio_framework_plugin::reactor::package_asset, "");
+    #[cfg(not(target_arch = "wasm32"))]
+    semio_framework_schema_registry::install_default_schema_leaf_reader(semio_framework_plugin::reactor::package_asset, env!("CARGO_MANIFEST_DIR"));
     ::semio_framework_schema_registry::ArtifactSchemaDescriptor {
         id: "s.fem.fem2d",
         artifact: ::semio_framework_schema_registry::FacetLeaves {
-            rust: include_str!("🧬️schema/🦀️.rs"), typescript: include_str!("🧬️schema/🟦️.ts"), graphql: include_str!("🧬️schema/🔗️.graphql"), json_schema: include_str!("🧬️schema/🔣️.json"), proto: include_str!("🧬️schema/🛰️.proto")
+            rust: "", typescript: "", graphql: "", json_schema: include_str!("🧬️schema/🔣️.json"), proto: ""
         },
         snapshot: ::semio_framework_schema_registry::FacetLeaves {
-            rust: include_str!("🧬️schema/📸️snapshot/🦀️.rs"),
-            typescript: include_str!("🧬️schema/📸️snapshot/🟦️.ts"),
-            graphql: include_str!("🧬️schema/📸️snapshot/🔗️.graphql"),
+            rust: "",
+            typescript: "",
+            graphql: "",
             json_schema: include_str!("🧬️schema/📸️snapshot/🔣️.json"),
-            proto: include_str!("🧬️schema/📸️snapshot/🛰️.proto"),
+            proto: "",
         },
         diff: ::semio_framework_schema_registry::FacetLeaves {
-            rust: include_str!("🧬️schema/🔺️diff/🦀️.rs"),
-            typescript: include_str!("🧬️schema/🔺️diff/🟦️.ts"),
-            graphql: include_str!("🧬️schema/🔺️diff/🔗️.graphql"),
+            rust: "",
+            typescript: "",
+            graphql: "",
             json_schema: include_str!("🧬️schema/🔺️diff/🔣️.json"),
-            proto: include_str!("🧬️schema/🔺️diff/🛰️.proto"),
+            proto: "",
         },
         mutations: ::semio_framework_schema_registry::FacetLeaves {
-            rust: include_str!("🧬️schema/🧬️mutations/🦀️.rs"),
-            typescript: include_str!("🧬️schema/🧬️mutations/🟦️.ts"),
-            graphql: include_str!("🧬️schema/🧬️mutations/🔗️.graphql"),
+            rust: "",
+            typescript: "",
+            graphql: "",
             json_schema: include_str!("🧬️schema/🧬️mutations/🔣️.json"),
-            proto: include_str!("🧬️schema/🧬️mutations/🛰️.proto"),
+            proto: "",
         },
     }
 }
@@ -81,10 +103,20 @@ pub fn fem2d_artifact_schema_descriptor() -> ::semio_framework_schema_registry::
 /// 💡️ Registers `s.fem.fem2d.inference`'s facet leaves into the OS-wide inference catalog — call
 /// once at plugin init, alongside `fem2d_artifact_schema_descriptor`'s registration.
 pub fn fem2d_artifact_inference_descriptor() -> ::semio_framework_schema_registry::ArtifactInferenceDescriptor {
+    ::semio_framework_schema_registry::register_schema_leaf_documents(&[
+        ::semio_framework_schema_registry::SchemaLeafDocument { scope: "s.fem.fem2d.inference", export: "inference", format: ::semio_framework_schema_registry::SchemaFormat::Rust, path: "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/💡️inferences/🦀️.rs" },
+        ::semio_framework_schema_registry::SchemaLeafDocument { scope: "s.fem.fem2d.inference", export: "inference", format: ::semio_framework_schema_registry::SchemaFormat::Typescript, path: "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/💡️inferences/🟦️.ts" },
+        ::semio_framework_schema_registry::SchemaLeafDocument { scope: "s.fem.fem2d.inference", export: "inference", format: ::semio_framework_schema_registry::SchemaFormat::Graphql, path: "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/💡️inferences/🔗️.graphql" },
+        ::semio_framework_schema_registry::SchemaLeafDocument { scope: "s.fem.fem2d.inference", export: "inference", format: ::semio_framework_schema_registry::SchemaFormat::Protobuf, path: "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/💡️inferences/🛰️.proto" },
+    ]);
+    #[cfg(target_arch = "wasm32")]
+    semio_framework_schema_registry::install_default_schema_leaf_reader(semio_framework_plugin::reactor::package_asset, "");
+    #[cfg(not(target_arch = "wasm32"))]
+    semio_framework_schema_registry::install_default_schema_leaf_reader(semio_framework_plugin::reactor::package_asset, env!("CARGO_MANIFEST_DIR"));
     ::semio_framework_schema_registry::ArtifactInferenceDescriptor {
         id: "s.fem.fem2d.inference",
         inference: ::semio_framework_schema_registry::FacetLeaves {
-            rust: include_str!("🧬️schema/💡️inferences/🦀️.rs"), typescript: include_str!("🧬️schema/💡️inferences/🟦️.ts"), graphql: include_str!("🧬️schema/💡️inferences/🔗️.graphql"), json_schema: include_str!("🧬️schema/💡️inferences/🔣️.json"), proto: include_str!("🧬️schema/💡️inferences/🛰️.proto")
+            rust: "", typescript: "", graphql: "", json_schema: include_str!("🧬️schema/💡️inferences/🔣️.json"), proto: ""
         },
     }
 }

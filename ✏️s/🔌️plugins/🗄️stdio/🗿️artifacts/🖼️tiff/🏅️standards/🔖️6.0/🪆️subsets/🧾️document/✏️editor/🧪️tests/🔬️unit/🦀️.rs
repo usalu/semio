@@ -1,4 +1,17 @@
-use super::*;
+use crate::editor::tiff_any::modes::edit::windows::main;
+use crate::standards::v6_0::subsets::document::schema::mutations::TiffMutation;
+use crate::standards::v6_0::subsets::document::schema::snapshot::TiffSnapshot;
+use crate::{standards::v6_0::subsets::document::schema::snapshot::TiffIfd, standards::v6_0::subsets::document::schema::snapshot::TiffTag};
+use crate::{STDIO_TIFF_DOCUMENT_SCHEMA, TIFF_ANY_DIALECT};
+use semio_framework_plugin::AppOperationContext;
+use semio_framework_plugin::InteractiveJobClassification;
+use semio_framework_plugin::ArtifactEditor;
+use semio_framework_plugin::Editor;
+use semio_framework_test_fixtures::fixture_text;
+use semio_s_artifact_stdio_contract::editing;
+use config::{TiffEditorConfig, TiffEditorConfigMutation};
+use crate::editor::tiff_any::{tiff_any_editor_command_from_action, tiff_any_editor_retained_reduce};
+use crate::editor::tiff_any::*;
 
 /// 🧬️ Registers the document schema tiff's declaration contributes — the contract every snapshot edit validates against;
 /// a fixture editor runs without the plugin assembly that publishes it.
@@ -198,7 +211,7 @@ fn physical_byte_order_options_preserve_owned_large_sample_identity() {
 #[test]
 fn payload_detail_edits_publish_the_exact_requested_value() {
     register_document_schema();
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../📇️registry/🧬️contract/✏️editing/🩹️patch/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../../../../../📇️registry/🧬️contract/✏️editing/🩹️patch/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let mut snapshot = crate::schema::blank_tiff_snapshot();
     snapshot.ifds[0].entries.push(TiffTag{tag:65000,values:crate::schema::snapshot::TiffValues::Undefined(vec![7,9])});
     let payload_path=format!("/ifds/0/entries/{}/values/value",snapshot.ifds[0].entries.len()-1);
@@ -220,4 +233,4 @@ fn payload_detail_edits_publish_the_exact_requested_value() {
     }
 }
 
-semio_framework_plugin::history_edit_acceptance_law!("stdio", super::TiffAnyEditor, || semio_framework_plugin::App { definition: super::create_tiff_any_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️6.0/🪆️subsets/🧾️document");
+semio_framework_plugin::history_edit_acceptance_law!("stdio", crate::editor::tiff_any::TiffAnyEditor, || semio_framework_plugin::App { definition: crate::editor::tiff_any::create_tiff_any_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️6.0/🪆️subsets/🧾️document");

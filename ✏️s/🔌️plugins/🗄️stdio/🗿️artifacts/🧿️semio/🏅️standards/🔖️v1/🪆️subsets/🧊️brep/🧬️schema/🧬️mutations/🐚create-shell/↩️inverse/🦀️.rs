@@ -1,13 +1,16 @@
 //! ↩️ Inverse for `CreateShell`.
 
-use crate::schema::mutations::{delete_shell, SemioBrepMutation};
+use crate::schema::mutations::delete_shell;
 use crate::schema::snapshot::SemioBrepSnapshot;
 
 //#region 🔖️Inverse
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn inverse(payload: &super::CreateShell, _base: &SemioBrepSnapshot) -> Result<Vec<SemioBrepMutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op>(payload: &super::CreateShell, _base: &SemioBrepSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError>
+where
+    Op: From<crate::schema::mutations::delete_shell::DeleteShell>,
+{
     Ok((|| {
-    vec![SemioBrepMutation::DeleteShell(delete_shell::DeleteShell { id: payload.id.clone() })]
+    vec![Op::from(delete_shell::DeleteShell { id: payload.id.clone() })]
 
     })())
 }

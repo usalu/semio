@@ -7,7 +7,7 @@ use std::collections::HashMap;
 
 use semio_framework_schema_state::{StateClass, parse_state_class_kebab};
 pub use semio_framework_schema_derive::ArtifactSchema;
-use semio_framework_schema_registry::{ArtifactSchemaDescriptor, AppSchemaDescriptor, with_artifact_schema_catalog, with_artifact_inference_catalog, with_app_schema_catalog, register_scope_schema_exports, with_schema_export_registry, FacetLeaves, SchemaExport, SchemaExportRegistry, SchemaExportRegistryError, SchemaFormat, SchemaResolveError, ScopeSchemaExports};
+use semio_framework_schema_registry::{ArtifactSchemaDescriptor, AppSchemaDescriptor, resolved_leaf_body, with_artifact_schema_catalog, with_artifact_inference_catalog, with_app_schema_catalog, register_scope_schema_exports, with_schema_export_registry, FacetLeaves, SchemaExport, SchemaExportRegistry, SchemaExportRegistryError, SchemaFormat, SchemaResolveError, ScopeSchemaExports};
 #[cfg(test)] use semio_framework_schema_registry::{ArtifactInferenceDescriptor, resolve_schema_export, schema_export_catalog_entries, scope_schema_exports_registered, scope_schema_facets_registered, SchemaExportEntries, SchemaExportEntry, RESERVED_FACET_EXPORT_IDS};
 
 //#region 🔖️Errors
@@ -187,15 +187,15 @@ pub async fn artifact_schema_graphql_sdl(key: &str) -> Option<String> {
     with_artifact_schema_catalog(|entries| {
         for entry in entries {
             if key == entry.id {
-                return Some(graphql_leaf_with_preamble(entry.artifact.graphql));
+                return Some(graphql_leaf_with_preamble(resolved_leaf_body(entry.id, "artifact", SchemaFormat::Graphql, &entry.artifact)));
             }
             let snapshot_key = format!("{}.snapshot", entry.id);
             if key == snapshot_key {
-                return Some(graphql_leaf_with_preamble(entry.snapshot.graphql));
+                return Some(graphql_leaf_with_preamble(resolved_leaf_body(entry.id, "snapshot", SchemaFormat::Graphql, &entry.snapshot)));
             }
             let diff_key = format!("{}.diff", entry.id);
             if key == diff_key {
-                return Some(graphql_leaf_with_preamble(entry.diff.graphql));
+                return Some(graphql_leaf_with_preamble(resolved_leaf_body(entry.id, "diff", SchemaFormat::Graphql, &entry.diff)));
             }
         }
         None
@@ -206,14 +206,14 @@ pub async fn with_inference_json_schema_catalog<R>(visit: impl FnOnce(&SchemaCat
     let mut catalog = SchemaCatalog::new();
     with_artifact_inference_catalog(|entries| {
         for entry in entries {
-            catalog.load_json(entry.id, parse_normative_json_leaf(entry.id, "inference", entry.inference.json_schema));
+            catalog.load_json(entry.id, parse_normative_json_leaf(entry.id, "inference", resolved_leaf_body(entry.id, "inference", SchemaFormat::JsonSchema, &entry.inference)));
         }
     });
     visit(&catalog)
 }
 
 pub async fn artifact_inference_graphql_sdl(key: &str) -> Option<String> {
-    with_artifact_inference_catalog(|entries| entries.iter().find(|entry| entry.id == key).map(|entry| graphql_leaf_with_preamble(entry.inference.graphql)))
+    with_artifact_inference_catalog(|entries| entries.iter().find(|entry| entry.id == key).map(|entry| graphql_leaf_with_preamble(resolved_leaf_body(entry.id, "inference", SchemaFormat::Graphql, &entry.inference))))
 }
 
 pub async fn with_app_json_schema_catalog<R>(visit: impl FnOnce(&SchemaCatalog) -> R) -> R {
@@ -231,11 +231,11 @@ pub async fn app_schema_graphql_sdl(key: &str) -> Option<String> {
     with_app_schema_catalog(|entries| {
         for entry in entries {
             if key == entry.id {
-                return Some(graphql_leaf_with_preamble(entry.config.graphql));
+                return Some(graphql_leaf_with_preamble(resolved_leaf_body(entry.id, "config", SchemaFormat::Graphql, &entry.config)));
             }
             let presence_key = format!("{}.presence", entry.id);
             if key == presence_key {
-                return Some(graphql_leaf_with_preamble(entry.presence.graphql));
+                return Some(graphql_leaf_with_preamble(resolved_leaf_body(entry.id, "presence", SchemaFormat::Graphql, &entry.presence)));
             }
         }
         None

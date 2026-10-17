@@ -11,7 +11,7 @@
 //! `interactionSelect` binding [`PanelTreeBuilder::interaction_domain`] stamps.
 
 use crate::editor::forms::terminology::FormsLabels;
-use crate::editor::forms::{forms_action, ui_label, FORMS_INTERACTION_FIELDS, FORMS_INTERACTION_GRANULARITY_FIELD, FORMS_INTERACTION_GRANULARITY_SECTION, FORMS_PLAY_APP_ID};
+use crate::editor::forms::support::{forms_action, ui_label, FORMS_INTERACTION_FIELDS, FORMS_INTERACTION_GRANULARITY_FIELD, FORMS_INTERACTION_GRANULARITY_SECTION, FORMS_PLAY_APP_ID};
 use crate::schema::forms_play_step_tree_id;
 use crate::{forms_steps, FormQuestion, FormStep, FormsSnapshot};
 use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase};
@@ -110,7 +110,5 @@ pub fn render(spec: &FormsSnapshot, labels: &FormsLabels, windows: &TreeWindows<
 //#endregion 🔖️Render
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

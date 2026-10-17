@@ -21,7 +21,7 @@ use serde::{Deserialize, Serialize};
 pub struct ChangeImportedFeatures {
     #[dsl(key = "new-imported-map")]
     #[value(default, skip_serializing_if="Option::is_none")]
-    pub new_imported_map: Option<crate::schema::ImportedMap>,
+    pub new_imported_map: Option<crate::schema::imported_map::ImportedMap>,
 }
 
 impl MutationKind<GisTerrainSnapshot, GisTerrainMutation> for ChangeImportedFeatures {

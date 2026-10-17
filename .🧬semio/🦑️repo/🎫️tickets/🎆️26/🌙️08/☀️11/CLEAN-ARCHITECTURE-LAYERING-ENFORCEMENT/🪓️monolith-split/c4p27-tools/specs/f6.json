@@ -1,0 +1,14 @@
+{
+  "source": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔗️AgentBridge/🧪️tests/🧩️component/🟦️.ts",
+  "siblingDir": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔗️AgentBridge/🧪️tests",
+  "header": "framework/products/os/modules/renderer/engine/elements/AgentBridge/<dir>.test.ts",
+  "deleteSource": true,
+  "replace": [["\"../../🧫️fixtures/", "\"../🧫️fixtures/"]],
+  "children": [
+    { "dir": "🔭️config-discovery", "doc": "/** 🔭️ AgentBridge discovery: the offer schema and answers, offer selection, the config fetch, the offer watch and the discovery hooks, each against a real loopback request or a fake transport. */", "ranges": [[23,23],[39,352]] },
+    { "dir": "🧬️frame-codec", "doc": "/** 🧬️ AgentBridge frame laws: the imported codec fixtures, the inbound ShellCommand application, the Shell state frame, the inference-state parity and the protected connection ownership. */", "ranges": [[23,23],[354,519]] },
+    { "dir": "🛠️tool-call-lifecycle", "doc": "/** 🛠️ AgentBridge tool-call lifecycle through the real hook over a fake socket: tool-call cancellation, the agent's free-text reply turns and the approval withdrawal replay. */", "ranges": [[23,29],[521,697]] },
+    { "dir": "🚏️artifact-routes", "doc": "/** 🚏️ AgentBridge artifact routes: the shell channel payload codec, the app command answer, the live artifact route and the artifact-bytes route of a live editor instance. */", "ranges": [[699,944]] },
+    { "dir": "🤝️handshake-ladder", "doc": "/** 🤝️ AgentBridge handshake: the bounded dial ladder, the typed refusals and the foreign welcome, replayed from the language-neutral handshake fixture. */", "ranges": [[23,23],[31,37],[946,1062]] }
+  ]
+}

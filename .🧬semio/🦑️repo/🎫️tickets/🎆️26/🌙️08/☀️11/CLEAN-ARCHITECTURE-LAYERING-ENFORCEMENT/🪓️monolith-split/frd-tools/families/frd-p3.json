@@ -1,0 +1,21 @@
+{
+ "name": "frd-p3",
+ "crates": [
+  "semio-framework-test-fixtures",
+  "semio-s-artifact-animate-presentation-viewer",
+  "semio-s-artifact-cad-cad",
+  "semio-s-artifact-cad-cad-typology",
+  "semio-s-artifact-flow-flow-inferences",
+  "semio-s-artifact-flow-flow-tests",
+  "semio-s-artifact-forms-forms-tests-2",
+  "semio-s-artifact-imperative-procedure",
+  "semio-s-artifact-lowpoly-lowpoly-mut-paint",
+  "semio-s-artifact-norm-en1996-checks",
+  "semio-s-artifact-norm-en1997",
+  "semio-s-artifact-norm-en1999",
+  "semio-s-artifact-wfc-3d-mutations",
+  "semio-s-artifact-wfc-bitmap-tests",
+  "semio-s-artifact-writer-writer-v1"
+ ],
+ "note": "FRD sample, no baseline"
+}

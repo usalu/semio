@@ -92,7 +92,6 @@ fn prepared_operation_wire_borrowed_text_matches_neutral_ordered_tuple_and_hex()
             assert!(progress.complete);
             assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
         }
-        println!("[DEBUG] prepared operation text row={index} exact-independent-bytes={} one structural event or copy<=64 heap0 five cancellation stops", expected.len());
     }
 }
 impl ArtifactCanonicalJson for OracleSource {
@@ -164,7 +163,6 @@ fn prepared_operation_wire_borrowed_json_matches_serde_without_birth_or_owner_co
             assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
             assert_eq!(&source.0 as *const serde_json::Value, before);
         }
-        println!("[DEBUG] prepared operation wire row={row_index} hex={hex} exact-serde-bytes={} copy<=64 no births/frees all five cancellation stops preserve original typed owner", expected.len());
         }
     }
 }
@@ -194,7 +192,6 @@ fn prepared_operation_output_preserves_every_original_prefix_and_physical_cancel
             assert!(owner.terminal_is_empty());assert_eq!(released,retained);
         }
     }
-    eprintln!("[DEBUG] original operation output fixed five-axis policy preserves UTF8/page prefixes and every System backing across cancellation cuts");
 }
 
 #[test]
@@ -214,7 +211,7 @@ fn original_text_failure_preserves_initialized_prefix_and_real_system_receipt() 
     output.fill(0xa5);let (failure,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cursor.advance(ArtifactPreparedOperationSource::Text{header:&[1,5],body:&original},&mut output,grant).unwrap_err());
     assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(failure.written_bytes,2);assert_eq!(failure.reason.retained_progress().copied_items,1);assert_eq!(failure.reason.retained_progress().copied_bytes,2);assert!(failure.reason.retained_progress().fits(grant));assert_eq!(&output[2..],&[0xa5;62]);assert_eq!(original.0.as_ptr(),pointer);
     let expected:Vec<u8>=row["expectedPrefix"].as_array().unwrap().iter().map(|v|v.as_u64().unwrap()as u8).collect();assert_eq!([&header[..],&output[..failure.written_bytes]].concat(),expected);assert_eq!(first.copied_bytes+failure.reason.retained_progress().copied_bytes,row["expectedCopiedBytes"].as_u64().unwrap()as usize);
-    let (closed,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cursor.close(grant).unwrap());assert!(closed.complete);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));println!("[DEBUG] original text failure canonical prefix2 cumulative4 System0 original identity exact retained receipt");
+    let (closed,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cursor.close(grant).unwrap());assert!(closed.complete);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
 }
 
 #[test]
@@ -231,7 +228,6 @@ fn original_text_frontier_uses_supplied_depth_and_zero_system_birth() {
   assert_eq!(&source.0 as *const _,pointer);if row["refused"].as_bool()==Some(true){assert!(refused&&!complete);assert_eq!(actual,row["expectedPrefix"].as_str().unwrap().as_bytes());}else{assert!(complete&&!refused);assert_eq!(actual,row["expectedText"].as_str().unwrap().as_bytes());}
   let(closed,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cursor.close(grant).unwrap());assert!(closed.complete);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
  }
- eprintln!("[DEBUG] original Text supplied parent2/3 immutable copy policy preserves original identity, zero System birth and refused child prefix");
 }
 
 #[test]
@@ -257,7 +253,6 @@ fn original_operation_contiguous_handoff_conserves_supplied_birth_copy_and_cance
    assert!(owner.terminal_is_empty());if let Some(bytes)=transferred{assert!(bytes.capacity()<=policy.maximum_release_bytes);assert!(policy.maximum_items>0&&policy.maximum_depth>0);let capacity=bytes.capacity();let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(bytes));assert_eq!(heap.requested_bytes,0);assert_eq!(heap.released_bytes,capacity);live-=heap.released_bytes;}assert_eq!(live,0);let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(owner));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
   }
  }
- eprintln!("[DEBUG] original protocol contiguous octets3 immutable supplied policy, denied original page/prefix identity, every cancellation cut and exact System birth/copy/release conservation");
 }
 
 #[test]
@@ -286,5 +281,4 @@ fn original_operation_rows_preserve_each_buffer_and_paid_collection_cancel_cut()
    assert_eq!(live,0);let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(owner));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
   }
  }
- eprintln!("[DEBUG] original operation rows2 fixed policy preserves exact buffers across50 paid protocol and cancellation cuts with System conservation");
 }

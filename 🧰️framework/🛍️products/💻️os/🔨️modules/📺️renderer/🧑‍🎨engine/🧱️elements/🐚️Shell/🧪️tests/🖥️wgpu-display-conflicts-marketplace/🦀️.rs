@@ -11,6 +11,9 @@
 use semio_framework_os_renderer_wgpu_fixtures::shell::host_test_shell;
 use super::*;
 
+/// 🎟️ Unbounded retained grant: the pre-migration step budget carried no retained limit.
+const UNBOUNDED_STEP_GRANT: semio_framework_job::RetainedCloneGrant = semio_framework_job::RetainedCloneGrant { maximum_items: usize::MAX, maximum_copy_bytes: usize::MAX, maximum_capacity_bytes: usize::MAX, maximum_release_bytes: usize::MAX, maximum_depth: usize::MAX };
+
 /// 🧪️ The panel-anchor fixture's own shell (one `space` bridge, a bound `studio` session), which is
 /// what makes these bodies exercise a REAL session rather than the no-session fallbacks.
 fn display_shell() -> ShellState {
@@ -106,7 +109,8 @@ fn settle_tree_surface_at_height(engine: &mut ui_wgpu::wgpu::Ui, atlas: &mut sem
     let cancel = semio_framework_job::CancelToken::root_now();
     let mut preview_sequence = 0;
     let reconciled = (0..16_384).any(|_| {
-        let mut cx = semio_framework_job::StepContext::new(operation, semio_framework_job::Generation(witness), semio_framework_job::StepBudget::new(64, u64::MAX), cancel.clone(), || Some(0), &mut preview_sequence);
+        let mut cx_retained = semio_framework_job::RetainedCloneProgress::default();
+        let mut cx = semio_framework_job::StepContext::new(operation, semio_framework_job::Generation(witness), semio_framework_job::StepBudget::new(64, u64::MAX, UNBOUNDED_STEP_GRANT), cancel.clone(), || Some(0), &mut preview_sequence, &mut cx_retained);
         match engine.step_document_reconcile(surface, "framework", &mut cx) {
             semio_framework_ui_retained_tree::reconcile::UiDocumentReconcileStep::Pending => false,
             semio_framework_ui_retained_tree::reconcile::UiDocumentReconcileStep::Complete => true,
@@ -116,7 +120,8 @@ fn settle_tree_surface_at_height(engine: &mut ui_wgpu::wgpu::Ui, atlas: &mut sem
     assert!(reconciled, "Display's accepted interaction rebases into its next paint candidate");
     for _ in 0..64 {
         for _ in 0..16_384 {
-            let mut cx = semio_framework_job::StepContext::new(operation, semio_framework_job::Generation(0), semio_framework_job::StepBudget::new(1, u64::MAX), cancel.clone(), || Some(0), &mut preview_sequence);
+            let mut cx_retained = semio_framework_job::RetainedCloneProgress::default();
+            let mut cx = semio_framework_job::StepContext::new(operation, semio_framework_job::Generation(0), semio_framework_job::StepBudget::new(1, u64::MAX, UNBOUNDED_STEP_GRANT), cancel.clone(), || Some(0), &mut preview_sequence, &mut cx_retained);
             if matches!(engine.step_layouts(&pool, atlas, &mut cx), ui_wgpu::wgpu::UiLayoutStep::Idle) {
                 break;
             }
@@ -708,7 +713,6 @@ fn display_projection_disclosures_reflow_the_actual_hugging_shell_panel() {
         semio_framework_async::block_on(ChromeViewCtx::of(&mut shell).handle_pointer_button(x, y, true, 0, &mut input, &theme)).unwrap();
         semio_framework_async::block_on(ChromeViewCtx::of(&mut shell).handle_pointer_button(x, y, false, 0, &mut input, &theme)).unwrap();
         paint(&mut shell, &mut input);
-        println!("[DEBUG] actual Display disclosure {id}: intrinsic={:?} accepted={:?}", semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::retained_content_height(FRAMEWORK_DISPLAY_WINDOWS_TAB_ID), input.hits().iter().filter_map(|hit| hit.control_id.clone()).collect::<Vec<_>>());
     }
     assert!(input.hits().iter().any(|hit| hit.control_id.as_deref() == Some(orthographic_id.as_str())), "actual hugging Display publishes Orthographic after one click per disclosure");
     caller.retire_world(&mut resources);

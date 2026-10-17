@@ -1,4 +1,5 @@
-use super::*;
+use semio_framework_plugin::SurfaceKind;
+use crate::editor::wires::modes::edit::windows::canvas::*;
 use crate::editor::wires::unit_tests::context::{new_app, render as render_body};
 
 #[semio_framework_async_macros::async_test]

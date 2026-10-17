@@ -18,5 +18,4 @@ test("original Session cold box law agrees with independent geometry", () => {
   expect(area).toBeCloseTo(fixture.expected.area, 10);
   expect(volume).toBeCloseTo(fixture.expected.volume, 10);
   geometry.dispose();
-  console.log(`[DEBUG] independent Session box triangles=${indices.count/3} area=${area} volume=${volume}`);
 });

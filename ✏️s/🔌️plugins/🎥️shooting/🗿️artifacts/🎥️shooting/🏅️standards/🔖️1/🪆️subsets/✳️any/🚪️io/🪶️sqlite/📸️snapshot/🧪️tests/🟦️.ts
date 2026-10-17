@@ -9,7 +9,7 @@ import fixture from "./🧫️fixtures/🔣️.json";
 import nativeSchema from "../../../../🧬️schema/📸️snapshot/🔣️.json";
 import artifactSchema from "../../../../🧬️schema/🔣️.json";
 import { ioSchema as ioSchema } from "@semio-tech/framework/io/schema";
-import childSchema from "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔣️.json";
+import { storeChildSchema as childSchema } from "@semio-tech/framework-os/modules/store/child/schema";
 import * as owner from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import * as artifact from "../../../../🧬️schema/🟦️.ts";
 import {binary64,type Binary64} from "@semio-tech/framework/value/ieee754";
@@ -56,5 +56,4 @@ test("Shooting all 222 independent SQL cells and coherent geometry edit preserve
  const original=snapshot(),expected=snapshot();expected.assets[0]!.origin[0]=binary64(8);
  const edited=await shootingCompleteIndependentOracle(await bytes(original),"edit"),actual=await restore(edited);expect(actual).toEqual(expected);
  await shootingCompleteIndependentOracle(await bytes(actual),"edited");
- console.log("[DEBUG] Shooting Source independently edited complete owner tables=6 rows=9 cells=222");
 });

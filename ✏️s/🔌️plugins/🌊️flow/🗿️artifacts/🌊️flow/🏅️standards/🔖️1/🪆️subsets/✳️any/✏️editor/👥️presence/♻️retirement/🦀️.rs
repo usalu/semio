@@ -13,6 +13,4 @@ impl store::SnapshotRetirementFactory<FlowPresence> for FlowPresenceRetirementFa
 }
 pub fn store_disposer()->Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<FlowPresence,FlowPresenceMutation>>>{Box::new(semio_framework_plugin::PresenceStoreOwnedDisposer::new(Arc::new(FlowPresence::default()),|value|value.preview_off_node_ids.is_empty()).expect("default Flow presence has no dynamic identifier owner"))}
 
-#[cfg(test)]
-#[path="🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

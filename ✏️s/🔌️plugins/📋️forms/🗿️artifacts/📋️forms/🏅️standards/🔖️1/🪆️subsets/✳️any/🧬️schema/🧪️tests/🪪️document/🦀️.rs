@@ -1,9 +1,10 @@
 //! 🧪️ Forms neutral document and sparse-edit laws against independent JSON values.
 use crate::{FormsSnapshot, FormsDiff};
+use semio_framework_test_fixtures::fixture_text;
 use store::{pack::snapshot::ArtifactDsl, pack::snapshot::ArtifactPack};
 
 fn vectors() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🔬️contract/🪪️document/🔣️.json")).expect("neutral vectors")
+    serde_json::from_str(fixture_text!("../../../🧪️tests/🧫️fixtures/🔬️contract/🪪️document/🔣️.json")).expect("neutral vectors")
 }
 
 #[test]

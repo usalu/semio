@@ -1,8 +1,11 @@
-use super::*;
+use crate::FormExpr;
+use semio_framework_pack_json::Value;
+use crate::editor::forms::questions::visibility::*;
+use semio_framework_test_fixtures::fixture_text;
 
 #[test]
 fn visibility_edits_match_shared_vectors() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../✏️editor/❓️questions/🫥️visibility/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     for case in fixture["cases"].as_array().unwrap() {
         let before: Option<FormExpr> = semio_framework_pack_json::from_json_str(&case["before"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         let value = semio_framework_pack_json::parse(&case["value"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();

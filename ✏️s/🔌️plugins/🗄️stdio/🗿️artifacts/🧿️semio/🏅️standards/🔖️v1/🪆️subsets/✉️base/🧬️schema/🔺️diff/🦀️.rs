@@ -247,7 +247,7 @@ impl DiffAlgebra<SemioSnapshot> for SemioDiff {
 /// 🌱 Representative `SemioDiff` cases for this facet's conformance-law tests: `NoChange` and one empty-but-real-tagged nested diff per
 /// subset. Single source of truth for both this file's own round-trip test and `🎹️composer/🦀️.rs`'s `diff_grammar_conformance_law`/
 /// `protocol_walk_law`.
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_diff_cases() -> Vec<SemioDiff> {
     vec![

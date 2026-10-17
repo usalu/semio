@@ -17,7 +17,8 @@ import {
 import { panelTabChildren, type PanelTabNode } from "@semio-tech/ui-react";
 import { builtNodeToSnapshot, UiDocumentStore } from "../../📃️UiDocumentStore/🟦️.tsx";
 import type { ViewModel } from "../../🔌️PluginRuntime/🧷️handle-contract/🟦️.ts";
-import { flattenPanelTabLeaves, shellLabel } from "../../🛠️ShellHelpers/🟦️.tsx";
+import { flattenPanelTabLeaves } from "../../🛠️ShellHelpers/🛣️route-and-chrome/🟦️.tsx";
+import { shellLabel } from "../../🛠️ShellHelpers/🏷️labels/🟦️.tsx";
 import { isPluginInstanceRetiredV1 } from "../../🔌️PluginRuntime/🟦️.tsx";
 
 //#region 🔖️BuiltNodeReconciler

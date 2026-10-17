@@ -1,6 +1,6 @@
 //! 🗑️ Direct binary codec for `remove-dpart-metadata`.
 
-use crate::standards::v1_7::subsets::vt::schema::mutations::RemoveDpartMetadata;
+use crate::standards::v1_7::subsets::vt::schema::mutations::remove_dpart_metadata::RemoveDpartMetadata;
 
 //#region 🔖️Identity
 pub const TAG: u8 = 17;
@@ -21,7 +21,5 @@ pub fn decode(bytes: &[u8]) -> Result<RemoveDpartMetadata, String> {
 //#endregion 🔖️Codec
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

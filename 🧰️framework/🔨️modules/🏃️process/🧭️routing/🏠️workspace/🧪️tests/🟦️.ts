@@ -99,7 +99,6 @@ test("native Rust, Python, Go and C# hosts resolve the same neutral workspace ve
       }
     }
   }
-  console.log(`[DEBUG] ${corpus.cases.length} workspace vectors agree across TypeScript, Rust, Python, Go, C# and find-up`);
 }, 120_000);
 
 
@@ -123,7 +122,6 @@ test("pre-runtime native bootstrap resolves the neutral workspace corpus", () =>
       expect(result.status === 0 ? result.stdout.trim() : null, `PowerShell ${row.id}: ${result.stderr}`).toBe(expected);
     }
   }
-  console.log(`[DEBUG] Native Bash bootstrap passed ${rows.length} neutral workspace vectors; PowerShell ${hasPowerShell ? "runtime verified" : "unavailable, runtime unverified"}`);
 });
 
 
@@ -140,5 +138,4 @@ test("native bootstrap validates explicit workspace ownership and rejects marker
   writeFileSync(join(linked, "📋️project.json"), "{}");
   const result = spawnSync("bash", ["-c", shell + '\nresolve_repo_root "$SEMIO_BOOTSTRAP_TEST_START"'], { env: { ...process.env, SEMIO_WORKSPACE_ROOT: linked, SEMIO_BOOTSTRAP_TEST_START: start }, encoding: "utf8" });
   expect(result.status).toBe(1);
-  console.log("[DEBUG] Native bootstrap accepts a validated explicit root and refuses an ordinary child or linked identity");
 });

@@ -20,10 +20,13 @@
       "import": "./dist/🟦️.js"
     }
   },
-  "dependencies": {},
+  "dependencies": {
+    "@semio-tech/procedural-js": "workspace:*"
+  },
   "license": "LGPL-3.0-or-later",
   "bundleKind": "library",
   "devDependencies": {
-    "@semio-tech/framework": "workspace:*"
+    "@semio-tech/framework": "workspace:*",
+    "@semio-tech/procedural-generation3d": "workspace:*"
   }
 }

@@ -1,0 +1,19 @@
+{
+ "name": "frs",
+ "crates": [
+  "semio-framework-number",
+  "semio-framework-async",
+  "semio-framework-dsl",
+  "semio-framework-os-channel"
+ ],
+ "base": {
+  "rev": "1bae6115bc5",
+  "crates": [
+   "semio-framework-number",
+   "semio-framework-async",
+   "semio-framework-dsl",
+   "semio-framework-os-channel"
+  ]
+ },
+ "note": "FRAMEWORK-RUST-FILE-SPLITS"
+}

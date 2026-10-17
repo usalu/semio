@@ -1,5 +1,6 @@
 //! ⚠️ Record schema construction preserves refusal authority across each ownership boundary.
-use crate::{NativeSchemaControl,RecordLayout,RecordSpec,RecordSpecProducer,Shape,producer};
+use semio_framework_dsl_record::{NativeSchemaControl,RecordLayout,RecordSpec,RecordSpecProducer,Shape,producer};
+use semio_framework_test_fixtures::fixture_text;
 use semio_framework_value::{ValueError,ValueRefusalKind};
 
 struct RefusingControl { kind:ValueRefusalKind, message:String }
@@ -19,7 +20,7 @@ impl NativeSchemaControl for RefusingControl {
 
 #[test]
 fn schema_constructors_retain_every_owned_refusal_kind_through_path_wrapping(){
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/⚠️refusal/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../🧪️tests/🧫️fixtures/⚠️refusal/🔣️.json")).unwrap();
     let kinds=[ValueRefusalKind::InvalidValue,ValueRefusalKind::Canceled,ValueRefusalKind::OwnershipLimit,ValueRefusalKind::AllocationFailed,ValueRefusalKind::WorkLimit,ValueRefusalKind::DepthLimit,ValueRefusalKind::UnsupportedOwner,ValueRefusalKind::InvariantViolated];
     for row in fixture["cases"].as_array().unwrap(){
         let kind=*kinds.iter().find(|kind|kind.as_str()==row["kind"].as_str().unwrap()).unwrap();

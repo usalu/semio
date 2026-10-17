@@ -423,7 +423,6 @@ fn a_native_gpu_context_creates_every_pipeline_without_a_validation_error() {
     match semio_framework_async::block_on(crate::gpu::GpuContext::headless(1, 1)) {
         Ok(_) => {
             if let Some(root)=std::env::var_os("SEMIO_TEST_ARTIFACT_DIR"){let root=std::path::PathBuf::from(root);std::fs::create_dir_all(&root).unwrap();std::fs::write(root.join("world3d-authored.wgsl"),semio_framework_ui_render_prepared_shaders::world3d_authored_shader()).unwrap();std::fs::write(root.join("raster-mip.wgsl"),semio_framework_ui_render_prepared_shaders::RASTER_MIP_SHADER).unwrap();}
-            eprintln!("[DEBUG] native GPU created authored pipelines with five texture roles and four alpha/culling combinations");
         }
         Err(error) => assert!(error.starts_with("offscreen adapter:"), "a native GPU context refused past adapter selection: {error}"),
     }

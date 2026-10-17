@@ -31,5 +31,4 @@ export async function provePlaygroundCompositionV1(root:string,output:string,rec
    assert.deepEqual(target.dependsOn,["activate-future-wgpu-"+profile]);assert.equal(target.cache,false);assert.equal(target.continuous,true);
   }
  }
- console.log("[DEBUG] playground composition portable="+fixture.cases.length+" implementations=2 AJV=1 receiving="+receivers);
 }

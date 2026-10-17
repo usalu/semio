@@ -22,7 +22,7 @@ test("overlapping development compilers share one claim and idle services releas
   let sessions = 0, admitted = false;
   const gate = createNextRebuildAdmissionV1({ directory, environment: {}, run: work => { sessions++; return work(control()); } });
   await Promise.all(vector.participants.map(id => gate.begin(id)));
-  const successor = acquireCompilerCapacityLeaseV1({ directory, control: control(), environment: {}, requestedParallelism: 1 }).then(lease => { admitted = true; return lease; });
+  const successor = acquireCompilerCapacityLeaseV1({ directory, control: control(), environment: {}, request:{kind:"exact",parallelism:1} }).then(lease => { admitted = true; return lease; });
   await Bun.sleep(30);
   expect(admitted).toBe(false);
   await gate.finish(vector.participants[0]!);
@@ -32,12 +32,11 @@ test("overlapping development compilers share one claim and idle services releas
   await gate.begin(vector.participants[0]!);
   await gate.finish(vector.participants[0]!);
   expect(sessions).toBe(vector.sessions);
-  console.log("[DEBUG] Overlapping Next development compilers share one claim; idle and warm successor claims return");
 });
 
 test("closing a queued development compiler cancels its own wait and preserves the caller", async () => {
   const directory = mkdtempSync(join(dirname(artifacts), "c")), original = new AbortController();
-  const held = await acquireCompilerCapacityLeaseV1({ directory, control: control(), environment: {} });
+  const held = await acquireCompilerCapacityLeaseV1({request:{kind:"whole-host"}, directory, control: control(), environment: {} });
   const gate = createNextRebuildAdmissionV1({ directory, environment: {}, run: work => work(control(original.signal)) });
   const pending = gate.begin("queued");
   await Bun.sleep(30);
@@ -60,7 +59,6 @@ test("the installed Webpack compiler runs the same grouped lifecycle and release
     const stats = await new Promise<any>((accept, reject) => compiler.run((error: unknown, result: any) => error ? reject(error) : accept(result)));
     expect(stats.hasErrors()).toBe(false);
     expect(sessions).toBe(1);
-    const lease = await acquireCompilerCapacityLeaseV1({ directory, control: control(), environment: {} }); lease.release();
+    const lease = await acquireCompilerCapacityLeaseV1({request:{kind:"whole-host"}, directory, control: control(), environment: {} }); lease.release();
   } finally { await new Promise<void>((accept, reject) => compiler.close((error: unknown) => error ? reject(error) : accept())); }
-  console.log("[DEBUG] Installed Next Webpack oracle compiled both development participants and returned host capacity");
 }, vector.maximumElapsedMilliseconds);

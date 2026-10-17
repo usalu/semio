@@ -1,5 +1,5 @@
 use super::*;
-use crate::editor::bim::unit_tests::support::{ctx, demo, run};
+use crate::editor::bim::fixture::support::{ctx, demo, run};
 
 #[semio_framework_async_macros::async_test]
 async fn the_ground_point_is_the_first_two_finite_coordinates_and_a_press_without_one_does_nothing() {

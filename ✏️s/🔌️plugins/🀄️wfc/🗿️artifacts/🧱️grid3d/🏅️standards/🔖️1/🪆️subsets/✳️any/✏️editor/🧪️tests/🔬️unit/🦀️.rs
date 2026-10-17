@@ -1,7 +1,13 @@
 //! 🔬️ Editor laws — every declared verb dispatches, the pick verb reads the ARMED UTILITY of the
 //! window it was dispatched in, and the two windows both render non-empty for both examples.
 
-use super::*;
+use crate::{editor::grid3d::modes::edit::windows::grid, editor::grid3d::modes::edit::windows::preview};
+use semio_framework_plugin::ArtifactEditor;
+use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::ConfigView;
+use semio_framework_plugin::NoConfig;
+use crate::editor::grid3d::{command_from_action, GRID3D_PUBLICATION_CONTRACTS, Grid3dRetainedCommandJobFactory};
+use crate::editor::grid3d::*;
 
 #[test]
 fn the_manifest_declares_both_window_kinds_and_the_three_utilities() {
@@ -236,4 +242,4 @@ fn a_cell_click_of_an_armed_utility_is_one_tool_transaction() {
     assert!(plain.transaction.is_none() && plain.artifact_mutations.len() == 1, "no admission: the leaf publishes plainly");
 }
 
-semio_framework_plugin::history_edit_acceptance_law!("wfc", super::Grid3dEditor, || semio_framework_plugin::App { definition: super::create_grid3d_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️1/🪆️subsets/✳️any");
+semio_framework_plugin::history_edit_acceptance_law!("wfc", crate::editor::grid3d::Grid3dEditor, || semio_framework_plugin::App { definition: crate::editor::grid3d::create_grid3d_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️1/🪆️subsets/✳️any");

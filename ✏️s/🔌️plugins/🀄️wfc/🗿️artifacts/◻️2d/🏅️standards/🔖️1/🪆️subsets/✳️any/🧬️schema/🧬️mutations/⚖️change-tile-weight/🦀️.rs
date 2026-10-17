@@ -2,7 +2,6 @@
 //! input the engine's Shannon-entropy heuristic reads.
 
 use crate::diff::Wfc2dDiff;
-use crate::mutations::Wfc2dMutation;
 use crate::schema::snapshot::Wfc2dSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -18,17 +17,23 @@ pub struct ChangeTileWeight {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_tile_weight(tile_id: String, weight: f64) -> Wfc2dMutation {
-    Wfc2dMutation::ChangeTileWeight(ChangeTileWeight { tile_id, weight })
+pub fn change_tile_weight<Op>(tile_id: String, weight: f64) -> Op
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::change_tile_weight::ChangeTileWeight>,
+{
+    Op::from(ChangeTileWeight { tile_id, weight })
 }
 
-impl MutationKind<Wfc2dSnapshot, Wfc2dMutation> for ChangeTileWeight {
+impl<Op> MutationKind<Wfc2dSnapshot, Op> for ChangeTileWeight
+where
+    Op: protocol::Mutation<Wfc2dSnapshot, Diff = Wfc2dDiff> + From<ChangeTileWeight>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "tile-weight", kind: "change-tile-weight", record: "ChangedTileWeight" };
 
     fn diff(&self, base: &Wfc2dSnapshot) -> protocol::MutationOutcome<Wfc2dDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Wfc2dSnapshot) -> Result<Vec<Wfc2dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Wfc2dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

@@ -47,7 +47,6 @@ for (const row of cases.cases) test(`production preparation isolates examples: $
       else writes += Number(existsSync(join(scratch, path)));
     }
     expect(writes).toBe(cases.expectedExampleWrites);
-    console.log(`[DEBUG] production preparation case=${row.id} contributions=${result.contributions} apps=${result.apps} receipts=${result.receipts} example-writes=${writes}`);
   } finally {
     rmSync(scratch, { recursive: true, force: true });
   }

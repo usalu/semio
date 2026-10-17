@@ -1,386 +1,141 @@
-pub(crate) mod context {
-    use super::super::*;
+use crate::editor::puzzle2d::snapshot::{PUZZLE2D_BOARD_SNAPSHOT_SCHEMA, PUZZLE2D_GRANULARITY_EDGE, PUZZLE2D_GRANULARITY_HANDLE, PUZZLE2D_GRANULARITY_NODE, PUZZLE2D_INTERACTION_DOMAIN, PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID, PUZZLE2D_PLAY_EXAMPLE_NAKAGIN_ID, Puzzle2dInteractionSnapshot, Puzzle2dScene, puzzle2d_entity_hidden};
+use crate::editor::puzzle2d::commands::set_active_example;
+use crate::editor::puzzle2d::config::Puzzle2dConfig;
+use crate::editor::puzzle2d::engine::BoardHost;
+use crate::editor::puzzle2d::modes::edit::tools::fill;
+use crate::editor::puzzle2d::modes::edit::windows::overview::utilities::{area_brush as area_brush_utility, brush as brush_utility, select as select_utility};
+use crate::editor::puzzle2d::modes::edit::windows::{detail, overview};
+use crate::editor::puzzle2d::panels::settings;
+use crate::editor::puzzle2d::snapshot::Puzzle2dPlaySnapshot;
+use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
+use semio_framework::kernel::UiDirtyScope;
+use semio_framework_plugin::kernel::Effect;
+use semio_framework_plugin::ArtifactEditor;
+use semio_framework_pack_json::Value;
+#[allow(unused_imports)]
+use crate::editor::puzzle2d::snapshot::{puzzle2d_scene_for, puzzle2d_scene_with, PUZZLE2D_GENERIC_TOOL_IDS, PUZZLE2D_RETAINED_TOOL_IDS, PUZZLE2D_ADD_NODE_DIALOG_ID, puzzle2d_active_utility, puzzle2d_addresses_locked_entity, puzzle2d_entity_label, puzzle2d_interaction_definition, puzzle2d_node_kind_arg, puzzle2d_select_scope, puzzle2d_selected_node_ids, puzzle2d_selection_is_locked, puzzle2d_window_and_engagements_scope, puzzle2d_window_only_scope};
+#[allow(unused_imports)]
+use crate::editor::puzzle2d::engine::board_host::drain_board_events_json;
+#[allow(unused_imports)]
+use crate::editor::puzzle2d::recorder::{puzzle2d_copy_fragment_from, puzzle2d_cut_operations_from, puzzle2d_paste_operations_on};
+#[allow(unused_imports)]
+use crate::editor::puzzle2d::config::Puzzle2dConfigMutation;
+#[allow(unused_imports)]
+use crate::editor::puzzle2d::engine::Point;
+#[allow(unused_imports)]
+use crate::editor::puzzle2d::modes::edit;
+#[allow(unused_imports)]
+use crate::editor::puzzle2d::precompute::fill as fill_run;
+#[allow(unused_imports)]
+use crate::editor::puzzle2d::modes::edit::windows::selection;
+#[allow(unused_imports)]
+use crate::editor::puzzle2d::panels::{artifact, catalogue, inspection};
+#[allow(unused_imports)]
+use crate::editor::puzzle2d::presence::{Puzzle2dPresence, Puzzle2dPresenceMutation};
+#[allow(unused_imports)]
+use crate::editor::puzzle2d::window::{self, Puzzle2dWindowConfig, Puzzle2dWindowTransient};
+#[allow(unused_imports)]
+use semio_framework_plugin::kernel::{ClipboardError, ClipboardFragment, PastePlacement};
+#[allow(unused_imports)]
+use semio_framework_plugin::ActionArgDef;
+#[allow(unused_imports)]
+use semio_framework_plugin::ActionArgOption;
+#[allow(unused_imports)]
+use semio_framework_plugin::ActionDefinition;
+#[allow(unused_imports)]
+use semio_framework_plugin::ActionKind;
+#[allow(unused_imports)]
+use semio_framework_plugin::ActionRef;
+#[allow(unused_imports)]
+use semio_framework_plugin::AppIo;
+#[allow(unused_imports)]
+use semio_framework_plugin::ArtifactPresentation;
+#[allow(unused_imports)]
+use semio_framework_plugin::ArtifactToolFactoryRegistry;
+#[allow(unused_imports)]
+use semio_framework_plugin::ArtifactToolPublicationContract;
+#[allow(unused_imports)]
+use semio_framework_plugin::ArtifactToolPublicationLane;
+#[allow(unused_imports)]
+use semio_framework_plugin::ArtifactView;
+#[allow(unused_imports)]
+use semio_framework_plugin::ConfigView;
+#[allow(unused_imports)]
+use semio_framework_artifact_reference::Dialect;
+#[allow(unused_imports)]
+use semio_framework_plugin::DialogDefinition;
+#[allow(unused_imports)]
+use semio_framework_plugin::DraftView;
+#[allow(unused_imports)]
+use semio_framework_plugin::Editor;
+#[allow(unused_imports)]
+use semio_framework_plugin::EditorApp;
+#[allow(unused_imports)]
+use semio_framework_plugin::Emit;
+#[allow(unused_imports)]
+use semio_framework_plugin::Fault;
+#[allow(unused_imports)]
+use semio_framework_plugin::HierarchyProvider;
+#[allow(unused_imports)]
+use semio_framework_plugin::InteractionRef;
+#[allow(unused_imports)]
+use semio_framework_plugin::InteractionTarget;
+#[allow(unused_imports)]
+use semio_framework_plugin::InteractionVerb;
+#[allow(unused_imports)]
+use semio_framework_plugin::InteractiveJobClassification;
+#[allow(unused_imports)]
+use semio_framework_ui_locale::Label;
+#[allow(unused_imports)]
+use semio_framework_ui_locale::LocalizedLabel;
+#[allow(unused_imports)]
+use semio_framework_plugin::MediaClass;
+#[allow(unused_imports)]
+use semio_framework_plugin::MediaForm;
+#[allow(unused_imports)]
+use semio_framework_plugin::MediaPortDirection;
+#[allow(unused_imports)]
+use semio_framework_plugin::MediaPortSpec;
+#[allow(unused_imports)]
+use semio_framework_plugin::MediaType;
+#[allow(unused_imports)]
+use semio_framework_plugin::NoDraft;
+#[allow(unused_imports)]
+use semio_framework_plugin::NoDraftMutation;
+#[allow(unused_imports)]
+use semio_framework_plugin::PortMultiplicity;
+#[allow(unused_imports)]
+use semio_framework_plugin::ToolFactoryKey;
+#[allow(unused_imports)]
+use semio_framework_plugin::ToolJobFactory;
+#[allow(unused_imports)]
+use semio_framework_plugin::ToolJobFactoryError;
+#[allow(unused_imports)]
+use semio_framework_plugin::WindowEngagement;
+#[allow(unused_imports)]
+use semio_framework_plugin::WindowMeasure;
+#[allow(unused_imports)]
+use semio_framework_plugin::app::InteractionView;
+#[allow(unused_imports)]
+use semio_framework_pack_json::json;
+#[allow(unused_imports)]
+use std::collections::{BTreeSet, HashMap, HashSet};
+#[allow(unused_imports)]
+use semio_framework_2d::compute::EngineHandles;
+#[allow(unused_imports)]
+use semio_framework_plugin::{ArtifactReservedToolInput, ArtifactReservedToolJob, ArtifactReservedToolJobRequest};
+#[allow(unused_imports)]
+use crate::editor::puzzle2d::kit::*;
+#[allow(unused_imports)]
+use crate::editor::puzzle2d::retained::*;
+#[allow(unused_imports)]
+use crate::editor::puzzle2d::session::*;
+use semio_framework_test_fixtures::fixture_text;
 
-    /// 🧮️ Weighs what this test binary allocates, per thread (`semio_framework_trace::HeapWitness`), so a cost law
-    /// reads its own work and nothing a concurrent law allocates.
-    #[global_allocator]
-    static PUZZLE2D_HEAP_WITNESS: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
-    use semio_framework_plugin::{ActionMeta, App, EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel, ViewWindowInstance};
-    
-    pub type Puzzle2dApp = VcsArtifactApp<EditorApp<Puzzle2dPlayApp>>;
-    
-    pub fn meta(actor: &str) -> ActionMeta {
-        semio_framework_plugin::artifact_app_laws::meta(actor)
-    }
-    
-    /// ⏳️ The harness's own executor: polls one app future to completion, yielding between turns.
-    ///
-    /// 🐛️ This file used to bridge every app call through `semio_framework_os_kernel::io::resolve_ready`, whose
-    /// contract is "an ARTIFACT-IO body must complete without a real suspension" — it PANICS on the
-    /// first `Pending`. That contract belongs to the synchronous `IoEntry`/compose thunks it was
-    /// written for, not to a harness driving a live app: the moment a dispatch gained a real await
-    /// point (the clipboard route's store admission) every law that went through it aborted with
-    /// "future was not ready on first poll". A live app's futures make progress on every poll, so the
-    /// harness polls — the same noop-waker spin the block3d window-transient law uses.
-    pub fn block_on<F: std::future::Future>(future: F) -> F::Output {
-        let mut future = std::pin::pin!(future);
-        let waker = std::task::Waker::noop();
-        let mut context = std::task::Context::from_waker(waker);
-        loop {
-            match future.as_mut().poll(&mut context) {
-                std::task::Poll::Ready(output) => return output,
-                std::task::Poll::Pending => std::thread::yield_now(),
-            }
-        }
-    }
-    
-    /// 🧰️ The registry-backed, instance-bound snapshot app: `bounded_first_step_tool_proofs!` joins the manifest's
-    /// migrated declarations to the live factories, which a registry-less app cannot satisfy.
-    pub fn app() -> Puzzle2dApp {
-        std::sync::LazyLock::force(&crate::examples::puzzle2d::nakagin_capsule_tower::SOURCE);
-        std::sync::LazyLock::force(&crate::examples::puzzle2d::concrete_forest::SOURCE);
-        app_with_registry()
-    }
-    
-    /// 🧾️ `assert_declared_actions_bridge_to_commands`/`new_app_with_registry` still take a `fn() ->
-    /// App` manifest (framework test context gap, not this packet's to fix — see the sibling `w2-cad-report`
-    /// "SDK gaps" §3); `create_puzzle2d_app` now returns `AppDefinition`, so this wraps it.
-    fn puzzle2d_manifest_for_tests() -> App {
-        App { definition: create_puzzle2d_app(), examples: Vec::new() }
-    }
-
-    semio_framework_plugin::history_edit_acceptance_law!("puzzle", Puzzle2dPlayApp, puzzle2d_manifest_for_tests, "../..");
-    
-    /// 🧰️ A registry-backed app so kind discipline (View/Shell actions must emit no operations) and the
-    /// utility contract are enforced exactly as in production.
-    pub fn app_with_registry() -> Puzzle2dApp {
-        let mut app = block_on(semio_framework_plugin::artifact_app_laws::new_app_with_registry::<EditorApp<Puzzle2dPlayApp>>(puzzle2d_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()));
-        block_on(app.bind_instance_id(1));
-        app
-    }
-    
-    pub fn window_view(kind: &str, id: &str) -> ViewModel {
-        let mut window_instances = [crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID, crate::editor::puzzle2d::config::PUZZLE2D_DETAIL_WINDOW_KIND_ID, crate::editor::puzzle2d::config::PUZZLE2D_SELECTION_WINDOW_KIND_ID]
-            .into_iter()
-            .map(|kind| ViewWindowInstance { id: kind.into(), window_kind_id: kind.into() })
-            .collect::<Vec<_>>();
-        if !window_instances.iter().any(|window| window.id == id) {
-            window_instances.push(ViewWindowInstance { id: id.into(), window_kind_id: kind.into() });
-        }
-        ViewModel { window_instances, ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) }.for_window_instance(id).expect("puzzle2d test window roster")
-    }
-    
-    fn action_meta(args: Option<&Value>, window_id: Option<&str>) -> ActionMeta {
-        let requested = args
-            .and_then(|value| value.get("windowId").or_else(|| value.get("window_id")).or_else(|| value.get("pane")).or_else(|| value.get("window")))
-            .and_then(Value::as_str);
-        let kind = requested
-            .filter(|kind| [crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID, crate::editor::puzzle2d::config::PUZZLE2D_DETAIL_WINDOW_KIND_ID, crate::editor::puzzle2d::config::PUZZLE2D_SELECTION_WINDOW_KIND_ID].contains(kind))
-            .or_else(|| window_id.filter(|kind| [crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID, crate::editor::puzzle2d::config::PUZZLE2D_DETAIL_WINDOW_KIND_ID, crate::editor::puzzle2d::config::PUZZLE2D_SELECTION_WINDOW_KIND_ID].contains(kind)))
-            .unwrap_or(crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID);
-        let id = window_id.or(requested).unwrap_or(kind);
-        ActionMeta { view_state: Some(window_view(kind, id)), ..meta("local") }
-    }
-    
-    /// 📄️ Drains everything one settle turn can have left behind — presented pages, effects, events,
-    /// completions (and the HISTORY PATCH they carry), the UI scope and local-interaction replies.
-    ///
-    /// 🐛️ Called both inside the loop AND once more before the loop returns. `has_pending_typed_operations`
-    /// counts the outboxes and the mounted operations, but an operation that RETIRED during the previous
-    /// turn's `advance_typed_operation_publication` leaves its terminal completion queued while the
-    /// predicate already reads false — so the exit branch returned a result whose `history_patch` was
-    /// still sitting in the outbox, and every `committed_edits(&result)` read 0 for an edit that really
-    /// landed in the document.
-    ///
-    /// 🧯️ A `Fault` page is ACKed like every other page — the host ACKs it too — and reported once the
-    /// operation has retired (`settle_registered_typed_operation`'s shape). Returning on it un-ACKed left the
-    /// faulted operation awaiting its ACK for ever, so the NEXT dispatch never settled either.
-    fn drain_settled(app: &mut Puzzle2dApp, result: &mut InvocationResult, fault: &mut Option<Fault>) -> Result<(), Fault> {
-        while let Some(page) = app.take_typed_operation_result_page(1) {
-            if page.lane == semio_framework_plugin::app::TypedOperationResultLane::Fault {
-                fault.get_or_insert_with(|| Fault::from(String::from_utf8_lossy(page.bytes()).into_owned()));
-            }
-            app.acknowledge_typed_operation_result(page.token)?;
-        }
-        result.requested_effects.extend(app.take_typed_operation_effect());
-        result.events.extend(app.take_typed_operation_event());
-        while let Some(completion) = block_on(app.take_typed_operation_completion())? {
-            result.ui_scope = completion.ui_scope;
-            if let Some(patch) = completion.history_patch {
-                result.history_patch = Some(match result.history_patch.take() {
-                    Some(mut previous) => {
-                        previous.upserts.extend(patch.upserts);
-                        previous.cursor = patch.cursor;
-                        previous.can_undo = patch.can_undo;
-                        previous.can_redo = patch.can_redo;
-                        previous
-                    }
-                    None => patch,
-                });
-            }
-        }
-        while let Some(progress) = app.take_typed_operation_ui_progress() {
-            result.ui_scope = progress.ui_scope;
-        }
-        while let Some(reply) = app.take_local_interaction_query_reply() {
-            if let protocol::LocalInteractionQueryReply::Page { page } = reply {
-                let token = protocol::LocalInteractionQueryToken { request_id: page.request_id, query_generation: page.query_generation, identity: page.identity.clone(), ordinal: page.ordinal };
-                app.acknowledge_local_interaction_query(&token);
-            }
-        }
-        Ok(())
-    }
-
-    fn settle(app: &mut Puzzle2dApp, result: Result<InvocationResult, Fault>) -> Result<InvocationResult, Fault> {
-        let mut result = result?;
-        let mut fault = None;
-        for _ in 0..1_048_576 {
-            if !app.has_pending_typed_operations() {
-                drain_settled(app, &mut result, &mut fault)?;
-                return fault.map_or(Ok(result), Err);
-            }
-            crate::puzzle_job::testing::maintain(app, store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)?;
-            block_on(app.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.preparation))?;
-            // 📄️ EVERY presented page and EVERY completion per turn, never one: `has_pending_typed_operations`
-            // counts the outboxes and the mounted operations but NOT a page already presented and waiting
-            // for its ACK, so a turn that leaves a second page (or the terminal completion that CARRIES
-            // THE HISTORY PATCH) queued can be the very turn this loop exits on — and the caller then reads
-            // a result with no committed edits at all. The framework's own `settle_registered_typed_operation`
-            // drains both in inner loops for exactly this reason.
-            drain_settled(app, &mut result, &mut fault)?;
-        }
-        Err(Fault::from("puzzle2d test operation did not settle"))
-    }
-    
-    /// 🧪️ B1: test-only replacement for the deleted `VcsArtifactApp::handle_action` app-dispatch path
-    /// (that method is FRAMEWORK-reserved now — an app's own actions go exclusively through the typed
-    /// `Self::Command` channel). Reconstructs the `Puzzle2dCommand` from the same
-    /// `(action, args, window_id)` triple every pre-B1 test already passed.
-    pub fn dispatch(app: &mut Puzzle2dApp, action: &str, args: Option<&Value>, window_id: Option<&str>) -> Result<InvocationResult, Fault> {
-        let action_meta = action_meta(args, window_id);
-        // 🕰️ Framework-reserved verbs (undo/redo/checkpoint/…/the six interaction verbs) stay on
-        // `handle_action` — ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM added
-        // interactionSelect/interactionHover/clearSelection/selectAll/setSelectionMode/
-        // setInteractionGranularity to this reserved set.
-        if matches!(
-            action,
-            "undo"
-                | "redo"
-                | "commitCheckpoint"
-                | "createAlternative"
-                | "switchAlternative"
-                | "checkoutCheckpoint"
-                | "copy"
-                | "cut"
-                | "paste"
-                | "revertToCommand"
-                | "historyFilter"
-                | "noteShellCommand"
-                | "interactionSelect"
-                | "interactionHover"
-                | "clearSelection"
-                | "selectAll"
-                | "setSelectionMode"
-                | "setInteractionGranularity"
-                | "hostEvent"
-        ) {
-            let dsl_args = args.map(semio_framework_value::DslValue::from);
-            let result = block_on(app.handle_action(action, dsl_args.as_ref(), &action_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity())).and_then(|admitted| block_on(semio_framework_plugin::app::settle_framework_reserved_admission(app, admitted)));
-            return settle(app, result);
-        }
-        let result = block_on(app.dispatch_typed(Puzzle2dCommand::from_action(action, args.cloned(), window_id.map(str::to_string)), &action_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()));
-        settle(app, result)
-    }
-
-    /// 🧰️ [`dispatch`] of an app verb from an explicit window view — for a law that needs what the view carries,
-    /// such as the window's active utility.
-    pub fn dispatch_in_view(app: &mut Puzzle2dApp, action: &str, args: Option<&Value>, window_id: Option<&str>, view_state: ViewModel) -> Result<InvocationResult, Fault> {
-        let action_meta = ActionMeta { view_state: Some(view_state), ..meta("local") };
-        let result = block_on(app.dispatch_typed(Puzzle2dCommand::from_action(action, args.cloned(), window_id.map(str::to_string)), &action_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()));
-        settle(app, result)
-    }
-
-    /// 🧾 How many DOCUMENT edits one dispatch actually committed. `InvocationResult.mutations` is
-    /// the INLINE carrier and the typed/retained ladder never uses it: a migrated verb commits its edits
-    /// inside the operation and reports them as command-log upserts, which `settle` adopts above.
-    ///
-    /// 🐛️ Since 2026-09-20 (`record_typed_operation_lane`, `🧰️framework/…/🔌️plugin/🦀️.rs`) a typed
-    /// operation's document edit is logged under its own VERB (`addNode`, `paste`, …) and its declared
-    /// kind; `action_id: "apply"` is only the backfill of an edit no command claimed. Filtering on
-    /// `"apply"` therefore read 0 for every edit that really landed. The row that IS a document edit is
-    /// the one carrying printed document ops — a config-lane or no-lane row prints none — and it is
-    /// applied; a coalesced gesture re-upserts its ONE row, so rows are counted by `seq`.
-    /// Every law that means "this verb edited the document" counts these, never `mutations`.
-    pub fn committed_edits(result: &InvocationResult) -> usize {
-        result.history_patch.as_ref().map_or(0, |patch| patch.upserts.iter().filter(|entry| entry.applied && !entry.op_lines.is_empty()).map(|entry| entry.seq).collect::<std::collections::BTreeSet<_>>().len())
-    }
-
-    /// 🛍️ One dispatch is the whole switch: `setActiveExample` answers one `Effect::LoadDocument` (no mutation row, no history
-    /// row), which this helper loads into the app as the host does. Returns the number of document edits the switch
-    /// committed — always zero.
-    pub fn load_example(app: &mut Puzzle2dApp, example_id: &str) -> usize {
-        let result = dispatch(app, "setActiveExample", Some(&json!({ "exampleId": example_id })), None).expect("load example");
-        let mut loaded = 0;
-        for effect in &result.requested_effects {
-            if let Effect::LoadDocument { pack, spr } = effect {
-                block_on(semio_framework_plugin::app::artifact_app_laws::load_document(app, &store::os_store::serialization::ArtifactPackFiles { pack: pack.clone(), spr: spr.clone(), ops: String::new() }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity())).expect("the example loads");
-                loaded += 1;
-            }
-        }
-        assert_eq!(loaded, 1, "an example switch is exactly one whole-document load");
-        committed_edits(&result)
-    }
-    
-    /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: dispatches `interactionSelect`
-    /// for one `(granularity, id)` pair in the `vortex` domain — the test-side replacement for the
-    /// deleted `setSelection` action.
-    pub fn select_id(app: &mut Puzzle2dApp, granularity: &str, id: &str) -> Result<InvocationResult, Fault> {
-        let targets = semio_framework_pack_json::to_json_string(&vec![InteractionTarget { granularity: granularity.into(), id: id.into() }]);
-        dispatch(app, "interactionSelect", Some(&json!({ "domainId": PUZZLE2D_INTERACTION_DOMAIN, "targets": targets, "merge": "replace", "method": "pick" })), None)
-    }
-    
-    pub fn concrete_forest_app() -> Puzzle2dApp {
-        let mut app = app();
-        load_example(&mut app, PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID);
-        app
-    }
-    
-    /// 🪟️ The window kind a canvas body paints, `None` for a panel body.
-    fn body_window_kind(body_key: &str) -> Option<&'static str> {
-        match body_key {
-            overview::BODY_KEY => Some(crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID),
-            detail::BODY_KEY => Some(crate::editor::puzzle2d::config::PUZZLE2D_DETAIL_WINDOW_KIND_ID),
-            selection::BODY_KEY => Some(crate::editor::puzzle2d::config::PUZZLE2D_SELECTION_WINDOW_KIND_ID),
-            _ => None,
-        }
-    }
-
-    /// 🖼️ The rendered body, serialized — every panel/window assertion greps this string. A canvas body
-    /// renders its kind's default instance (`id == kind`), the very window `action_meta` addresses when a
-    /// law names none: per-window state (camera, grid, gumball flags) is captured from the RENDERED
-    /// window's own partition (`window_config_store.capture(Some(view_state))`), so a render with no
-    /// window reads the empty default and never the window the law just published into.
-    pub fn render_body(app: &mut Puzzle2dApp, body_key: &str) -> String {
-        let view = body_window_kind(body_key).map_or_else(|| ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native), |kind| window_view(kind, kind));
-        render_body_with_view(app, body_key, &view)
-    }
-    
-    pub fn render_body_with_view(app: &mut Puzzle2dApp, body_key: &str, view_state: &ViewModel) -> String {
-        let tree = block_on(app.render(body_key, None, view_state)).expect("render");
-        let mut stack = vec![&tree.root];
-        while let Some(node) = stack.pop() {
-            if let semio_framework_ui_contract::Component::Surface(surface) = &node.component {
-                if surface.doc_schema.as_str() == <semio_framework_ui_scene::Board2dScene as semio_framework_ui_scene::SceneDoc>::SCHEMA {
-                    // 🚚️ The snapshot rides an out-of-doc lane (`Board2dSceneLane::Snapshot`) — a bare decode reads an empty `snapshot_json`.
-                    let scene: semio_framework_ui_scene::Board2dScene = semio_framework_plugin::artifact_app_laws::built_surface_scene(node).expect("decode board scene with lanes");
-                    return semio_framework_pack_json::to_json_string(&json!({ "schema": surface.doc_schema, "board2d": scene }));
-                }
-            }
-            stack.extend(node.children.iter());
-        }
-        // 🪟️ A built tree's children now travel as retained pages, so a bare `serde_json` of the root
-        // is refused — the projection helper walks and retires them exactly (5d's context already did).
-        semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(tree).expect("retire rendered node")
-    }
-    
-    /// 🪟️ `body_key` rendered as the window instance `window_id`. The instance travels in the view state
-    /// the framework captures that window's partitions from; a `"{body}:{window}"` key is no body at all
-    /// and rendered `Unknown body`.
-    pub fn render_window(app: &mut Puzzle2dApp, body_key: &str, window_id: &str) -> String {
-        let kind = body_window_kind(body_key).expect("render_window renders a canvas body");
-        render_body_with_view(app, body_key, &window_view(kind, window_id))
-    }
-    
-    /// 🧹️ Closes `app` to terminal-empty ownership; `#[track_caller]` so a refusal names WHICH app of a
-    /// two-app law did not get there.
-    #[track_caller]
-    pub fn close_app(app: &mut Puzzle2dApp) {
-        for _ in 0..1_048_576 {
-            if app.close_terminal_is_empty() {
-                return;
-            }
-            let demand = PluginApp::close_retirement_demands(app, store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("Puzzle 2D registered app close quote");
-            let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
-            if matches!(PluginApp::close_step(app, grant).expect("Puzzle 2D registered app close"), semio_framework_plugin::PluginLifecycleStep::Complete(_)) {
-                break;
-            }
-        }
-        assert!(app.close_terminal_is_empty(), "Puzzle 2D registered app close did not reach terminal-empty ownership");
-    }
-    
-    /// 🧾️ A standalone `Puzzle2dScene` for the measure/engagement builders that take one directly.
-    pub fn scene(snapshot: Value, runtime: Puzzle2dPlayRuntime, active_utility: &str) -> Puzzle2dScene {
-        Puzzle2dScene { board_snapshot: snapshot, runtime, active_utility: active_utility.into(), interaction: Puzzle2dInteractionSnapshot::default() }
-    }
-    
-    /// 📼️ A recorder over the typed document a host fixture states.
-    pub fn recorder_of(snapshot: Value) -> Puzzle2dRecorder {
-        let typed: crate::Puzzle2dSnapshot = semio_framework_value::FromValue::from_value(semio_framework_pack_json::to_dsl_value(&snapshot)).expect("typed fixture admits");
-        Puzzle2dRecorder::from_typed(std::sync::Arc::new(typed))
-    }
-
-    /// 🌱️ The concrete kinds that build `board` from an empty document — manifest, kind relations, catalogs, a `create-node` per
-    /// node, a `connect-handles` per edge (with its flags) and a `create-target-region` per region. A fixture's
-    /// authoring script, recorded through the same recorder the editor uses; nothing here differences two boards.
-    pub fn board_genesis_kinds(board: &crate::Puzzle2dSnapshot) -> Vec<Puzzle2dMutation> {
-        use crate::standards::v1::subsets::any::schema::mutations::{change_manifest_id, connect_kind_compatibility, create_node, create_target_region, replace_kind_catalogs};
-        let mut recorder = Puzzle2dRecorder::from_typed(std::sync::Arc::new(crate::Puzzle2dSnapshot::default()));
-        if board.meta.manifest_id.is_some() {
-            recorder.record(change_manifest_id(board.meta.manifest_id.clone()));
-        }
-        for row in board.meta.kind_compatibility.iter() {
-            recorder.record(connect_kind_compatibility(row.source.clone(), row.target.clone(), row.bidirectional, row.important, row.specificity, None));
-        }
-        if board.meta.kind_catalogs.is_some() {
-            recorder.record(replace_kind_catalogs(board.meta.kind_catalogs.clone()));
-        }
-        for node in board.nodes.iter() {
-            recorder.record(create_node(node.clone(), None));
-        }
-        for edge in board.edges.iter() {
-            recorder.connect_edge(edge.clone());
-        }
-        for region in board.target_regions.iter() {
-            recorder.record(create_target_region(region.clone(), None));
-        }
-        recorder.into_rows()
-    }
-
-    /// 🧱️ Seeds `board` into a fresh app as the concrete kinds that build it, ingested as one authored operation log.
-    pub fn seed_board(app: &mut Puzzle2dApp, board: &Value) {
-        use protocol::OpText as _;
-        let typed: crate::Puzzle2dSnapshot = semio_framework_value::FromValue::from_value(semio_framework_pack_json::to_dsl_value(board)).expect("the seed board admits");
-        let text = board_genesis_kinds(&typed).iter().map(|kind| kind.print_op()).collect::<Vec<_>>().join("\n");
-        block_on(app.ingest_operations_text(&text)).expect("seed the board");
-    }
-
-    /// 📥️ Dispatches `importSnapshot` for `board` and loads the whole document it requests, as the host does with an
-    /// `Effect::LoadDocument`.
-    pub fn import_board(app: &mut Puzzle2dApp, board: &Value) {
-        let result = dispatch(app, "importSnapshot", Some(&json!({ "payload": board })), None).expect("import the board");
-        assert!(result.mutations.is_empty(), "an import states no mutation: {:?}", result.mutations);
-        let mut loaded = 0;
-        for effect in result.requested_effects {
-            if let Effect::LoadDocument { pack, spr } = effect {
-                block_on(semio_framework_plugin::app::artifact_app_laws::load_document(app, &store::os_store::serialization::ArtifactPackFiles { pack, spr, ops: String::new() }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity())).expect("the import loads");
-                loaded += 1;
-            }
-        }
-        assert_eq!(loaded, 1, "an import is exactly one whole-document load");
-    }
-
-    pub fn fixture_of(app: &Puzzle2dApp) -> Value {
-        app.snapshot().expect("projection").value().clone()
-    }
-    
-    pub fn first_node_id(app: &Puzzle2dApp) -> String {
-        board_snapshot_nodes(&fixture_of(app))[0].get("id").and_then(|value| value.as_str()).expect("node id").to_string()
-    }
-}
-
-use context::*;
+semio_framework_plugin::history_edit_acceptance_law!("puzzle", Puzzle2dPlayApp, puzzle2d_manifest_for_tests, "../..");
+use crate::editor::puzzle2d::testkit::*;
 use crate::standards::v1::subsets::any::schema::mutations::apply_puzzle2d_mutation;
-use super::*;
+use crate::editor::puzzle2d::*;
 use crate::Puzzle2dSnapshot;
 use semio_framework::SET_ACTIVE_UTILITY_ACTION_ID;
 use semio_framework_plugin::PluginApp;
@@ -389,11 +144,11 @@ use store::{os_store::backbone::Backbone, os_store::backbone::BackboneMessage, o
 /// 📚️ The editor module's production source as the unsplit editor file held it: every mounted child first, then the editor file itself, so the `UnitTests` region marker still closes the production prefix.
 pub(crate) fn editor_source() -> String {
     [
-        include_str!("../../🕹️interaction/🦀️.rs"),
-        include_str!("../../🧰️kit/🦀️.rs"),
-        include_str!("../../🧵️retained/🦀️.rs"),
-        include_str!("../../🖌️session/🦀️.rs"),
-        include_str!("../../🦀️.rs"),
+        fixture_text!("../../../../🕹️interaction/🦀️.rs"),
+        fixture_text!("../../../../🧰️kit/🦀️.rs"),
+        fixture_text!("../../../../🧵️retained/🦀️.rs"),
+        fixture_text!("../../../../🖌️session/🦀️.rs"),
+        fixture_text!("../../../../🦀️.rs"),
     ]
     .concat()
 }
@@ -606,7 +361,7 @@ async fn undo_redo_round_trip_through_the_wrapper() {
 async fn command_envelope_round_trip_holds_for_an_applied_operation() {
     use crate::host::owned::{close_puzzle2d_store,puzzle2d_store};
 
-    use {crate::standards::v1::subsets::any::schema::Puzzle2dNode, crate::standards::v1::subsets::any::schema::PUZZLE_2D_SCHEMA};
+    use {crate::standards::v1::subsets::any::schema::records::Puzzle2dNode, crate::standards::v1::subsets::any::schema::records::PUZZLE_2D_SCHEMA};
     use protocol::{ArtifactId, Edit, SchemaId};
     use store::{os_store::document_materialize::create_document_envelope, os_store::store_schema::ArtifactCommand};
 
@@ -778,8 +533,8 @@ async fn select_action_declares_partial_ui_scope() {
             // `AppDefinition.windowKinds[].bodyKey` by the shell's `buildUiRefreshRequest`), not
             // the pane/kind-id constants (`PUZZLE2D_PANES`) — those are a different id space.
             assert_eq!(window_bodies, vec![overview::BODY_KEY, detail::BODY_KEY, selection::BODY_KEY], "window_bodies must be body keys, not pane ids");
-            assert!(panel_bodies.contains(&artifact::PUZZLE2D_PLAY_BODY_LAYERS.to_string()));
-            assert!(panel_bodies.contains(&inspection::PUZZLE2D_PLAY_BODY_PROPERTIES.to_string()));
+            assert!(panel_bodies.contains(&crate::editor::puzzle2d::config::PUZZLE2D_PLAY_BODY_LAYERS.to_string()));
+            assert!(panel_bodies.contains(&crate::editor::puzzle2d::config::PUZZLE2D_PLAY_BODY_PROPERTIES.to_string()));
             assert!(engagements, "select must refresh the engagement bar");
             assert!(!measures, "select must not force a measures refresh");
             assert!(!utilities);
@@ -859,10 +614,10 @@ fn dispatchable_actions<'a>(definition: &'a semio_framework_plugin::AppDefinitio
 fn utility_registry_declares_utilities() {
     let definition = create_puzzle2d_app();
     let ids: Vec<&str> = definition.utilities.iter().map(|utility| utility.id.as_str()).collect();
-    assert_eq!(ids, vec![select_utility::UTILITY_ID, brush_utility::UTILITY_ID, area_brush_utility::UTILITY_ID]);
+    assert_eq!(ids, vec![crate::editor::puzzle2d::config::PUZZLE2D_SELECT_UTILITY_ID, brush_utility::UTILITY_ID, area_brush_utility::UTILITY_ID]);
     let overview_window = definition.window_kinds.iter().find(|window| window.id == crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID).expect("overview pane");
     let overview_utilities: Vec<&str> = overview_window.utilities.iter().map(|utility| utility.as_str()).collect();
-    assert_eq!(overview_utilities, vec![select_utility::UTILITY_ID, brush_utility::UTILITY_ID, area_brush_utility::UTILITY_ID]);
+    assert_eq!(overview_utilities, vec![crate::editor::puzzle2d::config::PUZZLE2D_SELECT_UTILITY_ID, brush_utility::UTILITY_ID, area_brush_utility::UTILITY_ID]);
     assert!(dispatchable_actions(&definition, overview_window).iter().any(|action| action.id == SET_ACTIVE_UTILITY_ACTION_ID), "declaring utilities must inject the setActiveUtility action");
     // 🧰️ D-1: select/brush are this window's whole exclusive utility set, NOT a sub-collection, so
     // each carries `group: None` and renders as a flat utility bar icon (never one collapsed dropdown).
@@ -1126,7 +881,7 @@ async fn board_select_row_reaches_the_inspector_and_the_board() {
     let result = dispatch(&mut app, "applyBoardEvents", Some(&json!({ "eventsJson": events })), Some(crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID));
     assert!(result.is_ok(), "applyBoardEvents must not fault: {:?}", result.err());
     let board = render_body(&mut app, overview::BODY_KEY);
-    let inspector = render_body(&mut app, inspection::PUZZLE2D_PLAY_BODY_PROPERTIES);
+    let inspector = render_body(&mut app, crate::editor::puzzle2d::config::PUZZLE2D_PLAY_BODY_PROPERTIES);
     close_app(&mut app);
     assert!(board.contains(&id), "the painted board must carry the selected id: {}", &board[..board.len().min(400)]);
     assert!(inspector.contains(&id) && inspector.contains("puzzle2d-play-inspector.node.id"), "the inspector must show the selected node's fields: {}", &inspector[..inspector.len().min(600)]);
@@ -1208,13 +963,13 @@ fn hover_id_reaches_the_board_scene_for_every_granularity_and_pane() {
         assert_eq!(interaction.hovered_id().as_deref(), Some(hovered.as_str()), "{granularity} hover must resolve an id");
         let envelope = Puzzle2dScene { board_snapshot: snapshot.clone(), runtime: Default::default(), active_utility: "select".into(), interaction };
         for pane in PUZZLE2D_PANES {
-            let scene = edit::puzzle2d_board_scene("{}", &envelope, pane);
+            let scene = edit::canvas::puzzle2d_board_scene("{}", &envelope, pane);
             assert_eq!(scene.hovered_id.as_deref(), Some(hovered.as_str()), "{granularity} hover must reach the {pane} board scene");
             assert_eq!(scene.domain_id.as_deref(), Some(PUZZLE2D_INTERACTION_DOMAIN), "every pane must name the interaction domain its hover publishes on");
         }
     }
     let idle = Puzzle2dScene { board_snapshot: snapshot, runtime: Default::default(), active_utility: "select".into(), interaction: Puzzle2dInteractionSnapshot::default() };
-    assert!(edit::puzzle2d_board_scene("{}", &idle, crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID).hovered_id.is_none(), "no hover must paint no hover");
+    assert!(edit::canvas::puzzle2d_board_scene("{}", &idle, crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID).hovered_id.is_none(), "no hover must paint no hover");
 }
 
 /// 💡️ LAW: the popup rides the board scene with the SAME candidate page the armed brush cycles, and the
@@ -1231,7 +986,7 @@ fn suggestion_popup_publishes_the_shared_candidate_page_and_the_previewed_index(
         ..Default::default()
     };
     let envelope = Puzzle2dScene { board_snapshot: snapshot, runtime, active_utility: "select".into(), interaction: Puzzle2dInteractionSnapshot::default() };
-    let scene = edit::puzzle2d_board_scene("{}", &envelope, crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID);
+    let scene = edit::canvas::puzzle2d_board_scene("{}", &envelope, crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID);
     let menu: Value = semio_framework_pack_json::from_json_str(&scene.suggestion_menu_json.expect("an open popup must reach the client"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("menu json");
     assert_eq!(menu["open"], json!(true));
     assert_eq!((menu["x"].as_f64(), menu["y"].as_f64()), (Some(12.0), Some(34.0)));
@@ -1249,7 +1004,7 @@ fn suggestion_popup_publishes_the_shared_candidate_page_and_the_previewed_index(
 fn a_closed_suggestion_popup_publishes_no_menu() {
     let snapshot: Value = semio_framework_pack_json::from_json_str(&crate::examples::puzzle2d::concrete_forest::SOURCE.document_json(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("concrete forest json");
     let envelope = Puzzle2dScene { board_snapshot: snapshot, runtime: Default::default(), active_utility: "select".into(), interaction: Puzzle2dInteractionSnapshot::default() };
-    assert!(edit::puzzle2d_board_scene("{}", &envelope, crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID).suggestion_menu_json.is_none());
+    assert!(edit::canvas::puzzle2d_board_scene("{}", &envelope, crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID).suggestion_menu_json.is_none());
 }
 
 /// 🏷️ LAW: every board pane publishes the plugin's placement naming, so the os wgpu host and the React session mint the
@@ -1258,7 +1013,7 @@ fn a_closed_suggestion_popup_publishes_no_menu() {
 fn board_scene_publishes_the_plugin_placement_naming() {
     let snapshot: Value = semio_framework_pack_json::from_json_str(&crate::examples::puzzle2d::concrete_forest::SOURCE.document_json(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("concrete forest json");
     let envelope = Puzzle2dScene { board_snapshot: snapshot, runtime: Default::default(), active_utility: "select".into(), interaction: Puzzle2dInteractionSnapshot::default() };
-    assert_eq!(edit::puzzle2d_board_scene("{}", &envelope, crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID).placement_naming.as_deref(), Some(r#"{"brushNodePrefix":"puzzle2d.brush.","brushEdgePrefix":"puzzle2d.brush.edge."}"#));
+    assert_eq!(edit::canvas::puzzle2d_board_scene("{}", &envelope, crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID).placement_naming.as_deref(), Some(r#"{"brushNodePrefix":"puzzle2d.brush.","brushEdgePrefix":"puzzle2d.brush.edge."}"#));
 }
 
 /// 💡️ LAW: the context menu offers the popup on ONE selected handle and on nothing else — the entry
@@ -1794,7 +1549,7 @@ fn the_initial_snapshot_costs_only_its_document() {
 #[test]
 fn snapshot_import_requires_the_explicit_payload_contract() {
     use crate::editor::puzzle2d::commands::import_snapshot::puzzle2d_import_value;
-    let vectors: semio_framework_pack_json::Value = semio_framework_pack_json::from_json_str(include_str!("../../🎮️commands/🧊️document/📥️import-snapshot/🧪️tests/🧫️fixtures/📄️payload-input/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("plain input examples");
+    let vectors: semio_framework_pack_json::Value = semio_framework_pack_json::from_json_str(fixture_text!("../../../../🎮️commands/🧊️document/📥️import-snapshot/🧪️tests/🧫️fixtures/📄️payload-input/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("plain input examples");
     for case in vectors["cases"].as_array().expect("input cases") {
         let result = puzzle2d_import_value(&case["args"]);
         assert_eq!(result.is_ok(), case["accepted"].as_bool().expect("acceptance"));

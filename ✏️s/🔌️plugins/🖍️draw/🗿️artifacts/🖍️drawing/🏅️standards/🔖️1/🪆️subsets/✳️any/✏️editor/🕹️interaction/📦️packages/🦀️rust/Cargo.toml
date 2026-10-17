@@ -15,6 +15,9 @@ workspace = true
 [lib]
 path = "../../🦀️.rs"
 
+[features]
+testkit = ["dep:serde", "semio-s-artifact-draw-drawing-geometry/testkit", "semio-s-artifact-draw-drawing-model/testkit", "semio-s-artifact-draw-drawing-mutations/testkit", "semio-s-artifact-draw-drawing-scene/testkit", "semio-s-artifact-draw-drawing-structure/testkit"]
+
 [dependencies]
 semio-framework-job-registry = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧵️job/🗄️registry/📦️packages/🦀️rust" }
 
@@ -41,11 +44,13 @@ semio-s-artifact-draw-drawing-model = { workspace = true }
 semio-s-artifact-draw-drawing-mutations = { workspace = true }
 semio-s-artifact-draw-drawing-scene = { workspace = true }
 semio-s-artifact-draw-drawing-structure = { workspace = true }
+serde = { workspace = true, optional = true }
 
 [dev-dependencies]
 blake3 = { workspace = true }
 semio-framework-async-macros = { workspace = true }
 semio-framework-os-kernel = { workspace = true, features = ["mutation-testing", "protocol-laws"] }
 semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
+semio-framework-test-fixtures = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 serde = { workspace = true }
 serde_json = { workspace = true }

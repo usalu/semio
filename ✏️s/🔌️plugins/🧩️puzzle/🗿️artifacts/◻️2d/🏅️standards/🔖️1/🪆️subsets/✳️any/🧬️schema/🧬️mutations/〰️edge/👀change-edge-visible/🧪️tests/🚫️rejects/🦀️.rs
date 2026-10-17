@@ -9,23 +9,24 @@
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
 use crate::standards::v1::subsets::any::schema::mutations::apply_puzzle2d_mutation;
 use crate::standards::v1::subsets::any::schema::mutations::{inverse_puzzle2d_mutation};
+use semio_framework_test_fixtures::fixture_text;
 
 use crate::Puzzle2dSnapshot;
 
-const BEFORE: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/👀change-edge-visible/🚫️rejects/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/👀change-edge-visible/🚫️rejects/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/👀change-edge-visible/🚫️rejects/🦠️mutation/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/👀change-edge-visible/🚫️rejects/🎯️outcome/🔣️.json");
-const DIFF_ABSENT: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/👀change-edge-visible/🚫️rejects/🔺️diff/🚫️.absent");
+static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/👀change-edge-visible/🚫️rejects/📸️snapshot/⬅️before/🔣️.json"));
+static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/👀change-edge-visible/🚫️rejects/📸️snapshot/➡️after/🔣️.json"));
+static MUTATION: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/👀change-edge-visible/🚫️rejects/🦠️mutation/🔣️.json"));
+static OUTCOME: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/👀change-edge-visible/🚫️rejects/🎯️outcome/🔣️.json"));
+static DIFF_ABSENT: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/👀change-edge-visible/🚫️rejects/🔺️diff/🚫️.absent"));
 
 fn before() -> Puzzle2dSnapshot {
-    serde_json::from_str(BEFORE).expect("before snapshot decodes")
+    serde_json::from_str((*BEFORE)).expect("before snapshot decodes")
 }
 fn expected_after() -> Puzzle2dSnapshot {
-    serde_json::from_str(AFTER).expect("after snapshot decodes")
+    serde_json::from_str((*AFTER)).expect("after snapshot decodes")
 }
 fn mutation() -> Puzzle2dMutation {
-    serde_json::from_str(MUTATION).expect("mutation decodes")
+    serde_json::from_str((*MUTATION)).expect("mutation decodes")
 }
 
 /// ▶️ A refused `change-edge-visible` still applies cleanly — its diff is the default one — and leaves the
@@ -42,7 +43,7 @@ fn rejection_leaves_the_document_at_the_committed_after() {
 /// its target address.
 #[test]
 fn the_refusal_is_the_declared_one() {
-    assert!(DIFF_ABSENT.is_empty(), "change-edge-visible/rejects-hiding-an-edge-the-board-never-held: the D6 sentinel 🔺️diff/🚫️.absent must stay empty");
+    assert!((*DIFF_ABSENT).is_empty(), "change-edge-visible/rejects-hiding-an-edge-the-board-never-held: the D6 sentinel 🔺️diff/🚫️.absent must stay empty");
     let produced = <Puzzle2dMutation as protocol::Mutation<Puzzle2dSnapshot>>::diff(&mutation(), &before());
     assert_eq!(
         produced.diff(),
@@ -66,21 +67,21 @@ fn inverse_of_a_refusal() {
 /// 🔣️ Both committed snapshots and the committed `change-edge-visible` payload are already canonical.
 #[test]
 fn committed_json_is_canonical() {
-    for (label, text) in [("before", BEFORE), ("after", AFTER)] {
+    for (label, text) in [("before", (*BEFORE)), ("after", (*AFTER))] {
         let decoded: Puzzle2dSnapshot = serde_json::from_str(text).expect("snapshot decodes");
         let reencoded = serde_json::to_value(&decoded).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "change-edge-visible/rejects-hiding-an-edge-the-board-never-held: committed {label} JSON is not canonical");
     }
     let reencoded = serde_json::to_value(mutation()).expect("mutation encodes");
-    let original: serde_json::Value = serde_json::from_str(MUTATION).expect("mutation reparses");
+    let original: serde_json::Value = serde_json::from_str((*MUTATION)).expect("mutation reparses");
     assert_eq!(reencoded, original, "change-edge-visible/rejects-hiding-an-edge-the-board-never-held: committed mutation JSON is not canonical");
 }
 
 /// 🎯️ The declared rejection — status, code and path — is exactly what the diff builder emits.
 #[test]
 fn declared_outcome_holds() {
-    let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
+    let outcome: serde_json::Value = serde_json::from_str((*OUTCOME)).expect("outcome decodes");
     assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("rejected"), "change-edge-visible/rejects-hiding-an-edge-the-board-never-held declares a rejected outcome");
     let produced = <Puzzle2dMutation as protocol::Mutation<Puzzle2dSnapshot>>::diff(&mutation(), &before());
     let message = produced.messages().first().expect("a rejected outcome carries a diagnostic");

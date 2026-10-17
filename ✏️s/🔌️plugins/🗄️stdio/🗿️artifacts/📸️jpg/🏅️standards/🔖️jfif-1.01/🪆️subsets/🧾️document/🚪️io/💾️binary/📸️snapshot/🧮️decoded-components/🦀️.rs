@@ -1,6 +1,6 @@
 //! 🧮️ Controlled native JPEG component projection before color conversion.
 
-use super::super::super::{JpgByteSource,JpgStepDecoder,parse_jpg_header};
+use crate::standards::v_jfif_1_01::subsets::document::io::{JpgByteSource,JpgStepDecoder,parse_jpg_header};
 use semio_framework_value::{ValueError,ValueRefusalKind};
 use std::cell::{Cell,RefCell};
 

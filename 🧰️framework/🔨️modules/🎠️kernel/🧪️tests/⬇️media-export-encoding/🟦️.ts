@@ -3,8 +3,8 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { mediaExportBytes, MediaExportEncodingError, MEDIA_EXPORT_BASE64_ENCODING, MEDIA_EXPORT_UTF8_ENCODING } from "../../🎬️media-export/🟦️.ts";
-import { base64StandardDecode, base64StandardEncode } from "../../../🚪️io/🔤️base64/🟦️.ts";
-import { wireEffectToFriendly, wireMediaExportEncoding } from "../../../🎭️actor/🖼️wire-turn/🟦️.ts";
+import { base64StandardDecode, base64StandardEncode } from "@semio-tech/framework-io-base64-ts";
+import { wireEffectToFriendly, wireMediaExportEncoding } from "@semio-tech/framework-actor/wire-turn";
 
 /** ⬇️ TypeScript twin of `🧪️tests/⬇️media-export-encoding/🦀️.rs`, driven from the SAME fixture
  * (`🧫️fixtures/⬇️media-export-encoding/🔣️.json`): a `downloadMediaExport` envelope's

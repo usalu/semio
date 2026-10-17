@@ -191,7 +191,7 @@ const DIAGRAM_VERTICAL_V_EXTRA = 1.0;
 const DIAGRAM_HORIZONTAL_SCALE = 3.0633;
 
 type FlattenPlane = { origin: [number, number, number]; xAxis: [number, number, number]; yAxis: [number, number, number] };
-type FlattenPose = { plane: FlattenPlane; center: [number, number, number]; orientation: [number, number, number, number] };
+type FlattenPose = { plane: FlattenPlane; center: [number, number]; orientation: [number, number, number, number] };
 
 type FlatObject = {
   id: string;
@@ -632,7 +632,7 @@ export function prepareTopologyModel(model: Puzzle5dComposeModel): Puzzle5dCompo
 
 //#region 🔖️Vitest
 if (import.meta.vitest) {
-  const { registerTests1 } = await import("../../🧪️tests/🧪️compose5d-preparetopologymodel/🟦️.tsx");
+  const { registerTests1 } = await import("@semio-tech/puzzle-js/testing/compose5d-preparetopologymodel");
   await registerTests1(import.meta.vitest, { PUZZLE_5D_TOPOLOGY_ICON_WIDTH, compose5d, prepareTopologyModel }, { directory: import.meta.dir, url: import.meta.url });
 }
 //#endregion 🔖️Vitest

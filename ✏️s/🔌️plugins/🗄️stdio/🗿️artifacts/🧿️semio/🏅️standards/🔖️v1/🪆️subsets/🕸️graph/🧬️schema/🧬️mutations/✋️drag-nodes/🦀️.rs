@@ -3,7 +3,6 @@
 //! are the payload, so editing the drag in history re-derives every position from whatever base it replays on. Editors that
 //! compose this subset as their content child (dag, reasoning/wires) yield one per node drag.
 
-use crate::schema::mutations::SemioGraphMutation;
 use crate::schema::snapshot::{GraphNodeId, SemioGraphSnapshot};
 
 //#region 🔖️Payload
@@ -17,13 +16,16 @@ pub struct DragNodes {
     pub dy: f64,
 }
 
-impl protocol::MutationKind<SemioGraphSnapshot, SemioGraphMutation> for DragNodes {
+impl<Op> protocol::MutationKind<SemioGraphSnapshot, Op> for DragNodes
+where
+    Op: protocol::Mutation<SemioGraphSnapshot, Diff = crate::schema::diff::SemioGraphDiff> + From<DragNodes> + From<crate::schema::mutations::move_node::MoveNode>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "drag", entity: "nodes", kind: "drag-nodes", record: "DraggedNodes" };
 
-    fn diff(&self, base: &SemioGraphSnapshot) -> protocol::MutationOutcome<<SemioGraphMutation as protocol::Mutation<SemioGraphSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioGraphSnapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<SemioGraphSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &SemioGraphSnapshot) -> Result<Vec<SemioGraphMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &SemioGraphSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

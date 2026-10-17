@@ -1,6 +1,5 @@
 //! 📑️ Authoritative PDF mutation payload, diff, inverse, and tests for `set-outlines`.
 
-use super::PdfMutation;
 use crate::standards::v1_7::subsets::base::schema::diff::{self, PdfDiff};
 use crate::standards::v1_7::subsets::base::schema::snapshot::*;
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
@@ -14,7 +13,10 @@ pub struct SetOutlines {
     pub outlines: Vec<PdfOutlineItem>,
 }
 
-impl MutationKind<PdfSnapshot, PdfMutation> for SetOutlines {
+impl<Op> MutationKind<PdfSnapshot, Op> for SetOutlines
+where
+    Op: protocol::Mutation<PdfSnapshot, Diff = PdfDiff> + From<SetOutlines>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "outlines", kind: "set-outlines", record: "Set" };
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
@@ -22,10 +24,10 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetOutlines {
         MutationOutcome::new(diff::diff_set_outlines(base, &self.outlines))
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
         let _ = base;
-        vec![PdfMutation::SetOutlines(SetOutlines { outlines: base.outlines.clone() })]
+        vec![Op::from(SetOutlines { outlines: base.outlines.clone() })]
     
     })())
 }
@@ -42,8 +44,6 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetOutlines {
 //#endregion 🔖️Mutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
 

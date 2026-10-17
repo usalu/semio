@@ -1,4 +1,12 @@
-use super::*;
+use crate::editor::json_i_json::modes::edit::windows::main;
+use crate::{JsonMutation, JsonSnapshot, STDIO_JSON_DOCUMENT_SCHEMA};
+use semio_framework_plugin::ArtifactEditor;
+use semio_framework_plugin::Editor;
+use semio_framework_plugin::EditorApp;
+use semio_framework_plugin::Fault;
+use semio_framework_plugin::InteractiveJobClassification;
+use crate::editor::json_i_json::{decode_path_id, JSON_I_JSON_KIT_ACTION_ID, json_i_json_example_snapshot, json_i_json_command_from_action, json_i_json_emit};
+use crate::editor::json_i_json::*;
 use crate::schema::snapshot::JsonValue;
 
 /// 🧬️ Registers the document schema json's declaration contributes (`.schema(json_artifact_schema_descriptor())`) — the

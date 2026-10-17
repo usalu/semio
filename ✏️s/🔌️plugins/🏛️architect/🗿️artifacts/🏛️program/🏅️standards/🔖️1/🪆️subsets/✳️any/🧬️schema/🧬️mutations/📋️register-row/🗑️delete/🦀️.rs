@@ -2,8 +2,8 @@
 //! register catalog generated from the `x-semio-collection-catalog` of `📸️snapshot/🔣️.json`.
 
 use crate::standards::v1::subsets::any::schema::kernel::EntityId;
-use crate::standards::v1::subsets::any::schema::registers::RegisterKey;
-use crate::standards::v1::subsets::any::schema::{diff::ProgramDiff, mutations::ProgramMutation, snapshot::ProgramSnapshot};
+use crate::standards::v1::subsets::any::schema::registers::catalog::RegisterKey;
+use crate::standards::v1::subsets::any::schema::{diff::ProgramDiff, snapshot::ProgramSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 
 /// 🗑️ Removes one row, addressed by register and id; `↩️inverse` recreates it at its position.
@@ -18,12 +18,15 @@ pub struct DeleteRegisterRow {
     pub id: EntityId,
 }
 
-impl MutationKind<ProgramSnapshot, ProgramMutation> for DeleteRegisterRow {
+impl<Op> MutationKind<ProgramSnapshot, Op> for DeleteRegisterRow
+where
+    Op: protocol::Mutation<ProgramSnapshot, Diff = ProgramDiff> + From<DeleteRegisterRow> + From<crate::standards::v1::subsets::any::schema::mutations::create_register_row::CreateRegisterRow>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "register-row", kind: "delete-register-row", record: "DeletedRegisterRow" };
     fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &ProgramSnapshot) -> Result<Vec<ProgramMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &ProgramSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {

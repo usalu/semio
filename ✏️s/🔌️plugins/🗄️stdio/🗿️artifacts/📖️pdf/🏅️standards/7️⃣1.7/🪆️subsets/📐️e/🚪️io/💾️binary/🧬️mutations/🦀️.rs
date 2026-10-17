@@ -75,38 +75,26 @@ impl OpBinary for PdfEMutation {
 }
 //#endregion 🧱️Framing
 
-#[path = "🏳️set-output-intent/🦀️.rs"]
-pub mod set_output_intent;
+pub use semio_s_artifact_stdio_pdf_mut_family_6::standards::v1_7::subsets::e::io::binary::mutations::set_output_intent;
 
-#[path = "⏹️remove-media-annotation/🦀️.rs"]
-pub mod remove_media_annotation;
+pub use semio_s_artifact_stdio_pdf_mut_family_6::standards::v1_7::subsets::e::io::binary::mutations::remove_media_annotation;
 
-#[path = "🛬️remove-launch-action/🦀️.rs"]
-pub mod remove_launch_action;
+pub use semio_s_artifact_stdio_pdf_mut_family_6::standards::v1_7::subsets::e::io::binary::mutations::remove_launch_action;
 
-#[path = "🎬️insert-media-annotation/🦀️.rs"]
-pub mod insert_media_annotation;
+pub use semio_s_artifact_stdio_pdf_mut_family_6::standards::v1_7::subsets::e::io::binary::mutations::insert_media_annotation;
 
-#[path = "🚫️remove-javascript-action/🦀️.rs"]
-pub mod remove_javascript_action;
+pub use semio_s_artifact_stdio_pdf_mut_family_6::standards::v1_7::subsets::e::io::binary::mutations::remove_javascript_action;
 
-#[path = "🔒️insert-encryption-dictionary/🦀️.rs"]
-pub mod insert_encryption_dictionary;
+pub use semio_s_artifact_stdio_pdf_mut_family_6::standards::v1_7::subsets::e::io::binary::mutations::insert_encryption_dictionary;
 
-#[path = "🧺️remove-font-file/🦀️.rs"]
-pub mod remove_font_file;
+pub use semio_s_artifact_stdio_pdf_mut_family_6::standards::v1_7::subsets::e::io::binary::mutations::remove_font_file;
 
-#[path = "📜️insert-javascript-action/🦀️.rs"]
-pub mod insert_javascript_action;
+pub use semio_s_artifact_stdio_pdf_mut_family_6::standards::v1_7::subsets::e::io::binary::mutations::insert_javascript_action;
 
-#[path = "🔓️remove-encryption-dictionary/🦀️.rs"]
-pub mod remove_encryption_dictionary;
+pub use semio_s_artifact_stdio_pdf_mut_family_6::standards::v1_7::subsets::e::io::binary::mutations::remove_encryption_dictionary;
 
-#[path = "🔤️embed-font-file/🦀️.rs"]
-pub mod embed_font_file;
+pub use semio_s_artifact_stdio_pdf_mut_family_6::standards::v1_7::subsets::e::io::binary::mutations::embed_font_file;
 
-#[path = "🧽️remove-output-intent/🦀️.rs"]
-pub mod remove_output_intent;
+pub use semio_s_artifact_stdio_pdf_mut_family_6::standards::v1_7::subsets::e::io::binary::mutations::remove_output_intent;
 
-#[path = "🚀️insert-launch-action/🦀️.rs"]
-pub mod insert_launch_action;
+pub use semio_s_artifact_stdio_pdf_mut_family_6::standards::v1_7::subsets::e::io::binary::mutations::insert_launch_action;

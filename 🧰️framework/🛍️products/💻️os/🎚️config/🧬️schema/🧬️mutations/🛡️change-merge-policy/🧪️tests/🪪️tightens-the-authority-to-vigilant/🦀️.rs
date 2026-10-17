@@ -15,12 +15,13 @@
 //! `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`); the derived encodings come from `fixtures generate`.
 
 use super::{MergePolicyConfigMutation, MergePolicyDiff, MergePolicySetting};
+use semio_framework_test_fixtures::fixture_path;
 
-static BEFORE: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🧫️fixtures/🧬️mutations/🛡️change-merge-policy/🪪️tightens-the-authority-to-vigilant/📸️snapshot/⬅️before/🔣️.json")).expect("fixture"));
-static AFTER: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🧫️fixtures/🧬️mutations/🛡️change-merge-policy/🪪️tightens-the-authority-to-vigilant/📸️snapshot/➡️after/🔣️.json")).expect("fixture"));
-static MUTATION: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🧫️fixtures/🧬️mutations/🛡️change-merge-policy/🪪️tightens-the-authority-to-vigilant/🦠️mutation/🔣️.json")).expect("fixture"));
-static DIFF: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🧫️fixtures/🧬️mutations/🛡️change-merge-policy/🪪️tightens-the-authority-to-vigilant/🔺️diff/🔣️.json")).expect("fixture"));
-static OUTCOME: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🧫️fixtures/🧬️mutations/🛡️change-merge-policy/🪪️tightens-the-authority-to-vigilant/🎯️outcome/🔣️.json")).expect("fixture"));
+static BEFORE: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(fixture_path!("../../../🧫️fixtures/🧬️mutations/🛡️change-merge-policy/🪪️tightens-the-authority-to-vigilant/📸️snapshot/⬅️before/🔣️.json")).expect("fixture"));
+static AFTER: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(fixture_path!("../../../🧫️fixtures/🧬️mutations/🛡️change-merge-policy/🪪️tightens-the-authority-to-vigilant/📸️snapshot/➡️after/🔣️.json")).expect("fixture"));
+static MUTATION: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(fixture_path!("../../../🧫️fixtures/🧬️mutations/🛡️change-merge-policy/🪪️tightens-the-authority-to-vigilant/🦠️mutation/🔣️.json")).expect("fixture"));
+static DIFF: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(fixture_path!("../../../🧫️fixtures/🧬️mutations/🛡️change-merge-policy/🪪️tightens-the-authority-to-vigilant/🔺️diff/🔣️.json")).expect("fixture"));
+static OUTCOME: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(fixture_path!("../../../🧫️fixtures/🧬️mutations/🛡️change-merge-policy/🪪️tightens-the-authority-to-vigilant/🎯️outcome/🔣️.json")).expect("fixture"));
 
 fn before() -> MergePolicySetting {
     semio_framework_pack_json::from_json_str(BEFORE.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before merge-policy setting decodes")

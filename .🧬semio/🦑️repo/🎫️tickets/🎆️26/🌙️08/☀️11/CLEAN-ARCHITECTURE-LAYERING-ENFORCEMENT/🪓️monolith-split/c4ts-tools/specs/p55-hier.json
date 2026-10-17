@@ -1,0 +1,40 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/📓️print/🧬️schema/💡️inferences/🌳hierarchy/🟦️.ts",
+ "importers": "auto",
+ "allowManual": [
+  "export * from parent"
+ ],
+ "children": [
+  {
+   "dir": "🌲️tidy-tree-and-cluster",
+   "doc": "/** 🌲️ The Reingold–Tilford/Buchheim tidy tree and the dendrogram cluster layouts of the print hierarchy twin. */",
+   "lines": [
+    [
+     232,
+     460
+    ]
+   ]
+  },
+  {
+   "dir": "🧱️treemap-tilings-and-partition",
+   "doc": "/** 🧱️ The six treemap tilings, the treemap layout and the icicle partition of the print hierarchy twin. */",
+   "lines": [
+    [
+     464,
+     760
+    ]
+   ]
+  },
+  {
+   "dir": "🫧️circle-packing",
+   "doc": "/** 🫧️ The Welzl circle packing of the print hierarchy twin: sibling placement, enclosing circles and the seeded pack layout. */",
+   "lines": [
+    [
+     764,
+     1018
+    ]
+   ]
+  }
+ ],
+ "childrenImportParent": true
+}

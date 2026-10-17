@@ -21,5 +21,4 @@ fn controlled_json_refusal_preserves_real_kind_and_nested_path() {
     }
     assert_eq!(JsonError::TrailingData(4).kind(), ValueRefusalKind::InvalidValue);
     assert_eq!(JsonError::MaxDepthExceeded(128).kind(), ValueRefusalKind::DepthLimit);
-    println!("[DEBUG] controlled JSON preserves malformed input, cancellation, ownership refusal and nested authority paths");
 }

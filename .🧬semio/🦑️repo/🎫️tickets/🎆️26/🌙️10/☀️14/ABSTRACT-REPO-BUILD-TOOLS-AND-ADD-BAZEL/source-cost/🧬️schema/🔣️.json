@@ -1,0 +1,932 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "schema://ticket/source-control-lineage-cost",
+  "definitions": {
+    "Protocol": {
+      "const": {
+        "version": 1,
+        "scope": "source-only-genuine-controls-and-modeled-private-publisher-admission",
+        "maximumOriginalMilliseconds": 120000,
+        "maximumPhaseMilliseconds": 55000,
+        "maximumTestMilliseconds": 65000,
+        "controlCalls": 4096,
+        "publisherObserverCalls": 4096,
+        "progressEvents": 256,
+        "continuations": 64,
+        "maximumSynchronousCallsPerGroup": 64,
+        "cleanupReserveMilliseconds": 10000,
+        "nativeEffects": 0,
+        "productionEdits": false
+      }
+    },
+    "Variant": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "controlDepth",
+        "funding"
+      ],
+      "properties": {
+        "id": {
+          "enum": [
+            "flat",
+            "child",
+            "grandchild",
+            "scratch-funded"
+          ]
+        },
+        "controlDepth": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 3
+        },
+        "funding": {
+          "enum": [
+            "none",
+            "actual-artifact-scratch"
+          ]
+        }
+      }
+    },
+    "Metric": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "attemptedCalls",
+        "completedCalls",
+        "groups",
+        "totalMilliseconds",
+        "maximumGroupMilliseconds"
+      ],
+      "properties": {
+        "attemptedCalls": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "completedCalls": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "groups": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "totalMilliseconds": {
+          "type": "number",
+          "minimum": 0
+        },
+        "maximumGroupMilliseconds": {
+          "type": "number",
+          "minimum": 0
+        }
+      }
+    },
+    "PublisherMetric": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "observer",
+        "directPhase",
+        "writerProof",
+        "ancestorStat",
+        "backingStat",
+        "rootStat",
+        "actualAncestorDepth",
+        "admission"
+      ],
+      "properties": {
+        "observer": {
+          "$ref": "#/definitions/Metric"
+        },
+        "directPhase": {
+          "$ref": "#/definitions/Metric"
+        },
+        "writerProof": {
+          "$ref": "#/definitions/Metric"
+        },
+        "ancestorStat": {
+          "$ref": "#/definitions/Metric"
+        },
+        "backingStat": {
+          "$ref": "#/definitions/Metric"
+        },
+        "rootStat": {
+          "$ref": "#/definitions/Metric"
+        },
+        "actualAncestorDepth": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 64
+        },
+        "admission": {
+          "const": "explicit-source-private-registry-token-stage-mapping-model"
+        }
+      }
+    },
+    "VariantResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "controlDepth",
+        "completed",
+        "requireIssued",
+        "checkControl",
+        "remaining",
+        "leasePath",
+        "publish",
+        "yield",
+        "proof",
+        "publisher",
+        "elapsedSincePhaseStartMilliseconds",
+        "remainingBeforeMilliseconds",
+        "remainingAfterMilliseconds",
+        "orchestrationContinuations"
+      ],
+      "properties": {
+        "requireIssued": {
+          "$ref": "#/definitions/Metric"
+        },
+        "checkControl": {
+          "$ref": "#/definitions/Metric"
+        },
+        "remaining": {
+          "$ref": "#/definitions/Metric"
+        },
+        "leasePath": {
+          "$ref": "#/definitions/Metric"
+        },
+        "publish": {
+          "$ref": "#/definitions/Metric"
+        },
+        "yield": {
+          "$ref": "#/definitions/Metric"
+        },
+        "proof": {
+          "$ref": "#/definitions/Metric"
+        },
+        "id": {
+          "enum": [
+            "flat",
+            "child",
+            "grandchild",
+            "scratch-funded"
+          ]
+        },
+        "controlDepth": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 3
+        },
+        "completed": {
+          "type": "boolean"
+        },
+        "publisher": {
+          "$ref": "#/definitions/PublisherMetric"
+        },
+        "elapsedSincePhaseStartMilliseconds": {
+          "type": "number",
+          "minimum": 0
+        },
+        "remainingBeforeMilliseconds": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "remainingAfterMilliseconds": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "orchestrationContinuations": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "FaultCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "fault",
+        "expectedAdmission",
+        "expectedEffects",
+        "expectedPrimary",
+        "cleanupFault"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "fault": {
+          "enum": [
+            "none",
+            "copied-control",
+            "cancel-before",
+            "cancel-after-first-group",
+            "undefined-body",
+            "frozen-body",
+            "expired",
+            "undefined-body-cleanup",
+            "frozen-body-cleanup"
+          ]
+        },
+        "expectedAdmission": {
+          "type": "boolean"
+        },
+        "expectedEffects": {
+          "enum": [
+            "bounded",
+            "zero",
+            "first-group-only"
+          ]
+        },
+        "expectedPrimary": {
+          "enum": [
+            "value",
+            "exact-refusal",
+            "exact-abort-reason",
+            "exact-body-value",
+            "deadline-refusal",
+            "body-first-cleanup-aggregate"
+          ]
+        },
+        "cleanupFault": {
+          "enum": [
+            "none",
+            "after-real-remove-frozen"
+          ]
+        }
+      }
+    },
+    "SourceFact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "sha256",
+        "bytes",
+        "device",
+        "inode",
+        "modifiedNanoseconds",
+        "changedNanoseconds"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "device": {
+          "type": "string",
+          "pattern": "^-?[0-9]+$",
+          "maxLength": 64
+        },
+        "inode": {
+          "type": "string",
+          "pattern": "^-?[0-9]+$",
+          "maxLength": 64
+        },
+        "modifiedNanoseconds": {
+          "type": "string",
+          "pattern": "^-?[0-9]+$",
+          "maxLength": 64
+        },
+        "changedNanoseconds": {
+          "type": "string",
+          "pattern": "^-?[0-9]+$",
+          "maxLength": 64
+        }
+      }
+    },
+    "Custody": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "active",
+        "unresolved"
+      ],
+      "properties": {
+        "active": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 32
+        },
+        "unresolved": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 32
+        }
+      }
+    },
+    "ProgressTranscript": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "expectedFrames",
+        "matchedFrames",
+        "matchedBytes",
+        "complete"
+      ],
+      "properties": {
+        "expectedFrames": {
+          "const": 1024
+        },
+        "matchedFrames": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1024
+        },
+        "matchedBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1048576
+        },
+        "complete": {
+          "type": "boolean"
+        }
+      }
+    },
+    "Result": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "protocol",
+        "sources",
+        "rows",
+        "completed",
+        "terminal",
+        "phaseElapsedMilliseconds",
+        "remainingMilliseconds",
+        "progressTranscript",
+        "writerAcquired",
+        "writerReleased",
+        "descriptorCustody",
+        "cleanupFailures",
+        "nativeEffects"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "protocol": {
+          "$ref": "#/definitions/Protocol"
+        },
+        "sources": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 32,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/definitions/SourceFact"
+          }
+        },
+        "rows": {
+          "type": "array",
+          "maxItems": 4,
+          "items": {
+            "$ref": "#/definitions/VariantResult"
+          }
+        },
+        "completed": {
+          "type": "boolean"
+        },
+        "terminal": {
+          "type": "string",
+          "maxLength": 1024
+        },
+        "phaseElapsedMilliseconds": {
+          "type": "number",
+          "minimum": 0
+        },
+        "remainingMilliseconds": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "progressTranscript": {
+          "$ref": "#/definitions/ProgressTranscript"
+        },
+        "writerAcquired": {
+          "type": "boolean"
+        },
+        "writerReleased": {
+          "type": "boolean"
+        },
+        "descriptorCustody": {
+          "$ref": "#/definitions/Custody"
+        },
+        "cleanupFailures": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 32
+        },
+        "nativeEffects": {
+          "const": 0
+        }
+      }
+    },
+    "PrecedenceCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "order",
+        "expectedIssuedFirst",
+        "expectedGenericFirst"
+      ],
+      "properties": {
+        "id": {
+          "enum": [
+            "none",
+            "child",
+            "parent",
+            "child-then-parent",
+            "parent-then-child",
+            "same-reason"
+          ]
+        },
+        "order": {
+          "type": "array",
+          "maxItems": 2,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "child",
+              "parent"
+            ]
+          }
+        },
+        "expectedIssuedFirst": {
+          "enum": [
+            "none",
+            "child",
+            "parent",
+            "shared"
+          ]
+        },
+        "expectedGenericFirst": {
+          "enum": [
+            "none",
+            "child",
+            "parent",
+            "shared"
+          ]
+        }
+      }
+    },
+    "PrecedenceSuite": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "protocol",
+        "cases"
+      ],
+      "properties": {
+        "protocol": {
+          "const": {
+            "version": 1,
+            "scope": "genuine-cancellation-precedence-no-filesystem-effects",
+            "maximumOriginalMilliseconds": 120000,
+            "maximumPhaseMilliseconds": 10000,
+            "nativeEffects": 0
+          }
+        },
+        "cases": {
+          "type": "array",
+          "const": [
+            {
+              "id": "none",
+              "order": [],
+              "expectedIssuedFirst": "none",
+              "expectedGenericFirst": "none"
+            },
+            {
+              "id": "child",
+              "order": [
+                "child"
+              ],
+              "expectedIssuedFirst": "child",
+              "expectedGenericFirst": "child"
+            },
+            {
+              "id": "parent",
+              "order": [
+                "parent"
+              ],
+              "expectedIssuedFirst": "parent",
+              "expectedGenericFirst": "parent"
+            },
+            {
+              "id": "child-then-parent",
+              "order": [
+                "child",
+                "parent"
+              ],
+              "expectedIssuedFirst": "parent",
+              "expectedGenericFirst": "child"
+            },
+            {
+              "id": "parent-then-child",
+              "order": [
+                "parent",
+                "child"
+              ],
+              "expectedIssuedFirst": "parent",
+              "expectedGenericFirst": "parent"
+            },
+            {
+              "id": "same-reason",
+              "order": [
+                "child",
+                "parent"
+              ],
+              "expectedIssuedFirst": "shared",
+              "expectedGenericFirst": "shared"
+            }
+          ],
+          "items": {
+            "$ref": "#/definitions/PrecedenceCase"
+          }
+        }
+      }
+    },
+    "NameSelectionCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "names",
+        "expected"
+      ],
+      "properties": {
+        "id": {
+          "enum": [
+            "ascii",
+            "unicode",
+            "replacement-ties",
+            "duplicate",
+            "empty",
+            "maximum-units"
+          ]
+        },
+        "names": {
+          "type": "array",
+          "maxItems": 2048,
+          "items": {
+            "type": "string",
+            "maxLength": 256
+          }
+        },
+        "expected": {
+          "enum": [
+            "complete",
+            "duplicate"
+          ]
+        }
+      }
+    },
+    "NameSelectionSuite": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "protocol",
+        "cases"
+      ],
+      "properties": {
+        "protocol": {
+          "const": {
+            "version": 1,
+            "scope": "actual-pure-directory-selection-utf8-attribution-no-filesystem-effects",
+            "window": 64,
+            "widths": [
+              64,
+              128,
+              256,
+              512,
+              2048
+            ],
+            "maximumNameUnits": 256,
+            "maximumUtf8BytesPerName": 768,
+            "maximumRetainedLogicalNames": 64,
+            "nativeEffects": 0,
+            "maximumPhaseMilliseconds": 10000,
+            "maximumSelectedKeyBytes": 49152,
+            "maximumAllKeyBytes": 50688
+          }
+        },
+        "cases": {
+          "type": "array",
+          "const": [
+            {
+              "id": "ascii",
+              "names": [
+                "z",
+                "a",
+                "A",
+                "aa",
+                "0",
+                "b"
+              ],
+              "expected": "complete"
+            },
+            {
+              "id": "unicode",
+              "names": [
+                "\u00e9",
+                "e\u0301",
+                "a",
+                "\ud83d\ude00",
+                "\u00df",
+                "\u4e2d",
+                "Z",
+                "\ud83d\ude80",
+                "\u03a9"
+              ],
+              "expected": "complete"
+            },
+            {
+              "id": "replacement-ties",
+              "names": [
+                "\ud800",
+                "\ufffd",
+                "\udc00",
+                "a",
+                "\ud801"
+              ],
+              "expected": "complete"
+            },
+            {
+              "id": "duplicate",
+              "names": [
+                "b",
+                "a",
+                "a"
+              ],
+              "expected": "duplicate"
+            },
+            {
+              "id": "empty",
+              "names": [],
+              "expected": "complete"
+            },
+            {
+              "id": "maximum-units",
+              "names": [
+                "\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9",
+                "\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00",
+                "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                "\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d"
+              ],
+              "expected": "complete"
+            }
+          ],
+          "items": {
+            "$ref": "#/definitions/NameSelectionCase"
+          }
+        }
+      }
+    },
+    "IdentitySuite": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "protocol",
+        "cases"
+      ],
+      "properties": {
+        "protocol": {
+          "const": {
+            "maximumPhaseMilliseconds": 55000,
+            "maximumRows": 129,
+            "maximumAncestors": 64,
+            "maximumDirectories": 65,
+            "maximumRepeats": 8,
+            "rootMicroIterations": 4096,
+            "nativeEffects": 0,
+            "productionEdits": false
+          }
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 31,
+          "maxItems": 64,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "rows",
+              "repeats",
+              "contents",
+              "field",
+              "delta",
+              "fault",
+              "expected"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 64
+              },
+              "rows": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 129
+              },
+              "repeats": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 8
+              },
+              "contents": {
+                "enum": [
+                  "identity",
+                  "stamp",
+                  "mixed",
+                  "physical-bound"
+                ]
+              },
+              "field": {
+                "enum": [
+                  "none",
+                  "dev",
+                  "ino",
+                  "mode",
+                  "uid",
+                  "gid",
+                  "size",
+                  "nlink",
+                  "mtimeNs",
+                  "ctimeNs"
+                ]
+              },
+              "delta": {
+                "enum": [
+                  0,
+                  1
+                ]
+              },
+              "fault": {
+                "enum": [
+                  "none",
+                  "pre-io-undefined",
+                  "post-check-frozen",
+                  "lstat-frozen"
+                ]
+              },
+              "expected": {
+                "enum": [
+                  "success",
+                  "physical-change",
+                  "undefined",
+                  "frozen"
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "protocol",
+    "variants",
+    "faultCases"
+  ],
+  "properties": {
+    "protocol": {
+      "$ref": "#/definitions/Protocol"
+    },
+    "variants": {
+      "type": "array",
+      "const": [
+        {
+          "id": "flat",
+          "controlDepth": 1,
+          "funding": "none"
+        },
+        {
+          "id": "child",
+          "controlDepth": 2,
+          "funding": "none"
+        },
+        {
+          "id": "grandchild",
+          "controlDepth": 3,
+          "funding": "none"
+        },
+        {
+          "id": "scratch-funded",
+          "controlDepth": 2,
+          "funding": "actual-artifact-scratch"
+        }
+      ],
+      "items": {
+        "$ref": "#/definitions/Variant"
+      }
+    },
+    "faultCases": {
+      "type": "array",
+      "minItems": 9,
+      "maxItems": 9,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/definitions/FaultCase"
+      },
+      "const": [
+        {
+          "id": "ordinary",
+          "fault": "none",
+          "expectedAdmission": true,
+          "expectedEffects": "bounded",
+          "expectedPrimary": "value",
+          "cleanupFault": "none"
+        },
+        {
+          "id": "copied-control",
+          "fault": "copied-control",
+          "expectedAdmission": false,
+          "expectedEffects": "zero",
+          "expectedPrimary": "exact-refusal",
+          "cleanupFault": "none"
+        },
+        {
+          "id": "cancel-before",
+          "fault": "cancel-before",
+          "expectedAdmission": false,
+          "expectedEffects": "zero",
+          "expectedPrimary": "exact-abort-reason",
+          "cleanupFault": "none"
+        },
+        {
+          "id": "cancel-after-first-group",
+          "fault": "cancel-after-first-group",
+          "expectedAdmission": false,
+          "expectedEffects": "first-group-only",
+          "expectedPrimary": "exact-abort-reason",
+          "cleanupFault": "none"
+        },
+        {
+          "id": "undefined-body",
+          "fault": "undefined-body",
+          "expectedAdmission": false,
+          "expectedEffects": "zero",
+          "expectedPrimary": "exact-body-value",
+          "cleanupFault": "none"
+        },
+        {
+          "id": "frozen-body",
+          "fault": "frozen-body",
+          "expectedAdmission": false,
+          "expectedEffects": "zero",
+          "expectedPrimary": "exact-body-value",
+          "cleanupFault": "none"
+        },
+        {
+          "id": "expired",
+          "fault": "expired",
+          "expectedAdmission": false,
+          "expectedEffects": "zero",
+          "expectedPrimary": "deadline-refusal",
+          "cleanupFault": "none"
+        },
+        {
+          "id": "undefined-body-cleanup",
+          "fault": "undefined-body-cleanup",
+          "expectedAdmission": false,
+          "expectedEffects": "zero",
+          "expectedPrimary": "body-first-cleanup-aggregate",
+          "cleanupFault": "after-real-remove-frozen"
+        },
+        {
+          "id": "frozen-body-cleanup",
+          "fault": "frozen-body-cleanup",
+          "expectedAdmission": false,
+          "expectedEffects": "zero",
+          "expectedPrimary": "body-first-cleanup-aggregate",
+          "cleanupFault": "after-real-remove-frozen"
+        }
+      ]
+    }
+  }
+}

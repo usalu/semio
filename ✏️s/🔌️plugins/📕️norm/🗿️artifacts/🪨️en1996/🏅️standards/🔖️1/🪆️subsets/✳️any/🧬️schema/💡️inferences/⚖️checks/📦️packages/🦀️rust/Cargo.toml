@@ -23,6 +23,7 @@ semio-framework-value-derive = { workspace = true }
 [dev-dependencies]
 pack = { workspace = true }
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-framework-test-fixtures = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-framework-value = { workspace = true }
 semio-s-artifact-norm-en1996-editor = { workspace = true }
 semio-s-artifact-norm-en1996-io = { workspace = true }

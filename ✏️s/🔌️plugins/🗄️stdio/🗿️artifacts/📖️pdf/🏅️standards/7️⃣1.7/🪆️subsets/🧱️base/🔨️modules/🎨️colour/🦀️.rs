@@ -4,8 +4,8 @@
 //! stream (sampled/PostScript functions, ICC profiles, mesh shadings, tiling patterns).
 
 use crate::standards::v1_7::subsets::base::modules::lexer::{dict_f64, dict_get, dict_i64, dict_name};
-use crate::standards::v1_7::subsets::base::io::{PResult, PdfEngineError};
-use super::xref::ObjectSink;
+use crate::standards::v1_7::subsets::base::io::error::{PResult, PdfEngineError};
+use crate::standards::v1_7::subsets::base::modules::xref::ObjectSink;
 use crate::standards::v1_7::subsets::base::io::foreign_artifacts::{NativePdfArtifactResources, PdfArtifactResourcePort};
 use crate::standards::v1_7::subsets::base::schema::stream_roles::PdfStreamRoleValue;
 use crate::standards::v1_7::subsets::base::schema::graph_source::ObjectSource;
@@ -476,7 +476,5 @@ pub fn lower_ext_g_state(state: &PdfExtGState, sink: &mut dyn ObjectSink, form_r
 //#endregion 🔖️ExtGState
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

@@ -16,6 +16,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-s-artifact-puzzle-3d-commands-runtime-2 = { path = "../../🪜️runtime-2/📦️packages/🦀️rust" }
 semio-framework = { workspace = true }
 semio-framework-job = { workspace = true }
 semio-framework-os-kernel = { workspace = true }

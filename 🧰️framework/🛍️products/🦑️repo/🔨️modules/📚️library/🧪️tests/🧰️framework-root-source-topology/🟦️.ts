@@ -8,6 +8,7 @@ import { classifyPackageSource, semanticDirectoryKindId } from "../../🔍️dis
 type Move = Readonly<{ source: string; owner: string; kind: "rust" | "typescript"; anchor: string; consumer: string }>;
 type NodePackage = Readonly<{ manifest: string; entry: string; name: string; maximumEntryLines: number; testOwner: string; vitestConfig: string }>;
 type Fixture = Readonly<{
+  version: number;
   moves: readonly Move[];
   packages: Readonly<{ rust: Readonly<{ manifest: string; entry: string; name: string; feature: string; maximumEntryLines: number }>; typescript: NodePackage }>;
   directoryContexts: readonly Readonly<{ name: string; parentKind: string; kind: string }>[];

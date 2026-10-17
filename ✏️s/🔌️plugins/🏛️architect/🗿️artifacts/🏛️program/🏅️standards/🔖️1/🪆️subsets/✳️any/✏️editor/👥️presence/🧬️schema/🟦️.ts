@@ -32,6 +32,10 @@ type architectArchitectPresenceGuardSizeBounds = { readonly minItems?: number; r
 
 export const architectArchitectPresenceGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : architectArchitectPresenceGuardReject(at, "value is not an object");
+export const architectArchitectPresenceGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) architectArchitectPresenceGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const architectArchitectPresenceGuardArray = (value: unknown, at: string, bounds: architectArchitectPresenceGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return architectArchitectPresenceGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) architectArchitectPresenceGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -62,7 +66,7 @@ export const architectArchitectPresenceGuardConstant = <T extends string | numbe
 //#endregion 🚪️Parsers
 
 export function parseArchitectPresence(value: unknown, at = "$"): ArchitectPresence {
-  const row = architectArchitectPresenceGuardObject(value, at);
+  const row = architectArchitectPresenceGuardClosed(architectArchitectPresenceGuardObject(value, at), at, ["activeRegister", "adjacencyKindFilter", "graphCameraX", "graphCameraY", "graphCameraZoom"]);
   return {
     activeRegister: architectArchitectPresenceGuardString(row["activeRegister"], `${at}.activeRegister`),
     adjacencyKindFilter: row["adjacencyKindFilter"] === undefined ? undefined : architectArchitectPresenceGuardMember(row["adjacencyKindFilter"], `${at}.adjacencyKindFilter`, ["required", "preferred", "optional", "prohibited"] as const),

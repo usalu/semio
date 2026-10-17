@@ -1,6 +1,5 @@
 //! 🧨️ `delete-mesh` — clears the object's `mesh` CHILD slot. Idempotent; inverse escrows from BASE.
 
-use crate::schema::mutations::SemioObjectMutation;
 use crate::schema::snapshot::SemioObjectSnapshot;
 
 //#region 🔖️Payload
@@ -10,13 +9,16 @@ use crate::schema::snapshot::SemioObjectSnapshot;
 #[value(deny_unknown_fields)]
 pub struct DeleteMesh {}
 
-impl protocol::MutationKind<SemioObjectSnapshot, SemioObjectMutation> for DeleteMesh {
+impl<Op> protocol::MutationKind<SemioObjectSnapshot, Op> for DeleteMesh
+where
+    Op: protocol::Mutation<SemioObjectSnapshot, Diff = crate::schema::diff::SemioObjectDiff> + From<DeleteMesh> + From<crate::schema::mutations::create_mesh::CreateMesh>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "mesh", kind: "delete-mesh", record: "DeletedMesh" };
 
-    fn diff(&self, base: &SemioObjectSnapshot) -> protocol::MutationOutcome<<SemioObjectMutation as protocol::Mutation<SemioObjectSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioObjectSnapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<SemioObjectSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &SemioObjectSnapshot) -> Result<Vec<SemioObjectMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &SemioObjectSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

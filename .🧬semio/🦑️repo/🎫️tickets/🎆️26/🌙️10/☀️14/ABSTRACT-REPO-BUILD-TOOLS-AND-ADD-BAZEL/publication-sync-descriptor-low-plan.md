@@ -1,0 +1,23 @@
+# Synchronous Descriptor Acquisition Source Review
+
+This is conditional Source design, not measured performance or implementation authorization. No Native walk, process sample or test was run.
+
+The current witness still imports promises.open/opendir. Every directory page and every file enters its local owned wrapper, then the actual withArtifactDescriptorV1 owner. The wrapper reserves through that owner, awaits acquisition, runs bounded synchronous reads/stat operations on the real FileHandle.fd or Dir, and awaits native close. The concrete owner is framework/modules/filesystem/observation/descriptor/🟦️.ts; the package facade only reexports it. The owner has one shared scopes set, reserve-before-open maximumOwners, immediate exact acquired-object retention, a captured close method, one close attempt, and permanent unresolved custody on ambiguous close. Body-only arbitrary primary survives close failure. The remaining asynchronous system acquisition/close is therefore concrete Source work, but Source inspection does not allocate actual elapsed cost to it.
+
+## Small Coherent Change
+
+Factor the existing owner internally into reserve, bind and settle operations using the SAME scopes set and policy. Add first-party scoped read-file and directory entry points in this existing owner, reexported by the existing facade; do not create another owner, registry, source leaf, FileHandle imitation or W-local close convention. Each entry point reserves first, performs real openSync/opendirSync, and binds the actual numeric FD or actual Node Dir immediately in the same synchronous continuation before any check/await can throw. The owner itself supplies real closeSync/Dir.closeSync; callers cannot supply an invented numeric handle or arbitrary close callback as admission.
+
+The callback receives a framework-owned read-only capability with only the needed numeric-read/stat or name-read operations, not a fabricated FileHandle. Its private issuance must refuse escaped/copied capability operations after callback settlement. Alternatively, an internal numeric descriptor callback is sufficient if no durable capability escapes and W never treats it as a FileHandle. Directory callbacks retain the real Dir and expose only bounded synchronous read, with closure owned internally. Keep all existing async callers on the same custody implementation and accounting.
+
+If synchronous open throws before returning a handle, drop the reserved scope. If an actual handle has arrived, retain it before every observer/control check. Capture close exactly once; once close is uncertain retain the actual handle and scope, never retry/reopen it as known closure. Successful close removes custody before postclose observer verification, so an observer failure cannot falsely turn a closed FD into uncertain custody. Preserve exact undefined/frozen/Aggregate body primary and existing close-failure precedence.
+
+## Witness Boundary
+
+Replace only its two acquisitions and owner calls. Each acquisition and actual close remains bracketed by the existing full private phase/EX/backing/root observer. Every bounded read/stat/name syscall keeps actual issued-control/deadline/cancellation checks and unchanged work debit. The opened descriptor and named facts must still agree before content; complete EOF/named/ancestor checks and all four streams remain unchanged. No fact is cached across an await. Keep the real checked yields after each existing 64-read content group and between ancestry groups. A synchronous open cannot be cancelled mid syscall; this is bounded local-volume metadata work, not a promise of immediate interruption or a deadline extension.
+
+## Required Source Gates
+
+Actual OS FD/Dir tests must show reserve-before-open, maximum32 refusal with zero new opens, synchronous acquisition throw, cancellation/observer failure immediately after actual acquisition, exact same-object close once, close getter and undefined/frozen close failure, body-plus-close primary preservation, known-close postobserver failure without quarantine, callback escape refusal, and no handles after successful drain. An independent SQLite operation-order/count oracle and Python file bytes can validate real Generated resources. Counterlaws must fail the prior async-only acquisition path where that is the semantic assertion; do not call a synthetic timing improvement a runtime benchmark. Existing descriptor tests, complete W/P laws, strict affected roots and fresh Source closure checks remain required before a separate private Native attempt.
+
+Tools deadline/refusal outcomes remain failures regardless of this prospective plan. No quota, name/page/depth/work/stream/progress/child/descriptor bound, digest, hardlink accounting, grant or Original may change.

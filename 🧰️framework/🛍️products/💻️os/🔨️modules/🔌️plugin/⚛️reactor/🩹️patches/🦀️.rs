@@ -155,7 +155,7 @@ impl MountedReconcileGrant {
         Ok(true)
     }
 
-    #[cfg(test)]
+    #[cfg(any(test, feature = "artifact-app-testing"))]
     pub fn commit(mut self, tree: ComponentTree) {
         let owned = std::rc::Rc::clone(&self.state);
         let mut state = owned.borrow_mut();
@@ -389,7 +389,7 @@ impl PatchTracker {
         state.deferred[index].take()
     }
 
-    #[cfg(test)]
+    #[cfg(any(test, feature = "artifact-app-testing"))]
     pub fn begin(&self, surface: String, tree: ComponentTree) -> Result<u64, (String, ComponentTree)> {
         let surface_id = match ui_contract::SurfaceId::try_from(surface) {
             Ok(surface) => surface,

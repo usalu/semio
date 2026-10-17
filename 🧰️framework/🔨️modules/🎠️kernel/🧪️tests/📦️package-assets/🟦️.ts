@@ -15,10 +15,10 @@ import {
 } from "../../📦️package-assets/🟦️.ts";
 import { descriptorPackageAssets, fetchDescriptorManifest } from "../../🛂️descriptor-admission/🟦️.ts";
 import { OwnedResidentLedger } from "@semio-tech/value-ts/resident";
-import { ShardClient, type ShardBudget } from "../../../🎭️actor/📮️shard-client/🟦️.ts";
-import { fixtureOriginalWorkStock } from "../../../🎭️actor/🎟️retained-turn/🏛️bootstrap/🧪️tests/🧫️fixtures/🟦️.ts";
+import { ShardClient, type ShardBudget } from "@semio-tech/framework-actor/shard-client";
+import { fixtureOriginalWorkStock } from "@semio-tech/framework-actor/retained-turn/bootstrap/testing/fixtures";
 import { renderTextFontsFixtureUrl } from "../../../🖱️ui/🧪️tests/🧫️fixtures/🟦️.ts";
-import { canvasRuntimeAssetsFixtureUrl } from "../../../🖼️canvas/🧪️tests/🧫️fixtures/🟦️.ts";
+import { canvasRuntimeAssetsFixtureUrl } from "@semio-tech/framework-canvas-ts/testing/fixtures";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(here, "../../../../..");
@@ -90,7 +90,7 @@ describe("package assets in the browser kernel", () => {
 
   it("hands the assets a descriptor declares to a loader that registers only its manifest, like the React lane's module loader", async () => {
     const original = globalThis.fetch;
-    const serve = (document: object) => { globalThis.fetch = (async () => new Response(JSON.stringify(document), { headers: { "content-type": "application/json" } })) as typeof fetch; };
+    const serve = (document: object) => { globalThis.fetch = Object.assign(async () => new Response(JSON.stringify(document), { headers: { "content-type": "application/json" } }), { preconnect: () => {} }); };
     try {
       serve({ manifest: { pluginId: "demo", apps: [] }, assets: declared });
       const manifest = await fetchDescriptorManifest("demo", "http://page.test/modules/demo/bridge.js");

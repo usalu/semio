@@ -21,6 +21,7 @@ semio-framework-job-worker = { path = "../../../../../../../../../../../../../..
 semio-framework-job-worker-authority = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧵️job/👷️worker/🎟️authority/📦️packages/🦀️rust" }
 
 semio-framework = { workspace = true }
+semio-framework-action-bus = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🎯️action-bus/📦️packages/🦀️rust" }
 semio-framework-dsl-record = { workspace = true }
 semio-framework-dsl-record-derive = { workspace = true }
 semio-framework-job = { workspace = true }
@@ -33,9 +34,7 @@ semio-framework-value-derive = { workspace = true }
 semio-s-artifact-layout-layout-engine = { workspace = true }
 semio-s-artifact-layout-layout-engine-json = { workspace = true }
 semio-s-artifact-layout-layout-model = { workspace = true }
-semio-s-artifact-stdio-png = { workspace = true }
-semio-s-artifact-stdio-semio-base = { workspace = true }
-semio-s-artifact-stdio-semio-drawing = { workspace = true }
+semio-framework-pixels = { workspace = true }
 
 [dev-dependencies]
 semio-framework-job-worker = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧵️job/👷️worker/📦️packages/🦀️rust", features = ["testkit"] }
@@ -50,3 +49,4 @@ semio-s-artifact-layout-layout-editor-commands = { workspace = true }
 semio-s-artifact-layout-layout-mutations = { workspace = true }
 semio-s-artifact-layout-layout-mutations-frames = { workspace = true }
 serde_json = { workspace = true }
+semio-framework-io-ports = { workspace = true, features = ["testkit"] }

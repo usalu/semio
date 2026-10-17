@@ -1,5 +1,5 @@
 use super::*;
-use crate::editor::bim::unit_tests::support::{applied, ctx, demo, run};
+use crate::editor::bim::fixture::support::{applied, ctx, demo, run};
 use crate::standards::v1::subsets::any::schema::snapshot::{ColumnType, Material, MaterialCategory, Profile, Rgb};
 
 fn line(label: &str, building: &str, start: (f64, f64), end: (f64, f64)) -> GridLine {

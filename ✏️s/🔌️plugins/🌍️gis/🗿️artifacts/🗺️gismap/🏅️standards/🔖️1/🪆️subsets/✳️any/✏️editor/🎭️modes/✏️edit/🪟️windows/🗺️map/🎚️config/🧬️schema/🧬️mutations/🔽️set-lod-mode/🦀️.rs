@@ -1,6 +1,6 @@
 //! 🔽️ Level-of-detail payload and sparse configuration change.
 
-use super::super::{MapWindowConfig, MapWindowConfigDelta, MapWindowConfigDiff, MapWindowConfigMutation};
+use crate::editor::gis2d::modes::edit::windows::map::config::component::{MapWindowConfig, MapWindowConfigDelta, MapWindowConfigDiff};
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -16,7 +16,10 @@ pub struct SetLodMode {
 //#endregion 🧬️Payload
 
 //#region ⚙️Behavior
-impl MutationKind<MapWindowConfig, MapWindowConfigMutation> for SetLodMode {
+impl<Op> MutationKind<MapWindowConfig, Op> for SetLodMode
+where
+    Op: protocol::Mutation<MapWindowConfig, Diff = MapWindowConfigDiff> + From<SetLodMode>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "lod-mode", kind: "set-lod-mode", record: "SetLodMode" };
     fn diff(&self, base: &MapWindowConfig) -> MutationOutcome<MapWindowConfigDiff> {
         if base.lod_mode == self.value {
@@ -24,7 +27,7 @@ impl MutationKind<MapWindowConfig, MapWindowConfigMutation> for SetLodMode {
         }
         MutationOutcome::new(MapWindowConfigDelta { lod_mode: Some(self.value.clone()), ..Default::default() }.into())
     }
-    fn inverse(&self, base: &MapWindowConfig) -> Result<Vec<MapWindowConfigMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &MapWindowConfig) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
         vec![Self { value: base.lod_mode.clone() }.into()]
     

@@ -1,4 +1,8 @@
-use super::*;
+use crate::editor::equation::geometry_layers_json;
+use crate::EquationGeometry;
+use semio_framework_plugin::Canvas2dScene;
+use semio_framework_plugin::SurfaceKind;
+use crate::editor::equation::modes::edit::windows::geometry::*;
 
 #[semio_framework_async_macros::async_test]
 async fn renders_canvas_2d_scene() {

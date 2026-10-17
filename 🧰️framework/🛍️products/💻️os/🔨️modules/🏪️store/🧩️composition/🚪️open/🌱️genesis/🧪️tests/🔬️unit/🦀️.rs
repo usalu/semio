@@ -73,7 +73,6 @@ async fn member_genesis_envelope_streams_exact_canonical_bytes_with_bounded_work
         assert_eq!((&log.doc_id, &log.schema), (&expected.artifact_id, &source.schema.to_owned()));
         assert!(log.edits.is_empty());
         close(&mut encoder);
-        println!("[DEBUG] retained canonical genesis case={} original={} output={} plan-turns={plan_turns} copy-turns={turns} max-copy={maximum} URI-whole-release={birth}", row["id"], pack.len(), output.len());
     }
 }
 
@@ -89,5 +88,4 @@ fn member_genesis_envelope_cancel_retains_uri_until_one_whole_release_grant() {
         for _ in 0..turns { encoder.encode_step(source, &mut [0; 64], grant(64, 0, 0)).unwrap(); }
         close(&mut encoder);
     }
-    println!("[DEBUG] retained genesis cancellation at five phases preserves physical URI backing under one-below and frees exact whole extent");
 }

@@ -1,0 +1,18 @@
+{
+  "name": "@semio-tech/framework-canvas-ts",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./fonts": "./🔤️fonts/🟦️.ts",
+    "./fonts/publication": "./🔤️fonts/📦️publication/🟦️.ts",
+    "./renderer-resident": "./💾️renderer-resident/🟦️.ts",
+    "./renderer-work": "./🧵️renderer-work/🟦️.ts",
+    "./runtime-assets": "./🔌️runtime-assets/🟦️.ts",
+    "./runtime-assets/staging": "./🔌️runtime-assets/🚚️staging/🟦️.ts",
+    "./testing/fixtures": "./🧪️testing/🧫️fixtures/🟦️.ts",
+    "./testing/fixtures/demand-frames": "./🧪️testing/🧫️fixtures/🪶️demand-frames/🟦️.ts"
+  },
+  "devDependencies": {
+    "@semio-tech/framework": "workspace:*"
+  }
+}

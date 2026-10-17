@@ -1,6 +1,18 @@
 //! 📥️ Current exact registry load/reopen baseline for the retained load lifecycle cutover.
 
-use super::*;
+use std::sync::Arc;
+use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_framework_value::retirement::controlled::ControlledRetirement;
+use semio_framework_plugin_window_config::{DirectIngress, TypedWindowConfigStoreOwner, WindowConfigMutation, WindowConfigOwner, WindowConfigOwnerRegistry, WindowConfigPack, WindowConfigPackLoadStep, bounded_window_config_preparation_factory, bounded_window_config_store_disposer, bounded_window_config_store_owners, registry};
+use semio_framework_plugin_window_config::retained::ErasedWindowConfigPackLoad;
+use std::future::Future;
+use std::pin::Pin;
+use semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep;
+use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
+use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind};
+use semio_framework_plugin_window_config::registry::WindowRegistry;
+use semio_framework_os_kernel as protocol;
+use semio_framework_os_kernel as store;
 use std::collections::BTreeMap;
 
 fn block_on_retained_window_load<F: Future>(mut future: Pin<Box<F>>) -> F::Output {
@@ -40,7 +52,6 @@ fn window_config_paged_registry_opened_actor_owns_new_and_hydrated_partitions_be
             let mut reopened=WindowConfigOwnerRegistry::new(protocol::ActorId(opened_actor.clone().into()));reopened.register::<RetainedLoadOwnerA>().unwrap();let refused=reopened.owners.get_mut(RetainedLoadOwnerA::WINDOW_KIND_ID).unwrap().dispatch(&history_actor,WindowConfigMutation::of::<RetainedLoadOwnerA>("foreign-actor-window",RetainedLoadCameraConfigMutation::Snapshot{config:Box::new(camera.clone())}),&mut identity).await.unwrap_err();assert_eq!(refused.code.0,"window-config.actor");assert!(reopened.snapshot(RetainedLoadOwnerA::WINDOW_KIND_ID,"foreign-actor-window").is_none());let mut load=reopened.begin_retained_load(pack).unwrap();let mut ready=false;for _ in 0..65536{let grant=load.next_grant();match reopened.advance_retained_load(&mut load,grant){WindowConfigPackLoadStep::Ready=>{ready=true;break},WindowConfigPackLoadStep::Pending(_)=>{},other=>panic!("opened actor hydration {other:?}")}}assert!(ready);let candidate_actor=load.candidate_actor_for_test::<RetainedLoadOwnerA>().unwrap();let committed=reopened.commit_retained_load(&mut load);assert!(matches!(committed,WindowConfigPackLoadStep::Pending(_)|WindowConfigPackLoadStep::Complete));for _ in 0..65536{let grant=load.next_grant();if matches!(reopened.close_retained_load_step(&mut load,grant).unwrap(),PluginLifecycleStep::Complete(_))&&load.terminal_is_empty(){break}}assert!(load.terminal_is_empty());assert_eq!(reopened.snapshot(RetainedLoadOwnerA::WINDOW_KIND_ID,"actor-window").unwrap().get::<RetainedLoadOwnerA>(),Some(&camera));let restored=reopened.packs().await.unwrap().pop().unwrap();assert_eq!(restored.files.spr,history);assert_eq!(restored.files.pack,stored_pack);close_retained_load_registry(&mut reopened);
             let mut partition=TypedWindowConfigStoreOwner::<RetainedLoadOwnerA>{direct_ingress:ControlledRetirement::new(DirectIngress{mutations:Vec::new(),allocations:Vec::new(),addresses:Vec::new()}).map_err(|(error,_)|error).unwrap(),partitions:WindowRegistry::new(),partition_close_cursor:0,partition_address_retirement:None,actor:Some(protocol::ActorId(opened_actor.clone().into())),actor_retirement:None};let new_actor=partition.partition("fresh-actor-window").await.unwrap().store.local_actor_id().clone();for _ in 0..65536{if matches!(partition.close_step(retained_registry_grant()).unwrap(),PluginLifecycleStep::Complete(_))&&partition.terminal_is_empty(){break}}assert!(partition.terminal_is_empty());
             let mut empty=WindowConfigOwnerRegistry::new(protocol::ActorId(opened_actor.clone().into()));assert!(!empty.terminal_is_empty());let mut closed=false;let actor_grant=RetainedCloneGrant{maximum_items:law["retirementItems"].as_u64().unwrap()as usize,maximum_copy_bytes:law["retirementCopyBytes"].as_u64().unwrap()as usize,maximum_capacity_bytes:law["retirementCapacityBytes"].as_u64().unwrap()as usize,maximum_release_bytes:law["retirementReleaseBytes"].as_u64().unwrap()as usize,maximum_depth:law["retirementDepth"].as_u64().unwrap()as usize};for _ in 0..65536{let step=empty.close_step(actor_grant).unwrap();if let Some(progress)=step.progress(){assert!(progress.fits(actor_grant));}if matches!(step,PluginLifecycleStep::Complete(_))&&empty.terminal_is_empty(){closed=true;break}}assert!(closed);assert_eq!(candidate_actor.0.as_str(),opened_actor.as_str());assert_eq!(new_actor.0.as_str(),opened_actor.as_str());
-            eprintln!("[DEBUG] original window config new/hydrated owners retain opened actor before publication; historical SPR unchanged;independent original actor retirement currencies");
         }));
     });
 }
@@ -204,9 +215,10 @@ impl protocol::Mutation<RetainedLoadCameraConfig> for RetainedLoadCameraConfigMu
     }
 }
 
+#[doc(hidden)]
 #[path="🧬️preparation/🦀️.rs"]
-pub(crate) mod preparation;
-pub(super) use preparation::{CameraRetainedEdit,CameraRetainedEditCursor};
+pub mod preparation;
+pub(super) use crate::window_config_tests::retained_pack_load_tests::preparation::{CameraRetainedEdit, CameraRetainedEditCursor};
 
 pub(super) struct RetainedLoadOwnerA;
 struct RetainedLoadOwnerB;

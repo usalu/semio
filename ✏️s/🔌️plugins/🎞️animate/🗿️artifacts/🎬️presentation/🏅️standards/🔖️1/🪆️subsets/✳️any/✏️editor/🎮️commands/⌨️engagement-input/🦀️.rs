@@ -3,7 +3,7 @@
 #![allow(clippy::result_large_err)]
 
 use crate::editor::animate::config::{PresentationConfig, PresentationConfigMutation};
-use crate::editor::animate::PresentationDispatchCtx;
+use crate::editor::animate::support::PresentationDispatchCtx;
 use crate::standards::v1::subsets::any::schema::mutations::PresentationMutation;
 use crate::PresentationSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
@@ -18,3 +18,14 @@ pub struct EngagementInput {
 pub fn handle(payload: &EngagementInput, _doc: &ArtifactView<'_, PresentationSnapshot>, _cfg: &ConfigView<'_, PresentationConfig>, _ctx: &mut PresentationDispatchCtx) -> Result<Emit<PresentationMutation, PresentationConfigMutation>, Fault> {
     Ok(Emit::config(vec![PresentationConfigMutation::SetEngagementInput(crate::editor::animate::config::SetEngagementInput { value: payload.value.clone() })]))
 }
+
+//#region 🧩️ArtifactItems9
+pub mod artifact_items_9 {
+pub use crate::{snapshot::schema::demo_snapshot, snapshot::schema::PresentationSnapshot};
+
+/// 🎬️ The `demo` example document — see [`demo_snapshot`].
+pub fn demo_presentation_snapshot() -> PresentationSnapshot {
+    demo_snapshot()
+}
+}
+//#endregion 🧩️ArtifactItems9

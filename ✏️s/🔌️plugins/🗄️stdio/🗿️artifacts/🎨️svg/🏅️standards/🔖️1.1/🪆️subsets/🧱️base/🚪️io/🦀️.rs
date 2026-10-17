@@ -44,28 +44,6 @@ pub mod derived_composition {
 pub use derived_composition::*;
 //#endregion 🎹️DerivedComposition
 
-//#region 🚪️DerivedIoRegistry
-// 🐜️ `⚙️engine/` dissolved (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES): moved
-// here verbatim (destination rule 3 — `io_registry`/`ComposerEntry` → `🚪️io/`). This is the REAL
-// `&'static [ComposerEntry]` entries (NOT the artifact root's own shadowing `io_registry` module,
-// which returns `&[&ComposerEntry]` — a different type; the root's `.composers(...)` reaches this
-// module by its fully-qualified path, never the bare `io_registry::entries()` shortcut, per this
-// ticket's own "silent rebind" hazard).
-pub mod io_registry {
-    use crate::standards::v1_1::subsets::base::io::SvgComposer as SvgRawAnyComposer;
-    use crate::standards::v1_1::subsets::basic::io::SvgBasicComposer;
-    use crate::standards::v1_1::subsets::tiny::io::SvgTinyComposer;
-    use semio_framework_plugin::{composer_entry_of, io::ComposerEntry};
-    use std::sync::OnceLock;
-
-    static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
-
-    // 🚫️async: E1 pure table accessor consumed by OnceLock::get_or_init's sync closure — see R9
-    pub fn entries() -> &'static [ComposerEntry] {
-        ENTRIES.get_or_init(|| vec![composer_entry_of::<SvgRawAnyComposer>(), composer_entry_of::<SvgTinyComposer>(), composer_entry_of::<SvgBasicComposer>()]).as_slice()
-    }
-}
-//#endregion 🚪️DerivedIoRegistry
 
 //#region 🧪️Tests
 #[cfg(test)]
@@ -73,14 +51,15 @@ pub mod io_registry {
 mod tests;
 //#endregion 🧪️Tests
 
-#[path = "💾️binary/🦀️.rs"]
-pub mod binary;
+pub mod binary {
+    pub use semio_s_artifact_stdio_svg_tests::standards::v1_1::subsets::base::io::binary::*;
+    pub use semio_s_artifact_stdio_svg_handcrafted_diff_codec_tests::standards::v1_1::subsets::base::io::binary::inferences;
+}
 
 #[path = "📝️text/🦀️.rs"]
 pub mod text;
 
-#[path = "🪶️sqlite/🦀️.rs"]
-pub mod sqlite;
+
 
 pub mod derived_construction {
     use crate::schema::snapshot::{set_element_attr, CommonAttrs, PathCommand, SvgElement, ViewBox};

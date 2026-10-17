@@ -1,17 +1,23 @@
 //! 📝️ Retains the original selection, streams each borrowed replacement and admits one inverse row.
-use super::{TestConfig as State,TestConfigMutation as Mutation,ChangeTestConfigSelection};
-use crate::store;
-use crate::store::snapshot_clone_preparation::RetainedEditCustody;
-use store::snapshot_clone_preparation::{RetainedCloneEdit,RetainedCloneEditCursor,RetainedCloneEditStep};
-use semio_framework_value::{ValueError,ValueRefusalKind,retirement::controlled::ControlledRetirement,retained_clone::{RetainedCloneGrant,RetainedCloneRef,RetainedCloneProgress,RetainedCloneStep,RetainedCloneBirthDemand}};
+use crate::test_app_mutation_fixture::config::TestConfig as State;
+use crate::test_app_mutation_fixture::config::mutations::TestConfigMutation as Mutation;
+use crate::test_app_mutation_fixture::config::mutations::change_test_config_selection::ChangeTestConfigSelection;
+use semio_framework_os_kernel as store;
+use semio_framework_os_kernel::snapshot_clone_preparation::RetainedEditCustody;
+use semio_framework_os_kernel::snapshot_clone_preparation::{RetainedCloneEdit, RetainedCloneEditCursor, RetainedCloneEditStep};
+use semio_framework_value::{ValueError, ValueRefusalKind};
+use semio_framework_value::retirement::controlled::ControlledRetirement;
+use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneRef, RetainedCloneProgress, RetainedCloneStep, RetainedCloneBirthDemand};
 use std::mem::size_of;
 fn selection_json_bytes(original:Option<&str>)->Option<usize>{match original{None=>Some(4),Some(text)=>text.chars().try_fold(2usize,|bytes,ch|bytes.checked_add(match ch{'"'|'\\'|'\u{8}'|'\t'|'\n'|'\u{c}'|'\r'=>2,ch if ch<='\u{1f}'=>6,ch=>ch.len_utf8()}))}}
 fn selection_binary_bytes(original:Option<&str>)->Option<usize>{original.map_or(Some(2),|text|text.len().checked_add(6))}
-pub(crate) fn selection_prepared_bytes(base:Option<&str>,next:Option<&str>)->Option<usize>{13usize.checked_add(selection_json_bytes(next)?).and_then(|bytes|bytes.checked_add(selection_binary_bytes(next)?)).and_then(|bytes|bytes.checked_add(selection_binary_bytes(base)?))}
+#[doc(hidden)]
+pub fn selection_prepared_bytes(base:Option<&str>,next:Option<&str>)->Option<usize>{13usize.checked_add(selection_json_bytes(next)?).and_then(|bytes|bytes.checked_add(selection_binary_bytes(next)?)).and_then(|bytes|bytes.checked_add(selection_binary_bytes(base)?))}
 type Fields=(Option<ControlledRetirement<Option<String>>>,Option<Option<String>>,Option<Vec<Mutation>>);
+#[doc(hidden)]
 #[derive(semio_framework_value::FactoryPayloadRetirement)]
-pub(crate) struct SelectionRetainedEdit;
-pub(crate) struct SelectionRetainedEditCursor{phase:u8,offset:usize,allocated:bool,cancelled:bool,custody:RetainedEditCustody<Fields>}
+pub struct SelectionRetainedEdit;
+pub(crate) struct SelectionRetainedEditCursor{pub phase:u8,pub offset:usize,pub allocated:bool,pub cancelled:bool,pub custody:RetainedEditCustody<Fields>}
 impl RetainedCloneEdit<State,Mutation> for SelectionRetainedEdit{
  type Cursor=SelectionRetainedEditCursor;
  fn preflight(&self,mutation:&Mutation,lane:store::os_store::store_schema::HistoryLane)->Result<store::os_store::one_item::ArtifactStoreOneItemFootprint,String>{let Mutation::ChangeTestConfigSelection(value)=mutation;let bytes=value.selected.as_ref().map_or(0,String::len);let retained_bytes=bytes.checked_mul(4).and_then(|bytes|bytes.checked_add(65536)).ok_or("original selection preparation footprint overflow")?;if lane!=store::os_store::store_schema::HistoryLane::Document||retained_bytes>store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES||selection_prepared_bytes(None,value.selected.as_deref()).is_none_or(|bytes|bytes>1024){return Err("original selection preparation exceeds lane or physical bound".into());}Ok(store::os_store::one_item::ArtifactStoreOneItemFootprint{work_items:2,retained_bytes})}
@@ -20,13 +26,13 @@ impl RetainedCloneEdit<State,Mutation> for SelectionRetainedEdit{
  fn begin(&self,grant:RetainedCloneGrant)->Result<(Self::Cursor,RetainedCloneProgress),ValueError>{let mut receipt=self.begin_demand().admit(grant)?;receipt.copied_bytes=size_of::<Self::Cursor>();if !receipt.fits(grant){return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"original selection cursor transfer exceeds copy grant"));}Ok((SelectionRetainedEditCursor{phase:0,offset:0,allocated:false,cancelled:false,custody:RetainedEditCustody::new((None,None,None))},receipt))}
 }
 impl SelectionRetainedEditCursor{
- fn normal_demand(&self,base:&State,mutation:&Mutation,body:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{use semio_framework_value::RetirementDemand;Ok(match self.phase{
+ pub fn normal_demand(&self,base:&State,mutation:&Mutation,body:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{use semio_framework_value::RetirementDemand;Ok(match self.phase{
   0=>RetirementDemand{copy_bytes:size_of::<Option<String>>()+size_of::<ControlledRetirement<Option<String>>>(),depth:1,..Default::default()},
   1=>{let owner=self.custody.original().0.as_ref().expect("original displaced selection retained");if owner.terminal_is_empty(){RetirementDemand{copy_bytes:size_of::<Option<ControlledRetirement<Option<String>>>>(),depth:1,..Default::default()}}else{RetirementDemand{copy_bytes:owner.next_copy_byte_demand()?,capacity_bytes:owner.next_capacity_byte_demand(body)?,release_bytes:owner.next_release_byte_demand()?,depth:owner.next_depth_demand()?.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"original selection normal depth overflow"))?}}},
   2|3=>{let original=if self.phase==2{let Mutation::ChangeTestConfigSelection(value)=mutation;value.selected.as_deref()}else{base.selected.as_deref()};if !self.allocated{RetirementDemand{copy_bytes:size_of::<Option<Option<String>>>(),capacity_bytes:original.map_or(0,str::len),depth:1,..Default::default()}}else if let Some(original)=original.filter(|value|self.offset<value.len()){RetirementDemand{copy_bytes:original[self.offset..].chars().next().unwrap().len_utf8()+size_of::<usize>()*2,depth:1,..Default::default()}}else{RetirementDemand{copy_bytes:size_of::<Option<String>>()*2+size_of::<u8>(),depth:1,..Default::default()}}},
   4=>RetirementDemand{copy_bytes:size_of::<Vec<Mutation>>(),capacity_bytes:size_of::<Mutation>(),depth:1,..Default::default()},
   5=>RetirementDemand{copy_bytes:size_of::<Mutation>()*2+size_of::<Option<String>>(),depth:1,..Default::default()},_=>Default::default()})}
- fn copy_text(&mut self,original:Option<&str>,grant:RetainedCloneGrant)->Result<Option<RetainedCloneProgress>,ValueError>{
+ pub fn copy_text(&mut self,original:Option<&str>,grant:RetainedCloneGrant)->Result<Option<RetainedCloneProgress>,ValueError>{
   if !self.allocated{let bytes=original.map_or(0,str::len);let copy=size_of::<Option<Option<String>>>();if grant.maximum_capacity_bytes<bytes||grant.maximum_copy_bytes<copy{return Ok(None);}let value=original.map(|_|{let mut text=String::new();text.try_reserve_exact(bytes).map_err(|_|ValueError::literal(ValueRefusalKind::AllocationFailed,"original selection text allocation failed"))?;Ok::<_,ValueError>(text)}).transpose()?;self.custody.original_mut().1=Some(value);self.allocated=true;return Ok(Some(RetainedCloneProgress{copied_items:1,copied_bytes:copy,retained_capacity_bytes:bytes,released_bytes:0}));}
   let Some(original)=original else{return Ok(None)};if self.offset==original.len(){return Ok(None);}let overhead=size_of::<usize>()*2;if grant.maximum_copy_bytes<=overhead{return Ok(None);}let mut end=(self.offset+grant.maximum_copy_bytes-overhead).min(original.len());while !original.is_char_boundary(end){end-=1;}if end==self.offset{return Ok(None);}let text=self.custody.original_mut().1.as_mut().and_then(Option::as_mut).ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original selection partial text absent"))?;text.push_str(&original[self.offset..end]);let copied=end-self.offset;self.offset=end;Ok(Some(RetainedCloneProgress{copied_items:1,copied_bytes:copied+overhead,..Default::default()}))
  }

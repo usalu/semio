@@ -33,7 +33,7 @@ impl ArtifactSqliteSnapshotHost for SvgSnapshot {
         control.checkpoint(semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotPhase::ProjectSnapshot,0,0).map_err(semio_framework_os_kernel::io_schema::IoError::from_value_error)?;
         if dialect.artifact_kind!="s.stdio.svg"||dialect.standard!="1.1"{return Err(semio_framework_os_kernel::io_schema::IoError::from_value_error(ValueError::new(ValueRefusalKind::InvalidValue,"SVG owned snapshot dialect differs from SVG 1.1")));}
         validate_root(&self.doc).map_err(semio_framework_os_kernel::io_schema::IoError::from_value_error)?;let row=database.table("svg_document").map_err(semio_framework_os_kernel::io_schema::IoError::from_value_error)?.single_row().map_err(semio_framework_os_kernel::io_schema::IoError::from_value_error)?;if row.rowid!=1||row.text(1).map_err(semio_framework_os_kernel::io_schema::IoError::from_value_error)?!=self.schema{return Err(semio_framework_os_kernel::io_schema::IoError::from_value_error(ValueError::new(ValueRefusalKind::InvalidValue,"SVG owned document identity differs from semantic projection")));}
-        let diagnostics=match dialect.subset.as_str(){"*"=>Vec::new(),"tiny"=>crate::standards::v1_1::subsets::tiny::io::check_svg_tiny_conformance_controlled(self,control).map_err(semio_framework_os_kernel::io_schema::IoError::from_value_error)?,"basic"=>crate::standards::v1_1::subsets::basic::io::check_svg_basic_conformance_controlled(self,control).map_err(semio_framework_os_kernel::io_schema::IoError::from_value_error)?,_=>return Err(semio_framework_os_kernel::io_schema::IoError::from_value_error(ValueError::new(ValueRefusalKind::UnsupportedOwner,"SVG named subset has no owned semantic validator")))};Ok(semio_framework_os_kernel::io_schema::IoOutcome{value:(),diagnostics})
+        let diagnostics=match dialect.subset.as_str(){"*"=>Vec::new(),"tiny"=>crate::standards::v1_1::subsets::tiny::schema::conformance::check_svg_tiny_conformance_controlled(self,control).map_err(semio_framework_os_kernel::io_schema::IoError::from_value_error)?,"basic"=>crate::standards::v1_1::subsets::basic::schema::conformance::check_svg_basic_conformance_controlled(self,control).map_err(semio_framework_os_kernel::io_schema::IoError::from_value_error)?,_=>return Err(semio_framework_os_kernel::io_schema::IoError::from_value_error(ValueError::new(ValueRefusalKind::UnsupportedOwner,"SVG named subset has no owned semantic validator")))};Ok(semio_framework_os_kernel::io_schema::IoOutcome{value:(),diagnostics})
     }
 
     
@@ -54,9 +54,6 @@ fn from_sqlite_database(database: &SqliteDatabase, control: &mut SqliteSnapshotC
 
 use semio_framework_os_kernel::sqlite_snapshot::{ValueError, ValueRefusalKind};
 
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;
 
 
 #[path = "🚦️native/🦀️.rs"]

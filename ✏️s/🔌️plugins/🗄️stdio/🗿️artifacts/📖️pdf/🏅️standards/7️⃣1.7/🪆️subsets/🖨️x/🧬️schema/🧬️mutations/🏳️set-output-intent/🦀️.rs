@@ -1,7 +1,6 @@
 //! 🏳️ Authoritative PDF/X mutation for installing the required output intent.
 
-use super::remove_output_intent::RemoveOutputIntent;
-use super::PdfXMutation;
+use crate::standards::v1_7::subsets::x::schema::mutations::remove_output_intent::RemoveOutputIntent;
 use crate::standards::v1_7::subsets::base::schema::conformance_support as support;
 use crate::standards::v1_7::subsets::base::schema::diff::{self, PdfDiff};
 use crate::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot;
@@ -23,18 +22,21 @@ pub struct SetOutputIntent {
     pub entry_index: Option<usize>,
 }
 
-impl MutationKind<PdfSnapshot, PdfXMutation> for SetOutputIntent {
+impl<Op> MutationKind<PdfSnapshot, Op> for SetOutputIntent
+where
+    Op: protocol::Mutation<PdfSnapshot, Diff = PdfDiff> + From<SetOutputIntent> + From<crate::standards::v1_7::subsets::x::schema::mutations::remove_output_intent::RemoveOutputIntent>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "output-intent", kind: "set-output-intent", record: "Set" };
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
         MutationOutcome::new(diff::graph_edit(support::output_intent_rows(base, OUTPUT_INTENT_SUBTYPE, &self.identifier, OUTPUT_INTENT_DEST_PROFILE, &self.placements, self.entry_index)))
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfXMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         Ok({
             match support::output_intent_identifier(base) {
-                Some(identifier) => vec![PdfXMutation::SetOutputIntent(SetOutputIntent { identifier, placements: support::placements_of(base, &support::output_intent_creation_ids(base)), entry_index: None })],
-                None => vec![PdfXMutation::RemoveOutputIntent(RemoveOutputIntent {})],
+                Some(identifier) => vec![Op::from(SetOutputIntent { identifier, placements: support::placements_of(base, &support::output_intent_creation_ids(base)), entry_index: None })],
+                None => vec![Op::from(RemoveOutputIntent {})],
             }
         })
     }
@@ -50,9 +52,7 @@ impl MutationKind<PdfSnapshot, PdfXMutation> for SetOutputIntent {
 //#endregion 🔖️Mutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
 
 //#region 🔖️Facets

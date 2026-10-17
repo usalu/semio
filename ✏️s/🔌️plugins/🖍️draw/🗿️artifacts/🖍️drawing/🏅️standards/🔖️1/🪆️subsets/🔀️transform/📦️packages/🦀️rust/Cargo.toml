@@ -15,6 +15,9 @@ workspace = true
 [lib]
 path = "../../🦀️.rs"
 
+[features]
+testkit = ["dep:serde", "semio-s-artifact-draw-drawing-diff/testkit", "semio-s-artifact-draw-drawing-geometry/testkit", "semio-s-artifact-draw-drawing-model/testkit"]
+
 [dependencies]
 semio-framework-dsl-record = { workspace = true }
 semio-framework-dsl-record-derive = { workspace = true }
@@ -27,6 +30,7 @@ semio-framework-value-derive = { workspace = true }
 semio-s-artifact-draw-drawing-diff = { workspace = true }
 semio-s-artifact-draw-drawing-geometry = { workspace = true }
 semio-s-artifact-draw-drawing-model = { workspace = true }
+serde = { workspace = true, optional = true }
 
 [dev-dependencies]
 semio-framework-async-macros = { workspace = true }

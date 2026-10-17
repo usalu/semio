@@ -1,0 +1,14 @@
+{
+ "name": "ftcp",
+ "crates": [
+  "semio-framework-print",
+  "semio-framework-print-tests"
+ ],
+ "base": {
+  "rev": "1bae6115bc5",
+  "crates": [
+   "semio-framework-print"
+  ]
+ },
+ "note": "FTC print"
+}

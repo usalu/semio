@@ -46,5 +46,13 @@ semio-framework-plugin-ownership = { path = "../../../../🏛️ownership/🧱�
 semio-framework-plugin-instance-stores = { path = "../../../🏪️stores/📦️packages/🦀️rust" }
 semio-framework-plugin-instance-children = { path = "../../../🪆️children/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-artifact-reference = { workspace = true }
+semio-framework-plugin-reactor-app = { path = "../../../../⚛️reactor/🔌️app/📦️packages/🦀️rust" }
+semio-framework-plugin-reactor-tasks = { path = "../../../../⚛️reactor/⏲️tasks/📦️packages/🦀️rust" }
+semio-framework-plugin-time-travel = { path = "../../../../⏪️time-travel/📦️packages/🦀️rust" }
+semio_framework_ui_contract = { path = "../../../../../../../../🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
 
 [dev-dependencies]
+
+[features]
+artifact-app-testing = []

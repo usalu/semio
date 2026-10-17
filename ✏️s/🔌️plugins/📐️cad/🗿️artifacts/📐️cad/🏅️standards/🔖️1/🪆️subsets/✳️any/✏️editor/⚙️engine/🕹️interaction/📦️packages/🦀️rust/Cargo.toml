@@ -34,3 +34,4 @@ semio-s-artifact-cad-cad-model = { workspace = true }
 
 [dev-dependencies]
 semio-framework-async-macros = { workspace = true }
+semio-framework-test-fixtures = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }

@@ -35,7 +35,6 @@ fn shared_factory_custody_retains_original_weak_refused_and_empty_capacity_owner
         }
         let weak_frame=match weak{Some(weak)=>{let(_,heap)=observe_retirement_allocations(||drop(weak));assert_eq!(heap,(0,crate::retirement::shared::arc_bytes::<String>()));heap.1}None=>0};assert_eq!(refusals,usize::from(row["refuseOnce"].as_bool().unwrap()));assert_eq!(released+weak_frame,held+births);let(_,heap)=observe_retirement_allocations(||drop(cursor));assert_eq!(heap,(0,0));
     }}}
-    eprintln!("[DEBUG] shared factory giant original pointers/empty retained-capacity/weak original aliases/refused factory payload preserved, actual factory payload+all old Arc/ticket backing release exact, independent undergrants0heap, terminal Drop0heap");
 }
 
 
@@ -68,6 +67,5 @@ fn shared_factory_in_place_admission_preserves_original_slots_and_exact_issuer_r
         let authority:Arc<dyn FactoryRetirement>=factory;let authority=FactoryAuthority::new(authority);let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:0,maximum_capacity_bytes:RetirementQueue::frame_birth_bytes::<FactoryAuthority>(),maximum_release_bytes:0,maximum_depth:queue.len()+1};let (p,(a,r))=observe_retirement_allocations(||queue.admit_owned(authority,grant).map_err(|(error,_)|error).unwrap());assert_eq!((p.retained_capacity_bytes,p.released_bytes),(a,r));births+=a;released+=r;
         for turn in 0..1000000{if queue.terminal_is_empty(){break;}let body=copy.as_u64().unwrap()as usize;let demand=(queue.next_copy_byte_demand().unwrap(),queue.next_capacity_byte_demand(body).unwrap(),queue.next_release_byte_demand().unwrap(),queue.next_depth_demand().unwrap());let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.0.max(body),maximum_capacity_bytes:demand.1,maximum_release_bytes:demand.2,maximum_depth:demand.3};let (step,(a,r))=observe_retirement_allocations(||queue.step(grant).unwrap());let p=step.progress();assert!(p.fits(grant));assert_eq!((p.retained_capacity_bytes,p.released_bytes),(a,r));births+=a;released+=r;assert!(p.copied_items!=0||matches!(step,RetainedCloneStep::Complete(_)),"in-place admission custody blocked at {turn}");}
         assert!(queue.terminal_is_empty());assert_eq!(released,originals+births);let (_,heap)=observe_retirement_allocations(||drop(queue));assert_eq!(heap,(0,0));
-        eprintln!("[DEBUG] In-place original factory admission route={route} copy={copy} original={originals} births={births} physical={released} refusedOriginalPointer=true terminalDrop=0");
     }}}
 }

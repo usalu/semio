@@ -2,7 +2,7 @@
  * the directories in {@link RUNTIME_ASSET_CHANNELS} at their routes and hands the seven fetched files to the wasm module through
  * {@link installRuntimeAssets} before the module resolves its first icon or label. Every browser wasm module that links Canvas
  * exports the same door, `semioSetRuntimeAssets`. */
-import { COMPILER_FONTS_DIRECTORY, COMPILER_FONT_FILES } from "../../📚️compiler/🌍️world/🟦️.ts";
+import { COMPILER_FONTS_DIRECTORY, COMPILER_FONT_FILES } from "@semio-tech/framework-compiler-ts/world";
 
 /** 📦️ One directory a host serves at one route; its files are fetched relative to that route. */
 export interface RuntimeAssetChannel {

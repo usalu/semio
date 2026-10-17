@@ -1,5 +1,17 @@
+use crate::schema::diff::DxfDiff;
+use crate::{schema::snapshot::DxfBlock, schema::snapshot::DxfEntity, schema::snapshot::DxfHeaderVar, schema::snapshot::DxfLayer, schema::snapshot::DxfLinetype, schema::snapshot::DxfStyle};
+use crate::{schema::snapshot::DxfArc, schema::snapshot::DxfCircle, schema::snapshot::DxfLine, schema::snapshot::DxfText};
+use crate::DxfSnapshot;
+#[allow(unused_imports)]
+use crate::{schema::diff::block_field_changes, schema::diff::diff_insert_block, schema::diff::diff_insert_entity, schema::diff::diff_insert_layer, schema::diff::diff_insert_linetype, schema::diff::diff_insert_style, schema::diff::diff_remove_block, schema::diff::diff_remove_entity, schema::diff::diff_remove_header_var, schema::diff::diff_remove_layer, schema::diff::diff_remove_linetype, schema::diff::diff_remove_style, schema::diff::diff_set_block, schema::diff::diff_set_entity, schema::diff::diff_set_header_var, schema::diff::diff_set_layer, schema::diff::diff_set_linetype, schema::diff::diff_set_style, schema::diff::entity_field_changes, schema::diff::layer_field_changes, schema::diff::linetype_field_changes, schema::diff::style_field_changes};
+#[allow(unused_imports)]
+use crate::{schema::snapshot::DxfInsert, schema::snapshot::DxfOther, schema::snapshot::DxfPolyline, schema::snapshot::DxfSolid};
+#[allow(unused_imports)]
+use protocol::Mutation;
+#[allow(unused_imports)]
+use protocol::{OpBinary, OpText};
 use crate::apply_mutation;
-use super::*;
+use crate::standards::v_r12::subsets::any::schema::mutations::*;
 use crate::schema::diff::DxfEntitiesDiff;
 use crate::schema::snapshot::{DxfOtherTable, DxfTables, DxfTag, DxfValue, DxfVertex};
 use protocol::command::DiffAlgebra;

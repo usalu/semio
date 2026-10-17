@@ -6,7 +6,13 @@
   "type": "module",
   "private": true,
   "exports": {
-    ".": "./🟦️.ts"
+    ".": "./🟦️.ts",
+    "./modules/attention": "./🔨️modules/👀️attention/🟦️.ts",
+    "./modules/draft": "./🔨️modules/📝️draft/🟦️.ts",
+    "./modules/locomotion/constants": "./🔨️modules/🚶️locomotion/📐️constants/🟦️.ts",
+    "./modules/projection": "./🔨️modules/🎥️projection/🟦️.ts",
+    "./modules/spacing": "./🔨️modules/📏️spacing/🟦️.ts",
+    "./testing/fixtures/schema-conformance": "./🧪️testing/🧫️fixtures/🧬️schema-conformance/🟦️.ts"
   },
   "license": "LGPL-3.0-or-later",
   "semio": {
@@ -28,6 +34,7 @@
     "typescript": "^5.9.3",
     "vitest": "^4.0.17",
     "@semio-tech/process": "workspace:*",
-    "@semio-tech/framework": "workspace:*"
+    "@semio-tech/framework": "workspace:*",
+    "@semio-tech/pets-react": "workspace:*"
   }
 }

@@ -1,6 +1,15 @@
 //! 🎬 `insert-slide` — authored as its own mutation leaf; its diff and inverse live in `🔺️diff` and `↩️inverse`.
 
-use super::*;
+#[allow(unused_imports)]
+use protocol::Mutation;
+#[allow(unused_imports)]
+use crate::schema::diff::SemioPresentationDiff;
+#[allow(unused_imports)]
+use crate::schema::snapshot::SemioPresentationSnapshot;
+#[allow(unused_imports)]
+use crate::schema::snapshot::Slide;
+#[allow(unused_imports)]
+use crate::schema::mutations::remove_slide;
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
@@ -11,13 +20,16 @@ pub struct InsertSlide {
     pub slide: Slide,
 }
 
-impl protocol::MutationKind<SemioPresentationSnapshot, SemioPresentationMutation> for InsertSlide {
+impl<Op> protocol::MutationKind<SemioPresentationSnapshot, Op> for InsertSlide
+where
+    Op: protocol::Mutation<SemioPresentationSnapshot, Diff = crate::schema::diff::SemioPresentationDiff> + From<InsertSlide> + From<crate::schema::mutations::remove_slide::RemoveSlide>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "slide", kind: "insert-slide", record: "InsertSlide" };
 
-    fn diff(&self, base: &SemioPresentationSnapshot) -> protocol::MutationOutcome<<SemioPresentationMutation as Mutation<SemioPresentationSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioPresentationSnapshot) -> protocol::MutationOutcome<<Op as Mutation<SemioPresentationSnapshot>>::Diff> {
         diff::diff(self, base)
     }
-    fn inverse(&self, base: &SemioPresentationSnapshot) -> Result<Vec<SemioPresentationMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &SemioPresentationSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         inverse::inverse(self, base)?
     

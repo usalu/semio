@@ -16,6 +16,12 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-s-artifact-stdio-jpg-operations = { path = "../../🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/⚙️operations/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-jpg-inferences = { path = "../../🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/💡️inferences/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-jpg-schema = { path = "../../🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-jpg-schema-2 = { path = "../../🏅️standards/🔖️jfif-1.01/🪆️subsets/🧱️baseline/🧬️schema/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-jpg-mutations = { path = "../../🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-jpg-io-registry = { path = "../../🏅️standards/🔖️jfif-1.01/🪆️subsets/🧱️baseline/✏️editor/📦️packages/🦀️rust" }
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-dsl-record = { path = "../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
 semio-framework-async = { path = "../../../../../../../🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust" }
@@ -33,6 +39,7 @@ semio-framework = { workspace = true }
 semio-framework-hash = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-plugin = { workspace = true }
+semio-framework-action-bus = { path = "../../../../../../../🧰️framework/🔨️modules/🎯️action-bus/📦️packages/🦀️rust" }
 semio-framework-job = { workspace = true }
 semio-framework-schema = { workspace = true }
 semio-framework-value-derive = { workspace = true }
@@ -41,6 +48,7 @@ semio-s-artifact-stdio-contract = { workspace = true }
 serde_json = { workspace = true }
 
 [dev-dependencies]
+semio-framework-test-fixtures = { path = "../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-framework-trace = { path = "../../../../../../../🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-contract = { workspace = true, features = ["testing"] }
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }

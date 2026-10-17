@@ -3,7 +3,7 @@
  * (`🛂️manifest/🪟️view-context/🧬️schema/🔣️.json`, 65 536 characters).
  *
  * 🏁️ Its own module, with no React and no shell imports, for the same reason the contributions
- * publisher has one: importing `🛠️ShellHelpers/🟦️.tsx` from a test hits the
+ * publisher has one: importing the shell-surface modules of `🛠️ShellHelpers` from a test hits the
  * `ShellHelpers → Shell → ShellHost` cycle and dies with
  * `Cannot access '__vite_ssr_import_8__' before initialization`, so a law could not drive it. The
  * shape types come in as `import type` (erased at runtime), which is why this module adds no edge.

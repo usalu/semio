@@ -99,19 +99,16 @@ import {
   type UiTheme
 } from "@semio-tech/ui-react";
 import { UiDocumentStore } from "../../📃️UiDocumentStore/🟦️.tsx";
-import { createHubConnectionFetchPortV1, type HubConnectionPortV1 } from "../../🔗️HubConnection/🟦️.tsx";
+import { type HubConnectionPortV1 } from "../../🔗️HubConnection/🔌️connection-contract/🟦️.ts";
+import { createHubConnectionFetchPortV1 } from "../../🔗️HubConnection/🛰️fetch-port/🟦️.ts";
 import { sharedDocumentOpeningRoleV1, type DocumentOpeningReference, type DocumentOpeningTarget } from "../🧭️opening/🟦️.ts";
-import { type ActiveSession } from "../../🐚️Shell/🟦️.tsx";
-import {
-  EMPTY_APP_CATALOGUE,
-  downloadMediaExport,
-  mergeRecordPreservingIdentity,
-  browserActorSectionValuesV1,
-  programHistoryProjectionsWithLoadV1,
-  parsePanelState,
-  preserveJsonIdentity,
-  type UiRefreshCache
-} from "../../🛠️ShellHelpers/🟦️.tsx";
+import { type ActiveSession } from "../../🐚️Shell/📦️program-sessions/🟦️.ts";
+import { EMPTY_APP_CATALOGUE } from "../../🛠️ShellHelpers/🏷️labels/🟦️.tsx";
+import { downloadMediaExport } from "../../🛠️ShellHelpers/🔩️plumbing/📥️downloads-and-file-requests/🟦️.ts";
+import { mergeRecordPreservingIdentity, preserveJsonIdentity, type UiRefreshCache } from "../../🛠️ShellHelpers/🔄️ui-refresh/🟦️.ts";
+import { browserActorSectionValuesV1 } from "../../🛠️ShellHelpers/🛣️route-and-chrome/🟦️.tsx";
+import { programHistoryProjectionsWithLoadV1 } from "../../🛠️ShellHelpers/🔩️plumbing/🟦️.ts";
+import { parsePanelState } from "../../🛠️ShellHelpers/📌️panel/🟦️.ts";
 import { type PluginWasmHandle } from "../../🔌️PluginRuntime/🟦️.tsx";
 import { documentBackboneEffectV1, type ActorDocumentMessagePortV1 } from "@semio-tech/framework/backbone/binding";
 import { BrowserActorActionMailboxV1 } from "@semio-tech/framework/browser-bundle/action-handoff/requests";
@@ -122,7 +119,7 @@ import { closeDirectoryHomeOwnerV1, type DirectoryBootstrapUiState, type Directo
 import { agentBridgeOfferScopeFromDelegationsV1, useAgentBridge, type AgentAppCommandHandler, type AgentBridgeOfferScopeV1 } from "../../🔗️AgentBridge/🟦️.tsx";
 import { shellAppFault } from "@semio-tech/framework/mcp/channel";
 import type { BridgeInstanceRef } from "@semio-tech/framework/mcp/bridge";
-import type { ReduceResult, ShellCommand } from "../../../../../🖥️shell/🟦️.ts";
+import type { ReduceResult, ShellCommand } from "@semio-tech/framework/shell";
 import { LOCAL_SESSION_RECLAIM_INTERVAL_MS } from "../🎚️shell-model/🟦️.tsx";
 import { hubBootstrapOriginV1, hubSessionStorageV1, readViteSEnv } from "../🔐️identity-binding/🟦️.ts";
 import {
@@ -185,8 +182,9 @@ export function useIdentityAndDocumentPorts(core: ShellCoreAfterShellCoreState) 
   const {
     measuredDevice, dispatch, historyStore, uiLayout, uiDriverId, uiCustomDrivers, uiDriverDraft, uiLocale,
     uiTerminology, uiThemeId, uiCustomThemes, uiThemeDraft, refreshHistorySnapshot, dialogOpeningRef, liveDialogRef,
-    openSpaceId, sessionRef
+    openSpaceId, sessionRef, hostPorts
   } = core;
+  const documentAccess = hostPorts?.documentAccess;
   const uiDevice: ElementsSurfaceDevice = measuredDevice === "desktop" ? uiLayout : measuredDevice;
   const uiTheme: UiTheme = useMemo(() => {
     if (uiThemeDraft) return uiThemeDraft;
@@ -768,7 +766,7 @@ export function useIdentityAndDocumentPorts(core: ShellCoreAfterShellCoreState) 
     for (const history of spaceDirectoryHistoriesRef.current.values()) {
       if (!history.add(events)) continue;
       changed = true;
-      if (identityRef.current) adoptSharedSpaceAccess(history.spaceId, sharedDocumentOpeningRoleV1(history.events(), history.spaceId, identityRef.current.userId));
+      if (identityRef.current) adoptSharedSpaceAccess(history.spaceId, sharedDocumentOpeningRoleV1(history.events(), history.spaceId, identityRef.current.userId, documentAccess));
     }
     if (!changed || spaceDirectoryFoldPendingRef.current) return;
     spaceDirectoryFoldPendingRef.current = true;
@@ -776,7 +774,7 @@ export function useIdentityAndDocumentPorts(core: ShellCoreAfterShellCoreState) 
       spaceDirectoryFoldPendingRef.current = false;
       foldSpaceDirectoryRef.current();
     });
-  }, []);
+  }, [documentAccess]);
 
   return {
     uiDevice, uiTheme, uiDriver, backboneWorkerRef, backboneWorkerStreamsDetachRef, shellSessionIdRef, shellActorIdRef,

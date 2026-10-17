@@ -3,9 +3,9 @@ use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v_jfif_1_01::subsets::document::schema::snapshot::*;
 use crate::standards::v_jfif_1_01::subsets::document::io::text::snapshot as owned_text;
 use semio_framework_os_kernel::sqlite_snapshot::{ValueError, ValueRefusalKind};
-#[path="🫴️receiving/🦀️.rs"]mod receiving;
+#[path="🫴️receiving/🦀️.rs"]pub mod receiving;
 
-fn invalid(message:impl Into<String>)->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,message)}
+pub fn invalid(message:impl Into<String>)->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,message)}
 fn work(message:impl Into<String>)->ValueError{ValueError::new(ValueRefusalKind::WorkLimit,message)}
 fn ownership(message:impl Into<String>)->ValueError{ValueError::new(ValueRefusalKind::OwnershipLimit,message)}
 fn allocation(message:impl Into<String>)->ValueError{ValueError::new(ValueRefusalKind::AllocationFailed,message)}
@@ -80,6 +80,3 @@ fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotCont
  }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;

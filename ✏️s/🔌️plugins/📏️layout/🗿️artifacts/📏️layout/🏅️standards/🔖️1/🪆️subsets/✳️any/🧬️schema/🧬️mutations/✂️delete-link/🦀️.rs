@@ -11,8 +11,8 @@ use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🗑️DeleteLink
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 pub struct DeleteLink {
@@ -60,11 +60,3 @@ pub fn inverse_delete_link<Op: From<crate::create_link::CreateLink>>(payload: &D
 }
 //#endregion 🗑️DeleteLink
 
-//#region 🪢️TaxonomyMounts
-#[cfg(test)]
-#[path = "🧪️tests/📍️removes-a-middle-row/🦀️.rs"]
-mod tests_removes_a_middle_row;
-#[cfg(test)]
-#[path = "🧪️tests/🔗️removes-link-2/🦀️.rs"]
-mod tests_removes_link_2;
-//#endregion 🪢️TaxonomyMounts

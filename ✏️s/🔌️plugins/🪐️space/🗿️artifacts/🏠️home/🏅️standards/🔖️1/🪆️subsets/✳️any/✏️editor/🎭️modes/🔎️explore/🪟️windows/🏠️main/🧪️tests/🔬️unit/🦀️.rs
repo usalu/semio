@@ -1,5 +1,12 @@
+use crate::editor::home::config::HomeConfig;
+use crate::editor::home::transient::HomeDirectoryProjection;
+use crate::editor::home::terminology::SHomeLabels;
+use crate::editor::home::S_HOME_CONTROLLER_ID;
+use semio_s_space_core::HomeTableLabels;
+use semio_framework_plugin::app::TreeWindows;
+use crate::editor::home::modes::explore::windows::main::{render_rows, render_rows_wrapped};
 
-use super::*;
+use crate::editor::home::modes::explore::windows::main::*;
 
 fn project(node: semio_framework_plugin::BuiltNode) -> String {
     semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("Home row tree projection")

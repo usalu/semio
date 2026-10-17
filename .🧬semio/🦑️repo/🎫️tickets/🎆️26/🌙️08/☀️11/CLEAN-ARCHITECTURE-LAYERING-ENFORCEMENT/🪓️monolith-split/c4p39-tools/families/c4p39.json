@@ -1,0 +1,12 @@
+{
+ "name": "c4p39",
+ "crates": [
+  "semio-framework-os-renderer-wgpu-shell-tests-chrome-3",
+  "semio-framework-os-renderer-wgpu-shell-tests-chrome-4",
+  "semio-framework-os-renderer-wgpu-shell-tests-docs-1",
+  "semio-framework-os-renderer-wgpu-shell-tests-docs-2",
+  "semio-framework-os-renderer-wgpu-shell-tests-input-1",
+  "semio-framework-os-renderer-wgpu-shell-tests-windows-1"
+ ],
+ "note": "CENSUS4-PKG-39: the six Shell test bins that mount the six split law files (include! fragments, one module scope each)"
+}

@@ -3,8 +3,14 @@
 //! two transactions; a streamed stroke is one transaction of every sample, previewed through the one rasterizer, ended
 //! with zero trace by a cancel, and deaf to the late ticks of a closed press.
 
-use super::*;
-use crate::selection::RasterPixelSelection;
+use semio_s_artifact_raster_raster_editor::config::RasterConfig;
+use semio_s_artifact_raster_raster_editor::modes::edit::windows::composite::transient::RasterCompositeWindowTransient;
+use semio_s_artifact_raster_raster_mutations_pixels::paint_stroke::{PaintStroke as PaintStrokeLeaf, RasterBrush, RasterSelectionSpan, RasterStrokePoint};
+use semio_s_artifact_raster_raster_mutations::RasterMutation;
+use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
+use semio_framework_plugin::{ArtifactView, ConfigView};
+use semio_s_artifact_raster_raster_editor::commands::paint_stroke::*;
+use semio_s_artifact_raster_raster_editor::selection::RasterPixelSelection;
 use semio_framework_plugin::{AppOperationContext, HistoryView};
 
 fn document(locked: bool, visible: bool) -> RasterSnapshot {

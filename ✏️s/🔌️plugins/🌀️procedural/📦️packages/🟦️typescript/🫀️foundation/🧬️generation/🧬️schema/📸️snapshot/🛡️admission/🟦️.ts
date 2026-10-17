@@ -1,0 +1,2 @@
+/** 🛡️ Public entry `@semio-tech/procedural-js/foundation/generation/schema/snapshot/admission`: the explicit surface that importers outside the module use. */
+export { binary64, binary64Value, parseBinary64, parseCameraJson, parseFlowHostSnapshot, parseFormGeneration, parseGenerationPlayState, parseProceduralSnapshot, parseSynapseSpec, parseWidget, parseWidgetLayout } from "../../../../../../../🫀️foundation/🧬️generation/🧬️schema/📸️snapshot/🛡️admission/🟦️.ts";

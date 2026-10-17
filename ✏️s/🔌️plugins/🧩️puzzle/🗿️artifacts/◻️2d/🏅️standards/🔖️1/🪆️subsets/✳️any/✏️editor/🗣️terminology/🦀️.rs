@@ -2,7 +2,6 @@
 //! terminology×locale combination is compile-checked by `semio_framework_plugin::app_labels!`
 //! (see ticket 26/08/03/COMPILE-TIME-CHECKED-UI-LABELS-ACROSS-LOCALE-TERMINOLOGY-AND-BRAND).
 
-use semio_framework_ui_locale::AppLabels;
 use semio_framework_ui_locale::LabelText;
 use semio_framework_ui_locale::Locale;
 use semio_framework_ui_locale::LocalizedLabel;
@@ -175,7 +174,5 @@ pub fn puzzle2d_localized_phrase(field: impl Fn(&Puzzle2dLabels) -> LabelText, e
 //#endregion 🔖️Locale
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

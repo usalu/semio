@@ -20,12 +20,9 @@ pub fn decode(bytes: &[u8]) -> Result<GisMapSnapshot, PackError> {
 }
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
 
 
 
-#[path = "📦️pack/🦀️.rs"]
-pub(crate) mod owned_pack;
+pub use semio_s_artifact_gis_gismap_snapshot::standards::v1::subsets::any::io::binary::snapshot::owned_pack;

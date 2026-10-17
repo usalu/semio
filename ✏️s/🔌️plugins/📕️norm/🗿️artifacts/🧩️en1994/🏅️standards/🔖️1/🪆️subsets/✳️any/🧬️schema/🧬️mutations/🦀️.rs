@@ -114,8 +114,11 @@ mod tests;
 mod kinds_catalog;
 //#endregion 🧪️Tests
 
-#[cfg(test)]
-pub use crate::tests::demo_mutation_cases;
+#[cfg(any(test, feature = "testkit"))]
+#[path = "🧰️testkit/🦀️.rs"]
+mod testkit;
+#[cfg(any(test, feature = "testkit"))]
+pub use testkit::demo_mutation_cases;
 
 //#region 🍃️FacetLeaves
 /// 🍃️ The five handcrafted leaves of the `mutations` schema facet.

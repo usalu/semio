@@ -10,5 +10,4 @@ test("cold context dictionaries preserve independent JSON map semantics and orig
  expect(native).toContain("cold_insert");
  const codec=readFileSync(new URL("../../🚦️native/🦀️.rs",import.meta.url),"utf8");
  expect(codec).toContain("from_value_controlled");expect(codec).toContain("control.allocate_vec");
- console.log("[DEBUG] Five neutral cold dictionary cases checked against JavaScript Object.fromEntries and JSON wire; native physical witness remains separate");
 });

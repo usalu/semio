@@ -3,7 +3,7 @@ import { act, render, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { UI_MOBILE_MAX_WIDTH_PX, UI_TABLET_MAX_WIDTH_PX } from "@semio-tech/ui-react/chrome";
 import { HOME_CHROME_HEIGHT_PX, HOME_GRID_ROW_HEIGHT_PX, HOME_GRID_TRACKS, HomeScreen, TEXT_SIZES, homeCells, homeGridMinHeight, homeLayoutQueries, quizText, type QuizSession } from "@semio-tech/quiz-react";
-import stylesheet from "../../🎯️targets/⚛️react/🎨️.css?raw";
+import { quizStylesheet as stylesheet } from "@semio-tech/quiz-react/stylesheet";
 import { Home, PAGES, PREFERENCES, STATE, atViewport, cardHost, fixture, pane, stubSession } from "../🛠️home-grid-kit/🟦️.tsx";
 
 describe("🏠️ the layout in the learner's text size", () => {

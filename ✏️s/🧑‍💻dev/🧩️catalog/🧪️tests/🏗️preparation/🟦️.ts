@@ -49,5 +49,4 @@ test("the actual S preparation receiver retains every contributed closure",async
     checked++;
   }
   assert.ok(checked > 0);
- console.log("[DEBUG] actual S preparation closures",{components:components.length,checked});
 },30000);

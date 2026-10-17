@@ -1,4 +1,4 @@
-import type {FlowWasmDeliveryV1} from "../../../../../../../../🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts";
+import type {FlowWasmDeliveryV1} from "@semio-tech/ui-styling/builder/vite";
 import {join,isAbsolute,resolve} from "node:path";
 import {validateJsonSchemaSubset} from "@semio-tech/schema-validator-ts";
 import {type RepositoryArtifactRequestV1} from "../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/👓️reading/📋️contract/🟦️.ts";

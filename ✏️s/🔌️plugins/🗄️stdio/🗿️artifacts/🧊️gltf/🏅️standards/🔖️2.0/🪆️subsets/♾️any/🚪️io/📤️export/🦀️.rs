@@ -2,11 +2,11 @@
 //! `data:` URIs) and to the `.glb` binary container. Depends on the model only; its round-trip laws read back through
 //! the sibling `import` module.
 
-use crate::standards::v2_0::subsets::any::schema::snapshot::GltfSnapshot;
+use crate::standards::v2_0::subsets::any::schema::snapshot_root::GltfSnapshot;
 #[cfg(test)]
 use crate::standards::v2_0::subsets::any::schema::snapshot::{GltfAccessor, GltfAccessorType, GltfBuffer, GltfBufferView, GltfComponentType, GltfDocument, GltfJson, GltfMesh, GltfPrimitive, GltfSourceForm, GltfSparseAccessor, GltfSparseIndices, GltfSparseValues};
 #[cfg(test)]
-use crate::standards::v2_0::subsets::any::schema::STDIO_GLTF_DOCUMENT_SCHEMA;
+use crate::standards::v2_0::subsets::any::schema::snapshot_root::STDIO_GLTF_DOCUMENT_SCHEMA;
 #[cfg(test)]
 use crate::standards::v2_0::subsets::any::io::{b64_decode, decode_accessor, decode_data_uri, normalize_components};
 #[cfg(test)]

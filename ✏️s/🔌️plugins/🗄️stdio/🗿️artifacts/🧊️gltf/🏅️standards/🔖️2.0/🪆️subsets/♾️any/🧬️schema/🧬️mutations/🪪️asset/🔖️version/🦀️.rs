@@ -28,7 +28,10 @@ pub fn plan(p: &GltfChangeAssetVersionPayload, base: &GltfSnapshot) -> Result<Gl
     Ok(GltfDiff { asset: changed(GltfAssetDiff { version: (base.document.asset.version != p.version).then(|| p.version.clone()), ..Default::default() }), ..Default::default() })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn inverse(p: &GltfChangeAssetVersionPayload, base: &GltfSnapshot) -> Vec<super::GltfMutation> {
+pub fn inverse<Op>(p: &GltfChangeAssetVersionPayload, base: &GltfSnapshot) -> Vec<Op>
+where
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::remove_used_extension::RemoveUsedExtensionMutation>,
+{
     if validate(p, base).is_err() {
         return Vec::new();
     }
@@ -48,11 +51,17 @@ pub enum ChangeAssetVersionMutation {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn mutation(payload: GltfChangeAssetVersionPayload) -> super::GltfMutation {
-    super::GltfMutation::ChangeAssetVersion(ChangeAssetVersionMutation::Apply(payload))
+pub fn mutation<Op>(payload: GltfChangeAssetVersionPayload) -> Op
+where
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::change_asset_version::ChangeAssetVersionMutation>,
+{
+    Op::from(ChangeAssetVersionMutation::Apply(payload))
 }
 
-impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ChangeAssetVersionMutation {
+impl<Op> protocol::MutationKind<GltfSnapshot, Op> for ChangeAssetVersionMutation
+where
+    Op: protocol::Mutation<GltfSnapshot, Diff = GltfDiff> + From<ChangeAssetVersionMutation>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "asset-version", kind: "change-asset-version", record: "ChangedAssetVersion" };
 
     fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<GltfDiff> {
@@ -64,7 +73,7 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ChangeAssetVe
         }
     }
 
-    fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<super::GltfMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         match self {
             Self::Apply(payload) => Ok(inverse(payload, base)),
         }
@@ -81,7 +90,5 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ChangeAssetVe
 //#endregion 🧬️DirectMutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔖️raises-the-asset-f95b77/🦀️.rs"]
-mod case_raises_the_asset_f95b77;
+
 //#endregion 🧪️Tests

@@ -3,7 +3,7 @@
 pub const OPCODE: &str = "remove-dict-entry";
 pub const TEXT_OPCODE: &str = OPCODE;
 
-use crate::standards::v1_7::subsets::base::schema::mutations::RemoveDictEntry;
+use crate::standards::v1_7::subsets::base::schema::mutations::remove_dict_entry::RemoveDictEntry;
 
 /// 🖨️ Prints this direct payload through its schema-derived JSON representation.
 pub fn print(payload: &RemoveDictEntry) -> Result<String, String> {

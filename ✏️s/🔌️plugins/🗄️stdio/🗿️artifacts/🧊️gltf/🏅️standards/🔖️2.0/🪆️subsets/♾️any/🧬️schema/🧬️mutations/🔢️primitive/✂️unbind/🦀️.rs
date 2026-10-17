@@ -29,12 +29,15 @@ pub fn plan(p: &GltfUnbindPrimitiveIndicesPayload, base: &GltfSnapshot) -> Resul
     Ok(GltfDiff { meshes: primitive_patch(p.mesh, p.primitive, GltfPrimitiveDiff { indices: (value != base.document.meshes[p.mesh].primitives[p.primitive].indices).then(|| value), ..Default::default() }), ..Default::default() })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn inverse(p: &GltfUnbindPrimitiveIndicesPayload, base: &GltfSnapshot) -> Vec<super::GltfMutation> {
+pub fn inverse<Op>(p: &GltfUnbindPrimitiveIndicesPayload, base: &GltfSnapshot) -> Vec<Op>
+where
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::remove_used_extension::RemoveUsedExtensionMutation>,
+{
     if validate(p, base).is_err() {
         return Vec::new();
     }
     match base.document.meshes[p.mesh].primitives[p.primitive].indices {
-        Some(current) => vec![super::bind_primitive_indices::mutation(super::bind_primitive_indices::GltfBindPrimitiveIndicesPayload { mesh: p.mesh, primitive: p.primitive, accessor: current })],
+        Some(current) => vec![crate::standards::v2_0::subsets::any::schema::mutations::bind_primitive_indices::mutation(crate::standards::v2_0::subsets::any::schema::mutations::bind_primitive_indices::GltfBindPrimitiveIndicesPayload { mesh: p.mesh, primitive: p.primitive, accessor: current })],
         None => Vec::new(),
     }
 }
@@ -49,11 +52,17 @@ pub enum UnbindPrimitiveIndicesMutation {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn mutation(payload: GltfUnbindPrimitiveIndicesPayload) -> super::GltfMutation {
-    super::GltfMutation::UnbindPrimitiveIndices(UnbindPrimitiveIndicesMutation::Apply(payload))
+pub fn mutation<Op>(payload: GltfUnbindPrimitiveIndicesPayload) -> Op
+where
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::unbind_primitive_indices::UnbindPrimitiveIndicesMutation>,
+{
+    Op::from(UnbindPrimitiveIndicesMutation::Apply(payload))
 }
 
-impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for UnbindPrimitiveIndicesMutation {
+impl<Op> protocol::MutationKind<GltfSnapshot, Op> for UnbindPrimitiveIndicesMutation
+where
+    Op: protocol::Mutation<GltfSnapshot, Diff = GltfDiff> + From<UnbindPrimitiveIndicesMutation>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "unbind", entity: "primitive-indices", kind: "unbind-primitive-indices", record: "UnboundPrimitiveIndices" };
 
     fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<GltfDiff> {
@@ -65,7 +74,7 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for UnbindPrimiti
         }
     }
 
-    fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<super::GltfMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         match self {
             Self::Apply(payload) => Ok(inverse(payload, base)),
         }
@@ -82,7 +91,5 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for UnbindPrimiti
 //#endregion 🧬️DirectMutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/✂️returns-the-618d30/🦀️.rs"]
-mod case_returns_the_618d30;
+
 //#endregion 🧪️Tests

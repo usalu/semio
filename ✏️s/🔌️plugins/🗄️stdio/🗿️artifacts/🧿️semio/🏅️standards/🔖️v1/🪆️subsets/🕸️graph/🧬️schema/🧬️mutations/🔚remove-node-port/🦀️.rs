@@ -1,7 +1,6 @@
 //! 🔚 `remove-node-port` — detaches one port from a node, addressed by BASE-state
 //! `{node_id, index}`.
 
-use crate::schema::mutations::SemioGraphMutation;
 use crate::schema::snapshot::{GraphNodeId, SemioGraphSnapshot};
 
 //#region 🔖️Payload
@@ -13,13 +12,16 @@ pub struct RemoveNodePort {
     pub index: usize,
 }
 
-impl protocol::MutationKind<SemioGraphSnapshot, SemioGraphMutation> for RemoveNodePort {
+impl<Op> protocol::MutationKind<SemioGraphSnapshot, Op> for RemoveNodePort
+where
+    Op: protocol::Mutation<SemioGraphSnapshot, Diff = crate::schema::diff::SemioGraphDiff> + From<RemoveNodePort> + From<crate::schema::mutations::add_node_port::AddNodePort>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "node-port", kind: "remove-node-port", record: "RemovedNodePort" };
 
-    fn diff(&self, base: &SemioGraphSnapshot) -> protocol::MutationOutcome<<SemioGraphMutation as protocol::Mutation<SemioGraphSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioGraphSnapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<SemioGraphSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &SemioGraphSnapshot) -> Result<Vec<SemioGraphMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &SemioGraphSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

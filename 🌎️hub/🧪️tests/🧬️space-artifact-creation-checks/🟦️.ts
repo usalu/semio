@@ -3,8 +3,8 @@
  */
 import { scriptCompilerAdmissionControlV1 as exactCargoCallerControlV1 } from "@semio-tech/process/compiler-capacity";
 import { configuredExactCargoLawPolicyV1 } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
-import { descriptorDigestEncodingV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🚪️io/🧱️binary/🔐️descriptor-digest/🟦️.ts";
-import { parseSpaceArtifactCreateJsonV1, parseSpaceArtifactCreationCatalogJsonV1, parseSpaceArtifactCreationStatusJsonV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🚪️io/📝️text/🌱️space-artifact-creation-v1/🟦️.ts";
+import { descriptorDigestEncodingV1 } from "@semio-tech/framework-os/modules/directory/io/binary/descriptor-digest";
+import { parseSpaceArtifactCreateJsonV1, parseSpaceArtifactCreationCatalogJsonV1, parseSpaceArtifactCreationStatusJsonV1 } from "@semio-tech/framework-os/modules/directory/io/text/space-artifact-creation-v1";
 import { type ExactCargoLawGroup } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
 import { buildBudgetMs } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 import { createHash } from "node:crypto";
@@ -12,11 +12,11 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import Ajv from "ajv";
 import { canonicalJson } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧾️serialization/🔣️json/🟦️.ts";
-import { decodePackValue, encodePackValue, packValueToExactJson } from "../../../🧰️framework/🛍️products/💻️os/🟦️.ts";
-import type { PackValue } from "../../../🧰️framework/🛍️products/💻️os/🟦️.ts";
-import { DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES, parseDocumentOpenPlanV1, parseDocumentExecutionTargetLeaseFieldsV1, leaseFieldsFromPlanV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🔏️document-open/🟦️.ts";
+import { decodePackValue, encodePackValue, packValueToExactJson } from "@semio-tech/framework-os";
+import type { PackValue } from "@semio-tech/framework-os";
+import { DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES, parseDocumentOpenPlanV1, parseDocumentExecutionTargetLeaseFieldsV1, leaseFieldsFromPlanV1 } from "@semio-tech/framework-os/modules/directory/schema/document-open";
 import { DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES } from "@semio-tech/framework/directory/schema";
-import { sealSpaceArtifactCreateV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🌱️space-artifact-creation-v1/🟦️.ts";
+import { sealSpaceArtifactCreateV1 } from "@semio-tech/framework-os/modules/directory/schema/space-artifact-creation-v1";
 import { foldAll as foldDirectoryIndexEvents } from "@semio-tech/framework/directory";
 import { artifactFrontierIsGenesisForV1, artifactFrontierIsEditedForV1, validDocumentIndexEntryV1 } from "@semio-tech/framework/directory/schema";
 import { runRepositoryExactCargoLaws, configuredRepositoryCargoPreparationPolicyV1 } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
@@ -163,13 +163,11 @@ function proveSpaceArtifactCreationContractV1(repoRoot: string): number {
     const delivery = committed ? row.kind.includes("unreadable") ? "reconnect" : "broadcast" : "none";
     if (row.committed !== committed || row.publicEvents !== (committed ? 3 : 0) || row.terminal !== terminal || row.delivery !== delivery) throw new Error(`creation transaction oracle differs: ${row.kind}`);
   }
-  console.log(`[DEBUG] creation transaction oracle: independent-outcomes=${transactions.cases.length}; backend transactions not executed`);
   const recovery = JSON.parse(readFileSync(join(transactionRoot, "🧯️accepted-recovery.json"), "utf8"));
   if (recovery.cases.length !== 3 || new Set(recovery.cases.map((row: any) => row.kind)).size !== 3) throw new Error("creation accepted recovery corpus is not the exact kind closure");
   for (const row of recovery.cases) {
     if (!["live", "revoked", "expired"].includes(row.kind) || row.recoveryCandidates !== (row.kind === "expired" ? 1 : 0) || row.terminal !== (row.kind === "live" ? "accepted" : "failed") || row.facts !== (row.kind === "live" ? 1 : 2)) throw new Error(`creation accepted recovery oracle differs: ${row.kind}`);
   }
-  console.log(`[DEBUG] creation accepted recovery oracle: independent-observations=${recovery.cases.length}; real deadline/backend not executed`);
   const operation = JSON.parse(readFileSync(join(operationRoot, "🔣️.json"), "utf8"));
   const cancellations = JSON.parse(readFileSync(join(operationRoot, "🛑️cancel.json"), "utf8"));
   if (cancellations.cases.length !== 9) throw new Error("creation cancellation race corpus differs");
@@ -179,7 +177,6 @@ function proveSpaceArtifactCreationContractV1(repoRoot: string): number {
     const phase = !accepted ? null : row.state === "committed" ? "ready" : row.state === "failed" ? "failed" : "cancelled";
     if (row.accepted !== accepted || row.phase !== phase) throw new Error(`creation cancellation oracle differs: ${row.state}/${row.expectedRevision}`);
   }
-  console.log(`[DEBUG] creation cancellation oracle: plain-cases=${cancellations.cases.length}; backend concurrency not executed`);
   if (operation.schema !== "semio.test.artifact-creation-operation/v1" || operation.transitions.length !== 30
     || new Set(operation.transitions.map((row: any) => `${row.state}/${row.fact}`)).size !== 30) throw new Error("creation operation transition corpus is not the exact 6x5 closure");
   for (const row of operation.transitions) {
@@ -191,7 +188,6 @@ function proveSpaceArtifactCreationContractV1(repoRoot: string): number {
     const bytes = Buffer.from(value); const length = Buffer.alloc(8); length.writeBigUInt64BE(BigInt(bytes.length)); intentDigest.update(length).update(bytes);
   }
   if (intentDigest.digest("hex") !== operation.intent.commandSha256) throw new Error("creation operation independent intent commitment differs");
-  console.log(`[DEBUG] creation operation: independent transitions=${operation.transitions.length} independent-node-SHA256=1; native reducer/backend not executed`);
   const expected = genesis.expected;
   if (JSON.stringify(hash(Buffer.from(expected.checkpointEncodingHex, "hex"))) !== JSON.stringify(expected.checkpoint.checkpointId)
     || JSON.stringify(hash(descriptorDigestEncodingV1(expected.descriptor))) !== JSON.stringify(expected.checkpoint.descriptorDigestV1)

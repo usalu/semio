@@ -1,0 +1,71 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "path",
+    "beforeSha256",
+    "afterSha256",
+    "thirdpartyPinsSha256",
+    "entries",
+    "facadeCallerPresent"
+  ],
+  "properties": {
+    "path": {
+      "type": "string"
+    },
+    "beforeSha256": {
+      "type": "string"
+    },
+    "afterSha256": {
+      "type": "string"
+    },
+    "thirdpartyPinsSha256": {
+      "type": "string"
+    },
+    "entries": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path",
+          "name",
+          "version",
+          "dependencies",
+          "missingFirstparty"
+        ],
+        "properties": {
+          "path": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "version": {
+            "const": "0.1.0"
+          },
+          "dependencies": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "type": "string"
+            }
+          },
+          "missingFirstparty": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "facadeCallerPresent": {
+      "type": "boolean"
+    }
+  }
+}

@@ -7,7 +7,8 @@
   "private": true,
   "exports": {
     ".": "./🟦️.tsx",
-    "./🎨️.css": "./🎨️.css"
+    "./🎨️.css": "./🎨️.css",
+    "./builder/vite": "./🏗️builder/🌐️vite/🟦️.ts"
   },
   "license": "LGPL-3.0-or-later",
   "semio": {

@@ -1,4 +1,34 @@
-use super::*;
+#[allow(unused_imports)]
+use crate::{editor::shooting::config::ShootingConfig, editor::shooting::config::ShootingConfigMutation};
+#[allow(unused_imports)]
+use crate::editor::shooting::ui_helpers_and_io::ShootingDispatchCtx;
+#[allow(unused_imports)]
+use crate::mutations::change_shot_format::ChangeShotFormat;
+#[allow(unused_imports)]
+use crate::mutations::change_shot_height::ChangeShotHeight;
+#[allow(unused_imports)]
+use crate::mutations::change_shot_shape::ChangeShotShape;
+#[allow(unused_imports)]
+use crate::mutations::change_shot_width::ChangeShotWidth;
+#[allow(unused_imports)]
+use crate::mutations::create_shot::CreateShot;
+#[allow(unused_imports)]
+use crate::mutations::rename_shot::RenameShot;
+#[allow(unused_imports)]
+use crate::mutations::set_active_shot::SetActiveShot as SetActiveShotMutation;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::mutations::ShootingMutation;
+#[allow(unused_imports)]
+use crate::ShootingShot;
+#[allow(unused_imports)]
+use semio_framework_pack_json::json;
+#[allow(unused_imports)]
+use semio_framework_pack_json::Value;
+#[allow(unused_imports)]
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+#[allow(unused_imports)]
+use semio_framework_value_derive::{FromValue, ToValue};
+use crate::editor::shooting::commands::shot::*;
 use crate::editor::shooting::unit_tests::context::{dispatch, shooting_app};
 use crate::editor::shooting::ShootingCommand;
 
@@ -6,7 +36,7 @@ use crate::editor::shooting::ShootingCommand;
 async fn set_active_shot_label_patches_active_shot() {
     let mut app = shooting_app().await;
     dispatch(&mut app, ShootingCommand::SetActiveShotLabel(set_active_shot_label::SetActiveShotLabel { value: "Hero Shot".into() })).await;
-    assert_eq!(crate::standards::v1::subsets::any::schema::active_shot(&app.snapshot().expect("snapshot")).unwrap().label, "Hero Shot");
+    assert_eq!(crate::active_shot(&app.snapshot().expect("snapshot")).unwrap().label, "Hero Shot");
 }
 
 #[semio_framework_async_macros::async_test]

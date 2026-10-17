@@ -17,7 +17,8 @@ use ui_wgpu::wgpu::{
     draw_text_overlay, ActionDescriptor, FontAtlas, KeyAction, PointerModifiers, Rect, Rgba,
     SurfaceKind, Theme, UiComponentSceneNode,
 };
-use dag::dag_set_wheel_zoom_active;
+use semio_framework_os_infinite_board_dag_graph::{dag_set_wheel_zoom_active, fit_camera_to_content, hovered_node_id, hovered_node_id_ref, selection_union_bounds_screen_json};
+use semio_framework_os_infinite_board_dag_host::{connection_cursor_active_at_screen, screen_geometry_census_json, screen_hit, screen_hit_json};
 
 //#region NodeGraph
 
@@ -900,19 +901,19 @@ fn graph_payload_digest(parts: &[&str]) -> u64 {
 
 /// 📮️ One gesture's interaction payloads, with the three flags that say which of them this surface
 /// has not already told the guest.
-struct GraphInteractionDispatch {
+pub struct GraphInteractionDispatch {
     pub(super) domain_id: Option<String>,
     select_targets: String,
     hover_targets: String,
     pub(super) viewport: semio_framework_os_kernel::Viewport2d,
     digest: PublishedGraphInteraction,
-    pub(super) publish_select: bool,
-    pub(super) publish_hover: bool,
+    pub publish_select: bool,
+    pub publish_hover: bool,
     publish_viewport: bool,
 }
 
 impl GraphInteractionDispatch {
-    pub(super) fn item_count(&self) -> usize {
+    pub fn item_count(&self) -> usize {
         usize::from(self.publish_select) + usize::from(self.publish_hover) + usize::from(self.publish_viewport)
     }
 }

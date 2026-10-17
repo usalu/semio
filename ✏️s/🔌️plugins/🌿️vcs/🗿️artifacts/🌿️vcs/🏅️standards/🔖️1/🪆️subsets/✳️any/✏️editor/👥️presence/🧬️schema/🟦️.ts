@@ -19,6 +19,10 @@ type vcsVcsPresenceGuardSizeBounds = { readonly minItems?: number; readonly maxI
 
 export const vcsVcsPresenceGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : vcsVcsPresenceGuardReject(at, "value is not an object");
+export const vcsVcsPresenceGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) vcsVcsPresenceGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const vcsVcsPresenceGuardArray = (value: unknown, at: string, bounds: vcsVcsPresenceGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return vcsVcsPresenceGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) vcsVcsPresenceGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -49,5 +53,5 @@ export const vcsVcsPresenceGuardConstant = <T extends string | number | boolean>
 //#endregion 🚪️Parsers
 
 export function parseVcsDemoPresence(value: unknown, at = "$"): VcsDemoPresence {
-  return vcsVcsPresenceGuardObject(value, `${at}`);
+  return vcsVcsPresenceGuardClosed(vcsVcsPresenceGuardObject(value, `${at}`), `${at}`, []);
 }

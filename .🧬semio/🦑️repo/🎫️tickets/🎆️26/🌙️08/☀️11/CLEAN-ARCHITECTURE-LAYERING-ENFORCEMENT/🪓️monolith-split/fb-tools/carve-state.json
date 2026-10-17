@@ -1,0 +1,18 @@
+{
+ "🧬️kernel-contract/🦀️.rs": "3d6add3faaf5b9c48c84ed83ad58cffa77e4f38dfcce6ae0df3740d43e120662",
+ "🧬️kernel-contract/🧪️tests/🔬️unit/🦀️.rs": "e55d2fef1bea58942d3597a939cc166962a88a3b6add50d999280e72ac4bf5d1",
+ "📦️mesh-io/🦀️.rs": "43dec1e7abcf272de4bb46ce193d6da51421a23a1ba0d040b53cf12d95668a46",
+ "📦️mesh-io/🧪️tests/🖼️preview/🦀️.rs": "b21a6d8ff23eaf6cac427c5ac73ab7fd229781fd782d5cdcb5c4f346ed471a74",
+ "🪅️shape-value/🦀️.rs": "aaf61dcff219eae3e8fa7602fa8b789f03d3a994e4d6015f3a085f57889ecb66",
+ "🚚️shape-exchange/🦀️.rs": "4f0c38385a592c82f5fc61c24cf77da235ae3a84b556cda269de7040b6b31c09",
+ "🚚️shape-exchange/🧪️tests/🔬️unit/🦀️.rs": "da1bfc59c0271d86a7aea3a9bbba0ffcccc0d2d5b6170a011a5c1c6111abe08c",
+ "🦀️.rs": "6b1a5752a37c206b9bc0e5a63ff32916aa956316670923fca0ae5fee546258ee",
+ "🧪️tests/🔬️unit/🦀️.rs": "10529261f93214f4fe1716ef148ee33f5bcbbd67b0977681e8f6385f0b2c425b",
+ "🧪️tests/🦀️.rs": "756063435c5bc6c1ae4c8b225129bfc0481cf1dc6bd6abff25f6d5cb6277b8c0",
+ "🧪️tests/🔭️api/🦀️.rs": "99fecdeda5e52fc8d9aec1bb938448ce21a660bd4f475f4af17dc3e7458c37f3",
+ "🧪️tests/⏱️operation-jobs/🦀️.rs": "5a10bf171849d52eeeeae3500b1b23c916c04adf23e83dd77140f979fb4241be",
+ "⏱️operation-jobs/🧪️tests/🔬️unit/🦀️.rs": "3db61bb92efe5176a346f9094e58fad7dad8f7f0e2602f8dc710171079443de2",
+ "🧪️tests/🪅️shape-values/🦀️.rs": "6557d71470453093e0421c6dc59663f35a1fbce8bbcaa457c78db6bef896d7ac",
+ "🧪️tests/🔎️analysis/🦀️.rs": "73ae3ab3b2b6a5eb44d03938f7cbd349d161a52376f345bb1c69ae4d5f006cbe",
+ "🔎️analysis-session/🧪️tests/🔬️unit/🦀️.rs": "c281e2ba8574721642b93b80cc534c0ea8f3f0b3db36997e0a8e4d3430c80564"
+}

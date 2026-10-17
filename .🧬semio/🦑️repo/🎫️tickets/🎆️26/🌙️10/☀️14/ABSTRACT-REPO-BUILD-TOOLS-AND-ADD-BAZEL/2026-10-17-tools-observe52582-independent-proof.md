@@ -1,0 +1,7 @@
+# Tools Selected Observe 52582 Independent Proof
+
+Eight saved files match stable nofollow FD/name seven-field metadata, bytes and SHA256: current plan/census/both commands/result and actual observe log/request/result. Receipt: `🗑️generated/tools-observe52582-independent-hold.json`. Observe input8409f49b75d61c0b4d34fbabfee11b54fabfc06d8ad31ea4a000cb018ca2a029 matches saved command, exact request and result. Retire command remains1271 bytes/SHA0aaaf7a0114b98e0a07f974ca7c2a3b0c0a6b08cf94721a4eae5e2c8fd2a53d2.
+
+Root reports52582 natural0. Exact acquired observe result for selecteddb49 copied-artifact has11712 entries/10198 files/169004333 logical bytes/199614464 allocated bytes, inventoryb929798393ba62bfb6918b3dcbd92f0883772170e33863a605f44ccdb7386809 and40 selected immutable object identities. Retired generation/object arrays are empty. Whole committed allocation5bb63f095e76195f019374d31d739189 remains8588886016 bytes/raw journale1d658a6df301abf19f1f2f848ee24cd615b37c857c7265e1ba175256da0cceb, allocationRetired:false.
+
+This accepts a complete current observation only. Fresh fixed owner must reacquire real custody and recheck every current binding/selected payload/object/proven-unused relation before an effect; saved observation is no lease or authority. No retirement, physical savings, main image/charge closure or public readiness is accepted. No protected read or Native operation performed.

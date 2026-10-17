@@ -14,21 +14,21 @@ use crate::schema::diff::SemioKitDiff;
 use crate::schema::snapshot::SemioKitSnapshot;
 
 //#region 🔖️Leaves
-use super::add_design;
-use super::add_type;
-use super::bind_representation;
-use super::change_representation_pin;
-use super::create_model;
-use super::create_object;
-use super::create_properties;
-use super::delete_model;
-use super::delete_object;
-use super::delete_properties;
-use super::edit_design;
-use super::remove_design;
-use super::remove_type;
-use super::rename_type;
-use super::unbind_representation;
+use crate::schema::mutations::add_design;
+use crate::schema::mutations::add_type;
+use crate::schema::mutations::bind_representation;
+use crate::schema::mutations::change_representation_pin;
+use crate::schema::mutations::create_model;
+use crate::schema::mutations::create_object;
+use crate::schema::mutations::create_properties;
+use crate::schema::mutations::delete_model;
+use crate::schema::mutations::delete_object;
+use crate::schema::mutations::delete_properties;
+use crate::schema::mutations::edit_design;
+use crate::schema::mutations::remove_design;
+use crate::schema::mutations::remove_type;
+use crate::schema::mutations::rename_type;
+use crate::schema::mutations::unbind_representation;
 //#endregion 🔖️Leaves
 
 //#region 🔖️Mutations
@@ -102,17 +102,9 @@ pub fn inverse_semio_kit_mutation(mutation: &SemioKitMutation, base: &SemioKitSn
 //#endregion 🔖️Apply
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
 
 //#region 🧪️FixtureTests
-/// 🧪️ Handcrafted mutation fixtures (contract D1, ticket `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`)
-/// — one case per triad leaf, self-wired here rather than in `🦀️.rs` so this subset owns its
-/// own test surface. `#[path = "."]` re-roots the nested `#[path]`s at THIS file's directory (the
-/// `🧬️mutations` root) instead of the implicit `🦀️component/` child directory.
-#[cfg(test)]
-#[path = "🧪️tests/🔬️fixture/🦀️.rs"]
-mod fixture_tests;
+
 //#endregion 🧪️FixtureTests

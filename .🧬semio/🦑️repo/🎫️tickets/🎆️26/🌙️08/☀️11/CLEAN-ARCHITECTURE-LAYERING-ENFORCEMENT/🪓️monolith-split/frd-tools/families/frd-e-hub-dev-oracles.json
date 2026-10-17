@@ -1,0 +1,33 @@
+{
+ "name": "frd-e-hub-dev-oracles",
+ "crates": [
+  "semio-framework-test-fixtures",
+  "semio-hub-auth",
+  "semio-hub-bim",
+  "semio-hub-component-codec-laws",
+  "semio-hub-directory",
+  "semio-hub-directory-laws",
+  "semio-hub-directory-laws-2",
+  "semio-hub-draw",
+  "semio-hub-gis",
+  "semio-hub-hostile-input-laws",
+  "semio-hub-norm",
+  "semio-hub-note",
+  "semio-hub-stdio",
+  "semio-hub-testing",
+  "semio-hub-trusted-catalog-laws",
+  "semio-s-artifact-stdio-docx-test-oracle",
+  "semio-s-artifact-stdio-ifc-test-oracle",
+  "semio-s-artifact-stdio-jpg-test-oracle",
+  "semio-s-artifact-stdio-mp3-test-oracle",
+  "semio-s-artifact-stdio-mp4-test-oracle",
+  "semio-s-artifact-stdio-pptx-test-oracle",
+  "semio-s-artifact-stdio-step-test-oracle",
+  "semio-s-artifact-stdio-tiff-test-oracle",
+  "semio-s-composition-laws",
+  "semio-s-fixture-sweep",
+  "teaching-proctor",
+  "teaching-proctor-base"
+ ],
+ "note": "FRD touched crates, no baseline"
+}

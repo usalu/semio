@@ -43,5 +43,5 @@ pub fn app_schema_descriptor() -> ::semio_framework_schema_registry::AppSchemaDe
 
 //#region 🔁️Re-exports
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
-pub use crate::Filters;
+pub use crate::{Filters, SortDirection, TableSort};
 //#endregion 🔁️Re-exports

@@ -213,6 +213,7 @@ semio-framework-async-macros = { workspace = true }
 semio-framework-diagnostic = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-pack-json = { workspace = true }
+semio-framework-test-fixtures = { path = "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-framework-value = { workspace = true }
 semio-s-artifact-energy-model-diff = { workspace = true }
 semio-s-artifact-energy-model-mut-air-loop = { workspace = true }

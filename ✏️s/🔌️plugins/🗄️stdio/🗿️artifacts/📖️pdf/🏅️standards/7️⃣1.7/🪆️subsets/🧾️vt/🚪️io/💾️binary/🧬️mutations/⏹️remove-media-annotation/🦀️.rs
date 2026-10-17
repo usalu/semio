@@ -1,6 +1,6 @@
 //! ⏹️ Direct binary codec for `remove-media-annotation`.
 
-use crate::standards::v1_7::subsets::vt::schema::mutations::RemoveMediaAnnotation;
+use crate::standards::v1_7::subsets::vt::schema::mutations::remove_media_annotation::RemoveMediaAnnotation;
 
 //#region 🔖️Identity
 pub const TAG: u8 = 13;
@@ -21,7 +21,5 @@ pub fn decode(bytes: &[u8]) -> Result<RemoveMediaAnnotation, String> {
 //#endregion 🔖️Codec
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

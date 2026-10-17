@@ -1,0 +1,43 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-s-artifact-stdio-dwg-snapshot"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Stdio dwg snapshot and its codecs"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "🦀️.rs"
+
+[dependencies]
+semio-framework-artifact-reference = { workspace = true }
+semio-framework-diagnostic = { workspace = true }
+semio-framework-dsl-record = { workspace = true }
+semio-framework-dsl-record-derive = { workspace = true }
+semio-framework-hash = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-pack-json = { workspace = true }
+semio-framework-schema = { workspace = true }
+semio-framework-schema-composition = { workspace = true }
+semio-framework-schema-state = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-framework-value-derive = { workspace = true }
+semio-s-artifact-stdio-dwg-geometry = { workspace = true }
+semio-s-artifact-stdio-dwg-snapshot-document = { workspace = true }
+semio-s-artifact-stdio-dwg-snapshot-drawing = { workspace = true }
+semio-s-artifact-stdio-dwg-snapshot-objects = { workspace = true }
+semio-s-artifact-stdio-dwg-sqlite-drawing = { workspace = true }
+semio-s-artifact-stdio-dwg-sqlite-objects = { workspace = true }
+
+[dev-dependencies]
+semio-framework-async-macros = { workspace = true }
+semio-framework-dsl = { workspace = true }
+semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-s-artifact-stdio-contract = { workspace = true, features = ["testing"] }
+serde_json = { workspace = true }

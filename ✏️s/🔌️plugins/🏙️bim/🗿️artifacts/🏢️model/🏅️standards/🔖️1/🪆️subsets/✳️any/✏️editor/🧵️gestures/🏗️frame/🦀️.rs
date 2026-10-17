@@ -5,7 +5,8 @@
 
 use super::opening::nearest_host;
 use super::plane::{angle, axis_ends, dist, P};
-use super::session::{Mark, Pointer, Preview, Step, Style, Surface, Tool, ToolContext, ToolEvent, PICK_PIXELS, REJECTED};
+use super::session::{Pointer, Step, Surface, Tool, ToolContext, ToolEvent, PICK_PIXELS, REJECTED};
+use crate::editor::bim::marks::{Mark, Preview, Style};
 use crate::standards::v1::subsets::any::schema::inferences::curtain_layout::CurtainLayout;
 use crate::standards::v1::subsets::any::schema::{diff::Assigned, snapshot::{CurtainGrid, CurtainPanel, CurtainPanelOverride, Slope}, mutations::ModelMutation};
 

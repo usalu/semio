@@ -1,6 +1,22 @@
 //! 🖌️ Session of the puzzle 2d editor: the reserved import and clipboard jobs. See [`super`].
 
-use super::*;
+use crate::{editor::puzzle2d::snapshot::Puzzle2dInteractionSnapshot, editor::puzzle2d::snapshot::puzzle2d_clear_selection_write, editor::puzzle2d::recorder::puzzle2d_copy_fragment_from, editor::puzzle2d::recorder::puzzle2d_cut_operations_from, editor::puzzle2d::recorder::puzzle2d_paste_operations_on, editor::puzzle2d::snapshot::puzzle2d_selected_node_ids, editor::puzzle2d::snapshot::puzzle2d_selection_is_locked, editor::puzzle2d::snapshot::puzzle2d_selection_write};
+use crate::editor::puzzle2d::config::Puzzle2dConfigMutation;
+use crate::editor::puzzle2d::snapshot::Puzzle2dPlaySnapshot;
+use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
+use semio_framework::kernel::UiDirtyScope;
+use semio_framework_plugin::{kernel::Effect, kernel::PastePlacement};
+use semio_framework_plugin::EditorApp;
+use semio_framework_plugin::Emit;
+use semio_framework_plugin::Fault;
+use semio_framework_plugin::Media;
+use semio_framework_plugin::NoDraftMutation;
+use semio_framework_plugin::app::EphemeralEmit;
+use semio_framework_pack_json::{json, Value};
+use semio_framework_job::StepContext;
+use semio_framework_plugin::app::ArtifactToolCompletionRejection;
+use semio_framework_plugin::{ArtifactReservedToolJobRequest, ArtifactToolCompletion, MediaPayload};
+use crate::editor::puzzle2d::{Puzzle2dPlayApp, interaction, snapshot};
 
 //#region 🔖️PlayApp
 //#region 🧵️ReservedJobs
@@ -12,8 +28,8 @@ const PUZZLE2D_IMPORT_DECODED_ITEMS: usize = 4_096;
 /// 🧬️ At most one `connect-kind-compatibility` per admitted relation row, plus the single
 /// `replace-kind-catalogs` that carries the merged bundle.
 const PUZZLE2D_IMPORT_MUTATION_ITEMS: usize = PUZZLE2D_IMPORT_SEMANTIC_ITEMS + 1;
-pub(super) const PUZZLE2D_IMPORT_TOOL_ID: &str = "import-media";
-pub(super) const PUZZLE2D_IMPORT_PORT: &str = "kit:in";
+pub const PUZZLE2D_IMPORT_TOOL_ID: &str = "import-media";
+pub const PUZZLE2D_IMPORT_PORT: &str = "kit:in";
 /// 🗂️ The exact root keys a `kit.catalog` fragment may carry — the shape
 /// `Block2dPlayApp::export_media("catalog:out")` produces via
 /// `crate::standards::v1::subsets::any::schema::inferences::puzzle2d_manifest_fragment`, which is puzzle2d's
@@ -57,10 +73,10 @@ fn puzzle2d_import_label(row: &Value, name: &str) -> semio_framework_value::page
     row.get("label").and_then(Value::as_str).filter(|label| !label.trim().is_empty()).unwrap_or(name).into()
 }
 
-fn puzzle2d_import_handle_template(node_kind_id: &str, index: usize, template: &Value) -> Option<crate::standards::v1::subsets::any::schema::Puzzle2dHandleTemplate> {
+fn puzzle2d_import_handle_template(node_kind_id: &str, index: usize, template: &Value) -> Option<crate::standards::v1::subsets::any::schema::records::Puzzle2dHandleTemplate> {
     let handle_kind = template.get("handleKind").and_then(Value::as_str).filter(|kind| !kind.trim().is_empty())?;
     let name = template.get("name").and_then(Value::as_str).unwrap_or_default();
-    Some(crate::standards::v1::subsets::any::schema::Puzzle2dHandleTemplate {
+    Some(crate::standards::v1::subsets::any::schema::records::Puzzle2dHandleTemplate {
         id: puzzle2d_import_identity(template).map_or_else(|| format!("{node_kind_id}-h{index}"), str::to_string).into(),
         label: puzzle2d_import_label(template, name),
         name: name.into(),
@@ -74,11 +90,11 @@ fn puzzle2d_import_handle_template(node_kind_id: &str, index: usize, template: &
     })
 }
 
-fn puzzle2d_import_node_kind(row: &Value) -> Option<crate::standards::v1::subsets::any::schema::Puzzle2dCatalogNodeKind> {
+fn puzzle2d_import_node_kind(row: &Value) -> Option<crate::standards::v1::subsets::any::schema::records::Puzzle2dCatalogNodeKind> {
     let id = puzzle2d_import_identity(row)?;
     let name = row.get("name").and_then(Value::as_str).unwrap_or(id);
     let handles = puzzle2d_import_presentation(row, "handles").and_then(Value::as_array).map_or_else(semio_framework_value::list::PagedList::new, |templates| templates.iter().enumerate().filter_map(|(index, template)| puzzle2d_import_handle_template(id, index, template)).collect());
-    Some(crate::standards::v1::subsets::any::schema::Puzzle2dCatalogNodeKind {
+    Some(crate::standards::v1::subsets::any::schema::records::Puzzle2dCatalogNodeKind {
         id: id.into(),
         label: puzzle2d_import_label(row, name),
         name: name.into(),
@@ -95,9 +111,9 @@ fn puzzle2d_import_node_kind(row: &Value) -> Option<crate::standards::v1::subset
     })
 }
 
-fn puzzle2d_import_handle_kind(row: &Value) -> Option<crate::standards::v1::subsets::any::schema::Puzzle2dCatalogHandleKind> {
+fn puzzle2d_import_handle_kind(row: &Value) -> Option<crate::standards::v1::subsets::any::schema::records::Puzzle2dCatalogHandleKind> {
     let id = puzzle2d_import_identity(row)?;
-    Some(crate::standards::v1::subsets::any::schema::Puzzle2dCatalogHandleKind {
+    Some(crate::standards::v1::subsets::any::schema::records::Puzzle2dCatalogHandleKind {
         id: id.into(),
         code: None,
         label: Some(puzzle2d_import_label(row, row.get("name").and_then(Value::as_str).unwrap_or(id))),
@@ -110,10 +126,10 @@ fn puzzle2d_import_handle_kind(row: &Value) -> Option<crate::standards::v1::subs
     })
 }
 
-fn puzzle2d_import_edge_kind(row: &Value) -> Option<crate::standards::v1::subsets::any::schema::Puzzle2dCatalogEdgeKind> {
+fn puzzle2d_import_edge_kind(row: &Value) -> Option<crate::standards::v1::subsets::any::schema::records::Puzzle2dCatalogEdgeKind> {
     let id = puzzle2d_import_identity(row)?;
     let name = row.get("name").and_then(Value::as_str).unwrap_or(id);
-    Some(crate::standards::v1::subsets::any::schema::Puzzle2dCatalogEdgeKind {
+    Some(crate::standards::v1::subsets::any::schema::records::Puzzle2dCatalogEdgeKind {
         id: id.into(),
         label: puzzle2d_import_label(row, name),
         name: name.into(),
@@ -123,10 +139,10 @@ fn puzzle2d_import_edge_kind(row: &Value) -> Option<crate::standards::v1::subset
     })
 }
 
-fn puzzle2d_import_wire_kind(row: &Value) -> Option<crate::standards::v1::subsets::any::schema::Puzzle2dCatalogWireKind> {
+fn puzzle2d_import_wire_kind(row: &Value) -> Option<crate::standards::v1::subsets::any::schema::records::Puzzle2dCatalogWireKind> {
     let id = puzzle2d_import_identity(row)?;
     let name = row.get("name").and_then(Value::as_str).unwrap_or(id);
-    Some(crate::standards::v1::subsets::any::schema::Puzzle2dCatalogWireKind {
+    Some(crate::standards::v1::subsets::any::schema::records::Puzzle2dCatalogWireKind {
         id: id.into(),
         label: puzzle2d_import_label(row, name),
         name: name.into(),
@@ -173,43 +189,43 @@ enum Puzzle2dImportStage {
 /// never a direct state write. The producer this pairs with is `Block2dPlayApp`'s `"catalog:out"`
 /// port, whose payload IS this exact 2d manifest shape (see
 /// `🧱️block/🗿️artifacts/◻️2d/…/💡️inferences/🦀️.rs`'s `puzzle2d_manifest_fragment`).
-pub(super) struct Puzzle2dImportJob {
-    pub(super) port: String,
+pub struct Puzzle2dImportJob {
+    pub port: String,
     media_json: Option<String>,
-    pub(super) snapshot: Option<std::sync::Arc<Puzzle2dPlaySnapshot>>,
-    pub(super) fragment: Option<Value>,
-    pub(super) catalogs: crate::standards::v1::subsets::any::schema::Puzzle2dKindCatalogs,
-    compatibility: Vec<crate::standards::v1::subsets::any::schema::Puzzle2dKindCompatibility>,
-    pub(super) mutations: Vec<Puzzle2dMutation>,
-    pub(super) stage: Puzzle2dImportStage,
-    pub(super) cursor: usize,
+    pub snapshot: Option<std::sync::Arc<Puzzle2dPlaySnapshot>>,
+    pub fragment: Option<Value>,
+    pub catalogs: crate::standards::v1::subsets::any::schema::records::Puzzle2dKindCatalogs,
+    compatibility: Vec<crate::standards::v1::subsets::any::schema::records::Puzzle2dKindCompatibility>,
+    pub mutations: Vec<Puzzle2dMutation>,
+    pub stage: Puzzle2dImportStage,
+    pub cursor: usize,
     decoded_items: usize,
-    pub(super) progress: u64,
+    pub progress: u64,
     catalog_changed: bool,
-    pub(super) completion: Option<ArtifactToolCompletion<EditorApp<Puzzle2dPlayApp>>>,
+    pub completion: Option<ArtifactToolCompletion<EditorApp<Puzzle2dPlayApp>>>,
     pending_completion_rejection: Option<ArtifactToolCompletionRejection<EditorApp<Puzzle2dPlayApp>>>,
     completed: bool,
     outbox: crate::puzzle_job::JobOutbox,
     closing: bool,
-    pub(super) owners: crate::puzzle_job::WorkClosing<Puzzle2dImportOwners>,
+    pub owners: crate::puzzle_job::WorkClosing<Puzzle2dImportOwners>,
 }
 
 /// ♻️ The owners one `Puzzle2dImportJob` still holds when it closes, retired as one controlled bundle.
 #[derive(semio_framework_value::RetireOwned)]
 struct Puzzle2dImportOwners {
-    pub(super) port: String,
+    pub port: String,
     media_json: Option<String>,
-    pub(super) snapshot: Option<std::sync::Arc<Puzzle2dPlaySnapshot>>,
-    pub(super) fragment: Option<Value>,
-    pub(super) catalogs: crate::standards::v1::subsets::any::schema::Puzzle2dKindCatalogs,
-    compatibility: Vec<crate::standards::v1::subsets::any::schema::Puzzle2dKindCompatibility>,
-    pub(super) mutations: Vec<Puzzle2dMutation>,
-    pub(super) completion: Option<ArtifactToolCompletion<EditorApp<Puzzle2dPlayApp>>>,
+    pub snapshot: Option<std::sync::Arc<Puzzle2dPlaySnapshot>>,
+    pub fragment: Option<Value>,
+    pub catalogs: crate::standards::v1::subsets::any::schema::records::Puzzle2dKindCatalogs,
+    compatibility: Vec<crate::standards::v1::subsets::any::schema::records::Puzzle2dKindCompatibility>,
+    pub mutations: Vec<Puzzle2dMutation>,
+    pub completion: Option<ArtifactToolCompletion<EditorApp<Puzzle2dPlayApp>>>,
     pending_completion_rejection: Option<ArtifactToolCompletionRejection<EditorApp<Puzzle2dPlayApp>>>,
 }
 
 impl Puzzle2dImportJob {
-    pub(super) fn new(request: ArtifactReservedToolJobRequest<EditorApp<Puzzle2dPlayApp>>, port: String, media: Media) -> Self {
+    pub fn new(request: ArtifactReservedToolJobRequest<EditorApp<Puzzle2dPlayApp>>, port: String, media: Media) -> Self {
         let media_json = match media.payload {
             MediaPayload::Structured { json, .. } => Some(json),
             MediaPayload::Intrinsic { value, .. } => Some(semio_framework_pack_json::to_json_string(&value)),
@@ -220,7 +236,7 @@ impl Puzzle2dImportJob {
             media_json,
             snapshot: Some(request.snapshot),
             fragment: None,
-            catalogs: crate::standards::v1::subsets::any::schema::Puzzle2dKindCatalogs::default(),
+            catalogs: crate::standards::v1::subsets::any::schema::records::Puzzle2dKindCatalogs::default(),
             compatibility: Vec::new(),
             mutations: Vec::new(),
             stage: Puzzle2dImportStage::Decode,
@@ -237,15 +253,15 @@ impl Puzzle2dImportJob {
         }
     }
 
-    pub(super) fn checkpoint(&self) -> crate::puzzle_job::JobTurn {
+    pub fn checkpoint(&self) -> crate::puzzle_job::JobTurn {
         puzzle2d_import_checkpoint(self.stage as u8, self.cursor, self.decoded_items, self.progress)
     }
 
-    pub(super) fn rows(&self, key: &str) -> &[Value] {
+    pub fn rows(&self, key: &str) -> &[Value] {
         self.fragment.as_ref().and_then(|fragment| fragment.get(key)).and_then(Value::as_array).map(Vec::as_slice).unwrap_or(&[])
     }
 
-    pub(super) fn meta(&self, key: &str) -> Option<&Value> {
+    pub fn meta(&self, key: &str) -> Option<&Value> {
         self.snapshot.as_ref().and_then(|snapshot| snapshot.value().get("meta")).and_then(|meta| meta.get(key)).filter(|value| !value.is_null())
     }
 
@@ -257,7 +273,7 @@ impl Puzzle2dImportJob {
         Ok(())
     }
 
-    pub(super) fn decode(&mut self) -> Option<crate::puzzle_job::JobTurn> {
+    pub fn decode(&mut self) -> Option<crate::puzzle_job::JobTurn> {
         if self.port != PUZZLE2D_IMPORT_PORT {
             return Some(puzzle2d_job_fault("puzzle2d import only implements kit:in"));
         }
@@ -291,14 +307,14 @@ impl Puzzle2dImportJob {
             _ => return Some(puzzle2d_job_fault("puzzle2d kit:in decoded item limit exceeded")),
         };
         self.catalogs = match existing_catalogs.as_ref() {
-            Some(value) => match <crate::standards::v1::subsets::any::schema::Puzzle2dKindCatalogs as semio_framework_value::FromValue>::from_value(semio_framework_value::ToValue::to_value(value)) {
+            Some(value) => match <crate::standards::v1::subsets::any::schema::records::Puzzle2dKindCatalogs as semio_framework_value::FromValue>::from_value(semio_framework_value::ToValue::to_value(value)) {
                 Ok(catalogs) => catalogs,
                 Err(_) => return Some(puzzle2d_job_fault("puzzle2d kit:in cannot read the document's own kind catalogs")),
             },
-            None => crate::standards::v1::subsets::any::schema::Puzzle2dKindCatalogs::default(),
+            None => crate::standards::v1::subsets::any::schema::records::Puzzle2dKindCatalogs::default(),
         };
         for row in &existing_compatibility {
-            match <crate::standards::v1::subsets::any::schema::Puzzle2dKindCompatibility as semio_framework_value::FromValue>::from_value(semio_framework_value::ToValue::to_value(row)) {
+            match <crate::standards::v1::subsets::any::schema::records::Puzzle2dKindCompatibility as semio_framework_value::FromValue>::from_value(semio_framework_value::ToValue::to_value(row)) {
                 Ok(parsed) => self.compatibility.push(parsed),
                 Err(_) => return Some(puzzle2d_job_fault("puzzle2d kit:in cannot read the document's own kind relations")),
             }
@@ -310,7 +326,7 @@ impl Puzzle2dImportJob {
 }
 
 impl Puzzle2dImportJob {
-    pub(super) fn turn(&mut self, cx: &mut StepContext<'_>) -> crate::puzzle_job::JobTurn {
+    pub fn turn(&mut self, cx: &mut StepContext<'_>) -> crate::puzzle_job::JobTurn {
         if self.closing || cx.is_cancelled() {
             return crate::puzzle_job::JobTurn::Cancelled;
         }
@@ -404,7 +420,7 @@ impl Puzzle2dImportJob {
                     cx.consume_fuel(1);
                     return self.checkpoint();
                 };
-                let Ok(parsed) = <crate::standards::v1::subsets::any::schema::Puzzle2dKindCompatibility as semio_framework_value::FromValue>::from_value(semio_framework_value::ToValue::to_value(&row)) else {
+                let Ok(parsed) = <crate::standards::v1::subsets::any::schema::records::Puzzle2dKindCompatibility as semio_framework_value::FromValue>::from_value(semio_framework_value::ToValue::to_value(&row)) else {
                     return puzzle2d_job_fault("puzzle2d kit:in kind relation is malformed");
                 };
                 let existing = self.compatibility.iter().position(|entry| entry.source == parsed.source && entry.target == parsed.target);
@@ -523,42 +539,42 @@ impl ArtifactReservedJob for Puzzle2dImportJob {}
 /// this producer, so puzzle2d owning it is what makes `mod+c`/`mod+x`/`mod+v` and the context-menu
 /// clipboard rows do anything at all. Every arm answers in one step: a cut is copy-plus-delete as ONE
 /// artifact edit, and a paste is one insert whose clones the app re-selects.
-pub(super) struct Puzzle2dClipboardJob {
-    pub(super) tool_id: String,
-    pub(super) labels: Option<&'static crate::editor::puzzle2d::terminology::Puzzle2dLabels>,
-    pub(super) snapshot: Option<std::sync::Arc<Puzzle2dPlaySnapshot>>,
-    pub(super) raw_wire: Vec<u8>,
-    pub(super) args: Option<semio_framework_value::DslValue>,
-    pub(super) interaction: Option<semio_framework::InteractionState>,
-    pub(super) hover: Option<semio_framework_plugin::app::InteractionHoverState>,
-    pub(super) completion: Option<ArtifactToolCompletion<EditorApp<Puzzle2dPlayApp>>>,
+pub struct Puzzle2dClipboardJob {
+    pub tool_id: String,
+    pub labels: Option<&'static crate::editor::puzzle2d::terminology::Puzzle2dLabels>,
+    pub snapshot: Option<std::sync::Arc<Puzzle2dPlaySnapshot>>,
+    pub raw_wire: Vec<u8>,
+    pub args: Option<semio_framework_value::DslValue>,
+    pub interaction: Option<semio_framework::InteractionState>,
+    pub hover: Option<semio_framework_plugin::app::InteractionHoverState>,
+    pub completion: Option<ArtifactToolCompletion<EditorApp<Puzzle2dPlayApp>>>,
     rejection: Option<ArtifactToolCompletionRejection<EditorApp<Puzzle2dPlayApp>>>,
     outbox: crate::puzzle_job::JobOutbox,
     closing: bool,
-    pub(super) owners: crate::puzzle_job::WorkClosing<Puzzle2dClipboardOwners>,
+    pub owners: crate::puzzle_job::WorkClosing<Puzzle2dClipboardOwners>,
 }
 
 /// ♻️ The owners one `Puzzle2dClipboardJob` still holds when it closes, retired as one controlled bundle.
 #[derive(semio_framework_value::RetireOwned)]
 struct Puzzle2dClipboardOwners {
-    pub(super) args: Option<semio_framework_value::DslValue>,
-    pub(super) interaction: Option<semio_framework::InteractionState>,
-    pub(super) hover: Option<semio_framework_plugin::app::InteractionHoverState>,
-    pub(super) tool_id: String,
-    pub(super) snapshot: Option<std::sync::Arc<Puzzle2dPlaySnapshot>>,
-    pub(super) raw_wire: Vec<u8>,
-    pub(super) completion: Option<ArtifactToolCompletion<EditorApp<Puzzle2dPlayApp>>>,
+    pub args: Option<semio_framework_value::DslValue>,
+    pub interaction: Option<semio_framework::InteractionState>,
+    pub hover: Option<semio_framework_plugin::app::InteractionHoverState>,
+    pub tool_id: String,
+    pub snapshot: Option<std::sync::Arc<Puzzle2dPlaySnapshot>>,
+    pub raw_wire: Vec<u8>,
+    pub completion: Option<ArtifactToolCompletion<EditorApp<Puzzle2dPlayApp>>>,
     rejection: Option<ArtifactToolCompletionRejection<EditorApp<Puzzle2dPlayApp>>>,
 }
 
 impl Puzzle2dClipboardJob {
-    pub(super) fn new(request: ArtifactReservedToolJobRequest<EditorApp<Puzzle2dPlayApp>>) -> Self {
+    pub fn new(request: ArtifactReservedToolJobRequest<EditorApp<Puzzle2dPlayApp>>) -> Self {
         let ArtifactReservedToolInput::Action { args, interaction, hover } = request.input else { unreachable!("clipboard routes carry action input") };
         let labels = request.ui_axes.map(|(locale, terminology)| puzzle2d_labels(&semio_framework_plugin::ViewModel::new(locale, terminology)));
         Self { tool_id: request.tool_id, labels, snapshot: Some(request.snapshot), raw_wire: request.raw_wire, args, interaction: Some(interaction), hover: Some(hover), completion: Some(request.completion), rejection: None, outbox: Default::default(), closing: false, owners: Default::default() }
     }
 
-    pub(super) fn emit(&mut self) -> Result<Emit<Puzzle2dMutation, Puzzle2dConfigMutation, NoDraftMutation>, Fault> {
+    pub fn emit(&mut self) -> Result<Emit<Puzzle2dMutation, Puzzle2dConfigMutation, NoDraftMutation>, Fault> {
         let (Some(interaction), Some(hover)) = (self.interaction.as_ref(), self.hover.as_ref()) else {
             return Ok(Emit::default());
         };
@@ -651,7 +667,7 @@ impl InteractiveJob for Puzzle2dClipboardJob {
 }
 
 impl Puzzle2dClipboardJob {
-    pub(super) fn turn(&mut self, cx: &StepContext<'_>) -> crate::puzzle_job::JobTurn {
+    pub fn turn(&mut self, cx: &StepContext<'_>) -> crate::puzzle_job::JobTurn {
         if self.closing || cx.is_cancelled() {
             return crate::puzzle_job::JobTurn::Cancelled;
         }

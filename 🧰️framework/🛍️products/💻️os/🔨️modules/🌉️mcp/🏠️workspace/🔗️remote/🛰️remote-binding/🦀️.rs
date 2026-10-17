@@ -574,7 +574,7 @@ impl HubRemoteBinding {
         Ok(AuthorizedDescriptorSnapshot { authenticated_user_id, session_expires_at_ms, space, membership, observed_event_seq, documents: indexed })
     }
 
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testkit"))]
     pub fn install_snapshot_for_test(&self, snapshot: AuthorizedDescriptorSnapshot) {
         self.generation.fetch_add(1, Ordering::SeqCst);
         let authority_generation = next_authority_generation().expect("test authority generation capacity");
@@ -585,7 +585,7 @@ impl HubRemoteBinding {
         self.announce();
     }
 
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testkit"))]
     pub fn install_catalog_for_test(&self, selections: Vec<AuthorizedPackageSelection>) {
         let authority_generation = self.authority_generation.load(Ordering::SeqCst);
         assert_ne!(authority_generation, 0);

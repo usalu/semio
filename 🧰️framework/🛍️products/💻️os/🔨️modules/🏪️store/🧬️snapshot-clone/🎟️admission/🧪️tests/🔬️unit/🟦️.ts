@@ -34,7 +34,6 @@ test("snapshot clone source admission retains every owner until its exact grante
       expect(law.closure.includes(first.owner)).toBe(true);
     }
     expect(db.query("SELECT COUNT(*) AS count FROM custody").get()).toEqual({ count: 0 });
-    console.log("[DEBUG] snapshot clone SQLite exact birth and ordered original owner conservation");
   } finally { db.close(); }
   const source = readFileSync(new URL("../../../🦀️.rs", import.meta.url), "utf8");
   expect(source.includes("fn begin_demand(")).toBe(true);

@@ -1,8 +1,8 @@
 use semio_s_artifact_raster_raster_examples::raster_example_document;
 use semio_s_artifact_raster_raster_examples::default_raster_document;
-use crate::io::text::snapshot::snapshot_wire_codec::empty_raster_document;
-use super::*;
-use semio_s_artifact_raster_raster_mutations::binary::unit_tests::retirement::retire_raster_snapshot;
+use semio_s_artifact_raster_raster_model::io::text::snapshot::snapshot_wire_codec::empty_raster_document;
+use semio_s_artifact_raster_raster_model::*;
+use semio_s_artifact_raster_raster_model::retire_raster_value_cold;
 
 /// 📄️ The boot document is the committed Semio-logo carrier read through the artifact's own text
 /// codec — not the empty scaffold, and not a Rust restatement of the `.dsl.semio` bytes.
@@ -18,7 +18,7 @@ async fn default_document_boots_on_the_semio_demo_carrier() {
         panic!("the second layer is the brighten adjustment");
     };
     assert_eq!(adjustment_kind, "brightnessContrast");
-    retire_raster_snapshot(document);
+    retire_raster_value_cold(document);
 }
 
 /// 📚️ `raster_example_document` resolves exactly the ids this subset registers, and nothing else.
@@ -28,8 +28,8 @@ async fn only_a_registered_example_id_resolves_to_a_document() {
     let expected = default_raster_document();
     assert_eq!(registered, expected);
     assert!(raster_example_document("not-a-real-example").is_none());
-    retire_raster_snapshot(registered);
-    retire_raster_snapshot(expected);
+    retire_raster_value_cold(registered);
+    retire_raster_value_cold(expected);
 }
 
 /// 🖼️ LAW: the curated demo ships REAL media, and its backdrop layer declares exactly that media's own
@@ -60,13 +60,13 @@ async fn the_demo_carrier_ships_real_media_sized_exactly_as_its_backdrop_declare
     };
     assert_eq!(image_key.as_deref(), Some("semio-emblem"));
     assert_eq!((*layer_width, *layer_height), (Some(width), Some(height)), "the carrier's backdrop declares the committed emblem's own size");
-    retire_raster_snapshot(document);
+    retire_raster_value_cold(document);
 }
 
 #[test]
 fn repeated_layer_creation_has_distinct_persistable_identities() {
-    use crate::layer_node_id;
-    use crate::create_pixel_layer;
+    use semio_s_artifact_raster_raster_model::layer_node_id;
+    use semio_s_artifact_raster_raster_model::create_pixel_layer;
     let layers:Vec<_>=(0..1024).map(|_|create_pixel_layer("Pixels",1,1)).collect();
     let ids:std::collections::BTreeSet<_>=layers.iter().map(layer_node_id).collect();
     assert_eq!(ids.len(),layers.len());

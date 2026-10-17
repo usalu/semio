@@ -32,3 +32,6 @@ pub enum VcsDemoMutation {
 #[path = "🧪️tests/🔬️structural-correspondence/🦀️.rs"]
 mod structural_correspondence_tests;
 //#endregion 🧪️StructuralCorrespondence
+
+#[path = "../../../../../../🌉️apply/🦀️.rs"]
+pub mod central_apply;

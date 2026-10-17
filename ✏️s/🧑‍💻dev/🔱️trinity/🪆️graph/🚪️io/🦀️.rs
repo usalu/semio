@@ -4,6 +4,7 @@ use semio_framework_value::{FromValue,RetireOwned,ValueError,ValueRefusalKind};
 use semio_framework_value::retained_clone::{RetainedCloneGrant,RetainedCloneProgress};
 use store::io::io_mechanism::{IoEntry,IoEntryDirection,IoRunControl};
 use store::io_schema::{IoError,IoFidelity,IoOutcome,IoPayload,IoResult};
+use super::jack::standards::v1::subsets::any::schema::graph::TRINITY_JACK_DIALECT;
 pub const JSON:Dialect=Dialect{artifact_kind:"s.stdio.json",standard:StandardId("rfc8259"),subset:SubsetId::ANY};
 pub const TXT:Dialect=store::io_schema::CARRIER_TEXT;
 const SCHEMA:&str="s.dev.trinity.jack.archive.v1";
@@ -57,7 +58,7 @@ fn import(payload:&IoPayload,format:Format,control:&mut IoRunControl<'_,'_>)->Io
 #[path="📤️export/🔤️txt/🦀️.rs"]mod into_txt;
 #[path="📥️import/🔤️txt/🦀️.rs"]mod from_txt;
 pub fn entries()->&'static[IoEntry]{static ENTRIES:[IoEntry;4]=[
- IoEntry{owned_serializer:None,from:super::jack::TRINITY_JACK_DIALECT,into:JSON,fidelity:IoFidelity::Exact,direction:IoEntryDirection::Export,sniff:None,run:into_json::run},
- IoEntry{owned_serializer:None,from:JSON,into:super::jack::TRINITY_JACK_DIALECT,fidelity:IoFidelity::Exact,direction:IoEntryDirection::Import,sniff:None,run:from_json::run},
- IoEntry{owned_serializer:None,from:super::jack::TRINITY_JACK_DIALECT,into:TXT,fidelity:IoFidelity::Exact,direction:IoEntryDirection::Export,sniff:None,run:into_txt::run},
- IoEntry{owned_serializer:None,from:TXT,into:super::jack::TRINITY_JACK_DIALECT,fidelity:IoFidelity::Exact,direction:IoEntryDirection::Import,sniff:None,run:from_txt::run}];&ENTRIES}
+ IoEntry{owned_serializer:None,from:TRINITY_JACK_DIALECT,into:JSON,fidelity:IoFidelity::Exact,direction:IoEntryDirection::Export,sniff:None,run:into_json::run},
+ IoEntry{owned_serializer:None,from:JSON,into:TRINITY_JACK_DIALECT,fidelity:IoFidelity::Exact,direction:IoEntryDirection::Import,sniff:None,run:from_json::run},
+ IoEntry{owned_serializer:None,from:TRINITY_JACK_DIALECT,into:TXT,fidelity:IoFidelity::Exact,direction:IoEntryDirection::Export,sniff:None,run:into_txt::run},
+ IoEntry{owned_serializer:None,from:TXT,into:TRINITY_JACK_DIALECT,fidelity:IoFidelity::Exact,direction:IoEntryDirection::Import,sniff:None,run:from_txt::run}];&ENTRIES}

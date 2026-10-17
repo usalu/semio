@@ -16,7 +16,6 @@ fn canonical_native_source_handoff_refuses_extracted_original_without_losing_cus
  let(result,heap)=observe(||ArtifactCanonicalEditSealCursor::admit_source(&mut source,admitted));assert!(result.is_err());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert!(source.is_some());assert_eq!(extracted.as_ref()as*const Edit<bool>,pointer);assert_eq!(extracted.id.as_ptr(),id);
  let mut source=source.unwrap();for turn in 0..100000{if source.terminal_is_empty(){break;}let(step,heap)=observe(||source.close_step(admitted).unwrap());assert!(step.progress().fits(admitted));assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));assert!(turn<99999||source.terminal_is_empty());}assert!(source.terminal_is_empty());
  let edit=extracted;assert_eq!(edit.as_ref()as*const Edit<bool>,pointer);assert_eq!(edit.id.as_ptr(),id);let mut owner=ControlledRetirement::new(edit).unwrap_or_else(|(error,_)|panic!("extracted original retirement: {error}"));for turn in 0..100000{if owner.terminal_is_empty(){break;}let(step,heap)=observe(||owner.step(admitted).unwrap());assert!(step.progress().fits(admitted));assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));assert!(turn<99999||owner.terminal_is_empty());}assert!(owner.terminal_is_empty());let(_,heap)=observe(||{drop(owner);drop(source);});assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
- println!("[DEBUG] native extracted original source refuses admitted handoff heap0 and retains exact Box/id pointers; fixed4096 source/owner closure and terminal drop0");
 }
 
 #[test]
@@ -56,7 +55,6 @@ fn canonical_native_edit_seal_preserves_original_box_and_fields_after_framed_dig
     let(step,heap)=observe(||cursor.advance(admitted).unwrap());assert!(step.progress().fits(admitted));assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));turns+=1;
    }
    assert!(cursor.terminal_is_empty());let(_,heap)=observe(||drop(cursor));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
-   println!("[DEBUG] native original edit seal case={index} same_source={source_mode} pause={pause:?} phase={} pending={pending_pause} cancelled={cancelled} turns={turns} NodeSHA256/Serde digest exact; original Box/id/forwards pointers; zero/below/full 4096 heap and terminal drop0",phase_pause.map_or(0,|phase|phase as u8+1));
   }}
  }
 }

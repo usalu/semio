@@ -2,7 +2,8 @@
 use semio_framework_value::{ValueError,ValueRefusalKind};
 use super::{records::*,FormsSnapshot};
 use crate::{FormExpr,FormQuestion,FormQuestionOption,FormVectorField,FormStep};
-use crate::schema::{definition::FormsDefinition,response::{FormsResponse,FormsAnswer}};
+use crate::schema::definition::FormsDefinition;
+use crate::schema::response::{FormsAnswer, FormsResponse};
 use semio_framework_value::DslValue;
 use semio_framework_value::NativeDecodeControl;
 use crate::standards::v1::subsets::any::io::sqlite::snapshot::reconstruction::{retire_value,retire_condition,retire_snapshot};

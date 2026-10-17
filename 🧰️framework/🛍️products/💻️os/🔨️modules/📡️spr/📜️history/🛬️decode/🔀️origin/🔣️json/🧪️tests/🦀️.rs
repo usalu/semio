@@ -36,5 +36,4 @@ fn original_history_origin_json_native_borrows_funded_grammar_and_same_original_
   }
   for _ in 0..16{if owner.terminal_is_empty(){break}let(result,born,released)=observe(||owner.close_step(g).unwrap());assert_ne!(result,RetainedHistoryOriginJsonStep::Blocked);receipt(&mut owner,g,born,released);births+=born;releases+=released}assert!(owner.terminal_is_empty());assert_eq!(births,releases);assert_eq!(control.owned_bytes(),admitted.load(std::sync::atomic::Ordering::SeqCst));assert!(!control.has_retirement_owner());let(_,born,released)=observe(||drop(owner));assert_eq!((born,released),(0,0));drop(control);assert!(retirement.terminal_is_empty());
  }}}
- eprintln!("[DEBUG] Original History origin JSON reads unchanged contiguous and paged ranged per-turn sources with sealed address/extent/operation/generation through original forwarded capacity port, fixed complete limits and full5 grants; actual grammar/Dsl/error/typed recipient custody survives paid handoffs, physical heap balances and terminalDrop0");
 }

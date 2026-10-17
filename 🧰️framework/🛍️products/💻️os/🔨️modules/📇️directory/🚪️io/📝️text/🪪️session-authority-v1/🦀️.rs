@@ -1,6 +1,6 @@
 //! 🚪️ Physical Directory wire admission, canonical emission and bounded receipts.
 
-use super::super::super::schema::session_authority::*;
+use crate::session_authority::*;
 
 impl DirectorySessionAuthorityV1 {
     /// 📤️ Canonical json.

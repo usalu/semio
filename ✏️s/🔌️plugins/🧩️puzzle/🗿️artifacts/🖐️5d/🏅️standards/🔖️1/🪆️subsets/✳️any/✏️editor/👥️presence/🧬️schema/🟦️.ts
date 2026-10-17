@@ -42,6 +42,10 @@ type puzzlePuzzle5dPresenceGuardSizeBounds = { readonly minItems?: number; reado
 
 export const puzzlePuzzle5dPresenceGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : puzzlePuzzle5dPresenceGuardReject(at, "value is not an object");
+export const puzzlePuzzle5dPresenceGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) puzzlePuzzle5dPresenceGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const puzzlePuzzle5dPresenceGuardArray = (value: unknown, at: string, bounds: puzzlePuzzle5dPresenceGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return puzzlePuzzle5dPresenceGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) puzzlePuzzle5dPresenceGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -72,7 +76,7 @@ export const puzzlePuzzle5dPresenceGuardConstant = <T extends string | number | 
 //#endregion 🚪️Parsers
 
 export function parsePuzzle5dPresence(value: unknown, at = "$"): Puzzle5dPresence {
-  const row = puzzlePuzzle5dPresenceGuardObject(value, at);
+  const row = puzzlePuzzle5dPresenceGuardClosed(puzzlePuzzle5dPresenceGuardObject(value, at), at, ["selectedPartIds", "selectedGripIds", "selectedFastenerIds", "hoveredPartId", "camera2dX", "camera2dY", "camera2dZoom", "camera3dPosition", "camera3dTarget", "camera3dZoom", "activeUtilityId"]);
   return {
     selectedPartIds: puzzlePuzzle5dPresenceGuardArray(row["selectedPartIds"], `${at}.selectedPartIds`).map((item, index) => puzzlePuzzle5dPresenceGuardString(item, `${at}.selectedPartIds[${index}]`)),
     selectedGripIds: puzzlePuzzle5dPresenceGuardArray(row["selectedGripIds"], `${at}.selectedGripIds`).map((item, index) => puzzlePuzzle5dPresenceGuardString(item, `${at}.selectedGripIds[${index}]`)),
@@ -81,8 +85,8 @@ export function parsePuzzle5dPresence(value: unknown, at = "$"): Puzzle5dPresenc
     camera2dX: puzzlePuzzle5dPresenceGuardNumber(row["camera2dX"], `${at}.camera2dX`),
     camera2dY: puzzlePuzzle5dPresenceGuardNumber(row["camera2dY"], `${at}.camera2dY`),
     camera2dZoom: puzzlePuzzle5dPresenceGuardNumber(row["camera2dZoom"], `${at}.camera2dZoom`),
-    camera3dPosition: puzzlePuzzle5dPresenceGuardArray(row["camera3dPosition"], `${at}.camera3dPosition`, {"minItems": 3, "maxItems": 3}).map((item, index) => puzzlePuzzle5dPresenceGuardNumber(item, `${at}.camera3dPosition[${index}]`)),
-    camera3dTarget: puzzlePuzzle5dPresenceGuardArray(row["camera3dTarget"], `${at}.camera3dTarget`, {"minItems": 3, "maxItems": 3}).map((item, index) => puzzlePuzzle5dPresenceGuardNumber(item, `${at}.camera3dTarget[${index}]`)),
+    camera3dPosition: ((items0) => [puzzlePuzzle5dPresenceGuardNumber(items0[0], `${at}.camera3dPosition[0]`), puzzlePuzzle5dPresenceGuardNumber(items0[1], `${at}.camera3dPosition[1]`), puzzlePuzzle5dPresenceGuardNumber(items0[2], `${at}.camera3dPosition[2]`)])(puzzlePuzzle5dPresenceGuardArray(row["camera3dPosition"], `${at}.camera3dPosition`, {"minItems": 3, "maxItems": 3})),
+    camera3dTarget: ((items0) => [puzzlePuzzle5dPresenceGuardNumber(items0[0], `${at}.camera3dTarget[0]`), puzzlePuzzle5dPresenceGuardNumber(items0[1], `${at}.camera3dTarget[1]`), puzzlePuzzle5dPresenceGuardNumber(items0[2], `${at}.camera3dTarget[2]`)])(puzzlePuzzle5dPresenceGuardArray(row["camera3dTarget"], `${at}.camera3dTarget`, {"minItems": 3, "maxItems": 3})),
     camera3dZoom: puzzlePuzzle5dPresenceGuardNumber(row["camera3dZoom"], `${at}.camera3dZoom`),
     activeUtilityId: puzzlePuzzle5dPresenceGuardString(row["activeUtilityId"], `${at}.activeUtilityId`),
   };

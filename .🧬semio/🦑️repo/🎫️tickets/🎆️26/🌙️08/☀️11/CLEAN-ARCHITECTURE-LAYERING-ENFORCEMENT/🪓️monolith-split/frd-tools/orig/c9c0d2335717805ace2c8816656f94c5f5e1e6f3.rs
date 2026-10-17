@@ -1,0 +1,114 @@
+//! 🧪️ `change-representation-pin` fixture — `📌️repins`.
+//!
+//! Transcribed from `../../🔺️diff/🦀️.rs`: an out-of-range index is Error
+//! `mutation.target-missing`, a pin already equal is Warning `mutation.no-op`; otherwise ONLY the
+//! addressed link's `pin` is assigned. `target` and `role` are explicitly untouched — repinning
+//! changes WHICH VERSION of a representation the kit is frozen to, never which document or what
+//! for.
+
+use crate::schema::diff::SemioKitDiff;
+use crate::schema::mutations::SemioKitMutation;
+use crate::schema::snapshot::SemioKitSnapshot;
+use protocol::Mutation;
+
+static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../../🧪️tests/🧫️fixtures/🧬️mutations/📌change-representation-pin/📌️repins/📸️snapshot/⬅️before/🔣️.json"));
+static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../../🧪️tests/🧫️fixtures/🧬️mutations/📌change-representation-pin/📌️repins/📸️snapshot/➡️after/🔣️.json"));
+static MUTATION: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../../🧪️tests/🧫️fixtures/🧬️mutations/📌change-representation-pin/📌️repins/🦠️mutation/🔣️.json"));
+static DIFF: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../../🧪️tests/🧫️fixtures/🧬️mutations/📌change-representation-pin/📌️repins/🔺️diff/🔣️.json"));
+static OUTCOME: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../../🧪️tests/🧫️fixtures/🧬️mutations/📌change-representation-pin/📌️repins/🎯️outcome/🔣️.json"));
+
+fn before() -> SemioKitSnapshot {
+    semio_framework_pack_json::from_json_str((*BEFORE), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("change-representation-pin before snapshot decodes")
+}
+fn expected_after() -> SemioKitSnapshot {
+    semio_framework_pack_json::from_json_str((*AFTER), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("change-representation-pin after snapshot decodes")
+}
+fn mutation() -> SemioKitMutation {
+    semio_framework_pack_json::from_json_str((*MUTATION), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("change-representation-pin mutation decodes")
+}
+
+/// ▶️ The link stops tracking the target's live tip and freezes to a checkpoint instead.
+#[semio_framework_async_macros::async_test]
+async fn repins_the_link_without_retargeting_or_rerolling_it() {
+    let base = before();
+    let produced = protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("change-representation-pin applies to its committed before-snapshot");
+    assert_eq!(produced, expected_after(), "change-representation-pin/repins-the-representation-from-head-to-a-checkpoint: applied state differs from the committed after-snapshot");
+    assert_ne!(produced.representations[0].pin, base.representations[0].pin, "the pin really must have changed");
+    assert_eq!(produced.representations[0].target, base.representations[0].target, "repinning must not retarget the link");
+    assert_eq!(produced.representations[0].role, base.representations[0].role, "repinning must not change what the link is a representation FOR");
+    assert_eq!(produced.representations.len(), base.representations.len(), "repinning may never add or drop a link");
+}
+
+/// ↩️ The undo is a `change-representation-pin` carrying BASE's captured pin.
+#[semio_framework_async_macros::async_test]
+async fn the_undo_change_representation_pin_restores_the_head_pin() {
+    let base = before();
+    let mutation = mutation();
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
+    let undo = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
+    assert_eq!(undo.len(), 1, "change-representation-pin of an existing link undoes as exactly one change-representation-pin");
+    let SemioKitMutation::ChangeRepresentationPin(restore) = &undo[0] else { panic!("change-representation-pin must undo as change-representation-pin") };
+    assert_eq!(restore.pin, base.representations[0].pin, "the undo must recapture BASE's own pin");
+    let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward change-representation-pin applies");
+    for step in undo.iter().rev() {
+        current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("the undo change-representation-pin applies");
+    }
+    assert_eq!(current, base, "change-representation-pin/repins-the-representation-from-head-to-a-checkpoint: the undo did not restore the before-snapshot");
+}
+
+/// 🔣️ Snapshots and the payload are canonical — `LinkPin::Checkpoint` encodes as `{"kind":"checkpoint","id":…}`, the internally-tagged shape that lets a unit variant (`head`) and a struct variant share one field.
+#[semio_framework_async_macros::async_test]
+async fn committed_json_is_canonical() {
+    for (label, text) in [("before", (*BEFORE)), ("after", (*AFTER))] {
+        let decoded: SemioKitSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("snapshot encodes");
+        let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
+        assert_eq!(reencoded, original, "change-representation-pin/repins-the-representation-from-head-to-a-checkpoint: committed {label} JSON is not canonical");
+    }
+    let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&(mutation()))).expect("change-representation-pin mutation encodes");
+    let original: serde_json::Value = serde_json::from_str((*MUTATION)).expect("change-representation-pin mutation reparses");
+    assert_eq!(reencoded, original, "change-representation-pin/repins-the-representation-from-head-to-a-checkpoint: committed mutation JSON is not canonical");
+}
+
+/// 🎯️ Declared `applied`: the index is in range and the new pin genuinely differs, so neither target-missing nor no-op may fire
+#[semio_framework_async_macros::async_test]
+async fn declared_outcome_holds_as_committed() {
+    let outcome: serde_json::Value = serde_json::from_str((*OUTCOME)).expect("outcome decodes");
+    assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("applied"), "change-representation-pin/repins-the-representation-from-head-to-a-checkpoint: this case is declared applied");
+    let produced = mutation().diff(&before());
+    assert!(produced.messages().is_empty(), "repinning to a genuinely different pin must raise no diagnostics");
+}
+
+/// 🔺️ The sparse delta this mutation produces equals the committed diff. Only the `representations` slot.
+#[semio_framework_async_macros::async_test]
+async fn produces_committed_diff() {
+    let base = before();
+    let outcome = <SemioKitMutation as Mutation<SemioKitSnapshot>>::diff(&mutation(), &base);
+    let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
+    let committed: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff decodes");
+    assert_eq!(produced, committed, "change-representation-pin/repins-the-representation-from-head-to-a-checkpoint: produced diff differs from the committed 🔺️diff/🔣️.json");
+}
+
+/// 🔣️ The committed diff is a decode→encode fixed point, and only the slot this mutation is
+/// allowed to touch appears in it at all.
+#[semio_framework_async_macros::async_test]
+async fn committed_diff_is_canonical_and_narrowly_scoped() {
+    let decoded: SemioKitDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed change-representation-pin diff decodes");
+    assert!(decoded.types.is_none() && decoded.designs.is_none() && decoded.objects.is_none() && decoded.models.is_none() && decoded.properties.is_none(), "no other kit slot may appear in the diff");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("diff re-encodes");
+    let original: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff reparses");
+    assert_eq!(reencoded, original, "change-representation-pin/repins-the-representation-from-head-to-a-checkpoint: committed diff JSON is not canonical");
+}
+
+/// 🩹 Applying the committed diff to `before` yields `after`.
+#[semio_framework_async_macros::async_test]
+async fn committed_diff_applies_to_after() {
+    let decoded: SemioKitDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed change-representation-pin diff decodes");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed change-representation-pin diff applies to the before-snapshot");
+    assert_eq!(produced, expected_after(), "change-representation-pin/repins-the-representation-from-head-to-a-checkpoint: committed diff did not carry before to after");
+}
+
+fn runtime_fixture_text(relative: &str) -> &'static str {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative);
+    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display())).into_boxed_str())
+}

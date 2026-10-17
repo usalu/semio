@@ -1,7 +1,7 @@
 /** 🧹️ Flow session byte ownership fixtures and independent JSON oracle; source validation only. */
 import { strict as assert } from "node:assert";
 import stableStringify from "fast-json-stable-stringify";
-import { readModuleTreeSource } from "../../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 
 //#region 🔣️SessionOwnership
 const fixture = await Bun.file(new URL("../🧫️fixtures/🧹️session-retirement/🔣️.json", import.meta.url)).json();
@@ -15,19 +15,19 @@ const dagText = fixture.dag.text.repeat(fixture.dag.repeat);
 assert.equal(Buffer.byteLength(dagText), fixture.dag.minimumUtf8Bytes);
 assert.equal(stableStringify({ label: text }), JSON.stringify({ label: text }));
 assert.equal(fixture.scene.retainedVelloRects, 256);
-const canvasSource = await Bun.file(new URL("../../../../../../../../🔨️modules/🖼️canvas/🦀️.rs", import.meta.url)).text();
+const canvasSource = readModuleTreeSource(new URL("../../../../../../../../🔨️modules/🖼️canvas/🎬️scene/🖌️renderer/🦀️.rs", import.meta.url));
 assert(canvasSource.includes("fn retire_vello_fragment"));
 assert(canvasSource.includes("Self::vector_backing_bytes(&encoding.resources.glyph_runs)"));
 assert(canvasSource.indexOf("slot.command_backing_bytes = command.retirement_backing_bytes()") < canvasSource.indexOf("slot.command = Some(ManuallyDrop::new(command))"));
 const sceneConsumers = [
-  ["iconPaintCache", await Bun.file(new URL("../../../../../♾️infinite/🎲️board/⚙️engine/🦀️.rs", import.meta.url)).text(), "retirement_scene: Cell<Option<semio_framework_canvas::OpaqueSceneRetirementToken>>"],
-  ["boardWorldCache", readModuleTreeSource(new URL("../../../../../♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/🕹️gestures/🦀️.rs", import.meta.url)), "opaque_scene_retirement: Cell<Option<OpaqueSceneRetirementToken>>"],
-  ["engineCanvasPacket", readModuleTreeSource(new URL("../../../../../📺️renderer/🧑‍🎨engine/🧱️elements/⚙️EngineCanvas/🎯️targets/🧊️wgpu/🦀️.rs", import.meta.url)), "scene_retirement: Option<canvas::OpaqueSceneRetirementToken>"],
+  ["iconPaintCache", await Bun.file(new URL("../../../../../♾️infinite/🎲️board/⚙️engine/🦀️.rs", import.meta.url)).text(), "retirement_scene: Cell<Option<semio_framework_canvas::OpaqueSceneRetirementToken>>", "advance_opaque_scene_retirement"],
+  ["boardWorldCache", readModuleTreeSource(new URL("../../../../../♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/🕹️gestures/🦀️.rs", import.meta.url)), "opaque_scene_retirement: Cell<Option<OpaqueSceneRetirementToken>>", "advance_opaque_scene_retirement"],
+  ["engineCanvasPacket", await Bun.file(new URL("../../../../../📺️renderer/🧑‍🎨engine/🧱️elements/⚙️EngineCanvas/🎯️targets/🧊️wgpu/📦️prepared-engine-canvas/🦀️.rs", import.meta.url)).text(), "scene_retirement: ManuallyDrop<canvas::CanvasSceneRetirement>", "self.scene_retirement.close_step(&mut self.scene,grant)"],
 ] as const;
 assert.deepEqual(sceneConsumers.map(([name]) => name), fixture.scene.retainedConsumers);
-for (const [, source, retainedOwner] of sceneConsumers) {
+for (const [, source, retainedOwner, advance] of sceneConsumers) {
   assert(source.includes(retainedOwner));
-  assert(source.includes("advance_opaque_scene_retirement"));
+  assert(source.includes(advance));
 }
 const boardWorldLaws = await Bun.file(new URL("../../../../../♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/🧭️host/🧪️tests/🔬️board-host/🦀️.rs", import.meta.url)).text();
 const boardWorldRetirementLaw = boardWorldLaws.slice(boardWorldLaws.indexOf("fn board_world_scene_retirement_retains_exact_token_until_backing_is_released"));

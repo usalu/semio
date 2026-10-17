@@ -58,8 +58,3 @@ pub fn compute_drawing_topology(snapshot: &DrawingSnapshot) -> DrawingTopology {
 }
 //#endregion 🔖️Topology
 
-#[cfg(test)]
-//#region 🧪️Tests
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests

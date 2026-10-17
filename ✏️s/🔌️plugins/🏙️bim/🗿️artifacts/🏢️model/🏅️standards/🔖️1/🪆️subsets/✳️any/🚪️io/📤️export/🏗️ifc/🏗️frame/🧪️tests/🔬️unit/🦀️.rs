@@ -1,4 +1,4 @@
-use crate::standards::v1::subsets::any::io::export::ifc::testkit::{count, document, house, quantity, real, rows, string, tags, target};
+use crate::standards::v1::subsets::any::io::export::ifc::testkit::{count, document, house, leaning, quantity, real, rows, string, tags, target};
 use semio_s_artifact_stdio_contract::part21::{Part21Document, Part21Instance, Part21Value};
 
 fn solid_of<'a>(document: &'a Part21Document, args: &[Part21Value]) -> &'a Vec<Part21Value> {
@@ -64,23 +64,6 @@ fn frames_carry_area_and_volume_quantities() {
 use crate::standards::v1::subsets::any::io::export::ifc::testkit::{property_sets, text_of};
 use crate::standards::v1::subsets::any::schema::snapshot::{Axis, Beam, Column, ModelSnapshot, Point2, Slope};
 
-/// 🏗️ The house with a leaning column, an arc beam, an inclined beam and a beam joined to two columns, on the storey of its first column.
-pub(crate) fn leaning() -> ModelSnapshot {
-    let mut model = house();
-    let template = model.columns.values().next().cloned().expect("a column");
-    let beam_type = model.beams.values().next().map(|beam| beam.beam_type.clone()).expect("a beam");
-    let storey = template.storey.clone();
-    let at = |x: f64, y: f64| Point2 { x, y };
-    model.columns.insert("c-lean".into(), Column { position: at(30.0, 30.0), rotation: 0.0, tilt: Some(Slope { direction: 0.5, angle: 0.2 }), ..template.clone() });
-    model.columns.insert("c-west".into(), Column { position: at(40.0, 30.0), tilt: None, ..template.clone() });
-    model.columns.insert("c-east".into(), Column { position: at(46.0, 30.0), tilt: None, ..template });
-    let beam = |axis: Axis, end_top_offset: Option<f64>| Beam { storey: storey.clone(), beam_type: beam_type.clone(), axis, top_offset: 0.0, end_top_offset, phase: crate::standards::v1::subsets::any::schema::snapshot::Phase::New, name: String::new() };
-    model.beams.insert("b-arc".into(), beam(Axis::Arc { start: at(30.0, 40.0), end: at(36.0, 40.0), bulge: 0.4 }, None));
-    model.beams.insert("b-incline".into(), beam(Axis::Line { start: at(30.0, 50.0), end: at(36.0, 50.0) }, Some(-0.8)));
-    model.beams.insert("b-joined".into(), beam(Axis::Line { start: at(40.0, 30.0), end: at(46.0, 30.0) }, None));
-    model
-}
-
 fn shape_items<'a>(document: &'a Part21Document, args: &[Part21Value]) -> Vec<(String, &'a Part21Instance)> {
     let shape = target(document, args, 6).and_then(|instance| instance.entity("IFCPRODUCTDEFINITIONSHAPE")).expect("the shape");
     shape[2]
@@ -142,7 +125,7 @@ const FRAME_DIR: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️stand
 /// 🏗️ The frame model: [`leaning`] with the door, open and window panels of the curtain wall of the curtain wall export tests.
 pub(crate) fn frame() -> ModelSnapshot {
     let mut model = leaning();
-    model.curtain_panel_overrides = crate::standards::v1::subsets::any::io::export::ifc::curtain::tests::framed().curtain_panel_overrides;
+    model.curtain_panel_overrides = crate::standards::v1::subsets::any::io::export::ifc::testkit::framed().curtain_panel_overrides;
     model
 }
 

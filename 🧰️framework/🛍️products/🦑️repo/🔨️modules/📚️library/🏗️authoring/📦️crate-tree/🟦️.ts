@@ -1,13 +1,13 @@
-import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { dirname, join, resolve } from "node:path";
+import { existsSync, mkdirSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
+import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { crateIdent, identifierSet, measureRustCrate, planArtifactCrates, readMeasureSources, useLeafNames, weaveRootEdits, type ArtifactCratePlan, type CrateMeasure, type PlannedCrate } from "./🗺️plan/🟦️.ts";
 import { addWorkspaceMembers, insertBuildOwnerRows, manifestRowKey, rebaseManifestDirPaths, renderMirrorFiles, patchCargoLock, patchRouterPackages, readManifestDependencyRows, rebaseManifestRow, relativePosix, renderCrateManifest, renderMirrorRoot, type MirrorSpec, type MirrorUnit } from "./📝️render/🟦️.ts";
 import { demoteDanglingOuterDocs, parseRustSourceTree, rustOuterDocStart } from "./🌳️module-tree/🟦️.ts";
-import { resolveFixturePlaceholders } from "./🧪️test-closure/🟦️.ts";
+import { FIXTURE_READER_CRATE, FIXTURE_READER_PACKAGE_DIR, resolveFixturePlaceholders } from "./🧪️test-closure/🟦️.ts";
 
 export { planArtifactCrates } from "./🗺️plan/🟦️.ts";
 export type { ArtifactCratePlan, PlannedCrate } from "./🗺️plan/🟦️.ts";
-export { CRATE_HARD_BUDGET, CRATE_TARGET_BUDGET, measureFits, measureRustCrate } from "./🗺️plan/🟦️.ts";
+export { CRATE_HARD_BUDGET, CRATE_TARGET_BUDGET, measureFits, measureRustCrate, parseCrateBudget } from "./🗺️plan/🟦️.ts";
 
 /** 📝️ One file the carve writes, rewrites or deletes. */
 export type CarveFileWrite = { readonly path: string; readonly action: "create" | "update" | "delete"; readonly content: string };
@@ -24,6 +24,7 @@ export function mirrorSpecOf(plan: ArtifactCratePlan, crate: PlannedCrate): Mirr
     owned: crate.attach.map((decl): MirrorUnit => ({ path: decl.eff, node: decl.node, sourceText: decl.declText, oldScope: decl.scope, component: decl.isComponent, fileDir: dirname(decl.declFile) })),
     imported: crate.imports,
     wrapperNodes: plan.wrapperNodes,
+    gates: plan.gates,
     hoist: crate.hoisted === true,
   };
 }
@@ -41,7 +42,7 @@ function applyEdits(text: string, edits: readonly { start: number; end: number; 
 
 /** 🧾️ Rewrites the artifact root so carved modules and moved items become explicit re-exports. */
 export async function carveArtifactRootText(plan: ArtifactCratePlan): Promise<string> {
-  const edits = [...weaveRootEdits(plan.rootEdits, plan.wrapperNodes, plan.weave, plan.placement, plan.fileCuts).edits];
+  const edits = [...weaveRootEdits(plan.rootEdits, plan.wrapperNodes, plan.weave, plan.placement, plan.fileCuts, plan.gates).edits];
   const testGated = new Set(plan.tree.items.filter((item) => item.name && item.attributeTexts.some((attribute) => /cfg\(\s*test\s*\)/u.test(attribute))).map((item) => item.name!));
   for (const unit of plan.movedUnits) {
     const host = plan.crates.find((crate) => crate.id === unit.to);
@@ -89,6 +90,62 @@ function prunedUseText(statement: string, leaves: readonly string[]): string {
   return `${statement.slice(0, open)}{${members.join(", ")}}${statement.slice(close + 1)}`;
 }
 
+/** 🚩️ A feature of a package manifest with the entries it enables, which every carved crate declares again and forwards to the carved crates it depends on, so a consumer that enables the feature on the artifact reaches every crate. */
+export type ManifestFeature = Readonly<{ name: string; entries: readonly string[] }>;
+
+/** 🚩️ The features of a package manifest in declaration order; a feature that enables optional dependencies (`testkit = ["dep:serde_json"]`) keeps those entries in every carved crate, which carries the same dependency rows. */
+export function forwardableFeatures(manifestText: string): ManifestFeature[] {
+  const table = (Bun.TOML.parse(manifestText) as { features?: Record<string, unknown> }).features ?? {};
+  return Object.entries(table).filter(([, entries]) => Array.isArray(entries)).map(([name, entries]) => ({ name, entries: (entries as unknown[]).map(String) }));
+}
+
+/** 🚩️ The rendered entries of a carved feature: the original entries, then the same feature of every carved crate it forwards to. */
+export function featureRow(feature: ManifestFeature, forwardTo: readonly string[]): string {
+  return `${feature.name} = [${[...feature.entries, ...forwardTo.map((crate) => `${crate}/${feature.name}`)].map((entry) => JSON.stringify(entry)).join(", ")}]`;
+}
+
+/** 🚩️ Extends the features of the artifact package manifest with the carved crates' feature of the same name, keeping the original entries. */
+export function forwardFeatures(manifestText: string, features: readonly ManifestFeature[], crateNames: readonly string[]): string {
+  let out = manifestText;
+  for (const feature of features) out = out.replace(new RegExp(`^${feature.name.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&")}\\s*=\\s*\\[[^\\]]*\\]`, "mu"), () => featureRow(feature, crateNames));
+  return out;
+}
+
+/** 🧪️ Adds dev-dependency rows to the artifact package manifest (creating its `[dev-dependencies]` section when absent), so the facade tests see the features its carved crates gate their test helpers behind. */
+export function withDevDependencyRows(manifestText: string, rows: readonly string[]): string {
+  if (!rows.length) return manifestText;
+  const at = manifestText.search(/^\[dev-dependencies\]\s*$/mu);
+  if (at < 0) return `${manifestText.trimEnd()}\n\n[dev-dependencies]\n${rows.join("\n")}\n`;
+  const lineEnd = manifestText.indexOf("\n", at) + 1;
+  return manifestText.slice(0, lineEnd) + rows.join("\n") + "\n" + manifestText.slice(lineEnd);
+}
+
+/** 🧲️ Adds a dev-dependency row to a manifest at its sorted place inside `[dev-dependencies]`, creating the section when absent and leaving a manifest that already names the dependency unchanged. */
+export function insertDevDependencyRow(manifestText: string, row: string): string {
+  const key = manifestRowKey(row);
+  const lines = manifestText.split("\n");
+  const header = lines.findIndex((line) => /^\[dev-dependencies\]\s*$/u.test(line));
+  if (header < 0) return `${manifestText.trimEnd()}\n\n[dev-dependencies]\n${row}\n`;
+  let end = header + 1;
+  while (end < lines.length && !/^\[/u.test(lines[end]!)) end += 1;
+  if (lines.slice(header + 1, end).some((line) => manifestRowKey(line) === key)) return manifestText;
+  let last = header;
+  for (let at = header + 1; at < end; at += 1) {
+    const line = lines[at]!;
+    if (line.trim() === "" || line.trim().startsWith("#")) continue;
+    const existing = manifestRowKey(line);
+    if (existing > key) { lines.splice(at, 0, row); return lines.join("\n"); }
+    last = at;
+  }
+  lines.splice(last + 1, 0, row);
+  return lines.join("\n");
+}
+
+/** 🧲️ Gives a manifest the shared fixture reader as dev-dependency, with the path computed from the manifest's own directory. */
+export function withFixtureReaderDevDependency(manifestText: string, manifestDirectory: string, repoRoot: string): string {
+  return insertDevDependencyRow(manifestText, `${FIXTURE_READER_CRATE} = { path = "${relativePosix(manifestDirectory, resolve(repoRoot, FIXTURE_READER_PACKAGE_DIR))}" }`);
+}
+
 /** 🧱️ Computes every file write of a carve without touching the tree. */
 export async function carveWrites(plan: ArtifactCratePlan): Promise<{ writes: CarveFileWrite[]; rootLib: CrateMeasure; rootTest: CrateMeasure; fileTexts: Map<string, string> }> {
   const writes: CarveFileWrite[] = [];
@@ -97,6 +154,8 @@ export async function carveWrites(plan: ArtifactCratePlan): Promise<{ writes: Ca
   const rows = readManifestDependencyRows(originalManifest);
   const artifactPackageDir = resolve(plan.repoRoot, plan.packageDir);
   const crateById = new Map(plan.crates.map((crate) => [crate.id, crate]));
+  const features = forwardableFeatures(originalManifest);
+  const featureNames = features.map((feature) => feature.name);
   for (const crate of plan.crates) {
     const packageDir = resolve(plan.repoRoot, crate.packageDir);
     const siblingRows = crate.dependsOn.map((id) => crateById.get(id)!).map((dep) => `${dep.name} = { path = "${relativePosix(packageDir, resolve(plan.repoRoot, dep.packageDir))}" }`);
@@ -107,8 +166,9 @@ export async function carveWrites(plan: ArtifactCratePlan): Promise<{ writes: Ca
       workspaceRel: relativePosix(packageDir, plan.artifactDir),
       libPath: "🦀️.rs",
       dependencyRows: [...rows.dependencies.filter((row) => !sibling.has(manifestRowKey(row))).map((row) => rebaseManifestRow(row, artifactPackageDir, packageDir)), ...siblingRows],
-      devDependencyRows: rows.devDependencies.map((row) => rebaseManifestRow(row, artifactPackageDir, packageDir)),
+      devDependencyRows: [...rows.devDependencies.map((row) => rebaseManifestRow(row, artifactPackageDir, packageDir)), ...(featureNames.length ? crate.dependsOn.map((id) => crateById.get(id)!).map((dep) => `${dep.name} = { path = "${relativePosix(packageDir, resolve(plan.repoRoot, dep.packageDir))}", features = [${featureNames.map((feature) => JSON.stringify(feature)).join(", ")}] }`) : [])],
       targetSections: rows.targetSections.map((section) => rebaseManifestRow(section, artifactPackageDir, packageDir)),
+      featureRows: features.map((feature) => featureRow(feature, crate.dependsOn.map((id) => crateById.get(id)!.name))),
     });
     writes.push({ path: join(crate.packageDir, "Cargo.toml"), action: existsSync(join(packageDir, "Cargo.toml")) ? "update" : "create", content: manifest });
     const mirror = renderMirrorFiles(mirrorSpecOf(plan, crate));
@@ -120,7 +180,7 @@ export async function carveWrites(plan: ArtifactCratePlan): Promise<{ writes: Ca
   const rootAbsolute = resolve(plan.repoRoot, plan.rootFile);
   const baseTexts = new Map<string, string>([...plan.overlay.edits, ...plan.overlay.creates]);
   const cutsByFile = new Map<string, { start: number; end: number; text: string }[]>();
-  for (const cut of weaveRootEdits(plan.rootEdits, plan.wrapperNodes, plan.weave, plan.placement, plan.fileCuts).cuts) cutsByFile.set(cut.file, [...(cutsByFile.get(cut.file) ?? []), cut]);
+  for (const cut of weaveRootEdits(plan.rootEdits, plan.wrapperNodes, plan.weave, plan.placement, plan.fileCuts, plan.gates).cuts) cutsByFile.set(cut.file, [...(cutsByFile.get(cut.file) ?? []), cut]);
   const fileTexts = new Map<string, string>(baseTexts);
   for (const [file, cuts] of cutsByFile) {
     const base = fileTexts.get(file) ?? readFileSync(file, "utf8");
@@ -135,7 +195,7 @@ export async function carveWrites(plan: ArtifactCratePlan): Promise<{ writes: Ca
     if (absolute === rootAbsolute) continue;
     const repoRelative = relativePosix(plan.repoRoot, absolute);
     const owner = owners.find((entry) => entry.paths.has(repoRelative));
-    const content = owner ? rebaseManifestDirPaths(resolveFixturePlaceholders(text, plan.repoRoot, owner.dir), artifactPackageDir, owner.dir) : text;
+    const content = owner ? resolveFixturePlaceholders(rebaseManifestDirPaths(text, artifactPackageDir, owner.dir), plan.repoRoot, owner.dir) : text;
     writes.push({ path: repoRelative, action: plan.overlay.creates.has(absolute) ? "create" : "update", content });
   }
   const written = new Set(writes.map((write) => write.path));
@@ -155,14 +215,42 @@ export async function carveWrites(plan: ArtifactCratePlan): Promise<{ writes: Ca
   const dependenciesAt = originalManifest.search(/^\[dependencies\]\s*$/mu);
   if (dependenciesAt < 0) throw new Error("Artifact package manifest has no [dependencies]");
   const lineEnd = originalManifest.indexOf("\n", dependenciesAt) + 1;
-  writes.push({ path: join(plan.packageDir, "Cargo.toml"), action: "update", content: originalManifest.slice(0, lineEnd) + carvedRows.join("\n") + "\n" + originalManifest.slice(lineEnd) });
+  writes.push({ path: join(plan.packageDir, "Cargo.toml"), action: "update", content: withDevDependencyRows(forwardFeatures(originalManifest.slice(0, lineEnd) + carvedRows.join("\n") + "\n" + originalManifest.slice(lineEnd), features, plan.crates.map((crate) => crate.name)), featureNames.length ? plan.crates.map((crate) => `${crate.name} = { path = "${relativePosix(artifactPackageDir, resolve(plan.repoRoot, crate.packageDir))}", features = [${featureNames.map((feature) => JSON.stringify(feature)).join(", ")}] }`) : []) });
   const workspaceManifestPath = resolve(plan.artifactDir, "Cargo.toml");
   writes.push({ path: relativePosix(plan.repoRoot, workspaceManifestPath), action: "update", content: addWorkspaceMembers(readFileSync(workspaceManifestPath, "utf8"), plan.crates.map((crate) => relativePosix(plan.artifactDir, resolve(plan.repoRoot, crate.packageDir)))) });
   const routerPath = resolve(artifactPackageDir, "📜️script.ts");
   if (existsSync(routerPath)) writes.push({ path: join(plan.packageDir, "📜️script.ts"), action: "update", content: patchRouterPackages(readFileSync(routerPath, "utf8"), plan.artifactCrate, plan.crates.map((crate) => crate.name)) });
   const lockPath = resolve(plan.artifactDir, "Cargo.lock");
   if (existsSync(lockPath)) writes.push({ path: relativePosix(plan.repoRoot, lockPath), action: "update", content: patchCargoLock(readFileSync(lockPath, "utf8"), plan.artifactCrate, plan.crates.map((crate) => ({ name: crate.name, dependsOn: crate.dependsOn.map((id) => crateById.get(id)!.name) }))) });
+  for (const owner of owners) {
+    if (!writes.some((write) => write.path.endsWith(".rs") && owner.paths.has(write.path) && write.content.includes("semio_framework_test_fixtures"))) continue;
+    const manifestPath = relativePosix(plan.repoRoot, join(owner.dir, "Cargo.toml"));
+    const at = writes.findIndex((write) => write.path === manifestPath);
+    if (at >= 0) writes[at] = { ...writes[at]!, content: withFixtureReaderDevDependency(writes[at]!.content, owner.dir, plan.repoRoot) };
+  }
   return { writes, rootLib, rootTest, fileTexts };
+}
+
+/** 🧭️ The ticket tree of the repository, the only place inside the repository where a carve backup may live. */
+const CARVE_BACKUP_TICKET_TREE = ".🧬semio/🦑️repo/🎫️tickets";
+
+/** 🛡️ Resolves the `--backup=` directory of a carve: an absolute path is used as given and a relative one resolves against the repository root. A directory inside the source tree (the repository outside its ticket folders) is refused, because a backup there would be carved, committed or swept like source. */
+export function resolveCarveBackupDir(repoRoot: string, backup: string): string {
+  const root = realpathSync(repoRoot);
+  const target = resolve(root, backup);
+  let existing = target;
+  while (!existsSync(existing)) {
+    const parent = dirname(existing);
+    if (parent === existing) break;
+    existing = parent;
+  }
+  const physical = resolve(realpathSync(existing), relative(existing, target));
+  const inside = relative(root, physical);
+  const outside = isAbsolute(inside) || inside === ".." || inside.startsWith(`..${sep}`);
+  if (outside) return physical;
+  const ticketTree = CARVE_BACKUP_TICKET_TREE.split("/").join(sep);
+  if (inside === ticketTree || inside.startsWith(`${ticketTree}${sep}`)) return physical;
+  throw new Error(`new crates --backup=${backup}: ${physical} is inside the source tree; give an absolute directory outside the repository or one below ${CARVE_BACKUP_TICKET_TREE}`);
 }
 
 /** 💾️ Writes the planned files, saving a backup of every file it replaces when a backup directory is given. */

@@ -6,10 +6,21 @@
   "description": "@semio-tech/fem-js authored owner test infrastructure.",
   "type": "module",
   "private": true,
+  "exports": {
+    "./engine/app-surface/schema/result-mode": "./⚙️engine/🖥️app-surface/🧬️schema/👁️result-mode/🟦️.ts",
+    "./engine/app-surface/schema/results-animation": "./⚙️engine/🖥️app-surface/🧬️schema/🔣️results-animation/🟦️.ts",
+    "./testing/fixtures/child-outcomes": "./🧪️testing/🧫️fixtures/🧒️child-outcomes/🟦️.ts",
+    "./testing/fixtures/mounted-close": "./🧪️testing/🧫️fixtures/🧹️mounted-close/🟦️.ts",
+    "./testing/fixtures/visual-close-grants": "./🧪️testing/🧫️fixtures/💳️visual-close-grants/🟦️.ts",
+    "./testing/tool-job-fem-live-visual-publication": "./🧪️testing/🔬️tool-job-fem-live-visual-publication/🟦️.ts",
+    "./testing/tool-job-fem-numerical-microcursor": "./🧪️testing/🔬️tool-job-fem-numerical-microcursor/🟦️.ts"
+  },
   "scripts": {
     "test": "bun --cwd \"../../../../..\" repo run @semio-tech/fem-js:test"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@semio-tech/s-fem-composition-tests": "workspace:*"
+  },
   "devDependencies": {
     "manifold-3d": "^3.5.1",
     "three": "^0.182.0",

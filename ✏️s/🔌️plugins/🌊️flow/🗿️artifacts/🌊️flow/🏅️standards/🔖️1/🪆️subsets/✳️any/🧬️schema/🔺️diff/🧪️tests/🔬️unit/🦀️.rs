@@ -1,9 +1,18 @@
-use super::*;
+use crate::FlowSnapshot;
+use protocol::DiffAlgebra;
+use semio_framework_test_fixtures::fixture_text;
+#[allow(unused_imports)]
+use crate::FlowContentChild;
+#[allow(unused_imports)]
+use framework_schema::ArtifactSchema;
+#[allow(unused_imports)]
+use protocol::{ApplyCapability, MutationApplyResult, MutationDiff};
+use crate::standards::v1::subsets::any::schema::diff::*;
 
 #[test]
 fn flow_diff_codecs_preserve_the_neutral_schema_and_child_handles() {
     use protocol::{DiffBinary, DiffText};
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🔺️diff/🔁️codec/🔣️.json")).expect("neutral Flow diff codec fixture");
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../🧪️tests/🧫️fixtures/🔺️diff/🔁️codec/🔣️.json")).expect("neutral Flow diff codec fixture");
     let cases = fixture["cases"].as_array().expect("diff cases");
     assert_eq!(cases.len(), 3);
     for expected in cases {
@@ -18,7 +27,6 @@ fn flow_diff_codecs_preserve_the_neutral_schema_and_child_handles() {
         assert_eq!(serde_json::Value::from(semio_framework_value::ToValue::to_value(&text_diff)), *expected);
         assert_eq!(serde_json::Value::from(semio_framework_value::ToValue::to_value(&binary_diff)), *expected);
     }
-    println!("[DEBUG] Flow diff text and binary preserve all three independent JSON cases");
 }
 
 #[semio_framework_async_macros::async_test]

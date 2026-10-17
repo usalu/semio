@@ -7,23 +7,16 @@
 //! `🧬️schema/🦀️component.rs` for the wire types folded over here, and `🟦️.ts` for the
 //! byte-identical TypeScript twin (parity asserted over the golden fixture
 //! `🧫️fixtures/📇️directory/⚡️events.json` in both `🧪️Tests` regions).
+//!
+//! 🏛️ Facade: the wire contract core and its canonical text IO live in `semio-framework-os-directory-schema` (`schema`, `io::text`), the Check In contract in `semio-framework-os-directory-check-in`, the binary boundaries and the canonical checkpoint pair in `semio-framework-os-directory-binary` (`io::binary`) and the declared access policy in `semio-framework-os-directory-access-policy` (`access_policy`). This crate keeps the public `os_directory` paths of the kernel facade and the read model below.
 
-// 🧭️ Resolves relative to THIS file's own physical directory (📇️directory/), independent of how
-// this file itself got mounted into the crate from 🦀️.rs — see 🔣️taxonomy.json's
-// `rustEntryPathRules` header comment on why that holds even under `#[path]` mounting.
-#[path = "🧬️schema/🦀️.rs"]
-pub mod schema;
+pub use semio_framework_os_directory_schema as schema;
+pub use semio_framework_os_directory_access_policy as access_policy;
 
-
-// 🎫️ Lane 1-D (ticket §A ownership: "none" before this wave, ours per `📋️ownership-and-handoffs.md`
-// row `🔨️modules/📇️directory/**`): the hub client + native identity mint/restore helper. Both are
-// additive sub-modules beside `schema`, consuming `fold`/the wire types below without touching them.
-
-
-
-
-#[path = "🛡️access-policy/🧬️schema/🦀️.rs"]
-pub mod access_policy;
+pub mod io {
+    pub use semio_framework_os_directory_binary as binary;
+    pub use semio_framework_os_directory_schema::text;
+}
 
 use std::collections::BTreeMap;
 
@@ -34,19 +27,20 @@ pub use schema::{
     DirectoryAccessChange, DirectoryCommandResultV1, DirectoryConnectionPhase, DirectoryEventPageErrorV1, DirectoryEventPageV1, DirectoryPresenceActor, DirectorySessionAuthorityV1, DirectorySessionKindV1, DirectorySpaceAdministrationCapabilitiesV1, DirectorySpaceAdministrationDocumentWindowV1,
     DirectorySpaceAdministrationInviteRowV1, DirectorySpaceAdministrationInviteWindowV1, DirectorySpaceAdministrationMemberRowV1, DirectorySpaceAdministrationMemberWindowV1, DirectorySpaceAdministrationPageErrorV1,
     DirectorySpaceAdministrationPageV1, DirectorySpaceAdministrationPublicDocumentWindowV1, DirectorySpaceAdministrationSectionV1, DirectorySpaceListEntryV1, DirectorySpaceVisibility, DirectoryStreamMessage, DocumentBrowserActorSourceV1,
-    DocumentCheckInPhaseV1, DocumentCheckInProgressV1, DocumentCheckInReadyV1, DocumentCheckInRefusalV1, DocumentCheckInStatusV1, DocumentCheckInV1, DocumentDescriptor, DocumentExecutionProtocolV1, EditedArtifactFrontierV1, DocumentExecutionTargetComponentV1, DocumentExecutionTargetDescriptorV1, DocumentExecutionTargetLeaseFieldsV1, DocumentExecutionTargetLocaleV1, DocumentExecutionTargetStatusCodeV1,
+    DocumentDescriptor, DocumentExecutionProtocolV1, EditedArtifactFrontierV1, DocumentExecutionTargetComponentV1, DocumentExecutionTargetDescriptorV1, DocumentExecutionTargetLeaseFieldsV1, DocumentExecutionTargetLocaleV1, DocumentExecutionTargetStatusCodeV1,
     DocumentFrontier, DocumentOpenArtifactV1, DocumentOpenBrowserActorV1, DocumentOpenCatalogV1, DocumentOpenCheckpointV1, DocumentOpenGrantV1, DocumentOpenIntentV1, DocumentOpenPackageV1, DocumentOpenParentDialectV1, DocumentOpenPlanErrorCodeV1,
     DocumentOpenPlanErrorV1, DocumentOpenPlanV1, DocumentOpenRendererTargetV1, DocumentOpenRevalidationV1, DocumentOpenSurfaceRoleV1, DocumentOpenSurfaceV1, DocumentOwner, DocumentPlanSocketGrantIntentV1, DocumentScope, DocumentView,
     Hlc, InviteView, MemberSpaceViewV1, PublicDocumentCatalogEntryV1, PublicSpaceViewV1, PublishedArtifactBlob, PublishedArtifactCheckpoint, RebootstrapRequired,
     DIRECTORY_COMMAND_INVITE_TOKEN_MAX_BYTES, DIRECTORY_COMMAND_RECEIPT_MAX_BYTES,
     DIRECTORY_COMMAND_RECEIPT_MAX_EVENTS, DIRECTORY_COMMAND_REQUEST_ID_LEN, DIRECTORY_COMMAND_REQUEST_MAX_BYTES, DIRECTORY_EVENT_PAGE_MAX_BYTES, DIRECTORY_EVENT_PAGE_MAX_EVENT_BYTES, DIRECTORY_EVENT_PAGE_MAX_RAW_ROWS, DIRECTORY_SESSION_AUTHORITY_MAX_BYTES,
     DIRECTORY_SPACE_ADMINISTRATION_CURSOR_MAX_BYTES, DIRECTORY_SPACE_ADMINISTRATION_PAGE_MAX_BYTES, DIRECTORY_SPACE_ADMINISTRATION_PAGE_MAX_ROWS, DIRECTORY_SPACE_ADMINISTRATION_PAGE_SCHEMA, DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES,
-    DOCUMENT_CHECK_IN_MAX_BYTES, DOCUMENT_CHECK_IN_SCHEMA_V1, DOCUMENT_CHECK_IN_STATUS_SCHEMA_V1, DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES, DOCUMENT_OPEN_ID_MAX_BYTES, DOCUMENT_OPEN_MAX_SAFE_INTEGER, DOCUMENT_OPEN_PLAN_MAX_TTL_MS,
+    DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES, DOCUMENT_OPEN_ID_MAX_BYTES, DOCUMENT_OPEN_MAX_SAFE_INTEGER, DOCUMENT_OPEN_PLAN_MAX_TTL_MS,
 };
 pub use schema::{DirectoryEvent, DirectoryEventBody, DirectorySpaceKind, DirectorySpaceRole, MemberView, SpaceView, UserView};
 pub use schema::{DirectoryIndexedDocumentViewV1, DocumentIndexEntryV1};
 pub use schema::{DIRECTORY_PREFERENCE_PAGE_PATH_V1, USER_PREFERENCE_MUTATION_MAX_BYTES, USER_PREFERENCE_SCHEMA_ID_MAX_BYTES};
-pub use schema::{CanonicalCheckpointPairRefusalV1, CanonicalCheckpointPairV1};
+pub use semio_framework_os_directory_binary::{CanonicalCheckpointPairRefusalV1, CanonicalCheckpointPairV1};
+pub use semio_framework_os_directory_check_in::{DocumentCheckInPhaseV1, DocumentCheckInProgressV1, DocumentCheckInReadyV1, DocumentCheckInRefusalV1, DocumentCheckInStatusV1, DocumentCheckInV1, DOCUMENT_CHECK_IN_MAX_BYTES, DOCUMENT_CHECK_IN_SCHEMA_V1, DOCUMENT_CHECK_IN_STATUS_SCHEMA_V1};
 
 //#region 🔖️ReadModel
 /// 🏠️ One projected space: its `SpaceView` plus the current member roster.
@@ -215,9 +209,6 @@ pub async fn fold_all(model: DirectoryReadModel, events: &[DirectoryEvent]) -> D
     events.iter().fold(model, fold)
 }
 //#endregion 🔖️ReadModel
-
-#[path = "🚪️io/🦀️.rs"]
-pub mod io;
 
 pub use semio_framework_value::{DslValue,ToValue,FromValue,ValueError};
 #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]

@@ -1,0 +1,105 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "chunks",
+    "limits",
+    "cases"
+  ],
+  "properties": {
+    "chunks": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "stdout",
+        "stderr"
+      ],
+      "properties": {
+        "stdout": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "pattern": "^(?:[0-9a-f]{2})+$"
+          }
+        },
+        "stderr": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "pattern": "^(?:[0-9a-f]{2})+$"
+          }
+        }
+      }
+    },
+    "limits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maximumBytes",
+        "maximumLines"
+      ],
+      "properties": {
+        "maximumBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "maximumLines": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "style",
+          "status",
+          "sinkFailure",
+          "stdout",
+          "stderr",
+          "failure"
+        ],
+        "properties": {
+          "style": {
+            "enum": [
+              null,
+              "stream",
+              "stream-without-prefixes",
+              "static"
+            ]
+          },
+          "status": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "sinkFailure": {
+            "enum": [
+              false,
+              true,
+              "asynchronous"
+            ]
+          },
+          "stdout": {
+            "type": "string"
+          },
+          "stderr": {
+            "type": "string"
+          },
+          "failure": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

@@ -258,20 +258,20 @@ semio_framework_plugin::app_commands! {
 //#endregion 🔖️Commands
 
 //#region 🧵️RetainedCommands
-const EQUATION_TOOL_IDS: &[&str] = &["editEquation", "setAlgorithm", "setDirected", "nodeGraphEdit", "nodeGraphViewport", "editPoints", "setActiveExample", "addNode"];
+pub const EQUATION_TOOL_IDS: &[&str] = &["editEquation", "setAlgorithm", "setDirected", "nodeGraphEdit", "nodeGraphViewport", "editPoints", "setActiveExample", "addNode"];
 const EQUATION_RETAINED_PAYLOAD_SCHEMA: &str = "semio.equation/v1.tool-command.v1";
 const EQUATION_RETAINED_RAW_BYTES: usize = 65_536;
 const EQUATION_RETAINED_WORK_ITEMS: usize = 65_536;
-const EQUATION_MAX_NODES: usize = 256;
-const EQUATION_MAX_EDGES: usize = 512;
-const EQUATION_MAX_POINTS: usize = 1_024;
-const EQUATION_MAX_EDIT_JSON_BYTES: usize = 8_192;
-const EQUATION_MAX_EDIT_OPERATIONS: usize = 16;
+pub const EQUATION_MAX_NODES: usize = 256;
+pub const EQUATION_MAX_EDGES: usize = 512;
+pub const EQUATION_MAX_POINTS: usize = 1_024;
+pub const EQUATION_MAX_EDIT_JSON_BYTES: usize = 8_192;
+pub const EQUATION_MAX_EDIT_OPERATIONS: usize = 16;
 pub(crate) const EQUATION_MAX_DELETE_IDS: usize = 256;
 pub(crate) const EQUATION_MAX_TEXT_BYTES: usize = 256;
 /// 🧬️ The `nodeGraphEdit` argument the Actions pane stages by default — one node-graph gesture record `move` of the demo's
 /// node `a`, in the exact shared row shape `EquationEditOperation::from_value` admits.
-const EQUATION_DEFAULT_EDIT_OPERATIONS: &str = r#"[{"operation":"move","gestureId":"actions-pane","nodeIds":["a"],"dx":40.0,"dy":20.0}]"#;
+pub const EQUATION_DEFAULT_EDIT_OPERATIONS: &str = r#"[{"operation":"move","gestureId":"actions-pane","nodeIds":["a"],"dx":40.0,"dy":20.0}]"#;
 
 const EQUATION_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
     ArtifactToolPublicationContract { tool_id: "editEquation", lanes: &[ArtifactToolPublicationLane::Artifact] },
@@ -292,7 +292,7 @@ fn equation_tool_identity(tool_id: &str) -> u64 {
     tool_id.bytes().fold(0xcbf2_9ce4_8422_2325, |digest, byte| (digest ^ u64::from(byte)).wrapping_mul(0x1000_0000_01b3))
 }
 
-fn equation_operation_identity(tool_id: &str, operation: &AppOperationContext) -> u64 {
+pub fn equation_operation_identity(tool_id: &str, operation: &AppOperationContext) -> u64 {
     let mut identity = equation_tool_identity(tool_id);
     let app_instance = operation.app_instance_id.to_le_bytes();
     let operation_id = operation.operation_id.to_le_bytes();
@@ -309,7 +309,7 @@ fn equation_graph_shape_admitted(graph: &EquationGraph) -> bool {
     graph.nodes.len() <= EQUATION_MAX_NODES && graph.edges.len() <= EQUATION_MAX_EDGES && graph.algorithm.len() <= EQUATION_MAX_TEXT_BYTES && graph.algorithm_seed.as_ref().is_none_or(|seed| seed.len() <= EQUATION_MAX_TEXT_BYTES)
 }
 
-fn equation_edit_preflight(payload: &node_graph_edit::NodeGraphEdit) -> Option<usize> {
+pub fn equation_edit_preflight(payload: &node_graph_edit::NodeGraphEdit) -> Option<usize> {
     if payload.operations_json.len() > EQUATION_MAX_EDIT_JSON_BYTES {
         return None;
     }
@@ -323,7 +323,7 @@ fn equation_edit_preflight(payload: &node_graph_edit::NodeGraphEdit) -> Option<u
     Some(values.len())
 }
 
-fn equation_command_extent(command: &EquationCommand, snapshot: &EquationSnapshot) -> Option<usize> {
+pub fn equation_command_extent(command: &EquationCommand, snapshot: &EquationSnapshot) -> Option<usize> {
     if let EquationCommand::SetActiveExample(payload) = command {
         return (payload.example_id.len() <= EQUATION_MAX_TEXT_BYTES).then_some(1);
     }
@@ -405,7 +405,7 @@ enum EquationCloseUnit {
     Graph,
 }
 
-struct EquationRetainedCommandWork {
+pub struct EquationRetainedCommandWork {
     tool_id: &'static str,
     operation_identity: u64,
     extent: usize,
@@ -819,7 +819,7 @@ impl ArtifactCommandWork<EditorApp<EquationPlayApp>> for EquationRetainedCommand
     }
 }
 
-struct EquationCommandJobFactory {
+pub struct EquationCommandJobFactory {
     keys: Vec<ToolFactoryKey>,
 }
 
@@ -857,9 +857,9 @@ impl semio_framework::ToolJobFactory for EquationCommandJobFactory {
         &mut self,
         _operation: semio_framework_job::Operation,
         payload: Self::Payload,
-        input: semio_framework::action_bus::RetainedToolWireInput,
-        checkpoint: Option<semio_framework::action_bus::RetainedToolWireInput>,
-    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework::action_bus::RetainedToolWireInput, Option<semio_framework::action_bus::RetainedToolWireInput>)> {
+        input: semio_framework_action_bus::RetainedToolWireInput,
+        checkpoint: Option<semio_framework_action_bus::RetainedToolWireInput>,
+    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework_action_bus::RetainedToolWireInput, Option<semio_framework_action_bus::RetainedToolWireInput>)> {
         if input.declared_bytes() > EQUATION_RETAINED_RAW_BYTES || checkpoint.as_ref().is_some_and(|checkpoint| checkpoint.declared_bytes() > semio_framework_plugin::retained_command::ARTIFACT_COMMAND_CHECKPOINT_MAXIMUM_BYTES) {
             return Err((ToolJobFactoryError::new("Equation retained command rejects oversized wire or checkpoint owner"), input, checkpoint));
         }
@@ -880,7 +880,7 @@ impl ArtifactOwnedToolJobFactory for EquationCommandJobFactory {
 
 //#region 📬️StorePreparation
 #[derive(semio_framework_value::FactoryPayloadRetirement)]
-struct EquationStorePreparationFactory<P, M> {
+pub struct EquationStorePreparationFactory<P, M> {
     marker: std::marker::PhantomData<fn() -> (P, M)>,
 }
 
@@ -1431,9 +1431,34 @@ pub(crate) mod unit_tests;
 //#endregion 🧪️UnitTests
 
 //#region 🪢️TaxonomyMounts
-#[path = "📚️examples/🎬️demo-session/🦀️.rs"]
-pub mod demo_session;
-#[cfg(test)]
-#[path = "📚️examples/🎬️demo-session/🧪️tests/🧩️example/🦀️.rs"]
-mod example;
+
+
 //#endregion 🪢️TaxonomyMounts
+
+//#region 🧩️ArtifactItems5
+pub mod artifact_items_5 {
+use crate::{MATH_DOCUMENT_SCHEMA};
+use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
+
+//#region 🔖️ArtifactKind
+/// 🗂️ This artifact's `ArtifactKindSpec` — stitched into the app manifest by
+/// `crate::editor::equation::create_equation_app`'s `🔖️Manifest` region.
+pub fn artifact_kind() -> ArtifactKindSpec {
+    ArtifactKindSpec {
+        id: "computation.equation".into(),
+        label: semio_framework_ui_locale::LocalizedLabel::native("Equation", "Gleichung"),
+        source_format: MATH_DOCUMENT_SCHEMA.into(),
+        component_kind: "equation".into(),
+        dimension: "graph".into(),
+        media_capability: OsMediaCapability::MeshOnly,
+        media_type: MediaType { class: MediaClass::Computation, form: MediaForm::Value },
+        schema: MATH_DOCUMENT_SCHEMA.into(),
+        export_formats: vec![],
+        import_formats: vec![],
+        export_stdio_kinds: vec![],
+        import_stdio_kinds: vec![],
+    }
+}
+//#endregion 🔖️ArtifactKind
+}
+//#endregion 🧩️ArtifactItems5

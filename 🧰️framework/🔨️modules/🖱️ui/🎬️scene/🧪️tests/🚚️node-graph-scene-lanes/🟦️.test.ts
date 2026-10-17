@@ -4,7 +4,7 @@ import fixture from "../🧫️fixtures/🚚️node-graph-scene-lanes/🔣️.js
 import { NODE_GRAPH_SCENE_LANES, nodeGraphSceneFromLanes } from "../../🟦️.ts";
 
 test("node graph lanes match their language-neutral schema", () => {
-  expect<unknown>(NODE_GRAPH_SCENE_LANES).toEqual(fixture.lanes);
+  expect(NODE_GRAPH_SCENE_LANES).toEqual<typeof fixture.lanes>(fixture.lanes);
 });
 
 test("oversized node graphs preserve typed records and Unicode JSON through lanes", () => {

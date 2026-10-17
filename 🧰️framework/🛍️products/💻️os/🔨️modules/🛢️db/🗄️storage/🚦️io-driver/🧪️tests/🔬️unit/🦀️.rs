@@ -1,4 +1,5 @@
 use super::*;
+use semio_framework_test_fixtures::fixture_text;
 
 use db_io_core::{LeaseStorage as _, WAL_WRITER_ADMISSION_REFUSAL, WAL_WRITER_ADMISSION_WAITERS, WAL_WRITER_CAPACITY, WalWriterAdmissionCensus, WalWriterAdmissionLine, WalWriterPermit};
 
@@ -16,7 +17,7 @@ impl WalWriterGuard for usize {
 }
 
 fn fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../../🔐️writer/🧪️tests/🧫️fixtures/🔣️.json")).unwrap()
+    serde_json::from_str(fixture_text!("../../../🔐️writer/🧪️tests/🧫️fixtures/🔣️.json")).unwrap()
 }
 
 fn backend(slot: u16) -> DbIoBackendControl {

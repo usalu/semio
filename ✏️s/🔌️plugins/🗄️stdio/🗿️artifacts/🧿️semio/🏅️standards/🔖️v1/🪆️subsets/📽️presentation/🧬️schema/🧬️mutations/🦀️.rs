@@ -31,30 +31,22 @@ use crate::schema::snapshot::{SemioPresentationSnapshot, Slide, SlideFrame, Slid
 use protocol::{Mutation};
 
 //#region 🔖️Mutations
-#[path = "🧩insert-layout/🦀️.rs"]
-pub mod insert_layout;
-#[path = "🎓insert-master/🦀️.rs"]
-pub mod insert_master;
-#[path = "🔷insert-shape/🦀️.rs"]
-pub mod insert_shape;
-#[path = "🎬insert-slide/🦀️.rs"]
-pub mod insert_slide;
-#[path = "🧹️remove-layout/🦀️.rs"]
-pub mod remove_layout;
-#[path = "🚫️remove-master/🦀️.rs"]
-pub mod remove_master;
-#[path = "🔶remove-shape/🦀️.rs"]
-pub mod remove_shape;
-#[path = "📤️remove-slide/🦀️.rs"]
-pub mod remove_slide;
-#[path = "🔧set-layout-master/🦀️.rs"]
-pub mod set_layout_master;
+pub use semio_s_artifact_stdio_semio_presentation_schema::schema::mutations::support;
+#[allow(unused_imports)]
+use support::{layout_at, master_at, shape_at};
+pub use semio_s_artifact_stdio_semio_presentation_mut_family::schema::mutations::insert_layout;
+pub use semio_s_artifact_stdio_semio_presentation_mut_family::schema::mutations::insert_master;
+pub use semio_s_artifact_stdio_semio_presentation_mut_family::schema::mutations::insert_shape;
+pub use semio_s_artifact_stdio_semio_presentation_examples::schema::mutations::insert_slide;
+pub use semio_s_artifact_stdio_semio_presentation_mut_family::schema::mutations::remove_layout;
+pub use semio_s_artifact_stdio_semio_presentation_mut_family::schema::mutations::remove_master;
+pub use semio_s_artifact_stdio_semio_presentation_mut_family::schema::mutations::remove_shape;
+pub use semio_s_artifact_stdio_semio_presentation_examples::schema::mutations::remove_slide;
+pub use semio_s_artifact_stdio_semio_presentation_mut_family::schema::mutations::set_layout_master;
 #[path = "🪟set-shape-frame/🦀️.rs"]
 pub mod set_shape_frame;
-#[path = "🧭set-slide-layout/🦀️.rs"]
-pub mod set_slide_layout;
-#[path = "🧾set-slide-notes/🦀️.rs"]
-pub mod set_slide_notes;
+pub use semio_s_artifact_stdio_semio_presentation_schema::schema::mutations::set_slide_layout;
+pub use semio_s_artifact_stdio_semio_presentation_examples::schema::mutations::set_slide_notes;
 /// 📐️ Typed content mutation for `stdio.semio.presentation`. Addresses slides by INDEX (`index`,
 /// presentation order), shapes on a slide by `(slide_index, shape_index)` — no recursive path type
 /// needed (unlike docx's nested-table `DocxBlockPath`) since a shape tree here is exactly two
@@ -137,47 +129,20 @@ pub fn semio_presentation_mutation_inverse(mutation: &SemioPresentationMutation,
 }
 //#endregion 🔖️Apply
 
-//#region 🔖️Helpers
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn shape_at(base: &SemioPresentationSnapshot, slide_index: usize, shape_index: usize) -> Option<&SlideShape> {
-    base.slides.get(slide_index)?.shapes.get(shape_index)
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn master_at<'a>(base: &'a SemioPresentationSnapshot, id: &str) -> Option<&'a SlideMaster> {
-    base.masters.iter().find(|m| m.id == id)
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn layout_at<'a>(base: &'a SemioPresentationSnapshot, id: &str) -> Option<&'a SlideLayout> {
-    base.layouts.iter().find(|l| l.id == id)
-}
-//#endregion 🔖️Helpers
 
 
 
 
 //#endregion 🔖️MutationTrait
 
-//#region OpCodecs
-
-
-
-
-
-
-
-
-
-
-
-//#endregion OpCodecs
 
 //#region 🔖️Demo
 /// 🌱 Representative `SemioPresentationMutation` cases (one per variant) — single source of truth
 /// for this facet's own `op_text_binary_roundtrip_law` AND `ops_grammar_conformance_law`/
 /// `protocol_walk_law` in `🎹️composer/🦀️.rs`.
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn demo_mutation_cases() -> Vec<SemioPresentationMutation> {
+pub fn demo_mutation_cases() -> Vec<SemioPresentationMutation> {
     use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
     use crate::schema::snapshot::{PlaceholderKind, SlidePictureImage, SlideTableCell, SlideTableRow};
 

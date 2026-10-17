@@ -1,5 +1,6 @@
 use super::*;
 use protocol::SemanticMutation;
+use semio_framework_test_fixtures::fixture_path;
 
 /// 🏷️ `KINDS` must name every declared variant, in the exact order and spelling
 /// `#[derive(dsl::Mutations)]` assigns, and every entry must also appear in the committed
@@ -35,7 +36,7 @@ fn canonical_tagged_mutations_match_the_owned_schema_validator() {
     fn directories(path: &std::path::Path) -> Vec<std::path::PathBuf> {
         std::fs::read_dir(path).unwrap().map(|entry| entry.unwrap().path()).filter(|path| path.is_dir()).collect()
     }
-    let subsets = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️1/🪆️subsets");
+    let subsets = fixture_path!("../../../../..");
     let mut documents = vec![include_str!("../../../🔣️.json").to_owned()];
     let mut fixtures = Vec::new();
     for subset in ["🎨️style", "🏷️metadata", "🔀️transform", "🧱️structure"] {

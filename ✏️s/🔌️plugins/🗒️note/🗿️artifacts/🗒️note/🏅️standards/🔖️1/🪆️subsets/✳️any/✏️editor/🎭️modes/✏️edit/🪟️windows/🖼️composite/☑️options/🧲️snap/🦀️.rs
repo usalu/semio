@@ -27,7 +27,7 @@ pub fn measure(document: &NoteSnapshot, labels: &NotePlayLabels) -> WindowMeasur
                 label: Some(labels.measure_snap_to_grid.into()),
                 pressed: document.snap_enabled.unwrap_or(false),
                 text: None,
-                on_change: crate::editor::note::note_action("setSnapEnabled", None),
+                on_change: crate::editor::note::support::note_action("setSnapEnabled", None),
             },
             WindowMeasure::Slider {
                 id: "note-measures.snap-spacing".into(),
@@ -40,7 +40,7 @@ pub fn measure(document: &NoteSnapshot, labels: &NotePlayLabels) -> WindowMeasur
                 loading: None,
                 waiting: None,
                 disabled: None,
-                on_change: crate::editor::note::note_action("setSnapGridSpacing", None),
+                on_change: crate::editor::note::support::note_action("setSnapGridSpacing", None),
             },
         ],
     }

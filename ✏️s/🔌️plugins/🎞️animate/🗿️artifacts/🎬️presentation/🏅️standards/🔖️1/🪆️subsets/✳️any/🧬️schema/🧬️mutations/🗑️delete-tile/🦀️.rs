@@ -1,7 +1,6 @@
 //! 🗑️ `delete-tile` mutation payload — removes a figure tile crop from `tiles` by id.
 
 use crate::diff::PresentationDiff;
-use crate::mutations::PresentationMutation;
 use crate::PresentationSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 
@@ -17,14 +16,17 @@ pub struct DeleteTile {
     pub id: String,
 }
 
-impl MutationKind<PresentationSnapshot, PresentationMutation> for DeleteTile {
+impl<Op> MutationKind<PresentationSnapshot, Op> for DeleteTile
+where
+    Op: protocol::Mutation<PresentationSnapshot, Diff = PresentationDiff> + From<DeleteTile> + From<crate::standards::v1::subsets::any::schema::mutations::create_tile::CreateTile>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "tile", kind: "delete-tile", record: "DeletedTile" };
 
     fn diff(&self, base: &PresentationSnapshot) -> protocol::MutationOutcome<PresentationDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &PresentationSnapshot) -> Result<Vec<PresentationMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &PresentationSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

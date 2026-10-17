@@ -2,7 +2,30 @@
 //! inverse of `strip-non-tiny` and deliberately skips the profile gate the authoring leaves apply, because it only ever restores content
 //! the document held before.
 
-use super::*;
+#[allow(unused_imports)]
+use crate::standards::v1_1::subsets::tiny::schema::mutations::support::CODE_REJECTED;
+#[allow(unused_imports)]
+use crate::schema::snapshot::NodePath;
+#[allow(unused_imports)]
+use crate::schema::snapshot::SvgAttributeValue;
+#[allow(unused_imports)]
+use crate::schema::diff::SvgChildAdded;
+#[allow(unused_imports)]
+use crate::schema::diff::SvgChildrenDiff;
+#[allow(unused_imports)]
+use crate::schema::diff::SvgDiff;
+#[allow(unused_imports)]
+use crate::schema::diff::SvgElementDiff;
+#[allow(unused_imports)]
+use crate::schema::snapshot::SvgNode;
+#[allow(unused_imports)]
+use crate::schema::diff::SvgNodeDiff;
+#[allow(unused_imports)]
+use crate::SvgSnapshot;
+#[allow(unused_imports)]
+use crate::schema::snapshot::node_at;
+#[allow(unused_imports)]
+use crate::standards::v1_1::subsets::tiny::schema::mutations::strip_non_tiny;
 use crate::schema::diff::{SvgAttrAdded, SvgAttributesDiff, SvgChildModified};
 use crate::schema::snapshot::SvgNode as Node;
 
@@ -61,7 +84,10 @@ fn restore_node_diff(node: &Node, path: &NodePath, payload: &RestoreNonTiny) -> 
     }))
 }
 
-impl protocol::MutationKind<SvgSnapshot, SvgTinyMutation> for RestoreNonTiny {
+impl<Op> protocol::MutationKind<SvgSnapshot, Op> for RestoreNonTiny
+where
+    Op: protocol::Mutation<SvgSnapshot, Diff = SvgDiff> + From<RestoreNonTiny> + From<crate::standards::v1_1::subsets::tiny::schema::mutations::strip_non_tiny::StripNonTiny>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "non-tiny-content", kind: "restore-non-tiny", record: "RestoredNonTinyContent" };
 
     fn diff(&self, base: &SvgSnapshot) -> protocol::MutationOutcome<SvgDiff> {
@@ -71,8 +97,8 @@ impl protocol::MutationKind<SvgSnapshot, SvgTinyMutation> for RestoreNonTiny {
         }
         protocol::MutationOutcome::new(SvgDiff { root: base.doc.root.as_ref().and_then(|root| restore_node_diff(root, &Vec::new(), self)), ..Default::default() })
     }
-    fn inverse(&self, _base: &SvgSnapshot) -> Result<Vec<SvgTinyMutation>, semio_framework_value::ValueError> {
-        Ok(if self.elements.is_empty() && self.attributes.is_empty() { Vec::new() } else { vec![SvgTinyMutation::StripNonTiny(strip_non_tiny::StripNonTiny {})] })
+    fn inverse(&self, _base: &SvgSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+        Ok(if self.elements.is_empty() && self.attributes.is_empty() { Vec::new() } else { vec![Op::from(strip_non_tiny::StripNonTiny {})] })
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Restore non-Tiny content", "Nicht-Tiny-Inhalte wiederherstellen")

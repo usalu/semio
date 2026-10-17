@@ -162,7 +162,6 @@ fn controlled_output_is_the_only_allocation_and_matches_independent_engine() {
             assert_eq!(requests, 0);
         }
     }
-    println!("[DEBUG] Base64 all neutral lengths agree with independent engine; exact output-only allocation");
 }
 
 /// 🛑️ Cancellation closes the sole output owner and creates none during validation.
@@ -192,7 +191,6 @@ fn controlled_cancellation_preserves_phase_and_exact_output_custody() {
         assert_eq!(requests, if case["ownsOutput"].as_bool().unwrap() { expected } else { 0 });
         assert_eq!(releases, requests);
     }
-    println!("[DEBUG] Base64 cancellation before allocation and during both passes closes exact output custody");
 }
 
 /// 🚨️ Strict codec errors and existing resource precedence refuse before any owned storage.
@@ -236,7 +234,6 @@ fn controlled_malformed_inputs_allocate_nothing_and_preserve_refusal_precedence(
     assert_eq!(base64_standard_decode_controlled(b"Zg", &mut control), Err(Base64ControlError::Codec(Base64Error::InvalidLength)));
     let mut control = Base64Control { maximum_output_bytes: 3, progress: &mut denied };
     assert_eq!(base64_standard_decode_controlled(b"Zh==", &mut control), Err(Base64ControlError::Cancelled));
-    println!("[DEBUG] Base64 strict malformed and original refusal ordering hold without temporary storage");
 }
 
 /// 🪜️ Exact work demand makes zero or undersized grants inert and preserves terminal-only ownership.
@@ -293,7 +290,6 @@ fn retained_decode_uses_exact_work_grants_and_original_input_owner() {
         assert_eq!(borrowed.take_output().unwrap(), bytes);
         assert_eq!(match borrowed.into_parts().input { Base64Input::Borrowed(input) => input.as_ptr(), _ => unreachable!() }, text.as_ptr());
     }
-    println!("[DEBUG] Retained Base64 exact work grants preserve original input and terminal-only output");
 }
 
 /// 🧷️ Payload selection preserves the original allocation and excludes wrapper storage from progress.
@@ -369,7 +365,6 @@ fn retained_input_ranges_preserve_backing_and_span_progress() {
         assert_eq!(cursor.take_output().unwrap(), b"Man");
         assert_eq!(cursor.into_parts().range, range);
     }
-    println!("[DEBUG] Base64 range takes and returns original source without allocation or release");
 }
 
 /// 🫴️ Cancellation retains the first cause and transfers original partial storage without a clone or release.
@@ -407,5 +402,4 @@ fn retained_decode_refusal_transfers_exact_original_input_and_partial_output() {
     assert_eq!(output.capacity(), bytes.len());
     assert_eq!(output, bytes[..3072]);
     match parts.input { Base64Input::OwnedBytes(source) => assert_eq!(source.as_ptr(), source_pointer), _ => unreachable!() }
-    println!("[DEBUG] Retained Base64 refusal transfers unchanged input and exact partial output custody");
 }

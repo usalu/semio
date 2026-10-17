@@ -53,7 +53,7 @@ fn admit<T, E>(value: Result<T, E>) -> UiAssemblyResult<T> {
 /// 🔑️ Explicit key per text row — `try_build` stamps unkeyed nodes `"#0"` and `try_child` re-keys only
 /// EMPTY keys, so a step title next to its description collided (`DuplicateSiblingKey`); see the editor
 /// Try window's `display` (ticket 26/09/16/FORMS-PLUGIN-END-TO-END).
-fn text(key: &str, value: &str, emphasize: bool) -> UiAssemblyResult<ui::BuiltNode> {
+pub fn text(key: &str, value: &str, emphasize: bool) -> UiAssemblyResult<ui::BuiltNode> {
     let mut node: ui::BuiltNode = ui::text(admit(ui::Label::try_from(value))?).emphasize(emphasize).into();
     node.key = ui::UiText::try_from_str(key).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "forms viewer key admission failed"))?;
     Ok(node)

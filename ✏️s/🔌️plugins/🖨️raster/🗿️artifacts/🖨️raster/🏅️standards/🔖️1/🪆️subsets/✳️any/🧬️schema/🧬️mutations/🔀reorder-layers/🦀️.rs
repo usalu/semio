@@ -46,7 +46,4 @@ pub use mutation::ReorderLayers;
 pub mod diff;
 #[path = "↩️inverse/🦀️.rs"]
 pub mod inverse;
-#[cfg(test)]
-#[path = "🧪️tests/⤴️lifts/🦀️.rs"]
-mod tests_lifts_the_caption_layer_out_of_the_frame_group;
 //#endregion 🪢️TaxonomyMounts

@@ -1,9 +1,9 @@
 /** 🚉️ GIS directory lane: a scoped stream retired terminally on 4401 revokes the retained inference approval Undo owner. */
-import { workerLawFakesV1, FakeDirectoryWebSocket } from "../../../../../../../🧰️framework/🛍️products/💻️os/🧪️tests/🧰️worker-law-fakes/🟦️.ts";
-import type { TestSource } from "../../../../../../../🧰️framework/🛍️products/💻️os/🧪️tests/🧰️worker-law-fakes/🟦️.ts";
+import { workerLawFakesV1, FakeDirectoryWebSocket, WORKER_LAW_ACTOR_IDENTITY_GRANT } from "@semio-tech/framework-os/testing/worker-law-fakes";
+import type { TestSource } from "@semio-tech/framework-os/testing/worker-law-fakes";
 import type { ServiceCompositionTestDependenciesV1 } from "../🧰️dependencies/🟦️.ts";
 
-type BackboneWorkerResponse = import("../../../../../../../🧰️framework/🛍️products/💻️os/🟦️.ts").BackboneWorkerResponse;
+type BackboneWorkerResponse = import("@semio-tech/framework-os").BackboneWorkerResponse;
 type Vitest = NonNullable<ImportMeta["vitest"]>;
 
 export async function registerGisDirectoryLaneTests(vitest: Vitest, dependencies: ServiceCompositionTestDependenciesV1, source: TestSource): Promise<void> {
@@ -43,7 +43,7 @@ export async function registerGisDirectoryLaneTests(vitest: Vitest, dependencies
         socket.triggerOpen();
         const issue = testSeams.documentSocketGrantTestIssue;
         testSeams.documentSocketGrantTestIssue = null;
-        openArtifact({ documentId: scope.documentId, schema: "gis.map", bindings: [{ kind: "hub", dataClass: "persistedShared", baseUrl: "http://hub.test", spaceId: scope.spaceId }], actor: "caller" });
+        openArtifact({ documentId: scope.documentId, schema: "gis.map", bindings: [{ kind: "hub", dataClass: "persistedShared", baseUrl: "http://hub.test", spaceId: scope.spaceId }], actor: "caller", actorIdentityGrant: WORKER_LAW_ACTOR_IDENTITY_GRANT });
         testSeams.documentSocketGrantTestIssue = issue;
         const state = artifactState(scope.documentId, scope.spaceId)!;
         testSeams.inferenceApprovalUndoOwner = {
@@ -52,6 +52,7 @@ export async function registerGisDirectoryLaneTests(vitest: Vitest, dependencies
           clientInstanceId: state.openClientInstanceId,
           sessionEpoch: testSeams.directorySessionEpoch,
           sessionFence: { token: {}, sessionBindingSha256: "c".repeat(64), authorizationGeneration: 1 },
+          transport: { call: async () => { throw new Error("A revoked approval undo owner issues no document service call"); } },
           receipt: {
             schema: "semio.hub.inference-approval-receipt/v1",
             jobId: "1".repeat(32),

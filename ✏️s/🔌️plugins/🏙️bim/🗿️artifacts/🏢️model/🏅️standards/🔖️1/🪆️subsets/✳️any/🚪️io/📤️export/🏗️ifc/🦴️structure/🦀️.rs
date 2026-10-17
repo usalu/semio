@@ -1,5 +1,6 @@
 //! 🦴️ IFC4 structural analysis entities projected from the existing graph, with boundary conditions and load cases.
-use super::{Export, writer::{Ifc, Schema, V, text, unset, en, rf, refs, real, typed}};
+use crate::standards::v1::subsets::any::io::export::ifc::context::Export;
+use crate::standards::v1::subsets::any::io::export::ifc::writer::{Ifc, Schema, V, text, unset, en, rf, refs, real, typed};
 use crate::standards::v1::subsets::any::schema::snapshot::{Point3, StructuralLocation};
 use std::collections::BTreeMap;
 fn representation(ifc: &mut Ifc, points: &[Point3]) -> V { if points.is_empty(){return unset();}let ids:Vec<u64>=points.iter().map(|p|ifc.point3([p.x,p.y,p.z])).collect();let (item,kind)=if points.len()==1 {(ids[0],"Point")} else {(ifc.add("IFCPOLYLINE",vec![refs(&ids)]),"Curve3D")};let shape=ifc.shape(ifc.axis,"Reference",kind,&[item]);rf(ifc.add("IFCPRODUCTDEFINITIONSHAPE",vec![unset(),unset(),refs(&[shape])])) }

@@ -1,0 +1,42 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-s-artifact-norm-din18599-io-text"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "DIN V 18599 io: composition, builder, analyzer, mutation bridge and the text, binary and SQLite codecs - the text module"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+pack = { workspace = true }
+semio-framework-artifact-reference = { workspace = true }
+semio-framework-diagnostic = { workspace = true }
+semio-framework-dsl-record = { workspace = true }
+semio-framework-dsl-record-derive = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-pack-json = { workspace = true }
+semio-framework-plugin = { workspace = true }
+semio-framework-schema = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-framework-value-derive = { workspace = true }
+semio-s-artifact-norm-contract = { workspace = true }
+semio-s-artifact-norm-din18599-diff = { workspace = true }
+semio-s-artifact-norm-din18599-model = { workspace = true }
+semio-s-artifact-norm-din18599-mut-building = { workspace = true }
+semio-s-artifact-norm-din18599-mut-systems = { workspace = true }
+semio-s-artifact-norm-din18599-mut-zoning = { workspace = true }
+semio-s-artifact-norm-din18599-mutations = { workspace = true }
+
+[dev-dependencies]
+semio-framework-async-macros = { workspace = true }
+semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
+

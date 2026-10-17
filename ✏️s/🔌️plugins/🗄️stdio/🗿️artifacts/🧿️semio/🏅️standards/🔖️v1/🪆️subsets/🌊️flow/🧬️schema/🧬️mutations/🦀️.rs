@@ -30,34 +30,25 @@ use protocol::Mutation;
 
 
 //#region 🔖️Mutations
-#[path = "🌉️insert-edge/🦀️.rs"]
-pub mod insert_edge;
-#[path = "➕️insert-node/🦀️.rs"]
-pub mod insert_node;
-#[path = "✂️remove-edge/🦀️.rs"]
-pub mod remove_edge;
-#[path = "🗑️remove-node/🦀️.rs"]
-pub mod remove_node;
-#[path = "🧹️remove-node-param/🦀️.rs"]
-pub mod remove_node_param;
-#[path = "🔌️set-edge-endpoints/🦀️.rs"]
-pub mod set_edge_endpoints;
-#[path = "🎨️set-edge-kind/🦀️.rs"]
-pub mod set_edge_kind;
-#[path = "🏷️set-node-kind/🦀️.rs"]
-pub mod set_node_kind;
-#[path = "🔤️set-node-label/🦀️.rs"]
-pub mod set_node_label;
-#[path = "🎛️set-node-param/🦀️.rs"]
-pub mod set_node_param;
-#[path = "📍️set-node-position/🦀️.rs"]
-pub mod set_node_position;
+pub use semio_s_artifact_stdio_semio_flow_examples::schema::mutations::support;
+#[allow(unused_imports)]
+use support::{node_at, param_index_at};
+pub use support::{edge_at, param_value_at};
+pub use semio_s_artifact_stdio_semio_flow_mut_family::schema::mutations::insert_edge;
+pub use semio_s_artifact_stdio_semio_flow_mut_family::schema::mutations::insert_node;
+pub use semio_s_artifact_stdio_semio_flow_mut_family::schema::mutations::remove_edge;
+pub use semio_s_artifact_stdio_semio_flow_mut_family::schema::mutations::remove_node;
+pub use semio_s_artifact_stdio_semio_flow_mut_family::schema::mutations::remove_node_param;
+pub use semio_s_artifact_stdio_semio_flow_examples::schema::mutations::set_edge_endpoints;
+pub use semio_s_artifact_stdio_semio_flow_mut_family::schema::mutations::set_edge_kind;
+pub use semio_s_artifact_stdio_semio_flow_mut_family::schema::mutations::set_node_kind;
+pub use semio_s_artifact_stdio_semio_flow_mut_family::schema::mutations::set_node_label;
+pub use semio_s_artifact_stdio_semio_flow_mut_family::schema::mutations::set_node_param;
+pub use semio_s_artifact_stdio_semio_flow_set_node_position::schema::mutations::set_node_position;
 #[path = "✋️drag-nodes/🦀️.rs"]
 pub mod drag_nodes;
 /// 📐️ Typed content mutation for `s.stdio.semio.flow`. Addresses `nodes`/`edges` by `id` (both
 /// id-keyed collections) and a node's own `params` by `(id, key)`.
-//#region 🔖️Leaves
-//#endregion 🔖️Leaves
 
 /// 📐️ Typed mutation for this subset. `NoMutation` was dropped: `#[derive(dsl::Mutations)]`
 /// requires every variant to wrap exactly one leaf payload and a unit variant wraps none (the
@@ -133,24 +124,6 @@ pub fn inverse_semio_flow_mutation(mutation: &SemioFlowMutation, base: &SemioFlo
 
 //#endregion 🔖️Apply
 
-//#region 🔖️Helpers
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn node_at<'a>(base: &'a SemioFlowSnapshot, id: &str) -> Option<&'a FlowNode> {
-    base.nodes.iter().find(|n| n.id == id)
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn edge_at<'a>(base: &'a SemioFlowSnapshot, id: &str) -> Option<&'a FlowEdge> {
-    base.edges.iter().find(|e| e.id == id)
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn param_value_at<'a>(base: &'a SemioFlowSnapshot, id: &str, key: &str) -> Option<&'a str> {
-    node_at(base, id)?.params.iter().find(|p| p.key == key).map(|p| p.value.as_str())
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn param_index_at(base: &SemioFlowSnapshot, id: &str, key: &str) -> Option<usize> {
-    node_at(base, id)?.params.iter().position(|p| p.key == key)
-}
-//#endregion 🔖️Helpers
 
 
 
@@ -186,9 +159,9 @@ fn param_index_at(base: &SemioFlowSnapshot, id: &str, key: &str) -> Option<usize
 
 
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn fixture() -> SemioFlowSnapshot {
+pub fn fixture() -> SemioFlowSnapshot {
     SemioFlowSnapshot {
         schema: crate::schema::snapshot::STDIO_SEMIOFLOW_DOCUMENT_SCHEMA.into(),
         nodes: vec![node("n1", "source", "Source", 0.0, 0.0), node("n2", "sink", "Sink", 10.0, 10.0)],
@@ -196,9 +169,9 @@ fn fixture() -> SemioFlowSnapshot {
     }
 }
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn demo_mutation_cases() -> Vec<SemioFlowMutation> {
+pub fn demo_mutation_cases() -> Vec<SemioFlowMutation> {
     vec![
         SemioFlowMutation::InsertNode(insert_node::InsertNode { node: node("n3", "transform", "T", 5.0, 5.0), at: None }),
         SemioFlowMutation::RemoveNode(remove_node::RemoveNode { id: "n2".into() }),
@@ -218,21 +191,19 @@ pub(crate) fn demo_mutation_cases() -> Vec<SemioFlowMutation> {
 //#endregion 🔖️Demo
 
 //#region 🔖️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🔖️Tests
 
 /// 🌱 Shared fixture helpers + representative `SemioFlowMutation` cases (one per variant) —
 /// single source of truth for this facet's own tests AND `ops_grammar_conformance_law`/
 /// `protocol_walk_law` in `🎹️composer/🦀️.rs`.
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn node(id: &str, kind: &str, label: &str, x: f64, y: f64) -> FlowNode {
+pub fn node(id: &str, kind: &str, label: &str, x: f64, y: f64) -> FlowNode {
     FlowNode { id: id.into(), kind: kind.into(), label: label.into(), params: vec![crate::schema::snapshot::FlowParam { key: "k".into(), value: "v".into() }], position: SemioPoint2 { x, y } }
 }
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn edge(id: &str, from_node: &str, to_node: &str, kind: &str) -> FlowEdge {
     FlowEdge { id: id.into(), from: PortRef { node: from_node.into(), port: "out".into() }, to: PortRef { node: to_node.into(), port: "in".into() }, kind: kind.into() }

@@ -1,10 +1,11 @@
 use super::*;
 use semio_framework_async::{ProcessKind, ScopeOwner, WorkerPool, WorkerPoolConfig};
+use semio_framework_test_fixtures::fixture_text;
 
 //#region 🪪️RuntimeIdentity
 #[test]
 fn directory_native_runtime_identity_uses_the_services_owned_constructor() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../🪪️runtime/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let _: fn(Arc<ComputePool>, Arc<TokioHostRuntime>, ScopeHandle) -> UreqStreamingHttpTransport = UreqStreamingHttpTransport::new;
     assert_eq!(std::any::TypeId::of::<TokioHostRuntime>(), std::any::TypeId::of::<TokioHostRuntime>());
     assert_eq!(fixture["provider"], "semio_framework_os_services::TokioHostRuntime");
@@ -12,7 +13,7 @@ fn directory_native_runtime_identity_uses_the_services_owned_constructor() {
 
 #[semio_framework_async_macros::async_test]
 async fn directory_native_runtime_identity_preserves_original_injected_owners() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../🪪️runtime/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     for case in fixture["cases"].as_array().unwrap() {
         let workers = usize::try_from(case["workers"].as_u64().unwrap()).unwrap();
         let capacity = u32::try_from(case["computeCapacity"].as_u64().unwrap()).unwrap();
@@ -40,7 +41,7 @@ async fn directory_native_runtime_identity_preserves_original_injected_owners() 
 /// ⏱️ The per-request budget follows the caller's deadline (shared fixture `⏱️request-budget.json`).
 #[test]
 fn every_request_budget_is_what_the_callers_deadline_leaves() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/⏱️request-budget.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../🪪️runtime/🧪️tests/🧫️fixtures/⏱️request-budget.json")).unwrap();
     assert_eq!(fixture["unboundedRequestMs"], UREQ_HTTP_UNBOUNDED_REQUEST_MS);
     for case in fixture["cases"].as_array().unwrap() {
         assert_eq!(ureq_request_budget_ms(case["deadlineMs"].as_u64(), case["nowMs"].as_u64().unwrap()), case["budgetMs"].as_u64().unwrap(), "{case}");
@@ -91,7 +92,7 @@ async fn a_slow_answer_arrives_inside_the_callers_deadline_and_not_after_it() {
 /// fixture `🔁️byte-budget-refill.json`; the semio MCP gateway wedged on the lifetime budget, ticket 26/09/23 14b).
 #[semio_framework_async_macros::async_test]
 async fn an_exhausted_directory_byte_budget_names_itself_and_refills_on_the_pools_own_turn() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔁️byte-budget-refill.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../🪪️runtime/🧪️tests/🧫️fixtures/🔁️byte-budget-refill.json")).unwrap();
     assert_eq!(fixture["productionRefillIntervalMs"], HTTP_BUCKET_REFILL_INTERVAL_MS);
     let body = fixture["body"].as_str().unwrap().to_string();
     let admitted = usize::try_from(fixture["admittedRequests"].as_u64().unwrap()).unwrap();

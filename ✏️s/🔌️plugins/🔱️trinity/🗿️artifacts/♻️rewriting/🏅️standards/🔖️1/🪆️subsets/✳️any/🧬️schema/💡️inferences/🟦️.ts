@@ -35,6 +35,10 @@ type trinityRewritingInferenceGuardSizeBounds = { readonly minItems?: number; re
 
 export const trinityRewritingInferenceGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : trinityRewritingInferenceGuardReject(at, "value is not an object");
+export const trinityRewritingInferenceGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) trinityRewritingInferenceGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const trinityRewritingInferenceGuardArray = (value: unknown, at: string, bounds: trinityRewritingInferenceGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return trinityRewritingInferenceGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) trinityRewritingInferenceGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -65,14 +69,14 @@ export const trinityRewritingInferenceGuardConstant = <T extends string | number
 //#endregion 🚪️Parsers
 
 export function parseRewritingInference(value: unknown, at = "$"): RewritingInference {
-  const row = trinityRewritingInferenceGuardObject(value, at);
+  const row = trinityRewritingInferenceGuardClosed(trinityRewritingInferenceGuardObject(value, at), at, ["bounds"]);
   return {
     bounds: parseRewritingBounds(row["bounds"], `${at}.bounds`),
   };
 }
 
 export function parseRewritingBoundingBox(value: unknown, at = "$"): RewritingBoundingBox {
-  const row = trinityRewritingInferenceGuardObject(value, at);
+  const row = trinityRewritingInferenceGuardClosed(trinityRewritingInferenceGuardObject(value, at), at, ["minX", "minY", "maxX", "maxY"]);
   return {
     minX: trinityRewritingInferenceGuardNumber(row["minX"], `${at}.minX`),
     minY: trinityRewritingInferenceGuardNumber(row["minY"], `${at}.minY`),
@@ -82,7 +86,7 @@ export function parseRewritingBoundingBox(value: unknown, at = "$"): RewritingBo
 }
 
 export function parseRewritingBounds(value: unknown, at = "$"): RewritingBounds {
-  const row = trinityRewritingInferenceGuardObject(value, at);
+  const row = trinityRewritingInferenceGuardClosed(trinityRewritingInferenceGuardObject(value, at), at, ["boundingBox", "nodeCount"]);
   return {
     boundingBox: parseRewritingBoundingBox(row["boundingBox"], `${at}.boundingBox`),
     nodeCount: trinityRewritingInferenceGuardInteger(row["nodeCount"], `${at}.nodeCount`, {"minimum": 0}),

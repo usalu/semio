@@ -19,7 +19,7 @@ enum BlockListPaint {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-enum BlockListRole {
+pub enum BlockListRole {
     Action,
     Step { step_id: String, index: usize },
     StepHandle { step_id: String, index: usize },
@@ -32,23 +32,23 @@ enum BlockListRole {
 /** 🧩️ One laid-out `SurfaceKind::BlockList` target: where it sits, the control id it is drawn
  * and hovered under, and the action a press on it dispatches (`None` for a disabled reorder button —
  * React renders those disabled, so the press must fall through to nothing, not to the card). */
-struct BlockListTarget {
-    pub(crate) rect: Rect,
-    pub(crate) control_id: String,
-    pub(crate) action: Option<ActionDescriptor>,
+pub struct BlockListTarget {
+    pub rect: Rect,
+    pub control_id: String,
+    pub action: Option<ActionDescriptor>,
     pub(crate) paint: BlockListPaint,
-    pub(crate) role: BlockListRole,
+    pub role: BlockListRole,
 }
 
 /// 🧩️ A block list's whole laid-out surface: the two chrome bands, the scrolling step body, and the
 /// flat target list split into "before the body" / "inside the body" / "palette rail".
-struct BlockListPlan {
+pub struct BlockListPlan {
     header: Rect,
     pub(crate) body: Rect,
     palette_rect: Rect,
-    palette_target_step_id: Option<String>,
-    targets: Vec<BlockListTarget>,
-    body_range: std::ops::Range<usize>,
+    pub palette_target_step_id: Option<String>,
+    pub targets: Vec<BlockListTarget>,
+    pub body_range: std::ops::Range<usize>,
 }
 
 /// 📐️ Lays out one block list. The action payloads are the ones `🧩️BlockListHost/🟦️.tsx` dispatches
@@ -82,7 +82,7 @@ fn block_list_palette_target_step_id<'a>(steps: &'a [BlockListStep], selected_id
     steps.first().map(|step| step.id.as_str())
 }
 
-fn block_list_plan(scene: &UiComponentSceneNode, bounds: Rect, theme: &Theme, driver_drag: UiDriverDrag) -> BlockListPlan {
+pub fn block_list_plan(scene: &UiComponentSceneNode, bounds: Rect, theme: &Theme, driver_drag: UiDriverDrag) -> BlockListPlan {
     let pad = theme.padding_standard;
     let row_h = theme.control_height;
     let btn_w = theme.control_height_small;
@@ -369,7 +369,7 @@ fn paint_block_list_target(ctx: &mut FrameworkWidgetContext<'_>, target: &BlockL
     }
 }
 
-fn block_list_accessibility_controls(plan: &BlockListPlan, bounds: Rect, labels: BlockListChromeLabels) -> Vec<BlockListAccessibilityControl> {
+pub fn block_list_accessibility_controls(plan: &BlockListPlan, bounds: Rect, labels: BlockListChromeLabels) -> Vec<BlockListAccessibilityControl> {
     plan.targets
         .iter()
         .enumerate()
@@ -443,7 +443,7 @@ pub fn block_list_hit(scene: &UiComponentSceneNode, bounds: Rect, x: f32, y: f32
     None
 }
 
-fn block_list_accessibility_action_is_current(scene: &UiComponentSceneNode, action: &ActionDescriptor) -> bool {
+pub fn block_list_accessibility_action_is_current(scene: &UiComponentSceneNode, action: &ActionDescriptor) -> bool {
     let Some(list) = scene.block_list.as_ref() else { return false };
     if action.controller_id != scene.controller_id {
         return false;
@@ -481,12 +481,6 @@ pub fn block_list_accessibility_activate(scene: &UiComponentSceneNode, key: &str
 }
 
 //#endregion BlockList
-
-//#region BlockListTests
-#[cfg(test)]
-#[path = "../../../🧪️tests/🔬️wgpu-block-list/🦀️.rs"]
-mod block_list_tests;
-//#endregion BlockListTests
 
 //#region DiffView
 #[derive(Clone, Copy, PartialEq, Debug)]

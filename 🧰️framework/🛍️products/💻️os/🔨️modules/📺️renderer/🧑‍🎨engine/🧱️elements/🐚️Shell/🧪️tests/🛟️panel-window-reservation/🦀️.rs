@@ -8,7 +8,7 @@ fn fixture() -> Value {
 }
 
 fn fixture_shell(row: &Value) -> ShellState {
-    let mut shell = window_pane_chrome_tests::split_pane_shell();
+    let mut shell = split_pane_shell();
     shell.chrome.screen_w = row["width"].as_f64().expect("viewport width") as f32;
     shell.chrome.screen_h = 1000.0;
     shell.dock.dock_tabs = ShellDock::default();

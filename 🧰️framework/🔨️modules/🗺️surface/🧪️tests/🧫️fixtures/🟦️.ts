@@ -3,3 +3,5 @@ export { default as surfacePaintEditingFixture } from "../../🎨️paint/🧪�
 export { default as paintMaskStrokeFixture } from "../../🎨️paint/🧪️tests/🧫️fixtures/🎭️mask-stroke/🔣️.json" with { type: "json" };
 export { default as paintStrokeRevisionFixture } from "../../🎨️paint/🧪️tests/🧫️fixtures/🖌️stroke-revision/🔣️.json" with { type: "json" };
 export { default as nodeGraphSceneSchema } from "../../🕸️node-graph/📡️scene/🧬️schema/🔣️.json" with { type: "json" };
+export { default as graphSceneBodyFixture } from "../../🕸️node-graph/📡️scene/🧪️tests/🧫️fixtures/📦️body/🔣️.json" with { type: "json" };
+export { default as nodeGraphSceneFixture } from "../../🕸️node-graph/📡️scene/🧪️tests/🧫️fixtures/🔣️.json" with { type: "json" };

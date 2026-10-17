@@ -74,40 +74,27 @@ impl OpBinary for PdfUaMutation {
 //#endregion 🧱️Framing
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
 
-#[path = "🪓️remove-struct-tree-root/🦀️.rs"]
-pub mod remove_struct_tree_root;
+pub use semio_s_artifact_stdio_pdf_mut_family_6::standards::v1_7::subsets::ua::io::binary::mutations::remove_struct_tree_root;
 
-#[path = "🚫️remove-display-doc-title/🦀️.rs"]
-pub mod remove_display_doc_title;
+pub use semio_s_artifact_stdio_pdf_mut_family_6::standards::v1_7::subsets::ua::io::binary::mutations::remove_display_doc_title;
 
-#[path = "📰️set-info-title/🦀️.rs"]
-pub mod set_info_title;
+pub use semio_s_artifact_stdio_pdf_mut_family_4::standards::v1_7::subsets::ua::io::binary::mutations::set_info_title;
 
-#[path = "🗑️remove-mark-info/🦀️.rs"]
-pub mod remove_mark_info;
+pub use semio_s_artifact_stdio_pdf_mut_family_7::standards::v1_7::subsets::ua::io::binary::mutations::remove_mark_info;
 
-#[path = "🗣️set-lang/🦀️.rs"]
-pub mod set_lang;
+pub use semio_s_artifact_stdio_pdf_mut_family_7::standards::v1_7::subsets::ua::io::binary::mutations::set_lang;
 
-#[path = "🧺️remove-font-file/🦀️.rs"]
-pub mod remove_font_file;
+pub use semio_s_artifact_stdio_pdf_mut_family_7::standards::v1_7::subsets::ua::io::binary::mutations::remove_font_file;
 
-#[path = "🤐️remove-lang/🦀️.rs"]
-pub mod remove_lang;
+pub use semio_s_artifact_stdio_pdf_mut_family_7::standards::v1_7::subsets::ua::io::binary::mutations::remove_lang;
 
-#[path = "✅️set-mark-info/🦀️.rs"]
-pub mod set_mark_info;
+pub use semio_s_artifact_stdio_pdf_mut_family_7::standards::v1_7::subsets::ua::io::binary::mutations::set_mark_info;
 
-#[path = "🔤️embed-font-file/🦀️.rs"]
-pub mod embed_font_file;
+pub use semio_s_artifact_stdio_pdf_mut_family_7::standards::v1_7::subsets::ua::io::binary::mutations::embed_font_file;
 
-#[path = "🌲️set-struct-tree-root/🦀️.rs"]
-pub mod set_struct_tree_root;
+pub use semio_s_artifact_stdio_pdf_mut_family_7::standards::v1_7::subsets::ua::io::binary::mutations::set_struct_tree_root;
 
-#[path = "🪧️set-display-doc-title/🦀️.rs"]
-pub mod set_display_doc_title;
+pub use semio_s_artifact_stdio_pdf_mut_family_7::standards::v1_7::subsets::ua::io::binary::mutations::set_display_doc_title;

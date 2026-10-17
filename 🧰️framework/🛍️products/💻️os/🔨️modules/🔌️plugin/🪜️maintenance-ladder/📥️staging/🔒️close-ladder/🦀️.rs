@@ -2,30 +2,55 @@
 //!
 //! 🪜️ The retained-field rung of one hosted app's close ladder: every owned field the app retains
 //! beyond its stores is released through exact per-axis quotes and an unchanged caller grant.
-use super::*;
+use semio_framework_plugin_ownership::bounded_ownership::{ARTIFACT_LIVE_OUTPUT_SLOTS, PluginLifecycleStep, plugin_retirement_fault};
+use semio_framework_plugin_instance_stores::stores_components::{ActionIngress, PeerRoster};
+use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_framework_plugin_ownership::store_lifecycle::{ArtifactOwnedDisposer, ArtifactSnapshotCloseRetention};
+use pack::snapshot::ArtifactPack;
+use semio_framework_plugin_child::ChildContentRetirement;
+use semio_framework_plugin_decl_views::child_view::ChildContentView;
+use semio_framework_plugin_decl_emission::Emit;
+use semio_framework::{Fault, FaultFrom};
+use std::future::Future;
+use semio_framework_plugin_instance_extension::InstanceExtension;
+use crate::ladder_bundle::{LadderCtx, LadderRef};
+use store::{MemberFactory, Mutation, SpaceMember};
+use semio_framework_plugin_composition_publication::MountedTypedCommandFullOperationStage;
+use protocol::OpText;
+use semio_framework_plugin_decl_views::PeerPresenceRoot;
+use semio_framework_plugin_peer::{PeerPresenceRootRetirement, PeerRosterPublication};
+use semio_framework_plugin_instance_jobs::jobs_components::PendingReserved;
+use semio_framework_plugin_reactor_app::PluginApp;
+use semio_framework_plugin_operation::TOOL_CANCELLATION_SLOTS;
+use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
+use semio_framework_ui_contract::*;
 use semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure;
-use semio_framework_value::{RetirementDemand, ValueError, retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}};
-use super::docs_maintenance_ladder::{idle};
-use super::jobs_close_ladder::{handoff, handoff_demand, release_demand};
-use super::ladders_envelope_ladder::{erased_demand, erased_step};
-use super::ladders_lifecycle_stores::{ORIGINAL_STORE_LANES};
+use semio_framework_value::{RetirementDemand, ValueError};
+use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
+use semio_framework_plugin_instance_docs::docs_maintenance_ladder::idle;
+use semio_framework_plugin_instance_jobs::jobs_close_ladder::{handoff, handoff_demand, release_demand};
+use crate::ladders_envelope_ladder::{erased_demand, erased_step};
+use crate::ladders_lifecycle_stores::ORIGINAL_STORE_LANES;
 
-fn released(bytes: usize) -> RetainedCloneProgress {
+#[doc(hidden)]
+pub fn released(bytes: usize) -> RetainedCloneProgress {
     RetainedCloneProgress { copied_items: 1, released_bytes: bytes, ..Default::default() }
 }
 
-fn nested(mut demand: RetirementDemand) -> Result<RetirementDemand, ValueError> {
+#[doc(hidden)]
+pub fn nested(mut demand: RetirementDemand) -> Result<RetirementDemand, ValueError> {
     demand.depth = demand.depth.checked_add(1).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "retained field depth overflow"))?;
     Ok(demand)
 }
 
-pub(crate) fn child_grant(grant: RetainedCloneGrant) -> RetainedCloneGrant {
+#[doc(hidden)]
+pub fn child_grant(grant: RetainedCloneGrant) -> RetainedCloneGrant {
     RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth.saturating_sub(1), ..grant }
 }
 
 impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceExtension> LadderCtx<'ctx, A, M, X> {
     /// ♻️ Releases exactly one retained field owner under the caller's unchanged grant; a grant below the quote yields.
-    pub(crate) fn retained_fields_close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, Fault> {
+    pub fn retained_fields_close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, Fault> {
         let value_fault = |error: ValueError| plugin_sdk_fault(error.into_message());
         let idle = RetainedCloneProgress::default();
         if self.shared().retained_fields_own_terminal_is_empty() {
@@ -177,7 +202,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
 
 impl<'v, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceExtension> LadderRef<'v, A, M, X> {
     /// 📏️ Quotes the next retained-field turn on every independent axis; nothing is owed once every field is empty.
-    pub(crate) fn retained_fields_close_demand(&self, body: usize) -> Result<RetirementDemand, ValueError> {
+    pub fn retained_fields_close_demand(&self, body: usize) -> Result<RetirementDemand, ValueError> {
         if self.history.history_view.is_some() || self.history.cache.is_some() {
             return Ok(handoff_demand());
         }
@@ -243,7 +268,7 @@ impl<'v, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceEx
 
 impl<'v, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceExtension> LadderRef<'v, A, M, X> {
     /// 🪹️ Every field owner the retained-field rung releases is empty.
-    pub(crate) fn retained_fields_own_terminal_is_empty(&self) -> bool {
+    pub fn retained_fields_own_terminal_is_empty(&self) -> bool {
         self.history.cache.is_none()
             && self.history.history_view.is_none()
             && self.history.command_log.terminal_is_empty()
@@ -272,8 +297,9 @@ impl<'v, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceEx
 }
 
 /// 🪜️ One frontier of the close ladder, in the order the ladder drains them.
+#[doc(hidden)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum CloseRung {
+pub enum CloseRung {
     Begin,
     DirectIngress,
     CommandPrune,
@@ -330,7 +356,8 @@ pub(crate) enum CloseRung {
 const CANCELLATION_SLOT_SPAN: usize = TOOL_CANCELLATION_SLOTS + ARTIFACT_LIVE_OUTPUT_SLOTS;
 
 /// 🧺️ One owner of a fixed registry that the close ladder drains in place: its next turn quote, its granted turn and its terminal witness.
-pub(crate) trait ClosingOwner {
+#[doc(hidden)]
+pub trait ClosingOwner {
     fn closing_demands(&self, body: usize) -> Result<RetirementDemand, ValueError>;
     fn closing_step(&mut self, _cx:&mut semio_framework_job::StepContext<'_>, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep,PluginLifecycleFailure>;
     fn closing_terminal_is_empty(&self) -> bool;
@@ -373,7 +400,7 @@ impl<P: Send + Sync + 'static> ClosingOwner for store::os_store::presence::Prese
 }
 
 impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static, X: InstanceExtension> LadderCtx<'ctx, A, M, X> {
-    pub(crate) fn close_typed_operation_unit(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<PluginLifecycleStep,PluginLifecycleFailure>{
+    pub fn close_typed_operation_unit(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<PluginLifecycleStep,PluginLifecycleFailure>{
         let grant=cx.retained_grant();let demand=self.tools.close_typed_operation_demands(&*self.child_composition, grant.maximum_copy_bytes)?;
         semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|same,actual|self.close_typed_operation_granted(same,actual).map(|step|(step,false)))
     }
@@ -392,7 +419,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static, X: I
         Ok(PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: progress.copied_items.max(1), ..progress }))
     }
 
-    pub(crate) fn detach_child_root_step(&mut self) -> Result<RetainedCloneStep, Fault> {
+    pub fn detach_child_root_step(&mut self) -> Result<RetainedCloneStep, Fault> {
         let generation = if self.child_composition.child_content_root.root.as_ref().is_some_and(|root| root.len != 0) {
             let generation = self.child_composition.child_content_generation.checked_add(1).ok_or_else(|| plugin_sdk_fault("child root close generation exhausted before exact ownership transfer"))?;
             if !self.child_composition.child_content_retirements.can_insert(generation) { return Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default())); }
@@ -411,7 +438,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static, X: I
         Ok(RetainedCloneStep::Progress(handoff()))
     }
 
-    pub(crate) fn detach_peer_presence_step(&mut self) -> Result<RetainedCloneStep, Fault> {
+    pub fn detach_peer_presence_step(&mut self) -> Result<RetainedCloneStep, Fault> {
         let generation = if self.roster.peer_presence.is_empty() {
             None
         } else {
@@ -433,11 +460,11 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static, X: I
 
 impl<'v, A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static, X: InstanceExtension> LadderRef<'v, A, M, X> {
     /// 🩺️ The ladder frontier a stalled close is parked on, named for deadline reports.
-    pub(crate) fn close_rung_name(&self) -> String {
+    pub fn close_rung_name(&self) -> String {
         format!("{:?}", self.close_rung())
     }
 
-    pub(crate) fn close_rung(&self) -> CloseRung {
+    pub fn close_rung(&self) -> CloseRung {
         if !self.close.close_started { return CloseRung::Begin; }
         if !self.stores.window_config_store.direct_ingress_terminal_is_empty() { return CloseRung::DirectIngress; }
         if self.history.pending_command_prune.is_some() || self.history.command_prune_requested() || !self.history.command_log.pruned_terminal_is_empty() { return CloseRung::CommandPrune; }
@@ -494,7 +521,7 @@ impl<'v, A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static, X: Ins
 }
 
 impl<'v, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceExtension> LadderRef<'v, A, M, X> {
-    pub(super) fn retained_fields_terminal_is_empty(&self) -> bool {
+    pub fn retained_fields_terminal_is_empty(&self) -> bool {
         self.retained_fields_own_terminal_is_empty() && self.child_composition.children.is_empty() && self.interaction.local_interaction_query.is_none() && self.ingest.snapshot_read_returns_terminal_is_empty(&*self.stores, &*self.interaction)
     }
 }

@@ -1,4 +1,5 @@
-use super::*;
+use crate::standards::v1_7::subsets::vt::schema::mutations::insert_javascript_action::InsertJavascriptAction;
+use crate::standards::v1_7::subsets::vt::io::binary::mutations::insert_javascript_action::*;
 
 #[test]
 fn owned_payload_round_trips() {

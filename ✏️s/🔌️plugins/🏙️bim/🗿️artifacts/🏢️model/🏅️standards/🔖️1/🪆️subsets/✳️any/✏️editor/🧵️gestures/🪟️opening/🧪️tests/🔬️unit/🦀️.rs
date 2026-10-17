@@ -1,6 +1,6 @@
 use super::*;
-use crate::editor::bim::gestures::session::Shape;
-use crate::editor::bim::gestures::tests::fixture::{room, Rig};
+use crate::editor::bim::marks::Shape;
+use crate::editor::bim::fixture::{room, Rig};
 
 fn created(step: &Step) -> &crate::standards::v1::subsets::any::schema::mutations::create_opening::CreateOpening {
     match step.mutations.as_slice() {

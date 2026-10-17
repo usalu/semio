@@ -12,7 +12,6 @@ test("original physical SQLite fixture preserves every literal cell against inde
  const file=await exportSqliteDatabase(database);expect(file.length).toBe(fixture.expectedFileBytes);
  const oracle=Database.deserialize(file);try{expect(oracle.query("SELECT CAST(id AS TEXT) AS id,text FROM document").get()).toEqual({id:fixture.rowid,text:fixture.text});expect(oracle.query("PRAGMA integrity_check").get()).toEqual({integrity_check:"ok"});}finally{oracle.close();}
  expect(await importSqliteDatabase(file)).toEqual(database);
- console.log("[DEBUG] Original physical SQLite literal corpus independent SQLite/first-party source whole-cell equality and authored8192byte extent");
 });
 test("physical SQLite receiving retains every refused prefix under supplied original custody",()=>{
  const source=readFileSync(new URL("../🦀️.rs",import.meta.url),"utf8");

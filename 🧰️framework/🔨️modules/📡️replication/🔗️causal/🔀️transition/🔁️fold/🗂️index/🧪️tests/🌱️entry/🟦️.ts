@@ -11,4 +11,3 @@ for(const [key,value] of map)if(value.length)map.set(key,value+"?");
 assert.equal(occupied,fixture.expected.occupiedLazyCalls);
 assert.equal(vacant,fixture.expected.vacantLazyCalls);
 assert.equal(stableStringify(Object.fromEntries(map)),stableStringify(fixture.expected.map));
-console.log("[DEBUG] original fold index lazyOccupied=0 lazyVacant=1 independentStableJson=true");

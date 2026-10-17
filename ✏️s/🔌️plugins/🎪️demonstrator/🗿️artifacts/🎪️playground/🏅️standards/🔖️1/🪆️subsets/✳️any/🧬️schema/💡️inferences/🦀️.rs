@@ -19,7 +19,7 @@ pub struct PlaygroundTopology {
     pub node_count: u32,
 }
 
-fn infer_topology(_snapshot: &PlaygroundSnapshot) -> PlaygroundTopology {
+pub fn infer_topology(_snapshot: &PlaygroundSnapshot) -> PlaygroundTopology {
     PlaygroundTopology { topo_order: Vec::new(), depth: BTreeMap::new(), cycle_free: true, node_count: 0 }
 }
 //#endregion 🧭️Topology

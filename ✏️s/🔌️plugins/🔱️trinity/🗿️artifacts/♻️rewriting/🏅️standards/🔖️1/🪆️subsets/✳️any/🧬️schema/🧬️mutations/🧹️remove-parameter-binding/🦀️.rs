@@ -1,8 +1,7 @@
 //! 🧹️ Direct rewriting mutation — `RemoveParameterBinding`: takes one key out of the `parameter_bindings`
 //! map.
 use crate::standards::v1::subsets::any::schema::diff::RewritingDiff;
-use crate::standards::v1::subsets::any::schema::mutations::RewriteRuleMutation;
-use crate::RewritingSnapshot;
+use crate::standards::v1::subsets::any::schema::snapshot::RewritingSnapshot;
 
 //#region 🔖️Mutation
 /// 🧹️ `remove-parameter-binding` payload.
@@ -16,17 +15,23 @@ pub struct RemoveParameterBinding {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn remove_parameter_binding(key: String) -> RewriteRuleMutation {
-    RewriteRuleMutation::RemoveParameterBinding(RemoveParameterBinding { key })
+pub fn remove_parameter_binding<Op>(key: String) -> Op
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::remove_parameter_binding::RemoveParameterBinding>,
+{
+    Op::from(RemoveParameterBinding { key })
 }
 
-impl protocol::MutationKind<RewritingSnapshot, RewriteRuleMutation> for RemoveParameterBinding {
+impl<Op> protocol::MutationKind<RewritingSnapshot, Op> for RemoveParameterBinding
+where
+    Op: protocol::Mutation<RewritingSnapshot, Diff = RewritingDiff> + From<RemoveParameterBinding> + From<crate::standards::v1::subsets::any::schema::mutations::change_parameter_binding::ChangeParameterBinding>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "parameter-binding", kind: "remove-parameter-binding", record: "RemovedParameterBinding" };
 
     fn diff(&self, base: &RewritingSnapshot) -> protocol::MutationOutcome<RewritingDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &RewritingSnapshot) -> Result<Vec<RewriteRuleMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &RewritingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

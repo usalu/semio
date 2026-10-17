@@ -1,4 +1,4 @@
 #!/usr/bin/env bun
 /** 📦️ mathematical equation Rust artifact package router. */
 import { runArtifactRustPackageMain } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts";
-await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-mathematical-equation",{snapshotSqliteTests:["../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"]});
+await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-mathematical-equation",{ packages: ["semio-s-artifact-mathematical-equation", "semio-s-artifact-mathematical-equation-mut-family", "semio-s-artifact-mathematical-equation-editor", "semio-s-artifact-mathematical-equation-examples", "semio-s-artifact-mathematical-equation-inferences", "semio-s-artifact-mathematical-equation-leaf-tests", "semio-s-artifact-mathematical-equation-mutations", "semio-s-artifact-mathematical-equation-schema", "semio-s-artifact-mathematical-equation-snapshot", "semio-s-artifact-mathematical-equation-update-graph-algorithm"],snapshotSqliteTests:["../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"]});

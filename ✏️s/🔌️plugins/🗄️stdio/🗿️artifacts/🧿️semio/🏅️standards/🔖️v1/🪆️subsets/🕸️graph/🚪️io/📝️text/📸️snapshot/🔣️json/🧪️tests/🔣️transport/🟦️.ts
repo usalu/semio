@@ -11,4 +11,4 @@ test("Graph JSON preserves nonfinite words and ordered literal fields",()=>{
  expect(owned.nodes[0]!.width.bits).toBe(0x7ff8000000000042n);
  expect(oracle.compile({const:fixture.graph})(semioGraphJsonValue(owned))).toBe(true);
 });
-afterAll(()=>console.log("[DEBUG] Owned transport corpus completed: @semio-tech/stdio-semio"));
+afterAll(()=>{});

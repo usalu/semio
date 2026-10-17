@@ -13,7 +13,6 @@ test("reserved session admission borrows original control and keeps both refusal
  expect(admission).toContain("$cx");expect(admission).toContain("try_admit_owned(&mut job, &mut params, $cx)");
  expect(admission).not.toContain("WorkerJobAdmissionContext::new");expect(admission).not.toContain("StepBudget::new");
  expect(source).toContain("ManuallyDrop<Option<OriginalTurnFailure>>");expect(source).toContain("ControlledRetirement<OriginalTurnFailure>");
- console.log("[DEBUG] Ajv/SQLite reserved admission requires actual original1500 deadline/fuel1/65536 capacity supplier and whole primary plus independent refusal custody");
 });
 
 test("reserved close preserves original typed depth refusal before the shared cursor gate",()=>{
@@ -21,7 +20,6 @@ test("reserved close preserves original typed depth refusal before the shared cu
  const source=readFileSync(new URL("../../🏛️reserved/🦀️.rs",import.meta.url),"utf8"),start=source.indexOf("fn close_step(&mut self,cx:"),body=source.slice(start,source.indexOf("fn next_close_copy_byte_demand",start));
  expect(start).toBeGreaterThanOrEqual(0);expect(body).toContain("remaining.maximum_depth<demand.depth");expect(body).toContain("ValueRefusalKind::DepthLimit");expect(body).toContain("OriginalTurnFailure::from");
  expect(body.indexOf("remaining.maximum_depth<demand.depth")).toBeLessThan(body.indexOf("close_original_retained_step"));
- console.log("[DEBUG] SQLite zero-depth reference keeps all original16384 backing bytes; native reserved close must retain complete typed depth failure before pending currency gate");
 });
 test("original reserved job retains spare capacity until exact physical release",async()=>{
  const implementation=await import("../🟦️.ts");
@@ -41,7 +39,6 @@ test("original reserved job retains spare capacity until exact physical release"
   original=next.owner;
  }
  expect(original).toEqual({length:0,capacity:0});const terminal=implementation.reservedJobByteTurn(original,law.grant);expect(terminal.owner).toBe(original);expect(terminal.complete).toBe(true);expect(terminal.progress).toEqual({copiedItems:0,copiedBytes:0,capacityBytes:0,releaseBytes:0});db.close();
- console.log(`[DEBUG] independent SQLite original reserved job copied=${law.payloadBytes} physicalRelease=${law.backingBytes}`);
 });
 
 import "../../../../🏪️store/📬️command/🛬️receiving/🧪️tests/🟦️.ts";

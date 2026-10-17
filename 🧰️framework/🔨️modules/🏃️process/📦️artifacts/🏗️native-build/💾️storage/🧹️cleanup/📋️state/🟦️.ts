@@ -93,3 +93,10 @@ export function nativeImageReceiverDecisionV1(value:unknown):string{if(validateJ
 const preparationSchema=structuredClone(schema.definitions.Preparation);
 /** 🌱️ Selects a finite preparation obligation; only real provider custody can execute it. */
 export function nativeImagePreparationDecisionV1(value:unknown):"drain"|"settle-failure"|"handoff"|"retain"{if(validateJsonSchemaSubset(preparationSchema,value).length)throw Error("Closed finite Native preparation evidence required");const row=value as{failed:boolean;pendingCommands:number;pendingOperations:number;acknowledged:boolean;bodyOpen:boolean};return row.pendingCommands||row.pendingOperations?"drain":row.failed?"settle-failure":row.acknowledged&&!row.bodyOpen?"handoff":"retain";}
+
+const successfulChildSchema=structuredClone(schema.definitions.SuccessfulChildRetirement);
+/** ♻️ Describes complete terminal obligations; neutral evidence issues no physical retirement authority. */
+export function nativeSuccessfulChildRetirementDecisionV1(value:unknown):boolean{if(validateJsonSchemaSubset(successfulChildSchema,value).length)throw Error("Closed successful child retirement evidence required");const row=value as Record<string,unknown>;return row.phase==="cleanup"&&successfulChildSchema.required.every(key=>key==="version"||key==="phase"||row[key]===true);}
+
+/** 🧯️ Joins terminal close after body settlement and preserves the first thrown value, including undefined. */
+export async function withNativeImageTerminalCloseV1<T>(body:()=>Promise<T>,close:()=>Promise<void>):Promise<T>{if(typeof body!=="function"||typeof close!=="function")throw Error("Actual body and terminal close required");let value:T|undefined,failed=false,failure:unknown;try{value=await body();}catch(error){failed=true;failure=error;}try{await close();}catch(error){if(!failed){failed=true;failure=error;}}if(failed)throw failure;return value as T;}

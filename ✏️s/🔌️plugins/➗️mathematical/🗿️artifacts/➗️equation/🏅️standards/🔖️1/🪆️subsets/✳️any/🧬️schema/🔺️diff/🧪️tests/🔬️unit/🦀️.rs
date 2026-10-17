@@ -1,4 +1,5 @@
-use super::*;
+use crate::{EquationNode, EquationSnapshot};
+use crate::standards::v1::subsets::any::schema::diff::*;
 use crate::EquationPoint;
 
 /// ⚖️ LAW: a state diff carries the sparse slots only, and applying it re-derives the handles — exactly the snapshot built from the new state.

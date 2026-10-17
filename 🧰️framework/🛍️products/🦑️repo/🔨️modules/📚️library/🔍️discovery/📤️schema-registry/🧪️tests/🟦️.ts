@@ -22,7 +22,6 @@ test("production schema registry consumes fresh producer output with independent
    await loadProductionSchemaEntriesV1(producer,schema);expect(calls).toBe(2);
   }else await expect(loadProductionSchemaEntriesV1(producer,schema)).rejects.toThrow();
  }
- console.log("[DEBUG] production registry fresh routing / original canonical Schema / independent JSON + Ajv examples="+examples.cases.length);
 });
 
 test("production schema registry preserves failed and cancelled producer outcomes",async()=>{
@@ -56,6 +55,5 @@ test("original schema routes refuse test inputs and protect existing output befo
   writeFileSync(output,bytes);
   await expect(script.run(["entries","--out",output])).rejects.toThrow("--out requires a new output file");
   expect(readFileSync(output)).toEqual(bytes);
-  console.log("[DEBUG] original SchemaScript rejects two test-input routes / missing output / preserves real existing UTF8 bytes before acquisition");
  }finally{rmSync(directory,{recursive:true,force:true});}
 }));

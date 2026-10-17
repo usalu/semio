@@ -10,21 +10,22 @@ use crate::schema::diff::SemioKitDiff;
 use crate::schema::mutations::SemioKitMutation;
 use crate::schema::snapshot::SemioKitSnapshot;
 use protocol::Mutation;
+use semio_framework_test_fixtures::fixture_text;
 
-const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🖊️edit-design/🧩️replaces/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🖊️edit-design/🧩️replaces/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🖊️edit-design/🧩️replaces/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🖊️edit-design/🧩️replaces/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🖊️edit-design/🧩️replaces/🎯️outcome/🔣️.json");
+static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🖊️edit-design/🧩️replaces/📸️snapshot/⬅️before/🔣️.json"));
+static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🖊️edit-design/🧩️replaces/📸️snapshot/➡️after/🔣️.json"));
+static MUTATION: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🖊️edit-design/🧩️replaces/🦠️mutation/🔣️.json"));
+static DIFF: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🖊️edit-design/🧩️replaces/🔺️diff/🔣️.json"));
+static OUTCOME: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🖊️edit-design/🧩️replaces/🎯️outcome/🔣️.json"));
 
 fn before() -> SemioKitSnapshot {
-    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("edit-design before snapshot decodes")
+    semio_framework_pack_json::from_json_str((*BEFORE), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("edit-design before snapshot decodes")
 }
 fn expected_after() -> SemioKitSnapshot {
-    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("edit-design after snapshot decodes")
+    semio_framework_pack_json::from_json_str((*AFTER), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("edit-design after snapshot decodes")
 }
 fn mutation() -> SemioKitMutation {
-    semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("edit-design mutation decodes")
+    semio_framework_pack_json::from_json_str((*MUTATION), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("edit-design mutation decodes")
 }
 
 /// ▶️ Both nested collections are replaced at once; the design keeps its identity and name.
@@ -61,21 +62,21 @@ async fn the_undo_edit_design_restores_the_captured_content() {
 /// 🔣️ Snapshots and the payload are canonical — the payload embeds whole `SemioKitPiece`/`SemioKitConnection` values, so their camelCase field spellings appear inside a mutation whose own keys are snake_case.
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
-    for (label, text) in [("before", BEFORE), ("after", AFTER)] {
+    for (label, text) in [("before", (*BEFORE)), ("after", (*AFTER))] {
         let decoded: SemioKitSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
         let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "edit-design/replaces-the-designs-pieces-and-connections-in-one-step: committed {label} JSON is not canonical");
     }
     let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&(mutation()))).expect("edit-design mutation encodes");
-    let original: serde_json::Value = serde_json::from_str(MUTATION).expect("edit-design mutation reparses");
+    let original: serde_json::Value = serde_json::from_str((*MUTATION)).expect("edit-design mutation reparses");
     assert_eq!(reencoded, original, "edit-design/replaces-the-designs-pieces-and-connections-in-one-step: committed mutation JSON is not canonical");
 }
 
 /// 🎯️ Declared `applied`: the design exists and its content genuinely differs, so neither target-missing nor the conjunction no-op may fire
 #[semio_framework_async_macros::async_test]
 async fn declared_outcome_holds_as_committed() {
-    let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
+    let outcome: serde_json::Value = serde_json::from_str((*OUTCOME)).expect("outcome decodes");
     assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("applied"), "edit-design/replaces-the-designs-pieces-and-connections-in-one-step: this case is declared applied");
     let produced = mutation().diff(&before());
     assert!(produced.messages().is_empty(), "replacing a design content with genuinely different content must raise no diagnostics");
@@ -87,7 +88,7 @@ async fn produces_committed_diff() {
     let base = before();
     let outcome = <SemioKitMutation as Mutation<SemioKitSnapshot>>::diff(&mutation(), &base);
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
-    let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
+    let committed: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff decodes");
     assert_eq!(produced, committed, "edit-design/replaces-the-designs-pieces-and-connections-in-one-step: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
 
@@ -95,18 +96,18 @@ async fn produces_committed_diff() {
 /// allowed to touch appears in it at all.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical_and_narrowly_scoped() {
-    let decoded: SemioKitDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed edit-design diff decodes");
+    let decoded: SemioKitDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed edit-design diff decodes");
     let _designs = decoded.designs.as_ref().expect("edit-design must write the designs slot");
     assert!(decoded.types.is_none() && decoded.objects.is_none() && decoded.models.is_none() && decoded.properties.is_none() && decoded.representations.is_none(), "no other kit slot may appear in the diff");
     let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("diff re-encodes");
-    let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
+    let original: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff reparses");
     assert_eq!(reencoded, original, "edit-design/replaces-the-designs-pieces-and-connections-in-one-step: committed diff JSON is not canonical");
 }
 
 /// 🩹 Applying the committed diff to `before` yields `after`.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: SemioKitDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed edit-design diff decodes");
+    let decoded: SemioKitDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed edit-design diff decodes");
     let produced = protocol::apply_diff(&decoded, &before()).expect("committed edit-design diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "edit-design/replaces-the-designs-pieces-and-connections-in-one-step: committed diff did not carry before to after");
 }

@@ -14,6 +14,5 @@ pub struct Generation3dViewPresence {
 }
 
 //#region 🔁️Re-exports
-/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
 
 //#endregion 🔁️Re-exports

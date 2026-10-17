@@ -1,9 +1,14 @@
-use crate::editor::sequence::unit_tests::context::{dispatch, live_host_snapshot, main_window_meta, new_app, new_app_with_registry_wired};
-use crate::editor::sequence::SequenceCommand;
+use crate::editor::sequence::edit_rules;
+use semio_framework_pack_json::Value;
+use semio_framework_test_fixtures::fixture_text;
+use semio_s_artifact_stdio_semio_flow::schema::mutations::SemioFlowMutation;
+use semio_s_artifact_stdio_semio_flow::schema::snapshot::SemioFlowSnapshot;
+use crate::editor_unit_tests::context::{dispatch, live_host_snapshot, main_window_meta, new_app, new_app_with_registry_wired};
+use crate::editor::sequence::retained::SequenceCommand;
 use crate::SequenceCamera;
 use semio_framework_plugin::PluginApp;
 
-use super::set_viewport::SetViewport;
+use crate::editor::sequence::commands::node_graph::set_viewport::SetViewport;
 
 /// 🎥️ `SetViewport` is config-only — it must never emit a `SequenceMutation` (no VCS edit, no
 /// undo entry) and instead write straight into the config store.
@@ -31,7 +36,7 @@ async fn set_viewport_writes_config_not_operations() {
 #[semio_framework_async_macros::async_test]
 async fn node_graph_edit_delete_removes_the_named_step() {
     let mut app = new_app_with_registry_wired().await;
-    dispatch(&mut app, SequenceCommand::NodeGraphEdit(super::node_graph_edit::NodeGraphEdit { operations_json: "[{\"operation\":\"delete\",\"nodeIds\":[\"step-1\"],\"synapseIds\":[]}]".into() })).await;
+    dispatch(&mut app, SequenceCommand::NodeGraphEdit(crate::editor::sequence::commands::node_graph::node_graph_edit::NodeGraphEdit { operations_json: "[{\"operation\":\"delete\",\"nodeIds\":[\"step-1\"],\"synapseIds\":[]}]".into() })).await;
     let live = live_host_snapshot(&app).await;
     assert!(!live.steps.iter().any(|step| step.id == "step-1"));
     assert!(!live.edges.iter().any(|edge| edge.from == "step-1" || edge.to == "step-1"));
@@ -42,18 +47,18 @@ async fn node_graph_edit_delete_removes_the_named_step() {
 /// the `setSlider`/`insertPort` rows it has no widget for are refused.
 #[test]
 fn the_renderer_row_fixture_decodes_exactly() {
-    let fixture: serde_json::Value = serde_json::from_str(NODE_GRAPH_EDIT_ROWS).expect("the row fixture parses");
+    let fixture: serde_json::Value = serde_json::from_str((*NODE_GRAPH_EDIT_ROWS)).expect("the row fixture parses");
     for case in fixture["accepted"].as_array().expect("accepted rows") {
         let carried = !matches!(case["row"]["operation"].as_str(), Some("setSlider" | "insertPort"));
-        assert_eq!(super::node_graph_edit::sequence_node_graph_row(&semio_framework_value::DslValue::from(case["row"].clone())).is_ok(), carried, "accepted row {}", case["id"]);
+        assert_eq!(crate::editor::sequence::commands::node_graph::node_graph_edit::sequence_node_graph_row(&semio_framework_value::DslValue::from(case["row"].clone())).is_ok(), carried, "accepted row {}", case["id"]);
     }
     for case in fixture["refused"].as_array().expect("refused rows") {
-        assert!(super::node_graph_edit::sequence_node_graph_row(&semio_framework_value::DslValue::from(case["row"].clone())).is_err(), "refused row {} decoded", case["id"]);
+        assert!(crate::editor::sequence::commands::node_graph::node_graph_edit::sequence_node_graph_row(&semio_framework_value::DslValue::from(case["row"].clone())).is_err(), "refused row {} decoded", case["id"]);
     }
 }
 
 /// 🧾️ The framework's committed node-graph row vocabulary (schema `🧰️framework/🔨️modules/🛠️tool-machine/🧬️schema/🔣️node-graph-edit-rows`).
-const NODE_GRAPH_EDIT_ROWS: &str = include_str!("../../../../../../../../../../../../../../🧰️framework/🔨️modules/🛠️tool-machine/🧪️tests/🧫️fixtures/🧫️node-graph-edit-rows/🔣️.json");
+static NODE_GRAPH_EDIT_ROWS: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../🧰️framework/🔨️modules/🛠️tool-machine/🧪️tests/🧫️fixtures/🧫️node-graph-edit-rows/🔣️.json"));
 
 //#region ✋️ChildIntentLeaves
 fn fold(base: &semio_s_artifact_stdio_semio_flow::schema::snapshot::SemioFlowSnapshot, leaves: &[semio_s_artifact_stdio_semio_flow::schema::mutations::SemioFlowMutation]) -> semio_s_artifact_stdio_semio_flow::schema::snapshot::SemioFlowSnapshot {
@@ -100,9 +105,9 @@ async fn a_node_drag_record_is_one_child_transaction() {
     drop(live);
     let rows = |history: semio_framework::kernel::HistoryPatch| history.upserts.into_iter().filter(|entry| entry.applied && entry.transaction.is_some()).count();
     let before = rows(app.history_snapshot().await.expect("history"));
-    dispatch(&mut app, SequenceCommand::NodeGraphEdit(super::node_graph_edit::NodeGraphEdit { operations_json: format!("[{{\"operation\":\"move\",\"gestureId\":\"node-drag:0\",\"nodeIds\":[\"{id}\"],\"dx\":0.0,\"dy\":0.0}}]") })).await;
+    dispatch(&mut app, SequenceCommand::NodeGraphEdit(crate::editor::sequence::commands::node_graph::node_graph_edit::NodeGraphEdit { operations_json: format!("[{{\"operation\":\"move\",\"gestureId\":\"node-drag:0\",\"nodeIds\":[\"{id}\"],\"dx\":0.0,\"dy\":0.0}}]") })).await;
     assert_eq!(rows(app.history_snapshot().await.expect("history")), before, "a click moves nothing");
-    dispatch(&mut app, SequenceCommand::NodeGraphEdit(super::node_graph_edit::NodeGraphEdit { operations_json: format!("[{{\"operation\":\"move\",\"gestureId\":\"node-drag:1\",\"nodeIds\":[\"{id}\"],\"dx\":25.0,\"dy\":5.0}}]") })).await;
+    dispatch(&mut app, SequenceCommand::NodeGraphEdit(crate::editor::sequence::commands::node_graph::node_graph_edit::NodeGraphEdit { operations_json: format!("[{{\"operation\":\"move\",\"gestureId\":\"node-drag:1\",\"nodeIds\":[\"{id}\"],\"dx\":25.0,\"dy\":5.0}}]") })).await;
     let moved = live_host_snapshot(&app).await.steps.iter().find(|entry| entry.id == id).map(|entry| (entry.x, entry.y)).expect("moved step");
     assert_eq!(moved, (x + 25.0, y + 5.0));
     assert_eq!(rows(app.history_snapshot().await.expect("history")), before + 1, "one drag, one transaction row");

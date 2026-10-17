@@ -7,6 +7,7 @@
 //! @see <https://json-schema.org/draft-07/schema>
 
 use semio_framework_schema::OwnedJsonSchemaValidator;
+use semio_framework_test_fixtures::manifest_dir;
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
@@ -37,7 +38,7 @@ fn repo_root() -> PathBuf {
     if let Ok(declared) = std::env::var("SEMIO_SCHEMA_MODULE_ROOT") {
         return PathBuf::from(declared);
     }
-    let mut current = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    let mut current = manifest_dir!();
     while !current.join(".🧬semio").is_dir() {
         assert!(current.pop(), "no repo root carrying `.🧬semio` above {}", env!("CARGO_MANIFEST_DIR"));
     }

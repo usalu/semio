@@ -447,6 +447,3 @@ pub fn analyze_polygon_soup(positions: &[[f32; 3]], faces: &[Vec<u32>]) -> MeshQ
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;

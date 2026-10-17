@@ -1,4 +1,5 @@
-use super::super::{DummyDiff, DummyMutation, DummySnapshot};
+use crate::testing_laws_unit_1::mutation_fixture::dummy::{DummyDiff, DummySnapshot};
+use crate::testing_laws_unit_1::mutation_fixture::dummy::mutations::DummyMutation;
 use protocol::{MutationKind, MutationOutcome, OpBinary, OpText, ProtocolError, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -11,8 +12,8 @@ pub(crate) struct SetDummyCount {
     pub value: i32,
 }
 impl SetDummyCount {
-    const OPCODE: &'static str = "set-dummy-count";
-    const TAG: u8 = 0x61;
+    pub const OPCODE: &'static str = "set-dummy-count";
+    pub const TAG: u8 = 0x61;
 }
 impl OpText for SetDummyCount {
     fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {

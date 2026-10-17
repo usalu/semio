@@ -40,7 +40,7 @@ struct GisMapReconcileEnvelopeV1 {
     job: Option<GisMapReconciledJobV1>,
 }
 
-pub(crate) fn decode_reconcile_v1(value: DslValue, scope: &DocumentScope, request_id: &str) -> Result<JobReconcileResultV1<GisMapReconciledJobV1>, DocumentHttpPortCodeV1> {
+pub fn decode_reconcile_v1(value: DslValue, scope: &DocumentScope, request_id: &str) -> Result<JobReconcileResultV1<GisMapReconciledJobV1>, DocumentHttpPortCodeV1> {
     let envelope = GisMapReconcileEnvelopeV1::from_value(value).map_err(|_| DocumentHttpPortCodeV1::Invalid)?;
     if envelope.request_id != request_id || envelope.job.as_ref().is_some_and(|job| !job.validate(&scope.document_id)) { return Err(DocumentHttpPortCodeV1::Invalid); }
     parse_job_reconcile_result_v1(&envelope.schema, envelope.version, &envelope.request_id, envelope.found, envelope.job).map_err(|_| DocumentHttpPortCodeV1::Invalid)

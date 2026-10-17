@@ -1,13 +1,10 @@
 //! 💡️ projected-area atomic glTF inference leaf.
-use super::super::super::modules::{
+use crate::standards::v2_0::subsets::any::schema::modules::{
     inference_measures::{estimate, unavailable},
     measurement_contracts::*,
     vector_operations::{cross, sub},
 };
-use super::super::{
-    geometry_core::{statistics, GltfGeometryContext},
-    GltfEntityIndicators, GltfInferenceLeaf, GltfInferenceLeafDescriptor, GLTF_GEOMETRY_READS,
-};
+use crate::standards::v2_0::subsets::any::schema::inferences::geometry_core::{statistics, GltfGeometryContext};
 pub struct GltfProjectedAreaInference;
 impl GltfInferenceLeaf for GltfProjectedAreaInference {
     const DESCRIPTOR: GltfInferenceLeafDescriptor = GltfInferenceLeafDescriptor { id: "s.stdio.gltf.inference.projected-area.v1", algorithm_version: 1, cache_key: "s.stdio.gltf.inference.projected-area.v1:geometry-v2", reads: GLTF_GEOMETRY_READS };
@@ -17,7 +14,7 @@ pub fn descriptor() -> GltfInferenceLeafDescriptor {
     GltfProjectedAreaInference::DESCRIPTOR
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<GltfStatistics> {
+pub fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<GltfStatistics> {
     let projected = [0, 1, 2].map(|axis| context.faces.iter().map(|face| 0.5 * cross(sub(context.points[face[1]], context.points[face[0]]), sub(context.points[face[2]], context.points[face[0]]))[axis].abs()).sum::<f64>());
     estimate(statistics(&projected, &context.policy.histogram_edges), GltfUnit::SquareMetre, context.sample_count, Some(context.topology))
 }
@@ -27,6 +24,22 @@ pub fn unavailable_measure(ids: &[String]) -> GltfMeasure<GltfStatistics> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn encode_result(indicators: &GltfEntityIndicators) -> semio_framework_value::DslValue {
-    semio_framework_value::ToValue::to_value(&indicators.size.projected_area)
+pub fn encode_result(measure: &GltfMeasure<GltfStatistics>) -> semio_framework_value::DslValue {
+    semio_framework_value::ToValue::to_value(measure)
 }
+
+//#region 🧾️InferenceDescriptor
+/// 🧾️ Registry descriptor of this inference leaf; its companion documents are embedded from this leaf's own folder.
+pub fn inference_descriptor() -> semio_framework_schema_registry::ArtifactInferenceDescriptor {
+    semio_framework_schema_registry::ArtifactInferenceDescriptor {
+        id: "s.stdio.gltf.inference.projected-area.v1",
+        inference: semio_framework_schema_registry::FacetLeaves {
+            rust: include_str!("🦀️.rs"),
+            typescript: include_str!("🟦️.ts"),
+            graphql: include_str!("🔗️.graphql"),
+            json_schema: include_str!("🔣️.json"),
+            proto: include_str!("🛰️.proto"),
+        },
+    }
+}
+//#endregion 🧾️InferenceDescriptor

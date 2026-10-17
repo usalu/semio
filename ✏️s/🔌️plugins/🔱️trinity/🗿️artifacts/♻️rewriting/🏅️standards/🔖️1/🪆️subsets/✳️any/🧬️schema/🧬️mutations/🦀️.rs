@@ -5,17 +5,20 @@
 //! vocabulary (design §20.15), so no parent leaf reads the child — `edit-working-graph` replaces the whole child handle.
 
 use crate::standards::v1::subsets::any::schema::diff::RewritingDiff;
-use crate::RewritingSnapshot;
+use crate::standards::v1::subsets::any::schema::snapshot::RewritingSnapshot;
 
-pub use super::change_parameter_binding::{change_parameter_binding, ChangeParameterBinding};
-pub use super::change_rule_layout_point::{change_rule_layout_point, ChangeRuleLayoutPoint};
-pub use super::edit_working_graph::{edit_working_graph, EditWorkingGraph};
-pub use super::edit_lhs::{edit_lhs, EditLhs};
-pub use super::edit_rhs::{edit_rhs, EditRhs};
-pub use super::remove_parameter_binding::{remove_parameter_binding, RemoveParameterBinding};
-pub use super::remove_rule_layout_point::{remove_rule_layout_point, RemoveRuleLayoutPoint};
-pub use super::drag_rule_nodes::{drag_rule_nodes, DragRuleNodes};
-pub use super::set_rule_layout_points::{set_rule_layout_points, RuleLayoutPlacement, SetRuleLayoutPoints};
+pub use crate::standards::v1::subsets::any::schema::mutations::change_parameter_binding::{change_parameter_binding, ChangeParameterBinding};
+pub use crate::standards::v1::subsets::any::schema::mutations::change_rule_layout_point::{change_rule_layout_point, ChangeRuleLayoutPoint};
+pub use crate::standards::v1::subsets::any::schema::mutations::edit_working_graph::{edit_working_graph, EditWorkingGraph};
+pub use crate::standards::v1::subsets::any::schema::mutations::edit_lhs::EditLhs;
+pub use crate::standards::v1::subsets::any::schema::mutations::edit_rhs::EditRhs;
+pub use crate::standards::v1::subsets::any::schema::mutations::remove_parameter_binding::RemoveParameterBinding;
+pub use crate::standards::v1::subsets::any::schema::mutations::remove_rule_layout_point::RemoveRuleLayoutPoint;
+pub use crate::standards::v1::subsets::any::schema::mutations::drag_rule_nodes::DragRuleNodes;
+pub use crate::standards::v1::subsets::any::schema::mutations::set_rule_layout_points::{RuleLayoutPlacement, SetRuleLayoutPoints};
+pub use semio_s_artifact_trinity_rewriting_model::standards::v1::subsets::any::schema::mutations::support;
+pub(crate) use support::{offset_text};
+
 
 //#region 🔖️Aggregate
 /// 🧮️ Semantic rewrite-rule mutation vocabulary.
@@ -36,19 +39,41 @@ pub enum RewriteRuleMutation {
 }
 //#endregion 🔖️Aggregate
 
-//#region 🔢️Offsets
-/// 🔢️ A canvas offset as a label shows it: two decimals at most, trailing zeros dropped, `(en, de)`.
-pub(crate) fn offset_text(value: f64) -> (String, String) {
-    let rounded = (value * 100.0).round() / 100.0;
-    let text = format!("{:.2}", if rounded == 0.0 { 0.0 } else { rounded });
-    let en = text.trim_end_matches('0').trim_end_matches('.').to_string();
-    let de = en.replace('.', ",");
-    (en, de)
-}
-//#endregion 🔢️Offsets
 
 //#region 🧪️StructuralCorrespondence
 #[cfg(test)]
 #[path = "🧪️tests/🔬️structural-correspondence/🦀️.rs"]
 mod structural_correspondence_tests;
 //#endregion 🧪️StructuralCorrespondence
+
+//#region 🔖️ConcreteBuilders
+/// 🏗️ Builder of the `drag_rule_nodes` leaf for this aggregate; the leaf builder stays generic over its aggregate.
+pub fn drag_rule_nodes(targets: Vec<String>, dx: f64, dy: f64) -> RewriteRuleMutation {
+    crate::standards::v1::subsets::any::schema::mutations::drag_rule_nodes::drag_rule_nodes::<RewriteRuleMutation>(targets, dx, dy)
+}
+
+/// 🏗️ Builder of the `edit_lhs` leaf for this aggregate; the leaf builder stays generic over its aggregate.
+pub fn edit_lhs(new_lhs: crate::standards::v1::subsets::any::schema::rule::Lhs) -> RewriteRuleMutation {
+    crate::standards::v1::subsets::any::schema::mutations::edit_lhs::edit_lhs::<RewriteRuleMutation>(new_lhs)
+}
+
+/// 🏗️ Builder of the `edit_rhs` leaf for this aggregate; the leaf builder stays generic over its aggregate.
+pub fn edit_rhs(new_rhs: crate::standards::v1::subsets::any::schema::rule::Rhs) -> RewriteRuleMutation {
+    crate::standards::v1::subsets::any::schema::mutations::edit_rhs::edit_rhs::<RewriteRuleMutation>(new_rhs)
+}
+
+/// 🏗️ Builder of the `remove_parameter_binding` leaf for this aggregate; the leaf builder stays generic over its aggregate.
+pub fn remove_parameter_binding(key: String) -> RewriteRuleMutation {
+    crate::standards::v1::subsets::any::schema::mutations::remove_parameter_binding::remove_parameter_binding::<RewriteRuleMutation>(key)
+}
+
+/// 🏗️ Builder of the `remove_rule_layout_point` leaf for this aggregate; the leaf builder stays generic over its aggregate.
+pub fn remove_rule_layout_point(key: String) -> RewriteRuleMutation {
+    crate::standards::v1::subsets::any::schema::mutations::remove_rule_layout_point::remove_rule_layout_point::<RewriteRuleMutation>(key)
+}
+
+/// 🏗️ Builder of the `set_rule_layout_points` leaf for this aggregate; the leaf builder stays generic over its aggregate.
+pub fn set_rule_layout_points(points: Vec<RuleLayoutPlacement>, cleared: Vec<String>) -> RewriteRuleMutation {
+    crate::standards::v1::subsets::any::schema::mutations::set_rule_layout_points::set_rule_layout_points::<RewriteRuleMutation>(points, cleared)
+}
+//#endregion 🔖️ConcreteBuilders

@@ -20,7 +20,5 @@ pub fn snapshot() -> crate::VcsSnapshot {
 }
 
 //#region 🪢️TaxonomyMounts
-#[cfg(test)]
-#[path = "🧪️tests/🧩️example/🦀️.rs"]
-mod example;
+
 //#endregion 🪢️TaxonomyMounts

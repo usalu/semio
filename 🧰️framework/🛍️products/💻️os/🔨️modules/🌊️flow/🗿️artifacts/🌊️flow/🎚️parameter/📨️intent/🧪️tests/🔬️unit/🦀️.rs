@@ -95,6 +95,5 @@ fn original_graph_intent_indexed_json_retains_exact_strings_and_system_receipts(
             if encoder.is_complete() { break; }
         }
         assert!(encoder.is_complete()); assert_eq!(bytes, expected); assert_eq!(source.widget_id.as_ptr(), original);
-        println!("[DEBUG] original Graph intent indexed JSON exact serde bytes={} fixed64/System0 original string identity", bytes.len());
     }
 }

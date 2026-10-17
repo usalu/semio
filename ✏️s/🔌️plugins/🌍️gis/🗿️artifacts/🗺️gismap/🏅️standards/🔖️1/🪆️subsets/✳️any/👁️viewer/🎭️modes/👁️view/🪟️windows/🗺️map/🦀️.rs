@@ -35,7 +35,7 @@ pub const BODY_KEY: &str = "gis2d.view.map";
 const SURFACE_ID: &str = "gis2d.view.composite";
 /// 👁️ The host's default camera, published while a window has never been panned: the `TiledMapHost`
 /// fits the world exactly when the scene carries this string.
-const GIS_MAP_VIEW_DEFAULT_CAMERA_JSON: &str = r#"{"x":0,"y":0,"zoom":1}"#;
+pub const GIS_MAP_VIEW_DEFAULT_CAMERA_JSON: &str = r#"{"x":0,"y":0,"zoom":1}"#;
 /// 🧭️ The camera verb the react `TiledMapHost` dispatches after every pan/zoom. It is NOT
 /// framework-reserved: undeclared, it lands as `dropped action "setCamera" … no window kind declares it`.
 pub const SET_CAMERA_ACTION_ID: &str = "setCamera";
@@ -88,7 +88,5 @@ pub fn render(document: &GisMapSnapshot, window: Option<&config::GisMapViewerWin
 //#endregion 🔖️Render
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

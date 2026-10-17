@@ -341,11 +341,11 @@ fn widgets_of_every_other_variant_provide_pass_through_or_refuse() {
         ],
         vec![wire("e1", "slide", "number", "view", "")],
     ));
-    assert_eq!*(values["slide"].outputs.get("number").unwrap(), GeometryValue::Number(7.5));
-    assert_eq!*(values["note"].outputs.get("text").unwrap(), GeometryValue::Text("hello".into()));
-    assert_eq!*(values["image"].outputs.get("image").unwrap(), GeometryValue::Text("data:image/png;base64,AA==".into()));
-    assert_eq!*(values["var"].outputs.get("value").unwrap(), GeometryValue::Text("width".into()));
-    assert_eq!*(values["view"].outputs.get("number").unwrap(), GeometryValue::Number(7.5));
+    assert_eq!(*values["slide"].outputs.get("number").unwrap(), GeometryValue::Number(7.5));
+    assert_eq!(*values["note"].outputs.get("text").unwrap(), GeometryValue::Text("hello".into()));
+    assert_eq!(*values["image"].outputs.get("image").unwrap(), GeometryValue::Text("data:image/png;base64,AA==".into()));
+    assert_eq!(*values["var"].outputs.get("value").unwrap(), GeometryValue::Text("width".into()));
+    assert_eq!(*values["view"].outputs.get("number").unwrap(), GeometryValue::Number(7.5));
     assert!(values["act"].outputs.is_empty() && values["act"].fault.is_none() && values["out"].outputs.is_empty());
 }
 //#endregion 🧪️Faults
@@ -464,7 +464,6 @@ fn inference_reads_the_explicit_admitted_catalogue() {
     engine.start("custom-catalogue".into(), snapshot.into_inner(), CacheMode::Incremental, "custom-catalogue");
     while !engine.step(1).expect("typed catalogue engine").done {}
     assert_eq!(engine.oracle_values(), &custom);
-    println!("[DEBUG] Inference and one-unit engine read the explicit admitted catalogue independently of the bundled JSON owner");
 }
 
 #[test]
@@ -475,12 +474,11 @@ fn geometry_compute_context_injection_controls_actual_inference() {
     let read=document(vec![neuron("n","math.number",vec![])],vec![]);
     let input=GeometryInput::new(&read,catalogue(),&Context);
     let inferred=infer_geometry(&input);
-    assert_eq!*(inferred["n"].outputs.get("value").unwrap(),GeometryValue::Number(41.0));
+    assert_eq!(*inferred["n"].outputs.get("value").unwrap(),GeometryValue::Number(41.0));
     let mut engine=EngineFixture::new(Arc::clone(catalogue()),Arc::new(Context),0);
     engine.start("context".into(),read.into_inner(),CacheMode::Cold,"context");
     loop {if engine.step(1).unwrap().done{break;}}
-    assert_eq!*(engine.oracle_values()["n"].outputs.get("value").unwrap(),GeometryValue::Number(41.0));
-    println!("[DEBUG] Procedural geometry inference and engine used the explicit injected compute capability");
+    assert_eq!(*engine.oracle_values()["n"].outputs.get("value").unwrap(),GeometryValue::Number(41.0));
 }
 
 /// 🧪️ Native dependency scalars and shared parameters keep the independently authored IO hash literal shape.

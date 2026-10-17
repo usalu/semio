@@ -1,6 +1,6 @@
 //! 🧺️ Direct text codec for `remove-font-file`.
 
-use crate::standards::v1_7::subsets::vt::schema::mutations::RemoveFontFile;
+use crate::standards::v1_7::subsets::vt::schema::mutations::remove_font_file::RemoveFontFile;
 
 //#region 🔖️Identity
 pub const OPCODE: &str = "remove-font-file";
@@ -21,7 +21,5 @@ pub fn parse(text: &str) -> Result<RemoveFontFile, String> {
 //#endregion 🔖️Codec
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

@@ -29,6 +29,10 @@ type stdioCsvRfc4180AnyInferenceGuardSizeBounds = { readonly minItems?: number; 
 
 export const stdioCsvRfc4180AnyInferenceGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : stdioCsvRfc4180AnyInferenceGuardReject(at, "value is not an object");
+export const stdioCsvRfc4180AnyInferenceGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) stdioCsvRfc4180AnyInferenceGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const stdioCsvRfc4180AnyInferenceGuardArray = (value: unknown, at: string, bounds: stdioCsvRfc4180AnyInferenceGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return stdioCsvRfc4180AnyInferenceGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) stdioCsvRfc4180AnyInferenceGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -59,14 +63,14 @@ export const stdioCsvRfc4180AnyInferenceGuardConstant = <T extends string | numb
 //#endregion 🚪️Parsers
 
 export function parseCsvInference(value: unknown, at = "$"): CsvInference {
-  const row = stdioCsvRfc4180AnyInferenceGuardObject(value, at);
+  const row = stdioCsvRfc4180AnyInferenceGuardClosed(stdioCsvRfc4180AnyInferenceGuardObject(value, at), at, ["outline"]);
   return {
     outline: parseCsvOutline(row["outline"], `${at}.outline`),
   };
 }
 
 export function parseCsvOutline(value: unknown, at = "$"): CsvOutline {
-  const row = stdioCsvRfc4180AnyInferenceGuardObject(value, at);
+  const row = stdioCsvRfc4180AnyInferenceGuardClosed(stdioCsvRfc4180AnyInferenceGuardObject(value, at), at, ["recordCount", "columnCount", "hasHeader"]);
   return {
     recordCount: stdioCsvRfc4180AnyInferenceGuardInteger(row["recordCount"], `${at}.recordCount`),
     columnCount: stdioCsvRfc4180AnyInferenceGuardInteger(row["columnCount"], `${at}.columnCount`),

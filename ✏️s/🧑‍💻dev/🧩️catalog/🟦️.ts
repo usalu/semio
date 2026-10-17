@@ -1,4 +1,5 @@
-import { admitPluginCatalogV1, pluginCatalogV1, type PluginCatalogAdmissionV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🟦️.ts";
+import { admitPluginCatalogV1, pluginCatalogV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🟦️.ts";
+import type { PluginCatalogAdmissionV1 } from "@semio-tech/framework/plugin-catalog";
 import { EXTENSION_TARGETS, PLUGIN_BUILD_TARGETS, PLUGIN_HOST_CONFIGS, pluginModuleUrl, extensionModuleUrl } from "./🤖️generated/🧩️plugins/🟦️.ts";
 import { PLAYGROUND_BUILD_TARGETS } from "./🤖️generated/🎮️playgrounds/🟦️.ts";
 

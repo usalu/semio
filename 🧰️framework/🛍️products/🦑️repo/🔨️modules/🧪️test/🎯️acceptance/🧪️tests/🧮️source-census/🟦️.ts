@@ -16,11 +16,14 @@ import { describe, expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import Parser from "web-tree-sitter";
-import { readModuleTreeSource } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
-import { FRAMEWORK_ARTIFACT_NAMES, TOOL_MACHINE_VOCABULARY, artifactNameHitsOfText, debugTagHitsOfText, docstringEmojiReuseOfText, docstringHitsOfText, interactiveJobsOfText, interfaceImportHitsOfText, placeholderHitsOfText, utilityArtifactsOfSources } from "../../📋️orchestration/🟦️.ts";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
+import { interactiveJobsOfText, placeholderHitsOfText } from "../../📋️orchestration/🧮️placeholder-and-job-census/🟦️.ts";
+import { debugTagHitsOfText, docstringEmojiReuseOfText, docstringHitsOfText } from "../../📋️orchestration/📝️docstring-and-debug-census/🟦️.ts";
+import { interfaceImportHitsOfText } from "../../📋️orchestration/🔌️interface-import-census/🟦️.ts";
+import { FRAMEWORK_ARTIFACT_NAMES, TOOL_MACHINE_VOCABULARY, artifactNameHitsOfText, utilityArtifactsOfSources } from "../../📋️orchestration/🪢️artifact-neutrality/🟦️.ts";
 //#endregion 🔌️Adapters
 
-const fixture = JSON.parse(readFileSync(join(import.meta.dir, "..", "..", "🧫️fixtures", "🧮️source-census", "🔣️.json"), "utf8")) as {
+const fixture = JSON.parse(readFileSync(join(import.meta.dir, "..", "🧫️fixtures", "🧮️source-census", "🔣️.json"), "utf8")) as {
   placeholders: { name: string; path: string; text: string; expected: { line: number; macro: "todo" | "unimplemented"; testOnly: boolean; commented: boolean }[] }[];
   interactiveJobs: { name: string; path: string; text: string; expected: { command: string; classification: string; line: number }[]; calls: number; codeCalls: number }[];
   docstrings: { name: string; path: string; text: string; expected: { line: number; rule: "at-emoji" | "no-emoji" }[] }[];

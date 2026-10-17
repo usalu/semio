@@ -37,7 +37,8 @@ import { BodyButton, CardAction, CardIcon, Dialog, Glyph, IconLabel, LiveRegion,
 import type { QuizSession } from "../🧭️session/🟦️.ts";
 import type { QuizState } from "../🧭️session/🧮️state/🟦️.ts";
 import type { SessionFailure, SubmissionPhase } from "../🧭️session/📋️session-model/🟦️.ts";
-import { PRESENCE_ANCHORS, usePresenceTask, usePresenceView } from "../👥️presence/🟦️.tsx";
+import { usePresenceTask, usePresenceView } from "../👥️presence/🟦️.tsx";
+import { PRESENCE_ANCHORS } from "../👥️presence/👁️view/🟦️.ts";
 import { CrowdDoor, TaskFigures, crowdGate, crowdShown, keysHidden, type OthersChoice } from "../🗳️crowd/🟦️.tsx";
 import { CHALLENGE_LABELS } from "../⛰️challenge/🟦️.tsx";
 import { formatCountdown, formatDuration } from "../📏️quantity/🟦️.ts";

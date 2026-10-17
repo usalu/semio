@@ -3,7 +3,7 @@
 pub const TAG: u8 = dsl::protocol_record::tag_u8(include_str!("../📡️.protocol.semio"), "set-acro-form");
 pub const BINARY_TAG: u8 = TAG;
 
-use crate::standards::v1_7::subsets::base::schema::mutations::SetAcroForm;
+use crate::standards::v1_7::subsets::base::schema::mutations::set_acro_form::SetAcroForm;
 
 /// 📤️ Encodes this direct payload as canonical schema JSON bytes.
 pub fn encode(payload: &SetAcroForm) -> Result<Vec<u8>, String> {

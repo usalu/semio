@@ -528,7 +528,6 @@ fn recursive_depth_envelope_accepts_boundary_and_rejects_the_next_box() {
         assert_eq!(serde_json::to_value(&copied).unwrap(), serde_json::to_value(&source).unwrap());
         assert!(low == 1 || clone_under_depth(&source, low - 1).is_none(), "one level below the boundary refuses {boxes} boxes");
         measured.push((boxes, low));
-        println!("[DEBUG] Recursive structural boundary boxes={boxes} minimal-depth={low}");
     }
     let slope = (measured[measured.len() - 1].1 - measured[0].1) as f64 / (measured[measured.len() - 1].0 - measured[0].0) as f64;
     for pair in measured.windows(2) {

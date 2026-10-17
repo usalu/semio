@@ -1,7 +1,7 @@
 //! 🔺️ Diff constructor for `SetBeamAxis`: a one-field beam patch. The axis must have finite end points, length and a real arc, exactly like the axis of a wall;
 //! the inferred sweep, the joins with columns and the quantities follow by inference.
 
-use super::super::wall_geometry::flaw;
+use crate::standards::v1::subsets::any::schema::mutations::wall_geometry::flaw;
 use super::SetBeamAxis;
 use crate::standards::v1::subsets::any::schema::{diff::{patches::BeamPatch, Entry, ModelDiff}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};

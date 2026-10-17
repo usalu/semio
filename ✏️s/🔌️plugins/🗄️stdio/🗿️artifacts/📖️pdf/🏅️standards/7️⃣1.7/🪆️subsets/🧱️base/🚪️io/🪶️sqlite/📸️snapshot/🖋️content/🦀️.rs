@@ -1,6 +1,12 @@
 //! 🖋️ Ordered PDF operators with explicitly named operands and intrinsic inline-image bytes.
 use semio_framework_value::{ValueError,ValueRefusalKind};
-use crate::standards::v1_7::subsets::base::io::sqlite::snapshot::*;
+use crate::standards::v1_7::subsets::base::schema::snapshot::model::*;
+use crate::standards::v1_7::subsets::base::io::sqlite::snapshot::reader::{integer, boolean, optional_integer, text_cell, null_except, Reader};
+use store::sqlite_snapshot::{SqliteValue as V, artifact::{Cell as C}};
+use crate::standards::v1_7::subsets::base::io::sqlite::snapshot::number::{Row, Projection};
+use crate::standards::v1_7::subsets::base::io::sqlite::snapshot::artifact_reference;
+use crate::standards::v1_7::subsets::base::io::sqlite::snapshot::cos;
+use crate::standards::v1_7::subsets::base::io::sqlite::snapshot::color;
 
 #[derive(Clone, Copy)]
 enum O { LineWidth, LineCap, LineJoin, MiterLimit, DashPhase, RenderingIntent, Flatness, ExtGState, X1, Y1, X2, Y2, X3, Y3, Width, Height, CharSpacing, WordSpacing, HorizontalScale, Leading, FontName, FontSize, TextRenderingMode, TextRise, Tx, Ty, TextKind, TextValue, TextCodeCount, GlyphWx, GlyphWy, BboxLlx, BboxLly, BboxUrx, BboxUry, ColorSpaceName, PatternName, Gray, Red, Green, Blue, Cyan, Magenta, Yellow, Black, ShadingName, XobjectName, MarkedTag, PropertyKind, PropertyName, PropertyDictionary, InlineImage, UnknownOperator }
@@ -26,7 +32,7 @@ fn read_inline(reader: &mut Reader<'_, '_, '_>, key: i64) -> Result<PdfInlineIma
     Ok(PdfInlineImage { width: integer(row, 1)?, height: integer(row, 2)?, bits_per_component: integer(row, 3)?, color_space: optional_integer(row, 4)?.map(|key| color::read_color(reader, key)).transpose()?, image_mask: boolean(row, 5)?, decode, interpolate: boolean(row, 6)?, body, extra: cos::read_dictionary(reader, row.integer(9)?)? })
 }
 
-pub(super) fn write_ops(out: &mut Projection<'_, '_>, operations: &[PdfOp]) -> Result<i64,ValueError> {
+pub fn write_ops(out: &mut Projection<'_, '_>, operations: &[PdfOp]) -> Result<i64,ValueError> {
     let content = out.insert("pdf_content", &[])?;
     for (ordinal, operation) in operations.iter().enumerate() {
         let mut fields = [C::Null; WIDTH];
@@ -83,7 +89,7 @@ fn read_properties(reader: &mut Reader<'_, '_, '_>, row:Row<'_>) -> Result<PdfPr
     }
 }
 
-pub(super) fn read_ops(reader: &mut Reader<'_, '_, '_>, content: i64) -> Result<Vec<PdfOp>,ValueError> {
+pub fn read_ops(reader: &mut Reader<'_, '_, '_>, content: i64) -> Result<Vec<PdfOp>,ValueError> {
     use O::*;
     reader.take("pdf_content",content,1)?;
     let mut operations = Vec::new();

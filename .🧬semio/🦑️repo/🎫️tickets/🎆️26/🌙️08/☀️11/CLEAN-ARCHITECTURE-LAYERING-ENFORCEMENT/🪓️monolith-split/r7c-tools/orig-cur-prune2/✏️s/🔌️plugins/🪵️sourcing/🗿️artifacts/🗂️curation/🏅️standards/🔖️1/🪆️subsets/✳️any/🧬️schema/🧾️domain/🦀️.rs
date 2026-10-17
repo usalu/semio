@@ -1,0 +1,764 @@
+//! 🧾️ Curation schema domain: typology, geometry and world3d helpers, document helpers, the authored sourcing modules and the demo fixtures every codec, window and command of the artifact builds on.
+
+use crate::{CurationSnapshot, SourcingMutation};
+use framework_schema::ArtifactSchema;
+use semio_framework_plugin::world3d_mesh_id_from_url;
+use semio_framework_dispatch_macros::{dyn_enum, dyn_enum_close};
+use semio_s_artifact_stdio_semio_kit::schema::snapshot::SemioKitSnapshot;
+
+use crate::{CuratedItem, Filters, GeometryRecipe, ObjectKind, ObjectKindExtra};
+
+//#region 🔖️Typology
+/// 🌳️ One node in a module's typology tree — object kinds reference a node by its path of segment ids.
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[value(rename_all = "camelCase")]
+pub struct TypologyNode {
+    pub id: String,
+    pub label: String,
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
+    pub children: Vec<TypologyNode>,
+}
+
+impl TypologyNode {
+    pub fn new(id: impl Into<String>, label: impl Into<String>, children: Vec<TypologyNode>) -> Self {
+        Self { id: id.into(), label: label.into(), children }
+    }
+}
+
+/// 🔎️ Whether `path` (a sequence of segment ids from the root) resolves to a node in `root`'s tree.
+pub fn typology_contains(root: &TypologyNode, path: &[String]) -> bool {
+    match path.split_first() {
+        None => true,
+        Some((head, rest)) if *head == root.id => {
+            if rest.is_empty() {
+                true
+            } else {
+                root.children.iter().any(|child| typology_contains(child, rest))
+            }
+        }
+        _ => false,
+    }
+}
+
+/// 📋️ Flattens a typology tree into `(full path from root, label)` pairs, depth-first, for filter UIs.
+pub fn typology_flatten(root: &TypologyNode) -> Vec<(Vec<String>, String)> {
+    fn walk(node: &TypologyNode, prefix: &[String], out: &mut Vec<(Vec<String>, String)>) {
+        let mut path = prefix.to_vec();
+        path.push(node.id.clone());
+        out.push((path.clone(), node.label.clone()));
+        for child in &node.children {
+            walk(child, &path, out);
+        }
+    }
+    let mut out = Vec::new();
+    walk(root, &[], &mut out);
+    out
+}
+//#endregion 🔖️Typology
+
+//#region 🔖️Geometry
+/// 🧱️ Flat indexed triangle mesh data, ready for `mesh_from_indexed` at the plugin boundary.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct MeshDataSpec {
+    pub positions: Vec<f32>,
+    pub normals: Vec<f32>,
+    pub indices: Vec<u32>,
+}
+
+/// ➕️➖️ Appends `other` onto `base`, offsetting `other`'s indices past `base`'s existing vertex count.
+pub fn append_mesh_spec(base: &mut MeshDataSpec, other: MeshDataSpec) {
+    let vertex_offset = (base.positions.len() / 3) as u32;
+    base.positions.extend(other.positions);
+    base.normals.extend(other.normals);
+    base.indices.extend(other.indices.into_iter().map(|i| i + vertex_offset));
+}
+
+/// 📐️ Builds an axis-aligned box mesh centered at the origin, with per-face flat normals.
+fn box_mesh_spec(width: f64, height: f64, depth: f64) -> MeshDataSpec {
+    let (hw, hh, hd) = ((width * 0.5) as f32, (height * 0.5) as f32, (depth * 0.5) as f32);
+    // 6 faces * 4 verts, wound counter-clockwise when viewed from outside along the face normal.
+    let faces: [([f32; 3], [[f32; 3]; 4]); 6] = [
+        ([0.0, 0.0, 1.0], [[-hw, -hh, hd], [hw, -hh, hd], [hw, hh, hd], [-hw, hh, hd]]),
+        ([0.0, 0.0, -1.0], [[hw, -hh, -hd], [-hw, -hh, -hd], [-hw, hh, -hd], [hw, hh, -hd]]),
+        ([1.0, 0.0, 0.0], [[hw, -hh, hd], [hw, -hh, -hd], [hw, hh, -hd], [hw, hh, hd]]),
+        ([-1.0, 0.0, 0.0], [[-hw, -hh, -hd], [-hw, -hh, hd], [-hw, hh, hd], [-hw, hh, -hd]]),
+        ([0.0, 1.0, 0.0], [[-hw, hh, hd], [hw, hh, hd], [hw, hh, -hd], [-hw, hh, -hd]]),
+        ([0.0, -1.0, 0.0], [[-hw, -hh, -hd], [hw, -hh, -hd], [hw, -hh, hd], [-hw, -hh, hd]]),
+    ];
+    let mut spec = MeshDataSpec::default();
+    for (normal, corners) in faces {
+        let base = (spec.positions.len() / 3) as u32;
+        for corner in corners {
+            spec.positions.extend(corner);
+            spec.normals.extend(normal);
+        }
+        spec.indices.extend([base, base + 1, base + 2, base, base + 2, base + 3]);
+    }
+    spec
+}
+
+/// 🧱️ A box-built recipe as its axis-aligned boxes `(center, size)` in the recipe's own frame — a frame
+/// is its top/bottom rails and left/right stiles around the opening. `None` for a free-form `Mesh`.
+pub fn box_parts(recipe: &GeometryRecipe) -> Option<Vec<([f64; 3], [f64; 3])>> {
+    match *recipe {
+        GeometryRecipe::Box { width, height, depth } => Some(vec![([0.0, 0.0, 0.0], [width, height, depth])]),
+        GeometryRecipe::Slab { width, depth, thickness } => Some(vec![([0.0, 0.0, 0.0], [width, thickness, depth])]),
+        GeometryRecipe::Frame { width, height, depth, profile } => {
+            let (half_w, half_h, stile_h) = (width * 0.5, height * 0.5, height - profile * 2.0);
+            Some(vec![
+                ([0.0, half_h - profile * 0.5, 0.0], [width, profile, depth]),
+                ([0.0, -half_h + profile * 0.5, 0.0], [width, profile, depth]),
+                ([-half_w + profile * 0.5, 0.0, 0.0], [profile, stile_h, depth]),
+                ([half_w - profile * 0.5, 0.0, 0.0], [profile, stile_h, depth]),
+            ])
+        }
+        GeometryRecipe::Mesh { .. } | GeometryRecipe::Glb { .. } => None,
+    }
+}
+
+/// 🥽️ Public mesh route when geometry references a delivered GLB asset.
+pub fn geometry_mesh_url(recipe: &GeometryRecipe) -> Option<&str> {
+    match recipe {
+        GeometryRecipe::Glb { url, .. } => Some(url.as_str()),
+        _ => None,
+    }
+}
+
+/// 🧊️ Scene mesh id for a stock kind — url-backed ids match puzzle/cad (`world3d_mesh_id_from_url`).
+pub fn kind_world_mesh_id(kind: &ObjectKind) -> String {
+    geometry_mesh_url(&kind.geometry).map(world3d_mesh_id_from_url).unwrap_or_else(|| kind.id.clone())
+}
+
+/// 🧊️ One `{ id, url }` mesh atom for the world3d host.
+pub fn glb_mesh_json(url: &str) -> semio_framework_value::DslValue {
+    let id = world3d_mesh_id_from_url(url);
+    semio_framework_value::DslValue::object([("id".to_string(), semio_framework_value::DslValue::String(id)), ("url".to_string(), semio_framework_value::DslValue::String(url.to_string()))])
+}
+
+/// 🌐️ Registers every mesh atom `kinds` need in a grid/preview scene (unit box is separate).
+pub fn append_kind_scene_meshes(meshes: &mut Vec<semio_framework_value::DslValue>, seen: &mut std::collections::BTreeSet<String>, kind: &ObjectKind) {
+    if box_parts(&kind.geometry).is_some() {
+        return;
+    }
+    if let Some(url) = geometry_mesh_url(&kind.geometry) {
+        let id = world3d_mesh_id_from_url(url);
+        if seen.insert(id) {
+            meshes.push(glb_mesh_json(url));
+        }
+        return;
+    }
+    if seen.insert(kind.id.clone()) {
+        meshes.push(kind_mesh_json(kind));
+    }
+}
+
+/// 🧱️ Realizes a `GeometryRecipe` into flat mesh data.
+pub fn mesh_spec_for(recipe: &GeometryRecipe) -> MeshDataSpec {
+    match (recipe, box_parts(recipe)) {
+        (GeometryRecipe::Mesh { positions, normals, indices }, _) => MeshDataSpec { positions: positions.clone(), normals: normals.clone(), indices: indices.clone() },
+        (_, parts) => {
+            let mut spec = MeshDataSpec::default();
+            for (center, size) in parts.unwrap_or_default() {
+                let mut piece = box_mesh_spec(size[0], size[1], size[2]);
+                for vertex in piece.positions.chunks_mut(3) {
+                    vertex[0] += center[0] as f32;
+                    vertex[1] += center[1] as f32;
+                    vertex[2] += center[2] as f32;
+                }
+                append_mesh_spec(&mut spec, piece);
+            }
+            spec
+        }
+    }
+}
+
+/// 📏️ The largest bounding dimension of a recipe's geometry, used to normalize grid-cell scale.
+pub fn bounding_extent(recipe: &GeometryRecipe) -> f64 {
+    match recipe {
+        GeometryRecipe::Box { width, height, depth } => width.max(*height).max(*depth),
+        GeometryRecipe::Frame { width, height, depth, .. } => width.max(*height).max(*depth),
+        GeometryRecipe::Slab { width, depth, thickness } => width.max(*depth).max(*thickness),
+        GeometryRecipe::Mesh { positions, .. } => positions.chunks(3).flat_map(|p| p.iter().map(|v| v.abs() as f64 * 2.0)).fold(0.0_f64, f64::max).max(1e-6),
+        GeometryRecipe::Glb { extent, .. } => extent.max(1e-6),
+    }
+}
+
+/// 📐️ Axis-aligned bounds of one stock kind staged at the preview origin with unit scale — drives
+/// `World3dScene.fit_json` when the catalogue selection changes.
+pub fn preview_kind_bounds(kind: &ObjectKind) -> Option<([f64; 3], [f64; 3])> {
+    let mut minimum = [f64::INFINITY; 3];
+    let mut maximum = [f64::NEG_INFINITY; 3];
+    let mut grow = |point: [f64; 3]| {
+        for axis in 0..3 {
+            minimum[axis] = minimum[axis].min(point[axis]);
+            maximum[axis] = maximum[axis].max(point[axis]);
+        }
+    };
+    if let Some(parts) = box_parts(&kind.geometry) {
+        for (center, size) in parts {
+            let half = [size[0] * 0.5, size[1] * 0.5, size[2] * 0.5];
+            grow([center[0] - half[0], center[1] - half[1], center[2] - half[2]]);
+            grow([center[0] + half[0], center[1] + half[1], center[2] + half[2]]);
+        }
+    } else if let GeometryRecipe::Glb { extent, .. } = &*kind.geometry {
+        let half = extent * 0.5;
+        grow([-half, -half, -half]);
+        grow([half, half, half]);
+    } else {
+        let spec = mesh_spec_for(&kind.geometry);
+        for vertex in spec.positions.chunks_exact(3) {
+            grow([vertex[0] as f64, vertex[1] as f64, vertex[2] as f64]);
+        }
+    }
+    (0..3).all(|axis| minimum[axis].is_finite() && maximum[axis].is_finite()).then_some((minimum, maximum))
+}
+//#endregion 🔖️Geometry
+
+//#region 🔖️World3d
+/// 🌐️ Mesh atom for a stock kind's realized geometry — shared by the preview and grid windows (two
+/// consumers, hence schema-owned per this taxonomy's "more than one consumer" rule). Callers
+/// serialize with `semio_framework_pack_json::to_json_string` rather than `serde_json::json!`: ticket
+/// `26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS` — `MeshData` carries only
+/// the first-party `ToValue`/`FromValue` codec in production, `Serialize` is test-only.
+pub fn kind_mesh_json(kind: &ObjectKind) -> semio_framework_value::DslValue {
+    mesh_json(&kind.id, &mesh_spec_for(&kind.geometry))
+}
+
+/// 🧊️ The mesh id of the one unit cube every box-built recipe is instanced from.
+pub const SOURCING_UNIT_BOX_MESH_ID: &str = "sourcing.unit-box";
+
+/// 🧊️ The unit cube behind [`SOURCING_UNIT_BOX_MESH_ID`].
+pub fn unit_box_mesh_json() -> semio_framework_value::DslValue {
+    mesh_json(SOURCING_UNIT_BOX_MESH_ID, &box_mesh_spec(1.0, 1.0, 1.0))
+}
+
+fn mesh_json(id: &str, spec: &MeshDataSpec) -> semio_framework_value::DslValue {
+    let mesh = semio_framework::mesh_from_indexed(&spec.positions, &spec.normals, &spec.indices);
+    semio_framework_value::DslValue::object([("id".to_string(), semio_framework_value::DslValue::String(id.to_string())), ("data".to_string(), semio_framework_value::ToValue::to_value(&mesh))])
+}
+
+/// 🌐️ The instances drawing `kind` centered at `origin`, uniformly scaled by `scale`: one
+/// [`SOURCING_UNIT_BOX_MESH_ID`] instance per [`box_parts`] entry, or one instance of the kind's own
+/// [`kind_mesh_json`] for a free-form `Mesh`. A scene therefore carries geometry once, however much
+/// stock it lays out.
+pub fn kind_instances_json(kind: &ObjectKind, origin: [f64; 3], scale: f64, selected: bool) -> Vec<semio_framework_value::DslValue> {
+    let Some(parts) = box_parts(&kind.geometry) else {
+        let mesh_id = kind_world_mesh_id(kind);
+        return vec![instance_json(&kind.id, &mesh_id, &kind.name, origin, [scale; 3], selected)];
+    };
+    let single = parts.len() == 1;
+    parts
+        .iter()
+        .enumerate()
+        .map(|(index, (center, size))| {
+            let id = if single { kind.id.clone() } else { format!("{}#{index}", kind.id) };
+            let position = [origin[0] + center[0] * scale, origin[1] + center[1] * scale, origin[2] + center[2] * scale];
+            instance_json(&id, SOURCING_UNIT_BOX_MESH_ID, &kind.name, position, [size[0] * scale, size[1] * scale, size[2] * scale], selected)
+        })
+        .collect()
+}
+
+fn instance_json(id: &str, mesh_id: &str, label: &str, position: [f64; 3], scale: [f64; 3], selected: bool) -> semio_framework_value::DslValue {
+    semio_framework_value::DslValue::object([
+        ("id".to_string(), semio_framework_value::DslValue::String(id.to_string())),
+        ("meshId".to_string(), semio_framework_value::DslValue::String(mesh_id.to_string())),
+        ("position".to_string(), semio_framework_value::ToValue::to_value(&position)),
+        ("rotation".to_string(), semio_framework_value::ToValue::to_value(&[0.0, 0.0, 0.0, 1.0])),
+        ("scale".to_string(), semio_framework_value::ToValue::to_value(&scale)),
+        ("label".to_string(), semio_framework_value::DslValue::String(label.to_string())),
+        ("selected".to_string(), semio_framework_value::DslValue::Bool(selected)),
+        ("hovered".to_string(), semio_framework_value::DslValue::Bool(false)),
+    ])
+}
+
+/// 🔢️ Appends unit-box voxels spelling `count` in a 3×5 dot matrix beside `anchor` — used by the
+/// sourcing grid's representative-with-count display mode.
+pub fn append_grid_count_glyph_instances(instances: &mut Vec<semio_framework_value::DslValue>, object_id: &str, count: u32, anchor: [f64; 3], cell: f64) {
+    if count == 0 {
+        return;
+    }
+    let dot = cell * 0.07;
+    let pitch = cell * 0.11;
+    let digit_gap = cell * 0.35;
+    let digits = count.to_string();
+    let glyph_y = anchor[1] + cell * 0.55;
+    let start_x = anchor[0] + cell * 0.45;
+    for (digit_index, ch) in digits.chars().enumerate() {
+        let digit = ch.to_digit(10).unwrap_or(0) as usize;
+        let origin_x = start_x + digit_index as f64 * digit_gap;
+        for row in 0..5 {
+            for col in 0..3 {
+                if !grid_count_glyph_dot(digit, row, col) {
+                    continue;
+                }
+                let position = [origin_x + (col as f64 - 1.0) * pitch, glyph_y + (2.0 - row as f64) * pitch, anchor[2]];
+                let id = format!("{object_id}#count-glyph-{digit_index}-{row}-{col}");
+                instances.push(instance_json(&id, SOURCING_UNIT_BOX_MESH_ID, "", position, [dot, dot, dot], false));
+            }
+        }
+    }
+}
+
+fn grid_count_glyph_dot(digit: usize, row: usize, col: usize) -> bool {
+    const PATTERNS: [[[bool; 3]; 5]; 10] = [
+        [[true, true, true], [true, false, true], [true, false, true], [true, false, true], [true, true, true]],
+        [[false, true, false], [true, true, false], [false, true, false], [false, true, false], [true, true, true]],
+        [[true, true, true], [false, false, true], [true, true, true], [true, false, false], [true, true, true]],
+        [[true, true, true], [false, false, true], [true, true, true], [false, false, true], [true, true, true]],
+        [[true, false, true], [true, false, true], [true, true, true], [false, false, true], [false, false, true]],
+        [[true, true, true], [true, false, false], [true, true, true], [false, false, true], [true, true, true]],
+        [[true, true, true], [true, false, false], [true, true, true], [true, false, true], [true, true, true]],
+        [[true, true, true], [false, false, true], [false, true, false], [false, true, false], [false, true, false]],
+        [[true, true, true], [true, false, true], [true, true, true], [true, false, true], [true, true, true]],
+        [[true, true, true], [true, false, true], [true, true, true], [false, false, true], [true, true, true]],
+    ];
+    PATTERNS.get(digit).and_then(|pattern| pattern.get(row)).and_then(|row| row.get(col)).copied().unwrap_or(false)
+}
+//#endregion 🔖️World3d
+
+//#region 🔖️DocumentHelpers
+/// 🔎️ The stock kinds that currently satisfy every active filter dimension. `filters` lives on
+/// `crate::apps::curation::config::SourcingCurationConfig` (session-only view state), so this takes it as a
+/// separate parameter rather than reading it off the document.
+pub fn filtered_stock(document: &CurationSnapshot, filters: &Filters) -> Vec<ObjectKind> {
+    crate::stock_of(document)
+        .into_iter()
+        .filter(|kind| {
+            let query = filters.query.trim().to_lowercase();
+            let matches_query = query.is_empty() || kind.name.to_lowercase().contains(&query);
+            let matches_module = filters.module_ids.is_empty() || filters.module_ids.contains(&kind.module_id);
+            let matches_typology = filters.typology_path.is_empty() || kind.typology_path.starts_with(&filters.typology_path);
+            let matches_availability = kind.availability >= filters.min_availability;
+            matches_query && matches_module && matches_typology && matches_availability
+        })
+        .collect()
+}
+
+/// 🔢️ How many units of `object_id` are currently in the curated set (0 if absent).
+pub fn curated_count(document: &CurationSnapshot, object_id: &str) -> u32 {
+    document.curated.iter().find(|item| item.object_id == object_id).map_or(0, |item| item.count)
+}
+
+/// ➕️➖️ Adjusts the curated count for `object_id` by `delta`, clamped to `0..=availability`; removes the
+/// entry entirely when the count reaches 0. Silently no-operations if `object_id` isn't in the stock.
+pub fn curation_delta(document: &mut CurationSnapshot, object_id: &str, delta: i64) {
+    apply_curation_decision(document, curation_decision_for_delta(document, object_id, delta));
+}
+
+/// 🎯️ Sets the curated count for `object_id` directly, clamped to `0..=availability`; removes the
+/// entry when the count is 0. Silently no-operations if `object_id` isn't in the stock.
+pub fn curation_set(document: &mut CurationSnapshot, object_id: &str, count: u32) {
+    apply_curation_decision(document, curation_decision_for_set(document, object_id, count));
+}
+//#endregion 🔖️DocumentHelpers
+
+//#region 🔖️CurationDecisions
+/// 🧭️ What a curated-count adjustment resolves to against a given base document — the single
+/// source of truth both the mutating `curation_delta`/`curation_set` helpers above (schema-level
+/// fixtures/tests) and the `crate::apps::curation::commands::curation` handlers (which must emit a
+/// REAL `SourcingMutation` rather than mutate a document clone, now that whole-document replace is
+/// banned from the mutation enum) fold through.
+#[derive(Clone, Debug, PartialEq)]
+pub enum CurationDecision {
+    NoOp,
+    Create(CuratedItem),
+    ChangeCount { object_id: String, new_count: u32 },
+    Delete { object_id: String },
+}
+
+/// 🎯️ Resolves a relative count adjustment against `document`'s CURRENT `curated`/`stock`, clamped
+/// to `0..=availability`. Unknown `object_id` (absent from stock) resolves to `NoOp`.
+pub fn curation_decision_for_delta(document: &CurationSnapshot, object_id: &str, delta: i64) -> CurationDecision {
+    // 🔎️ `availability` lives on `stock_extra` (the sourcing-owned overflow half) — no need to
+    // resolve the composed `catalog` child just to clamp a count, so this reads `stock_extra`
+    // directly rather than going through `stock_of`'s full reassembly.
+    let Some(extra) = document.stock_extra.iter().find(|extra| extra.id == object_id) else { return CurationDecision::NoOp };
+    let next = (curated_count(document, object_id) as i64 + delta).clamp(0, extra.availability as i64) as u32;
+    curation_decision_for_set(document, object_id, next)
+}
+
+/// 🎯️ Resolves an absolute count set against `document`, clamped to `0..=availability`. Unknown
+/// `object_id` (absent from stock) resolves to `NoOp`.
+pub fn curation_decision_for_set(document: &CurationSnapshot, object_id: &str, count: u32) -> CurationDecision {
+    let Some(extra) = document.stock_extra.iter().find(|extra| extra.id == object_id) else { return CurationDecision::NoOp };
+    let clamped = count.min(extra.availability);
+    match document.curated.iter().find(|item| item.object_id == object_id) {
+        Some(_item) if clamped == 0 => CurationDecision::Delete { object_id: object_id.to_string() },
+        Some(item) if item.count == clamped => CurationDecision::NoOp,
+        Some(_) => CurationDecision::ChangeCount { object_id: object_id.to_string(), new_count: clamped },
+        None if clamped > 0 => CurationDecision::Create(CuratedItem { object_id: object_id.to_string(), count: clamped }),
+        None => CurationDecision::NoOp,
+    }
+}
+
+/// ▶️ Mutates `document.curated` in place to reflect `decision` — the shared apply step behind the
+/// mutating `curation_delta`/`curation_set` schema helpers only; command handlers turn a
+/// `CurationDecision` into a real `SourcingMutation` instead of calling this.
+fn apply_curation_decision(document: &mut CurationSnapshot, decision: CurationDecision) {
+    match decision {
+        CurationDecision::NoOp => {}
+        CurationDecision::Create(item) => document.curated.push(item),
+        CurationDecision::ChangeCount { object_id, new_count } => {
+            if let Some(item) = document.curated.iter_mut().find(|item| item.object_id == object_id) {
+                item.count = new_count;
+            }
+        }
+        CurationDecision::Delete { object_id } => document.curated.retain(|item| item.object_id != object_id),
+    }
+}
+//#endregion 🔖️CurationDecisions
+
+//#region 🔖️Modules
+/// 🧩️ A sourcing module composes a typology subtree, demo catalogue kinds, and preview meshing for one
+/// object family (e.g. beams, windows, slabs) — closed set, enum-dispatched via `SourcingModules` below
+/// (O1/R11: closed set ⇒ `dyn_enum_close!`, not a trait object).
+#[dyn_enum]
+pub trait SourcingModule {
+    fn module_id(&self) -> &str;
+    fn label(&self) -> &str;
+    fn typology(&self) -> TypologyNode;
+    fn demo_kinds(&self) -> Vec<ObjectKind>;
+    /// 🧱️ Realizes a kind's preview mesh; defaults to the generic geometry recipe realization.
+    fn preview_mesh(&self, kind: &ObjectKind) -> MeshDataSpec {
+        mesh_spec_for(&kind.geometry)
+    }
+}
+
+pub mod beams {
+    use super::{GeometryRecipe, ObjectKind, SourcingModule, TypologyNode};
+
+    pub struct BeamsModule;
+
+    impl SourcingModule for BeamsModule {
+        fn module_id(&self) -> &str {
+            "beams"
+        }
+        fn label(&self) -> &str {
+            "Beams"
+        }
+        fn typology(&self) -> TypologyNode {
+            TypologyNode::new(
+                "beams",
+                "Beams",
+                vec![
+                    TypologyNode::new("solid-timber", "Solid Timber", vec![TypologyNode::new("glulam", "Glulam", vec![]), TypologyNode::new("kvh", "KVH", vec![])]),
+                    TypologyNode::new("steel", "Steel", vec![TypologyNode::new("ipe", "IPE", vec![]), TypologyNode::new("hea", "HEA", vec![])]),
+                ],
+            )
+        }
+        fn demo_kinds(&self) -> Vec<ObjectKind> {
+            vec![
+                ObjectKind {
+                    id: "beam-glulam-gl24h".into(),
+                    name: "Glulam GL24h 200×400".into(),
+                    module_id: "beams".into(),
+                    typology_path: vec!["beams".into(), "solid-timber".into(), "glulam".into()],
+                    availability: 24,
+                    geometry: Box::new(GeometryRecipe::Box { width: 0.2, height: 0.4, depth: 6.0 }),
+                },
+                ObjectKind {
+                    id: "beam-kvh-c24".into(),
+                    name: "KVH C24 100×200".into(),
+                    module_id: "beams".into(),
+                    typology_path: vec!["beams".into(), "solid-timber".into(), "kvh".into()],
+                    availability: 60,
+                    geometry: Box::new(GeometryRecipe::Box { width: 0.1, height: 0.2, depth: 4.0 }),
+                },
+                ObjectKind {
+                    id: "beam-steel-ipe200".into(),
+                    name: "Steel IPE 200".into(),
+                    module_id: "beams".into(),
+                    typology_path: vec!["beams".into(), "steel".into(), "ipe".into()],
+                    availability: 12,
+                    geometry: Box::new(GeometryRecipe::Box { width: 0.1, height: 0.2, depth: 5.0 }),
+                },
+                ObjectKind {
+                    id: "beam-steel-hea160".into(),
+                    name: "Steel HEA 160".into(),
+                    module_id: "beams".into(),
+                    typology_path: vec!["beams".into(), "steel".into(), "hea".into()],
+                    availability: 8,
+                    geometry: Box::new(GeometryRecipe::Box { width: 0.16, height: 0.152, depth: 5.0 }),
+                },
+            ]
+        }
+    }
+}
+
+pub mod windows {
+    use super::{GeometryRecipe, ObjectKind, SourcingModule, TypologyNode};
+
+    pub struct WindowsModule;
+
+    impl SourcingModule for WindowsModule {
+        fn module_id(&self) -> &str {
+            "windows"
+        }
+        fn label(&self) -> &str {
+            "Windows"
+        }
+        fn typology(&self) -> TypologyNode {
+            TypologyNode::new("windows", "Windows", vec![TypologyNode::new("casement", "Casement", vec![]), TypologyNode::new("fixed", "Fixed", vec![]), TypologyNode::new("tilt-turn", "Tilt & Turn", vec![])])
+        }
+        fn demo_kinds(&self) -> Vec<ObjectKind> {
+            vec![
+                ObjectKind {
+                    id: "window-casement-100x120".into(),
+                    name: "Casement Window 100×120".into(),
+                    module_id: "windows".into(),
+                    typology_path: vec!["windows".into(), "casement".into()],
+                    availability: 18,
+                    geometry: Box::new(GeometryRecipe::Frame { width: 1.0, height: 1.2, depth: 0.08, profile: 0.08 }),
+                },
+                ObjectKind {
+                    id: "window-fixed-150x150".into(),
+                    name: "Fixed Window 150×150".into(),
+                    module_id: "windows".into(),
+                    typology_path: vec!["windows".into(), "fixed".into()],
+                    availability: 10,
+                    geometry: Box::new(GeometryRecipe::Frame { width: 1.5, height: 1.5, depth: 0.06, profile: 0.06 }),
+                },
+                ObjectKind {
+                    id: "window-tilt-turn-120x140".into(),
+                    name: "Tilt & Turn Window 120×140".into(),
+                    module_id: "windows".into(),
+                    typology_path: vec!["windows".into(), "tilt-turn".into()],
+                    availability: 14,
+                    geometry: Box::new(GeometryRecipe::Frame { width: 1.2, height: 1.4, depth: 0.09, profile: 0.09 }),
+                },
+            ]
+        }
+    }
+}
+
+pub mod reuse {
+    use super::{GeometryRecipe, ObjectKind, SourcingModule, TypologyNode};
+
+    pub const MESH_HEXAGONAL_CUT_CONCRETE_FOREST_LEFT: &str = "/mesh/🧊️hexagonal-cut-concrete-forest-left.glb";
+    pub const MESH_HEXAGONAL_CUT_CONCRETE_FOREST_RIGHT: &str = "/mesh/🧊️hexagonal-cut-concrete-forest-right.glb";
+    const CONCRETE_FOREST_EXTENT_M: f64 = 9.45;
+
+    pub struct ReuseModule;
+
+    impl SourcingModule for ReuseModule {
+        fn module_id(&self) -> &str {
+            "reuse"
+        }
+        fn label(&self) -> &str {
+            "Reuse"
+        }
+        fn typology(&self) -> TypologyNode {
+            TypologyNode::new("reuse", "Reuse", vec![TypologyNode::new("concrete", "Concrete", vec![TypologyNode::new("forest", "Forest", vec![])])])
+        }
+        fn demo_kinds(&self) -> Vec<ObjectKind> {
+            vec![
+                ObjectKind {
+                    id: "hexagonal-cut-concrete-forest-left".into(),
+                    name: "Hexagonal Cut Concrete Forest Left".into(),
+                    module_id: "reuse".into(),
+                    typology_path: vec!["reuse".into(), "concrete".into(), "forest".into()],
+                    availability: 12,
+                    geometry: Box::new(GeometryRecipe::Glb { url: MESH_HEXAGONAL_CUT_CONCRETE_FOREST_LEFT.into(), extent: CONCRETE_FOREST_EXTENT_M }),
+                },
+                ObjectKind {
+                    id: "hexagonal-cut-concrete-forest-right".into(),
+                    name: "Hexagonal Cut Concrete Forest Right".into(),
+                    module_id: "reuse".into(),
+                    typology_path: vec!["reuse".into(), "concrete".into(), "forest".into()],
+                    availability: 12,
+                    geometry: Box::new(GeometryRecipe::Glb { url: MESH_HEXAGONAL_CUT_CONCRETE_FOREST_RIGHT.into(), extent: CONCRETE_FOREST_EXTENT_M }),
+                },
+            ]
+        }
+    }
+}
+
+pub mod slabs {
+    use super::{GeometryRecipe, ObjectKind, SourcingModule, TypologyNode};
+
+    pub struct SlabsModule;
+
+    impl SourcingModule for SlabsModule {
+        fn module_id(&self) -> &str {
+            "slabs"
+        }
+        fn label(&self) -> &str {
+            "Slabs"
+        }
+        fn typology(&self) -> TypologyNode {
+            TypologyNode::new("slabs", "Slabs", vec![TypologyNode::new("concrete", "Concrete", vec![]), TypologyNode::new("clt", "CLT", vec![]), TypologyNode::new("hollow-core", "Hollow Core", vec![])])
+        }
+        fn demo_kinds(&self) -> Vec<ObjectKind> {
+            vec![
+                ObjectKind {
+                    id: "slab-concrete-240".into(),
+                    name: "Concrete Slab 240mm".into(),
+                    module_id: "slabs".into(),
+                    typology_path: vec!["slabs".into(), "concrete".into()],
+                    availability: 30,
+                    geometry: Box::new(GeometryRecipe::Slab { width: 2.4, depth: 1.2, thickness: 0.24 }),
+                },
+                ObjectKind {
+                    id: "slab-clt-160".into(),
+                    name: "CLT Slab 160mm".into(),
+                    module_id: "slabs".into(),
+                    typology_path: vec!["slabs".into(), "clt".into()],
+                    availability: 20,
+                    geometry: Box::new(GeometryRecipe::Slab { width: 2.95, depth: 1.25, thickness: 0.16 }),
+                },
+                ObjectKind {
+                    id: "slab-hollow-core-265".into(),
+                    name: "Hollow Core Slab 265mm".into(),
+                    module_id: "slabs".into(),
+                    typology_path: vec!["slabs".into(), "hollow-core".into()],
+                    availability: 16,
+                    geometry: Box::new(GeometryRecipe::Slab { width: 1.2, depth: 6.0, thickness: 0.265 }),
+                },
+            ]
+        }
+    }
+}
+
+/// 🧩️ One hot-installed sourcing module deserialized from the `"sourcing.module"` topic contribution.
+/// `pub` (not crate-private) solely so it can sit as a variant payload in the `pub enum SourcingModules`
+/// below without tripping the `private_interfaces` lint — construction stays internal to this module.
+#[derive(Clone)]
+pub struct ContributedSourcingModule {
+    pub(crate) module_id: String,
+    pub(crate) label: String,
+    pub(crate) typology: TypologyNode,
+    pub(crate) kinds: Vec<ObjectKind>,
+}
+
+impl SourcingModule for ContributedSourcingModule {
+    fn module_id(&self) -> &str {
+        &self.module_id
+    }
+
+    fn label(&self) -> &str {
+        &self.label
+    }
+
+    fn typology(&self) -> TypologyNode {
+        self.typology.clone()
+    }
+
+    fn demo_kinds(&self) -> Vec<ObjectKind> {
+        self.kinds.clone()
+    }
+}
+
+dyn_enum_close! {
+    /// 🔀️ The closed set of `SourcingModule` implementors, enum-dispatched (O1 — no `Box<dyn SourcingModule>`).
+    /// `dyn_enum_close!` generates the enum, `From<Variant>` impls, and the delegating `impl SourcingModule`.
+    pub enum SourcingModules: SourcingModule {
+        Beams(beams::BeamsModule),
+        Windows(windows::WindowsModule),
+        Slabs(slabs::SlabsModule),
+        Reuse(reuse::ReuseModule),
+        Contributed(ContributedSourcingModule),
+    }
+}
+
+pub const SOURCING_CURATION_APP_ID: &str = "sourcing-curation";
+
+/// 🔌️ Refreshes contributed `sourcing.module` entries when the host pushes a new catalogue.
+//#region 🔖️SourcingModuleTopicPayload
+
+//#endregion 🔖️SourcingModuleTopicPayload
+
+pub const SOURCING_JSON_MAX_BYTES: usize = 256 * 1024;
+pub const SOURCING_JSON_MAX_DEPTH: usize = 32;
+pub const SOURCING_JSON_MAX_ITEMS: usize = 4 * 1024;
+pub const SOURCING_JSON_MAX_STRING_BYTES: usize = 4 * 1024;
+
+
+
+/// 🗂️ The one open-contribution topic this app consumes — the `sourcing-module-*` extension crates
+/// publish exactly this string (`✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/*/🦀️.rs`).
+pub const SOURCING_MODULE_TOPIC: &str = "sourcing.module";
+
+
+
+/// 🔢️ The most modules this app ever installs at once — three authored plus five contributed. Every
+/// module costs the pool's filter bar one toggle plus one `select` item per typology node, and that
+/// chrome is a retained surface the host retires one 4 KiB page at a time: an unbounded module roster
+/// is an unbounded surface. A host pack past this cap installs its first modules and stops.
+pub const SOURCING_MAXIMUM_MODULES: usize = 8;
+
+
+
+
+
+/// 🏗️ The authored sourcing modules in their semantic registration order.
+pub fn authored_modules() -> Vec<SourcingModules> {
+    vec![beams::BeamsModule.into(), windows::WindowsModule.into(), slabs::SlabsModule.into(), reuse::ReuseModule.into()]
+}
+
+/// 🔎️ Looks up a single module by id.
+pub fn module_for(modules: Vec<SourcingModules>, module_id: &str) -> Option<SourcingModules> {
+    modules.into_iter().find(|module| module.module_id() == module_id)
+}
+//#endregion 🔖️Modules
+
+//#region 🔖️ModuleCatalogue
+/// 🧩️ One module's typology + catalogue kinds — the pool window's filter chrome and the
+/// `stockFromCatalogue` command both consume this (two consumers, hence schema-owned).
+pub struct ModuleCatalogue {
+    pub module_id: String,
+    pub label: String,
+    pub typology: TypologyNode,
+    pub kinds: Vec<ObjectKind>,
+}
+
+pub fn available_modules(modules: Vec<SourcingModules>) -> Vec<ModuleCatalogue> {
+    modules.into_iter().map(|module| ModuleCatalogue { module_id: module.module_id().to_string(), label: module.label().to_string(), typology: module.typology(), kinds: module.demo_kinds() }).collect()
+}
+//#endregion 🔖️ModuleCatalogue
+
+//#region 🔖️GridLayout
+/// 🔢️ Places item `index` of `count` total on a `ceil(sqrt(count))`-column grid, centered at the origin,
+/// with `cell` spacing between slots — used to lay out the curated 3D grid window.
+pub fn grid_placement(count: usize, index: usize, cell: f64) -> (f64, f64) {
+    if count == 0 {
+        return (0.0, 0.0);
+    }
+    let columns = (count as f64).sqrt().ceil().max(1.0) as usize;
+    let rows = count.div_ceil(columns);
+    let column = index % columns;
+    let row = index / columns;
+    let x = (column as f64 - (columns as f64 - 1.0) * 0.5) * cell;
+    let z = (row as f64 - (rows as f64 - 1.0) * 0.5) * cell;
+    (x, z)
+}
+
+/// 📏️ The uniform scale factor that fits a recipe's largest dimension inside a `cell`-sized grid slot.
+pub fn grid_scale(recipe: &GeometryRecipe, cell: f64) -> f64 {
+    let extent = bounding_extent(recipe);
+    if extent <= 0.0 {
+        1.0
+    } else {
+        cell / extent
+    }
+}
+//#endregion 🔖️GridLayout
+
+//#region 🔖️Fixtures
+/// 🧩️ The canonical demo-stock catalogue — every built-in module's demo kinds, in module-registration
+/// order. Single source of truth for `default_document`'s catalog content and every test fixture that
+/// used to independently duplicate `sourcing_modules("[]").iter().flat_map(...)`.
+pub fn demo_stock() -> Vec<ObjectKind> {
+    authored_modules().iter().flat_map(|module| module.demo_kinds()).collect()
+}
+
+
+
+
+//#endregion 🔖️Fixtures
+
+
+//#region 🧪️Tests
+#[cfg(test)]
+#[path = "../🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
+//#endregion 🧪️Tests

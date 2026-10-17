@@ -1,0 +1,55 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🧪️tests/🧪️docklayoutstore/🟦️.ts",
+ "fn": "registerTests1",
+ "copySharedTypes": true,
+ "groups": [
+  {
+   "dir": "🗂️state-stores",
+   "ext": ".ts",
+   "fn": "registerStateStoreTests",
+   "doc": "/** 🗂️ The dock layout, dock UI state and window pane state stores and the OS shell configuration of the framework in-source suites. */",
+   "lines": [
+    [
+     10,
+     252
+    ]
+   ]
+  },
+  {
+   "dir": "🧭️playground-actions-and-plugin-sources",
+   "ext": ".ts",
+   "fn": "registerPlaygroundActionAndPluginSourceTests",
+   "doc": "/** 🧭️ The playground resolution, effective action arguments, context menu organisation, plugin sources and lease pool eviction of the framework in-source suites. */",
+   "lines": [
+    [
+     253,
+     557
+    ]
+   ]
+  },
+  {
+   "dir": "🎰️machines",
+   "ext": ".ts",
+   "fn": "registerMachineTests",
+   "doc": "/** 🎰️ The statechart machines of the framework in-source suites: the fixture machines, the test host, the trace inspector, the kernel, persistence, the actor system, model testing, bit sets and the checkout DSL twin. */",
+   "lines": [
+    [
+     558,
+     1160
+    ]
+   ]
+  },
+  {
+   "dir": "⏱️async-helpers",
+   "ext": ".ts",
+   "fn": "registerAsyncHelperTests",
+   "doc": "/** ⏱️ The async helpers of the framework in-source suites: jittered retry backoff, latest wins, fetch with timeout and wait for event. */",
+   "lines": [
+    [
+     1161,
+     1371
+    ]
+   ]
+  }
+ ]
+}

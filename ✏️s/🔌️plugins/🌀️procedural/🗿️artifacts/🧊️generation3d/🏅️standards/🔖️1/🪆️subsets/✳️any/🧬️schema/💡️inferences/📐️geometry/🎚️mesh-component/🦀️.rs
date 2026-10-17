@@ -3,6 +3,7 @@
 //! Selections are mesh element ids validated against the input mesh; edge ids are half-edge handles. Shared vertices of a selection move once.
 #![allow(clippy::result_large_err)]
 
+use semio_framework_3d::mesh::{MeshModelingOps};
 use semio_s_artifact_procedural_3d_model::catalogue::Kind;
 use semio_s_artifact_procedural_3d_mesh_support::mode_element;
 use semio_s_artifact_procedural_3d_mesh_support::owned_mesh;

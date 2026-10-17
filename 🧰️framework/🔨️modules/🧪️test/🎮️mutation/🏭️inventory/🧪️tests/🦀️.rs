@@ -29,7 +29,6 @@ fn closed_corpus_matches_independent_serde_wire_values() {
         let mut observe = |row: MutationInventoryProgress| { progress.push(row); Ok(()) };
         let output = encode_mutation_inventory(&coordinate(&case["coordinate"]), "sample-inventory", &sources, &excluded, MutationInventoryBudget { maximum_units: 1_000_000, maximum_owned_bytes: 65_536 }, &mut observe).unwrap();
         let oracle: Value = serde_json::from_slice(&output).unwrap();
-        eprintln!("[DEBUG] Native inventory wire {}", json!({"name":case["name"],"output":oracle}));
         assert_eq!(oracle, case["expected"], "{}", case["name"]);
         assert_eq!(serde_json::from_slice::<Value>(&serde_json::to_vec(&oracle).unwrap()).unwrap(), oracle);
         assert!(progress.len() > output.len());
@@ -38,7 +37,6 @@ fn closed_corpus_matches_independent_serde_wire_values() {
         assert!(progress.iter().all(|row| row.owned_bytes <= 65_536));
         assert_eq!(progress.last().unwrap().emitted_bytes, output.len());
     }
-    eprintln!("[DEBUG] Eight native closed inventory cases match independent Serde values");
 }
 #[test]
 fn work_bytes_and_cancellation_refuse_before_returning_output() {
@@ -57,7 +55,6 @@ fn work_bytes_and_cancellation_refuse_before_returning_output() {
         let actual = match result { Ok(_) => "Admitted".to_string(), Err(error) => format!("{error:?}") };
         assert_eq!(actual, row["expected"].as_str().unwrap(), "{}", row["name"]);
         if let Some(limit) = limit { assert_eq!(callbacks, limit); assert_eq!(first_owned, Some(0)); }
-        eprintln!("[DEBUG] Native inventory control {}", json!({"name":row["name"],"actual":actual,"callbacks":callbacks,"firstOwned":first_owned}));
     }
     let mut early = |row: MutationInventoryProgress| { assert_eq!(row.owned_bytes, 0); Err(MutationInventoryError::Cancelled) };
     let huge = usize::try_from(9_007_199_254_740_991_u64).unwrap_or(usize::MAX);
@@ -69,7 +66,6 @@ fn exact_byte_and_work_frontiers_are_admitted_and_one_less_is_refused() {
     let mut terminal_units = 0;
     let mut observe = |row: MutationInventoryProgress| { terminal_units = row.completed_units; Ok(()) };
     let output = encode_mutation_inventory(&coordinate, "sample-inventory", &[], &[], MutationInventoryBudget { maximum_units: 1_000_000, maximum_owned_bytes: 65_536 }, &mut observe).unwrap();
-    eprintln!("[DEBUG] Native inventory frontier {}", json!({"units":terminal_units,"bytes":output.len(),"callbacks":terminal_units+3}));
     let budget = MutationInventoryBudget { maximum_units: terminal_units, maximum_owned_bytes: output.len() };
     let mut observe = |_: MutationInventoryProgress| Ok(());
     assert_eq!(encode_mutation_inventory(&coordinate, "sample-inventory", &[], &[], budget, &mut observe).unwrap(), output);
@@ -113,6 +109,5 @@ fn command_refuses_a_withdrawn_contribution_ambiguity_and_missing_control_policy
         let actual = match result { Ok(output) => { assert_eq!(serde_json::from_slice::<Value>(&output).unwrap()["mutations"], json!([])); "Admitted".to_string() }, Err(error) => format!("{error:?}") };
         assert_eq!(actual, row["expected"].as_str().unwrap());
         assert!(observations.windows(2).all(|rows| rows[0].completed_units <= rows[1].completed_units));
-        eprintln!("[DEBUG] Native inventory command {}", json!({"name":row["name"],"actual":actual}));
     }
 }

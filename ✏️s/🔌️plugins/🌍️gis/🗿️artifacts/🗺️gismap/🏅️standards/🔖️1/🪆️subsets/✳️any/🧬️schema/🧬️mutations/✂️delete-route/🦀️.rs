@@ -1,7 +1,6 @@
 //! 🗑️ `delete-route` mutation payload — removes a route feature from `routes` by id.
 
 use crate::diff::GisMapDiff;
-use crate::mutations::GisMapMutation;
 use crate::GisMapSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -22,14 +21,17 @@ pub struct DeleteRoute {
     pub id: String,
 }
 
-impl MutationKind<GisMapSnapshot, GisMapMutation> for DeleteRoute {
+impl<Op> MutationKind<GisMapSnapshot, Op> for DeleteRoute
+where
+    Op: protocol::Mutation<GisMapSnapshot, Diff = GisMapDiff> + From<DeleteRoute> + From<crate::standards::v1::subsets::any::schema::mutations::create_route::CreateRoute>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "route", kind: "delete-route", record: "DeletedRoute" };
 
     fn diff(&self, base: &GisMapSnapshot) -> protocol::MutationOutcome<GisMapDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &GisMapSnapshot) -> Result<Vec<GisMapMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &GisMapSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         super::inverse::inverse(self, base)
     }
 

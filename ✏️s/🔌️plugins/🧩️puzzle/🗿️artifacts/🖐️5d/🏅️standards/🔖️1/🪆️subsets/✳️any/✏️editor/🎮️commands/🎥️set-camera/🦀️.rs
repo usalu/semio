@@ -2,7 +2,7 @@
 
 use crate::editor::puzzle5d::config::{Puzzle5dCamera2d, Puzzle5dCamera3d};
 use crate::editor::puzzle5d::modes::edit::windows::{board2d, world3d};
-use crate::editor::puzzle5d::Puzzle5dActionCtx;
+use crate::editor::puzzle5d::interaction::Puzzle5dActionCtx;
 use semio_framework_pack_json::{to_dsl_value, Value};
 use semio_framework_value::FromValue;
 
@@ -18,7 +18,7 @@ pub fn set_camera(ctx: &mut Puzzle5dActionCtx<'_>, args: Option<&Value>) {
     let flat = match args.and_then(|value| value.get("surfaceId")).and_then(|value| value.as_str()) {
         Some(board2d::SURFACE_ID) => true,
         Some(world3d::SURFACE_ID) => false,
-        _ => ctx.window_kind == board2d::WINDOW_KIND_ID || camera.get("position").is_none(),
+        _ => ctx.window_kind == crate::editor::puzzle5d::entities::PUZZLE5D_BOARD_WINDOW_KIND_ID || camera.get("position").is_none(),
     };
     if flat {
         if let Ok(parsed) = Puzzle5dCamera2d::from_value(to_dsl_value(camera)) {

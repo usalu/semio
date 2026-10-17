@@ -440,11 +440,14 @@ pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
 #[path = "🧪️tests/🔬️pdf-page-contract/🦀️.rs"]
 mod pdf_page_contract;
 
-#[path = "💾️binary/🦀️.rs"]
-pub mod binary;
+pub mod binary {
+    pub use semio_s_artifact_note_note_kinds_catalog::standards::v1::subsets::any::io::binary::*;
+    pub use semio_s_artifact_note_note_insert_table_row::standards::v1::subsets::any::io::binary::inferences;
+}
 
-#[path = "📝️text/🦀️.rs"]
-pub mod text;
+pub mod text {
+    pub use semio_s_artifact_note_note_mut_family_4::standards::v1::subsets::any::io::text::*;
+    pub use semio_s_artifact_note_note_insert_table_row::standards::v1::subsets::any::io::text::inferences;
+}
 
-#[path = "🪶️sqlite/🦀️.rs"]
-pub mod sqlite;
+

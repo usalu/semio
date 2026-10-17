@@ -1,6 +1,5 @@
 //! 🎚️ Authoritative PDF mutation payload, diff, inverse, and tests for `remove-ext-g-state`.
 
-use super::PdfMutation;
 use crate::standards::v1_7::subsets::base::schema::diff::{self, PdfDiff};
 use crate::standards::v1_7::subsets::base::schema::snapshot::*;
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
@@ -14,7 +13,10 @@ pub struct RemoveExtGState {
     pub id: String,
 }
 
-impl MutationKind<PdfSnapshot, PdfMutation> for RemoveExtGState {
+impl<Op> MutationKind<PdfSnapshot, Op> for RemoveExtGState
+where
+    Op: protocol::Mutation<PdfSnapshot, Diff = PdfDiff> + From<RemoveExtGState> + From<crate::standards::v1_7::subsets::base::schema::mutations::set_ext_g_state::SetExtGState>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "remove", entity: "ext-g-state", kind: "remove-ext-g-state", record: "Remove" };
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
@@ -22,10 +24,10 @@ impl MutationKind<PdfSnapshot, PdfMutation> for RemoveExtGState {
         MutationOutcome::new(diff::diff_remove_ext_g_state(base, &self.id))
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
         let _ = base;
-        base.ext_g_states.iter().position(|item| item.id == self.id).map(|index| PdfMutation::SetExtGState(super::set_ext_g_state::SetExtGState { state: base.ext_g_states[index].clone(), index: Some(index) })).into_iter().collect()
+        base.ext_g_states.iter().position(|item| item.id == self.id).map(|index| Op::from(crate::standards::v1_7::subsets::base::schema::mutations::set_ext_g_state::SetExtGState { state: base.ext_g_states[index].clone(), index: Some(index) })).into_iter().collect()
     
     })())
 }
@@ -42,8 +44,6 @@ impl MutationKind<PdfSnapshot, PdfMutation> for RemoveExtGState {
 //#endregion 🔖️Mutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
 

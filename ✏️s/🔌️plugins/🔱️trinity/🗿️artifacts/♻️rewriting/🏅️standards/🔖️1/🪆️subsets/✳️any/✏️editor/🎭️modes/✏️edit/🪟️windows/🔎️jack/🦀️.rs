@@ -8,16 +8,16 @@
 //! same trinity-wide gap), so this static scene can no longer compute which variable to highlight.
 //! `occurrences_json` is left unset until a future wave threads interaction state through `render`.
 
-use crate::RewritingSnapshot;
+use crate::standards::v1::subsets::any::schema::snapshot::RewritingSnapshot;
 use semio_framework_plugin::NoConfig;
 use semio_framework_plugin::{scene_surface, BuiltNode, TextEditorScene, UiAssemblyResult};
 use semio_framework_ui_contract::SurfaceKind;
 
-pub(crate) fn render(state: &RewritingSnapshot, _cfg: &NoConfig) -> UiAssemblyResult<BuiltNode> {
-    let query = crate::editor::rewriting::compiled_jack_query(state);
+pub fn render(state: &RewritingSnapshot, _cfg: &NoConfig) -> UiAssemblyResult<BuiltNode> {
+    let query = crate::editor::rewriting::document::compiled_jack_query(state);
     scene_surface(
-        crate::editor::rewriting::TRINITY_REWRITING_PLAY_SURFACE_JACK,
+        crate::editor::rewriting::ids::TRINITY_REWRITING_PLAY_SURFACE_JACK,
         SurfaceKind::TextEditor,
-        &TextEditorScene { tokens_json: Some(semio_framework_pack_json::to_json_string(&semio_s_artifact_trinity_jack::language_service::semantic_tokens(&query))), ..TextEditorScene::base(query, Some("jack".into()), None) },
+        &TextEditorScene { tokens_json: Some(semio_framework_pack_json::to_json_string(&semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::language_service::semantic_tokens(&query))), ..TextEditorScene::base(query, Some("jack".into()), None) },
     )
 }

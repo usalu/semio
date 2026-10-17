@@ -7,7 +7,7 @@ import fixture from "./🧫️fixtures/🔣️.json";
 import schema from "../🧬️schema/🔣️.json";
 import {PathFlattenJob,preparePath,type PathFlattenInput} from "../🟦️.ts";
 import {pathSegmentsToSvgD,type PathSegment} from "../../../🟦️.ts";
-import {CoverageJob} from "../../../../🔲️pixels/🖊️coverage/🟦️.ts";
+import {CoverageJob} from "@semio-tech/framework-pixels-ts/coverage";
 const validate=new Ajv({strict:true}).compile(schema);
 function complete(input:PathFlattenInput,budget:number) {
  const job=new PathFlattenJob(input);let work=0;
@@ -71,10 +71,9 @@ import retirementRows from "./🧫️fixtures/🧹️retirement/🔣️.json";
 const retirementValid=new Ajv({strict:true}).compile(schema.definitions.retirementProgress);
 test("completed contours own coordinate copies independently of authored points",()=>{
  for(const row of fixture){const input=structuredClone(row.input) as PathFlattenInput,job=new PathFlattenJob(input);while(!job.advance(4096).done){}const output=job.result(),expected=structuredClone(output),sourcePoints=input.segments.flatMap(segment=>Object.values(segment).filter(Array.isArray)) as number[][];
-  for(const contour of output)for(const p of contour.points){expect(sourcePoints.includes(p)).toBe(false);expect(new Vector2(...p).clone().toArray()).toEqual(p);}
+  for(const contour of output)for(const p of contour.points){expect(sourcePoints.some(source=>Object.is(source,p))).toBe(false);expect(new Vector2(...p).clone().toArray()).toEqual(p);}
   for(const p of sourcePoints){p[0]=123;p[1]=456;}expect(output).toEqual(expected);job.cancel();const state=job as any;expect(state.contours).not.toBe(output);const retired=job.intoRetirement();expect(retired.output).toBe(null);let progress;do{progress=retired.job.advance(1);}while(!progress.done);expect(progress.work).toBe(3);expect(output).toEqual(expected);
  }
- process.stderr.write("[DEBUG] Published flattened points own coordinate copies and survive source mutation and cancellation\n");
 });
 test("async flattening retires actual private owners after completion cancellation or callback failure",async()=>{
  const original=PathFlattenJob.prototype.intoRetirement;
@@ -84,7 +83,6 @@ test("async flattening retires actual private owners after completion cancellati
    expect(adopted).toBe(1);expect(output).toEqual(mode==="success"?retirementRows[3]!.output:null);expect(progresses.length).toBe(mode==="success"?3:4);progresses.forEach((p,at)=>expect(p).toMatchObject({work:at+1,done:at===progresses.length-1}));expect(input).toEqual(before);
   }finally{spy.mockRestore();}
  }
- process.stderr.write("[DEBUG] Async flattening handed off once and drained real completion or cancellation owners with unit grants\n");
 });
 test("path retirement preserves published contours and drains private curves under grants",()=>{
  for(const row of retirementRows)for(const grant of [1,7,4096]){
@@ -98,9 +96,8 @@ test("path retirement preserves published contours and drains private curves und
   let work=0;for(let at=0;at<=row.work;at++){const beforeCount=state.contours.length,p=transferred.job.advance(grant);expect(beforeCount-state.contours.length).toBeLessThanOrEqual(grant);expect(retirementValid(p)).toBe(true);expect(p.work-work).toBeGreaterThan(0);expect(p.work-work).toBeLessThanOrEqual(grant);work=p.work;if(p.done)break;}
   expect(work).toBe(row.work);expect(transferred.job.terminalIsEmpty()).toBe(true);expect(transferred.job.advance(1)).toEqual({phase:"complete",work,done:true});expect(state.contours).toHaveLength(0);expect(state.stack).toHaveLength(0);expect(state.current).toBe(null);expect(state.input.segments).toHaveLength(0);expect(source).toEqual(before);if(published)expect(published).toEqual(row.output);
  }
- console.log("[DEBUG] Real flatten phases return completed contours intact and retire private curves with exact neutral work totals");
 });
 
 import admissionRows from "../../../🧹️retire/🧪️tests/🧫️fixtures/📥️admission/🔣️.json";
 import admissionSchema from "../../../🧹️retire/🧬️schema/📥️admission/🔣️.json";
-test("retained flatten admission preserves refused source until close",()=>{expect(new Ajv({strict:true}).compile(admissionSchema)(admissionRows)).toBe(true);for(const row of admissionRows.cases){if(row.kind!=="flatten")continue;const input:PathFlattenInput={segments:[{kind:"move",to:[3,7]}],transform:[1,0,0,1,0,0],tolerance:row.tolerance!};expect(validate(input)).toBe(false);expect(()=>new PathFlattenJob(input)).toThrow(/contract/);const job=PathFlattenJob.admit(input);expect((job as unknown as {input:PathFlattenInput}).input.segments).toBe(input.segments);expect(()=>job.advance(1)).toThrow(/contract/);expect(()=>job.result()).toThrow(/contract/);const retired=job.intoRetirement();expect(retired.output).toBe(null);while(!retired.job.advance(1).done){}expect(retired.job.terminalIsEmpty()).toBe(true);console.log("[DEBUG] Refused flatten admission retained actual source until explicit close");}});
+test("retained flatten admission preserves refused source until close",()=>{expect(new Ajv({strict:true}).compile(admissionSchema)(admissionRows)).toBe(true);for(const row of admissionRows.cases){if(row.kind!=="flatten")continue;const input:PathFlattenInput={segments:[{kind:"move",to:[3,7]}],transform:[1,0,0,1,0,0],tolerance:row.tolerance!};expect(validate(input)).toBe(false);expect(()=>new PathFlattenJob(input)).toThrow(/contract/);const job=PathFlattenJob.admit(input);expect((job as unknown as {input:PathFlattenInput}).input.segments).toBe(input.segments);expect(()=>job.advance(1)).toThrow(/contract/);expect(()=>job.result()).toThrow(/contract/);const retired=job.intoRetirement();expect(retired.output).toBe(null);while(!retired.job.advance(1).done){}expect(retired.job.terminalIsEmpty()).toBe(true);}});

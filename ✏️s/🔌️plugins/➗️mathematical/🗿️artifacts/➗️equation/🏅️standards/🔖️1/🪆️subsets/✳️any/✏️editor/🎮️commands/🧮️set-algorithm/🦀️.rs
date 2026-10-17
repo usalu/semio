@@ -26,7 +26,4 @@ pub fn handle(payload: &SetAlgorithm, doc: &ArtifactView<'_, EquationSnapshot>, 
 }
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

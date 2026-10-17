@@ -2,7 +2,6 @@
 //! inserted at its CANONICAL SORTED position so `delete-tile`'s inverse restores it in place.
 
 use crate::diff::Grid3dDiff;
-use crate::mutations::Grid3dMutation;
 use crate::schema::snapshot::*;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -17,17 +16,23 @@ pub struct CreateTile {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn create_tile(tile: Grid3dTile) -> Grid3dMutation {
-    Grid3dMutation::CreateTile(CreateTile { tile })
+pub fn create_tile<Op>(tile: Grid3dTile) -> Op
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::create_tile::CreateTile>,
+{
+    Op::from(CreateTile { tile })
 }
 
-impl MutationKind<Grid3dSnapshot, Grid3dMutation> for CreateTile {
+impl<Op> MutationKind<Grid3dSnapshot, Op> for CreateTile
+where
+    Op: protocol::Mutation<Grid3dSnapshot, Diff = Grid3dDiff> + From<CreateTile> + From<crate::standards::v1::subsets::any::schema::mutations::delete_tile::DeleteTile>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "tile", kind: "create-tile", record: "CreatedTile" };
 
     fn diff(&self, base: &Grid3dSnapshot) -> protocol::MutationOutcome<Grid3dDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Grid3dSnapshot) -> Result<Vec<Grid3dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Grid3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

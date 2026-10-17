@@ -1,7 +1,7 @@
 //! 📤️ Serialize `stdio.gltf` to stdio.json. Embeds any BIN-chunk-sourced (no-`uri`) buffer as a
 //! base64 data uri first (via the shared `.gltf` JSON codec), since plain `stdio.json` has nowhere
 //! else to carry those bytes -- same reasoning as `serialize_gltf_document`.
-use crate::standards::v2_0::subsets::any::schema::snapshot::GltfSnapshot;
+use crate::standards::v2_0::subsets::any::schema::snapshot_root::GltfSnapshot;
 use semio_s_artifact_stdio_json::standards::v_rfc8259::subsets::base::io::text::snapshot::parse_json_text;
 use semio_s_artifact_stdio_json::{JsonSnapshot, STDIO_JSON_DOCUMENT_SCHEMA};
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

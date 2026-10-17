@@ -1,9 +1,9 @@
-use super::*;
+use crate::editor::dag::config::*;
 use protocol::{Mutation, OpBinary, OpText};
 
 #[test]
 fn language_neutral_mutations_match_json_oracle_and_restore_base() {
-    let vectors: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔁️mutations.json")).unwrap();
+    let vectors: serde_json::Value = serde_json::from_str(runtime_fixture_text("../../🧪️tests/🧫️fixtures/🔁️mutations.json")).unwrap();
     for vector in vectors.as_array().unwrap() {
         let base: DagConfig = semio_framework_pack_json::from_json_str(&vector["base"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         let mutation: DagConfigMutation = semio_framework_pack_json::from_json_str(&vector["mutation"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
@@ -22,4 +22,9 @@ fn language_neutral_mutations_match_json_oracle_and_restore_base() {
         }
         assert_eq!(restored, base);
     }
+}
+
+fn runtime_fixture_text(relative: &str) -> &'static str {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative);
+    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display())).into_boxed_str())
 }

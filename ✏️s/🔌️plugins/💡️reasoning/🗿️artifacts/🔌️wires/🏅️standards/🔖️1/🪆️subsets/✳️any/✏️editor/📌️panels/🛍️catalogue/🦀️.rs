@@ -87,7 +87,4 @@ pub fn render(wires: &DslValue, labels: &WiresLabels, windows: &TreeWindows<'_>)
 //#endregion 🔖️Render
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

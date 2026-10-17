@@ -42,12 +42,6 @@
       "command": "bun ./📜️script.ts security-check"
     },
     {
-      "target": "hub-edit-durability-check",
-      "source": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/🧪️tests/🤝️hub-edit-durability/🟦️.ts",
-      "removedSource": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧪️tests/🤝️hub-edit-durability/🟦️.ts",
-      "command": "bun ./📜️script.ts hub-edit-durability-check"
-    },
-    {
       "target": "agent-reply-check",
       "source": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/🧪️tests/💬️agent-reply/🟦️.ts",
       "removedSource": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧪️tests/💬️agent-reply/🟦️.ts",

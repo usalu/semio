@@ -12,5 +12,4 @@ fn original_surface_identity_preserves_slot_and_generation_without_aba_aliasing(
         assert_eq!(left, left.clone());
     }
     assert_eq!(UI_LAYOUT_SURFACE_SLOTS, 64);
-    println!("[DEBUG] original surface identity native fixture: six exact slot/generation witnesses");
 }

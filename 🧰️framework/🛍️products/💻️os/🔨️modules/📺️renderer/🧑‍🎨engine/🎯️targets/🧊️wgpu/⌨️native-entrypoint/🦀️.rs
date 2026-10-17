@@ -1,7 +1,6 @@
 /// 🚪️ Drives a headless process future and retires its mounted native I/O owners.
 #[cfg(not(target_arch = "wasm32"))]
 pub(crate) fn drive_native_entrypoint<F: std::future::Future>(future: F) -> F::Output {
-    use std::sync::atomic::Ordering;
     use std::task::Poll;
     let mut future = Some(Box::pin(future));
     let mut output = None;
@@ -13,8 +12,7 @@ pub(crate) fn drive_native_entrypoint<F: std::future::Future>(future: F) -> F::O
             }
         }
         crate::pump_renderer_io_sessions(16);
-        let pending = crate::RENDERER_IO_SLOTS.iter().any(|slot| matches!(slot.state.load(Ordering::Acquire), crate::RENDERER_IO_LIVE | crate::RENDERER_IO_CHECKED_OUT));
-        if !pending {
+        if !crate::renderer_io_sessions_pending() {
             if let Some(value) = output.take() { return Poll::Ready(value); }
         } else {
             context.waker().wake_by_ref();

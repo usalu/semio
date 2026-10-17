@@ -1,5 +1,6 @@
 
 use super::*;
+use semio_framework_test_fixtures::fixture_path;
 
 pub(super) fn fixture() -> serde_json::Value {
     serde_json::from_str(include_str!("../🧫️fixtures/🛂️mutation-source-authority/🔣️.json")).unwrap()
@@ -247,7 +248,7 @@ fn validates_exact_domain_mutation_source_authority_fixture() {
 
 #[test]
 fn mutation_authority_locator_names_the_committed_projection_of_this_workspace() {
-    let committed = fs::canonicalize(Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🔣️mutation-authority.json")).unwrap();
+    let committed = fs::canonicalize(fixture_path!("../../../../🔣️mutation-authority.json")).unwrap();
     let workspace = mutation_authority_workspace_root(&committed).unwrap();
     assert_eq!(fs::canonicalize(mutation_authority_locator(&workspace, MUTATION_AUTHORITY_LOCATOR).unwrap()).unwrap(), committed);
     let projection: serde_json::Value = serde_json::from_slice(&fs::read(&committed).unwrap()).unwrap();

@@ -1,4 +1,4 @@
-/** 🧰️ Shared helpers of the presentation react deck suites: the test source locator, the global stylesheet text and the stock reveal auto-animate matcher host.
+/** 🧰️ Shared helpers of the presentation react deck suites: the test source locator, the global stylesheet text with its section imports inlined and the stock reveal auto-animate matcher host.
  *
  * @see ../../🎯️targets/⚛️react/🟦️.tsx — the module under test
  */
@@ -13,7 +13,11 @@ export const source: TestSource = { directory: dirname(fileURLToPath(import.meta
 
 export const stylesheetRelativePath = "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/🎨️.css";
 
-export const globalsCssSource = readFileSync(join(dirname(fileURLToPath(source.url)), stylesheetRelativePath), "utf8");
+/** 🧵️ Reads a stylesheet with its relative `@import` lines replaced by the imported text, in order. */
+const readStylesheetTree = (path: string): string =>
+  readFileSync(path, "utf8").replace(/^@import "(\.[^"]+)";$/gmu, (_line, relative: string) => readStylesheetTree(join(dirname(path), relative)));
+
+export const globalsCssSource = readStylesheetTree(join(dirname(fileURLToPath(source.url)), stylesheetRelativePath));
 
 export function stockRevealAutoAnimateMatcherHost(): AutoAnimateMatcherHost {
   return {

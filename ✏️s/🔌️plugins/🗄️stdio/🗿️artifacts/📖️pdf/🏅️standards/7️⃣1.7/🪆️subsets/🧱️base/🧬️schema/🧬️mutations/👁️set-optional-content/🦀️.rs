@@ -1,6 +1,5 @@
 //! 👁️ Authoritative PDF mutation payload, diff, inverse, and tests for `set-optional-content`.
 
-use super::PdfMutation;
 use crate::standards::v1_7::subsets::base::schema::diff::{self, PdfDiff};
 use crate::standards::v1_7::subsets::base::schema::snapshot::*;
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
@@ -14,7 +13,10 @@ pub struct SetOptionalContent {
     pub content: Option<PdfOptionalContent>,
 }
 
-impl MutationKind<PdfSnapshot, PdfMutation> for SetOptionalContent {
+impl<Op> MutationKind<PdfSnapshot, Op> for SetOptionalContent
+where
+    Op: protocol::Mutation<PdfSnapshot, Diff = PdfDiff> + From<SetOptionalContent>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "optional-content", kind: "set-optional-content", record: "Set" };
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
@@ -22,10 +24,10 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetOptionalContent {
         MutationOutcome::new(diff::diff_set_optional_content(base, self.content.clone()))
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
         let _ = base;
-        vec![PdfMutation::SetOptionalContent(SetOptionalContent { content: base.optional_content.clone() })]
+        vec![Op::from(SetOptionalContent { content: base.optional_content.clone() })]
     
     })())
 }
@@ -42,8 +44,6 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetOptionalContent {
 //#endregion 🔖️Mutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
 

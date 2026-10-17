@@ -39,7 +39,7 @@ impl TokenBucket {
     }
 
     // 🚫️async: E1-adjacent — same reasoning as `new` above (R9).
-    pub(super) fn try_consume(&mut self, bytes: u64) -> bool {
+    #[doc(hidden)] pub fn try_consume(&mut self, bytes: u64) -> bool {
         if bytes > self.remaining_bytes {
             false
         } else {
@@ -275,7 +275,7 @@ impl HttpPool {
                 match result {
                     Ok(Ok(response)) => {
                         let head = HttpResponseHead { status: response.status, headers: response.headers };
-                        let body: Box<dyn HttpBody> = Box::new(BufferedHttpBody { remaining: Some(response.body) });
+                        let body: Box<dyn HttpBody> = Box::new(BufferedHttpBody::new(response.body));
                         Ok((head, body, terminal))
                     }
                     Ok(Err(io_error)) => Err(HttpPoolError::Transport(io_error.to_string())),

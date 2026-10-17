@@ -1,0 +1,41 @@
+{
+  "parent": "semio-s-artifact-draw-drawing-host",
+  "name": "semio-s-artifact-draw-drawing-host-tests",
+  "dir": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🔨️modules/🏠️host/🧪️tests/🥣️companion",
+  "files": [
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🔨️modules/🏠️host/🧰️owned/🧪️tests/🔬️retained-mutation-authority/✏️edit-laws/🦀️.rs",
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🔨️modules/🏠️host/🧰️owned/🧪️tests/🔬️retained-mutation-authority/🏊️arena-laws/🦀️.rs",
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🔨️modules/🏠️host/🧰️owned/🧪️tests/🔬️retained-mutation-authority/🔎️lookup-laws/🦀️.rs",
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🔨️modules/🏠️host/🧰️owned/🧪️tests/🔬️retained-mutation-authority/🔏️digest-laws/🦀️.rs",
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🔨️modules/🏠️host/🧰️owned/🧪️tests/🔬️retained-mutation-authority/🦀️.rs",
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🔨️modules/🏠️host/🧰️owned/🧪️tests/🔬️retained-mutation-authority/🧩️candidate-laws/🦀️.rs",
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🔨️modules/🏠️host/🧰️owned/🧪️tests/🔬️retained-mutation-authority/🧬️snapshot-laws/🦀️.rs",
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🔨️modules/🏠️host/🧰️owned/🧪️tests/🔬️retained-mutation-authority/🧰️kit/🦀️.rs",
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🔨️modules/🏠️host/🧰️owned/🧪️tests/🔬️retained-mutation-authority/🪞️duplicate-laws/🦀️.rs"
+  ],
+  "testkit": [
+    "semio-s-artifact-draw-drawing-model",
+    "semio-s-artifact-draw-drawing-diff",
+    "semio-s-artifact-draw-drawing-geometry",
+    "semio-s-artifact-draw-drawing-mutations",
+    "semio-s-artifact-draw-drawing-transform",
+    "semio-s-artifact-draw-drawing-style",
+    "semio-s-artifact-draw-drawing-structure",
+    "semio-s-artifact-draw-drawing-metadata",
+    "semio-s-artifact-draw-drawing-scene",
+    "semio-s-artifact-draw-drawing-editor-interaction",
+    "semio-s-artifact-draw-drawing-host",
+    "semio-s-artifact-draw-drawing-editor"
+  ],
+  "emoji": "🥣️",
+  "summary": "the retained mutation authority laws of the drawing host.",
+  "description": "Companion test crate of semio-s-artifact-draw-drawing-host: the retained mutation authority laws of the drawing host",
+  "crate_map": {
+    "FillRule::": "semio_s_artifact_draw_drawing_model::fill_rule::FillRule::"
+  },
+  "extra_use": {
+    "🧰️owned/🧪️tests/🔬️retained-mutation-authority/🦀️.rs": [
+      "use semio_s_artifact_draw_drawing_host_arena::request_drawing_mutation_arena_pool;"
+    ]
+  }
+}

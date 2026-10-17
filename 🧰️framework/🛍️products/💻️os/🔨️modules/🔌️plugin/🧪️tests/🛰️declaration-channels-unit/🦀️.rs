@@ -1,11 +1,13 @@
 //! 🧪️ Shared declaration-channel laws run by each genuine leaf owner.
+use semio_framework_test_fixtures::fixture_text;
 use semio_framework_value::{FromValue, ToValue};
 use protocol::{Mutation, MutationDiff, MutationLeaf, OpBinary, OpText, SemanticMutation};
 use semio_framework_ui_locale::LocalizedLabel;
 use std::fmt::Debug;
 
-fn cases() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../🧪️testing/🛰️declaration-channels/🔣️.json")).expect("declaration fixture cases")
+#[doc(hidden)]
+pub fn cases() -> serde_json::Value {
+    serde_json::from_str(fixture_text!("../../../../🧪️testing/🛰️declaration-channels/🔣️.json")).expect("declaration fixture cases")
 }
 fn i32_value(value: &serde_json::Value) -> i32 {
     i32::try_from(value.as_i64().expect("integer")).expect("i32")
@@ -173,20 +175,22 @@ where
 
 #[test]
 fn strict_profile_is_an_io_rule_not_a_mutation_constraint() {
-    use crate::declarations::fixture::{Std1StrictSnapshot, StrictFromAny};
+    use crate::declarations_fixture_tests::fixture::Std1StrictSnapshot;
+    use crate::declarations_fixture_tests::fixture::StrictFromAny;
     let check = <StrictFromAny as semio_framework_os_kernel::io::io_mechanism::Deserializer<Std1StrictSnapshot>>::CONFORMANCE.expect("strict profile check");
     for row in cases()["conformance"].as_array().expect("conformance cases") {
         let snapshot = Std1StrictSnapshot { value: i32_value(&row["value"]) };
         assert_eq!(check(&snapshot).is_empty(), row["accept"].as_bool().expect("accept"));
-        let mutation = super::std1_strict::Std1StrictMutation::SetValue(super::std1_strict::SetValue { value: snapshot.value });
+        let mutation = crate::declaration_fixture_mutations::std1_strict::Std1StrictMutation::SetValue(crate::declaration_fixture_mutations::std1_strict::set_value::SetValue { value: snapshot.value });
         assert_eq!(protocol::apply_diff(mutation.diff(&snapshot).diff(), &snapshot).expect("negative mutation stays valid"), snapshot);
     }
 }
 
 /// 🧾️ The committed wire witnesses decode through the aggregate's `FromValue` and re-encode to exactly the committed JSON.
+#[doc(hidden)]
 #[test]
-fn committed_wire_witnesses_are_the_canonical_wire() {
-    ::store::os_store::test_support::assert_wire_witness::<super::std1_any::Std1AnyMutation>(include_str!("../../🧪️testing/🛰️declaration-channels/1standard/🌐️any/🧬️mutations/📝️set-value/🧪️tests/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
-    ::store::os_store::test_support::assert_wire_witness::<super::std1_strict::Std1StrictMutation>(include_str!("../../🧪️testing/🛰️declaration-channels/1standard/🔒️strict/🧬️mutations/📝️set-value/🧪️tests/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
-    ::store::os_store::test_support::assert_wire_witness::<super::std2_any::Std2AnyMutation>(include_str!("../../🧪️testing/🛰️declaration-channels/2standard/🌐️any/🧬️mutations/📝️set-value/🧪️tests/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
+pub fn committed_wire_witnesses_are_the_canonical_wire() {
+    ::store::os_store::test_support::assert_wire_witness::<crate::declaration_fixture_mutations::std1_any::Std1AnyMutation>(fixture_text!("../../../../🧪️testing/🛰️declaration-channels/1standard/🌐️any/🧬️mutations/📝️set-value/🧪️tests/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
+    ::store::os_store::test_support::assert_wire_witness::<crate::declaration_fixture_mutations::std1_strict::Std1StrictMutation>(fixture_text!("../../../../🧪️testing/🛰️declaration-channels/1standard/🔒️strict/🧬️mutations/📝️set-value/🧪️tests/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
+    ::store::os_store::test_support::assert_wire_witness::<crate::declaration_fixture_mutations::std2_any::Std2AnyMutation>(fixture_text!("../../../../🧪️testing/🛰️declaration-channels/2standard/🌐️any/🧬️mutations/📝️set-value/🧪️tests/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
 }

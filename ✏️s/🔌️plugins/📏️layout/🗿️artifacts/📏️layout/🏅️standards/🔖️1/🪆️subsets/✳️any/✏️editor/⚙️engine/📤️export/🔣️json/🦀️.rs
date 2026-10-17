@@ -1,8 +1,8 @@
 //! 🔣️ Layout export JSON: the bounded JSON validation and typed JSON writing cursors of the layout export job.
 
-use semio_framework_job_publication::{RetainedJobPublication,JobPublicationKind};
 #![allow(clippy::result_large_err)]
 #![allow(unexpected_cfgs)]
+use semio_framework_job_publication::{RetainedJobPublication,JobPublicationKind};
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
@@ -10,20 +10,14 @@ extern crate semio_framework_schema as schema;
 
 use semio_s_artifact_layout_layout_model::{Frame, GridSettings, LayoutBounds, Page, PageOverride};
 use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
-use semio_framework::action_bus::RetainedToolWireInput;
+use semio_framework_action_bus::RetainedToolWireInput;
 use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
 use semio_framework_job::{Generation, InteractiveStage, RevisionId};
 use semio_framework_job_worker_authority::{BatchDriveConfig,BatchJobParams};
 use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, Operation, StepContext};
 use semio_framework_plugin::app::{ArtifactDownloadOutput, ArtifactMediaExportCompletion, ArtifactMediaExportCredit, ArtifactMediaExportResult, ArtifactOutputChunks, ArtifactReservedToolJob, ArtifactSnapshotCloseLease, ArtifactToolCompletion};
 use semio_framework_plugin::{ArtifactReservedJob, ArtifactToolPublicationContract, ArtifactToolPublicationLane, EditorApp, EphemeralEmit, Fault, MediaClass, MediaForm, MediaType};
-use semio_framework_value_derive::{FromValue, ToValue};
-use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
-use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3;
-use semio_s_artifact_stdio_semio_base::schema::geometry::SemioQuaternion;
-use semio_s_artifact_stdio_semio_base::schema::geometry::SemioRgba;
-use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
-use semio_s_artifact_stdio_semio_drawing::schema::snapshot::{DrawNode, PathSegment};
+use semio_framework_io_ports::{VectorNode, VectorPoint2, VectorPoint3, VectorQuaternion, VectorRgba, VectorScene, VectorSegment, VectorTransform};
 use std::sync::Arc;
 use crate::dictionary::DictionaryJsonCursor;
 pub const MAX_LAYOUT_EXPORT_JSON_NODES: usize = 2_048;
@@ -34,450 +28,7 @@ pub const MAX_LAYOUT_EXPORT_DECODED_ITEMS: usize = 131_072;
 
 pub const MAX_LAYOUT_EXPORT_PACKAGE_FRAGMENT_BYTES: usize = 64 << 10;
 
-const JSON_INPUT_BYTES_PER_UNIT: usize = 2_048;
-
 const JSON_OUTPUT_BYTES_PER_UNIT: usize = 1_024;
-
-#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
-enum JsonRootState {
-    Value,
-    Done,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
-enum JsonArrayState {
-    FirstValueOrEnd,
-    Value,
-    CommaOrEnd,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
-enum JsonObjectState {
-    FirstKeyOrEnd,
-    Key,
-    Colon,
-    Value,
-    CommaOrEnd,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
-enum JsonContainer {
-    Array(JsonArrayState),
-    Object(JsonObjectState),
-}
-
-#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
-enum JsonStringEscape {
-    None,
-    Escape,
-    Unicode { digits: u8, value: u16 },
-    LowSlash,
-    LowU,
-    LowUnicode { digits: u8, value: u16 },
-}
-
-#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
-enum JsonNumberState {
-    Sign,
-    Zero,
-    Integer,
-    FractionStart,
-    Fraction,
-    ExponentStart,
-    ExponentSign,
-    Exponent,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
-enum JsonLiteral {
-    True,
-    False,
-    Null,
-}
-
-impl JsonLiteral {
-    fn bytes(&self) -> &'static [u8] {
-        match self {
-            Self::True => b"true",
-            Self::False => b"false",
-            Self::Null => b"null",
-        }
-    }
-}
-
-#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
-enum JsonToken {
-    None,
-    String { key: bool, decoded_bytes: usize, escape: JsonStringEscape },
-    Number(JsonNumberState),
-    Literal { literal: JsonLiteral, cursor: usize },
-}
-
-#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
-pub struct JsonValidationCursor {
-    byte_cursor: usize,
-    nodes: usize,
-    require_array: bool,
-    root: JsonRootState,
-    stack: Vec<JsonContainer>,
-    token: JsonToken,
-}
-
-impl JsonValidationCursor {
-    fn new(text: &str, require_array: bool) -> Result<Self, String> {
-        if text.len() > MAX_LAYOUT_EXPORT_PACKAGE_FRAGMENT_BYTES {
-            return Err("layout-export-json-byte-limit".into());
-        }
-        Ok(Self { byte_cursor: 0, nodes: 0, require_array, root: JsonRootState::Value, stack: Vec::new(), token: JsonToken::None })
-    }
-
-    fn add_node(&mut self) -> Result<(), String> {
-        self.nodes = self.nodes.checked_add(1).ok_or("layout-export-json-node-limit")?;
-        if self.nodes > MAX_LAYOUT_EXPORT_JSON_NODES || self.stack.len() > 64 {
-            return Err("layout-export-json-node-limit".into());
-        }
-        Ok(())
-    }
-
-    fn start_value(&mut self, byte: u8) -> Result<(), String> {
-        if self.require_array && self.root == JsonRootState::Value && self.stack.is_empty() && byte != b'[' {
-            return Err("layout-export-preflight-schema".into());
-        }
-        match self.stack.last_mut() {
-            Some(JsonContainer::Array(state @ (JsonArrayState::FirstValueOrEnd | JsonArrayState::Value))) => *state = JsonArrayState::CommaOrEnd,
-            Some(JsonContainer::Object(state @ JsonObjectState::Value)) => *state = JsonObjectState::CommaOrEnd,
-            None if self.root == JsonRootState::Value => self.root = JsonRootState::Done,
-            _ => return Err("layout-export-json-structure".into()),
-        }
-        self.add_node()?;
-        match byte {
-            b'{' => self.stack.push(JsonContainer::Object(JsonObjectState::FirstKeyOrEnd)),
-            b'[' => self.stack.push(JsonContainer::Array(JsonArrayState::FirstValueOrEnd)),
-            b'"' => self.token = JsonToken::String { key: false, decoded_bytes: 0, escape: JsonStringEscape::None },
-            b'-' => self.token = JsonToken::Number(JsonNumberState::Sign),
-            b'0' => self.token = JsonToken::Number(JsonNumberState::Zero),
-            b'1'..=b'9' => self.token = JsonToken::Number(JsonNumberState::Integer),
-            b't' => self.token = JsonToken::Literal { literal: JsonLiteral::True, cursor: 1 },
-            b'f' => self.token = JsonToken::Literal { literal: JsonLiteral::False, cursor: 1 },
-            b'n' => self.token = JsonToken::Literal { literal: JsonLiteral::Null, cursor: 1 },
-            _ => return Err("layout-export-json-value".into()),
-        }
-        if self.stack.len() > 64 {
-            return Err("layout-export-json-depth-limit".into());
-        }
-        Ok(())
-    }
-
-    fn finish_string(&mut self, key: bool) -> Result<(), String> {
-        if key {
-            match self.stack.last_mut() {
-                Some(JsonContainer::Object(state @ (JsonObjectState::FirstKeyOrEnd | JsonObjectState::Key))) => {
-                    *state = JsonObjectState::Colon;
-                    Ok(())
-                }
-                _ => Err("layout-export-json-key".into()),
-            }
-        } else {
-            Ok(())
-        }
-    }
-
-    fn add_string_bytes(decoded_bytes: &mut usize, bytes: usize) -> Result<(), String> {
-        *decoded_bytes = decoded_bytes.checked_add(bytes).ok_or("layout-export-json-string-limit")?;
-        if *decoded_bytes > MAX_LAYOUT_EXPORT_STRING_BYTES {
-            return Err("layout-export-json-string-limit".into());
-        }
-        Ok(())
-    }
-
-    fn hex(byte: u8) -> Option<u16> {
-        match byte {
-            b'0'..=b'9' => Some(u16::from(byte - b'0')),
-            b'a'..=b'f' => Some(u16::from(byte - b'a' + 10)),
-            b'A'..=b'F' => Some(u16::from(byte - b'A' + 10)),
-            _ => None,
-        }
-    }
-
-    fn finish_unicode(decoded_bytes: &mut usize, value: u16, low: bool) -> Result<JsonStringEscape, String> {
-        if low {
-            if !(0xdc00..=0xdfff).contains(&value) {
-                return Err("layout-export-json-unicode".into());
-            }
-            Self::add_string_bytes(decoded_bytes, 4)?;
-            return Ok(JsonStringEscape::None);
-        }
-        if (0xd800..=0xdbff).contains(&value) {
-            return Ok(JsonStringEscape::LowSlash);
-        }
-        if (0xdc00..=0xdfff).contains(&value) {
-            return Err("layout-export-json-unicode".into());
-        }
-        let scalar = char::from_u32(u32::from(value)).ok_or("layout-export-json-unicode")?;
-        Self::add_string_bytes(decoded_bytes, scalar.len_utf8())?;
-        Ok(JsonStringEscape::None)
-    }
-
-    fn number_delimiter(byte: u8) -> bool {
-        byte.is_ascii_whitespace() || matches!(byte, b',' | b']' | b'}')
-    }
-
-    fn advance_token(&mut self, bytes: &[u8]) -> Result<bool, String> {
-        match &mut self.token {
-            JsonToken::None => Ok(false),
-            JsonToken::String { key, decoded_bytes, escape } => {
-                let byte = *bytes.get(self.byte_cursor).ok_or("layout-export-json-string")?;
-                let low = matches!(escape, JsonStringEscape::LowUnicode { .. });
-                match escape {
-                    JsonStringEscape::None => match byte {
-                        b'"' => {
-                            let key = *key;
-                            self.byte_cursor += 1;
-                            self.token = JsonToken::None;
-                            self.finish_string(key)?;
-                        }
-                        b'\\' => {
-                            self.byte_cursor += 1;
-                            *escape = JsonStringEscape::Escape;
-                        }
-                        0..=0x1f => return Err("layout-export-json-string".into()),
-                        _ => {
-                            self.byte_cursor += 1;
-                            Self::add_string_bytes(decoded_bytes, 1)?;
-                        }
-                    },
-                    JsonStringEscape::Escape => {
-                        self.byte_cursor += 1;
-                        match byte {
-                            b'"' | b'\\' | b'/' | b'b' | b'f' | b'n' | b'r' | b't' => {
-                                Self::add_string_bytes(decoded_bytes, 1)?;
-                                *escape = JsonStringEscape::None;
-                            }
-                            b'u' => *escape = JsonStringEscape::Unicode { digits: 0, value: 0 },
-                            _ => return Err("layout-export-json-escape".into()),
-                        }
-                    }
-                    JsonStringEscape::Unicode { digits, value } | JsonStringEscape::LowUnicode { digits, value } => {
-                        let digit = Self::hex(byte).ok_or("layout-export-json-unicode")?;
-                        self.byte_cursor += 1;
-                        *value = (*value << 4) | digit;
-                        *digits += 1;
-                        if *digits == 4 {
-                            *escape = Self::finish_unicode(decoded_bytes, *value, low)?;
-                        }
-                    }
-                    JsonStringEscape::LowSlash => {
-                        if byte != b'\\' {
-                            return Err("layout-export-json-unicode".into());
-                        }
-                        self.byte_cursor += 1;
-                        *escape = JsonStringEscape::LowU;
-                    }
-                    JsonStringEscape::LowU => {
-                        if byte != b'u' {
-                            return Err("layout-export-json-unicode".into());
-                        }
-                        self.byte_cursor += 1;
-                        *escape = JsonStringEscape::LowUnicode { digits: 0, value: 0 };
-                    }
-                }
-                Ok(true)
-            }
-            JsonToken::Literal { literal, cursor } => {
-                let expected = literal.bytes();
-                let byte = *bytes.get(self.byte_cursor).ok_or("layout-export-json-literal")?;
-                if expected.get(*cursor).copied() != Some(byte) {
-                    return Err("layout-export-json-literal".into());
-                }
-                self.byte_cursor += 1;
-                *cursor += 1;
-                if *cursor == expected.len() {
-                    self.token = JsonToken::None;
-                }
-                Ok(true)
-            }
-            JsonToken::Number(state) => {
-                let Some(byte) = bytes.get(self.byte_cursor).copied() else {
-                    return Ok(false);
-                };
-                let next = match *state {
-                    JsonNumberState::Sign => match byte {
-                        b'0' => JsonNumberState::Zero,
-                        b'1'..=b'9' => JsonNumberState::Integer,
-                        _ => return Err("layout-export-json-number".into()),
-                    },
-                    JsonNumberState::Zero => match byte {
-                        b'.' => JsonNumberState::FractionStart,
-                        b'e' | b'E' => JsonNumberState::ExponentStart,
-                        _ if Self::number_delimiter(byte) => {
-                            self.token = JsonToken::None;
-                            return Ok(false);
-                        }
-                        _ => return Err("layout-export-json-number".into()),
-                    },
-                    JsonNumberState::Integer => match byte {
-                        b'0'..=b'9' => JsonNumberState::Integer,
-                        b'.' => JsonNumberState::FractionStart,
-                        b'e' | b'E' => JsonNumberState::ExponentStart,
-                        _ if Self::number_delimiter(byte) => {
-                            self.token = JsonToken::None;
-                            return Ok(false);
-                        }
-                        _ => return Err("layout-export-json-number".into()),
-                    },
-                    JsonNumberState::FractionStart => match byte {
-                        b'0'..=b'9' => JsonNumberState::Fraction,
-                        _ => return Err("layout-export-json-number".into()),
-                    },
-                    JsonNumberState::Fraction => match byte {
-                        b'0'..=b'9' => JsonNumberState::Fraction,
-                        b'e' | b'E' => JsonNumberState::ExponentStart,
-                        _ if Self::number_delimiter(byte) => {
-                            self.token = JsonToken::None;
-                            return Ok(false);
-                        }
-                        _ => return Err("layout-export-json-number".into()),
-                    },
-                    JsonNumberState::ExponentStart => match byte {
-                        b'+' | b'-' => JsonNumberState::ExponentSign,
-                        b'0'..=b'9' => JsonNumberState::Exponent,
-                        _ => return Err("layout-export-json-number".into()),
-                    },
-                    JsonNumberState::ExponentSign => match byte {
-                        b'0'..=b'9' => JsonNumberState::Exponent,
-                        _ => return Err("layout-export-json-number".into()),
-                    },
-                    JsonNumberState::Exponent => match byte {
-                        b'0'..=b'9' => JsonNumberState::Exponent,
-                        _ if Self::number_delimiter(byte) => {
-                            self.token = JsonToken::None;
-                            return Ok(false);
-                        }
-                        _ => return Err("layout-export-json-number".into()),
-                    },
-                };
-                *state = next;
-                self.byte_cursor += 1;
-                Ok(true)
-            }
-        }
-    }
-
-    fn start_key(&mut self) {
-        self.token = JsonToken::String { key: true, decoded_bytes: 0, escape: JsonStringEscape::None };
-    }
-
-    fn close_container(&mut self) -> Result<(), String> {
-        self.stack.pop().ok_or_else(|| "layout-export-json-structure".into()).map(|_| ())
-    }
-
-    fn advance(&mut self, text: &str) -> Result<bool, String> {
-        let bytes = text.as_bytes();
-        let end = self.byte_cursor.saturating_add(JSON_INPUT_BYTES_PER_UNIT).min(bytes.len());
-        while self.byte_cursor < end {
-            if !matches!(self.token, JsonToken::None) && self.advance_token(bytes)? {
-                continue;
-            }
-            let byte = bytes[self.byte_cursor];
-            if byte.is_ascii_whitespace() {
-                self.byte_cursor += 1;
-                continue;
-            }
-            match self.stack.last().cloned() {
-                None => match self.root {
-                    JsonRootState::Value => {
-                        self.byte_cursor += 1;
-                        self.start_value(byte)?;
-                    }
-                    JsonRootState::Done => return Err("layout-export-json-trailing".into()),
-                },
-                Some(JsonContainer::Array(JsonArrayState::FirstValueOrEnd)) => {
-                    if byte == b']' {
-                        self.byte_cursor += 1;
-                        self.close_container()?;
-                    } else {
-                        self.byte_cursor += 1;
-                        self.start_value(byte)?;
-                    }
-                }
-                Some(JsonContainer::Array(JsonArrayState::Value)) => {
-                    self.byte_cursor += 1;
-                    self.start_value(byte)?;
-                }
-                Some(JsonContainer::Array(JsonArrayState::CommaOrEnd)) => match byte {
-                    b',' => {
-                        self.byte_cursor += 1;
-                        if let Some(JsonContainer::Array(state)) = self.stack.last_mut() {
-                            *state = JsonArrayState::Value;
-                        }
-                    }
-                    b']' => {
-                        self.byte_cursor += 1;
-                        self.close_container()?;
-                    }
-                    _ => return Err("layout-export-json-array".into()),
-                },
-                Some(JsonContainer::Object(JsonObjectState::FirstKeyOrEnd)) => {
-                    if byte == b'}' {
-                        self.byte_cursor += 1;
-                        self.close_container()?;
-                    } else if byte == b'"' {
-                        self.byte_cursor += 1;
-                        self.start_key();
-                    } else {
-                        return Err("layout-export-json-key".into());
-                    }
-                }
-                Some(JsonContainer::Object(JsonObjectState::Key)) => {
-                    if byte != b'"' {
-                        return Err("layout-export-json-key".into());
-                    }
-                    self.byte_cursor += 1;
-                    self.start_key();
-                }
-                Some(JsonContainer::Object(JsonObjectState::Colon)) => {
-                    if byte != b':' {
-                        return Err("layout-export-json-colon".into());
-                    }
-                    self.byte_cursor += 1;
-                    if let Some(JsonContainer::Object(state)) = self.stack.last_mut() {
-                        *state = JsonObjectState::Value;
-                    }
-                }
-                Some(JsonContainer::Object(JsonObjectState::Value)) => {
-                    self.byte_cursor += 1;
-                    self.start_value(byte)?;
-                }
-                Some(JsonContainer::Object(JsonObjectState::CommaOrEnd)) => match byte {
-                    b',' => {
-                        self.byte_cursor += 1;
-                        if let Some(JsonContainer::Object(state)) = self.stack.last_mut() {
-                            *state = JsonObjectState::Key;
-                        }
-                    }
-                    b'}' => {
-                        self.byte_cursor += 1;
-                        self.close_container()?;
-                    }
-                    _ => return Err("layout-export-json-object".into()),
-                },
-            }
-        }
-        if self.byte_cursor != bytes.len() {
-            return Ok(false);
-        }
-        match &self.token {
-            JsonToken::None => {}
-            JsonToken::Number(JsonNumberState::Zero | JsonNumberState::Integer | JsonNumberState::Fraction | JsonNumberState::Exponent) => self.token = JsonToken::None,
-            _ => return Err("layout-export-json-incomplete".into()),
-        }
-        if self.stack.is_empty() && self.root == JsonRootState::Done {
-            Ok(true)
-        } else {
-            Err("layout-export-json-incomplete".into())
-        }
-    }
-}
 
 #[derive(Clone, Copy, Debug)]
 enum TopArrayKind {
@@ -566,6 +117,12 @@ pub enum StringSource {
     ReferencedBlobMediaType,
 }
 
+impl StringSource {
+    fn is_drawing(&self) -> bool {
+        matches!(self, Self::DrawingSchema | Self::DrawStyleName(_) | Self::DrawLayerId(_) | Self::DrawLayerName(_) | Self::DrawNodeValue { .. } | Self::DrawNodeStyle { .. } | Self::DrawNodeMime { .. })
+    }
+}
+
 #[derive(Clone, Debug, Default)]
 struct JsonStringWriteCursor {
     byte_cursor: usize,
@@ -614,7 +171,7 @@ pub enum TypedJsonNode {
     Dialect { referenced: bool },
     Drawing,
     DrawCanvas,
-    DrawRgba(SemioRgba),
+    DrawRgba(VectorRgba),
     DrawStyles { index: usize, opened: bool },
     DrawStyle(usize),
     DrawLayers { index: usize, opened: bool },
@@ -623,10 +180,10 @@ pub enum TypedJsonNode {
     DrawChildren { layer: usize, path: Vec<usize>, index: usize, opened: bool },
     DrawSegments { layer: usize, path: Vec<usize>, index: usize, opened: bool },
     DrawSegment { layer: usize, path: Vec<usize>, segment: usize },
-    DrawPoint2(SemioPoint2),
-    DrawPoint3(SemioPoint3),
-    DrawQuaternion(SemioQuaternion),
-    DrawTransform(SemioTransform),
+    DrawPoint2(VectorPoint2),
+    DrawPoint3(VectorPoint3),
+    DrawQuaternion(VectorQuaternion),
+    DrawTransform(VectorTransform),
     DrawBytes { layer: usize, path: Vec<usize>, index: usize, opened: bool },
     ReferencedModel,
     LinkPin,
@@ -640,9 +197,10 @@ pub enum TypedJsonNode {
 
 #[derive(Clone, Debug, Default)]
 pub struct TypedJsonCursor {
-    stack: Vec<TypedJsonNode>,
-    emitted_nodes: usize,
-    fragment_bytes: Option<usize>,
+    pub stack: Vec<TypedJsonNode>,
+    pub emitted_nodes: usize,
+    pub fragment_bytes: Option<usize>,
+    drawing: Option<Arc<VectorScene>>,
 }
 
 fn typed_string_source_owned_bytes(source: &StringSource) -> usize {
@@ -692,19 +250,19 @@ pub fn finite_json_number(value: f64) -> Result<Vec<u8>, String> {
 
 impl TypedJsonCursor {
     fn document() -> Self {
-        Self { stack: vec![TypedJsonNode::Document], emitted_nodes: 0, fragment_bytes: None }
+        Self { stack: vec![TypedJsonNode::Document], emitted_nodes: 0, fragment_bytes: None, drawing: None }
     }
 
     fn preflight() -> Self {
-        Self { stack: vec![TypedJsonNode::MissingLinks { index: 0, opened: false, emitted: false }], emitted_nodes: 0, fragment_bytes: None }
+        Self { stack: vec![TypedJsonNode::MissingLinks { index: 0, opened: false, emitted: false }], emitted_nodes: 0, fragment_bytes: None, drawing: None }
     }
 
     fn manifest() -> Self {
-        Self { stack: vec![TypedJsonNode::Manifest], emitted_nodes: 0, fragment_bytes: None }
+        Self { stack: vec![TypedJsonNode::Manifest], emitted_nodes: 0, fragment_bytes: None, drawing: None }
     }
 
     fn validating(node: TypedJsonNode) -> Self {
-        Self { stack: Self::fragment(node).into_iter().rev().collect(), emitted_nodes: 0, fragment_bytes: None }
+        Self { stack: Self::fragment(node).into_iter().rev().collect(), emitted_nodes: 0, fragment_bytes: None, drawing: None }
     }
 
     fn static_node(bytes: &'static [u8]) -> TypedJsonNode {
@@ -743,19 +301,27 @@ impl TypedJsonCursor {
         .ok_or_else(|| "layout-export-json-index".into())
     }
 
-    fn draw_node<'a>(snapshot: &'a LayoutSnapshot, layer: usize, path: &[usize]) -> Result<&'a DrawNode, String> {
-        let drawing = &snapshot.background_drawing.as_ref().ok_or("layout-export-json-background")?.content;
+    fn drawing_scene(&mut self, snapshot: &LayoutSnapshot) -> Result<Arc<VectorScene>, String> {
+        if let Some(scene) = &self.drawing {
+            return Ok(scene.clone());
+        }
+        let scene = Arc::new(semio_s_artifact_layout_layout_model::background_drawing_scene(snapshot).map_err(|error| error.to_string())?.ok_or("layout-export-json-background")?);
+        self.drawing = Some(scene.clone());
+        Ok(scene)
+    }
+
+    fn draw_node<'a>(drawing: &'a VectorScene, layer: usize, path: &[usize]) -> Result<&'a VectorNode, String> {
         let mut node = &drawing.layers.get(layer).ok_or("layout-export-json-draw-layer")?.root;
         for index in path {
             node = match node {
-                DrawNode::Group { children, .. } => children.get(*index).ok_or("layout-export-json-draw-child")?,
+                VectorNode::Group { children, .. } => children.get(*index).ok_or("layout-export-json-draw-child")?,
                 _ => return Err("layout-export-json-draw-path".into()),
             };
         }
         Ok(node)
     }
 
-    fn resolve_string<'a>(source: &StringSource, snapshot: &'a LayoutSnapshot) -> Result<&'a str, String> {
+    fn resolve_string<'a>(source: &StringSource, snapshot: &'a LayoutSnapshot, drawing: Option<&'a VectorScene>) -> Result<&'a str, String> {
         let missing = || "layout-export-json-string-source".to_string();
         Ok(match source {
             StringSource::DocumentSchema => &snapshot.schema,
@@ -806,20 +372,20 @@ impl TypedJsonCursor {
             StringSource::ChildTargetArtifactKind => &snapshot.background_drawing.as_ref().ok_or_else(missing)?.handle.target.dialect.artifact_kind,
             StringSource::ChildTargetStandard => &snapshot.background_drawing.as_ref().ok_or_else(missing)?.handle.target.dialect.standard,
             StringSource::ChildTargetSubset => &snapshot.background_drawing.as_ref().ok_or_else(missing)?.handle.target.dialect.subset,
-            StringSource::DrawingSchema => &snapshot.background_drawing.as_ref().ok_or_else(missing)?.content.schema,
-            StringSource::DrawStyleName(index) => &snapshot.background_drawing.as_ref().ok_or_else(missing)?.content.styles.get(*index).ok_or_else(missing)?.name,
-            StringSource::DrawLayerId(index) => &snapshot.background_drawing.as_ref().ok_or_else(missing)?.content.layers.get(*index).ok_or_else(missing)?.id,
-            StringSource::DrawLayerName(index) => &snapshot.background_drawing.as_ref().ok_or_else(missing)?.content.layers.get(*index).ok_or_else(missing)?.name,
-            StringSource::DrawNodeValue { layer, path } => match Self::draw_node(snapshot, *layer, path)? {
-                DrawNode::Text { value, .. } => value,
+            StringSource::DrawingSchema => &drawing.ok_or_else(missing)?.schema,
+            StringSource::DrawStyleName(index) => &drawing.ok_or_else(missing)?.styles.get(*index).ok_or_else(missing)?.name,
+            StringSource::DrawLayerId(index) => &drawing.ok_or_else(missing)?.layers.get(*index).ok_or_else(missing)?.id,
+            StringSource::DrawLayerName(index) => &drawing.ok_or_else(missing)?.layers.get(*index).ok_or_else(missing)?.name,
+            StringSource::DrawNodeValue { layer, path } => match Self::draw_node(drawing.ok_or_else(missing)?, *layer, path)? {
+                VectorNode::Text { value, .. } => value,
                 _ => return Err(missing()),
             },
-            StringSource::DrawNodeStyle { layer, path } => match Self::draw_node(snapshot, *layer, path)? {
-                DrawNode::Path { style: Some(value), .. } | DrawNode::Text { style: Some(value), .. } => value,
+            StringSource::DrawNodeStyle { layer, path } => match Self::draw_node(drawing.ok_or_else(missing)?, *layer, path)? {
+                VectorNode::Path { style: Some(value), .. } | VectorNode::Text { style: Some(value), .. } => value,
                 _ => return Err(missing()),
             },
-            StringSource::DrawNodeMime { layer, path } => match Self::draw_node(snapshot, *layer, path)? {
-                DrawNode::Image { mime, .. } => mime,
+            StringSource::DrawNodeMime { layer, path } => match Self::draw_node(drawing.ok_or_else(missing)?, *layer, path)? {
+                VectorNode::Image { mime, .. } => mime,
                 _ => return Err(missing()),
             },
             StringSource::ReferencedTargetArtifactId => &snapshot.referenced_model.as_ref().ok_or_else(missing)?.target.artifact_id,
@@ -941,7 +507,8 @@ impl TypedJsonCursor {
             TypedJsonNode::String { source, mut cursor } => {
                 self.account_node()?;
                 let maximum = MAX_LAYOUT_EXPORT_STRING_BYTES;
-                let value = Self::resolve_string(&source, snapshot)?;
+                let drawing = if source.is_drawing() { Some(self.drawing_scene(snapshot)?) } else { None };
+                let value = Self::resolve_string(&source, snapshot, drawing.as_deref())?;
                 if value.len() > maximum {
                     return Err("layout-export-json-string-limit".into());
                 }
@@ -1470,7 +1037,8 @@ impl TypedJsonCursor {
                 Self::static_node(b"}"),
             ]),
             TypedJsonNode::DrawCanvas => {
-                let value = &snapshot.background_drawing.as_ref().ok_or("layout-export-json-background")?.content.canvas;
+                let scene = self.drawing_scene(snapshot)?;
+                let value = &scene.canvas;
                 let mut nodes = vec![Self::static_node(b"{\"width\":"), Self::scalar(&value.width)?, Self::static_node(b",\"height\":"), Self::scalar(&value.height)?];
                 if let Some(background) = value.background {
                     nodes.extend([Self::static_node(b",\"background\":"), TypedJsonNode::DrawRgba(background)]);
@@ -1490,7 +1058,7 @@ impl TypedJsonCursor {
                 Self::static_node(b"}"),
             ]),
             TypedJsonNode::DrawStyles { index, opened } => {
-                let len = snapshot.background_drawing.as_ref().ok_or("layout-export-json-background")?.content.styles.len();
+                let len = self.drawing_scene(snapshot)?.styles.len();
                 if !opened {
                     self.push_sequence(vec![Self::static_node(b"["), TypedJsonNode::DrawStyles { index, opened: true }]);
                 } else if index < len {
@@ -1500,7 +1068,8 @@ impl TypedJsonCursor {
                 }
             }
             TypedJsonNode::DrawStyle(index) => {
-                let value = snapshot.background_drawing.as_ref().ok_or("layout-export-json-background")?.content.styles.get(index).ok_or("layout-export-json-index")?;
+                let scene = self.drawing_scene(snapshot)?;
+                let value = scene.styles.get(index).ok_or("layout-export-json-index")?;
                 let mut nodes = vec![Self::static_node(b"{\"name\":"), Self::string(StringSource::DrawStyleName(index))];
                 if let Some(fill) = value.fill {
                     nodes.extend([Self::static_node(b",\"fill\":"), TypedJsonNode::DrawRgba(fill)]);
@@ -1518,7 +1087,7 @@ impl TypedJsonCursor {
                 self.push_sequence(nodes);
             }
             TypedJsonNode::DrawLayers { index, opened } => {
-                let len = snapshot.background_drawing.as_ref().ok_or("layout-export-json-background")?.content.layers.len();
+                let len = self.drawing_scene(snapshot)?.layers.len();
                 if !opened {
                     self.push_sequence(vec![Self::static_node(b"["), TypedJsonNode::DrawLayers { index, opened: true }]);
                 } else if index < len {
@@ -1528,7 +1097,8 @@ impl TypedJsonCursor {
                 }
             }
             TypedJsonNode::DrawLayer(index) => {
-                let value = snapshot.background_drawing.as_ref().ok_or("layout-export-json-background")?.content.layers.get(index).ok_or("layout-export-json-index")?;
+                let scene = self.drawing_scene(snapshot)?;
+                let value = scene.layers.get(index).ok_or("layout-export-json-index")?;
                 self.push_sequence(vec![
                     Self::static_node(b"{\"id\":"),
                     Self::string(StringSource::DrawLayerId(index)),
@@ -1545,16 +1115,17 @@ impl TypedJsonCursor {
                 if path.len() > 64 {
                     return Err("layout-export-json-depth-limit".into());
                 }
-                let value = Self::draw_node(snapshot, layer, &path)?;
+                let scene = self.drawing_scene(snapshot)?;
+                let value = Self::draw_node(&scene, layer, &path)?;
                 match value {
-                    DrawNode::Path { style, .. } => self.push_sequence(vec![
+                    VectorNode::Path { style, .. } => self.push_sequence(vec![
                         Self::static_node(b"{\"kind\":\"path\",\"segments\":"),
                         TypedJsonNode::DrawSegments { layer, path: path.clone(), index: 0, opened: false },
                         if style.is_some() { Self::static_node(b",\"style\":") } else { Self::static_node(b"") },
                         if style.is_some() { Self::string(StringSource::DrawNodeStyle { layer, path }) } else { Self::static_node(b"") },
                         Self::static_node(b"}"),
                     ]),
-                    DrawNode::Text { at, style, .. } => self.push_sequence(vec![
+                    VectorNode::Text { at, style, .. } => self.push_sequence(vec![
                         Self::static_node(b"{\"kind\":\"text\",\"value\":"),
                         Self::string(StringSource::DrawNodeValue { layer, path: path.clone() }),
                         Self::static_node(b",\"at\":"),
@@ -1563,14 +1134,14 @@ impl TypedJsonCursor {
                         if style.is_some() { Self::string(StringSource::DrawNodeStyle { layer, path }) } else { Self::static_node(b"") },
                         Self::static_node(b"}"),
                     ]),
-                    DrawNode::Group { transform, .. } => self.push_sequence(vec![
+                    VectorNode::Group { transform, .. } => self.push_sequence(vec![
                         Self::static_node(b"{\"kind\":\"group\",\"transform\":"),
                         TypedJsonNode::DrawTransform(*transform),
                         Self::static_node(b",\"children\":"),
                         TypedJsonNode::DrawChildren { layer, path, index: 0, opened: false },
                         Self::static_node(b"}"),
                     ]),
-                    DrawNode::Image { at, width, height, .. } => self.push_sequence(vec![
+                    VectorNode::Image { at, width, height, .. } => self.push_sequence(vec![
                         Self::static_node(b"{\"kind\":\"image\",\"at\":"),
                         TypedJsonNode::DrawPoint2(*at),
                         Self::static_node(b",\"width\":"),
@@ -1589,8 +1160,9 @@ impl TypedJsonCursor {
                 if path.len() > 64 {
                     return Err("layout-export-json-depth-limit".into());
                 }
-                let len = match Self::draw_node(snapshot, layer, &path)? {
-                    DrawNode::Group { children, .. } => children.len(),
+                let scene = self.drawing_scene(snapshot)?;
+                let len = match Self::draw_node(&scene, layer, &path)? {
+                    VectorNode::Group { children, .. } => children.len(),
                     _ => return Err("layout-export-json-draw-path".into()),
                 };
                 if !opened {
@@ -1604,8 +1176,9 @@ impl TypedJsonCursor {
                 }
             }
             TypedJsonNode::DrawSegments { layer, path, index, opened } => {
-                let len = match Self::draw_node(snapshot, layer, &path)? {
-                    DrawNode::Path { segments, .. } => segments.len(),
+                let scene = self.drawing_scene(snapshot)?;
+                let len = match Self::draw_node(&scene, layer, &path)? {
+                    VectorNode::Path { segments, .. } => segments.len(),
                     _ => return Err("layout-export-json-draw-path".into()),
                 };
                 if !opened {
@@ -1621,14 +1194,15 @@ impl TypedJsonCursor {
                 }
             }
             TypedJsonNode::DrawSegment { layer, path, segment } => {
-                let value = match Self::draw_node(snapshot, layer, &path)? {
-                    DrawNode::Path { segments, .. } => segments.get(segment).ok_or("layout-export-json-index")?,
+                let scene = self.drawing_scene(snapshot)?;
+                let value = match Self::draw_node(&scene, layer, &path)? {
+                    VectorNode::Path { segments, .. } => segments.get(segment).ok_or("layout-export-json-index")?,
                     _ => return Err("layout-export-json-draw-path".into()),
                 };
                 let nodes = match value {
-                    PathSegment::MoveTo { to } => vec![Self::static_node(b"{\"kind\":\"moveTo\",\"to\":"), TypedJsonNode::DrawPoint2(*to), Self::static_node(b"}")],
-                    PathSegment::LineTo { to } => vec![Self::static_node(b"{\"kind\":\"lineTo\",\"to\":"), TypedJsonNode::DrawPoint2(*to), Self::static_node(b"}")],
-                    PathSegment::CubicTo { c1, c2, to } => vec![
+                    VectorSegment::MoveTo { to } => vec![Self::static_node(b"{\"kind\":\"moveTo\",\"to\":"), TypedJsonNode::DrawPoint2(*to), Self::static_node(b"}")],
+                    VectorSegment::LineTo { to } => vec![Self::static_node(b"{\"kind\":\"lineTo\",\"to\":"), TypedJsonNode::DrawPoint2(*to), Self::static_node(b"}")],
+                    VectorSegment::CubicTo { c1, c2, to } => vec![
                         Self::static_node(b"{\"kind\":\"cubicTo\",\"c1\":"),
                         TypedJsonNode::DrawPoint2(*c1),
                         Self::static_node(b",\"c2\":"),
@@ -1637,8 +1211,8 @@ impl TypedJsonCursor {
                         TypedJsonNode::DrawPoint2(*to),
                         Self::static_node(b"}"),
                     ],
-                    PathSegment::QuadTo { c, to } => vec![Self::static_node(b"{\"kind\":\"quadTo\",\"c\":"), TypedJsonNode::DrawPoint2(*c), Self::static_node(b",\"to\":"), TypedJsonNode::DrawPoint2(*to), Self::static_node(b"}")],
-                    PathSegment::ArcTo { rx, ry, x_rotation, large_arc, sweep, to } => vec![
+                    VectorSegment::QuadTo { c, to } => vec![Self::static_node(b"{\"kind\":\"quadTo\",\"c\":"), TypedJsonNode::DrawPoint2(*c), Self::static_node(b",\"to\":"), TypedJsonNode::DrawPoint2(*to), Self::static_node(b"}")],
+                    VectorSegment::ArcTo { rx, ry, x_rotation, large_arc, sweep, to } => vec![
                         Self::static_node(b"{\"kind\":\"arcTo\",\"rx\":"),
                         Self::scalar(rx)?,
                         Self::static_node(b",\"ry\":"),
@@ -1653,7 +1227,7 @@ impl TypedJsonCursor {
                         TypedJsonNode::DrawPoint2(*to),
                         Self::static_node(b"}"),
                     ],
-                    PathSegment::Close => vec![Self::static_node(b"{\"kind\":\"close\"}")],
+                    VectorSegment::Close => vec![Self::static_node(b"{\"kind\":\"close\"}")],
                 };
                 self.push_sequence(nodes);
             }
@@ -1682,8 +1256,9 @@ impl TypedJsonCursor {
                 Self::static_node(b"}"),
             ]),
             TypedJsonNode::DrawBytes { layer, path, index, opened } => {
-                let bytes = match Self::draw_node(snapshot, layer, &path)? {
-                    DrawNode::Image { bytes, .. } => bytes,
+                let scene = self.drawing_scene(snapshot)?;
+                let bytes = match Self::draw_node(&scene, layer, &path)? {
+                    VectorNode::Image { bytes, .. } => bytes,
                     _ => return Err("layout-export-json-draw-path".into()),
                 };
                 if !opened {
@@ -1833,6 +1408,9 @@ pub fn frame_bounds(frame: &Frame) -> &LayoutBounds {
 //#region 🪢️TaxonomyMounts
 #[path = "../🧾️dictionary/🦀️.rs"]
 pub mod dictionary;
+#[path = "✅️json-validation/🦀️.rs"]
+mod json_validation;
+pub use json_validation::JsonValidationCursor;
 //#endregion 🪢️TaxonomyMounts
 
 impl JsonScalar for bool {

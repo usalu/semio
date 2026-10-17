@@ -1,0 +1,31 @@
+⏪️time-travel/♻️retirement	15	reader + needle drift	store/instance scope readers (pluginSubtreeText, moduleFamilyText); constructor phase driver, discard publish pub fn, snapshot-return pump, ManuallyDrop import re-anchored; negative laws scoped to the actor instance
+⏪️time-travel/🧪️tests/🧩️history-partition	1	fixture drift	mount fixture re-pointed to the panel, command and job crate roots; re-export law is now 'pub mod'
+⏪️time-travel/🪪️identity	1	needle drift	commit_finished_replay via stores.store; mounted maintenance drive via original_plugin_turn_grant + ctx.drive_time_travel_turn(grant,…,cx); ctx.dispatch_time_travel_action
+⏯️tool-run/🎞️tick/📦️payload	1	stale pin	native grant pin 4096 -> 16384 (fixture-caller fixture raised in #683, the Rust reads that fixture)
+⏯️tool-run/📮️port/♻️retirement	1	stale reader	port source moved to 📜️declaration/⏯️tool-run: pluginSubtreeText
+⏯️tool-run/📮️port/🎟️admission	1	stale reader	same subtree; slice anchor now ordered
+♻️lifecycle/🏪️stores	4	reader + needle drift	instance-family reader -> pluginFamilyText / pluginSubtreeText; close ladder (ladder_ctx/ladder_ref, close_ladder_step(same,grant)); store read return boundary re-authored on the single try_return_to_registry_witness(grant) function; io module reader
+⚛️reactor/🎟️context	1	stale pin	retained-turn context fixture gained the source admission phase (#687): sum(items) 3 -> 4
+⚛️reactor/🎟️context/🌉️call	1	reader drift	export macros moved to 📣️macros: pluginSubtreeText
+⚛️reactor/…/⚖️failure-debit	2	behaviour moved	fuel is debited by the call sites before debit_original_error (cx.consume_fuel(actual_work)), not inside it: ordering law re-authored on primary-before-receipt; fixture preview helper via command_ctx(); PluginLifecyclePrimary path
+⚛️reactor/…/💼️job/📤️output	1	behaviour moved	the testing feature of the facade now forwards <crate>/original-actor-context-testing to the split crates (was empty): law checks the forwarded list
+⚛️reactor/…/💼️job/📤️receipt	1	stale pin	actor receipt magic SAC2 -> SAC3 (Rust writes b"SAC3", 136 bytes)
+⚛️reactor/…/🌉️call/📤️failure	1	needle drift	cause lent through self.cursor.advance_intrinsic(original,…) instead of OriginalCauseLoan::Turn
+⚛️reactor/…/🌉️call/📤️output	1	needle drift	read body split into read_job_output_step_with<T>: slice starts at the body
+⚛️reactor/🚪️lifetime/🏗️opening	1	reader + needle drift	runtime and instance trees via pluginSubtreeText; cancellation rung via self.tools.tool_cancellations
+🌐️browser-bundle/🛂️descriptor	1	stale fixture	expected actor exports regenerated from the WIT with the independent jco types (bd11-tools/actor-exports.ts): +admitActorContext/closeActorContext/poll input trio, sqlite take/retire/close, readJobOutput/acknowledgeJobOutput/closeJobs
+🌱️initialization/♻️retirement	1	needle drift	authority trait moved to the store crate and the job wrapper stayed in ♻️lifecycle: owner = trait + job text; close is close_original_retained_step with RetainedCloneProgress
+🎮️command/🎟️lease	2	reader + needle drift	instance-family reader -> pluginSubtreeText(🧵️instance, ⚛️reactor/🏃️runtime); pub async dispatch entrance; .tools.tool_cancellations; document window reset moved to tools/pending; caller list re-pointed to the staged production files (4 stale paths)
+🎮️command/🗝️latest	1	stale path	fixture read relative to the tests dir (🧫️fixtures moved under 🧪️tests)
+🏛️ownership/⚠️failure	2	needle drift	re-export now lives in the ownership crate root as original_failure::{…}
+👷️job/🚪️session/🫴️refusal	1	reader + needle drift	instance-family reader -> pluginSubtreeText(🧵️instance); reservations live on self.tools (the ownership/⚠️failure file imports this test, so it passes with it)
+🏛️ownership/📥️command-ingress	1	stale fixture	consumer fixture re-pointed to the exchange crate (plugin-exchange file, empty module chain, exchange manifest)
+👷️job/🚪️session/🎟️pending	1	visibility flip	pub(crate) fn pending -> pub fn pending
+📇️registry/📥️runtime	1	env-gated (kept)	spawns raw cargo test; compiler ingress refuses it without the repository launcher (O-06/O-09 class); no source drift
+📇️registry/🔎️discovery	7	env-gated + stale pin + load	needs SEMIO_TEST_ARTIFACT_DIR (6 tests); descriptor emitter maximumFiles pinned to 2 but the request carries the compiler inventory ceiling (16384): law now reads the policy const; stale-channel build-target test given a 120 s timeout (5 s default exceeded under load)
+📇️registry/🧪️tests/🎬️host-activation	1	API change (re-authored)	playgroundPreparationTargets is async and needs catalog contributions plus a preparation control: test awaits it with a contribution per fixture crate, the engine owner projects and the authored wasm profile producers; outputs are content-addressed components/<hash> plus modules/<name>: law re-authored on counts (1 component for a web variant, 3 for the native host session)
+📇️registry/🧪️tests/🎚️component-modes	1	env-gated (kept)	needs a launcher-issued script invocation (receiveScriptProcessInvocation) and runs rustc: O-06/O-09 class
+📇️registry/🧪️tests/📚️storybook-plugins	1	other runner (kept)	Playwright test file: bun test cannot run it ('Playwright Test did not expect test() to be called here')
+📇️registry/🧪️tests/🔁️rebuild	2	real regression (TS fixed)	the registry rebuild validator and schema still demanded command[0]=="nx" while the authored plans (and the runner: bun <command>) use "repo run …": validator/schema now require "repo"; fixtures and negative cases moved to repo
+📇️registry/🧪️tests/🧩️composition/🎚️config	1	not a test (kept)	a vitest configuration module (needs SEMIO_VITEST_POLICY), not a test file; bun test executes it and its policy guard throws
+📇️registry/🧪️tests/🧩️composition	1	stale convention	generator target executor nx:run-commands -> repo:script (library registration convention, as in BD8); the file runs 183 s under load, 37 of 38 already passed

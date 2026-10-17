@@ -341,8 +341,3 @@ impl Field for Rational {
     }
 }
 // #endregion 🔖️RationalTraitImpls
-
-// #region 🔖️Tests
-#[cfg(test)]
-include!("../🧪️tests/🔬️rational-unit/🦀️.rs");
-// #endregion 🔖️Tests

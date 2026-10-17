@@ -1,0 +1,226 @@
+{
+ "crates": {
+  "agg": {
+   "ident": "semio_s_artifact_raster_raster",
+   "root": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🦀️.rs"
+  },
+  "model": {
+   "ident": "semio_s_artifact_raster_raster_model",
+   "root": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs"
+  },
+  "diff": {
+   "ident": "semio_s_artifact_raster_raster_diff",
+   "root": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs"
+  },
+  "mutations": {
+   "ident": "semio_s_artifact_raster_raster_mutations",
+   "root": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs"
+  },
+  "layers": {
+   "ident": "semio_s_artifact_raster_raster_mutations_layers",
+   "root": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗂️layers/🦀️.rs"
+  },
+  "pixels": {
+   "ident": "semio_s_artifact_raster_raster_mutations_pixels",
+   "root": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖌️pixels/🦀️.rs"
+  },
+  "io": {
+   "ident": "semio_s_artifact_raster_raster_io",
+   "root": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs"
+  },
+  "editor": {
+   "ident": "semio_s_artifact_raster_raster_editor",
+   "root": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs"
+  },
+  "viewer": {
+   "ident": "semio_s_artifact_raster_raster_viewer",
+   "root": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs"
+  },
+  "host": {
+   "ident": "semio_s_artifact_raster_raster_host",
+   "root": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🔨️modules/🏠️host/🧰️owned/🦀️.rs"
+  },
+  "examples": {
+   "ident": "semio_s_artifact_raster_raster_examples",
+   "root": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🦀️.rs"
+  }
+ },
+ "companions": {
+  "mutations_tests": {
+   "dir": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🥣️companion",
+   "doc": "Companion test crate of `semio-s-artifact-raster-raster-mutations-layers` and `semio-s-artifact-raster-raster-mutations-pixels`: the leaf laws that apply a mutation through the closed vocabulary. The test files stay at their taxonomy nodes and are mounted here.",
+   "owners": [
+    "layers",
+    "pixels"
+   ]
+  },
+  "pixels_tests": {
+   "dir": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖌️pixels/🧪️tests/🥣️companion",
+   "doc": "Companion test crate of `semio-s-artifact-raster-raster-mutations-pixels`: the pixel leaf laws that run through the owned-document host. The test files stay at their taxonomy nodes and are mounted here.",
+   "owners": [
+    "pixels"
+   ]
+  },
+  "stack_tests": {
+   "dir": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🥣️companion",
+   "doc": "Companion test crate of the raster artifact crates: the full-stack laws that reach from the model through the vocabulary, the codecs and the host. The test files stay at their taxonomy nodes and are mounted here.",
+   "owners": [
+    "model",
+    "diff",
+    "mutations"
+   ]
+  }
+ },
+ "files": [
+  {
+   "file": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🔒️protection/🦀️.rs",
+   "owner": "model",
+   "companion": "stack_tests"
+  },
+  {
+   "file": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🔬️boot-document/🦀️.rs",
+   "owner": "model",
+   "companion": "stack_tests"
+  },
+  {
+   "file": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🖼️decoded-image/🦀️.rs",
+   "owner": "model",
+   "companion": "stack_tests"
+  },
+  {
+   "file": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/📸️snapshot/🧪️tests/🔬️unit/🦀️.rs",
+   "owner": "model",
+   "companion": "stack_tests"
+  },
+  {
+   "file": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+   "owner": "model",
+   "companion": "stack_tests"
+  },
+  {
+   "file": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🧪️tests/🔬️asset-capacity-vectors/🦀️.rs",
+   "owner": "diff",
+   "companion": "stack_tests"
+  },
+  {
+   "file": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️unit/🦀️.rs",
+   "owner": "mutations",
+   "companion": "stack_tests"
+  },
+  {
+   "file": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/🧬️mutations/🧪️tests/🔬️unit/🦀️.rs",
+   "owner": "mutations",
+   "companion": "stack_tests"
+  },
+  {
+   "file": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↔️move-layer/🧪️tests/📍️slides/🦀️.rs",
+   "owner": "layers",
+   "companion": "mutations_tests"
+  },
+  {
+   "file": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️rename-layer/🧪️tests/✏️renames/🦀️.rs",
+   "owner": "layers",
+   "companion": "mutations_tests"
+  },
+  {
+   "file": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌫️change-layer-opacity/🧪️tests/🌫️fades/🦀️.rs",
+   "owner": "layers",
+   "companion": "mutations_tests"
+  },
+  {
+   "file": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-layer/🧪️tests/🖋️creates-an-ink-8a1bf9/🦀️.rs",
+   "owner": "layers",
+   "companion": "mutations_tests"
+  },
+  {
+   "file": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎚️change-layer-adjustment/🧪️tests/📈️switches/🦀️.rs",
+   "owner": "layers",
+   "companion": "mutations_tests"
+  },
+  {
+   "file": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨change-layer-blend-mode/🧪️tests/💡️switches/🦀️.rs",
+   "owner": "layers",
+   "companion": "mutations_tests"
+  },
+  {
+   "file": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👁️change-layer-visible/🧪️tests/🙈️hides/🦀️.rs",
+   "owner": "layers",
+   "companion": "mutations_tests"
+  },
+  {
+   "file": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐resize-layer/🧪️tests/📐️resizes/🦀️.rs",
+   "owner": "layers",
+   "companion": "mutations_tests"
+  },
+  {
+   "file": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀reorder-layers/🧪️tests/⤴️lifts/🦀️.rs",
+   "owner": "layers",
+   "companion": "mutations_tests"
+  },
+  {
+   "file": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-layer/🧪️tests/🚫️deletes/🦀️.rs",
+   "owner": "layers",
+   "companion": "mutations_tests"
+  },
+  {
+   "file": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌈️apply-filter/🧪️tests/🦀️.rs",
+   "owner": "pixels",
+   "companion": "pixels_tests"
+  },
+  {
+   "file": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨️change-layer-pixels/🧪️tests/🦀️.rs",
+   "owner": "pixels",
+   "companion": "mutations_tests"
+  },
+  {
+   "file": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️transform-image/🧪️tests/🦀️.rs",
+   "owner": "pixels",
+   "companion": "pixels_tests"
+  },
+  {
+   "file": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖇️add-layer-asset/🧪️tests/🖼️declines/🦀️.rs",
+   "owner": "pixels",
+   "companion": "mutations_tests"
+  },
+  {
+   "file": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖌️paint-stroke/🧪️tests/🦀️.rs",
+   "owner": "pixels",
+   "companion": "pixels_tests"
+  },
+  {
+   "file": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗂️remove-layer-asset/🧪️tests/🖼️rejects/🦀️.rs",
+   "owner": "pixels",
+   "companion": "mutations_tests"
+  },
+  {
+   "file": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪣️fill-region/🧪️tests/🦀️.rs",
+   "owner": "pixels",
+   "companion": "pixels_tests"
+  },
+  {
+   "file": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫗️fill-selection/🧪️tests/🦀️.rs",
+   "owner": "pixels",
+   "companion": "pixels_tests"
+  },
+  {
+   "file": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/📸️snapshot/🧪️tests/🔬️unit/🦀️.rs",
+   "owner": "model",
+   "companion": "stack_tests"
+  },
+  {
+   "file": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛️change-layer/🧪️tests/🦀️.rs",
+   "owner": "layers",
+   "companion": "mutations_tests"
+  },
+  {
+   "file": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️change-layer-transform/🧪️tests/🦀️.rs",
+   "owner": "layers",
+   "companion": "mutations_tests"
+  },
+  {
+   "file": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔲write-pixel-region/🧪️tests/🦀️.rs",
+   "owner": "pixels",
+   "companion": "mutations_tests"
+  }
+ ]
+}

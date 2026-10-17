@@ -1,0 +1,675 @@
+use semio_framework_ui_contract::*;
+use semio_framework::*;
+use semio_framework::kernel::*;
+//#region 📡️RegisteredQueryDispatch
+use semio_framework_plugin_plugin_program::{AppInstance, decode_wire_serialized, encode_wire_serialized, plugin_runtime};
+use semio_framework_plugin_abi::{ArtifactAnalysis, ArtifactAnalyzer, ArtifactBuilder, ArtifactChildren, ArtifactComposer, ArtifactComposition, ArtifactDecomposer, ArtifactDeserializer, ArtifactSerializer, DerivedArtifactSpec};
+use semio_framework_plugin_decl_app::{ArtifactApp, NaturalFileDecodeCursor};
+use semio_framework_plugin_decl_surface::{ArtifactEditor, ArtifactViewer};
+use semio_framework_plugin_decl_views::tool_contract::ArtifactInstanceOperationOwner;
+use semio_framework_plugin_decl_app::tool_contract::{ArtifactOwnedToolJobFactory, ArtifactReservedJob};
+use pack::snapshot::ArtifactPack;
+use store::ArtifactStoreInitializationAuthority;
+use semio_framework_plugin_decl_emission::{AsyncTaskRun, AsyncTaskSource, Emit, ToolCommandCatalog};
+use semio_framework_os_kernel::os_store::backbone::Backbone;
+use semio_framework_plugin_decl_views::child_view::ChildContentRetainers;
+use semio_framework_value::DslValue;
+use semio_framework::{Fault, *};
+use semio_framework_diagnostic::FaultFrom;
+use semio_framework_value_derive::{FromValue, ToValue};
+use semio_framework_plugin_interaction::mutations::InteractionConfigMutation;
+use protocol::LOCAL_ACTOR_ID;
+use semio_framework_plugin_window_kits::{LabelAxes, WindowKit};
+use semio_framework_os_kernel::{MemberFactory, Mutation, SpaceMember};
+use semio_framework_plugin_reactor_app::PluginApp;
+use semio_framework_plugin_builder::Ready;
+use semio_framework_value::retained_clone::RetainedCloneGrant;
+use semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::document::mutations::set_count::SetCount;
+use semio_framework_os_kernel::io::SubsetValidator;
+use semio_framework_plugin_tests_05::plugin_runtime_plugin_builder_contract_support_1::{TestApp, interaction_app_raw};
+use semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::document::mutations::TestMutation;
+use semio_framework_plugin_decl_views::tool_run_contract::ToolRunRetargetableJob;
+use serde_json::{Value, json};
+use semio_framework_plugin_instance_app::VcsArtifactApp;
+use semio_framework_plugin_window_config::{WindowConfigOwner, WindowConfigReplaceMutation};
+use semio_framework_plugin_window_transient::window_transient::WindowTransientOwner;
+use semio_framework_job::InteractiveJob as _;
+#[cfg(any(test, feature = "artifact-app-testing"))]
+use semio_framework_plugin_testing_laws::artifact_app_laws;
+use semio_framework_os_kernel as protocol;
+use semio_framework_os_kernel as store;
+use semio_framework_plugin_tool_run as tool_run;
+use semio_framework_plugin_job::reserved_job_outcomes;
+
+//#region 🚪️ExactRuntimeCloseLease
+/// ⏱️ Mirrors the close worker's clock contract so a fixture clock row pins WHICH cleanup-fault
+/// variant the turn must publish, not merely that some fault was published.
+fn expected_clock_cause(samples: &[Option<u64>]) -> semio_framework_plugin_reactor_lifecycle::life_cleanup_vocabulary::RuntimeCleanupFault {
+    use semio_framework_plugin_reactor_lifecycle::life_cleanup_vocabulary::RuntimeCleanupFault;
+    let (Some(Some(start)), Some(Some(preflight))) = (samples.first().copied(), samples.get(1).copied()) else { return RuntimeCleanupFault::Clock };
+    if preflight < start { return RuntimeCleanupFault::ClockRegression; }
+    let Some(Some(finished)) = samples.get(2).copied() else { return RuntimeCleanupFault::Clock };
+    if finished < preflight { return RuntimeCleanupFault::ClockRegression; }
+    RuntimeCleanupFault::InteractiveCeiling
+}
+
+fn admit_fixture_session<J:semio_framework_job::InteractiveJob+'static>(job:J,config:semio_framework_job_worker_authority::BatchDriveConfig,cx:&mut semio_framework_job::StepContext<'_>)->semio_framework_job_worker::BatchJobSession<J>{
+    let mut original=semio_framework_plugin_ownership::reserved_job_session::RefusedWorkerSource::pending(job,(cx.operation(),cx.generation()));
+    for _ in 0..semio_framework_plugin_testing_laws::OriginalFixtureCaller::maximum_turns(){if let Some(session)=original.admit_pending_batch(config,cx).expect("same original fixture session admission"){assert!(original.terminal_is_empty());return session;}}
+    panic!("original session admission exceeded its supplied fixture turns")
+}
+
+fn close_fixture_session<J:semio_framework_job::InteractiveJob+'static>(session:&mut semio_framework_job_worker::BatchJobSession<J>,cx:&mut semio_framework_job::StepContext<'_>){
+    for _ in 0..semio_framework_plugin_testing_laws::OriginalFixtureCaller::maximum_turns(){if session.terminal_is_empty(){break;}session.close_step(cx).expect("same original fixture session close");}
+    assert!(session.terminal_is_empty());
+}
+
+fn drive_fixture_close_with_samples(state:&std::sync::Arc<semio_framework_plugin_reactor_lifecycle::life_instance_registry::RuntimeCloseWorkerState<TestRuntimeApps>>,cx:&mut semio_framework_job::StepContext<'_>,mut samples:impl FnMut()->Option<u64>){
+    use super::super::*;
+    let measured=runtime_callback_clock_begin(&mut samples);
+    let candidate=match measured{Ok(start)=>run_runtime_close_turn_inner(state,cx).expect("same original full close failure").map(|candidate|runtime_callback_clock_elapsed(&mut samples,start).map(|elapsed|(candidate,elapsed))),Err(cause)=>Some(Err(cause))};
+    match candidate{Some(Ok((status,elapsed)))=>runtime_close_publish_turn(state,status,elapsed),Some(Err(cause))=>{state.last_callback_elapsed_us.store(u64::MAX,Ordering::SeqCst);state.status.store(runtime_close_fault(state,cause).repr(),Ordering::SeqCst);},None=>{}}
+}
+
+fn terminal_close_state(complete: bool, faulted: bool, blocked: bool,cx:&mut semio_framework_job::StepContext<'_>) -> std::sync::Arc<semio_framework_plugin_reactor_lifecycle::life_instance_registry::RuntimeCloseWorkerState<TestRuntimeApps>> {
+    use super::super::*;
+    let job = RuntimeCloseCleanupJob { state: None, instance_id: 7, progress: None, contended: false, publication: semio_framework_plugin_job::reserved_job_outcomes::CleanupPublication::new(), closing: true };
+    let params = semio_framework_job_worker_authority::BatchDriveConfig { retained: semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy().close, site: "exact-close-terminal-law", stage: semio_framework_job::InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_us: 500 };
+    let mut session = admit_fixture_session(job, params,cx);
+    session.begin_close();
+    close_fixture_session(&mut session,cx);
+    let mut pump = RuntimeCloseCleanupPump::new();
+    pump.session = Some(session); pump.terminal = true; pump.complete = complete; pump.faulted = faulted; pump.blocked = blocked;
+    std::sync::Arc::new(RuntimeCloseWorkerState {
+        instance_id: 7, generation: semio_framework_job::Generation(1), mounted_policy: semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(),
+        cell: std::sync::Mutex::new(std::mem::ManuallyDrop::new(None)), pump: std::sync::Mutex::new(pump),
+        status: AtomicU8::new(RuntimeCloseStatus::Queued.repr()), deadline_resume: AtomicU8::new(u8::MAX), deadline_elapsed_us: AtomicU64::new(0), stalled_steps: AtomicU8::new(0),
+        stall_since_us: AtomicU64::new(0), stall_credit_spent_us: AtomicU64::new(0),
+        last_callback_elapsed_us: AtomicU64::new(0),
+        last_fault: std::sync::Mutex::new([0; 256]), last_fault_origin: AtomicU8::new(0), physical_close_calls: AtomicU64::new(0),
+        callback_phase_started_us: AtomicU64::new(0), callback_phase_us: std::array::from_fn(|_| AtomicU64::new(0)),
+    })
+}
+
+#[test]
+fn instance_lifetime_close_does_not_publish_terminal_before_watchdog() {
+    let mut original_caller=semio_framework_plugin_testing_laws::OriginalFixtureCaller::admit().expect("original full-body dispatch caller");let mut original_context=original_caller.context();let cx=&mut original_context;let result=(||{
+    use super::super::*;
+    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🚨️fault.fixture.json")).unwrap();
+    let state = terminal_close_state(true, false, false,cx);
+    let _ = run_runtime_close_turn_inner(&state,cx);
+    assert_eq!(RuntimeCloseStatus::from_repr(state.status.load(Ordering::SeqCst)) == RuntimeCloseStatus::Complete, fixture["owners"]["terminalVisibleBeforeWatchdog"].as_bool().unwrap());
+    for row in fixture["callbacks"].as_array().unwrap() {
+        let named = |name: &str| match name { "ready" => RuntimeCloseStatus::Ready, "complete" => RuntimeCloseStatus::Complete, "external-wait" => RuntimeCloseStatus::ExternalWait, "deadline-yield" => RuntimeCloseStatus::DeadlineYield, "fault" => RuntimeCloseStatus::Fault(RuntimeCleanupFault::PriorOutcome), _ => unreachable!() };
+        let elapsed_us = row["elapsedUs"].as_u64().unwrap();
+        state.status.store(RuntimeCloseStatus::Running.repr(), Ordering::SeqCst);
+        runtime_close_publish_turn(&state, named(row["candidate"].as_str().unwrap()), elapsed_us);
+        let expected = named(row["published"].as_str().unwrap());
+        assert_eq!(RuntimeCloseStatus::from_repr(state.status.load(Ordering::SeqCst)), expected, "{row}");
+        assert_eq!(state.last_callback_elapsed_us.load(Ordering::SeqCst), elapsed_us);
+    }
+})();let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original full-body dispatch caller terminal close");result
+}
+
+
+#[test]
+fn instance_lifetime_close_deadline_resume_never_reenters_completed_work() {
+    let mut original_caller=semio_framework_plugin_testing_laws::OriginalFixtureCaller::admit().expect("original full-body dispatch caller");let mut original_context=original_caller.context();let cx=&mut original_context;let result=(||{
+    use super::super::*;
+    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🚨️fault.fixture.json")).unwrap();
+    for row in fixture["callbacks"].as_array().unwrap().iter().filter(|row| row["published"] == "deadline-yield") {
+        let state = terminal_close_state(true, false, false,cx);
+        let first = run_runtime_close_turn_inner(&state,cx).unwrap().unwrap();
+        assert_eq!(first, RuntimeCloseStatus::Complete);
+        assert!(state.pump.lock().unwrap().session.is_none());
+        let candidate = match row["candidate"].as_str().unwrap() { "complete" => RuntimeCloseStatus::Complete, "ready" => RuntimeCloseStatus::Ready, "external-wait" => RuntimeCloseStatus::ExternalWait, _ => unreachable!() };
+        runtime_close_publish_turn(&state, candidate, row["elapsedUs"].as_u64().unwrap());
+        assert_eq!(RuntimeCloseStatus::from_repr(state.status.load(Ordering::SeqCst)), RuntimeCloseStatus::DeadlineYield);
+        assert_eq!(state.deadline_resume.load(Ordering::SeqCst), candidate.repr());
+        let owner = state.pump.lock().unwrap();
+        for elapsed in [8000, 1] {
+            state.status.store(RuntimeCloseStatus::Queued.repr(), Ordering::SeqCst);
+            let mut readings = [Some(0), Some(0), Some(elapsed)].into_iter();
+            drive_fixture_close_with_samples(&state,cx, || readings.next().flatten());
+            assert_eq!(RuntimeCloseStatus::from_repr(state.status.load(Ordering::SeqCst)), if elapsed == 8000 { RuntimeCloseStatus::DeadlineYield } else { candidate });
+            assert!(owner.session.is_none() && !owner.outcome_pending);
+        }
+        assert_eq!(state.deadline_resume.load(Ordering::SeqCst), u8::MAX);
+        assert_eq!(state.deadline_elapsed_us.load(Ordering::SeqCst), row["elapsedUs"].as_u64().unwrap());
+    }
+})();let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original full-body dispatch caller terminal close");result
+}
+
+
+#[semio_framework_async_macros::async_test]
+async fn instance_lifetime_close_late_physical_step_retains_its_exact_outcome() {
+    let mut original_caller=semio_framework_plugin_testing_laws::OriginalFixtureCaller::admit().expect("original full-body dispatch caller");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+    use super::super::*;
+    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🚨️fault.fixture.json")).unwrap();
+    let state = terminal_close_state(false, false, false,cx);
+    *state.pump.lock().unwrap() = RuntimeCloseCleanupPump::new();
+    **state.cell.lock().unwrap() = Some(std::sync::Arc::new(RuntimeAppCell::new(AppInstance { id: 7, app: TestRuntimeApps::from(query_app().await), surface_contexts: Default::default() }, semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy())));
+    let limit = fixture["callbackLimitUs"].as_u64().unwrap();
+    for _ in 0..4096 {
+        state.status.store(RuntimeCloseStatus::Queued.repr(), Ordering::SeqCst);
+        let mut sample = 0;
+        drive_fixture_close_with_samples(&state,cx, || {
+            sample += 1;
+            Some(if sample == 3 && state.physical_close_calls.load(Ordering::SeqCst) > 0 { limit } else { 0 })
+        });
+        if state.physical_close_calls.load(Ordering::SeqCst) > 0 { break; }
+    }
+    assert_eq!(state.physical_close_calls.load(Ordering::SeqCst), 1);
+    assert_eq!(RuntimeCloseStatus::from_repr(state.status.load(Ordering::SeqCst)), RuntimeCloseStatus::DeadlineYield);
+    {
+        let pump = state.pump.lock().unwrap();
+        assert!(pump.outcome_pending && pump.session.is_some());
+        state.status.store(RuntimeCloseStatus::Queued.repr(), Ordering::SeqCst);
+        drive_fixture_close_with_samples(&state,cx, || Some(0));
+        assert!(pump.outcome_pending && pump.session.is_some());
+        assert_eq!(state.physical_close_calls.load(Ordering::SeqCst) > 1, fixture["owners"]["lateResumeRepeatsPhysicalClose"].as_bool().unwrap());
+    }
+    for _ in 0..200_000 {
+        let status = RuntimeCloseStatus::from_repr(state.status.load(Ordering::SeqCst));
+        if status == RuntimeCloseStatus::Complete { break; }
+        assert!(!matches!(status, RuntimeCloseStatus::Fault(_)), "retained real close faulted: {status:?}");
+        state.status.store(RuntimeCloseStatus::Queued.repr(), Ordering::SeqCst);
+        drive_fixture_close_with_samples(&state,cx, || Some(0));
+    }
+    assert_eq!(RuntimeCloseStatus::from_repr(state.status.load(Ordering::SeqCst)), RuntimeCloseStatus::Complete);
+    assert!(state.cell.lock().unwrap().is_none());
+}.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original full-body dispatch caller terminal close");result
+}
+
+
+#[test]
+fn instance_lifetime_close_deadline_submit_refusal_preserves_candidate() {
+    let mut original_caller=semio_framework_plugin_testing_laws::OriginalFixtureCaller::admit().expect("original full-body dispatch caller");let mut original_context=original_caller.context();let cx=&mut original_context;let result=(||{
+    use super::super::*;
+    let state = terminal_close_state(true, false, false,cx);
+    assert_eq!(run_runtime_close_turn_inner(&state,cx).unwrap(), Some(RuntimeCloseStatus::Complete));
+    runtime_close_publish_turn(&state, RuntimeCloseStatus::Complete, 8000);
+    state.status.compare_exchange(RuntimeCloseStatus::DeadlineYield.repr(), RuntimeCloseStatus::Ready.repr(), Ordering::SeqCst, Ordering::SeqCst).unwrap();
+    let pool = semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1));
+    pool.shutdown().expect("isolated empty test pool shutdown");
+    assert!(pool.try_submit(semio_framework_async::Lane::Interactive,Box::new(||{})).is_err());
+    assert_eq!(RuntimeCloseStatus::from_repr(state.status.load(Ordering::SeqCst)), RuntimeCloseStatus::Ready);
+    assert_eq!(state.deadline_resume.load(Ordering::SeqCst), RuntimeCloseStatus::Complete.repr());
+    let pump = state.pump.lock().unwrap();
+    state.status.store(RuntimeCloseStatus::Queued.repr(), Ordering::SeqCst);
+    drive_fixture_close_with_samples(&state,cx, || Some(0));
+    assert_eq!(RuntimeCloseStatus::from_repr(state.status.load(Ordering::SeqCst)), RuntimeCloseStatus::Complete);
+    assert_eq!(state.deadline_resume.load(Ordering::SeqCst), u8::MAX);
+    assert!(pump.session.is_none() && !pump.outcome_pending);
+})();let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original full-body dispatch caller terminal close");result
+}
+
+#[test]
+fn instance_lifetime_close_fault_outcome_dominates_complete_progress() {
+    let mut original_caller=semio_framework_plugin_testing_laws::OriginalFixtureCaller::admit().expect("original full-body dispatch caller");let mut original_context=original_caller.context();let cx=&mut original_context;let result=(||{
+    use super::super::*;
+    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🚨️fault.fixture.json")).unwrap();
+    for row in fixture["terminalPump"].as_array().unwrap() {
+        let state = terminal_close_state(row["complete"].as_bool().unwrap(), row["faulted"].as_bool().unwrap(), row["blocked"].as_bool().unwrap(),cx);
+        let actual = runtime_close_cleanup_pump_one(&state, &mut state.pump.lock().unwrap(),cx).unwrap();
+        let expected = match row["status"].as_str().unwrap() { "complete" => RuntimeCloseStatus::Complete, "fault" => RuntimeCloseStatus::Fault(RuntimeCleanupFault::PriorOutcome), "external-wait" => RuntimeCloseStatus::ExternalWait, _ => unreachable!() };
+        assert_eq!(actual, expected, "exact terminal outcome {row}");
+    }
+})();let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original full-body dispatch caller terminal close");result
+}
+
+#[test]
+fn instance_lifetime_close_optional_monotonic_clock_rejects_missing_and_backward_authority() {
+    let mut original_caller=semio_framework_plugin_testing_laws::OriginalFixtureCaller::admit().expect("original full-body dispatch caller");let mut original_context=original_caller.context();let cx=&mut original_context;let result=(||{
+    use super::super::*;
+    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🚨️fault.fixture.json")).unwrap();
+    for row in fixture["clocks"].as_array().unwrap() {
+        let state = terminal_close_state(true, false, false,cx);
+        let readings: Vec<Option<u64>> = row["samples"].as_array().unwrap().iter().map(Value::as_u64).collect();
+        let mut samples = readings.clone().into_iter();
+        drive_fixture_close_with_samples(&state,cx, || samples.next().flatten());
+        let expected = if row["published"] == "complete" { RuntimeCloseStatus::Complete } else if row["published"] == "deadline-yield" { RuntimeCloseStatus::DeadlineYield } else { RuntimeCloseStatus::Fault(expected_clock_cause(&readings)) };
+        assert_eq!(RuntimeCloseStatus::from_repr(state.status.load(Ordering::SeqCst)), expected, "{row}");
+        assert_eq!(state.pump.lock().unwrap().session.is_none(), row["workEntered"].as_bool().unwrap(), "{row}");
+        if !row["workEntered"].as_bool().unwrap() {
+            let mut pump = state.pump.lock().unwrap();
+            assert!(pump.session.as_ref().unwrap().terminal_is_empty());
+            pump.session = None;
+        }
+    }
+})();let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original full-body dispatch caller terminal close");result
+}
+
+#[semio_framework_async_macros::async_test]
+async fn instance_lifetime_close_preflight_and_shared_restore_preserve_exact_owner() {
+    let mut original_caller=semio_framework_plugin_testing_laws::OriginalFixtureCaller::admit().expect("original full-body dispatch caller");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+    use super::super::*;
+    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🚨️fault.fixture.json")).unwrap();
+    let cell = std::sync::Arc::new(RuntimeAppCell::new(AppInstance { id: 7, app: TestRuntimeApps::from(query_app().await), surface_contexts: Default::default() }, semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy()));
+    let state = terminal_close_state(true, false, false,cx);
+    **state.cell.lock().unwrap() = Some(cell.clone());
+    assert_eq!(runtime_close_retire_cell(&state), RuntimeCloseStatus::Fault(RuntimeCleanupFault::InstanceNotDrained));
+    assert_eq!(std::sync::Arc::ptr_eq(state.cell.lock().unwrap().as_ref().unwrap(), &cell), fixture["owners"]["nonterminalPreflightKeepsExactAllocation"].as_bool().unwrap());
+    {
+        let mut instance = cell.instance.lock().unwrap();
+        for _ in 0..200_000 {
+            if instance.app.close_terminal_is_empty() { break; }
+            let demand = instance.app.close_retirement_demands(4096).unwrap();
+            let loan=cx.retained_grant();let _ = instance.app.close_step(cx,loan).unwrap();
+        }
+        assert!(instance.app.close_terminal_is_empty());
+    }
+    {
+        let mut pump = cell.maintenance_pump.lock().unwrap();
+        let demand = pump.retirement_demands(4096).unwrap();
+        let _ = pump.close_step(cx);
+    }
+    assert_eq!(runtime_close_retire_cell(&state), RuntimeCloseStatus::ExternalWait);
+    assert_eq!(std::sync::Arc::ptr_eq(state.cell.lock().unwrap().as_ref().unwrap(), &cell), fixture["owners"]["sharedRestoreKeepsExactAllocation"].as_bool().unwrap());
+    drop(cell);
+    assert_eq!(runtime_close_retire_cell(&state), RuntimeCloseStatus::Complete);
+    assert!(state.cell.lock().unwrap().is_none());
+}.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original full-body dispatch caller terminal close");result
+}
+
+#[test]
+fn instance_lifetime_close_contended_pump_keeps_exact_outcome_source() {
+    let mut original_caller=semio_framework_plugin_testing_laws::OriginalFixtureCaller::admit().expect("original full-body dispatch caller");let mut original_context=original_caller.context();let cx=&mut original_context;let result=(||{
+    use super::super::*;
+    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🚨️fault.fixture.json")).unwrap();
+    let state = terminal_close_state(true, false, false,cx);
+    let job = RuntimeCloseCleanupJob { state: Some(std::sync::Arc::downgrade(&state)), instance_id: 7, progress: None, contended: false, publication: semio_framework_plugin_job::reserved_job_outcomes::CleanupPublication::new(), closing: false };
+    let params = semio_framework_job_worker_authority::BatchDriveConfig { retained: semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy().close, site: "exact-close-source-law", stage: semio_framework_job::InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_us: 500 };
+    let mut session = admit_fixture_session(job, params,cx);
+    session.step_on_original_caller(cx).unwrap();
+    assert!(session.checkout_outcome());
+    assert!(session.take_checked_out_retained_step_receipt().is_some());
+    assert!(matches!(session.checked_out_outcome(), Ok(Some(semio_framework_job::JobOutcomeView::Complete { .. }))));
+    {
+        let mut pump = state.pump.lock().unwrap();
+        pump.outcome_pending = true;
+        pump.session = Some(session);
+    }
+    let (ready_tx, ready_rx) = std::sync::mpsc::channel();
+    let (release_tx, release_rx) = std::sync::mpsc::channel();
+    let held = state.clone();
+    let holder = std::thread::spawn(move || {
+        let _guard = held.pump.lock().unwrap();
+        ready_tx.send(()).unwrap();
+        let _ = release_rx.recv_timeout(std::time::Duration::from_millis(200));
+    });
+    ready_rx.recv().unwrap();
+    drive_fixture_close_with_samples(&state,cx, || Some(10));
+    let _ = release_tx.send(());
+    holder.join().unwrap();
+    let status = RuntimeCloseStatus::from_repr(state.status.load(Ordering::SeqCst));
+    let mut pump = state.pump.lock().unwrap();
+    let session_preserved = pump.session.is_some();
+    let source_preserved = pump.outcome_pending && pump.session.as_ref().is_some_and(|session| matches!(session.checked_out_outcome(), Ok(Some(semio_framework_job::JobOutcomeView::Complete { .. }))));
+    pump.outcome_pending = false;
+    if let Some(session) = pump.session.as_mut() {
+        session.begin_close();
+        close_fixture_session(session,cx);
+    }
+    pump.session = None;
+    pump.terminal = false;
+    assert_eq!(status, RuntimeCloseStatus::Ready);
+    assert_eq!(session_preserved, fixture["owners"]["contendedPumpPreservesSession"].as_bool().unwrap());
+    assert_eq!(source_preserved, fixture["owners"]["contendedOutcomePreservesSource"].as_bool().unwrap());
+})();let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original full-body dispatch caller terminal close");result
+}
+
+async fn close_lease_app(runtime: &semio_framework_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<TestRuntimeApps>) {
+    let cell = std::sync::Arc::new(semio_framework_plugin_reactor_lifecycle::life_app_cell::RuntimeAppCell::new(AppInstance { id: 7, app: TestRuntimeApps::from(query_app().await), surface_contexts: Default::default() }, semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy()));
+    runtime.instances.borrow_mut().insert_admitted(7, cell);
+}
+
+fn drive_close_lease(runtime: &semio_framework_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<TestRuntimeApps>, lease: &semio_framework_plugin_reactor_lifecycle::life_instance_registry::instance_lifetime::PluginInstanceCloseLease<TestRuntimeApps>,cx:&mut semio_framework_job::StepContext<'_>) {
+    for _ in 0..200_000 {
+        if let Err(error) = semio_framework_plugin_runtime_instances::inst_cleanup_turns::plugin_step_close_cleanup(runtime,cx) {
+            let entries = runtime.close_quarantine.borrow();
+            let state = &entries.get(7).unwrap().state;
+            let pump = state.pump.lock().unwrap();
+            let fault = state.last_fault.lock().unwrap();
+            let length = fault.iter().position(|byte| *byte == 0).unwrap_or(fault.len());
+            let phases = state.callback_phase_us.each_ref().map(|phase| phase.load(std::sync::atomic::Ordering::SeqCst));
+            panic!("exact close {error:?}: generation={} origin={} elapsed={} phases={phases:?} stalled={} terminal={} complete={} blocked={} faulted={} pending={:?} detail={}", state.generation.0, state.last_fault_origin.load(std::sync::atomic::Ordering::SeqCst), state.last_callback_elapsed_us.load(std::sync::atomic::Ordering::SeqCst), state.stalled_steps.load(std::sync::atomic::Ordering::SeqCst), pump.terminal, pump.complete, pump.blocked, pump.faulted, pump.pending_status, String::from_utf8_lossy(&fault[..length]));
+        }
+        if lease.is_retired().unwrap() && runtime.close_quarantine.borrow().get(7).is_none() { return; }
+        std::thread::yield_now();
+    }
+    panic!("exact app close witness did not reach terminal emptiness");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn instance_lifetime_close_witness_survives_quarantine_removal_and_reused_id() {
+    let mut original_caller=semio_framework_plugin_testing_laws::OriginalFixtureCaller::admit().expect("original full-body dispatch caller");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+    let runtime = semio_framework_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime::<TestRuntimeApps>::new({ let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
+    close_lease_app(&runtime).await;
+    let mut lease = semio_framework_plugin_reactor_lifecycle::life_instance_registry::instance_lifetime::plugin_capture_instance_close(&runtime, 7).unwrap();
+    assert!(!lease.is_retired().unwrap());
+    lease.begin_close(&runtime).unwrap();
+    assert_eq!(lease.close_generation(), Some(1));
+    let worker = runtime.close_quarantine.borrow().get(7).expect("quarantined close worker").state.clone();
+    drive_close_lease(&runtime, &lease,cx);
+    assert_eq!(lease.is_retired().unwrap(), fixture["nativeCases"]["quarantineRemovalPreservesTerminalWitness"].as_bool().unwrap());
+    {
+        let held = worker.pump.lock().expect("close worker pump");
+        assert_eq!(lease.is_retired().unwrap(), fixture["nativeCases"]["contendedWitnessStaysTerminal"].as_bool().unwrap(), "a terminal witness must not be retracted by a contended close worker pump");
+        drop(held);
+    }
+    close_lease_app(&runtime).await;
+    lease.begin_close(&runtime).unwrap();
+    assert_eq!(runtime.instances.borrow().get(7).is_some(), fixture["nativeCases"]["repeatCloseKeepsReplacement"].as_bool().unwrap());
+    let mut fresh = semio_framework_plugin_reactor_lifecycle::life_instance_registry::instance_lifetime::plugin_capture_instance_close(&runtime, 7).unwrap();
+    fresh.begin_close(&runtime).unwrap();
+    assert_eq!(fresh.close_generation(), Some(2));
+    drive_close_lease(&runtime, &fresh,cx);
+}.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original full-body dispatch caller terminal close");result
+}
+
+#[semio_framework_async_macros::async_test]
+async fn instance_lifetime_close_constructs_worker_shell_before_exact_live_detachment() {
+    let mut original_caller=semio_framework_plugin_testing_laws::OriginalFixtureCaller::admit().expect("original full-body dispatch caller");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+    let fixture: Value = serde_json::from_str(include_str!("../../../../../🚪️lifetime/🏗️construction.json")).unwrap();
+    let runtime = semio_framework_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime::<TestRuntimeApps>::new({ let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
+    close_lease_app(&runtime).await;
+    let mut lease = semio_framework_plugin_reactor_lifecycle::life_instance_registry::instance_lifetime::plugin_capture_instance_close(&runtime, 7).unwrap();
+    semio_framework_plugin_reactor_lifecycle::life_cleanup_pumps::RUNTIME_CLOSE_CONSTRUCTION_LIVE.with(|probe| probe.set(None));
+    lease.begin_close(&runtime).unwrap();
+    let constructed_while_live = semio_framework_plugin_reactor_lifecycle::life_cleanup_pumps::RUNTIME_CLOSE_CONSTRUCTION_LIVE.with(|probe| probe.take());
+    let live_after = runtime.instances.borrow().get(7).is_some();
+    let quarantined_after = runtime.close_quarantine.borrow().get(7).is_some();
+    drive_close_lease(&runtime, &lease,cx);
+    assert_eq!(constructed_while_live, fixture["atWorkerShellExactLiveAllocation"].as_bool());
+    assert_eq!(live_after, fixture["states"][2]["liveOwner"].as_bool().unwrap());
+    assert_eq!(quarantined_after, fixture["states"][2]["quarantineOwner"].as_bool().unwrap());
+}.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original full-body dispatch caller terminal close");result
+}
+
+#[semio_framework_async_macros::async_test]
+async fn instance_lifetime_close_rejects_foreign_root_and_exhaustion_before_detach() {
+    let mut original_caller=semio_framework_plugin_testing_laws::OriginalFixtureCaller::admit().expect("original full-body dispatch caller");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+    let runtime = semio_framework_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime::<TestRuntimeApps>::new({ let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
+    close_lease_app(&runtime).await;
+    let mut old = semio_framework_plugin_reactor_lifecycle::life_instance_registry::instance_lifetime::plugin_capture_instance_close(&runtime, 7).unwrap();
+    let displaced = runtime.instances.borrow_mut().take(7).unwrap();
+    close_lease_app(&runtime).await;
+    assert_eq!(old.begin_close(&runtime).is_err(), fixture["nativeCases"]["sameIdReplacementRejected"].as_bool().unwrap());
+    assert!(runtime.instances.borrow().get(7).is_some());
+    assert!(runtime.close_quarantine.borrow().is_empty());
+    let mut fresh = semio_framework_plugin_reactor_lifecycle::life_instance_registry::instance_lifetime::plugin_capture_instance_close(&runtime, 7).unwrap();
+    runtime.close_generation.set(u64::MAX);
+    assert!(fresh.begin_close(&runtime).is_err());
+    assert_eq!(runtime.instances.borrow().get(7).is_some(), fixture["nativeCases"]["overflowPreservesLiveOwner"].as_bool().unwrap());
+    runtime.close_generation.set(0);
+    fresh.begin_close(&runtime).unwrap();
+    drive_close_lease(&runtime, &fresh,cx);
+    runtime.instances.borrow_mut().insert_admitted(7, displaced);
+    old.begin_close(&runtime).unwrap();
+    drive_close_lease(&runtime, &old,cx);
+}.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original full-body dispatch caller terminal close");result
+}
+
+#[semio_framework_async_macros::async_test]
+async fn instance_lifetime_close_construction_failure_preserves_original_live_root() {
+    let mut original_caller=semio_framework_plugin_testing_laws::OriginalFixtureCaller::admit().expect("original full-body dispatch caller");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+    let fixture: Value = serde_json::from_str(include_str!("../../../../../🚪️lifetime/🏗️construction.json")).unwrap();
+    let law = &fixture["constructionFailure"];
+    let runtime = semio_framework_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime::<TestRuntimeApps>::new({ let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
+    close_lease_app(&runtime).await;
+    let rescue = runtime.instances.borrow().get(7).unwrap().clone();
+    let generation = runtime.close_generation.get();
+    let mut lease = semio_framework_plugin_reactor_lifecycle::life_instance_registry::instance_lifetime::plugin_capture_instance_close(&runtime, 7).unwrap();
+    semio_framework_plugin_reactor_lifecycle::life_cleanup_pumps::RUNTIME_CLOSE_CONSTRUCTION_FAIL.with(|fail| fail.set(true));
+    let fault = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| lease.begin_close(&runtime)));
+    let live = runtime.instances.borrow().get(7).is_some();
+    let same = runtime.instances.borrow().get(7).is_some_and(|owner| std::sync::Arc::ptr_eq(owner, &rescue));
+    let generation_unchanged = runtime.close_generation.get() == generation;
+    let quarantine_empty = runtime.close_quarantine.borrow().is_empty();
+    if !live { runtime.instances.borrow_mut().insert_admitted(7, rescue.clone()); }
+    drop(rescue);
+    lease.begin_close(&runtime).unwrap();
+    drive_close_lease(&runtime, &lease,cx);
+    assert!(fault.is_err());
+    assert!(quarantine_empty);
+    assert_eq!(live, law["liveOwner"].as_bool().unwrap());
+    assert_eq!(same, law["sameAllocation"].as_bool().unwrap());
+    assert_eq!(generation_unchanged, law["generationUnchanged"].as_bool().unwrap());
+}.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original full-body dispatch caller terminal close");result
+}
+//#endregion 🚪️ExactRuntimeCloseLease
+
+async fn query_command(runtime: &semio_framework_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<TestRuntimeApps>, seq: u64, command: protocol::LocalInteractionQueryCommand,cx:&mut semio_framework_job::StepContext<'_>) -> Vec<protocol::AppFrame> {
+    wire_command(runtime, seq, protocol::AppCommand::LocalInteractionQuery { seq, command },cx).await
+}
+
+async fn wire_command(runtime: &semio_framework_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<TestRuntimeApps>, seq: u64, command: protocol::AppCommand,cx:&mut semio_framework_job::StepContext<'_>) -> Vec<protocol::AppFrame> {
+    let encoded = protocol::encode_app_command(&command).await.unwrap();
+    run_ingress(runtime, seq, semio_framework_plugin_runtime_ops::ops_ingress::PluginCommandIngress::Encoded(encoded),cx).await
+}
+
+async fn cold_decoded_command(runtime: &semio_framework_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<TestRuntimeApps>, seq: u64, command: protocol::AppCommand,cx:&mut semio_framework_job::StepContext<'_>) -> Vec<protocol::AppFrame> {
+    run_ingress(runtime, seq, semio_framework_plugin_runtime_ops::ops_ingress::PluginCommandIngress::Decoded(semio_framework_plugin_runtime_ops::ops_ingress::original_manifest_receiving::OriginalDecodedPluginCommand::new(command)),cx).await
+}
+
+async fn run_ingress(runtime: &semio_framework_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<TestRuntimeApps>, seq: u64, ingress: semio_framework_plugin_runtime_ops::ops_ingress::PluginCommandIngress,cx:&mut semio_framework_job::StepContext<'_>) -> Vec<protocol::AppFrame> {
+    let mut input = Some((seq, ingress));
+    let mut frames = Vec::new();
+    for _ in 0..100 {
+        let output = semio_framework_plugin_runtime_exchange::exch_plugin_exchange::plugin_exchange(runtime, 7, input, &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity(), cx).await.unwrap();
+        for bytes in output.frames { frames.push(protocol::decode_app_frame(&bytes).await.unwrap()); }
+        input = output.retry_command;
+        if input.is_none() { return frames; }
+    }
+    panic!("fixed local query command did not leave ingress");
+}
+
+/// 🔒️ The encoded transaction route is no longer refused wholesale: it is admitted and answers
+/// with its OWN typed frame, failing CLOSED on the payload itself. The refusal this law used to
+/// name, `plugin.command-route-state-machine-required`, exists NOWHERE in the tree any more — it
+/// was the route-level rejection that has been replaced by the per-payload one below. What the
+/// law protects is unchanged: an encoded `TransactionPrepare` can never smuggle an unvalidated
+/// owner-mutation payload past the decoder, and no `Error` frame hides the outcome.
+#[semio_framework_async_macros::async_test]
+async fn local_interaction_cold_transaction_receipts_and_encoded_route_rejection() {
+    let mut original_caller=semio_framework_plugin_testing_laws::OriginalFixtureCaller::admit().expect("original full-body dispatch caller");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+    let runtime = semio_framework_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime::<TestRuntimeApps>::new({ let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
+    let cell = std::sync::Arc::new(semio_framework_plugin_reactor_lifecycle::life_app_cell::RuntimeAppCell::new(AppInstance { id: 7, app: TestRuntimeApps::from(query_app().await), surface_contexts: Default::default() }, semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy()));
+    runtime.instances.borrow_mut().insert_admitted(7, cell.clone());
+    semio_framework_plugin_runtime_instances::inst_wire_frames::test_admit_instance_actor(&runtime, 7, "local");
+    let denied = wire_command(&runtime, 0, protocol::AppCommand::TransactionPrepare { seq: 0, txn_id: "denied".into(), mutation_id: String::new(), payload: Vec::new(), prepared_ops: Vec::new(), origin: Vec::new(), prepared_child_ops: Vec::new() },cx).await;
+    assert!(!denied.iter().any(|frame| matches!(frame, protocol::AppFrame::Error { .. })), "the route answers through its own transaction frame, not an error frame: {denied:?}");
+    let rejection = denied
+        .iter()
+        .find_map(|frame| match frame {
+            protocol::AppFrame::TransactionPrepared { txn_id, rejection, .. } if txn_id == "denied" => Some(rejection),
+            _ => None,
+        })
+        .unwrap_or_else(|| panic!("the encoded transaction route answers its own TransactionPrepared frame; got {denied:?}"));
+    assert!(!rejection.is_empty(), "an empty owner-mutation payload must be REJECTED, never silently prepared: {denied:?}");
+    let fault: Fault = semio_framework_plugin_plugin_program::decode_wire_serialized(rejection).await.unwrap();
+    assert_eq!(fault.code.0, "transaction.unknown-mutation");
+    assert!(fault.message.contains("did not decode as a"), "the refusal names the decoder that rejected it: {fault:?}");
+    assert!(denied.iter().any(|frame| matches!(frame, protocol::AppFrame::Done { in_reply_to } if *in_reply_to == 0)), "the rejected command still closes its own ingress slot: {denied:?}");
+    for (prepare_seq, finish_seq, txn_id, commit) in [(1, 2, "receipt-commit", true), (3, 4, "receipt-rollback", false)] {
+        let operation = <TestMutation as protocol::OpBinary>::encode_op(&TestMutation::SetCount(SetCount { value: prepare_seq as i32 })).unwrap();
+        let prepared = cold_decoded_command(&runtime, prepare_seq, protocol::AppCommand::TransactionPrepare { seq: prepare_seq, txn_id: txn_id.into(), mutation_id: String::new(), payload: Vec::new(), prepared_ops: vec![operation], origin: Vec::new(), prepared_child_ops: Vec::new() },cx).await;
+        assert_eq!(prepared.iter().filter(|frame| matches!(frame, protocol::AppFrame::Done { in_reply_to } if *in_reply_to == prepare_seq)).count(), 1, "[TRACE] transaction prepare seq={prepare_seq} frames={prepared:?}");
+        assert!(prepared.iter().any(|frame| matches!(frame, protocol::AppFrame::TransactionPrepared { txn_id: actual, rejection, .. } if actual == txn_id && rejection.is_empty())));
+        let command = if commit { protocol::AppCommand::TransactionCommit { seq: finish_seq, txn_id: txn_id.into() } } else { protocol::AppCommand::TransactionRollback { seq: finish_seq, txn_id: txn_id.into() } };
+        let finished = cold_decoded_command(&runtime, finish_seq, command,cx).await;
+        assert_eq!(finished.iter().filter(|frame| matches!(frame, protocol::AppFrame::Done { in_reply_to } if *in_reply_to == finish_seq)).count(), 1, "[TRACE] transaction finish seq={finish_seq} frames={finished:?}");
+        assert!(finished.iter().any(|frame| match frame {
+            protocol::AppFrame::TransactionCommitted { txn_id: actual, edit_id } => commit && actual == txn_id && !edit_id.is_empty(),
+            protocol::AppFrame::TransactionRolledBack { txn_id: actual } => !commit && actual == txn_id,
+            _ => false,
+        }));
+    }
+    let rejected = cold_decoded_command(&runtime, 5, protocol::AppCommand::TransactionCommit { seq: 5, txn_id: "absent".into() },cx).await;
+    assert!(rejected.iter().any(|frame| matches!(frame, protocol::AppFrame::Error { in_reply_to: Some(5), .. })));
+    assert!(!rejected.iter().any(|frame| matches!(frame, protocol::AppFrame::Done { .. })));
+    drop(cell);
+    semio_framework_plugin_runtime_instances::inst_cleanup_turns::plugin_destroy_app(&runtime, 7).await.unwrap();
+    for _ in 0..200_000 {
+        semio_framework_plugin_runtime_instances::inst_cleanup_turns::plugin_step_close_cleanup(&runtime,cx).unwrap();
+        if runtime.close_quarantine.borrow().get(7).is_none() { break; }
+        std::thread::yield_now();
+    }
+    assert!(runtime.close_quarantine.borrow().get(7).is_none());
+}.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original full-body dispatch caller terminal close");result
+}
+
+/// 🧲️ `MergeDocumentArchive` reaches its handler on the encoded and on the decoded route (design §22.22): the program admits
+/// the read-back under the command's own sequence and answers `Done`, never an error frame and never a decode fault. What
+/// the merge then does is the folder route law's (`🧪️tests/🧪️folder-reload-route`); closing the program cancels what it admitted.
+#[semio_framework_async_macros::async_test]
+async fn a_merge_archive_command_is_admitted_under_its_own_sequence_on_both_routes() {
+    let mut original_caller=semio_framework_plugin_testing_laws::OriginalFixtureCaller::admit().expect("original full-body dispatch caller");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+    let runtime = semio_framework_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime::<TestRuntimeApps>::new({ let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
+    let cell = std::sync::Arc::new(semio_framework_plugin_reactor_lifecycle::life_app_cell::RuntimeAppCell::new(AppInstance { id: 7, app: TestRuntimeApps::from(query_app().await), surface_contexts: Default::default() }, semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy()));
+    runtime.instances.borrow_mut().insert_admitted(7, cell.clone());
+    let merge = |seq| protocol::AppCommand::MergeDocumentArchive { seq, archive: protocol::DocumentArchivePack { parent_pack: vec![1, 2], parent_spr: vec![3], members: Vec::new() } };
+    for (seq, frames) in [(0, wire_command(&runtime, 0, merge(0),cx).await), (1, cold_decoded_command(&runtime, 1, merge(1),cx).await)] {
+        assert!(frames.iter().any(|frame| matches!(frame, protocol::AppFrame::Done { in_reply_to } if *in_reply_to == seq)), "the merge is admitted under its own sequence: {frames:?}");
+        assert!(!frames.iter().any(|frame| matches!(frame, protocol::AppFrame::Error { .. })), "an admitted merge answers no error frame: {frames:?}");
+    }
+    drop(cell);
+    semio_framework_plugin_runtime_instances::inst_cleanup_turns::plugin_destroy_app(&runtime, 7).await.unwrap();
+    for _ in 0..200_000 {
+        semio_framework_plugin_runtime_instances::inst_cleanup_turns::plugin_step_close_cleanup(&runtime,cx).unwrap();
+        if runtime.close_quarantine.borrow().get(7).is_none() { break; }
+        std::thread::yield_now();
+    }
+    assert!(runtime.close_quarantine.borrow().get(7).is_none());
+}.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original full-body dispatch caller terminal close");result
+}
+
+use semio_framework_os_kernel::InteractionState;
+#[doc(hidden)]
+pub type Wallet = ::semio_framework_os_kernel::io::control::NativeSnapshotBodyWallet;
+#[doc(hidden)]
+pub type InteractionStore = store::ArtifactStore<InteractionState, InteractionConfigMutation>;
+include!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🕹️interaction/📃️query/🧪️tests/🧰️original-owners/🦀️.rs"));
+
+async fn query_app() -> VcsArtifactApp<TestApp> {
+    let fixture: Value = serde_json::from_str(&std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../../🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧪️tests/🧫️fixtures/🏠️local-interaction/🔣️.json")).unwrap()).unwrap();
+    let row = fixture["cases"].as_array().unwrap().iter().find(|row| row["id"] == "semantic-unicode-over-page").unwrap();
+    let mut state = row["expected"].clone(); state["hover"] = serde_json::json!({});
+    let state: InteractionState = serde_json::from_value(state).unwrap();
+    let envelope = store::os_store::document_materialize::create_document_envelope::<InteractionState, InteractionConfigMutation>("framework.interaction", "query-dispatch", state, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut interaction = store::ArtifactStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.unwrap();
+    let mut receiving = original_receiving_recipient();
+    install_original_interaction_owners(&mut interaction, &mut receiving);
+    let mut app = interaction_app_raw(semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity()).await;
+    let mut previous = std::mem::replace(&mut app.stores.interaction_store, interaction);
+    previous.close_owned_unscheduled().unwrap();
+    assert!(previous.close_owned_terminal_is_empty());
+    app.bind_instance_id(7).await;
+    app
+}
+
+#[semio_framework_async_macros::async_test]
+async fn local_interaction_registered_query_channel_continuation_ack_and_close() {
+    let mut original_caller=semio_framework_plugin_testing_laws::OriginalFixtureCaller::admit().expect("original full-body dispatch caller");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+    let runtime = semio_framework_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime::<TestRuntimeApps>::new({ let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
+    let cell = std::sync::Arc::new(semio_framework_plugin_reactor_lifecycle::life_app_cell::RuntimeAppCell::new(AppInstance { id: 7, app: TestRuntimeApps::from(query_app().await), surface_contexts: Default::default() }, semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy()));
+    runtime.instances.borrow_mut().insert_admitted(7, cell.clone());
+    let mut pending = std::collections::VecDeque::from(query_command(&runtime, 1, protocol::LocalInteractionQueryCommand::Read { request_id: 13 },cx).await);
+    let mut expected_identity = None;
+    let mut output = Vec::new();
+    let mut closed = false;
+    let mut seq = 1;
+    let mut pages = 0;
+    let mut received_receipt = 0;
+    let mut ephemeral = 0;
+    for _ in 0..200_000 {
+        if pending.is_empty() {
+            let (next, _) = semio_framework_plugin_runtime_ops::ops_typed_operations::plugin_continue_typed_operations(&runtime, semio_framework_plugin_runtime_ops::ops_typed_operations::TypedOperationGrant::UNIT, &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity(), cx).await.unwrap();
+            if let Some((instance, batch)) = next {
+                assert_eq!(instance, 7);
+                for bytes in batch.frames { pending.push_back(protocol::decode_app_frame(&bytes).await.unwrap()); }
+            }
+        }
+        if let Some(frame) = pending.pop_front() {
+                match frame {
+                    protocol::AppFrame::Done { in_reply_to } => { received_receipt += 1; assert_eq!(in_reply_to, received_receipt); },
+                    protocol::AppFrame::Ephemeral { presence, presence_generation, transient_generation, interaction, tool_run, history_edit } => {
+                        assert!(presence.is_empty()); assert!(interaction.is_empty()); assert!(tool_run.is_empty()); assert!(history_edit.is_empty());
+                        assert_eq!(presence_generation, 0); assert_eq!(transient_generation, 0);
+                        ephemeral += 1;
+                    },
+                    protocol::AppFrame::LocalInteractionQuery { reply: protocol::LocalInteractionQueryReply::Started { token } } => { assert!(expected_identity.replace(token.identity).is_none()); },
+                    protocol::AppFrame::LocalInteractionQuery { reply: protocol::LocalInteractionQueryReply::Page { page } } => {
+                        assert_eq!(Some(&page.identity), expected_identity.as_ref());
+                        assert!(page.bytes.len() <= 256);
+                        output.extend_from_slice(&page.bytes);
+                        pages += 1;
+                        let token = protocol::LocalInteractionQueryToken { request_id: page.request_id, query_generation: page.query_generation, identity: page.identity, ordinal: page.ordinal };
+                        seq += 1;
+                        pending.extend(query_command(&runtime, seq, protocol::LocalInteractionQueryCommand::Acknowledge { token },cx).await);
+                    },
+                    protocol::AppFrame::LocalInteractionQuery { reply: protocol::LocalInteractionQueryReply::Closed { cancelled: false, .. } } => closed = true,
+                    frame => panic!("unexpected registered query frame {frame:?}"),
+                }
+        }
+        if closed { break; }
+    }
+    assert!(closed);
+    assert!(pending.is_empty());
+    assert!(ephemeral > 0);
+    assert_eq!(received_receipt, seq);
+    assert!(pages > 16 && output.len() > 4096);
+    let capture: protocol::LocalInteractionCapture = semio_framework_pack_json::from_json_str(std::str::from_utf8(&output).unwrap(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    assert_eq!(Some(capture.identity), expected_identity);
+    assert!(!cell.instance.lock().unwrap().app.has_pending_typed_operations());
+    drop(cell);
+    semio_framework_plugin_runtime_instances::inst_cleanup_turns::plugin_destroy_app(&runtime, 7).await.unwrap();
+    for _ in 0..200_000 {
+        semio_framework_plugin_runtime_instances::inst_cleanup_turns::plugin_step_close_cleanup(&runtime,cx).unwrap();
+        if runtime.close_quarantine.borrow().get(7).is_none() { break; }
+        std::thread::yield_now();
+    }
+    assert!(runtime.close_quarantine.borrow().get(7).is_none());
+}.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original full-body dispatch caller terminal close");result
+}
+
+/// 🔡️ A typed value whose declaration order is not its key-byte order, at two depths.
+#[derive(Clone, Debug, PartialEq, semio_framework_value::FromValue, semio_framework_value::ToValue)]
+#[value(rename_all = "camelCase")]
+struct DeclaredOrderWitness {
+    pub cursor: u64,
+    pub can_undo: bool,
+    pub inner: Vec<DeclaredOrderInner>,
+}
+
+/// 🪜️ The nested half of [`DeclaredOrderWitness`].
+#[derive(Clone, Debug, PartialEq, semio_framework_value::FromValue, semio_framework_value::ToValue)]
+#[value(rename_all = "camelCase")]
+struct DeclaredOrderInner {
+    zulu: u32,
+    pub alpha: u32,
+}
+
+/// 🔡️ LAW (live fault F9 class, build B1): every typed value the program sends leaves with its object members in key-byte order
+/// at every depth — the order a host reader that re-encodes what it decoded reproduces — whatever order its type declares.
+#[test]
+fn typed_wire_values_leave_in_key_byte_order_whatever_their_types_declare() {
+    fn ordered(value: &semio_framework_value::DslValue) -> bool {
+        use semio_framework_value::DslValue;
+        match value {
+            DslValue::Array(items) => items.iter().all(ordered),
+            DslValue::Object(members) => members.windows(2).all(|pair| pair[0].0.as_bytes() < pair[1].0.as_bytes()) && members.iter().all(|(_, member)| ordered(member)),
+            _ => true,
+        }
+    }
+    let witness = DeclaredOrderWitness { cursor: 7, can_undo: true, inner: vec![DeclaredOrderInner { zulu: 1, alpha: 2 }] };
+    assert!(!ordered(&semio_framework_value::ToValue::to_value(&witness)), "the witness declares `cursor` before `canUndo`: its own order is not the wire order");
+    let sent = semio_framework_plugin_plugin_program::encode_wire_serialized(&witness);
+    let read = semio_framework_os_kernel::pack_rt::decode_wire_value(&sent).expect("the sent value decodes");
+    assert!(ordered(&read), "members leave in key-byte order at every depth: {read:?}");
+    assert_eq!(<DeclaredOrderWitness as semio_framework_value::FromValue>::from_value(read).expect("the witness reads back"), witness);
+}
+//#endregion 📡️RegisteredQueryDispatch

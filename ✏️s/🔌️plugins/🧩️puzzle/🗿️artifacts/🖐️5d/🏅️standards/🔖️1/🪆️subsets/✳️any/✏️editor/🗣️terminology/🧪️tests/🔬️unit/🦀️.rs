@@ -1,4 +1,17 @@
-use super::*;
+use semio_framework_ui_locale::Locale;
+use semio_framework_ui_locale::Terminology;
+#[allow(unused_imports)]
+use semio_framework_ui_locale::AppLabels;
+#[allow(unused_imports)]
+use semio_framework_ui_locale::LabelText;
+#[allow(unused_imports)]
+use semio_framework_ui_locale::LocalizedLabel;
+#[allow(unused_imports)]
+use semio_framework_tool_run::{ToolRunCounterDefinition, ToolRunReasonDefinition, ToolRunStageDefinition};
+#[allow(unused_imports)]
+use semio_s_artifact_puzzle_3d_model::{BrushSuggestionsRunCounter, BrushSuggestionsRunReason, BrushSuggestionsRunStage, FillRunCounter, FillRunReason, FillRunStage};
+use crate::editor::puzzle5d::terminology::*;
+use semio_framework_test_fixtures::fixture_text;
 
 #[test]
 fn labels_resolve_every_host_locale_and_terminology_axis() {
@@ -29,11 +42,11 @@ fn an_unauthored_locale_or_terminology_fails_closed_instead_of_defaulting() {
 }
 
 /// 🧾️ The language-neutral fill run vocabulary of the 3d planner 5d's fill runs: `$defs.Puzzle3dFillRun`.
-const PUZZLE3D_SCHEMA: &str = include_str!("../../../../../../../../../🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json");
+static PUZZLE3D_SCHEMA: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../../../🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json"));
 
 #[test]
 fn the_fill_run_vocabulary_equals_the_planner_schema_table_and_is_authored_for_every_label_axis() {
-    let schema: serde_json::Value = serde_json::from_str(PUZZLE3D_SCHEMA).expect("puzzle 3d schema parses");
+    let schema: serde_json::Value = serde_json::from_str((*PUZZLE3D_SCHEMA)).expect("puzzle 3d schema parses");
     let table = &schema["$defs"]["Puzzle3dFillRun"]["x-semio-toolRun"];
     let stages: Vec<String> = puzzle5d_fill_run_stages().into_iter().map(|stage| stage.id).collect();
     assert_eq!(serde_json::json!(stages), table["stages"]);
@@ -53,7 +66,7 @@ fn the_fill_run_vocabulary_equals_the_planner_schema_table_and_is_authored_for_e
 
 #[test]
 fn the_brush_suggestions_run_vocabulary_equals_the_search_schema_table_and_is_authored_for_every_label_axis() {
-    let schema: serde_json::Value = serde_json::from_str(PUZZLE3D_SCHEMA).expect("puzzle 3d schema parses");
+    let schema: serde_json::Value = serde_json::from_str((*PUZZLE3D_SCHEMA)).expect("puzzle 3d schema parses");
     let table = &schema["$defs"]["Puzzle3dBrushSuggestionsRun"]["x-semio-toolRun"];
     let stages: Vec<String> = puzzle5d_brush_suggestions_run_stages().into_iter().map(|stage| stage.id).collect();
     assert_eq!(serde_json::json!(stages), table["stages"]);

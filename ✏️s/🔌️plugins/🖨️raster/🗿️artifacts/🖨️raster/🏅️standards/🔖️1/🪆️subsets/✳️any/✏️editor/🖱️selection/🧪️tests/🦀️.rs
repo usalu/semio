@@ -1,9 +1,11 @@
 //! 🖱️ Layer creation requests one framework selection after publication, without a second history edit.
-use super::*;
+use semio_s_artifact_raster_raster_editor::RASTER_INTERACTION_DOMAIN;
+use semio_s_artifact_raster_raster_editor::layer_selection::*;
+use semio_framework_test_fixtures::fixture_text;
 
 #[test]
 fn layer_selection_matches_neutral_wire_arguments() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../../🖱️selection/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap(){
         let args=layer_selection_args(row["id"].as_str().unwrap()).unwrap();
         let json:serde_json::Value=serde_json::from_str(&semio_framework_pack_json::to_json_string(&args)).unwrap();
@@ -16,8 +18,8 @@ fn layer_selection_matches_neutral_wire_arguments() {
 #[semio_framework_async_macros::async_test]
 async fn created_and_duplicated_layers_are_selected_and_deleted_targets_are_pruned() {
     use crate::unit_tests::context;
-    use crate::RasterCommand;
-    use crate::commands::{add_layer, drop_layer_kind, duplicate_layer, delete_layer};
+    use semio_s_artifact_raster_raster_editor::RasterCommand;
+    use semio_s_artifact_raster_raster_editor::commands::{add_layer, drop_layer_kind, duplicate_layer, delete_layer};
     use semio_s_artifact_raster_raster_model::layer_node_id;
     use semio_s_artifact_raster_raster_model::snapshot::retire_raster_snapshot;
     let mut app=context::app().await;

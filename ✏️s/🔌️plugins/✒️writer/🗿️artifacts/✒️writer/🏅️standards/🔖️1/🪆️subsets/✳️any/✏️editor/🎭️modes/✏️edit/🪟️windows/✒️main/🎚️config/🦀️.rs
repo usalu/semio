@@ -91,9 +91,7 @@ pub fn addressed(view: &semio_framework_plugin::ViewModel, mutation: WriterMainW
     Ok(semio_framework_plugin::WindowConfigMutation::of::<WriterMainWindowConfigOwner>(window_id, mutation))
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️window-state/🦀️.rs"]
-mod tests;
+
 
 #[path = "🚪️io/🦀️.rs"]
 pub mod io;

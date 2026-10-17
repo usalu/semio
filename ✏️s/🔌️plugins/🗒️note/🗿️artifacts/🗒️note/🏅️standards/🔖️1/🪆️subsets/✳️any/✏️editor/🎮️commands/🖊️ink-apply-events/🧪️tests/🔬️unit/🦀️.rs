@@ -1,6 +1,31 @@
-use super::*;
+use crate::schema::mutations::drag_blocks;
+use crate::NoteBlockNode;
+use semio_framework_tool_machine::{ToolAbortReason, ToolYield};
+use semio_framework_value_derive::FromValue;
+#[allow(unused_imports)]
+use crate::editor::note::window::schema::{NoteInkToolEntry, NoteInkToolState};
+#[allow(unused_imports)]
+use crate::op::NoteMutation;
+#[allow(unused_imports)]
+use crate::schema::mutations::{apply_note_mutation, change_block_ink_width, change_block_locked, change_block_visible, create_asset, create_block, delete_block, edit_block_ink_stroke, move_block, rename_block, replace_asset_payload, resize_block};
+#[allow(unused_imports)]
+use crate::schema::{block_bounds, block_locked, block_name, block_visible, find_block, find_block_location, insert_block, remove_block_from_tree, update_block_in_tree};
+#[allow(unused_imports)]
+use crate::NoteImageAsset;
+#[allow(unused_imports)]
+use machine::Command;
+#[allow(unused_imports)]
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin, NoConfigMutation};
+#[allow(unused_imports)]
+use semio_framework_tool_machine::{ToolMachineRunner, ToolRefusal, ToolStep, ToolTransaction, ToolTransactionState};
+#[allow(unused_imports)]
+use semio_framework_value_derive::ToValue;
+#[allow(unused_imports)]
+use std::sync::atomic::{AtomicU64, Ordering};
+use crate::editor::note::commands::ink_apply_events::{note_gesture_yields, decode_canvas_events};
+use crate::editor::note::commands::ink_apply_events::*;
 use crate::editor::note::unit_tests::context::{dispatch, note_app, render, select_blocks};
-use crate::editor::note::NoteCommand;
+use crate::editor::note::command_enum::NoteCommand;
 use crate::schema::{block_id, create_block_by_kind};
 use crate::{NoteCamera, NoteSnapshot};
 use semio_framework_plugin::PluginApp;
@@ -105,7 +130,7 @@ async fn a_streamed_gesture_is_one_transaction_and_one_undo_step() {
 /// preview — and the next gesture opens fresh and publishes exactly once.
 #[semio_framework_async_macros::async_test]
 async fn an_aborted_gesture_leaves_zero_trace_and_a_fresh_gesture_publishes_once() {
-    let surface_behavior: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🧫️fixtures/🎬️surface-behavior/🔣️.json"))).expect("shared surface behavior fixture");
+    let surface_behavior: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🧫️fixtures/🎬️surface-behavior/🔣️.json"))).expect("shared surface behavior fixture");
     let law = surface_behavior["cases"].as_array().unwrap().iter().find(|entry| entry["id"] == "note-ink-canvas").expect("Note surface behavior");
     assert_eq!(law["terminalPolicy"], "cancelled-action-discards-draft");
     assert_eq!(law["publishedOnCancel"], json!([{ "action": "inkApplyEvents", "phase": "abort", "cancelled": null }]));

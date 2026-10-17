@@ -1,5 +1,7 @@
 
-use crate::modes::edit::windows::board::*;
+#[allow(unused_imports)] use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase, HasChildren};
+#[allow(unused_imports)] use semio_framework_plugin::SurfaceKind;
+#[allow(unused_imports)] use semio_s_artifact_block_5d_editor::modes::edit::windows::board::*;
 
 #[semio_framework_async_macros::async_test]
 async fn definition_declares_the_board_surface_and_body_key() {

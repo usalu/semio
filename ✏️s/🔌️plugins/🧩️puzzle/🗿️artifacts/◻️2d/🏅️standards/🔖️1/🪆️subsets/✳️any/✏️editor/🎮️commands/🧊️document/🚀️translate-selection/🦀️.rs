@@ -1,6 +1,7 @@
 //! 🚀️ `translate-selection` command.
 
-use crate::editor::puzzle2d::{puzzle2d_gesture_phase, Puzzle2dActionCtx, Puzzle2dSelectionRecord};
+use crate::editor::puzzle2d::modes::edit::windows::overview::utilities::select::{puzzle2d_gesture_phase, Puzzle2dSelectionRecord};
+use crate::editor::puzzle2d::interaction::Puzzle2dActionCtx;
 use semio_framework_tool_machine::GesturePhase;
 use semio_framework_pack_json::Value;
 

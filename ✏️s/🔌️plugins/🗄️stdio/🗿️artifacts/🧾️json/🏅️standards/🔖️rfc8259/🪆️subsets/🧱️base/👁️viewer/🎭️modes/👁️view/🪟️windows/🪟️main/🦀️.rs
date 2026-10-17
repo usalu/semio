@@ -122,7 +122,5 @@ fn node_view(key: String, key_label: Option<&str>, value: &JsonValue) -> TreeNod
 //#endregion 🔖️Render
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

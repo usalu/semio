@@ -128,7 +128,7 @@ describe("TaskManagerPanel", () => {
  * (the one seam `ShardWorkerLike` exists to let a test inject), so every other layer in the chain —
  * `TaskManagerPanel`'s button click → `onAction` → `ActivationRegistry.suspend`/`resume`/`cancel` →
  * `ShardClient` → a postMessage round trip — is the exact production code path. */
-const BUDGET: ShardBudget = { fuel: 1000, wallMs: 4, memoryBytes: 1 << 20, uiNodes: 100, mailboxLen: 16, maxEffects: 8, maxPatchBytes: 1 << 16 };
+const BUDGET: ShardBudget = { fuel: 1000, wallMs: 4, memoryBytes: 1 << 20, uiNodes: 100, mailboxLen: 16, maxEffects: 8, maxPatchBytes: 1 << 16, maxFrames: 8 };
 
 function autoReplyingShardClient(): ShardClient {
   return new ShardClient({ originalWorkStock: fixtureOriginalWorkStock(),

@@ -33,11 +33,14 @@ pub fn plan(p: &GltfCreateImagePayload, base: &GltfSnapshot) -> Result<GltfDiff,
     Ok(diff)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn inverse(p: &GltfCreateImagePayload, base: &GltfSnapshot) -> Vec<super::GltfMutation> {
+pub fn inverse<Op>(p: &GltfCreateImagePayload, base: &GltfSnapshot) -> Vec<Op>
+where
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::remove_used_extension::RemoveUsedExtensionMutation>,
+{
     if validate(p, base).is_err() {
         return Vec::new();
     }
-    vec![super::delete_image::mutation(super::delete_image::GltfDeleteImagePayload { index: p.position })]
+    vec![crate::standards::v2_0::subsets::any::schema::mutations::delete_image::mutation(crate::standards::v2_0::subsets::any::schema::mutations::delete_image::GltfDeleteImagePayload { index: p.position })]
 }
 
 //#region 🧬️DirectMutation
@@ -50,11 +53,17 @@ pub enum CreateImageMutation {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn mutation(payload: GltfCreateImagePayload) -> super::GltfMutation {
-    super::GltfMutation::CreateImage(CreateImageMutation::Apply(payload))
+pub fn mutation<Op>(payload: GltfCreateImagePayload) -> Op
+where
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::create_image::CreateImageMutation>,
+{
+    Op::from(CreateImageMutation::Apply(payload))
 }
 
-impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for CreateImageMutation {
+impl<Op> protocol::MutationKind<GltfSnapshot, Op> for CreateImageMutation
+where
+    Op: protocol::Mutation<GltfSnapshot, Diff = GltfDiff> + From<CreateImageMutation>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "image", kind: "create-image", record: "CreatedImage" };
 
     fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<GltfDiff> {
@@ -66,7 +75,7 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for CreateImageMu
         }
     }
 
-    fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<super::GltfMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         match self {
             Self::Apply(payload) => Ok(inverse(payload, base)),
         }
@@ -83,7 +92,5 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for CreateImageMu
 //#endregion 🧬️DirectMutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🖼️inserts-an-empty-e3b07a/🦀️.rs"]
-mod case_inserts_an_empty_e3b07a;
+
 //#endregion 🧪️Tests

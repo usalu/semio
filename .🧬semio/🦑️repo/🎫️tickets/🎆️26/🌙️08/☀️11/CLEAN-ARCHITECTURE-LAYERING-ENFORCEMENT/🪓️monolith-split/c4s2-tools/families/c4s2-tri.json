@@ -1,0 +1,7 @@
+{
+ "name": "c4s2",
+ "crates": [
+  "semio-s-dev-trinity-jack"
+ ],
+ "note": "CENSUS4-SMALL-2 package 64: the trinity jack dev crate that mounts the graph editor test file"
+}

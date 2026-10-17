@@ -1,8 +1,8 @@
 import {expect,test} from "bun:test";
 import Ajv from "ajv";
 import {Database} from "bun:sqlite";
-import manifest from "../🔣️.json";
 import schema from "../🧬️schema/🔣️.json";
+const manifest=schema.definitions.Release.const;
 import fixture from "./🧫️fixtures/🔣️.json";
 
 test("pinned Bazel selects six portable distributions against an independent SQL oracle",async()=>{

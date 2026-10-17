@@ -109,6 +109,13 @@
           "type": "boolean"
         }
       }
+    },
+    "Owners": {
+      "const": {
+        "formula": "🧮️formula/🟦️.ts",
+        "physical": "📥️physical/🟦️.ts",
+        "combinedFacade": false
+      }
     }
   }
 }

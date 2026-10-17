@@ -1,8 +1,9 @@
 use crate::{forms_steps, FormsSnapshot};
+use semio_framework_test_fixtures::fixture_text;
 
 #[test]
 fn definition_and_answers_survive_json_text_and_pack_restart() {
-    let input = include_str!("../../../🧪️tests/🧫️fixtures/🔬️contract/💾️persistence/🔣️.json");
+    let input = fixture_text!("../../../🧪️tests/🧫️fixtures/🔬️contract/💾️persistence/🔣️.json");
     let snapshot: FormsSnapshot = semio_framework_pack_json::from_json_str(input,semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     assert_eq!(forms_steps(&snapshot).len(), 1);
     assert_eq!(snapshot.responses.len(), 1);

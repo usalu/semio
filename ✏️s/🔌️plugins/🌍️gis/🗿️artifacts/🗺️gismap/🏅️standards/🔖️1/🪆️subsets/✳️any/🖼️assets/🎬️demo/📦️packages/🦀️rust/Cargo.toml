@@ -1,0 +1,18 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-s-artifact-gis-gismap-demo-asset"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Bundled demo DSL document of the gismap artifact, kept in its own crate so no logic crate embeds it"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "🦀️.rs"
+
+[dependencies]

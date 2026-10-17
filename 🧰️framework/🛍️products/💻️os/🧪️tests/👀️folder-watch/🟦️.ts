@@ -1,6 +1,6 @@
 /** 👀️ Stream-primary folder watch: the coalesced poll, its suppression while the stream is open, one stream per folder and abort on close. */
 import type { BackboneWorkerTestDependencies } from "../../🔨️modules/🏪️store/👷️worker/🟦️.ts";
-import { workerLawFakesV1 } from "../🧰️worker-law-fakes/🟦️.ts";
+import { workerLawFakesV1, WORKER_LAW_ACTOR_IDENTITY_GRANT } from "../🧰️worker-law-fakes/🟦️.ts";
 import type { TestSource } from "../🧰️worker-law-fakes/🟦️.ts";
 
 type ArtifactActorConfig = import("../../🟦️.ts").ArtifactActorConfig;
@@ -33,7 +33,7 @@ export async function registerFolderWatchTests(vitest: Vitest, dependencies: Bac
     }
 
     function folderOnlyConfig(documentId: string): ArtifactActorConfig {
-      return { documentId, schema: "demo/v1", bindings: [{ kind: "folder", dataClass: "persistedLocalOnly", path: `/tmp/${documentId}` }], actor: "actor-1" };
+      return { documentId, schema: "demo/v1", bindings: [{ kind: "folder", dataClass: "persistedLocalOnly", path: `/tmp/${documentId}` }], actor: "actor-1", actorIdentityGrant: WORKER_LAW_ACTOR_IDENTITY_GRANT };
     }
 
     function notFoundResponse() {

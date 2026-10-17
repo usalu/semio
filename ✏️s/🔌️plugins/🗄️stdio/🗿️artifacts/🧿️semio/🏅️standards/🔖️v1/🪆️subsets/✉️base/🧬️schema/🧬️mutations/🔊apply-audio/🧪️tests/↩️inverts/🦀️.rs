@@ -1,11 +1,12 @@
 //! 🧪️ `apply-audio` inverse law on its committed wrapped-arm vector: the wrapped mutation is undone by its own inverse rows, replayed
 //! last-to-first, and those rows' diffs sum to the negative of the forward diff.
 
-use crate::io::text::mutations::decode_semio_mutation_json;
-use crate::io::text::snapshot::decode_semio_snapshot_json;
+use semio_s_artifact_stdio_semio::io::text::mutations::decode_semio_mutation_json;
+use semio_s_artifact_stdio_semio::io::text::snapshot::decode_semio_snapshot_json;
+use semio_framework_test_fixtures::fixture_path;
 
-static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| Box::leak(std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/🔖️v1/🪆️subsets/✉️base/🧪️tests/🧫️fixtures/🔊️apply-audio-applied/⬅️before.json")).expect("the committed fixture is readable").into_boxed_str()));
-static MUTATION: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| Box::leak(std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/🔖️v1/🪆️subsets/✉️base/🧪️tests/🧫️fixtures/🔊️apply-audio-applied/🦠️mutation.json")).expect("the committed fixture is readable").into_boxed_str()));
+static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| Box::leak(std::fs::read_to_string(fixture_path!("../../🏅️standards/🔖️v1/🪆️subsets/✉️base/🧪️tests/🧫️fixtures/🔊️apply-audio-applied/⬅️before.json")).expect("the committed fixture is readable").into_boxed_str()));
+static MUTATION: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| Box::leak(std::fs::read_to_string(fixture_path!("../../🏅️standards/🔖️v1/🪆️subsets/✉️base/🧪️tests/🧫️fixtures/🔊️apply-audio-applied/🦠️mutation.json")).expect("the committed fixture is readable").into_boxed_str()));
 
 #[semio_framework_async_macros::async_test]
 async fn the_wrapped_audio_mutation_inverts_and_sums_to_the_negative_diff() {

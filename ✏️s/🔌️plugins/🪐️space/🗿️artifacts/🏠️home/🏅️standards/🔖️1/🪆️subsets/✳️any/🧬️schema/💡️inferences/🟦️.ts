@@ -23,6 +23,10 @@ type spaceHomeInferenceGuardSizeBounds = { readonly minItems?: number; readonly 
 
 export const spaceHomeInferenceGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : spaceHomeInferenceGuardReject(at, "value is not an object");
+export const spaceHomeInferenceGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) spaceHomeInferenceGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const spaceHomeInferenceGuardArray = (value: unknown, at: string, bounds: spaceHomeInferenceGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return spaceHomeInferenceGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) spaceHomeInferenceGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -53,7 +57,7 @@ export const spaceHomeInferenceGuardConstant = <T extends string | number | bool
 //#endregion 🚪️Parsers
 
 export function parseSHomeInference(value: unknown, at = "$"): SHomeInference {
-  const row = spaceHomeInferenceGuardObject(value, at);
+  const row = spaceHomeInferenceGuardClosed(spaceHomeInferenceGuardObject(value, at), at, ["contentDigest"]);
   return {
     contentDigest: spaceHomeInferenceGuardString(row["contentDigest"], `${at}.contentDigest`),
   };

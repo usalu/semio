@@ -36,7 +36,5 @@ pub fn wfc3d_drag_tool(verb: &str, authoring_seed: &str, base: &Wfc3dSnapshot, p
 }
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

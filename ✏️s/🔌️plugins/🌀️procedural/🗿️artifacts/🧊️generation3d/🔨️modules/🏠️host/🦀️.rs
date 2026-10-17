@@ -1,8 +1,8 @@
 //! 🏠️ Generation3d publication, retained replay and store ownership.
 #![allow(clippy::result_large_err)]
+#![allow(unused_imports)]
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
-#![allow(unused_imports)]
 use semio_s_artifact_procedural_3d_mut_generations::change_generation_value::ChangeGenerationValue;
 use semio_s_artifact_procedural_3d_mut_document::change_schema::ChangeSchema;
 use semio_s_artifact_procedural_3d_mut_synapses::connect_synapse::ConnectSynapse;
@@ -113,7 +113,7 @@ fn generation3d_publication_key(operation: semio_framework_job::OperationId, gen
     semio_framework_job_registry::FixedOperationKey::new(operation, generation)
 }
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Generation3dPublicationHostile {
     Missing,
@@ -123,7 +123,7 @@ pub enum Generation3dPublicationHostile {
     WrongParent,
 }
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 #[derive(Clone, Copy)]
 struct Generation3dPublicationHostileLease {
     operation: u64,
@@ -131,20 +131,20 @@ struct Generation3dPublicationHostileLease {
     observed: Option<&'static str>,
 }
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 fn generation3d_publication_hostiles() -> &'static std::sync::Mutex<[Option<Generation3dPublicationHostileLease>; GENERATION3D_PUBLICATION_SLOTS]> {
     static HOSTILES: std::sync::OnceLock<std::sync::Mutex<[Option<Generation3dPublicationHostileLease>; GENERATION3D_PUBLICATION_SLOTS]>> = std::sync::OnceLock::new();
     HOSTILES.get_or_init(|| std::sync::Mutex::new([None; GENERATION3D_PUBLICATION_SLOTS]))
 }
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 pub fn generation3d_arm_publication_hostile(operation: semio_framework_job::OperationId, hostile: Generation3dPublicationHostile) {
     let mut hostiles = generation3d_publication_hostiles().try_lock().expect("Generation3d hostile publication authority is uncontended");
     let slot = hostiles.iter_mut().find(|slot| slot.is_none()).expect("Generation3d hostile publication authority has a fixed slot");
     *slot = Some(Generation3dPublicationHostileLease { operation: operation.0, hostile, observed: None });
 }
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 pub fn generation3d_take_publication_hostile_observed(operation: semio_framework_job::OperationId) -> Option<&'static str> {
     let mut hostiles = generation3d_publication_hostiles().try_lock().expect("Generation3d hostile publication authority is uncontended");
     let slot = hostiles.iter_mut().find(|slot| slot.is_some_and(|value| value.operation == operation.0))?;
@@ -304,7 +304,7 @@ fn generation3d_validate_atomic_lease(lease: Generation3dPublicationLease, opera
 /// 🔐️ Fail-closed Generation3d authority used by the shared atomic replacement branch.
 pub fn generation3d_validate_atomic_publication_authority(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, live_generation: semio_framework_job::Generation) -> Result<(), &'static str> {
     let lease = generation3d_publication_lease_by_operation(operation)?.ok_or("generation3d-publication.authority-missing")?;
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testkit"))]
     let lease = {
         let mut lease = lease;
         let mut hostiles = generation3d_publication_hostiles().try_lock().map_err(|_| "generation3d-publication.hostile-contended")?;
@@ -463,7 +463,7 @@ enum Generation3dReplayDisplaced {
 }
 
 /// 🧊️ Retires one displaced replay owner at a cold boundary by paying every currency its own close quote names.
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 fn generation3d_retire_displaced_cold(value: Generation3dReplayDisplaced) {
     use semio_framework_value::retained_clone::RetainedCloneGrant;
     let birth = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 0, maximum_capacity_bytes: semio_framework_value::retirement::owned_retirement_birth_bytes::<Generation3dReplayDisplaced>(), maximum_release_bytes: 0, maximum_depth: 2 };
@@ -807,7 +807,7 @@ fn generation3d_copy_generation(source: &semio_framework_artifact_playbook_playb
 
 
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 pub fn generation3d_all_retained_mutation_fixtures_for_test() -> Vec<Generation3dMutation> {
     let synapse = semio_framework_artifact_flow_flow::SynapseSpec { id: "retained-synapse".into(), from: "retained-a".into(), to: "retained-b".into(), from_port: "out".into(), to_port: "in".into() };
     let mut values: semio_framework_artifact_playbook_playbook::PlaybookValues = semio_framework_artifact_playbook_playbook::PlaybookValues::new();
@@ -855,7 +855,7 @@ pub fn generation3d_all_retained_mutation_fixtures_for_test() -> Vec<Generation3
     mutations
 }
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 pub fn generation3d_apply_retained_mutations_for_test(snapshot: &mut Generation3dSnapshot, mutations: &[Generation3dMutation]) {
     for mutation in mutations {
         if let Some(displaced) = generation3d_apply_initialization_mutation(snapshot, mutation).expect("P3 production fixture retained replay") {

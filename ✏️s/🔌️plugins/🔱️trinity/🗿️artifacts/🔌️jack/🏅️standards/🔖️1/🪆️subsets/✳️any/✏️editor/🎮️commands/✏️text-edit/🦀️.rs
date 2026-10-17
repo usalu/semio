@@ -8,9 +8,9 @@ use semio_framework_plugin::{Emit, Fault, FaultCode, FaultOrigin, NoConfigMutati
 /// (`typing` argument) folds into its window's typing run, whose net leaf is the final query and which commits as ONE edit on
 /// idle, a caret jump, blur or any other verb (design §13.2), so typing never spends the store's fixed applied-edit ledger one
 /// keystroke at a time (ticket 26/09/23 F1); a one-shot dispatch is one edit.
-pub(crate) fn text_edit(text: &str) -> Result<Emit<TrinityGraphMutation, NoConfigMutation>, Fault> {
-    if text.len() > crate::JACK_QUERY_MAXIMUM_BYTES {
-        return Err(Fault::new(FaultOrigin::App, FaultCode::new("jack.query-too-large"), format!("a Jack query holds at most {} bytes", crate::JACK_QUERY_MAXIMUM_BYTES)));
+pub fn text_edit(text: &str) -> Result<Emit<TrinityGraphMutation, NoConfigMutation>, Fault> {
+    if text.len() > crate::standards::v1::subsets::any::schema::graph::JACK_QUERY_MAXIMUM_BYTES {
+        return Err(Fault::new(FaultOrigin::App, FaultCode::new("jack.query-too-large"), format!("a Jack query holds at most {} bytes", crate::standards::v1::subsets::any::schema::graph::JACK_QUERY_MAXIMUM_BYTES)));
     }
     Ok(Emit::mutations(vec![set_query(text.to_string())]))
 }

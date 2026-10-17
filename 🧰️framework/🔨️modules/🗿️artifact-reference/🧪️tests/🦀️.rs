@@ -7,7 +7,6 @@ fn semantic_artifact_reference_preserves_the_exact_four_owned_fields() {
     let reference=ArtifactRef{artifact_id:"".into(),dialect:ArtifactDialect{artifact_kind:"s.stdio.svg".into(),standard:"1.1".into(),subset:"*".into()}};
     let value=reference.to_value();
     assert_eq!(ArtifactRef::from_value(value).expect("owned reference"),reference);
-    eprintln!("[DEBUG] Semantic artifact reference owns its four exact identity fields");
 }
 
 #[test]
@@ -23,7 +22,6 @@ fn neutral_reference_admission_and_json_projection_match_the_independent_oracle(
         let input:semio_framework_value::DslValue=serde_json::from_value(invalid.clone()).expect("independent JSON input");
         assert!(ArtifactRef::from_value(input).is_err());
     }
-    eprintln!("[DEBUG] Two valid and seven invalid neutral references match first-party admission and serde_json output");
 }
 
 #[test]
@@ -37,7 +35,6 @@ fn native_reference_text_extensions_preserve_literal_identity_and_control() {
     assert_eq!(ArtifactRef::parse_uri_controlled(&expected.to_uri(),&mut control).unwrap(),expected);
     let mut deny=|_|false;let mut control=semio_framework_value::NativeDecodeControl::new(4096,&mut deny);
     assert!(ArtifactRef::parse_uri_controlled(&expected.to_uri(),&mut control).is_err());
-    eprintln!("[DEBUG] Explicit native reference text extension retains bounded admission and cancellation");
 }
 
 
@@ -54,5 +51,4 @@ fn borrowed_reference_preserves_four_owned_string_addresses_and_neutral_output()
             assert!(std::ptr::eq(view.as_ptr(), owned.as_ptr()));
         }
     }
-    eprintln!("[DEBUG] Actual owned ArtifactRef borrowed view preserves all four original strings and independent neutral JSON output");
 }

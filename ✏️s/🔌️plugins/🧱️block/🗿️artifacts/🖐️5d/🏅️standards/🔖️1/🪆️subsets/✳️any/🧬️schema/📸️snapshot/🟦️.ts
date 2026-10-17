@@ -1,8 +1,8 @@
 /** 🖐️ Complete Block5d persisted parent with the actual shared Block record authority. */
-import * as shared from "../../../../../../../../🧬️schema/🧱️document-fields/🟦️.ts";
-import * as p from "../../../../../../../../🧬️schema/🧱️document-fields/📐️scalar/🟦️.ts";
+import * as shared from "@semio-tech/block-js/schema/document-fields";
+import * as p from "@semio-tech/block-js/schema/document-fields/scalar";
 import type {Binary64} from "@semio-tech/framework/value/ieee754";
-export * from "../../../../../../../../🧬️schema/🧱️document-fields/🟦️.ts";
+export * from "@semio-tech/block-js/schema/document-fields";
 export interface Block5dPart2d{shape:string|null;radius:Binary64|null;width:Binary64|null;height:Binary64|null;color:string|null;iconKind:string|null}
 export interface Block5dPart3d{orientation:p.BlockVector4|null;scale:p.BlockVector3|null}
 export interface Block5dGripKind{id:string;name:string;label:string;color:string;defaultRopeKind:string}

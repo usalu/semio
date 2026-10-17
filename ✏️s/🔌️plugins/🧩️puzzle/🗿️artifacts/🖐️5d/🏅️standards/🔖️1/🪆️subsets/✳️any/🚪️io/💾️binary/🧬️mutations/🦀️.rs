@@ -37,9 +37,7 @@ pub fn decode_op(bytes: &[u8]) -> Result<Puzzle5dMutation, protocol::ProtocolErr
 //#endregion 🔖️Store
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
 
 //#region 🔒️WireFormatGuard
@@ -51,7 +49,6 @@ mod wire_format_guard;
 #[allow(unused_imports)]
 mod mutations_codec {
 use super::*;
-use crate::editor::puzzle5d::snapshot::Puzzle5dPlaySnapshot;
 use crate::standards::v1::subsets::any::schema::mutations::*;
 use crate::standards::v1::subsets::any::schema::diff::Puzzle5dDiff;
 use crate::Puzzle5dSnapshot;
@@ -99,27 +96,6 @@ use crate::standards::v1::subsets::any::schema::mutations::scale_target_volume::
 use {semio_s_artifact_puzzle_3d_mutations_selection::puzzle3d_selection_items as puzzle5d_selection_items, semio_s_artifact_puzzle_3d_mutations_selection::puzzle3d_selection_number as puzzle5d_selection_number, semio_s_artifact_puzzle_3d_mutations_selection::puzzle3d_selection_triple as puzzle5d_selection_triple, semio_s_artifact_puzzle_3d_mutations_selection::puzzle3d_targets_invariant as puzzle5d_targets_invariant, semio_s_artifact_puzzle_3d_model::quat_from_axis_angle, semio_s_artifact_puzzle_3d_model::quat_mul};
 
 
-/// 📦️ Packs through the typed authority, so the play kind shares `Puzzle5dSnapshot`'s derived record
-/// layout and pack-schema identity.
-impl pack::snapshot::ArtifactPack for Puzzle5dPlaySnapshot {
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        self.typed().encode_pack_with(options)
-    }
-
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        <Puzzle5dSnapshot as pack::snapshot::ArtifactPack>::decode_pack_with(bytes, options).map(Self::from_typed)
-    }
-
-    fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> {
-        <Puzzle5dSnapshot as pack::snapshot::ArtifactPack>::record_spec()
-    }
-    
-}
-impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for Puzzle5dPlaySnapshot {
-fn sqlite_snapshot_codec() -> Option<store::os_store::serialization::ArtifactSqliteSnapshotCodec> {
-        Some(<Self as store::os_store::ArtifactSqliteSnapshotOperations>::sqlite_codec())
-    }
-}
 }
 #[cfg(test)] pub use mutations_codec::*;
 

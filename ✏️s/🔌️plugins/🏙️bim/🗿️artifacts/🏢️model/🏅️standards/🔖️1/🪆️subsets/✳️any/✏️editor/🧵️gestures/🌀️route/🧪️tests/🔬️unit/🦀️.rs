@@ -1,7 +1,11 @@
-use super::*;
-use crate::editor::bim::entities::components::tests::furnished;
-use crate::editor::bim::gestures::session::Shape;
-use crate::editor::bim::gestures::tests::fixture::Rig;
+use super::{UTILITY};
+use crate::editor::bim::gestures::session::{GestureKey, Step, ToolEvent};
+use crate::editor::bim::gestures::typed::INVALID;
+use crate::standards::v1::subsets::any::schema::snapshot::{MepElement, MepShape, MepSystem, Point3};
+use crate::standards::v1::subsets::any::schema::mutations::ModelMutation;
+use crate::editor::bim::fixture::furnished;
+use crate::editor::bim::marks::Shape;
+use crate::editor::bim::fixture::Rig;
 
 fn created(step: &Step) -> &MepElement {
     match step.mutations.as_slice() {

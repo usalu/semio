@@ -6,9 +6,11 @@ pub mod retirement {
     }
 }
 
-use crate::binary::*;
+use semio_s_artifact_raster_raster_mutations::RasterMutation;
+use semio_s_artifact_raster_raster_mutations::binary::*;
 use semio_s_artifact_raster_raster_mutations_pixels::{add_layer_asset, remove_layer_asset};
-use semio_s_artifact_raster_raster_mutations_layers::{change_layer_adjustment_kind, change_layer_blend_mode, change_layer_opacity, change_layer_visible, create_layer, delete_layer, move_layer, rename_layer, reorder_layers, resize_layer};
+use semio_s_artifact_raster_raster_mutations_layers::{create_layer, delete_layer, move_layer, rename_layer, reorder_layers, resize_layer};
+use semio_s_artifact_raster_raster_mutations_layer_properties::{change_layer_adjustment_kind, change_layer_blend_mode, change_layer_opacity, change_layer_visible};
 use semio_s_artifact_raster_raster_model::io::text::snapshot::snapshot_wire_codec::empty_raster_document;
 use semio_s_artifact_raster_raster_model::{RasterLayerNode, RasterOwnedMap, RasterOwnedMapInsert, RasterTransform, RASTER_DOCUMENT_SCHEMA};
 use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
@@ -123,9 +125,9 @@ fn raster_owned_map_removal_returns_exact_pair_and_populated_drop_refuses() {
 
 #[test]
 fn retained_mask_keys_and_transforms_survive_clone_and_bounded_retirement() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/🔬️contract/🎭️mask/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(runtime_fixture_text("../../../🧫️fixtures/🔬️contract/🎭️mask/🔣️.json")).unwrap();
     for (index,case) in fixture["cases"].as_array().unwrap().iter().enumerate() {
-        let mask:crate::RasterLayerMask=semio_framework_pack_json::from_json_str(&case["mask"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+        let mask:semio_s_artifact_raster_raster_model::RasterLayerMask=semio_framework_pack_json::from_json_str(&case["mask"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         let mut base=empty_raster_document();
         let id=semio_s_artifact_raster_raster_model::layer_node_id(&base.layers[0]).to_owned();
         if let RasterLayerNode::Pixel {mask:target,..}=&mut base.layers[0] {*target=Some(mask.clone());}
@@ -144,7 +146,7 @@ fn retained_mask_keys_and_transforms_survive_clone_and_bounded_retirement() {
 /// 🖼️ Play-grid boot regression (ticket 26/09/19/SEMIO-TECH-PLAY-GRID-WITH-EVERY-APP, pane measured
 /// blank on :6033 2026-09-21): the interactive document lane applies `add-layer-asset` through this
 /// candidate authority, and the composite surface reads its pixels back out of the asset pool
-/// through `crate::raster_asset`. The authority minted the handle from a RAW `(mime, data)` digest —
+/// through `semio_s_artifact_raster_raster_mutations::raster_asset`. The authority minted the handle from a RAW `(mime, data)` digest —
 /// disagreeing with the canonical content-addressed id every other route mints — and inserted it
 /// WITHOUT the decoded content, so the demo booted with `assetsJson == "{}"`; the snapshot clone
 /// every subsequent mutation runs then rebuilt each handle field by field and dropped whatever
@@ -462,7 +464,7 @@ fn raster_owner_caps_and_all_mutation_variants_retire_one_owner_per_grant() {
         RasterMutation::DeleteLayer(delete_layer::mutation::DeleteLayer { layer_id: "pixel".into() }),
         RasterMutation::ReorderLayers(reorder_layers::mutation::ReorderLayers { layer_id: "pixel".into(), parent_id: Some("root".into()), index: 1 }),
         RasterMutation::RenameLayer(rename_layer::mutation::RenameLayer { layer_id: "pixel".into(), new_name: "Renamed".into() }),
-        RasterMutation::ChangeLayerLocked(semio_s_artifact_raster_raster_mutations_layers::change_layer_locked::ChangeLayerLocked {layer_id:"pixel".into(),expected:false,locked:true}),
+        RasterMutation::ChangeLayerLocked(semio_s_artifact_raster_raster_mutations_layer_properties::change_layer_locked::ChangeLayerLocked {layer_id:"pixel".into(),expected:false,locked:true}),
         RasterMutation::ChangeLayerVisible(change_layer_visible::mutation::ChangeLayerVisible { layer_id: "pixel".into(), new_visible: false }),
         RasterMutation::ChangeLayerOpacity(change_layer_opacity::mutation::ChangeLayerOpacity { layer_id: "pixel".into(), new_opacity: 0.5 }),
         RasterMutation::ChangeLayerBlendMode(change_layer_blend_mode::mutation::ChangeLayerBlendMode { layer_id: "pixel".into(), new_blend_mode: "multiply".into() }),
@@ -477,8 +479,8 @@ fn raster_owner_caps_and_all_mutation_variants_retire_one_owner_per_grant() {
             expected: Some(semio_s_artifact_raster_raster_model::RasterLayerMask { enabled: true, linked: true, invert: false, width: None, height: None, image_key: Some("previous".into()), transform: RasterTransform::default() }),
             mask: Some(semio_s_artifact_raster_raster_model::RasterLayerMask { enabled: true, linked: false, invert: true, width: Some(2), height: Some(3), image_key: Some("next".into()), transform: RasterTransform::default() }),
         }),
-        RasterMutation::ChangeLayerAdjustmentParameter(semio_s_artifact_raster_raster_mutations_layers::change_layer_adjustment_parameter::ChangeLayerAdjustmentParameter {layer_id:"tone".into(),parameter:"brightness".into(),expected:None,value:Some(semio_s_artifact_raster_raster_model::RasterAdjustmentNumber::decimal(0.25))}),
-        RasterMutation::ChangeLayerTransform(semio_s_artifact_raster_raster_mutations_layers::change_layer_transform::ChangeLayerTransform {layer_id:"pixel".into(),expected:RasterTransform::default(),transform:RasterTransform {x:2.0,y:3.0,..Default::default()}}),
+        RasterMutation::ChangeLayerAdjustmentParameter(semio_s_artifact_raster_raster_mutations_layer_properties::change_layer_adjustment_parameter::ChangeLayerAdjustmentParameter {layer_id:"tone".into(),parameter:"brightness".into(),expected:None,value:Some(semio_s_artifact_raster_raster_model::RasterAdjustmentNumber::decimal(0.25))}),
+        RasterMutation::ChangeLayerTransform(semio_s_artifact_raster_raster_mutations_layer_properties::change_layer_transform::ChangeLayerTransform {layer_id:"pixel".into(),expected:RasterTransform::default(),transform:RasterTransform {x:2.0,y:3.0,..Default::default()}}),
         RasterMutation::PaintStroke(semio_s_artifact_raster_raster_mutations_pixels::paint_stroke::PaintStroke {
             layer_id: "pixel".into(),
             target: "mask".into(),
@@ -570,7 +572,7 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
 #[test]
 fn retained_mask_mutations_match_cold_apply_and_undo() {
     use protocol::Mutation;
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧬️schema/🧬️mutations/🎭️change-layer-mask/🧪️tests/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(runtime_fixture_text("../../../../🧬️schema/🧬️mutations/🎭️change-layer-mask/🧪️tests/🔣️.json")).unwrap();
     for (index, case) in fixture["cases"].as_array().unwrap().iter().enumerate() {
         let mut source = fixture["before"].clone();
         let resolve = |key: &serde_json::Value| key.as_str().map(|key| fixture[key].clone()).unwrap_or(serde_json::Value::Null);
@@ -594,7 +596,7 @@ fn retained_mask_mutations_match_cold_apply_and_undo() {
 #[test]
 fn retained_adjustment_parameters_match_cold_apply_and_undo() {
     use protocol::Mutation;
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../🧬️schema/🧬️mutations/🎛️change-layer/🧪️tests/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(runtime_fixture_text("../../../../🧬️schema/🧬️mutations/🎛️change-layer/🧪️tests/🔣️.json")).unwrap();
     for (index,row) in fixture["cases"].as_array().unwrap().iter().enumerate() {
         let parameter=row["parameter"].as_str().unwrap();
         let mut source=serde_json::json!({"schema":"raster.document","id":"retained-tone","layers":[{"kind":"adjustment","id":"tone","name":"Tone","adjustmentKind":"brightnessContrast","params":{"metadata":"preserve"}}]});
@@ -615,7 +617,7 @@ fn retained_asset_insertion_at_full_capacity_refuses_without_changing_source() {
     let asset=semio_s_artifact_raster_raster_model::RasterImageAsset {mime:"image/png".into(),data:semio_framework_pixels::encode_png(&semio_framework_pixels::RasterImage {width:1,height:1,pixels:vec![1,2,3,255]}).unwrap()};
     for index in 0..semio_s_artifact_raster_raster_model::RASTER_OWNED_MAP_CAPACITY {let key=format!("capacity-{index}");base.assets.insert(key.clone(),semio_s_artifact_raster_raster_io::mint_raster_asset_child(&key,&asset)).unwrap();}
     let before=base.clone();
-    let operation=RasterMutation::AddLayerAsset(add_layer_asset::AddLayerAsset {asset_id:"overflow".into(),asset:crate::standards::v1::subsets::any::io::semio_image_snapshot_from_raster_asset(&asset).unwrap()});
+    let operation=RasterMutation::AddLayerAsset(add_layer_asset::AddLayerAsset {asset_id:"overflow".into(),asset:semio_s_artifact_raster_raster_io::semio_image_snapshot_from_raster_asset(&asset).unwrap()});
     let mut apply=RasterOneItemApply::new();
     let mut refusal=None;
     for _ in 0..200_000 {
@@ -643,7 +645,7 @@ fn retained_asset_insertion_at_full_capacity_refuses_without_changing_source() {
 
 #[test]
 fn retained_layer_clone_preserves_protection_during_history_replay() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../../../../../../../🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧪️tests/🧫️fixtures/🔒️protection/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(runtime_fixture_text("../../../../../../../../../../../../../🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧪️tests/🧫️fixtures/🔒️protection/🔣️.json")).unwrap();
     let mut base=semio_s_artifact_raster_raster_model::io::text::snapshot::snapshot_wire_codec::empty_raster_snapshot();base.layers=semio_framework_pack_json::from_json_str(&fixture["layers"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let operation=RasterMutation::RenameLayer(rename_layer::RenameLayer {layer_id:"locked-pixel".into(),new_name:"Accepted history".into()});
     let candidate=drive_raster_candidate(&base,&operation,981);
@@ -662,4 +664,9 @@ async fn raster_close_diagnosis_direct_store_add_layer_releases_all_owners() {
     document.dispatch(store::os_store::store_schema::ArtifactCommand::Apply{mutations:vec![RasterMutation::CreateLayer(create_layer::mutation::CreateLayer{parent_id:None,index:0,layer:Box::new(semio_s_artifact_raster_raster_model::create_pixel_layer("Close",512,512))})],transaction:None}, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.unwrap();
     store::os_store::test_support::close_plain_test_store(&mut document);
     assert!(document.close_owned_store_terminal_is_empty(),"direct store AddLayer closure must release all owners");
+}
+
+fn runtime_fixture_text(relative: &str) -> &'static str {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative);
+    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display())).into_boxed_str())
 }

@@ -1,4 +1,82 @@
-use super::*;
+use crate::standards::v1_1::subsets::base::schema::snapshot::SvgSnapshot;
+use crate::SVG_ANY_DIALECT;
+use semio_framework_plugin::ArtifactEditor;
+use semio_framework_plugin::Editor;
+#[allow(unused_imports)]
+use crate::editor::svg_any::modes::edit;
+#[allow(unused_imports)]
+use crate::editor::svg_any::modes::edit::windows::main;
+#[allow(unused_imports)]
+use crate::standards::v1_1::subsets::base::schema::mutations::edit_rules;
+#[allow(unused_imports)]
+use crate::standards::v1_1::subsets::base::schema::mutations::SvgMutation;
+#[allow(unused_imports)]
+use crate::STDIO_SVG_DOCUMENT_SCHEMA;
+#[allow(unused_imports)]
+use semio_framework_plugin::{retained_command::ArtifactRetainedCommandInputs, retained_command::ArtifactRetainedCommandJob, retained_command::ArtifactRetainedCommandPayload, retained_command::BoundedArtifactCommandWork};
+#[allow(unused_imports)]
+use semio_framework_plugin::AppOperationContext;
+#[allow(unused_imports)]
+use semio_framework_plugin::ArtifactOwnedToolJobFactory;
+#[allow(unused_imports)]
+use semio_framework_plugin::ArtifactOwnedToolJobRequest;
+#[allow(unused_imports)]
+use semio_framework_plugin::ArtifactStoreInitializationJob;
+#[allow(unused_imports)]
+use semio_framework_plugin::ArtifactToolFactoryRegistry;
+#[allow(unused_imports)]
+use semio_framework_plugin::ArtifactToolPublicationContract;
+#[allow(unused_imports)]
+use semio_framework_plugin::ArtifactToolPublicationLane;
+#[allow(unused_imports)]
+use semio_framework_plugin::EditorApp;
+#[allow(unused_imports)]
+use semio_framework_plugin::InteractiveJobClassification;
+#[allow(unused_imports)]
+use semio_framework_plugin::ToolExecutionContract;
+#[allow(unused_imports)]
+use semio_framework_plugin::ToolFactoryKey;
+#[allow(unused_imports)]
+use semio_framework_plugin::ToolJobFactory;
+#[allow(unused_imports)]
+use semio_framework_plugin::ToolJobFactoryError;
+#[allow(unused_imports)]
+use semio_framework_plugin::ToolOperationSpec;
+#[allow(unused_imports)]
+use semio_framework_plugin::ArtifactView;
+#[allow(unused_imports)]
+use semio_framework_plugin::ConfigView;
+#[allow(unused_imports)]
+use semio_framework_artifact_reference::Dialect;
+#[allow(unused_imports)]
+use semio_framework_plugin::DraftView;
+#[allow(unused_imports)]
+use semio_framework_plugin::Emit;
+#[allow(unused_imports)]
+use semio_framework_plugin::Fault;
+#[allow(unused_imports)]
+use semio_framework_ui_locale::Label;
+#[allow(unused_imports)]
+use semio_framework_plugin::NoConfig;
+#[allow(unused_imports)]
+use semio_framework_plugin::NoConfigMutation;
+#[allow(unused_imports)]
+use semio_framework_plugin::NoDraft;
+#[allow(unused_imports)]
+use semio_framework_plugin::NoDraftMutation;
+#[allow(unused_imports)]
+use semio_framework_plugin::NoPresence;
+#[allow(unused_imports)]
+use semio_framework_plugin::NoPresenceMutation;
+#[allow(unused_imports)]
+use semio_framework_plugin::NoTransient;
+#[allow(unused_imports)]
+use semio_framework_plugin::NoTransientMutation;
+#[allow(unused_imports)]
+use semio_framework_2d::compute::EngineHandles;
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_contract::editing;
+use crate::editor::svg_any::*;
 
 #[semio_framework_async_macros::async_test]
 async fn create_editor_builds_a_definition_for_the_editor_role() {
@@ -26,4 +104,4 @@ fn natural_file_route_round_trips_svg_with_an_independent_xml_oracle_and_fresh_s
     assert_eq!(current, <SvgAnyEditor as ArtifactEditor>::initial_snapshot(), "opening does not replace the selected owner before publication");
 }
 
-semio_framework_plugin::history_edit_acceptance_law!("stdio", super::SvgAnyEditor, || semio_framework_plugin::App { definition: super::create_svg_any_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️1.1/🪆️subsets/🧱️base");
+semio_framework_plugin::history_edit_acceptance_law!("stdio", crate::editor::svg_any::SvgAnyEditor, || semio_framework_plugin::App { definition: crate::editor::svg_any::create_svg_any_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️1.1/🪆️subsets/🧱️base");

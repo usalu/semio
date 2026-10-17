@@ -329,9 +329,9 @@ impl Default for SemioModelSnapshot {
 /// collection/leaf shape at least once. Single source of truth for
 /// `📚️examples/🏢️building/🖼️assets/🗣️.dsl.semio`/`🎒️.pack.semio` and for the
 /// conformance-law tests in `🎹️composer/🦀️.rs`.
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn demo_semio_model_snapshot() -> SemioModelSnapshot {
+pub fn demo_semio_model_snapshot() -> SemioModelSnapshot {
     SemioModelSnapshot {
         schema: STDIO_SEMIOMODEL_DOCUMENT_SCHEMA.into(),
         spatial: vec![
@@ -365,9 +365,7 @@ pub(crate) fn demo_semio_model_snapshot() -> SemioModelSnapshot {
 //#endregion 🔖️Demo
 
 //#region 🔖️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🔖️Tests
 
 

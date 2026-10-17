@@ -49,5 +49,4 @@ test("original cooperative host law has one higher owner and all twelve neutral 
   expect(rosters[0]).not.toContain("cooperative_maintenance_live_host_revisits_queued_owner");
   expect(rosters[0]).toContain("cooperative_maintenance_retains_deficit_until_later_host_turn");
   expect(rosters[0]).toContain("cooperative_maintenance_snapshot_contention_preserves_queued_job");
-  console.log("[DEBUG] cooperative-host-owner native=1 neutral=12 hostile=5 physical-provider=Bun+Node");
 });

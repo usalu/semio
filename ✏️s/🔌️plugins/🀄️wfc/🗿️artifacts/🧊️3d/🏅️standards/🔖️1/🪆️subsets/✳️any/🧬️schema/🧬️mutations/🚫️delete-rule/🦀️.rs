@@ -2,7 +2,6 @@
 //! it constrained.
 
 use crate::diff::Wfc3dDiff;
-use crate::mutations::Wfc3dMutation;
 use crate::schema::snapshot::Wfc3dSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -15,17 +14,23 @@ pub struct DeleteRule {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn delete_rule(id: String) -> Wfc3dMutation {
-    Wfc3dMutation::DeleteRule(DeleteRule { id })
+pub fn delete_rule<Op>(id: String) -> Op
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::delete_rule::DeleteRule>,
+{
+    Op::from(DeleteRule { id })
 }
 
-impl MutationKind<Wfc3dSnapshot, Wfc3dMutation> for DeleteRule {
+impl<Op> MutationKind<Wfc3dSnapshot, Op> for DeleteRule
+where
+    Op: protocol::Mutation<Wfc3dSnapshot, Diff = Wfc3dDiff> + From<DeleteRule> + From<crate::standards::v1::subsets::any::schema::mutations::create_rule::CreateRule>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "rule", kind: "delete-rule", record: "DeletedRule" };
 
     fn diff(&self, base: &Wfc3dSnapshot) -> protocol::MutationOutcome<Wfc3dDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Wfc3dSnapshot) -> Result<Vec<Wfc3dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Wfc3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

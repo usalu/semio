@@ -1,10 +1,14 @@
-use super::*;
+use semio_framework_test_fixtures::fixture_text;
+
+#[allow(unused_imports)]
+use crate::ShootingCamera;
+use crate::editor::shooting::config::*;
 use dsl::os_pack as pack;
 use protocol::{Mutation, OpBinary, OpText};
 
 #[semio_framework_async_macros::async_test]
 async fn shooting_configuration_contract_vectors_match_the_json_oracle() {
-    let vectors: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔁️mutation-contracts.json")).expect("neutral contract vectors");
+    let vectors: serde_json::Value = serde_json::from_str(fixture_text!("../../../✏️editor/🎚️config/🧪️tests/🧫️fixtures/🔁️mutation-contracts.json")).expect("neutral contract vectors");
     let base: ShootingConfig = semio_framework_pack_json::from_json_str(&vectors["base"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("owned base decoder");
     assert_eq!(<ShootingConfigMutation as Mutation<ShootingConfig>>::DESCRIPTORS.len(), vectors["cases"].as_array().expect("cases").len());
     for vector in vectors["cases"].as_array().expect("cases") {

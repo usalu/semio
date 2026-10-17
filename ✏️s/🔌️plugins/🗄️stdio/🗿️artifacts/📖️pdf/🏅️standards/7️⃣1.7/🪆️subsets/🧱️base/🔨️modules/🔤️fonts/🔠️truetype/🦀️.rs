@@ -428,7 +428,7 @@ impl TrueTypeFont {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn table_checksum(table: &[u8]) -> u32 {
+pub fn table_checksum(table: &[u8]) -> u32 {
     let mut sum = 0u32;
     for chunk in table.chunks(4) {
         let mut word = [0u8; 4];
@@ -602,7 +602,5 @@ pub fn synthesize_truetype(units_per_em: u16, glyphs: &[(u32, u16, Vec<Vec<(i16,
 //#endregion 🔖️Synthesis
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

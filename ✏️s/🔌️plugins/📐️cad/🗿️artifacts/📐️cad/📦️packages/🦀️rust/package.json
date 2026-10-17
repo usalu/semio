@@ -8,6 +8,11 @@
     "verify-cad-document-contract": "bun --cwd \"../../../../../../..\" repo run @semio-tech/cad-cad-rs:verify-cad-document-contract"
   },
   "devDependencies": {
-    "@semio-tech/framework": "workspace:*"
+    "@semio-tech/framework": "workspace:*",
+    "@semio-tech/framework-compiler-ts": "workspace:*"
+  },
+  "dependencies": {
+    "@semio-tech/cad-js": "workspace:*",
+    "@semio-tech/framework-os": "workspace:*"
   }
 }

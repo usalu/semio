@@ -1,0 +1,14 @@
+{
+  "name": "@semio-tech/cad-cad-ts",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./standards/1/subsets/any/editor/engine/actions": "./🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎬️actions/🟦️.ts",
+    "./standards/1/subsets/any/editor/engine/runtime": "./🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️.ts",
+    "./standards/1/subsets/any/editor/engine/stately": "./🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎰️stately/🟦️.ts"
+  },
+  "dependencies": {
+    "@semio-tech/cad-engine-ts": "workspace:*",
+    "@semio-tech/s-spatial-kernel-ts": "workspace:*"
+  }
+}

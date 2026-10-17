@@ -1,0 +1,41 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "iterations",
+    "preparedContracts",
+    "oneShotCalls",
+    "profileValidationsPerIteration",
+    "suffixValidationsPerIteration",
+    "schemaAliasSnapshot",
+    "freshInputValidation"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "iterations": {
+      "const": 4097
+    },
+    "preparedContracts": {
+      "const": 2
+    },
+    "oneShotCalls": {
+      "const": 0
+    },
+    "profileValidationsPerIteration": {
+      "const": 3
+    },
+    "suffixValidationsPerIteration": {
+      "const": 1
+    },
+    "schemaAliasSnapshot": {
+      "const": true
+    },
+    "freshInputValidation": {
+      "const": true
+    }
+  }
+}

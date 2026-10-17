@@ -91,7 +91,11 @@ vi.mock("@semio-tech/infinite-world-r3f", async (importOriginal) => {
   };
 });
 
-import { clearPendingWorldProjection, clearPendingWorldProjections, componentPickMergeMode, leftoverBrushRetainGuestHoverV1, registerPendingWorldProjection, World3dHost, World3dWindowViewRegistryV1, World3dWindowViewStoreContext, World3dWindowViewStoreV1, world3dSelectionActionArgs } from "../../🧱️elements/🌐️World3dHost/🟦️.tsx";
+import { World3dHost } from "../../🧱️elements/🌐️World3dHost/🟦️.tsx";
+import { componentPickMergeMode } from "../../🧱️elements/🌐️World3dHost/🎯️marquee-and-bridges/🟦️.tsx";
+import { leftoverBrushRetainGuestHoverV1 } from "../../🧱️elements/🌐️World3dHost/🔗️instance-selection/🟦️.ts";
+import { clearPendingWorldProjection, clearPendingWorldProjections, registerPendingWorldProjection, World3dWindowViewRegistryV1, World3dWindowViewStoreContext, World3dWindowViewStoreV1 } from "../../🧱️elements/🌐️World3dHost/🪟️window-view-store/🟦️.tsx";
+import { world3dSelectionActionArgs } from "../../🧱️elements/🌐️World3dHost/🖱️interaction-domain-args/🟦️.ts";
 import { WindowInstanceIdContext } from "../../🧱️elements/🗣️Interpreter/🌉️scene-host-contract/🟦️.ts";
 import { SetWindowIconContext, SetWindowTitleContext } from "../../🧱️elements/🏛️ShellHost/🟦️.tsx";
 

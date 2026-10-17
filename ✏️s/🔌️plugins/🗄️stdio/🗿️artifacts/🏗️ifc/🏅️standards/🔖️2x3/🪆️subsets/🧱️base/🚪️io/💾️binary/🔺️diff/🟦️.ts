@@ -49,5 +49,5 @@ export const stdioIfc2x3BaseDiffBinaryGuardConstant = <T extends string | number
 //#endregion 🚪️Parsers
 
 export function parseIfc2x3DiffBinary(value: unknown, at = "$"): Ifc2x3DiffBinary {
-  return stdioIfc2x3BaseDiffBinaryGuardObject(value, `${at}`);
+  return value instanceof Uint8Array ? value : stdioIfc2x3BaseDiffBinaryGuardReject(at, "value is not a byte array");
 }

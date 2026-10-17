@@ -1,6 +1,5 @@
 //! 🕸️ `create-mesh` — brings a new id-keyed mesh into existence. A duplicate `id` already present in `base` is a no-op (never a duplicate id).
 
-use crate::schema::mutations::SemioMeshMutation;
 use crate::schema::snapshot::{SemioMesh, SemioMeshSnapshot};
 
 //#region 🔖️Payload
@@ -13,13 +12,16 @@ pub struct CreateMesh {
     pub at: Option<usize>,
 }
 
-impl protocol::MutationKind<SemioMeshSnapshot, SemioMeshMutation> for CreateMesh {
+impl<Op> protocol::MutationKind<SemioMeshSnapshot, Op> for CreateMesh
+where
+    Op: protocol::Mutation<SemioMeshSnapshot, Diff = crate::schema::diff::SemioMeshDiff> + From<CreateMesh> + From<crate::schema::mutations::delete_mesh::DeleteMesh>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "mesh", kind: "create-mesh", record: "CreatedMesh" };
 
-    fn diff(&self, base: &SemioMeshSnapshot) -> protocol::MutationOutcome<<SemioMeshMutation as protocol::Mutation<SemioMeshSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioMeshSnapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<SemioMeshSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &SemioMeshSnapshot) -> Result<Vec<SemioMeshMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &SemioMeshSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

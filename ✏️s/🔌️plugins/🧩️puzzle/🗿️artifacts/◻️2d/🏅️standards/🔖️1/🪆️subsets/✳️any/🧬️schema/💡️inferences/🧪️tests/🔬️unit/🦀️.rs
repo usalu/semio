@@ -1,5 +1,13 @@
-use super::*;
-use {crate::standards::v1::subsets::any::schema::Puzzle2dEdge, crate::standards::v1::subsets::any::schema::Puzzle2dHandle, crate::standards::v1::subsets::any::schema::Puzzle2dNode, crate::standards::v1::subsets::any::schema::Puzzle2dNodeAnchor};
+use crate::Puzzle2dSnapshot;
+use crate::standards::v1::subsets::any::schema::inferences::flat_position::compute_flat_position;
+#[allow(unused_imports)]
+use ::semio_framework_schema::ArtifactSchema;
+#[allow(unused_imports)]
+use semio_s_artifact_puzzle_3d_inferences::flatten::{DIAGRAM_HORIZONTAL_SCALE, DIAGRAM_RADIUS};
+#[allow(unused_imports)]
+use std::collections::{HashMap, HashSet, VecDeque};
+use crate::standards::v1::subsets::any::schema::inferences::*;
+use {crate::standards::v1::subsets::any::schema::records::Puzzle2dEdge, crate::standards::v1::subsets::any::schema::records::Puzzle2dHandle, crate::standards::v1::subsets::any::schema::records::Puzzle2dNode, crate::standards::v1::subsets::any::schema::records::Puzzle2dNodeAnchor};
 use protocol::Inference;
 
 //#region 🧸️Fixtures
@@ -8,7 +16,7 @@ fn parent_child_snapshot() -> Puzzle2dSnapshot {
     let p = Puzzle2dNode { id: "p".into(), x: 5.0, y: 7.0, anchor: Puzzle2dNodeAnchor::Fixed, handles: vec![Puzzle2dHandle { id: "h".into(), ..Default::default() }].into(), ..Default::default() };
     let c = Puzzle2dNode { id: "c".into(), anchor: Puzzle2dNodeAnchor::Derived, handles: vec![Puzzle2dHandle { id: "h".into(), ..Default::default() }].into(), ..Default::default() };
     let e = Puzzle2dEdge { id: "e".into(), source: "p:h".into(), target: "c:h".into(), x: 3.0, y: -2.0, ..Default::default() };
-    Puzzle2dSnapshot { schema: crate::standards::v1::subsets::any::schema::PUZZLE_2D_SCHEMA.into(), camera: Default::default(), nodes: vec![p, c].into(), edges: vec![e].into(), target_regions: Default::default(), meta: Default::default() }
+    Puzzle2dSnapshot { schema: crate::standards::v1::subsets::any::schema::records::PUZZLE_2D_SCHEMA.into(), camera: Default::default(), nodes: vec![p, c].into(), edges: vec![e].into(), target_regions: Default::default(), meta: Default::default() }
 }
 //#endregion 🧸️Fixtures
 

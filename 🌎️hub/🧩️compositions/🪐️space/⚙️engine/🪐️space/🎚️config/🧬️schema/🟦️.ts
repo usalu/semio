@@ -51,6 +51,10 @@ type spaceSpaceConfigGuardSizeBounds = { readonly minItems?: number; readonly ma
 
 export const spaceSpaceConfigGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : spaceSpaceConfigGuardReject(at, "value is not an object");
+export const spaceSpaceConfigGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) spaceSpaceConfigGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const spaceSpaceConfigGuardArray = (value: unknown, at: string, bounds: spaceSpaceConfigGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return spaceSpaceConfigGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) spaceSpaceConfigGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -80,10 +84,19 @@ export const spaceSpaceConfigGuardConstant = <T extends string | number | boolea
   value === expected ? expected : spaceSpaceConfigGuardReject(at, `value is not ${String(expected)}`);
 //#endregion 🚪️Parsers
 
-export function parseSpaceConfig(value: unknown, at = "$"): SpaceConfig {
-  const row = spaceSpaceConfigGuardObject(value, at);
+export function parseSpaceWindowCamera(value: unknown, at = "$"): SpaceWindowCamera {
+  const row = spaceSpaceConfigGuardClosed(spaceSpaceConfigGuardObject(value, at), at, ["x", "y", "zoom"]);
   return {
-    camera: spaceSpaceConfigGuardObject(row["camera"], `${at}.camera`),
+    x: spaceSpaceConfigGuardNumber(row["x"], `${at}.x`),
+    y: spaceSpaceConfigGuardNumber(row["y"], `${at}.y`),
+    zoom: spaceSpaceConfigGuardNumber(row["zoom"], `${at}.zoom`),
+  };
+}
+
+export function parseSpaceConfig(value: unknown, at = "$"): SpaceConfig {
+  const row = spaceSpaceConfigGuardClosed(spaceSpaceConfigGuardObject(value, at), at, ["camera", "collapsedNodeIds", "previewOffNodeIds", "activeNodeId", "focusedNodeId", "clipboardNodeIds", "workflowEngagementInput", "compiledDagEngagementInput", "pendingImportNodeId", "pendingImportFormat", "activePanelTab", "spaceId"]);
+  return {
+    camera: Object.fromEntries(Object.entries(spaceSpaceConfigGuardObject(row["camera"], `${at}.camera`)).map(([key0, value0]) => [key0, parseSpaceWindowCamera(value0, `${at}.camera.${key0}`)])),
     collapsedNodeIds: spaceSpaceConfigGuardArray(row["collapsedNodeIds"], `${at}.collapsedNodeIds`).map((item, index) => spaceSpaceConfigGuardString(item, `${at}.collapsedNodeIds[${index}]`)),
     previewOffNodeIds: spaceSpaceConfigGuardArray(row["previewOffNodeIds"], `${at}.previewOffNodeIds`).map((item, index) => spaceSpaceConfigGuardString(item, `${at}.previewOffNodeIds[${index}]`)),
     activeNodeId: row["activeNodeId"] === undefined ? undefined : spaceSpaceConfigGuardString(row["activeNodeId"], `${at}.activeNodeId`),
@@ -95,14 +108,5 @@ export function parseSpaceConfig(value: unknown, at = "$"): SpaceConfig {
     pendingImportFormat: row["pendingImportFormat"] === undefined ? undefined : spaceSpaceConfigGuardString(row["pendingImportFormat"], `${at}.pendingImportFormat`),
     activePanelTab: spaceSpaceConfigGuardString(row["activePanelTab"], `${at}.activePanelTab`),
     spaceId: row["spaceId"] === undefined ? undefined : spaceSpaceConfigGuardString(row["spaceId"], `${at}.spaceId`),
-  };
-}
-
-export function parseSpaceWindowCamera(value: unknown, at = "$"): SpaceWindowCamera {
-  const row = spaceSpaceConfigGuardObject(value, at);
-  return {
-    x: spaceSpaceConfigGuardNumber(row["x"], `${at}.x`),
-    y: spaceSpaceConfigGuardNumber(row["y"], `${at}.y`),
-    zoom: spaceSpaceConfigGuardNumber(row["zoom"], `${at}.zoom`),
   };
 }

@@ -15,6 +15,6 @@ test("every fixture case states a fault or at least one measure", () => {
   for (const { name, outputs, fault } of fixture.cases) expect(fault !== undefined || Object.keys((outputs?.shape ?? {}) as object).length > 1, name).toBe(true);
 });
 
-test("three recomputes the length, ends, closure, bounding box and spline passage of every curve and wire case (EllipseCurve, CatmullRomCurve3 and plain polyline sums)", { timeout: 120000 }, () => {
+test("three recomputes the length, ends, closure, bounding box and spline passage of every curve and wire case (EllipseCurve, CatmullRomCurve3 and plain polyline sums)", () => {
   expect(disagreements(fixture.cases, oracleCase, fixture.tolerance)).toEqual([]);
-});
+}, { timeout: 120000 });

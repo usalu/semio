@@ -8,7 +8,7 @@ import { buildBudgetMs } from "../../../../../🧰️framework/🔨️modules/�
 import { runRepositoryExactCargoLaws, configuredRepositoryCargoPreparationPolicyV1 } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { compositionLawGroups, RETAINED_ARTIFACT_UNITS, retainedLawGroups, testCompositionOwnership } from "../../🧪️tests/🔬️ownership/🟦️.ts";
+import { compositionLawGroups, inTargetFamily, RETAINED_ARTIFACT_UNITS, retainedLawGroups, testCompositionOwnership } from "../../🧪️tests/🔬️ownership/🟦️.ts";
 class SourceScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw new Error("source-check accepts no arguments");
@@ -23,7 +23,7 @@ class TestScript extends BundleScript {
     const filtered = rest.indexOf("--law-filter");
     const pattern = filtered < 0 ? undefined : rest[filtered + 1];
     if (filtered >= 0 && !pattern) throw new Error("law filter requires a name fragment");
-    const groups = (target === RETAINED_ARTIFACT_UNITS ? retainedLawGroups() : compositionLawGroups().filter(group => target === undefined || group.target.name === target)).map(group => ({ ...group, laws: group.laws.filter(law => pattern === undefined || law.includes(pattern)) })).filter(group => group.laws.length > 0);
+    const groups = (target === RETAINED_ARTIFACT_UNITS ? retainedLawGroups() : compositionLawGroups().filter(group => inTargetFamily(group.target.name, target))).map(group => ({ ...group, laws: group.laws.filter(law => pattern === undefined || law.includes(pattern)) })).filter(group => group.laws.length > 0);
     if (!groups.length || (selected >= 0 && !target)) throw new Error("unknown composition target or empty law selection");
     testCompositionOwnership(target);
     const cargoArgs = rest.filter((_value, index) => (selected < 0 || index !== selected && index !== selected + 1) && (filtered < 0 || index !== filtered && index !== filtered + 1));

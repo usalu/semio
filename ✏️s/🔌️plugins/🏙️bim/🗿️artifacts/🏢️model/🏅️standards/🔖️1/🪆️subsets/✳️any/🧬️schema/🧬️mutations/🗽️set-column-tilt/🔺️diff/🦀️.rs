@@ -1,7 +1,7 @@
 //! 🔺️ Diff constructor for `SetColumnTilt`: a one-field column patch that assigns the tilt (absent in the payload clears it, the column is plumb again). A tilt leans by a
 //! positive angle of at most 60 degrees towards a finite direction. The tilted solid, its volume and the joins follow by inference; the position stays the base point.
 
-use super::super::wall_geometry::tilt_flaw;
+use crate::standards::v1::subsets::any::schema::mutations::wall_geometry::tilt_flaw;
 use super::SetColumnTilt;
 use crate::standards::v1::subsets::any::schema::{diff::{Assigned, patches::ColumnPatch, Entry, ModelDiff}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};

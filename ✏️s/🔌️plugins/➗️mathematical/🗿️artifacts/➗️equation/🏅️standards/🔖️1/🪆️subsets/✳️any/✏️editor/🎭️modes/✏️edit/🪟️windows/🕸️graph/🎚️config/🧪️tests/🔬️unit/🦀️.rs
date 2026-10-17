@@ -1,4 +1,4 @@
-use super::*;
+use crate::editor::equation::modes::edit::windows::graph::config::*;
 use protocol::Mutation;
 
 #[semio_framework_async_macros::async_test]

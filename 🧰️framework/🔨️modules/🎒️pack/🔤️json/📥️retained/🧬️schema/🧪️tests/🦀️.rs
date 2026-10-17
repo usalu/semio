@@ -177,6 +177,5 @@ fn cancelled_owned_schema_cursor_retires_one_real_page_per_close_grant() {
         assert!(!cursor.terminal_is_empty());assert_eq!(cursor.tokens.pages.slots.as_ptr(),pointer);
     }
     let(step,allocated,released)=semio_framework_trace_memory_testing::observe_backing(||cursor.close_step(grant).unwrap());assert_eq!((allocated,released),(0,backing));assert_eq!(step.progress().released_bytes,backing);assert!(step.progress().fits(grant));assert!(matches!(step,RetainedCloneStep::Complete(_)));assert!(cursor.terminal_is_empty());
-    eprintln!("[DEBUG] schema cancel preserves original directory pointer under denied work/release/depth; inline page work releases0 and final directory releases exact{backing} bytes");
 }
 

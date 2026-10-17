@@ -1,4 +1,7 @@
-use super::*;
+use crate::EQUATION_DIALECT;
+use semio_framework_plugin::ArtifactViewer;
+use semio_framework_plugin::Viewer;
+use crate::viewer::equation::*;
 
 #[semio_framework_async_macros::async_test]
 async fn create_equation_viewer_builds_a_definition_for_the_viewer_role() {

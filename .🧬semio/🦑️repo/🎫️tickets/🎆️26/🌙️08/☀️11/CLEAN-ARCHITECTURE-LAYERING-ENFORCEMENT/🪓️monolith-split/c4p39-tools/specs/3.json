@@ -1,0 +1,84 @@
+{
+ "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️tests/🔬️wgpu-panel-anchor-model/🦀️.rs",
+ "original": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/c4p39-tools/orig/3.rs",
+ "stage": "/Users/ueli/.cache/c4p39/stage",
+ "chunks": [
+  {
+   "name": "🪟️spawned-documents-and-host-panel",
+   "folder": "🪟️spawned-documents-and-host-panel",
+   "doc": "🪟️ Spawned documents and host panel: the fresh shell, spawned document routing, the host panel codec, claim order and stale session identity.",
+   "ranges": [
+    [
+     8,
+     164
+    ]
+   ]
+  },
+  {
+   "name": "📌️anchor-ids-resize-and-default-dock",
+   "folder": "📌️anchor-ids-resize-and-default-dock",
+   "doc": "📌️ Anchor ids, resize and default dock: anchor group and id mapping, panel width and resize hits, and the shared default dock fixture.",
+   "ranges": [
+    [
+     166,
+     324
+    ]
+   ]
+  },
+  {
+   "name": "🧱️anchor-geometry-and-state",
+   "folder": "🧱️anchor-geometry-and-state",
+   "doc": "🧱️ Anchor geometry and state: anchor insets, banding and chrome-hosted style, the open-anchor snapshot, census, column projections and path reconciliation.",
+   "ranges": [
+    [
+     326,
+     525
+    ]
+   ]
+  },
+  {
+   "name": "🗄️dock-override-round-trip",
+   "folder": "🗄️dock-override-round-trip",
+   "doc": "🗄️ Dock override round trip: dock skeleton application, tab moves, the shell config round trip, persistence idempotence and the theme panel gating.",
+   "ranges": [
+    [
+     527,
+     686
+    ]
+   ]
+  },
+  {
+   "name": "⚙️settings-keybindings-hug-and-mobile",
+   "folder": "⚙️settings-keybindings-hug-and-mobile",
+   "doc": "⚙️ Settings, keybindings, hug and mobile: the Settings branch and shell-owned leaves, remappable keybindings, content hug and the mobile flattening.",
+   "ranges": [
+    [
+     688,
+     893
+    ]
+   ]
+  },
+  {
+   "name": "💬️command-form-and-agent-chat",
+   "folder": "💬️command-form-and-agent-chat",
+   "doc": "💬️ Command form and agent chat: the staged command form and the agent chat transcript, cancel and composer laws.",
+   "ranges": [
+    [
+     895,
+     1121
+    ]
+   ]
+  },
+  {
+   "name": "🌳️tree-units-and-chrome-bands",
+   "folder": "🌳️tree-units-and-chrome-bands",
+   "doc": "🌳️ Tree units and chrome bands: the persisted tree units, the Display branch leaves and the navbar and footer band fixtures.",
+   "ranges": [
+    [
+     1123,
+     1262
+    ]
+   ]
+  }
+ ]
+}

@@ -1,7 +1,6 @@
 //! 📌 Shooting mutation payload — `SetActiveAsset`. A narrow addressed single-field setter on the document root (taxonomy's `set` verb).
 
 use crate::diff::ShootingDiff;
-use crate::mutations::ShootingMutation;
 use crate::ShootingSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 
@@ -15,12 +14,15 @@ pub struct SetActiveAsset {
     pub asset_id: Option<String>,
 }
 
-impl MutationKind<ShootingSnapshot, ShootingMutation> for SetActiveAsset {
+impl<Op> MutationKind<ShootingSnapshot, Op> for SetActiveAsset
+where
+    Op: protocol::Mutation<ShootingSnapshot, Diff = ShootingDiff> + From<SetActiveAsset>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "active-asset", kind: "set-active-asset", record: "SetActiveAsset" };
     fn diff(&self, base: &ShootingSnapshot) -> protocol::MutationOutcome<ShootingDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &ShootingSnapshot) -> Result<Vec<ShootingMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &ShootingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

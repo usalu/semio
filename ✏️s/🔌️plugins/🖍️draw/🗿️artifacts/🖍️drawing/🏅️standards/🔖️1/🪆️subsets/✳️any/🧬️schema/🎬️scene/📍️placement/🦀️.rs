@@ -4,14 +4,14 @@ use crate::paint::scene::{ScenePaintJob, PaintedSceneLimits, PreparedPaint};
 use semio_framework_2d::{booleans::{BooleanJob,BooleanInput,BooleanOperand,BooleanOperation,BooleanFillRule},flatten::{PathFlattenJob,PathFlattenInput},PathSegment};
 type Point=[f64;2];type Bounds=[f64;4];
 #[derive(Clone,Copy,Debug,PartialEq)]
-#[cfg_attr(test,derive(serde::Serialize,serde::Deserialize))]
-#[cfg_attr(test,serde(rename_all="camelCase"))]
+#[cfg_attr(any(test, feature = "testkit"),derive(serde::Serialize,serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"),serde(rename_all="camelCase"))]
 pub enum PlacementBasis{Area,Length,Bounds,Empty}
 #[derive(Clone,Copy,Debug,PartialEq)]
-#[cfg_attr(test,derive(serde::Serialize,serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"),derive(serde::Serialize,serde::Deserialize))]
 pub struct DrawingScenePlacement{pub bounds:Option<Bounds>,pub centroid:Point,pub area:f64,pub basis:PlacementBasis}
 #[derive(Clone,Copy,Debug)]
-#[cfg_attr(test,derive(serde::Serialize))]
+#[cfg_attr(any(test, feature = "testkit"),derive(serde::Serialize))]
 pub struct DrawingScenePlacementProgress{pub phase:&'static str,pub work:u64,pub done:bool}
 #[derive(Clone,Copy,Default)]
 struct Sum{value:f64,error:f64}
@@ -54,6 +54,3 @@ impl DrawingScenePlacementJob{
  pub fn into_retirement(mut self)->(DrawingScenePlacementRetirement,Option<DrawingScenePlacement>){let output=self.result().ok();self.output=None;self.cancelled=true;(DrawingScenePlacementRetirement::new(self),output)}
 }
 semio_framework_2d::physical_work_retirement!(DrawingScenePlacementRetirement,DrawingScenePlacementJob,String,|error:&str|error.to_string());
-#[cfg(test)]
-#[path="🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;

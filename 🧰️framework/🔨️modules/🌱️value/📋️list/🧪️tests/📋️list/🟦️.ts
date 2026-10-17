@@ -15,7 +15,6 @@ test("owner payload page ceiling preserves independently patched order and exact
     assert.equal(Math.min(slots,pageCeiling.capacity)*pageCeiling.elementBytes,pageCeiling.ownerPayloadPageBytes);
   }
   assert.deepEqual(Buffer.from(JSON.stringify(patched)),Buffer.from(JSON.stringify(pageCeiling.expected)));
-  console.log("[DEBUG] Paged list owner page ceiling=512 ordered third-party rows="+patched.length);
 });
 
 export function testPagedListOwnership(): void {
@@ -44,7 +43,6 @@ export function testPagedListOwnership(): void {
 
 test("original paged list ownership preserves JSON Patch order and signed reservation custody", () => {
   testPagedListOwnership();
-  console.log("[DEBUG] Original PagedList JSONPatch ordered reservation and retained backing helper passed");
 });
 
 test("retained release authority keeps physical ownership distinct from copied input", () => {
@@ -62,7 +60,6 @@ test("retained release authority keeps physical ownership distinct from copied i
   assert.equal(released.releasedBytes, releaseAuthority.expected.releasedBytes);
   assert(released.releasedBytes > releaseAuthority.grant.maximumCopyBytes);
   assert(released.releasedBytes <= releaseAuthority.grant.maximumReleaseBytes);
-  console.log("[DEBUG] Independent release oracle copy=64 release=4096 physical=128 one-below retains owner");
 });
 
 test("retained empty tail permits release while the earlier page stays live", () => {
@@ -76,5 +73,4 @@ test("retained empty tail permits release while the earlier page stays live", ()
   assert.equal(edited[1].length,0);
   assert.equal(edited[0].length,frontier.earlierLiveItems);
   assert.deepEqual(edited[0],Array.from({length:frontier.earlierLiveItems},(_,value)=>value));
-  console.log("[DEBUG] original paged list neutral empty tail="+frontier.tailItems+" earlier live="+frontier.earlierLiveItems+" independentJSONPatch=true");
 });

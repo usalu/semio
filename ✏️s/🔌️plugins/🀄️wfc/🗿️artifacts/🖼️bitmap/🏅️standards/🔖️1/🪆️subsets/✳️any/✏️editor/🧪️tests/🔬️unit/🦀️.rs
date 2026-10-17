@@ -1,9 +1,22 @@
 //! 🧪️ Editor surface — the manifest it declares, and that every typed command reaches exactly the
 //! mutation it claims to.
 
-use super::*;
+use crate::editor::bitmap::commands::set_active_example;
+use crate::editor::bitmap::modes::edit;
+use crate::editor::bitmap::modes::edit::tools::fill as fill_tool;
+use crate::{editor::bitmap::modes::edit::windows::input, editor::bitmap::modes::edit::windows::output};
+use crate::{editor::bitmap::transient::BitmapTransient, editor::bitmap::transient::BitmapTransientMutation, editor::bitmap::transient::SetSolve};
+use crate::{WFC_BITMAP_DIALECT, WFC_BITMAP_DOCUMENT_SCHEMA};
+use semio_framework_plugin::AppOperationContext;
+use semio_framework_plugin::ArtifactEditor;
+use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::ConfigView;
+use semio_framework_plugin::InteractiveJobClassification;
+use semio_framework_plugin::NoConfig;
+use crate::editor::bitmap::*;
 use crate::{BitmapMutation, BitmapSnapshot};
 use crate::standards::v1::subsets::any::io::text::snapshot::encode_base64;
+use semio_framework_test_fixtures::fixture_text;
 
 fn commands() -> Vec<(BitmapEditorCommand, &'static str)> {
     vec![
@@ -115,7 +128,7 @@ fn the_brush_verb_and_utility_are_declared_and_answered() {
     for retired in ["stroke-begin", "stroke-extend", "stroke-commit"] {
         assert!(!BITMAP_TOOL_IDS.contains(&retired), "'{retired}' was replaced by the brush tool");
     }
-    let config = crate::standards::v1::subsets::any::io::text::bitmap_json_encode(&input::config::BitmapInputWindowConfig::default());
+    let config = crate::standards::v1::subsets::any::io::text::snapshot::bitmap_json_encode(&input::config::BitmapInputWindowConfig::default());
     assert!(!config.contains("stroke"), "the window config carries no stroke scratch: {config}");
 }
 
@@ -285,7 +298,7 @@ fn a_contradiction_transient_paints_a_distinct_overlay() {
 #[test]
 fn the_python_oracle_vector_matches_the_rust_payload_shape() {
     use crate::editor::bitmap::modes::edit::tools::fill::{payload_from_assignment, BitmapFillPayload};
-    let text = include_str!("../../🎭️modes/✏️edit/🛠️tools/🌡fill/🧪️tests/🧫️fixtures/🐍️python-fill-oracle/🔣️.json");
+    let text = fixture_text!("../../../../🎭️modes/✏️edit/🛠️tools/🌡fill/🧪️tests/🧫️fixtures/🐍️python-fill-oracle/🔣️.json");
     let payload = BitmapFillPayload::decode_json(text).expect("vector decodes");
     assert_eq!(payload.width, 2);
     assert_eq!(payload.height, 2);
@@ -306,4 +319,4 @@ fn the_editor_declares_the_artifact_kind_it_edits() {
     assert_eq!(create_bitmap_editor().artifact_kinds, vec![crate::artifact_kind()]);
 }
 
-semio_framework_plugin::history_edit_acceptance_law!("wfc", super::BitmapEditor, || semio_framework_plugin::App { definition: super::create_bitmap_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️1/🪆️subsets/✳️any");
+semio_framework_plugin::history_edit_acceptance_law!("wfc", crate::editor::bitmap::BitmapEditor, || semio_framework_plugin::App { definition: crate::editor::bitmap::create_bitmap_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️1/🪆️subsets/✳️any");

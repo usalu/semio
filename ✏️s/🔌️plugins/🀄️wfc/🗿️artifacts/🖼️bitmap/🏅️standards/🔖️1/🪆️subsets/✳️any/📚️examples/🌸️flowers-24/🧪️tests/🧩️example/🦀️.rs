@@ -1,7 +1,8 @@
 //! 🧪️ `flowers-24` — the committed asset IS the print of the authored spec, and the example really
 //! exercises the ground constraint and the pin lane.
 
-use super::{indices, label, snapshot, EDGE, GROUND, PETAL, PRIMARY_TEXT, SEED, SKY, STEM};
+use semio_framework_ui_locale::LocalizedLabel;
+use crate::examples::flowers_24::{indices, label, snapshot, EDGE, GROUND, PETAL, PRIMARY_TEXT, SEED, SKY, STEM};
 use crate::standards::v1::subsets::any::io::text::snapshot::{parse_dsl, print_dsl};
 
 #[test]

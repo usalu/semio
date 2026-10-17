@@ -127,7 +127,6 @@ test("provenance publication refuses original expiry when awaited recheck return
     await expect(session.close()).rejects.toThrow(new RegExp(law.expectedError, "u"));
     expect(existsSync(receipt)).toBe(law.expectedPublished);
   } finally { await session.discard(); }
-  console.log("[DEBUG] Awaited provenance recheck cannot renew expired original publication authority; noble SHA-256 oracle agrees");
 });
 
 test("exact-boundary provenance receipts keep every temporary materialized path inside the same portable cap", async () => {
@@ -143,7 +142,6 @@ test("exact-boundary provenance receipts keep every temporary materialized path 
   for (const path of observed) expect(validate(path.split("")), `Temporary path has ${path.length} UTF-16 units`).toBe(true);
   expect(existsSync(receipt)).toBe(law.expectedPublished);
   expect(readdirSync(root).filter(name => name.endsWith(".tmp"))).toEqual([]);
-  console.log("[DEBUG] Exact 256-unit receipt and all observed temporary paths agree with independent Ajv UTF-16 array oracle");
 });
 
 test("the progress sink admits one row per interval exactly like lodash throttle", () => {
@@ -317,7 +315,6 @@ test("a large invocation is observed against real bytes and published as a small
   expect(observed.units[11]!.inputs[3]).toBe(first.inputs[3]);
   expect(JSON.stringify(observed)).not.toContain('"text"');
   expect(statSync(receipt).size).toBe(bytes.length);
-  console.log(`[DEBUG] synthetic receipt ${bytes.length} bytes against ${naive} naive bytes; ${document.inputs.length} interned inputs for ${units.length * files.length} references`);
 });
 
 test("a refused or failed observation leaves neither a receipt nor a temporary file", async () => {
@@ -395,7 +392,6 @@ test("one build session hashes every file once and rechecks it once however many
   const leaves = staged[0]!.units.map((unit) => cargoUnitLeafV1(unit, roots));
   expect(staged[1]!.units.map((unit) => cargoUnitLeafV1(unit, roots))).toEqual(leaves);
   expect(new Set(leaves).size).toBe(invocation.units.length);
-  console.log(`[DEBUG] session byte counter: ${reads.files.size} files, ${reads.bytes} bytes read for ${passes.length} invocations (2 reads per file)`);
 });
 
 test("a session whose files changed before its final recheck publishes no receipt", async () => {

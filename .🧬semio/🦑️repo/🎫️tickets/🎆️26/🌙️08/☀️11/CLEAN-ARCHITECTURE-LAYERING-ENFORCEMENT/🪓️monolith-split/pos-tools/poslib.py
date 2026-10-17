@@ -6,7 +6,8 @@ ROOT = "/Users/ueli/Documents/semio"
 F = ROOT + "/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split"
 GEN = F + "/🗑️generated"
 SCRATCH = "/private/tmp/claude-501/-Users-ueli--claude-spares-spare-PBncC5/6c384ddf-f4e2-43bf-8d3c-c66daff05e49/scratchpad"
-SANDBOX_BASE = SCRATCH + "/pos-work"
+PREFIX = os.environ.get("POS_PREFIX", "pos")
+SANDBOX_BASE = SCRATCH + "/" + PREFIX + "-work"
 TOOLCHAIN = "+nightly-2026-07-20"
 
 
@@ -41,7 +42,7 @@ class Sandbox:
 def log_write(path, text):
     p = os.path.realpath(os.path.dirname(os.path.abspath(path)))
     assert p.startswith(os.path.realpath(GEN) + os.sep) or p == os.path.realpath(GEN), f"log outside generated: {path}"
-    assert os.path.basename(path).startswith("pos-"), f"log name must start with pos-: {path}"
+    assert os.path.basename(path).startswith(PREFIX + "-"), f"log name must start with {PREFIX}-: {path}"
     os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, "w", encoding="utf-8") as f:
         f.write(text)
@@ -156,7 +157,7 @@ def dep_sections(sections):
 
 
 class Manifests:
-    CACHE = GEN + "/pos-manifest-index.json"
+    CACHE = GEN + "/" + PREFIX + "-manifest-index.json"
 
     def __init__(self, src):
         self.src = src
@@ -172,7 +173,7 @@ class Manifests:
         untracked = subprocess.run(["git", "-c", "core.fsmonitor=false", "-c", "core.quotepath=false", "ls-files", "--others", "--exclude-standard", "--", "*Cargo.toml"], cwd=ROOT, capture_output=True, text=True).stdout.split("\n")
         idx = {}
         for rel in sorted(set(tracked + untracked)):
-            if not rel or "node_modules" in rel or "/target/" in rel or "🗑️generated" in rel or "/dist/" in rel or "pre-a1" in rel:
+            if not rel or rel.startswith(".") or "node_modules" in rel or "/target/" in rel or "🗑️generated" in rel or "/dist/" in rel or "pre-a1" in rel:
                 continue
             data = self.src.read(rel)
             if data is None:

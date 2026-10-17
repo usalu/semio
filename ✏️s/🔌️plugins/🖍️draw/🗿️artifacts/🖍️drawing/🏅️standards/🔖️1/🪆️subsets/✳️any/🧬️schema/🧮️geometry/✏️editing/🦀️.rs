@@ -35,9 +35,9 @@ impl PathGeometrySource for std::borrow::Cow<'_, [PathSegment]> {
 }
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum)]
-#[cfg_attr(test, derive(serde::Deserialize, serde::Serialize))]
+#[cfg_attr(any(test, feature = "testkit"), derive(serde::Deserialize, serde::Serialize))]
 #[value(tag = "kind", rename_all = "camelCase")]
-#[cfg_attr(test, serde(tag = "kind", rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testkit"), serde(tag = "kind", rename_all = "camelCase"))]
 pub enum PathEdit {
     Node { index: usize, mode: NodeMode },
     Simplify { tolerance: f64 },
@@ -55,7 +55,7 @@ pub enum PathEdit {
 }
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Deserialize, serde::Serialize))]
+#[cfg_attr(any(test, feature = "testkit"), derive(serde::Deserialize, serde::Serialize))]
 #[dsl(keyword = "path-point")]
 pub struct PathPointRef {
     pub index: usize,
@@ -63,28 +63,28 @@ pub struct PathPointRef {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslScalar)]
-#[cfg_attr(test, derive(serde::Deserialize, serde::Serialize))]
+#[cfg_attr(any(test, feature = "testkit"), derive(serde::Deserialize, serde::Serialize))]
 #[value(rename_all = "camelCase")]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
 pub enum SegmentType { Line, Cubic }
 
 #[derive(Clone, Copy, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslScalar)]
-#[cfg_attr(test, derive(serde::Deserialize, serde::Serialize))]
+#[cfg_attr(any(test, feature = "testkit"), derive(serde::Deserialize, serde::Serialize))]
 #[value(rename_all="camelCase")]
-#[cfg_attr(test, serde(rename_all="camelCase"))]
+#[cfg_attr(any(test, feature = "testkit"), serde(rename_all="camelCase"))]
 pub enum NodeMode { Corner, Smooth, Symmetric }
 
 #[derive(Clone, Copy, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslScalar, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Deserialize, serde::Serialize))]
+#[cfg_attr(any(test, feature = "testkit"), derive(serde::Deserialize, serde::Serialize))]
 #[value(rename_all = "camelCase")]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
 pub enum PathPoint { Anchor, Control1, Control2 }
 
 #[derive(Clone, Copy, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslScalar)]
-#[cfg_attr(test, derive(serde::Deserialize, serde::Serialize))]
+#[cfg_attr(any(test, feature = "testkit"), derive(serde::Deserialize, serde::Serialize))]
 #[value(rename_all = "camelCase")]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
 pub enum PathAxis { X, Y }
 
 fn endpoint(segment: &PathSegment) -> Option<[f64; 2]> {

@@ -1,9 +1,10 @@
 //! 🔬️ Language-agnostic PersistenceDataClass fixture — Rust runner.
 
 use super::{bindings_data_class, wire_lane_data_class, PersistenceBinding, PersistenceDataClass};
+use semio_framework_test_fixtures::manifest_dir;
 
 fn fixture() -> serde_json::Value {
-    let manifest = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    let manifest = manifest_dir!();
     let candidates = [
         manifest.join("../../🔨️modules/🏪️store/🧫️fixtures/persistence-data-class-v1/🔣️.json"),
         manifest.join("../../../🔨️modules/🏪️store/🧫️fixtures/persistence-data-class-v1/🔣️.json"),
@@ -18,7 +19,7 @@ fn fixture() -> serde_json::Value {
 }
 
 fn workspace_fixture() -> std::path::PathBuf {
-    let manifest = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    let manifest = manifest_dir!();
     for ancestor in manifest.ancestors() {
         let candidate = ancestor.join("🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧫️fixtures/persistence-data-class-v1/🔣️.json");
         if candidate.is_file() {

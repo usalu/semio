@@ -1,4 +1,4 @@
-use super::*;
+use crate::schema::snapshot::*;
 
 #[semio_framework_async_macros::async_test]
 async fn json_pack_round_trips() {

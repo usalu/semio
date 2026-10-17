@@ -2,7 +2,7 @@
 
 use super::*;
 
-struct Process3dStoreInitializationAuthority {
+pub(super) struct Process3dStoreInitializationAuthority {
     actor: protocol::ActorId,
     pub(super) operation: semio_framework_job::OperationId,
     pub(super) generation: semio_framework_job::Generation,
@@ -487,7 +487,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<Process3dSnaps
 }
 
 /// 🎟️ Funds one synchronous fixture turn from exactly the demand its own owner quoted.
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 pub fn process3d_demand_grant(demand: semio_framework_value::RetirementDemand) -> semio_framework_value::retained_clone::RetainedCloneGrant {
     semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) }
 }

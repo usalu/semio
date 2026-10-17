@@ -30,13 +30,10 @@ pub fn definition() -> PanelTabDefinition {
 
 //#region 🔖️Render
 pub fn render(labels: &WriterPlayLabels) -> UiAssemblyResult<BuiltNode> {
-    let entries = crate::editor::writer::ui_node_list([tree_item("writer-catalogue.jack", crate::editor::writer::ui_label(labels.jack_description.as_str())?)])?;
-    PanelTreeBuilder::new("writer-catalogue")?.section("writer-catalogue.language", Some(crate::editor::writer::ui_label(labels.language.as_str())?), true, entries)?.build()
+    let entries = crate::editor::writer::base::ui_node_list([tree_item("writer-catalogue.jack", crate::editor::writer::base::ui_label(labels.jack_description.as_str())?)])?;
+    PanelTreeBuilder::new("writer-catalogue")?.section("writer-catalogue.language", Some(crate::editor::writer::base::ui_label(labels.language.as_str())?), true, entries)?.build()
 }
 //#endregion 🔖️Render
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

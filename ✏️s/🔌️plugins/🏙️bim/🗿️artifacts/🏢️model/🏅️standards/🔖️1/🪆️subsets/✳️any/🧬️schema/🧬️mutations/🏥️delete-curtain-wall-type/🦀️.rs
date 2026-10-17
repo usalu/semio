@@ -8,13 +8,4 @@ pub mod diff;
 #[path = "↩️inverse/🦀️.rs"]
 pub mod inverse;
 pub use component::*;
-#[cfg(test)]
-#[path = "🧪️tests/✅️removes/🦀️.rs"]
-mod tests_removes;
-#[cfg(test)]
-#[path = "🧪️tests/🚫️used-by-curtain-walls/🦀️.rs"]
-mod tests_used_by_curtain_walls;
-#[cfg(test)]
-#[path = "🧪️tests/⛔️missing/🦀️.rs"]
-mod tests_missing;
 //#endregion 🔖️Leaves

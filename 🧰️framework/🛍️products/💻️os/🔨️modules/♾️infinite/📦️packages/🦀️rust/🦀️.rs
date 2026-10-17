@@ -47,7 +47,6 @@ pub use semio_framework_graph_manifest::{PropertyBag, PropertyValue};
 pub use canvas::geom_sel::{inflate_world_box, point_in_polygon, polygon_contains_world_box, polygon_intersects_world_box, segment_intersects_polygon, segment_intersects_world_box, world_box_contains_box, world_box_contains_point, world_box_from_points, world_boxes_overlap, WorldBox};
 pub use semio_framework_graph_drawing::routing::{circle_handle_angle_toward, compute_edge_bezier_outward, compute_edge_bezier_points, compute_edge_sharp_sz_path, handle_exterior_cap_fill_path, handle_exterior_cap_peak, handle_exterior_cap_stroke_path, handle_exterior_cap_triangle_fill_path, handle_exterior_cap_triangle_peak, handle_exterior_cap_triangle_stroke_path, handle_outside_node_clip_path, handle_outward_at_node_rim, handle_position_on_circle, handle_position_on_rectangle, rectangle_handle_angle_toward};
 pub use geometry::{clamp_f64, distance_between, distance_point_to_cubic_bezier, normalize_or_zero};
-pub use semio_framework_os_kernel::{os_dsl, os_pack, os_spr, os_store, os_vcs};
 pub use semio_framework_canvas::camera::CANVAS_CAMERA_ZOOM_MAX as BOARD_CAMERA_ZOOM_MAX;
 pub use semio_framework_canvas::camera::CANVAS_CAMERA_ZOOM_MIN as BOARD_CAMERA_ZOOM_MIN;
 pub use semio_framework_canvas as canvas;

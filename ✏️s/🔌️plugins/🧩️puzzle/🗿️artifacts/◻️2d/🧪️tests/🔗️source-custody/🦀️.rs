@@ -2,7 +2,7 @@
 use semio_framework_value::retained_clone::{RetainedCloneBorrowAuthority, RetainedCloneGrant, RetainedCloneSource};
 use semio_framework_trace::observe_heap_allocations_on_this_thread;
 
-pub(crate) fn admit() -> RetainedCloneBorrowAuthority {
+pub fn admit() -> RetainedCloneBorrowAuthority {
     let capacity=RetainedCloneBorrowAuthority::constructor_capacity_bytes::<()>();
     assert!(capacity<=4096);
     assert!(capacity>0);
@@ -19,7 +19,7 @@ pub(crate) fn admit() -> RetainedCloneBorrowAuthority {
     source
 }
 
-pub(crate) fn close(source:&mut RetainedCloneBorrowAuthority) {
+pub fn close(source:&mut RetainedCloneBorrowAuthority) {
     for _ in 0..100000 {
         if source.terminal_is_empty(){return;}
         let copy=source.next_close_copy_byte_demand().unwrap();
@@ -41,7 +41,7 @@ pub(crate) fn close(source:&mut RetainedCloneBorrowAuthority) {
     panic!("original source custody did not close under its pure demands");
 }
 
-pub(crate) fn admit_source<T:semio_framework_value::retirement::RetireOwned+Sync>(original:std::sync::Arc<T>) -> RetainedCloneSource<T> {
+pub fn admit_source<T:semio_framework_value::retirement::RetireOwned+Sync>(original:std::sync::Arc<T>) -> RetainedCloneSource<T> {
     let capacity=RetainedCloneSource::<T>::constructor_capacity_bytes::<()>();
     assert!(capacity>0&&capacity<=4096);
     let (refused,heap)=observe_heap_allocations_on_this_thread(||RetainedCloneSource::admit(std::sync::Arc::clone(&original),(),RetainedCloneGrant::one_capacity_turn(capacity-1,1)));
@@ -58,7 +58,7 @@ pub(crate) fn admit_source<T:semio_framework_value::retirement::RetireOwned+Sync
     source
 }
 
-pub(crate) fn close_source<T:semio_framework_value::retirement::RetireOwned+Sync>(source:&mut RetainedCloneSource<T>) {
+pub fn close_source<T:semio_framework_value::retirement::RetireOwned+Sync>(source:&mut RetainedCloneSource<T>) {
     for _ in 0..100000 {
         if source.terminal_is_empty(){return;}
         let copy=source.next_close_copy_byte_demand().unwrap();
@@ -80,7 +80,7 @@ pub(crate) fn close_source<T:semio_framework_value::retirement::RetireOwned+Sync
     panic!("original snapshot source custody did not close under its pure demands");
 }
 
-pub(crate) fn close_cursor<C>(cursor:&mut C,maximum_turns:usize,demands:fn(&C)->(usize,usize,usize,usize),step:fn(&mut C,RetainedCloneGrant)->Result<semio_framework_value::retained_clone::RetainedCloneStep,semio_framework_value::ValueError>,terminal:fn(&C)->bool) {
+pub fn close_cursor<C>(cursor:&mut C,maximum_turns:usize,demands:fn(&C)->(usize,usize,usize,usize),step:fn(&mut C,RetainedCloneGrant)->Result<semio_framework_value::retained_clone::RetainedCloneStep,semio_framework_value::ValueError>,terminal:fn(&C)->bool) {
     for _ in 0..maximum_turns {
         if terminal(cursor){return;}
         let ((copy,capacity,release,depth),heap)=observe_heap_allocations_on_this_thread(||demands(cursor));

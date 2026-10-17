@@ -1,4 +1,4 @@
-use crate::text::mutations::*;
+use crate::mutations::*;
 
 #[semio_framework_async_macros::async_test]
 async fn op_text_round_trips_update_site() {

@@ -60,7 +60,7 @@ pub fn engagement(active_utility: &str) -> WindowEngagement {
             placeholder: Some("Select all".into()),
             disabled: None,
             on_change: None,
-            on_submit: Some(crate::editor::note::note_action("selectAll", None)),
+            on_submit: Some(crate::editor::note::support::note_action("selectAll", None)),
             on_repeat_last: None,
             on_abort: None,
         }),
@@ -79,7 +79,5 @@ pub fn render(document: &NoteSnapshot, camera: &NoteCamera, active_utility: &str
 //#endregion 🔖️Render
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

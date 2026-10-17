@@ -1,53 +1,11 @@
-import { acquireCompilerCapacityLeaseV1, scriptCompilerAdmissionControlV1, compilerAdmissionBudgetV1, type CompilerAdmissionControl } from "../../../../🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
-import { readBuildMode } from "../../../../🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
-import { receiveScriptProcessInvocation } from "../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { mkdirSync, mkdtempSync, readdirSync, rmSync } from "node:fs";
-import { join, resolve } from "node:path";
-import { BundleScript, ScriptRouter, type ScriptInvocation } from "../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { readProcessOwnerContextV1, processCacheDirectoryV1 } from "../../../../🏃️process/📦️packages/🟦️typescript/📋️context/🟦️.ts";
-import { buildBudgetMs } from "../../../../🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
-import { stageArtifacts } from "../../../../🏃️process/📦️packages/🟦️typescript/📦️artifacts/📤️publication/🟦️.ts";
-import { runOwnedCommand } from "../../../../🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
-import { acquireResourceLease } from "../../../../🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
-
-/** 🔐️ Protects the Python build environment while dependency preparation or wheel compilation is using it. */
-async function withPythonEnvironment(root: string, invocation: ScriptInvocation, action: (signal: AbortSignal, environment: NodeJS.ProcessEnv, control:CompilerAdmissionControl) => Promise<void>, requestedParallelism?:1): Promise<void> {
-  const control = scriptCompilerAdmissionControlV1(invocation, "styling:python", buildBudgetMs()), signal = control.signal;
-  let capacity: Awaited<ReturnType<typeof acquireCompilerCapacityLeaseV1>> | undefined;
-  try {
-    capacity=await acquireCompilerCapacityLeaseV1({directory:readProcessOwnerContextV1(process.env,root).leaseDirectory,control,requestedParallelism});
-    const environment = resolve(root, process.env.UV_PROJECT_ENVIRONMENT ?? ".venv");
-    const lease = await acquireResourceLease({ directory: readProcessOwnerContextV1(process.env,root).leaseDirectory, resource: `styling-python:${environment}`, mode: "exclusive", signal, control, onWait: ({ elapsedMs }) => console.log(`Waiting for styling Python environment: ${elapsedMs}ms`) });
-    try { signal.throwIfAborted(); await action(control.signal,{...process.env,SEMIO_COMPILER_CAPACITY_HELD:"true",SEMIO_COMPILER_PARALLELISM:String(capacity.parallelism)},control); } finally { lease.release(); }
-  } finally { capacity?.release(); }
-}
-
-/** 📥️ Installs locked wheel-building tools without compiling an editable first-party package. */
-export class StylingPythonDepsScript extends BundleScript {
-  async run(args: string[]): Promise<void> {
-    if (args.length) throw new Error("Python styling preparation uses the locked build group");
-    await withPythonEnvironment(this.root, this.invocation, (signal,environment,control) => runOwnedCommand("uv", ["sync", "--locked", "--group", "build", "--no-install-project", "--project", this.root], this.root, "styling-python-deps", compilerAdmissionBudgetV1(control),{signal,env:environment}));
-  }
-}
-
-/** 📦️ Publishes one reproducible wheel from the prepared backend without dependency resolution or downloads. */
-export class StylingPythonBuildScript extends BundleScript {
-  async run(args: string[]): Promise<void> {
-    if (args.length) throw new Error("The Python styling build uses SEMIO_BUILD_MODE");
-    const mode = readBuildMode(process.env.SEMIO_BUILD_MODE);
-    await withPythonEnvironment(this.root, this.invocation, async (signal,environment,control) => {
-      const staging = join(process.env.SEMIO_STYLING_PYTHON_BUILD_ROOT ?? processCacheDirectoryV1(readProcessOwnerContextV1(process.env,this.root),"python","ui-styling"), "staging");
-      mkdirSync(staging, { recursive: true });
-      const temporary = mkdtempSync(join(staging, "wheel-"));
-      try {
-        await runOwnedCommand("uv", ["run", "--locked", "--no-sync", "--offline", "--no-python-downloads", "--group", "build", "--project", this.root, "python", "-I", "-m", "hatchling", "build", "--target", "wheel", "--directory", temporary], this.root, "styling-python-build", compilerAdmissionBudgetV1(control),{signal,env:environment});
-        const wheels = readdirSync(temporary).filter(name => name.endsWith(".whl"));
-        if (wheels.length !== 1) throw new Error(`Expected one styling wheel, got ${wheels.length}`);
-        await stageArtifacts(join(this.root, "dist/build", mode), `@semio-tech/ui-styling-py:build:${mode}`, new Map([[wheels[0]!, join(temporary, wheels[0]!)]]), { signal, leaseDirectory:readProcessOwnerContextV1(process.env,this.root).leaseDirectory });
-        console.log(`Published styling Python wheel: ${wheels[0]}`);
-      } finally { rmSync(temporary, { recursive: true, force: true }); }
-    },1);
-  }
-}
-
-if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => (new ScriptRouter(resolve(import.meta.dir, "../../📦️packages/🐍️python")).register("deps", StylingPythonDepsScript).register("build", StylingPythonBuildScript)).run(process.argv.slice(2), original));
+import{BundleScript,ScriptRouter,receiveScriptProcessInvocation}from"../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import{scriptCompilerAdmissionControlV1}from"../../../../🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
+import{buildBudgetMs}from"../../../../🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
+import{readNativeCallerAuthorityV1}from"../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
+import{runStylingPythonV1}from"./🟦️.ts";
+import{resolve}from"node:path";
+/** 📥️ Mutates only the genuinely held locked Python dependency environment. */
+export class StylingPythonDepsScript extends BundleScript{async run(args:string[]):Promise<void>{if(args.length)throw Error("Python deps accepts no options");await runStylingPythonV1(this.invocation,scriptCompilerAdmissionControlV1(this.invocation,"styling:python-deps",buildBudgetMs()),{version:1,operation:"deps",mode:readNativeCallerAuthorityV1(this.invocation.capabilities).original.buildMode});}}
+/** 🎡️ Publishes one wheel after actual compiler CPU and accepted children settle. */
+export class StylingPythonBuildScript extends BundleScript{async run(args:string[]):Promise<void>{if(args.length)throw Error("Python build accepts no options");await runStylingPythonV1(this.invocation,scriptCompilerAdmissionControlV1(this.invocation,"styling:python-build",buildBudgetMs()),{version:1,operation:"build",mode:readNativeCallerAuthorityV1(this.invocation.capabilities).original.buildMode});}}
+if(import.meta.main)await receiveScriptProcessInvocation(process.env,original=>new ScriptRouter(resolve(import.meta.dir,"../../📦️packages/🐍️python")).register("deps",StylingPythonDepsScript).register("build",StylingPythonBuildScript).run(process.argv.slice(2),original));

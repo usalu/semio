@@ -89,7 +89,7 @@ class LintScript extends BundleScript {
     }
     if (segments.length === 1 && segments[0] === "framework-neutral-product-direction") { await verifyDependencyDirection(this.invocation,this.repoRoot, repoTestArtifactEnvironment(this.repoRoot, "framework-neutral-product-direction"), "framework-neutral"); return; }
     if (segments.length === 1 && segments[0] === "rust-source-direction") { await verifyRustSourceDirection(this.repoRoot, join(repoTestArtifactEnvironment(this.repoRoot, "rust-source-direction").SEMIO_TEST_ARTIFACT_DIR!, "rust-source-direction.json")); return; }
-    if (segments.length === 1 && segments[0] === "cargo-dependency-direction") { await verifyCargoDependencyDirection(this.repoRoot,this.invocation); return; }
+    if (segments.length === 1 && segments[0] === "cargo-dependency-direction") { await verifyCargoDependencyDirection(this.repoRoot,this.invocation,createIssuedResourceControlV1(this.invocation,"cargo:direction-entry",0)); return; }
     if (segments.length !== 1 || segments[0] !== "dependency-direction") throw new Error("Expected lint dependency-direction");
     await verifyDependencyDirection(this.invocation,this.repoRoot, repoTestArtifactEnvironment(this.repoRoot, "dependency-direction"));
   }
@@ -108,7 +108,6 @@ class SchemaReadInventoryScript extends BundleScript {
         if (target.length > 256 || [...target].length > 256) throw new Error("Schema reader report path exceeds 256 characters");
         mkdirSync(resolve(target, ".."), { recursive: true }); writeFileSync(target, JSON.stringify(index, null, 2) + "\n");
       }
-      console.log(`[DEBUG] original schema reader inventory sources=${index.reports.length} whole=${index.reports.reduce((count, row) => count + row.reads.filter(read => read.resolution === "whole").length, 0)} projected=${index.reports.reduce((count, row) => count + row.reads.filter(read => read.resolution === "projected").length, 0)} unresolved=${index.reports.filter(row => !row.completeSyntax || row.unresolved.length).length} unavailable=${index.unavailablePaths.length}`);
     } finally { process.removeListener("SIGINT", cancel); }
   }
 }
@@ -130,7 +129,7 @@ class TestScript extends BundleScript {
     if (segments.length === 1 && ["original-command-control","original-exact-preparation-control","original-default-preparation-control"].includes(segments[0]!)) {
       const sources = ["🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🧪️tests/🟦️.ts", "🧰️framework/🔨️modules/🏃️process/📥️capture/🧪️tests/🟦️.ts", "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/📥️invocation/🧪️tests/🟦️.ts", "🧰️framework/🔨️modules/🏃️process/📥️capture/📥️invocation/🧪️tests/🟦️.ts", "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🧪️tests/🟦️.ts", "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🧪️tests/📥️original-control/🟦️.ts", "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🧪️tests/📤️fractional/🟦️.ts"];
       if(segments[0]!=="original-command-control")sources.push("🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🛠️preparation/🧪️tests/🟦️.ts");
-      if(segments[0]==="original-default-preparation-control")sources.push("🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/🧪️tests/📥️original-control/🟦️.ts","🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🧪️tests/📤️stream/🟦️.ts","🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧪️tests/🎛️preparation/🟦️.ts");
+      if(segments[0]==="original-default-preparation-control")sources.push("🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/🧪️tests/📥️original-control/🟦️.ts","🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🧪️tests/📤️stream/🟦️.ts","🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧪️tests/🎛️preparation/🟦️.ts","🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/🧾️custody/🧪️tests/🟦️.ts","🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/🧾️custody/🧪️tests/🎛️control/🟦️.ts");
       await runRepositoryCommand(this.invocation,process.execPath,["test",...sources.map(source=>join(this.repoRoot,source)),"--timeout","60000"],this.repoRoot,"repository-"+segments[0],{version:1,maximumElapsedMilliseconds:60000,output:{maximumBytes:67108864,maximumLines:65536}},{env:repoTestArtifactEnvironment(this.repoRoot,segments[0]!)});
       return;
     }
@@ -278,7 +277,6 @@ class TestScript extends BundleScript {
       mkdirSync(env.SEMIO_TEST_ARTIFACT_DIR!, { recursive: true });
       await runRepositoryTestCommand(process.execPath, [join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📜️script.ts"), "test", "native-dependencies"], { cwd: this.repoRoot, env });
       await runRepositoryTestCommand(process.execPath, ["test", join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🏗️native/🟦️.ts")], { cwd: this.repoRoot, env, budgetMs: scriptInvocationBudget(this.invocation, 120_000), signal: this.invocation.control.signal });
-      console.log("[DEBUG] native-dependencies: neutral environment vectors and independent bundler/schema/Cargo/Nx oracles passed");
       return;
     }
     if (segments[0] === "canonical-json") {
@@ -357,7 +355,7 @@ class TestScript extends BundleScript {
       await this.run(["rust-source-direction"]);
       await verifyDependencyDirection(this.invocation,this.repoRoot, repoTestArtifactEnvironment(this.repoRoot, "dependency-direction"));
       await verifyRustSourceDirection(this.repoRoot);
-      await verifyCargoDependencyDirection(this.repoRoot,this.invocation);
+      await verifyCargoDependencyDirection(this.repoRoot,this.invocation,createIssuedResourceControlV1(this.invocation,"cargo:direction-entry",0));
       return;
     }
     if (segments[0] === "canonical-execution") {
@@ -435,6 +433,12 @@ class TestScript extends BundleScript {
       if (segments.length !== 1) throw new Error("Expected test generated-source-topology");
       const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🏭️generated-source-topology/🟦️.ts");
       await runRepositoryTestCommand(process.execPath, ["test", source], { cwd: this.repoRoot });
+      return;
+    }
+    if (segments[0] === "parser-projection") {
+      if (segments.length !== 1) throw new Error("Expected test parser-projection");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🧬️schema/🪞️parser-projection/🧪️tests/🎯️ajv-oracle/🟦️.ts");
+      await runRepositoryTestCommand(process.execPath, ["test", source], { cwd: this.repoRoot, budgetMs: 120_000 });
       return;
     }
     if (segments[0] === "package-body-policy") {
@@ -922,6 +926,11 @@ class TestScript extends BundleScript {
       if (segments.length !== 1) throw new Error("Transaction process observer accepts no extra arguments");
       const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🧪️tests/⚙️transaction-process-ownership/🟦️.ts");
       await runRepositoryTestCommand(process.execPath, ["test", source], { cwd: this.repoRoot });
+      return;
+    }
+    if (segments[0] === "regeneration-commands") {
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🏗️regeneration-commands/🟦️.ts");
+      await runRepositoryTestCommand(process.execPath, ["test", source, ...segments.slice(1)], { cwd: this.repoRoot });
       return;
     }
     if (segments[0] === "transaction-v2") {

@@ -1,4 +1,5 @@
-use super::*;
+use protocol::Mutation;
+use crate::editor::vcs::presence::*;
 
 #[semio_framework_async_macros::async_test]
 async fn vcs_demo_presence_noop_has_exact_mutation_metadata() {

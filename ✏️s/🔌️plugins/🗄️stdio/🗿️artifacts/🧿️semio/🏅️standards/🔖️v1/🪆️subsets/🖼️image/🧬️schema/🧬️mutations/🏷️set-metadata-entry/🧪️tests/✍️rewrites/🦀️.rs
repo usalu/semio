@@ -11,21 +11,22 @@ use crate::schema::mutations::set_metadata_entry;
 use crate::schema::mutations::SemioImageMutation;
 use crate::schema::snapshot::SemioImageSnapshot;
 use protocol::Mutation;
+use semio_framework_test_fixtures::fixture_text;
 
-const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏷️set-metadata-entry/✍️rewrites/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏷️set-metadata-entry/✍️rewrites/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏷️set-metadata-entry/✍️rewrites/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏷️set-metadata-entry/✍️rewrites/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏷️set-metadata-entry/✍️rewrites/🎯️outcome/🔣️.json");
+static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🏷️set-metadata-entry/✍️rewrites/📸️snapshot/⬅️before/🔣️.json"));
+static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🏷️set-metadata-entry/✍️rewrites/📸️snapshot/➡️after/🔣️.json"));
+static MUTATION: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🏷️set-metadata-entry/✍️rewrites/🦠️mutation/🔣️.json"));
+static DIFF: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🏷️set-metadata-entry/✍️rewrites/🔺️diff/🔣️.json"));
+static OUTCOME: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🏷️set-metadata-entry/✍️rewrites/🎯️outcome/🔣️.json"));
 
 fn before() -> SemioImageSnapshot {
-    semio_framework_pack_json::from_json_str(BEFORE,semio_framework_pack_json::JsonMemberPolicy::Reject).expect("set-metadata-entry before snapshot decodes")
+    semio_framework_pack_json::from_json_str((*BEFORE),semio_framework_pack_json::JsonMemberPolicy::Reject).expect("set-metadata-entry before snapshot decodes")
 }
 fn expected_after() -> SemioImageSnapshot {
-    semio_framework_pack_json::from_json_str(AFTER,semio_framework_pack_json::JsonMemberPolicy::Reject).expect("set-metadata-entry after snapshot decodes")
+    semio_framework_pack_json::from_json_str((*AFTER),semio_framework_pack_json::JsonMemberPolicy::Reject).expect("set-metadata-entry after snapshot decodes")
 }
 fn mutation() -> SemioImageMutation {
-    semio_framework_pack_json::from_json_str(MUTATION,semio_framework_pack_json::JsonMemberPolicy::Reject).expect("set-metadata-entry mutation decodes")
+    semio_framework_pack_json::from_json_str((*MUTATION),semio_framework_pack_json::JsonMemberPolicy::Reject).expect("set-metadata-entry mutation decodes")
 }
 fn leaf_outcome() -> protocol::MutationOutcome<SemioImageDiff> {
     <SemioImageMutation as Mutation<SemioImageSnapshot>>::diff(&mutation(), &before())
@@ -66,21 +67,21 @@ async fn the_undo_set_metadata_entry_restores_the_old_value() {
 /// 🔣️ Snapshots and the `{"mutation":"setMetadataEntry","key":"Author","value":"Ueli Saluz"}` payload are canonical fixed points.
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
-    for (label, text) in [("before", BEFORE), ("after", AFTER)] {
+    for (label, text) in [("before", (*BEFORE)), ("after", (*AFTER))] {
         let decoded: SemioImageSnapshot = semio_framework_pack_json::from_json_str(text,semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
         let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "set-metadata-entry/rewrites-the-existing-author-entry: committed {label} JSON is not canonical");
     }
     let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&(mutation()))).expect("set-metadata-entry mutation encodes");
-    let original: serde_json::Value = serde_json::from_str(MUTATION).expect("set-metadata-entry mutation reparses");
+    let original: serde_json::Value = serde_json::from_str((*MUTATION)).expect("set-metadata-entry mutation reparses");
     assert_eq!(reencoded, original, "set-metadata-entry/rewrites-the-existing-author-entry: committed mutation JSON is not canonical");
 }
 
 /// 🎯️ Declared `applied`: the key exists but with a different value, so mutation.no-op must not fire
 #[semio_framework_async_macros::async_test]
 async fn declared_outcome_holds_with_no_guard_branch_firing() {
-    let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
+    let outcome: serde_json::Value = serde_json::from_str((*OUTCOME)).expect("outcome decodes");
     assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("applied"), "set-metadata-entry/rewrites-the-existing-author-entry: this case is declared applied");
     assert!(leaf_outcome().messages().is_empty(), "the key exists but with a different value, so mutation.no-op must not fire");
 }
@@ -90,14 +91,14 @@ async fn declared_outcome_holds_with_no_guard_branch_firing() {
 async fn produces_committed_diff() {
     let outcome = leaf_outcome();
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
-    let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
+    let committed: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff decodes");
     assert_eq!(produced, committed, "set-metadata-entry/rewrites-the-existing-author-entry: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
 
 /// 🔣️ The committed diff is a decode→encode fixed point and is scoped as narrowly as the leaf builds it.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical_and_narrowly_scoped() {
-    let decoded: SemioImageDiff = semio_framework_pack_json::from_json_str(DIFF,semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed set-metadata-entry diff decodes");
+    let decoded: SemioImageDiff = semio_framework_pack_json::from_json_str((*DIFF),semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed set-metadata-entry diff decodes");
 
     let metadata = decoded.metadata.as_ref().expect("set-metadata-entry must write the metadata slot");
     assert!(metadata.removed.is_empty() && metadata.added.is_empty(), "an in-place rewrite neither adds nor removes an entry");
@@ -105,14 +106,14 @@ async fn committed_diff_is_canonical_and_narrowly_scoped() {
     assert_eq!(metadata.modified[0].key, "Author", "the modification is keyed by the entry name, not an index");
     assert!(decoded.frames.is_none() && decoded.width.is_none(), "no other slot may be touched");
     let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("diff re-encodes");
-    let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
+    let original: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff reparses");
     assert_eq!(reencoded, original, "set-metadata-entry/rewrites-the-existing-author-entry: committed diff JSON is not canonical");
 }
 
 /// 🩹 Applying the committed diff to `before` yields `after`.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: SemioImageDiff = semio_framework_pack_json::from_json_str(DIFF,semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed set-metadata-entry diff decodes");
+    let decoded: SemioImageDiff = semio_framework_pack_json::from_json_str((*DIFF),semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed set-metadata-entry diff decodes");
     let produced = protocol::apply_diff(&decoded, &before()).expect("committed set-metadata-entry diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "set-metadata-entry/rewrites-the-existing-author-entry: committed diff did not carry before to after");
 }

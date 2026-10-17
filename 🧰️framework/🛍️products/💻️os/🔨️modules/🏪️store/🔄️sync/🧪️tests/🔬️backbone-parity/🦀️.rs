@@ -1,3 +1,5 @@
+use semio_framework_test_fixtures::fixture_path;
+
 use super::{
     artifact_mailbox_pair, ensure_demo_codec_registered, native_actor, presence_to_bytes, ActorId, ArtifactActorConfig, ArtifactEvent, Bootstrap, ChannelBackbone, ClientFrame, CommandAckOutcome, DemoMutation, DemoSnapshot, MutationEnvelope,
     PersistenceBinding, PresencePeer, RemoteState, RuntimeFrontierSummary, ServerFrame, AckStage, ApplyOutcome,
@@ -325,7 +327,7 @@ impl ParityHarness {
 }
 
 fn load_fixture() -> Value {
-    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../⚖️parity");
+    let root = fixture_path!("../../../../⚖️parity");
     let fixtures = std::fs::read_dir(&root).expect("parity dir").filter_map(|entry| entry.ok()).find(|entry| entry.file_name().to_string_lossy().contains("fixture")).expect("fixtures dir");
     let text = std::fs::read_to_string(fixtures.path().join("🔣️.json")).expect("fixture json");
     serde_json::from_str(&text).expect("fixture parse")

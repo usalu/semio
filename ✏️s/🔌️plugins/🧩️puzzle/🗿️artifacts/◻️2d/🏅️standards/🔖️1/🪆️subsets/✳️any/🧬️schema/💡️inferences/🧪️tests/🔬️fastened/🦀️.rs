@@ -1,5 +1,14 @@
-use super::*;
-use {crate::standards::v1::subsets::any::schema::Puzzle2dCamera, crate::standards::v1::subsets::any::schema::Puzzle2dEdge, crate::standards::v1::subsets::any::schema::Puzzle2dMeta, crate::standards::v1::subsets::any::schema::Puzzle2dNode, crate::standards::v1::subsets::any::schema::Puzzle2dNodeAnchor, crate::Puzzle2dSnapshot};
+use semio_s_artifact_puzzle_3d_inferences::flatten::DIAGRAM_RADIUS;
+#[allow(unused_imports)]
+use ::semio_framework_schema::ArtifactSchema;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::flat_position::compute_flat_position;
+#[allow(unused_imports)]
+use semio_s_artifact_puzzle_3d_inferences::flatten::DIAGRAM_HORIZONTAL_SCALE;
+#[allow(unused_imports)]
+use std::collections::{HashMap, HashSet, VecDeque};
+use crate::standards::v1::subsets::any::schema::inferences::*;
+use {crate::standards::v1::subsets::any::schema::records::Puzzle2dCamera, crate::standards::v1::subsets::any::schema::records::Puzzle2dEdge, crate::standards::v1::subsets::any::schema::records::Puzzle2dMeta, crate::standards::v1::subsets::any::schema::records::Puzzle2dNode, crate::standards::v1::subsets::any::schema::records::Puzzle2dNodeAnchor, crate::Puzzle2dSnapshot};
 
 #[test]
 fn fastened_layout_places_child_from_origin_parent_by_handle_angle() {
@@ -23,7 +32,7 @@ fn fastened_layout_places_child_from_origin_parent_by_handle_angle() {
                 visible: None,
                 locked: None,
                 anchor: Puzzle2dNodeAnchor::Fixed,
-                handles: vec![crate::standards::v1::subsets::any::schema::Puzzle2dHandle { id: "h".into(), handle_kind: None, angle: 0.0, radius: None, color: None, icon_kind: None, scale: None, visible: None, locked: None }].into(),
+                handles: vec![crate::standards::v1::subsets::any::schema::records::Puzzle2dHandle { id: "h".into(), handle_kind: None, angle: 0.0, radius: None, color: None, icon_kind: None, scale: None, visible: None, locked: None }].into(),
             },
             Puzzle2dNode {
                 id: "c".into(),
@@ -41,7 +50,7 @@ fn fastened_layout_places_child_from_origin_parent_by_handle_angle() {
                 visible: None,
                 locked: None,
                 anchor: Puzzle2dNodeAnchor::Derived,
-                handles: vec![crate::standards::v1::subsets::any::schema::Puzzle2dHandle { id: "h".into(), handle_kind: None, angle: 0.0, radius: None, color: None, icon_kind: None, scale: None, visible: None, locked: None }].into(),
+                handles: vec![crate::standards::v1::subsets::any::schema::records::Puzzle2dHandle { id: "h".into(), handle_kind: None, angle: 0.0, radius: None, color: None, icon_kind: None, scale: None, visible: None, locked: None }].into(),
             },
         ].into(),
         edges: vec![Puzzle2dEdge {

@@ -75,7 +75,7 @@ impl Serializer<ModelSnapshot> for ModelIntoSvg {
 }
 //#endregion 🔖️Serializer
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 #[path = "🧪️tests/🧰️testkit/🦀️.rs"]
 pub mod testkit;
 

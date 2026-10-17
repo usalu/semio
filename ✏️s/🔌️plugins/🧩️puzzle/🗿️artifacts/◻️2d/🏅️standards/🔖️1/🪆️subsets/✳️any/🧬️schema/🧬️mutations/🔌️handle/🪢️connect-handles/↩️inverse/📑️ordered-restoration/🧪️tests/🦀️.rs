@@ -1,13 +1,14 @@
 //! 🧪️ Exact original edge ordering and optional flag restoration.
 
-use {crate::standards::v1::subsets::any::schema::Puzzle2dNode, crate::Puzzle2dSnapshot, crate::standards::v1::subsets::any::schema::Puzzle2dEdge};
+use semio_framework_test_fixtures::fixture_text;
+use {crate::standards::v1::subsets::any::schema::records::Puzzle2dNode, crate::Puzzle2dSnapshot, crate::standards::v1::subsets::any::schema::records::Puzzle2dEdge};
 use crate::standards::v1::subsets::any::schema::mutations::apply_puzzle2d_mutation;
 use crate::standards::v1::subsets::any::schema::{empty_puzzle2d_snapshot,mutations::{Puzzle2dMutation,delete_node,disconnect_handles,remove_node_handle,inverse_puzzle2d_mutation}};
 use serde_json::{Value,json};
 
 #[test]
 fn history_edit_puzzle2d_edge_restoration_preserves_original_ordinals_and_optional_flags() {
-    let corpus: Value = serde_json::from_str(include_str!("../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🪢️connect-handles/↩️inverse/📑️ordered-restoration/🔣️.json")).expect("committed edge order corpus");
+    let corpus: Value = serde_json::from_str(fixture_text!("../../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🪢️connect-handles/↩️inverse/📑️ordered-restoration/🔣️.json")).expect("committed edge order corpus");
     for row in corpus["cases"].as_array().expect("cases") {
         let mut base = empty_puzzle2d_snapshot();
         let node: Puzzle2dNode = serde_json::from_value(json!({"id":"node","anchor":"fixed","x":3.0,"y":-4.0,"handles":[{"id":"retained-handle","angle":1.0},{"id":"handle","angle":2.0}],"text":"😀\u{0}"})).expect("native node");
@@ -39,7 +40,6 @@ fn history_edit_puzzle2d_edge_restoration_preserves_original_ordinals_and_option
             assert_eq!(after,base,"exact native original ordering and optional flags: {}",row["name"]);
             assert_eq!(serde_json::to_value(&base).expect("retained native state"),original,"original is unchanged");
         }
-        println!("[DEBUG] Puzzle2d edge restoration native cascade={} restores complete original order and optional flags",row["name"]);
     }
     for row in corpus["insertions"].as_array().expect("insertions") {
         let mut base = empty_puzzle2d_snapshot();
@@ -50,5 +50,4 @@ fn history_edit_puzzle2d_edge_restoration_preserves_original_ordinals_and_option
         apply_puzzle2d_mutation(&mut base,&mutation).expect("native ordered insertion");
         assert_eq!(base.edges.iter().map(|edge|edge.id.to_string_owner()).collect::<Vec<_>>(),row["after"].as_array().expect("after identifiers").iter().map(|id|id.as_str().expect("identifier").to_owned()).collect::<Vec<_>>());
     }
-    println!("[DEBUG] Puzzle2d edge restoration six insertion cases preserve append, exact ordinal, and clamped insertion semantics");
 }

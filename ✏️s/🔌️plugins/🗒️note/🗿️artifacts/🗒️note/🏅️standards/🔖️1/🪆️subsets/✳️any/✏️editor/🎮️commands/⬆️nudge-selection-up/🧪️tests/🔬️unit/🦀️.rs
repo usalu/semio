@@ -1,4 +1,13 @@
-use super::*;
+use crate::editor::note::commands::nudge_selection::nudge;
+use crate::op::NoteMutation;
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit};
+#[allow(unused_imports)]
+use crate::editor::note::commands::nudge_selection::NUDGE_STEP;
+#[allow(unused_imports)]
+use semio_framework_plugin::Fault;
+#[allow(unused_imports)]
+use semio_framework_value_derive::{FromValue, ToValue};
+use crate::editor::note::commands::nudge_selection_up::*;
 use crate::editor::note::commands::{nudge_selection_down, nudge_selection_left, nudge_selection_right, nudge_selection_right_fast};
 use crate::schema::{block_bounds, block_id, create_block_by_kind, mutations::apply_note_mutation, NoteIdOwner};
 use crate::NoteSnapshot;
@@ -24,8 +33,8 @@ fn moved_bounds(document: &NoteSnapshot, selected: &str, emit: &semio_framework_
     (x, y)
 }
 
-fn dispatch_ctx(selected: &str) -> crate::editor::note::NoteDispatchCtx {
-    crate::editor::note::NoteDispatchCtx { selected_block_ids: vec![selected.to_string()], id_owner: NoteIdOwner::new("nudge-test", 1), view_state: None, window_transient: Default::default(), window_transient_owner: None }
+fn dispatch_ctx(selected: &str) -> crate::editor::note::dispatch_ctx::NoteDispatchCtx {
+    crate::editor::note::dispatch_ctx::NoteDispatchCtx { selected_block_ids: vec![selected.to_string()], id_owner: NoteIdOwner::new("nudge-test", 1), view_state: None, window_transient: Default::default(), window_transient_owner: None }
 }
 
 #[semio_framework_async_macros::async_test]
@@ -71,7 +80,7 @@ async fn nudge_fast_actions_use_ten_pixel_step() {
 async fn a_nudge_without_a_selection_emits_nothing() {
     let (document, _) = selected_document();
     let history = semio_framework_plugin::HistoryView::empty();
-    let mut ctx = crate::editor::note::NoteDispatchCtx { selected_block_ids: Vec::new(), id_owner: NoteIdOwner::new("nudge-test", 2), view_state: None, window_transient: Default::default(), window_transient_owner: None };
+    let mut ctx = crate::editor::note::dispatch_ctx::NoteDispatchCtx { selected_block_ids: Vec::new(), id_owner: NoteIdOwner::new("nudge-test", 2), view_state: None, window_transient: Default::default(), window_transient_owner: None };
     let emit = handle(&NudgeSelectionUp {}, &semio_framework_plugin::ArtifactView::new(&document, &history), &semio_framework_plugin::ConfigView { snapshot: &semio_framework_plugin::NoConfig::default(), window: None }, &mut ctx).expect("nudge up");
     assert!(emit.artifact_mutations.is_empty(), "an empty selection must not move anything");
 }

@@ -1,0 +1,5 @@
+# Bounded IO Private Qualification Proof
+
+Independent stable bounded nofollow FD/stamp reads bind complete 6258 byte log SHA `7228c13f4d4b6627b84c613c03e4cf10ec75f103b789a860cd7483d95289f5a6` and both host-side traces in `🗑️generated/native-publication-bounded-io-private-low-independent.json`. Root separately confirms actual54187 terminal0. All ten stages occur in exact order through verified/settled; mounted-application-preserved reports sockets1, exact socket/raw journal/ordinary reopen/child absence/healthy parent, followed by canonical parent retirement. Node payload SHA agrees before/after and with qualification. Trace application records are identical; only authenticated service log roster/directory may differ.
+
+This is private macOS acceptance for current bounded synchronous IO, not a Tools speed promise or global qualification, kernel socket state, SDK or Windows/Linux acceptance. Tools’ prior initial-witness deadline remains historical refusal until an independently authorized fresh result. No mounted walk or Native effects occurred in this audit.

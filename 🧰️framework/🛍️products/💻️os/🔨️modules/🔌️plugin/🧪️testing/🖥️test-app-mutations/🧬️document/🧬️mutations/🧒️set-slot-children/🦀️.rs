@@ -1,5 +1,6 @@
 //#region 🧒️SetSlotChildren
-use super::super::{TestDiff, TestMutation, TestSnapshot};
+use crate::test_app_mutation_fixture::document::{TestDiff, TestSnapshot};
+use crate::test_app_mutation_fixture::document::mutations::TestMutation;
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -7,12 +8,13 @@ use semio_framework_value_derive::{FromValue, ToValue};
 /// `ArtifactRef` uris. Registering a member is the runtime's job; DECLARING it on the parent
 /// snapshot is the app's, and only a declared member is admitted back by `ChildRestoreProjection`
 /// when the parent document is reloaded.
+#[doc(hidden)]
 #[derive(Clone, semio_framework_value::CanonicalJsonTree, Debug, PartialEq, serde::Serialize, serde::Deserialize, ToValue, FromValue, semio_framework_value_derive::RetireOwned, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract=::protocol)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
-pub(crate) struct SetSlotChildren {
+pub struct SetSlotChildren {
     pub children: Vec<String>,
 }
 
@@ -45,7 +47,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     }
 }
 
+#[doc(hidden)]
 #[cfg(test)]
 #[path = "../../../../../🧪️tests/🧒️test-app-document-set-slot-children-unit/🦀️.rs"]
-mod tests;
+pub mod tests;
 //#endregion 🧒️SetSlotChildren

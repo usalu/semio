@@ -8,14 +8,15 @@
 //! asserted by the shared codec-matrix harness, not here.
 
 use crate::CadMutation;
+use semio_framework_test_fixtures::fixture_path;
 use semio_s_artifact_cad_cad_model::snapshot::CadSnapshot;
 use protocol::Mutation;
 
-static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧪️tests/🧫️fixtures/🧬️mutations/🖇️replace-reference-media/🖼️reattaches/📸️snapshot/⬅️before/🔣️.json")).expect("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🖇️replace-reference-media/🖼️reattaches/📸️snapshot/⬅️before/🔣️.json").leak());
-static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧪️tests/🧫️fixtures/🧬️mutations/🖇️replace-reference-media/🖼️reattaches/📸️snapshot/➡️after/🔣️.json")).expect("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🖇️replace-reference-media/🖼️reattaches/📸️snapshot/➡️after/🔣️.json").leak());
-static MUTATION: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧪️tests/🧫️fixtures/🧬️mutations/🖇️replace-reference-media/🖼️reattaches/🦠️mutation/🔣️.json")).expect("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🖇️replace-reference-media/🖼️reattaches/🦠️mutation/🔣️.json").leak());
-static DIFF: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧪️tests/🧫️fixtures/🧬️mutations/🖇️replace-reference-media/🖼️reattaches/🔺️diff/🔣️.json")).expect("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🖇️replace-reference-media/🖼️reattaches/🔺️diff/🔣️.json").leak());
-static OUTCOME: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧪️tests/🧫️fixtures/🧬️mutations/🖇️replace-reference-media/🖼️reattaches/🎯️outcome/🔣️.json")).expect("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🖇️replace-reference-media/🖼️reattaches/🎯️outcome/🔣️.json").leak());
+static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| std::fs::read_to_string(fixture_path!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🖇️replace-reference-media/🖼️reattaches/📸️snapshot/⬅️before/🔣️.json")).expect("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🖇️replace-reference-media/🖼️reattaches/📸️snapshot/⬅️before/🔣️.json").leak());
+static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| std::fs::read_to_string(fixture_path!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🖇️replace-reference-media/🖼️reattaches/📸️snapshot/➡️after/🔣️.json")).expect("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🖇️replace-reference-media/🖼️reattaches/📸️snapshot/➡️after/🔣️.json").leak());
+static MUTATION: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| std::fs::read_to_string(fixture_path!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🖇️replace-reference-media/🖼️reattaches/🦠️mutation/🔣️.json")).expect("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🖇️replace-reference-media/🖼️reattaches/🦠️mutation/🔣️.json").leak());
+static DIFF: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| std::fs::read_to_string(fixture_path!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🖇️replace-reference-media/🖼️reattaches/🔺️diff/🔣️.json")).expect("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🖇️replace-reference-media/🖼️reattaches/🔺️diff/🔣️.json").leak());
+static OUTCOME: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| std::fs::read_to_string(fixture_path!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🖇️replace-reference-media/🖼️reattaches/🎯️outcome/🔣️.json")).expect("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🖇️replace-reference-media/🖼️reattaches/🎯️outcome/🔣️.json").leak());
 
 fn before() -> CadSnapshot {
     semio_framework_pack_json::from_json_str(*BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("replace-reference-media/reattaches-the-shape-reference-to-a-new-plan: before snapshot decodes")

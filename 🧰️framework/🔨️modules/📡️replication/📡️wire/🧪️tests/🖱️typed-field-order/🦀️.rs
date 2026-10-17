@@ -21,5 +21,4 @@ fn interaction_typed_field_order_matches_shared_json_oracle() {
             assert_eq!(DslValue::Object(entries), DslValue::from(&serde_json::to_value(selection).expect("independent selection serde oracle")));
         }
     }
-    println!("[DEBUG] shared typed field-order controls {}", fixture["cases"].as_array().expect("cases").len());
 }

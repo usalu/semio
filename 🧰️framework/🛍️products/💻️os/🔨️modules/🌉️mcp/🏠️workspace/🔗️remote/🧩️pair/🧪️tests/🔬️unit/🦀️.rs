@@ -16,6 +16,7 @@ use semio_framework_os_kernel::os_directory::DocumentView;
 use semio_framework_os_kernel::os_directory::MemberSpaceViewV1;
 use semio_framework_os_kernel::os_directory::MemberView;
 use semio_framework_os_kernel::os_directory::RebootstrapRequired;
+use semio_framework_test_fixtures::fixture_text;
 use std::collections::HashMap;
 use std::collections::VecDeque;
 use std::sync::Arc;
@@ -23,7 +24,7 @@ use std::sync::Mutex;
 use std::sync::atomic::AtomicU64;
 use std::sync::atomic::AtomicUsize;
 use std::sync::atomic::Ordering;
-use crate::remote::{AuthorizedDescriptorSnapshot, AuthorizedDocumentView, HubRemoteBinding, HubStreamObservation, base64_encode_exact, canonical_checkpoint_resource_text, checked_base64_length, checkpoint_resource_uri, parse_checkpoint_resource_uri};
+use semio_framework_os_mcp_hub_remote::remote::{AuthorizedDescriptorSnapshot, AuthorizedDocumentView, HubRemoteBinding, HubStreamObservation, base64_encode_exact, canonical_checkpoint_resource_text, checked_base64_length, checkpoint_resource_uri, parse_checkpoint_resource_uri};
 use semio_framework_os_mcp_hub_pair::binding_errors::HubBindingError;
 use semio_framework_os_mcp_hub_pair::pair::{CanonicalPairActorState, CanonicalPairBody, CanonicalPairFetchRequest, CanonicalPairHttpResponse, CanonicalPairMountError, CanonicalPairMountIdentity, CanonicalPairTransport, HUB_PAIR_CACHE_MAX_ENTRIES, HUB_PAIR_MAX_VERIFIED_BYTES, HUB_PAIR_MEDIA_TYPE, PairBegin, PairCompletion, canonical_etag, checkpoint, maximum_wire_bytes, wait_for_published_receipt};
 use semio_framework_os_mcp_schema::schema::UNTRUSTED_CONTENT_NOTICE;
@@ -31,13 +32,10 @@ use semio_framework_os_mcp_schema::schema::UNTRUSTED_CONTENT_NOTICE;
 use semio_framework_os_mcp_hub_pair::pair::{decode_fixture_for_test, test_wiped_bytes};
 
 /// 🧪️ Reads a committed fixture from the package directory at run time instead of embedding it in the test binary.
-fn fixture_text(relative: &str) -> &'static str {
-    Box::leak(std::fs::read_to_string(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative)).expect(relative).into_boxed_str())
-}
 
 
 fn fixture() -> serde_json::Value {
-    serde_json::from_str(fixture_text("../../../🏠️workspace/🔗️remote/🧩️pair/🧪️tests/🧫️fixtures/🔣️.json")).expect("canonical pair cache fixture")
+    serde_json::from_str(fixture_text!("../../../🏠️workspace/🔗️remote/🧩️pair/🧪️tests/🧫️fixtures/🔣️.json")).expect("canonical pair cache fixture")
 }
 
 fn decode_hex(value: &str) -> Vec<u8> {
@@ -359,7 +357,7 @@ async fn canonical_pair_actor_keys_cache_and_mount_to_one_binding_and_evicts_by_
 #[tokio::test]
 async fn authenticated_hub_checkpoint_resource_projects_exact_verified_pair_and_never_crosses_scope() {
     let contract = fixture();
-    let resource_contract: serde_json::Value = serde_json::from_str(fixture_text("../../../🏠️workspace/🧪️tests/🧫️fixtures/🔐️canonical-checkpoint-resource/🔣️.json")).unwrap();
+    let resource_contract: serde_json::Value = serde_json::from_str(fixture_text!("../../../🏠️workspace/🧪️tests/🧫️fixtures/🔐️canonical-checkpoint-resource/🔣️.json")).unwrap();
     let wire = decode_hex(contract["valid"]["wireHex"].as_str().unwrap());
     let etag = contract["valid"]["etag"].as_str().unwrap().to_string();
     let scope = DocumentScope::new(contract["binding"]["spaceId"].as_str().unwrap(), contract["binding"]["documentId"].as_str().unwrap());

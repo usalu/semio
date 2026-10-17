@@ -7,7 +7,7 @@
 pub mod derived_composition {
     use crate::standards::v6_0::subsets::baseline::schema::check_tiff_baseline_conformance;
     use crate::standards::v6_0::subsets::document::schema::snapshot::TiffSnapshot;
-    use crate::standards::v6_0::subsets::document::io::TiffComposer as TiffAnyComposer;
+    use crate::standards::v6_0::subsets::document::io::facets::TiffComposer as TiffAnyComposer;
     use semio_framework_diagnostic::Diagnostic;
 use semio_framework_diagnostic::FaultCode;
 use semio_framework_diagnostic::Severity;
@@ -150,7 +150,7 @@ pub use derived_construction::*;
 
 pub mod derived_analysis {
     use crate::standards::v6_0::subsets::document::schema::snapshot::{TiffSnapshot};
-    use crate::standards::v6_0::subsets::document::io::{TiffAnalyzer as TiffAnyAnalyzer, TiffParts};
+    use crate::standards::v6_0::subsets::document::io::facets::{TiffAnalyzer as TiffAnyAnalyzer, TiffParts};
     use semio_framework_diagnostic::Diagnostic;
 #[cfg(test)] use semio_framework_diagnostic::FaultCode;
 #[cfg(test)] use semio_framework_diagnostic::FaultScope;
@@ -163,7 +163,6 @@ pub mod derived_analysis {
 
     //#region 🔖️Conformance
     use crate::standards::v6_0::subsets::baseline::schema::conformance::*;
-    pub fn check_tiff_baseline_conformance_controlled(snapshot:&TiffSnapshot,control:&mut semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl<'_>)->Result<Vec<Diagnostic>,semio_framework_value::ValueError>{check_tiff_baseline_conformance_with(snapshot,&mut |at,total|control.checkpoint(semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotPhase::ProjectSnapshot,at,total))}
     //#endregion 🔖️Conformance
 
     //#region 🔖️Analyzer
@@ -206,5 +205,20 @@ semio_framework_plugin::derive_artifact_facets!(
     composer: TiffBaselineComposer,
 );
 
-#[path="🧮️native-conformance/🦀️.rs"]
-pub mod native_conformance;
+pub use semio_s_artifact_stdio_tiff_inferences::standards::v6_0::subsets::baseline::io::native_conformance;
+
+//#region 🚪️DerivedIoRegistry
+pub mod io_registry {
+    use super::TiffBaselineComposer;
+    use crate::standards::v6_0::subsets::document::io::facets::TiffComposer as TiffRawAnyComposer;
+    use semio_framework_plugin::{composer_entry_of, io::ComposerEntry};
+    use std::sync::OnceLock;
+
+    static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
+
+    // 🚫️async: E1 pure table accessor consumed by OnceLock::get_or_init's sync closure — see R9
+    pub fn entries() -> &'static [ComposerEntry] {
+        ENTRIES.get_or_init(|| vec![composer_entry_of::<TiffRawAnyComposer>(), composer_entry_of::<TiffBaselineComposer>()]).as_slice()
+    }
+}
+//#endregion 🚪️DerivedIoRegistry

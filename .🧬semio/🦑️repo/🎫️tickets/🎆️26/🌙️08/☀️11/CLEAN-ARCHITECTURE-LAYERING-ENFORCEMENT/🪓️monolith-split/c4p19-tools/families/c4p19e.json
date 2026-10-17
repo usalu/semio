@@ -1,0 +1,21 @@
+{
+ "name": "c4p19e",
+ "crates": [
+  "semio-s-artifact-norm-en1995-schema",
+  "semio-s-artifact-norm-en1995-editor",
+  "semio-s-artifact-norm-en1995-examples",
+  "semio-s-artifact-norm-en1995-inferences",
+  "semio-s-artifact-norm-en1995"
+ ],
+ "note": "CENSUS4-PKG-19 semio-s-artifact-norm-en1995-schema plus direct dependents",
+ "base": {
+  "rev": "b84bf526c7b",
+  "crates": [
+   "semio-s-artifact-norm-en1995-schema",
+   "semio-s-artifact-norm-en1995-editor",
+   "semio-s-artifact-norm-en1995-examples",
+   "semio-s-artifact-norm-en1995-inferences",
+   "semio-s-artifact-norm-en1995"
+  ]
+ }
+}

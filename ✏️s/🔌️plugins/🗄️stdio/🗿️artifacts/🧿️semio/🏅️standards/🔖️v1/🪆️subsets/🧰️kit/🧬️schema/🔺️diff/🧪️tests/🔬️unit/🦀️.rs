@@ -1,4 +1,28 @@
-use super::*;
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_semio_base::schema::triples::absorb_indexed_slot;
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_semio_base::schema::triples::apply_indexed_rows;
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_semio_base::schema::triples::inverse_indexed_rows;
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_semio_base::schema::triples::validate_indexed_triple;
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_semio_base::schema::triples::IndexedRow;
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_semio_base::schema::triples::Replace;
+#[allow(unused_imports)]
+use crate::schema::snapshot::{SemioKitConnection, SemioKitDesign, SemioKitPiece, SemioKitSnapshot, SemioKitType};
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_semio_model::schema::snapshot::SemioModelSnapshot;
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_semio_object::schema::snapshot::SemioObjectSnapshot;
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValueSnapshot;
+#[allow(unused_imports)]
+use framework_schema::ArtifactSchema;
+#[allow(unused_imports)]
+use protocol::MutationDiff;
+use crate::schema::diff::*;
 use semio_s_artifact_stdio_semio_base::schema::triples::IndexedTripleDiff;
 use crate::schema::snapshot::demo_kit_snapshot;
 use protocol::{DiffBinary,DiffText};

@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `ReplaceKindCatalogs` — sets `meta.kindCatalogs`.
 use crate::standards::v1::subsets::any::schema::diff::{Puzzle2dDiff, Puzzle2dMetaPatch};
 use crate::Puzzle2dSnapshot;
-use crate::standards::v1::subsets::any::schema::puzzle2d_catalogs_invariant;
+use crate::standards::v1::subsets::any::schema::records::puzzle2d_catalogs_invariant;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::ReplaceKindCatalogs, base: &Puzzle2dSnapshot) -> protocol::MutationOutcome<Puzzle2dDiff> {

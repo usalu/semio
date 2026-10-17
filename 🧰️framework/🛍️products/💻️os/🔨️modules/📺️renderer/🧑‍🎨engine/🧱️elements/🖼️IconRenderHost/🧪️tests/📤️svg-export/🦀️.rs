@@ -1,4 +1,6 @@
-use super::*;
+use infinite_world::world::World3dMeshAsset;
+use super::IconSvgExport;
+use ui_wgpu::wgpu::Mesh3dField;
 use infinite_world::world::{World3dMeshAppearance, World3dPrimitiveMaterial};
 use semio_framework_ui_scene_mesh::{mesh3d_allocate_step, mesh3d_begin, mesh3d_seal, mesh3d_write_edge, mesh3d_write_u32, mesh3d_write_vec3, Mesh3dSchema};
 use semio_framework_ui_scene_pass::{SceneAuthoredMaterial3d, SceneMaterialAlpha3d};

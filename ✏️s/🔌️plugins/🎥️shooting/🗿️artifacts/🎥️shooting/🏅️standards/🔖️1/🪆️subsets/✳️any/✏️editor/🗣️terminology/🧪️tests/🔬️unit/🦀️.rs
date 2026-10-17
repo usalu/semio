@@ -1,4 +1,4 @@
-use super::*;
+use crate::editor::shooting::terminology::*;
 
 #[semio_framework_async_macros::async_test]
 async fn shooting_labels_resolve_native_english_by_default() {

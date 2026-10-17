@@ -36,7 +36,6 @@ test("original Actor context is a public General owner with private binding", ()
     for (const file of [join(retained, "🤝️admission/🧪️tests/🦀️.rs"), join(retained, "🧪️tests/🟦️.ts"), join(actor, "📦️packages/🦀️rust/📜️script.ts")]) expect(readFileSync(file, "utf8")).not.toContain("🛍️products");
     expect(readFileSync(join(retained, "🦀️.rs"), "utf8")).not.toContain("pub mod context;");const directory=join(owner,"📦️packages/🦀️rust"),manifest=TOML.parse(readFileSync(join(directory,"Cargo.toml"),"utf8")) as any;expect(manifest.package.name).toBe("semio-framework-actor-retained-context");expect(resolve(directory,manifest.lib.path)).toBe(implementation);expect(resolve(directory,manifest.dependencies["semio-framework-actor-retained-turn"].path)).toBe(join(retained,"📦️packages/🦀️rust"));
   } finally { db.close(); tree.delete(); }
-  console.log("[DEBUG] Defining General Actor context eight public first-party types, private binding and product-free core test mounts verified with independent Rust AST/Ajv/SQLite");
 });
 
 /** 🎟️ Independent transactional binding rejects foreign, repeated and absent original epochs. */
@@ -54,5 +53,4 @@ test("original retirement binding advances only its same original source", () =>
     db.exec("CREATE TABLE remaining(fuel INTEGER,items INTEGER)");db.query("INSERT INTO remaining VALUES(?,?)").run(original.work.fuel-3,original.totalGrant[0]!-3);
     for(const row of original.closedContextCases){const fuel=original.work.fuel-3+(row.axis==="fuel"?row.increment:0),items=original.totalGrant[0]!-3+(row.axis==="items"?row.increment:0);expect(Boolean(db.query("SELECT 1 FROM remaining WHERE ?>=0 AND ?<=fuel AND ?>=0 AND ?<=items").get(fuel,fuel,items,items))).toBe(row.accepted);}
   } finally { db.close(); }
-  console.log("[DEBUG] Independent SQLite checked General context binding accepts20/21, refuses foreign operation/generation, duplicate20 and absent0");
 });

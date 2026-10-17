@@ -55,8 +55,8 @@ use server::contract::{ActorKey, CommandEnvelope, CommandId, EventRecord, Idempo
 use server::storage::{AuthorityStore, StorageError};
 use server::__semio_dispatch_Decider;
 
-use crate::catalog::LoadedCatalog;
-use crate::storage::SqliteAuthorityStore;
+use teaching_proctor_base::catalog::LoadedCatalog;
+use teaching_proctor_base::storage::SqliteAuthorityStore;
 
 /// ✒️ The actor kind of a handle key.
 pub const HANDLE: &str = "quiz-handle";
@@ -475,6 +475,11 @@ pub async fn unrelayed(log: &SqliteAuthorityStore, tenant: &str) -> Result<Vec<C
 }
 //#endregion 🔖️Saga
 
+#[cfg(any(test, feature = "testkit"))]
+#[doc(hidden)]
+#[path = "🧰️fixtures/🦀️.rs"]
+pub mod fixtures;
+
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
-pub(crate) mod tests;
+mod tests;

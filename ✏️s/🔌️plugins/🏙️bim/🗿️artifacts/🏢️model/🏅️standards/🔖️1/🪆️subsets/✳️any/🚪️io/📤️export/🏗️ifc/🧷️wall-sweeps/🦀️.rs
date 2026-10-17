@@ -3,11 +3,12 @@
 //! `Semio_WallSweep` set with the authored record (host, side, height, inset, material, profile as JSON), so an import merges them back into one sweep; the base quantities of a run are its share of the quantity row.
 //! 📎 <https://standards.buildingsmart.org/IFC/RELEASE/IFC2x3/TC1/HTML/ifcsharedbldgelements/lexical/ifcmember.htm>
 
-use super::brep::{brep_definition, mesh_where};
-use super::data::{label, number};
-use super::walls::describe;
-use super::writer::{en, int, rf, text, typed, V};
-use super::{Export, Quantity, StoreyRef};
+use crate::standards::v1::subsets::any::io::export::ifc::brep::{brep_definition, mesh_where};
+use crate::standards::v1::subsets::any::io::export::ifc::data::{number};
+use crate::standards::v1::subsets::any::io::export::ifc::writer::label;
+use crate::standards::v1::subsets::any::io::export::ifc::walls::describe;
+use crate::standards::v1::subsets::any::io::export::ifc::writer::{en, int, rf, text, typed, V};
+use crate::standards::v1::subsets::any::io::export::ifc::context::{Export, Quantity, StoreyRef};
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::wall_sweeps::{runs, section_area, section_of};
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::walls::cuts_of;
 use crate::standards::v1::subsets::any::schema::authored::plan::segment_of;

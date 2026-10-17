@@ -6,7 +6,7 @@ pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio"
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
 //#endregion 📡️SemioProtocol
 
-use crate::RewritingSnapshot;
+use crate::standards::v1::subsets::any::schema::snapshot::RewritingSnapshot;
 use store::PackError;
 
 /// 📦️ Encodes a `RewritingSnapshot` to its binary pack form.
@@ -29,7 +29,7 @@ mod tests;
 mod snapshot_codec {
 use super::*;
 use crate::standards::v1::subsets::any::schema::snapshot::*;
-use crate::LayoutPoint;
+use crate::standards::v1::subsets::any::schema::model::LayoutPoint;
 use ::semio_framework_schema::ArtifactSchema;
 use std::collections::BTreeMap;
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.

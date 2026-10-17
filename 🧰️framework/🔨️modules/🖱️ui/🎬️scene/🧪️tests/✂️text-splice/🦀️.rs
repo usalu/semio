@@ -166,7 +166,6 @@ fn draft_changes_json_preserves_neutral_ranges_and_matches_independent_serde_ora
   let changes: Vec<super::DraftChange> = serde_json::from_value(row["changes"].clone()).unwrap();
   let mut observe=|_|true; let mut control=protocol::value::NativeEncodeControl::new(0,&mut observe); let mut bytes=Vec::new(); super::write_draft_changes_json_into(&changes,1024,3,64,&mut |part:&[u8],_:&mut protocol::value::NativeEncodeControl<'_>|->Result<(),protocol::value::ValueError>{bytes.extend_from_slice(part);Ok(())},&mut control).unwrap(); let actual=String::from_utf8(bytes).unwrap();
   assert_eq!(actual, row["json"].as_str().unwrap()); assert_eq!(actual, serde_json::to_string(&changes).unwrap());
-  println!("[DEBUG] draft JSON native id={} bytes={} independentSerde=true",row["id"].as_str().unwrap(),actual.len());
  }
 }
 
@@ -206,7 +205,6 @@ fn draft_wire_borrows_original_changes_and_retains_refusal_prefixes() {
             let result=super::write_draft_changes_json_into(&changes,1024,depth,items,&mut |_:&[u8],_:&mut NativeEncodeControl<'_>|->Result<(),ValueError>{Ok(())},&mut control);
             if depth==0||!changes.is_empty(){assert_eq!(result.unwrap_err().kind,kind);}
         }
-        println!("[DEBUG] draft-wire borrowed original={} byte/refusal/cancel/depth/item laws admitted",row["id"]);
     }
 }
 
@@ -242,7 +240,6 @@ fn draft_wire_incremental_cursor_keeps_original_source_and_cumulative_admission(
             assert_eq!(wire,serde_json::to_string(&changes).unwrap());
             assert!(control.owned_bytes()>=wire.capacity());
             assert!(matches!(cursor.step(1,&mut control,grant),Ok(None)));
-            println!("[DEBUG] draft-wire cursor original={} units={} admitted={} exactPointer=true",row["id"],units,control.owned_bytes());
         }
     }
 }

@@ -40,5 +40,4 @@ export function testWireRetirementFixture():void{
    }
   }
  }
- console.log("[DEBUG] original wire grant oracle5cases×2wordWidths×4copyCredits preserves complete physical backing and terminal receipt");
 }

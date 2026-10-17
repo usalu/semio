@@ -1,4 +1,5 @@
-use super::{PdfAction, PdfColorSpace, PdfDate, PdfDictEntry, PdfFormField, PdfFormFieldKind, PdfFunction, PdfObject, PdfOutlineItem};
+use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfAction, PdfColorSpace, PdfDate, PdfDictEntry, PdfFormField, PdfFormFieldKind, PdfFunction, PdfObject, PdfOutlineItem};
+use semio_framework_test_fixtures::fixture_text;
 use semio_framework_value::{DslValue, FromValue, ToValue};
 use semio_framework_value::native_decoding::{NativeDecodeControl, NativeDecodeProgress};
 use semio_framework_value::native_encoding::{NativeEncodeControl, NativeEncodeProgress};
@@ -26,7 +27,7 @@ fn roundtrip<T: FromValue + ToValue>(wire: &serde_json::Value) {
 
 #[test]
 fn pdf_recursive_retirement_owned_wire_corpus_roundtrips_with_serde_json() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/📸️snapshot/♻️retirement/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../🧪️tests/🧫️fixtures/📸️snapshot/♻️retirement/🔣️.json")).unwrap();
     assert_eq!(fixture["cases"].as_array().unwrap().len(), 10);
     for row in fixture["cases"].as_array().unwrap() {
         match row["owner"].as_str().unwrap() {

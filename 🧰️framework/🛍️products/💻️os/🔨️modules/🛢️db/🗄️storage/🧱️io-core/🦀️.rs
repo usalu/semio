@@ -670,7 +670,7 @@ impl DbIoPageWriter {
         DbIoPageWriterSeal { writer: Some(self) }
     }
 
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testkit"))]
     pub fn seal(mut self) -> Result<DbIoPages, DbIoPageWriterRejected> {
         match self.finish() {
             Ok(pages) => Ok(pages),
@@ -678,7 +678,7 @@ impl DbIoPageWriter {
         }
     }
 
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testkit"))]
     pub fn finish(&mut self) -> Result<DbIoPages, DbError> {
         loop {
             if let Some(owner) = self.seal_retained_step()? {

@@ -100,7 +100,4 @@ pub fn apply_with_state(payload: &AddRelationship, doc: &ArtifactView<'_, WiresS
 }
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

@@ -1,4 +1,24 @@
-use super::*;
+#[allow(unused_imports)]
+use crate::editor::shooting::terminology::ShootingLabels;
+#[allow(unused_imports)]
+use semio_framework_ui_locale::LabelText;
+#[allow(unused_imports)]
+use semio_framework_ui_locale::LocalizedLabel;
+#[allow(unused_imports)]
+use semio_framework_plugin::PanelGroup;
+#[allow(unused_imports)]
+use semio_framework_plugin::PanelTabDefinition;
+#[allow(unused_imports)]
+use semio_framework_plugin::PanelTabKind;
+#[allow(unused_imports)]
+use semio_framework_plugin::PanelTreeBuilder;
+#[allow(unused_imports)]
+use semio_framework_plugin::TreeWindows;
+#[allow(unused_imports)]
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
+#[allow(unused_imports)]
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL;
+use crate::editor::shooting::panels::catalogue::*;
 use crate::editor::shooting::unit_tests::context::{render as render_body, shooting_app};
 
 #[semio_framework_async_macros::async_test]

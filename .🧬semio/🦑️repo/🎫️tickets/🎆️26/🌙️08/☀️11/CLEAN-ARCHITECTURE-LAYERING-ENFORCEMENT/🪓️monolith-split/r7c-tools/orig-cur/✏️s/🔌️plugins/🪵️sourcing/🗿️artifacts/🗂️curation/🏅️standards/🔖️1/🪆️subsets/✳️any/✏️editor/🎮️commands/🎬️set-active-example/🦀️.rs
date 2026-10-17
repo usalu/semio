@@ -1,0 +1,29 @@
+//! 📄️ 📄️ Sourcing curation app commands command — `set-active-example`.
+
+use crate::standards::v1::subsets::any::schema::mutations::SourcingMutation;
+use crate::CurationSnapshot;
+use crate::editor::sourcing::config::{SourcingCurationConfig, SourcingCurationConfigMutation};
+use crate::editor::sourcing::{reset_document_effect, EMPTY_EXAMPLE_ID};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_framework_value_derive::{FromValue, ToValue};
+
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
+#[dsl(keyword = "active-example")]
+pub struct SetActiveExample {
+    pub example_id: String,
+}
+
+//#region 📚️BoundedExample
+const MAXIMUM_EXAMPLE_BYTES: usize = 8_192;
+const _: () = assert!(crate::standards::v1::subsets::any::io::text::snapshot::DEMO_STOCK_TEXT.len() <= MAXIMUM_EXAMPLE_BYTES);
+const _: () = assert!(crate::standards::v1::subsets::any::io::text::snapshot::EMPTY_CURATION_TEXT.len() <= MAXIMUM_EXAMPLE_BYTES);
+
+pub fn handle(payload: &SetActiveExample, _doc: &ArtifactView<'_, CurationSnapshot>, _cfg: &ConfigView<'_, SourcingCurationConfig>) -> Result<Emit<SourcingMutation, SourcingCurationConfigMutation>, Fault> {
+    let text = match payload.example_id.as_str() {
+        EMPTY_EXAMPLE_ID => crate::standards::v1::subsets::any::io::text::snapshot::EMPTY_CURATION_TEXT.to_string(),
+        id => crate::standards::v1::subsets::any::examples().iter().find(|example| example.id() == id).map(semio_framework_plugin::ExampleSource::document).ok_or_else(|| Fault::from("sourcing.example.unknown"))?,
+    };
+    let next = <CurationSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(&text).map_err(|error| Fault::from(error.to_string()))?;
+    Ok(Emit { effects: vec![reset_document_effect(&next)], ..Default::default() })
+}
+//#endregion 📚️BoundedExample

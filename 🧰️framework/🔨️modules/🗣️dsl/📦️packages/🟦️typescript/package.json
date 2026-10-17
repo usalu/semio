@@ -1,0 +1,8 @@
+{
+  "name": "@semio-tech/framework-dsl-ts",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./testing/fixtures/binding/shared-utf8": "./🧪️testing/🧫️fixtures/🪆️binding/📝️shared-utf8/🟦️.ts"
+  }
+}

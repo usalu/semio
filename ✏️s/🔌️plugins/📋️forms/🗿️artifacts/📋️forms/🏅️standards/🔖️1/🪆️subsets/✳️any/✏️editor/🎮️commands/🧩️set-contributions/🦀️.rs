@@ -17,7 +17,5 @@ pub fn handle(payload: &SetContributions, _doc: &ArtifactView<'_, FormsSnapshot>
 }
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

@@ -8,11 +8,12 @@
 //! 🔖 `IoFidelity::Lossy`: parametric constraints and derived inferences have no IFC slot; geometry, identity, types, templates and classification chains are exact.
 //! 📎 https://standards.buildingsmart.org/IFC/DEV/IFC4_3/RC1/HTML/ and https://standards.buildingsmart.org/IFC/RELEASE/IFC4/ADD2_TC1/HTML/
 
-use super::{export_ifc4, Export};
-#[cfg(test)] use super::{codec};
-use super::data::property_value;
-use super::projection::{json_cell, plain, quote};
-use super::writer::{en, list, opt_text, refs, rf, text, unset, Ifc, Schema};
+use crate::standards::v1::subsets::any::io::export::ifc::context::Export;
+use crate::standards::v1::subsets::any::io::export::ifc::export_ifc4;
+#[cfg(test)] use crate::standards::v1::subsets::any::io::export::ifc::codec;
+use crate::standards::v1::subsets::any::io::export::ifc::data::property_value;
+use crate::standards::v1::subsets::any::io::export::ifc::projection::{json_cell, plain, quote};
+use crate::standards::v1::subsets::any::io::export::ifc::writer::{en, list, opt_text, refs, rf, text, unset, Ifc, Schema};
 use crate::standards::v1::subsets::any::schema::snapshot::{ClassificationItem, ClassificationSystem, ModelSnapshot, PropertyDef, PropertyKind, PropertyTemplate, TemplateTarget};
 use semio_framework::io_schema::{IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_artifact_reference::{Dialect, StandardId, SubsetId};
@@ -179,7 +180,7 @@ pub fn classification_system(ifc: &mut Ifc, id: &str, system: &ClassificationSys
 
 //#region 🔖️Library
 /// 📚️ Writes the project library of an IFC4 file: the property set templates and the classification systems of the model (nothing when it has neither; nothing in an IFC 2x3 file). The library is declared by the project in
-/// [`super::data::emit_links`], once the project exists. A template without properties (IFC4 needs at least one) and a table row whose parent is missing or listed twice are noted.
+/// [`crate::standards::v1::subsets::any::io::export::ifc::data::emit_links`], once the project exists. A template without properties (IFC4 needs at least one) and a table row whose parent is missing or listed twice are noted.
 pub fn emit_library(x: &mut Export<'_>) {
     let model = x.model;
     if x.schema() != Schema::Ifc4 || (model.property_templates.is_empty() && model.classification_systems.is_empty()) {

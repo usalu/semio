@@ -60,16 +60,11 @@ pub fn inverse_change_data_fields<Op: From<crate::change_data_fields::ChangeData
 }
 //#endregion 🧾ChangeDataFields
 
-//#region 🪢️TaxonomyMounts
-#[cfg(test)]
-#[path = "🧪️tests/🧾️attaches/🦀️.rs"]
-mod tests_attaches_a_data_fields_payload;
-//#endregion 🪢️TaxonomyMounts
 
 //#region 🔮️SerdeOracle
 /// 🔮️ Test-only independent Serde projection for typed data-field changes.
-#[cfg(any(test, feature = "testing"))]
+#[cfg(any(test, feature = "testkit"))]
 impl serde::Serialize for ChangeDataFields {fn serialize<S:serde::Serializer>(&self,serializer:S)->Result<S::Ok,S::Error>{serde::Serialize::serialize(&serde_json::Value::from(semio_framework_value::ToValue::to_value(self)),serializer)}}
-#[cfg(any(test, feature = "testing"))]
+#[cfg(any(test, feature = "testkit"))]
 impl<'de>serde::Deserialize<'de>for ChangeDataFields{fn deserialize<D:serde::Deserializer<'de>>(deserializer:D)->Result<Self,D::Error>{let value=<serde_json::Value as serde::Deserialize>::deserialize(deserializer)?;<Self as semio_framework_value::FromValue>::from_value(semio_framework_value::DslValue::from(&value)).map_err(serde::de::Error::custom)}}
 //#endregion 🔮️SerdeOracle

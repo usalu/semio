@@ -3,7 +3,7 @@
 pub const OPCODE: &str = "insert-signature-field";
 pub const TEXT_OPCODE: &str = OPCODE;
 
-use crate::standards::v1_7::subsets::h::schema::mutations::InsertSignatureField;
+use crate::standards::v1_7::subsets::h::schema::mutations::insert_signature_field::InsertSignatureField;
 
 /// 🖨️ Prints this direct payload through its schema-derived JSON representation.
 pub fn print(payload: &InsertSignatureField) -> Result<String, String> {

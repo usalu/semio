@@ -3,7 +3,8 @@ use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v6_0::subsets::document::io::sqlite::snapshot::*;
 use crate::standards::v6_0::subsets::document::schema::snapshot::{TiffSnapshot,TiffWord64};
 use semio_framework_os_kernel::{sqlite_snapshot::*, os_store::serialization::ArtifactSqliteSnapshotHost};
-pub(super) fn fixture()->TiffSnapshot{let neutral:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🎛️semantic.json")).unwrap();let case=neutral["cases"].as_array().unwrap().iter().find(|case|case["id"]=="metadataAndExactRaster").unwrap();semio_framework_pack_json::from_json_str(&case["input"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()}
+use semio_framework_test_fixtures::fixture_text;
+pub(super) fn fixture()->TiffSnapshot{let neutral:serde_json::Value=serde_json::from_str(fixture_text!("../../🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🎛️semantic.json")).unwrap();let case=neutral["cases"].as_array().unwrap().iter().find(|case|case["id"]=="metadataAndExactRaster").unwrap();semio_framework_pack_json::from_json_str(&case["input"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()}
 
 pub(super) fn project(snapshot: &TiffSnapshot) -> SqliteDatabase {
     snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true,SqliteDatabaseLimits::default())).expect("project")

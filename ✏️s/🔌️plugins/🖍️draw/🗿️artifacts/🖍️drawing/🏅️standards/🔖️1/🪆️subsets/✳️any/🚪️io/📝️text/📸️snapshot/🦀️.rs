@@ -44,11 +44,6 @@ pub fn print_dsl(document: &DrawingSnapshot) -> String {
     pack::snapshot::ArtifactDsl::print_dsl(document)
 }
 
-//#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests
 
 #[allow(unused_imports)]
 mod mutations_codec {

@@ -1,6 +1,6 @@
 //! 🎥️ `focus-selection` command.
 
-use {crate::editor::puzzle2d::snapshot::board_snapshot_nodes, crate::editor::puzzle2d::snapshot::set_runtime_camera, crate::editor::puzzle2d::Puzzle2dActionCtx};
+use {crate::editor::puzzle2d::snapshot::board_snapshot_nodes, crate::editor::puzzle2d::snapshot::set_runtime_camera, crate::editor::puzzle2d::interaction::Puzzle2dActionCtx};
 use semio_framework_pack_json::json;
 
 /// 🎯️ Centres the camera on the selection's bounding box (session state only — never the snapshot).

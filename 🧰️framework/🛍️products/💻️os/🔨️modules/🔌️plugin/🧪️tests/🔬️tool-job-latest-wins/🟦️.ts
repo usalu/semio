@@ -1,6 +1,6 @@
 import { isDeepStrictEqual } from "node:util";
 import { join } from "node:path";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { createRequire } from "node:module";
 import { spawnSync } from "node:child_process";
 import { WORKSPACE_ROOT } from "../../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/📍️checkout-root/🟦️.ts";
@@ -35,7 +35,8 @@ export function toolJobLatestWinsSelfTests(): number {
   if (Buffer.byteLength(integration.keyRetirement.text, "utf8") !== integration.keyRetirement.utf8Bytes
     || JSON.stringify(Array.from(integration.keyRetirement.text as string).reverse().map((scalar) => Buffer.byteLength(scalar, "utf8"))) !== JSON.stringify(integration.keyRetirement.scalarBytes)) throw new Error("latest-wins UTF-8 retirement byte oracle");
   const source = readFileSync(join(base, "🦀️.rs"), "utf8");
-  const runtimeContractTests = readFileSync(join(base, "🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs"), "utf8");
+  const contractRoot = join(base, "🧪️tests");
+  const runtimeContractTests = readdirSync(contractRoot).filter((name) => name.startsWith("🔬️plugin-runtime-plugin-builder-contract")).sort().map((name) => readFileSync(join(contractRoot, name, "🦀️.rs"), "utf8")).join("\n");
   const body = (text: string, name: string): string => {
     const owner = name === "has_runnable_typed_operations" ? "impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> PluginApp for VcsArtifactApp<A, M>" : ["take_result_page", "reject_cancelled_publication"].includes(name) ? "impl<A: ArtifactApp> MountedTypedCommandFullOperation<A>" : undefined;
     const ownerStart = owner ? text.indexOf(owner) : -1;
@@ -179,7 +180,6 @@ export function toolJobLatestWinsSelfTests(): number {
     rawSource.replace("assert_eq!(heap.released_bytes,progress.released_bytes)", "assert_eq!(heap.released_bytes,0)"),
   ];
   for (const hostile of rawHostiles) if (hostile === rawSource || rawClose(hostile)) throw new Error("retained raw close accepts lost physical custody or capacity-sized copy deadlock");
-  console.log("[DEBUG] Original raw close Buffer cases=" + rawFixture.cases.length + "; independent backing/copy and native source refusal laws passed");
   const childCloseFixture = JSON.parse(readFileSync(join(base, "🧵️retained-command/🧪️tests/🧫️fixtures/🧩️child-prepublication-close.json"), "utf8"));
   const validateChildGrant = new Ajv({ strict: true }).compile(JSON.parse(readFileSync(retainedCloneWireSchemaUrl, "utf8")));
   if (!validateChildGrant(childCloseFixture.closeGrant)) throw new Error("original child close caller violates its genuine neutral production grant");
@@ -211,7 +211,6 @@ export function toolJobLatestWinsSelfTests(): number {
     const result = spawnSync("rustfmt", ["--edition", "2021", "--emit", "stdout", "--config", "skip_children=true", join(base, path)], { stdio: ["ignore", "ignore", "pipe"], timeout: 5000 });
     if (result.status !== 0) throw new Error(`original child source grammar refused ${path}: ${result.stderr?.toString()}`);
   }
-  console.log("[DEBUG] Original ChildEmit full-grant/receipt source and rejected-owner hostiles passed; fixed caller Grant matched canonical Ajv and multibyte Buffer oracle; native System law remains unrun");
   const storeSource = readFileSync(join(base, "../🏪️store/🦀️.rs"), "utf8");
   const publisherStart = source.lastIndexOf("fn publish_mounted_typed_operation_unit(");
   const mutatePublisher = (before: string, after: string): string => source.slice(0, publisherStart) + source.slice(publisherStart).replace(before, after);
@@ -245,7 +244,6 @@ export function toolJobLatestWinsSelfTests(): number {
       if (hostile === source || firstCheck[1](hostile)) throw new Error("mounted batch publication accepted a copied or dropped original mutation owner");
     }
   }
-  console.log("[DEBUG] Original three mutable batch lanes forward supplied preparation policy and actual ownership receipt; nine clone/empty/drop hostiles rejected; defining Store admission precedes original transfer");
   for (const [name, check, hostile] of mountedChecks) {
     if (!check(source)) throw new Error(`mounted source binding rejected its real ${name}`);
     if (hostile === source || check(hostile)) throw new Error(`mounted source binding accepted hostile ${name}`);

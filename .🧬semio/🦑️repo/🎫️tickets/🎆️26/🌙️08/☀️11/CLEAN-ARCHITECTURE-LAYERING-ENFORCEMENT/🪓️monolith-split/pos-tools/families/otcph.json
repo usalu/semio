@@ -1,0 +1,14 @@
+{
+ "name": "otcph",
+ "crates": [
+  "semio-framework-os-history-record-decode",
+  "semio-framework-os-history-record-decode-tests"
+ ],
+ "base": {
+  "rev": "1bae6115bc5",
+  "crates": [
+   "semio-framework-os-history-record-decode"
+  ]
+ },
+ "note": "OTCP history record decode"
+}

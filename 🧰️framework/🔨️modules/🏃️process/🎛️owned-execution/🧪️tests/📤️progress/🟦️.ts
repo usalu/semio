@@ -13,5 +13,4 @@ test("explicit progress output preserves canonical stdout against the independen
  const independent=Bun.spawn(["node","-e",source],{stdout:"pipe",stderr:"pipe"}),owned=Bun.spawn([process.execPath,"--eval",code],{stdout:"pipe",stderr:"pipe"});
  const [oracleStatus,status,oracleStdout,stdout,stderr]=await Promise.all([independent.exited,owned.exited,new Response(independent.stdout).text(),new Response(owned.stdout).text(),new Response(owned.stderr).text()]);
  expect(oracleStatus).toBe(0);expect(status).toBe(0);expect(stdout).toBe(oracleStdout);expect(stdout).toBe(fixture.expectedStdout);expect(JSON5.parse(stdout)).toEqual(JSON.parse(fixture.expectedStdout));expect(stderr).toContain(`[${fixture.label}] running elapsedMs=`);
- console.log(`[DEBUG] neutral progress stdout=canonical output=${fixture.expectedChannel}`);
 },20000);

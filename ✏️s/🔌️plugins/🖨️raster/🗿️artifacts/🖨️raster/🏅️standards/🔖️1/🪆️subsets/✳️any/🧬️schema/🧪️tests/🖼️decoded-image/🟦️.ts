@@ -22,5 +22,4 @@ test("physical numeric binding preserves the Node Buffer IEEE words", () => {
     const layer=rasterLayerNodeFromJson({kind:"pixel",id:"word",name:"Word",visible:true,locked:false,opacity:number,blendMode:"normal",transform:{x:0,y:0,a:1,b:0,c:0,d:1}});
     expect(layer.opacity.bits).toBe(expected.readUInt32LE());
   }
-  console.log("[DEBUG] physical Raster numeric words match Node Buffer");
 });

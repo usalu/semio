@@ -1,4 +1,5 @@
 use super::*;
+use semio_framework_test_fixtures::fixture_path;
 
 #[semio_framework_async_macros::async_test]
 async fn cad_config_default_matches_the_existing_runtime_defaults() {
@@ -38,7 +39,7 @@ async fn cad_sun_config_round_trips_through_world_sun_config() {
 
 #[semio_framework_async_macros::async_test]
 async fn cad_config_operation_snapshot_round_trips_and_restores_exactly() {
-    let fixture: serde_json::Value = serde_json::from_str(std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🧪️tests/🧫️fixtures/📦️inline-layout/🔣️.json")).expect("../../🧪️tests/🧫️fixtures/📦️inline-layout/🔣️.json").leak()).expect("neutral config mutation layout fixture");
+    let fixture: serde_json::Value = serde_json::from_str(std::fs::read_to_string(fixture_path!("../../🧪️tests/🧫️fixtures/📦️inline-layout/🔣️.json")).expect("../../🧪️tests/🧫️fixtures/📦️inline-layout/🔣️.json").leak()).expect("neutral config mutation layout fixture");
     let base = CadConfig::default();
     let next = CadConfig { selected_node_ids: serde_json::from_value(fixture["selectedNodeIds"].clone()).expect("neutral selection"), ..CadConfig::default() };
     let operation = CadConfigMutation::Set(SetEdit { config: Box::new(next.clone()) });

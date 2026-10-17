@@ -18,6 +18,30 @@ pub const MAX_FRAME_BYTES: usize = 16 * 1024 * 1024;
 pub const MAX_CHUNK_BYTES: usize = 64 * 1024;
 const MAX_ENVIRONMENT_PAIRS: usize = 8192;
 const MAX_GROUP_MEMBERS: usize = 64;
+pub const BUILD_TOOL_ENVIRONMENT: &str = "SEMIO_BUILD_TOOL";
+#[path = "../../../📚️library/🏗️build/🕸️graph/🦀️rust/🦀️.rs"]
+pub mod build_authority;
+
+/// 🏗️ Reads the client's last selected build tool with native environment-name semantics.
+pub fn build_tool_environment(environment: &[(String, String)]) -> Option<&str> {
+    environment.iter().rev().find(|(name, _)| if cfg!(windows) { name.eq_ignore_ascii_case(BUILD_TOOL_ENVIRONMENT) } else { name == BUILD_TOOL_ENVIRONMENT }).map(|(_, value)| value.as_str())
+}
+
+/// 📌️ Pins the effective tool before reuse, reading the actual neutral workspace default at most once.
+pub fn bind_build_tools<'a>(root: &Path, inherited: Option<&str>, commands: impl IntoIterator<Item = &'a mut SessionCommand>) -> std::io::Result<()> {
+    let mut default = None;
+    for command in commands {
+        if !command.uses_build_tool(root) { continue; }
+        let tool = match command.selected_build_tool(root, inherited) {
+            Some(tool) => tool.to_string(),
+            None => { if default.is_none() { default = Some(build_authority::default_build_tool(root)?); } default.as_ref().unwrap().clone() },
+        };
+        if !build_authority::is_build_tool(&tool) { return Err(std::io::Error::other("neutral build tool required")); }
+        command.env.retain(|(name, _)| if cfg!(windows) { !name.eq_ignore_ascii_case(BUILD_TOOL_ENVIRONMENT) } else { name != BUILD_TOOL_ENVIRONMENT });
+        command.env.push((BUILD_TOOL_ENVIRONMENT.to_string(), tool));
+    }
+    Ok(())
+}
 
 /// 📂 Canonical workspace paths retain native command-runtime spelling on Windows.
 pub fn canonical_path(path: &Path) -> PathBuf {
@@ -152,7 +176,7 @@ impl SpawnGroup {
         fn collect<'a>(launch: &'a Launch, services: &mut Vec<(&'a LaunchProcess, usize)>) {
             for need in &launch.requires { collect(need, services); }
             for process in &launch.processes {
-                if !services.iter().any(|(known, _)| known.command_id == process.command_id) { services.push((process, services.len())); }
+                if !services.iter().any(|(known, _)| *known == process) { services.push((process, services.len())); }
             }
         }
         for need in &launch.requires { collect(need, &mut services); }
@@ -235,6 +259,49 @@ fn validate_environment(env: &[(String, String)]) -> bool {
 }
 
 impl SessionCommand {
+    /// 🏗️ Identifies the neutral Repo launcher whose selected backend belongs to task identity.
+    pub fn uses_build_tool(&self, root: &Path) -> bool {
+        let runtime = self.cmd.rsplit(['/', '\\']).next().is_some_and(|name| name == "bun" || name == "bun.exe");
+        if !runtime { return false; }
+        if self.args.first().is_some_and(|value| value == "repo") { return true; }
+        if !self.args.get(1).is_some_and(|value| value == "repo") { return false; }
+        let normalize = |path: &Path| {
+            let mut output = std::path::PathBuf::new();
+            for component in path.components() {
+                match component { std::path::Component::CurDir => {}, std::path::Component::ParentDir => { output.pop(); }, value => output.push(value.as_os_str()) }
+            }
+            output
+        };
+        let script = normalize(&root.join(&self.cwd).join(&self.args[0]));
+        build_authority::build_launcher_paths(root).iter().any(|path| {
+            #[cfg(windows)] { normalize(path).to_string_lossy().eq_ignore_ascii_case(&script.to_string_lossy()) }
+            #[cfg(not(windows))] { normalize(path) == script }
+        })
+    }
+
+    /// 🎯️ Resolves only explicit outer Repo options and environment; the workspace owns the default.
+    pub fn selected_build_tool<'a>(&'a self, root: &Path, inherited: Option<&'a str>) -> Option<&'a str> {
+        if !self.uses_build_tool(root) { return None; }
+        let mut tool = build_tool_environment(&self.env).or(inherited);
+        let offset = if self.args.first().is_some_and(|value| value == "repo") { 1 } else { 2 };
+        let mut arguments = self.args[offset..].iter();
+        while let Some(argument) = arguments.next() {
+            if argument == "--" { break; }
+            if argument == "--tool" { tool = Some(arguments.next().map(String::as_str).unwrap_or("")); }
+            else if let Some(value) = argument.strip_prefix("--tool=") { tool = Some(value); }
+        }
+        tool
+    }
+
+    /// ♻️ Refuses unresolved build identity while ordinary non-build tasks need no backend.
+    pub fn same_build_tool(&self, other: &Self, root: &Path) -> bool {
+        match (self.selected_build_tool(root, None), other.selected_build_tool(root, None)) {
+            (Some(left), Some(right)) => left == right,
+            (None, None) => !self.uses_build_tool(root) && !other.uses_build_tool(root),
+            _ => false,
+        }
+    }
+
     /// 🏃️ The invocation of one process of a resolved launch at the default terminal size.
     pub fn from_process(process: &LaunchProcess, extra_env: &[(String, String)], group: Option<String>) -> Self {
         let mut env = process.env.clone();

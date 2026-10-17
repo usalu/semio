@@ -1,4 +1,7 @@
-use super::*;
+use crate::schema::document_to_workflow;
+use semio_framework_plugin::NodeGraphScene;
+use semio_framework_plugin::SurfaceKind;
+use crate::viewer::dag::modes::view::windows::main::*;
 
 #[semio_framework_async_macros::async_test]
 async fn definition_declares_the_node_graph_surface_and_body_key() {

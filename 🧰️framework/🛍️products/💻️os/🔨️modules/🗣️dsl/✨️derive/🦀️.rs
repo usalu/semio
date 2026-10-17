@@ -11,7 +11,7 @@ use syn::{Data, DeriveInput, Fields, Type, parse_macro_input};
     #[doc(hidden)] pub workspace_root: PathBuf,
     #[doc(hidden)] pub mutation_root: PathBuf,
     #[doc(hidden)] pub owner: String,
-    expected_semantic_kind: Option<String>,
+    #[doc(hidden)] pub expected_semantic_kind: Option<String>,
     #[doc(hidden)] pub source_path: PathBuf,
     #[doc(hidden)] pub descriptor_path: PathBuf,
     #[doc(hidden)] pub taxonomy_path: PathBuf,
@@ -477,6 +477,13 @@ fn mutation_leaf_balanced_end(raw: &[u8], mut index: usize, open: u8, close: u8)
 #[derive(Debug)]
 #[doc(hidden)] pub struct MutationLeafAttrs { contract: syn::Path, payload: Option<syn::Ident>, input_schema: Option<syn::Path> }
 
+impl MutationLeafAttrs {
+    /// 🧷️ Collects the parsed `mutation_leaf` attribute arguments of one derive input.
+    #[doc(hidden)] pub fn new(contract: syn::Path, payload: Option<syn::Ident>, input_schema: Option<syn::Path>) -> Self {
+        Self { contract, payload, input_schema }
+    }
+}
+
 #[doc(hidden)] pub fn parse_mutation_leaf_attrs(input: &DeriveInput) -> syn::Result<MutationLeafAttrs> {
     let mut contract = None;
     let mut payload = None;
@@ -514,7 +521,7 @@ fn mutation_leaf_balanced_end(raw: &[u8], mut index: usize, open: u8, close: u8)
         if !wraps_one { return Err(syn::Error::new_spanned(variant, "mutation_leaf payload names a variant that wraps exactly one payload")); }
         if let Some(path) = &input_schema { return Err(syn::Error::new_spanned(path, "mutation_leaf input_schema and payload are exclusive: a wrapped leaf's input schema is its payload variant's")); }
     }
-    Ok(MutationLeafAttrs { contract, payload, input_schema })
+    Ok(MutationLeafAttrs::new(contract, payload, input_schema))
 }
 
 #[doc(hidden)] pub fn mutation_leaf_portable_path(path: &Path) -> Result<String, String> { path.to_str().map(|path| path.replace('\\', "/")).filter(|path| !path.is_empty()).ok_or_else(|| "metadata path is not UTF-8".to_string()) }

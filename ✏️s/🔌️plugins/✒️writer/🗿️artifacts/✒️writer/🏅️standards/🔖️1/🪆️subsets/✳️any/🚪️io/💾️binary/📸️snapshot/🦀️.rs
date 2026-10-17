@@ -50,14 +50,9 @@ pub fn decode(bytes: &[u8]) -> Result<WriterSnapshot, PackError> {
 }
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️semio-protocol-conformance/🦀️.rs"]
-mod semio_protocol_conformance;
+
 
 /// 🫴️ Declares this owner’s actual controlled native record factories.
 impl pack::snapshot::ArtifactNativeSnapshot for WriterSnapshot {

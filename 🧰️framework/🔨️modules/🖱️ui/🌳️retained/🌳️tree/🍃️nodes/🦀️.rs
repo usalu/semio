@@ -683,7 +683,7 @@ impl UiTree {
         self.mounted_layout_generation = generation;
     }
 
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testkit"))]
     pub fn accepted_layout_generation(&self) -> u64 {
         self.mounted_layout_generation
     }

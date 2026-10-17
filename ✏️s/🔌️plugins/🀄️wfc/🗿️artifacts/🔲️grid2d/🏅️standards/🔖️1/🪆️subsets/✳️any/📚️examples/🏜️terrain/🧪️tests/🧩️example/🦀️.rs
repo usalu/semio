@@ -1,6 +1,7 @@
 //! 🧪️ The `terrain` example is a real, solvable bitmap tile set whose transition law holds.
 
-use super::*;
+use crate::schema::snapshot::WfcTileMedia2d;
+use crate::examples::grid2d::terrain::*;
 use crate::schema::snapshot::{Grid2dSnapshot, WfcDirection2d};
 use crate::standards::v1::subsets::any::io::binary::snapshot::{decode_palette_indices};
 

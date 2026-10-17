@@ -94,7 +94,7 @@ function outcomeDocumentOracle(row: Case): string[] {
   const parsed = JSON.parse(contentOf(row)) as { code?: unknown; messages?: unknown[] };
   return [parsed, ...(parsed.messages ?? [])]
     .filter((message): message is { code: string; level?: string } => typeof (message as { code?: unknown }).code === "string")
-    .flatMap((message) => (admitted(message) ? [] : [`${known(message) ? "level-mismatch" : "outside-vocabulary"}|${message.code}`]))
+    .flatMap((message) => (Boolean(admitted(message)) ? [] : [`${Boolean(known(message)) ? "level-mismatch" : "outside-vocabulary"}|${message.code}`]))
     .sort();
 }
 

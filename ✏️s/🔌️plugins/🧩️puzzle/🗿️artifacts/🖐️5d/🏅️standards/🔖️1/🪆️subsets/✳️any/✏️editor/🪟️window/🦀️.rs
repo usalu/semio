@@ -1,7 +1,7 @@
 //! 🪟️ Exact-instance Puzzle 5D window configuration and transient interaction owners.
 
 use crate::editor::puzzle5d::config::{Puzzle5dCamera2d, Puzzle5dCamera3d, Puzzle5dRuntime, Puzzle5dSelectableKinds};
-use crate::editor::puzzle5d::modes::edit::windows::{board2d, world3d};
+use crate::editor::puzzle5d::entities::{PUZZLE5D_BOARD_WINDOW_KIND_ID, PUZZLE5D_WORLD_WINDOW_KIND_ID};
 use semio_framework_plugin::WorldSunConfig;
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
@@ -724,7 +724,7 @@ impl protocol::DiffAlgebra<Puzzle5dWindowTransient> for Puzzle5dWindowTransientD
 
 semio_framework_value::artifact_retire_struct!(Puzzle5dWindowTransient { suggestion_menu, engagement_input, brush_candidate_index });
 
-fn puzzle5d_window_transient_preflight(mutation: &Puzzle5dWindowTransientMutation) -> Result<store::os_store::one_item::ArtifactStoreOneItemFootprint, String> {
+pub fn puzzle5d_window_transient_preflight(mutation: &Puzzle5dWindowTransientMutation) -> Result<store::os_store::one_item::ArtifactStoreOneItemFootprint, String> {
     let Puzzle5dWindowTransientMutation::Snapshot { transient } = mutation;
     let menu = transient.suggestion_menu.as_ref().map_or(Some(0), |menu| menu.window_id.capacity().checked_add(menu.vortex_full_id.capacity()));
     let retained_bytes = menu
@@ -775,8 +775,8 @@ macro_rules! owners {
     };
 }
 
-owners!(Puzzle5dBoardWindowConfigOwner, Puzzle5dBoardWindowConfig, Puzzle5dBoardWindowConfigMutation, "puzzle.5dboardwindowconfig", Puzzle5dBoardWindowTransientOwner, board2d::WINDOW_KIND_ID);
-owners!(Puzzle5dWorldWindowConfigOwner, Puzzle5dWorldWindowConfig, Puzzle5dWorldWindowConfigMutation, "puzzle.5dworldwindowconfig", Puzzle5dWorldWindowTransientOwner, world3d::WINDOW_KIND_ID);
+owners!(Puzzle5dBoardWindowConfigOwner, Puzzle5dBoardWindowConfig, Puzzle5dBoardWindowConfigMutation, "puzzle.5dboardwindowconfig", Puzzle5dBoardWindowTransientOwner, PUZZLE5D_BOARD_WINDOW_KIND_ID);
+owners!(Puzzle5dWorldWindowConfigOwner, Puzzle5dWorldWindowConfig, Puzzle5dWorldWindowConfigMutation, "puzzle.5dworldwindowconfig", Puzzle5dWorldWindowTransientOwner, PUZZLE5D_WORLD_WINDOW_KIND_ID);
 
 pub fn register_config(registry: &mut semio_framework_plugin::WindowConfigOwnerRegistry) -> Result<(), semio_framework_plugin::Fault> {
     registry.register::<Puzzle5dBoardWindowConfigOwner>()?;
@@ -935,7 +935,7 @@ pub fn transient_from_runtime(runtime: &Puzzle5dRuntime, window_id: &str) -> Puz
 pub fn addressed_config(view: &semio_framework_plugin::ViewModel, config: Puzzle5dWindowConfig) -> Result<semio_framework_plugin::WindowConfigMutation, semio_framework_plugin::Fault> {
     let id = view.window_id.as_deref().ok_or_else(|| semio_framework_plugin::Fault::from("puzzle5d-window-required"))?;
     match kind_for_view(view) {
-        Some(board2d::WINDOW_KIND_ID) => Ok(semio_framework_plugin::WindowConfigMutation::of::<Puzzle5dBoardWindowConfigOwner>(
+        Some(PUZZLE5D_BOARD_WINDOW_KIND_ID) => Ok(semio_framework_plugin::WindowConfigMutation::of::<Puzzle5dBoardWindowConfigOwner>(
             id,
             Puzzle5dBoardWindowConfigMutation::Set(Puzzle5dBoardWindowConfigMutationSet {
                 patch: Puzzle5dBoardWindowConfigDiff::of(&Puzzle5dBoardWindowConfig {
@@ -949,7 +949,7 @@ pub fn addressed_config(view: &semio_framework_plugin::ViewModel, config: Puzzle
                 }),
             }),
         )),
-        Some(world3d::WINDOW_KIND_ID) => Ok(semio_framework_plugin::WindowConfigMutation::of::<Puzzle5dWorldWindowConfigOwner>(
+        Some(PUZZLE5D_WORLD_WINDOW_KIND_ID) => Ok(semio_framework_plugin::WindowConfigMutation::of::<Puzzle5dWorldWindowConfigOwner>(
             id,
             Puzzle5dWorldWindowConfigMutation::Set(Puzzle5dWorldWindowConfigMutationSet {
                 patch: Puzzle5dWorldWindowConfigDiff::of(&Puzzle5dWorldWindowConfig {
@@ -978,17 +978,14 @@ pub fn addressed_transient(view: &semio_framework_plugin::ViewModel, transient: 
     let id = view.window_id.as_deref().ok_or_else(|| semio_framework_plugin::Fault::from("puzzle5d-window-required"))?;
     let mutation = Puzzle5dWindowTransientMutation::Snapshot { transient };
     match kind_for_view(view) {
-        Some(board2d::WINDOW_KIND_ID) => Ok(semio_framework_plugin::WindowTransientMutation::of::<Puzzle5dBoardWindowTransientOwner>(id, mutation)),
-        Some(world3d::WINDOW_KIND_ID) => Ok(semio_framework_plugin::WindowTransientMutation::of::<Puzzle5dWorldWindowTransientOwner>(id, mutation)),
+        Some(PUZZLE5D_BOARD_WINDOW_KIND_ID) => Ok(semio_framework_plugin::WindowTransientMutation::of::<Puzzle5dBoardWindowTransientOwner>(id, mutation)),
+        Some(PUZZLE5D_WORLD_WINDOW_KIND_ID) => Ok(semio_framework_plugin::WindowTransientMutation::of::<Puzzle5dWorldWindowTransientOwner>(id, mutation)),
         _ => Err(semio_framework_plugin::Fault::from("puzzle5d-window-kind-required")),
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 
 //#region 🪢️TaxonomyMounts
-#[path = "🧬️schema/🦀️.rs"]
-pub mod schema;
+
 //#endregion 🪢️TaxonomyMounts

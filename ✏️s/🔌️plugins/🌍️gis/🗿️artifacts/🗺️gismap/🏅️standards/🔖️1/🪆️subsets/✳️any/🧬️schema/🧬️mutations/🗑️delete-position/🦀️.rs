@@ -1,7 +1,6 @@
 //! 🗑️ `delete-position` mutation payload — removes a position feature from `positions` by id.
 
 use crate::diff::GisMapDiff;
-use crate::mutations::GisMapMutation;
 use crate::GisMapSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -22,14 +21,17 @@ pub struct DeletePosition {
     pub id: String,
 }
 
-impl MutationKind<GisMapSnapshot, GisMapMutation> for DeletePosition {
+impl<Op> MutationKind<GisMapSnapshot, Op> for DeletePosition
+where
+    Op: protocol::Mutation<GisMapSnapshot, Diff = GisMapDiff> + From<DeletePosition> + From<crate::standards::v1::subsets::any::schema::mutations::create_position::CreatePosition>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "position", kind: "delete-position", record: "DeletedPosition" };
 
     fn diff(&self, base: &GisMapSnapshot) -> protocol::MutationOutcome<GisMapDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &GisMapSnapshot) -> Result<Vec<GisMapMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &GisMapSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         super::inverse::inverse(self, base)
     }
 

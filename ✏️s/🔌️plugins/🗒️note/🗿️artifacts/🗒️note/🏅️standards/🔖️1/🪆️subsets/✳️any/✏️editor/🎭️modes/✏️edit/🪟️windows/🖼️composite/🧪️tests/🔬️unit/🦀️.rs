@@ -1,4 +1,33 @@
-use super::*;
+use crate::editor::note::modes::edit::windows::composite::options;
+use semio_framework_plugin::InkCanvasScene;
+use semio_framework_plugin::SurfaceKind;
+#[allow(unused_imports)]
+use crate::editor::note::terminology::NotePlayLabels;
+#[allow(unused_imports)]
+use crate::{NoteCamera, NoteSnapshot};
+#[allow(unused_imports)]
+use semio_framework_plugin::BuiltNode;
+#[allow(unused_imports)]
+use semio_framework_plugin::InkCanvasInteractionDomain;
+#[allow(unused_imports)]
+use semio_framework_plugin::InteractionView;
+#[allow(unused_imports)]
+use semio_framework_ui_locale::LocalizedLabel;
+#[allow(unused_imports)]
+use semio_framework_plugin::UiAssemblyResult;
+#[allow(unused_imports)]
+use semio_framework_plugin::WindowEngagement;
+#[allow(unused_imports)]
+use semio_framework_plugin::WindowEngagementInput;
+#[allow(unused_imports)]
+use semio_framework_plugin::WindowEngagementStatus;
+#[allow(unused_imports)]
+use semio_framework_plugin::WindowKindDefinition;
+#[allow(unused_imports)]
+use semio_framework_plugin::WindowMeasure;
+#[allow(unused_imports)]
+use semio_framework_plugin::WindowOptions;
+use crate::editor::note::modes::edit::windows::composite::*;
 use crate::editor::note::unit_tests::context::{note_app, render as render_body};
 use crate::editor::note::NOTE_PLAY_BODY_COMPOSITE as BODY_COMPOSITE;
 

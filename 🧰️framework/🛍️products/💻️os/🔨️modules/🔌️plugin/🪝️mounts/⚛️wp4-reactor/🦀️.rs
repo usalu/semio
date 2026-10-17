@@ -4,9 +4,7 @@
 // Carving a crate removes its unit here and puts `extern crate <crate> as <old module name>;` in its place (PLAN-PLUGIN-CRATES.md, section 12.5).
 
 //#region 📄️DeclarationFixtureMutationMount
-#[cfg(test)]
-#[path = "../../🧪️tests/🤝️cooperative-pump/🦀️.rs"]
-mod cooperative_pump_tests;
+
 #[cfg(test)]
 #[path = "../../🧪️tests/🏃️plugin-runtime-runtime-laws/🦀️.rs"]
 mod plugin_runtime_runtime_laws;
@@ -26,24 +24,10 @@ pub mod reactor {
     pub use semio_framework_plugin_reactor_turn::{last_turn_more_work_sources, poll_kernel, retained_command_ingress_occupancy, retained_extension_invocation_occupancy, TurnMoreWorkSources};
 }
 //#endregion ⚛️ReactorFacet
-#[cfg(test)]
-#[path = "🧪️test-hosts/⏲️reactor-tasks/🦀️.rs"]
-pub(crate) mod reactor_tasks_test_hosts;
-#[cfg(test)]
-#[path = "🧪️test-hosts/📦️runtime-instances/🦀️.rs"]
-pub(crate) mod runtime_instances_test_hosts;
-#[cfg(test)]
-#[path = "🧪️test-hosts/⚙️runtime-ops/🦀️.rs"]
-pub(crate) mod runtime_ops_test_hosts;
-#[cfg(test)]
-#[path = "../👥️wp3-owners/🧪️test-hosts/🧩️extension/🦀️.rs"]
-pub(crate) mod extension_test_hosts;
-#[cfg(test)]
-#[path = "🧪️test-hosts/🖼️reactor-surfaces/🦀️.rs"]
-pub(crate) mod reactor_surfaces_test_hosts;
-#[cfg(test)]
-#[path = "🧪️test-hosts/⚛️reactor-core/🦀️.rs"]
-pub(crate) mod reactor_core_test_hosts;
-#[cfg(test)]
-#[path = "🧪️test-hosts/🔂️reactor-turn/🦀️.rs"]
-pub(crate) mod reactor_turn_test_hosts;
+
+
+
+
+
+
+

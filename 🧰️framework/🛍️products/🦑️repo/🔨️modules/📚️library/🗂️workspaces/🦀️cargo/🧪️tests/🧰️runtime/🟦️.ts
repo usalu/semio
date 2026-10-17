@@ -22,11 +22,12 @@ export function cargoPreparationFixtureEnvironmentV1(root:string):Record<string,
 
 import {prepareCargoWorkspaceInvocation} from "../../🟦️.ts";
 import type {CargoPreparationStorageV1} from "../../🛠️preparation/📦️storage/🟦️.ts";
+import {createIssuedResourceControlV1}from"../../../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import {nativeCallerPhaseV1} from "../../../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
 /** 🎛️ Awaits the real preparation executable through the independently authored original fixture grant. */
-export async function prepareCargoFixtureV1(storage:CargoPreparationStorageV1,root:string,args:readonly string[],cwd:string,environment:Record<string,string|undefined>):Promise<void>{await receiveScriptProcessInvocation(environment,original=>prepareCargoWorkspaceInvocation(storage,root,args,cwd,environment,nativeCallerPhaseV1(original,root).leaseControl));}
+export async function prepareCargoFixtureV1(storage:CargoPreparationStorageV1,root:string,args:readonly string[],cwd:string,environment:Record<string,string|undefined>):Promise<void>{await receiveScriptProcessInvocation(environment,original=>prepareCargoWorkspaceInvocation(storage,root,args,cwd,environment,nativeCallerPhaseV1(original,root,createIssuedResourceControlV1(original,"native:cargo-fixture-entry",0)).leaseControl));}
 
 import {withRepositoryCargoPreparationV1} from "../../../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🟦️.ts";
 import {runOwnedCommand} from "../../../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
 /** 🦀️ Runs the independent Cargo oracle only while authentic backing and original fixture custody remain live. */
-export async function captureCargoFixtureV1(root:string,args:readonly string[]):Promise<string>{const environment=cargoPreparationFixtureEnvironmentV1(root);return receiveScriptProcessInvocation(environment,original=>withRepositoryCargoPreparationV1(findWorkspaceRoot(import.meta.dir),root,original,environment,async(bounded,phase)=>{let output="";await runOwnedCommand("cargo",[...args],root,"cargo:fixture-oracle",phase.budget(),{...phase.options(bounded),stdout:"stderr",onLine:(line,stream)=>{if(stream==="stdout")output+=line+"\n";}});return output;}));}
+export async function captureCargoFixtureV1(root:string,args:readonly string[]):Promise<string>{const environment=cargoPreparationFixtureEnvironmentV1(root);return receiveScriptProcessInvocation(environment,original=>withRepositoryCargoPreparationV1(findWorkspaceRoot(import.meta.dir),root,original,createIssuedResourceControlV1(original,"native:cargo-fixture-entry",0),environment,async(bounded,phase)=>{let output="";await runOwnedCommand("cargo",[...args],root,"cargo:fixture-oracle",phase.budget(),{...phase.options(bounded),stdout:"stderr",onLine:(line,stream)=>{if(stream==="stdout")output+=line+"\n";}});return output;}));}

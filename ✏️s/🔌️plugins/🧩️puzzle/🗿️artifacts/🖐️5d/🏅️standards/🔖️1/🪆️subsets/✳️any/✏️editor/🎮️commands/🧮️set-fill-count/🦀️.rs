@@ -1,6 +1,6 @@
 //! 🧮️ `set-fill-count` command.
 
-use crate::editor::puzzle5d::Puzzle5dActionCtx;
+use crate::editor::puzzle5d::interaction::Puzzle5dActionCtx;
 use semio_framework_pack_json::Value;
 use semio_framework::kernel::Effect;
 

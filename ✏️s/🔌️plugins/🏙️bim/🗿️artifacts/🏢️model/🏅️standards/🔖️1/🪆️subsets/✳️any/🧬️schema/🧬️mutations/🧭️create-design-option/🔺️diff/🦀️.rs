@@ -1,7 +1,8 @@
 //! 🔺️ Sparse declarative create-design-option diff.
 use super::CreateDesignOption;
 use crate::*;
-use super::super::{elements, option_rules};
+use super::super::elements;
+use crate::standards::v1::subsets::any::schema::authored::option_rules;
 use protocol::{MutationOutcome, OutcomeCode};
 pub fn diff(payload: &CreateDesignOption, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {
     if payload.id.trim().is_empty() { return MutationOutcome::refuse(OutcomeCode::Invariant, "Id is empty.", [payload.id.clone()]); }

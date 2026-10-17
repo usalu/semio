@@ -106,7 +106,6 @@ fn original_actor_retirement_binding_preserves_private_source_on_refusal() {
     assert_eq!(retained.grant.maximum_items, 60);
     assert_eq!(retained.work.fuel, 60);
     assert_eq!(observe(|| drop(slot)).1, (0, 0));
-    eprintln!("[DEBUG] Actual actor private epochs20/21 accepted; foreign/repeated/zero denied heap0; total64-paid4=60; three separate close frontiers; terminalDrop0");
 }
 
 #[test]
@@ -163,7 +162,6 @@ fn original_actor_epoch_is_exact_and_cannot_be_rebound_by_a_child() {
     }
     assert_eq!(released, births);
     assert_eq!(observe(|| drop(owner)).1, (0, 0));
-    eprintln!("[DEBUG] Actual actor epochs7/9 childRebind refused heap0; persistent source recipient stable; external zero delta; rootsReleased={released}");
 }
 
 #[test]
@@ -255,5 +253,4 @@ fn original_actor_context_preserves_input_and_paid_authorities_across_admission_
     }
     assert_eq!(released, births);
     assert_eq!(observe(|| drop(owner)).1, (0, 0));
-    eprintln!("[DEBUG] Actual actor71/3 source64 paid admission4 copy41 release97 through same persistent recipient={recipient_identity}; independent external deltas; rootsReleased={released}; terminalDrop0");
 }

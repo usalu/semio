@@ -1,6 +1,17 @@
 //! 🔺️ Diff for `ApplyValue`.
 
-use super::super::*;
+#[allow(unused_imports)]
+use protocol::Mutation;
+#[allow(unused_imports)]
+use crate::schema::diff::SemioDiff;
+#[allow(unused_imports)]
+use crate::schema::snapshot::SemioSnapshot;
+#[allow(unused_imports)]
+use crate::schema::snapshot::SemioSubsetSnapshot;
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_semio_value_mutations::schema::mutations::SemioValueMutation;
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValueSnapshot;
 
 //#region 🔖️Diff
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

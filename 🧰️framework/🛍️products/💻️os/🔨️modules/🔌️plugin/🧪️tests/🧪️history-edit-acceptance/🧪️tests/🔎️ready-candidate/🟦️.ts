@@ -16,5 +16,4 @@ test("history acceptance search discards blocked trials before selecting a ready
  const source=read("../../🦀️.rs");const start=source.indexOf("for candidate in changes {");const end=source.indexOf("let Some(drafted) = drafted",start);const search=source.slice(start,end);
  expect(search).toContain("change.is_none() && app.time_travel.status().is_some_and(|status| status.review == Some(HistoryTimeTravelReview::Blocked))");
  expect(search).toContain("HISTORY_EDIT_EXIT_ACTION_ID");expect(search).toContain("discarding a blocked trial left a supersession of the mutation");
- console.log("[DEBUG] independent SQLite rollback preserves blocked trials without durable edits");
 });

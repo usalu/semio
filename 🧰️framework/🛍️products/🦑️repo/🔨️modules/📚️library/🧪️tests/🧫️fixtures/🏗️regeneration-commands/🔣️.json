@@ -1,0 +1,96 @@
+{
+  "schemaVersion": 1,
+  "contractId": "fixture-generator",
+  "cwd": "🧪️owner",
+  "commands": [
+    {
+      "id": "neutral",
+      "command": [
+        "bun",
+        "repo",
+        "run",
+        "fixture:generate"
+      ],
+      "valid": true
+    },
+    {
+      "id": "nx-backend-leak",
+      "command": [
+        "bun",
+        "nx",
+        "run",
+        "fixture:generate"
+      ],
+      "valid": false
+    },
+    {
+      "id": "bazel-backend-leak",
+      "command": [
+        "bun",
+        "bazel",
+        "run",
+        "fixture:generate"
+      ],
+      "valid": false
+    },
+    {
+      "id": "other-runtime",
+      "command": [
+        "node",
+        "repo",
+        "run",
+        "fixture:generate"
+      ],
+      "valid": false
+    },
+    {
+      "id": "wrong-operation",
+      "command": [
+        "bun",
+        "repo",
+        "exec",
+        "fixture:generate"
+      ],
+      "valid": false
+    },
+    {
+      "id": "extra-argument",
+      "command": [
+        "bun",
+        "repo",
+        "run",
+        "fixture:generate",
+        "--help"
+      ],
+      "valid": false
+    },
+    {
+      "id": "missing-target",
+      "command": [
+        "bun",
+        "repo",
+        "run"
+      ],
+      "valid": false
+    },
+    {
+      "id": "non-string-target",
+      "command": [
+        "bun",
+        "repo",
+        "run",
+        7
+      ],
+      "valid": false
+    }
+  ],
+  "registration": {
+    "target": "test-regeneration-commands",
+    "route": "regeneration-commands",
+    "command": "bun repo run @semio-tech/repo-lib:test-regeneration-commands --skip-cache",
+    "launchNames": [
+      "⚖️Test Neutral Regeneration Commands [EN]",
+      "⚖️Neutrale Generierungsbefehle Prüfen [DE]"
+    ]
+  }
+}

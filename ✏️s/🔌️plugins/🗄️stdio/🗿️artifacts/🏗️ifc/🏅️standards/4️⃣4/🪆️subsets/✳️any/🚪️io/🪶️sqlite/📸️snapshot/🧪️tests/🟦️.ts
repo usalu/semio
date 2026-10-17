@@ -43,7 +43,6 @@ test("IFC4 removal-result references preserve full owner through independently e
    function edit(value:IfcValue){if(value.kind==="reference"&&value.value===BigInt(case_.removedId))value.value=BigInt(corpus.editReference);else if(value.kind==="aggregate")value.value.forEach(edit);else if(value.kind==="typedValue")value.value.items.forEach(edit);}
    [...input.header.fileDescription,...input.header.fileName,...input.header.fileSchema,...input.entities.flatMap(entity=>[...entity.args,...entity.complex.flatMap(part=>part.args)])].forEach(edit);
    expect(await ifcSnapshotFromSqliteDatabase(await importSqliteDatabase(physical.serialize()))).toEqual(input);
-   console.log("[DEBUG] IFC4 full intermediate reference owner",case_.removedId);
   }finally{physical.close();}
  }
 });
@@ -57,7 +56,7 @@ test("IFC4 complete positive SQL surrogates preserve literal native identities",
    physical.exec("UPDATE "+name+" SET "+[key+"="+key+"+"+corpus.surrogateOffset,...links.filter(link=>link.from!==key).map(link=>link.from+"="+link.from+"+"+corpus.surrogateOffset)].join(","));
   }
   expect(physical.query("PRAGMA integrity_check").get()).toEqual({integrity_check:"ok"});expect(physical.query("PRAGMA foreign_key_check").all()).toEqual([]);
-  expect(await ifcSnapshotFromSqliteDatabase(await importSqliteDatabase(physical.serialize()))).toEqual(input);console.log("[DEBUG] IFC4 full shifted-surrogate owner",corpus.surrogateOffset);
+  expect(await ifcSnapshotFromSqliteDatabase(await importSqliteDatabase(physical.serialize()))).toEqual(input);
  }finally{physical.close();}
 });
 
@@ -78,5 +77,5 @@ test("IFC4 complete independent cells preserve copied limits and required empty 
  expect(normSemanticContract["schemaBytes"]).toEqual(3250);expect(normSemanticContract["tableWidths"]).toEqual({"ifc_aggregate_element":4,"ifc_argument":5,"ifc_complex_type":4,"ifc_document":3,"ifc_entity":5,"ifc_file_description_argument":4,"ifc_file_name_argument":4,"ifc_file_schema_argument":4,"ifc_header":1,"ifc_typed_argument":4,"ifc_value":11});expect(normSemanticContract["cases"]).toEqual([{"id":"originalSourceFull","rows":65,"valueBytes":1869},{"id":"emptyEntitiesRetainHeader","rows":18,"valueBytes":456}]);
  for(const item of normSemanticContract.cases){const source=fixture();if(item.id==="emptyEntitiesRetainHeader"){source.entities=[];}const database=await normSemanticProject(source),bytes=await normSemanticExport(database);expect(normIndependentExtent(bytes)).toEqual({rows:item.rows,valueBytes:item.valueBytes,schemaBytes:normSemanticContract.schemaBytes,tableWidths:normSemanticContract.tableWidths});const limits={maxRows:item.rows,maxValueBytes:item.valueBytes,maxSchemaBytes:normSemanticContract.schemaBytes,maxTables:11,maxColumns:11};expect(await normSemanticProject(source,limits)).toEqual(database);expect(await normSemanticRestore(await normSemanticImport(bytes),limits)).toEqual(source);
   for(const short of[{...limits,maxRows:item.rows-1},{...limits,maxValueBytes:item.valueBytes-1},{...limits,maxSchemaBytes:limits.maxSchemaBytes-1},{...limits,maxTables:10},{...limits,maxColumns:10}]){await expect(normSemanticProject(source,short)).rejects.toThrow();await expect(normSemanticRestore(database,short)).rejects.toThrow();}
- }console.log("[DEBUG] IFC4 complete independent SQLite cells and metadata preserve full and empty semantic limits");
+ }
 });

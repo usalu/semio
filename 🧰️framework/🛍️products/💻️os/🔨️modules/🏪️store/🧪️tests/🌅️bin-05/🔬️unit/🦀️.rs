@@ -1203,7 +1203,6 @@ async fn composition_graph_retires_with_exact_independent_frontier_grants() {
     }
     assert!(graph.terminal_is_empty()); assert_eq!(released_bytes, original_bytes);
     let (_, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| drop(graph)); assert_eq!((allocated, released), (0, 0));
-    println!("[DEBUG] original linked graph backing={original_bytes} release={released_bytes} terminalDrop0; every common demand independently admitted");
 }
 
 #[semio_framework_async_macros::async_test]

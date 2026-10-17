@@ -324,7 +324,7 @@ test("queued exclusive compiler cancellation drains rejected work and permits a 
  writeFileSync(script,`import {runNativeBuildDriverV1} from ${JSON.stringify(source)};import {withLawStorageV1,lawStoragePolicyV1} from ${JSON.stringify(new URL("../../🧪️tests/🦀️cargo/🟦️.ts",import.meta.url).href)};import {phaseCompilerAdmissionControlV1} from ${JSON.stringify(new URL("../../../../🏗️build/🎟️capacity/🟦️.ts",import.meta.url).href)};import {existsSync,readFileSync} from "node:fs";import {join} from "node:path";const run=(control,extra)=>withLawStorageV1(control,lawStoragePolicyV1.stubImageBytes,(held,control)=>runNativeBuildDriverV1({...options,...extra,storage:held.storage,cacheRoot:join(held.root,"cache"),shared:{target:join(held.root,"target"),build:join(held.root,"build")},environment:{...options.environment,...held.environment,CARGO_TARGET_DIR:join(held.root,"target")},control,log:()=>undefined}));const unhandled=[];process.on("unhandledRejection",error=>unhandled.push(String(error)));const controller=new AbortController(),options=${JSON.stringify(options)};const cancel=setInterval(()=>{if(existsSync(${JSON.stringify(calls)})){clearInterval(cancel);controller.abort(Error("cancel queued exclusive by law"));}},${law.pollMs});let refused=false;try{await run(phaseCompilerAdmissionControlV1(controller.signal,30000,()=>undefined,()=>new Promise(done=>setImmediate(done))),{});}catch{refused=true;}finally{clearInterval(cancel);}await Bun.sleep(${law.settleMs});const successor=await run(phaseCompilerAdmissionControlV1(new AbortController().signal,30000,()=>undefined,()=>new Promise(done=>setImmediate(done))),{plan:{version:1,passes:[options.plan.passes[0]],jobs:[]}});console.log(JSON.stringify({refused,unhandled,children:JSON.parse(readFileSync(${JSON.stringify(calls)},"utf8").trim()).id,resumed:successor.failed.length===0}));`);
  const child=Bun.spawn([process.execPath,script],{cwd:root,stdout:"pipe",stderr:"pipe"}),output=await new Response(child.stdout).text(),diagnostic=await new Response(child.stderr).text();expect(await child.exited,diagnostic).toBe(0);
  const result=JSON.parse(output.trim().split("\n").at(-1)!);expect(result.refused).toBe(true);expect(result.unhandled).toHaveLength(law.expectedUnhandled);expect([result.children]).toEqual(law.expectedChildren);expect(result.resumed).toBe(law.resumed);expect(existsSync(join(root,"jobs.jsonl"))).toBe(false);
- const pid=JSON.parse(readFileSync(calls,"utf8").trim()).pid;expect(()=>process.kill(pid,0)).toThrow();console.log("[DEBUG] Queued exclusive compiler cancellation has no unhandled rejection, kills holder and allows fresh successor");
+ const pid=JSON.parse(readFileSync(calls,"utf8").trim()).pid;expect(()=>process.kill(pid,0)).toThrow();
 },120_000);
 
 
@@ -335,7 +335,7 @@ test("unit graph compilation cancellation stops its metadata child and releases 
  const pid=JSON.parse(readFileSync(calls,"utf8").split("\n")[0]!).pid;controller.abort(Error("metadata cancellation"));try{await running;}catch(error){expect(controller.signal.aborted).toBe(true);}
  await new Promise(resolve=>setTimeout(resolve,50));let live=true;try{process.kill(pid,0);}catch{live=false;}
  if(live)process.kill(pid,"SIGKILL");expect(live).toBe(false);
- expect((await runStub(root,{version:1,passes:[pass]},cargo)).staged).toEqual(["unit:release"]);console.log("[DEBUG] Cancelled unit graph metadata child stops and successor reacquires admission");
+ expect((await runStub(root,{version:1,passes:[pass]},cargo)).staged).toEqual(["unit:release"]);
 },120000);
 
 test("profile mode selection follows only admitted compiler profiles",()=>{for(const row of fixture.profileModes)expect(profileBuildModeV1(row.profile) as string).toBe(row.mode);for(const profile of fixture.invalidProfiles)expect(()=>profileBuildModeV1(profile as Parameters<typeof profileBuildModeV1>[0])).toThrow();});
@@ -353,7 +353,6 @@ test("generation roots and fixed leaves are admitted as resolved absolute paths 
   }
   const absolute = join(root, "relative"), result = nativeBuildGenerationV1("warm", relative(process.cwd(), absolute), { target: relative(process.cwd(), join(root, "t")), build: relative(process.cwd(), join(root, "b")) });
   for (const value of [result.root, result.target, result.build, result.report, result.logs, result.jobserver, result.stages]) expect(isAbsolute(value)).toBe(true);
-  console.log("[DEBUG] Ajv agrees with generation path admission; forbidden roots leave no materialized parent");
 });
 
 test("pending stages and finalizers retain original numeric authority and settle without aborting its signal", async () => {
@@ -393,7 +392,6 @@ test("pending stages and finalizers retain original numeric authority and settle
     }
     expect((await runStub(root, { version: 1, passes: [pass] }, cargo)).failed).toEqual([]);
   }
-  console.log("[DEBUG] Original finite stage/finalizer authority settles pending work; original signal and fractional remainder preserved");
 }, 90_000);
 
 test("the original finite caller budget stops running metadata and returns admission", async () => {
@@ -406,7 +404,6 @@ test("the original finite caller budget stops running metadata and returns admis
   expect(() => process.kill(pid, 0)).toThrow();
   expect(controller.signal.aborted).toBe(false);
   expect((await runStub(root, { version: 1, passes: [pass] }, cargo)).failed).toEqual([]);
-  console.log("[DEBUG] Finite original native build budget stopped metadata child and successor acquired admission");
 }, 45_000);
 
 
@@ -433,5 +430,4 @@ try {
   const observed = JSON.parse(readFileSync(marker, "utf8"));
   expect(observed.oracle).toBe(vector.oracle);
   expect([observed.participant, ...(result.staged.length ? ["pass"] : [])].sort()).toEqual(vector.expectedParticipants);
-  console.log("[DEBUG] Unlaned Cargo job and same-profile pass completed with one token; Python SQLite oracle=" + vector.oracle);
 }, 45_000);

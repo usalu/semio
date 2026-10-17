@@ -17,15 +17,15 @@ pub mod encode;
 #[path="🛬️decode/🦀️.rs"]
 pub mod decode;
 #[path="🖼️assets/🦀️.rs"]
-mod assets;
+pub mod assets;
 pub use assets::DrawingClipboardAssets;
 #[derive(Clone,Debug,PartialEq,semio_framework_value::ToValue,semio_framework_value::FromValue,semio_framework_value::RetainedClone,semio_framework_value::RetireOwned)]
 #[value(rename_all="camelCase")]
-#[cfg_attr(test,derive(serde::Serialize,serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"),derive(serde::Serialize,serde::Deserialize))]
 pub struct DrawingClipboard {pub schema:String,pub roots:Vec<DrawingLayerNode>,pub selected:Vec<String>,pub assets:DrawingClipboardAssets}
 pub fn media_type()->MediaType {MediaType {class:MediaClass::TwoD,form:MediaForm::Design}}
 fn invalid(message:impl Into<String>)->ClipboardError {ClipboardError::ParseFailed(message.into())}
-fn world(document:&DrawingSnapshot,id:&str)->Result<[f64;6],ClipboardError> {
+pub fn world(document:&DrawingSnapshot,id:&str)->Result<[f64;6],ClipboardError> {
     let mut transforms=Vec::new();let mut current=Some(id.to_owned());
     while let Some(id)=current {
         if transforms.len()>=32 {return Err(invalid("Clipboard ancestry exceeds capacity"));}
@@ -87,7 +87,7 @@ pub fn decode(fragment:&ClipboardFragment)->Result<DrawingClipboard,ClipboardErr
     validate(&packet)?;
     Ok(packet)
 }
-fn validate(packet:&DrawingClipboard)->Result<(),ClipboardError> {
+pub fn validate(packet:&DrawingClipboard)->Result<(),ClipboardError> {
     if packet.schema!=SCHEMA || packet.roots.is_empty() || packet.roots.len()>MAX_NODES || packet.assets.len()>MAX_NODES || packet.selected.is_empty() || packet.selected.len()>MAX_NODES{return Err(invalid("Invalid drawing clipboard packet"));}
     let mut nodes=BTreeMap::new();let mut stack=packet.roots.iter().map(|node|(node,1usize)).collect::<Vec<_>>();
     while let Some((node,depth))=stack.pop(){let base=layer_base(node);if depth>MAX_DEPTH||base.id.is_empty()||base.id.len()>MAX_ID_BYTES||nodes.len()==MAX_NODES{return Err(invalid("Invalid clipboard ancestry or identity"));}let id=base.id.to_string_owner();if nodes.insert(id,node).is_some(){return Err(invalid("Clipboard identities must be unique"));}if let DrawingLayerNode::Group(group)=node{if group.children.len()>MAX_NODES{return Err(invalid("Clipboard group exceeds capacity"));}for child in &group.children{stack.push((child,depth+1));}}}
@@ -176,9 +176,6 @@ pub fn invert(matrix:[f64;6])->Result<[f64;6],ClipboardError>{
     if determinant==0.0 || !matrix.iter().all(|n|n.is_finite()){return Err(invalid("Clipboard transform is singular or nonfinite / Zwischenablagetransformation ist singulär oder nicht endlich"));}
     Ok([d/determinant,-b/determinant,-c/determinant,a/determinant,(c*y-d*x)/determinant,(b*x-a*y)/determinant])
 }
-#[cfg(test)]
-#[path="🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 
 fn paste_identity(kind:crate::schema::identity::DrawingIdentityKind,document:&semio_framework_value::paged::PagedUtf8<{usize::MAX}>,source:&str,ordinal:usize,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<String,ClipboardError>{
  let mut material=[0u8;4096];let mut output=[0u8;76];

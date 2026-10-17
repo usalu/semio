@@ -7,7 +7,7 @@ import TOML from "@iarna/toml";
 import {inspectRustModuleGraph} from "../../../../../🔍️discovery/🟦️.ts";
 import {rustExternProviders} from "../../🔗️binding/🟦️.ts";
 import {COMPUTE_OWNERSHIP_CONTRACT_PATH,COMPUTE_OWNERSHIP_DECLARATION_PATH,rustFamilyOwnershipActive,inspectRustFamilyOwnership,readRustFamilyOwnershipContract,type RustFamilyOwnershipProblem} from "../🟦️.ts";
-const owner=resolve(import.meta.dir,"..");
+const owner=import.meta.dir;
 export const corpus=JSON.parse(readFileSync(join(owner,"🧫️fixtures/🔣️.json"),"utf8")) as {version:1;ownerSource:string;activationCases:readonly {id:string;sources:Record<string,string>;active:boolean;nativeAliases?:Record<string,"provider"|"other">}[];cases:readonly {id:string;source:string;expectedCodes:readonly RustFamilyOwnershipProblem["code"][];nativeCompiles:boolean}[]};
 export const declaration=corpus.ownerSource;
 export const contract=readRustFamilyOwnershipContract({version:1,ownerManifest:"provider/Cargo.toml",ownerRoot:"provider/lib.rs",declarationSource:"provider/compute.rs",modulePath:["compute"],externName:"semio_framework_2d",packageName:"semio-framework-2d",symbols:["EngineKey","EngineHandle","EngineFault","EngineHandles","EngineCache","EngineRep"],traitName:"Engine"});

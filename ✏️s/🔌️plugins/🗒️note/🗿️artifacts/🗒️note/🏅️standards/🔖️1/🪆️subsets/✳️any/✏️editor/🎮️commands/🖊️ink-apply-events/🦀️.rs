@@ -9,6 +9,7 @@
 //! `TransactionRef`. Design `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/📋️design.md` §5.
 #![allow(unexpected_cfgs)]
 
+use crate::editor::note::window::schema::{NoteInkToolEntry, NoteInkToolState};
 use crate::op::NoteMutation;
 use crate::schema::mutations::{apply_note_mutation, change_block_ink_width, change_block_locked, change_block_visible, create_asset, create_block, delete_block, drag_blocks, edit_block_ink_stroke, move_block, rename_block, replace_asset_payload, resize_block};
 use crate::schema::{block_bounds, block_id, block_locked, block_name, block_visible, find_block, find_block_location, insert_block, remove_block_from_tree, update_block_in_tree};
@@ -155,7 +156,7 @@ fn note_event_yields(base: &NoteSnapshot, provisional: &[(String, NoteMutation)]
 
 /// 🤏️ The host's record of a block drag — `{"kind":"drag","ids":[…],"dx":…,"dy":…}`, the offset from the gesture's
 /// start — as the ONE relative `drag-blocks` leaf it yields under the gesture key; the identity drag retracts it.
-fn note_gesture_yields(gesture_json: &str) -> Result<Vec<ToolYield<NoteMutation>>, Fault> {
+pub fn note_gesture_yields(gesture_json: &str) -> Result<Vec<ToolYield<NoteMutation>>, Fault> {
     let invalid = |detail: &str| Fault::new(FaultOrigin::App, FaultCode::new("note.ink-gesture.invalid"), detail.to_string());
     let record: serde_json::Value = serde_json::from_str(gesture_json).map_err(|_| invalid("the ink gesture record is not JSON"))?;
     if record.get("kind").and_then(serde_json::Value::as_str) != Some("drag") {
@@ -175,7 +176,7 @@ fn note_gesture_yields(gesture_json: &str) -> Result<Vec<ToolYield<NoteMutation>
 
 /// 🖋️ Decodes the ink-canvas host's `InkCanvasEvent[]` batch (framework `ink.document` block shapes) into
 /// note events — a malformed batch is a fault, never a silently empty gesture.
-fn decode_canvas_events(events_json: &str) -> Result<Vec<NoteCanvasEvent>, Fault> {
+pub fn decode_canvas_events(events_json: &str) -> Result<Vec<NoteCanvasEvent>, Fault> {
     let invalid = |detail: String| Fault::new(FaultOrigin::App, FaultCode::new("note.ink-events.invalid"), detail);
     let parsed = semio_framework_pack_json::parse(events_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| invalid(format!("ink events are not JSON: {error:?}")))?;
     let mut value = semio_framework_pack_json::to_dsl_value(&parsed);
@@ -281,32 +282,6 @@ pub fn note_ink_tool_clock() -> protocol::HybridLogicalTimestamp {
     semio_framework_tool_machine::authoring_clock(NOTE_INK_TOOL_TICK.fetch_add(1, Ordering::Relaxed))
 }
 
-/// 🧷️ One provisional entry of a persisted ink tool transaction, its mutation in value form so the window transient
-/// retires it like any other value.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
-#[value(rename_all = "camelCase")]
-pub struct NoteInkToolEntry {
-    pub key: String,
-    pub mutation: semio_framework_value::DslValue,
-}
-
-/// 💾️ A composite window's in-flight ink gesture, persisted in its window transient between dispatches — ephemeral
-/// local tool state, never history: the statechart configuration by stable ids, the verb, the admission and document
-/// revision it opened on, and the open transaction's provisional entries.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
-#[value(rename_all = "camelCase")]
-pub struct NoteInkToolState {
-    pub states: Vec<String>,
-    pub verb: String,
-    pub authoring_seed: String,
-    pub base_revision: String,
-    pub transaction: protocol::TransactionRef,
-    pub entries: Vec<NoteInkToolEntry>,
-}
-
-semio_framework_value::artifact_retire_struct!(NoteInkToolEntry { key, mutation });
-semio_framework_value::artifact_retire_struct!(NoteInkToolState { states, verb, authoring_seed, base_revision, transaction, entries });
-
 /// 🎚️ Where one dispatch sits in an ink gesture: a one-shot `Once`, a `Stream` tick into the window's open
 /// transaction, the `Commit` that ends it, or a host `Abort` with its reason.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -348,7 +323,7 @@ fn refusal(refused: ToolRefusal) -> Fault {
 impl NoteInkTool {
     /// 🚀️ The tool at rest for `<appId>#<verb>` under this admission's seed and document revision.
     pub fn start(verb: &str, authoring_seed: &str, base_revision: &str) -> Result<Self, ToolRefusal> {
-        let runner = ToolMachineRunner::start(format!("{}#{verb}", crate::editor::note::NOTE_PLAY_CONTROLLER_ID), protocol::ActorId(authoring_seed.into()), (), NoteInkToolHost)?;
+        let runner = ToolMachineRunner::start(format!("{}#{verb}", crate::editor::note::support::NOTE_PLAY_CONTROLLER_ID), protocol::ActorId(authoring_seed.into()), (), NoteInkToolHost)?;
         Ok(Self { runner, verb: verb.to_string(), authoring_seed: authoring_seed.to_string(), base_revision: base_revision.to_string() })
     }
 
@@ -359,7 +334,7 @@ impl NoteInkTool {
         let persisted = machine::PersistedSnapshot { version: 1, fingerprint: definition.fingerprint, states: state.states.clone(), history: Vec::new(), done: false };
         let entries = state.entries.iter().map(|entry| Ok((entry.key.clone(), semio_framework_value::FromValue::from_value(entry.mutation.clone()).map_err(|_| ToolRefusal::Closed)?))).collect::<Result<Vec<(String, NoteMutation)>, ToolRefusal>>()?;
         let snapshot = machine::restore::<ink_tool::InkTool, machine::NoMigrations>(&persisted, NoteInkToolContext, &[]).map_err(|_| ToolRefusal::Closed)?;
-        let runner = ToolMachineRunner::resume(format!("{}#{}", crate::editor::note::NOTE_PLAY_CONTROLLER_ID, state.verb), protocol::ActorId(state.authoring_seed.as_str().into()), (), snapshot, Some(ToolTransaction::resume(state.transaction.clone(), entries)), NoteInkToolHost)?;
+        let runner = ToolMachineRunner::resume(format!("{}#{}", crate::editor::note::support::NOTE_PLAY_CONTROLLER_ID, state.verb), protocol::ActorId(state.authoring_seed.as_str().into()), (), snapshot, Some(ToolTransaction::resume(state.transaction.clone(), entries)), NoteInkToolHost)?;
         Ok(Self { runner, verb: state.verb.clone(), authoring_seed: state.authoring_seed.clone(), base_revision: state.base_revision.clone() })
     }
 
@@ -479,7 +454,7 @@ pub struct InkApplyEvents {
 // after a gesture — selection is framework-owned `InteractionState` now, only ever mutated by the framework's own
 // injected `interactionSelect` handling; the field stays on the wire (the ink-canvas host still sends it) but is not
 // acted on.
-pub fn handle(payload: &InkApplyEvents, doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, semio_framework_plugin::NoConfig>, ctx: &mut crate::editor::note::NoteDispatchCtx) -> Result<Emit<NoteMutation, NoConfigMutation>, Fault> {
+pub fn handle(payload: &InkApplyEvents, doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, semio_framework_plugin::NoConfig>, ctx: &mut crate::editor::note::dispatch_ctx::NoteDispatchCtx) -> Result<Emit<NoteMutation, NoConfigMutation>, Fault> {
     let phase = NoteInkPhase::parse(payload.phase.as_deref(), payload.reason.as_deref())?;
     let events = if payload.events_json.is_empty() { Vec::new() } else { decode_canvas_events(&payload.events_json)? };
     let mut window_config_mutations = Vec::new();
@@ -502,7 +477,5 @@ pub fn handle(payload: &InkApplyEvents, doc: &ArtifactView<'_, NoteSnapshot>, _c
 }
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

@@ -421,4 +421,4 @@ pub(crate) fn enc_attr(a: &SvgAttr) -> String {
 }
 }
 
-pub(crate) fn enc_svg_node(node:&crate::schema::snapshot::SvgNode)->String {semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::diff::enc_xml_node(&crate::standards::v1_1::subsets::base::io::text::snapshot::native_svg_node(node))}
+pub fn enc_svg_node(node:&crate::schema::snapshot::SvgNode)->String {semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::diff::enc_xml_node(&crate::standards::v1_1::subsets::base::io::text::snapshot::native_svg_node(node))}

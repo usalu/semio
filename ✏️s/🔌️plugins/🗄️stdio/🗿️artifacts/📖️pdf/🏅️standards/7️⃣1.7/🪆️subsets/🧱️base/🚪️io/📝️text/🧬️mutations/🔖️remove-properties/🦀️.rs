@@ -3,7 +3,7 @@
 pub const OPCODE: &str = "remove-properties";
 pub const TEXT_OPCODE: &str = OPCODE;
 
-use crate::standards::v1_7::subsets::base::schema::mutations::RemoveProperties;
+use crate::standards::v1_7::subsets::base::schema::mutations::remove_properties::RemoveProperties;
 
 /// 🖨️ Prints this direct payload through its schema-derived JSON representation.
 pub fn print(payload: &RemoveProperties) -> Result<String, String> {

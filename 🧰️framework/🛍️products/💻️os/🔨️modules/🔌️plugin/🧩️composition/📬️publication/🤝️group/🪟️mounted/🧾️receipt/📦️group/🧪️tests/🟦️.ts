@@ -12,11 +12,10 @@ test("mounted group receipt preserves every causal lane before an allocation-fre
   const patched=applyPatch({},Object.entries(expected).map(([key,value])=>({op:"add" as const,path:"/"+key,value})),true,false).newDocument;
   expect(patched).toEqual(expected);
   expect(Buffer.byteLength(row.invocationId,"utf8")).toBe(new TextEncoder().encode(row.invocationId).byteLength);
-  for(const stop of law.cancelStops){expect(stop>=0).toBe(true);expect(applyPatch({receipt:expected},[{op:"remove",path:"/receipt"}],true,false).newDocument).toEqual({});}
+  for(const stop of law.cancelStops){expect(stop>=0).toBe(true);expect(applyPatch<{receipt?:typeof expected}>({receipt:expected},[{op:"remove",path:"/receipt"}],true,false).newDocument).toEqual({});}
  }
  const source=readFileSync(resolve(root,"🦀️.rs"),"utf8");
  for(const method of ["next_capacity_byte_demand","advance_metadata","push_mutation_triple","push_member_edit","next_close_byte_demand","close_step","take"]){expect(source.includes("fn "+method+"(")).toBe(true);}
- console.log("[DEBUG] mounted group receipt neutral Node UTF8/RFC6902 preserves all causal fields, three-lane order, nine cancellation stops and constant decision transfer");
 });
 
 test("mounted group child metadata borrows original completed rows across independent backing",()=>{
@@ -31,5 +30,4 @@ test("mounted group child metadata borrows original completed rows across indepe
  const source=readFileSync(resolve(root,"🦀️.rs"),"utf8");
  expect(source.includes("trait MountedGroupPreparedChildEdits")).toBe(true);
  expect(source.includes("Ready(&'a dyn MountedGroupPreparedChildEdits)")).toBe(true);
- console.log("[DEBUG] completed member rows project original child metadata in source order with Node JSON/RFC6902 independent oracle");
 });

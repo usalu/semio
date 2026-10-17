@@ -1,15 +1,16 @@
 //! 📏️ borrowed Rewriting bounds retain actual fields and pay only concrete traversal frontiers.
-use crate::RewritingSnapshot;
-use crate::standards::v1::subsets::any::schema::{Pattern,Rhs};
-use semio_s_artifact_trinity_jack::{JackSnapshot,PropertyDef};
+use crate::standards::v1::subsets::any::schema::snapshot::RewritingSnapshot;
+use crate::standards::v1::subsets::any::schema::rule::{Pattern, Rhs};
+use semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::snapshot::JackSnapshot;
+use semio_framework_graph_manifest::PropertyDef;
 use semio_framework_graph_manifest::PropertyValue;
 use semio_framework_value::{ValueError,ValueType};
 use semio_framework_os_kernel::sqlite_snapshot::{SqliteSnapshotControl,artifact::NativeEncodingBound};
 type Bound<'a,'p>=NativeEncodingBound<'a,'p>;
-fn text(value:&str,bound:&mut Bound<'_,'_>)->Result<(),ValueError>{bound.add(128)?;bound.repeated(value.len(),6)}
+pub fn text(value:&str,bound:&mut Bound<'_,'_>)->Result<(),ValueError>{bound.add(128)?;bound.repeated(value.len(),6)}
 fn optional(value:&Option<String>,bound:&mut Bound<'_,'_>)->Result<(),ValueError>{match value{Some(value)=>text(value,bound),None=>bound.add(128)}}
-fn pattern(value:&Pattern,bound:&mut Bound<'_,'_>)->Result<(),ValueError>{bound.add(512)?;text(&value.left_var,bound)?;text(&value.left_kind,bound)?;for value in[&value.edge_var,&value.edge_kind,&value.right_var,&value.right_kind]{optional(value,bound)?;}Ok(())}
-fn property(value:&PropertyValue,bound:&mut Bound<'_,'_>)->Result<(),ValueError>{
+pub fn pattern(value:&Pattern,bound:&mut Bound<'_,'_>)->Result<(),ValueError>{bound.add(512)?;text(&value.left_var,bound)?;text(&value.left_kind,bound)?;for value in[&value.edge_var,&value.edge_kind,&value.right_var,&value.right_kind]{optional(value,bound)?;}Ok(())}
+pub fn property(value:&PropertyValue,bound:&mut Bound<'_,'_>)->Result<(),ValueError>{
  let mut pending=bound.allocate_frontier(1)?;bound.push_frontier(&mut pending,value)?;
  while let Some(value)=pending.pop(){bound.add(256)?;match value{
   PropertyValue::Null|PropertyValue::Bool(_)=>{},PropertyValue::Number(_)=>bound.add(1100)?,PropertyValue::String(value)=>text(value,bound)?,
@@ -30,7 +31,7 @@ fn jack(value:&JackSnapshot,bound:&mut Bound<'_,'_>)->Result<(),ValueError>{
  for kind in &value.manifest.port_kinds{bound.add(512)?;text(&kind.name,bound)?;declarations(&kind.properties,bound)?;}
  Ok(())
 }
-fn rhs(value:&Rhs,bound:&mut Bound<'_,'_>)->Result<(),ValueError>{
+pub fn rhs(value:&Rhs,bound:&mut Bound<'_,'_>)->Result<(),ValueError>{
  bound.add(1024)?;for values in[&value.create,&value.merge]{for value in values{pattern(value,bound)?;}}
  for value in &value.delete{text(value,bound)?;}
  for value in &value.set{bound.add(512)?;text(&value.var,bound)?;text(&value.prop,bound)?;property(&value.value,bound)?;}

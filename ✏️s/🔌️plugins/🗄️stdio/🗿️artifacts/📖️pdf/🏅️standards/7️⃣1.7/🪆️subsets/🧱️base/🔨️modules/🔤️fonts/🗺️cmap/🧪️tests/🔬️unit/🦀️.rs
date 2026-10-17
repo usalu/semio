@@ -1,4 +1,9 @@
-use super::*;
+use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfCidMapping, PdfCodespaceRange, PdfEmbeddedCMap, PdfToUnicode, PdfToUnicodeMapping};
+#[allow(unused_imports)]
+use crate::standards::v1_7::subsets::base::modules::lexer::{Lexer, Token};
+#[allow(unused_imports)]
+use crate::standards::v1_7::subsets::base::schema::snapshot::PdfObject;
+use crate::standards::v1_7::subsets::base::modules::fonts::cmap::*;
 
 #[test]
 fn to_unicode_round_trips_through_print_and_parse() {

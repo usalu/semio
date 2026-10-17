@@ -20,16 +20,14 @@ export function sampled<Amount>(few: Amount, full: Amount, more: Amount): Amount
 export default {
   root,
   resolve: {
-    alias: {
-      "@semio-tech/pets": resolve(root, "🟦️.ts"),
-    },
+    alias: [{ find: /^@semio-tech\/pets$/u, replacement: resolve(root, "🟦️.ts") }],
   },
   test: {
     root,
     name: "@semio-tech/pets",
     mode: "test",
     environment: "node",
-    include: ["../../🔨️modules/*/🧪️tests/🔬️unit/🟦️.ts", "../../🧬️schema/🧪️tests/🔬️unit/🟦️.ts", "../../🔨️modules/🚧️clearance/🧪️tests/📦️boxes-and-places/🟦️.ts", "../../🔨️modules/🚧️clearance/🧪️tests/📜️claims-and-order/🟦️.ts", "../../🔨️modules/🚧️clearance/🧪️tests/🪑️seating-and-heads/🟦️.ts", "../../🔨️modules/🚧️clearance/🧪️tests/🏛️world-laws/🟦️.ts", "../../🔨️modules/🎪️stage/🧪️tests/🚪️arrival-and-gaze/🟦️.ts", "../../🔨️modules/🎪️stage/🧪️tests/🚶️walking-and-encounters/🟦️.ts", "../../🔨️modules/🎪️stage/🧪️tests/🎬️frames-and-summoning/🟦️.ts", "../../🔨️modules/🎪️stage/🧪️tests/📏️distance-and-turning/🟦️.ts", "../../🔨️modules/🎪️stage/🧪️tests/👁️attention-and-gait/🟦️.ts", "../../🔨️modules/🎪️stage/🧪️tests/🧠️determinism-and-mind/🟦️.ts", "../../🔨️modules/🎪️stage/🧪️tests/🦾️body-and-gear/🟦️.ts", "../../🔨️modules/🎪️stage/🧪️tests/🪄️mischief-and-arithmetic/🟦️.ts"],
+    include: ["../../🔨️modules/*/🧪️tests/🔬️unit/🟦️.ts", "../../🔨️modules/💗️feeling/🧪️tests/⏳️mood-over-time-and-face/🟦️.ts", "../../🔨️modules/💗️feeling/🧪️tests/🎭️appraisal-wishes-and-contagion/🟦️.ts", "../../🔨️modules/💗️feeling/🧪️tests/🪜️species-states-and-tricks/🟦️.ts", "../../🔨️modules/💗️feeling/🧪️tests/⚗️encounters-and-chemistry/🟦️.ts", "../../🔨️modules/🧗️climbing/🧪️tests/🪜️ladder-suites/🟦️.ts", "../../🔨️modules/🧗️climbing/🧪️tests/🪝️rope-and-shot-suites/🟦️.ts", "../../🔨️modules/🧗️climbing/🧪️tests/🗺️route-and-determinism-suites/🟦️.ts", "../../🔨️modules/🚧️clearance/🧪️tests/📦️boxes-and-places/🟦️.ts", "../../🔨️modules/🚧️clearance/🧪️tests/📜️claims-and-order/🟦️.ts", "../../🔨️modules/🚧️clearance/🧪️tests/🪑️seating-and-heads/🟦️.ts", "../../🔨️modules/🚧️clearance/🧪️tests/🏛️world-laws/🟦️.ts", "../../🔨️modules/🎪️stage/🧪️tests/🚪️arrival-and-gaze/🟦️.ts", "../../🔨️modules/🎪️stage/🧪️tests/🚶️walking-and-encounters/🟦️.ts", "../../🔨️modules/🎪️stage/🧪️tests/🎬️frames-and-summoning/🟦️.ts", "../../🔨️modules/🎪️stage/🧪️tests/📏️distance-and-turning/🟦️.ts", "../../🔨️modules/🎪️stage/🧪️tests/👁️attention-and-gait/🟦️.ts", "../../🔨️modules/🎪️stage/🧪️tests/🧠️determinism-and-mind/🟦️.ts", "../../🔨️modules/🎪️stage/🧪️tests/🦾️body-and-gear/🟦️.ts", "../../🔨️modules/🎪️stage/🧪️tests/🪄️mischief-and-arithmetic/🟦️.ts"],
     coverage: { include: ["🟦️.ts", "../../🧬️schema/🟦️.ts", "../../🔨️modules/**/🟦️.ts"] },
     passWithNoTests: false,
   },

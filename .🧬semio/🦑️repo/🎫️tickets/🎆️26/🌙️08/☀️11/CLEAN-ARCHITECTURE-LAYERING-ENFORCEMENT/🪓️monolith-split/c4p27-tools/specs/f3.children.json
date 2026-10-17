@@ -1,0 +1,72 @@
+[
+ {
+  "dir": "📦️program-sessions",
+  "doc": "/** 📦️ Shell program sessions: the mixed-value inspector placeholder, the catalog program module and loaded program state, the local and session program readers, the plugin panel status and canvas status, and the active session and space program entries. */",
+  "lines": [
+   [
+    79,
+    163
+   ]
+  ]
+ },
+ {
+  "dir": "🔒️boot-and-locks",
+  "doc": "/** 🔒️ Shell boot configuration: the app role environment, the option locks and their resolution and merging, the shell defaults, the brand and introduction rules and the durable storage clearing. */",
+  "lines": [
+   [
+    190,
+    345
+   ]
+  ]
+ },
+ {
+  "dir": "👥️peer-interaction",
+  "doc": "/** 👥️ Shell peer interaction: the sync card kind, the history entries, the presence peers and the per-domain roster of what peers select and hover. */",
+  "lines": [
+   [
+    348,
+    414
+   ]
+  ]
+ },
+ {
+  "dir": "🗃️state-shapes",
+  "doc": "/** 🗃️ Shell state shapes: every slice of the shell store (plugin runtime, windows, action panes, panels, layout, overlays, tutorial, preferences, sync, inference, merge, command panel) and the updatable field helpers. */",
+  "lines": [
+   [
+    419,
+    676
+   ]
+  ]
+ },
+ {
+  "dir": "🎛️shell-actions",
+  "doc": "/** 🎛️ Shell actions: the closed union of every action the shell reducers accept. */",
+  "lines": [
+   [
+    678,
+    758
+   ]
+  ]
+ },
+ {
+  "dir": "♻️slice-reducers",
+  "doc": "/** ♻️ Shell slice reducers: the loaded program upsert and the reducer of every store slice. */",
+  "lines": [
+   [
+    762,
+    1113
+   ]
+  ]
+ },
+ {
+  "dir": "🕹️shell-store",
+  "doc": "/** 🕹️ Shell store: the local interaction store, the root reducer, the selectors and the initial shell state. */",
+  "lines": [
+   [
+    1118,
+    1264
+   ]
+  ]
+ }
+]

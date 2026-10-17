@@ -26,6 +26,4 @@ impl Serializer<WriterSnapshot> for WriterIntoDocx {
 }
 //#endregion 🔖️Serializer
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

@@ -9,7 +9,7 @@ import { describe, expect, it } from "vitest";
 import { type HttpTransport } from "@semio-tech/framework-server";
 import { handleActorId, learnerTag, type RecordAnswerCommand } from "@semio-tech/quiz";
 import { DEFAULT_BOARD, ProctorClient, ProctorUnavailable, QuizApp, QuizSession, lastSubmittedRunOf, learnerName, localStore, memoryStorageOrigin, newId, openRunOf, overallLeaderboard, quizText, shownLeaderboard, type PresenceConnect, type PresenceSocket } from "@semio-tech/quiz-react";
-import stylesheet from "../../🎯️targets/⚛️react/🎨️.css?raw";
+import { quizStylesheet as stylesheet } from "@semio-tech/quiz-react/stylesheet";
 import { QUIZ, CATALOG, decoder, PROJECTION_LAG, FakeProctor, sloppyAnswer, seedAnonymousRival, TIMING, QUIET_PRESENCE, navbar, app, answerCurrentTask, sessionOn, startedRun, classification, everyItemTo } from "../🧰️learner-journey-kit/🟦️.tsx";
 
 describe("🚶️ learner journey", () => {

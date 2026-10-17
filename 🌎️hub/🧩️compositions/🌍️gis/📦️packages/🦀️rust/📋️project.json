@@ -162,6 +162,23 @@
       "dependsOn": [
         "component"
       ]
+    },
+    "hub-edit-durability-check": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [
+        {
+          "projects": [
+            "@semio-tech/framework-os-mcp-rs"
+          ],
+          "target": "build"
+        }
+      ],
+      "options": {
+        "cwd": "🌎️hub/🧩️compositions/🌍️gis/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts hub-edit-durability-check"
+      },
+      "outputs": []
     }
   }
 }

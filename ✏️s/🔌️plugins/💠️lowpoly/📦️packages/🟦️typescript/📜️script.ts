@@ -4,6 +4,7 @@ import { receiveScriptProcessInvocation } from "../../../../../🧰️framework/
 import { runCmd } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
+import { readModuleTreeSource } from "../../../../../🧰️framework/📦️packages/🟦️typescript/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
 import Ajv from "ajv";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
@@ -52,7 +53,7 @@ class TestScript extends BundleScript {
     const root = resolve(import.meta.dir, "../..");
     const policySchema = JSON.parse(readFileSync(resolve(root, "🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json"), "utf8")).$defs.LowpolyPublicationPolicyV1;
     const fixture = JSON.parse(readFileSync(resolve(root, "🧪️tests/🧫️fixtures/🧪️interactive-job/🔣️.json"), "utf8")) as Fixture;
-    const source = readFileSync(resolve(root, "🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs"), "utf8");
+    const source = readModuleTreeSource(resolve(root, "🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs"));
     const schemaSource = readFileSync(resolve(root, "🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs"), "utf8");
     const sessionSource = readFileSync(resolve(root, "🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🖌️session/🦀️.rs"), "utf8");
     const sourceCollapsed = source.replace(/\s+/g, " ").replace(/,\s*\}/g, " }");

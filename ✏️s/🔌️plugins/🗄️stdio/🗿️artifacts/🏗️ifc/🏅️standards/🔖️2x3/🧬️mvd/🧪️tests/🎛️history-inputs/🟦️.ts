@@ -15,6 +15,5 @@ test("IFC model view committed history intent agrees with independent RFC6902",(
  for(const subset of ["🤝️cv20","🏢️cobie","🧮️sav"]){
   const leaf=ajv.compile(read(`🪆️subsets/${subset}/🧬️schema/🧬️mutations/👁️set-view-definition/🧬️schema/🔣️.json`));expect(leaf(mutation.SetViewDefinition)).toBe(true);
   const path=resolve(root,`🪆️subsets/${subset}/🧪️tests/🧫️fixtures/🧬️history-edits/👁️view/🦠️mutation/🔣️.json`);expect(existsSync(path)).toBe(true);expect(JSON.parse(readFileSync(path,"utf8"))).toEqual({mutation,before,after});
-  console.log("[DEBUG] IFC native model view history intent agrees with RFC6902",subset);
  }
 });

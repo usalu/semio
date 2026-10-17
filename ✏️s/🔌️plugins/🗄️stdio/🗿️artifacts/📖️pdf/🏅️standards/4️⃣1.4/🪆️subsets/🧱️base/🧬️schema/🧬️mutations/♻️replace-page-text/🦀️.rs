@@ -1,6 +1,5 @@
 //! 📝️ Direct replace-page-text payload, sparse diff, concrete inverse, and laws.
 
-use super::PdfMutation;
 use crate::standards::v1_4::subsets::base::schema::diff::{PdfDiff, PdfPageDiff, PdfPageModified, PdfPagesDiff};
 use crate::standards::v1_4::subsets::base::schema::snapshot::PdfSnapshot;
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
@@ -23,7 +22,10 @@ impl ReplacePageText {
     }
 }
 
-impl MutationKind<PdfSnapshot, PdfMutation> for ReplacePageText {
+impl<Op> MutationKind<PdfSnapshot, Op> for ReplacePageText
+where
+    Op: protocol::Mutation<PdfSnapshot, Diff = PdfDiff> + From<ReplacePageText>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "replace", entity: "page", kind: "replace-page-text", record: "ReplacedPageText" };
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
@@ -33,12 +35,12 @@ impl MutationKind<PdfSnapshot, PdfMutation> for ReplacePageText {
         MutationOutcome::new(PdfDiff { pages: Some(PdfPagesDiff { modified: vec![PdfPageModified { index: self.index, diff: PdfPageDiff { text: Some(self.text.clone()), ..Default::default() } }], ..Default::default() }) })
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
         if !self.valid(base) {
             return Vec::new();
         }
-        vec![PdfMutation::ReplacePageText(ReplacePageText { index: self.index, text: base.pages[self.index].text.clone() })]
+        vec![Op::from(ReplacePageText { index: self.index, text: base.pages[self.index].text.clone() })]
     
     })())
 }
@@ -57,11 +59,7 @@ impl MutationKind<PdfSnapshot, PdfMutation> for ReplacePageText {
 //#endregion 🔖️Codecs
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔄️round/🦀️.rs"]
-mod tests_round_trips_the_concrete_inverse;
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
+
 //#endregion 🧪️Tests

@@ -1,6 +1,5 @@
 //! Puzzle5d mutation — `ChangePart2dLocked`: changes a part's 2D-projection locked flag.
 use crate::standards::v1::subsets::any::schema::diff::Puzzle5dDiff;
-use crate::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation;
 use crate::Puzzle5dSnapshot;
 
 //#region 🔖️Mutation
@@ -17,13 +16,16 @@ pub struct ChangePart2dLocked {
     pub new_locked: Option<bool>,
 }
 
-impl protocol::MutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for ChangePart2dLocked {
+impl<Op> protocol::MutationKind<Puzzle5dSnapshot, Op> for ChangePart2dLocked
+where
+    Op: protocol::Mutation<Puzzle5dSnapshot, Diff = Puzzle5dDiff> + From<ChangePart2dLocked>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "part", kind: "change-part2d-locked", record: "ChangedPart2dLocked" };
 
     fn diff(&self, base: &Puzzle5dSnapshot) -> protocol::MutationOutcome<Puzzle5dDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Puzzle5dSnapshot) -> Result<Vec<Puzzle5dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Puzzle5dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     
@@ -39,6 +41,9 @@ impl protocol::MutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for ChangePart2d
 //#endregion 🔖️Mutation
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_part_2d_locked(id: String, new_locked: Option<bool>) -> Puzzle5dMutation {
-    Puzzle5dMutation::ChangePart2dLocked(ChangePart2dLocked { id, new_locked })
+pub fn change_part_2d_locked<Op>(id: String, new_locked: Option<bool>) -> Op
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::change_part_2d_locked::ChangePart2dLocked>,
+{
+    Op::from(ChangePart2dLocked { id, new_locked })
 }

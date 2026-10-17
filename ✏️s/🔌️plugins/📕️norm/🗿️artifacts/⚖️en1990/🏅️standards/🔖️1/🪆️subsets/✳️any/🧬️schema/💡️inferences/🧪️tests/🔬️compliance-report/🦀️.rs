@@ -1,4 +1,5 @@
 use crate::*;
+use semio_framework_test_fixtures::fixture_path;
 use semio_s_plugin_norm_compliance::CheckStatus;
 use semio_s_artifact_norm_en1990_checks::NaDe;
 
@@ -158,7 +159,7 @@ async fn geo_and_equ_stab_checks_emitted() {
 
 #[semio_framework_async_macros::async_test]
 async fn python_oracle_matches_evaluate_json_within_half_percent() {
-    let oracle = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/⚖️compliance/🐍️.py");
+    let oracle = fixture_path!("../../../🧪️tests/⚖️compliance/🐍️.py");
     assert!(oracle.exists(), "missing oracle {}", oracle.display());
     for (name, doc) in [
         ("default", En1990Snapshot::default()),

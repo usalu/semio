@@ -1,10 +1,33 @@
 //! \u{1f9ea}️ Own PDF 1.4 page drafts, mutation inverses and address admission.
-use super::*;
+use crate::standards::v1_4::subsets::base::schema::snapshot::{PageDoc, PdfSnapshot};
+use crate::standards::v1_4::subsets::base::schema::mutations::{PdfMutation, ResizePage};
+use semio_framework_plugin::TreeWindows;
+use semio_framework_plugin::app::DocumentWindowKit;
+use semio_framework_test_fixtures::fixture_text;
+use semio_framework_ui_contract::UiPublicationRevision;
+use semio_framework_ui_locale::Locale;
+use semio_framework_value::DslValue;
+#[allow(unused_imports)]
+use crate::standards::v1_4::subsets::base::schema::mutations::{InsertPage, RemovePage, MovePage, ReplacePageText};
+#[allow(unused_imports)]
+use protocol::{Mutation, OpText};
+#[allow(unused_imports)]
+use semio_framework_plugin::{Fault, FaultCode, FaultOrigin, ActionArgDef, ActionDefinition, ActionKind, WindowKindDefinition, PluginAssemblyError, UiAssemblyResult, Buildable, HasBase, UiText};
+#[allow(unused_imports)]
+use semio_framework_plugin::app::{EditableDocumentPage, EditableDocumentView, WindowKit};
+#[allow(unused_imports)]
+use semio_framework_plugin::plugin_app_close_prelude as ui;
+#[allow(unused_imports)]
+use semio_framework_ui_contract::BuiltNode;
+#[allow(unused_imports)]
+use semio_framework_ui_locale::LocalizedLabel;
+use crate::editor::pdf14::page::{index};
+use crate::editor::pdf14::page::*;
 use protocol::{MutationDiff, OpBinary};
-const CORPUS: &str = include_str!("../../../🧪️tests/🧫️fixtures/📄️resolved-page-domain/🔣️.json");
+static CORPUS: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧱️base/✏️editor/🧪️tests/🧫️fixtures/📄️resolved-page-domain/🔣️.json"));
 fn fixture() -> crate::standards::v1_4::subsets::base::schema::snapshot::PdfSnapshot {
     use crate::standards::v1_4::subsets::base::schema::snapshot::{PdfSnapshot, PageDoc};
-    let fixture: serde_json::Value = serde_json::from_str(CORPUS).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str((*CORPUS)).unwrap();
     PdfSnapshot { schema: fixture["schema"].as_str().unwrap().into(), pages: fixture["pages"].as_array().unwrap().iter().map(|page| PageDoc { width: page["width"].as_f64().unwrap(), height: page["height"].as_f64().unwrap(), text: page["text"].as_str().unwrap().into() }).collect() }
 }
 
@@ -27,7 +50,6 @@ fn own14_page_view_retains_the_exact_publication_and_each_addressed_text() {
         assert!(projection.contains("page-0-item-0"));
         assert!(projection.contains("page-1-item-0"));
     }
-    eprintln!("[DEBUG] own14 two-page drafts keep real publication addresses and both locales");
 }
 
 #[test]
@@ -52,7 +74,6 @@ fn own14_page_text_admission_keeps_geometry_and_inverse() {
         assert!(text_edit_mutation(&original, page, item, token, "edited").is_err());
     }
     assert_eq!(original, fixture());
-    eprintln!("[DEBUG] own14 text admission rejects stale and absent targets and restores inverse");
 }
 
 #[test]
@@ -79,5 +100,4 @@ fn own14_page_structure_actions_only_emit_their_actual_mutation_kind() {
     assert!(edit_from_action("set-page-size", Some(&wrong)).is_err());
     let out = PdfMutation::ResizePage(ResizePage { index: 2, width: 8.0, height: 9.0 }).print_op();
     assert!(emit_page_edit(&base, "set-page-size", &out).is_err());
-    eprintln!("[DEBUG] own14 page-size command actual typed leaf and exact inverse");
 }

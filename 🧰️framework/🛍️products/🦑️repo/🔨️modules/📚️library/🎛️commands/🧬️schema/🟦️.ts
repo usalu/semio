@@ -1,4 +1,4 @@
-/** 🧾️ `schema` command family: generate, check, compile, docs, entries, oracle, test, verify and audit.
+/** 🧾️ `schema` command family: generate, check, compile, docs, entries, oracle, parsers, test, verify and audit.
  * @see 📜️script.ts
  */
 import { createIssuedResourceControlV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -10,6 +10,7 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync
 import { tmpdir } from "node:os";
 import { dirname, isAbsolute, join } from "node:path";
 import { pathToFileURL } from "node:url";
+import { checkParsers, parseProjectionArguments, projectParsers, renderParserCheck, renderProjectionReport } from "./🪞️parser-projection/🟦️.ts";
 
 //#region 🔖️SchemaScript
 /** 🧪️ The tracked vitest project of `framework.schema`, which declares the module's own third-party oracle specs. */
@@ -36,10 +37,11 @@ export class SchemaScript extends Script {
     if (sub === "audit") return this.audit(rest);
     if (sub === "docs") return this.docs();
     if (sub === "oracle") return this.oracle();
+    if (sub === "parsers") return this.parsers(rest);
     if (sub === "compile") return this.compile(rest);
     if (sub === "entries") return this.entries(rest);
     if (sub === "test") return this.test(rest);
-    throw new Error(`unknown schema subcommand: ${JSON.stringify(sub)} (expected audit | check | compile | docs | entries | generate | oracle | test | verify).`);
+    throw new Error(`unknown schema subcommand: ${JSON.stringify(sub)} (expected audit | check | compile | docs | entries | generate | oracle | parsers | test | verify).`);
   }
 
   private inventory(): SchemaScopeInventory {
@@ -103,6 +105,39 @@ export class SchemaScript extends Script {
     }
     writeFileSync(abs, rendered);
     console.log(`[schema generate] ${rel}: ${Object.keys(inventory.catalog.scopes).length} scopes, ${inventory.diagnostics.length} diagnostics.`);
+  }
+
+  /**
+   * 🪞️ `parsers report|apply|check`: projects the schema exports of a scope into typed `parse<Export>` entry points
+   * (`--under`, `--formats`, `--closing`, `--replace`, `--restate`, `--all`), or gates their freshness (`check`). Ctrl-C cancels between modules.
+   * @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🧬️schema/🪞️parser-projection/🟦️.ts
+   */
+  private parsers(args: string[]): void {
+    const options = parseProjectionArguments(this.root, args);
+    if (options.command === "apply" && !options.closing && options.replace.size === 0 && options.restate.size === 0 && !options.all) {
+      throw new Error("[schema parsers] apply without --closing, --replace or --restate would project every undeclared export in every format; pass --all to do that on purpose.");
+    }
+    const controller = new AbortController();
+    const cancel = (): void => controller.abort(new Error("[schema parsers] cancelled."));
+    process.once("SIGINT", cancel);
+    process.once("SIGTERM", cancel);
+    let seen = 0;
+    const onProgress = (module: string): void => {
+      seen += 1;
+      if (seen % 250 === 0) console.error(`[schema parsers] ${seen} modules, at ${module}`);
+    };
+    try {
+      if (options.command === "check") {
+        const check = checkParsers({ root: this.root, signal: controller.signal, onProgress });
+        process.stdout.write(renderParserCheck(check));
+        if (!check.ok) process.exitCode = 1;
+        return;
+      }
+      process.stdout.write(renderProjectionReport(projectParsers({ ...options, signal: controller.signal, onProgress })));
+    } finally {
+      process.off("SIGINT", cancel);
+      process.off("SIGTERM", cancel);
+    }
   }
 
   /** 🚦️ Reports scope invariant violations; --fixture-boundary runs the independent example-authority gate. */

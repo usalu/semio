@@ -77,4 +77,12 @@ use semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep;
 /// [`Plugin::builder`](crate::Plugin::builder) + [`plugin_exports!`](crate::plugin_exports).
 /// The retired `semio_plugin!` macro is gone — typestate on the builder makes missing identity fields a compile error.
 #[cfg(test)]
-include!("../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs");
+use crate::builder::PluginBuilder;
+
+
+
+
+
+
+
+

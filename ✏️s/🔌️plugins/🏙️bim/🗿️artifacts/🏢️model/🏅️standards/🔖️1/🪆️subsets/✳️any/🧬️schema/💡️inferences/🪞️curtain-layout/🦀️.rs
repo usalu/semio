@@ -137,14 +137,6 @@ pub fn dependency(snapshot: &ModelSnapshot, id: &str, curtain: &CurtainWall) -> 
 }
 //#endregion 🔖️Geometry
 
-//#region 🔖️Projection
-/// 🪞️ The layout of every curtain wall (the `CurtainLayout` nodes of the model graph).
-#[cfg(test)]
-pub fn compute_curtain_layout(snapshot: &ModelSnapshot) -> BTreeMap<String, CurtainLayout> {
-    std::mem::take(&mut super::super::model_graph::infer_selected::<{ super::super::model_graph::kinds::CURTAINS }>(snapshot).curtain_layout)
-}
-//#endregion 🔖️Projection
-
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;

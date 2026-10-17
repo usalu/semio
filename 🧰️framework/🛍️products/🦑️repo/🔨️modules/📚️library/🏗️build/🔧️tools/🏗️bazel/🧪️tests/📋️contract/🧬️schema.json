@@ -1,0 +1,98 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "contracts",
+    "vectors",
+    "retiredIds"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "contracts": {
+      "type": "array",
+      "minItems": 12,
+      "maxItems": 12,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "component",
+          "definition",
+          "removed",
+          "sha256"
+        ],
+        "properties": {
+          "component": {
+            "type": "string",
+            "maxLength": 256
+          },
+          "definition": {
+            "enum": [
+              "ActionBirth",
+              "OutputSnapshot",
+              "ModuleSetup",
+              "ImplementationPolicy",
+              "Planner",
+              "Implementation",
+              "Command",
+              "PreparationReceipt",
+              "MaterializedPaths",
+              "PreparationObservation",
+              "OpenLifetime",
+              "StorageLayout"
+            ]
+          },
+          "removed": {
+            "type": "string",
+            "maxLength": 256
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          }
+        }
+      }
+    },
+    "retiredIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "vectors": {
+      "type": "array",
+      "minItems": 12,
+      "maxItems": 12,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "component",
+          "reference",
+          "value",
+          "admit"
+        ],
+        "properties": {
+          "component": {
+            "type": "string",
+            "maxLength": 256
+          },
+          "reference": {
+            "type": "string",
+            "maxLength": 128
+          },
+          "value": {},
+          "admit": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

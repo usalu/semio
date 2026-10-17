@@ -8,9 +8,9 @@ use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
 /// 🎯️ One dragged path point: the path layer, the segment that owns the point and which of its points.
 #[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
 #[dsl(keyword = "path-point-target")]
 pub struct DrawingPathPointTarget {
     pub layer_id: semio_framework_value::paged::PagedUtf8<{usize::MAX}>,
@@ -22,9 +22,9 @@ pub struct DrawingPathPointTarget {
 #[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner=semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
 #[dsl(keyword = "drag-path-points")]
 pub struct DragPathPoints {
     pub targets: semio_framework_value::list::PagedList<DrawingPathPointTarget, {usize::MAX}>,

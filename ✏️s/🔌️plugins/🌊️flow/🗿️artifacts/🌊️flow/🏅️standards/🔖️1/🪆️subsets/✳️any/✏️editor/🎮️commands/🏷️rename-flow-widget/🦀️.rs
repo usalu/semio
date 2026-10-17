@@ -30,12 +30,12 @@ pub fn handle(payload: &RenameFlowWidget, doc: &ArtifactView<'_, FlowSnapshot>, 
 /// new id is refused by name.
 pub fn rename_edit(payload: &RenameFlowWidget, composed: &FlowSnapshot) -> Result<Emit<FlowMutation, NoConfigMutation>, Fault> {
     let refuse = |code: &str, message: String| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new(code), message);
-    let mut edit = crate::editor::flow::edit_rules::ContentEdit::new(crate::editor::flow::flow_composed_content(composed)?);
+    let mut edit = crate::editor::flow::edit_rules::ContentEdit::new(crate::editor::flow::host::flow_composed_content(composed)?);
     if !edit.content.nodes.iter().any(|node| node.id == payload.old_id) {
         return Err(refuse("mutation.target-missing", format!("renameFlowWidget found no widget \"{}\"", payload.old_id)));
     }
     if !edit.rename_node(&payload.old_id, payload.value.trim()) {
         return Err(refuse("flow.widget-id-unavailable", format!("renameFlowWidget cannot rename \"{}\" to \"{}\": the id is empty or taken", payload.old_id, payload.value.trim())));
     }
-    Ok(crate::editor::flow::flow_content_leaves_emit(&composed.content.child_id, edit.leaves))
+    Ok(crate::editor::flow::host::flow_content_leaves_emit(&composed.content.child_id, edit.leaves))
 }

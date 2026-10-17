@@ -1,6 +1,7 @@
 //! 🚧️ `set-brush-placement-contact-tolerance` command.
+use crate::editor::puzzle5d::entities::puzzle5d_absolute_or_delta;
 
-use crate::editor::puzzle5d::{puzzle5d_absolute_or_delta, Puzzle5dActionCtx};
+use crate::editor::puzzle5d::interaction::Puzzle5dActionCtx;
 use semio_framework_pack_json::Value;
 
 /// 🖌️ The collision budget every brush/fill placement is tested against — an absolute `value` or a

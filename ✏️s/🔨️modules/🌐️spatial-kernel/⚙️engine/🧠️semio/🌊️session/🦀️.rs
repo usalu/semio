@@ -68,7 +68,6 @@ fn retired_analytic_mesh_metadata_obeys_exact_byte_grants() {
         let progress=owner.step(grant).unwrap().progress();assert!(progress.fits(grant));released+=progress.released_bytes;turns+=1;assert!(turns<1000000);
     }
     assert!(released>=count*label_bytes,"metadata labels require admitted physical release");
-    println!("[DEBUG] Analytic metadata labels={count} repeatedEightByteRefusal=true releasedBytes={released} turns={turns}");
 }
 
 #[cfg(test)]
@@ -116,7 +115,6 @@ mod physical_session_custody {
         }
         assert_eq!(retained+born,freed);assert_eq!(final_shell,1);assert!(refusals>0);
         caller.retire(stock);
-        println!("[DEBUG] Original Session actualWeakPin=true warmedPartialMesh=true retainedSource={retained} admittedBirth={born} physicalRelease={freed} repeatedEightByteRefusals={refusals} turns={turns} separateFinalShell={final_shell}");
     }
 }
 

@@ -1,0 +1,65 @@
+//! 🧪️ `delete-page` fixture — `📍️removes-a-middle-row`.
+//!
+//! 📍️ The addressed row sits in the MIDDLE of its ordered collection, so the concrete inverse must put it back at its original index, and the inverse steps' diffs must sum to the negative of the forward diff.
+
+use semio_s_artifact_layout_layout_mutations::LayoutMutation;
+use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
+use protocol::Mutation;
+
+static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗑️delete-page/📍️removes-a-middle-row/📸️snapshot/⬅️before/🔣️.json"));
+static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗑️delete-page/📍️removes-a-middle-row/📸️snapshot/➡️after/🔣️.json"));
+static MUTATION: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗑️delete-page/📍️removes-a-middle-row/🦠️mutation/🔣️.json"));
+static DIFF: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗑️delete-page/📍️removes-a-middle-row/🔺️diff/🔣️.json"));
+
+fn before() -> LayoutSnapshot {
+    semio_framework_pack_json::from_json_str(*BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("delete-page/removes-a-middle-row: before snapshot decodes")
+}
+fn expected_after() -> LayoutSnapshot {
+    semio_framework_pack_json::from_json_str(*AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("delete-page/removes-a-middle-row: after snapshot decodes")
+}
+fn mutation() -> LayoutMutation {
+    serde_json::from_str(*MUTATION).expect("delete-page/removes-a-middle-row: mutation decodes")
+}
+
+/// ▶️ `delete-page` carries `before` to exactly the committed `after`.
+#[semio_framework_async_macros::async_test]
+async fn applies_to_committed_after() {
+    let base = before();
+    let applied = protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("delete-page/removes-a-middle-row: applies to its committed before-snapshot");
+    assert_eq!(applied, expected_after(), "delete-page/removes-a-middle-row: applied state differs from the committed after-snapshot");
+    assert_ne!(applied, base, "delete-page/removes-a-middle-row: the forward mutation left the model untouched, so nothing was proved");
+}
+
+/// ↩️ The concrete inverse puts the middle row back at its original index.
+#[semio_framework_async_macros::async_test]
+async fn inverse_restores_the_middle_position() {
+    let base = before();
+    let inverse = mutation().inverse(&base).expect("valid retained mutation inverse fixture");
+    assert!(!inverse.is_empty(), "delete-page/removes-a-middle-row: a changing mutation must have a non-empty inverse");
+    let mut snapshot = protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("delete-page/removes-a-middle-row: forward applies");
+    for step in inverse.iter().rev() {
+        snapshot = protocol::apply_diff(step.diff(&snapshot).diff(), &snapshot).expect("delete-page/removes-a-middle-row: inverse step applies");
+    }
+    assert_eq!(snapshot, base, "delete-page/removes-a-middle-row: inverse did not restore the before-snapshot, row order included");
+}
+
+/// 🔺️ The sparse delta this kind produces is exactly the committed diff.
+#[semio_framework_async_macros::async_test]
+async fn produces_committed_diff() {
+    let base = before();
+    let outcome = mutation().diff(&base);
+    let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
+    let committed: serde_json::Value = serde_json::from_str(*DIFF).expect("committed diff decodes");
+    assert_eq!(produced, committed, "delete-page/removes-a-middle-row: produced diff differs from the committed 🔺️diff/🔣️.json");
+}
+
+/// ⚖️ The inverse steps' diffs sum, by `absorb`, to the negative of the forward diff.
+#[semio_framework_async_macros::async_test]
+async fn inverse_diffs_sum_to_negative_diff() {
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation(), &before()).await;
+}
+
+fn runtime_fixture_text(relative: &str) -> &'static str {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative);
+    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display())).into_boxed_str())
+}

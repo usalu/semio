@@ -1,0 +1,53 @@
+[package]
+workspace = "../../../../../../../../.."
+name = "semio-framework-os-store-tests-01"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Companion test bin 01 of the OS kernel Store: the root-mounted store unit tests packed by subject"
+publish = false
+
+[package.metadata.semio]
+role = "framework"
+id = "os-store-tests-01"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+
+[dependencies]
+semio-framework-artifact-reference = { workspace = true }
+semio-framework-async-macros = { path = "../../../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
+semio-framework-diagnostic = { path = "../../../../../../../../🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
+semio-framework-job = { workspace = true, features = ["testkit"] }
+semio-framework-os-spr = { path = "../../../../../📡️spr/📦️packages/🦀️rust" }
+semio-framework-os-store-engine = { path = "../../../../⚙️engine/📦️packages/🦀️rust" }
+semio-framework-os-store-initialization-runtime = { path = "../../../../🏗️initialization/🏃️runtime/📦️packages/🦀️rust" }
+semio-framework-os-store-replay = { path = "../../../../🔁️replay/📦️packages/🦀️rust", features = ["hot-path-census"] }
+semio-framework-os-store-snapshot-clone = { path = "../../../../🧬️snapshot-clone/📦️packages/🦀️rust" }
+semio-framework-os-store-space-schema = { path = "../../../../🧬️schema/📦️packages/🦀️rust" }
+semio-framework-os-store-test-support = { path = "../../../../🧰️test-support/📦️packages/🦀️rust" }
+semio-framework-os-store-testing-doubles = { path = "../../../../🧪️testing/🎭️doubles/📦️packages/🦀️rust" }
+semio-framework-os-store-testing-fixtures = { path = "../../../../🧪️testing/📦️packages/🦀️rust" }
+semio-framework-os-vcs = { path = "../../../../../🌿️vcs/📦️packages/🦀️rust" }
+semio-framework-pack = { workspace = true }
+semio-framework-pack-json-retained-schema = { path = "../../../../../../../../🔨️modules/🎒️pack/🔤️json/📥️retained/🧬️schema/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-replication = { workspace = true }
+semio-framework-trace = { workspace = true }
+semio-framework-trace-memory-testing = { path = "../../../../../../../../🔨️modules/⏱️trace/🧮️memory/🧪️testing/📥️requests/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-value-derive = { path = "../../../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
+semio-framework-value-snapshot-read = { path = "../../../../../../../../🔨️modules/🌱️value/📸️snapshot/👁️read/📦️packages/🦀️rust" }
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"
+
+[dev-dependencies]
+semio-framework-os-store-test-support = { path = "../../../../🧰️test-support/📦️packages/🦀️rust", features = ["testkit"] }

@@ -1,4 +1,5 @@
-use super::*;
+use crate::standards::v_rfc1950::subsets::any::schema::snapshot::DeflateSnapshot;
+use crate::standards::v_rfc1950::subsets::any::schema::inferences::*;
 use crate::standards::v_rfc1950::subsets::any::schema::demo_deflate_snapshot;
 use protocol::Inference;
 

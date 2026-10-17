@@ -78,7 +78,6 @@ for (const row of corpus.cases) test(row.id, async () => {
         expect(await inspectRustSourceInputs(root, targets, sources), row.id).toEqual(row.result.references.filter((reference) => row.removal!.paths.includes(reference.path)).map((reference) => ({ code: "missing-input", to: reference.path, kind: reference.kind, line: reference.line })));
       }
     }
-    console.log("[DEBUG] attribute input oracle; id=" + row.id + "; native=" + compiled.status + "; scanner=" + row.result.state);
   } finally { rmSync(root, { recursive: true, force: true }); }
 }, 45_000);
 
@@ -92,6 +91,5 @@ for(const row of corpus.featureCases)test("compiler feature scope "+row.id,()=>{
   if(result.stderr===undefined)throw Error("Feature oracle requires compiler diagnostics");
   expect(result.exitCode===0,result.stderr.toString()).toBe(row.native);if(!row.native)expect(result.stderr.toString()).toContain("error["+row.diagnostic+"]");
   expect(rustModuleScopeProof(inspectRustModuleGraphFacts(row.source),row.modulePath).state==="resolved").toBe(row.resolved);
-  console.log("[DEBUG] feature scope oracle; id="+row.id+"; native="+result.exitCode+"; resolved="+row.resolved);
  }finally{rmSync(root,{recursive:true,force:true});}
 },45_000);

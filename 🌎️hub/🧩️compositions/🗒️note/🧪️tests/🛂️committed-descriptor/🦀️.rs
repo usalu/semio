@@ -1,4 +1,5 @@
 //! 🗒️ Committed note descriptor smoke law owned by the note composition.
+use semio_framework_test_fixtures::manifest_dir;
 use std::{collections::HashMap, path::PathBuf, sync::Arc};
 use semio_framework_os_run::{InMemoryBlobStore, WasmtimeNodeHost};
 
@@ -6,7 +7,7 @@ use semio_framework_os_run::{InMemoryBlobStore, WasmtimeNodeHost};
 /// `🏗️bootstrap/🦀️.rs`'s own `find_repo_root` uses, duplicated here (not `include!`d — the bin crate's
 /// own doc explains a `[[bin]]` target does not share the lib's module tree).
 fn test_repo_root() -> PathBuf {
-    let mut dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    let mut dir = manifest_dir!();
     loop {
         if dir.join("nx.json").is_file() {
             return dir;

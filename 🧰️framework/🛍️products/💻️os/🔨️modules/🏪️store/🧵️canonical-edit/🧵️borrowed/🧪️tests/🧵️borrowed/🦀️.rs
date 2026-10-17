@@ -323,7 +323,6 @@ fn member_canonical_reader_map_retirement_preserves_refused_original_and_paid_ca
         assert!(owner.is_none());assert_eq!(lifetime.root_drops.load(Ordering::SeqCst),1);assert_eq!(lifetime.active_iterators.load(Ordering::SeqCst),0);
         let (_,heap)=observe_heap_allocations_on_this_thread(||drop(owner));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
     }
-    println!("[DEBUG] member reader map retains original key pointer/serde bytes on denied admission; independent grant pays every System birth/release and cancel frontier, map backing retires before exact lifetime notification");
 }
 /// 📏️ The canonical bytes the original edit must seal to, projected independently through serde.
 fn expected_json(edit: &Edit<MapMutation>) -> Vec<u8> {
@@ -412,7 +411,7 @@ fn borrowed_map_native_checkpoint_is_refused_and_a_live_owner_moves_workers() {
 
 #[test]
 fn borrowed_map_indexed_depth_refusal_and_deep_originals_seal_under_the_depth_grant() {
-    let mut indexed = ArtifactCanonicalJsonCursor { maximum_depth: 2, ..ArtifactCanonicalJsonCursor::default() };
+    let mut indexed = ArtifactCanonicalJsonCursor::with_maximum_depth(2);
     let original_grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:65536,maximum_release_bytes:65536,maximum_depth:64};
     let mut initialized=0;let mut failure=None;
     for _ in 0..32{match indexed.encode_chunk_admitted(&IndexedDepth(2),&mut[0;256],original_grant){Ok(step)=>initialized+=step.written_bytes,Err(error)=>{failure=Some(error);break}}}

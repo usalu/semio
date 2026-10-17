@@ -1,0 +1,35 @@
+[package]
+workspace = "../../../../.."
+name = "teaching-proctor-domain"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Teaching proctor domain: the learner and handle deciders with the enrollment saga, the read-model projections and the query handler, over the base storage and catalog."
+
+# 🧠️ The quiz lifecycle as commands, events and read models; the instance wires it to the gateway.
+[package.metadata.semio]
+role = "library"
+id = "teaching-proctor-domain"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+# 🧰️ The fixtures of the domain tests (ids, envelopes, the command bus and perfect runs) for the crates above.
+[features]
+testkit = ["teaching-proctor-base/testkit"]
+
+[dependencies]
+teaching-proctor-base = { path = "../../../🧱️base/📦️packages/🦀️rust" }
+semio-framework-quiz = { workspace = true }
+semio-framework-server = { workspace = true }
+semio-framework-async = { workspace = true }
+semio-framework-dispatch-macros = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true, features = ["float_roundtrip"] }
+tokio = { workspace = true, features = ["rt-multi-thread", "macros", "net", "time", "fs", "signal", "sync"] }
+
+[dev-dependencies]
+teaching-proctor-base = { path = "../../../🧱️base/📦️packages/🦀️rust", features = ["testkit"] }

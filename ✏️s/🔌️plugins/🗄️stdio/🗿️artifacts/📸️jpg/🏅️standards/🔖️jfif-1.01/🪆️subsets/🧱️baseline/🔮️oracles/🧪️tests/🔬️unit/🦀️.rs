@@ -1,10 +1,11 @@
 use super::*;
+use semio_framework_test_fixtures::fixture_bytes;
 
 fn scan() -> std::path::PathBuf {
     let dir = std::env::temp_dir().join("semio-jpg-baseline-oracle");
     std::fs::create_dir_all(&dir).expect("temp dir");
     let path = dir.join("scan.jpg");
-    std::fs::write(&path, include_bytes!("../../../🧪️tests/🧫️fixtures/🏘️abbau-aufbau-masterarbeit-grundriss/🖼️.jpg")).expect("write scan");
+    std::fs::write(&path, fixture_bytes!("../../../🏅️standards/🔖️jfif-1.01/🪆️subsets/🧱️baseline/🧪️tests/🧫️fixtures/🏘️abbau-aufbau-masterarbeit-grundriss/🖼️.jpg").to_vec()).expect("write scan");
     path
 }
 

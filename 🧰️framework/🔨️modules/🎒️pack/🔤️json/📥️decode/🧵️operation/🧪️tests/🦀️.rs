@@ -12,7 +12,6 @@ fn close<S:JsonReadSource+Copy>(operation:&mut JsonReadOperation<'_,'_,S,DslValu
         assert!(step.progress().fits(grant));assert_eq!((born,released),(step.progress().retained_capacity_bytes,step.progress().released_bytes));
         turns+=1;assert!(turns<law["maximumCloseTurns"].as_u64().unwrap());
     }
-    println!("[DEBUG] original JSON operation physically closed turns={turns} cumulative={:?}",operation.retirement_receipt());
 }
 
 #[test]
@@ -45,7 +44,7 @@ fn original_outcome_custody(name:&str){
     while !operation.terminal_is_empty(){let(result,born,released)=semio_framework_trace_memory_testing::observe_backing(||operation.close_step(cleanup));let step=result.unwrap();if matches!(step,RetainedCloneStep::Complete(_)){assert!(operation.terminal_is_empty());}let progress=step.progress();born_total+=born;released_total+=released;assert_eq!((born,released),(progress.retained_capacity_bytes,progress.released_bytes));turns+=1;assert!(turns<law["maximumCloseTurns"].as_u64().unwrap());}
     let orphaned=born_total-released_total;
     assert!(operation.value().is_none());assert!(operation.error().is_none());
-    let((),born,released)=semio_framework_trace_memory_testing::observe_backing(||drop(operation));assert_eq!((born,released),(0,0));println!("[DEBUG] JSON outcome={name} originalStorage={held} escapedAfterOperationClosure={orphaned}");assert_eq!(orphaned,0,"operation must retain every original output and diagnostic through its own paid closure");
+    let((),born,released)=semio_framework_trace_memory_testing::observe_backing(||drop(operation));assert_eq!((born,released),(0,0));assert_eq!(orphaned,0,"operation must retain every original output and diagnostic through its own paid closure");
 }
 
 #[test]

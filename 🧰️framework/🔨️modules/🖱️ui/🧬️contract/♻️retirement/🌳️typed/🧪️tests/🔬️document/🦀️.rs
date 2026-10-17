@@ -1,4 +1,5 @@
 use super::*;
+use semio_framework_test_fixtures::fixture_text;
 
 fn lease() -> UiDocumentLease {
     let record = UiNodeRecord {
@@ -122,7 +123,7 @@ fn instance_lifetime_ui_document_contention_preserves_claim_and_zero_progress() 
 
 #[test]
 fn instance_lifetime_ui_document_drop_hands_back_without_waiting_for_arena() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../♻️retirement/🌳️typed/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     for started in [false, true] {
         let mut owner = lease();
         let handle = owner.handle.unwrap();

@@ -1,0 +1,9 @@
+# Build Input Schema Fold Review
+
+Independent Python canonical keyword/ref inverse-rebase SHA reconstruction matches all four retained premove owners: namespace root (excluding newly added definitions), OptionalQuota, OptionalLedger and InferenceDataset. All three retired schema documents are absent. Receipt `🗑️generated/build-input-fold-low-normalized.json` binds comparison outcomes; premove hashes are observations, not recovered historical Source copies.
+
+Current storage MJS selects all three nested definitions while validator calls retain the full canonical component root. Nested ledger runtime passes componentSchema for state/publication. Root namespace enum remains distinct from object subschemas. Inputs helper roster, Graph implementation authority and inference implementation revision include canonical schema once with real executable leaves retained. Framework TS/MJS/MTS/JSON scan finds zero retired quota/ledger/dataset schema literals; test ledger.json DATA remains separate. No alias or runtime leaf removed.
+
+No new Source coherence blocker found. Producer reports pure2laws223 assertions,14-root strict37403 actual0 and affected MJS phase/admission/identity/revision selectors actual0. Final modified/removed file manifest and independent FD/stamp/SHA hold remain pending, as do new actual complete tooling/backend captures. No Native/SDK/store/runtime/capacity success is inferred. This audit made no Source edit or Native effect.
+
+Final17-path hold independently clean:14modified bounded nofollow FD/pre-open/post/named stamps and SHA match;3retired paths absent, in `🗑️generated/build-input-storage-fold-low-independent.json`. Producer reports15focused Source laws and14-root strict37403 actual0. Existing unchanged declarations are not falsely claimed modified. No new blocker for separately authorized complete capture/current FD verification; no capacity or runtime acceptance inferred.

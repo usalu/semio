@@ -1,0 +1,19 @@
+{
+ "name": "wbr",
+ "crates": [
+  "semio-s-artifact-energy-model-viewer",
+  "semio-s-artifact-energy-model-session",
+  "semio-s-artifact-remodel-remodeling-mut-vectors",
+  "semio-s-artifact-remodel-remodeling-mut-params"
+ ],
+ "base": {
+  "rev": "1bae6115bc5",
+  "crates": [
+   "semio-s-artifact-energy-model-viewer",
+   "semio-s-artifact-energy-model-session",
+   "semio-s-artifact-remodel-remodeling-mut-vectors",
+   "semio-s-artifact-remodel-remodeling-mut-params"
+  ]
+ },
+ "note": "WIRING-BUDGET-ROOTS"
+}

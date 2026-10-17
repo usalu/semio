@@ -1,9 +1,9 @@
-use super::*;
+use crate::standards::v1::subsets::any::schema::mutations::*;
 use protocol::SemanticMutation;
 
 #[test]
 fn direct_owner_descriptor_surfaces_and_catalog_correspond() {
-    let mutation_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations");
+    let mutation_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../🧬️mutations");
     let owner = mutation_root.join("✒️change-schema");
     let source = std::fs::read_to_string(owner.join("🦀️.rs")).expect("direct Rust owner");
     let descriptor_source = std::fs::read_to_string(owner.join("🔣️.json")).expect("direct language-neutral descriptor");

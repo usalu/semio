@@ -5,17 +5,15 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️semio-grammar-conformance/🦀️.rs"]
-mod semio_grammar_conformance;
+
 
 #[allow(unused_imports)]
 mod diff_codec {
 use super::*;
 use crate::schema::diff::*;
 use protocol::{DiffText,DiffBinary};
-use crate::schema::WriterArtifact;
-use crate::{document_child_handle_with_text, WriterSnapshot};
+
+
 use crate::schema::diff::*;
 
 impl protocol::DiffText for WriterDiff {

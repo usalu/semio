@@ -28,7 +28,6 @@ test("ordered map clone quotes preserve independent original and interrupted can
       expect(original).toEqual(row.expectedKeys);
     }
   }
-  console.log("[DEBUG] Ordered map clone neutral corpus matches independent RFC6902 outputs and interruption custody");
 });
 test("original shared clone preserves independent original values and cancellation",()=>{
  const path=join(root,owner,"🧬️retained-clone/🔗️shared"),law=JSON.parse(readFileSync(join(path,"🧪️tests/🧫️fixtures/🔣️.json"),"utf8"));
@@ -40,7 +39,6 @@ test("original shared clone preserves independent original values and cancellati
   expect(original.source.text).toBe(text);
   for(const stop of law.interruptAfter){const pending={source:{text},candidate:stop===2?{text}:undefined};const closed=applyPatch(pending,[{op:"remove",path:"/source"}],true,false).newDocument;expect(pending.source.text).toBe(text);if(stop===2)expect(closed.candidate!.text).toBe(text);}
  }}
- console.log("[DEBUG] Original shared clone independent RFC6902 original/output close and cancellation values verified");
 });
 test("typed read leases preserve independent sparse visitation and payload outputs", () => {
   const path = join(root, owner, "🔗️read"), law = JSON.parse(readFileSync(join(path,"🧪️tests/🧫️fixtures/🔣️.json"),"utf8"));
@@ -58,8 +56,7 @@ test("typed read leases preserve independent sparse visitation and payload outpu
     const independent = applyPatch({visits:[]},row.visits.map((value:number|null)=>({op:"add" as const,path:"/visits/-",value})),true,false).newDocument.visits;
     expect(observed).toEqual(independent);
   }
-  for (const text of law.texts) expect(applyPatch({},[{op:"add",path:"/root",value:text}],true,false).newDocument.root).toBe(JSON.parse(JSON.stringify(text)));
-  console.log("[DEBUG] Typed read sparse visitation and independent JSON Patch payload outputs verified");
+  for (const text of law.texts) expect(applyPatch<{root?:unknown}>({},[{op:"add",path:"/root",value:text}],true,false).newDocument.root).toBe(JSON.parse(JSON.stringify(text)));
 });
 test("erased read portable source pin law preserves independent payload authority", () => {
   const path = join(root, owner, "🔗️read"), law = JSON.parse(readFileSync(join(path,"🧪️tests/🧫️fixtures/🔣️.json"),"utf8"));
@@ -71,21 +68,19 @@ test("erased read portable source pin law preserves independent payload authorit
     expect(original.read).toBe(true);
     expect(original.authority).toBe(true);
   }
-  console.log("[DEBUG] Erased read strict neutral source pin and independent retained payload authority verified");
 });
 test("borrowed clone authority follows independent JSON Patch", () => {
   for (const row of fixture.vectors.filter((row: {accepted:boolean}) => row.accepted)) {
     const input = structuredClone(row.input);
-    const copied = applyPatch({}, [{ op: "add", path: "/value", value: structuredClone(input) }], true, false).newDocument.value;
+    const copied = applyPatch<{value?:typeof row.input}>({}, [{ op: "add", path: "/value", value: structuredClone(input) }], true, false).newDocument.value;
     expect(copied).toEqual(row.input);
     expect(input).toEqual(row.input);
     for (const at of fixture.borrowAuthority.cancelAt) {
-      const partial = applyPatch({ owners: Object.entries(copied).slice(0, at) }, [{ op: "replace", path: "/owners", value: [] }], true, false).newDocument;
+      const partial = applyPatch({ owners: Object.entries(copied ?? {}).slice(0, at) }, [{ op: "replace", path: "/owners", value: [] }], true, false).newDocument;
       expect(partial.owners).toEqual([]);
       expect(input).toEqual(row.input);
     }
   }
-  console.log("[DEBUG] borrowed clone independent JSON Patch laws verified");
 });
 test("paged native ownership follows semantic JSON and independent UTF-8 ordering", () => {
   const local = join(root, owner, "📦️paged");
@@ -106,7 +101,7 @@ test("paged native ownership follows semantic JSON and independent UTF-8 orderin
   expect(Object.hasOwn(edited, lexicalTail)).toBe(false);
   expect(validValue(edited)).toBe(true);
 
-  expect(applyPatch({}, [{op:"add",path:"/object",value:object}], true, false).newDocument.object).toEqual(JSON.parse(JSON.stringify(object)));
+  expect(applyPatch<{object?:unknown}>({}, [{op:"add",path:"/object",value:object}], true, false).newDocument.object).toEqual(JSON.parse(JSON.stringify(object)));
   for (const row of law.comparisons) {
     expect(Math.sign(Buffer.compare(Buffer.from(prefix + row.left), Buffer.from(prefix + row.right)))).toBe(row.ordering);
     expect(JSON.parse(JSON.stringify({ text: prefix + row.left }))).toEqual({ text: prefix + row.left });
@@ -123,7 +118,6 @@ test("paged native ownership follows semantic JSON and independent UTF-8 orderin
   const aliases = applyPatch({bindings:["left","right"]}, [{op:"remove",path:"/bindings/0"}], true, false).newDocument;
   expect(aliases.bindings).toEqual(["right"]);
   expect(applyPatch(aliases, [{op:"remove",path:"/bindings/0"}], true, false).newDocument.bindings).toEqual([]);
-  console.log("[DEBUG] paged native JSON/UTF-8 comparison law verified");
 });
 /** 🗂️ Admits explicitly owned compiler storage without following directory links. */
 function compilerStorage(path: string): string {
@@ -189,7 +183,6 @@ test("retirement source capacity agrees with independent decimal arithmetic",asy
     }
   }
   expect(observations.length).toBe(24);
-  console.log(`[DEBUG] retirement source capacity 24 portable word-width vectors agree with decimal.js`);
 });
 
 test("owned projected fields preserve native value paths and exact alias closure",()=>{
@@ -199,7 +192,6 @@ test("owned projected fields preserve native value paths and exact alias closure
  let aliases=["parent","child"];for(const action of law.closeSequence){if(action==="parent"||action==="child"){const index=aliases.indexOf(action);aliases=applyPatch({aliases},[{op:"remove",path:"/aliases/"+index}],true,false).newDocument.aliases;}if(action==="complete")expect(aliases).toEqual([]);}
  expect(JSON.stringify(law.input)).toBe(before);expect(law.constructorAllocationBytes).toBe(0);expect(law.maximumItems).toBe(1);expect(law.maximumBytes).toBe(0);
  expect(readFileSync(join(root,owner,"🧬️retained-clone/🦀️.rs"),"utf8").includes("pub fn project_owned")).toBe(true);
- console.log("[DEBUG] owned projection native value paths agree with independent RFC6902 pointer and exact alias closure");
 });
 
 test("owned source birth funds original custody before allocation", () => {
@@ -219,7 +211,6 @@ test("owned source birth funds original custody before allocation", () => {
   expect(law.sharedAuthorityRetainsAlias).toBe(true);
   const shared=applyPatch({original:original.authority,aliases:["issuer","source"]},[{op:"remove",path:"/aliases/1"}],true,false).newDocument;expect(shared.original).toBe(original.authority);expect(shared.aliases).toEqual(["issuer"]);
   for(const order of law.closeOrders){const live={owner:law.owner,authority:law.authority,aliases:["source","projection"],released:false};const first=applyPatch(live,[{op:"remove",path:order==="sourceFirst"?"/aliases/0":"/aliases/1"}],true,false).newDocument;expect(first.owner).toBe(law.owner);expect(first.authority).toBe(law.authority);expect(first.released).toBe(false);expect(first.aliases).toEqual([order==="sourceFirst"?"projection":"source"]);const terminal=applyPatch(first,[{op:"remove",path:"/aliases/0"},{op:"replace",path:"/released",value:true}],true,false).newDocument;expect(terminal.aliases).toEqual([]);expect(terminal.released).toBe(true);}
-  console.log("[DEBUG] owned source birth independent RFC6902 oracle preserves original owners on all refused currencies");
 });
 
 test("funded read ownership keeps sparse returned roots independently of live readers", () => {
@@ -242,7 +233,6 @@ test("funded read ownership keeps sparse returned roots independently of live re
     expect(visits).toEqual(row.visits);
     for(let slot=0;slot<row.issued;slot++)if(!row.returned.includes(slot)){expect(slots[slot]!.issued).toBe(true);expect(slots[slot]!.root).toBe(slot);}
   }
-  console.log("[DEBUG] independent read ownership oracle preserves original sparse wrap and live-reader starvation vectors");
 });
 
 test("retained clone close depth preserves an unfunded original birth", () => {
@@ -260,25 +250,25 @@ test("retained clone close depth preserves an unfunded original birth", () => {
   expect(law.fundedBirth.maximumDepth).toBe(law.pendingBirthDepth);expect(admitted.owner).toBeNull();expect(admitted.retiring).toBe(true);
   const terminal=applyPatch(admitted,[{op:"replace",path:"/retiring",value:false}],true,false).newDocument;
   expect(terminal.owner).toBeNull();expect(terminal.retiring).toBe(false);expect(law.terminalDepth).toBe(0);
-  console.log("[DEBUG] independent close depth oracle preserves original custody across refused and funded birth");
 });
 
+type Chain = { text: string; next: Chain | null };
 test("recursive structural depth counts field and box owners independently", () => {
   const directory=join(root,owner,"🧬️retained-clone/🧪️tests/🧫️fixtures/🌳️structural-depth");
   const law=JSON.parse(readFileSync(join(directory,"🔣️.json"),"utf8"));
   for(const row of law.cases){
-    let chain={text:"leaf",next:null} as {text:string,next:unknown};
+    let chain:Chain={text:"leaf",next:null};
     for(let index=0;index<row.boxes;index++) chain={text:`node-${index}-β`,next:chain};
-    const copy=applyPatch({},[{op:"add",path:"/chain",value:chain}],true,false).newDocument.chain;
+    const copy=applyPatch<{chain?:Chain}>({},[{op:"add",path:"/chain",value:chain}],true,false).newDocument.chain;
+    if(copy===undefined)throw new Error("The patched document lost its chain");
     expect(JSON.parse(JSON.stringify(copy))).toEqual(chain);
-    let boxes=0,current=copy;
+    let boxes=0,current:Chain=copy;
     while(current.next!==null){expect(current.text).toBe(`node-${row.boxes-1-boxes}-β`);boxes++;current=current.next;}
     expect(current.text).toBe("leaf");expect(boxes).toBe(row.boxes);
     expect(boxes*(law.fieldLevelsPerBox+law.boxLevelsPerBox)+law.terminalFieldLevels).toBe(row.requiredDepth);
     expect(row.requiredDepth<=row.maximumDepth).toBe(row.accepted);
   }
   expect(law.close).toEqual({maximumItems:1,maximumCopyBytes:2,maximumReleaseBytes:65536});
-  console.log("[DEBUG] Recursive field/box depth oracle preserves zero, one, 31/32 and 255/256 ordered chain boundaries with separate two-byte copy and exact physical close authority");
 });
 
 test("read closure order retains the original typed payload until its exact last alias closes", () => {
@@ -290,7 +280,6 @@ test("read closure order retains the original typed payload until its exact last
     if(order==="read-first"){expect(state.authority).toBe(true);expect(state.released).toBe(false);state=applyPatch(state,[{op:"replace",path:"/authority",value:false}],true,false).newDocument;}
     expect(state.authority||state.read).toBe(false);state=applyPatch(state,[{op:"replace",path:"/released",value:true}],true,false).newDocument;expect(state.released).toBe(true);
   }
-  console.log("[DEBUG] Independent AJV and RFC6902 close-order oracle preserves the original last-reader payload");
 });
 
 test("original shared source and projection header events agree with zero-copy schema and independent aliases",()=>{
@@ -301,5 +290,5 @@ test("original shared source and projection header events agree with zero-copy s
 
 test("original shared source typed body retains neutral raw Float32 atoms and independent move identity",()=>{
  const law=JSON.parse(readFileSync(new URL("../../🧬️retained-clone/🔗️source/🧪️tests/🧫️fixtures/🎟️header.json",import.meta.url),"utf8"));const payload=law.typedPayload;expect(payload.rawArrayBytes).toBe(12);expect(payload.rawElementBytes).toBe(4);expect(payload.selectedSpillCopyBytes).toBe(0);expect(payload.closeBodies).toEqual([0,1,3,64]);
- for(const row of payload.values){const bytes=new DataView(new ArrayBuffer(payload.rawArrayBytes));row.forEach((value:number,index:number)=>bytes.setFloat32(index*payload.rawElementBytes,value,true));expect(row.map((_:number,index:number)=>bytes.getFloat32(index*payload.rawElementBytes,true))).toEqual(row);const original={source:row};const moved=applyPatch(original,[{op:"move",from:"/source",path:"/retained"}],true,false).newDocument;expect(moved.retained).toEqual(row);expect(applyPatch(moved,[{op:"remove",path:"/retained"}],true,false).newDocument).toEqual({});}
+ for(const row of payload.values){const bytes=new DataView(new ArrayBuffer(payload.rawArrayBytes));row.forEach((value:number,index:number)=>bytes.setFloat32(index*payload.rawElementBytes,value,true));expect(row.map((_:number,index:number)=>bytes.getFloat32(index*payload.rawElementBytes,true))).toEqual(row);const original={source:row};const moved=applyPatch<{source?:typeof row;retained?:typeof row}>(original,[{op:"move",from:"/source",path:"/retained"}],true,false).newDocument;expect(moved.retained).toEqual(row);expect(applyPatch(moved,[{op:"remove",path:"/retained"}],true,false).newDocument).toEqual({});}
 });

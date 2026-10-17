@@ -53,22 +53,26 @@ wasm-bindgen = "0.2.106"
 web-sys = { version = "0.3.98", features = ["HtmlCanvasElement", "Window", "Request", "RequestInit", "RequestMode", "Response", "console"] }
 
 [dev-dependencies]
-semio-framework-os-infinite-board-dag-host = { path = ".", features = ["testkit"] }
 semio-framework-os-kernel = { path = "../../../../../../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["mutation-testing"] }
+semio-framework-test-fixtures = { path = "../../../../../../../../../../../🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 serde_json = "1.0.140"
 
 [[test]]
 name = "board_dag_host_input"
 path = "../../🧪️tests/🎛️input/🦀️.rs"
+required-features = ["testkit"]
 
 [[test]]
 name = "board_dag_host_wire_edit"
 path = "../../🧪️tests/🔗️wire-edit/🦀️.rs"
+required-features = ["testkit"]
 
 [[test]]
 name = "board_dag_host_dag_unit"
 path = "../../🧪️tests/🔬️dag-unit/🦀️.rs"
+required-features = ["testkit"]
 
 [[test]]
 name = "board_dag_host_edit_rows"
 path = "../../🧪️tests/🛠️edit-rows/🦀️.rs"
+required-features = ["testkit"]

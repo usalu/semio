@@ -1,9 +1,10 @@
 use super::*;
+use semio_framework_test_fixtures::fixture_text;
 
 //#region 🧪️ResidentPermits
 #[test]
 fn retained_resident_fixed_backing_counts_against_the_same_aggregate() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🗃️fixed/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../🎟️resident/🗃️fixed/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let actual = UiResidentPermit::snapshot().unwrap();
     assert_eq!(actual.bytes > 0, fixture["staticCountsAgainstAggregate"].as_bool().unwrap());
     assert_eq!(actual.bytes, UiResidentPermit::contract_backing_bytes());
@@ -30,7 +31,7 @@ fn retained_resident_fixed_backing_counts_against_the_same_aggregate() {
 }
 
 fn fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap()
+    serde_json::from_str(fixture_text!("../../🎟️resident/🧪️tests/🧫️fixtures/🔣️.json")).unwrap()
 }
 fn empty_snapshot() -> UiResidentSnapshot {
     UiResidentSnapshot { bytes: UiResidentPermit::fixed_backing_bytes().unwrap(), ..Default::default() }

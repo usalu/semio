@@ -3,7 +3,7 @@
 //! No height is stored: it is inferred from the top constraint.
 
 use super::super::elements;
-use super::super::wall_geometry::curtain_wall_flaw;
+use crate::standards::v1::subsets::any::schema::mutations::wall_geometry::curtain_wall_flaw;
 use super::CreateCurtainWall;
 use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};

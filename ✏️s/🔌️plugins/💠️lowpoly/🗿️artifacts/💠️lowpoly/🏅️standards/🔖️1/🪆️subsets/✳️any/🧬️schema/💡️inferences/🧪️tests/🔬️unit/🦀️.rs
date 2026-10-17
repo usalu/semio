@@ -1,5 +1,6 @@
 use super::*;
 use protocol::Inference;
+use semio_framework_test_fixtures::fixture_path;
 
 //#region 🧪️InferenceLaws
 #[semio_framework_async_macros::async_test]
@@ -17,7 +18,7 @@ async fn inference_default_law() {
 /// 🔮️ Neutral vectors independently checked with Three XYZ Euler/quaternion mathematics.
 #[semio_framework_async_macros::async_test]
 async fn semantic_transform_neutral_three_oracle_law() {
-    let fixture: serde_json::Value = serde_json::from_str(std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧪️tests/🧫️fixtures/💡️inferences/🔬️unit/🔄️transform.json")).expect("../../../../🧪️tests/🧫️fixtures/💡️inferences/🔬️unit/🔄️transform.json").leak()).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(std::fs::read_to_string(fixture_path!("../../../../🧪️tests/🧫️fixtures/💡️inferences/🔬️unit/🔄️transform.json")).expect("../../../../🧪️tests/🧫️fixtures/💡️inferences/🔬️unit/🔄️transform.json").leak()).unwrap();
     for case in fixture["cases"].as_array().unwrap() {
         let triple = |value: &serde_json::Value| -> [f32; 3] { std::array::from_fn(|i| value[i].as_f64().unwrap() as f32) };
         let transform = LowpolyTransform { position: triple(&case["transform"]["position"]), rotation: triple(&case["transform"]["rotation"]), scale: triple(&case["transform"]["scale"]) };
@@ -29,7 +30,6 @@ async fn semantic_transform_neutral_three_oracle_law() {
         for (index, value) in world.iter().enumerate() {
             assert!((value - case["world"][index].as_f64().unwrap()).abs() < 1e-10, "{} world {index}", case["id"]);
         }
-        eprintln!("[DEBUG] Lowpoly semantic transform Three oracle {} quaternion={quaternion:?} world={world:?}", case["id"]);
     }
     assert_eq!(triangle_normal([0.0; 3], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0]), [0.0, 0.0, 1.0]);
     assert_eq!(triangle_normal([0.0; 3], [0.0; 3], [0.0; 3]), [0.0; 3]);

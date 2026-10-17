@@ -12,7 +12,6 @@ class FlowFormsScript extends BundleScript {
 }
 if (process.argv[2] === "generation-root-policy") {
   const { proceduralGenerationRootSelfTests } = await import("../../🧬️generation/🧪️tests/🔬️procedural-generation-root/🟦️.ts");
-  console.log(`[DEBUG] generation root policy checks=${proceduralGenerationRootSelfTests()}`);
 } else {
   await runArtifactRustPackageMain(import.meta.dir, "semio-framework-artifact-playbook-playbook",{commands:{"test-flow-forms":FlowFormsScript}});
 }

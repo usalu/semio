@@ -42,6 +42,10 @@ type trinityJackInferenceGuardSizeBounds = { readonly minItems?: number; readonl
 
 export const trinityJackInferenceGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : trinityJackInferenceGuardReject(at, "value is not an object");
+export const trinityJackInferenceGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) trinityJackInferenceGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const trinityJackInferenceGuardArray = (value: unknown, at: string, bounds: trinityJackInferenceGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return trinityJackInferenceGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) trinityJackInferenceGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -72,7 +76,7 @@ export const trinityJackInferenceGuardConstant = <T extends string | number | bo
 //#endregion 🚪️Parsers
 
 export function parseJackInference(value: unknown, at = "$"): JackInference {
-  const row = trinityJackInferenceGuardObject(value, at);
+  const row = trinityJackInferenceGuardClosed(trinityJackInferenceGuardObject(value, at), at, ["topology", "flatPosition"]);
   return {
     topology: parseJackTopology(row["topology"], `${at}.topology`),
     flatPosition: parseJackFlatPosition(row["flatPosition"], `${at}.flatPosition`),
@@ -80,24 +84,24 @@ export function parseJackInference(value: unknown, at = "$"): JackInference {
 }
 
 export function parseJackTopology(value: unknown, at = "$"): JackTopology {
-  const row = trinityJackInferenceGuardObject(value, at);
+  const row = trinityJackInferenceGuardClosed(trinityJackInferenceGuardObject(value, at), at, ["topoOrder", "depth", "cycleFree", "nodeCount"]);
   return {
     topoOrder: trinityJackInferenceGuardArray(row["topoOrder"], `${at}.topoOrder`).map((item, index) => trinityJackInferenceGuardString(item, `${at}.topoOrder[${index}]`)),
-    depth: Object.fromEntries(Object.entries(trinityJackInferenceGuardObject(row["depth"], `${at}.depth`)).map(([key,value])=>[key,trinityJackInferenceGuardInteger(value,`${at}.depth.${key}`,{minimum:0})])),
+    depth: Object.fromEntries(Object.entries(trinityJackInferenceGuardObject(row["depth"], `${at}.depth`)).map(([key0, value0]) => [key0, trinityJackInferenceGuardInteger(value0, `${at}.depth.${key0}`, {"minimum": 0})])),
     cycleFree: trinityJackInferenceGuardBoolean(row["cycleFree"], `${at}.cycleFree`),
     nodeCount: trinityJackInferenceGuardInteger(row["nodeCount"], `${at}.nodeCount`, {"minimum": 0}),
   };
 }
 
 export function parseJackFlatPosition(value: unknown, at = "$"): JackFlatPosition {
-  const row = trinityJackInferenceGuardObject(value, at);
+  const row = trinityJackInferenceGuardClosed(trinityJackInferenceGuardObject(value, at), at, ["positions"]);
   return {
-    positions: Object.fromEntries(Object.entries(trinityJackInferenceGuardObject(row["positions"], `${at}.positions`)).map(([key,value])=>[key,parseJackFlatPositionUv(value,`${at}.positions.${key}`)])),
+    positions: Object.fromEntries(Object.entries(trinityJackInferenceGuardObject(row["positions"], `${at}.positions`)).map(([key0, value0]) => [key0, parseJackFlatPositionUv(value0, `${at}.positions.${key0}`)])),
   };
 }
 
 export function parseJackFlatPositionUv(value: unknown, at = "$"): JackFlatPositionUv {
-  const row = trinityJackInferenceGuardObject(value, at);
+  const row = trinityJackInferenceGuardClosed(trinityJackInferenceGuardObject(value, at), at, ["u", "v"]);
   return {
     u: trinityJackInferenceGuardNumber(row["u"], `${at}.u`),
     v: trinityJackInferenceGuardNumber(row["v"], `${at}.v`),

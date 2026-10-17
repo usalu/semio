@@ -1,6 +1,6 @@
 //! 🔭️ `set-lod-automatic` command — whether the world pane picks its detail level from the zoom.
 
-use crate::editor::puzzle5d::Puzzle5dActionCtx;
+use crate::editor::puzzle5d::interaction::Puzzle5dActionCtx;
 use semio_framework_pack_json::Value;
 
 pub fn set_lod_automatic(ctx: &mut Puzzle5dActionCtx<'_>, args: Option<&Value>) {

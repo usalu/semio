@@ -45,19 +45,22 @@
           "type": "array",
           "items": {
             "type": "string"
-          }
+          },
+          "default": []
         },
         "modified": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/ZipEntryModified"
-          }
+          },
+          "default": []
         },
         "added": {
           "type": "array",
           "items": {
             "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/zip/2.0/base/snapshot.json#/$defs/ZipEntry"
-          }
+          },
+          "default": []
         },
         "order": {
           "type": "array",

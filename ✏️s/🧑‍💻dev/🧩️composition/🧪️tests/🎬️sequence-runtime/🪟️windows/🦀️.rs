@@ -23,7 +23,9 @@ fn sequence_window_ownership_runtime_isolates_restores_and_resets_exact_windows(
             use semio_s_artifact_sequence_sequence::editor::sequence::commands::node_graph::set_viewport;
             use semio_s_artifact_sequence_sequence::editor::sequence::commands::playback::run_command;
             use semio_s_artifact_sequence_sequence::editor::sequence::commands::step::add_step;
-            use semio_s_artifact_sequence_sequence::editor::sequence::{SequenceCommand, SEQUENCE_PLAY_BODY_MAIN, SEQUENCE_PLAY_BODY_SCRIPT};
+            use semio_s_artifact_sequence_sequence::editor::sequence::retained::SequenceCommand;
+            use semio_s_artifact_sequence_sequence::editor::sequence::modes::edit::windows::main::SEQUENCE_PLAY_BODY_MAIN;
+            use semio_s_artifact_sequence_sequence::editor::sequence::modes::edit::windows::script::SEQUENCE_PLAY_BODY_SCRIPT;
             use super::context::{new_app as new_app_with_registry_wired, SequenceApp};
             use semio_framework_plugin::{artifact_app_laws, ActionMeta, PluginApp, ViewModel, ViewWindowInstance, WindowConfigOwner, WindowTransientOwner};
 

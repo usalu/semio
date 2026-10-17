@@ -2,15 +2,58 @@
 //! in which an empty stage never consumes the call. Every unit quotes its next demand on all axes and spends the caller's
 //! unchanged grant on exactly one owner; the same module drives the envelope-ingress, store-replacement and archive-load
 //! frontiers for both the live rotation and the close ladder.
-use super::*;
-use crate::tool_jobs::time_travel;
-use semio_framework_value::{RetirementDemand, ValueError, retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}};
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as pack;
+use semio_framework_plugin_ownership::bounded_ownership::{ARTIFACT_LIVE_OUTPUT_SLOTS, ArtifactFixedRegistry, PluginLifecycleStep, plugin_retirement_fault, plugin_turn_admitted};
+use semio_framework_plugin_instance_stores::stores_components::{ActionIngress, InstanceStores, LocalInteraction, PeerRoster};
+use semio_framework_plugin_document_media::{ActiveArtifactEnvelopeIngress, ActiveArtifactStoreReplacement, ActiveArtifactStoreReplacementState, ActiveDocumentArchiveLoadState, ArtifactStoreReplacementPublicationGuard, ArtifactStoreReplacementRefusal, CompositionPinsRetirement, publish_boxed_document_store_candidate_if_authoritative};
+use semio_framework_plugin_decl_app::{ArtifactApp, DOCUMENT_LOAD_FAILED_CODE, document_load_fault};
+use semio_framework_plugin_ownership::store_lifecycle::{ArtifactDisposal, ArtifactDocumentStoreDisposer, ArtifactOwnedDisposer, ArtifactSnapshotCloseRetention};
+use pack::snapshot::ArtifactPack;
+use store::{ArtifactStore, ConfigStore, MemberFactory, Mutation, SpaceMember};
+use semio_framework_plugin_instance_children::children_components::ChildComposition;
+use semio_framework_plugin_child::{ChildContentRetirement, ChildMemberRegistry, ChildMemberRetirement};
+use semio_framework_plugin_decl_views::child_view::{ChildContentView, child_content_arc_bytes};
+use crate::ladders_components::{CloseCursors, MaintenanceCursors};
+use semio_framework_plugin_instance_history::history_components::{CommandHistory, HostEvents, Transactions};
+use semio_framework_plugin_decl_emission::Emit;
+use semio_framework_plugin_instance_docs::docs_components::{EnvelopeJobs, MediaTransfers};
+use semio_framework::{Fault, FaultCode, FaultFrom, FaultOrigin};
+use std::future::Future;
+use semio_framework_plugin_instance_extension::InstanceExtension;
+use semio_framework_plugin_interaction::mutations::InteractionConfigMutation;
+use crate::ladder_bundle::{LadderCtx, LadderRef};
+use std::mem::ManuallyDrop;
+use semio_framework_plugin_composition_publication::MountedTypedCommandFullOperationStage;
+use protocol::OpText;
+use semio_framework_plugin_decl_views::PeerPresenceRoot;
+use semio_framework_plugin_peer::{PeerPresenceRootRetirement, PeerRosterPublication, PeerRosterPublicationStage, PresenceRosterOutcome};
+use semio_framework_plugin_instance_jobs::jobs_components::{PendingReserved, ToolOperations};
+use semio_framework_plugin_reactor_app::PluginApp;
+use semio_framework_plugin_instance_render::render_bundle::{RenderCtx, RenderRef};
+use semio_framework_plugin_operation::TOOL_CANCELLATION_SLOTS;
+use semio_framework_plugin_time_travel_turns::time_travel_bundle::{TimeTravelCtx, TimeTravelRef};
+use semio_framework_plugin_time_travel::TimeTravelLedger;
+use semio_framework_plugin_tool_run::tool_jobs_tool_machine::ToolMachineRuntime;
+use semio_framework_plugin_tool_run_turns::tool_run_bundle::{ToolRunCtx, ToolRunRef};
+use semio_framework_plugin_tool_run::ToolRunLedger;
+use semio_framework_plugin_instance_typed_ops::typed_bundle::TypedCtx;
+use semio_framework_plugin_window_transient::window_transient::WindowTransientOwnerRegistry;
+use semio_framework_plugin_composition_emission::root::{advance_original_child_root_retirement, original_child_root_retirement_demands};
+use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
+use crate::ladders_document_replacement::{retire_document_window_registry_demands, retire_document_window_registry_step};
+use semio_framework_ui_contract::*;
+use semio_framework_plugin_time_travel as time_travel;
+use semio_framework_value::{RetirementDemand, ValueError};
+use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 
-use super::docs_maintenance_ladder::{idle, item, item_demand, progressed, removed};
-use super::ladders_plugin_app_impl::{MAINTENANCE_CHILD_MEMBER_STAGE, MAINTENANCE_CHILD_ROOT_STAGE, MAINTENANCE_CONFIG_LANE_DISPLACED_STAGE, MAINTENANCE_DOCUMENT_DISPLACED_STAGE, MAINTENANCE_STAGES};
+use semio_framework_plugin_instance_docs::docs_maintenance_ladder::{idle, item, item_demand, progressed, removed};
+use crate::ladders_plugin_app_impl::{MAINTENANCE_CHILD_MEMBER_STAGE, MAINTENANCE_CHILD_ROOT_STAGE, MAINTENANCE_CONFIG_LANE_DISPLACED_STAGE, MAINTENANCE_DOCUMENT_DISPLACED_STAGE, MAINTENANCE_STAGES};
 
+#[doc(hidden)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum MaintenanceUnit {
+pub enum MaintenanceUnit {
     CommandPrune,
     MediaRefusal,
     ActionIngress,
@@ -34,7 +77,8 @@ enum MaintenanceTool {
 
 const ROTATION_START: usize = 14;
 
-pub(crate) const MAINTENANCE_POSITIONS: usize = ROTATION_START + MAINTENANCE_STAGES as usize;
+#[doc(hidden)]
+pub const MAINTENANCE_POSITIONS: usize = ROTATION_START + MAINTENANCE_STAGES as usize;
 
 fn maintenance_fault(code: &'static str, message: &'static str) -> Fault {
     Fault::new(FaultOrigin::Framework, FaultCode::new(code), message)
@@ -45,7 +89,7 @@ fn worker_pool() -> semio_framework_async::WorkerPool {
 }
 
 impl MaintenanceUnit {
-    pub(crate) fn trace(self) -> u64 {
+    pub fn trace(self) -> u64 {
         match self {
             Self::Pressure(stage) | Self::Stage(stage) => u64::from(stage),
             Self::AgentPreview=>108,
@@ -63,7 +107,7 @@ impl MaintenanceUnit {
 }
 
 impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static, X: InstanceExtension> LadderCtx<'ctx, A, M, X> {
-    pub(crate) fn maintenance_unit_step(&mut self,unit:MaintenanceUnit,cx:&mut semio_framework_job::StepContext<'_>,grant:RetainedCloneGrant)->Result<PluginLifecycleStep,crate::PluginLifecycleFailure>{
+    pub fn maintenance_unit_step(&mut self,unit:MaintenanceUnit,cx:&mut semio_framework_job::StepContext<'_>,grant:RetainedCloneGrant)->Result<PluginLifecycleStep,semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{
         match unit{
             MaintenanceUnit::AgentPreview=>self.tools.close_agent_lane_preview(cx, grant),
             MaintenanceUnit::MediaRefusal=>self.media.close_media_submission_refusal(&mut *self.tools, cx, grant),
@@ -79,7 +123,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static, X: I
         }
     }
 
-    fn maintenance_stage_step(&mut self,stage:u8,cx:&mut semio_framework_job::StepContext<'_>,grant:RetainedCloneGrant)->Result<PluginLifecycleStep,crate::PluginLifecycleFailure>{
+    fn maintenance_stage_step(&mut self,stage:u8,cx:&mut semio_framework_job::StepContext<'_>,grant:RetainedCloneGrant)->Result<PluginLifecycleStep,semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{
         if stage==26{return self.pending.close_document_window_admission(cx, false)}
         if stage==18{
             let before=cx.retained_progress();let complete=self.tools.tool_cancellations.cleanup_slot(self.maintenance.maintenance_cancellation_cursor,cx,true)?;
@@ -118,7 +162,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static, X: I
                 let Some((index,operation_id))=self.media.segmented_closures.next_id_from(self.maintenance.maintenance_segment_cursor)else{return Ok(idle())};self.maintenance.maintenance_segment_cursor=(index+1)%ARTIFACT_LIVE_OUTPUT_SLOTS;
                 if let Some(source)=self.media.snapshot_retirements.get(operation_id){source.validate_retirement(cx)?}
                 let original=self.media.segmented_closures.get_mut(operation_id).ok_or_else(||maintenance_fault("interactive-job.segment-close","original segmented close owner changed"))?;
-                if original.terminal_is_empty(){self.media.segmented_closures.remove(operation_id);return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<crate::media_export::MediaDownloadRetirement>(),..Default::default()}))}original.close_step(cx,grant)
+                if original.terminal_is_empty(){self.media.segmented_closures.remove(operation_id);return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<semio_framework_plugin_document_media::media_export::MediaDownloadRetirement>(),..Default::default()}))}original.close_step(cx,grant)
             },
             3 => {
                 let Some((index, operation_id)) = self.media.snapshot_retirements.next_id_from(self.maintenance.maintenance_snapshot_cursor) else { return Ok(idle()) };
@@ -300,7 +344,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static, X: I
     }
 
     /// 🎟️ One granted release turn of the next closing envelope ingress; a closing app closes every ingress.
-    pub(crate) fn drive_envelope_ingress(&mut self, grant: RetainedCloneGrant, closing: bool) -> Result<PluginLifecycleStep, Fault> {
+    pub fn drive_envelope_ingress(&mut self, grant: RetainedCloneGrant, closing: bool) -> Result<PluginLifecycleStep, Fault> {
         let empty = RetainedCloneProgress::default();
         let Some((index, operation_id)) = self.shared().envelope_ingress_target(closing) else { return Ok(PluginLifecycleStep::Complete(empty)) };
         if grant.maximum_items == 0 {
@@ -326,7 +370,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static, X: I
     }
 
     /// 🎟️ One granted turn of the next store replacement; a closing app cancels it first and removes it once terminal.
-    pub(crate) fn drive_store_replacement_jobs(&mut self,cx:&mut semio_framework_job::StepContext<'_>,loan:RetainedCloneGrant,closing:bool)->Result<PluginLifecycleStep,crate::PluginLifecycleFailure>{
+    pub fn drive_store_replacement_jobs(&mut self,cx:&mut semio_framework_job::StepContext<'_>,loan:RetainedCloneGrant,closing:bool)->Result<PluginLifecycleStep,semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{
         let demand=self.shared().store_replacement_demands(closing,loan.maximum_copy_bytes)?;
         semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,loan,demand,|same,grant|{
             let step=self.drive_store_replacement_original(same,grant,closing)?;
@@ -336,7 +380,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static, X: I
         })
     }
 
-    fn drive_store_replacement_original(&mut self,cx:&mut semio_framework_job::StepContext<'_>, grant: RetainedCloneGrant, closing: bool) -> Result<PluginLifecycleStep,crate::PluginLifecycleFailure> {
+    fn drive_store_replacement_original(&mut self,cx:&mut semio_framework_job::StepContext<'_>, grant: RetainedCloneGrant, closing: bool) -> Result<PluginLifecycleStep,semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
         use ActiveArtifactStoreReplacementState as State;
         let empty = RetainedCloneProgress::default();
         let item = item();
@@ -487,7 +531,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static, X: I
     }
 
     /// 🎟️ One granted turn of the next archive load; a closing app cancels every load and drops it once terminal-empty.
-    pub(crate) fn drive_document_archive_load_retirements(&mut self,cx:&mut semio_framework_job::StepContext<'_>,grant:RetainedCloneGrant,closing:bool)->Result<PluginLifecycleStep,crate::PluginLifecycleFailure> {
+    pub fn drive_document_archive_load_retirements(&mut self,cx:&mut semio_framework_job::StepContext<'_>,grant:RetainedCloneGrant,closing:bool)->Result<PluginLifecycleStep,semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
         let empty = RetainedCloneProgress::default();
         let Some((index, operation)) = self.shared().document_archive_target(closing) else {
             if closing && self.ingest.document_archive_loads.empty_backing_byte_demand().is_some_and(|bytes| bytes != 0) {
@@ -521,12 +565,12 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static, X: I
 
 impl<'v, A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static, X: InstanceExtension> LadderRef<'v, A, M, X> {
     /// 🌡️ Pressure beats fairness: a displaced-owner or child retirement queue a quarter full is drained out of turn.
-    pub(crate) fn maintenance_ladder_under_pressure(&self) -> bool {
+    pub fn maintenance_ladder_under_pressure(&self) -> bool {
         self.history.command_prune_requested() || self.history.pending_command_prune.is_some() || !self.history.command_log.pruned_terminal_is_empty() || self.tools.next_closing_private_child_group(&*self.child_composition).is_some() || self.stores.store.maintenance_retirements_under_pressure() || self.stores.config_lane_under_pressure() || self.child_composition.child_retirements_under_pressure()
     }
 
     /// 🪹️ Every live retirement frontier and its retained directory backing is empty.
-    pub(crate) fn maintenance_ladder_terminal_is_empty(&self) -> bool {
+    pub fn maintenance_ladder_terminal_is_empty(&self) -> bool {
         self.stores.window_config_store.direct_ingress_terminal_is_empty()
             && !self.render_ref().tool_overlay_retirement_pending()
             && self.tool_run_ref().tool_run_retirement_demand(0).is_ok_and(|demand| demand == RetirementDemand::default())
@@ -572,7 +616,7 @@ impl<'v, A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static, X: Ins
             && self.tools.live_runtime_instance_id.is_none_or(|instance_id| A::mounted_jobs_terminal_is_empty(instance_id))
     }
 
-    pub(crate) fn maintenance_unit_at(&self, position: usize, cursor: u8) -> Option<MaintenanceUnit> {
+    pub fn maintenance_unit_at(&self, position: usize, cursor: u8) -> Option<MaintenanceUnit> {
         match position {
             0 => (self.history.command_prune_requested() || self.history.pending_command_prune.is_some() || !self.history.command_log.pruned_terminal_is_empty()).then_some(MaintenanceUnit::CommandPrune),
             1 => self.tools.next_closing_private_child_group(&*self.child_composition).map(MaintenanceUnit::PrivateChildGroup),
@@ -592,7 +636,7 @@ impl<'v, A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static, X: Ins
         }
     }
 
-    pub(crate) fn maintenance_unit_demand(&self, unit: MaintenanceUnit, body: usize) -> Result<Option<RetirementDemand>, ValueError> {
+    pub fn maintenance_unit_demand(&self, unit: MaintenanceUnit, body: usize) -> Result<Option<RetirementDemand>, ValueError> {
         let present = |demand: RetirementDemand| (demand != RetirementDemand::default()).then_some(demand);
         Ok(match unit {
             MaintenanceUnit::AgentPreview=>self.tools.agent_lane_preview.as_ref().map(|state|state.retirement_demands(body,self.tools.tool_cancellations.handle())).transpose()?,
@@ -610,7 +654,7 @@ impl<'v, A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static, X: Ins
     }
 
     /// 📏️ Quotes the first unit with work, in the exact order [`Self::maintenance_ladder_step`] visits them.
-    pub(crate) fn maintenance_ladder_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
+    pub fn maintenance_ladder_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
         for position in 0..MAINTENANCE_POSITIONS {
             let Some(unit) = self.maintenance_unit_at(position, self.maintenance.maintenance_stage) else { continue };
             if let Some(demand) = self.maintenance_unit_demand(unit, body)?.filter(|demand| *demand != RetirementDemand::default()) {
@@ -648,7 +692,7 @@ impl<'v, A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static, X: Ins
                 if self.media.media_closures.get(operation_id).is_some_and(|active|active.download_pending){return Ok(Some(RetirementDemand::default()))}
                 self.media.media_closures.get(operation_id).map(|active| active.retirement_demands(body,&self.tools.tool_cancellations)).transpose()?
             }
-            2=>{let Some((_,operation_id))=self.media.segmented_closures.next_id_from(self.maintenance.maintenance_segment_cursor)else{return Ok(None)};Some({let original=self.media.segmented_closures.get(operation_id).ok_or_else(||maintenance_fault("interactive-job.segment-quote","original segmented close owner is missing"))?;if original.terminal_is_empty(){RetirementDemand{copy_bytes:size_of::<crate::media_export::MediaDownloadRetirement>(),depth:1,..Default::default()}}else{original.retirement_demands(body)?}})},
+            2=>{let Some((_,operation_id))=self.media.segmented_closures.next_id_from(self.maintenance.maintenance_segment_cursor)else{return Ok(None)};Some({let original=self.media.segmented_closures.get(operation_id).ok_or_else(||maintenance_fault("interactive-job.segment-quote","original segmented close owner is missing"))?;if original.terminal_is_empty(){RetirementDemand{copy_bytes:size_of::<semio_framework_plugin_document_media::media_export::MediaDownloadRetirement>(),depth:1,..Default::default()}}else{original.retirement_demands(body)?}})},
             3 => {
                 let Some((_, operation_id)) = self.media.snapshot_retirements.next_id_from(self.maintenance.maintenance_snapshot_cursor) else { return Ok(None) };
                 if self.media.media_exports.get(operation_id).is_some() || self.media.media_closures.get(operation_id).is_some() || self.media.segmented_downloads.contains(operation_id) || self.media.segmented_closures.contains(operation_id) || self.media.media_download_preparation.as_ref().is_some_and(|pending|pending.operation_id==operation_id) {
@@ -724,7 +768,7 @@ impl<'v, A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static, X: Ins
     }
 
     /// 📏️ Quotes the next envelope-ingress page release: the page payload, then the slot backing's whole physical release.
-    pub(crate) fn envelope_ingress_demands(&self, closing: bool, _body: usize) -> Result<RetirementDemand, ValueError> {
+    pub fn envelope_ingress_demands(&self, closing: bool, _body: usize) -> Result<RetirementDemand, ValueError> {
         let Some((_, operation_id)) = self.envelope_ingress_target(closing) else { return Ok(RetirementDemand::default()) };
         Ok(self.ingest.envelope_ingress.get(operation_id).map_or_else(RetirementDemand::default, ActiveArtifactEnvelopeIngress::retirement_demands))
     }
@@ -741,7 +785,7 @@ impl<'v, A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static, X: Ins
     }
 
     /// 📏️ Quotes the next store-replacement turn selected by the target replacement's own state.
-    pub(crate) fn store_replacement_demands(&self, closing: bool, body: usize) -> Result<RetirementDemand, ValueError> {
+    pub fn store_replacement_demands(&self, closing: bool, body: usize) -> Result<RetirementDemand, ValueError> {
         let Some((_, operation_id)) = self.store_replacement_target(closing) else { return Ok(RetirementDemand::default()) };
         self.ingest.store_replacement_jobs.get(operation_id).map_or(Ok(RetirementDemand::default()), |active| store_replacement_unit_demands::<A, M>(active, closing, body))
     }
@@ -755,7 +799,7 @@ impl<'v, A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static, X: Ins
     }
 
     /// 📏️ Quotes the next archive-load turn of the target load, in the phase its state machine is about to run.
-    pub(crate) fn document_archive_demands(&self, closing: bool, body: usize) -> Result<RetirementDemand, ValueError> {
+    pub fn document_archive_demands(&self, closing: bool, body: usize) -> Result<RetirementDemand, ValueError> {
         let Some((_, operation)) = self.document_archive_target(closing) else {
             let backing = if closing { self.ingest.document_archive_loads.empty_backing_byte_demand().unwrap_or(0) } else { 0 };
             return Ok(if backing == 0 { RetirementDemand::default() } else { RetirementDemand { release_bytes: backing, depth: 1, ..Default::default() } });
@@ -783,3 +827,22 @@ pub(crate) fn store_replacement_unit_demands<A: ArtifactApp, M: SpaceMember + Me
         State::Complete => if closing { item_demand() } else { RetirementDemand::default() },
     })
 }
+
+#[path = "📥️staging/🏪️lifecycle-stores/🦀️.rs"]
+pub mod ladders_lifecycle_stores;
+#[path = "📥️staging/🔁️document-replacement/🦀️.rs"]
+pub mod ladders_document_replacement;
+#[path = "📥️staging/🔄️full-operation/🦀️.rs"]
+pub mod ladders_full_operation;
+#[path = "📥️staging/🔌️plugin-app-impl/🦀️.rs"]
+pub mod ladders_plugin_app_impl;
+#[path = "📥️staging/🔒️close-ladder/🦀️.rs"]
+pub mod ladders_close_ladder;
+#[path = "📥️staging/🗝️envelope-ladder/🦀️.rs"]
+pub mod ladders_envelope_ladder;
+#[path = "📥️staging/🚪️ingress/🦀️.rs"]
+pub mod ladders_ingress;
+#[path = "📥️staging/🧺️bundle/🦀️.rs"]
+pub mod ladder_bundle;
+#[path = "📥️staging/🧱️components/🦀️.rs"]
+pub mod ladders_components;

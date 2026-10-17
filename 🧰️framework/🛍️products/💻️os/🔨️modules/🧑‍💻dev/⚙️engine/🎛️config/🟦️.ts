@@ -1,6 +1,6 @@
 //#region 🔌️Adapters
 import { loadConfigFromFile } from "vite";
-import type { OwnedTestProjectConfig } from "../../../../../../🔨️modules/🖱️ui/🎯️targets/⚛️react/🛠️build-tooling/🟦️.ts";
+import type { OwnedTestProjectConfig } from "@semio-tech/ui-react/build-tooling";
 //#endregion 🔌️Adapters
 
 //#region 🗄️Configuration

@@ -24,7 +24,7 @@ import paletteFixture from "../🧫️fixtures/📐️bounded-palette/🔣️.js
 import { createShellScope, ShellScopeProvider } from "@semio-tech/ui-react";
 import { createMemoryStoragePort } from "@semio-tech/framework";
 import { I18nextProvider } from "react-i18next";
-import { SelectionUtilityOptions } from "../../../🛠️ShellHelpers/🟦️.tsx";
+import { SelectionUtilityOptions } from "../../../🛠️ShellHelpers/🪟️window-panes/🪛️utility-bar-options/🟦️.tsx";
 import { within } from "@testing-library/react";
 
 const WINDOW_ID = "fem2d-window-1";

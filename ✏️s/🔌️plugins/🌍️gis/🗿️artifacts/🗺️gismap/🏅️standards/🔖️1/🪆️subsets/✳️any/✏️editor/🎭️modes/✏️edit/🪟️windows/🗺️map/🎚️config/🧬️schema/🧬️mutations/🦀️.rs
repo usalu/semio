@@ -1,6 +1,6 @@
 //! 🧬️ Transparent direct configuration mutation roster.
 
-use super::{MapWindowConfig, MapWindowConfigDiff};
+use crate::editor::gis2d::modes::edit::windows::map::config::{MapWindowConfig, MapWindowConfigDiff};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🧬️Leaves

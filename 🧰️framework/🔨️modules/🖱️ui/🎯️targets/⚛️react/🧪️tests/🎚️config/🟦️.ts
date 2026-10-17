@@ -14,14 +14,13 @@ export default defineConfig({
   root: testRoot,
   cacheDir: testCacheDirectoryV1(process.env, "ui-react"),
   resolve: {
-    alias: [{ find: "@semio-tech/ui-react", replacement: resolve(root, "🟦️.tsx") }],
+    alias: [{ find: /^@semio-tech\/ui-react$/u, replacement: resolve(root, "🟦️.tsx") }],
   },
   test: {
     root: testRoot,
     name: "@semio-tech/ui-react",
     environment: "jsdom",
     include: [
-      "../../../../🧪️tests/📐️overlay-flow/🟦️.ts",
       "../../../../🧪️tests/🖼️icon-render-camera/🟦️.tsx",
       "../../../../🧪️tests/🧪️owned-locale-detector-retirement/🟦️.tsx",
       "../../../../🧪️tests/🛟️chrome-panel-safe-area/🟦️.ts",

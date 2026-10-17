@@ -1,6 +1,8 @@
 //! 🧪️ The `edit` mode states two panes, an even split and the three pointer utilities.
 
-use super::*;
+use crate::{editor::grid2d::modes::edit::windows::grid, editor::grid2d::modes::edit::windows::preview};
+use semio_framework_ui_locale::LocalizedLabel;
+use crate::editor::grid2d::modes::edit::*;
 
 #[test]
 fn the_mode_is_localized_and_carries_no_unreferenced_tool() {

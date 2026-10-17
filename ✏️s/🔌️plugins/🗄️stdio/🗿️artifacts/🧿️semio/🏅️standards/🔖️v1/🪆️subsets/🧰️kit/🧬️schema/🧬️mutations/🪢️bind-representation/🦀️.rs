@@ -2,7 +2,6 @@
 //! `representations` pool (FINAL-state addressing). `role` joins this link to the
 //! `SemioKitType.id` it represents (module doc comment on `📸️snapshot/🦀️.rs`).
 
-use crate::schema::mutations::SemioKitMutation;
 use crate::schema::snapshot::SemioKitSnapshot;
 
 //#region 🔖️Payload
@@ -17,13 +16,16 @@ pub struct BindRepresentation {
     pub at: Option<usize>,
 }
 
-impl protocol::MutationKind<SemioKitSnapshot, SemioKitMutation> for BindRepresentation {
+impl<Op> protocol::MutationKind<SemioKitSnapshot, Op> for BindRepresentation
+where
+    Op: protocol::Mutation<SemioKitSnapshot, Diff = crate::schema::diff::SemioKitDiff> + From<BindRepresentation> + From<crate::schema::mutations::unbind_representation::UnbindRepresentation>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "bind", entity: "representation", kind: "bind-representation", record: "BoundRepresentation" };
 
-    fn diff(&self, base: &SemioKitSnapshot) -> protocol::MutationOutcome<<SemioKitMutation as protocol::Mutation<SemioKitSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioKitSnapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<SemioKitSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &SemioKitSnapshot) -> Result<Vec<SemioKitMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &SemioKitSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

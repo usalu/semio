@@ -1,0 +1,221 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "Case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "held",
+        "live",
+        "reader",
+        "workspace",
+        "partition",
+        "invocation",
+        "retained",
+        "accepting",
+        "capacity",
+        "accepted"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "held": {
+          "type": "boolean"
+        },
+        "live": {
+          "type": "boolean"
+        },
+        "reader": {
+          "type": "boolean"
+        },
+        "workspace": {
+          "type": "boolean"
+        },
+        "partition": {
+          "type": "boolean"
+        },
+        "invocation": {
+          "type": "boolean"
+        },
+        "retained": {
+          "type": "boolean"
+        },
+        "accepting": {
+          "type": "boolean"
+        },
+        "capacity": {
+          "type": "boolean"
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "Lifetime": {
+      "enum": [
+        "drain",
+        "error",
+        "undefined",
+        "cancel",
+        "missing",
+        "copied",
+        "retired"
+      ]
+    },
+    "Terminal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode",
+        "failed",
+        "same",
+        "completed",
+        "settledBeforeRelease",
+        "bodyCalled",
+        "events"
+      ],
+      "properties": {
+        "mode": {
+          "enum": [
+            "drain",
+            "error",
+            "undefined",
+            "cancel",
+            "missing",
+            "copied",
+            "retired"
+          ]
+        },
+        "failed": {
+          "type": "boolean"
+        },
+        "same": {
+          "type": "boolean"
+        },
+        "completed": {
+          "type": "boolean"
+        },
+        "settledBeforeRelease": {
+          "type": "boolean"
+        },
+        "bodyCalled": {
+          "type": "boolean"
+        },
+        "events": {
+          "type": "array",
+          "maxItems": 16,
+          "items": {
+            "enum": [
+              "started",
+              "callback-return",
+              "release",
+              "drained",
+              "scope-settled",
+              "scope-failed"
+            ]
+          }
+        }
+      }
+    },
+    "Batch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "live",
+        "inventory"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "ordinary",
+            "managed",
+            "copied"
+          ]
+        },
+        "live": {
+          "type": "boolean"
+        },
+        "inventory": {
+          "type": "boolean"
+        }
+      }
+    },
+    "Epoch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "changed",
+        "afterAwait",
+        "accepted"
+      ],
+      "properties": {
+        "changed": {
+          "enum": [
+            "none",
+            "source",
+            "schema"
+          ]
+        },
+        "afterAwait": {
+          "type": "boolean"
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "ColdImport": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "module",
+        "method"
+      ],
+      "properties": {
+        "module": {
+          "enum": [
+            "🏗️build/🕸️graph/🟦️.ts",
+            "🏗️build/📥️caller/🟦️.ts",
+            "🟨️.mjs"
+          ]
+        },
+        "method": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "RevisionReader": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "module",
+        "sourceMaximumBytes",
+        "schemaMaximumBytes"
+      ],
+      "properties": {
+        "module": {
+          "enum": [
+            "⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts",
+            "🏗️build/📥️inputs/💾️storage/🟨️.mjs",
+            "🏗️build/📥️inputs/🧮️digest/📥️read/🟨️.mjs",
+            "🏗️build/👁️observation/🟨️.mjs",
+            "🏗️build/🕸️graph/🟦️.ts",
+            "🏗️build/👁️observation/📥️reuse/🟨️.mjs",
+            "🏗️build/📥️inputs/📋️data/📥️load/🟨️.mjs"
+          ]
+        },
+        "sourceMaximumBytes": {
+          "const": 8388608
+        },
+        "schemaMaximumBytes": {
+          "const": 65536
+        }
+      }
+    }
+  }
+}

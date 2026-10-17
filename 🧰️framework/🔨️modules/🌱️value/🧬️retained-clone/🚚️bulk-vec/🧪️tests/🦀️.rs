@@ -175,7 +175,6 @@ fn bulk_vector_clone_turn_count_is_bytes_over_page() {
     let (output, turns, mut cursor) = drive(&source, 1 << 20);
     assert_eq!(turns.len(), number(&law, "maximumTurnsForFourMebibytes"));
     assert!(turns.len() * 1000 < output.len(), "[DEBUG] 4 MiB vec clone took {} turns for {} elements", turns.len(), output.len());
-    eprintln!("[DEBUG] bulk vec clone 4 MiB Vec<u16>: {} turns", turns.len());
     drop(output);
     close_all(&mut cursor);
 }

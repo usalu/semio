@@ -61,11 +61,15 @@ pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
 }
 //#endregion 🔖️IoDeclaration
 
-#[path = "💾️binary/🦀️.rs"]
-pub mod binary;
+pub mod binary {
+    pub use semio_s_artifact_sourcing_curation_schema::standards::v1::subsets::any::io::binary::*;
+    pub use semio_s_artifact_sourcing_curation_domain::standards::v1::subsets::any::io::binary::diff;
+    pub use semio_s_artifact_sourcing_curation_examples::standards::v1::subsets::any::io::binary::inferences;
+}
 
-#[path = "📝️text/🦀️.rs"]
-pub mod text;
+pub mod text {
+    pub use semio_s_artifact_sourcing_curation_schema::standards::v1::subsets::any::io::text::*;
+    pub use semio_s_artifact_sourcing_curation_examples::standards::v1::subsets::any::io::text::inferences;
+}
 
-#[path = "🪶️sqlite/🦀️.rs"]
-pub mod sqlite;
+

@@ -93,7 +93,6 @@ fn edit_replay_clamping_preserves_every_fatal_mutation_status() {
     assert!(result.report().outcomes.iter().any(|outcome| outcome.messages.is_empty()));
     result.begin_retirement();
     semio_framework_os_store_testing_doubles::close(&mut result);
-    eprintln!("[DEBUG] all {count} fatal mutation statuses preserved after cooperative message settlement");
 }
 /// 🧾️ Each original owner pays its complete advertised physical release.
 fn retire_bounded(mut child: Box<dyn ErasedSnapshotRetirement>, bytes: usize) {
@@ -144,5 +143,4 @@ fn edit_message_clamp_cursor_matches_neutral_rows_and_cancels_bounded() {
             }
         }
     }
-    eprintln!("[DEBUG] final paged clamp eight neutral cases, three work seeds, three release seeds and six cancellation points retain exact paid terminal owners");
 }

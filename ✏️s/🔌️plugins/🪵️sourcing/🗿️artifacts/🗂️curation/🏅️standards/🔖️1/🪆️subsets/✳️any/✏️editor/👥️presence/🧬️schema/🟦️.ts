@@ -26,6 +26,10 @@ type sourcingCurationPresenceGuardSizeBounds = { readonly minItems?: number; rea
 
 export const sourcingCurationPresenceGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : sourcingCurationPresenceGuardReject(at, "value is not an object");
+export const sourcingCurationPresenceGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) sourcingCurationPresenceGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const sourcingCurationPresenceGuardArray = (value: unknown, at: string, bounds: sourcingCurationPresenceGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return sourcingCurationPresenceGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) sourcingCurationPresenceGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -56,10 +60,10 @@ export const sourcingCurationPresenceGuardConstant = <T extends string | number 
 //#endregion 🚪️Parsers
 
 export function parseSourcingCurationPresence(value: unknown, at = "$"): SourcingCurationPresence {
-  const row = sourcingCurationPresenceGuardObject(value, at);
+  const row = sourcingCurationPresenceGuardClosed(sourcingCurationPresenceGuardObject(value, at), at, ["worldCameraPosition", "worldCameraTarget", "worldCameraFov"]);
   return {
-    worldCameraPosition: sourcingCurationPresenceGuardArray(row["worldCameraPosition"], `${at}.worldCameraPosition`, {"minItems": 3, "maxItems": 3}).map((item, index) => sourcingCurationPresenceGuardNumber(item, `${at}.worldCameraPosition[${index}]`)),
-    worldCameraTarget: sourcingCurationPresenceGuardArray(row["worldCameraTarget"], `${at}.worldCameraTarget`, {"minItems": 3, "maxItems": 3}).map((item, index) => sourcingCurationPresenceGuardNumber(item, `${at}.worldCameraTarget[${index}]`)),
+    worldCameraPosition: ((items0) => [sourcingCurationPresenceGuardNumber(items0[0], `${at}.worldCameraPosition[0]`), sourcingCurationPresenceGuardNumber(items0[1], `${at}.worldCameraPosition[1]`), sourcingCurationPresenceGuardNumber(items0[2], `${at}.worldCameraPosition[2]`)])(sourcingCurationPresenceGuardArray(row["worldCameraPosition"], `${at}.worldCameraPosition`, {"minItems": 3, "maxItems": 3})),
+    worldCameraTarget: ((items0) => [sourcingCurationPresenceGuardNumber(items0[0], `${at}.worldCameraTarget[0]`), sourcingCurationPresenceGuardNumber(items0[1], `${at}.worldCameraTarget[1]`), sourcingCurationPresenceGuardNumber(items0[2], `${at}.worldCameraTarget[2]`)])(sourcingCurationPresenceGuardArray(row["worldCameraTarget"], `${at}.worldCameraTarget`, {"minItems": 3, "maxItems": 3})),
     worldCameraFov: sourcingCurationPresenceGuardNumber(row["worldCameraFov"], `${at}.worldCameraFov`),
   };
 }

@@ -31,7 +31,5 @@ impl Serializer<Grid2dSnapshot> for Grid2dIntoJson {
 }
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

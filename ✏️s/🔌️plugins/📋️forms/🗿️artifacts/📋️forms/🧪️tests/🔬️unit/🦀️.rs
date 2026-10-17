@@ -1,4 +1,5 @@
 use super::*;
+use semio_framework_test_fixtures::fixture_text;
 
 trait FormsChildOwnerOracle {
     fn expected() -> serde_json::Value;
@@ -8,7 +9,7 @@ struct SerdeJsonFormsChildOwnerOracle;
 
 impl FormsChildOwnerOracle for SerdeJsonFormsChildOwnerOracle {
     fn expected() -> serde_json::Value {
-        serde_json::from_str(include_str!("../🧫️fixtures/🧫️child-owner-isolation/🔣️.json")).expect("language-neutral Forms child-owner fixture")
+        serde_json::from_str(fixture_text!("../../🧪️tests/🧫️fixtures/🧫️child-owner-isolation/🔣️.json")).expect("language-neutral Forms child-owner fixture")
     }
 }
 

@@ -20,6 +20,5 @@ export class TestScript extends BundleScript {
     }
     const uniqueKeys = ajv.compile({ type: "array", items: { type: "string" }, uniqueItems: true });
     for (const row of fixture.duplicateCases) assert.equal(uniqueKeys(row.entries.map(entry => entry[0])), false, row.id);
-    console.log(`[DEBUG] Diagnostic controlled strict TypeScript and independent Ajv oracle: ${fixture.cases.length} cases`);
   }
 }

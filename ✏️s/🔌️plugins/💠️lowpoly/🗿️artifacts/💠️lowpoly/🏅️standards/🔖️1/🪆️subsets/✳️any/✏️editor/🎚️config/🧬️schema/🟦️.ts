@@ -84,6 +84,10 @@ type lowpolyLowpolyConfigGuardSizeBounds = { readonly minItems?: number; readonl
 
 export const lowpolyLowpolyConfigGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : lowpolyLowpolyConfigGuardReject(at, "value is not an object");
+export const lowpolyLowpolyConfigGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) lowpolyLowpolyConfigGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const lowpolyLowpolyConfigGuardArray = (value: unknown, at: string, bounds: lowpolyLowpolyConfigGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return lowpolyLowpolyConfigGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) lowpolyLowpolyConfigGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -114,7 +118,7 @@ export const lowpolyLowpolyConfigGuardConstant = <T extends string | number | bo
 //#endregion 🚪️Parsers
 
 export function parseLowpolyConfig(value: unknown, at = "$"): LowpolyConfig {
-  const row = lowpolyLowpolyConfigGuardObject(value, at);
+  const row = lowpolyLowpolyConfigGuardClosed(lowpolyLowpolyConfigGuardObject(value, at), at, ["activeObjectId", "selectionMode", "selectionIds", "selectionTargetsMesh", "selectionTargetsVertex", "selectionTargetsEdge", "selectionTargetsFace", "selectionKeys", "paintUtility", "activePaintLayer", "selectionMethod", "selectionModeDefault", "selectedObjectIds", "hoveredObjectId", "hoveredTargetObjectId", "hoveredTargetMode", "hoveredTargetId", "utilityParamsJson", "paintColorR", "paintColorG", "paintColorB", "paintColorA", "worldCameraPosition", "worldCameraTarget", "worldCameraFov", "engagementInput", "showEdges", "sunEnabled", "sunAzimuth", "sunElevation", "sunIntensity", "sunColor"]);
   return {
     activeObjectId: lowpolyLowpolyConfigGuardString(row["activeObjectId"], `${at}.activeObjectId`),
     selectionMode: lowpolyLowpolyConfigGuardString(row["selectionMode"], `${at}.selectionMode`),
@@ -138,8 +142,8 @@ export function parseLowpolyConfig(value: unknown, at = "$"): LowpolyConfig {
     paintColorG: lowpolyLowpolyConfigGuardInteger(row["paintColorG"], `${at}.paintColorG`, {"minimum": 0, "maximum": 255}),
     paintColorB: lowpolyLowpolyConfigGuardInteger(row["paintColorB"], `${at}.paintColorB`, {"minimum": 0, "maximum": 255}),
     paintColorA: lowpolyLowpolyConfigGuardInteger(row["paintColorA"], `${at}.paintColorA`, {"minimum": 0, "maximum": 255}),
-    worldCameraPosition: lowpolyLowpolyConfigGuardArray(row["worldCameraPosition"], `${at}.worldCameraPosition`, {"minItems": 3, "maxItems": 3}).map((item, index) => lowpolyLowpolyConfigGuardNumber(item, `${at}.worldCameraPosition[${index}]`)),
-    worldCameraTarget: lowpolyLowpolyConfigGuardArray(row["worldCameraTarget"], `${at}.worldCameraTarget`, {"minItems": 3, "maxItems": 3}).map((item, index) => lowpolyLowpolyConfigGuardNumber(item, `${at}.worldCameraTarget[${index}]`)),
+    worldCameraPosition: ((items0) => [lowpolyLowpolyConfigGuardNumber(items0[0], `${at}.worldCameraPosition[0]`), lowpolyLowpolyConfigGuardNumber(items0[1], `${at}.worldCameraPosition[1]`), lowpolyLowpolyConfigGuardNumber(items0[2], `${at}.worldCameraPosition[2]`)])(lowpolyLowpolyConfigGuardArray(row["worldCameraPosition"], `${at}.worldCameraPosition`, {"minItems": 3, "maxItems": 3})),
+    worldCameraTarget: ((items0) => [lowpolyLowpolyConfigGuardNumber(items0[0], `${at}.worldCameraTarget[0]`), lowpolyLowpolyConfigGuardNumber(items0[1], `${at}.worldCameraTarget[1]`), lowpolyLowpolyConfigGuardNumber(items0[2], `${at}.worldCameraTarget[2]`)])(lowpolyLowpolyConfigGuardArray(row["worldCameraTarget"], `${at}.worldCameraTarget`, {"minItems": 3, "maxItems": 3})),
     worldCameraFov: lowpolyLowpolyConfigGuardNumber(row["worldCameraFov"], `${at}.worldCameraFov`),
     engagementInput: lowpolyLowpolyConfigGuardString(row["engagementInput"], `${at}.engagementInput`),
     showEdges: lowpolyLowpolyConfigGuardBoolean(row["showEdges"], `${at}.showEdges`),

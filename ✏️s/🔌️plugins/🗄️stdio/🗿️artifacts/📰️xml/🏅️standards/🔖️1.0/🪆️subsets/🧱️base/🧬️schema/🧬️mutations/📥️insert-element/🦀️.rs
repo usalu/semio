@@ -41,6 +41,4 @@ impl protocol::MutationKind<XmlSnapshot, super::XmlMutation> for InsertElementMu
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

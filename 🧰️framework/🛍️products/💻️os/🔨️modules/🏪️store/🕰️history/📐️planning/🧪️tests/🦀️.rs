@@ -43,7 +43,6 @@ fn history_plan_retirement_owns_original_positions_inputs_and_empty_page_scaffol
         }
         assert_eq!(released,held+allocated);let(_,heap)=observe_heap_allocations_on_this_thread(||drop(target));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
     }}
-    println!("[DEBUG] native actual HistoryReadPlan original ordinal/draft/supersession/text/page owners preserved; empty constructor pages0heap; five-axis undergrants0effects; exact physical receipts; terminal Drop0heap");
 }
 #[test]
 fn history_preview_retirement_preserves_original_plan_draft_snapshot_registry_and_factories() {
@@ -71,7 +70,6 @@ use semio_framework_value::ErasedSnapshotRetirement;
         }
         assert_eq!(released,held+allocated);let(_,heap)=observe_heap_allocations_on_this_thread(||drop(owner));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
     }}
-    println!("[DEBUG] native complete original preview plan/draft/snapshot/registry/factory custody preserved across nine cancellation/copy frontiers; pure inquiries0heap; all five-axis refusals0effects; physical births/releases exact; terminal Drop0heap");
 }
 #[test]
 fn history_completed_plan_retains_original_residue_and_transferred_results() {
@@ -104,7 +102,6 @@ use semio_framework_os_store_testing_fixtures::DemoSnapshot;
         }
         assert_eq!(released,held+allocated);let(_,heap)=observe_heap_allocations_on_this_thread(||drop(target));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
     }}}
-    println!("[DEBUG] actual completed preview/replay handoffs retain original position/count pointers and transfer original result owners0heap; eighteen cancellation/copy routes; all five-axis refusals0effects; exact physical receipts; terminal Drop0heap");
 }
 
 #[test]
@@ -130,7 +127,7 @@ use semio_framework_os_store_testing_fixtures::DemoSnapshot;
             for below in [grant;5].into_iter().enumerate().filter_map(|(axis,mut below)|{match axis{0=>below.maximum_items=0,1 if work>0=>below.maximum_copy_bytes=work-1,2 if capacity>0=>below.maximum_capacity_bytes=capacity-1,3 if release>0=>below.maximum_release_bytes=release-1,4 if depth>0=>below.maximum_depth=depth-1,_=>return None};Some(below)}){let(step,heap)=observe_heap_allocations_on_this_thread(||owner.close_step(below));match step{Ok(step)=>assert_eq!(step.progress(),Default::default()),Err(error)=>assert!(matches!(error.kind,ValueRefusalKind::DepthLimit|ValueRefusalKind::OwnershipLimit|ValueRefusalKind::WorkLimit))};assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));}
             let(step,heap)=observe_heap_allocations_on_this_thread(||owner.close_step(grant).unwrap());assert!(step.progress().fits(grant));assert_eq!((step.progress().retained_capacity_bytes,step.progress().released_bytes),(heap.requested_bytes,heap.released_bytes));births+=heap.requested_bytes;released+=heap.released_bytes;if owner.terminal_is_empty(){break;}assert!(matches!(step,semio_framework_value::retained_clone::RetainedCloneStep::Progress(_)));if turn==cut.as_u64().unwrap()as usize{let(same,heap)=observe_heap_allocations_on_this_thread(||owner);owner=same;assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));}assert!(turn<199999);
         }
-        assert_eq!(released,held+births);let(_,heap)=observe_heap_allocations_on_this_thread(||drop(owner));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));eprintln!("[DEBUG] History actual raw route={route} copy={copy} cancellation={cut} original={held} births={births} physical={released} parentUntilPhysicalEmpty=true terminalDrop=0");
+        assert_eq!(released,held+births);let(_,heap)=observe_heap_allocations_on_this_thread(||drop(owner));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
     }}}
 }
 
@@ -158,6 +155,6 @@ use semio_framework_os_vcs::VcsError;
             let body=copy.as_u64().unwrap()as usize;let demand=if !owner.terminal_is_empty(){semio_framework_value::RetirementDemand{copy_bytes:owner.next_copy_byte_demand().unwrap(),capacity_bytes:owner.next_capacity_byte_demand(cleanup_grant(&law).maximum_copy_bytes).unwrap(),release_bytes:owner.next_release_byte_demand().unwrap(),depth:owner.next_depth_demand().unwrap()}}else if let Some(frame)=frame.as_ref(){semio_framework_value::factory_ticket_demands(frame,cleanup_grant(&law).maximum_copy_bytes).unwrap()}else{break};let grant=cleanup_grant(&law);
             let (step,heap)=observe_heap_allocations_on_this_thread(||if !owner.terminal_is_empty(){owner.close_step(grant).unwrap()}else{semio_framework_value::close_factory_ticket(&mut frame,grant).unwrap()});assert!(step.progress().fits(grant));assert_eq!((step.progress().retained_capacity_bytes,step.progress().released_bytes),(heap.requested_bytes,heap.released_bytes));births+=heap.requested_bytes;released+=heap.released_bytes;if turn==cut.as_u64().unwrap()as usize{let(same,heap)=observe_heap_allocations_on_this_thread(||owner);owner=same;assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));}assert!(turn<199999);
         }
-        assert!(owner.terminal_is_empty()&&frame.is_none()&&output.is_none());assert_eq!(released,held+births);let(_,heap)=observe_heap_allocations_on_this_thread(||drop((owner,frame,output)));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));eprintln!("[DEBUG] History actual preview output pointer preserved; original input residue retained; copy={copy} cancellation={cut} original={held} births={births} physical={released} terminalDrop=0");
+        assert!(owner.terminal_is_empty()&&frame.is_none()&&output.is_none());assert_eq!(released,held+births);let(_,heap)=observe_heap_allocations_on_this_thread(||drop((owner,frame,output)));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
     }}
 }

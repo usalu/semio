@@ -3,7 +3,7 @@ use super::*;
 fn actual_gpu() -> Option<GpuContext> {
     match semio_framework_async::block_on(GpuContext::headless(1, 1)) {
         Ok(gpu) => Some(gpu),
-        Err(fault) => { eprintln!("[DEBUG] native engine raster ownership law unavailable: {fault}"); None }
+        Err(fault) => {  None }
     }
 }
 fn reserved(gpu: &mut GpuContext, witness: RasterTextureWitness) -> EngineRasterBuild {
@@ -47,7 +47,6 @@ fn another_actual_session_returns_the_exact_owned_build_before_first_allocation(
     close_build(&mut gpu, &mut build);
     close_gpu(&mut gpu);
     close_gpu(&mut foreign);
-    eprintln!("[DEBUG] actual sibling session refused original build; issuer retained roots and closed exact reservation");
 }
 
 /// ⏳️ Changed live freshness refuses texture birth and retains the issuer's complete original build.
@@ -68,7 +67,6 @@ fn stale_exact_reservation_returns_original_roots_before_allocating_texture() {
     assert!(!build.terminal_is_empty());
     close_build(&mut gpu, &mut build);
     close_gpu(&mut gpu);
-    eprintln!("[DEBUG] stale exact tuple allocated no texture; actual original build closed before terminal");
 }
 
 /// 📬️ A full actual close slot returns a second issuer's exact admission instead of consuming it.
@@ -97,7 +95,6 @@ fn occupied_retirement_slot_returns_the_other_actual_issued_admission() {
     close_build(&mut gpu, &mut first_build);
     close_gpu(&mut other);
     close_gpu(&mut gpu);
-    eprintln!("[DEBUG] actual occupied retirement returned second issuer admission; both actual tables/builds retired");
 }
 
 /// 🧺️ A stale actual admission transferred into an available rejection close slot is reported as retained.
@@ -112,5 +109,4 @@ fn rejected_actual_admission_is_retained_only_after_the_close_cursor_owns_it() {
     close_build(&mut issuer, &mut build);
     close_gpu(&mut issuer);
     close_gpu(&mut gpu);
-    eprintln!("[DEBUG] actual stale admission moved into rejected close owner before Retained; both actual tables/builds retired");
 }

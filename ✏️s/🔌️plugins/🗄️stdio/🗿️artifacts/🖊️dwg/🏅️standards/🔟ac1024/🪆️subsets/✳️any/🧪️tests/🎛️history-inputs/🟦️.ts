@@ -16,6 +16,5 @@ test("DWG version-info edits are genuine committed inputs for each native versio
     expect(validate(mutation)).toBe(true);
     expect(validate({ ...mutation, version: "ACX" })).toBe(false);
     expect(after).toEqual({ ...before, version: "AC1024", codepage });
-    console.log(`[DEBUG] DWG committed version info originalVersion=${version} version=${after.version} codepage=${after.codepage} unchangedOtherFields=true`);
   }
 });

@@ -1,10 +1,38 @@
 //! 🏊️ Staged `reserved-routes` members of the `instance-commands` use cases, as methods of the borrowed bundle (WP7 of the instance family).
 //!
 //! 🧊️ Framework-reserved routes: the history, clipboard and shared host routes and their commit units.
-use super::*;
-use super::commands_instance_root::catalogue_snapshot_from_document;
-use super::commands_instance_root::note_shell_command_label;
-use super::docs_plugin_app_impl::history_changed_event;
+use semio_framework::{ActionKind, Fault, FaultCode, FaultFrom, FaultOrigin, NOTE_SHELL_COMMAND_ACTION_ID, REVERT_TO_COMMAND_ACTION_ID, SET_HISTORY_COMMAND_FILTER_ACTION_ID};
+use semio_framework_plugin_decl_emission::{ActionMeta, Emit};
+use semio_framework_plugin_decl_app::ArtifactApp;
+use store::os_store::store_schema::ArtifactCommand;
+use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use pack::snapshot::ArtifactPack;
+use semio_framework_plugin_job::reserved_jobs::{CLIPBOARD_ACTION_IDS, FrameworkReservedCommit, FrameworkReservedCommitPermit, FrameworkReservedCommitStage, HISTORY_ACTION_IDS, PendingFrameworkReserved, encode_framework_reserved_job_input};
+use semio_framework::kernel::{ClipboardFragment, Effect, FRAMEWORK_RESERVED_JOB_KIND, InvocationResult, UiDirtyScope};
+use crate::command_bundle::CommandCtx;
+use semio_framework_value::DslValue;
+use semio_framework_ui_layout::layout::FRAMEWORK_HISTORY_BODY_KEY;
+use semio_framework_plugin_retained_command::reserved_route_capacity_lift::FRAMEWORK_RESERVED_ROUTE_CAPACITY;
+use std::future::Future;
+use std::collections::HashSet;
+use semio_framework_plugin_decl_views::history_view::{HistoryCommandFilter, InverseAction, ShellHistoryReplay};
+use semio_framework_plugin_interaction::interaction_topology::INTERACTION_ACTION_IDS;
+use semio_framework_plugin_instance_extension::InstanceExtension;
+use store::{MemberFactory, Mutation, SpaceMember};
+use semio_framework_plugin_decl_views::child_view::MemberKey;
+use protocol::OpText;
+use semio_framework_plugin_reactor_app::PluginApp;
+use semio_framework::onboarding::RECORD_TUTORIAL_ACTION_ID;
+use semio_framework_plugin_instance_jobs::jobs_components::ToolOperations;
+use semio_framework_plugin_job::TypedOperationCompletionWitness;
+use semio_framework_plugin_retained_command::typed_operation::bounded_json_items;
+use semio_framework_plugin_instance_dispatch::dispatch_emit;
+use semio_framework_plugin_instance_render::render_history_view::history_command;
+use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
+use semio_framework_ui_contract::*;
+use crate::commands_instance_root::catalogue_snapshot_from_document;
+use crate::commands_instance_root::note_shell_command_label;
+use semio_framework_plugin_instance_docs::docs_plugin_app_impl::history_changed_event;
 
 impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceExtension> CommandCtx<'ctx, A, M, X> {
     /// 🧮️ One reserved gesture's work, in the STAGED EDIT ROWS every other capacity in the
@@ -91,7 +119,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
     /// 🪜️ Runs ONE bounded unit of the commit at the head of the queue. Commits are strictly FIFO,
     /// and the head waits while a finished outcome is still untaken, so at most one outcome is ever
     /// owed to the host. A finished commit leaves its result in `reserved_commit_outcome`.
-    pub(super) async fn step_framework_reserved_commit(&mut self) -> Result<(), Fault> {
+    pub async fn step_framework_reserved_commit(&mut self) -> Result<(), Fault> {
         if self.pending.reserved_commit_outcome.is_some() {
             return Ok(());
         }
@@ -226,7 +254,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
             let Some(replay) = self.history.shell_redo.pop() else {
                 return Ok(None);
             };
-            crate::plugin_runtime::debug_runtime_line(format_args!("[TRACE] chrome history action=redo seq={}", replay.seq));
+            semio_framework_plugin_reactor_app::debug_runtime_line(format_args!("[TRACE] chrome history action=redo seq={}", replay.seq));
             self.history.shell_undone.remove(&replay.seq);
             self.history.history_dirty_sequences.insert(replay.seq);
             self.tools.record_command(&mut *self.history, action, ActionKind::History, None, None, Vec::new(), None);
@@ -252,7 +280,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
         let seq = entry.seq;
         let inverse = entry.inverse.clone().expect("chrome undo target has inverse");
         let redo = InverseAction { action_id: entry.action_id.clone(), args: None };
-        crate::plugin_runtime::debug_runtime_line(format_args!("[TRACE] chrome history action=undo seq={seq} inverse={}", inverse.action_id));
+        semio_framework_plugin_reactor_app::debug_runtime_line(format_args!("[TRACE] chrome history action=undo seq={seq} inverse={}", inverse.action_id));
         self.history.shell_undone.insert(seq);
         self.history.shell_redo.push(ShellHistoryReplay { seq, redo });
         self.history.history_dirty_sequences.insert(seq);
@@ -261,7 +289,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
     }
 
     async fn commit_framework_history_route(&mut self, action: &str, args: Option<&DslValue>, meta: &ActionMeta, permit: &FrameworkReservedCommitPermit, pins: Vec<vcs::CompositionPin>, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<InvocationResult, Fault> {
-        crate::plugin_runtime::debug_runtime_line(format_args!("[TRACE] history route action={action}"));
+        semio_framework_plugin_reactor_app::debug_runtime_line(format_args!("[TRACE] history route action={action}"));
         if permit.lease.is_cancelled().await {
             return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.cancelled"), format!("framework route '{action}' was cancelled at commit")));
         }

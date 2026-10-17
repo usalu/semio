@@ -3,7 +3,7 @@
 //! the framework's segmented-download lane above it, a notice above what one segmented download
 //! may carry.
 
-use crate::editor::puzzle5d::Puzzle5dDocument;
+use crate::editor::puzzle5d::entities::Puzzle5dDocument;
 use crate::retained_command::PUZZLE_COMMAND_OUTPUT_BYTES;
 use semio_framework_plugin::app::{ArtifactDownloadOutput, ArtifactOutputChunks};
 use semio_framework_plugin::kernel::Effect;

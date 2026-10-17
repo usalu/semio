@@ -5,9 +5,9 @@ use semio_s_artifact_draw_drawing_diff::{DrawingDiff, DrawingAssetsDelta};
 #[derive(Clone,Debug,PartialEq,semio_framework_value::RetainedClone,semio_framework_value::RetireOwned,semio_framework_value::ToValue,semio_framework_value::FromValue,semio_framework_dsl_record_derive::DslRecord,dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner=semio_framework_pack_json)]
 #[mutation_leaf(contract=::protocol)]
-#[cfg_attr(test,derive(serde::Serialize,serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"),derive(serde::Serialize,serde::Deserialize))]
 #[value(rename_all="camelCase")]
-#[cfg_attr(test,serde(rename_all="camelCase"))]
+#[cfg_attr(any(test, feature = "testkit"),serde(rename_all="camelCase"))]
 #[dsl(keyword="import-image-asset")]
 pub struct ImportImageAsset {pub asset_id:semio_framework_value::paged::PagedUtf8<{usize::MAX}>,#[dsl(block)] pub asset:DrawingImageAsset}
 pub fn import_image_asset<Op: From<ImportImageAsset>>(asset_id:String,asset:DrawingImageAsset) -> Op {Op::from(ImportImageAsset {asset_id:asset_id.into(),asset})}

@@ -1817,49 +1817,6 @@ where
     }
 }
 
-/// 🧭️ Selects the original archive operation eligible for one close turn.
-fn original_document_archive_close_slot<P,Mutation>(document_archive_loads:&ArtifactFixedRegistry<ActiveDocumentArchiveLoad<P,Mutation>>,closing:bool)->Option<u64>
-where P:Clone+semio_framework_value::ToValue+semio_framework_value::FromValue,Mutation:Clone+semio_framework_value::ToValue+semio_framework_value::FromValue+store::Mutation<P>{
-    (0..ARTIFACT_LIVE_OUTPUT_SLOTS).find_map(|index|document_archive_loads.entry(index).filter(|(_,active)|closing||active.terminal_target.is_some()&&!matches!(active.state,ActiveDocumentArchiveLoadState::Ready|ActiveDocumentArchiveLoadState::Cancelled|ActiveDocumentArchiveLoadState::Fault)).map(|(operation,_)|*operation))
-}
-
-/// 📏️ Borrows the exact archive frontier and separate original registry backing.
-#[doc(hidden)]
-pub fn original_document_archive_close_demands<P,Mutation>(document_archive_loads:&ArtifactFixedRegistry<ActiveDocumentArchiveLoad<P,Mutation>>,body:usize,closing:bool)->Result<Option<RetirementDemand>,ValueError>
-where P:Clone+semio_framework_value::ToValue+semio_framework_value::FromValue+ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot+Send+Sync+'static,Mutation:Clone+semio_framework_value::ToValue+semio_framework_value::FromValue+store::Mutation<P>+OpBinary+OpText+Send+'static{
-    if let Some(operation)=original_document_archive_close_slot(document_archive_loads,closing){
-        let active=document_archive_loads.get(operation).expect("original archive close slot");
-        return if active.terminal()||active.terminal_target.is_none()||active.inputs_are_empty(){Ok(Some(RetirementDemand{release_bytes:if active.terminal(){active.fault.capacity()}else{0},depth:1,..Default::default()}))}else{active.retirement_demands(body).map(Some)};
-    }
-    Ok(if closing{document_archive_loads.empty_backing_byte_demand().filter(|bytes|*bytes!=0).map(|release_bytes|RetirementDemand{release_bytes,depth:1,..Default::default()})}else{None})
-}
-
-/// 🎟️ Yields actual child progress before terminal status, slot removal, or backing release.
-#[doc(hidden)]
-pub fn advance_original_document_archive_close<P,Mutation>(document_archive_loads:&mut ArtifactFixedRegistry<ActiveDocumentArchiveLoad<P,Mutation>>,grant:RetainedCloneGrant,closing:bool)->Result<RetainedCloneStep,ValueError>
-where P:Clone+semio_framework_value::ToValue+semio_framework_value::FromValue+ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot+Send+Sync+'static,Mutation:Clone+semio_framework_value::ToValue+semio_framework_value::FromValue+store::Mutation<P>+OpBinary+OpText+Send+'static{
-    let idle=RetainedCloneProgress::default();
-    let Some(demand)=original_document_archive_close_demands(document_archive_loads,grant.maximum_copy_bytes,closing)?else{return Ok(RetainedCloneStep::Complete(idle));};
-    if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(RetainedCloneStep::Progress(idle));}
-    let Some(operation)=original_document_archive_close_slot(document_archive_loads,closing)else{return document_archive_loads.close_empty_backing_granted(grant);};
-    let active=document_archive_loads.get_mut(operation).expect("original archive close slot");
-    if active.terminal(){
-        if !active.inputs_are_empty(){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"terminal archive retained an original physical owner"));}
-        let released_bytes=active.fault.capacity();
-        if released_bytes!=0{drop(std::mem::take(&mut active.fault));return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes,..idle}));}
-        drop(document_archive_loads.remove(operation));
-        return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..idle}));
-    }
-    if active.terminal_target.is_none(){active.request_terminal(ActiveDocumentArchiveLoadState::Cancelled);return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..idle}));}
-    if active.inputs_are_empty(){
-        let target=active.terminal_target.expect("original archive terminal target");active.state=target;active.phase=ActiveDocumentArchiveLoadPhase::Terminal;
-        return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..idle}));
-    }
-    let step=active.close_step(grant)?;
-    semio_framework_value::retained_clone::admit_retained_clone_close(grant,step,active.terminal_is_empty(),"original scheduled archive close")?;
-    Ok(RetainedCloneStep::Progress(step.progress()))
-}
-
 impl<P, Mutation> Drop for ActiveDocumentArchiveLoad<P, Mutation>
 where
     P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,

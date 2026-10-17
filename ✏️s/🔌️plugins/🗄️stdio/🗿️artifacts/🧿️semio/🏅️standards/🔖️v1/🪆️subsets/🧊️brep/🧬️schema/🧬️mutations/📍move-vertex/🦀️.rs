@@ -2,7 +2,6 @@
 //! absolute position, not a relative offset). SMO approved this verb explicitly.
 
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3;
-use crate::schema::mutations::SemioBrepMutation;
 use crate::schema::snapshot::SemioBrepSnapshot;
 
 //#region 🔖️Payload
@@ -14,13 +13,16 @@ pub struct MoveVertex {
     pub new_point: SemioPoint3,
 }
 
-impl protocol::MutationKind<SemioBrepSnapshot, SemioBrepMutation> for MoveVertex {
+impl<Op> protocol::MutationKind<SemioBrepSnapshot, Op> for MoveVertex
+where
+    Op: protocol::Mutation<SemioBrepSnapshot, Diff = crate::schema::diff::SemioBrepDiff> + From<MoveVertex>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "move", entity: "vertex", kind: "move-vertex", record: "MovedVertex" };
 
-    fn diff(&self, base: &SemioBrepSnapshot) -> protocol::MutationOutcome<<SemioBrepMutation as protocol::Mutation<SemioBrepSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioBrepSnapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<SemioBrepSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &SemioBrepSnapshot) -> Result<Vec<SemioBrepMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &SemioBrepSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

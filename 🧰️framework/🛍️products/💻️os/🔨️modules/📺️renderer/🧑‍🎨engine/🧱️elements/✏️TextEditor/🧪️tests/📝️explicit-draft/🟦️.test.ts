@@ -6,7 +6,8 @@ import retention from "../🧫️fixtures/📝️explicit-draft/🧭️retention
 import schema from "../../🧬️schema/📝️explicit-draft/🔣️.json";
 import { localDocumentOwnerIdentityForSessionV1, LocalDocumentOwnerRegistryV1 } from "../../../🗣️Interpreter/🧭️local-document-owner/🟦️.ts";
 import { startedTypedOperationV1, typedOperationCancellationActionV1, typedOperationCancellationOwnerIsCurrentV1 } from "../../../🏛️ShellHost/🟦️.tsx";
-import { TEXT_EDITOR_RETAINED_DRAFT_LIMIT_V1, acceptTextEditorExplicitDraftCancellation, beginTextEditorExplicitDraft, changeTextEditorExplicitDraft, createTextEditorExplicitDraft, parseTextEditorExplicitDraftSettings, reconcileTextEditorExplicitDraft, refuseTextEditorExplicitDraftCancellation, requestTextEditorExplicitDraftCancellation, settleTextEditorExplicitDraft, startTextEditorExplicitDraftOperation, textEditorExplicitDraftAction, textEditorExplicitDraftFailureV1 } from "../../🟦️.tsx";
+import { TEXT_EDITOR_RETAINED_DRAFT_LIMIT_V1 } from "../../📌️retained-drafts/🟦️.ts";
+import { acceptTextEditorExplicitDraftCancellation, beginTextEditorExplicitDraft, changeTextEditorExplicitDraft, createTextEditorExplicitDraft, parseTextEditorExplicitDraftSettings, reconcileTextEditorExplicitDraft, refuseTextEditorExplicitDraftCancellation, requestTextEditorExplicitDraftCancellation, settleTextEditorExplicitDraft, startTextEditorExplicitDraftOperation, textEditorExplicitDraftAction, textEditorExplicitDraftFailureV1 } from "../../✍️explicit-draft-state/🟦️.ts";
 
 const dirtyDraft = () => changeTextEditorExplicitDraft(createTextEditorExplicitDraft(lifecycle.source, lifecycle.base, lifecycle.baseRevision), lifecycle.source, lifecycle.base, lifecycle.draft, lifecycle.baseRevision);
 const applied = { kind: "applied", inputSeq: 1, commit: { operation: lifecycle.operation, revision: lifecycle.ownRevision } } as const;
@@ -226,7 +227,7 @@ describe("text editor explicit drafts that publish their change set", () => {
     state = changeTextEditorExplicitDraft(state, "surface", "hello world", "hello brave new world", "1");
     state = changeTextEditorExplicitDraft(state, "surface", "hello world", "hello brave new w", "1");
     expect(state.changes).toEqual([{ offset: 6, delete: 0, insert: "brave new " }, { offset: 7, delete: 4, insert: "" }]);
-    expect(textEditorExplicitDraftAction(settings!, state.draft, state.changes).args?.splices).toBe(JSON.stringify(state.changes));
+    expect(textEditorExplicitDraftAction(settings!, state.draft, state.changes).args).toHaveProperty("splices", JSON.stringify(state.changes));
     expect(textEditorExplicitDraftAction(settings!, state.draft, state.changes).args).not.toHaveProperty("text");
   });
 });

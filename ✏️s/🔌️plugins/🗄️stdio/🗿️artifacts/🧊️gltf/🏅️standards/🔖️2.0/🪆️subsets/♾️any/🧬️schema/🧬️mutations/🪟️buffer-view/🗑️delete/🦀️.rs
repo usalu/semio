@@ -28,11 +28,14 @@ pub fn plan(p: &GltfDeleteBufferViewPayload, base: &GltfSnapshot) -> Result<Gltf
     Ok(diff)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn inverse(p: &GltfDeleteBufferViewPayload, base: &GltfSnapshot) -> Vec<super::GltfMutation> {
+pub fn inverse<Op>(p: &GltfDeleteBufferViewPayload, base: &GltfSnapshot) -> Vec<Op>
+where
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::remove_used_extension::RemoveUsedExtensionMutation>,
+{
     if validate(p, base).is_err() {
         return Vec::new();
     }
-    let mut rows = vec![super::create_buffer_view::mutation(super::create_buffer_view::GltfCreateBufferViewPayload { position: p.index, buffer: base.document.buffer_views[p.index].buffer, byte_offset: base.document.buffer_views[p.index].byte_offset, byte_length: base.document.buffer_views[p.index].byte_length, buffer_view: Some(Box::new(base.document.buffer_views[p.index].clone())) })];
+    let mut rows = vec![crate::standards::v2_0::subsets::any::schema::mutations::create_buffer_view::mutation(crate::standards::v2_0::subsets::any::schema::mutations::create_buffer_view::GltfCreateBufferViewPayload { position: p.index, buffer: base.document.buffer_views[p.index].buffer, byte_offset: base.document.buffer_views[p.index].byte_offset, byte_length: base.document.buffer_views[p.index].byte_length, buffer_view: Some(Box::new(base.document.buffer_views[p.index].clone())) })];
 
     rows.reverse();
     rows
@@ -48,11 +51,17 @@ pub enum DeleteBufferViewMutation {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn mutation(payload: GltfDeleteBufferViewPayload) -> super::GltfMutation {
-    super::GltfMutation::DeleteBufferView(DeleteBufferViewMutation::Apply(payload))
+pub fn mutation<Op>(payload: GltfDeleteBufferViewPayload) -> Op
+where
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::delete_buffer_view::DeleteBufferViewMutation>,
+{
+    Op::from(DeleteBufferViewMutation::Apply(payload))
 }
 
-impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for DeleteBufferViewMutation {
+impl<Op> protocol::MutationKind<GltfSnapshot, Op> for DeleteBufferViewMutation
+where
+    Op: protocol::Mutation<GltfSnapshot, Diff = GltfDiff> + From<DeleteBufferViewMutation>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "buffer-view", kind: "delete-buffer-view", record: "DeletedBufferView" };
 
     fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<GltfDiff> {
@@ -64,7 +73,7 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for DeleteBufferV
         }
     }
 
-    fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<super::GltfMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         match self {
             Self::Apply(payload) => Ok(inverse(payload, base)),
         }
@@ -81,10 +90,6 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for DeleteBufferV
 //#endregion 🧬️DirectMutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️t067/🦀️.rs"]
-mod case_t067;
-#[cfg(test)]
-#[path = "🧪️tests/🔬️middle-row/🦀️.rs"]
-mod case_middle_row;
+
+
 //#endregion 🧪️Tests

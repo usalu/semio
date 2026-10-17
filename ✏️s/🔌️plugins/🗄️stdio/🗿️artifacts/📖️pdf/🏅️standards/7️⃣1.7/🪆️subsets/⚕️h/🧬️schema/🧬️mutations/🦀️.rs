@@ -4,26 +4,16 @@
 use crate::standards::v1_7::subsets::base::schema::{diff::PdfDiff, snapshot::PdfSnapshot};
 
 //#region 🔖️Leaves
-#[path = "🔤️embed-font-file/🦀️.rs"]
-pub mod embed_font_file;
-#[path = "📜️insert-javascript-action/🦀️.rs"]
-pub mod insert_javascript_action;
-#[path = "🚀️insert-launch-action/🦀️.rs"]
-pub mod insert_launch_action;
-#[path = "✒️insert-signature-field/🦀️.rs"]
-pub mod insert_signature_field;
-#[path = "🧺️remove-font-file/🦀️.rs"]
-pub mod remove_font_file;
-#[path = "🚫️remove-javascript-action/🦀️.rs"]
-pub mod remove_javascript_action;
-#[path = "🛬️remove-launch-action/🦀️.rs"]
-pub mod remove_launch_action;
-#[path = "✂️remove-signature-field/🦀️.rs"]
-pub mod remove_signature_field;
-#[path = "👤️set-info-author/🦀️.rs"]
-pub mod set_info_author;
-#[path = "🏷️set-info-title/🦀️.rs"]
-pub mod set_info_title;
+pub use semio_s_artifact_stdio_pdf_mut_family_5::standards::v1_7::subsets::h::schema::mutations::embed_font_file;
+pub use semio_s_artifact_stdio_pdf_mut_family_5::standards::v1_7::subsets::h::schema::mutations::insert_javascript_action;
+pub use semio_s_artifact_stdio_pdf_mut_family_5::standards::v1_7::subsets::h::schema::mutations::insert_launch_action;
+pub use semio_s_artifact_stdio_pdf_mut_family_5::standards::v1_7::subsets::h::schema::mutations::insert_signature_field;
+pub use semio_s_artifact_stdio_pdf_mut_family_5::standards::v1_7::subsets::h::schema::mutations::remove_font_file;
+pub use semio_s_artifact_stdio_pdf_mut_family_5::standards::v1_7::subsets::h::schema::mutations::remove_javascript_action;
+pub use semio_s_artifact_stdio_pdf_mut_family_5::standards::v1_7::subsets::h::schema::mutations::remove_launch_action;
+pub use semio_s_artifact_stdio_pdf_mut_family_5::standards::v1_7::subsets::h::schema::mutations::remove_signature_field;
+pub use semio_s_artifact_stdio_pdf_mut_family::standards::v1_7::subsets::h::schema::mutations::set_info_author;
+pub use semio_s_artifact_stdio_pdf_conformance_support::standards::v1_7::subsets::h::schema::mutations::set_info_title;
 
 pub use embed_font_file::EmbedFontFile;
 pub use insert_javascript_action::InsertJavascriptAction;
@@ -70,7 +60,5 @@ pub fn pdf_h_mutation_kinds() -> &'static [protocol::SemanticDescriptor] {
 //#endregion 🔖️Delegation
 
 //#region 🧪️CatalogParity
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️CatalogParity

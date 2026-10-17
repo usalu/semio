@@ -1,12 +1,16 @@
-use crate::builder::PluginBuilder;
+use semio_framework_plugin_decl_registry::ArtifactInferenceServiceMetadata;
+use semio_framework_plugin_reactor_app::PluginApp;
+use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_framework_plugin_builder::PluginBuilder;
 use pack::snapshot::ArtifactSqliteSnapshot as _;
-use super::*;
-use crate::__semio_dispatch_PluginApp;
-use crate::surface_contract::{ArtifactEditor, ArtifactViewer, Editor, ViewEmit, Viewer};
-use crate::app_views::{ArtifactView, ConfigView, DraftView, InteractionView, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation};
-use crate::app_emission::Emit;
-use crate::ViewModel;
-use {semio_framework::AppRole,semio_framework_artifact_reference::Dialect,semio_framework::Fault,semio_framework::IconName,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+use semio_framework_plugin_reactor_app::__semio_dispatch_PluginApp;
+use semio_framework_plugin_decl_surface::{ArtifactEditor, ArtifactViewer, Editor, Viewer};
+use semio_framework_plugin_decl_emission::surface_contract::ViewEmit;
+use semio_framework_plugin_decl_views::{ArtifactView, ConfigView, DraftView, InteractionView, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation};
+use semio_framework_plugin_decl_emission::Emit;
+use semio_framework::ViewModel;
+use semio_framework::{AppRole, Fault, IconName};
+use semio_framework_artifact_reference::{Dialect, StandardId, SubsetId};
 use semio_framework_2d::compute::EngineHandles;
 use semio_framework_ui_locale::LocalizedLabel;
 
@@ -92,7 +96,31 @@ impl ArtifactViewer for SchemaStampViewerFixture {
     }
 }
 
-use crate::plugin_app_close_prelude::*;
+use semio_framework::{AppDefinition, *};
+use semio_framework_plugin_abi::{ArtifactAnalysis, ArtifactAnalyzer, ArtifactBuilder, ArtifactChildren, ArtifactComposer, ArtifactComposition, ArtifactDecomposer, ArtifactDeserializer, ArtifactSerializer, DerivedArtifactSpec};
+use semio_framework_plugin_decl_views::tool_contract::ArtifactInstanceOperationOwner;
+use semio_framework_plugin_decl_app::tool_contract::{ArtifactOwnedToolJobFactory, ArtifactReservedJob};
+use store::ArtifactStoreInitializationAuthority;
+use semio_framework_plugin_decl_emission::{AsyncTaskRun, AsyncTaskSource, ToolCommandCatalog};
+use semio_framework_plugin_decl_views::child_view::ChildContentRetainers;
+use semio_framework_ui_runtime::ComponentTree;
+use semio_framework_plugin_decl_surface::{EditorApp, ViewerApp};
+use semio_framework_plugin_app_builder::ExampleSource;
+use semio_framework_plugin_window_kits::{LabelAxes, WindowKit};
+use semio_framework_plugin_decl_app::NaturalFileDecodeCursor;
+use semio_framework_os_kernel::io::SubsetValidator;
+use semio_framework_plugin_decl_views::tool_run_contract::ToolRunRetargetableJob;
+use semio_framework_plugin_interaction::UiAssemblyResult;
+use semio_framework_value::ValueError;
+use semio_framework_plugin_instance_app::VcsArtifactApp;
+use semio_framework_plugin_window_config::{WindowConfigOwner, WindowConfigReplaceMutation};
+use semio_framework_plugin_window_transient::window_transient::WindowTransientOwner;
+use semio_framework_plugin_plugin_program::{WireArtifactInferenceMetadata, wire_list_artifact_inference_services};
+use semio_framework_plugin_extension::artifact_inference::artifact_inference_service;
+use semio_framework_plugin_window_transient::built_text_to_component_tree;
+use semio_framework_os_kernel as store;
+use semio_framework_ui_contract::*;
+use semio_framework::kernel::*;
 semio_framework_dispatch_macros::dyn_enum_close! {
     /// 🗃️ Closed app set for the private schema stamping fixtures.
     enum SchemaStampApps: PluginApp {

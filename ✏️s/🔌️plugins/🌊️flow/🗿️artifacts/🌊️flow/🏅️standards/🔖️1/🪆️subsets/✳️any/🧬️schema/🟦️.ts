@@ -1,5 +1,5 @@
 /** 🧬️ Flow document artifact: durable schema and composed content identity. */
-import { parseArtifactChild, type ArtifactChild } from "../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts";
+import { parseArtifactChild, type ArtifactChild } from "@semio-tech/framework-os/modules/store/child/schema";
 
 export interface FlowArtifact {
   /** @state artifact */ schema: string;

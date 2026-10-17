@@ -1,0 +1,49 @@
+{
+ "residual": [
+  {
+   "name": "rename-error",
+   "observations": 3,
+   "pending": true,
+   "limitNodes": 65536,
+   "keepOld": 3
+  },
+  {
+   "name": "rename-after-error",
+   "observations": 3,
+   "pending": false,
+   "limitNodes": 65536,
+   "keepOld": 3
+  },
+  {
+   "name": "rename-pressure",
+   "observations": 3,
+   "pending": true,
+   "limitNodes": 3,
+   "keepOld": 0
+  }
+ ],
+ "census": [
+  {
+   "name": "empty-node",
+   "body": false,
+   "extra": false
+  },
+  {
+   "name": "extra-node-leaf",
+   "body": true,
+   "extra": true
+  }
+ ],
+ "protocol": {
+  "version": 1,
+  "fileName": "stage.json",
+  "maximumFiles": 1,
+  "maximumBytes": 16777216
+ },
+ "guards": [
+  "outside-writer",
+  "shared-retirement",
+  "oversize",
+  "linked"
+ ]
+}

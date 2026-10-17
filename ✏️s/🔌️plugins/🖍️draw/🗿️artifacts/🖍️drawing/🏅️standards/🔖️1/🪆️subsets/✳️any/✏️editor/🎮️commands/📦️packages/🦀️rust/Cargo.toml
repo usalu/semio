@@ -15,7 +15,11 @@ workspace = true
 [lib]
 path = "../../🦀️.rs"
 
+[features]
+testkit = ["semio-s-artifact-draw-drawing-editor-commands-2/testkit"]
+
 [dependencies]
+semio-s-artifact-draw-drawing-editor-commands-2 = { workspace = true }
 semio-framework-dsl-record = { workspace = true }
 semio-framework-dsl-record-derive = { workspace = true }
 semio-framework-hash = { workspace = true }

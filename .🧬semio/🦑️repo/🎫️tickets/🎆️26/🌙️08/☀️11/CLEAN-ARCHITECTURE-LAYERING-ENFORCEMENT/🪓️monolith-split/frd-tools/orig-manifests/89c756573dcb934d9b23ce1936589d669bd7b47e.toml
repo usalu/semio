@@ -1,0 +1,68 @@
+[package]
+workspace = "../../../../../../.."
+name = "semio-s-artifact-procedural-2d-editor"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Procedural generation2d editor: the play app, its artifact editor implementation, the retained command, flow-eval, contributions and store-preparation routes and the app manifest"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-job-publication = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🧵️job/📬️outcome/📤️publication/📦️packages/🦀️rust" }
+semio-framework-composition-admission = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧩️composition/📥️admission/📦️packages/🦀️rust" }
+pack = { workspace = true }
+semio-framework = { workspace = true }
+semio-framework-action-bus = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🎯️action-bus/📦️packages/🦀️rust" }
+semio-framework-2d = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/📦️packages/🦀️rust" }
+semio-framework-artifact-flow-flow = { workspace = true }
+semio-framework-artifact-playbook-playbook = { workspace = true }
+semio-framework-artifact-reference = { workspace = true }
+semio-framework-job = { workspace = true }
+semio-framework-os-flow = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-pack-json = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-framework-plugin = { workspace = true }
+semio-framework-tool-machine = { workspace = true }
+semio-framework-ui-locale = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-s-artifact-procedural-2d-editor-commands = { workspace = true }
+semio-s-artifact-procedural-2d-editor-config = { workspace = true }
+semio-s-artifact-procedural-2d-editor-panels = { workspace = true }
+semio-s-artifact-procedural-2d-editor-presence = { workspace = true }
+semio-s-artifact-procedural-2d-editor-transient = { workspace = true }
+semio-s-artifact-procedural-2d-examples = { workspace = true }
+semio-s-artifact-procedural-2d-host = { workspace = true }
+semio-s-artifact-procedural-2d-io-text = { workspace = true }
+semio-s-artifact-procedural-2d-mode-edit = { workspace = true }
+semio-s-artifact-procedural-2d-mode-generate = { workspace = true }
+semio-s-artifact-procedural-2d-model = { workspace = true }
+semio-s-artifact-procedural-2d-mut-widgets = { workspace = true }
+semio-s-artifact-procedural-2d-mutations = { workspace = true }
+semio-s-artifact-procedural-2d-node-graph-edit = { workspace = true }
+semio-s-artifact-procedural-2d-preview-eval = { workspace = true }
+semio-s-artifact-procedural-2d-terminology = { workspace = true }
+
+[dev-dependencies]
+semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
+fnv = "1.0.7"
+semio-framework-async-macros = { workspace = true }
+semio-framework-tool-run = { workspace = true }
+semio-framework-ui-contract = { workspace = true }
+serde_json = { workspace = true }
+semio-s-artifact-procedural-2d-io-binary = { workspace = true }
+semio-s-artifact-procedural-2d-testkit = { workspace = true }
+semio-s-artifact-procedural-2d-model = { workspace = true, features = ["testkit"] }
+semio-s-artifact-procedural-2d-host = { workspace = true, features = ["testkit"] }
+
+[[test]]
+name = "editor-routes"
+path = "../../🧪️tests/🔬️editor-routes/🦀️.rs"

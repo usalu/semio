@@ -1,6 +1,7 @@
 use super::*;
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::testing::{assert_matches_oracle, case, close, group_extent, raised};
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::{compute_element_solids, SolidFamily};
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::SolidFamily;
+use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_element_solids;
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::plan::solid_steps;
 use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
 use protocol::Inference;
@@ -50,7 +51,7 @@ async fn a_slope_tilts_the_plane_about_the_uphill_edge() {
 #[semio_framework_async_macros::async_test]
 async fn the_span_and_the_underside_follow_the_same_plane() {
     let snapshot = case(CASE).snapshot;
-    let levels = crate::standards::v1::subsets::any::schema::inferences::storey_levels::compute_storey_levels(&snapshot);
+    let levels = crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_storey_levels(&snapshot);
     let (holed, sloped) = (&snapshot.ceilings["c-holed"], &snapshot.ceilings["c-sloped"]);
     assert_eq!(span(&snapshot, holed, &levels["st-ground"]), (2.7 - 0.0625, 2.7));
     assert!(close(2.7 - 0.0625, underside_at(&snapshot, holed, &levels["st-ground"], Point2 { x: 1.0, y: 1.0 }).expect("under the board"), 1e-12));

@@ -1,13 +1,14 @@
-use super::*;
+use semio_framework_test_fixtures::fixture_text;
+use semio_framework_value::ValueError;
+use crate::standards::v_jfif_1_01::subsets::baseline::schema::conformance::*;
 #[test]
 fn neutral_baseline_facts_preserve_every_native_conformance_axis(){
- let corpus:serde_json::Value=serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🏅️conformance/🔣️.json")).unwrap();
+ let corpus:serde_json::Value=serde_json::from_str(fixture_text!("../../../../🧱️baseline/🧪️tests/🧫️fixtures/🏅️conformance/🔣️.json")).unwrap();
  for case in corpus["cases"].as_array().unwrap(){
   let facts:JpgBaselineFacts=semio_framework_pack_json::from_json_str(&case["facts"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
   let owned=semio_framework_pack_json::to_json_string(&semio_framework_value::ToValue::to_value(&facts));assert_eq!(serde_json::from_str::<serde_json::Value>(&owned).unwrap(),case["facts"]);
   let codes:Vec<String>=check_baseline_facts(&facts).into_iter().map(|diagnostic|diagnostic.code.0).collect();assert_eq!(serde_json::to_value(codes).unwrap(),case["codes"]);
  }
- println!("[DEBUG] JPEG baseline neutral facts independently parsed by serde_json");
 }
 #[test]
 fn baseline_facts_cancel_inside_owned_component_traversal(){

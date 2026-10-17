@@ -99,7 +99,7 @@ pub const KINDS: &[&str] = &["set-file-description", "set-file-name", "set-file-
 /// ▶️ Applies `mutation` to `snapshot` — diff is the single semantics source: computed first,
 /// then applied, never re-derived by hand.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 pub fn apply_step_mutation(snapshot: &mut StepSnapshot, mutation: &StepMutation) -> protocol::MutationOutcome<StepDiff> {
     let outcome = <StepMutation as Mutation<StepSnapshot>>::diff(mutation, snapshot);
     match protocol::apply_diff(outcome.diff(), snapshot) {

@@ -1,7 +1,24 @@
 //! 🪤️ Staged slice of the `typed-operations` band of the mounted artifact instance: its `instance-stores` members (WP6 step S0 of the instance family).
 //!
 //! 🧾️ Typed operations of the mounted artifact instance: typed-operation publication, typed-command dispatch, configuration and the history panel.
-use super::*;
+use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use pack::snapshot::ArtifactPack;
+use semio_framework_plugin_decl_emission::Emit;
+use semio_framework::{Fault, FaultFrom};
+use std::future::Future;
+use crate::stores_components::InstanceStores;
+use store::{MemberFactory, Mutation, SpaceMember};
+use semio_framework_plugin_retained_command::typed_operation::MountedTypedCommandFullOperation;
+use protocol::OpText;
+use semio_framework_plugin_composition_publication::PendingArtifactStorePublication;
+use semio_framework_plugin_reactor_app::PluginApp;
+use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
+use semio_framework_plugin_decl_app::tool_contract::TypedOperationResultLane;
+use semio_framework_plugin_job::TypedOperationResultPage;
+use semio_framework_plugin_ownership::bounded_ownership::plugin_retirement_fault;
+use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
+use semio_framework_ui_contract::*;
 
 impl<A: ArtifactApp> InstanceStores<A> {
     /// 🔀️ Ticket 26/09/16/INPUT-CAUSALITY-LEDGER §2 C — THE point the reactor first owns a
@@ -62,7 +79,7 @@ impl<A: ArtifactApp> InstanceStores<A> {
     /// be the one that survives. A refused spawn (quota, key supersession,
     /// executor capacity) is this operation's own `Fault`: the ladder above
     /// gives the slot a chance to free and then mints its terminal fault page.
-    pub(crate) fn handoff_mounted_durable_publication(&mut self, mounted: &mut MountedTypedCommandFullOperation<A>) -> Result<bool, Fault> {
+    pub fn handoff_mounted_durable_publication(&mut self, mounted: &mut MountedTypedCommandFullOperation<A>) -> Result<bool, Fault> {
         let Some(pending) = mounted.pending_artifact_publication.take() else {
             return Ok(false);
         };
@@ -94,23 +111,23 @@ impl<A: ArtifactApp> InstanceStores<A> {
     }
 
     /// 🪟️ Continues the window-config authority refresh a published receipt retains until the displaced snapshot has admitted custody; `true` once it is complete, when the use case tells the extensions and queues the receipt's result page; every unit reports its actual progress to the host turn.
-    pub(crate) fn advance_window_config_refresh(&mut self, mounted: &mut MountedTypedCommandFullOperation<A>, retained: RetainedCloneGrant) -> Result<bool, Fault> {
+    pub fn advance_window_config_refresh(&mut self, mounted: &mut MountedTypedCommandFullOperation<A>, retained: RetainedCloneGrant) -> Result<bool, Fault> {
         mounted.pending_window_config_receipt.ok_or_else(|| plugin_sdk_fault("window config refresh lost its retained publication receipt"))?;
         let authority = mounted.window_config_authority.as_mut().ok_or_else(|| plugin_sdk_fault("window config receipt lost its captured window authority"))?;
         self.window_config_store.refresh_demands(authority, retained.maximum_copy_bytes).map_err(plugin_retirement_fault)?;
         let step = self.window_config_store.refresh(authority, retained)?;
-        let (super::super::window_mutation::WindowAuthorityRefreshStep::Pending(progress) | super::super::window_mutation::WindowAuthorityRefreshStep::Ready(progress)) = step;
+        let (semio_framework_plugin_window_config::window_mutation::refresh::WindowAuthorityRefreshStep::Pending(progress) | semio_framework_plugin_window_config::window_mutation::refresh::WindowAuthorityRefreshStep::Ready(progress)) = step;
         if progress != RetainedCloneProgress::default() {
             assert!(mounted.publication_ownership_progress.is_none(), "window config refresh cannot overwrite an unreturned original receipt");
             mounted.publication_ownership_progress = Some((retained, progress));
             mounted.publication_progress = mounted.publication_progress.saturating_add(1);
         }
-        if matches!(step, super::super::window_mutation::WindowAuthorityRefreshStep::Pending(_)) { return Ok(false); }
+        if matches!(step, semio_framework_plugin_window_config::window_mutation::refresh::WindowAuthorityRefreshStep::Pending(_)) { return Ok(false); }
         Ok(true)
     }
 
     /// 🪟️ Queues the retained window-config receipt's result page once the refresh is complete and the extensions have been told.
-    pub(crate) fn queue_window_config_receipt(mounted: &mut MountedTypedCommandFullOperation<A>) -> Result<(), Fault> {
+    pub fn queue_window_config_receipt(mounted: &mut MountedTypedCommandFullOperation<A>) -> Result<(), Fault> {
         let receipt = mounted.pending_window_config_receipt.take().ok_or_else(|| plugin_sdk_fault("window config refresh lost its retained publication receipt"))?;
         let token = mounted.next_token();
         mounted.queue_page(TypedOperationResultPage::try_serialize(token, TypedOperationResultLane::WindowConfig, &receipt)?)

@@ -287,7 +287,5 @@ pub fn render(document: &Grid2dSnapshot, config: &Grid2dWindowConfig, tool_run: 
 //#endregion 🔖️Render
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

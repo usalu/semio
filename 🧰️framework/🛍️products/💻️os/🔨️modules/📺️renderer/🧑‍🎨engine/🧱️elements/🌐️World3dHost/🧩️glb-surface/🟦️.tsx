@@ -28,21 +28,11 @@ import {
 import { world3dGlbSubElementMeshData, type World3dSubElementPaint } from "../📏️modelling/🟦️.tsx";
 import { GLB_MESH_FRAME_ROTATION_X, WORLD_MESH_OUTLINE_USER_DATA_KEY } from "@semio-tech/infinite-world-r3f";
 import { type WorldEnvironmentMaterialRecord, type WorldMeshData, type WorldSelectionTargets } from "../🔭️scene-schema/🟦️.ts";
-import {
-  applyGlbMeshEdgeBorders,
-  buildFaceOverlayGeometry,
-  buildVertexOverlayGeometry,
-  buildVertexPickData,
-  celebrateConicAngleRadians,
-  createCelebratingConicMaterial,
-  GLB_MESH_LOCAL_BOUNDS,
-  glbMeshFrameCorners,
-  type MeshStyleKind,
-  useFrame,
-  useLoader,
-  useThree,
-  WORLD_VERTEX_DOT_PX
-} from "../🎨️mesh-render/🟦️.tsx";
+import { useFrame, useLoader, useThree } from "../🎨️mesh-render/🟦️.tsx";
+import { type MeshStyleKind } from "../🎨️mesh-render/🖌️mesh-style-palette/🟦️.ts";
+import { celebrateConicAngleRadians, createCelebratingConicMaterial } from "../🎨️mesh-render/🎊️instance-celebration/🟦️.ts";
+import { buildFaceOverlayGeometry, buildVertexOverlayGeometry, buildVertexPickData } from "../🎨️mesh-render/🔺️mesh-geometry-and-appearance/🟦️.ts";
+import { applyGlbMeshEdgeBorders, GLB_MESH_LOCAL_BOUNDS, glbMeshFrameCorners, WORLD_VERTEX_DOT_PX } from "../🎨️mesh-render/🪟️glb-bounds-and-styling/🟦️.ts";
 import { applyWorldInstanceMeshRaycast } from "../🔗️instance-selection/🟦️.ts";
 
 //#region 🔖️World3dHost

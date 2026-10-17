@@ -3,6 +3,7 @@
 //! the spatial kernel's typology-style tests, so the two implementations can never drift silently.
 
 use super::*;
+use semio_framework_test_fixtures::fixture_path;
 
 //#region 🔖️Assets
 #[test]
@@ -36,7 +37,7 @@ fn every_attribute_definition_asset_parses() {
 /// of them byte for byte. A renamed asset used to vanish from the TS registry silently while this one still embedded it.
 #[test]
 fn every_typology_folder_holds_the_fixed_filename_and_is_embedded() {
-    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions");
+    let root = fixture_path!("../../../../../📚️examples/🖼️assets/🏗️modelDefinitions");
     let mut on_disk = Vec::new();
     for model_definition in std::fs::read_dir(&root).expect("model definitions root") {
         let Ok(folders) = std::fs::read_dir(model_definition.expect("model definition").path().join("🗂️typologies")) else {

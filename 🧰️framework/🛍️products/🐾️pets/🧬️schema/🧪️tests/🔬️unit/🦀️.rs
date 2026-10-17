@@ -5,6 +5,7 @@
 
 use super::*;
 use crate::testkit::{assert_same, entries, fixture, json, normative, typed};
+use semio_framework_test_fixtures::fixture_text;
 use serde::de::DeserializeOwned;
 use serde_json::{json, Value};
 
@@ -257,7 +258,7 @@ fn closed_sets_of_numbers_decode_nothing_the_contract_refuses() {
 
 #[test]
 fn every_definition_of_the_normative_file_has_a_twin_under_its_name() {
-    let source = include_str!("../../🦀️.rs");
+    let source = fixture_text!("../../../../🧬️schema/🦀️.rs");
     let declared: std::collections::BTreeSet<&str> = source
         .lines()
         .filter_map(|line| ["pub struct ", "pub enum ", "pub type "].iter().find_map(|keyword| line.strip_prefix(keyword)))

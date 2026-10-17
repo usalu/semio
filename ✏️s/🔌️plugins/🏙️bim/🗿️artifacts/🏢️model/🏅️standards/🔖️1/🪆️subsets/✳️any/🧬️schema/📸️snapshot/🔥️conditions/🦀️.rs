@@ -2,7 +2,7 @@
 //! a record cannot be written. Pure, total and read-only: a refusal names the field below the record and carries the message.
 //! 📎 https://www.iso.org/standard/65708.html (ISO 6946, thermal transmittance) and https://gbxml.org/schema_doc/7.03/GreenBuildingXML_Ver7.03.html
 
-use super::{CurtainWallType, DoorType, SpaceConditions, WindowType};
+use super::entities::{CurtainWallType, DoorType, SpaceConditions, WindowType};
 
 //#region 🔖️Limits
 /// 🌡️ The lowest set point a space accepts, in degrees Celsius.

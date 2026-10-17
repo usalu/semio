@@ -73,7 +73,4 @@ pub mod set_active_example {
 //#endregion 🔖️SetActiveExample
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

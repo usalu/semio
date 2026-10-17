@@ -29,5 +29,4 @@ fn original_history_metadata_native_paged_fields_preserve_same_policy_receipts_a
   assert!(owner.terminal_is_empty());assert_eq!(births,releases);assert_eq!(control.owned_bytes(),admitted.load(std::sync::atomic::Ordering::SeqCst));let(_,born,released)=observe(||drop(owner));assert_eq!((born,released),(0,0));dictionary.cancel();dictionary.close_step(&source,g).unwrap();dictionary.take_receipt();assert!(dictionary.terminal_is_empty());drop(control);assert!(retirement.terminal_is_empty());
  }}}
  let[mut original]=prior;let original_id=std::mem::take(&mut original.id);let mut callback=|_|true;let mut allocate=|_:NativeDecodeAllocation|Ok(());let mut control=NativeDecodeControl::new_forwarded(control_limit,&mut callback,&mut allocate);let(b,r)=close_owned(original_id,&mut control,g);assert_eq!(prior_identity.1+b,r);
- eprintln!("[DEBUG] Original paged OpMeta all-presence/absence native fields retain unchanged declared HistoryReadLimits and cumulative allocation port; fixed2 full5 denials preserve exact source/prior pointers, real typed and partial receiving plus original grammar/field/vector/SharedUtf8 retirement conserve heap and terminalDrop0");
 }

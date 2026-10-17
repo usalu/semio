@@ -1,0 +1,39 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/rust-rlib-command-data-v1",
+  "$ref": "#/definitions/Command",
+  "definitions": {
+    "Policy": {"const": {"maximumBytes": 16777216, "maximumDependencies": 4096}},
+    "Path": {"type": "string", "minLength": 1, "maxLength": 256, "pattern": "^[^\u0000]+$"},
+    "Argument": {"type": "string", "maxLength": 32768, "pattern": "^[^\u0000]*$"},
+    "Dependency": {
+      "type": "object", "additionalProperties": false, "required": ["unit", "directory", "output"],
+      "properties": {
+        "unit": {"type": "string", "pattern": "^[a-z][a-z0-9_-]{0,79}$"},
+        "directory": {"$ref": "#/definitions/Path"},
+        "output": {"type": "string", "maxLength": 200, "pattern": "^[A-Za-z0-9_-]+\\.rlib$"}
+      }
+    },
+    "Bindings": {
+      "type": "object", "additionalProperties": false,
+      "required": ["version", "platform", "root", "cwd", "output", "temporary", "incremental", "dependencies"],
+      "properties": {
+        "version": {"const": 1}, "platform": {"enum": ["posix", "win32"]},
+        "root": {"$ref": "#/definitions/Path"}, "cwd": {"$ref": "#/definitions/Path"},
+        "output": {"$ref": "#/definitions/Path"}, "temporary": {"$ref": "#/definitions/Path"},
+        "incremental": {"anyOf": [{"type": "null"}, {"$ref": "#/definitions/Path"}]},
+        "dependencies": {"type": "array", "maxItems": 4096, "items": {"$ref": "#/definitions/Dependency"}}
+      }
+    },
+    "Command": {
+      "type": "object", "additionalProperties": false,
+      "required": ["version", "program", "cwd", "arguments", "cfgArguments", "environment"],
+      "properties": {
+        "version": {"const": 1}, "program": {"$ref": "#/definitions/Path"}, "cwd": {"$ref": "#/definitions/Path"},
+        "arguments": {"type": "array", "items": {"$ref": "#/definitions/Argument"}},
+        "cfgArguments": {"type": "array", "items": {"$ref": "#/definitions/Argument"}},
+        "environment": {"type": "object", "additionalProperties": {"$ref": "#/definitions/Argument"}}
+      }
+    }
+  }
+}

@@ -289,7 +289,6 @@ describe("📐️ canonical test layout", () => {
       expect(existsSync(join(repoRoot, row.path)), row.id).toBe(true);
       expect(contains(expanded(groups, "default"), row.path, row.projectRoot), row.id).toBe(row.defaults);
       expect(contains(expanded(groups, "production"), row.path, row.projectRoot), row.id).toBe(row.production);
-      console.log("[DEBUG] original Nx semantic inputs " + JSON.stringify({ id: row.id, defaults: row.defaults, production: row.production }));
     }
   });
 

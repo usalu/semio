@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "codegen_backend",
+    "codegen_units",
+    "lto"
+  ],
+  "properties": {
+    "codegen_backend": {
+      "anyOf": [
+        {
+          "type": "string",
+          "minLength": 1
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "codegen_units": {
+      "anyOf": [
+        {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "lto": {
+      "enum": [
+        "false",
+        "off",
+        "thin",
+        "fat"
+      ]
+    }
+  },
+  "definitions": {
+    "Policy": {
+      "const": {
+        "boundedClass": "jobserver-codegen",
+        "exclusiveClass": "whole-host-backend"
+      }
+    }
+  }
+}

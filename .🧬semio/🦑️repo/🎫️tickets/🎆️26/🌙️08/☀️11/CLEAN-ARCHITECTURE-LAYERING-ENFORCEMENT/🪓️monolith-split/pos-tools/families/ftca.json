@@ -1,0 +1,15 @@
+{
+ "name": "ftca",
+ "crates": [
+  "semio-framework-async",
+  "semio-framework-async-tests",
+  "semio-framework-async-wasm-pool-tests"
+ ],
+ "base": {
+  "rev": "1bae6115bc5",
+  "crates": [
+   "semio-framework-async"
+  ]
+ },
+ "note": "FTC async (2 companions)"
+}

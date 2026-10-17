@@ -3,6 +3,8 @@
 //! 🧭️ The root laws are mounted flat; the laws of each value module sit below a wrapper of that module that restates its imports and uses the crate's `testkit` hooks.
 #![cfg(test)]
 
+use semio_framework_test_fixtures::fixture_path;
+
 pub use semio_framework_value::*;
 use semio_framework_value_testing_allocator as allocation_testing;
 pub(crate) use allocation_testing::observe_retirement_allocations;
@@ -11,7 +13,7 @@ use std::{collections::HashMap, path::{Path, PathBuf}, sync::{Mutex, OnceLock}};
 
 pub fn product_directory() -> &'static Path {
     static DIRECTORY: OnceLock<PathBuf> = OnceLock::new();
-    DIRECTORY.get_or_init(|| Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../.."))
+    DIRECTORY.get_or_init(|| fixture_path!("../../../.."))
 }
 
 fn leaked(relative: &str) -> &'static [u8] {
@@ -37,8 +39,6 @@ mod original_retirement_integration_tests;
 #[path = "../../⚠️refusal/🧪️tests/🦀️.rs"]
 mod refusal_tests;
 
-#[path = "🧮️numeric-scratch/🦀️.rs"]
-pub mod numeric_scratch;
 
 #[path = "📦️paged/🦀️.rs"]
 pub mod paged;
@@ -49,8 +49,6 @@ pub mod paged_append;
 #[path = "📝️shared-utf8/🦀️.rs"]
 pub mod shared_utf8;
 
-#[path = "🔢️graphql-int64/🦀️.rs"]
-pub mod graphql_int64;
 
 #[path = "🧬️bounded-clone/🦀️.rs"]
 pub mod bounded_clone;
@@ -58,11 +56,8 @@ pub mod bounded_clone;
 #[path = "🔗️read/🦀️.rs"]
 pub mod read;
 
-#[path = "🏷️types/🦀️.rs"]
-pub mod types;
 
-#[path = "⚠️refusal/🦀️.rs"]
-pub mod refusal;
 
 #[path = "🌱️retained-clone/🦀️.rs"]
 pub mod retained_clone;
+

@@ -10,12 +10,12 @@ fn close_fold_and_check_original_grants(job:&mut HistoryFoldJob<'_,()>){
 #[test]
 fn bounded_history_fold_physical_retirement_preserves_whole_queued_owners_and_terminal_frames(){
     let law:serde_json::Value=serde_json::from_str(include_str!("../🧪️tests/🧫️fixtures/🔣️.json")).unwrap();assert_eq!(law["independentCredits"].as_array().unwrap().len(),5);
-    for extent in law["extents"].as_array().unwrap(){let extent=extent.as_u64().unwrap()as usize;let mut job=HistoryFoldJob::<()>::new(|_|std::future::pending());let mut original=Vec::with_capacity(extent);if extent!=0{original.push(37u8);}assert_eq!(original.capacity(),extent);assert_eq!(original.len(),extent.min(law["logicalItems"].as_u64().unwrap()as usize));let birth=owned_retirement_birth_bytes::<Vec<u8>>();job.control.0.retirement_capacity.store(birth,Ordering::Relaxed);job.control.0.retirement_items.store(1,Ordering::Relaxed);job.control.retire(original);let expected=job.control.demands(7).unwrap();assert_eq!(job.next_capacity_byte_demand(7).unwrap(),expected.capacity_bytes);assert_eq!(job.next_release_byte_demand().unwrap(),expected.release_bytes);close_fold_and_check_original_grants(&mut job);let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(job));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));println!("[DEBUG] fold extent={extent} independent capacity/release/depth refusals preserve original queued owners; trace equals receipts; terminalDrop0heap");}
+    for extent in law["extents"].as_array().unwrap(){let extent=extent.as_u64().unwrap()as usize;let mut job=HistoryFoldJob::<()>::new(|_|std::future::pending());let mut original=Vec::with_capacity(extent);if extent!=0{original.push(37u8);}assert_eq!(original.capacity(),extent);assert_eq!(original.len(),extent.min(law["logicalItems"].as_u64().unwrap()as usize));let birth=owned_retirement_birth_bytes::<Vec<u8>>();job.control.0.retirement_capacity.store(birth,Ordering::Relaxed);job.control.0.retirement_items.store(1,Ordering::Relaxed);job.control.retire(original);let expected=job.control.demands(7).unwrap();assert_eq!(job.next_capacity_byte_demand(7).unwrap(),expected.capacity_bytes);assert_eq!(job.next_release_byte_demand().unwrap(),expected.release_bytes);close_fold_and_check_original_grants(&mut job);let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(job));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));}
 }
 
 #[test]
 fn bounded_history_fold_cancellation_preserves_tracked_future_and_error_backings(){
-    for extent in [1usize,8194,65536,262144]{let original=String::from_utf8(vec![37u8;extent]).unwrap();let pointer=original.as_ptr()as usize;let mut job=HistoryFoldJob::new(move|control|async move{let original=control.track(original).unwrap_or_else(|_| unreachable!()).await;assert_eq!(original.as_ptr()as usize,pointer);std::future::pending::<()>().await;drop(original);Ok(())});assert!(matches!(job.step(job.next_step_grant(1,1).unwrap(),&mut||false).unwrap(),HistoryFoldJobStep::Pending{released_bytes:0,..}));close_fold_and_check_original_grants(&mut job);let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(job));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));let detail=String::from_utf8(vec![37u8;extent]).unwrap();let mut job=HistoryFoldJob::<()>::new(move|_|std::future::ready(Err(semio_framework_replication_error::ProtocolError::Io(detail))));assert!(matches!(job.step(job.next_step_grant(1,1).unwrap(),&mut||false).unwrap(),HistoryFoldJobStep::Pending{released_bytes:0,..}));close_fold_and_check_original_grants(&mut job);let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(job));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));println!("[DEBUG] tracked fold future/error extent={extent} preserve originals on independent undergrants; birth/release trace agrees; terminalDrop0heap");}
+    for extent in [1usize,8194,65536,262144]{let original=String::from_utf8(vec![37u8;extent]).unwrap();let pointer=original.as_ptr()as usize;let mut job=HistoryFoldJob::new(move|control|async move{let original=control.track(original).unwrap_or_else(|_| unreachable!()).await;assert_eq!(original.as_ptr()as usize,pointer);std::future::pending::<()>().await;drop(original);Ok(())});assert!(matches!(job.step(job.next_step_grant(1,1).unwrap(),&mut||false).unwrap(),HistoryFoldJobStep::Pending{released_bytes:0,..}));close_fold_and_check_original_grants(&mut job);let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(job));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));let detail=String::from_utf8(vec![37u8;extent]).unwrap();let mut job=HistoryFoldJob::<()>::new(move|_|std::future::ready(Err(semio_framework_replication_error::ProtocolError::Io(detail))));assert!(matches!(job.step(job.next_step_grant(1,1).unwrap(),&mut||false).unwrap(),HistoryFoldJobStep::Pending{released_bytes:0,..}));close_fold_and_check_original_grants(&mut job);let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(job));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));}
 }
 
 #[test]
@@ -59,7 +59,6 @@ fn bounded_history_fold_new_local_admission_retains_original_across_same_poll_re
         close_fold_and_check_original_grants(&mut job);
         let (_, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| drop(job));
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
-        println!("[DEBUG] new fold local extent={extent} waits for independent frame capacity; original pointer retained; same-poll drop and terminal trace equal genuine receipts");
     }
 }
 
@@ -77,7 +76,6 @@ fn bounded_history_fold_unsupported_local_refusal_returns_original_before_regist
     assert_eq!(original.0.as_ptr(), pointer);
     assert_eq!(control.0.pending_retirement_birth.load(Ordering::Relaxed), 0);
     assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
-    println!("[DEBUG] unsupported fold local returns original pointer with zero birth, release, or registered demand");
 }
 
 #[test]
@@ -99,7 +97,6 @@ fn bounded_history_fold_cancellation_keeps_multiple_preborn_locals_and_waiting_o
         close_fold_and_check_original_grants(&mut job);
         let (_, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| drop(job));
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
-        println!("[DEBUG] fold cancellation after {admitted} preborn locals retains mixed originals; queued frames transfer without allocation; waiting original birth, future release, nested backing release, and terminal drop obey independent receipts");
     }
 }
 
@@ -128,7 +125,7 @@ fn bounded_history_manual_protocol_variants_declare_exact_native_birth_and_relea
         "remove"=>check(semio_framework_replication_mutation::MapEntryOperation::<String>::Remove),
         "reject"=>check(semio_framework_replication_mutation::MapEntryOperation::<String>::Reject),
         _=>panic!("unknown neutral protocol variant"),
-    }println!("[DEBUG] manual protocol variant={} actual native frame/scaffold/backing birth and release equal genuine receipts; every independent undergrant preserves original custody",variant.as_str().unwrap());}
+    }}
 }
 
 #[test]
@@ -138,7 +135,7 @@ fn bounded_history_multiple_waiting_originals_refuse_independent_item_undergrant
     let law:serde_json::Value=serde_json::from_str(include_str!("../🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let expected=law["waitingOriginalItemDemand"].as_u64().unwrap() as usize;assert_eq!(job.next_local_admission_item_demand(),expected);
     job.request_cancel();let grant=job.next_step_grant(expected,7).unwrap();
     for items in 0..expected{let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||job.close_step(RetainedCloneGrant{maximum_items:items,..grant}).unwrap());assert_eq!(step.progress(),RetainedCloneProgress::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(job.next_local_admission_item_demand(),expected);}
-    let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||job.close_step(grant).unwrap());let progress=step.progress();assert_eq!(progress.copied_items,expected);assert_eq!((heap.requested_bytes,heap.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));assert_eq!(job.next_local_admission_item_demand(),0);close_fold_and_check_original_grants(&mut job);let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(job));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));println!("[DEBUG] two waiting fold originals require exactly two real frame items; zero/subexact item grants preserve original custody and heap; funded atomic future release reports both actual births");
+    let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||job.close_step(grant).unwrap());let progress=step.progress();assert_eq!(progress.copied_items,expected);assert_eq!((heap.requested_bytes,heap.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));assert_eq!(job.next_local_admission_item_demand(),0);close_fold_and_check_original_grants(&mut job);let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(job));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
 }
 
 
@@ -182,5 +179,4 @@ fn bounded_history_shared_actor_admission_retains_preborn_shell_and_actual_recei
     let mut actor=job.control.track(actor).unwrap_or_else(|_|unreachable!());fund(&job.control,RetainedCloneGrant{maximum_items:1,maximum_capacity_bytes:owned_retirement_birth_bytes::<semio_framework_value::SharedUtf8>(),maximum_depth:1,..Default::default()});
     let Poll::Ready(actor)=Pin::new(&mut actor).poll(&mut Context::from_waker(job.waker.as_ref().unwrap())) else{panic!("original shared actor retirement frame must be ready")};drop(actor);
     close_fold_and_check_original_grants(&mut job);let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(job));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
-    println!("[DEBUG] original shared actor source pointer retained; each undergrant0/0; exact Arc birth={capacity} copy={copied}; same preborn frame queued with zero poll free; original shell/backing physical close receipts and terminal0/0");
 }

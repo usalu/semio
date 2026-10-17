@@ -1,13 +1,46 @@
 //! 🏏️ Staged `actions` members of the `instance-commands` use cases, as methods of the borrowed bundle (WP7 of the instance family).
 //!
 //! 🚦️ Action and command dispatch, the addressed action preview and the agent lane preview.
-use super::*;
-use super::commands_instance_root::framework_reserved_action_kind;
-use super::docs_instance_root::artifact_handle_of;
-use super::docs_instance_root::viewer_read_only_fault;
+use semio_framework_plugin_decl_emission::{ActionMeta, ChildEmit, Emit};
+use semio_framework_plugin_command::command_admission::AdmittedToolCommand;
+use semio_framework_plugin_job::{AgentLaneCarriage, AgentLanePublication, EmitWire, agent_lane_carriage, agent_lane_no_effect_fault, agent_lane_uncarried_fault, artifact_owned_tool_birth_grant};
+use semio_framework::{AppRole, Fault, FaultCode, FaultFrom, FaultOrigin, REVERT_TO_COMMAND_ACTION_ID, SET_ACTIVE_TOOL_ACTION_ID, SET_ACTIVE_UTILITY_ACTION_ID};
+#[cfg(any(test, feature = "artifact-app-testing"))]
+use std::sync::Arc;
+use semio_framework_plugin_decl_app::{ArtifactApp, ArtifactOwnedContextHandle, viewer_rejects_action};
+use semio_framework_plugin_operation::{ArtifactDocumentAuthority, CANCEL_TYPED_OPERATION_ACTION_ID, ToolOperationKey};
+use semio_framework_plugin_decl_views::media_contract::ArtifactOutputChunks;
+use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_framework_plugin_decl_app::tool_contract::{ArtifactOwnedToolJobContext, ArtifactOwnedToolJobRequest, ArtifactOwnedToolJobSnapshots, ArtifactToolCompletion, ArtifactToolRawInput};
+use pack::snapshot::ArtifactPack;
+use semio_framework_plugin_decl_views::ArtifactView;
+use std::collections::BTreeMap;
+use semio_framework_plugin_command::{CATALOGUE_EXAMPLE_ACTION_ID, PURE_HISTORY_UNAVAILABLE_CODE};
+use semio_framework_plugin_decl_views::child_view::ChildContentView;
+use crate::command_bundle::CommandCtx;
+use semio_framework_value::DslValue;
+use std::future::Future;
+use semio_framework_plugin_job::reserved_jobs::{HISTORY_ACTION_IDS, is_framework_reserved_action_id};
+use semio_framework_plugin_instance_extension::InstanceExtension;
+use semio_framework::kernel::{InvocationResult, UiDirtyScope};
+use semio_framework::manifest::{ActionInvocation as ManifestActionInvocation, CommandAddress as ManifestCommandAddress, CommandOwnerAddress as ManifestCommandOwnerAddress};
+use std::mem::ManuallyDrop;
+use store::{MemberFactory, Mutation, SpaceMember};
+use protocol::OpText;
+use semio_framework_plugin_reactor_app::PluginApp;
+use semio_framework_value::retained_clone::RetainedCloneProgress;
+use semio_framework_plugin_tool_run::tool_jobs_tool_machine::{ToolDispatch, ToolTag};
+use semio_framework_plugin_instance_jobs::jobs_components::ToolOperations;
+use semio_framework_plugin_instance_dispatch::dispatch_emit;
+use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
+use semio_framework_plugin_window_kits::validate_ui_dispatch_classification;
+use semio_framework_ui_contract::*;
+use crate::commands_instance_root::framework_reserved_action_kind;
+use semio_framework_plugin_instance_docs::docs_instance_root::artifact_handle_of;
+use semio_framework_plugin_instance_docs::docs_instance_root::viewer_read_only_fault;
 
 impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceExtension> CommandCtx<'ctx, A, M, X> {
-    pub(crate) async fn dispatch_action(&mut self, action: &str, source_args: &mut Option<DslValue>, original_fault: &mut Option<Fault>, meta: &ActionMeta, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<Option<InvocationResult>, semio_framework_job::OriginalTurnFailure> {
+    pub async fn dispatch_action(&mut self, action: &str, source_args: &mut Option<DslValue>, original_fault: &mut Option<Fault>, meta: &ActionMeta, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<Option<InvocationResult>, semio_framework_job::OriginalTurnFailure> {
         let Some(slot)=self.ingress.stage_action_source(action, source_args, original_fault, cx)?else{return Ok(None)};
         let Some(mut source)=self.ingress.action_ingress_sources.get_mut(slot).unwrap().loan_source(cx)?else{return Ok(None)};
         let result=self.dispatch_action_received(action,&mut source,meta,identity,cx).await;
@@ -17,7 +50,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
         result
     }
 
-    async fn dispatch_action_received(&mut self,action:&str,source:&mut crate::action_ingress::ActionIngressSource,meta:&ActionMeta,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<InvocationResult>,semio_framework_job::OriginalTurnFailure>{
+    async fn dispatch_action_received(&mut self,action:&str,source:&mut semio_framework_plugin_instance_stores::action_ingress::ActionIngressSource,meta:&ActionMeta,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<InvocationResult>,semio_framework_job::OriginalTurnFailure>{
         let args=source.assembled.as_ref().or(source.prepared.as_ref()).or(source.args.as_ref());
         if A::ROLE == AppRole::Viewer && viewer_rejects_action(action) {
             return Err((viewer_read_only_fault(action)).into());
@@ -107,7 +140,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
 
     /// 🎯️ Validates manifest structural app/mode ownership, converts the addressed
     /// invocation arguments once into the app's typed command, and enters the typed dispatch channel.
-    pub(super) async fn dispatch_command(&mut self, address: &ManifestCommandAddress, source_args: &mut Option<DslValue>, original_fault: &mut Option<Fault>, active_mode_id: Option<&str>, meta: &ActionMeta, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<Option<InvocationResult>,semio_framework_job::OriginalTurnFailure> {
+    pub async fn dispatch_command(&mut self, address: &ManifestCommandAddress, source_args: &mut Option<DslValue>, original_fault: &mut Option<Fault>, active_mode_id: Option<&str>, meta: &ActionMeta, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<Option<InvocationResult>,semio_framework_job::OriginalTurnFailure> {
         let command_id = address.command_id.as_str();
         let owner_app_id = self.app.instance_id().await.to_string();
         let (owner, definition) = match &address.owner {
@@ -149,7 +182,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
             self.host_events.invocation_kind = previous_kind;
             return result.map(Some).map_err(semio_framework_job::OriginalTurnFailure::from);
         }
-        let crate::action_ingress::ActionIngressSource{assembled,prepared,args,fault,..}=&mut *source;
+        let semio_framework_plugin_instance_stores::action_ingress::ActionIngressSource{assembled,prepared,args,fault,..}=&mut *source;
         let command=A::command_from_action(command_id,if assembled.is_some(){assembled}else if prepared.is_some(){prepared}else{args},fault).await?;
         let wire = <A::Command as ::protocol::OpBinary>::encode_op(&command).map_err(|error| error.into_fault())?;
         let admission = self.tools.admit_command_wire(&*self.stores, command_id, &wire, 1).await?;
@@ -237,7 +270,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
     /// particular window kind (`🗒️note` declares all 48 of its verbs this way). A concrete
     /// kind must own the verb; `"*"` addresses the app registry directly, exactly as
     /// `dispatch_action` does for every verb the shell sends.
-    pub(crate) async fn preview_addressed_action(&mut self, invocation: &ManifestActionInvocation, meta: &ActionMeta, cx:&mut semio_framework_job::StepContext<'_>) -> Result<Option<InvocationResult>,semio_framework_job::OriginalTurnFailure> {
+    pub async fn preview_addressed_action(&mut self, invocation: &ManifestActionInvocation, meta: &ActionMeta, cx:&mut semio_framework_job::StepContext<'_>) -> Result<Option<InvocationResult>,semio_framework_job::OriginalTurnFailure> {
         let address=&invocation.address;
         let owner_app_id = self.app.instance_id().await;
         if address.app_id != owner_app_id {
@@ -254,7 +287,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
             return Err((plugin_sdk_fault(format!("window kind {} does not own action {}", address.window_kind_id, address.action_id))).into());
         }
         let context = meta.view_state.as_ref().ok_or_else(|| plugin_sdk_fault("addressed action requires the caller's explicit language and terminology context"))?;
-        let view = crate::plugin_runtime::admit_addressed_action_view(context, &invocation.address)?;
+        let view = semio_framework_plugin_reactor_app::admit_addressed_action_view(context, &invocation.address)?;
         let definition = self
             .tools.registry
             .get(&address.action_id)
@@ -350,13 +383,13 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
     /// transaction cannot carry, see [`agent_lane_uncarried_lanes`]) and how many of the job's own steps ran.
     fn admit_agent_lane_preview_key(&mut self,meta:&ActionMeta,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         if self.tools.agent_lane_preview.is_none(){
-            let grant=cx.retained_grant();let bytes=size_of::<crate::tool_jobs::AgentLanePreview<A>>();if cx.should_yield()||grant.maximum_items<2||grant.maximum_copy_bytes<bytes||grant.maximum_depth==0{return Ok(false)}
+            let grant=cx.retained_grant();let bytes=size_of::<semio_framework_plugin_job::AgentLanePreview<A>>();if cx.should_yield()||grant.maximum_items<2||grant.maximum_copy_bytes<bytes||grant.maximum_depth==0{return Ok(false)}
             let Some(operation_id)=self.media.admit_typed_operation_slot(&*self.pending, &*self.tools)else{return Ok(false)};
             let revision=self.stores.store.content_revision_now();let key=ToolOperationKey{app_instance_id:meta.instance_id,document:ArtifactDocumentAuthority(meta.instance_id),operation_id,base_revision:semio_framework_job::RevisionId(u64::from_be_bytes(revision[..8].try_into().expect("revision lane width"))),generation:semio_framework_job::Generation(self.stores.store.generation_now())};
             let Some(caller)=cx.original_source_parent()?.admit_loan(cx)?else{return Ok(false)};
             cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;
             let config=semio_framework_job_worker_authority::BatchDriveConfig{retained:grant,site:"plugin_agent_lane_preview",stage:semio_framework_job::InteractiveStage::InteractiveStep,fuel_per_step:0,step_budget_us:0};
-            self.tools.agent_lane_preview=Some(crate::tool_jobs::AgentLanePreview{key:Some(key),caller:std::mem::ManuallyDrop::new(Some(caller)),starting:true,producer:None,children:None,completion:None,completion_close:None,lease:None,lease_close:None,config,maximum_bytes:0,steps:0,publication:None,complete:false,closing:false,publication_close:None});
+            self.tools.agent_lane_preview=Some(semio_framework_plugin_job::AgentLanePreview{key:Some(key),caller:std::mem::ManuallyDrop::new(Some(caller)),starting:true,producer:None,children:None,completion:None,completion_close:None,lease:None,lease_close:None,config,maximum_bytes:0,steps:0,publication:None,complete:false,closing:false,publication_close:None});
         }
         let state=self.tools.agent_lane_preview.as_mut().unwrap();
         if state.closing{return Ok(false)}
@@ -433,7 +466,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
         let dispatch =
             self.tools.tool_jobs.dispatch_wire_retained_with_spec(&wire_admission, admission.raw_wire, None, spec).map_err(|rejected| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.dispatch"), rejected.error.to_string()))?;
         let config=semio_framework_job_worker_authority::BatchDriveConfig{retained:cx.retained_grant(),site:"plugin_agent_lane_preview",stage:semio_framework_job::InteractiveStage::InteractiveStep,fuel_per_step:contract.max_work_units_per_step,step_budget_us:u64::from(contract.max_step_micros)};
-        let state=self.tools.agent_lane_preview.as_mut().expect("original preview lease remains received");state.producer=Some(crate::tool_jobs::OriginalPreviewDrive::new(dispatch.job,config,cx));state.completion=Some(completion);state.config=config;state.maximum_bytes=contract.max_output_bytes;state.starting=false;
+        let state=self.tools.agent_lane_preview.as_mut().expect("original preview lease remains received");state.producer=Some(semio_framework_plugin_job::OriginalPreviewDrive::new(dispatch.job,config,cx));state.completion=Some(completion);state.config=config;state.maximum_bytes=contract.max_output_bytes;state.starting=false;
         Ok(())
     }
 
@@ -441,8 +474,8 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
     /// carries. Decoding it here is what gives the agent lane the same dispatch the shell's UI
     /// lane has; running it through [`Self::preview_addressed_action`] rather than
     /// `handle_action_invocation` is what makes it a PREPARE (see that method's own doc).
-    pub(super) async fn dispatch_command_frame(&mut self, command_bytes: &[u8], meta: &ActionMeta, _identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<Option<InvocationResult>,semio_framework_job::OriginalTurnFailure> {
-        let invocation: ManifestActionInvocation = crate::plugin_runtime::decode_wire_serialized(command_bytes).await.map_err(|_| {
+    pub async fn dispatch_command_frame(&mut self, command_bytes: &[u8], meta: &ActionMeta, _identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<Option<InvocationResult>,semio_framework_job::OriginalTurnFailure> {
+        let invocation: ManifestActionInvocation = semio_framework_plugin_plugin_program::decode_wire_serialized(command_bytes).await.map_err(|_| {
             Fault::new(
                 FaultOrigin::Framework,
                 FaultCode::new("interactive-job.missing-exact-key"),

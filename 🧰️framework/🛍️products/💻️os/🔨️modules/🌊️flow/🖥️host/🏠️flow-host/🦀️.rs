@@ -39,7 +39,7 @@ pub(super) struct FlowBaselinePublication {
 pub struct FlowBaselineLeases {
     pub snapshot:Option<Arc<TreeSnapshot>>,
     pub channels:Option<Arc<EvalChannels>>,
-    pub(super) current:Option<Arc<EvalChannels>>,
+    pub current:Option<Arc<EvalChannels>>,
 }
 
 #[derive(semio_framework_value::RetireOwned)]

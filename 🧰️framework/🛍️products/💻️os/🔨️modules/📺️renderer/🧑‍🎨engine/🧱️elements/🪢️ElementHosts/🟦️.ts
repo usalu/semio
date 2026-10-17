@@ -20,7 +20,8 @@ import { Paint2dHost } from "../🖌️Paint2dHost/🟦️.tsx";
 import { TableHost } from "../📊️Table/🟦️.tsx";
 import { TextEditorHost } from "../✏️TextEditor/🟦️.tsx";
 import { TiledMapHost } from "../🧭️TiledMapHost/🟦️.tsx";
-import { World3dHost, leftoverTreeItemSelectedV1, leftoverWorldSelectionOverlayV1, subscribeLeftoverWorldSelectionV1 } from "../🌐️World3dHost/🟦️.tsx";
+import { World3dHost } from "../🌐️World3dHost/🟦️.tsx";
+import { leftoverTreeItemSelectedV1, leftoverWorldSelectionOverlayV1, subscribeLeftoverWorldSelectionV1 } from "../🌐️World3dHost/🔗️instance-selection/🟦️.ts";
 
 function mediaTransportExtensionHost(extensionId: string): typeof MediaTransportHost | undefined {
   return extensionId === MEDIA_TRANSPORT_EXTENSION_ID ? MediaTransportHost : undefined;

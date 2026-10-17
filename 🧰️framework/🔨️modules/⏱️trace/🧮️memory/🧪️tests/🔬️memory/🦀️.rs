@@ -3,13 +3,15 @@
 //! `🧮️memory/🧬️schema/🔣️.json`, because the number in that schema is the one every law reasons with
 //! and the ones in the link arguments are the ones the browser enforces.
 
+use semio_framework_test_fixtures::fixture_text;
+
 use super::{
     guest_host_answer_pages, guest_linear_memory_bytes, guest_linear_memory_install_peak_ceiling_bytes, guest_linear_memory_percent, peak_heap_bytes, reset_heap_peak, retained_heap_bytes,
     GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES, GUEST_HOST_ANSWER_CEILING_BYTES, GUEST_LINEAR_MEMORY_INSTALL_PEAK_PERCENT, GUEST_LINEAR_MEMORY_MAXIMUM_BYTES, GUEST_LINEAR_MEMORY_STACK_BYTES,
 };
 
 fn schema() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../🧬️schema/🔣️.json")).unwrap()
+    serde_json::from_str(fixture_text!("../../🧮️memory/🧬️schema/🔣️.json")).unwrap()
 }
 
 #[test]
@@ -70,7 +72,7 @@ fn the_contiguous_request_ceiling_is_one_guest_growth_unit() {
 /// fingerprints across the shared dep graph). The target's `-zstack-size` reserves the schema's stack.
 #[test]
 fn the_link_arguments_carry_the_declared_budget() {
-    let cargo_config = include_str!("../../../../../../.cargo/config.toml");
+    let cargo_config = fixture_text!("../../../../../.cargo/config.toml");
     let guest_target = cargo_config.lines().skip_while(|line| line.trim() != "[target.wasm32-wasip2]").skip(1).take_while(|line| !line.trim_start().starts_with('[')).collect::<Vec<_>>().join("\n");
     assert!(
         guest_target.contains(&format!("link-arg=--max-memory={GUEST_LINEAR_MEMORY_MAXIMUM_BYTES}")),

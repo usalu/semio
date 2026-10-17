@@ -3,7 +3,7 @@
 use semio_framework_plugin::NoConfig;
 use semio_framework_plugin::NoConfigMutation;
 use crate::editor::flow::edit_rules::ContentEdit;
-use crate::editor::flow::{flow_composed_content, flow_content_leaves_emit, host_from_snapshot};
+use crate::editor::flow::host::{flow_composed_content, flow_content_leaves_emit, host_from_snapshot};
 use crate::editor::flow::modes::edit::windows::main::config::FlowMainWindowConfig;
 use crate::{FlowMutation, FlowSnapshot};
 use flow::FlowEvalSession;
@@ -39,7 +39,5 @@ pub fn handle(_payload: &Reorganize, doc: &ArtifactView<'_, FlowSnapshot>, cfg: 
 }
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

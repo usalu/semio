@@ -1,6 +1,5 @@
 //! Puzzle5d mutation — `ChangeFastenerKind`: changes a fastener's `fastener_kind` catalog reference.
 use crate::standards::v1::subsets::any::schema::diff::Puzzle5dDiff;
-use crate::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation;
 use crate::Puzzle5dSnapshot;
 
 //#region 🔖️Mutation
@@ -17,13 +16,16 @@ pub struct ChangeFastenerKind {
     pub new_fastener_kind: Option<String>,
 }
 
-impl protocol::MutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for ChangeFastenerKind {
+impl<Op> protocol::MutationKind<Puzzle5dSnapshot, Op> for ChangeFastenerKind
+where
+    Op: protocol::Mutation<Puzzle5dSnapshot, Diff = Puzzle5dDiff> + From<ChangeFastenerKind>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "fastener", kind: "change-fastener-kind", record: "ChangedFastenerKind" };
 
     fn diff(&self, base: &Puzzle5dSnapshot) -> protocol::MutationOutcome<Puzzle5dDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Puzzle5dSnapshot) -> Result<Vec<Puzzle5dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Puzzle5dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     
@@ -39,6 +41,9 @@ impl protocol::MutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for ChangeFasten
 //#endregion 🔖️Mutation
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_fastener_kind(id: String, new_fastener_kind: Option<String>) -> Puzzle5dMutation {
-    Puzzle5dMutation::ChangeFastenerKind(ChangeFastenerKind { id, new_fastener_kind })
+pub fn change_fastener_kind<Op>(id: String, new_fastener_kind: Option<String>) -> Op
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::change_fastener_kind::ChangeFastenerKind>,
+{
+    Op::from(ChangeFastenerKind { id, new_fastener_kind })
 }

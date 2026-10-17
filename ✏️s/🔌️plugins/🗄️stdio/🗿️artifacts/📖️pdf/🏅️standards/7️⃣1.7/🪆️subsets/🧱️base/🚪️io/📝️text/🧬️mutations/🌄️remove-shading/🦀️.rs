@@ -3,7 +3,7 @@
 pub const OPCODE: &str = "remove-shading";
 pub const TEXT_OPCODE: &str = OPCODE;
 
-use crate::standards::v1_7::subsets::base::schema::mutations::RemoveShading;
+use crate::standards::v1_7::subsets::base::schema::mutations::remove_shading::RemoveShading;
 
 /// 🖨️ Prints this direct payload through its schema-derived JSON representation.
 pub fn print(payload: &RemoveShading) -> Result<String, String> {

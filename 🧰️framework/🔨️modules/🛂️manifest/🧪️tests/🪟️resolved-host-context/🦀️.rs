@@ -149,6 +149,5 @@ fn view_model_original_retirement_preserves_every_field_and_physical_backing(){
    let(step,heap)=observe(||owner.step(grant).unwrap());let progress=step.progress();assert!(progress.fits(grant));assert!(!heap.overflowed);assert_eq!(heap.requested_bytes,progress.retained_capacity_bytes);assert_eq!(heap.released_bytes,progress.released_bytes);allocated+=heap.requested_bytes;released+=heap.released_bytes;turns+=1;
   }
   assert!(owner.terminal_is_empty());assert_eq!(original_bytes+allocated,released);let(_,heap)=observe(||drop(owner));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
-  println!("[DEBUG] Original view context locale={} original={original_bytes} allocated={allocated} released={released} turns={turns}",oracle.locale.as_str());
  }
 }

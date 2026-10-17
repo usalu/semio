@@ -13,7 +13,8 @@
 use crate::config::{RasterConfig, RasterConfigMutation};
 use crate::modes::edit::windows::composite::transient;
 use crate::modes::edit::windows::composite::transient::{RasterCompositeWindowTransient, RasterStrokeToolState};
-use crate::{RasterCommand, RasterPlayApp};
+use crate::RasterCommand;
+use crate::commands::work_app::RasterWorkApp;
 use semio_s_artifact_raster_raster_mutations_pixels::paint_stroke::{PaintStroke as PaintStrokeLeaf, RasterBrush, RasterSelectionSpan, RasterStrokePoint, RASTER_STROKE_MAXIMUM_POINTS};
 use semio_s_artifact_raster_raster_mutations::RasterMutation;
 use semio_s_artifact_raster_raster_model::{find_layer, layer_protection, layer_visible};
@@ -21,7 +22,7 @@ use semio_s_artifact_raster_raster_model::RasterLayerNode;
 use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
 use crate::commands::paint_stroke::machine::Command;
 use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep};
-use semio_framework_plugin::{ArtifactView, ConfigView, EditorApp, Emit, EphemeralEmit, Fault};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, EphemeralEmit, Fault};
 use semio_framework_tool_machine::{drive_gesture, GesturePhase, GestureTool, ToolAbortReason, ToolMachineRunner, ToolRefusal, ToolStep, ToolTransaction, ToolTransactionState, ToolYield};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -260,7 +261,7 @@ impl machine::Host<paint_tool::PaintTool> for PaintToolHost {
 pub struct RasterPaintTool {
     runner: ToolMachineRunner<paint_tool::PaintTool, PaintToolHost>,
     press: String,
-    authoring_seed: String,
+    pub authoring_seed: String,
 }
 
 impl RasterPaintTool {
@@ -412,23 +413,23 @@ pub struct PaintStrokeWork {
     consumed: bool,
 }
 
-impl ArtifactCommandWork<EditorApp<RasterPlayApp>> for PaintStrokeWork {
+impl<A: RasterWorkApp> ArtifactCommandWork<A> for PaintStrokeWork {
     fn tool_id(&self) -> &'static str {
         "paintStroke"
     }
 
-    fn extent(&self, command: &RasterCommand, _snapshot: &RasterSnapshot, _interaction: &protocol::InteractionState, _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<RasterPlayApp>>>) -> Option<usize> {
+    fn extent(&self, command: &RasterCommand, _snapshot: &RasterSnapshot, _interaction: &protocol::InteractionState, _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<A>>) -> Option<usize> {
         matches!(command, RasterCommand::PaintStroke(_)).then_some(1)
     }
 
-    fn work_demands(&self, input: &ArtifactCommandInputs<'_, EditorApp<RasterPlayApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+    fn work_demands(&self, input: &ArtifactCommandInputs<'_, A>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
         let RasterCommand::PaintStroke(payload) = input.command else { return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "raster paint command required")) };
         let samples = payload.xs.len().saturating_add(payload.ys.len()).saturating_mul(size_of::<f64>());
         let copy_bytes = size_of::<(Emit<RasterMutation, RasterConfigMutation>, RasterCompositeWindowTransient)>().saturating_add(samples);
         Ok(semio_framework_value::RetirementDemand { copy_bytes, capacity_bytes: samples, depth: 1, ..Default::default() })
     }
 
-    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<RasterPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<RasterPlayApp>>, semio_framework_job::OriginalTurnFailure> {
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, A>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<A>, semio_framework_job::OriginalTurnFailure> {
         let original: Result<_, Fault> = (|| {
         if self.consumed {
             return Err(Fault::from("raster-paint-stroke-work-repeated"));
@@ -453,7 +454,4 @@ impl ArtifactCommandWork<EditorApp<RasterPlayApp>> for PaintStrokeWork {
 //#endregion 🧵️RetainedWork
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

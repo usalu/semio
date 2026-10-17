@@ -1,4 +1,20 @@
-use super::*;
+use semio_framework_test_fixtures::fixture_text;
+use semio_framework_value::FromValue;
+use semio_framework_os_kernel::os_directory::schema::DocumentScope;
+use crate::{inference_schema::GisMapReconciledJobV1, inference_schema::GisMapInferenceApprovalRequestV1};
+use semio_framework_job::reconcile::JobReconcileResultV1;
+use semio_framework_os_kernel::{os_directory::client::DirectoryClient, os_directory::client::DocumentHttpPortCodeV1};
+use semio_framework_os_kernel::os_directory::client::document_http::CompiledDocumentHttpPortV1;
+use semio_framework_async::OperationContext;
+#[allow(unused_imports)]
+use semio_framework_value::{DslValue, ToValue};
+#[allow(unused_imports)]
+use crate::{inference_schema::GisMapApprovalUndoReceiptV1, inference_schema::GisMapApprovalUndoRequestV1, inference_schema::GisMapInferenceApprovalReceiptV1, inference_schema::GisMapInferenceEventPageV1, inference_schema::GisMapInferenceJobReceiptV1, inference_schema::GisMapInferenceJobRequestV1};
+#[allow(unused_imports)]
+use semio_framework_job::{reconcile::JobReconcileRequestV1, reconcile::parse_job_reconcile_result_v1};
+#[allow(unused_imports)]
+use semio_framework_os_kernel::{os_directory::client::DocumentHttpOperationV1, os_directory::client::DocumentHttpPortDeclarationV1, os_directory::client::DOCUMENT_HTTP_PORT_TOPIC};
+use crate::inference_client::*;
 use semio_framework_os_kernel::os_directory::client::{DirectoryWsConnection, DirectoryWsPoll, HttpMethod, HttpResponse, TransportError};
 use std::sync::{Arc, Mutex};
 
@@ -21,7 +37,7 @@ impl DirectoryTransport for TestTransport {
     fn issue_socket_grant(&self, _: &OperationContext, _: &str, _: &str, _: &[u8], _: u64) -> Result<HttpResponse, TransportError> { unreachable!() }
     fn open_ws(&self, _: &OperationContext, _: &str, _: &[String], _: u64) -> Result<Self::Ws, TransportError> { unreachable!() }
 }
-fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap() }
+fn fixture() -> serde_json::Value { serde_json::from_str(fixture_text!("../../💡️inference/🔌️client/🧪️tests/🧫️fixtures/🔣️.json")).unwrap() }
 fn decode<R: FromValue>(value: &serde_json::Value) -> R { semio_framework_pack_json::from_json_str(&value.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap() }
 fn context() -> OperationContext { OperationContext { actor: 0, generation: 0, trace: semio_framework_async::TraceId(0), lane: 0, deadline_ms: None, cancel: semio_framework_async::CancelToken::root_now(), capability: None } }
 

@@ -1,6 +1,6 @@
 //! 🪓️ Direct binary codec for `remove-struct-tree-root`.
 
-use crate::standards::v1_7::subsets::ua::schema::mutations::RemoveStructTreeRoot;
+use crate::standards::v1_7::subsets::ua::schema::mutations::remove_struct_tree_root::RemoveStructTreeRoot;
 
 //#region 🔖️Identity
 pub const TAG: u8 = 3;
@@ -21,7 +21,5 @@ pub fn decode(bytes: &[u8]) -> Result<RemoveStructTreeRoot, String> {
 //#endregion 🔖️Codec
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

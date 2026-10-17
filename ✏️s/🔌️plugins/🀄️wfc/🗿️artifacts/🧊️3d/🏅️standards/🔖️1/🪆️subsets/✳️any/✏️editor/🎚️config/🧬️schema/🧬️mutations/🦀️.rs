@@ -1,6 +1,6 @@
 //! 🧬️ Semantic `Wfc3dConfig` mutation vocabulary and codecs.
 
-use super::{Wfc3dConfig, Wfc3dConfigDiff};
+use crate::editor::wfc3d::config::{Wfc3dConfig, Wfc3dConfigDiff};
 
 #[path = "🔄️replace-config/🦀️.rs"]
 mod replace_config;

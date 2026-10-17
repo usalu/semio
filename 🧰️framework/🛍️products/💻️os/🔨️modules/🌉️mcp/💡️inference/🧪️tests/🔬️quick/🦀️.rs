@@ -1,5 +1,6 @@
 //! 🧱️ Inference_quick of the tools-inference crate: Inference discovery, jobs and resources.
 
+use semio_framework_test_fixtures::fixture_text;
 use semio_framework_ui_locale::Locale;
 use semio_framework_ui_locale::Terminology;
 use std::sync::Arc;
@@ -20,9 +21,6 @@ use semio_framework_os_mcp_workspace::headless_workspace_state::HeadlessWorkspac
 use semio_framework_os_mcp_port::channel_port::MockArtifactChannel;
 
 /// 🧪️ Reads a committed fixture from the package directory at run time instead of embedding it in the test binary.
-fn fixture_text(relative: &str) -> &'static str {
-    Box::leak(std::fs::read_to_string(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative)).expect(relative).into_boxed_str())
-}
 
 
 fn empty_catalog() -> Arc<Catalog> {
@@ -60,7 +58,7 @@ fn plugin_only_catalog(plugin_id: &str) -> Arc<Catalog> {
 fn open_workspace(catalog: Arc<Catalog>) -> Arc<HeadlessWorkspace> {
     let dir = store::test_support::tempdir().expect("tempdir");
     let mut workspace=HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:test".to_string(), Vec::new(), catalog).expect("opens");
-    workspace.test_discovery=Some(serde_json::from_str(fixture_text("../../../💡️inference/🧪️tests/🧫️fixtures/🧩️neutral-descriptors/🔣️.json")).unwrap());
+    workspace.test_discovery=Some(serde_json::from_str(fixture_text!("../../../💡️inference/🧪️tests/🧫️fixtures/🧩️neutral-descriptors/🔣️.json")).unwrap());
     Arc::new(workspace)
 }
 
@@ -523,13 +521,13 @@ fn a_read_of_an_unbound_inference_keeps_its_plain_refusal() {
 fn original_mcp_inference_preserves_required_caller_authority(){
  let grant=serde_json::json!({"maximumItems":1,"maximumCopyBytes":3,"maximumCapacityBytes":524288,"maximumReleaseBytes":1048576,"maximumDepth":128});let admitted=inference_original_retained(&grant).unwrap();assert_eq!((admitted.maximum_items,admitted.maximum_copy_bytes,admitted.maximum_capacity_bytes,admitted.maximum_release_bytes,admitted.maximum_depth),(1,3,524288,1048576,128));let independent:serde_json::Value=serde_json::from_str(&serde_json::to_string(&grant).unwrap()).unwrap();assert_eq!(independent["maximumCopyBytes"],admitted.maximum_copy_bytes);
  for axis in ["maximumItems","maximumCopyBytes","maximumCapacityBytes","maximumReleaseBytes","maximumDepth"]{let mut denied=grant.clone();denied.as_object_mut().unwrap().remove(axis);assert!(inference_original_retained(&denied).is_err());let mut negative=grant.clone();negative[axis]=serde_json::json!(-1);assert!(inference_original_retained(&negative).is_err());}
- assert!(inference_original_retained(&serde_json::json!({})).is_err());let mut extra=grant.clone();extra["extra"]=serde_json::json!(0);assert!(inference_original_retained(&extra).is_err());let mut wide=grant.clone();wide["maximumDepth"]=serde_json::json!(4294967296u64);assert!(inference_original_retained(&wide).is_err());let mut zero=grant.clone();zero["maximumItems"]=serde_json::json!(0);assert_eq!(inference_original_retained(&zero).unwrap().maximum_items,0);eprintln!("[DEBUG] Original MCP turn grant requires all5 currencies, keeps exact1/3/sourcecapacity/release/depth and rejects absent/extra/negative/address-wide authority");
+ assert!(inference_original_retained(&serde_json::json!({})).is_err());let mut extra=grant.clone();extra["extra"]=serde_json::json!(0);assert!(inference_original_retained(&extra).is_err());let mut wide=grant.clone();wide["maximumDepth"]=serde_json::json!(4294967296u64);assert!(inference_original_retained(&wide).is_err());let mut zero=grant.clone();zero["maximumItems"]=serde_json::json!(0);assert_eq!(inference_original_retained(&zero).unwrap().maximum_items,0);
 }
 
 /// 🎟️ The actual original command metadata borrows cancellation and preserves every supplied authority.
 #[test]
 fn original_mcp_source_requires_exact_turn_revision_cancellation_and_work() {
- let source: serde_json::Value = serde_json::from_str(fixture_text("../../../💡️inference/🧪️tests/🧫️fixtures/original-caller.json")).unwrap();
+ let source: serde_json::Value = serde_json::from_str(fixture_text!("../../../💡️inference/🧪️tests/🧫️fixtures/original-caller.json")).unwrap();
  let pointer = source["cancellationId"].as_str().unwrap().as_ptr();
  let (authority, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| inference_original_turn(&source));
  let authority = authority.unwrap();
@@ -571,5 +569,4 @@ fn original_mcp_source_requires_exact_turn_revision_cancellation_and_work() {
  assert!(inference_original_turn(&denied).is_err());
  let mut denied = source.clone(); denied["turn"]["work"]["extra"] = serde_json::json!(0);
  assert!(inference_original_turn(&denied).is_err());
- eprintln!("[DEBUG] Actual MCP parser total fuel64/clock1671/deadline1000000 and physical64/4096; loan work11/items1/copy3; Serde equal; missing/extra/over-budget denied; cancellation borrowed System0");
 }

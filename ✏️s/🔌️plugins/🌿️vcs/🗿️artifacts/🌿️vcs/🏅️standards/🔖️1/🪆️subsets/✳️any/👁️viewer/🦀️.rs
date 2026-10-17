@@ -107,3 +107,13 @@ pub fn create_vcs_viewer() -> semio_framework_plugin::AppDefinition {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🧩️ArtifactItems5
+pub mod artifact_items_5 {
+/// 🧩️ App fleet capable of hosting this artifact's editor and viewer.
+pub trait VcsApplication:
+    semio_framework_plugin::PluginApp + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::vcs::VcsPlayApp>>> + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::vcs::VcsViewer>>>
+{
+}
+}
+//#endregion 🧩️ArtifactItems5

@@ -1,10 +1,10 @@
 /** 🌉️ The worker's wire bridge: envelope round trips, frame decoding, Commands batches and session stamping. */
 import type { BackboneWorkerTestDependencies } from "../../🔨️modules/🏪️store/👷️worker/🟦️.ts";
-import { workerLawFakesV1, sampleEnvelope } from "../🧰️worker-law-fakes/🟦️.ts";
+import { workerLawFakesV1, sampleEnvelope, WORKER_LAW_ACTOR_IDENTITY_GRANT } from "../🧰️worker-law-fakes/🟦️.ts";
 import type { TestSource } from "../🧰️worker-law-fakes/🟦️.ts";
 
 type ArtifactActorConfig = import("../../🟦️.ts").ArtifactActorConfig;
-type ArtifactPresencePeer = import("../../../../🔨️modules/📡️replication/🟦️.ts").ArtifactPresencePeer;
+type ArtifactPresencePeer = import("@semio-tech/framework-replication").ArtifactPresencePeer;
 type ArtifactState = import("../../🔨️modules/🏪️store/👷️worker/🟦️.ts").ArtifactState;
 type BackboneWorkerResponse = import("../../🟦️.ts").BackboneWorkerResponse;
 type Vitest = NonNullable<ImportMeta["vitest"]>;
@@ -48,7 +48,7 @@ export async function registerWireBridgeTests(vitest: Vitest, dependencies: Back
       const decoded = decodeServerFrame(serverFrame).frame;
       const exactBatch = extractServerCommandsDocumentBackboneBatchExact(serverFrame);
       if (typeof decoded === "string" || !("Commands" in decoded) || exactBatch === null) throw new Error("expected exact server Commands frame");
-      const config: ArtifactActorConfig = { documentId: "d", schema: "demo/v1", bindings: [{ kind: "hub", dataClass: "persistedShared", baseUrl: "http://hub.test", spaceId: "space-1" }], actor: "local" };
+      const config: ArtifactActorConfig = { documentId: "d", schema: "demo/v1", bindings: [{ kind: "hub", dataClass: "persistedShared", baseUrl: "http://hub.test", spaceId: "space-1" }], actor: "local", actorIdentityGrant: WORKER_LAW_ACTOR_IDENTITY_GRANT };
       const state: ArtifactState = { ...newArtifactState(config, documentRuntimeKeyForConfig(config), { postMessage() {}, close() {} } as unknown as BroadcastChannel, "client-1"), actor: "local" };
       const priorSink = testSeams.workerPostTestSink;
       const posted: BackboneWorkerResponse[] = [];
@@ -90,14 +90,14 @@ export async function registerWireBridgeTests(vitest: Vitest, dependencies: Back
         },
         revalidation: { directoryRevision: 1, membershipGeneration: 1, sessionGeneration: 1 },
       });
-      const hubConfig: ArtifactActorConfig = { documentId: "doc-1", schema: "demo/v1", bindings: [{ kind: "hub", dataClass: "persistedShared", baseUrl: "http://hub.test", spaceId: "studio-1", installedTarget }], actor: "actor-1" };
+      const hubConfig: ArtifactActorConfig = { documentId: "doc-1", schema: "demo/v1", bindings: [{ kind: "hub", dataClass: "persistedShared", baseUrl: "http://hub.test", spaceId: "studio-1", installedTarget }], actor: "actor-1", actorIdentityGrant: WORKER_LAW_ACTOR_IDENTITY_GRANT };
       const hubState = { config: hubConfig, sessionColor: 7 } as unknown as ArtifactState;
       const peer: ArtifactPresencePeer = { actor: "actor-1", connectedAtMs: 1000, color: 99, surface: "shell-should-never-set-this", views: [] };
       const stamped = stampSession(peer, hubState);
       expect(stamped.color).toBe(7);
       expect(stamped.surface).toBe("s.space.home@1/*#editor");
 
-      const folderConfig: ArtifactActorConfig = { documentId: "doc-2", schema: "demo/v1", bindings: [{ kind: "folder", dataClass: "persistedLocalOnly", path: "/tmp/doc-2" }], actor: "actor-1" };
+      const folderConfig: ArtifactActorConfig = { documentId: "doc-2", schema: "demo/v1", bindings: [{ kind: "folder", dataClass: "persistedLocalOnly", path: "/tmp/doc-2" }], actor: "actor-1", actorIdentityGrant: WORKER_LAW_ACTOR_IDENTITY_GRANT };
       const folderState = { config: folderConfig, sessionColor: null } as unknown as ArtifactState;
       const stampedFolder = stampSession(peer, folderState);
       expect(stampedFolder.color).toBeUndefined();
@@ -105,10 +105,10 @@ export async function registerWireBridgeTests(vitest: Vitest, dependencies: Back
     });
 
     it("stampSession publishes an actor-bound document's own presence pack, interaction, tool run and history edit, never the Shell's local instance's", async () => {
-      const { encodePresenceHistoryEdit, encodePresenceInteraction, encodePresenceToolRun } = await import("../../../../🔨️modules/📡️replication/🟦️.ts");
+      const { encodePresenceHistoryEdit, encodePresenceInteraction, encodePresenceToolRun } = await import("@semio-tech/framework-replication");
       const fixture = JSON.parse(await (await import("node:fs/promises")).readFile(new URL("./🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🧫️fixtures/👕️canvas-presence/🔣️.json", source.url), "utf8")) as { readonly paint: readonly { readonly roster: readonly ArtifactPresencePeer[] }[] };
       const selecting = fixture.paint[0]!.roster.find((row) => row.actor === "peer-a")!;
-      const config: ArtifactActorConfig = { documentId: "doc-4", schema: "demo/v1", bindings: [{ kind: "hub", dataClass: "persistedShared", baseUrl: "http://hub.test", spaceId: "studio-1" }], actor: "actor-1" };
+      const config: ArtifactActorConfig = { documentId: "doc-4", schema: "demo/v1", bindings: [{ kind: "hub", dataClass: "persistedShared", baseUrl: "http://hub.test", spaceId: "studio-1" }], actor: "actor-1", actorIdentityGrant: WORKER_LAW_ACTOR_IDENTITY_GRANT };
       const localEdit = { mutationId: "local", stage: "editing", drafts: 0 } as const;
       const shellPeer: ArtifactPresencePeer = { actor: "actor-1", connectedAtMs: 1000, views: [], presencePack: [9, 9], interaction: { app_id: "local-instance", domains: [] }, historyEdit: localEdit };
       const toolRun = { toolId: "fill", state: "running", stage: 1, completed: 2, total: 5 } as const;
@@ -125,7 +125,7 @@ export async function registerWireBridgeTests(vitest: Vitest, dependencies: Back
     });
 
     it("handleHubFrame stores the hub-assigned session color on a Session frame", () => {
-      const config: ArtifactActorConfig = { documentId: "doc-3", schema: "demo/v1", bindings: [{ kind: "hub", dataClass: "persistedShared", baseUrl: "http://hub.test", spaceId: "studio-1" }], actor: "actor-1" };
+      const config: ArtifactActorConfig = { documentId: "doc-3", schema: "demo/v1", bindings: [{ kind: "hub", dataClass: "persistedShared", baseUrl: "http://hub.test", spaceId: "studio-1" }], actor: "actor-1", actorIdentityGrant: WORKER_LAW_ACTOR_IDENTITY_GRANT };
       const state = { config, actor: "", hubActorReady: false, pendingSocketActorId: "actor-1", outbox: [], sessionColor: null } as unknown as ArtifactState;
       handleHubFrame(state, { Session: { actor: "actor-1", color: 3 } });
       expect(state.sessionColor).toBe(3);

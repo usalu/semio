@@ -1,7 +1,7 @@
 /** 🔺️ Canonical Layout diff with every native `ToValue` field present and nullable. */
 import { parseSchemaRecord } from "@semio-tech/framework/schema/record";
 import {parseQuestionDictionary,type QuestionDictionary,parseCharacterStyle,parseFrame,parseImageLink,parseLayoutDrawingChild,parseLayer,parseLayoutRect,parsePage,parsePageOverride,parseParagraphStyle,parseParentPage,parseSpread,parseTextStory,parseTextStyleRun,type ArtifactLink,type CharacterStyle,type Frame,type ImageLink,type Layer,type LayoutDrawingChild,type LayoutRect,type Page,type PageOverride,type ParagraphStyle,type ParentPage,type Spread,type TextStory,type TextStyleRun} from "../🟦️.ts";
-import { parseArtifactLink } from "../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️link/🧬️schema/🟦️.ts";
+import { parseArtifactLink } from "@semio-tech/framework-os/modules/store/link/schema";
 export * from "../🟦️.ts";
 import {parseBinary64,parseBinary32,type Binary64,type Binary32} from "@semio-tech/framework/value/ieee754";
 

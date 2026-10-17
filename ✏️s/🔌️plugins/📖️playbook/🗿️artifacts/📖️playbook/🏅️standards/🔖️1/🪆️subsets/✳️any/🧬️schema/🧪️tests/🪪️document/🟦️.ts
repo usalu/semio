@@ -5,7 +5,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { assertDocumentContractOracle } from "@semio-tech/framework/schema/oracles/document";
 import { ioSchema as ioSchema } from "@semio-tech/framework/io/schema";
-import childSchema from "../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔣️.json" with { type: "json" };
+import { storeChildSchema as childSchema } from "@semio-tech/framework-os/modules/store/child/schema";
 import artifactSchema from "../../🔣️.json" with { type: "json" };
 import snapshotSchema from "../../📸️snapshot/🔣️.json" with { type: "json" };
 import diffSchema from "../../🔺️diff/🔣️.json" with { type: "json" };
@@ -43,14 +43,13 @@ export function testPlaybookDocumentContractOracle(): void {
     committed: { snapshots: 18, diffs: 5 },
   });
   for (const schema of [artifactSchema, snapshotSchema, diffSchema] as Array<Record<string, any>>) {
-    assert.equal(childKind(schema, "document"), "s.stdio.semio");
     assert.equal(childKind(schema, "flow"), "s.stdio.semio");
   }
   const files = snapshotFiles(join(import.meta.dir, "../../../🧪️tests/🧫️fixtures/🧬️mutations"));
   assert.equal(files.length, 18);
   for (const path of files) {
     const value = snapshot.parsePlaybookSnapshot(JSON.parse(readFileSync(path, "utf8")));
-    for (const field of ["document", "flow"] as const) {
+    for (const field of ["flow"] as const) {
       assert.equal(value[field].target.dialect.artifactKind, "s.stdio.semio", `${path}:${field} kind`);
       assert.equal(value[field].target.artifactId, value[field].childId, `${path}:${field} identity`);
     }

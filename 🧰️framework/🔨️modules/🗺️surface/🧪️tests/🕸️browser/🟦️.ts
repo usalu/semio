@@ -18,5 +18,4 @@ test("General Surface generated browser owners initialize without Specific graph
  for(const name of corpus.browserSessions){expect(typeof module[name]).toBe("function");expect(reflected.some(symbol=>symbol.startsWith(name.toLowerCase()+"_"))).toBe(true);}
  for(const name of corpus.specificBrowserSessions){expect(name in module).toBe(false);expect(reflected.some(symbol=>symbol.toLowerCase().includes(name.toLowerCase()))).toBe(false);}
  expect(Object.keys(initialized).sort()).toEqual(reflected.sort());
- console.log("[DEBUG] General Surface JS declarations, initialized Wasm and independent WebAssembly export reflection retain only Map/Raster/Terrain sessions");
 });

@@ -23,5 +23,4 @@ test("validates actual artifact inventory payloads through two independent schem
     observed.push(false);
   }
   expect(observed).toEqual([true, false, false, false]);
-  console.log("[DEBUG] artifact inventory payload verdicts=" + JSON.stringify(observed));
 });

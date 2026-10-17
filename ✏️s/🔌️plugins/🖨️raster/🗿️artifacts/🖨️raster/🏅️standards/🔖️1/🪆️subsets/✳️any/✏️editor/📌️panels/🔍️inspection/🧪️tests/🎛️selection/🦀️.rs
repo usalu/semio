@@ -43,7 +43,7 @@ fn inspector_projects_selected_properties_and_foreground_in_both_languages() {
             if !ids.is_empty(){for mode in fixture["blendModes"].as_array().unwrap(){assert!(text.contains(mode.as_str().unwrap()),"missing blend option {mode}: {text}");}}
         }
     }
-    semio_s_artifact_raster_raster_mutations::binary::unit_tests::retirement::retire_raster_snapshot(document);
+    semio_s_artifact_raster_raster_model::retire_raster_value_cold(document);
 }
 
 #[semio_framework_async_macros::async_test]

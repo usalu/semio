@@ -1,4 +1,13 @@
-use super::*;
+use crate::{mutations::create_position, mutations::delete_position, mutations::delete_route, mutations::reorder_positions, mutations::reorder_routes, mutations::replace_position_data, mutations::replace_region_data, mutations::replace_route_data};
+use crate::GisMapSnapshot;
+use protocol::Mutation;
+#[allow(unused_imports)]
+use crate::diff::GisMapDiff;
+#[allow(unused_imports)]
+use crate::{mutations::create_region, mutations::create_route, mutations::delete_region, mutations::reorder_regions, mutations::set_position_property, mutations::remove_position_property, mutations::set_route_property, mutations::remove_route_property, mutations::set_region_property, mutations::remove_region_property};
+#[allow(unused_imports)]
+use store::{os_store::store_schema::ArtifactEnvelope, ArtifactStore};
+use crate::standards::v1::subsets::any::schema::mutations::*;
 use crate::standards::v1::subsets::any::io::text::snapshot::gis_map_descriptor_json;
 use crate::standards::v1::subsets::any::io::text::snapshot::{gis_map_document_from_descriptor_json};
 use crate::standards::v1::subsets::any::io::text::snapshot::{empty_gis_map_snapshot};
@@ -39,7 +48,7 @@ async fn positions_create_replace_delete_round_trip() {
 
 #[semio_framework_async_macros::async_test]
 async fn positions_reorder_round_trips() {
-    let document = crate::gis_map_snapshot_with_derived_children(GisMapSnapshot { positions: vec![feature("p1"), feature("p2"), feature("p3")], ..Default::default() });
+    let document = crate::standards::v1::subsets::any::map_composition::gis_map_snapshot_with_derived_children(GisMapSnapshot { positions: vec![feature("p1"), feature("p2"), feature("p3")], ..Default::default() });
     let reordered = round_trip(&document, &GisMapMutation::ReorderPositions(reorder_positions::ReorderPositions { id: "p1".into(), to_index: 2 }));
     assert_eq!(reordered.positions.iter().map(|f| f.id.clone()).collect::<Vec<_>>(), vec!["p2", "p3", "p1"]);
 }
@@ -54,7 +63,7 @@ async fn delete_and_replace_of_a_missing_id_invert_to_nothing() {
 
 #[semio_framework_async_macros::async_test]
 async fn create_position_obeys_the_inverse_and_diff_absorb_laws() {
-    let base = crate::gis_map_snapshot_with_derived_children(GisMapSnapshot { positions: vec![feature("p1")], ..Default::default() });
+    let base = crate::standards::v1::subsets::any::map_composition::gis_map_snapshot_with_derived_children(GisMapSnapshot { positions: vec![feature("p1")], ..Default::default() });
     let mutation = GisMapMutation::CreatePosition(create_position::CreatePosition { index: 1, item: feature("p2") });
     protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &mutation).await;
     let d1 = mutation.diff(&base).into_parts().0;
@@ -64,14 +73,14 @@ async fn create_position_obeys_the_inverse_and_diff_absorb_laws() {
 
 #[semio_framework_async_macros::async_test]
 async fn delete_route_obeys_the_inverse_law() {
-    let base = crate::gis_map_snapshot_with_derived_children(GisMapSnapshot { routes: vec![feature("r1")], ..Default::default() });
+    let base = crate::standards::v1::subsets::any::map_composition::gis_map_snapshot_with_derived_children(GisMapSnapshot { routes: vec![feature("r1")], ..Default::default() });
     let mutation = GisMapMutation::DeleteRoute(delete_route::DeleteRoute { id: "r1".into() });
     protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &mutation).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn replace_region_data_obeys_the_inverse_and_diff_absorb_laws() {
-    let base = crate::gis_map_snapshot_with_derived_children(GisMapSnapshot { regions: vec![feature("g1")], ..Default::default() });
+    let base = crate::standards::v1::subsets::any::map_composition::gis_map_snapshot_with_derived_children(GisMapSnapshot { regions: vec![feature("g1")], ..Default::default() });
     let mutation = GisMapMutation::ReplaceRegionData(replace_region_data::ReplaceRegionData { id: "g1".into(), new_data: dsl_of(&json!({ "kind": "boundary" })) });
     protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &mutation).await;
     let d1 = mutation.diff(&base).into_parts().0;
@@ -81,7 +90,7 @@ async fn replace_region_data_obeys_the_inverse_and_diff_absorb_laws() {
 
 #[semio_framework_async_macros::async_test]
 async fn reorder_routes_obeys_the_inverse_law() {
-    let base = crate::gis_map_snapshot_with_derived_children(GisMapSnapshot { routes: vec![feature("r1"), feature("r2")], ..Default::default() });
+    let base = crate::standards::v1::subsets::any::map_composition::gis_map_snapshot_with_derived_children(GisMapSnapshot { routes: vec![feature("r1"), feature("r2")], ..Default::default() });
     let mutation = GisMapMutation::ReorderRoutes(reorder_routes::ReorderRoutes { id: "r1".into(), to_index: 1 });
     protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &mutation).await;
 }
@@ -146,7 +155,7 @@ async fn replace_route_data_missing_target_is_error() {
 
 #[semio_framework_async_macros::async_test]
 async fn create_position_duplicate_id_fatal_never_applies() {
-    let base = crate::gis_map_snapshot_with_derived_children(GisMapSnapshot { positions: vec![feature("p1")], ..Default::default() });
+    let base = crate::standards::v1::subsets::any::map_composition::gis_map_snapshot_with_derived_children(GisMapSnapshot { positions: vec![feature("p1")], ..Default::default() });
     let mutation = GisMapMutation::CreatePosition(create_position::CreatePosition { index: 0, item: feature("p1") });
     protocol::os_spr::protocol_laws::assert_fatal_never_applies(&Mutation::diff(&mutation, &base)).await;
 }

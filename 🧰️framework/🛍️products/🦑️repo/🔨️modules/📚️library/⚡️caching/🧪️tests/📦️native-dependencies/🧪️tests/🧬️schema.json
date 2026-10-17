@@ -1,0 +1,131 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "signals",
+    "rejected",
+    "systemModules",
+    "systemCases",
+    "receipts",
+    "failures"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "signals": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "cancel"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "cancel": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "rejected": {
+      "type": "array",
+      "items": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      }
+    },
+    "systemModules": {
+      "const": [
+        "bun:ffi",
+        "bun:sqlite"
+      ]
+    },
+    "systemCases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path",
+          "admit"
+        ],
+        "properties": {
+          "path": {
+            "type": "string"
+          },
+          "admit": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "receipts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "fault",
+          "admit"
+        ],
+        "properties": {
+          "fault": {
+            "enum": [
+              "none",
+              "historical",
+              "status",
+              "signal",
+              "maximum",
+              "deadline",
+              "capabilities",
+              "owner",
+              "digest",
+              "calls",
+              "reason",
+              "zero",
+              "null"
+            ]
+          },
+          "admit": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "failures": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "fault",
+          "admit"
+        ],
+        "properties": {
+          "fault": {
+            "enum": [
+              "exact",
+              "undefined",
+              "aggregate",
+              "foreign",
+              "combined",
+              "cause",
+              "cycle"
+            ]
+          },
+          "admit": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

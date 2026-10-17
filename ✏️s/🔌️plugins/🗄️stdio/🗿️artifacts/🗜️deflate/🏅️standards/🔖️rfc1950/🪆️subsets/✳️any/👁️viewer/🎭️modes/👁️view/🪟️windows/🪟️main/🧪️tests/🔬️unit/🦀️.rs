@@ -1,4 +1,6 @@
-use super::*;
+use crate::schema::snapshot::DeflateLevelHint;
+use crate::DeflateSnapshot;
+use crate::viewer::deflate::modes::view::windows::main::*;
 
 #[semio_framework_async_macros::async_test]
 async fn definition_declares_a_read_only_text_window() {

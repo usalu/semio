@@ -1,8 +1,10 @@
-use super::reactor_driver::*;
+use semio_framework_ui_runtime::{DEFAULT_REVISION_TOLERANCE, is_stale_intent};
+use crate::reactor_core_test_hosts::reactor_core_unit_1::reactor_driver::{patches_diff, patches_revision, presence_expire_and_flush, presence_record_own, presence_record_peer};
 use semio_framework_ui_contract as ui_contract;
 use semio_framework_ui_runtime::{ComponentTree, TreeNode};
 
-fn leaf(key: &str) -> ComponentTree {
+#[doc(hidden)]
+pub fn leaf(key: &str) -> ComponentTree {
     ComponentTree::new(TreeNode::try_new(key, ui_contract::Component::Separator(ui_contract::SeparatorProps {})).unwrap_or_else(|_| panic!("bounded test tree")))
 }
 
@@ -23,7 +25,7 @@ async fn revision_guard_never_rejects_an_intent_at_the_never_rendered_default() 
 /// no command" reduced to the guard `poll` evaluates before ever reaching dispatch.
 #[semio_framework_async_macros::async_test]
 async fn revision_guard_rejects_an_intent_trailing_by_more_than_the_tolerance() {
-    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().unwrap();let mut cx=original_caller.context();
+    let mut original_caller=semio_framework_plugin_testing_laws::OriginalFixtureCaller::admit().unwrap();let mut cx=original_caller.context();
 
     patches_diff("s",leaf("root"),&mut cx).await;
     patches_diff("s",leaf("root2"),&mut cx).await;

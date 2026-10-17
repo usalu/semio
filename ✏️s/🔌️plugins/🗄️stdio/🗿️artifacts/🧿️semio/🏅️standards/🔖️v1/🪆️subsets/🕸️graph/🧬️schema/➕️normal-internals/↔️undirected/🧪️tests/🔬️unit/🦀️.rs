@@ -1,4 +1,6 @@
-use super::*;
+use graph_core::{GraphView, NodeId};
+use graph_manifest::{PropertyBag, PropertyValue};
+use crate::schema::normal_internals::undirected::*;
 
 #[test]
 fn crud_round_trip() {

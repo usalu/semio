@@ -47,9 +47,9 @@ function schemaModulePath(root: string, ...segments: string[]): string {
   return join(ownerRoot(root), "🧬️schema", ...segments);
 }
 
-/** 🎯️ The mirror this generator writes: `<owner>/🤖️generated/🟦️.ts`, a sibling of `📦️packages`. */
+/** 🎯️ The mirror this generator writes: `🧰️framework/🔨️modules/🐚️shell/🤖️generated/🟦️.ts`, beside the reducer that consumes it (the renderer reaches both through the framework SDK). */
 function generatedBindingsPath(root: string): string {
-  return join(ownerRoot(root), "🤖️generated", "🟦️.ts");
+  return join(ownerRoot(root), "..", "..", "..", "..", "🔨️modules", "🐚️shell", "🤖️generated", "🟦️.ts");
 }
 
 /** 🪪️ The `$id` `🧬️schema/🔣️.json` must declare, mirrored from `schema_registry::OWNED_JSON_SCHEMA_ID`. */
@@ -60,7 +60,7 @@ async function runTypegenExportTest(root:string,outPath:string,workspace:string,
   await runRepositoryCargoCommandV1(invocation,phaseControl,workspace,["test","--features","typegen",TYPEGEN_TEST_FILTER],root,{...process.env,SEMIO_TYPEGEN_OUT:outPath},buildBudgetMs());
 }
 
-/** 🧬️ Renders `<owner>/🤖️generated/🟦️.ts` from `<owner>/🧬️schema` — the schema module's Rust
+/** 🧬️ Renders `🧰️framework/🔨️modules/🐚️shell/🤖️generated/🟦️.ts` from `<owner>/🧬️schema` — the schema module's Rust
  * registry, gated against its own `🔣️.json` before a single byte is written. */
 class TypegenScript extends BundleScript {
   async run(): Promise<void> {

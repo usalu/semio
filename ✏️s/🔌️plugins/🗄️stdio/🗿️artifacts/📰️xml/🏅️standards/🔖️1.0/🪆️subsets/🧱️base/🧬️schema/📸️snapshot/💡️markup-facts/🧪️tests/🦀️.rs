@@ -1,8 +1,9 @@
 //! 🧫️ Namespace evidence shared with the independent quick-xml reader.
 use super::*;
+use semio_framework_test_fixtures::fixture_text;
 #[test]
 fn markup_facts_resolve_aliases_and_ignore_inert_payload_with_quick_xml() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/📸️snapshot/💡️markup-facts/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../🧪️tests/🧫️fixtures/📸️snapshot/💡️markup-facts/🔣️.json")).unwrap();
     for case in fixture["cases"].as_array().unwrap() {
         let document: XmlDocument = semio_framework_pack_json::from_json_str(&case["document"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         let facts = XmlMarkupFacts::from_document(&document);

@@ -2,6 +2,673 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/framework/filesystem/observation/descriptor/component.json",
   "definitions": {
+    "RelativeBindingProtocol": {
+      "const": {
+        "version": 1,
+        "maximumOwners": 32,
+        "maximumTargetUnits": 256,
+        "maximumTargetBytes": 1024,
+        "maximumStageUnits": 12,
+        "maximumExpectations": 32,
+        "expected": [
+          "missing",
+          "link"
+        ],
+        "desiredKind": "directory",
+        "expectation": "exact-private-same-live-parent-frame-consumed-before-await",
+        "parent": "quiescent-exclusive-until-accepted-descendants-drained",
+        "oldEntry": "verify-displaced-before-owned-unlink-no-unknown-delete-or-rollback",
+        "failure": "retain-ambiguous-staging-and-displaced-leaves-no-success",
+        "durability": "actual-child-where-supported-and-parent-flush-before-result",
+        "posix": {
+          "darwin": {
+            "symbol": "renameatx_np",
+            "exchange": 2
+          },
+          "linux": {
+            "symbol": "renameat2",
+            "exchange": 2
+          }
+        },
+        "windows": {
+          "setReparseCode": 589988,
+          "renameClass": 10,
+          "replaceExisting": false,
+          "compatible": "same-tag-held-reparse-update",
+          "incompatible": "held-old-preserve-then-absent-publish-under-domain-ex",
+          "physical": "unqualified",
+          "renameRootOffset": 8,
+          "renameNameLengthOffset": 16,
+          "renameNameOffset": 20,
+          "renameMinimumBytes": 24,
+          "symbolicPathOffset": 20,
+          "mountPathOffset": 16,
+          "ioPending": 997,
+          "newDirectoryTag": 2684354563,
+          "maximumReparseBytes": 16384,
+          "targetEncodings": [
+            "dos-drive-junction",
+            "unc-directory-symbolic-link",
+            "canonical-guid-directory-symbolic-link"
+          ]
+        }
+      }
+    },
+    "RelativeBindingFaultCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "effect",
+        "accepted"
+      ],
+      "properties": {
+        "effect": {
+          "enum": [
+            "foreign-displaced-file",
+            "foreign-displaced-directory",
+            "exchange-unsupported",
+            "symlink-collision",
+            "flush-error",
+            "held-close-error",
+            "frozen-close",
+            "undefined-close",
+            "unawaited-capture",
+            "capture-concurrent-publish"
+          ]
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "RelativeBindingFaultCases": {
+      "const": [
+        {
+          "effect": "foreign-displaced-file",
+          "accepted": false
+        },
+        {
+          "effect": "foreign-displaced-directory",
+          "accepted": false
+        },
+        {
+          "effect": "exchange-unsupported",
+          "accepted": false
+        },
+        {
+          "effect": "symlink-collision",
+          "accepted": false
+        },
+        {
+          "effect": "flush-error",
+          "accepted": false
+        },
+        {
+          "effect": "held-close-error",
+          "accepted": false
+        },
+        {
+          "effect": "frozen-close",
+          "accepted": false
+        },
+        {
+          "effect": "undefined-close",
+          "accepted": false
+        },
+        {
+          "effect": "unawaited-capture",
+          "accepted": true
+        },
+        {
+          "effect": "capture-concurrent-publish",
+          "accepted": false
+        }
+      ]
+    },
+    "RelativeBindingWindowsTargets": {
+      "const": [
+        {
+          "effect": "unc-target",
+          "path": "\\\\server\\share\\new",
+          "substitute": "\\??\\UNC\\server\\share\\new",
+          "tag": 2684354572
+        },
+        {
+          "effect": "guid-target",
+          "path": "\\\\?\\Volume{12345678-1234-1234-1234-123456789abc}\\new",
+          "substitute": "\\??\\Volume{12345678-1234-1234-1234-123456789abc}\\new",
+          "tag": 2684354572
+        },
+        {
+          "effect": "drive-extended-target",
+          "path": "\\\\?\\C:\\new",
+          "substitute": "\\??\\C:\\new",
+          "tag": 2684354563
+        }
+      ]
+    },
+    "RelativeBindingTarget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "path"
+      ],
+      "properties": {
+        "kind": {
+          "const": "directory"
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        }
+      }
+    },
+    "RelativeBindingCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "effect",
+        "accepted"
+      ],
+      "properties": {
+        "effect": {
+          "enum": [
+            "missing",
+            "link",
+            "dangling",
+            "external",
+            "file",
+            "directory",
+            "copied",
+            "sibling",
+            "escaped",
+            "reused",
+            "bad-target",
+            "proxy-target",
+            "accessor-target",
+            "foreign-name",
+            "cancel",
+            "cancel-after-stage",
+            "frozen",
+            "undefined",
+            "registry",
+            "unawaited",
+            "concurrent",
+            "private-id",
+            "security",
+            "streams",
+            "rename-error",
+            "foreign-displaced-file",
+            "foreign-displaced-directory",
+            "flush-error",
+            "close-error",
+            "tag-mismatch",
+            "incompatible-kind",
+            "pending",
+            "proxy-expected",
+            "unsafe-name",
+            "expectation-limit",
+            "hardlinked-link",
+            "undefined-close",
+            "frozen-close",
+            "unc-target",
+            "guid-target",
+            "drive-extended-target"
+          ]
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "RelativeBindingCases": {
+      "const": [
+        {
+          "effect": "missing",
+          "accepted": true
+        },
+        {
+          "effect": "link",
+          "accepted": true
+        },
+        {
+          "effect": "dangling",
+          "accepted": true
+        },
+        {
+          "effect": "external",
+          "accepted": true
+        },
+        {
+          "effect": "file",
+          "accepted": false
+        },
+        {
+          "effect": "directory",
+          "accepted": false
+        },
+        {
+          "effect": "copied",
+          "accepted": false
+        },
+        {
+          "effect": "sibling",
+          "accepted": false
+        },
+        {
+          "effect": "escaped",
+          "accepted": false
+        },
+        {
+          "effect": "reused",
+          "accepted": true
+        },
+        {
+          "effect": "bad-target",
+          "accepted": false
+        },
+        {
+          "effect": "proxy-target",
+          "accepted": false
+        },
+        {
+          "effect": "accessor-target",
+          "accepted": false
+        },
+        {
+          "effect": "foreign-name",
+          "accepted": false
+        },
+        {
+          "effect": "cancel",
+          "accepted": false
+        },
+        {
+          "effect": "cancel-after-stage",
+          "accepted": false
+        },
+        {
+          "effect": "frozen",
+          "accepted": false
+        },
+        {
+          "effect": "undefined",
+          "accepted": false
+        },
+        {
+          "effect": "registry",
+          "accepted": false
+        },
+        {
+          "effect": "unawaited",
+          "accepted": true
+        },
+        {
+          "effect": "concurrent",
+          "accepted": true
+        },
+        {
+          "effect": "private-id",
+          "accepted": false
+        },
+        {
+          "effect": "security",
+          "accepted": false
+        },
+        {
+          "effect": "streams",
+          "accepted": false
+        },
+        {
+          "effect": "rename-error",
+          "accepted": false
+        },
+        {
+          "effect": "foreign-displaced-file",
+          "accepted": false
+        },
+        {
+          "effect": "foreign-displaced-directory",
+          "accepted": false
+        },
+        {
+          "effect": "flush-error",
+          "accepted": false
+        },
+        {
+          "effect": "close-error",
+          "accepted": false
+        },
+        {
+          "effect": "tag-mismatch",
+          "accepted": false
+        },
+        {
+          "effect": "incompatible-kind",
+          "accepted": true
+        },
+        {
+          "effect": "pending",
+          "accepted": false
+        },
+        {
+          "effect": "proxy-expected",
+          "accepted": false
+        },
+        {
+          "effect": "unsafe-name",
+          "accepted": false
+        },
+        {
+          "effect": "expectation-limit",
+          "accepted": false
+        },
+        {
+          "effect": "hardlinked-link",
+          "accepted": false
+        },
+        {
+          "effect": "undefined-close",
+          "accepted": false
+        },
+        {
+          "effect": "frozen-close",
+          "accepted": false
+        },
+        {
+          "effect": "unc-target",
+          "accepted": true
+        },
+        {
+          "effect": "guid-target",
+          "accepted": true
+        },
+        {
+          "effect": "drive-extended-target",
+          "accepted": true
+        }
+      ]
+    },
+    "RelativeCreateModeCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "directory",
+        "mode",
+        "accepted"
+      ],
+      "properties": {
+        "directory": {
+          "type": "boolean"
+        },
+        "mode": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "RelativeCreateModeCases": {
+      "const": [
+        {
+          "directory": false,
+          "mode": 33152,
+          "accepted": true
+        },
+        {
+          "directory": true,
+          "mode": 16832,
+          "accepted": true
+        },
+        {
+          "directory": false,
+          "mode": 33664,
+          "accepted": false
+        },
+        {
+          "directory": false,
+          "mode": 34176,
+          "accepted": false
+        },
+        {
+          "directory": false,
+          "mode": 35200,
+          "accepted": false
+        },
+        {
+          "directory": true,
+          "mode": 17344,
+          "accepted": false
+        },
+        {
+          "directory": true,
+          "mode": 17856,
+          "accepted": false
+        },
+        {
+          "directory": true,
+          "mode": 18880,
+          "accepted": false
+        }
+      ]
+    },
+    "RelativeCreateProtocol": {
+      "const": {
+        "version": 1,
+        "maximumWriteBytes": 65536,
+        "maximumFileBytes": 67108864,
+        "minimumWriteBytes": 1,
+        "positions": "contiguous-only",
+        "creation": "absent-only-exclusive-nofollow-parent-relative",
+        "parent": "quiescent-exclusive-until-accepted-descendants-drained",
+        "failure": "retain-created-leaf-no-rollback-delete",
+        "durability": "actual-child-flush-close-parent-flush-before-success",
+        "maximumOwners": 32,
+        "directoryMode": 448,
+        "fileMode": 384,
+        "windows": {
+          "fileCreate": 2,
+          "fileCreated": 2,
+          "statusCollision": 3221225525,
+          "ioPending": 997
+        },
+        "posix": {
+          "darwin": {
+            "open": "__openat",
+            "write": 1,
+            "create": 512,
+            "exclusive": 2048
+          },
+          "linux": {
+            "open": "openat",
+            "write": 1,
+            "create": 64,
+            "exclusive": 128
+          }
+        }
+      }
+    },
+    "RelativeCreateCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "effect",
+        "accepted"
+      ],
+      "properties": {
+        "effect": {
+          "enum": [
+            "success",
+            "directory",
+            "directory-unawaited",
+            "existing-file",
+            "existing-directory",
+            "existing-link",
+            "invalid-name",
+            "offset",
+            "gap",
+            "zero",
+            "oversize",
+            "proxy-bytes",
+            "getter-bytes",
+            "copied-writer",
+            "escaped-writer",
+            "parent-concurrent",
+            "unawaited",
+            "unawaited-no-reopen",
+            "undefined-primary",
+            "frozen-primary",
+            "cancel",
+            "foreign-name",
+            "capacity",
+            "short-write",
+            "flush-error",
+            "body-close",
+            "undefined-close",
+            "pending-write",
+            "private-id",
+            "security",
+            "streams"
+          ]
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "RelativeCreateCases": {
+      "const": [
+        {
+          "effect": "success",
+          "accepted": true
+        },
+        {
+          "effect": "directory",
+          "accepted": true
+        },
+        {
+          "effect": "directory-unawaited",
+          "accepted": true
+        },
+        {
+          "effect": "existing-file",
+          "accepted": false
+        },
+        {
+          "effect": "existing-directory",
+          "accepted": false
+        },
+        {
+          "effect": "existing-link",
+          "accepted": false
+        },
+        {
+          "effect": "invalid-name",
+          "accepted": false
+        },
+        {
+          "effect": "offset",
+          "accepted": false
+        },
+        {
+          "effect": "gap",
+          "accepted": false
+        },
+        {
+          "effect": "zero",
+          "accepted": false
+        },
+        {
+          "effect": "oversize",
+          "accepted": false
+        },
+        {
+          "effect": "proxy-bytes",
+          "accepted": false
+        },
+        {
+          "effect": "getter-bytes",
+          "accepted": true
+        },
+        {
+          "effect": "copied-writer",
+          "accepted": false
+        },
+        {
+          "effect": "escaped-writer",
+          "accepted": false
+        },
+        {
+          "effect": "parent-concurrent",
+          "accepted": true
+        },
+        {
+          "effect": "unawaited",
+          "accepted": true
+        },
+        {
+          "effect": "unawaited-no-reopen",
+          "accepted": true
+        },
+        {
+          "effect": "undefined-primary",
+          "accepted": false
+        },
+        {
+          "effect": "frozen-primary",
+          "accepted": false
+        },
+        {
+          "effect": "cancel",
+          "accepted": false
+        },
+        {
+          "effect": "foreign-name",
+          "accepted": false
+        },
+        {
+          "effect": "capacity",
+          "accepted": false
+        },
+        {
+          "effect": "short-write",
+          "accepted": true
+        },
+        {
+          "effect": "flush-error",
+          "accepted": false
+        },
+        {
+          "effect": "body-close",
+          "accepted": false
+        },
+        {
+          "effect": "undefined-close",
+          "accepted": false
+        },
+        {
+          "effect": "pending-write",
+          "accepted": false
+        },
+        {
+          "effect": "private-id",
+          "accepted": false
+        },
+        {
+          "effect": "security",
+          "accepted": false
+        },
+        {
+          "effect": "streams",
+          "accepted": false
+        }
+      ]
+    },
     "Protocol": {
       "const": {
         "version": 1,
@@ -53,6 +720,2410 @@
         },
         "unresolved": {
           "type": "boolean"
+        }
+      }
+    },
+    "SynchronousProtocol": {
+      "const": {
+        "version": 1,
+        "acquisition": "synchronous-system",
+        "close": "synchronous-system",
+        "owner": "shared-descriptor-custody",
+        "maximumReadBytes": 65536,
+        "receiver": "exact-live-object",
+        "fileFacts": [
+          "dev",
+          "ino",
+          "mode",
+          "size",
+          "nlink",
+          "mtimeNs",
+          "ctimeNs"
+        ],
+        "rawDescriptor": "private",
+        "directoryEntry": "name-only",
+        "fileFlags": [
+          "readonly",
+          "nofollow",
+          "nonblocking"
+        ],
+        "fileKind": "regular",
+        "checkpoint": "required-around-admission-stat"
+      }
+    },
+    "ReadIdentity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "dev",
+        "ino",
+        "mode",
+        "size",
+        "nlink",
+        "mtimeNs",
+        "ctimeNs"
+      ],
+      "properties": {
+        "dev": {
+          "type": "string",
+          "pattern": "^[0-9]+$"
+        },
+        "ino": {
+          "type": "string",
+          "pattern": "^[0-9]+$"
+        },
+        "mode": {
+          "type": "string",
+          "pattern": "^[0-9]+$"
+        },
+        "size": {
+          "type": "string",
+          "pattern": "^[0-9]+$"
+        },
+        "nlink": {
+          "type": "string",
+          "pattern": "^[0-9]+$"
+        },
+        "mtimeNs": {
+          "type": "string",
+          "pattern": "^-?[0-9]+$"
+        },
+        "ctimeNs": {
+          "type": "string",
+          "pattern": "^-?[0-9]+$"
+        }
+      }
+    },
+    "SynchronousCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "effect",
+        "primary",
+        "unresolved"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "effect": {
+          "enum": [
+            "file",
+            "directory",
+            "file-missing",
+            "copied-file",
+            "escaped-file",
+            "copied-directory",
+            "escaped-directory",
+            "fd-zero",
+            "capacity",
+            "acquire-error",
+            "file-body-undefined",
+            "file-body-frozen",
+            "file-body-aggregate",
+            "file-close-undefined",
+            "file-close-frozen",
+            "file-body-close",
+            "directory-close-undefined",
+            "directory-body-close",
+            "known-close-posterror",
+            "cancel-after-acquire",
+            "observer-after-acquire",
+            "read-bound",
+            "read-position-overflow",
+            "fifo"
+          ]
+        },
+        "primary": {
+          "enum": [
+            "value",
+            "acquire",
+            "body",
+            "close",
+            "refused"
+          ]
+        },
+        "unresolved": {
+          "enum": [
+            0,
+            1
+          ]
+        }
+      }
+    },
+    "RelativeProtocol": {
+      "const": {
+        "version": 1,
+        "maximumRootPathUnits": 256,
+        "maximumNameBytes": 255,
+        "maximumDirectoryEntries": 65536,
+        "maximumLinkBytes": 4096,
+        "maximumDirectoryRecordBytes": 1048,
+        "maximumReadBytes": 65536,
+        "numericDescriptor": "private",
+        "receiver": "exact-live-object",
+        "entryProof": "issued-live-parent-and-name",
+        "children": "accepted-before-close-and-drained",
+        "unlink": "fresh-name-and-descriptor-cas",
+        "rootAuthority": "ordinary-filesystem-capability-only",
+        "windowsDurability": "requires-actual-supported-native-proof"
+      }
+    },
+    "RelativeCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "effect",
+        "accepted"
+      ],
+      "properties": {
+        "effect": {
+          "enum": [
+            "ordinary",
+            "copied",
+            "escaped",
+            "name",
+            "symlink-directory",
+            "unknown-remaining",
+            "foreign-device",
+            "cancel",
+            "undefined",
+            "close",
+            "late-name",
+            "inode",
+            "oversized-dirent",
+            "errno",
+            "parent-change",
+            "unawaited-child",
+            "copied-entry",
+            "metadata-enoent",
+            "transfer-null",
+            "transfer-null-close",
+            "transfer-throw",
+            "body-close",
+            "directory-capacity",
+            "capacity",
+            "special-file"
+          ]
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "RelativeCases": {
+      "const": [
+        {
+          "effect": "ordinary",
+          "accepted": true
+        },
+        {
+          "effect": "copied",
+          "accepted": false
+        },
+        {
+          "effect": "escaped",
+          "accepted": false
+        },
+        {
+          "effect": "name",
+          "accepted": false
+        },
+        {
+          "effect": "symlink-directory",
+          "accepted": false
+        },
+        {
+          "effect": "unknown-remaining",
+          "accepted": false
+        },
+        {
+          "effect": "foreign-device",
+          "accepted": false
+        },
+        {
+          "effect": "cancel",
+          "accepted": false
+        },
+        {
+          "effect": "undefined",
+          "accepted": false
+        },
+        {
+          "effect": "close",
+          "accepted": false
+        },
+        {
+          "effect": "late-name",
+          "accepted": false
+        },
+        {
+          "effect": "inode",
+          "accepted": false
+        },
+        {
+          "effect": "oversized-dirent",
+          "accepted": false
+        },
+        {
+          "effect": "errno",
+          "accepted": false
+        },
+        {
+          "effect": "parent-change",
+          "accepted": false
+        },
+        {
+          "effect": "unawaited-child",
+          "accepted": true
+        },
+        {
+          "effect": "copied-entry",
+          "accepted": false
+        },
+        {
+          "effect": "metadata-enoent",
+          "accepted": false
+        },
+        {
+          "effect": "transfer-null",
+          "accepted": false
+        },
+        {
+          "effect": "transfer-null-close",
+          "accepted": false
+        },
+        {
+          "effect": "transfer-throw",
+          "accepted": false
+        },
+        {
+          "effect": "body-close",
+          "accepted": false
+        },
+        {
+          "effect": "directory-capacity",
+          "accepted": false
+        },
+        {
+          "effect": "capacity",
+          "accepted": false
+        },
+        {
+          "effect": "special-file",
+          "accepted": false
+        }
+      ]
+    },
+    "RelativeWindowsProtocol": {
+      "const": {
+        "version": 1,
+        "platform": "win32",
+        "architecture": "x64",
+        "runtime": "bun",
+        "maximumNameUnits": 255,
+        "bufferBytes": 65536,
+        "maximumReparseBytes": 16384,
+        "maximumSecurityBytes": 65536,
+        "objectAttributesBytes": 48,
+        "unicodeStringBytes": 16,
+        "statusBytes": 16,
+        "fileOpen": 1,
+        "fileOpened": 1,
+        "fileDirectory": 1,
+        "fileNonDirectory": 64,
+        "fileSynchronous": 32,
+        "fileOpenReparse": 2097152,
+        "objectDontReparse": 4096,
+        "shareRead": 1,
+        "genericRead": 2147483648,
+        "genericWrite": 1073741824,
+        "delete": 65536,
+        "synchronize": 1048576,
+        "backupSemantics": 33554432,
+        "openReparseWin32": 2097152,
+        "directoryAttribute": 16,
+        "reparseAttribute": 1024,
+        "readonlyAttribute": 1,
+        "basicClass": 0,
+        "standardClass": 1,
+        "tagClass": 9,
+        "idClass": 18,
+        "streamClass": 22,
+        "directoryClass": 37,
+        "directoryHeaderBytes": 104,
+        "diskFileType": 1,
+        "statusPending": 259,
+        "statusNoMoreFiles": 2147483654,
+        "statusEndOfFile": 3221225489,
+        "statusNotFound": 3221225524,
+        "statusNotDirectory": 3221225731,
+        "symbolicLinkTag": 2684354572,
+        "mountPointTag": 2684354563,
+        "getReparseCode": 589992,
+        "dispositionClass": 21,
+        "dispositionDelete": 1,
+        "dispositionPosix": 2,
+        "dispositionIgnoreReadonly": 16,
+        "fileTimeEpoch": "116444736000000000",
+        "libraries": [
+          "kernel32.dll",
+          "ntdll.dll",
+          "advapi32.dll"
+        ]
+      }
+    },
+    "RelativeWindowsCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "effect",
+        "accepted"
+      ],
+      "properties": {
+        "effect": {
+          "enum": [
+            "ordinary",
+            "names",
+            "readlink",
+            "remove-file",
+            "remove-directory",
+            "sync",
+            "missing",
+            "copied",
+            "escaped",
+            "copied-entry",
+            "foreign-parent",
+            "wrong-name",
+            "late-name",
+            "native-id",
+            "volume",
+            "reparse-directory",
+            "unknown-tag",
+            "streams",
+            "security",
+            "pending",
+            "alternate-status",
+            "open-error",
+            "close-error",
+            "undefined",
+            "frozen",
+            "body-close",
+            "cancel",
+            "read-bound",
+            "live-child-remove",
+            "unawaited-child",
+            "flush-error",
+            "flush-drift",
+            "capacity",
+            "invalid-name",
+            "malformed-directory",
+            "malformed-reparse",
+            "open-cancel",
+            "root-open-cancel",
+            "ambiguous-root",
+            "names-twice",
+            "names-concurrent",
+            "child-failure",
+            "body-child-failure",
+            "reparse-ancestor",
+            "directory-id-drift",
+            "copied-file",
+            "escaped-file",
+            "cancel-child",
+            "open-capacity",
+            "expired",
+            "checkpoint-enoent",
+            "close-enoent",
+            "enumeration-pages",
+            "hardlink",
+            "post-disposition-id",
+            "post-disposition-size",
+            "post-disposition-links",
+            "post-disposition-pending",
+            "delete-close-error",
+            "readlink-bom"
+          ]
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "RelativeWindowsCases": {
+      "const": [
+        {
+          "effect": "ordinary",
+          "accepted": true
+        },
+        {
+          "effect": "names",
+          "accepted": true
+        },
+        {
+          "effect": "readlink",
+          "accepted": true
+        },
+        {
+          "effect": "remove-file",
+          "accepted": true
+        },
+        {
+          "effect": "remove-directory",
+          "accepted": true
+        },
+        {
+          "effect": "sync",
+          "accepted": true
+        },
+        {
+          "effect": "missing",
+          "accepted": true
+        },
+        {
+          "effect": "copied",
+          "accepted": false
+        },
+        {
+          "effect": "escaped",
+          "accepted": false
+        },
+        {
+          "effect": "copied-entry",
+          "accepted": false
+        },
+        {
+          "effect": "foreign-parent",
+          "accepted": false
+        },
+        {
+          "effect": "wrong-name",
+          "accepted": false
+        },
+        {
+          "effect": "late-name",
+          "accepted": false
+        },
+        {
+          "effect": "native-id",
+          "accepted": false
+        },
+        {
+          "effect": "volume",
+          "accepted": false
+        },
+        {
+          "effect": "reparse-directory",
+          "accepted": false
+        },
+        {
+          "effect": "unknown-tag",
+          "accepted": false
+        },
+        {
+          "effect": "streams",
+          "accepted": false
+        },
+        {
+          "effect": "security",
+          "accepted": false
+        },
+        {
+          "effect": "pending",
+          "accepted": false
+        },
+        {
+          "effect": "alternate-status",
+          "accepted": false
+        },
+        {
+          "effect": "open-error",
+          "accepted": false
+        },
+        {
+          "effect": "close-error",
+          "accepted": false
+        },
+        {
+          "effect": "undefined",
+          "accepted": false
+        },
+        {
+          "effect": "frozen",
+          "accepted": false
+        },
+        {
+          "effect": "body-close",
+          "accepted": false
+        },
+        {
+          "effect": "cancel",
+          "accepted": false
+        },
+        {
+          "effect": "read-bound",
+          "accepted": false
+        },
+        {
+          "effect": "live-child-remove",
+          "accepted": false
+        },
+        {
+          "effect": "unawaited-child",
+          "accepted": true
+        },
+        {
+          "effect": "flush-error",
+          "accepted": false
+        },
+        {
+          "effect": "flush-drift",
+          "accepted": false
+        },
+        {
+          "effect": "capacity",
+          "accepted": false
+        },
+        {
+          "effect": "invalid-name",
+          "accepted": false
+        },
+        {
+          "effect": "malformed-directory",
+          "accepted": false
+        },
+        {
+          "effect": "malformed-reparse",
+          "accepted": false
+        },
+        {
+          "effect": "open-cancel",
+          "accepted": false
+        },
+        {
+          "effect": "root-open-cancel",
+          "accepted": false
+        },
+        {
+          "effect": "ambiguous-root",
+          "accepted": false
+        },
+        {
+          "effect": "names-twice",
+          "accepted": true
+        },
+        {
+          "effect": "names-concurrent",
+          "accepted": true
+        },
+        {
+          "effect": "child-failure",
+          "accepted": false
+        },
+        {
+          "effect": "body-child-failure",
+          "accepted": false
+        },
+        {
+          "effect": "reparse-ancestor",
+          "accepted": false
+        },
+        {
+          "effect": "directory-id-drift",
+          "accepted": false
+        },
+        {
+          "effect": "copied-file",
+          "accepted": false
+        },
+        {
+          "effect": "escaped-file",
+          "accepted": false
+        },
+        {
+          "effect": "cancel-child",
+          "accepted": false
+        },
+        {
+          "effect": "open-capacity",
+          "accepted": false
+        },
+        {
+          "effect": "expired",
+          "accepted": false
+        },
+        {
+          "effect": "checkpoint-enoent",
+          "accepted": false
+        },
+        {
+          "effect": "close-enoent",
+          "accepted": false
+        },
+        {
+          "effect": "enumeration-pages",
+          "accepted": true
+        },
+        {
+          "effect": "hardlink",
+          "accepted": true
+        },
+        {
+          "effect": "post-disposition-id",
+          "accepted": false
+        },
+        {
+          "effect": "post-disposition-size",
+          "accepted": false
+        },
+        {
+          "effect": "post-disposition-links",
+          "accepted": false
+        },
+        {
+          "effect": "post-disposition-pending",
+          "accepted": false
+        },
+        {
+          "effect": "delete-close-error",
+          "accepted": false
+        },
+        {
+          "effect": "readlink-bom",
+          "accepted": true
+        }
+      ]
+    },
+    "RelativePosixProtocol": {
+      "const": {
+        "version": 1,
+        "architectures": [
+          "arm64",
+          "x64"
+        ],
+        "darwin": {
+          "library": "/usr/lib/libSystem.B.dylib",
+          "probeSymlink": 2097152,
+          "probeNoFollow": false,
+          "directoryUnlinkLinks": "unchanged-until-close",
+          "nameOffset": 21,
+          "recordLengthOffset": 16,
+          "nameLengthOffset": 18,
+          "x64Readdir": "readdir$INODE64",
+          "arm64Readdir": "readdir",
+          "nofollow": 256,
+          "directory": 1048576,
+          "nonblock": 4,
+          "cloexec": 16777216,
+          "removeDirectory": 128,
+          "headerBytes": 21,
+          "error": "__error",
+          "atSymlinkNoFollow": 32,
+          "stat": {
+            "bytes": 144,
+            "dev": 0,
+            "mode": 4,
+            "nlink": 6,
+            "ino": 8,
+            "mtime": 48,
+            "ctime": 64,
+            "size": 96
+          },
+          "x64Stat": "fstatat$INODE64",
+          "arm64Stat": "fstatat"
+        },
+        "linux": {
+          "libc": "glibc",
+          "probePath": 2097152,
+          "probeNoFollow": true,
+          "directoryUnlinkLinks": "zero",
+          "nameOffset": 19,
+          "recordLengthOffset": 16,
+          "nameTerminator": "first-null-inside-record",
+          "readdir": "readdir64",
+          "nonblock": 2048,
+          "cloexec": 524288,
+          "removeDirectory": 512,
+          "headerBytes": 19,
+          "error": "__errno_location",
+          "x64": {
+            "nofollow": 131072,
+            "directory": 65536,
+            "library": "/lib/x86_64-linux-gnu/libc.so.6"
+          },
+          "arm64": {
+            "nofollow": 32768,
+            "directory": 16384,
+            "library": "/lib/aarch64-linux-gnu/libc.so.6"
+          }
+        },
+        "specialFile": "refuse",
+        "symlinkTraversal": "refuse",
+        "directoryCursor": "independent-openat-dot-before-fdopendir",
+        "unlinkAuthority": "caller-exclusive-domain-custody-required",
+        "progressEntries": 64
+      }
+    },
+    "RelativeWindowsFacts": {
+      "const": {
+        "native": {
+          "volumeSerial": 123,
+          "fileIndexHigh": 0,
+          "fileIndexLow": 3,
+          "attributes": 0,
+          "size": 27,
+          "links": 1,
+          "lastWriteTime": "116444736000010000",
+          "changeTime": "116444736000010000"
+        },
+        "expected": {
+          "dev": "123",
+          "ino": "3",
+          "mode": "33206",
+          "size": "27",
+          "nlink": "1",
+          "mtimeNs": "1000000",
+          "ctimeNs": "1000000"
+        }
+      }
+    },
+    "RelativePathProtocol": {
+      "const": {
+        "version": 1,
+        "minimumDepth": 1,
+        "maximumDepth": 64,
+        "maximumNameBytes": 16384,
+        "maximumAdditionalOwners": 2,
+        "proof": "same-root-issued-directory-entry-with-parent-lineage",
+        "progressSteps": 8
+      }
+    },
+    "RelativePathCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "action",
+        "depth",
+        "accepted"
+      ],
+      "properties": {
+        "action": {
+          "enum": [
+            "depth-1",
+            "depth-31",
+            "depth-33",
+            "depth-64",
+            "depth-65",
+            "empty",
+            "copied",
+            "foreign-root",
+            "wrong-name",
+            "lineage",
+            "changed",
+            "private-id",
+            "mid-open-drift",
+            "late-parent",
+            "unawaited",
+            "child-failure",
+            "undefined",
+            "frozen",
+            "close-error",
+            "body-close",
+            "capacity",
+            "name-budget",
+            "malformed-step",
+            "empty-name",
+            "escaped",
+            "cancel-handoff",
+            "expiry-handoff",
+            "recursive-counterexample",
+            "opaque-expiry",
+            "array-hole",
+            "array-extra",
+            "array-getter",
+            "cancel-yield",
+            "proxy-array",
+            "proxy-step",
+            "proxy-identity"
+          ]
+        },
+        "depth": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "RelativePathCases": {
+      "const": [
+        {
+          "action": "depth-1",
+          "depth": 1,
+          "accepted": true
+        },
+        {
+          "action": "depth-31",
+          "depth": 31,
+          "accepted": true
+        },
+        {
+          "action": "depth-33",
+          "depth": 33,
+          "accepted": true
+        },
+        {
+          "action": "depth-64",
+          "depth": 64,
+          "accepted": true
+        },
+        {
+          "action": "depth-65",
+          "depth": 65,
+          "accepted": false
+        },
+        {
+          "action": "empty",
+          "depth": 0,
+          "accepted": false
+        },
+        {
+          "action": "copied",
+          "depth": 2,
+          "accepted": false
+        },
+        {
+          "action": "foreign-root",
+          "depth": 1,
+          "accepted": false
+        },
+        {
+          "action": "wrong-name",
+          "depth": 2,
+          "accepted": false
+        },
+        {
+          "action": "lineage",
+          "depth": 2,
+          "accepted": false
+        },
+        {
+          "action": "changed",
+          "depth": 2,
+          "accepted": false
+        },
+        {
+          "action": "private-id",
+          "depth": 2,
+          "accepted": false
+        },
+        {
+          "action": "mid-open-drift",
+          "depth": 2,
+          "accepted": false
+        },
+        {
+          "action": "late-parent",
+          "depth": 2,
+          "accepted": false
+        },
+        {
+          "action": "unawaited",
+          "depth": 2,
+          "accepted": true
+        },
+        {
+          "action": "child-failure",
+          "depth": 2,
+          "accepted": false
+        },
+        {
+          "action": "undefined",
+          "depth": 2,
+          "accepted": false
+        },
+        {
+          "action": "frozen",
+          "depth": 2,
+          "accepted": false
+        },
+        {
+          "action": "close-error",
+          "depth": 2,
+          "accepted": false
+        },
+        {
+          "action": "body-close",
+          "depth": 2,
+          "accepted": false
+        },
+        {
+          "action": "capacity",
+          "depth": 2,
+          "accepted": false
+        },
+        {
+          "action": "name-budget",
+          "depth": 64,
+          "accepted": false
+        },
+        {
+          "action": "malformed-step",
+          "depth": 2,
+          "accepted": false
+        },
+        {
+          "action": "empty-name",
+          "depth": 2,
+          "accepted": false
+        },
+        {
+          "action": "escaped",
+          "depth": 2,
+          "accepted": false
+        },
+        {
+          "action": "cancel-handoff",
+          "depth": 2,
+          "accepted": false
+        },
+        {
+          "action": "expiry-handoff",
+          "depth": 2,
+          "accepted": false
+        },
+        {
+          "action": "recursive-counterexample",
+          "depth": 64,
+          "accepted": false
+        },
+        {
+          "action": "opaque-expiry",
+          "depth": 2,
+          "accepted": false
+        },
+        {
+          "action": "array-hole",
+          "depth": 2,
+          "accepted": false
+        },
+        {
+          "action": "array-extra",
+          "depth": 2,
+          "accepted": false
+        },
+        {
+          "action": "array-getter",
+          "depth": 2,
+          "accepted": false
+        },
+        {
+          "action": "cancel-yield",
+          "depth": 64,
+          "accepted": false
+        },
+        {
+          "action": "proxy-array",
+          "depth": 2,
+          "accepted": false
+        },
+        {
+          "action": "proxy-step",
+          "depth": 2,
+          "accepted": false
+        },
+        {
+          "action": "proxy-identity",
+          "depth": 2,
+          "accepted": false
+        }
+      ]
+    },
+    "SynchronousOwnerProtocol": {
+      "const": {
+        "version": 1,
+        "maximumPrototypeDepth": 16,
+        "callback": "ordinary-synchronous-only",
+        "returnedPromise": "refuse-without-adoption-and-close",
+        "sharing": "same-private-descriptor-registry",
+        "fileKinds": [
+          "regular"
+        ],
+        "directoryEntry": "immutable-name-only",
+        "registryDefinition": "Protocol",
+        "readDefinition": "SynchronousProtocol",
+        "checkpointCallback": "ordinary-synchronous-only",
+        "checkpointResult": "same-closed-synchronous-result-guard"
+      }
+    },
+    "SynchronousOwnerCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "action",
+        "accepted"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "file",
+            "directory"
+          ]
+        },
+        "action": {
+          "enum": [
+            "success",
+            "undefined-body",
+            "frozen-body",
+            "copied",
+            "escaped",
+            "async-body",
+            "promise-body",
+            "rejecting-promise",
+            "thenable",
+            "then-getter",
+            "proxy-result",
+            "proxy-body",
+            "capacity",
+            "open-error",
+            "close-error",
+            "body-close",
+            "cancel-before",
+            "cancel-after-open",
+            "unsupported",
+            "read-bound",
+            "not-file",
+            "invalid-entry",
+            "symlink",
+            "success-void",
+            "promise-constructor",
+            "prototype-then",
+            "long-prototype",
+            "undefined-close",
+            "cancel-after-body",
+            "continuation",
+            "checkpoint-async",
+            "checkpoint-proxy",
+            "checkpoint-promise-before",
+            "checkpoint-promise-after-open",
+            "checkpoint-constructor-before",
+            "checkpoint-then-before",
+            "checkpoint-prototype-then-before",
+            "checkpoint-proxy-result-before",
+            "checkpoint-rejecting-before",
+            "checkpoint-undefined-before",
+            "checkpoint-frozen-before",
+            "checkpoint-undefined-after-open",
+            "checkpoint-frozen-after-open"
+          ]
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "SynchronousOwnerCases": {
+      "const": [
+        {
+          "kind": "file",
+          "action": "success",
+          "accepted": true
+        },
+        {
+          "kind": "file",
+          "action": "undefined-body",
+          "accepted": false
+        },
+        {
+          "kind": "file",
+          "action": "frozen-body",
+          "accepted": false
+        },
+        {
+          "kind": "file",
+          "action": "copied",
+          "accepted": false
+        },
+        {
+          "kind": "file",
+          "action": "escaped",
+          "accepted": false
+        },
+        {
+          "kind": "file",
+          "action": "async-body",
+          "accepted": false
+        },
+        {
+          "kind": "file",
+          "action": "promise-body",
+          "accepted": false
+        },
+        {
+          "kind": "file",
+          "action": "rejecting-promise",
+          "accepted": false
+        },
+        {
+          "kind": "file",
+          "action": "thenable",
+          "accepted": false
+        },
+        {
+          "kind": "file",
+          "action": "then-getter",
+          "accepted": false
+        },
+        {
+          "kind": "file",
+          "action": "proxy-result",
+          "accepted": false
+        },
+        {
+          "kind": "file",
+          "action": "proxy-body",
+          "accepted": false
+        },
+        {
+          "kind": "file",
+          "action": "capacity",
+          "accepted": false
+        },
+        {
+          "kind": "file",
+          "action": "open-error",
+          "accepted": false
+        },
+        {
+          "kind": "file",
+          "action": "close-error",
+          "accepted": false
+        },
+        {
+          "kind": "file",
+          "action": "body-close",
+          "accepted": false
+        },
+        {
+          "kind": "file",
+          "action": "cancel-before",
+          "accepted": false
+        },
+        {
+          "kind": "file",
+          "action": "cancel-after-open",
+          "accepted": false
+        },
+        {
+          "kind": "file",
+          "action": "unsupported",
+          "accepted": false
+        },
+        {
+          "kind": "directory",
+          "action": "success",
+          "accepted": true
+        },
+        {
+          "kind": "directory",
+          "action": "undefined-body",
+          "accepted": false
+        },
+        {
+          "kind": "directory",
+          "action": "frozen-body",
+          "accepted": false
+        },
+        {
+          "kind": "directory",
+          "action": "copied",
+          "accepted": false
+        },
+        {
+          "kind": "directory",
+          "action": "escaped",
+          "accepted": false
+        },
+        {
+          "kind": "directory",
+          "action": "async-body",
+          "accepted": false
+        },
+        {
+          "kind": "directory",
+          "action": "promise-body",
+          "accepted": false
+        },
+        {
+          "kind": "directory",
+          "action": "rejecting-promise",
+          "accepted": false
+        },
+        {
+          "kind": "directory",
+          "action": "thenable",
+          "accepted": false
+        },
+        {
+          "kind": "directory",
+          "action": "then-getter",
+          "accepted": false
+        },
+        {
+          "kind": "directory",
+          "action": "proxy-result",
+          "accepted": false
+        },
+        {
+          "kind": "directory",
+          "action": "proxy-body",
+          "accepted": false
+        },
+        {
+          "kind": "directory",
+          "action": "capacity",
+          "accepted": false
+        },
+        {
+          "kind": "directory",
+          "action": "open-error",
+          "accepted": false
+        },
+        {
+          "kind": "directory",
+          "action": "close-error",
+          "accepted": false
+        },
+        {
+          "kind": "directory",
+          "action": "body-close",
+          "accepted": false
+        },
+        {
+          "kind": "directory",
+          "action": "cancel-before",
+          "accepted": false
+        },
+        {
+          "kind": "directory",
+          "action": "cancel-after-open",
+          "accepted": false
+        },
+        {
+          "kind": "directory",
+          "action": "unsupported",
+          "accepted": false
+        },
+        {
+          "kind": "file",
+          "action": "read-bound",
+          "accepted": false
+        },
+        {
+          "kind": "file",
+          "action": "not-file",
+          "accepted": false
+        },
+        {
+          "kind": "file",
+          "action": "symlink",
+          "accepted": false
+        },
+        {
+          "kind": "directory",
+          "action": "invalid-entry",
+          "accepted": false
+        },
+        {
+          "kind": "file",
+          "action": "success-void",
+          "accepted": true
+        },
+        {
+          "kind": "file",
+          "action": "promise-constructor",
+          "accepted": false
+        },
+        {
+          "kind": "file",
+          "action": "prototype-then",
+          "accepted": false
+        },
+        {
+          "kind": "file",
+          "action": "long-prototype",
+          "accepted": false
+        },
+        {
+          "kind": "directory",
+          "action": "success-void",
+          "accepted": true
+        },
+        {
+          "kind": "directory",
+          "action": "promise-constructor",
+          "accepted": false
+        },
+        {
+          "kind": "directory",
+          "action": "prototype-then",
+          "accepted": false
+        },
+        {
+          "kind": "directory",
+          "action": "long-prototype",
+          "accepted": false
+        },
+        {
+          "kind": "file",
+          "action": "undefined-close",
+          "accepted": false
+        },
+        {
+          "kind": "file",
+          "action": "cancel-after-body",
+          "accepted": false
+        },
+        {
+          "kind": "file",
+          "action": "continuation",
+          "accepted": false
+        },
+        {
+          "kind": "directory",
+          "action": "undefined-close",
+          "accepted": false
+        },
+        {
+          "kind": "directory",
+          "action": "cancel-after-body",
+          "accepted": false
+        },
+        {
+          "kind": "directory",
+          "action": "continuation",
+          "accepted": false
+        },
+        {
+          "kind": "file",
+          "action": "checkpoint-async",
+          "accepted": false
+        },
+        {
+          "kind": "file",
+          "action": "checkpoint-proxy",
+          "accepted": false
+        },
+        {
+          "kind": "file",
+          "action": "checkpoint-promise-before",
+          "accepted": false
+        },
+        {
+          "kind": "file",
+          "action": "checkpoint-promise-after-open",
+          "accepted": false
+        },
+        {
+          "kind": "file",
+          "action": "checkpoint-constructor-before",
+          "accepted": false
+        },
+        {
+          "kind": "file",
+          "action": "checkpoint-then-before",
+          "accepted": false
+        },
+        {
+          "kind": "file",
+          "action": "checkpoint-prototype-then-before",
+          "accepted": false
+        },
+        {
+          "kind": "file",
+          "action": "checkpoint-proxy-result-before",
+          "accepted": false
+        },
+        {
+          "kind": "file",
+          "action": "checkpoint-rejecting-before",
+          "accepted": false
+        },
+        {
+          "kind": "file",
+          "action": "checkpoint-undefined-before",
+          "accepted": false
+        },
+        {
+          "kind": "file",
+          "action": "checkpoint-frozen-before",
+          "accepted": false
+        },
+        {
+          "kind": "file",
+          "action": "checkpoint-undefined-after-open",
+          "accepted": false
+        },
+        {
+          "kind": "file",
+          "action": "checkpoint-frozen-after-open",
+          "accepted": false
+        },
+        {
+          "kind": "directory",
+          "action": "checkpoint-async",
+          "accepted": false
+        },
+        {
+          "kind": "directory",
+          "action": "checkpoint-proxy",
+          "accepted": false
+        },
+        {
+          "kind": "directory",
+          "action": "checkpoint-promise-before",
+          "accepted": false
+        },
+        {
+          "kind": "directory",
+          "action": "checkpoint-promise-after-open",
+          "accepted": false
+        },
+        {
+          "kind": "directory",
+          "action": "checkpoint-constructor-before",
+          "accepted": false
+        },
+        {
+          "kind": "directory",
+          "action": "checkpoint-then-before",
+          "accepted": false
+        },
+        {
+          "kind": "directory",
+          "action": "checkpoint-prototype-then-before",
+          "accepted": false
+        },
+        {
+          "kind": "directory",
+          "action": "checkpoint-proxy-result-before",
+          "accepted": false
+        },
+        {
+          "kind": "directory",
+          "action": "checkpoint-rejecting-before",
+          "accepted": false
+        },
+        {
+          "kind": "directory",
+          "action": "checkpoint-undefined-before",
+          "accepted": false
+        },
+        {
+          "kind": "directory",
+          "action": "checkpoint-frozen-before",
+          "accepted": false
+        },
+        {
+          "kind": "directory",
+          "action": "checkpoint-undefined-after-open",
+          "accepted": false
+        },
+        {
+          "kind": "directory",
+          "action": "checkpoint-frozen-after-open",
+          "accepted": false
+        }
+      ]
+    },
+    "SynchronousOwnerModelProtocol": {
+      "const": {
+        "version": 1,
+        "classification": "explicit-Source-syscall-model-not-platform-ABI",
+        "flags": {
+          "O_RDONLY": 0,
+          "O_NOFOLLOW": 16,
+          "O_NONBLOCK": 32
+        }
+      }
+    },
+    "RelativePreservationProtocol": {
+      "const": {
+        "version": 1,
+        "purpose": "preserve-current-ordinary-entry-and-publish-binding",
+        "allowedKinds": [
+          "file",
+          "directory"
+        ],
+        "minimumSourceNameUnits": 12,
+        "maximumIntentBytes": 4096,
+        "maximumReceiptBytes": 4096,
+        "maximumExpectations": 32,
+        "maximumCapsulesPerFrame": 1,
+        "capsulePrefix": ".p",
+        "capsuleDigestHex": 8,
+        "payload": "p",
+        "intent": "i",
+        "receipt": "r",
+        "deletePayload": false,
+        "adoptPayload": false,
+        "followPayload": false,
+        "payloadContentsObserved": false,
+        "overwriteCapsule": false,
+        "durability": "intent-capsule-parent-before-exchange-receipt-capsule-parent-before-result",
+        "unknownDisplaced": "retain-and-refuse-without-rollback",
+        "windows": "pre-effect-refusal-until-rooted-sharing-qualified",
+        "receiver": "original-root-frame-only",
+        "identityTransition": "same-seven-fields-except-nondecreasing-ctime-after-own-exchange",
+        "combinedExpectations": "shares-existing-binding-counter",
+        "descendantPathUnits": "capsule-p-no-longer-than-source-basename",
+        "retention": "opaque-inode-no-content-snapshot-or-runtime-adoption"
+      }
+    },
+    "RelativePreservationCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "effect",
+        "accepted"
+      ],
+      "properties": {
+        "effect": {
+          "enum": [
+            "directory",
+            "file",
+            "hardlink",
+            "unawaited",
+            "copied",
+            "foreign-frame",
+            "escaped",
+            "link",
+            "missing",
+            "special",
+            "short-name",
+            "intent-empty",
+            "intent-oversize",
+            "intent-surrogate",
+            "capsule-collision",
+            "parent-drift",
+            "leaf-drift",
+            "cancel-before",
+            "cancel-after-intent",
+            "undefined-after-intent",
+            "frozen-after-intent",
+            "concurrent",
+            "same-frame-second",
+            "combined-capacity",
+            "late-foreign",
+            "intent-sync",
+            "exchange-failure",
+            "receipt-sync",
+            "parent-final-sync",
+            "close-failure",
+            "windows-refusal",
+            "intent-drift",
+            "late-unknown",
+            "capture-arity",
+            "publish-arity",
+            "copied-receiver",
+            "frozen-close",
+            "undefined-close",
+            "nested-frame",
+            "target-getter",
+            "target-proxy",
+            "body-undefined",
+            "body-frozen",
+            "combined-binding-capacity",
+            "path-bound",
+            "partial-write",
+            "intent-max",
+            "intent-write-zero",
+            "cancel-after-exchange",
+            "capture-unawaited",
+            "intent-close-failure",
+            "receipt-close-failure"
+          ]
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "RelativePreservationCases": {
+      "const": [
+        {
+          "effect": "directory",
+          "accepted": true
+        },
+        {
+          "effect": "file",
+          "accepted": true
+        },
+        {
+          "effect": "hardlink",
+          "accepted": true
+        },
+        {
+          "effect": "unawaited",
+          "accepted": true
+        },
+        {
+          "effect": "copied",
+          "accepted": false
+        },
+        {
+          "effect": "foreign-frame",
+          "accepted": false
+        },
+        {
+          "effect": "escaped",
+          "accepted": false
+        },
+        {
+          "effect": "link",
+          "accepted": false
+        },
+        {
+          "effect": "missing",
+          "accepted": false
+        },
+        {
+          "effect": "special",
+          "accepted": false
+        },
+        {
+          "effect": "short-name",
+          "accepted": false
+        },
+        {
+          "effect": "intent-empty",
+          "accepted": false
+        },
+        {
+          "effect": "intent-oversize",
+          "accepted": false
+        },
+        {
+          "effect": "intent-surrogate",
+          "accepted": false
+        },
+        {
+          "effect": "capsule-collision",
+          "accepted": false
+        },
+        {
+          "effect": "parent-drift",
+          "accepted": false
+        },
+        {
+          "effect": "leaf-drift",
+          "accepted": false
+        },
+        {
+          "effect": "cancel-before",
+          "accepted": false
+        },
+        {
+          "effect": "cancel-after-intent",
+          "accepted": false
+        },
+        {
+          "effect": "undefined-after-intent",
+          "accepted": false
+        },
+        {
+          "effect": "frozen-after-intent",
+          "accepted": false
+        },
+        {
+          "effect": "concurrent",
+          "accepted": false
+        },
+        {
+          "effect": "same-frame-second",
+          "accepted": false
+        },
+        {
+          "effect": "combined-capacity",
+          "accepted": false
+        },
+        {
+          "effect": "late-foreign",
+          "accepted": false
+        },
+        {
+          "effect": "intent-sync",
+          "accepted": false
+        },
+        {
+          "effect": "exchange-failure",
+          "accepted": false
+        },
+        {
+          "effect": "receipt-sync",
+          "accepted": false
+        },
+        {
+          "effect": "parent-final-sync",
+          "accepted": false
+        },
+        {
+          "effect": "close-failure",
+          "accepted": false
+        },
+        {
+          "effect": "windows-refusal",
+          "accepted": false
+        },
+        {
+          "effect": "intent-drift",
+          "accepted": false
+        },
+        {
+          "effect": "late-unknown",
+          "accepted": false
+        },
+        {
+          "effect": "capture-arity",
+          "accepted": false
+        },
+        {
+          "effect": "publish-arity",
+          "accepted": false
+        },
+        {
+          "effect": "copied-receiver",
+          "accepted": false
+        },
+        {
+          "effect": "frozen-close",
+          "accepted": false
+        },
+        {
+          "effect": "undefined-close",
+          "accepted": false
+        },
+        {
+          "effect": "nested-frame",
+          "accepted": false
+        },
+        {
+          "effect": "target-getter",
+          "accepted": false
+        },
+        {
+          "effect": "target-proxy",
+          "accepted": false
+        },
+        {
+          "effect": "body-undefined",
+          "accepted": false
+        },
+        {
+          "effect": "body-frozen",
+          "accepted": false
+        },
+        {
+          "effect": "combined-binding-capacity",
+          "accepted": false
+        },
+        {
+          "effect": "path-bound",
+          "accepted": false
+        },
+        {
+          "effect": "partial-write",
+          "accepted": true
+        },
+        {
+          "effect": "intent-max",
+          "accepted": true
+        },
+        {
+          "effect": "intent-write-zero",
+          "accepted": false
+        },
+        {
+          "effect": "cancel-after-exchange",
+          "accepted": false
+        },
+        {
+          "effect": "capture-unawaited",
+          "accepted": true
+        },
+        {
+          "effect": "intent-close-failure",
+          "accepted": false
+        },
+        {
+          "effect": "receipt-close-failure",
+          "accepted": false
+        }
+      ]
+    },
+    "RelativePreservationIdentity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "dev",
+        "ino",
+        "mode",
+        "size",
+        "nlink",
+        "mtimeNs",
+        "ctimeNs"
+      ],
+      "properties": {
+        "dev": {
+          "type": "string",
+          "pattern": "^-?(0|[1-9][0-9]*)$"
+        },
+        "ino": {
+          "type": "string",
+          "pattern": "^-?(0|[1-9][0-9]*)$"
+        },
+        "mode": {
+          "type": "string",
+          "pattern": "^-?(0|[1-9][0-9]*)$"
+        },
+        "size": {
+          "type": "string",
+          "pattern": "^-?(0|[1-9][0-9]*)$"
+        },
+        "nlink": {
+          "type": "string",
+          "pattern": "^-?(0|[1-9][0-9]*)$"
+        },
+        "mtimeNs": {
+          "type": "string",
+          "pattern": "^-?(0|[1-9][0-9]*)$"
+        },
+        "ctimeNs": {
+          "type": "string",
+          "pattern": "^-?(0|[1-9][0-9]*)$"
+        }
+      }
+    },
+    "RelativePreservationReceipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "purpose",
+        "name",
+        "capsule",
+        "kind",
+        "identity",
+        "intentSha256",
+        "target",
+        "deletePayload",
+        "adoptPayload"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "purpose": {
+          "const": "preserve-current-ordinary-entry-and-publish-binding"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 12,
+          "maxLength": 255
+        },
+        "capsule": {
+          "type": "string",
+          "pattern": "^\\.p[0-9a-f]{8}$"
+        },
+        "kind": {
+          "enum": [
+            "file",
+            "directory"
+          ]
+        },
+        "identity": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "dev",
+            "ino",
+            "mode",
+            "size",
+            "nlink",
+            "mtimeNs",
+            "ctimeNs"
+          ],
+          "properties": {
+            "dev": {
+              "type": "string",
+              "pattern": "^-?(0|[1-9][0-9]*)$"
+            },
+            "ino": {
+              "type": "string",
+              "pattern": "^-?(0|[1-9][0-9]*)$"
+            },
+            "mode": {
+              "type": "string",
+              "pattern": "^-?(0|[1-9][0-9]*)$"
+            },
+            "size": {
+              "type": "string",
+              "pattern": "^-?(0|[1-9][0-9]*)$"
+            },
+            "nlink": {
+              "type": "string",
+              "pattern": "^-?(0|[1-9][0-9]*)$"
+            },
+            "mtimeNs": {
+              "type": "string",
+              "pattern": "^-?(0|[1-9][0-9]*)$"
+            },
+            "ctimeNs": {
+              "type": "string",
+              "pattern": "^-?(0|[1-9][0-9]*)$"
+            }
+          }
+        },
+        "intentSha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "target": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "deletePayload": {
+          "const": false
+        },
+        "adoptPayload": {
+          "const": false
+        }
+      }
+    },
+    "RelativeRetentionProtocol": {
+      "const": {
+        "version": 1,
+        "purpose": "retain-current-ordinary-entry-without-binding",
+        "sharedPolicy": "RelativePreservationProtocol",
+        "sourceAbsent": true,
+        "target": false,
+        "publishBinding": false,
+        "adoptPayload": false,
+        "deletePayload": false,
+        "payloadContentsObserved": false,
+        "durability": "intent-capsule-parent-before-move-receipt-capsule-parent-before-result",
+        "identityTransition": "same-seven-fields-except-nondecreasing-ctime-after-own-move",
+        "absence": "completed-operation-data-recheck-before-later-use",
+        "posix": {
+          "darwin": {
+            "symbol": "renameatx_np",
+            "noReplace": 4,
+            "fileParentLinkDelta": [
+              0,
+              1
+            ]
+          },
+          "linux": {
+            "symbol": "renameat2",
+            "noReplace": 1,
+            "fileParentLinkDelta": [
+              0
+            ]
+          }
+        },
+        "windows": "pre-effect-refusal-until-rooted-sharing-qualified"
+      }
+    },
+    "RelativeRetentionCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "effect",
+        "accepted"
+      ],
+      "properties": {
+        "effect": {
+          "enum": [
+            "file",
+            "directory",
+            "hardlink",
+            "unawaited",
+            "intent-max",
+            "partial-write",
+            "generation-name",
+            "copied",
+            "foreign-frame",
+            "escaped",
+            "link",
+            "missing",
+            "special",
+            "short-name",
+            "intent-empty",
+            "intent-oversize",
+            "intent-surrogate",
+            "capsule-collision",
+            "payload-collision",
+            "parent-drift",
+            "leaf-drift",
+            "cancel-before",
+            "cancel-after-intent",
+            "undefined-after-intent",
+            "frozen-after-intent",
+            "concurrent",
+            "same-frame-second",
+            "combined-capacity",
+            "late-foreign",
+            "intent-sync",
+            "rename-failure",
+            "receipt-sync",
+            "parent-final-sync",
+            "close-failure",
+            "windows-refusal",
+            "intent-drift",
+            "late-unknown",
+            "capture-arity",
+            "retain-arity",
+            "copied-receiver",
+            "frozen-close",
+            "undefined-close",
+            "nested-frame",
+            "body-undefined",
+            "body-frozen",
+            "combined-binding-capacity",
+            "path-bound",
+            "intent-write-zero",
+            "cancel-after-move",
+            "capture-unawaited",
+            "intent-close-failure",
+            "receipt-close-failure",
+            "source-recreated",
+            "unsupported-rename",
+            "late-source-close-unknown",
+            "late-capsule-close-unknown",
+            "late-final-parent-sync-unknown",
+            "late-source-close-foreign",
+            "wrong-close-frame",
+            "pinned-source-close-failure",
+            "capsule-close-failure",
+            "rename-library-close-failure"
+          ]
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "RelativeRetentionCases": {
+      "const": [
+        {
+          "effect": "file",
+          "accepted": true
+        },
+        {
+          "effect": "directory",
+          "accepted": true
+        },
+        {
+          "effect": "hardlink",
+          "accepted": true
+        },
+        {
+          "effect": "unawaited",
+          "accepted": true
+        },
+        {
+          "effect": "intent-max",
+          "accepted": true
+        },
+        {
+          "effect": "partial-write",
+          "accepted": true
+        },
+        {
+          "effect": "generation-name",
+          "accepted": true
+        },
+        {
+          "effect": "copied",
+          "accepted": false
+        },
+        {
+          "effect": "foreign-frame",
+          "accepted": false
+        },
+        {
+          "effect": "escaped",
+          "accepted": false
+        },
+        {
+          "effect": "link",
+          "accepted": false
+        },
+        {
+          "effect": "missing",
+          "accepted": false
+        },
+        {
+          "effect": "special",
+          "accepted": false
+        },
+        {
+          "effect": "short-name",
+          "accepted": false
+        },
+        {
+          "effect": "intent-empty",
+          "accepted": false
+        },
+        {
+          "effect": "intent-oversize",
+          "accepted": false
+        },
+        {
+          "effect": "intent-surrogate",
+          "accepted": false
+        },
+        {
+          "effect": "capsule-collision",
+          "accepted": false
+        },
+        {
+          "effect": "payload-collision",
+          "accepted": false
+        },
+        {
+          "effect": "parent-drift",
+          "accepted": false
+        },
+        {
+          "effect": "leaf-drift",
+          "accepted": false
+        },
+        {
+          "effect": "cancel-before",
+          "accepted": false
+        },
+        {
+          "effect": "cancel-after-intent",
+          "accepted": false
+        },
+        {
+          "effect": "undefined-after-intent",
+          "accepted": false
+        },
+        {
+          "effect": "frozen-after-intent",
+          "accepted": false
+        },
+        {
+          "effect": "concurrent",
+          "accepted": false
+        },
+        {
+          "effect": "same-frame-second",
+          "accepted": false
+        },
+        {
+          "effect": "combined-capacity",
+          "accepted": false
+        },
+        {
+          "effect": "late-foreign",
+          "accepted": false
+        },
+        {
+          "effect": "intent-sync",
+          "accepted": false
+        },
+        {
+          "effect": "rename-failure",
+          "accepted": false
+        },
+        {
+          "effect": "receipt-sync",
+          "accepted": false
+        },
+        {
+          "effect": "parent-final-sync",
+          "accepted": false
+        },
+        {
+          "effect": "close-failure",
+          "accepted": false
+        },
+        {
+          "effect": "windows-refusal",
+          "accepted": false
+        },
+        {
+          "effect": "intent-drift",
+          "accepted": false
+        },
+        {
+          "effect": "late-unknown",
+          "accepted": false
+        },
+        {
+          "effect": "capture-arity",
+          "accepted": false
+        },
+        {
+          "effect": "retain-arity",
+          "accepted": false
+        },
+        {
+          "effect": "copied-receiver",
+          "accepted": false
+        },
+        {
+          "effect": "frozen-close",
+          "accepted": false
+        },
+        {
+          "effect": "undefined-close",
+          "accepted": false
+        },
+        {
+          "effect": "nested-frame",
+          "accepted": false
+        },
+        {
+          "effect": "body-undefined",
+          "accepted": false
+        },
+        {
+          "effect": "body-frozen",
+          "accepted": false
+        },
+        {
+          "effect": "combined-binding-capacity",
+          "accepted": false
+        },
+        {
+          "effect": "path-bound",
+          "accepted": false
+        },
+        {
+          "effect": "intent-write-zero",
+          "accepted": false
+        },
+        {
+          "effect": "cancel-after-move",
+          "accepted": false
+        },
+        {
+          "effect": "capture-unawaited",
+          "accepted": true
+        },
+        {
+          "effect": "intent-close-failure",
+          "accepted": false
+        },
+        {
+          "effect": "receipt-close-failure",
+          "accepted": false
+        },
+        {
+          "effect": "source-recreated",
+          "accepted": false
+        },
+        {
+          "effect": "unsupported-rename",
+          "accepted": false
+        },
+        {
+          "effect": "late-source-close-unknown",
+          "accepted": false
+        },
+        {
+          "effect": "late-capsule-close-unknown",
+          "accepted": false
+        },
+        {
+          "effect": "late-final-parent-sync-unknown",
+          "accepted": false
+        },
+        {
+          "effect": "late-source-close-foreign",
+          "accepted": false
+        },
+        {
+          "effect": "wrong-close-frame",
+          "accepted": false
+        },
+        {
+          "effect": "pinned-source-close-failure",
+          "accepted": false
+        },
+        {
+          "effect": "capsule-close-failure",
+          "accepted": false
+        },
+        {
+          "effect": "rename-library-close-failure",
+          "accepted": false
+        }
+      ]
+    },
+    "RelativeRetentionReceipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "purpose",
+        "name",
+        "capsule",
+        "kind",
+        "identity",
+        "intentSha256",
+        "sourceAbsent",
+        "deletePayload",
+        "adoptPayload"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "purpose": {
+          "const": "retain-current-ordinary-entry-without-binding"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 12,
+          "maxLength": 255
+        },
+        "capsule": {
+          "type": "string",
+          "pattern": "^\\.p[0-9a-f]{8}$"
+        },
+        "kind": {
+          "enum": [
+            "file",
+            "directory"
+          ]
+        },
+        "identity": {
+          "$ref": "#/definitions/RelativePreservationIdentity"
+        },
+        "intentSha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "sourceAbsent": {
+          "const": true
+        },
+        "deletePayload": {
+          "const": false
+        },
+        "adoptPayload": {
+          "const": false
         }
       }
     }

@@ -3,7 +3,7 @@
 //! point snaps to a nanometre. Refused: an unknown beam, a taken new id and a fraction that is not strictly inside the beam or leaves a part without length.
 
 use super::super::elements;
-use super::super::wall_geometry::{snap, split, Split};
+use crate::standards::v1::subsets::any::schema::mutations::wall_geometry::{snap, split, Split};
 use super::SplitBeam;
 use crate::standards::v1::subsets::any::schema::{diff::{Assigned, patches::BeamPatch, Entry, KeyedDelta, ModelDiff}, snapshot::{Beam, ModelSnapshot}};
 use protocol::{MutationOutcome, OutcomeCode};

@@ -1,7 +1,7 @@
 //! 📄️ Shooting play app panel — the document tree: shots and assets of the current snapshot.
 
 use crate::editor::shooting::terminology::ShootingLabels;
-use crate::editor::shooting::SHOOTING_INTERACTION_DOMAIN;
+use crate::editor::shooting::ui_helpers_and_io::SHOOTING_INTERACTION_DOMAIN;
 use crate::ShootingSnapshot;
 use semio_framework_ui_locale::Label;
 use semio_framework_ui_locale::LocalizedLabel;
@@ -38,23 +38,23 @@ pub fn definition() -> PanelTabDefinition {
 /// `setSelection` row-click semantics).
 fn asset_select_action(asset_id: &str) -> semio_framework_plugin::UiAssemblyResult<(semio_framework_plugin::ActionId, Option<semio_framework_plugin::UiValue>)> {
     let targets = semio_framework_pack_json::to_json_string(&[semio_framework_plugin::InteractionTarget { granularity: "asset".into(), id: asset_id.into() }]);
-    let args = crate::editor::shooting::ui_value_map([
-        ("domainId", crate::editor::shooting::ui_value_text(SHOOTING_INTERACTION_DOMAIN)?),
-        ("merge", crate::editor::shooting::ui_value_text("replace")?),
-        ("targets", crate::editor::shooting::ui_value_text(&targets)?),
+    let args = crate::editor::shooting::ui_helpers_and_io::ui_value_map([
+        ("domainId", crate::editor::shooting::ui_helpers_and_io::ui_value_text(SHOOTING_INTERACTION_DOMAIN)?),
+        ("merge", crate::editor::shooting::ui_helpers_and_io::ui_value_text("replace")?),
+        ("targets", crate::editor::shooting::ui_helpers_and_io::ui_value_text(&targets)?),
     ])?;
-    crate::editor::shooting::shooting_action("interactionSelect", Some(args))
+    crate::editor::shooting::ui_helpers_and_io::shooting_action("interactionSelect", Some(args))
 }
 
 pub fn render(snapshot: &ShootingSnapshot, labels: &ShootingLabels, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     PanelTreeBuilder::new("shooting-play-document")?
-        .window_section(windows, "shooting-play-document.shots", Some(crate::editor::shooting::ui_label(labels.shots.as_str())?), true, &snapshot.shots, |shot| {
-            let ids = crate::editor::shooting::ui_value_list([crate::editor::shooting::ui_value_text(&shot.id)?])?;
-            let args = crate::editor::shooting::ui_value_map([("shotIds", ids)])?;
-            crate::editor::shooting::tree_item_with_icon(format!("shooting-shot:{}", shot.id), Label::data(shot.label.clone()), "camera", crate::editor::shooting::shooting_action("setShotSelection", Some(args)))
+        .window_section(windows, "shooting-play-document.shots", Some(crate::editor::shooting::ui_helpers_and_io::ui_label(labels.shots.as_str())?), true, &snapshot.shots, |shot| {
+            let ids = crate::editor::shooting::ui_helpers_and_io::ui_value_list([crate::editor::shooting::ui_helpers_and_io::ui_value_text(&shot.id)?])?;
+            let args = crate::editor::shooting::ui_helpers_and_io::ui_value_map([("shotIds", ids)])?;
+            crate::editor::shooting::ui_helpers_and_io::tree_item_with_icon(format!("shooting-shot:{}", shot.id), Label::data(shot.label.clone()), "camera", crate::editor::shooting::ui_helpers_and_io::shooting_action("setShotSelection", Some(args)))
         })?
-        .window_section(windows, "shooting-play-document.assets", Some(crate::editor::shooting::ui_label(labels.assets.as_str())?), true, &snapshot.assets, |asset| {
-            crate::editor::shooting::tree_item_with_icon(format!("shooting-asset:{}", asset.id), Label::data(asset.name.clone()), "box", asset_select_action(&asset.id))
+        .window_section(windows, "shooting-play-document.assets", Some(crate::editor::shooting::ui_helpers_and_io::ui_label(labels.assets.as_str())?), true, &snapshot.assets, |asset| {
+            crate::editor::shooting::ui_helpers_and_io::tree_item_with_icon(format!("shooting-asset:{}", asset.id), Label::data(asset.name.clone()), "box", asset_select_action(&asset.id))
         })?
         .build()
 }
@@ -62,7 +62,5 @@ pub fn render(snapshot: &ShootingSnapshot, labels: &ShootingLabels, windows: &Tr
 //#endregion 🔖️Render
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

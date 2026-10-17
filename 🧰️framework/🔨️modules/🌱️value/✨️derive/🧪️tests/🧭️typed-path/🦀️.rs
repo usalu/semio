@@ -1,5 +1,6 @@
 //! 🧭️ Language-neutral typed-path fixtures exercised through generated Rust implementations.
 
+use semio_framework_test_fixtures::fixture_text;
 use semio_framework_value::{DslValue, FromValue, ToValue, ValueEdit, ValueError, ValueRefusalKind, ValueShape};
 use serde::Deserialize;
 use std::collections::BTreeMap;
@@ -66,7 +67,7 @@ enum EmptyExternal {}
 
 #[test]
 fn empty_enum_retirement_preserves_the_uninhabited_value_contract() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/♻️empty-enum-retirement/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../🧪️tests/🧫️fixtures/♻️empty-enum-retirement/🔣️.json")).unwrap();
     let syntax: syn::ItemEnum = syn::parse_str("enum EmptyExternal {}").unwrap();
     assert_eq!(fixture["kind"], "enum");
     assert_eq!(syntax.ident.to_string(), fixture["name"].as_str().unwrap());
@@ -74,7 +75,6 @@ fn empty_enum_retirement_preserves_the_uninhabited_value_contract() {
     assert_eq!(fixture["inhabited"], false);
     assert_eq!(fixture["borrowedReferenceInhabited"], true);
     assert_eq!(<EmptyExternal as semio_framework_value::retirement::RetireOwned>::controlled_retirement_supported(), fixture["controlledRetirement"].as_bool().unwrap());
-    eprintln!("[DEBUG] empty-enum retirement compiled owned and borrowed methods; neutral zero-variant shape oracle=syn/serde_json");
 }
 
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
@@ -179,7 +179,7 @@ struct LargeDocument {
 }
 
 fn corpus() -> Corpus {
-    serde_json::from_str(include_str!("../../../🔁️codec/🧭️path/🧪️tests/🧫️fixtures/🔣️.json")).expect("neutral typed-path fixture parses")
+    serde_json::from_str(fixture_text!("../../../🔁️codec/🧭️path/🧪️tests/🧫️fixtures/🔣️.json")).expect("neutral typed-path fixture parses")
 }
 
 fn value_edit(edit: &Edit) -> ValueEdit {
@@ -313,6 +313,6 @@ mod decoding_trait_collision {
 
 #[test]
 fn controlled_empty_enum_corpus_refuses_every_uninhabited_wire(){
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🔁️codec/🧪️tests/🧫️fixtures/🛫️controlled/🔣️.json")).unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../🔁️codec/🧪️tests/🧫️fixtures/🛫️controlled/🔣️.json")).unwrap();
  for row in fixture["emptyEnums"].as_array().unwrap(){assert_eq!(row["inhabited"],false);for input in row["inputs"].as_array().unwrap(){let mut callback=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(10000,&mut callback);let value=DslValue::from(input);match row["id"].as_str().unwrap(){"external-empty"=>assert!(EmptyExternal::from_value_controlled(&value,&mut control).is_err()),"tagged-empty"=>assert!(EmptyTagged::from_value_controlled(&value,&mut control).is_err()),_=>panic!("unknown empty enum identity")};}}
 }

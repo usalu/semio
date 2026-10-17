@@ -1,7 +1,7 @@
 //! 🛍️ Note play app panel — the block-kind catalogue: a read-only reference list.
 
 use crate::editor::note::terminology::NotePlayLabels;
-use crate::editor::note::ui_label;
+use crate::editor::note::support::ui_label;
 use semio_framework_plugin::BuiltNode;
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::PanelGroup;
@@ -47,7 +47,5 @@ pub fn render(labels: &NotePlayLabels) -> UiAssemblyResult<BuiltNode> {
 //#endregion 🔖️Render
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

@@ -8,7 +8,7 @@ import fg from "fast-glob";
 import plugin, { cacheInternals } from "../../../🏗️build/🕸️graph/📥️inference/🟨️.mjs";
 
 type Corpus = { version: 1; files: Record<string, string>; cases: { id: string; files: string[]; names: string[] }[]; authorities: string[]; snapshot: { entry: string; inputs: string[]; nextSource: string; nextFile: string; nextInputs: string[] } };
-const fixture = JSON.parse(readFileSync(join(import.meta.dir, "..", "🧫️fixtures/🔣️.json"), "utf8")) as Corpus;
+const fixture = JSON.parse(readFileSync(join(import.meta.dir, "🧫️fixtures/🔣️.json"), "utf8")) as Corpus;
 const toml = createRequire(import.meta.url)("@iarna/toml");
 const library = resolve(import.meta.dir, "../../.."), repository = resolve(library, "../../../../..");
 

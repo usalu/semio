@@ -1,6 +1,6 @@
 use super::*;
 use crate::standards::v1::subsets::any::io::export::ifc::export_ifc2x3;
-use crate::standards::v1::subsets::any::io::export::ifc::ramps::tests::with_ramp;
+use crate::standards::v1::subsets::any::io::export::ifc::testkit::with_ramp;
 use crate::standards::v1::subsets::any::io::import::ifc::import_ifc2x3;
 
 #[test]

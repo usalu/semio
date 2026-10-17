@@ -1,7 +1,6 @@
 //! 🎲 Sets the deterministic WFC solve seed. PERSISTED snapshot field, authored ONLY here — never ambient — so the solve inference's `DepHash` caching stays sound.
 
 use crate::diff::Grid2dDiff;
-use crate::mutations::Grid2dMutation;
 use crate::schema::snapshot::Grid2dSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -16,17 +15,23 @@ pub struct ChangeSeed {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_seed(seed: u64) -> Grid2dMutation {
-    Grid2dMutation::ChangeSeed(ChangeSeed { seed })
+pub fn change_seed<Op>(seed: u64) -> Op
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::change_seed::ChangeSeed>,
+{
+    Op::from(ChangeSeed { seed })
 }
 
-impl MutationKind<Grid2dSnapshot, Grid2dMutation> for ChangeSeed {
+impl<Op> MutationKind<Grid2dSnapshot, Op> for ChangeSeed
+where
+    Op: protocol::Mutation<Grid2dSnapshot, Diff = Grid2dDiff> + From<ChangeSeed>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "seed", kind: "change-seed", record: "ChangedSeed" };
 
     fn diff(&self, base: &Grid2dSnapshot) -> protocol::MutationOutcome<Grid2dDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Grid2dSnapshot) -> Result<Vec<Grid2dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Grid2dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

@@ -1,4 +1,6 @@
-use super::*;
+use crate::schema::snapshot::SemioGraphSnapshot;
+use semio_framework_plugin::MeshWindowKit;
+use crate::viewer::modes::view::windows::main::*;
 
 #[semio_framework_async_macros::async_test]
 async fn definition_declares_the_shared_mesh_window_kit() {

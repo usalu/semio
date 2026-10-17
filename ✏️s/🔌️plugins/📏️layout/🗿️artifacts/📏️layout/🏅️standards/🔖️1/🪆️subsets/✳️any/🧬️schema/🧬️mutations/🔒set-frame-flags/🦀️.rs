@@ -10,8 +10,8 @@ use semio_framework_value_derive::{FromValue, ToValue};
 
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 pub struct SetFrameFlags {
@@ -83,8 +83,3 @@ pub fn inverse_set_frame_flags<Op: From<crate::set_frame_flags::SetFrameFlags>>(
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 
-//#region 🪢️TaxonomyMounts
-#[cfg(test)]
-#[path = "🧪️tests/🔒️locks-frame-1/🦀️.rs"]
-mod tests_locks_frame_1;
-//#endregion 🪢️TaxonomyMounts

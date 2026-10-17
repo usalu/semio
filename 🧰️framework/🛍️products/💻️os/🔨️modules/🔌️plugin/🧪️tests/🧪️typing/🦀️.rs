@@ -2,15 +2,40 @@
 //! document without touching it, a run whose leaves a moved document refuses aborts with zero trace (`baseMoved`), and a
 //! frozen document drops every run.
 
-use super::*;
-use crate::test_app_mutation_fixture::{SetCount, SetLabel, SetSlotChildren, TestMutation, TestSnapshot};
+#[cfg(any(test, feature = "artifact-app-testing"))]
+use semio_framework::kernel::ActorId;
+use std::sync::Arc;
+use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_framework_plugin_decl_app::tool_contract::ArtifactOwnedToolJobFactory;
+use pack::snapshot::ArtifactPack;
+use semio_framework_plugin_decl_emission::Emit;
+use semio_framework::FaultFrom;
+use semio_framework_value_derive::{FromValue, ToValue};
+use semio_framework::kernel::HybridLogicalTimestamp;
+use store::{Mutation, MutationDiff};
+use protocol::{OpBinary, OpText};
+use semio_framework_plugin_reactor_app::PluginApp;
+use semio_framework_value::retirement::RetireOwned;
+use semio_framework_plugin_decl_views::tool_run_contract::ToolRunRetargetableJob;
+#[cfg(test)]
+use semio_framework_tool_machine::TypingCommit;
+use semio_framework_plugin_window_config::WindowConfigOwner;
+use semio_framework_ui_contract::*;
+use semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::document::mutations::set_count::SetCount;
+use semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::document::mutations::set_label::SetLabel;
+use semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::document::mutations::set_slot_children::SetSlotChildren;
+use semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::document::mutations::TestMutation;
+use semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::document::TestSnapshot;
 use semio_framework_tool_machine::{ToolStep, TypingFold, TypingInput};
 
-fn committed(count: i32, label: &str) -> Arc<TestSnapshot> {
+#[doc(hidden)]
+pub fn committed(count: i32, label: &str) -> Arc<TestSnapshot> {
     Arc::new(TestSnapshot { count, label: label.into(), ..TestSnapshot::default() })
 }
 
-fn replace(_net: &[TestMutation], next: &[TestMutation]) -> TypingFold<TestMutation> {
+#[doc(hidden)]
+pub fn replace(_net: &[TestMutation], next: &[TestMutation]) -> TypingFold<TestMutation> {
     TypingFold::Net(next.to_vec())
 }
 

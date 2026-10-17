@@ -32,7 +32,7 @@ fn original_factory_shared_aliases_cancel_with_exact_full_grants_and_physical_re
         let(_,heap)=observe_retirement_allocations(||{drop(root);drop(factory);});assert_eq!(heap,(0,0));
         for owner in &mut owners{for _ in 0..cancel{if owner.is_none(){break;}let(b,r)=turn(owner,copy);births+=b;released+=r;}}
         for owner in &mut owners{for turn_index in 0..100000{if owner.is_none(){break;}let(b,r)=turn(owner,copy);births+=b;released+=r;assert!(turn_index<99999,"shared factory full closure exceeded bounded original law");}assert!(owner.is_none());}
-        assert_eq!(released,original+births);eprintln!("[DEBUG] Shared factory physical aliases={count} copy={copy} cancel={cancel} original={original} births={births} physical={released}");
+        assert_eq!(released,original+births);
     }}}}
 }
 

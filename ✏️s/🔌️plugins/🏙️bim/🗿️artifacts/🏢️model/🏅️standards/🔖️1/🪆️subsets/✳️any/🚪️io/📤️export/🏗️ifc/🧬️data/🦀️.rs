@@ -1,8 +1,8 @@
 //! 🧬️ The non-geometric data of the IFC file (IFC 2x3 and IFC4): materials with their physical properties, layered and profiled types (with their authored property sets in `HasPropertySets`), property sets, classification systems with their
 //! tables, base quantities and the relationship entities (aggregation, containment, typing, material association, classification association) the families recorded.
 
-use super::writer::{en, flag, int, opt_text, real, refs, rf, text, typed, unset, Schema, V};
-use super::{Export, Quantity};
+use crate::standards::v1::subsets::any::io::export::ifc::writer::{en, flag, int, label, opt_text, real, refs, rf, text, typed, unset, Schema, V};
+use crate::standards::v1::subsets::any::io::export::ifc::context::{Export, Quantity};
 use crate::standards::v1::subsets::any::schema::snapshot::{ClassificationSystem, Layer, Profile, PropertyValue};
 use std::collections::BTreeMap;
 
@@ -37,11 +37,6 @@ pub fn property_value(value: &PropertyValue) -> V {
         PropertyValue::Volume { value } => typed("IFCVOLUMEMEASURE", real(*value)),
         PropertyValue::Angle { value } => typed("IFCPLANEANGLEMEASURE", real(*value)),
     }
-}
-
-/// 🏷️ `IFCLABEL(value)`.
-pub fn label(value: &str) -> V {
-    typed("IFCLABEL", text(value))
 }
 
 /// 🔢️ `IFCREAL(value)`.

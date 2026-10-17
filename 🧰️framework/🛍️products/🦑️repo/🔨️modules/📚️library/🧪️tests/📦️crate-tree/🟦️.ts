@@ -1,16 +1,19 @@
 import { describe, expect, test } from "bun:test";
 import { execFileSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { dirname, join } from "node:path";
-import { applyCarveWrites, carveWrites, planArtifactCrates } from "../../🏗️authoring/📦️crate-tree/🟦️.ts";
-import { demoteDanglingOuterDocs, parseRustSourceTree, prunedUse, rustOuterDocStart } from "../../🏗️authoring/📦️crate-tree/🌳️module-tree/🟦️.ts";
+import { dirname, join, relative } from "node:path";
+import { applyCarveWrites, carveWrites, featureRow, forwardableFeatures, forwardFeatures, insertDevDependencyRow, parseCrateBudget, planArtifactCrates, resolveCarveBackupDir, withDevDependencyRows, withFixtureReaderDevDependency } from "../../🏗️authoring/📦️crate-tree/🟦️.ts";
+import { cfgImpliesTest, demoteDanglingOuterDocs, identifierSet, parseRustSourceTree, prunedUse, referencedItemNames, rustOuterDocStart } from "../../🏗️authoring/📦️crate-tree/🌳️module-tree/🟦️.ts";
 import { MeasureUnion, totalsFit } from "../../🏗️authoring/📦️crate-tree/📏️measure-union/🟦️.ts";
-import { allItems, crateIdent as crateIdentOf, implHeader, qualifyModuleHeads, rootAliasModules, superChains } from "../../🏗️authoring/📦️crate-tree/🗺️plan/🟦️.ts";
-import { addWorkspaceMembers, hidingExcludePattern, insertBuildOwnerRows, patchCargoLock, patchRouterPackages, rebaseManifestDirPaths, rebaseRustIncludes, workspaceAdmissionProblems } from "../../🏗️authoring/📦️crate-tree/📝️render/🟦️.ts";
-import { rewriteCrateAliases, rewriteForCombined, siblingPathCrates, verifyAppliedLayout } from "../../🏗️authoring/📦️crate-tree/🧫️sandbox/🟦️.ts";
+import { aliasChains, allItems, crateRelativeChains, crateTreeWasmCfg, crateIdent as crateIdentOf, implHeader, qualifyModuleHeads, rootAliasModules, superChains } from "../../🏗️authoring/📦️crate-tree/🗺️plan/🟦️.ts";
+import { renderMirrorFiles, addWorkspaceMembers, hidingExcludePattern, insertBuildOwnerRows, patchCargoLock, patchRouterPackages, rebaseManifestDirPaths, rebaseRustIncludes, rewriteMountPaths, workspaceAdmissionProblems } from "../../🏗️authoring/📦️crate-tree/📝️render/🟦️.ts";
+import { dropBaseUnresolvedNames, external, hoistInnerAttributes, normalizeCombined, mountedPathFiles, rewriteCrateAliases, rewriteForCombined, siblingPathCrates, unresolvedSubjects, verifyAppliedLayout } from "../../🏗️authoring/📦️crate-tree/🧫️sandbox/🟦️.ts";
+import { inlineRootFileModules } from "../../🏗️authoring/📦️crate-tree/🫗️inline-root/🟦️.ts";
+import { absolutizeBeyond } from "../../🏗️authoring/📦️crate-tree/🪜️lift-kids/🟦️.ts";
+import { inlineMountTreeFiles } from "../../🏗️authoring/📦️crate-tree/🌲️inline-mounts/🟦️.ts";
 import { externalizeFacetLeaves } from "../../🏗️authoring/📦️crate-tree/🧾️facet-leaves/🟦️.ts";
-import { absolutizeSuperPaths, fixturesToRuntime, resolveFixturePlaceholders, transformTestClosure } from "../../🏗️authoring/📦️crate-tree/🧪️test-closure/🟦️.ts";
+import { absolutizeSuperPaths, FIXTURE_READER_CRATE, FIXTURE_READER_PACKAGE_DIR, declaredNames, fixturesToRuntime, hostPrivate, importFixtureMacros, resolveFixturePlaceholders, transformTestClosure } from "../../🏗️authoring/📦️crate-tree/🧪️test-closure/🟦️.ts";
 import { checkOrphanRules, compareModuleTrees, dropUnlinkedCascades, plainModulePath, resolveCrateModules, sharedMountFiles, unlinkedGlobModules } from "../../🏗️authoring/📦️crate-tree/🔬️verify/🟦️.ts";
 
 const files: Record<string, string> = {
@@ -56,6 +59,19 @@ function fixture(): string {
 }
 
 describe("artifact crate carve", () => {
+  test("treats every cfg that only holds under cfg(test) as a test-only module mount", () => {
+    expect(["cfg(test)", "cfg( test )", 'cfg(all(test,not(target_arch="wasm32")))', "cfg(all(feature = \"x\", test))", "cfg(any(test, all(test, unix)))"].map(cfgImpliesTest)).toEqual([true, true, true, true, true]);
+    expect(["cfg(unix)", "cfg(not(test))", "cfg(any(test, unix))", "cfg(all(unix, windows))", "path = \"x\""].map(cfgImpliesTest)).toEqual([false, false, false, false, false]);
+    const tree = parseRustSourceTree('#[cfg(all(test,not(target_arch="wasm32")))]\n#[path="q.rs"]\nmod quick;\nmod live;\n');
+    expect(tree.modules.map((node) => [node.name, node.conditionalTest])).toEqual([["quick", true], ["live", false]]);
+  });
+
+  test("counts only identifiers that can name a module-level item as references", () => {
+    const names = referencedItemNames("fn f(artifact: &A, count: u8) -> S { let v = artifact.definition.steps(); S { definition: v, artifact: count, extra } }");
+    expect([...names].sort()).toEqual(["A", "S", "artifact", "count", "extra", "f", "fn", "let", "u8", "v"]);
+    expect([...referencedItemNames("let x = pack::snapshot::Pack::new(crate::forms_steps(&self::helper), super::up());")].sort()).toEqual(["crate", "forms_steps", "helper", "let", "pack", "self", "super", "up", "x"]);
+  });
+
   test("parses the module skeleton with exact offsets", () => {
     const tree = parseRustSourceTree(files["🦀️.rs"]!);
     expect(tree.modules.map((node) => node.name)).toEqual(["schema", "io"]);
@@ -91,6 +107,28 @@ describe("artifact crate carve", () => {
     }
   });
 
+  test("gives every crate that reads a rewritten fixture the shared reader as dev-dependency", async () => {
+    const root = fixture();
+    try {
+      const schemaRoot = join(root, "🧬️schema/🦀️.rs");
+      writeFileSync(schemaRoot, `${files["🧬️schema/🦀️.rs"]}#[cfg(test)]\n#[path = "🧪️tests/🦀️.rs"]\nmod tests;\n`);
+      mkdirSync(join(root, "🧬️schema/🧪️tests/🧫️fixtures"), { recursive: true });
+      writeFileSync(join(root, "🧬️schema/🧪️tests/🧫️fixtures/a.json"), "{}\n");
+      writeFileSync(join(root, "🧬️schema/🧪️tests/🦀️.rs"), '#[test]\nfn reads_the_fixture() { assert_eq!(include_str!("🧫️fixtures/a.json"), "{}\\n"); }\n');
+      const plan = await planArtifactCrates(root, "📦️packages/🦀️rust", { target: { files: 3, bytes: 230000, lines: 3500 }, hard: { files: 32, bytes: 262144, lines: 4000 }, tests: { fixtures: true, aggregate: false, hoist: false } });
+      const { writes } = await carveWrites(plan);
+      const reader = writes.find((write) => write.path.endsWith(".rs") && write.content.includes("fixture_text!("));
+      expect(reader).toBeDefined();
+      expect(reader!.content).toContain("use semio_framework_test_fixtures::fixture_text;");
+      expect(reader!.content).not.toContain("runtime_fixture");
+      const manifests = writes.filter((write) => write.path.endsWith("Cargo.toml") && write.content.includes(FIXTURE_READER_CRATE));
+      expect(manifests.length).toBeGreaterThan(0);
+      for (const manifest of manifests) expect(manifest.content).toMatch(/\[dev-dependencies\][^[]*semio-framework-test-fixtures = \{ path = "[^"]*fixture-reader[^"]*" \}/u);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
   test("detects orphan-rule violations that a wrong cut would create", () => {
     const sources = (text: string) => new Map([["lib.rs", text]]);
     const violations = checkOrphanRules(
@@ -102,14 +140,104 @@ describe("artifact crate carve", () => {
     expect(checkOrphanRules([{ name: "types", sources: sources("pub struct Snap;\nimpl std::fmt::Display for Snap { }") }], implHeader, allItems)).toEqual([]);
   });
 
+  test("accepts an impl of a foreign trait on a foreign type when a trait argument is a local type", () => {
+    const sources = (text: string) => new Map([["lib.rs", text]]);
+    expect(implHeader("impl MutationDiff<Play> for Diff { }")).toEqual({ trait: "MutationDiff", self: "Diff", traitArgs: ["Play"] });
+    expect(checkOrphanRules([{ name: "types", sources: sources("pub struct Diff;") }, { name: "play", sources: sources("pub struct Play;\nimpl MutationDiff<Play> for Diff { }") }], implHeader, allItems)).toEqual([]);
+    expect(checkOrphanRules([{ name: "types", sources: sources("pub struct Diff;") }, { name: "play", sources: sources("pub struct Play;\nimpl Other<Vec<u8>> for Diff { }") }], implHeader, allItems)).toEqual([{ crate: "play", file: "lib.rs", trait: "Other", selfType: "Diff", definedIn: ["types"] }]);
+  });
+
   test("moves test fixtures to runtime reads and resolves them against the crate directory", () => {
     const source = 'const BEFORE: &str = include_str!("../../🧪️tests/🧫️fixtures/before.json");\nfn run() { assert_eq!(BEFORE.len(), 3); let text = include_str!("../../🧪️tests/🧫️fixtures/after.json"); }\n';
     const rewritten = fixturesToRuntime(source, "/repo/x/y/z/test.rs", "/repo")!;
     expect(rewritten).toContain("static BEFORE: std::sync::LazyLock<&'static str>");
     expect(rewritten).toContain("(*BEFORE).len()");
-    expect(rewritten).toContain('runtime_fixture_text("@fixtures/');
-    expect(resolveFixturePlaceholders(rewritten, "/repo", "/repo/x/y/pkg")).toContain('runtime_fixture_text("../../🧪️tests/🧫️fixtures/after.json")');
+    expect(rewritten).toContain('fixture_text!("@fixtures/');
+    expect(rewritten).toContain("use semio_framework_test_fixtures::fixture_text;");
+    expect(rewritten).not.toContain("runtime_fixture");
+    expect(resolveFixturePlaceholders(rewritten, "/repo", "/repo/x/y/pkg")).toContain('fixture_text!("../../🧪️tests/🧫️fixtures/after.json")');
     expect(fixturesToRuntime("fn plain() {}", "/repo/a.rs", "/repo")).toBeNull();
+  });
+  test("imports the shared fixture macros once, after the file header and before the first item", () => {
+    expect(importFixtureMacros("//! doc\n\nuse super::*;\n\n#[test]\nfn a() {}\n", ["fixture_text"])).toBe("//! doc\n\nuse super::*;\nuse semio_framework_test_fixtures::fixture_text;\n\n#[test]\nfn a() {}\n");
+    expect(importFixtureMacros("use super::*;\nuse serde_json::Value;\nuse std::fs;\nfn a() {}\n", ["fixture_bytes"])).toBe("use super::*;\nuse semio_framework_test_fixtures::fixture_bytes;\nuse serde_json::Value;\nuse std::fs;\nfn a() {}\n");
+    expect(importFixtureMacros("//! doc\n#![allow(dead_code)]\n\nfn a() {}\n", ["fixture_text", "fixture_bytes", "fixture_text"])).toBe("//! doc\n#![allow(dead_code)]\n\nuse semio_framework_test_fixtures::{fixture_bytes, fixture_text};\n\nfn a() {}\n");
+    expect(importFixtureMacros("//#region x\n//! doc\n\nuse super::*;\nfn a() {}\n", ["fixture_text"])).toBe("//#region x\n//! doc\n\nuse super::*;\nuse semio_framework_test_fixtures::fixture_text;\nfn a() {}\n");
+    expect(importFixtureMacros("/// outer\nfn a() {}\n", ["fixture_text"])).toBe("use semio_framework_test_fixtures::fixture_text;\n\n/// outer\nfn a() {}\n");
+    const imported = importFixtureMacros("fn a() {}\n", ["fixture_path"]);
+    expect(imported).toBe("use semio_framework_test_fixtures::fixture_path;\n\nfn a() {}\n");
+    expect(importFixtureMacros(imported, ["fixture_path"])).toBe(imported);
+    expect(importFixtureMacros("use semio_framework_test_fixtures::{fixture_bytes, fixture_text};\nfn a() {}", ["fixture_text"])).toBe("use semio_framework_test_fixtures::{fixture_bytes, fixture_text};\nfn a() {}");
+    expect(importFixtureMacros("use semio_framework_test_fixtures::fixture_text;\nfn a() {}", ["fixture_text", "fixture_bytes"])).toBe("use semio_framework_test_fixtures::{fixture_bytes, fixture_text};\nfn a() {}");
+    expect(importFixtureMacros("use super::*;\nuse semio_framework_test_fixtures::fixture_path;\nfn a() {}", ["fixture_text", "manifest_dir"])).toBe("use super::*;\nuse semio_framework_test_fixtures::{fixture_path, fixture_text, manifest_dir};\nfn a() {}");
+  });
+  test("names a fixture reader package that exists and carries the crate name the generator writes", () => {
+    const repoRoot = join(import.meta.dir, "../../../../../../..");
+    const manifest = readFileSync(join(repoRoot, FIXTURE_READER_PACKAGE_DIR, "Cargo.toml"), "utf8");
+    expect(manifest).toContain(`name = "${FIXTURE_READER_CRATE}"`);
+  });
+  test("emits the shared reader for bytes and text instead of a per-file helper", () => {
+    const source = 'fn run() { let a = include_str!("../../🧪️tests/🧫️fixtures/a.json"); let b = include_bytes!("../../🧪️tests/🧫️fixtures/b.bin"); }\n';
+    const rewritten = fixturesToRuntime(source, "/repo/x/y/z/test.rs", "/repo")!;
+    expect(rewritten).toContain("use semio_framework_test_fixtures::{fixture_bytes, fixture_text};");
+    expect(rewritten).toContain('fixture_text!("@fixtures/');
+    expect(rewritten).toContain('fixture_bytes!("@fixtures/');
+    expect(rewritten).not.toMatch(/\bfn (runtime_)?fixture_/u);
+    expect(rewritten).not.toContain("CARGO_MANIFEST_DIR");
+  });
+  test("rebases the paths handed to the shared fixture reader and leaves fixture placeholders alone", () => {
+    const source = 'let a = fixture_text!("../../x/y.json");\nlet b = fixture_bytes!("@fixtures/x/y.bin");\nlet c = fixture_path!("..");\nlet d = "fixture_text!(\\"no\\")";';
+    const moved = rebaseManifestDirPaths(source, "/repo/art/📦️packages/🦀️rust", "/repo/art/sub/deeper/📦️packages/🦀️rust");
+    expect(moved).toContain('fixture_text!("../../../../x/y.json")');
+    expect(moved).toContain('fixture_bytes!("@fixtures/x/y.bin")');
+    expect(moved).toContain('fixture_path!("../../../../📦️packages")');
+    expect(moved).toContain('"fixture_text!(\\"no\\")"');
+    expect(rebaseManifestDirPaths(moved, "/repo/art/sub/deeper/📦️packages/🦀️rust", "/repo/art/📦️packages/🦀️rust")).toBe(source);
+  });
+  test("adds the shared fixture reader as a sorted dev-dependency and never twice", () => {
+    const manifest = '[package]\nname = "x"\n\n[dependencies]\na = { path = "../a" }\n\n[dev-dependencies]\nalpha = "1"\nzeta = { path = "../zeta" }\n\n[features]\ntestkit = []\n';
+    const added = withFixtureReaderDevDependency(manifest, "/repo/p/q/📦️packages/🦀️rust", "/repo");
+    const pathFromManifest = relative("/repo/p/q/📦️packages/🦀️rust", `/repo/${FIXTURE_READER_PACKAGE_DIR}`);
+    expect(added).toContain(`alpha = "1"\n${FIXTURE_READER_CRATE} = { path = "${pathFromManifest}" }\nzeta = `);
+    expect(withFixtureReaderDevDependency(added, "/repo/p/q/📦️packages/🦀️rust", "/repo")).toBe(added);
+    const bare = withFixtureReaderDevDependency('[package]\nname = "x"\n\n[dependencies]\n', "/repo/p", "/repo");
+    expect(bare).toMatch(/\[dev-dependencies\]\nsemio-framework-test-fixtures = \{ path = "\.\.\/🧰️framework\//u);
+    expect(insertDevDependencyRow("[dev-dependencies]\nb = 1\n\n[features]\n", "c = 2")).toBe("[dev-dependencies]\nb = 1\nc = 2\n\n[features]\n");
+    expect(insertDevDependencyRow("[dev-dependencies]\nb = 1\nz = 3\nc = 2\n", "c = 2")).toBe("[dev-dependencies]\nb = 1\nz = 3\nc = 2\n");
+  });
+  test("moves any embedded text of a test file to a runtime read, whatever its path", () => {
+    const source = 'fn run() { let descriptor = include_str!("../../🧩️component/🔣️.json"); assert!(!descriptor.is_empty()); }\n';
+    const rewritten = fixturesToRuntime(source, "/repo/x/y/🧪️tests/🔬️unit/🦀️.rs", "/repo")!;
+    expect(rewritten).toContain('fixture_text!("@fixtures/x/y/🧩️component/🔣️.json")');
+    expect(fixturesToRuntime(source, "/repo/x/y/lib.rs", "/repo")).toBeNull();
+  });
+  test("reads fixture bytes at run time, also from a reference constant of an inline module", () => {
+    const source = 'const TILES: &[(&str, &[u8])] = &[("a", include_bytes!("../../🧪️tests/🧫️fixtures/a.pbf")), ("b", include_bytes!("../../🧪️tests/🧫️fixtures/b.pbf"))];\nfn n() -> usize { TILES.len() }\n';
+    const rewritten = fixturesToRuntime(source, "/repo/x/y/z/test.rs", "/repo")!;
+    expect(rewritten).toContain("static TILES: std::sync::LazyLock<&[(&str, &[u8])]> = std::sync::LazyLock::new(|| &*Box::leak(Box::new( [(\"a\", fixture_bytes!(\"@fixtures/");
+    expect(rewritten).toContain(")));");
+    expect(rewritten).toContain("(*TILES).len()");
+    expect(rewritten).toContain("use semio_framework_test_fixtures::fixture_bytes;");
+    expect(rewritten).not.toContain("fixture_text");
+    expect(rewritten).not.toContain("fn fixture_bytes");
+  });
+  test("does not count a re-worded unresolved name as a layout regression but keeps a new unresolved name", () => {
+    const base = ["E0425\tcannot find type `GisMapFeaturesDelta` in this scope", "E0433\tcannot find type `Other` in this scope"];
+    const carved = ["E0432\tunresolved import `crate::diff::GisMapFeaturesDelta`", "E0432\tunresolved imports `crate::a::Other`, `crate::a::GisMapFeaturesDelta`", "E0432\tunresolved import `crate::diff::Fresh`", "E0603\tmodule `x` is private"];
+    expect(dropBaseUnresolvedNames(base, carved)).toEqual(["E0432\tunresolved import `crate::diff::Fresh`", "E0603\tmodule `x` is private"]);
+    expect(unresolvedSubjects("E0432\tunresolved import `crate::diff::GisMapFeaturesDelta`: no `X` in `diff`")).toEqual(["GisMapFeaturesDelta"]);
+  });
+  test("turns a fixture constant of an inline module into a lazily read static that reaches the helper through super", () => {
+    const nested = 'mod inner {\n    const CONTRACT: &str = include_str!("../../🧪️tests/🧫️fixtures/c.json");\n    fn f() -> usize { CONTRACT.len() }\n}\n';
+    const rewritten = fixturesToRuntime(nested, "/repo/x/y/z/test.rs", "/repo")!;
+    expect(rewritten).toContain("static CONTRACT: std::sync::LazyLock<&str> = std::sync::LazyLock::new(|| super::fixture_text!(\"@fixtures/");
+    expect(rewritten).toContain("use semio_framework_test_fixtures::fixture_text;");
+    expect(rewritten).toContain("(*CONTRACT).len()");
+    const array = 'mod inner {\n    const ROWS: [&str; 2] = [include_str!("../../🧪️tests/🧫️fixtures/e.json"), include_str!("../../🧪️tests/🧫️fixtures/f.json")];\n    fn n() -> usize { ROWS.len() }\n}\n';
+    const arrayRewrite = fixturesToRuntime(array, "/repo/x/y/z/test.rs", "/repo")!;
+    expect(arrayRewrite).toContain("static ROWS: std::sync::LazyLock<[&str; 2]> = std::sync::LazyLock::new(|| [super::fixture_text!(");
+    expect(arrayRewrite).toContain("]);");
+    expect(arrayRewrite).toContain("(*ROWS).len()");
   });
 
   test("serves typescript, graphql and proto facet companions from their documents", () => {
@@ -152,14 +280,101 @@ describe("artifact crate carve", () => {
     expect(result.text).toContain('json_schema: "", proto: ""');
     expect(result.text).toContain("SchemaFormat::JsonSchema");
     expect(result.text).toContain('rust: include_str!("a.rs")');
+    const withRust = externalizeFacetLeaves(source, "/repo/x/🦀️.rs", "/repo", { json: true, rust: true })!;
+    expect(withRust.leaves.map((leaf) => `${leaf.export}/${leaf.format}/${leaf.path}`)).toEqual(["artifact/rust/x/a.rs", "artifact/jsonschema/x/🔣️.json"]);
+    expect(withRust.text).toContain("SchemaFormat::Rust");
+    expect(withRust.text).not.toContain('include_str!("a.rs")');
+  });
+
+  test("serves a concat of embedded companions as several ordered documents under an id constant", () => {
+    const source = [
+      "pub fn descriptor() -> ::semio_framework_schema_registry::ArtifactSchemaDescriptor {",
+      "    ::semio_framework_schema_registry::ArtifactSchemaDescriptor {",
+      "        id: crate::snapshot::DEMO_SCHEMA_ID,",
+      '        artifact: ::semio_framework_schema_registry::FacetLeaves { rust: concat!(include_str!("a.rs"), include_str!("b.rs")), typescript: "", graphql: "", json_schema: "", proto: "" },',
+      '        snapshot: ::semio_framework_schema_registry::FacetLeaves { rust: "", typescript: "", graphql: "", json_schema: "", proto: "" },',
+      '        diff: ::semio_framework_schema_registry::FacetLeaves { rust: "", typescript: "", graphql: "", json_schema: "", proto: "" },',
+      "        mutations: ::semio_framework_schema_registry::FacetLeaves {",
+      '            rust: include_str!("m.rs"),',
+      "            typescript: concat!(",
+      '                include_str!("../m/🟦️.ts"),',
+      '                include_str!("../m/g/🟦️.ts"),',
+      "            ),",
+      '            graphql: include_str!("m.graphql"),',
+      '            json_schema: include_str!("m.json"),',
+      '            proto: "",',
+      "        },",
+      "    }",
+      "}",
+      "",
+    ].join("\n");
+    const result = externalizeFacetLeaves(source, "/repo/x/y/🦀️.rs", "/repo")!;
+    expect(result.leaves.map((leaf) => `${leaf.export}/${leaf.format}/${leaf.path}`)).toEqual(["mutations/typescript/x/m/🟦️.ts", "mutations/typescript/x/m/g/🟦️.ts", "mutations/graphql/x/y/m.graphql"]);
+    expect(result.text).toContain("scope: crate::snapshot::DEMO_SCHEMA_ID, export: \"mutations\", format: ::semio_framework_schema_registry::SchemaFormat::Typescript");
+    expect(result.text).toContain('typescript: "",\n            graphql: "",\n            json_schema: include_str!("m.json")');
+    expect(result.text).toContain('rust: concat!(include_str!("a.rs"), include_str!("b.rs"))');
+  });
+
+  test("serves the facet companions of an inference descriptor under the inference export", () => {
+    const source = [
+      "pub fn descriptor() -> ::semio_framework_schema_registry::ArtifactInferenceDescriptor {",
+      "    ::semio_framework_schema_registry::ArtifactInferenceDescriptor {",
+      '        id: "s.demo.demo.inference",',
+      '        inference: ::semio_framework_schema_registry::FacetLeaves { rust: include_str!("a.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },',
+      "    }",
+      "}",
+      "",
+    ].join("\n");
+    const result = externalizeFacetLeaves(source, "/repo/x/🦀️.rs", "/repo")!;
+    expect(result.leaves.map((leaf) => `${leaf.scope}/${leaf.export}/${leaf.format}/${leaf.path}`)).toEqual([
+      "s.demo.demo.inference/inference/typescript/x/🟦️.ts",
+      "s.demo.demo.inference/inference/graphql/x/🔗️.graphql",
+      "s.demo.demo.inference/inference/protobuf/x/🛰️.proto",
+    ]);
+    expect(result.text).toContain('rust: include_str!("a.rs"), typescript: "", graphql: "", json_schema: include_str!("🔣️.json"), proto: ""');
+    expect(result.text.indexOf("register_schema_leaf_documents")).toBeLessThan(result.text.lastIndexOf("ArtifactInferenceDescriptor {\n"));
+  });
+
+  test("serves the facet companions of an app descriptor under the config and presence exports", () => {
+    const source = [
+      "pub fn app_schema_descriptor() -> ::semio_framework_schema_registry::AppSchemaDescriptor {",
+      "    ::semio_framework_schema_registry::AppSchemaDescriptor {",
+      '        id: "s.demo.demo",',
+      '        config: ::semio_framework_schema_registry::FacetLeaves { rust: include_str!("a.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },',
+      '        presence: ::semio_framework_schema_registry::FacetLeaves { rust: include_str!("p/a.rs"), typescript: include_str!("p/🟦️.ts"), graphql: include_str!("p/🔗️.graphql"), json_schema: include_str!("p/🔣️.json"), proto: include_str!("p/🛰️.proto") },',
+      "    }",
+      "}",
+      "",
+    ].join("\n");
+    const result = externalizeFacetLeaves(source, "/repo/x/🦀️.rs", "/repo")!;
+    expect(result.leaves.map((leaf) => `${leaf.scope}/${leaf.export}/${leaf.format}/${leaf.path}`)).toEqual([
+      "s.demo.demo/config/typescript/x/🟦️.ts",
+      "s.demo.demo/config/graphql/x/🔗️.graphql",
+      "s.demo.demo/config/protobuf/x/🛰️.proto",
+      "s.demo.demo/presence/typescript/x/p/🟦️.ts",
+      "s.demo.demo/presence/graphql/x/p/🔗️.graphql",
+      "s.demo.demo/presence/protobuf/x/p/🛰️.proto",
+    ]);
+    expect(result.text).toContain('presence: ::semio_framework_schema_registry::FacetLeaves { rust: include_str!("p/a.rs"), typescript: "", graphql: "", json_schema: include_str!("p/🔣️.json"), proto: "" }');
   });
 
   test("registers carved crates in workspace members, router packages and the lockfile", () => {
     expect(addWorkspaceMembers('[workspace]\nmembers = [ "b", "a" ]\n', ["c", "a"])).toBe('[workspace]\nmembers = [\n  "a",\n  "b",\n  "c",\n]\n');
     expect(patchRouterPackages('await runArtifactRustPackageMain(import.meta.dir, "demo",{snapshotSqliteTests:[]});', "demo", ["demo-x"])).toContain('packages: ["demo", "demo-x"]');
+    expect(patchRouterPackages('await runRepositoryCargoTests(["demo"], this.repoRoot, this.invocation, rest);', "demo", ["demo-mesh", "demo-tests"])).toContain('runRepositoryCargoTests(["demo", "demo-mesh", "demo-tests"], this.repoRoot');
     const lock = patchCargoLock('version = 4\n\n[[package]]\nname = "demo"\nversion = "0.1.0"\ndependencies = [\n "serde",\n]\n', "demo", [{ name: "demo-x", dependsOn: [] }]);
     expect(lock).toContain('name = "demo-x"');
     expect(lock).toMatch(/name = "demo"[\s\S]*"demo-x"/u);
+  });
+  test("keeps every version of a multi-version package when it patches the lockfile", () => {
+    const text = 'version = 4\n\n[[package]]\nname = "bit-vec"\nversion = "0.6.3"\nsource = "registry+https://github.com/rust-lang/crates.io-index"\nchecksum = "aa"\n\n[[package]]\nname = "bit-vec"\nversion = "0.8.0"\nsource = "registry+https://github.com/rust-lang/crates.io-index"\nchecksum = "bb"\n\n[[package]]\nname = "demo"\nversion = "0.1.0"\ndependencies = [\n "bit-vec 0.8.0",\n]\n\n[[package]]\nname = "zeta"\nversion = "1.0.0"\n';
+    const lock = patchCargoLock(text, "demo", [{ name: "demo-x", dependsOn: [] }, { name: "demo-y", dependsOn: ["demo-x"] }]);
+    expect(lock.match(/name = "bit-vec"/gu)?.length).toBe(2);
+    expect(lock).toContain('checksum = "aa"');
+    expect(lock).toContain('checksum = "bb"');
+    expect([...lock.matchAll(/name = "([^"]+)"/gu)].map((entry) => entry[1])).toEqual(["bit-vec", "bit-vec", "demo", "demo-x", "demo-y", "zeta"]);
+    expect(lock).toContain('name = "demo-y"\nversion = "0.1.0"\ndependencies = [\n "bit-vec 0.8.0",\n "demo-x",\n]');
+    expect(patchCargoLock(lock, "demo", [{ name: "demo-x", dependsOn: [] }, { name: "demo-y", dependsOn: ["demo-x"] }])).toBe(lock);
   });
   test("admits carved members that sit under a blanket standards exclusion so Cargo and the launcher agree", () => {
     const workspace = [
@@ -275,6 +490,130 @@ describe("artifact crate carve", () => {
       rmSync(root, { recursive: true, force: true });
     }
   });
+  test("folds a root-level mount tree file back into the root with re-based paths and marks the file for deletion", () => {
+    const root = "/repo/art";
+    const files: Record<string, string> = {
+      "/repo/art/🌳️tree/🦀️.rs": '//! 🌳️ The mount tree.\n\n#[path = "."]\npub mod v1 {\n    #[path = "../x/🦀️.rs"]\n    mod component;\n    pub use component::*;\n    #[path = "."]\n    pub mod deep {\n        #[path = "../x/y/🦀️.rs"]\n        pub mod leaf;\n    }\n}\n',
+      "/repo/art/🧾️decl/🦀️.rs": "pub fn declaration() {}\n",
+    };
+    const source = '#[path = "🌳️tree/🦀️.rs"]\npub mod standards;\n#[path = "🧾️decl/🦀️.rs"]\nmod decl;\n';
+    const folded = inlineMountTreeFiles(`${root}/🦀️.rs`, source, (absolute) => files[absolute] ?? null);
+    expect(folded.deletes).toEqual(new Set(["/repo/art/🌳️tree/🦀️.rs"]));
+    expect(folded.rootSource).toContain('#[path = "."]\npub mod standards {');
+    expect(folded.rootSource).toContain('#[path = "x/🦀️.rs"]');
+    expect(folded.rootSource).toContain('#[path = "x/y/🦀️.rs"]');
+    expect(folded.rootSource).toContain('#[path = "🧾️decl/🦀️.rs"]\nmod decl;');
+    expect(folded.rootSource).not.toContain("The mount tree");
+    expect(parseRustSourceTree(folded.rootSource).modules.map((node) => [node.name, node.inline])).toEqual([["standards", true], ["decl", false]]);
+  });
+  test("detaches a test whose host imports an item with a relative super path by carrying the absolute import", () => {
+    const root = mkdtempSync(join(tmpdir(), "semio-detach-super-"));
+    try {
+      const layout: Record<string, string> = {
+        "🦀️.rs": '#[path = "."]\npub mod m {\n    #[path = "m/🦀️.rs"]\n    mod component;\n    pub use component::*;\n    #[path = "m/leaf/🦀️.rs"]\n    pub mod leaf;\n}\n',
+        "m/🦀️.rs": "pub struct Agg;\n",
+        "m/leaf/🦀️.rs": 'use super::Agg;\nuse crate::m::{self, Agg as Alias};\npub struct Leaf;\npub fn make() -> Agg { Agg }\n#[cfg(test)]\n#[path = "🧪️tests/🦀️.rs"]\nmod tests;\n',
+        "m/leaf/🧪️tests/🦀️.rs": "use super::*;\n#[test]\nfn t() { let _: Agg = make(); let _: Alias = Agg; let _ = Leaf; }\n",
+      };
+      for (const [path, content] of Object.entries(layout)) { mkdirSync(dirname(join(root, path)), { recursive: true }); writeFileSync(join(root, path), content); }
+      const result = transformTestClosure(root, join(root, "🦀️.rs"), layout["🦀️.rs"]!, new Set(), { fixtures: false, aggregate: false, hoist: false, detach: true });
+      const test = result.edits.get(join(root, "m/leaf/🧪️tests/🦀️.rs"));
+      expect(test).toContain("use crate::m::Agg;");
+      expect(test).toContain("use crate::m::Agg as Alias;");
+      expect(test).not.toMatch(/\buse super::/u);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+  test("detaches a test that imports a private host function through super and widens that function to pub", () => {
+    const root = mkdtempSync(join(tmpdir(), "semio-detach-super-private-fn-"));
+    try {
+      const layout: Record<string, string> = {
+        "🦀️.rs": '#[path = "."]\npub mod m {\n    #[path = "m/🦀️.rs"]\n    mod component;\n    pub use component::*;\n}\n',
+        "m/🦀️.rs": 'fn examples() -> usize { 3 }\npub fn count() -> usize { examples() }\n#[cfg(test)]\n#[path = "🧪️tests/🦀️.rs"]\nmod tests;\n',
+        "m/🧪️tests/🦀️.rs": "use super::examples;\n#[test]\nfn t() { assert_eq!(examples(), 3); }\n",
+      };
+      for (const [path, content] of Object.entries(layout)) { mkdirSync(dirname(join(root, path)), { recursive: true }); writeFileSync(join(root, path), content); }
+      const result = transformTestClosure(root, join(root, "🦀️.rs"), layout["🦀️.rs"]!, new Set(), { fixtures: false, aggregate: false, hoist: false, detach: true });
+      expect(result.edits.get(join(root, "m/🦀️.rs"))).toContain("pub fn examples()");
+      expect(result.edits.get(join(root, "m/🧪️tests/🦀️.rs"))).toContain("use crate::m::examples;");
+      expect(result.edits.get(join(root, "m/🧪️tests/🦀️.rs"))!.match(/use crate::m::(?:\{[^}]*\b)?examples\b/gu)).toHaveLength(1);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+  test("detaches a test whose host groups several items behind a leading super run into one absolute group", () => {
+    const root = mkdtempSync(join(tmpdir(), "semio-detach-super-group-"));
+    try {
+      const layout: Record<string, string> = {
+        "🦀️.rs": '#[path = "."]\npub mod m {\n    #[path = "m/🦀️.rs"]\n    mod component;\n    pub use component::*;\n    #[path = "m/mutations/🦀️.rs"]\n    pub mod mutations;\n}\n',
+        "m/🦀️.rs": "pub struct Cfg;\npub struct CfgMutation;\npub struct CfgDelta;\n",
+        "m/mutations/🦀️.rs": '#[path = "set/🦀️.rs"]\nmod set;\npub use set::S;\n',
+        "m/mutations/set/🦀️.rs": 'use super::super::{Cfg, CfgDelta, CfgMutation};\npub struct S;\n#[cfg(test)]\n#[path = "🧪️tests/🦀️.rs"]\nmod tests;\n',
+        "m/mutations/set/🧪️tests/🦀️.rs": "use super::*;\n#[test]\nfn t() { let _ = Cfg; let _ = CfgMutation; let _ = S; }\n",
+      };
+      for (const [path, content] of Object.entries(layout)) { mkdirSync(dirname(join(root, path)), { recursive: true }); writeFileSync(join(root, path), content); }
+      const result = transformTestClosure(root, join(root, "🦀️.rs"), layout["🦀️.rs"]!, new Set(), { fixtures: false, aggregate: false, hoist: false, detach: true });
+      const test = result.edits.get(join(root, "m/mutations/set/🧪️tests/🦀️.rs"));
+      expect(test).toContain("use crate::m::{Cfg, CfgMutation};");
+      expect(test).not.toMatch(/::\{crate::/u);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+  test("detaches a test that globs its host by carrying the host's private glob imports", () => {
+    const root = mkdtempSync(join(tmpdir(), "semio-detach-glob-"));
+    try {
+      const layout: Record<string, string> = {
+        "🦀️.rs": '#[path = "."]\npub mod k {\n    #[path = "k/🦀️.rs"]\n    pub mod base;\n}\n#[path = "."]\npub mod m {\n    #[path = "m/🦀️.rs"]\n    mod component;\n    pub use component::*;\n    #[path = "m/leaf/🦀️.rs"]\n    pub mod leaf;\n}\n',
+        "k/🦀️.rs": "pub struct Id;\n",
+        "m/🦀️.rs": "pub struct Agg;\n",
+        "m/leaf/🦀️.rs": 'use crate::k::base::*;\npub struct Leaf;\n#[cfg(test)]\n#[path = "🧪️tests/🦀️.rs"]\nmod tests;\n',
+        "m/leaf/🧪️tests/🦀️.rs": "use super::*;\n#[test]\nfn t() { let _ = Id; let _ = Leaf; }\n",
+      };
+      for (const [path, content] of Object.entries(layout)) { mkdirSync(dirname(join(root, path)), { recursive: true }); writeFileSync(join(root, path), content); }
+      const result = transformTestClosure(root, join(root, "🦀️.rs"), layout["🦀️.rs"]!, new Set(), { fixtures: false, aggregate: false, hoist: false, detach: true });
+      const test = result.edits.get(join(root, "m/leaf/🧪️tests/🦀️.rs"));
+      expect(test).toContain("use crate::k::base::*;");
+      expect(test).toContain("use crate::m::leaf::*;");
+      expect(test).not.toMatch(/\buse super::/u);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+  test("prunes a group with a self leaf without leaving an empty member", () => {
+    expect(prunedUse("use a::b::{self, C, D};", ["b", "C"])).toBe("use a::b::{self, C};");
+    expect(prunedUse("use a::b::{self as parent, C};", ["parent", "C"])).toBe("use a::b::{self as parent, C};");
+    expect(prunedUse("use a::b::{self, C};", ["b"])).toBe("use a::b;");
+  });
+  test("a brace group names the chains of its members, not the shared prefix module", () => {
+    expect(crateRelativeChains("use crate::a::b::{c::X, d::Y};")).toEqual([["a", "b", "c", "X"], ["a", "b", "d", "Y"]]);
+    expect(crateRelativeChains("use crate::a::b::*;")).toEqual([["a", "b"]]);
+    expect(crateRelativeChains("let _ = crate::a::b::run();")).toEqual([["a", "b", "run"]]);
+  });
+  test("aggregates sibling leaf tests into the file that holds the inline parent module, not into the lib root", () => {
+    const root = mkdtempSync(join(tmpdir(), "semio-aggregate-file-"));
+    try {
+      const leaf = (name: string): Record<string, string> => ({
+        [`tree/${name}/🦀️.rs`]: `pub fn ${name}() {}\n#[cfg(test)]\n#[path = "🧪️tests/🦀️.rs"]\nmod tests;\n`,
+        [`tree/${name}/🧪️tests/🦀️.rs`]: `use super::*;\n#[test]\nfn runs() { ${name}(); }\n`,
+      });
+      const layout: Record<string, string> = {
+        "🦀️.rs": '#[path = "tree/🦀️.rs"]\npub mod s;\n',
+        "tree/🦀️.rs": '#[path = "."]\npub mod modules {\n    #[path = "a/🦀️.rs"]\n    pub mod a;\n    #[path = "b/🦀️.rs"]\n    pub mod b;\n    #[path = "c/🦀️.rs"]\n    pub mod c;\n}\n',
+        ...leaf("a"), ...leaf("b"), ...leaf("c"),
+      };
+      for (const [path, content] of Object.entries(layout)) { mkdirSync(dirname(join(root, path)), { recursive: true }); writeFileSync(join(root, path), content); }
+      const result = transformTestClosure(root, join(root, "🦀️.rs"), layout["🦀️.rs"]!, new Set(), { fixtures: false, aggregate: true, hoist: false });
+      expect(result.rootSource).toBe(layout["🦀️.rs"]);
+      const tree = result.edits.get(join(root, "tree/🦀️.rs"))!;
+      expect(tree).toContain("mod leaf_tests;");
+      expect(tree.indexOf("mod leaf_tests;")).toBeLessThan(tree.lastIndexOf("}"));
+      expect(result.notes.some((note) => note.includes("aggregated 3 leaf test files"))).toBe(true);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
   test("rebases paths joined onto the cargo manifest directory when a file moves to another crate directory", () => {
     const source = 'let a = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../x/y.json"));\nlet b = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../z");\nlet c = env!("CARGO_MANIFEST_DIR");';
     const moved = rebaseManifestDirPaths(source, "/repo/art/📦️packages/🦀️rust", "/repo/art/sub/deeper/📦️packages/🦀️rust");
@@ -288,7 +627,7 @@ describe("artifact crate carve", () => {
     const concatenated = 'let script = concat!(include_str!("../../🧪️tests/🧫️fixtures/a.sql"), "\\nselect 1;");\nlet plain = include_str!("../../🧪️tests/🧫️fixtures/b.json");\nfn f() {}';
     const rewritten = fixturesToRuntime(`fn t() { ${concatenated} }`, "/repo/x/y/z/test.rs", "/repo")!;
     expect(rewritten).toContain('concat!(include_str!("../../🧪️tests/🧫️fixtures/a.sql")');
-    expect(rewritten).toContain('runtime_fixture_text("@fixtures/');
+    expect(rewritten).toContain('fixture_text!("@fixtures/');
     const constConcat = 'const A: &str = include_str!("../../🧪️tests/🧫️fixtures/a.sql");\nfn t() { let _ = concat!(A, "x"); }';
     expect(fixturesToRuntime(constConcat, "/repo/x/y/z/test.rs", "/repo")).toBeNull();
     const root = mkdtempSync(join(tmpdir(), "semio-hoist-ref-"));
@@ -323,6 +662,62 @@ describe("artifact crate carve", () => {
       rmSync(root, { recursive: true, force: true });
     }
   });
+  test("retargets the absolute self path of a hoisted test to its new mount", () => {
+    const root = mkdtempSync(join(tmpdir(), "semio-hoist-self-"));
+    try {
+      const layout: Record<string, string> = {
+        "🦀️.rs": 'pub const DOCUMENT: &str = "d";\n#[path = "."]\npub mod a {\n    #[path = "a/🦀️.rs"]\n    mod component;\n    pub use component::*;\n}\n',
+        "a/🦀️.rs": '#[cfg(test)]\n#[path = "🧪️tests/🦀️.rs"]\nmod tests;\n',
+        "a/🧪️tests/🦀️.rs": 'pub fn helper() {}\nmod inner {\n    use crate::a::tests::*;\n    #[test]\n    fn t() { helper(); let _ = crate::DOCUMENT; }\n}\n',
+      };
+      for (const [path, content] of Object.entries(layout)) { mkdirSync(dirname(join(root, path)), { recursive: true }); writeFileSync(join(root, path), content); }
+      const result = transformTestClosure(root, join(root, "🦀️.rs"), layout["🦀️.rs"]!, new Set(["DOCUMENT"]), { fixtures: false, aggregate: false, hoist: true });
+      const name = /mod (hoisted_[A-Za-z0-9_]+);/u.exec(result.rootSource)![1]!;
+      const moved = result.edits.get(join(root, "a/🧪️tests/🦀️.rs"))!;
+      expect(moved).toContain(`use crate::${name}::*;`);
+      expect(moved).not.toContain("crate::a::tests");
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+  test("sees the aliases that a use statement inside a function body binds", () => {
+    const chains = aliasChains("pub fn io() {\n    use crate::standards::io::export::serializers::artifacts as export;\n    let _ = export::json::Codec;\n}\n");
+    expect(chains).toContainEqual(["standards", "io", "export", "serializers", "artifacts", "json", "Codec"]);
+  });
+  test("carries the private imports of the host into a nested module of a detached test that globs the host", () => {
+    const root = mkdtempSync(join(tmpdir(), "semio-detach-nested-"));
+    try {
+      const layout: Record<string, string> = {
+        "🦀️.rs": 'pub const DOCUMENT: &str = "d";\n#[path = "."]\npub mod a {\n    #[path = "a/🦀️.rs"]\n    mod component;\n    pub use component::*;\n}\n',
+        "a/🦀️.rs": 'use std::collections::BTreeMap as Private;\n#[cfg(test)]\n#[path = "🧪️tests/🦀️.rs"]\nmod tests;\n',
+        "a/🧪️tests/🦀️.rs": 'pub mod context {\n    use super::super::*;\n    pub fn make() -> Private<u8, u8> { Private::new() }\n}\n',
+      };
+      for (const [path, content] of Object.entries(layout)) { mkdirSync(dirname(join(root, path)), { recursive: true }); writeFileSync(join(root, path), content); }
+      const result = transformTestClosure(root, join(root, "🦀️.rs"), layout["🦀️.rs"]!, new Set(["DOCUMENT"]), { fixtures: false, aggregate: false, hoist: false, detach: true });
+      const moved = result.edits.get(join(root, "a/🧪️tests/🦀️.rs"))!;
+      expect(moved).toMatch(/use crate::a::\*;\n\s*use std::collections::BTreeMap as Private;/u);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+  test("names a private import of the host by its carried import in a hoisted test instead of through the host path", () => {
+    const root = mkdtempSync(join(tmpdir(), "semio-hoist-private-import-"));
+    try {
+      const layout: Record<string, string> = {
+        "🦀️.rs": 'pub const DOCUMENT: &str = "d";\n#[path = "."]\npub mod a {\n    #[path = "a/🦀️.rs"]\n    mod component;\n    pub use component::*;\n}\n',
+        "a/🦀️.rs": 'use std::collections::BTreeMap as Private;\n#[cfg(test)]\n#[path = "🧪️tests/🦀️.rs"]\nmod tests;\n',
+        "a/🧪️tests/🦀️.rs": 'use crate::a::*;\n#[test]\nfn t() { let _ = crate::a::Private::<u8, u8>::new(); let _ = crate::DOCUMENT; }\n',
+      };
+      for (const [path, content] of Object.entries(layout)) { mkdirSync(dirname(join(root, path)), { recursive: true }); writeFileSync(join(root, path), content); }
+      const result = transformTestClosure(root, join(root, "🦀️.rs"), layout["🦀️.rs"]!, new Set(["DOCUMENT"]), { fixtures: false, aggregate: false, hoist: true });
+      const moved = result.edits.get(join(root, "a/🧪️tests/🦀️.rs"))!;
+      expect(moved).toContain("use std::collections::BTreeMap as Private;");
+      expect(moved).toContain("let _ = Private::<u8, u8>::new();");
+      expect(moved).not.toContain("crate::a::Private");
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
   test("widens the private host items a hoisted test uses and carries private absolute imports into hoisted tests", () => {
     const root = mkdtempSync(join(tmpdir(), "semio-hoist-private-"));
     try {
@@ -343,6 +738,64 @@ describe("artifact crate carve", () => {
     } finally {
       rmSync(root, { recursive: true, force: true });
     }
+  });
+  test("widens a private host item once when several hoisted tests use it", () => {
+    const root = mkdtempSync(join(tmpdir(), "semio-hoist-twice-"));
+    try {
+      const layout: Record<string, string> = {
+        "🦀️.rs": 'pub const DOCUMENT: &str = "d";\n#[path = "."]\npub mod a {\n    #[path = "a/🦀️.rs"]\n    mod component;\n    pub use component::*;\n}\n',
+        "a/🦀️.rs": 'fn secret() {}\n#[cfg(test)]\n#[path = "🧪️tests/🔬️one/🦀️.rs"]\nmod one;\n#[cfg(test)]\n#[path = "🧪️tests/🔬️two/🦀️.rs"]\nmod two;\n',
+        "a/🧪️tests/🔬️one/🦀️.rs": '#[test]\nfn t() { secret(); let _ = crate::DOCUMENT; }\n',
+        "a/🧪️tests/🔬️two/🦀️.rs": '#[test]\nfn t() { secret(); let _ = crate::DOCUMENT; }\n',
+      };
+      for (const [path, content] of Object.entries(layout)) { mkdirSync(dirname(join(root, path)), { recursive: true }); writeFileSync(join(root, path), content); }
+      const result = transformTestClosure(root, join(root, "🦀️.rs"), layout["🦀️.rs"]!, new Set(["DOCUMENT"]), { fixtures: false, aggregate: false, hoist: true });
+      const host = result.edits.get(join(root, "a/🦀️.rs"))!;
+      expect(host).toContain("pub fn secret() {}");
+      expect(host).not.toContain("pub pub");
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+  test("treats the import of an unlinked first-party crate as external noise and keeps every other unresolved import", () => {
+    expect(external("E0432\tunresolved import `semio_framework_artifact_playbook_playbook`")).toBe(false);
+    expect(external("E0432\tunresolved import `semio_framework_artifact_playbook_playbook`\tsome/file.rs\tno `x` in the root")).toBe(false);
+    expect(external("E0432\tunresolved import `crate::editor::forms::support`")).toBe(true);
+    expect(external("E0220\tassociated type `Error` not found for `V`")).toBe(false);
+    expect(external("E0220\tassociated type `Error` not found for `Visitor`\tx.rs\t")).toBe(false);
+    expect(external("E0220\tassociated type `Error` not found for `crate::Thing`")).toBe(true);
+    expect(external("E0432\tunresolved import `helper`")).toBe(true);
+  });
+  test("inlines root file modules that only glob-re-export plain items and leaves every other file module mounted", () => {
+    const root = mkdtempSync(join(tmpdir(), "semio-inline-root-"));
+    try {
+      const layout: Record<string, string> = {
+        "🦀️.rs": 'pub struct Keep;\n#[path = "📦️records/🦀️.rs"]\nmod records;\npub use records::*;\n#[path = "🧷️nested/🦀️.rs"]\nmod nested;\npub use nested::*;\n',
+        "📦️records/🦀️.rs": '//! 📦️ Records.\n\nuse super::*;\n\npub struct Record(pub Keep);\n',
+        "🧷️nested/🦀️.rs": 'use super::*;\n#[path = "x/🦀️.rs"]\nmod x;\npub fn f() {}\n',
+      };
+      for (const [path, content] of Object.entries(layout)) { mkdirSync(dirname(join(root, path)), { recursive: true }); writeFileSync(join(root, path), content); }
+      const result = inlineRootFileModules(null, join(root, "🦀️.rs"), layout["🦀️.rs"]!);
+      expect(result.rootSource).toContain("//#region 🧩️records");
+      expect(result.rootSource).toContain("pub struct Record(pub Keep);");
+      expect(result.rootSource).not.toContain("pub use records::*;");
+      expect(result.rootSource).not.toContain("use super::*;");
+      expect(result.rootSource).toContain("mod nested;");
+      const own = inlineRootFileModules(null, join(root, "🦀️.rs"), 'pub struct Keep;\n#[path = "📦️records/🦀️.rs"]\nmod records;\npub use records::*;\n');
+      expect(own.rootSource).toContain("//#region 🧩️records");
+      writeFileSync(join(root, "📦️records/🦀️.rs"), "use super::*;\n//#region Own\npub struct Record(pub Keep);\n//#endregion Own\n");
+      const kept = inlineRootFileModules(null, join(root, "🦀️.rs"), 'pub struct Keep;\n#[path = "📦️records/🦀️.rs"]\nmod records;\npub use records::*;\n');
+      expect(kept.rootSource).toContain("//#region Own");
+      expect(kept.rootSource).not.toContain("🧩️records");
+      expect([...result.deletes]).toEqual([join(root, "📦️records/🦀️.rs")]);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+  test("keeps the private component segment when a leaf glob is made absolute for a mutation family", () => {
+    const raw = ["editor", "config", "component", "mutations", "set"];
+    expect(absolutizeBeyond("use super::*;\n", raw, 0, false)).toBe("use crate::editor::config::component::mutations::*;\n");
+    expect(absolutizeBeyond("use super::*;\n", raw, 0)).toBe("use crate::editor::config::mutations::*;\n");
   });
   const weaveFiles = (deep: boolean): Record<string, string> => ({
     "Cargo.toml": files["Cargo.toml"]!,
@@ -390,6 +843,23 @@ describe("artifact crate carve", () => {
       applyCarveWrites(root, writes);
       const carved = [resolveCrateModules(root, join(root, "🦀️.rs")), ...plan.crates.map((crate) => resolveCrateModules(root, join(root, crate.packageDir, "🦀️.rs")))];
       expect(compareModuleTrees(original, carved).problems).toEqual([]);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("keeps a mounted child in the facade when a kept root file module names it", async () => {
+    const root = weaveTree(false);
+    try {
+      const rootFile = join(root, "🦀️.rs");
+      writeFileSync(rootFile, readFileSync(rootFile, "utf8") + '#[path = "🧾️declaration/🦀️.rs"]\nmod declaration;\n');
+      mkdirSync(join(root, "🧾️declaration"), { recursive: true });
+      writeFileSync(join(root, "🧾️declaration/🦀️.rs"), "//! declaration\npub fn assembled() -> u8 { crate::io::text::helper_text() }\n");
+      const plan = await planArtifactCrates(root, "📦️packages/🦀️rust", { ...tiny });
+      expect(plan.problems.filter((problem) => !problem.includes("mounts no file"))).toEqual([]);
+      expect(plan.weave.map((entry) => entry.eff.join("::"))).not.toContain("io::text");
+      const { writes } = await carveWrites(plan);
+      expect(writes.find((write) => write.path === "🦀️.rs")!.content).toContain("pub use demo_weave_io::io;");
     } finally {
       rmSync(root, { recursive: true, force: true });
     }
@@ -515,6 +985,66 @@ describe("artifact crate carve", () => {
     }
   });
 
+  test("keeps a slice in the crate of the cfg(test) module it reaches, because a dependency never compiles that module", async () => {
+    const root = writeTree("semio-cfg-test-module-", {
+      ...scaffold("demo-cfg-test-module", '//! root\n#[path = "."]\npub mod io {\n    #[path = "🚪️io/🦀️.rs"]\n    mod component;\n    pub use component::*;\n}\n'),
+      "🚪️io/🦀️.rs": '//! io\n#[path = "📝️text/🦀️.rs"]\npub mod text;\n',
+      "🚪️io/📝️text/🦀️.rs": '//! text\n#[path = "🅰️a/🦀️.rs"]\npub mod a;\n#[path = "🅱️b/🦀️.rs"]\npub mod b;\n',
+      "🚪️io/📝️text/🅰️a/🦀️.rs": '//! a\npub fn value() -> u8 { 1 }\n#[cfg(test)]\n#[path = "🧰️support/🦀️.rs"]\npub mod support;\n',
+      "🚪️io/📝️text/🅰️a/🧰️support/🦀️.rs": "//! support\npub fn helper() -> u8 { 2 }\n",
+      "🚪️io/📝️text/🅱️b/🦀️.rs": "//! b\npub fn run() -> u8 { 3 }\n#[cfg(test)]\nmod checks {\n    #[test]\n    fn t() { assert_eq!(crate::io::text::a::support::helper(), 2); }\n}\n",
+    });
+    try {
+      const plan = await planArtifactCrates(root, "📦️packages/🦀️rust", { ...tiny, tests: { fixtures: false, aggregate: false, hoist: false, detach: false } });
+      expect(plan.problems).toEqual([]);
+      const holder = (suffix: string) => plan.crates.find((crate) => crate.attach.some((decl) => decl.eff.join("::") === suffix))!;
+      expect(holder("io::text::a::support").id).toBe(holder("io::text::b").id);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  }, 60_000);
+
+  test("does not make a slice depend on the owner of a prefix when the path names an inline wrapper module that the owner does not own", async () => {
+    const root = writeTree("semio-wrapper-prefix-", {
+      ...scaffold("demo-wrapper-prefix", '//! root\n#[path = "."]\npub mod top {\n    #[path = "🔝top/🦀️.rs"]\n    mod component;\n    pub use component::*;\n    #[path = "."]\n    pub mod mid {\n        #[path = "🅰️a/🦀️.rs"]\n        pub mod a;\n        #[path = "🅱️b/🦀️.rs"]\n        pub mod b;\n    }\n}\n'),
+      "🔝top/🦀️.rs": "//! top\npub fn here() -> u8 { 0 }\n",
+      "🅰️a/🦀️.rs": "//! a\npub fn value() -> u8 { 1 }\n",
+      "🅱️b/🦀️.rs": "//! b\nuse crate::top::mid;\npub fn run() -> u8 { mid::a::value() }\n",
+    });
+    try {
+      const plan = await planArtifactCrates(root, "📦️packages/🦀️rust", { ...tiny });
+      expect(plan.problems).toEqual([]);
+      const holder = (suffix: string) => plan.crates.find((crate) => crate.attach.some((decl) => decl.eff.join("::") === suffix))!;
+      const [top, a, b] = [holder("top"), holder("top::mid::a"), holder("top::mid::b")];
+      expect(new Set([top, a, b]).size).toBe(3);
+      expect(b.dependsOn).toContain(a.id);
+      expect(b.dependsOn).not.toContain(top.id);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  }, 60_000);
+
+  test("glob-exports the owner of a module into the wrapper that hosts its detached test in another crate, so the wrapper does not shadow the module", async () => {
+    const root = writeTree("semio-detached-test-host-", {
+      ...scaffold("demo-detached-test-host", '//! root\n#[path = "."]\npub mod io {\n    #[path = "🚪️io/🦀️.rs"]\n    mod component;\n    pub use component::*;\n}\n'),
+      "🚪️io/🦀️.rs": "//! io\npub fn helper() -> u8 { 1 }\npub fn both() -> u8 { text::helper_text() + helper() }\n#[path = \"📝️text/🦀️.rs\"]\npub mod text;\n",
+      "🚪️io/📝️text/🦀️.rs": `//! text\n${"// padding that makes this slice too large to share a crate with the test\n".repeat(30)}pub fn helper_text() -> u8 { 2 }\n#[cfg(test)]\n#[path = "🧪️tests/🦀️.rs"]\nmod tests;\n`,
+      "🚪️io/📝️text/🧪️tests/🦀️.rs": "use super::*;\nuse crate::io::helper;\n\n#[test]\nfn text_helper_is_two() { assert_eq!(helper_text() + helper(), 3); }\n",
+    });
+    try {
+      const plan = await planArtifactCrates(root, "📦️packages/🦀️rust", { target: { files: 8, bytes: 1500, lines: 3500 }, hard: { files: 32, bytes: 262144, lines: 4000 }, tests: { fixtures: false, aggregate: false, hoist: true, detach: true } });
+      expect(plan.problems).toEqual([]);
+      const holder = (suffix: string) => plan.crates.find((crate) => crate.attach.some((decl) => decl.eff.join("::") === suffix))!;
+      const [host, text] = [holder("io::text::tests"), holder("io::text")];
+      expect(host.id).not.toBe(text.id);
+      const { writes } = await carveWrites(plan);
+      const mirror = writes.find((write) => write.path === `${host.packageDir}/🦀️.rs`)!.content;
+      expect(mirror).toContain(`pub use ${crateIdentOf(text.name)}::io::text::*;`);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  }, 60_000);
+
   test("resolves a type name that two standards define to the definition in the closest module", async () => {
     const standard = (name: string): Record<string, string> => ({
       [`🅰️${name}/🧬️schema/🦀️.rs`]: "//! schema\npub struct Doc;\n",
@@ -600,6 +1130,7 @@ describe("artifact crate carve", () => {
       applyCarveWrites(repo, writes);
       const clean = await verifyAppliedLayout(repo, artifact, join(sandbox, "clean"));
       expect(clean.crates).toBeGreaterThan(1);
+      expect(clean.baseCrates).toBe(0);
       expect(Object.values(clean.layout).map((row) => row.onlyCombined)).toEqual([0, 0]);
       const broken = join(repo, artifact, "🚪️io/📝️text/🦀️.rs");
       writeFileSync(broken, readFileSync(broken, "utf8").replace("crate::schema::value()", "crate::schema::missing()"));
@@ -629,12 +1160,102 @@ describe("artifact crate carve", () => {
       git("commit", "-q", "-m", "baseline");
       const clean = await verifyAppliedLayout(repo, artifact, join(sandbox, "clean"));
       expect(clean.crates).toBe(1);
+      expect(clean.baseCrates).toBe(1);
       expect(Object.values(clean.layout).map((row) => row.onlyCombined)).toEqual([0, 0]);
       expect(Object.values(clean.layout).every((row) => row.base === row.combined && row.base > 0)).toBe(true);
       write("🧩️extra/🦀️.rs", "//! 🧩️ hand-built crate\nuse crate::MacroMade;\nuse crate::Added;\npub fn a() -> u8 { demo_x::A }\n");
       const regressed = await verifyAppliedLayout(repo, artifact, join(sandbox, "regressed"), "HEAD", false, 5);
       expect(regressed.layout.native!.onlyCombined).toBe(1);
       expect(regressed.layout.native!.sampleOnlyCombined[0]).toContain("Added");
+    } finally {
+      rmSync(repo, { recursive: true, force: true });
+      rmSync(sandbox, { recursive: true, force: true });
+    }
+  });
+
+  test("copies the working-tree file that a healed pre-carve file mounts when the pre-carve tree lacks it, so the base still parses", async () => {
+    const repo = mkdtempSync(join(tmpdir(), "semio-applied-target-"));
+    const sandbox = mkdtempSync(join(tmpdir(), "semio-applied-target-sbx-"));
+    const artifact = "a/b/c";
+    try {
+      const write = (path: string, text: string): void => { mkdirSync(dirname(join(repo, artifact, path)), { recursive: true }); writeFileSync(join(repo, artifact, path), text); };
+      write("Cargo.toml", '[workspace]\nmembers = ["📦️packages/🦀️rust"]\n');
+      write("📦️packages/🦀️rust/Cargo.toml", '[package]\nname = "demo-x"\nversion = "0.1.0"\n\n[lib]\npath = "../../🦀️.rs"\n');
+      write("🦀️.rs", "//! 🧪️ facade\n#[path = \"🪟️views/🦀️.rs\"]\npub mod views;\n");
+      write("🪟️views/🦀️.rs", "//! 🪟️ views\npub mod tools {\n    #[path = \"../🛠️tools/🦀️.rs\"]\n    pub mod simulation;\n}\n");
+      write("🪟️views/🛠️tools/🦀️.rs", "//! 🛠️ tools\npub const B: u8 = 2;\n");
+      const git = (...args: string[]): void => { execFileSync("git", ["-c", "user.name=t", "-c", "user.email=t@t", "-c", "commit.gpgsign=false", "-c", "core.hooksPath=/dev/null", ...args], { cwd: repo, stdio: "pipe" }); };
+      git("init", "-q");
+      git("add", "-A");
+      git("commit", "-q", "-m", "baseline");
+      write("🪟️views/🦀️.rs", "//! 🪟️ views\n#[path = \"🛠️tools\"]\npub mod tools {\n    #[path = \"🦀️.rs\"]\n    pub mod simulation;\n}\n#[path = \"🆕️added/🦀️.rs\"]\npub mod added;\n");
+      write("🪟️views/🆕️added/🦀️.rs", "//! 🆕️ added\npub const C: u8 = 3;\n");
+      const report = await verifyAppliedLayout(repo, artifact, join(sandbox, "target"), "HEAD", false, 5);
+      expect(report.healedBase.map((path) => path.split("/").slice(-2).join("/")).sort()).toEqual(["🆕️added/🦀️.rs", "🪟️views/🦀️.rs"]);
+      expect(Object.values(report.layout).map((row) => row.onlyCombined)).toEqual([0, 0]);
+      expect(Object.values(report.layout).every((row) => row.base === row.combined)).toBe(true);
+    } finally {
+      rmSync(repo, { recursive: true, force: true });
+      rmSync(sandbox, { recursive: true, force: true });
+    }
+  });
+
+  test("leaves a binary-only package of the artifact out of the layout differential", async () => {
+    const repo = mkdtempSync(join(tmpdir(), "semio-applied-bin-"));
+    const sandbox = mkdtempSync(join(tmpdir(), "semio-applied-bin-sbx-"));
+    const artifact = "a/b/c";
+    try {
+      const write = (path: string, text: string): void => { mkdirSync(dirname(join(repo, artifact, path)), { recursive: true }); writeFileSync(join(repo, artifact, path), text); };
+      write("Cargo.toml", '[workspace]\nmembers = ["📦️packages/🦀️rust", "🐚️shell/📦️packages/🦀️rust"]\n');
+      write("📦️packages/🦀️rust/Cargo.toml", '[package]\nname = "demo-x"\nversion = "0.1.0"\n\n[lib]\npath = "../../🦀️.rs"\n');
+      write("🦀️.rs", "//! 🧪️ facade\npub const A: u8 = 1;\n");
+      write("🐚️shell/📦️packages/🦀️rust/Cargo.toml", '[package]\nname = "demo-x-shell"\nversion = "0.1.0"\n\n[[bin]]\nname = "demo-x-shell"\npath = "📦️bin.rs"\n');
+      write("🐚️shell/📦️packages/🦀️rust/📦️bin.rs", "fn main() { println!(\"{}\", demo_x::A); }\n");
+      const git = (...args: string[]): void => { execFileSync("git", ["-c", "user.name=t", "-c", "user.email=t@t", "-c", "commit.gpgsign=false", "-c", "core.hooksPath=/dev/null", ...args], { cwd: repo, stdio: "pipe" }); };
+      git("init", "-q");
+      git("add", "-A");
+      git("commit", "-q", "-m", "baseline");
+      const report = await verifyAppliedLayout(repo, artifact, join(sandbox, "bin"));
+      expect(report.crates).toBe(0);
+      expect(report.baseCrates).toBe(0);
+      expect(Object.values(report.layout).map((row) => row.onlyCombined)).toEqual([0, 0]);
+    } finally {
+      rmSync(repo, { recursive: true, force: true });
+      rmSync(sandbox, { recursive: true, force: true });
+    }
+  });
+
+  test("lists the module files a root mounts with flat path attributes, relative to the root's own directory", () => {
+    const text = ['#[path = "🏊️arena-laws/🦀️.rs"]', "mod arena_laws;", '#[path = "../shared/🦀️.rs"] mod shared;', '#[path = "🧪️tests"] mod tests { #[path = "x/🦀️.rs"] mod x; }', ""].join("\n");
+    expect(mountedPathFiles("a/b/🦀️.rs", text)).toEqual(["a/b/🏊️arena-laws/🦀️.rs", "a/shared/🦀️.rs", "a/b/x/🦀️.rs"]);
+    expect(mountedPathFiles("a/b/🦀️.rs", "pub mod plain;\n")).toEqual([]);
+  });
+
+  test("hoists the inner attributes and inner docs that sit behind an item to the head of the file and leaves a clean file alone", () => {
+    const broken = ["use std::fmt::Debug;", "#![allow(dead_code)]", "//! 🧪️ facade", "#[cfg(test)] use std::fmt::Display;", "#![allow(unused_imports)]", "pub mod kit {", "    //! inner doc of an inline module", "}", ""].join("\n");
+    expect(hoistInnerAttributes(broken)).toBe(["#![allow(dead_code)]", "//! 🧪️ facade", "#![allow(unused_imports)]", "use std::fmt::Debug;", "#[cfg(test)] use std::fmt::Display;", "pub mod kit {", "    //! inner doc of an inline module", "}", ""].join("\n"));
+    const clean = ["//! 🧪️ facade", "#![allow(dead_code)]", "use std::fmt::Debug;", "pub const A: u8 = 1;", ""].join("\n");
+    expect(hoistInnerAttributes(clean)).toBe(clean);
+  });
+
+  test("repairs a pre-carve root with a misplaced inner attribute from its own text, so a carve that rewrote the root is not compared against its own carved root", async () => {
+    const repo = mkdtempSync(join(tmpdir(), "semio-applied-hoist-"));
+    const sandbox = mkdtempSync(join(tmpdir(), "semio-applied-hoist-sbx-"));
+    const artifact = "a/b/c";
+    try {
+      const write = (path: string, text: string): void => { mkdirSync(dirname(join(repo, artifact, path)), { recursive: true }); writeFileSync(join(repo, artifact, path), text); };
+      write("Cargo.toml", '[workspace]\nmembers = ["📦️packages/🦀️rust"]\n');
+      write("📦️packages/🦀️rust/Cargo.toml", '[package]\nname = "demo-x"\nversion = "0.1.0"\n\n[lib]\npath = "../../🦀️.rs"\n');
+      write("🦀️.rs", "use std::fmt::Debug;\n#![allow(dead_code)]\n//! 🧪️ facade\npub mod kit {\n    pub fn a() {}\n}\nuse crate::kit::missing;\n");
+      const git = (...args: string[]): void => { execFileSync("git", ["-c", "user.name=t", "-c", "user.email=t@t", "-c", "commit.gpgsign=false", "-c", "core.hooksPath=/dev/null", ...args], { cwd: repo, stdio: "pipe" }); };
+      git("init", "-q");
+      git("add", "-A");
+      git("commit", "-q", "-m", "baseline");
+      write("🦀️.rs", "//! 🧪️ facade\n#![allow(dead_code)]\nuse std::fmt::Debug;\npub mod kit {\n    pub fn a() {}\n}\nuse crate::kit::missing;\nuse crate::kit::added;\n");
+      const report = await verifyAppliedLayout(repo, artifact, join(sandbox, "hoist"), "HEAD", false, 5);
+      expect(report.healedBase.map((path) => path.split("/").slice(-1)[0])).toEqual(["🦀️.rs"]);
+      expect(report.layout.native!.onlyCombined).toBe(1);
+      expect(report.layout.native!.sampleOnlyCombined[0]).toContain("added");
     } finally {
       rmSync(repo, { recursive: true, force: true });
       rmSync(sandbox, { recursive: true, force: true });
@@ -794,6 +1415,60 @@ describe("artifact crate carve", () => {
     }
   });
 
+  test("compares an unreadable manifest-relative include by what it names, not by how deep the crate sits", () => {
+    const base = "E0000\tcouldn't read `<sandbox>/../../../x/y.json`: No such file or directory (os error 2)";
+    const combined = "E0000\tcouldn't read `<sandbox>/../../../../../../x/y.json`: No such file or directory (os error 2)";
+    expect(normalizeCombined(combined)).toBe(normalizeCombined(base));
+    expect(normalizeCombined(combined)).not.toBe(normalizeCombined(base.replace("y.json", "z.json")));
+  });
+
+  test("follows a path through a root use alias to the module it names instead of the alias target", async () => {
+    const root = mkdtempSync(join(tmpdir(), "semio-alias-"));
+    const layout: Record<string, string> = {
+      "Cargo.toml": files["Cargo.toml"]!,
+      "Cargo.lock": 'version = 4\n\n[[package]]\nname = "demo-alias"\nversion = "0.1.0"\n',
+      "📦️packages/🦀️rust/Cargo.toml": '[package]\nworkspace = "../.."\nname = "demo-alias"\nversion.workspace = true\nedition.workspace = true\nrust-version.workspace = true\n\n[lib]\npath = "../../🦀️.rs"\n\n[dependencies]\n',
+      "📦️packages/🦀️rust/📜️script.ts": 'await runArtifactRustPackageMain(import.meta.dir, "demo-alias",{snapshotSqliteTests:[]});\n',
+      "🦀️.rs": [
+        "//! root",
+        '#[path = "."]',
+        "pub mod standards {",
+        '    #[path = "."]',
+        "    pub mod v1 {",
+        '        #[path = "."]',
+        "        pub mod schema {",
+        '            #[path = "🧬️schema/🦀️.rs"]',
+        "            mod component;",
+        "            pub use component::*;",
+        '            #[path = "🧬️schema/🔺️diff/🦀️.rs"]',
+        "            pub mod diff;",
+        "        }",
+        '        #[path = "."]',
+        "        pub mod leaf {",
+        '            #[path = "🍃️leaf/🦀️.rs"]',
+        "            mod component;",
+        "            pub use component::*;",
+        "        }",
+        "    }",
+        "}",
+        "pub use crate::standards::v1::schema;",
+        "",
+      ].join("\n"),
+      "🧬️schema/🦀️.rs": "//! schema\npub fn one() -> u8 { 1 }\n",
+      "🧬️schema/🔺️diff/🦀️.rs": "//! diff\npub fn two() -> u8 { 2 }\n",
+      "🍃️leaf/🦀️.rs": "//! leaf\npub fn three() -> u8 { crate::schema::diff::two() }\n",
+    };
+    try {
+      for (const [path, content] of Object.entries(layout)) { mkdirSync(dirname(join(root, path)), { recursive: true }); writeFileSync(join(root, path), content); }
+      const plan = await planArtifactCrates(root, "📦️packages/🦀️rust", { ...tiny });
+      expect(plan.problems).toEqual([]);
+      const holder = (suffix: string) => plan.crates.find((crate) => crate.attach.some((decl) => decl.eff.join("::").endsWith(suffix)))!;
+      expect(holder("v1::leaf").dependsOn).toContain(holder("schema::diff").id);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
   test("drops only the re-export cascades of an unlinked external crate from the oracle diagnostics", () => {
     const entry = (code: string, message: string, label: string, sourceLine: string) => ({ code, message, label, file: "a.rs", line: 1, sourceLine });
     const kept = dropUnlinkedCascades([
@@ -803,6 +1478,13 @@ describe("artifact crate carve", () => {
       entry("E0425", "cannot find type `Op` in this scope", "", "fn f() -> Op"),
     ]);
     expect(kept.map((item) => item.message)).toEqual(["cannot find module or crate `semio_foo` in this scope", "unresolved import `crate::Real`", "cannot find type `Op` in this scope"]);
+  });
+
+  test("counts a path through the extern prelude of an unlinked crate as external noise and keeps every other missing name", () => {
+    expect(external("E0433\tcannot find `semio_framework_schema_registry` in the crate root\tx.rs\t")).toBe(false);
+    expect(external("E0433\tcannot find module or crate `semio_foo` in this scope\tx.rs\tuse of unresolved module or unlinked crate `semio_foo`")).toBe(false);
+    expect(external("E0433\tcannot find `schema` in `any`\tx.rs\t")).toBe(true);
+    expect(external("E0432\tunresolved import `crate::Real`\tx.rs\t")).toBe(true);
   });
 
   test("drops the unresolved imports that go through a module which glob-re-exports an unlinked external crate", () => {
@@ -885,6 +1567,13 @@ describe("artifact crate carve", () => {
     expect(rewritten).not.toContain("pub(in ");
   });
 
+  test("counts the private component module of a host as one super level when it absolutizes the paths of a detached test", () => {
+    const rewritten = absolutizeSuperPaths("use super::*;\nfn t() { super::super::topology::run(); super::super::super::sibling::run(); }\n", ["schema", "inferences", "component", "tests"]);
+    expect(rewritten).toContain("use crate::schema::inferences::*;");
+    expect(rewritten).toContain("crate::schema::inferences::topology::run()");
+    expect(rewritten).toContain("crate::schema::sibling::run()");
+  });
+
   test("removing a mount takes its outer doc comment along and leaves region markers and plain comments alone", () => {
     const source = "//#region R\n/// doc one\n/// doc two\n#[cfg(test)]\nmod tests;\n//#endregion R\n// plain\n#[cfg(test)]\nmod other;\n";
     const mount = source.indexOf("#[cfg(test)]\nmod tests;");
@@ -902,5 +1591,187 @@ describe("artifact crate carve", () => {
     expect(fixed).toContain("// orphan one\n// orphan two");
     expect(demoteDanglingOuterDocs("mod m {\n    /// orphan in block\n}\n")).toContain("    // orphan in block");
     expect(demoteDanglingOuterDocs("/// doc\n#[cfg(test)]\nmod t;\n")).toBe("/// doc\n#[cfg(test)]\nmod t;\n");
+  });
+  test("declares a cut file module pub in the mirror so the parent crate can re-export it, and leaves a pub one alone", () => {
+    const source = '#[path = "child/🦀️.rs"]\nmod child;\n#[path = "open/🦀️.rs"]\npub mod open;\n';
+    const [hidden, open] = parseRustSourceTree(source).modules;
+    const widened = rewriteMountPaths(source.slice(hidden!.start, hidden!.end), { ...hidden!, start: 0, declStart: hidden!.declStart - hidden!.start, end: hidden!.end - hidden!.start }, "/r", "/r", true);
+    expect(widened).toContain("pub mod child;");
+    const kept = rewriteMountPaths(source.slice(open!.start, open!.end), { ...open!, start: 0, declStart: open!.declStart - open!.start, end: open!.end - open!.start }, "/r", "/r", true);
+    expect(kept).not.toContain("pub pub");
+    expect(kept).toContain("pub mod open;");
+  });
+
+  test("places the carried imports of an aggregated leaf test behind its inner doc comments", () => {
+    const root = mkdtempSync(join(tmpdir(), "semio-aggregate-inner-"));
+    try {
+      const leaf = (name: string, doc: boolean): Record<string, string> => ({
+        [`tree/${name}/🦀️.rs`]: `use std::fmt::Debug;\npub fn ${name}() {}\n#[cfg(test)]\n#[path = "🧪️tests/🦀️.rs"]\nmod tests;\n`,
+        [`tree/${name}/🧪️tests/🦀️.rs`]: `${doc ? "//! inner doc\n" : ""}use super::*;\n#[test]\nfn runs() { ${name}(); let _: Option<&dyn Debug> = None; }\n`,
+      });
+      const layout: Record<string, string> = {
+        "🦀️.rs": '#[path = "tree/🦀️.rs"]\npub mod s;\n',
+        "tree/🦀️.rs": '#[path = "."]\npub mod modules {\n    #[path = "a/🦀️.rs"]\n    pub mod a;\n    #[path = "b/🦀️.rs"]\n    pub mod b;\n    #[path = "c/🦀️.rs"]\n    pub mod c;\n}\n',
+        ...leaf("a", true), ...leaf("b", false), ...leaf("c", false),
+      };
+      for (const [path, content] of Object.entries(layout)) { mkdirSync(dirname(join(root, path)), { recursive: true }); writeFileSync(join(root, path), content); }
+      const result = transformTestClosure(root, join(root, "🦀️.rs"), layout["🦀️.rs"]!, new Set(), { fixtures: false, aggregate: true, hoist: false });
+      const created = [...result.creates.values()].join("\n");
+      expect(created).toContain("mod a {\n//! inner doc\n");
+      expect(created.indexOf("//! inner doc")).toBeLessThan(created.indexOf("use std::fmt::Debug;"));
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("gates an applied carve against a pre-carve directory when the fleet carves a tree with uncommitted edits", async () => {
+    const repo = mkdtempSync(join(tmpdir(), "semio-applied-dir-"));
+    const sandbox = mkdtempSync(join(tmpdir(), "semio-applied-dir-sbx-"));
+    const snapshot = mkdtempSync(join(tmpdir(), "semio-applied-dir-pre-"));
+    const artifact = "a/b/c";
+    try {
+      for (const [path, content] of Object.entries(weaveFiles(false))) { mkdirSync(dirname(join(repo, artifact, path)), { recursive: true }); writeFileSync(join(repo, artifact, path), content); }
+      const git = (...args: string[]): void => { execFileSync("git", ["-c", "user.name=t", "-c", "user.email=t@t", "-c", "commit.gpgsign=false", "-c", "core.hooksPath=/dev/null", ...args], { cwd: repo, stdio: "pipe" }); };
+      git("init", "-q");
+      git("add", "-A");
+      git("commit", "-q", "-m", "baseline");
+      cpSync(join(repo, artifact), join(snapshot, artifact), { recursive: true });
+      const plan = await planArtifactCrates(repo, `${artifact}/📦️packages/🦀️rust`, { ...tiny });
+      expect(plan.problems).toEqual([]);
+      const { writes } = await carveWrites(plan);
+      applyCarveWrites(repo, writes);
+      const clean = await verifyAppliedLayout(repo, artifact, join(sandbox, "clean"), `dir:${snapshot}`);
+      expect(clean.crates).toBeGreaterThan(1);
+      expect(clean.baseCrates).toBe(0);
+      expect(Object.values(clean.layout).map((row) => row.onlyCombined)).toEqual([0, 0]);
+    } finally {
+      rmSync(repo, { recursive: true, force: true });
+      rmSync(sandbox, { recursive: true, force: true });
+      rmSync(snapshot, { recursive: true, force: true });
+    }
+  });
+  test("resolves an absolute --backup directory as given and never joins it onto the repository root", () => {
+    const repo = mkdtempSync(join(tmpdir(), "semio-backup-repo-"));
+    const outside = mkdtempSync(join(tmpdir(), "semio-backup-outside-"));
+    try {
+      const resolved = resolveCarveBackupDir(repo, join(outside, "f3-backup"));
+      expect(resolved).toBe(join(realpathSync(outside), "f3-backup"));
+      writeFileSync(join(repo, "keep.rs"), "old\n");
+      applyCarveWrites(repo, [{ path: "keep.rs", action: "update", content: "new\n" }], resolved);
+      expect(readFileSync(join(resolved, "keep.rs"), "utf8")).toBe("old\n");
+      expect(readFileSync(join(repo, "keep.rs"), "utf8")).toBe("new\n");
+      expect(existsSync(join(repo, outside.replace(/^[/\\]+/u, "")))).toBe(false);
+    } finally {
+      rmSync(repo, { recursive: true, force: true });
+      rmSync(outside, { recursive: true, force: true });
+    }
+  });
+
+  test("resolves a relative --backup directory below the ticket tree and refuses every directory inside the source tree", () => {
+    const repo = mkdtempSync(join(tmpdir(), "semio-backup-source-"));
+    try {
+      const ticketDir = ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/T/🗑️generated/f3-backup";
+      expect(resolveCarveBackupDir(repo, ticketDir)).toBe(join(realpathSync(repo), ticketDir));
+      expect(() => resolveCarveBackupDir(repo, "f3-backup")).toThrow("inside the source tree");
+      expect(() => resolveCarveBackupDir(repo, join(repo, "✏️s/backup"))).toThrow("inside the source tree");
+      expect(() => resolveCarveBackupDir(repo, ".")).toThrow("inside the source tree");
+      expect(() => resolveCarveBackupDir(repo, ".🧬semio/other/backup")).toThrow("inside the source tree");
+      expect(() => resolveCarveBackupDir(repo, "x/../../escape-ok-" + Date.now())).not.toThrow();
+    } finally {
+      rmSync(repo, { recursive: true, force: true });
+    }
+  });
+
+  test("treats a root alias module whose nested modules alias the same targets as one alias and refuses a nested module with other targets", () => {
+    const source = [
+      "pub mod diff {\n    pub use crate::standards::v1::any::schema::diff::*;\n    pub mod schema {\n        pub use crate::standards::v1::any::schema::diff::*;\n    }\n}",
+      "pub mod mutations {\n    pub use crate::standards::v1::any::schema::mutations::*;\n    pub mod schema {\n        pub use crate::elsewhere::*;\n    }\n}",
+    ].join("\n");
+    const aliases = rootAliasModules(source, parseRustSourceTree(source).modules);
+    expect([...aliases.keys()]).toEqual(["diff"]);
+    expect([...aliases.get("diff")!.nested]).toEqual(["schema"]);
+  });
+
+  test("prints the cfg of the wasm32 guest target, which the planner scans for code only that target compiles", () => {
+    const cfg = crateTreeWasmCfg();
+    expect(cfg).toContain("target_arch=wasm32");
+    expect(cfg).not.toContain("unix");
+  });
+
+  test("keeps the cfg gate of a module in the wrapper and the imported leaf a mirror root declares in its place", () => {
+    const gates = new Map<string, readonly string[]>([["editor::wasm", ['#[cfg(target_arch = "wasm32")]']]]);
+    const spec = {
+      doc: "//! mirror", newRootDir: "/tmp/mirror-x", innerAttributes: [], externLines: [], movedItemsText: "", itemImports: [], owned: [],
+      imported: [{ path: ["editor", "wasm", "protocol"], crateIdent: "other_crate", visibility: "pub", order: 1, glob: false }, { path: ["editor", "wasm"], crateIdent: "third_crate", visibility: "pub", order: 0, glob: true }],
+      wrapperNodes: new Map(), gates,
+    };
+    const text = renderMirrorFiles(spec).root;
+    expect(text).toContain('#[cfg(target_arch = "wasm32")]\n    #[path = "."]\n    pub mod wasm {');
+    expect(text).toContain("pub use third_crate::editor::wasm::*;");
+    const without = renderMirrorFiles({ ...spec, gates: undefined }).root;
+    expect(without).not.toContain("wasm32");
+  });
+
+  test("a test that only mentions a host import as a field, a path segment or its own binding does not need that import", () => {
+    const host = "use crate::snapshot::{Component, Point2};\nuse crate::mep::Mep;\nuse crate::walls;\nuse crate::plan;\nfn run() {}\n";
+    const body = [
+      "fn graph(session: &Session) {",
+      "    let walls = || 1;",
+      "    assert_eq!(session.mep.len(), walls());",
+      "    let row = Row { mep: 1, walls: 2 };",
+      "    let node = ModelNode::Component(id);",
+      "    for (local, plan) in pairs {}",
+      "}",
+    ].join("\n");
+    expect(hostPrivate(host, identifierSet(body), new Set<string>(), body)).toEqual({ items: [], carry: [], relative: [] });
+    const pattern = "fn graph(v: Value) { let Point2 { x, .. } = v else { return }; }";
+    expect(hostPrivate(host, identifierSet(pattern), new Set<string>(), pattern).carry).toEqual(["use crate::snapshot::Point2;"]);
+    const real = "fn graph() { let point = Point2 { x: 0.0, y: 0.0 }; let c: Component = point.into(); }";
+    expect(hostPrivate(host, identifierSet(real), new Set<string>(), real).carry).toEqual(["use crate::snapshot::{Component, Point2};"]);
+    const elsewhere = "fn graph() { let point = crate::snapshot::Point2 { x: 0.0, y: 0.0 }; }";
+    expect(hostPrivate(host, identifierSet(elsewhere), new Set<string>(), elsewhere, ["a"]).carry).toEqual([]);
+    const viaHost = "fn graph() { let point = crate::a::Point2 { x: 0.0, y: 0.0 }; }";
+    expect(hostPrivate(host, identifierSet(viaHost), new Set<string>(), viaHost, ["a", "component"]).carry).toEqual(["use crate::snapshot::Point2;"]);
+  });
+
+  test("an impl of an imported trait or type does not declare that name in the body", () => {
+    const body = "impl Work<App> for Job { fn run(&self) {} }\nstruct Own;\nfn helper() {}\n";
+    expect([...declaredNames(body)].sort()).toEqual(["Own", "helper"]);
+    const host = "use crate::retained::{Work, Step};\n";
+    expect(hostPrivate(host, identifierSet(body), declaredNames(body), body).carry).toEqual(["use crate::retained::Work;"]);
+  });
+
+  test("a host import that names one of the host's own child modules is relative, not an absolute import to carry", () => {
+    const host = "#[path = \"frames/🦀️.rs\"]\nmod frames;\nuse frames::Rigid;\nuse std::collections::BTreeMap;\n";
+    const body = "fn walls(r: Rigid, m: BTreeMap<u8, u8>) {}";
+    const found = hostPrivate(host, identifierSet(body), new Set<string>(), body);
+    expect(found.relative).toEqual(["use frames::Rigid;"]);
+    expect(found.carry).toEqual(["use std::collections::BTreeMap;"]);
+  });
+
+  test("keeps the optional dependencies a testkit feature enables and forwards the feature to the carved crates", () => {
+    const manifest = '[package]\nname = "x"\n\n[features]\ntestkit = ["dep:serde_json", "dep:quick-xml"]\nempty = []\n\n[dependencies]\nserde_json = { workspace = true, optional = true }\n';
+    const features = forwardableFeatures(manifest);
+    expect(features).toEqual([{ name: "testkit", entries: ["dep:serde_json", "dep:quick-xml"] }, { name: "empty", entries: [] }]);
+    expect(featureRow(features[0]!, ["demo-a", "demo-b"])).toBe('testkit = ["dep:serde_json", "dep:quick-xml", "demo-a/testkit", "demo-b/testkit"]');
+    expect(featureRow(features[1]!, [])).toBe("empty = []");
+    const forwarded = forwardFeatures(manifest, features, ["demo-a"]);
+    expect(forwarded).toContain('testkit = ["dep:serde_json", "dep:quick-xml", "demo-a/testkit"]');
+    expect(forwarded).toContain('empty = ["demo-a/empty"]');
+    expect(forwarded).toContain("[dependencies]\nserde_json = { workspace = true, optional = true }");
+  });
+
+  test("adds the carved crates as dev-dependencies of the artifact manifest, creating the section when it is absent", () => {
+    const rows = ['demo-a = { path = "../a", features = ["testkit"] }'];
+    expect(withDevDependencyRows("[package]\nname = \"x\"\n\n[dev-dependencies]\nserde_json.workspace = true\n", rows)).toBe('[package]\nname = "x"\n\n[dev-dependencies]\n' + rows[0] + '\nserde_json.workspace = true\n');
+    expect(withDevDependencyRows("[package]\nname = \"x\"\n", rows)).toBe('[package]\nname = "x"\n\n[dev-dependencies]\n' + rows[0] + "\n");
+    expect(withDevDependencyRows("[package]\n", [])).toBe("[package]\n");
+  });
+});
+
+describe("crate budget flag", () => {
+  test("parses <files>/<bytes>/<lines> and refuses everything else", () => {
+    expect(parseCrateBudget("28/200000/3000")).toEqual({ files: 28, bytes: 200000, lines: 3000 });
+    for (const text of ["", "28/200000", "28/200000/3000/1", "0/1/1", "a/b/c", "28/-1/3000", "28/2e5/3000", "28/ 200000/3000"]) expect(() => parseCrateBudget(text)).toThrow("positive integers");
   });
 });

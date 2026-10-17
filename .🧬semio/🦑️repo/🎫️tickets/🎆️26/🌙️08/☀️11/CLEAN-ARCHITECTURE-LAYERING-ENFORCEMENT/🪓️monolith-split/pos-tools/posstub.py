@@ -262,6 +262,8 @@ class Stub:
         self.defined = set()
 
     def node(self, segs, kind=None):
+        if any(not re.fullmatch(IDENT, s) for s in segs):
+            return None
         cur = self.root
         n = None
         for s in segs:

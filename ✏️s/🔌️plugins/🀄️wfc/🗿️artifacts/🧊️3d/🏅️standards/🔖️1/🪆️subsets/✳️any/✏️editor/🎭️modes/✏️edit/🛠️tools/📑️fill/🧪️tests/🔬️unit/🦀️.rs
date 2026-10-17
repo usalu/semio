@@ -1,6 +1,11 @@
 //! 🧪 Fill tool laws — progressive payloads, abort, oracle parity, and the language-agnostic vector.
 
-use super::*;
+use crate::editor::wfc3d::modes::edit::windows::preview::WFC_3D_PREVIEW_WINDOW;
+use semio_framework_job::{JobOutcomeBorrow, RetainedCloneGrant, RetainedCloneProgress, StepContext};
+use semio_framework_plugin::Fault;
+use semio_framework_test_fixtures::fixture_text;
+use semio_framework_tool_run::{ToolRunIdentity, ToolRunTraceKind};
+use crate::editor::wfc3d::modes::edit::tools::fill::*;
 use crate::examples::tower_stack;
 use crate::inferences::solve_with_clock;
 use semio_framework_job::{Generation, InteractiveJobCloseStep, OperationId, StepBudget};
@@ -9,7 +14,7 @@ use semio_framework_plugin::ToolRunJobPort;
 use semio_framework_tool_run::{ToolRunId, ToolRunTick};
 use std::sync::Arc;
 
-const PARTIAL_VECTOR: &str = include_str!("../🧫️fixtures/🎞️partial-tick.json");
+static PARTIAL_VECTOR: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../✏️editor/🎭️modes/✏️edit/🛠️tools/📑️fill/🧪️tests/🧫️fixtures/🎞️partial-tick.json"));
 
 fn identity() -> ToolRunIdentity {
     ToolRunIdentity::new(ToolRunId { app_instance_id: 1, run: 1 }, [7; 32])
@@ -95,7 +100,7 @@ fn the_tool_declares_the_read_only_wfc3d_fill_run() {
 
 #[test]
 fn the_language_agnostic_partial_vector_decodes_to_the_normative_shape() {
-    let payload = decode_fill_payload(PARTIAL_VECTOR.as_bytes()).expect("fixture decodes");
+    let payload = decode_fill_payload((*PARTIAL_VECTOR).as_bytes()).expect("fixture decodes");
     assert_eq!(payload.decided_count(), 2);
     assert!(!payload.done);
     assert!(!payload.contradiction);

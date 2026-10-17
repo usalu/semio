@@ -2,7 +2,7 @@
 import { createElement, type ReactElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { uiI18n } from "@semio-tech/ui-react";
-import { automaticCheckinWaitsV1 } from "../../🧱️elements/🛠️ShellHelpers/🟦️.tsx";
+import { automaticCheckinWaitsV1 } from "../../🧱️elements/🛠️ShellHelpers/🧾️transfer-checkin-tutorial/🟦️.ts";
 import automaticCheckinCorpus from "../../🧱️elements/🛠️ShellHelpers/🧪️tests/🧫️fixtures/🧫️automatic-checkin/🔣️.json";
 import { cleanup, fireEvent, render } from "@semio-tech/ui-react/test";
 import { afterEach, describe, expect, it, vi } from "vitest";

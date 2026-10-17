@@ -59,7 +59,5 @@ pub fn render(scene: &DagScene, camera: &DagCamera, _labels: &DagPlayLabels) -> 
 //#endregion 🔖️Render
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

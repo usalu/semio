@@ -313,14 +313,17 @@ pub fn diagram_drawing(diagram: &SemioDiagram) -> crate::schema::snapshot::Semio
 mod diagram_tests;
 //#endregion 🧪️Tests
 
-#[path = "💾️binary/🦀️.rs"]
-pub mod binary;
+pub mod binary {
+    pub use semio_s_artifact_stdio_semio_drawing_binary::io::binary::*;
+    pub use semio_s_artifact_stdio_semio_drawing_inferences::io::binary::inferences;
+}
 
-#[path = "📝️text/🦀️.rs"]
-pub mod text;
+pub mod text {
+    pub use semio_s_artifact_stdio_semio_drawing_binary::io::text::*;
+    pub use semio_s_artifact_stdio_semio_drawing_inferences::io::text::inferences;
+}
 
-#[path = "🪶️sqlite/🦀️.rs"]
-pub mod sqlite;
+
 
 pub mod derived_construction {
     use crate::schema::diff::SemioDrawingDiff;

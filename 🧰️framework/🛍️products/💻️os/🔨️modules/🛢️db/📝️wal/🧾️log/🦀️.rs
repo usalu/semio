@@ -100,7 +100,7 @@ const MAX_RUN_IDS: u64 = 1_000_000;
 
 /// ✍️ Writes a varint-length-prefixed byte field — this crate's one field encoding used by
 /// every string/id-shaped record field.
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 async fn write_field(writer: &mut pack::ByteWriter, bytes: &[u8]) {
     writer.write_varint_u64(bytes.len() as u64);
     writer.write_bytes(bytes);
@@ -120,7 +120,7 @@ async fn read_field_string(reader: &mut pack::ByteReader<'_>) -> Result<String, 
     String::from_utf8(read_field_bytes(reader).await?).map_err(|_| DbError::Corrupt("wal record field is not valid utf-8".to_string()))
 }
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 async fn encode_frontier(writer: &mut pack::ByteWriter, frontier: &Frontier) {
     write_field(writer, frontier.document.0.as_bytes()).await;
     writer.write_u64_le(frontier.head_seq);
@@ -616,7 +616,7 @@ impl WalRecord {
     /// history-log records (where e.g. a dictionary delta can plausibly be "skippable" to some
     /// future reader), every `WAL_*` record is load-bearing for correct replay — there is no
     /// optional WAL record in this crate's design.
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testkit"))]
     pub async fn encode(&self) -> (u8, bool, Vec<u8>) {
         let mut writer = pack::ByteWriter::new();
         let kind = match self {

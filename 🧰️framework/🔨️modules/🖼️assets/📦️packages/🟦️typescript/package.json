@@ -15,7 +15,8 @@
     "url": "https://github.com/usalu"
   },
   "dependencies": {
-    "@semio-tech/framework": "workspace:*"
+    "@semio-tech/framework": "workspace:*",
+    "@semio-tech/ui-react": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^22.19.6",
@@ -24,6 +25,20 @@
   },
   "bundleKind": "asset",
   "exports": {
-    ".": "./🟦️.ts"
+    ".": "./🟦️.ts",
+    "./icons/builder/projection": "./🔣️icons/🏗️builder/📽️projection/🟦️.ts",
+    "./mesh": "./🥽️mesh/🟦️.ts",
+    "./mesh/catalog": "./🥽️mesh/📇️catalog/🟦️.ts",
+    "./published-page": "./🌐️published-page/🟦️.ts",
+    "./resolver/delivery": "./🔍️resolver/🌐️delivery/🟦️.ts",
+    "./resolver/dispatch": "./🔍️resolver/🧭️dispatch/🟦️.ts",
+    "./tile-proxy": "./🗺️tile-proxy/🟦️.ts",
+    "./testing/fixtures": "./🧪️testing/🧫️fixtures/🟦️.ts",
+    "./metabolism/representation/capsules/j/capsule-j": "./🌱️metabolism/🎨️representation/💊️capsules/🪝️j/🧊️capsule-j/🟦️.ts",
+    "./fonts/anta/latin/regular/outline": "./🔤️fonts/🚀️anta/🏛️latin/📖️regular/🔤️outline/🟦️.ts",
+    "./fonts/anta/latin-ext/regular/outline": "./🔤️fonts/🚀️anta/➕️latin-ext/📖️regular/🔤️outline/🟦️.ts",
+    "./fonts/anta/math/regular/outline": "./🔤️fonts/🚀️anta/🧮️math/📖️regular/🔤️outline/🟦️.ts",
+    "./fonts/anta/symbols/regular/outline": "./🔤️fonts/🚀️anta/🔣️symbols/📖️regular/🔤️outline/🟦️.ts",
+    "./cursor/default/light": "./👆️cursor/🖱️default/☀️light/🟦️.ts"
   }
 }

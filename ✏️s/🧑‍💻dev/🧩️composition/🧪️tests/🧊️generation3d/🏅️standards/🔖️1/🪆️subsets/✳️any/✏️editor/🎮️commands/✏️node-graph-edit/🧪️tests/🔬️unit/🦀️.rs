@@ -1,5 +1,6 @@
 use super::*;
 use crate::editor_domain::editor_laws::context::{app, dispatch, snapshot, Generation3dApp};
+use semio_framework_test_fixtures::repo_text;
 use semio_s_artifact_procedural_3d_editor::Generation3dCommand;
 
 async fn edit(app: &mut Generation3dApp, operations: serde_json::Value) {
@@ -78,7 +79,7 @@ async fn move_offsets_the_widget_a_node_drag_names_from_its_base() {
 //#region 🎚️SliderGesture
 /// 🎚️ The table a dragged inline slider must answer — the twin of the host lane's own
 /// (`📺️renderer/🧑‍🎨engine/🧪️tests/🎚️continuous-gesture-lane`), over the same numbers.
-const SLIDER_GESTURE_FIXTURE_JSON: &str = include_str!("../../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🎚️slider-gesture.json");
+fn slider_gesture_fixture_json() -> &'static str { repo_text!("✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🎚️slider-gesture.json") }
 
 #[derive(serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -106,7 +107,7 @@ struct SliderGestureLiveEvaluations {
 /// gesture is allowed to cost. The release is the dispatch's own top-level `commit` (the framework scrub machine).
 #[test]
 fn a_press_spends_at_most_two_live_round_trips_and_one_commit() {
-    let table: SliderGestureFixture = serde_json::from_str(SLIDER_GESTURE_FIXTURE_JSON).expect("slider gesture fixture");
+    let table: SliderGestureFixture = serde_json::from_str(slider_gesture_fixture_json()).expect("slider gesture fixture");
     assert_eq!(table.schema, "s.procedural.generation3d.slider-gesture/v2");
     assert_eq!(table.live_evaluations.max_live_round_trips, 2, "one round trip in flight and one owed is the whole budget");
     assert_eq!(table.live_evaluations.commits_per_press, 1, "a press releases once");

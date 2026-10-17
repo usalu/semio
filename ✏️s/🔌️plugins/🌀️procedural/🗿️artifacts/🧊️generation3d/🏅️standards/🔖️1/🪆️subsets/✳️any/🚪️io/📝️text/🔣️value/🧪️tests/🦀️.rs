@@ -1,5 +1,6 @@
 //! 🧪️ Portable representation witnesses and independent serde JSON comparison.
 
+use semio_framework_test_fixtures::fixture_text;
 use semio_s_artifact_procedural_3d_model::catalogue::Localized;
 use semio_s_artifact_procedural_3d_mut_widgets::change_widget_input::WidgetInputValue;
 use semio_s_artifact_procedural_3d_mut_generations::select_generation::SelectGeneration;
@@ -7,7 +8,7 @@ use semio_framework_value::{FromValue, ToValue};
 
 #[test]
 fn value_codec_portable_witnesses() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../🔣️value/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let value = |key: &str| semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse(&fixture[key].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap());
     let oracle = |projection: &semio_framework_value::DslValue| serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_string(&semio_framework_pack_json::from_dsl_value(projection))).unwrap();
     assert_eq!(oracle(&Localized::from_value(value("localized")).unwrap().to_value()), fixture["localized"]);
@@ -29,7 +30,6 @@ fn value_codec_portable_witnesses() {
     decoded.retire_cold();
     snapshot.retire_cold();
     assert!(semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot::from_value(value("snapshotMissingGeneration")).is_err());
-    eprintln!("[DEBUG] generation3d IO value codecs verified against portable serde witnesses");
 }
 
 #[test]
@@ -39,7 +39,7 @@ fn widget_descriptor_io_admission_precedes_native_creation() {
     use semio_s_artifact_procedural_3d_mutations::GraphEditor;
     use semio_framework_artifact_flow_flow::WidgetDescriptor;
     let _serial = semio_s_artifact_procedural_3d_testkit::test_serial::lock();
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../🔣️value/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let base = empty_generation3d_snapshot();
     for row in fixture["descriptors"].as_array().unwrap() {
         let text = row["value"].to_string();
@@ -55,5 +55,4 @@ fn widget_descriptor_io_admission_precedes_native_creation() {
         });
     }
     base.retire_cold();
-    eprintln!("[DEBUG] generation3d descriptor IO admission matches serde before native creation");
 }

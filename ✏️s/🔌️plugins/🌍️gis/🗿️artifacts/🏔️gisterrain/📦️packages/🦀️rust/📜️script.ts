@@ -36,4 +36,4 @@ if (segments[0] === "gis-terrain-window-config") {
   }
 }
 
-await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-gis-gisterrain", { commands: { verify: OwnedVerifyScript }, snapshotSqliteTests:["../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"] });
+await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-gis-gisterrain", { packages: ["semio-s-artifact-gis-gisterrain", "semio-s-artifact-gis-gisterrain-editor", "semio-s-artifact-gis-gisterrain-inferences", "semio-s-artifact-gis-gisterrain-operations", "semio-s-artifact-gis-gisterrain-relocated-engine-tests", "semio-s-artifact-gis-gisterrain-schema", "semio-s-artifact-gis-gisterrain-terrain-descriptor"], commands: { verify: OwnedVerifyScript }, snapshotSqliteTests:["../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"] });

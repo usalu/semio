@@ -67,8 +67,3 @@ pub fn render(definition: &Block2dSnapshot, labels: &Block2dLabels) -> UiAssembl
 }
 //#endregion 🔖️Render
 
-//#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests

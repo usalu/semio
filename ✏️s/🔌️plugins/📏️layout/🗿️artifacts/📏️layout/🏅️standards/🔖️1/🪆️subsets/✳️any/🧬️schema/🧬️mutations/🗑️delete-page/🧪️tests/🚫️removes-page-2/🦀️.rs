@@ -7,24 +7,25 @@
 //! `.pack.semio`/`.patch.semio` encodings are derived from it by `fixtures generate` and are
 //! asserted by the shared codec-matrix harness, not here.
 
+use semio_framework_test_fixtures::fixture_text;
 use semio_s_artifact_layout_layout_mutations::LayoutMutation;
 use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
 use protocol::{Mutation, MutationDiff};
 
-const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗑️delete-page/🚫️removes-page-2/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗑️delete-page/🚫️removes-page-2/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗑️delete-page/🚫️removes-page-2/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗑️delete-page/🚫️removes-page-2/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗑️delete-page/🚫️removes-page-2/🎯️outcome/🔣️.json");
+static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗑️delete-page/🚫️removes-page-2/📸️snapshot/⬅️before/🔣️.json"));
+static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗑️delete-page/🚫️removes-page-2/📸️snapshot/➡️after/🔣️.json"));
+static MUTATION: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗑️delete-page/🚫️removes-page-2/🦠️mutation/🔣️.json"));
+static DIFF: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗑️delete-page/🚫️removes-page-2/🔺️diff/🔣️.json"));
+static OUTCOME: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗑️delete-page/🚫️removes-page-2/🎯️outcome/🔣️.json"));
 
 fn before() -> LayoutSnapshot {
-    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("delete-page/removes-page-2: before snapshot decodes")
+    semio_framework_pack_json::from_json_str(*BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("delete-page/removes-page-2: before snapshot decodes")
 }
 fn expected_after() -> LayoutSnapshot {
-    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("delete-page/removes-page-2: after snapshot decodes")
+    semio_framework_pack_json::from_json_str(*AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("delete-page/removes-page-2: after snapshot decodes")
 }
 fn mutation() -> LayoutMutation {
-    serde_json::from_str(MUTATION).expect("delete-page/removes-page-2: mutation decodes")
+    serde_json::from_str(*MUTATION).expect("delete-page/removes-page-2: mutation decodes")
 }
 fn applied() -> LayoutSnapshot {
     let base = before();
@@ -65,27 +66,27 @@ async fn inverse_recreates_the_full_page_record() {
 /// 🔣️ Both committed snapshots and the committed mutation are canonical: decode→encode is a fixed point.
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
-    for (label, text) in [("before", BEFORE), ("after", AFTER)] {
+    for (label, text) in [("before", *BEFORE), ("after", *AFTER)] {
         let decoded: LayoutSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
         let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "delete-page/removes-page-2: committed {label} JSON is not canonical");
     }
     let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&mutation())).expect("mutation encodes");
-    let original: serde_json::Value = serde_json::from_str(MUTATION).expect("mutation reparses");
+    let original: serde_json::Value = serde_json::from_str(*MUTATION).expect("mutation reparses");
     assert_eq!(reencoded, original, "delete-page/removes-page-2: committed mutation JSON is not canonical");
 }
 
 /// 🎯️ The declared outcome matches what `delete-page`'s own diff builder actually produces.
 #[semio_framework_async_macros::async_test]
 async fn declared_outcome_holds() {
-    let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
+    let declared: serde_json::Value = serde_json::from_str(*OUTCOME).expect("outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "delete-page/removes-page-2: this fixture declares an applied outcome");
     let base = before();
     let produced = mutation().diff(&base);
     assert!(produced.messages().is_empty(), "delete-page/removes-page-2: declared clean-applied but the diff builder reported {:?}", produced.messages());
     let delta = produced.diff().pages.as_ref().expect("delete-page fills the pages delta");
-    assert_eq!(delta.removed, vec![crate::diff::LayoutPageRemoval { id: "page-2".to_string(), index: 1 }], "delete-page's diff carries the id and base index in `removed`");
+    assert_eq!(delta.removed, vec![semio_s_artifact_layout_layout_mutations_content::diff::LayoutPageRemoval { id: "page-2".to_string(), index: 1 }], "delete-page's diff carries the id and base index in `removed`");
     assert!(delta.inserted.is_empty() && delta.moved.is_empty() && delta.modified.is_empty(), "delete-page touches only the `removed` arm of the pages delta");
 }
 
@@ -97,7 +98,7 @@ async fn produces_committed_diff() {
     let base = before();
     let outcome = mutation().diff(&base);
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
-    let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
+    let committed: serde_json::Value = serde_json::from_str(*DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "delete-page/removes-page-2: delete-page must emit a pages delta whose only populated arm is `removed`, carrying the id and base index");
 }
 
@@ -106,9 +107,9 @@ async fn produces_committed_diff() {
 /// the wire and the untouched ones must be committed as explicit `null`.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
-    let decoded: semio_s_artifact_layout_layout_diff::LayoutDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes into the artifact's diff type");
+    let decoded: semio_s_artifact_layout_layout_diff::LayoutDiff = semio_framework_pack_json::from_json_str(*DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes into the artifact's diff type");
     let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("committed diff re-encodes");
-    let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
+    let original: serde_json::Value = serde_json::from_str(*DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "delete-page/removes-page-2: committed diff JSON is not canonical");
 }
 
@@ -116,7 +117,7 @@ async fn committed_diff_is_canonical() {
 /// description of the change `delete-page` makes, not a summary of it.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: semio_s_artifact_layout_layout_diff::LayoutDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes into the artifact's diff type");
+    let decoded: semio_s_artifact_layout_layout_diff::LayoutDiff = semio_framework_pack_json::from_json_str(*DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes into the artifact's diff type");
     let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "delete-page/removes-page-2: committed diff did not carry before to after");
 }

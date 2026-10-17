@@ -1,6 +1,5 @@
 //! 📝️ Direct set-page-text payload, sparse diff, concrete inverse, and laws.
 
-use super::PdfA1Mutation;
 use crate::standards::v1_4::subsets::base::schema::diff::{PdfDiff, PdfPageDiff, PdfPageModified, PdfPagesDiff};
 use crate::standards::v1_4::subsets::base::schema::snapshot::PdfSnapshot;
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
@@ -24,7 +23,10 @@ impl SetPageText {
     }
 }
 
-impl MutationKind<PdfSnapshot, PdfA1Mutation> for SetPageText {
+impl<Op> MutationKind<PdfSnapshot, Op> for SetPageText
+where
+    Op: protocol::Mutation<PdfSnapshot, Diff = PdfDiff> + From<SetPageText>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "page", kind: "set-page-text", record: "SetPage" };
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
@@ -34,12 +36,12 @@ impl MutationKind<PdfSnapshot, PdfA1Mutation> for SetPageText {
         MutationOutcome::new(PdfDiff { pages: Some(PdfPagesDiff { modified: vec![PdfPageModified { index: 0, diff: PdfPageDiff { text: Some(self.text.clone()), ..Default::default() } }], ..Default::default() }) })
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfA1Mutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
         if !self.valid(base) {
             return Vec::new();
         }
-        vec![PdfA1Mutation::SetPageText(SetPageText { text: base.pages[0].text.clone() })]
+        vec![Op::from(SetPageText { text: base.pages[0].text.clone() })]
     
     })())
 }
@@ -55,7 +57,5 @@ impl MutationKind<PdfSnapshot, PdfA1Mutation> for SetPageText {
 //#endregion 🔖️Behavior
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

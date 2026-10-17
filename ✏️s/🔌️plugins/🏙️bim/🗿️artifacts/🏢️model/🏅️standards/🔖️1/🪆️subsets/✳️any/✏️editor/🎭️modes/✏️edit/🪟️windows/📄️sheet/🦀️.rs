@@ -5,7 +5,6 @@
 #[path = "🎚️config/🦀️.rs"]
 pub mod config;
 
-use self::config::BimSheetWindowConfig;
 use crate::editor::bim::interaction::BIM_ELEMENT_DOMAIN;
 use crate::editor::bim::kit::{canvas_surface, meta_record, path, path_record, text_record, Paint, Rgba};
 use crate::editor::bim::terminology::BimLabels;
@@ -63,7 +62,7 @@ pub fn sheets_in_order(snapshot: &ModelSnapshot) -> Vec<String> {
 }
 
 /// 📄️ The sheet a sheet window shows: its configured one while it still exists, else the first one in print order; none when the model has no sheet.
-pub fn active_sheet(snapshot: &ModelSnapshot, config: &BimSheetWindowConfig) -> Option<String> {
+pub fn active_sheet(snapshot: &ModelSnapshot, config: &config::BimSheetWindowConfig) -> Option<String> {
     if snapshot.sheets.contains_key(&config.sheet) {
         return Some(config.sheet.clone());
     }
@@ -208,13 +207,13 @@ pub fn records(layout: Option<&SheetLayout>, inference: &ModelInference, selecti
 //#region 🔖️Render
 /// 🎨️ Renders the sheet window.
 #[allow(clippy::too_many_arguments)]
-pub fn render(snapshot: &ModelSnapshot, inference: &ModelInference, config: &BimSheetWindowConfig, selection: &[String], utility: &str, revision: u32, labels: &BimLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(snapshot: &ModelSnapshot, inference: &ModelInference, config: &config::BimSheetWindowConfig, selection: &[String], utility: &str, revision: u32, labels: &BimLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     render_over(snapshot, inference, config, selection, utility, revision, labels, &[])
 }
 
 /// 🎨️ [`render`] with the records of the authoring overlay (the handles of the selected viewports, the gesture preview) painted last, over everything.
 #[allow(clippy::too_many_arguments)]
-pub fn render_over(snapshot: &ModelSnapshot, inference: &ModelInference, config: &BimSheetWindowConfig, selection: &[String], utility: &str, revision: u32, labels: &BimLabels, overlay: &[DslValue]) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render_over(snapshot: &ModelSnapshot, inference: &ModelInference, config: &config::BimSheetWindowConfig, selection: &[String], utility: &str, revision: u32, labels: &BimLabels, overlay: &[DslValue]) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let layout = active_sheet(snapshot, config).and_then(|id| inference.sheet_layouts.get(&id));
     let framing = layout.filter(|_| !config.framed).map(|layout| semio_framework_plugin::Canvas2dFraming { revision, bounds: [0.0, 0.0, layout.width, layout.height], padding: FRAMING_PADDING });
     let mut records = records(layout, inference, selection, utility, labels);

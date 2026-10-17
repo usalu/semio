@@ -23,7 +23,7 @@ import {
   type ToolRunTraceSubject,
   type ToolRunVerdict
 } from "@semio-tech/framework/tool-run";
-import { resolveMeshStyle } from "../../../🟦️.tsx";
+import { resolveMeshStyle } from "../../../🎨️mesh-render/🖌️mesh-style-palette/🟦️.ts";
 import { createToolRunTraceInstancedMesh, publishToolRunTraceCursor, syncToolRunTraceInstancedMesh, toolRunTraceCapacity, toolRunTraceCursorViewState, toolRunTraceDataAttributes, toolRunTraceFade, ToolRunTraceRecordStore, TOOL_RUN_TRACE_METRICS } from "../../🟦️.tsx";
 
 type Resident = Map<bigint, { readonly verdict: ToolRunVerdict; readonly subject: ToolRunTraceSubject }>;

@@ -5,18 +5,18 @@ use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshotH
 use std::collections::{BTreeMap,BTreeSet};
 use semio_framework_value::ValueError;
 fn invalid(message:impl Into<String>)->ValueError{ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,message)}
-pub(crate)fn number(n:usize)->Result<i64,ValueError>{i64::try_from(n).map_err(|_|ValueError::new(semio_framework_value::ValueRefusalKind::WorkLimit,"grid3d ordinal overflow"))}
-pub(crate)fn columns(table:&str)->&'static[FloatColumn]{match table{"wfc_grid3d_cell_size"=>&[FloatColumn::Binary64(4)],"wfc_grid3d_tile"=>&[FloatColumn::Binary64(5)],"wfc_grid3d_position"=>&[FloatColumn::Binary64(3)],_=>&[]}}
+pub fn number(n:usize)->Result<i64,ValueError>{i64::try_from(n).map_err(|_|ValueError::new(semio_framework_value::ValueRefusalKind::WorkLimit,"grid3d ordinal overflow"))}
+pub fn columns(table:&str)->&'static[FloatColumn]{match table{"wfc_grid3d_cell_size"=>&[FloatColumn::Binary64(4)],"wfc_grid3d_tile"=>&[FloatColumn::Binary64(5)],"wfc_grid3d_position"=>&[FloatColumn::Binary64(3)],_=>&[]}}
 fn identity(r:FloatRow<'_>,n:usize)->Result<(),ValueError>{if r.rowid<=0||r.integer(0)?!=r.rowid||r.values.len()!=n{return Err(invalid("grid3d entity identity or column count differs"))}Ok(())}
 fn word(r:FloatRow<'_>,i:usize)->Result<u32,ValueError>{u32::try_from(r.integer(i)?).map_err(|_|invalid("grid3d unsigned32 differs"))}
 fn flag(r:FloatRow<'_>,i:usize)->Result<bool,ValueError>{match r.integer(i)?{0=>Ok(false),1=>Ok(true),_=>Err(invalid("grid3d boolean differs"))}}
-fn rows<'a>(d:&'a SqliteDatabase,t:&str,c:&mut SqliteSnapshotControl<'_>)->Result<Vec<FloatRow<'a>>,ValueError>{let mut result=Vec::new();let mut ids=BTreeSet::new();for(i,r)in d.table(t)?.rows.iter().enumerate(){if i%256==0{c.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,i,0)?;}let r=FloatRow::new(r,columns(t))?;if !ids.insert(r.rowid){return Err(invalid("duplicate grid3d row identity"))}result.push(r);}Ok(result)}
+pub fn rows<'a>(d:&'a SqliteDatabase,t:&str,c:&mut SqliteSnapshotControl<'_>)->Result<Vec<FloatRow<'a>>,ValueError>{let mut result=Vec::new();let mut ids=BTreeSet::new();for(i,r)in d.table(t)?.rows.iter().enumerate(){if i%256==0{c.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,i,0)?;}let r=FloatRow::new(r,columns(t))?;if !ids.insert(r.rowid){return Err(invalid("duplicate grid3d row identity"))}result.push(r);}Ok(result)}
 fn ordered<'a>(mut rows:Vec<FloatRow<'a>>,ordinal:usize)->Result<Vec<FloatRow<'a>>,ValueError>{rows.sort_by_key(|r|r.integer(ordinal).unwrap_or(-1));for(i,r)in rows.iter().enumerate(){if r.integer(ordinal)?!=number(i)?{return Err(invalid("grid3d ordinals must be contiguous"))}}Ok(rows)}
 fn groups<'a>(d:&'a SqliteDatabase,t:&str,n:usize,owners:&BTreeSet<i64>,c:&mut SqliteSnapshotControl<'_>)->Result<BTreeMap<i64,Vec<FloatRow<'a>>>,ValueError>{let mut map=BTreeMap::<i64,Vec<FloatRow<'a>>>::new();for(i,r)in rows(d,t,c)?.into_iter().enumerate(){if i%256==0{c.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,i,0)?;}identity(r,n)?;let owner=r.integer(1)?;if !owners.contains(&owner){return Err(invalid("grid3d relationship has unknown owner"))}map.entry(owner).or_default().push(r);}Ok(map)}
 fn parse_direction(s:&str)->Result<Grid3dDirection,ValueError>{match s{"LEFT"=>Ok(Grid3dDirection::Left),"RIGHT"=>Ok(Grid3dDirection::Right),"FRONT"=>Ok(Grid3dDirection::Front),"BACK"=>Ok(Grid3dDirection::Back),"BOTTOM"=>Ok(Grid3dDirection::Bottom),"TOP"=>Ok(Grid3dDirection::Top),_=>Err(invalid("grid3d direction differs"))}}
-pub(crate)fn authored_schema(c:&SqliteSnapshotControl<'_>)->Result<(),ValueError>{if Grid3dSnapshot::SQLITE_SCHEMA.len()>c.limits().max_schema_bytes{return Err(invalid("grid3d authored schema limit exceeded"))}Ok(())}
+pub fn authored_schema(c:&SqliteSnapshotControl<'_>)->Result<(),ValueError>{if Grid3dSnapshot::SQLITE_SCHEMA.len()>c.limits().max_schema_bytes{return Err(invalid("grid3d authored schema limit exceeded"))}Ok(())}
 fn decimal(mut value:u64,buffer:&mut[u8;20])->&str{let mut start=buffer.len();loop{start-=1;buffer[start]=b'0'+(value%10)as u8;value/=10;if value==0{break}}std::str::from_utf8(&buffer[start..]).expect("decimal digits")}
-pub(crate)fn write_rows(value:&Grid3dSnapshot,p:&mut RowWriter<'_,'_>)->Result<(),ValueError>{let mut seed=[0u8;20];
+pub fn write_rows(value:&Grid3dSnapshot,p:&mut RowWriter<'_,'_>)->Result<(),ValueError>{let mut seed=[0u8;20];
  let mut total=1usize;for n in [value.cell_sizes_x.len(),value.cell_sizes_y.len(),value.cell_sizes_z.len(),value.tiles.len(),value.rules.len(),value.pinned.len(),value.masked.len()]{total=total.checked_add(n).ok_or_else(||ValueError::new(semio_framework_value::ValueRefusalKind::WorkLimit,"grid3d entity count overflow"))?;p.check_rows(total)?;}for t in &value.tiles{total=total.checked_add(match &t.media{Grid3dTileMedia::Mesh{mesh}=>1usize.checked_add(mesh.positions.len()).and_then(|n|n.checked_add(mesh.indices.len())).and_then(|n|n.checked_add(usize::from(mesh.color.is_some()))).ok_or_else(||ValueError::new(semio_framework_value::ValueRefusalKind::WorkLimit,"grid3d mesh entity count overflow"))?,Grid3dTileMedia::MeshChild{..}=>1}).ok_or_else(||ValueError::new(semio_framework_value::ValueRefusalKind::WorkLimit,"grid3d entity count overflow"))?;p.check_rows(total)?;p.checkpoint()?;}
  p.insert_key("wfc_grid3d_document",1,&[Cell::Text(&value.schema),Cell::Text(decimal(value.seed,&mut seed)),Cell::Integer(i64::from(value.width)),Cell::Integer(i64::from(value.height)),Cell::Integer(i64::from(value.depth)),Cell::Integer(i64::from(value.periodic_x)),Cell::Integer(i64::from(value.periodic_y)),Cell::Integer(i64::from(value.periodic_z))])?;
  for(axis,sizes)in [("x",&value.cell_sizes_x),("y",&value.cell_sizes_y),("z",&value.cell_sizes_z)]{for(i,size)in sizes.iter().enumerate(){p.insert_float("wfc_grid3d_cell_size",&[Cell::Integer(1),Cell::Text(axis),Cell::Integer(number(i)?),Cell::Real(*size)],columns("wfc_grid3d_cell_size"))?;}}
@@ -25,7 +25,7 @@ pub(crate)fn write_rows(value:&Grid3dSnapshot,p:&mut RowWriter<'_,'_>)->Result<(
  for(i,r)in value.pinned.iter().enumerate(){p.insert("wfc_grid3d_pin",&[Cell::Integer(1),Cell::Integer(number(i)?),Cell::Integer(i64::from(r.x)),Cell::Integer(i64::from(r.y)),Cell::Integer(i64::from(r.z)),Cell::Text(&r.tile_id)])?;}
  for(i,r)in value.masked.iter().enumerate(){p.insert("wfc_grid3d_mask",&[Cell::Integer(1),Cell::Integer(number(i)?),Cell::Integer(i64::from(r.x)),Cell::Integer(i64::from(r.y)),Cell::Integer(i64::from(r.z))])?;}
  Ok(())}
-pub(crate)fn semantic(value:&Grid3dSnapshot,phase:SqliteSnapshotPhase,c:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{authored_schema(c)?;let mut p=RowWriter::borrowed(c,phase)?;write_rows(value,&mut p)?;p.finish_borrowed()}
+pub fn semantic(value:&Grid3dSnapshot,phase:SqliteSnapshotPhase,c:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{authored_schema(c)?;let mut p=RowWriter::borrowed(c,phase)?;write_rows(value,&mut p)?;p.finish_borrowed()}
 impl ArtifactSqliteSnapshotHost for Grid3dSnapshot{
 
 fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,c:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{controlled_native::decode_sqlite_snapshot_native(payload,c,native_control)}
@@ -55,9 +55,6 @@ fn from_sqlite_database(d:&SqliteDatabase,c:&mut SqliteSnapshotControl<'_>)->Res
 }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;
 
 
 #[path = "🛬️native/🦀️.rs"]

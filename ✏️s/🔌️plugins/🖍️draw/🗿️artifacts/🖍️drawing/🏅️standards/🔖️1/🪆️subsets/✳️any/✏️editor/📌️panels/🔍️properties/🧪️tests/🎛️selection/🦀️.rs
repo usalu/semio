@@ -1,5 +1,14 @@
 //! 🧪️ Language-neutral inspector journeys through the actual UI projection.
-use super::*;
+use semio_framework_test_fixtures::fixture_text;
+
+#[allow(unused_imports)] use semio_s_artifact_draw_drawing_editor_interaction::terminology::DrawingPlayLabels;
+#[allow(unused_imports)] use semio_s_artifact_draw_drawing_model::{selected_drawing_layers, layer_base};
+#[allow(unused_imports)] use semio_s_artifact_draw_drawing_model::{DrawingLayerNode, FillStyle, PathSegment};
+#[allow(unused_imports)] use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
+#[allow(unused_imports)] use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase, HasChildren, InputKind, Trigger};
+#[allow(unused_imports)] use semio_framework_plugin::BuiltNode;
+#[allow(unused_imports)] use semio_framework_plugin::TreeWindows;
+#[allow(unused_imports)] use semio_s_artifact_draw_drawing_editor_interaction::panels::properties::*;
 use semio_s_artifact_draw_drawing_model::{create_drawing_shape_layer_rect, layer_base_mut};
 use semio_framework_plugin::{artifact_app_laws::project_and_retire_fixture_tree, built_to_component_tree, ViewModel};
 
@@ -17,7 +26,7 @@ fn retire_inspector_view(view:ViewModel){
 
 #[test]
 fn inspector_selection_fixtures() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎛️selection/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../📌️panels/🔍️properties/🧪️tests/🧫️fixtures/🎛️selection/🔣️.json")).unwrap();
     let mut layer = create_drawing_shape_layer_rect(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Rectangle")).to_string().into()).expect("nonempty authored identity"), "Rectangle");
     layer_base_mut(&mut layer).id = "shape.a".into();
     let document = DrawingSnapshot { layers: vec![layer].into(), ..Default::default() };
@@ -92,7 +101,7 @@ fn inspector_input_rows(node: &serde_json::Value, output: &mut Vec<serde_json::V
 
 #[test]
 fn node_coordinates_are_grouped_into_readable_pairs() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎛️node-rows/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../📌️panels/🔍️properties/🧪️tests/🧫️fixtures/🎛️node-rows/🔣️.json")).unwrap();
     let segments: Vec<PathSegment> = serde_json::from_value(fixture["segments"].clone()).unwrap();
     for labels in [&DrawingPlayLabels::NATIVE_EN, &DrawingPlayLabels::NATIVE_DE] {
         for disabled in [false, true] {
@@ -109,7 +118,7 @@ fn node_coordinates_are_grouped_into_readable_pairs() {
 
 #[test]
 fn gradient_coordinates_and_stops_have_labeled_rows() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎨️fill-rows/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../📌️panels/🔍️properties/🧪️tests/🧫️fixtures/🎨️fill-rows/🔣️.json")).unwrap();
     for labels in [&DrawingPlayLabels::NATIVE_EN, &DrawingPlayLabels::NATIVE_DE] {
         for disabled in [false, true] {
             for case in fixture["cases"].as_array().unwrap() {
@@ -179,7 +188,7 @@ fn inspector_controls_bind_the_events_the_host_dispatches() {
         }
         for child in node["children"].as_array().unwrap() { check(child, events, count); }
     }
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎛️selection/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../📌️panels/🔍️properties/🧪️tests/🧫️fixtures/🎛️selection/🔣️.json")).unwrap();
     let mut layer = semio_s_artifact_draw_drawing_model::create_drawing_path_layer(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Curve")).to_string().into()).expect("nonempty authored identity"), "Curve", vec![PathSegment::Move { to: [0.0,0.0] },PathSegment::Cubic { ctrl1: [0.0,12.0],ctrl2: [12.0,12.0],to: [12.0,0.0] }].into());
     layer_base_mut(&mut layer).attributes.fill = semio_s_artifact_draw_drawing_model::fill::edit_fill(None,&semio_s_artifact_draw_drawing_model::fill::FillEdit::Type { value: semio_s_artifact_draw_drawing_model::fill::FillType::LinearGradient }).unwrap();
     let id = layer_base(&layer).id.clone();
@@ -312,7 +321,7 @@ fn blend_inspector_exposes_every_mode_and_preserves_mixed_and_locked_states() {
         if node.key.as_str() == "drawing-inspector.blendMode.input" { return Some(node.disabled); }
         node.children.iter().find_map(disabled)
     }
-    let cases: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎛️field-patch/🔣️.json")).unwrap();
+    let cases: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎛️field-patch/🔣️.json")).unwrap();
     let modes = cases.as_array().unwrap().iter().filter(|case| case["patch"]["field"] == "blendMode" && case["accepted"] == true).map(|case| case["patch"]["value"].as_str().unwrap()).collect::<Vec<_>>();
     assert_eq!(modes.len(), 16);
     let view = ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
@@ -344,7 +353,7 @@ fn blend_inspector_exposes_every_mode_and_preserves_mixed_and_locked_states() {
 
 #[test]
 fn authored_geometry_controls_match_shared_inspector_contract() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🎛️geometry/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../../../📌️panels/🔍️properties/🧪️tests/🧫️fixtures/🎛️geometry/🔣️.json")).unwrap();
     for case in fixture["cases"].as_array().unwrap() {
         let layer=semio_s_artifact_draw_drawing_model::create_layer_by_kind(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit(((case["kind"].as_str().unwrap())).to_string().into()).expect("nonempty authored identity"), case["kind"].as_str().unwrap());
         let id=semio_s_artifact_draw_drawing_model::layer_id(&layer).to_string_owner();
@@ -365,7 +374,7 @@ fn authored_geometry_controls_match_shared_inspector_contract() {
 
 #[test]
 fn node_mode_and_simplification_controls_dispatch_semantic_edits() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🎛️geometry/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../../../📌️panels/🔍️properties/🧪️tests/🧫️fixtures/🎛️geometry/🔣️.json")).unwrap();
     let segment=PathSegment::Move{to:[0.0,0.0]};
     for labels in [&DrawingPlayLabels::NATIVE_EN,&DrawingPlayLabels::NATIVE_DE] {
         let row=node_row("path",0,&segment,None,false,labels).unwrap();
@@ -383,7 +392,7 @@ fn node_mode_and_simplification_controls_dispatch_semantic_edits() {
 /// 🧭️ Neutral eligibility cases reach the actual bilingual inspector with inherited locks and original groups.
 #[test]
 fn inspector_actions_respect_selection_eligibility() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🎬️actions/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../../../📌️panels/🔍️properties/🎬️actions/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap() {
         let selection=&row["selection"];
         let count=selection["count"].as_u64().unwrap() as usize;
@@ -447,13 +456,13 @@ fn inspector_actions_respect_selection_eligibility() {
             }
             "shapePath"=>{
                 let shape=&layers[1];
-                layers[1]=DrawingLayerNode::Path(semio_s_artifact_draw_drawing_model::DrawingPathBody {base:layer_base(shape).clone(),segments:crate::schema::layer_to_path_segments(shape).into()});
+                layers[1]=DrawingLayerNode::Path(semio_s_artifact_draw_drawing_model::DrawingPathBody {base:layer_base(shape).clone(),segments:semio_s_artifact_draw_drawing_geometry::layer_to_path_segments(shape).into()});
             }
             _=>{}
         }
         let document=DrawingSnapshot {layers:layers.into(),..Default::default()};
         let resolved=semio_s_artifact_draw_drawing_model::selected_drawing_layers(&document,&ids);
-        let eligibility=selection_actions::SelectionActionEligibility::from_selection(&document,&resolved,&ids);
+        let eligibility=semio_s_artifact_draw_drawing_editor_interaction::panels::properties::selection_actions::SelectionActionEligibility::from_selection(&document,&resolved,&ids);
         assert_eq!(eligibility.count,count,"{}: resolved count",row["name"]);
         assert_eq!(eligibility.locked,locked,"{}: inherited lock",row["name"]);
         assert_eq!(eligibility.same_parent,same_parent,"{}: same parent",row["name"]);
@@ -480,5 +489,4 @@ fn inspector_actions_respect_selection_eligibility() {
             assert_eq!(document,before,"inspector projection cannot publish a document edit");
         }
     }
-    eprintln!("[DEBUG] Actual EN/DE inspector action projection matched twenty-one neutral selection cases including inherited locks and unresolved group compositing");
 }

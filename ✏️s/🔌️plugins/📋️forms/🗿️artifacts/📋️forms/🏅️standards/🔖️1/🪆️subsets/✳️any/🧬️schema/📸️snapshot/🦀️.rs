@@ -91,6 +91,4 @@ impl Default for FormsSnapshot {
 // codecs (design.md rule: `🧬️schema` is types + pure transforms only). Their round-trip tests moved
 // with them.
 
-#[cfg(test)]
-#[path = "../🧪️tests/💾️persistence/🦀️.rs"]
-mod persistence_tests;
+

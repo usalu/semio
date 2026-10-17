@@ -1,6 +1,6 @@
 /** 🌀️ Owned Generation2d relational snapshot entry points. */
-import{projectProceduralSnapshot,reconstructProceduralSnapshot}from"../../../../../../../../../🫀️foundation/🧬️generation/🪶️sqlite/🟦️.ts";
-import {type ProceduralSnapshot} from "../../../../../../../../../🫀️foundation/🧬️generation/🧬️schema/📸️snapshot/🟦️.ts";
+import{projectProceduralSnapshot,reconstructProceduralSnapshot}from"@semio-tech/procedural-js/foundation/generation/sqlite";
+import {type ProceduralSnapshot} from "@semio-tech/procedural-js/foundation/generation/schema/snapshot";
 import type{ArtifactSqliteOptions}from"@semio-tech/framework/io/sqlite-snapshot/artifact";
 import type{SqliteDatabase}from"@semio-tech/framework/io/sqlite-snapshot";
 export const GENERATION2D_SQLITE_SCHEMA=`CREATE TABLE generation_document (id INTEGER PRIMARY KEY, host_id INTEGER NOT NULL REFERENCES generation_host(id), selected_generation_id TEXT, preview_text TEXT);

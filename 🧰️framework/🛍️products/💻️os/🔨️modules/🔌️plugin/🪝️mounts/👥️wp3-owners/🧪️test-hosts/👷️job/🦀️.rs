@@ -3,26 +3,26 @@
 #[cfg(test)]
 pub(crate) mod job_unit_1 {
     #[cfg(test)]
-    use semio_framework_plugin_operation::ArtifactDocumentAuthority;
+use semio_framework_plugin_operation::ArtifactDocumentAuthority;
     #[cfg(test)]
-    use semio_framework_plugin_ownership::bounded_ownership::ArtifactFixedRegistry;
+use semio_framework_plugin_ownership::bounded_ownership::ArtifactFixedRegistry;
     #[cfg(test)]
-    use semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep;
+use semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep;
     use semio_framework_value::retained_clone::RetainedCloneGrant;
     use semio_framework_value::retained_clone::RetainedCloneProgress;
     use semio_framework_value::RetirementDemand;
     #[cfg(test)]
-    use semio_framework_plugin_operation::ToolCancellationHandle;
+use semio_framework_plugin_operation::ToolCancellationHandle;
     #[cfg(test)]
-    use semio_framework_plugin_operation::ToolOperationKey;
+use semio_framework_plugin_operation::ToolOperationKey;
     #[cfg(any(test, feature = "artifact-app-testing"))]
-    use semio_framework::ViewModel;
+use semio_framework::ViewModel;
     #[cfg(any(test, feature = "artifact-app-testing"))]
-    use semio_framework_plugin_window_transient::window_transient::WindowTransientOwnerRegistry;
+use semio_framework_plugin_window_transient::window_transient::WindowTransientOwnerRegistry;
     #[cfg(test)]
-    use crate::artifact_instance::retire_document_window_registry_demands;
+use semio_framework_plugin_instance_ladders::ladders_document_replacement::retire_document_window_registry_demands;
     #[cfg(test)]
-    use crate::artifact_instance::retire_document_window_registry_step;
+use semio_framework_plugin_instance_ladders::ladders_document_replacement::retire_document_window_registry_step;
     use semio_framework_plugin_decl_app::ArtifactApp;
     use semio_framework_plugin_decl_app::tool_contract::ArtifactOwnedToolJobFactory;
     use semio_framework_plugin_decl_app::tool_contract::ArtifactReservedJob;
@@ -47,9 +47,6 @@ pub(crate) mod job_unit_2 {
     include!("../../../../🧪️tests/🔬️app-artifact-reserved-tool-job/🦀️.rs");
 }
 
-#[cfg(test)]
-#[path = "🧱️unit-3/🦀️.rs"]
-pub(crate) mod job_unit_3;
 
 #[cfg(test)]
 pub(crate) mod job_unit_4 {
@@ -62,14 +59,14 @@ pub(crate) mod job_unit_4 {
     use semio_framework::kernel::Effect;
     use semio_framework::Fault;
     #[cfg(any(test, feature = "artifact-app-testing"))]
-    use semio_framework_plugin_interaction::interaction_topology::INTERACTION_ACTION_IDS;
+use semio_framework_plugin_interaction::interaction_topology::INTERACTION_ACTION_IDS;
     #[cfg(any(test, feature = "artifact-app-testing"))]
-    use serde_json::Value;
+use serde_json::Value;
     use semio_framework_value::ValueError;
     use semio_framework_plugin_job::agent_lane_carriage;
     use semio_framework_plugin_job::agent_lane_uncarried_lanes;
     #[cfg(test)]
-    use crate::app_testing::artifact_app_laws;
+use semio_framework_plugin_testing_laws::artifact_app_laws;
     use semio_framework_plugin_job::drive_agent_lane_preview;
     use semio_framework_ui_contract::*;
     use semio_framework_plugin_decl_app::ArtifactApp;
@@ -83,7 +80,7 @@ pub(crate) mod job_unit_4 {
     use store::MutationDiff;
     use protocol::OpBinary;
     use protocol::OpText;
-    use crate::plugin_app::PluginApp;
+    use semio_framework_plugin_reactor_app::PluginApp;
     use semio_framework_value_derive::ToValue;
     use semio_framework_plugin_decl_views::tool_run_contract::ToolRunRetargetableJob;
     use semio_framework_plugin_window_config::WindowConfigOwner;

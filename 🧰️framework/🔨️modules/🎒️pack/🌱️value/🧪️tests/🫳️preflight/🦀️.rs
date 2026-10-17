@@ -122,7 +122,7 @@ fn record_borrowed_preflight_pack_table_and_statements_exact_ordinary_wire(){
  use std::{io::Write,process::{Command,Stdio}};let mut child=Command::new("bun").args(["-e",script]).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();child.stdin.take().unwrap().write_all(&bytes).unwrap();let output=child.wait_with_output().unwrap();assert!(output.status.success(),"{}",String::from_utf8_lossy(&output.stderr));let actual:serde_json::Value=serde_json::from_slice(&output.stdout).unwrap();assert_eq!(actual["0"]["tableRows"].as_array().unwrap().len(),count);
  for(index,row)in source.rows.iter().enumerate(){let actual=&actual["0"]["tableRows"][index];assert_eq!(actual["0"],row.0);assert_eq!(actual["1"],row.1.map(serde_json::Value::Bool).unwrap_or(serde_json::Value::Null));assert_eq!(actual["2"],row.2.map(|value|serde_json::Value::String(value.to_string())).unwrap_or(serde_json::Value::Null));assert_eq!(actual["3"],row.3.map(|value|serde_json::Value::String(value.to_string())).unwrap_or(serde_json::Value::Null));assert_eq!(actual["4"],row.4.map(|value|serde_json::json!({"bits":format!("{:016x}",value.to_bits())})).unwrap_or(serde_json::Value::Null));assert_eq!(actual["5"],row.5.map(serde_json::Value::from).unwrap_or(serde_json::Value::Null));assert_eq!(actual["6"],serde_json::json!(row.6));}
  for(index,(key,value))in source.statements.iter().enumerate(){assert_eq!(actual["1"]["statements"][index]["keyword"],*key);assert_eq!(actual["1"]["statements"][index]["record"]["0"],*value);}
- parity(&source,&table_statements_spec(),true,false);eprintln!("[DEBUG] immutable sparse table bitmaps and forced statement symbols match ordinary Pack exactly");
+ parity(&source,&table_statements_spec(),true,false);
 }
 
 #[derive(Debug,PartialEq,DslRecord)]
@@ -146,15 +146,15 @@ fn logical_depth<T:DslField>(source:&T,spec:&S,maximum:u16){
 }
 #[test]
 fn record_borrowed_preflight_pack_nested_record_logical_depth(){
- let corpus=fixture();let recipe=&corpus["logicalDepth"];let source=NestedOwner{payload:CsvField{value:recipe["nestedText"].as_str().unwrap().into(),quoted:true}};logical_depth(&source,&nested_spec(),recipe["nestedRecord"].as_u64().unwrap()as u16);eprintln!("[DEBUG] nested Record has its ordinary bare frame at logical level two");
+ let corpus=fixture();let recipe=&corpus["logicalDepth"];let source=NestedOwner{payload:CsvField{value:recipe["nestedText"].as_str().unwrap().into(),quoted:true}};logical_depth(&source,&nested_spec(),recipe["nestedRecord"].as_u64().unwrap()as u16);
 }
 #[test]
 fn record_borrowed_preflight_pack_packed_numeric_logical_depth(){
- let corpus=fixture();let recipe=&corpus["logicalDepth"];let source=PackedSigned{values:recipe["signedWords"].as_array().unwrap().iter().map(|word|word.as_str().unwrap().parse().unwrap()).collect()};logical_depth(&source,&signed_spec(),recipe["packedSignedList"].as_u64().unwrap()as u16);let(spec,record)=owned(&source);assert_eq!(independent_pack(&encode_document(&spec,&record,&EncodeOptions::default()).unwrap())["0"],recipe["signedWords"]);eprintln!("[DEBUG] mandatory packed numeric List stays at its ordinary logical value level");
+ let corpus=fixture();let recipe=&corpus["logicalDepth"];let source=PackedSigned{values:recipe["signedWords"].as_array().unwrap().iter().map(|word|word.as_str().unwrap().parse().unwrap()).collect()};logical_depth(&source,&signed_spec(),recipe["packedSignedList"].as_u64().unwrap()as u16);let(spec,record)=owned(&source);assert_eq!(independent_pack(&encode_document(&spec,&record,&EncodeOptions::default()).unwrap())["0"],recipe["signedWords"]);
 }
 #[test]
 fn record_borrowed_preflight_pack_table_statements_logical_depth(){
- let source=table_statements_fixture();let corpus=fixture();logical_depth(&source,&table_statements_spec(),corpus["logicalDepth"]["tableStatements"].as_u64().unwrap()as u16);eprintln!("[DEBUG] table fallback and bare statement frames retain the ordinary logical depth");
+ let source=table_statements_fixture();let corpus=fixture();logical_depth(&source,&table_statements_spec(),corpus["logicalDepth"]["tableStatements"].as_u64().unwrap()as u16);
 }
 fn reference_row_spec()->S{S{keyword:None,layout:RecordLayout::Inline,fields:&REFERENCE_ROW}}
 static REFERENCE_ROW:[F;7]=[F::new(0,"text",H::Ref("document")),F::new(1,"flag",H::Bool),F::new(2,"signed",H::Int),F::new(3,"unsigned",H::UInt),F::new(4,"real",H::Float),F::new(5,"kind",H::Enum(&[("keep",0),("erase",1)])),F::new(6,"nested",H::List(text))];
@@ -162,7 +162,7 @@ static REFERENCE_ROOT:[F;2]=[F::new(0,"rows",H::Table(reference_row_spec)),TABLE
 fn reference_row_ordinary()->RecordSpec{let mut spec=table_row_ordinary();spec.fields[0].shape=semio_framework_dsl_record::Shape::Ref("document");spec}
 #[test]
 fn record_borrowed_preflight_pack_long_forced_reference_column(){
- use semio_framework_dsl_record::{Shape,RecordSpecProducer};let source=table_statements_fixture();let(mut ordinary,record)=owned(&source);let borrowed=S{keyword:None,layout:RecordLayout::Inline,fields:&REFERENCE_ROOT};ordinary.fields[0].shape=Shape::Table(RecordSpecProducer{ordinary:reference_row_ordinary,encoding:|_|Err(ValueError::new(K::UnsupportedOwner,"ordinary reference oracle metadata")),decoding:|_|Err(ValueError::new(K::UnsupportedOwner,"ordinary reference oracle metadata"))});let bytes=encode_document(&ordinary,&record,&EncodeOptions::default()).expect("single long Ref table cell requires a forced symbol");assert_eq!(independent_pack(&bytes)["0"]["tableRows"][0]["0"],source.rows[0].0);let mut allow=|_|true;let mut control=NativeEncodeControl::new(0,&mut allow);assert_eq!(semio_framework_pack_record_preflight::borrowed_schema_hash(borrowed,&mut control).unwrap(),super::schema_hash(&ordinary));let(actual,requests,releases)=crate::test_allocation::observe_backing(||measure_document_borrowed(&source,&borrowed,&EncodeOptions::default(),&mut control));assert_eq!(actual.unwrap(),bytes.len());assert_eq!((requests,releases,control.owned_bytes()),(0,0,0));eprintln!("[DEBUG] independent Node DEFLATE readback preserves a single forced Ref larger than 128 bytes");
+ use semio_framework_dsl_record::{Shape,RecordSpecProducer};let source=table_statements_fixture();let(mut ordinary,record)=owned(&source);let borrowed=S{keyword:None,layout:RecordLayout::Inline,fields:&REFERENCE_ROOT};ordinary.fields[0].shape=Shape::Table(RecordSpecProducer{ordinary:reference_row_ordinary,encoding:|_|Err(ValueError::new(K::UnsupportedOwner,"ordinary reference oracle metadata")),decoding:|_|Err(ValueError::new(K::UnsupportedOwner,"ordinary reference oracle metadata"))});let bytes=encode_document(&ordinary,&record,&EncodeOptions::default()).expect("single long Ref table cell requires a forced symbol");assert_eq!(independent_pack(&bytes)["0"]["tableRows"][0]["0"],source.rows[0].0);let mut allow=|_|true;let mut control=NativeEncodeControl::new(0,&mut allow);assert_eq!(semio_framework_pack_record_preflight::borrowed_schema_hash(borrowed,&mut control).unwrap(),super::schema_hash(&ordinary));let(actual,requests,releases)=crate::test_allocation::observe_backing(||measure_document_borrowed(&source,&borrowed,&EncodeOptions::default(),&mut control));assert_eq!(actual.unwrap(),bytes.len());assert_eq!((requests,releases,control.owned_bytes()),(0,0,0));
 }
 
 #[derive(Debug,PartialEq,DslRecord)]
@@ -170,7 +170,7 @@ struct AbsentOwner{value:Option<String>}
 static ABSENT:[F;1]=[F::new(0,"value",H::Text)];
 #[test]
 fn record_borrowed_preflight_pack_absent_root_has_no_wire_child_depth(){
- let source=AbsentOwner{value:None};let(spec,record)=owned(&source);let corpus=fixture();let mut options=EncodeOptions::default();options.limits.max_depth=corpus["logicalDepth"]["rootAbsent"].as_u64().unwrap()as u16;let bytes=encode_document(&spec,&record,&options).unwrap();assert_eq!(independent_pack(&bytes),serde_json::json!({}));let borrowed=S{keyword:None,layout:RecordLayout::Inline,fields:&ABSENT};let mut allow=|_|true;let mut control=NativeEncodeControl::new(0,&mut allow);let(actual,requests,releases)=crate::test_allocation::observe_backing(||measure_document_borrowed(&source,&borrowed,&options,&mut control));assert_eq!(actual.unwrap(),bytes.len());assert_eq!((requests,releases,control.owned_bytes()),(0,0,0));assert_eq!(source.to_value(),FieldValue::Record(record));eprintln!("[DEBUG] omitted absent root fields have no wire child or caller depth debit");
+ let source=AbsentOwner{value:None};let(spec,record)=owned(&source);let corpus=fixture();let mut options=EncodeOptions::default();options.limits.max_depth=corpus["logicalDepth"]["rootAbsent"].as_u64().unwrap()as u16;let bytes=encode_document(&spec,&record,&options).unwrap();assert_eq!(independent_pack(&bytes),serde_json::json!({}));let borrowed=S{keyword:None,layout:RecordLayout::Inline,fields:&ABSENT};let mut allow=|_|true;let mut control=NativeEncodeControl::new(0,&mut allow);let(actual,requests,releases)=crate::test_allocation::observe_backing(||measure_document_borrowed(&source,&borrowed,&options,&mut control));assert_eq!(actual.unwrap(),bytes.len());assert_eq!((requests,releases,control.owned_bytes()),(0,0,0));assert_eq!(source.to_value(),FieldValue::Record(record));
 }
 
 struct SpatialOwner{coordinate:[f64;3],direction:[f64;3]}
@@ -188,7 +188,7 @@ fn record_borrowed_preflight_pack_authored_coord_and_direction_exact_original_wo
  let corpus=fixture();let recipe=&corpus["spatial"];let words=|key:&str|->[f64;3]{recipe[key]["words"].as_array().unwrap().iter().map(|word|f64::from_bits(u64::from_str_radix(word.as_str().unwrap(),16).unwrap())).collect::<Vec<_>>().try_into().unwrap()};
  let source=SpatialOwner{coordinate:words("coordinate"),direction:words("direction")};let(spec,record)=owned(&source);let bytes=encode_document(&spec,&record,&EncodeOptions::default()).unwrap();let readback=independent_pack(&bytes);
  for(id,key)in[("0","coordinate"),("1","direction")]{let expected=serde_json::Value::Array(recipe[key]["words"].as_array().unwrap().iter().map(|word|serde_json::json!({"bits":word.as_str().unwrap()})).collect());assert_eq!(readback[id],expected);}
- parity(&source,&spatial_spec(),true,false);eprintln!("[DEBUG] canonical borrowed Coord and Dir retain exact ordinary packed-f64 words with zero scratch");
+ parity(&source,&spatial_spec(),true,false);
 }
 
 #[derive(Debug,PartialEq,DslRecord)]
@@ -200,5 +200,4 @@ fn intrinsic_spec()->S{S{keyword:None,layout:RecordLayout::Inline,fields:&INTRIN
 fn record_borrowed_preflight_intrinsic_values_match_canonical_bytes_and_controls(){
  let fixture=fixture();for row in fixture["intrinsic"].as_array().unwrap(){let value=semio_framework_value::DslValue::from(row);assert_eq!(serde_json::Value::from(&value),*row);let source=IntrinsicOwner{value};let(spec,record)=owned(&source);let bytes=encode_document(&spec,&record,&EncodeOptions::default()).unwrap();let(decoded,_)=super::decode_document(&bytes,&spec,&Default::default()).unwrap();assert_eq!(decoded,record);let Some(FieldValue::Value(decoded))=decoded.fields.get(&0)else{panic!("canonical intrinsic field tag")};assert_eq!(serde_json::Value::from(decoded),*row);let text=semio_framework_dsl_record::print(&record,&spec,JoinMode::Document);let decoded=semio_framework_dsl_record::parse_exact(&text,&spec,&Default::default()).unwrap();assert_eq!(decoded,record,"Text preserves intrinsic field and exact number kinds");let Some(FieldValue::Value(decoded))=decoded.fields.get(&0)else{panic!("Text intrinsic field tag")};assert_eq!(serde_json::Value::from(decoded),*row);parity(&source,&intrinsic_spec(),true,false);parity(&source,&intrinsic_spec(),false,false);}
  let prefix=fixture["distinctSymbols"]["prefix"].as_str().unwrap();let count=fixture["distinctSymbols"]["count"].as_u64().unwrap();let source=IntrinsicOwner{value:semio_framework_value::DslValue::Array((0..count).map(|index|semio_framework_value::DslValue::String(format!("{prefix}{index}"))).collect())};parity(&source,&intrinsic_spec(),true,true);
- eprintln!("[DEBUG] Neutral intrinsic null/bool/numbers/UTF8/nested arrays/objects match actual canonical Pack and Text lengths, exact bounds, spill ownership and cancellation");
 }

@@ -1,4 +1,4 @@
-use super::super::compute_diagnostics;
+use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_diagnostics;
 use crate::standards::v1::subsets::any::schema::inferences::diagnostics::{Diagnostic, DiagnosticCode, Severity};
 use crate::standards::v1::subsets::any::schema::inferences::wall_layout::attach::testing::{gable_roof, model, rect, wall};
 use serde_json::json;

@@ -1,6 +1,6 @@
 //! 🪦️ `delete-target-region` command.
 
-use crate::editor::puzzle2d::Puzzle2dActionCtx;
+use crate::editor::puzzle2d::interaction::Puzzle2dActionCtx;
 use semio_framework_pack_json::Value;
 
 /// 🪦️ Removes the one addressed target region. A region owns no dependents, so nothing cascades.

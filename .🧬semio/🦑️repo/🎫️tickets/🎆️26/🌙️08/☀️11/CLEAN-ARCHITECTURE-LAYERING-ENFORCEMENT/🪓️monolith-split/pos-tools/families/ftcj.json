@@ -1,0 +1,14 @@
+{
+ "name": "ftcj",
+ "crates": [
+  "semio-framework-pack-json",
+  "semio-framework-pack-json-tests"
+ ],
+ "base": {
+  "rev": "1bae6115bc5",
+  "crates": [
+   "semio-framework-pack-json"
+  ]
+ },
+ "note": "FTC pack-json"
+}

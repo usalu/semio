@@ -1,6 +1,6 @@
 //! 💔️ `delete-edge` command.
 
-use crate::editor::puzzle2d::Puzzle2dActionCtx;
+use crate::editor::puzzle2d::interaction::Puzzle2dActionCtx;
 use semio_framework_pack_json::Value;
 
 /// 💔️ Drops one edge by id — the inverse of `createEdge`, and the programmatic twin of the board

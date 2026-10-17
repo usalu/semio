@@ -28,7 +28,7 @@ fn mutation_of(value: &Value) -> LocalFoldersConfigMutation {
 
 /// 🧪️ A fresh shell on the host fixture app, as a process boot would make it, sharing the law's preference slot.
 fn booted_shell(document_id: Option<&str>) -> ShellState {
-    let mut shell = panel_anchor_model_tests::host_test_shell();
+    let mut shell = host_test_shell();
     if let Some(document_id) = document_id {
         let session = shell.docs.session.clone().expect("the host fixture holds a session");
         let key = (session.plugin_id.clone(), session.instance_id);

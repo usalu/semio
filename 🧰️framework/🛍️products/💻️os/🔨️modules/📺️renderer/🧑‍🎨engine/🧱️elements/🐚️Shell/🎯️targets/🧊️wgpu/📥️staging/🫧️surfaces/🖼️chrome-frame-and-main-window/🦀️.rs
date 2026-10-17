@@ -21,11 +21,13 @@ impl SurfaceState {
             assert!(self.world3d_states.set_external_reservations(self.retired_world3d_states.len()), "retired World3d release restores admission credits");
             return !self.retired_world3d_states.is_empty();
         }
+        let terrain_grant=semio_framework_value::retained_clone::RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:65536,maximum_release_bytes:16*1024*1024,maximum_depth:64};
         let now = semio_framework_job::default_now_us();
-        let Some(budget) = now.and_then(|now| semio_framework_job::StepBudget::from_duration(1, now, semio_framework_job::MAINTENANCE_LANE_WALL_US)) else {
+        let Some(budget) = now.and_then(|now| semio_framework_job::StepBudget::from_duration(1, now, semio_framework_job::MAINTENANCE_LANE_WALL_US, terrain_grant)) else {
             self.world3d_retirement_fault=Some(infinite_world::world::WorldDynamicFault::Ownership(semio_framework_value::ValueRefusalKind::WorkLimit));
             return true;
         };
+        let mut retained_progress = semio_framework_job::RetainedCloneProgress::default();
         let mut context = semio_framework_job::StepContext::new(
             semio_framework_job::OperationId(self.world3d_retirement_epoch),
             semio_framework_job::Generation(1),
@@ -33,9 +35,8 @@ impl SurfaceState {
             semio_framework_job::root_cancel_token(),
             semio_framework_job::default_now_us,
             &mut self.world3d_retirement_sequence,
+            &mut retained_progress,
         );
-
-        let terrain_grant=semio_framework_value::retained_clone::RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:65536,maximum_release_bytes:16*1024*1024,maximum_depth:64};
         let terrain=infinite_world::world::step_world3d_terrain_retirement(&mut state.session, &mut state.terrain,terrain_grant,&mut context);
         if !terrain.ownership.fits(terrain_grant) {self.world3d_retirement_fault=Some(infinite_world::world::WorldDynamicFault::Ownership(semio_framework_value::ValueRefusalKind::InvariantViolated));return true;}
         match terrain.step {

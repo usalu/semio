@@ -1,0 +1,21 @@
+{
+ "name": "sourcing",
+ "crates": [
+  "semio-s-artifact-sourcing-curation",
+  "semio-s-artifact-sourcing-curation-domain",
+  "semio-s-artifact-sourcing-curation-examples",
+  "semio-s-artifact-sourcing-curation-inferences",
+  "semio-s-artifact-sourcing-curation-operations",
+  "semio-s-artifact-sourcing-curation-schema",
+  "semio-s-artifact-sourcing-curation-tests",
+  "semio-s-plugin-sourcing-beams",
+  "semio-s-plugin-sourcing-beams-component",
+  "semio-s-plugin-sourcing-catalog-oracle",
+  "semio-s-plugin-sourcing-slabs",
+  "semio-s-plugin-sourcing-slabs-component",
+  "semio-s-plugin-sourcing-windows",
+  "semio-s-plugin-sourcing-windows-component",
+  "semio-sourcing-mutation-bridge"
+ ],
+ "note": "ORACLE-HARVEST-PLUGINS: ✏️s/🔌️plugins/🪵️sourcing"
+}

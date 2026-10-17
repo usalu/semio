@@ -60,7 +60,6 @@ fn bounded_value_retirement_preserves_original_owner_and_physical_receipts_under
                 assert!(turns <= 32768);
             }
             assert!(physical >= held + born);
-            eprintln!("[DEBUG] original bounded catalog shared={shared} copy={copy} held={held} actual birth={born} physical={physical} turns={turns} no fabricated page debt");
         }
     }
 }
@@ -123,7 +122,6 @@ fn original_vcs_retirement_preserves_real_history_visibility_genesis_and_full_ph
         assert_eq!(physical, born + during + factory_bytes);
         let (_, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| drop(owner));
         assert_eq!((allocated, released), (0, law["terminalDropBytes"].as_u64().unwrap() as usize));
-        eprintln!("[DEBUG] original VCS edit={with_edit} same snapshot pointer/full-u64 mutation rows; exact native history, visibility, Pack and factory physical={physical} System births={} turns={turns} terminalDrop0heap", born + during + factory_bytes);
     }
 }
 
@@ -180,7 +178,6 @@ fn original_displaced_queue_preserves_each_child_receipt_and_retains_maintenance
     assert_eq!(physical, born + during);
     let (_, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| drop(queue));
     assert_eq!((allocated, released), (0, law["terminalDropBytes"].as_u64().unwrap() as usize));
-    eprintln!("[DEBUG] original displaced queue turns={turns} physical={physical} same fixed maintenance backing and full terminal child receipts");
 }
 
 #[test]
@@ -240,7 +237,6 @@ fn original_sparse_lane_authority_matches_sorted_oracle_and_retains_original_phy
     assert_eq!(physical, original + born);
     let (_, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| drop((index, rows)));
     assert_eq!((allocated, released), (0, law["terminalDropBytes"].as_u64().unwrap() as usize));
-    eprintln!("[DEBUG] original sparse lane index same sorted facts/tail owners, source={original} birth={born} full physical={physical} finalDrop0");
 }
 
 #[test]
@@ -289,7 +285,6 @@ fn original_repository_history_entry_close_conserves_raw_box_value_and_factory_c
     assert_eq!(physical, original + born);
     let (_, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| drop(owner));
     assert_eq!((allocated, released), (0, law["terminalDropBytes"].as_u64().unwrap() as usize));
-    eprintln!("[DEBUG] original repository history entry full-u64={actual} raw+factory source={original} births={born} exact physical={physical} turns={turns} terminalDrop0");
 }
 
 #[test]
@@ -333,7 +328,6 @@ fn original_schema_history_array_close_releases_same_decoder_ledger_and_factory_
     assert_eq!(physical, original + born);
     let (_, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| drop(owner));
     assert_eq!((allocated, released), (0, law["terminalDropBytes"].as_u64().unwrap() as usize));
-    eprintln!("[DEBUG] original schema array same decoder+ledger+factory original={original} born={born} physical={physical} turns={turns} terminalDrop0");
 }
 
 #[test]
@@ -388,7 +382,6 @@ fn original_retained_member_open_close_conserves_supplied_birth_and_physical_rel
     assert_eq!(physical, original + born);
     let (_, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| drop(owner));
     assert_eq!((allocated, released), (0, law["terminalDropBytes"].as_u64().unwrap() as usize));
-    eprintln!("[DEBUG] original retained member-open source={original} funded cursor births={born} full physical={physical} turns={turns} terminalDrop0");
 }
 
 #[test]
@@ -430,5 +423,4 @@ fn original_operation_rows_close_conserves_last_factory_and_retired_string_owner
     assert_eq!(physical, original + born);
     let (_, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| drop(owner));
     assert_eq!((allocated, released), (0, law["terminalDropBytes"].as_u64().unwrap() as usize));
-    eprintln!("[DEBUG] original operation rows same last factory+identity+retired String Vec source={original} births={born} full physical={physical} turns={turns} terminalDrop0");
 }

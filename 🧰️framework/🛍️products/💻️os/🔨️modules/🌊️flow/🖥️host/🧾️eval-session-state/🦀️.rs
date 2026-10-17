@@ -406,7 +406,7 @@ pub(super) enum SessionRetentionRow {
 }
 #[derive(semio_framework_value::RetireOwned)]
 pub(super) struct SessionPreviewRetention {
-    pub roster:Option<Vec<String>>,phase:u8,slot:usize,comparison:usize,matched:bool,
+    pub roster:Option<Vec<String>>,pub(super) phase:u8,pub(super) slot:usize,pub(super) comparison:usize,pub(super) matched:bool,
     pub(super) removed:Option<ControlledRetirement<SessionRetentionRow>>,
 }
 

@@ -23,7 +23,7 @@ class CompleteSqliteSource extends BundleScript{
 
 /** 🦀️ Qualifies only the complete semantic laws in the actual mounted BIM owner. */
 class CompleteSqliteNative extends CompleteSqliteSource {
- async run(args:string[]):Promise<void>{await super.run(args);await runArtifactRustTests("semio-s-artifact-bim-model",this.repoRoot,["--lib","sqlite_snapshot_bim_complete_","--no-fail-fast"],this.invocation.control);}
+ async run(args:string[]):Promise<void>{await super.run(args);await runArtifactRustTests("semio-s-artifact-bim-model",this.repoRoot,["--lib","sqlite_snapshot_bim_complete_","--no-fail-fast"],this.invocation);}
 }
 
 /** 🔎️ Independent SQLite interpretation and authoritative edits over original public IO files. */

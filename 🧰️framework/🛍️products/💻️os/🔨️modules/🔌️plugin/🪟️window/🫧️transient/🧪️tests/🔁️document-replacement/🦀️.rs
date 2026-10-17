@@ -1,10 +1,11 @@
 mod document_window_replacement_tests {
     use super::*;
-    fn grant(demand:semio_framework_value::RetirementDemand,items:usize)->semio_framework_value::retained_clone::RetainedCloneGrant{semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:items,maximum_copy_bytes:demand.copy_bytes.max(4096),maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth.max(1)}}
+    #[doc(hidden)]
+pub fn grant(demand:semio_framework_value::RetirementDemand,items:usize)->semio_framework_value::retained_clone::RetainedCloneGrant{semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:items,maximum_copy_bytes:demand.copy_bytes.max(4096),maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth.max(1)}}
 
     #[test]
     fn retained_window_input_document_scope_renewal_cancels_old_and_admits_new_work() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🪟️window/🫧️transient/🧪️tests/🧫️fixtures/🪟️retained-window-input/🔣️.json"))).unwrap();
+        let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🪟️window/🫧️transient/🧪️tests/🧫️fixtures/🪟️retained-window-input/🔣️.json"))).unwrap();
         let expected = &fixture["documentReplacement"];
         let key =
             |id| ToolOperationKey { app_instance_id: 11, document: ArtifactDocumentAuthority(11), operation_id: semio_framework_job::OperationId(id), base_revision: semio_framework_job::RevisionId(0), generation: semio_framework_job::Generation(0) };
@@ -29,13 +30,13 @@ mod document_window_replacement_tests {
 
     struct RetirementWindow;
 
-    impl crate::WindowTransientOwner for RetirementWindow {
+    impl semio_framework_plugin_window_transient::window_transient::WindowTransientOwner for RetirementWindow {
         const WINDOW_KIND_ID: &'static str = "canvas";
-        type State = crate::publication_fixture::PublicationTransient;
-        type Mutation = crate::publication_fixture::PublicationTransientMutation;
+        type State = semio_framework_plugin_testing_fixtures_publication::publication_fixture::transient::PublicationTransient;
+        type Mutation = semio_framework_plugin_testing_fixtures_publication::publication_fixture::transient::mutations::PublicationTransientMutation;
 
-        fn build_owners() -> crate::component::window_transient::WindowTransientOwnerBundle<Self::State, Self::Mutation> {
-            crate::window_transient_owners::owners()
+        fn build_owners() -> semio_framework_plugin_window_transient::window_transient::WindowTransientOwnerBundle<Self::State, Self::Mutation> {
+            semio_framework_plugin_testing_fixtures_publication::window_transient_owners::owners()
         }
     }
 
@@ -76,7 +77,6 @@ mod document_window_replacement_tests {
         }
         assert!(registries.is_empty());
         assert_eq!(registries.empty_backing_byte_demand(),Some(0));
-        eprintln!("[DEBUG] zero grant preserves document cursor; original blocked generation permits later retirement; admitted close releases all original registry backing");
     }
 
     #[test]
@@ -94,6 +94,5 @@ mod document_window_replacement_tests {
         let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||retire_document_window_registry_step(&mut registries,&mut cursor,grant,true).unwrap());
         assert_eq!(step,PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:backing,..Default::default()}));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,backing));assert_eq!(registries.empty_backing_byte_demand(),Some(0));
         let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(registries));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
-        eprintln!("[DEBUG] original displaced window registry physical={backing} exact refusal custody and separate final backing release terminalDrop0");
     }
 }

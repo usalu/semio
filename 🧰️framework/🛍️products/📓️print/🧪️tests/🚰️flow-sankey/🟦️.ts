@@ -6,7 +6,7 @@
 // #region 🔌️Adapters
 import { sankey as d3Sankey, sankeyCenter, sankeyJustify, sankeyLeft, sankeyRight } from "d3-sankey";
 import { defineTestAdapter, type AdapterContext } from "@semio-tech/framework/test/adapter";
-import { compileVizProbeDocument, probeProjection, roundProbeNumbers, type ProbeProjection, type VizProbeStatement } from "../../🔨️modules/🧪️viz-probe/🟦️.ts";
+import { compileVizProbeDocumentInContext, probeProjection, roundProbeNumbers, type ProbeProjection, type VizProbeStatement } from "../../🔨️modules/🧪️viz-probe/🟦️.ts";
 // #endregion 🔌️Adapters
 
 // #region 🧫️Vectors
@@ -53,7 +53,7 @@ function grid(values: readonly number[]): number[] {
 
 // #region 🔮️Oracle
 /** 🔮️ d3-sankey itself, in the same unit extent and with the same four alignments. */
-function d3Projection(ctx: AdapterContext): { projection: ProbeProjection } {
+function d3Projection(ctx: AdapterContext): ProbeProjection {
   const alignments = { justify: sankeyJustify, left: sankeyLeft, right: sankeyRight, center: sankeyCenter };
   const nodes = nodeIds(ctx).map((id) => ({ id }));
   const links = rows(ctx).map((row) => ({ source: row.source!, target: row.target!, value: Number(row.value) }));
@@ -92,9 +92,8 @@ function statements(ctx: AdapterContext): VizProbeStatement[] {
 }
 
 async function subject(ctx: AdapterContext): Promise<{ projection: ProbeProjection }> {
-  const records = await compileVizProbeDocument(
-    { case: CASE, scenario: ctx.scenario.id, packages: ["semio-viz-flow"], body: statements(ctx) },
-    { workDir: ctx.workDir },
+  const records = await compileVizProbeDocumentInContext(ctx,
+    { case: CASE, scenario: ctx.scenario.id, packages: ["semio-viz-flow"], body: statements(ctx) }
   );
   return { projection: probeProjection(roundProbeNumbers(records, DECIMALS)) };
 }

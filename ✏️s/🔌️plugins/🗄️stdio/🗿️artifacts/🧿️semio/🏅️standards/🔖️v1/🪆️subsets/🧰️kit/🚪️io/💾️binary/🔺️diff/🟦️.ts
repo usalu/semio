@@ -50,8 +50,8 @@ export const stdioSemioV1KitDiffBinaryGuardConstant = <T extends string | number
 export function parseSemioKitDiffFrame(value: unknown, at = "$"): SemioKitDiffFrame {
   const row = stdioSemioV1KitDiffBinaryGuardObject(value, at);
   return {
-    format: row["format"] === undefined ? undefined : stdioSemioV1KitDiffBinaryGuardInteger(row["format"], `${at}.format`),
-    presence: row["presence"] === undefined ? undefined : stdioSemioV1KitDiffBinaryGuardInteger(row["presence"], `${at}.presence`),
-    payload: row["payload"] === undefined ? undefined : stdioSemioV1KitDiffBinaryGuardString(row["payload"], `${at}.payload`),
+    format: stdioSemioV1KitDiffBinaryGuardInteger(row["format"], `${at}.format`),
+    presence: stdioSemioV1KitDiffBinaryGuardInteger(row["presence"], `${at}.presence`),
+    payload: stdioSemioV1KitDiffBinaryGuardString(row["payload"], `${at}.payload`),
   };
 }

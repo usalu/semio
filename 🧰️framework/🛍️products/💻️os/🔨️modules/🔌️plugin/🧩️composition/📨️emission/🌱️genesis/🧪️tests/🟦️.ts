@@ -30,7 +30,6 @@ test("private group copies exact prepared edit receipts before final staging", (
   expect(publication.includes("fn prepared_edit_id(&self) -> Option<&str>")).toBe(true);
   for (const authority of ["prepared_operation_count", "prepared_operation_metadata", "prepared_operation("]) expect(publication.includes(authority)).toBe(true);
   for (const authority of ["prepared_receipt", "prepared_publication", "acknowledge_prepared_receipt", "parent_receipt_copied", "receipt_copied", "parent_touched", "parent_identity"]) expect(owner.includes(authority)).toBe(true);
-  console.log("[DEBUG] independent receipt corpus preserves three exact UTF8 edit identifiers, prestage copy acknowledgment, one common group and original optional transaction");
 });
 
 /** 📄️ Independent JSON UTF8 oracle preserves every streamed page byte under original64-byte copies. */
@@ -51,7 +50,6 @@ test("private genesis input pages preserve ordered multilingual JSON bytes and c
     expect(joined).toEqual(bytes);
     expect(JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(joined))).toBe(source);
     for (const stop of input.cancelAt) expect(bytes.subarray(0, Math.min(stop * input.maximumCopyBytes, bytes.length))).toEqual(joined.subarray(0, Math.min(stop * input.maximumCopyBytes, joined.length)));
-    console.log(`[DEBUG] private genesis JSON UTF8 oracle count=${count} bytes=${bytes.length} pages=${pages.length} copy=${input.maximumCopyBytes}`);
   }
 });
 
@@ -72,10 +70,9 @@ test("private genesis preserves distinct declared identities and publishes exact
   }
   const committed = structuredClone(fixture.initial);
   for (const lane of lanes) applyPatch(committed[lane], fixture.patches[lane] as Operation[], true, true);
-  const adopted = applyPatch(committed, [{ op: "add", path: `/visibleMembers/${fixture.source.childId}`, value: fixture.source.reference }], true, true).newDocument;
+  const adopted = applyPatch<typeof committed | typeof fixture.expected>(committed, [{ op: "add", path: `/visibleMembers/${fixture.source.childId}`, value: fixture.source.reference }], true, true).newDocument;
   expect(adopted).toEqual(fixture.expected);
   for (const lane of lanes) expect(adopted[lane]).not.toEqual(fixture.initial[lane]);
-  console.log(`[DEBUG] Private genesis independent oracle lanes=${lanes.length} cancellationStops=${fixture.cancelBeforeCommit.length} local=${fixture.source.childId} target=${fixture.source.reference.artifactId}`);
 });
 
 /** 🪪️ The retained publication driver keeps typed sources private until one common decision. */
@@ -89,7 +86,6 @@ test("private typed publication lanes retain original sources through staged ado
   const source = readFileSync(new URL("../../../📬️publication/🤝️group/🦀️.rs", import.meta.url), "utf8");
   for (const authority of ["PrivateOwnedPublicationLane", "owned_publication_birth_bytes", "begin_one_item_owned_publication", "prepare_one_item_publication", "stage_one_item_publication", "adopt_one_item_publication", "abort_one_item_publication", "maximum_release_bytes", "terminal_is_empty"]) expect(source.includes(authority)).toBe(true);
   expect(source.includes("encode_op")).toBe(false);
-  console.log("[DEBUG] RFC6902 private three-lane corpus preserves all seven precommit cancellation states; driver consumes only original typed owner admission and staged common authority");
 });
 
 /** 🌳️ Independent Rust grammar checks the retained driver while the full native compiler owns its queue. */
@@ -103,7 +99,6 @@ test("private publication lane owner parses with the independent Rust grammar", 
     finally { tree.delete(); }
   }
   parser.delete();
-  console.log("[DEBUG] independent Tree-sitter Rust grammar accepts retained private typed lane owner and canonical close function; native type/runtime proof remains a separate gate");
 });
 
 /** 🪆️ The private child input row borrows original identities before guarded request handoff. */
@@ -119,7 +114,6 @@ test("private child input row keeps local identity and exact owner separate thro
   for (const authority of ["PrivateChildPublicationInput", "PrivateChildMemberMetadataIssuer", "PrivateChildGenesisInput", "MemberOpenRequest", "next_capacity_byte_demand", "maximum_copy_bytes", "maximum_release_bytes", "close_granted", "terminal_is_empty"]) expect(source.includes(authority)).toBe(true);
   expect(source.includes("encode_op")).toBe(false);
   expect(source.includes(".clone()")).toBe(false);
-  console.log("[DEBUG] private child input contract retains distinct local/target identities, fixed64-child decision bound, separately admitted262144 phase ceiling and original64 borrowed-copy bound");
 });
 
 /** 📦️ Independent ordered-source and cancellation reference for separately admitted private row frames. */
@@ -144,5 +138,4 @@ test("private group owner keeps original ordered inputs and every declared cance
   for (const authority of ["PRIVATE_CHILD_GROUP_MAXIMUM_CHILDREN", "row_birth_bytes", "advance_inputs", "advance_openings", "advance_publications", "advance_projection", "advance_entries", "advance_graph", "next_close_byte_demand", "terminal_is_empty", "maximum_copy_bytes", "maximum_release_bytes"]) expect(source.includes(authority)).toBe(true);
   expect(source.includes("encode_op")).toBe(false);
   expect(source.includes(".clone()")).toBe(false);
-  console.log(`[DEBUG] private group independent Int32/Buffer/RFC6902 oracle preserves original ordered inputs at ${fixture.ownerInput.cancelStops.length} cancellation frontiers; row/frame physical parity remains its native allocator law`);
 });

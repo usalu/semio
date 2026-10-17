@@ -1,4 +1,15 @@
-use super::*;
+use crate::standards::v1_7::subsets::base::io::text_string::{decode_text_string, encode_text_string};
+use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfCMap, PdfFont, PdfFontKind, PdfFontProgram, PdfToUnicode, PdfToUnicodeMapping};
+use crate::standards::v1_7::subsets::base::io::foreign_artifacts::PdfArtifactResourcePort;
+#[allow(unused_imports)]
+use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfBaseEncoding, PdfSimpleEncoding};
+#[allow(unused_imports)]
+use std::collections::{BTreeMap, HashMap};
+#[allow(unused_imports)]
+use std::sync::OnceLock;
+#[allow(unused_imports)]
+use crate::standards::v1_7::subsets::base::io::error::{PResult, PdfEngineError};
+use crate::standards::v1_7::subsets::base::modules::fonts::*;
 use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfCidFont, PdfCidWidthRun, PdfEncodingDifference, PdfFontDescriptor};
 
 #[test]

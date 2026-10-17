@@ -35,7 +35,7 @@ import {
   reduceFem3dStoryAction,
   type Fem3dStoryState,
   type FemStoryLocale,
-} from "../../../../🧑‍💻dev/🏗️fem/📖️stories/🧭️coordination/🟦️.ts";
+} from "@semio-tech/s-fem-composition-tests/stories/coordination";
 
 //#region StoryHost
 const FEM3D_MODEL_BODY_KEY = "fem3d.play.model";

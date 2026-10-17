@@ -1,7 +1,6 @@
 //! ⚡️ Puzzle5d artifact — OpText/OpBinary codecs + grammar for `Puzzle5dMutation`.
 
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation;
-use crate::editor::puzzle5d::snapshot::Puzzle5dPlaySnapshot;
 
 
 //#region 📖️SemioGrammar
@@ -84,15 +83,4 @@ use crate::standards::v1::subsets::any::schema::mutations::scale_target_volume::
 use {semio_s_artifact_puzzle_3d_mutations_selection::puzzle3d_selection_items as puzzle5d_selection_items, semio_s_artifact_puzzle_3d_mutations_selection::puzzle3d_selection_number as puzzle5d_selection_number, semio_s_artifact_puzzle_3d_mutations_selection::puzzle3d_selection_triple as puzzle5d_selection_triple, semio_s_artifact_puzzle_3d_mutations_selection::puzzle3d_targets_invariant as puzzle5d_targets_invariant, semio_s_artifact_puzzle_3d_model::quat_from_axis_angle, semio_s_artifact_puzzle_3d_model::quat_mul};
 
 
-impl pack::snapshot::ArtifactDsl for Puzzle5dPlaySnapshot {
-    const EXTENSION: &'static str = "puzzle5d-play";
-
-    fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-        <Puzzle5dSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text).map(Self::from_typed)
-    }
-
-    fn print_dsl(&self) -> String {
-        <Puzzle5dSnapshot as pack::snapshot::ArtifactDsl>::print_dsl(self.typed())
-    }
-}
 }

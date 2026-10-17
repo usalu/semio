@@ -1,6 +1,6 @@
 import {admitCollectionPackageDeclaration,type CollectionArtifactPackage,type CollectionPackageDeclaration} from "./../../../🧬️schema/📦️package/🟦️.ts";
-import {decodeJsonSyntax,type JsonSyntaxControl,type JsonSyntaxNode} from "./../../../../../../../../../🔨️modules/🎒️pack/🔤️json/📥️decode/🟦️.ts";
-import {JsonMemberPolicy} from "./../../../../../../../../../🔨️modules/🎒️pack/🔤️json/🧩️members/🟦️.ts";
+import {decodeJsonSyntax,type JsonSyntaxControl,type JsonSyntaxNode} from "@semio-tech/pack-json-decode-ts";
+import {JsonMemberPolicy} from "@semio-tech/framework-pack-json-ts/members";
 /** 📥️ Decodes exact package fields with caller-owned limits and cancellation. */
 export async function decodeCollectionPackageJson(source:string,control:JsonSyntaxControl):Promise<CollectionArtifactPackage>{
  const node=await decodeJsonSyntax(source,JsonMemberPolicy.Reject,control);

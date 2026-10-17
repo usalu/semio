@@ -30,6 +30,10 @@ type rasterRasterInferenceGuardSizeBounds = { readonly minItems?: number; readon
 
 export const rasterRasterInferenceGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : rasterRasterInferenceGuardReject(at, "value is not an object");
+export const rasterRasterInferenceGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) rasterRasterInferenceGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const rasterRasterInferenceGuardArray = (value: unknown, at: string, bounds: rasterRasterInferenceGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return rasterRasterInferenceGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) rasterRasterInferenceGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -60,17 +64,17 @@ export const rasterRasterInferenceGuardConstant = <T extends string | number | b
 //#endregion 🚪️Parsers
 
 export function parseRasterInference(value: unknown, at = "$"): RasterInference {
-  const row = rasterRasterInferenceGuardObject(value, at);
+  const row = rasterRasterInferenceGuardClosed(rasterRasterInferenceGuardObject(value, at), at, ["topology"]);
   return {
     topology: parseRasterTopology(row["topology"], `${at}.topology`),
   };
 }
 
 export function parseRasterTopology(value: unknown, at = "$"): RasterTopology {
-  const row = rasterRasterInferenceGuardObject(value, at);
+  const row = rasterRasterInferenceGuardClosed(rasterRasterInferenceGuardObject(value, at), at, ["topoOrder", "depth", "cycleFree", "nodeCount"]);
   return {
     topoOrder: rasterRasterInferenceGuardArray(row["topoOrder"], `${at}.topoOrder`).map((item, index) => rasterRasterInferenceGuardString(item, `${at}.topoOrder[${index}]`)),
-    depth: rasterRasterInferenceGuardObject(row["depth"], `${at}.depth`),
+    depth: Object.fromEntries(Object.entries(rasterRasterInferenceGuardObject(row["depth"], `${at}.depth`)).map(([key0, value0]) => [key0, rasterRasterInferenceGuardInteger(value0, `${at}.depth.${key0}`)])),
     cycleFree: rasterRasterInferenceGuardBoolean(row["cycleFree"], `${at}.cycleFree`),
     nodeCount: rasterRasterInferenceGuardInteger(row["nodeCount"], `${at}.nodeCount`),
   };

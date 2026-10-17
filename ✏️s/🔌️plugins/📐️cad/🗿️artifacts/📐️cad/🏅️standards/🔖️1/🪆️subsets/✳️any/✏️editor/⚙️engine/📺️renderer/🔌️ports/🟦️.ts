@@ -4,9 +4,9 @@
  */
 
 import { sceneHostPort } from "@semio-tech/framework/ui/targets/react";
-import { kernelGeometry, type Vec3 } from "../../../../../../../../../../⚙️engine/📔️registry/🟦️.ts";
-import { type SpatialPreviewKernel } from "../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️.ts";
-import { PreciseSpatialKernelMath, preciseSpatialKernelMath } from "../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🧮️preview/🟦️.ts";
+import { kernelGeometry, type Vec3 } from "@semio-tech/cad-engine-ts/registry";
+import { type SpatialPreviewKernel } from "@semio-tech/s-spatial-kernel-ts/spatial";
+import { PreciseSpatialKernelMath, preciseSpatialKernelMath } from "@semio-tech/s-spatial-kernel-ts/preview";
 
 // #region 🔌️PortWiring
 const useFrame = sceneHostPort.fiber.useFrame;

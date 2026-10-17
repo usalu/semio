@@ -30,6 +30,5 @@ test("HTML committed text doctype and attribute intents match independent HTML5 
   expect(after).not.toEqual(before);
   const path=resolve(root,`🧪️tests/🧫️fixtures/🧬️history-edits/${row.id}/🦠️mutation/🔣️.json`);expect(existsSync(path)).toBe(true);
   expect(JSON.parse(readFileSync(path,"utf8"))).toEqual({mutation:row.mutation,before,after});
-  console.log("[DEBUG] HTML committed native intent matches independent parse5",row.id);
  }
 });

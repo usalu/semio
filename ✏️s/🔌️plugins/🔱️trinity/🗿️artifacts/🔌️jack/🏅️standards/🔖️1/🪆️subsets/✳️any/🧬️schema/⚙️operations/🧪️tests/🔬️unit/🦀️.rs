@@ -1,9 +1,22 @@
+use crate::standards::v1::subsets::any::schema::mutations::TrinityGraphMutation;
+use crate::standards::v1::subsets::any::schema::graph::{EntityRef, GraphEffect};
+use crate::standards::v1::subsets::any::schema::memory::Graph;
+use crate::standards::v1::subsets::any::schema::snapshot::JackSnapshot;
+use semio_framework_graph_manifest::{PropertyBag, PropertyValue};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::graph::TRINITY_GRAPH_SCHEMA;
+#[allow(unused_imports)]
+use protocol::Mutation;
+#[allow(unused_imports)]
+use store::{os_store::document_materialize::create_document_envelope, os_store::store_schema::ArtifactEnvelope, ArtifactStore};
 use crate::standards::v1::subsets::any::io::binary::mutations::new_trinity_graph_store;
-use crate::JackWorkingScene;
-use super::*;
+use crate::standards::v1::subsets::any::schema::content::JackWorkingScene;
+use crate::standards::v1::subsets::any::schema::operations::*;
 use crate::standards::v1::subsets::any::schema::mutations::{register_trinity_graph_mutation_descriptors,set_query,SetQuery};
 
-use crate::{Camera, Edge, Manifest, Node, Port, PortDirection};
+use crate::standards::v1::subsets::any::schema::graph::{Camera, Edge, Node, Port};
+use crate::standards::v1::subsets::any::schema::manifest::Manifest;
+use semio_framework_graph_manifest::PortDirection;
 use store::os_store::store_schema::ArtifactCommand;
 
 fn mini_fixture() -> JackSnapshot {
@@ -52,7 +65,7 @@ fn mini_graph() -> Graph {
     Graph::from_snapshot(mini_fixture()).expect("mini graph")
 }
 
-fn check(effect: GraphEffect) -> Result<(), crate::TrinityRamError> {
+fn check(effect: GraphEffect) -> Result<(), crate::standards::v1::subsets::any::schema::errors::TrinityRamError> {
     validate_graph_effect(&effect, &mini_graph())
 }
 
@@ -60,40 +73,40 @@ fn check(effect: GraphEffect) -> Result<(), crate::TrinityRamError> {
 async fn effect_rejects_port_kind_not_declared_on_the_node_kind() {
     let mut graph = mini_graph();
     graph.manifest = Manifest {
-        node_kinds: vec![crate::NodeKindDef { name: "Piece".into(), properties: vec![], port_kinds: vec!["Connector".into()] }],
-        edge_kinds: vec![crate::EdgeKindDef { name: "Connection".into(), properties: vec![] }],
+        node_kinds: vec![crate::standards::v1::subsets::any::schema::manifest::NodeKindDef { name: "Piece".into(), properties: vec![], port_kinds: vec!["Connector".into()] }],
+        edge_kinds: vec![crate::standards::v1::subsets::any::schema::manifest::EdgeKindDef { name: "Connection".into(), properties: vec![] }],
         port_kinds: vec![
-            crate::PortKindDef { name: "Connector".into(), direction: PortDirection::Out, properties: vec![] },
-            crate::PortKindDef { name: "Other".into(), direction: PortDirection::In, properties: vec![] },
+            crate::standards::v1::subsets::any::schema::manifest::PortKindDef { name: "Connector".into(), direction: PortDirection::Out, properties: vec![] },
+            crate::standards::v1::subsets::any::schema::manifest::PortKindDef { name: "Other".into(), direction: PortDirection::In, properties: vec![] },
         ],
     };
     let effect = GraphEffect::CreateNode(mini_node("new", 0.0, 0.0, vec![Port { id: "p".into(), kind: "Other".into(), direction: PortDirection::In, properties: PropertyBag::new() }]));
-    assert!(matches!(validate_graph_effect(&effect, &graph), Err(crate::TrinityRamError::PortKindNotDeclaredOnMutation { .. })));
+    assert!(matches!(validate_graph_effect(&effect, &graph), Err(crate::standards::v1::subsets::any::schema::errors::TrinityRamError::PortKindNotDeclaredOnMutation { .. })));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn effect_create_edge_rejects_invalid_port_keys_and_missing_endpoints() {
     let edge = |source: String, target: String| GraphEffect::CreateEdge(Edge { id: "e2".into(), kind: "Connection".into(), source, target, properties: PropertyBag::new() });
-    assert!(matches!(check(edge("noAt".into(), crate::port_key("child", "in-a"))), Err(crate::TrinityRamError::InvalidSourcePortKey(_))));
-    assert!(matches!(check(edge(crate::port_key("root", "out-a"), "noAt".into())), Err(crate::TrinityRamError::InvalidTargetPortKey(_))));
-    assert!(matches!(check(edge(crate::port_key("ghost", "out"), crate::port_key("child", "in-a"))), Err(crate::TrinityRamError::SourceNodeNotFound(_))));
-    assert!(matches!(check(edge(crate::port_key("root", "out-a"), crate::port_key("ghost", "in"))), Err(crate::TrinityRamError::TargetNodeNotFound(_))));
+    assert!(matches!(check(edge("noAt".into(), crate::standards::v1::subsets::any::schema::graph::port_key("child", "in-a"))), Err(crate::standards::v1::subsets::any::schema::errors::TrinityRamError::InvalidSourcePortKey(_))));
+    assert!(matches!(check(edge(crate::standards::v1::subsets::any::schema::graph::port_key("root", "out-a"), "noAt".into())), Err(crate::standards::v1::subsets::any::schema::errors::TrinityRamError::InvalidTargetPortKey(_))));
+    assert!(matches!(check(edge(crate::standards::v1::subsets::any::schema::graph::port_key("ghost", "out"), crate::standards::v1::subsets::any::schema::graph::port_key("child", "in-a"))), Err(crate::standards::v1::subsets::any::schema::errors::TrinityRamError::SourceNodeNotFound(_))));
+    assert!(matches!(check(edge(crate::standards::v1::subsets::any::schema::graph::port_key("root", "out-a"), crate::standards::v1::subsets::any::schema::graph::port_key("ghost", "in"))), Err(crate::standards::v1::subsets::any::schema::errors::TrinityRamError::TargetNodeNotFound(_))));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn effect_rejects_duplicate_node_and_edge_ids() {
-    assert!(matches!(check(GraphEffect::CreateNode(mini_node("root", 0.0, 0.0, vec![]))), Err(crate::TrinityRamError::NodeAlreadyExists(_))));
-    assert!(matches!(check(GraphEffect::CreateEdge(Edge { id: "e1".into(), kind: "Connection".into(), source: crate::port_key("root", "out-a"), target: crate::port_key("child", "in-a"), properties: PropertyBag::new() })), Err(crate::TrinityRamError::EdgeAlreadyExists(_))));
+    assert!(matches!(check(GraphEffect::CreateNode(mini_node("root", 0.0, 0.0, vec![]))), Err(crate::standards::v1::subsets::any::schema::errors::TrinityRamError::NodeAlreadyExists(_))));
+    assert!(matches!(check(GraphEffect::CreateEdge(Edge { id: "e1".into(), kind: "Connection".into(), source: crate::standards::v1::subsets::any::schema::graph::port_key("root", "out-a"), target: crate::standards::v1::subsets::any::schema::graph::port_key("child", "in-a"), properties: PropertyBag::new() })), Err(crate::standards::v1::subsets::any::schema::errors::TrinityRamError::EdgeAlreadyExists(_))));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn effect_rejects_missing_entities_on_delete_rename_move_and_property_edits() {
-    assert!(matches!(check(GraphEffect::DeleteNode("ghost".into())), Err(crate::TrinityRamError::NodeNotFound(_))));
-    assert!(matches!(check(GraphEffect::DeleteEdge("ghost".into())), Err(crate::TrinityRamError::EdgeNotFound(_))));
-    assert!(matches!(check(GraphEffect::RenameNode { id: "ghost".into(), name: "x".into() }), Err(crate::TrinityRamError::NodeNotFound(_))));
-    assert!(matches!(check(GraphEffect::MoveNode { id: "ghost".into(), x: 0.0, y: 0.0 }), Err(crate::TrinityRamError::NodeNotFound(_))));
-    assert!(matches!(check(GraphEffect::RemoveProperty { entity: EntityRef::Node("ghost".into()), key: "label".into() }), Err(crate::TrinityRamError::NodeNotFound(_))));
-    assert!(matches!(check(GraphEffect::RemoveProperty { entity: EntityRef::Edge("ghost".into()), key: "u".into() }), Err(crate::TrinityRamError::EdgeNotFound(_))));
+    assert!(matches!(check(GraphEffect::DeleteNode("ghost".into())), Err(crate::standards::v1::subsets::any::schema::errors::TrinityRamError::NodeNotFound(_))));
+    assert!(matches!(check(GraphEffect::DeleteEdge("ghost".into())), Err(crate::standards::v1::subsets::any::schema::errors::TrinityRamError::EdgeNotFound(_))));
+    assert!(matches!(check(GraphEffect::RenameNode { id: "ghost".into(), name: "x".into() }), Err(crate::standards::v1::subsets::any::schema::errors::TrinityRamError::NodeNotFound(_))));
+    assert!(matches!(check(GraphEffect::MoveNode { id: "ghost".into(), x: 0.0, y: 0.0 }), Err(crate::standards::v1::subsets::any::schema::errors::TrinityRamError::NodeNotFound(_))));
+    assert!(matches!(check(GraphEffect::RemoveProperty { entity: EntityRef::Node("ghost".into()), key: "label".into() }), Err(crate::standards::v1::subsets::any::schema::errors::TrinityRamError::NodeNotFound(_))));
+    assert!(matches!(check(GraphEffect::RemoveProperty { entity: EntityRef::Edge("ghost".into()), key: "u".into() }), Err(crate::standards::v1::subsets::any::schema::errors::TrinityRamError::EdgeNotFound(_))));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -101,9 +114,9 @@ async fn effect_set_property_checks_the_manifest() {
     let mut graph = mini_graph();
     graph.nodes.get_mut("root").expect("root").kind = "Ghost".into();
     let set = |key: &str, value: PropertyValue| GraphEffect::SetProperty { entity: EntityRef::Node("root".into()), key: key.into(), value };
-    assert!(matches!(validate_graph_effect(&set("label", PropertyValue::String("x".into())), &graph), Err(crate::TrinityRamError::UnknownEntityKind { .. })));
-    assert!(matches!(check(set("bogus", PropertyValue::Null)), Err(crate::TrinityRamError::UnknownPropertyAtPath { .. })));
-    assert!(matches!(check(set("label", PropertyValue::Number(1.0))), Err(crate::TrinityRamError::PropertyTypeMismatch { .. })));
+    assert!(matches!(validate_graph_effect(&set("label", PropertyValue::String("x".into())), &graph), Err(crate::standards::v1::subsets::any::schema::errors::TrinityRamError::UnknownEntityKind { .. })));
+    assert!(matches!(check(set("bogus", PropertyValue::Null)), Err(crate::standards::v1::subsets::any::schema::errors::TrinityRamError::UnknownPropertyAtPath { .. })));
+    assert!(matches!(check(set("label", PropertyValue::Number(1.0))), Err(crate::standards::v1::subsets::any::schema::errors::TrinityRamError::PropertyTypeMismatch { .. })));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -111,15 +124,15 @@ async fn apply_graph_effects_applies_a_valid_sequence_and_refuses_an_invalid_one
     let mut graph = mini_graph();
     apply_graph_effects(&mut graph, &[GraphEffect::RenameNode { id: "root".into(), name: "renamed".into() }, GraphEffect::MoveNode { id: "root".into(), x: 50.0, y: 60.0 }]).expect("rename and move apply");
     assert_eq!(graph.node("root").map(|node| (node.name.as_str(), node.x, node.y)), Some(("renamed", 50.0, 60.0)));
-    assert!(matches!(apply_graph_effects(&mut graph, &[GraphEffect::DeleteNode("ghost".into())]), Err(crate::TrinityRamError::NodeNotFound(_))));
+    assert!(matches!(apply_graph_effects(&mut graph, &[GraphEffect::DeleteNode("ghost".into())]), Err(crate::standards::v1::subsets::any::schema::errors::TrinityRamError::NodeNotFound(_))));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn set_query_validation_bounds_the_query() {
     let fixture = mini_fixture();
     validate_trinity_graph_operation(&set_query("MATCH (a:Piece) RETURN a".into()), &fixture).expect("bounded query");
-    let err = validate_trinity_graph_operation(&set_query("x".repeat(crate::JACK_QUERY_MAXIMUM_BYTES + 1)), &fixture).expect_err("oversized query");
-    assert!(matches!(err, crate::TrinityRamError::QueryTooLarge { .. }));
+    let err = validate_trinity_graph_operation(&set_query("x".repeat(crate::standards::v1::subsets::any::schema::graph::JACK_QUERY_MAXIMUM_BYTES + 1)), &fixture).expect_err("oversized query");
+    assert!(matches!(err, crate::standards::v1::subsets::any::schema::errors::TrinityRamError::QueryTooLarge { .. }));
 }
 
 #[semio_framework_async_macros::async_test]

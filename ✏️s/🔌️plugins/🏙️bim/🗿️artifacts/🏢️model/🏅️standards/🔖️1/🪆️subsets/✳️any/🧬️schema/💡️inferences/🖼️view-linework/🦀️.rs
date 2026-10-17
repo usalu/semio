@@ -72,11 +72,6 @@ pub fn view_of(snapshot: &ModelSnapshot, id: &str, view: &View, inputs: &ViewInp
     }
 }
 
-/// 🖼️ The drawing of every view (the `View` nodes of the model graph).
-#[cfg(test)]
-pub fn compute_view_linework(snapshot: &ModelSnapshot) -> BTreeMap<String, ViewLinework> {
-    std::mem::take(&mut super::super::model_graph::infer_selected::<{ super::super::model_graph::kinds::VIEWS }>(snapshot).view_linework)
-}
 //#endregion 🔖️Inputs
 
 //#region 🔖️Dependency

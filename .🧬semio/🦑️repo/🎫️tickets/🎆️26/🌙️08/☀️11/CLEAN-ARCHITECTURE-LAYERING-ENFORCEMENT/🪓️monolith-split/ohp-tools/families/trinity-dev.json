@@ -1,0 +1,7 @@
+{
+ "name": "trinity-dev",
+ "crates": [
+  "semio-s-dev-trinity-jack"
+ ],
+ "note": "ORACLE-HARVEST-PLUGINS: ✏️s/🧑‍💻dev/🔱️trinity"
+}

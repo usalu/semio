@@ -20,24 +20,25 @@
 
 use crate::mutations::{apply_presentation_mutation, inverse_presentation_mutation, PresentationMutation};
 use crate::{default_figure_tile_source, PresentationDiff, PresentationSnapshot};
+use semio_framework_test_fixtures::fixture_text;
 
-const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🆕create-tile/🧪️rejects/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🆕create-tile/🧪️rejects/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🆕create-tile/🧪️rejects/🦠️mutation/🔣️.json");
-const DIFF_ABSENT: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🆕create-tile/🧪️rejects/🔺️diff/🚫️.absent");
-const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🆕create-tile/🧪️rejects/🎯️outcome/🔣️.json");
+static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🆕create-tile/🧪️rejects/📸️snapshot/⬅️before/🔣️.json"));
+static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🆕create-tile/🧪️rejects/📸️snapshot/➡️after/🔣️.json"));
+static MUTATION: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🆕create-tile/🧪️rejects/🦠️mutation/🔣️.json"));
+static DIFF_ABSENT: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🆕create-tile/🧪️rejects/🔺️diff/🚫️.absent"));
+static OUTCOME: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🆕create-tile/🧪️rejects/🎯️outcome/🔣️.json"));
 
 fn mutation() -> PresentationMutation {
-    semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation decodes")
+    semio_framework_pack_json::from_json_str((*MUTATION), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation decodes")
 }
 fn expected_after() -> PresentationSnapshot {
-    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after snapshot decodes")
+    semio_framework_pack_json::from_json_str((*AFTER), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after snapshot decodes")
 }
 
 /// 🌱 The committed `⬅️before`, with its composed `presentation` child resolved to a deck holding
 /// exactly the tile the committed payload carries — the collision the Fatal guards against.
 fn before() -> PresentationSnapshot {
-    let snapshot: PresentationSnapshot = semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes");
+    let snapshot: PresentationSnapshot = semio_framework_pack_json::from_json_str((*BEFORE), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes");
     let PresentationMutation::CreateTile(payload) = mutation() else {
         panic!("rejects-a-duplicate-tile-id's committed mutation must be a create-tile");
     };
@@ -71,7 +72,7 @@ fn a_colliding_tile_id_is_fatal() {
 /// 🚷 The diff is DECLARED absent, not an invented empty patch.
 #[test]
 fn the_committed_diff_is_declared_absent() {
-    assert!(DIFF_ABSENT.is_empty(), "🔺️diff/🚫️.absent must be an empty marker, not a stand-in patch");
+    assert!((*DIFF_ABSENT).is_empty(), "🔺️diff/🚫️.absent must be an empty marker, not a stand-in patch");
     let produced = <PresentationMutation as protocol::Mutation<PresentationSnapshot>>::diff(&mutation(), &before());
     assert_eq!(produced.diff(), &PresentationDiff::default(), "create-tile/rejects-a-duplicate-tile-id: a Fatal outcome must produce no delta at all");
 }
@@ -80,14 +81,14 @@ fn the_committed_diff_is_declared_absent() {
 /// externally tagged `{"CreateTile": …}` envelope this enum's missing serde tag attribute implies.
 #[test]
 fn committed_json_is_canonical() {
-    for (label, text) in [("before", BEFORE), ("after", AFTER)] {
+    for (label, text) in [("before", (*BEFORE)), ("after", (*AFTER))] {
         let decoded: PresentationSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
         let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "create-tile/rejects-a-duplicate-tile-id: committed {label} JSON is not canonical");
     }
     let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&mutation())).expect("mutation encodes");
-    let original: serde_json::Value = serde_json::from_str(MUTATION).expect("mutation reparses");
+    let original: serde_json::Value = serde_json::from_str((*MUTATION)).expect("mutation reparses");
     assert_eq!(reencoded, original, "create-tile/rejects-a-duplicate-tile-id: committed mutation JSON is not canonical");
     assert!(original.get("CreateTile").is_some(), "presentation mutations are externally tagged by their PascalCase variant name");
 }
@@ -95,7 +96,7 @@ fn committed_json_is_canonical() {
 /// 🎯️ The declared rejection — status, code and path — is exactly what the diff builder emits.
 #[test]
 fn declared_outcome_holds() {
-    let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
+    let outcome: serde_json::Value = serde_json::from_str((*OUTCOME)).expect("outcome decodes");
     assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("rejected"), "create-tile/rejects-a-duplicate-tile-id declares a rejected outcome");
     let produced = <PresentationMutation as protocol::Mutation<PresentationSnapshot>>::diff(&mutation(), &before());
     let message = produced.messages().first().expect("a rejected outcome carries a diagnostic");

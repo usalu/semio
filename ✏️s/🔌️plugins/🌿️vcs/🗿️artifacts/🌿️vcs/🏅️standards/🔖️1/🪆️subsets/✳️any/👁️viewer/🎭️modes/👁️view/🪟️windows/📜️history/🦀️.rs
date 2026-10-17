@@ -20,7 +20,7 @@ pub const BODY_KEY: &str = TreeWindowKit::KIND_ID;
 pub const VCS_DOCUMENT_NODE_ID: &str = "$";
 /// ➖️ The document row's label while the document has no title — the same language-neutral mark the
 /// editor's summary prints for empty notes.
-const VCS_UNTITLED_LABEL: &str = "—";
+pub const VCS_UNTITLED_LABEL: &str = "—";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
@@ -42,7 +42,7 @@ pub fn render(document: &VcsSnapshot, history: &HistoryView) -> UiAssemblyResult
     TreeWindowKit::render(&history_tree_view(document, history))
 }
 
-fn history_tree_view(document: &VcsSnapshot, history: &HistoryView) -> TreeView {
+pub fn history_tree_view(document: &VcsSnapshot, history: &HistoryView) -> TreeView {
     let mut children_by_parent: HashMap<Option<String>, Vec<&store::HistoryColumn>> = HashMap::new();
     for column in &history.columns {
         children_by_parent.entry(column.parent_checkpoint_id.clone()).or_default().push(column);

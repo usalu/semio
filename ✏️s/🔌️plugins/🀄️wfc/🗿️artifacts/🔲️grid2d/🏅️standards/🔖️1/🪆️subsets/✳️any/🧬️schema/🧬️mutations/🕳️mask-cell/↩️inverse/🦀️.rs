@@ -1,9 +1,13 @@
 //! ↩️ Inverse for `MaskCell` — unmasks the cell and restores the pin the mask cascaded away.
 
-use crate::mutations::{pin_cell, unmask_cell, Grid2dMutation};
+use crate::standards::v1::subsets::any::schema::mutations::pin_cell::pin_cell;
+use crate::standards::v1::subsets::any::schema::mutations::unmask_cell::unmask_cell;
 use crate::schema::snapshot::Grid2dSnapshot;
 
-pub fn inverse(payload: &super::MaskCell, base: &Grid2dSnapshot) -> Result<Vec<Grid2dMutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op>(payload: &super::MaskCell, base: &Grid2dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError>
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::pin_cell::PinCell> + From<crate::standards::v1::subsets::any::schema::mutations::unmask_cell::UnmaskCell>,
+{
     Ok((|| {
     if base.masked.iter().any(|cell| cell.x == payload.x && cell.y == payload.y) {
         return Vec::new();

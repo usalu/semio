@@ -36,4 +36,5 @@ semio-s-artifact-procedural-3d-mutations = { workspace = true }
 semio-s-artifact-procedural-generation3d = { path = "../../../../../../../../📦️packages/🦀️rust" }
 semio-s-procedural-core-generation-sqlite-test-support = { workspace = true }
 semio-framework-test-original-snapshot-owners = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🛬️original-snapshot-owners/📦️packages/🦀️rust" }
+semio-s-artifact-procedural-3d-model = { workspace = true, features = ["testkit"] }
 

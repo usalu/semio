@@ -21,6 +21,7 @@ compliance-testing = ["dep:serde", "dep:serde_json", "dep:semio-framework-artifa
 [dependencies]
 pack = { workspace = true }
 semio-framework = { workspace = true }
+semio-framework-action-bus = { path = "../../../../../../../../🧰️framework/🔨️modules/🎯️action-bus/📦️packages/🦀️rust" }
 semio-framework-artifact-reference = { workspace = true, optional = true }
 semio-framework-job = { workspace = true }
 semio-framework-os-kernel = { workspace = true }

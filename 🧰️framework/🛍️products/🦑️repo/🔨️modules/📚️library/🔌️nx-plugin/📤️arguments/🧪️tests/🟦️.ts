@@ -19,7 +19,6 @@ test("owner arguments are admitted then transported literally and consumed exact
   expect(api.consumeOwnerArgumentsV1(consumed.environment).arguments).toEqual([]);
   const oracle=Bun.spawnSync(["node","-e","process.stdout.write(JSON.stringify(process.argv.slice(1)))","--",...consumed.arguments]);
   expect(oracle.exitCode).toBe(0);expect(JSON.parse(new TextDecoder().decode(oracle.stdout))).toEqual(row.arguments);
-  console.log(`[DEBUG] Nx owner argv ${row.id} actualNode=true arguments=${row.arguments.length} consumedOnce=true`);
  }
  for(const row of fixture.invalid){expect(admit(row)).toBe(false);expect(()=>api.consumeOwnerArgumentsV1({SEMIO_OWNER_ARGUMENTS:JSON.stringify(row)})).toThrow();}
 });
@@ -49,17 +48,15 @@ test("Nx delegates the unchanged static owner command while literal argv stays o
  }
  expect(()=>api.encodeOwnerArgumentsV1(["\u0000"])).toThrow();
  await expect(api.executeOwnerArgumentsV1({command:"bun ./📜️script.ts test"},{},async()=>({success:true}))).rejects.toThrow("original forwarded arguments");
- console.log("[DEBUG] Nx owner executor staticCommand=preserved shellArgumentInterpolation=false preparationAndChildRoute=preserved");
 });
 
 test("the current Nx process executor returns literal envelope values without executing their shell syntax",async()=>{
  const api={...await import(new URL("../../../🏗️build/📤️arguments/🟨️.mjs",import.meta.url).href),...await import(new URL("../🟨️.mjs",import.meta.url).href)};
  const context={root:process.cwd(),projectName:"literal-owner",targetName:"probe",projectsConfigurations:{projects:{"literal-owner":{root:"."}}}};
  for(const row of fixture.cases){
-  const result=await api.default({command:'node -e "console.log(JSON.stringify(JSON.parse(process.env.SEMIO_OWNER_ARGUMENTS).arguments))"',cwd:".",usePty:false,streamOutput:false,__unparsed__:row.arguments},context);
-  expect(result.success,row.id).toBe(true);const lines=result.terminalOutput.trim().split(/\r?\n/);expect(JSON.parse(lines.at(-1)),row.id).toEqual(row.arguments);
+  const result:{success:boolean;terminalOutput:string}=await api.default({command:'node -e "console.log(JSON.stringify(JSON.parse(process.env.SEMIO_OWNER_ARGUMENTS).arguments))"',cwd:".",usePty:false,streamOutput:false,__unparsed__:row.arguments},context);
+  expect(result.success,row.id).toBe(true);const lines=result.terminalOutput.trim().split(/\r?\n/);expect(JSON.parse(lines.at(-1)!),row.id).toEqual(row.arguments);
  }
- console.log("[DEBUG] Nx delegated lifecycle actualNode=true filtersAndQuotes=literal platformIndependentEnvelope=true");
 });
 
 test("the actual Nx schema admits every original CLI argument into the owner boundary",async()=>{
@@ -70,7 +67,6 @@ test("the actual Nx schema admits every original CLI argument into the owner bou
   const admitted=combineOptionsForExecutor({__overrides_unparsed__:row.arguments},undefined,{options:{command:"bun ./📜️script.ts test",forwardAllArgs:true}},executorSchema,"fixture",".",false);
   expect(admitted.__unparsed__,row.id).toEqual(row.arguments);
  }
- console.log("[DEBUG] actual Nx schema CLI admission originals=preserved filterAndPositionalScope=exact");
 });
 
 test("the canonical build dispatcher preserves the complete literal filter and positional scope",async()=>{
@@ -81,7 +77,6 @@ test("the canonical build dispatcher preserves the complete literal filter and p
  expect(status,stderr+stdout).toBe(0);
  const marker="[DEBUG] ownerArgumentReceipt=",line=stdout.split(/\r?\n/).find(line=>line.startsWith(marker));
  expect(line).toBeDefined();const receipt=JSON.parse(line!.slice(marker.length));expect(receipt.arguments).toEqual(arguments_);expect(receipt.carrierPresent).toBe(false);
- console.log(`[DEBUG] actual Nx CLI -> declared owner -> child arguments=${arguments_.length} exact=true envelopeConsumed=true nativePreparation=unchanged`);
 },180000);
 
 test("bun repo retains both original Nextest filter and positional selections",async()=>{
@@ -91,5 +86,4 @@ test("bun repo retains both original Nextest filter and positional selections",a
  expect(status,stderr+stdout).toBe(0);
  const marker="[DEBUG] ownerArgumentReceipt=",line=stdout.split(/\r?\n/).find(line=>line.startsWith(marker));
  expect(line).toBeDefined();const receipt=JSON.parse(line!.slice(marker.length));expect(receipt.arguments).toEqual(arguments_);expect(receipt.carrierPresent).toBe(false);
- console.log(`[DEBUG] bun repo -> declared owner -> child Nextest arguments=${arguments_.length} exact=true selections=unchanged envelopeConsumed=true`);
 },180000);

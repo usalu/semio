@@ -17,7 +17,6 @@ fn neutral_vocabulary_preserves_shared_literal_identity_and_independent_json(){
         let mut allow=|_|true;let mut control=NativeDecodeControl::new(16384,&mut allow);
         assert_eq!(ArtifactRef::from_value_controlled(&native,&mut control).unwrap(),expected);
     }
-    eprintln!("[DEBUG] Three shared literal references preserve independent JSON and controlled native round trips");
 }
 #[test]
 fn neutral_vocabulary_preserves_shared_controlled_refusal_categories(){
@@ -29,5 +28,4 @@ fn neutral_vocabulary_preserves_shared_controlled_refusal_categories(){
     let mut allow=|_|true;let mut control=NativeDecodeControl::new(16384,&mut allow);let invalid=ArtifactRef::from_value_controlled(&DslValue::Bool(false),&mut control).unwrap_err();
     for(error,case)in[canceled,ownership,invalid].into_iter().zip(fixture["cases"].as_array().unwrap()){assert_eq!(error.kind.as_str(),case["kind"].as_str().unwrap());}
     let mut allow=|_|true;let mut control=NativeDecodeControl::new(16384,&mut allow);assert_eq!(ArtifactRef::from_value_controlled(&native,&mut control).unwrap(),expected);
-    eprintln!("[DEBUG] Shared initial cancellation, ownership admission, invalid shape and unrestricted literal identity retain their causes");
 }

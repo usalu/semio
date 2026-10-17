@@ -1,10 +1,12 @@
 //! ↩️ Inverse for `ChangeBlockLocked`.
 use super::ChangeBlockLocked;
-use crate::schema::mutations::NoteMutation;
 use crate::NoteSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &ChangeBlockLocked, base: &NoteSnapshot) -> Result<Vec<NoteMutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op>(payload: &ChangeBlockLocked, base: &NoteSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError>
+where
+    Op: From<crate::standards::v1::subsets::block::schema::mutations::change_block_locked::ChangeBlockLocked>,
+{
     Ok((|| {
     let Some(block) = crate::schema::find_block(&base.blocks, &payload.id) else { return Vec::new() };
     let old = match block {
@@ -15,7 +17,7 @@ pub fn inverse(payload: &ChangeBlockLocked, base: &NoteSnapshot) -> Result<Vec<N
         | crate::NoteBlockNode::Ink { locked, .. }
         | crate::NoteBlockNode::Group { locked, .. } => *locked,
     };
-    vec![NoteMutation::ChangeBlockLocked(ChangeBlockLocked { id: payload.id.clone(), new_locked: old })]
+    vec![Op::from(ChangeBlockLocked { id: payload.id.clone(), new_locked: old })]
 
     })())
 }

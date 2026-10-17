@@ -138,7 +138,7 @@ impl Default for SemioSnapshot {
 /// already-nontrivial nested payload rather than an all-default stub. Single source of truth for
 /// `📚️examples/🌐️envelope/🖼️assets/🗣️.dsl.semio`/`🎒️.pack.semio` and this facet's
 /// own conformance-law tests.
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_semio_snapshot() -> SemioSnapshot {
     use semio_s_artifact_stdio_semio_flow::schema::snapshot::demo_flow_snapshot;
@@ -147,9 +147,7 @@ pub(crate) fn demo_semio_snapshot() -> SemioSnapshot {
 //#endregion 🔖️Demo
 
 //#region 🔖️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🔖️Tests
 
 
@@ -160,9 +158,7 @@ mod tests;
 semio_framework_value::artifact_retire_struct!(SemioSnapshot{schema,subset});
 
 
-#[cfg(test)]
-#[path="🧪️tests/🛫️native/🦀️.rs"]
-pub(crate) mod native_output_tests;
+
 
 /// 🏷️ The wire tag naming which of the 13 domain subsets is carried — shared by the text DSL's
 /// `subset=<tag>` header line and used to select which subset's own REAL codec to delegate to.
@@ -170,7 +166,7 @@ pub(crate) mod native_output_tests;
 /// (ticket 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING) is a sibling
 /// module, not a descendant, and needs this same dispatch as its own honest derivation.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn subset_tag(s: &SemioSubsetSnapshot) -> &'static str {
+pub fn subset_tag(s: &SemioSubsetSnapshot) -> &'static str {
     match s {
         SemioSubsetSnapshot::Brep(_) => "brep",
         SemioSubsetSnapshot::Mesh(_) => "mesh",
@@ -196,7 +192,7 @@ pub(crate) fn subset_tag(s: &SemioSubsetSnapshot) -> &'static str {
 /// 🔢️ The binary sibling of [`subset_tag`] — a real, individually protocol-walkable `u8` ordinal
 /// (0-13, enum declaration order), used by the binary pack header instead of a length-prefixed name.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn subset_ordinal(s: &SemioSubsetSnapshot) -> u8 {
+pub fn subset_ordinal(s: &SemioSubsetSnapshot) -> u8 {
     match s {
         SemioSubsetSnapshot::Brep(_) => 0,
         SemioSubsetSnapshot::Mesh(_) => 1,

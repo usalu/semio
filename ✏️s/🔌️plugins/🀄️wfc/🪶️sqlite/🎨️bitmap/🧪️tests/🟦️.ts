@@ -32,7 +32,7 @@ export async function verifyBitmapSqlite<S>(prefix:string,make:(value:Case)=>S,b
    expect(db.query(`SELECT storage_kind FROM ${prefix}_bitmap`).get()).toEqual({storage_kind:value.mode});
    expect(db.query(`SELECT ordinal,palette_index FROM ${prefix}_bitmap_pixel ORDER BY ordinal`).all()).toEqual(value.indices.map((palette_index,ordinal)=>({ordinal,palette_index})));
    expect(db.query(`SELECT ordinal,scalar_text FROM ${prefix}_bitmap_literal_scalar ORDER BY ordinal`).all()).toEqual(value.mode==="literal"?Array.from(value.text).map((scalar_text,ordinal)=>({ordinal,scalar_text})):[]);
-   expect(await reconstruct(await importSqliteDatabase(db.serialize()))).toEqual(source);
+   const [rebuilt,original]=await Promise.all([reconstruct(await importSqliteDatabase(db.serialize())),source]);expect(rebuilt).toEqual(original);
    if(value.id==="three-unknown-index"){
     db.query(`UPDATE ${prefix}_bitmap_pixel SET palette_index=? WHERE ordinal=?`).run(fixture.edit.paletteIndex,fixture.edit.ordinal);
     const restored=await reconstruct(await importSqliteDatabase(db.serialize())),edited=bitmap(restored),expected=[...value.indices];expected[fixture.edit.ordinal]=fixture.edit.paletteIndex;

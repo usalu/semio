@@ -18,7 +18,8 @@ import userEvent from "@testing-library/user-event";
 import { afterAll, describe, expect, it, vi } from "vitest";
 import type * as DomAccessibilityApi from "dom-accessibility-api" with { "resolution-mode": "require" };
 import { argControl, createMemoryStoragePort, mutationInputDefs, OsShellConfig } from "@semio-tech/framework";
-import { shellLabel, syncAttachDocumentIdV1, syncShellLabelLocale } from "../../../../🛠️ShellHelpers/🟦️.tsx";
+import { shellLabel, syncShellLabelLocale } from "../../../../🛠️ShellHelpers/🏷️labels/🟦️.tsx";
+import { syncAttachDocumentIdV1 } from "../../../../🛠️ShellHelpers/🧾️transfer-checkin-tutorial/🟦️.ts";
 import { commitLocalFoldersConfigMutationV1, LocalFolderReconnectBand, localFolderNameV1, localFolderReconnectOfferV1, readLocalFolderBindingsV1, readLocalFolderEventsV1 } from "../../🟦️.tsx";
 import { LOCAL_FOLDERS_CONFIG_SCHEMA, type LocalFolderBinding, type LocalFoldersConfigMutation } from "@semio-tech/framework/config/mutations";
 

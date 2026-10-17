@@ -1,0 +1,23 @@
+{
+ "name": "block2d",
+ "crates": [
+  "semio-s-artifact-block-2d",
+  "semio-s-artifact-block-2d-diff",
+  "semio-s-artifact-block-2d-editor",
+  "semio-s-artifact-block-2d-editor-tests",
+  "semio-s-artifact-block-2d-examples",
+  "semio-s-artifact-block-2d-inferences",
+  "semio-s-artifact-block-2d-io",
+  "semio-s-artifact-block-2d-io-read",
+  "semio-s-artifact-block-2d-io-sqlite",
+  "semio-s-artifact-block-2d-io-write",
+  "semio-s-artifact-block-2d-model",
+  "semio-s-artifact-block-2d-mut-handles",
+  "semio-s-artifact-block-2d-mut-meta",
+  "semio-s-artifact-block-2d-mut-node-kind",
+  "semio-s-artifact-block-2d-mutations",
+  "semio-s-artifact-block-2d-schema",
+  "semio-s-artifact-block-2d-viewer"
+ ],
+ "note": "ORACLE-HARVEST-PLUGINS: ✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d"
+}

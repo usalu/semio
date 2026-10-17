@@ -1,0 +1,36 @@
+{
+  "cases": [
+    {
+      "method": "lifetime",
+      "effects": 0
+    },
+    {
+      "method": "write",
+      "effects": 0
+    },
+    {
+      "method": "borrow",
+      "effects": 0
+    },
+    {
+      "method": "custody",
+      "effects": 0
+    },
+    {
+      "method": "borrow-custody",
+      "effects": 0
+    },
+    {
+      "method": "store",
+      "effects": 0
+    },
+    {
+      "method": "artifact-cache",
+      "effects": 0
+    },
+    {
+      "method": "writer-operation",
+      "effects": 0
+    }
+  ]
+}

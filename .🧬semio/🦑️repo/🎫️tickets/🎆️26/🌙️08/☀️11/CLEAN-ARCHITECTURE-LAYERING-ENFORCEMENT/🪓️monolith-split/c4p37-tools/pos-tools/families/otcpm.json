@@ -1,0 +1,14 @@
+{
+ "name": "otcpm",
+ "crates": [
+  "semio-framework-os-command",
+  "semio-framework-os-command-tests"
+ ],
+ "base": {
+  "rev": "1bae6115bc5",
+  "crates": [
+   "semio-framework-os-command"
+  ]
+ },
+ "note": "OTCP command"
+}

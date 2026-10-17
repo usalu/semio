@@ -3,7 +3,7 @@
 
 use crate::standards::v1::subsets::any::schema::mutations::delete_target_region::DeleteTargetRegion;
 use crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff;
-use {crate::Puzzle2dSnapshot, crate::standards::v1::subsets::any::schema::Puzzle2dTargetRegion};
+use {crate::Puzzle2dSnapshot, crate::standards::v1::subsets::any::schema::records::Puzzle2dTargetRegion};
 
 //#region 🔖️Mutation
 /// 🌍 `create-target-region` payload — full initial payload at an optional FINAL-state `index`

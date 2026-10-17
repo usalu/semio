@@ -2,6 +2,7 @@
 //!
 //! Writers and readers advance in bounded slices; the format codecs of the mesh engine (STL and GLB encode and decode, JSON encode) run as one unit each.
 
+use semio_framework_3d::mesh::{MeshModelingOps};
 use semio_s_artifact_procedural_3d_model::catalogue::Kind;
 use semio_s_artifact_procedural_3d_mesh_support::capacity_fault;
 use semio_s_artifact_procedural_3d_mesh_support::export_fault;

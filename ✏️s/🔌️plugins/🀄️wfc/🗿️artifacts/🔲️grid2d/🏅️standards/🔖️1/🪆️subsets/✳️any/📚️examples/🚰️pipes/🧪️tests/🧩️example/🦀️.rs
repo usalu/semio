@@ -1,6 +1,7 @@
 //! 🧪️ The `pipes` example is a real, solvable, canonically ordered document.
 
-use super::*;
+use crate::{schema::snapshot::Grid2dSnapshot, schema::snapshot::WfcDirection2d, schema::snapshot::WfcTileMedia2d};
+use crate::examples::grid2d::pipes::*;
 
 #[test]
 fn the_example_states_five_tiles_and_a_complete_connector_rule_set() {

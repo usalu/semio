@@ -23,7 +23,7 @@ import { isSlug, type Challenge, type Slug } from "@semio-tech/quiz";
 import { QUIZ_LOCALES, isQuizLocale, quizText, type QuizLabelKey, type QuizLocale, type QuizText } from "../🌐️i18n/🟦️.ts";
 import { isChallenge, isRecord, type LocalStore } from "../💾️persistence/🟦️.ts";
 import { BodyButton, CardAction, CardIcon, PageFrame, QuizCard, Segments, cn, type PaneView } from "../🪟️chrome/🟦️.tsx";
-import { PRESENCE_ANCHORS } from "../👥️presence/🟦️.tsx";
+import { PRESENCE_ANCHORS } from "../👥️presence/👁️view/🟦️.ts";
 import { OTHERS_CHOICES, type OthersChoice } from "../🗳️crowd/🟦️.tsx";
 import { PET_CHOICES, PetsPlay, effectivePetMode, usePetCast, usePetsForced, usePetsReduced, type PetChoice, type PetLiveliness } from "../🐾️pets/🟦️.tsx";
 import { HOME_PAGES } from "../🧭️session/🧮️state/🟦️.ts";

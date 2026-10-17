@@ -9,10 +9,10 @@ pub mod lookup;
 //#region 🔖️Snapshot
 /// 📸️ Persisted drawing document snapshot (persistent fields of the artifact).
 #[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, ArtifactSchema)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[value(retire_with = "crate::standards::v1::subsets::any::schema::snapshot::retire_decoded_drawing_snapshot")]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
 #[dsl(id = "drawing.drawing", layout = "lines")]
 #[artifact_schema(id = "s.draw.drawing")]
 pub struct DrawingSnapshot {
@@ -22,18 +22,18 @@ pub struct DrawingSnapshot {
     pub id: semio_framework_value::paged::PagedUtf8<{usize::MAX}>,
     #[state(artifact)]
     #[value(skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(test, serde(skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(skip_serializing_if = "Option::is_none"))]
     pub title: Option<semio_framework_value::paged::PagedUtf8<{usize::MAX}>>,
     #[state(artifact)]
     #[dsl(statements, block)]
     pub layers: semio_framework_value::list::PagedList<DrawingLayerNode, {usize::MAX}>,
     #[state(artifact)]
     #[value(default, skip_serializing_if = "semio_framework_value::paged::PagedMap::is_empty")]
-    #[cfg_attr(test, serde(default, skip_serializing_if = "semio_framework_value::paged::PagedMap::is_empty"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default, skip_serializing_if = "semio_framework_value::paged::PagedMap::is_empty"))]
     pub assets: semio_framework_value::paged::PagedMap<DrawingImageAsset, {usize::MAX}>,
     #[state(artifact)]
     #[value(skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(test, serde(skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(skip_serializing_if = "Option::is_none"))]
     #[dsl(block)]
     pub artboard: Option<DrawingArtboard>,
 }

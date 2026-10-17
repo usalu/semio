@@ -7,7 +7,7 @@ use super::*;
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct RemoveBlock {
-    pub(crate) path: DocxBlockPath,
+    pub path: DocxBlockPath,
 }
 
 impl protocol::MutationKind<DocxSnapshot, DocxMutation> for RemoveBlock {

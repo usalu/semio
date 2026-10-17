@@ -1,4 +1,9 @@
-use super::*;
+use crate::standards::v6_0::subsets::document::io::encode_tiff_page_png;
+use crate::standards::v6_0::subsets::document::schema::snapshot::TiffSnapshot;
+use semio_framework_plugin::app::ImageWindowKit;
+use semio_framework_ui_locale::Locale;
+use crate::viewer::tiff_any::modes::view::windows::main::{image_view};
+use crate::viewer::tiff_any::modes::view::windows::main::*;
 
 #[semio_framework_async_macros::async_test]
 async fn definition_uses_the_frozen_window_kit_kind_id() {

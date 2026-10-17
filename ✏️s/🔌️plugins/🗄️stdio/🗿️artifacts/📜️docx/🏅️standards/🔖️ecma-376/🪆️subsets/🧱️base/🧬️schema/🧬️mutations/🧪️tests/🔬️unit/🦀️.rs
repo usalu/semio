@@ -513,7 +513,6 @@ fn empty_paragraph_text_edit_preserves_markup_and_roundtrips_through_independent
         assert_eq!(reopened.xml_part(&part_path).unwrap().document, snapshot.xml_part(&part_path).unwrap().document);
         apply_addressed(&mut snapshot, &prepared.inverse).unwrap();
         assert_eq!(snapshot, before);
-        println!("[DEBUG] DOCX empty paragraph {} retains markup, namespace, save/reopen, and exact undo", case["id"]);
     }
 }
 

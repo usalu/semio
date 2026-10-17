@@ -59,7 +59,6 @@ test("owned interpreter selects all six original WIT job exports", () => {
       expect(arm).toContain("parameters:vec![" + parameters + "],results:vec![ValueType::I64]");
     }
   } finally { db.close(); runtimeTree.delete(); tree.delete(); }
-  console.log("[DEBUG] original interpreter job selector sixPorts=true twoBorrowHelpers=true currentScalarTypes=true ownedRustAST=true independentSQLite=true closedAjv=true");
 });
 
 /** 🚀️ GUI commands admit the actual outer Nx caller and declare source versus native execution explicitly. */
@@ -94,7 +93,6 @@ test("job contract GUI launches match the supported original Nx caller", () => {
   const bootstrap = readFileSync(resolve(library, "⚡️caching/🚀️bootstrap/📜️script.ts"), "utf8");
   expect(bootstrap).toContain("createScriptProcessEnvelope(policy, capabilities, Date.now())");
   expect(bootstrap).toContain("const encoded = process.env.SEMIO_SCRIPT_POLICY");
-  console.log("[DEBUG] Original job GUI source/native execution contracts, fresh Nx bootstrap and independent closed caller schema verified");
 });
 
 /** 🕸️ The independent system engine validates and executes the authored shared job core type. */
@@ -117,7 +115,6 @@ test("authored job selector core types match actual export signatures and indepe
     expect(invoke(...row.parameters.map(type => type === "i32" ? 0 : 0n))).toBe(0n);
   }
   expect(fixture.results).toEqual(["i64"]);
-  console.log("[DEBUG] Actual Rust AST core signatures six job ports plus two body-loan helpers match closed corpus and independently validated/executed system WebAssembly; actual guest bodies unqualified");
 });
 
 /** 🧾️ The owned decoder recognizes the actual current fixed receipt before the dynamic JSON result path. */
@@ -135,5 +132,4 @@ test("owned result decoder preserves the original current fixed actor receipt", 
     expect(body.indexOf("OriginalActorFixedReceipt::read(bytes)")).toBeLessThan(body.indexOf("serde_json::from_slice(bytes)"));
     expect(body).toContain("TurnFault::ActorCall");
   } finally { db.close(); tree.delete(); }
-  console.log("[DEBUG] owned result dispatch currentFixedReceipt=SAC2 actualSourceBeforeJSON=true independentBufferSQLite=true");
 });

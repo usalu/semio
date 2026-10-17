@@ -1,14 +1,13 @@
-//! 📏️ layout → png — the pages laid side by side as a drawing (`layout_snapshot_to_semio_drawing`: page
+//! 📏️ layout → png — the pages laid side by side as a drawing (`layout_snapshot_to_scene`: page
 //! boundaries, frames with their fills and strokes, and any imported background trace) written as
-//! an anti-aliased PNG raster by `s.stdio.semio/v1/drawing`'s own export leaf.
+//! an anti-aliased PNG raster by the codec bound to the background drawing slot.
 //!
 //! 🔖 `IoFidelity::Lossy`: a picture of the spreads — story text, styles and links are not drawn.
-use crate::layout_snapshot_to_semio_drawing;
+use crate::layout_snapshot_to_format;
 use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
-use {semio_s_artifact_stdio_semio_drawing_export::encode_drawing, semio_s_artifact_stdio_semio_drawing::io::SemioDrawingFormat};
 
 pub fn register() {}
 
 pub fn serialize_bytes(from: &LayoutSnapshot) -> Result<Vec<u8>, store::PackError> {
-    encode_drawing(&layout_snapshot_to_semio_drawing(from), SemioDrawingFormat::Png).map_err(|error| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("layout→png: {error}"))))
+    layout_snapshot_to_format(from, "png").map_err(|error| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("layout→png: {error}"))))
 }

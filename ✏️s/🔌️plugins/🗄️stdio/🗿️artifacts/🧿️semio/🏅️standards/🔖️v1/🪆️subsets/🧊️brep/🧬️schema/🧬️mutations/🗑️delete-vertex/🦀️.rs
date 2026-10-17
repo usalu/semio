@@ -7,7 +7,6 @@
 //! edge is left with a stale reference — the same honestly-flagged limitation the loop exclusion
 //! already accepts, not something this triad can close without inventing an unaddressed verb.
 
-use crate::schema::mutations::SemioBrepMutation;
 use crate::schema::snapshot::SemioBrepSnapshot;
 
 //#region 🔖️Payload
@@ -18,13 +17,16 @@ pub struct DeleteVertex {
     pub id: String,
 }
 
-impl protocol::MutationKind<SemioBrepSnapshot, SemioBrepMutation> for DeleteVertex {
+impl<Op> protocol::MutationKind<SemioBrepSnapshot, Op> for DeleteVertex
+where
+    Op: protocol::Mutation<SemioBrepSnapshot, Diff = crate::schema::diff::SemioBrepDiff> + From<DeleteVertex> + From<crate::schema::mutations::create_edge::CreateEdge> + From<crate::schema::mutations::create_vertex::CreateVertex>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "vertex", kind: "delete-vertex", record: "DeletedVertex" };
 
-    fn diff(&self, base: &SemioBrepSnapshot) -> protocol::MutationOutcome<<SemioBrepMutation as protocol::Mutation<SemioBrepSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioBrepSnapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<SemioBrepSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &SemioBrepSnapshot) -> Result<Vec<SemioBrepMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &SemioBrepSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

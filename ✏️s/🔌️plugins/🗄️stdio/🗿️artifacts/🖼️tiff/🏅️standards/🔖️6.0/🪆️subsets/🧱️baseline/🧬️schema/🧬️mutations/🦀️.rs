@@ -49,6 +49,4 @@ pub(crate) fn set_first_page_shorts(base: &TiffSnapshot, tag: u16, words: Vec<u1
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

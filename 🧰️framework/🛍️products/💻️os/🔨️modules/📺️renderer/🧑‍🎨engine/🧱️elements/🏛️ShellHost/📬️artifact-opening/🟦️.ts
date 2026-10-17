@@ -38,21 +38,12 @@ import {
   type Severity
 } from "@semio-tech/framework";
 import { resolveArtifactOpeningRelay, type ResolvedArtifactOpeningRelay } from "@semio-tech/framework/backbone";
-import {
-  type ActiveSession,
-  selectOpenConflicts,
-  localProgramsV1,
-  programPluginIdV1,
-  sessionProgramsV1
-} from "../../🐚️Shell/🟦️.tsx";
-import { EMPTY_APP_LABELS_OVERLAY, applyFrameworkLayoutSeed, groupOpenWithEntries, shellLabel } from "../../🛠️ShellHelpers/🟦️.tsx";
-import {
-  DEFAULT_APP_NONE_VALUE,
-  type ConflictsHostApi,
-  type DefaultAppRow,
-  type DefaultAppsHostApi,
-  encodeDefaultAppValue
-} from "../../📌️ChromePanels/🟦️.tsx";
+import { type ActiveSession, localProgramsV1, programPluginIdV1, sessionProgramsV1 } from "../../🐚️Shell/📦️program-sessions/🟦️.ts";
+import { selectOpenConflicts } from "../../🐚️Shell/🕹️shell-store/🟦️.ts";
+import { EMPTY_APP_LABELS_OVERLAY, shellLabel } from "../../🛠️ShellHelpers/🏷️labels/🟦️.tsx";
+import { applyFrameworkLayoutSeed } from "../../🛠️ShellHelpers/🛣️route-and-chrome/🟦️.tsx";
+import { groupOpenWithEntries } from "../../🛠️ShellHelpers/🧾️transfer-checkin-tutorial/🟦️.ts";
+import { DEFAULT_APP_NONE_VALUE, type ConflictsHostApi, type DefaultAppRow, type DefaultAppsHostApi, encodeDefaultAppValue } from "../../📌️ChromePanels/📱️settings-defaults-and-conflicts/🟦️.tsx";
 // #endregion 🔌️Adapters
 import { isPluginInstanceRetiredV1, type PluginWasmHandle } from "../../🔌️PluginRuntime/🟦️.tsx";
 import { liveInstanceWindowFaultV1 } from "../🩺️fault/🟦️.ts";

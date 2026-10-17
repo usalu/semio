@@ -1,8 +1,8 @@
 use crate::standards::v1::subsets::any::io::text::mutations::*;
 use crate::standards::v1::subsets::any::schema::mutations::{create_tile,delete_tile,delete_tiles,rename_tile,reorder_tiles,replace_source,resize_source_frame,resize_tile_crop};
 
-use crate::standards::v1::subsets::any::schema::{populate_tile_drafts_from_grid, FigureTileGridSeedSpec};
-use crate::{default_figure_tile_source, default_presentation_snapshot, FigureTileDraft, FigureTileFrame, PresentationSnapshot};
+use crate::standards::v1::subsets::any::schema::tile_grid::{populate_tile_drafts_from_grid, FigureTileGridSeedSpec};
+use crate::{default_figure_tile_source, default_presentation_snapshot, presentation_working_scene, FigureTileDraft, FigureTileFrame, PresentationSnapshot};
 use store::os_store::test_support;
 
 async fn round_trip(deck: &PresentationSnapshot, operation: &PresentationMutation) -> PresentationSnapshot {
@@ -19,15 +19,15 @@ async fn round_trip(deck: &PresentationSnapshot, operation: &PresentationMutatio
 #[semio_framework_async_macros::async_test]
 async fn seeding_tiles_and_clearing_them_round_trip() {
     let deck = default_presentation_snapshot();
-    let (source, _) = crate::presentation_working_scene(&deck);
+    let (source, _) = presentation_working_scene(&deck);
     let tiles = populate_tile_drafts_from_grid(FigureTileGridSeedSpec { source: &source, rows: 2, columns: 2, gap: 0.0, key_prefix: "tile" });
     let mut seeded = deck.clone();
     for (index, tile) in tiles.iter().cloned().enumerate() {
         seeded = round_trip(&seeded, &PresentationMutation::CreateTile(create_tile::CreateTile { index, tile })).await;
     }
-    assert_eq!(crate::presentation_working_scene(&seeded).1.len(), 4);
+    assert_eq!(presentation_working_scene(&seeded).1.len(), 4);
     let cleared = round_trip(&seeded, &PresentationMutation::DeleteTiles(delete_tiles::DeleteTiles { ids: tiles.iter().map(|tile| tile.id.clone()).collect() })).await;
-    assert!(crate::presentation_working_scene(&cleared).1.is_empty());
+    assert!(presentation_working_scene(&cleared).1.is_empty());
 }
 
 #[semio_framework_async_macros::async_test]
@@ -35,13 +35,13 @@ async fn tile_create_rename_resize_delete_round_trip() {
     let deck = default_presentation_snapshot();
     let tile = FigureTileDraft { id: "t1".into(), name: "A".into(), crop: FigureTileFrame { x: 0.1, y: 0.1, width: 0.2, height: 0.2 } };
     let added = round_trip(&deck, &PresentationMutation::CreateTile(create_tile::CreateTile { index: 0, tile })).await;
-    assert_eq!(crate::presentation_working_scene(&added).1.len(), 1);
+    assert_eq!(presentation_working_scene(&added).1.len(), 1);
     let renamed = round_trip(&added, &PresentationMutation::RenameTile(rename_tile::RenameTile { id: "t1".into(), new_name: "Renamed".into() })).await;
-    assert_eq!(crate::presentation_working_scene(&renamed).1[0].name, "Renamed");
+    assert_eq!(presentation_working_scene(&renamed).1[0].name, "Renamed");
     let recropped = round_trip(&renamed, &PresentationMutation::ResizeTileCrop(resize_tile_crop::ResizeTileCrop { id: "t1".into(), new_crop: FigureTileFrame { x: 0.3, y: 0.3, width: 0.4, height: 0.4 } })).await;
-    assert_eq!(crate::presentation_working_scene(&recropped).1[0].crop.width, 0.4);
+    assert_eq!(presentation_working_scene(&recropped).1[0].crop.width, 0.4);
     let removed = round_trip(&recropped, &PresentationMutation::DeleteTile(delete_tile::DeleteTile { id: "t1".into() })).await;
-    assert!(crate::presentation_working_scene(&removed).1.is_empty());
+    assert!(presentation_working_scene(&removed).1.is_empty());
 }
 
 //#region 🔖️OpTextTests

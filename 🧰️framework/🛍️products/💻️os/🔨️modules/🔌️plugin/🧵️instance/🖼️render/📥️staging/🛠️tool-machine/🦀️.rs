@@ -1,11 +1,46 @@
 //! 🎵️ Staged `tool-machine` members of the `instance-render` use cases, as methods of the borrowed bundle (WP7 of the instance family).
 //!
 //! 🛠️ The tool overlays: gesture, press and typing state of the continuous tools, the overlay refold and its retirement, and the test clock.
-use super::*;
-use crate::tool_jobs::tool_machine::*;
-use crate::tool_jobs::tool_machine::gesture_issuer::GestureOperation;
-use crate::tool_jobs::tool_machine::gesture_issuer::reserve_live;
-use crate::tool_jobs::tool_machine::gesture_issuer::issue_live;
+#[cfg(any(test, feature = "artifact-app-testing"))]
+use std::sync::Arc;
+use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_framework_plugin_decl_emission::Emit;
+use semio_framework::Fault;
+use semio_framework_plugin_decl_emission::HostEvent;
+use store::Mutation;
+use semio_framework_plugin_tool_run::tool_jobs_tool_machine::PressLeaf;
+use semio_framework_plugin_tool_run::tool_jobs_tool_machine::ScrubTag;
+use semio_framework_plugin_tool_run::tool_jobs_tool_machine::ToolTag;
+use semio_framework_plugin_window_config::WindowConfigMutation;
+use semio_framework_plugin_tool_run::tool_jobs_tool_machine::gesture_host_event;
+use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_framework_plugin_decl_app::tool_contract::ArtifactOwnedToolJobFactory;
+use pack::snapshot::ArtifactPack;
+use semio_framework::FaultFrom;
+use semio_framework_value_derive::FromValue;
+use store::MutationDiff;
+use protocol::OpBinary;
+use protocol::OpText;
+use semio_framework_plugin_reactor_app::PluginApp;
+use semio_framework_value::retirement::RetireOwned;
+use semio_framework_value_derive::ToValue;
+use semio_framework_plugin_decl_views::tool_run_contract::ToolRunRetargetableJob;
+use semio_framework_plugin_window_config::WindowConfigOwner;
+use semio_framework_plugin_decl_emission::ActionMeta;
+use semio_framework::kernel::ActorId;
+use store::{ArtifactStore, MemberFactory, SpaceMember};
+use semio_framework_plugin_decl_app::tool_contract::ArtifactToolCompletionValue;
+use semio_framework::{FaultCode, FaultOrigin};
+use std::future::Future;
+use semio_framework_plugin_decl_views::gesture_contract::{GestureCapture, GestureSlot};
+use semio_framework_plugin_instance_extension::InstanceExtension;
+use semio_framework_plugin_retained_command::typed_operation::MountedTypedCommandFullOperation;
+use crate::render_bundle::{RenderCtx, RenderRef};
+use semio_framework_ui_contract::*;
+use semio_framework_plugin_tool_run::tool_jobs_tool_machine::*;
+use semio_framework_plugin_tool_run::tool_jobs_tool_machine::gesture_issuer::GestureOperation;
+use semio_framework_plugin_tool_run::tool_jobs_tool_machine::gesture_issuer::reserve_live;
+use semio_framework_plugin_tool_run::tool_jobs_tool_machine::gesture_issuer::issue_live;
 use semio_framework_tool_machine::ToolAbortReason;
 use semio_framework_tool_machine::ToolStep;
 use semio_framework_tool_machine::TypingInput;
@@ -17,7 +52,7 @@ use semio_framework_value::ValueError;
 use semio_framework_value::retained_clone::RetainedCloneGrant;
 use semio_framework_value::retained_clone::RetainedCloneProgress;
 use semio_framework_value::retained_clone::RetainedCloneStep;
-use super::jobs_close_ladder::handoff;
+use semio_framework_plugin_instance_jobs::jobs_close_ladder::handoff;
 
 //#region 🔖️Driver
 impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceExtension> RenderCtx<'ctx, A, M, X> {
@@ -30,7 +65,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
 
     /// 🧊️ `frozen`: a history edit opens, so every open press and every run still open leaves zero trace (a run normally
     /// commits before the history verb reaches here).
-    pub(crate) fn freeze_tool_machines(&mut self) {
+    pub fn freeze_tool_machines(&mut self) {
         let presses = self.tool_machines.presses.abort_all(ToolAbortReason::Frozen);
         let runs = self.tool_machines.typing.abort_all(ToolAbortReason::Frozen);
         if !presses.is_empty() || !runs.is_empty() {
@@ -40,7 +75,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
 
     /// 🎟️ Admits the dispatch's original window gesture into a fixed runtime slot and caller-funded strong-only capture.
     /// Completed decisions retain their slot until physical maintenance; occupied slots preserve the refused admission.
-    pub(crate) fn admit_gesture_slot(&mut self,operation:u64,base:&[u8;32],meta:&ActionMeta,birth:RetainedCloneGrant,handoff:RetainedCloneGrant)->Result<GestureCapture<A::Mutation>,Fault>{
+    pub fn admit_gesture_slot(&mut self,operation:u64,base:&[u8;32],meta:&ActionMeta,birth:RetainedCloneGrant,handoff:RetainedCloneGrant)->Result<GestureCapture<A::Mutation>,Fault>{
         let index=self.tool_machines.gesture_operations.iter().position(Option::is_none);
         let available=index.is_some()&&!self.tool_machines.gesture_operations.iter().flatten().any(|original|original.operation==operation);
         let prepared=reserve_live::<A::Mutation>(available,birth,handoff).map_err(|error|error.into_fault())?;
@@ -59,7 +94,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
     }
 
     /// 🖋️ Settlement retains the original captured slot and rejected decision until funded maintenance.
-    pub(crate) fn settle_gesture_slot(&mut self,operation:u64,publishes:bool)->bool{
+    pub fn settle_gesture_slot(&mut self,operation:u64,publishes:bool)->bool{
         let frozen=X::freezes_document(&*self.time_travel, &*self.tool_runs);
         let Some(original)=self.tool_machines.gesture_operations.iter_mut().flatten().find(|original|original.operation==operation&&!original.settled)else{return false};
         original.settled=true;
@@ -73,10 +108,10 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
     }
 
     /// 🛑️ Cancellation records intent while preserving the original slot and every decided field.
-    pub(crate) fn request_gesture_cancellation(&mut self,operation:u64){if let Some(original)=self.tool_machines.gesture_operations.iter_mut().flatten().find(|original|original.operation==operation){original.request_cancellation();}}
+    pub fn request_gesture_cancellation(&mut self,operation:u64){if let Some(original)=self.tool_machines.gesture_operations.iter_mut().flatten().find(|original|original.operation==operation){original.request_cancellation();}}
 
     /// 🪦️ The bounded fixed registry closes every original operation through its existing maintenance child.
-    pub(crate) fn begin_gesture_retirement(&mut self){for original in self.tool_machines.gesture_operations.iter_mut().flatten(){original.request_cancellation();}}
+    pub fn begin_gesture_retirement(&mut self){for original in self.tool_machines.gesture_operations.iter_mut().flatten(){original.request_cancellation();}}
 
     fn gesture_retirement_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
         let demand=self.shared().gesture_retirement_demand(grant.maximum_copy_bytes)?;
@@ -92,7 +127,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
 
     /// 🛎️ A host fact of one window: its open gesture ends with the fact's reason and zero trace — the ONE place a blur, a
     /// lost capture, a utility switch, a closing window, a moved base or a history edit ends a gesture; no editor maps it.
-    pub(crate) fn end_window_gesture(&mut self, event: &HostEvent) {
+    pub fn end_window_gesture(&mut self, event: &HostEvent) {
         if matches!(self.tool_machines.gestures.host_event(event.window_id(), gesture_host_event(event)), ToolStep::Aborted(..)) {
             self.tool_machines.gesture_ended = true;
             self.follow_tool_machines(true);
@@ -101,7 +136,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
 
     /// 🌐️ An instance-wide host fact (a history edit froze the document, a remote edit moved the base): every window's
     /// open gesture ends with the fact's reason and zero trace, whether or not a view lists the window.
-    pub(crate) fn end_every_gesture(&mut self, event: &HostEvent) {
+    pub fn end_every_gesture(&mut self, event: &HostEvent) {
         if !self.tool_machines.gestures.host_event_all(gesture_host_event(event)).is_empty() {
             self.tool_machines.gesture_ended = true;
             self.follow_tool_machines(true);
@@ -109,14 +144,14 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
     }
 
     /// 🎨️ Whether a host fact ended a gesture since the last ask: the windows that previewed it owe a repaint.
-    pub(crate) fn take_gesture_ended(&mut self) -> bool {
+    pub fn take_gesture_ended(&mut self) -> bool {
         std::mem::take(&mut self.tool_machines.gesture_ended)
     }
 
     /// 🪞️ Refolds the tool overlays — the document on the committed head, the app config on the committed config, every held
     /// window config on its window's committed partition — retires every displaced alias through its store (a snapshot with
     /// retire-owned roots panics on a plain drop of its last owner), and drops every run the moved head conflicts with.
-    pub(crate) fn follow_tool_machines(&mut self, changed: bool) {
+    pub fn follow_tool_machines(&mut self, changed: bool) {
         if self.shared().tool_overlay_retirement_pending(){self.tool_machines.refold_owed=true;return;}
         self.tool_machines.refold_owed=false;
         let machines = &*self.tool_machines;
@@ -161,7 +196,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
     }
 
     /// 🎟️ Original refold Vec/Arc owners wait for this actual full grant; no cold-drain fallback is admitted.
-    pub(crate) fn tool_overlay_retirement_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
+    pub fn tool_overlay_retirement_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
         if !self.shared().tool_overlay_retirement_pending(){return Ok(RetainedCloneStep::Complete(Default::default()));}
         if self.shared().gesture_retirement_pending(){return self.gesture_retirement_step(grant);}
         if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()));}
@@ -190,7 +225,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
     /// of the press the window already closed stays silent on every lane. One ledger step decides every lane, so a refused
     /// input leaves the press, its overlays and its held config exactly as they were until a retry or a host abort decides.
     /// Answers whether `emit` publishes the press.
-    pub(crate) fn settle_press<D>(&mut self, tag: &ScrubTag, base: &[u8], actor: &str, emit: &mut Emit<A::Mutation, A::ConfigMutation, D>) -> Result<bool, Fault> {
+    pub fn settle_press<D>(&mut self, tag: &ScrubTag, base: &[u8], actor: &str, emit: &mut Emit<A::Mutation, A::ConfigMutation, D>) -> Result<bool, Fault> {
         let base: String = base.iter().map(|byte| format!("{byte:02x}")).collect();
         let leaves = std::mem::take(&mut emit.artifact_mutations)
             .into_iter()
@@ -227,7 +262,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
     /// the window's run; nothing publishes while the run is open, and a run the edit ended (idle lapse, caret jump, another
     /// buffer) publishes in this emit as ONE edit stamped with its own `TransactionRef`. An emit that carries no transaction
     /// logs no history row; every other lane of the emit (effects, events, UI scope) publishes as usual.
-    pub(crate) fn settle_tool_operation(&mut self, mounted: &mut MountedTypedCommandFullOperation<A>, publication: &mut ArtifactToolCompletionValue<A>) -> Result<(), Fault> {
+    pub fn settle_tool_operation(&mut self, mounted: &mut MountedTypedCommandFullOperation<A>, publication: &mut ArtifactToolCompletionValue<A>) -> Result<(), Fault> {
         let operation = mounted.operation.operation.0;
         let driven = self.settle_gesture_slot(operation, matches!(publication, ArtifactToolCompletionValue::Emit(Ok(_), _)));
         let tag = self.tool_machines.take_operation(operation);
@@ -284,13 +319,13 @@ impl<'v, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceEx
         Ok(RetirementDemand{copy_bytes:size_of::<GestureOperation<A::Mutation>>(),depth:1,..Default::default()})
     }
 
-    pub(crate) fn tool_overlay_retirement_pending(&self)->bool{
+    pub fn tool_overlay_retirement_pending(&self)->bool{
         self.gesture_retirement_pending()||self.tool_machines.pending_overlay_aliases.is_some()||self.tool_machines.overlay_alias_retirement.is_some()||self.tool_machines.pending_config_aliases.is_some()||self.tool_machines.config_alias_retirement.is_some()||self.stores.window_config_store.preview_retirement_pending()
     }
 
     fn tool_overlay_refold_owed(&self)->bool{self.tool_machines.refold_owed}
 
-    pub(crate) fn tool_overlay_retirement_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{
+    pub fn tool_overlay_retirement_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{
         if self.gesture_retirement_pending(){return self.gesture_retirement_demand(body);}
         if let Some(owner)=self.tool_machines.overlay_alias_retirement.as_ref(){return if owner.terminal_is_empty(){Ok(RetirementDemand{copy_bytes:size_of::<Option<ToolOriginalAliasBatch<A::Snapshot>>>(),depth:1,..Default::default()})}else{owner.next_demand(ArtifactStore::<A::Snapshot,A::Mutation>::snapshot_alias_retirement_birth_bytes())};}
         if self.tool_machines.pending_overlay_aliases.is_some(){return Ok(ToolOriginalAliasBatch::<A::Snapshot>::constructor_demand());}

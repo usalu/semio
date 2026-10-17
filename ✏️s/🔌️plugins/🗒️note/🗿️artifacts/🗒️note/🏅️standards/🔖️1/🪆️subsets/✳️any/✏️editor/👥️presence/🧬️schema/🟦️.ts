@@ -28,6 +28,10 @@ type noteNotePresenceGuardSizeBounds = { readonly minItems?: number; readonly ma
 
 export const noteNotePresenceGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : noteNotePresenceGuardReject(at, "value is not an object");
+export const noteNotePresenceGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) noteNotePresenceGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const noteNotePresenceGuardArray = (value: unknown, at: string, bounds: noteNotePresenceGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return noteNotePresenceGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) noteNotePresenceGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -58,7 +62,7 @@ export const noteNotePresenceGuardConstant = <T extends string | number | boolea
 //#endregion 🚪️Parsers
 
 export function parseNotePresence(value: unknown, at = "$"): NotePresence {
-  const row = noteNotePresenceGuardObject(value, at);
+  const row = noteNotePresenceGuardClosed(noteNotePresenceGuardObject(value, at), at, ["cameraX", "cameraY", "cameraZoom", "activeUtilityId"]);
   return {
     cameraX: noteNotePresenceGuardNumber(row["cameraX"], `${at}.cameraX`),
     cameraY: noteNotePresenceGuardNumber(row["cameraY"], `${at}.cameraY`),

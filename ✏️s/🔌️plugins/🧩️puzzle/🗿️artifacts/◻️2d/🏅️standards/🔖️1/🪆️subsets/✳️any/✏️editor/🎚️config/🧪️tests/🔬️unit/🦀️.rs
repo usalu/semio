@@ -1,4 +1,6 @@
-use super::*;
+#[allow(unused_imports)]
+use std::collections::BTreeMap;
+use crate::editor::puzzle2d::config::*;
 
 #[test]
 fn app_config_carries_weights_and_fill_count_but_no_window_or_operation_state() {

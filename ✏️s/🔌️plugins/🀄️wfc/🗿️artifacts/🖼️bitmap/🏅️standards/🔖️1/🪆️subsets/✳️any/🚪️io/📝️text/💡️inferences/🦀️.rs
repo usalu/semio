@@ -13,7 +13,7 @@ impl BitmapInferenceJob {
     /// retried on the next page — the commit text is generated incrementally and never materialised
     /// as one oversized `String`, which is what keeps the guest's contiguous-allocation ceiling out
     /// of the picture for a 256 × 256 output.
-    pub(crate) fn next_encode_chunk(&self) -> Option<(String, EncodePhase, usize)> {
+    pub fn next_encode_chunk(&self) -> Option<(String, EncodePhase, usize)> {
         match self.encode_phase {
             EncodePhase::Open => Some((r#"{"pixels":""#.to_string(), EncodePhase::Pixels, 0)),
             EncodePhase::Pixels => {
@@ -39,5 +39,5 @@ impl BitmapInferenceJob {
     }
 }
 }
-pub(crate) fn decode_inference_value<T:semio_framework_value::FromValue>(text:&str)->Result<T,String> {crate::standards::v1::subsets::any::io::text::bitmap_json_decode(text).map_err(|error|error.to_string())}
-pub(crate) fn encode_inference_value<T:semio_framework_value::ToValue>(value:&T)->String {crate::standards::v1::subsets::any::io::text::bitmap_json_encode(value)}
+pub fn decode_inference_value<T:semio_framework_value::FromValue>(text:&str)->Result<T,String> {crate::standards::v1::subsets::any::io::text::snapshot::bitmap_json_decode(text).map_err(|error|error.to_string())}
+pub fn encode_inference_value<T:semio_framework_value::ToValue>(value:&T)->String {crate::standards::v1::subsets::any::io::text::snapshot::bitmap_json_encode(value)}

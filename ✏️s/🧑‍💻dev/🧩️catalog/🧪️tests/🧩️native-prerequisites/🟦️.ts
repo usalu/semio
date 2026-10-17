@@ -30,7 +30,6 @@ test("current graph owners precede native and transitive component compilation i
       expect(tasks.dependencies[row.target]).toContain(required);
     }
   }
-  console.log(`[DEBUG] native graph prerequisites selections=${selections.length} owners=${fixture.owners.length}`);
 }, 30_000);
 
 
@@ -60,7 +59,6 @@ test("component description verifies the shipped bytes with its native emitter p
   expect(stages.find((stage: any) => stage.name === "describe")).toBeDefined();
   expect(stages.find((stage: any) => stage.name === "publish").after).toContain("describe");
   expect(stages.find((stage: any) => stage.name === "publish").after).toContain("probe");
-  console.log("[DEBUG] actual component emitter precedes shipped-byte driver; materialization publication waits for semantic description and probe");
 });
 
 
@@ -94,7 +92,6 @@ test("browser and native renderer inputs precede consumers in the installed Nx g
     for(const operation of ["run","smoke"])expect(targets[`${operation}-${corpus.variant}-native-${profile}`].options.forwardAllArgs).toBe(true);
   }
   expect(targets[`build-${corpus.variant}-react-release`].dependsOn).toContain(corpus.flowProducer);
-  console.log("[DEBUG] renderer inputs checked through installed Nx");
 });
 
 test("native foreground tasks retain their child failure outcome",async()=>{

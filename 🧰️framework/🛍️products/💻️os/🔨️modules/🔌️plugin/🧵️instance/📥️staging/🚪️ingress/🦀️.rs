@@ -1,13 +1,47 @@
 //! 📒️ Staged slice of the `ingress` band of the mounted artifact instance: its `instance-app` members (WP6 step S0 of the instance family).
 //!
 //! 🚪️ Ingress of the mounted artifact instance: framework-reserved job driving, constructors, store-constructor units, envelope ingress and decode, document archive genesis and merge, child members and packs.
-use super::*;
-use crate::tool_jobs::time_travel;
+use semio_framework_plugin_instance_stores::stores_components::{ActionIngress, ConstructorState, InstanceStores, LocalInteraction, PeerRoster};
+use semio_framework::kernel::ActorId;
+use semio_framework_plugin_window_kits::AppActionRegistry;
+use semio_framework_plugin_decl_app::ArtifactApp;
+use store::os_store::store_schema::ArtifactCommand;
+use semio_framework_plugin_decl_views::tool_contract::ArtifactInstanceOperationOwnerHandle;
+use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use pack::snapshot::ArtifactPack;
+use store::{ArtifactStore, ConfigStore, MemberFactory, Mutation, SpaceMember, create_config_envelope};
+use semio_framework_plugin_decl_app::tool_contract::{ArtifactToolFactoryRegistry, ArtifactToolPublicContract, ArtifactToolPublicationLane};
+use std::collections::BTreeMap;
+use semio_framework_plugin_instance_children::children_components::ChildComposition;
+use semio_framework_plugin_instance_ladders::ladders_components::{CloseCursors, MaintenanceCursors};
+use semio_framework_plugin_instance_history::history_components::{CommandHistory, HostEvents, Transactions};
+use store::os_store::composition_coordinator::CompositionCoordinator;
+use semio_framework_plugin_decl_emission::Emit;
+use semio_framework_plugin_instance_docs::docs_components::{EnvelopeJobs, MediaTransfers};
+use semio_framework::FaultFrom;
+use std::future::Future;
+use semio_framework_plugin_instance_extension::InstanceExtension;
+use semio_framework_plugin_interaction::mutations::InteractionConfigMutation;
+use protocol::OpText;
+use semio_framework_plugin_instance_jobs::jobs_components::{PendingReserved, ToolOperations};
+use semio_framework_plugin_reactor_app::PluginApp;
+use semio_framework_plugin_decl_registry::artifact_registration::PluginRuntimeRegistry;
+use semio_framework_plugin_time_travel::TimeTravelLedger;
+use semio_framework_plugin_tool_run::tool_jobs_tool_machine::ToolMachineRuntime;
+use semio_framework_plugin_tool_run::ToolRunLedger;
+use semio_framework_plugin_job::lifted_full_operation_job::TypedCommandFullOperationJobFactory;
+use crate::VcsArtifactApp;
+use semio_framework_plugin_window_config::WindowConfigOwnerRegistry;
+use semio_framework_plugin_window_transient::window_transient::WindowTransientOwnerRegistry;
+use store::os_store::document_materialize::create_document_envelope;
+use semio_framework_plugin_job::reserved_jobs::register_framework_reserved_factories;
+use semio_framework_ui_contract::*;
+use semio_framework_plugin_time_travel as time_travel;
 
 impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A, M> {
     /// 🧬️ Constructs a store-only wrapper with an empty registry. Every action and typed
     /// command fails closed before decoding until a registry-backed wrapper is constructed.
-    pub async fn new(app: A, actor: ActorId, mounted_policy: crate::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Self {
+    pub async fn new(app: A, actor: ActorId, mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Self {
         Self::with_registry(app, AppActionRegistry::default(), actor, mounted_policy, identity).await
     }
 
@@ -20,12 +54,12 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
         A::initial_snapshot().await
     }
 
-    pub async fn with_registry(app: A, registry: AppActionRegistry, actor: ActorId, mounted_policy: crate::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Self {
+    pub async fn with_registry(app: A, registry: AppActionRegistry, actor: ActorId, mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Self {
         Self::with_registry_on_bus(app, registry, semio_framework::ActionBus::new(), actor, mounted_policy, identity).await
     }
 
     /// 🫂️ Activates an app controller against Platform's injected shared production registry.
-    pub async fn with_registry_on_bus(app: A, registry: AppActionRegistry, tool_jobs: semio_framework::ActionBus, actor: ActorId, mounted_policy: crate::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Self {
+    pub async fn with_registry_on_bus(app: A, registry: AppActionRegistry, tool_jobs: semio_framework::ActionBus, actor: ActorId, mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Self {
         let mounted_policy = mounted_policy.validate().expect("explicit app embedding policy");
         let app_id = app.instance_id().await.to_string();
         PluginRuntimeRegistry::publish_framework_schema_documents().expect("the OS's own schema documents never conflict");
@@ -60,7 +94,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
         let mut app_tool_registry = ArtifactToolFactoryRegistry::<A>::new(&tool_jobs, &app_id);
         A::register_tool_job_factories(&mut app_tool_registry).expect("app-owned tool factories must preserve exact owner/controller/schema/tool authority");
         let app_tool_registrations = app_tool_registry.finish();
-        let (tool_job_controller_id, tool_job_registrations) = crate::reserved_jobs::tool_job_registration::<A>(&registry, &app_id, A::DOCUMENT_SCHEMA, <A::Command as ::protocol::OpBinary>::TOOL_JOB_IDS, &tool_jobs, &app_tool_registrations)
+        let (tool_job_controller_id, tool_job_registrations) = semio_framework_plugin_job::reserved_jobs::tool_job_registration::<A>(&registry, &app_id, A::DOCUMENT_SCHEMA, <A::Command as ::protocol::OpBinary>::TOOL_JOB_IDS, &tool_jobs, &app_tool_registrations)
             .expect("tool proof catalog must exactly join migrated generated declarations to live concrete factories");
         let artifact_one_item_factory = A::build_artifact_store_one_item_preparation_factory();
         let config_one_item_factory = A::build_config_store_one_item_preparation_factory();

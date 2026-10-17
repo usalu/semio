@@ -15,6 +15,9 @@ workspace = true
 [lib]
 path = "../../🦀️.rs"
 
+[features]
+testkit = []
+
 [dependencies]
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-diagnostic = { workspace = true }
@@ -30,11 +33,8 @@ semio-framework-ui-locale = { workspace = true }
 semio-framework-value = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 semio-framework-value-dictionary = { workspace = true }
-semio-s-artifact-stdio-dwg-geometry = { workspace = true }
-semio-s-artifact-stdio-semio-base = { workspace = true }
-semio-s-artifact-stdio-semio-drawing = { workspace = true }
-semio-s-artifact-stdio-svg = { workspace = true }
 serde = { workspace = true }
+semio-framework-io-ports = { workspace = true }
 
 [dev-dependencies]
 semio-framework-async-macros = { workspace = true }
@@ -43,3 +43,4 @@ semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"]
 serde_json = { workspace = true }
 semio-framework-test-original-snapshot-owners = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🛬️original-snapshot-owners/📦️packages/🦀️rust" }
 semio-framework-io-sqlite-snapshot-testing-backing = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️testing/💰️backing/📦️packages/🦀️rust" }
+semio-framework-io-ports = { workspace = true, features = ["testkit"] }

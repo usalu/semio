@@ -1,6 +1,8 @@
 //! 🧰️ Kit of the puzzle 2d editor: the one-item store preparations of the config and the artifact lane. See [`super`].
 
-use super::*;
+use crate::{editor::puzzle2d::config::Puzzle2dConfig, editor::puzzle2d::config::Puzzle2dConfigMutation};
+use crate::editor::puzzle2d::snapshot::Puzzle2dPlaySnapshot;
+use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
 
 //#region 🔖️PlayApp
 //#region 🧵️RetainedCommands
@@ -11,18 +13,18 @@ use super::*;
 const PUZZLE2D_CONFIG_STORE_MAXIMUM_BYTES: usize = 65_536;
 
 struct Puzzle2dConfigStorePreparation {
-    pub(super) owners: store::OneItemOwners<Puzzle2dConfig, Puzzle2dConfigMutation>,
-    pub(super) checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint,
+    pub owners: store::OneItemOwners<Puzzle2dConfig, Puzzle2dConfigMutation>,
+    pub checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint,
     completed_bytes: usize,
-    pub(super) phase: u8,
-    pub(super) cancelled: bool,
+    pub phase: u8,
+    pub cancelled: bool,
 }
 
 /// 🎚️ Config-lane preparation factory — the precondition every `Config` publication contract above
 /// depends on (`build_config_store_one_item_preparation_factory`); mirrors
 /// `Puzzle3dConfigStorePreparationFactory`.
 #[derive(semio_framework_value::FactoryPayloadRetirement)]
-pub(super) struct Puzzle2dConfigStorePreparationFactory;
+pub struct Puzzle2dConfigStorePreparationFactory;
 
 /// 🌉️ Measures the fully encoded config root against the fixed store envelope. `Puzzle2dConfig` is
 /// encoded through the same in-house `semio_framework_pack_json` writer its `OpBinary` codec uses, so the measured
@@ -183,14 +185,14 @@ impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFacto
 /// delete node, connect / disconnect handles, manifest, compatibility, catalogs) one per store turn.
 
 #[derive(semio_framework_value::FactoryPayloadRetirement)]
-pub(super) struct Puzzle2dArtifactStorePreparationFactory;
+pub struct Puzzle2dArtifactStorePreparationFactory;
 
 struct Puzzle2dArtifactStorePreparation {
-    pub(super) owners: store::OneItemOwners<Puzzle2dPlaySnapshot, Puzzle2dMutation>,
-    pub(super) checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint,
+    pub owners: store::OneItemOwners<Puzzle2dPlaySnapshot, Puzzle2dMutation>,
+    pub checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint,
     completed_bytes: usize,
-    pub(super) phase: u8,
-    pub(super) cancelled: bool,
+    pub phase: u8,
+    pub cancelled: bool,
 }
 
 impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Puzzle2dPlaySnapshot, Puzzle2dMutation> for Puzzle2dArtifactStorePreparationFactory {

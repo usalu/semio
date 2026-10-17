@@ -1,10 +1,11 @@
 //! ↩️ Builds the exact native deletion inverse through controlled retained record owners.
 
-use crate::standards::v1::subsets::any::schema::mutations::native_preparation_child::{Puzzle2dCloseAxis,close_child_demand,close_demand_methods};
-use super::{DeleteNode,Puzzle2dDeleteNodePreparationCursor,Puzzle2dDeleteNodePreparationStep};
-use {crate::Puzzle2dSnapshot, crate::standards::v1::subsets::any::schema::Puzzle2dNode, crate::standards::v1::subsets::any::schema::Puzzle2dEdge, crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation, crate::standards::v1::subsets::any::schema::mutations::create_node::CreateNode, crate::standards::v1::subsets::any::schema::mutations::connect_handles::ConnectHandles, crate::standards::v1::subsets::any::schema::mutations::change_edge_visible::ChangeEdgeVisible, crate::standards::v1::subsets::any::schema::mutations::change_edge_locked::ChangeEdgeLocked};
+use crate::standards::v1::subsets::any::schema::preparation::native_preparation_child::Puzzle2dCloseAxis;
+use super::{Puzzle2dDeleteNodePreparationCursor, Puzzle2dDeleteNodePreparationStep};
+use crate::standards::v1::subsets::any::schema::mutations::{DeleteNode};
+use {crate::Puzzle2dSnapshot, crate::standards::v1::subsets::any::schema::records::Puzzle2dNode, crate::standards::v1::subsets::any::schema::records::Puzzle2dEdge, crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation, crate::standards::v1::subsets::any::schema::mutations::create_node::CreateNode, crate::standards::v1::subsets::any::schema::mutations::connect_handles::ConnectHandles, crate::standards::v1::subsets::any::schema::mutations::change_edge_visible::ChangeEdgeVisible, crate::standards::v1::subsets::any::schema::mutations::change_edge_locked::ChangeEdgeLocked};
 use semio_framework_value::{ValueError,ValueRefusalKind,list::PagedList,paged::PagedUtf8,retirement::controlled::ControlledRetirement,retained_clone::{RetainedClone,RetainedCloneBinding, RetainedFieldCursor,RetainedCloneCursor,RetainedCloneRef,RetainedCloneGrant,RetainedCloneStep,RetainedCloneProgress}};
-use crate::standards::v1::subsets::any::schema::mutations::native_preparation_child::Puzzle2dPreparationChild;
+use crate::standards::v1::subsets::any::schema::preparation::native_preparation_child::Puzzle2dPreparationChild;
 use std::{mem::{size_of,ManuallyDrop},ops::{Deref,DerefMut}};
 
 pub struct Puzzle2dDeleteNodeInverseCursor { state: ManuallyDrop<Puzzle2dDeleteNodeInverseState> }
@@ -158,7 +159,7 @@ impl Puzzle2dDeleteNodeInverseCursor {
     pub fn begin_close(&mut self) {self.closing=true;self.preparation.begin_close();self.node.begin_close();self.edge.begin_close();self.identifier.begin_close();}
 
     fn close_demand(&self,axis:Puzzle2dCloseAxis)->Result<usize,ValueError>{
-        if !self.preparation.terminal_is_empty(){return close_child_demand!(axis,self.preparation)}
+        if !self.preparation.terminal_is_empty(){return match axis {Puzzle2dCloseAxis::Copy=>self.preparation.next_close_copy_byte_demand(),Puzzle2dCloseAxis::Capacity(body)=>self.preparation.next_close_capacity_byte_demand(body),Puzzle2dCloseAxis::Release=>self.preparation.next_close_release_byte_demand(),Puzzle2dCloseAxis::Depth=>self.preparation.next_close_depth_demand()}}
         if !self.node.terminal_is_empty(){return axis.retained::<Puzzle2dNode,_>(&self.node)}
         if !self.edge.terminal_is_empty(){return axis.retained::<Puzzle2dEdge,_>(&self.edge)}
         if !self.identifier.terminal_is_empty(){return axis.retained::<PagedUtf8<{usize::MAX}>,_>(&self.identifier)}
@@ -169,7 +170,10 @@ impl Puzzle2dDeleteNodeInverseCursor {
         axis.binding(if self.mutation.is_some(){&self.mutation}else{&self.source})
     }
 
-    close_demand_methods!(next_close_copy_byte_demand,next_close_capacity_byte_demand,next_close_release_byte_demand,next_close_depth_demand);
+    pub fn next_close_copy_byte_demand(&self)->Result<usize,ValueError>{self.close_demand(Puzzle2dCloseAxis::Copy)}
+    pub fn next_close_capacity_byte_demand(&self,body:usize)->Result<usize,ValueError>{self.close_demand(Puzzle2dCloseAxis::Capacity(body))}
+    pub fn next_close_release_byte_demand(&self)->Result<usize,ValueError>{self.close_demand(Puzzle2dCloseAxis::Release)}
+    pub fn next_close_depth_demand(&self)->Result<usize,ValueError>{self.close_demand(Puzzle2dCloseAxis::Depth)}
 
     pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError> {
         if !self.closing {return Err(refusal("delete inverse closure was not started"));}
@@ -202,6 +206,4 @@ fn progress(items:usize,bytes:usize,capacity:usize)->RetainedCloneStep {Retained
 fn retirement_progress(step:RetainedCloneStep)->RetainedCloneStep {RetainedCloneStep::Progress(step.progress())}
 fn refusal(message:&str)->ValueError {ValueError::new(ValueRefusalKind::InvariantViolated,message)}
 
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;
+

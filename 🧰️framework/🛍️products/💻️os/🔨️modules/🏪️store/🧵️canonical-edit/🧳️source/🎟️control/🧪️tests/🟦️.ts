@@ -14,7 +14,6 @@ test("original canonical control schema agrees with independent Ajv without a me
  const ours=cases.map(value=>validateJsonSchemaSubset(resolved,value).length===0);
  expect(ours).toEqual([true,false,false,false]);expect(cases.map(value=>independent(value))).toEqual(ours);
  for(const bytes of law.bodyCopyGrants){const input={...law.original,body:{...law.original.body,maximumCopyBytes:bytes}};expect(validateJsonSchemaSubset(resolved,input)).toEqual([]);expect(independent(input)).toBe(true);expect(input.metadata).toBe(law.original.metadata);}
- console.log("[DEBUG] original finite metadata4096 is separately caller-authored; body1/7 and every zero receipt field remain unchanged; firstparty schema/Ajv outputs agree");
 });
 test("actual Sealer receives mandatory original metadata and records it separately before source work",()=>{
  const source=readFileSync(new URL("../../🦀️.rs",root),"utf8");

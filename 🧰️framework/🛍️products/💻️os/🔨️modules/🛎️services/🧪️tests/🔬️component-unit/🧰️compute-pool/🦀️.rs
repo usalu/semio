@@ -222,7 +222,6 @@ use semio_framework_job_worker_authority::{BatchDriveConfig,BatchJobParams,Worke
         let(result,heap)={let mut future=std::pin::pin!(pool.run_job(&runtime,&scope,&ctx,original,&mut job,&mut params,&mut control,&mut receipt,&mut completion,|_|panic!("refused source cannot publish a semantic loan")));semio_framework_trace::observe_heap_allocations_on_this_thread(||future.as_mut().poll(&mut Context::from_waker(std::task::Waker::noop())))};assert!(matches!(result,Poll::Ready(Ok(false))));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert!(completion.is_none());drop(control);assert_eq!(admission,Default::default());assert_eq!(receipt.progress,Default::default());assert_eq!(job.as_ref().unwrap()as*const _,job_pointer);assert_eq!(params.as_ref().unwrap()as*const _,params_pointer);
     }
     let BatchJobParams{cancel,..}=params.take().unwrap();let mut close=semio_framework_async::CancelTokenRetirement::from_token(cancel);let step=close.return_alias_step(&ctx.cancel,original).unwrap();assert!(step.progress().fits(original));assert!(close.terminal_is_empty());drop(close);
-    eprintln!("[DEBUG] Original Services admission denials preserve source addresses and zero native birth/free under real HeapWitness");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -242,7 +241,6 @@ use semio_framework_job_worker_authority::{WorkerJobAdmissionContext};
     ctx.cancel.cancel().await;
     while !completion.as_ref().unwrap().terminal_is_empty(){assert_eq!(completion.as_ref().unwrap()as*const _,original);let step=close_original_compute(completion.as_mut().unwrap(),&ctx,u64::MAX,&mut close_sequence,&close_authority,&mut receipt);assert!(step.progress().fits(grant));if step.progress()==Default::default(){sleep_ms(&runtime,1).await;}}
     assert!(receipt.progress.released_bytes>=admission.retained_capacity_bytes);drop(completion);assert!(close_authority.close_step(grant).unwrap().progress().fits(grant));assert!(close_authority.terminal_is_empty());
-    eprintln!("[DEBUG] Original Services completion survives driver cancellation and closes through same original context birth={} released={}",admission.retained_capacity_bytes,receipt.progress.released_bytes);
 }
 
 /// 🌀️ A self-contained cooperative yield with no tokio `rt`-feature dependency (this crate no

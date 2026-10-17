@@ -1,0 +1,67 @@
+{
+ "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs",
+ "original": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/c4p17-tools/orig/gen2dunit.rs.txt",
+ "stage": "/private/tmp/claude-501/-Users-ueli-Documents-semio/6c384ddf-f4e2-43bf-8d3c-c66daff05e49/scratchpad/c4p17/stage/gen2dunit-fs",
+ "chunks": [
+  {
+   "folder": "🧰️production-fixtures-and-maintenance-law",
+   "doc": "🧰️ Production fixtures of the generation2d editor routes: the seeded snapshot, mutations, envelope helpers and the non-empty retained maintenance swap law.",
+   "ranges": [
+    [
+     54,
+     258
+    ]
+   ]
+  },
+  {
+   "folder": "🎛️command-surface-laws",
+   "doc": "🎛️ Command surface laws of the generation2d editor routes: the retained route dispositions, the contributions ceiling, the run-start and preview-eval laws, the demo run job and the command ids with their wire forms.",
+   "ranges": [
+    [
+     260,
+     639
+    ]
+   ]
+  },
+  {
+   "folder": "📜️manifest-and-cross-cutting-laws",
+   "doc": "📜️ Manifest and cross-cutting laws of the generation2d editor routes: the manifest stitch, the declared action bridge, the canvas wire defaults and the widget undo and convergence laws.",
+   "ranges": [
+    [
+     641,
+     778
+    ]
+   ]
+  },
+  {
+   "folder": "📏️surface-budget-and-context-menu-laws",
+   "doc": "📏️ Surface budget and context menu laws of the generation2d editor routes: the resident surface bound, the disclosure budget and the framework-owned graph selection.",
+   "ranges": [
+    [
+     780,
+     849
+    ]
+   ]
+  },
+  {
+   "folder": "🔌️port-laws",
+   "doc": "🔌️ Port laws of the generation2d editor routes: the export and import doors, the params-in patching and the declared media ports.",
+   "ranges": [
+    [
+     851,
+     985
+    ]
+   ]
+  },
+  {
+   "folder": "📇️window-action-archive-and-genesis-laws",
+   "doc": "📇️ Window action, archive import and hub genesis laws of the generation2d editor routes.",
+   "ranges": [
+    [
+     987,
+     1090
+    ]
+   ]
+  }
+ ]
+}

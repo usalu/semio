@@ -1,0 +1,501 @@
+{
+  "schema": "brep.preview-component-identities.v1",
+  "transfer": {
+    "position": [
+      0,
+      0,
+      0,
+      1,
+      0,
+      0,
+      0,
+      1,
+      0,
+      1,
+      1,
+      0
+    ],
+    "normal": [
+      0,
+      0,
+      1,
+      0,
+      0,
+      1,
+      0,
+      0,
+      1,
+      0,
+      0,
+      1
+    ],
+    "index": [
+      0,
+      1,
+      2,
+      1,
+      3,
+      2
+    ],
+    "edges": [
+      0,
+      0,
+      0,
+      0.5,
+      0,
+      0,
+      0.5,
+      0,
+      0,
+      1,
+      0,
+      0,
+      1,
+      0,
+      0,
+      1,
+      1,
+      0
+    ],
+    "face_groups": [
+      {
+        "start": 0,
+        "count": 3,
+        "entity_id": "4294967297"
+      },
+      {
+        "start": 3,
+        "count": 3,
+        "entity_id": "18446744073709551615"
+      }
+    ],
+    "edge_groups": [
+      {
+        "start": 0,
+        "count": 2,
+        "entity_id": "18446744073709551614"
+      },
+      {
+        "start": 2,
+        "count": 1,
+        "entity_id": "4294967298"
+      }
+    ],
+    "face_infos": [],
+    "edge_infos": []
+  },
+  "refusals": [
+    {
+      "domain": "face",
+      "row": 0,
+      "field": "start",
+      "value": 1
+    },
+    {
+      "domain": "face",
+      "row": 1,
+      "field": "start",
+      "value": 0
+    },
+    {
+      "domain": "face",
+      "row": 0,
+      "field": "count",
+      "value": 0
+    },
+    {
+      "domain": "face",
+      "row": 0,
+      "field": "entity_id",
+      "value": ""
+    },
+    {
+      "domain": "edge",
+      "row": 0,
+      "field": "count",
+      "value": 4
+    },
+    {
+      "domain": "edge",
+      "row": 1,
+      "field": "start",
+      "value": -1
+    }
+  ],
+  "expected": {
+    "faceIds": [
+      0,
+      1
+    ],
+    "edgeIds": [
+      0,
+      0,
+      1
+    ],
+    "componentReferences": {
+      "face": [
+        "4294967297",
+        "18446744073709551615"
+      ],
+      "edge": [
+        "18446744073709551614",
+        "4294967298"
+      ]
+    },
+    "area": 1
+  },
+  "meshPack": {
+    "bodyBase64": "AAcBCDAAAAAAAAAAAAAAAAAAAIA/AAAAAAAAAAAAAAAAAACAPwAAAAAAAIA/AACAPwAAAAACCDAAAAAAAAAAAAAAgD8AAAAAAAAAAAAAgD8AAAAAAAAAAAAAgD8AAAAAAAAAAAAAgD8DCBgAAAAAAQAAAAIAAAABAAAAAwAAAAIAAAAGCAgAAAAAAQAAAAgISAAAAAAAAAAAAAAAAAAAAD8AAAAAAAAAAAAAAD8AAAAAAAAAAAAAgD8AAAAAAAAAAAAAgD8AAAAAAAAAAAAAgD8AAIA/AAAAAAkIDAAAAAAAAAAAAQAAAA0Ic3siY29tcG9uZW50UmVmZXJlbmNlcyI6eyJlZGdlIjpbIjE4NDQ2NzQ0MDczNzA5NTUxNjE0IiwiNDI5NDk2NzI5OCJdLCJmYWNlIjpbIjQyOTQ5NjcyOTciLCIxODQ0Njc0NDA3MzcwOTU1MTYxNSJdfX0=",
+    "bodyBytes": 350
+  },
+  "retirement": {
+    "labels": 4096,
+    "labelBytes": 128,
+    "itemsPerTurn": 1,
+    "bytesPerTurn": 3,
+    "maximumSteps": 1000000
+  },
+  "referenceRefusals": [
+    {
+      "id": "null-domain-table",
+      "references": null
+    },
+    {
+      "id": "array-domain-table",
+      "references": []
+    },
+    {
+      "id": "unknown-domain",
+      "references": {
+        "solid": [
+          "1"
+        ]
+      }
+    },
+    {
+      "id": "missing-pick-buffer",
+      "references": {
+        "face": [
+          "4294967297"
+        ]
+      }
+    },
+    {
+      "id": "empty-label",
+      "references": {
+        "face": [
+          ""
+        ]
+      }
+    },
+    {
+      "id": "oversized-label",
+      "references": {
+        "face": [
+          "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+        ]
+      }
+    }
+  ],
+  "deconstruction": [
+    {
+      "kind": "wire",
+      "counts": [
+        4,
+        4,
+        0,
+        0
+      ]
+    },
+    {
+      "kind": "face",
+      "counts": [
+        4,
+        4,
+        1,
+        0
+      ]
+    },
+    {
+      "kind": "edge",
+      "counts": [
+        2,
+        1,
+        0,
+        0
+      ]
+    },
+    {
+      "kind": "vertex",
+      "counts": [
+        1,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "kind": "shell",
+      "counts": [
+        8,
+        12,
+        6,
+        1
+      ]
+    },
+    {
+      "kind": "solid",
+      "counts": [
+        8,
+        12,
+        6,
+        1
+      ]
+    },
+    {
+      "kind": "compound",
+      "counts": [
+        16,
+        24,
+        12,
+        2
+      ]
+    },
+    {
+      "kind": "shared-compound",
+      "counts": [
+        8,
+        12,
+        6,
+        1
+      ]
+    },
+    {
+      "kind": "curve",
+      "counts": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "kind": "surface",
+      "counts": [
+        0,
+        0,
+        0,
+        0
+      ]
+    }
+  ],
+  "wire": {
+    "width": 2,
+    "height": 1.5,
+    "edgeCount": 4,
+    "perimeter": 7
+  },
+  "measurements": {
+    "circleRadius": 1,
+    "length": [
+      {
+        "kind": "wire",
+        "value": 7
+      },
+      {
+        "kind": "face",
+        "value": 7
+      },
+      {
+        "kind": "vertex",
+        "value": 0
+      },
+      {
+        "kind": "shell",
+        "value": 18
+      },
+      {
+        "kind": "solid",
+        "value": 18
+      },
+      {
+        "kind": "compound",
+        "value": 36
+      },
+      {
+        "kind": "shared-compound",
+        "value": 18
+      },
+      {
+        "kind": "circle",
+        "value": 6.283185307179586
+      }
+    ],
+    "area": [
+      {
+        "kind": "face",
+        "value": 3
+      },
+      {
+        "kind": "shell",
+        "value": 13
+      },
+      {
+        "kind": "solid",
+        "value": 13
+      },
+      {
+        "kind": "compound",
+        "value": 26
+      },
+      {
+        "kind": "shared-compound",
+        "value": 13
+      }
+    ],
+    "volume": [
+      {
+        "kind": "solid",
+        "value": 3
+      },
+      {
+        "kind": "compound",
+        "value": 6
+      },
+      {
+        "kind": "shared-compound",
+        "value": 3
+      }
+    ],
+    "lengthRefusals": [
+      "curve",
+      "surface"
+    ]
+  },
+  "closestPoint": {
+    "query": [
+      1.0,
+      0.75,
+      3
+    ],
+    "cases": [
+      {
+        "kind": "vertex",
+        "point": [
+          0,
+          0,
+          0
+        ],
+        "distance": 3.25
+      },
+      {
+        "kind": "edge",
+        "point": [
+          1.0,
+          0,
+          0
+        ],
+        "distance": 3.092329219213245
+      },
+      {
+        "kind": "wire",
+        "point": [
+          1.0,
+          0,
+          0
+        ],
+        "distance": 3.092329219213245
+      },
+      {
+        "kind": "face",
+        "point": [
+          1.0,
+          0.75,
+          0
+        ],
+        "distance": 3
+      },
+      {
+        "kind": "shell",
+        "point": [
+          1.0,
+          0.75,
+          1
+        ],
+        "distance": 2
+      },
+      {
+        "kind": "solid",
+        "point": [
+          1.0,
+          0.75,
+          1
+        ],
+        "distance": 2
+      },
+      {
+        "kind": "compound",
+        "point": [
+          1.0,
+          0.75,
+          1
+        ],
+        "distance": 2
+      },
+      {
+        "kind": "shared-compound",
+        "point": [
+          1.0,
+          0.75,
+          1
+        ],
+        "distance": 2
+      }
+    ]
+  },
+  "curvedClosestPoint": {
+    "radius": 1.0,
+    "height": 2.0,
+    "cases": [
+      {
+        "query": [
+          2.0,
+          0.0,
+          4.0
+        ],
+        "point": [
+          1.0,
+          0.0,
+          2.0
+        ],
+        "distance": 2.23606797749979
+      },
+      {
+        "query": [
+          2.0,
+          0.0,
+          -2.0
+        ],
+        "point": [
+          1.0,
+          0.0,
+          0.0
+        ],
+        "distance": 2.23606797749979
+      },
+      {
+        "query": [
+          2.0,
+          0.0,
+          1.0
+        ],
+        "point": [
+          1.0,
+          0.0,
+          1.0
+        ],
+        "distance": 1.0
+      }
+    ]
+  }
+}

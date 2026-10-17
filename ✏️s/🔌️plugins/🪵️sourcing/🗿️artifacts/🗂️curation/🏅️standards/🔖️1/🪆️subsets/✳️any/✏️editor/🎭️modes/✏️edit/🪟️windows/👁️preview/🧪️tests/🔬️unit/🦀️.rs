@@ -1,6 +1,8 @@
+use semio_framework_plugin::World3dScene;
 
-use super::*;
-use crate::editor::sourcing::unit_tests::context::{new_app, render as render_body};
+use semio_framework_plugin::SurfaceKind;
+use crate::editor::sourcing::modes::edit::windows::preview::{SOURCING_CURATION_BODY_PREVIEW, definition, render};
+use crate::editor_unit_tests::context::{new_app, render as render_body};
 
 /// 🧬️ Direct unit coverage for `render`'s own id-lookup logic — the app-level call site always
 /// passes an empty slice (see the `selected_ids` doc comment above) until a future wave threads

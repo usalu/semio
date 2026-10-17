@@ -33,6 +33,10 @@ type reasoningWiresCanvasTransientGuardSizeBounds = { readonly minItems?: number
 
 export const reasoningWiresCanvasTransientGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : reasoningWiresCanvasTransientGuardReject(at, "value is not an object");
+export const reasoningWiresCanvasTransientGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) reasoningWiresCanvasTransientGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const reasoningWiresCanvasTransientGuardArray = (value: unknown, at: string, bounds: reasoningWiresCanvasTransientGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return reasoningWiresCanvasTransientGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) reasoningWiresCanvasTransientGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -63,13 +67,13 @@ export const reasoningWiresCanvasTransientGuardConstant = <T extends string | nu
 //#endregion 🚪️Parsers
 
 export function parseWiresCanvasTransient(value: unknown, at = "$"): WiresCanvasTransient {
-  const row = reasoningWiresCanvasTransientGuardObject(value, at);
+  const row = reasoningWiresCanvasTransientGuardClosed(reasoningWiresCanvasTransientGuardObject(value, at), at, ["dragNodeId", "dragStartX", "dragStartY", "dragLastX", "dragLastY", "dragZoom"]);
   return {
     dragNodeId: row["dragNodeId"] === undefined ? undefined : reasoningWiresCanvasTransientGuardString(row["dragNodeId"], `${at}.dragNodeId`),
     dragStartX: reasoningWiresCanvasTransientGuardNumber(row["dragStartX"], `${at}.dragStartX`),
     dragStartY: reasoningWiresCanvasTransientGuardNumber(row["dragStartY"], `${at}.dragStartY`),
     dragLastX: reasoningWiresCanvasTransientGuardNumber(row["dragLastX"], `${at}.dragLastX`),
     dragLastY: reasoningWiresCanvasTransientGuardNumber(row["dragLastY"], `${at}.dragLastY`),
-    dragZoom: reasoningWiresCanvasTransientGuardNumber(row["dragZoom"], `${at}.dragZoom`, { minimum: Number.MIN_VALUE }),
+    dragZoom: reasoningWiresCanvasTransientGuardNumber(row["dragZoom"], `${at}.dragZoom`),
   };
 }

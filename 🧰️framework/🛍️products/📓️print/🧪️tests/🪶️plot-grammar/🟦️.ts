@@ -120,6 +120,7 @@ export default defineTestAdapter({
           ],
         };
         const plan = planVizChart({
+          language: "en",
           width: Number(row.width),
           height: Number(row.height),
           margin: { top: Number(row.marginTop), right: Number(row.marginRight), bottom: Number(row.marginBottom), left: Number(row.marginLeft) },

@@ -1,4 +1,39 @@
-use super::*;
+use crate::editor::puzzle2d::terminology::Puzzle2dLabels;
+use crate::editor::puzzle2d::snapshot::Puzzle2dScene;
+use semio_framework_plugin::BuiltNode;
+use semio_framework_plugin::TreeWindows;
+use semio_framework_pack_json::{json, Value};
+#[allow(unused_imports)]
+use crate::editor::puzzle2d::{snapshot::inferred_kind_entries, snapshot::kind_catalog_entries, interaction::ui_label, snapshot::PUZZLE2D_PLAY_CONTROLLER_ID};
+#[allow(unused_imports)]
+use semio_framework_plugin::tree_item_with_action;
+#[allow(unused_imports)]
+use semio_framework_plugin::tree_item_with_action_draggable;
+#[allow(unused_imports)]
+use semio_framework_plugin::ActionFactory;
+#[allow(unused_imports)]
+use semio_framework_ui_locale::LocalizedLabel;
+#[allow(unused_imports)]
+use semio_framework_plugin::PanelGroup;
+#[allow(unused_imports)]
+use semio_framework_plugin::PanelTabDefinition;
+#[allow(unused_imports)]
+use semio_framework_plugin::PanelTabKind;
+#[allow(unused_imports)]
+use semio_framework_plugin::PanelTreeBuilder;
+#[allow(unused_imports)]
+use semio_framework_plugin::PluginAssemblyError;
+#[allow(unused_imports)]
+use semio_framework_plugin::UiMapBuilder;
+#[allow(unused_imports)]
+use semio_framework_plugin::UiText;
+#[allow(unused_imports)]
+use semio_framework_plugin::UiValue;
+#[allow(unused_imports)]
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
+#[allow(unused_imports)]
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL;
+use crate::editor::puzzle2d::panels::catalogue::*;
 
 //#region 🪟️WindowLaws
 const RETIREMENT_DRAIN_STEPS: usize = 4096;

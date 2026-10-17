@@ -35,6 +35,5 @@ test("canonical paged map fixture preserves accepted JSON bytes and exact lifeti
   expect(source).toContain("Object(PagedMap");
   expect(source).toContain("admit_typed_controlled_retirement");
   expect(source).not.toContain("active.truncate");
-  console.log("[DEBUG] original canonical map JSON/hash matches JSON.stringify/Node SHA256; SQLite iterator-before-root conservation at zero/one/seven aliases");
 });
 

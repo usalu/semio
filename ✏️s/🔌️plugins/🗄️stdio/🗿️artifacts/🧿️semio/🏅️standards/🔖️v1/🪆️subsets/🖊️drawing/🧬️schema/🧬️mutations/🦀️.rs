@@ -18,23 +18,23 @@ use crate::schema::diff::SemioDrawingDiff;
 use crate::schema::snapshot::SemioDrawingSnapshot;
 
 //#region 🔖️Leaves
-use super::change_stroke_color;
-use super::change_stroke_width;
-use super::create_layer;
-use super::create_node;
-use super::delete_layer;
-use super::delete_node;
-use super::drag_nodes;
-use super::flatten_node;
-use super::group_nodes;
-use super::move_node;
-use super::reorder_nodes;
-use super::replace_fill;
-use super::replace_path;
-use super::rotate_node;
-use super::scale_node;
-use super::unflatten_node;
-use super::ungroup_node;
+use crate::schema::mutations::change_stroke_color;
+use crate::schema::mutations::change_stroke_width;
+use crate::schema::mutations::create_layer;
+use crate::schema::mutations::create_node;
+use crate::schema::mutations::delete_layer;
+use crate::schema::mutations::delete_node;
+use crate::schema::mutations::drag_nodes;
+use crate::schema::mutations::flatten_node;
+use crate::schema::mutations::group_nodes;
+use crate::schema::mutations::move_node;
+use crate::schema::mutations::reorder_nodes;
+use crate::schema::mutations::replace_fill;
+use crate::schema::mutations::replace_path;
+use crate::schema::mutations::rotate_node;
+use crate::schema::mutations::scale_node;
+use crate::schema::mutations::unflatten_node;
+use crate::schema::mutations::ungroup_node;
 //#endregion 🔖️Leaves
 
 //#region 🔖️Mutations
@@ -115,9 +115,9 @@ pub fn inverse_semio_drawing_mutation(mutation: &SemioDrawingMutation, base: &Se
 //#region 🔖️Demo
 /// 🌱 One representative value per variant — single source of truth for `🚪️io/🦀️.rs`'s
 /// `ops_grammar_conformance_law`/`protocol_walk_law` AND this file's own round-trip tests.
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn demo_mutation_cases() -> Vec<SemioDrawingMutation> {
+pub fn demo_mutation_cases() -> Vec<SemioDrawingMutation> {
     use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
     use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3;
     use semio_s_artifact_stdio_semio_base::schema::geometry::SemioQuaternion;
@@ -160,11 +160,5 @@ mod tests;
 //#endregion 🧪️Tests
 
 //#region 🧪️FixtureTests
-/// 🧪️ Handcrafted mutation fixtures (contract D1, ticket `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`)
-/// — one case per triad leaf, self-wired here rather than in `🦀️.rs` so this subset owns its
-/// own test surface. `#[path = "."]` re-roots the nested `#[path]`s at THIS file's directory (the
-/// `🧬️mutations` root) instead of the implicit `🦀️component/` child directory.
-#[cfg(test)]
-#[path = "🧪️tests/🔬️fixture/🦀️.rs"]
-mod fixture_tests;
+
 //#endregion 🧪️FixtureTests

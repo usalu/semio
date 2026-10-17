@@ -1,0 +1,393 @@
+{
+ "⏯️run": [
+  "ChangeRunEndDay",
+  "ChangeRunStartDay",
+  "ChangeRunYear",
+  "ChangeRunStartMonth",
+  "ChangeRunEndMonth"
+ ],
+ "☀️pv-system": [
+  "ChangePvSystemInverterEfficiency",
+  "ChangePvSystemDcCapacity",
+  "CreatePvSystem",
+  "DeletePvSystem",
+  "ChangePvSystemModuleEfficiency",
+  "ChangePvSystemTilt",
+  "ChangePvSystemArea",
+  "ChangePvSystemAzimuth"
+ ],
+ "⚠️fault": [
+  "CreateFault",
+  "ChangeFaultSeverity",
+  "ChangeFaultTargetEquipment",
+  "ChangeFaultType",
+  "ChangeFaultStartSchedule",
+  "DeleteFault"
+ ],
+ "⛱️shading-device": [
+  "ChangeFenestrationOverhangOffset",
+  "ChangeFenestrationFinOffset",
+  "ChangeFenestrationFinDepth",
+  "ChangeFenestrationOverhangDepth"
+ ],
+ "❄️refrigeration": [
+  "CreateRefrigerationSystem",
+  "ChangeRefrigerationSystemDesignLoad",
+  "ChangeRefrigerationSystemDefrostSchedule",
+  "ChangeRefrigerationSystemCaseCount",
+  "DeleteRefrigerationSystem"
+ ],
+ "🌞️daylight-zone": [
+  "DeleteDaylightZone",
+  "ChangeDaylightZoneZone",
+  "CreateDaylightZone",
+  "ChangeDaylightZoneGlareLimit",
+  "ChangeDaylightZoneWindowTransmittance",
+  "ChangeDaylightZoneIlluminanceTarget"
+ ],
+ "🌡️thermostat": [
+  "ChangeThermostatHeatingThrottleRange",
+  "ChangeThermostatCoolingThrottleRange",
+  "ChangeThermostatCoolingSetpointSchedule",
+  "DeleteThermostat",
+  "ChangeThermostatZone",
+  "ChangeThermostatHeatingSetpointSchedule",
+  "CreateThermostat"
+ ],
+ "🌪️ventilation": [
+  "CreateMechanicalVentilation",
+  "ChangeMechanicalVentilationFanDeltaPressure",
+  "ChangeMechanicalVentilationFanTotalEfficiency",
+  "ChangeMechanicalVentilationSchedule",
+  "DeleteMechanicalVentilation",
+  "ChangeMechanicalVentilationDesignFlow",
+  "ChangeMechanicalVentilationZone"
+ ],
+ "🌬️air-loop": [
+  "ChangeAirLoopSupplyNode",
+  "ChangeAirLoopReturnNode",
+  "ChangeAirLoopDesignSupplyAirFlow",
+  "RenameAirLoop",
+  "CreateAirLoop",
+  "DeleteAirLoop",
+  "RemoveAirLoopTerminalZone",
+  "AddAirLoopTerminalZone"
+ ],
+ "🌳️shading": [
+  "ChangeShadingSurfaceTransmittanceSchedule",
+  "CreateShadingSurface",
+  "RenameShadingSurface",
+  "ReplaceShadingSurfaceVertices",
+  "DeleteShadingSurface"
+ ],
+ "🍃️outdoor-air": [
+  "ChangeOutdoorAirSystemAirLoop",
+  "CreateOutdoorAirSystem",
+  "DeleteOutdoorAirSystem",
+  "ChangeOutdoorAirSystemEconomizerEnabled",
+  "ChangeOutdoorAirSystemMinOaFlow"
+ ],
+ "🎚️setpoint": [
+  "DeleteSetpointManager",
+  "ChangeSetpointManagerSchedule",
+  "CreateSetpointManager",
+  "ReplaceSetpointManagerKind",
+  "RenameSetpointManager"
+ ],
+ "🎨️finish": [
+  "ChangeMaterialSolarAbsorptance",
+  "ChangeMaterialVisibleAbsorptance",
+  "ChangeMaterialThermalAbsorptance",
+  "ChangeMaterialRoughness"
+ ],
+ "🏗️construction": [
+  "AddConstructionLayer",
+  "RemoveConstructionLayer",
+  "CreateConstruction",
+  "ReorderConstructionLayers",
+  "DeleteConstruction",
+  "RenameConstruction"
+ ],
+ "🏡️zone": [
+  "ChangeZoneMultiplier",
+  "ChangeZoneConditioned",
+  "CreateZone",
+  "DeleteZone",
+  "RenameZone",
+  "ChangeZoneFloorAreaParticipation",
+  "ChangeZoneVolume"
+ ],
+ "🏭️plant-loop": [
+  "ChangePlantLoopSupplyTemperature",
+  "ChangePlantLoopType",
+  "CreatePlantLoop",
+  "RemovePlantLoopEquipment",
+  "DeletePlantLoop",
+  "RenamePlantLoop",
+  "AddPlantLoopEquipment",
+  "ChangePlantLoopDesignFlow",
+  "ChangePlantLoopReturnTemperature"
+ ],
+ "👥️people-gain": [
+  "ChangePeopleGainSchedule",
+  "ChangePeopleGainSensibleFraction",
+  "ChangePeopleGainActivitySchedule",
+  "CreatePeopleGain",
+  "ChangePeopleGainPeoplePerArea",
+  "ChangePeopleGainLatentFraction",
+  "ChangePeopleGainRadiantFraction",
+  "ChangePeopleGainZone",
+  "DeletePeopleGain"
+ ],
+ "💡️lighting-gain": [
+  "ChangeLightingGainSchedule",
+  "ChangeLightingGainRadiantFraction",
+  "ChangeLightingGainReturnAirFraction",
+  "CreateLightingGain",
+  "ChangeLightingGainVisibleFraction",
+  "ChangeLightingGainWattsPerArea",
+  "ChangeLightingGainZone",
+  "DeleteLightingGain"
+ ],
+ "💧️humidistat": [
+  "ChangeHumidistatHumidifyingSetpointSchedule",
+  "CreateHumidistat",
+  "ChangeHumidistatHumidifyingThrottleRange",
+  "ChangeHumidistatZone",
+  "DeleteHumidistat",
+  "ChangeHumidistatDehumidifyingSetpointSchedule",
+  "ChangeHumidistatDehumidifyingThrottleRange"
+ ],
+ "💨️infiltration": [
+  "ChangeInfiltrationSchedule",
+  "ChangeInfiltrationZone",
+  "ChangeInfiltrationFlowPerExteriorArea",
+  "CreateInfiltration",
+  "ChangeInfiltrationDesignFlowAch",
+  "ChangeInfiltrationMethod",
+  "DeleteInfiltration"
+ ],
+ "💯️ideal-loads": [
+  "ChangeIdealLoadsSystemMaxHeatingCapacity",
+  "ChangeIdealLoadsSystemZone",
+  "ChangeIdealLoadsSystemOutdoorAirPerArea",
+  "ChangeIdealLoadsSystemMaxHeatingSupplyAirTemp",
+  "ChangeIdealLoadsSystemMinCoolingSupplyAirTemp",
+  "ChangeIdealLoadsSystemMaxCoolingCapacity",
+  "ChangeIdealLoadsSystemOutdoorAirPerPerson",
+  "CreateIdealLoadsSystem",
+  "DeleteIdealLoadsSystem"
+ ],
+ "📆️year-schedule": [
+  "ChangeAnnualScheduleHolidayDailySchedule",
+  "AddAnnualScheduleHoliday",
+  "RemoveAnnualScheduleHoliday",
+  "ChangeAnnualScheduleDefaultDailySchedule",
+  "DeleteAnnualSchedule",
+  "InsertAnnualScheduleRule",
+  "RemoveAnnualScheduleRule",
+  "CreateAnnualSchedule",
+  "ReorderAnnualScheduleRules"
+ ],
+ "📈️time-series": [
+  "DeleteTimeSeriesSchedule",
+  "ReplaceTimeSeriesScheduleValues",
+  "ChangeTimeSeriesScheduleTimestep",
+  "CreateTimeSeriesSchedule"
+ ],
+ "📋️space-list": [
+  "AddSpaceListMember",
+  "CreateSpaceList",
+  "DeleteSpaceList",
+  "RemoveSpaceListMember",
+  "RenameSpaceList"
+ ],
+ "📍️site": [
+  "ChangeGroundDeep",
+  "ChangeSiteElevation",
+  "ChangeSiteLatitude",
+  "ChangeSiteLongitude",
+  "ChangeGroundBuilding",
+  "ChangeGroundShallow",
+  "ChangeSiteNorthAxis",
+  "ChangeSiteTimeZone"
+ ],
+ "📏️sizing": [
+  "ChangeSizingObjectDesignDayType",
+  "ChangeSizingObjectZone",
+  "CreateSizingObject",
+  "ChangeSizingObjectSizingType",
+  "DeleteSizingObject"
+ ],
+ "🔋️model": [
+  "DisconnectReferencedModel",
+  "UnbindWeatherFile",
+  "BindWeatherFile",
+  "RenameModel",
+  "RemoveOutputVariable",
+  "AddOutputVariable",
+  "ChangeModelVersion",
+  "ConnectReferencedModel",
+  "ReplaceAirflowNetwork"
+ ],
+ "🔌️load-center": [
+  "AddElectricalLoadCenterPv",
+  "RemoveElectricalLoadCenterPv",
+  "CreateElectricalLoadCenter",
+  "AddElectricalLoadCenterBattery",
+  "DeleteElectricalLoadCenter",
+  "RenameElectricalLoadCenter",
+  "RemoveElectricalLoadCenterBattery"
+ ],
+ "🔍️glazing": [
+  "ChangeFenestrationShgc",
+  "ChangeFenestrationVlt",
+  "ChangeFenestrationUValue",
+  "ChangeFenestrationFrameConductance",
+  "BindFenestrationGlazingConstruction",
+  "ChangeFenestrationDividerConductance",
+  "ClearFenestrationGlazingConstruction"
+ ],
+ "🔒️enclosure": [
+  "CreateThermalEnclosure",
+  "DeleteThermalEnclosure",
+  "AddThermalEnclosureZone",
+  "RemoveThermalEnclosureZone",
+  "RenameThermalEnclosure"
+ ],
+ "🔥️solar-thermal": [
+  "ChangeSolarThermalSystemAzimuth",
+  "CreateSolarThermalSystem",
+  "DeleteSolarThermalSystem",
+  "ChangeSolarThermalSystemEfficiency",
+  "ChangeSolarThermalSystemTilt",
+  "ChangeSolarThermalSystemCollectorArea",
+  "ChangeSolarThermalSystemStorageVolume"
+ ],
+ "🔧️zone-equipment": [
+  "ChangeZoneEquipmentCoolingCapacity",
+  "ChangeZoneEquipmentPriority",
+  "ChangeZoneEquipmentZone",
+  "ChangeZoneEquipmentType",
+  "DeleteZoneEquipment",
+  "CreateZoneEquipment",
+  "ChangeZoneEquipmentHeatingCapacity"
+ ],
+ "🔲️boundary": [
+  "ChangeSurfaceSunExposed",
+  "ChangeSurfaceWindExposed",
+  "DisconnectSurfaces",
+  "ChangeSurfaceBoundaryCondition",
+  "ConnectSurfaces"
+ ],
+ "🕐️fixed-schedule": [
+  "DeleteConstantSchedule",
+  "CreateConstantSchedule",
+  "ChangeConstantScheduleValue"
+ ],
+ "🕒️day-schedule": [
+  "DeleteDailySchedule",
+  "ReplaceDailyScheduleHourlyValues",
+  "ChangeDailyScheduleInterpolation",
+  "CreateDailySchedule",
+  "ChangeDailyScheduleLimits"
+ ],
+ "🕳️leakage": [
+  "ChangeInfiltrationConstantTermCoefficient",
+  "ChangeInfiltrationTemperatureTermCoefficient",
+  "ChangeInfiltrationVelocityTermCoefficient",
+  "ChangeInfiltrationVelocitySquaredTermCoefficient",
+  "ChangeInfiltrationStackHeight",
+  "ChangeInfiltrationEffectiveLeakageArea",
+  "ChangeInfiltrationDischargeCoefficient"
+ ],
+ "🖥️equipment-gain": [
+  "ChangeEquipmentGainSchedule",
+  "ChangeEquipmentGainWattsPerArea",
+  "ChangeEquipmentGainRadiantFraction",
+  "ChangeEquipmentGainLatentFraction",
+  "CreateEquipmentGain",
+  "ChangeEquipmentGainZone",
+  "DeleteEquipmentGain"
+ ],
+ "🗓️week-schedule": [
+  "DeleteWeeklySchedule",
+  "ChangeWeeklyScheduleDay",
+  "CreateWeeklySchedule"
+ ],
+ "🚰️water-system": [
+  "ChangeWaterSystemSchedule",
+  "CreateWaterSystem",
+  "ChangeWaterSystemPeakFlow",
+  "DeleteWaterSystem",
+  "ChangeWaterSystemFixtureCount"
+ ],
+ "🚿️shw-system": [
+  "ChangeShwSystemHeaterCapacity",
+  "ChangeShwSystemSetpoint",
+  "ChangeShwSystemSchedule",
+  "DeleteShwSystem",
+  "CreateShwSystem",
+  "ChangeShwSystemStorageVolume"
+ ],
+ "🛋️space": [
+  "RenameSpace",
+  "ChangeSpaceZone",
+  "ChangeSpaceFloorArea",
+  "DeleteSpace",
+  "CreateSpace"
+ ],
+ "🛏️room-air": [
+  "CreateRoomAirModelAssignment",
+  "DeleteRoomAirModelAssignment",
+  "ChangeRoomAirModel"
+ ],
+ "🥂️window-layer": [
+  "RenameGasMaterial",
+  "ChangeGlazingMaterialThickness",
+  "ChangeGlazingMaterialConductivity",
+  "ChangeGlazingMaterialSolarTransmittance",
+  "RenameGlazingMaterial",
+  "ChangeGasMaterialThickness",
+  "ChangeGasMaterialGas",
+  "ChangeGlazingMaterialVisibleTransmittance",
+  "ChangeGlazingMaterialInfraredEmissivity"
+ ],
+ "🧱️surface": [
+  "RenameSurface",
+  "ChangeSurfaceMultiplier",
+  "ReplaceSurfaceVertices",
+  "ChangeSurfaceZone",
+  "CreateSurface",
+  "ChangeSurfaceClass",
+  "ChangeSurfaceConstruction",
+  "DeleteSurface"
+ ],
+ "🪟️fenestration": [
+  "ChangeFenestrationHeight",
+  "ChangeFenestrationSillHeight",
+  "RenameFenestration",
+  "ReplaceFenestrationVertices",
+  "DeleteFenestration",
+  "ChangeFenestrationArea",
+  "ChangeFenestrationSurface",
+  "CreateFenestration"
+ ],
+ "🪨️material": [
+  "ChangeMaterialSpecificHeat",
+  "ChangeMaterialDensity",
+  "ChangeMaterialThickness",
+  "ChangeMaterialConductivity",
+  "CreateMaterial",
+  "RenameMaterial",
+  "DeleteMaterial"
+ ],
+ "🪫️battery": [
+  "ChangeBatteryMaxCharge",
+  "ChangeBatteryMaxDischarge",
+  "DeleteBattery",
+  "ChangeBatteryRoundTripEfficiency",
+  "ChangeBatteryCapacity",
+  "CreateBattery"
+ ]
+}

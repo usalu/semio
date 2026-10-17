@@ -1,5 +1,45 @@
-use super::*;
-use crate::editor::puzzle5d::unit_tests::context::*;
+use crate::editor::puzzle5d::catalog::puzzle5d_part_display_label;
+use crate::editor::puzzle5d::terminology::Puzzle5dLabels;
+use crate::editor::puzzle5d::entities::{puzzle5d_grip_full_id, Puzzle5dFastener, Puzzle5dGrip, Puzzle5dPart, PUZZLE5D_GRANULARITY_FASTENER, PUZZLE5D_GRANULARITY_GRIP, PUZZLE5D_GRANULARITY_PART};
+use crate::editor::puzzle5d::view::Puzzle5dScene;
+use semio_framework_plugin::plugin_app_close_prelude::BuiltNode;
+use semio_framework_plugin::TreeWindows;
+use semio_framework_plugin::UiValue;
+use semio_framework_ui_contract as ui;
+#[allow(unused_imports)]
+use crate::editor::puzzle5d::interaction::ui_label;
+#[allow(unused_imports)]
+use crate::editor::puzzle5d::entities::{find_part_by_grip_full_id, Puzzle5dDocument, Puzzle5dTargetVolume, PUZZLE5D_GRANULARITY_TARGET_VOLUME, PUZZLE5D_INTERACTION_DOMAIN, PUZZLE5D_PLAY_CONTROLLER_ID};
+#[allow(unused_imports)]
+use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase, RowActionPlacement};
+#[allow(unused_imports)]
+use semio_framework_plugin::row_action;
+#[allow(unused_imports)]
+use semio_framework_plugin::row_target;
+#[allow(unused_imports)]
+use semio_framework_plugin::tree_window_item;
+#[allow(unused_imports)]
+use semio_framework_ui_locale::LocalizedLabel;
+#[allow(unused_imports)]
+use semio_framework_plugin::PanelGroup;
+#[allow(unused_imports)]
+use semio_framework_plugin::PanelTabDefinition;
+#[allow(unused_imports)]
+use semio_framework_plugin::PanelTabKind;
+#[allow(unused_imports)]
+use semio_framework_plugin::PanelTreeBuilder;
+#[allow(unused_imports)]
+use semio_framework_plugin::PluginAssemblyError;
+#[allow(unused_imports)]
+use semio_framework_plugin::UiAssemblyResult;
+#[allow(unused_imports)]
+use semio_framework_plugin::UiText;
+#[allow(unused_imports)]
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
+#[allow(unused_imports)]
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL;
+use crate::editor::puzzle5d::panels::artifact::*;
+use crate::editor::puzzle5d::testkit::*;
 
 #[test]
 fn document_tree_lists_the_seeded_parts_section() {
@@ -36,7 +76,7 @@ fn labels() -> &'static Puzzle5dLabels {
 
 /// 🏗️ A synthetic document of `parts` parts carrying `grips` grips each, plus `fasteners` fasteners.
 fn scaled_scene(parts: usize, grips: usize, fasteners: usize) -> Puzzle5dScene {
-    let mut document = crate::editor::puzzle5d::empty_document();
+    let mut document = crate::editor::puzzle5d::entities::empty_document();
     document.parts = (0..parts)
         .map(|part| Puzzle5dPart {
             id: format!("part-{part}"),
@@ -259,16 +299,16 @@ fn a_whole_open_document_stamps_every_total_and_stays_inside_the_body_node_ceili
 /// 🏷️ A part row reads its AUTHORED label, not its kind id, and duplicate kinds get numbered roots.
 #[test]
 fn part_rows_read_authored_labels_and_numbered_peers() {
-    let mut document = crate::editor::puzzle5d::empty_document();
+    let mut document = crate::editor::puzzle5d::entities::empty_document();
     document.parts = vec![
-        Puzzle5dPart { id: "a".into(), part_kind: "capsule".into(), anchor: Default::default(), part_2d: Default::default(), part_3d: crate::editor::puzzle5d::Puzzle5dPart3d { label: Some("Capsule".into()), ..Default::default() }, grips: Vec::new() },
-        Puzzle5dPart { id: "b".into(), part_kind: "capsule".into(), anchor: Default::default(), part_2d: Default::default(), part_3d: crate::editor::puzzle5d::Puzzle5dPart3d { label: Some("Capsule 2".into()), ..Default::default() }, grips: Vec::new() },
+        Puzzle5dPart { id: "a".into(), part_kind: "capsule".into(), anchor: Default::default(), part_2d: Default::default(), part_3d: crate::editor::puzzle5d::entities::Puzzle5dPart3d { label: Some("Capsule".into()), ..Default::default() }, grips: Vec::new() },
+        Puzzle5dPart { id: "b".into(), part_kind: "capsule".into(), anchor: Default::default(), part_2d: Default::default(), part_3d: crate::editor::puzzle5d::entities::Puzzle5dPart3d { label: Some("Capsule 2".into()), ..Default::default() }, grips: Vec::new() },
         Puzzle5dPart { id: "c".into(), part_kind: "capsule".into(), anchor: Default::default(), part_2d: Default::default(), part_3d: Default::default(), grips: Vec::new() },
     ];
     assert_eq!(puzzle5d_part_display_label(&document.parts[0], &document), "Capsule");
     assert_eq!(puzzle5d_part_display_label(&document.parts[2], &document), "capsule", "an unlabelled part falls back to its kind's catalogue name");
-    assert_eq!(crate::editor::puzzle5d::puzzle5d_next_part_label(&document.parts, &document, "capsule"), "Capsule 3", "the highest numbered peer is 2, so the next one is 3");
-    assert_eq!(crate::editor::puzzle5d::puzzle5d_next_part_label(&document.parts, &document, "core"), "core", "the first instance of a kind takes the bare catalogue name");
+    assert_eq!(crate::editor::puzzle5d::catalog::puzzle5d_next_part_label(&document.parts, &document, "capsule"), "Capsule 3", "the highest numbered peer is 2, so the next one is 3");
+    assert_eq!(crate::editor::puzzle5d::catalog::puzzle5d_next_part_label(&document.parts, &document, "core"), "core", "the first instance of a kind takes the bare catalogue name");
 }
 
 /// 🙈️ Every part row carries exactly the two hide/lock set-verbs, and its ONE target asks for the INVERSE of the

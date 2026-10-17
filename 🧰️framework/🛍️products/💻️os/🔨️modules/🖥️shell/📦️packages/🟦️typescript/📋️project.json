@@ -2,7 +2,7 @@
   "name": "@semio-tech/framework-os-shell",
   "$schema": "../../../../../🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "namedInputs": {
-    "default": ["{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/🟦️.ts", "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/🧬️schema/**/*", "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/🤖️generated/**/*", "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/🧪️tests/🧫️fixtures/**/*", "{projectRoot}/**/*", "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/🧪️tests/🎚️config/🟦️.ts"]
+    "default": ["{workspaceRoot}/🧰️framework/🔨️modules/🐚️shell/🟦️.ts", "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/🧬️schema/**/*", "{workspaceRoot}/🧰️framework/🔨️modules/🐚️shell/🤖️generated/**/*", "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/🧪️tests/🧫️fixtures/**/*", "{projectRoot}/**/*", "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/🧪️tests/🎚️config/🟦️.ts"]
   },
   "targets": {
     "test": {

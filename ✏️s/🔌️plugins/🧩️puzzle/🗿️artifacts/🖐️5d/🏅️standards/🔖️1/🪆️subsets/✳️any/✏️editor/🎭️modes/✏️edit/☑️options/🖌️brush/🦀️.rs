@@ -7,10 +7,9 @@
 //! once here and each window's `window_measures()` collects from it.
 
 use crate::editor::puzzle5d::terminology::Puzzle5dLabels;
-use crate::editor::puzzle5d::{
-    puzzle5d_action, puzzle5d_kind_ids, puzzle5d_kind_weight_sum, Puzzle5dScene, PUZZLE5D_PLAY_CONTROLLER_ID, PUZZLE5D_SUGGESTION_OFFSET_MAX, PUZZLE5D_SUGGESTION_OFFSET_MIN,
-    PUZZLE5D_SUGGESTION_OFFSET_STEP,
-};
+use crate::editor::puzzle5d::entities::{puzzle5d_action, PUZZLE5D_PLAY_CONTROLLER_ID, PUZZLE5D_SUGGESTION_OFFSET_MAX, PUZZLE5D_SUGGESTION_OFFSET_MIN, PUZZLE5D_SUGGESTION_OFFSET_STEP};
+use crate::editor::puzzle5d::catalog::{puzzle5d_kind_ids, puzzle5d_kind_weight_sum};
+use crate::editor::puzzle5d::view::Puzzle5dScene;
 use semio_framework_plugin::WindowMeasure;
 
 use std::collections::HashMap;

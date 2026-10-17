@@ -55,5 +55,66 @@ use semio_framework_value::ValueError;
 
     /// ✅️ Checks the owned profile without a physical codec.
     pub fn check_svg_tiny_conformance(snapshot:&SvgSnapshot)->Vec<Diagnostic>{check_svg_tiny_conformance_with(snapshot,&mut |_,_|Ok(())).expect("owned SVG validation count")}
+    /// 🚦️ Binds physical SQLite progress to pure owned profile validation.
+    pub fn check_svg_tiny_conformance_controlled(snapshot:&SvgSnapshot,control:&mut semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl<'_>)->Result<Vec<Diagnostic>,semio_framework_value::ValueError>{check_svg_tiny_conformance_with(snapshot,&mut |completed,total|control.checkpoint(semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotPhase::ProjectSnapshot,completed,total))}
 
 
+
+//#region 🧩️ArtifactItems
+pub mod artifact_items {
+/// 🏷️ Document schema / DSL envelope id.
+pub const STDIO_SVG_DOCUMENT_SCHEMA: &str = "stdio.svg";
+}
+//#endregion 🧩️ArtifactItems
+
+//#region 🧩️ArtifactItems2
+pub mod artifact_items_2 {
+/// 🧬️ Artifact schema descriptor id.
+pub const SVG_ARTIFACT_SCHEMA_ID: &str = "s.stdio.svg";
+}
+//#endregion 🧩️ArtifactItems2
+
+//#region 🧩️ArtifactItems3
+pub mod artifact_items_3 {
+/// 📜 Schema-owned package definition.
+pub const ARTIFACT_DEFINITION_SCHEMA: &str = include_str!("../../../../../../📜️artifact-definition.json");
+}
+//#endregion 🧩️ArtifactItems3
+
+//#region 🧩️ArtifactItems4
+pub mod artifact_items_4 {
+use crate::{STDIO_SVG_DOCUMENT_SCHEMA};
+use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
+
+//#region 🔖️ArtifactKind
+/// 🗂️ This artifact's `ArtifactKindSpec`.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn artifact_kind() -> ArtifactKindSpec {
+    ArtifactKindSpec {
+        id: "s.stdio.svg".into(),
+        label: semio_framework_ui_locale::LocalizedLabel::native("Svg", "Svg"),
+        source_format: STDIO_SVG_DOCUMENT_SCHEMA.into(),
+        component_kind: "stdio".into(),
+        dimension: "data".into(),
+        media_capability: OsMediaCapability::MeshOnly,
+        media_type: MediaType { class: MediaClass::Data, form: MediaForm::Document },
+        schema: STDIO_SVG_DOCUMENT_SCHEMA.into(),
+        export_formats: vec![],
+        import_formats: vec![],
+        export_stdio_kinds: vec![],
+        import_stdio_kinds: vec![],
+    }
+}
+//#endregion 🔖️ArtifactKind
+}
+//#endregion 🧩️ArtifactItems4
+
+//#region 🧩️ArtifactItems8
+pub mod artifact_items_8 {
+use crate::{ARTIFACT_DEFINITION_SCHEMA};
+
+pub fn formats() -> Result<Vec<semio_framework_plugin::io::FormatDescriptor>, semio_framework_plugin::ArtifactDefinitionError> {
+    semio_s_artifact_stdio_contract::format_descriptors(ARTIFACT_DEFINITION_SCHEMA)
+}
+}
+//#endregion 🧩️ArtifactItems8

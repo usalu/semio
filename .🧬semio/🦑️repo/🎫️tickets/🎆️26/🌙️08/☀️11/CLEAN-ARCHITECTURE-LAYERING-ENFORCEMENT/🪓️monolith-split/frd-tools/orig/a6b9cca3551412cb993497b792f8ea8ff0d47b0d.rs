@@ -1,0 +1,120 @@
+//! 🧪️ `🕸️create-mesh` fixture — `🕸️attaches`.
+//!
+//! Transcribed from `../../🔺️diff/🦀️.rs`: an object that ALREADY has a mesh child is
+//! FATAL `mutation.duplicate-id`; otherwise the diff sets `mesh = Some(Some(ArtifactChild::new(
+//! child_id, target)))`. The outer `Some` means "this diff writes the slot", the inner `Some`
+//! means "to this handle" — and because the inner value is a real object rather than `null`, this
+//! case's committed diff survives a JSON round trip intact (unlike its `DeleteMesh` sibling).
+//! A child handle is exactly two strings: `childId` plus the target `ArtifactRef`; the child's
+//! own content never appears in the parent.
+
+use crate::schema::diff::SemioObjectDiff;
+use crate::schema::mutations::SemioObjectMutation;
+use crate::schema::snapshot::SemioObjectSnapshot;
+use protocol::Mutation;
+
+static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../../🧪️tests/🧫️fixtures/🧬️mutations/🕸️create-mesh/🕸️attaches/📸️snapshot/⬅️before/🔣️.json"));
+static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../../🧪️tests/🧫️fixtures/🧬️mutations/🕸️create-mesh/🕸️attaches/📸️snapshot/➡️after/🔣️.json"));
+static MUTATION: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../../🧪️tests/🧫️fixtures/🧬️mutations/🕸️create-mesh/🕸️attaches/🦠️mutation/🔣️.json"));
+static DIFF: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../../🧪️tests/🧫️fixtures/🧬️mutations/🕸️create-mesh/🕸️attaches/🔺️diff/🔣️.json"));
+static OUTCOME: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../../🧪️tests/🧫️fixtures/🧬️mutations/🕸️create-mesh/🕸️attaches/🎯️outcome/🔣️.json"));
+
+fn before() -> SemioObjectSnapshot {
+    semio_framework_pack_json::from_json_str((*BEFORE), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("🕸️create-mesh before snapshot decodes")
+}
+fn expected_after() -> SemioObjectSnapshot {
+    semio_framework_pack_json::from_json_str((*AFTER), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("🕸️create-mesh after snapshot decodes")
+}
+fn mutation() -> SemioObjectMutation {
+    semio_framework_pack_json::from_json_str((*MUTATION), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("🕸️create-mesh mutation decodes")
+}
+
+/// ▶️ The mesh slot goes from empty to a handle; the transform and the other two slots stay empty.
+#[semio_framework_async_macros::async_test]
+async fn attaches_the_mesh_handle_to_an_object_that_had_none() {
+    let base = before();
+    assert!(base.mesh.is_none(), "the fixture's whole point is a base whose mesh slot is empty");
+    let produced = protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("🕸️create-mesh applies to its committed before-snapshot");
+    assert_eq!(produced, expected_after(), "🕸️create-mesh/attaches-a-mesh-child-to-an-object-that-has-none: applied state differs from the committed after-snapshot");
+    let handle = produced.mesh.as_ref().expect("the mesh slot must be populated afterwards");
+    assert_eq!(handle.child_id, "kitchen-sink-mesh", "the handle keeps the payload's own child id");
+    assert_eq!(handle.target.dialect.subset, "mesh", "the handle points at a mesh-subset artifact");
+    assert_eq!(produced.transform, base.transform, "🕸️create-mesh must not touch the object's placement");
+    assert!(produced.brep.is_none() && produced.properties.is_none(), "🕸️create-mesh must not touch the other two child slots");
+}
+
+/// ↩️ With an empty base slot the undo is a single `DeleteMesh`, which clears the slot again.
+#[semio_framework_async_macros::async_test]
+async fn the_undo_delete_mesh_detaches_the_handle_again() {
+    let base = before();
+    let mutation = mutation();
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
+    let undo = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
+    assert_eq!(undo, vec![SemioObjectMutation::DeleteMesh(crate::schema::mutations::delete_mesh::DeleteMesh {})], "creating a child into an EMPTY slot must undo as the matching delete, not as another create");
+    let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward 🕸️create-mesh applies");
+    for step in undo.iter().rev() {
+        current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("the undo DeleteMesh applies to the object that now has a child");
+    }
+    assert_eq!(current, base, "🕸️create-mesh/attaches-a-mesh-child-to-an-object-that-has-none: the undo did not restore the before-snapshot");
+}
+
+/// 🔣️ Snapshots and the payload are canonical — the payload's own fields are snake_case
+/// (`child_id`, no `rename_all` on the struct) while the nested `ArtifactRef`/`ArtifactDialect`
+/// are camelCase, and the before-snapshot omits the empty child keys entirely.
+#[semio_framework_async_macros::async_test]
+async fn committed_json_is_canonical() {
+    for (label, text) in [("before", (*BEFORE)), ("after", (*AFTER))] {
+        let decoded: SemioObjectSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("snapshot encodes");
+        let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
+        assert_eq!(reencoded, original, "🕸️create-mesh/attaches-a-mesh-child-to-an-object-that-has-none: committed {label} JSON is not canonical");
+    }
+    let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&(mutation()))).expect("🕸️create-mesh mutation encodes");
+    let original: serde_json::Value = serde_json::from_str((*MUTATION)).expect("🕸️create-mesh mutation reparses");
+    assert_eq!(reencoded, original, "🕸️create-mesh/attaches-a-mesh-child-to-an-object-that-has-none: committed mutation JSON is not canonical");
+}
+
+/// 🎯️ Declared `applied`: the base slot is empty, so the FATAL `mutation.duplicate-id` branch
+/// must not fire.
+#[semio_framework_async_macros::async_test]
+async fn declared_outcome_holds_without_a_duplicate_id_rejection() {
+    let outcome: serde_json::Value = serde_json::from_str((*OUTCOME)).expect("outcome decodes");
+    assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("applied"), "🕸️create-mesh/attaches-a-mesh-child-to-an-object-that-has-none: this case is declared applied");
+    let produced = mutation().diff(&before());
+    assert!(produced.messages().is_empty(), "attaching a child to an empty slot must raise no diagnostics");
+}
+
+/// 🔺️ The produced delta equals the committed diff — one slot, the handle, nothing else.
+#[semio_framework_async_macros::async_test]
+async fn produces_committed_diff() {
+    let base = before();
+    let outcome = <SemioObjectMutation as Mutation<SemioObjectSnapshot>>::diff(&mutation(), &base);
+    let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
+    let committed: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff decodes");
+    assert_eq!(produced, committed, "🕸️create-mesh/attaches-a-mesh-child-to-an-object-that-has-none: produced diff differs from the committed 🔺️diff/🔣️.json");
+}
+
+/// 🔣️ The committed diff is canonical: the inner value is a real handle object, so the
+/// `Option<Option<..>>` slot survives decode→encode unchanged.
+#[semio_framework_async_macros::async_test]
+async fn committed_diff_is_canonical() {
+    let decoded: SemioObjectDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed 🕸️create-mesh diff decodes");
+    assert!(matches!(decoded.mesh, Some(Some(_))), "the mesh slot must decode as Some(Some(handle)) — set, not cleared");
+    assert!(decoded.transform.is_none(), "🕸️create-mesh must leave the transform slot untouched");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("diff re-encodes");
+    let original: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff reparses");
+    assert_eq!(reencoded, original, "🕸️create-mesh/attaches-a-mesh-child-to-an-object-that-has-none: committed diff JSON is not canonical");
+}
+
+/// 🩹 Applying the committed diff to `before` yields `after`.
+#[semio_framework_async_macros::async_test]
+async fn committed_diff_applies_to_after() {
+    let decoded: SemioObjectDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed 🕸️create-mesh diff decodes");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed 🕸️create-mesh diff applies to the before-snapshot");
+    assert_eq!(produced, expected_after(), "🕸️create-mesh/attaches-a-mesh-child-to-an-object-that-has-none: committed diff did not carry before to after");
+}
+
+fn runtime_fixture_text(relative: &str) -> &'static str {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative);
+    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display())).into_boxed_str())
+}

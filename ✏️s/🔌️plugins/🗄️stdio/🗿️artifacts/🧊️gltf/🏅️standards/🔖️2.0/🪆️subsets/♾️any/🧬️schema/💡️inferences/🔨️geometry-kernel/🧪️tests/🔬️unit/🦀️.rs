@@ -1,8 +1,9 @@
-use super::super::{
+use crate::standards::v2_0::subsets::any::schema::inferences::{
     area_volume::contact_area,
     clearance::{interference_volume, overlap_volume},
 };
-use super::*;
+use crate::standards::v2_0::subsets::any::schema::modules::{measurement_contracts::*, mesh_topology::Topology};
+use crate::standards::v2_0::subsets::any::schema::inferences::geometry_core::*;
 
 fn box_part(lo: V3, hi: V3) -> RawPart {
     RawPart {

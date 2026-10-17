@@ -31,5 +31,4 @@ test("raw replay cancellation preserves original custody until separately admitt
   expect(source.includes("std::mem::replace(&mut *self.original, ReplayOwnedState::terminal())")).toBe(true);
   expect(producer.includes("impl<P, M: Mutation<P>> Drop for EditReplayResult")).toBe(true);
   expect(producer.includes("original residual custody remain")).toBe(true);
-  console.log("[DEBUG] raw replay cancellation keeps all five original owner families; SQLite admits only whole physical release");
 });

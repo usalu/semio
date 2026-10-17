@@ -1,6 +1,6 @@
 //! ⚡️ TrinityGraph mutation text codec and operation-runtime bridge.
 
-use crate::JackSnapshot;
+use crate::standards::v1::subsets::any::schema::snapshot::JackSnapshot;
 
 use crate::standards::v1::subsets::any::schema::mutations::TrinityGraphMutation;
 
@@ -41,15 +41,16 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-#[path = "🔎️set-query/🦀️.rs"]
-pub mod set_query;
+pub use semio_s_artifact_trinity_jack_model::standards::v1::subsets::any::io::text::mutations::set_query;
 
 #[allow(unused_imports)]
 mod operation_codec {
 use crate::standards::v1::subsets::any::schema::mutations::TrinityGraphMutation;
 use crate::standards::v1::subsets::any::schema::mutations::set_query;
-use crate::executor::GraphEffect;
-use crate::{Edge, EntityRef, JackSnapshot, Node, Port, PropertyBag, PropertyDef, PropertyValue};
+use crate::standards::v1::subsets::any::schema::graph::GraphEffect;
+use crate::standards::v1::subsets::any::schema::graph::{Edge, EntityRef, Node, Port};
+use crate::standards::v1::subsets::any::schema::snapshot::JackSnapshot;
+use semio_framework_graph_manifest::{PropertyBag, PropertyDef, PropertyValue};
 use protocol::{Mutation, MutationDiff, OpBinary, OpText};
 use semio_framework_diagnostic::TextError;
 use semio_framework_value::{ValueError,ValueRefusalKind};

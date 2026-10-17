@@ -14,6 +14,12 @@ export interface CadConfig {
   contributionsJson: string;
 }
 
+/** 🕹️ Which handle gestures a CAD world window offers; the TypeScript twin of `CadDislocateOptions` in `../🦀️.rs`. */
+export interface CadDislocateOptions {
+  moveEnabled: boolean;
+  rotateEnabled: boolean;
+}
+
 /** 🚪️ A strict CAD application config parse refusal. */
 export class CadConfigRefusal extends Error {
   constructor(readonly at: string, readonly why: string) {
@@ -21,9 +27,9 @@ export class CadConfigRefusal extends Error {
   }
 }
 
-const reject = (at: string, why: string): never => {
+function reject(at: string, why: string): never {
   throw new CadConfigRefusal(at, why);
-};
+}
 
 const object = (value: unknown, at: string): Record<string, unknown> =>
   value !== null && typeof value === "object" && !Array.isArray(value)

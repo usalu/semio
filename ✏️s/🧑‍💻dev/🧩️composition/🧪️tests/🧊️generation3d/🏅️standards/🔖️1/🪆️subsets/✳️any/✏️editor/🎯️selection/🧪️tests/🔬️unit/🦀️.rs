@@ -1,8 +1,9 @@
 use super::*;
+use semio_framework_test_fixtures::repo_text;
 
 #[test]
 fn mesh_component_vertices_match_evaluated_topology_fixtures() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎯️selection/🧪️tests/🧫️fixtures/🥽️topology/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(repo_text!("✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎯️selection/🧪️tests/🧫️fixtures/🥽️topology/🔣️.json")).unwrap();
     let data = fixture["mesh"].to_string();
     for case in fixture["valid"].as_array().unwrap() {
         let ids = case["ids"].as_array().unwrap().iter().map(|id| id.as_str().unwrap().to_owned()).collect::<Vec<_>>();
@@ -48,7 +49,7 @@ fn mesh_component_cached_validation_rejects_stale_indices_without_evaluation() {
 
 #[test]
 fn mesh_component_pivot_uses_unique_topology_vertices() {
-    let fixture = semio_framework_pack_json::parse(include_str!("../../../../../../../../../../../../🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🥽️mesh/🧪️tests/🧫️fixtures/🧭️component-transform/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let fixture = semio_framework_pack_json::parse(repo_text!("🧰️framework/🔨️modules/🏗️mesh-engine/🥽️polygon/🧪️tests/🧫️fixtures/🧭️component-transform/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let mesh = semio_framework_pack_json::to_string(fixture.get("mesh").unwrap());
     for case in fixture.get("cases").unwrap().as_array().unwrap() {
         let transform = case.get("transform").unwrap();
@@ -64,7 +65,7 @@ fn mesh_component_pivot_uses_unique_topology_vertices() {
 
 #[test]
 fn mesh_quick_actions_match_component_kind_and_locale() {
-    let fixtures: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎯️selection/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+    let fixtures: serde_json::Value = serde_json::from_str(repo_text!("✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎯️selection/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     for case in fixtures["quickActions"].as_array().unwrap() {
         let granularity = case["granularity"].as_str().unwrap();
         let selection = ComponentSelection { granularity: granularity.into(), selected: vec![format!("box@meshOut#0.{granularity}.0")], hovered: None };
@@ -80,7 +81,7 @@ fn mesh_quick_actions_match_component_kind_and_locale() {
 
 #[test]
 fn mesh_component_targets_match_shared_contract() {
-    let fixtures: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎯️selection/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+    let fixtures: serde_json::Value = serde_json::from_str(repo_text!("✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎯️selection/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     for target in fixtures["valid"].as_array().unwrap() {
         let actual = ComponentTarget::parse(target["id"].as_str().unwrap()).unwrap();
         assert_eq!(actual.instance, target["instance"].as_str().unwrap());
@@ -131,7 +132,7 @@ fn mesh_component_projection_preserves_instance_and_filters_hidden_targets() {
 
 #[test]
 fn mesh_component_edit_context_is_scoped_to_the_addressed_editor_preview() {
-    let fixtures: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎯️selection/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+    let fixtures: serde_json::Value = serde_json::from_str(repo_text!("✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎯️selection/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     for case in fixtures["contexts"].as_array().unwrap() {
         let kind = case["window"].as_str().unwrap();
         let view = semio_framework_plugin::ViewModel {

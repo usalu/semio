@@ -26,7 +26,7 @@
 //! `crate::declaration_1_4()` (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE).
 
 use crate::standards::v1_4::subsets::base::schema::snapshot::{PageDoc, PdfSnapshot};
-use crate::standards::v1_4::subsets::base::schema::STDIO_PDF_DOCUMENT_SCHEMA;
+use crate::standards::v1_4::subsets::base::schema::snapshot::STDIO_PDF_DOCUMENT_SCHEMA;
 use std::collections::{HashMap, HashSet};
 
 /// 🔀️ The shared COS syntax layer, hosted in the 1.7 subtree (see the module doc comment).
@@ -596,6 +596,24 @@ pub fn encode_pdf(snapshot: &PdfSnapshot) -> Result<Vec<u8>, String> {
 }
 //#endregion 🔖️Encode
 
+//#region 🎬️DemoSnapshot
+/// 📄️ The demo `stdio.pdf` document — the single source of truth for `📚️examples/🎬️demo/🖼️assets/
+/// 🗣️.dsl.semio`/`🎒️.pack.semio` (both are literally this snapshot's `print_dsl`/
+/// `encode_pack` output, asserted equal by `fixture_honesty_law`).
+///
+/// Deliberately the real `decode_pdf(encode_pdf(seed))` FIXED POINT rather than a hand-written
+/// struct: `encode_pdf` writes each page's `/MediaBox` and content stream from the model, and
+/// `decode_pdf` reads them back through the real page-tree walk, so the fixed point is what
+/// `parse_dsl(print_dsl(demo)) == demo` genuinely requires. Same construction 1.7's own
+/// `demo_pdf17_snapshot` uses, for the same reason.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn demo_pdf_snapshot() -> PdfSnapshot {
+    let seed = PdfSnapshot { schema: STDIO_PDF_DOCUMENT_SCHEMA.into(), pages: vec![PageDoc { width: 612.0, height: 792.0, text: "Semio Demo".into() }] };
+    let bytes = encode_pdf(&seed).expect("encode_pdf(seed) must succeed");
+    decode_pdf(&bytes).expect("decode_pdf(encode_pdf(seed)) must succeed")
+}
+//#endregion 🎬️DemoSnapshot
+
 //#region 🔖️SchemaSpecs
 /// 📇️ P2-FG3: `dsl::registry::register_schema_spec` -- genuinely callable for the SNAPSHOT:
 /// `PdfSnapshot`/`PageDoc` both derive `dsl::DslRecord`, so `__dsl_spec` genuinely exists.
@@ -621,35 +639,19 @@ pub fn register_schema_specs() {
 pub fn register_schema_specs() {}
 //#endregion 🔖️SchemaSpecs
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 
-//#region 🚪️DerivedIoRegistry
-pub mod io_registry {
-    use crate::standards::v1_4::subsets::a::io::PdfAComposer;
-    use crate::standards::v1_4::subsets::base::io::PdfComposer as PdfRawAnyComposer;
-    use crate::standards::v1_4::subsets::x::io::PdfXComposer;
-    use semio_framework_plugin::{composer_entry_of, io::ComposerEntry};
-    use std::sync::OnceLock;
 
-    static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
-
-    // 🚫️async: E1 pure table accessor consumed by OnceLock::get_or_init's sync closure — see R9
-    pub fn entries() -> &'static [ComposerEntry] {
-        ENTRIES.get_or_init(|| vec![composer_entry_of::<PdfRawAnyComposer>(), composer_entry_of::<PdfAComposer>(), composer_entry_of::<PdfXComposer>()]).as_slice()
-    }
+pub mod binary {
+    pub use semio_s_artifact_stdio_pdf_schema_2::standards::v1_4::subsets::base::io::binary::*;
+    pub use semio_s_artifact_stdio_pdf_snapshot::standards::v1_4::subsets::base::io::binary::inferences;
 }
-//#endregion 🚪️DerivedIoRegistry
 
-#[path = "💾️binary/🦀️.rs"]
-pub mod binary;
+pub mod text {
+    pub use semio_s_artifact_stdio_pdf_schema_2::standards::v1_4::subsets::base::io::text::*;
+    pub use semio_s_artifact_stdio_pdf_snapshot::standards::v1_4::subsets::base::io::text::inferences;
+}
 
-#[path = "📝️text/🦀️.rs"]
-pub mod text;
 
-#[path = "🪶️sqlite/🦀️.rs"]
-pub mod sqlite;
 
 /// 🌉️ Where a builder or a test meets the central applier: a mutation's diff is applied atomically to the working snapshot, and a
 /// rejection becomes a fatal outcome. The schema layer only builds diffs; applying them is an io/store concern.

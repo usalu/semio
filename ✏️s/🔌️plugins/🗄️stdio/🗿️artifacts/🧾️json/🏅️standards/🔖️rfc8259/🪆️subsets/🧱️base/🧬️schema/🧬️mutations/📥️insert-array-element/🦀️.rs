@@ -43,6 +43,4 @@ impl protocol::MutationKind<JsonSnapshot, super::JsonMutation> for InsertArrayEl
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

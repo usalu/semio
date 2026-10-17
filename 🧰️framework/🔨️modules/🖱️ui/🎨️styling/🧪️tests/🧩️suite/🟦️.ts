@@ -49,10 +49,10 @@ import {
 } from "../../📦️packages/🟦️typescript/🟦️.ts";
 import { meshCollectionVitePlugin, serveFileWithValidatorsV1, PLAYGROUND_PLAY_BOOT_APPEARANCE_SCRIPT, PLAYGROUND_PLAY_BOOT_THEME_SCRIPT, resolveSemioAssetRoot, SEMIO_ASSET_ROOT, SEMIO_FAVICON_HEAD_HTML, semioAssetsVitePlugin, semioBrandHtmlVitePlugins, semioEmojiIndexHtmlVitePlugin, semioFaviconSources, semioFaviconSvgMarkup, semioFaviconVitePlugin, staticDirMountVitePlugins, staticDirVitePlugin, tileProxyVitePlugin } from "../../🏗️builder/🌐️vite/🟦️.ts";
 import { fontCatalogSources, parseFontCatalog, parseGoogleFontWoff2Map, resolveFontFaceUrl, resolveFontSource } from "../../🔤️fonts/🟦️.ts";
-import type { OwnedBuildMiddleware, OwnedBuildServer } from "../../../🎯️targets/⚛️react/🛠️build-tooling/🟦️.ts";
-import { parseMeshDeliveryCatalog, meshAssetTransportUrl, resolveMeshAsset } from "../../../../🖼️assets/🥽️mesh/🟦️.ts";
-import { MESH_DELIVERY_CATALOG } from "../../../../🖼️assets/🥽️mesh/📇️catalog/🟦️.ts";
-import { assetPathFromRequest, assetTransportUrl, parseAssetDeliveryAuthority, SEMIO_ASSET_DIRECTORY, SEMIO_ASSET_ROUTE } from "../../../../🖼️assets/🔍️resolver/🌐️delivery/🟦️.ts";
+import type { OwnedBuildMiddleware, OwnedBuildServer } from "@semio-tech/ui-react/build-tooling";
+import { parseMeshDeliveryCatalog, meshAssetTransportUrl, resolveMeshAsset } from "@semio-tech/assets/mesh";
+import { MESH_DELIVERY_CATALOG } from "@semio-tech/assets/mesh/catalog";
+import { assetPathFromRequest, assetTransportUrl, parseAssetDeliveryAuthority, SEMIO_ASSET_DIRECTORY, SEMIO_ASSET_ROUTE } from "@semio-tech/assets/resolver/delivery";
 
 const repoRoot = resolve(import.meta.dir, "../../../../../..");
 /** 🧪️ A complete owned dev server whose only live seam is the middleware registration. */

@@ -11,7 +11,16 @@ import { cleanup, fireEvent, render } from "@semio-tech/ui-react/test";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { actionSemanticsForKind, type ActionDefinition, type AppDefinition, type AppWindowKindDefinition, createMemoryStoragePort } from "@semio-tech/framework";
 import { buildActiveUtilityByWindowId, initialShellState, actionStageKey, actionRequiresStagedForm, resolveKeybindingIntent, WindowActionPane, type ResolvedActionArgDef, type ResolvedActionDefinition, shellReducer } from "../../🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx";
-import { windowActionPaneNode, chordUsesCanonicalKeyTokens, clipboardWriteFragmentFromEffect, keyboardEventMatchesChord, pasteActionWithRetainedFragment, pasteArgsFragment } from "../../🧱️elements/🛠️ShellHelpers/🟦️.tsx";
+import { windowActionPaneNode } from "../../🧱️elements/🛠️ShellHelpers/🪟️window-panes/🟦️.tsx";
+import {
+  chordUsesCanonicalKeyTokens,
+  keyboardEventMatchesChord
+} from "../../🧱️elements/🛠️ShellHelpers/🪟️window-panes/⌨️keyboard-chords/🟦️.ts";
+import {
+  clipboardWriteFragmentFromEffect,
+  pasteActionWithRetainedFragment,
+  pasteArgsFragment
+} from "../../🧱️elements/🛠️ShellHelpers/🪟️window-panes/📋️clipboard-activation/🟦️.ts";
 import "../🧰️engine-contract-helpers/🟦️.ts";
 
 // 🧰️ Window Actions & Utilities Contract (WS-2): staged argument forms (P1/P2), palette redirect (P3),
@@ -136,7 +145,6 @@ describe("window action panel — staging and single dispatch (P1/P2)", () => {
         expect(Object.fromEntries(utilityAssignmentCases.windowIds.map((window) => [window, state.actionPane.activeUtilityByWindowId[window] ?? null])), row.id).toEqual(step.expected);
       }
     }
-    console.log(`[DEBUG] React ${locale} actual shell reducer preserves twenty explicit assignments and user presses across two window scopes`);
   });
 
   it.each(["en", "de"] as const)("initial window utility decisions follow declared arms and preserve resolved registers (%s)", async (locale) => {
@@ -189,13 +197,11 @@ describe("window action panel — staging and single dispatch (P1/P2)", () => {
       expect(oracle({ ...row, actual }), JSON.stringify(oracle.errors)).toBe(true);
     }
     expect(() => resolveInitialWindowUtility({ ...fixture.cases[0]!, initialUtilityId: "unknown" })).toThrow();
-    console.log(`[DEBUG] React ${locale} initial utility decisions match twelve neutral outputs and independent Ajv relational assertions`);
   });
 
   it("initial utility nullable admission preserves the resolved host context contract", async () => {
     const { testResolvedHostContext } = await import("../../../../../../../🔨️modules/🛂️manifest/🪟️view-context/🧪️tests/🪟️resolved-host-context/🟦️.ts");
     testResolvedHostContext();
-    console.log("[DEBUG] Actual resolved-context admission and independent Ajv agree across the existing valid and invalid corpus after nullable utility admission");
   });
 
   it.each(["en", "de"] as const)("initial utility registers preserve an explicit clear in the store and guest projection (%s)", (locale) => {
@@ -213,7 +219,6 @@ describe("window action panel — staging and single dispatch (P1/P2)", () => {
     const addressed = windowViewContext({ ...view, activeUtilityId: "pen" }, row.windowId)!;
     expect(addressed.activeUtilityId).toBeUndefined();
     expect(addressed.activeUtilityByWindowId).toEqual(projected);
-    console.log(`[DEBUG] React ${locale} actual store and parsed guest context preserve a deliberate clear without confusing it with a new window`);
   });
 
   it("renders every row disabled when an active utility gates actions", () => {
@@ -237,7 +242,6 @@ describe("window action panel — staging and single dispatch (P1/P2)", () => {
       expect(execute.mock.calls.slice(before).map(([action]) => action.action)).toEqual(policy.allowsActionsWhileActive ? utilityActionPolicy.actions : []);
     }
     cleanup();
-    console.log(`[DEBUG] Mounted React ${locale} neutral palette declarations dispatch 60 commands across twelve armed tools and preserve foreign modal-tool refusal`);
   });
 
   it("groups actions into category sections like the command panel", () => {

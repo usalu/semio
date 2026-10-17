@@ -51,7 +51,6 @@ describe("real workspace smoke", () => {
     const logs = await run(["logs", task.session]);
     expect(logs.code, logs.stderr).toBe(0);
     expect(plain(logs.stdout)).toMatch(/Successfully ran target build/);
-    console.log(`[DEBUG] real native Nx build ${task.session} completed through ${instance}, exited 0, and retained its build log`);
   }, 1_300_000);
 
   test("A finite real Nx command runs to completion with exit code 0", async () => {
@@ -61,7 +60,6 @@ describe("real workspace smoke", () => {
     expect(result.code, `${result.stderr}\n${text.slice(-3000)}`).toBe(0);
     expect(text).toMatch(/\b\d+ pass\b/);
     expect(text).not.toMatch(/\b[1-9]\d* fail\b/);
-    console.log(`[DEBUG] real dashboard Nx test completed through instance ${instance}: ${text.slice(-1600)}`);
   }, 1_300_000);
 
   test("A real development server starts detached, answers and stops", async () => {
@@ -71,9 +69,9 @@ describe("real workspace smoke", () => {
     const started = await run(["run", "@teaching/architecture-quiz:dev", "--detach", "--wait-ready", "--timeout", "900"], 1_000_000);
     expect(started.code, `${started.stderr}\n${started.stdout}`).toBe(0);
     const address = /http:\/\/(?:127\.0\.0\.1|localhost):6061\S*/.exec(started.stdout)?.[0];
-    expect(address, started.stdout).toBeDefined();
-    const early = await get(address!).then(() => false, () => true);
-    expect((await get(address!, 240)).status).toBe(200);
+    if (address === undefined) throw new Error(`No ready address in ${started.stdout}`);
+    const early = await get(address).then(() => false, () => true);
+    expect((await get(address, 240)).status).toBe(200);
     const mine = async () => (JSON.parse((await run(["tasks", "--json"])).stdout) as { session: string; commandId: string; status: string; readyUrl: string | null; startedMs: number }[]).filter((task) => task.commandId === "@teaching/architecture-quiz:dev").sort((a, b) => b.startedMs - a.startedMs)[0]!;
     const task = await mine();
     expect(task.status).toBe("running");
@@ -83,6 +81,5 @@ describe("real workspace smoke", () => {
     expect((await mine()).status).toBe("exited");
     expect(await refused("http://127.0.0.1:6061/")).toBe(true);
     expect(early, `--wait-ready returned ${address} before the server accepted a connection`).toBe(false);
-    console.log(`[DEBUG] real development server ${task.session} answered HTTP 200 at ${address}, stopped, and released port 6061`);
   }, 1_100_000);
 });

@@ -115,6 +115,6 @@ fn a_content_type_row_inserts_removes_and_changes_through_its_own_kinds() {
     assert_eq!(removed, vec![DocxMutation::RemoveContentType(remove_content_type::RemoveContentType { is_override: false, name: "zzdemo".into() })]);
     let changed = resolve(&base, SnapshotEditEvent::SetValue { path: format!("/opc/contentTypes/defaults/{demo}/contentType"), value: DslValue::String("application/x-semio-changed".into()) });
     assert_eq!(changed, vec![DocxMutation::SetContentType(set_content_type::SetContentType { is_override: false, name: "zzdemo".into(), content_type: "application/x-semio-changed".into(), index: None })]);
-    let inserted = resolve(&base, SnapshotEditEvent::InsertValue { path: "/opc/contentTypes/defaults/-".into(), value: ContentTypeRow { name: "zzpointer".into(), content_type: "application/x-semio-demo".into() }.to_value() });
+    let inserted = resolve(&base, SnapshotEditEvent::InsertValue { path: "/opc/contentTypes/defaults/-".into(), value: DslValue::object([("name".to_string(), DslValue::String("zzpointer".into())), ("contentType".to_string(), DslValue::String("application/x-semio-demo".into()))]) });
     assert!(matches!(inserted.as_slice(), [DocxMutation::SetContentType(set_content_type::SetContentType { is_override: false, index: Some(_), .. })]));
 }

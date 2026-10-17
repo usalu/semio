@@ -1,7 +1,7 @@
 //! 🧪️ The per-pane config: it round-trips through its own envelope, every operation has a real
 //! inverse, and the armed-tile fallback never names a tile the document does not declare.
 
-use super::*;
+use crate::editor::wfc3d::config::*;
 use protocol::Mutation;
 
 #[test]

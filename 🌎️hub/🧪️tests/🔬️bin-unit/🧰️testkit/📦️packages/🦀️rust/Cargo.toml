@@ -62,3 +62,4 @@ tokio-tungstenite = "0.26"
 blake3 = "1"
 
 [dev-dependencies]
+semio-hub-runtime = { workspace = true, features = ["testkit"] }

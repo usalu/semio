@@ -53,7 +53,6 @@ fn controlled_value_paged_refusal_actual_allocation_kind_corpus() {
         assert_eq!(refusal.kind.as_str(), row["expected"]["kind"].as_str().unwrap(), "{}", row["id"]);
         assert_eq!(refusal.reason, row["expected"]["reason"].as_str().unwrap(), "{}", row["id"]);
     }
-    println!("[DEBUG] PagedList preserves quota allocator and admission identity through actual allocation refusals");
 }
 
 #[test]

@@ -1,0 +1,38 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖋️InkCanvasHost/🟦️.tsx",
+ "fn": "InkCanvasHost",
+ "propsType": "ComponentSceneHostProps",
+ "coreType": "InkCore",
+ "region": "InkCanvasHost",
+ "parentTail": 67,
+ "hooks": [
+  {
+   "dir": "🧰️ink-session-state",
+   "name": "useInkSessionState",
+   "upto": 35,
+   "doc": "/** 🧰️ InkCanvasHost session state: the scene and window instance, the refs, the draft document and the drag, marquee, text edit, table edit and context menu state, the labels, the selection, hover and interaction lanes and the local presence publishing. */",
+   "docFn": "/** 🧰️ Holds the refs, state, parsed lanes and presence publishing of the ink window. */"
+  },
+  {
+   "dir": "🎬️ink-gestures",
+   "name": "useInkGestures",
+   "upto": 50,
+   "doc": "/** 🎬️ InkCanvasHost gestures: the action dispatcher, the interaction selection and hover publishing and the begin, live, commit, abort and atomic gesture lifecycle of the ink events. */",
+   "docFn": "/** 🎬️ Publishes the interaction lanes and runs the gesture lifecycle that sends ink events. */"
+  },
+  {
+   "dir": "👆️ink-pointer",
+   "name": "useInkPointer",
+   "upto": 61,
+   "doc": "/** 👆️ InkCanvasHost pointer: the move start, the pointer down, move, up and cancel handlers, the resize handle and block handlers, the wheel and the double click. */",
+   "docFn": "/** 👆️ Builds the pointer, wheel and double click handlers of the ink canvas. */"
+  },
+  {
+   "dir": "✂️ink-edit-and-clipboard",
+   "name": "useInkEditAndClipboard",
+   "upto": 67,
+   "doc": "/** ✂️ InkCanvasHost editing and clipboard: the context menu, the text and table edit commits and the image paste, copy and paste handlers. */",
+   "docFn": "/** ✂️ Builds the context menu, edit commit and clipboard handlers of the ink canvas. */"
+  }
+ ]
+}

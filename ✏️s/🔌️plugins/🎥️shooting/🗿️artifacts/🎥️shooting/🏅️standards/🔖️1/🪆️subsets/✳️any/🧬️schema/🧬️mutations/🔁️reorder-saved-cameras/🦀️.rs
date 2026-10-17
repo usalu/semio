@@ -1,7 +1,6 @@
 //! 🔁 Shooting mutation payload — `ReorderSavedCameras`. Repositions a saved camera within the display-ordered `savedCameras` list.
 
 use crate::diff::ShootingDiff;
-use crate::mutations::ShootingMutation;
 use crate::ShootingSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 
@@ -16,12 +15,15 @@ pub struct ReorderSavedCameras {
     pub to_index: usize,
 }
 
-impl MutationKind<ShootingSnapshot, ShootingMutation> for ReorderSavedCameras {
+impl<Op> MutationKind<ShootingSnapshot, Op> for ReorderSavedCameras
+where
+    Op: protocol::Mutation<ShootingSnapshot, Diff = ShootingDiff> + From<ReorderSavedCameras>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "reorder", entity: "saved-cameras", kind: "reorder-saved-cameras", record: "ReorderedSavedCameras" };
     fn diff(&self, base: &ShootingSnapshot) -> protocol::MutationOutcome<ShootingDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &ShootingSnapshot) -> Result<Vec<ShootingMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &ShootingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

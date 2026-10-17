@@ -15,5 +15,4 @@ fn retained_raw_admission_has_no_failure_destructor_or_undeclared_allocation(){
   assert_eq!(refusal.map(ArtifactRetainedAdmissionRefusal::id),row["expectedRefusal"].as_str());
   let capacity=buffer.capacity();let(_,heap)=observe(||drop(std::mem::take(&mut buffer)));assert_eq!(heap.requested_bytes,0);assert_eq!(heap.released_bytes,capacity);
  }
- eprintln!("[DEBUG] retained raw admission reserves exactly the declared wire bytes without source cleanup");
 }

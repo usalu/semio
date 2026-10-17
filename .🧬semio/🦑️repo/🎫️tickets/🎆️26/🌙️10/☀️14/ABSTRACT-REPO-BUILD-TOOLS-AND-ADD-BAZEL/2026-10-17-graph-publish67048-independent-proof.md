@@ -1,0 +1,7 @@
+# First Graph namespace publication67048 independent proof
+
+Final publication log, exact input command60264 and current nine unique lease/debug Source paths passed stable bounded nofollow FD/name seven-stamp/SHA binding. Current Source mismatches:0. Receipt: `🗑️generated/graph-publish67048-independent-hold.json`.
+
+All ten stages occur exactly once in canonical order: accepted, observed, witnessed, detached, underlying, staged, published, attached, verified, settled. Command input SHA equals the independently held command af2ac39a1cc145c212b181d4f3a61c7e90321760c09ef969dd34020812569d6b. Actual acquired result qualifies mounted-application-preserved, receipt filesystem66060288/physical67108864 with mountDirectory, witness digestf6a9089f9c193da0a29bcab3021880af336bde318652f1ba2cab18fe74db32d5, files3/directories2/bytes156 and application565f44305320a32ba285d2f70949818636cf0991c1c2dbbc91bc2f95f4e09249.
+
+Body returns, outer control enters/closes pending0, issued scope settles, process enters/closes pending0 and Original settles. Root reports natural actual67048 terminal0. This establishes one exact actual namespace publication and natural owner drainage, not namespace retirement, all12Graph/5Products cleanup or public SDK/build acceptance. Root must refresh census and plan before another command; no old command is reused as current authority. No protected/current-process read or Native operation was performed by this auditor.

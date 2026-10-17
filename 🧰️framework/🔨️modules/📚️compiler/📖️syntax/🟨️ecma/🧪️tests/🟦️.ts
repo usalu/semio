@@ -16,7 +16,7 @@ test("ECMA original source spans and decoded literal examples agree with indepen
     const parsed = ts.createSourceFile("literal.ts", `const value = ${row.source};`, ts.ScriptTarget.Latest, true);
     const declaration = (parsed.statements[0] as ts.VariableStatement).declarationList.declarations[0]!;
     expect(ts.isStringLiteral(declaration.initializer!), row.source).toBe(true);
-    expect((declaration.initializer as ts.StringLiteral).text, row.source).toBe(value);
+    expect((declaration.initializer as ts.StringLiteral).text, row.source).toBe(row.expected);
   }
   for (const row of examples.sources) {
     const parsed = ts.createSourceFile("reader.ts", row.source, ts.ScriptTarget.Latest, true), expected: { kind: string; text: string; start: number; end: number; value?: string }[] = [];
@@ -41,7 +41,6 @@ test("ECMA original source spans and decoded literal examples agree with indepen
     expect(found.sort((a, b) => a.start - b.start), row.id).toEqual(expected.sort((a, b) => a.start - b.start));
     expect(found.filter(row => row.kind === "string").map(row => row.value), row.id).toEqual(row.literalValues);
   }
-  console.log("[DEBUG] original ECMA UTF16 spans, escaped literals, regex custody and nested template expressions match independent TypeScript");
 });
 
 test("ECMA malformed input retains original offending spans and terminal offset", () => {
@@ -62,7 +61,6 @@ test("ECMA original atomic source owners observe cancellation during expensive s
     expect(() => ecmaTokens(source, 0, () => { if (++turns === 3) throw marker; })).toThrow(marker);
     expect(turns, row.id).toBe(3);
   }
-  console.log("[DEBUG] original ECMA atomic literal, identifier and comment scans honor caller cancellation");
 });
 
 
@@ -101,7 +99,6 @@ test("ECMA binding identities and original syntax-tree call ranges match indepen
     }
     expect(actual.sort((a, b) => a.start - b.start || b.end - a.end), row.id).toEqual(expected.sort((a, b) => a.start - b.start || b.end - a.end));
   }
-  console.log("[DEBUG] original ECMA syntax-tree call spans and decoded escaped binding identities match independent TypeScript");
 });
 
 
@@ -110,7 +107,6 @@ test("ECMA first-party parser and defining syntax formats satisfy strict indepen
   const program = ts.createProgram([source], { target: ts.ScriptTarget.ESNext, module: ts.ModuleKind.Preserve, moduleResolution: ts.ModuleResolutionKind.Bundler, strict: true, noUncheckedIndexedAccess: true, allowImportingTsExtensions: true, noEmit: true, skipLibCheck: true, types: [], lib: ["lib.esnext.d.ts"] });
   const diagnostics = ts.getPreEmitDiagnostics(program);
   expect(diagnostics.map(row => ({ code: row.code, path: row.file?.fileName, start: row.start, message: ts.flattenDiagnosticMessageText(row.messageText, "\n") }))).toEqual([]);
-  console.log("[DEBUG] actual first-party ECMA implementation and defining formats compile under strict independent TypeScript");
 });
 
 
@@ -134,5 +130,4 @@ test("ECMA parser preserves original statement boundaries and refuses malformed 
     }
     if (row.id === "empty-statements") expect(program![0]!.start).toBe(file.statements[2]!.getStart(file));
   }
-  console.log("[DEBUG] original ECMA statement, spread and line-terminator boundaries agree with independent TypeScript; malformed bindings remain unresolved");
 });

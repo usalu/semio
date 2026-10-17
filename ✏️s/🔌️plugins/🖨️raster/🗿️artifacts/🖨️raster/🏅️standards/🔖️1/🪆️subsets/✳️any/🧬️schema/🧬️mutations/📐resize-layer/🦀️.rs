@@ -47,7 +47,4 @@ pub use mutation::ResizeLayer;
 pub mod diff;
 #[path = "↩️inverse/🦀️.rs"]
 pub mod inverse;
-#[cfg(test)]
-#[path = "🧪️tests/📐️resizes/🦀️.rs"]
-mod tests_resizes_the_canvas_layer_to_256_by_128;
 //#endregion 🪢️TaxonomyMounts

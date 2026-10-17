@@ -1,7 +1,6 @@
 //! 📎️ Authoritative PDF/A mutation for inserting an attached file specification.
 
-use super::remove_embedded_file::RemoveEmbeddedFile;
-use super::PdfAMutation;
+use crate::standards::v1_7::subsets::a::schema::mutations::remove_embedded_file::RemoveEmbeddedFile;
 use crate::standards::v1_7::subsets::base::schema::conformance_support as support;
 use crate::standards::v1_7::subsets::base::schema::diff::{self, PdfDiff};
 use crate::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot;
@@ -18,16 +17,19 @@ pub struct InsertEmbeddedFile {
     pub placements: Vec<support::ObjectPlacement>,
 }
 
-impl MutationKind<PdfSnapshot, PdfAMutation> for InsertEmbeddedFile {
+impl<Op> MutationKind<PdfSnapshot, Op> for InsertEmbeddedFile
+where
+    Op: protocol::Mutation<PdfSnapshot, Diff = PdfDiff> + From<InsertEmbeddedFile> + From<crate::standards::v1_7::subsets::a::schema::mutations::remove_embedded_file::RemoveEmbeddedFile>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "insert", entity: "embedded-file", kind: "insert-embedded-file", record: "Insert" };
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
         MutationOutcome::new(diff::graph_edit(support::insert_file_spec_rows(base, &self.file_name, &self.placements)))
     }
 
-    fn inverse(&self, _base: &PdfSnapshot) -> Result<Vec<PdfAMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, _base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
-        vec![PdfAMutation::RemoveEmbeddedFile(RemoveEmbeddedFile { file_name: self.file_name.clone() })]
+        vec![Op::from(RemoveEmbeddedFile { file_name: self.file_name.clone() })]
     
     })())
 }
@@ -43,7 +45,5 @@ impl MutationKind<PdfSnapshot, PdfAMutation> for InsertEmbeddedFile {
 //#endregion 🔖️Mutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

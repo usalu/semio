@@ -4,7 +4,7 @@
 use crate::editor::writer::terminology::WriterPlayLabels;
 use crate::schema::{parse_jack_ast, JackAstNode};
 use crate::{writer_text, WriterSnapshot};
-use crate::editor::writer::{WRITER_INTERACTION_AST, WRITER_INTERACTION_GRANULARITY, WRITER_PLAY_APP_ID};
+use crate::editor::writer::base::{WRITER_INTERACTION_AST, WRITER_INTERACTION_GRANULARITY, WRITER_PLAY_APP_ID};
 use semio_framework_plugin::plugin_app_close_prelude::HasBase;
 use semio_framework_plugin::tree_item;
 use semio_framework_plugin::tree_window_item;
@@ -63,8 +63,8 @@ pub fn definition() -> PanelTabDefinition {
 ///
 /// 🪟️ Every AST level nests through [`tree_window_item`], so a wide `match`/`pattern` node streams
 /// its children in host-chosen windows instead of failing the render past the fixed child capacity.
-fn jack_ast_to_tree_item(node: &JackAstNode, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    let item = ui::tree_item(crate::editor::writer::ui_label(node.label.clone())?)
+pub fn jack_ast_to_tree_item(node: &JackAstNode, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    let item = ui::tree_item(crate::editor::writer::base::ui_label(node.label.clone())?)
         .try_id(&node.id)
         .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "writer AST id admission failed"))?
         .description(UiText::try_from_str(&node.kind).ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "writer AST kind admission failed"))?)
@@ -75,19 +75,19 @@ fn jack_ast_to_tree_item(node: &JackAstNode, windows: &TreeWindows<'_>) -> semio
 
 pub fn render(document: &WriterSnapshot, labels: &WriterPlayLabels, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     if document.language_id != "jack" {
-        let items = crate::editor::writer::ui_node_list([tree_item("writer-document.id", crate::editor::writer::ui_label(document.id.clone())?), tree_item("writer-document.language", crate::editor::writer::ui_label(document.language_id.clone())?)])?;
-        return PanelTreeBuilder::new("writer-document")?.section("writer-document.meta", Some(crate::editor::writer::ui_label(labels.artifact.as_str())?), true, items)?.build();
+        let items = crate::editor::writer::base::ui_node_list([tree_item("writer-document.id", crate::editor::writer::base::ui_label(document.id.clone())?), tree_item("writer-document.language", crate::editor::writer::base::ui_label(document.language_id.clone())?)])?;
+        return PanelTreeBuilder::new("writer-document")?.section("writer-document.meta", Some(crate::editor::writer::base::ui_label(labels.artifact.as_str())?), true, items)?.build();
     }
     let root = parse_jack_ast(&writer_text(document));
     PanelTreeBuilder::new("writer-play-document")?
         .window_section_or_placeholder(
             windows,
             "writer-play-document.ast",
-            Some(crate::editor::writer::ui_label(labels.artifact.as_str())?),
+            Some(crate::editor::writer::base::ui_label(labels.artifact.as_str())?),
             true,
             std::slice::from_ref(&root),
             |node| jack_ast_to_tree_item(node, windows),
-            crate::editor::writer::ui_label(labels.empty_query.as_str())?,
+            crate::editor::writer::base::ui_label(labels.empty_query.as_str())?,
         )?
         .interaction_domain(WRITER_PLAY_APP_ID, WRITER_INTERACTION_AST)?
         .build()
@@ -95,7 +95,4 @@ pub fn render(document: &WriterSnapshot, labels: &WriterPlayLabels, windows: &Tr
 //#endregion 🔖️Render
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

@@ -1,0 +1,13 @@
+{
+ "name": "c4p9",
+ "crates": [
+  "semio-s-artifact-architect-program",
+  "semio-architect-mutation-bridge",
+  "semio-s-artifact-process-process3d-editor",
+  "semio-s-artifact-process-process3d",
+  "semio-s-artifact-process-process3d-model",
+  "semio-s-artifact-process-process3d-modes",
+  "semio-s-artifact-process-process3d-panels"
+ ],
+ "note": "CENSUS4-PKG-9: architect program register/inference modules and the process3d editor lib root; absolute runs (--no-base), compared as multisets before and after (c4p9pre / c4p9post)"
+}

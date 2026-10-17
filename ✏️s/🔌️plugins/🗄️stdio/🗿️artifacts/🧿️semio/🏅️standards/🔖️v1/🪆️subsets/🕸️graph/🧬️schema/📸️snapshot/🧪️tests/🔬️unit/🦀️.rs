@@ -1,6 +1,7 @@
 use crate::io::text::snapshot::decode_semio_graph_snapshot_json;
 use crate::io::text::snapshot::encode_semio_graph_snapshot_json;
-use super::*;
+use crate::schema::snapshot::*;
+use semio_framework_test_fixtures::fixture_text;
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn populated() -> SemioGraphSnapshot {
@@ -38,8 +39,8 @@ async fn codec_retention_law() {
 
 #[test]
 fn declared_graph_json_preserves_raw_geometry_and_every_intrinsic_family() {
-    let neutral: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/📸️snapshot/🔣️json/🔣️.json")).expect("closed neutral intrinsic cases");
-    let mut raw: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏗️create-node/🔎️appends/📸️snapshot/➡️after/🔣️.json")).expect("committed full graph");
+    let neutral: serde_json::Value = serde_json::from_str(fixture_text!("../../../../🧪️tests/🧫️fixtures/📸️snapshot/🔣️json/🔣️.json")).expect("closed neutral intrinsic cases");
+    let mut raw: serde_json::Value = serde_json::from_str(fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏗️create-node/🔎️appends/📸️snapshot/➡️after/🔣️.json")).expect("committed full graph");
     raw["nodes"][0]["properties"] = neutral["properties"].clone();
     for bits in [0, 0x8000000000000000, 1, 0x000fffffffffffff, 0x0010000000000000, 0x7fefffffffffffff, 0x7ff0000000000000, 0xfff0000000000000, 0x7ff8000000000011, 0x7ff0000000000001, u64::MAX] {
         let word = serde_json::json!({"bits": format!("{bits:016x}")});

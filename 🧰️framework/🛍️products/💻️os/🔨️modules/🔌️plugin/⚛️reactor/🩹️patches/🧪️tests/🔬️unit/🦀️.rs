@@ -4,8 +4,7 @@ use semio_framework_plugin_reactor_lifecycle::instance_lifetime::NativeCloseKey;
 use semio_framework_job::StepContext;
 use semio_framework_ui_contract as ui_contract;
 #[doc(hidden)]
-#[path = "../../../../🧪️testing/🎟️caller/🦀️.rs"]
-pub mod original_caller;
+pub use semio_framework_plugin_testing_caller as original_caller;
 use semio_framework_ui_runtime::TreeNode;
 
 thread_local! { static PANIC_AFTER_OUTPUT_TRANSFER: std::cell::Cell<bool> = const { std::cell::Cell::new(false) }; }
@@ -1818,5 +1817,4 @@ fn mounted_original_producer_shell_denials_unchanged_child_census_and_paid_termi
     let(done,born,released)=observe(||caller.turn(RetainedCloneGrant{maximum_release_bytes:capacity,..stock},|cx|terminal.close_step(cx)).unwrap());assert!(!done);assert_eq!((born,released),(0,capacity));assert_eq!(caller.receipt().released_bytes,capacity);assert!(terminal.terminal_is_empty());assert_eq!(observe(||drop(terminal)).1,0);
     {let mut state=tracker.state.borrow_mut();let slot=state.slots.iter_mut().flatten().find(|slot|slot.key==key).unwrap();slot.reconciler=producer.reconciler.take();}drop(producer.reservation.take());
     caller.turn(stock,|cx|{close_instance_to_empty(&tracker,941,cx);Ok(())}).unwrap();caller.retire(stock);
-    eprintln!("[DEBUG] actual original producer deniedCapacity0/1/3/64 unchangedChild=true zeroCensusBirthRelease=true originalDonationCopy0=true shellBorn={capacity} sourceReleased={freed} separateFinalShellRelease={capacity} terminalDrop0=true");
 }

@@ -122,5 +122,4 @@ test("an admitted catalogue owns its kind definitions independently of the nativ
   expect(validate(files.find(file => file.kinds.some(kind => kind.id === context.kind)))).toBe(true);
   expect(() => buildCatalogue([...files, files.find(file => file.kinds.some(kind => kind.id === context.kind))!])).toThrow("duplicate kind id");
   expect(context.duplicateIdentityRefused).toBe(true);
-  console.log("[DEBUG] Typed admitted catalogue isolation agrees with the independent JSON Schema oracle");
 });

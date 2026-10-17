@@ -1,6 +1,6 @@
 //! 🛬️ Direct binary codec for `remove-launch-action`.
 
-use crate::standards::v1_7::subsets::vt::schema::mutations::RemoveLaunchAction;
+use crate::standards::v1_7::subsets::vt::schema::mutations::remove_launch_action::RemoveLaunchAction;
 
 //#region 🔖️Identity
 pub const TAG: u8 = 11;
@@ -21,7 +21,5 @@ pub fn decode(bytes: &[u8]) -> Result<RemoveLaunchAction, String> {
 //#endregion 🔖️Codec
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

@@ -1,0 +1,21 @@
+{
+ "name": "frd-f1",
+ "crates": [
+  "semio-framework-test-fixtures",
+  "semio-framework-async-wasm-pool-tests",
+  "semio-framework-dsl-record",
+  "semio-framework-expression",
+  "semio-framework-job-worker",
+  "semio-framework-os-infinite-board-dag-model",
+  "semio-framework-os-infinite-world-host",
+  "semio-framework-os-kernel-db-io-core",
+  "semio-framework-os-mcp-plugin-runtime",
+  "semio-framework-os-mcp-shell-channel",
+  "semio-framework-os-renderer-wgpu-native-platform",
+  "semio-framework-plugin-publication-mounted",
+  "semio-framework-plugin-tests-10",
+  "semio-framework-trace",
+  "semio-framework-ui-host-tests"
+ ],
+ "note": "FRD sample, no baseline"
+}

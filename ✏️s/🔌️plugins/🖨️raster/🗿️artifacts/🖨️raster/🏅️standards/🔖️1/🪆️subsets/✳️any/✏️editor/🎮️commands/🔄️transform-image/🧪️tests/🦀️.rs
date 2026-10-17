@@ -1,7 +1,11 @@
 //! 🧪️ Laws of the raster grid change: a rotation, resize or crop is ONE edit holding ONE `transform-image` leaf on the
 //! layer's pixels; a change the layer, the session or the leaf cannot take leaves zero trace.
 
-use super::*;
+use semio_s_artifact_raster_raster_editor::config::RasterConfig;
+use semio_s_artifact_raster_raster_mutations::RasterMutation;
+use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
+use semio_framework_plugin::{ArtifactView, ConfigView};
+use semio_s_artifact_raster_raster_editor::commands::transform_image::*;
 use semio_framework_plugin::HistoryView;
 
 fn document(locked: bool) -> RasterSnapshot {

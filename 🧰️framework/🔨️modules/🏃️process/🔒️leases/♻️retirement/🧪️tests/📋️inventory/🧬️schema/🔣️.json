@@ -1,0 +1,82 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "maximum",
+    "bounds",
+    "faults"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "maximum": {
+      "const": 65536
+    },
+    "bounds": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "entries",
+          "accepted"
+        ],
+        "properties": {
+          "entries": {
+            "enum": [
+              0,
+              65536,
+              65537
+            ]
+          },
+          "accepted": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "faults": {
+      "type": "array",
+      "minItems": 5,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "read",
+          "close"
+        ],
+        "properties": {
+          "name": {
+            "enum": [
+              "read-error",
+              "read-undefined",
+              "close-error",
+              "close-undefined",
+              "cancel"
+            ]
+          },
+          "read": {
+            "enum": [
+              "none",
+              "error",
+              "undefined",
+              "cancel"
+            ]
+          },
+          "close": {
+            "enum": [
+              "none",
+              "error",
+              "undefined"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

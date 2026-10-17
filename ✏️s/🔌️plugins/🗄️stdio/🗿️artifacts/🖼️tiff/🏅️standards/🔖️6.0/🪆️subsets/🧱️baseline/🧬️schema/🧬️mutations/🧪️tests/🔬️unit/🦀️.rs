@@ -1,7 +1,11 @@
+use protocol::Mutation;
 use crate::apply_mutation;
-use super::*;
+use crate::standards::v6_0::subsets::baseline::schema::mutations::*;
+use crate::schema::diff::*;
+use crate::schema::snapshot::*;
 use crate::standards::v6_0::subsets::baseline::schema::{check_tiff_baseline_conformance, CODE_UNSUPPORTED_BITS_PER_SAMPLE, CODE_UNSUPPORTED_PHOTOMETRIC};
 use crate::standards::v6_0::subsets::document::schema::snapshot::{TiffIfd, TiffSampleBlock, TiffTag, TiffWord64};
+use semio_framework_test_fixtures::fixture_text;
 
 /// 🧫️ A conforming 4x2 RGB document: 8 bits per sample, one owned block.
 fn conforming() -> TiffSnapshot {
@@ -22,7 +26,7 @@ fn codes(snapshot: &TiffSnapshot) -> Vec<String> {
 /// 🏷️ [`KINDS`] against the committed catalog and the enum, in declaration order.
 #[test]
 fn kinds_match_the_committed_catalog_and_the_enum() {
-    let manifest = include_str!("../../../../🔮️oracles/🔣️.json");
+    let manifest = fixture_text!("../../../../../🧱️baseline/🔮️oracles/🔣️.json");
     for kind in KINDS {
         assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
     }

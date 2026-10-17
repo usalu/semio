@@ -1,0 +1,30 @@
+{
+ "name": "tad",
+ "crates": [
+  "semio-s-artifact-trinity-rewriting-v1",
+  "semio-s-artifact-trinity-rewriting-editor",
+  "semio-s-artifact-trinity-rewriting-model",
+  "semio-s-artifact-trinity-rewriting-operations",
+  "semio-s-artifact-trinity-rewriting-layout",
+  "semio-s-artifact-trinity-rewriting-inferences",
+  "semio-s-artifact-trinity-rewriting-schema",
+  "semio-s-artifact-trinity-rewriting-tests-narrows-the-lhs-pattern-to-a-shaft-neighbour",
+  "semio-s-artifact-trinity-rewriting-mut-any",
+  "semio-s-artifact-trinity-rewriting",
+  "semio-s-artifact-trinity-jack-window-config",
+  "semio-s-artifact-trinity-jack-results-window",
+  "semio-s-artifact-trinity-jack-jack",
+  "semio-s-artifact-trinity-jack-transient",
+  "semio-s-artifact-trinity-jack-inferences",
+  "semio-s-artifact-trinity-jack-graph-query",
+  "semio-s-artifact-trinity-jack-schema",
+  "semio-s-artifact-trinity-jack-language-service",
+  "semio-s-artifact-trinity-jack-executor",
+  "semio-s-artifact-trinity-jack",
+  "semio-s-artifact-trinity-jack-model",
+  "semio-s-artifact-trinity-jack-graph-manifest-tests",
+  "semio-s-dev-trinity-jack",
+  "semio-s-artifact-trinity-jack-semio-content"
+ ],
+ "note": "TRINITY-API-DRIFT: jack + rewriting + dev/trinity graph, no baseline"
+}

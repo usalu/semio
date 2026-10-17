@@ -1,5 +1,5 @@
 //! 🔗️ Reference lookup over the owned PDF graph.
-use crate::standards::v1_7::subsets::base::schema::snapshot::{ObjRef,PdfObject,PdfIndirectObject};
+use crate::standards::v1_7::subsets::base::schema::snapshot::model::{ObjRef,PdfObject,PdfIndirectObject};
 use std::collections::HashMap;
 use crate::standards::v1_7::subsets::base::schema::stream_roles::{PdfAdmittedStreamRole, PdfGraphIdentity, PdfGraphPath, PdfStreamRoleValue, PdfStreamRoleKind};
 

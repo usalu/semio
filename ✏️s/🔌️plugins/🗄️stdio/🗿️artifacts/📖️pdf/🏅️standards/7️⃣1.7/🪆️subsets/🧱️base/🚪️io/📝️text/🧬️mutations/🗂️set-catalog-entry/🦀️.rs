@@ -3,7 +3,7 @@
 pub const OPCODE: &str = "set-catalog-entry";
 pub const TEXT_OPCODE: &str = OPCODE;
 
-use crate::standards::v1_7::subsets::base::schema::mutations::SetCatalogEntry;
+use crate::standards::v1_7::subsets::base::schema::mutations::set_catalog_entry::SetCatalogEntry;
 
 /// 🖨️ Prints this direct payload through its schema-derived JSON representation.
 pub fn print(payload: &SetCatalogEntry) -> Result<String, String> {

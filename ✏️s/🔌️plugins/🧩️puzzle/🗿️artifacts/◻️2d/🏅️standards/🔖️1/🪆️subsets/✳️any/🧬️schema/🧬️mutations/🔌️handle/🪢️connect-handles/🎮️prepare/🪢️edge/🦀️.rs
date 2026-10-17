@@ -1,11 +1,11 @@
 //! 🪢️ Assembles actual native edge fields through separately granted ownership turns.
 
-use super::ConnectHandles;
-use crate::standards::v1::subsets::any::schema::Puzzle2dEdge;
+use crate::standards::v1::subsets::any::schema::mutations::{ConnectHandles};
+use crate::standards::v1::subsets::any::schema::records::Puzzle2dEdge;
 use semio_framework_value::{ValueError, ValueRefusalKind, paged::PagedUtf8, retirement::controlled::ControlledRetirement, retained_clone::{RetainedClone, RetainedCloneBinding, RetainedCloneCursor, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneRef, RetainedCloneStep}};
 use std::{mem::{ManuallyDrop, size_of}, ops::{Deref, DerefMut}};
 
-type Text = PagedUtf8<{usize::MAX}>;
+pub type Text = PagedUtf8<{usize::MAX}>;
 pub struct Puzzle2dConnectEdgeCursor { state: ManuallyDrop<Puzzle2dConnectEdgeState> }
 
 #[doc(hidden)]
@@ -140,9 +140,17 @@ impl Puzzle2dConnectEdgeCursor {
 }
 
 impl Drop for Puzzle2dConnectEdgeCursor { fn drop(&mut self) { let empty = self.terminal_is_empty(); assert!(std::thread::panicking() || empty, "edge assembly abandoned before controlled closure"); if empty { unsafe { ManuallyDrop::drop(&mut self.state); } } } }
-fn copy(bytes: usize) -> RetainedCloneStep { RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: bytes, ..Default::default() }) }
+pub fn copy(bytes: usize) -> RetainedCloneStep { RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: bytes, ..Default::default() }) }
 fn refusal(message: &str) -> ValueError { ValueError::new(ValueRefusalKind::InvariantViolated, message) }
 
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;
+
+
+impl crate::standards::v1::subsets::any::schema::preparation::native_preparation_child::Puzzle2dNativePreparation for Puzzle2dConnectEdgeCursor {
+    fn begin_close(&mut self){Puzzle2dConnectEdgeCursor::begin_close(self);}
+    fn close_granted(&mut self,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<semio_framework_value::retained_clone::RetainedCloneStep,semio_framework_value::ValueError>{Puzzle2dConnectEdgeCursor::close_step(self,grant)}
+    fn terminal_is_empty(&self)->bool{Puzzle2dConnectEdgeCursor::terminal_is_empty(self)}
+    fn next_close_copy_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{Puzzle2dConnectEdgeCursor::next_close_copy_byte_demand(self)}
+    fn next_close_capacity_byte_demand(&self,body:usize)->Result<usize,semio_framework_value::ValueError>{Puzzle2dConnectEdgeCursor::next_close_capacity_byte_demand(self,body)}
+    fn next_close_release_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{Puzzle2dConnectEdgeCursor::next_close_release_byte_demand(self)}
+    fn next_close_depth_demand(&self)->Result<usize,semio_framework_value::ValueError>{Puzzle2dConnectEdgeCursor::next_close_depth_demand(self)}
+}

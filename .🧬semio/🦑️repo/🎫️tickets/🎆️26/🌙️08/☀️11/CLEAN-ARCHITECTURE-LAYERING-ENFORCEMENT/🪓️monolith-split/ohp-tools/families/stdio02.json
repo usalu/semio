@@ -1,0 +1,1 @@
+{"name": "stdio02", "crates": ["semio-s-artifact-stdio-epw", "semio-s-artifact-stdio-epw-editor", "semio-s-artifact-stdio-epw-io-registry", "semio-s-artifact-stdio-epw-mutations", "semio-s-artifact-stdio-epw-schema", "semio-s-artifact-stdio-epw-snapshot", "semio-s-artifact-stdio-epw-test-oracle", "semio-s-artifact-stdio-epw-tests"], "note": "stdio 🌦️epw"}

@@ -82,5 +82,4 @@ async fn material_texture_refs_resolve_actual_image_sources_and_refuse_dangling_
     let mut external = source;
     external.document.images[0].uri = Some("unresolved.png".into());
     assert!(::semio_framework_async::poll::resolve_ready(SemioMeshFromGltf::deserialize(&external)).is_err());
-    println!("[DEBUG] Actual glTF texture image sources and PNG payloads survive both directions");
 }

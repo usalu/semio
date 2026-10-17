@@ -1,7 +1,7 @@
 //! 🔺️ Diff constructor for `SetBeam`: a sparse beam patch naming only the fields that really change. The beam type must exist and both top offsets must be finite
 //! (the end offset is assigned: none makes the beam level again). The axis is the business of `set-beam-axis`; no elevation is written, it is inferred.
 
-use super::super::wall_geometry::offsets_flaw;
+use crate::standards::v1::subsets::any::schema::mutations::wall_geometry::offsets_flaw;
 use super::SetBeam;
 use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff, Patch}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};

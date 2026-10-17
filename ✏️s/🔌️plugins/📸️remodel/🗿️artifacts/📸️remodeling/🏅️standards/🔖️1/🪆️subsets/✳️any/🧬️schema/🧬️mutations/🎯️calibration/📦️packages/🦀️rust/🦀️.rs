@@ -42,69 +42,8 @@ pub mod standards {
                             #[path = "../../../🚫delete-camera/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                         }
-                        #[path = "."]
-                        pub mod create_rig_extrinsic {
-                            #[path = "../../../⛓️create-rig/🦀️.rs"]
-                            mod component;
-                            #[path = "../../../⛓️create-rig/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "../../../⛓️create-rig/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                        }
-                        #[path = "."]
-                        pub mod delete_rig_extrinsic {
-                            #[path = "../../../✂️delete-rig-extrinsic/🦀️.rs"]
-                            mod component;
-                            #[path = "../../../✂️delete-rig-extrinsic/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "../../../✂️delete-rig-extrinsic/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                        }
-                        #[path = "."]
-                        pub mod update_rig_extrinsic {
-                            #[path = "../../../🔩update-rig-extrinsic/🦀️.rs"]
-                            mod component;
-                            #[path = "../../../🔩update-rig-extrinsic/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "../../../🔩update-rig-extrinsic/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                        }
-                        #[path = "."]
-                        pub mod create_gcp {
-                            #[path = "../../../🧿create-gcp/🦀️.rs"]
-                            mod component;
-                            #[path = "../../../🧿create-gcp/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "../../../🧿create-gcp/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                        }
-                        #[path = "."]
-                        pub mod delete_gcp {
-                            #[path = "../../../🚮delete-gcp/🦀️.rs"]
-                            mod component;
-                            #[path = "../../../🚮delete-gcp/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "../../../🚮delete-gcp/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                        }
-                        #[path = "."]
-                        pub mod add_gcp_observation {
-                            #[path = "../../../🔎add-gcp-observation/🦀️.rs"]
-                            mod component;
-                            #[path = "../../../🔎add-gcp-observation/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "../../../🔎add-gcp-observation/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                        }
-                        #[path = "."]
-                        pub mod remove_gcp_observation {
-                            #[path = "../../../🚷remove-gcp-observation/🦀️.rs"]
-                            mod component;
-                            #[path = "../../../🚷remove-gcp-observation/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "../../../🚷remove-gcp-observation/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                        }
+                        pub use semio_s_artifact_remodel_remodeling_mut_calib_2::standards::v1::subsets::any::schema::mutations::{create_rig_extrinsic, delete_rig_extrinsic, update_rig_extrinsic, add_gcp_observation, remove_gcp_observation};
+                        pub use semio_s_artifact_remodel_remodeling_mut_calib_3::standards::v1::subsets::any::schema::mutations::{create_gcp, delete_gcp};
                     }
                 }
             }

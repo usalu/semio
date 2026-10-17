@@ -3,7 +3,7 @@
 //! `end_top_offset` at the end: no elevation is stored, it is inferred.
 
 use super::super::elements;
-use super::super::wall_geometry::{flaw, offsets_flaw};
+use crate::standards::v1::subsets::any::schema::mutations::wall_geometry::{flaw, offsets_flaw};
 use super::CreateBeam;
 use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};

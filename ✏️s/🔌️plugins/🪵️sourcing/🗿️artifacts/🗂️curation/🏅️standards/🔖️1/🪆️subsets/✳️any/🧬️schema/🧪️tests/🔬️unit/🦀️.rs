@@ -1,6 +1,20 @@
+use crate::CurationSnapshot;
+use crate::{Filters, GeometryRecipe};
+use semio_framework_test_fixtures::fixture_text;
+#[allow(unused_imports)]
+use framework_schema::ArtifactSchema;
+#[allow(unused_imports)]
+use semio_framework_plugin::world3d_mesh_id_from_url;
+#[allow(unused_imports)]
+use semio_framework_dispatch_macros::{dyn_enum, dyn_enum_close};
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_semio_kit::schema::snapshot::SemioKitSnapshot;
+#[allow(unused_imports)]
+use crate::{CuratedItem, ObjectKind};
+use crate::standards::v1::subsets::any::schema::domain::{box_mesh_spec};
 use crate::standards::v1::subsets::any::io::text::snapshot::{sourcing_modules, sourcing_json_envelope_is_bounded};
 
-use super::*;
+use crate::standards::v1::subsets::any::schema::domain::*;
 
 fn sample_document() -> CurationSnapshot {
     crate::curation_snapshot_from_stock(&demo_stock(), Vec::new())
@@ -199,15 +213,14 @@ async fn sourcing_contribution_envelope_rejects_depth_string_and_cardinality_plu
 
 #[test]
 fn admitted_module_queries_match_the_neutral_typed_roster() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🔬️contract/🧩️admitted-modules/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../🧪️tests/🧫️fixtures/🔬️contract/🧩️admitted-modules/🔣️.json")).unwrap();
     let expected: Vec<&str> = fixture["authoredModuleIds"].as_array().unwrap().iter().map(|id| id.as_str().unwrap()).collect();
     let modules = available_modules(authored_modules());
     assert_eq!(modules.iter().map(|module| module.module_id.as_str()).collect::<Vec<_>>(), expected);
     let selected = fixture["selectedModuleId"].as_str().unwrap();
     assert_eq!(module_for(authored_modules(), selected).unwrap().module_id(), selected);
     assert_eq!(module_for(Vec::new(), selected).is_some(), fixture["emptyAdmittedRosterFindsModule"].as_bool().unwrap());
-    let native_stock: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/📦️expected-stock.json")).unwrap();
+    let native_stock: serde_json::Value = serde_json::from_str(fixture_text!("../../../../🧪️tests/🧫️fixtures/📦️expected-stock.json")).unwrap();
     let expected_ids: Vec<&str> = native_stock.as_array().unwrap().iter().map(|row| row["id"].as_str().unwrap()).collect();
     assert_eq!(demo_stock().iter().map(|row| row.id.as_str()).collect::<Vec<_>>(), expected_ids);
-    eprintln!("[DEBUG] Admitted sourcing module queries preserve authored order and isolation; independent serde_json stock witness agrees");
 }

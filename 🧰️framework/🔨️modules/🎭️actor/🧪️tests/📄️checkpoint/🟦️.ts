@@ -48,7 +48,6 @@ expect(testingSchemaExists(new URL("./🧬️schema/🔣️.json",import.meta.ur
  let independent={state:[] as number[],progress:0,calls:0};
  for(const phase of fixture.phases){independent=applyPatch(independent,phase==='job'?[{op:'replace',path:'/calls',value:1}]:phase==='page'?[{op:'replace',path:'/state',value:fixture.state}]:[{op:'replace',path:'/progress',value:fixture.appliedProgress}],true).newDocument;}
  expect(independent).toEqual({state:fixture.state,progress:fixture.appliedProgress,calls:fixture.jobCalls});db.close();
- console.log(`[DEBUG] actor checkpoint SQLite/RFC6902 projection: phases=${fixture.phases.join(',')} originalWallet=${fixture.originalGrant.maximumItems}/${fixture.originalGrant.maximumCopyBytes} borrowedProducer=true destination=${fixture.destination} originalBytes=${row.state} appliedProgress=${row.progress} jobCalls=${fixture.jobCalls}`);
 });
 
 
@@ -58,5 +57,4 @@ expect(testingSchemaExists(new URL("./🧬️schema/🔣️.json",import.meta.ur
 test("original projection allocates exact complete backing before first copied page",()=>{
  const law=JSON.parse(readFileSync(new URL("./allocation.json",import.meta.url),"utf8"));expect(testingSchemaExists(new URL("./🧬️schema/allocation.json",import.meta.url))).toBe(false);const db=new Database(":memory:");try{db.exec("CREATE TABLE allocation(capacity INTEGER,allowed INTEGER)");for(const capacity of [law.oneShortCapacityBytes,law.declaredCapacityBytes])db.query("INSERT INTO allocation VALUES(?,?)").run(capacity,Number(capacity>=Buffer.from(law.originalBytes).length));expect(db.query("SELECT allowed FROM allocation ORDER BY capacity").all()).toEqual([{allowed:0},{allowed:1}]);}finally{db.close();}
  const publication=readFileSync(new URL("../../💼️job/📨️publication/🦀️.rs",import.meta.url),"utf8");const projection=publication.slice(publication.indexOf("impl JobOutcomeProjection"),publication.indexOf("pub struct JobTurnBridge"));expect(projection.includes("try_reserve_exact")).toBe(false);expect(projection.includes("Layout::array::<u8>(required)")).toBe(true);expect(projection.includes("Vec::from_raw_parts(pointer.as_ptr(), 0, required)")).toBe(true);expect(projection.indexOf("grant.maximum_capacity_bytes < required")).toBeLessThan(projection.indexOf("std::alloc::alloc(layout)"));expect(projection.includes("retained_capacity_bytes: required")).toBe(true);
- console.error("[DEBUG] Original projection exact3byte capacity vs one-short2byte refusal matches independent SQLite; full original extent prepaid before allocator, one page copy per turn, same cumulative recipient");
 });

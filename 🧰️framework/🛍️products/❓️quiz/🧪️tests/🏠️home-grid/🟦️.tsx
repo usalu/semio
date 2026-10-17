@@ -17,7 +17,7 @@ import { describe, expect, it, vi } from "vitest";
 import { UI_MOBILE_MAX_WIDTH_PX, UI_TABLET_MAX_WIDTH_PX } from "@semio-tech/ui-react/chrome";
 import { learnerTag, roomScope } from "@semio-tech/quiz";
 import { EMPTY_PRESENCE_VIEW, Glyph, HOME_GRID_TRACKS, HomeScreen, LEADERBOARD_POLL_MS, LeaderboardCard, LeaderboardPage, PresenceProvider, boardExcerpt, homeCells, homeLayout, homePages, homeTrackTemplate, quizText, textPresentation, type PeerCursor, type PresenceView, type QuizSession, type QuizState } from "@semio-tech/quiz-react";
-import stylesheet from "../../🎯️targets/⚛️react/🎨️.css?raw";
+import { quizStylesheet as stylesheet } from "@semio-tech/quiz-react/stylesheet";
 import { CATALOG, Home, LEARNER, PAGES, PREFERENCES, QUIZZES, SNOW_EMOJI, STATE, atViewport, boardOf, cardHost, fixture, held, pane, stubSession } from "../🛠️home-grid-kit/🟦️.tsx";
 
 const SNOW_TEXT = String.fromCodePoint(0x2744, 0xfe0e);

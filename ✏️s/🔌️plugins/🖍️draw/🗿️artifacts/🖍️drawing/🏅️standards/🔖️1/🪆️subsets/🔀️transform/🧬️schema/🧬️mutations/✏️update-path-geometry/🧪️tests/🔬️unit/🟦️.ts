@@ -38,7 +38,8 @@ test("path geometry preserves identity, appearance and undo", () => {
   const result = applyPathGeometry(before, mutation);
   const oracle = produce(before, draft => { const layer=draft.layers[0]!;if(layer.kind!=="path")throw new Error("path required");layer.segments=fixture.after.map(s=>drawingPathFromGeometry(s as PathGeometrySegment)); });
   expect(result).toEqual(oracle);
-  expect(parseDrawingLayerPatch({ pathSegments: fixture.after }).pathSegments).toEqual(fixture.after);
+  const parsedSegments = parseDrawingLayerPatch({ pathSegments: fixture.after }).pathSegments!;
+  expect(parsedSegments).toEqual<typeof fixture.after>(fixture.after);
   expect(parseDrawingLayerPatch({ pathSegments: [] }).pathSegments).toEqual([]);
   expect(() => parseDrawingLayerPatch({ pathSegments: [{ kind: "arc", rx: -1 }] })).toThrow();
   expect(applyPathGeometry(result, { layerId: "path", segments: fixture.before as PathGeometrySegment[] })).toEqual(before);

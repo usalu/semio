@@ -2,7 +2,6 @@
 //! (captures the full removed payload + severed cascade for its inverse, per taxonomy's `delete`
 //! canonical args).
 
-use crate::schema::mutations::SemioGraphMutation;
 use crate::schema::snapshot::{GraphNodeId, SemioGraphSnapshot};
 
 //#region 🔖️Payload
@@ -13,13 +12,16 @@ pub struct DeleteNode {
     pub id: GraphNodeId,
 }
 
-impl protocol::MutationKind<SemioGraphSnapshot, SemioGraphMutation> for DeleteNode {
+impl<Op> protocol::MutationKind<SemioGraphSnapshot, Op> for DeleteNode
+where
+    Op: protocol::Mutation<SemioGraphSnapshot, Diff = crate::schema::diff::SemioGraphDiff> + From<DeleteNode> + From<crate::schema::mutations::create_edge::CreateEdge> + From<crate::schema::mutations::create_node::CreateNode>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "node", kind: "delete-node", record: "DeletedNode" };
 
-    fn diff(&self, base: &SemioGraphSnapshot) -> protocol::MutationOutcome<<SemioGraphMutation as protocol::Mutation<SemioGraphSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioGraphSnapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<SemioGraphSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &SemioGraphSnapshot) -> Result<Vec<SemioGraphMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &SemioGraphSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

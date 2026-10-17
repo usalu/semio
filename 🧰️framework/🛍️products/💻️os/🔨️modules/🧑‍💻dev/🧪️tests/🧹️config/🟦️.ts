@@ -16,7 +16,7 @@ import picomatch from "picomatch";
 import { describe, expect, it, vi } from "vitest";
 import { stripExecutableShebang } from "../../🧹️executable-source/🟦️.ts";
 import { createServer } from "vite";
-import { UNWATCHED_REPOSITORY_SEGMENTS, createSourceFreshnessRegistry, repositorySourceWatchRoots, requestedTransformFile, semioPlaygroundReactRefreshCoherenceVitePlugin, semioSourceFreshnessVitePlugins, semioSourceWatchVitePlugin, unwatchedRepositoryPathMatcher } from "../../🔌️vite-plugins/🟦️.ts";
+import { UNWATCHED_REPOSITORY_SEGMENTS, createSourceFreshnessRegistry, repositorySourceWatchRoots, requestedTransformFile, semioPlaygroundReactRefreshCoherenceVitePlugin, semioSourceFreshnessVitePlugins, semioSourceWatchVitePlugin, unwatchedRepositoryPathMatcher } from "../../🔌️vite-plugins/🔖️source-freshness/🟦️.ts";
 
 vi.mock("node:fs", async (original) => {
   const fs = await original<typeof import("node:fs")>();

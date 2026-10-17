@@ -1,5 +1,6 @@
+use crate::viewer::home::modes::view::windows::main;
 
-use super::*;
+use crate::viewer::home::modes::view::*;
 
 #[semio_framework_async_macros::async_test]
 async fn the_view_layout_lists_the_main_window() {

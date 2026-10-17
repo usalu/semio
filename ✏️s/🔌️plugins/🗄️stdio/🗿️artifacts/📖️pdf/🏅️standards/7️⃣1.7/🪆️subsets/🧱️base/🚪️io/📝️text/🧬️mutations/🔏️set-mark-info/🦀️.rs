@@ -3,7 +3,7 @@
 pub const OPCODE: &str = "set-mark-info";
 pub const TEXT_OPCODE: &str = OPCODE;
 
-use crate::standards::v1_7::subsets::base::schema::mutations::SetMarkInfo;
+use crate::standards::v1_7::subsets::base::schema::mutations::set_mark_info::SetMarkInfo;
 
 /// 🖨️ Prints this direct payload through its schema-derived JSON representation.
 pub fn print(payload: &SetMarkInfo) -> Result<String, String> {

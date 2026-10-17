@@ -36,6 +36,10 @@ type stdioSemioV1ObjectInferenceGuardSizeBounds = { readonly minItems?: number; 
 
 export const stdioSemioV1ObjectInferenceGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : stdioSemioV1ObjectInferenceGuardReject(at, "value is not an object");
+export const stdioSemioV1ObjectInferenceGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) stdioSemioV1ObjectInferenceGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const stdioSemioV1ObjectInferenceGuardArray = (value: unknown, at: string, bounds: stdioSemioV1ObjectInferenceGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return stdioSemioV1ObjectInferenceGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) stdioSemioV1ObjectInferenceGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -66,14 +70,14 @@ export const stdioSemioV1ObjectInferenceGuardConstant = <T extends string | numb
 //#endregion 🚪️Parsers
 
 export function parseSemioObjectInference(value: unknown, at = "$"): SemioObjectInference {
-  const row = stdioSemioV1ObjectInferenceGuardObject(value, at);
+  const row = stdioSemioV1ObjectInferenceGuardClosed(stdioSemioV1ObjectInferenceGuardObject(value, at), at, ["composition"]);
   return {
     composition: parseSemioObjectComposition(row["composition"], `${at}.composition`),
   };
 }
 
 export function parseSemioObjectComposition(value: unknown, at = "$"): SemioObjectComposition {
-  const row = stdioSemioV1ObjectInferenceGuardObject(value, at);
+  const row = stdioSemioV1ObjectInferenceGuardClosed(stdioSemioV1ObjectInferenceGuardObject(value, at), at, ["hasBrep", "hasMesh", "hasProperties", "position"]);
   return {
     hasBrep: stdioSemioV1ObjectInferenceGuardBoolean(row["hasBrep"], `${at}.hasBrep`),
     hasMesh: stdioSemioV1ObjectInferenceGuardBoolean(row["hasMesh"], `${at}.hasMesh`),
@@ -83,7 +87,7 @@ export function parseSemioObjectComposition(value: unknown, at = "$"): SemioObje
 }
 
 export function parseSemioPoint3(value: unknown, at = "$"): SemioPoint3 {
-  const row = stdioSemioV1ObjectInferenceGuardObject(value, at);
+  const row = stdioSemioV1ObjectInferenceGuardClosed(stdioSemioV1ObjectInferenceGuardObject(value, at), at, ["x", "y", "z"]);
   return {
     x: stdioSemioV1ObjectInferenceGuardNumber(row["x"], `${at}.x`),
     y: stdioSemioV1ObjectInferenceGuardNumber(row["y"], `${at}.y`),

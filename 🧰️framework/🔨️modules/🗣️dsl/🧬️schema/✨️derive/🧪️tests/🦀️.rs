@@ -40,7 +40,6 @@ fn required_inline_statement_emission_preserves_the_authored_native_owner() {
   let output=emit_record(declaration);let _:syn::File=syn::parse2(output.clone()).unwrap();
   if actual=="RequiredInlineStatements"{let output=output.to_string();assert!(!output.contains("Box :: new"));assert!(!output.contains("self . statement . as_ref"));assert!(output.contains("DslVariants"));}
  }
- println!("[DEBUG] required inline, boxed, optional and repeated native variant roles parsed with independent syn");
 }
 
 #[test]
@@ -74,7 +73,6 @@ fn original_optional_custody_is_excluded_from_wire_but_retired_as_owned_native_f
  let controlled=controlled_record_codegen(&data.fields).into_iter().map(|tokens|tokens.to_string()).collect::<String>();assert!(controlled.contains("None"));assert!(!controlled.contains("record . get (1u16)"));
  assert!(record_retirement_codegen(&data.fields,None).to_string().contains("source"));
  let invalid:DeriveInput=syn::parse_str(fixture["invalidDeclaration"].as_str().unwrap()).unwrap();assert!(emit_record(invalid).to_string().contains(fixture["invalidMessage"].as_str().unwrap()));
- println!("[DEBUG] originalOptionalCustody=wireOmitted originalNativeField=retirementIncluded independentSynOutput=valid invalidNonOptional=refused");
 }
 
 /// 🕳️ Zero-variant borrowed projections eliminate the underlying uninhabited owner.
@@ -94,7 +92,6 @@ fn empty_enum_borrowed_and_receiving_emission_matches_independent_syntax() {
   let syntax:syn::File=syn::parse2(output).unwrap();let mut matches=Matches{count:0};syn::visit::Visit::visit_file(&mut matches,&syntax);
   assert_eq!(matches.count,row["borrowedEmptyMatches"].as_u64().unwrap() as usize,"{}",row["id"]);
  }
- println!("[DEBUG] Empty tagged/scalar/owned-receiving borrowed eliminations match six neutral cases under independent syn AST");
 }
 
 #[test]

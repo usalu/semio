@@ -1,4 +1,5 @@
-use super::*;
+use crate::VcsSnapshot;
+use crate::standards::v1::subsets::any::schema::inferences::summary::*;
 
 #[semio_framework_async_macros::async_test]
 async fn empty_notes_and_tags_yield_a_zero_summary() {

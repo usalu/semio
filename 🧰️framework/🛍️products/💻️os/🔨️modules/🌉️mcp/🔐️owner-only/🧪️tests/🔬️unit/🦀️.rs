@@ -2,16 +2,14 @@
 //! fixture (whoami SID parsing, icacls arguments, SDDL verdicts), plus the real POSIX modes on this host.
 
 use crate::owner_only::{owner_only_acl_flags, parse_whoami_user_sid, sddl_owner_only_violations};
+use semio_framework_test_fixtures::fixture_text;
 #[cfg(unix)]
 use crate::owner_only::{verify_owner_only, write_owner_only};
 
 /// 🧪️ Reads a committed fixture from the package directory at run time instead of embedding it in the test binary.
-fn fixture_text(relative: &str) -> &'static str {
-    Box::leak(std::fs::read_to_string(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative)).expect(relative).into_boxed_str())
-}
 
 
-const FIXTURE: &str = fixture_text("../../../../../../🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/🔐️owner-only/🔣️.json");
+const FIXTURE: &str = fixture_text!("../../../../../../🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/🔐️owner-only/🔣️.json");
 
 fn fixture() -> serde_json::Value {
     serde_json::from_str(FIXTURE).expect("owner-only fixture parses")

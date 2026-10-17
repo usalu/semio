@@ -1,6 +1,5 @@
 //! 🔁️ Authoritative PDF mutation payload, diff, inverse, and tests for `replace-content`.
 
-use super::PdfMutation;
 use crate::standards::v1_7::subsets::base::schema::diff::{self, PdfDiff};
 use crate::standards::v1_7::subsets::base::schema::snapshot::*;
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
@@ -16,7 +15,10 @@ pub struct ReplaceContent {
     pub op: PdfOp,
 }
 
-impl MutationKind<PdfSnapshot, PdfMutation> for ReplaceContent {
+impl<Op> MutationKind<PdfSnapshot, Op> for ReplaceContent
+where
+    Op: protocol::Mutation<PdfSnapshot, Diff = PdfDiff> + From<ReplaceContent>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "replace", entity: "content", kind: "replace-content", record: "Replace" };
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
@@ -24,10 +26,10 @@ impl MutationKind<PdfSnapshot, PdfMutation> for ReplaceContent {
         MutationOutcome::new(diff::diff_replace_content(self.index, self.at, self.op.clone()))
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
         let _ = base;
-        base.pages.get(self.index).and_then(|page| page.content.get(self.at)).map(|op| PdfMutation::ReplaceContent(ReplaceContent { index: self.index, at: self.at, op: op.clone() })).into_iter().collect()
+        base.pages.get(self.index).and_then(|page| page.content.get(self.at)).map(|op| Op::from(ReplaceContent { index: self.index, at: self.at, op: op.clone() })).into_iter().collect()
     
     })())
 }
@@ -44,8 +46,6 @@ impl MutationKind<PdfSnapshot, PdfMutation> for ReplaceContent {
 //#endregion 🔖️Mutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
 

@@ -3,13 +3,13 @@
 use semio_framework_plugin::{ChildContentView, Fault, FaultCode, FaultOrigin};
 use semio_s_artifact_stdio_semio_graph::schema::snapshot::{SemioGraphSnapshot, STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA};
 
-pub(crate) const WORKING_CHILD_SLOT: &str = "workingGraph";
+pub const WORKING_CHILD_SLOT: &str = "workingGraph";
 
 fn refused(message: impl Into<String>) -> Fault {
     Fault::new(FaultOrigin::App, FaultCode::new("trinity.rewriting.child-refused"), message)
 }
 
-pub(crate) fn read<'a>(parent: &crate::RewritingSnapshot, children: &'a ChildContentView) -> Result<store::os_store::snapshot_read::SnapshotReadRef<'a, SemioGraphSnapshot>, Fault> {
+pub fn read<'a>(parent: &crate::standards::v1::subsets::any::schema::snapshot::RewritingSnapshot, children: &'a ChildContentView) -> Result<store::os_store::snapshot_read::SnapshotReadRef<'a, SemioGraphSnapshot>, Fault> {
     let handle = &parent.working_graph.content;
     let dialect = &handle.target.dialect;
     if dialect.artifact_kind != "s.stdio.semio" || dialect.standard != "v1" || dialect.subset != "graph" {

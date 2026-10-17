@@ -29,6 +29,8 @@
     "loadOwners": [
       "inventoryTaxonomyWithSourceParentPruning",
       "planTaxonomy",
+      "verifyTaxonomyScopes",
+      "verifyTaxonomyScopesClosed",
       "applyTaxonomyPlan",
       "inventoryTaxonomySources"
     ],

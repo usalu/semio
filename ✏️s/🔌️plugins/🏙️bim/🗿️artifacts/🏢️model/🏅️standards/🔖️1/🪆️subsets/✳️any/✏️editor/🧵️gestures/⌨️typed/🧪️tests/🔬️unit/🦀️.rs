@@ -1,7 +1,7 @@
 use super::*;
 use crate::editor::bim::gestures::plane::{axis_ends, signed_area};
-use crate::editor::bim::gestures::session::Shape;
-use crate::editor::bim::gestures::tests::fixture::{model, room, Rig};
+use crate::editor::bim::marks::Shape;
+use crate::editor::bim::fixture::{model, room, Rig};
 use crate::standards::v1::subsets::any::schema::mutations::ModelMutation;
 
 #[semio_framework_async_macros::async_test]

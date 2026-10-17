@@ -28,6 +28,10 @@ type stdioSvg11BaseInferenceGuardSizeBounds = { readonly minItems?: number; read
 
 export const stdioSvg11BaseInferenceGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : stdioSvg11BaseInferenceGuardReject(at, "value is not an object");
+export const stdioSvg11BaseInferenceGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) stdioSvg11BaseInferenceGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const stdioSvg11BaseInferenceGuardArray = (value: unknown, at: string, bounds: stdioSvg11BaseInferenceGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return stdioSvg11BaseInferenceGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) stdioSvg11BaseInferenceGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -58,14 +62,14 @@ export const stdioSvg11BaseInferenceGuardConstant = <T extends string | number |
 //#endregion 🚪️Parsers
 
 export function parseSvgInference(value: unknown, at = "$"): SvgInference {
-  const row = stdioSvg11BaseInferenceGuardObject(value, at);
+  const row = stdioSvg11BaseInferenceGuardClosed(stdioSvg11BaseInferenceGuardObject(value, at), at, ["dimensions"]);
   return {
     dimensions: parseSvgDimensions(row["dimensions"], `${at}.dimensions`),
   };
 }
 
 export function parseSvgDimensions(value: unknown, at = "$"): SvgDimensions {
-  const row = stdioSvg11BaseInferenceGuardObject(value, at);
+  const row = stdioSvg11BaseInferenceGuardClosed(stdioSvg11BaseInferenceGuardObject(value, at), at, ["width", "height"]);
   return {
     width: stdioSvg11BaseInferenceGuardNumber(row["width"], `${at}.width`),
     height: stdioSvg11BaseInferenceGuardNumber(row["height"], `${at}.height`),

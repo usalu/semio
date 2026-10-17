@@ -395,7 +395,5 @@ impl DiffAlgebra<PdfSnapshot> for PdfDiff {
 //#endregion 🔖️DiffCodec
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

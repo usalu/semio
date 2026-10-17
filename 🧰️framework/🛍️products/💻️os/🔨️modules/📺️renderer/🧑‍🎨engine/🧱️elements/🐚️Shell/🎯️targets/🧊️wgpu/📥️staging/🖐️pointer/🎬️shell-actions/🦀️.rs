@@ -145,7 +145,7 @@ impl<'ctx> PointerCtx<'ctx> {
                     changed = true;
                 }
                 ArtifactEvent::Conflict(message) => {
-                    if let Some((code, text, severity)) = time_travel::history_refusal_notice(&message.code.0, self.prefs.active_locale()).filter(|(code, _, _)| !time_travel::history_refusal_is_silent(code)) {
+                    if let Some((code, text, severity)) = history_refusal_notice(&message.code.0, self.prefs.active_locale()).filter(|(code, _, _)| !history_refusal_is_silent(code)) {
                         self.chrome.show_transient_notice(text, severity, Some(code));
                     }
                     if let Some(terminal) = shell_sync_link_terminal(&message.code.0) {

@@ -1,5 +1,6 @@
 //! 🥞️ Render visible artwork privately, then replace the layer tree in one undoable operation.
-use crate::{RasterCommand, RasterPlayApp};
+use crate::RasterCommand;
+use crate::commands::work_app::RasterWorkApp;
 use crate::config::{RasterConfig, RasterConfigMutation};
 use semio_s_artifact_raster_raster_model::layer_node_id;
 use semio_s_artifact_raster_raster_model::create_pixel_layer;
@@ -9,7 +10,7 @@ use semio_s_artifact_raster_raster_mutations::RasterMutation;
 use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
 use semio_s_artifact_raster_raster_io::RasterStackPreparation;
 use semio_framework_pixels::{compositing::layers::RasterStackJob,png_encoding::{EncodedPngImage,PngEncodeJob}};
-use semio_framework_plugin::{ArtifactView,ConfigView,EditorApp,Emit,Fault};
+use semio_framework_plugin::{ArtifactView,ConfigView,Emit,Fault};
 use semio_framework_plugin::retained_command::{ArtifactCommandInputs,ArtifactCommandWork,ArtifactCommandWorkStep};
 use semio_framework_value_derive::{FromValue,ToValue};
 
@@ -17,12 +18,12 @@ use semio_framework_value_derive::{FromValue,ToValue};
 #[dsl(keyword="flatten-layers")]
 pub struct FlattenLayers {pub name:String}
 
-fn prepare(command:&FlattenLayers,document:&RasterSnapshot)->Result<RasterStackPreparation,Fault> {
+pub fn prepare(command:&FlattenLayers,document:&RasterSnapshot)->Result<RasterStackPreparation,Fault> {
     if command.name.trim().is_empty()||command.name.chars().count()>120 {return Err(Fault::from("raster.flatten-name-invalid"));}
     for layer in &document.layers {semio_s_artifact_raster_raster_model::require_layer_edit(&document.layers,layer_node_id(layer),true).map_err(Fault::from)?;}
     RasterStackPreparation::new(document).map_err(Fault::from)
 }
-fn publish(image:EncodedPngImage,origin:[f64;2],name:&str,document:&RasterSnapshot)->Result<Emit<RasterMutation,RasterConfigMutation>,Fault> {
+pub fn publish(image:EncodedPngImage,origin:[f64;2],name:&str,document:&RasterSnapshot)->Result<Emit<RasterMutation,RasterConfigMutation>,Fault> {
     use semio_s_artifact_raster_raster_mutations_pixels::{add_layer_asset, remove_layer_asset};
     use semio_s_artifact_raster_raster_mutations_layers::{create_layer, delete_layer};
     let (layer,key,asset)=baked_layer(image,origin,name,"flatten");
@@ -58,15 +59,15 @@ pub fn asset_keys_except(layers:&[RasterLayerNode],excluded:&std::collections::B
 pub fn handle(_payload:&FlattenLayers,_doc:&ArtifactView<'_,RasterSnapshot>,_cfg:&ConfigView<'_,RasterConfig>)->Result<Emit<RasterMutation,RasterConfigMutation>,Fault> {Err(Fault::from("raster.flatten-requires-retained-work"))}
 
 #[derive(Default)]
-pub struct LayerBakeWork<const MERGE_DOWN:bool> {preparing:Option<RasterStackPreparation>,compositing:Option<RasterStackJob>,encoding:Option<PngEncodeJob>,origin:[f64;2],complete:bool}
-impl<const MERGE_DOWN:bool> ArtifactCommandWork<EditorApp<RasterPlayApp>> for LayerBakeWork<MERGE_DOWN> {
+pub struct LayerBakeWork<const MERGE_DOWN:bool> {pub preparing:Option<RasterStackPreparation>,compositing:Option<RasterStackJob>,encoding:Option<PngEncodeJob>,pub origin:[f64;2],complete:bool}
+impl<A: RasterWorkApp, const MERGE_DOWN:bool> ArtifactCommandWork<A> for LayerBakeWork<MERGE_DOWN> {
     fn tool_id(&self)->&'static str {if MERGE_DOWN {"mergeDown"} else {"flattenLayers"}}
-    fn extent(&self,command:&RasterCommand,_snapshot:&RasterSnapshot,_interaction:&protocol::InteractionState,_context:Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<RasterPlayApp>>>)->Option<usize> {(matches!((MERGE_DOWN,command),(false,RasterCommand::FlattenLayers(_))|(true,RasterCommand::MergeDown(_)))).then_some(1)}
-    fn work_demands(&self,_input:&ArtifactCommandInputs<'_,EditorApp<RasterPlayApp>>,_maximum_copy_bytes:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError> {
+    fn extent(&self,command:&RasterCommand,_snapshot:&RasterSnapshot,_interaction:&protocol::InteractionState,_context:Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<A>>)->Option<usize> {(matches!((MERGE_DOWN,command),(false,RasterCommand::FlattenLayers(_))|(true,RasterCommand::MergeDown(_)))).then_some(1)}
+    fn work_demands(&self,_input:&ArtifactCommandInputs<'_,A>,_maximum_copy_bytes:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError> {
         let stage=if self.encoding.is_some() {size_of::<PngEncodeJob>()+size_of::<Emit<RasterMutation,RasterConfigMutation>>()} else if self.compositing.is_some() {size_of::<RasterStackJob>()+size_of::<PngEncodeJob>()} else {size_of::<RasterStackPreparation>()+size_of::<RasterStackJob>()};
         Ok(semio_framework_value::RetirementDemand {copy_bytes:stage,depth:1,..Default::default()})
     }
-    fn step(&mut self,input:&ArtifactCommandInputs<'_,EditorApp<RasterPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>)->Result<ArtifactCommandWorkStep<EditorApp<RasterPlayApp>>, semio_framework_job::OriginalTurnFailure> {
+    fn step(&mut self,input:&ArtifactCommandInputs<'_,A>, _cx: &mut semio_framework_job::StepContext<'_>)->Result<ArtifactCommandWorkStep<A>, semio_framework_job::OriginalTurnFailure> {
         let original: Result<_, Fault> = (|| {
         if self.complete {return Err(Fault::from("raster.flatten-work-complete"));}
         if !matches!((MERGE_DOWN,input.command),(false,RasterCommand::FlattenLayers(_))|(true,RasterCommand::MergeDown(_))) {return Err(Fault::from("raster.bake-work-mismatch"));}
@@ -111,6 +112,3 @@ impl<const MERGE_DOWN:bool> ArtifactCommandWork<EditorApp<RasterPlayApp>> for La
     fn next_close_depth_demand(&self)->Result<usize,semio_framework_value::ValueError> {Ok(usize::from(!self.terminal_is_empty()))}
     fn terminal_is_empty(&self)->bool {self.preparing.is_none()&&self.compositing.is_none()&&self.encoding.is_none()}
 }
-#[cfg(test)]
-#[path="🧪️tests/🦀️.rs"]
-mod tests;

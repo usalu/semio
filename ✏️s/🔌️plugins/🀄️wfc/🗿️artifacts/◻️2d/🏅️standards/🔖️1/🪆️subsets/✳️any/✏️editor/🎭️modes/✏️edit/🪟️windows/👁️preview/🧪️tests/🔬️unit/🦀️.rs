@@ -1,6 +1,7 @@
 //! 🧪️ The `wfc-2d-preview` window — layer projection from an inferred assignment.
 
-use super::{definition, preview_fit, preview_layers_json, render, WFC_2D_PREVIEW_BODY, WFC_2D_PREVIEW_WINDOW};
+use crate::{editor::wfc2d::modes::edit::tools::fill, editor::wfc2d::modes::edit::tools::fill::Wfc2dFillTickPayload};
+use crate::editor::wfc2d::modes::edit::windows::preview::{definition, preview_fit, preview_layers_json, render, WFC_2D_PREVIEW_BODY, WFC_2D_PREVIEW_WINDOW};
 use crate::editor::wfc2d::transient::{Wfc2dAssignment, Wfc2dTransient};
 
 #[test]

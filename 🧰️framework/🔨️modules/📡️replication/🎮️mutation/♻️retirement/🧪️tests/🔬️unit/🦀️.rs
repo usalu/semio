@@ -23,7 +23,6 @@ fn cooperative_replay_capacity_release_obeys_the_neutral_law(){
         assert!(turn<9999);
     }
     assert!(exact&&owner.terminal_is_empty());assert!(law["exactGrantAccepted"].as_bool().unwrap());let(_,heap)=observe_heap_allocations_on_this_thread(||drop(owner));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
-    println!("[DEBUG] replay original empty Vec capacity={capacity} ordinaryBody={body} exact physical release=true");
 }
 
 #[test]
@@ -32,7 +31,7 @@ fn cooperative_replay_paged_inverse_preserves_semantic_array_and_releases_each_p
     let expected:Vec<u8>=(0..count).map(|index|(index%256)as u8).collect();let owners=PagedList::<u8,{usize::MAX}>::try_from_iter(expected.iter().copied()).unwrap();assert_eq!(serde_json::to_value(&owners).unwrap(),serde_json::to_value(&expected).unwrap());
     let factory=Arc::new(OwnedValueRetirementFactory::<u8>::default());let(mut owner,heap)=observe_heap_allocations_on_this_thread(||ReplayMutationsRetirement::new(owners,factory));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));let mut releases=0;
     for turn in 0..100000{if owner.terminal_is_empty(){break;}let current=grant(&owner);assert!(current.maximum_copy_bytes+current.maximum_capacity_bytes<=maximum&&current.maximum_release_bytes<=maximum);let progress=observe(||owner.close_step(current),current);releases+=usize::from(progress.released_bytes>0);assert!(turn<99999);}
-    assert!(owner.terminal_is_empty());assert!(releases>=law["minimumBackingReleases"].as_u64().unwrap()as usize);let(_,heap)=observe_heap_allocations_on_this_thread(||drop(owner));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));println!("[DEBUG] native paged inverse rows={count} admitted physical releases={releases}");
+    assert!(owner.terminal_is_empty());assert!(releases>=law["minimumBackingReleases"].as_u64().unwrap()as usize);let(_,heap)=observe_heap_allocations_on_this_thread(||drop(owner));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
 }
 
 #[test]
@@ -46,6 +45,6 @@ fn cooperative_replay_pending_native_lanes_birth_and_release_each_actual_child()
             for short in [RetainedCloneGrant::default(),RetainedCloneGrant{maximum_depth:depth.saturating_sub(1),..current},RetainedCloneGrant{maximum_copy_bytes:copy.saturating_sub(1),..current},RetainedCloneGrant{maximum_capacity_bytes:capacity.saturating_sub(1),..current},RetainedCloneGrant{maximum_release_bytes:release.saturating_sub(1),..current}]{if short!=current{assert_eq!(observe(||owner.close_step(short),short),Default::default());}}
             observe(||owner.close_step(current),current);assert!(turn<9999);
         }
-        assert!(owner.terminal_is_empty());let(_,heap)=observe_heap_allocations_on_this_thread(||drop(owner));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));println!("[DEBUG] native replay two-lane original custody closed vector={vector}");
+        assert!(owner.terminal_is_empty());let(_,heap)=observe_heap_allocations_on_this_thread(||drop(owner));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
     }
 }

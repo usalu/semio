@@ -203,9 +203,9 @@ impl Default for SemioDocumentSnapshot {
 /// kind (Heading/Paragraph/List/Table/Code/Quote/Image/PageBreak), exercising every leaf shape at
 /// least once. Single source of truth for `📚️examples/🗒️memo/🖼️assets/🗣️.dsl.semio`/
 /// `🎒️.pack.semio` and for the conformance-law tests in `🎹️composer/🦀️.rs`.
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn demo_semio_document_snapshot() -> SemioDocumentSnapshot {
+pub fn demo_semio_document_snapshot() -> SemioDocumentSnapshot {
     SemioDocumentSnapshot {
         schema: STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA.into(),
         styles: vec![DocStyle { id: "heading1".into(), name: "Heading 1".into(), based_on: Some("normal".into()) }],
@@ -224,8 +224,6 @@ pub(crate) fn demo_semio_document_snapshot() -> SemioDocumentSnapshot {
 }
 //#endregion 🔖️Demo
 //#region 🔖️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🔖️Tests
                                                    

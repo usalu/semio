@@ -1,4 +1,4 @@
-use crate::text::snapshot::*;
+use crate::snapshot::*;
 use semio_s_artifact_norm_iso16757_model::CatalogueValue;
 
 #[semio_framework_async_macros::async_test]

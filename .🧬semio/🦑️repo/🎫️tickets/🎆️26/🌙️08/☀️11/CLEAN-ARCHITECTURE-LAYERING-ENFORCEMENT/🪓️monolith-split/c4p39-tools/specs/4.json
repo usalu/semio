@@ -1,0 +1,73 @@
+{
+ "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️tests/🔬️wgpu-shell-chrome-parity/🦀️.rs",
+ "original": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/c4p39-tools/orig/4.rs",
+ "stage": "/Users/ueli/.cache/c4p39/stage",
+ "chunks": [
+  {
+   "name": "📚️fixtures-and-parity-builders",
+   "folder": "📚️fixtures-and-parity-builders",
+   "doc": "📚️ Fixtures and parity builders: the shared picker, switch, controls, safe-area, boot and icon fixtures and the parity app, mode and window-kind builders.",
+   "ranges": [
+    [
+     16,
+     128
+    ]
+   ]
+  },
+  {
+   "name": "🎛️example-picker-and-role-groups",
+   "folder": "🎛️example-picker-and-role-groups",
+   "doc": "🎛️ Example picker and role groups: the dialect-keyed example picker, boot example resolution, the roles group, role switching and mode stepping.",
+   "ranges": [
+    [
+     130,
+     325
+    ]
+   ]
+  },
+  {
+   "name": "🛑️chords-controls-and-compute-status",
+   "folder": "🛑️chords-controls-and-compute-status",
+   "doc": "🛑️ Chords, controls and compute status: shared keybinding rows, the alt axis, the surface overlay controls and the compute status pill and pane.",
+   "ranges": [
+    [
+     327,
+     589
+    ]
+   ]
+  },
+  {
+   "name": "🗣️chrome-i18n-and-switch-order",
+   "folder": "🗣️chrome-i18n-and-switch-order",
+   "doc": "🗣️ Chrome i18n and switch order: bilingual chrome literal laws, chrome key coverage and the create-before-retire session switch.",
+   "ranges": [
+    [
+     591,
+     751
+    ]
+   ]
+  },
+  {
+   "name": "🪟️window-scope-laws",
+   "folder": "🪟️window-scope-laws",
+   "doc": "🪟️ Window scope laws: the window scope fixture, seeded active windows, instance icon overrides and app-wide chord routing to the owning window.",
+   "ranges": [
+    [
+     753,
+     1012
+    ]
+   ]
+  },
+  {
+   "name": "🛟️safe-area-and-incoming-layout",
+   "folder": "🛟️safe-area-and-incoming-layout",
+   "doc": "🛟️ Safe area and incoming layout: the chrome panel safe area, the overlay row beside floating panels and incoming layout identity, maximize and pruning.",
+   "ranges": [
+    [
+     1014,
+     1274
+    ]
+   ]
+  }
+ ]
+}

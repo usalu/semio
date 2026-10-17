@@ -13,9 +13,10 @@ use super::*;
 use crate::editor_domain::editor_laws::context::app_with_registry;
 use crate::editor_domain::editor_laws::serial_execution;
 use semio_framework_plugin::{PluginApp, ViewModel, ViewWindowInstance};
+use semio_framework_test_fixtures::repo_text;
 
 //#region 📌️Fixture
-const MODE_PANEL_FIXTURE_JSON: &str = include_str!("../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/📌️mode-panel-publication.json");
+fn mode_panel_fixture_json() -> &'static str { repo_text!("✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/📌️mode-panel-publication.json") }
 
 #[derive(serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -53,7 +54,7 @@ struct ModePanelWindow {
 }
 
 fn mode_panel_fixture() -> ModePanelFixture {
-    let fixture: ModePanelFixture = serde_json::from_str(MODE_PANEL_FIXTURE_JSON).expect("mode panel publication fixture");
+    let fixture: ModePanelFixture = serde_json::from_str(mode_panel_fixture_json()).expect("mode panel publication fixture");
     assert_eq!(fixture.format, "semio.generation3d.mode-panel-publication");
     assert_eq!(fixture.version, 1);
     fixture

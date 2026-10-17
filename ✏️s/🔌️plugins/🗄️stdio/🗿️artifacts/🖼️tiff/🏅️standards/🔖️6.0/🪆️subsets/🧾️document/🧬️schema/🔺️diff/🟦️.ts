@@ -55,6 +55,10 @@ type stdioTiff60DocumentDiffGuardSizeBounds = { readonly minItems?: number; read
 
 export const stdioTiff60DocumentDiffGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : stdioTiff60DocumentDiffGuardReject(at, "value is not an object");
+export const stdioTiff60DocumentDiffGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) stdioTiff60DocumentDiffGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const stdioTiff60DocumentDiffGuardArray = (value: unknown, at: string, bounds: stdioTiff60DocumentDiffGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return stdioTiff60DocumentDiffGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) stdioTiff60DocumentDiffGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -93,11 +97,22 @@ export function parseTiffTagsDiff(value: unknown, at = "$"): TiffTagsDiff {
   };
 }
 
-export function parseTiffIfdDiff(value:unknown,at="$"):TiffIfdDiff{
- const row=stdioTiff60DocumentDiffGuardObject(value,at);if(Object.keys(row).some(key=>!["entries","blocks","runs"].includes(key)))throw Error(at+": foreign owned diff field");
- return {entries:row.entries===undefined?undefined:parseTiffTagsDiff(row.entries,at+".entries"),blocks:row.blocks===undefined?undefined:stdioTiff60DocumentDiffGuardArray(row.blocks,at+".blocks").map((v,i)=>parseTiffSampleBlock(v,at+".blocks["+i+"]")),runs:row.runs===undefined?undefined:stdioTiff60DocumentDiffGuardArray(row.runs,at+".runs").map((v,i)=>parseTiffSampleRun(v,at+".runs["+i+"]"))}
+export function parseTiffIfdDiff(value: unknown, at = "$"): TiffIfdDiff {
+  const row = stdioTiff60DocumentDiffGuardClosed(stdioTiff60DocumentDiffGuardObject(value, at), at, ["entries", "blocks", "runs"]);
+  return {
+    entries: row["entries"] === undefined ? undefined : parseTiffTagsDiff(row["entries"], `${at}.entries`),
+    blocks: row["blocks"] === undefined ? undefined : stdioTiff60DocumentDiffGuardArray(row["blocks"], `${at}.blocks`).map((item, index) => parseTiffSampleBlock(item, `${at}.blocks[${index}]`)),
+    runs: row["runs"] === undefined ? undefined : stdioTiff60DocumentDiffGuardArray(row["runs"], `${at}.runs`).map((item, index) => parseTiffSampleRun(item, `${at}.runs[${index}]`)),
+  };
 }
-export function parseTiffSampleRun(value:unknown,at="$"):TiffSampleRun{const row=stdioTiff60DocumentDiffGuardObject(value,at);if(Object.keys(row).some(key=>!["block","offset","samples"].includes(key)))throw Error(at+": foreign sample run field");return {block:stdioTiff60DocumentDiffGuardInteger(row.block,at+".block",{minimum:0}),offset:stdioTiff60DocumentDiffGuardInteger(row.offset,at+".offset",{minimum:0}),samples:stdioTiff60DocumentDiffGuardArray(row.samples,at+".samples").map((word,index)=>{const w=stdioTiff60DocumentDiffGuardObject(word,at+".samples["+index+"]");return {lo:stdioTiff60DocumentDiffGuardInteger(w.lo,at+".samples["+index+"].lo",{minimum:0,maximum:4294967295}),hi:stdioTiff60DocumentDiffGuardInteger(w.hi,at+".samples["+index+"].hi",{minimum:0,maximum:4294967295})}})}}
+export function parseTiffSampleRun(value: unknown, at = "$"): TiffSampleRun {
+  const row = stdioTiff60DocumentDiffGuardClosed(stdioTiff60DocumentDiffGuardObject(value, at), at, ["block", "offset", "samples"]);
+  return {
+    block: stdioTiff60DocumentDiffGuardInteger(row["block"], `${at}.block`, {"minimum": 0}),
+    offset: stdioTiff60DocumentDiffGuardInteger(row["offset"], `${at}.offset`, {"minimum": 0}),
+    samples: stdioTiff60DocumentDiffGuardArray(row["samples"], `${at}.samples`).map((item, index) => ((row1) => ({ lo: stdioTiff60DocumentDiffGuardInteger(row1["lo"], `${at}.samples[${index}].lo`, {"minimum": 0, "maximum": 4294967295}), hi: stdioTiff60DocumentDiffGuardInteger(row1["hi"], `${at}.samples[${index}].hi`, {"minimum": 0, "maximum": 4294967295}) }))(stdioTiff60DocumentDiffGuardClosed(stdioTiff60DocumentDiffGuardObject(item, `${at}.samples[${index}]`), `${at}.samples[${index}]`, ["lo", "hi"]))),
+  };
+}
 export function parseTiffIfdModified(value: unknown, at = "$"): TiffIfdModified {
   const row = stdioTiff60DocumentDiffGuardObject(value, at);
   return {
@@ -116,10 +131,33 @@ export function parseTiffIfdsDiff(value: unknown, at = "$"): TiffIfdsDiff {
 }
 
 import {parseTiffIfd,parseTiffValues,parseTiffSampleBlock,parseTiffSnapshot,type TiffSnapshot} from "../📸️snapshot/🟦️.ts";
-export function parseTiffTagModified(value:unknown,at="$"):TiffTagModified{const row=stdioTiff60DocumentDiffGuardObject(value,at);if(Object.keys(row).some(v=>!["tag","values"].includes(v)))throw Error(at+": foreign tag diff field");return {tag:stdioTiff60DocumentDiffGuardInteger(row.tag,at+".tag",{minimum:0,maximum:65535}),values:parseTiffValues(row.values,at+".values")}}
-export function parseTiffTagAdded(value:unknown,at="$"):TiffTagAdded{return parseTiffTagModified(value,at)}
-export function parseTiffIfdAdded(value:unknown,at="$"):TiffIfdAdded{const row=stdioTiff60DocumentDiffGuardObject(value,at);return {index:stdioTiff60DocumentDiffGuardInteger(row.index,at+".index",{minimum:0}),ifd:parseTiffIfd(row.ifd,at+".ifd")}}
-export function parseTiffDiff(value:unknown,at="$"):TiffDiff{const row=stdioTiff60DocumentDiffGuardObject(value,at);if(Object.keys(row).some(v=>v!=="ifds"))throw Error(at+": foreign diff field");return {ifds:row.ifds===undefined?undefined:parseTiffIfdsDiff(row.ifds,at+".ifds")}}
+export function parseTiffTagModified(value: unknown, at = "$"): TiffTagModified {
+  const row = stdioTiff60DocumentDiffGuardClosed(stdioTiff60DocumentDiffGuardObject(value, at), at, ["tag", "values"]);
+  return {
+    tag: stdioTiff60DocumentDiffGuardInteger(row["tag"], `${at}.tag`, {"minimum": 0, "maximum": 65535}),
+    values: parseTiffValues(row["values"], `${at}.values`),
+  };
+}
+export function parseTiffTagAdded(value: unknown, at = "$"): TiffTagAdded {
+  const row = stdioTiff60DocumentDiffGuardClosed(stdioTiff60DocumentDiffGuardObject(value, at), at, ["tag", "values"]);
+  return {
+    tag: stdioTiff60DocumentDiffGuardInteger(row["tag"], `${at}.tag`, {"minimum": 0, "maximum": 65535}),
+    values: parseTiffValues(row["values"], `${at}.values`),
+  };
+}
+export function parseTiffIfdAdded(value: unknown, at = "$"): TiffIfdAdded {
+  const row = stdioTiff60DocumentDiffGuardObject(value, at);
+  return {
+    index: stdioTiff60DocumentDiffGuardInteger(row["index"], `${at}.index`, {"minimum": 0}),
+    ifd: parseTiffIfd(row["ifd"], `${at}.ifd`),
+  };
+}
+export function parseTiffDiff(value: unknown, at = "$"): TiffDiff {
+  const row = stdioTiff60DocumentDiffGuardClosed(stdioTiff60DocumentDiffGuardObject(value, at), at, ["ifds"]);
+  return {
+    ifds: row["ifds"] === undefined ? undefined : parseTiffIfdsDiff(row["ifds"], `${at}.ifds`),
+  };
+}
 
 function same(left:unknown,right:unknown):boolean{if(left===right)return true;if(Array.isArray(left)&&Array.isArray(right))return left.length===right.length&&left.every((value,index)=>same(value,right[index]));if(left&&right&&typeof left==='object'&&typeof right==='object'){const a=left as Record<string,unknown>,b=right as Record<string,unknown>,keys=Object.keys(a);return keys.length===Object.keys(b).length&&keys.every(key=>same(a[key],b[key]));}return false;}
 /** 🔺️ Derives a sparse semantic delta by owned directory and tag identity. */

@@ -113,6 +113,7 @@ exclude = [
     "🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting",
     "🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack",
     "🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🪆️graph-query/📦️packages/🦀️rust",
+    "🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🪆️content/🧿️semio/📦️packages/🦀️rust",
     "🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag",
     "🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing",
     "🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/🧩️json/📦️packages/🦀️rust",

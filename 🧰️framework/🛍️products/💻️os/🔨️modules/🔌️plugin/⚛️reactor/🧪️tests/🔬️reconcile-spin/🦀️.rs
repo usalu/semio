@@ -1,19 +1,25 @@
-use super::pending::with_state as with_pending;
-use super::turn::{drive_reconcile_within, reconcile_arms_turn, PATCH_CLOSE_UNITS_PER_TURN, PATCH_RETIREMENT_BYTES_PER_UNIT, PATCH_RETIREMENT_ITEMS_PER_UNIT};
-use super::*;
+use semio_framework_plugin_reactor_lifecycle::with_state as with_pending;
+use semio_framework_plugin_reactor_turn::{drive_reconcile_within, reconcile_arms_turn, PATCH_CLOSE_UNITS_PER_TURN, PATCH_RETIREMENT_BYTES_PER_UNIT, PATCH_RETIREMENT_ITEMS_PER_UNIT};
+use semio_framework::kernel::UiPatch;
+use semio_framework_plugin_reactor_lifecycle::instance_lifetime;
+use semio_framework_plugin_reactor_patches as patches;
+use semio_framework_plugin_reactor_lifecycle as pending;
+use semio_framework_ui_contract as ui_contract;
 use semio_framework::kernel::{ActorInstanceLifetime, ActorUiPatchReceipt};
 use semio_framework_ui_runtime::{ComponentTree, TreeNode};
 
 /// 🌲️ The cheapest admissible retained tree: this suite prices CROSSINGS, and a crossing costs the
 /// same whether the surface carries one text leaf or a Nakagin-scale world
 /// (`🔬️reconcile-budget` prices the bytes).
-fn tree(text: &str) -> ComponentTree {
+#[doc(hidden)]
+pub fn tree(text: &str) -> ComponentTree {
     let value = ui_contract::UiText::try_from_str(text).expect("bounded fixture text");
     let root = TreeNode::try_new("root", ui_contract::Component::Text(ui_contract::TextProps { value: ui_contract::Label(value), emphasize: None, data_attributes: None })).expect("bounded fixture tree");
     ComponentTree::new(root)
 }
 
-fn budget() -> serde_json::Value {
+#[doc(hidden)]
+pub fn budget() -> serde_json::Value {
     serde_json::from_str(include_str!("../🧫️fixtures/🔁️reconcile-spin.json")).expect("reconcile spin budget fixture")
 }
 
@@ -33,10 +39,10 @@ fn drain_pending_authority(cx:&mut semio_framework_job::StepContext<'_>) {
 /// this suite guards is "every crossing carries events or a patch".
 #[derive(Default)]
 struct CrossingLedger {
-    crossings: usize,
+    pub crossings: usize,
     with_patch: usize,
     with_events: usize,
-    idle: usize,
+    pub idle: usize,
 }
 
 /// 🔁️ The browser loop, exactly as `PluginRuntime.settlePluginTurn` drives it: post a turn carrying
@@ -131,7 +137,7 @@ fn settle_tracker(tracker: &patches::PatchTracker, instance: u32,cx:&mut semio_f
 /// (`📓️reactor-reconcile-spin-2026-09-14.md` §2).
 #[test]
 fn n_pending_retained_surfaces_converge_in_bounded_crossings_that_each_carry_something() {
- let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original reconcile fixture caller");
+ let mut original_caller=semio_framework_plugin_testing_laws::OriginalFixtureCaller::admit().expect("independently authored original reconcile fixture caller");
  let mut original_context=original_caller.context();let cx=&mut original_context;
  let result=(||{
     let fixture = budget();
@@ -153,7 +159,7 @@ fn n_pending_retained_surfaces_converge_in_bounded_crossings_that_each_carry_som
 /// `None`.
 #[test]
 fn a_published_patch_leaves_the_guest_on_the_turn_that_published_it() {
- let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original reconcile fixture caller");
+ let mut original_caller=semio_framework_plugin_testing_laws::OriginalFixtureCaller::admit().expect("independently authored original reconcile fixture caller");
  let mut original_context=original_caller.context();let cx=&mut original_context;
  let result=(||{
     let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
@@ -186,7 +192,7 @@ fn a_published_patch_leaves_the_guest_on_the_turn_that_published_it() {
 /// turn that carried nothing (`📓️reactor-reconcile-spin-2026-09-14.md` §1, family 2).
 #[test]
 fn a_host_blocked_ready_output_spends_no_opportunity_and_arms_nothing() {
- let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original reconcile fixture caller");
+ let mut original_caller=semio_framework_plugin_testing_laws::OriginalFixtureCaller::admit().expect("independently authored original reconcile fixture caller");
  let mut original_context=original_caller.context();let cx=&mut original_context;
  let result=(||{
     let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
@@ -246,7 +252,7 @@ fn retire_host_patch(patch: ui_contract::UiPatch,cx:&mut semio_framework_job::St
 /// ceiling.
 #[test]
 fn the_reconcile_drive_respects_the_turns_wall_hold() {
- let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original reconcile fixture caller");
+ let mut original_caller=semio_framework_plugin_testing_laws::OriginalFixtureCaller::admit().expect("independently authored original reconcile fixture caller");
  let mut original_context=original_caller.context();let cx=&mut original_context;
  let result=(||{
     let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
@@ -270,7 +276,7 @@ fn the_reconcile_drive_respects_the_turns_wall_hold() {
 /// turn armed only for the retirement it owes — never for a surface that will never publish again.
 #[test]
 fn a_cancellation_mid_drive_stops_the_publication_and_still_quiesces() {
- let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original reconcile fixture caller");
+ let mut original_caller=semio_framework_plugin_testing_laws::OriginalFixtureCaller::admit().expect("independently authored original reconcile fixture caller");
  let mut original_context=original_caller.context();let cx=&mut original_context;
  let result=(||{
     let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
@@ -337,7 +343,7 @@ fn a_cancellation_mid_drive_stops_the_publication_and_still_quiesces() {
 /// in neither.
 #[test]
 fn the_pending_publication_phases_partition_what_arms_a_turn() {
- let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original reconcile fixture caller");
+ let mut original_caller=semio_framework_plugin_testing_laws::OriginalFixtureCaller::admit().expect("independently authored original reconcile fixture caller");
  let mut original_context=original_caller.context();let cx=&mut original_context;
  let result=(||{
     let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();

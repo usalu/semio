@@ -51,7 +51,6 @@ fn owned_native_samples_oracle(_ctx: &Context) -> Result<Outcome, String> {
         law::inverse_restores("neutral native paint", &project_png_owned(&restored)?, original)?;
         observations.push(Json::Object(vec![("name".into(), Json::String(row.str("name"))), ("painted".into(), observation)]));
     }
-    eprintln!("[DEBUG] independent PNG owned vectors preserve 16-bit precision and interlaced duplicate palette indices");
     Ok(Outcome::projection(Json::Array(observations)))
 }
 
@@ -159,7 +158,6 @@ mod subject {
             law::inverse_restores("neutral native paint", &project_png_owned(&encode_png(&snapshot).map_err(|error| error.to_string())?)?, original)?;
             observations.push(Json::Object(vec![("name".into(), Json::String(row.str("name"))), ("painted".into(), observation)]));
         }
-        eprintln!("[DEBUG] actual PNG typed mutations preserve precise native values through physical I/O");
         Ok(Outcome::projection(Json::Array(observations)))
     }
     //#endregion 🔖️MutationFromSpec

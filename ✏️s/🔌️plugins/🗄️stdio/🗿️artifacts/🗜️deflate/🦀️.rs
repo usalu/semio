@@ -1,8 +1,7 @@
 //! 🎪 `stdio.deflate` artifact — stdio reference format.
-use semio_framework_plugin::PluginBuilder;
-
 #![allow(async_fn_in_trait)]
 #![allow(long_running_const_eval)]
+use semio_framework_plugin::PluginBuilder;
 
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
@@ -12,8 +11,6 @@ extern crate semio_framework_value_derive as value_derive;
 
 pub use semio_s_artifact_stdio_contract::{apply_mutation, apply_mutation_checked, mutation_from_payload_json, mutation_inverse, mutation_payload_json, MutationRefusal};
 
-use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
-
 pub use schema::diff::DeflateDiff;
 pub use schema::mutations::DeflateMutation;
 pub use schema::snapshot::DeflateSnapshot;
@@ -21,192 +18,27 @@ pub use schema::DeflateArtifact;
 /// 🧬️ The wire contract a native test host decodes `🥒️.feature` witnesses through and inverts them with
 /// (`Mutation::from_payload_value`/`Mutation::inverse`), re-exported because such a host links this crate alone.
 
-/// 🏷️ Document schema / DSL envelope id.
-pub const STDIO_DEFLATE_DOCUMENT_SCHEMA: &str = "stdio.deflate";
+pub use semio_s_artifact_stdio_deflate_snapshot::{STDIO_DEFLATE_DOCUMENT_SCHEMA};
 
-/// 🧬️ Artifact schema descriptor id.
-pub const DEFLATE_ARTIFACT_SCHEMA_ID: &str = "s.stdio.deflate";
+pub use semio_s_artifact_stdio_deflate_examples::{DEFLATE_ARTIFACT_SCHEMA_ID};
 
-/// 📜 Schema-owned package definition.
-pub const ARTIFACT_DEFINITION_SCHEMA: &str = include_str!("📜️artifact-definition.json");
+pub use semio_s_artifact_stdio_deflate_examples::{ARTIFACT_DEFINITION_SCHEMA};
 
-pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::PluginAssemblyError> {
-    let factories = native_codecs();
-    let executables = semio_s_artifact_stdio_contract::native_codec_executables(ARTIFACT_DEFINITION_SCHEMA, &factories)?;
-    semio_s_artifact_stdio_contract::definition_from_schema_with_executables(ARTIFACT_DEFINITION_SCHEMA, executables)
-}
+pub use semio_s_artifact_stdio_deflate_schema::{definition};
 
-pub fn formats() -> Result<Vec<semio_framework_plugin::io::FormatDescriptor>, semio_framework_plugin::ArtifactDefinitionError> {
-    semio_s_artifact_stdio_contract::format_descriptors(ARTIFACT_DEFINITION_SCHEMA)
-}
+pub use semio_s_artifact_stdio_deflate_examples::{formats};
 
-fn native_codec() -> store::os_store::serialization::ArtifactCodec {
-    let mut codec = store::artifact_codec::<DeflateSnapshot, DeflateMutation>(STDIO_DEFLATE_DOCUMENT_SCHEMA);
-    codec.extension = "zz";
-    codec.pack_schema_hash = semio_framework_hash::Sha256::digest(include_bytes!("🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🚪️io/💾️binary/📸️snapshot/📡️.protocol.semio"));
-    codec
-}
+pub use semio_s_artifact_stdio_deflate_schema::{native_codec};
 
-pub fn native_codecs() -> Vec<semio_s_artifact_stdio_contract::NativeCodecFactory> {
-    vec![semio_s_artifact_stdio_contract::NativeCodecFactory { id: "stdio.native.deflate.v1", artifact: "deflate", kind: artifact_kind, codec: native_codec }]
-}
+pub use semio_s_artifact_stdio_deflate_schema::{native_codecs};
 
-pub fn contribution() -> semio_s_artifact_stdio_contract::ArtifactContribution {
-    semio_s_artifact_stdio_contract::ArtifactContribution { definition_constraint: None, identity: "deflate", schema: ARTIFACT_DEFINITION_SCHEMA, definition, assembly, formats, native_codecs }
-}
+pub use semio_s_artifact_stdio_deflate_tests::{contribution};
 
-//#region 🔖️Declaration
-/// 🔖️ This artifact's declaration (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W6, g2) —
-/// replaces the old side-effecting `crate::engine::register()`, which the
-/// plugin root called unconditionally before `PluginBuilder::new(...)` was even constructed. Mirrors
-/// `🔋️energy`'s `s.model` exemplar exactly: a headless library artifact with zero `ArtifactApp`s,
-/// so `.document_codec_bare::<Snapshot, Mutation>(schema)` stands in for
-/// `store::os_store::codec_registry::register_document_codec(store::artifact_codec::<DeflateSnapshot,
-/// DeflateMutation>(...))`. `.composers(...)` reaches the SUBSET IO module's own `io_registry`
-/// (returns `&'static [ComposerEntry]`, owned rows) by its full path
-/// (`standards::v_rfc1950::subsets::any::io::io_registry` — the former `⚙️engine`'s `io_registry`,
-/// dissolved there per ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — deliberately
-/// NOT this file's own `io_registry` module below, whose `entries()` returns
-/// `&'static [&'static ComposerEntry]` (references) and would silently rebind under a bare call
-/// (see this ticket's "SILENT REBIND" hazard).
-///
-/// **NOT covered by any `ArtifactDeclaration` field**: `register_schema_specs()`
-/// (`dsl::registry::register_schema_spec`, the P2-M3 `FullResolver` insertion API — a registry
-/// distinct from `.languages()`'s `dsl::register_language`), now living beside `io_registry` in
-/// `standards::v_rfc1950::subsets::any::io`. No field here closes it, so it is not invented and the
-/// call is not dropped — it survives on the plugin root's `.setup(...)`, repointed at this new
-/// location by the dissolution.
-/// 🧩️ Binds this executable root to its sole schema-owned definition.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn assembly() -> Result<semio_s_artifact_stdio_contract::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
-    semio_s_artifact_stdio_contract::runtime_assembly("deflate", definition()?, declaration)
-}
+pub use semio_s_artifact_stdio_deflate_tests::{assembly, declaration, pilot_languages};
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
-    let formats = formats()?;
-    semio_framework_plugin::ArtifactDeclaration::builder(definition)
-        .schema(schema::deflate_artifact_schema_descriptor())
-        .formats(formats)
-        .inferences([schema::inferences::deflate_artifact_inference_descriptor()])
-        .composers(standards::v_rfc1950::subsets::any::io::io_registry::entries())
-        .languages(pilot_languages())
-        .document_codec_bare::<DeflateSnapshot, DeflateMutation>(STDIO_DEFLATE_DOCUMENT_SCHEMA, semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.deflate", standard: semio_framework_artifact_reference::StandardId("rfc1950"), subset: semio_framework_artifact_reference::SubsetId("*") })
-        .try_build()
-}
-
-/// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built
-/// once and leaked to a `&'static` slice since `dsl::passthrough_hooks` isn't `const fn`, copied
-/// verbatim (five `LanguageSpec` rows, one per role) from the former
-/// `crate::engine::register_pilot_languages`'s own
-/// `dsl::register_language(...)` call bodies — same ids, same grammar/protocol paths, same
-/// `passthrough_hooks` calls.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
-    static LANGUAGES: std::sync::OnceLock<Vec<semio_framework_dsl::LanguageSpec>> = std::sync::OnceLock::new();
-    LANGUAGES
-        .get_or_init(|| {
-            vec![
-                semio_framework_dsl::LanguageSpec {
-                    id: "stdio.deflate",
-                    extension: Some("zz"),
-                    role: semio_framework_dsl::LanguageRole::Document,
-                    grammar: Some(standards::v_rfc1950::subsets::any::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(standards::v_rfc1950::subsets::any::io::text::snapshot::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(standards::v_rfc1950::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(standards::v_rfc1950::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
-                    hooks: semio_framework_dsl::passthrough_hooks("stdio.deflate"),
-                },
-                semio_framework_dsl::LanguageSpec {
-                    id: "stdio.deflate.op",
-                    extension: None,
-                    role: semio_framework_dsl::LanguageRole::Ops,
-                    grammar: Some(standards::v_rfc1950::subsets::any::io::text::mutations::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(standards::v_rfc1950::subsets::any::io::text::mutations::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(standards::v_rfc1950::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(standards::v_rfc1950::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
-                    hooks: semio_framework_dsl::passthrough_hooks("stdio.deflate.op"),
-                },
-                semio_framework_dsl::LanguageSpec {
-                    id: "stdio.deflate.diff",
-                    extension: None,
-                    role: semio_framework_dsl::LanguageRole::Diff,
-                    grammar: Some(standards::v_rfc1950::subsets::any::io::text::diff::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(standards::v_rfc1950::subsets::any::io::text::diff::COMPONENT_GRAMMAR_PATH),
-                    protocol: None,
-                    protocol_path: None,
-                    hooks: semio_framework_dsl::passthrough_hooks("stdio.deflate.diff"),
-                },
-                semio_framework_dsl::LanguageSpec {
-                    id: "stdio.deflate.pack",
-                    extension: None,
-                    role: semio_framework_dsl::LanguageRole::Pack,
-                    grammar: None,
-                    grammar_path: None,
-                    protocol: Some(standards::v_rfc1950::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(standards::v_rfc1950::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
-                    hooks: semio_framework_dsl::passthrough_hooks("stdio.deflate.pack"),
-                },
-                semio_framework_dsl::LanguageSpec {
-                    id: "stdio.deflate.spr",
-                    extension: None,
-                    role: semio_framework_dsl::LanguageRole::Spr,
-                    grammar: None,
-                    grammar_path: None,
-                    protocol: Some(standards::v_rfc1950::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(standards::v_rfc1950::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
-                    hooks: semio_framework_dsl::passthrough_hooks("stdio.deflate.spr"),
-                },
-            ]
-        })
-        .as_slice()
-}
-//#endregion 🔖️Declaration
-
-//#region 🔖️ArtifactKind
-/// 🗂️ This artifact's `ArtifactKindSpec`.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn artifact_kind() -> ArtifactKindSpec {
-    ArtifactKindSpec {
-        id: "s.stdio.deflate".into(),
-        label: semio_framework_ui_locale::LocalizedLabel::native("Deflate", "Deflate"),
-        source_format: STDIO_DEFLATE_DOCUMENT_SCHEMA.into(),
-        component_kind: "stdio".into(),
-        dimension: "data".into(),
-        media_capability: OsMediaCapability::MeshOnly,
-        media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
-        schema: STDIO_DEFLATE_DOCUMENT_SCHEMA.into(),
-        export_formats: vec![],
-        import_formats: vec![],
-        export_stdio_kinds: vec![],
-        import_stdio_kinds: vec![],
-    }
-}
-//#endregion 🔖️ArtifactKind
+pub use semio_s_artifact_stdio_deflate_schema::{artifact_kind};
 //#region 🚪️DerivedIoRegistry
-pub mod io_registry {
-    use crate::standards::v_rfc1950::subsets::any::io::io_registry as v_rfc1950;
-    use {semio_framework_plugin::io::register_composer_entries,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposedArtifact,semio_framework_plugin::io::ComposerEntry,semio_framework_artifact_reference::Dialect,semio_framework_plugin::io::ErasedComposeSource};
-    use std::sync::OnceLock;
-
-    static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
-
-    // 🚫️async: E1 pure table accessor consumed by OnceLock::get_or_init's sync closure — see R9
-    pub fn entries() -> &'static [&'static ComposerEntry] {
-        ENTRIES.get_or_init(|| v_rfc1950::entries().iter().collect()).as_slice()
-    }
-
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
-        let entry = entries().iter().find(|e| e.writes == target).ok_or_else(|| ComposeError { message: format!("DeflateComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
-        ::semio_framework_async::poll::resolve_ready((entry.compose)(sources))
-    }
-
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn register() {
-        register_composer_entries(v_rfc1950::entries()).expect("static Stdio registration must be available and conflict-free");
-    }
-}
+pub use semio_s_artifact_stdio_deflate_tests::io_registry;
 //#endregion 🚪️DerivedIoRegistry
 
 #[path = "."]
@@ -231,87 +63,19 @@ pub mod standards {
             pub mod any {
                 #[path = "."]
                 pub mod schema {
-                    #[path = "🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🧬️schema/🦀️.rs"]
-                    mod component;
-                    pub use component::*;
-                    #[path = "."]
-                    pub mod snapshot {
-                        #[path = "🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                    #[path = "."]
-                    pub mod inferences {
-                        #[path = "🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                        #[path = "."]
-                        pub mod window {
-                            #[path = "🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🧬️schema/💡️inferences/🪟window/🦀️.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                    }
-                    #[path = "."]
-                    pub mod diff {
-                        #[path = "🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                    #[path = "."]
-                    pub mod mutations {
-                        #[path = "🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
+                    pub use semio_s_artifact_stdio_deflate_schema::standards::v_rfc1950::subsets::any::schema::*;
+
+                    pub use semio_s_artifact_stdio_deflate_snapshot::standards::v_rfc1950::subsets::any::schema::snapshot;
+                    pub use semio_s_artifact_stdio_deflate_mutations::standards::v_rfc1950::subsets::any::schema::inferences;
+                    pub use semio_s_artifact_stdio_deflate_mutations::standards::v_rfc1950::subsets::any::schema::diff;
+                    pub use semio_s_artifact_stdio_deflate_mutations::standards::v_rfc1950::subsets::any::schema::mutations;
                 }
                 #[path = "."]
                 pub mod io {
-                    #[path = "🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🚪️io/🦀️.rs"]
-                    mod component;
-                    pub use component::*;
-                    #[path = "."]
-                    pub mod import {
-                        #[path = "."]
-                        pub mod deserializers {
-                            #[path = "."]
-                            pub mod artifacts {
-                                #[path = "."]
-                                pub mod binary {
-                                    #[path = "."]
-                                    pub mod v_raw {
-                                        #[path = "."]
-                                        pub mod any {
-                                            #[path = "🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/💾️binary/🔖️raw/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    #[path = "."]
-                    pub mod export {
-                        #[path = "."]
-                        pub mod serializers {
-                            #[path = "."]
-                            pub mod artifacts {
-                                #[path = "."]
-                                pub mod binary {
-                                    #[path = "."]
-                                    pub mod v_raw {
-                                        #[path = "."]
-                                        pub mod any {
-                                            #[path = "🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/💾️binary/🔖️raw/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
+                    pub use semio_s_artifact_stdio_deflate_tests::standards::v_rfc1950::subsets::any::io::*;
+
+                    pub use semio_s_artifact_stdio_deflate_tests::standards::v_rfc1950::subsets::any::io::import;
+                    pub use semio_s_artifact_stdio_deflate_tests::standards::v_rfc1950::subsets::any::io::export;
                 }
             }
         }
@@ -323,52 +87,24 @@ pub mod schema {
     pub use super::standards::v_rfc1950::subsets::any::schema::*;
 }
 
-
-#[path = "."]
-pub mod examples {
-    #[path = "."]
-    pub mod demo {
-        #[path = "🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️.rs"]
-        mod component;
-        pub use component::*;
-    }
-}
+pub use semio_s_artifact_stdio_deflate_examples::examples;
 
 #[path = "."]
 pub mod editor {
     #[path = "."]
     pub mod deflate {
-        #[path = "🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/✏️editor/🦀️.rs"]
-        mod component;
-        pub use component::*;
-        #[path = "🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/✏️editor/🧭️edit-rules/🦀️.rs"]
-        pub mod edit_rules;
-        #[path = "."]
-        pub mod presence {
-            #[path = "🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
-        #[path = "."]
-        pub mod config {
-            #[path = "🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
+        pub use semio_s_artifact_stdio_deflate_mutations::editor::deflate::*;
+
+        pub use semio_s_artifact_stdio_deflate_examples::editor::deflate::edit_rules;
+        pub use semio_s_artifact_stdio_deflate_examples::editor::deflate::presence;
+        pub use semio_s_artifact_stdio_deflate_examples::editor::deflate::config;
         #[path = "."]
         pub mod modes {
             #[path = "."]
             pub mod edit {
-                #[path = "🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🦀️.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "."]
-                pub mod windows {
-                    #[path = "."]
-                    pub mod main {
-                        #[path = "🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                }
+                pub use semio_s_artifact_stdio_deflate_mutations::editor::deflate::modes::edit::*;
+
+                pub use semio_s_artifact_stdio_deflate_mutations::editor::deflate::modes::edit::windows;
             }
         }
     }
@@ -378,38 +114,27 @@ pub mod editor {
 pub mod viewer {
     #[path = "."]
     pub mod deflate {
-        #[path = "🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/👁️viewer/🦀️.rs"]
-        mod component;
-        pub use component::*;
-        #[path = "."]
-        pub mod presence {
-            #[path = "🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/👁️viewer/👥️presence/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
-        #[path = "."]
-        pub mod config {
-            #[path = "🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/👁️viewer/🎚️config/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
+        pub use semio_s_artifact_stdio_deflate_tests::viewer::deflate::*;
+
+        pub use semio_s_artifact_stdio_deflate_examples::viewer::deflate::presence;
+        pub use semio_s_artifact_stdio_deflate_examples::viewer::deflate::config;
         #[path = "."]
         pub mod modes {
             #[path = "."]
             pub mod view {
-                #[path = "🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🦀️.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "."]
-                pub mod windows {
-                    #[path = "."]
-                    pub mod main {
-                        #[path = "🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                }
+                pub use semio_s_artifact_stdio_deflate_mutations::viewer::deflate::modes::view::*;
+
+                pub use semio_s_artifact_stdio_deflate_mutations::viewer::deflate::modes::view::windows;
             }
         }
     }
 }
 
 pub use crate::standards::v_rfc1950::subsets::any::io::{DeflateBuilderConstruction, DeflateParts, DeflateAnalyzerAnalysis, DeflateBuilderFacets, DeflateBuilder, DeflateAnalyzer, DeflateComposer};
+
+#[cfg(test)]
+#[path = "🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🫴️receiving/🧪️tests/🦀️.rs"]
+mod hoisted_receiving_0;
+#[cfg(test)]
+#[path = "🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs"]
+mod hoisted_snapshot_1;

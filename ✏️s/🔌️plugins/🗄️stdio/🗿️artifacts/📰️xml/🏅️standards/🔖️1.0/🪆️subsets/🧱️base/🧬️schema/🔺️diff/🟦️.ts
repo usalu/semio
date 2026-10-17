@@ -127,13 +127,11 @@ export function parseXmlAttrAdded(value: unknown, at = "$"): XmlAttrAdded {
 
 export function parseXmlAttributesDiff(value: unknown, at = "$"): XmlAttributesDiff {
   const row = stdioXml10BaseDiffGuardObject(value, at);
-  const order = row["order"] === undefined ? undefined : stdioXml10BaseDiffGuardArray(row["order"], `${at}.order`).map((item, index) => stdioXml10BaseDiffGuardString(item, `${at}.order[${index}]`));
-  if (order && new Set(order).size !== order.length) stdioXml10BaseDiffGuardReject(`${at}.order`, "attribute identities must be unique");
   return {
-    order,
     removed: row["removed"] === undefined ? undefined : stdioXml10BaseDiffGuardArray(row["removed"], `${at}.removed`).map((item, index) => stdioXml10BaseDiffGuardString(item, `${at}.removed[${index}]`)),
     modified: row["modified"] === undefined ? undefined : stdioXml10BaseDiffGuardArray(row["modified"], `${at}.modified`).map((item, index) => parseXmlAttrModified(item, `${at}.modified[${index}]`)),
     added: row["added"] === undefined ? undefined : stdioXml10BaseDiffGuardArray(row["added"], `${at}.added`).map((item, index) => parseXmlAttrAdded(item, `${at}.added[${index}]`)),
+    order: row["order"] === undefined ? undefined : stdioXml10BaseDiffGuardArray(row["order"], `${at}.order`).map((item, index) => stdioXml10BaseDiffGuardString(item, `${at}.order[${index}]`)),
   };
 }
 
@@ -178,12 +176,5 @@ export function parseXmlElementDiff(value: unknown, at = "$"): XmlElementDiff {
 }
 
 export function parseXmlNodeDiff(value: unknown, at = "$"): XmlNodeDiff {
-  const row = stdioXml10BaseDiffGuardObject(value, at);
-  const kind = stdioXml10BaseDiffGuardMember(row["kind"], `${at}.kind`, ["element", "text", "replace"] as const);
-  if (kind === "element") {
-    const diff = parseXmlElementDiff(row, at);
-    return { kind, ...diff };
-  }
-  if (kind === "text") return { kind, text: row["text"] === undefined ? undefined : stdioXml10BaseDiffGuardString(row["text"], `${at}.text`) };
-  return { kind, node: row["node"] === undefined ? undefined : row["node"] === null ? null : parseXmlNode(row["node"], `${at}.node`) };
+  return ((row0) => { switch (stdioXml10BaseDiffGuardMember(row0["kind"], `${at}.kind`, ["element", "text", "replace"] as const)) { case "element": return { kind: "element", ...parseXmlElementDiff(row0, `${at}`) }; case "text": return { kind: "text", text: row0["text"] === undefined ? undefined : stdioXml10BaseDiffGuardString(row0["text"], `${at}.text`) }; case "replace": return { kind: "replace", node: row0["node"] === undefined ? undefined : (row0["node"] === null ? null : parseXmlNode(row0["node"], `${at}.node`)) }; } })(stdioXml10BaseDiffGuardObject(value, `${at}`));
 }

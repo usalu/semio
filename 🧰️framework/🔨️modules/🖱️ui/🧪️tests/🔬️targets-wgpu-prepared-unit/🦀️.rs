@@ -1,4 +1,5 @@
 use super::*;
+use semio_framework_test_fixtures::fixture_text;
 
 use semio_framework_ui_prepared::testing::*;
 
@@ -10,7 +11,7 @@ use semio_framework_job::{root_cancel_token, Generation, InteractiveStage, JobOu
 #[test]
 fn prepared_animation_receipt_measures_actual_normal_and_overlay_primitives() {
     let _guard = prepared_process_guard();
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🖌️render/⏱️schedule/🧪️tests/🧫️fixtures/🎞️animation/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../🖌️render/⏱️schedule/🧪️tests/🧫️fixtures/🎞️animation/🔣️.json")).unwrap();
     for overlay_route in [false, true] {
         for row in fixture["primitives"].as_array().unwrap() {
             let mut draw = DrawList::default();
@@ -670,7 +671,7 @@ fn tessellation_commands_retain_exact_scalar_and_overlay_cursors() {
 
 #[test]
 fn prepared_measurement_retains_scene_and_overlay_raster_cursors() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔽️retained-select-overlay-raster/🔣️.json")).expect("retained Select/overlay raster fixture");
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../🧪️tests/🧫️fixtures/🔽️retained-select-overlay-raster/🔣️.json")).expect("retained Select/overlay raster fixture");
     let key = fixture["image"]["sharedKey"].as_str().expect("shared raster key");
     let mut draw = DrawList::default();
     draw.push_raster_quad(key, [0.0, 0.0, 4.0, 4.0], [0.0, 0.0, 1.0, 1.0], 1.0);
@@ -738,7 +739,7 @@ fn prepared_packet_publishes_main_overlay_and_top_overlay_raster_owners() {
 #[test]
 fn prepared_render_common_close_funds_declared_frontiers_without_losing_original_owners() {
     let _guard = prepared_process_guard();
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📦️prepared-close/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../🧪️tests/🧫️fixtures/📦️prepared-close/🔣️.json")).unwrap();
     for row in fixture["grants"].as_array().unwrap() {
         let grant = semio_framework_job::RetainedCloneGrant {
             maximum_items: row["items"].as_u64().unwrap() as usize,
@@ -771,7 +772,6 @@ fn prepared_render_common_close_funds_declared_frontiers_without_losing_original
         assert!(complete);
         assert!(PreparedRenderJob::terminal_is_empty(&job));
         assert_eq!(InteractiveJob::close_step(&mut job, grant), semio_framework_job::InteractiveJobCloseStep::Complete { progress: semio_framework_job::RetainedCloneProgress::default() });
-        println!("[DEBUG] prepared close {} declared=true originalInput=true fullGrantCleanup=true", row["name"].as_str().unwrap());
     }
 }
 

@@ -1,6 +1,6 @@
 //! 🔺️ Sparse diff builder for `ConnectKindCompatibility` — appends one row to `meta.kindCompatibility`.
 use crate::standards::v1::subsets::any::schema::diff::{Puzzle2dDiff, Puzzle2dKindCompatibilityDelta, Puzzle2dMetaPatch};
-use {crate::standards::v1::subsets::any::schema::Puzzle2dKindCompatibility, crate::Puzzle2dSnapshot};
+use {crate::standards::v1::subsets::any::schema::records::Puzzle2dKindCompatibility, crate::Puzzle2dSnapshot};
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::ConnectKindCompatibility, base: &Puzzle2dSnapshot) -> protocol::MutationOutcome<Puzzle2dDiff> {

@@ -1,4 +1,5 @@
 use super::*;
+use semio_framework_test_fixtures::fixture_text;
 
 async fn admitted_wal_bytes(mut bytes: Vec<u8>) -> db_wal_log::WalBytes {
     bytes.shrink_to_fit();
@@ -180,7 +181,7 @@ async fn a_fifty_thousand_edit_document_streams_to_a_fresh_replica_within_one_fr
 
 #[semio_framework_async_macros::async_test]
 async fn sync_replay_ignores_neutral_aborted_command_snapshot_and_cas() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../📝️wal/🧪️tests/🧫️fixtures/🧾️committed-transactions/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../📝️wal/🧪️tests/🧫️fixtures/🧾️committed-transactions/🔣️.json")).unwrap();
     let row = fixture["cases"].as_array().unwrap().iter().find(|row| row["name"] == "aborted-commands-snapshot-cas-have-no-effects").unwrap();
     let document = ArtifactId::from("committed-sync");
     let storage = db_wal::testkit::committed_fixture_storage(row, &document).await;
@@ -1016,7 +1017,7 @@ async fn retained_sync_hello_deadline_retry_drop_close_retains_registry_until_wo
 
 #[test]
 fn retained_sync_hello_ready_pending_panic_and_repeat_poll_have_typed_terminal_states() {
-    let source = include_str!("../../🦀️.rs");
+    let source = fixture_text!("../../🦀️.rs");
     assert!(source.contains("Ok(std::task::Poll::Pending)"));
     assert!(source.contains("Ok(std::task::Poll::Ready(execution))"));
     assert!(source.contains("core.quarantined = Some(DatabaseSyncHelloQuarantineClose"));
@@ -1026,7 +1027,7 @@ fn retained_sync_hello_ready_pending_panic_and_repeat_poll_have_typed_terminal_s
 
 #[test]
 fn retained_sync_hello_production_census_has_zero_blocking_waits_and_no_eager_follow_up() {
-    let source = include_str!("../../🦀️.rs");
+    let source = fixture_text!("../../🦀️.rs");
     assert!(source.contains("#[cfg(test)]\npub async fn handle_hello"));
     assert!(source.contains("DatabaseSyncHelloNextFuture"));
 }

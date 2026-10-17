@@ -171,5 +171,4 @@ test("TypeScript declaration EOF corpus follows closed schema and independent co
     expect(actual.diagnostics.length, row.id).toBeGreaterThan(0);
     coordinateBounds(row.source, actual);
   }
-  console.log("[DEBUG] Independent TypeScript compiler confirms " + boundaries.cases.length + " truncated token/Unicode/TSX cases; owned recovery remains bounded");
 });

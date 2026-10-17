@@ -7,12 +7,13 @@ use crate::schema::diff::SemioGraphDiff;
 use crate::schema::mutations::SemioGraphMutation;
 use crate::schema::snapshot::SemioGraphSnapshot;
 use protocol::Mutation;
+use semio_framework_test_fixtures::fixture_text;
 
-const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📐resize-node/📐️resizes/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📐resize-node/📐️resizes/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📐resize-node/📐️resizes/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📐resize-node/📐️resizes/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📐resize-node/📐️resizes/🎯️outcome/🔣️.json");
+static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📐resize-node/📐️resizes/📸️snapshot/⬅️before/🔣️.json"));
+static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📐resize-node/📐️resizes/📸️snapshot/➡️after/🔣️.json"));
+static MUTATION: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📐resize-node/📐️resizes/🦠️mutation/🔣️.json"));
+static DIFF: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📐resize-node/📐️resizes/🔺️diff/🔣️.json"));
+static OUTCOME: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📐resize-node/📐️resizes/🎯️outcome/🔣️.json"));
 
 fn decode<T: semio_framework_value::FromValue>(text: &str) -> T {
     semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("resize-node fixture decodes")
@@ -27,17 +28,17 @@ fn json(text: &str) -> serde_json::Value {
 /// ▶️ The node takes the size; position, label, kind and edges are untouched.
 #[semio_framework_async_macros::async_test]
 async fn resizes_the_node() {
-    let base = snapshot(BEFORE);
-    let produced = protocol::apply_diff(decode::<SemioGraphMutation>(MUTATION).diff(&base).diff(), &base).expect("resize-node applies to its committed before-snapshot");
-    assert_eq!(produced, snapshot(AFTER), "resize-node/resizes: applied state differs from the committed after-snapshot");
+    let base = snapshot((*BEFORE));
+    let produced = protocol::apply_diff(decode::<SemioGraphMutation>((*MUTATION)).diff(&base).diff(), &base).expect("resize-node applies to its committed before-snapshot");
+    assert_eq!(produced, snapshot((*AFTER)), "resize-node/resizes: applied state differs from the committed after-snapshot");
     assert_eq!(produced.edges, base.edges, "resizing a node must not disturb any edge");
 }
 
 /// ↩️ The undo is one `resize-node` back to the base size, and it restores the before-snapshot.
 #[semio_framework_async_macros::async_test]
 async fn the_undo_resizes_back() {
-    let base = snapshot(BEFORE);
-    let mutation: SemioGraphMutation = decode(MUTATION);
+    let base = snapshot((*BEFORE));
+    let mutation: SemioGraphMutation = decode((*MUTATION));
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     let undo = mutation.inverse(&base).expect("resize-node inverse");
     assert!(matches!(undo.as_slice(), [SemioGraphMutation::ResizeNode(_)]), "{undo:?}");
@@ -51,21 +52,21 @@ async fn the_undo_resizes_back() {
 /// 🔣️ Snapshots and the committed payload are canonical fixed points.
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
-    for text in [BEFORE, AFTER] {
+    for text in [(*BEFORE), (*AFTER)] {
         assert_eq!(json(&crate::io::text::snapshot::encode_semio_graph_snapshot_json(&snapshot(text)).expect("snapshot encodes")), json(text), "resize-node/resizes: a committed snapshot is not canonical");
     }
-    assert_eq!(json(&semio_framework_pack_json::to_json_string(&decode::<SemioGraphMutation>(MUTATION))), json(MUTATION), "resize-node/resizes: the committed mutation is not canonical");
+    assert_eq!(json(&semio_framework_pack_json::to_json_string(&decode::<SemioGraphMutation>((*MUTATION)))), json((*MUTATION)), "resize-node/resizes: the committed mutation is not canonical");
 }
 
 /// 🎯️ Declared `applied`: the node exists and the size is new, so no guard fires; the committed diff is produced.
 #[semio_framework_async_macros::async_test]
 async fn declared_outcome_and_diff_hold() {
-    let base = snapshot(BEFORE);
-    assert_eq!(json(OUTCOME)["status"], "applied");
-    let outcome = <SemioGraphMutation as Mutation<SemioGraphSnapshot>>::diff(&decode(MUTATION), &base);
+    let base = snapshot((*BEFORE));
+    assert_eq!(json((*OUTCOME))["status"], "applied");
+    let outcome = <SemioGraphMutation as Mutation<SemioGraphSnapshot>>::diff(&decode((*MUTATION)), &base);
     assert!(outcome.messages().is_empty(), "{:?}", outcome.messages());
-    assert_eq!(json(&semio_framework_pack_json::to_json_string(outcome.diff())), json(DIFF), "resize-node/resizes: produced diff differs from the committed diff");
-    assert_eq!(protocol::apply_diff(&decode::<SemioGraphDiff>(DIFF), &base).expect("committed diff applies"), snapshot(AFTER));
+    assert_eq!(json(&semio_framework_pack_json::to_json_string(outcome.diff())), json((*DIFF)), "resize-node/resizes: produced diff differs from the committed diff");
+    assert_eq!(protocol::apply_diff(&decode::<SemioGraphDiff>((*DIFF)), &base).expect("committed diff applies"), snapshot((*AFTER)));
 }
 
 /// 🚧️ The guard branches report their frozen codes.
@@ -73,7 +74,7 @@ async fn declared_outcome_and_diff_hold() {
 async fn guard_branches_report_their_frozen_codes() {
     use crate::schema::mutations::resize_node::ResizeNode;
     use crate::schema::snapshot::GraphNodeId;
-    let base = snapshot(BEFORE);
+    let base = snapshot((*BEFORE));
     let codes = |id: &str, width: f64, height: f64| -> Vec<String> {
         SemioGraphMutation::ResizeNode(ResizeNode { id: GraphNodeId::new(id), width, height }).diff(&base).messages().iter().map(|message| message.code.0.to_string()).collect()
     };

@@ -1,5 +1,6 @@
 //! ⚖️ DIN EN 16798 compliance numeric worked examples + Wave D DoD tests.
 
+use semio_framework_test_fixtures::fixture_path;
 use semio_s_artifact_norm_din16798_checks::{part_1, ComfortCategory, PollutionClass};
 use semio_s_artifact_norm_din16798_checks::part_3;
 use semio_s_artifact_norm_din16798_checks::{check_full_environment, parse_category, ComfortModel, VentMethod, VentSystemType};
@@ -11,7 +12,7 @@ use std::path::PathBuf;
 use std::process::Command;
 
 fn family_any_dir() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️1/🪆️subsets/✳️any")
+    fixture_path!("../../🏅️standards/🔖️1/🪆️subsets/✳️any")
 }
 
 fn ticket_generated() -> PathBuf {

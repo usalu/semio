@@ -53,7 +53,6 @@ fn retained_intrinsic_body_exact_requests_and_typed_physical_close_receipts(){
   let receipt=match step{RetainedCloneStep::Complete(receipt)|RetainedCloneStep::Progress(receipt)=>receipt};assert_eq!(requests,receipt.retained_capacity_bytes);assert_eq!(releases,receipt.released_bytes);actual_releases+=releases;
  }
  assert!(cursor.terminal_is_empty());assert!(actual_releases>=admitted);
- eprintln!("[DEBUG] retained intrinsic Body actual allocator requests and terminal releases match independent typed receipts");
 }
 
 #[test]
@@ -127,7 +126,7 @@ fn retained_intrinsic_document_allocator_birth_and_terminal_physical_grants_are_
  for _ in 0..1000000{let before=cursor.admitted_bytes();let(result,requests,releases)=semio_framework_trace_memory_testing::observe_backing(||cursor.advance(1,false));if let Err(error)=result{close_document(&mut cursor);panic!("unexpected document refusal: {error:?}")}let step=result.unwrap();assert_eq!(requests,step.admitted_bytes-before);assert_eq!(releases,0);assert_eq!(cursor.input().unwrap().as_ptr(),pointer);if step.complete{break}}
  let admitted=cursor.admitted_bytes();assert!(cursor.advance(1,true).is_err());assert!(cursor.take_output().is_none());let mut actual_releases=0;
  for _ in 0..1000000{if cursor.terminal_is_empty(){break}let copy=cursor.next_close_copy_byte_demand().unwrap().max(3);let release=cursor.next_close_release_byte_demand().unwrap();let capacity=cursor.next_close_capacity_byte_demand(copy.max(release)).unwrap();let depth=cursor.next_close_depth_demand().unwrap();let(result,requests,releases)=semio_framework_trace_memory_testing::observe_backing(||cursor.close_step(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:capacity,maximum_release_bytes:release,maximum_depth:depth}));let receipt=match result.unwrap(){RetainedCloneStep::Complete(receipt)|RetainedCloneStep::Progress(receipt)=>receipt};assert_eq!(requests,receipt.retained_capacity_bytes);assert_eq!(releases,receipt.released_bytes);actual_releases+=releases;}
- assert!(cursor.terminal_is_empty());assert!(actual_releases>=admitted);eprintln!("[DEBUG] retained Document original source, inflater, catalog, chunk-reference and partial-value allocations close under independent exact receipts");
+ assert!(cursor.terminal_is_empty());assert!(actual_releases>=admitted);
 }
 
 /// 🎟️ Actual payload births match funded frontier receipts and every denied source remains unchanged.
@@ -145,6 +144,5 @@ fn original_intrinsic_paid_frontiers_preserve_bytes_and_match_json(){
    let(call,born,released)=semio_framework_trace_memory_testing::observe_backing(||cursor.advance_original_step(grant,false));assert_eq!(released,0);assert_eq!(born,call.progress.retained_capacity_bytes);assert!(call.progress.fits(grant));total+=born;if call.result.unwrap().complete{break}
   }
   let output=cursor.take_output().expect("original funded grammar completes");assert_eq!(Value::from(&output),row["expected"]);assert_eq!(cursor.admitted_bytes(),total);close(&mut cursor);drop(output);
-  eprintln!("[DEBUG] original intrinsic paid source={} bytes={} born={} Unicode/JSON oracle=true",row["id"],bytes.len(),total);
  }
 }

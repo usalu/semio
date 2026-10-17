@@ -1,0 +1,18 @@
+{
+ "name": "ftcw",
+ "crates": [
+  "semio-framework-artifact-workflow-run",
+  "semio-framework-artifact-workflow-run-tests",
+  "semio-framework-os-space-testing-sqlite-native-caller",
+  "semio-framework-io-sqlite-snapshot-testing-backing"
+ ],
+ "base": {
+  "rev": "1bae6115bc5",
+  "crates": [
+   "semio-framework-artifact-workflow-run",
+   "semio-framework-os-space-testing-sqlite-native-caller",
+   "semio-framework-io-sqlite-snapshot-testing-backing"
+  ]
+ },
+ "note": "FTC workflow-run (+ the DM2 sqlite test helpers its laws glob-import)"
+}

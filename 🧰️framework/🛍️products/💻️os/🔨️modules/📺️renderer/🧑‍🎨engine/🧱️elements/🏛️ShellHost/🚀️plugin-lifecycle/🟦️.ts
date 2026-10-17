@@ -29,32 +29,27 @@ import {
 import { DEV_STREAM_ROUTES } from "@semio-tech/framework/backbone";
 import { resolveBootPrimaryAppV1 } from "../🔀️surface-switch/🟦️.ts";
 import { type UiStatus } from "@semio-tech/ui-react";
-import { type LoadedProgramState, resolvePluginCanvasStatus, upsertLoadedProgramV1 } from "../../🐚️Shell/🟦️.tsx";
+import { type LoadedProgramState, resolvePluginCanvasStatus } from "../../🐚️Shell/📦️program-sessions/🟦️.ts";
+import { upsertLoadedProgramV1 } from "../../🐚️Shell/♻️slice-reducers/🟦️.ts";
 import type { ViewModel } from "../../🔌️PluginRuntime/🧷️handle-contract/🟦️.ts";
+import { EMPTY_APP_LABELS_OVERLAY, shellLabel } from "../../🛠️ShellHelpers/🏷️labels/🟦️.tsx";
 import {
-  EMPTY_APP_LABELS_OVERLAY,
   applyFrameworkLayoutSeed,
-  buildActiveUtilityByWindowId,
-  buildSpacePanelState,
   loadPluginModuleResilient,
   pluginInstallProgressTotalV1,
   pluginModuleStoreNoticeTextV1,
-  panelJsonFromState,
-  parsePanelState,
   pluginShouldEstablishSession,
-  sessionWindowInstances,
-  shellLabel,
   type PluginInstallOutcome
-} from "../../🛠️ShellHelpers/🟦️.tsx";
+} from "../../🛠️ShellHelpers/🛣️route-and-chrome/🟦️.tsx";
+import { buildActiveUtilityByWindowId, sessionWindowInstances } from "../../🛠️ShellHelpers/🔄️ui-refresh/🟦️.ts";
+import { buildSpacePanelState, panelJsonFromState, parsePanelState } from "../../🛠️ShellHelpers/📌️panel/🟦️.ts";
 // #endregion 🔌️Adapters
 import { onPluginInstancesLost, PluginBootShardLostError, type PluginWasmHandle } from "../../🔌️PluginRuntime/🟦️.tsx";
 import { isShardLostError } from "../../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
 import { streamMuxWatchV1 } from "@semio-tech/framework/io/stream-mux";
-import { MODULE_EXTENSION_ROUTE } from "../../../../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
-import { createHubPluginSource, HUB_SAME_ORIGIN_MOUNT, type HubPluginSourceV1 } from "../../../../../🔌️plugin/📇️registry/🌎️hub-source/🟦️.ts";
+import type { HubPluginSourceV1 } from "@semio-tech/framework/plugin-module/hub-source/port";
 import { hubCatalogClosureV1, hubCatalogOwnerOfDialectV1, hubProgramIdV1 } from "@semio-tech/framework/plugin-module/hub-source/resolution";
 import type { TrustedPluginModuleIndexEntryV1 } from "@semio-tech/framework/plugin-module";
-import pluginModuleStoreWorkerUrl from "../../../../../🔌️plugin/📇️registry/🌎️hub-source/👷️service-worker/🟦️.ts?worker&url";
 import { resolveRequiredHostApps } from "../🪪️host-bootstrap/🟦️.tsx";
 import { commandStallWatch, registerProgramExtensionV1 } from "../../🔌️PluginRuntime/🟦️.tsx";
 import { seededActiveWindowId } from "../🎚️shell-model/🟦️.tsx";
@@ -85,8 +80,13 @@ export function usePluginLifecycle(core: ShellCoreAfterDirectoryAndRoute) {
     openInstanceIdRef, sessionRef, shellRouteLedgerRef, backboneWorkerRef, hubEnv, directoryHomeOwnerRef, uiLocaleRef,
     uiTerminologyRef, retireDirectoryHomeOwner, showTransientNoticeRef, extensionFetchAbortRef, loadedPluginsRef,
     pluginModuleUrlByIdRef, pluginArtifactRebuiltAtRef, recordPluginArtifactRebuiltAt, pluginOpInFlightRef,
-    pluginInstallAbortsRef, pluginInstallProgressById, notePluginInstallProgress, registry
+    pluginInstallAbortsRef, pluginInstallProgressById, notePluginInstallProgress, registry, hostPorts
   } = core;
+  const extensionRoute = hostPorts?.pluginDistribution?.extensionRoute;
+  const extensionStoreUrl = (suffix: string): string => {
+    if (extensionRoute === undefined) throw new Error("extension-route-absent: the composition root supplied no plugin distribution port");
+    return `${extensionRoute}${suffix}`;
+  };
   //#region 🔌️PluginRuntime
   /** 🔌️ The one registry entry the shell must have loaded before it can create a session — the studio
    * host plugin (`hostConfig.pluginId`) in studio mode, otherwise the resolved single-app variant.
@@ -96,23 +96,16 @@ export function usePluginLifecycle(core: ShellCoreAfterDirectoryAndRoute) {
     return resolvePluginCanvasStatus(!!session, error, primaryPluginId ? pluginStatusById[primaryPluginId] : undefined, primaryPluginId ? pluginSupervisorById[primaryPluginId] : undefined);
   }, [session, error, primaryPluginId, pluginStatusById, pluginSupervisorById]);
   /** 🌎️ A shell with a hub installs a module this device does not serve from the hub's trusted catalog into its
-   * persisted plugin module store ({@link createHubPluginSource}); `null` without a hub. Its notices reach the person
+   * persisted plugin module store (the plugin distribution port's hub source); `null` without a hub. Its notices reach the person
    * through the shell's own transient notice, in their language. */
   const hubPluginSource: HubPluginSourceV1 | null = useMemo(
     () =>
-      hubEnv && typeof navigator !== "undefined" && "serviceWorker" in navigator && typeof caches !== "undefined" && "locks" in navigator
-        ? createHubPluginSource({
-            hubMount: HUB_SAME_ORIGIN_MOUNT,
-            storeWorkerUrl: pluginModuleStoreWorkerUrl,
-            origin: globalThis.location.origin,
+      hubEnv
+        ? hostPorts?.pluginDistribution?.hubPluginSource({
             onNotice: (notice) => showTransientNoticeRef.current(pluginModuleStoreNoticeTextV1(notice, uiLocaleRef.current), notice.kind === "quota-exceeded" ? "error" : "info", `plugin-module-store.${notice.kind}`),
-            caches,
-            locks: navigator.locks,
-            serviceWorker: navigator.serviceWorker,
-            persist: () => navigator.storage?.persist?.() ?? Promise.resolve(false),
-          })
+          }) ?? null
         : null,
-    [hubEnv],
+    [hubEnv, hostPorts?.pluginDistribution],
   );
   /** 🔌️ Dev hosts stream availability on the page's stream channel (`DEV_STREAM_ROUTES`, one WebSocket for every stream of
    * the page and its workers, never an HTTP/1.1 connection held per stream); shipped static bundles replay one immediate
@@ -628,7 +621,7 @@ export function usePluginLifecycle(core: ShellCoreAfterDirectoryAndRoute) {
       let moduleUrl = "";
       let packageHash = "";
       try {
-        const response = await fetch(`${MODULE_EXTENSION_ROUTE}/install`, {
+        const response = await fetch(extensionStoreUrl("/install"), {
           method: "POST",
           headers: { "content-type": "application/json" },
           body: JSON.stringify({ url: sourceUri }),
@@ -692,7 +685,7 @@ export function usePluginLifecycle(core: ShellCoreAfterDirectoryAndRoute) {
         pluginOpInFlightRef.current.delete(extensionId);
       }
     },
-    [dispatchSpaceExtensionOp, extensionTargetById, pluginSource],
+    [dispatchSpaceExtensionOp, extensionTargetById, pluginSource, extensionRoute],
   );
 
   /** 🧩️ Installs an extension package from a local `.sxt` / `.semio` file via the extension store. */
@@ -704,7 +697,7 @@ export function usePluginLifecycle(core: ShellCoreAfterDirectoryAndRoute) {
       let packageHash = "";
       try {
         const bytes = await file.arrayBuffer();
-        const response = await fetch(`${MODULE_EXTENSION_ROUTE}/install`, {
+        const response = await fetch(extensionStoreUrl("/install"), {
           method: "POST",
           headers: { "content-type": "application/octet-stream" },
           body: bytes,
@@ -762,7 +755,7 @@ export function usePluginLifecycle(core: ShellCoreAfterDirectoryAndRoute) {
         pluginOpInFlightRef.current.delete(extensionId);
       }
     },
-    [dispatchSpaceExtensionOp, extensionTargetById],
+    [dispatchSpaceExtensionOp, extensionTargetById, extensionRoute],
   );
 
   /** 🧩️ Unloads an extension, drops it from the ledger, and best-effort asks the store / space
@@ -784,7 +777,7 @@ export function usePluginLifecycle(core: ShellCoreAfterDirectoryAndRoute) {
         setExtensionLedger((prev) => prev.filter((entry) => entry.extensionId !== extensionId));
         void dispatchSpaceExtensionOp("uninstallExtension", { extensionId });
         try {
-          await fetch(`${MODULE_EXTENSION_ROUTE}/install?extensionId=${encodeURIComponent(extensionId)}`, { method: "DELETE", signal: extensionFetchAbortRef.current.signal });
+          await fetch(extensionStoreUrl(`/install?extensionId=${encodeURIComponent(extensionId)}`), { method: "DELETE", signal: extensionFetchAbortRef.current.signal });
         } catch {
           /* store may not expose DELETE yet */
         }
@@ -792,7 +785,7 @@ export function usePluginLifecycle(core: ShellCoreAfterDirectoryAndRoute) {
         pluginOpInFlightRef.current.delete(extensionId);
       }
     },
-    [dispatchSpaceExtensionOp],
+    [dispatchSpaceExtensionOp, extensionRoute],
   );
 
   /** 🧩️ Toggles whether an installed extension's contributions are pushed to host plugins. */

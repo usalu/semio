@@ -1,5 +1,6 @@
 use super::*;
 use crate::editor_domain::editor_laws::context::{app, dispatch_with_view, preview_views};
+use semio_framework_test_fixtures::repo_text;
 use semio_s_artifact_procedural_3d_editor::Generation3dCommand;
 use semio_framework_artifact_flow_flow::{FlowHostSnapshot, Widget};
 use semio_framework_os_flow::neural::{Atom, ColdRetire, Dictionary, Value};
@@ -17,7 +18,7 @@ async fn flow_eval_tick_does_not_panic_with_nothing_pending() {
 }
 
 //#region 🚧️ContributionGatedArming
-const CONTRIBUTION_GATED_ARMING_FIXTURE_JSON: &str = include_str!("../../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🧫️fixtures/🚧️contribution-gated-arming.json");
+fn contribution_gated_arming_fixture_json() -> &'static str { repo_text!("✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🧫️fixtures/🚧️contribution-gated-arming.json") }
 
 #[derive(serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -50,7 +51,7 @@ struct ResumeCase {
 }
 
 fn contribution_gated_arming_fixture() -> ContributionGatedArmingFixture {
-    let fixture: ContributionGatedArmingFixture = serde_json::from_str(CONTRIBUTION_GATED_ARMING_FIXTURE_JSON).expect("contribution gated arming fixture");
+    let fixture: ContributionGatedArmingFixture = serde_json::from_str(contribution_gated_arming_fixture_json()).expect("contribution gated arming fixture");
     assert_eq!(fixture.format, "semio.generation3d.contribution-gated-arming");
     assert_eq!(fixture.version, 1);
     assert_eq!(fixture.tick_step_budget, semio_framework_os_flow::FLOW_EVAL_TICK_STEP_BUDGET, "the fixture's widget counts only force a second tick while they exceed the REAL step budget");

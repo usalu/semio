@@ -7,25 +7,26 @@
 //!
 //! 📋️ Missing source remains the authored refusal; positive duplication carries explicit target identities.
 
+use semio_framework_test_fixtures::fixture_text;
 use semio_s_artifact_draw_drawing_mutations::{inverse_drawing_mutation, DrawingMutation};
 use semio_s_artifact_draw_drawing_mutations::text::apply_drawing_mutation;
 use semio_s_artifact_draw_drawing_model::find_drawing_layer;
 use semio_s_artifact_draw_drawing_diff::DrawingDiff;
 use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
 
-const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📋️duplicate-layer/🚫️rejects/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📋️duplicate-layer/🚫️rejects/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📋️duplicate-layer/🚫️rejects/🦠️mutation/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📋️duplicate-layer/🚫️rejects/🎯️outcome/🔣️.json");
+static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧫️fixtures/🧬️mutations/📋️duplicate-layer/🚫️rejects/📸️snapshot/⬅️before/🔣️.json"));
+static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧫️fixtures/🧬️mutations/📋️duplicate-layer/🚫️rejects/📸️snapshot/➡️after/🔣️.json"));
+static MUTATION: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧫️fixtures/🧬️mutations/📋️duplicate-layer/🚫️rejects/🦠️mutation/🔣️.json"));
+static OUTCOME: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧫️fixtures/🧬️mutations/📋️duplicate-layer/🚫️rejects/🎯️outcome/🔣️.json"));
 
 fn before() -> DrawingSnapshot {
-    serde_json::from_str(BEFORE).expect("before snapshot decodes")
+    serde_json::from_str(*BEFORE).expect("before snapshot decodes")
 }
 fn expected_after() -> DrawingSnapshot {
-    serde_json::from_str(AFTER).expect("after snapshot decodes")
+    serde_json::from_str(*AFTER).expect("after snapshot decodes")
 }
 fn mutation() -> DrawingMutation {
-    serde_json::from_str(MUTATION).expect("mutation decodes")
+    serde_json::from_str(*MUTATION).expect("mutation decodes")
 }
 
 /// ▶️ A rejected `duplicate-layer` leaves the document byte-identical: the committed `after` is the
@@ -65,21 +66,21 @@ async fn inverse_has_nothing_to_undo() {
 /// 🔣️ Both committed snapshots are already canonical: decode→encode is a fixed point.
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
-    for (label, text) in [("before", BEFORE), ("after", AFTER)] {
+    for (label, text) in [("before", *BEFORE), ("after", *AFTER)] {
         let decoded: DrawingSnapshot = serde_json::from_str(text).expect("snapshot decodes");
         let reencoded = serde_json::to_value(&decoded).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "duplicate-layer/rejects-a-missing-source-layer: committed {label} JSON is not canonical");
     }
     let reencoded = serde_json::to_value(mutation()).expect("mutation encodes");
-    let original: serde_json::Value = serde_json::from_str(MUTATION).expect("mutation reparses");
+    let original: serde_json::Value = serde_json::from_str(*MUTATION).expect("mutation reparses");
     assert_eq!(reencoded, original, "duplicate-layer/rejects-a-missing-source-layer: committed mutation JSON is not canonical");
 }
 
 /// 🎯️ The declared rejection — status, code and path — is exactly what the diff builder emits.
 #[semio_framework_async_macros::async_test]
 async fn declared_outcome_holds() {
-    let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
+    let outcome: serde_json::Value = serde_json::from_str(*OUTCOME).expect("outcome decodes");
     assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("rejected"), "duplicate-layer/rejects-a-missing-source-layer declares a rejected outcome");
     let produced = <DrawingMutation as protocol::Mutation<DrawingSnapshot>>::diff(&mutation(), &before());
     let message = produced.messages().first().expect("a rejected outcome carries a diagnostic");
@@ -93,5 +94,5 @@ async fn declared_outcome_holds() {
 async fn a_present_source_inverse_sums_to_the_negative_diff() {
     let base = DrawingSnapshot { layers: vec![semio_s_artifact_draw_drawing_model::create_drawing_shape_layer_rect(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Rect")).to_string().into()).expect("nonempty authored identity"), "Rect")].into(), ..Default::default() };
     let source = semio_s_artifact_draw_drawing_model::layer_id(&base.layers[0]).clone();
-    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&crate::duplicate_layer::mutation::duplicate_layer(source.clone(),vec![semio_s_artifact_draw_drawing_model::identity::DrawingIdentityAssignment{source:source.clone(),target:"duplicate-target".into()}].into()), &base).await;
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&semio_s_artifact_draw_drawing_structure::duplicate_layer::mutation::duplicate_layer(source.clone(),vec![semio_s_artifact_draw_drawing_model::identity::DrawingIdentityAssignment{source:source.clone(),target:"duplicate-target".into()}].into()), &base).await;
 }

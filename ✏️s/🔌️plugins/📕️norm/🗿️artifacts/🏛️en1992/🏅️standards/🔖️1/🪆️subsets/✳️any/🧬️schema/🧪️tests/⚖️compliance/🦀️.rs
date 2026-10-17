@@ -1,5 +1,6 @@
 //! ⚖️ EN 1992 compliance numeric worked examples + remedy law + oracle parity.
 
+use semio_framework_test_fixtures::fixture_path;
 use semio_s_plugin_norm_compliance::AnnexChoice;
 use semio_s_artifact_norm_en1992_inferences::evaluate;
 use semio_s_artifact_norm_en1992_checks::na_de::AnnexParams;
@@ -372,7 +373,7 @@ fn example_snapshot_validates_against_json_schema() {
 }
 
 fn family_any_dir() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️1/🪆️subsets/✳️any")
+    fixture_path!("../../🏅️standards/🔖️1/🪆️subsets/✳️any")
 }
 
 fn oracle_script() -> PathBuf {

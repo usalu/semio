@@ -65,7 +65,6 @@ fn record_operation_pages_emit_exact_canonical_words_and_keep_canceled_prefix_ow
         assert_eq!(record.fields.get(&1), Some(&FieldValue::Bytes64(payload.clone())));
         finish(&mut output);
     }
-    println!("[DEBUG] Core streamed canonical Record bytes directly into source-owned pages; cancellation retains the exact emitted prefix until actual bounded terminal retirement");
 }
 
 #[test]
@@ -105,7 +104,6 @@ fn record_operation_pages_decode_cross_page_bytes_and_utf8_without_flattening_th
     assert_eq!(error.kind().as_str(),case["malformedKind"].as_str().unwrap());
     assert!(source.iter().eq(bad));
     finish(&mut source);
-    println!("[DEBUG] Core source-range decoding preserves all cross-page octets and UTF8 words; malformed input retains the same source until bounded terminal retirement");
 }
 
 #[test]
@@ -137,7 +135,6 @@ fn intrinsic_operation_pages_emit_and_decode_same_complete_owner_under_actual_po
     assert_eq!(encode_value_record_body_into(1,&value,&options,&mut output,&mut encoding).unwrap_err().kind(),ValueRefusalKind::WorkLimit);
     assert_eq!(output.len(),0);finish(&mut output);
     assert_eq!(serde_json::to_value(&payload).unwrap(),serde_json::to_value(&expected[case["prefix"].as_array().unwrap().len()..]).unwrap());
-    println!("[DEBUG] Intrinsic Core producer emits exact literal-framed complete8194 owner into paid pages; source decoding keeps the same backing and exact/one-byte-short policy before fixed4096 terminal release");
 }
 
 #[test]
@@ -172,7 +169,6 @@ fn record_operation_pages_real_core_sink_uses_step_funded_backing_and_same_contr
     assert_eq!(decode_record_body_span_exact_controlled(semio_framework_replication_codec::ByteSpan::from_source(&source),&spec,&Default::default(),&mut control).unwrap(),record);
     for _ in 0..17000{if source.close_one(1,4096).unwrap()==OperationByteCloseStep::Complete{break;}}
     assert!(source.terminal_is_empty());assert_eq!(source.allocated_bytes(),0);
-    println!("[DEBUG] Real Core Record producer uses paid8194 payload backing from separate4096 funding hops with same cumulative Native control; only literal4-byte field indexes are newly admitted and same source decodes exactly before4096 terminal release");
 }
 
 #[test]
@@ -214,7 +210,6 @@ fn record_operation_pages_borrowed_source_excludes_large_payload_mirrors_and_kee
     assert!(matches!(refusal,PackRefusal::ValueRefusal(ValueError{kind:ValueRefusalKind::Canceled,..})));
     assert!(wire.len()>0&&wire.len()<expected.len());assert!(wire.iter().eq(expected[..wire.len()].iter().copied()));finish(&mut wire);
     assert_eq!(source.bytes.len(),fixture["payloadBytes"].as_u64().unwrap()as usize);assert_eq!(source.text.len(),source.bytes.len());
-    println!("[DEBUG] Core borrowed source emits literal bytes plus8194 text without an owned payload mirror; same cumulative control funds fixed4096 pages and retires real wire, canceled prefix retained");
 }
 
 #[test]
@@ -248,7 +243,6 @@ fn record_operation_pages_borrowed_source_joins_actual_nested_derived_tables_num
     let mut allow=|_|true;let mut encoding=semio_framework_value::NativeEncodeControl::new(131072,&mut allow);
     let result=encode_projected_record_body_into(&spec,&only,&narrow,&mut output,&mut encoding);let rejected=result.is_err();finish(&mut output);
     assert!(rejected,"nested canonical Record value depth3 must refuse at2 even when source path has only2 ordinals");
-    println!("[DEBUG] Actual derived original Record source preserves packed signed/unsigned/Float words, nested field IDs, sparse table bitmap, forced symbols, exact intrinsic variants and wire presence through paged canonical emission and same-source decode");
 }
 
 struct ImmutableSymbolSource{texts:Vec<String>}
@@ -289,7 +283,6 @@ fn borrowed_operation_symbols_preserve_first_source_and_all_paid_pages(){
  let mut returned=0;for _ in 0..1000{let before=scratch.allocated_bytes();let((progress,bytes),requested,released)=crate::test_allocation::observe_backing(||scratch.return_one(&mut parent,1,4096).unwrap());assert_eq!((requested,released),(0,0));assert!(bytes<=4096);assert_eq!(before-scratch.allocated_bytes(),bytes);returned+=bytes;assert_eq!(parent.retained_bytes(),returned);assert!(scratch.len().is_err());if !progress{break;}}assert_eq!(returned,backing);assert_eq!(scratch.allocated_bytes(),0);
  let mut retired=0;for _ in 0..1000{let(step,requested,released)=crate::test_allocation::observe_backing(||parent.close_step(1,4096));assert_eq!(requested,0);match step{AllocationReturnStep::Complete=>{assert_eq!(released,0);break;},AllocationReturnStep::Pending{released_items,released_bytes}=>{assert!(released_items<=1&&released<=4096);assert_eq!(released,released_bytes);retired+=released;}}}assert!(parent.terminal_is_empty());assert_eq!(retired,backing);
  for(row,text)in rows.iter().zip(&source.texts){assert_eq!(text.len(),row["text"].as_str().unwrap().len()*row["repeat"].as_u64().unwrap()as usize);}
- eprintln!("[DEBUG] actual borrowed symbols occurrences10 selected7 first-source pointers unchanged; fixed4096 refusal retains paid scratch; one-item4096 physical retirement exact");
 }
 
 #[test]
@@ -325,7 +318,6 @@ fn borrowed_static_projected_pack_keeps_source_scratch_and_exact_wire(){
  for _ in 0..32768{let((progress,returned),requested,released)=crate::test_allocation::observe_backing(||capsule.return_one(&mut parent,1,1).unwrap());assert_eq!((requested,released,returned),(0,0,0));assert_eq!(capsule.allocated_bytes(),scratch);assert!(parent.terminal_is_empty());if !progress{break}}
  let mut returned=0;for _ in 0..32768{let before=capsule.allocated_bytes();let((progress,bytes),requested,released)=crate::test_allocation::observe_backing(||capsule.return_one(&mut parent,1,4096).unwrap());assert_eq!((requested,released),(0,0));assert!(bytes<=4096);assert_eq!(before-capsule.allocated_bytes(),bytes);returned+=bytes;assert_eq!(parent.retained_bytes(),returned);if !progress{break}}assert_eq!(returned,scratch);assert_eq!(capsule.allocated_bytes(),0);
  let mut disposed=0;for _ in 0..32768{let(step,requested,released)=crate::test_allocation::observe_backing(||parent.close_step(1,4096));assert_eq!(requested,0);match step{AllocationReturnStep::Complete=>{assert_eq!(released,0);break},AllocationReturnStep::Pending{released_items,released_bytes}=>{assert!(released_items<=1&&released<=4096);assert_eq!(released,released_bytes);disposed+=released;}}}assert!(parent.terminal_is_empty());assert_eq!(disposed,scratch);
- eprintln!("[DEBUG] actual static borrowed Pack source8194 exact literal wire, original pointers retained, same cumulative65536 pays scratch+output, reused emission requests0, fixed4096 admission refuses with retained scratch, every1/4096 scratch retirement independently observed");
 }
 
 #[test]
@@ -342,7 +334,6 @@ fn borrowed_static_projected_pack_nested_authored_shapes_match_original_codec(){
  let(result,requested,released)=crate::test_allocation::observe_backing(||capsule.write_body(&options,&mut output,&mut control));assert_eq!(result.unwrap(),expected.len());assert_eq!(requested,capsule.allocated_bytes()+output.allocated_bytes());assert_eq!(released,0);assert_eq!(requested,control.owned_bytes());assert!(output.iter().eq(expected.iter().copied()));
  let mut accepted=|_|true;let mut decoding=semio_framework_value::NativeDecodeControl::new(65536,&mut accepted);assert_eq!(decode_record_body_span_exact_controlled(semio_framework_replication_codec::ByteSpan::from_source(&output),&spec,&Default::default(),&mut decoding).unwrap(),record);finish(&mut output);
  let scratch=capsule.allocated_bytes();let mut disposed=0;for _ in 0..32768{let(step,requested,released)=crate::test_allocation::observe_backing(||capsule.retire_one(1,4096).unwrap());assert_eq!(requested,0);assert_eq!(released,step.2);assert!(step.1<=1&&released<=4096);disposed+=released;if !step.0{break}}assert_eq!(disposed,scratch);assert_eq!(capsule.allocated_bytes(),0);
- eprintln!("[DEBUG] actual static borrowed nested Record/table sparseBool/forcedText/map keys/intrinsic object/numeric words/Wire exactly match original codec with caller retained paid sort ranges and bounded observed retirement");
 }
 
 #[test]
@@ -366,7 +357,6 @@ fn borrowed_static_projected_pack_statement_ref_and_unsorted_source_match_origin
  let options=EncodeOptions::default();let expected=encode_record_body(&ordinary,&record,&options).unwrap();let mut output=semio_framework_replication_codec::io::binary::operation_bytes::OwnedOperationBytes::try_new(16384,65536).unwrap();let mut capsule=BorrowedProjectedPackOperation::from_source(&source,S{keyword:None,layout:RecordLayout::Inline,fields:&FIELDS});let mut accepted=|_|true;let mut control=semio_framework_value::NativeEncodeControl::new(65536,&mut accepted);
  let(result,requested,released)=crate::test_allocation::observe_backing(||capsule.write_body(&options,&mut output,&mut control));assert_eq!(result.unwrap(),expected.len());assert_eq!(requested,capsule.allocated_bytes()+output.allocated_bytes());assert_eq!(requested,control.owned_bytes());assert_eq!(released,0);assert!(output.iter().eq(expected.iter().copied()));assert_eq!(source.reference.as_ptr(),pointer);finish(&mut output);
  let scratch=capsule.allocated_bytes();let mut disposed=0;for _ in 0..32768{let(step,requested,released)=crate::test_allocation::observe_backing(||capsule.retire_one(1,4096).unwrap());assert_eq!(requested,0);assert_eq!(released,step.2);assert!(step.1<=1&&released<=4096);disposed+=released;if !step.0{break}}assert_eq!(disposed,scratch);assert_eq!(capsule.allocated_bytes(),0);
- eprintln!("[DEBUG] actual static borrowed statement forced keyword, single129-byte forcedRef column and unsorted original field/map ordinals exactly match original Pack; all paid canonical sort ranges remain in caller until observed1/4096 retirement");
 }
 
 #[test]
@@ -383,10 +373,9 @@ fn borrowed_static_projected_pack_actual_derived_variant_source_matches_original
   let options=EncodeOptions::default();let expected=encode_record_body(&ordinary,&record,&options).unwrap();let mut output=semio_framework_replication_codec::io::binary::operation_bytes::OwnedOperationBytes::try_new(16384,65536).unwrap();let(mut capsule,requested,released)=crate::test_allocation::observe_backing(||BorrowedProjectedPackOperation::from_variant(operation));assert_eq!((requested,released,capsule.allocated_bytes()),(0,0,0));assert_eq!(capsule.variant_identity().unwrap(),(expected_keyword,expected_ordinal));let inline=capsule.inline_storage_bytes();assert!(inline>=std::mem::size_of::<super::SourceTextLocator>()&&inline<=1024);let mut accepted=|_|true;let mut control=semio_framework_value::NativeEncodeControl::new(65536,&mut accepted);
   let mut measurement=semio_framework_replication_codec::io::binary::operation_bytes::OperationByteMeasurement::new(options.limits.max_file_len);let(result,requested,released)=crate::test_allocation::observe_backing(||control.scoped_maximum(512,|control|capsule.write_body(&options,&mut measurement,control)));assert_eq!(result.unwrap(),expected.len());assert_eq!((requested,released,capsule.allocated_bytes(),control.owned_bytes()),(0,0,0,0));assert_eq!(capsule.inline_storage_bytes(),inline);
   let(result,requested,released)=crate::test_allocation::observe_backing(||capsule.write_body(&options,&mut output,&mut control));assert_eq!(result.unwrap(),expected.len());assert_eq!(requested,capsule.allocated_bytes()+output.allocated_bytes());assert_eq!(requested,control.owned_bytes());assert_eq!(released,0);assert!(output.iter().eq(expected.iter().copied()));finish(&mut output);
-  let scratch=capsule.allocated_bytes();let mut disposed=0;for _ in 0..32768{let(step,requested,released)=crate::test_allocation::observe_backing(||capsule.retire_one(1,4096).unwrap());assert_eq!(requested,0);assert_eq!(released,step.2);assert!(step.1<=1&&released<=4096);disposed+=released;if !step.0{break}}assert_eq!(disposed,scratch);assert_eq!(capsule.allocated_bytes(),0);assert_eq!(capsule.variant_identity().unwrap_err().kind(),semio_framework_value::ValueRefusalKind::InvariantViolated);eprintln!("[DEBUG] actual variant ordinal{expected_ordinal} caller-embedded scratch bytes{inline}; constructor and512 measurement requests0/releases0; independently measured1/4096 settlement");
+  let scratch=capsule.allocated_bytes();let mut disposed=0;for _ in 0..32768{let(step,requested,released)=crate::test_allocation::observe_backing(||capsule.retire_one(1,4096).unwrap());assert_eq!(requested,0);assert_eq!(released,step.2);assert!(step.1<=1&&released<=4096);disposed+=released;if !step.0{break}}assert_eq!(disposed,scratch);assert_eq!(capsule.allocated_bytes(),0);assert_eq!(capsule.variant_identity().unwrap_err().kind(),semio_framework_value::ValueRefusalKind::InvariantViolated);
  }
  let Mutation::Text{value}=&original else{unreachable!()};assert_eq!(value.len(),8194);
- eprintln!("[DEBUG] actual derived named/Unit/delegated variant borrowed static metadata and original source match canonical ordinary bodies with all scratch retained and independently retired1/4096");
 }
 
 #[test]
@@ -402,7 +391,6 @@ fn borrowed_static_projected_pack_owned_variant_retains_source_until_scratch_set
   capsule=match capsule.take_settled_source(){Err(retained)=>retained,Ok(_)=>panic!("source escaped with paid canonical backing")};let Mutation::Data(value)=capsule.retained_source();assert_eq!(value.value.as_ptr(),pointer);assert_eq!(value.value.len(),8194);
   let retained=capsule.allocated_bytes();let mut disposed=0;for _ in 0..32768{let(step,requested,released)=crate::test_allocation::observe_backing(||capsule.retire_one(1,4096).unwrap());assert_eq!(requested,0);assert_eq!(released,step.2);assert!(step.1<=1&&released<=4096);disposed+=released;if !step.0{break}}assert_eq!(disposed,retained);assert_eq!(capsule.allocated_bytes(),0);let source=match capsule.take_settled_source(){Ok(source)=>source,Err(_)=>panic!("settled canonical scratch withheld original source")};let Mutation::Data(value)=&source;assert_eq!(value.value.as_ptr(),pointer);assert_eq!(value.value.len(),8194);
  }
- eprintln!("[DEBUG] actual owned canonical variant keeps original8194 source pointer through success/refusal, refuses source transfer until scratch settles, measures every1/4096 retirement, then transfers genuine typed source without semantic retirement credit");
 }
 
 #[test]
@@ -439,7 +427,6 @@ fn borrowed_static_paged_origin_source8194_exact_body_and_physical4096(){
   let(step,zero)=semio_framework_trace::observe_heap_allocations_on_this_thread(||label.value.close_step(Default::default()).unwrap());assert!(matches!(step,RetainedCloneStep::Progress(_)|RetainedCloneStep::Complete(_)));assert_eq!((zero.requested_bytes,zero.released_bytes),(0,0));
   let mut disposed=0;for _ in 0..32768{let(step,event)=semio_framework_trace::observe_heap_allocations_on_this_thread(||label.value.close_step(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_release_bytes:4096,maximum_depth:1,..Default::default()}).unwrap());assert!(!event.overflowed);assert_eq!(event.requested_bytes,0);assert!(event.released_bytes<=4096&&event.largest_release_bytes<=4096);let progress=match step{RetainedCloneStep::Progress(progress)=>progress,RetainedCloneStep::Complete(progress)=>progress};assert_eq!(event.released_bytes,progress.released_bytes);assert!(progress.copied_items<=1);disposed+=event.released_bytes;if label.value.terminal_is_empty(){break}}
   assert_eq!(disposed,original_backing);assert!(label.value.terminal_is_empty());assert!(label.value.read_view().is_err());let(_,drop_event)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(label));assert_eq!((drop_event.requested_bytes,drop_event.released_bytes),(0,0));
-  eprintln!("[DEBUG] original paged semantic source mode={mode} logical8194 originalBacking={original_backing} disposed={disposed}; exact canonical body8200 and real1/4096 source/capsule/output events; original contiguous String and whole ChildEmit family unqualified");
  }
 }
 
@@ -454,7 +441,7 @@ fn owned_operation_source_retirement_preserves_independent_currencies(){
  let mut copied=0;while owner.len()!=0{let(step,event)=semio_framework_trace::observe_heap_allocations_on_this_thread(||ErasedSnapshotRetirement::close_step(&mut owner,RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:1,maximum_depth:1,..Default::default()}).unwrap());let progress=match step{RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress)=>progress};assert_eq!((progress.copied_items,progress.copied_bytes,progress.released_bytes),(1,1,0));assert_eq!((event.requested_bytes,event.released_bytes),(0,0));copied+=progress.copied_bytes;}assert_eq!(copied,8194);assert_eq!(owner.allocated_bytes(),backing);
  let mut released=0;for _ in 0..128{let demand=ErasedSnapshotRetirement::next_release_byte_demand(&owner).unwrap();assert!(demand<=4096);if demand!=0{for grant in[RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_depth:1,..Default::default()},RetainedCloneGrant{maximum_items:1,maximum_release_bytes:demand-1,maximum_depth:1,..Default::default()}]{let(before,event)=semio_framework_trace::observe_heap_allocations_on_this_thread(||ErasedSnapshotRetirement::close_step(&mut owner,grant).unwrap());let progress=match before{RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress)=>progress};assert_eq!(progress.released_bytes,0);assert_eq!((event.requested_bytes,event.released_bytes),(0,0));assert_eq!(ErasedSnapshotRetirement::next_release_byte_demand(&owner).unwrap(),demand);}}
  let(step,event)=semio_framework_trace::observe_heap_allocations_on_this_thread(||ErasedSnapshotRetirement::close_step(&mut owner,RetainedCloneGrant{maximum_items:1,maximum_release_bytes:demand,maximum_depth:1,..Default::default()}).unwrap());let progress=match step{RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress)=>progress};assert!(!event.overflowed);assert_eq!(event.requested_bytes,0);assert_eq!(event.released_bytes,progress.released_bytes);assert_eq!(progress.copied_bytes,0);assert!(event.released_bytes<=4096&&event.largest_release_bytes<=4096);released+=event.released_bytes;if owner.terminal_is_empty(){break}}
- assert!(owner.terminal_is_empty());assert_eq!(released,backing);assert_eq!(ErasedSnapshotRetirement::next_copy_byte_demand(&owner).unwrap(),0);assert_eq!(ErasedSnapshotRetirement::next_release_byte_demand(&owner).unwrap(),0);assert_eq!(ErasedSnapshotRetirement::next_depth_demand(&owner).unwrap(),0);let(_,event)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(owner));assert_eq!((event.requested_bytes,event.released_bytes),(0,0));eprintln!("[DEBUG] original operation8194 backing={backing} copy8194 releases0; exact physical<=4096 independently funded and observed; zero terminal demands; separate currencies cannot substitute");
+ assert!(owner.terminal_is_empty());assert_eq!(released,backing);assert_eq!(ErasedSnapshotRetirement::next_copy_byte_demand(&owner).unwrap(),0);assert_eq!(ErasedSnapshotRetirement::next_release_byte_demand(&owner).unwrap(),0);assert_eq!(ErasedSnapshotRetirement::next_depth_demand(&owner).unwrap(),0);let(_,event)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(owner));assert_eq!((event.requested_bytes,event.released_bytes),(0,0));
 }
 
 #[test]
@@ -471,7 +458,7 @@ fn borrowed_variant_retains_original_paged_source_without_dynamic_mirror(){
  struct Prefix{bytes:[u8;16],length:usize}impl std::fmt::Write for Prefix{fn write_str(&mut self,text:&str)->std::fmt::Result{let end=self.length.checked_add(text.len()).filter(|end|*end<=self.bytes.len()).ok_or(std::fmt::Error)?;self.bytes[self.length..end].copy_from_slice(text.as_bytes());self.length=end;Ok(())}}
  let mut prefix=Prefix{bytes:[0;16],length:0};let(result,event)=semio_framework_trace::observe_heap_allocations_on_this_thread(||std::fmt::write(&mut prefix,format_args!("{}",source.value.read_view().unwrap())));assert!(result.is_err());assert_eq!(prefix.length,16);assert_eq!(prefix.bytes,[b'x';16]);assert_eq!((event.requested_bytes,event.released_bytes),(0,0));
  let scratch=capsule.allocated_bytes();let mut released=0;for _ in 0..32768{let(step,event)=semio_framework_trace::observe_heap_allocations_on_this_thread(||capsule.retire_one(1,4096).unwrap());assert_eq!(event.requested_bytes,0);assert_eq!(event.released_bytes,step.2);assert!(step.1<=1&&event.released_bytes<=4096&&event.largest_release_bytes<=4096);released+=event.released_bytes;if !step.0{break}}assert_eq!(released,scratch);drop(capsule);
- let mut released=0;while !source.value.terminal_is_empty(){let(step,event)=semio_framework_trace::observe_heap_allocations_on_this_thread(||source.value.close_step(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_release_bytes:4096,maximum_depth:1,..Default::default()}).unwrap());let progress=match step{RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress)=>progress};assert_eq!(event.requested_bytes,0);assert_eq!(event.released_bytes,progress.released_bytes);assert!(event.released_bytes<=4096&&event.largest_release_bytes<=4096);released+=event.released_bytes;}assert_eq!(released,original);let(_,event)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(source));assert_eq!((event.requested_bytes,event.released_bytes),(0,0));eprintln!("[DEBUG] direct borrowed variant original paged source8194 metadata512 body8200; no DslVariants/FieldValue mirror; formatted source preserves bounded refusal; physical1/4096 observed; actual authored SetLabel/whole carriers separate");
+ let mut released=0;while !source.value.terminal_is_empty(){let(step,event)=semio_framework_trace::observe_heap_allocations_on_this_thread(||source.value.close_step(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_release_bytes:4096,maximum_depth:1,..Default::default()}).unwrap());let progress=match step{RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress)=>progress};assert_eq!(event.requested_bytes,0);assert_eq!(event.released_bytes,progress.released_bytes);assert!(event.released_bytes<=4096&&event.largest_release_bytes<=4096);released+=event.released_bytes;}assert_eq!(released,original);let(_,event)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(source));assert_eq!((event.requested_bytes,event.released_bytes),(0,0));
 }
 
 #[test]
@@ -489,5 +476,5 @@ fn paged_semantic_source_admits_original_owned_custody_and_settles_every_allocat
  {let borrowed=source.borrow();let original=borrowed.get();assert_eq!(original.allocated_bytes(),backing);let projected=Borrowed(original);let mut capsule=super::BorrowedProjectedPackOperation::from_source(&projected,S{keyword:None,layout:RecordLayout::Inline,fields:&FIELDS});let mut measurement=semio_framework_replication_codec::io::binary::operation_bytes::OperationByteMeasurement::new(8200);let window=control.owned_bytes()+512;let(result,event)=semio_framework_trace::observe_heap_allocations_on_this_thread(||control.scoped_maximum(window,|control|capsule.write_body(&EncodeOptions::default(),&mut measurement,control)));assert_eq!(result.unwrap(),8200);assert_eq!((event.requested_bytes,event.released_bytes),(0,0));assert_eq!(original.allocated_bytes(),backing);for index in 0..8194{assert_eq!(original.read_view().unwrap().byte_at(index),Some(b'x'));}let scratch=capsule.allocated_bytes();let mut disposed=0;for _ in 0..32768{let(step,event)=semio_framework_trace::observe_heap_allocations_on_this_thread(||capsule.retire_one(1,4096).unwrap());assert_eq!(event.requested_bytes,0);assert_eq!(event.released_bytes,step.2);assert!(step.1<=1&&event.released_bytes<=4096&&event.largest_release_bytes<=4096);disposed+=event.released_bytes;if !step.0{break}}assert_eq!(disposed,scratch);}
  let(step,event)=semio_framework_trace::observe_heap_allocations_on_this_thread(||source.close_step(Default::default()).unwrap());assert_eq!(step.progress(),Default::default());assert_eq!((event.requested_bytes,event.released_bytes),(0,0));let(mut born,mut disposed,mut copied)=(0,0,0);
  for _ in 0..100000{let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:4096,maximum_release_bytes:4096,maximum_depth:64};let(step,event)=semio_framework_trace::observe_heap_allocations_on_this_thread(||source.close_step(grant).unwrap());let progress=match step{RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress)=>progress};assert!(progress.fits(grant));assert!(!event.overflowed);assert_eq!(event.requested_bytes,progress.retained_capacity_bytes);assert_eq!(event.released_bytes,progress.released_bytes);assert!(event.requested_bytes<=4096&&event.released_bytes<=4096&&event.largest_release_bytes<=4096);born+=event.requested_bytes;disposed+=event.released_bytes;copied+=progress.copied_bytes;if source.terminal_is_empty(){break}}
- assert!(source.terminal_is_empty());assert_eq!(disposed,backing+birth+born);assert!(copied>=8194);assert_eq!(source.next_close_copy_byte_demand().unwrap(),0);assert_eq!(source.next_close_release_byte_demand().unwrap(),0);assert_eq!(source.next_close_depth_demand().unwrap(),0);let(_,event)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(source));assert_eq!((event.requested_bytes,event.released_bytes),(0,0));eprintln!("[DEBUG] actual typed paged source original8194 backing={backing} custodyBirth={birth} closeBirth={born} disposed={disposed} copied={copied}; single cumulative65536 and positive metadata512; all original/custody/scaffold events fit independent1/4096 grants; authored whole carrier separate");
+ assert!(source.terminal_is_empty());assert_eq!(disposed,backing+birth+born);assert!(copied>=8194);assert_eq!(source.next_close_copy_byte_demand().unwrap(),0);assert_eq!(source.next_close_release_byte_demand().unwrap(),0);assert_eq!(source.next_close_depth_demand().unwrap(),0);let(_,event)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(source));assert_eq!((event.requested_bytes,event.released_bytes),(0,0));
 }

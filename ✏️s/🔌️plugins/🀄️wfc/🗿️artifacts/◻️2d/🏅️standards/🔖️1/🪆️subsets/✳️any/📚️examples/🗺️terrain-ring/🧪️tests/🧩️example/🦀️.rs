@@ -1,7 +1,9 @@
 //! 🧪️ Example round trip, plus the raster laws only this example can prove.
 
+use crate::{schema::snapshot::Wfc2dColor, schema::snapshot::Wfc2dSnapshot, schema::snapshot::Wfc2dBitmapMedia};
 use crate::schema::snapshot::Wfc2dTileMedia;
 use crate::standards::v1::subsets::any::io::binary::snapshot::tile_media_png_data_url;
+use semio_framework_test_fixtures::fixture_text;
 
 #[test]
 fn printed_text_parses_back_to_the_authored_document() {
@@ -62,7 +64,7 @@ fn the_terrain_ring_solves() {
 /// 🎨️ The declared palette fixture reaches the actual PNG author and checked raster view.
 #[test]
 fn raster_preserves_clamped_palette_and_unknown_index_transparency() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🎨️raster/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🎨️raster/🔣️.json")).unwrap();
     let number = |value: &serde_json::Value| u32::try_from(value.as_u64().unwrap()).unwrap();
     let indices: Vec<u8> = fixture["indices"].as_array().unwrap().iter().map(|v| u8::try_from(v.as_u64().unwrap()).unwrap()).collect();
     let palette = fixture["palette"].as_array().unwrap().iter().map(|color| crate::schema::snapshot::Wfc2dColor { r: number(&color["r"]), g: number(&color["g"]), b: number(&color["b"]), a: number(&color["a"]) }).collect();

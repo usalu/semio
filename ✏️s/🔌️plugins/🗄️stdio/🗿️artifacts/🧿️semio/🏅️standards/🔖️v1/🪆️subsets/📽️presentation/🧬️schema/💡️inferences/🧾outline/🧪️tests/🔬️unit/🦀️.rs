@@ -1,4 +1,6 @@
-use super::*;
+use semio_s_artifact_stdio_semio_document::{schema::snapshot::DocBlock, schema::snapshot::DocRun};
+use crate::{schema::snapshot::SemioPresentationSnapshot, schema::snapshot::SlideShape};
+use crate::schema::inferences::outline::*;
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
 use crate::schema::snapshot::{PlaceholderKind, Slide, SlideFrame, SlideLayout, SlideMaster, SlideTableCell, SlideTableRow, STDIO_SEMIOPRESENTATION_DOCUMENT_SCHEMA};
 

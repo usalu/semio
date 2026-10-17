@@ -30,6 +30,10 @@ type stdioDxfR12HeaderInferenceGuardSizeBounds = { readonly minItems?: number; r
 
 export const stdioDxfR12HeaderInferenceGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : stdioDxfR12HeaderInferenceGuardReject(at, "value is not an object");
+export const stdioDxfR12HeaderInferenceGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) stdioDxfR12HeaderInferenceGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const stdioDxfR12HeaderInferenceGuardArray = (value: unknown, at: string, bounds: stdioDxfR12HeaderInferenceGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return stdioDxfR12HeaderInferenceGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) stdioDxfR12HeaderInferenceGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -60,17 +64,17 @@ export const stdioDxfR12HeaderInferenceGuardConstant = <T extends string | numbe
 //#endregion 🚪️Parsers
 
 export function parseDxfInference(value: unknown, at = "$"): DxfInference {
-  const row = stdioDxfR12HeaderInferenceGuardObject(value, at);
+  const row = stdioDxfR12HeaderInferenceGuardClosed(stdioDxfR12HeaderInferenceGuardObject(value, at), at, ["bounds"]);
   return {
     bounds: parseDxfBounds(row["bounds"], `${at}.bounds`),
   };
 }
 
 export function parseDxfBounds(value: unknown, at = "$"): DxfBounds {
-  const row = stdioDxfR12HeaderInferenceGuardObject(value, at);
+  const row = stdioDxfR12HeaderInferenceGuardClosed(stdioDxfR12HeaderInferenceGuardObject(value, at), at, ["min", "max", "entityCount"]);
   return {
-    min: stdioDxfR12HeaderInferenceGuardArray(row["min"], `${at}.min`, {"minItems": 3, "maxItems": 3}).map((item, index) => stdioDxfR12HeaderInferenceGuardNumber(item, `${at}.min[${index}]`)),
-    max: stdioDxfR12HeaderInferenceGuardArray(row["max"], `${at}.max`, {"minItems": 3, "maxItems": 3}).map((item, index) => stdioDxfR12HeaderInferenceGuardNumber(item, `${at}.max[${index}]`)),
+    min: ((items0) => [stdioDxfR12HeaderInferenceGuardNumber(items0[0], `${at}.min[0]`), stdioDxfR12HeaderInferenceGuardNumber(items0[1], `${at}.min[1]`), stdioDxfR12HeaderInferenceGuardNumber(items0[2], `${at}.min[2]`)])(stdioDxfR12HeaderInferenceGuardArray(row["min"], `${at}.min`, {"minItems": 3, "maxItems": 3})),
+    max: ((items0) => [stdioDxfR12HeaderInferenceGuardNumber(items0[0], `${at}.max[0]`), stdioDxfR12HeaderInferenceGuardNumber(items0[1], `${at}.max[1]`), stdioDxfR12HeaderInferenceGuardNumber(items0[2], `${at}.max[2]`)])(stdioDxfR12HeaderInferenceGuardArray(row["max"], `${at}.max`, {"minItems": 3, "maxItems": 3})),
     entityCount: stdioDxfR12HeaderInferenceGuardInteger(row["entityCount"], `${at}.entityCount`, {"minimum": 0}),
   };
 }

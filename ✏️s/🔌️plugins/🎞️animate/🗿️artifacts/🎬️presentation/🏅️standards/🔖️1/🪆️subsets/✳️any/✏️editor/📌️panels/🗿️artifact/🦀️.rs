@@ -1,8 +1,8 @@
 //! 📄️ Animate presentation app panel — the document tree: tiles of the current deck.
 
 use crate::editor::animate::terminology::AnimatePresentationLabels;
-use crate::editor::animate::ui_label;
-use crate::editor::animate::{PRESENTATION_INTERACTION_DOMAIN, PRESENTATION_INTERACTION_GRANULARITY, PRESENTATION_PLAY_APP_ID};
+use crate::editor::animate::support::ui_label;
+use crate::editor::animate::support::{PRESENTATION_INTERACTION_DOMAIN, PRESENTATION_INTERACTION_GRANULARITY, PRESENTATION_PLAY_APP_ID};
 use crate::PresentationSnapshot;
 use semio_framework_plugin::tree_item_desc;
 use semio_framework_ui_locale::LocalizedLabel;
@@ -49,7 +49,7 @@ pub fn render(deck: &PresentationSnapshot, labels: &AnimatePresentationLabels, w
             |tile| {
                 let mut node = tree_item_desc(tile.id.clone(), ui_label(&tile.name)?, Some(format!("x={:.3} y={:.3} w={:.3} h={:.3}", tile.crop.x, tile.crop.y, tile.crop.width, tile.crop.height)))?;
                 if let semio_framework_plugin::Component::TreeItem(props) = &mut node.component {
-                    props.granularity = Some(crate::editor::animate::ui_text(PRESENTATION_INTERACTION_GRANULARITY)?);
+                    props.granularity = Some(crate::editor::animate::support::ui_text(PRESENTATION_INTERACTION_GRANULARITY)?);
                 }
                 Ok(node)
             },

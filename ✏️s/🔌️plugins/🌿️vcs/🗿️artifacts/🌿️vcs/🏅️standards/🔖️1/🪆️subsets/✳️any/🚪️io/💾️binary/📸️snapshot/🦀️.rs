@@ -49,9 +49,6 @@ pub fn decode(bytes: &[u8]) -> Result<VcsSnapshot, PackError> {
 }
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests
 
 /// 🫴️ Declares this owner’s actual controlled native record factories.
@@ -59,3 +56,43 @@ impl pack::snapshot::ArtifactNativeSnapshot for VcsSnapshot {
  fn decode_native_snapshot(payload:pack::snapshot::NativeSnapshotInput<'_>,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,semio_framework_value::ValueError>{store::decode_native_snapshot_record(payload,<Self as pack::snapshot::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record,native|Self::__dsl_from_record_controlled(record,native),control)}
  fn encode_native_snapshot(&self,encoding:pack::snapshot::NativeSnapshotEncoding,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<store::io_schema::IoPayload,semio_framework_value::ValueError>{store::encode_native_snapshot_record(encoding,<Self as pack::snapshot::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|native|self.__dsl_to_record_controlled(native),control)}
 }
+
+//#region 🧩️ArtifactItems
+pub mod artifact_items {
+pub const VCS_DOCUMENT_SCHEMA: &str = "vcs.vcs";
+}
+//#endregion 🧩️ArtifactItems
+
+//#region 🧩️ArtifactItems4
+pub mod artifact_items_4 {
+//#region 🔖️Declaration
+pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
+    use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
+    ArtifactDefinition::new(ArtifactIdentity::parse("s.vcs.vcs")?)
+        .capability(ArtifactCapability::new(ArtifactIdentity::parse("s.vcs.vcs.schema.artifact")?, ArtifactCapabilityKind::schema()).descriptor(b"s.vcs.vcs")?.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::schema(), "s.vcs.vcs")?)?)?
+        .capability(
+            ArtifactCapability::new(ArtifactIdentity::parse("s.vcs.vcs.inference.artifact")?, ArtifactCapabilityKind::inference())
+                .descriptor(b"s.vcs.vcs.inference")?
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::schema(), "s.vcs.vcs.inference")?)?,
+        )?
+        .capability(
+            ArtifactCapability::new(ArtifactIdentity::parse("s.vcs.vcs.composer.native")?, ArtifactCapabilityKind::composer()).descriptor(b"s.vcs.vcs@1/*")?.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.vcs.vcs@1/*")?)?,
+        )?
+        .capability(
+            ArtifactCapability::new(ArtifactIdentity::parse("s.vcs.vcs.composer.json")?, ArtifactCapabilityKind::composer())
+                .descriptor(b"s.stdio.json@rfc8259/*")?
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.json@rfc8259/*")?)?,
+        )?
+        .capability(
+            ArtifactCapability::new(ArtifactIdentity::parse("s.vcs.vcs.codec.document")?, ArtifactCapabilityKind::codec())
+                .descriptor(b"vcs.vcs:vcs")?
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::codec(), "vcs.vcs")?)?
+                .claim(ArtifactIdentityClaim::codec_extension("vcs.vcs", "vcs")?)?,
+        )?
+        .capability(ArtifactCapability::new(ArtifactIdentity::parse("s.vcs.vcs.localization.en")?, ArtifactCapabilityKind::localization()).descriptor(b"VCS")?.localization(ArtifactLocalization::new(ArtifactLocale::parse("en")?, "VCS")?)?)?
+        .capability(ArtifactCapability::new(ArtifactIdentity::parse("s.vcs.vcs.localization.de")?, ArtifactCapabilityKind::localization()).descriptor(b"VCS")?.localization(ArtifactLocalization::new(ArtifactLocale::parse("de")?, "VCS")?)?)
+}
+
+//#endregion 🔖️Declaration
+}
+//#endregion 🧩️ArtifactItems4

@@ -1,7 +1,7 @@
 //! 🚩️ `set-target-volume-flag` command, and the two set-verbs an outliner target-volume row names
 //! (`setTargetVolumeHidden`, `setTargetVolumeLocked`).
 
-use crate::editor::puzzle5d::Puzzle5dActionCtx;
+use crate::editor::puzzle5d::interaction::Puzzle5dActionCtx;
 use crate::standards::v1::subsets::any::schema::mutations::{change_target_volume_hidden, change_target_volume_locked};
 use semio_framework_pack_json::Value;
 

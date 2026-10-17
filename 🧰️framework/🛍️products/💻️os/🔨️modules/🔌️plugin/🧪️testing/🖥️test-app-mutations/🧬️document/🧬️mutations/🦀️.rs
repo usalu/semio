@@ -5,16 +5,17 @@ pub mod set_count;
 pub mod set_label;
 #[path = "🧒️set-slot-children/🦀️.rs"]
 pub mod set_slot_children;
-pub(crate) use set_count::SetCount;
-pub(crate) use set_label::SetLabel;
-pub(crate) use set_slot_children::SetSlotChildren;
+pub use crate::test_app_mutation_fixture::document::mutations::set_count::SetCount;
+pub use crate::test_app_mutation_fixture::document::mutations::set_label::SetLabel;
+pub use crate::test_app_mutation_fixture::document::mutations::set_slot_children::SetSlotChildren;
 
+#[doc(hidden)]
 #[derive(Clone, semio_framework_value::CanonicalJsonTree, Debug, PartialEq, serde::Serialize, serde::Deserialize, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_value_derive::RetireOwned, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[serde(tag = "operation", content = "payload", rename_all = "camelCase", deny_unknown_fields)]
 #[value(tag = "operation", content = "payload", rename_all = "camelCase", deny_unknown_fields)]
-#[mutations(snapshot=super::TestSnapshot,diff=super::TestDiff,schema="plugin.testkit.document")]
-pub(crate) enum TestMutation {
+#[mutations(snapshot=crate::test_app_mutation_fixture::document::TestSnapshot,diff=crate::test_app_mutation_fixture::document::TestDiff,schema="plugin.testkit.document")]
+pub enum TestMutation {
     SetCount(SetCount),
     SetLabel(SetLabel),
     SetSlotChildren(SetSlotChildren),
@@ -53,14 +54,15 @@ impl protocol::OpBinary for TestMutation {
     }
 }
 
+#[doc(hidden)]
 #[cfg(test)]
 #[path = "../../../../🧪️tests/🧬️test-app-document-mutation-roster-unit/🦀️.rs"]
-mod tests;
+pub mod tests;
 //#endregion 🧬️TestDocumentMutationAggregate
 
 impl TestMutation{
     /// 🎒️ Captures this original variant in caller-retained canonical scratch.
-    pub(crate) fn retained_pack_operation(&self)->semio_framework_os_kernel::os_pack::record::BorrowedProjectedPackOperation<semio_framework_dsl_record::native_encoding::VariantProjection<'_,Self>>{
+    pub fn retained_pack_operation(&self)->semio_framework_os_kernel::os_pack::record::BorrowedProjectedPackOperation<semio_framework_dsl_record::native_encoding::VariantProjection<'_,Self>>{
         semio_framework_os_kernel::os_pack::record::BorrowedProjectedPackOperation::from_variant(self)
     }
 }

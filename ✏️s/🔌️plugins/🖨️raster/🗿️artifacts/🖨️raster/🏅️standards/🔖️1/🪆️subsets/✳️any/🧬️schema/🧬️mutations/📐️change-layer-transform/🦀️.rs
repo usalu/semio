@@ -1,6 +1,5 @@
 //! 📐️ Exact, conflict-checked affine placement for pixel and group layers.
 use semio_s_artifact_raster_raster_model::{RasterLayerNode, RasterLayerPatch};
-#[cfg(test)] use semio_s_artifact_raster_raster_mutations::RasterMutation;
 use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
 use semio_s_artifact_raster_raster_diff::{diff_patch_layer, RasterDiff};
 use semio_s_artifact_raster_raster_model::{find_layer, layer_transform};
@@ -31,6 +30,3 @@ impl<Op> protocol::MutationKind<RasterSnapshot, Op> for ChangeLayerTransform whe
     fn label(&self)->semio_framework_ui_locale::LocalizedLabel {semio_framework_ui_locale::LocalizedLabel::native("Transform layer","Ebene transformieren")}
     fn target(&self)->Vec<String>{vec![self.layer_id.clone()]}
 }
-#[cfg(test)]
-#[path="🧪️tests/🦀️.rs"]
-mod tests;

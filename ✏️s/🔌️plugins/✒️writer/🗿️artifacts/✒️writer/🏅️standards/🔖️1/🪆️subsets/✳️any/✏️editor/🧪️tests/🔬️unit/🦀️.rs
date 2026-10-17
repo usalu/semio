@@ -1,5 +1,11 @@
+use semio_framework_test_fixtures::fixture_text;
+
 pub(crate) mod context {
-    use super::super::*;
+    use semio_framework_plugin::app::EditorApp;
+    use semio_framework_plugin::WindowMeasure;
+    use crate::op::WriterMutation;
+    use crate::WriterSnapshot;
+    use crate::editor::writer::{WriterCommand, WriterPlayApp, create_writer_app};
     use semio_framework_plugin::artifact_app_laws::{close_registered_fixture_app, meta, new_app_with_registry_and_members as framework_new_app_with_registry_and_members, settle_registered_typed_operation};
     use semio_framework_plugin::{EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel, ViewWindowInstance};
     
@@ -160,8 +166,20 @@ pub(crate) mod context {
     }
 }
 
-use super::*;
-use crate::editor::writer::unit_tests::context::{new_app_with_registry, WriterApp};
+use semio_framework_plugin::{AppActionRegistry, ArtifactView, ConfigView, ContextMenuRequest, ContextMenuTextContext, HierarchyProvider, MediaError, MediaPayload, NoConfig, WindowMeasure};
+use pack::snapshot::ArtifactPack;
+use semio_framework_plugin::app::EditorApp;
+#[cfg(test)]
+use serde_json::Value;
+use crate::{WRITER_DOCUMENT_SCHEMA, WriterSnapshot, writer_text};
+use crate::editor::writer::modes::edit::windows::main::transient::WriterMainWindowTransient;
+use crate::op::WriterMutation;
+use crate::editor::writer::commands::{commit_rename, engagement_input, engagement_submit, format_document, lint_document, load_document_json, open_document, request_completions, set_active_example, set_camera, set_editor_selection, set_font_px, set_line_height, set_tab_size, set_text, text_edit, text_splice, toggle_line_numbers};
+use crate::editor::writer::modes::edit;
+use crate::editor::writer::base::writer_io;
+use crate::editor::writer::{WriterCommand, WriterPlayApp, create_writer_app};
+use crate::editor::writer::base::{reset_document_effect, WriterChapterPayload};
+use crate::editor_unit_tests::context::{new_app_with_registry, WriterApp};
 use semio_framework_plugin::PluginApp;
 
 async fn context_menu_items(app: &mut WriterApp, surface: Option<semio_framework_plugin::ContextMenuSurfaceTarget>) -> Value {
@@ -184,7 +202,7 @@ fn writer_envelope_wire() -> Vec<u8> {
 
 #[test]
 fn interactive_job_fixture_matches_the_exact_factory_join() {
-    let fixture: Value = serde_json::from_str(include_str!("../🧫️fixtures/🎬️writer-migration/🔣️.json")).expect("language-neutral Writer migration fixture");
+    let fixture: Value = serde_json::from_str(fixture_text!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🧫️fixtures/🎬️writer-migration/🔣️.json")).expect("language-neutral Writer migration fixture");
     assert_eq!(fixture["payloadSchema"], WRITER_COMMAND_PAYLOAD_SCHEMA);
     assert_eq!(fixture["maxRawWireBytes"], MAX_WRITER_COMMAND_RAW_BYTES);
     assert_eq!(fixture["maxWorkUnitsPerStep"], 1);
@@ -609,7 +627,7 @@ async fn context_menu_via_the_registry_still_starts_with_select_token() {
 //#region 🔖️CrossCutting
 #[semio_framework_async_macros::async_test]
 async fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
-    use crate::editor::writer::unit_tests::context::{new_app, render};
+    use crate::editor_unit_tests::context::{new_app, render};
     let mut app = new_app().await;
     assert!(render(&mut app, "writer.play.nope").await.contains("Unknown body"));
 }

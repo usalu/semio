@@ -6,11 +6,12 @@ use crate::examples::{tower_stack, two_room_corridor, wall_roof_facade_strip};
 use crate::standards::v1::subsets::any::io::text::snapshot::{parse_dsl, print_dsl};
 use crate::{Wfc3dSnapshot, WFC3D_DIALECT};
 use pack::snapshot::ArtifactPack;
+use semio_framework_test_fixtures::fixture_text;
 
-const CONTRACT: &str = include_str!("../🧫️fixtures/🧩️mount-contract/🔣️.json");
+static CONTRACT: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧩️mount-contract/🔣️.json"));
 
 fn contract() -> serde_json::Value {
-    serde_json::from_str(CONTRACT).expect("the committed mount contract decodes")
+    serde_json::from_str((*CONTRACT)).expect("the committed mount contract decodes")
 }
 
 #[test]

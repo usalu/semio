@@ -1,6 +1,7 @@
 //! 📝️ Direct publication-presence replacement payload and inverse behavior.
 
-use super::super::{PublicationPresence, PublicationPresenceMutation};
+use crate::publication_fixture::presence::PublicationPresence;
+use crate::publication_fixture::presence::mutations::PublicationPresenceMutation;
 use protocol::{MutationKind, MutationOutcome, OpBinary, OpText, ProtocolError, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -57,8 +58,8 @@ impl OpBinary for ChangePublicationPresence {
 impl MutationKind<PublicationPresence, PublicationPresenceMutation> for ChangePublicationPresence {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "publication-presence", kind: "change-publication-presence", record: "ChangedPublicationPresence" };
 
-    fn diff(&self, _base: &PublicationPresence) -> MutationOutcome<super::super::PublicationPresenceDiff> {
-        MutationOutcome::new(super::super::PublicationPresenceDiff { revision: Some(self.revision) })
+    fn diff(&self, _base: &PublicationPresence) -> MutationOutcome<crate::publication_fixture::presence::PublicationPresenceDiff> {
+        MutationOutcome::new(crate::publication_fixture::presence::PublicationPresenceDiff { revision: Some(self.revision) })
     }
 
     fn inverse(&self, base: &PublicationPresence) -> Result<Vec<PublicationPresenceMutation>, semio_framework_value::ValueError> {

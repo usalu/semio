@@ -54,7 +54,6 @@ fn persisted_hydration_release_store_entry_refuses_foreign_target_without_consum
     assert_eq!(hydration.initial.as_ref().unwrap() as *const Snapshot, snapshot_identity);
     assert_eq!(hydration.owners.as_ref().unwrap() as *const DocumentStoreOwners<Snapshot, Mutation>, catalog_identity);
     assert!(!hydration.terminal_is_empty());
-    eprintln!("[DEBUG] Store-only hydration refuses Envelope before work/allocation; original catalog/pack/snapshot/history identities retained");
     for _ in 0..fixture["maximumCloseTurns"].as_u64().unwrap() {
         if hydration.terminal_is_empty() { break; }
         let demand = quoted(&hydration, semio_framework_os_store_owned_schema_decode::OWNED_SCHEMA_DECODE_PAGE_BYTES);
@@ -92,7 +91,6 @@ fn persisted_hydration_release_fold_caller_funds_exact_cleanup_without_copy_fuel
             assert_eq!(step, RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, released_bytes: extent, ..Default::default() }));
             assert_eq!((allocated, released), (0, extent));
             assert_eq!(hydration_fold_byte_grant(logical, 0), Some(logical));
-            eprintln!("[DEBUG] Fold caller cleanup logical={} wholePhysical={} receipt={} work1 no logical work on cleanup turn", logical, extent, released);
         }
         assert_eq!(hydration_fold_byte_grant(logical, fixture["refusedAllocationBytes"].as_u64().unwrap() as usize), None);
     }
@@ -119,7 +117,6 @@ fn persisted_hydration_release_funds_actual_whole_allocation_and_separate_termin
         let (_, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| drive_hydration_retirement(&mut active, &mut cx, release_grant(frame)).unwrap());
         assert_eq!((allocated, released), (0, frame));
         assert!(active.is_none());
-        eprintln!("[DEBUG] persisted hydration whole physical extent={} release={} terminalFrame={} fuel1 admission262144", extent, extent, frame);
     }
 }
 
@@ -164,7 +161,6 @@ fn persisted_hydration_release_runtime_funds_whole_physical_extent_with_one_work
         assert_eq!((allocated, released), (0, extent));
         assert_eq!(work_left, 0);
         assert!(retained_terminal);
-        eprintln!("[DEBUG] hydration envelope runtime exactPhysical={} workFuel1 heapBirth0 terminalFrameSeparate=true", extent);
     }
 }
 
@@ -182,7 +178,6 @@ fn persisted_hydration_release_refuses_extent_outside_existing_admission() {
     assert_eq!(cx.fuel_remaining(), 1);
     assert!(!active.as_ref().unwrap().terminal_is_empty());
     assert_eq!(active.as_ref().unwrap().next_release_byte_demand().unwrap(), extent);
-    eprintln!("[DEBUG] persisted hydration denied outside-admission extent={} retained=true heapBirth=0 heapFree=0 fuelUnspent=1", extent);
 }
 
 impl ErasedSnapshotRetirement for AllocationProbe {
@@ -223,7 +218,6 @@ fn persisted_hydration_release_runtime_refuses_extent_outside_existing_admission
     assert_eq!(result, Ok(false));
     assert_eq!((allocated, released), (0, 0));
     assert_eq!((work_left, retained_demand), (1, extent));
-    eprintln!("[DEBUG] hydration envelope runtime deniedPhysical={} retained=true workFuel1Unspent heapBirth0 heapFree0", extent);
 }
 
 #[test]
@@ -260,7 +254,6 @@ fn persisted_hydration_release_pages_are_independent_of_step_fuel() {
         assert!(active_owner.terminal_is_empty());
         active.take();
     }
-    eprintln!("[DEBUG] Persisted hydration 9 neutral release cases retain fuel, cancellation, deadline, real reader aliases and 4096-byte physical ceiling");
 }
 
 #[test]
@@ -327,7 +320,6 @@ fn member_hydration_ready_auxiliary_retains_empty_capacity_until_paid_close() {
     assert_eq!(total_released, original_owned_bytes + total_born);
     let (_, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| drop(owner));
     assert_eq!((allocated, released), (0, 0));
-    eprintln!("[DEBUG] ready hydration retains original empty actor capacity={} without catalog; every birth/backing/frame paid, denied identity preserved", extent);
 }
 
 #[test]
@@ -348,7 +340,6 @@ fn funded_verified_genesis_preserves_original_refusal_and_every_shared_backing_r
         assert_eq!(freed, expected + born, "every retirement frame a close turn births is paid and released again");
         let (_, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| { drop(snapshot); drop(pack); });
         assert_eq!((allocated, released), (0, 0));
-        eprintln!("[DEBUG] verified Genesis original refusal custody / funded shared owner complete paid free={freed}, terminal0heap");
     }
 
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📏️physical-demand/🔣️.json")).unwrap();
@@ -454,7 +445,6 @@ fn message_ledger_phased_birth_cancellation_preserves_exact_original_pages() {
         assert!(retirement.terminal_is_empty()); assert_eq!(freed_total, total);
         let (_, born, freed) = semio_framework_trace_memory_testing::observe_backing(|| drop(retirement));
         assert_eq!((born, freed), (0, 0));
-        eprintln!("[DEBUG] original message pages cancellation cut={} born={} paidFree={} terminal0heap", cut, total, freed_total);
     }
 }
 
@@ -510,6 +500,5 @@ use semio_framework_value::ArtifactOwnedValueRetirementFactory;
         }
         assert!(owner.terminal_is_empty()); assert_eq!(freed_total, all_born + metadata_bytes);
         let (_, born, freed) = semio_framework_trace_memory_testing::observe_backing(|| drop(owner)); assert_eq!((born, freed), (0, 0));
-        eprintln!("[DEBUG] member envelope original phased cancellation cut={} born={} paidFree={} metadata={} terminal0heap", cut, all_born, freed_total, metadata_bytes);
     }
 }

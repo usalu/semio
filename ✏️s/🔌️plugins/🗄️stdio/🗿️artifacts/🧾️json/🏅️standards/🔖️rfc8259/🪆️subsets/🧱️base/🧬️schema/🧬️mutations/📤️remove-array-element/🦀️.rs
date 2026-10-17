@@ -40,6 +40,4 @@ impl protocol::MutationKind<JsonSnapshot, super::JsonMutation> for RemoveArrayEl
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

@@ -3,7 +3,7 @@
 //! is one bidirectional thing, unsplit, so it lives here rather than mirrored under import/export).
 
 use crate::{WriterSnapshot};
-#[cfg(test)] use crate::{schema, WriterDocumentChild};
+#[cfg(test)] use crate::schema;
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
@@ -98,24 +98,17 @@ pub fn dag_jack_example_json() -> String {
 //#endregion 🔖️Examples
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️semio-grammar-conformance/🦀️.rs"]
-mod semio_grammar_conformance;
+
 
 
 #[allow(unused_imports)]
 mod mutations_codec {
 use super::*;
-use crate::standards::v1::subsets::any::schema::operations::*;
-use crate::schema::mutations::WriterMutation;
-#[cfg(test)]
-use crate::schema::mutations::{ChangeLanguage, ChangeUri, EditText, RenameWriter};
-use crate::WriterDiff;
+
+
+
 use crate::WriterSnapshot;
 use protocol::Mutation;
 
@@ -136,10 +129,9 @@ pub use mutations_codec::*;
 
 #[allow(unused_imports)]
 mod snapshot_codec {
-use crate::standards::v1::subsets::any::schema::*;
-use crate::{document_child_handle_with_text, WriterDocumentChild, WriterSnapshot, WRITER_DOCUMENT_SCHEMA};
+use crate::WriterSnapshot;
 use framework_schema::ArtifactSchema;
-use semio_s_artifact_trinity_jack::lexer::{lex_spanned, SpannedToken, Token};
+use semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::lexer::{lex_spanned, SpannedToken, Token};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 
@@ -173,7 +165,7 @@ impl semio_framework_dsl::DslIdiom for JackWriterIdiom {
     type Ast = String;
 
     fn parse(text: &str) -> Result<Self::Ast, semio_framework_diagnostic::TextError> {
-        semio_s_artifact_trinity_jack::core::format(text).map_err(|e| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, e.to_string(), semio_framework_diagnostic::TextSpan::at(1, 1)))
+        semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::language_service::format(text).map_err(|e| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, e.to_string(), semio_framework_diagnostic::TextSpan::at(1, 1)))
     }
 
     fn print(ast: &Self::Ast) -> String {
@@ -181,12 +173,12 @@ impl semio_framework_dsl::DslIdiom for JackWriterIdiom {
     }
 
     fn classify(text: &str) -> Vec<(semio_framework_dsl::TokenClass, semio_framework_diagnostic::TextSpan)> {
-        semio_s_artifact_trinity_jack::core::semantic_tokens(text).into_iter().map(|t| (token_class_from_name(&t.class), byte_span_to_text_span(text, t.start, t.end))).collect()
+        semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::language_service::semantic_tokens(text).into_iter().map(|t| (token_class_from_name(&t.class), byte_span_to_text_span(text, t.start, t.end))).collect()
     }
 
     fn complete(text: &str, offset: usize) -> Vec<semio_framework_dsl::CompletionItem> {
-        let graph = semio_s_artifact_trinity_jack::core::example_graph();
-        semio_s_artifact_trinity_jack::core::complete(&graph, text, offset).into_iter().map(|item| semio_framework_dsl::CompletionItem { label: item.label, detail: item.detail }).collect()
+        let graph = semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::language_service::example_graph();
+        semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::language_service::complete(&graph, text, offset).into_iter().map(|item| semio_framework_dsl::CompletionItem { label: item.label, detail: item.detail }).collect()
     }
 }
 

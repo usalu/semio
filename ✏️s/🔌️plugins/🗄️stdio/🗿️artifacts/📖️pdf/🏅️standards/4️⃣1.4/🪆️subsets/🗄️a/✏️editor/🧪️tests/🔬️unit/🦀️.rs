@@ -1,4 +1,17 @@
-use super::*;
+use crate::editor::pdf14a::modes::edit::windows::main;
+use crate::standards::v1_4::subsets::base::schema::{mutations::PdfMutation, snapshot::PdfSnapshot};
+use crate::standards::v1_4::subsets::base::schema::snapshot::STDIO_PDF_DOCUMENT_SCHEMA;
+use crate::editor::pdf14::page;
+use semio_framework_plugin::{ArtifactEditor, Editor};
+#[allow(unused_imports)]
+use crate::editor::pdf14a::modes::edit;
+#[allow(unused_imports)]
+use crate::standards::v1_7::subsets::base::schema::PDF_ARTIFACT_SCHEMA_ID;
+#[allow(unused_imports)]
+use {semio_framework_plugin::built_to_component_tree, semio_framework_plugin::ArtifactView, semio_framework_plugin::ComponentTree, semio_framework_plugin::ConfigView, semio_framework_artifact_reference::Dialect, semio_framework_plugin::DraftView, semio_framework_plugin::Emit, semio_framework_plugin::Fault, semio_framework_plugin::NoConfig, semio_framework_plugin::NoConfigMutation, semio_framework_plugin::NoDraft, semio_framework_plugin::NoDraftMutation, semio_framework_plugin::NoPresence, semio_framework_plugin::NoPresenceMutation, semio_framework_plugin::NoTransient, semio_framework_plugin::NoTransientMutation, semio_framework_artifact_reference::StandardId, semio_framework_artifact_reference::SubsetId};
+#[allow(unused_imports)]
+use semio_framework_2d::compute::EngineHandles;
+use crate::editor::pdf14a::*;
 
 #[semio_framework_async_macros::async_test]
 async fn create_pdf14_a_editor_builds_a_definition_for_the_editor_role() {
@@ -37,7 +50,7 @@ async fn explicit_nonzero_page_payload_is_preserved() {
 
 #[test]
 fn own14_declared_document_and_mutation_owners_are_exact() {
-    assert_eq!(<Pdf14AEditor as ArtifactEditor>::DOCUMENT_SCHEMA, crate::standards::v1_4::subsets::base::schema::STDIO_PDF_DOCUMENT_SCHEMA);
+    assert_eq!(<Pdf14AEditor as ArtifactEditor>::DOCUMENT_SCHEMA, crate::standards::v1_4::subsets::base::schema::snapshot::STDIO_PDF_DOCUMENT_SCHEMA);
     assert_eq!(std::any::type_name::<<Pdf14AEditor as ArtifactEditor>::Snapshot>(), std::any::type_name::<crate::standards::v1_4::subsets::base::schema::snapshot::PdfSnapshot>());
     assert_eq!(std::any::type_name::<<Pdf14AEditor as ArtifactEditor>::Mutation>(), std::any::type_name::<crate::standards::v1_4::subsets::base::schema::mutations::PdfMutation>());
 }

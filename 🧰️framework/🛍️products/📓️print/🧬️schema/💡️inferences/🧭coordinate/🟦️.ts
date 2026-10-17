@@ -3,7 +3,7 @@
  * reports its inverse so a hit test or an annotation can travel back.
  * @see ../../../🖋️latex/semio-viz-coordinate.sty
  */
-import type { VizCoordinateKind, VizCoordinateOptions, VizExtent, VizPoint } from "../../📸️snapshot/📊️chart/🟦️.ts";
+import type { VizCoordinateKind, VizCoordinateOptions, VizExtent, VizPoint } from "@semio-tech/print/schema/snapshot/chart";
 
 //#region 🔖️Contract
 /** 🧭️ A coordinate system: a forward map, an optional inverse, and the frame it works in. */

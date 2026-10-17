@@ -354,13 +354,15 @@ impl KernelPoolState {
         let terminal = matches!(&publication.outcome, semio_framework_actor::JobStepOutcome::Complete { .. } | semio_framework_actor::JobStepOutcome::Cancelled | semio_framework_actor::JobStepOutcome::Fault { .. });
         let now = semio_framework_job::default_now_us();
         let mut preview_sequence = publication.turn.operation.preview_sequence;
+        let mut retained_progress = semio_framework_job::RetainedCloneProgress::default();
         let mut context = semio_framework_job::StepContext::new(
             semio_framework_job::OperationId(publication.turn.operation.operation),
             semio_framework_job::Generation(publication.turn.operation.generation),
-            now.and_then(|now| semio_framework_job::StepBudget::from_duration(1, now, semio_framework_job::INTERACTIVE_LANE_WALL_US)).unwrap_or(semio_framework_job::StepBudget::new(0, 0)),
+            now.and_then(|now| semio_framework_job::StepBudget::from_duration(1, now, semio_framework_job::INTERACTIVE_LANE_WALL_US, JOB_REPLAY_STEP_GRANT)).unwrap_or(semio_framework_job::StepBudget::new(0, 0, JOB_REPLAY_STEP_GRANT)),
             semio_framework_job::root_cancel_token(),
             semio_framework_job::default_now_us,
             &mut preview_sequence,
+            &mut retained_progress,
         );
         match entry.log.begin_capture(&mut context, actor, semio_framework_actor::JobReplaySchedule { worker_count, worker_slot, granted_fuel: TURN_BUDGET.fuel, deadline_class_ms: TURN_BUDGET.deadline_ms }, publication) {
             Ok(()) => entry.terminal_seen |= terminal,
@@ -386,13 +388,15 @@ impl KernelPoolState {
             let operation = entry.authority.operation;
             let now = semio_framework_job::default_now_us();
             let mut preview_sequence = operation.preview_sequence;
+            let mut retained_progress = semio_framework_job::RetainedCloneProgress::default();
             let mut context = semio_framework_job::StepContext::new(
                 semio_framework_job::OperationId(operation.operation),
                 semio_framework_job::Generation(operation.generation),
-                now.and_then(|now| semio_framework_job::StepBudget::from_duration(1, now, semio_framework_job::MAINTENANCE_LANE_WALL_US)).unwrap_or(semio_framework_job::StepBudget::new(0, 0)),
+                now.and_then(|now| semio_framework_job::StepBudget::from_duration(1, now, semio_framework_job::MAINTENANCE_LANE_WALL_US, JOB_REPLAY_STEP_GRANT)).unwrap_or(semio_framework_job::StepBudget::new(0, 0, JOB_REPLAY_STEP_GRANT)),
                 semio_framework_job::root_cancel_token(),
                 semio_framework_job::default_now_us,
                 &mut preview_sequence,
+                &mut retained_progress,
             );
             if entry.log.acknowledge_publication(&mut context, policy).is_err() {
                 entry.log.begin_close();
@@ -414,13 +418,15 @@ impl KernelPoolState {
         let operation = self.job_replays[index].as_ref().expect("mounted replay").authority.operation;
         let now = semio_framework_job::default_now_us();
         let mut preview_sequence = operation.preview_sequence;
+        let mut retained_progress = semio_framework_job::RetainedCloneProgress::default();
         let mut context = semio_framework_job::StepContext::new(
             semio_framework_job::OperationId(operation.operation),
             semio_framework_job::Generation(operation.generation),
-            now.and_then(|now| semio_framework_job::StepBudget::from_duration(1, now, semio_framework_job::INTERACTIVE_LANE_WALL_US)).unwrap_or(semio_framework_job::StepBudget::new(0, 0)),
+            now.and_then(|now| semio_framework_job::StepBudget::from_duration(1, now, semio_framework_job::INTERACTIVE_LANE_WALL_US, JOB_REPLAY_STEP_GRANT)).unwrap_or(semio_framework_job::StepBudget::new(0, 0, JOB_REPLAY_STEP_GRANT)),
             semio_framework_job::root_cancel_token(),
             semio_framework_job::default_now_us,
             &mut preview_sequence,
+            &mut retained_progress,
         );
         if self.job_replays[index].as_ref().expect("mounted replay").log.close_started() {
             let _ = self.job_replays[index].as_mut().expect("mounted replay").log.close_step(&mut context);
@@ -479,13 +485,15 @@ impl KernelPoolState {
         if self.job_progress.has_close_work() {
             let now = semio_framework_job::default_now_us();
             let mut preview_sequence = 0;
+            let mut retained_progress = semio_framework_job::RetainedCloneProgress::default();
             let mut context = semio_framework_job::StepContext::new(
                 semio_framework_job::OperationId(0),
                 semio_framework_job::Generation(0),
-                now.and_then(|now| semio_framework_job::StepBudget::from_duration(1, now, semio_framework_job::MAINTENANCE_LANE_WALL_US)).unwrap_or(semio_framework_job::StepBudget::new(0, 0)),
+                now.and_then(|now| semio_framework_job::StepBudget::from_duration(1, now, semio_framework_job::MAINTENANCE_LANE_WALL_US, JOB_REPLAY_STEP_GRANT)).unwrap_or(semio_framework_job::StepBudget::new(0, 0, JOB_REPLAY_STEP_GRANT)),
                 semio_framework_job::root_cancel_token(),
                 semio_framework_job::default_now_us,
                 &mut preview_sequence,
+                &mut retained_progress,
             );
             let _ = self.job_progress.close_step(&mut context);
             return !self.command_maintenance_pending();
@@ -622,13 +630,15 @@ impl KernelPoolState {
         }
         let now = semio_framework_job::default_now_us();
         let mut preview_sequence = publication.turn.operation.preview_sequence;
+        let mut retained_progress = semio_framework_job::RetainedCloneProgress::default();
         let mut context = semio_framework_job::StepContext::new(
             semio_framework_job::OperationId(publication.turn.operation.operation),
             semio_framework_job::Generation(publication.turn.operation.generation),
-            now.and_then(|now| semio_framework_job::StepBudget::from_duration(2, now, semio_framework_job::INTERACTIVE_LANE_WALL_US)).unwrap_or(semio_framework_job::StepBudget::new(0, 0)),
+            now.and_then(|now| semio_framework_job::StepBudget::from_duration(2, now, semio_framework_job::INTERACTIVE_LANE_WALL_US, JOB_REPLAY_STEP_GRANT)).unwrap_or(semio_framework_job::StepBudget::new(0, 0, JOB_REPLAY_STEP_GRANT)),
             semio_framework_job::root_cancel_token(),
             semio_framework_job::default_now_us,
             &mut preview_sequence,
+            &mut retained_progress,
         );
         let admission = match self.job_progress.preflight(&mut context, actor, &publication, live) {
             Ok(admission) => admission,
@@ -1799,7 +1809,7 @@ impl KernelPoolState {
             retained.patch.is_some() || !retained.queued_patches.is_empty() || !retained.rejected_patches.is_empty() || retained.build.is_some() || retained.build_pending || retained.closing.is_some() || retained.exchange_closing.is_some();
         if !active {
             if let Some(rejection) = self.pending_rejections.get(instance, &surface).filter(|rejection| rejection.generation == generation) {
-                if retained.published.is_none() {
+                if !retained.has_published() {
                     return Err(rejection.reason.to_string());
                 }
             }
@@ -1810,7 +1820,7 @@ impl KernelPoolState {
                     let reason = rejection.1.to_string();
                     let owner = PendingSurfaceRejection { generation, instance, surface: surface.clone(), revision: rejection.0, reason: rejection.1, patch: None, receipt: retained.patch_receipt };
                     let _ = self.pending_rejections.try_upsert(owner);
-                    if requested.is_some() && retained.published.is_none() {
+                    if requested.is_some() && !retained.has_published() {
                         return Err(reason);
                     }
                 } else if retained.patch.is_none() {

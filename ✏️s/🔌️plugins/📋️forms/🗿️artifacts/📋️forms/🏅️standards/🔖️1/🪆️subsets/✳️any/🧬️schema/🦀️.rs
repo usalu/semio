@@ -1,6 +1,5 @@
 //! 🧬️ Forms artifact schema — every field of the artifact with its state class.
 
-use crate::op::FormMutation;
 // 🧷️ Aliased (not the bare `dsl` name): this file also needs the EXTERN `dsl` crate (kernel DSL
 // value/derive surface) for `value_to_dsl`/`dsl_to_value` below — importing the artifact's own `dsl`
 // submodule under the bare name would shadow that crate and break every `semio_framework_value::DslValue`/`semio_framework_value::ToValue::to_value`
@@ -9,12 +8,9 @@ use crate::op::FormMutation;
 use crate::{forms_snapshot_with_state, forms_steps, FormsResultsChild, FormsSnapshot, FormsStructureChild, FORMS_DOCUMENT_SCHEMA};
 use framework_schema::ArtifactSchema;
 
-#[path = "📝️definition/🦀️.rs"]
-pub mod definition;
-#[path = "📨️response/🦀️.rs"]
-pub mod response;
-#[path = "✅️validation/🦀️.rs"]
-pub mod validation;
+pub use semio_s_artifact_forms_forms_definition::standards::v1::subsets::any::schema::definition;
+pub use semio_s_artifact_forms_forms_definition::standards::v1::subsets::any::schema::response;
+pub use semio_s_artifact_forms_forms_definition::standards::v1::subsets::any::schema::validation;
 use semio_framework_value_dictionary::{QuestionDictionary, QuestionDictionaryEntry};
 pub use validation::{can_advance, step_errors};
 
@@ -97,7 +93,8 @@ pub use crate::playbook::{
 
 
 /// 🧾️ Configured defaults retain the actual value owners and declared question order.
-pub fn configured_dictionary(spec:&FormsSnapshot)->Result<QuestionDictionary,semio_framework_value::ValueError>{let spec=crate::mutations::as_playbook_spec(spec);let mut entries=Vec::new();for step in &spec.steps{for block in &step.blocks{entries.push(QuestionDictionaryEntry{question_id:block.id.clone(),value:crate::playbook::default_value_for_block(block)});}}let owner=semio_framework_value::DecodedValue::new(QuestionDictionary{entries},<QuestionDictionary as semio_framework_value::FromValue>::retire_decoded);owner.get().validate()?;Ok(owner.take())}
+pub fn configured_dictionary(spec:&FormsSnapshot)->Result<QuestionDictionary,semio_framework_value::ValueError>{let spec=crate::as_playbook_spec(spec);let mut entries=Vec::new();for step in &spec.steps{for block in &step.blocks{entries.push(QuestionDictionaryEntry{question_id:block.id.clone(),value:crate::playbook::default_value_for_block(block)});}}let owner=semio_framework_value::DecodedValue::new(QuestionDictionary{entries},<QuestionDictionary as semio_framework_value::FromValue>::retire_decoded);owner.get().validate()?;Ok(owner.take())}
+
 //#endregion 🔖️PlaybookVocabulary
 
 //#region 🔖️DocumentHelpers
@@ -146,26 +143,6 @@ pub fn locate_question(spec: &FormsSnapshot, question_id: &str) -> Option<Questi
     None
 }
 
-/// 🎛️ The leaves that carry `before` to `after` inside `step_id` — the single seam every inspector/command question edit
-/// flows through (design §17.1 of ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING): one ABSOLUTE `change-block-field` per
-/// field that differs, so history edits exactly that value; a changed id or kind (a re-seeded question) is the one
-/// whole-question `replace-block`. Nothing when the edit changes nothing.
-pub fn question_edit_mutations(step_id: &str, before: &FormQuestion, after: &FormQuestion) -> Vec<FormMutation> {
-    use crate::mutations::change_block_field::mutation::{BlockField, ChangeBlockField};
-    if before.id != after.id || before.kind != after.kind {
-        return vec![FormMutation::ReplaceBlock(crate::mutations::replace_block::mutation::ReplaceBlock { step_id: step_id.to_string(), block: after.clone() })];
-    }
-    BlockField::changes(before, after).into_iter().map(|change| FormMutation::ChangeBlockField(ChangeBlockField { block_id: after.id.clone(), change })).collect()
-}
-
-/// ✏️ Locates `question_id` in `spec`, applies `mutate` to a clone, and returns the [`question_edit_mutations`] that record
-/// the edit. Returns `None` if the question no longer exists.
-pub fn update_block_operations(spec: &FormsSnapshot, question_id: &str, mutate: impl FnOnce(&mut FormQuestion)) -> Option<Vec<FormMutation>> {
-    let location = locate_question(spec, question_id)?;
-    let mut question = location.question.clone();
-    mutate(&mut question);
-    Some(question_edit_mutations(&location.step_id, &location.question, &question))
-}
 //#endregion 🔖️QuestionLocation
 
 //#region 🔖️Ids
@@ -235,18 +212,9 @@ pub fn forms_artifact_schema_descriptor() -> semio_framework_schema_registry::Ar
     }
 }
 //#endregion 🔖️Descriptor
-//#region 🏗️Construction
-/// 🏗️ Ticket 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM: the old hand-rolled
-/// `FormsBuilderConstruction` (`empty`/`from_snapshot`/`from_text`/`from_binary`/`mutate`/`absorb`/
-/// `build`) did nothing beyond the ordinary `Mutation`/`MutationDiff` algebra — a trivial subset,
-/// per the SDK's own `SnapshotBuilder<S, M>` (W1-C task 3).
-pub type Construction = semio_framework_plugin::app::SnapshotBuilder<FormsSnapshot, FormMutation>;
-//#endregion 🏗️Construction
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
 
 //#region 🔁️Re-exports

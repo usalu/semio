@@ -1,10 +1,14 @@
 //! 🎛️ Neutral tone vectors exercise retained publication, exact inverses and coalesced diffs.
-use super::*;
+use semio_s_artifact_raster_raster_model::{RasterAdjustmentParameter, RasterLayerNode, RasterLayerPatch};
+use semio_s_artifact_raster_raster_mutations::RasterMutation;
+use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
+use semio_s_artifact_raster_raster_diff::diff_patch_layer;
+use semio_s_artifact_raster_raster_mutations_layer_properties::change_layer_adjustment_parameter::*;
 use protocol::{Mutation,MutationDiff,OpText,OpBinary};
 fn retire(document:RasterSnapshot) {semio_s_artifact_raster_raster_model::snapshot::retire_raster_snapshot(document);}
 #[test]
 fn adjustment_parameter_vectors_preserve_other_fields_and_exact_undo() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(runtime_fixture_text("../../../../🎛️change-layer/🧪️tests/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap() {
         let parameter=row["parameter"].as_str().unwrap();
         let mut reference=serde_json::json!({"schema":"raster.document","id":"tone-test","layers":[{"kind":"adjustment","id":"tone","name":"Tone","adjustmentKind":"brightnessContrast","params":{"metadata":"preserved"}}]});
@@ -55,7 +59,7 @@ fn adjustment_parameter_diff_can_replace_a_key_at_map_capacity() {
 
 #[test]
 fn adjustment_parameter_patch_vectors_match_schema_acceptance() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(runtime_fixture_text("../../../../🎛️change-layer/🧪️tests/🔣️.json")).unwrap();
     for row in fixture["parameterPatches"].as_array().unwrap() {
         let mut before=semio_s_artifact_raster_raster_model::io::text::snapshot::snapshot_wire_codec::empty_raster_snapshot();
         let layer=semio_s_artifact_raster_raster_model::create_layer_of_kind("adjustment");
@@ -68,4 +72,9 @@ fn adjustment_parameter_patch_vectors_match_schema_acceptance() {
         if let Ok(after)=result {retire(after);}
         diff.retire_cold();retire(before);
     }
+}
+
+fn runtime_fixture_text(relative: &str) -> &'static str {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative);
+    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display())).into_boxed_str())
 }

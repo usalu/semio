@@ -1,0 +1,15 @@
+# Selected Tools fixed seam preliminary review
+
+The current fixed administrative owner was read with its private postorder/object removal bodies and activation/witness admission callees. No material Source authority blocker was found in this preliminary review. Bytes are not yet final-held; agent reports remaining test/helper/corpus work and actual final gates pending.
+
+Actual setup-all invocation/control and the unchanged complete Tools declaration/whole allocation are checked before the real protected parent. The actual opaque artifact token remains private. Registry, selected generation and selected object-shard writers use the existing catalog, refuse waiting and remain held through effects. Current activation cannot be selected; its full generation and witness roster are rechecked before each selected inventory/effect. Read evidence is private/context-bound; structural read context does not grant effects.
+
+Postorder removal authenticates all rows before first effect, compares current named/FD stamps and remaining parent rosters, handles exact hardlink decrements, requires name absence, syncs parent directories and checks cancellation/progress. Only objects referenced by selected admitted generations are considered; actual released-object proof and shard writer precede deletion. It retains the complete tooling allocation and rechecks the actual journal/domain receipt. Failure may leave partial selected payload removal and must not claim charge retirement or successful closure from exception handling.
+
+Final manifest, schema/corpus and complete read-worker gate remain required before release. Reported actual ADMIN Source models use real Generated witness/tree/descriptors and SQLite lease effects with explicitly modeled Core/metadata identity ports; they do not establish declared Native Tools retirement or public SDK acceptance. No Native/protected payload operation was performed by this review.
+
+## Material helper issue before final hold
+
+Final helper inspection found selected Root0 entry directly calls withScriptProcessEnvelope(selectedRun), while runSelectedToolingDiagnosticV1 creates a zero-request compiler control and only rethrows body failure. It does not wrap the awaited administrative body in an actual issued scope with additionalSignal and abort(error) inside the callback before drain. The earlier actual Root0 Tools hang and genuine tracked-work law show why this matters when failure retains a lease lifetime. The fixed administrative body is not alleged to hang on every failure; current Source models do not establish uncertain Native custody closure.
+
+Root and Interfaces were notified. Final fifteen-file release hold is withheld pending the same narrow failure cancellation law as the already qualified asset/Graph callers, or concrete proof that all selected failure paths settle every tracked hold. Required real Source countercases include Error, undefined/frozen primary, success without abort and genuine tracked FD/lifetime drainage under the same Original. No Native retry is proposed by this finding.

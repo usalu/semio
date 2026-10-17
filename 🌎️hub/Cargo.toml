@@ -28,6 +28,7 @@ members = [
     "📇️directory/🛠️service/📦️packages/🦀️rust",
     "📇️directory/🧪️tests/🏛️backend-laws/📦️packages/🦀️rust",
     "📇️directory/🧪️tests/🏛️laws/📦️packages/🦀️rust",
+    "📇️directory/🧪️tests/🪜️laws-2/📦️packages/🦀️rust",
     "📇️directory/🪶️sqlite/📦️packages/🦀️rust",
     "📊️observability/📦️packages/🦀️rust",
     "📦️packages/🦀️rust",
@@ -83,6 +84,7 @@ members = [
     "🧩️compositions/💡️reasoning/🧩️component/📦️packages/🦀️rust",
     "🧩️compositions/📋️forms/📦️packages/🦀️rust",
     "🧩️compositions/📋️forms/🧩️component/📦️packages/🦀️rust",
+    "🧩️compositions/📏️layout/🖊️drawing/📦️packages/🦀️rust",
     "🧩️compositions/📏️layout/📦️packages/🦀️rust",
     "🧩️compositions/📏️layout/🧩️component/📦️packages/🦀️rust",
     "🧩️compositions/📐️cad/📦️packages/🦀️rust",
@@ -307,6 +309,8 @@ semio-s-artifact-draw-drawing-examples = { path = "../✏️s/🔌️plugins/�
 semio-s-artifact-draw-drawing-model = { path = "../✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust" }
 semio-s-artifact-draw-drawing-viewer = { path = "../✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/📦️packages/🦀️rust" }
 semio-s-artifact-raster-raster = { path = "../✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/📦️packages/🦀️rust" }
+semio-s-artifact-raster-raster-editor = { path = "../✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust" }
+semio-s-artifact-raster-raster-viewer = { path = "../✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/📦️packages/🦀️rust" }
 semio-s-artifact-note-note = { path = "../✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/📦️packages/🦀️rust" }
 semio-s-artifact-sourcing-curation = { path = "../✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/📦️packages/🦀️rust" }
 semio-s-artifact-procedural-generation2d = { path = "../✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/📦️packages/🦀️rust" }

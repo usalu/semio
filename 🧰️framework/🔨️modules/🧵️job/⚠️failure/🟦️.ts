@@ -1,5 +1,5 @@
 import type {ValueError,ValueErrorRetainedProgress} from "../../🌱️value/📦️packages/🟦️typescript/⚠️refusal/🟦️.ts";
-import type {Fault} from "../../⚠️diagnostic/🧾️retained/🟦️.ts";
+import type {Fault} from "@semio-tech/framework-diagnostic-ts/retained";
 import type {IntrinsicValue} from "@semio-tech/value-ts/schema/intrinsic";
 /** 🧬️ The original domain lends its complete typed fields and distinct native receipt. */
 export interface OriginalDomainFailure {readonly code:string;readonly message:string;readonly retainedProgress:ValueErrorRetainedProgress;readonly original:Extract<IntrinsicValue,{kind:"object"}>}

@@ -6,7 +6,7 @@ use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 /// 📝️ Replaces authored content while retaining the current document identity and saved answers.
-pub(super) fn replace_design_operations(current: &FormsSnapshot, next: &FormsSnapshot) -> Vec<FormMutation> {
+pub fn replace_design_operations(current: &FormsSnapshot, next: &FormsSnapshot) -> Vec<FormMutation> {
     use crate::mutations::{change_form_title, create_step, delete_step};
     if current.title == next.title && current.definition == next.definition { return Vec::new(); }
     let mut operations = Vec::new();
@@ -31,6 +31,4 @@ pub fn handle(payload: &SetSpecJson, doc: &ArtifactView<'_, FormsSnapshot>, _cfg
     Ok(Emit { artifact_mutations: replace_design_operations(doc.snapshot, &next), ..Default::default() })
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

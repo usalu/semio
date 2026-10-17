@@ -1,8 +1,9 @@
 use super::*;
+use semio_framework_test_fixtures::fixture_path;
 
 #[semio_framework_async_macros::async_test]
 async fn interaction_spec_parses_box_asset() {
-    let raw = std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/📦️box.json")).expect("../../../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/📦️box.json").leak();
+    let raw = std::fs::read_to_string(fixture_path!("../../../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/📦️box.json")).expect("../../../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/📦️box.json").leak();
     let spec: InteractionSpec = semio_framework_pack_json::from_json_str(raw, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("📦️box.json parses as InteractionSpec");
     assert_eq!(spec.id, "primitive.box");
     assert_eq!(spec.machine.initial, "idle");
@@ -17,7 +18,7 @@ async fn interaction_spec_parses_box_asset() {
 
 #[semio_framework_async_macros::async_test]
 async fn interaction_spec_parses_sphere_asset_with_command_finish() {
-    let raw = std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/🌐️sphere.json")).expect("../../../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/🌐️sphere.json").leak();
+    let raw = std::fs::read_to_string(fixture_path!("../../../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/🌐️sphere.json")).expect("../../../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/🌐️sphere.json").leak();
     let spec: InteractionSpec = semio_framework_pack_json::from_json_str(raw, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("🌐️sphere.json parses as InteractionSpec");
     assert_eq!(spec.id, "solid.sphere");
     assert_eq!(spec.commit.operation.action, "command.finish");
@@ -27,15 +28,15 @@ async fn interaction_spec_parses_sphere_asset_with_command_finish() {
 #[semio_framework_async_macros::async_test]
 async fn interaction_spec_parses_all_energy_and_structure_classic_assets() {
     let sources = [
-        std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🕹️interactions/🧱️constructBasePlate.json")).expect("../../../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🕹️interactions/🧱️constructBasePlate.json").leak(),
-        std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🕹️interactions/🚧️constructExternalWall.json")).expect("../../../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🕹️interactions/🚧️constructExternalWall.json").leak(),
-        std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🕹️interactions/🚢️constructHull.json")).expect("../../../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🕹️interactions/🚢️constructHull.json").leak(),
-        std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🕹️interactions/🏠️constructRoof.json")).expect("../../../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🕹️interactions/🏠️constructRoof.json").leak(),
-        std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🕹️interactions/🪟️constructWindows.json")).expect("../../../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🕹️interactions/🪟️constructWindows.json").leak(),
-        std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building/🕹️interactions/🧱️constructOneWayRe-72a083.json")).expect("../../../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building/🕹️interactions/🧱️constructOneWayRe-72a083.json").leak(),
-        std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building/🕹️interactions/🏛️constructReinforc-411bd6.json")).expect("../../../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building/🕹️interactions/🏛️constructReinforc-411bd6.json").leak(),
-        std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building/🕹️interactions/🛡️constructReinforc-c38891.json")).expect("../../../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building/🕹️interactions/🛡️constructReinforc-c38891.json").leak(),
-        std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building/🕹️interactions/🚧️constructReinforc-e8fc67.json")).expect("../../../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building/🕹️interactions/🚧️constructReinforc-e8fc67.json").leak(),
+        std::fs::read_to_string(fixture_path!("../../../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🕹️interactions/🧱️constructBasePlate.json")).expect("../../../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🕹️interactions/🧱️constructBasePlate.json").leak(),
+        std::fs::read_to_string(fixture_path!("../../../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🕹️interactions/🚧️constructExternalWall.json")).expect("../../../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🕹️interactions/🚧️constructExternalWall.json").leak(),
+        std::fs::read_to_string(fixture_path!("../../../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🕹️interactions/🚢️constructHull.json")).expect("../../../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🕹️interactions/🚢️constructHull.json").leak(),
+        std::fs::read_to_string(fixture_path!("../../../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🕹️interactions/🏠️constructRoof.json")).expect("../../../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🕹️interactions/🏠️constructRoof.json").leak(),
+        std::fs::read_to_string(fixture_path!("../../../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🕹️interactions/🪟️constructWindows.json")).expect("../../../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🕹️interactions/🪟️constructWindows.json").leak(),
+        std::fs::read_to_string(fixture_path!("../../../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building/🕹️interactions/🧱️constructOneWayRe-72a083.json")).expect("../../../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building/🕹️interactions/🧱️constructOneWayRe-72a083.json").leak(),
+        std::fs::read_to_string(fixture_path!("../../../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building/🕹️interactions/🏛️constructReinforc-411bd6.json")).expect("../../../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building/🕹️interactions/🏛️constructReinforc-411bd6.json").leak(),
+        std::fs::read_to_string(fixture_path!("../../../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building/🕹️interactions/🛡️constructReinforc-c38891.json")).expect("../../../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building/🕹️interactions/🛡️constructReinforc-c38891.json").leak(),
+        std::fs::read_to_string(fixture_path!("../../../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building/🕹️interactions/🚧️constructReinforc-e8fc67.json")).expect("../../../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building/🕹️interactions/🚧️constructReinforc-e8fc67.json").leak(),
     ];
     for raw in sources {
         let spec: InteractionSpec = semio_framework_pack_json::from_json_str(raw, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("asset parses as InteractionSpec");
@@ -51,7 +52,7 @@ async fn interaction_spec_parses_all_energy_and_structure_classic_assets() {
 /// `InteractionSpec` — catches schema drift between the JSON assets and these Rust types.
 #[semio_framework_async_macros::async_test]
 async fn every_interaction_asset_on_disk_parses_as_interaction_spec() {
-    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions");
+    let root = fixture_path!("../../../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions");
     fn walk(dir: &std::path::Path, out: &mut Vec<std::path::PathBuf>) {
         let Ok(entries) = std::fs::read_dir(dir) else { return };
         for entry in entries.flatten() {
@@ -108,7 +109,7 @@ async fn evaluate_expr_supports_path_const_var_and_boolean_combinators() {
 
 #[semio_framework_async_macros::async_test]
 async fn interaction_spec_guard_evaluates_against_context() {
-    let raw = std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🕹️interactions/🚧️constructExternalWall.json")).expect("../../../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🕹️interactions/🚧️constructExternalWall.json").leak();
+    let raw = std::fs::read_to_string(fixture_path!("../../../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🕹️interactions/🚧️constructExternalWall.json")).expect("../../../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🕹️interactions/🚧️constructExternalWall.json").leak();
     let spec: InteractionSpec = semio_framework_pack_json::from_json_str(raw, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("parses");
     let mut context = std::collections::HashMap::new();
     let env_without = ExprEnv { context: &context, event: None };

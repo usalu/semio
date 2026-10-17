@@ -145,26 +145,21 @@ mod semio_protocol_conformance;
 pub const BINARY_TAG_REGISTRY: &[(&str, u8)] =
     &[("rename-writer", rename_writer::BINARY_TAG), ("change-uri", change_uri::BINARY_TAG), ("change-language", change_language::BINARY_TAG), ("edit-text", edit_text::BINARY_TAG), ("splice-text", splice_text::BINARY_TAG)];
 
-#[path = "🌐change-language/🦀️.rs"]
-pub mod change_language;
+pub use semio_s_artifact_writer_writer_tests::standards::v1::subsets::any::io::binary::mutations::change_language;
 
-#[path = "✏️edit-text/🦀️.rs"]
-pub mod edit_text;
+pub use semio_s_artifact_writer_writer_tests::standards::v1::subsets::any::io::binary::mutations::edit_text;
 
-#[path = "✂️splice-text/🦀️.rs"]
-pub mod splice_text;
+pub use semio_s_artifact_writer_writer_tests::standards::v1::subsets::any::io::binary::mutations::splice_text;
 
-#[path = "🔗change-uri/🦀️.rs"]
-pub mod change_uri;
+pub use semio_s_artifact_writer_writer_tests::standards::v1::subsets::any::io::binary::mutations::change_uri;
 
-#[path = "🏷️rename-writer/🦀️.rs"]
-pub mod rename_writer;
+pub use semio_s_artifact_writer_writer_tests::standards::v1::subsets::any::io::binary::mutations::rename_writer;
 
 mod native_codec {
 #[cfg(test)] use super::*;
 use crate::schema::mutations::{WriterMutation};
-#[cfg(test)] use crate::schema::mutations::{change_language, change_uri, edit_text, inverse_writer_mutation, rename_writer, splice_text, ChangeLanguage, ChangeUri, EditText, RenameWriter, SpliceText};
-#[cfg(test)] use crate::central_apply::{apply_writer_mutation};
+#[cfg(test)] use crate::schema::mutations::{change_language, change_uri, edit_text, rename_writer, splice_text, EditText};
+
 
 impl protocol::OpBinary for WriterMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {

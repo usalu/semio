@@ -118,7 +118,11 @@ pub fn close_instance_owner_turn<O: semio_framework_plugin::ArtifactInstanceOper
     handle
         .with_mut::<O, _>(|owner| {
             let demand = owner.retirement_demands(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).map_err(|error| semio_framework_plugin::Fault::from(error.to_string()))?;
-            let step = owner.close_step(exact_grant(demand))?;
+            let grant = exact_grant(demand);
+            let mut sequence = 0;
+            let mut receipt = RetainedCloneProgress::default();
+            let mut cx = StepContext::new(semio_framework_job::allocate_operation_id(), Generation(1), StepBudget::new(1, u64::MAX, grant), semio_framework_job::root_cancel_token(), semio_framework_job::default_now_us, &mut sequence, &mut receipt);
+            let step = owner.close_step(&mut cx, grant).map_err(|error| semio_framework_plugin::Fault::from(format!("{error:?}")))?;
             Ok(matches!(step, semio_framework_plugin::PluginLifecycleStep::Complete(_)))
         })
         .expect("the owner lends itself to its close ladder")

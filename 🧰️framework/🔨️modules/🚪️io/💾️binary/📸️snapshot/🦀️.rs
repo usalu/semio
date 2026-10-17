@@ -45,7 +45,7 @@ impl ArtifactPack for semio_framework_value::DslValue {
  }
 }
 
-impl ArtifactPack for protocol::InteractionState {
+impl ArtifactPack for semio_framework_replication_interaction::InteractionState {
     fn encode_pack_with(&self, options: &PackEncodeOptions) -> Result<Vec<u8>, PackError> {
         let value = <Self as ToValue>::to_value(self);
         <DslValue as ArtifactPack>::encode_pack_with(&value, options)

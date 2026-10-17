@@ -1,9 +1,10 @@
 //! 🧫️ Literal protocol boundaries, known physical work and bounded iterative scopes.
 use crate::{parse_protocol,print_protocol,walk_protocol,walk_literal_protocol_controlled,NativeDecodeControl};
-fn fixture()->serde_json::Value{serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap()}
+use semio_framework_test_fixtures::fixture_text;
+fn fixture()->serde_json::Value{serde_json::from_str(fixture_text!("../../📖️grammar/📡️literal/🧪️tests/🧫️fixtures/🔣️.json")).unwrap()}
 #[test]
 fn protocol_literal_bit_fields_have_neutral_buffer_witness(){
- let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🧮️bits/🔣️.json")).unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../📖️grammar/📡️literal/🧪️tests/🧫️fixtures/🧮️bits/🔣️.json")).unwrap();
  for case in fixture["cases"].as_array().unwrap(){
   let source=fixture["source"].as_str().unwrap().replace("MASK",case["mask"].as_str().unwrap());
   let spec=parse_protocol(&source).unwrap();assert_eq!(parse_protocol(&print_protocol(&spec)).unwrap(),spec);
@@ -12,7 +13,6 @@ fn protocol_literal_bit_fields_have_neutral_buffer_witness(){
   if case["present"].as_bool().unwrap(){assert!(walk_protocol(&spec,&bytes[..8]).is_err());}else{bytes.push(91);assert!(walk_protocol(&spec,&bytes).is_err());}
  }
  for mask in fixture["invalidMasks"].as_array().unwrap(){assert!(parse_protocol(&fixture["source"].as_str().unwrap().replace("MASK",mask.as_str().unwrap())).is_err());}
- eprintln!("[DEBUG] native bit-field conditions admit eight neutral unsigned64 Buffer witnesses");
 }
 #[test]
 fn sqlite_snapshot_literal_protocol_lexical_octets_and_full_unsigned_domain(){

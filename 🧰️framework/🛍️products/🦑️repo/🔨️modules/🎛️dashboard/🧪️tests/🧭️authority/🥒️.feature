@@ -1,27 +1,29 @@
-Feature: The dashboard is the sole developer control plane
-  Nx targets and owner declarations are the command authority. Editors and agents consume
-  the same daemon through the dashboard. Package scripts only bootstrap the workspace.
+Feature: Developer surfaces share neutral command authority
+  Build targets and owner declarations are the command authority. The dashboard, editors
+  and agents dispatch tasks through the repository build interface.
 
-  Scenario: Keep only the four root bootstrap scripts
+  Scenario: Preserve canonical bootstraps and neutral task aliases
     Given the repository root package manifest
-    Then its scripts are exactly nx, setup, dashboard and dashboard:install
-    And each script uses the canonical bootstrap or an owning Nx target
+    Then repo, setup, dashboard and dashboard:install retain their canonical commands
+    And additional aliases select literal targets through bun repo run
+    And direct backend commands and shell composition are refused
     And an independent JSON Schema validator reaches the same decision
 
-  Scenario: Refuse competing editor and agent launch configuration
-    Given every active source directory of the monorepo
-    Then no editor or agent launch JSON or JSONC file exists
-    And historical ticket inputs, dependencies and generated output are outside the active configuration scope
+  Scenario: Preserve required editor launch projections
+    Given the registered launch configuration and launch seed
+    Then both parse as version 0.2.0 launch projections
+    And their build task commands do not invoke Nx or Bazel directly
+    And authored Source helper and debugger declarations remain available
 
-  Scenario: Preserve every root runnable capability through its Nx owner
-    Given the root Nx manifest and its dashboard declarations
+  Scenario: Preserve every root runnable capability through its build owner
+    Given the root project manifest and its dashboard declarations
     Then root commands are discoverable from targets or declarations
     And no root package script is required to discover them
 
-  Scenario: Run authored scripts through one declarative Nx entry
-    Given an authored source or ticket script and its owning Nx project
+  Scenario: Run authored scripts through one declarative build entry
+    Given an authored source or ticket script and its owning build project
     When a developer selects the script, project and working directory
-    Then the dashboard resolves an argument vector through Nx exec
+    Then the dashboard resolves an argument vector through the neutral exec operation
     And arguments and environment remain explicit task inputs
 
   Scenario: Workspace startup never waits for Nx analytics consent

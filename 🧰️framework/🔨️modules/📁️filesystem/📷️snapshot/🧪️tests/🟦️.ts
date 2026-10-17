@@ -47,5 +47,4 @@ test("source projection preserves explicit deletion, predecessors and inverse bo
   const projection = new SourceProjection([change], () => "old");
   change.after = "foreign";
   expect(projection.resolve("a.rs")).toBeNull();
-  console.log(`[DEBUG] source projection: ${fixture.cases.length} shared cases retained; deletion never reads physical fallback`);
 });

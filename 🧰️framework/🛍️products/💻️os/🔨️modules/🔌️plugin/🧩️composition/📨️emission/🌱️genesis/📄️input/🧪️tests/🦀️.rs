@@ -23,7 +23,6 @@ async fn child_emission_private_genesis_writer_streams_canonical_pages_and_retai
         for _ in 0..100000{let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cursor.advance(source,grant).unwrap());assert!(step.progress().fits(grant));assert_eq!(heap.released_bytes,0);assert_eq!(heap.requested_bytes,step.progress().retained_capacity_bytes);if matches!(step,RetainedCloneStep::Complete(_)){ready=true;break;}}
         assert!(ready);let mut pages=cursor.take_ready().unwrap();let mut joined=Vec::new();for index in 0..pages.page_count(){joined.extend_from_slice(pages.admitted_page(index).unwrap().as_slice());}assert_eq!(joined,canonical);let(decoded,_)=semio_framework_os_kernel::os_store::serialization::decode_document_pack_bytes(&joined).await.unwrap();assert_eq!(decoded,pack);assert_eq!(pack.as_ptr(),pointer);
         while pages.close_take_page().is_some(){}let backing=pages.allocation_byte_demand();let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(pages));assert_eq!(heap.released_bytes,backing);cursor.begin_close();while !cursor.terminal_is_empty(){let demand=cursor.next_close_byte_demand();cursor.close_granted(RetainedCloneGrant{maximum_release_bytes:demand,..grant}).unwrap();}
-        println!("[DEBUG] private genesis assembled canonical case={} original={} encoded={} fixed-page-backing={} copy64 and six cancellation phases returned every exact allocation",row["id"],pack.len(),joined.len(),backing);
     }
 }
 
@@ -45,7 +44,6 @@ fn child_emission_private_input_writer_fills_only_admitted_inline_prefix() {
     assert!(ready);let mut pages=cursor.take_ready().unwrap();let mut joined=Vec::new();for index in 0..pages.page_count(){joined.extend_from_slice(pages.admitted_page(index).unwrap().as_slice());}
     assert_eq!(joined,source);assert_eq!(serde_json::from_slice::<String>(&joined).unwrap(),fixture["source"].as_str().unwrap().repeat(257));
     while pages.close_take_page().is_some(){}let bytes=pages.allocation_byte_demand();let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(pages));assert_eq!(heap.released_bytes,bytes);assert!(cursor.terminal_is_empty());
-    println!("[DEBUG] private genesis writer sink admitted exact{} UTF8/JSON bytes directly into original pages under64-byte output prefixes and whole{} slot release",position,bytes);
 }
 
 #[test]
@@ -82,6 +80,5 @@ fn child_emission_private_input_pages_preserve_exact_source_and_whole_backing() 
         let page_count=pages.page_count();while pages.close_take_page().is_some(){}
         let backing=pages.allocation_byte_demand();let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(pages));assert_eq!(heap.released_bytes,backing);
         assert!(cursor.terminal_is_empty());
-        println!("[DEBUG] private genesis input serde bytes={} pages={} backing={} copy64 preserved original source and all6 cancellation stops",source.len(),page_count,backing);
     }
 }

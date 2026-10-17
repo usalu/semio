@@ -22,7 +22,7 @@ import { EMPTY_APP_LABELS_OVERLAY, resolveLayoutForMode } from "@semio-tech/fram
 // binding. Every production entry reaches them through `🏛️ShellHost` → `🐚️Shell`, and so does this
 // suite — the side-effect import is the evaluation order, not a dependency.
 import "../../🧱️elements/🐚️Shell/🟦️.tsx";
-import { resolveFrameworkLayoutSeed } from "../../🧱️elements/🛠️ShellHelpers/🟦️.tsx";
+import { resolveFrameworkLayoutSeed } from "../../🧱️elements/🛠️ShellHelpers/🛣️route-and-chrome/🟦️.tsx";
 
 //#region 🧫️Fixture
 type FixtureRect = { readonly x: number; readonly y: number; readonly w: number; readonly h: number };
@@ -52,7 +52,7 @@ type FixtureCase = {
 type Fixture = { readonly note: string; readonly provenance: Record<string, string>; readonly canvas: FixtureRect; readonly cases: readonly FixtureCase[] };
 
 const here = dirname(fileURLToPath(import.meta.url));
-const fixturePath = resolve(here, "../../🧫️fixtures/🪟️app-mode-layouts/🔣️.json");
+const fixturePath = resolve(here, "../🧫️fixtures/🪟️app-mode-layouts/🔣️.json");
 const fixture = JSON.parse(readFileSync(fixturePath, "utf8")) as Fixture;
 
 const windowKindsForSeed = (kase: FixtureCase) => kase.app.windowKinds.map((kind) => ({ id: kind.id, label: kind.label }));

@@ -1,6 +1,5 @@
 //! 🛡️ Conformance over decoded native values.
-#[path="🧮️facts/🦀️.rs"]
-pub mod facts;
+pub use semio_s_artifact_stdio_jpg_operations::standards::v_jfif_1_01::subsets::baseline::schema::conformance::facts;
 pub use facts::{JpgBaselineFacts,JpgSamplingFact};
 use semio_framework_value::ValueError;
 use semio_framework_diagnostic::{Diagnostic,FaultCode,FaultScope,Severity,TextSpan};
@@ -46,6 +45,4 @@ pub fn check_baseline_facts_with(facts:&JpgBaselineFacts,checkpoint:&mut dyn FnM
     Ok(out)
 }
 
-#[cfg(test)]
-#[path="🧪️tests/🦀️.rs"]
-mod tests;
+

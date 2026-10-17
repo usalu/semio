@@ -3,8 +3,7 @@
 //! per SVG, keyed by the bare stem after the repo's emoji filename prefix. The board's icon codec
 //! reaches it through [`puzzle_themed_icon_lookup`].
 
-#[path = "🌱️metabolism/🦀️.rs"]
-mod board_metabolism_icons;
+pub use semio_s_artifact_puzzle_2d_snapshot::editor::puzzle2d::engine::icons::board_metabolism_icons;
 
 /// 🔣️ Resolves a board catalog icon key to its SVG source, or `None` when the key is not a
 /// metabolism asset (the codec then falls back to typst-math / emoji rendering).
@@ -13,7 +12,5 @@ pub fn puzzle_themed_icon_lookup(key: &str) -> Option<&'static str> {
 }
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

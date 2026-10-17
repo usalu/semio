@@ -130,11 +130,6 @@ impl protocol::OpBinary for Block2dConfigMutation {
 }
 //#endregion 🔖️ConfigOperations
 
-//#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests
 
 //#region 🪢️Mounts
 #[path = "🧬️schema/🦀️.rs"]

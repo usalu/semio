@@ -1,0 +1,92 @@
+{
+ "file": "🧰️framework/🛍️products/💻️os/🖥️host/🧪️tests/🔬️host-unit/🦀️.rs",
+ "original": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/c4p47-tools/orig/hu.rs",
+ "stage": "/Users/ueli/.cache/c4p47/stage-frag",
+ "base_depth": 1,
+ "chunks": [
+  {
+   "name": "🔌️plugin-registry-and-hot-swap",
+   "folder": "🔌️plugin-registry-and-hot-swap",
+   "doc": "🔌️ Plugin registry and hot swap: loading plugin apps into the registry and the generation bump and app tracking of a hot swap.",
+   "ranges": [
+    [
+     11,
+     225
+    ]
+   ],
+   "marker": "///"
+  },
+  {
+   "name": "🛟️rollback-contributions-and-recovery",
+   "folder": "🛟️rollback-contributions-and-recovery",
+   "doc": "🛟️ Rollback, contributions and recovery: the invalid manifest rollback, the contribution tracking and the recovery UI of a quarantined plugin.",
+   "ranges": [
+    [
+     227,
+     390
+    ]
+   ],
+   "marker": "///"
+  },
+  {
+   "name": "🧰️host-fixtures",
+   "folder": "🧰️host-fixtures",
+   "doc": "🧰️ Host fixtures: the minimal app definition, the seeded draw and sink plugins and the space and workflow store fixtures.",
+   "ranges": [
+    [
+     392,
+     483
+    ]
+   ],
+   "marker": "///"
+  },
+  {
+   "name": "🎭️actor-context-and-store-laws",
+   "folder": "🎭️actor-context-and-store-laws",
+   "doc": "🎭️ Actor context and store laws: the retained actor context, the workflow store catalog wire and the backbone round trips with their cursor.",
+   "ranges": [
+    [
+     485,
+     607
+    ]
+   ],
+   "marker": "///"
+  },
+  {
+   "name": "🌱️instances-parameters-and-catalog",
+   "folder": "🌱️instances-parameters-and-catalog",
+   "doc": "🌱️ Instances, parameters and catalog: spawning and removing app instances, studio parameters, space catalog entries, cycles and the concurrent delete and wire reconcile.",
+   "ranges": [
+    [
+     609,
+     707
+    ]
+   ],
+   "marker": "///"
+  },
+  {
+   "name": "📝️dsl-and-op-text-laws",
+   "folder": "📝️dsl-and-op-text-laws",
+   "doc": "📝️ DSL and operation text laws: the sample workflow snapshot, its DSL round trips and the operation text and document text round trips.",
+   "ranges": [
+    [
+     709,
+     914
+    ]
+   ],
+   "marker": "//"
+  },
+  {
+   "name": "🧩️extension-install-laws",
+   "folder": "🧩️extension-install-laws",
+   "doc": "🧩️ Extension install laws: the test executor bridge, the sample extension package, install, mismatch refusal, capability scoping and uninstall.",
+   "ranges": [
+    [
+     916,
+     1039
+    ]
+   ],
+   "marker": "//"
+  }
+ ]
+}

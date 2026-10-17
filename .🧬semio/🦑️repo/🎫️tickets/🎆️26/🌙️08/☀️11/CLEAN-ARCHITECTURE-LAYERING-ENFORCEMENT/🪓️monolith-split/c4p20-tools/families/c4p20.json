@@ -1,0 +1,27 @@
+{
+ "name": "c4p20",
+ "crates": [
+  "semio-s-artifact-remodel-remodeling-algebra",
+  "semio-s-artifact-remodel-remodeling-sfm",
+  "semio-s-artifact-remodel-remodeling-mesh",
+  "semio-s-artifact-remodel-remodeling-mesh-surface",
+  "semio-s-artifact-remodel-remodeling-mesh-repair",
+  "semio-s-artifact-remodel-remodeling-editor",
+  "semio-s-artifact-remodel-remodeling-session",
+  "semio-s-artifact-remodel-remodeling-camera",
+  "semio-s-artifact-remodel-remodeling-dense",
+  "semio-s-artifact-remodel-remodeling-engine",
+  "semio-s-artifact-remodel-remodeling-geo",
+  "semio-s-artifact-remodel-remodeling-inferences",
+  "semio-s-artifact-remodel-remodeling-lie",
+  "semio-s-artifact-remodel-remodeling-mesh-atlas",
+  "semio-s-artifact-remodel-remodeling-motion",
+  "semio-s-artifact-remodel-remodeling-optimize",
+  "semio-s-artifact-remodel-remodeling-sfm-geometry",
+  "semio-s-artifact-remodel-remodeling-signal",
+  "semio-s-artifact-remodel-remodeling-reconstruct",
+  "semio-s-artifact-remodel-remodeling-modes",
+  "semio-s-artifact-remodel-remodeling"
+ ],
+ "note": "CENSUS4-PKG-20: remodeling sfm, mesh, mesh-surface, mesh-repair, editor, session and algebra crates plus direct dependents; absolute runs (--no-base), compared before and after with posdiff.py"
+}

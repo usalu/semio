@@ -3,7 +3,7 @@
 #![allow(clippy::result_large_err)]
 
 use crate::editor::animate::config::{PresentationConfig, PresentationConfigMutation};
-use crate::editor::animate::{valid_tile_ids, PresentationDispatchCtx};
+use crate::editor::animate::support::{valid_tile_ids, PresentationDispatchCtx};
 use crate::mutations::delete_tiles::DeleteTiles;
 use crate::standards::v1::subsets::any::schema::mutations::PresentationMutation;
 use crate::PresentationSnapshot;
@@ -30,7 +30,5 @@ pub fn handle(_payload: &DeleteSelection, doc: &ArtifactView<'_, PresentationSna
 }
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

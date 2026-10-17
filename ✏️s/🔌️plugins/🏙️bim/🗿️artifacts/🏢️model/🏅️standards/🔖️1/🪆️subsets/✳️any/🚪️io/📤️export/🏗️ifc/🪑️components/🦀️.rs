@@ -5,10 +5,11 @@
 //! their bounds). The placement is the inferred one (host fit, yaw, origin in the storey), the body the faceted brep or tessellation of the inferred solid in that frame (a mirror is baked into the body, IFC placements cannot mirror).
 //! 📎 <https://standards.buildingsmart.org/IFC/RELEASE/IFC4/ADD2_TC1/HTML/schema/ifcsharedbldgserviceelements/lexical/ifcflowterminal.htm>
 
-use super::brep::{body_kind, mesh_item};
-use super::data::{define, label, property_set};
-use super::writer::{en, opt_text, refs, unset, V};
-use super::{Export, Quantity};
+use crate::standards::v1::subsets::any::io::export::ifc::brep::{body_kind, mesh_item};
+use crate::standards::v1::subsets::any::io::export::ifc::data::{define, property_set};
+use crate::standards::v1::subsets::any::io::export::ifc::writer::label;
+use crate::standards::v1::subsets::any::io::export::ifc::writer::{en, opt_text, refs, unset, V};
+use crate::standards::v1::subsets::any::io::export::ifc::context::{Export, Quantity};
 use crate::standards::v1::subsets::any::schema::inferences::components::{overrides_of, ComponentPlacement};
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::ElementSolid;
 use crate::standards::v1::subsets::any::schema::snapshot::{FamilyCategory, FamilyParameter, FamilySolid};

@@ -24,7 +24,7 @@ pub struct OpeningState {
     /// 🚪️ The ONE document open in flight or settled, advanced by the frame pump
     /// ([`Self::advance_document_opening`]) and painted as its own band with a cancel control.
     pub document_opening: Option<ShellDocumentOpening>,
-    pub icon_export: Option<icon_export::IconExportBatch>,
+    pub icon_export: Option<IconExportBatch>,
     /// 🪪️ The verified execution-target lease fields for the open document. Native document opening
     /// retains only a canonical surface-id preference today — `document_socket_surface_from_descriptor`
     /// was deliberately downgraded from a forgeable partial authority by the execution-target-lease

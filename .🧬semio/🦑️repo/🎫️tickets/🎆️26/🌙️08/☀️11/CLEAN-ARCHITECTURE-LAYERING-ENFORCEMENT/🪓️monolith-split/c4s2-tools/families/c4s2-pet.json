@@ -1,0 +1,7 @@
+{
+ "name": "c4s2",
+ "crates": [
+  "semio-framework-pets-traversal"
+ ],
+ "note": "CENSUS4-SMALL-2 package 65: the pets traversal crate that mounts the climbing module and its unit tests"
+}

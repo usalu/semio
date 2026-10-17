@@ -15,4 +15,4 @@ test("Remodeling JSON projects canonical defaults and decodes each exact scalar 
  expect(()=>parseRemodelingSnapshot(JSON.parse(remodelingSnapshotToJsonText(changed)))).toThrow();
  expect(oracle.compile({const:{bits:fixture.word.bits}})(JSON.parse(remodelingSnapshotToJsonText(changed)).streams[0].syncOffsetMs)).toBe(true);
 });
-afterAll(()=>console.log("[DEBUG] Owned transport corpus completed: @semio-tech/remodel-remodeling-rs"));
+afterAll(()=>{});

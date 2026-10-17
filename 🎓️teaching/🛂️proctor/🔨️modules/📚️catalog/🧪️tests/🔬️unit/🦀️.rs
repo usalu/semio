@@ -1,16 +1,7 @@
 use super::*;
-use crate::storage::tests::scratch;
+use super::fixtures::fixture;
+use crate::storage::fixtures::scratch;
 use sha2::Digest;
-
-/// 📚️ The catalog file the proctor's own tests play.
-pub(crate) fn fixture_path() -> PathBuf {
-    Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🧫️fixtures/📚️catalog/🔣️.json")
-}
-
-/// 📚️ The fixture catalog, loaded.
-pub(crate) fn fixture() -> LoadedCatalog {
-    load_catalog(&fixture_path()).expect("the fixture catalog is valid")
-}
 
 fn quiz_document(id: &str) -> String {
     format!(r#"{{"schema":"semio.quiz/v1","id":"{id}","emoji":"🧪","title":{{"en":"T","de":"T"}},"description":{{"en":"D","de":"D"}},"tasks":[{{"kind":"sorting","id":"order","title":{{"en":"T","de":"T"}},"prompt":{{"en":"P","de":"P"}},"quantity":{{"label":{{"en":"L","de":"L"}},"unit":"W","scale":"linear","prefixed":false,"additive":false}},"items":[{{"id":"a","label":{{"en":"A","de":"A"}},"value":1}},{{"id":"b","label":{{"en":"B","de":"B"}},"value":2}}]}}]}}"#)

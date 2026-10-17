@@ -28,11 +28,14 @@ pub fn plan(p: &GltfDeleteAnimationPayload, base: &GltfSnapshot) -> Result<GltfD
     Ok(diff)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn inverse(p: &GltfDeleteAnimationPayload, base: &GltfSnapshot) -> Vec<super::GltfMutation> {
+pub fn inverse<Op>(p: &GltfDeleteAnimationPayload, base: &GltfSnapshot) -> Vec<Op>
+where
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::remove_used_extension::RemoveUsedExtensionMutation>,
+{
     if validate(p, base).is_err() {
         return Vec::new();
     }
-    let mut rows = vec![super::create_animation::mutation(super::create_animation::GltfCreateAnimationPayload { position: p.index, animation: Some(Box::new(base.document.animations[p.index].clone())) })];
+    let mut rows = vec![crate::standards::v2_0::subsets::any::schema::mutations::create_animation::mutation(crate::standards::v2_0::subsets::any::schema::mutations::create_animation::GltfCreateAnimationPayload { position: p.index, animation: Some(Box::new(base.document.animations[p.index].clone())) })];
 
     rows.reverse();
     rows
@@ -48,11 +51,17 @@ pub enum DeleteAnimationMutation {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn mutation(payload: GltfDeleteAnimationPayload) -> super::GltfMutation {
-    super::GltfMutation::DeleteAnimation(DeleteAnimationMutation::Apply(payload))
+pub fn mutation<Op>(payload: GltfDeleteAnimationPayload) -> Op
+where
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::delete_animation::DeleteAnimationMutation>,
+{
+    Op::from(DeleteAnimationMutation::Apply(payload))
 }
 
-impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for DeleteAnimationMutation {
+impl<Op> protocol::MutationKind<GltfSnapshot, Op> for DeleteAnimationMutation
+where
+    Op: protocol::Mutation<GltfSnapshot, Diff = GltfDiff> + From<DeleteAnimationMutation>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "animation", kind: "delete-animation", record: "DeletedAnimation" };
 
     fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<GltfDiff> {
@@ -64,7 +73,7 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for DeleteAnimati
         }
     }
 
-    fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<super::GltfMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         match self {
             Self::Apply(payload) => Ok(inverse(payload, base)),
         }
@@ -81,10 +90,6 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for DeleteAnimati
 //#endregion 🧬️DirectMutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🚫️removes-the-bob-e4e346/🦀️.rs"]
-mod case_removes_the_bob_e4e346;
-#[cfg(test)]
-#[path = "🧪️tests/🔬️middle-row/🦀️.rs"]
-mod case_middle_row;
+
+
 //#endregion 🧪️Tests

@@ -1,5 +1,13 @@
 //! 🪪️ Explicit relational persistence for identity-bound semantic stream roles.
-use super::*;
+use crate::standards::v1_7::subsets::base::schema::snapshot::model::*;
+use crate::standards::v1_7::subsets::base::io::sqlite::snapshot::reader::{integer, Reader};
+use store::sqlite_snapshot::{SqliteValue as V, artifact::{Cell as C}};
+use crate::standards::v1_7::subsets::base::io::sqlite::snapshot::number::{Projection};
+use crate::standards::v1_7::subsets::base::io::sqlite::snapshot::artifact_reference;
+use crate::standards::v1_7::subsets::base::io::sqlite::snapshot::font;
+use crate::standards::v1_7::subsets::base::io::sqlite::snapshot::content;
+use crate::standards::v1_7::subsets::base::io::sqlite::snapshot::resource;
+use semio_framework_value::{ValueError, ValueRefusalKind};
 use crate::standards::v1_7::subsets::base::schema::stream_roles::{PdfAdmittedStreamRole, PdfGraphIdentity, PdfGraphPath, PdfStreamRoleValue};
 
 fn invalid() -> ValueError { ValueError::new(ValueRefusalKind::InvalidValue, "PDF stream role fields differ from the declared semantic variant") }
@@ -21,7 +29,7 @@ fn read_identity(reader: &mut Reader<'_, '_, '_>, key: i64) -> Result<PdfGraphId
     }
     Ok(PdfGraphIdentity { owner, path })
 }
-pub(super) fn write_role(out: &mut Projection<'_, '_>, role: &PdfAdmittedStreamRole) -> Result<i64, ValueError> {
+pub fn write_role(out: &mut Projection<'_, '_>, role: &PdfAdmittedStreamRole) -> Result<i64, ValueError> {
     let identity = write_identity(out, &role.identity)?;
     let mut cells = [C::Null; 14];
     cells[0] = C::Integer(identity);
@@ -45,7 +53,7 @@ pub(super) fn write_role(out: &mut Projection<'_, '_>, role: &PdfAdmittedStreamR
     for (ordinal, dependency) in role.dependencies.iter().enumerate() { let identity = write_identity(out, dependency)?; out.insert("pdf_stream_role_dependency", &[C::Integer(key), C::Integer(ordinal as i64), C::Integer(identity)])?; }
     Ok(key)
 }
-pub(super) fn read_role(reader: &mut Reader<'_, '_, '_>, key: i64) -> Result<PdfAdmittedStreamRole, ValueError> {
+pub fn read_role(reader: &mut Reader<'_, '_, '_>, key: i64) -> Result<PdfAdmittedStreamRole, ValueError> {
     let row = reader.take("pdf_stream_role", key, 15)?;
     let kind = row.text(2)?;
     let column = match kind { "operators" => 3, "sampledWords" => 4, "calculatorProgram" => 5, "unicodeMap" => 6, "characterMap" => 7, "fontProgram" => 8, "image" => 9, "metadataText" => 10, "attachmentBytes" => 11, "paletteComponents" => 12, "glyphIds" => 13, "referenceBody" => 14, _ => return Err(invalid()) };

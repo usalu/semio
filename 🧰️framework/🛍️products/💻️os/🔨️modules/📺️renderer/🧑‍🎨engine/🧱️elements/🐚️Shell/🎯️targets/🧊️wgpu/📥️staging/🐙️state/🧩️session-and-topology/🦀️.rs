@@ -123,8 +123,7 @@ impl ShellState {
                 time_travel_polled_at_ms: 0.0,
                 local_folder_bindings: None,
                 local_folder_reattach_tried: None,
-                local_folder_direct_reattach: local_folders::LOCAL_FOLDER_DIRECT_REATTACH,
-                #[cfg(any(target_arch = "wasm32", any(test, feature = "testkit")))]
+                local_folder_direct_reattach: LOCAL_FOLDER_DIRECT_REATTACH,
                 host_route_folder: None,
             },
             prefs: PrefsState {
@@ -279,7 +278,7 @@ impl ShellState {
                 dock_view: DockState::default(),
                 dock_instance_owner: None,
                 dock_input_identity: None,
-                tree_windows: tree_windows::TreeWindowScheduler::default(),
+                tree_windows: TreeWindowScheduler::default(),
                 tree_window_served: HashMap::new(),
                 dock_canvas_bounds: Rect::new(0.0, 0.0, 0.0, 0.0),
                 dock_axis_separator: 0.0,

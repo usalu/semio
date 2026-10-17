@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { isAbsolute, join, win32, resolve } from "node:path";
-import { parseDocumentOpenIntentV1, parseDocumentExecutionTargetLeaseFieldsV1, DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES } from "../../../📇️directory/🧬️schema/🔏️document-open/🟦️.ts";
+import { parseDocumentOpenIntentV1, parseDocumentExecutionTargetLeaseFieldsV1, DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES } from "@semio-tech/framework-os/modules/directory/schema/document-open";
 import { type DocumentOpenIntentV1, type DocumentExecutionTargetLeaseFieldsV1, DOCUMENT_BROWSER_ACTOR_MAX_BYTES, DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES } from "@semio-tech/framework/directory/schema";
 import { blake3Hex } from "@semio-tech/framework/hash";
 import {observePhysicalFileV1,readPhysicalFileV1,type PhysicalFileClaimV1,type FileObservationControlV1} from "@semio-tech/framework/filesystem/observation";
@@ -149,7 +149,7 @@ export async function executeProtectedActorChildV1(page:ProtectedActorBrowserPor
   },{childUrl,actorBase64:Buffer.from(joined.actor).toString("base64"),actorSha256:claim(joined.actor).sha256,actorByteLength:joined.actor.byteLength});
   const guest=new Uint8Array(result.guest);
   try{
-    const {verifyBrowserActorDescribeV1}=await import("../../../🔌️plugin/🌐️browser-bundle/🧾️describe/🟦️.ts");const {decodePackValue,encodePackValue}=await import("../../../../🟦️.ts");
+    const {verifyBrowserActorDescribeV1}=await import("../../../🔌️plugin/🌐️browser-bundle/🧾️describe/🟦️.ts");const {decodePackValue,encodePackValue}=await import("@semio-tech/framework-os");
     verifyBrowserActorDescribeV1(guest,joined.descriptor,{decode:decodePackValue,encode:encodePackValue});
     return{sourceDetached:true,describe:claim(guest),transferCount:result.transferCount,cancelled:true,capacityRestored:true,stages:result.stages};
   }finally{guest.fill(0);result.guest.fill(0);}

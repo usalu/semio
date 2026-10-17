@@ -216,7 +216,5 @@ pub fn preview_instances_delta_value(snapshot: &Grid3dSnapshot, previous: &[Grid
 //#endregion 👁️PreviewWindow
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

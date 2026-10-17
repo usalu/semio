@@ -15,8 +15,8 @@ use semio_framework_value_derive::{FromValue, ToValue};
 /// ✋️ `drag-frames` payload — the page, the frames it moves (literal ids) and the offset every one of them moves by.
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 pub struct DragFrames {
@@ -76,20 +76,3 @@ pub fn inverse_drag_frames<Op: From<crate::move_frame::MoveFrame>>(payload: &Dra
 }
 //#endregion ↩️Inverse
 
-//#region 🪢️TaxonomyMounts
-#[cfg(test)]
-#[path = "🧪️tests/✋️drags-both-frames/🦀️.rs"]
-mod tests_drags_both_frames;
-#[cfg(test)]
-#[path = "🧪️tests/⏸️keeps-a-zero-offset/🦀️.rs"]
-mod tests_keeps_a_zero_offset;
-#[cfg(test)]
-#[path = "🧪️tests/🔁️refuses/🦀️.rs"]
-mod tests_refuses_a_repeated_frame;
-#[cfg(test)]
-#[path = "🧪️tests/🚫️rejects/🦀️.rs"]
-mod tests_rejects_missing_frames;
-#[cfg(test)]
-#[path = "🧪️tests/⚠️skips/🦀️.rs"]
-mod tests_skips_a_locked_and_a_missing_frame;
-//#endregion 🪢️TaxonomyMounts

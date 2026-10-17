@@ -294,7 +294,5 @@ async fn sqlite_snapshot_composed_owner_census() {
             assert_eq!(route.hops.len(),1);
             assert_eq!(route.fidelity,IoFidelity::Exact);
         }
-        eprintln!("[DEBUG] Hub Space composed Snapshot owner dialect={} schema={} concrete_type={:?} sql_bytes={} installed_same_hooks=true direct_exact_directions=2",native.to_coordinate(),codec.schema,declared.snapshot_type,sql.len());
     }
-    eprintln!("[DEBUG] Hub Space composed Snapshot census Runtime=2 metadataOnly=0 declaredBindings=2 genuineAppSurfaces={}",plugin.manifest.apps.len());
 }

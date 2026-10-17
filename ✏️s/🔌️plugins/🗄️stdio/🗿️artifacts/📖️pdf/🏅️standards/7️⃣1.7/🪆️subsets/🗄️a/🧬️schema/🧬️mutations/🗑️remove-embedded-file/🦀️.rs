@@ -1,7 +1,6 @@
 //! 🗑️ Authoritative PDF/A mutation for removing a named attached file specification.
 
-use super::insert_embedded_file::InsertEmbeddedFile;
-use super::PdfAMutation;
+use crate::standards::v1_7::subsets::a::schema::mutations::insert_embedded_file::InsertEmbeddedFile;
 use crate::standards::v1_7::subsets::base::schema::conformance_support as support;
 use crate::standards::v1_7::subsets::base::schema::diff::{self, PdfDiff};
 use crate::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot;
@@ -16,7 +15,10 @@ pub struct RemoveEmbeddedFile {
     pub file_name: String,
 }
 
-impl MutationKind<PdfSnapshot, PdfAMutation> for RemoveEmbeddedFile {
+impl<Op> MutationKind<PdfSnapshot, Op> for RemoveEmbeddedFile
+where
+    Op: protocol::Mutation<PdfSnapshot, Diff = PdfDiff> + From<RemoveEmbeddedFile> + From<crate::standards::v1_7::subsets::a::schema::mutations::insert_embedded_file::InsertEmbeddedFile>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "remove", entity: "embedded-file", kind: "remove-embedded-file", record: "Remove" };
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
@@ -24,9 +26,9 @@ impl MutationKind<PdfSnapshot, PdfAMutation> for RemoveEmbeddedFile {
         MutationOutcome::new(diff::graph_edit(rows))
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfAMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         Ok({
-            support::file_spec_named(base, &self.file_name).map(|id| PdfAMutation::InsertEmbeddedFile(InsertEmbeddedFile { file_name: self.file_name.clone(), placements: support::placements_of(base, &support::file_spec_creation_ids(base, id)) })).into_iter().collect()
+            support::file_spec_named(base, &self.file_name).map(|id| Op::from(InsertEmbeddedFile { file_name: self.file_name.clone(), placements: support::placements_of(base, &support::file_spec_creation_ids(base, id)) })).into_iter().collect()
         })
     }
 
@@ -41,7 +43,5 @@ impl MutationKind<PdfSnapshot, PdfAMutation> for RemoveEmbeddedFile {
 //#endregion 🔖️Mutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

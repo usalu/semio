@@ -2,7 +2,8 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use graph_core::{pairwise, AttrView, AttrWeight, Directed, EdgeId, EdgeRef, EdgeSubgraphView, EdgeWeights, GraphView, HandleId, NodeId, Normal, Ported, PropertyBag, PropertyValue, Storage, SubgraphView, Undirected};
+use graph_core::{pairwise, AttrView, AttrWeight, Directed, EdgeId, EdgeRef, EdgeSubgraphView, EdgeWeights, GraphView, HandleId, NodeId, Normal, Ported, Storage, SubgraphView, Undirected};
+use graph_manifest::{PropertyBag, PropertyValue};
 
 // #region 🔖️Construction
 /// 🕸️ NetworkX `MultiGraph` parity facade: an undirected multigraph wrapping `Storage<Ported, Undirected>`. Every node gets a lazily-allocated "default handle" (see `handle_of`) so callers work at plain `NodeId` level, matching NetworkX's handle-free `MultiGraph` API — the `Ported` port model is only an internal storage detail here. `Storage<Ported,_>::add_edge_with` always mints a fresh `EdgeId`, which directly plays the role of NetworkX's per-pair insertion "key" (`G.add_edge(u, v)` returns a key); this is a deliberate simplification since `EdgeId` is globally unique/monotone rather than scoped per node pair like NetworkX's keys.
@@ -502,7 +503,5 @@ impl EdgeWeights for PortUndirectedGraph {
 // #endregion 🔖️Views
 
 // #region 🔖️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 // #endregion 🔖️Tests

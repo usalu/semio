@@ -2,7 +2,7 @@
 //! when the handle id already exists on that node.
 use crate::standards::v1::subsets::any::schema::diff::{Puzzle2dDiff, Puzzle2dHandlesDelta, Puzzle2dNodePatch, Puzzle2dNodesDelta};
 use crate::Puzzle2dSnapshot;
-use crate::standards::v1::subsets::any::schema::puzzle2d_handle_invariant;
+use crate::standards::v1::subsets::any::schema::records::puzzle2d_handle_invariant;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::AddNodeHandle, base: &Puzzle2dSnapshot) -> protocol::MutationOutcome<Puzzle2dDiff> {

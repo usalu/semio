@@ -1,0 +1,310 @@
+[
+  {
+    "effect": "directory",
+    "accepted": true,
+    "outcome": "published",
+    "deletePayload": false,
+    "adoptPayload": false
+  },
+  {
+    "effect": "file",
+    "accepted": true,
+    "outcome": "published",
+    "deletePayload": false,
+    "adoptPayload": false
+  },
+  {
+    "effect": "external-hardlink-file",
+    "accepted": true,
+    "outcome": "published",
+    "deletePayload": false,
+    "adoptPayload": false
+  },
+  {
+    "effect": "dangling-entry-link",
+    "accepted": false,
+    "outcome": "refused",
+    "deletePayload": false,
+    "adoptPayload": false
+  },
+  {
+    "effect": "special-entry",
+    "accepted": false,
+    "outcome": "refused",
+    "deletePayload": false,
+    "adoptPayload": false
+  },
+  {
+    "effect": "copied-expectation",
+    "accepted": false,
+    "outcome": "refused",
+    "deletePayload": false,
+    "adoptPayload": false
+  },
+  {
+    "effect": "foreign-frame",
+    "accepted": false,
+    "outcome": "refused",
+    "deletePayload": false,
+    "adoptPayload": false
+  },
+  {
+    "effect": "expired-control",
+    "accepted": false,
+    "outcome": "refused",
+    "deletePayload": false,
+    "adoptPayload": false
+  },
+  {
+    "effect": "wrong-original",
+    "accepted": false,
+    "outcome": "refused",
+    "deletePayload": false,
+    "adoptPayload": false
+  },
+  {
+    "effect": "no-global-ex",
+    "accepted": false,
+    "outcome": "refused",
+    "deletePayload": false,
+    "adoptPayload": false
+  },
+  {
+    "effect": "unqualified-target",
+    "accepted": false,
+    "outcome": "refused",
+    "deletePayload": false,
+    "adoptPayload": false
+  },
+  {
+    "effect": "one-unprepared-scope",
+    "accepted": false,
+    "outcome": "refused",
+    "deletePayload": false,
+    "adoptPayload": false
+  },
+  {
+    "effect": "native-topology-intersection",
+    "accepted": false,
+    "outcome": "refused",
+    "deletePayload": false,
+    "adoptPayload": false
+  },
+  {
+    "effect": "state-role-intersection",
+    "accepted": false,
+    "outcome": "refused",
+    "deletePayload": false,
+    "adoptPayload": false
+  },
+  {
+    "effect": "path-257",
+    "accepted": false,
+    "outcome": "refused",
+    "deletePayload": false,
+    "adoptPayload": false
+  },
+  {
+    "effect": "retained-slot-collision",
+    "accepted": false,
+    "outcome": "refused",
+    "deletePayload": false,
+    "adoptPayload": false
+  },
+  {
+    "effect": "existing-marker-only",
+    "accepted": false,
+    "outcome": "refused",
+    "deletePayload": false,
+    "adoptPayload": false
+  },
+  {
+    "effect": "cross-device",
+    "accepted": false,
+    "outcome": "refused",
+    "deletePayload": false,
+    "adoptPayload": false
+  },
+  {
+    "effect": "ancestor-drift",
+    "accepted": false,
+    "outcome": "refused",
+    "deletePayload": false,
+    "adoptPayload": false
+  },
+  {
+    "effect": "leaf-precheck-drift",
+    "accepted": false,
+    "outcome": "refused",
+    "deletePayload": false,
+    "adoptPayload": false
+  },
+  {
+    "effect": "intent-create-failure",
+    "accepted": false,
+    "outcome": "unresolved",
+    "deletePayload": false,
+    "adoptPayload": false
+  },
+  {
+    "effect": "intent-flush-failure",
+    "accepted": false,
+    "outcome": "unresolved",
+    "deletePayload": false,
+    "adoptPayload": false
+  },
+  {
+    "effect": "parent-flush-before-move-failure",
+    "accepted": false,
+    "outcome": "unresolved",
+    "deletePayload": false,
+    "adoptPayload": false
+  },
+  {
+    "effect": "late-foreign-file",
+    "accepted": false,
+    "outcome": "unresolved",
+    "deletePayload": false,
+    "adoptPayload": false
+  },
+  {
+    "effect": "late-foreign-directory",
+    "accepted": false,
+    "outcome": "unresolved",
+    "deletePayload": false,
+    "adoptPayload": false
+  },
+  {
+    "effect": "foreign-slot-appeared",
+    "accepted": false,
+    "outcome": "unresolved",
+    "deletePayload": false,
+    "adoptPayload": false
+  },
+  {
+    "effect": "rename-unsupported",
+    "accepted": false,
+    "outcome": "unresolved",
+    "deletePayload": false,
+    "adoptPayload": false
+  },
+  {
+    "effect": "retained-id-mismatch",
+    "accepted": false,
+    "outcome": "unresolved",
+    "deletePayload": false,
+    "adoptPayload": false
+  },
+  {
+    "effect": "retained-content-metadata-drift",
+    "accepted": false,
+    "outcome": "unresolved",
+    "deletePayload": false,
+    "adoptPayload": false
+  },
+  {
+    "effect": "retained-roster-drift",
+    "accepted": false,
+    "outcome": "unresolved",
+    "deletePayload": false,
+    "adoptPayload": false
+  },
+  {
+    "effect": "rename-durability-failure",
+    "accepted": false,
+    "outcome": "unresolved",
+    "deletePayload": false,
+    "adoptPayload": false
+  },
+  {
+    "effect": "receipt-flush-failure",
+    "accepted": false,
+    "outcome": "unresolved",
+    "deletePayload": false,
+    "adoptPayload": false
+  },
+  {
+    "effect": "binding-raced-ordinary-file",
+    "accepted": false,
+    "outcome": "unresolved",
+    "deletePayload": false,
+    "adoptPayload": false
+  },
+  {
+    "effect": "binding-flush-failure",
+    "accepted": false,
+    "outcome": "unresolved",
+    "deletePayload": false,
+    "adoptPayload": false
+  },
+  {
+    "effect": "cancellation-after-retain",
+    "accepted": false,
+    "outcome": "unresolved",
+    "deletePayload": false,
+    "adoptPayload": false
+  },
+  {
+    "effect": "arbitrary-undefined-close-failure",
+    "accepted": false,
+    "outcome": "unresolved",
+    "deletePayload": false,
+    "adoptPayload": false
+  },
+  {
+    "effect": "frozen-primary-close-failure",
+    "accepted": false,
+    "outcome": "unresolved",
+    "deletePayload": false,
+    "adoptPayload": false
+  },
+  {
+    "effect": "shared-32-before-open",
+    "accepted": false,
+    "outcome": "refused",
+    "deletePayload": false,
+    "adoptPayload": false
+  },
+  {
+    "effect": "nt-sharing-refusal",
+    "accepted": false,
+    "outcome": "unresolved",
+    "deletePayload": false,
+    "adoptPayload": false
+  },
+  {
+    "effect": "nt-pending-rename",
+    "accepted": false,
+    "outcome": "unresolved",
+    "deletePayload": false,
+    "adoptPayload": false
+  },
+  {
+    "effect": "nt-private-id-drift",
+    "accepted": false,
+    "outcome": "refused",
+    "deletePayload": false,
+    "adoptPayload": false
+  },
+  {
+    "effect": "nt-reparse-root",
+    "accepted": false,
+    "outcome": "refused",
+    "deletePayload": false,
+    "adoptPayload": false
+  },
+  {
+    "effect": "nt-samevolume-held-rename",
+    "accepted": true,
+    "outcome": "published",
+    "deletePayload": false,
+    "adoptPayload": false
+  },
+  {
+    "effect": "actual-unknown-endpoint",
+    "accepted": false,
+    "outcome": "refused",
+    "deletePayload": false,
+    "adoptPayload": false
+  }
+]

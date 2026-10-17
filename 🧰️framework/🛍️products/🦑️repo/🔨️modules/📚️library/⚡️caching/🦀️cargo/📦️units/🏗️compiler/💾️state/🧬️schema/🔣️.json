@@ -28,7 +28,10 @@
         "owner": "repo:compiler-state:prototype",
         "workspaceOwner": "repo:compiler:prototype",
         "workspaceFile": "compiler-prototype.json",
-        "outputDirectory": "b/p"
+        "outputDirectory": "b/p",
+        "producerFilesystemBytes": 1073741824,
+        "producerMetadataBytes": 65536,
+        "catalogueMetadataBytes": 67108864
       }
     },
     "Environment": {
@@ -70,6 +73,41 @@
           "TMP",
           "TEMP"
         ]
+      }
+    },
+    "FundingKind": {
+      "enum": [
+        "compiler-state",
+        "compiler-store"
+      ]
+    },
+    "FundingRefusalCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "failure",
+        "effects"
+      ],
+      "properties": {
+        "name": {
+          "enum": [
+            "state-store",
+            "state-operation",
+            "state-funding",
+            "compile-state",
+            "compile-store",
+            "compile-store-prototype",
+            "compile-absent"
+          ]
+        },
+        "failure": {
+          "type": "string",
+          "minLength": 1
+        },
+        "effects": {
+          "const": 0
+        }
       }
     }
   }

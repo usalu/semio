@@ -1,4 +1,7 @@
-use super::*;
+use crate::standards::v1_4::subsets::base::schema::snapshot::PdfSnapshot;
+#[allow(unused_imports)]
+use framework_schema::ArtifactSchema;
+use crate::standards::v1_4::subsets::base::schema::inferences::*;
 use protocol::Inference;
 
 #[test]

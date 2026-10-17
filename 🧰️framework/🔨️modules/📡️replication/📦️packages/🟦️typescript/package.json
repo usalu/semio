@@ -6,7 +6,14 @@
   "type": "module",
   "private": true,
   "exports": {
-    ".": "./🟦️.ts"
+    ".": "./🟦️.ts",
+    "./apply-refusal/schema": "./🚧️apply-refusal/🧬️schema/🟦️.ts",
+    "./apply-refusal/testing/fixtures": "./🚧️apply-refusal/🧪️testing/🧫️fixtures/🟦️.ts",
+    "./mutation/map/schema": "./🎮️mutation/🗂️map/🧬️schema/🟦️.ts",
+    "./testing/fixtures": "./🧪️testing/🧫️fixtures/🟦️.ts",
+    "./wire/command/ingress/ownership/testing/consumer": "./📡️wire/🎮️command/📥️ingress/🏛️ownership/🧪️testing/🧩️consumer/🟦️.ts",
+    "./wire/local-interaction": "./📡️wire/🏠️local-interaction/🟦️.ts",
+    "./wire/local-interaction/transport": "./📡️wire/🏠️local-interaction/📡️transport/🟦️.ts"
   },
   "scripts": {
     "test": "bun --cwd \"../../../../..\" repo run @semio-tech/framework-replication:test"
@@ -17,7 +24,8 @@
     "vitest": "^4.0.17",
     "@semio-tech/process": "workspace:*",
     "@semio-tech/schema-ts": "workspace:*",
-    "@semio-tech/schema-validator-ts": "workspace:*"
+    "@semio-tech/schema-validator-ts": "workspace:*",
+    "@semio-tech/framework-pack-ts": "workspace:*"
   },
   "license": "LGPL-3.0-or-later",
   "repository": {

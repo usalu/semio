@@ -1,0 +1,5 @@
+{
+ "name": "pstsourcing",
+ "crates": ["semio-s-artifact-sourcing-curation"],
+ "base": {"rev": "b84bf526c7b", "crates": ["semio-s-artifact-sourcing-curation"]}
+}

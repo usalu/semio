@@ -2139,7 +2139,10 @@
     "owner": "repo:compiler-state:prototype",
     "workspaceOwner": "repo:compiler:prototype",
     "workspaceFile": "compiler-prototype.json",
-    "outputDirectory": "b/p"
+    "outputDirectory": "b/p",
+    "producerFilesystemBytes": 1073741824,
+    "producerMetadataBytes": 65536,
+    "catalogueMetadataBytes": 67108864
   },
   "smallPolicy": {
     "version": 1,
@@ -2167,7 +2170,10 @@
     "owner": "diagnostic:artifact-cache",
     "workspaceOwner": "diagnostic:artifact-workspace",
     "workspaceFile": "producer.json",
-    "outputDirectory": "out"
+    "outputDirectory": "out",
+    "producerFilesystemBytes": 33554432,
+    "producerMetadataBytes": 65536,
+    "catalogueMetadataBytes": 1048576
   },
   "policyCaptures": [
     {
@@ -2471,6 +2477,691 @@
       "stdout": "",
       "guardPaths": [],
       "accepted": false
+    }
+  ],
+  "commits": [
+    {
+      "name": "same-entry",
+      "globalSequence": 1,
+      "entrySequence": 1,
+      "expectedSequence": 1,
+      "accepted": true
+    },
+    {
+      "name": "unrelated-context-advanced",
+      "globalSequence": 2,
+      "entrySequence": 1,
+      "expectedSequence": 1,
+      "accepted": true
+    },
+    {
+      "name": "same-entry-replaced",
+      "globalSequence": 2,
+      "entrySequence": 2,
+      "expectedSequence": 1,
+      "accepted": false
+    }
+  ],
+  "peaks": [
+    {
+      "name": "one-cold-child",
+      "observation": {
+        "version": 1,
+        "availableBytes": 4226809856,
+        "creating": true,
+        "allocations": [
+          {
+            "owner": "catalogue",
+            "bytes": 67108864
+          }
+        ],
+        "promises": [],
+        "fundedFilesystemBytes": 4226809856
+      },
+      "admitted": true
+    },
+    {
+      "name": "second-sparse-child",
+      "observation": {
+        "version": 1,
+        "availableBytes": 4226809856,
+        "creating": true,
+        "allocations": [
+          {
+            "owner": "catalogue",
+            "bytes": 67108864
+          },
+          {
+            "owner": "first",
+            "bytes": 1074855936
+          }
+        ],
+        "promises": [
+          "first"
+        ],
+        "fundedFilesystemBytes": 4226809856
+      },
+      "admitted": true
+    },
+    {
+      "name": "second-allocated-child",
+      "observation": {
+        "version": 1,
+        "availableBytes": 3152019456,
+        "creating": true,
+        "allocations": [
+          {
+            "owner": "catalogue",
+            "bytes": 67108864
+          },
+          {
+            "owner": "first",
+            "bytes": 1074855936
+          }
+        ],
+        "promises": [
+          "first"
+        ],
+        "fundedFilesystemBytes": 4226809856
+      },
+      "admitted": true
+    },
+    {
+      "name": "unbound-promise-is-charged",
+      "observation": {
+        "version": 1,
+        "availableBytes": 4226809856,
+        "creating": true,
+        "allocations": [
+          {
+            "owner": "catalogue",
+            "bytes": 67108864
+          }
+        ],
+        "promises": [
+          "first",
+          "second"
+        ],
+        "fundedFilesystemBytes": 4226809856
+      },
+      "admitted": false
+    },
+    {
+      "name": "one-byte-short-original-ceiling",
+      "observation": {
+        "version": 1,
+        "availableBytes": 4226809856,
+        "creating": true,
+        "allocations": [
+          {
+            "owner": "catalogue",
+            "bytes": 67108864
+          }
+        ],
+        "promises": [],
+        "fundedFilesystemBytes": 2215706623
+      },
+      "admitted": false
+    },
+    {
+      "name": "exact-original-ceiling",
+      "observation": {
+        "version": 1,
+        "availableBytes": 4226809856,
+        "creating": true,
+        "allocations": [
+          {
+            "owner": "catalogue",
+            "bytes": 67108864
+          }
+        ],
+        "promises": [],
+        "fundedFilesystemBytes": 2215706624
+      },
+      "admitted": true
+    },
+    {
+      "name": "actual-free-floor-refuses",
+      "observation": {
+        "version": 1,
+        "availableBytes": 1073741823,
+        "creating": false,
+        "allocations": [
+          {
+            "owner": "catalogue",
+            "bytes": 67108864
+          },
+          {
+            "owner": "first",
+            "bytes": 1074855936
+          }
+        ],
+        "promises": [
+          "first"
+        ],
+        "fundedFilesystemBytes": 4226809856
+      },
+      "admitted": false
+    }
+  ],
+  "childRetirements": [
+    {
+      "name": "dirty-complete-child-retiring",
+      "state": "retiring",
+      "digest": null,
+      "identity": true,
+      "accepted": true
+    },
+    {
+      "name": "clean-child-retiring",
+      "state": "retiring",
+      "digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "identity": true,
+      "accepted": true
+    },
+    {
+      "name": "retiring-without-original-identity",
+      "state": "retiring",
+      "digest": null,
+      "identity": false,
+      "accepted": false
+    },
+    {
+      "name": "clean-without-digest",
+      "state": "clean",
+      "digest": null,
+      "identity": false,
+      "accepted": false
+    }
+  ],
+  "selectedDescriptors": [
+    {
+      "name": "Exact Owned Positive Directory",
+      "stdout": "p71\u0000cfixture\u0000\nf19\u0000ar\u0000tDIR\u0000n{root}\u0000\n",
+      "guards": [
+        {
+          "fd": 19,
+          "path": "{root}",
+          "type": "DIR"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "name": "Exact Owned Backing And Directory",
+      "stdout": "p71\u0000cfixture\u0000\nf19\u0000ar\u0000tDIR\u0000n{root}\u0000\nf20\u0000ar\u0000tREG\u0000n{root}/fixed.dmg\u0000\n",
+      "guards": [
+        {
+          "fd": 19,
+          "path": "{root}",
+          "type": "DIR"
+        },
+        {
+          "fd": 20,
+          "path": "{root}/fixed.dmg",
+          "type": "REG"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "name": "Foreign Reader On Selected Filesystem",
+      "stdout": "p71\u0000cfixture\u0000\nf19\u0000ar\u0000tDIR\u0000n{root}\u0000\np72\u0000cforeign\u0000\nf9\u0000ar\u0000tREG\u0000n{root}/payload\u0000\n",
+      "guards": [
+        {
+          "fd": 19,
+          "path": "{root}",
+          "type": "DIR"
+        }
+      ],
+      "accepted": false
+    },
+    {
+      "name": "Foreign Nonprefix Alias Must Not Disappear",
+      "stdout": "p71\u0000cfixture\u0000\nf19\u0000ar\u0000tDIR\u0000n{root}\u0000\np72\u0000cforeign\u0000\nf9\u0000ar\u0000tREG\u0000n/outside/alias\u0000\n",
+      "guards": [
+        {
+          "fd": 19,
+          "path": "{root}",
+          "type": "DIR"
+        }
+      ],
+      "accepted": false
+    },
+    {
+      "name": "Own Unknown Nonprefix Alias Must Not Disappear",
+      "stdout": "p71\u0000cfixture\u0000\nf19\u0000ar\u0000tDIR\u0000n{root}\u0000\nf20\u0000ar\u0000tREG\u0000n/outside/alias\u0000\n",
+      "guards": [
+        {
+          "fd": 19,
+          "path": "{root}",
+          "type": "DIR"
+        }
+      ],
+      "accepted": false
+    },
+    {
+      "name": "Foreign Deleted Name Must Not Disappear",
+      "stdout": "p71\u0000cfixture\u0000\nf19\u0000ar\u0000tDIR\u0000n{root}\u0000\np72\u0000cforeign\u0000\nf9\u0000ar\u0000tREG\u0000n{root}/payload (deleted)\u0000\n",
+      "guards": [
+        {
+          "fd": 19,
+          "path": "{root}",
+          "type": "DIR"
+        }
+      ],
+      "accepted": false
+    },
+    {
+      "name": "Exact Own Unknown Descriptor",
+      "stdout": "p71\u0000cfixture\u0000\nf19\u0000ar\u0000tDIR\u0000n{root}\u0000\nf20\u0000ar\u0000tDIR\u0000n{root}\u0000\n",
+      "guards": [
+        {
+          "fd": 19,
+          "path": "{root}",
+          "type": "DIR"
+        }
+      ],
+      "accepted": false
+    },
+    {
+      "name": "Guard Descriptor Write Access",
+      "stdout": "p71\u0000cfixture\u0000\nf19\u0000aw\u0000tDIR\u0000n{root}\u0000\n",
+      "guards": [
+        {
+          "fd": 19,
+          "path": "{root}",
+          "type": "DIR"
+        }
+      ],
+      "accepted": false
+    },
+    {
+      "name": "Guard Descriptor Unknown Access",
+      "stdout": "p71\u0000cfixture\u0000\nf19\u0000a\u0000tDIR\u0000n{root}\u0000\n",
+      "guards": [
+        {
+          "fd": 19,
+          "path": "{root}",
+          "type": "DIR"
+        }
+      ],
+      "accepted": false
+    },
+    {
+      "name": "Guard Descriptor Wrong Type",
+      "stdout": "p71\u0000cfixture\u0000\nf19\u0000ar\u0000tREG\u0000n{root}\u0000\n",
+      "guards": [
+        {
+          "fd": 19,
+          "path": "{root}",
+          "type": "DIR"
+        }
+      ],
+      "accepted": false
+    },
+    {
+      "name": "Guard Descriptor Unknown Type",
+      "stdout": "p71\u0000cfixture\u0000\nf19\u0000ar\u0000tUNKN\u0000n{root}\u0000\n",
+      "guards": [
+        {
+          "fd": 19,
+          "path": "{root}",
+          "type": "DIR"
+        }
+      ],
+      "accepted": false
+    },
+    {
+      "name": "Guard Descriptor Changed Name",
+      "stdout": "p71\u0000cfixture\u0000\nf19\u0000ar\u0000tDIR\u0000n{root}/alias\u0000\n",
+      "guards": [
+        {
+          "fd": 19,
+          "path": "{root}",
+          "type": "DIR"
+        }
+      ],
+      "accepted": false
+    },
+    {
+      "name": "Guard Descriptor NonNumeric",
+      "stdout": "p71\u0000cfixture\u0000\nfcwd\u0000ar\u0000tDIR\u0000n{root}\u0000\n",
+      "guards": [
+        {
+          "fd": 19,
+          "path": "{root}",
+          "type": "DIR"
+        }
+      ],
+      "accepted": false
+    },
+    {
+      "name": "Guard Descriptor Missing Access",
+      "stdout": "p71\u0000cfixture\u0000\nf19\u0000tDIR\u0000n{root}\u0000\n",
+      "guards": [
+        {
+          "fd": 19,
+          "path": "{root}",
+          "type": "DIR"
+        }
+      ],
+      "accepted": false
+    },
+    {
+      "name": "Guard Descriptor Missing Type",
+      "stdout": "p71\u0000cfixture\u0000\nf19\u0000ar\u0000n{root}\u0000\n",
+      "guards": [
+        {
+          "fd": 19,
+          "path": "{root}",
+          "type": "DIR"
+        }
+      ],
+      "accepted": false
+    },
+    {
+      "name": "Guard Descriptor Missing Name",
+      "stdout": "p71\u0000cfixture\u0000\nf19\u0000ar\u0000tDIR\u0000\n",
+      "guards": [
+        {
+          "fd": 19,
+          "path": "{root}",
+          "type": "DIR"
+        }
+      ],
+      "accepted": false
+    },
+    {
+      "name": "Duplicate Selected Descriptor",
+      "stdout": "p71\u0000cfixture\u0000\nf19\u0000ar\u0000tDIR\u0000n{root}\u0000\nf19\u0000ar\u0000tDIR\u0000n{root}\u0000\n",
+      "guards": [
+        {
+          "fd": 19,
+          "path": "{root}",
+          "type": "DIR"
+        }
+      ],
+      "accepted": false
+    },
+    {
+      "name": "Duplicate Selected Field",
+      "stdout": "p71\u0000cfixture\u0000\nf19\u0000ar\u0000ar\u0000tDIR\u0000n{root}\u0000\n",
+      "guards": [
+        {
+          "fd": 19,
+          "path": "{root}",
+          "type": "DIR"
+        }
+      ],
+      "accepted": false
+    },
+    {
+      "name": "Duplicate Process Set",
+      "stdout": "p71\u0000cfixture\u0000\nf19\u0000ar\u0000tDIR\u0000n{root}\u0000\np71\u0000cfixture\u0000\nf19\u0000ar\u0000tDIR\u0000n{root}\u0000\n",
+      "guards": [
+        {
+          "fd": 19,
+          "path": "{root}",
+          "type": "DIR"
+        }
+      ],
+      "accepted": false
+    },
+    {
+      "name": "Unknown Selected Field",
+      "stdout": "p71\u0000cfixture\u0000\nf19\u0000ar\u0000zunknown\u0000tDIR\u0000n{root}\u0000\n",
+      "guards": [
+        {
+          "fd": 19,
+          "path": "{root}",
+          "type": "DIR"
+        }
+      ],
+      "accepted": false
+    },
+    {
+      "name": "Missing Set Terminator",
+      "stdout": "p71\u0000cfixture\u0000\nf19\u0000ar\u0000tDIR\u0000n{root}\u0000",
+      "guards": [
+        {
+          "fd": 19,
+          "path": "{root}",
+          "type": "DIR"
+        }
+      ],
+      "accepted": false
+    },
+    {
+      "name": "Missing Nul Terminator",
+      "stdout": "p71\u0000cfixture\u0000\nf19\u0000ar\u0000tDIR\u0000n{root}\n",
+      "guards": [
+        {
+          "fd": 19,
+          "path": "{root}",
+          "type": "DIR"
+        }
+      ],
+      "accepted": false
+    },
+    {
+      "name": "Missing Process Identity",
+      "stdout": "f19\u0000ar\u0000tDIR\u0000n{root}\u0000\n",
+      "guards": [
+        {
+          "fd": 19,
+          "path": "{root}",
+          "type": "DIR"
+        }
+      ],
+      "accepted": false
+    },
+    {
+      "name": "Missing Process Command",
+      "stdout": "p71\u0000\nf19\u0000ar\u0000tDIR\u0000n{root}\u0000\n",
+      "guards": [
+        {
+          "fd": 19,
+          "path": "{root}",
+          "type": "DIR"
+        }
+      ],
+      "accepted": false
+    },
+    {
+      "name": "Empty Selection",
+      "stdout": "",
+      "guards": [
+        {
+          "fd": 19,
+          "path": "{root}",
+          "type": "DIR"
+        }
+      ],
+      "accepted": false
+    },
+    {
+      "name": "Missing Second Positive Guard",
+      "stdout": "p71\u0000cfixture\u0000\nf19\u0000ar\u0000tDIR\u0000n{root}\u0000\n",
+      "guards": [
+        {
+          "fd": 19,
+          "path": "{root}",
+          "type": "DIR"
+        },
+        {
+          "fd": 20,
+          "path": "{root}/fixed.dmg",
+          "type": "REG"
+        }
+      ],
+      "accepted": false
+    },
+    {
+      "name": "Duplicate Guard Descriptor",
+      "stdout": "p71\u0000cfixture\u0000\nf19\u0000ar\u0000tDIR\u0000n{root}\u0000\n",
+      "guards": [
+        {
+          "fd": 19,
+          "path": "{root}",
+          "type": "DIR"
+        },
+        {
+          "fd": 19,
+          "path": "{root}/other",
+          "type": "REG"
+        }
+      ],
+      "accepted": false
+    },
+    {
+      "name": "Duplicate Guard Name",
+      "stdout": "p71\u0000cfixture\u0000\nf19\u0000ar\u0000tDIR\u0000n{root}\u0000\n",
+      "guards": [
+        {
+          "fd": 19,
+          "path": "{root}",
+          "type": "DIR"
+        },
+        {
+          "fd": 20,
+          "path": "{root}",
+          "type": "DIR"
+        }
+      ],
+      "accepted": false
+    },
+    {
+      "name": "Guard Escaped Name Ambiguous",
+      "stdout": "p71\u0000cfixture\u0000\nf19\u0000ar\u0000tDIR\u0000n{root}\u0000\n",
+      "guards": [
+        {
+          "fd": 19,
+          "path": "{root}\\x41",
+          "type": "DIR"
+        }
+      ],
+      "accepted": false
+    }
+  ],
+  "selectedCensus": [
+    {
+      "action": "success",
+      "queries": 2,
+      "accepted": true,
+      "phase": "mounted"
+    },
+    {
+      "action": "foreign",
+      "queries": 1,
+      "accepted": false,
+      "phase": "mounted"
+    },
+    {
+      "action": "open-error",
+      "queries": 0,
+      "accepted": false,
+      "phase": "mounted"
+    },
+    {
+      "action": "stamp-change",
+      "queries": 1,
+      "accepted": false,
+      "phase": "mounted"
+    },
+    {
+      "action": "pre-cancel",
+      "queries": 0,
+      "accepted": false,
+      "phase": "mounted"
+    },
+    {
+      "action": "capture-undefined",
+      "queries": 1,
+      "accepted": false,
+      "phase": "mounted"
+    },
+    {
+      "action": "layout",
+      "queries": 0,
+      "accepted": false,
+      "phase": "mounted"
+    },
+    {
+      "action": "cancel-after-capture",
+      "queries": 1,
+      "accepted": false,
+      "phase": "mounted"
+    },
+    {
+      "action": "path-swap",
+      "queries": 1,
+      "accepted": false,
+      "phase": "inactive"
+    },
+    {
+      "action": "success",
+      "phase": "inactive",
+      "queries": 1,
+      "accepted": true
+    },
+    {
+      "action": "foreign",
+      "phase": "inactive",
+      "queries": 1,
+      "accepted": false
+    },
+    {
+      "action": "stamp-change",
+      "phase": "inactive",
+      "queries": 1,
+      "accepted": false
+    },
+    {
+      "action": "open-error",
+      "phase": "inactive",
+      "queries": 0,
+      "accepted": false
+    },
+    {
+      "action": "phase",
+      "phase": "mounted",
+      "queries": 0,
+      "accepted": false
+    }
+  ],
+  "observationQueueNonceBytes": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15
+  ],
+  "observationQueuePaths": [
+    {
+      "encoding": "hex",
+      "characters": 32,
+      "utf16": 260,
+      "codepoints": 254,
+      "allowed": false
+    },
+    {
+      "encoding": "base64url",
+      "characters": 22,
+      "utf16": 250,
+      "codepoints": 244,
+      "allowed": true
     }
   ]
 }

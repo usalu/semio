@@ -7,7 +7,7 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.pro
 mod snapshot_codec {
 use super::*;
 use crate::standards::v1_4::subsets::base::schema::snapshot::*;
-use crate::standards::v1_4::subsets::base::schema::STDIO_PDF_DOCUMENT_SCHEMA;
+use crate::standards::v1_4::subsets::base::schema::snapshot::STDIO_PDF_DOCUMENT_SCHEMA;
 use framework_schema::ArtifactSchema;
 
 impl pack::snapshot::ArtifactPack for PdfSnapshot {

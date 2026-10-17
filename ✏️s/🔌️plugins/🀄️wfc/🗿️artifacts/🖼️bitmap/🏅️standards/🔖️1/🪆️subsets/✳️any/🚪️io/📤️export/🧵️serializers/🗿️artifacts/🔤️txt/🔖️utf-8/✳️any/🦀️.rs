@@ -24,7 +24,5 @@ impl Serializer<BitmapSnapshot> for BitmapIntoTxt {
 
 
 //#region 🧪Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪Tests

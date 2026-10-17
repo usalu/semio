@@ -1,0 +1,10 @@
+{
+  "name": "@semio-tech/framework-ui-viewport-ts",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./2d/schema": "./◻️2d/🧬️schema/🟦️.ts",
+    "./3d/schema": "./🧊️3d/🧬️schema/🟦️.ts",
+    "./testing/fixtures/poses": "./🧪️testing/🧫️fixtures/🪟️poses/🟦️.ts"
+  }
+}

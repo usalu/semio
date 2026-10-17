@@ -114,9 +114,6 @@ impl PreparedRegionQueryJob{
  pub fn result(&self,live:PreparedRegionStamp)->Result<bool,String>{self.authority(live)?;if self.phase!="complete"{return Err("Prepared region query incomplete".into());}Ok(self.contains)}
  pub fn cancel(&mut self){self.cancelled=true;}
 }
-#[cfg(test)]
-#[path="🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 
 #[path="📋️prepare/🦀️.rs"]
 pub mod scene;

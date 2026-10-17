@@ -92,7 +92,6 @@ fn complete_portable_mounted_turn_corpus() {
     assert!(path.to_string_lossy().encode_utf16().count() <= 256, "result path must fit Windows");
     std::fs::create_dir_all(path.parent().expect("result parent")).expect("owned result directory");
     std::fs::write(path, serde_json::to_vec(&results).expect("bounded native verdicts")).expect("owned native result output");
-    println!("[DEBUG] Actual mounted turn: all29 observations including actual initial store generation0 and same canceled original close and eight malformed identities/grants/clocks executed against original StepContext");
 }
 
 #[test]
@@ -128,7 +127,6 @@ fn explicit_phase_policy_corpus_preserves_legitimate_empty_authority() {
         })();
         assert_eq!(admitted.is_ok(), vector["valid"].as_bool().unwrap(), "portable policy {}", vector["id"]);
     }
-    println!("[DEBUG] Allfour mandatory phase policy vectors executed without default authority");
 }
 
 #[test]
@@ -163,7 +161,6 @@ fn nested_job_receipts_preserve_original_scheduling_debit() {
     assert!(path.is_absolute() && path.to_string_lossy().encode_utf16().count() <= 256, "nested result authority must be absolute and bounded");
     std::fs::create_dir_all(path.parent().unwrap()).expect("owned nested result directory");
     std::fs::write(path, serde_json::to_vec(&results).unwrap()).expect("owned nested result output");
-    println!("[DEBUG] Eight original job scheduling receipts retained every physical currency without double debit");
 }
 
 fn context_receipt(value: &Value) -> RetainedCloneProgress {
@@ -197,7 +194,6 @@ fn mounted_original_context_receipts_preserve_every_independent_axis() {
         };
         assert_eq!(remaining, vector["remaining"].grant().unwrap(), "original remaining authority {}", vector["id"]);
         results.push(serde_json::json!({"id":vector["id"],"remaining":{"maximumItems":remaining.maximum_items,"maximumCopyBytes":remaining.maximum_copy_bytes,"maximumCapacityBytes":remaining.maximum_capacity_bytes,"maximumReleaseBytes":remaining.maximum_release_bytes,"maximumDepth":remaining.maximum_depth}}));
-        println!("[DEBUG] mounted original context {} remaining={remaining:?} actual={:?}", vector["id"], context.retained_progress());
     }
     for vector in fixture["nestedJobs"].as_array().unwrap() {
         let grant = fixture["vectors"][0]["context"].grant().unwrap();
@@ -222,7 +218,6 @@ fn mounted_original_context_receipts_preserve_every_independent_axis() {
         assert_eq!(accepted, vector["debit"] == "child", "exact original nested receipt {}", vector["id"]);
         if accepted { assert_eq!(turn.context().retained_progress(), receipt); assert_eq!(turn.progress(), receipt); }
         results.push(serde_json::json!({"id":vector["id"],"accepted":accepted}));
-        println!("[DEBUG] mounted original nested {} accepted={accepted} actual={:?}", vector["id"], turn.context().retained_progress());
     }
     let path = std::path::PathBuf::from(std::env::var_os("SEMIO_MOUNTED_OWNER_CONTEXT_RESULTS").expect("explicit original context result path"));
     assert!(path.is_absolute() && path.to_string_lossy().encode_utf16().count() <= 256);
@@ -233,7 +228,7 @@ fn mounted_original_context_receipts_preserve_every_independent_axis() {
 #[test]
 fn original_mounted_turn_debits_actual_context_receipt_once_and_keeps_fuel_independent(){
     let fixture:Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();let law=&fixture["contextReceipt"];let grant=law["grant"].grant().unwrap();CLOCK.with(|clock|clock.set(Some(10)));let identity=MountedOwnerIdentityV1{instance_id:7,operation:OperationId(99117),generation:Generation(13)};let policy=MountedOwnerPolicyV1{preparation:grant,maintenance:grant,close:grant};let mut sequence=0;let mut actual=RetainedCloneProgress::default();let mut context=StepContext::new(identity.operation,identity.generation,StepBudget::new(law.word("fuel").unwrap() as u64,100,grant),CancelToken::root_now(),now_us,&mut sequence,&mut actual);let mut turn=MountedOwnerTurnV1::admit(7,identity,MountedOwnerPhaseV1::Preparation,policy,&mut context).unwrap().unwrap();let mut source=Vec::<u8>::new();let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||source.reserve_exact(64));assert_eq!(source.capacity(),64);assert_eq!((heap.requested_bytes,heap.released_bytes),(64,0));let pointer=source.as_ptr();let birth=RetainedCloneProgress{copied_items:1,retained_capacity_bytes:64,..Default::default()};turn.record(birth,false,false).unwrap();assert_eq!(turn.context().retained_progress(),birth);
-    let receipt=RetainedCloneProgress{copied_items:1,copied_bytes:law["source"].as_str().unwrap().len(),..Default::default()};turn.advance_job(|context,incoming|{assert_eq!(incoming,context.retained_grant());source.extend_from_slice(law["source"].as_str().unwrap().as_bytes());context.consume_fuel(law.word("childFuel").unwrap() as u64);context.consume_retained(receipt)?;Ok(MountedOwnerJobReceiptV1{progress:receipt,complete:false,terminal_is_empty:false})}).unwrap();assert_eq!(source.as_ptr(),pointer);assert_eq!(turn.context().retained_progress(),birth.checked_add(receipt).unwrap());let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(source));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,64));let release=RetainedCloneProgress{copied_items:1,released_bytes:64,..Default::default()};turn.record(release,true,true).unwrap();assert_eq!(turn.grant(),law["remaining"].grant().unwrap());assert_eq!(turn.context().retained_grant(),turn.grant());assert_eq!(turn.context().fuel_remaining(),law.word("remainingFuel").unwrap() as u64);assert_eq!(turn.progress(),turn.context().retained_progress());eprintln!("[DEBUG] original mounted same context born64/copy23/free64 accepted once, original source pointer unchanged, child fuel5 independent from one physical item");
+    let receipt=RetainedCloneProgress{copied_items:1,copied_bytes:law["source"].as_str().unwrap().len(),..Default::default()};turn.advance_job(|context,incoming|{assert_eq!(incoming,context.retained_grant());source.extend_from_slice(law["source"].as_str().unwrap().as_bytes());context.consume_fuel(law.word("childFuel").unwrap() as u64);context.consume_retained(receipt)?;Ok(MountedOwnerJobReceiptV1{progress:receipt,complete:false,terminal_is_empty:false})}).unwrap();assert_eq!(source.as_ptr(),pointer);assert_eq!(turn.context().retained_progress(),birth.checked_add(receipt).unwrap());let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(source));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,64));let release=RetainedCloneProgress{copied_items:1,released_bytes:64,..Default::default()};turn.record(release,true,true).unwrap();assert_eq!(turn.grant(),law["remaining"].grant().unwrap());assert_eq!(turn.context().retained_grant(),turn.grant());assert_eq!(turn.context().fuel_remaining(),law.word("remainingFuel").unwrap() as u64);assert_eq!(turn.progress(),turn.context().retained_progress());
 }
 
 #[test]
@@ -261,7 +256,6 @@ fn original_actor_capture_uses_full_grant_and_retains_cancellation_custody(){
   }
   let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(slot.take()));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(births,releases);
   observations.push(serde_json::json!({"id":vector["id"],"textBytes":source.len(),"copyBytes":receipt.copied_bytes,"capacityBytes":receipt.retained_capacity_bytes,"releaseBytes":receipt.released_bytes,"turns":turns,"births":births,"releases":releases,"deniedHeapBytes":0,"dropHeapBytes":0}));
-  eprintln!("[DEBUG] mounted original actor {} source={} capture={} turns={} birth={} release={} undergrantHeap0 terminalDrop0",vector["id"],original_pointer as usize,capture_pointer as usize,turns,births,releases);
  }
  let parent=std::path::PathBuf::from(std::env::var_os("SEMIO_MOUNTED_OWNER_RESULTS").expect("explicit original mounted output authority"));let path=parent.parent().unwrap().join("actor.json");assert!(path.is_absolute()&&path.to_string_lossy().encode_utf16().count()<=256);std::fs::create_dir_all(path.parent().unwrap()).unwrap();std::fs::write(path,serde_json::to_vec(&observations).unwrap()).unwrap();
 }
@@ -280,7 +274,6 @@ fn original_mounted_failed_producer_retains_actual_external_and_turn_receipt() {
         assert_eq!(error.retained_progress(),actual);assert_eq!(turn.progress(),actual);assert_eq!(turn.context().retained_progress(),actual);assert_eq!(turn.context().fuel_remaining(),6);assert_eq!(turn.grant().maximum_capacity_bytes,0);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(source.as_ptr(),pointer);
         drop(turn);drop(context);assert_eq!(external,actual);let(_,closed)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(source));assert_eq!(closed.released_bytes,actual.retained_capacity_bytes);
     }
-    println!("[DEBUG] Original mounted failure and false Complete retain actual64 effects in both original recipients; refusal0/0, same source pointer, fuel6, physical final release64");
 }
 
 #[test]
@@ -294,7 +287,6 @@ fn original_mounted_nested_failure_receives_actual_context_delta_once() {
   assert_eq!(error.retained_progress(),actual);assert_eq!(turn.progress(),actual);assert_eq!(turn.context().retained_progress(),actual);assert_eq!(turn.context().fuel_remaining(),6);assert_eq!(turn.grant().maximum_capacity_bytes,0);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(source.as_ptr(),pointer);
   drop(turn);drop(context);assert_eq!(external,actual);let(_,closed)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(source));assert_eq!(closed.released_bytes,64);
  }
- println!("[DEBUG] Actual nested failure and false Complete preserved original64 context debit in mounted recipient once; same source pointer, fuel6, denial0/0, release64");
 }
 
 #[test]
@@ -326,7 +318,6 @@ fn original_mounted_lifecycle_adopts_same_caller_receipt_once() {
         assert_eq!(turn.progress(), turn.context().retained_progress());
         assert_eq!(turn.context().fuel_remaining(), if debit == "child" || debit == "partial" { 3 } else { 4 });
     }
-    eprintln!("[DEBUG] original mounted lifecycle op71/gen3 adopts same caller receipt once, independent four currencies and CPU, missing/partial/foreign debit refused, System0");
 }
 
 #[test]
@@ -346,7 +337,6 @@ fn original_mounted_alias_custody_measures_each_final_backing_payload_and_shell(
   let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(cursor.unique_mut().unwrap().bytes_mut().take()));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,64));let shell=cursor.demands().release_bytes;assert_eq!(shell,arc.release_bytes);
   let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cursor.step(policy,|owner|owner.bytes().is_none()).unwrap());assert!(cursor.terminal_is_empty());assert_eq!(step.progress().released_bytes,shell);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,shell));let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(cursor));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
   let backing=semio_framework_value::retirement::shared::shared_retirement_allocation_bytes::<MountedOwnerCellV1<dyn OriginalPayload>>();assert_eq!(born.requested_bytes,backing+64+shell);rows.push(serde_json::json!({"aliases":aliases,"birth":born.requested_bytes,"release":backing+64+shell,"arc":backing,"payload":64,"shell":shell,"constructor":0,"denied":0,"terminal":0,"sharedClosed":false}));
-  println!("[DEBUG] Original alias count{aliases} same source{:?}: birth{} separately released backing{backing}/payload64/shell{shell}, denied0/0 constructor0/0 terminalDrop0",pointer,born.requested_bytes);
  }
  let parent=std::path::PathBuf::from(std::env::var_os("SEMIO_MOUNTED_OWNER_RESULTS").expect("explicit mounted output authority"));let path=parent.parent().unwrap().join("alias.json");assert!(path.to_string_lossy().encode_utf16().count()<=256);std::fs::write(path,serde_json::to_vec(&rows).unwrap()).unwrap();
 }
@@ -360,5 +350,4 @@ fn original_mounted_inline_gate_keeps_exclusion_poison_and_same_payload_without_
  let original=Arc::clone(&source);assert!(std::panic::catch_unwind(std::panic::AssertUnwindSafe(||{let _guard=original.try_lock().unwrap();panic!("original gate producer panic")})).is_err());drop(original);assert!(matches!(source.try_lock(),Err(MountedOwnerCellErrorV1::Poisoned)));
  let mut cursor=MountedOwnerAliasRetirementV1::new(source);let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:0,maximum_capacity_bytes:0,maximum_release_bytes:65536,maximum_depth:1};let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cursor.step(grant,Option::is_none).unwrap());assert_eq!(heap.requested_bytes,0);assert_eq!(heap.released_bytes,step.progress().released_bytes);assert_eq!(cursor.unique().unwrap().as_ref().unwrap().as_ptr(),pointer);let mut released=heap.released_bytes;
  let((),heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(cursor.unique_mut().unwrap().take()));assert_eq!(heap.released_bytes,64);released+=heap.released_bytes;let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cursor.step(grant,Option::is_none).unwrap());assert_eq!(heap.released_bytes,step.progress().released_bytes);released+=heap.released_bytes;assert_eq!(born.requested_bytes,released);let((),heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(cursor));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
- println!("[DEBUG] Original inline gate source{:?} retained cross-thread exclusion and poisoned payload, source birth{} exact release{}; normal gate0/0 and terminalDrop0",pointer,born.requested_bytes,released);
 }

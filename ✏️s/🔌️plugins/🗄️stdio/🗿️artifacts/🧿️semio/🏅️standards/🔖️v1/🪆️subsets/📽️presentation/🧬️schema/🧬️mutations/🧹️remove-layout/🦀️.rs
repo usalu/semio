@@ -1,6 +1,13 @@
 //! 🪃 `remove-layout` — authored as its own mutation leaf; its diff and inverse live in `🔺️diff` and `↩️inverse`.
 
-use super::*;
+#[allow(unused_imports)]
+use protocol::Mutation;
+#[allow(unused_imports)]
+use crate::schema::diff::SemioPresentationDiff;
+#[allow(unused_imports)]
+use crate::schema::snapshot::SemioPresentationSnapshot;
+#[allow(unused_imports)]
+use crate::schema::mutations::insert_layout;
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
@@ -10,13 +17,16 @@ pub struct RemoveLayout {
     pub id: String,
 }
 
-impl protocol::MutationKind<SemioPresentationSnapshot, SemioPresentationMutation> for RemoveLayout {
+impl<Op> protocol::MutationKind<SemioPresentationSnapshot, Op> for RemoveLayout
+where
+    Op: protocol::Mutation<SemioPresentationSnapshot, Diff = crate::schema::diff::SemioPresentationDiff> + From<RemoveLayout> + From<crate::schema::mutations::insert_layout::InsertLayout>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "layout", kind: "remove-layout", record: "RemoveLayout" };
 
-    fn diff(&self, base: &SemioPresentationSnapshot) -> protocol::MutationOutcome<<SemioPresentationMutation as Mutation<SemioPresentationSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioPresentationSnapshot) -> protocol::MutationOutcome<<Op as Mutation<SemioPresentationSnapshot>>::Diff> {
         diff::diff(self, base)
     }
-    fn inverse(&self, base: &SemioPresentationSnapshot) -> Result<Vec<SemioPresentationMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &SemioPresentationSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         inverse::inverse(self, base)?
     

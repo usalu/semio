@@ -37,7 +37,7 @@ type Fixture = {
 
 const suiteRoot = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(suiteRoot, "../../../../../../../../../..");
-const fixture = JSON.parse(readFileSync(resolve(suiteRoot, "../../🧫️fixtures/🎨️layout/🔣️.json"), "utf8")) as Fixture;
+const fixture = JSON.parse(readFileSync(resolve(suiteRoot, "../🧫️fixtures/🎨️layout/🔣️.json"), "utf8")) as Fixture;
 
 afterEach(() => {
   cleanup();

@@ -5,6 +5,7 @@
 //! 26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION.
 
 use semio_framework_plugin::ExampleSource;
+use semio_framework_test_fixtures::repo_root;
 use semio_framework_ui_locale::LocalizedLabel;
 
 pub const ID: &str = "bachelor-thesis";
@@ -39,7 +40,7 @@ pub fn document_bytes() -> &'static [u8] {
 fn repository_file() -> &'static [u8] {
     static BYTES: std::sync::OnceLock<&'static [u8]> = std::sync::OnceLock::new();
     BYTES.get_or_init(|| {
-        let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).ancestors().find(|candidate| candidate.join("nx.json").is_file()).expect("the repository root holds nx.json");
+        let root = repo_root!();
         Box::leak(std::fs::read(root.join(BACHELOR_THESIS_ASSET_NAME)).unwrap_or_else(|error| panic!("{}: {error}", BACHELOR_THESIS_ASSET_NAME)).into_boxed_slice())
     })
 }

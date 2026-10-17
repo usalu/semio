@@ -42,4 +42,5 @@ semio-framework-schema-registry = { path = "../../📇️registry/📦️package
 
 [dev-dependencies]
 semio-framework-async-macros = { path = "../../../⏳️async/✨️macros/📦️packages/🦀️rust" }
+semio-framework-test-fixtures = { path = "../../../🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 serde_json = { workspace = true }

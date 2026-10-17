@@ -1,8 +1,8 @@
 //! 💾️ remove-page native binary payload owner.
 
 use crate::standards::v1_4::subsets::base::schema::mutations::PdfMutation;
-use crate::standards::v1_4::subsets::base::io::binary::mutations::{put_index, Reader};
-use crate::standards::v1_4::subsets::base::schema::mutations::RemovePage;
+use crate::standards::v1_4::subsets::base::io::binary::mutations::wire::{put_index, Reader};
+use crate::standards::v1_4::subsets::base::schema::mutations::remove_page::RemovePage;
 
 //#region 🔖️Codec
 pub const TAG: u8 = dsl::protocol_record::tag_u8(include_str!("../📡️.protocol.semio"), "remove-page");

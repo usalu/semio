@@ -1,7 +1,7 @@
 //! 🔺️ Diff constructor for `SetCurtainPanelOverride`: a one-field override patch. A solid panel names an existing material, a door or window panel an existing type; the cell the
 //! override addresses never changes (delete and create to address another cell).
 
-use super::super::wall_geometry::panel_flaw;
+use crate::standards::v1::subsets::any::schema::mutations::wall_geometry::panel_flaw;
 use super::SetCurtainPanelOverride;
 use crate::standards::v1::subsets::any::schema::{diff::{patches::CurtainPanelOverridePatch, Entry, ModelDiff}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};

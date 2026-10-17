@@ -1,14 +1,15 @@
 use super::*;
+use semio_framework_test_fixtures::repo_text;
 use std::collections::BTreeMap;
 use semio_framework_tool_run::{ToolRunId, ToolRunTraceKind, ToolRunIdentity, ToolRunState};
 use std::collections::BTreeSet;
 use std::sync::Arc;
 
 /// 📜️ The language-agnostic run law both surfaces answer.
-const PREVIEW_EVAL_RUN_FIXTURE_JSON: &str = include_str!("../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/⏯️preview-eval-run.json");
+fn preview_eval_run_fixture_json() -> &'static str { repo_text!("✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/⏯️preview-eval-run.json") }
 
 fn fixture() -> serde_json::Value {
-    let fixture: serde_json::Value = serde_json::from_str(PREVIEW_EVAL_RUN_FIXTURE_JSON).expect("the preview evaluation run fixture parses");
+    let fixture: serde_json::Value = serde_json::from_str(preview_eval_run_fixture_json()).expect("the preview evaluation run fixture parses");
     assert_eq!(fixture["format"], "semio.generation3d.preview-eval-run");
     assert_eq!(fixture["version"], 1);
     fixture
@@ -223,7 +224,7 @@ fn the_lod_deflection_ladder_is_shared_and_monotone() {
 /// (`🔬️wgpu-shell-chrome-parity`) and the TypeScript `world3dComputeStatusV1` twin
 /// (`🔎️renderer-twins`) answer. This law closes the third side of the triangle: that the PRODUCER
 /// actually emits a timeline of that shape, which is the half neither renderer can assert.
-const SURFACE_CONTROLS_FIXTURE_JSON: &str = include_str!("../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️tests/🧫️fixtures/🛑️surface-controls/🔣️.json");
+fn surface_controls_fixture_json() -> &'static str { repo_text!("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️tests/🧫️fixtures/🛑️surface-controls/🔣️.json") }
 
 fn published(session: &FlowEvalSession, run: Option<&ToolRunView>) -> serde_json::Value {
     serde_json::from_str(&preview_progress_status_json_for(Some(session), run, Ok(GENERATION_3D_GEOMETRY_EXTENSION_ID.to_string()))).expect("the projection publishes json")
@@ -241,7 +242,7 @@ fn published(session: &FlowEvalSession, run: Option<&ToolRunView>) -> serde_json
 /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-progress-visibility-2026-09-14.md`).
 #[test]
 fn a_live_evaluation_publishes_non_idle_frames_with_a_monotone_ratio_and_an_offered_abort() {
-    let shared: serde_json::Value = serde_json::from_str(SURFACE_CONTROLS_FIXTURE_JSON).expect("the shared surface-controls fixture parses");
+    let shared: serde_json::Value = serde_json::from_str(surface_controls_fixture_json()).expect("the shared surface-controls fixture parses");
     let minimum = shared["progressTimeline"]["minimumNonIdleFrames"].as_u64().expect("the shared fixture declares a minimum") as usize;
     let run = run_view(&serde_json::json!({ "run": 1, "generation": 0, "state": "running" }));
     let mut host = semio_framework_os_flow::FlowHost::default();

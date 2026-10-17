@@ -10,6 +10,9 @@ use semio_framework_ui_retained_tree::tree::NodeKey;
 use semio_framework_ui_retained_tree::tree::WidgetSpec;
 use semio_framework_ui_theme::Theme;
 
+/// 🎟️ Unbounded retained grant: the pre-migration step budget carried no retained limit.
+const UNBOUNDED_STEP_GRANT: semio_framework_job::RetainedCloneGrant = semio_framework_job::RetainedCloneGrant { maximum_items: usize::MAX, maximum_copy_bytes: usize::MAX, maximum_capacity_bytes: usize::MAX, maximum_release_bytes: usize::MAX, maximum_depth: usize::MAX };
+
 fn text_node(value: &str) -> UiNode {
     UiNode::Text(UiTextNode { value: Label::data(value), emphasize: None, data_attributes: None, presence: UiPresence::default(), menu: None })
 }
@@ -235,12 +238,12 @@ fn retiring_a_component_releases_its_exact_camera_diagnostic_owner() {
     let mut owner = fixture_scene_pointer_target("diagnostic-close-window", "diagnostic-close-document", "camera-owner");
     owner.host_id = "diagnostic-close-host".into();
     owner.kind = semio_framework_ui_declaration::ui::SurfaceKind::Canvas2d;
-    assert!(crate::scenes::mount_scene_identity(&owner));
+    assert!(semio_framework_os_renderer_wgpu_scene_state::mount_scene_identity(&owner));
     WORLD_CAMERA_LEDGER.borrow_mut().insert(owner.host_id.clone(), serde_json::json!({ "position": [1.0, 2.0, 3.0] }));
-    assert!(crate::scenes::retire_scene_identity(&owner));
+    assert!(semio_framework_os_renderer_wgpu_scene_state::retire_scene_identity(&owner));
     let remaining = world_camera_ledger_row(&owner.host_id);
     for _ in 0..262_144 {
-        if !crate::scenes::close_retired_scene_surface_one() {
+        if !semio_framework_os_renderer_wgpu_scene_state::close_retired_scene_surface_one() {
             break;
         }
     }
@@ -286,7 +289,8 @@ fn a_painted_chrome_window_reports_draw_calls_quads_and_glyphs() {
     let mut preview_sequence = 0;
     for _ in 0..64 {
         for _ in 0..16_384 {
-            let mut cx = semio_framework_job::StepContext::new(operation, semio_framework_job::Generation(0), semio_framework_job::StepBudget::new(1, u64::MAX), cancel.clone(), || Some(0), &mut preview_sequence);
+            let mut cx_retained = semio_framework_job::RetainedCloneProgress::default();
+            let mut cx = semio_framework_job::StepContext::new(operation, semio_framework_job::Generation(0), semio_framework_job::StepBudget::new(1, u64::MAX, UNBOUNDED_STEP_GRANT), cancel.clone(), || Some(0), &mut preview_sequence, &mut cx_retained);
             if matches!(engine.step_layouts(&pool, &mut atlas, &mut cx), ui_wgpu::wgpu::UiLayoutStep::Idle) {
                 break;
             }

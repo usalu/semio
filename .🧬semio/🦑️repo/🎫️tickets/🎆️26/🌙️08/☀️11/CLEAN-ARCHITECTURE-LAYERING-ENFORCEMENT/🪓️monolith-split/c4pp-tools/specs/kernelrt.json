@@ -1,0 +1,190 @@
+{
+ "tag": "kernelrt",
+ "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️wgpu-renderer-kernel-runtime-semantic-document/🦀️.rs",
+ "original": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/c4pp-tools/orig/kernelrt.rs",
+ "stage": "/Users/ueli/.cache/c4pp/stage/kernelrt",
+ "chunks": [
+  {
+   "folder": "🧰️retained-document-fixtures",
+   "depth": 1,
+   "start": 4,
+   "end": 53,
+   "lines": 52,
+   "reopen": 0,
+   "close": 0,
+   "rebased": 0,
+   "marker": "///",
+   "first": [
+    "fn",
+    "recovery_job"
+   ]
+  },
+  {
+   "folder": "🔢️sequence-and-registry-max-plus-one",
+   "depth": 1,
+   "start": 55,
+   "end": 113,
+   "lines": 61,
+   "reopen": 0,
+   "close": 0,
+   "rebased": 0,
+   "marker": "///",
+   "first": [
+    "fn",
+    "renderer_sequence_maximum_is_once_then_permanently_exhausted_and_rollback_is_transactional"
+   ]
+  },
+  {
+   "folder": "📄️command-batch-and-document-pages",
+   "depth": 1,
+   "start": 115,
+   "end": 232,
+   "lines": 120,
+   "reopen": 0,
+   "close": 0,
+   "rebased": 0,
+   "marker": "///",
+   "first": [
+    "fn",
+    "command_batch_slots_plus_one_document_is_retained_after_nonterminal_close_and_exactly_returned_or_retired"
+   ]
+  },
+  {
+   "folder": "📡️presentation-bridge-and-replay-recovery",
+   "depth": 1,
+   "start": 234,
+   "end": 339,
+   "lines": 108,
+   "reopen": 0,
+   "close": 0,
+   "rebased": 0,
+   "marker": "///",
+   "first": [
+    "fn",
+    "mounted_job_progress_presentation_bridge_is_fixed_fifo_and_generation_checked"
+   ]
+  },
+  {
+   "folder": "🪪️product-authority-fixtures-and-identity",
+   "depth": 1,
+   "start": 341,
+   "end": 503,
+   "lines": 165,
+   "reopen": 0,
+   "close": 0,
+   "rebased": 0,
+   "marker": "///",
+   "first": [
+    "fn",
+    "admitted_product_request"
+   ]
+  },
+  {
+   "folder": "🧱️product-claim-and-raw-backing",
+   "depth": 1,
+   "start": 505,
+   "end": 636,
+   "lines": 134,
+   "reopen": 0,
+   "close": 0,
+   "rebased": 0,
+   "marker": "///",
+   "first": [
+    "fn",
+    "product_claim_fault_retains_exact_request_cursor_checkpoint_and_generation"
+   ]
+  },
+  {
+   "folder": "📥️product-ingress-and-refusal-slots",
+   "depth": 1,
+   "start": 638,
+   "end": 808,
+   "lines": 173,
+   "reopen": 0,
+   "close": 0,
+   "rebased": 0,
+   "marker": "///",
+   "first": [
+    "fn",
+    "product_ingress_kind_and_input_max_plus_one_return_exact_spawn_and_remainder"
+   ]
+  },
+  {
+   "folder": "♻️mounted-replay-drop-and-panic-recovery",
+   "depth": 1,
+   "start": 810,
+   "end": 910,
+   "lines": 103,
+   "reopen": 0,
+   "close": 0,
+   "rebased": 0,
+   "marker": "///",
+   "first": [
+    "fn",
+    "production_mounted_process_replay_supports_one_two_four_and_default_without_private_pool"
+   ]
+  },
+  {
+   "folder": "⏱️turn-fairness-and-abandoned-requests",
+   "depth": 1,
+   "start": 912,
+   "end": 1000,
+   "lines": 91,
+   "reopen": 0,
+   "close": 0,
+   "rebased": 1,
+   "marker": "///",
+   "first": [
+    "fn",
+    "destroy_request"
+   ]
+  },
+  {
+   "folder": "📨️fixed-request-queue-laws",
+   "depth": 1,
+   "start": 1002,
+   "end": 1147,
+   "lines": 148,
+   "reopen": 0,
+   "close": 0,
+   "rebased": 1,
+   "marker": "///",
+   "first": [
+    "fn",
+    "command_request"
+   ]
+  },
+  {
+   "folder": "🔒️close-registry-and-queue-shutdown",
+   "depth": 1,
+   "start": 1149,
+   "end": 1245,
+   "lines": 99,
+   "reopen": 0,
+   "close": 0,
+   "rebased": 0,
+   "marker": "///",
+   "first": [
+    "fn",
+    "fixed_kernel_close_registry_returns_the_exact_modulo_collision_and_reuses_only_after_terminal_generation"
+   ]
+  },
+  {
+   "folder": "🧵️slot-tables-pool-future-and-delivery-wake",
+   "depth": 0,
+   "start": 1248,
+   "end": 1402,
+   "lines": 157,
+   "reopen": 0,
+   "close": 0,
+   "rebased": 3,
+   "marker": "///",
+   "first": [
+    "fn",
+    "kernel_runtime_slot_tables_are_heap_first_and_fit_a_bounded_thread_stack"
+   ]
+  }
+ ],
+ "root_lines": 27,
+ "root_synth_closers": 0
+}

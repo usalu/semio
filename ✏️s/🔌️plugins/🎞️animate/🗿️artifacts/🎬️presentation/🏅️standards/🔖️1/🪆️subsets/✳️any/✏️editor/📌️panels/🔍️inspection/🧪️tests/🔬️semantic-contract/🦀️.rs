@@ -1,4 +1,26 @@
-use super::*;
+use crate::editor::animate::terminology::AnimatePresentationLabels;
+use semio_framework_test_fixtures::fixture_text;
+#[allow(unused_imports)]
+use crate::{editor::animate::support::ui_label, editor::animate::support::ui_node_list};
+#[allow(unused_imports)]
+use crate::{PresentationSnapshot, PRESENTATION_DOCUMENT_SCHEMA};
+#[allow(unused_imports)]
+use semio_framework_plugin::tree_item_desc;
+#[allow(unused_imports)]
+use semio_framework_ui_locale::LocalizedLabel;
+#[allow(unused_imports)]
+use semio_framework_plugin::PanelGroup;
+#[allow(unused_imports)]
+use semio_framework_plugin::PanelTabDefinition;
+#[allow(unused_imports)]
+use semio_framework_plugin::PanelTabKind;
+#[allow(unused_imports)]
+use semio_framework_plugin::PanelTreeBuilder;
+#[allow(unused_imports)]
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_ID;
+#[allow(unused_imports)]
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_LABEL;
+use crate::editor::animate::panels::inspection::*;
 use semio_framework_plugin::BuiltNode;
 
 fn project(node: BuiltNode) -> serde_json::Value {
@@ -10,7 +32,7 @@ fn project(node: BuiltNode) -> serde_json::Value {
 /// `description`, not a child `value` node.
 #[test]
 fn presentation_semantic_panels_match_the_json_oracle() {
-    let vectors: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️panels.json")).expect("neutral UI vectors");
+    let vectors: serde_json::Value = serde_json::from_str(fixture_text!("../../🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🧪️tests/🧫️fixtures/🔣️panels.json")).expect("neutral UI vectors");
     let document = crate::default_presentation_snapshot();
     let (_, tiles) = crate::presentation_working_scene(&document);
     for row in vectors["cases"].as_array().expect("locales") {

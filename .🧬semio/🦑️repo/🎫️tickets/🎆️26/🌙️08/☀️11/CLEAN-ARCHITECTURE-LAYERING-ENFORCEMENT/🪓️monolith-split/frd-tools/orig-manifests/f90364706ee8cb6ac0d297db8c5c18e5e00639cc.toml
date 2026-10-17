@@ -1,0 +1,119 @@
+[package]
+workspace = "../../../.."
+name = "semio-hub-norm"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Norm plugin — fifteen compliance-standard document apps (DIN/EN/ISO/VDI) with headless NormHost-backed checking in one hot-swappable WASM component"
+
+[lints]
+workspace = true
+
+[package.metadata.semio]
+role = "hub"
+
+[lib]
+path = "../../🦀️.rs"
+
+[[test]]
+name = "surface_render"
+path = "../../🖥️app-surface/🧪️tests/🖥️app-surface/🦀️.rs"
+
+[[test]]
+name = "compliance_gate"
+path = "../../🧪️tests/🚦️compliance-gate/🦀️.rs"
+
+[dependencies]
+semio-s-artifact-norm-en1993-viewer = { workspace = true }
+semio-s-artifact-norm-en1993-model = { workspace = true }
+semio-s-artifact-norm-en1993-editor = { workspace = true }
+semio-s-artifact-norm-iso16757-viewer = { workspace = true }
+semio-s-artifact-norm-iso16757-model = { workspace = true }
+semio-s-artifact-norm-iso16757-editor = { workspace = true }
+semio-s-artifact-norm-en1998-viewer = { workspace = true }
+semio-s-artifact-norm-en1998-model = { workspace = true }
+semio-s-artifact-norm-en1998-editor = { workspace = true }
+semio-s-artifact-norm-en1999-viewer = { workspace = true }
+semio-s-artifact-norm-en1999-model = { workspace = true }
+semio-s-artifact-norm-en1999-editor = { workspace = true }
+semio-s-artifact-norm-en1995-viewer = { workspace = true }
+semio-s-artifact-norm-en1995-model = { workspace = true }
+semio-s-artifact-norm-en1995-editor = { workspace = true }
+semio-s-artifact-norm-en1996-viewer = { workspace = true }
+semio-s-artifact-norm-en1996-model = { workspace = true }
+semio-s-artifact-norm-en1996-editor = { workspace = true }
+semio-s-artifact-norm-din4108-viewer = { workspace = true }
+semio-s-artifact-norm-din4108-model = { workspace = true }
+semio-s-artifact-norm-din4108-editor = { workspace = true }
+semio-s-artifact-norm-en1994-viewer = { workspace = true }
+semio-s-artifact-norm-en1994-model = { workspace = true }
+semio-s-artifact-norm-en1994-editor = { workspace = true }
+semio-s-artifact-norm-vdi3805-viewer = { workspace = true }
+semio-s-artifact-norm-vdi3805-model = { workspace = true }
+semio-s-artifact-norm-vdi3805-editor = { workspace = true }
+semio-s-artifact-norm-en1992-viewer = { workspace = true }
+semio-s-artifact-norm-en1992-model = { workspace = true }
+semio-s-artifact-norm-en1992-editor = { workspace = true }
+semio-s-artifact-norm-en1991-viewer = { workspace = true }
+semio-s-artifact-norm-en1991-model = { workspace = true }
+semio-s-artifact-norm-en1991-editor = { workspace = true }
+semio-s-artifact-norm-din16798-viewer = { workspace = true }
+semio-s-artifact-norm-din16798-model = { workspace = true }
+semio-s-artifact-norm-din16798-editor = { workspace = true }
+semio-s-artifact-norm-en1997-viewer = { workspace = true }
+semio-s-artifact-norm-en1997-model = { workspace = true }
+semio-s-artifact-norm-en1997-editor = { workspace = true }
+semio-s-artifact-norm-din18599-viewer = { workspace = true }
+semio-s-artifact-norm-din18599-model = { workspace = true }
+semio-s-artifact-norm-din18599-editor = { workspace = true }
+semio-s-artifact-norm-en1990-viewer = { workspace = true }
+semio-s-artifact-norm-en1990-model = { workspace = true }
+semio-s-artifact-norm-en1990-editor = { workspace = true }
+semio-framework-pack = { path = "../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
+semio-framework-ui-locale = { path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-dispatch-macros = { workspace = true }
+semio-framework-job = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-plugin = { workspace = true }
+semio-s-artifact-norm-din4108 = { workspace = true }
+semio-s-artifact-norm-din16798 = { workspace = true }
+semio-s-artifact-norm-din18599 = { workspace = true }
+semio-s-artifact-norm-en1990 = { workspace = true }
+semio-s-artifact-norm-en1991 = { workspace = true }
+semio-s-artifact-norm-en1992 = { workspace = true }
+semio-s-artifact-norm-en1993 = { workspace = true }
+semio-s-artifact-norm-en1994 = { workspace = true }
+semio-s-artifact-norm-en1995 = { workspace = true }
+semio-s-artifact-norm-en1996 = { workspace = true }
+semio-s-artifact-norm-en1997 = { workspace = true }
+semio-s-artifact-norm-en1998 = { workspace = true }
+semio-s-artifact-norm-en1999 = { workspace = true }
+semio-s-artifact-norm-iso16757 = { workspace = true }
+semio-s-artifact-norm-vdi3805 = { workspace = true }
+semio-s-artifact-stdio-semio = { workspace = true }
+
+[dev-dependencies]
+semio-s-artifact-norm-en1993-examples = { workspace = true }
+semio-s-artifact-norm-iso16757-examples = { workspace = true }
+semio-s-artifact-norm-en1998-examples = { workspace = true }
+semio-s-artifact-norm-en1999-examples = { workspace = true }
+semio-s-artifact-norm-en1995-examples = { workspace = true }
+semio-s-artifact-norm-en1996-examples = { workspace = true }
+semio-s-artifact-norm-din4108-examples = { workspace = true }
+semio-s-artifact-norm-en1994-examples = { workspace = true }
+semio-s-artifact-norm-vdi3805-examples = { workspace = true }
+semio-s-artifact-norm-vdi3805-examples-failing = { workspace = true }
+semio-s-artifact-norm-en1992-examples = { workspace = true }
+semio-s-artifact-norm-en1991-examples = { workspace = true }
+semio-s-artifact-norm-din16798-examples = { workspace = true }
+semio-s-artifact-norm-en1997-examples = { workspace = true }
+semio-s-artifact-norm-din18599-examples = { workspace = true }
+semio-s-artifact-norm-en1990-examples = { workspace = true }
+semio-s-plugin-norm-compliance = { workspace = true }
+semio-s-plugin-norm-app-surface = { workspace = true }
+semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
+semio-framework-async-macros = { workspace = true }
+semio-s-artifact-norm-contract = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }

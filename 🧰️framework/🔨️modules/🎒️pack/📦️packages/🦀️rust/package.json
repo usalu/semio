@@ -14,6 +14,11 @@
   "devDependencies": {
     "@webassemblyjs/leb128": "1.13.2",
     "@semio-tech/process": "workspace:*",
-    "@semio-tech/value-ts": "workspace:*"
+    "@semio-tech/value-ts": "workspace:*",
+    "@semio-tech/framework-replication": "workspace:*",
+    "@semio-tech/framework-pack-record-ts": "workspace:*"
+  },
+  "dependencies": {
+    "@semio-tech/framework-pack-error-ts": "workspace:*"
   }
 }

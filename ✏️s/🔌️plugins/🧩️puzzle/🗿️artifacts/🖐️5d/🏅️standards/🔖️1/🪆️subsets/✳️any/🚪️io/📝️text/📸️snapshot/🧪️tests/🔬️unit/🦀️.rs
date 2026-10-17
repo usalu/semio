@@ -1,6 +1,7 @@
+use crate::Puzzle5dSnapshot;
 
 use crate::standards::v1::subsets::any::io::text::snapshot::*;
-use crate::{Puzzle5dCompatSpecificity, Puzzle5dFastener, Puzzle5dGrip, Puzzle5dGrip2d, Puzzle5dGrip3d, Puzzle5dKindCompatibility, Puzzle5dMeta, Puzzle5dPart, Puzzle5dPart2d, Puzzle5dPart3d, Puzzle5dPartAnchor, Puzzle5dScale};
+use crate::standards::v1::subsets::any::schema::document_records::{Puzzle5dCompatSpecificity, Puzzle5dFastener, Puzzle5dGrip, Puzzle5dGrip2d, Puzzle5dGrip3d, Puzzle5dKindCompatibility, Puzzle5dMeta, Puzzle5dPart, Puzzle5dPart2d, Puzzle5dPart3d, Puzzle5dPartAnchor, Puzzle5dScale};
 
 #[test]
 fn puzzle5d_projection_dsl_round_trips() {

@@ -1,6 +1,6 @@
 /** 🪝 Extension invocation completion ownership and public invocation paging. */
 import { dispatchInvokeExtensionEffect, runInvokeExtensionEffect } from "../../🧱️elements/🏛️ShellHost/🟦️.tsx";
-import type { LoadedProgramState } from "../../🧱️elements/🐚️Shell/🟦️.tsx";
+import type { LoadedProgramState } from "../../🧱️elements/🐚️Shell/📦️program-sessions/🟦️.ts";
 import extensionInvocationFixture from "../../🧱️elements/🏛️ShellHost/🧪️tests/🧫️fixtures/🔣️extension-invocation.json";
 import { extensionInvocationWireFixture } from "../../../../🌊️flow/🧪️tests/🧫️fixtures/🟦️.ts";
 import { describe, expect, it, vi } from "vitest";

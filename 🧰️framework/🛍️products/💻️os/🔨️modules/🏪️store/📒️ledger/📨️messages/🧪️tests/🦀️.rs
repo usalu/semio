@@ -33,6 +33,5 @@ fn current_message_ledger_retirement_pays_original_pages_and_arrays() {
     }
     assert_eq!(total_freed, expected); assert!(owner.original.backing_is_empty());
     let (_, born, freed) = semio_framework_trace_memory_testing::observe_backing(|| drop(owner)); assert_eq!((born, freed), (0, 0));
-    eprintln!("[DEBUG] original message ledger: 128page/6array exact frees, fixed policy, refusal retains every pointer, allocator release={total_freed}");
 }
 

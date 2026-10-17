@@ -8,10 +8,10 @@ use super::*;
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 pub struct InsertViewpoint {
-    pub(crate) topic_guid: String,
-    pub(crate) viewpoint: BcfViewpoint,
+    pub topic_guid: String,
+    pub viewpoint: BcfViewpoint,
     #[value(default, skip_serializing_if = "Option::is_none")]
-    pub(crate) index: Option<usize>,
+    pub index: Option<usize>,
 }
 
 impl protocol::MutationKind<BcfSnapshot, BcfMutation> for InsertViewpoint {

@@ -7,7 +7,7 @@ import { describe, expect, test } from "bun:test";
 import { diffChars } from "diff";
 import fixture from "../🧫️fixtures/✂️text-splice/🔣️.json";
 import fc from "fast-check";
-import { machineTypingLawFixture as typingLaw } from "../../../../🛠️tool-machine/🧪️tests/🧫️fixtures/🟦️.ts";
+import { machineTypingLawFixture as typingLaw } from "@semio-tech/framework-tool-machine-ts/testing/fixtures";
 import { applyTextSpliceV1, composeTextSplicesV1, createTextEditorTypingRunV1, locateTextSpliceV1, TEXT_EDITOR_TYPING_BUFFER_ARG, TEXT_EDITOR_TYPING_COMMIT_ARG, TEXT_EDITOR_TYPING_HOST_SIGNALS, TEXT_EDITOR_TYPING_IDLE_MS, rebaseTextEditsV1, receiveTextEditorSceneV1, refuseTextEditorSpliceV1, scalarOfUtf8OffsetV1, sendTextEditorSpliceV1, settleTextEditorSpliceV1, TEXT_SPLICE_CONTEXT_SCALARS, TEXT_SPLICE_MIN_TWO_SIDED_SCALARS, textEditorAppliedSpliceV1, textEditorSpliceHostV1, textEditorTypingV1, textSpliceFromEditV1, utf8OffsetOfScalarV1, type TextEditorSpliceHostV1, type TextEditorSpliceViewV1, type TextSpliceV1 } from "../../✂️text-splice/🟦️.ts";
 
 describe("text splice", () => {
@@ -486,7 +486,7 @@ describe("text editor typing run (host side)", () => {
 });
 
 test("draft JSON wire preserves literal ranges and canonical native text authority",()=>{
- for(const row of fixture.draftJson){expect(JSON.stringify(row.changes)).toBe(row.json);expect(JSON.parse(row.json)).toEqual(row.changes);console.log("[DEBUG] draft JSON neutral="+row.id+" bytes="+new TextEncoder().encode(row.json).length);}
+ for(const row of fixture.draftJson){expect(JSON.stringify(row.changes)).toBe(row.json);expect(JSON.parse(row.json)).toEqual(row.changes);}
  const source=require("node:fs").readFileSync(require("node:path").resolve(import.meta.dir,"../../✂️text-splice/🦀️.rs"),"utf8");const writer=source.slice(source.indexOf("pub fn write_draft_changes_json_into"),source.indexOf("pub fn apply_draft_changes"));expect(writer).toContain("write_json_source_into");expect(writer).not.toContain("serde_json");
 });
 

@@ -1,5 +1,11 @@
 //! 🧪️ Retained image decoding defers publication and closes every child at its real grant.
-use super::*;
+use semio_framework_test_fixtures::fixture_text;
+
+#[allow(unused_imports)] use semio_s_artifact_draw_drawing_editor::{DRAWING_BOUNDED_PAYLOAD_SCHEMA, DRAWING_IMAGE_PUBLICATION_CONTRACTS, DRAWING_IMAGE_RAW_BYTES, DRAWING_IMAGE_TOOL_IDS, DrawingCommand, DrawingPlayApp};
+#[allow(unused_imports)] use semio_s_artifact_draw_drawing_editor_commands::import_image;
+#[allow(unused_imports)] use semio_framework_plugin::retained_command::{ArtifactCommandWork,ArtifactCommandInputs,ArtifactCommandWorkStep};
+#[allow(unused_imports)] use semio_framework_value::{retirement::controlled::ControlledRetirement,retained_clone::{RetainedCloneGrant,RetainedCloneStep},ValueError};
+#[allow(unused_imports)] use semio_s_artifact_draw_drawing_editor::image_job::*;
 fn close(work:&mut Work) {
     use semio_framework_job::InteractiveJobCloseStep;
     work.begin_close();
@@ -14,7 +20,7 @@ fn close(work:&mut Work) {
 }
 #[test]
 fn retained_image_import_shared_cases() {
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../../🎮️commands/📥️import-image/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
  for row in fixture["cases"].as_array().unwrap() {
   let snapshot=DrawingSnapshot::default();let saved=snapshot.clone();let command=DrawingCommand::ImportImage(import_image::ImportImage {payload:row["input"]["payload"].as_str().unwrap().into(),name:Some("Artwork.png".into()),parent_id:None,index:None});
   let config=NoConfig {};let history=semio_framework_plugin::HistoryView::empty();let interaction=protocol::InteractionState::default();let hover=semio_framework_plugin::app::InteractionHoverState::new();
@@ -24,12 +30,12 @@ fn retained_image_import_shared_cases() {
   for stop in [0,1,25,100,usize::MAX] {
    let mut work=Work::new();let mut completed=false;
    for at in 0..100000 {if at==stop {break;}
-    let mut cx=semio_framework_job::StepContext::new(semio_framework_job::OperationId(1),semio_framework_job::Generation(1),semio_framework_job::StepBudget::new(1,u64::MAX).with_retained_work(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:262144,maximum_capacity_bytes:536870912,maximum_release_bytes:0,maximum_depth:128}),cancel.clone(),semio_framework_job::default_now_us,&mut sequence);
-    match work.step(&input,&mut cx).unwrap() {ArtifactCommandWorkStep::Progress {..}=>{},ArtifactCommandWorkStep::Complete(emit)=>{assert_eq!(emit.artifact_mutations.len(),2);let mut after=snapshot.clone();for mutation in emit.artifact_mutations {crate::mutations::apply_drawing_mutation(&mut after,&mutation).unwrap();}let asset=after.assets.values().next().unwrap();assert_eq!(serde_json::to_value(asset).unwrap(),row["expected"]);completed=true;break;},_=>panic!("Unexpected image import result")}
+    let mut cx_retained=semio_framework_job::RetainedCloneProgress::default();
+    let mut cx=semio_framework_job::StepContext::new(semio_framework_job::OperationId(1),semio_framework_job::Generation(1),semio_framework_job::StepBudget::new(1,u64::MAX,RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:262144,maximum_capacity_bytes:536870912,maximum_release_bytes:0,maximum_depth:128}),cancel.clone(),semio_framework_job::default_now_us,&mut sequence,&mut cx_retained);
+    match work.step(&input,&mut cx).unwrap() {ArtifactCommandWorkStep::Progress {..}=>{},ArtifactCommandWorkStep::Complete(emit)=>{assert_eq!(emit.artifact_mutations.len(),2);let mut after=snapshot.clone();for mutation in emit.artifact_mutations {semio_s_artifact_draw_drawing_editor::mutations::apply_drawing_mutation(&mut after,&mutation).unwrap();}let asset=after.assets.values().next().unwrap();assert_eq!(serde_json::to_value(asset).unwrap(),row["expected"]);completed=true;break;},_=>panic!("Unexpected image import result")}
     assert_eq!(snapshot,saved);
    }
    if stop==usize::MAX {assert!(completed);}assert_eq!(snapshot,saved);close(&mut work);
   }
  }
- eprintln!("[DEBUG] Retained image import deferred publication, original source and exact child retirement laws executed");
 }

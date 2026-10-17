@@ -1,0 +1,152 @@
+[
+  {
+    "id": "mounted",
+    "target": "tools",
+    "present": true,
+    "mounted": true,
+    "main": "exact",
+    "descendant": "none",
+    "declaration": true,
+    "expected": "none"
+  },
+  {
+    "id": "inactive",
+    "target": "tools",
+    "present": true,
+    "mounted": false,
+    "main": "none",
+    "descendant": "none",
+    "declaration": true,
+    "expected": "none"
+  },
+  {
+    "id": "missing",
+    "target": "tools",
+    "present": false,
+    "mounted": false,
+    "main": "none",
+    "descendant": "none",
+    "declaration": true,
+    "expected": "missing"
+  },
+  {
+    "id": "leases",
+    "target": "leases",
+    "present": true,
+    "mounted": true,
+    "main": "exact",
+    "descendant": "none",
+    "declaration": true,
+    "expected": "infrastructure"
+  },
+  {
+    "id": "foreign",
+    "target": "tools",
+    "present": true,
+    "mounted": true,
+    "main": "exact",
+    "descendant": "none",
+    "declaration": false,
+    "expected": "declaration"
+  },
+  {
+    "id": "no-mapping",
+    "target": "tools",
+    "present": true,
+    "mounted": true,
+    "main": "none",
+    "descendant": "none",
+    "declaration": true,
+    "expected": "mapping"
+  },
+  {
+    "id": "duplicate",
+    "target": "tools",
+    "present": true,
+    "mounted": true,
+    "main": "duplicate",
+    "descendant": "none",
+    "declaration": true,
+    "expected": "mapping"
+  },
+  {
+    "id": "wrong-root",
+    "target": "tools",
+    "present": true,
+    "mounted": true,
+    "main": "wrong-root",
+    "descendant": "none",
+    "declaration": true,
+    "expected": "mapping"
+  },
+  {
+    "id": "inactive-mapped",
+    "target": "tools",
+    "present": true,
+    "mounted": false,
+    "main": "exact",
+    "descendant": "none",
+    "declaration": true,
+    "expected": "mapping"
+  },
+  {
+    "id": "child-backing",
+    "target": "tools",
+    "present": true,
+    "mounted": true,
+    "main": "exact",
+    "descendant": "backing",
+    "declaration": true,
+    "expected": "descendants"
+  },
+  {
+    "id": "child-mount",
+    "target": "tools",
+    "present": true,
+    "mounted": true,
+    "main": "exact",
+    "descendant": "mount",
+    "declaration": true,
+    "expected": "descendants"
+  },
+  {
+    "id": "unrelated",
+    "target": "tools",
+    "present": true,
+    "mounted": true,
+    "main": "exact",
+    "descendant": "outside",
+    "declaration": true,
+    "expected": "none"
+  },
+  {
+    "id": "prefix-boundary",
+    "target": "tools",
+    "present": true,
+    "mounted": true,
+    "main": "exact",
+    "descendant": "prefix",
+    "declaration": true,
+    "expected": "none"
+  },
+  {
+    "id": "missing-device",
+    "target": "tools",
+    "present": true,
+    "mounted": true,
+    "main": "missing-device",
+    "descendant": "none",
+    "declaration": true,
+    "expected": "mapping"
+  },
+  {
+    "id": "wrong-device",
+    "target": "tools",
+    "present": true,
+    "mounted": true,
+    "main": "wrong-device",
+    "descendant": "none",
+    "declaration": true,
+    "expected": "mapping"
+  }
+]

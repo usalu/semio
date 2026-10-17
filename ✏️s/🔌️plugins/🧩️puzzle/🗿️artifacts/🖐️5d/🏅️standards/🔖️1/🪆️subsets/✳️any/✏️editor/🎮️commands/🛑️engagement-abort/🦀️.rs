@@ -1,8 +1,9 @@
 //! 🛑️ `engagement-abort` command.
+use crate::editor::puzzle5d::view::puzzle5d_fill_tool_active;
 
 use crate::editor::puzzle5d::modes::edit::tools::fill as fill_tool;
-use crate::editor::puzzle5d::modes::edit::windows::world3d;
-use crate::editor::puzzle5d::{puzzle5d_fill_tool_active, Puzzle5dActionCtx, PUZZLE5D_DEFAULT_UTILITY};
+use crate::editor::puzzle5d::interaction::Puzzle5dActionCtx;
+use crate::editor::puzzle5d::entities::PUZZLE5D_DEFAULT_UTILITY;
 use semio_framework_pack_json::Value;
 use semio_framework_plugin::kernel::Effect;
 use semio_framework_tool_run::{TOOL_RUN_ABORT_ACTION_ID, TOOL_RUN_ARG_GENERATION, TOOL_RUN_ARG_RUN_ID};
@@ -30,5 +31,5 @@ pub fn engagement_abort(ctx: &mut Puzzle5dActionCtx<'_>, _args: Option<&Value>) 
         ctx.scene.active_utility = PUZZLE5D_DEFAULT_UTILITY.into();
         return;
     }
-    ctx.scene.active_utility = if ctx.window_kind == world3d::WINDOW_KIND_ID { world3d::utilities::transform::UTILITY_ID.into() } else { PUZZLE5D_DEFAULT_UTILITY.into() };
+    ctx.scene.active_utility = if ctx.window_kind == crate::editor::puzzle5d::entities::PUZZLE5D_WORLD_WINDOW_KIND_ID { crate::editor::puzzle5d::modes::edit::windows::world3d::utilities::transform::UTILITY_ID.into() } else { PUZZLE5D_DEFAULT_UTILITY.into() };
 }

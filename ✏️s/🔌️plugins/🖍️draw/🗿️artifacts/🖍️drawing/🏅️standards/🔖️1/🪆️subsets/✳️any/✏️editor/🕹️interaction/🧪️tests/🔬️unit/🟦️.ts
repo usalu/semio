@@ -2,8 +2,9 @@
 import { expect, test } from "bun:test";
 
 test("Select All resolves document topology without a prior pick", async () => {
+  const manifest = await Bun.file(new URL("../../../🛂️manifest/🦀️.rs", import.meta.url)).text();
   const source = await Bun.file(new URL("../../../🦀️.rs", import.meta.url)).text();
-  expect(source.includes("hierarchy: HierarchyProvider::Topology")).toBe(true);
+  expect(manifest.includes("hierarchy: HierarchyProvider::Topology")).toBe(true);
   expect(source.includes("fn interaction_topology(")).toBe(true);
 });
 
@@ -42,12 +43,12 @@ test("point references match neutral topology and their exact geometry revision"
   for(const row of pointFixture) {
     const segments=row.segments as PathGeometrySegment[],geometry=geometryId(segments)!;
     expect(geometry).toBe(blake3Hex(Uint8Array.from(row.bytes.match(/../g)!,byte=>parseInt(byte,16))));
-    const slots=segments.flatMap((segment,index)=>pointSlots(segment).map(point=>[index,point]));
-    expect<unknown>(slots).toEqual(row.points);
+    const slots=segments.flatMap((segment,index)=>pointSlots(segment).map((point):[number,ReturnType<typeof pointSlots>[number]]=>[index,point]));
+    expect<typeof row.points>(slots).toEqual(row.points);
     for(const [index,point] of slots) {
       const reference={layerId:row.layerId,geometry,index,point};
       expect(validate(reference)).toBe(true);
-      expect<unknown>(parsePointId(pointId(reference as Parameters<typeof pointId>[0])!)).toEqual(reference);
+      expect(parsePointId(pointId(reference as Parameters<typeof pointId>[0])!)).toEqual(reference);
     }
     if(segments.length) {
       const moved=structuredClone(segments); if(moved[0]!.kind!=="close")moved[0]!.to[0]+=1;
@@ -70,7 +71,7 @@ for(const row of pointTopologyFixture)test(`point topology: ${row.name}`,()=>{
   const topology=drawingPointTopology(row.layers as DrawingInteractionLayer[]);
   const actual=topology.ordered.map(node=>{const point=parsePointId(node.id)!;expect(node.granularity).toBe("point");expect(node.parent).toBeUndefined();return [point.layerId,point.index,point.point];});
   expect(actual).toEqual(row.points);
-  const root=new Object3D(),oracle:unknown[][]=[];
+  const root=new Object3D(),oracle:(string|number)[][]=[];
   const build=(layers:readonly DrawingInteractionLayer[],parent:Object3D):void=>{
     for(const layer of layers){const node=new Object3D();node.name=layer.base.id;node.visible=layer.base.visible!==false && layer.base.locked!==true;node.userData.layer=layer;parent.add(node);if(layer.kind==="group")build(layer.children as DrawingInteractionLayer[] ?? [],node);}
   };
@@ -79,7 +80,7 @@ for(const row of pointTopologyFixture)test(`point topology: ${row.name}`,()=>{
     const layer=node.userData.layer as DrawingInteractionLayer|undefined;
     if(layer?.kind==="path")for(const [index,segment] of (layer.segments??[]).entries())for(const point of pointSlots(segment))oracle.push([layer.base.id,index,point]);
   });
-  expect<unknown>(actual).toEqual(oracle);
+  expect(actual).toEqual(oracle);
 });
 
 import pointPicks from "../../🎯️points/🧪️tests/🧫️fixtures/🖱️picking/🔣️.json";

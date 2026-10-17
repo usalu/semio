@@ -1,0 +1,21 @@
+import {test,expect} from "bun:test";
+import Ajv from "ajv";
+import {readFileSync,mkdtempSync,writeFileSync,mkdirSync} from "node:fs";
+import {resolve} from "node:path";
+import {readNativeCatalogV1} from "../🟦️.ts";
+import schema from "../🧬️schema/🔣️.json";
+import fixture from "./🧫️fixtures/🔣️.json";
+const root=resolve(import.meta.dir,"../../../../../../../..");
+test("Native catalog contract admits empty and alternate owner contributions",()=>{const oracle=new Ajv({strict:true}).compile(schema);expect(oracle(fixture.empty)).toBe(true);expect(oracle(fixture.alternate)).toBe(true);for(const invalid of fixture.refused.slice(0,2))expect(oracle(invalid)).toBe(false);});
+test("Original generic native receivers do not compile generated catalogs",()=>{for(const owner of ["🧰️framework/🛍️products/💻️os/🔨️modules/🏃️run/🏗️bootstrap/🦀️.rs","🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🦀️.rs","🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs"]){const source=readFileSync(resolve(root,owner),"utf8");expect(source).not.toMatch(/(?:include!|include_str!|#\[path)[^\n]*registry\/🤖️generated/u);}});
+
+test("Native parser executes original Rust ownership source and independent schema projection",async()=>{
+ const owner=resolve(import.meta.dir,"../🦀️.rs"),renderer=resolve(root,"🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📇️catalog/🦀️.rs"),output=process.env.SEMIO_TEST_ARTIFACT_DIR!,directory=mkdtempSync(resolve(output,"p-"));
+ writeFileSync(resolve(directory,"Cargo.toml"),'[workspace]\n[package]\nname="native_catalog_receiving_law"\nversion="0.0.0"\nedition="2021"\n[lib]\npath="lib.rs"\n[dependencies]\nserde={version="1",features=["derive"]}\nserde_json="1"\n');
+ writeFileSync(resolve(directory,"lib.rs"),'extern crate self as semio_framework_os_kernel;\n#[path='+JSON.stringify(owner)+'] pub mod native_catalog;\n#[path='+JSON.stringify(renderer)+'] pub mod renderer_catalog;\n#[test] fn actual_renderer_catalog_owns_host_alias_and_activation(){let catalog=native_catalog::read_native_catalog_v1('+JSON.stringify(JSON.stringify(fixture.alternate))+').unwrap();renderer_catalog::install_plugin_catalog_v1(catalog).unwrap();assert_eq!(renderer_catalog::resolve_registry_plugin_id("draft"),"drawing");assert_eq!(renderer_catalog::resolve_playground_app_id("draft"),Some("work"));assert_eq!(renderer_catalog::resolve_plugin_host_config("sketch").unwrap().landing_app_id,"start");assert_eq!(renderer_catalog::plugin_artifact_kind_activations(),&[("picture","drawing")]);println!("[DEBUG] Original renderer hosts and activation projection agree with alternate catalog");}\n');
+ if(process.env.SEMIO_NATIVE_TEST_CATALOG){const published=readNativeCatalogV1(JSON.parse(readFileSync(resolve(process.env.SEMIO_NATIVE_TEST_CATALOG,"🦀️catalog.json"),"utf8")));writeFileSync(resolve(directory,"publication.json"),JSON.stringify(published));writeFileSync(resolve(directory,"lib.rs"),readFileSync(resolve(directory,"lib.rs"),"utf8")+'\n#[test] fn actual_caller_publication_is_admitted(){let catalog=native_catalog::read_native_catalog_v1(include_str!("publication.json")).unwrap();assert!(!catalog.plugins.is_empty());println!("[DEBUG] Specific actual native publication plugins={} playgrounds={}",catalog.plugins.len(),catalog.playgrounds.len());}\n');}
+ const child=Bun.spawn(["cargo","test","--offline","--manifest-path",resolve(directory,"Cargo.toml"),"--target-dir",resolve(output,"t"),"--","--nocapture"],{cwd:directory,env:{...process.env,CARGO_BUILD_BUILD_DIR:resolve(output,"b")},stdout:"pipe",stderr:"pipe"});
+ const timer=setTimeout(()=>child.kill("SIGTERM"),120000);try{const [stdout,stderr,status]=await Promise.all([new Response(child.stdout).text(),new Response(child.stderr).text(),child.exited]);expect(status,stderr).toBe(0);expect(stdout).toContain("Native catalog empty/alternate/refused owner laws");console.log(stdout);}finally{clearTimeout(timer);}
+ const admitted=readNativeCatalogV1(fixture.alternate);expect(admitted.plugins.map(row=>row.pluginId)).toEqual(fixture.expected.plugins);for(const invalid of fixture.refused)expect(()=>readNativeCatalogV1(invalid)).toThrow();
+ writeFileSync(resolve(output,"native-parser-runtime.md"),"Original Rust source laws ran successfully with Cargo and the same portable corpus admitted by Ajv.\n");
+},150000);

@@ -1,5 +1,7 @@
 //! 🧪️ CAD native codecs preserve exact model and drawing child identities.
 
+use semio_framework_test_fixtures::fixture_path;
+
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
 use semio_s_artifact_cad_cad_model::CadArtifact;
@@ -10,7 +12,7 @@ use semio_framework_os_kernel::{DiffBinary, DiffText};
 
 #[test]
 fn cad_document_contract_round_trips_exact_child_identities() {
-    let fixture: serde_json::Value = serde_json::from_str(std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🧪️tests/🧫️fixtures/🔬️contract/🪪️document/🔣️.json")).expect("../../../🧪️tests/🧫️fixtures/🔬️contract/🪪️document/🔣️.json").leak()).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(std::fs::read_to_string(fixture_path!("../../../🧪️tests/🧫️fixtures/🔬️contract/🪪️document/🔣️.json")).expect("../../../🧪️tests/🧫️fixtures/🔬️contract/🪪️document/🔣️.json").leak()).unwrap();
     let source = fixture["document"].to_string();
     let artifact: CadArtifact = semio_framework_pack_json::from_json_str(&source, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let snapshot: CadSnapshot = semio_framework_pack_json::from_json_str(&source, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
@@ -47,7 +49,6 @@ fn cad_document_contract_round_trips_exact_child_identities() {
     assert_eq!(alias.target.artifact_id,"model-b");
     assert!(semio_s_artifact_cad_cad_model::snapshot::cad_model_child("model-a", &semio_framework_artifact_reference::ArtifactRef { artifact_id: "model-a".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "drawing".into() } }).is_err());
     assert!(semio_s_artifact_cad_cad_model::snapshot::cad_drawing_child("drawing-a", &semio_framework_artifact_reference::ArtifactRef { artifact_id: "drawing-a".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "drawing".into() } }).is_ok());
-    eprintln!("[DEBUG] Cad document preserves two exact child identities, {} reference keys, snapshot text/binary and sparse/replacement diff round trips against the serde_json corpus", expected.len());
 }
 
 #[test]
@@ -55,18 +56,18 @@ fn cad_brep_events_preserve_ordered_geometry_ownership_and_exact_inverse() {
     use protocol::{Mutation, OpBinary, OpText};
     let cases = [
         (
-            std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🧪️tests/🧫️fixtures/🧬️mutations/🧊️create-brep/🧊️inserts-topology-at-middle/📸️snapshot/⬅️before/🔣️.json")).expect("../../../🧪️tests/🧫️fixtures/🧬️mutations/🧊️create-brep/🧊️inserts-topology-at-middle/📸️snapshot/⬅️before/🔣️.json").leak(),
-            std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🧪️tests/🧫️fixtures/🧬️mutations/🧊️create-brep/🧊️inserts-topology-at-middle/📸️snapshot/➡️after/🔣️.json")).expect("../../../🧪️tests/🧫️fixtures/🧬️mutations/🧊️create-brep/🧊️inserts-topology-at-middle/📸️snapshot/➡️after/🔣️.json").leak(),
-            std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🧪️tests/🧫️fixtures/🧬️mutations/🧊️create-brep/🧊️inserts-topology-at-middle/🦠️mutation/🔣️.json")).expect("../../../🧪️tests/🧫️fixtures/🧬️mutations/🧊️create-brep/🧊️inserts-topology-at-middle/🦠️mutation/🔣️.json").leak(),
-            std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🧪️tests/🧫️fixtures/🧬️mutations/🧊️create-brep/🧊️inserts-topology-at-middle/🦠️mutation/🗣️.dsl.semio")).expect("../../../🧪️tests/🧫️fixtures/🧬️mutations/🧊️create-brep/🧊️inserts-topology-at-middle/🦠️mutation/🗣️.dsl.semio").leak(),
-            std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🧪️tests/🧫️fixtures/🧬️mutations/🧊️create-brep/🧊️inserts-topology-at-middle/🔺️diff/🔣️.json")).expect("../../../🧪️tests/🧫️fixtures/🧬️mutations/🧊️create-brep/🧊️inserts-topology-at-middle/🔺️diff/🔣️.json").leak(),
+            std::fs::read_to_string(fixture_path!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🧊️create-brep/🧊️inserts-topology-at-middle/📸️snapshot/⬅️before/🔣️.json")).expect("../../../🧪️tests/🧫️fixtures/🧬️mutations/🧊️create-brep/🧊️inserts-topology-at-middle/📸️snapshot/⬅️before/🔣️.json").leak(),
+            std::fs::read_to_string(fixture_path!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🧊️create-brep/🧊️inserts-topology-at-middle/📸️snapshot/➡️after/🔣️.json")).expect("../../../🧪️tests/🧫️fixtures/🧬️mutations/🧊️create-brep/🧊️inserts-topology-at-middle/📸️snapshot/➡️after/🔣️.json").leak(),
+            std::fs::read_to_string(fixture_path!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🧊️create-brep/🧊️inserts-topology-at-middle/🦠️mutation/🔣️.json")).expect("../../../🧪️tests/🧫️fixtures/🧬️mutations/🧊️create-brep/🧊️inserts-topology-at-middle/🦠️mutation/🔣️.json").leak(),
+            std::fs::read_to_string(fixture_path!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🧊️create-brep/🧊️inserts-topology-at-middle/🦠️mutation/🗣️.dsl.semio")).expect("../../../🧪️tests/🧫️fixtures/🧬️mutations/🧊️create-brep/🧊️inserts-topology-at-middle/🦠️mutation/🗣️.dsl.semio").leak(),
+            std::fs::read_to_string(fixture_path!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🧊️create-brep/🧊️inserts-topology-at-middle/🔺️diff/🔣️.json")).expect("../../../🧪️tests/🧫️fixtures/🧬️mutations/🧊️create-brep/🧊️inserts-topology-at-middle/🔺️diff/🔣️.json").leak(),
         ),
         (
-            std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🧪️tests/🧫️fixtures/🧬️mutations/🧹delete-brep/🧹️removes-middle-topology/📸️snapshot/⬅️before/🔣️.json")).expect("../../../🧪️tests/🧫️fixtures/🧬️mutations/🧹delete-brep/🧹️removes-middle-topology/📸️snapshot/⬅️before/🔣️.json").leak(),
-            std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🧪️tests/🧫️fixtures/🧬️mutations/🧹delete-brep/🧹️removes-middle-topology/📸️snapshot/➡️after/🔣️.json")).expect("../../../🧪️tests/🧫️fixtures/🧬️mutations/🧹delete-brep/🧹️removes-middle-topology/📸️snapshot/➡️after/🔣️.json").leak(),
-            std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🧪️tests/🧫️fixtures/🧬️mutations/🧹delete-brep/🧹️removes-middle-topology/🦠️mutation/🔣️.json")).expect("../../../🧪️tests/🧫️fixtures/🧬️mutations/🧹delete-brep/🧹️removes-middle-topology/🦠️mutation/🔣️.json").leak(),
-            std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🧪️tests/🧫️fixtures/🧬️mutations/🧹delete-brep/🧹️removes-middle-topology/🦠️mutation/🗣️.dsl.semio")).expect("../../../🧪️tests/🧫️fixtures/🧬️mutations/🧹delete-brep/🧹️removes-middle-topology/🦠️mutation/🗣️.dsl.semio").leak(),
-            std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🧪️tests/🧫️fixtures/🧬️mutations/🧹delete-brep/🧹️removes-middle-topology/🔺️diff/🔣️.json")).expect("../../../🧪️tests/🧫️fixtures/🧬️mutations/🧹delete-brep/🧹️removes-middle-topology/🔺️diff/🔣️.json").leak(),
+            std::fs::read_to_string(fixture_path!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🧹delete-brep/🧹️removes-middle-topology/📸️snapshot/⬅️before/🔣️.json")).expect("../../../🧪️tests/🧫️fixtures/🧬️mutations/🧹delete-brep/🧹️removes-middle-topology/📸️snapshot/⬅️before/🔣️.json").leak(),
+            std::fs::read_to_string(fixture_path!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🧹delete-brep/🧹️removes-middle-topology/📸️snapshot/➡️after/🔣️.json")).expect("../../../🧪️tests/🧫️fixtures/🧬️mutations/🧹delete-brep/🧹️removes-middle-topology/📸️snapshot/➡️after/🔣️.json").leak(),
+            std::fs::read_to_string(fixture_path!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🧹delete-brep/🧹️removes-middle-topology/🦠️mutation/🔣️.json")).expect("../../../🧪️tests/🧫️fixtures/🧬️mutations/🧹delete-brep/🧹️removes-middle-topology/🦠️mutation/🔣️.json").leak(),
+            std::fs::read_to_string(fixture_path!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🧹delete-brep/🧹️removes-middle-topology/🦠️mutation/🗣️.dsl.semio")).expect("../../../🧪️tests/🧫️fixtures/🧬️mutations/🧹delete-brep/🧹️removes-middle-topology/🦠️mutation/🗣️.dsl.semio").leak(),
+            std::fs::read_to_string(fixture_path!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🧹delete-brep/🧹️removes-middle-topology/🔺️diff/🔣️.json")).expect("../../../🧪️tests/🧫️fixtures/🧬️mutations/🧹delete-brep/🧹️removes-middle-topology/🔺️diff/🔣️.json").leak(),
         ),
     ];
     for (before, after, input, text, diff) in cases {
@@ -82,7 +83,6 @@ fn cad_brep_events_preserve_ordered_geometry_ownership_and_exact_inverse() {
         let mut restored = after;
         for inverse in mutation.inverse(&before).unwrap() { restored = protocol::apply_diff(inverse.diff(&restored).diff(), &restored).unwrap(); }
         assert_eq!(restored, before);
-        eprintln!("[DEBUG] Cad topology event preserves exact middle-position inverse and native text/binary against the independent serde_json corpus");
     }
 }
 
@@ -91,12 +91,12 @@ fn cad_brep_events_preserve_ordered_geometry_ownership_and_exact_inverse() {
 async fn cad_brep_events_invert_to_the_negative_diff() {
     let cases = [
         (
-            std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🧪️tests/🧫️fixtures/🧬️mutations/🧊️create-brep/🧊️inserts-topology-at-middle/📸️snapshot/⬅️before/🔣️.json")).expect("../../../🧪️tests/🧫️fixtures/🧬️mutations/🧊️create-brep/🧊️inserts-topology-at-middle/📸️snapshot/⬅️before/🔣️.json").leak(),
-            std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🧪️tests/🧫️fixtures/🧬️mutations/🧊️create-brep/🧊️inserts-topology-at-middle/🦠️mutation/🔣️.json")).expect("../../../🧪️tests/🧫️fixtures/🧬️mutations/🧊️create-brep/🧊️inserts-topology-at-middle/🦠️mutation/🔣️.json").leak(),
+            std::fs::read_to_string(fixture_path!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🧊️create-brep/🧊️inserts-topology-at-middle/📸️snapshot/⬅️before/🔣️.json")).expect("../../../🧪️tests/🧫️fixtures/🧬️mutations/🧊️create-brep/🧊️inserts-topology-at-middle/📸️snapshot/⬅️before/🔣️.json").leak(),
+            std::fs::read_to_string(fixture_path!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🧊️create-brep/🧊️inserts-topology-at-middle/🦠️mutation/🔣️.json")).expect("../../../🧪️tests/🧫️fixtures/🧬️mutations/🧊️create-brep/🧊️inserts-topology-at-middle/🦠️mutation/🔣️.json").leak(),
         ),
         (
-            std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🧪️tests/🧫️fixtures/🧬️mutations/🧹delete-brep/🧹️removes-middle-topology/📸️snapshot/⬅️before/🔣️.json")).expect("../../../🧪️tests/🧫️fixtures/🧬️mutations/🧹delete-brep/🧹️removes-middle-topology/📸️snapshot/⬅️before/🔣️.json").leak(),
-            std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🧪️tests/🧫️fixtures/🧬️mutations/🧹delete-brep/🧹️removes-middle-topology/🦠️mutation/🔣️.json")).expect("../../../🧪️tests/🧫️fixtures/🧬️mutations/🧹delete-brep/🧹️removes-middle-topology/🦠️mutation/🔣️.json").leak(),
+            std::fs::read_to_string(fixture_path!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🧹delete-brep/🧹️removes-middle-topology/📸️snapshot/⬅️before/🔣️.json")).expect("../../../🧪️tests/🧫️fixtures/🧬️mutations/🧹delete-brep/🧹️removes-middle-topology/📸️snapshot/⬅️before/🔣️.json").leak(),
+            std::fs::read_to_string(fixture_path!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🧹delete-brep/🧹️removes-middle-topology/🦠️mutation/🔣️.json")).expect("../../../🧪️tests/🧫️fixtures/🧬️mutations/🧹delete-brep/🧹️removes-middle-topology/🦠️mutation/🔣️.json").leak(),
         ),
     ];
     for (before, input) in cases {

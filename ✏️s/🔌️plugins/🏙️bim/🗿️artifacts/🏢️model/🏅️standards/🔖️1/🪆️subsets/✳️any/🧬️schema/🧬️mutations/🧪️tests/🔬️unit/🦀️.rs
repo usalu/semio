@@ -73,7 +73,7 @@ async fn every_id_of_every_collection_is_taken_by_its_kind() {
 #[semio_framework_async_macros::async_test]
 async fn the_pure_storey_elevation_equals_the_inference_engine() {
     let base = house();
-    let levels = crate::standards::v1::subsets::any::schema::inferences::storey_levels::compute_storey_levels(&base);
+    let levels = crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_storey_levels(&base);
     assert!(base.storeys.values().any(|storey| storey.level < 0), "the house stacks downward too");
     for id in base.storeys.keys() {
         assert_eq!(crate::standards::v1::subsets::any::schema::authored::storeys::elevation(&base, id), Some(levels[id].elevation), "{id}");

@@ -1,0 +1,27 @@
+[package]
+workspace = "../../../../../../../../../../.."
+name = "semio-s-artifact-layout-layout-mutations-frames-tests-2"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Companion test crate of semio-s-artifact-layout-layout-mutations-frames: the mutation fixture laws of the frame leaves, part two"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dev-dependencies]
+semio-framework-async-macros = { workspace = true }
+semio-framework-diagnostic = { workspace = true }
+semio-framework-os-kernel = { workspace = true, features = ["mutation-testing", "protocol-laws"] }
+semio-framework-pack-json = { workspace = true }
+semio-s-artifact-layout-layout-diff = { workspace = true, features = ["testkit"] }
+semio-s-artifact-layout-layout-model = { workspace = true, features = ["testkit"] }
+semio-s-artifact-layout-layout-mutations = { workspace = true, features = ["testkit"] }
+semio-s-artifact-layout-layout-mutations-frames = { workspace = true, features = ["testkit"] }
+serde_json = { workspace = true }

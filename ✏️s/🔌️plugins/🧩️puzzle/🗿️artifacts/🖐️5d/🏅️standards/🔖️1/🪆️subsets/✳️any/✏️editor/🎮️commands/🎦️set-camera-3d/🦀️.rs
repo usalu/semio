@@ -1,6 +1,6 @@
 //! 🎦️ `set-camera-3d` command.
 
-use crate::editor::puzzle5d::Puzzle5dActionCtx;
+use crate::editor::puzzle5d::interaction::Puzzle5dActionCtx;
 use semio_framework_pack_json::{to_dsl_value, Value};
 use semio_framework_value::FromValue;
 

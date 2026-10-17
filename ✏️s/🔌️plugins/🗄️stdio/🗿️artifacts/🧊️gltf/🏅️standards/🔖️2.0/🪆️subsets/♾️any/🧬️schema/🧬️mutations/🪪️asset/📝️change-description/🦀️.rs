@@ -28,7 +28,10 @@ pub fn plan(p: &GltfChangeAssetDescriptiveMetadataPayload, base: &GltfSnapshot) 
     Ok(GltfDiff { asset: changed(GltfAssetDiff { generator: (asset.generator != p.generator).then(|| p.generator.clone()), copyright: (asset.copyright != p.copyright).then(|| p.copyright.clone()), min_version: (asset.min_version != p.min_version).then(|| p.min_version.clone()), ..Default::default() }), ..Default::default() })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn inverse(p: &GltfChangeAssetDescriptiveMetadataPayload, base: &GltfSnapshot) -> Vec<super::GltfMutation> {
+pub fn inverse<Op>(p: &GltfChangeAssetDescriptiveMetadataPayload, base: &GltfSnapshot) -> Vec<Op>
+where
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::remove_used_extension::RemoveUsedExtensionMutation>,
+{
     if validate(p, base).is_err() {
         return Vec::new();
     }
@@ -49,11 +52,17 @@ pub enum ChangeAssetDescriptiveMetadataMutation {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn mutation(payload: GltfChangeAssetDescriptiveMetadataPayload) -> super::GltfMutation {
-    super::GltfMutation::ChangeAssetDescriptiveMetadata(ChangeAssetDescriptiveMetadataMutation::Apply(payload))
+pub fn mutation<Op>(payload: GltfChangeAssetDescriptiveMetadataPayload) -> Op
+where
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::change_asset_descriptive_metadata::ChangeAssetDescriptiveMetadataMutation>,
+{
+    Op::from(ChangeAssetDescriptiveMetadataMutation::Apply(payload))
 }
 
-impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ChangeAssetDescriptiveMetadataMutation {
+impl<Op> protocol::MutationKind<GltfSnapshot, Op> for ChangeAssetDescriptiveMetadataMutation
+where
+    Op: protocol::Mutation<GltfSnapshot, Diff = GltfDiff> + From<ChangeAssetDescriptiveMetadataMutation>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "asset-descriptive-metadata", kind: "change-asset-descriptive-metadata", record: "ChangedAssetDescriptiveMetadata" };
 
     fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<GltfDiff> {
@@ -65,7 +74,7 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ChangeAssetDe
         }
     }
 
-    fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<super::GltfMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         match self {
             Self::Apply(payload) => Ok(inverse(payload, base)),
         }
@@ -82,7 +91,5 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ChangeAssetDe
 //#endregion 🧬️DirectMutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️t068/🦀️.rs"]
-mod case_t068;
+
 //#endregion 🧪️Tests

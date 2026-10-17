@@ -5,7 +5,7 @@
 
 import { shellDialogSessionIsCurrentV1, type ShellDialogSessionV1 } from "../🗨️dialog-origin/🟦️.ts";
 import { type ShellInputActionV1 } from "../🎯️input-ledger/🟦️.ts";
-import { type ShellHistoryProjectionV1 } from "../../🛠️ShellHelpers/🟦️.tsx";
+import { type ShellHistoryProjectionV1 } from "../../🛠️ShellHelpers/🔩️plumbing/🟦️.ts";
 
 //#region FrameworkOsShell
 //#region 🏁️OperationSettle

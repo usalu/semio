@@ -1,4 +1,8 @@
-use super::*;
+use semio_framework_artifact_flow_flow::CameraJson;
+use semio_framework_test_fixtures::fixture_text;
+#[allow(unused_imports)]
+use std::collections::HashMap;
+use crate::editor::flow::modes::edit::windows::main::config::*;
 use crate::editor::flow::modes::edit::windows::main::transient::{FlowGenerationsWindowTransientOwner, FlowWindowTransient, FlowWindowTransientMutation};
 use protocol::{Mutation, OpBinary, OpText};
 
@@ -51,7 +55,7 @@ fn flow_window_ownership_runtime_isolates_restores_and_resets_exact_windows() {
                     artifact_app_laws::decode_fixture_scene(&json).map_err(str::to_string)
                 }
 
-                let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔬️window/🔣️.json")).unwrap();
+                let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../🎭️modes/✏️edit/🪟️windows/🌊️main/🎚️config/🧪️tests/🧫️fixtures/🔬️window/🔣️.json")).unwrap();
                 let left_id = fixture["windowInstances"][0]["id"].as_str().unwrap();
                 let right_id = fixture["windowInstances"][1]["id"].as_str().unwrap();
                 let generation_id = fixture["windowInstances"][3]["id"].as_str().unwrap();
@@ -143,7 +147,6 @@ fn flow_window_ownership_runtime_isolates_restores_and_resets_exact_windows() {
                     if status.state != protocol::DocumentArchiveLoadState::Ready { return Err(format!("Flow complete archive reload refused: {:?}", semio_framework_diagnostic::decode_fault_bytes(&status.fault))); }
                     let restored = app.document_pack().await.map_err(|error| format!("{error:?}"))?;
                     if restored.pack != document_before.pack || restored.spr != document_before.spr { return Err("Flow complete reload changed exact document bytes".into()); }
-                    println!("[DEBUG] Flow exact-window complete archive restored neutral owned-member closure through begin/poll/ack; document bytes unchanged");
                     // 🫧️ A same-byte reload is still a NEW document instance for every window: the whole
                     // window-transient registry is replaced at `document_generation + 1`, so each partition
                     // is reborn at generation 0 holding its own `Default` state. `capture` answers `Some`
@@ -261,7 +264,6 @@ fn flow_two_window_config_commands_in_one_turn_both_land() {
                 }
                 .await;
                 if let Err(error) = &outcome {
-                    eprintln!("[DEBUG] Flow one-turn window-config failure before close: {error}");
                 }
                 artifact_app_laws::close_registered_fixture_app(&mut *app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
                 outcome.expect("Flow two window-config commands in one turn");
@@ -274,7 +276,7 @@ fn flow_two_window_config_commands_in_one_turn_both_land() {
 
 #[semio_framework_async_macros::async_test]
 async fn flow_window_ownership_mutations_match_neutral_fixture_and_codecs() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔬️window/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../🎭️modes/✏️edit/🪟️windows/🌊️main/🎚️config/🧪️tests/🧫️fixtures/🔬️window/🔣️.json")).unwrap();
     let base_config: FlowMainWindowConfig = semio_framework_pack_json::from_json_str(&fixture["baseConfig"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let base_transient: FlowWindowTransient = semio_framework_pack_json::from_json_str(&fixture["baseTransient"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     for row in fixture["configMutations"].as_array().unwrap() {

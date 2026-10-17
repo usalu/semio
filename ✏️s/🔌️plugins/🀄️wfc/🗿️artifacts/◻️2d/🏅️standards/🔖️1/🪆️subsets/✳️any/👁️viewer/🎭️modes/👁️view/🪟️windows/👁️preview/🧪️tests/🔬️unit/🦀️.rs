@@ -1,6 +1,6 @@
 //! 🧪️ The viewer's board window — read-only projection of the AUTHORED board.
 
-use super::{board_layers_json, definition, render, WFC_2D_VIEW_BODY, WFC_2D_VIEW_WINDOW};
+use crate::viewer::wfc2d::modes::view::windows::preview::{board_layers_json, definition, render, WFC_2D_VIEW_BODY, WFC_2D_VIEW_WINDOW};
 
 #[test]
 fn window_identity_is_the_declared_board() {

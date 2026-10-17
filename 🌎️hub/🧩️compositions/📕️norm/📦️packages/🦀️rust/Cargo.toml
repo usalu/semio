@@ -94,6 +94,7 @@ semio-s-artifact-norm-vdi3805 = { workspace = true }
 semio-s-artifact-stdio-semio = { workspace = true }
 
 [dev-dependencies]
+semio-framework-test-fixtures = { path = "../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-s-artifact-norm-en1993-examples = { workspace = true }
 semio-s-artifact-norm-iso16757-examples = { workspace = true }
 semio-s-artifact-norm-en1998-examples = { workspace = true }

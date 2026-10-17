@@ -1,4 +1,5 @@
-use super::*;
+use crate::JpgSnapshot;
+use crate::standards::v_jfif_1_01::subsets::document::schema::mutations::top_level::*;
 use crate::schema::snapshot::{JfifDensityUnits, JfifThumbnail, JpgImage, JpgSegment};
 
 /// ⚖️ `jpg_mutation_inverse_sum_law`: every leaf sums its inverse diffs to the negative forward diff on an image whose other-segment list has MIDDLE entries to cut and insert at.

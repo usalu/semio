@@ -92,7 +92,7 @@ fn hex_decode(text: &str) -> Result<Vec<u8>, String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn decode_node_id(node_id: &str) -> Result<Vec<usize>, String> {
+pub fn decode_node_id(node_id: &str) -> Result<Vec<usize>, String> {
     if node_id == main::XML_ROOT_NODE_ID {
         return Ok(Vec::new());
     }
@@ -116,7 +116,7 @@ fn decode_node_id(node_id: &str) -> Result<Vec<usize>, String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn resolve_node<'a>(root: &'a XmlNode, path: &[usize]) -> Option<&'a XmlNode> {
+pub fn resolve_node<'a>(root: &'a XmlNode, path: &[usize]) -> Option<&'a XmlNode> {
     let mut node = root;
     for &index in path {
         match node {
@@ -188,7 +188,7 @@ impl protocol::OpBinary for XmlAnyEditorCommand {
 
 //#region 🧵️RetainedRoutes
 /// 🪟️ The verb the `TreeWindowKit` mints for `🪟️main` — declared by the framework, reduced only here.
-const XML_ANY_KIT_ACTION_ID: &str = "set-node";
+pub const XML_ANY_KIT_ACTION_ID: &str = "set-node";
 /// 🧵️ The app-owned retained routes this editor declares: the example switch and `set-node`.
 /// `validate_ui_dispatch_classification` refuses any verb that is not `Migrated`, and `Migrated`
 /// only survives the guest's `interactive-job.catalog-incomplete` boot check when this roster, the
@@ -225,7 +225,7 @@ fn xml_any_retained_contract() -> ToolExecutionContract {
 /// whose asset IS this app's curated document; every other id — including the empty id the shell
 /// sends for "the app's own default document" — opens the genesis document.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn xml_any_example_snapshot(example_id: &str) -> XmlSnapshot {
+pub fn xml_any_example_snapshot(example_id: &str) -> XmlSnapshot {
     if example_id == crate::examples::demo::ID {
         <XmlSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(crate::examples::demo::PRIMARY_TEXT).unwrap_or_default()
     } else {
@@ -237,7 +237,7 @@ fn xml_any_example_snapshot(example_id: &str) -> XmlSnapshot {
 /// `ArtifactEditor::command_from_action`'s default refuses EVERY id, which is why the boot example,
 /// every navbar pick and every Actions-pane row died before reaching a command.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn xml_any_command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<XmlAnyEditorCommand, Fault> {
+pub fn xml_any_command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<XmlAnyEditorCommand, Fault> {
     if let Some(event) = semio_s_artifact_stdio_contract::editing::snapshot_edit_event_from_action(action, args)? {
         return Ok(XmlAnyEditorCommand::EditSnapshot { event });
     }
@@ -270,7 +270,7 @@ fn xml_any_retained_extent(_command: &XmlAnyEditorCommand, _snapshot: &XmlSnapsh
 /// ✏️ The one reduction `handle` and the retained route share: the example switch hands the host
 /// its document, `set-node` becomes this artifact's own mutation.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn xml_any_emit(command: &XmlAnyEditorCommand, snapshot: &XmlSnapshot, canonical_revision: Option<[u8; 32]>) -> Result<Emit<XmlMutation, NoConfigMutation, NoDraftMutation>, Fault> {
+pub fn xml_any_emit(command: &XmlAnyEditorCommand, snapshot: &XmlSnapshot, canonical_revision: Option<[u8; 32]>) -> Result<Emit<XmlMutation, NoConfigMutation, NoDraftMutation>, Fault> {
     let (node_id, revision, value) = match command {
         XmlAnyEditorCommand::SetActiveExample { example_id } => {
             return Ok(Emit { effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&xml_any_example_snapshot(example_id), STDIO_XML_DOCUMENT_SCHEMA)], ..Default::default() })
@@ -349,9 +349,9 @@ impl ToolJobFactory for XmlAnyRetainedCommandJobFactory {
         &mut self,
         _operation: semio_framework_job::Operation,
         payload: Self::Payload,
-        input: semio_framework_plugin::action_bus::RetainedToolWireInput,
-        checkpoint: Option<semio_framework_plugin::action_bus::RetainedToolWireInput>,
-    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework_plugin::action_bus::RetainedToolWireInput, Option<semio_framework_plugin::action_bus::RetainedToolWireInput>)> {
+        input: semio_framework_action_bus::RetainedToolWireInput,
+        checkpoint: Option<semio_framework_action_bus::RetainedToolWireInput>,
+    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework_action_bus::RetainedToolWireInput, Option<semio_framework_action_bus::RetainedToolWireInput>)> {
         if input.declared_bytes() > XML_ANY_RETAINED_RAW_BYTES || checkpoint.is_some() {
             return Err((ToolJobFactoryError::new("stdio xml retained command rejects oversized wire or checkpoint owner"), input, checkpoint));
         }

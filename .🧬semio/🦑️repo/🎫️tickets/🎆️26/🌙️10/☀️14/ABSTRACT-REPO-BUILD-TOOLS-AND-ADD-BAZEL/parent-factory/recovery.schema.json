@@ -1,0 +1,230 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "fixtures",
+    "cases",
+    "protocol",
+    "selections"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 22,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "effect",
+          "accepted"
+        ],
+        "properties": {
+          "effect": {
+            "enum": [
+              "ordinary",
+              "name",
+              "createdSha256",
+              "version",
+              "backingIdentity",
+              "allocation.id",
+              "allocation.owner",
+              "allocation.kind",
+              "allocation.phase",
+              "allocation.bytes",
+              "allocation.namespace",
+              "allocation.child.directory",
+              "allocation.child.filesystemBytes",
+              "allocation.child.maximumPhysicalBytes",
+              "allocation.child.policySha256",
+              "allocation.child.version",
+              "allocation.child.allocation",
+              "allocation.child.parentIdentity",
+              "policy.capacityBytes",
+              "policy.maximumWorkspaceBytes",
+              "policy.maximumArtifactBytes",
+              "protocol.metadataBytes",
+              "protocol.version",
+              "protocol.parentFilesystemBytes",
+              "protocol.parentMaximumPhysicalBytes",
+              "protocol.childFilesystemBytes",
+              "protocol.childMaximumPhysicalBytes",
+              "protocol.maximumWorkspaceBytes",
+              "protocol.maximumArtifactBytes",
+              "protocol.maximumOutputBytes",
+              "protocol.maximumOutputLines"
+            ]
+          },
+          "accepted": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "protocol": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "parentFilesystemBytes",
+        "parentMaximumPhysicalBytes",
+        "childFilesystemBytes",
+        "childMaximumPhysicalBytes",
+        "metadataBytes",
+        "maximumWorkspaceBytes",
+        "maximumArtifactBytes",
+        "maximumOutputBytes",
+        "maximumOutputLines"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "parentFilesystemBytes": {
+          "const": 134217728
+        },
+        "parentMaximumPhysicalBytes": {
+          "const": 135266304
+        },
+        "childFilesystemBytes": {
+          "const": 33554432
+        },
+        "childMaximumPhysicalBytes": {
+          "const": 34603008
+        },
+        "metadataBytes": {
+          "const": 65536
+        },
+        "maximumWorkspaceBytes": {
+          "const": 67108864
+        },
+        "maximumArtifactBytes": {
+          "const": 1048576
+        },
+        "maximumOutputBytes": {
+          "const": 65536
+        },
+        "maximumOutputLines": {
+          "const": 256
+        }
+      }
+    },
+    "fixtures": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "oneOf": [
+          {
+            "type": "object",
+            "required": [
+              "fixtureName",
+              "createdSha256",
+              "recovery",
+              "known"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "fixtureName": {
+                "const": "pf-q157nV"
+              },
+              "createdSha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              },
+              "recovery": {
+                "const": "closed"
+              },
+              "known": {
+                "type": "object"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "fixtureName",
+              "createdSha256",
+              "recovery",
+              "known"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "fixtureName": {
+                "const": "pf-dH731i"
+              },
+              "createdSha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              },
+              "recovery": {
+                "const": "exact"
+              },
+              "known": {
+                "type": "object"
+              }
+            }
+          }
+        ]
+      },
+      "allOf": [
+        {
+          "contains": {
+            "type": "object",
+            "required": [
+              "fixtureName"
+            ],
+            "properties": {
+              "fixtureName": {
+                "const": "pf-q157nV"
+              }
+            }
+          }
+        },
+        {
+          "contains": {
+            "type": "object",
+            "required": [
+              "fixtureName"
+            ],
+            "properties": {
+              "fixtureName": {
+                "const": "pf-dH731i"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "selections": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "object",
+        "required": [
+          "fixtureName",
+          "settled",
+          "accepted"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "fixtureName": {
+            "type": "string",
+            "pattern": "^pf-[A-Za-z0-9]{6}$"
+          },
+          "settled": {
+            "type": "boolean"
+          },
+          "accepted": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

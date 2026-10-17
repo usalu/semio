@@ -1109,7 +1109,7 @@
       ]
     }
   ],
-  "ownerImporterPath": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧪️ticket-owned-browser-host-staging/🟦️.ts",
+  "ownerImporterPath": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧪️ticket-owned-browser-host-staging/🧰️test-kit/🟦️.ts",
   "consumers": [
     {
       "id": "hub-browser-host-staging",
@@ -1164,7 +1164,7 @@
     {
       "id": "browser-host-owner-importer",
       "mode": "direct-import",
-      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧪️ticket-owned-browser-host-staging/🟦️.ts",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧪️ticket-owned-browser-host-staging/🧰️test-kit/🟦️.ts",
       "requiredTokens": [
         "../../♻️activation/🌐️browser-host/🏗️staging/🟦️.ts",
         "../../🚚️distribution/🏗️compiler/🟦️.ts",
@@ -1201,7 +1201,19 @@
     {
       "id": "os-host-hash",
       "mode": "direct-import",
-      "path": "🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/📜️script.ts",
+      "path": "🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/🎛️commands/🪪️member-history-identity/🟦️.ts",
+      "requiredTokens": [
+        "blake3Hex",
+        "🔏️hash/🟦️.ts"
+      ],
+      "forbiddenTokens": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts"
+      ]
+    },
+    {
+      "id": "os-host-dictionary-hash",
+      "mode": "direct-import",
+      "path": "🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/🎛️commands/📚️member-history-dictionary/🟦️.ts",
       "requiredTokens": [
         "blake3Hex",
         "🔏️hash/🟦️.ts"

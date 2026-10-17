@@ -10,21 +10,22 @@ use crate::schema::diff::SemioObjectDiff;
 use crate::schema::mutations::SemioObjectMutation;
 use crate::schema::snapshot::SemioObjectSnapshot;
 use protocol::Mutation;
+use semio_framework_test_fixtures::fixture_text;
 
-const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🚚move-object/🚚️moves/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🚚move-object/🚚️moves/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🚚move-object/🚚️moves/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🚚move-object/🚚️moves/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🚚move-object/🚚️moves/🎯️outcome/🔣️.json");
+static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🚚move-object/🚚️moves/📸️snapshot/⬅️before/🔣️.json"));
+static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🚚move-object/🚚️moves/📸️snapshot/➡️after/🔣️.json"));
+static MUTATION: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🚚move-object/🚚️moves/🦠️mutation/🔣️.json"));
+static DIFF: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🚚move-object/🚚️moves/🔺️diff/🔣️.json"));
+static OUTCOME: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🚚move-object/🚚️moves/🎯️outcome/🔣️.json"));
 
 fn before() -> SemioObjectSnapshot {
-    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("move-object before snapshot decodes")
+    semio_framework_pack_json::from_json_str((*BEFORE), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("move-object before snapshot decodes")
 }
 fn expected_after() -> SemioObjectSnapshot {
-    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("move-object after snapshot decodes")
+    semio_framework_pack_json::from_json_str((*AFTER), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("move-object after snapshot decodes")
 }
 fn move_object() -> SemioObjectMutation {
-    semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("move-object mutation decodes")
+    semio_framework_pack_json::from_json_str((*MUTATION), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("move-object mutation decodes")
 }
 
 /// ▶️ Translation is replaced outright (it is an absolute placement, not a delta); rotation and
@@ -61,14 +62,14 @@ async fn the_undo_move_object_restores_the_original_translation() {
 /// coordinate is a dyadic `f64` so decode→encode is exact.
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
-    for (label, text) in [("before", BEFORE), ("after", AFTER)] {
+    for (label, text) in [("before", (*BEFORE)), ("after", (*AFTER))] {
         let decoded: SemioObjectSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
         let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "move-object/moves-the-object-to-a-new-translation: committed {label} JSON is not canonical");
     }
     let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&(move_object()))).expect("move-object mutation encodes");
-    let original: serde_json::Value = serde_json::from_str(MUTATION).expect("move-object mutation reparses");
+    let original: serde_json::Value = serde_json::from_str((*MUTATION)).expect("move-object mutation reparses");
     assert_eq!(reencoded, original, "move-object/moves-the-object-to-a-new-translation: committed mutation JSON is not canonical");
 }
 
@@ -76,7 +77,7 @@ async fn committed_json_is_canonical() {
 /// neither the FATAL `mutation.invariant` nor the `mutation.no-op` warning may fire.
 #[semio_framework_async_macros::async_test]
 async fn declared_outcome_holds_with_neither_invariant_nor_no_op() {
-    let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
+    let outcome: serde_json::Value = serde_json::from_str((*OUTCOME)).expect("outcome decodes");
     assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("applied"), "move-object/moves-the-object-to-a-new-translation: this case is declared applied");
     let produced = move_object().diff(&before());
     assert!(produced.messages().is_empty(), "a finite, genuinely-different translation must raise no diagnostics");
@@ -88,17 +89,17 @@ async fn produces_committed_diff() {
     let base = before();
     let outcome = <SemioObjectMutation as Mutation<SemioObjectSnapshot>>::diff(&move_object(), &base);
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
-    let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
+    let committed: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff decodes");
     assert_eq!(produced, committed, "move-object/moves-the-object-to-a-new-translation: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
 
 /// 🔣️ The committed diff is canonical and touches ONLY the `transform` slot.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical_and_touches_only_the_transform_slot() {
-    let decoded: SemioObjectDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed move-object diff decodes");
+    let decoded: SemioObjectDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed move-object diff decodes");
     assert!(decoded.transform.is_some(), "move-object must write the transform slot");
     assert!(decoded.brep.is_none() && decoded.mesh.is_none() && decoded.properties.is_none(), "move-object must leave all three child slots untouched");
-    let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
+    let committed: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff reparses");
     assert_eq!(committed.as_object().map(|map| map.len()), Some(1), "the committed diff JSON must carry exactly the transform key");
     let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("diff re-encodes");
     assert_eq!(reencoded, committed, "move-object/moves-the-object-to-a-new-translation: committed diff JSON is not canonical");
@@ -107,7 +108,7 @@ async fn committed_diff_is_canonical_and_touches_only_the_transform_slot() {
 /// 🩹 Applying the committed diff to `before` yields `after`.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: SemioObjectDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed move-object diff decodes");
+    let decoded: SemioObjectDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed move-object diff decodes");
     let produced = protocol::apply_diff(&decoded, &before()).expect("committed move-object diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "move-object/moves-the-object-to-a-new-translation: committed diff did not carry before to after");
 }

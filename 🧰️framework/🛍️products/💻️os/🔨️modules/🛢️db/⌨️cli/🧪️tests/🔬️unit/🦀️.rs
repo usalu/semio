@@ -9,7 +9,7 @@ async fn cli_verify_checks_neutral_logical_commit_boundaries() {
     for (name, expected) in [("aborted-commands-snapshot-cas-have-no-effects", Some(0)), ("two-commands-only-after-logical-commit", Some(2)), ("wrong-commit-count", None), ("active-incomplete-needs-durable-abort", None)] {
         let row = fixture["cases"].as_array().unwrap().iter().find(|row| row["name"] == name).expect("registered neutral CLI boundary");
         let document = db_ids::ArtifactId::from("committed-cli");
-        let memory = db_wal::tests::committed_fixture_storage(row, &document).await;
+        let memory = db_wal::testkit::committed_fixture_storage(row, &document).await;
         let root = tempdir(name).await;
         let storage = db_storage_fs::FsStorage::open(db_io_driver::db_io_test_pool(), &root).await.unwrap();
         let writer_permit = storage.acquire_writer(&document).await.unwrap();

@@ -1,6 +1,6 @@
 //! 🤲️ Original PDF 1.4 operation recipes stream their own fields into admitted byte backing.
 use crate::standards::v1_4::subsets::base::schema::mutations::PdfMutation;
-use crate::standards::v1_4::subsets::base::io::binary::mutations::{insert_page,remove_page,move_page,resize_page,replace_page_text};
+use crate::standards::v1_4::subsets::base::io::binary::mutations::{insert_page, remove_page, move_page, resize_page, replace_page_text};
 use protocol::{ProtocolError,PackRefusal,codec::PackEncodeOptions,operation_bytes::{OperationByteOutput,OperationByteLimitedOutput}};
 use semio_framework_value::{NativeEncodeControl,ValueRefusalKind};
 

@@ -1,7 +1,7 @@
 /** 🧮️ Owns the actual OS semantic decoder comparisons for the original neutral wire corpus. */
 import {test,expect} from "bun:test";
 import equal from "fast-deep-equal";
-import fixture from "../../../../🔨️modules/🎒️pack/🌱️value/🧪️tests/🧫️fixtures/🧮️wire-materialization/🔣️.json";
+import { valueWireMaterializationFixture as fixture } from "@semio-tech/framework-pack-ts/testing/fixtures";
 import {decodePackValue,packValueToExactJson} from "../../🟦️.ts";
 
 test("OS semantic Pack outputs preserve every original wire materialization comparison",()=>{
@@ -18,5 +18,4 @@ test("OS semantic Pack outputs preserve every original wire materialization comp
  expect(fixture.cases.length).toBe(21);
  expect(comparisons).toBe(10);
  expect(probes).toBe(1);
- console.log(`[DEBUG] OS Pack wire: original-cases=${fixture.cases.length} exact-semantic=${comparisons} allowance-probes=${probes}`);
 });

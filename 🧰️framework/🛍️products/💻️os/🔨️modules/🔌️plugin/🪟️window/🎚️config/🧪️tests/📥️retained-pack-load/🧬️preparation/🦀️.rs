@@ -1,14 +1,15 @@
 //! 📷️ Copies only the original fixed camera fields and admits its inverse Box and row separately.
-use super::{RetainedLoadCameraConfig as State,RetainedLoadCameraConfigMutation as Mutation};
-use crate::store;
-use crate::store::snapshot_clone_preparation::RetainedEditCustody;
-use store::snapshot_clone_preparation::{RetainedCloneEdit,RetainedCloneEditCursor,RetainedCloneEditStep};
-use semio_framework_value::{ValueError,ValueRefusalKind,retained_clone::{RetainedClone,RetainedCloneRef,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedCloneBirthDemand,ScalarCursor}};
+use crate::window_config_tests::retained_pack_load_tests::{RetainedLoadCameraConfig as State, RetainedLoadCameraConfigMutation as Mutation};
+use semio_framework_os_kernel as store;
+use semio_framework_os_kernel::snapshot_clone_preparation::RetainedEditCustody;
+use semio_framework_os_kernel::snapshot_clone_preparation::{RetainedCloneEdit, RetainedCloneEditCursor, RetainedCloneEditStep};
+use semio_framework_value::{ValueError, ValueRefusalKind};
+use semio_framework_value::retained_clone::{RetainedClone, RetainedCloneRef, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, RetainedCloneBirthDemand, ScalarCursor};
 use std::mem::size_of;
 impl RetainedClone for State{type Cursor=ScalarCursor<Self>;fn retained_clone_cursor()->Self::Cursor{Default::default()}}
 #[derive(semio_framework_value::FactoryPayloadRetirement)]
 pub(crate) struct CameraRetainedEdit;
-pub(crate) struct CameraRetainedEditCursor{stage:u8,cancelled:bool,custody:RetainedEditCustody<(Option<Box<State>>,Option<Vec<Mutation>>)>}
+pub(crate) struct CameraRetainedEditCursor{pub stage:u8,pub cancelled:bool,pub custody:RetainedEditCustody<(Option<Box<State>>,Option<Vec<Mutation>>)>}
 impl RetainedCloneEdit<State,Mutation> for CameraRetainedEdit{
  type Cursor=CameraRetainedEditCursor;
  fn preflight(&self,mutation:&Mutation,lane:store::os_store::store_schema::HistoryLane)->Result<store::os_store::one_item::ArtifactStoreOneItemFootprint,String>{let Mutation::Snapshot{config}=mutation;if lane!=store::os_store::store_schema::HistoryLane::Document||![config.viewport.x,config.viewport.y,config.viewport.zoom].into_iter().chain(config.eye).all(f64::is_finite)||config.viewport.zoom<=0.0{return Err("original camera mutation has invalid lane or finite viewport authority".into());}Ok(store::os_store::one_item::ArtifactStoreOneItemFootprint{work_items:2,retained_bytes:65536})}
@@ -16,7 +17,7 @@ impl RetainedCloneEdit<State,Mutation> for CameraRetainedEdit{
  fn snapshot_cursor_birth_demand(&self)->RetainedCloneBirthDemand{RetainedCloneBirthDemand{capacity_bytes:0,depth:1}}
  fn begin(&self,grant:RetainedCloneGrant)->Result<(Self::Cursor,RetainedCloneProgress),ValueError>{let mut receipt=self.begin_demand().admit(grant)?;receipt.copied_bytes=size_of::<Self::Cursor>();if !receipt.fits(grant){return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"camera original cursor transfer exceeds grant"));}Ok((CameraRetainedEditCursor{stage:0,cancelled:false,custody:RetainedEditCustody::new((None,None))},receipt))}
 }
-impl CameraRetainedEditCursor{fn normal_demand(&self)->semio_framework_value::RetirementDemand{let(copy_bytes,capacity_bytes)=match self.stage{0=>(size_of::<State>()*2,0),1=>(size_of::<State>()+size_of::<Box<State>>(),size_of::<State>()),2=>(size_of::<Vec<Mutation>>(),size_of::<Mutation>()),3=>(size_of::<Mutation>()*2+size_of::<Box<State>>(),0),_=>(0,0)};semio_framework_value::RetirementDemand{copy_bytes,capacity_bytes,depth:2,..Default::default()}}}
+impl CameraRetainedEditCursor{pub fn normal_demand(&self)->semio_framework_value::RetirementDemand{let(copy_bytes,capacity_bytes)=match self.stage{0=>(size_of::<State>()*2,0),1=>(size_of::<State>()+size_of::<Box<State>>(),size_of::<State>()),2=>(size_of::<Vec<Mutation>>(),size_of::<Mutation>()),3=>(size_of::<Mutation>()*2+size_of::<Box<State>>(),0),_=>(0,0)};semio_framework_value::RetirementDemand{copy_bytes,capacity_bytes,depth:2,..Default::default()}}}
 impl RetainedCloneEditCursor<State,Mutation> for CameraRetainedEditCursor{
  fn advance(&mut self,base:RetainedCloneRef<'_,State>,post:&mut State,mutation:RetainedCloneRef<'_,Mutation>,grant:RetainedCloneGrant)->Result<RetainedCloneEditStep,ValueError>{
   if self.cancelled||self.custody.is_closing()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(RetainedCloneEditStep::Progress(Default::default()));}

@@ -1,6 +1,15 @@
 //! 🔺️ Diff for `SetBlockBasePoint`.
 
-use super::super::*;
+#[allow(unused_imports)]
+use crate::schema::diff::CadBlockDiff;
+#[allow(unused_imports)]
+use crate::schema::diff::SemioCadDiff;
+#[allow(unused_imports)]
+use crate::schema::snapshot::SemioCadSnapshot;
+#[allow(unused_imports)]
+use crate::schema::mutations::support::find_block;
+#[allow(unused_imports)]
+use crate::schema::diff::wrap_block_diff;
 
 //#region 🔖️Diff
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

@@ -8,8 +8,8 @@ import { PassThrough } from "node:stream";
 import type { ChildProcess } from "node:child_process";
 import ts from "typescript";
 import { loadTaxonomy, semanticDirectoryKindId } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts";
-import { readMcpGatewaySource } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🟦️.ts";
-import { readModuleTreeSource } from "../../../🧰️framework/🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
+import { readMcpGatewaySource } from "@semio-tech/framework-os-mcp";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 import { exactCargoStageEnvironments } from "../../🏗️build/🛂staging-environment/🟦️.ts";
 import { orderedDirectoryPublicationOracle } from "../../📇️directory/📣️publication/🧪️tests/🧾️ordered-append-broadcast/🟦️.ts";
 import { directChildEnvironment, directChildLaunch, deliverCredentialEnvelopeToChild, sealedDirectChildEnvironment, type CredentialChildOperations } from "../../🔐️auth/📤️credential-delivery/🟦️.ts";
@@ -33,7 +33,6 @@ test("Hub consumes retained OS document mounts and the bound session authority",
   for(const marker of consumerContracts.mount.required)expect(mount).toContain(marker);
   for(const marker of consumerContracts.mount.forbidden)expect(mount).not.toContain(marker);
   for(const marker of consumerContracts.session.required)expect(source).toContain(marker);
-  console.log("[DEBUG] Hub-owned retained mount and bound session response source contracts",{mountChecks:consumerContracts.mount.required.length+consumerContracts.mount.forbidden.length,sessionChecks:consumerContracts.session.required.length});
 });
 const fixturePath = join(hubRoot, "🧪️tests/🧫️fixtures/🧱️foundation-source/🔣️.json");
 const fixtureSource = readFileSync(fixturePath, "utf8");

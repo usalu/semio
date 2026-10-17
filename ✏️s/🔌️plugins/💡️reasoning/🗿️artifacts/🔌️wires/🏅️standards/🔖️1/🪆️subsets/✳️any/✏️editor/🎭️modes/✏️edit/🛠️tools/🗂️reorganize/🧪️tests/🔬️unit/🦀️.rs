@@ -1,4 +1,9 @@
-use super::*;
+use crate::SemioGraphMutation;
+use semio_s_artifact_stdio_semio_graph::schema::mutations::move_node::MoveNode;
+use semio_framework_graph_layout_run::{layout_run_definition, layout_run_entity, LayoutRunConfig};
+use semio_framework_plugin::Fault;
+use semio_framework_tool_run::{JobKindId, ToolRunDefinition};
+use crate::editor::wires::modes::edit::tools::reorganize::*;
 use crate::editor::wires::unit_tests::context::{close, metabolism_app, WiresApp};
 use crate::editor::wires::ReasoningWiresPlayApp;
 use crate::schema::{board_snapshot_nodes, node_position};
@@ -11,10 +16,10 @@ use semio_framework_tool_run::{ToolRunId, ToolRunIdentity, ToolRunVerdict, TOOL_
 use serde_json::Value;
 use std::collections::{BTreeMap, BTreeSet};
 
-const FIXTURE: &str = include_str!("../🧫️fixtures/🎞️layout-run.json");
+static FIXTURE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../🎭️modes/✏️edit/🛠️tools/🗂️reorganize/🧪️tests/🧫️fixtures/🎞️layout-run.json"));
 
 fn fixture() -> Value {
-    serde_json::from_str(FIXTURE).expect("reorganize fixture parses")
+    serde_json::from_str((*FIXTURE)).expect("reorganize fixture parses")
 }
 
 fn identity() -> ToolRunIdentity {
@@ -62,7 +67,7 @@ fn reorganize_tool_declares_the_shared_layout_run_definition() {
     let app = crate::editor::wires::create_wires_app();
     assert!(app.tools.iter().any(|declared| declared.id == TOOL_ID && declared.run.is_some()));
     assert!(app.modes.iter().all(|mode| mode.tools.iter().any(|reference| reference.as_str() == TOOL_ID)));
-    let injected = semio_framework::tool_run::tool_run_action_definitions(&app);
+    let injected = semio_framework_tool_run_actions::tool_run_action_definitions(&app);
     for action in TOOL_RUN_ACTION_IDS {
         assert!(injected.iter().any(|definition| definition.id == action), "{action} is injected");
     }
@@ -271,42 +276,37 @@ fn debug_reorganize_undo_settles() {
     pump_until(&mut app, "reorganize completes", |app| run_state(app) == Some("complete"));
     tool_run_action(&mut app, semio_framework_tool_run::TOOL_RUN_FINALIZE_ACTION_ID, &run_arguments());
     pump_until(&mut app, "reorganize finalizes", |app| run_state(app) == Some("finalized"));
-    eprintln!("[DEBUG] finalized pending={}", app.has_pending_typed_operations());
     for turn in 0..2000 {
         if !app.has_pending_typed_operations() {
-            eprintln!("[DEBUG] finalize settled at turn {turn}");
             break;
         }
         PluginApp::maintenance_step(&mut *app, 1, store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("[DEBUG] maintenance");
         ::semio_framework_async::poll::resolve_ready(app.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.preparation)).expect("[DEBUG] advance");
         if let Some(page) = app.take_typed_operation_result_page(1) {
-            eprintln!("[DEBUG] finalize page {:?}", page.lane);
             app.acknowledge_typed_operation_result(page.token).expect("[DEBUG] ack");
         }
         while let Some(effect) = app.take_typed_operation_effect() {
-            eprintln!("[DEBUG] finalize effect {effect:?}");
         }
         let _ = ::semio_framework_async::poll::resolve_ready(app.take_typed_operation_completion()).expect("[DEBUG] completion");
     }
-    eprintln!("[DEBUG] before undo pending={} presence={:?}", app.has_pending_typed_operations(), app.tool_run_presence().map(|presence| presence.state.wire_name()));
     let admitted = ::semio_framework_async::poll::resolve_ready(app.handle_action("undo", None, &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()));
-    eprintln!("[DEBUG] undo admitted {:?}", admitted.as_ref().map(|result| result.output.clone()));
     for turn in 0..4000 {
         if !app.has_pending_typed_operations() {
-            eprintln!("[DEBUG] undo settled at turn {turn}");
             break;
         }
         PluginApp::maintenance_step(&mut *app, 1, store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("[DEBUG] maintenance");
         ::semio_framework_async::poll::resolve_ready(app.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.preparation)).expect("[DEBUG] advance");
         while let Some(page) = app.take_typed_operation_result_page(1) {
-            eprintln!("[DEBUG] undo page {:?} {}", page.lane, String::from_utf8_lossy(page.bytes()).chars().take(300).collect::<String>());
             app.acknowledge_typed_operation_result(page.token).expect("[DEBUG] ack");
         }
         while let Some(effect) = app.take_typed_operation_effect() {
-            eprintln!("[DEBUG] undo effect {effect:?}");
         }
         let _ = ::semio_framework_async::poll::resolve_ready(app.take_typed_operation_completion()).expect("[DEBUG] completion");
     }
-    eprintln!("[DEBUG] after undo pending={}", app.has_pending_typed_operations());
     close(app);
+}
+
+fn runtime_fixture_text(relative: &str) -> &'static str {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative);
+    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display())).into_boxed_str())
 }

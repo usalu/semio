@@ -1,0 +1,2108 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "Census": {
+      "type": "object",
+      "required": [
+        "version",
+        "scope",
+        "facts",
+        "kernel"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "scope": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024
+        },
+        "facts": {
+          "type": "array",
+          "minItems": 7,
+          "maxItems": 7,
+          "items": {
+            "type": "object",
+            "required": [
+              "name",
+              "directory",
+              "present"
+            ],
+            "properties": {
+              "name": {
+                "enum": [
+                  "dependencies",
+                  "diagnostics",
+                  "graph",
+                  "products",
+                  "rust",
+                  "tools",
+                  "leases"
+                ]
+              },
+              "directory": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "present": {
+                "type": "boolean"
+              },
+              "declaration": {
+                "type": "object",
+                "required": [
+                  "filesystemBytes",
+                  "maximumPhysicalBytes"
+                ],
+                "properties": {
+                  "filesystemBytes": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 9007199254740991
+                  },
+                  "maximumPhysicalBytes": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 9007199254740991
+                  }
+                },
+                "additionalProperties": false
+              },
+              "folder": {
+                "type": "object",
+                "required": [
+                  "dev",
+                  "ino",
+                  "mode",
+                  "nlink",
+                  "size",
+                  "allocatedBytes",
+                  "stamp"
+                ],
+                "properties": {
+                  "dev": {
+                    "type": "string",
+                    "pattern": "^(0|[1-9][0-9]{0,19})$"
+                  },
+                  "ino": {
+                    "type": "string",
+                    "pattern": "^(0|[1-9][0-9]{0,19})$"
+                  },
+                  "mode": {
+                    "type": "string",
+                    "pattern": "^(0|[1-9][0-9]{0,19})$"
+                  },
+                  "nlink": {
+                    "type": "string",
+                    "pattern": "^(0|[1-9][0-9]{0,19})$"
+                  },
+                  "size": {
+                    "type": "string",
+                    "pattern": "^(0|[1-9][0-9]{0,19})$"
+                  },
+                  "allocatedBytes": {
+                    "type": "string",
+                    "pattern": "^(0|[1-9][0-9]{0,19})$"
+                  },
+                  "stamp": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 512
+                  }
+                },
+                "additionalProperties": false
+              },
+              "backing": {
+                "type": "object",
+                "required": [
+                  "dev",
+                  "ino",
+                  "mode",
+                  "nlink",
+                  "size",
+                  "allocatedBytes",
+                  "stamp"
+                ],
+                "properties": {
+                  "dev": {
+                    "type": "string",
+                    "pattern": "^(0|[1-9][0-9]{0,19})$"
+                  },
+                  "ino": {
+                    "type": "string",
+                    "pattern": "^(0|[1-9][0-9]{0,19})$"
+                  },
+                  "mode": {
+                    "type": "string",
+                    "pattern": "^(0|[1-9][0-9]{0,19})$"
+                  },
+                  "nlink": {
+                    "type": "string",
+                    "pattern": "^(0|[1-9][0-9]{0,19})$"
+                  },
+                  "size": {
+                    "type": "string",
+                    "pattern": "^(0|[1-9][0-9]{0,19})$"
+                  },
+                  "allocatedBytes": {
+                    "type": "string",
+                    "pattern": "^(0|[1-9][0-9]{0,19})$"
+                  },
+                  "stamp": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 512
+                  }
+                },
+                "additionalProperties": false
+              },
+              "receipt": {
+                "type": "object",
+                "required": [
+                  "dev",
+                  "ino",
+                  "mode",
+                  "nlink",
+                  "size",
+                  "allocatedBytes",
+                  "stamp",
+                  "sha256",
+                  "value"
+                ],
+                "properties": {
+                  "dev": {
+                    "type": "string",
+                    "pattern": "^(0|[1-9][0-9]{0,19})$"
+                  },
+                  "ino": {
+                    "type": "string",
+                    "pattern": "^(0|[1-9][0-9]{0,19})$"
+                  },
+                  "mode": {
+                    "type": "string",
+                    "pattern": "^(0|[1-9][0-9]{0,19})$"
+                  },
+                  "nlink": {
+                    "type": "string",
+                    "pattern": "^(0|[1-9][0-9]{0,19})$"
+                  },
+                  "size": {
+                    "type": "string",
+                    "pattern": "^(0|[1-9][0-9]{0,19})$"
+                  },
+                  "allocatedBytes": {
+                    "type": "string",
+                    "pattern": "^(0|[1-9][0-9]{0,19})$"
+                  },
+                  "stamp": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 512
+                  },
+                  "sha256": {
+                    "type": "string",
+                    "pattern": "^[a-f0-9]{64}$"
+                  },
+                  "value": {}
+                },
+                "additionalProperties": false
+              },
+              "root": {
+                "type": "object",
+                "required": [
+                  "dev",
+                  "ino",
+                  "mode",
+                  "nlink",
+                  "size",
+                  "allocatedBytes",
+                  "stamp"
+                ],
+                "properties": {
+                  "dev": {
+                    "type": "string",
+                    "pattern": "^(0|[1-9][0-9]{0,19})$"
+                  },
+                  "ino": {
+                    "type": "string",
+                    "pattern": "^(0|[1-9][0-9]{0,19})$"
+                  },
+                  "mode": {
+                    "type": "string",
+                    "pattern": "^(0|[1-9][0-9]{0,19})$"
+                  },
+                  "nlink": {
+                    "type": "string",
+                    "pattern": "^(0|[1-9][0-9]{0,19})$"
+                  },
+                  "size": {
+                    "type": "string",
+                    "pattern": "^(0|[1-9][0-9]{0,19})$"
+                  },
+                  "allocatedBytes": {
+                    "type": "string",
+                    "pattern": "^(0|[1-9][0-9]{0,19})$"
+                  },
+                  "stamp": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 512
+                  }
+                },
+                "additionalProperties": false
+              },
+              "mounted": {
+                "type": "boolean"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "kernel": {
+          "type": "array",
+          "maxItems": 4096,
+          "items": {
+            "type": "object",
+            "required": [
+              "image",
+              "entities"
+            ],
+            "properties": {
+              "image": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "entities": {
+                "type": "array",
+                "maxItems": 16384,
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "mount",
+                    "device"
+                  ],
+                  "properties": {
+                    "mount": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "maxLength": 256
+                    },
+                    "device": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "maxLength": 256
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "Result": {
+      "type": "object",
+      "required": [
+        "version",
+        "id",
+        "status",
+        "reason",
+        "descendants"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "id": {
+          "enum": [
+            "dependencies",
+            "diagnostics",
+            "graph",
+            "products",
+            "rust",
+            "tools",
+            "leases"
+          ]
+        },
+        "status": {
+          "enum": [
+            "ready",
+            "blocked",
+            "missing"
+          ]
+        },
+        "reason": {
+          "enum": [
+            "none",
+            "missing",
+            "infrastructure",
+            "declaration",
+            "mapping",
+            "descendants"
+          ]
+        },
+        "descendants": {
+          "type": "array",
+          "maxItems": 4096,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "Cases": {
+      "type": "array",
+      "minItems": 12,
+      "maxItems": 32,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "target",
+          "present",
+          "mounted",
+          "main",
+          "descendant",
+          "declaration",
+          "expected"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "target": {
+            "enum": [
+              "dependencies",
+              "diagnostics",
+              "graph",
+              "products",
+              "rust",
+              "tools",
+              "leases"
+            ]
+          },
+          "present": {
+            "type": "boolean"
+          },
+          "mounted": {
+            "type": "boolean"
+          },
+          "main": {
+            "enum": [
+              "none",
+              "exact",
+              "duplicate",
+              "wrong-root",
+              "missing-device",
+              "wrong-device"
+            ]
+          },
+          "descendant": {
+            "enum": [
+              "none",
+              "backing",
+              "mount",
+              "outside",
+              "prefix"
+            ]
+          },
+          "declaration": {
+            "type": "boolean"
+          },
+          "expected": {
+            "enum": [
+              "none",
+              "missing",
+              "infrastructure",
+              "declaration",
+              "mapping",
+              "descendants"
+            ]
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "ReadCases": {
+      "type": "array",
+      "minItems": 8,
+      "maxItems": 16,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "body",
+          "close",
+          "mutation",
+          "expected"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "body": {
+            "enum": [
+              "none",
+              "undefined",
+              "frozen",
+              "aggregate"
+            ]
+          },
+          "close": {
+            "enum": [
+              "none",
+              "before",
+              "after",
+              "aggregate"
+            ]
+          },
+          "mutation": {
+            "enum": [
+              "none",
+              "short",
+              "growth"
+            ]
+          },
+          "expected": {
+            "enum": [
+              "success",
+              "primary",
+              "close",
+              "combined",
+              "expanded"
+            ]
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "IdentityCases": {
+      "type": "array",
+      "minItems": 12,
+      "maxItems": 32,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "member",
+          "field",
+          "accepted"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "member": {
+            "enum": [
+              "backing",
+              "folder",
+              "root",
+              "receipt"
+            ]
+          },
+          "field": {
+            "enum": [
+              "none",
+              "dev",
+              "ino",
+              "mode",
+              "nlink",
+              "size",
+              "allocatedBytes",
+              "stamp",
+              "sha256"
+            ]
+          },
+          "accepted": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "DiagnosticCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "effect",
+        "accepted",
+        "throws"
+      ],
+      "properties": {
+        "effect": {
+          "enum": [
+            "captured",
+            "missing",
+            "accessor",
+            "extra",
+            "reason",
+            "non-error",
+            "unfrozen",
+            "emit-undefined",
+            "emit-frozen",
+            "prototype",
+            "wrong-message",
+            "overlong",
+            "identity"
+          ]
+        },
+        "accepted": {
+          "type": "boolean"
+        },
+        "throws": {
+          "type": "boolean"
+        }
+      }
+    },
+    "DiagnosticCases": {
+      "const": [
+        {
+          "effect": "captured",
+          "accepted": true,
+          "throws": false
+        },
+        {
+          "effect": "missing",
+          "accepted": false,
+          "throws": false
+        },
+        {
+          "effect": "accessor",
+          "accepted": false,
+          "throws": false
+        },
+        {
+          "effect": "extra",
+          "accepted": false,
+          "throws": false
+        },
+        {
+          "effect": "reason",
+          "accepted": false,
+          "throws": false
+        },
+        {
+          "effect": "non-error",
+          "accepted": false,
+          "throws": false
+        },
+        {
+          "effect": "unfrozen",
+          "accepted": false,
+          "throws": false
+        },
+        {
+          "effect": "emit-undefined",
+          "accepted": false,
+          "throws": true
+        },
+        {
+          "effect": "emit-frozen",
+          "accepted": false,
+          "throws": true
+        },
+        {
+          "effect": "prototype",
+          "accepted": false,
+          "throws": false
+        },
+        {
+          "effect": "wrong-message",
+          "accepted": false,
+          "throws": false
+        },
+        {
+          "effect": "overlong",
+          "accepted": false,
+          "throws": false
+        },
+        {
+          "effect": "identity",
+          "accepted": true,
+          "throws": false
+        }
+      ]
+    },
+    "DiagnosticProtocol": {
+      "const": {
+        "maximumBytes": 4096,
+        "maximumDecimalUnits": 21,
+        "maximumPathUnits": 256
+      }
+    },
+    "StageProtocol": {
+      "const": {
+        "maximumReceiptBytes": 4096,
+        "maximumSampleBytes": 4096,
+        "maximumSamples": 11,
+        "maximumBytes": 45056
+      }
+    },
+    "StageObservation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "stamp8",
+        "stamp7",
+        "sha256",
+        "uid",
+        "gid",
+        "birthtimeNs"
+      ],
+      "properties": {
+        "stamp8": {
+          "type": "string",
+          "pattern": "^-?[0-9]{1,21}(?::-?[0-9]{1,21}){7}$"
+        },
+        "stamp7": {
+          "type": "string",
+          "pattern": "^-?[0-9]{1,21}(?::-?[0-9]{1,21}){6}$"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "uid": {
+          "type": "string",
+          "pattern": "^-?[0-9]{1,21}$"
+        },
+        "gid": {
+          "type": "string",
+          "pattern": "^-?[0-9]{1,21}$"
+        },
+        "birthtimeNs": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^-?[0-9]{1,21}$"
+        }
+      }
+    },
+    "StageSample": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "id",
+        "stage",
+        "elapsedMilliseconds",
+        "observation",
+        "refusal",
+        "publicationTransitionExpected",
+        "changedFields"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "id": {
+          "enum": [
+            "dependencies",
+            "diagnostics",
+            "graph",
+            "leases",
+            "products",
+            "rust",
+            "tools"
+          ]
+        },
+        "stage": {
+          "enum": [
+            "accepted",
+            "observed",
+            "witnessed",
+            "detached",
+            "underlying",
+            "staged",
+            "published",
+            "attached",
+            "verified",
+            "settled",
+            "terminal-failure"
+          ]
+        },
+        "elapsedMilliseconds": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "observation": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/StageObservation"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "refusal": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "publicationTransitionExpected": {
+          "type": "boolean"
+        },
+        "changedFields": {
+          "type": "array",
+          "maxItems": 12,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "dev",
+              "ino",
+              "mode",
+              "nlink",
+              "size",
+              "blocks",
+              "mtimeNs",
+              "ctimeNs",
+              "uid",
+              "gid",
+              "birthtimeNs",
+              "sha256"
+            ]
+          }
+        }
+      },
+      "anyOf": [
+        {
+          "properties": {
+            "observation": {
+              "type": "object"
+            },
+            "refusal": {
+              "type": "null"
+            }
+          }
+        },
+        {
+          "properties": {
+            "observation": {
+              "type": "null"
+            },
+            "refusal": {
+              "type": "string"
+            }
+          }
+        }
+      ]
+    },
+    "StageTrace": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "scope",
+        "id",
+        "pid",
+        "samples",
+        "origin"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "scope": {
+          "const": "declared macOS publication stage receipt DATA; no acceptance or ownership proof"
+        },
+        "id": {
+          "enum": [
+            "dependencies",
+            "diagnostics",
+            "graph",
+            "leases",
+            "products",
+            "rust",
+            "tools"
+          ]
+        },
+        "pid": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "samples": {
+          "type": "array",
+          "maxItems": 11,
+          "items": {
+            "$ref": "#/definitions/StageSample"
+          }
+        },
+        "origin": {
+          "enum": [
+            "canonical-callback",
+            "generated-source-model"
+          ]
+        }
+      }
+    },
+    "StageCases": {
+      "type": "array",
+      "minItems": 13,
+      "maxItems": 32,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "stage",
+          "field",
+          "initial",
+          "publicationTransitionExpected",
+          "changedFields"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          },
+          "stage": {
+            "enum": [
+              "accepted",
+              "observed",
+              "witnessed",
+              "detached",
+              "underlying",
+              "staged",
+              "published",
+              "attached",
+              "verified",
+              "settled",
+              "terminal-failure"
+            ]
+          },
+          "field": {
+            "enum": [
+              "none",
+              "dev",
+              "ino",
+              "mode",
+              "nlink",
+              "size",
+              "blocks",
+              "mtimeNs",
+              "ctimeNs",
+              "uid",
+              "gid",
+              "birthtimeNs",
+              "sha256"
+            ]
+          },
+          "initial": {
+            "type": "boolean"
+          },
+          "publicationTransitionExpected": {
+            "type": "boolean"
+          },
+          "changedFields": {
+            "type": "array",
+            "maxItems": 12,
+            "uniqueItems": true,
+            "items": {
+              "enum": [
+                "dev",
+                "ino",
+                "mode",
+                "nlink",
+                "size",
+                "blocks",
+                "mtimeNs",
+                "ctimeNs",
+                "uid",
+                "gid",
+                "birthtimeNs",
+                "sha256"
+              ]
+            }
+          }
+        }
+      }
+    },
+    "StageControlCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "control",
+        "primary",
+        "expected"
+      ],
+      "properties": {
+        "control": {
+          "enum": [
+            "cancelled",
+            "expired",
+            "retired"
+          ]
+        },
+        "primary": {
+          "enum": [
+            "undefined",
+            "frozen"
+          ]
+        },
+        "expected": {
+          "const": "primary-first"
+        }
+      }
+    },
+    "StageControlCases": {
+      "const": [
+        {
+          "control": "cancelled",
+          "primary": "undefined",
+          "expected": "primary-first"
+        },
+        {
+          "control": "cancelled",
+          "primary": "frozen",
+          "expected": "primary-first"
+        },
+        {
+          "control": "expired",
+          "primary": "undefined",
+          "expected": "primary-first"
+        },
+        {
+          "control": "expired",
+          "primary": "frozen",
+          "expected": "primary-first"
+        },
+        {
+          "control": "retired",
+          "primary": "undefined",
+          "expected": "primary-first"
+        },
+        {
+          "control": "retired",
+          "primary": "frozen",
+          "expected": "primary-first"
+        }
+      ]
+    },
+    "StageTerminalRefusal": {
+      "const": "Terminal receipt observation unavailable outside canonical callback custody"
+    },
+    "StageTerminalCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "primary",
+        "observation",
+        "refusal"
+      ],
+      "properties": {
+        "primary": {
+          "enum": [
+            "undefined",
+            "frozen"
+          ]
+        },
+        "observation": {
+          "type": "null"
+        },
+        "refusal": {
+          "const": "Terminal receipt observation unavailable outside canonical callback custody"
+        }
+      }
+    },
+    "StageTerminalCases": {
+      "const": [
+        {
+          "primary": "undefined",
+          "observation": null,
+          "refusal": "Terminal receipt observation unavailable outside canonical callback custody"
+        },
+        {
+          "primary": "frozen",
+          "observation": null,
+          "refusal": "Terminal receipt observation unavailable outside canonical callback custody"
+        }
+      ]
+    },
+    "FreshEnvironment": {
+      "const": [
+        "SEMIO_SCRIPT_PROCESS_INVOCATION",
+        "SEMIO_SCRIPT_POLICY",
+        "SEMIO_SCRIPT_CAPABILITIES",
+        "SEMIO_BUILD_TOOL",
+        "SEMIO_BUILD_MODE",
+        "SEMIO_BUILD_GRAPH_PATH",
+        "SEMIO_BUILD_GRAPH_DIGEST",
+        "SEMIO_BUILD_REUSE_GRAPH",
+        "SEMIO_SCRIPT_MAX_ELAPSED_MS",
+        "SEMIO_BUILD_INVOCATION_PID",
+        "SEMIO_TASK_PROJECT",
+        "SEMIO_TASK_TARGET",
+        "SEMIO_BAZEL_FIXTURE_PHASE",
+        "SEMIO_BAZEL_INTEGRATION",
+        "SEMIO_BUILD_BUDGET_MS",
+        "SEMIO_CMD_BUDGET_MS",
+        "SEMIO_ORCHESTRATOR_BUDGET_MS",
+        "SEMIO_DAEMON_BUDGET_MS"
+      ]
+    },
+    "OrdinaryProtocol": {
+      "const": {
+        "cleanupReserveMilliseconds": 10000,
+        "childMilliseconds": 5000,
+        "finiteParentMilliseconds": 20000,
+        "nativeEffects": 0
+      }
+    },
+    "OrdinaryPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "owner",
+        "maximumElapsedMilliseconds"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "owner": {
+          "const": "repository:build"
+        },
+        "maximumElapsedMilliseconds": {
+          "const": 0
+        }
+      }
+    },
+    "Entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode",
+        "argumentCount",
+        "partition",
+        "census"
+      ],
+      "properties": {
+        "mode": {
+          "enum": [
+            "--test",
+            "--strict",
+            "--test-ordinary",
+            "--ordinary-worker",
+            "--plan",
+            "--publish",
+            "--publish-ordinary",
+            "--test-root0-failure",
+            "--root0-error-worker",
+            "--root0-undefined-worker",
+            "--root0-frozen-worker",
+            "--root0-success-worker",
+            "--root0-cleanup-worker",
+            "--root0-negative-worker",
+            "--root0-cancelled-worker",
+            "--root0-finite-child-worker",
+            "--retirement-source",
+            "--retirement-strict",
+            "--service-payload-source",
+            "--service-payload-strict",
+            "--service-parent-undefined-worker",
+            "--service-parent-frozen-worker",
+            "--catalog-identity-source",
+            "--catalog-identity-strict",
+            "--publish-prepared-ordinary",
+            "--logical-observation-source",
+            "--logical-observation-strict"
+          ]
+        },
+        "argumentCount": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2
+        },
+        "partition": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "census": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "anyOf": [
+        {
+          "properties": {
+            "mode": {
+              "enum": [
+                "--test",
+                "--strict",
+                "--test-ordinary",
+                "--ordinary-worker",
+                "--test-root0-failure",
+                "--root0-error-worker",
+                "--root0-undefined-worker",
+                "--root0-frozen-worker",
+                "--root0-success-worker",
+                "--root0-cleanup-worker",
+                "--root0-negative-worker",
+                "--root0-cancelled-worker",
+                "--root0-finite-child-worker",
+                "--retirement-source",
+                "--retirement-strict",
+                "--service-payload-source",
+                "--service-payload-strict",
+                "--service-parent-undefined-worker",
+                "--service-parent-frozen-worker",
+                "--catalog-identity-source",
+                "--catalog-identity-strict",
+                "--logical-observation-source",
+                "--logical-observation-strict"
+              ]
+            },
+            "argumentCount": {
+              "const": 0
+            },
+            "partition": {
+              "type": "null"
+            },
+            "census": {
+              "type": "null"
+            }
+          }
+        },
+        {
+          "properties": {
+            "mode": {
+              "const": "--plan"
+            },
+            "argumentCount": {
+              "const": 1
+            },
+            "partition": {
+              "type": "null"
+            },
+            "census": {
+              "type": "string",
+              "pattern": "^native-assets-protected-[1-9][0-9]*\\.json$"
+            }
+          }
+        },
+        {
+          "properties": {
+            "mode": {
+              "enum": [
+                "--publish",
+                "--publish-ordinary",
+                "--publish-prepared-ordinary"
+              ]
+            },
+            "argumentCount": {
+              "const": 2
+            },
+            "partition": {
+              "enum": [
+                "dependencies",
+                "diagnostics",
+                "graph",
+                "leases",
+                "products",
+                "rust",
+                "tools"
+              ]
+            },
+            "census": {
+              "type": "string",
+              "pattern": "^native-assets-protected-[1-9][0-9]*\\.json$"
+            }
+          }
+        }
+      ]
+    },
+    "OrdinaryCases": {
+      "type": "array",
+      "minItems": 22,
+      "maxItems": 64,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "argv",
+          "override",
+          "accepted"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          },
+          "argv": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 4,
+            "items": {
+              "type": "string"
+            }
+          },
+          "override": {
+            "enum": [
+              null,
+              "SEMIO_SCRIPT_PROCESS_INVOCATION",
+              "SEMIO_SCRIPT_POLICY",
+              "SEMIO_SCRIPT_CAPABILITIES",
+              "SEMIO_BUILD_TOOL",
+              "SEMIO_BUILD_MODE",
+              "SEMIO_BUILD_GRAPH_PATH",
+              "SEMIO_BUILD_GRAPH_DIGEST",
+              "SEMIO_BUILD_REUSE_GRAPH",
+              "SEMIO_SCRIPT_MAX_ELAPSED_MS",
+              "SEMIO_BUILD_INVOCATION_PID",
+              "SEMIO_TASK_PROJECT",
+              "SEMIO_TASK_TARGET",
+              "SEMIO_BAZEL_FIXTURE_PHASE",
+              "SEMIO_BAZEL_INTEGRATION",
+              "SEMIO_BUILD_BUDGET_MS",
+              "SEMIO_CMD_BUDGET_MS",
+              "SEMIO_ORCHESTRATOR_BUDGET_MS",
+              "SEMIO_DAEMON_BUDGET_MS"
+            ]
+          },
+          "accepted": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "OrdinaryLaunchCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "language",
+        "mode",
+        "order",
+        "policyText"
+      ],
+      "properties": {
+        "language": {
+          "enum": [
+            "EN",
+            "DE"
+          ]
+        },
+        "mode": {
+          "enum": [
+            "--test-ordinary",
+            "--publish-ordinary",
+            "--test-root0-failure"
+          ]
+        },
+        "order": {
+          "type": "number"
+        },
+        "policyText": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "OrdinaryLaunchCases": {
+      "const": [
+        {
+          "language": "EN",
+          "mode": "--test-ordinary",
+          "order": 920.2,
+          "policyText": "No Overall Deadline"
+        },
+        {
+          "language": "DE",
+          "mode": "--test-ordinary",
+          "order": 920.3,
+          "policyText": "Ohne Gesamtlaufzeitgrenze"
+        },
+        {
+          "language": "EN",
+          "mode": "--publish-ordinary",
+          "order": 923.2,
+          "policyText": "No Overall Deadline"
+        },
+        {
+          "language": "DE",
+          "mode": "--publish-ordinary",
+          "order": 923.3,
+          "policyText": "Ohne Gesamtlaufzeitgrenze"
+        },
+        {
+          "language": "EN",
+          "mode": "--test-root0-failure",
+          "order": 920.4,
+          "policyText": "No Overall Deadline"
+        },
+        {
+          "language": "DE",
+          "mode": "--test-root0-failure",
+          "order": 920.5,
+          "policyText": "Ohne Gesamtlaufzeitgrenze"
+        }
+      ]
+    },
+    "Root0FailureProtocol": {
+      "const": {
+        "observationMilliseconds": 25,
+        "workerMilliseconds": 5000,
+        "maximumOutputBytes": 65536,
+        "maximumOutputLines": 128,
+        "nativeEffects": 0
+      }
+    },
+    "Root0FailureCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "mode",
+        "primary",
+        "abort",
+        "closeCalls",
+        "closeSucceeded",
+        "rescue"
+      ],
+      "properties": {
+        "id": {
+          "enum": [
+            "error",
+            "undefined",
+            "frozen",
+            "success",
+            "cleanup",
+            "negative",
+            "cancelled",
+            "finite-child"
+          ]
+        },
+        "mode": {
+          "enum": [
+            "--root0-error-worker",
+            "--root0-undefined-worker",
+            "--root0-frozen-worker",
+            "--root0-success-worker",
+            "--root0-cleanup-worker",
+            "--root0-negative-worker",
+            "--root0-cancelled-worker",
+            "--root0-finite-child-worker"
+          ]
+        },
+        "primary": {
+          "enum": [
+            "none",
+            "error",
+            "undefined",
+            "frozen"
+          ]
+        },
+        "abort": {
+          "type": "boolean"
+        },
+        "closeCalls": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "closeSucceeded": {
+          "type": "boolean"
+        },
+        "rescue": {
+          "type": "boolean"
+        }
+      }
+    },
+    "Root0FailureCases": {
+      "type": "array",
+      "minItems": 8,
+      "maxItems": 8,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "mode",
+          "primary",
+          "abort",
+          "closeCalls",
+          "closeSucceeded",
+          "rescue"
+        ],
+        "properties": {
+          "id": {
+            "enum": [
+              "error",
+              "undefined",
+              "frozen",
+              "success",
+              "cleanup",
+              "negative",
+              "cancelled",
+              "finite-child"
+            ]
+          },
+          "mode": {
+            "enum": [
+              "--root0-error-worker",
+              "--root0-undefined-worker",
+              "--root0-frozen-worker",
+              "--root0-success-worker",
+              "--root0-cleanup-worker",
+              "--root0-negative-worker",
+              "--root0-cancelled-worker",
+              "--root0-finite-child-worker"
+            ]
+          },
+          "primary": {
+            "enum": [
+              "none",
+              "error",
+              "undefined",
+              "frozen"
+            ]
+          },
+          "abort": {
+            "type": "boolean"
+          },
+          "closeCalls": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "closeSucceeded": {
+            "type": "boolean"
+          },
+          "rescue": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "Root0FailureReceipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "id",
+        "pid",
+        "policy",
+        "deadlineEpochMilliseconds",
+        "wireSha256",
+        "capabilities",
+        "events",
+        "failed",
+        "primaryExact",
+        "scopeAborted",
+        "closes",
+        "closeSucceeded",
+        "rescued",
+        "scopeSettled",
+        "unclosedAtScopeTerminal",
+        "fixtureDescriptorClosed",
+        "finiteChildMilliseconds",
+        "nativeEffects"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "id": {
+          "enum": [
+            "error",
+            "undefined",
+            "frozen",
+            "success",
+            "cleanup",
+            "negative",
+            "cancelled",
+            "finite-child"
+          ]
+        },
+        "pid": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "policy": {
+          "$ref": "#/definitions/OrdinaryPolicy"
+        },
+        "deadlineEpochMilliseconds": {
+          "type": "null"
+        },
+        "wireSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "capabilities": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "workspaceRoot"
+          ],
+          "properties": {
+            "workspaceRoot": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            }
+          }
+        },
+        "events": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 12,
+          "items": {
+            "enum": [
+              "open",
+              "body-failure",
+              "abort",
+              "close-start",
+              "close-refused",
+              "close-end",
+              "scope-drained",
+              "original-settled",
+              "fixture-close",
+              "rescue",
+              "cancel-before-body"
+            ]
+          }
+        },
+        "failed": {
+          "type": "boolean"
+        },
+        "primaryExact": {
+          "const": true
+        },
+        "scopeAborted": {
+          "type": "boolean"
+        },
+        "closes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "closeSucceeded": {
+          "type": "boolean"
+        },
+        "rescued": {
+          "type": "boolean"
+        },
+        "scopeSettled": {
+          "const": true
+        },
+        "unclosedAtScopeTerminal": {
+          "type": "boolean"
+        },
+        "fixtureDescriptorClosed": {
+          "const": true
+        },
+        "finiteChildMilliseconds": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "exclusiveMinimum": 0,
+          "maximum": 5000
+        },
+        "nativeEffects": {
+          "const": 0
+        }
+      }
+    },
+    "PreparedPublicationCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "platform",
+        "argv",
+        "override",
+        "accepted",
+        "purpose",
+        "ordinary"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "platform": {
+          "enum": [
+            "darwin",
+            "linux",
+            "win32"
+          ]
+        },
+        "argv": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 4
+        },
+        "override": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "accepted": {
+          "type": "boolean"
+        },
+        "purpose": {
+          "enum": [
+            "current-publication",
+            "current-prepared-publication",
+            null
+          ]
+        },
+        "ordinary": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      }
+    },
+    "PreparedPublicationCases": {
+      "const": [
+        {
+          "id": "publish-darwin",
+          "platform": "darwin",
+          "argv": [
+            "--publish",
+            "tools",
+            "native-assets-protected-1.json"
+          ],
+          "override": null,
+          "accepted": true,
+          "purpose": "current-publication",
+          "ordinary": false
+        },
+        {
+          "id": "publish-linux",
+          "platform": "linux",
+          "argv": [
+            "--publish",
+            "tools",
+            "native-assets-protected-1.json"
+          ],
+          "override": null,
+          "accepted": true,
+          "purpose": "current-publication",
+          "ordinary": false
+        },
+        {
+          "id": "publish-win32",
+          "platform": "win32",
+          "argv": [
+            "--publish",
+            "tools",
+            "native-assets-protected-1.json"
+          ],
+          "override": null,
+          "accepted": true,
+          "purpose": "current-publication",
+          "ordinary": false
+        },
+        {
+          "id": "publish-ordinary-darwin",
+          "platform": "darwin",
+          "argv": [
+            "--publish-ordinary",
+            "tools",
+            "native-assets-protected-1.json"
+          ],
+          "override": null,
+          "accepted": true,
+          "purpose": "current-publication",
+          "ordinary": true
+        },
+        {
+          "id": "publish-ordinary-linux",
+          "platform": "linux",
+          "argv": [
+            "--publish-ordinary",
+            "tools",
+            "native-assets-protected-1.json"
+          ],
+          "override": null,
+          "accepted": true,
+          "purpose": "current-publication",
+          "ordinary": true
+        },
+        {
+          "id": "publish-ordinary-win32",
+          "platform": "win32",
+          "argv": [
+            "--publish-ordinary",
+            "tools",
+            "native-assets-protected-1.json"
+          ],
+          "override": null,
+          "accepted": true,
+          "purpose": "current-publication",
+          "ordinary": true
+        },
+        {
+          "id": "publish-prepared-ordinary-darwin",
+          "platform": "darwin",
+          "argv": [
+            "--publish-prepared-ordinary",
+            "tools",
+            "native-assets-protected-1.json"
+          ],
+          "override": null,
+          "accepted": true,
+          "purpose": "current-prepared-publication",
+          "ordinary": true
+        },
+        {
+          "id": "publish-prepared-ordinary-linux",
+          "platform": "linux",
+          "argv": [
+            "--publish-prepared-ordinary",
+            "tools",
+            "native-assets-protected-1.json"
+          ],
+          "override": null,
+          "accepted": false,
+          "purpose": null,
+          "ordinary": null
+        },
+        {
+          "id": "publish-prepared-ordinary-win32",
+          "platform": "win32",
+          "argv": [
+            "--publish-prepared-ordinary",
+            "tools",
+            "native-assets-protected-1.json"
+          ],
+          "override": null,
+          "accepted": false,
+          "purpose": null,
+          "ordinary": null
+        },
+        {
+          "id": "override-SEMIO_SCRIPT_PROCESS_INVOCATION",
+          "platform": "darwin",
+          "argv": [
+            "--publish-prepared-ordinary",
+            "tools",
+            "native-assets-protected-1.json"
+          ],
+          "override": "SEMIO_SCRIPT_PROCESS_INVOCATION",
+          "accepted": false,
+          "purpose": null,
+          "ordinary": null
+        },
+        {
+          "id": "override-SEMIO_SCRIPT_POLICY",
+          "platform": "darwin",
+          "argv": [
+            "--publish-prepared-ordinary",
+            "tools",
+            "native-assets-protected-1.json"
+          ],
+          "override": "SEMIO_SCRIPT_POLICY",
+          "accepted": false,
+          "purpose": null,
+          "ordinary": null
+        },
+        {
+          "id": "override-SEMIO_SCRIPT_CAPABILITIES",
+          "platform": "darwin",
+          "argv": [
+            "--publish-prepared-ordinary",
+            "tools",
+            "native-assets-protected-1.json"
+          ],
+          "override": "SEMIO_SCRIPT_CAPABILITIES",
+          "accepted": false,
+          "purpose": null,
+          "ordinary": null
+        },
+        {
+          "id": "override-SEMIO_BUILD_TOOL",
+          "platform": "darwin",
+          "argv": [
+            "--publish-prepared-ordinary",
+            "tools",
+            "native-assets-protected-1.json"
+          ],
+          "override": "SEMIO_BUILD_TOOL",
+          "accepted": false,
+          "purpose": null,
+          "ordinary": null
+        },
+        {
+          "id": "override-SEMIO_BUILD_MODE",
+          "platform": "darwin",
+          "argv": [
+            "--publish-prepared-ordinary",
+            "tools",
+            "native-assets-protected-1.json"
+          ],
+          "override": "SEMIO_BUILD_MODE",
+          "accepted": false,
+          "purpose": null,
+          "ordinary": null
+        },
+        {
+          "id": "override-SEMIO_BUILD_GRAPH_PATH",
+          "platform": "darwin",
+          "argv": [
+            "--publish-prepared-ordinary",
+            "tools",
+            "native-assets-protected-1.json"
+          ],
+          "override": "SEMIO_BUILD_GRAPH_PATH",
+          "accepted": false,
+          "purpose": null,
+          "ordinary": null
+        },
+        {
+          "id": "override-SEMIO_BUILD_GRAPH_DIGEST",
+          "platform": "darwin",
+          "argv": [
+            "--publish-prepared-ordinary",
+            "tools",
+            "native-assets-protected-1.json"
+          ],
+          "override": "SEMIO_BUILD_GRAPH_DIGEST",
+          "accepted": false,
+          "purpose": null,
+          "ordinary": null
+        },
+        {
+          "id": "override-SEMIO_BUILD_REUSE_GRAPH",
+          "platform": "darwin",
+          "argv": [
+            "--publish-prepared-ordinary",
+            "tools",
+            "native-assets-protected-1.json"
+          ],
+          "override": "SEMIO_BUILD_REUSE_GRAPH",
+          "accepted": false,
+          "purpose": null,
+          "ordinary": null
+        },
+        {
+          "id": "override-SEMIO_SCRIPT_MAX_ELAPSED_MS",
+          "platform": "darwin",
+          "argv": [
+            "--publish-prepared-ordinary",
+            "tools",
+            "native-assets-protected-1.json"
+          ],
+          "override": "SEMIO_SCRIPT_MAX_ELAPSED_MS",
+          "accepted": false,
+          "purpose": null,
+          "ordinary": null
+        },
+        {
+          "id": "override-SEMIO_BUILD_INVOCATION_PID",
+          "platform": "darwin",
+          "argv": [
+            "--publish-prepared-ordinary",
+            "tools",
+            "native-assets-protected-1.json"
+          ],
+          "override": "SEMIO_BUILD_INVOCATION_PID",
+          "accepted": false,
+          "purpose": null,
+          "ordinary": null
+        },
+        {
+          "id": "override-SEMIO_TASK_PROJECT",
+          "platform": "darwin",
+          "argv": [
+            "--publish-prepared-ordinary",
+            "tools",
+            "native-assets-protected-1.json"
+          ],
+          "override": "SEMIO_TASK_PROJECT",
+          "accepted": false,
+          "purpose": null,
+          "ordinary": null
+        },
+        {
+          "id": "override-SEMIO_TASK_TARGET",
+          "platform": "darwin",
+          "argv": [
+            "--publish-prepared-ordinary",
+            "tools",
+            "native-assets-protected-1.json"
+          ],
+          "override": "SEMIO_TASK_TARGET",
+          "accepted": false,
+          "purpose": null,
+          "ordinary": null
+        },
+        {
+          "id": "override-SEMIO_BAZEL_FIXTURE_PHASE",
+          "platform": "darwin",
+          "argv": [
+            "--publish-prepared-ordinary",
+            "tools",
+            "native-assets-protected-1.json"
+          ],
+          "override": "SEMIO_BAZEL_FIXTURE_PHASE",
+          "accepted": false,
+          "purpose": null,
+          "ordinary": null
+        },
+        {
+          "id": "override-SEMIO_BAZEL_INTEGRATION",
+          "platform": "darwin",
+          "argv": [
+            "--publish-prepared-ordinary",
+            "tools",
+            "native-assets-protected-1.json"
+          ],
+          "override": "SEMIO_BAZEL_INTEGRATION",
+          "accepted": false,
+          "purpose": null,
+          "ordinary": null
+        },
+        {
+          "id": "override-SEMIO_BUILD_BUDGET_MS",
+          "platform": "darwin",
+          "argv": [
+            "--publish-prepared-ordinary",
+            "tools",
+            "native-assets-protected-1.json"
+          ],
+          "override": "SEMIO_BUILD_BUDGET_MS",
+          "accepted": false,
+          "purpose": null,
+          "ordinary": null
+        },
+        {
+          "id": "override-SEMIO_CMD_BUDGET_MS",
+          "platform": "darwin",
+          "argv": [
+            "--publish-prepared-ordinary",
+            "tools",
+            "native-assets-protected-1.json"
+          ],
+          "override": "SEMIO_CMD_BUDGET_MS",
+          "accepted": false,
+          "purpose": null,
+          "ordinary": null
+        },
+        {
+          "id": "override-SEMIO_ORCHESTRATOR_BUDGET_MS",
+          "platform": "darwin",
+          "argv": [
+            "--publish-prepared-ordinary",
+            "tools",
+            "native-assets-protected-1.json"
+          ],
+          "override": "SEMIO_ORCHESTRATOR_BUDGET_MS",
+          "accepted": false,
+          "purpose": null,
+          "ordinary": null
+        },
+        {
+          "id": "override-SEMIO_DAEMON_BUDGET_MS",
+          "platform": "darwin",
+          "argv": [
+            "--publish-prepared-ordinary",
+            "tools",
+            "native-assets-protected-1.json"
+          ],
+          "override": "SEMIO_DAEMON_BUDGET_MS",
+          "accepted": false,
+          "purpose": null,
+          "ordinary": null
+        },
+        {
+          "id": "missing-census",
+          "platform": "darwin",
+          "argv": [
+            "--publish-prepared-ordinary",
+            "tools"
+          ],
+          "override": null,
+          "accepted": false,
+          "purpose": null,
+          "ordinary": null
+        },
+        {
+          "id": "foreign-partition",
+          "platform": "darwin",
+          "argv": [
+            "--publish-prepared-ordinary",
+            "foreign",
+            "native-assets-protected-1.json"
+          ],
+          "override": null,
+          "accepted": false,
+          "purpose": null,
+          "ordinary": null
+        },
+        {
+          "id": "foreign-census",
+          "platform": "darwin",
+          "argv": [
+            "--publish-prepared-ordinary",
+            "tools",
+            "../foreign.json"
+          ],
+          "override": null,
+          "accepted": false,
+          "purpose": null,
+          "ordinary": null
+        },
+        {
+          "id": "extra-tail",
+          "platform": "darwin",
+          "argv": [
+            "--publish-prepared-ordinary",
+            "tools",
+            "native-assets-protected-1.json",
+            "foreign"
+          ],
+          "override": null,
+          "accepted": false,
+          "purpose": null,
+          "ordinary": null
+        },
+        {
+          "id": "unknown-mode",
+          "platform": "darwin",
+          "argv": [
+            "--publish-prepared",
+            "tools",
+            "native-assets-protected-1.json"
+          ],
+          "override": null,
+          "accepted": false,
+          "purpose": null,
+          "ordinary": null
+        }
+      ]
+    }
+  }
+}

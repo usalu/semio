@@ -1,4 +1,10 @@
-use super::*;
+#[allow(unused_imports)]
+use crate::editor::puzzle2d::{snapshot::puzzle2d_kind_ids, snapshot::puzzle2d_window_and_measures_scope, interaction::Puzzle2dActionCtx};
+#[allow(unused_imports)]
+use semio_framework_pack_json::{json, Value};
+#[allow(unused_imports)]
+use std::collections::BTreeMap;
+use crate::editor::puzzle2d::commands::set_brush_kind_weights::*;
 
 #[test]
 fn kind_weight_group_normalizes_to_sum_one() {

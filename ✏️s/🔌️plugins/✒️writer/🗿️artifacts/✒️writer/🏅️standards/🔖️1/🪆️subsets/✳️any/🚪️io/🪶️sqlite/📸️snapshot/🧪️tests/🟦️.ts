@@ -23,13 +23,11 @@ test("Writer declared owner corpus pins complete authored SQL tables independent
  
  const db=new Database(":memory:");
  try{db.exec(await Bun.file(new URL("../🗄️.sql",import.meta.url)).text());expect(db.query("SELECT name FROM sqlite_schema WHERE type='table' ORDER BY name").all()).toEqual(law.tables.map(name=>({name})));expect(db.query("PRAGMA integrity_check").all()).toEqual([{integrity_check:"ok"}]);expect(db.query("PRAGMA foreign_key_check").all()).toEqual([]);}finally{db.close();}
- console.log("[DEBUG] Writer closed declaration owner "+law.dialect.artifactKind+" schema="+law.schema+" complete_authored_SQL_tables="+law.tables.length);
 });
 
 test("Writer original authored examples keep every reference component and full owner",async()=>{
  const {default:law}=await import("./🧫️fixtures/🔗️authored-examples/🔣️.json");const {default:Ajv}=await import("ajv");
  for(const entry of law.examples){const snapshot=parseWriterSnapshot(entry.snapshot);const db=Database.deserialize(await exportSqliteDatabase(await writerSnapshotToSqliteDatabase(snapshot)));try{expect(db.query("PRAGMA integrity_check").all()).toEqual([{integrity_check:"ok"}]);expect(db.query("PRAGMA foreign_key_check").all()).toEqual([]);expect(db.query("SELECT child_id,target_artifact_id,target_artifact_kind,target_standard,target_subset FROM writer_document_child").get()).toEqual({child_id:snapshot.document.childId,target_artifact_id:snapshot.document.target.artifactId,target_artifact_kind:snapshot.document.target.dialect.artifactKind,target_standard:snapshot.document.target.dialect.standard,target_subset:snapshot.document.target.dialect.subset});expect(await writerSnapshotFromSqliteDatabase(await importSqliteDatabase(new Uint8Array(db.serialize())))).toEqual(entry.snapshot);}finally{db.close();}}
- console.log("[DEBUG] Writer authored examples complete owners=2 current literal reference fields=4 independently queryable");
 });
 
 test("Writer hub tail commits retain the complete current transition and content address",async()=>{
@@ -44,7 +42,6 @@ test("Writer hub tail commits retain the complete current transition and content
  for(const row of law.checkpoints){expect(validate(row.transition)).toBe(true);const t=row.transition,bytes:number[]=[];const u=(out:number[],n:number)=>{let value=BigInt(n);do{const part=Number(value&127n);value>>=7n;out.push(part|(value?128:0));}while(value);};const s=(value:string)=>{const text=Buffer.from(value,"utf8");u(bytes,text.length);bytes.push(...text);};const o=(value:string|null)=>{bytes.push(value===null?0:1);if(value!==null)s(value);};
  u(bytes,2);s(t.checkpointId);o(t.parentId);s(t.changeId);u(bytes,t.mutationIds.length);for(const id of t.mutationIds)s(id);o(t.description);s(t.savedAt);u(bytes,t.authors.length);for(const author of t.authors){s(author.id);s(author.name);o(author.avatar);}o(t.message);s(t.timestamp);o(t.lineId);
  const material:number[]=[];u(material,row.clock.actor);u(material,row.clock.physical_ms);u(material,row.clock.logical);u(material,bytes.length);material.push(...bytes);const expectedId="transition-"+Buffer.from(blake3(Uint8Array.from(material))).toString("hex").slice(0,16);expect(historyTransitionId(row.clock,bytes)).toBe(expectedId);
- console.log("[DEBUG] Writer current checkpoint producer index="+row.index+" bytes="+bytes.length+" id="+expectedId+" payload="+JSON.stringify(bytes));
  expect(captured.envelopes[row.index]!.diff.payload).toEqual(bytes);expect(captured.envelopes[row.index]!.mutation_id).toBe(expectedId);
  }
 });

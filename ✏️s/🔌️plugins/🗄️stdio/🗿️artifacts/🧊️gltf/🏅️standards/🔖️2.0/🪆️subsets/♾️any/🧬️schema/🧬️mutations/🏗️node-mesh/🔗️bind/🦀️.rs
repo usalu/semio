@@ -26,14 +26,17 @@ pub fn plan(p: &GltfBindNodeMeshPayload, base: &GltfSnapshot) -> Result<GltfDiff
     Ok(GltfDiff { nodes: patch(p.node, GltfNodeDiff { mesh: (current != Some(p.mesh)).then_some(Some(p.mesh)), ..Default::default() }), ..Default::default() })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn inverse(p: &GltfBindNodeMeshPayload, base: &GltfSnapshot) -> Vec<super::GltfMutation> {
+pub fn inverse<Op>(p: &GltfBindNodeMeshPayload, base: &GltfSnapshot) -> Vec<Op>
+where
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::remove_used_extension::RemoveUsedExtensionMutation>,
+{
     if validate(p, base).is_err() {
         return Vec::new();
     }
     match base.document.nodes[p.node].mesh {
         Some(current) if current == p.mesh => Vec::new(),
         Some(current) => vec![mutation(GltfBindNodeMeshPayload { node: p.node, mesh: current })],
-        None => vec![super::unbind_node_mesh::mutation(super::unbind_node_mesh::GltfUnbindNodeMeshPayload { node: p.node })],
+        None => vec![crate::standards::v2_0::subsets::any::schema::mutations::unbind_node_mesh::mutation(crate::standards::v2_0::subsets::any::schema::mutations::unbind_node_mesh::GltfUnbindNodeMeshPayload { node: p.node })],
     }
 }
 
@@ -47,11 +50,17 @@ pub enum BindNodeMeshMutation {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn mutation(payload: GltfBindNodeMeshPayload) -> super::GltfMutation {
-    super::GltfMutation::BindNodeMesh(BindNodeMeshMutation::Apply(payload))
+pub fn mutation<Op>(payload: GltfBindNodeMeshPayload) -> Op
+where
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::bind_node_mesh::BindNodeMeshMutation>,
+{
+    Op::from(BindNodeMeshMutation::Apply(payload))
 }
 
-impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for BindNodeMeshMutation {
+impl<Op> protocol::MutationKind<GltfSnapshot, Op> for BindNodeMeshMutation
+where
+    Op: protocol::Mutation<GltfSnapshot, Diff = GltfDiff> + From<BindNodeMeshMutation>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "bind", entity: "node-mesh", kind: "bind-node-mesh", record: "BoundNodeMesh" };
 
     fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<GltfDiff> {
@@ -63,7 +72,7 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for BindNodeMeshM
         }
     }
 
-    fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<super::GltfMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         match self {
             Self::Apply(payload) => Ok(inverse(payload, base)),
         }
@@ -80,7 +89,5 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for BindNodeMeshM
 //#endregion 🧬️DirectMutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔗️binds-the-hull-fe46fd/🦀️.rs"]
-mod case_binds_the_hull_fe46fd;
+
 //#endregion 🧪️Tests

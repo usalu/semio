@@ -53,5 +53,4 @@ fn original_interpreter_deadline_uses_exact_units_and_original_clock_boundary(){
   if row["expired"].as_bool().unwrap(){assert!(matches!(actual,Err(TurnFault::DeadlineExceeded)));assert_eq!(observed,Some(0));assert_eq!(state.pending_snapshot().unwrap(),Some((OwnedSnapshotOperation::Export,0)));}else{assert!(matches!(actual,Err(TurnFault::Trapped(_))));}
  }
  crate::test_native_authority::close(&mut identity);
- eprintln!("[DEBUG] original interpreter exactMsToUs=true absoluteBoundary=true missingClockRefused=true noRenewal=true originalSource=true actualSnapshotResume=true deniedSnapshotPendingPreserved=true");
 }

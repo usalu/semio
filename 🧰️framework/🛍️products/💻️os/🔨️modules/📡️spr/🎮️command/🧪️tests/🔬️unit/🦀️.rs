@@ -2,6 +2,7 @@ use super::mutation_laws_fixture::{foreign_step_fixture, AddCounter, AddCounterF
 use super::*;
 use crate::fold::{fold_plan_diff, fold_plan_inverse};
 use protocol::io::text::OpText;
+use semio_framework_test_fixtures::fixture_path;
 
 fn json_oracle<T: protocol::value::ToValue>(value: &T) -> serde_json::Value {
     serde_json::from_str(&semio_framework_pack_json::to_json_string(value)).expect("independent JSON parser accepts first-party value encoding")
@@ -218,7 +219,7 @@ fn str_eq_matches_std_partial_eq() {
             index += 1;
         }
     };
-    let fixture: serde_json::Value = serde_json::from_str(std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🧫️fixtures/🔤️string-equality/🔣️.json")).expect("fixture").as_str()).expect("language-neutral equality vectors");
+    let fixture: serde_json::Value = serde_json::from_str(std::fs::read_to_string(fixture_path!("../../../🧫️fixtures/🔤️string-equality/🔣️.json")).expect("fixture").as_str()).expect("language-neutral equality vectors");
     for row in fixture["cases"].as_array().expect("equality cases") {
         let left = row["left"].as_str().expect("left string");
         let right = row["right"].as_str().expect("right string");
@@ -249,7 +250,7 @@ fn approved_verbs_are_unique_and_lowercase() {
 
 #[test]
 fn space_history_verbs_match_the_language_neutral_contract() {
-    let fixture: serde_json::Value = serde_json::from_str(std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🧫️fixtures/🗣️verb-vocabulary/🔣️.json")).expect("fixture").as_str()).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(std::fs::read_to_string(fixture_path!("../../../🧫️fixtures/🗣️verb-vocabulary/🔣️.json")).expect("fixture").as_str()).unwrap();
     for case in fixture["cases"].as_array().unwrap() {
         let verb = case["verb"].as_str().unwrap();
         let expected = case["record"].as_str();
@@ -276,7 +277,7 @@ fn mutation_descriptor_semantics_participate_in_immutable_identity() {
 fn derive_mutations_wires_complete_leaf_and_atomic_registration() {
     use super::registry_fixture::*;
     let base = MiniDoc { name: "a".into() };
-    let witness: serde_json::Value = serde_json::from_str(std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧪️testing/📔️registry/🧬️mutations/📛️rename-mini/🧪️tests/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json")).expect("fixture").as_str()).unwrap();
+    let witness: serde_json::Value = serde_json::from_str(std::fs::read_to_string(fixture_path!("../../../../🧪️testing/📔️registry/🧬️mutations/📛️rename-mini/🧪️tests/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json")).expect("fixture").as_str()).unwrap();
     let mutation: MiniMutation = semio_framework_pack_json::from_json_str(&witness.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed rename-mini wire witness");
     assert_eq!(mutation, RenameMini { new_name: "b".into() }.into());
     assert_eq!(json_oracle(&mutation), witness);
@@ -296,7 +297,7 @@ fn derive_mutations_wires_complete_leaf_and_atomic_registration() {
     let descriptor = mutation_descriptor("mini.doc#rename-mini").unwrap();
     assert_eq!(descriptor.semantics(), mutation.semantics());
     assert_eq!(descriptor.leaf(), mutation.descriptor());
-    let declared: serde_json::Value = serde_json::from_str(std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧪️testing/📔️registry/🧬️mutations/📛️rename-mini/🔣️.json")).expect("fixture").as_str()).unwrap();
+    let declared: serde_json::Value = serde_json::from_str(std::fs::read_to_string(fixture_path!("../../../../🧪️testing/📔️registry/🧬️mutations/📛️rename-mini/🔣️.json")).expect("fixture").as_str()).unwrap();
     assert_eq!(json_oracle(descriptor.leaf()), declared);
     assert!(register_mini_mutation_descriptors(semio_framework_schema_state::StateClass::Config).is_err());
     assert_eq!(mutation_descriptor("mini.doc#rename-mini"), Some(descriptor));
@@ -347,7 +348,7 @@ fn mutation_leaf_descriptor_fixture() -> MutationLeafDescriptor {
 }
 
 fn mutation_leaf_descriptor_fixture_json() -> serde_json::Value {
-    serde_json::from_str(std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🧫️fixtures/🪪️mutation-leaf-descriptor/🔣️.json")).expect("fixture").as_str()).expect("valid neutral descriptor fixture")
+    serde_json::from_str(std::fs::read_to_string(fixture_path!("../../../🧫️fixtures/🪪️mutation-leaf-descriptor/🔣️.json")).expect("fixture").as_str()).expect("valid neutral descriptor fixture")
 }
 
 static MUTATION_LEAF_DESCRIPTOR_DUPLICATE_OUTCOMES: [MutationOutcomeClass; 2] = [MutationOutcomeClass::Applied, MutationOutcomeClass::Applied];
@@ -886,7 +887,7 @@ fn derive_composite_mutation_wires_delegating_mutation_kind() {
 
 #[test]
 fn approved_verbs_match_closed_schema() {
-    let schema: serde_json::Value = serde_json::from_str(std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧬️schema/🔣️.json")).expect("fixture").as_str()).unwrap();
+    let schema: serde_json::Value = serde_json::from_str(std::fs::read_to_string(fixture_path!("../../../../🧬️schema/🔣️.json")).expect("fixture").as_str()).unwrap();
     let rows = schema["$defs"]["MutationVerbPairV1"]["oneOf"].as_array().unwrap();
     assert_eq!(rows.len(), APPROVED_VERBS.len());
     for (row, (verb, record)) in rows.iter().zip(APPROVED_VERBS) {

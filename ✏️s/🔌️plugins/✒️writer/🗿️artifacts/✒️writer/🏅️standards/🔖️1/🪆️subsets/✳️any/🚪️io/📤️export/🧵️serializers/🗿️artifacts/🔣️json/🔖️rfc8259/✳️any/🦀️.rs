@@ -23,6 +23,4 @@ impl Serializer<WriterSnapshot> for WriterIntoJson {
 }
 //#endregion 🔖️Serializer
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

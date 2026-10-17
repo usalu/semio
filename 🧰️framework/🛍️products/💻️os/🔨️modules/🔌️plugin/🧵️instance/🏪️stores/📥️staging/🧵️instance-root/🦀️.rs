@@ -1,12 +1,25 @@
 //! 📫️ Staged slice of the `instance-root` band of the mounted artifact instance: its `instance-stores` members (WP6 step S0 of the instance family).
 //!
 //! 🧵️ The mounted artifact instance `VcsArtifactApp`: its state, its turns and its `PluginApp` implementation.
-use super::*;
+use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_framework_artifact_reference::{ArtifactDialect, ArtifactRef};
+use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use pack::snapshot::ArtifactPack;
+use semio_framework::kernel::Effect;
+use semio_framework_plugin_decl_emission::Emit;
+use semio_framework::{Fault, FaultFrom};
+use std::future::Future;
+use crate::stores_components::InstanceStores;
+use store::{MemberFactory, Mutation, SpaceMember};
+use protocol::OpText;
+use semio_framework_plugin_reactor_app::PluginApp;
+use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
+use semio_framework_ui_contract::*;
 
 impl<A: ArtifactApp> InstanceStores<A> {
     /// 🪪️ A command's whole-document replacement names this store's identity, not whatever the app
     /// minted: see [`store::os_store::text_format::stamp_document_spr_identity`].
-    pub(crate) fn stamp_load_document_identity(&self, effect: Effect) -> Result<Effect, Fault> {
+    pub fn stamp_load_document_identity(&self, effect: Effect) -> Result<Effect, Fault> {
         let Effect::LoadDocument { pack, spr } = effect else { return Ok(effect) };
         let envelope = self.store.envelope();
         let identity = ArtifactRef { artifact_id: envelope.id.clone(), dialect: A::DIALECT.into() };
@@ -23,7 +36,7 @@ impl<A: ArtifactApp> InstanceStores<A> {
     /// it is the whole contract between `Effect::LoadDocument` and `load_document_archive` — and the
     /// plain dispatch lane and the refresh poll both used to skip it, which is why every
     /// `setActiveExample` whose verb is not a mounted retained tool died in the browser.
-    pub(crate) fn stamp_load_document_effects(&self, effects: Vec<Effect>) -> Result<Vec<Effect>, Fault> {
+    pub fn stamp_load_document_effects(&self, effects: Vec<Effect>) -> Result<Vec<Effect>, Fault> {
         if !effects.iter().any(|effect| matches!(effect, Effect::LoadDocument { .. })) {
             return Ok(effects);
         }
@@ -33,7 +46,7 @@ impl<A: ArtifactApp> InstanceStores<A> {
     /// 🪪️ The refresh poll's twin — that lane has no error channel, so an undecodable log rides on
     /// unchanged and the archive loader reports its own identity refusal, rather than the effect
     /// disappearing without a word.
-    pub(crate) fn stamp_polled_load_document_effects(&self, effects: Vec<Effect>) -> Vec<Effect> {
+    pub fn stamp_polled_load_document_effects(&self, effects: Vec<Effect>) -> Vec<Effect> {
         if !effects.iter().any(|effect| matches!(effect, Effect::LoadDocument { .. })) {
             return effects;
         }

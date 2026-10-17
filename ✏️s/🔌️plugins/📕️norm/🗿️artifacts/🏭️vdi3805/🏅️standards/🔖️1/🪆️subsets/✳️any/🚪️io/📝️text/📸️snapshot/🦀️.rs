@@ -32,7 +32,7 @@ pub type Vdi3805SnapshotText = String;
 
 #[allow(unused_imports)]
 mod snapshot_codec {
-use crate::text::snapshot::*;
+use crate::snapshot::*;
 use semio_s_artifact_norm_vdi3805_model::*;
 use semio_s_artifact_norm_vdi3805_model::{CatalogIndex, CharacteristicCurve, EditionId, EditionProfileChoice, ManufacturerCatalog, ParametricGeometry, SecurityLimits};
 use framework_schema::ArtifactSchema;
@@ -46,11 +46,11 @@ pub fn decode_vdi3805_dsl(text: &str) -> Result<Vdi3805Snapshot, String> { <Vdi3
 
 pub fn encode_vdi3805_dsl(snapshot: &Vdi3805Snapshot) -> String { pack::snapshot::ArtifactDsl::print_dsl(snapshot) }
 }
-pub use crate::text::snapshot::snapshot_codec::*;
+pub use crate::snapshot::snapshot_codec::*;
 
 #[allow(unused_imports)]
 mod snapshot_wire_codec {
-use crate::text::snapshot::*;
+use crate::snapshot::*;
 use semio_s_artifact_norm_vdi3805_schema::*;
 use semio_s_artifact_norm_vdi3805_model::attributes_from_records;
 use std::collections::BTreeMap;
@@ -182,11 +182,11 @@ pub fn parse_native_text(text: &str, limits: SecurityLimits) -> Result<Manufactu
     Ok(ManufacturerCatalog { file, products, extensions: ExtensionBag::default() })
 }
 }
-pub use crate::text::snapshot::snapshot_wire_codec::*;
+pub use crate::snapshot::snapshot_wire_codec::*;
 
 #[allow(unused_imports)]
 mod snapshot_wire2_codec {
-use crate::text::snapshot::parse_native_text;
+use crate::snapshot::parse_native_text;
 use semio_s_artifact_norm_vdi3805_schema::*;
 use std::collections::BTreeMap;
 use semio_s_artifact_norm_vdi3805_model::{GenericAttributes, CatalogIndex, CharacteristicCurve, EditionId, EditionProfileChoice, ManufacturerCatalog, ManufacturerFile, ParametricGeometry, SecurityLimits};
@@ -310,6 +310,6 @@ pub fn assert_native_round_trip(catalog: &ManufacturerCatalog, limits: SecurityL
     Ok(())
 }
 }
-pub use crate::text::snapshot::snapshot_wire2_codec::*;
+pub use crate::snapshot::snapshot_wire2_codec::*;
 
 semio_s_plugin_norm_compliance::impl_norm_artifact_record!(@text Vdi3805Snapshot, extension="vdi3805", envelope_id="norm.vdi3805");

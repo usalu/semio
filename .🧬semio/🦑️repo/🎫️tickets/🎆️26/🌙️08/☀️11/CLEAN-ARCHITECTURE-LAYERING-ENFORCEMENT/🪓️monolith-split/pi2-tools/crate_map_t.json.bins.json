@@ -1,0 +1,52 @@
+{
+ "tests-01": [
+  "reactor_core_test_hosts",
+  "app_window_kits_tests",
+  "reactor_tasks_test_hosts"
+ ],
+ "tests-02": [
+  "declarations_fixture_tests",
+  "declaration_fixture_mutations",
+  "extension_test_hosts"
+ ],
+ "tests-03": [
+  "child_test_hosts",
+  "window_mutation_tests",
+  "window_config_tests",
+  "segmented_download_contract"
+ ],
+ "tests-04": [
+  "app_builder_tests_host",
+  "reactor_turn_test_hosts",
+  "builder_test_hosts",
+  "testing_fixtures_test_hosts"
+ ],
+ "tests-05": [
+  "app_panel_kit_tests",
+  "owned_media_error_tests_host",
+  "job_test_hosts",
+  "document_media_test_hosts",
+  "runtime_instances_test_hosts",
+  "media_publication_tests_host",
+  "reactor_surfaces_test_hosts",
+  "instance_ladders_test_hosts"
+ ],
+ "tests-06": [
+  "publication_mounted_test_hosts",
+  "tool_run_test_hosts",
+  "runtime_ops_test_hosts",
+  "app_commands_tests_host",
+  "original_codec_binding_laws",
+  "media_export_credit_tests_host",
+  "contributed_mutation_wire_tests_host",
+  "bounded_initializer_laws",
+  "natural_file_lifecycle_tests",
+  "receipt_tests_host",
+  "fixture_projection_retirement_tests",
+  "time_travel_turns_test_hosts",
+  "cooperative_pump_tests"
+ ],
+ "tests-07": [
+  "tool_run_turns_test_hosts"
+ ]
+}

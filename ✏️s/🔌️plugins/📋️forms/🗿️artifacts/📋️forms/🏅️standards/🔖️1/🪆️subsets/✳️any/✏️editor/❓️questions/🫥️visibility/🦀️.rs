@@ -63,6 +63,4 @@ pub fn patch_condition(condition: Option<&FormExpr>, path: &str, field: &str, va
     Ok(Some(root))
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️editing/🦀️.rs"]
-mod tests;
+

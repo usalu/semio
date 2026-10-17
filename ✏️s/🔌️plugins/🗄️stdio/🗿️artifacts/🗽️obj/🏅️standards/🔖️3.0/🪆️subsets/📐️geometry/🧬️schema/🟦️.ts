@@ -45,6 +45,10 @@ type stdioObj30GeometryArtifactGuardSizeBounds = { readonly minItems?: number; r
 
 export const stdioObj30GeometryArtifactGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : stdioObj30GeometryArtifactGuardReject(at, "value is not an object");
+export const stdioObj30GeometryArtifactGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) stdioObj30GeometryArtifactGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const stdioObj30GeometryArtifactGuardArray = (value: unknown, at: string, bounds: stdioObj30GeometryArtifactGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return stdioObj30GeometryArtifactGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) stdioObj30GeometryArtifactGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -75,7 +79,7 @@ export const stdioObj30GeometryArtifactGuardConstant = <T extends string | numbe
 //#endregion 🚪️Parsers
 
 export function parseObjArtifact(value: unknown, at = "$"): ObjArtifact {
-  const row = stdioObj30GeometryArtifactGuardObject(value, at);
+  const row = stdioObj30GeometryArtifactGuardClosed(stdioObj30GeometryArtifactGuardObject(value, at), at, ["schema", "vertices", "texcoords", "normals", "faces", "groups", "objects", "mtllib", "usemtl", "smoothingGroups", "unknownStatements"]);
   return {
     schema: stdioObj30GeometryArtifactGuardString(row["schema"], `${at}.schema`),
     vertices: stdioObj30GeometryArtifactGuardArray(row["vertices"], `${at}.vertices`).map((item, index) => parseObjVertex(item, `${at}.vertices[${index}]`)),
@@ -120,16 +124,16 @@ export function parseObjNormal(value: unknown, at = "$"): ObjNormal {
 }
 
 export function parseObjFaceVertex(value: unknown, at = "$"): ObjFaceVertex {
-  const row = stdioObj30GeometryArtifactGuardObject(value, at);
+  const row = stdioObj30GeometryArtifactGuardClosed(stdioObj30GeometryArtifactGuardObject(value, at), at, ["vertex", "texcoord", "normal"]);
   return {
-    vertex: stdioObj30GeometryArtifactGuardInteger(row["vertex"], `${at}.vertex`, {"minimum": 0,"maximum":4294967295}),
-    texcoord: row["texcoord"] === undefined ? undefined : stdioObj30GeometryArtifactGuardInteger(row["texcoord"], `${at}.texcoord`, {"minimum": 0,"maximum":4294967295}),
-    normal: row["normal"] === undefined ? undefined : stdioObj30GeometryArtifactGuardInteger(row["normal"], `${at}.normal`, {"minimum": 0,"maximum":4294967295}),
+    vertex: stdioObj30GeometryArtifactGuardInteger(row["vertex"], `${at}.vertex`, {"minimum": 0, "maximum": 4294967295}),
+    texcoord: row["texcoord"] === undefined ? undefined : stdioObj30GeometryArtifactGuardInteger(row["texcoord"], `${at}.texcoord`, {"minimum": 0, "maximum": 4294967295}),
+    normal: row["normal"] === undefined ? undefined : stdioObj30GeometryArtifactGuardInteger(row["normal"], `${at}.normal`, {"minimum": 0, "maximum": 4294967295}),
   };
 }
 
 export function parseObjFace(value: unknown, at = "$"): ObjFace {
-  const row = stdioObj30GeometryArtifactGuardObject(value, at);
+  const row = stdioObj30GeometryArtifactGuardClosed(stdioObj30GeometryArtifactGuardObject(value, at), at, ["vertices"]);
   return {
     vertices: stdioObj30GeometryArtifactGuardArray(row["vertices"], `${at}.vertices`).map((item, index) => parseObjFaceVertex(item, `${at}.vertices[${index}]`)),
   };

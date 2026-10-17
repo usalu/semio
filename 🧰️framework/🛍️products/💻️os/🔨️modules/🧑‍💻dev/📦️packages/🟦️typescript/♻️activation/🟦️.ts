@@ -1,0 +1,3 @@
+/** ♻️ Public entry `@semio-tech/framework-os-dev/activation`: the explicit surface that importers outside the module use. */
+export { ACTIVATION_RECEIPT_FILE, PLAYGROUND_SESSION_ARTIFACT_KEY, PLAYGROUND_SESSION_OUTPUT_ROOT_ENV, builtPluginModulesRootIn, developmentRuntimeRoot, nextActivationReceipt, observeActivationReceipts, parseActivationReceipt, playgroundSessionOutputPath, playgroundSessionStagedOutputPath, playgroundSessionViteAlias, playgroundSessionsRootV1, publishActivationReceipt, readActivationReceipt, stagedModuleReportLines, stagedModuleVerdict } from "../../../♻️activation/🟦️.ts";
+export type { ActivationReceipt, StagedModuleFacts, StagedModuleVerdict } from "../../../♻️activation/🟦️.ts";

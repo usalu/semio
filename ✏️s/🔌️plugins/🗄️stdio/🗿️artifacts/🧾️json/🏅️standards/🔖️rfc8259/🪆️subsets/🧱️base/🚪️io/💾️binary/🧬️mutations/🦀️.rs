@@ -18,17 +18,12 @@ impl protocol::OpBinary for JsonMutation {
     }
 }
 
-#[path = "✏️set-member/🦀️.rs"]
-pub mod set_member;
 
-#[path = "📤️remove-array-element/🦀️.rs"]
-pub mod remove_array_element;
 
-#[path = "🗑️remove-member/🦀️.rs"]
-pub mod remove_member;
 
-#[path = "📥️insert-array-element/🦀️.rs"]
-pub mod insert_array_element;
 
-#[path = "🔢️set-scalar/🦀️.rs"]
-pub mod set_scalar;
+
+
+
+
+

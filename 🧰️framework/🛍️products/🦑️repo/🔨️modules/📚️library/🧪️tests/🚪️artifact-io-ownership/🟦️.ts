@@ -43,7 +43,6 @@ test("native codec implementations belong to their declared physical representat
       rmSync(join(root,"artifact"),{recursive:true,force:true});
     }
   } finally {parser.delete();rmSync(root,{recursive:true,force:true});}
-  console.log("[DEBUG] Native representation ownership oracle=tree-sitter");
 });
 
 test("native codecs exclude host document-store and publication authority",async()=>{
@@ -60,7 +59,6 @@ test("native codecs exclude host document-store and publication authority",async
   expect(found.length).toBe(row.host.length?1:0);if(found[0])for(const name of row.host)expect(found[0].reason).toContain(name);
   rmSync(join(root,"artifact"),{recursive:true,force:true});
  }}finally{parser.delete();rmSync(root,{recursive:true,force:true});}
- console.log("[DEBUG] Native host authority oracle=tree-sitter");
 });
 
 test("framework products with paired snapshot schema and IO are architecture owners", () => {
@@ -85,7 +83,6 @@ test("framework products with paired snapshot schema and IO are architecture own
     const expected = fixture.owners.filter(owner => owner.checked).map(owner => `${owner.path}/🧬️schema/📸️snapshot/🦀️.rs`).sort();
     expect(artifactIoArchitectureBreaches(root,undefined,taxonomy).filter(row => row.kind === "artifact-io/schema-codec").map(row => row.scope).sort()).toEqual(expected);
   } finally {rmSync(root,{recursive:true,force:true});}
-  console.log("[DEBUG] framework paired snapshot+IO owner discovery oracle=picomatch");
 });
 
 test("semantic and physical source declarations remain in separate owners", async () => {
@@ -124,7 +121,6 @@ test("semantic and physical source declarations remain in separate owners", asyn
     expect(names.filter(name => /(?:To|From)(?:Native)?Json(?:Text|Value|Projection)?$|Json(?:Text|Projection)$|^(?:decode|encode|write).*Json(?:Value)?$|^decode.*Protobuf$|^TxtProtobuf|^txtProtobuf(?:Key|String)$|^(?:render|infer).*Tikz(?:Plan)?$/u.test(name)).sort()).toEqual(row.forbidden);
     expect(schemaTypeScriptWireSymbols(row.source)).toEqual(row.forbidden);
   }
-  console.log("[DEBUG] artifact-io-source-boundary oracle=tree-sitter+TypeScript");
 });
 
 test("semantic diffs have independent text and binary IO owners", async () => {
@@ -152,7 +148,6 @@ test("semantic diffs have independent text and binary IO owners", async () => {
       expect(missingArtifactDiffWireTypes(row.semantic, row.text, row.binary)).toEqual(row.missing);
     }
   } finally { parser.delete(); }
-  console.log("[DEBUG] diff-io-coverage paired representations oracle=tree-sitter");
 });
 const oracle = picomatch([
   "🧬️schema/{📸️snapshot,🔺️diff,🧬️mutations,💡️inferences}",
@@ -291,7 +286,7 @@ test("Rust schema rejects physical dependencies while admitting test-only probes
  for(const name of["serde_json","semio_framework_pack_json","semio_framework_io_schema","pack_rt::encode_wire_value","io::text","io::binary","io::sqlite"])if(code.includes(name)||attributeDependencies.some(path=>path.includes(name)))expected.add(name);
  if([code,...attributeDependencies].some(path=>/\bio::(?!text\b|binary\b|sqlite\b|import\b|export\b)/u.test(path)))expected.add("io::");
  expect([...expected].sort()).toEqual(row.forbidden);expect(schemaRustWireDependencies(row.source)).toEqual(row.forbidden);
- }}finally{parser.delete();}console.log("[DEBUG] Rust schema physical dependency oracle=tree-sitter");
+ }}finally{parser.delete();}
 });
 
 test("TypeScript schema rejects the complete IO namespace independently",()=>{
@@ -303,7 +298,6 @@ test("TypeScript schema rejects the complete IO namespace independently",()=>{
  const testOnly=picomatch("**/🔬️probes/**",{dot:true})(join(owner,"🟦️.ts"));expect(testOnly).toBe(row.testOnly===true);
  expect(artifactIoArchitectureBreaches(root,["artifact"],taxonomy).some(breach=>breach.scope===join(owner,"🟦️.ts").slice(root.length+1)&&breach.kind==="artifact-io/schema-codec-dependency")).toBe(row.forbidden&&!testOnly);
  }}finally{rmSync(root,{recursive:true,force:true});}
- console.log("[DEBUG] complete TypeScript IO namespace oracle=TypeScript AST");
 });
 
 test("TypeScript native parser dependencies belong to physical IO", () => {
@@ -317,7 +311,6 @@ test("TypeScript native parser dependencies belong to physical IO", () => {
   const found=artifactIoArchitectureBreaches(root,["artifact"],taxonomy).filter(breach=>breach.kind==="artifact-io/schema-codec-dependency");expect(found.length,row.id).toBe(row.forbidden.length&&row.owner!=="io"&&!row.testOnly?1:0);
   rmSync(join(root,"artifact"),{recursive:true,force:true});
  }}finally{rmSync(root,{recursive:true,force:true});}
- console.log(`[DEBUG] Native parser ownership: neutral cases=${vector.cases.length}; independent oracle=TypeScript AST`);
 });
 
 test("TypeScript root implementations and IO semantic definitions have actual owners", () => {
@@ -336,5 +329,4 @@ test("TypeScript root implementations and IO semantic definitions have actual ow
   const found=artifactIoArchitectureBreaches(root,["artifact"],taxonomy).filter(breach=>breach.kind===(row.owner==="root"?"artifact-io/root-codec-implementation":"artifact-io/io-semantic-implementation"));expect(found.length).toBe(row.forbidden.length?1:0);if(found[0])for(const name of row.forbidden)expect(found[0].reason).toContain(name);
   rmSync(join(root,"artifact"),{recursive:true,force:true});
  }}finally{rmSync(root,{recursive:true,force:true});}
- console.log("[DEBUG] Actual TypeScript owner definitions agree with independent compiler AST");
 });

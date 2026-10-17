@@ -3,11 +3,11 @@
 //! font the stream selected (`Tf`) and re-encoded through it on print, so the typed lane carries
 //! Unicode wherever the font can vouch for it and raw codes everywhere else.
 
-use super::colour::{lift_colour_space_inline, lower_colour_space_inline};
-use super::filters::{decode_stream, encode_stream};
+use crate::standards::v1_7::subsets::base::modules::colour::{lift_colour_space_inline, lower_colour_space_inline};
+use crate::standards::v1_7::subsets::base::modules::filters::{decode_stream, encode_stream};
 use crate::standards::v1_7::subsets::base::modules::fonts::FontCodec;
 use crate::standards::v1_7::subsets::base::modules::lexer::{is_ws, number_text, write_object, Lexer, Token};
-use crate::standards::v1_7::subsets::base::io::{PResult, PdfEngineError};
+use crate::standards::v1_7::subsets::base::io::error::{PResult, PdfEngineError};
 use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfDictEntry, PdfInlineImage, PdfImageBody, PdfLineCap, PdfLineJoin, PdfObject, PdfOp, PdfPropertyList, PdfTextArrayItem, PdfTextString};
 use std::collections::HashMap;
 
@@ -338,7 +338,7 @@ pub fn parse_content(data: &[u8], fonts: &dyn FontTable,resources:&mut dyn crate
                     extra: entries.into_iter().filter(|e| !matches!(e.key.as_str(), "Width" | "Height" | "BitsPerComponent" | "ColorSpace" | "ImageMask" | "Decode" | "Interpolate" | "Filter" | "DecodeParms" | "Length")).collect(),
                 };
                 let components=if image.image_mask{1}else{image.color_space.as_ref().and_then(|color|color.components()).unwrap_or(1)};
-                image.body=if let Some(filter)=filters.iter().find(|filter|filter.is_image_codec()) {let kind=match filter {crate::standards::v1_7::subsets::base::schema::snapshot::PdfStreamFilter::Dct {..}=>"s.stdio.jpeg",crate::standards::v1_7::subsets::base::schema::snapshot::PdfStreamFilter::Jpx=>"s.stdio.jpeg2000",crate::standards::v1_7::subsets::base::schema::snapshot::PdfStreamFilter::Ccitt {..}=>"s.stdio.ccitt",crate::standards::v1_7::subsets::base::schema::snapshot::PdfStreamFilter::Jbig2 {..}=>"s.stdio.jbig2",_=>unreachable!()};PdfImageBody::Artifact {reference:resources.admit(kind,PdfObject::Stream {dict:Vec::new(),data:decoded,filters})?}}else{PdfImageBody::Samples {values:super::images::unpack_image_samples(image.width,image.height,components,if image.image_mask{1}else{image.bits_per_component},&decoded)?}};
+                image.body=if let Some(filter)=filters.iter().find(|filter|filter.is_image_codec()) {let kind=match filter {crate::standards::v1_7::subsets::base::schema::snapshot::PdfStreamFilter::Dct {..}=>"s.stdio.jpeg",crate::standards::v1_7::subsets::base::schema::snapshot::PdfStreamFilter::Jpx=>"s.stdio.jpeg2000",crate::standards::v1_7::subsets::base::schema::snapshot::PdfStreamFilter::Ccitt {..}=>"s.stdio.ccitt",crate::standards::v1_7::subsets::base::schema::snapshot::PdfStreamFilter::Jbig2 {..}=>"s.stdio.jbig2",_=>unreachable!()};PdfImageBody::Artifact {reference:resources.admit(kind,PdfObject::Stream {dict:Vec::new(),data:decoded,filters})?}}else{PdfImageBody::Samples {values:crate::standards::v1_7::subsets::base::modules::images::unpack_image_samples(image.width,image.height,components,if image.image_mask{1}else{image.bits_per_component},&decoded)?}};
                 operands.clear();
                 ops.push(PdfOp::InlineImage { image });
                 continue;
@@ -664,7 +664,7 @@ pub fn print_content(ops: &[PdfOp], fonts: &dyn FontTable) -> PResult<Vec<u8>> {
                 if image.interpolate {
                     out.extend_from_slice(b" /I true");
                 }
-                let (data,filters)=match &image.body {PdfImageBody::Samples {values}=>(super::images::pack_image_samples(image.width,image.height,if image.image_mask{1}else{image.color_space.as_ref().and_then(|color|color.components()).unwrap_or(1)},if image.image_mask{1}else{image.bits_per_component},values)?,Vec::new()),PdfImageBody::Artifact {reference}=>{let PdfObject::Stream {data,filters,..}=fonts.content_artifact(reference)? else {return Err(PdfEngineError::Unsupported("inline image artifact is not a native stream".into()));};if !filters.iter().any(|filter|filter.is_image_codec()){return Err(PdfEngineError::Unsupported("referenced image artifact has no native image codec".into()));}(data,filters)}};
+                let (data,filters)=match &image.body {PdfImageBody::Samples {values}=>(crate::standards::v1_7::subsets::base::modules::images::pack_image_samples(image.width,image.height,if image.image_mask{1}else{image.color_space.as_ref().and_then(|color|color.components()).unwrap_or(1)},if image.image_mask{1}else{image.bits_per_component},values)?,Vec::new()),PdfImageBody::Artifact {reference}=>{let PdfObject::Stream {data,filters,..}=fonts.content_artifact(reference)? else {return Err(PdfEngineError::Unsupported("inline image artifact is not a native stream".into()));};if !filters.iter().any(|filter|filter.is_image_codec()){return Err(PdfEngineError::Unsupported("referenced image artifact has no native image codec".into()));}(data,filters)}};
                 let (encoded, filter_entries) = encode_stream(&data, &filters);
                 for entry in filter_entries.iter().chain(image.extra.iter()) {
                     out.push(b' ');
@@ -829,7 +829,5 @@ pub fn content_references(ops: &[PdfOp]) -> ContentReferences {
 //#endregion 🔖️Walk
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

@@ -1,7 +1,6 @@
 //! 📏 Changes the world size of one cell — the box every tile's media is scaled into, and the `grid_factor` the grid window snaps to.
 
 use crate::diff::Grid2dDiff;
-use crate::mutations::Grid2dMutation;
 use crate::schema::snapshot::Grid2dSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -17,17 +16,23 @@ pub struct ChangeCellSize {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_cell_size(cell_width: f64, cell_height: f64) -> Grid2dMutation {
-    Grid2dMutation::ChangeCellSize(ChangeCellSize { cell_width, cell_height })
+pub fn change_cell_size<Op>(cell_width: f64, cell_height: f64) -> Op
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::change_cell_size::ChangeCellSize>,
+{
+    Op::from(ChangeCellSize { cell_width, cell_height })
 }
 
-impl MutationKind<Grid2dSnapshot, Grid2dMutation> for ChangeCellSize {
+impl<Op> MutationKind<Grid2dSnapshot, Op> for ChangeCellSize
+where
+    Op: protocol::Mutation<Grid2dSnapshot, Diff = Grid2dDiff> + From<ChangeCellSize>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "cell-size", kind: "change-cell-size", record: "ChangedCellSize" };
 
     fn diff(&self, base: &Grid2dSnapshot) -> protocol::MutationOutcome<Grid2dDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Grid2dSnapshot) -> Result<Vec<Grid2dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Grid2dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

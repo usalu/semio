@@ -1,0 +1,11 @@
+import {runResolutionOracle, diffDiagnostics} from "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️authoring/📦️crate-tree/🔬️verify/🟦️.ts";
+import {external, normalizeCombined} from "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️authoring/📦️crate-tree/🧫️sandbox/🟦️.ts";
+const [base, combined, needle] = process.argv.slice(2);
+const flags = ["--test"];
+const b = runResolutionOracle(base!, `${base}/__combined.rs`, "combined", flags);
+const c = runResolutionOracle(combined!, `${combined}/__combined.rs`, "combined", flags);
+const strip = (list: string[]): string[] => [...new Set(list.filter(external).map(normalizeCombined).map((line) => line.split("\t").slice(0, 2).join("\t")))].filter((line) => !line.includes("aborting due to"));
+const sb = strip(b.diagnostics), sc = strip(c.diagnostics);
+console.log("base", sb.length, "combined", sc.length);
+console.log("BASE with needle:", sb.filter((l) => l.includes(needle!)).map((l) => l.slice(0, 300)));
+console.log("COMB with needle:", sc.filter((l) => l.includes(needle!)).map((l) => l.slice(0, 300)));

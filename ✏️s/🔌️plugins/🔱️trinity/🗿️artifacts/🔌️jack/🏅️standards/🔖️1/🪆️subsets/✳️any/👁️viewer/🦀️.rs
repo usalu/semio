@@ -7,7 +7,8 @@
 use crate::standards::v1::subsets::any::schema::mutations::TrinityGraphMutation;
 use crate::viewer::jack::modes::view;
 use crate::viewer::jack::modes::view::windows::graph;
-use crate::{empty_trinity_graph_snapshot, JackSnapshot, TRINITY_GRAPH_SCHEMA, TRINITY_JACK_DIALECT};
+use crate::standards::v1::subsets::any::schema::snapshot::{empty_trinity_graph_snapshot, JackSnapshot};
+use crate::standards::v1::subsets::any::schema::graph::{TRINITY_GRAPH_SCHEMA, TRINITY_JACK_DIALECT};
 use semio_framework_plugin::ArtifactView;
 use semio_framework_plugin::ArtifactViewer;
 use semio_framework_plugin::ConfigView;
@@ -46,9 +47,9 @@ impl protocol::OpBinary for TrinityJackViewCommand {
 
 //#region 🔖️Viewer
 #[derive(Default, Clone, Copy)]
-pub struct TrinityJackViewer<C:crate::JackComposition>(std::marker::PhantomData<C>);
+pub struct TrinityJackViewer<C:crate::standards::v1::subsets::any::schema::composition::JackComposition>(std::marker::PhantomData<C>);
 
-impl<C:crate::JackComposition> ArtifactViewer for TrinityJackViewer<C> {
+impl<C:crate::standards::v1::subsets::any::schema::composition::JackComposition> ArtifactViewer for TrinityJackViewer<C> {
     /// 🧩️ The same member roster the editor declares — see `TrinityJackPlayApp`'s `Members`.
     type Members = C::Members;
     type Snapshot = JackSnapshot;
@@ -62,9 +63,9 @@ impl<C:crate::JackComposition> ArtifactViewer for TrinityJackViewer<C> {
     type Command = TrinityJackViewCommand;
 
     const DIALECT: Dialect = TRINITY_JACK_DIALECT;
-    /// 🧬️ The crate's one loaded-parent child projection (`crate::jack_child_restore_projection`).
+    /// 🧬️ The crate's one loaded-parent child projection (`crate::standards::v1::subsets::any::schema::snapshot::jack_child_restore_projection`).
     fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<semio_framework_composition_admission::ChildRestoreProjection<'_>, Fault> {
-        crate::jack_child_restore_projection(snapshot)
+        crate::standards::v1::subsets::any::schema::snapshot::jack_child_restore_projection(snapshot)
     }
     const DOCUMENT_SCHEMA: &'static str = TRINITY_GRAPH_SCHEMA;
 

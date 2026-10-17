@@ -342,7 +342,7 @@ pub fn home_retained_contract() -> ToolExecutionContract {
 #[derive(semio_framework_value::FactoryPayloadRetirement)]
 pub struct HomeConfigPreparationFactory;
 
-struct HomeConfigPreparation {
+pub struct HomeConfigPreparation {
     owners: store::OneItemOwners<HomeConfig, HomeConfigMutation>,
     serialized_bytes: Option<usize>,
     checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint,
@@ -358,7 +358,7 @@ fn home_config_retained_bytes(config: &HomeConfig) -> usize {
 }
 
 #[cfg(test)]
-struct HomeConfigByteCounter { bytes: usize }
+pub struct HomeConfigByteCounter { bytes: usize }
 
 #[cfg(test)]
 impl std::io::Write for HomeConfigByteCounter {

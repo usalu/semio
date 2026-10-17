@@ -2,15 +2,15 @@
 use crate::schema::diff::SvgDiff;
 use crate::SvgSnapshot;
 
-pub use super::insert_element::InsertElementPayload;
-pub use super::remove_element::RemoveElementPayload;
-pub use super::set_attribute::SetAttributePayload;
-pub use super::set_declaration::SetDeclarationPayload;
-pub use super::set_doctype::SetDoctypePayload;
-pub use super::set_element_name::SetElementNamePayload;
-pub use super::set_text::SetTextPayload;
-pub use super::set_transform::SetTransformPayload;
-pub use super::set_view_box::SetViewBoxPayload;
+pub use crate::standards::v1_1::subsets::base::schema::mutations::insert_element::InsertElementPayload;
+pub use crate::standards::v1_1::subsets::base::schema::mutations::remove_element::RemoveElementPayload;
+pub use crate::standards::v1_1::subsets::base::schema::mutations::set_attribute::SetAttributePayload;
+pub use crate::standards::v1_1::subsets::base::schema::mutations::set_declaration::SetDeclarationPayload;
+pub use crate::standards::v1_1::subsets::base::schema::mutations::set_doctype::SetDoctypePayload;
+pub use crate::standards::v1_1::subsets::base::schema::mutations::set_element_name::SetElementNamePayload;
+pub use crate::standards::v1_1::subsets::base::schema::mutations::set_text::SetTextPayload;
+pub use crate::standards::v1_1::subsets::base::schema::mutations::set_transform::SetTransformPayload;
+pub use crate::standards::v1_1::subsets::base::schema::mutations::set_view_box::SetViewBoxPayload;
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
@@ -38,8 +38,8 @@ pub fn apply_svg_mutation(snapshot: &mut SvgSnapshot, mutation: &SvgMutation) ->
 }
 
 
-#[cfg(test)]
-pub(crate) fn demo_mutation_cases() -> Vec<SvgMutation> {
+#[cfg(any(test, feature = "testkit"))]
+pub fn demo_mutation_cases() -> Vec<SvgMutation> {
     use crate::schema::snapshot::SvgNode;
     vec![
         SvgMutation::SetDeclaration(SetDeclarationPayload { declaration: None }),
@@ -54,6 +54,4 @@ pub(crate) fn demo_mutation_cases() -> Vec<SvgMutation> {
     ]
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

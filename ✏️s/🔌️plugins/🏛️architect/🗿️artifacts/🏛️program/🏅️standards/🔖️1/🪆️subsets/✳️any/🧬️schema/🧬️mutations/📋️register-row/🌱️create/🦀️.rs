@@ -1,8 +1,8 @@
 //! 🌱️ ProgramSnapshot mutation — `create-register-row` leaf: the generic create over every id-keyed register, typed by the
 //! register catalog generated from the `x-semio-collection-catalog` of `📸️snapshot/🔣️.json`.
 
-use crate::standards::v1::subsets::any::schema::registers::RegisterRow;
-use crate::standards::v1::subsets::any::schema::{diff::ProgramDiff, mutations::ProgramMutation, snapshot::ProgramSnapshot};
+use crate::standards::v1::subsets::any::schema::registers::catalog::RegisterRow;
+use crate::standards::v1::subsets::any::schema::{diff::ProgramDiff, snapshot::ProgramSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 
 /// 🌱️ Brings a new row into existence in the register its `row` names, appended unless `index` places it.
@@ -19,12 +19,15 @@ pub struct CreateRegisterRow {
     pub index: Option<usize>,
 }
 
-impl MutationKind<ProgramSnapshot, ProgramMutation> for CreateRegisterRow {
+impl<Op> MutationKind<ProgramSnapshot, Op> for CreateRegisterRow
+where
+    Op: protocol::Mutation<ProgramSnapshot, Diff = ProgramDiff> + From<CreateRegisterRow> + From<crate::standards::v1::subsets::any::schema::mutations::delete_register_row::DeleteRegisterRow>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "register-row", kind: "create-register-row", record: "CreatedRegisterRow" };
     fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &ProgramSnapshot) -> Result<Vec<ProgramMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &ProgramSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {

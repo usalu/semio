@@ -1,0 +1,8 @@
+{
+  "name": "@semio-tech/os-directory-binary-rs",
+  "tags": [
+    "lang:rust",
+    "role:framework",
+    "family:os-directory"
+  ]
+}

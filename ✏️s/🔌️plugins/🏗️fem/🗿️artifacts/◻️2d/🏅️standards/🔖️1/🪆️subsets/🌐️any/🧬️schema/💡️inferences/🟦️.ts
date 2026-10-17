@@ -34,6 +34,10 @@ type femFem2dInferenceGuardSizeBounds = { readonly minItems?: number; readonly m
 
 export const femFem2dInferenceGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : femFem2dInferenceGuardReject(at, "value is not an object");
+export const femFem2dInferenceGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) femFem2dInferenceGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const femFem2dInferenceGuardArray = (value: unknown, at: string, bounds: femFem2dInferenceGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return femFem2dInferenceGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) femFem2dInferenceGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -64,22 +68,22 @@ export const femFem2dInferenceGuardConstant = <T extends string | number | boole
 //#endregion 🚪️Parsers
 
 export function parseFem2dInference(value: unknown, at = "$"): Fem2dInference {
-  const row = femFem2dInferenceGuardObject(value, at);
+  const row = femFem2dInferenceGuardClosed(femFem2dInferenceGuardObject(value, at), at, ["bounds"]);
   return {
     bounds: parseFem2dBounds(row["bounds"], `${at}.bounds`),
   };
 }
 
 export function parseFem2dBoundingBox(value: unknown, at = "$"): Fem2dBoundingBox {
-  const row = femFem2dInferenceGuardObject(value, at);
+  const row = femFem2dInferenceGuardClosed(femFem2dInferenceGuardObject(value, at), at, ["min", "max"]);
   return {
-    min: femFem2dInferenceGuardArray(row["min"], `${at}.min`, {"minItems": 2, "maxItems": 2}).map((item, index) => femFem2dInferenceGuardNumber(item, `${at}.min[${index}]`)),
-    max: femFem2dInferenceGuardArray(row["max"], `${at}.max`, {"minItems": 2, "maxItems": 2}).map((item, index) => femFem2dInferenceGuardNumber(item, `${at}.max[${index}]`)),
+    min: ((items0) => [femFem2dInferenceGuardNumber(items0[0], `${at}.min[0]`), femFem2dInferenceGuardNumber(items0[1], `${at}.min[1]`)])(femFem2dInferenceGuardArray(row["min"], `${at}.min`, {"minItems": 2, "maxItems": 2})),
+    max: ((items0) => [femFem2dInferenceGuardNumber(items0[0], `${at}.max[0]`), femFem2dInferenceGuardNumber(items0[1], `${at}.max[1]`)])(femFem2dInferenceGuardArray(row["max"], `${at}.max`, {"minItems": 2, "maxItems": 2})),
   };
 }
 
 export function parseFem2dBounds(value: unknown, at = "$"): Fem2dBounds {
-  const row = femFem2dInferenceGuardObject(value, at);
+  const row = femFem2dInferenceGuardClosed(femFem2dInferenceGuardObject(value, at), at, ["boundingBox", "nodeCount", "elementCount"]);
   return {
     boundingBox: parseFem2dBoundingBox(row["boundingBox"], `${at}.boundingBox`),
     nodeCount: femFem2dInferenceGuardInteger(row["nodeCount"], `${at}.nodeCount`, {"minimum": 0}),

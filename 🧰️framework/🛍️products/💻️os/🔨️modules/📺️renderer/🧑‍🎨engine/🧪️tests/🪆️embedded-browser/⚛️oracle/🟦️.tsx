@@ -1,8 +1,9 @@
-import { pluginCatalogV1, type PluginCatalogRowsV1 } from "../../../../../🔌️plugin/📇️registry/🟦️.ts";
+import { pluginCatalogV1 } from "../../../../../🔌️plugin/📇️registry/🟦️.ts";
+import type { PluginCatalogRowsV1 } from "@semio-tech/framework/plugin-catalog";
 import React from "react";
 import { createRoot } from "react-dom/client";
 import { FrameworkOsShell } from "../../../🧱️elements/🏛️ShellHost/🟦️.tsx";
-import { EMPTY_SHELL_LOCKS } from "../../../🧱️elements/🐚️Shell/🟦️.tsx";
+import { EMPTY_SHELL_LOCKS } from "../../../🧱️elements/🐚️Shell/🔒️boot-and-locks/🟦️.ts";
 import type { AppSurfaceSessionFactory } from "../../../🧱️elements/🪪️WasmSessionLoader/🟦️.tsx";
 import { activeShellRoot } from "@semio-tech/ui-react";
 

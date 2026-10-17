@@ -1,12 +1,14 @@
 //! ↩ Inverse constructor for `ChangeSceneSunEnabled` — reconstructed from BASE state.
 
 use super::ChangeSceneSunEnabled;
-use crate::mutations::ShootingMutation;
 use crate::ShootingSnapshot;
 
-pub fn inverse(_payload: &ChangeSceneSunEnabled, base: &ShootingSnapshot) -> Result<Vec<ShootingMutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op>(_payload: &ChangeSceneSunEnabled, base: &ShootingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError>
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::change_scene_sun_enabled::ChangeSceneSunEnabled>,
+{
     Ok((|| {
-    vec![ShootingMutation::ChangeSceneSunEnabled(ChangeSceneSunEnabled { new_enabled: base.scene.sun.enabled })]
+    vec![Op::from(ChangeSceneSunEnabled { new_enabled: base.scene.sun.enabled })]
 
     })())
 }

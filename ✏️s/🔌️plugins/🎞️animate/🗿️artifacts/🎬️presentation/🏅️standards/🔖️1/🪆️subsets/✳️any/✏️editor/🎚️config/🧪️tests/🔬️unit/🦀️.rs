@@ -1,4 +1,6 @@
-use super::*;
+#[allow(unused_imports)]
+use protocol::Mutation;
+use crate::editor::animate::config::*;
 
 #[test]
 fn presentation_config_default_matches_the_existing_runtime_defaults() {

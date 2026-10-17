@@ -1,4 +1,7 @@
-use super::*;
+use crate::{standards::v1::subsets::any::schema::snapshot::EquationExprSnapshot, standards::v1::subsets::any::schema::snapshot::EquationNode, standards::v1::subsets::any::schema::snapshot::EquationNodeKind};
+use crate::EquationSnapshot;
+use crate::standards::v1::subsets::any::schema::inferences::roots::{extract_integer_polynomial};
+use crate::standards::v1::subsets::any::schema::inferences::roots::*;
 use crate::standards::v1::subsets::any::schema::snapshot::EquationNodeLabel;
 
 /// 🧪️ `x^2 - 3x + 2 = (x-1)(x-2)`, roots `{1, 2}` — built directly as a labeled tree (`Add` of
@@ -81,7 +84,7 @@ async fn dep_input_changes_when_a_coefficient_changes() {
 /// 🧪️ Native serde independently checks the neutral logical dependency projection.
 #[semio_framework_async_macros::async_test]
 async fn typed_dependency_matches_neutral_serde_oracle() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🌱roots/🔑️dependency/🔣.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(runtime_fixture_text("../../../../🧪️tests/🧫️fixtures/💡️inferences/🌱roots/🔑️dependency/🔣.json")).unwrap();
     let mut snapshot = EquationSnapshot::default();
     snapshot.equation = quadratic_with_roots_one_and_two();
     let dependency = <EquationRootsField as protocol::InferredField<EquationSnapshot>>::dep_input(&snapshot, &usize::MAX, &[]);
@@ -89,4 +92,9 @@ async fn typed_dependency_matches_neutral_serde_oracle() {
     let independent = serde_json::json!({"coefficients":["2","-3","1"],"interval":null});
     assert_eq!(actual, fixture);
     assert_eq!(actual, independent);
+}
+
+fn runtime_fixture_text(relative: &str) -> &'static str {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative);
+    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display())).into_boxed_str())
 }

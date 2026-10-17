@@ -7,7 +7,7 @@ use semio_framework_ui_locale::app_labels;
 // `.mutation()`/`.view_action()`/`.shell_action()` call site in `create_space_app`'s manifest.
 app_labels! {
     pub struct SStudioLabels {
-        pub apps_section: native_en "Apps", native_de "Apps", reuse_en "Apps", reuse_de "Apps";
+        apps_section: native_en "Apps", native_de "Apps", reuse_en "Apps", reuse_de "Apps";
         media_vfs_empty_message: native_en "No app instances in the workflow.", native_de "Keine App-Instanzen im Workflows.", reuse_en "No app instances in the workflow.", reuse_de "Keine App-Instanzen im Workflows.";
         add_parameter: native_en "Add Parameter", native_de "Parameter hinzufügen", reuse_en "Add Parameter", reuse_de "Parameter hinzufügen";
         name: native_en "Name", native_de "Name", reuse_en "Name", reuse_de "Name";

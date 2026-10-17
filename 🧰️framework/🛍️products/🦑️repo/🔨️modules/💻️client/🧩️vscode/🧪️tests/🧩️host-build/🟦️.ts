@@ -3,12 +3,13 @@ import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { join } from "node:path";
 import { spawnSync } from "node:child_process";
+import{readBuildMode}from"../../../../../../../🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts";
 import { extensionBuildConfig } from "../../🏗️builder/🟦️.ts";
 
 /** 🧩️ Compares CommonJS host bundles with esbuild and native Node while excluding framework test registration. */
 export async function testExtensionHostBuild(generated: string): Promise<void> {
   const require = createRequire(import.meta.url), fixture = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🧩️host-build/🔣️.json"), "utf8"));
-  const root = mkdtempSync(join(generated, "extension-host-build-")), config = extensionBuildConfig(root, "entry.ts", "out", "extension.cjs", false);
+  const root = mkdtempSync(join(generated, "extension-host-build-")), config = extensionBuildConfig(root, "entry.ts", "out", "extension.cjs", readBuildMode(process.env.SEMIO_BUILD_MODE));
   assert.deepEqual(config.define, fixture.define);
   for (const [id, expected] of fixture.externals) assert.equal(config.build.rollupOptions.external(id), expected, id);
   writeFileSync(join(root, "entry.ts"), fixture.source); writeFileSync(join(root, "library.ts"), fixture.library);

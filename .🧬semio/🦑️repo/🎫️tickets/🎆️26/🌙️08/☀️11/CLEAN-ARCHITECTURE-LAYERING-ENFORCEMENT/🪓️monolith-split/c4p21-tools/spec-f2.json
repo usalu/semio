@@ -1,0 +1,36 @@
+{
+ "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🔮️oracles/🏃️execution/🐍️.py",
+ "snapshot": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/🗑️generated/c4p21-snap/f2-work.py",
+ "alias": "semio_norm_vocabulary_",
+ "children": [
+  {
+   "key": "document",
+   "dir": "📄️document",
+   "doc": "Document access: the wire spelling helpers, the document model, its entity tables, the derived views and the refusal signal.",
+   "regions": [
+    "🔖️Wire",
+    "🔖️Document",
+    "🔖️Entities",
+    "🔖️DerivedViews",
+    "🔖️Refusal"
+   ]
+  },
+  {
+   "key": "verbs",
+   "dir": "🔧️verbs",
+   "doc": "The closed verb table: apply, refuse and invert rules for every mutation kind.",
+   "regions": [
+    "🔖️Verbs"
+   ]
+  },
+  {
+   "key": "carrier",
+   "dir": "📝️carrier",
+   "doc": "The envelope-level reader and printer of the committed .dsl.semio carrier.",
+   "regions": [
+    "🔖️Carrier"
+   ]
+  }
+ ],
+ "origin": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/🗑️generated/c4p21-snap/f2.py"
+}

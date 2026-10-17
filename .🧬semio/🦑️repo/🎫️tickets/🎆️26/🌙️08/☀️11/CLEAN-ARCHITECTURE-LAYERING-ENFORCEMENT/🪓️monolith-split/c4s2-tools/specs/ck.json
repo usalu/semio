@@ -1,0 +1,67 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🧪️tests/🧪️chunkkey/🟦️.tsx",
+ "fn": "registerTests1",
+ "groups": [
+  {
+   "dir": "🧭️navigation-and-camera-state",
+   "ext": ".ts",
+   "fn": "registerNavigationTests",
+   "doc": "/** 🧭️ The chunk key, chunk visibility, orbit mouse buttons and navigation gestures suites, and the orbit camera view state and gizmo direction suites of the infinite world r3f module. */",
+   "lines": [
+    [
+     37,
+     183
+    ]
+   ]
+  },
+  {
+   "dir": "🎛️gizmo-specs-and-view-templates",
+   "ext": ".ts",
+   "fn": "registerGizmoSpecAndViewTemplateTests",
+   "doc": "/** 🎛️ The projection gizmo spec, the orbit view and kind switch specs, the template selection and mode options, the rig seed and the orbit view templates and layout descriptors suites of the infinite world r3f module. */",
+   "lines": [
+    [
+     184,
+     437
+    ]
+   ]
+  },
+  {
+   "dir": "📐️projection-poses-and-matrices",
+   "ext": ".ts",
+   "fn": "registerProjectionPoseAndMatrixTests",
+   "doc": "/** 📐️ The projection gumball plane, pose, transition, field of view, ortho zoom, matrices, gizmo hover, framing, orbit constraints and curvilinear suites of the infinite world r3f module. */",
+   "lines": [
+    [
+     438,
+     797
+    ]
+   ]
+  },
+  {
+   "dir": "🏷️template-labels-and-lod",
+   "ext": ".ts",
+   "fn": "registerTemplateLabelAndLodTests",
+   "doc": "/** 🏷️ The projection icon ids, templates, template id codec and labels, and the floating origin, level of detail, grid and far plane suites of the infinite world r3f module. */",
+   "lines": [
+    [
+     798,
+     946
+    ]
+   ]
+  },
+  {
+   "dir": "🧱️mesh-reference-and-volume",
+   "ext": ".ts",
+   "fn": "registerMeshReferenceAndVolumeTests",
+   "doc": "/** 🧱️ The mesh border, reference transform, appearance and pose, volume transform and containment and entity flag suites of the infinite world r3f module. */",
+   "lines": [
+    [
+     947,
+     1114
+    ]
+   ]
+  }
+ ],
+ "copySharedTypes": true
+}

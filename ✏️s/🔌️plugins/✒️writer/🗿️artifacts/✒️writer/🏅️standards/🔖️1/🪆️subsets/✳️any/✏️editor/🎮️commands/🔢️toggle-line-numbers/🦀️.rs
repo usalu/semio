@@ -14,7 +14,4 @@ pub fn handle(_payload: &ToggleLineNumbers, _doc: &ArtifactView<'_, WriterSnapsh
 }
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

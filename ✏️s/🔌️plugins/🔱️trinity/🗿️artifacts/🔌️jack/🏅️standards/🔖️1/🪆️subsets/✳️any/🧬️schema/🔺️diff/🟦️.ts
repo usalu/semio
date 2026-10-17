@@ -1,5 +1,5 @@
 /** 🔺️ Jack sparse durable delta with whole child-handle replacement. */
-import { parseArtifactChild, type ArtifactChild } from "../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts";
+import { parseArtifactChild, type ArtifactChild } from "@semio-tech/framework-os/modules/store/child/schema";
 import { parseCamera, parseManifest, type Camera, type Manifest } from "../🟦️.ts";
 
 export interface JackDiff {

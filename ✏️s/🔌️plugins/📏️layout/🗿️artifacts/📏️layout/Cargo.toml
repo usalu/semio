@@ -7,6 +7,8 @@ members = [
     "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📤️export/🔣️json/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🪜️commands-2/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧪️tests/🥣️companion/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/📦️packages/🦀️rust",
@@ -17,8 +19,14 @@ members = [
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/📇️descriptor/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄️content/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔩️content-2/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄️content/🧪️tests/🍯️companion-1/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄️content/🧪️tests/🍰️companion-2/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️frames/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧰️frames-2/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️frames/🧪️tests/🍯️companion-1/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️frames/🧪️tests/🍰️companion-2/📦️packages/🦀️rust",
     "📦️packages/🦀️rust",
     "🔨️modules/🏠️host/🧰️owned/📦️packages/🦀️rust",
 ]
@@ -48,43 +56,17 @@ path = "../../../../../🧰️framework/🔨️modules/🗿️artifact-reference
 [workspace.dependencies.semio-framework-job]
 path = "../../../../../🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust"
 
+[workspace.dependencies.semio-framework-io-ports]
+path = "../../../../../🧰️framework/🔨️modules/🚪️io/🔌️ports/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-pixels]
+path = "../../../../../🧰️framework/🔨️modules/🔲️pixels/📦️packages/🦀️rust"
+
 [workspace.dependencies.semio-framework-tool-machine]
 path = "../../../../../🧰️framework/🔨️modules/🛠️tool-machine/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-framework-ui-contract]
 path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust"
-
-
-[workspace.dependencies.semio-s-artifact-stdio-dwg-geometry]
-path = "../../../🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/🧮️geometry/📦️packages/🦀️rust"
-
-[workspace.dependencies.semio-s-artifact-stdio-dwg-snapshot]
-path = "../../../🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️packages/🦀️rust"
-[workspace.dependencies.semio-s-artifact-stdio-dwg-read]
-path = "../../../🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/📥️import/📦️packages/🦀️rust"
-
-[workspace.dependencies.semio-s-artifact-stdio-dwg-write]
-path = "../../../🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/📤️export/📦️packages/🦀️rust"
-[workspace.dependencies.semio-s-artifact-stdio-json]
-path = "../../../🗄️stdio/🗿️artifacts/🧾️json/📦️packages/🦀️rust"
-
-[workspace.dependencies.semio-s-artifact-stdio-png]
-path = "../../../🗄️stdio/🗿️artifacts/📷️png/📦️packages/🦀️rust"
-
-[workspace.dependencies.semio-s-artifact-stdio-semio-base]
-path = "../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/📦️packages/🦀️rust"
-
-[workspace.dependencies.semio-s-artifact-stdio-semio-drawing]
-path = "../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/📦️packages/🦀️rust"
-
-[workspace.dependencies.semio-s-artifact-stdio-semio-drawing-export]
-path = "../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🚪️io/📤️export/📦️packages/🦀️rust"
-
-[workspace.dependencies.semio-s-artifact-stdio-semio-drawing-import]
-path = "../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🚪️io/📥️import/📦️packages/🦀️rust"
-
-[workspace.dependencies.semio-s-artifact-stdio-svg]
-path = "../../../🗄️stdio/🗿️artifacts/🎨️svg/📦️packages/🦀️rust"
 
 [workspace.dependencies.serde]
 version = "1.0.228"
@@ -194,8 +176,14 @@ path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️
 [workspace.dependencies.semio-s-artifact-layout-layout-mutations-content]
 path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄️content/📦️packages/🦀️rust"
 
+[workspace.dependencies.semio-s-artifact-layout-layout-mutations-content-2]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔩️content-2/📦️packages/🦀️rust"
+
 [workspace.dependencies.semio-s-artifact-layout-layout-mutations-frames]
 path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️frames/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-layout-layout-mutations-frames-2]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧰️frames-2/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-s-artifact-layout-layout-viewer]
 path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/📦️packages/🦀️rust"
@@ -212,6 +200,9 @@ path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️
 
 [workspace.dependencies.semio-s-artifact-layout-layout-editor-commands]
 path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-layout-layout-editor-commands-2]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🪜️commands-2/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-s-artifact-layout-layout-editor-panels]
 path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📦️packages/🦀️rust"

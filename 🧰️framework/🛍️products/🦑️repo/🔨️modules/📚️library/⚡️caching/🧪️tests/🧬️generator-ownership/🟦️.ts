@@ -3,6 +3,7 @@ import { mkdirSync, mkdtempSync, readFileSync, writeFileSync, symlinkSync, rmSyn
 import { dirname, join, relative, resolve } from "node:path";
 import { createRequire } from "node:module";
 import { relativeSourceInputs, readSourceInputContract } from "../../../🕸️dependencies/🟦️typescript/🟨️.mjs";
+import {testMethodV1,testRecordV1,testStringsV1,testInputsV1} from "../📋️values/🟦️.ts";
 
 /** 🧬️ Verifies one physical producer per semantic generator output in the native Nx task graph. */
 export async function testGeneratorOwnership(workspace: string, output: string): Promise<void> {
@@ -15,29 +16,35 @@ export async function testGeneratorOwnership(workspace: string, output: string):
   for (const [path, project] of Object.entries(fixture.projects)) {
     put(`${path}/📋️project.json`, JSON.stringify(project));
   }
-  const plugin = (await import("../../../🏗️build/🕸️graph/📥️inference/🟨️.mjs")).default;
+  const plugin = testRecordV1((await import("../../../🏗️build/🕸️graph/📥️inference/🟨️.mjs")).default);
   const files = Object.keys(fixture.projects).map(path => `${path}/📋️project.json`);
-  const results = await plugin.createNodesV2[1](files, {}, { workspaceRoot: root });
-  const projects: Record<string, any> = Object.assign({}, ...results.map(([, result]: any) => result.projects));
+  const nodesV2 = plugin.createNodesV2;
+  assert.ok(Array.isArray(nodesV2));
+  const createNodes = nodesV2[1];
+  assert.ok(typeof createNodes === "function");
+  const results:unknown = await Reflect.apply(createNodes,nodesV2,[files, {}, { workspaceRoot: root }]);
+  assert.ok(Array.isArray(results));
+  const projects:Record<string,unknown> = Object.assign({}, ...results.map(row => {assert.ok(Array.isArray(row));return testRecordV1(row[1],"projects");}));
   for (const [id, expected] of Object.entries(fixture.expected)) {
     const [project, target] = id.split(":");
-    assert.deepEqual(projects[project].targets[target].outputs, (expected as string[]).map(path => `{workspaceRoot}/${path}`), `Exactly one producer must own ${id}'s files`);
+    assert.ok(project && target, "Each expected producer must identify its project and target");
+    assert.deepEqual(testRecordV1(projects,project,"targets",target).outputs, testStringsV1(expected).map(path => `{workspaceRoot}/${path}`), `Exactly one producer must own ${id}'s files`);
   }
   const graph = { nodes: Object.fromEntries(Object.entries(projects).map(([name, data]) => [name, { name, type: "lib", data }])), dependencies: Object.fromEntries(Object.keys(projects).map(name => [name, []])) };
   const tasks = require("nx/src/tasks-runner/create-task-graph").createTaskGraph(graph, {}, ["package"], ["generate"], undefined, {}, false);
   assert.deepEqual(tasks.dependencies["package:generate"].sort(), ["browser:generate-boot", "browser:generate-worker"]);
-  assert.ok(projects.package.targets.generate.inputs.some((input: any) => input.dependentTasksOutputFiles === "**/*"));
-  await plugin.createDependencies({}, { workspaceRoot: root, projects });
-  assert.deepEqual(await plugin.createDependencies({}, { workspaceRoot: root, projects: {} }), []);
+  assert.ok(testInputsV1(testRecordV1(projects,"package","targets","generate").inputs).some(input => typeof input !== "string" && input.dependentTasksOutputFiles === "**/*"));
+  await testMethodV1(plugin,"createDependencies",{}, { workspaceRoot: root, projects });
+  assert.deepEqual(await testMethodV1(plugin,"createDependencies",{}, { workspaceRoot: root, projects: {} }), []);
   const invalid = structuredClone(fixture.contract);
   invalid.outputRoots[0].producer.ownerPath = "missing";
   put(`${library}/🔣️taxonomy.json`, JSON.stringify({ generatorContracts: { fixture: invalid } }));
-  await assert.rejects(async () => plugin.createDependencies({}, { workspaceRoot: root, projects }), /no Nx producer/);
+  await assert.rejects(async () => testMethodV1(plugin,"createDependencies",{}, { workspaceRoot: root, projects }), /no Nx producer/);
   put(`${library}/🔣️taxonomy.json`, JSON.stringify({ generatorContracts: { fixture: fixture.contract } }));
   put("package.json", JSON.stringify({ private: true, name: "generator-ownership-fixture" }));
   put("nx.json", JSON.stringify({ useDaemonProcess: false, namedInputs: { sharedGlobals: [] }, cacheDirectory: ".nx/cache" }));
   put(".gitignore", "node_modules\n.nx\ndist\n.runs\n");
-  for (const project of Object.values(projects)) put(`${project.root}/project.json`, JSON.stringify(project));
+  for (const value of Object.values(projects)) {const project=testRecordV1(value);assert.ok(typeof project.root==="string");put(`${project.root}/project.json`, JSON.stringify(project));}
   symlinkSync(join(workspace, "node_modules"), join(root, "node_modules"), process.platform === "win32" ? "junction" : "dir");
   const cli = join(dirname(require.resolve("nx/package.json")), "dist/bin/nx.js");
   const execute = async () => {
@@ -88,7 +95,6 @@ export async function testWgpuGeneratorOwnership(workspace: string): Promise<voi
     if (source.includes("/🤖️generated/")) assert.ok(project.targets["generate-frame-worker"].inputs.some((input: any) => input.dependentTasksOutputFiles === "**/" + source.split("/🤖️generated/")[1]));
     else assert.ok(project.namedInputs.frameWorkerSources.includes("{workspaceRoot}/" + source) || browserSources.has(source), source);
   }
-  console.log(`[DEBUG] WGPU browser ownership modules=${observed.size} producers=${new Set(contract.outputRoots.map((output: any) => output.producer?.target ?? contract.target)).size} NxInputs=complete`);
 }
 
 /** 📦️ Exercises real WGPU bytes through native Nx cold publication, reuse, restoration and source invalidation. */
@@ -160,7 +166,6 @@ export async function testBrowserTransportOwnership(workspace: string): Promise<
       assert.ok(owned.has(row.target), `Missing browser transport owner: ${row.target}`);
       assert.ok(contract.inputPatterns.includes(row.target), `Missing generator input: ${row.target}`);
     }
-    console.log(`[DEBUG] Browser transport import scope=${row.scope} source=${row.source} target=${row.target}`);
   }
   assert.ok(!owned.has(fixture.retiredInput));
   assert.ok(!contract.inputPatterns.includes(fixture.retiredInput));
@@ -175,7 +180,6 @@ export async function testBrowserInputClosure(workspace: string): Promise<void> 
     assert.equal(result.success, true, result.logs.map(String).join("\n"));
   }
   const expected = new Set<string>(profile.sourceModulePaths), missing = [...observed].filter(path => !expected.has(path)).sort(), unused = [...expected].filter(path => !observed.has(path)).sort();
-  console.log(`[DEBUG] Browser input compiler closure modules=${observed.size} missing=${JSON.stringify(missing)} unused=${JSON.stringify(unused)}`);
   assert.deepEqual(missing, []);
   assert.deepEqual(unused, []);
 }

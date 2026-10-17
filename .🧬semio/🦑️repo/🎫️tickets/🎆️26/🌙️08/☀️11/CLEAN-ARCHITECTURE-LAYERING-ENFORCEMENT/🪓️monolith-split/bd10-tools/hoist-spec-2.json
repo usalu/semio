@@ -1,0 +1,81 @@
+{
+ "crates": {
+  "agg": {
+   "ident": "semio_s_artifact_raster_raster",
+   "root": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🦀️.rs"
+  },
+  "model": {
+   "ident": "semio_s_artifact_raster_raster_model",
+   "root": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs"
+  },
+  "diff": {
+   "ident": "semio_s_artifact_raster_raster_diff",
+   "root": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs"
+  },
+  "mutations": {
+   "ident": "semio_s_artifact_raster_raster_mutations",
+   "root": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs"
+  },
+  "layers": {
+   "ident": "semio_s_artifact_raster_raster_mutations_layers",
+   "root": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗂️layers/🦀️.rs"
+  },
+  "pixels": {
+   "ident": "semio_s_artifact_raster_raster_mutations_pixels",
+   "root": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖌️pixels/🦀️.rs"
+  },
+  "io": {
+   "ident": "semio_s_artifact_raster_raster_io",
+   "root": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs"
+  },
+  "editor": {
+   "ident": "semio_s_artifact_raster_raster_editor",
+   "root": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs"
+  },
+  "viewer": {
+   "ident": "semio_s_artifact_raster_raster_viewer",
+   "root": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs"
+  },
+  "host": {
+   "ident": "semio_s_artifact_raster_raster_host",
+   "root": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🔨️modules/🏠️host/🧰️owned/🦀️.rs"
+  },
+  "examples": {
+   "ident": "semio_s_artifact_raster_raster_examples",
+   "root": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🦀️.rs"
+  }
+ },
+ "companions": {
+  "mutations_tests": {
+   "dir": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🥣️companion",
+   "doc": "Companion test crate of `semio-s-artifact-raster-raster-mutations-layers` and `semio-s-artifact-raster-raster-mutations-pixels`: the leaf laws that apply a mutation through the closed vocabulary. The test files stay at their taxonomy nodes and are mounted here.",
+   "owners": [
+    "layers",
+    "pixels"
+   ]
+  },
+  "pixels_tests": {
+   "dir": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖌️pixels/🧪️tests/🥣️companion",
+   "doc": "Companion test crate of `semio-s-artifact-raster-raster-mutations-pixels`: the pixel leaf laws that run through the owned-document host. The test files stay at their taxonomy nodes and are mounted here.",
+   "owners": [
+    "pixels"
+   ]
+  },
+  "stack_tests": {
+   "dir": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🥣️companion",
+   "doc": "Companion test crate of the raster artifact crates: the full-stack laws that reach from the model through the vocabulary, the codecs and the host. The test files stay at their taxonomy nodes and are mounted here.",
+   "owners": [
+    "model",
+    "diff",
+    "mutations"
+   ]
+  }
+ },
+ "files": [
+  {
+   "file": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/📸️snapshot/🧪️tests/🔬️unit/🦀️.rs",
+   "owner": "model",
+   "companion": "stack_tests"
+  }
+ ]
+}

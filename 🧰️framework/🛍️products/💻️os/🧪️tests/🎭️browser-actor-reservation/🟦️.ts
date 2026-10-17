@@ -1,7 +1,7 @@
 /** 🎭️ Browser document actor reservation: private grant, scope, generation and retirement laws and activation on an exact socket Session. */
 import { stubFetch } from "../🌐️fetch-stub/🟦️.ts";
 import type { BackboneWorkerTestDependencies } from "../../🔨️modules/🏪️store/👷️worker/🟦️.ts";
-import { workerLawFakesV1, executionTargetBytes, FakeHubWebSocket, WORKER_LAW_CAPABILITY } from "../🧰️worker-law-fakes/🟦️.ts";
+import { workerLawFakesV1, executionTargetBytes, FakeHubWebSocket, WORKER_LAW_CAPABILITY, WORKER_LAW_ACTOR_IDENTITY_GRANT } from "../🧰️worker-law-fakes/🟦️.ts";
 import type { TestSource, ExecutionTargetLeaseFixture } from "../🧰️worker-law-fakes/🟦️.ts";
 
 type ArtifactState = import("../../🔨️modules/🏪️store/👷️worker/🟦️.ts").ArtifactState;
@@ -63,7 +63,7 @@ export async function registerBrowserActorReservationTests(vitest: Vitest, depen
       (globalThis as unknown as { Worker: unknown }).Worker = FakeReservationWorker;
       const setup = (name: string, spaceId = "reservation-space") => {
         const documentId = "reservation-" + name;
-        openArtifact({ documentId, schema: fixture.manifest.artifact.schema, bindings: [], actor: "untrusted-ui-actor" });
+        openArtifact({ documentId, schema: fixture.manifest.artifact.schema, bindings: [], actor: "untrusted-ui-actor", actorIdentityGrant: WORKER_LAW_ACTOR_IDENTITY_GRANT });
         const state = artifactState(documentId)!;
         artifacts.delete(state.runtimeKey);
         const binding = { kind: "hub", dataClass: "persistedShared", baseUrl: fixture.hubOrigin, spaceId } as const;
@@ -357,7 +357,7 @@ export async function registerBrowserActorReservationTests(vitest: Vitest, depen
             current.plan.scope.spaceId = spaceId;
             current.manifest.scope.spaceId = spaceId;
             current.plan.expiresAtUnixMs = Date.now() + 30000;
-            openArtifact({ documentId: current.intent.scope.documentId, schema: current.plan.artifact.schema, bindings: [], actor: "untrusted-ui-actor" });
+            openArtifact({ documentId: current.intent.scope.documentId, schema: current.plan.artifact.schema, bindings: [], actor: "untrusted-ui-actor", actorIdentityGrant: WORKER_LAW_ACTOR_IDENTITY_GRANT });
             const state = artifactState(current.intent.scope.documentId)!;
             state.openClientInstanceId = current.intent.clientInstanceId;
             artifacts.delete(state.runtimeKey);

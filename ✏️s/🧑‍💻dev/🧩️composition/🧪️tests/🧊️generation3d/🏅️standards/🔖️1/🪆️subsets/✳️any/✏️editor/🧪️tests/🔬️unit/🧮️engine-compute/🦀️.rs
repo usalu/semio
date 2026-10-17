@@ -1,3 +1,5 @@
+use semio_framework_test_fixtures::repo_text;
+
 // 🧮️ Engine compute: preview payloads, mesh bridges, preview marks and graph projections.
 
 //#region 🔖️EngineComputeTests
@@ -7,37 +9,6 @@
 /// behavior (they construct or take a [`Generation3dConfig`]), so the tests travel with them.
 use semio_framework_ui::wgpu::kernel_3d_scene::{aabb_intersects_frustum, frustum_planes, transform_aabb, Camera3d, Instance3d, Vec3};
 use semio_s_artifact_procedural_3d_mutations::central_apply::apply_generation3d_mutation;
-fn test_serial() -> crate::test_serial::TestSerialGuard {
-    crate::editor_domain::editor_laws::serial_execution::lock()
-}
-
-/// 🌉️ Decodes one preview mesh record's `data` field (a `pack::json`/`serde_json::Value` fragment
-/// off the wire) into `MeshData` through its first-party `FromValue` codec — `MeshData` no longer
-/// derives `serde::Deserialize` in a non-`#[cfg(test)]` build of its own crate (`🏗️mesh-engine/🦀️.rs`'s
-/// `#[cfg_attr(test, derive(Serialize, Deserialize))]` only activates inside that crate's OWN test
-/// build, never for a downstream consumer like this one), so `serde_json::from_value` cannot reach
-/// it here; round-trip through the wire text and `semio_framework_pack_json::from_json_str` instead, exactly like
-/// production's `mesh_data_for_preview_handle` (above) does.
-fn mesh_data_from_json(value: &Value) -> semio_framework_plugin::MeshData {
-    semio_framework_pack_json::from_json_str(&serde_json::to_string(value).expect("mesh data json text"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mesh data")
-}
-
-/// 🌉️ `Mesh3d` (a plain positions/normals/indices struct) no longer exists —
-/// `semio_framework_ui::wgpu::kernel_3d_scene`'s mesh API is now a generation/revision-keyed write-token/lease
-/// pair (`mesh3d_begin`/`mesh3d_write_vec3`/`mesh3d_seal`) meant for the shared render-owned mesh
-/// arena, not for a one-off AABB check. This test only ever needed the bounding box of the raw
-/// position buffer, so compute it directly instead of standing up a lease.
-fn aabb_of_positions(positions: &[f32]) -> ([f32; 3], [f32; 3]) {
-    let mut min = [f32::INFINITY; 3];
-    let mut max = [f32::NEG_INFINITY; 3];
-    for vertex in positions.chunks_exact(3) {
-        for axis in 0..3 {
-            min[axis] = min[axis].min(vertex[axis]);
-            max[axis] = max[axis].max(vertex[axis]);
-        }
-    }
-    (min, max)
-}
 
 fn preview_payload_from_evaluated_fixture(host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot, cfg: &Generation3dConfig) -> (String, String) {
     let eval_json = semio_s_artifact_procedural_3d_model::with_host(host_snapshot, |host| host.evaluate().unwrap_or_default());
@@ -53,7 +24,7 @@ fn preview_payload_from_evaluated_fixture(host_snapshot: &semio_framework_artifa
 fn geometry_media_export_uses_the_supplied_instance_owner_and_refuses_closed_authority() {
     let _serial = test_serial();
     use semio_framework_plugin::{ArtifactEditor, MediaClass, MediaForm, MediaPayload, TransientView};
-    let fixtures: Value = serde_json::from_str(include_str!("../../../../../../../../../../../../🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🥽️mesh/🧪️tests/🧫️fixtures/🔣️.json")).expect("the language-neutral mesh corpus");
+    let fixtures: Value = serde_json::from_str(repo_text!("🧰️framework/🔨️modules/🏗️mesh-engine/🥽️polygon/🧪️tests/🧫️fixtures/🔣️.json")).expect("the language-neutral mesh corpus");
     let fixture = fixtures["meshes"].as_array().unwrap().iter().find(|case| case["name"] == "unit-tetrahedron").expect("the independent tetrahedron fixture");
     let source = semio_framework_plugin::MeshData {
         positions: fixture["mesh"]["vertices"].as_array().unwrap().iter().flat_map(|vertex| vertex.as_array().unwrap().iter().map(|coordinate| coordinate.as_f64().unwrap() as f32)).collect(),
@@ -194,7 +165,7 @@ fn document_from_mesh_rejects_empty_or_invalid_geometry() {
 #[test]
 fn mesh_import_preserves_fixture_coordinates_in_an_editable_graph() {
     let _serial = test_serial();
-    let fixtures: Value = serde_json::from_str(include_str!("../../../../../../../../../../../../🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🥽️mesh/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+    let fixtures: Value = serde_json::from_str(repo_text!("🧰️framework/🔨️modules/🏗️mesh-engine/🥽️polygon/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     for case in fixtures["meshes"].as_array().unwrap() {
         let source = &case["mesh"];
         if source["faces"].as_array().unwrap().iter().any(|face| face.as_array().unwrap().len() != 3) { continue; }

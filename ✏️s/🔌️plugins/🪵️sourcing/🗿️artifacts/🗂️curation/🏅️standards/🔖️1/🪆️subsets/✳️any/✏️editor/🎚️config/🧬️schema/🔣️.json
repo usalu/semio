@@ -51,7 +51,39 @@
           "minimum": 0
         },
         "sort": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/sourcing/curation/artifact.json#/$defs/TableSort"
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TableSort"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "SortDirection": {
+      "title": "SortDirection",
+      "type": "string",
+      "enum": [
+        "asc",
+        "desc"
+      ]
+    },
+    "TableSort": {
+      "title": "TableSort",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "columnId",
+        "direction"
+      ],
+      "properties": {
+        "columnId": {
+          "type": "string"
+        },
+        "direction": {
+          "$ref": "#/$defs/SortDirection"
         }
       }
     }

@@ -5,7 +5,8 @@
 //! will read.
 
 use super::plane::{angle, dist, point2, same, P};
-use super::session::{Mark, Pointer, Preview, Step, Style, Tool, ToolContext, ToolEvent, PICK_PIXELS, REJECTED, STOREY_MISSING};
+use super::session::{Pointer, Step, Tool, ToolContext, ToolEvent, PICK_PIXELS, REJECTED, STOREY_MISSING};
+use crate::editor::bim::marks::{Mark, Preview, Style};
 use super::snap::SnapHit;
 use crate::editor::bim::entities::notations::standard_style;
 use crate::standards::v1::subsets::any::schema::inferences::annotation_layout::anchors::{reference_point, resolve, Reference};

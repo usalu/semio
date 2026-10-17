@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "resource": "queue-claim-catalog",
+  "resource": "resource-retirement-catalog:v2",
   "maximumDatabaseBytes": 16384,
   "maximumClaimsPerTurn": 256,
   "cases": [
@@ -24,5 +24,18 @@
       "queued": false,
       "retired": true
     }
-  ]
+  ],
+  "catalogIdentity": {
+    "resource": "resource-retirement-catalog:v2",
+    "admissionResource": "resource-directory-admission:v1",
+    "foreignResource": "foreign-retirement-catalog",
+    "tables": 2,
+    "slots": 2,
+    "pages": 3,
+    "maximumDatabaseBytes": 16384,
+    "sharedAdmission": {
+      "resources": "timeout",
+      "claims": "empty"
+    }
+  }
 }

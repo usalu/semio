@@ -34,7 +34,10 @@ pub fn plan(p: &GltfMoveNodeChildPayload, base: &GltfSnapshot) -> Result<GltfDif
     Ok(GltfDiff { nodes: patch(p.parent, GltfNodeDiff { children: Some(GltfRefsDelta::relocation(&refs(&base.document.nodes[p.parent].children), index, p.position)), ..Default::default() }), ..Default::default() })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn inverse(p: &GltfMoveNodeChildPayload, base: &GltfSnapshot) -> Vec<super::GltfMutation> {
+pub fn inverse<Op>(p: &GltfMoveNodeChildPayload, base: &GltfSnapshot) -> Vec<Op>
+where
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::remove_used_extension::RemoveUsedExtensionMutation>,
+{
     if validate(p, base).is_err() {
         return Vec::new();
     }
@@ -54,11 +57,17 @@ pub enum MoveNodeChildMutation {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn mutation(payload: GltfMoveNodeChildPayload) -> super::GltfMutation {
-    super::GltfMutation::MoveNodeChild(MoveNodeChildMutation::Apply(payload))
+pub fn mutation<Op>(payload: GltfMoveNodeChildPayload) -> Op
+where
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::move_node_child::MoveNodeChildMutation>,
+{
+    Op::from(MoveNodeChildMutation::Apply(payload))
 }
 
-impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for MoveNodeChildMutation {
+impl<Op> protocol::MutationKind<GltfSnapshot, Op> for MoveNodeChildMutation
+where
+    Op: protocol::Mutation<GltfSnapshot, Diff = GltfDiff> + From<MoveNodeChildMutation>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "move", entity: "node-child", kind: "move-node-child", record: "MovedNodeChild" };
 
     fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<GltfDiff> {
@@ -70,7 +79,7 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for MoveNodeChild
         }
     }
 
-    fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<super::GltfMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         match self {
             Self::Apply(payload) => Ok(inverse(payload, base)),
         }
@@ -87,7 +96,5 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for MoveNodeChild
 //#endregion 🧬️DirectMutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️t045/🦀️.rs"]
-mod case_t045;
+
 //#endregion 🧪️Tests

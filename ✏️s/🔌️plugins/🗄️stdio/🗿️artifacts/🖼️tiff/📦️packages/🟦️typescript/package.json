@@ -22,7 +22,10 @@
       "import": "./dist/🟦️.js"
     }
   },
-  "dependencies": {},
+  "dependencies": {
+    "@semio-tech/stdio-deflate": "workspace:*",
+    "@semio-tech/stdio-jpg": "workspace:*"
+  },
   "license": "LGPL-3.0-or-later",
   "repository": {
     "type": "git",

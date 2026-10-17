@@ -99,7 +99,7 @@ pub fn handle(payload: &ImportVideoFramePayload, doc: &ArtifactView<'_, Remodeli
 }
 
 /// 🪟️ The refusal of a streamed import dispatched without a window: its tool state lives in the importing window.
-pub(crate) fn import_window_required() -> Fault {
+pub fn import_window_required() -> Fault {
     Fault::new(FaultOrigin::App, FaultCode::new("remodeling.import.window-required"), "A streamed import keeps its progress in the window that starts it; dispatch it from a window.")
 }
 

@@ -1,5 +1,6 @@
 use crate::standards::v1::subsets::any::io::text::snapshot::*;
 use crate::{forms_children_from_steps, forms_steps, FormStep, FORMS_DOCUMENT_SCHEMA};
+use semio_framework_test_fixtures::fixture_text;
 use store::os_store::test_support::assert_dsl_round_trip;
 
 #[semio_framework_async_macros::async_test]
@@ -27,7 +28,7 @@ async fn default_fixture_dsl_round_trips() {
     assert_eq!(spec.id, "default");
     assert_eq!(forms_steps(&spec).len(), 1);
     assert_dsl_round_trip(&spec);
-    let expected: serde_json::Value = serde_json::from_str(include_str!("../../../../../🖼️assets/📇️contact/🔣️.json")).unwrap();
+    let expected: serde_json::Value = serde_json::from_str(fixture_text!("../../../../🖼️assets/📇️contact/🔣️.json")).unwrap();
     let actual: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&spec)).unwrap();
     assert_eq!(actual, expected);
 }

@@ -24,7 +24,7 @@ test("surface neutral owner survives deleting each specific graph composition",(
 });
 
 test("surface retained refusal interfaces use the defining General Value owner",()=>{
- const owner=resolve(import.meta.dir,"../.."),graphPackage=join(owner,"🕸️node-graph/📦️packages/🦀️rust"),manifestSource=readFileSync(join(graphPackage,"Cargo.toml"),"utf8"),manifestValue=Bun.TOML.parse(manifestSource);expect(manifestValue).toEqual(parseToml(manifestSource));const manifest=manifestValue as CargoManifest;const path=manifest.dependencies["semio-framework-value"]!.path!;expect(path).toBe("../../../../🌱️value/📦️packages/🦀️rust");const text=readFileSync(resolve(graphPackage,path,"Cargo.toml"),"utf8"),provider=Bun.TOML.parse(text)as CargoManifest;expect(provider).toEqual(parseToml(text));expect(provider.package.name).toBe("semio-framework-value");
+ const owner=resolve(import.meta.dir,"../.."),graphPackage=join(owner,"🕸️node-graph/📦️packages/🦀️rust"),manifestSource=readFileSync(join(graphPackage,"Cargo.toml"),"utf8"),manifestValue=Bun.TOML.parse(manifestSource);expect(manifestValue).toEqual(parseToml(manifestSource));const manifest=manifestValue as CargoManifest;const path=manifest.dependencies["semio-framework-value"]!.path!;expect(path).toBe("../../../../🌱️value/📦️packages/🦀️rust");const text=readFileSync(resolve(graphPackage,path,"Cargo.toml"),"utf8"),provider=Bun.TOML.parse(text)as CargoManifest;const expectedAt27x594 = parseToml(text); expect<typeof expectedAt27x594>(provider).toEqual(expectedAt27x594);expect(provider.package.name).toBe("semio-framework-value");
  const cursor=readFileSync(join(owner,"🕸️node-graph/📡️scene/🦀️.rs"),"utf8");expect(cursor).toContain("Result<SceneDecodeStep,ValueError>");expect(cursor).toContain("ValueError::literal");expect(cursor).not.toContain("serde_json::Error");expect(cursor).not.toContain("store::");
 });
 
@@ -41,7 +41,6 @@ test("surface vector tile fixtures belong to their owner and agree with independ
   const source = readFileSync(join(owner, "🧱️vector-tiles/📦️mvt-decoder/🧪️tests/🔬️unit/🦀️.rs"), "utf8");
   expect(source.includes("MAP-VECTOR-TILES")).toBe(false);
   expect(source.includes("#[ignore")).toBe(false);
-  console.log("[DEBUG] Owned vector tile bytes and layer/feature/geometry inventories agree with Protobuf.js across all six original tiles");
 });
 
 test("surface neutral interaction interfaces come directly from their defining packages", () => {

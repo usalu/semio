@@ -1,6 +1,6 @@
 //! 🚪️ Native codec, stdio.txt hop declaration, and txt leaf for `s.wfc.wfc3d`.
 
-use super::{export_stdio_kinds, import_stdio_kinds, io};
+use crate::standards::v1::subsets::any::io::{export_stdio_kinds, import_stdio_kinds, io};
 use crate::examples::{tower_stack, two_room_corridor, wall_roof_facade_strip};
 use crate::mutations::{self as mutation_builders, Wfc3dMutation};
 use crate::schema::snapshot::Wfc3dSnapshot;

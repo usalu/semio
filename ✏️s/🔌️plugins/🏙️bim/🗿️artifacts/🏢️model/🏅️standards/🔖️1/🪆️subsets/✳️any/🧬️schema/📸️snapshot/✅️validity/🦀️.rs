@@ -1,6 +1,7 @@
 //! ✅️ Authored-value validity rules shared by every leaf that writes a length, a profile or an outline: pure, total and base-free.
 
-use super::{Baluster, Infill, Point2, Profile, Railing, Ramp, RiserKind, Stair, StairStringer, StringerKind, Vertex};
+use super::values::{Baluster, Infill, Point2, Profile, RiserKind, StairStringer, StringerKind, Vertex};
+use super::entities::{Railing, Ramp, Stair};
 
 const AREA_EPSILON: f64 = 1e-9;
 

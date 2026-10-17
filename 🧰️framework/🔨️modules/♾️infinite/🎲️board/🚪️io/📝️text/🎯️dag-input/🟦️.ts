@@ -1,5 +1,5 @@
-import {decodeJsonSyntax,type JsonSyntaxNode,type JsonSyntaxControl,type JsonSyntaxMember} from "../../../../../🎒️pack/🔤️json/📥️decode/🟦️.ts";
-import {JsonMemberPolicy} from "../../../../../🎒️pack/🔤️json/🧩️members/🟦️.ts";
+import {decodeJsonSyntax,type JsonSyntaxNode,type JsonSyntaxControl,type JsonSyntaxMember} from "@semio-tech/pack-json-decode-ts";
+import {JsonMemberPolicy} from "@semio-tech/framework-pack-json-ts/members";
 import {NativeDecodeControl} from "@semio-tech/value-ts/decode";
 import {ValueError} from "../../../../../🌱️value/📦️packages/🟦️typescript/⚠️refusal/🟦️.ts";
 import type {DagSelectionDomains,DagChannelRef,DagNodeEvaluationStatus,DagNodeStatuses,DagHoverFacts,DagWireTypeRefusal} from "../../../🧬️schema/🎯️dag-input/🟦️.ts";

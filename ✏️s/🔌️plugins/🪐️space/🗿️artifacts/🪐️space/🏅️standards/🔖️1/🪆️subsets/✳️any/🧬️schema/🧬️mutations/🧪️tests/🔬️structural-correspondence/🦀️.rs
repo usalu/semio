@@ -1,5 +1,6 @@
 
 use super::*;
+use semio_framework_test_fixtures::fixture_path;
 
 fn outcome_classes(outcomes: &[&str]) -> semio_framework_pack_json::Value {
     semio_framework_pack_json::Value::Array(outcomes.iter().map(|outcome| semio_framework_pack_json::Value::from(*outcome)).collect())
@@ -7,7 +8,7 @@ fn outcome_classes(outcomes: &[&str]) -> semio_framework_pack_json::Value {
 
 #[test]
 fn direct_owners_descriptors_surfaces_and_catalog_correspond() {
-    let mutation_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations");
+    let mutation_root = fixture_path!("../..");
     let descriptor_kinds: Vec<_> = <SSpaceMutation as protocol::SemanticMutation<SSpaceSnapshot>>::kinds().iter().map(|descriptor| descriptor.kind).collect();
     let catalog_source = std::fs::read_to_string(mutation_root.join("../../🔮️oracles/🔣️.json")).expect("language-neutral oracle catalog");
     let catalog: semio_framework_pack_json::Value = semio_framework_pack_json::parse(&catalog_source, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("valid language-neutral oracle catalog");

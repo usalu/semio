@@ -22,6 +22,9 @@ workspace = true
 path = "../../🦀️.rs"
 doctest = false
 
+[features]
+testkit = []
+
 [dependencies]
 framework_hash = { path = "../../../../../../../🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
 semio-framework = { workspace = true }
@@ -39,6 +42,7 @@ semio-framework-os-mcp-hub-pair = { path = "../../../🔗️hub-pair/📦️pack
 
 [dev-dependencies]
 semio-framework-pack-json = { path = "../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-framework-test-fixtures = { path = "../../../../../../../🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 tokio = { workspace = true, features = ["full"] }
 semio-framework-os-mcp-capabilities = { path = "../../../🧰️capabilities/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-os-mcp-hub-pair = { path = "../../../🔗️hub-pair/📦️packages/🦀️rust", features = ["testkit"] }

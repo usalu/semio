@@ -11,7 +11,7 @@ pub struct EngagementSubmit {
     pub value: Option<String>,
 }
 
-pub fn handle(payload: &EngagementSubmit, _doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, semio_framework_plugin::NoConfig>, ctx: &mut crate::editor::note::NoteDispatchCtx) -> Result<Emit<NoteMutation, semio_framework_plugin::NoConfigMutation>, Fault> {
+pub fn handle(payload: &EngagementSubmit, _doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, semio_framework_plugin::NoConfig>, ctx: &mut crate::editor::note::dispatch_ctx::NoteDispatchCtx) -> Result<Emit<NoteMutation, semio_framework_plugin::NoConfigMutation>, Fault> {
     let mut artifact_mutations = Vec::new();
     if ctx.selected_block_ids.len() == 1 {
         let name = payload.value.clone().unwrap_or_else(|| ctx.window_transient.engagement_input.clone());

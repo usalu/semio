@@ -1,9 +1,19 @@
 //! 🧪️ Exact native host owners preserve cancellation, retirement and store publication laws.
 
-use super::*;
+use crate::op::WriterMutation;
+use semio_framework_test_fixtures::fixture_text;
+#[allow(unused_imports)]
+use store::os_store::owned_schema_decode::ArtifactEnvelopeMutationFieldTarget;
+#[allow(unused_imports)]
+use semio_framework_value::retirement::OwnedValueRetirementFactory;
+use crate::host::owned::{WRITER_ENVELOPE_FIELD_BYTES};
+use crate::host::owned::*;
 use crate::standards::v1::subsets::any::io::binary::mutations::*;
 use crate::{schema, WriterSnapshot};
 use semio_framework_value::retained_clone::RetainedCloneGrant;
+
+/// 🎟️ Unbounded retained grant: the pre-migration step budget carried no retained limit.
+const UNBOUNDED_STEP_GRANT: semio_framework_job::RetainedCloneGrant = semio_framework_job::RetainedCloneGrant { maximum_items: usize::MAX, maximum_copy_bytes: usize::MAX, maximum_capacity_bytes: usize::MAX, maximum_release_bytes: usize::MAX, maximum_depth: usize::MAX };
 
 fn funded_retirement_grant() -> RetainedCloneGrant {
     RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 1 << 20, maximum_capacity_bytes: 1 << 20, maximum_release_bytes: 1 << 20, maximum_depth: 64 }
@@ -91,8 +101,9 @@ fn drive_writer_edit_tokens(
     let mut pending = None;
     let mut preview_sequence = 0;
     for _ in 0..100_000 {
+        let mut context_retained = semio_framework_job::RetainedCloneProgress::default();
         let mut context =
-            semio_framework_job::StepContext::new(semio_framework_job::OperationId(1), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(3, u64::MAX), cancel.clone(), semio_framework_job::default_now_us, &mut preview_sequence);
+            semio_framework_job::StepContext::new(semio_framework_job::OperationId(1), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(3, u64::MAX, UNBOUNDED_STEP_GRANT), cancel.clone(), semio_framework_job::default_now_us, &mut preview_sequence, &mut context_retained);
         let field = match pending.take() {
             Some(field) => field,
             None => match source.step(&mut context) {
@@ -245,11 +256,11 @@ fn hub_tail_envelope(value: &serde_json::Value) -> protocol::MutationEnvelope {
 /// The reloaded envelope must carry every folded operation.
 #[semio_framework_async_macros::async_test]
 async fn a_document_folded_from_the_hub_tail_reloads_again() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🔁️hub-tail-after-check-in/🔣️.json")).expect("hub tail fixture decodes");
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../🧪️tests/🧫️fixtures/🔁️hub-tail-after-check-in/🔣️.json")).expect("hub tail fixture decodes");
     let document_id = fixture["documentId"].as_str().expect("hub tail document id");
     let tail = fixture["envelopes"].as_array().expect("hub tail envelopes");
     assert_eq!(tail.len(), 17, "the captured tail: four edits, a Check In, eleven two-author edits, a second Check In");
-    let current: serde_json::Value = serde_json::from_str(include_str!("../../../../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🔁️hub-tail-after-check-in/🧭️current-checkpoints/🔣️.json")).expect("closed current checkpoint semantics");
+    let current: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../🧪️tests/🧫️fixtures/🔁️hub-tail-after-check-in/🧭️current-checkpoints/🔣️.json")).expect("closed current checkpoint semantics");
     let current_rows = current["checkpoints"].as_array().expect("current checkpoint rows");
     assert_eq!(current_rows.len(), 2);
     for row in current_rows {
@@ -262,7 +273,6 @@ async fn a_document_folded_from_the_hub_tail_reloads_again() {
         assert_eq!(protocol::decode_history_transition(&payload).expect("current producer decoder"), transition);
         let envelope = hub_tail_envelope(&tail[row["index"].as_u64().unwrap() as usize]);
         let id = protocol::history_transition_id(&envelope.timestamp, &payload);
-        println!("[DEBUG] Writer current Native checkpoint bytes={} id={} full_semantics=true", payload.len(), id.0);
         assert_eq!(payload, envelope.diff.payload, "captured checkpoint includes the explicit current line field");
         assert_eq!(id, envelope.mutation_id, "current checkpoint address covers all bytes");
     }

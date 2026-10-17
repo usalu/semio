@@ -3,7 +3,6 @@
 //! sound (wave function collapse is seeded-random internally).
 
 use crate::diff::BitmapDiff;
-use crate::mutations::BitmapMutation;
 use crate::schema::snapshot::BitmapSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -18,17 +17,23 @@ pub struct ChangeSeed {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_seed(seed: u64) -> BitmapMutation {
-    BitmapMutation::ChangeSeed(ChangeSeed { seed })
+pub fn change_seed<Op>(seed: u64) -> Op
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::change_seed::ChangeSeed>,
+{
+    Op::from(ChangeSeed { seed })
 }
 
-impl MutationKind<BitmapSnapshot, BitmapMutation> for ChangeSeed {
+impl<Op> MutationKind<BitmapSnapshot, Op> for ChangeSeed
+where
+    Op: protocol::Mutation<BitmapSnapshot, Diff = BitmapDiff> + From<ChangeSeed>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "seed", kind: "change-seed", record: "ChangedSeed" };
 
     fn diff(&self, base: &BitmapSnapshot) -> protocol::MutationOutcome<BitmapDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &BitmapSnapshot) -> Result<Vec<BitmapMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &BitmapSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

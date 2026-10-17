@@ -1,7 +1,6 @@
 //! ✂️ Authoritative PDF/H mutation for removing a matching signature field.
 
-use super::insert_signature_field::InsertSignatureField;
-use super::PdfHMutation;
+use crate::standards::v1_7::subsets::h::schema::mutations::insert_signature_field::InsertSignatureField;
 use crate::standards::v1_7::subsets::base::schema::conformance_support as support;
 use crate::standards::v1_7::subsets::base::schema::diff::{self, PdfDiff};
 use crate::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot;
@@ -16,18 +15,21 @@ pub struct RemoveSignatureField {
     pub name: String,
 }
 
-impl MutationKind<PdfSnapshot, PdfHMutation> for RemoveSignatureField {
+impl<Op> MutationKind<PdfSnapshot, Op> for RemoveSignatureField
+where
+    Op: protocol::Mutation<PdfSnapshot, Diff = PdfDiff> + From<RemoveSignatureField> + From<crate::standards::v1_7::subsets::h::schema::mutations::insert_signature_field::InsertSignatureField>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "remove", entity: "signature-field", kind: "remove-signature-field", record: "Remove" };
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
         MutationOutcome::new(diff::graph_edit(support::remove_signature_field_rows(base, &self.name)))
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfHMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         Ok({
             support::signature_field_named(base, &self.name).map(|field| {
                 let fields = support::signature_fields(base);
-                PdfHMutation::InsertSignatureField(InsertSignatureField { name: self.name.clone(), placements: support::placements_of(base, &[field]), field_index: fields.iter().position(|candidate| *candidate == field), entry_index: (fields.len() == 1).then(|| support::catalog_entry_position(base, "AcroForm")).flatten() })
+                Op::from(InsertSignatureField { name: self.name.clone(), placements: support::placements_of(base, &[field]), field_index: fields.iter().position(|candidate| *candidate == field), entry_index: (fields.len() == 1).then(|| support::catalog_entry_position(base, "AcroForm")).flatten() })
             }).into_iter().collect()
         })
     }
@@ -43,9 +45,7 @@ impl MutationKind<PdfSnapshot, PdfHMutation> for RemoveSignatureField {
 //#endregion 🔖️Mutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
 
 //#region 🔖️Facets

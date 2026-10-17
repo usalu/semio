@@ -1,0 +1,2 @@
+/** 🔣️ Public entry `@semio-tech/block-js/schema/document-fields/io/json`: the explicit surface that importers outside the module use. */
+export { attribute, author, camera2d, camera3d, compatible, defaultText, floating, kind, list, optionalOut, optionalText, optionalWord, out, reject, representation, row, text, word, wordFromDsl, xyz, xyzOut } from "../../../../../../🧬️schema/🧱️document-fields/🚪️io/🔣️json/🟦️.ts";

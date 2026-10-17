@@ -62,8 +62,10 @@ def main():
     for c in CHUNK_DIRS:
         d = SH + "/" + c
         print("chunk dir", c, sorted(os.listdir(d)) if os.path.isdir(d) else None)
-        if APPLY and os.path.isdir(d) and os.listdir(d) == ["🦀️.rs"]:
-            shutil.rmtree(d)
+        if APPLY and os.path.isfile(d + "/🦀️.rs"):
+            os.remove(d + "/🦀️.rs")
+            if not os.listdir(d):
+                os.rmdir(d)
 
 
 if __name__ == "__main__":

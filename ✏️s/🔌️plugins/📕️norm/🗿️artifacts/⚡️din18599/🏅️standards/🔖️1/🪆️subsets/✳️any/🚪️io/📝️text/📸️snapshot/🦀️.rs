@@ -34,7 +34,7 @@ pub type Din18599SnapshotText = String;
 
 #[allow(unused_imports)]
 mod snapshot_codec {
-use crate::text::snapshot::*;
+use crate::snapshot::*;
 use semio_s_artifact_norm_din18599_model::*;
 use semio_s_artifact_norm_din18599_model::{Adjacency, Attachment, AutomationClass, BuildingCategory, CalculationMethod, CoolingSystem, DhwSystem, Din18599ClimateChild, ElementKind, EnvelopeElement, HeatingSystem, LightingSystem, MonthlyClimate, Renewables, ThermalZone, UseClass, VentilationSystem};
 use framework_schema::ArtifactSchema;
@@ -84,14 +84,14 @@ pub fn encode_din18599_dsl(snapshot: &Din18599Snapshot) -> String {
     pack::snapshot::ArtifactDsl::print_dsl(snapshot)
 }
 }
-pub use crate::text::snapshot::snapshot_codec::*;
+pub use crate::snapshot::snapshot_codec::*;
 
 #[allow(unused_imports)]
 mod snapshot_wire_codec {
-use crate::text::snapshot::*;
+use crate::snapshot::*;
 use semio_s_artifact_norm_din18599_model::*;
 use semio_s_artifact_norm_din18599_model::{Adjacency, Attachment, AutomationClass, BuildingCategory, CalculationMethod, CoolingSystem, DhwSystem, Din18599ClimateChild, ElementKind, EnvelopeElement, HeatingSystem, LightingSystem, MonthlyClimate, Renewables, ThermalZone, UseClass, VentilationSystem};
 use framework_schema::ArtifactSchema;
 
 }
-#[cfg(test)] pub use crate::text::snapshot::snapshot_wire_codec::*;
+#[cfg(test)] pub use crate::snapshot::snapshot_wire_codec::*;

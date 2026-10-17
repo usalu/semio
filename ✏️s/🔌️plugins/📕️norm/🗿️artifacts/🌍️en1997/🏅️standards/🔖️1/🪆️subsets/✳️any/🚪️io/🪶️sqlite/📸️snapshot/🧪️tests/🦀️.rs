@@ -1,3 +1,4 @@
+use semio_framework_test_fixtures::fixture_path;
 use semio_framework_test_original_snapshot_owners as original_owners;
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use semio_s_artifact_norm_en1997_model::En1997Snapshot;
@@ -26,7 +27,7 @@ fn sqlite_snapshot_en1997_controlled_output_has_exact_wire_and_real_interior_adm
 /// 🔬️ Checks all handwritten EN1997 cells through an independent SQLite engine and coherent nested edits.
 fn en1997_independent_complete_sqlite_oracle(bytes:&[u8],mode:&str,encoding:&str,annex:&str)->Vec<u8>{
  use std::{io::Write,process::{Command,Stdio}};
- let directory=std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures/🔬️independent");
+ let directory=fixture_path!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔬️independent");
  let script=r#"import{Database}from'bun:sqlite';import{deepStrictEqual,ok}from'node:assert';
 const expected=await Bun.file(process.argv[1]).json(),mode=process.argv[2],encoding=process.argv[3],annex=process.argv[4];
 const variant=expected.variants.find(value=>value.annex===annex);ok(variant,'literal annex');
@@ -111,7 +112,6 @@ async fn sqlite_snapshot_en1997_independent_complete_nested_edit_both_annex_publ
    let imported=async{let original_file_dialect=&dialect;let original_file_input=&edited;let original_file_limits=SqliteDatabaseLimits::default();let original_file_progress:&mut dyn FnMut(semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |_|true;semio_framework_os_kernel::io::testing::with_snapshot_file_encoding(semio_framework_os_kernel::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|io_import_sqlite_snapshot::<En1997Snapshot>(original_file_dialect,original_file_input,sqlite_control,native_owner).await).await}.await.unwrap().value;assert_eq!(imported,expected);
    let restored_native=original_owners::io_run(&from,store::io_schema::IoPayload::Binary(edited),SqliteDatabaseLimits::default(),&mut |_|true).await.unwrap().value;assert_eq!(restored_native,payload);
    let public=original_owners::io_run(&into,restored_native,SqliteDatabaseLimits::default(),&mut |_|true).await.unwrap().value;let store::io_schema::IoPayload::Binary(bytes)=public else{panic!("public EN1997 SQLite file")};en1997_independent_complete_sqlite_oracle(&bytes,"edited",label,annex);
-   eprintln!("[DEBUG] EN1997 complete independently edited public owner annex={annex} encoding={label} tables=9 rows=9 cells=210 native_exact=true");
   }
  }
 }
@@ -144,7 +144,6 @@ fn sqlite_snapshot_en1997_original_native_semantic_extent_has_independent_exact_
     assert_eq!(original_owners::with_decoding(|native_owner|En1997Snapshot::decode_sqlite_snapshot_native(&ordinary,&mut SqliteSnapshotControl::new(&mut |_|true,budget), native_owner)).unwrap_err().kind,kind);
    }
   }
-  eprintln!("[DEBUG] EN1997 independent exact native cell boundary case={} annex={} rows={rows} bytes={bytes} both_native_encodings=true",case["id"],annex);
  }}
 }
 
@@ -159,7 +158,7 @@ fn sqlite_snapshot_en1997_complete_independent_native_semantic_limits(){
   for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{source.preflight_sqlite_snapshot_encoding(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap();let payload=original_owners::with_encoding(|native_owner|source.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,limits), native_owner)).unwrap();assert_eq!(original_owners::with_decoding(|native_owner|En1997Snapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,limits), native_owner)).unwrap(),source);
    for short in[SqliteDatabaseLimits{max_rows:limits.max_rows-1,..limits},SqliteDatabaseLimits{max_value_bytes:limits.max_value_bytes-1,..limits},SqliteDatabaseLimits{max_schema_bytes:limits.max_schema_bytes-1,..limits},SqliteDatabaseLimits{max_tables:8,..limits},SqliteDatabaseLimits{max_columns:41,..limits}]{assert!(original_owners::with_sqlite_recipient(short,&mut |_|true,|sqlite_control|source.to_sqlite_database(sqlite_control)).is_err(),"relational copied limits {short:?}");assert!(original_owners::with_sqlite_recipient(short,&mut |_|true,|sqlite_control|En1997Snapshot::from_sqlite_database(&database, sqlite_control)).is_err(),"reconstruct copied limits {short:?}");assert!(source.preflight_sqlite_snapshot_encoding(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,short)).is_err(),"preflight copied limits {encoding:?} {short:?}");assert!(original_owners::with_encoding(|native_owner|source.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,short), native_owner)).is_err(),"encoder copied limits {encoding:?} {short:?}");assert!(original_owners::with_decoding(|native_owner|En1997Snapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,short), native_owner)).is_err(),"decoder copied limits {encoding:?} {short:?}");}
   }
- }eprintln!("[DEBUG] EN1997 independently measured complete copied native semantic limits");
+ }
 }
 #[test]
 fn sqlite_snapshot_en1997_complete_independent_copied_columns_admission(){

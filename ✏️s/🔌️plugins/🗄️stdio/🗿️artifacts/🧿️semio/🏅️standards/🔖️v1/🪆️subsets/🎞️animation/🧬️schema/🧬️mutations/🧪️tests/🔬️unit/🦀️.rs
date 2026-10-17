@@ -1,5 +1,8 @@
+use crate::schema::snapshot::SemioAnimationSnapshot;
+use protocol::Mutation;
+use crate::schema::mutations::{fixture};
 use crate::io::binary::mutations::wire_tag;
-use super::*;
+use crate::schema::mutations::*;
 use crate::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO as WIRE_PROTOCOL;
 
 /// 🧪️ `kinds_match_the_enum_and_the_catalog`: `KINDS` names every declared variant, at the

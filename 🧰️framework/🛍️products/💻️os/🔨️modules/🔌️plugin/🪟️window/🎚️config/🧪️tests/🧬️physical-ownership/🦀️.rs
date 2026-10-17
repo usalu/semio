@@ -1,10 +1,13 @@
 //! ⚖️ Physical ownership laws of the retained window-config state, hosted by the facade test build (they name the window-config test fixtures).
-use super::*;
-use super::super::pack_identity_tests::IdentityWindowOwner;
+use semio_framework_value::retirement::controlled::ControlledRetirement;
+use semio_framework_plugin_window_config::retained::{ErasedWindowConfigPackLoad, RetainedStatePhase, RetainedWindowConfigStateDecode, RetainedWindowConfigTypedState, ValueFrame, controlled_demands};
+use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
+use semio_framework_os_kernel as store;
+use crate::window_config_tests::pack_identity_tests::IdentityWindowOwner;
 
 #[test]
 fn window_config_paged_registry_actual_authored_root_metadata_producer() {
-    use super::super::retained_pack_load_tests::RetainedLoadCameraConfig;
+    use crate::window_config_tests::retained_pack_load_tests::RetainedLoadCameraConfig;
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🗂️registry/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let law = &fixture["rootMetadata"];
     let ((producer, absent), getter) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| (
@@ -39,7 +42,6 @@ fn window_config_paged_registry_actual_authored_root_metadata_producer() {
     assert_eq!(allocated, released);
     let (_, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| drop(owner));
     assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
-    eprintln!("[DEBUG] original Window authored root metadata nativeBirth={} controlledRelease={released} optionalGetter0 terminalDrop0", birth.requested_bytes);
 }
 
 #[test]
@@ -75,7 +77,6 @@ fn window_config_paged_registry_retained_source_reservation_uses_capacity_author
     assert_eq!(released, capacity);
     let (_, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| drop(decoder));
     assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
-    eprintln!("[DEBUG] original retained window source capacity={capacity} release={released} copy0 reservation admitted terminalDrop0");
 }
 
 #[test]
@@ -120,5 +121,4 @@ fn window_config_paged_registry_actual_inline_parser_retains_original_backing() 
     assert_eq!(allocated, released);
     let (_, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| drop(parser));
     assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
-    eprintln!("[DEBUG] original inline window parser allocated={allocated} release={released} turns={turns} terminalDrop0");
 }

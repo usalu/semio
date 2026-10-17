@@ -1,4 +1,8 @@
-use super::*;
+use semio_framework_graph_layout_run::{layout_run_definition, layout_run_entity, LayoutRunPoint};
+use semio_framework_plugin::Fault;
+use semio_framework_tool_run::{JobKindId, ToolRunIdentity};
+use std::collections::BTreeSet;
+use crate::editor::dag::modes::edit::tools::reorganize::*;
 use crate::editor::dag::config::DagConfig;
 use crate::editor::dag::unit_tests::context::{new_app_with_registry, DagApp};
 use crate::editor::dag::DagPlayApp;
@@ -14,10 +18,10 @@ use semio_framework_tool_run::{ToolRunId, ToolRunVerdict, TOOL_RUN_ACTION_IDS};
 use serde_json::Value;
 use std::collections::BTreeMap;
 
-const FIXTURE: &str = include_str!("../🧫️fixtures/🎞️layout-run.json");
+static FIXTURE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../🎭️modes/✏️edit/🛠️tools/🗂️reorganize/🧪️tests/🧫️fixtures/🎞️layout-run.json"));
 
 fn fixture() -> Value {
-    serde_json::from_str(FIXTURE).expect("reorganize fixture parses")
+    serde_json::from_str((*FIXTURE)).expect("reorganize fixture parses")
 }
 
 fn identity() -> ToolRunIdentity {
@@ -69,7 +73,7 @@ fn reorganize_tool_declares_the_shared_layout_run_definition() {
     let app = crate::editor::dag::create_dag_app();
     assert!(app.tools.iter().any(|declared| declared.id == TOOL_ID && declared.run.is_some()));
     assert!(app.modes.iter().all(|mode| mode.tools.iter().any(|reference| reference.as_str() == TOOL_ID)));
-    let injected = semio_framework::tool_run::tool_run_action_definitions(&app);
+    let injected = semio_framework_tool_run_actions::tool_run_action_definitions(&app);
     for action in TOOL_RUN_ACTION_IDS {
         assert!(injected.iter().any(|definition| definition.id == action), "{action} is injected");
     }
@@ -281,4 +285,9 @@ fn aborting_a_reorganize_run_leaves_the_document_byte_identical() {
     assert_eq!((after.pack, after.spr), (pack.pack, pack.spr), "abort leaves the document byte-identical");
     assert_eq!(history_len(&mut app), history);
     semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
+}
+
+fn runtime_fixture_text(relative: &str) -> &'static str {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative);
+    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display())).into_boxed_str())
 }

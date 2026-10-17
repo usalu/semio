@@ -1,8 +1,16 @@
-use super::*;
+use crate::editor::gis3d::modes::view::windows::terrain::config::{GisTerrainWindowConfig, GisTerrainWindowConfigMutation};
+use semio_framework_test_fixtures::fixture_text;
+#[allow(unused_imports)]
+use crate::{editor::gis3d::modes::view::windows::terrain::config::GisTerrainWindowConfigDelta, editor::gis3d::modes::view::windows::terrain::config::GisTerrainWindowConfigDiff};
+#[allow(unused_imports)]
+use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
+#[allow(unused_imports)]
+use semio_framework_value_derive::{FromValue, ToValue};
+use crate::editor::gis3d::modes::view::windows::terrain::config::mutations::set_camera::*;
 use protocol::Mutation;
 #[test]
 fn direct_leaf_neutral_schema_codec_and_outcome_laws() {
-    super::super::super::direct_leaf_contracts::assert_leaf_contract::<SetCamera>("camera", include_str!("../../🔣️.json"));
+    crate::editor::gis3d::modes::view::windows::terrain::config::direct_leaf_contracts::assert_leaf_contract::<SetCamera>("camera", fixture_text!("../../../../../✏️editor/🎭️modes/👁️view/🪟️windows/🏔️terrain/🎚️config/🧬️schema/🧬️mutations/🎥️set-camera/🔣️.json"));
 }
 #[test]
 fn sparse_camera_inverse_and_codecs_restore_the_base() {

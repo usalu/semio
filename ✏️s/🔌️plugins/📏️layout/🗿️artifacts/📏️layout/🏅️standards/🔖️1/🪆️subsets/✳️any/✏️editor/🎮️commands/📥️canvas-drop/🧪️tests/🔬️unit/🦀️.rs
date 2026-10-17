@@ -1,4 +1,8 @@
-use super::*;
+#[allow(unused_imports)] use semio_framework_plugin::NoConfig;
+#[allow(unused_imports)] use semio_s_artifact_layout_layout_mutations::LayoutMutation;
+#[allow(unused_imports)] use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+#[allow(unused_imports)] use semio_framework_value_derive::{FromValue, ToValue};
+#[allow(unused_imports)] use semio_s_artifact_layout_layout_editor_commands::canvas_drop::*;
 use semio_framework_plugin::HistoryView;
 
 #[test]
@@ -29,7 +33,7 @@ fn every_placeable_artifact_kind_links_its_native_dialect() {
     let history = HistoryView::empty();
     let doc = ArtifactView::new(&document, &history);
     let cfg = ConfigView { snapshot: &config, window: None };
-    for (kind, _, artifact_kind) in crate::NATIVE_PLACEMENTS {
+    for (kind, _, artifact_kind) in semio_s_artifact_layout_layout_editor_commands::NATIVE_PLACEMENTS {
         let emit = handle(&CanvasDrop { surface_id: Some("layout.play.blueprint".into()), kind: (*kind).into(), x: 0.0, y: 0.0, width: 100.0, height: 100.0, artifact_ref: format!("ref-{kind}"), proxy_data_url: String::new() }, &doc, &cfg).expect(kind);
         let LayoutMutation::CreateLink(created) = &emit.artifact_mutations[0] else { panic!("{kind} link") };
         assert_eq!(created.link.artifact_kind, *artifact_kind, "{kind}");

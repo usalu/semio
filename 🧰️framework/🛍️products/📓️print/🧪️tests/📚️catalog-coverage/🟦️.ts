@@ -11,7 +11,10 @@ import Ajv2020 from "ajv/dist/2020";
 import MarkdownIt from "markdown-it";
 import { getWorkspaceRoot } from "../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { defineTestAdapter } from "@semio-tech/framework/test/adapter";
-import { loadVizCatalog, loadVizSchema, marksItselfGenerated, registeredVizFamilies, vizCoverageReport, vizGeneratedFiles, vizImplementedFamilyKeys, vizApiReferenceFindings } from "../../🔨️modules/📊️visualization-gallery/🟦️.ts";
+import { loadVizCatalog, loadVizSchema, marksItselfGenerated } from "../../🔨️modules/📊️visualization-gallery/🟦️.ts";
+import { vizGeneratedFiles } from "../../🔨️modules/📊️visualization-gallery/🏭️artifact-generation/🟦️.ts";
+import { vizImplementedFamilyKeys } from "../../🔨️modules/📊️visualization-gallery/🔑️implemented-keys/🟦️.ts";
+import { registeredVizFamilies, vizCoverageReport, vizApiReferenceFindings } from "../../🔨️modules/📊️visualization-gallery/🩺️coverage-verification/🟦️.ts";
 import type { LocalizedText } from "../../🧬️schema/🟦️.ts";
 import { vizOptionList } from "../../🧬️schema/🟦️.ts";
 

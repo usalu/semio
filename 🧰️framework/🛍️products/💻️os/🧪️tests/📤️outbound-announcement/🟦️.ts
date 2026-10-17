@@ -3,9 +3,11 @@
  * independent reference of the ledger rule — every gesture starts its own edit, an undo announces one transition and leaves its
  * edit in the ledger — derives every step's expectation: each gesture announces exactly the operations it appended (ticket
  * 26/09/23 C10 09:4x: a re-announced, already accepted operation made the hub refuse the writer's typing). */
+import { loadStoreOutboundAnnouncementFixture } from "../../🔨️modules/🏪️store/🧪️tests/🧫️fixtures/🟦️.ts";
+
 export async function registerOutboundAnnouncementTests(vitest: NonNullable<ImportMeta["vitest"]>): Promise<void> {
   const { describe, it, expect } = vitest;
-  const { default: fixture } = await import("../../🔨️modules/🏪️store/🧪️tests/🧫️fixtures/📤️outbound-announcement/🔣️.json");
+  const fixture = await loadStoreOutboundAnnouncementFixture();
   type Expect = { announcedOperations: number; announcedTransitions: number; edits: number; tailOperations: number; observed: string | null };
   type Edit = { operations: number };
 

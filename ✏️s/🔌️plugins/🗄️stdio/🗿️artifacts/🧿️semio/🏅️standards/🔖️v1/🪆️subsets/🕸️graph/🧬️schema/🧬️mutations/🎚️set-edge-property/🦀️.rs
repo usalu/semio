@@ -2,7 +2,6 @@
 //! twin of `set-node-property` (composed editors keep per-edge fields as keyed graph properties, e.g. trinity jack's
 //! `SET e.k = v`); a key the edge lacks is attached by `add-edge-property` and detached by `remove-edge-property`.
 
-use crate::schema::mutations::SemioGraphMutation;
 use crate::schema::snapshot::{GraphEdgeId, SemioGraphSnapshot};
 use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValue;
 
@@ -17,13 +16,16 @@ pub struct SetEdgeProperty {
     pub value: SemioValue,
 }
 
-impl protocol::MutationKind<SemioGraphSnapshot, SemioGraphMutation> for SetEdgeProperty {
+impl<Op> protocol::MutationKind<SemioGraphSnapshot, Op> for SetEdgeProperty
+where
+    Op: protocol::Mutation<SemioGraphSnapshot, Diff = crate::schema::diff::SemioGraphDiff> + From<SetEdgeProperty>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "edge-property", kind: "set-edge-property", record: "SetEdgeProperty" };
 
-    fn diff(&self, base: &SemioGraphSnapshot) -> protocol::MutationOutcome<<SemioGraphMutation as protocol::Mutation<SemioGraphSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioGraphSnapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<SemioGraphSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &SemioGraphSnapshot) -> Result<Vec<SemioGraphMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &SemioGraphSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         Ok(super::inverse::inverse(self, base))
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {

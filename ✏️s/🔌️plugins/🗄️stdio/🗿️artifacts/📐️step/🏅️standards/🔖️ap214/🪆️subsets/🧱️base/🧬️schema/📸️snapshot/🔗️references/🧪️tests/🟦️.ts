@@ -16,6 +16,5 @@ test("STEP closed internal references preserve forward and cyclic edges while re
  const {validateStepReferences}=await import("../🟦️.ts");
  for(const row of corpus.cases){const entities=row.entities.map((entity:any)=>({...entity,id:BigInt(entity.id),args:entity.args.map(convert),complex:entity.complex.map((part:any)=>({...part,args:part.args.map(convert)}))}));expect(validateStepReferences({entities} as any),row.id).toEqual(row.error);}
  expect(readFileSync(new URL("../../../🔺️diff/🦀️.rs",import.meta.url),"utf8")).toContain("validate_step_references(&next)?");
- console.log("[DEBUG] STEP eight native reference-closure vectors agree with independent SQLite identity/FK constraints");
 });
 function convert(value:any):any{return typeof value!=="object"||value===null?value:"reference" in value?{reference:BigInt(value.reference)}:"aggregate" in value?{aggregate:value.aggregate.map(convert)}:"typedValue" in value?{typedValue:{...value.typedValue,value:convert(value.typedValue.value)}}:value;}

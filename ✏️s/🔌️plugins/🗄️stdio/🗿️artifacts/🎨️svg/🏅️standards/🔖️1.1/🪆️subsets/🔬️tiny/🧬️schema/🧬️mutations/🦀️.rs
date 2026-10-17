@@ -28,34 +28,29 @@ use crate::schema::snapshot::{node_at, NodePath, TransformOp, ViewBox};
 
 
 use crate::SvgSnapshot;
-#[cfg(test)] use protocol::Mutation;
+#[cfg(any(test, feature = "testkit"))] use protocol::Mutation;
 use crate::schema::snapshot::{SvgNode, SvgAttributeValue};
 
 //#region 🔖️Mutations
+pub use semio_s_artifact_stdio_svg_handcrafted_diff_codec_tests::standards::v1_1::subsets::tiny::schema::mutations::support;
+pub use support::{BLOCKED_ATTRS, BLOCKED_ELEMENTS, is_blocked_attribute, is_blocked_element, subtree_profile_violation};
+#[allow(unused_imports)]
+use support::{CODE_REJECTED, local_name};
 #[path = "🧭️edit-rules/🦀️.rs"]
 pub mod edit_rules;
-#[path = "➕insert-tiny-element/🦀️.rs"]
-pub mod insert_tiny_element;
-#[path = "➖remove-element/🦀️.rs"]
-pub mod remove_element;
-#[path = "♻️restore-non-tiny/🦀️.rs"]
-pub mod restore_non_tiny;
+pub use semio_s_artifact_stdio_svg_mut_family::standards::v1_1::subsets::tiny::schema::mutations::insert_tiny_element;
+pub use semio_s_artifact_stdio_svg_mut_family::standards::v1_1::subsets::tiny::schema::mutations::remove_element;
+pub use semio_s_artifact_stdio_svg_mutations::standards::v1_1::subsets::tiny::schema::mutations::restore_non_tiny;
 /// 📐️ Typed content mutation for `stdio.svg` 1.1/🔬️tiny. Nodes are addressed by `NodePath` (a
 /// child-index chain from the root `<svg>` element), exactly as the parent subset's own snapshot
 /// model does — the snapshot type is shared, only the vocabulary is this subset's.
 //#region 🔖️Leaves
-#[path = "✍️set-text/🦀️.rs"]
-pub mod set_text;
-#[path = "🏷️set-tiny-attribute/🦀️.rs"]
-pub mod set_tiny_attribute;
-#[path = "🔄set-transform/🦀️.rs"]
-pub mod set_transform;
-#[path = "🖼️set-view-box/🦀️.rs"]
-pub mod set_view_box;
-#[path = "🪧stamp-base-profile/🦀️.rs"]
-pub mod stamp_base_profile;
-#[path = "🧹strip-non-tiny/🦀️.rs"]
-pub mod strip_non_tiny;
+pub use semio_s_artifact_stdio_svg_handcrafted_diff_codec_tests::standards::v1_1::subsets::tiny::schema::mutations::set_text;
+pub use semio_s_artifact_stdio_svg_mutations::standards::v1_1::subsets::tiny::schema::mutations::set_tiny_attribute;
+pub use semio_s_artifact_stdio_svg_mutations::standards::v1_1::subsets::tiny::schema::mutations::set_transform;
+pub use semio_s_artifact_stdio_svg_mutations::standards::v1_1::subsets::tiny::schema::mutations::set_view_box;
+pub use semio_s_artifact_stdio_svg_mutations::standards::v1_1::subsets::tiny::schema::mutations::stamp_base_profile;
+pub use semio_s_artifact_stdio_svg_mutations::standards::v1_1::subsets::tiny::schema::mutations::strip_non_tiny;
 //#endregion 🔖️Leaves
 
 /// 📐️ Typed mutation for this subset. `NoMutation` was dropped: `#[derive(dsl::Mutations)]` requires
@@ -114,58 +109,13 @@ pub fn kind_of(mutation: &SvgTinyMutation) -> &'static str {
 }
 //#endregion 🔖️Mutations
 
-//#region 🔖️Profile
-/// 🚫 Elements SVG Tiny 1.1 excludes outright; `fe*` filter primitives match by prefix, since Tiny
-/// forbids the whole filter mechanism.
-const BLOCKED_ELEMENTS: &[&str] = &["style", "script", "symbol", "marker", "clipPath", "mask", "pattern", "linearGradient", "radialGradient", "stop", "filter", "cursor", "textPath", "tspan", "tref", "view"];
 
-/// 🚫 Presentation attributes SVG Tiny 1.1 forbids on ANY element.
-const BLOCKED_ATTRS: &[&str] = &["style", "opacity", "fill-opacity", "stroke-opacity", "clip-path", "mask", "filter"];
-
-const CODE_REJECTED: &str = "mutation.target-mismatch";
-
-fn local_name(name: &str) -> &str {
-    name.rsplit(':').next().unwrap_or(name)
-}
-
-/// 🚫 `true` for an element SVG Tiny 1.1 does not retain.
-pub fn is_blocked_element(name: &str) -> bool {
-    let ln = local_name(name);
-    BLOCKED_ELEMENTS.contains(&ln) || ln.starts_with("fe")
-}
-
-/// 🚫 `true` for a presentation attribute SVG Tiny 1.1 forbids everywhere.
-pub fn is_blocked_attribute(name: &str) -> bool {
-    BLOCKED_ATTRS.contains(&local_name(name))
-}
-
-/// 🛡️ The gate every authoring mutation passes through: the message naming the first excluded
-/// element or attribute in the subtree, or `None` when the subtree is Tiny-clean.
-pub fn subtree_profile_violation(node: &SvgNode) -> Option<String> {
-    match node {
-        SvgNode::Element { name, attrs, children } => {
-            if is_blocked_element(name) {
-                return Some(format!("element <{name}> is outside SVG Tiny 1.1's vocabulary -- REC-SVGMobile-20030114 excludes it"));
-            }
-            if let Some(attr) = attrs.iter().find(|a| is_blocked_attribute(&a.name)) {
-                return Some(format!("attribute '{}' on <{name}> is forbidden anywhere in SVG Tiny 1.1", attr.name));
-            }
-            children.iter().find_map(subtree_profile_violation)
-        }
-        _ => None,
-    }
-}
-
-//#endregion 🔖️Profile
-
-//#region 🔖️AttributeHelper
-//#endregion 🔖️AttributeHelper
 
 
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`: the diff is the single semantics source, never a separate
 /// imperative apply path.
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 pub fn apply_svg_tiny_mutation(snapshot: &mut SvgSnapshot, mutation: &SvgTinyMutation) -> protocol::MutationOutcome<SvgDiff> {
     let outcome = Mutation::diff(mutation, snapshot);
     match protocol::apply_diff(outcome.diff(), snapshot) {
@@ -180,6 +130,4 @@ pub fn apply_svg_tiny_mutation(snapshot: &mut SvgSnapshot, mutation: &SvgTinyMut
 //#endregion 🔖️Apply
 
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

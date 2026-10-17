@@ -12,7 +12,6 @@ fn original_host_program_fault_retains_exact_typed_frame_cause_without_heap() {
     assert_eq!((failure.text.len(), failure.text.capacity()), (0, 0));
     let semio_framework_actor::pack::PackError::InvalidRetainedTurn(original) = failure.frame.unwrap() else { unreachable!() };
     assert_eq!(original.as_ptr(), cause.as_ptr());
-    eprintln!("[DEBUG] Actual renderer ProgramFault response retains exact original typed PackError/static cause pointer heap0 with no String error adapter; physical frame publication accounting remains separate");
 }
 
 #[test]
@@ -45,5 +44,4 @@ fn original_host_program_fault_resource_override_and_single_wire_preserve_origin
     assert_eq!(budget.retained, input);
     assert_eq!(ShardResourceBudget::from_original(&budget), resources);
     assert_eq!(position, bytes.len());
-    eprintln!("[DEBUG] Actual borrowed Host grant resource-only override preserves original71/3/19 pointer and all5axes; one108byte wire equals independent neutral Python struct/Node Buffer golden encode/decode heap0 on supplied backing");
 }

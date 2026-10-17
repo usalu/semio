@@ -1,5 +1,6 @@
+use crate::standards::v1_7::subsets::ua::schema::mutations::embed_font_file::EmbedFontFile;
 
-use super::*;
+use crate::standards::v1_7::subsets::ua::io::text::mutations::embed_font_file::*;
 
 #[test]
 fn owned_payload_round_trips() {

@@ -1,4 +1,5 @@
-use crate::text::snapshot::*;
+use crate::snapshot::*;
+use semio_framework_test_fixtures::manifest_dir;
 
 #[semio_framework_async_macros::async_test]
 async fn document_dsl_round_trips_the_reference_fixture() {
@@ -16,9 +17,9 @@ async fn regenerate_example_dsl_assets_when_env_set() {
     if std::env::var_os("SEMIO_VDI_REGEN").is_none() {
         return;
     }
-    use crate::text::snapshot::encode_vdi3805_dsl;
+    use crate::snapshot::encode_vdi3805_dsl;
     use crate::{conforming_valve_dataset, nonconforming_valve_dataset};
-    let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    let root = manifest_dir!();
     let assets = root.join("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🖼️assets");
     let demo = assets.join("🎬️demo/🗣️.dsl.semio");
     let non = assets.join("🌶️nonconforming/🗣️.dsl.semio");
@@ -45,7 +46,7 @@ async fn regenerate_mutation_fixtures_when_env_set() {
     }
     use crate::{Vdi3805Diff, Vdi3805Mutation, Vdi3805Snapshot};
     use protocol::Mutation;
-    let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    let root = manifest_dir!();
     let fixtures = root.join("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🧬️mutations");
     let mut regenerated = 0usize;
     for kind_dir in std::fs::read_dir(&fixtures).expect("mutations fixtures") {

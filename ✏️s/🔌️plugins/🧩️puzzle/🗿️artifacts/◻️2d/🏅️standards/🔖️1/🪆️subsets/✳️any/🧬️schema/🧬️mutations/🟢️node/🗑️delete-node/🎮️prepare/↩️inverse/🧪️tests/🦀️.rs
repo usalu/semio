@@ -1,9 +1,26 @@
 //! 🧪️ Native cascade inverse heap, exact semantics, cancellation, and source authority laws.
 
-use super::*;
+use crate::standards::v1::subsets::any::schema::mutations::DeleteNode;
+use crate::standards::v1::subsets::any::schema::{records::Puzzle2dNode, records::Puzzle2dEdge, mutations::Puzzle2dMutation};
+use semio_framework_value::{ValueError, list::PagedList, paged::PagedUtf8, retirement::controlled::ControlledRetirement, retained_clone::RetainedClone, retained_clone::RetainedCloneGrant, retained_clone::RetainedCloneStep};
+use std::mem::size_of;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::preparation::native_preparation_child::Puzzle2dCloseAxis;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::preparation::delete_node_preparation::{Puzzle2dDeleteNodePreparationCursor, Puzzle2dDeleteNodePreparationStep};
+#[allow(unused_imports)]
+use crate::{Puzzle2dSnapshot, standards::v1::subsets::any::schema::mutations::create_node::CreateNode, standards::v1::subsets::any::schema::mutations::connect_handles::ConnectHandles, standards::v1::subsets::any::schema::mutations::change_edge_visible::ChangeEdgeVisible, standards::v1::subsets::any::schema::mutations::change_edge_locked::ChangeEdgeLocked};
+#[allow(unused_imports)]
+use semio_framework_value::{ValueRefusalKind, retained_clone::RetainedCloneBinding, retained_clone::RetainedFieldCursor, retained_clone::RetainedCloneCursor, retained_clone::RetainedCloneRef, retained_clone::RetainedCloneProgress};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::preparation::native_preparation_child::Puzzle2dPreparationChild;
+#[allow(unused_imports)]
+use std::{mem::ManuallyDrop, ops::Deref, ops::DerefMut};
+use crate::standards::v1::subsets::any::schema::preparation::delete_node_preparation::inverse::*;
 use crate::standards::v1::subsets::any::schema::mutations::apply_puzzle2d_mutation;
-use crate::test_source_custody;
+use crate::standards::v1::subsets::any::schema::testkit as test_source_custody;
 use crate::standards::v1::subsets::any::schema::{empty_puzzle2d_snapshot,mutations::{delete_node,inverse_puzzle2d_mutation}};
+use semio_framework_test_fixtures::fixture_text;
 
 fn grant(turn:usize)->RetainedCloneGrant {match turn % 3 { 0 => RetainedCloneGrant::one_capacity_turn(4096,64), 1 => RetainedCloneGrant::one_payload_turn(4096,64), _ => RetainedCloneGrant::one_release_turn(4096,64) }}
 fn observed(grant:RetainedCloneGrant,action:impl FnOnce()->Result<RetainedCloneStep,ValueError>)->RetainedCloneStep {
@@ -37,14 +54,14 @@ fn retire(inverse:PagedList<Puzzle2dMutation,{usize::MAX}>) {
 fn history_edit_puzzle2d_owned_delete_inverse_preserves_exact_cascade_and_granted_cancellation() {
     assert!(size_of::<Puzzle2dDeleteNodeInverseCursor>()<=4096);
     assert!(size_of::<<Puzzle2dEdge as RetainedClone>::Cursor>()<=4096);
-    let corpus:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗑️delete-node/🎮️prepare/🔣️.json")).unwrap();
+    let corpus:serde_json::Value=serde_json::from_str(fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗑️delete-node/🎮️prepare/🔣️.json")).unwrap();
     let text=|value:&serde_json::Value|{let value=value.as_str().unwrap();match value.strip_prefix("$large:"){Some(suffix)=>PagedUtf8::<{usize::MAX}>::from(format!("{}{suffix}",corpus["control"]["largePrefix"].as_str().unwrap().repeat(corpus["control"]["largeRepeats"].as_u64().unwrap() as usize))),None=>value.into()}};
     let mut source=test_source_custody::admit();
     let mut mutation=test_source_custody::admit();
     for case in corpus["cases"].as_array().unwrap() {
         let mut base=empty_puzzle2d_snapshot();
         for (index,node) in case["nodes"].as_array().unwrap().iter().enumerate() {
-            base.nodes.push(Puzzle2dNode {id:text(&node["id"]),node_kind:Some("kind".into()),shape:Some("rectangle".into()),x:index as f64,y:-(index as f64),width:Some(5.0),height:Some(7.0),text:Some("😀\u{0}".repeat(1300).into()),handles:node["handles"].as_array().unwrap().iter().map(|id|crate::standards::v1::subsets::any::schema::Puzzle2dHandle {id:text(id),handle_kind:Some("literal".into()),angle:3.0,color:Some("😀\u{0}é".into()),visible:Some(false),locked:Some(true),..Default::default()}).collect(),..Default::default()});
+            base.nodes.push(Puzzle2dNode {id:text(&node["id"]),node_kind:Some("kind".into()),shape:Some("rectangle".into()),x:index as f64,y:-(index as f64),width:Some(5.0),height:Some(7.0),text:Some("😀\u{0}".repeat(1300).into()),handles:node["handles"].as_array().unwrap().iter().map(|id|crate::standards::v1::subsets::any::schema::records::Puzzle2dHandle {id:text(id),handle_kind:Some("literal".into()),angle:3.0,color:Some("😀\u{0}é".into()),visible:Some(false),locked:Some(true),..Default::default()}).collect(),..Default::default()});
         }
         for (index,edge) in case["edges"].as_array().unwrap().iter().enumerate() {
             base.edges.push(Puzzle2dEdge {id:text(&edge["id"]),source:text(&edge["source"]),target:text(&edge["target"]),edge_kind:Some("".into()),gap:-3.0,shift:2.0,rise:1.0,rotation:4.0,turn:5.0,tilt:-6.0,x:7.0,y:-8.0,source_tip:Some("".into()),target_tip:Some("é".into()),visible:if index%3==0{Some(false)}else if index%3==1{Some(true)}else{None},locked:if index%3==0{Some(true)}else if index%3==1{Some(false)}else{None}});
@@ -78,7 +95,6 @@ fn history_edit_puzzle2d_owned_delete_inverse_preserves_exact_cascade_and_grante
         let mut swapped=Puzzle2dDeleteNodeInverseCursor::default();observed(grant(0),||swapped.advance(source.borrow(&base),mutation.borrow(&payload),grant(0)));
         let other=payload.clone();assert!(swapped.advance(source.borrow(&base),mutation.borrow(&other),grant(1)).is_err());close(&mut swapped);
         assert_eq!(serde_json::to_value(&base).unwrap(),original);assert_eq!(serde_json::to_value(&payload).unwrap(),original_payload);
-        eprintln!("[DEBUG] Puzzle2d DeleteNode inverse {} preserves literal native Node/Edge records, original ordinals and optional flags with zero-heap constructor and admitted close/cancellation",case["id"].as_str().unwrap());
     }
     test_source_custody::close(&mut source);test_source_custody::close(&mut mutation);
 }

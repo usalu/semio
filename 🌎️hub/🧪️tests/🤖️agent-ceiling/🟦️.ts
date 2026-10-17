@@ -14,9 +14,9 @@ import { directoryCommandRequestJson, sealDirectoryCommandRequestV1 } from "@sem
  * Acceptance ledger 2.13 / outcome 2 security (P0 of 2026-09-27: a `read` delegation's agent edited a hub note).
  */
 import { randomBytes } from "node:crypto";
-import { hubProbeCall, hubProbeCreateArtifact, hubProbeCreateSpace, hubProbeCreationCatalog, hubProbeOpenPlan, hubProbeSignIn } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧪️testkit/📡️client-probe/🟦️.ts";
-import { decodeServerFrame, encodeClientFrame } from "../../../🧰️framework/🔨️modules/📡️replication/🟦️.ts";
-import { parseDocumentSocketGrantReceiptV1 } from "../../../🧰️framework/🛍️products/💻️os/🟦️.ts";
+import { hubProbeCall, hubProbeCreateArtifact, hubProbeCreateSpace, hubProbeCreationCatalog, hubProbeOpenPlan, hubProbeSignIn } from "@semio-tech/framework-os/modules/directory/testkit/client-probe";
+import { decodeServerFrame, encodeClientFrame } from "@semio-tech/framework-replication";
+import { parseDocumentSocketGrantReceiptV1 } from "@semio-tech/framework-os";
 import { type DirectoryCommand } from "@semio-tech/framework/directory/schema";
 
 /** 🧾️ One observed boundary: what the hub answered and whether that is what the ceiling demands. */

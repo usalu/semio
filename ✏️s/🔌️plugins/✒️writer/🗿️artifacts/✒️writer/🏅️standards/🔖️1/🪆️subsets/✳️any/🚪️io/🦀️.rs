@@ -21,7 +21,7 @@ pub fn io() -> IoDeclaration {
     }
 }
 
-fn entries() -> &'static [IoEntry] {
+pub fn entries() -> &'static [IoEntry] {
     use crate::standards::v1::subsets::any::io::export::serializers::artifacts as export;
     use crate::standards::v1::subsets::any::io::import::deserializers::artifacts as import;
     static ENTRIES: std::sync::OnceLock<Vec<IoEntry>> = std::sync::OnceLock::new();
@@ -56,5 +56,4 @@ pub mod binary;
 #[path = "📝️text/🦀️.rs"]
 pub mod text;
 
-#[path = "🪶️sqlite/🦀️.rs"]
-pub mod sqlite;
+

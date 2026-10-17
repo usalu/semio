@@ -39,6 +39,5 @@ for (const row of examples.cases) test(row.id, () => {
     expect(discoverCaseDirs(root)).toEqual(oracle);
     const unknown = actual.flatMap(entry => validateCaseContract(root, entry, registry).filter(finding => finding.id === "unknown-case-child").map(finding => finding.scope)).sort();
     expect(unknown).toEqual([...row.unknown].sort());
-    console.log("[DEBUG] opaque fixture discovery " + JSON.stringify({ id: row.id, actual: actual.map(row => row.caseDir), oracle, unknown }));
   } finally { rmSync(root, { recursive: true, force: true }); }
 });

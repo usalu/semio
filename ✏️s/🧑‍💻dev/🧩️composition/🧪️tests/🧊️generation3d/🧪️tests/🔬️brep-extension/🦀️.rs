@@ -69,7 +69,6 @@ pub fn serve(pending: &PendingExtensionInvocation) -> Result<Vec<u8>, Fault> {
             let request = semio_framework_plugin::ArtifactInferenceExecutionRequest { policy: &[], budgets: &budget, cancellation_id, previous_state: None, requested_cache_mode: semio_framework_plugin::WireArtifactInferenceCacheMode::Incremental, canonical_payload: pending.request_json.as_bytes(), dependencies: &[] };
             let execution = with_geometry_context(|owner| service.infer_with_context(&request, owner));
             let execution = execution.map_err(|error| bad_request("evaluate", error.message))?;
-            eprintln!("[DEBUG] packaged geometry inference {} complete={}", payload.operator_id, execution.complete);
             Ok(execution.canonical_payload)
         }
         (MATH_EXTENSION_PLUGIN_ID, "evaluate") => {

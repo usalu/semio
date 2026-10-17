@@ -4,28 +4,17 @@
 use crate::standards::v1_7::subsets::base::schema::{diff::PdfDiff, snapshot::PdfSnapshot};
 
 //#region 🔖️Leaves
-#[path = "🔤️embed-font-file/🦀️.rs"]
-pub mod embed_font_file;
-#[path = "🚫️remove-display-doc-title/🦀️.rs"]
-pub mod remove_display_doc_title;
-#[path = "🧺️remove-font-file/🦀️.rs"]
-pub mod remove_font_file;
-#[path = "🤐️remove-lang/🦀️.rs"]
-pub mod remove_lang;
-#[path = "🗑️remove-mark-info/🦀️.rs"]
-pub mod remove_mark_info;
-#[path = "🪓️remove-struct-tree-root/🦀️.rs"]
-pub mod remove_struct_tree_root;
-#[path = "🪧️set-display-doc-title/🦀️.rs"]
-pub mod set_display_doc_title;
-#[path = "📰️set-info-title/🦀️.rs"]
-pub mod set_info_title;
-#[path = "🗣️set-lang/🦀️.rs"]
-pub mod set_lang;
-#[path = "✅️set-mark-info/🦀️.rs"]
-pub mod set_mark_info;
-#[path = "🌲️set-struct-tree-root/🦀️.rs"]
-pub mod set_struct_tree_root;
+pub use semio_s_artifact_stdio_pdf_mut_family_4::standards::v1_7::subsets::ua::schema::mutations::embed_font_file;
+pub use semio_s_artifact_stdio_pdf_mut_family_4::standards::v1_7::subsets::ua::schema::mutations::remove_display_doc_title;
+pub use semio_s_artifact_stdio_pdf_mut_family_4::standards::v1_7::subsets::ua::schema::mutations::remove_font_file;
+pub use semio_s_artifact_stdio_pdf_mut_family_4::standards::v1_7::subsets::ua::schema::mutations::remove_lang;
+pub use semio_s_artifact_stdio_pdf_mut_family_4::standards::v1_7::subsets::ua::schema::mutations::remove_mark_info;
+pub use semio_s_artifact_stdio_pdf_mut_family_4::standards::v1_7::subsets::ua::schema::mutations::remove_struct_tree_root;
+pub use semio_s_artifact_stdio_pdf_mut_family_4::standards::v1_7::subsets::ua::schema::mutations::set_display_doc_title;
+pub use semio_s_artifact_stdio_pdf_mut_family::standards::v1_7::subsets::ua::schema::mutations::set_info_title;
+pub use semio_s_artifact_stdio_pdf_mut_family_4::standards::v1_7::subsets::ua::schema::mutations::set_lang;
+pub use semio_s_artifact_stdio_pdf_mut_family_4::standards::v1_7::subsets::ua::schema::mutations::set_mark_info;
+pub use semio_s_artifact_stdio_pdf_mut_family_4::standards::v1_7::subsets::ua::schema::mutations::set_struct_tree_root;
 
 pub use embed_font_file::EmbedFontFile;
 pub use remove_display_doc_title::RemoveDisplayDocTitle;
@@ -74,7 +63,5 @@ pub fn pdf_ua_mutation_kinds() -> &'static [protocol::SemanticDescriptor] {
 //#endregion 🔖️Delegation
 
 //#region 🧪️CatalogParity
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️CatalogParity

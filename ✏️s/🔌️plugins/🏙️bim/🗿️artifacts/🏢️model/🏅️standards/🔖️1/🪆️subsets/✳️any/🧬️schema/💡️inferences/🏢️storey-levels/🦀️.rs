@@ -96,14 +96,6 @@ pub fn target_of<'a>(top: &TopConstraint, levels: &'a BTreeMap<String, StoreyLev
 }
 //#endregion 🔖️Vertical
 
-//#region 🔖️Projection
-/// 🪜️ The levels of every storey (the `Storey` nodes of the model graph).
-#[cfg(test)]
-pub fn compute_storey_levels(snapshot: &ModelSnapshot) -> BTreeMap<String, StoreyLevel> {
-    std::mem::take(&mut super::super::model_graph::infer_selected::<{ super::super::model_graph::kinds::LEVELS }>(snapshot).storey_levels)
-}
-//#endregion 🔖️Projection
-
 /// ⚖️ The differences between a committed third-party oracle table and a produced one: numbers within `1e-9` (relative above 1), arrays in order, objects by member, everything else equal.
 #[cfg(test)]
 pub fn table_problems(expected: &str, actual: &str) -> Vec<String> {

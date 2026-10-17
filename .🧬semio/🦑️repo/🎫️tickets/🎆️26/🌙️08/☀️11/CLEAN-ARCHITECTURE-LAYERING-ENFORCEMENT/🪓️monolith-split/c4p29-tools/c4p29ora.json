@@ -1,0 +1,7 @@
+{
+ "name": "c4p29ora",
+ "crates": [
+  "semio-s-artifact-stdio-docx-test-oracle"
+ ],
+ "note": "CENSUS4-PKG-29: docx test oracle crate alone (lib and test cfg)"
+}

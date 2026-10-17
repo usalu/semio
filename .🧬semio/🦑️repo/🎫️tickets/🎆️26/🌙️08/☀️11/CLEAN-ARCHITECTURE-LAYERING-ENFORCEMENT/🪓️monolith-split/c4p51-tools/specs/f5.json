@@ -1,0 +1,46 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/❓️quiz/🧪️tests/🧾️learner-lifecycle/🐍️.py",
+ "snapshot": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/🗑️generated/c4p51-snap/f5.py",
+ "alias": "semio_quiz_lifecycle_",
+ "children": [
+  {
+   "key": "sheet",
+   "dir": "🧗️challenge-and-sheet",
+   "doc": "Randomness, the challenge ladder with its hints and clock, and the sheet of a run.",
+   "regions": [
+    "🔖️Randomness",
+    "🔖️Challenge",
+    "🔖️Sheet"
+   ]
+  },
+  {
+   "key": "scoring",
+   "dir": "✅️answers-and-scoring",
+   "doc": "The answer rules, the scoring of a run and the badges it earns.",
+   "regions": [
+    "🔖️Answers",
+    "🔖️Scoring",
+    "🔖️Badges"
+   ]
+  },
+  {
+   "key": "learner",
+   "dir": "📇️handles-and-learner",
+   "doc": "The handle decider, the learner decider with its folding evolve, and the learner and run views.",
+   "regions": [
+    "🔖️Handles",
+    "🔖️Learner",
+    "🔖️Views"
+   ]
+  },
+  {
+   "key": "site",
+   "dir": "🎞️replay-and-site",
+   "doc": "The replay of committed sequences and the play of the site catalog.",
+   "regions": [
+    "🔖️Replay",
+    "🔖️Site"
+   ]
+  }
+ ]
+}

@@ -1,7 +1,39 @@
-use super::*;
+use semio_framework_test_fixtures::fixture_text;
+
+#[allow(unused_imports)]
+use crate::editor::note::terminology::NotePlayLabels;
+#[allow(unused_imports)]
+use crate::editor::note::support::ui_label;
+#[allow(unused_imports)]
+use crate::schema::flatten_blocks;
+#[allow(unused_imports)]
+use crate::NoteSnapshot;
+#[allow(unused_imports)]
+use semio_framework_plugin::tree_item_desc;
+#[allow(unused_imports)]
+use semio_framework_plugin::ui_node_list;
+#[allow(unused_imports)]
+use semio_framework_plugin::BuiltNode;
+#[allow(unused_imports)]
+use semio_framework_ui_locale::LocalizedLabel;
+#[allow(unused_imports)]
+use semio_framework_plugin::PanelGroup;
+#[allow(unused_imports)]
+use semio_framework_plugin::PanelTabDefinition;
+#[allow(unused_imports)]
+use semio_framework_plugin::PanelTabKind;
+#[allow(unused_imports)]
+use semio_framework_plugin::PanelTreeBuilder;
+#[allow(unused_imports)]
+use semio_framework_plugin::UiAssemblyResult;
+#[allow(unused_imports)]
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_ID;
+#[allow(unused_imports)]
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_LABEL;
+use crate::editor::note::panels::inspection::*;
 #[test]
 fn note_semantic_panels_match_the_json_oracle() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️summary.json")).expect("neutral UI vectors");
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🧪️tests/🧫️fixtures/🔣️summary.json")).expect("neutral UI vectors");
     let mut snapshot = crate::standards::v1::subsets::any::io::text::snapshot::empty_note_snapshot();
     snapshot.snap_enabled = Some(false);
     for row in fixture["cases"].as_array().expect("locale cases") {
@@ -38,7 +70,7 @@ fn note_semantic_panels_match_the_json_oracle() {
 
 #[test]
 fn note_ink_canvas_payload_matches_the_json_oracle() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️summary.json")).expect("neutral canvas vectors");
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🧪️tests/🧫️fixtures/🔣️summary.json")).expect("neutral canvas vectors");
     let snapshot = crate::standards::v1::subsets::any::io::text::snapshot::empty_note_snapshot();
     let camera = serde_json::from_value(fixture["camera"].clone()).expect("camera oracle");
     for mode in ["composite", "navigator"] {

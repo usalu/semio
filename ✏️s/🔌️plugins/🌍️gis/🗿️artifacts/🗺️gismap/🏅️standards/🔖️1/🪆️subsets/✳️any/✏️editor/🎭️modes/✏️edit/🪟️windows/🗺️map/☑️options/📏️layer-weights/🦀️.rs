@@ -4,7 +4,7 @@
 //! reused verbatim by the inspector panel's matching slider fields.
 
 use crate::editor::gis2d::modes::edit::windows::map::config::MapWindowConfig;
-use crate::editor::gis2d::gis2d_window_action;
+use crate::editor::gis2d::constants_and_io::gis2d_window_action;
 use crate::editor::gis2d::terminology::{gis2d_layer_label, Gis2dPlayLabels};
 use semio_framework_plugin::WindowMeasure;
 use crate::tile_coordinates::gis_policy::gis_map_layer_weight_slider_ids_json;
@@ -64,7 +64,4 @@ pub fn measure(cfg: &MapWindowConfig, labels: &Gis2dPlayLabels) -> WindowMeasure
 //#endregion 🔖️Option
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

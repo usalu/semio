@@ -133,7 +133,6 @@ fn cancelled_clipboard_outcome_preserves_original_input_until_descriptor_ack_and
     assert_eq!(closed.progress(), RetainedCloneProgress { copied_items: 1, released_bytes: capacity, ..Default::default() });
     assert!(job.terminal_is_empty());
     while !owner.terminal_is_empty() { assert!(owner.close_step(supplied).progress().fits(supplied)); }
-    eprintln!("[DEBUG] clipboard cancelled descriptor original input pointer/capacity preserved; denied outcome0heap, borrowed admission0heap, original ACK and exact native release funded separately");
 }
 
 #[test]
@@ -155,7 +154,6 @@ fn cancelled_clipboard_driver_binds_the_original_producer_witness(){
     assert_eq!(descriptor.acknowledge(grant).progress().copied_items,1);drop(descriptor);
     job.begin_close();let closed=job.close_step(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:0,maximum_capacity_bytes:0,maximum_release_bytes:capacity,maximum_depth:1});assert_eq!(closed.progress(),RetainedCloneProgress{copied_items:1,released_bytes:capacity,..Default::default()});assert!(job.terminal_is_empty());
     while !owner.terminal_is_empty(){assert!(owner.close_step(grant).progress().fits(grant))}
-    eprintln!("[DEBUG] actual clipboard drive_step original cancelled producer witness borrowed until funded ACK and physical input close");
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -220,5 +218,4 @@ use semio_framework_job_worker::{WorkerJobSession};use semio_framework_job_worke
     let Some(ClipboardIoOperation::Write(text))=cancelled_job.as_ref().unwrap().operation.as_ref()else{panic!("original precancelled input")};assert_eq!(text.as_ptr(),cancelled_pointer);assert_eq!(text.capacity(),capacity);assert_eq!(text,&oracle);assert!(cancelled_params.is_some());
     let mut cancelled_job=cancelled_job.take().unwrap();cancelled_job.begin_close();assert_eq!(cancelled_job.close_step(supplied).progress(),RetainedCloneProgress{copied_items:1,released_bytes:capacity,..Default::default()});assert!(cancelled_job.terminal_is_empty());
     while !owner.terminal_is_empty(){assert!(owner.close_step(supplied).progress().fits(supplied))}
-    eprintln!("[DEBUG] original clipboard session source/params pointer preserved by prebirth denial; admission uses caller context, ignores config policy, returns exact native heap receipt before exposing session");
 }

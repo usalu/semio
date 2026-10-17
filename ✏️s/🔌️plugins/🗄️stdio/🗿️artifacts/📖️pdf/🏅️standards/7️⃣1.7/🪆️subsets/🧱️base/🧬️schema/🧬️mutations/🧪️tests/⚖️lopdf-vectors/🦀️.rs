@@ -12,7 +12,18 @@
 //!
 //! @see ../../../../🏭️generator/🔁️codec/🦀️.rs
 
-use super::*;
+use crate::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot;
+#[allow(unused_imports)]
+use crate::standards::v1_7::subsets::base::schema::diff::PdfDiff;
+#[allow(unused_imports)]
+use crate::standards::v1_7::subsets::base::schema::snapshot::{ObjRef, PdfPage};
+#[allow(unused_imports)]
+use semio_framework_value::{DslValue, FromValue, ToValue};
+#[allow(unused_imports)]
+use semio_framework_plugin::{Fault, FaultCode, FaultOrigin};
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_contract::editing::{EditRules, EntityRule, InsertRule, RemoveRule, Selector, SnapshotEditEvent};
+use crate::standards::v1_7::subsets::base::schema::mutations::*;
 use crate::standards::v1_7::subsets::base::io::import::decode_pdf;
 use crate::standards::v1_7::subsets::base::io::export::encode_pdf;
 use crate::standards::v1_7::subsets::base::schema::diff::PdfPageBox;
@@ -29,7 +40,7 @@ fn lanes(snapshot: &PdfSnapshot) -> PdfSnapshot {
 }
 
 fn applied(base: &PdfSnapshot, mutation: &PdfMutation) -> PdfSnapshot {
-    crate::standards::v1_7::subsets::base::io::mutation_bridge::applied(base, mutation)
+    crate::standards::v1_7::subsets::base::schema::testkit::applied(base, mutation)
 }
 
 /// 💾️ Writes the snapshot with this subset's writer and reads the bytes back.
@@ -93,7 +104,7 @@ fn content_edit(before: &PdfSnapshot, after: &PdfSnapshot) -> (usize, usize, Vec
 }
 
 /// 🗂️ The committed lopdf pairs, read when a test runs so the binary vectors stay out of the compiled source closure.
-const LOPDF_FIXTURES: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures");
+const LOPDF_FIXTURES: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../🧪️tests/🧫️fixtures");
 
 /// 📥️ One committed fixture file below [`LOPDF_FIXTURES`], addressed as `<kind directory>/<file name>`.
 fn fixture(relative: &str) -> Vec<u8> {

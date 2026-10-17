@@ -4,7 +4,7 @@ use crate::standards::v1::subsets::any::schema::mutations::disconnect_kind_compa
 use semio_framework_value::paged::PagedUtf8;
 
 use crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff;
-use {crate::standards::v1::subsets::any::schema::Puzzle2dCompatSpecificity, crate::Puzzle2dSnapshot};
+use {crate::standards::v1::subsets::any::schema::records::Puzzle2dCompatSpecificity, crate::Puzzle2dSnapshot};
 
 //#region 🔖️Mutation
 /// 🤝 `connect-kind-compatibility` payload. A duplicate `(source, target)` pair is a no-op.

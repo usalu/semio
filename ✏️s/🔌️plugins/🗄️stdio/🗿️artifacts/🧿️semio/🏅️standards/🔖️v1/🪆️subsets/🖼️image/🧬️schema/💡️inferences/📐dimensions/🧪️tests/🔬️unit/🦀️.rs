@@ -1,4 +1,5 @@
-use super::*;
+use crate::{schema::snapshot::SemioColorspace, schema::snapshot::SemioImageSnapshot};
+use crate::schema::inferences::dimensions::*;
 use crate::schema::snapshot::{SemioImageFrame, STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA};
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9

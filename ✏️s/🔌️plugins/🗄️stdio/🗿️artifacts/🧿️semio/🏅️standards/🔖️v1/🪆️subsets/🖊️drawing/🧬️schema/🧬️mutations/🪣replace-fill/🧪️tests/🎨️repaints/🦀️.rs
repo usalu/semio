@@ -10,21 +10,22 @@ use crate::schema::diff::SemioDrawingDiff;
 use crate::schema::mutations::SemioDrawingMutation;
 use crate::schema::snapshot::SemioDrawingSnapshot;
 use protocol::Mutation;
+use semio_framework_test_fixtures::fixture_text;
 
-const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🪣replace-fill/🎨️repaints/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🪣replace-fill/🎨️repaints/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🪣replace-fill/🎨️repaints/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🪣replace-fill/🎨️repaints/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🪣replace-fill/🎨️repaints/🎯️outcome/🔣️.json");
+static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🪣replace-fill/🎨️repaints/📸️snapshot/⬅️before/🔣️.json"));
+static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🪣replace-fill/🎨️repaints/📸️snapshot/➡️after/🔣️.json"));
+static MUTATION: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🪣replace-fill/🎨️repaints/🦠️mutation/🔣️.json"));
+static DIFF: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🪣replace-fill/🎨️repaints/🔺️diff/🔣️.json"));
+static OUTCOME: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🪣replace-fill/🎨️repaints/🎯️outcome/🔣️.json"));
 
 fn before() -> SemioDrawingSnapshot {
-    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("replace-fill before snapshot decodes")
+    semio_framework_pack_json::from_json_str((*BEFORE), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("replace-fill before snapshot decodes")
 }
 fn expected_after() -> SemioDrawingSnapshot {
-    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("replace-fill after snapshot decodes")
+    semio_framework_pack_json::from_json_str((*AFTER), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("replace-fill after snapshot decodes")
 }
 fn mutation() -> SemioDrawingMutation {
-    semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("replace-fill mutation decodes")
+    semio_framework_pack_json::from_json_str((*MUTATION), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("replace-fill mutation decodes")
 }
 
 /// ▶️ Only the fill changes; stroke, width, opacity and every node stay put.
@@ -60,21 +61,21 @@ async fn the_undo_replace_fill_restores_the_red() {
 /// 🔣️ Snapshots and the payload are canonical — `DrawStyle` spells its width `strokeWidth` (camelCase) while the payload key stays `new_fill`, and an absent style field is an OMITTED key, never a null.
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
-    for (label, text) in [("before", BEFORE), ("after", AFTER)] {
+    for (label, text) in [("before", (*BEFORE)), ("after", (*AFTER))] {
         let decoded: SemioDrawingSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
         let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "replace-fill/repaints-the-primary-styles-fill-from-red-to-blue: committed {label} JSON is not canonical");
     }
     let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&(mutation()))).expect("replace-fill mutation encodes");
-    let original: serde_json::Value = serde_json::from_str(MUTATION).expect("replace-fill mutation reparses");
+    let original: serde_json::Value = serde_json::from_str((*MUTATION)).expect("replace-fill mutation reparses");
     assert_eq!(reencoded, original, "replace-fill/repaints-the-primary-styles-fill-from-red-to-blue: committed mutation JSON is not canonical");
 }
 
 /// 🎯️ Declared `applied`: the style exists, every channel is finite and the colour genuinely differs, so none of the three guards may fire
 #[semio_framework_async_macros::async_test]
 async fn declared_outcome_holds_as_committed() {
-    let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
+    let outcome: serde_json::Value = serde_json::from_str((*OUTCOME)).expect("outcome decodes");
     assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("applied"), "replace-fill/repaints-the-primary-styles-fill-from-red-to-blue: this case is declared applied");
     let produced = mutation().diff(&before());
     assert!(produced.messages().is_empty(), "repainting a fill to a finite, genuinely different colour must raise no diagnostics");
@@ -86,7 +87,7 @@ async fn produces_committed_diff() {
     let base = before();
     let outcome = <SemioDrawingMutation as Mutation<SemioDrawingSnapshot>>::diff(&mutation(), &base);
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
-    let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
+    let committed: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff decodes");
     assert_eq!(produced, committed, "replace-fill/repaints-the-primary-styles-fill-from-red-to-blue: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
 
@@ -94,7 +95,7 @@ async fn produces_committed_diff() {
 /// this subset ever writes — stays absent from it.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical_and_narrowly_scoped() {
-    let decoded: SemioDrawingDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed replace-fill diff decodes");
+    let decoded: SemioDrawingDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed replace-fill diff decodes");
     assert!(decoded.canvas.is_none(), "no drawing mutation writes the canvas slot");
     let styles = decoded.styles.as_ref().expect("the styles triple must be present");
     assert!(styles.removed.is_empty() && styles.added.is_empty(), "a style edit is a per-field modification, never a remove-and-re-add");
@@ -105,14 +106,14 @@ async fn committed_diff_is_canonical_and_narrowly_scoped() {
     assert!(matches!(style_diff.fill, Some(Some(_))), "the fill slot must decode as Some(Some(colour)) — set, not cleared");
     assert!(style_diff.stroke.is_none() && style_diff.stroke_width.is_none() && style_diff.opacity.is_none(), "no other style field may be written");
     let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("diff re-encodes");
-    let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
+    let original: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff reparses");
     assert_eq!(reencoded, original, "replace-fill/repaints-the-primary-styles-fill-from-red-to-blue: committed diff JSON is not canonical");
 }
 
 /// 🩹 Applying the committed diff to `before` yields `after`.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: SemioDrawingDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed replace-fill diff decodes");
+    let decoded: SemioDrawingDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed replace-fill diff decodes");
     let produced = protocol::apply_diff(&decoded, &before()).expect("committed replace-fill diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "replace-fill/repaints-the-primary-styles-fill-from-red-to-blue: committed diff did not carry before to after");
 }

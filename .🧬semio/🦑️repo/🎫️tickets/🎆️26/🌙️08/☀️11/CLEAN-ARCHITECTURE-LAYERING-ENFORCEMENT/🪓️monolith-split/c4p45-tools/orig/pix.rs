@@ -1,0 +1,1417 @@
+//! 🖼️ Owned raster image codecs (PNG, RFC1950 zlib/DEFLATE) and pixel-buffer utilities — no
+//! third-party runtime dependency. Ports the pure algorithmic core already proven inside
+//! `semio-s-plugin-stdio`'s own `📷️png`/`🗜️deflate` artifacts (ticket
+//! 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS, wave 1) down to the
+//! framework tier so `✏️s/🔌️plugins/**` crates never need the third-party `png`/`image` crates
+//! at runtime. Ancillary PNG metadata (gAMA/cHRM/sRGB/pHYs/tIME/bKGD/text chunks) is parsed only
+//! insofar as it affects pixel reconstruction — this module always canonicalizes into flat RGBA8.
+
+use std::fmt;
+
+//#region Error
+/// ⚠️ Raster codec failure — a malformed/unsupported input, never a panic.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum RasterError {
+    Codec(String),
+}
+
+impl fmt::Display for RasterError {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Codec(message) => write!(formatter, "raster codec error: {message}"),
+        }
+    }
+}
+
+impl std::error::Error for RasterError {}
+
+impl From<String> for RasterError {
+    fn from(message: String) -> Self {
+        Self::Codec(message)
+    }
+}
+//#endregion Error
+
+//#region RasterImage
+/// 🎨️ Row-major 8-bit RGBA image with interleaved channels; pixel `(x, y)` occupies
+/// `pixels[(y * width + x) * 4 ..][..4]`.
+#[derive(Clone, Debug, PartialEq, Eq, Default, semio_framework_value::RetireOwned)]
+pub struct RasterImage {
+    pub width: u32,
+    pub height: u32,
+    pub pixels: Vec<u8>,
+}
+
+impl RasterImage {
+    /// 🎨️ Zero-filled (transparent black) RGBA image of the given size.
+    pub fn new(width: u32, height: u32) -> Self {
+        Self { width, height, pixels: vec![0u8; (width as usize) * (height as usize) * 4] }
+    }
+}
+//#endregion RasterImage
+
+//#region Crc32
+/// 🧮️ ISO 3309 / ITU-T V.42 CRC-32 (the PNG §5.4 checksum).
+fn crc32(data: &[u8]) -> u32 {
+    crc32_update(0xFFFF_FFFF, data) ^ 0xFFFF_FFFF
+}
+
+/// 🧮️ The 256-entry CRC-32 table, built once at compile time — the per-byte cost of
+/// [`crc32_update`] is one lookup, which keeps a streamed IDAT check proportional to the bytes a
+/// decoder step actually consumes.
+const CRC32_TABLE: [u32; 256] = {
+    let mut table = [0u32; 256];
+    let mut index = 0usize;
+    while index < 256 {
+        let mut value = index as u32;
+        let mut bit = 0;
+        while bit < 8 {
+            value = if value & 1 != 0 { 0xEDB88320 ^ (value >> 1) } else { value >> 1 };
+            bit += 1;
+        }
+        table[index] = value;
+        index += 1;
+    }
+    table
+};
+
+/// ➕️ Folds `data` into a running (pre-inversion) CRC-32 register.
+fn crc32_update(mut crc: u32, data: &[u8]) -> u32 {
+    for &byte in data {
+        crc = CRC32_TABLE[((crc ^ byte as u32) & 0xFF) as usize] ^ (crc >> 8);
+    }
+    crc
+}
+//#endregion Crc32
+
+//#region Deflate
+mod deflate {
+    //! 🗜️ RFC1950/RFC1951 zlib/DEFLATE — Adler32, bit I/O, canonical Huffman, greedy hash-chain
+    //! LZ77, and the stored/fixed/dynamic inflate trio. Ported verbatim (algorithm-for-algorithm)
+    //! from `semio-s-plugin-stdio`'s own `🗜️deflate` artifact codec, stripped of that artifact's
+    //! interactive-job checkpointing and `DeflateSnapshot` typed-container framing — this module
+    //! only ever needs the byte<->byte zlib wrapper PNG's IDAT stream is built on.
+
+    //#region Adler32
+    fn adler32(data: &[u8]) -> u32 {
+        const MOD: u32 = 65521;
+        let mut a: u32 = 1;
+        let mut b: u32 = 0;
+        for &byte in data {
+            a = (a + byte as u32) % MOD;
+            b = (b + a) % MOD;
+        }
+        (b << 16) | a
+    }
+    //#endregion Adler32
+
+    //#region BitIo
+    #[derive(semio_framework_value::RetireOwned)]
+    struct BitWriter {
+        out: Vec<u8>,
+        cur: u8,
+        nbits: u8,
+    }
+
+    impl BitWriter {
+        fn new() -> Self {
+            Self { out: Vec::new(), cur: 0, nbits: 0 }
+        }
+        fn write_bits(&mut self, mut value: u32, mut count: u8) {
+            while count > 0 {
+                let take = (8 - self.nbits).min(count);
+                let mask = (1u32 << take) - 1;
+                self.cur |= ((value & mask) as u8) << self.nbits;
+                self.nbits += take;
+                value >>= take;
+                count -= take;
+                if self.nbits == 8 {
+                    self.out.push(self.cur);
+                    self.cur = 0;
+                    self.nbits = 0;
+                }
+            }
+        }
+        fn align_byte(&mut self) {
+            if self.nbits > 0 {
+                self.out.push(self.cur);
+                self.cur = 0;
+                self.nbits = 0;
+            }
+        }
+    }
+
+    struct BitReader<'a> {
+        pub data: &'a [u8],
+        pos: usize,
+        cur: u8,
+        nbits: u8,
+    }
+
+    impl<'a> BitReader<'a> {
+        fn new(data: &'a [u8]) -> Self {
+            Self { data, pos: 0, cur: 0, nbits: 0 }
+        }
+        fn read_bits(&mut self, count: u8) -> Result<u32, String> {
+            let mut out = 0u32;
+            for i in 0..count {
+                if self.nbits == 0 {
+                    if self.pos >= self.data.len() {
+                        return Err("unexpected end of deflate stream".into());
+                    }
+                    self.cur = self.data[self.pos];
+                    self.pos += 1;
+                    self.nbits = 8;
+                }
+                let bit = (self.cur & 1) as u32;
+                self.cur >>= 1;
+                self.nbits -= 1;
+                out |= bit << i;
+            }
+            Ok(out)
+        }
+        fn align_byte(&mut self) {
+            self.nbits = 0;
+            self.cur = 0;
+        }
+    }
+    //#endregion BitIo
+
+    //#region Huffman
+    fn reverse_bits(mut v: u32, len: u8) -> u32 {
+        let mut r = 0u32;
+        for _ in 0..len {
+            r = (r << 1) | (v & 1);
+            v >>= 1;
+        }
+        r
+    }
+
+    fn build_codes(lengths: &[u8]) -> Vec<(u32, u8)> {
+        let mut bl_count = [0u32; 16];
+        for &l in lengths {
+            if l > 0 {
+                bl_count[l as usize] += 1;
+            }
+        }
+        let mut next_code = [0u32; 16];
+        let mut code = 0u32;
+        for bits in 1..=15 {
+            code = (code + bl_count[bits - 1]) << 1;
+            next_code[bits] = code;
+        }
+        let mut codes = vec![(0u32, 0u8); lengths.len()];
+        for (i, &len) in lengths.iter().enumerate() {
+            if len != 0 {
+                let c = next_code[len as usize];
+                next_code[len as usize] += 1;
+                codes[i] = (reverse_bits(c, len), len);
+            }
+        }
+        codes
+    }
+
+    struct HuffDecoder {
+        table: Vec<Option<(u16, u8)>>,
+        max_bits: u8,
+    }
+
+    impl HuffDecoder {
+        fn from_lengths(lengths: &[u8]) -> Result<Self, String> {
+            let max_bits = lengths.iter().copied().max().unwrap_or(0);
+            if max_bits > 15 {
+                return Err("invalid huffman length".into());
+            }
+            let size = 1usize << max_bits;
+            let mut table = vec![None; size.max(1)];
+            let codes = build_codes(lengths);
+            for (sym, &(code, len)) in codes.iter().enumerate() {
+                if len == 0 {
+                    continue;
+                }
+                let step = 1usize << len;
+                let mut fill = code as usize;
+                while fill < size {
+                    table[fill] = Some((sym as u16, len));
+                    fill += step;
+                }
+            }
+            Ok(Self { table, max_bits })
+        }
+
+        fn decode(&self, br: &mut BitReader<'_>) -> Result<u16, String> {
+            if self.max_bits == 0 {
+                return Err("empty huffman alphabet".into());
+            }
+            let mut acc = 0u32;
+            for len in 1..=self.max_bits {
+                let bit = br.read_bits(1)?;
+                acc |= bit << (len - 1);
+                if let Some(Some((sym, l))) = self.table.get(acc as usize) {
+                    if *l == len {
+                        return Ok(*sym);
+                    }
+                }
+            }
+            Err("invalid huffman symbol".into())
+        }
+    }
+
+    fn fixed_lit_lengths() -> Vec<u8> {
+        let mut l = vec![0u8; 288];
+        l[..144].fill(8);
+        l[144..256].fill(9);
+        l[256..280].fill(7);
+        l[280..].fill(8);
+        l
+    }
+
+    fn fixed_dist_lengths() -> Vec<u8> {
+        vec![5u8; 32]
+    }
+    //#endregion Huffman
+
+    //#region Lz77
+    const LEN_BASE: [u16; 29] = [3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 15, 17, 19, 23, 27, 31, 35, 43, 51, 59, 67, 83, 99, 115, 131, 163, 195, 227, 258];
+    const LEN_EXTRA: [u8; 29] = [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 0];
+    const DIST_BASE: [u16; 30] = [1, 2, 3, 4, 5, 7, 9, 13, 17, 25, 33, 49, 65, 97, 129, 193, 257, 385, 513, 769, 1025, 1537, 2049, 3073, 4097, 6145, 8193, 12289, 16385, 24577];
+    const DIST_EXTRA: [u8; 30] = [0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11, 12, 12, 13, 13];
+
+    const WINDOW: usize = 32 * 1024;
+    const MIN_MATCH: usize = 3;
+    const MAX_MATCH: usize = 258;
+    const HASH_BITS: u32 = 15;
+    const HASH_SIZE: usize = 1 << HASH_BITS;
+    const MAX_CHAIN: usize = 128;
+
+    #[inline]
+    fn hash3(data: &[u8], i: usize) -> usize {
+        let v = (data[i] as u32) | ((data[i + 1] as u32) << 8) | ((data[i + 2] as u32) << 16);
+        ((v.wrapping_mul(0x9E3779B1)) >> (32 - HASH_BITS)) as usize
+    }
+
+    fn longest_match(data: &[u8], pos: usize, head: &[i32], prev: &[i32], max_chain: usize) -> Option<(usize, usize)> {
+        if pos + MIN_MATCH > data.len() {
+            return None;
+        }
+        let limit = (data.len() - pos).min(MAX_MATCH);
+        let mut best_len = 0usize;
+        let mut best_dist = 0usize;
+        let mut candidate = head[hash3(data, pos)];
+        let min_candidate = pos.saturating_sub(WINDOW - 1) as i32;
+        let mut chain = 0usize;
+        while candidate >= min_candidate && candidate >= 0 && chain < max_chain {
+            let cpos = candidate as usize;
+            if best_len == 0 || (cpos + best_len < data.len() && data[cpos + best_len] == data[pos + best_len]) {
+                let mut len = 0usize;
+                while len < limit && data[cpos + len] == data[pos + len] {
+                    len += 1;
+                }
+                if len > best_len {
+                    best_len = len;
+                    best_dist = pos - cpos;
+                    if len >= limit {
+                        break;
+                    }
+                }
+            }
+            candidate = prev[cpos & (WINDOW - 1)];
+            chain += 1;
+        }
+        if best_len >= MIN_MATCH {
+            Some((best_len, best_dist))
+        } else {
+            None
+        }
+    }
+
+    fn length_symbol(len: usize) -> (usize, u32, u8) {
+        for (idx, &base) in LEN_BASE.iter().enumerate().rev() {
+            if len >= base as usize {
+                return (257 + idx, (len - base as usize) as u32, LEN_EXTRA[idx]);
+            }
+        }
+        unreachable!("length_symbol called with len < MIN_MATCH")
+    }
+
+    fn distance_symbol(dist: usize) -> (usize, u32, u8) {
+        for (idx, &base) in DIST_BASE.iter().enumerate().rev() {
+            if dist >= base as usize {
+                return (idx, (dist - base as usize) as u32, DIST_EXTRA[idx]);
+            }
+        }
+        unreachable!("distance_symbol called with dist == 0")
+    }
+    //#endregion Lz77
+
+    //#region Compress
+    /// 🗜️ Batch fixed-Huffman DEFLATE compressor: greedy hash-chain LZ77 with lazy one-step
+    /// lookahead, emitted as a single final fixed-Huffman block (RFC1951 BTYPE=1).
+    fn deflate_raw(data: &[u8]) -> Vec<u8> {
+        let mut writer = BitWriter::new();
+        write_fixed_block(&mut writer, data, true);
+        writer.align_byte();
+        writer.out
+    }
+
+    fn write_fixed_block(writer: &mut BitWriter, data: &[u8], final_block: bool) {
+        writer.write_bits(if final_block { 0b011 } else { 0b010 }, 3);
+        let literal_codes = build_codes(&fixed_lit_lengths());
+        let distance_codes = build_codes(&fixed_dist_lengths());
+        let mut head = vec![-1i32; HASH_SIZE];
+        let mut previous = vec![-1i32; WINDOW];
+        let insert = |position: usize, head: &mut [i32], previous: &mut [i32]| {
+            if position + MIN_MATCH <= data.len() {
+                let hash = hash3(data, position);
+                previous[position & (WINDOW - 1)] = head[hash];
+                head[hash] = position as i32;
+            }
+        };
+        let mut position = 0usize;
+        let mut pending: Option<(usize, usize, usize)> = None;
+        while position < data.len() {
+            let next = longest_match(data, position, &head, &previous, MAX_CHAIN);
+            insert(position, &mut head, &mut previous);
+            match (pending.take(), next) {
+                (None, Some((length, distance))) => {
+                    pending = Some((position, length, distance));
+                    position += 1;
+                }
+                (Some((start, plen, _)), Some((length, distance))) if length > plen => {
+                    let (code, bits) = literal_codes[data[start] as usize];
+                    writer.write_bits(code, bits);
+                    pending = Some((position, length, distance));
+                    position += 1;
+                }
+                (Some((start, length, distance)), _) => {
+                    let (symbol, extra, extra_bits) = length_symbol(length);
+                    let (code, bits) = literal_codes[symbol];
+                    writer.write_bits(code, bits);
+                    writer.write_bits(extra, extra_bits);
+                    let (symbol, extra, extra_bits) = distance_symbol(distance);
+                    let (code, bits) = distance_codes[symbol];
+                    writer.write_bits(code, bits);
+                    writer.write_bits(extra, extra_bits);
+                    let end = (start + length).min(data.len());
+                    for p in (start + 2)..end {
+                        insert(p, &mut head, &mut previous);
+                    }
+                    position = end;
+                }
+                (None, None) => {
+                    let (code, bits) = literal_codes[data[position] as usize];
+                    writer.write_bits(code, bits);
+                    position += 1;
+                }
+            }
+        }
+        if let Some((start, length, distance)) = pending.take() {
+            let (symbol, extra, extra_bits) = length_symbol(length);
+            let (code, bits) = literal_codes[symbol];
+            writer.write_bits(code, bits);
+            writer.write_bits(extra, extra_bits);
+            let (symbol, extra, extra_bits) = distance_symbol(distance);
+            let (code, bits) = distance_codes[symbol];
+            writer.write_bits(code, bits);
+            writer.write_bits(extra, extra_bits);
+            let _ = start;
+        }
+        let (code, bits) = literal_codes[256];
+        writer.write_bits(code, bits);
+    }
+
+    #[derive(semio_framework_value::RetireOwned)]
+    pub(super) struct ZlibEncodeCursor {
+        writer: BitWriter,
+        adler_a: u32,
+        adler_b: u32,
+        started: bool,
+    }
+
+    impl ZlibEncodeCursor {
+        pub(super) fn new() -> Self {
+            Self { writer: BitWriter::new(), adler_a: 1, adler_b: 0, started: false }
+        }
+
+        pub(super) fn push(&mut self, data: &[u8], final_block: bool) -> Vec<u8> {
+            if !self.started {
+                self.writer.out.extend_from_slice(&[0x78, 0x01]);
+                self.started = true;
+            }
+            for &byte in data {
+                self.adler_a = (self.adler_a + u32::from(byte)) % 65521;
+                self.adler_b = (self.adler_b + self.adler_a) % 65521;
+            }
+            write_fixed_block(&mut self.writer, data, final_block);
+            if final_block {
+                self.writer.align_byte();
+                self.writer.out.extend_from_slice(&((self.adler_b << 16) | self.adler_a).to_be_bytes());
+            }
+            std::mem::take(&mut self.writer.out)
+        }
+    }
+    //#endregion Compress
+
+    //#region Decompress
+    fn inflate_block_stored(br: &mut BitReader<'_>, out: &mut Vec<u8>) -> Result<(), String> {
+        br.align_byte();
+        if br.pos + 4 > br.data.len() {
+            return Err("truncated stored block".into());
+        }
+        let len = u16::from_le_bytes([br.data[br.pos], br.data[br.pos + 1]]);
+        let nlen = u16::from_le_bytes([br.data[br.pos + 2], br.data[br.pos + 3]]);
+        br.pos += 4;
+        if len ^ 0xFFFF != nlen {
+            return Err("stored block LEN/NLEN mismatch".into());
+        }
+        let end = br.pos + len as usize;
+        if end > br.data.len() {
+            return Err("truncated stored payload".into());
+        }
+        out.extend_from_slice(&br.data[br.pos..end]);
+        br.pos = end;
+        Ok(())
+    }
+
+    fn inflate_codes(br: &mut BitReader<'_>, out: &mut Vec<u8>, lit: &HuffDecoder, dist: &HuffDecoder) -> Result<(), String> {
+        loop {
+            let sym = lit.decode(br)? as usize;
+            if sym < 256 {
+                out.push(sym as u8);
+            } else if sym == 256 {
+                break;
+            } else if sym <= 285 {
+                let idx = sym - 257;
+                if idx >= LEN_BASE.len() {
+                    return Err("invalid length symbol".into());
+                }
+                let mut length = LEN_BASE[idx] as usize;
+                let extra = LEN_EXTRA[idx];
+                if extra > 0 {
+                    length += br.read_bits(extra)? as usize;
+                }
+                let dsym = dist.decode(br)? as usize;
+                if dsym >= DIST_BASE.len() {
+                    return Err("invalid distance symbol".into());
+                }
+                let mut distance = DIST_BASE[dsym] as usize;
+                let dextra = DIST_EXTRA[dsym];
+                if dextra > 0 {
+                    distance += br.read_bits(dextra)? as usize;
+                }
+                if distance == 0 || distance > out.len() {
+                    return Err("invalid backreference".into());
+                }
+                for _ in 0..length {
+                    let b = out[out.len() - distance];
+                    out.push(b);
+                }
+            } else {
+                return Err("invalid lit/len symbol".into());
+            }
+        }
+        Ok(())
+    }
+
+    fn dynamic_decoders(br: &mut BitReader<'_>) -> Result<(HuffDecoder, HuffDecoder), String> {
+        let hlit = br.read_bits(5)? as usize + 257;
+        let hdist = br.read_bits(5)? as usize + 1;
+        let hclen = br.read_bits(4)? as usize + 4;
+        const ORDER: [usize; 19] = [16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15];
+        let mut cl_lens = vec![0u8; 19];
+        for i in 0..hclen {
+            cl_lens[ORDER[i]] = br.read_bits(3)? as u8;
+        }
+        let cl_dec = HuffDecoder::from_lengths(&cl_lens)?;
+        let mut lens = Vec::with_capacity(hlit + hdist);
+        while lens.len() < hlit + hdist {
+            let sym = cl_dec.decode(br)? as usize;
+            match sym {
+                0..=15 => lens.push(sym as u8),
+                16 => {
+                    let rep = br.read_bits(2)? as usize + 3;
+                    let prev = *lens.last().ok_or("bad repeat")?;
+                    lens.extend(std::iter::repeat_n(prev, rep));
+                }
+                17 => {
+                    let rep = br.read_bits(3)? as usize + 3;
+                    lens.extend(std::iter::repeat_n(0u8, rep));
+                }
+                18 => {
+                    let rep = br.read_bits(7)? as usize + 11;
+                    lens.extend(std::iter::repeat_n(0u8, rep));
+                }
+                _ => return Err("bad code-length symbol".into()),
+            }
+        }
+        if lens.len() < hlit + hdist {
+            return Err("incomplete dynamic trees".into());
+        }
+        let lit = HuffDecoder::from_lengths(&lens[..hlit])?;
+        let dist = HuffDecoder::from_lengths(&lens[hlit..hlit + hdist])?;
+        Ok((lit, dist))
+    }
+
+    fn inflate_dynamic(br: &mut BitReader<'_>, out: &mut Vec<u8>) -> Result<(), String> {
+        let (lit, dist) = dynamic_decoders(br)?;
+        inflate_codes(br, out, &lit, &dist)
+    }
+
+    fn inflate_raw(data: &[u8]) -> Result<Vec<u8>, String> {
+        let mut br = BitReader::new(data);
+        let mut out = Vec::new();
+        loop {
+            let bfinal = br.read_bits(1)?;
+            let btype = br.read_bits(2)?;
+            match btype {
+                0 => inflate_block_stored(&mut br, &mut out)?,
+                1 => {
+                    let lit = HuffDecoder::from_lengths(&fixed_lit_lengths())?;
+                    let dist = HuffDecoder::from_lengths(&fixed_dist_lengths())?;
+                    inflate_codes(&mut br, &mut out, &lit, &dist)?;
+                }
+                2 => inflate_dynamic(&mut br, &mut out)?,
+                _ => return Err("reserved BTYPE".into()),
+            }
+            if bfinal == 1 {
+                break;
+            }
+        }
+        Ok(out)
+    }
+    //#endregion Decompress
+
+    //#region Zlib
+    /// 🗜️ Zlib-wrap compress (CMF/FLG + raw deflate + Adler32).
+    pub fn zlib_compress(data: &[u8]) -> Vec<u8> {
+        let raw = deflate_raw(data);
+        let mut out = Vec::with_capacity(2 + raw.len() + 4);
+        out.push(0x78);
+        out.push(0x01);
+        out.extend_from_slice(&raw);
+        out.extend_from_slice(&adler32(data).to_be_bytes());
+        out
+    }
+
+    /// 🗜️ Zlib unwrap + inflate + Adler32 verify.
+    pub fn zlib_decompress(data: &[u8]) -> Result<Vec<u8>, String> {
+        if data.len() < 6 {
+            return Err("zlib stream too short".into());
+        }
+        let cmf = data[0];
+        let flg = data[1];
+        if (cmf & 0x0F) != 8 {
+            return Err("unsupported zlib compression method".into());
+        }
+        if !((cmf as u16) * 256 + flg as u16).is_multiple_of(31) {
+            return Err("zlib CMF/FLG check failed".into());
+        }
+        if flg & 0x20 != 0 {
+            return Err("zlib preset dictionary not supported".into());
+        }
+        let adler_bytes = &data[data.len() - 4..];
+        let expect = u32::from_be_bytes([adler_bytes[0], adler_bytes[1], adler_bytes[2], adler_bytes[3]]);
+        let raw = &data[2..data.len() - 4];
+        let out = inflate_raw(raw)?;
+        let got = adler32(&out);
+        if got != expect {
+            return Err(format!("adler32 mismatch: expected {expect:#010x}, got {got:#010x}"));
+        }
+        Ok(out)
+    }
+    //#endregion Zlib
+}
+//#endregion Deflate
+
+//#region PngChunkIo
+const PNG_SIGNATURE: [u8; 8] = [137, 80, 78, 71, 13, 10, 26, 10];
+
+fn write_chunk(out: &mut Vec<u8>, ty: &[u8; 4], data: &[u8]) {
+    out.extend_from_slice(&(data.len() as u32).to_be_bytes());
+    out.extend_from_slice(ty);
+    out.extend_from_slice(data);
+    let mut crc_in = Vec::with_capacity(4 + data.len());
+    crc_in.extend_from_slice(ty);
+    crc_in.extend_from_slice(data);
+    out.extend_from_slice(&crc32(&crc_in).to_be_bytes());
+}
+
+type PngChunk<'a> = ([u8; 4], &'a [u8]);
+
+/// 📖️ Splits a PNG byte stream into `(type, data)` chunks, rejecting CRC mismatches and
+/// truncation up front so downstream decode logic never has to re-check framing.
+fn read_chunks(data: &[u8]) -> Result<Vec<PngChunk<'_>>, String> {
+    if data.len() < 8 || data[0..8] != PNG_SIGNATURE {
+        return Err("png: bad signature".into());
+    }
+    read_chunks_from(data, 8)
+}
+
+/// 📖️ [`read_chunks`] from an arbitrary chunk boundary `pos` through `IEND`.
+fn read_chunks_from(data: &[u8], mut pos: usize) -> Result<Vec<PngChunk<'_>>, String> {
+    let mut chunks = Vec::new();
+    loop {
+        if pos + 8 > data.len() {
+            return Err("png: truncated chunk header".into());
+        }
+        let len = u32::from_be_bytes([data[pos], data[pos + 1], data[pos + 2], data[pos + 3]]) as usize;
+        let ty: [u8; 4] = [data[pos + 4], data[pos + 5], data[pos + 6], data[pos + 7]];
+        let start = pos + 8;
+        let end = start.checked_add(len).ok_or("png: chunk length overflow")?;
+        if end + 4 > data.len() {
+            return Err("png: truncated chunk data or crc".into());
+        }
+        let chunk_data = &data[start..end];
+        let stored_crc = u32::from_be_bytes([data[end], data[end + 1], data[end + 2], data[end + 3]]);
+        if crc32_update(crc32_update(0xFFFF_FFFF, &ty), chunk_data) ^ 0xFFFF_FFFF != stored_crc {
+            return Err(format!("png: chunk CRC mismatch ({})", String::from_utf8_lossy(&ty)));
+        }
+        chunks.push((ty, chunk_data));
+        pos = end + 4;
+        if ty == *b"IEND" {
+            break;
+        }
+        if pos >= data.len() {
+            return Err("png: missing IEND".into());
+        }
+    }
+    Ok(chunks)
+}
+//#endregion PngChunkIo
+
+//#region PngIhdr
+#[derive(semio_framework_value::RetireOwned)]
+struct Ihdr {
+    pub width: u32,
+    pub height: u32,
+    pub bit_depth: u8,
+    pub color_type: u8,
+    interlace: u8,
+}
+
+fn parse_ihdr(data: &[u8]) -> Result<Ihdr, String> {
+    if data.len() != 13 {
+        return Err("png IHDR: expected 13 bytes".into());
+    }
+    let width = u32::from_be_bytes([data[0], data[1], data[2], data[3]]);
+    let height = u32::from_be_bytes([data[4], data[5], data[6], data[7]]);
+    let bit_depth = data[8];
+    let color_type = data[9];
+    let compression = data[10];
+    let filter_method = data[11];
+    let interlace = data[12];
+    if width == 0 || height == 0 {
+        return Err("png IHDR: zero dimension".into());
+    }
+    if compression != 0 {
+        return Err("png IHDR: unsupported compression method".into());
+    }
+    if filter_method != 0 {
+        return Err("png IHDR: unsupported filter method".into());
+    }
+    if interlace > 1 {
+        return Err("png IHDR: unsupported interlace method".into());
+    }
+    let valid = match color_type {
+        0 => matches!(bit_depth, 1 | 2 | 4 | 8 | 16),
+        2 => matches!(bit_depth, 8 | 16),
+        3 => matches!(bit_depth, 1 | 2 | 4 | 8),
+        4 => matches!(bit_depth, 8 | 16),
+        6 => matches!(bit_depth, 8 | 16),
+        _ => false,
+    };
+    if !valid {
+        return Err(format!("png IHDR: unsupported color type {color_type} / bit depth {bit_depth}"));
+    }
+    Ok(Ihdr { width, height, bit_depth, color_type, interlace })
+}
+
+fn samples_per_pixel(color_type: u8) -> usize {
+    match color_type {
+        0 => 1,
+        2 => 3,
+        3 => 1,
+        4 => 2,
+        6 => 4,
+        _ => unreachable!("validated in parse_ihdr"),
+    }
+}
+
+fn bpp_bytes(ihdr: &Ihdr) -> usize {
+    (samples_per_pixel(ihdr.color_type) * ihdr.bit_depth as usize).div_ceil(8).max(1)
+}
+
+fn packed_row_bytes(width: u32, color_type: u8, bit_depth: u8) -> usize {
+    let bits = width as usize * samples_per_pixel(color_type) * bit_depth as usize;
+    bits.div_ceil(8)
+}
+//#endregion PngIhdr
+
+//#region PngFilter
+fn paeth(a: u8, b: u8, c: u8) -> u8 {
+    let (a, b, c) = (a as i32, b as i32, c as i32);
+    let p = a + b - c;
+    let pa = (p - a).abs();
+    let pb = (p - b).abs();
+    let pc = (p - c).abs();
+    if pa <= pb && pa <= pc {
+        a as u8
+    } else if pb <= pc {
+        b as u8
+    } else {
+        c as u8
+    }
+}
+
+fn filter_row(filter_type: u8, cur: &[u8], prev: Option<&[u8]>, bpp: usize) -> Vec<u8> {
+    let mut out = vec![0u8; cur.len()];
+    for x in 0..cur.len() {
+        let a = if x >= bpp { cur[x - bpp] } else { 0 };
+        let b = prev.map_or(0, |p| p[x]);
+        let c = if x >= bpp { prev.map_or(0, |p| p[x - bpp]) } else { 0 };
+        out[x] = match filter_type {
+            0 => cur[x],
+            1 => cur[x].wrapping_sub(a),
+            2 => cur[x].wrapping_sub(b),
+            3 => cur[x].wrapping_sub(((a as u16 + b as u16) / 2) as u8),
+            4 => cur[x].wrapping_sub(paeth(a, b, c)),
+            _ => unreachable!("caller only passes 0..=4"),
+        };
+    }
+    out
+}
+
+fn defilter_row(filter_type: u8, filt: &[u8], prev: Option<&[u8]>, bpp: usize) -> Result<Vec<u8>, String> {
+    if filter_type > 4 {
+        return Err(format!("png: unsupported filter type {filter_type}"));
+    }
+    let mut out = vec![0u8; filt.len()];
+    for x in 0..filt.len() {
+        let a = if x >= bpp { out[x - bpp] } else { 0 };
+        let b = prev.map_or(0, |p| p[x]);
+        let c = if x >= bpp { prev.map_or(0, |p| p[x - bpp]) } else { 0 };
+        out[x] = match filter_type {
+            0 => filt[x],
+            1 => filt[x].wrapping_add(a),
+            2 => filt[x].wrapping_add(b),
+            3 => filt[x].wrapping_add(((a as u16 + b as u16) / 2) as u8),
+            4 => filt[x].wrapping_add(paeth(a, b, c)),
+            _ => unreachable!("checked above"),
+        };
+    }
+    Ok(out)
+}
+
+/// 🧮️ Minimum-sum-of-absolute-values heuristic (bytes read as signed), the common real-world
+/// choice per PNG spec §9.8 — not optimal, but genuinely per-scanline-adaptive.
+fn choose_filter(cur: &[u8], prev: Option<&[u8]>, bpp: usize) -> (u8, Vec<u8>) {
+    let mut best_ft = 0u8;
+    let mut best_sum = i64::MAX;
+    let mut best = Vec::new();
+    for ft in 0u8..=4 {
+        let f = filter_row(ft, cur, prev, bpp);
+        let sum: i64 = f.iter().map(|&b| (b as i8).unsigned_abs() as i64).sum();
+        if sum < best_sum {
+            best_sum = sum;
+            best_ft = ft;
+            best = f;
+        }
+    }
+    (best_ft, best)
+}
+
+fn defilter_pass(raw: &[u8], mut pos: usize, height: u32, row_bytes: usize, bpp: usize) -> Result<(Vec<Vec<u8>>, usize), String> {
+    let mut rows = Vec::with_capacity(height as usize);
+    let mut prev: Option<Vec<u8>> = None;
+    for _ in 0..height {
+        if pos >= raw.len() {
+            return Err("png: truncated scanline data".into());
+        }
+        let ft = raw[pos];
+        pos += 1;
+        if pos + row_bytes > raw.len() {
+            return Err("png: truncated scanline data".into());
+        }
+        let filt = &raw[pos..pos + row_bytes];
+        pos += row_bytes;
+        let recon = defilter_row(ft, filt, prev.as_deref(), bpp)?;
+        prev = Some(recon.clone());
+        rows.push(recon);
+    }
+    Ok((rows, pos))
+}
+//#endregion PngFilter
+
+//#region PngAdam7
+/// 🪜️ Pass geometry `(start_x, start_y, step_x, step_y)`, PNG spec §8.2.
+const ADAM7: [(u32, u32, u32, u32); 7] = [(0, 0, 8, 8), (4, 0, 8, 8), (0, 4, 4, 8), (2, 0, 4, 4), (0, 2, 2, 4), (1, 0, 2, 2), (0, 1, 1, 2)];
+
+fn adam7_pass_dims(width: u32, height: u32, pass: usize) -> (u32, u32) {
+    let (sx, sy, stx, sty) = ADAM7[pass];
+    let w = if width > sx { (width - sx).div_ceil(stx) } else { 0 };
+    let h = if height > sy { (height - sy).div_ceil(sty) } else { 0 };
+    (w, h)
+}
+//#endregion PngAdam7
+
+//#region PngUnpack
+fn unpack_samples(row: &[u8], width: usize, spp: usize, bit_depth: u8) -> Vec<u32> {
+    let count = width * spp;
+    let mut out = Vec::with_capacity(count);
+    if bit_depth == 16 {
+        for i in 0..count {
+            out.push(((row[i * 2] as u32) << 8) | row[i * 2 + 1] as u32);
+        }
+    } else if bit_depth == 8 {
+        out.extend(row[..count].iter().map(|&sample| u32::from(sample)));
+    } else {
+        let mut bitpos = 0usize;
+        for _ in 0..count {
+            let mut v = 0u32;
+            for _ in 0..bit_depth {
+                let byte = row[bitpos / 8];
+                let bit = (byte >> (7 - (bitpos % 8))) & 1;
+                v = (v << 1) | bit as u32;
+                bitpos += 1;
+            }
+            out.push(v);
+        }
+    }
+    out
+}
+
+fn scale_to_8(sample: u32, bit_depth: u8) -> u8 {
+    match bit_depth {
+        8 => sample as u8,
+        16 => (sample >> 8) as u8,
+        _ => {
+            let maxval = (1u32 << bit_depth) - 1;
+            ((sample * 255 + maxval / 2) / maxval) as u8
+        }
+    }
+}
+
+/// 🎨️ Converts one pixel's raw (unscaled) samples to 8-bit RGBA using PLTE/tRNS as needed.
+fn pixel_to_rgba(samples: &[u32], ihdr: &Ihdr, palette: &[[u8; 3]], palette_alpha: &[u8], gray_trans: Option<u32>, rgb_trans: Option<(u32, u32, u32)>) -> Result<[u8; 4], String> {
+    match ihdr.color_type {
+        0 => {
+            let g = samples[0];
+            let a = if gray_trans == Some(g) { 0 } else { 255 };
+            let g8 = scale_to_8(g, ihdr.bit_depth);
+            Ok([g8, g8, g8, a])
+        }
+        2 => {
+            let (r, g, b) = (samples[0], samples[1], samples[2]);
+            let a = if rgb_trans == Some((r, g, b)) { 0 } else { 255 };
+            Ok([scale_to_8(r, ihdr.bit_depth), scale_to_8(g, ihdr.bit_depth), scale_to_8(b, ihdr.bit_depth), a])
+        }
+        3 => {
+            let idx = samples[0] as usize;
+            let rgb = palette.get(idx).ok_or_else(|| format!("png: palette index {idx} out of range"))?;
+            let a = palette_alpha.get(idx).copied().unwrap_or(255);
+            Ok([rgb[0], rgb[1], rgb[2], a])
+        }
+        4 => {
+            let g8 = scale_to_8(samples[0], ihdr.bit_depth);
+            let a8 = scale_to_8(samples[1], ihdr.bit_depth);
+            Ok([g8, g8, g8, a8])
+        }
+        6 => Ok([scale_to_8(samples[0], ihdr.bit_depth), scale_to_8(samples[1], ihdr.bit_depth), scale_to_8(samples[2], ihdr.bit_depth), scale_to_8(samples[3], ihdr.bit_depth)]),
+        _ => unreachable!("validated in parse_ihdr"),
+    }
+}
+//#endregion PngUnpack
+
+//#region PngCodec
+/// 📤️ Encodes an 8-bit RGBA image as a minimal, spec-conformant PNG: IHDR (color type 6 / bit
+/// depth 8 / interlace 0), one adaptively-filtered IDAT, IEND. No ancillary chunks — none of this
+/// crate's callers need gAMA/cHRM/sRGB/pHYs/tIME/bKGD/text metadata round-tripped.
+pub fn encode_png(image: &RasterImage) -> Result<Vec<u8>, RasterError> {
+    let expected_len = (image.width as usize).checked_mul(image.height as usize).and_then(|p| p.checked_mul(4)).ok_or_else(|| RasterError::Codec("dimensions overflow".into()))?;
+    if image.pixels.len() != expected_len {
+        return Err(RasterError::Codec("pixels length mismatch".into()));
+    }
+    let idat = pack_idat(image.width, image.height, 6, 8, &image.pixels, 4);
+    let compressed = deflate::zlib_compress(&idat);
+    Ok(assemble_png(image.width, image.height, 6, 8, &compressed))
+}
+
+#[path = "📷️png/✍️encode/🦀️.rs"]
+pub mod png_encoding;
+#[path = "📷️png/📥️decode/🦀️.rs"]
+pub mod png_decoding;
+#[path = "📸️jpeg/📥️decode/🦀️.rs"]
+pub mod jpeg_decoding;
+#[path = "🖼️image/📥️decode/🦀️.rs"]
+pub mod image_decoding;
+
+/// 📤️ Encodes row-major big-endian 16-bit grayscale samples as a 16-bit grayscale PNG (color
+/// type 0), for lossless heightfield/DSM-style export.
+pub fn encode_png_gray16(width: u32, height: u32, samples: &[u16]) -> Result<Vec<u8>, RasterError> {
+    let expected_len = (width as usize).checked_mul(height as usize).ok_or_else(|| RasterError::Codec("dimensions overflow".into()))?;
+    if width == 0 || height == 0 || samples.len() != expected_len {
+        return Err(RasterError::Codec("samples length mismatch".into()));
+    }
+    let mut packed = Vec::with_capacity(samples.len() * 2);
+    for &sample in samples {
+        packed.extend_from_slice(&sample.to_be_bytes());
+    }
+    let idat = pack_idat(width, height, 0, 16, &packed, 2);
+    let compressed = deflate::zlib_compress(&idat);
+    Ok(assemble_png(width, height, 0, 16, &compressed))
+}
+
+fn pack_idat(width: u32, height: u32, _color_type: u8, _bit_depth: u8, packed: &[u8], bpp: usize) -> Vec<u8> {
+    let row_bytes = width as usize * bpp;
+    let mut idat = Vec::with_capacity((row_bytes + 1) * height as usize);
+    let mut prev: Option<Vec<u8>> = None;
+    for y in 0..height as usize {
+        let row = &packed[y * row_bytes..(y + 1) * row_bytes];
+        let (ft, filtered) = choose_filter(row, prev.as_deref(), bpp);
+        idat.push(ft);
+        idat.extend_from_slice(&filtered);
+        prev = Some(row.to_vec());
+    }
+    idat
+}
+
+fn assemble_png(width: u32, height: u32, color_type: u8, bit_depth: u8, compressed_idat: &[u8]) -> Vec<u8> {
+    let mut out = Vec::new();
+    out.extend_from_slice(&PNG_SIGNATURE);
+    let mut ihdr = Vec::with_capacity(13);
+    ihdr.extend_from_slice(&width.to_be_bytes());
+    ihdr.extend_from_slice(&height.to_be_bytes());
+    ihdr.extend_from_slice(&[bit_depth, color_type, 0, 0, 0]);
+    write_chunk(&mut out, b"IHDR", &ihdr);
+    write_chunk(&mut out, b"IDAT", compressed_idat);
+    write_chunk(&mut out, b"IEND", &[]);
+    out
+}
+
+/// 📥️ Reconstructs cold synchronous callers through the existing scanline codec.
+/// Caller-scheduled image preparation uses [png_decoding::PngDecodeJob] with explicit grants.
+pub fn decode_png(data: &[u8]) -> Result<RasterImage, RasterError> {
+    if data.len() > 67108864 { return Err(RasterError::Codec("PNG byte limit exceeded".into())); }
+    let mut source = PngScanlineDecoder::new(data)?;
+    let (width,height) = (source.width(),source.height());
+    let extent = (width as usize).checked_mul(height as usize).filter(|pixels| *pixels <= 16777216).and_then(|pixels|pixels.checked_mul(4)).ok_or_else(||RasterError::Codec("PNG pixel limit exceeded".into()))?;
+    let mut image = RasterImage {width,height,pixels:Vec::with_capacity(extent)};
+    while let Some(row) = source.next_row()? { image.pixels.extend_from_slice(&row); }
+    if image.pixels.len() != extent { return Err(RasterError::Codec("PNG decoded extent mismatch".into())); }
+    Ok(image)
+}
+//#endregion PngCodec
+
+//#region PngScanlineDecoder
+/// ⏱️ Incremental PNG decoder with a bounded cost per call, for callers that must stay
+/// interaction-friendly (progress/cancellation, a fixed worker-step ceiling) while decoding a
+/// still image. For non-interlaced images nothing is eager: construction only walks the chunk
+/// headers and verifies the (small) chunks before the first `IDAT`; each [`Self::step`] then
+/// inflates at most its unit budget of zlib output bytes straight from the `IDAT` chunks —
+/// verifying every chunk CRC as its last byte is consumed and the zlib Adler-32 at the end — and
+/// yields a row as soon as one whole filtered scanline has been inflated, unfiltered and
+/// canonicalized to RGBA8. Interlaced images decode all Adam7 passes eagerly on construction (rare
+/// in practice for camera/photogrammetry input) and then simply drain a pre-built row queue.
+pub struct PngScanlineDecoder {
+    #[doc(hidden)] pub width: u32,
+    #[doc(hidden)] pub height: u32,
+    rows: PngScanlineSource,
+}
+
+/// ⏭️ Outcome of one bounded [`PngScanlineDecoder::step`].
+#[derive(Debug, PartialEq, Eq)]
+pub enum PngScanlineStep {
+    /// The unit budget ran out before the next scanline was complete.
+    Pending,
+    /// One canonical RGBA8 scanline (`width * 4` bytes), top to bottom.
+    Row(Vec<u8>),
+    /// Every scanline has been yielded and the stream's checksums verified.
+    Done,
+}
+
+enum PngScanlineSource {
+    Streamed(Box<PngScanlineStream>),
+    Queued(std::collections::VecDeque<Vec<u8>>),
+}
+
+struct PngScanlineStream {
+    pub data: Vec<u8>,
+    ihdr: Ihdr,
+    palette: Vec<[u8; 3]>,
+    palette_alpha: Vec<u8>,
+    gray_trans: Option<u32>,
+    rgb_trans: Option<(u32, u32, u32)>,
+    /// Next unread byte of `data` inside the current `IDAT` chunk.
+    cursor: usize,
+    /// End (exclusive) of the current `IDAT` chunk's data.
+    chunk_end: usize,
+    /// Running CRC register of the current `IDAT` chunk (type + data so far).
+    chunk_crc: u32,
+    /// Offset of the first chunk after the `IDAT` run.
+    after_idat: usize,
+    /// Zlib stream bytes (all `IDAT` data) not consumed yet.
+    zlib_remaining: usize,
+    inflater: semio_framework_deflate::Inflater,
+    pending: Option<u8>,
+    inflate_done: bool,
+    adler: (u32, u32),
+    row: Vec<u8>,
+    prev: Option<Vec<u8>>,
+    row_bytes: usize,
+    bpp: usize,
+    next_y: u32,
+}
+
+impl PngScanlineStream {
+    /// 📥️ Next zlib byte from the `IDAT` run, verifying each chunk's CRC as it is crossed.
+    fn next_zlib_byte(&mut self) -> Result<Option<u8>, String> {
+        if self.zlib_remaining == 0 {
+            return Ok(None);
+        }
+        while self.cursor == self.chunk_end {
+            let stored = u32::from_be_bytes([self.data[self.chunk_end], self.data[self.chunk_end + 1], self.data[self.chunk_end + 2], self.data[self.chunk_end + 3]]);
+            if self.chunk_crc ^ 0xFFFF_FFFF != stored {
+                return Err("png: chunk CRC mismatch (IDAT)".into());
+            }
+            let header = self.chunk_end + 4;
+            let len = u32::from_be_bytes([self.data[header], self.data[header + 1], self.data[header + 2], self.data[header + 3]]) as usize;
+            self.chunk_crc = crc32_update(0xFFFF_FFFF, &self.data[header + 4..header + 8]);
+            self.cursor = header + 8;
+            self.chunk_end = self.cursor + len;
+        }
+        let byte = self.data[self.cursor];
+        self.chunk_crc = crc32_update(self.chunk_crc, &[byte]);
+        self.cursor += 1;
+        self.zlib_remaining -= 1;
+        Ok(Some(byte))
+    }
+
+    /// 🏁️ After the last scanline: drains the deflate stream, checks the Adler-32 trailer, the
+    /// last `IDAT` CRC and every chunk after the run through `IEND`.
+    fn finish(&mut self, budget: &mut usize) -> Result<bool, String> {
+        while !self.inflate_done {
+            if *budget == 0 {
+                return Ok(false);
+            }
+            *budget -= 1;
+            if self.pending.is_none() && self.zlib_remaining > 4 {
+                self.pending = self.next_zlib_byte()?;
+            }
+            let input_complete = self.pending.is_none() && self.zlib_remaining <= 4;
+            match self.inflater.advance(&mut self.pending, input_complete).map_err(|error| format!("png: inflate: {error:?}"))? {
+                semio_framework_deflate::InflateOutcome::NeedInput => {}
+                semio_framework_deflate::InflateOutcome::Wrote(byte) => self.adler_push(byte),
+                semio_framework_deflate::InflateOutcome::Done => self.inflate_done = true,
+            }
+        }
+        if self.zlib_remaining != 4 || self.pending.is_some() {
+            return Err("png: zlib stream length does not match its deflate data".into());
+        }
+        let mut trailer = [0u8; 4];
+        for slot in &mut trailer {
+            *slot = self.next_zlib_byte()?.ok_or("png: truncated zlib trailer")?;
+        }
+        if u32::from_be_bytes(trailer) != (self.adler.1 << 16) | self.adler.0 {
+            return Err("png: zlib adler32 mismatch".into());
+        }
+        let stored = u32::from_be_bytes([self.data[self.chunk_end], self.data[self.chunk_end + 1], self.data[self.chunk_end + 2], self.data[self.chunk_end + 3]]);
+        if self.cursor != self.chunk_end || self.chunk_crc ^ 0xFFFF_FFFF != stored {
+            return Err("png: chunk CRC mismatch (IDAT)".into());
+        }
+        read_chunks_from(&self.data, self.after_idat)?;
+        Ok(true)
+    }
+
+    fn adler_push(&mut self, byte: u8) {
+        self.adler.0 = (self.adler.0 + byte as u32) % 65_521;
+        self.adler.1 = (self.adler.1 + self.adler.0) % 65_521;
+    }
+}
+
+impl PngScanlineDecoder {
+    /// 🌱️ Copies `data` and starts a decoder over it (see [`Self::from_vec`]).
+    pub fn new(data: &[u8]) -> Result<Self, RasterError> {
+        Self::from_vec(data.to_vec())
+    }
+
+    /// 🌱️ Walks the chunk headers, verifies and parses IHDR/PLTE/tRNS, and positions the stream at
+    /// the first `IDAT` byte. Only an interlaced image is decoded here, eagerly.
+    pub fn from_vec(data: Vec<u8>) -> Result<Self, RasterError> {
+        if data.len() < 8 || data[0..8] != PNG_SIGNATURE {
+            return Err(RasterError::Codec("png: bad signature".into()));
+        }
+        let mut ihdr: Option<Ihdr> = None;
+        let mut palette: Vec<[u8; 3]> = Vec::new();
+        let mut palette_alpha: Vec<u8> = Vec::new();
+        let mut gray_trans: Option<u32> = None;
+        let mut rgb_trans: Option<(u32, u32, u32)> = None;
+        let mut first_idat: Option<usize> = None;
+        let mut after_idat: Option<usize> = None;
+        let mut zlib_len = 0usize;
+        let mut pos = 8usize;
+        loop {
+            if pos + 8 > data.len() {
+                return Err(RasterError::Codec("png: truncated chunk header".into()));
+            }
+            let len = u32::from_be_bytes([data[pos], data[pos + 1], data[pos + 2], data[pos + 3]]) as usize;
+            let ty: [u8; 4] = [data[pos + 4], data[pos + 5], data[pos + 6], data[pos + 7]];
+            let start = pos + 8;
+            let end = start.checked_add(len).ok_or_else(|| RasterError::Codec("png: chunk length overflow".into()))?;
+            if end.checked_add(4).is_none_or(|crc_end| crc_end > data.len()) {
+                return Err(RasterError::Codec("png: truncated chunk data or crc".into()));
+            }
+            if ty == *b"IDAT" {
+                if after_idat.is_some() {
+                    return Err(RasterError::Codec("png: IDAT chunks are not consecutive".into()));
+                }
+                first_idat.get_or_insert(pos);
+                zlib_len += len;
+            } else {
+                if first_idat.is_some() && after_idat.is_none() {
+                    after_idat = Some(pos);
+                }
+                if first_idat.is_none() {
+                    let chunk = &data[start..end];
+                    let stored = u32::from_be_bytes([data[end], data[end + 1], data[end + 2], data[end + 3]]);
+                    if crc32_update(crc32_update(0xFFFF_FFFF, &ty), chunk) ^ 0xFFFF_FFFF != stored {
+                        return Err(RasterError::Codec(format!("png: chunk CRC mismatch ({})", String::from_utf8_lossy(&ty))));
+                    }
+                    if ty == *b"IHDR" {
+                        ihdr = Some(parse_ihdr(chunk).map_err(RasterError::Codec)?);
+                    } else if ty == *b"PLTE" {
+                        palette = chunk.as_chunks::<3>().0.to_vec();
+                    } else if ty == *b"tRNS" {
+                        let color_type = ihdr.as_ref().ok_or_else(|| RasterError::Codec("png: tRNS before IHDR".into()))?.color_type;
+                        match color_type {
+                            0 if chunk.len() == 2 => gray_trans = Some(u16::from_be_bytes([chunk[0], chunk[1]]) as u32),
+                            2 if chunk.len() == 6 => {
+                                let r = u16::from_be_bytes([chunk[0], chunk[1]]) as u32;
+                                let g = u16::from_be_bytes([chunk[2], chunk[3]]) as u32;
+                                let b = u16::from_be_bytes([chunk[4], chunk[5]]) as u32;
+                                rgb_trans = Some((r, g, b));
+                            }
+                            3 => palette_alpha = chunk.to_vec(),
+                            _ => {}
+                        }
+                    }
+                }
+            }
+            pos = end + 4;
+            if ty == *b"IEND" {
+                break;
+            }
+            if pos >= data.len() {
+                return Err(RasterError::Codec("png: missing IEND".into()));
+            }
+        }
+        let ihdr = ihdr.ok_or_else(|| RasterError::Codec("png: missing IHDR".into()))?;
+        let (Some(first_idat), Some(after_idat)) = (first_idat, after_idat) else { return Err(RasterError::Codec("png: missing IDAT".into())) };
+        if ihdr.color_type == 3 && palette.is_empty() {
+            return Err(RasterError::Codec("png: color type 3 requires PLTE".into()));
+        }
+        let width = ihdr.width;
+        let height = ihdr.height;
+        if ihdr.interlace != 0 {
+            return Self::interlaced(&data, ihdr, &palette, &palette_alpha, gray_trans, rgb_trans);
+        }
+        if zlib_len < 6 {
+            return Err(RasterError::Codec("png: zlib stream too short".into()));
+        }
+        let row_bytes = packed_row_bytes(width, ihdr.color_type, ihdr.bit_depth);
+        let bpp = bpp_bytes(&ihdr);
+        let chunk_start = first_idat + 8;
+        let first_len = u32::from_be_bytes([data[first_idat], data[first_idat + 1], data[first_idat + 2], data[first_idat + 3]]) as usize;
+        let mut stream = PngScanlineStream {
+            chunk_crc: crc32_update(0xFFFF_FFFF, b"IDAT"),
+            data,
+            ihdr,
+            palette,
+            palette_alpha,
+            gray_trans,
+            rgb_trans,
+            cursor: chunk_start,
+            chunk_end: chunk_start + first_len,
+            after_idat,
+            zlib_remaining: zlib_len,
+            inflater: semio_framework_deflate::Inflater::new(),
+            pending: None,
+            inflate_done: false,
+            adler: (1, 0),
+            row: Vec::with_capacity(row_bytes + 1),
+            prev: None,
+            row_bytes,
+            bpp,
+            next_y: 0,
+        };
+        let cmf = stream.next_zlib_byte().map_err(RasterError::Codec)?.ok_or_else(|| RasterError::Codec("zlib stream too short".into()))?;
+        let flg = stream.next_zlib_byte().map_err(RasterError::Codec)?.ok_or_else(|| RasterError::Codec("zlib stream too short".into()))?;
+        if (cmf & 0x0F) != 8 {
+            return Err(RasterError::Codec("unsupported zlib compression method".into()));
+        }
+        if !((cmf as u16) * 256 + flg as u16).is_multiple_of(31) {
+            return Err(RasterError::Codec("zlib CMF/FLG check failed".into()));
+        }
+        if flg & 0x20 != 0 {
+            return Err(RasterError::Codec("zlib preset dictionary not supported".into()));
+        }
+        Ok(Self { width, height, rows: PngScanlineSource::Streamed(Box::new(stream)) })
+    }
+
+    fn interlaced(data: &[u8], ihdr: Ihdr, palette: &[[u8; 3]], palette_alpha: &[u8], gray_trans: Option<u32>, rgb_trans: Option<(u32, u32, u32)>) -> Result<Self, RasterError> {
+        let chunks = read_chunks(data).map_err(RasterError::Codec)?;
+        let mut idat = Vec::new();
+        for &(ty, chunk) in &chunks {
+            if ty == *b"IDAT" {
+                idat.extend_from_slice(chunk);
+            }
+        }
+        let raw = deflate::zlib_decompress(&idat).map_err(RasterError::Codec)?;
+        let (width, height) = (ihdr.width, ihdr.height);
+        let spp = samples_per_pixel(ihdr.color_type);
+        let bpp = bpp_bytes(&ihdr);
+        let mut rgba_rows: Vec<Vec<u8>> = (0..height).map(|_| vec![0u8; width as usize * 4]).collect();
+        let mut pos = 0usize;
+        for (pass, &(sx, sy, stx, sty)) in ADAM7.iter().enumerate() {
+            let (pw, ph) = adam7_pass_dims(width, height, pass);
+            if pw == 0 || ph == 0 {
+                continue;
+            }
+            let row_bytes = packed_row_bytes(pw, ihdr.color_type, ihdr.bit_depth);
+            let (rows, new_pos) = defilter_pass(&raw, pos, ph, row_bytes, bpp).map_err(RasterError::Codec)?;
+            pos = new_pos;
+            for (j, row) in rows.iter().enumerate() {
+                let samples = unpack_samples(row, pw as usize, spp, ihdr.bit_depth);
+                let y = sy + j as u32 * sty;
+                for i in 0..pw as usize {
+                    let px = pixel_to_rgba(&samples[i * spp..i * spp + spp], &ihdr, palette, palette_alpha, gray_trans, rgb_trans).map_err(RasterError::Codec)?;
+                    let x = (sx + i as u32 * stx) as usize;
+                    rgba_rows[y as usize][x * 4..x * 4 + 4].copy_from_slice(&px);
+                }
+            }
+        }
+        Ok(Self { width, height, rows: PngScanlineSource::Queued(rgba_rows.into()) })
+    }
+
+    pub fn width(&self) -> u32 {
+        self.width
+    }
+
+    pub fn height(&self) -> u32 {
+        self.height
+    }
+
+    /// ⏭️ Advances by exactly one scanline, returning canonical RGBA8 bytes (`width * 4`), or
+    /// `None` once every row has been yielded and the stream verified.
+    pub fn next_row(&mut self) -> Result<Option<Vec<u8>>, RasterError> {
+        loop {
+            match self.step(usize::MAX)? {
+                PngScanlineStep::Pending => {}
+                PngScanlineStep::Row(row) => return Ok(Some(row)),
+                PngScanlineStep::Done => return Ok(None),
+            }
+        }
+    }
+
+    /// ⏱️ One bounded unit of decoding: at most `unit_budget` inflater advances (each consumes at
+    /// most one compressed byte and produces at most one filtered-scanline byte), plus the
+    /// unfilter/canonicalize of the one scanline they complete.
+    pub fn step(&mut self, unit_budget: usize) -> Result<PngScanlineStep, RasterError> {
+        let width = self.width;
+        let height = self.height;
+        let stream = match &mut self.rows {
+            PngScanlineSource::Queued(queue) => return Ok(queue.pop_front().map_or(PngScanlineStep::Done, PngScanlineStep::Row)),
+            PngScanlineSource::Streamed(stream) => stream,
+        };
+        let mut budget = unit_budget.max(1);
+        if stream.next_y >= height {
+            return if stream.finish(&mut budget).map_err(RasterError::Codec)? { Ok(PngScanlineStep::Done) } else { Ok(PngScanlineStep::Pending) };
+        }
+        while stream.row.len() < stream.row_bytes + 1 {
+            if budget == 0 {
+                return Ok(PngScanlineStep::Pending);
+            }
+            budget -= 1;
+            if stream.pending.is_none() && stream.zlib_remaining > 4 {
+                stream.pending = stream.next_zlib_byte().map_err(RasterError::Codec)?;
+            }
+            let input_complete = stream.pending.is_none() && stream.zlib_remaining <= 4;
+            match stream.inflater.advance(&mut stream.pending, input_complete).map_err(|error| RasterError::Codec(format!("png: inflate: {error:?}")))? {
+                semio_framework_deflate::InflateOutcome::NeedInput => {}
+                semio_framework_deflate::InflateOutcome::Wrote(byte) => {
+                    stream.adler_push(byte);
+                    stream.row.push(byte);
+                }
+                semio_framework_deflate::InflateOutcome::Done => return Err(RasterError::Codec("png: truncated scanline data".into())),
+            }
+        }
+        let ft = stream.row[0];
+        let recon = defilter_row(ft, &stream.row[1..], stream.prev.as_deref(), stream.bpp).map_err(RasterError::Codec)?;
+        stream.row.clear();
+        let spp = samples_per_pixel(stream.ihdr.color_type);
+        let samples = unpack_samples(&recon, width as usize, spp, stream.ihdr.bit_depth);
+        let mut row = vec![0u8; width as usize * 4];
+        for i in 0..width as usize {
+            let px = pixel_to_rgba(&samples[i * spp..i * spp + spp], &stream.ihdr, &stream.palette, &stream.palette_alpha, stream.gray_trans, stream.rgb_trans).map_err(RasterError::Codec)?;
+            row[i * 4..i * 4 + 4].copy_from_slice(&px);
+        }
+        stream.prev = Some(recon);
+        stream.next_y += 1;
+        Ok(PngScanlineStep::Row(row))
+    }
+}
+//#endregion PngScanlineDecoder
+
+//#region Resize
+/// 📐️ Bilinear-resamples an RGBA8 image to `(dst_width, dst_height)`; degenerates to a copy when
+/// the target size matches the source, and to transparent black when either target dimension is
+/// zero.
+pub fn resize_bilinear(image: &RasterImage, dst_width: u32, dst_height: u32) -> RasterImage {
+    if dst_width == image.width && dst_height == image.height {
+        return image.clone();
+    }
+    if dst_width == 0 || dst_height == 0 || image.width == 0 || image.height == 0 {
+        return RasterImage::new(dst_width, dst_height);
+    }
+    let mut out = RasterImage::new(dst_width, dst_height);
+    let scale_x = image.width as f64 / dst_width as f64;
+    let scale_y = image.height as f64 / dst_height as f64;
+    let get = |x: u32, y: u32, channel: usize| -> f64 {
+        let idx = ((y * image.width + x) * 4) as usize + channel;
+        image.pixels[idx] as f64
+    };
+    for dy in 0..dst_height {
+        let sy = ((dy as f64 + 0.5) * scale_y - 0.5).max(0.0);
+        let y0 = sy.floor() as u32;
+        let y1 = (y0 + 1).min(image.height - 1);
+        let fy = sy - y0 as f64;
+        for dx in 0..dst_width {
+            let sx = ((dx as f64 + 0.5) * scale_x - 0.5).max(0.0);
+            let x0 = sx.floor() as u32;
+            let x1 = (x0 + 1).min(image.width - 1);
+            let fx = sx - x0 as f64;
+            let out_idx = ((dy * dst_width + dx) * 4) as usize;
+            for channel in 0..4 {
+                let top = get(x0, y0, channel) * (1.0 - fx) + get(x1, y0, channel) * fx;
+                let bottom = get(x0, y1, channel) * (1.0 - fx) + get(x1, y1, channel) * fx;
+                let value = top * (1.0 - fy) + bottom * fy;
+                out.pixels[out_idx + channel] = value.round().clamp(0.0, 255.0) as u8;
+            }
+        }
+    }
+    out
+}
+//#endregion Resize
+
+#[cfg(feature = "testkit")]
+#[doc(hidden)]
+pub mod testkit {
+    pub mod deflate {
+        use super::super::deflate as inner;
+        pub fn zlib_compress(data: &[u8]) -> Vec<u8> {
+            inner::zlib_compress(data)
+        }
+        pub fn zlib_decompress(data: &[u8]) -> Result<Vec<u8>, String> {
+            inner::zlib_decompress(data)
+        }
+    }
+}

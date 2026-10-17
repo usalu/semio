@@ -2,7 +2,7 @@
 //! `create` verb. Physical dir name (`➕add-block`, wired by `🦀️.rs`) predates the semantic
 //! rename; the Rust module is still `add_block`, the type/variant/kind are `create-block`.
 
-use crate::{FormMutation, FormQuestion, FormsDiff, FormsSnapshot};
+use crate::{FormQuestion, FormsDiff, FormsSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 
 //#region 🧩️CreateBlock
@@ -19,15 +19,18 @@ pub struct CreateBlock {
     pub index: Option<usize>,
 }
 
-impl MutationKind<FormsSnapshot, FormMutation> for CreateBlock {
+impl<Op> MutationKind<FormsSnapshot, Op> for CreateBlock
+where
+    Op: protocol::Mutation<FormsSnapshot, Diff = FormsDiff> + From<CreateBlock> + From<crate::standards::v1::subsets::any::schema::mutations::delete_block::mutation::DeleteBlock>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "block", kind: "create-block", record: "CreatedBlock" };
 
     fn diff(&self, base: &FormsSnapshot) -> protocol::MutationOutcome<FormsDiff> {
-        super::diff::diff_create_block(self, base)
+        crate::standards::v1::subsets::any::schema::mutations::create_block::diff::diff_create_block(self, base)
     }
-    fn inverse(&self, base: &FormsSnapshot) -> Result<Vec<FormMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &FormsSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
-        super::inverse::inverse_create_block(self, base)?
+        crate::standards::v1::subsets::any::schema::mutations::create_block::inverse::inverse_create_block(self, base)?
     
     })
 }

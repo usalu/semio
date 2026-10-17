@@ -1,6 +1,6 @@
 //! 🔭️ `set-lod-mode` command.
 
-use crate::editor::puzzle5d::Puzzle5dActionCtx;
+use crate::editor::puzzle5d::interaction::Puzzle5dActionCtx;
 use semio_framework_pack_json::Value;
 
 pub fn set_lod_mode(ctx: &mut Puzzle5dActionCtx<'_>, args: Option<&Value>) {

@@ -3,15 +3,17 @@ use serde::{Deserialize, Serialize};
 use pack::snapshot::ArtifactPack;
 
 //#region 🧫️Snapshot
+#[doc(hidden)]
 #[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, Default, PartialEq, Serialize, semio_framework_value_derive::ToValue, Deserialize, semio_framework_value_derive::FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = store)]
 #[artifact(extension = "testkit-macro-cfg")]
-pub(crate) struct TestConfig {
-    pub(crate) selected: Option<String>,
+pub struct TestConfig {
+    pub selected: Option<String>,
 }
 semio_framework_value::artifact_retire_struct!(TestConfig { selected });
+#[doc(hidden)]
 #[path="🧬️preparation/🦀️.rs"]
-pub(crate) mod preparation;
+pub mod preparation;
 
 impl pack::snapshot::ArtifactDsl for TestConfig {
     const EXTENSION: &'static str = "testkit-macro-cfg";
@@ -47,7 +49,8 @@ impl store::ConfigRecord for TestConfig {}
 //#region 🧬️Mutations
 #[path = "../../🧪️testing/🖥️test-app-mutations/🎚️config/🧬️mutations/🦀️.rs"]
 pub mod mutations;
-pub(crate) use mutations::{ChangeTestConfigSelection, TestConfigMutation};
+pub use crate::test_app_mutation_fixture::config::mutations::change_test_config_selection::ChangeTestConfigSelection;
+pub use crate::test_app_mutation_fixture::config::mutations::TestConfigMutation;
 //#endregion 🧬️Mutations
 
 //#region 🔺️Diff

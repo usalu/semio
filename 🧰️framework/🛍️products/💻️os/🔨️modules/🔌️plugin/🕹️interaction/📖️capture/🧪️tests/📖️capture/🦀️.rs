@@ -1,12 +1,13 @@
 //! 🧪️ Actual Store read leases, bounded byte output, cancellation, and return-maintenance ownership.
 use super::*;
 use crate::mutations::InteractionConfigMutation;
+use semio_framework_test_fixtures::fixture_path;
 use store::{ArtifactStore, SpaceMember};
 
 type InteractionStore = ArtifactStore<InteractionState, InteractionConfigMutation>;
 
 async fn fixture() -> (InteractionStore, LocalInteractionCaptureCursor, Vec<u8>, crate::io::control::NativeSnapshotBodyWallet) {
-    let fixture: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧪️tests/🧫️fixtures/🏠️local-interaction/🔣️.json")).expect("fixture read at run time")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(fixture_path!("../../../../../../../🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧪️tests/🧫️fixtures/🏠️local-interaction/🔣️.json")).expect("fixture read at run time")).unwrap();
     let row = fixture["cases"].as_array().unwrap().iter().find(|row| row["id"] == "semantic-unicode-over-page").unwrap();
     let mut state = row["expected"].clone();
     state["hover"] = serde_json::json!({"private": {"channel": "pointer", "ids": ["hover-is-not-captured"]}});

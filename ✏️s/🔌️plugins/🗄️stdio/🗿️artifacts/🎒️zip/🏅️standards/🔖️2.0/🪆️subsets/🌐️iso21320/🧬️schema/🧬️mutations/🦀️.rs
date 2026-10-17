@@ -123,6 +123,4 @@ fn added_entry_diff(base: &ZipSnapshot, entry: &ZipEntry, before: Option<&str>, 
 }
 //#endregion 🔖️AddEntry
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

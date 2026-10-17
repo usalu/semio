@@ -1,0 +1,21 @@
+{
+ "name": "frd-f3",
+ "crates": [
+  "semio-framework-test-fixtures",
+  "semio-dashboard-journeys",
+  "semio-framework-canvas-assets",
+  "semio-framework-mesh-engine",
+  "semio-framework-os-command-tests",
+  "semio-framework-os-config-tests-2",
+  "semio-framework-os-infinite-world-components",
+  "semio-framework-os-kernel",
+  "semio-framework-os-mcp-probe-document",
+  "semio-framework-plugin-decl-views",
+  "semio-framework-plugin-testing-fixtures",
+  "semio-framework-plugin-tests-09",
+  "semio-framework-plugin-tests-11-2",
+  "semio-framework-value-derive",
+  "semio-framework-value-intrinsic"
+ ],
+ "note": "FRD sample, no baseline"
+}

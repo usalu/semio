@@ -1,13 +1,14 @@
 use super::*;
+use semio_framework_test_fixtures::{fixture_path, fixture_text};
 use semio_framework_value::{FromValue, ToValue};
 use serde_json::Value;
 
 fn fixture() -> Value {
-    serde_json::from_str(include_str!("../../../../../../🧪️tests/🧫️fixtures/🗂️catalogue/🔣️.json")).expect("catalogue fixture parses")
+    serde_json::from_str(fixture_text!("../../../../🧪️tests/🧫️fixtures/🗂️catalogue/🔣️.json")).expect("catalogue fixture parses")
 }
 
 fn catalogue_folder() -> std::path::PathBuf {
-    std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🗂️catalogue")
+    fixture_path!("../../../../🧬️schema/🗂️catalogue")
 }
 
 fn step<'a>(node: &'a mut Value, key: &Value) -> &'a mut Value {

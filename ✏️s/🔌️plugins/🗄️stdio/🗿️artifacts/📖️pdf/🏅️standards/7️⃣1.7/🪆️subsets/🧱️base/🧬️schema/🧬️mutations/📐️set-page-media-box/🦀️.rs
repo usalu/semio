@@ -1,6 +1,5 @@
 //! 📐️ Authoritative PDF mutation payload, diff, inverse, and tests for `set-page-media-box`.
 
-use super::PdfMutation;
 use crate::standards::v1_7::subsets::base::schema::diff::{self, PdfDiff};
 use crate::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot;
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
@@ -15,16 +14,19 @@ pub struct SetPageMediaBox {
     pub media_box: [f64; 4],
 }
 
-impl MutationKind<PdfSnapshot, PdfMutation> for SetPageMediaBox {
+impl<Op> MutationKind<PdfSnapshot, Op> for SetPageMediaBox
+where
+    Op: protocol::Mutation<PdfSnapshot, Diff = PdfDiff> + From<SetPageMediaBox>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "page-media-box", kind: "set-page-media-box", record: "Set" };
 
     fn diff(&self, _base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
         MutationOutcome::new(diff::diff_set_page_media_box(self.index, self.media_box))
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
-        base.pages.get(self.index).map(|page| PdfMutation::SetPageMediaBox(SetPageMediaBox { index: self.index, media_box: page.media_box })).into_iter().collect()
+        base.pages.get(self.index).map(|page| Op::from(SetPageMediaBox { index: self.index, media_box: page.media_box })).into_iter().collect()
     
     })())
 }
@@ -41,8 +43,6 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetPageMediaBox {
 //#endregion 🔖️Mutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
 

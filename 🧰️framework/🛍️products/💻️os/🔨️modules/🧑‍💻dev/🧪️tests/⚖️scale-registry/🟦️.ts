@@ -1,8 +1,8 @@
 /** 🧪️ Verifies deterministic synthetic testing registries against independent graph topology. */
 import { expect, test } from "vitest";
 import { DirectedGraph } from "graphology";
-import examples from "../../../../🧪️testing/⚖️scale/🧪️tests/🧫️fixtures/📇️registry/🔣️.json";
-import { renderScaleFixtureArtifacts } from "../../../../🧪️testing/⚖️scale/📽️projection/🟦️.ts";
+import { scaleRegistryFixture as examples } from "@semio-tech/framework-os/testing/scale/testing/fixtures/registry";
+import { renderScaleFixtureArtifacts } from "@semio-tech/framework-os/testing/scale/projection";
 
 for (const example of examples) test(example.name, () => {
   const first = renderScaleFixtureArtifacts(example.plugins, example.extensions, example.seed);

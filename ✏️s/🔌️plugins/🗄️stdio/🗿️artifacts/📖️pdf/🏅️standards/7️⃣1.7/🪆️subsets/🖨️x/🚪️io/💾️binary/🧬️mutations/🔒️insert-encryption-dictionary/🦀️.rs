@@ -1,6 +1,6 @@
 //! 🔒️ Direct binary codec for `insert-encryption-dictionary`.
 
-use crate::standards::v1_7::subsets::x::schema::mutations::InsertEncryptionDictionary;
+use crate::standards::v1_7::subsets::x::schema::mutations::insert_encryption_dictionary::InsertEncryptionDictionary;
 
 //#region 🔖️Identity
 pub const TAG: u8 = 0;
@@ -21,7 +21,5 @@ pub fn decode(bytes: &[u8]) -> Result<InsertEncryptionDictionary, String> {
 //#endregion 🔖️Codec
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

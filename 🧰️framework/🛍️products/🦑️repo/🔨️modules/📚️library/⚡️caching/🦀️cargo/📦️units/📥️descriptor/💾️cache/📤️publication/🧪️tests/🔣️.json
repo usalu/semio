@@ -1,0 +1,132 @@
+{
+  "version": 1,
+  "nodes": 2,
+  "cases": [
+    {
+      "name": "healthy",
+      "accepted": true,
+      "events": [
+        "publish:admitted",
+        "validate:shared",
+        "consume:shared"
+      ],
+      "message": "",
+      "mutateNodeLimit": 0
+    },
+    {
+      "name": "pressure",
+      "accepted": true,
+      "events": [
+        "publish:pressure",
+        "retire:retired",
+        "stage",
+        "publish:admitted",
+        "validate:exclusive",
+        "consume:shared"
+      ],
+      "message": "",
+      "mutateNodeLimit": 1
+    },
+    {
+      "name": "recovery",
+      "accepted": true,
+      "events": [
+        "publish:recovery",
+        "recover",
+        "stage",
+        "publish:admitted",
+        "validate:exclusive",
+        "consume:shared"
+      ],
+      "message": "",
+      "mutateNodeLimit": 0
+    },
+    {
+      "name": "staging",
+      "accepted": true,
+      "events": [
+        "publish:staging",
+        "stage",
+        "publish:admitted",
+        "validate:exclusive",
+        "consume:shared"
+      ],
+      "message": "",
+      "mutateNodeLimit": 0
+    },
+    {
+      "name": "too-large",
+      "accepted": false,
+      "events": [
+        "publish:pressure"
+      ],
+      "message": "Complete requested descriptor set exceeds the fixed cache frontier",
+      "mutateNodeLimit": 0
+    },
+    {
+      "name": "corrupt",
+      "accepted": false,
+      "events": [
+        "publish:error"
+      ],
+      "message": "Immutable selected Rust node collision",
+      "mutateNodeLimit": 0
+    }
+  ],
+  "primaries": [
+    {
+      "phase": "publish",
+      "primary": "error"
+    },
+    {
+      "phase": "publish",
+      "primary": "undefined"
+    },
+    {
+      "phase": "validate",
+      "primary": "error"
+    },
+    {
+      "phase": "validate",
+      "primary": "undefined"
+    },
+    {
+      "phase": "consume",
+      "primary": "error"
+    },
+    {
+      "phase": "consume",
+      "primary": "undefined"
+    }
+  ],
+  "epochs": [
+    "entry",
+    "delivery"
+  ],
+  "drain": [
+    {
+      "name": "success",
+      "child": "success",
+      "invalidate": false,
+      "failed": false
+    },
+    {
+      "name": "child-error",
+      "child": "error",
+      "invalidate": false,
+      "failed": true
+    },
+    {
+      "name": "child-undefined",
+      "child": "undefined",
+      "invalidate": false,
+      "failed": true
+    },
+    {
+      "name": "final-recheck",
+      "child": "success",
+      "invalidate": true,
+      "failed": true
+    }
+  ]
+}

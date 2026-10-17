@@ -20,7 +20,8 @@
 use crate::schema::normal_internals::undirected::UndirectedGraph;
 use crate::schema::snapshot::SemioGraphSnapshot;
 use crate::schema::traversal_internals::dfs_preorder_nodes;
-use graph_core::{NodeId, PropertyBag};
+use graph_core::{NodeId};
+use graph_manifest::{PropertyBag};
 use std::collections::BTreeMap;
 
 //#region 🔖️Value
@@ -134,8 +135,5 @@ impl store::InferredField<SemioGraphSnapshot> for NodeConnectivity {
 }
 //#endregion 🔖️DependencyHashChain
 
-#[cfg(test)]
-//#region 🧪️Tests
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

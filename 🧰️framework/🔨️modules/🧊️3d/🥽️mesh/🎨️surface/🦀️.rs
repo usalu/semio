@@ -8,9 +8,6 @@
 use super::*;
 use std::collections::BTreeMap;
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 
 const CHUNK: usize = 256;
 

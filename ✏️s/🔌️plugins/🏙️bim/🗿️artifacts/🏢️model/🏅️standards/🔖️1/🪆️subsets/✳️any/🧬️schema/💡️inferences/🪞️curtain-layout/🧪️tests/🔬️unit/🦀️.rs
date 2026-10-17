@@ -2,6 +2,7 @@ use super::*;
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::{kinds, plan, ModelNode};
 use crate::standards::v1::subsets::any::schema::{snapshot::{CurtainGrid, CurtainPanel}, diff::{Entry, ModelDiff, patches::StoreyPatch}};
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
+use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_curtain_layout;
 
 const HOUSE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🏠️house/📸️snapshot/🔣️.json");
 

@@ -1,7 +1,7 @@
 import {expect,test} from "bun:test";
 import {mkdirSync,mkdtempSync,readFileSync,writeFileSync} from "node:fs";
 import {join,resolve} from "node:path";
-const owner=resolve(import.meta.dir,"../.."),output=process.env.SEMIO_TEST_ARTIFACT_DIR;
+const owner=resolve(import.meta.dir,".."),output=process.env.SEMIO_TEST_ARTIFACT_DIR;
 if(!output)throw Error("Caller-owned native output required");mkdirSync(output,{recursive:true});
 const corpus=JSON.parse(readFileSync(join(owner,"🧫️fixtures/🔣️.json"),"utf8")) as {ownerSource:string;activationCases:readonly {id:string;sources:Record<string,string>;active:boolean;nativeAliases?:Record<string,"provider"|"other">}[];cases:readonly {id:string;source:string;nativeCompiles:boolean;expectedDiagnostic:"none"|"E0425"|"E0433"|"E0659"}[]};
 const root=mkdtempSync(join(output,"compute-binding-native-"));

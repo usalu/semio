@@ -6,6 +6,14 @@
   "description": "Puzzle authored artifact test infrastructure.",
   "type": "module",
   "private": true,
+  "exports": {
+    "./artifacts/5d/standards/1/subsets/any/schema/diff": "./🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts",
+    "./testing/compose5d-preparetopologymodel": "./🧪️testing/🧪️compose5d-preparetopologymodel/🟦️.ts",
+    "./testing/interactivity-puzzle-fill-p4e": "./🧪️testing/🔬️interactivity-puzzle-fill-p4e/🟦️.ts",
+    "./testing/interactivity-puzzle-fill-run-job": "./🧪️testing/🔬️interactivity-puzzle-fill-run-job/🟦️.ts",
+    "./testing/interactivity-puzzle-fill-trace": "./🧪️testing/🔬️interactivity-puzzle-fill-trace/🟦️.ts",
+    "./testing/tool-job-puzzle-reserved-routes": "./🧪️testing/🔬️tool-job-puzzle-reserved-routes/🟦️.ts"
+  },
   "scripts": {
     "test": "bun --cwd \"../../../../..\" repo run @semio-tech/puzzle-js:test"
   },
@@ -22,6 +30,7 @@
     "@semio-tech/cad-js-module-aec-building-structure": "workspace:*"
   },
   "devDependencies": {
+    "@semio-tech/s-dev-catalog-ts": "workspace:*",
     "@tailwindcss/vite": "^4.1.18",
     "@types/react": "^19.2.8",
     "@types/react-dom": "^19.2.3",

@@ -17,7 +17,7 @@
 //! engine behaviour.
 
 #[path="🔣️json/🦀️.rs"]
-pub(crate) mod remodeling_json;
+pub mod remodeling_json;
 
 use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::default_remodeling_scene;
 use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::image_asset_child_handle;

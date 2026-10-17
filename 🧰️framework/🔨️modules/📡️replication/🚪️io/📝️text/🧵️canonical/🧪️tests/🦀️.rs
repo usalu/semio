@@ -51,7 +51,6 @@ fn persistent_protocol_canonical_fields_preserve_original_projection_pointers_an
     let(step,heap)=observe_heap_allocations_on_this_thread(||source.close_step(admitted).unwrap());assert!(step.progress().fits(admitted));assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));assert!(turn<99999||source.terminal_is_empty());
    }
    assert!(source.terminal_is_empty());let(_,heap)=observe_heap_allocations_on_this_thread(||drop(source));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
-   println!("[DEBUG] persistent canonical protocol edit={} pause={pause:?} turns={turns} original field/backing pointers exact, transaction retained, JSON revision bytes exact, 4096 body grant and physical closure/terminal drop exact",row["edit"]["id"]);
   }
  }
 }

@@ -1,6 +1,23 @@
 //! 🧵️ Retained work of the puzzle 5d editor: the window tool ids, the retained payload schema, extent and reduce helpers, the window command work and the export work. See [`super`].
 
-use super::*;
+use crate::editor::puzzle5d::snapshot::Puzzle5dPlaySnapshot;
+use crate::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation;
+use crate::editor::puzzle5d::commands::export_snapshot;
+use crate::{editor::puzzle5d::config::Puzzle5dConfig, editor::puzzle5d::config::Puzzle5dConfigMutation};
+use crate::editor::puzzle5d::window as window_ownership;
+use semio_framework_plugin::kernel::UiDirtyScope;
+use semio_framework_plugin::EditorApp;
+use semio_framework_plugin::Emit;
+use semio_framework_plugin::Fault;
+use semio_framework_job::Operation;
+use semio_framework_pack_json::Value;
+use crate::editor::puzzle5d::dispatch::puzzle5d_handle_action;
+use crate::editor::puzzle5d::interaction::Puzzle5dEditor;
+use crate::editor::puzzle5d::{interaction, snapshot, view};
+use crate::editor::puzzle5d::entities::{PUZZLE5D_INTERACTION_DOMAIN, Puzzle5dDocument, puzzle5d_document_from_snapshot, puzzle5d_editor_projection};
+use semio_framework_job::StepContext;
+use crate::editor::puzzle5d::entities::{PUZZLE5D_WORLD_WINDOW_KIND_ID};
+use crate::editor::puzzle5d::interaction::{Puzzle5dCommand, puzzle5d_notice_emit};
 
 //#region 🔖️PlayApp
 //#region 🧵️RetainedCommands
@@ -9,7 +26,7 @@ use super::*;
 /// suggestion offset publish the addressed pane's `WindowConfig`; the contact tolerance publishes the
 /// shared app `Config` through the same one-turn route (puzzle 3d joins the identical set to its own
 /// `Puzzle3dWindowCommandWork` arm).
-pub(super) const PUZZLE5D_WINDOW_TOOL_IDS: &[&str] = &[
+pub const PUZZLE5D_WINDOW_TOOL_IDS: &[&str] = &[
     "addTargetVolume",
     "setVoxelDims",
     "cycleBrushCandidate",
@@ -51,9 +68,9 @@ pub(super) const PUZZLE5D_WINDOW_TOOL_IDS: &[&str] = &[
     "setLodManual",
     "setTransformGumballFlag",
 ];
-pub(super) const PUZZLE5D_RETAINED_PAYLOAD_SCHEMA: &str = "puzzle.5d.tool-command.v1";
+pub const PUZZLE5D_RETAINED_PAYLOAD_SCHEMA: &str = "puzzle.5d.tool-command.v1";
 
-pub(super) fn puzzle5d_retained_extent(_command: &Puzzle5dCommand, snapshot: &Puzzle5dPlaySnapshot, interaction: &protocol::InteractionState) -> Option<usize> {
+pub fn puzzle5d_retained_extent(_command: &Puzzle5dCommand, snapshot: &Puzzle5dPlaySnapshot, interaction: &protocol::InteractionState) -> Option<usize> {
     let projection = puzzle5d_editor_projection(snapshot);
     let selection = interaction.selection.get(PUZZLE5D_INTERACTION_DOMAIN).map_or(0, |selection| selection.ids.len());
     let parts = projection.get("parts").and_then(Value::as_array).map_or(0, Vec::len);
@@ -63,7 +80,7 @@ pub(super) fn puzzle5d_retained_extent(_command: &Puzzle5dCommand, snapshot: &Pu
     (items <= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS).then_some(items)
 }
 
-pub(super) fn puzzle5d_retained_reduce(
+pub fn puzzle5d_retained_reduce<A: Puzzle5dEditor>(
     command: &Puzzle5dCommand,
     snapshot: &Puzzle5dPlaySnapshot,
     config: &Puzzle5dConfig,
@@ -73,61 +90,61 @@ pub(super) fn puzzle5d_retained_reduce(
 ) -> Result<Emit<Puzzle5dMutation, Puzzle5dConfigMutation>, Fault> {
     let empty_selection = protocol::DomainSelection::default();
     let selection = interaction.selection.get(PUZZLE5D_INTERACTION_DOMAIN).unwrap_or(&empty_selection);
-    let window_id = view_state.and_then(|view| view.window_id.as_deref()).or_else(|| command.window_id()).unwrap_or(world3d::WINDOW_KIND_ID);
+    let window_id = view_state.and_then(|view| view.window_id.as_deref()).or_else(|| command.window_id()).unwrap_or(crate::editor::puzzle5d::entities::PUZZLE5D_WORLD_WINDOW_KIND_ID);
     let runtime = window_ownership::runtime(config, &window_ownership::Puzzle5dWindowConfig::default(), &window_ownership::Puzzle5dWindowTransient::default(), window_id);
-    Ok(with_puzzle5d_app(|app| app.handle_action_impl("", command.action_id(), command.args(), command.window_id(), snapshot, &runtime, view_state, selection, None, None).0))
+    Ok(puzzle5d_handle_action::<A>("", command.action_id(), command.args(), command.window_id(), snapshot, &runtime, view_state, selection, None, None).0)
 }
 
 /// 🎲️ The nonce one operation's minted part and fastener ids derive from.
-pub(super) fn puzzle5d_operation_nonce(operation: &Operation) -> u64 {
+pub fn puzzle5d_operation_nonce(operation: &Operation) -> u64 {
     operation.operation.0 ^ operation.generation.0.rotate_left(17) ^ operation.seed.rotate_left(31)
 }
 
 /// ♻️ The owners one `Puzzle5dWindowCommandWork` still holds when its job closes, retired as one controlled bundle.
 #[derive(semio_framework_value::RetireOwned)]
 struct Puzzle5dWindowWorkOwners {
-    pub(super) instance_owner: Option<semio_framework_plugin::ArtifactInstanceOperationOwnerHandle>,
-    pub(super) tool_run: Option<semio_framework_plugin::ToolRunView>,
-    pub(super) authoring_seed: String,
+    pub instance_owner: Option<semio_framework_plugin::ArtifactInstanceOperationOwnerHandle>,
+    pub tool_run: Option<semio_framework_plugin::ToolRunView>,
+    pub authoring_seed: String,
 }
 
-pub(super) struct Puzzle5dWindowCommandWork {
-    pub(super) tool_id: &'static str,
+pub struct Puzzle5dWindowCommandWork {
+    pub tool_id: &'static str,
     consumed: bool,
-    pub(super) closing: bool,
-    pub(super) close_owners: crate::puzzle_job::WorkClosing<Puzzle5dWindowWorkOwners>,
-    pub(super) instance_owner: Option<semio_framework_plugin::ArtifactInstanceOperationOwnerHandle>,
-    pub(super) tool_run: Option<semio_framework_plugin::ToolRunView>,
+    pub closing: bool,
+    pub close_owners: crate::puzzle_job::WorkClosing<Puzzle5dWindowWorkOwners>,
+    pub instance_owner: Option<semio_framework_plugin::ArtifactInstanceOperationOwnerHandle>,
+    pub tool_run: Option<semio_framework_plugin::ToolRunView>,
     /// 🌱️ The admission's authoring seed a typed `move`/`rotate`/`scale` submit mints its tool transaction from.
-    pub(super) authoring_seed: String,
+    pub authoring_seed: String,
 }
 
 impl Puzzle5dWindowCommandWork {
-    pub(super) fn new(tool_id: &'static str, authoring_seed: String) -> Self {
+    pub fn new(tool_id: &'static str, authoring_seed: String) -> Self {
         Self { tool_id, consumed: false, closing: false, close_owners: Default::default(), instance_owner: None, tool_run: None, authoring_seed }
     }
 
     /// 🪪️ Binds the admission's retained operation owner.
-    pub(super) fn bound(mut self, owner: semio_framework_plugin::ArtifactInstanceOperationOwnerHandle) -> Self {
+    pub fn bound(mut self, owner: semio_framework_plugin::ArtifactInstanceOperationOwnerHandle) -> Self {
         self.instance_owner = Some(owner);
         self
     }
 
     /// ⏯️ Binds the instance's tool run as of admission — the identity Escape's `toolRunAbort` needs.
-    pub(super) fn with_tool_run(mut self, tool_run: Option<semio_framework_plugin::ToolRunView>) -> Self {
+    pub fn with_tool_run(mut self, tool_run: Option<semio_framework_plugin::ToolRunView>) -> Self {
         self.tool_run = tool_run;
         self
     }
 }
 
-impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puzzle5dPlayApp>> for Puzzle5dWindowCommandWork {
+impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<A>> for Puzzle5dWindowCommandWork {
     fn tool_id(&self) -> &'static str { self.tool_id }
-    fn extent(&self, _command: &Puzzle5dCommand, _snapshot: &Puzzle5dPlaySnapshot, _interaction: &protocol::InteractionState, _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Puzzle5dPlayApp>>>) -> Option<usize> { Some(1) }
-    fn work_demands(&self, _input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle5dPlayApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-        crate::retained_command::step_demands::<EditorApp<Puzzle5dPlayApp>>(size_of::<Self>())
+    fn extent(&self, _command: &Puzzle5dCommand, _snapshot: &Puzzle5dPlaySnapshot, _interaction: &protocol::InteractionState, _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<A>>>) -> Option<usize> { Some(1) }
+    fn work_demands(&self, _input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        crate::retained_command::step_demands::<EditorApp<A>>(size_of::<Self>())
     }
 
-    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle5dPlayApp>>, _cx: &mut StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<Puzzle5dPlayApp>>, Fault> {
+    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, _cx: &mut StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, Fault> {
         let semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config, interaction, hover: _hover, context, .. } = *input;
         let view_state = context.and_then(|context| context.view_state.as_ref());
         let window_config_snapshot = context.and_then(|context| context.window_config.as_ref());
@@ -140,7 +157,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puz
         let runtime = window_ownership::runtime(config, &window_config, &window_transient, window_id);
         let empty_selection = protocol::DomainSelection::default();
         let selection = interaction.selection.get(PUZZLE5D_INTERACTION_DOMAIN).unwrap_or(&empty_selection);
-        let (emit, ephemeral) = with_puzzle5d_app(|app| app.handle_action_impl(&self.authoring_seed, command.action_id(), command.args(), Some(window_id), snapshot, &runtime, Some(view), selection, self.instance_owner.as_ref(), self.tool_run.as_ref()));
+        let (emit, ephemeral) = puzzle5d_handle_action::<A>(&self.authoring_seed, command.action_id(), command.args(), Some(window_id), snapshot, &runtime, Some(view), selection, self.instance_owner.as_ref(), self.tool_run.as_ref());
         self.consumed = true;
         Ok(semio_framework_plugin::retained_command::ArtifactCommandWorkStep::CompleteWithEphemeral { emit, ephemeral })
     }
@@ -186,24 +203,24 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puz
 /// segmented download is a `PuzzleCommandWorkStep`, not an `Emit` — `◻️2d`'s `Puzzle2dExportWork` is
 /// the same shape.
 #[derive(Default)]
-pub(super) struct Puzzle5dExportWork {
+pub struct Puzzle5dExportWork {
     consumed: bool,
 }
 
-impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puzzle5dPlayApp>> for Puzzle5dExportWork {
+impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<A>> for Puzzle5dExportWork {
     fn tool_id(&self) -> &'static str {
         "exportSnapshot"
     }
 
-    fn extent(&self, _command: &Puzzle5dCommand, _snapshot: &Puzzle5dPlaySnapshot, _interaction: &protocol::InteractionState, _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Puzzle5dPlayApp>>>) -> Option<usize> {
+    fn extent(&self, _command: &Puzzle5dCommand, _snapshot: &Puzzle5dPlaySnapshot, _interaction: &protocol::InteractionState, _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<A>>>) -> Option<usize> {
         Some(1)
     }
 
-    fn work_demands(&self, _input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle5dPlayApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-        crate::retained_command::step_demands::<EditorApp<Puzzle5dPlayApp>>(size_of::<Self>())
+    fn work_demands(&self, _input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        crate::retained_command::step_demands::<EditorApp<A>>(size_of::<Self>())
     }
 
-    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle5dPlayApp>>, _cx: &mut StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<Puzzle5dPlayApp>>, Fault> {
+    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, _cx: &mut StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, Fault> {
         let semio_framework_plugin::retained_command::ArtifactCommandInputs { command: _command, snapshot, config: _config, interaction: _interaction, hover: _hover, context, .. } = *input;
         let view_state = context.and_then(|context| context.view_state.as_ref());
         if self.consumed {

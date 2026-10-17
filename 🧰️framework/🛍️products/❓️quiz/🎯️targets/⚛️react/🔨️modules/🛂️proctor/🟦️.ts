@@ -12,7 +12,7 @@
  * and a deputy decides meanwhile; it is asked again now and then, and after every refusal, since a refusal may be the
  * first sign of a proctor that was replaced.
  *
- * @see ../../../../../🖥️server/🟦️.ts — `ServerClient`, `CommandEnvelope`, `QueryEnvelope`
+ * @see ../../../../../🖥️server/📡️client/🟦️.ts — `ServerClient`; `CommandEnvelope` and `QueryEnvelope` in ../../../../../🖥️server/🧬️wire-types/🟦️.ts
  * @see ../../../../🧬️schema/🔣️.json — `Command`, `Event`, `Query`, `Rejection` and the views
  * @see https://www.rfc-editor.org/rfc/rfc9110#section-10.2.3 — `Retry-After`
  */

@@ -1,5 +1,6 @@
 //! ✏️ Flow play app — the `edit` mode: the default two-window authoring layout (graph + compiled DSL).
 
+use crate::editor::flow::base::FLOW_PLAY_WINDOW_MAIN;
 use crate::editor::flow::modes::edit::windows::{compiled, main};
 use semio_framework_plugin::create_default_layout;
 use semio_framework_ui_locale::LocalizedLabel;
@@ -17,7 +18,7 @@ pub fn definition() -> ModeDefinition {
 /// 🪟️ The app's default window layout — this mode is the app's `default_mode_id`, so its layout IS the
 /// app-level `default_layout`.
 pub fn layout() -> WindowLayout {
-    create_default_layout(&[main::FLOW_PLAY_WINDOW_MAIN.into(), compiled::FLOW_PLAY_WINDOW_COMPILED.into()], "row", Some(&[68.0, 32.0]), Some(&["Flow".into(), "DSL".into()]))
+    create_default_layout(&[FLOW_PLAY_WINDOW_MAIN.into(), compiled::FLOW_PLAY_WINDOW_COMPILED.into()], "row", Some(&[68.0, 32.0]), Some(&["Flow".into(), "DSL".into()]))
 }
 //#endregion 🔖️Definition
 

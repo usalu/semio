@@ -1,4 +1,4 @@
-import { buildModePolicy, readBuildMode, type BuildMode } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
+import { buildModePolicy, type BuildMode } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 import { builtinModules, createRequire } from "node:module";
 import { resolve } from "node:path";
 
@@ -10,7 +10,7 @@ export function extensionPackageEnvironment(environment: NodeJS.ProcessEnv): Nod
 }
 
 /** 📦️Defines a dependency-bundled CommonJS entry while retaining VS Code and Node host modules. */
-export function extensionBuildConfig(root: string, entry: string, outputDirectory: string, outputFile: string, watch: boolean, mode: BuildMode = readBuildMode(process.env.SEMIO_BUILD_MODE)) {
+export function extensionBuildConfig(root: string, entry: string, outputDirectory: string, outputFile: string, mode: BuildMode) {
   const policy = buildModePolicy(mode);
   const define = { "import.meta.vitest": "undefined" };
   return {
@@ -40,7 +40,6 @@ export function extensionBuildConfig(root: string, entry: string, outputDirector
       rollupOptions: { treeshake: policy.optimize, external: (id: string) => id.startsWith("node:") || extensionExternals.has(id) },
       sourcemap: policy.sourceMap,
       target: "node22",
-      watch: watch ? {} : undefined,
     },
   };
 }

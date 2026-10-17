@@ -136,6 +136,10 @@ type drawingDrawingDiffGuardSizeBounds = { readonly minItems?: number; readonly 
 
 export const drawingDrawingDiffGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : drawingDrawingDiffGuardReject(at, "value is not an object");
+export const drawingDrawingDiffGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) drawingDrawingDiffGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const drawingDrawingDiffGuardArray = (value: unknown, at: string, bounds: drawingDrawingDiffGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return drawingDrawingDiffGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) drawingDrawingDiffGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -224,7 +228,7 @@ export function parseDrawingLayerInsertion(value: unknown, at = "$"): DrawingLay
 }
 
 export function parseDrawingLayerRelocation(value: unknown, at = "$"): DrawingLayerRelocation {
-  const row = drawingDrawingDiffGuardObject(value, at);
+  const row = drawingDrawingDiffGuardClosed(drawingDrawingDiffGuardObject(value, at), at, ["id", "from", "to"]);
   return {
     id: drawingDrawingDiffGuardString(row["id"], `${at}.id`),
     from: parseDrawingLayerAddress(row["from"], `${at}.from`),
@@ -233,7 +237,7 @@ export function parseDrawingLayerRelocation(value: unknown, at = "$"): DrawingLa
 }
 
 export function parseDrawingLayerModification(value: unknown, at = "$"): DrawingLayerModification {
-  const row = drawingDrawingDiffGuardObject(value, at);
+  const row = drawingDrawingDiffGuardClosed(drawingDrawingDiffGuardObject(value, at), at, ["id", "patch"]);
   return {
     id: drawingDrawingDiffGuardString(row["id"], `${at}.id`),
     patch: parseDrawingLayerPatch(row["patch"], `${at}.patch`),

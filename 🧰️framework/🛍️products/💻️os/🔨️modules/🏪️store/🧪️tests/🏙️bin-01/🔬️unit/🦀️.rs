@@ -3,6 +3,7 @@
 //! 🧭️ Moved from the former store unit test module (chunk 1 of the cut by subject).
 
 use super::*;
+use semio_framework_test_fixtures::fixture_path;
 
 #[test]
 fn original_catalog_constructor_stages_retain_original_sources_and_conserve_native_heap(){
@@ -13,7 +14,7 @@ fn original_catalog_constructor_stages_retain_original_sources_and_conserve_nati
   let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owners.admit_constructor(grant));let receipt=result.unwrap_or_else(|_|panic!("unchanged independent constructor policy must admit next original stage"));assert!(receipt.fits(grant));assert!(receipt.copied_items>0);assert_eq!(heap.requested_bytes,receipt.retained_capacity_bytes);assert_eq!(heap.released_bytes,receipt.released_bytes);births+=heap.requested_bytes;releases+=heap.released_bytes;turns+=1;
  }
  while !owners.uninstalled_owners_terminal_is_empty(){assert!(turns<4096,"original uninstalled catalog must close under independent authority");let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owners.close_uninstalled_owners_step(grant));let step=step.unwrap();let receipt=step.progress();assert!(receipt.fits(grant));assert!(receipt.copied_items>0||matches!(step,RetainedCloneStep::Complete(_)));assert_eq!(heap.requested_bytes,receipt.retained_capacity_bytes);assert_eq!(heap.released_bytes,receipt.released_bytes);births+=heap.requested_bytes;releases+=heap.released_bytes;turns+=1;}
- let(_,terminal)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(owners));assert_eq!(terminal.requested_bytes,0);assert_eq!(terminal.released_bytes,0);assert_eq!(births,releases);println!("[DEBUG] Original catalog source/ticket stages turns={turns} births={births} releases={releases} terminalDrop=0 fixedGrant={grant:?}");
+ let(_,terminal)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(owners));assert_eq!(terminal.requested_bytes,0);assert_eq!(terminal.released_bytes,0);assert_eq!(births,releases);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -48,7 +49,6 @@ async fn original_member_group_stage_and_adoption_preserve_physical_receipts_and
  assert!(publication.acknowledge());
  for _ in 0..fixture["maximumTurns"].as_u64().unwrap(){if publication.terminal_is_empty(){break;}let(step,heap)=original_heap(||publication.close_step(grant.retained_grant()).unwrap());let receipt=step.progress();assert!(receipt.fits(grant.retained_grant()));assert_eq!((heap.0,heap.1),(receipt.retained_capacity_bytes,receipt.released_bytes));}
  assert!(publication.terminal_is_empty());let((),heap)=original_heap(||drop(publication));assert_eq!((heap.0,heap.1),(0,fixture["law"]["terminalDropBytes"].as_u64().unwrap()as usize));
- eprintln!("[DEBUG] original member group staged born={births} released={releases}, private before={before} committed after={after}, original stage+flags retained until quoted closure and terminalDrop0");
 }
 
 #[test]
@@ -63,7 +63,6 @@ fn artifact_store_one_item_grant_preserves_neutral_independent_currencies() {
         let actual = grant.retained_grant();
         assert_eq!([actual.maximum_items, actual.maximum_copy_bytes, actual.maximum_capacity_bytes, actual.maximum_release_bytes, actual.maximum_depth], [row["maximumItems"].as_u64().unwrap() as usize, row["maximumCopyBytes"].as_u64().unwrap() as usize, row["maximumCapacityBytes"].as_u64().unwrap() as usize, row["maximumReleaseBytes"].as_u64().unwrap() as usize, row["maximumDepth"].as_u64().unwrap() as usize]);
     }
-    eprintln!("[DEBUG] original Store one-item schema preserves independent items/copy/capacity/whole-release/depth through actual neutral grant and serde_json oracle");
 }
 
 /// 🪪️ Reads the complete neutral error corpus's authored kind without message classification.
@@ -91,7 +90,6 @@ fn command_decode_canonical_pack_refusal_preserves_all_value_causes(){
   let reference=serde_json::json!({"kind":row["kind"],"message":row["display"].as_str().unwrap().strip_prefix("schema error: ").unwrap()});
   assert_eq!(serde_json::json!({"kind":format!("{:?}",value.kind),"message":value.message}),reference);
  }
- eprintln!("[DEBUG] Command layout preserves all eight original canonical Pack value causes without allocation");
 }
 
 #[test]
@@ -101,7 +99,6 @@ fn command_decode_canonical_pack_refusal_retains_actual_reader_and_operation_sou
  let source=std::error::Error::source(&command).unwrap().downcast_ref::<semio_framework_os_spr::ProtocolError>().unwrap();assert!(std::ptr::eq(source,match &command{CommandDecodeError::Layout(error)=>error,_=>unreachable!()}));
  let mut reader=pack::ByteReader::new(&[]);let refusal=reader.read_u8().unwrap_err();let operation=CommandDecodeError::Operation{index:7,error:refusal.into()};
  let CommandDecodeError::Operation{index,error}=&operation else{unreachable!()};assert_eq!(*index,7);assert!(std::ptr::eq(error,std::error::Error::source(&operation).unwrap().downcast_ref::<semio_framework_os_spr::ProtocolError>().unwrap()));
- eprintln!("[DEBUG] Actual canonical primitive read refusal and indexed operation retain their original command causes");
 }
 
 #[test]
@@ -117,7 +114,6 @@ fn command_decode_canonical_pack_refusal_preserves_all_positioned_text_causes(){
   assert_eq!(value.kind,kind);assert_eq!(value.span,span);assert_eq!(value.expected.as_deref(),row["expected"].as_str());assert_eq!(value.message.as_ptr(),allocation);assert_eq!(value.expected.as_ref().map(|text|text.as_ptr()),expected_allocation);assert_eq!(wrapped.to_string(),row["display"].as_str().unwrap());
   assert!(std::ptr::eq(value,std::error::Error::source(&wrapped).unwrap().downcast_ref::<TextError>().unwrap()));
  }
- eprintln!("[DEBUG] Store positioned Text-to-Pack join preserves eight kinds, span, expectation and exact original source");
 }
 
 
@@ -378,7 +374,7 @@ fn ephemeral_one_item_publication_fixture_matches_the_third_party_json_oracle() 
 
 #[test]
 fn one_item_publication_source_denies_generic_or_unbounded_shortcuts() {
-    let source = ["../../../../⚙️engine/🧱️core/📥️lifted/🏪️store/🦀️.rs", "../../../../⚙️engine/📥️lifted/🏪️store/🦀️.rs", "../../../../🎮️one-item/📬️publication/🦀️.rs"].iter().map(|file| std::fs::read_to_string(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(file)).unwrap_or_else(|error| panic!("read {file}: {error}"))).collect::<String>();
+    let source = ["../../../../⚙️engine/🧱️core/📥️lifted/🏪️store/🦀️.rs", "../../../../⚙️engine/📥️lifted/🏪️store/🦀️.rs", "../../../../🎮️one-item/📬️publication/🦀️.rs"].iter().map(|file| std::fs::read_to_string(fixture_path!(file)).unwrap_or_else(|error| panic!("read {file}: {error}"))).collect::<String>();
     let authority_start = source.find("pub struct ArtifactStoreOneItemLiveAuthority").expect("private live authority");
     let authority_end = source[authority_start..].find("impl ArtifactStoreOneItemLiveAuthority").map(|offset| authority_start + offset).expect("authority helper");
     let authority_shape = &source[authority_start..authority_end];
@@ -545,7 +541,7 @@ fn artifact_store_edit_retirement_is_interruptible_and_terminal_empty_after_deep
             assert!(physical_release >= payload_bytes);
             let (_, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| drop(retirement));
             assert_eq!((allocated, released), (0, law["terminalDropBytes"].as_u64().unwrap() as usize));
-            eprintln!("[DEBUG] original edit retains forward/inverse/metadata backings at birth; bounded copy and exact whole physical releases match System through terminal-empty"); return;
+             return;
         }
         let demand = retirement.demands(copy).unwrap();
         let grant = RetainedCloneGrant { maximum_copy_bytes: copy.max(demand.copy_bytes), ..physical_test_close_grant() };
@@ -807,7 +803,6 @@ fn drain_completed_record(mut owner: Box<dyn ArtifactEnvelopeCompletedRecord<(),
             let frame = std::mem::size_of_val(owner.as_ref());
             let (_, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| drop(owner));
             assert_eq!((heap.requested_bytes, heap.released_bytes), (0, frame));
-            eprintln!("[DEBUG] original completed record actual nested births={born} physical={released} separate original frame={frame}");
             return;
         }
     }
@@ -1370,5 +1365,4 @@ async fn member_owned_batch_admission_keeps_exact_source_on_wrong_type_stale_rev
     assert_eq!(member.snapshot_ref().n, Some(0));
     for _ in 0..65_536 { if matches!(SpaceMember::close_owned_step(&mut member, physical_test_close_grant()).unwrap(), RetainedCloneStep::Complete(_)) { break; } }
     assert!(SpaceMember::close_owned_terminal_is_empty(&member));
-    println!("[DEBUG] Exact typed member source admission retained original allocation/order through wrong type, generation, revision and metadata refusal; fresh candidate cancelled without publication");
 }

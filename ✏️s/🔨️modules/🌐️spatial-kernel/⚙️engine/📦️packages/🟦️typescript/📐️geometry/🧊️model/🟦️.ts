@@ -1,0 +1,2 @@
+/** 🧊️ Public entry `@semio-tech/s-spatial-kernel-ts/geometry/model`: the explicit surface that importers outside the module use. */
+export { Model, hashModelPrimitives, hashModelVertices, materializeInlineObjectPrimitives, objectPrimaryPrimitiveRef, objectPrimitiveEntries, objectPrimitiveRefs, parseModelJson, resolveKernelTopologyKind, resolvePrimitiveRefKind, resolveStandalonePrimitiveKind } from "../../../../📐️geometry/🧊️model/🟦️.ts";

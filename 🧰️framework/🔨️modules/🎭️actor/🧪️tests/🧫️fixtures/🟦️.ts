@@ -1,14 +1,15 @@
 /** 🧫 The actor module's public fixture entry: the language-neutral corpora its consumers read, exposed by name under one import so no consumer spells the owner's internal folders. */
-export const retainedTurnContextFixtureUrl = new URL("../../🎟️retained-turn/🎟️context/🧪️tests/🧫️fixtures/🔣️.json", import.meta.url);
-export const retainedTurnContextSchemaUrl = new URL("../../🎟️retained-turn/🎟️context/🧬️schema/🔣️.json", import.meta.url);
+import { fixtureUrl } from "@semio-tech/framework/test/source-text";
+export const retainedTurnContextFixtureUrl = fixtureUrl(import.meta.url, "../../🎟️retained-turn/🎟️context/🧪️tests/🧫️fixtures/🔣️.json");
+export const retainedTurnContextSchemaUrl = fixtureUrl(import.meta.url, "../../🎟️retained-turn/🎟️context/🧬️schema/🔣️.json");
 export { default as turnBootstrapCompositionFixture } from "../../🎟️retained-turn/🏛️bootstrap/🧪️tests/🧫️fixtures/📋️composition.json" with { type: "json" };
 export const loadTurnBootstrapCompositionFixture = () => import("../../🎟️retained-turn/🏛️bootstrap/🧪️tests/🧫️fixtures/📋️composition.json").then(module => module.default);
 export { default as retainedTurnBootstrapSchema } from "../../🎟️retained-turn/🏛️bootstrap/🧬️schema/🔣️.json" with { type: "json" };
-export const turnJobArgumentsFixtureUrl = new URL("../../🎟️retained-turn/💼️job/📋️arguments/🧪️tests/🧫️fixtures/🔣️.json", import.meta.url);
-export const turnJobSourceSchemaUrl = new URL("../../🎟️retained-turn/💼️job/📥️source/🧬️schema/🔣️.json", import.meta.url);
-export const retainedTurnBatchFixtureUrl = new URL("../../🎟️retained-turn/📦️batch/🧪️tests/🧫️fixtures/🔣️.json", import.meta.url);
-export const turnAdmissionReadyFixtureUrl = new URL("../../🎟️retained-turn/🤝️admission/📤️ready/🧪️tests/🧫️fixtures/🔣️.json", import.meta.url);
-export const turnAdmissionReadySchemaUrl = new URL("../../🎟️retained-turn/🤝️admission/📤️ready/🧬️schema/🔣️.json", import.meta.url);
+export const turnJobArgumentsFixtureUrl = fixtureUrl(import.meta.url, "../../🎟️retained-turn/💼️job/📋️arguments/🧪️tests/🧫️fixtures/🔣️.json");
+export const turnJobSourceSchemaUrl = fixtureUrl(import.meta.url, "../../🎟️retained-turn/💼️job/📥️source/🧬️schema/🔣️.json");
+export const retainedTurnBatchFixtureUrl = fixtureUrl(import.meta.url, "../../🎟️retained-turn/📦️batch/🧪️tests/🧫️fixtures/🔣️.json");
+export const turnAdmissionReadyFixtureUrl = fixtureUrl(import.meta.url, "../../🎟️retained-turn/🤝️admission/📤️ready/🧪️tests/🧫️fixtures/🔣️.json");
+export const turnAdmissionReadySchemaUrl = fixtureUrl(import.meta.url, "../../🎟️retained-turn/🤝️admission/📤️ready/🧬️schema/🔣️.json");
 export const loadActorCompositionBootstrapFixture = () => import("../../🏘️composition/🏗️bootstrap/🧪️tests/🧫️fixtures/🔣️.json").then(module => module.default);
 export const loadActorCompositionFixture = () => import("../../🏘️composition/🧪️tests/🧫️fixtures/🔣️.json").then(module => module.default);
 export const loadReturnResponseFramingFixture = () => import("../../📤️return/📨️response/🌿️framing/🧪️tests/🧫️fixtures/🔣️.json").then(module => module.default);
@@ -24,7 +25,7 @@ export const loadActorReturnSchema = () => import("../../📤️return/🧬️sc
 export const loadClientSegmentedDownloadFixture = () => import("../../📮️shard-client/📤️segmented-download/🧪️tests/🧫️fixtures/🔣️.json").then(module => module.default);
 export const loadClientSegmentedDownloadSchema = () => import("../../📮️shard-client/📤️segmented-download/🧬️schema/🔣️.json").then(module => module.default);
 export const loadActorShardClientFixture = () => import("../../📮️shard-client/🧪️tests/🧫️fixtures/🔣️.json").then(module => module.default);
-export const actorLifetimeFixtureUrl = new URL("../../🚪️lifetime/🧪️tests/🧫️fixtures/🔣️.json", import.meta.url);
+export const actorLifetimeFixtureUrl = fixtureUrl(import.meta.url, "../../🚪️lifetime/🧪️tests/🧫️fixtures/🔣️.json");
 export { default as typedOperationPageFixture } from "../🗞️typed-operation-page/🧫️fixtures/🔣️.json" with { type: "json" };
 export { default as reservedVerbAnswerFixture } from "./🕹️reserved-verb-answer/🔣️.json" with { type: "json" };
 export const loadActorCodecFixture = () => import("../../🧬️codec/🧪️tests/🧫️fixtures/🔣️.json").then(module => module.default);
@@ -39,7 +40,7 @@ export const loadInstanceOutputFaultFixture = () => import("../../🪪️activat
 export const loadActorActivationFixture = () => import("../../🪪️activation/🧪️tests/🧫️fixtures/🔣️.json").then(module => module.default);
 export { default as retainedTurnSupplierFixture } from "../../🎟️retained-turn/🎟️supplier/🧪️tests/🧫️fixtures/🔣️.json" with { type: "json" };
 export { default as retainedTurnSupplierSchema } from "../../🎟️retained-turn/🎟️supplier/🧬️schema/🔣️.json" with { type: "json" };
-export const actorPageFixtureUrl = new URL("../../📃️page/🧪️tests/🧫️fixtures/🔣️.json", import.meta.url);
-export const actorColdPairFixtureUrl = new URL("../../📥️cold-pair/🧪️tests/🧫️fixtures/🔣️.json", import.meta.url);
-export const actorColdPairSchemaUrl = new URL("../../📥️cold-pair/🧬️schema/🔣️.json", import.meta.url);
-export const actorLifetimePatchFixtureUrl = new URL("../../🚪️lifetime/🩹️patch/🧪️tests/🧫️fixtures/🔣️.json", import.meta.url);
+export const actorPageFixtureUrl = fixtureUrl(import.meta.url, "../../📃️page/🧪️tests/🧫️fixtures/🔣️.json");
+export const actorColdPairFixtureUrl = fixtureUrl(import.meta.url, "../../📥️cold-pair/🧪️tests/🧫️fixtures/🔣️.json");
+export const actorColdPairSchemaUrl = fixtureUrl(import.meta.url, "../../📥️cold-pair/🧬️schema/🔣️.json");
+export const actorLifetimePatchFixtureUrl = fixtureUrl(import.meta.url, "../../🚪️lifetime/🩹️patch/🧪️tests/🧫️fixtures/🔣️.json");

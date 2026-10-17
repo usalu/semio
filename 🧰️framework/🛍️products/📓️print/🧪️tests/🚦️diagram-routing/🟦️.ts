@@ -10,7 +10,7 @@
 // #endregion 🧲️Header
 // #region 🔌️Adapters
 import { defineTestAdapter, type AdapterContext } from "@semio-tech/framework/test/adapter";
-import { compileVizProbeDocument, probeProjection, roundProbeNumbers, roundProjectionNumbers, type ProbeProjection, type VizProbeStatement } from "../../🔨️modules/🧪️viz-probe/🟦️.ts";
+import { compileVizProbeDocumentInContext, probeProjection, roundProbeNumbers, roundProjectionNumbers, type ProbeProjection, type VizProbeStatement } from "../../🔨️modules/🧪️viz-probe/🟦️.ts";
 // #endregion 🔌️Adapters
 
 // #region 🧫️Vectors
@@ -87,7 +87,7 @@ function namedRoutes(ctx: AdapterContext): number[] {
 
 // #region 🧪️Probe
 async function subject(ctx: AdapterContext, routing: string): Promise<{ projection: ProbeProjection }> {
-  const records = await compileVizProbeDocument(
+  const records = await compileVizProbeDocumentInContext(ctx,
     {
       case: CASE,
       scenario: ctx.scenario.id,
@@ -101,8 +101,7 @@ async function subject(ctx: AdapterContext, routing: string): Promise<{ projecti
         { raw: `\\SemioVizDiagram[nodes=t-nodes,edges=t-edges,width=80,height=48,pad=3,col-gap=4,row-gap=4,routing=${routing}]` },
         { raw: FRAME.close },
       ],
-    },
-    { workDir: ctx.workDir },
+    }
   );
   const projection = probeProjection(roundProbeNumbers(records, DECIMALS));
   return { projection: { "geometry/diagram-route": projection["geometry/diagram-route"] ?? [] } };

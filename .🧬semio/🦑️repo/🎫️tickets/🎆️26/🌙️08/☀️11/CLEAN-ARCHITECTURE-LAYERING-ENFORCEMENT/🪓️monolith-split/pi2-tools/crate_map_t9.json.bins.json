@@ -1,0 +1,120 @@
+{
+ "tests-01": [
+  "retained_command_test_hosts",
+  "runtime_instances_test_hosts",
+  "instance_ladders_test_hosts"
+ ],
+ "tests-02": [
+  "child_test_hosts",
+  "publication_mounted_test_hosts",
+  "app_builder_tests_host",
+  "tool_run_test_hosts"
+ ],
+ "tests-03": [
+  "plugin_builder_contract_tests_5"
+ ],
+ "tests-04": [
+  "plugin_builder_contract_tests_10",
+  "time_travel_turns_test_hosts"
+ ],
+ "tests-05": [
+  "plugin_builder_contract_tests_12",
+  "media_export_credit_tests_host"
+ ],
+ "tests-06": [
+  "testing_laws_unit_1",
+  "testing_fixtures_test_hosts"
+ ],
+ "tests-07": [
+  "testing_laws_unit_2",
+  "segmented_download_contract"
+ ],
+ "tests-08": [
+  "plugin_builder_contract_tests_15",
+  "natural_file_lifecycle_tests"
+ ],
+ "tests-09": [
+  "plugin_builder_contract_tests_7",
+  "runtime_ops_test_hosts",
+  "cooperative_pump_tests"
+ ],
+ "tests-10": [
+  "plugin_builder_contract_tests_8",
+  "app_commands_tests_host",
+  "tool_run_turns_test_hosts"
+ ],
+ "tests-11": [
+  "plugin_builder_contract_tests_9",
+  "original_codec_binding_laws",
+  "fixture_projection_retirement_tests"
+ ],
+ "tests-12": [
+  "plugin_builder_contract_tests_13",
+  "reactor_tasks_test_hosts",
+  "contributed_mutation_wire_tests_host"
+ ],
+ "tests-13": [
+  "plugin_builder_contract_tests_2",
+  "bounded_initializer_laws",
+  "receipt_tests_host"
+ ],
+ "tests-14": [
+  "plugin_builder_contract_tests_6"
+ ],
+ "tests-15": [
+  "plugin_builder_contract_tests_1"
+ ],
+ "tests-16": [
+  "plugin_builder_contract_tests_14"
+ ],
+ "tests-17": [
+  "plugin_builder_contract_tests_11"
+ ],
+ "tests-18": [
+  "plugin_builder_contract_tests_3",
+  "reactor_surfaces_test_hosts"
+ ],
+ "tests-19": [
+  "plugin_builder_contract_tests_4"
+ ],
+ "tests-20": [
+  "job_tool_run_host_1"
+ ],
+ "tests-21": [
+  "testing_laws_unit_4",
+  "app_window_kits_tests"
+ ],
+ "tests-22": [
+  "job_tool_run_host_2",
+  "job_test_hosts"
+ ],
+ "tests-23": [
+  "reactor_core_test_hosts",
+  "media_publication_tests_host",
+  "document_media_test_hosts"
+ ],
+ "tests-24": [
+  "declarations_fixture_tests",
+  "declaration_fixture_mutations",
+  "artifact_admission_tests",
+  "app_panel_kit_tests"
+ ],
+ "tests-25": [
+  "testing_laws_unit_3",
+  "owned_media_error_tests_host"
+ ],
+ "tests-26": [
+  "window_mutation_tests",
+  "window_config_tests",
+  "window_transient_tests"
+ ],
+ "tests-27": [
+  "extension_test_hosts"
+ ],
+ "tests-28": [
+  "reactor_turn_test_hosts"
+ ],
+ "tests-29": [
+  "builder_test_hosts"
+ ]
+}

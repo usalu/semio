@@ -73,32 +73,22 @@ impl OpText for PdfHMutation {
 }
 //#endregion 🧱️Framing
 
-#[path = "🏷️set-info-title/🦀️.rs"]
-pub mod set_info_title;
+pub use semio_s_artifact_stdio_pdf_mut_family_5::standards::v1_7::subsets::h::io::text::mutations::set_info_title;
 
-#[path = "🛬️remove-launch-action/🦀️.rs"]
-pub mod remove_launch_action;
+pub use semio_s_artifact_stdio_pdf_mut_family_8::standards::v1_7::subsets::h::io::text::mutations::remove_launch_action;
 
-#[path = "🚫️remove-javascript-action/🦀️.rs"]
-pub mod remove_javascript_action;
+pub use semio_s_artifact_stdio_pdf_mut_family_8::standards::v1_7::subsets::h::io::text::mutations::remove_javascript_action;
 
-#[path = "✂️remove-signature-field/🦀️.rs"]
-pub mod remove_signature_field;
+pub use semio_s_artifact_stdio_pdf_mut_family_8::standards::v1_7::subsets::h::io::text::mutations::remove_signature_field;
 
-#[path = "🧺️remove-font-file/🦀️.rs"]
-pub mod remove_font_file;
+pub use semio_s_artifact_stdio_pdf_mut_family_8::standards::v1_7::subsets::h::io::text::mutations::remove_font_file;
 
-#[path = "📜️insert-javascript-action/🦀️.rs"]
-pub mod insert_javascript_action;
+pub use semio_s_artifact_stdio_pdf_mut_family_8::standards::v1_7::subsets::h::io::text::mutations::insert_javascript_action;
 
-#[path = "👤️set-info-author/🦀️.rs"]
-pub mod set_info_author;
+pub use semio_s_artifact_stdio_pdf_mut_family_5::standards::v1_7::subsets::h::io::text::mutations::set_info_author;
 
-#[path = "🔤️embed-font-file/🦀️.rs"]
-pub mod embed_font_file;
+pub use semio_s_artifact_stdio_pdf_mut_family_8::standards::v1_7::subsets::h::io::text::mutations::embed_font_file;
 
-#[path = "🚀️insert-launch-action/🦀️.rs"]
-pub mod insert_launch_action;
+pub use semio_s_artifact_stdio_pdf_mut_family_8::standards::v1_7::subsets::h::io::text::mutations::insert_launch_action;
 
-#[path = "✒️insert-signature-field/🦀️.rs"]
-pub mod insert_signature_field;
+pub use semio_s_artifact_stdio_pdf_mut_family_8::standards::v1_7::subsets::h::io::text::mutations::insert_signature_field;

@@ -7,12 +7,15 @@ use semio_framework_diagnostic::FaultCode;
 use protocol::MutationMessage;
 use protocol::MutationReplayOutcome;
 use semio_framework_diagnostic::Severity;
+use semio_framework_test_fixtures::fixture_path;
 use serde_json::Value;
 
-const LAW: &str = include_str!("../🧫️fixtures/🧫️lifecycle-law/🔣️.json");
-
-fn law() -> Value {
-    serde_json::from_str(LAW).expect("fixture parses")
+/// 📥️ Reads the 333 KB language-agnostic lifecycle-law fixture at run time instead of embedding it with `include_str!`, so the test closure stays inside the source gate.
+/// @see <https://doc.rust-lang.org/std/macro.include_str.html>
+pub(crate) fn law() -> Value {
+    let path = fixture_path!("../../🧪️tests/🧫️fixtures/🧫️lifecycle-law/🔣️.json");
+    let text = std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display()));
+    serde_json::from_str(&text).expect("fixture parses")
 }
 
 fn text(value: &Value) -> &str {

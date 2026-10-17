@@ -7,9 +7,9 @@ use semio_framework_value::DslValue;
 use store::sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase,artifact::{Projection,Cell}};
 #[path="📏️admission/🦀️.rs"]pub mod admission;
 pub const SQL:&str=include_str!("🗄️.sql");
-fn text(value:&Option<String>)->Cell<'_>{value.as_deref().map_or(Cell::Null,Cell::Text)}
+pub fn text(value:&Option<String>)->Cell<'_>{value.as_deref().map_or(Cell::Null,Cell::Text)}
 fn reference(value:Option<i64>)->Cell<'static>{value.map_or(Cell::Null,Cell::Integer)}
-fn float(value:Option<f64>)->[Cell<'static>;3]{match value{None=>[Cell::Null;3],Some(value)=>[if value.is_nan(){Cell::Null}else{Cell::Real(value)},Cell::Integer(value.to_bits()as i64),Cell::Text(if value.is_nan(){"nan"}else if value==f64::INFINITY{"positiveInfinity"}else if value==f64::NEG_INFINITY{"negativeInfinity"}else{"finite"})]}}
+pub fn float(value:Option<f64>)->[Cell<'static>;3]{match value{None=>[Cell::Null;3],Some(value)=>[if value.is_nan(){Cell::Null}else{Cell::Real(value)},Cell::Integer(value.to_bits()as i64),Cell::Text(if value.is_nan(){"nan"}else if value==f64::INFINITY{"positiveInfinity"}else if value==f64::NEG_INFINITY{"negativeInfinity"}else{"finite"})]}}
 fn words(value:u64)->[Cell<'static>;2]{[Cell::Integer((value>>32)as i64),Cell::Integer((value&0xffffffff)as i64)]}
 fn ordinal(value:usize)->Result<Cell<'static>,ValueError>{Ok(Cell::Integer(i64::try_from(value).map_err(|_|ValueError::new(ValueRefusalKind::WorkLimit,"Forms ordinal exceeds signed SQLite domain"))?))}
 fn next(value:&mut i64)->Result<i64,ValueError>{*value=value.checked_add(1).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"Forms surrogate identity overflow"))?;Ok(*value)}
@@ -75,6 +75,3 @@ fn to_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<Sqli
 fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{reconstruct(database,control)}
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;

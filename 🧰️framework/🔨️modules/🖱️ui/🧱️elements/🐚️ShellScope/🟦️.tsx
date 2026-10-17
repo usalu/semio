@@ -12,7 +12,7 @@ import i18next from "i18next";
 import { type StoragePort, createBrowserStoragePort } from "../../🔨️modules/🗄️storage-port/🟦️.ts";
 import { ephemeralBox, ephemeralSet } from "../../../🫧️transient/🟦️.ts";
 import { type UiLocale } from "../📚️I18n/🟦️.tsx";
-import { createShellI18nInstance } from "../../🎯️targets/⚛️react/🌐️i18n/🟦️.ts";
+import { createShellI18nInstance } from "@semio-tech/ui-react/i18n";
 import { type MergeMode } from "../../../🕹️interaction/🟦️.ts";
 // #endregion 🔌️Adapters
 

@@ -46,9 +46,10 @@ function walkRustSources(dir: string, out: string[]): void {
 async function checkPlaygroundAliasFreshness(): Promise<string[]> {
   const viteConfigPath = join(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/🟦️.ts");
   const source = await Bun.file(viteConfigPath).text();
-  const aliasPattern = /\{\s*find:\s*"([^"]+)",\s*replacement:\s*path\.resolve\(repoRoot,\s*"([^"]+)"\)\s*\}/g;
+  const aliasPattern = /\{\s*find:\s*(?:"([^"]+)"|(\/\^[^,]+?\$\/u)),\s*replacement:\s*path\.resolve\(repoRoot,\s*"([^"]+)"\)\s*\}/g;
   const failures: string[] = [];
-  for (const [, find, relativeTarget] of source.matchAll(aliasPattern)) {
+  for (const [, literalFind, exactFind, relativeTarget] of source.matchAll(aliasPattern)) {
+    const find = literalFind ?? exactFind;
     if(find===undefined||relativeTarget===undefined)throw Error("Actual Vite alias capture required");
     if (!existsSync(join(repoRoot, relativeTarget))) {
       failures.push(`⚙️vite.config.ts: alias "${find}" -> "${relativeTarget}" does not exist on disk`);

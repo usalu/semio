@@ -229,7 +229,6 @@ fn member_open_request_rejection_retains_exact_pages_and_identity() {
         assert!(request.terminal_is_empty());
         assert_eq!(logical, bytes + identity_bytes, "{}: exact original logical input and identity ownership", row["id"]);
         assert_eq!(released - frames, identity_capacity, "{}: exact original physical identity capacity", row["id"]);
-        println!("[DEBUG] member-open request={} logical-input-plus-identity={logical} whole-page-backing={frames} physical-identity={identity_capacity} paid-physical-release={released} whole-allocation-denial-retained=true", row["id"]);
     }
 }
 
@@ -256,12 +255,11 @@ fn member_open_request_every_report_is_same_turn_physical_release_without_new_cl
             reported += released;
             if events.requested_bytes != 0 || events.released_bytes != released {
                 mismatches += 1;
-                if mismatches <= 8 { println!("[DEBUG] request allocator mismatch case={} grant={grant} born={} physical-release={} reported-release={released}", row["id"], events.requested_bytes, events.released_bytes); }
+                if mismatches <= 8 {  }
             }
             if request.terminal_is_empty() { break; }
         }
         assert!(request.terminal_is_empty());
-        println!("[DEBUG] request complete physical census case={} inline-bytes={} actual-release={physical} reported-release={reported}", row["id"], bytes.len());
     }
     assert_eq!(births, 0, "closing retained original identities must not birth unadmitted retirement boxes");
     assert_eq!(mismatches, 0, "inline payload work cannot masquerade as same-turn physical allocation release");
@@ -311,7 +309,6 @@ fn member_open_request_original_identity_capacity_is_indivisible_even_when_empty
         assert_eq!(step,RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:capacity,..Default::default()}));
         assert_eq!((events.requested_bytes,events.released_bytes),(0,capacity));assert!(request.closing_actor.is_none());
         retire_request(&mut request);
-        println!("[DEBUG] member-open original identity={} logical-bytes={text_bytes} physical-capacity={capacity} shared-frame={lease} whole-denial-retained=true exact-paid-release=true",row["id"]);
     }
 }
 
@@ -354,7 +351,6 @@ fn member_open_request_inline_pages_retire_one_item_without_physical_payload_cre
         assert_eq!(step, RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: backing, ..Default::default() }));
         assert_eq!((events.requested_bytes, events.released_bytes), (0, backing));
         retire_request(&mut request);
-        println!("[DEBUG] inline request={} input={length} page-items={page_count} payload-physical-free=0 whole-backing={backing} zero-item-and-one-below-retained=true", row["id"]);
     }
 }
 
@@ -390,5 +386,4 @@ fn member_input_buffer_birth_and_retirement_preserve_actual_system_and_original_
     }
     assert!(original.is_none()&&active.is_none());assert_eq!(released,allocated);
     let (_,heap)=observe_heap_allocations_on_this_thread(||drop((original,active)));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
-    println!("[DEBUG] member input buffer explicit policy refuses before allocation; original pointer survives occupied refusal; every funded birth/close matches actual System and terminal Drop releases nothing");
 }

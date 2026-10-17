@@ -35,11 +35,14 @@ pub fn plan(p: &GltfCreateCameraPayload, base: &GltfSnapshot) -> Result<GltfDiff
     Ok(diff)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn inverse(p: &GltfCreateCameraPayload, base: &GltfSnapshot) -> Vec<super::GltfMutation> {
+pub fn inverse<Op>(p: &GltfCreateCameraPayload, base: &GltfSnapshot) -> Vec<Op>
+where
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::remove_used_extension::RemoveUsedExtensionMutation>,
+{
     if validate(p, base).is_err() {
         return Vec::new();
     }
-    vec![super::delete_camera::mutation(super::delete_camera::GltfDeleteCameraPayload { index: p.position })]
+    vec![crate::standards::v2_0::subsets::any::schema::mutations::delete_camera::mutation(crate::standards::v2_0::subsets::any::schema::mutations::delete_camera::GltfDeleteCameraPayload { index: p.position })]
 }
 
 //#region 🧬️DirectMutation
@@ -52,11 +55,17 @@ pub enum CreateCameraMutation {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn mutation(payload: GltfCreateCameraPayload) -> super::GltfMutation {
-    super::GltfMutation::CreateCamera(CreateCameraMutation::Apply(payload))
+pub fn mutation<Op>(payload: GltfCreateCameraPayload) -> Op
+where
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::create_camera::CreateCameraMutation>,
+{
+    Op::from(CreateCameraMutation::Apply(payload))
 }
 
-impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for CreateCameraMutation {
+impl<Op> protocol::MutationKind<GltfSnapshot, Op> for CreateCameraMutation
+where
+    Op: protocol::Mutation<GltfSnapshot, Diff = GltfDiff> + From<CreateCameraMutation>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "camera", kind: "create-camera", record: "CreatedCamera" };
 
     fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<GltfDiff> {
@@ -68,7 +77,7 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for CreateCameraM
         }
     }
 
-    fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<super::GltfMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         match self {
             Self::Apply(payload) => Ok(inverse(payload, base)),
         }
@@ -85,7 +94,5 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for CreateCameraM
 //#endregion 🧬️DirectMutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️t048/🦀️.rs"]
-mod case_t048;
+
 //#endregion 🧪️Tests

@@ -1,0 +1,179 @@
+use crate::{standards::riff_pcm::subsets::any::schema::snapshot::RiffChunk, standards::riff_pcm::subsets::any::schema::snapshot::WavChunkRef, standards::riff_pcm::subsets::any::schema::snapshot::WavData, standards::riff_pcm::subsets::any::schema::snapshot::WavFmt, standards::riff_pcm::subsets::any::schema::snapshot::WavSnapshot};
+use crate::apply_mutation;
+use crate::standards::riff_pcm::subsets::any::schema::mutations::*;
+use protocol::command::DiffAlgebra;
+use protocol::MutationDiff;
+
+// 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+fn base_snapshot() -> WavSnapshot {
+    WavSnapshot { data: WavData::Pcm16(vec![10, -10, 5]), ..WavSnapshot::default() }
+}
+
+// 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+fn variants(base: &WavSnapshot) -> Vec<WavMutation> {
+    vec![
+        WavMutation::SetFmt(set_fmt::SetFmt { fmt: WavFmt { channels: 2, ..WavFmt::default() } }),
+        WavMutation::SetData(set_data::SetData { data: WavData::Float32(vec![0.25, -0.25]) }),
+        WavMutation::PatchData(patch_data::PatchData { index: 1, remove_count: 1, data: WavData::Pcm16(vec![42]), move_to: None }),
+        WavMutation::SetOtherChunks(set_other_chunks::SetOtherChunks { chunks: vec![RiffChunk { fourcc: "fact".into(), data: vec![1, 2], pad_byte: 0 }], chunk_order: None }),
+        WavMutation::SetPadBytes(set_pad_bytes::SetPadBytes { fmt_pad_byte: 0, data_pad_byte: 0 }),
+    ]
+}
+
+//#region mutation_diff_law
+/// 🧪️ `mutation.diff(base).diff().apply(base) == apply_mutation(base, mutation)`.
+#[semio_framework_async_macros::async_test]
+async fn mutation_diff_law_every_variant() {
+    let base = base_snapshot();
+    for m in variants(&base) {
+        let mut via_apply = base.clone();
+        let returned = apply_mutation(&mut via_apply, &m);
+        let direct = m.diff(&base);
+        assert_eq!(direct, returned, "diff mismatch for {m:?}");
+        assert_eq!(protocol::apply_diff(direct.diff(), &base).unwrap(), via_apply, "apply mismatch for {m:?}");
+    }
+}
+//#endregion mutation_diff_law
+
+//#region inverse_law
+/// 🧪️ Applying the inverse mutation restores base, at both the mutation and diff levels.
+#[semio_framework_async_macros::async_test]
+async fn inverse_law_mutation_and_diff_level() {
+    let base = base_snapshot();
+    for m in variants(&base) {
+        let mut round = base.clone();
+        apply_mutation(&mut round, &m);
+        for inv in m.inverse(&base).expect("valid retained mutation inverse fixture").into_iter().rev() {
+            apply_mutation(&mut round, &inv);
+        }
+        assert_eq!(round, base, "mutation-level inverse failed for {m:?}");
+
+        let d = m.diff(&base);
+        let applied = protocol::apply_diff(d.diff(), &base).unwrap();
+        let undone = protocol::apply_diff(&d.diff().inverse(&base), &applied).unwrap();
+        assert_eq!(undone, base, "diff-level inverse failed for {m:?}");
+    }
+}
+//#endregion inverse_law
+
+//#region kinds_matches_enum_and_manifest
+// 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+fn kind_of(m: &WavMutation) -> &'static str {
+    match m {
+        WavMutation::SetFmt(_) => "set-fmt",
+        WavMutation::SetData(_) => "set-data",
+        WavMutation::PatchData(_) => "patch-data",
+        WavMutation::SetOtherChunks(_) => "set-other-chunks",
+        WavMutation::SetPadBytes(_) => "set-pad-bytes",
+    }
+}
+
+/// 🧪️ `KINDS` must name exactly the enum's own variants (the match above is exhaustive, so a
+/// variant added without updating `kind_of` fails to compile) AND every one of them must appear
+/// in the mutation catalog's declared `kinds` — the framework never parses Rust, so this test is
+/// what keeps the manifest honest. The check is containment, not equality: the manifest also
+/// declares `no-mutation`, the identity scenario the `🥒️.feature` still exercises against the
+/// independent oracle even though `NoMutation` is no longer an enum variant (`no` is not an
+/// approved semantic verb for `#[derive(dsl::Mutations)]`) — the same split
+/// `🎛️mutate-mp3-mpeg1-layer3`'s own `kinds_match_the_committed_catalog` makes for its sibling
+/// vocabulary.
+#[semio_framework_async_macros::async_test]
+async fn kinds_matches_enum_variants_and_manifest() {
+    let base = base_snapshot();
+    let mut from_enum: Vec<&str> = variants(&base).iter().map(kind_of).collect();
+    from_enum.sort_unstable();
+    from_enum.dedup();
+    let mut from_const = KINDS.to_vec();
+    from_const.sort_unstable();
+    assert_eq!(from_const, from_enum, "KINDS must name exactly the enum's variants");
+
+    let manifest = include_str!("../../../../🔮️oracles/🔣️.json");
+    for kind in KINDS {
+        assert!(manifest.contains(&format!("\"{kind}\"")), "the oracle catalog manifest must declare kind {kind:?}");
+    }
+}
+//#endregion kinds_matches_enum_and_manifest
+
+//#region op_text_binary_roundtrip_law
+#[semio_framework_async_macros::async_test]
+async fn op_text_binary_roundtrip_law() {
+    let base = base_snapshot();
+    for m in variants(&base) {
+        let printed = m.print_op();
+        assert!(!printed.contains('\n'), "print_op must be one line, got {printed:?}");
+        let parsed = WavMutation::parse_op(&printed).unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));
+        assert_eq!(parsed, m, "print_op/parse_op round-trip mismatch for {m:?}");
+
+        let encoded = m.encode_op().unwrap_or_else(|e| panic!("encode_op({m:?}) failed: {e}"));
+        let decoded = WavMutation::decode_op(&encoded).unwrap_or_else(|e| panic!("decode_op failed: {e}"));
+        assert_eq!(decoded, m, "encode_op/decode_op round-trip mismatch for {m:?}");
+    }
+}
+//#endregion op_text_binary_roundtrip_law
+
+#[semio_framework_async_macros::async_test]
+async fn text_descriptor_recognizes_every_printer_variant() {
+    let base = base_snapshot();
+    let grammar = semio_framework_dsl::parse_grammar(crate::standards::riff_pcm::subsets::any::io::text::mutations::COMPONENT_GRAMMAR_SEMIO).expect("parse WAV mutation grammar");
+    let recognizer = semio_framework_dsl::Recognizer::compile(&grammar, &semio_framework_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_framework_os_kernel::os_dsl::grammar::product_macros()).expect("selected grammar fragments");
+    for mutation in variants(&base) {
+        let printed = mutation.print_op();
+        assert!(recognizer.recognize(&printed).unwrap_or(false), "WAV mutation grammar did not recognize {printed:?}");
+    }
+}
+
+#[semio_framework_async_macros::async_test]
+async fn mutations_reject_states_that_cannot_round_trip_through_riff() {
+    let fixture: serde_json::Value = serde_json::from_str(runtime_fixture_text("../../../../🧪️tests/🧫️fixtures/🧭️serialization-boundaries/🔣️.json")).expect("serialization boundary fixture is JSON");
+    let invalid_even_pad = fixture["invalidEvenPadByte"].as_u64().expect("invalidEvenPadByte") as u8;
+    let overflow_ext = fixture["overflowFmtExtensionBytes"].as_u64().expect("overflowFmtExtensionBytes") as usize;
+    let valid_fourcc = fixture["validFourcc"].as_str().expect("validFourcc");
+    let invalid_fourcc = fixture["invalidFourcc"].as_str().expect("invalidFourcc");
+    let invalid_mutations = [
+        WavMutation::SetFmt(set_fmt::SetFmt { fmt: WavFmt { ext: Some(vec![0; overflow_ext]), ..WavFmt::default() } }),
+        WavMutation::SetOtherChunks(set_other_chunks::SetOtherChunks { chunks: vec![RiffChunk { fourcc: valid_fourcc.into(), data: vec![1, 2], pad_byte: invalid_even_pad }], chunk_order: None }),
+        WavMutation::SetOtherChunks(set_other_chunks::SetOtherChunks { chunks: vec![RiffChunk { fourcc: invalid_fourcc.into(), data: vec![1], pad_byte: 0 }], chunk_order: None }),
+    ];
+    for invalid in invalid_mutations {
+        let mut current = base_snapshot();
+        let outcome = apply_mutation(&mut current, &invalid);
+        assert!(!outcome.messages().is_empty(), "unrepresentable mutation must report a diagnostic");
+        assert!(outcome.diff().is_empty(), "unrepresentable mutation must carry an empty diff");
+        assert_eq!(current, base_snapshot(), "unrepresentable mutation must leave the document unchanged");
+    }
+}
+
+/// ⚖️ `wav_mutation_inverse_sum_law`: every leaf sums its inverse diffs to the negative forward diff on a base whose sample lane and chunk list have MIDDLE
+/// entries to cut, insert at, move and reorder.
+#[semio_framework_async_macros::async_test]
+async fn wav_mutation_inverse_sum_law_holds_for_every_leaf() {
+    let chunk = |fourcc: &str, data: Vec<u8>| RiffChunk { fourcc: fourcc.into(), data, pad_byte: 0 };
+    let base = WavSnapshot {
+        data: WavData::Pcm16(vec![1, 2, 3, 4, 5, 6]),
+        other_chunks: vec![chunk("fact", vec![1, 2, 3, 4]), chunk("LIST", vec![9, 9])],
+        chunk_order: vec![WavChunkRef::Other(0), WavChunkRef::Format, WavChunkRef::Other(1), WavChunkRef::Samples],
+        ..WavSnapshot::default()
+    };
+    let patch = |index: u64, remove_count: u64, data: WavData, move_to: Option<u64>| WavMutation::PatchData(patch_data::PatchData { index, remove_count, data, move_to });
+    for mutation in [
+        patch(2, 2, WavData::Pcm16(vec![9, 9, 9]), None),
+        patch(3, 0, WavData::Pcm16(vec![7]), None),
+        patch(1, 1, WavData::Pcm16(Vec::new()), None),
+        patch(1, 0, WavData::Pcm16(Vec::new()), Some(4)),
+        WavMutation::SetData(set_data::SetData { data: WavData::Float32(vec![0.25, -0.25]) }),
+        WavMutation::SetFmt(set_fmt::SetFmt { fmt: WavFmt { channels: 2, ..WavFmt::default() } }),
+        WavMutation::SetOtherChunks(set_other_chunks::SetOtherChunks { chunks: vec![chunk("LIST", vec![9, 9])], chunk_order: None }),
+        WavMutation::SetOtherChunks(set_other_chunks::SetOtherChunks { chunks: vec![chunk("fact", vec![1, 2, 3, 4]), chunk("LIST", vec![9, 9])], chunk_order: Some(vec![WavChunkRef::Format, WavChunkRef::Other(1), WavChunkRef::Samples, WavChunkRef::Other(0)]) }),
+    ] {
+        protocol::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
+    }
+    let odd = WavSnapshot { fmt: WavFmt { ext: Some(vec![1]), ..WavFmt::default() }, data: WavData::Raw(vec![1, 2, 3]), ..WavSnapshot::default() };
+    for mutation in [WavMutation::SetPadBytes(set_pad_bytes::SetPadBytes { fmt_pad_byte: 0x11, data_pad_byte: 0x22 }), WavMutation::SetPadBytes(set_pad_bytes::SetPadBytes { fmt_pad_byte: 0, data_pad_byte: 0x33 })] {
+        protocol::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &odd).await;
+    }
+}
+
+fn runtime_fixture_text(relative: &str) -> &'static str {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative);
+    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display())).into_boxed_str())
+}

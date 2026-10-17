@@ -1,9 +1,14 @@
 //! 🧪️ Unchanged property submissions must not publish semantic history entries.
-use super::*;
+use semio_framework_test_fixtures::fixture_text;
+
+#[allow(unused_imports)] use semio_s_artifact_draw_drawing_mutations::{drawing_op_for_layer_field, DrawingMutation};
+#[allow(unused_imports)] use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
+#[allow(unused_imports)] use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+#[allow(unused_imports)] use semio_s_artifact_draw_drawing_editor_commands::patch_layer::*;
 
 #[test]
 fn field_history_fixtures_admit_only_changed_facets() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../../🩹️patch-layer/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let document:DrawingSnapshot=serde_json::from_value(fixture["document"].clone()).unwrap();
     for case in fixture["cases"].as_array().unwrap() {
         let mutation:DrawingMutation=serde_json::from_value(case["mutation"].clone()).unwrap();
@@ -26,12 +31,12 @@ fn missing_field_target_is_an_error_instead_of_an_unchanged_submission() {
 
 #[test]
 fn every_bulk_field_target_is_admitted_before_publication() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../../🩹️patch-layer/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let document:DrawingSnapshot=serde_json::from_value(fixture["document"].clone()).unwrap();
-    let cases:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🎯️selection/🔣️.json")).unwrap();
+    let cases:serde_json::Value=serde_json::from_str(fixture_text!("../../../../🩹️patch-layer/🧪️tests/🧫️fixtures/🎯️selection/🔣️.json")).unwrap();
     for case in cases.as_array().unwrap() {
         let ids:Vec<String>=serde_json::from_value(case["ids"].clone()).unwrap();
-        let selected=super::super::patch_layers::selected_targets(&document,&ids);
+        let selected=semio_s_artifact_draw_drawing_editor_commands::patch_layers::selected_targets(&document,&ids);
         if case["expected"].is_null(){assert!(selected.is_err(),"{}",case["name"]);continue;}
         let actual=selected.unwrap().iter().map(|layer|semio_s_artifact_draw_drawing_model::layer_id(layer).to_string()).collect::<Vec<_>>();
         assert_eq!(serde_json::to_value(actual).unwrap(),case["expected"],"{}",case["name"]);

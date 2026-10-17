@@ -13,7 +13,7 @@ import meshSchema from"../../../../../🧬️schema/🕸️mesh/🔣️.json";
 import { valueIntrinsicSchema as intrinsicSchema } from "@semio-tech/framework/value/schema/intrinsic";
 import artifactSchema from"../../../../../🧬️schema/🔣️.json";
 import { ioSchema as ioSchema } from "@semio-tech/framework/io/schema";
-import childSchema from"../../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔣️.json";
+import { storeChildSchema as childSchema } from "@semio-tech/framework-os/modules/store/child/schema";
 import{decodeLowpolyJsonSnapshot}from"../../../../📝️text/📸️snapshot/🔣️json/🟦️.ts";
 type Neutral={kind:string;value?:unknown;items?:Neutral[];members?:{name:string;value:Neutral}[]};
 function intrinsic(value:Neutral):unknown{switch(value.kind){case"null":return{kind:value.kind};case"unsigned":case"signed":return{kind:value.kind,value:BigInt(value.value as string)};case"float":return{kind:value.kind,value:{bits:BigInt(`0x${value.value}`)}};case"bytes":return{kind:value.kind,value:Uint8Array.from(value.value as number[])};case"array":return{kind:value.kind,items:value.items!.map(intrinsic)};case"object":return{kind:value.kind,members:value.members!.map(member=>({name:member.name,value:intrinsic(member.value)}))};default:return{kind:value.kind,value:value.value};}}

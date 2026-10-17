@@ -1,0 +1,96 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "empty",
+      "body": "return",
+      "child": "none",
+      "failed": false,
+      "events": [
+        "prepare",
+        "consume",
+        "deliver"
+      ],
+      "preparations": 1
+    },
+    {
+      "name": "body-error",
+      "body": "error",
+      "child": "none",
+      "failed": true,
+      "events": [
+        "prepare",
+        "consume",
+        "failed"
+      ],
+      "preparations": 1
+    },
+    {
+      "name": "body-undefined",
+      "body": "undefined",
+      "child": "none",
+      "failed": true,
+      "events": [
+        "prepare",
+        "consume",
+        "failed"
+      ],
+      "preparations": 1
+    },
+    {
+      "name": "child-success",
+      "body": "return",
+      "child": "success",
+      "failed": false,
+      "events": [
+        "prepare",
+        "consume",
+        "child-start",
+        "body-return",
+        "child-close",
+        "deliver"
+      ],
+      "preparations": 1
+    },
+    {
+      "name": "child-error",
+      "body": "return",
+      "child": "error",
+      "failed": true,
+      "events": [
+        "prepare",
+        "consume",
+        "child-start",
+        "body-return",
+        "child-close",
+        "failed"
+      ],
+      "preparations": 1
+    },
+    {
+      "name": "child-undefined",
+      "body": "return",
+      "child": "undefined",
+      "failed": true,
+      "events": [
+        "prepare",
+        "consume",
+        "child-start",
+        "body-return",
+        "child-close",
+        "failed"
+      ],
+      "preparations": 1
+    },
+    {
+      "name": "invalid-consumer",
+      "body": "invalid",
+      "child": "none",
+      "failed": true,
+      "events": [
+        "failed"
+      ],
+      "preparations": 0
+    }
+  ]
+}

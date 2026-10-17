@@ -130,6 +130,4 @@ impl Puzzle2dLookupCursor {
     pub fn terminal_is_empty(&self) -> bool { self.closing && self.output.is_none() && self.comparison.terminal_is_empty() && self.source.is_none() && self.target.is_none() }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;
+

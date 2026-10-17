@@ -18,7 +18,7 @@ pub struct MoveLayer {
 }
 
 /// 🌳️ Resolve a tree drop to an index in the destination after removing the source.
-fn resolve_drop(payload: &MoveLayer, document: &RasterSnapshot) -> Result<Option<reorder_layers::mutation::ReorderLayers>, Fault> {
+pub fn resolve_drop(payload: &MoveLayer, document: &RasterSnapshot) -> Result<Option<reorder_layers::mutation::ReorderLayers>, Fault> {
     if !matches!(payload.drop_position.as_str(), "before" | "after" | "inside") { return Err(Fault::from("raster-layer-drop-position-invalid")); }
     let source = find_layer(&document.layers, &payload.layer_id).ok_or_else(|| Fault::from("raster-layer-source-missing"))?;
     let target = find_layer(&document.layers, &payload.target_row_id).ok_or_else(|| Fault::from("raster-layer-target-missing"))?;
@@ -48,6 +48,3 @@ pub fn handle(payload: &MoveLayer, doc: &ArtifactView<'_, RasterSnapshot>, _cfg:
     })
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;

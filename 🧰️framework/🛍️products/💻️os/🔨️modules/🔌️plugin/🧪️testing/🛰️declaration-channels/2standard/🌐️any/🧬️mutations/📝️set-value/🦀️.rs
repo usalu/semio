@@ -1,6 +1,7 @@
 //#region 📝️Std2AnySetValue
 //! 📝️ Replaces the Std2Any fixture's value with an authored i32.
-use super::{Std2AnyDiff, Std2AnyMutation, Std2AnySnapshot};
+use super::{Std2AnyDiff, Std2AnySnapshot};
+use crate::declaration_fixture_mutations::std2_any::Std2AnyMutation;
 use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 
@@ -29,7 +30,8 @@ impl protocol::MutationKind<Std2AnySnapshot, Std2AnyMutation> for SetValue {
     }
 }
 
+#[doc(hidden)]
 #[cfg(test)]
 #[path = "../../../../../../🧪️tests/🌐️standard-two-any-set-value-unit/🦀️.rs"]
-mod tests;
+pub mod tests;
 //#endregion 📝️Std2AnySetValue

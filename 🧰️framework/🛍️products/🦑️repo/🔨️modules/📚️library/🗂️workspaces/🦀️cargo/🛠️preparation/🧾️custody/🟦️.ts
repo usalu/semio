@@ -1,3 +1,6 @@
+import{requireIssuedResourceControlV1,withRequestedIssuedResourceControlV1,scriptResourceProcessEnvironmentV1}from"../../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+import{captureOwnedCommandResultV1}from"../../../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
+import type{CargoPreparationControlV1}from"../../🟦️.ts";
 import custodySchema from "./🧬️schema/🔣️.json";
 import {createHash} from "node:crypto";
 import {existsSync,lstatSync,readFileSync,readdirSync,writeFileSync} from "node:fs";
@@ -7,6 +10,7 @@ import {fileURLToPath} from "node:url";
 export type CargoPreparationInputV1 = Readonly<{path:string;kind:"file"|"directory"|"presence";sha256:string|null}>;
 export type CargoPreparationResolutionV1 = Readonly<{source:string;specifier:string;selected:string}>;
 export type CargoPreparationObservationV1 = Readonly<{version:1;root:string;sourceRoot:string;script:string;command:readonly string[];sources:readonly CargoPreparationInputV1[];resolverInputs:readonly CargoPreparationInputV1[];inputs:readonly CargoPreparationInputV1[];outputs:readonly CargoPreparationInputV1[];resolutions:readonly CargoPreparationResolutionV1[]}>;
+const custodyControlProtocol=Object.freeze({...custodySchema.$defs.CargoPreparationControlProtocolV1.const});
 const digest=(value:string|Buffer):string=>createHash("sha256").update(value).digest("hex");
 const ordered=(a:string,b:string):number=>Buffer.compare(Buffer.from(a),Buffer.from(b));
 function physical(root:string,path:string):void {
@@ -29,9 +33,18 @@ export function cargoPreparationInputV1(root:string,path:string,kind:CargoPrepar
  if(!info.isDirectory())throw Error("Preparation directory is not physical");
  const entries=readdirSync(path,{withFileTypes:true}).map(row=>{if(row.isSymbolicLink())throw Error("Preparation directory contains a symlink");return[row.name,row.isDirectory()?"directory":row.isFile()?"file":"other"];}).sort((a,b)=>ordered(a[0]!,b[0]!));return{path,kind,sha256:digest(JSON.stringify(entries))};
 }
-/** 📚️ Binds the selected first-party program's eager import/reexport closure and its resolver configuration. */
-export function cargoPreparationProgramSourcesV1(root:string,entry:string):Readonly<{sourceRoot:string;sources:readonly CargoPreparationInputV1[];resolverInputs:readonly CargoPreparationInputV1[];inputs:readonly CargoPreparationInputV1[];resolutions:readonly CargoPreparationResolutionV1[]}> {
- physical(root,entry);const result=Bun.spawnSync([process.execPath,fileURLToPath(new URL("../📜️script.ts",import.meta.url)),"capture-program",root,entry],{cwd:root,env:{...process.env,SEMIO_WORKSPACE_ROOT:root},stdout:"pipe",stderr:"pipe"});if(result.exitCode!==0)throw Error(`Preparation program capture failed: ${result.stderr.toString()}`);const value=JSON.parse(result.stdout.toString());const row=admitCargoPreparationObservationV1({...value,version:1,root,script:entry,command:["capture-program"],outputs:[]});return{sourceRoot:row.sourceRoot,sources:row.sources,resolverInputs:row.resolverInputs,inputs:row.inputs,resolutions:row.resolutions};
+/** 🧷️ Snapshots actual caller authority before any awaited physical continuation. */
+function cargoPreparationControlSnapshotV1(control:CargoPreparationControlV1):CargoPreparationControlV1 {
+ const phase=control?.leaseControl,signal=control?.signal,advance=control?.advance,budget=control?.childBudget,options=control?.childOptions;requireIssuedResourceControlV1(phase);if(signal!==phase.signal||typeof advance!=="function"||typeof budget!=="function"||typeof options!=="function")throw Error("Actual Cargo preparation phase and transport required");return Object.freeze({leaseControl:phase,signal,advance:advance.bind(control),childBudget:budget.bind(control),childOptions:options.bind(control)});
+}
+/** 📡️ Joins one bounded real resolver child under the actual nonrenewable caller phase. */
+async function captureCargoPreparationProgramV1(root:string,operation:"capture-program"|"resolve-program",args:readonly string[],control:CargoPreparationControlV1,input?:string):Promise<unknown> {
+ const actual=cargoPreparationControlSnapshotV1(control),check=()=>{requireIssuedResourceControlV1(actual.leaseControl);actual.signal.throwIfAborted();},path=fileURLToPath(new URL("../📜️script.ts",import.meta.url));check();await actual.advance({operation:"recipe",path,completedOperations:0});check();const maximum=Math.floor(Math.min(custodyControlProtocol.maximumChildMilliseconds,actual.childBudget(custodyControlProtocol.maximumChildMilliseconds),actual.leaseControl.remainingMilliseconds()??Infinity));if(!Number.isFinite(maximum)||maximum<1)throw Error("Finite original Cargo custody child budget required");
+ const result=await withRequestedIssuedResourceControlV1(actual.leaseControl,maximum,async phase=>{check();const options=actual.childOptions({...process.env,SEMIO_WORKSPACE_ROOT:root});check();if(options.signal!==actual.signal||!options.output||typeof options.onProgress!=="function")throw Error("Actual Cargo custody child transport required");return captureOwnedCommandResultV1(process.execPath,[path,operation,...args],root,{control:phase,output:{maximumBytes:Math.min(options.output.maximumBytes,custodyControlProtocol.maximumCaptureBytes),maximumLines:Math.min(options.output.maximumLines,custodyControlProtocol.maximumCaptureLines)},env:scriptResourceProcessEnvironmentV1(phase,options.env??{}),...(input===undefined?{}:{input:{version:1,text:input}})});});check();await actual.advance({operation:"recipe",path,completedOperations:1});check();if(result.status!==0||result.signal!==null)throw Error(`Preparation program ${operation} failed: ${result.status} ${result.signal}: ${result.stderr}`);return JSON.parse(result.stdout);
+}
+/** 📚️ Binds selected program imports and resolver inputs through the actual controlled child. */
+export async function cargoPreparationProgramSourcesV1(root:string,entry:string,control:CargoPreparationControlV1):Promise<Readonly<{sourceRoot:string;sources:readonly CargoPreparationInputV1[];resolverInputs:readonly CargoPreparationInputV1[];inputs:readonly CargoPreparationInputV1[];resolutions:readonly CargoPreparationResolutionV1[]}>> {
+ const actual=cargoPreparationControlSnapshotV1(control);physical(root,entry);const value=await captureCargoPreparationProgramV1(root,"capture-program",[root,entry],actual),row=admitCargoPreparationObservationV1({...value as object,version:1,root,script:entry,command:["capture-program"],outputs:[]});return{sourceRoot:row.sourceRoot,sources:row.sources,resolverInputs:row.resolverInputs,inputs:row.inputs,resolutions:row.resolutions};
 }
 
 /** 🧬️ Admits only complete current-format observations from the selected preparation producer. */
@@ -44,14 +57,19 @@ export function admitCargoPreparationObservationV1(value:unknown):CargoPreparati
  return row;
 }
 /** 🔒️ Refuses changed producer source, input presence/bytes/rosters, or published output bytes. */
-export function assertCargoPreparationObservationCurrentV1(value:unknown):void {
- const row=admitCargoPreparationObservationV1(value);
+export async function assertCargoPreparationObservationCurrentV1(value:unknown,control:CargoPreparationControlV1):Promise<void> {
+ const actual=cargoPreparationControlSnapshotV1(control),row=admitCargoPreparationObservationV1(structuredClone(value));
  for(const edge of row.resolutions){cargoPreparationProgramRootV1(row.root,row.sourceRoot,edge.source);cargoPreparationProgramRootV1(row.root,row.sourceRoot,edge.selected);}
- if(row.resolutions.length){const result=Bun.spawnSync([process.execPath,fileURLToPath(new URL("../📜️script.ts",import.meta.url)),"resolve-program"],{cwd:row.root,env:{...process.env,SEMIO_WORKSPACE_ROOT:row.root},stdin:Buffer.from(JSON.stringify(row.resolutions)),stdout:"pipe",stderr:"pipe"});if(result.exitCode!==0)throw Error(`Preparation program resolution failed: ${result.stderr.toString()}`);const selected=JSON.parse(result.stdout.toString());if(!Array.isArray(selected)||selected.length!==row.resolutions.length)throw Error("Invalid current program resolution");for(const [index,edge] of row.resolutions.entries())if(selected[index]!==edge.selected)throw Error(`Preparation program resolution changed: ${edge.source} ${edge.specifier}`);}
- const outputs=new Set(row.outputs.map(input=>input.path));
- for(const input of row.sources)if(cargoPreparationInputV1(cargoPreparationProgramRootV1(row.root,row.sourceRoot,input.path),input.path,input.kind).sha256!==input.sha256)throw Error(`Preparation custody changed: ${input.path}`);
- for(const input of row.resolverInputs)if(cargoPreparationInputV1(row.sourceRoot,input.path,input.kind).sha256!==input.sha256)throw Error(`Preparation resolver custody changed: ${input.path}`);
- for(const input of [...row.inputs.filter(input=>!outputs.has(input.path)),...row.outputs])if(cargoPreparationInputV1(row.root,input.path,input.kind).sha256!==input.sha256)throw Error(`Preparation custody changed: ${input.path}`);
+ if(row.resolutions.length){const selected=await captureCargoPreparationProgramV1(row.root,"resolve-program",[],actual,JSON.stringify(row.resolutions));if(!Array.isArray(selected)||selected.length!==row.resolutions.length)throw Error("Invalid current program resolution");for(const[index,edge]of row.resolutions.entries())if(selected[index]!==edge.selected)throw Error(`Preparation program resolution changed: ${edge.source} ${edge.specifier}`);}
+ let completed=0;for(const item of cargoPreparationCurrentInputsV1(row)){requireIssuedResourceControlV1(actual.leaseControl);await actual.advance({operation:"recipe",path:item.input.path,completedOperations:completed++});requireIssuedResourceControlV1(actual.leaseControl);if(cargoPreparationInputV1(item.root,item.input.path,item.input.kind).sha256!==item.input.sha256)throw Error(`Preparation custody changed: ${item.input.path}`);}requireIssuedResourceControlV1(actual.leaseControl);
+}
+/** 📑️ Selects current byte observations with published outputs superseding prior reads. */
+function cargoPreparationCurrentInputsV1(row:CargoPreparationObservationV1):readonly Readonly<{root:string;input:CargoPreparationInputV1}>[] {
+ const outputs=new Set(row.outputs.map(input=>input.path));return[...row.sources.map(input=>({root:cargoPreparationProgramRootV1(row.root,row.sourceRoot,input.path),input})),...row.resolverInputs.map(input=>({root:row.sourceRoot,input})),...[...row.inputs.filter(input=>!outputs.has(input.path)),...row.outputs].map(input=>({root:row.root,input}))];
+}
+/** 🧮️ Checks producer completion bytes without acquiring resolver subprocess authority. */
+function assertCargoPreparationBytesCurrentV1(row:CargoPreparationObservationV1):void {
+ for(const item of cargoPreparationCurrentInputsV1(row))if(cargoPreparationInputV1(item.root,item.input.path,item.input.kind).sha256!==item.input.sha256)throw Error(`Preparation custody changed: ${item.input.path}`);
 }
 let active:{row:{version:1;root:string;sourceRoot:string;script:string;command:string[]};sources:Map<string,CargoPreparationInputV1>;inputs:Map<string,CargoPreparationInputV1>;outputs:Map<string,CargoPreparationInputV1>}|undefined;
 function capture():typeof active {
@@ -67,5 +85,5 @@ export function observeCargoPreparationInputV1(path:string,kind:CargoPreparation
 export function observeCargoPreparationOutputV1(path:string,bytes:string|Buffer):void {const state=capture();if(state){physical(state.row.root,path);state.outputs.set(path,{path,kind:"file",sha256:digest(bytes)});}}
 /** 🧾️ Publishes complete operation custody only after all inputs and outputs remain current. */
 export function completeCargoPreparationObservationV1():void {
- const state=capture();if(!state)return;const row={...state.row,resolverInputs:[],resolutions:[],sources:[...state.sources.values()],inputs:[...state.inputs.values()],outputs:[...state.outputs.values()]};assertCargoPreparationObservationCurrentV1(row);writeFileSync(process.env.SEMIO_CARGO_PREPARATION_OBSERVATION!,JSON.stringify(row));active=undefined;
+ const state=capture();if(!state)return;const row={...state.row,resolverInputs:[],resolutions:[],sources:[...state.sources.values()],inputs:[...state.inputs.values()],outputs:[...state.outputs.values()]};assertCargoPreparationBytesCurrentV1(admitCargoPreparationObservationV1(row));writeFileSync(process.env.SEMIO_CARGO_PREPARATION_OBSERVATION!,JSON.stringify(row));active=undefined;
 }

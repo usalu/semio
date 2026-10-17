@@ -123,7 +123,4 @@ pub fn render(program: &ProgramSnapshot, cfg: &config::ArchitectGraphWindowConfi
 //#endregion 🔖️Render
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

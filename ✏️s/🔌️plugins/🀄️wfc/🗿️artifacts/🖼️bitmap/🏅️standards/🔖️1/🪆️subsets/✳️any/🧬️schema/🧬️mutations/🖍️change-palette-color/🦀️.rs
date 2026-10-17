@@ -2,7 +2,6 @@
 //! move, so no pixel or pin is renumbered and the delta is one palette lane write.
 
 use crate::diff::BitmapDiff;
-use crate::mutations::BitmapMutation;
 use crate::schema::snapshot::{BitmapColor, BitmapSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -18,17 +17,23 @@ pub struct ChangePaletteColor {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_palette_color(index: usize, color: BitmapColor) -> BitmapMutation {
-    BitmapMutation::ChangePaletteColor(ChangePaletteColor { index, color })
+pub fn change_palette_color<Op>(index: usize, color: BitmapColor) -> Op
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::change_palette_color::ChangePaletteColor>,
+{
+    Op::from(ChangePaletteColor { index, color })
 }
 
-impl MutationKind<BitmapSnapshot, BitmapMutation> for ChangePaletteColor {
+impl<Op> MutationKind<BitmapSnapshot, Op> for ChangePaletteColor
+where
+    Op: protocol::Mutation<BitmapSnapshot, Diff = BitmapDiff> + From<ChangePaletteColor>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "palette-color", kind: "change-palette-color", record: "ChangedPaletteColor" };
 
     fn diff(&self, base: &BitmapSnapshot) -> protocol::MutationOutcome<BitmapDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &BitmapSnapshot) -> Result<Vec<BitmapMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &BitmapSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

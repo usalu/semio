@@ -3,7 +3,8 @@
 use crate::standards::v1::subsets::any::schema::mutations::set_query;
 use crate::editor::jack::transient::{JackResultsWindowTransientMutation, JackResultsWindowTransientOwner, ReplaceQueryResult};
 use crate::editor::jack::{TrinityJackCommand, TrinityJackPlayApp};
-use crate::{JackSnapshot, TRINITY_GRAPH_SCHEMA};
+use crate::standards::v1::subsets::any::schema::snapshot::JackSnapshot;
+use crate::standards::v1::subsets::any::schema::graph::TRINITY_GRAPH_SCHEMA;
 use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
 use semio_framework_plugin::app::ArtifactOwnedToolJobContext;
 use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload};
@@ -11,30 +12,31 @@ use semio_framework_job::InteractiveJobCloseStep;
 use semio_framework_plugin::{AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactToolPublicationContract, ArtifactToolPublicationLane, EditorApp, EphemeralEmit, Fault, FaultCode, FaultOrigin};
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 use semio_framework_value::RetirementDemand;
-use crate::{JackGraphQuery,JackContentRead};
+use semio_s_artifact_trinity_jack_graph_query::JackGraphQuery;
+use crate::standards::v1::subsets::any::schema::content_read::JackContentRead;
 use semio_framework_plugin::app::ChildEmitPreparation;
 
-type Owner<C> = EditorApp<TrinityJackPlayApp<C>>;
-pub(crate) const JACK_QUERY_TOOL_IDS: &[&str] = &["runQuery", "loadExampleQuery"];
+pub type Owner<C> = EditorApp<TrinityJackPlayApp<C>>;
+pub const JACK_QUERY_TOOL_IDS: &[&str] = &["runQuery", "loadExampleQuery"];
 const RAW_BYTES: usize = 16_384;
 const QUERY_BYTES: usize = 4_096;
-const QUERY_CHECKPOINT_BYTES: usize = 32;
-const QUERY_REPLAY_MAXIMUM_STEPS: u64 = (QUERY_BYTES as u64) * 16_384 * 16_384 * 16_384 + 1_000_000;
+pub const QUERY_CHECKPOINT_BYTES: usize = 32;
+pub const QUERY_REPLAY_MAXIMUM_STEPS: u64 = (QUERY_BYTES as u64) * 16_384 * 16_384 * 16_384 + 1_000_000;
 const PAYLOAD_SCHEMA: &str = "trinity.jack.query-command.v1";
 const LANES: &[ArtifactToolPublicationLane] = &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Child, ArtifactToolPublicationLane::WindowTransient];
 
-pub(crate) struct JackQueryJobFactory<C:crate::JackComposition>{
+pub struct JackQueryJobFactory<C:crate::standards::v1::subsets::any::schema::composition::JackComposition>{
     composition:std::marker::PhantomData<C>,
     keys: Vec<ToolFactoryKey>,
 }
 
-impl<C:crate::JackComposition> JackQueryJobFactory<C>{
-    pub(crate) fn new(controller: &str) -> Self {
+impl<C:crate::standards::v1::subsets::any::schema::composition::JackComposition> JackQueryJobFactory<C>{
+    pub fn new(controller: &str) -> Self {
         Self { composition:std::marker::PhantomData,keys: JACK_QUERY_TOOL_IDS.iter().map(|tool| ToolFactoryKey::new(controller, *tool)).collect() }
     }
 }
 
-impl<C:crate::JackComposition> ToolJobFactory for JackQueryJobFactory<C>{
+impl<C:crate::standards::v1::subsets::any::schema::composition::JackComposition> ToolJobFactory for JackQueryJobFactory<C>{
     type Payload = ArtifactRetainedCommandPayload<Owner<C>>;
     type Job = ArtifactRetainedCommandJob<Owner<C>>;
     fn keys(&self) -> &[ToolFactoryKey] {
@@ -56,9 +58,9 @@ impl<C:crate::JackComposition> ToolJobFactory for JackQueryJobFactory<C>{
         &mut self,
         _operation: semio_framework_job::Operation,
         payload: Self::Payload,
-        input: semio_framework::action_bus::RetainedToolWireInput,
-        checkpoint: Option<semio_framework::action_bus::RetainedToolWireInput>,
-    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework::action_bus::RetainedToolWireInput, Option<semio_framework::action_bus::RetainedToolWireInput>)> {
+        input: semio_framework_action_bus::RetainedToolWireInput,
+        checkpoint: Option<semio_framework_action_bus::RetainedToolWireInput>,
+    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework_action_bus::RetainedToolWireInput, Option<semio_framework_action_bus::RetainedToolWireInput>)> {
         if input.declared_bytes() > RAW_BYTES || checkpoint.as_ref().is_some_and(|checkpoint| checkpoint.declared_bytes() > semio_framework_plugin::retained_command::ARTIFACT_COMMAND_CHECKPOINT_MAXIMUM_BYTES) {
             return Err((ToolJobFactoryError::new("query wire or checkpoint exceeds admitted ownership"), input, checkpoint));
         }
@@ -69,14 +71,14 @@ impl<C:crate::JackComposition> ToolJobFactory for JackQueryJobFactory<C>{
     }
 }
 
-impl<C:crate::JackComposition> ArtifactOwnedToolJobFactory for JackQueryJobFactory<C>{
+impl<C:crate::standards::v1::subsets::any::schema::composition::JackComposition> ArtifactOwnedToolJobFactory for JackQueryJobFactory<C>{
     type Owner = Owner<C>;
     const TOOL_IDS: &'static [&'static str] = JACK_QUERY_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = TRINITY_GRAPH_SCHEMA;
     const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[ArtifactToolPublicationContract { tool_id: "runQuery", lanes: LANES }, ArtifactToolPublicationContract { tool_id: "loadExampleQuery", lanes: LANES }];
 }
 
-pub(crate) fn build_job<C:crate::JackComposition>(request: ArtifactOwnedToolJobRequest<Owner<C>>) -> Result<semio_framework::ToolOperationSpec, Fault> {
+pub fn build_job<C:crate::standards::v1::subsets::any::schema::composition::JackComposition>(request: ArtifactOwnedToolJobRequest<Owner<C>>) -> Result<semio_framework::ToolOperationSpec, Fault> {
     let tool = TrinityJackPlayApp::<C>::command_id(&request.command);
     if tool != request.tool_id || !JACK_QUERY_TOOL_IDS.contains(&tool) {
         return Err(Fault::from("query command does not match its exact factory key"));
@@ -122,7 +124,7 @@ pub(crate) fn build_job<C:crate::JackComposition>(request: ArtifactOwnedToolJobR
         retained: request.retained,
         authoring_seed: request.authoring_seed.clone(),
     };
-    let adopts_query = matches!(request.command.as_ref(), TrinityJackCommand::LoadExampleQuery { .. }) && source != request.snapshot.query && source.len() <= crate::JACK_QUERY_MAXIMUM_BYTES;
+    let adopts_query = matches!(request.command.as_ref(), TrinityJackCommand::LoadExampleQuery { .. }) && source != request.snapshot.query && source.len() <= crate::standards::v1::subsets::any::schema::graph::JACK_QUERY_MAXIMUM_BYTES;
     let work = Box::new(JackQueryWork::<C>::new(tool, source.to_string(), adopts_query, editor_window_id.to_string(), results_window_id.to_string(), operation.operation_id, operation.generation));
     let payload = ArtifactRetainedCommandPayload::new(
         ArtifactRetainedCommandInputs {
@@ -150,30 +152,30 @@ fn content_missing() -> Fault {
     Fault::new(FaultOrigin::App, FaultCode::new("trinity.jack.content-missing"), "the query operation carries no child view")
 }
 
-struct JackQueryWork<C:crate::JackComposition>{
+pub struct JackQueryWork<C:crate::standards::v1::subsets::any::schema::composition::JackComposition>{
     composition:std::marker::PhantomData<C>,
     tool: &'static str,
     source: Option<String>,
     adopts_query: bool,
     editor_window_id: Option<String>,
     results_window_id: Option<String>,
-    preparation: Option<crate::executor::QueryExecutionPreparation>,
-    execution: Option<Box<crate::executor::QueryExecution>>,
+    preparation: Option<crate::standards::v1::subsets::any::schema::executor::QueryExecutionPreparation>,
+    execution: Option<Box<crate::standards::v1::subsets::any::schema::executor::QueryExecution>>,
     operation_id: u64,
     generation: u64,
-    progress: u64,
-    replay_target: Option<u64>,
+    pub progress: u64,
+    pub replay_target: Option<u64>,
     finished: bool,
     closing: bool,
     retirement: Option<Box<dyn store::ErasedSnapshotRetirement>>,
 }
 
-impl<C:crate::JackComposition> JackQueryWork<C>{
-    fn new(tool: &'static str, source: String, adopts_query: bool, editor_window_id: String, results_window_id: String, operation_id: u64, generation: u64) -> Self {
+impl<C:crate::standards::v1::subsets::any::schema::composition::JackComposition> JackQueryWork<C>{
+    pub fn new(tool: &'static str, source: String, adopts_query: bool, editor_window_id: String, results_window_id: String, operation_id: u64, generation: u64) -> Self {
         Self { composition:std::marker::PhantomData,tool, source: Some(source), adopts_query, editor_window_id: Some(editor_window_id), results_window_id: Some(results_window_id), preparation: None, execution: None, operation_id, generation, progress: 0, replay_target: None, finished: false, closing: false, retirement: None }
     }
 
-    fn identity(&self) -> u64 {
+    pub fn identity(&self) -> u64 {
         let tool = match self.tool {
             "runQuery" => 0x7275_6e51_7565_7279,
             "loadExampleQuery" => 0x6c6f_6164_5175_6572,
@@ -198,7 +200,7 @@ impl<C:crate::JackComposition> JackQueryWork<C>{
     fn complete(
         &mut self,
         input: &ArtifactCommandInputs<'_, Owner<C>>,
-        result: Option<crate::ast::QueryResult>,
+        result: Option<crate::standards::v1::subsets::any::schema::ast::QueryResult>,
         error: Option<String>,
         preparations:Vec<ChildEmitPreparation>,
     ) -> ArtifactCommandWorkStep<Owner<C>> {
@@ -219,7 +221,7 @@ impl<C:crate::JackComposition> JackQueryWork<C>{
     }
 }
 
-impl<C:crate::JackComposition> ArtifactCommandWork<Owner<C>> for JackQueryWork<C>{
+impl<C:crate::standards::v1::subsets::any::schema::composition::JackComposition> ArtifactCommandWork<Owner<C>> for JackQueryWork<C>{
     fn tool_id(&self) -> &'static str {
         self.tool
     }
@@ -244,8 +246,8 @@ impl<C:crate::JackComposition> ArtifactCommandWork<Owner<C>> for JackQueryWork<C
             return Err(Fault::from("query operation owner changed"));
         }
         if self.preparation.is_none() && self.execution.is_none() {
-            match crate::core::parse(self.source.as_ref().expect("query source is retained")) {
-                Ok(query) => self.preparation = Some(crate::executor::QueryExecutionPreparation::new(query)),
+            match crate::standards::v1::subsets::any::schema::language_service::parse(self.source.as_ref().expect("query source is retained")) {
+                Ok(query) => self.preparation = Some(crate::standards::v1::subsets::any::schema::executor::QueryExecutionPreparation::new(query)),
                 Err(error) => return Ok(self.complete(input, None, Some(error), Vec::new())),
             }
             return Ok(self.progress("query-parse", br#"{"en":"Parsing query","de":"Abfrage wird analysiert"}"#));
@@ -253,8 +255,8 @@ impl<C:crate::JackComposition> ArtifactCommandWork<Owner<C>> for JackQueryWork<C
         if let Some(preparation) = self.preparation.as_mut() {
             let content = C::bind(input.snapshot, &input.context.ok_or_else(content_missing)?.children)?;
             match preparation.step(input.snapshot, &content, QUERY_BYTES) {
-                Ok(crate::executor::QueryPreparationStep::Pending) => return Ok(self.progress("query-prepare", br#"{"en":"Preparing query","de":"Abfrage wird vorbereitet"}"#)),
-                Ok(crate::executor::QueryPreparationStep::Complete(execution)) => {
+                Ok(crate::standards::v1::subsets::any::schema::executor::QueryPreparationStep::Pending) => return Ok(self.progress("query-prepare", br#"{"en":"Preparing query","de":"Abfrage wird vorbereitet"}"#)),
+                Ok(crate::standards::v1::subsets::any::schema::executor::QueryPreparationStep::Complete(execution)) => {
                     self.execution = Some(execution);
                     self.preparation = None;
                     return Ok(self.progress("query-prepare", br#"{"en":"Preparing query","de":"Abfrage wird vorbereitet"}"#));
@@ -346,17 +348,17 @@ impl<C:crate::JackComposition> ArtifactCommandWork<Owner<C>> for JackQueryWork<C
     }
 }
 
-impl<C:crate::JackComposition> JackQueryWork<C>{
+impl<C:crate::standards::v1::subsets::any::schema::composition::JackComposition> JackQueryWork<C>{
     /// 📏️ Quotes the next close turn in the fixed order: child cursor, execution, preparation, then each owned string.
     fn close_demands(&self, body: usize) -> Result<RetirementDemand, semio_framework_value::ValueError> {
         if let Some(owner) = self.retirement.as_ref() {
             return store::os_store::snapshot_read::artifact_retirement_box_demands(owner, body);
         }
         if let Some(execution) = self.execution.as_ref() {
-            return if execution.terminal_is_empty() { Ok(RetirementDemand { release_bytes: size_of::<crate::executor::QueryExecution>(), depth: 1, ..Default::default() }) } else { execution.close_demands(body) };
+            return if execution.terminal_is_empty() { Ok(RetirementDemand { release_bytes: size_of::<crate::standards::v1::subsets::any::schema::executor::QueryExecution>(), depth: 1, ..Default::default() }) } else { execution.close_demands(body) };
         }
         if let Some(preparation) = self.preparation.as_ref() {
-            return if preparation.terminal_is_empty() { Ok(RetirementDemand { copy_bytes: size_of::<Option<crate::executor::QueryExecutionPreparation>>(), depth: 1, ..Default::default() }) } else { preparation.close_demands(body) };
+            return if preparation.terminal_is_empty() { Ok(RetirementDemand { copy_bytes: size_of::<Option<crate::standards::v1::subsets::any::schema::executor::QueryExecutionPreparation>>(), depth: 1, ..Default::default() }) } else { preparation.close_demands(body) };
         }
         if self.source.is_some() {
             return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.source);
@@ -368,6 +370,3 @@ impl<C:crate::JackComposition> JackQueryWork<C>{
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;

@@ -10,7 +10,7 @@ import { type UiLabel, type UiTranslationKey } from "@semio-tech/ui-react";
 import { type ActionDispatchLifecycleV1, type ContextMenuItemSpec, type PluginContextMenuRequest } from "@semio-tech/framework";
 import { UiDocumentStore } from "../../📃️UiDocumentStore/🟦️.tsx";
 import { type UiIntent } from "@semio-tech/framework";
-import { shellLabel } from "../../🛠️ShellHelpers/🟦️.tsx";
+import { shellLabel } from "../../🛠️ShellHelpers/🏷️labels/🟦️.tsx";
 
 //#region 🔖️UiInterpreter
 export function interpLabel(key: UiTranslationKey): UiLabel {

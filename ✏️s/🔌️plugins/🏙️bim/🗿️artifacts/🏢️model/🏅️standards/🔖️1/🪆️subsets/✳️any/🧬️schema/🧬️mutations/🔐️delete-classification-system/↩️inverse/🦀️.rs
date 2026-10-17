@@ -5,9 +5,12 @@ use super::super::cascade;
 use super::super::create_classification_system::CreateClassificationSystem;
 use super::super::set_element_classification::SetElementClassification;
 use super::DeleteClassificationSystem;
-use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{snapshot::ModelSnapshot};
 
-pub fn inverse(payload: &DeleteClassificationSystem, base: &ModelSnapshot) -> Vec<ModelMutation> {
+pub fn inverse<Op>(payload: &DeleteClassificationSystem, base: &ModelSnapshot) -> Vec<Op>
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::create_classification_system::CreateClassificationSystem> + From<crate::standards::v1::subsets::any::schema::mutations::set_element_classification::SetElementClassification>,
+{
     let Some(system) = base.classification_systems.get(&payload.id) else {
         return Vec::new();
     };
@@ -17,7 +20,7 @@ pub fn inverse(payload: &DeleteClassificationSystem, base: &ModelSnapshot) -> Ve
     }
     holders
         .into_iter()
-        .map(|(holder, code)| ModelMutation::SetElementClassification(SetElementClassification { id: holder, system: payload.id.clone(), code }))
-        .chain(std::iter::once(ModelMutation::CreateClassificationSystem(CreateClassificationSystem { id: payload.id.clone(), system: system.clone() })))
+        .map(|(holder, code)| Op::from(SetElementClassification { id: holder, system: payload.id.clone(), code }))
+        .chain(std::iter::once(Op::from(CreateClassificationSystem { id: payload.id.clone(), system: system.clone() })))
         .collect()
 }

@@ -1,7 +1,8 @@
 use super::*;
+use semio_framework_test_fixtures::fixture_text;
 #[test]
 fn original_result_variants_preserve_native_payload_and_all_axis_receipts(){
- let law:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
+ let law:serde_json::Value=serde_json::from_str(fixture_text!("../../⚖️result/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
  let g=&law["grant"];let grant=RetainedCloneGrant{maximum_items:g["maximumItems"].as_u64().unwrap()as usize,maximum_copy_bytes:g["maximumCopyBytes"].as_u64().unwrap()as usize,maximum_capacity_bytes:g["maximumCapacityBytes"].as_u64().unwrap()as usize,maximum_release_bytes:g["maximumReleaseBytes"].as_u64().unwrap()as usize,maximum_depth:g["maximumDepth"].as_u64().unwrap()as usize};
  for variant in law["variants"].as_array().unwrap(){for repeat in law["repeats"].as_array().unwrap(){
   let n=repeat.as_u64().unwrap()as usize;let ok=variant.as_str().unwrap()=="Ok";
@@ -23,6 +24,6 @@ fn original_result_variants_preserve_native_payload_and_all_axis_receipts(){
    let transfer=owner.original().is_some()&&capacity==size_of::<OriginalResult<String,String>>();if transfer{assert_eq!(copy,0);}
    let(step,heap)=crate::allocation_testing::observe_retirement_allocations(||owner.step(grant).unwrap());if transfer{assert_eq!(step.progress().copied_bytes,0);}assert!(step.progress().fits(grant));assert_eq!((step.progress().retained_capacity_bytes,step.progress().released_bytes),heap);assert_eq!(owner.step_progress(),step.progress());births+=heap.0;releases+=heap.1;
   }
-  let(_,heap)=crate::allocation_testing::observe_retirement_allocations(||drop(owner));assert_eq!(heap,(0,0));assert_eq!(births,releases);println!("[DEBUG] original Result {} repeat{n} pointer{pointer:?} turns{turns} birth{births} release{releases}, independent axis denials0/0 and terminalDrop0",variant.as_str().unwrap());
+  let(_,heap)=crate::allocation_testing::observe_retirement_allocations(||drop(owner));assert_eq!(heap,(0,0));assert_eq!(births,releases);
  }}
 }

@@ -13,7 +13,7 @@ for (const planPath of process.argv.slice(2)) {
     const sf = ts.createSourceFile(f.facade, text, ts.ScriptTarget.ESNext, true);
     for (const st of sf.statements) {
       const spec = (ts.isExportDeclaration(st) || ts.isImportDeclaration(st)) && st.moduleSpecifier && ts.isStringLiteral(st.moduleSpecifier) ? st.moduleSpecifier.text : null;
-      if (!spec) continue;
+      if (!spec || !spec.startsWith(".")) continue;
       stmts++;
       if (!existsSync(resolve(join(ROOT, dirname(f.facade)), spec))) { bad++; console.log("BROKEN", f.facade.slice(-110), "->", spec); }
     }

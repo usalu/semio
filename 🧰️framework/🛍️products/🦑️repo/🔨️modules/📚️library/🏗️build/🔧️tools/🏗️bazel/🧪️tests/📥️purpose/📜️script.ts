@@ -7,7 +7,7 @@ import{readBuildGraphV1}from"../../../../🕸️graph/🟦️.ts";
 import{createIssuedResourceControlV1,receiveScriptProcessInvocation,readIssuedScriptProcessEnvelopeV1,readScriptProcessEnvelope,scriptProcessEnvironment,withScriptProcessEnvelope,checkScriptInvocation,advanceScriptInvocation,type ScriptInvocation}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import{validateJsonSchemaSubset}from"../../../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
 import type{NativeBuildCallerCapabilitiesV1}from"../../../../📥️caller/🟦️.ts";
-import schema from"../../🧬️schema/🧪️purpose.json";
+import schema from"./🧬️schema/🔣️.json";
 import{checkBazelPurposeParentV1,createBazelPurposeEnvelopeV1,type BazelPurposeContextV1}from"./🌱️birth/🟦️.ts";
 const protocol=schema.definitions.Protocol.const;
 function inside(root:string,path:string):boolean{const distance=relative(root,path);return Boolean(distance)&&distance!==".."&&!distance.startsWith(".."+sep)&&!isAbsolute(distance);}

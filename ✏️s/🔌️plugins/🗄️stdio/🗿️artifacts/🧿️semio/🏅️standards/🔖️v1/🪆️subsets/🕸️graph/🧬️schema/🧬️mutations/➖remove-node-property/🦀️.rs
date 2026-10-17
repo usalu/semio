@@ -2,7 +2,6 @@
 //! `set-node-property`, so a history edit of an earlier row never re-targets it; the inverse restores the entry at its
 //! BASE index, byte-exact).
 
-use crate::schema::mutations::SemioGraphMutation;
 use crate::schema::snapshot::{GraphNodeId, SemioGraphSnapshot};
 
 //#region 🔖️Payload
@@ -15,13 +14,16 @@ pub struct RemoveNodeProperty {
     pub key: String,
 }
 
-impl protocol::MutationKind<SemioGraphSnapshot, SemioGraphMutation> for RemoveNodeProperty {
+impl<Op> protocol::MutationKind<SemioGraphSnapshot, Op> for RemoveNodeProperty
+where
+    Op: protocol::Mutation<SemioGraphSnapshot, Diff = crate::schema::diff::SemioGraphDiff> + From<RemoveNodeProperty> + From<crate::schema::mutations::add_node_property::AddNodeProperty>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "node-property", kind: "remove-node-property", record: "RemovedNodeProperty" };
 
-    fn diff(&self, base: &SemioGraphSnapshot) -> protocol::MutationOutcome<<SemioGraphMutation as protocol::Mutation<SemioGraphSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioGraphSnapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<SemioGraphSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &SemioGraphSnapshot) -> Result<Vec<SemioGraphMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &SemioGraphSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         Ok(super::inverse::inverse(self, base))
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {

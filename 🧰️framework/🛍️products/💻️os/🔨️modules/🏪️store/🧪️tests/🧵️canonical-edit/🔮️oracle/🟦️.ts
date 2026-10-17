@@ -5,5 +5,4 @@ import { storeCanonicalEditSealerSelfTests } from "../../../🧵️canonical-edi
 test("canonical edit payloads, bytes and retained source ownership agree with independent oracles", () => {
   testCanonicalEditFixtures();
   const observations = storeCanonicalEditSealerSelfTests();
-  console.log("[DEBUG] canonical edit domain observations " + JSON.stringify(observations));
 }, 30_000);

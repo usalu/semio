@@ -6,13 +6,13 @@ use semio_s_artifact_draw_drawing_io::image::DrawingImageAdmissionJob;
 use semio_s_artifact_draw_drawing_editor_commands::import_image::publication::DrawingImagePublicationJob;
 use semio_framework_plugin::retained_command::{ArtifactCommandWork,ArtifactCommandInputs,ArtifactCommandWorkStep};
 use semio_framework_value::{retirement::controlled::ControlledRetirement,retained_clone::{RetainedCloneGrant,RetainedCloneStep},ValueError};
-type App=semio_framework_plugin::EditorApp<DrawingPlayApp>;
+pub type App=semio_framework_plugin::EditorApp<DrawingPlayApp>;
 /// 🪙️ Whether the step wallet still funds one whole work turn quoted as `demand`.
 fn can_enter(grant:RetainedCloneGrant,demand:semio_framework_value::RetirementDemand)->bool{grant.maximum_items>0&&grant.maximum_copy_bytes>=demand.copy_bytes&&grant.maximum_capacity_bytes>=demand.capacity_bytes&&grant.maximum_release_bytes>=demand.release_bytes&&grant.maximum_depth>=demand.depth}
 #[derive(semio_framework_value::RetireOwned)]
 struct Workspace {job:Option<DrawingImageAdmissionJob>,publication:Option<DrawingImagePublicationJob>}
-struct Work {workspace:Option<ControlledRetirement<Workspace>>,identity:Option<usize>,complete:bool,closing:bool}
-impl Work {fn new()->Self {Self {workspace:None,identity:None,complete:false,closing:false}}}
+pub struct Work {workspace:Option<ControlledRetirement<Workspace>>,identity:Option<usize>,complete:bool,closing:bool}
+impl Work {pub fn new()->Self {Self {workspace:None,identity:None,complete:false,closing:false}}}
 impl ArtifactCommandWork<App> for Work {
  fn tool_id(&self)->&'static str {"importImage"}
  fn extent(&self,command:&DrawingCommand,snapshot:&DrawingSnapshot,_interaction:&protocol::InteractionState,_context:Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<App>>)->Option<usize> {
@@ -77,7 +77,7 @@ impl semio_framework::ToolJobFactory for DrawingImageCommandJobFactory {
     fn classification(&self)->semio_framework::InteractiveJobClassification {semio_framework::InteractiveJobClassification::Migrated}
     fn execution_contract(&self)->semio_framework::ToolExecutionContract {semio_framework::ToolExecutionContract::resumable(DRAWING_IMAGE_RAW_BYTES,4096,1,262144,7500,1,1).with_retained_work(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:262144,maximum_capacity_bytes:536870912,maximum_release_bytes:0,maximum_depth:128})}
     fn create_job(&mut self,_operation:semio_framework_job::Operation,payload:Self::Payload)->Result<Self::Job,semio_framework::ToolJobFactoryError> {Ok(Self::Job::new(payload))}
-    fn create_job_from_wire_pages_with_payload(&mut self,_operation:semio_framework_job::Operation,payload:Self::Payload,input:semio_framework::action_bus::RetainedToolWireInput,checkpoint:Option<semio_framework::action_bus::RetainedToolWireInput>)->Result<Self::Job,(semio_framework::ToolJobFactoryError,semio_framework::action_bus::RetainedToolWireInput,Option<semio_framework::action_bus::RetainedToolWireInput>)> {
+    fn create_job_from_wire_pages_with_payload(&mut self,_operation:semio_framework_job::Operation,payload:Self::Payload,input:semio_framework_action_bus::RetainedToolWireInput,checkpoint:Option<semio_framework_action_bus::RetainedToolWireInput>)->Result<Self::Job,(semio_framework::ToolJobFactoryError,semio_framework_action_bus::RetainedToolWireInput,Option<semio_framework_action_bus::RetainedToolWireInput>)> {
         if checkpoint.is_some()||input.declared_bytes()>DRAWING_IMAGE_RAW_BYTES {return Err((semio_framework::ToolJobFactoryError::new("Image import ingress rejects oversized wire or checkpoint"),input,checkpoint));}
         Ok(Self::Job::from_wire(payload,input))
     }
@@ -95,6 +95,3 @@ pub fn build(request:semio_framework_plugin::ArtifactOwnedToolJobRequest<App>)->
     let payload=semio_framework_plugin::retained_command::ArtifactRetainedCommandPayload::new(semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {command:*request.command,snapshot:request.snapshot, snapshot_read:request.snapshot_read,config:request.config,history:request.history,interaction_state:request.interaction_state,interaction_hover:request.interaction_hover,context:Some(request.context),operation,completion:request.completion},DrawingCommand::command_id,DRAWING_IMAGE_RAW_BYTES,4096,Box::new(work));
     Ok(semio_framework::ToolOperationSpec::new(request.controller_id,request.tool_id,request.payload_schema_id,payload,request.operation))
 }
-#[cfg(test)]
-#[path="🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;

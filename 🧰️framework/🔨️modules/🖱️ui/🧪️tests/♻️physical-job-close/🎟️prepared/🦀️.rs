@@ -2,11 +2,12 @@ use super::*;
 use super::tests::{atlas_fixture_authority, atlas_fixture_owner, atlas_fixture_page};
 use super::measured;
 use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep as Close, RetainedCloneGrant};
+use semio_framework_test_fixtures::fixture_text;
 
 #[test]
 fn prepared_original_owner_closes_through_the_actual_job_full_grant_contract() {
     let _guard = prepared_process_guard();
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../🧪️tests/♻️physical-job-close/🧫️fixtures/🔣️.json")).unwrap();
     let law = &fixture["prepared"];
     for copy in fixture["copyGrants"].as_array().unwrap() {
         let input = PreparedRenderInput::new(law["sceneRevision"].as_u64().unwrap(), law["previewGeneration"].as_u64().unwrap(), DrawList::default(), None, 0.0);
@@ -42,7 +43,7 @@ fn prepared_original_owner_closes_through_the_actual_job_full_grant_contract() {
 #[test]
 fn prepared_original_atlas_owner_preserves_denials_and_reports_every_physical_release() {
     let _guard = prepared_process_guard();
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../🧪️tests/♻️physical-job-close/🧫️fixtures/🔣️.json")).unwrap();
     let law = &fixture["prepared"];
     let atlas = &law["atlas"];
     for copy in fixture["copyGrants"].as_array().unwrap() {
@@ -87,14 +88,13 @@ fn prepared_original_atlas_owner_preserves_denials_and_reports_every_physical_re
         assert_eq!(total_release, expected_release);
         let (_, births, frees) = measured(|| drop(job));
         assert_eq!((births, frees), (0, 0));
-        println!("[DEBUG] prepared original atlas copy={copy} physicalRelease={total_release} deniedIdentity=unchanged terminalDrop=0");
     }
 }
 
 #[test]
 fn prepared_original_abandoned_owners_report_full_physical_grants() {
     let _guard = prepared_process_guard();
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../🧪️tests/♻️physical-job-close/🧫️fixtures/🔣️.json")).unwrap();
     let law = &fixture["prepared"];
     let recipe = &law["atlas"];
     for copy in fixture["copyGrants"].as_array().unwrap() {
@@ -141,7 +141,7 @@ fn prepared_original_abandoned_owners_report_full_physical_grants() {
 
 #[test]
 fn prepared_close_gate_preserves_the_original_refusal_receipt() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../🧪️tests/♻️physical-job-close/🧫️fixtures/🔣️.json")).unwrap();
     for row in fixture["refusalReceipts"].as_array().unwrap() {
         let progress = RetainedCloneProgress { copied_items: row["copiedItems"].as_u64().unwrap() as usize, copied_bytes: row["copiedBytes"].as_u64().unwrap() as usize, retained_capacity_bytes: row["retainedCapacityBytes"].as_u64().unwrap() as usize, released_bytes: row["releasedBytes"].as_u64().unwrap() as usize };
         let original = ValueError::literal(ValueRefusalKind::InvariantViolated, "original child refusal").with_retained_progress(progress);
@@ -151,7 +151,6 @@ fn prepared_close_gate_preserves_the_original_refusal_receipt() {
         let oracle = serde_json::json!({"copiedItems": received.copied_items, "copiedBytes": received.copied_bytes, "retainedCapacityBytes": received.retained_capacity_bytes, "releasedBytes": received.released_bytes});
         assert_eq!(&oracle, row);
         assert_eq!(step.progress(), received);
-        println!("[DEBUG] prepared refusal receipt original={progress:?} received={received:?} independentSerde=true physicalProducer=false");
     }
 }
 
@@ -159,7 +158,7 @@ fn prepared_close_gate_preserves_the_original_refusal_receipt() {
 fn prepared_outcome_loans_preserve_original_custody_and_paid_descriptor_acknowledgement() {
     use semio_framework_job::{JobOutcomeBorrow, JobOutcomeView, StepBudget, StepContext, OperationId, Generation, root_cancel_token};
     let _guard = prepared_process_guard();
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../🧪️tests/♻️physical-job-close/🧫️fixtures/🔣️.json")).unwrap();
     let law = &fixture["preparedOutcome"];
     let original = ui_contract::UI_WORKER_RETIREMENT_POLICY;
     let mut complete_absence = None;
@@ -218,5 +217,4 @@ fn prepared_outcome_loans_preserve_original_custody_and_paid_descriptor_acknowle
     let (state, output) = complete_absence.unwrap();
     let actual = serde_json::json!({ "deniedReceipt": fixture["preparedOutcome"]["expected"]["deniedReceipt"], "completeStateAbsent": state, "completeOutputAbsent": output, "faultLoanIdentity": fault_identity, "acknowledgementItems": 1 });
     assert_eq!(actual, law["expected"]);
-    println!("[DEBUG] prepared held outcome original fault custody, absent complete carriers, paid ACK, zero-effect denial and terminal physical close: {actual}");
 }

@@ -1,4 +1,6 @@
-use super::*;
+use crate::schema::snapshot::SemioModelSnapshot;
+use protocol::Mutation;
+use crate::schema::mutations::*;
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
 use crate::schema::snapshot::{ElementClass, GeometryRef, ModelRelation, RelationKind, SemioModelElement, SpatialKind, SpatialNode};
 use crate::io::binary::mutations::wire_tag;

@@ -7,7 +7,7 @@ import { decodeQueryEnvelope, encodeQueryResult, type HttpResponse, type HttpTra
 import { type Menagerie } from "@semio-tech/pets";
 import type { Query } from "@semio-tech/quiz";
 import { PET_CHOICES, PreferencesPanel, QUIZ_LOCALES, QUIZ_PET_KEEPOUTS, QUIZ_PET_SURFACES, QuizApp, localStore, memoryStorageOrigin, petNames, quizInstance, quizText, readPreferences, writePreferences, type PetChoice, type PresenceConnect, type QuizPetsSource, type QuizPreferences } from "@semio-tech/quiz-react";
-import vectors from "../../../🐾️pets/🧪️tests/🧫️fixtures/🧬️schema-conformance/🔣️.json";
+import { schemaConformanceFixture as vectors } from "@semio-tech/pets/testing/fixtures/schema-conformance";
 import { CATALOG, MENAGERIE, PREFERENCES, Pets, REDUCED_MOTION, fakeSource, fakeStage, layer, motionPreference, named, settle } from "../🪛️pet-companions-kit/🟦️.tsx";
 
 const SAMPLE = vectors.menagerie as unknown as Menagerie;

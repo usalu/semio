@@ -1,0 +1,33 @@
+{
+ "name": "c4p17",
+ "crates": [
+  "semio-s-artifact-mathematical-equation",
+  "semio-s-artifact-wfc-bitmap",
+  "semio-s-artifact-wfc-3d",
+  "semio-s-artifact-procedural-2d-editor",
+  "semio-s-artifact-procedural-3d-io-text",
+  "semio-s-artifact-procedural-3d-preview-eval",
+  "semio-s-artifact-procedural-generation2d",
+  "semio-s-artifact-procedural-generation3d",
+  "semio-s-artifact-procedural-3d-io",
+  "semio-s-artifact-procedural-3d-editor",
+  "semio-s-artifact-procedural-3d-viewer"
+ ],
+ "note": "CENSUS4-PKG-17: equation polynomial-internals, wfc bitmap/3d editors and host inferences, generation2d editor, generation3d io-text value and preview-eval split into children; union with the direct dependents",
+ "base": {
+  "rev": "b84bf526c7b",
+  "crates": [
+   "semio-s-artifact-mathematical-equation",
+   "semio-s-artifact-wfc-bitmap",
+   "semio-s-artifact-wfc-3d",
+   "semio-s-artifact-procedural-2d-editor",
+   "semio-s-artifact-procedural-3d-io-text",
+   "semio-s-artifact-procedural-3d-preview-eval",
+   "semio-s-artifact-procedural-generation2d",
+   "semio-s-artifact-procedural-generation3d",
+   "semio-s-artifact-procedural-3d-io",
+   "semio-s-artifact-procedural-3d-editor",
+   "semio-s-artifact-procedural-3d-viewer"
+  ]
+ }
+}

@@ -1,0 +1,12 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🐾️pets/🔨️modules/💗️feeling/🧪️tests/🔬️unit/🟦️.ts",
+ "importers": [],
+ "childRoot": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🐾️pets/🔨️modules/💗️feeling/🧪️tests",
+ "children": [
+  {"dir": "🧰️feeling-test-kit", "doc": "/** 🧰️ Shared fixtures and helpers of the feeling unit suites: the fixture reader, the tolerance and sample sizes, the vectors of the module and of the chemistry rules, the calm and host characters, the deep comparison and the seeded draws. */", "lines": [[92,195]]},
+  {"dir": "⏳️mood-over-time-and-face", "doc": "/** ⏳️ Unit suite of the feeling module, time and face: how a feeling comes, holds and fades over ticks, and the face a feeling makes. */", "lines": [[355,506]]},
+  {"dir": "🎭️appraisal-wishes-and-contagion", "doc": "/** 🎭️ Unit suite of the feeling module, appraisal and contagion: what happens to a pet, what a mood does to its wishes and encounters, and the mood that travels. */", "lines": [[508,697]]},
+  {"dir": "🪜️species-states-and-tricks", "doc": "/** 🪜️ Unit suite of the feeling module, the states of a species: how the states follow each other, the ladder of states and the tricks. */", "lines": [[699,868]]},
+  {"dir": "⚗️encounters-and-chemistry", "doc": "/** ⚗️ Unit suite of the feeling module, encounters and chemistry: where two bodies are to each other, the chemistry of a menagerie and the arithmetic of the module. */", "lines": [[870,1094]]}
+ ]
+}

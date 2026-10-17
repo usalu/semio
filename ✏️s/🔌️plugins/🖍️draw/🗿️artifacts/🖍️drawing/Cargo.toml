@@ -5,25 +5,36 @@ resolver = "2"
 members = [
     "✏️editor/🪆️1-any/🎮️commands/🖱️canvas-pointer-down/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🪜️commands-2/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧪️tests/🥣️companion/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🕹️interaction/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🕹️interaction/🧪️tests/🥣️companion/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🍰️companion-2/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🥣️companion/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🧪️tests/🥣️companion/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📇️descriptor/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🥣️companion/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/🎨️style/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/🎨️style/🧪️tests/🥣️companion/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/🏷️metadata/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/🔀️transform/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧪️tests/🥣️companion/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/🧱️structure/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/🧱️structure/🧪️tests/🥣️companion/📦️packages/🦀️rust",
     "📦️packages/🦀️rust",
     "🔨️modules/🏠️host/📦️packages/🦀️rust",
+    "🔨️modules/🏠️host/🧪️tests/🥣️companion/📦️packages/🦀️rust",
     "🔨️modules/🏠️host/🧰️owned/🏟️arena/📦️packages/🦀️rust",
     "🔨️modules/🏠️host/🧰️owned/🔏️digest/📦️packages/🦀️rust",
 ]
@@ -57,6 +68,9 @@ path = "../../../../../🧰️framework/🔨️modules/🕸️graph/🛂️manif
 
 [workspace.dependencies.semio-framework-job]
 path = "../../../../../🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-job-registry]
+path = "../../../../../🧰️framework/🔨️modules/🧵️job/🗄️registry/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-framework-tool-machine]
 path = "../../../../../🧰️framework/🔨️modules/🛠️tool-machine/📦️packages/🦀️rust"
@@ -246,6 +260,9 @@ path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📇️
 
 [workspace.dependencies.semio-s-artifact-draw-drawing-editor-commands]
 path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-draw-drawing-editor-commands-2]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🪜️commands-2/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-s-artifact-draw-drawing-editor-interaction]
 path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🕹️interaction/📦️packages/🦀️rust"

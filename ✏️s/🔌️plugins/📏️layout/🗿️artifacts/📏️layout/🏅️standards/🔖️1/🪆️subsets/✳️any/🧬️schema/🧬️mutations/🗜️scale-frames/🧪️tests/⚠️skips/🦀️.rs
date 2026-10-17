@@ -5,27 +5,28 @@
 //! Source of truth is the committed JSON quintet under `🧫️fixtures/🧬️mutations/🗜️scale-frames/⚠️skips/` (contract D1), authored by
 //! the independent implementation `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/🧪️w3-t-layout-author-vectors.py`.
 
+use semio_framework_test_fixtures::fixture_text;
 use semio_s_artifact_layout_layout_mutations::LayoutMutation;
 use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
 use protocol::{Mutation, MutationDiff};
 
-const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗜️scale-frames/⚠️skips/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗜️scale-frames/⚠️skips/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗜️scale-frames/⚠️skips/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗜️scale-frames/⚠️skips/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗜️scale-frames/⚠️skips/🎯️outcome/🔣️.json");
+static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗜️scale-frames/⚠️skips/📸️snapshot/⬅️before/🔣️.json"));
+static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗜️scale-frames/⚠️skips/📸️snapshot/➡️after/🔣️.json"));
+static MUTATION: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗜️scale-frames/⚠️skips/🦠️mutation/🔣️.json"));
+static DIFF: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗜️scale-frames/⚠️skips/🔺️diff/🔣️.json"));
+static OUTCOME: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗜️scale-frames/⚠️skips/🎯️outcome/🔣️.json"));
 
 fn before() -> LayoutSnapshot {
-    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("scale-frames/skips-a-locked-and-a-missing-frame: before snapshot decodes")
+    semio_framework_pack_json::from_json_str(*BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("scale-frames/skips-a-locked-and-a-missing-frame: before snapshot decodes")
 }
 fn expected_after() -> LayoutSnapshot {
-    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("scale-frames/skips-a-locked-and-a-missing-frame: after snapshot decodes")
+    semio_framework_pack_json::from_json_str(*AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("scale-frames/skips-a-locked-and-a-missing-frame: after snapshot decodes")
 }
 fn mutation() -> LayoutMutation {
-    semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("scale-frames/skips-a-locked-and-a-missing-frame: mutation decodes")
+    semio_framework_pack_json::from_json_str(*MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("scale-frames/skips-a-locked-and-a-missing-frame: mutation decodes")
 }
 fn outcome() -> serde_json::Value {
-    serde_json::from_str(OUTCOME).expect("scale-frames/skips-a-locked-and-a-missing-frame: outcome decodes")
+    serde_json::from_str(*OUTCOME).expect("scale-frames/skips-a-locked-and-a-missing-frame: outcome decodes")
 }
 fn applied() -> LayoutSnapshot {
     let base = before();
@@ -60,13 +61,13 @@ fn declared_messages() -> Vec<(semio_framework_diagnostic::Severity, String, Vec
 /// 🔣️ Both committed snapshots and the committed payload are canonical: decode→encode is a fixed point.
 #[test]
 fn committed_json_is_canonical() {
-    for (label, text) in [("before", BEFORE), ("after", AFTER)] {
+    for (label, text) in [("before", *BEFORE), ("after", *AFTER)] {
         let decoded: LayoutSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
         let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("snapshot encodes");
         assert_eq!(reencoded, serde_json::from_str::<serde_json::Value>(text).expect("snapshot reparses"), "scale-frames/skips-a-locked-and-a-missing-frame: committed {label} JSON is not canonical");
     }
     let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&mutation())).expect("mutation encodes");
-    assert_eq!(reencoded, serde_json::from_str::<serde_json::Value>(MUTATION).expect("mutation reparses"), "scale-frames/skips-a-locked-and-a-missing-frame: committed mutation JSON is not canonical");
+    assert_eq!(reencoded, serde_json::from_str::<serde_json::Value>(*MUTATION).expect("mutation reparses"), "scale-frames/skips-a-locked-and-a-missing-frame: committed mutation JSON is not canonical");
 }
 
 /// 🎯️ The declared outcome — status, codes, levels and addressed targets — is exactly what `scale-frames`'s diff raises.
@@ -86,15 +87,15 @@ fn applies_to_committed_after() {
 #[test]
 fn produces_committed_diff() {
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(mutation().diff(&before()).diff())).expect("produced diff encodes");
-    assert_eq!(produced, serde_json::from_str::<serde_json::Value>(DIFF).expect("committed diff decodes"), "scale-frames/skips-a-locked-and-a-missing-frame: produced diff differs from the committed 🔺️diff/🔣️.json");
+    assert_eq!(produced, serde_json::from_str::<serde_json::Value>(*DIFF).expect("committed diff decodes"), "scale-frames/skips-a-locked-and-a-missing-frame: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
 
 /// 🩹 The committed diff decodes to `LayoutDiff`, re-encodes byte for byte, and carries `before` to `after` on its own.
 #[test]
 fn committed_diff_is_canonical_and_complete() {
-    let decoded: semio_s_artifact_layout_layout_diff::LayoutDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
+    let decoded: semio_s_artifact_layout_layout_diff::LayoutDiff = semio_framework_pack_json::from_json_str(*DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
     let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("committed diff re-encodes");
-    assert_eq!(reencoded, serde_json::from_str::<serde_json::Value>(DIFF).expect("committed diff reparses"), "scale-frames/skips-a-locked-and-a-missing-frame: committed diff JSON is not canonical");
+    assert_eq!(reencoded, serde_json::from_str::<serde_json::Value>(*DIFF).expect("committed diff reparses"), "scale-frames/skips-a-locked-and-a-missing-frame: committed diff JSON is not canonical");
     assert_eq!(protocol::apply_diff(&decoded, &before()).expect("committed diff applies"), expected_after(), "scale-frames/skips-a-locked-and-a-missing-frame: committed diff did not carry before to after");
 }
 

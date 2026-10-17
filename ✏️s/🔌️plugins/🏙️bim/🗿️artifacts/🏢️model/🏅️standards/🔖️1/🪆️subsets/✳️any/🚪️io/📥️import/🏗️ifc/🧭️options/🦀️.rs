@@ -16,14 +16,14 @@ pub fn read(i: &mut Import<'_>) {
                 _ => {
                     let Some(group) = label(&rows, "Group").filter(|id| i.model.option_groups.contains_key(id)) else { i.skip("IFCGROUP", &id, "Design option has no imported option group"); continue; };
                     let option = DesignOption { name, group, primary: label(&rows, "Primary").as_deref() == Some("true") };
-                    if let Some(problem) = crate::standards::v1::subsets::any::schema::mutations::option_rules::option_problem(&i.model, &id, &option) { i.skip("IFCGROUP", &id, problem); continue; }
+                    if let Some(problem) = crate::standards::v1::subsets::any::schema::authored::option_rules::option_problem(&i.model, &id, &option) { i.skip("IFCGROUP", &id, problem); continue; }
                     i.model.design_options.insert(id.clone(), option);
                 }
             }
             i.ids.insert(instance.id, id);
         }
     }
-    let elements = crate::standards::v1::subsets::any::schema::mutations::option_rules::element_ids(&i.model);
+    let elements = crate::standards::v1::subsets::any::schema::authored::option_rules::element_ids(&i.model);
     for (_, args) in i.doc.rows("IFCRELASSIGNSTOGROUP") {
         let Some(group) = args.get(6).and_then(Part21Value::as_ref_id).and_then(|entity| i.ids.get(&entity)).cloned() else { continue; };
         let options = i.model.design_options.contains_key(&group);

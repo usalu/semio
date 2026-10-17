@@ -20,7 +20,6 @@ test("runtime owner direction agrees with independent glob policy at all three d
     const independent = references.flatMap(reference => fixture.rules.filter((rule: any) => micromatch.isMatch(row.from, rule.oracle.from) && micromatch.isMatch(reference.path, rule.oracle.to)).map((rule: any) => ({ rule: rule.name, from: row.from, to: reference.path, line: reference.line, call: reference.call, context: reference.context, start: reference.start, end: reference.end })));
     expect(actual.map((edge: any) => edge.rule)).toEqual(row.expectedRules);
     expect(actual).toEqual(independent);
-    console.log("[DEBUG] runtime path direction " + JSON.stringify({ id: row.id, actual }));
   }
 });
 

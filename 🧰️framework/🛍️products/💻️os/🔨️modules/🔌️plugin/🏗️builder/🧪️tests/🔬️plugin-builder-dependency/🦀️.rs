@@ -1,7 +1,9 @@
-use crate::builder::PluginBuilder;
-use super::*;
-use crate::artifact_registration::ArtifactContribution;
-use crate::artifact_declaration::{FlowExtensionExecutableIdentity, FlowExtensionManifest};
+use semio_framework_plugin_builder::PluginBuilder;
+use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_framework_plugin_decl_registry::{FlowExtensionDeclaration, HostMediaHandlerDeclaration};
+use semio_framework_plugin_reactor_app::PluginApp;
+use semio_framework_plugin_decl_registry::artifact_registration::ArtifactContribution;
+use semio_framework_plugin_decl_registry::{FlowExtensionExecutableIdentity, FlowExtensionManifest};
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 static MESH_IMPORT_EXECUTIONS: AtomicUsize = AtomicUsize::new(0);
@@ -38,15 +40,19 @@ fn alternate_mesh_importer(_mesh: &semio_framework::MeshData) -> Result<semio_fr
     Ok(semio_framework_pack_json::json!({ "bridge": "alternate" }))
 }
 
-use super::dependency_fixture::{AddValue, DependencyTestOp, DependencyTestSnapshot};
+use crate::builder_test_hosts::builder_unit_1::dependency_fixture::mutations::add_value::AddValue;
+use crate::builder_test_hosts::builder_unit_1::dependency_fixture::mutations::DependencyTestOp;
+use crate::builder_test_hosts::builder_unit_1::dependency_fixture::DependencyTestSnapshot;
 
-async fn contribution(target_artifact_kind: &str) -> ArtifactContribution {
+#[doc(hidden)]
+pub async fn contribution(target_artifact_kind: &str) -> ArtifactContribution {
     ArtifactContribution::builder(target_artifact_kind).await.mutation::<DependencyTestSnapshot, DependencyTestOp, AddValue>("dep-target.document", 1, 1).await.build()
 }
 
+#[doc(hidden)]
 #[semio_framework_async_macros::async_test]
-async fn dependency_gating_rejects_a_contribution_onto_a_non_dependency() {
-    let error = PluginBuilder::<_, crate::plugin_app::NoPluginApp>::new("builder-test-contributor-missing-dep")
+pub async fn dependency_gating_rejects_a_contribution_onto_a_non_dependency() {
+    let error = PluginBuilder::<_, semio_framework_plugin_reactor_app::NoPluginApp>::new("builder-test-contributor-missing-dep")
         .label("Builder Test Contributor Missing Dep")
         .version("0.1.0")
         .package_id("semio:builder-test-contributor-missing-dep")
@@ -60,7 +66,7 @@ async fn dependency_gating_rejects_a_contribution_onto_a_non_dependency() {
 
 #[semio_framework_async_macros::async_test]
 async fn a_direct_dependency_permits_its_contribution_and_lands_on_the_manifest() {
-    let plugin = PluginBuilder::<_, crate::plugin_app::NoPluginApp>::new("builder-test-contributor-ok")
+    let plugin = PluginBuilder::<_, semio_framework_plugin_reactor_app::NoPluginApp>::new("builder-test-contributor-ok")
         .label("Builder Test Contributor Ok")
         .version("0.1.0")
         .package_id("semio:builder-test-contributor-ok")
@@ -81,7 +87,7 @@ async fn host_media_contributions_are_idempotent_and_execute_only_at_runtime() {
     MESH_IMPORT_EXECUTIONS.store(0, Ordering::SeqCst);
     let kind = host_media_kind().await;
     let bridge = HostMediaHandlerDeclaration::mesh_import("builder-test.media.mesh-import", kind.clone(), kind.schema.clone(), counting_mesh_importer).expect("typed bridge declaration");
-    let plugin = PluginBuilder::<_, crate::plugin_app::NoPluginApp>::new("builder-test-media")
+    let plugin = PluginBuilder::<_, semio_framework_plugin_reactor_app::NoPluginApp>::new("builder-test-media")
         .label("Builder Test Media")
         .version("0.1.0")
         .package_id("semio:builder-test-media")
@@ -92,7 +98,7 @@ async fn host_media_contributions_are_idempotent_and_execute_only_at_runtime() {
         .expect("identical frozen host-media declarations are idempotent");
     assert_eq!(MESH_IMPORT_EXECUTIONS.load(Ordering::SeqCst), 0, "assembly must never execute a media converter");
     assert_eq!(plugin.host_media_handlers().len(), 1);
-    let result = plugin.import_mesh(&crate::MeshImportRequest { artifact_kind: kind.id.clone(), artifact_schema: kind.schema.clone(), mesh: semio_framework::MeshData::default() }).expect("runtime bridge execution");
+    let result = plugin.import_mesh(&semio_framework_plugin_decl_registry::MeshImportRequest { artifact_kind: kind.id.clone(), artifact_schema: kind.schema.clone(), mesh: semio_framework::MeshData::default() }).expect("runtime bridge execution");
     assert_eq!(result.document, semio_framework_pack_json::json!({ "bridge": "counting" }));
     assert_eq!(MESH_IMPORT_EXECUTIONS.load(Ordering::SeqCst), 1);
 }
@@ -104,7 +110,7 @@ async fn host_media_conflicts_reject_the_whole_candidate_before_execution() {
     let kind = host_media_kind().await;
     let first = HostMediaHandlerDeclaration::mesh_import("builder-test.media.first", kind.clone(), kind.schema.clone(), counting_mesh_importer).expect("first bridge");
     let second = HostMediaHandlerDeclaration::mesh_import("builder-test.media.second", kind.clone(), kind.schema.clone(), alternate_mesh_importer).expect("second bridge");
-    let error = PluginBuilder::<_, crate::plugin_app::NoPluginApp>::new("builder-test-media-conflict")
+    let error = PluginBuilder::<_, semio_framework_plugin_reactor_app::NoPluginApp>::new("builder-test-media-conflict")
         .label("Builder Test Media Conflict")
         .version("0.1.0")
         .package_id("semio:builder-test-media-conflict")
@@ -123,7 +129,7 @@ async fn flow_extension_descriptors_are_idempotent_and_conflict_rejecting() {
     let manifest = FlowExtensionManifest::new("builder-test-flow", "Builder Test Flow", "0.1.0").expect("typed manifest");
     let executable = FlowExtensionExecutableIdentity::native("semio.builder-test.flow", "semio.builder-test.flow.module", "activate").expect("typed executable identity");
     let declaration = FlowExtensionDeclaration::new("builder-test.flow.contribution", manifest.clone(), executable.clone()).expect("flow declaration");
-    let plugin = PluginBuilder::<_, crate::plugin_app::NoPluginApp>::new("builder-test-flow")
+    let plugin = PluginBuilder::<_, semio_framework_plugin_reactor_app::NoPluginApp>::new("builder-test-flow")
         .label("Builder Test Flow")
         .version("0.1.0")
         .package_id("semio:builder-test-flow")
@@ -133,7 +139,7 @@ async fn flow_extension_descriptors_are_idempotent_and_conflict_rejecting() {
         .expect("identical frozen flow declarations are idempotent");
     assert_eq!(plugin.flow_extensions().len(), 1);
     let conflict = FlowExtensionDeclaration::new("builder-test.flow.other", manifest, executable).expect("conflicting target descriptor");
-    let error = PluginBuilder::<_, crate::plugin_app::NoPluginApp>::new("builder-test-flow-conflict")
+    let error = PluginBuilder::<_, semio_framework_plugin_reactor_app::NoPluginApp>::new("builder-test-flow-conflict")
         .label("Builder Test Flow Conflict")
         .version("0.1.0")
         .package_id("semio:builder-test-flow-conflict")

@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/3d-brep-engine-tests-rs",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

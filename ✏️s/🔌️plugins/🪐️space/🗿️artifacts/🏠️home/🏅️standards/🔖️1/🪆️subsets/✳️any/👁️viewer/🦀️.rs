@@ -89,13 +89,13 @@ impl protocol::OpBinary for HomeViewCommand {
 
 //#region 🧵️RetainedCommands
 /// 📏️ The page rides the retained wire budget the editor's page route admits — one bound for both surfaces.
-fn home_view_retained_extent(command: &HomeViewCommand, _snapshot: &SHomeSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
+pub fn home_view_retained_extent(command: &HomeViewCommand, _snapshot: &SHomeSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
     let HomeViewCommand::ApplyDirectoryEventPage { page_json } = command;
     (page_json.len() <= HOME_DIRECTORY_PAGE_BYTES).then_some(1)
 }
 
 /// 📄️ The sealed page a viewer command carries, for the page route both Home surfaces share.
-fn home_view_page_json(command: &HomeViewCommand) -> Option<&str> {
+pub fn home_view_page_json(command: &HomeViewCommand) -> Option<&str> {
     let HomeViewCommand::ApplyDirectoryEventPage { page_json } = command;
     Some(page_json)
 }
@@ -133,9 +133,9 @@ impl semio_framework_plugin::ToolJobFactory for HomeViewCommandJobFactory {
         &mut self,
         _operation: semio_framework_job::Operation,
         payload: Self::Payload,
-        input: semio_framework_plugin::action_bus::RetainedToolWireInput,
-        checkpoint: Option<semio_framework_plugin::action_bus::RetainedToolWireInput>,
-    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework_plugin::action_bus::RetainedToolWireInput, Option<semio_framework_plugin::action_bus::RetainedToolWireInput>)> {
+        input: semio_framework_action_bus::RetainedToolWireInput,
+        checkpoint: Option<semio_framework_action_bus::RetainedToolWireInput>,
+    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework_action_bus::RetainedToolWireInput, Option<semio_framework_action_bus::RetainedToolWireInput>)> {
         if input.declared_bytes() > HOME_DIRECTORY_PAGE_BYTES || checkpoint.as_ref().is_some_and(|value| value.declared_bytes() > semio_framework_plugin::retained_command::ARTIFACT_COMMAND_CHECKPOINT_MAXIMUM_BYTES) {
             return Err((ToolJobFactoryError::new("Space Home view command rejects an oversized wire or checkpoint owner"), input, checkpoint));
         }

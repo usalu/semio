@@ -28,7 +28,7 @@ import {
   type HubSessionStateV1,
   type HubSignInErrorCodeV1
 } from "@semio-tech/framework/directory/sign-in";
-import { hubUiLabel } from "../🔗️HubConnection/🟦️.tsx";
+import { hubUiLabel } from "../🔗️HubConnection/🌐️ui-labels/🟦️.ts";
 // #endregion 🔌️Adapters
 
 //#region 🔖️Types

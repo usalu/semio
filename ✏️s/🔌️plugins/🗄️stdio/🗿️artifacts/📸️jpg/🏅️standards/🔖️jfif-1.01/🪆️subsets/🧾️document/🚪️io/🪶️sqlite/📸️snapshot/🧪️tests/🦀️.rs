@@ -1,19 +1,31 @@
+use crate::standards::v_jfif_1_01::subsets::document::io::text::snapshot as owned_text;
+use semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotPhase;
+use semio_framework_test_fixtures::fixture_text;
+#[allow(unused_imports)]
+use crate::standards::v_jfif_1_01::subsets::document::schema::snapshot::*;
+#[allow(unused_imports)]
+use semio_framework_os_kernel::{sqlite_snapshot::ValueError, sqlite_snapshot::ValueRefusalKind};
+#[allow(unused_imports)]
+use std::{collections::BTreeMap, collections::BTreeSet};
+#[allow(unused_imports)]
+use semio_framework_os_kernel::{sqlite_snapshot::artifact::Cell, sqlite_snapshot::artifact::Projection, sqlite_snapshot::artifact::reconstruct_text, sqlite_snapshot::validate_sqlite_database_schema, sqlite_snapshot::SqliteDatabase, sqlite_snapshot::SqliteRow};
+use crate::standards::v_jfif_1_01::subsets::document::io::sqlite::snapshot::{invalid};
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v_jfif_1_01::subsets::document::io::sqlite::snapshot::*;
 use semio_framework_os_kernel::{sqlite_snapshot::{export_sqlite_database,import_sqlite_database,SqliteDatabaseLimits,SqliteSnapshotControl,SqliteValue},os_store::serialization::ArtifactSqliteSnapshotHost};
 
-fn fixture()->JpgSnapshot{semio_framework_pack_json::from_json_str(include_str!("🧫️fixtures/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()}
+fn fixture()->JpgSnapshot{semio_framework_pack_json::from_json_str(fixture_text!("../../🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()}
 fn roundtrip(snapshot:&JpgSnapshot)->JpgSnapshot{let database=snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap();let bytes=export_sqlite_database(&database,SqliteDatabaseLimits::default(),&mut |_|true).unwrap();JpgSnapshot::from_sqlite_database(&import_sqlite_database(&bytes,SqliteDatabaseLimits::default(),&mut |_|true).unwrap(),&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap()}
 
 fn intermediate_fixture()->JpgSnapshot{
- let case:serde_json::Value=serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/📸️snapshot/🫳️ownership/🔣️.json")).unwrap();let mut snapshot=fixture();snapshot.image.width=u32::try_from(case["width"].as_u64().unwrap()).unwrap();snapshot.image.height=u32::try_from(case["height"].as_u64().unwrap()).unwrap();snapshot.image.pixels=case["pixels"].as_array().unwrap().iter().map(|value|u8::try_from(value.as_u64().unwrap()).unwrap()).collect();snapshot.image.jfif_thumbnail=Some(semio_framework_pack_json::from_json_str(&case["jfifThumbnail"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap());snapshot
+ let case:serde_json::Value=serde_json::from_str(fixture_text!("../../🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧪️tests/🧫️fixtures/📸️snapshot/🫳️ownership/🔣️.json")).unwrap();let mut snapshot=fixture();snapshot.image.width=u32::try_from(case["width"].as_u64().unwrap()).unwrap();snapshot.image.height=u32::try_from(case["height"].as_u64().unwrap()).unwrap();snapshot.image.pixels=case["pixels"].as_array().unwrap().iter().map(|value|u8::try_from(value.as_u64().unwrap()).unwrap()).collect();snapshot.image.jfif_thumbnail=Some(semio_framework_pack_json::from_json_str(&case["jfifThumbnail"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap());snapshot
 }
 #[test]
 fn sqlite_snapshot_jpg_owned_intermediate_dimensions_preserve_partial_pixels(){let snapshot=intermediate_fixture();assert_eq!(roundtrip(&snapshot),snapshot);}
 
 #[test]
 fn sqlite_snapshot_jpg_complete_neutral_corpus_and_optional_empty_entities(){
- let snapshot=fixture();assert_eq!(roundtrip(&snapshot),snapshot);let oracle:serde_json::Value=serde_json::from_str(&semio_framework_pack_json::to_json_string(&semio_framework_value::ToValue::to_value(&snapshot))).unwrap();assert_eq!(oracle,serde_json::from_str::<serde_json::Value>(include_str!("🧫️fixtures/🔣️.json")).unwrap());
+ let snapshot=fixture();assert_eq!(roundtrip(&snapshot),snapshot);let oracle:serde_json::Value=serde_json::from_str(&semio_framework_pack_json::to_json_string(&semio_framework_value::ToValue::to_value(&snapshot))).unwrap();assert_eq!(oracle,serde_json::from_str::<serde_json::Value>(fixture_text!("../../🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json")).unwrap());
  for units in [JfifDensityUnits::Aspect,JfifDensityUnits::PixelsPerInch,JfifDensityUnits::PixelsPerCm]{for present in [false,true]{let snapshot=JpgSnapshot { schema:"custom 世界".into(), image: crate::schema::snapshot::JpgImage { width:u32::MAX,height:0,pixels:Vec::new(),jfif_density_units:units,jfif_thumbnail:present.then_some(JfifThumbnail{width:0,height:255,rgb_data:Vec::new()}),..crate::schema::snapshot::JpgImage::default() } };assert_eq!(roundtrip(&snapshot),snapshot);}}
 }
 
@@ -71,7 +83,7 @@ fn sqlite_snapshot_jpg_native_factory_has_declared_structural_identity(){
 #[test]
 fn sqlite_snapshot_jpg_controlled_output_admits_owned_octets_and_cancels_inside_copy(){
  use semio_framework_os_kernel::sqlite_snapshot::{SnapshotEncoding,SqliteSnapshotPhase as Phase,SqliteSnapshotProgress};
- let plan:serde_json::Value=serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/📸️snapshot/🛫️encoding/🔣️.json")).unwrap();
+ let plan:serde_json::Value=serde_json::from_str(fixture_text!("../../🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧪️tests/🧫️fixtures/📸️snapshot/🛫️encoding/🔣️.json")).unwrap();
  let mut snapshot=fixture();snapshot.schema="owned JPG 世界\0".into();snapshot.image.other_segments[0].data=vec![255;plan["octets"].as_u64().unwrap()as usize];
  for encoding in [SnapshotEncoding::Binary,SnapshotEncoding::Text]{
   let limits=SqliteDatabaseLimits::default();let payload=semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| snapshot.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,limits), native_owner)).unwrap();assert!(semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| JpgSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,limits), native_owner)).unwrap()==snapshot);
@@ -87,13 +99,13 @@ fn sqlite_snapshot_jpg_controlled_output_admits_owned_octets_and_cancels_inside_
 fn ordinary_and_controlled_initial_record_pack_body_diagnostic() {
     use pack::record as pack_rt;
     let owner = crate::standards::v_jfif_1_01::subsets::document::io::blank_jpg_snapshot();
-    let original_spec = crate::standards::v_jfif_1_01::subsets::document::io::sqlite::snapshot::owned_text::spec();
-    let original_record = crate::standards::v_jfif_1_01::subsets::document::io::sqlite::snapshot::owned_text::to_record(&owner);
+    let original_spec = crate::standards::v_jfif_1_01::subsets::document::io::text::snapshot::spec();
+    let original_record = crate::standards::v_jfif_1_01::subsets::document::io::text::snapshot::to_record(&owner);
     let maximum = semio_framework_os_kernel::sqlite_snapshot::SqliteDatabaseLimits::default().max_allocation_bytes;
     let mut observer = |_| true;
     let mut native = semio_framework_value::NativeEncodeControl::new(maximum, &mut observer);
-    let paid_spec = crate::standards::v_jfif_1_01::subsets::document::io::sqlite::snapshot::owned_text::spec_producer().encode(&mut native).unwrap();
-    let paid_record = crate::standards::v_jfif_1_01::subsets::document::io::sqlite::snapshot::owned_text::to_record_controlled(&owner, &mut native).unwrap();
+    let paid_spec = crate::standards::v_jfif_1_01::subsets::document::io::text::snapshot::spec_producer().encode(&mut native).unwrap();
+    let paid_record = crate::standards::v_jfif_1_01::subsets::document::io::text::snapshot::to_record_controlled(&owner, &mut native).unwrap();
     let options = pack_rt::EncodeOptions::default();
     let original = pack_rt::encode_document(&original_spec, &original_record, &options).unwrap();
     let record_join = pack_rt::encode_document(&original_spec, &paid_record, &options).unwrap();
@@ -101,16 +113,13 @@ fn ordinary_and_controlled_initial_record_pack_body_diagnostic() {
     let controlled = pack_rt::encode_document_controlled(&paid_spec, &paid_record, &options, &mut native).unwrap();
     for (label,bytes) in [("record", &record_join),("spec", &spec_join),("controlled", &controlled)] {
         let first = original.iter().zip(bytes.iter()).position(|(left,right)|left != right);
-        eprintln!("[DEBUG] jpg body {label} original={} candidate={} first={first:?}",original.len(),bytes.len());
     }
     let original_decoded = pack_rt::decode_document(&original,&original_spec,&pack_rt::DecodeOptions::default()).unwrap().0;
     let controlled_decoded = pack_rt::decode_document(&controlled,&original_spec,&pack_rt::DecodeOptions::default()).unwrap().0;
-    eprintln!("[DEBUG] jpg record equal={} decoded equal={} original={:?} controlled={:?}",original_record == paid_record,original_decoded == controlled_decoded,original_record,paid_record);
     assert_eq!(original_record,paid_record,"real initial owner RecordValue changed");
     assert_eq!(original,record_join,"paid RecordValue changes ordinary body");
     assert_eq!(original,spec_join,"paid RecordSpec changes ordinary body");
     assert_eq!(original,controlled,"controlled encoder changes exact body");
     let shipped = semio_framework_os_kernel::pack_rt::encode_document(&original_spec,&original_record,&semio_framework_os_kernel::PackEncodeOptions::default()).unwrap();
-    eprintln!("[DEBUG] actual shipped Record authority original={} core={} first={:?}",shipped.len(),original.len(),shipped.iter().zip(&original).position(|(left,right)|left!=right));
     assert_eq!(shipped,original,"actual shipped ArtifactPack runtime must use the same intrinsic Record authority as SQLite");
 }

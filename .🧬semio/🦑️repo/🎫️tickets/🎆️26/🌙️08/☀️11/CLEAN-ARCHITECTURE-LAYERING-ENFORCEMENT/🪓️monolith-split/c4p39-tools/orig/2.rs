@@ -1,0 +1,1411 @@
+use semio_framework_os_renderer_wgpu_fixtures::shell::paint_component_pointer_documents;
+use super::*;
+use serde::Deserialize;
+
+fn shell() -> ShellState {
+    ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct HubProjectionFixture {
+    cases: Vec<HubProjectionCase>,
+}
+
+#[derive(Deserialize)]
+struct HubProjectionCase {
+    id: String,
+    projection: ShellHubProjectionV1,
+    expected: HubProjectionExpected,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct HubProjectionExpected {
+    state: String,
+    peer_count: usize,
+    document_count: usize,
+}
+
+#[test]
+fn hub_command_opens_the_route_overlay_without_adding_a_default_dock_tab() {
+    let mut shell = shell();
+    let dock = SessionCtx::of(&mut shell).default_dock();
+    assert!(!PanelAnchor::ALL.into_iter().flat_map(|anchor| dock.tabs(anchor)).any(|tab| tab.id == FRAMEWORK_HUB_PANEL_ID));
+    semio_framework_async::block_on(ActionsCtx::of(&mut shell).apply_os_command("os.openHub", None)).expect("Hub command opens the workspace");
+    assert!(shell.directory.hub_workspace_open);
+    assert_eq!(shell.opening.uri_history.get(shell.opening.uri_index).map(String::as_str), Some("/hub"));
+    assert!(shell.docs.shell_owned_panel_leaves(&shell.chrome, &shell.plugins, &shell.prefs).iter().any(|id| id == FRAMEWORK_HUB_PANEL_ID), "the overlay keeps its retained body publication");
+    semio_framework_async::block_on(ActionsCtx::of(&mut shell).handle_hub_workspace_action(semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::CLOSE_WORKSPACE, None));
+    assert!(!shell.directory.hub_workspace_open);
+}
+
+#[test]
+fn neutral_session_link_and_multi_document_vectors_fold_to_the_shared_summary() {
+    let fixture: HubProjectionFixture = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🔗️hub-projection/🔣️.json")).expect("hub projection fixture");
+    for case in fixture.cases {
+        let summary = shell_hub_connection_summary_v1(&case.projection);
+        assert_eq!(summary.state.as_str(), case.expected.state, "{} state", case.id);
+        assert_eq!(summary.peer_count, case.expected.peer_count, "{} peers", case.id);
+        assert_eq!(summary.document_count, case.expected.document_count, "{} documents", case.id);
+    }
+}
+
+#[test]
+fn status_replacement_and_document_retirement_share_one_projection() {
+    let mut shell = shell();
+    shell.sync.publish_hub_document_status("hub:a/one", ShellHubRemoteV1::Connecting);
+    shell.sync.publish_hub_document_status("hub:a/one", ShellHubRemoteV1::Live { peer_count: 4 });
+    shell.sync.publish_hub_document_status("hub:b/two", ShellHubRemoteV1::Backoff { retry_in_ms: 1000 });
+    assert_eq!(shell.sync.hub_documents.len(), 2);
+    let projection = ShellHubProjectionV1 {
+        session: HubSessionPresence::SignedIn,
+        link: HubLink::Reachable,
+        documents: shell.sync.hub_documents.iter().map(|(document_key, remote)| ShellHubDocumentV1 { document_key: document_key.clone(), remote: remote.clone() }).collect(),
+    };
+    let summary = shell_hub_connection_summary_v1(&projection);
+    assert_eq!(summary.state, HubConnectionState::Live { peer_count: 4 });
+    shell.sync.retire_hub_document_status("hub:a/one");
+    assert_eq!(shell.sync.hub_documents.len(), 1);
+    shell.sync.retire_hub_document_status("hub:b/two");
+    assert!(shell.sync.hub_documents.is_empty());
+}
+
+#[test]
+fn document_projection_refuses_a_sixty_fifth_distinct_owner_but_allows_replacement() {
+    let mut shell = shell();
+    for index in 0..64 {
+        shell.sync.publish_hub_document_status(format!("hub:a/{index}"), ShellHubRemoteV1::Detached);
+    }
+    shell.sync.publish_hub_document_status("hub:a/64", ShellHubRemoteV1::Connecting);
+    assert_eq!(shell.sync.hub_documents.len(), 64);
+    assert!(!shell.sync.hub_documents.contains_key("hub:a/64"));
+    shell.sync.publish_hub_document_status("hub:a/0", ShellHubRemoteV1::Live { peer_count: 2 });
+    assert_eq!(shell.sync.hub_documents.get("hub:a/0"), Some(&ShellHubRemoteV1::Live { peer_count: 2 }));
+}
+
+/// 🧩️ A hub document's open band names the resolution step it is on — asking the hub for the lease, downloading
+/// the component, then its descriptor, verified — as step 1 of 3, in both tongues, and a cancelled resolution
+/// settles as cancelled (ticket 26/09/23 slice WG8, hub-resolved execution targets).
+#[test]
+fn the_open_band_names_every_resolution_step_in_both_tongues() {
+    let mut opening = ShellDocumentOpening::new("Block".into(), ShellDocumentOpenPhase::Resolving, "block".into(), "s.block.block2d@1/*#editor".into(), None, None);
+    for (step, en, de) in [
+        (0, "asking the hub which component runs it", "Hub wird nach der ausführenden Komponente gefragt"),
+        (1, "downloading the component", "Komponente wird heruntergeladen"),
+        (2, "downloading its descriptor", "Deskriptor wird heruntergeladen"),
+        (3, "verified", "geprüft"),
+    ] {
+        opening.resolve_step.store(step, std::sync::atomic::Ordering::Release);
+        let english = document_opening_banner_text(&opening, opening.started_at_ms, false);
+        let german = document_opening_banner_text(&opening, opening.started_at_ms, true);
+        assert_eq!(english, format!("Resolving the hub's component for Block ({en}) · 1/3 · 0 s"));
+        assert_eq!(german, format!("Hub-Komponente wird ermittelt für Block ({de}) · 1/3 · 0 s"));
+    }
+    assert!(opening.running(), "a resolving open is still running");
+    opening.phase = ShellDocumentOpenPhase::Instantiating;
+    assert_eq!(document_opening_banner_text(&opening, opening.started_at_ms, false), "Starting Block · 2/3 · 0 s");
+    opening.phase = ShellDocumentOpenPhase::Cancelled;
+    assert!(!opening.running(), "a cancelled open only waits for its band to close");
+}
+
+/// 🔐️ One hub workspace verb, driven the way a frame drives it natively ([`drive`], which also pumps the
+/// renderer I/O and worker-retirement slots). A bare `block_on` parked for ever inside a verb after a
+/// live law had opened a document: sampled on two-user gate run 17, the test thread sat in
+/// `block_on(handle_hub_workspace_action)` for 23 min, and eight earlier runs never exited.
+fn hub_verb(shell: &mut ShellState, verb: &str, args: &[(&str, &str)]) {
+    let args = (!args.is_empty()).then(|| DslValue::Object(args.iter().map(|(key, value)| ((*key).to_string(), DslValue::String((*value).to_string()))).collect()));
+    #[cfg(not(target_arch = "wasm32"))]
+    drive(ActionsCtx::of(&mut shell).handle_hub_workspace_action(verb, args));
+    #[cfg(target_arch = "wasm32")]
+    semio_framework_async::block_on(ActionsCtx::of(&mut shell).handle_hub_workspace_action(verb, args));
+    settle_hub_workspace(shell);
+}
+
+/// 🔐️ Pumps the directory lane until the hub workspace's spawned requests (sign-in, spaces) have answered — the
+/// verbs only arm them now, and a frame applies the answer.
+fn settle_hub_workspace(shell: &mut ShellState) {
+    while !shell.directory.hub_workspace_settled() {
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            let _ = semio_framework_os_renderer_wgpu_host_base::pump_renderer_io_sessions(1);
+            drive(ActionsCtx::of(&mut shell).pump_directory_events());
+        }
+        #[cfg(target_arch = "wasm32")]
+        semio_framework_async::block_on(ActionsCtx::of(&mut shell).pump_directory_events());
+        std::thread::sleep(std::time::Duration::from_millis(5));
+    }
+}
+
+fn hub_attribute_values(node: &UiNode, attribute: &str, found: &mut Vec<String>) {
+    match node {
+        UiNode::Stack(stack) => stack.children.iter().for_each(|child| hub_attribute_values(child, attribute, found)),
+        UiNode::Text(text) => found.extend(text.data_attributes.as_ref().and_then(|attributes| attributes.get(attribute)).cloned()),
+        _ => {}
+    }
+}
+
+/// 🤝️ The wgpu shell's whole hub journey against a REAL hub, through the shell's own lane and its
+/// own native `DirectoryTransport` — no stub anywhere: `/hub` opens the workspace, a typed origin
+/// becomes the selected connection, a credential sign-in mints a session, a sealed `create-space`
+/// command lands, and the authoritative space list reaches the retained `UiNode` tree the
+/// accessibility mirror projects (`data-semio-hub-space`).
+///
+/// 🔌️ `#[ignore]`d because it needs a live hub with credential sign-in enabled; boot one with the
+/// `os-hub:live-sign-in-check` recipe (`OS_HUB_CREDENTIAL_SIGN_IN=1 bun 🌎️hub/🔐️auth/🧪️tests/🤝️live-sign-in/🟦️.ts --hold`)
+/// and run with `SEMIO_HUB_LIVE_ORIGIN`, `SEMIO_HUB_LIVE_EMAIL`, `SEMIO_HUB_LIVE_PASSWORD` set and
+/// `-- --ignored`.
+#[test]
+#[ignore = "needs a live hub at SEMIO_HUB_LIVE_ORIGIN; see this test's own doc comment"]
+fn a_live_hub_signs_in_and_its_spaces_reach_the_retained_workspace() {
+    let origin = std::env::var("SEMIO_HUB_LIVE_ORIGIN").expect("SEMIO_HUB_LIVE_ORIGIN");
+    let email = std::env::var("SEMIO_HUB_LIVE_EMAIL").expect("SEMIO_HUB_LIVE_EMAIL");
+    let password = std::env::var("SEMIO_HUB_LIVE_PASSWORD").expect("SEMIO_HUB_LIVE_PASSWORD");
+    let space_name = format!("wg6 live {}", chrome_now_ms() as u64);
+    let mut shell = shell();
+    semio_framework_async::block_on(ActionsCtx::of(&mut shell).apply_os_command("os.openHub", None)).expect("the hub route opens");
+    assert!(shell.directory.hub_workspace_open);
+    assert_eq!(shell.directory.hub_workspace.presence(), HubSessionPresence::SignedOut);
+    assert_eq!(shell.sync.hub_connection_state(&shell.directory), HubConnectionState::SignedOut);
+    hub_verb(&mut shell, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::SET_ADDRESS, &[("value", origin.as_str())]);
+    hub_verb(&mut shell, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::ADD_CONNECTION, &[]);
+    assert_eq!(shell.directory.hub_workspace.origin(), origin.trim_end_matches('/'));
+    hub_verb(&mut shell, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::SET_EMAIL, &[("value", email.as_str())]);
+    hub_verb(&mut shell, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::SET_PASSWORD, &[("value", password.as_str())]);
+    hub_verb(&mut shell, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::SIGN_IN, &[]);
+    println!("wg6-live sign-in phase={} error={:?} user={:?} display={:?}", shell.directory.hub_workspace.session.phase.as_str(), shell.directory.hub_workspace.session.error, shell.directory.hub_workspace.session.user_id, shell.directory.hub_workspace.display_name);
+    assert_eq!(shell.directory.hub_workspace.session.phase, HubSessionPhase::SignedIn, "error {:?}", shell.directory.hub_workspace.session.error);
+    assert!(shell.directory.hub_workspace.password_draft.is_empty(), "the password never outlives its request");
+    assert!(shell.directory.hub_workspace.display_name.is_some());
+    assert_eq!(shell.sync.hub_connection_state(&shell.directory), HubConnectionState::Online, "a verified session on a reachable hub with nothing attached");
+    hub_verb(&mut shell, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::SET_SPACE_NAME, &[("value", space_name.as_str())]);
+    hub_verb(&mut shell, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::CREATE_SPACE, &[]);
+    println!("wg6-live spaces phase={} rows={:?}", shell.directory.hub_workspace.phase.as_str(), shell.directory.hub_workspace.rows.iter().map(|row| (row.name.as_str(), row.id.as_str(), row.access.as_str())).collect::<Vec<_>>());
+    assert_eq!(shell.directory.hub_workspace.phase, semio_framework_os_renderer_wgpu_hub_contracts::space_browser::SpaceBrowserPhase::Ready);
+    let created = shell.directory.hub_workspace.rows.iter().find(|row| row.name == space_name).expect("the created space is listed").id.clone();
+    for locale in [Locale::En, Locale::De] {
+        let tree = semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::build_hub_workspace_ui(&shell.directory.hub_workspace, locale);
+        let mut spaces = Vec::new();
+        hub_attribute_values(&tree, "data-semio-hub-space", &mut spaces);
+        let mut phases = Vec::new();
+        hub_attribute_values(&tree, "data-semio-hub-phase", &mut phases);
+        println!("wg6-live tree locale={locale:?} phase={phases:?} spaces={spaces:?}");
+        assert!(spaces.contains(&created), "{locale:?} tree lists the created space");
+        assert_eq!(phases, vec![HubSessionPhase::SignedIn.as_str().to_string()]);
+    }
+    hub_verb(&mut shell, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::OPEN_SPACE, &[("spaceId", created.as_str())]);
+    println!(
+        "wg6-live open space={:?} members={:?} uri={:?}",
+        shell.directory.hub_workspace.open_space_id,
+        shell.directory.hub_workspace.members.iter().map(|member| (member.display_name.as_str(), member.owner)).collect::<Vec<_>>(),
+        shell.opening.uri_history.get(shell.opening.uri_index)
+    );
+    assert_eq!(shell.directory.hub_workspace.open_space_id.as_deref(), Some(created.as_str()));
+    assert!(shell.directory.hub_workspace.members.iter().any(|member| member.owner), "the creator is listed as the owner");
+    hub_verb(&mut shell, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::SIGN_OUT, &[]);
+    assert_eq!(shell.directory.hub_workspace.presence(), HubSessionPresence::SignedOut);
+    assert!(shell.directory.hub_workspace.rows.is_empty());
+}
+
+/// ✂️ A loopback TCP relay in front of the hub whose every live connection can be cut at once,
+/// then healed: the second actor reaches the hub ONLY through it, so severing it is a real
+/// network loss on that actor's sockets — the document socket and the directory transport alike —
+/// while the first actor's own connections stay untouched.
+#[cfg(not(target_arch = "wasm32"))]
+struct SeverableRelay {
+    origin: String,
+    live: std::sync::Arc<std::sync::Mutex<Vec<std::net::TcpStream>>>,
+    open: std::sync::Arc<std::sync::atomic::AtomicBool>,
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl SeverableRelay {
+    fn start(upstream_origin: &str) -> Self {
+        let upstream = upstream_origin.trim_start_matches("http://").trim_end_matches('/').to_string();
+        let listener = std::net::TcpListener::bind("127.0.0.1:0").expect("relay binds a loopback port");
+        let origin = format!("http://{}", listener.local_addr().expect("relay address"));
+        let live = std::sync::Arc::new(std::sync::Mutex::new(Vec::new()));
+        let open = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(true));
+        let (accepted, admitting) = (live.clone(), open.clone());
+        std::thread::spawn(move || {
+            for inbound in listener.incoming().flatten() {
+                let outbound = match std::net::TcpStream::connect(&upstream) {
+                    Ok(outbound) if admitting.load(std::sync::atomic::Ordering::SeqCst) => outbound,
+                    _ => {
+                        let _ = inbound.shutdown(std::net::Shutdown::Both);
+                        continue;
+                    }
+                };
+                let mut retained = accepted.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+                retained.extend([inbound.try_clone(), outbound.try_clone()].into_iter().flatten());
+                drop(retained);
+                let pipe = |mut from: std::net::TcpStream, mut to: std::net::TcpStream| {
+                    std::thread::spawn(move || {
+                        let _ = std::io::copy(&mut from, &mut to);
+                        let _ = to.shutdown(std::net::Shutdown::Write);
+                    });
+                };
+                if let (Ok(from), Ok(to)) = (inbound.try_clone(), outbound.try_clone()) {
+                    pipe(from, to);
+                }
+                pipe(outbound, inbound);
+            }
+        });
+        Self { origin, live, open }
+    }
+
+    fn sever(&self) -> usize {
+        self.open.store(false, std::sync::atomic::Ordering::SeqCst);
+        let streams = std::mem::take(&mut *self.live.lock().unwrap_or_else(std::sync::PoisonError::into_inner));
+        streams.iter().for_each(|stream| {
+            let _ = stream.shutdown(std::net::Shutdown::Both);
+        });
+        streams.len()
+    }
+
+    fn heal(&self) {
+        self.open.store(true, std::sync::atomic::Ordering::SeqCst);
+    }
+}
+
+/// 📒️ One named step of the two-user journey and what the shells' own state showed for it.
+#[cfg(not(target_arch = "wasm32"))]
+#[derive(Default)]
+struct CollaborationLedger {
+    steps: Vec<(&'static str, bool, String)>,
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl CollaborationLedger {
+    fn record(&mut self, step: &'static str, passed: bool, detail: String) -> bool {
+        println!("g7w-live step={step} {} {detail}", if passed { "PASS" } else { "FAIL" });
+        self.steps.push((step, passed, detail));
+        passed
+    }
+}
+
+/// 🔂️ Polls one shell future to completion while pumping what the GPU present loop pumps in the
+/// real binary (`present_step_inner`): retained renderer I/O sessions and worker-job retirements.
+/// Without it a headless caller parks forever on the first `run_renderer_io` (the native runtime
+/// manifest read inside `load_wasm_plugins`), because nothing else drives those slots.
+#[cfg(not(target_arch = "wasm32"))]
+fn drive<F: std::future::Future>(future: F) -> F::Output {
+    let mut future = std::pin::pin!(future);
+    let mut context = std::task::Context::from_waker(std::task::Waker::noop());
+    loop {
+        if let std::task::Poll::Ready(output) = future.as_mut().poll(&mut context) {
+            return output;
+        }
+        let advanced = semio_framework_os_renderer_wgpu_host_base::pump_renderer_io_sessions(1);
+        let _ = semio_framework_job_worker::pump_worker_job_retirements(1, 1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+        if advanced == 0 {
+            std::thread::sleep(std::time::Duration::from_millis(1));
+        }
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn live_env(key: &str) -> String {
+    std::env::var(key).unwrap_or_else(|_| panic!("{key} is required; see the two-user law's doc comment"))
+}
+
+/// 🔑️ Signs one shell in through its own hub lane, clicking Sign in a second time exactly like a
+/// human would when the first attempt failed (a debug hub's password hash can outlast the lane's
+/// 5 s command deadline under load); answers the first attempt's refusal, if any.
+#[cfg(not(target_arch = "wasm32"))]
+fn sign_in_live(shell: &mut ShellState, origin: &str, email: &str, password: &str) -> Option<String> {
+    drive(ActionsCtx::of(&mut shell).apply_os_command("os.openHub", None)).expect("the hub route opens");
+    hub_verb(shell, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::SET_ADDRESS, &[("value", origin)]);
+    hub_verb(shell, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::ADD_CONNECTION, &[]);
+    let mut first_refusal = None;
+    for _ in 0..2 {
+        hub_verb(shell, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::SET_EMAIL, &[("value", email)]);
+        hub_verb(shell, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::SET_PASSWORD, &[("value", password)]);
+        hub_verb(shell, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::SIGN_IN, &[]);
+        if shell.directory.hub_workspace.session.phase == HubSessionPhase::SignedIn {
+            break;
+        }
+        first_refusal.get_or_insert_with(|| format!("{:?}", shell.directory.hub_workspace.session.error));
+    }
+    first_refusal
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn shell_command(shell: &mut ShellState, action_id: &str, args: &[(&str, &str)]) {
+    let args = DslValue::Object(args.iter().map(|(key, value)| ((*key).to_string(), DslValue::String((*value).to_string()))).collect());
+    drive(ActionsCtx::of(&mut shell).handle_replay_shell_command(action_id, Some(&args)));
+}
+
+/// 📣️ The shared replay-refusal vocabulary (`🏛️ShellHost/📣️replay-refusal/🔣️.json`) names exactly the reasons this shell can
+/// raise, and its vectors — the same ones React's engine contract answers — pin each reason's text per locale and its code.
+#[test]
+fn the_shared_replay_refusal_vocabulary_names_every_reason_with_its_text_and_code() {
+    let vocabulary = &*REPLAY_REFUSAL_V1;
+    let reasons: std::collections::BTreeSet<String> = ReplayRefusalReasonV1::ALL.iter().map(|reason| reason.key()).collect();
+    assert_eq!(vocabulary.reasons.keys().cloned().collect::<std::collections::BTreeSet<_>>(), reasons, "vocabulary keys == the shell's reasons");
+    assert!(vocabulary.reasons.values().all(|label| !label.en.is_empty() && !label.de.is_empty() && label.en != label.de), "every reason speaks both tongues");
+    assert!(!vocabulary.vectors.is_empty());
+    for vector in &vocabulary.vectors {
+        assert_eq!((vector.reason.notice_text(&vector.locale), vector.reason.code()), (vector.text.clone(), vector.code.clone()), "{vector:?}");
+    }
+}
+
+/// 📣️ A guest replay this shell cannot serve is refused OUT LOUD — the vocabulary's warning notice in the shell's tongue with
+/// its fault code — never dropped: the local studio catalog (route B has no native half yet), an unknown `os.*` command or
+/// directory verb, and a space artifact creation nobody signed in for, or from no mounted Space index.
+#[cfg(not(target_arch = "wasm32"))]
+#[test]
+fn an_unserved_guest_replay_is_refused_out_loud_in_the_shells_tongue() {
+    use ReplayRefusalReasonV1::{InvalidRequest, LocalCatalogUnavailable, SignInRequired, SpaceIndexRequired, UnroutedCommand};
+    let identity = || Identity { user_id: "user-a".into(), email: "a@example.test".into(), display_name: "Ada".into(), hub_base_url: "https://hub.example".into(), issued_at_ms: 1 };
+    let cases: [(&str, &str, bool, &[(&str, &str)], ReplayRefusalReasonV1); 7] = [
+        ("en", "os.local-catalog.admit", false, &[("documentId", "studio-1")], LocalCatalogUnavailable),
+        ("de", "os.local-catalog.open", true, &[("documentId", "studio-1")], LocalCatalogUnavailable),
+        ("de", "os.local-catalog.retire", true, &[("documentId", "studio-1")], LocalCatalogUnavailable),
+        ("en", "os.unknown-verb", true, &[], UnroutedCommand),
+        ("de", "os.directory.unknown-verb", true, &[], InvalidRequest),
+        ("de", "os.create-space-artifact", false, &[("kindChoice", "{}"), ("name", "Plan")], SignInRequired),
+        ("en", "os.create-space-artifact", true, &[("kindChoice", "{}"), ("name", "Plan")], SpaceIndexRequired),
+    ];
+    for (locale, action_id, signed_in, args, reason) in cases {
+        let mut shell = shell();
+        shell.prefs.locale_id = locale.into();
+        if signed_in {
+            shell.directory.identity = Some(identity());
+        }
+        shell_command(&mut shell, action_id, args);
+        let notice = shell.chrome.transient_notice().unwrap_or_else(|| panic!("{action_id} ({locale}) is refused out loud"));
+        let label = &REPLAY_REFUSAL_V1.reasons[&reason.key()];
+        let spoken = if locale == "de" { label.de.as_str() } else { label.en.as_str() };
+        assert_eq!((notice.message.as_str(), notice.code.as_deref()), (spoken, Some(reason.code().as_str())), "{locale} {action_id}");
+        assert!(matches!(notice.severity, semio_framework::Severity::Warning), "{action_id} warns");
+    }
+}
+
+/// 🌱️ Only a canonical choice of one kind the space's ready catalog offers becomes a creation — ShellHost's
+/// `spaceArtifactCreationRequestFromAction` gate: exact `{kindChoice, name}`, the choice byte-equal to the catalog kind's
+/// encoding, the catalog of the index's own space.
+#[cfg(not(target_arch = "wasm32"))]
+#[test]
+fn a_space_artifact_creation_replay_names_exactly_one_offered_kind() {
+    let catalog: SpaceArtifactCreationCatalogV1 = serde_json::from_value(serde_json::json!({
+        "schema": "semio.hub.space-artifact-creation-catalog/v1",
+        "spaceId": "space-a",
+        "catalogGenerationId": "d1099ba98c89995f462d00c109bc8fcdb5594260e9bdb584e3da628dabbe94ad",
+        "kinds": [
+            { "kindId": "2d.block", "schema": "block.2d", "dialect": { "artifactKind": "s.block.block2d", "standard": "1", "subset": "*" }, "label": { "en": "Block board", "de": "Blockbrett" } },
+            { "kindId": "2d.note", "schema": "note.document", "dialect": { "artifactKind": "s.note.note", "standard": "1", "subset": "*" }, "label": { "en": "Note", "de": "Notiz" } }
+        ]
+    }))
+    .expect("catalog fixture");
+    let choice = |kind: &semio_framework_os_kernel::os_directory::schema::space_artifact_creation::SpaceArtifactCreationKindV1| {
+        drive(semio_framework::manifest::encode_artifact_kind_choice(&semio_framework::manifest::ArtifactKindChoice {
+            kind_id: kind.kind_id.clone(),
+            schema: kind.schema.clone(),
+            dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: kind.dialect.artifact_kind.clone(), standard: kind.dialect.standard.clone(), subset: kind.dialect.subset.clone() },
+            label: LocalizedLabel::native(&kind.label.en, &kind.label.de),
+        }))
+    };
+    let note = choice(&catalog.kinds[1]);
+    let judged = |args: Value, space: &str| drive(space_artifact_creation_replay_choice(Some(&args), Some(&catalog), space));
+    assert_eq!(judged(serde_json::json!({ "kindChoice": note, "name": "Minutes" }), "space-a"), Ok(("2d.note".to_string(), "Minutes".to_string())));
+    let mut forged = serde_json::from_str::<Value>(&note).expect("choice is JSON");
+    forged["label"]["en"] = Value::from("Notes");
+    let refused = [
+        (serde_json::json!({ "kindChoice": note, "name": "Minutes", "spaceId": "space-b" }), "space-a", ReplayRefusalReasonV1::InvalidRequest),
+        (serde_json::json!({ "kindChoice": note }), "space-a", ReplayRefusalReasonV1::InvalidRequest),
+        (serde_json::json!({ "kindChoice": format!(" {note}"), "name": "Minutes" }), "space-a", ReplayRefusalReasonV1::InvalidRequest),
+        (serde_json::json!({ "kindChoice": forged.to_string(), "name": "Minutes" }), "space-a", ReplayRefusalReasonV1::InvalidRequest),
+        (serde_json::json!({ "kindChoice": note, "name": 7 }), "space-a", ReplayRefusalReasonV1::InvalidRequest),
+        (serde_json::json!({ "kindChoice": note, "name": "Minutes" }), "space-b", ReplayRefusalReasonV1::RouterNotReady),
+    ];
+    for (args, space, reason) in refused {
+        assert_eq!(judged(args.clone(), space), Err(reason), "{args} in {space}");
+    }
+    assert_eq!(drive(space_artifact_creation_replay_choice(Some(&serde_json::json!({ "kindChoice": note, "name": "Minutes" })), None, "space-a")), Err(ReplayRefusalReasonV1::RouterNotReady));
+}
+
+/// 🛰️ The offer scope stays true to the shell (G12 × WG11): a signed-in shell in a space names its human's live agents once the
+/// listing answers; a space switch or a sign-out retires the scope AT ONCE; a listing answered for a target the shell left is
+/// dropped; the listing is re-read on the discovery max interval, so a revoked delegation leaves the scope; only the three
+/// values reach the page.
+#[test]
+fn the_agent_bridge_offer_scope_follows_sign_in_space_and_revocation() {
+    let hub = "http://127.0.0.1:7800".to_string();
+    let (space_a, space_b) = ((hub.clone(), "space-a".to_string()), (hub.clone(), "space-b".to_string()));
+    let mut owner = AgentBridgeOfferScopeOwnerV1::default();
+    assert_eq!((owner.observe(None, 0.0), owner.page_json()), (None, "null".to_string()), "no scope before sign-in");
+    let due = owner.observe(Some(space_a.clone()), 10.0).expect("a new target lists at once");
+    assert_eq!(owner.observe(Some(space_a.clone()), 11.0), None, "one listing in flight at a time");
+    owner.settle(&due, Some(vec!["agent:d-1".into(), "agent:d-2".into()]), 20.0);
+    assert_eq!(owner.page_json(), r#"{"hubOrigin":"http://127.0.0.1:7800","spaceId":"space-a","agentPrincipalIds":["agent:d-1","agent:d-2"]}"#);
+    assert_eq!(owner.observe(Some(space_a.clone()), 20.0 + AGENT_BRIDGE_OFFER_SCOPE_REFRESH_MS - 1.0), None, "a standing scope is not re-listed early");
+    let refresh = owner.observe(Some(space_a.clone()), 20.0 + AGENT_BRIDGE_OFFER_SCOPE_REFRESH_MS).expect("the listing is re-read on schedule");
+    owner.settle(&refresh, Some(vec!["agent:d-2".into()]), 30_100.0);
+    assert_eq!(owner.scope().map(|scope| scope.agent_principal_ids.clone()), Some(vec!["agent:d-2".to_string()]), "a revoked delegation leaves the scope");
+    let switched = owner.observe(Some(space_b.clone()), 30_200.0).expect("a space switch lists the new space at once");
+    assert_eq!(owner.page_json(), "null", "a space switch retires the old space's agents at once");
+    owner.settle(&space_a, Some(vec!["agent:d-9".into()]), 30_300.0);
+    assert_eq!(owner.page_json(), "null", "a listing for a space the shell left is dropped");
+    owner.settle(&switched, None, 30_400.0);
+    assert_eq!(owner.page_json(), "null", "a failed listing leaves local offers only");
+    let retry = owner.observe(Some(space_b.clone()), 30_400.0 + AGENT_BRIDGE_OFFER_SCOPE_REFRESH_MS).expect("a failed listing is retried on schedule");
+    owner.settle(&retry, Some(Vec::new()), 60_500.0);
+    assert_eq!(owner.page_json(), r#"{"hubOrigin":"http://127.0.0.1:7800","spaceId":"space-b","agentPrincipalIds":[]}"#);
+    assert_eq!(owner.observe(None, 60_600.0), None);
+    assert_eq!(owner.page_json(), "null", "a sign-out retires the scope at once");
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn remote_of(shell: &ShellState) -> String {
+    shell.sync.sync_status.as_ref().map_or_else(|| "none".to_string(), |status| format!("{:?}", status.remote))
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn is_live(shell: &ShellState) -> bool {
+    matches!(shell.sync.sync_status.as_ref().map(|status| &status.remote), Some(RemoteState::Live { .. }))
+}
+
+/// 🖼️ What one painted frame does for an open document, headless, answering how many renderer I/O
+/// sessions it advanced: the present loop's renderer I/O and
+/// worker-retirement slots (`present_step_inner`; a detached request such as the open's app instance
+/// waits on them), the frame pump (`pump_sync_events`: directory lane, auto check-in, the frame-pumped
+/// open, document actor events), the chrome walk's presence phase, which arms the maintenance lane's
+/// heartbeat step (`ShellChromeFramePhase::Presence` → `advance_presence_preview_step`), and one settle
+/// step when the settle lane is owed one. Without the presence half a headless shell never beat, so the
+/// hub saw no peer and dropped each idle document socket after its presence lease (two-user gate run 13).
+#[cfg(not(target_arch = "wasm32"))]
+fn frame_pump(shell: &mut ShellState) -> usize {
+    let advanced = semio_framework_os_renderer_wgpu_host_base::pump_renderer_io_sessions(1);
+    let _ = semio_framework_job_worker::pump_worker_job_retirements(1, 1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+    drive(PointerCtx::of(&mut shell).pump_sync_events());
+    shell.sync.request_presence_preview(&mut shell.chrome);
+    if shell.chrome.chrome_present.maintenance.presence_requested {
+        ChromeViewCtx::of(&mut shell).advance_presence_preview_step();
+    }
+    if PointerCtx::of(&mut shell).settle_pump_pending() {
+        drive(PointerCtx::of(&mut shell).settle_pump_step());
+    }
+    advanced
+}
+
+/// ⏱️ How one frame-pumped open went, frame by frame: the frames while its steps were out and the
+/// frames that then rendered what it owed, each with its count and its longest single frame.
+#[cfg(not(target_arch = "wasm32"))]
+#[derive(Debug, Default)]
+struct OpenFrames {
+    opening: usize,
+    opening_longest: std::time::Duration,
+    rendering: usize,
+    rendering_longest: std::time::Duration,
+    elapsed: std::time::Duration,
+}
+
+/// 🚪️ Pumps frames ([`frame_pump`]) until the shell's frame-pumped document open settles and the
+/// settle lane has rendered what it owed, timing every frame. Like the present loop, it idles only when
+/// no renderer I/O session advanced. A settled failure or cancellation is left for the caller to assert.
+#[cfg(not(target_arch = "wasm32"))]
+fn settle_document_opening(shell: &mut ShellState) -> OpenFrames {
+    let started = std::time::Instant::now();
+    let mut frames = OpenFrames::default();
+    while shell.opening.document_opening.as_ref().is_some_and(ShellDocumentOpening::running) && started.elapsed() < std::time::Duration::from_secs(180) {
+        let frame = std::time::Instant::now();
+        let advanced = frame_pump(shell);
+        frames.opening += 1;
+        frames.opening_longest = frames.opening_longest.max(frame.elapsed());
+        if advanced == 0 {
+            std::thread::sleep(std::time::Duration::from_millis(1));
+        }
+    }
+    while PointerCtx::of(&mut shell).settle_pump_pending() && started.elapsed() < std::time::Duration::from_secs(180) {
+        let frame = std::time::Instant::now();
+        let _ = frame_pump(shell);
+        frames.rendering += 1;
+        frames.rendering_longest = frames.rendering_longest.max(frame.elapsed());
+    }
+    frames.elapsed = started.elapsed();
+    frames
+}
+
+/// 🔁️ Drives both shells' frames ([`frame_pump`]) until `done` holds or the budget ends, recording
+/// every distinct remote state either shell passed through.
+#[cfg(not(target_arch = "wasm32"))]
+fn pump_pair(a: &mut ShellState, b: &mut ShellState, budget: std::time::Duration, trail: &mut Vec<String>, done: impl Fn(&ShellState, &ShellState) -> bool) -> Option<std::time::Duration> {
+    let started = std::time::Instant::now();
+    while started.elapsed() < budget {
+        let _ = frame_pump(a);
+        let _ = frame_pump(b);
+        let observed = format!("A={} B={}", remote_of(a), remote_of(b));
+        if trail.last() != Some(&observed) {
+            trail.push(observed);
+        }
+        if done(a, b) {
+            return Some(started.elapsed());
+        }
+        std::thread::sleep(std::time::Duration::from_millis(25));
+    }
+    None
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn applied_edits(shell: &mut ShellState) -> Vec<(String, bool)> {
+    drive(SessionCtx::of(&mut shell).refresh_history_snapshot());
+    history_rows_oldest_first(&shell.history.history_entries).into_iter().filter(|entry| entry.kind == "mutation").map(|entry| (entry.action_id.clone(), entry.applied)).collect()
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn author_edit(shell: &mut ShellState, action: &str) -> (Result<(), String>, std::time::Duration) {
+    let controller_id = shell.docs.session.as_ref().map(|session| session.app.controller_id.clone()).unwrap_or_default();
+    let started = std::time::Instant::now();
+    let outcome = drive(ActionsCtx::of(&mut shell).dispatch_action(ActionDescriptor { controller_id, action: action.to_string(), args: None }));
+    (outcome, started.elapsed())
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn online_members(shell: &mut ShellState, space_id: &str) -> Vec<(String, bool)> {
+    drive(shell.directory.reload_hub_members(space_id));
+    shell.directory.hub_workspace.members.iter().map(|member| (member.display_name.clone(), member.online)).collect()
+}
+
+/// 🤝️ Two native wgpu shells, two hub users, one hub document — the whole collaboration journey
+/// through each shell's own lanes and state, no browser and no stub: both sign in, the first
+/// creates a space and seats the second as an author, both open the space and the same block2d
+/// document through the `os.open-artifact` relay (the guest runs natively on the kernel thread,
+/// the document actor dials the hub's document socket), presence must show both, each actor's
+/// edit must reach the other's ledger, undo is per actor, and severing the second actor's network
+/// must neither freeze its shell nor lose its offline edit. "Not frozen" is measured against the same
+/// shell's own online edit (at most twice its latency), so the bound holds for a debug interpreter too.
+///
+/// 📒️ Every step is recorded (PASS/FAIL + what the shells showed) before the law asserts the
+/// whole ledger, so one run is the per-step table even when an early step fails.
+///
+/// 🔌️ `#[ignore]`d: needs a live credential-sign-in hub at `SEMIO_HUB_LIVE_ORIGIN` with the two
+/// principals `SEMIO_HUB_LIVE_EMAIL`/`_PASSWORD` and `SEMIO_HUB_LIVE_PEER_EMAIL`/`_PASSWORD`, plus
+/// a native runtime staged for `block2d` at `SEMIO_PLUGIN_MODULES`; the renderer package's
+/// `hub-live-collaboration-check` verb provides all of it.
+#[cfg(not(target_arch = "wasm32"))]
+#[test]
+#[ignore = "needs a live hub, two principals and a staged native block2d runtime; see this test's own doc comment"]
+fn two_live_wgpu_shells_collaborate_on_one_hub_document() {
+    let journey = native_guest_journey();
+    let origin = live_env("SEMIO_HUB_LIVE_ORIGIN");
+    let (a_email, a_password) = (live_env("SEMIO_HUB_LIVE_EMAIL"), live_env("SEMIO_HUB_LIVE_PASSWORD"));
+    let (b_email, b_password) = (live_env("SEMIO_HUB_LIVE_PEER_EMAIL"), live_env("SEMIO_HUB_LIVE_PEER_PASSWORD"));
+    let modules = std::path::PathBuf::from(live_env("SEMIO_PLUGIN_MODULES"));
+    let variant = live_env("SEMIO_PLUGIN");
+    let relay = SeverableRelay::start(&origin);
+    let mut ledger = CollaborationLedger::default();
+    let plugins = drive(semio_framework_os_renderer_wgpu_program_bridge::load_wasm_plugins(&variant, &modules)).expect("the staged native runtime loads");
+    assert!(plugins.iter().any(|entry| entry.plugin_id == journey.plugin_id.as_str()), "the staged runtime carries {}", journey.plugin_id);
+    let mut a = ShellState::new(plugins.clone(), variant.clone(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+    let mut b = ShellState::new(plugins, variant, semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+
+    let a_retry = sign_in_live(&mut a, &origin, &a_email, &a_password);
+    let b_retry = sign_in_live(&mut b, &relay.origin, &b_email, &b_password);
+    let (a_user, b_user) = (a.directory.hub_workspace.session.user_id.clone(), b.directory.hub_workspace.session.user_id.clone());
+    ledger.record(
+        "1-sign-in",
+        a.directory.hub_workspace.session.phase == HubSessionPhase::SignedIn && b.directory.hub_workspace.session.phase == HubSessionPhase::SignedIn && a_user.is_some() && a_user != b_user,
+        format!(
+            "A={} {:?} {:?} error={:?} retried-after={a_retry:?} B={} {:?} {:?} error={:?} retried-after={b_retry:?} (B via relay {})",
+            a.directory.hub_workspace.session.phase.as_str(),
+            a_user,
+            a.directory.hub_workspace.display_name,
+            a.directory.hub_workspace.session.error,
+            b.directory.hub_workspace.session.phase.as_str(),
+            b_user,
+            b.directory.hub_workspace.display_name,
+            b.directory.hub_workspace.session.error,
+            relay.origin
+        ),
+    );
+
+    let space_name = format!("g7w collaboration {}", chrome_now_ms() as u64);
+    hub_verb(&mut a, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::SET_SPACE_NAME, &[("value", space_name.as_str())]);
+    hub_verb(&mut a, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::CREATE_SPACE, &[]);
+    let space_id = a.directory.hub_workspace.rows.iter().find(|row| row.name == space_name).map(|row| row.id.clone()).unwrap_or_default();
+    shell_command(&mut a, "os.directory.upsert-member", &[("spaceId", space_id.as_str()), ("email", b_email.as_str()), ("role", "author")]);
+    hub_verb(&mut b, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::REFRESH_SPACES, &[]);
+    let b_row = b.directory.hub_workspace.rows.iter().find(|row| row.id == space_id).map(|row| (row.name.clone(), row.role));
+    ledger.record("2-same-space", !space_id.is_empty() && b_row.as_ref().is_some_and(|(_, role)| *role == Some(DirectorySpaceRole::Author)), format!("space={space_id} B sees {b_row:?}"));
+
+    hub_verb(&mut a, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::OPEN_SPACE, &[("spaceId", space_id.as_str())]);
+    hub_verb(&mut b, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::OPEN_SPACE, &[("spaceId", space_id.as_str())]);
+    let (a_roster, b_roster) = (online_members(&mut a, &space_id), online_members(&mut b, &space_id));
+    ledger.record("3-roster", a_roster.len() == 2 && b_roster.len() == 2, format!("A roster={a_roster:?} B roster={b_roster:?}"));
+
+    let kind_id = a.directory.hub_workspace.creation.catalog.as_ref().and_then(|catalog| catalog.kinds.iter().find(|kind| kind.schema == journey.schema.as_str())).map(|kind| kind.kind_id.clone()).unwrap_or_default();
+    hub_verb(&mut a, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::SELECT_ARTIFACT_KIND, &[("kindId", kind_id.as_str())]);
+    hub_verb(&mut a, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::SET_ARTIFACT_NAME, &[("value", "Shared board")]);
+    hub_verb(&mut a, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::CREATE_ARTIFACT, &[]);
+    let creation_started = std::time::Instant::now();
+    let mut creation_trail = Vec::new();
+    while creation_started.elapsed() < std::time::Duration::from_secs(150) {
+        let observed = a.directory.hub_workspace.creation.operation.as_ref().map(|operation| (semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::hub_artifact_creation_phase_str(operation.phase), operation.opening));
+        if creation_trail.last() != Some(&observed) {
+            creation_trail.push(observed);
+        }
+        if a.directory.hub_workspace.creation.operation.as_ref().is_some_and(|operation| operation.opening != HubArtifactOpening::Idle && operation.opening != HubArtifactOpening::Opening) {
+            break;
+        }
+        let _ = frame_pump(&mut a);
+        std::thread::sleep(std::time::Duration::from_millis(25));
+    }
+    let a_open = settle_document_opening(&mut a);
+    println!("g7w-live A open frames={a_open:?} phase={:?}", a.opening.document_opening.as_ref().map(|opening| &opening.phase));
+    let created = a.directory.hub_workspace.creation.operation.as_ref().and_then(|operation| operation.ready.clone());
+    ledger.record(
+        "4a-create-through-the-door",
+        created.is_some() && a.directory.hub_workspace.creation.operation.as_ref().is_some_and(|operation| operation.opening == HubArtifactOpening::Opened),
+        format!("catalog={} kind={kind_id:?} trail={creation_trail:?} created={created:?} after={:?}", a.directory.hub_workspace.creation.catalog_phase.as_str(), creation_started.elapsed()),
+    );
+    let document_id = created.as_ref().map(|ready| ready.artifact_id.clone()).unwrap_or_default();
+    let open_args =
+        [("artifactRef", journey.artifact_ref.as_str()), ("pluginId", journey.plugin_id.as_str()), ("appId", journey.app_id.as_str()), ("documentId", document_id.as_str()), ("schema", journey.schema.as_str()), ("spaceId", space_id.as_str())];
+    shell_command(&mut b, "os.open-artifact", &open_args);
+    let b_open = settle_document_opening(&mut b);
+    println!("g7w-live B open frames={b_open:?}");
+    let session_of = |shell: &ShellState| shell.docs.session.as_ref().map(|session| (session.plugin_id.clone(), session.app.id.clone(), session.instance_id));
+    ledger.record(
+        "4-guest-mounted",
+        [&a, &b].iter().all(|shell| shell.docs.session.as_ref().is_some_and(|session| session.plugin_id == journey.plugin_id.as_str() && session.app.id == journey.app_id.as_str())),
+        format!("A session={:?} error={:?} B session={:?} error={:?}", session_of(&a), a.chrome.error, session_of(&b), b.chrome.error),
+    );
+    ledger.record(
+        "5-hub-binding",
+        a.sync.sync_channel.is_some() && b.sync.sync_channel.is_some() && a.directory.presence_surface.is_some() && b.directory.presence_surface.is_some(),
+        format!("A uri={:?} surface={:?} B uri={:?} surface={:?}", a.sync.sync_backbone_uri, a.directory.presence_surface, b.sync.sync_backbone_uri, b.directory.presence_surface),
+    );
+
+    let mut trail = Vec::new();
+    let live_after = pump_pair(&mut a, &mut b, std::time::Duration::from_secs(30), &mut trail, |a, b| is_live(a) && is_live(b));
+    let codec = match drive(store_sync::os_store::codec_registry::document_kind_codec(journey.schema.as_str())) {
+        Ok(Some(codec)) => drive(codec.pack_schema_hash()).ok(),
+        _ => None,
+    };
+    let socket_live = ledger.record("6-document-socket-live", live_after.is_some(), format!("after={live_after:?} trail={trail:?} native codec for {}={codec:?} hub_documents A={:?} B={:?}", journey.schema, a.sync.hub_documents, b.sync.hub_documents));
+
+    let presence_after = socket_live.then(|| pump_pair(&mut a, &mut b, std::time::Duration::from_secs(10), &mut trail, |a, b| a.directory.presence_peers.len() >= 2 && b.directory.presence_peers.len() >= 2)).flatten();
+    let (a_online, b_online) = (online_members(&mut a, &space_id), online_members(&mut b, &space_id));
+    ledger.record(
+        "7-presence-both",
+        presence_after.is_some() && a_online.iter().all(|(_, online)| *online) && b_online.iter().all(|(_, online)| *online),
+        format!("after={presence_after:?} A peers={} roster={a_online:?} B peers={} roster={b_online:?}", a.directory.presence_peers.len(), b.directory.presence_peers.len()),
+    );
+
+    let a_before = applied_edits(&mut a).len();
+    let (a_edit, a_latency) = author_edit(&mut a, journey.verb.as_str());
+    let a_ledger = applied_edits(&mut a);
+    ledger.record("8-a-authors", a_edit.is_ok() && a_ledger.len() == a_before + 1, format!("outcome={a_edit:?} latency={a_latency:?} A ledger {a_before}->{:?}", a_ledger));
+
+    let b_before = applied_edits(&mut b).len();
+    let b_ingest = pump_pair(&mut a, &mut b, std::time::Duration::from_secs(10), &mut trail, |_, _| false);
+    let b_seen = applied_edits(&mut b);
+    ledger.record("9-b-ingests", socket_live && b_seen.len() > b_before, format!("pumped={b_ingest:?} B ledger {b_before}->{b_seen:?} B remote={}", remote_of(&b)));
+
+    let a_seen_before = applied_edits(&mut a).len();
+    let (b_edit, b_latency) = author_edit(&mut b, journey.verb.as_str());
+    let _ = pump_pair(&mut a, &mut b, std::time::Duration::from_secs(10), &mut trail, |_, _| false);
+    let a_seen = applied_edits(&mut a);
+    ledger.record("10-b-authors-a-ingests", b_edit.is_ok() && socket_live && a_seen.len() > a_seen_before, format!("B outcome={b_edit:?} latency={b_latency:?} A ledger {a_seen_before}->{a_seen:?}"));
+
+    let (undo, _) = author_edit(&mut a, journey.undo.as_str());
+    let _ = pump_pair(&mut a, &mut b, std::time::Duration::from_secs(10), &mut trail, |_, _| false);
+    let (a_after_undo, b_after_undo) = (applied_edits(&mut a), applied_edits(&mut b));
+    let a_own_reverted = a_after_undo.iter().filter(|(action, applied)| action == journey.verb.as_str() && !applied).count() == 1;
+    ledger.record("11-per-actor-undo", undo.is_ok() && a_own_reverted && socket_live, format!("undo={undo:?} A ledger={a_after_undo:?} B ledger={b_after_undo:?}"));
+
+    let severed = relay.sever();
+    let (offline_edit, offline_latency) = author_edit(&mut b, journey.verb.as_str());
+    let offline_pump = std::time::Instant::now();
+    let _ = pump_pair(&mut a, &mut b, std::time::Duration::from_secs(3), &mut trail, |_, _| false);
+    let pump_elapsed = offline_pump.elapsed();
+    hub_verb(&mut b, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::REFRESH_SPACES, &[]);
+    let offline_phase = b.directory.hub_workspace.phase.as_str();
+    let offline_remote = remote_of(&b);
+    relay.heal();
+    hub_verb(&mut b, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::REFRESH_SPACES, &[]);
+    let healed_phase = b.directory.hub_workspace.phase.as_str();
+    let a_before_heal = applied_edits(&mut a).len();
+    let relive = pump_pair(&mut a, &mut b, std::time::Duration::from_secs(40), &mut trail, |a, b| is_live(a) && is_live(b));
+    let _ = pump_pair(&mut a, &mut b, std::time::Duration::from_secs(10), &mut trail, |_, _| false);
+    let a_after_heal = applied_edits(&mut a);
+    ledger.record(
+        "12-connection-loss",
+        offline_edit.is_ok() && offline_latency <= b_latency.saturating_mul(2) && pump_elapsed < std::time::Duration::from_secs(5) && offline_phase == semio_framework_os_renderer_wgpu_hub_contracts::space_browser::SpaceBrowserPhase::Stale.as_str() && healed_phase == semio_framework_os_renderer_wgpu_hub_contracts::space_browser::SpaceBrowserPhase::Ready.as_str() && relive.is_some() && a_after_heal.len() > a_before_heal,
+        format!("severed={severed} B offline edit={offline_edit:?} latency={offline_latency:?} pump={pump_elapsed:?} B spaces offline={offline_phase} healed={healed_phase} B remote offline={offline_remote} relive={relive:?} A ledger {a_before_heal}->{a_after_heal:?}"),
+    );
+
+    println!("g7w-live trail={trail:?}");
+    let failed: Vec<&str> = ledger.steps.iter().filter(|(_, passed, _)| !passed).map(|(step, _, _)| *step).collect();
+    hub_verb(&mut a, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::SIGN_OUT, &[]);
+    hub_verb(&mut b, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::SIGN_OUT, &[]);
+    assert!(failed.is_empty(), "two-user collaboration steps failed: {failed:?}");
+}
+
+/// ⏯️ The one guest journey both native laws drive, read from the shared language-agnostic fixture.
+#[cfg(not(target_arch = "wasm32"))]
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct NativeGuestJourney {
+    plugin_id: String,
+    artifact_ref: String,
+    app_id: String,
+    schema: String,
+    verb: String,
+    undo: String,
+    redo: String,
+    clipboard: Vec<String>,
+    expected_edits_after_verb: usize,
+    expected_applied_after_undo: usize,
+    expected_applied_after_redo: usize,
+    expected_edits_after_clipboard: usize,
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn native_guest_journey() -> NativeGuestJourney {
+    serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/⏯️native-guest-journey/🔣️.json")).expect("native guest journey fixture")
+}
+
+/// ⏯️ Mounts the fixture's staged guest in one native wgpu shell with no hub, authors the fixture's
+/// verb and asserts the mount and the edit: the relay switches to the guest's app, every surface its
+/// session opens reaches the retained registry (no `Surface unavailable` fault), the session binds the
+/// document it opened (a refused binding used to pass silently as a debug line), and the verb settles
+/// and lands exactly once in the guest's own ledger. Answers the shell for a law that continues.
+#[cfg(not(target_arch = "wasm32"))]
+fn native_guest_authored(journey: &NativeGuestJourney) -> ShellState {
+    let modules = std::path::PathBuf::from(live_env("SEMIO_PLUGIN_MODULES"));
+    let variant = live_env("SEMIO_PLUGIN");
+    let plugins = drive(semio_framework_os_renderer_wgpu_program_bridge::load_wasm_plugins(&variant, &modules)).expect("the staged native runtime loads");
+    assert!(plugins.iter().any(|entry| entry.plugin_id == journey.plugin_id), "the staged runtime carries {}", journey.plugin_id);
+    let mut shell = ShellState::new(plugins, variant, semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+    let document_id = format!("native-guest-journey-{}", chrome_now_ms() as u64);
+    let started = std::time::Instant::now();
+    shell_command(
+        &mut shell,
+        "os.open-artifact",
+        &[("artifactRef", journey.artifact_ref.as_str()), ("pluginId", journey.plugin_id.as_str()), ("appId", journey.app_id.as_str()), ("documentId", document_id.as_str()), ("schema", journey.schema.as_str())],
+    );
+    let command = started.elapsed();
+    let frames = settle_document_opening(&mut shell);
+    let session = shell.docs.session.as_ref().map(|session| (session.plugin_id.clone(), session.app.id.clone(), session.instance_id));
+    println!("native-guest-journey open command={command:?} frames={frames:?} session={session:?} error={:?}", shell.chrome.error);
+    assert!(shell.opening.document_opening.is_none(), "the open settled and cleared its band: {:?}", shell.opening.document_opening.as_ref().map(|opening| &opening.phase));
+    assert_eq!(session.as_ref().map(|(plugin, app, _)| (plugin.as_str(), app.as_str())), Some((journey.plugin_id.as_str(), journey.app_id.as_str())), "the relay mounted the guest's app");
+    assert_eq!(shell.chrome.error, None, "every surface the session opened reached the retained registry");
+    assert_eq!(shell.sync.sync_channel.as_ref().map(|channel| channel.document_id.as_str()), Some(document_id.as_str()), "the relay bound the session to the document it opened");
+
+    let before = applied_edits(&mut shell);
+    let (edit, latency) = author_edit(&mut shell, &journey.verb);
+    let after = applied_edits(&mut shell);
+    println!("native-guest-journey verb={} outcome={edit:?} latency={latency:?} ledger {before:?} -> {after:?}", journey.verb);
+    assert_eq!(edit, Ok(()), "the authored verb settles");
+    assert_eq!(applied_count(&after, &journey.verb), applied_count(&before, &journey.verb) + journey.expected_edits_after_verb);
+    shell
+}
+
+/// ⏯️ One native wgpu shell mounts the staged guest on the native kernel thread with no hub at all and
+/// authors one edit (see [`native_guest_authored`]). This is the kernel turn loop's contract with a
+/// real owned-interpreter guest — the B1 defect of ticket 26/09/18 slice G7w (the first post-boot turn
+/// never returned, then every authored edit spun `MoreWork` until the settle budget) reproduced
+/// without a hub, so it can never hide behind a hub-side failure again.
+///
+/// 🔌️ `#[ignore]`d: needs the fixture's native runtime staged at `SEMIO_PLUGIN_MODULES` for
+/// `SEMIO_PLUGIN`; the renderer package's `native-guest-journey-check` verb provides both.
+#[cfg(not(target_arch = "wasm32"))]
+#[test]
+#[ignore = "needs a staged native guest runtime; see this test's own doc comment"]
+fn a_native_guest_mounts_and_settles_an_authored_edit_without_a_hub() {
+    let _ = native_guest_authored(&native_guest_journey());
+}
+
+/// 🧮️ How many of `ledger`'s edits are `verb`'s and applied.
+#[cfg(not(target_arch = "wasm32"))]
+fn applied_count(ledger: &[(String, bool)], verb: &str) -> usize {
+    ledger.iter().filter(|(action, applied)| action == verb && *applied).count()
+}
+
+/// ⏪️ [`native_guest_authored`], then the fixture's undo, asserted to settle and to revert exactly the
+/// authored edit. Answers the shell for a law that continues.
+#[cfg(not(target_arch = "wasm32"))]
+fn native_guest_undone(journey: &NativeGuestJourney) -> ShellState {
+    let mut shell = native_guest_authored(journey);
+    let (undo, latency) = author_edit(&mut shell, &journey.undo);
+    let undone = applied_edits(&mut shell);
+    println!("native-guest-journey undo outcome={undo:?} latency={latency:?} ledger {undone:?}");
+    assert_eq!(undo, Ok(()), "undo settles");
+    assert_eq!(applied_count(&undone, &journey.verb), journey.expected_applied_after_undo, "undo reverted exactly the authored edit");
+    shell
+}
+
+/// ⏪️ The journey's edit, then its undo. Undo is a framework reserved tool verb: the guest admits it and
+/// spawns a `semio_framework::kernel::FRAMEWORK_RESERVED_JOB_KIND` job, so this law holds the native
+/// kernel to starting that job live, stepping it to its end and settling the guest's completion turn
+/// — the one reserved-job mechanism the React host drives in `driveReservedToolJob` (ticket 26/09/23
+/// slice WG8, §1.4).
+///
+/// 🔌️ `#[ignore]`d for the same staged runtime as [`a_native_guest_mounts_and_settles_an_authored_edit_without_a_hub`].
+#[cfg(not(target_arch = "wasm32"))]
+#[test]
+#[ignore = "needs a staged native guest runtime; see this test's own doc comment"]
+fn a_native_guest_undoes_its_authored_edit_without_a_hub() {
+    let _ = native_guest_undone(&native_guest_journey());
+}
+
+/// ⏩️ The journey's edit and undo, then the fixture's redo: a second reserved tool job on the same
+/// instance, which settles and applies exactly the undone edit again.
+///
+/// 🔌️ `#[ignore]`d for the same staged runtime as [`a_native_guest_mounts_and_settles_an_authored_edit_without_a_hub`].
+#[cfg(not(target_arch = "wasm32"))]
+#[test]
+#[ignore = "needs a staged native guest runtime; see this test's own doc comment"]
+fn a_native_guest_redoes_its_undone_edit_without_a_hub() {
+    let journey = native_guest_journey();
+    let mut shell = native_guest_undone(&journey);
+    let (redo, latency) = author_edit(&mut shell, &journey.redo);
+    let redone = applied_edits(&mut shell);
+    println!("native-guest-journey redo outcome={redo:?} latency={latency:?} ledger {redone:?}");
+    assert_eq!(redo, Ok(()), "redo settles");
+    assert_eq!(applied_count(&redone, &journey.verb), journey.expected_applied_after_redo, "redo applied exactly the undone edit again");
+}
+
+/// 📋️ The journey's edit, then the fixture's selection and clipboard verbs in order (select all, copy,
+/// paste): each is a framework reserved verb — the selection one a spawned reserved tool job, the
+/// clipboard ones run inside the guest's turn — and each settles, leaving the edit ledger exactly as the
+/// fixture declares.
+///
+/// 🔌️ `#[ignore]`d for the same staged runtime as [`a_native_guest_mounts_and_settles_an_authored_edit_without_a_hub`].
+#[cfg(not(target_arch = "wasm32"))]
+#[test]
+#[ignore = "needs a staged native guest runtime; see this test's own doc comment"]
+fn a_native_guest_copies_and_pastes_its_selection_without_a_hub() {
+    let journey = native_guest_journey();
+    let mut shell = native_guest_authored(&journey);
+    let before = applied_edits(&mut shell);
+    for verb in &journey.clipboard {
+        let (outcome, latency) = author_edit(&mut shell, verb);
+        println!("native-guest-journey clipboard verb={verb} outcome={outcome:?} latency={latency:?}");
+        assert_eq!(outcome, Ok(()), "{verb} settles");
+    }
+    let after = applied_edits(&mut shell);
+    println!("native-guest-journey clipboard ledger {before:?} -> {after:?}");
+    assert_eq!(after.len(), before.len() + journey.expected_edits_after_clipboard, "the clipboard verbs left the declared edits");
+    assert_eq!(applied_count(&after, &journey.verb), applied_count(&before, &journey.verb), "the authored edit stays applied");
+}
+
+/// 🖼️ Opening a document never holds the shell across a guest turn: the relay only starts the open,
+/// every frame while the guest instantiates and loads the document stays short, and the band's cancel
+/// stops an open whose app instance is still being created — the instance is destroyed and the session
+/// stays as it was. Before, the relay held the shell (and so the frame build) for the whole open: 17 s
+/// in a debug build (ticket 26/09/23 slice WG8). The frames that then render the new session are
+/// measured and reported; each spends the guest's own render turns.
+///
+/// 🔌️ `#[ignore]`d for the same staged runtime as [`a_native_guest_mounts_and_settles_an_authored_edit_without_a_hub`].
+#[cfg(not(target_arch = "wasm32"))]
+#[test]
+#[ignore = "needs a staged native guest runtime; see this test's own doc comment"]
+fn a_native_guest_open_keeps_the_frame_loop_painting_and_is_cancellable() {
+    let journey = native_guest_journey();
+    let modules = std::path::PathBuf::from(live_env("SEMIO_PLUGIN_MODULES"));
+    let variant = live_env("SEMIO_PLUGIN");
+    let plugins = drive(semio_framework_os_renderer_wgpu_program_bridge::load_wasm_plugins(&variant, &modules)).expect("the staged native runtime loads");
+    let mut shell = ShellState::new(plugins, variant, semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+    let open = |shell: &mut ShellState, document_id: &str| {
+        let started = std::time::Instant::now();
+        shell_command(shell, "os.open-artifact", &[("artifactRef", journey.artifact_ref.as_str()), ("pluginId", journey.plugin_id.as_str()), ("appId", journey.app_id.as_str()), ("documentId", document_id), ("schema", journey.schema.as_str())]);
+        started.elapsed()
+    };
+
+    let command = open(&mut shell, "native-guest-open-cancelled");
+    assert_eq!(shell.opening.document_opening.as_ref().map(|opening| opening.phase.clone()), Some(ShellDocumentOpenPhase::Instantiating), "the relay only starts the open");
+    shell.opening.cancel_document_opening();
+    let cancelled = settle_document_opening(&mut shell);
+    println!("native-guest-open cancel command={command:?} frames={cancelled:?} phase={:?}", shell.opening.document_opening.as_ref().map(|opening| &opening.phase));
+    assert_eq!(shell.opening.document_opening.as_ref().map(|opening| opening.phase.clone()), Some(ShellDocumentOpenPhase::Cancelled), "the cancel settled the open");
+    assert!(shell.docs.session.is_none() && shell.sync.sync_channel.is_none(), "a cancelled open mounts nothing");
+    shell.opening.cancel_document_opening();
+    assert!(shell.opening.document_opening.is_none(), "closing the settled band clears it");
+
+    let command = open(&mut shell, "native-guest-open-painted");
+    let frames = settle_document_opening(&mut shell);
+    println!("native-guest-open command={command:?} frames={frames:?}");
+    assert!(command < std::time::Duration::from_millis(500), "the relay started the open without a guest turn: {command:?}");
+    assert!(frames.opening > 1 && frames.opening_longest < std::time::Duration::from_millis(500), "every frame stayed short while the guest opened: {frames:?}");
+    assert_eq!(shell.sync.sync_channel.as_ref().map(|channel| channel.document_id.as_str()), Some("native-guest-open-painted"));
+}
+
+/// 🌱️ One native wgpu shell creates a hub-bound artifact through its own creation door against a
+/// REAL hub: sign in, create and open a space, the door loads the space's selected current catalog,
+/// the first creatable kind is chosen and named, Create submits the sealed intent, the frame pump
+/// polls the hub's receipts, and the creation reaches `Ready` with a hub-minted artifact id — every
+/// step through the shell's own lanes and state (ticket 26/09/23 slice WG8, G-P1-3). Whether the
+/// ready artifact then opens depends on the kind's guest being staged natively, so the law reports the
+/// opening and asserts only the creation.
+///
+/// 🔌️ `#[ignore]`d: needs a live credential-sign-in hub with a ready trusted catalog at
+/// `SEMIO_HUB_LIVE_ORIGIN` and one principal at `SEMIO_HUB_LIVE_EMAIL`/`_PASSWORD`.
+#[cfg(not(target_arch = "wasm32"))]
+#[test]
+#[ignore = "needs a live hub with a ready trusted catalog; see this test's own doc comment"]
+fn a_live_hub_artifact_is_created_through_the_wgpu_creation_door() {
+    let origin = live_env("SEMIO_HUB_LIVE_ORIGIN");
+    let mut shell = shell();
+    let refusal = sign_in_live(&mut shell, &origin, &live_env("SEMIO_HUB_LIVE_EMAIL"), &live_env("SEMIO_HUB_LIVE_PASSWORD"));
+    assert_eq!(shell.directory.hub_workspace.session.phase, HubSessionPhase::SignedIn, "first refusal {refusal:?}");
+    let space_name = format!("wg8 door {}", chrome_now_ms() as u64);
+    hub_verb(&mut shell, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::SET_SPACE_NAME, &[("value", space_name.as_str())]);
+    hub_verb(&mut shell, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::CREATE_SPACE, &[]);
+    let space_id = shell.directory.hub_workspace.rows.iter().find(|row| row.name == space_name).map(|row| row.id.clone()).expect("the created space is listed");
+    hub_verb(&mut shell, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::OPEN_SPACE, &[("spaceId", space_id.as_str())]);
+    let creation = &shell.directory.hub_workspace.creation;
+    let kinds: Vec<(String, String, String)> = creation.catalog.iter().flat_map(|catalog| catalog.kinds.iter()).map(|kind| (kind.kind_id.clone(), kind.label.en.clone(), kind.label.de.clone())).collect();
+    println!("wg8-door catalog={} kinds={kinds:?}", creation.catalog_phase.as_str());
+    assert_eq!(creation.catalog_phase, HubArtifactCatalogPhase::Ready);
+    let kind_id = kinds.first().map(|(kind_id, _, _)| kind_id.clone()).expect("the catalog offers a kind");
+    hub_verb(&mut shell, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::SELECT_ARTIFACT_KIND, &[("kindId", kind_id.as_str())]);
+    hub_verb(&mut shell, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::SET_ARTIFACT_NAME, &[("value", "Door artifact")]);
+    let started = std::time::Instant::now();
+    hub_verb(&mut shell, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::CREATE_ARTIFACT, &[]);
+    let mut trail = Vec::new();
+    while started.elapsed() < std::time::Duration::from_secs(150) {
+        let observed = shell.directory.hub_workspace.creation.operation.as_ref().map(|operation| (semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::hub_artifact_creation_phase_str(operation.phase), operation.opening));
+        if trail.last() != Some(&observed) {
+            trail.push(observed);
+        }
+        if shell.directory.hub_workspace.creation.operation.as_ref().is_some_and(|operation| hub_artifact_creation_terminal(operation.phase) && operation.opening != HubArtifactOpening::Idle && operation.opening != HubArtifactOpening::Opening) {
+            break;
+        }
+        drive(PointerCtx::of(&mut shell).pump_sync_events());
+        std::thread::sleep(std::time::Duration::from_millis(25));
+    }
+    let operation = shell.directory.hub_workspace.creation.operation.clone().expect("the door holds its creation");
+    println!("wg8-door kind={kind_id} trail={trail:?} after={:?} ready={:?}", started.elapsed(), operation.ready);
+    for locale in [Locale::En, Locale::De] {
+        let tree = semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::build_hub_workspace_ui(&shell.directory.hub_workspace, locale);
+        let mut phases = Vec::new();
+        hub_attribute_values(&tree, "data-semio-hub-artifact-creation-phase", &mut phases);
+        println!("wg8-door tree locale={locale:?} phase={phases:?}");
+    }
+    assert_eq!(operation.phase, SpaceArtifactCreationPhaseV1::Ready);
+    assert!(operation.ready.as_ref().is_some_and(|ready| ready.kind_id == kind_id && ready.artifact_id.starts_with("artifact-")));
+    hub_verb(&mut shell, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::SIGN_OUT, &[]);
+}
+
+/// 🌉️ The file handshake between the native half of the cross-shell journey and its browser driver
+/// (`SEMIO_CROSS_SHELL_DIR`): each side publishes one JSON observation per step (`native-<step>.json`,
+/// `react-<step>.json`, written whole through a rename), and waits for the other side's step while its own
+/// frames keep running ([`frame_pump`]) — a waiting native user still beats, ingests and paints.
+#[cfg(not(target_arch = "wasm32"))]
+struct CrossShellHandshake {
+    dir: std::path::PathBuf,
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl CrossShellHandshake {
+    fn publish(&self, step: &str, value: Value) {
+        let target = self.dir.join(format!("native-{step}.json"));
+        let staged = self.dir.join(format!(".native-{step}.json"));
+        std::fs::write(&staged, serde_json::to_vec_pretty(&value).expect("handshake step encodes")).expect("handshake step is written");
+        std::fs::rename(&staged, &target).expect("handshake step is published");
+        println!("cross-shell native {step} {value}");
+    }
+
+    fn await_react(&self, shell: &mut ShellState, step: &str, budget: std::time::Duration) -> Option<Value> {
+        let path = self.dir.join(format!("react-{step}.json"));
+        let started = std::time::Instant::now();
+        while started.elapsed() < budget {
+            if let Ok(bytes) = std::fs::read(&path) {
+                let value: Value = serde_json::from_slice(&bytes).expect("react handshake step decodes");
+                println!("cross-shell react {step} after {:?} {value}", started.elapsed());
+                return Some(value);
+            }
+            let _ = frame_pump(shell);
+            std::thread::sleep(std::time::Duration::from_millis(25));
+        }
+        println!("cross-shell react {step} never arrived within {budget:?}");
+        None
+    }
+}
+
+/// 🖼️ Paints every window body of the mounted session once, headless, the way a presented frame paints
+/// it (the shell input laws' own painter), so the engine surfaces a window carries (the board) register and
+/// mirror into the shell's pointer-state maps exactly as they would under a GPU. Answers the painted boards.
+#[cfg(not(target_arch = "wasm32"))]
+fn paint_session_windows(shell: &mut ShellState, body: Rect) -> Vec<String> {
+    let _serialized = semio_framework_os_renderer_wgpu_engine_registry::engine_surface_law_guard();
+    let controller = shell.docs.session.as_ref().map(|session| session.app.controller_id.clone()).unwrap_or_default();
+    let mut windows: Vec<String> = shell.docs.window_ui.keys().cloned().collect();
+    windows.sort();
+    shell.dock.dock_window_plan = windows.iter().map(|window_id| (window_id.clone(), body)).collect();
+    let documents: Vec<(String, UiDocumentLease)> = windows.iter().filter_map(|window_id| shell.docs.window_ui.remove(window_id).map(|document| (window_id.clone(), document))).collect();
+    let rows: Vec<(&str, &str, &UiDocumentLease, Rect)> = documents.iter().map(|(window_id, document)| (window_id.as_str(), controller.as_str(), document, body)).collect();
+    let _input = paint_component_pointer_documents(shell, &rows);
+    drop(rows);
+    shell.docs.window_ui.extend(documents);
+    SessionCtx::of(&mut shell).sync_engine_surface_states();
+    let boards: Vec<String> = shell.surfaces.board2d_states.iter().map(|(_, surface)| surface.window_id.clone()).collect();
+    println!("cross-shell native painted windows={windows:?} boards={boards:?}");
+    boards
+}
+
+/// 🧩️ The canvas kind the cross-shell cursor law opens: puzzle2d's editor window `2d-overview` is a
+/// `SurfaceKind::Board2d` pane on both shells, so each user has a board to point at and to paint the other's
+/// cursor over (block2d's only window is a summary surface with no board).
+#[cfg(not(target_arch = "wasm32"))]
+const CROSS_SHELL_BOARD_SCHEMA: &str = "board.ports.directed.v1";
+
+/// 🤝️ Steps 1–4 of the cross-shell journey (audit s12 P1-4, ticket 26/09/23 slice WG8), shared by both
+/// cross-shell laws: the native wgpu user A signs in, creates a space, seats the React user B as an author,
+/// creates an artifact of `schema` through its door and opens it (the hub-resolved component), paints its
+/// windows; B opens the same artifact from its Space index in a real browser on a real `s` serve (driven by
+/// `wp-wg8/cross-shell.mjs` through [`CrossShellHandshake`]); then each sees the other in its roster.
+#[cfg(not(target_arch = "wasm32"))]
+struct CrossShellMeeting {
+    a: ShellState,
+    handshake: CrossShellHandshake,
+    ledger: CollaborationLedger,
+    b_actor: String,
+    boards: Vec<String>,
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl CrossShellMeeting {
+    fn meet(schema: &str) -> Self {
+        let origin = live_env("SEMIO_HUB_LIVE_ORIGIN");
+        let (a_email, a_password) = (live_env("SEMIO_HUB_LIVE_EMAIL"), live_env("SEMIO_HUB_LIVE_PASSWORD"));
+        let b_email = live_env("SEMIO_HUB_LIVE_PEER_EMAIL");
+        let handshake = CrossShellHandshake { dir: std::path::PathBuf::from(live_env("SEMIO_CROSS_SHELL_DIR")) };
+        let modules = std::path::PathBuf::from(live_env("SEMIO_PLUGIN_MODULES"));
+        let variant = live_env("SEMIO_PLUGIN");
+        let mut ledger = CollaborationLedger::default();
+        let plugins = drive(semio_framework_os_renderer_wgpu_program_bridge::load_wasm_plugins(&variant, &modules)).expect("the staged native runtime loads");
+        let mut a = ShellState::new(plugins, variant, semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+
+        let retry = sign_in_live(&mut a, &origin, &a_email, &a_password);
+        let a_user = a.directory.hub_workspace.session.user_id.clone();
+        ledger.record("1-a-signs-in", a.directory.hub_workspace.session.phase == HubSessionPhase::SignedIn, format!("A={} {a_user:?} retried-after={retry:?}", a.directory.hub_workspace.session.phase.as_str()));
+
+        let space_name = format!("wg8 cross-shell {}", chrome_now_ms() as u64);
+        hub_verb(&mut a, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::SET_SPACE_NAME, &[("value", space_name.as_str())]);
+        hub_verb(&mut a, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::CREATE_SPACE, &[]);
+        let space_id = a.directory.hub_workspace.rows.iter().find(|row| row.name == space_name).map(|row| row.id.clone()).unwrap_or_default();
+        shell_command(&mut a, "os.directory.upsert-member", &[("spaceId", space_id.as_str()), ("email", b_email.as_str()), ("role", "author")]);
+        hub_verb(&mut a, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::OPEN_SPACE, &[("spaceId", space_id.as_str())]);
+        let kind_id = a.directory.hub_workspace.creation.catalog.as_ref().and_then(|catalog| catalog.kinds.iter().find(|kind| kind.schema == schema)).map(|kind| kind.kind_id.clone()).unwrap_or_default();
+        hub_verb(&mut a, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::SELECT_ARTIFACT_KIND, &[("kindId", kind_id.as_str())]);
+        hub_verb(&mut a, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::SET_ARTIFACT_NAME, &[("value", "Cross-shell board")]);
+        hub_verb(&mut a, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::CREATE_ARTIFACT, &[]);
+        let creation_started = std::time::Instant::now();
+        let mut creation_trail = Vec::new();
+        while creation_started.elapsed() < std::time::Duration::from_secs(600) && !a.directory.hub_workspace.creation.operation.as_ref().is_some_and(|operation| operation.opening != HubArtifactOpening::Idle && operation.opening != HubArtifactOpening::Opening)
+        {
+            let observed = a.directory.hub_workspace.creation.operation.as_ref().map(|operation| (semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::hub_artifact_creation_phase_str(operation.phase), operation.opening));
+            if creation_trail.last() != Some(&observed) {
+                creation_trail.push(observed);
+            }
+            let _ = frame_pump(&mut a);
+            std::thread::sleep(std::time::Duration::from_millis(25));
+        }
+        let a_open = settle_document_opening(&mut a);
+        println!(
+            "cross-shell native creation catalog={} trail={creation_trail:?} after={:?} open={a_open:?} phase={:?} error={:?}",
+            a.directory.hub_workspace.creation.catalog_phase.as_str(),
+            creation_started.elapsed(),
+            a.opening.document_opening.as_ref().map(|opening| &opening.phase),
+            a.chrome.error
+        );
+        let document_id = a.directory.hub_workspace.creation.operation.as_ref().and_then(|operation| operation.ready.as_ref()).map(|ready| ready.artifact_id.clone()).unwrap_or_default();
+        let live_after = pump_until(&mut a, std::time::Duration::from_secs(30), is_live);
+        ledger.record(
+            "2-a-creates-and-opens",
+            !space_id.is_empty() && !document_id.is_empty() && live_after.is_some(),
+            format!("space={space_id} schema={schema} kind={kind_id:?} document={document_id} opening={:?} live-after={live_after:?} remote={}", a.directory.hub_workspace.creation.operation.as_ref().map(|operation| operation.opening), remote_of(&a)),
+        );
+        let boards = paint_session_windows(&mut a, Rect::new(0.0, 40.0, 1200.0, 760.0));
+        let a_actor = a.directory.presence_self.as_ref().map(|(actor, _)| actor.clone()).unwrap_or_default();
+        handshake.publish("open", serde_json::json!({ "spaceId": space_id, "documentId": document_id, "schema": schema, "actor": a_actor, "userId": a_user, "boards": boards, "live": live_after.is_some() }));
+
+        let react_open = handshake.await_react(&mut a, "open", std::time::Duration::from_secs(600));
+        ledger.record("3-b-opens-in-react", react_open.as_ref().is_some_and(|value| value["live"] == true), format!("{react_open:?}"));
+
+        let is_b = |peer: &PresencePeer, a_actor: &str| peer.actor != a_actor && peer.user_id.is_some() && peer.user_id != a_user;
+        let presence_after = pump_until(&mut a, std::time::Duration::from_secs(30), |shell| shell.directory.presence_peers.iter().any(|peer| is_b(peer, &a_actor)));
+        let b_peer = a.directory.presence_peers.iter().find(|peer| is_b(peer, &a_actor)).cloned();
+        let b_actor = b_peer.as_ref().map(|peer| peer.actor.clone()).unwrap_or_default();
+        handshake.publish("presence", serde_json::json!({ "seesReact": b_peer.is_some(), "reactActor": b_actor, "peers": a.directory.presence_peers.iter().map(|peer| serde_json::json!({ "actor": peer.actor, "userId": peer.user_id, "label": peer.label, "color": peer.color, "views": peer.views.len() })).collect::<Vec<_>>() }));
+        let react_presence = handshake.await_react(&mut a, "presence", std::time::Duration::from_secs(120));
+        ledger.record(
+            "4-presence-both-ways",
+            presence_after.is_some() && react_presence.as_ref().is_some_and(|value| value["seesNative"] == true),
+            format!("A sees B after {presence_after:?} as {:?}; B sees A: {react_presence:?}", b_peer.as_ref().map(|peer| (&peer.actor, &peer.label, peer.color))),
+        );
+        Self { a, handshake, ledger, b_actor, boards }
+    }
+
+    /// 🏁️ Tells the driver the journey ended, signs A out and asserts every recorded step.
+    fn finish(mut self) {
+        let failed: Vec<&str> = self.ledger.steps.iter().filter(|(_, passed, _)| !passed).map(|(step, _, _)| *step).collect();
+        self.handshake.publish("done", serde_json::json!({ "failed": failed }));
+        hub_verb(&mut self.a, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::SIGN_OUT, &[]);
+        assert!(failed.is_empty(), "cross-shell steps failed: {failed:?}");
+    }
+}
+
+/// 🤝️ One native wgpu user and one React `s` user co-edit ONE hub document (the fixture's block2d kind):
+/// after [`CrossShellMeeting::meet`], each user's edit reaches the other's ledger, each undoes only their own
+/// edit, and B's same-document reload converges (A's later edit reaches the reloaded B). Every step is
+/// recorded before the law asserts the whole ledger.
+///
+/// 🔌️ `#[ignore]`d: needs a live hub (`SEMIO_HUB_LIVE_ORIGIN`, principal A `SEMIO_HUB_LIVE_EMAIL`/`_PASSWORD`,
+/// B's `SEMIO_HUB_LIVE_PEER_EMAIL`), a staged native runtime (`SEMIO_PLUGIN_MODULES`/`SEMIO_PLUGIN`) and the
+/// browser driver (`CROSS_MODE=edits`) sharing `SEMIO_CROSS_SHELL_DIR`.
+#[cfg(not(target_arch = "wasm32"))]
+#[test]
+#[ignore = "needs a live hub, a React s serve and its browser driver; see this test's own doc comment"]
+fn a_native_and_a_react_user_collaborate_on_one_hub_document() {
+    let journey = native_guest_journey();
+    let mut meeting = CrossShellMeeting::meet(journey.schema.as_str());
+    let CrossShellMeeting { a, handshake, ledger, .. } = &mut meeting;
+
+    let before = applied_edits(a).len();
+    let (edit, latency) = author_edit(a, journey.verb.as_str());
+    let a_ledger = applied_edits(a);
+    handshake.publish("edit", serde_json::json!({ "verb": journey.verb, "ok": edit.is_ok(), "ledger": a_ledger.len() }));
+    let react_ingested = handshake.await_react(a, "ingested", std::time::Duration::from_secs(120));
+    ledger.record(
+        "5-a-edits-b-ingests",
+        edit.is_ok() && a_ledger.len() == before + 1 && react_ingested.as_ref().is_some_and(|value| value["ingested"] == true),
+        format!("A outcome={edit:?} latency={latency:?} ledger {before}->{}; B {react_ingested:?}", a_ledger.len()),
+    );
+
+    let remote_before = applied_edits(a).iter().filter(|(action, _)| action == "apply").count();
+    let react_edit = handshake.await_react(a, "edit", std::time::Duration::from_secs(120));
+    let a_ingests = pump_until_ledger(a, std::time::Duration::from_secs(30), |ledger| ledger.iter().filter(|(action, _)| action == "apply").count() > remote_before);
+    let a_after_b = applied_edits(a);
+    handshake.publish("ingested", serde_json::json!({ "ingested": a_ingests.is_some(), "ledger": a_after_b.len() }));
+    ledger.record("6-b-edits-a-ingests", react_edit.as_ref().is_some_and(|value| value["ok"] == true) && a_ingests.is_some(), format!("B {react_edit:?}; A ingested after {a_ingests:?} ledger {remote_before}->{a_after_b:?}"));
+
+    let (undo, _) = author_edit(a, journey.undo.as_str());
+    let a_undone = applied_edits(a);
+    let own_reverted = a_undone.iter().filter(|(action, applied)| action == journey.verb.as_str() && !applied).count() == 1;
+    handshake.publish("undo", serde_json::json!({ "ok": undo.is_ok(), "ownReverted": own_reverted, "ledger": a_undone.iter().map(|(action, applied)| format!("{action}:{applied}")).collect::<Vec<_>>() }));
+    let react_undo = handshake.await_react(a, "undo", std::time::Duration::from_secs(120));
+    let a_after_b_undo = pump_until_ledger(a, std::time::Duration::from_secs(20), |ledger| ledger.iter().any(|(action, applied)| action == "apply" && !applied));
+    let a_final = applied_edits(a);
+    ledger.record(
+        "7-each-undoes-own",
+        undo.is_ok() && own_reverted && react_undo.as_ref().is_some_and(|value| value["ok"] == true && value["ownReverted"] == true) && a_after_b_undo.is_some(),
+        format!("A undo={undo:?} own-reverted={own_reverted}; B {react_undo:?}; A sees B's undo after {a_after_b_undo:?} ledger={a_final:?}"),
+    );
+
+    let react_reloaded = handshake.await_react(a, "reloaded", std::time::Duration::from_secs(600));
+    let (after_reload, _) = author_edit(a, journey.verb.as_str());
+    handshake.publish("after-reload-edit", serde_json::json!({ "ok": after_reload.is_ok(), "ledger": applied_edits(a).len() }));
+    let react_converged = handshake.await_react(a, "converged", std::time::Duration::from_secs(120));
+    ledger.record(
+        "8-reload-converges",
+        react_reloaded.as_ref().is_some_and(|value| value["live"] == true) && after_reload.is_ok() && react_converged.as_ref().is_some_and(|value| value["converged"] == true),
+        format!("B reloaded {react_reloaded:?}; A edit {after_reload:?}; B {react_converged:?}"),
+    );
+    meeting.finish();
+}
+
+/// 🖱️ One native wgpu user and one React `s` user point at ONE hub board ([`CROSS_SHELL_BOARD_SCHEMA`]):
+/// after [`CrossShellMeeting::meet`], A's pointer over its painted board travels as a canvas-presence window
+/// view on the one presence wire and React paints A's cursor over the same window; B moves its mouse over
+/// React's board canvas and A's verified roster carries B's view, which A's chrome turns into a peer cursor
+/// over its own board (`board_peer_overlays`).
+///
+/// 🔌️ `#[ignore]`d: the same live inputs as [`a_native_and_a_react_user_collaborate_on_one_hub_document`], with
+/// the browser driver in `CROSS_MODE=cursors`.
+#[cfg(not(target_arch = "wasm32"))]
+#[test]
+#[ignore = "needs a live hub, a React s serve and its browser driver; see this test's own doc comment"]
+fn a_native_and_a_react_user_see_each_others_cursor_on_one_hub_board() {
+    let mut meeting = CrossShellMeeting::meet(CROSS_SHELL_BOARD_SCHEMA);
+    let CrossShellMeeting { a, handshake, ledger, b_actor, boards, .. } = &mut meeting;
+
+    let board = a.surfaces.board2d_states.iter().next().map(|(_, surface)| (surface.window_id.clone(), surface.bounds));
+    if let Some((_, bounds)) = board.as_ref() {
+        a.directory.presence_pointer = Some((bounds.x + bounds.w * 0.75, bounds.y + bounds.h * 0.25));
+    }
+    let (views, _) = a.directory.board_presence_views(&a.surfaces);
+    let _ = pump_until(a, std::time::Duration::from_secs(2), |_| false);
+    handshake.publish(
+        "cursor",
+        serde_json::json!({ "board": board.as_ref().map(|(window, _)| window), "views": views.iter().map(|view| serde_json::json!({ "windowId": view.window_id, "space": view.space, "pointer": view.pointer })).collect::<Vec<_>>() }),
+    );
+    let react_cursor = handshake.await_react(a, "cursor", std::time::Duration::from_secs(120));
+    let b_actor = b_actor.clone();
+    let native_sees = pump_until(a, std::time::Duration::from_secs(20), |shell| shell.directory.board_peer_overlays(&shell.surfaces).iter().any(|(_, overlays)| overlays.cursors.iter().any(|cursor| cursor.actor == b_actor)));
+    let a_overlays: Vec<String> = a.directory.board_peer_overlays(&a.surfaces).iter().flat_map(|(_, overlays)| overlays.cursors.iter().map(|cursor| format!("{}@{:?} chip={}", cursor.actor, cursor.at, cursor.chip))).collect();
+    let b_views: Vec<String> = a.directory.presence_peers.iter().filter(|peer| peer.actor == b_actor).flat_map(|peer| peer.views.iter().map(|view| format!("{}:{}:{:?}", view.window_id, view.space, view.pointer))).collect();
+    ledger.record(
+        "5-cursors-both-ways",
+        native_sees.is_some() && react_cursor.as_ref().is_some_and(|value| value["seesNativeCursor"] == true),
+        format!("A boards={boards:?} views={views:?} B sees A's cursor: {react_cursor:?}; A sees B's cursor after {native_sees:?}: {a_overlays:?} (B's views {b_views:?})"),
+    );
+    handshake.publish("cursor-seen", serde_json::json!({ "seesReactCursor": native_sees.is_some(), "overlays": a_overlays }));
+    meeting.finish();
+}
+
+/// ⚖️ A long guest turn shares the native kernel and only its owner's cancel ends it (ticket 26/09/23 WG8,
+/// coordinator-approved design): the hub-resolved puzzle component's `InstanceOpen` — longer than the old 30 s
+/// wall-clock kill in a debug host under load (cross-shell run 10) — completes while the staged block2d app keeps
+/// answering history reads between its slices, and a second open dropped by its owner mid-turn is retired.
+///
+/// 🔌️ `#[ignore]`d: needs the staged native runtime (`SEMIO_PLUGIN_MODULES`/`SEMIO_PLUGIN`, the journey fixture's
+/// app answers) and the long-opening component (`SEMIO_LONG_TURN_PLUGIN`, `SEMIO_LONG_TURN_APP`,
+/// `SEMIO_LONG_TURN_COMPONENT`, `SEMIO_LONG_TURN_DESCRIPTOR`, `SEMIO_LONG_TURN_RECEIPT`).
+#[cfg(not(target_arch = "wasm32"))]
+#[test]
+#[ignore = "needs a staged native runtime and a long-opening component; see this test's own doc comment"]
+fn a_long_guest_turn_shares_the_kernel_and_only_its_owners_cancel_ends_it() {
+    let journey = native_guest_journey();
+    let modules = std::path::PathBuf::from(live_env("SEMIO_PLUGIN_MODULES"));
+    let plugins = drive(semio_framework_os_renderer_wgpu_program_bridge::load_wasm_plugins(&live_env("SEMIO_PLUGIN"), &modules)).expect("the staged native runtime loads");
+    let answering_program = plugins.iter().find(|entry| entry.plugin_id == journey.plugin_id).cloned().expect("the staged runtime carries the answering app");
+    let answering = drive(answering_program.create_app(&journey.app_id)).expect("the answering app opens");
+    let long = drive(semio_framework_os_renderer_wgpu_program_bridge::load_resolved_program(
+        &live_env("SEMIO_LONG_TURN_PLUGIN"),
+        std::path::Path::new(&live_env("SEMIO_LONG_TURN_COMPONENT")),
+        std::path::Path::new(&live_env("SEMIO_LONG_TURN_DESCRIPTOR")),
+        &semio_framework_os_kernel::os_component_receipt::ComponentReceiptV1::decode_canonical(&std::fs::read(live_env("SEMIO_LONG_TURN_RECEIPT")).expect("the long-opening component's receipt")).expect("a canonical shipped receipt"),
+    ))
+    .expect("the long-opening component loads");
+    let long_app = live_env("SEMIO_LONG_TURN_APP");
+    let waker = std::task::Waker::noop();
+    let mut context = std::task::Context::from_waker(waker);
+    let pump = || {
+        let _ = semio_framework_os_renderer_wgpu_host_base::pump_renderer_io_sessions(1);
+        let _ = semio_framework_job_worker::pump_worker_job_retirements(1, 1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+    };
+
+    let started = std::time::Instant::now();
+    let mut opening = Box::pin(long.create_app(&long_app));
+    let mut answers: Vec<std::time::Duration> = Vec::new();
+    let mut answer = None;
+    let opened = loop {
+        pump();
+        if let std::task::Poll::Ready(result) = std::future::Future::poll(opening.as_mut(), &mut context) {
+            break result;
+        }
+        let (asked, reading) = answer.get_or_insert_with(|| (std::time::Instant::now(), Box::pin(answering_program.read_history(answering))));
+        if let std::task::Poll::Ready(read) = std::future::Future::poll(reading.as_mut(), &mut context) {
+            read.expect("the answering app answers while the long turn is in flight");
+            answers.push(asked.elapsed());
+            answer = None;
+        }
+        std::thread::sleep(std::time::Duration::from_millis(5));
+    };
+    let open_took = started.elapsed();
+    drop(answer);
+    let longest_answer = answers.iter().max().copied().unwrap_or_default();
+    println!("fair-turns long open took={open_took:?} result={opened:?} answers-while-open={} longest-answer={longest_answer:?}", answers.len());
+    let long_instance = opened.expect("the long InstanceOpen completes: no wall-clock limit ends a progressing turn");
+    assert!(open_took < std::time::Duration::from_secs(2) || !answers.is_empty(), "another app answered between the long turn's slices ({open_took:?} open, no answer)");
+
+    let cancelled_before = semio_framework_os_renderer_wgpu_kernel_runtime::CANCELLED_KERNEL_TURNS.load(std::sync::atomic::Ordering::Relaxed);
+    let cancelled_open_started = std::time::Instant::now();
+    let mut cancelled_open = Box::pin(long.create_app(&long_app));
+    let mut finished_before_cancel = false;
+    while cancelled_open_started.elapsed() < std::time::Duration::from_millis(800) {
+        pump();
+        if std::future::Future::poll(cancelled_open.as_mut(), &mut context).is_ready() {
+            finished_before_cancel = true;
+            break;
+        }
+        std::thread::sleep(std::time::Duration::from_millis(5));
+    }
+    drop(cancelled_open);
+    let answered_after_cancel = std::time::Instant::now();
+    let mut reading = Box::pin(answering_program.read_history(answering));
+    let read = loop {
+        pump();
+        if let std::task::Poll::Ready(read) = std::future::Future::poll(reading.as_mut(), &mut context) {
+            break read;
+        }
+        std::thread::sleep(std::time::Duration::from_millis(5));
+    };
+    let cancelled_after = semio_framework_os_renderer_wgpu_kernel_runtime::CANCELLED_KERNEL_TURNS.load(std::sync::atomic::Ordering::Relaxed);
+    println!("fair-turns cancel finished-before-cancel={finished_before_cancel} cancelled-turns={cancelled_before}->{cancelled_after} next-answer-after={:?} ok={}", answered_after_cancel.elapsed(), read.is_ok());
+    read.expect("the kernel keeps answering after a cancelled turn");
+    assert!(finished_before_cancel || cancelled_after == cancelled_before + 1, "dropping the open mid-turn retired exactly that turn");
+    long.destroy_app(long_instance);
+    answering_program.destroy_app(answering);
+}
+
+/// 📒️ Pumps one shell's frames ([`frame_pump`]) and re-reads its edit ledger ([`applied_edits`]) every half second
+/// until `done` holds for the ledger or the budget ends — the ledger is a history snapshot, not frame state.
+#[cfg(not(target_arch = "wasm32"))]
+fn pump_until_ledger(shell: &mut ShellState, budget: std::time::Duration, done: impl Fn(&[(String, bool)]) -> bool) -> Option<std::time::Duration> {
+    let started = std::time::Instant::now();
+    let mut next_read = started;
+    while started.elapsed() < budget {
+        let _ = frame_pump(shell);
+        if std::time::Instant::now() >= next_read {
+            if done(&applied_edits(shell)) {
+                return Some(started.elapsed());
+            }
+            next_read = std::time::Instant::now() + std::time::Duration::from_millis(500);
+        }
+        std::thread::sleep(std::time::Duration::from_millis(25));
+    }
+    None
+}
+
+/// ⏳️ Pumps one shell's frames ([`frame_pump`]) until `done` holds or the budget ends.
+#[cfg(not(target_arch = "wasm32"))]
+fn pump_until(shell: &mut ShellState, budget: std::time::Duration, done: impl Fn(&ShellState) -> bool) -> Option<std::time::Duration> {
+    let started = std::time::Instant::now();
+    while started.elapsed() < budget {
+        let _ = frame_pump(shell);
+        if done(shell) {
+            return Some(started.elapsed());
+        }
+        std::thread::sleep(std::time::Duration::from_millis(25));
+    }
+    None
+}
+
+
+/// 🔐️ LAW (ticket 26/09/23 session 12, runs s12g/s12h): the sign-in and the spaces read never hold the frame's
+/// interaction state. The verbs only ARM a [`ShellHubTask`] and return — so the chrome shows `Signing in…` with its
+/// Cancel while the hub hashes — the directory pump applies the answer, and Cancel ends the request: a cancelled
+/// sign-in's late answer is never applied.
+#[cfg(not(target_arch = "wasm32"))]
+#[test]
+fn the_sign_in_verb_arms_a_task_and_returns_while_the_hub_is_still_answering() {
+    let source = semio_framework_os_renderer_wgpu_test_support::shell_source();
+    let dispatch = source.split("fn handle_hub_workspace_action<'a>(").nth(1).expect("the hub verb dispatch exists");
+    let dispatch = &dispatch[..dispatch.find("\n    }\n").expect("the dispatch closes")];
+    assert!(dispatch.contains("hub_action::SIGN_IN => self.start_hub_sign_in(),"), "SIGN_IN arms and returns");
+    assert!(dispatch.contains("hub_action::REFRESH_SPACES => self.start_hub_spaces_reload(),"), "REFRESH_SPACES arms and returns");
+    assert!(!source.contains("run_hub_sign_in_turn") && !source.contains("reload_hub_spaces().await"), "no hub leg is awaited inside a verb");
+
+    let mut shell = shell();
+    hub_verb(&mut shell, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::SET_EMAIL, &[("value", "user1@semio.dev")]);
+    hub_verb(&mut shell, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::SET_PASSWORD, &[("value", "correct horse battery staple")]);
+    let (sender, receiver) = std::sync::mpsc::channel();
+    shell.directory.hub_workspace.session = reduce_hub_session(&shell.directory.hub_workspace.session, &HubSessionEvent::Submit);
+    shell.directory.hub_sign_in_task = Some(ShellHubTask { receiver, cancel: CancelToken::root_now(), task: None });
+    assert_eq!(shell.directory.hub_workspace.session.phase, HubSessionPhase::SigningIn);
+    for locale in [Locale::En, Locale::De] {
+        let tree = serde_json::to_string(&semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::build_hub_workspace_ui(&shell.directory.hub_workspace, locale)).expect("hub tree json");
+        assert!(tree.contains("framework.hub.sign-in.cancel"), "a running sign-in offers Cancel ({locale:?})");
+    }
+    assert!(!shell.sync.poll_hub_workspace_tasks(&mut shell.directory), "nothing is applied before the hub answers");
+    sender.send(ShellHubSignInAnswer::Failed { code: HubSignInErrorCode::InvalidCredentials, retry_after_seconds: None }).expect("the task answers");
+    assert!(shell.sync.poll_hub_workspace_tasks(&mut shell.directory), "the pump applies the answer");
+    assert!(shell.directory.hub_workspace_settled());
+    assert_eq!(shell.directory.hub_workspace.session.error, Some(HubSignInErrorCode::InvalidCredentials));
+
+    let (late, receiver) = std::sync::mpsc::channel();
+    shell.directory.hub_workspace.session = reduce_hub_session(&shell.directory.hub_workspace.session, &HubSessionEvent::Submit);
+    shell.directory.hub_sign_in_task = Some(ShellHubTask { receiver, cancel: CancelToken::root_now(), task: None });
+    hub_verb(&mut shell, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::CANCEL_SIGN_IN, &[]);
+    assert!(shell.directory.hub_workspace_settled(), "Cancel ends the request");
+    let _ = late.send(ShellHubSignInAnswer::Unverified);
+    assert!(!shell.sync.poll_hub_workspace_tasks(&mut shell.directory), "a cancelled sign-in's late answer is never applied");
+    assert_eq!(shell.directory.hub_workspace.session.error, Some(HubSignInErrorCode::Cancelled));
+}

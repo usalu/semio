@@ -1,32 +1,64 @@
 //! 🏆️ Staged `child-group` members of the `instance-typed-ops` use cases, as methods of the borrowed bundle (WP7 of the instance family).
 //!
 //! 🪆️ Private child group publication.
-use super::*;
-use crate::child_content::MountedChildGroupIdentitySource;
-use crate::child_content::*;
-use crate::child_content::mounted_child_group_receipt_group::MountedGroupMemberReceipts;
-use crate::child_content::mounted_child_group_receipt_group::MountedCommandEntry;
-use crate::child_content::mounted_child_group_receipt_group::MountedCommandEntrySource;
-use super::docs_instance_root::typed_operation_document_is_fresh;
+use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_framework_plugin_child::ChildContentRetirement;
+use semio_framework_plugin_decl_emission::Emit;
+use store::MemberFactory;
+use semio_framework_plugin_composition_publication::group::private_publication_group::owner::PrivateChildGroupSource;
+use semio_framework_plugin_composition_publication::group::private_publication_group::owner::PrivateChildPublicationGroup;
+use semio_framework_value::retained_clone::RetainedCloneGrant;
+use semio_framework_value::retained_clone::RetainedCloneProgress;
+use semio_framework_value::retained_clone::RetainedCloneStep;
+use semio_framework_value::RetirementDemand;
+use store::SpaceMember;
+use semio_framework_value::ValueError;
+use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
+use semio_framework::FaultFrom;
+use semio_framework::ActionKind;
+use semio_framework_plugin_decl_app::tool_contract::{ArtifactBoundedToolFault, ArtifactToolCompletionValue, TypedOperationResultLane};
+use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use pack::snapshot::ArtifactPack;
+use semio_framework_plugin_publication_mounted::mounted_child_group_receipt_group::command::CommandAppendRefusal;
+use semio_framework_plugin_composition_publication::ComposedGestureResult;
+use std::future::Future;
+use semio_framework_plugin_instance_extension::InstanceExtension;
+use semio_framework_plugin_retained_command::typed_operation::MountedTypedCommandFullOperation;
+use store::Mutation;
+use protocol::OpText;
+use semio_framework_plugin_composition_publication::group::private_publication_group::owner::PRIVATE_CHILD_GROUP_MAXIMUM_CHILDREN;
+use semio_framework_plugin_reactor_app::PluginApp;
+use semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep;
+use crate::typed_bundle::TypedCtx;
+use semio_framework_plugin_job::TypedOperationResultPage;
+use semio_framework_ui_contract::*;
+use semio_framework_plugin_publication_mounted::mounted_child_group_identity::MountedChildGroupIdentitySource;
+use semio_framework_plugin_decl_views::child_view::ChildContentRetainers;
+use semio_framework_plugin_publication_mounted::mounted_child_group_receipt_group;
+use semio_framework_os_kernel as store;
+use semio_framework_plugin_publication_mounted::mounted_child_group_receipt_group::receipt_members::MountedGroupMemberReceipts;
+use semio_framework_plugin_publication_mounted::mounted_child_group_receipt_group::command::entry::MountedCommandEntry;
+use semio_framework_plugin_publication_mounted::mounted_child_group_receipt_group::command::entry::MountedCommandEntrySource;
+use semio_framework_plugin_instance_docs::docs_instance_root::typed_operation_document_is_fresh;
 
 impl<'ctx, A:ArtifactApp,M:SpaceMember+MemberFactory+'static, X: InstanceExtension> TypedCtx<'ctx, A, M, X> {
-    fn advance_private_child_group(&mut self,mounted:&mut MountedTypedCommandFullOperation<A>,cx:&mut semio_framework_job::StepContext<'_>,loan:RetainedCloneGrant)->Result<RetainedCloneStep,crate::PluginLifecycleFailure>{
+    fn advance_private_child_group(&mut self,mounted:&mut MountedTypedCommandFullOperation<A>,cx:&mut semio_framework_job::StepContext<'_>,loan:RetainedCloneGrant)->Result<RetainedCloneStep,semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{
         if self.child_composition.private_child_groups.get(mounted.operation.operation.0).is_some_and(|owner|owner.phase>=9){return Ok(RetainedCloneStep::Complete(Default::default()))}
         let step=semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,loan,RetirementDemand{depth:1,..Default::default()},|same,grant|{let step=self.advance_private_child_group_granted(mounted,same,grant)?;Ok((PluginLifecycleStep::Progress(step.progress()),false))})?;
         let ready=self.child_composition.private_child_groups.get(mounted.operation.operation.0).is_some_and(|owner|owner.phase>=9);
         Ok(if ready{RetainedCloneStep::Complete(step.progress().unwrap_or_default())}else{RetainedCloneStep::Progress(step.progress().unwrap_or_default())})
     }
 
-    fn advance_private_child_group_granted(&mut self,mounted:&mut MountedTypedCommandFullOperation<A>,cx:&mut semio_framework_job::StepContext<'_>,grant:RetainedCloneGrant)->Result<RetainedCloneStep,crate::PluginLifecycleFailure>{
+    fn advance_private_child_group_granted(&mut self,mounted:&mut MountedTypedCommandFullOperation<A>,cx:&mut semio_framework_job::StepContext<'_>,grant:RetainedCloneGrant)->Result<RetainedCloneStep,semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{
         use semio_framework_value::retained_clone::{RetainedCloneProgress,RetainedCloneStep};
-        let step=(||->Result<RetainedCloneStep,crate::PluginLifecycleFailure>{
+        let step=(||->Result<RetainedCloneStep,semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{
         let operation=mounted.operation.operation.0;
         let kind=self.tools.declared_dispatch_kind(&*self.host_events, &mounted.verb).unwrap_or(ActionKind::Mutation);
         let owner=self.child_composition.private_child_groups.get_mut(operation).ok_or_else(||plugin_sdk_fault("mounted publication lost its original admitted group frame"))?;
         if owner.closing{return Err(plugin_sdk_fault("mounted private publication requires bounded retirement after cancellation").into());}
         if owner.phase>=9{return Ok(RetainedCloneStep::Complete(Default::default()));}
         let structural=||RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()});
-        let error=crate::PluginLifecycleFailure::from;
+        let error=semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from;
         if owner.phase==0{
             if owner.identity.ready(){*owner.group_id=owner.identity.take_ready(grant);owner.phase=1;return Ok(structural());}
             let source=MountedChildGroupIdentitySource{parent:&self.stores.store.envelope().id,actor:&mounted.meta.actor,revision:mounted.canonical_revision,instance:mounted.meta.instance_id,operation};
@@ -71,7 +103,7 @@ impl<'ctx, A:ArtifactApp,M:SpaceMember+MemberFactory+'static, X: InstanceExtensi
         let label=self.tools.registry.get(&mounted.verb).map(|definition|&definition.label).or_else(||self.tools.registry.get_command(&mounted.verb).map(|definition|&definition.label));
         let source=MountedCommandEntrySource{action_id:&mounted.verb,label,captured_millis:owner.captured_millis,kind,count:1,parent_touched:group.parent_touched(),child_edit_count:group.child_count()};
         if owner.command.is_none(){owner.command=Some(MountedCommandEntry::new(source).map_err(|_|plugin_sdk_fault("mounted command entry refused its original timestamp authority"))?);return Ok(structural());}
-        let command=owner.command.as_mut().unwrap();if !command.ready(){let _capacity=command.next_capacity_byte_demand(source).map_err(|_|plugin_sdk_fault("mounted command entry source changed before prestage"))?;return command.advance(source,grant).map_err(|_|crate::PluginLifecycleFailure::from(plugin_sdk_fault("mounted command entry lost its original borrowed label source")));}
+        let command=owner.command.as_mut().unwrap();if !command.ready(){let _capacity=command.next_capacity_byte_demand(source).map_err(|_|plugin_sdk_fault("mounted command entry source changed before prestage"))?;return command.advance(source,grant).map_err(|_|semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from(plugin_sdk_fault("mounted command entry lost its original borrowed label source")));}
         if owner.append.is_none(){owner.append=Some(self.history.command_log.prepare_append().map_err(|_|plugin_sdk_fault("mounted command history refused its next original page"))?);return Ok(structural());}
         let append=owner.append.as_mut().unwrap();match self.history.command_log.validate_append(append){Ok(())=>{},Err(mounted_child_group_receipt_group::CommandAppendRefusal::Unfunded)=>{return Ok(append.admit_step(grant));},Err(mounted_child_group_receipt_group::CommandAppendRefusal::Stale)=>{let step=append.close_step(grant);owner.append=None;return Ok(step);},Err(_)=>return Err(plugin_sdk_fault("mounted command append lost its exact original history authority").into())}
         owner.phase=9;Ok(RetainedCloneStep::Complete(Default::default()))
@@ -80,7 +112,7 @@ impl<'ctx, A:ArtifactApp,M:SpaceMember+MemberFactory+'static, X: InstanceExtensi
         Ok(if ready{step}else{RetainedCloneStep::Progress(step.progress())})
     }
 
-    pub(crate) async fn publish_mounted_owned_child_operation_unit(&mut self,mounted:&mut MountedTypedCommandFullOperation<A>,cx:&mut semio_framework_job::StepContext<'_>)->Result<(),crate::PluginLifecycleFailure>{
+    pub async fn publish_mounted_owned_child_operation_unit(&mut self,mounted:&mut MountedTypedCommandFullOperation<A>,cx:&mut semio_framework_job::StepContext<'_>)->Result<(),semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{
         let operation=mounted.owned_child_group.ok_or_else(||plugin_sdk_fault("mounted private publication lost its exact operation identity"))?;
         let Some(owner)=self.child_composition.private_child_groups.get(operation)else{mounted.owned_child_group=None;return Ok(());};
         let lease=mounted.cancellation_lease.as_ref().ok_or_else(||plugin_sdk_fault("mounted private publication requires its original cancellation lease"))?;

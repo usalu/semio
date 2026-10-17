@@ -34,7 +34,6 @@ fn tool_original_alias_batch_preserves_original_admission_and_exact_heap_cleanup
         assert!(batch.terminal_is_empty());assert_eq!(Arc::strong_count(&root),1);
         let(_,heap)=crate::allocation_testing::observe_retirement_allocations(||drop(batch));assert_eq!((heap.0,heap.1),(0,0));
     }}
-    println!("[DEBUG] original tool alias batches0/1/65/257 preserve zero/below-grant pointers and exact factory custody, one native alias per turn, empty spare8192 backing, four-axis heap receipts and terminal Drop0heap");
 }
 #[test]
 fn single_original_alias_preserves_root_and_issuer_without_batch_reconstruction(){
@@ -54,5 +53,4 @@ fn single_original_alias_preserves_root_and_issuer_without_batch_reconstruction(
   }
   assert!(owner.terminal_is_empty());assert_eq!(Arc::strong_count(&root),1);let((),heap)=crate::allocation_testing::observe_retirement_allocations(||drop(owner));assert_eq!(heap,(0,0));
  }
- println!("[DEBUG] single original alias retains root pointer and actual issuer through0/1/3/17/129 pauses, constructor undergrant0heap, no invented Vec, exact four-axis heaps,100000 turns and terminalDrop0");
 }

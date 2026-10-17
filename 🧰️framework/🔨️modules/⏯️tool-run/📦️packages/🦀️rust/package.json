@@ -11,6 +11,8 @@
   "bundleKind": "library",
   "devDependencies": {
     "@semio-tech/framework": "workspace:*",
+    "@semio-tech/framework-compiler-ts": "workspace:*",
+    "@semio-tech/framework-replication": "workspace:*",
     "@semio-tech/process": "workspace:*"
   }
 }

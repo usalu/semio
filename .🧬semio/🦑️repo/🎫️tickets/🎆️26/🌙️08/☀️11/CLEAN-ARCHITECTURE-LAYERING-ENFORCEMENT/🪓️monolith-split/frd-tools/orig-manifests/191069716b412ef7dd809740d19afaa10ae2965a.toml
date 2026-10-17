@@ -1,0 +1,35 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-s-artifact-stdio-semio-audio-mutations"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "🧬️ The semio audio mutation vocabulary: every mutation with its diff and inverse, their text and binary codecs, and the member store owner."
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "🦀️.rs"
+
+[dependencies]
+semio-framework-diagnostic = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-pack-json = { workspace = true }
+semio-framework-ui-locale = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-framework-value-derive = { workspace = true }
+semio-s-artifact-stdio-semio-base = { workspace = true }
+semio-s-artifact-stdio-semio-audio-model = { workspace = true }
+
+[dev-dependencies]
+semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-framework-async-macros = { workspace = true }
+
+[[test]]
+name = "inverse_laws"
+path = "../../🧪️tests/🔬️inverses/🦀️.rs"
+

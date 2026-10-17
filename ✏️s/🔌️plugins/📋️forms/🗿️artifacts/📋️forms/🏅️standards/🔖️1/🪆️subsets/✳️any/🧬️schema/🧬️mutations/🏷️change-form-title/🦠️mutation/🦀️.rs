@@ -3,7 +3,7 @@
 //! fit). Physical dir name (`📖update-playbook`, wired by `🦀️.rs`) predates the semantic
 //! rename; the Rust module is still `update_playbook`, the type/variant/kind are `change-form-title`.
 
-use crate::{FormMutation, FormsDiff, FormsSnapshot};
+use crate::{FormsDiff, FormsSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 
 //#region 🖋️ChangeFormTitle
@@ -16,15 +16,18 @@ pub struct ChangeFormTitle {
     pub new_title: Option<String>,
 }
 
-impl MutationKind<FormsSnapshot, FormMutation> for ChangeFormTitle {
+impl<Op> MutationKind<FormsSnapshot, Op> for ChangeFormTitle
+where
+    Op: protocol::Mutation<FormsSnapshot, Diff = FormsDiff> + From<ChangeFormTitle>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "form-title", kind: "change-form-title", record: "ChangedFormTitle" };
 
     fn diff(&self, base: &FormsSnapshot) -> protocol::MutationOutcome<FormsDiff> {
-        super::diff::diff_change_form_title(self, base)
+        crate::standards::v1::subsets::any::schema::mutations::change_form_title::diff::diff_change_form_title(self, base)
     }
-    fn inverse(&self, base: &FormsSnapshot) -> Result<Vec<FormMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &FormsSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
-        super::inverse::inverse_change_form_title(self, base)?
+        crate::standards::v1::subsets::any::schema::mutations::change_form_title::inverse::inverse_change_form_title(self, base)?
     
     })
 }

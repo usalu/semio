@@ -2,7 +2,7 @@
 //!
 //! Carved out of `🏗️bootstrap/🦀️.rs`; mounted from its root with `#[path]`.
 
-use directory::os_directory::io::text::access_policy::directory_access_permits;
+use directory::os_directory::access_policy::directory_access_permits;
 use directory::os_directory::io::text::directory_command_sha256;
 use axum::body::Bytes;
 use axum::extract::{OriginalUri, Path, State};

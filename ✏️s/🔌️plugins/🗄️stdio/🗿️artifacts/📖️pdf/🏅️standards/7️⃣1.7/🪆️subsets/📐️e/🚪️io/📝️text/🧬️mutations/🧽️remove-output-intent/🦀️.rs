@@ -3,7 +3,7 @@
 pub const OPCODE: &str = "remove-output-intent";
 pub const TEXT_OPCODE: &str = OPCODE;
 
-use crate::standards::v1_7::subsets::e::schema::mutations::RemoveOutputIntent;
+use crate::standards::v1_7::subsets::e::schema::mutations::remove_output_intent::RemoveOutputIntent;
 
 /// 🖨️ Prints this direct payload through its schema-derived JSON representation.
 pub fn print(payload: &RemoveOutputIntent) -> Result<String, String> {

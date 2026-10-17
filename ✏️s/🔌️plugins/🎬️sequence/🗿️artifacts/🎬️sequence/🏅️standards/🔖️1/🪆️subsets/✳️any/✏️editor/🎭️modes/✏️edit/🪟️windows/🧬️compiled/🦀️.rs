@@ -1,6 +1,6 @@
 //! 🧬️ Sequence play app — the compiled-DAG window: the read-only wire literal of the current fixture.
 
-use crate::editor::sequence::host_from_host_snapshot;
+use crate::editor::sequence::host::host_from_host_snapshot;
 use crate::SequenceHostSnapshot;
 use semio_framework_plugin::BuiltNode;
 use semio_framework_ui_locale::LocalizedLabel;
@@ -46,7 +46,4 @@ pub fn render(host_snapshot: &SequenceHostSnapshot) -> UiAssemblyResult<BuiltNod
 //#endregion 🔖️Render
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

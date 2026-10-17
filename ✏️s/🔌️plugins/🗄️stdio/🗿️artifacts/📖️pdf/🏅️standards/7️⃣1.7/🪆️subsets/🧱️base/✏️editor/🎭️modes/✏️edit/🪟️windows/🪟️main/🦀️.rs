@@ -26,6 +26,4 @@ pub fn render_windowed(document: &PdfSnapshot, windows: &TreeWindows<'_>, locale
     page::render_window(document)
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

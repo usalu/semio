@@ -1,4 +1,5 @@
 use super::*;
+use semio_framework_test_fixtures::fixture_text;
 
 #[semio_framework_async_macros::async_test]
 async fn positioned_refusals_preserve_syntax_work_and_owner_categories() {
@@ -112,7 +113,7 @@ async fn missing_start_directive_is_an_error() {
 /// self-hosting proof the architecture plan calls for.
 #[semio_framework_async_macros::async_test]
 async fn self_hosting_grammar_grammar_parses_and_round_trips() {
-    let source = include_str!("../../📖️grammar.grammar.semio");
+    let source = fixture_text!("../../📖️grammar/📖️grammar.grammar.semio");
     let parsed = parse_grammar(source).expect("dsl_grammar's own grammar.grammar must parse under its own parser");
     assert_eq!(parsed.id, "grammar");
     let printed = print_grammar(&parsed);
@@ -218,7 +219,7 @@ field body bytes
 
 #[semio_framework_async_macros::async_test]
 async fn self_hosting_protocol_grammar_semio_parses_as_grammar() {
-    let source = include_str!("../../📡️protocol.grammar.semio");
+    let source = fixture_text!("../../📖️grammar/📡️protocol.grammar.semio");
     let parsed = parse_grammar(source).expect("protocol.grammar.semio must parse as dialect grammar");
     assert_eq!(parsed.dialect, SemioDialect::Grammar);
     assert_eq!(parsed.id, "protocol");

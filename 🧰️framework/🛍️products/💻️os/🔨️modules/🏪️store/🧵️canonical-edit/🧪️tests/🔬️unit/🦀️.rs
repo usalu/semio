@@ -36,7 +36,6 @@ fn canonical_sealer_constructor_refusal_keeps_every_original_owner_without_heap_
         assert_eq!(Arc::as_ptr(&original.2), post_address);
         assert_eq!(original.1.id.as_ptr(), id_address);
     }
-    println!("[DEBUG] canonical sealer zero/one-below/depth refusal preserves exact original edit/post/authority/factory owners with zero heap work");
 }
 
 /// 🔬️ `ScalarBytes::from_node`'s serde-free arms (`Null`/`Bool`/`I64`/`U64`/`I128`/`U128`/
@@ -414,7 +413,7 @@ fn canonical_authority_final_unicode_strings_retire_under_single_byte_grants() {
     assert_eq!((allocated, released), (receipt.retained_capacity_bytes, 0)); assert!(receipt.fits(grant));
     let mut owner = Some(owner); let mut physical_release = 0;
     for _ in 0..1000 {
-        if owner.is_none() { assert!(physical_release >= payload_bytes + birth.capacity_bytes); eprintln!("[DEBUG] original authority birth/refusal preserves Arc custody; one-byte copy and whole physical releases match System"); return; }
+        if owner.is_none() { assert!(physical_release >= payload_bytes + birth.capacity_bytes);  return; }
         let demand = factory_ticket_demands(owner.as_ref().unwrap(), grant.maximum_copy_bytes).unwrap();
         let actual = RetainedCloneGrant { maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth, ..grant };
         let (step, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| close_factory_ticket(&mut owner, RetainedCloneGrant { maximum_items: 0, ..actual }).unwrap());
@@ -513,6 +512,5 @@ fn canonical_json_original_supplied_depth_and_prefix_conserve_every_real_turn() 
         assert_eq!(&source.0 as *const _, source_address);
         if row["refused"].as_bool().unwrap_or(false) { assert!(refused); assert_eq!(actual, row["expectedPrefix"].as_str().unwrap().as_bytes()); }
         else { assert!(!refused && encoder.is_complete()); assert_eq!(actual, expected); }
-        println!("[DEBUG] canonical JSON original supplied depth={} prefix={} refused={} actual System0 full-grant per-event receipts", grant.maximum_depth, actual.len(), refused);
     }
 }

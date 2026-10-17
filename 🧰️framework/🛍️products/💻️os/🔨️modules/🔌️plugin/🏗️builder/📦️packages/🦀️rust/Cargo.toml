@@ -19,7 +19,7 @@ maxActiveLines = 4000
 workspace = true
 
 [lib]
-path = "🦀️.rs"
+path = "../../🦀️.rs"
 
 [features]
 canvas-runtime-assets = ["dep:semio-framework-canvas-assets"]
@@ -44,5 +44,9 @@ semio-framework-canvas-assets = { path = "../../../../../../../🔨️modules/�
 semio-framework-os-kernel = { path = "../../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
 semio-framework-plugin-ownership = { path = "../../../🏛️ownership/🧱️owner/📦️packages/🦀️rust" }
 semio-framework-schema-registry = { path = "../../../../../../../🔨️modules/🧬️schema/📇️registry/📦️packages/🦀️rust" }
+semio-framework-plugin-mounted-owner = { path = "../../../🏇️mounted-owner/📦️packages/🦀️rust" }
+semio-framework-plugin-reactor-core = { path = "../../../⚛️reactor/📦️packages/🦀️rust" }
+semio-framework-plugin-reactor-jobs = { path = "../../../⚛️reactor/💼️jobs/📦️packages/🦀️rust" }
+semio-framework-plugin-registration = { path = "../../📜️registration/📦️packages/🦀️rust" }
 
 [dev-dependencies]

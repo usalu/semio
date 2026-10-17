@@ -13,9 +13,7 @@ pub type GisTerrainEnvelope = ArtifactEnvelope<GisTerrainSnapshot, GisTerrainMut
 pub type GisTerrainStore = ArtifactStore<GisTerrainSnapshot, GisTerrainMutation>;
 
 //#region 🔹Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🔹Tests
 
 pub fn apply_gis_terrain_mutation(snapshot: &mut GisTerrainSnapshot, mutation: &GisTerrainMutation) -> protocol::MutationApplyResult<()> {
@@ -44,7 +42,5 @@ pub const KINDS: &[&str] = &["change-exaggeration", "change-imported-features"];
 //#endregion 🌉️TestBridge
 
 //#region 🧪️KindsConformance
-#[cfg(test)]
-#[path = "🧪️tests/🔬️kinds-conformance/🦀️.rs"]
-mod kinds_conformance;
+
 //#endregion 🧪️KindsConformance

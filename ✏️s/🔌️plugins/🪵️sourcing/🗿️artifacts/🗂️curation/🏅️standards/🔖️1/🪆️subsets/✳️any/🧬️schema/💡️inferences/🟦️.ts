@@ -29,6 +29,10 @@ type sourcingCurationInferenceGuardSizeBounds = { readonly minItems?: number; re
 
 export const sourcingCurationInferenceGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : sourcingCurationInferenceGuardReject(at, "value is not an object");
+export const sourcingCurationInferenceGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) sourcingCurationInferenceGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const sourcingCurationInferenceGuardArray = (value: unknown, at: string, bounds: sourcingCurationInferenceGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return sourcingCurationInferenceGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) sourcingCurationInferenceGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -59,14 +63,14 @@ export const sourcingCurationInferenceGuardConstant = <T extends string | number
 //#endregion 🚪️Parsers
 
 export function parseCurationInference(value: unknown, at = "$"): CurationInference {
-  const row = sourcingCurationInferenceGuardObject(value, at);
+  const row = sourcingCurationInferenceGuardClosed(sourcingCurationInferenceGuardObject(value, at), at, ["entries"]);
   return {
     entries: parseCurationEntries(row["entries"], `${at}.entries`),
   };
 }
 
 export function parseCurationEntries(value: unknown, at = "$"): CurationEntries {
-  const row = sourcingCurationInferenceGuardObject(value, at);
+  const row = sourcingCurationInferenceGuardClosed(sourcingCurationInferenceGuardObject(value, at), at, ["stockCount", "entryCount", "totalCount"]);
   return {
     stockCount: sourcingCurationInferenceGuardInteger(row["stockCount"], `${at}.stockCount`),
     entryCount: sourcingCurationInferenceGuardInteger(row["entryCount"], `${at}.entryCount`),

@@ -1,8 +1,19 @@
-use super::*;
+use semio_framework_abi::{AbiBytes, AbiControl, AbiErrorCode, AbiEvent, AbiEventCode, AbiHandle, AbiMessage, AbiPortPoll, AbiReply, AbiRequest, AbiRequestId, AbiStatus, AbiWorkBudget};
+use semio_framework_test_fixtures::fixture_text;
+#[allow(unused_imports)]
+use semio_framework_abi::{AbiError, AbiHandleTable, AbiMessageBytes, AbiPageReader, AbiPort, AbiPortRejection, AbiReplyLedger, AbiStatusCode, ABI_MAX_BODY_BYTES, ABI_MAX_IN_FLIGHT_HANDLES, ABI_MAX_IN_FLIGHT_REQUESTS, ABI_MAX_MESSAGE_BYTES, ABI_MAX_TRANSFER_BYTES};
+#[allow(unused_imports)]
+use std::cell::RefCell;
+#[allow(unused_imports)]
+use std::collections::VecDeque;
+#[allow(unused_imports)]
+use std::rc::Rc;
+use crate::editor::sequence::wasm::protocol::{SequenceResource, request_slot};
+use crate::editor::sequence::wasm::protocol::*;
 
-const SEQUENCE_ABI_LEDGER: &str = include_str!("../🧫️fixtures/📊️.tsv");
-const SEQUENCE_ABI_LIMITS: &str = include_str!("../🧫️fixtures/📐️limits.tsv");
-const SEQUENCE_ABI_TRACE: &str = include_str!("../🧫️fixtures/👣️trace/📊️.tsv");
+static SEQUENCE_ABI_LEDGER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("@fixtures/✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🧪️tests/🧫️fixtures/📊️.tsv"));
+static SEQUENCE_ABI_LIMITS: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("@fixtures/✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🧪️tests/🧫️fixtures/📐️limits.tsv"));
+static SEQUENCE_ABI_TRACE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("@fixtures/✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🧪️tests/🧫️fixtures/👣️trace/📊️.tsv"));
 
 #[derive(Default)]
 struct MockDomain {
@@ -29,7 +40,7 @@ impl SequenceDomain for MockDomain {
 }
 
 fn request(operation: u16, id: u64, generation: u32, bytes: Vec<u8>) -> AbiMessage {
-    AbiMessage::Request(AbiRequest { operation: semio_framework::abi::AbiOperation::try_new(operation).unwrap(), request_id: AbiRequestId(id), generation, bytes: AbiBytes::try_new(bytes).unwrap() })
+    AbiMessage::Request(AbiRequest { operation: semio_framework_abi::AbiOperation::try_new(operation).unwrap(), request_id: AbiRequestId(id), generation, bytes: AbiBytes::try_new(bytes).unwrap() })
 }
 
 fn open(bridge: &mut SequenceBridge<MockDomain>, id: u64) -> AbiHandle {
@@ -86,9 +97,9 @@ fn fingerprint(bridge: &SequenceBridge<MockDomain>) -> String {
 
 #[test]
 fn schema_and_language_neutral_ledgers_are_present() {
-    assert!(SEQUENCE_ABI_LEDGER.lines().count() >= 5);
-    assert!(SEQUENCE_ABI_LIMITS.contains("max_plus_one"));
-    assert!(SEQUENCE_ABI_TRACE.contains("terminal_empty"));
+    assert!((*SEQUENCE_ABI_LEDGER).lines().count() >= 5);
+    assert!((*SEQUENCE_ABI_LIMITS).contains("max_plus_one"));
+    assert!((*SEQUENCE_ABI_TRACE).contains("terminal_empty"));
 }
 
 #[test]

@@ -10,7 +10,7 @@
   ],
   "properties": {
     "version": {
-      "const": 2
+      "const": 4
     },
     "facts": {
       "type": "object",
@@ -533,7 +533,7 @@
           ]
         },
         "adapter": {
-          "const": "direct-rlib-v2"
+          "const": "direct-rlib-v4"
         },
         "dependencies": {
           "type": "array",
@@ -581,20 +581,20 @@
           "type": "object",
           "additionalProperties": false,
           "required": [
-            "cwd",
+            "root",
             "policy"
           ],
           "properties": {
-            "cwd": {
+            "policy": {
+              "enum": [
+                "compiler-context-v2",
+                "temporary-v1"
+              ]
+            },
+            "root": {
               "type": "string",
               "minLength": 1,
               "maxLength": 256
-            },
-            "policy": {
-              "enum": [
-                "compiler-state-v1",
-                "temporary-v1"
-              ]
             }
           }
         }
@@ -612,5 +612,6 @@
       "pattern": "^[a-f0-9]{64}$"
     }
   },
-  "description": "First-party direct rlib context v2. Required execution cwd/policy is consumed under a genuine producer loan. Canonical compact JSON uses UTF-8 byte ordering for object keys and set-valued features/cfg. All strings are Unicode scalars. Arrays of compiler arguments retain their exact order. Digest and metadata are full SHA256 lowercase hex."
+  "description": "First-party direct rlib context v4. Required canonical execution root/policy is hashed before deriving the complete-context producer cwd under a genuine producer loan. Canonical compact JSON uses UTF-8 byte ordering for object keys and set-valued features/cfg. All strings are Unicode scalars. Arrays of compiler arguments retain their exact order. Digest and metadata are full SHA256 lowercase hex.",
+  "$id": "https://semio.tech/schema/rust-unit-context-v4"
 }

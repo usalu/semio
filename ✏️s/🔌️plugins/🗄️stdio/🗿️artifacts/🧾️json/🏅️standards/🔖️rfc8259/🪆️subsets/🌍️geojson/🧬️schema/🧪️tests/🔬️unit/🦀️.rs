@@ -1,16 +1,19 @@
+use crate::{standards::v_rfc8259::subsets::base::schema::snapshot::JsonSnapshot, standards::v_rfc8259::subsets::base::schema::snapshot::JsonValue};
+use semio_framework_test_fixtures::fixture_text;
+use std::collections::BTreeMap;
 use serde_json::Value;
 use crate::standards::v_rfc8259::subsets::geojson::io::text::snapshot::write_geojson;
-use super::*;
+use crate::standards::v_rfc8259::subsets::geojson::schema::*;
 use crate::standards::v_rfc8259::subsets::geojson::io::text::snapshot::read_geojson_text;
 use crate::standards::v_rfc8259::subsets::geojson::io::{JsonGeoJsonComposerComposition, JsonGeoJsonValidator};
 use {semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::io::ComposeSource,semio_framework_artifact_reference::Dialect,semio_framework_plugin::io::IoPayload,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId,semio_framework_plugin::io::SubsetValidator};
 use std::str::FromStr;
 
-const VECTORS: &str = include_str!("../../../🧪️tests/🧫️fixtures/🌍️read-write/🔣️.json");
+static VECTORS: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../🧪️tests/🧫️fixtures/🌍️read-write/🔣️.json"));
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn vectors() -> (Vec<Value>, f64) {
-    let document: Value = serde_json::from_str(VECTORS).expect("vectors are JSON");
+    let document: Value = serde_json::from_str((*VECTORS)).expect("vectors are JSON");
     (document["cases"].as_array().expect("cases").clone(), document["tolerance"].as_f64().expect("tolerance"))
 }
 

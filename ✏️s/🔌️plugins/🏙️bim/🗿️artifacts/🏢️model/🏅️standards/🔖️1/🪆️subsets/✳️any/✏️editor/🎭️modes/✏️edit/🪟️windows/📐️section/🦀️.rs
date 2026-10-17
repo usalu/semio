@@ -5,7 +5,6 @@
 #[path = "🎚️config/🦀️.rs"]
 pub mod config;
 
-use self::config::BimSectionWindowConfig;
 use crate::editor::bim::interaction::BIM_ELEMENT_DOMAIN;
 use crate::editor::bim::kit::{canvas_surface, meta_record, text_record};
 use crate::editor::bim::terminology::BimLabels;
@@ -54,7 +53,7 @@ pub fn vertical_views(snapshot: &ModelSnapshot) -> Vec<String> {
 }
 
 /// 📐️ The view a section window shows: its configured one while it still is a section or elevation, else the first one in browser order; none when the model has no such view.
-pub fn active_view(snapshot: &ModelSnapshot, config: &BimSectionWindowConfig) -> Option<String> {
+pub fn active_view(snapshot: &ModelSnapshot, config: &config::BimSectionWindowConfig) -> Option<String> {
     if snapshot.views.get(&config.view).is_some_and(|view| view.kind.is_vertical() && view.plane.is_some()) {
         return Some(config.view.clone());
     }
@@ -62,7 +61,7 @@ pub fn active_view(snapshot: &ModelSnapshot, config: &BimSectionWindowConfig) ->
 }
 
 /// 📐️ The plane of the view a section window shows.
-pub fn plane_of(snapshot: &ModelSnapshot, config: &BimSectionWindowConfig) -> Option<ViewPlane> {
+pub fn plane_of(snapshot: &ModelSnapshot, config: &config::BimSectionWindowConfig) -> Option<ViewPlane> {
     active_view(snapshot, config).and_then(|id| snapshot.views.get(&id)).and_then(|view| view.plane)
 }
 //#endregion 🔖️View
@@ -80,13 +79,13 @@ pub fn records(drawing: Option<&crate::standards::v1::subsets::any::schema::infe
 
 /// 📐️ Renders the section window.
 #[allow(clippy::too_many_arguments)]
-pub fn render(snapshot: &ModelSnapshot, inference: &ModelInference, config: &BimSectionWindowConfig, selection: &[String], utility: &str, revision: u32, labels: &BimLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(snapshot: &ModelSnapshot, inference: &ModelInference, config: &config::BimSectionWindowConfig, selection: &[String], utility: &str, revision: u32, labels: &BimLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     render_over(snapshot, inference, config, selection, utility, revision, labels, &[])
 }
 
 /// 📐️ [`render`] with the records of the authoring overlay (storey top handles, the gesture preview) painted last, over everything.
 #[allow(clippy::too_many_arguments)]
-pub fn render_over(snapshot: &ModelSnapshot, inference: &ModelInference, config: &BimSectionWindowConfig, selection: &[String], utility: &str, revision: u32, labels: &BimLabels, overlay: &[DslValue]) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render_over(snapshot: &ModelSnapshot, inference: &ModelInference, config: &config::BimSectionWindowConfig, selection: &[String], utility: &str, revision: u32, labels: &BimLabels, overlay: &[DslValue]) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let drawing = active_view(snapshot, config).and_then(|view| inference.view_linework.get(&view));
     let framing = drawing.filter(|_| !config.framed).and_then(|drawing| crate::render::plan::canvas_bounds(&drawing.lines)).map(|bounds| semio_framework_plugin::Canvas2dFraming { revision, bounds, padding: 48.0 });
     let mut records = records(drawing, selection, utility, labels);

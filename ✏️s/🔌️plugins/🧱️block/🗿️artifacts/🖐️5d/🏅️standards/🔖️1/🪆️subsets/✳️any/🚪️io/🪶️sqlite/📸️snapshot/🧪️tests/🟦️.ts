@@ -1,4 +1,5 @@
 import * as artifactSqlite0 from "../🟦️.ts";
+import { mutableSqliteDatabase, type MutableSqliteDatabase } from "@semio-tech/framework/io/sqlite-snapshot/testing/mutable-copy";
 import { valueSchema as binary64Schema } from "@semio-tech/framework/value/schema";
 /** 🧱️ Exact Block5d canonical parent laws share independent neutral primitive evidence. */
 import {expect,test} from 'bun:test';
@@ -79,9 +80,9 @@ test('SQLite Block5d actual declared JSON boundary preserves every native IEEE w
  for(const raw of laws.binary64Bits){const value=specimen(BigInt('0x'+raw)),text=block5dToJsonText(value),wire=JSON.parse(text);expect(wire.grips[0].angle).toEqual({bits:raw});expect(block5dFromJsonText(text)).toEqual(value);}
 });
 
-import * as two from "../../../../../../../../../◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🟦️.ts";
+import * as two from "@semio-tech/block-2d/standards/1/subsets/any/schema/snapshot";
 
-import * as three from "../../../../../../../../../🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🟦️.ts";
+import * as three from "@semio-tech/block-3d/standards/1/subsets/any/schema/snapshot";
 
 test('SQLite shared Block2d snapshot uses the same exact common word and required record authority',()=>{
  const parse=Reflect.get(two,'parseBlock2dSnapshot') as ((v:unknown)=>unknown)|undefined;expect(typeof parse).toBe('function');const base=specimen(0x7ff0000000000001n),value={schema:'literal',nodeKind:base.partKind,presentation:base.part2d,handleKinds:[{id:'',name:'',label:'',color:'',defaultWireKind:''}],handles:[{id:'',handleKind:'unresolved',angle:{bits:0x7ff0000000000001n},radius:{bits:0n}}],compatibility:base.compatibility,attributes:base.attributes,authors:base.authors,camera2d:base.camera2d,meta:base.meta};expect(parse!(value)).toEqual(value);expect(()=>parse!({...value,camera2d:{x:0,y:0,zoom:1}})).toThrow();
@@ -121,9 +122,9 @@ for(const item of laws.dslWordCases)test('SQLite Block5d published Text consumer
 });
 
 
-import {block2dFromJsonText} from "../../../../../../../../../◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🟦️.ts";
-import {block2dToJsonText} from "../../../../../../../../../◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🟦️.ts";
-import {block2dFromDslText} from "../../../../../../../../../◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔤️txt/🔖️utf-8/✳️any/🟦️.ts";
+import {block2dFromJsonText} from "@semio-tech/block-2d/subsets/any/io/import/deserializers/artifacts/json/rfc8259/any";
+import {block2dToJsonText} from "@semio-tech/block-2d/subsets/any/io/export/serializers/artifacts/json/rfc8259/any";
+import {block2dFromDslText} from "@semio-tech/block-2d/1/subsets/any/io/import/deserializers/artifacts/txt/utf-8/any";
 for(const item of laws.dslWordCases)test('SQLite shared Block2d published JSON/Text consumers own canonical word '+item.bits,()=>{
  const base=specimen(BigInt('0x'+item.bits)),value:two.Block2dSnapshot={schema:'literal',nodeKind:base.partKind,presentation:base.part2d,handleKinds:[{id:'',name:'',label:'',color:'',defaultWireKind:''}],handles:[{id:'',handleKind:'unresolved',angle:base.camera2d.x,radius:base.camera2d.x}],compatibility:base.compatibility,attributes:base.attributes,authors:base.authors,camera2d:base.camera2d,meta:base.meta};
  const wire=block2dToJsonText(value);expect(JSON.parse(wire).handles[0].angle).toEqual({bits:item.bits});expect(block2dFromJsonText(wire)).toEqual(value);
@@ -132,7 +133,7 @@ for(const item of laws.dslWordCases)test('SQLite shared Block2d published JSON/T
 });
 
 
-import twoJsonSchema from "../../../../../../../../../◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json";
+import { subsetsAnySchema as twoJsonSchema } from "@semio-tech/block-2d/standards/1/subsets/any/schema";
 const twoJsonValidate=new Ajv({strict:false}).compile(twoJsonSchema);
 for(const item of laws.dslWordCases)test('SQLite shared Block2d actual declared JSON schema admits exact word '+item.bits,()=>{
  const base=specimen(BigInt('0x'+item.bits)),value:two.Block2dSnapshot={schema:'literal',nodeKind:base.partKind,presentation:base.part2d,handleKinds:[],handles:[],compatibility:base.compatibility,attributes:base.attributes,authors:base.authors,camera2d:base.camera2d,meta:base.meta};
@@ -140,7 +141,7 @@ for(const item of laws.dslWordCases)test('SQLite shared Block2d actual declared 
 });
 
 
-import threeJsonSchema from "../../../../../../../../../🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json";
+import { subsetsAnySchema as threeJsonSchema } from "@semio-tech/block-3d/standards/1/subsets/any/schema";
 test('SQLite shared Block2d schema refuses malformed words and incomplete owned kinds',()=>{
  const base=specimen(0n),value:two.Block2dSnapshot={schema:'literal',nodeKind:base.partKind,presentation:base.part2d,handleKinds:[],handles:[],compatibility:[],attributes:[],authors:[],camera2d:base.camera2d,meta:base.meta};const wire=JSON.parse(block2dToJsonText(value));wire.camera2d.x={bits:'wrong'};expect(twoJsonValidate(wire)).toBe(false);wire.camera2d.x={bits:'0000000000000000'};wire.handleKinds=[{id:'only'}];expect(twoJsonValidate(wire)).toBe(false);
 });
@@ -177,7 +178,7 @@ test('Block5d closed supplied caller ledger contract has independent exact octet
 test('Block5d supplied operation exposes paid child stage with genuine byte backing',async()=>{
  const bytes=new Uint8Array(callerLedger.byteBacking),operation=sqliteOperation({maxAllocationBytes:callerLedger.twoCallBytes});
  const stage=Reflect.get(operation,'allocationStage');expect(typeof stage).toBe('function');
- const run=(owner:ReturnType<typeof sqliteOperation>)=>Reflect.get(owner,'allocationStage').call(owner,(maximum:number)=>new NativeDecodeControl(maximum,()=>true),async(control:NativeDecodeControl)=>control.copyBytes(bytes));
+ const run=(owner:ReturnType<typeof sqliteOperation>)=>Reflect.get(owner,'allocationStage').call(owner,(maximum:number)=>new NativeDecodeControl(maximum,()=>true),async(control:{readonly ownedBytes:number})=>{if(!(control instanceof NativeDecodeControl))throw Error("Native decode control required");return control.copyBytes(bytes);});
  expect(await run(operation)).toEqual(bytes);expect(operation.ownedBytes).toBe(callerLedger.exactBytes);
  expect(await run(operation)).toEqual(bytes);expect(operation.ownedBytes).toBe(callerLedger.twoCallBytes);
  await expect(run(operation)).rejects.toMatchObject({kind:'ownershipLimit'});expect(operation.ownedBytes).toBe(callerLedger.twoCallBytes);
@@ -219,6 +220,6 @@ test('Block5d exact literal owner capture precedes mutable callbacks',async()=>{
  for(const path of Reflect.get(captureContract,'extraPaths') as (string|number)[][]){const value=specimen(bits);ledgerAt(value,path).foreign=true;await expect(artifactSqlite0.block5dSnapshotToSqliteDatabase(value)).rejects.toMatchObject({kind:'invalidValue'})}
  const value=specimen(bits),expected=structuredClone(value);let projected=false;
  const database=await artifactSqlite0.block5dSnapshotToSqliteDatabase(value,{onProgress:()=>{if(!projected){projected=true;value.meta.description='mutated after borrow';value.authors.length=0}}});expect(projected).toBe(true);
- const independent=Database.deserialize(await exportSqliteDatabase(database),{safeIntegers:true});let imported:Awaited<ReturnType<typeof importSqliteDatabase>>;try{expect(independent.query('PRAGMA integrity_check').values()).toEqual([['ok']]);expect(independent.query('PRAGMA foreign_key_check').values()).toEqual([]);imported=await importSqliteDatabase(independent.serialize());expect(await artifactSqlite0.block5dSnapshotFromSqliteDatabase(imported)).toEqual(expected)}finally{independent.close()}
+ const independent=Database.deserialize(await exportSqliteDatabase(database),{safeIntegers:true});let imported:MutableSqliteDatabase;try{expect(independent.query('PRAGMA integrity_check').values()).toEqual([['ok']]);expect(independent.query('PRAGMA foreign_key_check').values()).toEqual([]);imported=mutableSqliteDatabase(await importSqliteDatabase(independent.serialize()));expect(await artifactSqlite0.block5dSnapshotFromSqliteDatabase(imported)).toEqual(expected)}finally{independent.close()}
  let restored=false;expect(await artifactSqlite0.block5dSnapshotFromSqliteDatabase(imported!,{onProgress:()=>{if(!restored){restored=true;imported!.tables[0]!.rows[0]!.values[1]='mutated SQL cell';imported!.tables[0]!.rows.length=0;imported!.tables.length=0}}})).toEqual(expected);expect(restored).toBe(true);
 });

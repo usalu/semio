@@ -1,5 +1,5 @@
 use super::*;
-use crate::editor::bim::unit_tests::support::{applied, ctx, demo, german, run};
+use crate::editor::bim::fixture::support::{applied, ctx, demo, german, run};
 
 fn create(kind: &str, parent: &str, name: &str, selected: &[&str], german_view: bool) -> Result<Emit<ModelMutation, NoConfigMutation>, Fault> {
     let snapshot = demo();

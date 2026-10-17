@@ -2,23 +2,24 @@
 //!
 //! 📍️ The addressed row sits in the MIDDLE of its ordered collection, so the concrete inverse must put it back at its original index, and the inverse steps' diffs must sum to the negative of the forward diff.
 
+use semio_framework_test_fixtures::fixture_text;
 use semio_s_artifact_layout_layout_mutations::LayoutMutation;
 use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
 use protocol::Mutation;
 
-const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✂️delete-link/📍️removes-a-middle-row/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✂️delete-link/📍️removes-a-middle-row/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✂️delete-link/📍️removes-a-middle-row/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✂️delete-link/📍️removes-a-middle-row/🔺️diff/🔣️.json");
+static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✂️delete-link/📍️removes-a-middle-row/📸️snapshot/⬅️before/🔣️.json"));
+static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✂️delete-link/📍️removes-a-middle-row/📸️snapshot/➡️after/🔣️.json"));
+static MUTATION: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✂️delete-link/📍️removes-a-middle-row/🦠️mutation/🔣️.json"));
+static DIFF: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✂️delete-link/📍️removes-a-middle-row/🔺️diff/🔣️.json"));
 
 fn before() -> LayoutSnapshot {
-    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("delete-link/removes-a-middle-row: before snapshot decodes")
+    semio_framework_pack_json::from_json_str(*BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("delete-link/removes-a-middle-row: before snapshot decodes")
 }
 fn expected_after() -> LayoutSnapshot {
-    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("delete-link/removes-a-middle-row: after snapshot decodes")
+    semio_framework_pack_json::from_json_str(*AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("delete-link/removes-a-middle-row: after snapshot decodes")
 }
 fn mutation() -> LayoutMutation {
-    serde_json::from_str(MUTATION).expect("delete-link/removes-a-middle-row: mutation decodes")
+    serde_json::from_str(*MUTATION).expect("delete-link/removes-a-middle-row: mutation decodes")
 }
 
 /// ▶️ `delete-link` carries `before` to exactly the committed `after`.
@@ -49,7 +50,7 @@ async fn produces_committed_diff() {
     let base = before();
     let outcome = mutation().diff(&base);
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
-    let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
+    let committed: serde_json::Value = serde_json::from_str(*DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "delete-link/removes-a-middle-row: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
 

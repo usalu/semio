@@ -38,7 +38,10 @@ pub fn plan(p: &GltfMovePrimitiveAttributePayload, base: &GltfSnapshot) -> Resul
     Ok(GltfDiff { meshes: primitive_patch(p.mesh, p.primitive, GltfPrimitiveDiff { attributes: Some(rows), ..Default::default() }), ..Default::default() })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn inverse(p: &GltfMovePrimitiveAttributePayload, base: &GltfSnapshot) -> Vec<super::GltfMutation> {
+pub fn inverse<Op>(p: &GltfMovePrimitiveAttributePayload, base: &GltfSnapshot) -> Vec<Op>
+where
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::remove_used_extension::RemoveUsedExtensionMutation>,
+{
     if validate(p, base).is_err() {
         return Vec::new();
     }
@@ -58,11 +61,17 @@ pub enum MovePrimitiveAttributeMutation {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn mutation(payload: GltfMovePrimitiveAttributePayload) -> super::GltfMutation {
-    super::GltfMutation::MovePrimitiveAttribute(MovePrimitiveAttributeMutation::Apply(payload))
+pub fn mutation<Op>(payload: GltfMovePrimitiveAttributePayload) -> Op
+where
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::move_primitive_attribute::MovePrimitiveAttributeMutation>,
+{
+    Op::from(MovePrimitiveAttributeMutation::Apply(payload))
 }
 
-impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for MovePrimitiveAttributeMutation {
+impl<Op> protocol::MutationKind<GltfSnapshot, Op> for MovePrimitiveAttributeMutation
+where
+    Op: protocol::Mutation<GltfSnapshot, Diff = GltfDiff> + From<MovePrimitiveAttributeMutation>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "move", entity: "primitive-attribute", kind: "move-primitive-attribute", record: "MovedPrimitiveAttribute" };
 
     fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<GltfDiff> {
@@ -74,7 +83,7 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for MovePrimitive
         }
     }
 
-    fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<super::GltfMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         match self {
             Self::Apply(payload) => Ok(inverse(payload, base)),
         }
@@ -91,7 +100,5 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for MovePrimitive
 //#endregion 🧬️DirectMutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️t060/🦀️.rs"]
-mod case_t060;
+
 //#endregion 🧪️Tests

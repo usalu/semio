@@ -1,12 +1,12 @@
-import { COMPONENT_MODULE_DIRECTORIES } from "../../../../../✏️s/🧑‍💻dev/🧩️catalog/🤖️generated/🧩️plugins/🟦️.ts";
+import { COMPONENT_MODULE_DIRECTORIES } from "@semio-tech/s-dev-catalog-ts/generated/plugins";
 import { mkdirSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { developmentRuntimeRoot, parseActivationReceipt, publishActivationReceipt, readActivationReceipt, type ActivationReceipt } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🟦️.ts";
+import { developmentRuntimeRoot, parseActivationReceipt, publishActivationReceipt, readActivationReceipt, type ActivationReceipt } from "@semio-tech/framework-os-dev/activation";
 import { demonstratorRuntimeComponentIds } from "../📦️assets/🟦️.ts";
 import { demonstratorRuntimeBuildVariants, demonstratorRuntimePluginId } from "../🟦️.ts";
-import type { ActivationComponentSpec } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️vite-plugins/🟦️.ts";
+import type { ActivationComponentSpec } from "@semio-tech/framework-os-dev/vite-plugins";
 import { runtimeComponentClosure } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧩️runtime/🟨️.mjs";
-import { EXTENSION_TARGETS, PLUGIN_BUILD_TARGETS } from "../../../../../✏️s/🧑‍💻dev/🧩️catalog/🤖️generated/🧩️plugins/🟦️.ts";
+import { EXTENSION_TARGETS, PLUGIN_BUILD_TARGETS } from "@semio-tech/s-dev-catalog-ts/generated/plugins";
 import { moduleDirectoryName, componentOwnerRootV1 } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
 
 //#region 🔖️DemonstratorActivationLanes

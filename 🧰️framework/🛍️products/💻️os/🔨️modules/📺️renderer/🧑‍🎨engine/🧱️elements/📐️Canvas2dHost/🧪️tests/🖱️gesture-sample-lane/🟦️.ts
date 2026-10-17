@@ -13,7 +13,8 @@
  *      items still go out.
  */
 import { describe, expect, it } from "vitest";
-import { JsonLayersCanvasSession, createCanvasPointerGestureLane, type CanvasPointerDispatch } from "../../🟦️.tsx";
+import { createCanvasPointerGestureLane, type CanvasPointerDispatch } from "../../👆️pointer-lane/🟦️.ts";
+import { JsonLayersCanvasSession } from "../../🗂️layers-session/🟦️.ts";
 
 type Sent = { readonly action: string; readonly args: Record<string, unknown> };
 

@@ -50,7 +50,6 @@ pub fn original_owned_job_header_matches_portable_oracle_without_allocation() {
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
         assert!(result.is_err());
     }
-    println!("[DEBUG] Original owned job fixed184 six physical frames and42 refused headers allocate/release0, preserve all original currencies");
 }
 
 /// 🔒️ Actual resident metadata cannot be overwritten or acknowledge a different physical loan.
@@ -59,5 +58,5 @@ pub fn original_owned_job_metadata_loan_denies_overwrite_before_body_without_hea
  let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../📤️receipt/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let original=OriginalActorFixedReceipt::read(&bytes(fixture["failureHex"].as_str().unwrap())).unwrap();let call=OriginalOwnedJobCall{input:original.input,spent:original.spent,work_units_spent:original.work_units_spent,status:OriginalOwnedJobStatus::Close{admitted:false},refusal:None};
  let(mut loan,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(OriginalOwnedJobReceiptLoan::empty);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));let(pointer,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||loan.produce(||call).unwrap().as_ptr()as usize);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));let mut entered=false;
  let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||loan.produce(||{entered=true;call}).map(|_|()));assert!(result.is_err());assert!(!entered);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));let handbacks:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();for row in handbacks["loanHandbacks"].as_array().unwrap(){let candidate=if row["pointer"].as_str().unwrap()=="original"{pointer}else{pointer+1};assert_eq!(loan.hand_back(candidate,row["extent"].as_u64().unwrap()as usize),row["accepted"].as_bool().unwrap());}assert!(!loan.hand_back(pointer,184));
- let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||{let bytes=loan.produce(||call).unwrap();let decoded=OriginalOwnedJobFixedReceipt::read(bytes).unwrap();assert_eq!(decoded.input,call.input);assert_eq!(decoded.spent,call.spent);assert_eq!(decoded.work_units_spent,call.work_units_spent)});assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert!(loan.hand_back(pointer,184));println!("[DEBUG] Original owned metadata184 loan exactPointerExtent=true overwriteBeforeBody=false heap0/0 rawReceiptUnchanged=true bodyLoansUnaffected=true");
+ let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||{let bytes=loan.produce(||call).unwrap();let decoded=OriginalOwnedJobFixedReceipt::read(bytes).unwrap();assert_eq!(decoded.input,call.input);assert_eq!(decoded.spent,call.spent);assert_eq!(decoded.work_units_spent,call.work_units_spent)});assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert!(loan.hand_back(pointer,184));
 }

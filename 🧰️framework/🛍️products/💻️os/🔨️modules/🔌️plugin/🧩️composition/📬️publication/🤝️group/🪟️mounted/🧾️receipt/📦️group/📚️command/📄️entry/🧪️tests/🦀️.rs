@@ -1,5 +1,5 @@
 fn command_entry_grant(copy: usize, capacity: usize, release: usize) -> RetainedCloneGrant { RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: copy, maximum_capacity_bytes: capacity, maximum_release_bytes: release, maximum_depth: 64 } }
-fn command_entry_fixture() -> serde_json::Value { serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap() }
+fn command_entry_fixture() -> serde_json::Value { crate::fixture_json("🧾️receipt/📦️group/📚️command/📄️entry/🧪️tests/🧫️fixtures/🔣️.json") }
 fn command_entry_label(row: &serde_json::Value) -> Option<LocalizedLabel> { row["label"].is_object().then(|| LocalizedLabel::from_fn(|term, locale| row["label"][term.as_str()][locale.as_str()].as_str().unwrap().into())) }
 fn command_entry_source<'a>(row: &'a serde_json::Value, label: Option<&'a LocalizedLabel>, millis: i64) -> MountedCommandEntrySource<'a> { MountedCommandEntrySource { action_id: row["actionId"].as_str().unwrap(), label, captured_millis: millis, kind: ActionKind::Mutation, count: 1, parent_touched: row["parentTouched"].as_bool().unwrap(), child_edit_count: row["childEditIds"].as_array().unwrap().len() } }
 fn command_entry_close(owner: &mut MountedCommandEntry) {
@@ -91,7 +91,6 @@ fn mounted_command_entry_preborn_fields_match_neutral_node_utc_and_original_rece
         let (result,heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| MountedCommandEntry::new(source));
         assert!(matches!(result,Err(MountedCommandEntryRefusal::Timestamp))); assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
     }
-    println!("[DEBUG] preborn command entry UTC6/labels2/copy5 match independent Node Date/full terminology-locale corpus; wrong-cardinality/parent/zero-item refusals retain exact fields; final seq1001 and original receipt pointers transfer with heap0/0");
 }
 
 #[test]
@@ -117,5 +116,4 @@ fn mounted_command_entry_large_label_cancel_retains_original_allocation_and_sour
         command_entry_close(&mut owner);
         assert_eq!(label.resolve(Terminology::ALL[0],Locale::ALL[0]).as_ptr(),pointer);
     }
-    println!("[DEBUG] preborn command original8194 UTF8 label retained across ten cancel stops; copy1/whole birth-release and same-length foreign source refusal preserve original pointer");
 }

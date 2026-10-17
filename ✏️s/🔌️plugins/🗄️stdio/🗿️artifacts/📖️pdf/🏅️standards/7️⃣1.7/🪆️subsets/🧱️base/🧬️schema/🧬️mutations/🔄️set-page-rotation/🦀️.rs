@@ -1,6 +1,5 @@
 //! 🔄️ Authoritative PDF mutation payload, diff, inverse, and tests for `set-page-rotation`.
 
-use super::PdfMutation;
 use crate::standards::v1_7::subsets::base::schema::diff::{self, PdfDiff};
 use crate::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot;
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
@@ -15,16 +14,19 @@ pub struct SetPageRotation {
     pub rotation: u16,
 }
 
-impl MutationKind<PdfSnapshot, PdfMutation> for SetPageRotation {
+impl<Op> MutationKind<PdfSnapshot, Op> for SetPageRotation
+where
+    Op: protocol::Mutation<PdfSnapshot, Diff = PdfDiff> + From<SetPageRotation>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "page-rotation", kind: "set-page-rotation", record: "Set" };
 
     fn diff(&self, _base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
         MutationOutcome::new(diff::diff_set_page_rotation(self.index, self.rotation as i32))
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
-        base.pages.get(self.index).map(|page| PdfMutation::SetPageRotation(SetPageRotation { index: self.index, rotation: page.rotate.rem_euclid(360) as u16 })).into_iter().collect()
+        base.pages.get(self.index).map(|page| Op::from(SetPageRotation { index: self.index, rotation: page.rotate.rem_euclid(360) as u16 })).into_iter().collect()
     
     })())
 }
@@ -41,8 +43,6 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetPageRotation {
 //#endregion 🔖️Mutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
 

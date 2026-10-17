@@ -1,6 +1,11 @@
 //! 📋️ Shared duplication vectors preserve sibling placement, metadata and inverse history.
-use super::*;
+use semio_s_artifact_raster_raster_editor::config::RasterConfig;
+use semio_s_artifact_raster_raster_mutations::RasterMutation;
+use semio_s_artifact_raster_raster_model::find_layer;
+use semio_framework_plugin::{ArtifactView, ConfigView};
+use semio_s_artifact_raster_raster_editor::commands::duplicate_layer::*;
 use protocol::Mutation;
+use semio_framework_test_fixtures::fixture_text;
 use semio_s_artifact_raster_raster_model::layer_node_id;
 use semio_s_artifact_raster_raster_model::snapshot::retire_raster_snapshot;
 use semio_s_artifact_raster_raster_model::io::text::snapshot::snapshot_wire_codec::empty_raster_snapshot;
@@ -20,7 +25,7 @@ fn assert_copy(source:&semio_s_artifact_raster_raster_model::RasterLayerNode,cop
 
 #[test]
 fn duplicate_keeps_parent_properties_and_undo() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../../🎮️commands/📋️duplicate-layer/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let mut document=empty_raster_snapshot();document.layers=semio_framework_pack_json::from_json_str(&fixture["layers"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let history=semio_framework_plugin::HistoryView::empty();let doc=ArtifactView::new(&document,&history);
     let config=RasterConfig::default();let cfg=ConfigView {snapshot:&config,window:None};

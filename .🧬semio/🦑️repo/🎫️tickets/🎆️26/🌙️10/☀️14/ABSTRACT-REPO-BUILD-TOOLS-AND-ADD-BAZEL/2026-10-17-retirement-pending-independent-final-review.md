@@ -1,0 +1,9 @@
+# Canonical Pending Refusal Independent Review
+
+Nine final inputs match stable nofollow FD/name seven-field metadata, bytes and SHA256. Receipt: `🗑️generated/retirement-pending-nine-independent-hold.json`.
+
+The material pending deletion boundary is closed in all four Mac/Fixed canonical retirement entries. Ordinary variants call existing publication-settled guard before lease acquisition, repeat inside ownership before receipt/journal work, immediately before detach and immediately before recursive removal. WithWriter variants validate actual supplied proof and guard before receipt/journal/native work, then repeat before detach/removal. Pending present/appeared slots refuse rather than being recursively deleted. No relaxed Core snapshot or ad hoc cleanup/adoption is introduced.
+
+Root reports actual semantic preproduction pending admission RED then12239 natural0, four-root strict0/one Source law489 assertions across76 Generated-slot/model-destructive-port cases. No actual Native effects were used in those tests and executions were not rerun by this reviewer. No material blocker found in bounded Source review. Products ready seed remains seed-only; its pending image effect remains unreleased and now must refuse. A distinct future legitimate pending completion needs separate owner design, not metadata rewrite/clear. Tools selected payload retirement retains the whole image and is a different operation. No protected read or Native operation performed.
+
+Refreshed ten-input checkpoint independently matches current stable FD/name/seven-fact/bytes/SHA at `🗑️generated/retirement-pending-ten-independent-hold.json`. Root reports strict21924 natural0 and ordinary33grammar/24argv Source0. Four canonical guard bodies retain the reviewed refusal placement; added helper/input binding does not grant pending retirement.

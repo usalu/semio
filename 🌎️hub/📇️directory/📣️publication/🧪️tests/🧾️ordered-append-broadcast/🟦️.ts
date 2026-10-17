@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { join, sep } from "node:path";
-import { listModuleTree } from "../../../../../🧰️framework/🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
+import { listModuleTree } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 
 export type OrderedAppendBroadcastFixture = {
   readonly schema: "semio.hub.directory.ordered-append-broadcast/v1";

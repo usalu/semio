@@ -42,7 +42,8 @@ const bounded = (root, path) => {
 };
 
 const physicalBudget = () => ({ texts: new Map(), bytes: 0, lists: new Map(), entries: 0 });
-const context = root => ({ root, inventory: new Map(), documents: new Map(), texts: new Map(), selected: new Map(), observations: new Map(), physical: physicalBudget() });
+const physicalObservations = () => ({ paths: new Map(), order: [] });
+const context = root => ({ root, inventory: new Map(), documents: new Map(), texts: new Map(), selected: new Map(), observations: physicalObservations(), physical: physicalBudget() });
 function sameManifest(left, right) { return ["dev", "ino", "mode", "nlink", "size", "mtimeNs", "ctimeNs", "birthtimeNs"].every(key => left[key] === right[key]); }
 /** 📏️ Reads a bounded actual descriptor and refuses substitution, truncation or growth before returning text. */
 function readManifestText(path, budget, maximum = limits.maximumManifestBytes) {
@@ -183,13 +184,27 @@ function ownershipChange(operation, path, previous, current) {
   }
   return { operation, path, added, removed, typeChanged, total, omitted: Math.max(0, total - 8) };
 }
+/** 🧾️ Retains original path facts with independent path/fact bounds and global reference order. */
+function retainOwnershipObservationV1(observations, operation, path, value) {
+  if (!observations) return;
+  if (operation !== "state" && operation !== "list") throw Error("Closed Bun ownership observation kind required");
+  let record = observations.paths.get(path);
+  const previous = record?.[operation];
+  if (previous !== undefined) {
+    if (JSON.stringify(previous) !== JSON.stringify(value)) throw Error("Bun current ownership changed during verification: " + path + "; change=" + JSON.stringify(ownershipChange(operation, path, previous, value)));
+    return;
+  }
+  if (operation === "list" && record?.state[0] !== "directory") throw Error("Original Bun directory state observation required");
+  if (!record && observations.paths.size >= limits.maximumObservationPaths) throw Error("Bun ownership physical path observation capacity exceeded");
+  if (observations.order.length >= limits.maximumObservationFacts) throw Error("Bun ownership observation fact capacity exceeded");
+  if (operation === "list") value.forEach(Object.freeze);
+  Object.freeze(value);
+  if (!record) { record = Object.seal({ path, state: value, list: undefined }); observations.paths.set(path, record); }
+  else record.list = value;
+  observations.order.push(Object.freeze({ record, operation }));
+}
 function nativeOperations(observations, root, budget = physicalBudget()) {
-  const retain = (operation, path, value) => {
-    if (!observations) return;
-    const key = JSON.stringify([operation, path]), previous = observations.get(key);
-    if (previous && JSON.stringify(previous.value) !== JSON.stringify(value)) throw Error("Bun current ownership changed during verification: " + path + "; change=" + JSON.stringify(ownershipChange(operation, path, previous.value, value)));
-    if (!previous) { if (observations.size >= limits.maximumObservations) throw Error("Bun ownership observation capacity exceeded"); observations.set(key, { operation, path, value }); }
-  };
+  const retain = (operation, path, value) => retainOwnershipObservationV1(observations, operation, path, value);
   return {
     state(path) {
       if (typeof path !== "string" || path.length > limits.maximumPathUnits) throw Error("Bun workspace physical path capacity exceeded");
@@ -228,14 +243,14 @@ function* publicationPlan(owner, selection, verifyPublished) {
     scopes.push({ manifest: scope.manifest, beforeSha256: createHash("sha256").update(owner.texts.get(scope.manifest)).digest("hex"), patterns, packages });
   }
   for (const [path, text] of owner.texts) if ((yield { operation: "readText", path: bounded(owner.root, path) }) !== text) throw Error("Bun current manifest changed during verification: " + path);
-  for (const observation of owner.observations.values()) yield { operation: observation.operation, path: observation.path };
+  for (const { record, operation } of owner.observations.order) yield { operation, path: record.path };
   return { version: 1, scopes, packages: membership.packages };
 }
 /** 🛡️ Fences the last caller continuation before native publication or a completed report. */
 function currentFence(owner, operations, signal) {
   signal.throwIfAborted();
   if (readManifestText(ownershipPath, undefined, limits.maximumPolicyBytes) !== ownershipSource) throw Error("Bun current ownership policy changed during publication");
-  for (const observation of owner.observations.values()) { signal.throwIfAborted(); executeOperation(operations, observation); }
+  for (const { record, operation } of owner.observations.order) { signal.throwIfAborted(); executeOperation(operations, { operation, path: record.path }); }
   for (const [path, text] of owner.texts) {
     signal.throwIfAborted();
     if (operations.readText(bounded(owner.root, path)) !== text) throw Error("Bun current manifest changed during publication: " + path);
@@ -270,9 +285,9 @@ async function publishCurrentOwnership(root, selection, control) {
   const validate = async () => {
     control.signal.throwIfAborted();
     if (readManifestText(ownershipPath, undefined, limits.maximumPolicyBytes) !== ownershipSource) throw Error("Bun current ownership policy changed during publication");
-    for (const observation of owner.observations.values()) {
-      control.signal.throwIfAborted(); executeOperation(operations, observation);
-      await control.advance({ operation: observation.operation, path: observation.path, completedOperations: ++current.completedOperations });
+    for (const { record, operation } of owner.observations.order) {
+      control.signal.throwIfAborted(); executeOperation(operations, { operation, path: record.path });
+      await control.advance({ operation, path: record.path, completedOperations: ++current.completedOperations });
       control.signal.throwIfAborted();
     }
     for (const [path, text] of owner.texts) {
@@ -318,9 +333,9 @@ async function withCurrentBunWorkspaceOwnershipV1(root, selection, control, body
   const validate = async () => {
     guard();
     if (readManifestText(ownershipPath, undefined, limits.maximumPolicyBytes) !== ownershipSource) throw Error("Bun current ownership policy changed during verification");
-    for (const observation of owner.observations.values()) {
-      guard(); executeOperation(operations, observation);
-      await control.advance({ operation: observation.operation, path: observation.path, completedOperations: ++current.completedOperations }); guard();
+    for (const { record, operation } of owner.observations.order) {
+      guard(); executeOperation(operations, { operation, path: record.path });
+      await control.advance({ operation, path: record.path, completedOperations: ++current.completedOperations }); guard();
     }
     for (const [path, text] of owner.texts) {
       guard(); const target = bounded(root, path);
@@ -352,7 +367,7 @@ async function discoverCurrentBunWorkspaceScopesV1(root, selection, control) {
   const computation = function* (owner, selected) {
     const scopes = yield* scopesPlan(owner, selected);
     for (const [path, text] of owner.texts) if ((yield { operation: "readText", path: bounded(owner.root, path) }) !== text) throw Error("Bun current manifest changed during verification: " + path);
-    for (const observation of owner.observations.values()) yield { operation: observation.operation, path: observation.path };
+    for (const { record, operation } of owner.observations.order) yield { operation, path: record.path };
     return scopes;
   };
   const current = await controlledOwnership(root, selection, control, false, computation);

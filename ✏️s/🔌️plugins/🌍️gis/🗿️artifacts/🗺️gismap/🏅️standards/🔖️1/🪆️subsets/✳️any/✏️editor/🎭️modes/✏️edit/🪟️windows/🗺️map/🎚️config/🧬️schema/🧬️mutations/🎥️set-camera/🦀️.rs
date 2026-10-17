@@ -1,6 +1,6 @@
 //! 🎥️ Camera payload and sparse camera configuration change.
 
-use super::super::{MapWindowConfig, MapWindowConfigDelta, MapWindowConfigDiff, MapWindowConfigMutation};
+use crate::editor::gis2d::modes::edit::windows::map::config::component::{MapWindowConfig, MapWindowConfigDelta, MapWindowConfigDiff};
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -16,7 +16,10 @@ pub struct SetCamera {
 //#endregion 🧬️Payload
 
 //#region ⚙️Behavior
-impl MutationKind<MapWindowConfig, MapWindowConfigMutation> for SetCamera {
+impl<Op> MutationKind<MapWindowConfig, Op> for SetCamera
+where
+    Op: protocol::Mutation<MapWindowConfig, Diff = MapWindowConfigDiff> + From<SetCamera>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "camera", kind: "set-camera", record: "SetCamera" };
     fn diff(&self, base: &MapWindowConfig) -> MutationOutcome<MapWindowConfigDiff> {
         if base.camera_json == self.camera_json {
@@ -24,7 +27,7 @@ impl MutationKind<MapWindowConfig, MapWindowConfigMutation> for SetCamera {
         }
         MutationOutcome::new(MapWindowConfigDelta { camera_json: Some(self.camera_json.clone()), ..Default::default() }.into())
     }
-    fn inverse(&self, base: &MapWindowConfig) -> Result<Vec<MapWindowConfigMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &MapWindowConfig) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
         vec![Self { camera_json: base.camera_json.clone() }.into()]
     

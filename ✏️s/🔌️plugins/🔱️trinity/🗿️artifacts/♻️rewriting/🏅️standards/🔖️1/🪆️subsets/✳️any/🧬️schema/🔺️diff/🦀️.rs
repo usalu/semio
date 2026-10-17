@@ -3,12 +3,14 @@
 
 use semio_framework_graph_manifest::PropertyValue;
 
-use crate::standards::v1::subsets::any::schema::{Assignment, Lhs, ParameterSpec, Pattern, Rhs};
-use crate::{LayoutPoint, RewritingSnapshot};
+use crate::standards::v1::subsets::any::schema::rule::{Assignment, Lhs, ParameterSpec, Pattern, Rhs};
+use crate::standards::v1::subsets::any::schema::model::LayoutPoint;
+use crate::standards::v1::subsets::any::schema::snapshot::RewritingSnapshot;
 use ::semio_framework_schema::ArtifactSchema;
 use protocol::{DiffAlgebra, MutationDiff};
 use replication::{MapDelta, MapEntryOperation};
-use semio_s_artifact_trinity_jack::{JackDiff, JackSnapshot};
+use semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::diff::JackDiff;
+use semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::snapshot::JackSnapshot;
 
 //#region 🔖️Diff
 /// 🔺️ Sparse typed delta for the rewriting artifact; persistent entries apply via [`MutationDiff`](protocol::MutationDiff).
@@ -230,7 +232,7 @@ impl MapView<PropertyValue> for semio_framework_graph_manifest::PropertyBag {
     }
 }
 
-impl MapView<LayoutPoint> for crate::standards::v1::subsets::any::schema::RuleLayout {
+impl MapView<LayoutPoint> for crate::standards::v1::subsets::any::schema::layout::RuleLayout {
     fn view_get(&self, key: &str) -> Option<&LayoutPoint> {
         self.get(key)
     }
@@ -313,6 +315,4 @@ impl DiffAlgebra<RewritingSnapshot> for RewritingDiff {
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🗂️map-ownership/🦀️.rs"]
-mod map_ownership_tests;
+

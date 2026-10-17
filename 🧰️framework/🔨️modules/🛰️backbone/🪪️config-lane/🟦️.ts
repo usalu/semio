@@ -1,5 +1,6 @@
 /** 🪪️ The identity and local-catalog config lanes of the document backbone: the actor configs that open the two OS-wide config facets over the local folder lane, and the event fold that materializes the identity. */
-import type { ArtifactActorConfig, ArtifactEvent, PersistenceBinding } from "../🟦️.ts";
+import type { PersistenceBinding } from "../🔑️persistence-binding/🟦️.ts";
+import type { ArtifactActorConfig, ArtifactEvent } from "../🎭️artifact-actor/🟦️.ts";
 import type { Identity } from "../../🎚️config/🧬️schema/🧬️mutations/🆔️identity-config-mutation/🟦️.ts";
 import { LOCAL_CATALOG_CONFIG_SCHEMA } from "../../🎚️config/🧬️schema/🧬️mutations/📥️admit-local-document/🟦️.ts";
 

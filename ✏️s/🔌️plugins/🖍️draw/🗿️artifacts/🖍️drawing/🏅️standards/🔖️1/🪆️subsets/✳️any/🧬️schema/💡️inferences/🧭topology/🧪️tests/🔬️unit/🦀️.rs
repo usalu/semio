@@ -1,8 +1,11 @@
-use super::*;
-use crate::{DrawingAttributes, DrawingGroupBody, DrawingLayerBase, DrawingPathBody};
+#[allow(unused_imports)] use semio_s_artifact_draw_drawing_model::DrawingLayerNode;
+#[allow(unused_imports)] use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
+#[allow(unused_imports)] use std::collections::BTreeMap;
+#[allow(unused_imports)] use semio_s_artifact_draw_drawing_model::inferences::topology::*;
+use semio_s_artifact_draw_drawing_model::{DrawingAttributes, DrawingGroupBody, DrawingLayerBase, DrawingPathBody};
 
 fn base(id: &str) -> DrawingLayerBase {
-    DrawingLayerBase { id: id.into(), name: id.into(), visible: true, locked: false, opacity: 1.0, blend_mode: "normal".into(), transform: crate::default_drawing_transform(), attributes: DrawingAttributes::default() }
+    DrawingLayerBase { id: id.into(), name: id.into(), visible: true, locked: false, opacity: 1.0, blend_mode: "normal".into(), transform: semio_s_artifact_draw_drawing_model::default_drawing_transform(), attributes: DrawingAttributes::default() }
 }
 
 fn path_layer(id: &str) -> DrawingLayerNode {

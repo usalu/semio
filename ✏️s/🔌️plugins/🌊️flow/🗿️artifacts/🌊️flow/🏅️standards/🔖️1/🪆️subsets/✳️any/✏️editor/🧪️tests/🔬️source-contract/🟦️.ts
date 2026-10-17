@@ -307,7 +307,7 @@ assert(flowPluginSource.includes(".viewer::<crate::viewer::flow::FlowViewer>"));
 assert(viewerOwnerSource.includes("type Members = semio_s_artifact_stdio_semio::SemioMembers;"), "the viewer itself must declare the roster its composed children open through");
 //#endregion 👁️ViewerOwnerAuthority
 //#region 🏭️PublicSurfaceOwners
-const surfaceOwners = await Bun.file(new URL("../../../../../../../../../../../../🌎️hub/🧩️compositions/🌊️flow/🧫️fixtures/🧹️surface-owners/🔣️.json", import.meta.url)).json();
+const surfaceOwners = await Bun.file(new URL("../../../../../../../../../../../../🌎️hub/🧩️compositions/🌊️flow/🧪️tests/🧫️fixtures/🧹️surface-owners/🔣️.json", import.meta.url)).json();
 
 
 

@@ -33,6 +33,10 @@ type vcsVcsArtifactGuardSizeBounds = { readonly minItems?: number; readonly maxI
 
 export const vcsVcsArtifactGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : vcsVcsArtifactGuardReject(at, "value is not an object");
+export const vcsVcsArtifactGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) vcsVcsArtifactGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const vcsVcsArtifactGuardArray = (value: unknown, at: string, bounds: vcsVcsArtifactGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return vcsVcsArtifactGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) vcsVcsArtifactGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -63,7 +67,7 @@ export const vcsVcsArtifactGuardConstant = <T extends string | number | boolean>
 //#endregion 🚪️Parsers
 
 export function parseVcsArtifact(value: unknown, at = "$"): VcsArtifact {
-  const row = vcsVcsArtifactGuardObject(value, at);
+  const row = vcsVcsArtifactGuardClosed(vcsVcsArtifactGuardObject(value, at), at, ["schema", "title", "counter", "notes", "status", "tags"]);
   return {
     schema: vcsVcsArtifactGuardString(row["schema"], `${at}.schema`),
     title: vcsVcsArtifactGuardString(row["title"], `${at}.title`),

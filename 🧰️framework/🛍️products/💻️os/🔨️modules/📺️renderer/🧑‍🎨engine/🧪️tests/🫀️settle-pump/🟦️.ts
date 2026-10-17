@@ -9,7 +9,7 @@
  * Rust twin parses — so the two shells cannot drift into two ideas of what "still working" means.
  *
  * ⚖️ An independent derivation is the point: React's own refresh lane
- * (`🛠️ShellHelpers/🟦️.tsx`'s `createUiRefreshCoalescerV1`) has always DECLARED a follow-up pass and let
+ * (`🛠️ShellHelpers/🔄️ui-refresh/🟦️.ts`'s `createUiRefreshCoalescerV1`) has always DECLARED a follow-up pass and let
  * its loop run it, never converging a chain inside the call that started it. This oracle is the wgpu
  * half of that same door, with the loop owned by the frame runtime.
  *

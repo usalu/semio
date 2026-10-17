@@ -593,7 +593,7 @@ pub fn assert_replay_derived(name: &str, model: &ModelSnapshot, derivations: &st
 /// plus the second section, the first one turned a quarter, so the examples show exactly what a person gets by asking the editor for views.
 pub fn assert_views_are_the_commands(name: &str, model: &ModelSnapshot) {
     use crate::editor::bim::commands::create_view::{extents, handle, CreateView, MARGIN};
-    use crate::editor::bim::unit_tests::support::{ctx, run};
+    use crate::editor::bim::fixture::support::{ctx, run};
     use crate::standards::v1::subsets::any::schema::snapshot::{Point2, View, ViewPlane};
     let bare = ModelSnapshot { views: Default::default(), ..model.clone() };
     let made = |kind: &str, parent: &str| -> Vec<View> {

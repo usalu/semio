@@ -18,7 +18,8 @@ const OPENINGS_CASE: &str = "shared://💡️inferences/🧊️element-solids/�
 mod subject {
     use super::{OPENINGS_CASE, SNAPSHOT};
     use semio_repo_test_host::{parse_json, Context, Outcome};
-    use semio_s_artifact_bim_model::standards::v1::subsets::any::io::text::snapshot::{decode_model_snapshot_json, encode_inference_projection_json};
+    use semio_s_artifact_bim_model::standards::v1::subsets::any::io::text::snapshot::decode_model_snapshot_json;
+    use semio_s_artifact_bim_model::standards::v1::subsets::any::io::text::projection::encode_inference_projection_json;
 
     /// 🧊️ `{wall id: {base_z, top_z, volume}}` of every wall whose axis is a straight line.
     pub fn wall_solids(ctx: &Context) -> Result<Outcome, String> {

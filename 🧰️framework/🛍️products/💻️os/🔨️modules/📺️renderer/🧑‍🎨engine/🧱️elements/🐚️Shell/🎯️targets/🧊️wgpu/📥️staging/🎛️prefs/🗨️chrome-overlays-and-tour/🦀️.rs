@@ -17,7 +17,7 @@ pub const COMMAND_REJECTED_FAULT_CODE: &str = "app.command.rejected";
 
 /// 🧯️ Classifies one dispatch-fault string — and the structured guest refusal behind it, when there is one — into the banner
 /// React would show for it: a read-only viewer is an `info` with its own frozen copy, a hub history refusal an `error` with
-/// its localized copy (`time_travel::history_refusal_notice`), a guest refusal the framework or its app declared a notice for
+/// its localized copy (`history_refusal_notice`), a guest refusal the framework or its app declared a notice for
 /// (`kernel::fault_notice`: the kernel's history-lane refusals — an open or ended tool recording, a full or still replaying
 /// history, `{n}` from `Fault.params` — as warnings, then the app's `faultNotices` with the fault's own severity), a rejected
 /// mutation an `error` carrying the frozen code, any other guest refusal React's localized `dispatch-failed` notice (never its
@@ -28,7 +28,7 @@ pub fn classify_dispatch_fault_notice(error: &str, refused: Option<&RefusedGuest
         let text = LocalizedLabel::native("This is a read-only viewer — editing is disabled.", "Dies ist ein schreibgeschützter Betrachter – Bearbeiten ist deaktiviert.").resolve(terminology, locale).to_string();
         return (text, Severity::Info, Some(VIEWER_READ_ONLY_FAULT_CODE.to_string()));
     }
-    if let Some((code, text, severity)) = time_travel::history_refusal_of_fault(error, locale) {
+    if let Some((code, text, severity)) = history_refusal_of_fault(error, locale) {
         return (text.to_string(), severity, Some(code.to_string()));
     }
     if let Some((refused, notice)) = refused.and_then(|refused| semio_framework::kernel::fault_notice(&refused.fault, &refused.notices, terminology, locale).map(|notice| (refused, notice))) {
@@ -67,7 +67,7 @@ impl PrefsState {
     pub fn note_dispatch_fault(&mut self, error: &str, chrome: &mut ChromeState) {
         let refused = chrome.chrome_build.refused_guest_fault.take().filter(|refused| dispatch_fault_names_code(error, &refused.fault.code.0));
         let (message, severity, code) = classify_dispatch_fault_notice(error, refused.as_ref(), self.active_terminology(), self.active_locale());
-        if code.as_deref().is_some_and(time_travel::history_refusal_is_silent) {
+        if code.as_deref().is_some_and(history_refusal_is_silent) {
             return;
         }
         chrome.show_transient_notice(message, severity, code.as_deref());
@@ -110,7 +110,7 @@ impl PrefsState {
 //#region 🧯️TransientNoticeAndAgentOverlays
 /// 🛟️ The native input draft disposition of an exact typed history refusal.
 pub fn dispatch_refusal_discards_input_draft(error: &str) -> bool {
-    time_travel::history_refusal_discards_input_draft(error)
+    history_refusal_discards_input_draft(error)
 }
 //#endregion 🧯️TransientNoticeAndAgentOverlays
 //#endregion 🔖️ChromeOverlaysAndTour

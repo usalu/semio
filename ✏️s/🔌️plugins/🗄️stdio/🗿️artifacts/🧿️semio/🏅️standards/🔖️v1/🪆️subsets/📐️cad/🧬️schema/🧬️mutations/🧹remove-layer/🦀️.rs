@@ -1,6 +1,13 @@
 //! 🧹️ `remove-layer` — authored as its own mutation leaf; its diff and inverse live in `🔺️diff` and `↩️inverse`.
 
-use super::*;
+#[allow(unused_imports)]
+use protocol::Mutation;
+#[allow(unused_imports)]
+use crate::schema::diff::SemioCadDiff;
+#[allow(unused_imports)]
+use crate::schema::snapshot::SemioCadSnapshot;
+#[allow(unused_imports)]
+use crate::schema::mutations::add_layer;
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
@@ -10,13 +17,16 @@ pub struct RemoveLayer {
     pub name: String,
 }
 
-impl protocol::MutationKind<SemioCadSnapshot, SemioCadMutation> for RemoveLayer {
+impl<Op> protocol::MutationKind<SemioCadSnapshot, Op> for RemoveLayer
+where
+    Op: protocol::Mutation<SemioCadSnapshot, Diff = crate::schema::diff::SemioCadDiff> + From<RemoveLayer> + From<crate::schema::mutations::add_layer::AddLayer>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "layer", kind: "remove-layer", record: "RemoveLayer" };
 
-    fn diff(&self, base: &SemioCadSnapshot) -> protocol::MutationOutcome<<SemioCadMutation as Mutation<SemioCadSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioCadSnapshot) -> protocol::MutationOutcome<<Op as Mutation<SemioCadSnapshot>>::Diff> {
         diff::diff(self, base)
     }
-    fn inverse(&self, base: &SemioCadSnapshot) -> Result<Vec<SemioCadMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &SemioCadSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         inverse::inverse(self, base)?
     

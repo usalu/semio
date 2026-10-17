@@ -1,6 +1,8 @@
+use semio_framework_test_fixtures::fixture_text;
+
 #[semio_framework_async_macros::async_test]
 async fn primary_asset_is_nonempty() {
-    let text = include_str!("../../../../🖼️assets/🎬️demo/🗣️.dsl.semio");
+    let text = semio_s_artifact_gis_gismap_demo_asset::DEMO_DSL;
     assert!(text.len() > 8);
 }
 
@@ -8,8 +10,8 @@ async fn primary_asset_is_nonempty() {
 #[semio_framework_async_macros::async_test]
 async fn primary_asset_preserves_neutral_document_and_child_identities() {
     use store::{pack::snapshot::ArtifactDsl, pack::snapshot::ArtifactPack};
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🪪️document/🔣️.json")).unwrap();
-    let snapshot = crate::GisMapSnapshot::parse_dsl(super::PRIMARY_TEXT).expect("typed demo parses");
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🧫️fixtures/🪪️document/🔣️.json")).unwrap();
+    let snapshot = crate::GisMapSnapshot::parse_dsl(crate::examples::demo::PRIMARY_TEXT).expect("typed demo parses");
     let decoded = crate::GisMapSnapshot::decode_pack(&snapshot.encode_pack()).expect("typed demo binary decodes");
     assert_eq!(decoded, snapshot);
     let descriptor: serde_json::Value = serde_json::from_str(&crate::standards::v1::subsets::any::io::text::snapshot::gis_map_descriptor_json(&decoded)).unwrap();
@@ -25,7 +27,6 @@ async fn primary_asset_preserves_neutral_document_and_child_identities() {
         assert_eq!(target.dialect.subset, fixture[field]["subset"].as_str().unwrap());
     }
     assert!(decoded.image.is_none());
-    eprintln!("[DEBUG] GIS demo typed-text/Pack/serde_json positions=152 routes=149 regions=0 durable-children=2");
 }
 
 /// 🛰️ What `setActiveExample` does at boot: resolve the catalogue id and frame the document. The
@@ -49,7 +50,7 @@ async fn default_example_document_carries_addressable_features() {
 #[semio_framework_async_macros::async_test]
 async fn inference_determinism_law() {
     use protocol::Inference;
-    let text = include_str!("../../../../🖼️assets/🎬️demo/🗣️.dsl.semio");
+    let text = semio_s_artifact_gis_gismap_demo_asset::DEMO_DSL;
     let snapshot = <crate::GisMapSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text).expect("demo fixture parses");
     let inference = crate::standards::v1::subsets::any::schema::inferences::GisMapInference::infer(&snapshot).expect("valid materialized inference fixture");
     assert_eq!(inference, crate::standards::v1::subsets::any::schema::inferences::GisMapInference::infer(&snapshot).expect("valid materialized inference fixture"));

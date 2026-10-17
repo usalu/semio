@@ -374,12 +374,20 @@ pub struct IconExportBatch {
     preparing: Option<Box<IconExportScenePreparation>>,
     scene_rejected: Option<IconExportSceneRejected>,
     pub scene: Option<Box<IconExportPreparedScene>>,
+    #[cfg(any(test, feature = "testkit"))]
+    #[doc(hidden)]
+    pub initializing: Option<ShellDetached<Result<GpuContext, String>>>,
+    #[cfg(not(any(test, feature = "testkit")))]
     initializing: Option<ShellDetached<Result<GpuContext, String>>>,
     pub source: Option<Box<GpuContext>>,
     pub rendering: Option<Box<IconGpuPngExport>>,
     gpu_rejected: Option<IconGpuPngRejected>,
     pub vector: Option<IconSvgExport>,
     vector_rejected: Option<IconSvgRejected>,
+    #[cfg(any(test, feature = "testkit"))]
+    #[doc(hidden)]
+    pub saving: Option<ShellDetached<Result<bool, String>>>,
+    #[cfg(not(any(test, feature = "testkit")))]
     saving: Option<ShellDetached<Result<bool, String>>>,
     pub bytes: Option<Vec<u8>>,
     item_fault: Option<IconExportFault>,

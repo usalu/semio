@@ -1,6 +1,6 @@
 //! 🎬️ Actual Imperative extensions execute the public Sequence host composition.
 use semio_s_imperative as imperative_engine;
-use semio_s_artifact_sequence_sequence::editor::sequence::{SequenceHost, retire_run_result_cold};
+use semio_s_artifact_sequence_sequence::editor::sequence::host::{SequenceHost, retire_run_result_cold};
 
 fn installed() {
     use imperative_engine::{contributions_json_from_entries, register_native_imperative_module, sync_imperative_module_contributions};
@@ -37,7 +37,8 @@ async fn run_executes_default_snapshot_and_records_scope() {
 
 mod context {
     use semio_framework_plugin::{AppActionRegistry, EditorApp, PluginApp, VcsArtifactApp, ViewModel, ViewWindowInstance};
-    use semio_s_artifact_sequence_sequence::editor::sequence::{SequencePlayApp, SequenceCommand, create_sequence_app};
+    use semio_s_artifact_sequence_sequence::editor::sequence::app::{SequencePlayApp, create_sequence_app};
+    use semio_s_artifact_sequence_sequence::editor::sequence::retained::SequenceCommand;
     use semio_s_artifact_sequence_sequence::editor::sequence::modes::edit::windows::script::SEQUENCE_PLAY_WINDOW_SCRIPT;
     use semio_s_artifact_stdio_semio::SemioMembers;
     use semio_framework_plugin::artifact_app_laws::{meta, settle_registered_typed_operation, close_registered_fixture_app, project_and_retire_fixture_tree};

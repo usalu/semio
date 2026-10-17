@@ -34,7 +34,7 @@ for (const [name, parse] of [["Snapshot", parsePlaygroundSnapshotText], ["Diff",
 
 test("Playground diff binds its actual closed artifact fields", () => {
   const check = new Ajv({ strict: false }).compile(diffSchema);
-  for (const value of fixture.validDiffs) { expect(check(value)).toBe(true); expect(parsePlaygroundDiff(value)).toEqual({ artifact: value.artifact, schema: value.schema }); }
+  for (const value of fixture.validDiffs) { expect(check(value)).toBe(true); expect(parsePlaygroundDiff(value)).toEqual(value); }
   for (const value of fixture.invalidDiffs) { expect(check(value)).toBe(false); expect(() => parsePlaygroundDiff(value)).toThrow(); }
 });
 

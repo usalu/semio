@@ -1,5 +1,5 @@
 //! 🧪️ Native manifest identities owned by their concrete catalog.
-use crate::graph_manifest::*;
+use crate::standards::v1::subsets::any::schema::graph_manifest::*;
 
 #[test]
 fn nakagin_manifest_loads() {

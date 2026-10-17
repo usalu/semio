@@ -26,16 +26,14 @@ export default defineConfig({
   root: testRoot,
   cacheDir: repoCacheDirectory(repoRoot, "vite", "os-mcp"),
   resolve: {
-    alias: {
-      "@semio-tech/framework-os-mcp": resolve(root, "./🟦️.ts"),
-    },
+    alias: [{ find: /^@semio-tech\/framework-os-mcp$/u, replacement: resolve(root, "./🟦️.ts") }],
   },
   test: {
     root: testRoot,
     name: "@semio-tech/framework-os-mcp",
     environment: "node",
     include: [resolve(root, "../../🧪️tests/*/🟦️.ts")],
-    exclude: [resolve(root, "./🟦️.ts")],
+    exclude: [resolve(root, "./🟦️.ts"), resolve(root, "../../🧪️tests/🎚️config/🟦️.ts"), resolve(root, "../../🧪️tests/🧫️fixtures/🟦️.ts")],
     env: { S_AGENT_BRIDGE_DIR: SUITE_AGENT_BRIDGE_DIR },
     coverage: { include: ["../../🟦️.ts"] },
     testTimeout: 30_000,

@@ -27,7 +27,7 @@ import { localized, type QuizLocale, type QuizText } from "../🌐️i18n/🟦�
 import { RadarChart, type RadarAxis } from "../🕸️radar/🟦️.tsx";
 import { IconLabel, LiveRegion, useAnnouncement } from "../🪟️chrome/🟦️.tsx";
 import { DROP_ZONE_CLASS, DragGrip, HintNote, LockedNote, SELECT_ANNOUNCEMENT_DELAY_MS, SELECT_CLASS, describedBy, elementId, hintName, hintTerm, useFocusAfterRender, useHintAnnouncement, type TaskViewProps } from "../🧩️task/🟦️.tsx";
-import { PRESENCE_ANCHORS } from "../👥️presence/🟦️.tsx";
+import { PRESENCE_ANCHORS } from "../👥️presence/👁️view/🟦️.ts";
 import { petProp, usePetTopic } from "../🐾️pets/🟦️.tsx";
 import { formatNumber, withMinusSign, withUnit } from "../📏️quantity/🟦️.ts";
 

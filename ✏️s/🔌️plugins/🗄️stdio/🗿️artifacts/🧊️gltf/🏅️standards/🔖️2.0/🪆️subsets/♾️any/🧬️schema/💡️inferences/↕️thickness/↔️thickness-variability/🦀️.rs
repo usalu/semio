@@ -1,9 +1,9 @@
 //! 💡️ thickness-variability atomic glTF inference leaf.
-use super::super::super::modules::{
+use crate::standards::v2_0::subsets::any::schema::modules::{
     inference_measures::{estimate, unavailable},
     measurement_contracts::*,
 };
-use super::super::{geometry_core::GltfGeometryContext, GltfEntityIndicators, GltfInferenceLeaf, GltfInferenceLeafDescriptor, GLTF_GEOMETRY_READS};
+use crate::standards::v2_0::subsets::any::schema::inferences::geometry_core::GltfGeometryContext;
 
 pub struct GltfThicknessVariabilityInference;
 
@@ -18,11 +18,11 @@ pub fn descriptor() -> GltfInferenceLeafDescriptor {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<f64> {
-    let distribution = super::distribution(context);
+pub fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<f64> {
+    let distribution = crate::standards::v2_0::subsets::any::schema::inferences::thickness::distribution(context);
     distribution
         .standard_deviation
-        .map_or_else(|| unavailable(GltfUnit::Metre, context.unavailable_volume, Vec::new(), context.sample_count, Some(context.topology)), |value| estimate(value, GltfUnit::Metre, super::samples(context).len(), Some(context.topology)))
+        .map_or_else(|| unavailable(GltfUnit::Metre, context.unavailable_volume, Vec::new(), context.sample_count, Some(context.topology)), |value| estimate(value, GltfUnit::Metre, crate::standards::v2_0::subsets::any::schema::inferences::thickness::samples(context).len(), Some(context.topology)))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -31,10 +31,24 @@ pub fn unavailable_measure(ids: &[String]) -> GltfMeasure<f64> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn encode_result(indicators: &GltfEntityIndicators) -> semio_framework_value::DslValue {
-    semio_framework_value::ToValue::to_value(&indicators.thickness.thickness_variability)
+pub fn encode_result(measure: &GltfMeasure<f64>) -> semio_framework_value::DslValue {
+    semio_framework_value::ToValue::to_value(measure)
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+//#region 🧾️InferenceDescriptor
+/// 🧾️ Registry descriptor of this inference leaf; its companion documents are embedded from this leaf's own folder.
+pub fn inference_descriptor() -> semio_framework_schema_registry::ArtifactInferenceDescriptor {
+    semio_framework_schema_registry::ArtifactInferenceDescriptor {
+        id: "s.stdio.gltf.inference.thickness-variability.v1",
+        inference: semio_framework_schema_registry::FacetLeaves {
+            rust: include_str!("🦀️.rs"),
+            typescript: include_str!("🟦️.ts"),
+            graphql: include_str!("🔗️.graphql"),
+            json_schema: include_str!("🔣️.json"),
+            proto: include_str!("🛰️.proto"),
+        },
+    }
+}
+//#endregion 🧾️InferenceDescriptor
+
+

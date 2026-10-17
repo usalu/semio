@@ -1,42 +1,42 @@
 //! 🪆️ Rewriting's composed `workingGraph` child (design §20.15 of ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING): readers compose
 //! the parent with the exact member-store child, and every working-graph edit is ONE child-lane edit of the shared
 //! `s.stdio.semio@v1/graph` vocabulary — no parent leaf reads the child.
-use crate::RewritingSnapshot;
+use crate::standards::v1::subsets::any::schema::snapshot::RewritingSnapshot;
 use semio_framework_diagnostic::Severity;
 use semio_framework_plugin::app::{ChildContentView,ChildEmitPreparation};
 use semio_framework_plugin::{Emit, Fault};
 use semio_s_artifact_stdio_semio_graph::schema::mutations::SemioGraphMutation;
 use semio_s_artifact_stdio_semio_graph::schema::snapshot::SemioGraphSnapshot;
+use semio_s_artifact_trinity_jack_semio_content::SemioJackContentOwner;
 
-#[path = "👁️read/🦀️.rs"]
-mod read;
-pub(crate) use read::{read, WORKING_CHILD_SLOT};
+pub use semio_s_artifact_trinity_rewriting_schema::standards::v1::subsets::any::content::read;
+pub use read::{read, WORKING_CHILD_SLOT};
 
 /// 🧩️ The rule as its readers see it: the parent's fields composed on read with the exact published `workingGraph` member — the
 /// working graph's single truth, never the parent's genesis owner, which goes stale after a child-lane edit. A root the child no
 /// longer holds reads as no root.
-pub(crate) fn composed(parent: &RewritingSnapshot, children: &ChildContentView) -> Result<RewritingSnapshot, Fault> {
+pub fn composed(parent: &RewritingSnapshot, children: &ChildContentView) -> Result<RewritingSnapshot, Fault> {
     let child = read(parent, children)?;
     let mut view = parent.clone();
     if view.working_graph.root_node_id.as_ref().is_some_and(|root| !child.nodes.iter().any(|node| &node.id.value == root)) {
         view.working_graph.root_node_id = None;
     }
-    semio_s_artifact_trinity_jack::materialize_jack_snapshot(&mut view.working_graph.content, SemioGraphSnapshot::clone(&child));
+    semio_s_artifact_trinity_jack_semio_content::materialize_jack_snapshot(&mut view.working_graph.content, SemioGraphSnapshot::clone(&child));
     Ok(view)
 }
 
 /// 🌱️ The genesis pack of the rule's own `workingGraph` child, derived from the parent the document was created or loaded with.
-pub(crate) fn genesis_working_child_pack(parent: &RewritingSnapshot, slot: &str, child_id: &str) -> Result<Option<Vec<u8>>, semio_framework_value::ValueError> {
+pub fn genesis_working_child_pack(parent: &RewritingSnapshot, slot: &str, child_id: &str) -> Result<Option<Vec<u8>>, semio_framework_value::ValueError> {
     use pack::snapshot::ArtifactPack;
     if slot != WORKING_CHILD_SLOT || child_id != parent.working_graph.content.child_id {
         return Ok(None);
     }
-    let owner = semio_s_artifact_trinity_jack::jack_content_for_handle(&parent.working_graph.content)?;
+    let owner = semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::content::jack_content_for_handle(&parent.working_graph.content)?;
     Ok(Some(SemioGraphSnapshot::encode_pack(owner.snapshot())))
 }
 
 /// 🧬️ Publishes `leaves` as ONE edit of the exact composed `workingGraph` child; no leaf is the empty emit.
-pub(crate) fn working_child_emit<M, C, D>(parent: &RewritingSnapshot, leaves: Vec<SemioGraphMutation>) -> Emit<M, C, D> {
+pub fn working_child_emit<M, C, D>(parent: &RewritingSnapshot, leaves: Vec<SemioGraphMutation>) -> Emit<M, C, D> {
     if leaves.is_empty() {
         return Emit::default();
     }
@@ -44,7 +44,7 @@ pub(crate) fn working_child_emit<M, C, D>(parent: &RewritingSnapshot, leaves: Ve
 }
 
 /// 🛂️ Applies `leaf` to the running working child when the graph vocabulary admits it there; a refused leaf leaves it untouched.
-pub(crate) fn admit(work: &mut SemioGraphSnapshot, leaf: &SemioGraphMutation) -> bool {
+pub fn admit(work: &mut SemioGraphSnapshot, leaf: &SemioGraphMutation) -> bool {
     let refused = |messages: &[protocol::MutationMessage]| messages.iter().any(|message| matches!(message.level, Severity::Error | Severity::Fatal));
     let outcome = <SemioGraphMutation as protocol::Mutation<SemioGraphSnapshot>>::diff(leaf, work);
     if refused(outcome.messages()) {

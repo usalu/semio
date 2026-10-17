@@ -1,0 +1,1 @@
+{"name": "stdio13", "crates": ["semio-s-artifact-stdio-tsv", "semio-s-artifact-stdio-tsv-inferences", "semio-s-artifact-stdio-tsv-io-registry", "semio-s-artifact-stdio-tsv-mutations", "semio-s-artifact-stdio-tsv-schema", "semio-s-artifact-stdio-tsv-snapshot", "semio-s-artifact-stdio-tsv-test-oracle"], "note": "stdio 📑️tsv"}

@@ -1,0 +1,84 @@
+{
+ "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️tests/🎨️wgpu-theme-editor-and-accessibility/🦀️.rs",
+ "original": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/c4p39-tools/orig/1.rs",
+ "stage": "/Users/ueli/.cache/c4p39/stage",
+ "chunks": [
+  {
+   "name": "🧰️theme-editor-fixtures",
+   "folder": "🧰️theme-editor-fixtures",
+   "doc": "🧰️ Theme editor fixtures: the accessibility and publication fixtures, the nested settings shell, the control-id walk and the retained control state the theme laws read.",
+   "ranges": [
+    [
+     14,
+     102
+    ]
+   ]
+  },
+  {
+   "name": "🎚️theme-publication-and-sections",
+   "folder": "🎚️theme-publication-and-sections",
+   "doc": "🎚️ Theme publication and sections: retained republish without guest refresh, invalid input, the canonical document, and the colors, spacing, fonts, number, metrics and appearance sections.",
+   "ranges": [
+    [
+     104,
+     326
+    ]
+   ]
+  },
+  {
+   "name": "🔁️theme-tokens-and-leaves",
+   "folder": "🔁️theme-tokens-and-leaves",
+   "doc": "🔁️ Theme tokens and leaves: re-tokenised painting, the publication ceiling, the reset predicate, the General and Theme leaves and the rows' authored coordinates.",
+   "ranges": [
+    [
+     328,
+     476
+    ]
+   ]
+  },
+  {
+   "name": "♿️accessible-names-and-activation",
+   "folder": "♿️accessible-names-and-activation",
+   "doc": "♿️ Accessible names and activation: chrome control names and shortcuts, pressed buttons on actual hit ids, focusable field labels and the accessibility and pointer activation routes.",
+   "ranges": [
+    [
+     478,
+     693
+    ]
+   ]
+  },
+  {
+   "name": "🪞️mirror-address-liveness",
+   "folder": "🪞️mirror-address-liveness",
+   "doc": "🪞️ Mirror address liveness: the settings toggle shell and the accessibility address staying live, stale or delayed across frames.",
+   "ranges": [
+    [
+     695,
+     765
+    ]
+   ]
+  },
+  {
+   "name": "🧭️settings-strip-and-keybindings",
+   "folder": "🧭️settings-strip-and-keybindings",
+   "doc": "🧭️ Settings strip and keybindings: the constrained tab strip, mobile panel buttons, inline chords, the flagged keybinding rows and accepted dock names.",
+   "ranges": [
+    [
+     767,
+     1006
+    ]
+   ]
+  },
+  {
+   "name": "📐️passive-regions-and-geometry",
+   "folder": "📐️passive-regions-and-geometry",
+   "doc": "📐️ Passive regions and geometry: passive chrome regions, compact theme spacing, named metrics and their localized authoring guidance.",
+   "ranges": [
+    [
+     1008,
+     1180
+    ]
+   ]
+  }
+ ]
+}

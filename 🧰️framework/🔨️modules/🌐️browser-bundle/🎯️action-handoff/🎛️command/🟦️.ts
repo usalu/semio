@@ -1,6 +1,6 @@
 /** 🎛️ Canonical catalog action and command pages for one authenticated document actor. */
 import type { ActionInvocation, CommandInvocation, PluginViewState } from "@semio-tech/framework";
-import { encodeAppCommand } from "../../../🧾️app-channel/🟦️.ts";
+import { encodeAppCommand } from "../../../🧾️app-channel/🎛️command-codec/🟦️.ts";
 import { encodePackValue, viewContextWireValue, type PackValue } from "../../../🎁️packs/🟦️.ts";
 import { parseBrowserActorActionRequestV1, type BrowserActorActionOwnerV1, type BrowserActorActionRequestV1 } from "../🟦️.ts";
 

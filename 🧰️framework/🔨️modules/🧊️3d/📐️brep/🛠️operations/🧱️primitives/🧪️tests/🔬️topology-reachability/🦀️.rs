@@ -4,6 +4,7 @@ use semio_framework_3d_brep_tolerance::Tol;
 use semio_framework_3d_brep_representation::arena::ArenaId;
 use semio_framework_3d_brep_representation::topology::{history, Body, EntityRef, ReachabilityJob, ReachabilityStep};
 use semio_framework_3d_brep_vector::Pnt3;
+use semio_framework_test_fixtures::fixture_text;
 
 /// ♻️ A closed box plus one orphan vertex: `compact` must free exactly the orphan and nothing
 /// the box's solid transitively reaches.
@@ -85,7 +86,7 @@ async fn merge_preserves_self_and_offsets_others_labels() {
 fn original_reach_set_owns_exact_physical_membership() {
     use crate::test_support::observe_tessellation_system as observe;
     use semio_framework_value::{retirement::controlled::ControlledRetirement,retained_clone::RetainedCloneGrant};
-    let law:serde_json::Value=serde_json::from_str(include_str!("../../../../📸️representation/🕸️topology/🧪️tests/🧫️fixtures/🎟️reachability/🔣️.json")).unwrap();
+    let law:serde_json::Value=serde_json::from_str(fixture_text!("../../../📸️representation/🕸️topology/🧪️tests/🧫️fixtures/🎟️reachability/🔣️.json")).unwrap();
     let mut body=Body::new();let mut rec=history::OpRecorder::new();let solid=make_box(&mut body,1.,1.,1.,&mut rec).unwrap();let orphan=make_vertex(&mut body,Pnt3::new(9.,9.,9.),Tol::DEFAULT,&mut rec);
     for copy in law["copyGrants"].as_array().unwrap() {
         let (keep,source)=observe(||body.reachable_from(&[EntityRef::Solid(solid)]));
@@ -100,7 +101,7 @@ fn original_reach_set_owns_exact_physical_membership() {
             if grant.maximum_release_bytes>law["deniedReleaseBytes"].as_u64().unwrap() as usize {for _ in 0..2 {let (step,heap)=observe(||owner.step(RetainedCloneGrant {maximum_release_bytes:law["deniedReleaseBytes"].as_u64().unwrap() as usize,..grant}).unwrap());assert_eq!(step.progress(),Default::default());assert_eq!(heap,(0,0));denied+=1;}}
             let (step,heap)=observe(||owner.step(grant).unwrap());assert!(step.progress().fits(grant));assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));assert!(step.progress()!=Default::default()||owner.terminal_is_empty(),"stalled original ReachSet turn={turns} copyDemand={} grant={grant:?} step={step:?} actual={heap:?} source={source:?} born={born} freed={freed}",owner.next_copy_byte_demand().unwrap());born+=heap.0;freed+=heap.1;turns+=1;assert!(turns<100000);
         }
-        assert!(denied>0);assert_eq!(source.0-source.1+born,freed);let(_,heap)=observe(||drop(owner));assert_eq!(heap,(0,law["terminalDropBytes"].as_u64().unwrap() as usize));eprintln!("[DEBUG] Original ReachSet copy={copy} source={} admitted={born} physical={freed} refusals={denied} turns={turns} terminalDrop=0",source.0-source.1);
+        assert!(denied>0);assert_eq!(source.0-source.1+born,freed);let(_,heap)=observe(||drop(owner));assert_eq!(heap,(0,law["terminalDropBytes"].as_u64().unwrap() as usize));
     }
 }
 
@@ -109,7 +110,7 @@ fn original_reach_set_owns_exact_physical_membership() {
 fn original_reachability_turns_preserve_source_and_actual_physical_receipts() {
     use crate::test_support::observe_tessellation_system as observe;
     use semio_framework_value::{retirement::controlled::ControlledRetirement,retained_clone::RetainedCloneGrant};
-    let law:serde_json::Value=serde_json::from_str(include_str!("../../../../📸️representation/🕸️topology/🧪️tests/🧫️fixtures/🎟️reachability/🔣️.json")).unwrap();
+    let law:serde_json::Value=serde_json::from_str(fixture_text!("../../../📸️representation/🕸️topology/🧪️tests/🧫️fixtures/🎟️reachability/🔣️.json")).unwrap();
     let mut body=Body::new();let mut rec=history::OpRecorder::new();let solid=make_box(&mut body,1.,1.,1.,&mut rec).unwrap();let original=body.entity_counts();
     for cancel in std::iter::once(None).chain(law["incremental"]["cancelTurns"].as_array().unwrap().iter().map(|turn|Some(turn.as_u64().unwrap() as usize))) {
         let (mut job,heap)=observe(||ReachabilityJob::new());assert_eq!(heap,(0,0));let (accepted,heap)=observe(||job.begin_root(EntityRef::Solid(solid)));accepted.unwrap();assert_eq!(heap,(0,0));
@@ -122,6 +123,6 @@ fn original_reachability_turns_preserve_source_and_actual_physical_receipts() {
         }
         if cancel.is_none(){let keep=job.keep();assert_eq!(keep.vertices.len(),law["box"]["vertices"].as_u64().unwrap() as usize);assert_eq!(keep.faces.len(),law["box"]["faces"].as_u64().unwrap() as usize);assert_eq!(keep.curves2.len(),law["box"]["curves2"].as_u64().unwrap() as usize);}
         let(mut owner,heap)=observe(||ControlledRetirement::new(job).unwrap_or_else(|(error,_)|panic!("original walk closure: {error}")));assert_eq!(heap,(0,0));while !owner.terminal_is_empty(){let copy=owner.next_copy_byte_demand().unwrap();let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:owner.next_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:owner.next_release_byte_demand().unwrap(),maximum_depth:owner.next_depth_demand().unwrap()};let(step,heap)=observe(||owner.step(grant).unwrap());assert!(step.progress().fits(grant));assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));admitted+=heap.0;physical+=heap.1;}
-        assert_eq!(admitted,physical);let(_,heap)=observe(||drop(owner));assert_eq!(heap,(0,0));eprintln!("[DEBUG] Original reachability cancel={cancel:?} sameBody=true oneItem=true physical={physical} turns={turns} terminalDrop=0");
+        assert_eq!(admitted,physical);let(_,heap)=observe(||drop(owner));assert_eq!(heap,(0,0));
     }
 }

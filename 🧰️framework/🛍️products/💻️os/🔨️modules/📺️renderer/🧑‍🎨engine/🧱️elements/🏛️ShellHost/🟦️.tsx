@@ -10,7 +10,7 @@
 import { OwnedShellDialog } from "./🗨️dialog-origin/🌐️browser/🟦️.tsx";
 import { isTerminalDocumentCheckInPhaseV1 } from "@semio-tech/framework/document/check-in";
 import { SessionAuthorityNotice } from "./🔖️session-notice/🟦️.tsx";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useLayoutEffect, useState } from "react";
 import {
   type Anchor,
   ANCHORS,
@@ -32,26 +32,24 @@ import {
   UIIntroduction,
   UiKeybindingsProvider
 } from "@semio-tech/ui-react";
-import { readUiPreferences } from "../../🎚️UiPreferences/🟦️.ts";
+import { readUiPreferences } from "../🎚️UiPreferences/🟦️.ts";
 import { PluginSurfaceActionsContext } from "../🗣️Interpreter/🧷️interpreter-context/🟦️.ts";
 import { RowActionRefusalsContext, UiPresenceOverlayContext } from "../🗣️Interpreter/👥️presence-overlay/🟦️.ts";
 import { SpaceAdministrationPane } from "../🛂️SpaceAdministration/🟦️.tsx";
 import { HubWorkspace } from "../🔗️HubConnection/🏛️workspace/🟦️.tsx";
-import { BoardSessionFactoryContext } from "../🪪️WasmSessionLoader/🟦️.tsx";
-import { isEphemeralShellBrand, ShellFaultBoundary } from "../🐚️Shell/🟦️.tsx";
+import { BoardSessionFactoryContext, registerWasmBindingsV1 } from "../🪪️WasmSessionLoader/🟦️.tsx";
+import { isEphemeralShellBrand } from "../🐚️Shell/🔒️boot-and-locks/🟦️.ts";
+import { ShellFaultBoundary } from "../🐚️Shell/🟦️.tsx";
 import { registerElementHostsV1 } from "../🪢️ElementHosts/🟦️.ts";
+import { pluginInstallBandTextV1, pluginInstallCancelTextV1 } from "../🛠️ShellHelpers/🛣️route-and-chrome/🟦️.tsx";
+import { checkinAbortText, checkinStatusText } from "../🛠️ShellHelpers/🧾️transfer-checkin-tutorial/🟦️.ts";
+import { renderStagedArgControl, interactionSelectionIdsV1 } from "../🛠️ShellHelpers/🪟️window-panes/📝️staged-args/🟦️.tsx";
 import {
-  pluginInstallBandTextV1,
-  pluginInstallCancelTextV1,
-  checkinAbortText,
-  checkinStatusText,
-  renderStagedArgControl,
-  interactionSelectionIdsV1,
   resolveDialogDefinition,
   resolveIntroductionDefinition,
   resolveManifestLabel,
   shellLabel
-} from "../🛠️ShellHelpers/🟦️.tsx";
+} from "../🛠️ShellHelpers/🏷️labels/🟦️.tsx";
 // #endregion 🔌️Adapters
 import { HistoryReprojectionStatus, TimeTravelBand } from "../🛠️ShellHelpers/⏪️time-travel/🟦️.tsx";
 import { localFolderNameV1, LocalFolderReconnectBand } from "./📎️local-folders/🟦️.tsx";
@@ -188,6 +186,8 @@ registerElementHostsV1();
 export function FrameworkOsShell(props: FrameworkOsShellProps): React.ReactElement {
   const { shellId, storageNamespace, ownsPage = false, brand, locks, initialLocale: requestedLocale, ...innerProps } = props;
   const ephemeral = isEphemeralShellBrand(brand);
+  const wasmBindings = props.hostPorts?.wasmBindings;
+  useLayoutEffect(() => (wasmBindings === undefined ? undefined : registerWasmBindingsV1(wasmBindings)), [wasmBindings]);
   const [scope] = useState<ShellScope>(() => {
     const storage = resolveShellScopeStorage(ephemeral, storageNamespace);
     const initialLocale = locks?.locale ?? readUiPreferences(storage).locale ?? requestedLocale ?? detectShellLocale(typeof navigator !== "undefined" ? navigator.language : undefined);

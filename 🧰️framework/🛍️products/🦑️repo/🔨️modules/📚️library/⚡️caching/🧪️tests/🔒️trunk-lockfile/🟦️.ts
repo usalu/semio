@@ -1,3 +1,4 @@
+import{testRecordV1}from"../📋️values/🟦️.ts";
 import {repositoryCargoPreparationStorageV1} from "../../📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🟦️.ts";
 import assert from "node:assert/strict";
 import { mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
@@ -6,10 +7,13 @@ import { dirname, join, resolve } from "node:path";
 import { spawn, spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { pathToFileURL } from "node:url";
-import {setImmediate} from "node:timers/promises";
+import {createRequestedIssuedResourceControlV1,requireIssuedResourceControlInvocationV1,type ScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import type{ResourceLeaseControl}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
+import{nativeCallerPhaseV1}from"../../📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
 
 /** 🔒️ Keeps Trunk's build/serve Cargo invocation on the committed dependency lock. */
-export async function testTrunkLockfile(workspace: string, native = false): Promise<void> {
+export async function testTrunkLockfile(workspace: string,invocation:ScriptInvocation,parent:ResourceLeaseControl,native = false): Promise<void> {
+  requireIssuedResourceControlInvocationV1(parent,invocation);
   const require = createRequire(import.meta.url), fixture = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🔒️trunk-lockfile/🔣️.json"), "utf8"));
   const workspaceProject = JSON.parse(readFileSync(join(workspace, "📋️project.json"), "utf8")), tooling = workspaceProject.targets[fixture.tooling.target];
   assert.ok(tooling, "Trunk acquisition must have an explicit Nx prerequisite");
@@ -24,13 +28,12 @@ export async function testTrunkLockfile(workspace: string, native = false): Prom
   assert.ok(!closure.includes(join(workspace, "📜️script.ts")), "Native preparation must not load the root application router");
   assert.ok(closure.every(path => !path.includes("/🔍️discovery/") && !path.includes("/🎮️playground/")), "Native setup must not load application taxonomy");
   const temporary = mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR!, "native-dependencies-"));
-  const started=performance.now(),progress:string[]=[];
-  const invocationFor=(signal:AbortSignal)=>({policy:{version:1 as const,owner:"trunk-lock-original-fixture",maximumElapsedMilliseconds:fixture.originalNativeControl.maximumElapsedMilliseconds},capabilities:{version:1 as const,buildMode:"prototype" as const,repositoryRoot:temporary,artifactDirectory:join(temporary,"target"),command:{kind:"native-owner-command" as const,manifest:"Cargo.toml",workingDirectory:".",program:process.execPath,arguments:["trunk"]},...fixture.originalNativeControl.native},control:{signal,remainingMilliseconds:()=>fixture.originalNativeControl.maximumElapsedMilliseconds-(performance.now()-started),async publish(event:unknown){progress.push(JSON.stringify(event));await setImmediate();},async yieldContinuation(){progress.push("yield");await setImmediate();}}});
+  const phase=nativeCallerPhaseV1(invocation,workspace,parent),progress:string[]=[];
   try {
     writeFileSync(join(temporary, "Cargo.lock"), `[[package]]\nname = "wasm-bindgen"\nversion = "${fixture.tooling.bindgenVersion}"\n`);
     for (const row of fixture.tooling.cases) {
       const commands: string[][] = [];
-      await prepareDependencies("trunk", temporary, invocationFor(new AbortController().signal),{version:1,directory:workspace,leaseDirectory:repositoryCargoPreparationStorageV1(process.cwd()).leaseDirectory,program:repositoryCargoPreparationStorageV1(process.cwd()).program}, async (command: string, args: string[], cwd: string, signal: AbortSignal, capture: boolean) => {
+      await prepareDependencies("trunk", temporary, invocation,{version:1,directory:workspace,leaseDirectory:repositoryCargoPreparationStorageV1(process.cwd()).leaseDirectory,program:repositoryCargoPreparationStorageV1(process.cwd()).program},phase, async (command: string, args: string[], cwd: string, signal: AbortSignal, capture: boolean) => {
         assert.equal(cwd, temporary); assert.equal(signal.aborted, false);
         if (capture) return command === "trunk" ? row.version : command === "wasm-bindgen" ? row.bindgen : row.targets;
         commands.push([command, ...args]); return "";
@@ -38,11 +41,12 @@ export async function testTrunkLockfile(workspace: string, native = false): Prom
       assert.deepEqual(commands, row.commands, "Preparation must be pinned and avoid reinstalling ready tooling");
     }
     const controller = new AbortController(), failure = new Error("Cancelled dependency probe"), calls: string[][] = [];
-    await assert.rejects(prepareDependencies("trunk", temporary, invocationFor(controller.signal),{version:1,directory:workspace,leaseDirectory:repositoryCargoPreparationStorageV1(process.cwd()).leaseDirectory,program:repositoryCargoPreparationStorageV1(process.cwd()).program}, async (command: string, args: string[]) => {
+    const cancelledPhase=nativeCallerPhaseV1(invocation,workspace,createRequestedIssuedResourceControlV1(parent,0,controller.signal));
+    await assert.rejects(prepareDependencies("trunk", temporary, invocation,{version:1,directory:workspace,leaseDirectory:repositoryCargoPreparationStorageV1(process.cwd()).leaseDirectory,program:repositoryCargoPreparationStorageV1(process.cwd()).program},cancelledPhase, async (command: string, args: string[]) => {
       calls.push([command, ...args]); controller.abort(failure); throw failure;
     }), error => error === failure);
     assert.deepEqual(calls, [["trunk", "--version"]], "Cancelling a probe must never start an installation");
-    assert.ok(progress.length>0);assert.ok(progress.includes("yield"));console.log("[DEBUG] original Trunk preparation progress "+progress.length);
+    await phase.advance("trunk-fixture:completed");const continuation=phase.leaseControl.yieldContinuation;if(!continuation)throw Error("Issued Native continuation required");await continuation();progress.push("yield");assert.ok(progress.length>0);assert.ok(progress.includes("yield"));
   } finally { rmSync(temporary, { recursive: true, force: true }); }
   for (const config of fixture.configs) {
     const path = config.compiler, compiler = readFileSync(join(workspace, path), "utf8"), syntax = ts.createSourceFile(path, compiler, ts.ScriptTarget.Latest, true);
@@ -70,10 +74,12 @@ export async function testTrunkLockfile(workspace: string, native = false): Prom
     assert.deepEqual(target.outputs, []);
     assert.ok(target.options.command.includes("native cargo metadata --manifest"));
     const { cacheInternals } = await import("../../../🏗️build/🕸️graph/📥️inference/🟨️.mjs");
+    for(const name of["withNativePreparation","targetPolicy","nativeLockInputs"])assert.equal(typeof cacheInternals[name],"function");
+    if(typeof cacheInternals.withNativePreparation!=="function"||typeof cacheInternals.targetPolicy!=="function"||typeof cacheInternals.nativeLockInputs!=="function")throw Error("Current native inference Source functions required");
     const projectRoot = config.project.slice(0, -"/📋️project.json".length);
-    const prepared = cacheInternals.withNativePreparation({ ...structuredClone(project), root: projectRoot }, workspace, { fixture: { ownership: "owned", target: "fixture:generate", nativeConsumers: [projectRoot] } });
-    assert.deepEqual(prepared.targets[fixture.target].dependsOn ?? [], [], "Cargo metadata must not schedule native source generators");
-    assert.equal(cacheInternals.targetPolicy(fixture.target, target).cache, true, "the lock guard replays once every manifest it validates is hashed");
+    const prepared = testRecordV1(cacheInternals.withNativePreparation({ ...structuredClone(project), root: projectRoot }, workspace, { fixture: { ownership: "owned", target: "fixture:generate", nativeConsumers: [projectRoot] } }));
+    assert.deepEqual(testRecordV1(testRecordV1(prepared.targets)[fixture.target]).dependsOn ?? [], [], "Cargo metadata must not schedule native source generators");
+    assert.equal(testRecordV1(cacheInternals.targetPolicy(fixture.target,target)).cache, true, "the lock guard replays once every manifest it validates is hashed");
     assert.deepEqual(cacheInternals.nativeLockInputs(target.options.command), ["{workspaceRoot}/**/Cargo.toml", "{workspaceRoot}/Cargo.lock"], "cargo metadata --locked validates the lock against every workspace manifest");
     assert.deepEqual(cacheInternals.nativeLockInputs('bun "script.ts" native cargo check --manifest "Cargo.toml"'), []);
     if (native) {

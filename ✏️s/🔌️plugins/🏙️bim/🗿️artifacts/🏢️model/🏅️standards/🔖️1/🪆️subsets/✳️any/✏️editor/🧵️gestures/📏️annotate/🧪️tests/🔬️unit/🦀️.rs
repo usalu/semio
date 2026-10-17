@@ -1,6 +1,6 @@
 use crate::editor::bim::gestures::session::{Modifiers, ToolEvent};
-use crate::editor::bim::gestures::tests::fixture::room;
-use crate::editor::bim::gestures::tests::fixture::Rig;
+use crate::editor::bim::fixture::room;
+use crate::editor::bim::fixture::Rig;
 use crate::standards::v1::subsets::any::schema::inferences::annotation_layout::StoreyAnnotations;
 use crate::standards::v1::subsets::any::schema::{snapshot::{AnchorEnd, AnnotationAnchor, Point2, TagCategory, WallSide}, inferences::ModelInference, mutations::ModelMutation};
 use protocol::Inference;

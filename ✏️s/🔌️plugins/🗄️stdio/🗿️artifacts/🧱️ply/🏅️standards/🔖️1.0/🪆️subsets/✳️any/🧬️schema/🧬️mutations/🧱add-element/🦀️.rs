@@ -7,8 +7,8 @@ use super::*;
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct AddElement {
-    pub(crate) index: usize,
-    pub(crate) element: PlyElement,
+    pub index: usize,
+    pub element: PlyElement,
 }
 
 impl protocol::MutationKind<PlySnapshot, PlyMutation> for AddElement {

@@ -4,7 +4,7 @@ import {Database} from "bun:sqlite";
 import {join,resolve} from "node:path";
 import {readFileSync} from "node:fs";
 import {parse} from "@iarna/toml";
-import schema from "../🧬️schema/🔣️.json";
+import componentSchema from "../../🧬️schema/🔣️.json";const schema=componentSchema.definitions.StorageLayout;
 import fixture from "./🧫️fixtures/🔣️.json";
 import {bazelCacheLayoutV1} from "../🟦️.ts";
 import {canonicalArchitectureEnvironment} from "../../../../../⚡️caching/🦀️cargo/🌿️environment/🟦️.ts";

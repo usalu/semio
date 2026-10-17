@@ -1,0 +1,8 @@
+{
+ "name": "c4ppp1",
+ "crates": [
+  "semio-s-artifact-stdio-semio-table-causal",
+  "semio-s-artifact-stdio-semio-value-fuzzy"
+ ],
+ "note": "CENSUS4-PARTIAL package 41: the two stdio semio compute crates whose root file is split (no workspace dependents)"
+}

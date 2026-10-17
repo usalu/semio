@@ -1,0 +1,46 @@
+{
+ "file": "/Users/ueli/Documents/semio/🌎️hub/🏗️bootstrap/🧾️provenance/🚚️bootstrap-publication/🟦️.ts",
+ "importers": "auto",
+ "children": [
+  {
+   "dir": "🧱️materialized-bundle",
+   "doc": "/** 🧱️ Trusted bootstrap materialized bundle: materializes the selected trusted catalog bundle into a verified directory and reads the current bundle back.\n * @see ../../../../📦️packages/🦀️rust/📜️script.ts\n */",
+   "lines": [
+    [
+     56,
+     345
+    ]
+   ]
+  },
+  {
+   "dir": "🗺️gis-proofs-and-staging",
+   "doc": "/** 🗺️ Trusted bootstrap GIS proofs and staging: the cold map component proof, the closed browser actor proof, the isolated candidate current staging and the rotation source fixture proof.\n * @see ../../../../📦️packages/🦀️rust/📜️script.ts\n */",
+   "lines": [
+    [
+     347,
+     612
+    ]
+   ]
+  },
+  {
+   "dir": "🔄️rotation-and-current-pointer",
+   "doc": "/** 🔄️ Trusted bootstrap rotation and current pointer: the stdio GIS rotation materialization and the publication revision, the current pointer read, the published current, its verification and the probe pointer staging.\n * @see ../../../../📦️packages/🦀️rust/📜️script.ts\n */",
+   "lines": [
+    [
+     614,
+     798
+    ]
+   ]
+  },
+  {
+   "dir": "📮️receipts-and-publication-child",
+   "doc": "/** 📮️ Trusted bootstrap receipts and publication child: the publication receipt contract and receipt, the unconfirmed publication error and the publication child run with its receipt.\n * @see ../../../../📦️packages/🦀️rust/📜️script.ts\n */",
+   "lines": [
+    [
+     800,
+     860
+    ]
+   ]
+  }
+ ]
+}

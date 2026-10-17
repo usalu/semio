@@ -25,33 +25,6 @@ pub mod standards {
                             pub mod inverse;
                         }
                         #[path = "."]
-                        pub mod update_feature_params {
-                            #[path = "../../../🌠update-feature-params/🦀️.rs"]
-                            mod component;
-                            #[path = "../../../🌠update-feature-params/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "../../../🌠update-feature-params/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                        }
-                        #[path = "."]
-                        pub mod update_match_params {
-                            #[path = "../../../🪢update-match-params/🦀️.rs"]
-                            mod component;
-                            #[path = "../../../🪢update-match-params/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "../../../🪢update-match-params/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                        }
-                        #[path = "."]
-                        pub mod update_sfm_params {
-                            #[path = "../../../🧮update-sfm-params/🦀️.rs"]
-                            mod component;
-                            #[path = "../../../🧮update-sfm-params/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "../../../🧮update-sfm-params/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                        }
-                        #[path = "."]
                         pub mod update_dense_params {
                             #[path = "../../../🌁update-dense-params/🦀️.rs"]
                             mod component;
@@ -60,33 +33,8 @@ pub mod standards {
                             #[path = "../../../🌁update-dense-params/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                         }
-                        #[path = "."]
-                        pub mod update_mesh_params {
-                            #[path = "../../../🕸️update-mesh-params/🦀️.rs"]
-                            mod component;
-                            #[path = "../../../🕸️update-mesh-params/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "../../../🕸️update-mesh-params/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                        }
-                        #[path = "."]
-                        pub mod update_motion_params {
-                            #[path = "../../../🏎️update-motion/🦀️.rs"]
-                            mod component;
-                            #[path = "../../../🏎️update-motion/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "../../../🏎️update-motion/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                        }
-                        #[path = "."]
-                        pub mod update_geo_params {
-                            #[path = "../../../🌐update-geo-params/🦀️.rs"]
-                            mod component;
-                            #[path = "../../../🌐update-geo-params/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "../../../🌐update-geo-params/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                        }
+                        pub use semio_s_artifact_remodel_remodeling_mut_params_2::standards::v1::subsets::any::schema::mutations::{update_feature_params, update_sfm_params, update_mesh_params, update_geo_params};
+                        pub use semio_s_artifact_remodel_remodeling_mut_params_3::standards::v1::subsets::any::schema::mutations::{update_match_params, update_motion_params};
                     }
                 }
             }

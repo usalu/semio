@@ -14,7 +14,4 @@ pub fn handle(_payload: &IncrementCounter, doc: &ArtifactView<'_, VcsSnapshot>, 
 }
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

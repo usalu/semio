@@ -47,7 +47,7 @@ pub const KINDS: &[&str] = &["upsert-instance", "remove-instance", "set-header"]
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`, returning the diff (computed against the PRE-mutation
 /// state, per `Mutation::diff`'s contract).
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 pub fn apply_ifc2x3_mutation(snapshot: &mut Ifc2x3Snapshot, mutation: &Ifc2x3Mutation) -> protocol::MutationOutcome<Ifc2x3Diff> {
     let outcome = <Ifc2x3Mutation as Mutation<Ifc2x3Snapshot>>::diff(mutation, snapshot);
     match protocol::apply_diff(outcome.diff(), snapshot) {

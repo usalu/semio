@@ -68,5 +68,4 @@ async fn pack_refusal_kind_controls_db_category_and_owned_message() {
         assert_eq!(serde_json::json!({"category":category,"output":message}),serde_json::json!({"category":row["category"],"output":row["output"]}),"{}",row["id"]);
         if let Some(pointer)=retained{let DbError::InvalidArgument(message)=converted else{panic!("typed invalid argument")};assert_eq!(message.as_ptr(),pointer);}
     }
-    eprintln!("[DEBUG] DB Pack conversion twelve closed vectors use typed kind and retain invalid argument allocation");
 }

@@ -1,5 +1,6 @@
 use super::*;
 use crate::editor_domain::editor_laws::context::{app, render as render_body};
+use semio_framework_test_fixtures::repo_text;
 
 #[semio_framework_async_macros::async_test]
 async fn inspector_shows_no_selection_by_default() {
@@ -77,7 +78,7 @@ fn inspector_brep_controls_keep_geometry_connected_and_numeric_commits_localized
     use semio_s_artifact_procedural_3d_terminology::Generation3dLabels;
     let _serial = crate::editor_domain::editor_laws::serial_execution::lock();
     crate::flow_operators::installed();
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(repo_text!("✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     fn node<'a>(tree: &'a serde_json::Value, key: &str) -> Option<&'a serde_json::Value> {
         if tree["key"] == key { return Some(tree); }
         tree["children"].as_array()?.iter().find_map(|child| node(child, key))
@@ -177,6 +178,5 @@ fn inspector_brep_controls_keep_geometry_connected_and_numeric_commits_localized
                 assert_eq!(semio_framework_pack_json::to_json_string(&*snapshot), before);
             }
         }
-        eprintln!("[DEBUG] selected BRep {} retains connected topology inputs, localized absolute controls and read-only declared outputs", case["kind"]);
     }
 }

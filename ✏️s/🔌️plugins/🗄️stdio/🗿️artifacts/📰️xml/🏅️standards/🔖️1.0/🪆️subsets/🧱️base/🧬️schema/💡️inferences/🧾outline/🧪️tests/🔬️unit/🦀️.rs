@@ -1,4 +1,6 @@
-use super::*;
+use crate::schema::snapshot::XmlNode;
+use crate::XmlSnapshot;
+use crate::standards::v1_0::subsets::base::schema::inferences::outline::*;
 use crate::schema::snapshot::XmlDocument;
 
 #[semio_framework_async_macros::async_test]

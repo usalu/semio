@@ -7,6 +7,7 @@ import { editPath, dragPathPoint, type PathEdit } from "../../🟦️.ts";
 import { arcGeometry, arcPoint, segmentBounds, type Point, type Matrix } from "../../../🟦️.ts";
 import boundsFixture from "../../../../../🧪️tests/🧫️fixtures/🧮️geometry/🔄️arc-bounds/🔣️.json";
 import type { PathGeometrySegment } from "../../../../🟦️.ts";
+import { admitted } from "../../../../../🧪️tests/🧫️fixtures/🟦️.ts";
 import fixture from "../../../../../🧪️tests/🧫️fixtures/🧮️geometry/✏️editing/🎮️operations/🔣️.json";
 import schema from "../../🧬️schema/🔣️.json";
 import algorithms from "../../../../../🧪️tests/🧫️fixtures/🧮️geometry/✏️editing/🎮️operations/🎛️algorithms/🔣️.json";
@@ -160,7 +161,7 @@ test("joining preserves oriented curves and matches independent contour splices"
   expect(result).toEqual(oracle);
   expect(before).toEqual(saved);
   const coincident=fixture.find(item=>item.name==="join-coincident-endpoints")!;
-  expect(editPath(coincident.before as PathGeometrySegment[],coincident.operation as PathEdit)).toEqual(produce(coincident.before,draft=>{draft.splice(2,1);}));
+  const expectedAt164x105 = produce(coincident.before,draft=>{draft.splice(2,1);}); expect<typeof expectedAt164x105>(editPath(coincident.before as PathGeometrySegment[],coincident.operation as PathEdit)).toEqual(expectedAt164x105);
   const reversed=fixture.find(item=>item.name==="join-reversed-contours")!;
   const joined=editPath(reversed.before as PathGeometrySegment[],reversed.operation as PathEdit),segment=joined[1]!;
   if(segment.kind!=="cubic") throw new Error("Missing joined curve");
@@ -217,7 +218,7 @@ test("node pointer deltas stay correct through affine ancestors without snapping
     if(sample.constrained){if(Math.abs(dx)>=Math.abs(dy))dy=0;else dx=0;}
     const oracle=world.add(new Vector2(dx,dy)).applyMatrix3(matrix.clone().invert());
     expect(result![0]).toBeCloseTo(oracle.x,12);expect(result![1]).toBeCloseTo(oracle.y,12);
-    expect(dragPathPoint(segment,point,sample.matrix as Matrix,sample.start as Point,sample.start as Point,false)).toEqual(local);
+    expect(dragPathPoint(segment,point,sample.matrix as Matrix,sample.start as Point,sample.start as Point,false)).toEqual<typeof local>(local);
   }
 });
 
@@ -227,7 +228,7 @@ test("gesture position previews copy at most the edited segment and its adjacent
     const source=row.before as PathGeometrySegment[], saved=structuredClone(source), operation=row.operation as Extract<PathEdit,{kind:"position"}>;
     const patch=patchPathPoint(source[operation.index]!,source[operation.index+1],operation.point,operation.to);
     const preview=produce(source,draft=>{draft[operation.index]=patch[0];if(patch[1])draft[operation.index+1]=patch[1];});
-    expect(preview).toEqual(row.after);
+    expect<typeof row.after>(preview).toEqual(row.after);
     expect(preview).toEqual(editPath(source,operation));
     expect(source).toEqual(saved);
     expect(()=>patchPathPoint(source[operation.index]!,source[operation.index+1],operation.point,[Infinity,0])).toThrow();
@@ -242,11 +243,11 @@ test("node picking names the nearest visible point with deterministic anchor pri
   for(const row of pointHits) {
     const segment=row.segment as PathGeometrySegment, matrix=row.matrix as Matrix;
     const result=pathPointHit(segment,matrix,row.world as Point,row.tolerance);
-    expect(result?.point??null).toBe(row.point);
+    expect<typeof row.point>(result?.point??null).toBe(row.point);
     const candidates=segment.kind==="close"?[]:[{point:"anchor",to:segment.to},...(segment.kind==="quad"?[{point:"control1",to:segment.ctrl}]:segment.kind==="cubic"?[{point:"control1",to:segment.ctrl1},{point:"control2",to:segment.ctrl2}]:[])];
     const [a,b,c,d,e,f]=matrix,affine=new Matrix3().set(a,c,e,b,d,f,0,0,1);
     const oracle=candidates.map(candidate=>({...candidate,distance:new Vector2(...candidate.to).applyMatrix3(affine).distanceTo(new Vector2(...row.world))})).filter(candidate=>candidate.distance<=row.tolerance).sort((a,b)=>a.distance-b.distance)[0];
-    expect(result?.point??null).toBe(oracle?.point??null);
+    expect(Object.is(result?.point??null,oracle?.point??null)).toBe(true);
     if(result)expect(result.distance).toBeCloseTo(oracle!.distance,12);
     expect(pathPointHit(segment,matrix,row.world as Point,-1)).toBeNull();
   }
@@ -255,13 +256,13 @@ test("node picking names the nearest visible point with deterministic anchor pri
 import translationFixture from "../../../../../🧪️tests/🧫️fixtures/🧮️geometry/✏️editing/🎮️operations/↔️points/🔣️.json";
 
 test("multi-point translation is atomic, order-independent and agrees with Three vectors", () => {
-  const validate=new Ajv({strict:true}).compile(schema);
+  const validate=new Ajv({strict:true}).compile<PathEdit>(schema);
   for(const row of translationFixture) {
     const source=row.before as PathGeometrySegment[],saved=structuredClone(source),operation=row.operation as PathEdit;
     expect(validate(operation)).toBe(true);
     if("error" in row) { expect(()=>editPath(source,operation)).toThrow(); expect(source).toEqual(saved); continue; }
     const actual=editPath(source,operation);
-    expect(actual).toEqual(row.after);
+    expect<typeof row.after>(actual).toEqual(row.after);
     expect(source).toEqual(saved);
     const oracle=structuredClone(source) as unknown as Record<string,unknown>[];
     for(const [index,field] of row.moved) {
@@ -270,7 +271,7 @@ test("multi-point translation is atomic, order-independent and agrees with Three
     }
     expect(actual).toEqual(oracle as unknown as PathGeometrySegment[]);
     expect(editPath(source,{...row.operation,points:[...row.operation.points].reverse()} as PathEdit)).toEqual(actual);
-    expect(editPath(actual,{...row.operation,delta:row.operation.delta.map(value=>-value)} as PathEdit)).toEqual(source);
+    expect(editPath(actual,admitted(validate,{...row.operation,delta:row.operation.delta.map(value=>-value)},"path edit"))).toEqual(source);
   }
 });
 
@@ -291,7 +292,7 @@ test("world point nudges ignore translation and honor the complete affine basis"
     const source=structuredClone(row.segments) as PathGeometrySegment[],points=row.points as import("../../🟦️.ts").PathPointRef[];
     if(!row.after){expect(()=>translateWorldPathPoints(source,points,row.matrix as [number,number,number,number,number,number],row.delta as [number,number])).toThrow();continue;}
     const actual=translateWorldPathPoints(source,points,row.matrix as [number,number,number,number,number,number],row.delta as [number,number]);
-    expect(actual).toEqual(row.after);expect(source).toEqual(row.segments);
+    expect(actual).toEqual<typeof row.after>(row.after);expect(source).toEqual<typeof row.segments>(row.segments);
     const [a,b,c,d]=row.matrix,local=new Vector2(...row.delta as [number,number]).applyMatrix3(new Matrix3().set(a!,c!,0,b!,d!,0,0,0,1).invert());
     expect(actual).toEqual(editPath(source,{kind:"translate",points,delta:[local.x,local.y]}));
   }

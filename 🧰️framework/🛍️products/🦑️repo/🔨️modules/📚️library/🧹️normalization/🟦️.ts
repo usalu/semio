@@ -590,9 +590,9 @@ function parseGeneratorNodeRecord(value: unknown, name: string): TaxonomyGenerat
 function parseRegeneration(value: unknown, name: string): TaxonomyRegeneration {
   const row = planRecord(value, name, ["id", "contractId", "cwd", "command", "outputRoots", "inputs", "preOutputs", "outputs", "preview", "previewManifestDigest", "staleRemovals"], ["verifyCommand"]);
   const command = row.command;
-  if (!Array.isArray(command) || command.length !== 4 || command[0] !== "bun" || command[1] !== "nx" || command[2] !== "run" || typeof command[3] !== "string") throw new Error(`${name}.command is invalid`);
+  if (!Array.isArray(command) || command.length !== 4 || command[0] !== "bun" || command[1] !== "repo" || command[2] !== "run" || typeof command[3] !== "string") throw new Error(`${name}.command is invalid`);
   const verifyCommand = row.verifyCommand;
-  if (verifyCommand !== undefined && (!Array.isArray(verifyCommand) || verifyCommand.length !== 4 || verifyCommand[0] !== "bun" || verifyCommand[1] !== "nx" || verifyCommand[2] !== "run" || typeof verifyCommand[3] !== "string")) throw new Error(`${name}.verifyCommand is invalid`);
+  if (verifyCommand !== undefined && (!Array.isArray(verifyCommand) || verifyCommand.length !== 4 || verifyCommand[0] !== "bun" || verifyCommand[1] !== "repo" || verifyCommand[2] !== "run" || typeof verifyCommand[3] !== "string")) throw new Error(`${name}.verifyCommand is invalid`);
   if (!["outputRoots", "inputs", "preOutputs", "outputs", "staleRemovals"].every((key) => Array.isArray(row[key]))) throw new Error(`${name} array fields are invalid`);
   const preview = planRecord(row.preview, `${name}.preview`, ["contractId", "nodes", "schemaVersion", "staleRemovals"]);
   if (preview.schemaVersion !== 1 || preview.contractId !== row.contractId || !Array.isArray(preview.nodes) || !Array.isArray(preview.staleRemovals)) throw new Error(`${name}.preview is invalid`);
@@ -2321,7 +2321,7 @@ function typescriptCollectionChangedBinding(syntax: TypeScriptCollectionSyntax, 
   const assignment = (text?: string): boolean => /^(?:=|\+=|-=|\*=|\/=|%=|&=|\|=|\^=|&&=|\|\|=|\?\?=|\*\*=|<<=|>>=|>>>=|\+\+|--)$/u.test(text ?? "");
   return tokens.some((token, index) => {
     if (token.kind !== "identifier" || token.text !== name || index === declaration) return false;
-    if (assignment(tokens[index + 1]?.text) || ["++", "--"].includes(requireTaxonomyValue(tokens[index - 1],"tokens[index - 1]")?.text)) return true;
+    if (assignment(tokens[index + 1]?.text) || ["++", "--"].includes(tokens[index - 1]?.text ?? "")) return true;
     let cursor = index + 1;
     while (tokens[cursor]?.text === "." && tokens[cursor + 1]?.kind === "identifier" || tokens[cursor]?.text === "[" && pairs.has(cursor)) cursor = requireTaxonomyValue(tokens[cursor],"tokens[cursor]").text === "[" ? pairs.get(cursor)! + 1 : cursor + 2;
     if (cursor > index + 1 && assignment(tokens[cursor]?.text)) return true;
@@ -2432,7 +2432,7 @@ function typescriptPathCollectionReferenceAuthority(content: string): ReferenceT
   };
   const imported = (index: number, module: string, name: string): boolean => {
     const token = requireTaxonomyValue(tokens[index],"tokens[index]"), owner = imports.get(token?.text);
-    return Boolean(token?.kind === "identifier" && ![".", "?."].includes(requireTaxonomyValue(tokens[index - 1],"tokens[index - 1]")?.text) && owner?.module === module && owner.name === name && bindings.get(token.text)?.length === 1 && !changed(token.text, owner.index));
+    return Boolean(token?.kind === "identifier" && ![".", "?."].includes(tokens[index - 1]?.text ?? "") && owner?.module === module && owner.name === name && bindings.get(token.text)?.length === 1 && !changed(token.text, owner.index));
   };
   const rootValue = (index: number): boolean => {
     const row = unique(requireTaxonomyValue(tokens[index],"tokens[index]")?.text);
@@ -2451,7 +2451,7 @@ function typescriptPathCollectionReferenceAuthority(content: string): ReferenceT
     if (!elements.length || elements.some(([start, end]) => { const value = staticValue(start, end, row.scope); return value === null || !relativeLeaf(value); })) continue;
     const uses = tokens.flatMap((token, index) => token.kind === "identifier" && token.text === row.name && index !== row.index ? [index] : []);
     if (embedded.some((expression) => expression.tokens.some((token) => token.kind === "identifier" && token.text === row.name))) continue;
-    if (uses.some((index) => !loops.some((loop) => loop.collection === index) && !(tokens[index - 1]?.text === "..." && tokens[requireTaxonomyValue(tokens[index],"tokens[index]").group]?.text === "[" && [",", "]"].includes(requireTaxonomyValue(tokens[index + 1],"tokens[index + 1]")?.text)))) continue;
+    if (uses.some((index) => !loops.some((loop) => loop.collection === index) && !(tokens[index - 1]?.text === "..." && tokens[requireTaxonomyValue(tokens[index],"tokens[index]").group]?.text === "[" && [",", "]"].includes(tokens[index + 1]?.text ?? "")))) continue;
     const reader = loops.some((loop) => {
       const item = unique(requireTaxonomyValue(tokens[loop.item],"tokens[loop.item]").text);
       if (requireTaxonomyValue(tokens[loop.collection],"tokens[loop.collection]").text !== row.name || row.end >= loop.index || row.scope !== requireTaxonomyValue(tokens[loop.index],"tokens[loop.index]").scope || !immutable(item) || item.index !== loop.item) return false;

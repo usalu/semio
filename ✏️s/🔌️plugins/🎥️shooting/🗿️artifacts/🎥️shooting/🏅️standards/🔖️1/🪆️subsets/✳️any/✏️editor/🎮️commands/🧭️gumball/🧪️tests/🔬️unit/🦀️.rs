@@ -2,9 +2,24 @@
 //! keyed by its `TransactionRef`, one editable relative leaf labelled from the leaf — a gesture that moves nothing
 //! leaves zero trace, and the leaf's inputs replay relative to whatever base precedes it.
 
-use super::*;
+use crate::standards::v1::subsets::any::schema::mutations::ShootingMutation;
+use crate::ShootingSnapshot;
+#[allow(unused_imports)]
+use crate::{editor::shooting::config::ShootingConfig, editor::shooting::config::ShootingConfigMutation};
+#[allow(unused_imports)]
+use crate::{editor::shooting::ui_helpers_and_io::ShootingDispatchCtx, editor::shooting::ui_helpers_and_io::SHOOTING_PLAY_APP_ID};
+#[allow(unused_imports)]
+use machine::Command;
+#[allow(unused_imports)]
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+#[allow(unused_imports)]
+use semio_framework_tool_machine::{ToolMachineRunner, ToolStep, ToolYield};
+#[allow(unused_imports)]
+use semio_framework_value_derive::{FromValue, ToValue};
+use crate::editor::shooting::commands::gumball::*;
 use crate::editor::shooting::unit_tests::context::{dispatch, dispatch_rows, history_verb, shooting_app, ShootingApp, SHOOTING_TEST_INSTANCE};
-use crate::editor::shooting::{ShootingCommand, SHOOTING_INTERACTION_DOMAIN};
+use crate::editor::shooting::{ShootingCommand};
+use crate::editor::shooting::ui_helpers_and_io::{SHOOTING_INTERACTION_DOMAIN};
 use protocol::{Mutation, MutationDiff};
 use semio_framework::kernel::HistoryEntry;
 use semio_framework_plugin::{artifact_app_laws, PluginApp};
@@ -100,10 +115,8 @@ async fn an_id_less_gesture_moves_the_live_selection() {
     semio_framework_plugin::app::settle_framework_reserved_admission(&mut *app, admitted).await.expect("the selection admission settles");
     artifact_app_laws::settle_registered_typed_operation(&mut *app, SHOOTING_TEST_INSTANCE, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("the selection settles");
     let captured = app.interaction_state().await;
-    eprintln!("[DEBUG] Shooting idless before dispatch selection={:?}", captured.selection.get(SHOOTING_INTERACTION_DOMAIN).map(|selection| (&selection.granularity, &selection.ids)));
     let rows = dispatch_rows(&mut app, translate(Vec::new(), 3.0)).await;
     let after_dispatch = app.interaction_state().await;
-    eprintln!("[DEBUG] Shooting idless after dispatch rows={} selection={:?}", rows.len(), after_dispatch.selection.get(SHOOTING_INTERACTION_DOMAIN).map(|selection| (&selection.granularity, &selection.ids)));
     assert_eq!(rows.len(), 1, "the selection fallback commits one transaction");
     assert_eq!(origin(&app, &asset_id), [before[0] + 3.0, before[1], before[2]]);
 }

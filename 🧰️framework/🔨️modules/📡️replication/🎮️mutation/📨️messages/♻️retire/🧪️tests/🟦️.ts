@@ -13,7 +13,6 @@ test("♻️ neutral message ledger retirement preserves the original and remove
     expect(row.rowCapacity).toBeGreaterThanOrEqual(row.expectedRows);
     expect(row.contextCapacity).toBeGreaterThanOrEqual(Buffer.byteLength(row.context));
   }
-  console.log(`[DEBUG] ${law.cases.length} neutral diagnostic-ledger owner cases match independent RFC6902; physical release proof remains native`);
 });
 test("♻️ replay outcomes preserve both original identities through exact diagnostic retirement",()=>{
   expect(law.outcomeIdentity.capacity).toBeGreaterThanOrEqual(Buffer.byteLength(law.outcomeIdentity.text));
@@ -23,7 +22,6 @@ test("♻️ replay outcomes preserve both original identities through exact dia
     expect(baseline).toEqual({mutationId:law.outcomeIdentity.text,editId:row.context,messages:row.messages});
   }
   expect(readFileSync(new URL("../🦀️.rs",import.meta.url),"utf8")).toContain("pub fn from_replay_outcome");
-  console.log(`[DEBUG] ${law.cases.length} outcome ledgers preserve both owned identities and agree with independent RFC6902`);
 });
 test("♻️ nested edit diagnostics retain original owners until the exact grant permits release",()=>{
   for(const row of law.editLedgers){
@@ -37,5 +35,4 @@ test("♻️ nested edit diagnostics retain original owners until the exact gran
   expect(producer).toContain("pub struct EditMessageLedgerRetirement");
   const ledger=readFileSync(new URL("../../../../../../🛍️products/💻️os/🔨️modules/🏪️store/📒️ledger/🦀️.rs",import.meta.url),"utf8");
   expect(ledger.includes("inner: crate::os_spr::command::EditMessageLedgerRetirement")).toBe(true);
-  console.log(`[DEBUG] ${law.editLedgers.length} strict neutral nested ledgers agree with independent RFC6902, canonical native owner and real rejected Store mount`);
 });

@@ -271,7 +271,7 @@ pub fn replay_process(session: &mut ProcessKernelReplay, scene: &ProcessWorkingS
             _ => session.kernel_mut().cut(&handle, &tool),
         };
         #[cfg(test)]
-        if let Err(error) = &result { eprintln!("[DEBUG] Process replay step {} refused: {error}", step.id); }
+        if let Err(error) = &result {  }
         let next = result.ok()?;
         handle = next;
         session.tables.memo.insert(prefix_signature(stock_signature, &enabled_steps[..=index]), handle.clone());

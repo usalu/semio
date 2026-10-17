@@ -1,11 +1,13 @@
 //! 🎞️ Original tick wire chunks enter the same preadmitted payload and caller context one paid unit at a time.
-use semio_framework_job::{RetainedPayloadBuilder,StepContext};
-use semio_framework_tool_run::{ToolRunTickWriter,ToolRunTickWireCursor};
-use semio_framework_value::{ValueError,retained_clone::RetainedCloneProgress};
+use semio_framework_job::{RetainedPayloadBuilder, StepContext};
+use semio_framework_tool_run::{ToolRunTickWriter, ToolRunTickWireCursor};
+use semio_framework_value::ValueError;
+use semio_framework_value::retained_clone::RetainedCloneProgress;
 
+#[doc(hidden)]
 #[cfg(test)]
 #[path="🧪️tests/🦀️.rs"]
-mod tests;
+pub mod tests;
 
 /// 🤝️ Borrows the original writer, cursor, preadmitted payload storage and append position throughout the turn.
 pub fn advance_original_tick_payload(writer:&ToolRunTickWriter,cursor:&mut ToolRunTickWireCursor,payload:&mut RetainedPayloadBuilder,position:&mut usize,cx:&mut StepContext<'_>)->Result<bool,ValueError>{

@@ -1,6 +1,13 @@
+use crate::Puzzle5dSnapshot;
+use protocol::Mutation;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::diff::Puzzle5dDiff;
+#[allow(unused_imports)]
+use protocol::DiffAlgebra;
 
-use super::*;
+use crate::standards::v1::subsets::any::schema::mutations::*;
 use crate::apply_puzzle5d_mutation;
+use semio_framework_test_fixtures::fixture_text;
 
 #[test]
 fn puzzle5d_delta_ops_round_trip_and_stay_granular() {
@@ -48,7 +55,7 @@ use protocol::os_spr::protocol_laws::{assert_mutation_diff_absorb_law, assert_mu
 
 #[semio_framework_async_macros::async_test]
 async fn move_part_2d_diff_absorb_law() {
-    use crate::Puzzle5dPart;
+    use crate::standards::v1::subsets::any::schema::document_records::Puzzle5dPart;
     let base = empty();
     let part = Puzzle5dPart { id: "p1".into(), ..Default::default() };
     let with_part = protocol::apply_diff(create_part(part, None).diff(&base).diff(), &base).expect("valid mutation diff");
@@ -64,7 +71,7 @@ fn empty() -> Puzzle5dSnapshot {
 
 #[semio_framework_async_macros::async_test]
 async fn create_delete_part_inverse_law() {
-    use crate::Puzzle5dPart;
+    use crate::standards::v1::subsets::any::schema::document_records::Puzzle5dPart;
     let base = empty();
     let part = Puzzle5dPart { id: "p1".into(), ..Default::default() };
     (assert_mutation_inverse_law(&base, &create_part(part.clone(), None))).await;
@@ -74,7 +81,7 @@ async fn create_delete_part_inverse_law() {
 
 #[semio_framework_async_macros::async_test]
 async fn part_field_mutations_inverse_law() {
-    use crate::{Puzzle5dGrip, Puzzle5dPart, Puzzle5dPartAnchor, Puzzle5dScale};
+    use crate::standards::v1::subsets::any::schema::document_records::{Puzzle5dGrip, Puzzle5dPart, Puzzle5dPartAnchor, Puzzle5dScale};
     let base = empty();
     let part = Puzzle5dPart { id: "p1".into(), grips: vec![Puzzle5dGrip { id: "g1".into(), grip_kind: None, grip_2d: Default::default(), grip_3d: Default::default() }], ..Default::default() };
     let with_part = protocol::apply_diff(create_part(part, None).diff(&base).diff(), &base).expect("valid mutation diff");
@@ -98,7 +105,7 @@ async fn part_field_mutations_inverse_law() {
 
 #[semio_framework_async_macros::async_test]
 async fn connect_disconnect_grips_inverse_law_and_cascade() {
-    use crate::{Puzzle5dGrip, Puzzle5dPart};
+    use crate::standards::v1::subsets::any::schema::document_records::{Puzzle5dGrip, Puzzle5dPart};
     let base = empty();
     let part_a = Puzzle5dPart { id: "a".into(), grips: vec![Puzzle5dGrip { id: "ga".into(), grip_kind: None, grip_2d: Default::default(), grip_3d: Default::default() }], ..Default::default() };
     let part_b = Puzzle5dPart { id: "b".into(), grips: vec![Puzzle5dGrip { id: "gb".into(), grip_kind: None, grip_2d: Default::default(), grip_3d: Default::default() }], ..Default::default() };
@@ -121,7 +128,7 @@ async fn connect_disconnect_grips_inverse_law_and_cascade() {
 
 #[semio_framework_async_macros::async_test]
 async fn document_scalar_mutations_inverse_law() {
-    use crate::{Puzzle5dCompatSpecificity, Puzzle5dKindCatalogs};
+    use crate::standards::v1::subsets::any::schema::document_records::{Puzzle5dCompatSpecificity, Puzzle5dKindCatalogs};
     let base = empty();
     (assert_mutation_inverse_law(&base, &rename_puzzle5d(Some("Nakagin".into())))).await;
     (assert_mutation_inverse_law(&base, &change_domain("mechanical".into()))).await;
@@ -161,7 +168,7 @@ async fn missing_target_is_error_per_verb_family() {
 
 #[semio_framework_async_macros::async_test]
 async fn create_duplicate_id_is_fatal_and_never_applies() {
-    use crate::Puzzle5dPart;
+    use crate::standards::v1::subsets::any::schema::document_records::Puzzle5dPart;
     let mut base = empty();
     let part = Puzzle5dPart { id: "p0".into(), ..Default::default() };
     base.parts.push(part.clone());
@@ -176,8 +183,8 @@ async fn create_duplicate_id_is_fatal_and_never_applies() {
 /// 🧱️ One part placed on the board at `(x, 0)` and in the world at `origin`, plus one target volume at `origin`.
 fn selection_scene(x: f64, origin: [f64; 3]) -> Puzzle5dSnapshot {
     let mut scene = empty();
-    scene.parts.push(crate::Puzzle5dPart { id: "p1".into(), part_2d: crate::Puzzle5dPart2d { x, ..Default::default() }, part_3d: crate::Puzzle5dPart3d { origin, scale: Some(crate::Puzzle5dScale::Uniform(2.0)), ..Default::default() }, ..Default::default() });
-    scene.target_volumes.push(crate::Puzzle5dTargetVolume { id: "v1".into(), origin, ..Default::default() });
+    scene.parts.push(crate::standards::v1::subsets::any::schema::document_records::Puzzle5dPart { id: "p1".into(), part_2d: crate::standards::v1::subsets::any::schema::document_records::Puzzle5dPart2d { x, ..Default::default() }, part_3d: crate::standards::v1::subsets::any::schema::document_records::Puzzle5dPart3d { origin, scale: Some(crate::standards::v1::subsets::any::schema::document_records::Puzzle5dScale::Uniform(2.0)), ..Default::default() }, ..Default::default() });
+    scene.target_volumes.push(crate::standards::v1::subsets::any::schema::document_records::Puzzle5dTargetVolume { id: "v1".into(), origin, ..Default::default() });
     scene
 }
 
@@ -196,7 +203,7 @@ fn selection_leaves_replay_on_a_moved_base() {
     }
     let mut scene = selection_scene(0.0, [0.0; 3]);
     apply_puzzle5d_mutation(&mut scene, &scale_selection_3d(vec!["p1".into()], [0.5, 1.0, 3.0])).expect("scaling applies");
-    assert_eq!(scene.parts[0].part_3d.scale, Some(crate::Puzzle5dScale::Vec3([1.0, 2.0, 6.0])), "a uniform base scale broadcasts before the per-axis factors multiply it");
+    assert_eq!(scene.parts[0].part_3d.scale, Some(crate::standards::v1::subsets::any::schema::document_records::Puzzle5dScale::Vec3([1.0, 2.0, 6.0])), "a uniform base scale broadcasts before the per-axis factors multiply it");
     let outcome = drag_selection_2d(vec!["v1".into()], 1.0, 1.0).diff(&scene);
     assert_eq!(outcome.messages().iter().map(|message| message.code.0.as_str()).collect::<Vec<_>>(), vec!["mutation.target-missing"], "the board paints no target volume, so a board drag of one reaches nothing");
 }
@@ -271,7 +278,7 @@ fn kinds_match_the_enum_and_the_catalog() {
     for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
         assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
     }
-    let manifest = include_str!("../../../../🔮️oracles/🔣️.json");
+    let manifest = fixture_text!("../../../../../../🔮️oracles/🔣️.json");
     for kind in KINDS {
         assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
     }
@@ -294,7 +301,7 @@ fn play_snapshot_pack_shares_the_typed_record_identity_and_round_trips() {
 /// inverse diffs sum to the negative diff.
 #[semio_framework_async_macros::async_test]
 async fn middle_row_removals_restore_their_position() {
-    use crate::{Puzzle5dCompatSpecificity, Puzzle5dGrip, Puzzle5dPart, Puzzle5dTargetVolume};
+    use crate::standards::v1::subsets::any::schema::document_records::{Puzzle5dCompatSpecificity, Puzzle5dGrip, Puzzle5dPart, Puzzle5dTargetVolume};
     use protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law;
     let step = |base: Puzzle5dSnapshot, mutation: Puzzle5dMutation| protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("valid mutation diff");
     let grip = |id: &str| Puzzle5dGrip { id: id.into(), grip_kind: None, grip_2d: Default::default(), grip_3d: Default::default() };

@@ -1,5 +1,5 @@
-import type {VizChartInference} from "../../../🧬️schema/💡️inferences/🟦️.ts";
-import type {VizChartDiagnostic} from "../../../🧬️schema/💡️inferences/✅️validation/🟦️.ts";
+import type {VizChartInference} from "@semio-tech/print-viz-inference";
+import type {VizChartDiagnostic} from "@semio-tech/print-viz-inference/validation";
 import document from "./🔣️.json";
 import {validateJsonSchemaSubset} from "@semio-tech/schema-validator-ts";
 

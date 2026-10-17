@@ -15,21 +15,22 @@
 
 use crate::mutations::{apply_presentation_mutation, inverse_presentation_mutation, PresentationMutation};
 use crate::{PresentationDiff, PresentationSnapshot};
+use semio_framework_test_fixtures::fixture_text;
 
-const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧹delete-tiles/🧪️rejects/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧹delete-tiles/🧪️rejects/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧹delete-tiles/🧪️rejects/🦠️mutation/🔣️.json");
-const DIFF_ABSENT: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧹delete-tiles/🧪️rejects/🔺️diff/🚫️.absent");
-const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧹delete-tiles/🧪️rejects/🎯️outcome/🔣️.json");
+static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧹delete-tiles/🧪️rejects/📸️snapshot/⬅️before/🔣️.json"));
+static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧹delete-tiles/🧪️rejects/📸️snapshot/➡️after/🔣️.json"));
+static MUTATION: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧹delete-tiles/🧪️rejects/🦠️mutation/🔣️.json"));
+static DIFF_ABSENT: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧹delete-tiles/🧪️rejects/🔺️diff/🚫️.absent"));
+static OUTCOME: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧹delete-tiles/🧪️rejects/🎯️outcome/🔣️.json"));
 
 fn mutation() -> PresentationMutation {
-    semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation decodes")
+    semio_framework_pack_json::from_json_str((*MUTATION), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation decodes")
 }
 fn before() -> PresentationSnapshot {
-    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes")
+    semio_framework_pack_json::from_json_str((*BEFORE), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes")
 }
 fn expected_after() -> PresentationSnapshot {
-    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after snapshot decodes")
+    semio_framework_pack_json::from_json_str((*AFTER), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after snapshot decodes")
 }
 
 /// ▶️ A wholly unsatisfiable `delete-tiles` leaves the document byte-identical to the committed
@@ -60,7 +61,7 @@ fn a_total_miss_is_one_error_listing_every_missing_id() {
 /// 🚷 The diff is DECLARED absent, not an invented empty patch.
 #[test]
 fn the_committed_diff_is_declared_absent() {
-    assert!(DIFF_ABSENT.is_empty(), "🔺️diff/🚫️.absent must be an empty marker, not a stand-in patch");
+    assert!((*DIFF_ABSENT).is_empty(), "🔺️diff/🚫️.absent must be an empty marker, not a stand-in patch");
     let produced = <PresentationMutation as protocol::Mutation<PresentationSnapshot>>::diff(&mutation(), &before());
     assert_eq!(produced.diff(), &PresentationDiff::default(), "delete-tiles/rejects-when-every-addressed-tile-is-missing: a rejection must produce no delta at all");
 }
@@ -69,14 +70,14 @@ fn the_committed_diff_is_declared_absent() {
 /// `ids` really carries two entries, which is what makes the threshold guard meaningful here.
 #[test]
 fn committed_json_is_canonical() {
-    for (label, text) in [("before", BEFORE), ("after", AFTER)] {
+    for (label, text) in [("before", (*BEFORE)), ("after", (*AFTER))] {
         let decoded: PresentationSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
         let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "delete-tiles/rejects-when-every-addressed-tile-is-missing: committed {label} JSON is not canonical");
     }
     let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&mutation())).expect("mutation encodes");
-    let original: serde_json::Value = serde_json::from_str(MUTATION).expect("mutation reparses");
+    let original: serde_json::Value = serde_json::from_str((*MUTATION)).expect("mutation reparses");
     assert_eq!(reencoded, original, "delete-tiles/rejects-when-every-addressed-tile-is-missing: committed mutation JSON is not canonical");
     assert_eq!(original.get("DeleteTiles").and_then(|payload| payload.get("ids")).and_then(serde_json::Value::as_array).map(Vec::len), Some(2), "the threshold guard needs more than one addressed id to be a real threshold");
 }
@@ -85,7 +86,7 @@ fn committed_json_is_canonical() {
 /// emits.
 #[test]
 fn declared_outcome_holds() {
-    let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
+    let outcome: serde_json::Value = serde_json::from_str((*OUTCOME)).expect("outcome decodes");
     assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("rejected"), "delete-tiles/rejects-when-every-addressed-tile-is-missing declares a rejected outcome");
     let produced = <PresentationMutation as protocol::Mutation<PresentationSnapshot>>::diff(&mutation(), &before());
     let message = produced.messages().first().expect("a rejected outcome carries a diagnostic");

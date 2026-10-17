@@ -1,10 +1,12 @@
 //! 📸️ Resolves native first-ID deletion targets before copying and retiring paged candidate owners.
 
-use crate::standards::v1::subsets::any::schema::mutations::native_preparation_child::{Puzzle2dCloseAxis,close_child_demand,close_demand_methods};
-use super::{DeleteNode, Puzzle2dDeleteNodePreparationCursor, Puzzle2dDeleteNodePreparationStep, Puzzle2dSnapshot};
-use {crate::standards::v1::subsets::any::schema::Puzzle2dEdge, crate::standards::v1::subsets::any::schema::Puzzle2dNode};
+use crate::standards::v1::subsets::any::schema::preparation::native_preparation_child::Puzzle2dCloseAxis;
+use super::{Puzzle2dDeleteNodePreparationCursor, Puzzle2dDeleteNodePreparationStep};
+use crate::standards::v1::subsets::any::schema::mutations::{DeleteNode};
+use crate::standards::v1::subsets::any::schema::snapshot::Puzzle2dSnapshot;
+use {crate::standards::v1::subsets::any::schema::records::Puzzle2dEdge, crate::standards::v1::subsets::any::schema::records::Puzzle2dNode};
 use semio_framework_value::{ValueError, ValueRefusalKind, list::{PagedList, PagedListEditCursor}, retirement::controlled::ControlledRetirement, retained_clone::{RetainedCloneBinding, RetainedFieldCursor, RetainedCloneCursor, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneRef, RetainedCloneStep, paged::PagedUtf8BoundedOrdCursor, ordered_map::{BoundedOrdCursor, BoundedOrdGrant, BoundedOrdProgress, BoundedOrdStep}}};
-use crate::standards::v1::subsets::any::schema::mutations::native_preparation_child::Puzzle2dPreparationChild;
+use crate::standards::v1::subsets::any::schema::preparation::native_preparation_child::Puzzle2dPreparationChild;
 use std::{mem::{ManuallyDrop, size_of}, ops::{Deref, DerefMut}};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -178,7 +180,7 @@ impl Puzzle2dDeleteNodeCandidateCursor {
     pub fn begin_close(&mut self) { self.closing = true;self.preparation.begin_close();self.comparison.begin_close();self.snapshot_clone.begin_close(); }
 
     fn close_demand(&self,axis:Puzzle2dCloseAxis)->Result<usize,ValueError>{
-        if !self.preparation.terminal_is_empty(){return close_child_demand!(axis,self.preparation)}
+        if !self.preparation.terminal_is_empty(){return match axis {Puzzle2dCloseAxis::Copy=>self.preparation.next_close_copy_byte_demand(),Puzzle2dCloseAxis::Capacity(body)=>self.preparation.next_close_capacity_byte_demand(body),Puzzle2dCloseAxis::Release=>self.preparation.next_close_release_byte_demand(),Puzzle2dCloseAxis::Depth=>self.preparation.next_close_depth_demand()}}
         if !self.comparison.terminal_is_empty(){return match axis{Puzzle2dCloseAxis::Copy=>self.comparison.next_close_copy_byte_demand(),Puzzle2dCloseAxis::Capacity(body)=>self.comparison.next_close_capacity_byte_demand(body),Puzzle2dCloseAxis::Release=>self.comparison.next_close_release_byte_demand(),Puzzle2dCloseAxis::Depth=>BoundedOrdCursor::next_close_depth_demand(&self.comparison)}}
         if !self.snapshot_clone.terminal_is_empty(){return axis.retained::<Puzzle2dSnapshot,_>(&self.snapshot_clone)}
         if let Some(owner)=self.node_close.as_ref(){return axis.retirement(owner)}
@@ -194,7 +196,10 @@ impl Puzzle2dDeleteNodeCandidateCursor {
         axis.binding(if self.source.is_some(){&self.source}else{&self.mutation})
     }
 
-    close_demand_methods!(next_close_copy_byte_demand,next_close_capacity_byte_demand,next_close_release_byte_demand,next_close_depth_demand);
+    pub fn next_close_copy_byte_demand(&self)->Result<usize,ValueError>{self.close_demand(Puzzle2dCloseAxis::Copy)}
+    pub fn next_close_capacity_byte_demand(&self,body:usize)->Result<usize,ValueError>{self.close_demand(Puzzle2dCloseAxis::Capacity(body))}
+    pub fn next_close_release_byte_demand(&self)->Result<usize,ValueError>{self.close_demand(Puzzle2dCloseAxis::Release)}
+    pub fn next_close_depth_demand(&self)->Result<usize,ValueError>{self.close_demand(Puzzle2dCloseAxis::Depth)}
 
     pub fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         if !self.closing { return Err(refusal("delete candidate closure was not started")); }
@@ -239,6 +244,4 @@ fn close_progress(step: RetainedCloneStep) -> RetainedCloneStep { RetainedCloneS
 fn edit_progress(step: semio_framework_value::list::PagedListEditStep) -> RetainedCloneStep { RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: step.moved_items, copied_bytes: step.progress.placed_bytes, retained_capacity_bytes: step.progress.allocated_bytes, released_bytes: step.progress.released_allocation_bytes }) }
 fn refusal(message: &str) -> ValueError { ValueError::new(ValueRefusalKind::InvariantViolated, message) }
 
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;
+

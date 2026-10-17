@@ -5,7 +5,7 @@ use serde_json::{Value,json};
 #[test]
 fn boolean_translated_stroke_junctions_preserve_endpoint_incidence(){
  let rows:Vec<Value>=serde_json::from_str(include_str!("🧫️fixtures/🔗️endpoints/🔣️.json")).unwrap();
- for row in rows {let source=input(&row);let mut previous=None;for grant in [1,7,4096]{let (segments,_)=finish(source.clone(),grant);let rings=contours(&segments);assert_eq!(rings.len(),1,"{}",row["name"]);assert!(area(&rings[0])>0.0);for ring in &rings{for at in 0..ring.len(){assert!(length(ring[at],ring[(at+1)%ring.len()])>source.epsilon);}}if let Some(before)=&previous{assert_eq!(&segments,before);}previous=Some(segments);println!("[DEBUG] Native endpoint-preserving translated stroke junction {} grant={grant} contours=1",row["name"]);}}
+ for row in rows {let source=input(&row);let mut previous=None;for grant in [1,7,4096]{let (segments,_)=finish(source.clone(),grant);let rings=contours(&segments);assert_eq!(rings.len(),1,"{}",row["name"]);assert!(area(&rings[0])>0.0);for ring in &rings{for at in 0..ring.len(){assert!(length(ring[at],ring[(at+1)%ring.len()])>source.epsilon);}}if let Some(before)=&previous{assert_eq!(&segments,before);}previous=Some(segments);}}
 }
 fn rows()->Vec<Value> {serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap()}
 fn input(row:&Value)->BooleanInput {
@@ -28,9 +28,9 @@ fn boolean_neutral_regions_with_identical_outputs_across_grants() {
   for grant in [1,7,4096] {let (segments,p)=finish(input.clone(),grant);let rings=contours(&segments);assert_eq!(rings.len(),row["expected"]["contours"].as_u64().unwrap() as usize,"{}",row["name"]);let actual=rings.iter().map(|ring|area(ring)).sum::<f64>();let expected=row["expected"]["area"].as_f64().unwrap();assert!((actual-expected).abs()<=1e-18f64.max(input.epsilon*input.epsilon*16.0),"{}: {actual} vs {expected}",row["name"]);
    if row["name"]!="translated mixed axis preserves geometry"&&row["name"]!="tiny separate regions" {for y in -2..17 {for x in -2..23 {let point=[x as f64+0.317,y as f64+0.173];let expected=input.operands.iter().map(|operand|filled(&operand.contours,point,operand.fill_rule)).reduce(|a,b|input.operation.apply(a,b)).unwrap();assert_eq!(filled(&rings,point,BooleanFillRule::Nonzero),expected);}}}
    if let Some(expected)=row["expected"]["segments"].as_array() {let actual=segments.iter().map(|s|match s {PathSegment::Move{to}=>json!({"kind":"move","to":to}),PathSegment::Line{to}=>json!({"kind":"line","to":to}),PathSegment::Close=>json!({"kind":"close"}),_=>panic!("Unexpected boolean curve")}).collect::<Vec<_>>();assert_eq!(actual.len(),expected.len());for (a,b) in actual.iter().zip(expected) {assert_eq!(a["kind"],b["kind"]);if a["kind"]!="close" {for axis in 0..2 {assert_eq!(a["to"][axis].as_f64(),b["to"][axis].as_f64());}}}}
-   if let Some(limit)=row["expected"]["maxPairs"].as_u64() {assert!(p.pairs<=limit);assert!(p.work<=row["expected"]["maxWork"].as_u64().unwrap());println!("[DEBUG] boolean spatial index checked {} candidate pairs in {} work units",p.pairs,p.work);}
+   if let Some(limit)=row["expected"]["maxPairs"].as_u64() {assert!(p.pairs<=limit);assert!(p.work<=row["expected"]["maxWork"].as_u64().unwrap());}
    if let Some(before)=&previous {assert_eq!(&segments,before);}previous=Some(segments);assert!(p.edges<=input.max_edges);assert!(p.parameters<=input.max_parameters);
-  }println!("[DEBUG] boolean fixture {} retained filled regions and identical grant outputs",row["name"]);
+  }
  }
 }
 #[test]
@@ -51,7 +51,7 @@ fn boolean_cancellation_covers_every_public_phase_and_keeps_owned_results() {
 #[test]
 fn boolean_exact_resource_caps_and_progress_taxonomy() {
  let input=input(&rows()[0]);let (expected,p)=finish(input.clone(),1);let mut exact=input;exact.max_edges=p.vertices;exact.max_parameters=p.parameters;exact.max_atomic_edges=p.atomic_edges;exact.max_segments=p.segments;exact.max_work=p.work;assert_eq!(finish(exact,7).0,expected);
- let value=json!({"phase":p.phase.as_str(),"operands":p.operands,"vertices":p.vertices,"edges":p.edges,"parameters":p.parameters,"pairs":p.pairs,"atomicEdges":p.atomic_edges,"boundaryEdges":p.boundary_edges,"contours":p.contours,"segments":p.segments,"work":p.work,"done":p.done});assert_eq!(value.as_object().unwrap().len(),12);println!("[DEBUG] boolean exact limits completed {} segments in {} work units",p.segments,p.work);
+ let value=json!({"phase":p.phase.as_str(),"operands":p.operands,"vertices":p.vertices,"edges":p.edges,"parameters":p.parameters,"pairs":p.pairs,"atomicEdges":p.atomic_edges,"boundaryEdges":p.boundary_edges,"contours":p.contours,"segments":p.segments,"work":p.work,"done":p.done});assert_eq!(value.as_object().unwrap().len(),12);
 }
 
 #[test]
@@ -64,9 +64,8 @@ fn boolean_retirement_hands_off_owned_sources_and_drains_private_arrangements(){
   let(mut close,operands,output)=job.into_retirement();assert_eq!(operands.as_ptr(),source_ptr);assert_eq!(operands.iter().map(|o|o.contours.clone()).collect::<Vec<_>>(),source_points);
   if let Some(ptr)=published{assert_eq!(output.as_ref().unwrap().as_ptr(),ptr);let actual=contours(output.as_ref().unwrap()).iter().map(|r|area(r)).sum::<f64>();assert_eq!(actual,fixture["expected"]["area"].as_f64().unwrap());}else{assert!(output.is_none());}
   assert!(close.advance(0).is_err());let mut work=0;loop{let p=close.advance(grant).unwrap();assert!(p.work>=work&&p.work-work<=grant as u64);work=p.work;if p.done{break;}}assert!(work>0);assert!(close.terminal_is_empty());assert!(close.owner.original().is_none());let p=close.advance(1).unwrap();assert_eq!((p.phase,p.work,p.done),("complete",work,true));
-  println!("[DEBUG] Native Boolean retirement {} {}: {} structural steps at grant {}",row["source"],phase,work,grant);
  }}
 }
 
 #[test]
-fn retained_admission_keeps_refused_boolean_source(){let fixture:Value=serde_json::from_str(include_str!("../../🧹️retire/🧪️tests/🧫️fixtures/📥️admission/🔣️.json")).unwrap();for row in fixture["cases"].as_array().unwrap(){if row["kind"]!="boolean"{continue;}let mut source=input(&rows()[0]);source.max_edges=row["maxEdges"].as_u64().unwrap()as usize;let operands=source.operands.as_ptr();let points=source.operands[0].contours[0].as_ptr();let mut job=BooleanJob::admit(source);assert_eq!(job.input.operands.as_ptr(),operands);assert_eq!(job.input.operands[0].contours[0].as_ptr(),points);assert!(job.advance_work(1).is_err());assert!(job.result().is_err());let mut close=BooleanRetirement::new(job);assert_eq!(close.owner.original().unwrap().input.operands.as_ptr(),operands);while !close.advance(1).unwrap().done{}assert!(close.terminal_is_empty());println!("[DEBUG] Refused native Boolean input kept original operand and point pointers until physical close");}}
+fn retained_admission_keeps_refused_boolean_source(){let fixture:Value=serde_json::from_str(include_str!("../../🧹️retire/🧪️tests/🧫️fixtures/📥️admission/🔣️.json")).unwrap();for row in fixture["cases"].as_array().unwrap(){if row["kind"]!="boolean"{continue;}let mut source=input(&rows()[0]);source.max_edges=row["maxEdges"].as_u64().unwrap()as usize;let operands=source.operands.as_ptr();let points=source.operands[0].contours[0].as_ptr();let mut job=BooleanJob::admit(source);assert_eq!(job.input.operands.as_ptr(),operands);assert_eq!(job.input.operands[0].contours[0].as_ptr(),points);assert!(job.advance_work(1).is_err());assert!(job.result().is_err());let mut close=BooleanRetirement::new(job);assert_eq!(close.owner.original().unwrap().input.operands.as_ptr(),operands);while !close.advance(1).unwrap().done{}assert!(close.terminal_is_empty());}}

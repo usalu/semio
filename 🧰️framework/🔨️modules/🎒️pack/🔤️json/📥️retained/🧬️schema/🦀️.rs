@@ -17,6 +17,10 @@ pub struct OwnedSchemaDecodePage {
 impl OwnedSchemaDecodePage {
     /// 🫙️ Fixed inline storage admits no heap allocation before the first source copy.
     pub const fn empty()->Self{Self{bytes:[0;OWNED_SCHEMA_DECODE_PAGE_BYTES],len:0}}
+    /// 📄️ Wraps one bounded producer buffer or returns it untouched when the extent exceeds the inline capacity.
+    pub fn try_from_array(bytes:[u8;OWNED_SCHEMA_DECODE_PAGE_BYTES],len:usize)->Result<Self,[u8;OWNED_SCHEMA_DECODE_PAGE_BYTES]>{if len>OWNED_SCHEMA_DECODE_PAGE_BYTES{return Err(bytes)}Ok(Self{bytes,len:len as u16})}
+    /// 📄️ Wraps one producer buffer whose extent the caller already admitted against the inline capacity.
+    pub fn from_preflighted_array(bytes:[u8;OWNED_SCHEMA_DECODE_PAGE_BYTES],len:usize)->Self{debug_assert!(len<=OWNED_SCHEMA_DECODE_PAGE_BYTES);Self{bytes,len:len as u16}}
     /// 📋️ Borrows the exact ordered byte prefix without copying or materializing a page.
     pub fn as_slice(&self)->&[u8]{&self.bytes[..self.len()]}
     /// ⛽️ Copies only the separately granted borrowed source prefix into fixed inline capacity.

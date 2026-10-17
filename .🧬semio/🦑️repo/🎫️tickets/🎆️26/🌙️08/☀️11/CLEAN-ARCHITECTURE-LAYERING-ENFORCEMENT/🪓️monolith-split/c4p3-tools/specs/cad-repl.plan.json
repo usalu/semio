@@ -1,0 +1,46 @@
+{
+ "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📺️renderer/🎛️repl/🟦️.tsx",
+ "source": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/🗑️generated/c4p3-snap/cad-repl.pre-split.tsx",
+ "fn": "InteractionRepl",
+ "propsType": "InteractionReplProps",
+ "coreType": "ReplCoreAfter",
+ "region": "🪩️Repl",
+ "hookExt": "",
+ "hooks": [
+  {
+   "dir": "📺️view-state",
+   "name": "useReplViewState",
+   "upto": 87,
+   "doc": "/** 📺️ CAD renderer REPL: the host-controlled chrome state, the projection and gumball preview state, the refs, the derived pick targets and the scene and selection toggles of the REPL view. */",
+   "docFn": "/** 📺️ Holds the REPL view state: props, host state, refs, pick targets and scene toggles. */"
+  },
+  {
+   "dir": "🎬️session-lifecycle",
+   "name": "useReplSessionLifecycle",
+   "upto": 111,
+   "doc": "/** 🎬️ CAD renderer REPL: the chrome dismissal, the interaction cancellation, the escape key, the runtime start and restart and the selection accept resolution of an interaction session. */",
+   "docFn": "/** 🎬️ Runs the interaction session lifecycle of the REPL. */"
+  },
+  {
+   "dir": "🎯️selection-pointer",
+   "name": "useReplSelectionAndPointer",
+   "upto": 121,
+   "doc": "/** 🎯️ CAD renderer REPL: the selection commit, prune and dispatch, the hover and camera callbacks, the spatial interaction event and the drag selection gesture. */",
+   "docFn": "/** 🎯️ Wires the selection commit and the canvas pointer gestures of the REPL. */"
+  },
+  {
+   "dir": "🧾️command-palette",
+   "name": "useReplCommandPalette",
+   "upto": 138,
+   "doc": "/** 🧾️ CAD renderer REPL: the transition dispatch, the command suggestions, the numeric entry and line submission and the command input key handler. */",
+   "docFn": "/** 🧾️ Builds the command palette suggestions and the command input handlers of the REPL. */"
+  },
+  {
+   "dir": "🤝️engagement-keys",
+   "name": "useReplEngagementAndKeys",
+   "upto": 157,
+   "doc": "/** 🤝️ CAD renderer REPL: the engagement controls and specs, the numeric entry synchronisation, the global key capture, the scene pointer move and the drag overlay geometry. */",
+   "docFn": "/** 🤝️ Publishes the engagement and search specs and captures the global keys of the REPL. */"
+  }
+ ]
+}

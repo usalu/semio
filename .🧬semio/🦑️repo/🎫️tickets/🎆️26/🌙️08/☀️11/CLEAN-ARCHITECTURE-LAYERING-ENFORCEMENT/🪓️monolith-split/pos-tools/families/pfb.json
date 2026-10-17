@@ -1,0 +1,25 @@
+{
+ "name": "pfb",
+ "crates": [
+  "semio-s-plugin-energy-engine-sim",
+  "semio-s-plugin-energy-engine-sim-restore",
+  "semio-s-plugin-energy-engine-sim-retirement",
+  "semio-s-plugin-energy-engine-sim-wire",
+  "semio-s-artifact-fem-3d-editor-visual-job",
+  "semio-s-artifact-fem-3d-editor-session",
+  "semio-s-artifact-energy-model-mutations"
+ ],
+ "base": {
+  "rev": "1bae6115bc5",
+  "crates": [
+   "semio-s-plugin-energy-engine-sim",
+   "semio-s-plugin-energy-engine-sim-restore",
+   "semio-s-plugin-energy-engine-sim-retirement",
+   "semio-s-plugin-energy-engine-sim-wire",
+   "semio-s-artifact-fem-3d-editor-visual-job",
+   "semio-s-artifact-fem-3d-editor-session",
+   "semio-s-artifact-energy-model-mutations"
+  ]
+ },
+ "note": "PLUGIN-FILE-SPLITS-B"
+}

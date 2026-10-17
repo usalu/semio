@@ -50,6 +50,7 @@ semio-framework-plugin-interpreter = { workspace = true }
 # component under the owned interpreter, so the release tool links no Wasmtime. A real `wasm32-wasip2` component imports
 # `wasi:io/poll` and friends through the Rust target's runtime shim, so the oracle links `wasmtime-wasi` beside `world actor`'s
 # own imports; `component-model-async` serves the `async func` `describe()` (`Store::run_concurrent`, `Accessor`).
+semio-framework-test-fixtures = { path = "../../../../../../../🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 wasmtime = { version = "47.0.3", features = ["cranelift", "component-model", "component-model-async"] }
 wasmtime-wasi = "47.0.3"
 semio-framework-os-kernel = { path = "../../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["mutation-testing"] }

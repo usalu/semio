@@ -34,5 +34,4 @@ test("actual portable NativeDecodeControl preserves cancellation ownership workl
     assert(refusal instanceof ValueError, operation.id);
     const error = decorate(refusal, row.path); assert.equal(error.kind, row.expected.kind); assert.equal(error.toString(), row.expected.display);
   }
-  console.log("[DEBUG] portable typed refusal construction and actual NativeDecodeControl retain authority and path");
 });

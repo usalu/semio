@@ -1,0 +1,254 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "distinct explicit tools for one required service",
+      "entries": [
+        {
+          "id": "service:dev",
+          "env": {},
+          "requires": []
+        },
+        {
+          "id": "app:dev",
+          "env": {},
+          "requires": [
+            {
+              "run": "service:dev",
+              "env": {
+                "SEMIO_BUILD_TOOL": "nx"
+              }
+            },
+            {
+              "run": "service:dev",
+              "env": {
+                "SEMIO_BUILD_TOOL": "bazel"
+              }
+            }
+          ]
+        }
+      ],
+      "root": "app:dev",
+      "inherited": "nx",
+      "required": [
+        "service:dev=nx",
+        "service:dev=bazel"
+      ]
+    },
+    {
+      "name": "compound member cannot suppress another backend service",
+      "entries": [
+        {
+          "id": "service:dev",
+          "env": {},
+          "requires": []
+        },
+        {
+          "id": "app:dev",
+          "env": {},
+          "requires": [
+            {
+              "run": "service:dev",
+              "env": {
+                "SEMIO_BUILD_TOOL": "bazel"
+              }
+            }
+          ]
+        },
+        {
+          "id": "compound:workspace/all",
+          "env": {},
+          "requires": [],
+          "members": [
+            {
+              "run": "service:dev",
+              "env": {
+                "SEMIO_BUILD_TOOL": "nx"
+              }
+            },
+            {
+              "run": "app:dev",
+              "env": {}
+            }
+          ]
+        }
+      ],
+      "root": "compound:workspace/all",
+      "inherited": "nx",
+      "required": [
+        "service:dev=bazel"
+      ]
+    },
+    {
+      "name": "identical compound member satisfies required service",
+      "entries": [
+        {
+          "id": "service:dev",
+          "env": {},
+          "requires": []
+        },
+        {
+          "id": "app:dev",
+          "env": {},
+          "requires": [
+            {
+              "run": "service:dev",
+              "env": {
+                "SEMIO_BUILD_TOOL": "nx"
+              }
+            }
+          ]
+        },
+        {
+          "id": "compound:workspace/all",
+          "env": {},
+          "requires": [],
+          "members": [
+            {
+              "run": "service:dev",
+              "env": {
+                "SEMIO_BUILD_TOOL": "nx"
+              }
+            },
+            {
+              "run": "app:dev",
+              "env": {}
+            }
+          ]
+        }
+      ],
+      "root": "compound:workspace/all",
+      "inherited": "nx",
+      "required": []
+    },
+    {
+      "name": "nested branches share one exact requirement",
+      "entries": [
+        {
+          "id": "service:dev",
+          "env": {},
+          "requires": []
+        },
+        {
+          "id": "one:dev",
+          "env": {},
+          "requires": [
+            {
+              "run": "service:dev",
+              "env": {
+                "SEMIO_BUILD_TOOL": "nx"
+              }
+            }
+          ]
+        },
+        {
+          "id": "two:dev",
+          "env": {},
+          "requires": [
+            {
+              "run": "service:dev",
+              "env": {
+                "SEMIO_BUILD_TOOL": "nx"
+              }
+            }
+          ]
+        },
+        {
+          "id": "app:dev",
+          "env": {},
+          "requires": [
+            {
+              "run": "one:dev",
+              "env": {}
+            },
+            {
+              "run": "two:dev",
+              "env": {}
+            }
+          ]
+        }
+      ],
+      "root": "app:dev",
+      "inherited": "nx",
+      "required": [
+        "service:dev=nx",
+        "one:dev=nx",
+        "two:dev=nx"
+      ]
+    },
+    {
+      "name": "unresolved inherited tool survives explicit Nx sibling",
+      "entries": [
+        {
+          "id": "service:dev",
+          "env": {},
+          "requires": []
+        },
+        {
+          "id": "app:dev",
+          "env": {},
+          "requires": [
+            {
+              "run": "service:dev",
+              "env": {}
+            },
+            {
+              "run": "service:dev",
+              "env": {
+                "SEMIO_BUILD_TOOL": "nx"
+              }
+            }
+          ]
+        }
+      ],
+      "root": "app:dev",
+      "inherited": "bazel",
+      "required": [
+        "service:dev=bazel",
+        "service:dev=nx"
+      ]
+    },
+    {
+      "name": "unresolved compound member cannot suppress explicit Nx service",
+      "entries": [
+        {
+          "id": "service:dev",
+          "env": {},
+          "requires": []
+        },
+        {
+          "id": "app:dev",
+          "env": {},
+          "requires": [
+            {
+              "run": "service:dev",
+              "env": {
+                "SEMIO_BUILD_TOOL": "nx"
+              }
+            }
+          ]
+        },
+        {
+          "id": "compound:workspace/all",
+          "env": {},
+          "requires": [],
+          "members": [
+            {
+              "run": "service:dev",
+              "env": {}
+            },
+            {
+              "run": "app:dev",
+              "env": {}
+            }
+          ]
+        }
+      ],
+      "root": "compound:workspace/all",
+      "inherited": "bazel",
+      "required": [
+        "service:dev=nx"
+      ]
+    }
+  ]
+}

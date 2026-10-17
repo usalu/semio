@@ -24,3 +24,6 @@ path = "../../🦀️.rs"
 "lopdf" = { version = "0.44", default-features = false }
 "semio-repo-test-host" = { path = "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🦀️rust", default-features = false }
 "semio-s-plugin-stdio-document-test-oracle" = { path = "../../../../../🔮️oracles/📃️document/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+semio-framework-test-fixtures = { path = "../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }

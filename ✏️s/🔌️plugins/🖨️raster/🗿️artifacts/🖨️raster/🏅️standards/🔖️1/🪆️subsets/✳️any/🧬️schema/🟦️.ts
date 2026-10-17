@@ -5,7 +5,7 @@ export interface SemioImageMetadataEntry { key: string; value: string }
 /** 🖼️ Decoded raster asset: the shape parsed below; its conformance to the stored Semio image schema is checked where plugins may meet. */
 export interface SemioImageSnapshot { schema: string; width: number; height: number; colorspace: SemioColorspace; bitDepth: number; frames: SemioImageFrame[]; icc: number[] | null; metadata: SemioImageMetadataEntry[] }
 import { parseIntrinsicValue, type IntrinsicValue } from "@semio-tech/framework/value/schema";
-import { parseArtifactChild, type ArtifactChild } from "../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts";
+import { parseArtifactChild, type ArtifactChild } from "@semio-tech/framework-os/modules/store/child/schema";
 
 import { type Binary64, type Binary32, binary64Value } from "@semio-tech/framework/value/ieee754";
 import { parseBinary64, parseBinary32 } from "@semio-tech/framework/value/ieee754";
@@ -104,6 +104,10 @@ type rasterRasterArtifactGuardSizeBounds = { readonly minItems?: number; readonl
 
 export const rasterRasterArtifactGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : rasterRasterArtifactGuardReject(at, "value is not an object");
+export const rasterRasterArtifactGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) rasterRasterArtifactGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const rasterRasterArtifactGuardArray = (value: unknown, at: string, bounds: rasterRasterArtifactGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return rasterRasterArtifactGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) rasterRasterArtifactGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -244,7 +248,7 @@ export function rasterTransformNumbers(transform: RasterTransform): { x: number;
 //#endregion 🔖️JsonProjection
 
 export function parseRasterViewportSize(value: unknown, at = "$"): RasterViewportSize {
-  const row = rasterRasterArtifactGuardObject(value, at);
+  const row = rasterRasterArtifactGuardClosed(rasterRasterArtifactGuardObject(value, at), at, ["width", "height"]);
   return {
     width: rasterRasterArtifactGuardNumber(row["width"], `${at}.width`),
     height: rasterRasterArtifactGuardNumber(row["height"], `${at}.height`),

@@ -1,0 +1,7 @@
+[
+ {"dir":"🎛️scene-gumball","doc":"/** 🎛️ World3d instance layers, scene gumball: the transform gumball a selection carries in the three.js scene. */","lines":[[102,156]]},
+ {"dir":"🧊️instance-node","doc":"/** 🧊️ World3d instance layers, instance node: the per-instance node that paints a mesh or primitive with its pose, paint ids and highlight, and the cached orientation quaternion of an instance. */","lines":[[158,638]]},
+ {"dir":"☁️point-cloud-layer","doc":"/** ☁️ World3d instance layers, point cloud: the point cloud layer visual and the layer that draws it. */","lines":[[1190,1234]]},
+ {"dir":"🌪️vortex-markers","doc":"/** 🌪️ World3d instance layers, vortex markers: the vortex material revision, the direction arrow layout and the markers that show every vortex in the scene. */","lines":[[1238,1412]]},
+ {"dir":"🪟️instance-chrome-store","doc":"/** 🪟️ World3d instance layers, chrome store: the instance chrome snapshot, the local hover paint id and the external store that publishes per-instance chrome to the r3f subtree. */","lines":[[1416,1546]]}
+]

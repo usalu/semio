@@ -7,7 +7,7 @@ fn independent_round_trip(ctx:&Context)->Result<Outcome,String>{
  let path=ctx.artifact("oracle","baseline-reference.jpg")?;std::fs::write(&path,&bytes).map_err(|error|error.to_string())?;
  let axes=semio_s_artifact_stdio_jpg_test_oracle::standards::v_jfif_1_01::subsets::baseline::read_axes(&path)?;let codes=semio_s_artifact_stdio_jpg_test_oracle::standards::v_jfif_1_01::subsets::baseline::verdict(&axes);if !codes.is_empty(){return Err(format!("independent native export baseline codes: {codes:?}"));}
  let projection=Json::Object(vec![("format".into(),Json::String("jpg-baseline".into())),("sofMarker".into(),Json::String(format!("{:02x}",axes.sof_marker))),("precision".into(),Json::Number(f64::from(axes.precision))),("conformance".into(),Json::Array(Vec::new()))]);
- eprintln!("[DEBUG] independent JPEG baseline export reopened through libjpeg");Ok(Outcome::with_raw(bytes,projection))
+ Ok(Outcome::with_raw(bytes,projection))
 }
 #[cfg(feature="sut")]
 mod subject {
@@ -27,7 +27,6 @@ mod subject {
    if was.get(field)!=now.get(field){return Err(format!("independent JPEG metadata changed at {field}"));}
   }
   let projection=Json::Object(vec![("format".into(),Json::String("jpg-baseline".into())),("sofMarker".into(),Json::String(format!("{:02x}",observations.sof_marker))),("precision".into(),Json::Number(f64::from(observations.frame.precision))),("conformance".into(),Json::Array(Vec::new()))]);
-  eprintln!("[DEBUG] JPEG independent reopen dimensions={} baseline=SOF0",now.str("dimensions"));
   Ok(Outcome::with_raw(bytes,projection))
  }
 }

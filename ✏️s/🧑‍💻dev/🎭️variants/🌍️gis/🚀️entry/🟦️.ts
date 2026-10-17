@@ -1,6 +1,6 @@
-import { composeSpecificOsCatalogV1 } from "../../../🧩️catalog/🟦️.ts";
-import { GIS_INFERENCE_PRESENTATION_V1 } from "../../../../🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🪟️presentation/🟦️.tsx";
-import { bootFrameworkOsDev } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🟦️.ts";
+import { composeSpecificOsCatalogV1 } from "@semio-tech/s-dev-catalog-ts";
+import { GIS_INFERENCE_PRESENTATION_V1 } from "@semio-tech/gis-gismap-js/inference/presentation";
+import { bootFrameworkOsDev } from "@semio-tech/framework-os-dev";
 import { PUZZLE_BOARD_SESSION_FACTORIES } from "@semio-tech/puzzle-2d";
 const operation = new AbortController();
 window.addEventListener("pagehide", () => operation.abort(), { once: true });

@@ -1,7 +1,8 @@
 //! 🧰️ Dev-only support of the font crate family tests: authored font bytes and funded physical close with heap witnesses.
+use semio_framework_test_fixtures::fixture_path;
 use semio_framework_value::{retirement::{RetireOwned,controlled::ControlledRetirement},retained_clone::{RetainedCloneGrant,RetainedCloneStep}};
 /// 🔤️ Reads one shipped font asset outline by its `🖼️assets/🔤️fonts` family path.
-pub fn bytes(font:&str)->Vec<u8>{let path=std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../../..").join("🖼️assets/🔤️fonts").join(font).join("🔤️outline.ttf");std::fs::read(path).unwrap()}
+pub fn bytes(font:&str)->Vec<u8>{let path=fixture_path!("../../../../../../..").join("🖼️assets/🔤️fonts").join(font).join("🔤️outline.ttf");std::fs::read(path).unwrap()}
 /// 🧹️ Closes one owner with single-item grants and returns the physically released bytes.
 pub fn close<T:RetireOwned>(value:T)->usize{close_with_items(value,1)}
 /// 🧮️ Closes one owner with `items`-item grants, proving every step against the heap witness, and returns the released bytes.

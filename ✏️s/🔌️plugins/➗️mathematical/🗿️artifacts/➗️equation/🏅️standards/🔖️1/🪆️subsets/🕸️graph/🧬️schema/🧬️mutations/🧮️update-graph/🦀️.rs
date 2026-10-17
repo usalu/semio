@@ -3,7 +3,7 @@
 //! inseparable-facet `update` exception rather than two independent `change-` scalars — matches
 //! the app's `SetAlgorithm` command, which always sends both fields together.
 
-use crate::{EquationMutation, EquationSnapshot};
+use crate::EquationSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Payload
@@ -16,13 +16,16 @@ pub struct UpdateGraphAlgorithm {
     pub new_algorithm_seed: Option<String>,
 }
 
-impl protocol::MutationKind<EquationSnapshot, EquationMutation> for UpdateGraphAlgorithm {
+impl<Op> protocol::MutationKind<EquationSnapshot, Op> for UpdateGraphAlgorithm
+where
+    Op: protocol::Mutation<EquationSnapshot, Diff = crate::EquationDiff> + From<UpdateGraphAlgorithm>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "update", entity: "graph", kind: "update-graph-algorithm", record: "UpdatedGraphAlgorithm" };
 
-    fn diff(&self, base: &EquationSnapshot) -> protocol::MutationOutcome<<EquationMutation as protocol::Mutation<EquationSnapshot>>::Diff> {
+    fn diff(&self, base: &EquationSnapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<EquationSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &EquationSnapshot) -> Result<Vec<EquationMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EquationSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

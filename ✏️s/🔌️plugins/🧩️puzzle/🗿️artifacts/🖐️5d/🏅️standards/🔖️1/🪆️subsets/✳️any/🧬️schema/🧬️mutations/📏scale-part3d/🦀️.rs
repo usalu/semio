@@ -1,6 +1,5 @@
 //! Puzzle5d mutation — `ScalePart3d`: changes a part's 3D-projection freeform scale.
 use crate::standards::v1::subsets::any::schema::diff::Puzzle5dDiff;
-use crate::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation;
 use crate::Puzzle5dSnapshot;
 
 //#region 🔖️Mutation
@@ -14,16 +13,19 @@ use crate::Puzzle5dSnapshot;
 #[dsl(keyword = "scale-part3d")]
 pub struct ScalePart3d {
     pub id: String,
-    pub new_scale: Option<crate::Puzzle5dScale>,
+    pub new_scale: Option<crate::standards::v1::subsets::any::schema::document_records::Puzzle5dScale>,
 }
 
-impl protocol::MutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for ScalePart3d {
+impl<Op> protocol::MutationKind<Puzzle5dSnapshot, Op> for ScalePart3d
+where
+    Op: protocol::Mutation<Puzzle5dSnapshot, Diff = Puzzle5dDiff> + From<ScalePart3d>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "scale", entity: "part", kind: "scale-part3d", record: "ScaledPart3d" };
 
     fn diff(&self, base: &Puzzle5dSnapshot) -> protocol::MutationOutcome<Puzzle5dDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Puzzle5dSnapshot) -> Result<Vec<Puzzle5dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Puzzle5dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     
@@ -39,6 +41,9 @@ impl protocol::MutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for ScalePart3d 
 //#endregion 🔖️Mutation
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn scale_part_3d(id: String, new_scale: Option<crate::Puzzle5dScale>) -> Puzzle5dMutation {
-    Puzzle5dMutation::ScalePart3d(ScalePart3d { id, new_scale })
+pub fn scale_part_3d<Op>(id: String, new_scale: Option<crate::standards::v1::subsets::any::schema::document_records::Puzzle5dScale>) -> Op
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::scale_part_3d::ScalePart3d>,
+{
+    Op::from(ScalePart3d { id, new_scale })
 }

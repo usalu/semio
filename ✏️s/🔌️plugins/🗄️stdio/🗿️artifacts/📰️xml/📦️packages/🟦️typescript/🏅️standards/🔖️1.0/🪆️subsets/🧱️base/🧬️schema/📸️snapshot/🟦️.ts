@@ -1,0 +1,4 @@
+/** 📸️ Public entry `@semio-tech/stdio-xml/standards/1.0/subsets/base/schema/snapshot`: the explicit surface that importers outside the module use. */
+export { default as baseSnapshotSchema } from "../../../../../../../../🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🔣️.json";
+export { materializeRetainedXmlDocument, parseRetainedXmlDocument, parseXmlDeclaration, parseXmlDoctype, parseXmlDocument, parseXmlNode, retainXmlDocument, validateXmlDocumentWireBoundary } from "../../../../../../../../🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🟦️.ts";
+export type { RetainedXmlDocument, XmlAttr, XmlDeclaration, XmlDoctype, XmlDocument, XmlDtdDeclaration, XmlExternalId, XmlNode, XmlQuote } from "../../../../../../../../🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🟦️.ts";

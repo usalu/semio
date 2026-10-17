@@ -22,7 +22,9 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-framework-os-io = { path = "../../../../../🚪️io/📦️packages/🦀️rust" }
 semio-framework-os-spr = { path = "../../../../../📡️spr/📦️packages/🦀️rust" }
+semio-framework-os-store-backbone = { path = "../../../../🔗️backbone/📦️packages/🦀️rust" }
 semio-framework-os-store-canonical-json = { path = "../../../../🧵️canonical-edit/📦️packages/🦀️rust" }
 semio-framework-os-store-codec-registry = { path = "../../../📦️packages/🦀️rust" }
 semio-framework-os-store-engine = { path = "../../../../⚙️engine/📦️packages/🦀️rust" }

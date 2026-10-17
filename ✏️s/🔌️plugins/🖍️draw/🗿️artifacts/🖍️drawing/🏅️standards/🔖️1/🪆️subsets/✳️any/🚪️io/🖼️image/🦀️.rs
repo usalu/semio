@@ -86,7 +86,7 @@ pub fn prepared_scene_node_value(node:&semio_s_artifact_draw_drawing_scene::view
 }
 
 /// 🧪️ Cold fixture construction retains every decoder child until its quoted physical close.
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 pub fn drawing_image_from_png(bytes:&[u8])->DrawingImageAsset{
  let source=base64_codec::base64_standard_encode(bytes);
  let mut job=DrawingImageAdmissionJob::new(ImageDecodeInput{mime:"image/png",data:&source,max_source_bytes:268439552,max_bytes:67108864,max_pixels:16777216,max_chunks:65536}).expect("valid fixture PNG source");

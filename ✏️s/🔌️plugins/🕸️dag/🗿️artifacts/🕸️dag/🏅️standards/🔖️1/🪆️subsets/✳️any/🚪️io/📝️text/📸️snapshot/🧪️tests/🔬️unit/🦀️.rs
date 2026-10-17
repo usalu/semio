@@ -16,7 +16,7 @@ async fn dump_example_dsl_when_requested() {
 fn demo_graph_matches_the_language_neutral_json_oracle() {
     let snapshot = crate::examples::demo::snapshot();
     let graph = crate::examples::demo::scene();
-    let expected: serde_json::Value = serde_json::from_str(include_str!("../../../../../📚️examples/🎬️demo/🧪️tests/🧫️fixtures/🧾️scene.json")).expect("demo JSON oracle");
+    let expected: serde_json::Value = serde_json::from_str(runtime_fixture_text("../../../../📚️examples/🎬️demo/🧪️tests/🧫️fixtures/🧾️scene.json")).expect("demo JSON oracle");
     let observed = serde_json::json!({
         "nodes": graph.nodes.iter().map(|node| (&node.id, &node.name, node.x, node.y)).collect::<Vec<_>>(),
         "edges": graph.edges.iter().map(|edge| (&edge.id, &edge.source, &edge.target)).collect::<Vec<_>>(),
@@ -42,4 +42,9 @@ async fn fused_edge_arrow_wire_parses_labeled_endpoints() {
     assert_eq!(parsed.edge_label.kind.as_deref(), Some("Connection"));
     assert_eq!(parsed.from.id, "a");
     assert!(parsed.edge.as_ref().map(|(d, _)| *d).unwrap_or(false));
+}
+
+fn runtime_fixture_text(relative: &str) -> &'static str {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative);
+    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display())).into_boxed_str())
 }

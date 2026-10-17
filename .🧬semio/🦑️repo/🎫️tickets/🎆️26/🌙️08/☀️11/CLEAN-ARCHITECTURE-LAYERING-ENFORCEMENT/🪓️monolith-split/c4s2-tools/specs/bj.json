@@ -1,0 +1,89 @@
+{
+ "file": "/Users/ueli/Documents/semio/✏️s/🧑‍💻dev/📐️cad/🧪️tests/🔮️spatial-kernel/🧱️brepjs/🟦️.ts",
+ "importers": "auto",
+ "children": [
+  {
+   "dir": "🧩️opencascade-and-scratch",
+   "doc": "/** 🧩️ The OpenCascade wasm locator of the brepjs kernel, the quantised vector key and the extrusion direction.\n *\n * @see ../🟦️.ts — the brepjs kernel module, kept ONLY as a vitest differential oracle\n */",
+   "lines": [
+    [
+     84,
+     120
+    ]
+   ]
+  },
+  {
+   "dir": "🧱️entity-maps",
+   "doc": "/** 🧱️ The brep entity maps of the brepjs kernel: model face and edge ids, normal alignment, face and edge infos, and the mesh transfer with its cache.\n *\n * @see ../🟦️.ts — the brepjs kernel module, kept ONLY as a vitest differential oracle\n */",
+   "lines": [
+    [
+     121,
+     375
+    ]
+   ]
+  },
+  {
+   "dir": "🔗️wires-and-selection",
+   "doc": "/** 🔗️ The wire and selection helpers of the brepjs kernel: model edges and wires as brep shapes, oriented faces, selection picks and the edge ids of picks.\n *\n * @see ../🟦️.ts — the brepjs kernel module, kept ONLY as a vitest differential oracle\n */",
+   "lines": [
+    [
+     377,
+     643
+    ]
+   ]
+  },
+  {
+   "dir": "✂️edit-diffs",
+   "doc": "/** ✂️ The model edit diffs of the brepjs kernel: edge segments, join, explode, split, trim and the corner connector.\n *\n * @see ../🟦️.ts — the brepjs kernel module, kept ONLY as a vitest differential oracle\n */",
+   "lines": [
+    [
+     645,
+     1007
+    ]
+   ]
+  },
+  {
+   "dir": "🧊️solid-topology-and-fixture",
+   "doc": "/** 🧊️ The solid topology of the brepjs kernel: extrusion distance, solids from model topology, the STEP vertex quantisation, wire edge order and the inline model space fixture.\n *\n * @see ../🟦️.ts — the brepjs kernel module, kept ONLY as a vitest differential oracle\n */",
+   "lines": [
+    [
+     1010,
+     1187
+    ]
+   ]
+  },
+  {
+   "dir": "⚙️wasm-engine",
+   "doc": "/** ⚙️ The brepjs WebAssembly engine: the OpenCascade-backed implementation of every spatial kernel operation.\n *\n * @see ../🟦️.ts — the brepjs kernel module, kept ONLY as a vitest differential oracle\n */",
+   "lines": [
+    [
+     1191,
+     1826
+    ]
+   ]
+  },
+  {
+   "dir": "📨️worker-and-kernel",
+   "doc": "/** 📨️ The worker protocol, the worker client and the brepjs spatial kernel that fronts them.\n *\n * @see ../🟦️.ts — the brepjs kernel module, kept ONLY as a vitest differential oracle\n */",
+   "lines": [
+    [
+     1830,
+     2069
+    ]
+   ]
+  },
+  {
+   "dir": "📦️exchange",
+   "doc": "/** 📦️ The exchange functions of the brepjs kernel: model space to STEP, OBJ and GLB and STEP back into model space.\n *\n * @see ../🟦️.ts — the brepjs kernel module, kept ONLY as a vitest differential oracle\n */",
+   "lines": [
+    [
+     2071,
+     2129
+    ]
+   ]
+  }
+ ],
+ "allowManual": [
+  "📐️geometry/🟦️.ts"
+ ]
+}

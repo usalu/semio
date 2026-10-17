@@ -1,0 +1,68 @@
+[package]
+workspace = "../../../../../../.."
+name = "semio-s-artifact-stdio-semio-brep-viewer"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Component crate of semio-s-artifact-stdio-semio-brep: viewer"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "🦀️.rs"
+
+[features]
+testkit = []
+
+[dependencies]
+semio-framework-3d-brep-vector.workspace = true
+semio-framework-3d-brep-tolerance.workspace = true
+semio-framework-3d-brep-surface.workspace = true
+semio-framework-3d-brep-curve.workspace = true
+semio-framework = { workspace = true }
+semio-framework-2d = { workspace = true }
+semio-framework-3d-brep-queries = { workspace = true }
+semio-framework-3d-brep-representation = { workspace = true }
+semio-framework-3d-brep-tessellation = { workspace = true }
+semio-framework-artifact-reference = { workspace = true }
+semio-framework-diagnostic = { workspace = true }
+semio-framework-job = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-pack-json = { workspace = true }
+semio-framework-plugin = { workspace = true }
+semio-framework-schema = { workspace = true }
+semio-framework-schema-composition = { workspace = true }
+semio-framework-schema-registry = { workspace = true }
+semio-framework-schema-state = { workspace = true }
+semio-framework-ui-locale = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-framework-value-derive = { workspace = true }
+semio-s-artifact-stdio-contract = { workspace = true }
+semio-s-artifact-stdio-semio-base = { workspace = true }
+semio-s-artifact-stdio-semio-brep-examples = { path = "../../../📚️examples/🧊️solid/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-semio-brep-mut-family = { path = "../../../🧬️schema/🧬️mutations/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-semio-brep-schema = { path = "../../../🧬️schema/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-semio-brep-snapshot = { path = "../../../🧬️schema/📸️snapshot/📦️packages/🦀️rust" }
+serde_json = { workspace = true }
+
+[dev-dependencies]
+semio-framework-3d-brep-boolean.workspace = true
+semio-framework-3d-brep-sweep.workspace = true
+semio-framework-3d-brep-offset.workspace = true
+semio-framework-3d-brep-validation.workspace = true
+pack = { workspace = true }
+parry3d = { workspace = true }
+semio-framework-3d-brep-construction = { workspace = true }
+semio-framework-3d-brep-engine = { workspace = true }
+semio-framework-async = { workspace = true }
+semio-framework-async-macros = { workspace = true }
+semio-framework-dsl = { workspace = true }
+semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
+semio-framework-test-fixtures = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-contract = { workspace = true, features = ["testing"] }
+semio-s-artifact-stdio-semio-brep-snapshot = { path = "../../../🧬️schema/📸️snapshot/📦️packages/🦀️rust", features = ["testkit"] }

@@ -76,8 +76,7 @@ pub mod io_registry {
 #[path = "💾️binary/🦀️.rs"]
 pub mod binary;
 
-#[path = "📝️text/🦀️.rs"]
-pub mod text;
+pub use semio_s_artifact_norm_en1998_io_text as text;
 
 #[path = "🪶️sqlite/🦀️.rs"]
 pub mod sqlite;

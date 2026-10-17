@@ -12,13 +12,11 @@ test("schema validation retains original lexical and declaration workspaces",()=
  const declaredShape=(sql:string)=>{const db=new Database(":memory:");try{db.exec(sql);return(db.query("SELECT name,type,\"notnull\",dflt_value,pk FROM pragma_table_info((SELECT name FROM sqlite_schema WHERE type='table')) ORDER BY cid").all() as {name:string;type:string;notnull:number;dflt_value:string|null;pk:number}[]).map(row=>({...row,name:row.name.replace(/[A-Z]/g,value=>value.toLowerCase()),type:row.type.toUpperCase()}));}finally{db.close();}};
  for(const row of f.cases){const db=new Database(":memory:");try{db.exec(row.declared);expect((db.query("SELECT name FROM pragma_table_info((SELECT name FROM sqlite_schema WHERE type='table')) ORDER BY cid").all() as {name:string}[]).map(value=>value.name)).toEqual(row.columns);}finally{db.close();}}for(const row of f.cases)expect(JSON.stringify(declaredShape(row.actual))===JSON.stringify(declaredShape(row.declared))).toBe(row.accepted);
  const source=readFileSync(resolve(owner,"🔁️transfer/🦀️.rs"),"utf8");expect(source).toContain("SchemaValidationStorage");expect(source).toContain("validate_database_into");expect(source).toContain("validate_component_into");expect(source).toContain("validate_table_into");
- console.log("[DEBUG] Independent SQLite agrees with quoted identifiers, escaped literals, column declarations and original validation corpus");
 });
 test("closed original recipient corpus matches independent SQLite UTF8",()=>{
  const validate=new Ajv({strict:true}).compile(JSON.parse(readFileSync(resolve(owner,"🧬️schema/🫙️prefix/🔣️.json"),"utf8")));
  expect(validate(fixture)).toBe(true);
  const db=new Database(":memory:");try{db.exec(fixture.schemaSql);for(const[index,row]of fixture.samples.entries())db.run("INSERT INTO original_values VALUES(?,?)",[index+1,row.text]);const rows=db.query("SELECT value,hex(CAST(value AS BLOB)) AS octets FROM original_values ORDER BY id").all() as {value:string;octets:string}[];expect(rows).toEqual(fixture.samples.map(row=>({value:row.text,octets:Buffer.from(row.octets).toString("hex").toUpperCase()})));}finally{db.close();}
- console.log("[DEBUG] Independent SQLite preserves original empty, embedded NUL and multibyte UTF8 fields");
 });
 test("SQLite scopes retain the original recipient with explicit active admission",()=>{
  const source=readFileSync(resolve(owner,"🦀️.rs"),"utf8"),recipient=readFileSync(resolve(owner,"../../🌱️value/🛬️decode/🫴️recipient/🦀️.rs"),"utf8");
@@ -43,7 +41,6 @@ test("Complete original database fields agree with independent SQLite",()=>{
  expect(db.query("PRAGMA integrity_check").get()).toEqual({integrity_check:"ok"});
  expect(db.query("SELECT id,text,hex(payload) AS payload,optional,value FROM original_database ORDER BY id").all()).toEqual(f.rows.map(row=>({id:row.id,text:row.text,payload:Buffer.from(row.octets).toString("hex").toUpperCase(),optional:row.optional,value:row.value})));
  }finally{db.close();}
- console.log("[DEBUG] Independent SQLite complete database corpus preserves empty, NUL, Unicode, exact blobs, nulls and scalar cells");
 });
 
 test("Nested conversion producers borrow the original transfer ledger and callback",()=>{

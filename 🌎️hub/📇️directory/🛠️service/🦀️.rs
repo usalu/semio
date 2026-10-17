@@ -1,14 +1,14 @@
 //! 🛠️ DirectoryService: the serialized writer, projection rebuild, artifact CAS sweep and the verified checkpoint publisher adapter.
 
 //#region 🔖️Service
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 struct DirectoryWriterTestFence {
     pub(crate) claimed: std::sync::atomic::AtomicBool,
     pub(crate) reached: tokio::sync::Notify,
     pub(crate) release: tokio::sync::Notify,
 }
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 impl DirectoryWriterTestFence {
     /// 🧪️ Creates a one-shot pause at an explicitly armed writer boundary.
     pub(crate) fn new() -> Self {
@@ -55,9 +55,9 @@ pub struct DirectoryService {
     delivery_write: tokio::sync::RwLock<()>,
     delivery_invalidations: tokio::sync::broadcast::Sender<String>,
     artifact_cas_sweep_secret: [u8; 32],
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testkit"))]
     publication_test_fence: std::sync::Mutex<Option<Arc<DirectoryWriterTestFence>>>,
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testkit"))]
     decision_test_fence: std::sync::Mutex<Option<Arc<DirectoryWriterTestFence>>>,
 }
 
@@ -196,21 +196,21 @@ impl DirectoryService {
             delivery_write: tokio::sync::RwLock::new(()),
             delivery_invalidations,
             artifact_cas_sweep_secret: sweep_secret.finalize(),
-            #[cfg(test)]
+            #[cfg(any(test, feature = "testkit"))]
             publication_test_fence: std::sync::Mutex::new(None),
-            #[cfg(test)]
+            #[cfg(any(test, feature = "testkit"))]
             decision_test_fence: std::sync::Mutex::new(None),
         }
     }
 
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testkit"))]
     pub fn arm_decision_test_fence(&self) -> Arc<DirectoryWriterTestFence> {
         let fence = Arc::new(DirectoryWriterTestFence::new());
         *self.decision_test_fence.lock().unwrap() = Some(fence.clone());
         fence
     }
 
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testkit"))]
     async fn pause_decision_test_fence_once(&self) {
         let fence = self.decision_test_fence.lock().unwrap().take();
         if let Some(fence) = fence {
@@ -219,7 +219,7 @@ impl DirectoryService {
         }
     }
 
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testkit"))]
     /// 🧪️ Arms a one-shot post-append fence for the writer-order concurrency law.
     pub fn arm_publication_test_fence(&self) -> Arc<DirectoryWriterTestFence> {
         let fence = Arc::new(DirectoryWriterTestFence::new());
@@ -227,7 +227,7 @@ impl DirectoryService {
         fence
     }
 
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testkit"))]
     /// ⏸️ Pauses the first committed page so a competing writer can prove it remains excluded.
     async fn pause_publication_test_fence_once(&self, persisted: &[DirectoryEvent]) {
         if persisted.is_empty() {
@@ -253,7 +253,7 @@ impl DirectoryService {
     /// 🔗️ Keeps durable append and synchronous fanout in the same writer-guard lifetime.
     async fn append_and_publish_locked(&self, clock: &tokio::sync::MutexGuard<'_, HubClock>, events: &[NewDirectoryEvent]) -> DirectoryResult<Vec<DirectoryEvent>> {
         let persisted = if events.is_empty() { Vec::new() } else { self.dir.append_events(events).await? };
-        #[cfg(test)]
+        #[cfg(any(test, feature = "testkit"))]
         self.pause_publication_test_fence_once(&persisted).await;
         Ok(self.publish_persisted_locked(clock, persisted))
     }
@@ -314,7 +314,7 @@ impl DirectoryService {
     pub async fn execute(&self, actor: DirectoryActor, command: DirectoryCommand) -> DirectoryResult<(Vec<DirectoryEvent>, Option<CommandResult>)> {
         let mut clock = self.write.lock().await;
         let decision = decide(self.dir.as_ref(), &actor, command, &mut clock).await?;
-        #[cfg(test)]
+        #[cfg(any(test, feature = "testkit"))]
         self.pause_decision_test_fence_once().await;
         let persisted = self.append_and_publish_locked(&clock, &decision.events).await?;
         Ok((persisted, decision.result))
@@ -344,7 +344,7 @@ impl DirectoryService {
                 return Err(error);
             }
         };
-        #[cfg(test)]
+        #[cfg(any(test, feature = "testkit"))]
         self.pause_decision_test_fence_once().await;
         let persisted = match self.dir.append_decided_events(&decision.events).await? {
             DirectoryAppendOutcomeV1::Appended(events) => events,
@@ -376,7 +376,7 @@ impl DirectoryService {
                 completed_at: now_ms(),
             })
             .await?;
-        #[cfg(test)]
+        #[cfg(any(test, feature = "testkit"))]
         self.pause_publication_test_fence_once(&persisted).await;
         let published = self.publish_persisted_locked(&clock, persisted);
         let result = match decision.result.and_then(|result| result.invite_token) {
@@ -436,7 +436,7 @@ impl DirectoryService {
             Err(DirectoryError::Backend(_)) => return AdminEffectCommitV1::Indeterminate,
             Err(_) => return AdminEffectCommitV1::RejectedBeforeCommit,
         };
-        #[cfg(test)]
+        #[cfg(any(test, feature = "testkit"))]
         self.pause_decision_test_fence_once().await;
         let persisted = if decision.events.is_empty() {
             Vec::new()
@@ -549,7 +549,7 @@ impl DirectoryService {
         let committed = self.dir.redeem_invite_atomic(capability, &actor, user_id, hlc).await?;
         if let InviteRedemptionCommit::NewlyCommitted { event } = &committed {
             let persisted = vec![event.clone()];
-            #[cfg(test)]
+            #[cfg(any(test, feature = "testkit"))]
             self.pause_publication_test_fence_once(&persisted).await;
             self.publish_persisted_locked(&clock, persisted);
         }

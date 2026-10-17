@@ -1,9 +1,29 @@
 //! 📀️ Staged slice of the `ingress` band of the mounted artifact instance: its `instance-children` members (WP6 step S0 of the instance family).
 //!
 //! 🚪️ Ingress of the mounted artifact instance: framework-reserved job driving, constructors, store-constructor units, envelope ingress and decode, document archive genesis and merge, child members and packs.
-use super::*;
-use crate::tool_jobs::time_travel;
-use super::children_instance_root::{genesis_member_schema};
+use semio_framework_plugin_ownership::bounded_ownership::ARTIFACT_LIVE_OUTPUT_SLOTS;
+use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_framework_artifact_reference::{ArtifactDialect, ArtifactRef};
+use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use pack::snapshot::ArtifactPack;
+#[cfg(test)]
+use semio_framework_plugin_child::ChildAdmissionTestState;
+use crate::children_components::ChildComposition;
+use semio_framework_plugin_child::{ChildContentRetirement, ChildMemberEntry, ChildMemberRegistrationError, ChildMemberRetirement, ChildStoreAdmission, DocumentClosureSourceView, MemberPath};
+use semio_framework_plugin_decl_views::child_view::{ChildContentView, MemberKey, MemberKeyRef};
+use semio_framework_plugin_instance_history::history_components::CommandHistory;
+use semio_framework_plugin_decl_emission::Emit;
+use semio_framework::{Fault, FaultCode, FaultFrom, FaultOrigin};
+use std::future::Future;
+use semio_framework_plugin_instance_stores::stores_components::InstanceStores;
+use store::{MemberFactory, Mutation, SpaceMember};
+use protocol::OpText;
+use semio_framework_plugin_reactor_app::PluginApp;
+use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
+use semio_framework_value::{RetirementDemand, ValueError};
+use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
+use semio_framework_ui_contract::*;
+use crate::children_instance_root::genesis_member_schema;
 
 impl<M: SpaceMember + MemberFactory + 'static> ChildComposition<M> {
     /// 🌱️ Opens every composed child the initial snapshot declares and the app derives
@@ -11,7 +31,7 @@ impl<M: SpaceMember + MemberFactory + 'static> ChildComposition<M> {
     /// composition graph and the child content root are complete from the first frame — a saved
     /// archive of a never-edited document then carries its derivable members instead of relying on
     /// the loading side to re-derive them.
-    pub(crate) async fn seed_genesis_children<A: ArtifactApp>(&mut self, stores: &mut InstanceStores<A>, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), Fault> {
+    pub async fn seed_genesis_children<A: ArtifactApp>(&mut self, stores: &mut InstanceStores<A>, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), Fault> {
         let mut genesis = Vec::new();
         {
             let snapshot = stores.store.snapshot_ref();
@@ -45,7 +65,7 @@ impl<M: SpaceMember + MemberFactory + 'static> ChildComposition<M> {
     /// while the retirements its own publications need are not yet admissible ([`Self::reclaim_child_retirements`]):
     /// the parent already holds every edit in order, the child it names follows once maintenance returned them, and
     /// the instance stays runnable meanwhile (`child_follow_awaits_retirement`).
-    pub(crate) async fn follow_derivable_children<A: ArtifactApp>(&mut self, stores: &mut InstanceStores<A>, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), Fault> {
+    pub async fn follow_derivable_children<A: ArtifactApp>(&mut self, stores: &mut InstanceStores<A>, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), Fault> {
         let generation = stores.store.generation_now();
         if generation == self.followed_parent_generation || self.children.has_admission_in_flight() {
             return Ok(());
@@ -61,7 +81,7 @@ impl<M: SpaceMember + MemberFactory + 'static> ChildComposition<M> {
                 let Some((slot, fields)) = projection.get(index) else { break };
                 let key = (slot.to_string(), fields.child_id.to_string());
                 if self.children.get(&key).is_none() {
-                    if crate::child_content::member_is_retiring(&self.child_member_retirements, fields.artifact_id) {
+                    if semio_framework_plugin_child::member_is_retiring(&self.child_member_retirements, fields.artifact_id) {
                         deferred = true;
                     } else if let Some(initial_pack) = A::genesis_child_pack(snapshot, slot, fields.child_id).map_err(|error| plugin_sdk_fault(error.into_message()))? {
                         let dialect = ArtifactDialect { artifact_kind: fields.artifact_kind.to_string(), standard: fields.standard.to_string(), subset: fields.subset.to_string() };
@@ -125,7 +145,7 @@ impl<M: SpaceMember + MemberFactory + 'static> ChildComposition<M> {
 
     /// ⏳️ A follow pass waits on child retirements and the parent has not been followed since — pending, runnable
     /// work until maintenance returned them (see `child_follow_awaits_retirement`).
-    pub(crate) fn derivable_follow_awaits_retirement<A: ArtifactApp>(&self, stores: &InstanceStores<A>) -> bool {
+    pub fn derivable_follow_awaits_retirement<A: ArtifactApp>(&self, stores: &InstanceStores<A>) -> bool {
         self.child_follow_awaits_retirement && stores.store.generation_now() != self.followed_parent_generation
     }
 
@@ -137,7 +157,7 @@ impl<M: SpaceMember + MemberFactory + 'static> ChildComposition<M> {
     }
 
     /// ⏳️ Queries the original fixed retirement slots; funded maintenance makes room.
-    pub(crate) fn reclaim_child_retirements(&self, roots: usize, members: usize) -> Result<bool, Fault> {
+    pub fn reclaim_child_retirements(&self, roots: usize, members: usize) -> Result<bool, Fault> {
         if roots > ARTIFACT_LIVE_OUTPUT_SLOTS || members > ARTIFACT_LIVE_OUTPUT_SLOTS {
             return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.child-root-retirement-span"), "one child publication span exceeds the fixed retirement authority"));
         }
@@ -146,7 +166,7 @@ impl<M: SpaceMember + MemberFactory + 'static> ChildComposition<M> {
 
     /// 🎟️ Admits the next immutable child-content publication once its retirement slot is vacant — reclaimed first when
     /// an older retirement still holds it ([`Self::reclaim_child_retirements`]).
-    pub(crate) fn admit_child_content_publication(&mut self) -> Result<u64, Fault> {
+    pub fn admit_child_content_publication(&mut self) -> Result<u64, Fault> {
         self.admit_child_content_publication_span(1)?;
         Ok(self.child_content_generation + 1)
     }
@@ -154,7 +174,7 @@ impl<M: SpaceMember + MemberFactory + 'static> ChildComposition<M> {
     /// 🎟️ Admits `count` consecutive child-content publications (see [`Self::admit_child_content_publication`]). Only a
     /// ring of retirements that are every one still borrowed answers the retryable
     /// `interactive-job.child-root-retirement-saturated`.
-    pub(crate) fn admit_child_content_publication_span(&mut self, count: usize) -> Result<(), Fault> {
+    pub fn admit_child_content_publication_span(&mut self, count: usize) -> Result<(), Fault> {
         if self.child_content_generation.checked_add(count as u64).is_none() {
             return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.child-root-generation"), "immutable child-content generation exhausted"));
         }
@@ -164,12 +184,12 @@ impl<M: SpaceMember + MemberFactory + 'static> ChildComposition<M> {
         Ok(())
     }
 
-    pub(crate) async fn publish_child_content_member(&mut self, generation: u64, slot: &str, child_id: &str) -> Result<(), Fault> {
+    pub async fn publish_child_content_member(&mut self, generation: u64, slot: &str, child_id: &str) -> Result<(), Fault> {
         self.publish_member_content(generation, MemberKeyRef::root(slot, child_id)).await
     }
 
     /// 📰️ Republishes the immutable child-content root with the member at one exact owner edge captured anew.
-    pub(crate) async fn publish_member_content(&mut self, generation: u64, key: MemberKeyRef<'_>) -> Result<(), Fault> {
+    pub async fn publish_member_content(&mut self, generation: u64, key: MemberKeyRef<'_>) -> Result<(), Fault> {
         if generation != self.child_content_generation.saturating_add(1) || !self.child_content_retirements.can_insert(generation) {
             return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.child-root-publication-authority"), "immutable child-content publication lost its exact admitted generation"));
         }
@@ -186,7 +206,7 @@ impl<M: SpaceMember + MemberFactory + 'static> ChildComposition<M> {
     /// 📮️ Sends one member's events on the document's backbone under that member's lane: the owner-path text of the
     /// member that owns it (empty for the document itself) and its step there (design §21.9). A member whose owner is
     /// not live has no lane: its events are refused here, never sent under another lane and never dropped.
-    pub(crate) async fn send_member_lane<A: ArtifactApp>(&mut self, stores: &mut InstanceStores<A>, lane: &MemberKey, payload: Vec<u8>) -> Result<(), Fault> {
+    pub async fn send_member_lane<A: ArtifactApp>(&mut self, stores: &mut InstanceStores<A>, lane: &MemberKey, payload: Vec<u8>) -> Result<(), Fault> {
         if payload.is_empty() || stores.store.backbone_ref().is_none() {
             return Ok(());
         }
@@ -248,7 +268,7 @@ impl<M: SpaceMember + MemberFactory + 'static> ChildComposition<M> {
     }
 
     #[cfg(test)]
-    pub(in super::super) fn test_child_admission_state(&self, abort_generation: u64) -> ChildAdmissionTestState {
+    pub fn test_child_admission_state(&self, abort_generation: u64) -> ChildAdmissionTestState {
         ChildAdmissionTestState {
             children_empty: self.children.is_empty(),
             generation: self.child_content_generation,
@@ -260,13 +280,13 @@ impl<M: SpaceMember + MemberFactory + 'static> ChildComposition<M> {
         }
     }
 
-    pub(crate) fn child_member_retirement_quote(&self,body:usize,closing:bool)->Result<Option<RetirementDemand>,ValueError>{
+    pub fn child_member_retirement_quote(&self,body:usize,closing:bool)->Result<Option<RetirementDemand>,ValueError>{
         let Some((_,generation))=self.child_member_retirements.next_id_from(self.child_member_retirement_cursor)else{let release_bytes=self.child_member_retirements.empty_backing_byte_demand().unwrap_or(0);return Ok((closing&&release_bytes!=0).then_some(RetirementDemand{copy_bytes:size_of_val(&self.child_member_retirements),release_bytes,depth:1,..Default::default()}))};let retirement=self.child_member_retirements.get(generation).unwrap();let parent_copy=size_of::<usize>();
         if retirement.terminal_is_empty(){return Ok(Some(RetirementDemand{copy_bytes:parent_copy+size_of::<Option<(u64,ChildMemberRetirement<M>)>>(),depth:1,..Default::default()}))}
         ChildContentRetirement::parent_snapshot_demand(retirement.retirement_demands(body.saturating_sub(parent_copy))?,parent_copy).map(Some)
     }
 
-    pub(crate) fn child_member_retirement_unit(&mut self,grant:RetainedCloneGrant,closing:bool)->Result<RetainedCloneStep,Fault>{
+    pub fn child_member_retirement_unit(&mut self,grant:RetainedCloneGrant,closing:bool)->Result<RetainedCloneStep,Fault>{
         let empty=RetainedCloneProgress::default();let Some(demand)=self.child_member_retirement_quote(grant.maximum_copy_bytes, closing).map_err(|error|plugin_sdk_fault(error.into_message()))?else{return Ok(RetainedCloneStep::Progress(empty))};
         if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(RetainedCloneStep::Progress(empty))}
         let Some((index, generation)) = self.child_member_retirements.next_id_from(self.child_member_retirement_cursor) else {
@@ -348,7 +368,7 @@ impl<M: SpaceMember + MemberFactory + 'static> ChildComposition<M> {
     /// without this a joining replica never learns a single child-lane edit and the two replicas
     /// diverge on the very content a composing plugin keeps in its children (measured on
     /// `🌊️flow`'s `content` child, ticket 26/09/19 `📓️flow.md` §5.3).
-    pub(crate) async fn announce_member_event_logs<A: ArtifactApp>(&mut self, stores: &mut InstanceStores<A>) -> Result<(), Fault> {
+    pub async fn announce_member_event_logs<A: ArtifactApp>(&mut self, stores: &mut InstanceStores<A>) -> Result<(), Fault> {
         if self.children.is_empty() {
             return Ok(());
         }
@@ -364,7 +384,7 @@ impl<M: SpaceMember + MemberFactory + 'static> ChildComposition<M> {
     /// 📤️ Announces the tail edit of every member a composite gesture just touched, under
     /// that member's own lane. Called from the ONE choke point child edits land at
     /// (`dispatch_emit_group`), so a child-lane edit travels exactly like a parent-lane one.
-    pub(crate) async fn announce_member_tail_edits<A: ArtifactApp>(&mut self, stores: &mut InstanceStores<A>, lanes: &[(String, String)]) -> Result<(), Fault> {
+    pub async fn announce_member_tail_edits<A: ArtifactApp>(&mut self, stores: &mut InstanceStores<A>, lanes: &[(String, String)]) -> Result<(), Fault> {
         if stores.store.backbone_ref().is_none() {
             return Ok(());
         }
@@ -385,7 +405,7 @@ impl<M: SpaceMember + MemberFactory + 'static> ChildComposition<M> {
     /// peer's lane for the child its own later edit — or ours — replaced), and a lane naming a child the
     /// follow pass has not opened yet because it waits on retirements is the child that pass derives: both
     /// carry nothing the composition does not already hold and are skipped.
-    pub(crate) async fn fold_member_inbound<A: ArtifactApp>(&mut self, stores: &mut InstanceStores<A>, history: &mut CommandHistory<A>) -> Result<usize, Fault> {
+    pub async fn fold_member_inbound<A: ArtifactApp>(&mut self, stores: &mut InstanceStores<A>, history: &mut CommandHistory<A>) -> Result<usize, Fault> {
         let inbound = stores.store.take_member_inbound();
         if inbound.is_empty() {
             return Ok(0);
@@ -460,7 +480,7 @@ impl<M: SpaceMember + MemberFactory + 'static> ChildComposition<M> {
     /// one, and the parent's history is still perfectly valid without it.
     /// 📌️ One checkpoint-cascade unit: commits the child at `slot`/`child_id` when it is dirty,
     /// republishes its content root, and answers the pin its current checkpoint contributes.
-    pub(crate) async fn checkpoint_child_unit(&mut self, message: &str, authors: &[vcs::Author], key: MemberKeyRef<'_>, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<Option<vcs::CompositionPin>, Fault> {
+    pub async fn checkpoint_child_unit(&mut self, message: &str, authors: &[vcs::Author], key: MemberKeyRef<'_>, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<Option<vcs::CompositionPin>, Fault> {
         let publication_generation = self.admit_child_content_publication()?;
         let (reference, checkpoint_id) = {
             let entry = self.children.member_mut(key).ok_or_else(|| plugin_sdk_fault("checkpoint child authority changed during bounded publication"))?;
@@ -477,7 +497,7 @@ impl<M: SpaceMember + MemberFactory + 'static> ChildComposition<M> {
     /// each restored by one [`Self::checkout_child_unit`]. A pin naming a child that is not currently
     /// open is QUEUED (`pending_child_pins`) rather than dropped, so a child adopted later still lands
     /// on its pinned state instead of silently staying at head — see `open_child`.
-    pub(crate) fn checkout_cascade_pins<A: ArtifactApp>(&mut self, stores: &mut InstanceStores<A>) -> Result<Vec<vcs::CompositionPin>, Fault> {
+    pub fn checkout_cascade_pins<A: ArtifactApp>(&mut self, stores: &mut InstanceStores<A>) -> Result<Vec<vcs::CompositionPin>, Fault> {
         let Some(checkpoint_id) = stores.store.current_checkpoint_id().map(str::to_string) else { return Ok(Vec::new()) };
         let Some(pins) = stores.store.envelope().vcs.checkpoints.iter().find(|checkpoint| checkpoint.id == checkpoint_id).map(|checkpoint| checkpoint.composition_pins.clone()) else { return Ok(Vec::new()) };
         self.pending_child_pins.clear();
@@ -486,7 +506,7 @@ impl<M: SpaceMember + MemberFactory + 'static> ChildComposition<M> {
     }
 
     /// ⏮️ One checkout-cascade unit: restores one live child to `pin`, or queues the pin.
-    pub(crate) async fn checkout_child_unit(&mut self, pin: &vcs::CompositionPin, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), Fault> {
+    pub async fn checkout_child_unit(&mut self, pin: &vcs::CompositionPin, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), Fault> {
         let child_key = self.children.keyed_entries().find(|(_, entry)| entry.reference.artifact_id == pin.child_ref.artifact_id).map(|(key, _)| key.to_key());
         let Some(key) = child_key else {
             self.pending_child_pins.push(pin.clone());

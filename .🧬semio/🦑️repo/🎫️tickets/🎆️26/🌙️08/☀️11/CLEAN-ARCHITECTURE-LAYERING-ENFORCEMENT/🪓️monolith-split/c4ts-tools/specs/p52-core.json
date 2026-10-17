@@ -1,0 +1,10 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🎤️presentation/🧪️tests/📽️presentation-core/🟦️.ts",
+ "kit": {"dir": "🧷️presentation-core-kit", "doc": "/** 🧷️ Shared fixtures of the presentation core suites: the thought scope helper and the sample intro deck. */", "lines": [[4,43]]},
+ "children": [
+  {"dir": "🌱️intro-and-resolution", "doc": "/** 🌱️ The presentation core, intro arrangements and resolution: the intro morph labels, embodiment and scope resolution, morph ids and split participants. */", "lines": [[162,412]]},
+  {"dir": "🪡️thought-expansion", "doc": "/** 🪡️ The presentation core, `expandThoughtSlides`: how thoughts expand into slides, authors, affiliations, descriptions and tiles. */", "lines": [[414,745]]},
+  {"dir": "🗺️arrangement-geometry-and-sequences", "doc": "/** 🗺️ The presentation core, arrangement geometry and sequences: centring, figure frames, scroll origins, figure grids, source crops, text morph roots, sequences and slide hashes. */", "lines": [[747,980]]},
+  {"dir": "🔄️analogy-and-tile-play", "doc": "/** 🔄️ The presentation core, analogies, video and pdf embodiments and tile play. */", "lines": [[982,1128]]}
+ ]
+}

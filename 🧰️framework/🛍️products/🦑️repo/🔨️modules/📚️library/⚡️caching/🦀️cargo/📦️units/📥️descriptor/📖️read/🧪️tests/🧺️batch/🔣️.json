@@ -1,0 +1,80 @@
+{
+  "version": 1,
+  "nodes": 35,
+  "batches": [
+    {
+      "nodes": 0,
+      "accepted": true
+    },
+    {
+      "nodes": 1,
+      "accepted": true
+    },
+    {
+      "nodes": 16,
+      "accepted": true
+    },
+    {
+      "nodes": 17,
+      "accepted": false
+    }
+  ],
+  "publication": [
+    {
+      "phase": "cold",
+      "written": 35,
+      "reused": 0,
+      "batches": 3,
+      "opens": 0,
+      "directories": 35
+    },
+    {
+      "phase": "warm",
+      "written": 0,
+      "reused": 35,
+      "batches": 3,
+      "opens": 35,
+      "directories": 0
+    },
+    {
+      "phase": "partial",
+      "written": 1,
+      "reused": 34,
+      "batches": 3,
+      "opens": 34,
+      "directories": 1
+    }
+  ],
+  "invalid": [
+    "proxy",
+    "copied",
+    "duplicate",
+    "sparse",
+    "accessor",
+    "extra",
+    "node-proxy",
+    "array-subclass"
+  ],
+  "faults": [
+    "corrupt",
+    "close"
+  ],
+  "epochs": [
+    {
+      "target": "source",
+      "stage": "entry"
+    },
+    {
+      "target": "source",
+      "stage": "delivery"
+    },
+    {
+      "target": "policy",
+      "stage": "entry"
+    },
+    {
+      "target": "policy",
+      "stage": "delivery"
+    }
+  ]
+}

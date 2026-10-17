@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "idle-after-unfinished-prefix",
+      "cancel": false,
+      "blockers": 8192,
+      "turns": 2,
+      "retiredPerTurn": 1
+    },
+    {
+      "name": "cancel-during-unfinished-prefix",
+      "cancel": true,
+      "blockers": 8192,
+      "turns": 1,
+      "retiredPerTurn": 0
+    }
+  ]
+}

@@ -1,4 +1,5 @@
 use super::*;
+use semio_s_artifact_process_process3d_config::Process3dConfigSetCursor;
 
 #[semio_framework_async_macros::async_test]
 async fn face_drag_negative_distance_yields_cut() {

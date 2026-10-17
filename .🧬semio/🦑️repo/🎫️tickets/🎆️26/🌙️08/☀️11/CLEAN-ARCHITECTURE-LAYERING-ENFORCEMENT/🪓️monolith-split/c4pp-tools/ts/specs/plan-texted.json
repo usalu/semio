@@ -1,0 +1,18 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/✏️TextEditor/🟦️.tsx",
+ "fn": "WasmEditorSurface",
+ "propsType": "WasmEditorSurfaceProps",
+ "coreType": "EditorCore",
+ "region": "WasmEditorSurface",
+ "hooks": [
+  {"dir": "🧰️surface-state-and-delivery", "name": "useEditorSurfaceState", "upto": 28,
+   "doc": "/** 🧰️ Text editor surface state and delivery: the session, rename, hover, echo and draft refs, the dispatcher, the read-only and splice typing state, the typing run, the edit delivery, the explicit draft history stepping and the session sync. */",
+   "docFn": "/** 🧰️ Holds the refs and state of the editor surface and delivers edits and scene syncs. */"},
+  {"dir": "👥️session-presence-and-caret", "name": "useEditorSessionPresence", "upto": 44,
+   "doc": "/** 👥️ Text editor session, presence and caret: the session epoch and sync effect, the canvas appearance sync, the local and peer caret presence, the selection emission and the caret cadence effects. */",
+   "docFn": "/** 👥️ Syncs the session, publishes the local caret and projects peer carets. */"},
+  {"dir": "🔤️completions-rename-and-menu", "name": "useEditorCompletionsRenameAndMenu", "upto": 67,
+   "doc": "/** 🔤️ Text editor completions, rename and menu: the wasm session and rename state, the completions and rename info, the session factory, the caret screen position, the completion, rename and context menu handlers and the session ready callback. */",
+   "docFn": "/** 🔤️ Provides the completion list, the rename preview and commit and the context menu of the editor. */"}
+ ]
+}

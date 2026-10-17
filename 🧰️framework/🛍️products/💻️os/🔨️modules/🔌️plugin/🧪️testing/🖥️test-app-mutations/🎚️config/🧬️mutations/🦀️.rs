@@ -1,12 +1,13 @@
 #[path = "📝️change-test-config/🦀️.rs"]
 pub mod change_test_config_selection;
-pub(crate) use change_test_config_selection::ChangeTestConfigSelection;
+pub use crate::test_app_mutation_fixture::config::mutations::change_test_config_selection::ChangeTestConfigSelection;
+#[doc(hidden)]
 #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, dsl::Mutations, semio_framework_dsl_record_derive::DslEnum, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = store)]
 #[serde(tag = "operation", content = "payload", rename_all = "camelCase", deny_unknown_fields)]
 #[value(tag = "operation", content = "payload", rename_all = "camelCase", deny_unknown_fields)]
-#[mutations(snapshot=super::TestConfig,diff=super::TestConfigDiff,schema="plugin.testkit.config")]
-pub(crate) enum TestConfigMutation {
+#[mutations(snapshot=crate::test_app_mutation_fixture::config::TestConfig,diff=crate::test_app_mutation_fixture::config::TestConfigDiff,schema="plugin.testkit.config")]
+pub enum TestConfigMutation {
     ChangeTestConfigSelection(ChangeTestConfigSelection),
 }
 impl semio_framework_value::retirement::RetireOwned for TestConfigMutation {
@@ -37,8 +38,8 @@ impl protocol::OpBinary for TestConfigMutation {
     }
 }
 semio_framework_os_kernel::original_ordinal_operation_receiving!(TestConfigMutation);
-impl store::snapshot_clone_preparation::ConfigApplyMutation<super::TestConfig> for TestConfigMutation {
-    fn exchange(self, post: &mut super::TestConfig) -> Result<Self, (semio_framework_value::ValueError, Self)> {
+impl store::snapshot_clone_preparation::ConfigApplyMutation<crate::test_app_mutation_fixture::config::TestConfig> for TestConfigMutation {
+    fn exchange(self, post: &mut crate::test_app_mutation_fixture::config::TestConfig) -> Result<Self, (semio_framework_value::ValueError, Self)> {
         let Self::ChangeTestConfigSelection(change) = self;
         let previous = std::mem::replace(&mut post.selected, change.selected);
         Ok(Self::ChangeTestConfigSelection(ChangeTestConfigSelection { selected: previous }))

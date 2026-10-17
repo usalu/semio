@@ -29,5 +29,12 @@
         "wrappers": "refuse"
       }
     }
+  },
+  "definitions": {
+    "Policy": {
+      "const": {
+        "maximumUnsupportedUnits": 65536
+      }
+    }
   }
 }

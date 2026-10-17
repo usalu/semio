@@ -12,15 +12,16 @@
 use semio_framework_os_renderer_wgpu_engine_attach::drop_engine_surface;
 use super::*;
 use semio_framework_os_kernel::Viewport2d;
+use semio_framework_test_fixtures::fixture_text;
 use semio_framework_ui_declaration::ui::SurfaceKind;
 use semio_framework_ui_layout::layout::UiPresence;
 use semio_framework_ui_scene_node_graph::{NodeGraphInteractionDomain, NodeGraphScene};
 use ui_wgpu::wgpu::InputState;
 
-const NODE_GRAPH_SCENE_FIXTURE: &str = include_str!("../🧫️fixtures/🕸️wgpu-node-graph/🔣️.json");
+static NODE_GRAPH_SCENE_FIXTURE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../🧱️elements/⚙️EngineCanvas/🧪️tests/🧫️fixtures/🕸️wgpu-node-graph/🔣️.json"));
 
 pub(super) fn hexagonal_mushroom_column_fixture_json() -> String {
-    let value: Value = serde_json::from_str(NODE_GRAPH_SCENE_FIXTURE).expect("committed generation3d flow fixture parses");
+    let value: Value = serde_json::from_str((*NODE_GRAPH_SCENE_FIXTURE)).expect("committed generation3d flow fixture parses");
     serde_json::to_string(value.get("hostSnapshot").expect("host document payload")).expect("host document re-encodes")
 }
 
@@ -44,7 +45,7 @@ pub(super) fn flow_window_scene(surface_id: &str) -> UiComponentSceneNode {
                 edge_target_prefix: "flow-play-document.synapse.".into(),
                 handle_target_prefix: "flow-play-document.handle.".into(),
             }),
-            operators: serde_json::from_value(serde_json::from_str::<Value>(NODE_GRAPH_SCENE_FIXTURE).expect("graph fixture")["operators"].clone()).expect("document operator records"),
+            operators: serde_json::from_value(serde_json::from_str::<Value>((*NODE_GRAPH_SCENE_FIXTURE)).expect("graph fixture")["operators"].clone()).expect("document operator records"),
             host_snapshot_json: Some(hexagonal_mushroom_column_fixture_json()),
             capabilities_json: Some(json!({ "engine": "flow", "spotlight": true }).to_string()),
             lod_json: Some(json!({ "automatic": true }).to_string()),
@@ -65,8 +66,8 @@ pub(super) fn flow_window_scene(surface_id: &str) -> UiComponentSceneNode {
     }
 }
 
-fn paint_scene_into_draw_list(scene: &UiComponentSceneNode, bounds: Rect) -> super::engine_surface_attach_tests::RetainedSurfacePaint {
-    super::engine_surface_attach_tests::paint_retained_surface_scene(scene, bounds)
+fn paint_scene_into_draw_list(scene: &UiComponentSceneNode, bounds: Rect) -> semio_framework_os_renderer_wgpu_ui_engine_tests::surface_fixtures::RetainedSurfacePaint {
+    semio_framework_os_renderer_wgpu_ui_engine_tests::surface_fixtures::paint_retained_surface_scene(scene, bounds)
 }
 
 /// 🔤️ One action's string fields, key-sorted — the emitted value contract is order-preserving, and a
@@ -141,7 +142,7 @@ fn node_graph_window_attaches_the_flow_engine_and_paints_a_non_empty_draw_list()
     assert!(!packet.scene.retirement_is_empty(), "the flow host painted real vector commands, not an empty scene");
     assert_eq!((packet.width, packet.height), (966, 836), "the packet is sized to the window body");
     let mut retirement_turns = 0usize;
-    while !packet.close_step() {
+    while !close_engine_canvas_packet_step(&mut packet) {
         retirement_turns += 1;
         assert!(retirement_turns < 262_144, "the transferred engine packet reaches terminal release");
     }
@@ -149,7 +150,7 @@ fn node_graph_window_attaches_the_flow_engine_and_paints_a_non_empty_draw_list()
     assert!(resources.terminal_is_empty());
     drop(packet);
     drop(resources);
-    super::engine_surface_attach_tests::close_retained_surface_fixture(surface_id);
+    semio_framework_os_renderer_wgpu_ui_engine_tests::surface_fixtures::close_retained_surface_fixture(surface_id);
 }
 
 #[test]
@@ -192,7 +193,7 @@ fn tutorial_semantic_points_resolve_through_live_graph_geometry() {
     let actual = resolve_tutorial_surface_point(&host_id, &semio_framework::onboarding::IntroductionPoint::Domain { id: surface_id.into(), domain: "slider".into(), entity: "radius".into(), value: 1.5 }).unwrap();
     assert!((actual.0 - expected[0]).abs() < 0.001 && (actual.1 - expected[1]).abs() < 0.001, "slider domain must use the same zoomed track as React: {actual:?} vs {expected:?}");
     assert_eq!(resolve_tutorial_surface_point(&host_id, &semio_framework::onboarding::IntroductionPoint::Scene { id: surface_id.into(), position: [0.0, 0.0, 0.0] }), None, "a 2D graph intentionally has no 3D scene projector");
-    super::engine_surface_attach_tests::close_retained_surface_fixture(surface_id);
+    semio_framework_os_renderer_wgpu_ui_engine_tests::surface_fixtures::close_retained_surface_fixture(surface_id);
 }
 
 #[test]
@@ -298,7 +299,7 @@ fn fit_graph_answers_the_fitted_camera_not_the_scene_camera() {
     assert!(sync_node_graph_scene(&scene, "law-window", bounds, Theme::default().panel), "attach");
 
     let scene_camera = [94.755_815_717_374_45, -97.508_331_346_796_68, 1.784_432_561_601_109_9];
-    let fitted = crate::engine_canvas::node_graph_fit_camera(surface_id).expect("a live graph can be framed");
+    let fitted = semio_framework_os_renderer_wgpu_engine_graph::node_graph::node_graph_fit_camera(surface_id).expect("a live graph can be framed");
     assert_ne!(fitted, scene_camera, "the fit must answer a camera it computed, not the scene's own");
 
     let (published, painted, coverage) = ENGINE_SURFACES
@@ -352,7 +353,7 @@ fn node_graph_paint_publishes_its_captions_over_the_engine_raster() {
         })
         .expect("the live flow host answers its label overlay state");
     let label_rows = rows.get("labels").and_then(Value::as_array).expect("label rows");
-    let fixture: Value = serde_json::from_str(NODE_GRAPH_SCENE_FIXTURE).unwrap();
+    let fixture: Value = serde_json::from_str((*NODE_GRAPH_SCENE_FIXTURE)).unwrap();
     let ports = label_rows.iter().filter(|row| row["kind"] == "port").count();
     let labels = label_rows.len();
     assert_eq!(ports, fixture["captionExpectation"]["ports"].as_u64().unwrap() as usize, "overlay state {rows:?}");
@@ -369,5 +370,5 @@ fn node_graph_paint_publishes_its_captions_over_the_engine_raster() {
     assert!(caption_layer > raster_layer, "captions paint in a LATER layer than the engine raster ({caption_layer} vs {raster_layer}), or the opaque texture covers them");
     let glyphs: usize = draw.layers.iter().map(|layer| layer.overlay_ui_instances.len()).sum();
     assert!(glyphs >= labels, "every published caption reaches the draw list as glyphs, got {glyphs} for {labels} captions");
-    super::engine_surface_attach_tests::close_retained_surface_fixture(surface_id);
+    semio_framework_os_renderer_wgpu_ui_engine_tests::surface_fixtures::close_retained_surface_fixture(surface_id);
 }

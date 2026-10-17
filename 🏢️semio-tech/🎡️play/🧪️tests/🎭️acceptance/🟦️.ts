@@ -213,7 +213,6 @@ async function paintWitness(page: Page, variant: string): Promise<PaintWitness> 
       colors.add((image.data[index]! << 16) | (image.data[index + 1]! << 8) | image.data[index + 2]!);
     }
     expect(colors.size, `${variant}: actual GPU geometry draw must produce varying interior canvas pixels`).toBeGreaterThanOrEqual(generation3dWorkflow.gpu.minimumInteriorColors);
-    console.log(`[DEBUG] ${variant} GPU draw and physical interior canvas witness: ${colors.size} colors`);
   }
   const detail = witnesses.length === 0 ? "the pane mounted no window at all" : witnesses.map((witness) => `${witness.surface} [${witness.kind}] ${witness.painted ? "paints" : "EMPTY"} — ${witness.detail}`).join("; ");
   return { painted: witnesses.some(qualifies), detail };
@@ -295,7 +294,6 @@ async function exerciseSurfaceRoundTrip(page: Page, pane: PlayPane): Promise<voi
     await dismissPaneIntroduction(page, pane);
     const witness = await paintWitness(page, pane.variant);
     expect(witness.painted, `${pane.variant} ${step.role} paints nothing — ${witness.detail}`).toBe(step.painted);
-    console.log(`[DEBUG] ${pane.variant} ${step.role} ${dialect}#${step.role}: ${witness.detail}`);
   }
 }
 
@@ -387,7 +385,6 @@ test.describe("semio-tech play", () => {
     await expect(input).toHaveValue(String(changed));
     const afterInspection = JSON.parse((await graph.getAttribute("data-host-snapshot-json"))!);
     for (const field of generation3dWorkflow.sourceNavigation.documentUnchanged) expect(afterInspection[field]).toEqual(beforeInspection[field]);
-    console.log(`[DEBUG] generation3d ${language.browser} actual keyboard selected ${slider!.id}; inspector ${slider!.value}→${changed}; current GPU redraw; exact undo and redo`);
     errors.stop();
     expect(errors.pageErrors).toEqual([]);
     expect(errors.consoleErrors).toEqual([]);
@@ -409,7 +406,6 @@ test.describe("semio-tech play", () => {
     await graph.focus();for(let step=0;step<=created.widgets.length;step++){if((await graph.getAttribute("data-diagram-focused-node"))===added[0]!.id)break;await graph.press(generation3dWorkflow.focusKey);}await expect(graph).toHaveAttribute("data-diagram-focused-node",added[0]!.id);await graph.press(generation3dWorkflow.selectKey);
     const volume=page.locator(`[data-layered-pane="${variant}"] [data-ui-node-key="${generation3dWorkflow.analysis.outputKey}"]`);await expect(volume).toBeVisible();const actualVolume=async()=>{const text=await volume.textContent();if(text===null||/(stale|pending|error|veraltet|Fehler)/i.test(text))return null;const match=text.match(/:\s*(-?\d+(?:\.\d+)?(?:e[+-]?\d+)?)/i);return match?Number(match[1]):null;};await expect.poll(actualVolume).not.toBeNull();const measured=await actualVolume();expect(Number.isFinite(measured)).toBe(true);expect(measured!).toBeGreaterThanOrEqual(generation3dWorkflow.analysis.minimumVolume);
     await graph.focus();await graph.press(generation3dWorkflow.history.undo);await expect.poll(snapshot).toEqual(before);await graph.press(generation3dWorkflow.history.redo);await expect.poll(snapshot).toEqual(created);
-    console.log(`[DEBUG] generation3d ${language.browser} actual current shape ${sourceId} → ${added[0]!.id} volume=${measured} inference; exactly one created widget/wire; existing graph preserved; exact one undo/redo`);
     errors.stop();expect(errors.pageErrors).toEqual([]);expect(errors.consoleErrors).toEqual([]);expect(errors.refusedInputs).toEqual([]);expect(errors.resourceErrors).toEqual([]);
   });
 
@@ -438,7 +434,6 @@ test.describe("semio-tech play", () => {
     const before=await snapshot();await button.click();
     const terminal=scope.locator(`[data-slot="world-compute-status"][data-compute-phase="${law.terminalPhase}"]`).first();await expect(terminal).toBeVisible();await expect(terminal).not.toHaveAttribute("aria-busy","true");await expect(terminal.locator('[data-slot="world-compute-cancel"]')).toHaveCount(0);
     const after=await snapshot();for(const field of law.documentUnchanged)expect(after[field as keyof typeof after]).toEqual(before[field as keyof typeof before]);
-    console.log(`[DEBUG] generation3d ${language.browser} actual ${law.example} work ${run}/${generation} advanced ${firstDone}→${latestDone} over ${Date.now()-started}ms; localized DOM cancel reached ${law.terminalPhase}; graph preserved`);
     errors.stop();expect(errors.pageErrors).toEqual([]);expect(errors.consoleErrors).toEqual([]);expect(errors.refusedInputs).toEqual([]);expect(errors.resourceErrors).toEqual([]);
   });
 
@@ -455,7 +450,6 @@ test.describe("semio-tech play", () => {
       expect(await waitForPaneShellOutcome(page, "generation3d")).toBe("ready");
       await expect(page.locator('[data-slot="play-language-choice"]')).toHaveCount(0);
       await expect(page.locator("html")).toHaveAttribute("lang", "de");
-      console.log("[DEBUG] unsupported browser locale required explicit Deutsch choice before actual generation3d shell boot");
     });
   });
 

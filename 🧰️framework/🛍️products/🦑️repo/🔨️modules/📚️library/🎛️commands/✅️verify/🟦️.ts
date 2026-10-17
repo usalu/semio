@@ -44,6 +44,7 @@ import { toolJobCoverageRun } from "../../⚖️laws/🎯️tool-job-coverage/�
 import { POLICY_BREACH_GATES } from "./🚨️policy-breach-gates/🟦️.ts";
 import { verifyComposedChildRefAssetCount, verifyComposedChildRefRows } from "./🧷️composed-child-refs/🟦️.ts";
 import { censusGeneratedCorruption } from "./🧟️generated-corruption/🟦️.ts";
+import { runTypescriptVerification } from "./🔷️typescript-project/🟦️.ts";
 import { runAgnosticGate, runDebugTagCensusGate, runDocstringCensusGate, runDocstringEmojiGate, runInterfaceImportGate, runMutationCapGate, runSourceCensusGate } from "./🚦️gates/🟦️.ts";
 import { rustWarningTargetScope } from "./🦀️rust-warnings/🟦️.ts";
 import type { SelfTestLanes } from "../../⚖️laws/🧪️self-test-lanes/🟦️.ts";
@@ -86,6 +87,10 @@ export abstract class VerifyScript extends Script {
     }
     if (segments[0] === "generated-corruption") {
       this.runGeneratedCorruption(segments.slice(1));
+      return;
+    }
+    if (segments[0] === "typescript") {
+      await runTypescriptVerification(this.root, segments.slice(1));
       return;
     }
     if (segments[0] === "rust-warnings") {
@@ -1111,7 +1116,7 @@ export abstract class VerifyScript extends Script {
       policyReadFileSafe(this.root, "🧰️framework/🔨️modules/🗺️surface/🕸️node-graph/🦀️.rs"),
       ["🧱️core", "🎞️session"].map((node) => policyReadModuleTreeSource(this.root, `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/${node}/🦀️.rs`)).join("\n"),
       policyReadModuleTreeSource(this.root, "🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/🦀️.rs"),
-      policyReadFileSafe(this.root, "🧰️framework/🔨️modules/✍️editor/🦀️.rs"),
+      policyReadModuleTreeSource(this.root, "🧰️framework/🔨️modules/✍️editor/🦀️.rs"),
       ["🗃️model", "🕸️graph", "🧭️host"].map((node) => policyReadModuleTreeSource(this.root, `🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/${node}/🦀️.rs`)).join("\n"),
     );
     if (failures.length > 0) throw new Error(`[verify interactivity p3mn] ${failures.join("; ")}`);
@@ -1242,6 +1247,8 @@ export abstract class VerifyScript extends Script {
     runCmd("bun", ["repo", "run", "@semio-tech/repo-lib:lint-styling-pixels"], { cwd: this.root, ...orchestratorBudgetOpts() });
     console.log("[verify] framework owned-schema binding freshness…");
     runCmd("bun", ["repo", "run", "@semio-tech/framework-rs:check"], { cwd: this.root, ...orchestratorBudgetOpts() });
+    console.log("[verify] schema parser projection freshness…");
+    runCmd("bun", ["repo", "run", "workspace:schema-parsers-check"], { cwd: this.root, ...orchestratorBudgetOpts() });
     console.log("[verify] ui locale/terminology axes freshness…");
     runCmd("bun", ["repo", "run", "@semio-tech/ui-rs:check"], { cwd: this.root, ...orchestratorBudgetOpts() });
     console.log("[verify] chrome i18n literal scan…");

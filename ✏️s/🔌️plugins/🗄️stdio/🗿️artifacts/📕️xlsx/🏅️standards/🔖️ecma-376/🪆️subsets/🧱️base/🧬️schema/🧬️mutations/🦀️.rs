@@ -104,7 +104,7 @@ pub const KINDS: &[&str] = &["insert-sheet", "remove-sheet", "rename-sheet", "se
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot` through its own diff — the diff is the single semantics source, never a separate imperative apply path.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 pub fn apply_xlsx_mutation(snapshot: &mut XlsxSnapshot, mutation: &XlsxMutation) -> protocol::MutationOutcome<XlsxDiff> {
     let outcome = Mutation::diff(mutation, snapshot);
     match protocol::apply_diff(outcome.diff(), snapshot) {

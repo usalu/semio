@@ -16,7 +16,7 @@ fn queue_surface_action(input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>,
 #[cfg(test)]
 #[test]
 fn production_action_ingress_has_no_legacy_queue_and_text_vec_helpers_are_test_only() {
-    let _camera_owner = crate::scenes::camera_fixture_lease(crate::scenes::camera_fixture_grant());
+    let _camera_owner = semio_framework_os_renderer_wgpu_scene_state::camera_fixture_lease(semio_framework_os_renderer_wgpu_scene_state::camera_fixture_grant());
     #[allow(non_snake_case)]
     fn SCENES_SOURCE() -> &'static str {
         semio_framework_os_renderer_wgpu_test_support::scenes_source()
@@ -78,7 +78,7 @@ fn production_action_ingress_has_no_legacy_queue_and_text_vec_helpers_are_test_o
 #[cfg(test)]
 #[test]
 fn ink_event_pages_preserve_order_and_fail_before_exceeding_fixed_storage() {
-    let _camera_owner = crate::scenes::camera_fixture_lease(crate::scenes::camera_fixture_grant());
+    let _camera_owner = semio_framework_os_renderer_wgpu_scene_state::camera_fixture_lease(semio_framework_os_renderer_wgpu_scene_state::camera_fixture_grant());
     let mut pages = InkEventJsonPages::default();
     pages.push(&json!({ "operation": "first", "value": "quoted\\\"" })).unwrap();
     pages.push(&json!({ "operation": "second" })).unwrap();
@@ -96,7 +96,7 @@ fn ink_event_pages_preserve_order_and_fail_before_exceeding_fixed_storage() {
 #[cfg(test)]
 #[test]
 fn ink_raw_fragment_pages_are_single_slab_fifo_and_reject_max_plus_one() {
-    let _camera_owner = crate::scenes::camera_fixture_lease(crate::scenes::camera_fixture_grant());
+    let _camera_owner = semio_framework_os_renderer_wgpu_scene_state::camera_fixture_lease(semio_framework_os_renderer_wgpu_scene_state::camera_fixture_grant());
     let mut pages = InkRawPages::default();
     pages.push("{\"id\":\"first\"}").unwrap();
     pages.push("{\"id\":\"second\"}").unwrap();
@@ -115,7 +115,7 @@ fn ink_raw_fragment_pages_are_single_slab_fifo_and_reject_max_plus_one() {
 #[cfg(test)]
 #[test]
 fn ink_block_cursor_visits_nested_groups_in_stable_depth_first_order() {
-    let _camera_owner = crate::scenes::camera_fixture_lease(crate::scenes::camera_fixture_grant());
+    let _camera_owner = semio_framework_os_renderer_wgpu_scene_state::camera_fixture_lease(semio_framework_os_renderer_wgpu_scene_state::camera_fixture_grant());
     let source = json!({
         "blocks": [{
             "id": "group",
@@ -166,7 +166,7 @@ fn ink_block_cursor_visits_nested_groups_in_stable_depth_first_order() {
 #[cfg(test)]
 #[test]
 fn ink_nested_value_admission_rejects_hostile_depth() {
-    let _camera_owner = crate::scenes::camera_fixture_lease(crate::scenes::camera_fixture_grant());
+    let _camera_owner = semio_framework_os_renderer_wgpu_scene_state::camera_fixture_lease(semio_framework_os_renderer_wgpu_scene_state::camera_fixture_grant());
     let mut value = Value::Null;
     for _ in 0..=semio_framework_ui_action::ACTION_DEPTH_CAPACITY {
         value = Value::Array(vec![value]);
@@ -292,7 +292,7 @@ pub fn handle_scene_pointer_move(scene: &UiComponentSceneNode, bounds: Rect, x: 
                     schedule_scene_camera_dispatch(&scene.host_id, &scene.surface_id);
                 }
                 SceneDragMode::MapMarquee { start_x, start_y, method, .. } => {
-                    let (sx, sy) = engine_canvas::map_local_pointer(inner, x, y);
+                    let (sx, sy) = semio_framework_os_renderer_wgpu_engine_board::tiled_map::map_local_pointer(inner, x, y);
                     let distance = ((sx as f32 - *start_x).powi(2) + (sy as f32 - *start_y).powi(2)).sqrt();
                     mutate_scene_state(&scene.surface_id, |state| {
                         if distance >= MAP_MARQUEE_THRESHOLD_PX {
@@ -501,86 +501,8 @@ pub fn handle_scene_pointer_button(scene: &UiComponentSceneNode, bounds: Rect, x
 }
 
 #[cfg(test)]
-pub fn paint2d_navigator_fit_viewport(flat: &[Paint2dFlatLayer], inner: Rect) -> Viewport {
-    let mut min_x = f32::INFINITY;
-    let mut min_y = f32::INFINITY;
-    let mut max_x = f32::NEG_INFINITY;
-    let mut max_y = f32::NEG_INFINITY;
-    for layer in flat {
-        let w = layer.width as f64 * layer.scale_x;
-        let h = layer.height as f64 * layer.scale_y;
-        let x0 = (layer.x - w * 0.5) as f32;
-        let y0 = (layer.y - h * 0.5) as f32;
-        let x1 = (layer.x + w * 0.5) as f32;
-        let y1 = (layer.y + h * 0.5) as f32;
-        min_x = min_x.min(x0.min(x1));
-        min_y = min_y.min(y0.min(y1));
-        max_x = max_x.max(x0.max(x1));
-        max_y = max_y.max(y0.max(y1));
-    }
-    if !min_x.is_finite() || !min_y.is_finite() || !max_x.is_finite() || !max_y.is_finite() {
-        return Viewport { x: 0.0, y: 0.0, zoom: 1.0 };
-    }
-    let content_w = (max_x - min_x).max(1.0);
-    let content_h = (max_y - min_y).max(1.0);
-    let inner_w = (inner.w - PAINT2D_NAVIGATOR_PADDING * 2.0).max(1.0);
-    let inner_h = (inner.h - PAINT2D_NAVIGATOR_PADDING * 2.0).max(1.0);
-    let zoom = (inner_w / content_w).min(inner_h / content_h).clamp(0.05, 32.0);
-    Viewport { x: min_x + (max_x - min_x) * 0.5, y: min_y + (max_y - min_y) * 0.5, zoom }
-}
-
-#[cfg(test)]
-pub fn paint2d_navigator_overlay_rect(content_camera_json: &str, content_viewport_json: Option<&str>, navigator_viewport: &Viewport, navigator_inner: Rect) -> Option<Rect> {
-    let content_viewport_json = content_viewport_json?;
-    let content_camera = Viewport::from_json(content_camera_json);
-    let size: Value = serde_json::from_str(content_viewport_json).ok()?;
-    let content_w = size.get("width").and_then(Value::as_f64).unwrap_or(0.0) as f32;
-    let content_h = size.get("height").and_then(Value::as_f64).unwrap_or(0.0) as f32;
-    if content_w <= 0.0 || content_h <= 0.0 {
-        return None;
-    }
-    let content_rect = Rect::new(0.0, 0.0, content_w, content_h);
-    let (wx0, wy0) = content_camera.screen_to_world(0.0, 0.0, content_rect);
-    let (wx1, wy1) = content_camera.screen_to_world(content_w, content_h, content_rect);
-    let (sx0, sy0) = navigator_viewport.world_to_screen(wx0, wy0, navigator_inner);
-    let (sx1, sy1) = navigator_viewport.world_to_screen(wx1, wy1, navigator_inner);
-    Some(Rect::new(sx0.min(sx1), sy0.min(sy1), (sx1 - sx0).abs(), (sy1 - sy0).abs()))
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#[cfg(test)]
 fn test_find_ink_item<'a>(blocks: &'a [Value], id: &str) -> Option<&'a Value> {
     flatten_ink_items(blocks).into_iter().find(|block| ink_item_id(block) == id)
-}
-
-#[cfg(test)]
-pub fn ink_items_at_point<'a>(blocks: &'a [Value], overrides: &BTreeMap<String, Value>, x: f64, y: f64) -> Vec<&'a Value> {
-    let mut flat = flatten_ink_items(blocks);
-    flat.reverse();
-    flat.into_iter().filter(|block| ink_effective_bounds(block, overrides).contains_point(x, y)).collect()
 }
 
 #[cfg(test)]
@@ -897,25 +819,23 @@ fn ink_wheel(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, delta: f
 }
 
 
-
-
 #[cfg(test)]
 pub fn tiled_map_pointer_down(surface_id: &str, controller_id: &str, inner: Rect, x: f32, y: f32, button: i16, shift: bool, ctrl_or_meta: bool, selection_method: &str) -> Vec<ActionDescriptor> {
-    let (sx, sy) = engine_canvas::map_local_pointer(inner, x, y);
+    let (sx, sy) = semio_framework_os_renderer_wgpu_engine_board::tiled_map::map_local_pointer(inner, x, y);
     if button == 0 {
         mutate_scene_state(surface_id, |state| {
-            state.drag = Some(SceneDrag { mode: SceneDragMode::MapMarquee { start_x: sx as f32, start_y: sy as f32, method: selection_method.to_string(), merge_mode: engine_canvas::map_marquee_mode(shift, ctrl_or_meta).to_string() } });
+            state.drag = Some(SceneDrag { mode: SceneDragMode::MapMarquee { start_x: sx as f32, start_y: sy as f32, method: selection_method.to_string(), merge_mode: semio_framework_os_renderer_wgpu_engine_board::tiled_map::map_marquee_mode(shift, ctrl_or_meta).to_string() } });
             state.map_marquee_points = vec![(sx as f32, sy as f32)];
             state.map_marquee_active = false;
         });
         return Vec::new();
     }
     if button == 1 {
-        engine_canvas::with_map_host_mut(surface_id, |host| host.pointer_down_screen(sx, sy, 1));
+        semio_framework_os_renderer_wgpu_engine_board::tiled_map::with_map_host_mut(surface_id, |host| host.pointer_down_screen(sx, sy, 1));
         mutate_scene_state(surface_id, |state| {
             state.drag = Some(SceneDrag { mode: SceneDragMode::MapPan });
         });
-        return engine_canvas::with_map_host_mut(surface_id, |host| engine_canvas::map_interaction_actions(surface_id, controller_id, host)).unwrap_or_default();
+        return semio_framework_os_renderer_wgpu_engine_board::tiled_map::with_map_host_mut(surface_id, |host| engine_canvas::map_interaction_actions(surface_id, controller_id, host)).unwrap_or_default();
     }
     let _ = controller_id;
     Vec::new()
@@ -923,14 +843,14 @@ pub fn tiled_map_pointer_down(surface_id: &str, controller_id: &str, inner: Rect
 
 #[cfg(test)]
 pub fn tiled_map_pointer_move(surface_id: &str, controller_id: &str, inner: Rect, x: f32, y: f32, down: bool) -> Vec<ActionDescriptor> {
-    let (sx, sy) = engine_canvas::map_local_pointer(inner, x, y);
+    let (sx, sy) = semio_framework_os_renderer_wgpu_engine_board::tiled_map::map_local_pointer(inner, x, y);
     if down {
         let state = scene_state(surface_id);
         if let Some(drag) = &state.drag {
             match &drag.mode {
                 SceneDragMode::MapPan => {
-                    engine_canvas::with_map_host_mut(surface_id, |host| host.pointer_move_screen(sx, sy));
-                    return engine_canvas::with_map_host_mut(surface_id, |host| engine_canvas::map_interaction_actions(surface_id, controller_id, host)).unwrap_or_default();
+                    semio_framework_os_renderer_wgpu_engine_board::tiled_map::with_map_host_mut(surface_id, |host| host.pointer_move_screen(sx, sy));
+                    return semio_framework_os_renderer_wgpu_engine_board::tiled_map::with_map_host_mut(surface_id, |host| engine_canvas::map_interaction_actions(surface_id, controller_id, host)).unwrap_or_default();
                 }
                 SceneDragMode::MapMarquee { start_x, start_y, method, .. } => {
                     let distance = ((sx as f32 - *start_x).powi(2) + (sy as f32 - *start_y).powi(2)).sqrt();
@@ -954,8 +874,8 @@ pub fn tiled_map_pointer_move(surface_id: &str, controller_id: &str, inner: Rect
         }
         return Vec::new();
     }
-    let hit_json = engine_canvas::with_map_host(surface_id, |host| host.hit_test_feature_json(sx, sy)).unwrap_or_else(|| "null".into());
-    let hover = engine_canvas::parse_map_hover(&hit_json);
+    let hit_json = semio_framework_os_renderer_wgpu_engine_board::tiled_map::with_map_host(surface_id, |host| host.hit_test_feature_json(sx, sy)).unwrap_or_else(|| "null".into());
+    let hover = semio_framework_os_renderer_wgpu_engine_board::tiled_map::parse_map_hover(&hit_json);
     let hover_json = if hover.is_null() { "null".into() } else { hover.to_string() };
     let prior = scene_state(surface_id).map_last_hover_json;
     if prior.as_deref() == Some(hover_json.as_str()) {
@@ -969,7 +889,7 @@ pub fn tiled_map_pointer_move(surface_id: &str, controller_id: &str, inner: Rect
 
 #[cfg(test)]
 pub fn tiled_map_pointer_up(surface_id: &str, controller_id: &str, inner: Rect, x: f32, y: f32) -> Vec<ActionDescriptor> {
-    let (sx, sy) = engine_canvas::map_local_pointer(inner, x, y);
+    let (sx, sy) = semio_framework_os_renderer_wgpu_engine_board::tiled_map::map_local_pointer(inner, x, y);
     let state = scene_state(surface_id);
     let Some(drag) = state.drag.clone() else {
         return Vec::new();
@@ -977,8 +897,8 @@ pub fn tiled_map_pointer_up(surface_id: &str, controller_id: &str, inner: Rect, 
     let mut actions = Vec::new();
     match drag.mode {
         SceneDragMode::MapPan => {
-            engine_canvas::with_map_host_mut(surface_id, |host| host.pointer_up_screen(sx, sy));
-            actions.extend(engine_canvas::with_map_host_mut(surface_id, |host| engine_canvas::map_interaction_actions(surface_id, controller_id, host)).unwrap_or_default());
+            semio_framework_os_renderer_wgpu_engine_board::tiled_map::with_map_host_mut(surface_id, |host| host.pointer_up_screen(sx, sy));
+            actions.extend(semio_framework_os_renderer_wgpu_engine_board::tiled_map::with_map_host_mut(surface_id, |host| engine_canvas::map_interaction_actions(surface_id, controller_id, host)).unwrap_or_default());
         }
         SceneDragMode::MapMarquee { start_x, start_y, method, merge_mode } => {
             let distance = ((sx as f32 - start_x).powi(2) + (sy as f32 - start_y).powi(2)).sqrt();
@@ -989,8 +909,8 @@ pub fn tiled_map_pointer_up(surface_id: &str, controller_id: &str, inner: Rect, 
                 } else {
                     points = vec![(start_x, start_y), (sx as f32, sy as f32)];
                 }
-                let crossing = engine_canvas::map_marquee_crossing(&method, start_x, sx as f32);
-                let ids = engine_canvas::with_map_host(surface_id, |host| query_map_feature_hits(host, &method, &points, crossing)).unwrap_or_default();
+                let crossing = semio_framework_os_renderer_wgpu_engine_board::tiled_map::map_marquee_crossing(&method, start_x, sx as f32);
+                let ids = semio_framework_os_renderer_wgpu_engine_board::tiled_map::with_map_host(surface_id, |host| query_map_feature_hits(host, &method, &points, crossing)).unwrap_or_default();
                 actions.push(engine_canvas::map_action(
                     controller_id,
                     semio_framework_ui_declaration::ui::tiled_map_actions::SET_FEATURE_SELECTION,
@@ -1001,7 +921,7 @@ pub fn tiled_map_pointer_up(surface_id: &str, controller_id: &str, inner: Rect, 
                     }),
                 ));
             } else if distance < MAP_MARQUEE_THRESHOLD_PX {
-                let hit_json = engine_canvas::with_map_host(surface_id, |host| host.hit_test_feature_json(sx, sy)).unwrap_or_else(|| "null".into());
+                let hit_json = semio_framework_os_renderer_wgpu_engine_board::tiled_map::with_map_host(surface_id, |host| host.hit_test_feature_json(sx, sy)).unwrap_or_else(|| "null".into());
                 let hit: Value = serde_json::from_str(&hit_json).unwrap_or(Value::Null);
                 if let Some(id) = hit.get("id").and_then(|value| value.as_str()) {
                     actions.push(engine_canvas::map_action(
@@ -1047,50 +967,11 @@ pub fn board2d_wheel(surface_id: &str, controller_id: &str, inner: Rect, x: f32,
     engine_canvas::board2d_wheel(surface_id, controller_id, inner, x, y, delta)
 }
 
-#[cfg(test)]
-pub fn cursor_from_click(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, scroll: f32) -> usize {
-    let Some(editor) = &scene.text_editor else {
-        return 0;
-    };
-    let line_h = 18.0;
-    let line_index = ((y - inner.y - 8.0 + scroll) / line_h).max(0.0) as usize;
-    let lines: Vec<&str> = editor.buffer.lines().collect();
-    let line = lines.get(line_index).copied().unwrap_or("");
-    let rel_x = (x - inner.x - 8.0).max(0.0);
-    let mut cursor = 0usize;
-    let mut width = 0.0f32;
-    for (index, ch) in line.chars().enumerate() {
-        let advance = if ch == '\t' { 8.0 } else { 7.0 };
-        if width + advance * 0.5 > rel_x {
-            cursor = index;
-            break;
-        }
-        width += advance;
-        cursor = index + 1;
-    }
-    lines.iter().take(line_index).map(|l| l.len() + 1).sum::<usize>() + cursor
-}
-
-#[cfg(test)]
-pub fn line_col_at(text: &str, cursor: usize) -> (usize, usize) {
-    let mut index = 0usize;
-    for (line_index, line) in text.lines().enumerate() {
-        let next = index + line.len() + 1;
-        if cursor < next {
-            return (line_index, cursor.saturating_sub(index));
-        }
-        index = next;
-    }
-    let line_count = text.lines().count();
-    (line_count.saturating_sub(1), 0)
-}
-
 #[test]
 fn actual_camera_identity_directory_fits_the_original_bootstrap_policy() {
     let grant = camera_fixture_grant();
-    let (copy, birth) = crate::camera_storage::DirectoryOwner::<Option<SceneCameraOwnerMetadata>>::transfer_demands();
+    let (copy, birth) = semio_framework_os_renderer_camera::DirectoryOwner::<Option<SceneCameraOwnerMetadata>>::transfer_demands();
     assert!(copy + std::mem::size_of::<Option<&'static str>>() <= grant.maximum_copy_bytes);
     assert!(birth <= grant.maximum_capacity_bytes);
     assert!(birth <= grant.maximum_release_bytes);
-    eprintln!("[DEBUG] camera actual identity directory copy={} birth={} original-maximum={}", copy, birth, grant.maximum_capacity_bytes);
 }

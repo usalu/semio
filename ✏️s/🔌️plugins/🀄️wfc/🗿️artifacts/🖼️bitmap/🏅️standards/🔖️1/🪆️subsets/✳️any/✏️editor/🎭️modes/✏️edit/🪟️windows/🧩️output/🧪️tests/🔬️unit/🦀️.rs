@@ -1,6 +1,9 @@
 //! 🧪️ Output window — the read-only inferred canvas, its staleness guard and its action roster.
 
-use super::*;
+use crate::editor::bitmap::transient::BitmapTransient;
+use semio_framework_plugin::SurfaceKind;
+use semio_framework_plugin::ToolRunView;
+use crate::editor::bitmap::modes::edit::windows::output::*;
 use crate::editor::bitmap::modes::edit::windows::output::config::BitmapOutputWindowConfig;
 use crate::standards::v1::subsets::any::io::text::snapshot::decode_base64;
 use crate::standards::v1::subsets::any::io::text::snapshot::encode_base64;

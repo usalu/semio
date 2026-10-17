@@ -4,7 +4,7 @@ import {bindSvgAttribute,printSvgAttribute,nativeSvgDocument} from "../../../�
 import { SaxesParser } from "saxes";
 import boundaryContract from "./🧫️fixtures/🧭️boundaries/🔣️.json";
 
-import { validateXmlDocumentWireBoundary } from "../../../../../../../../../📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🟦️.ts";
+import { validateXmlDocumentWireBoundary } from "@semio-tech/stdio-xml/standards/1.0/subsets/base/schema/snapshot";
 import ownership from "./🧫️fixtures/💰️backing/🔣️.json";
 
 /** 🧫️ SVG's shared typed XML corpus retains independent SVG table names. */

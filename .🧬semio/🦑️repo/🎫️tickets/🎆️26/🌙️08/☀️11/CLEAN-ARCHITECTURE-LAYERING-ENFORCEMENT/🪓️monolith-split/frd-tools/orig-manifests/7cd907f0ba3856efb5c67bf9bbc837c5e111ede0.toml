@@ -1,0 +1,28 @@
+[package]
+workspace = "../../../../../.."
+name = "semio-framework-3d-mesh-document"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Canonical owned half-edge document, topology, surface and conversion"
+[lints]
+workspace = true
+[package.metadata.semio]
+role = "framework"
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+[lib]
+path = "../../🦀️.rs"
+[dependencies]
+semio-framework-3d-mesh-contract = { path = "../../../🧬️contract/📦️packages/🦀️rust" }
+semio-framework-pack-json = { path = "../../../../../🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-framework-value.workspace = true
+semio-framework-mesh-engine.workspace = true
+semio-framework-value-derive.workspace = true
+[dev-dependencies]
+serde.workspace = true
+serde_json.workspace = true
+parry3d = "0.17"
+semio-framework-3d-testing-support = { path = "../../../../🧪️tests/🧰️support/📦️packages/🦀️rust" }

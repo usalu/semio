@@ -10,9 +10,9 @@
 // #endregion 🧲️Header
 // #region 🔌️Adapters
 import { defineTestAdapter, type AdapterContext } from "@semio-tech/framework/test/adapter";
-import { planVizChart, renderVizScene } from "../../🧬️schema/💡️inferences/🖼️render/🟦️.ts";
+import { planVizChart, renderVizScene } from "@semio-tech/print-viz-inference/render";
 import { renderVizTikz } from "../../🚪️io/📝️text/💡️inferences/🖋️latex/🟦️.ts";
-import { renderGrammarChecks } from "../../🧬️schema/💡️inferences/📦️packages/🟦️typescript/🔬️probes/🟦️.ts";
+import { renderGrammarChecks } from "@semio-tech/print-viz-inference/probes";
 import type { VizChartSpecification } from "../../🧬️schema/📸️snapshot/📊️chart/🟦️.ts";
 // #endregion 🔌️Adapters
 

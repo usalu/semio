@@ -1,9 +1,25 @@
+use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfColorSpace, PdfFunction, PdfShading, PdfShadingKind};
+use semio_framework_test_fixtures::fixture_text;
+#[allow(unused_imports)]
+use crate::standards::v1_7::subsets::base::modules::lexer::{dict_f64, dict_get, dict_i64, dict_name};
+#[allow(unused_imports)]
+use crate::standards::v1_7::subsets::base::io::error::{PResult, PdfEngineError};
+#[allow(unused_imports)]
+use crate::standards::v1_7::subsets::base::modules::xref::ObjectSink;
+#[allow(unused_imports)]
+use crate::standards::v1_7::subsets::base::io::foreign_artifacts::{NativePdfArtifactResources, PdfArtifactResourcePort};
+#[allow(unused_imports)]
+use crate::standards::v1_7::subsets::base::schema::stream_roles::PdfStreamRoleValue;
+#[allow(unused_imports)]
+use crate::standards::v1_7::subsets::base::schema::graph_source::ObjectSource;
+#[allow(unused_imports)]
+use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfDictEntry, PdfExtGState, PdfLineCap, PdfLineJoin, PdfMatrix, PdfObject, PdfRect, PdfSoftMask};
 use protocol::command::DiffAlgebra;
-use super::*;
+use crate::standards::v1_7::subsets::base::modules::colour::*;
 
 #[test]
 fn sampled_function_neutral_words_preserve_native_twelve_bit_extent() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🚪️io/🪶️sqlite/📸️snapshot/🌈️color/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../🚪️io/🪶️sqlite/📸️snapshot/🌈️color/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let case = &fixture["sampled12"];
     let words: Vec<u32> = serde_json::from_value(case["sampleWords"].clone()).unwrap();
     let bytes: Vec<u8> = serde_json::from_value(case["nativeBytes"].clone()).unwrap();
@@ -22,7 +38,6 @@ fn sampled_function_neutral_words_preserve_native_twelve_bit_extent() {
         assert_eq!(pack_sample_words(&words,bits).unwrap(),bytes);
         assert_eq!(unpack_sample_words(&bytes,bits,words.len()).unwrap(),words);
     }
-    eprintln!("[DEBUG] PDF sampled function native words=513,4095 width=12 neutral_native_extent=3 all_widths=8");
 }
 
 #[test]
@@ -32,7 +47,7 @@ fn sampled_function_typed_diff_inverse_and_native_document_preserve_words() {
     use crate::standards::v1_7::subsets::base::schema::mutations::set_shading::SetShading;
     use crate::standards::v1_7::subsets::base::schema::snapshot::*;
     use protocol::{DiffCodec,Mutation};
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🚪️io/🪶️sqlite/📸️snapshot/🌈️color/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../🚪️io/🪶️sqlite/📸️snapshot/🌈️color/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let case = &fixture["sampled12"];
     let words: Vec<u32> = serde_json::from_value(case["sampleWords"].clone()).unwrap();
     let function = PdfFunction::Sampled { domain: vec![0.0,1.0], range: vec![0.0,1.0], size: vec![2], bits_per_sample: 12, order: None, encode: None, decode: None, samples: words.clone() };
@@ -55,5 +70,4 @@ fn sampled_function_typed_diff_inverse_and_native_document_preserve_words() {
     let admitted=io::import::decode_pdf(&native).unwrap();
     let PdfShadingKind::Axial { function:PdfFunction::Sampled { samples,.. },.. }=&admitted.shadings[0].kind else {panic!("sampled shading role must remain typed")};
     assert_eq!(samples,&words);
-    eprintln!("[DEBUG] PDF typed sampled shading diff/inverse and independent lopdf native admission words=513,4095");
 }

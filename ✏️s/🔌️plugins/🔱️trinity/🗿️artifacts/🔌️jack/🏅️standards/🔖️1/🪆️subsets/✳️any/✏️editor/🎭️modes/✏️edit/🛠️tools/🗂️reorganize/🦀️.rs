@@ -43,7 +43,7 @@ pub struct JackLayoutGraph {
 
 /// 🗺️ Maps the content child: one body per first-seen node id at its committed position, repelling by a quarter of its
 /// clamped extent sum; one unit spring per distinct node pair a connection joins.
-pub fn layout_graph(content: &dyn crate::JackContentVisual) -> JackLayoutGraph {
+pub fn layout_graph(content: &dyn semio_s_artifact_trinity_jack_graph_query::JackContentVisual) -> JackLayoutGraph {
     let (mut layout, mut index) = (JackLayoutGraph::default(), HashMap::new());
     let (nodes,edges)=content.visual_counts();
     for node in (0..nodes).filter_map(|index|content.node_view(index)) {
@@ -69,7 +69,7 @@ pub fn layout_graph(content: &dyn crate::JackContentVisual) -> JackLayoutGraph {
 
 //#region 🔖️Job
 /// ✍️ Encodes one layout move as the `content` child's absolute graph `move-node` op.
-pub fn move_encoder(node_ids:Vec<String>,codec:std::sync::Arc<dyn crate::JackContentMoveCodec>)->impl LayoutRunOpEncoder+'static{
+pub fn move_encoder(node_ids:Vec<String>,codec:std::sync::Arc<dyn crate::standards::v1::subsets::any::schema::content_read::JackContentMoveCodec>)->impl LayoutRunOpEncoder+'static{
  move |node:u32,_entity:u64,position:LayoutRunPoint|{
   let id=node_ids.get(node as usize).ok_or_else(||LayoutRunEncodeError("layout move has no retained node".into()))?;
   codec.encode_move(id,position.x,position.y).map_err(|error|LayoutRunEncodeError(error.into_message()))
@@ -77,7 +77,7 @@ pub fn move_encoder(node_ids:Vec<String>,codec:std::sync::Arc<dyn crate::JackCon
 }
 
 /// 📍️ The overlay positions a resumed run continues from: the base origins with the provisional member moves folded in.
-fn overlay_positions(layout:&JackLayoutGraph,member_ops:&[Vec<u8>],codec:&dyn crate::JackContentMoveCodec)->Vec<LayoutRunPoint>{
+fn overlay_positions(layout:&JackLayoutGraph,member_ops:&[Vec<u8>],codec:&dyn crate::standards::v1::subsets::any::schema::content_read::JackContentMoveCodec)->Vec<LayoutRunPoint>{
  let index:HashMap<&str,u32>=layout.node_ids.iter().enumerate().map(|(at,id)|(id.as_str(),at as u32)).collect();
  let moves=member_ops.iter().filter_map(|bytes|codec.decode_move(bytes).ok().flatten()).filter_map(|value|index.get(value.node_id.as_str()).map(|at|(*at,LayoutRunPoint::new(value.x,value.y))));
  layout_run_overlay_positions(&layout.graph,moves)
@@ -85,7 +85,7 @@ fn overlay_positions(layout:&JackLayoutGraph,member_ops:&[Vec<u8>],codec:&dyn cr
 
 /// 🧵️ Builds the layout run over the run's base content child; a settings change resumes it from the ledger's checkpoint
 /// with the provisional member moves folded over the base positions (`📓️wave-W3-F.md` §3.3).
-pub fn build_job(identity: ToolRunIdentity, content: &dyn crate::JackContentLayout, checkpoint: Option<&[u8]>, member_ops: &[Vec<u8>]) -> Result<ToolRunJob, Fault> {
+pub fn build_job(identity: ToolRunIdentity, content: &dyn crate::standards::v1::subsets::any::schema::content_read::JackContentLayout, checkpoint: Option<&[u8]>, member_ops: &[Vec<u8>]) -> Result<ToolRunJob, Fault> {
     let layout = layout_graph(content);
     let codec=content.move_codec();
     let resume = checkpoint.map(|checkpoint| LayoutRunResume { checkpoint, positions: overlay_positions(&layout, member_ops,codec.as_ref()), provisional_len: member_ops.len() as u32 });

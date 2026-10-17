@@ -6,6 +6,7 @@ import { configuredExactCargoLawPolicyV1 } from "../../../🧰️framework/🔨�
 import { buildBudgetMs } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 import { join } from "node:path";
 import { runRepositoryExactCargoLaws, runCmd, orchestratorBudgetOpts, configuredRepositoryCargoPreparationPolicyV1 } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -327,8 +328,8 @@ async function proveRetainedShortAdmin(repoRoot: string): Promise<number> {
   const owner = source.slice(ownerStart, source.indexOf("/// 🗝️", ownerStart));
   const runtimeStart = source.indexOf("struct AdminOperationRuntime");
   const runtime = source.slice(runtimeStart, ownerStart);
-  const schema = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🦀️.rs"), "utf8");
-  const schemaTypeScript = readFileSync(join(repoRoot, "🧰️framework/🔨️modules/📇️directory/🧬️schema/🟦️.ts"), "utf8");
+  const schema = readModuleTreeSource(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🦀️.rs"));
+  const schemaTypeScript = readModuleTreeSource(join(repoRoot, "🧰️framework/🔨️modules/📇️directory/🧬️schema/🟦️.ts"));
   const schemaJson = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🔣️.json"), "utf8");
   const directory = readHubDirectorySource(repoRoot);
   const sqlite = readDirectoryBackendSource(repoRoot, "🪶️sqlite");

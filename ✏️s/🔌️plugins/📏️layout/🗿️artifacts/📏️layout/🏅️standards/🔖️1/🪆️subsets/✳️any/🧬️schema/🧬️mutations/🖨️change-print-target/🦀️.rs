@@ -9,8 +9,8 @@ use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🖨️ChangePrintTarget
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 pub struct ChangePrintTarget {
@@ -62,8 +62,3 @@ pub fn inverse_change_print_target<Op: From<crate::change_print_target::ChangePr
 }
 //#endregion 🖨️ChangePrintTarget
 
-//#region 🪢️TaxonomyMounts
-#[cfg(test)]
-#[path = "🧪️tests/🖨️sets/🦀️.rs"]
-mod tests_sets_a_cmyk_print_target;
-//#endregion 🪢️TaxonomyMounts

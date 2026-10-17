@@ -56,6 +56,5 @@ fn direct_leaf_retirement_requires_independent_grants_and_reaches_terminal_empty
             let step=retirement.step(grant).unwrap();let progress=step.progress();assert!(progress.fits(grant));assert_ne!(progress.copied_items,0,"mutation {index} stalled at turn {turn}");total=total.checked_add(progress).unwrap();
         }
         assert!(retirement.terminal_is_empty());
-        println!("[DEBUG] Flow typed mutation retirement variant={index} copied={} born={} released={}",total.copied_bytes,total.retained_capacity_bytes,total.released_bytes);
     }
 }

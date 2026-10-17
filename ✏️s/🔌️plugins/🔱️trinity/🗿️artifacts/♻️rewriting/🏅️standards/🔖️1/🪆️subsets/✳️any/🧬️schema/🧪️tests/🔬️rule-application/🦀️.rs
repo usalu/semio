@@ -1,15 +1,21 @@
-use crate::standards::v1::subsets::any::io::text::snapshot::rule_query_json;
-use crate::standards::v1::subsets::any::io::text::snapshot::apply_rule_json;
-use crate::standards::v1::subsets::any::io::text::snapshot::build_rule_query;
-use crate::standards::v1::subsets::any::io::text::snapshot::assignment_value_jack;
-use crate::standards::v1::subsets::any::io::text::snapshot::resolve_parameter_value;
-use crate::standards::v1::subsets::any::io::text::snapshot::pattern_to_match_clause;
-use crate::standards::v1::subsets::any::io::text::snapshot::parse_bindings_json;
-use super::*;
+use crate::standards::v1::subsets::any::schema::application::rule_query_json;
+use crate::standards::v1::subsets::any::schema::application::apply_rule_json;
+use crate::standards::v1::subsets::any::schema::application::build_rule_query;
+use crate::standards::v1::subsets::any::schema::application::assignment_value_jack;
+use crate::standards::v1::subsets::any::schema::application::resolve_parameter_value;
+use crate::standards::v1::subsets::any::schema::application::pattern_to_match_clause;
+use crate::standards::v1::subsets::any::schema::application::parse_bindings_json;
+use crate::standards::v1::subsets::any::schema::application::*;
+use crate::standards::v1::subsets::any::schema::errors::TrinityRewritingError;
+use crate::standards::v1::subsets::any::schema::rule::*;
+use crate::standards::v1::subsets::any::schema::snapshot::RewritingSnapshot;
+use semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::memory::Graph;
+use semio_framework_graph_manifest::{PropertyBag, PropertyValue};
 use pack::snapshot::ArtifactDsl;
+use semio_s_artifact_trinity_jack_semio_content::SemioJackContent;
 
 fn nakagin_graph() -> Graph {
-    Graph::from_snapshot(crate::editor::rewriting::fixture_rule_state().working_graph).unwrap()
+    Graph::from_snapshot(crate::standards::v1::subsets::any::schema::test_support::fixture_rule_state().working_graph).unwrap()
 }
 
 fn empty_rule() -> Rule {
@@ -23,7 +29,7 @@ fn empty_rule() -> Rule {
 #[semio_framework_async_macros::async_test]
 async fn jack_query_on_nakagin() {
     let mut g = nakagin_graph();
-    let result = semio_s_artifact_trinity_jack::executor::run(&mut g, "MATCH (a:Piece) WHERE a.name = 'b' RETURN a.name").unwrap();
+    let result = semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::runner::run(&mut g, "MATCH (a:Piece) WHERE a.name = 'b' RETURN a.name").unwrap();
     assert_eq!(result.rows.len(), 1);
 }
 
@@ -71,14 +77,14 @@ async fn rewrite_rule_parameter_substitution() {
 
 #[semio_framework_async_macros::async_test]
 async fn rewriting_labeled_fixture_reloads() {
-    let mut g = Graph::from_snapshot(crate::editor::rewriting::fixture_rule_state().working_graph).unwrap();
+    let mut g = Graph::from_snapshot(crate::standards::v1::subsets::any::schema::test_support::fixture_rule_state().working_graph).unwrap();
     let rule = Rule {
         name: "label-core".into(),
         lhs: Lhs { pattern: Pattern { left_var: "a".into(), left_kind: "Piece".into(), edge_var: None, edge_kind: None, right_var: None, right_kind: None }, where_clause: Some("a.name = 'b'".into()) },
         rhs: Rhs { create: vec![], delete: vec![], set: vec![Assignment { var: "a".into(), prop: "label".into(), value: PropertyValue::String("nakagin-core".into()) }], merge: vec![], parameters: vec![] },
     };
     apply_rule(&mut g, &rule, &semio_framework_graph_manifest::PropertyBag::new()).unwrap();
-    let snapshot_json = g.host_snapshot_json().unwrap();
+    let snapshot_json = g.host_snapshot_json::<SemioJackContent>().unwrap();
     let reloaded = Graph::load_json(&snapshot_json).unwrap();
     let core = reloaded.node("7dc5b737-3b6b-4068-b315-b7bacc91c2e1").unwrap();
     assert_eq!(core.properties.get("label"), Some(&PropertyValue::String("nakagin-core".into())));

@@ -13,7 +13,7 @@ fn original_flex_grid_close_preserves_native_depth_denial_and_exact_release(){
             if depth>1{depth_denials+=1;}assert!(depth<=grant.maximum_depth&&bytes<=grant.maximum_release_bytes);
             let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.close_granted(grant).unwrap());assert!(step.progress().fits(grant));assert_eq!((step.progress().retained_capacity_bytes,step.progress().released_bytes),(heap.requested_bytes,heap.released_bytes));released+=heap.released_bytes;turns+=1;assert!(turns<4096);
         }
-        assert!(depth_denials>0);assert_eq!(birth.requested_bytes,released);let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(owner));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));eprintln!("[DEBUG] originalFlexGrid count={count} turns={turns} nativeDepthDenials={depth_denials} exactRelease={released} terminalDrop0=true sourceFactoryUncredited=true");
+        assert!(depth_denials>0);assert_eq!(birth.requested_bytes,released);let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(owner));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
     }
 }
 

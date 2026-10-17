@@ -20,7 +20,6 @@ test("DWG actual native document entities preserve all fields, duplicates and fu
     oracle.run("UPDATE dwg_summary SET title='Independent SQLite',total_editing_time_low=4294967294");oracle.run("UPDATE dwg_preview_palette_entry SET alpha=19 WHERE ordinal=0");
     const expected=structuredClone(input);expected.summary.title="Independent SQLite";expected.summary.totalEditingTime--;expected.preview.palette[0]!.alpha=19;
     expect(await reconstruct(await importSqliteDatabase(oracle.serialize()))).toEqual(expected);
-    console.log("[DEBUG] DWG TypeScript typed document SQLite oracle preserved unsigned64 metadata and duplicate entities");
   }finally{oracle.close();}
 },30000);
 

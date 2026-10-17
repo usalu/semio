@@ -3,6 +3,7 @@
 //! channel literal in a wgpu target is the only way the two renderers can silently drift apart, so
 //! it fails here instead of at a screenshot diff.
 
+use semio_framework_test_fixtures::manifest_dir;
 use semio_framework_ui_theme::theme::*;
 use semio_framework_ui_testing_paint_policy as paint_policy;
 
@@ -12,7 +13,7 @@ use std::path::PathBuf;
 /// 📂️ Repo root, five levels above `semio-framework-ui`'s manifest
 /// (`🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust`).
 fn repo_root() -> PathBuf {
-    let mut root = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    let mut root = manifest_dir!();
     for _ in 0..5 {
         root = root.parent().expect("manifest dir has five ancestors up to the repo root").to_path_buf();
     }

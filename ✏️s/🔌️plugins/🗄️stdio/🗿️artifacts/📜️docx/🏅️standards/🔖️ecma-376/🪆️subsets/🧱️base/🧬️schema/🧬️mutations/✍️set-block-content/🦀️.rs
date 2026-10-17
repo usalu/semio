@@ -7,8 +7,8 @@ use super::*;
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetBlockContent {
-    pub(crate) path: DocxBlockPath,
-    pub(crate) block: DocxBlock,
+    pub path: DocxBlockPath,
+    pub block: DocxBlock,
 }
 
 impl protocol::MutationKind<DocxSnapshot, DocxMutation> for SetBlockContent {

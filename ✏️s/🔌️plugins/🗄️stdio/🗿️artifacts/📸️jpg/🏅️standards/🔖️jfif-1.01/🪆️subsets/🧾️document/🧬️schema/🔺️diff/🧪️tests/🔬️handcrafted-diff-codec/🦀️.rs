@@ -1,4 +1,6 @@
-use super::*;
+use crate::{schema::snapshot::JfifDensityUnits, schema::snapshot::JfifThumbnail, schema::snapshot::JpgSegment};
+use crate::JpgSnapshot;
+use crate::standards::v_jfif_1_01::subsets::document::schema::diff::*;
 use protocol::command::DiffAlgebra;
 use protocol::{DiffBinary,DiffCodec,DiffText};
 

@@ -1,7 +1,8 @@
-use super::{HomeTransient, HomeTransientRetirementFactory};
-use super::mutations::{ApplyDirectoryPage, HomeTransientDiff, HomeTransientMutation};
-use crate::editor::home::transient::component::io::text::mutations::{home_transient_mutation_report_json};
+use crate::editor::home::transient::{HomeTransient, HomeTransientRetirementFactory};
+use crate::editor::home::transient::mutations::{ApplyDirectoryPage, HomeTransientDiff, HomeTransientMutation};
+use crate::editor::home::transient::io::text::mutations::{home_transient_mutation_report_json};
 use protocol::Mutation as _;
+use semio_framework_test_fixtures::fixture_text;
 use std::sync::Arc;
 
 //#region 🧫️Pages
@@ -176,7 +177,7 @@ fn the_committed_vectors_hold_through_the_production_bridge() {
     /// 🧫️ One committed vector read when the test runs, so the language-neutral JSON stays out of the compiled source closure.
     fn vector(name: &'static str) -> (&'static str, String, String, String, String, String) {
         let read = |leaf: &str| {
-            let path = format!("{}/{name}/{leaf}", concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🧪️tests/🧫️fixtures/📬️apply-directory"));
+            let path = format!("{}/{name}/{leaf}", concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../✏️editor/🫧️transient/🧪️tests/🧫️fixtures/📬️apply-directory"));
             std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("{path}: {error}"))
         };
         (name, read("📸️snapshot/⬅️before/🔣️.json"), read("🦠️mutation/🔣️.json"), read("📸️snapshot/➡️after/🔣️.json"), read("🔺️diff/🔣️.json"), read("🎯️outcome/🔣️.json"))
@@ -199,7 +200,7 @@ fn the_committed_vectors_hold_through_the_production_bridge() {
 /// document and indexed document of the language-neutral fixture, and corruption is explicit rather than defaulted.
 #[test]
 fn the_projection_wire_round_trips_documents_and_rejects_corruption() {
-    let fixture: semio_framework_pack_json::Value = semio_framework_pack_json::parse(include_str!("../🧫️fixtures/📇️projection-wire-v1/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("language-neutral projection fixture");
+    let fixture: semio_framework_pack_json::Value = semio_framework_pack_json::parse(fixture_text!("../../../../../../✏️editor/🫧️transient/🧪️tests/🧫️fixtures/📇️projection-wire-v1/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("language-neutral projection fixture");
     let wire = semio_framework_pack_json::json!({ "sessionBindingSha256": "", "authorizationGeneration": 0, "receiptSha256": "", "directory": fixture["wire"].clone() });
     let transient: HomeTransient = semio_framework_pack_json::from_json_str(&wire.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("fixture projection");
     let document_ids: Vec<&str> = transient.directory().spaces().flat_map(|space| space.documents.iter().map(|document| document.document_id.as_str())).collect();

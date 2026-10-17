@@ -1,7 +1,12 @@
+use semio_framework_test_fixtures::fixture_text;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
+use crate::{schema::snapshot::PortRef, schema::snapshot::SemioFlowSnapshot};
+use protocol::Mutation;
+use crate::schema::mutations::{edge_at, param_value_at, fixture};
 use crate::io::binary::mutations::wire_tag;
 use crate::schema::mutations::node;
 use crate::io::text::mutations::print_flow_mutation;
-use super::*;
+use crate::schema::mutations::*;
 use protocol::command::DiffAlgebra;
 
 //#region 🔖️MutationDiffLaw
@@ -76,7 +81,7 @@ fn kinds_match_the_enum_and_the_catalog() {
         seen[ordinal] = true;
     }
     assert!(seen.iter().all(|hit| *hit), "demo_mutation_cases must reach every KINDS entry, missing {:?}", KINDS.iter().zip(seen.iter()).filter(|(_, hit)| !**hit).map(|(kind, _)| *kind).collect::<Vec<_>>());
-    let manifest = include_str!("../../../../🔮️oracles/🔣️.json");
+    let manifest = fixture_text!("../../../🔮️oracles/🔣️.json");
     for kind in KINDS {
         assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
     }
@@ -176,7 +181,7 @@ fn drag_nodes_labels_its_row_from_its_inputs() {
 fn paged_flow_original_source_keeps_all_fourteen_frames_and_exact_owner_policy(){
     use semio_framework_os_kernel::os_spr::operation_bytes::{OwnedOperationBytes,OperationByteMeasurement,OperationBytePreparation,OperationByteCloseStep};
     use semio_framework_value::{NativeEncodeControl,ValueRefusalKind};
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/📦️operation-source.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../🧪️tests/🧫️fixtures/🧬️mutations/📦️operation-source.json")).unwrap();
     let mut operations=Vec::new();
     for case in fixture["cases"].as_array().unwrap(){let operation=SemioFlowMutation::parse_op(case["text"].as_str().unwrap()).unwrap();let mut literal=vec![1,case["tag"].as_u64().unwrap()as u8];literal.extend_from_slice(case["body"].as_str().unwrap().as_bytes());assert_eq!(operation.encode_op().unwrap(),literal);operations.push(operation);}
     operations.push(SemioFlowMutation::SetNodePosition(set_node_position::SetNodePosition{id:"n".into(),position:SemioPoint2{x:f64::MAX,y:f64::from_bits(1)}}));
@@ -194,7 +199,6 @@ fn paged_flow_original_source_keeps_all_fourteen_frames_and_exact_owner_policy()
     }
     let operation=operations.last().unwrap();let expected=operation.encode_op().unwrap();let mut options=protocol::codec::PackEncodeOptions::default();options.limits.max_file_len=expected.len()as u64;let mut prefix=OwnedOperationBytes::try_new(expected.len(),allocation).unwrap();let mut cancel=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|progress.completed<fixture["cancelAt"].as_u64().unwrap()as usize;let mut encoding=NativeEncodeControl::new(allocation,&mut cancel);
     assert_eq!(kind(operation.encode_op_into(&options,&mut prefix,&mut encoding).unwrap_err()),ValueRefusalKind::Canceled);assert!(prefix.len()<expected.len());assert!(prefix.iter().eq(expected[..prefix.len()].iter().copied()));close(&mut prefix,expected.len()+fixture["closeStepScaffold"].as_u64().unwrap()as usize);
-    println!("[DEBUG] Original fourteen Flow headers and text/Patch JSON bodies preserve neutral literal octets; original8194 label and extreme native f64 Display use fixed source cells, caller policy/refused prefixes and terminal4096 page grants");
 }
 
 /// 🎯️ Position law: removing ANY node, edge or param (first, middle, last) is undone at its original index, and the inverse sums to the negative diff.

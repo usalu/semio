@@ -16,5 +16,4 @@ test("owned Editor error preserves kind, display and original diagnostic", () =>
     expect(error.cause).toBe(cause);
   }
   expect(() => new EditorError("other" as EditorErrorKind, new Error("invalid"))).toThrow(TypeError);
-  console.log("[DEBUG] owned Editor error: eleven shared cases retained");
 });

@@ -2,8 +2,8 @@
 use super::*;
 use semio_framework_dsl_record::DslField;
 
-pub(super) fn producer()->semio_framework_dsl_record::RecordSpecProducer{Terrain::__dsl_spec_producer()}
-pub(super) fn project(snapshot:&GisTerrainSnapshot,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<semio_framework_dsl_record::RecordValue,semio_framework_value::ValueError>{
+pub fn producer()->semio_framework_dsl_record::RecordSpecProducer{Terrain::__dsl_spec_producer()}
+pub fn project(snapshot:&GisTerrainSnapshot,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<semio_framework_dsl_record::RecordValue,semio_framework_value::ValueError>{
  control.begin_stage(3)?;
  let mut fields=semio_framework_dsl_record::native_encoding::EncodedRecord::new(3,control)?;
  fields.insert(0,control.scoped_stage(|control|{control.begin_stage(0)?;snapshot.exaggeration.to_value_controlled(control)})?)?;control.step()?;

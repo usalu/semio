@@ -33,11 +33,14 @@ pub fn plan(p: &GltfCreateSkinPayload, base: &GltfSnapshot) -> Result<GltfDiff, 
     Ok(diff)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn inverse(p: &GltfCreateSkinPayload, base: &GltfSnapshot) -> Vec<super::GltfMutation> {
+pub fn inverse<Op>(p: &GltfCreateSkinPayload, base: &GltfSnapshot) -> Vec<Op>
+where
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::remove_used_extension::RemoveUsedExtensionMutation>,
+{
     if validate(p, base).is_err() {
         return Vec::new();
     }
-    vec![super::delete_skin::mutation(super::delete_skin::GltfDeleteSkinPayload { index: p.position })]
+    vec![crate::standards::v2_0::subsets::any::schema::mutations::delete_skin::mutation(crate::standards::v2_0::subsets::any::schema::mutations::delete_skin::GltfDeleteSkinPayload { index: p.position })]
 }
 
 //#region 🧬️DirectMutation
@@ -50,11 +53,17 @@ pub enum CreateSkinMutation {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn mutation(payload: GltfCreateSkinPayload) -> super::GltfMutation {
-    super::GltfMutation::CreateSkin(CreateSkinMutation::Apply(payload))
+pub fn mutation<Op>(payload: GltfCreateSkinPayload) -> Op
+where
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::create_skin::CreateSkinMutation>,
+{
+    Op::from(CreateSkinMutation::Apply(payload))
 }
 
-impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for CreateSkinMutation {
+impl<Op> protocol::MutationKind<GltfSnapshot, Op> for CreateSkinMutation
+where
+    Op: protocol::Mutation<GltfSnapshot, Diff = GltfDiff> + From<CreateSkinMutation>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "skin", kind: "create-skin", record: "CreatedSkin" };
 
     fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<GltfDiff> {
@@ -66,7 +75,7 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for CreateSkinMut
         }
     }
 
-    fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<super::GltfMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         match self {
             Self::Apply(payload) => Ok(inverse(payload, base)),
         }
@@ -83,7 +92,5 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for CreateSkinMut
 //#endregion 🧬️DirectMutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🦴️inserts-an-empty-5b0798/🦀️.rs"]
-mod case_inserts_an_empty_5b0798;
+
 //#endregion 🧪️Tests

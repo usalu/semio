@@ -1,0 +1,11 @@
+{
+  "name": "@semio-tech/puzzle-3d-ts",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./standards/1/subsets/any/schema/diff": "./🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts"
+  },
+  "devDependencies": {
+    "@semio-tech/framework-os": "workspace:*"
+  }
+}

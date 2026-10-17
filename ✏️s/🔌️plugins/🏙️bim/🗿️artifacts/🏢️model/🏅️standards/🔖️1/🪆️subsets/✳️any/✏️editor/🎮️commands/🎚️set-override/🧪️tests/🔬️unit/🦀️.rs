@@ -1,6 +1,6 @@
 use super::*;
-use crate::editor::bim::entities::components::tests::placed;
-use crate::editor::bim::unit_tests::support::{applied, ctx, run};
+use crate::editor::bim::fixture::placed;
+use crate::editor::bim::fixture::support::{applied, ctx, run};
 use crate::standards::v1::subsets::any::schema::snapshot::ComponentOverride;
 
 fn call(snapshot: &ModelSnapshot, name: &str, value: &str) -> Result<Emit<ModelMutation, NoConfigMutation>, Fault> {

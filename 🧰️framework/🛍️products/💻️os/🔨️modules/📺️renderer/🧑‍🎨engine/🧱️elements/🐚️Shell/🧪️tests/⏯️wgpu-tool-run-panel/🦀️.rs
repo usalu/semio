@@ -44,7 +44,7 @@ struct PaintedPanel {
 }
 
 fn paint_panel(shell: &mut ShellState, surface: &str, document: &UiDocumentLease) -> PaintedPanel {
-    let mut caller=crate::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
+    let mut caller=semio_framework_os_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
     let mut draw = DrawList::default();
     let mut atlas = FontAtlas::builtin();
     let icons = IconAtlas::default();
@@ -54,10 +54,10 @@ fn paint_panel(shell: &mut ShellState, surface: &str, document: &UiDocumentLease
     let mut world3d_states = AdmittedSurfaceMap::default();
     let mut world_resources = infinite_world::world::World3dBuildContext::new(infinite_world::world::WorldCursorWakeAuthority::new());
     let mut cursor = UiDocumentFrameCursor::default();
-    crate::interpreter::begin_accessibility_visible_documents();
+    semio_framework_os_renderer_wgpu_ui_engine_dump::chrome_ledger::begin_accessibility_visible_documents();
     let complete = (0..SHELL_WINDOW_PAINT_OPPORTUNITIES.min(1 << 20)).any(|_| {
         let mut ctx = framework_widget_context(&mut draw, None, &mut atlas, Some(&icons), &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None, 0.0);
-        let mut hosts = crate::scenes::SceneEngineHosts { chrome_labels: crate::scenes::SceneChromeLabels::english(), world3d_states: &mut world3d_states, world_resources: &mut world_resources, window_id: surface };
+        let mut hosts = semio_framework_os_renderer_wgpu_scene_state::SceneEngineHosts { chrome_labels: semio_framework_os_renderer_wgpu_scene_state::SceneChromeLabels::english(), world3d_states: &mut world3d_states, world_resources: &mut world_resources, window_id: surface };
         let done = caller.turn(|cx|render_ui_document_step(&mut cursor, document, Rect::new(0.0, 0.0, 360.0, 720.0), &mut ctx, surface, "s.test.tool-run", ui_wgpu::wgpu::UiDriverDrag::Handle, &mut hosts, cx));
         assert!(done || !cursor.terminal_is_fault(), "the panel paint faulted in phase {}", cursor.phase_name());
         done
@@ -72,7 +72,7 @@ fn paint_panel(shell: &mut ShellState, surface: &str, document: &UiDocumentLease
 }
 
 fn dispatched(input: &mut InputState<ActionDescriptor>) -> Vec<Value> {
-    crate::collect_fixture_actions(input)
+    semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(input)
         .into_iter()
         .map(|action| {
             let args = dsl_value_as_json(action.args.as_ref().expect("action args"));
@@ -89,15 +89,15 @@ fn press(shell: &mut ShellState, painted: &mut PaintedPanel, control: &str) {
 }
 
 fn close_panel(surface: &str, document: &mut UiDocumentLease) {
-    let mut caller=crate::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
-    assert!(crate::interpreter::request_ui_document_close(surface));
+    let mut caller=semio_framework_os_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
+    assert!(semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::request_ui_document_close(surface));
     for _ in 0..262_144 {
-        if !crate::interpreter::ui_document_close_pending_for(surface) {
+        if !semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::ui_document_close_pending_for(surface) {
             break;
         }
-        assert!(caller.turn(|cx|crate::interpreter::close_ui_document_one(cx)).expect("original fixture caller turn"), "each admitted ToolRun close opportunity advances");
+        assert!(caller.turn(|cx|semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::close_ui_document_one(cx)).expect("original fixture caller turn"), "each admitted ToolRun close opportunity advances");
     }
-    assert!(!crate::interpreter::ui_document_close_pending_for(surface));
+    assert!(!semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::ui_document_close_pending_for(surface));
     while !document.close_step() {}
     caller.finish();
 }
@@ -144,7 +144,7 @@ fn tool_run_panel_buttons_are_keyboard_reachable() {
     let records = fixture_records();
     let mut focused = Vec::new();
     for _ in 0..3 {
-        let commands = crate::interpreter::dispatch_ui_event(surface, ui_wgpu::wgpu::UiEvent::KeyDown { key: "Tab".into(), modifiers: ui_wgpu::wgpu::EventModifiers::default() }, &mut painted.input);
+        let commands = semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::dispatch_ui_event(surface, ui_wgpu::wgpu::UiEvent::KeyDown { key: "Tab".into(), modifiers: ui_wgpu::wgpu::EventModifiers::default() }, &mut painted.input);
         shell.chrome.chrome_build.note_content_focus_commands(&commands);
         focused.extend(commands.iter().filter_map(|command| match command {
             ui_wgpu::wgpu::UiCommand::FocusChanged { node: Some(node), .. } => records.get(arena_index(node)).map(|record| record.key.as_str().to_string()),
@@ -156,7 +156,7 @@ fn tool_run_panel_buttons_are_keyboard_reachable() {
     assert!(!focused.iter().any(|key| key.ends_with("toolRunStep")), "a disabled run button never takes focus: {focused:?}");
     let mut wrapped = None;
     for _ in 0..=focused.len() {
-        let commands = crate::interpreter::dispatch_ui_event(surface, ui_wgpu::wgpu::UiEvent::KeyDown { key: "Tab".into(), modifiers: ui_wgpu::wgpu::EventModifiers::default() }, &mut painted.input);
+        let commands = semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::dispatch_ui_event(surface, ui_wgpu::wgpu::UiEvent::KeyDown { key: "Tab".into(), modifiers: ui_wgpu::wgpu::EventModifiers::default() }, &mut painted.input);
         wrapped = commands.iter().find_map(|command| match command {
             ui_wgpu::wgpu::UiCommand::FocusChanged { node: Some(node), .. } => records.get(arena_index(node)).map(|record| record.key.as_str().to_string()),
             _ => None,
@@ -166,7 +166,7 @@ fn tool_run_panel_buttons_are_keyboard_reachable() {
         }
     }
     assert_eq!(wrapped.as_deref(), Some("framework.toolRun.1.toolRunPause"), "Tab wraps past the last enabled button back onto the first");
-    crate::interpreter::dispatch_ui_event(surface, ui_wgpu::wgpu::UiEvent::KeyDown { key: "Enter".into(), modifiers: ui_wgpu::wgpu::EventModifiers::default() }, &mut painted.input);
+    semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::dispatch_ui_event(surface, ui_wgpu::wgpu::UiEvent::KeyDown { key: "Enter".into(), modifiers: ui_wgpu::wgpu::EventModifiers::default() }, &mut painted.input);
     assert_eq!(dispatched(&mut painted.input), vec![serde_json::json!({ "action": "toolRunPause", "runId": "1", "generation": 0 })], "Enter on the focused Pause button dispatches the run's pause");
     close_panel(surface, &mut document);
 }

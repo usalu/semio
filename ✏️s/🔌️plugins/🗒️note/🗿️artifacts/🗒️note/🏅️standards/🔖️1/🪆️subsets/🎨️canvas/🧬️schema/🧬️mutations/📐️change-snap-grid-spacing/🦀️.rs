@@ -1,6 +1,5 @@
 //! 📐 Note mutation — `ChangeSnapGridSpacing`: sets the snap grid spacing.
 
-use crate::schema::mutations::NoteMutation;
 use crate::{NoteDiff, NoteSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -19,24 +18,30 @@ pub struct ChangeSnapGridSpacing {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_snap_grid_spacing(new_spacing: Option<f64>) -> NoteMutation {
-    NoteMutation::ChangeSnapGridSpacing(ChangeSnapGridSpacing { new_spacing })
+pub fn change_snap_grid_spacing<Op>(new_spacing: Option<f64>) -> Op
+where
+    Op: From<crate::standards::v1::subsets::canvas::schema::mutations::change_snap_grid_spacing::ChangeSnapGridSpacing>,
+{
+    Op::from(ChangeSnapGridSpacing { new_spacing })
 }
 
-impl MutationKind<NoteSnapshot, NoteMutation> for ChangeSnapGridSpacing {
+impl<Op> MutationKind<NoteSnapshot, Op> for ChangeSnapGridSpacing
+where
+    Op: protocol::Mutation<NoteSnapshot, Diff = NoteDiff> + From<ChangeSnapGridSpacing>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "snap-grid-spacing", kind: "change-snap-grid-spacing", record: "ChangedSnapGridSpacing" };
 
     fn diff(&self, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &NoteSnapshot) -> Result<Vec<NoteMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &NoteSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     
     })
 }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        crate::schema::mutations::note_setting_label(("snap grid spacing", "Fangrasterabstand"), self.new_spacing.map(crate::schema::mutations::note_label_number))
+        crate::schema::note_setting_label(("snap grid spacing", "Fangrasterabstand"), self.new_spacing.map(crate::schema::note_label_number))
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

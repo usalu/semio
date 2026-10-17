@@ -1,3 +1,3 @@
 /** ⏯️ SDK entry `@semio-tech/framework/tool-run`: explicit public surface of the framework module that plugins build on. */
-export { TOOL_RUN_ABORT_ACTION_ID, TOOL_RUN_PAUSE_ACTION_ID, TOOL_RUN_RESUME_ACTION_ID, TOOL_RUN_VERDICTS, ToolRunTraceStore, decodeToolRunTraceDelta, encodeToolRunTraceDelta, toolRunHexToBytes, toolRunIdentityFromJson, toolRunPanelGroupRun, toolRunPanelNewRuns, toolRunTraceDeltaFromJson, toolRunTraceOpFromJson } from "../../../🔨️modules/⏯️tool-run/🟦️.ts";
-export type { ToolRunTraceCursor, ToolRunTraceDelta, ToolRunTraceOp, ToolRunTraceSubject, ToolRunVerdict } from "../../../🔨️modules/⏯️tool-run/🟦️.ts";
+export { TOOL_RUN_ABORT_ACTION_ID, TOOL_RUN_PAUSE_ACTION_ID, TOOL_RUN_RESUME_ACTION_ID, TOOL_RUN_VERDICTS, ToolRunTraceStore, decodeToolRunTraceDelta, encodeToolRunTraceDelta, toolRunHexToBytes, toolRunIdentityFromJson, toolRunPanelGroupRun, toolRunPanelNewRuns, toolRunTraceDeltaFromJson, toolRunTraceOpFromJson } from "@semio-tech/framework-tool-run-ts";
+export type { ToolRunTraceCursor, ToolRunTraceDelta, ToolRunTraceOp, ToolRunTraceSubject, ToolRunVerdict } from "@semio-tech/framework-tool-run-ts";

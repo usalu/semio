@@ -11,7 +11,7 @@ test("one owned Pack source returns its exact business tree after codec scaffold
   expect(validate({ ...fixture, headerCopyBytes: 64 })).toBe(false);
   expect(validate({ ...fixture, physicalRetirement: false })).toBe(false);
   const original = fixture.source;
-  const transferred = applyPatch({ original, pending: null }, [{ op: "move", from: "/original", path: "/pending" }], true, false).newDocument;
+  const transferred = applyPatch<{ original?: typeof original; pending: typeof original | null }>({ original, pending: null }, [{ op: "move", from: "/original", path: "/pending" }], true, false).newDocument;
   expect(transferred.pending).toEqual(original);
   expect(BigInt(original.nodeHashLiteral)).toBe((1n << 64n) - 3n);
   for (const copy of fixture.copyGrants) {
@@ -26,5 +26,4 @@ test("one owned Pack source returns its exact business tree after codec scaffold
   expect(source).toContain("take_authority(grant)");
   expect(source).not.toContain("JsonWrite");
   expect(source).not.toContain("to_value(");
-  console.log("[DEBUG] Ajv, independent JSONPatch/BigInt/UTF8 retain one original logical tree and metadata-only source donation; actual Pack/System/finite caller qualification remains separate");
 });

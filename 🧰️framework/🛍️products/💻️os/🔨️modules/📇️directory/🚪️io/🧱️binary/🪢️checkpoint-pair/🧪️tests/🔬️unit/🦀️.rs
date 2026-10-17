@@ -105,5 +105,4 @@ fn a_pair_is_admitted_only_as_the_checkpoint_a_rebootstrap_control_names() {
 fn canonical_checkpoint_pair_native_body_has_explicit_io_owner() {
     let owner: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🧪️tests/🧫️fixtures/📇️directory/🪢️checkpoint-pair-io-owner-v1.json")).expect("neutral owner");
     assert!(module_path!().contains(owner["owner"].as_str().expect("owner")));
-    eprintln!("[DEBUG] Directory native binary body owner {}", module_path!());
 }

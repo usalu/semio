@@ -15,6 +15,7 @@ import { tmpdir } from "node:os";
 import { dirname, join, resolve, relative } from "node:path";
 import {buildGraphPathV1} from "../../../📚️library/🏗️build/🕸️graph/🟦️.ts";
 import {readBuildMode} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
+import {readModuleTreeSource} from "../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
 import { installedDashboard } from "../../📦️installation/🟦️.ts";
 import {Oracle} from "../🗺️coverage/🔮️oracle/🟦️.ts";
 
@@ -57,7 +58,7 @@ const json = (path: string): Json => JSON.parse(files.get(path)!) as Json;
 test("neutral publication location derives current cache authority and ignores the charge receipt",()=>{
  const declaration=JSON.parse(readFileSync(join(dashboard,"🧪️tests/🧫️fixtures/🎮️registry/🏗️workspace.json"),"utf8")).publication,{path,charge,...locations}=declaration,publication=JSON.parse(readFileSync(join(repo,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📣️publication.json"),"utf8"));expect(new Ajv2020({strict:true}).compile(publication)(locations)).toBe(true);expect(graphFile).toBe(path);expect(buildGraphPathV1(root)).toBe(join(root,path));
  writeFileSync(join(root,charge),JSON.stringify({version:1,allocation:"storage-charge",owner:"repository:graph-store",bytes:1}));try{const oracle=new Oracle(root);expect(oracle.projects.has("@fixture/artifact-wav")).toBe(true);expect(oracle.problems).toEqual([]);}finally{rmSync(join(root,charge),{force:true});}
- for(const file of ["🎮️registry/🦀️.rs","📚️inventory/🦀️.rs"]){const source=readFileSync(join(dashboard,file),"utf8");expect(source).toContain("graph_file");expect(source).not.toContain("cache/build/graph.json");}console.log("[DEBUG] Neutral graph partition authority and charge separation agree with independent dashboard oracle");
+ for(const file of ["🎮️registry/🦀️.rs","📚️inventory/🦀️.rs"]){const source=readModuleTreeSource(join(dashboard,file));expect(source).toContain("graph_file");expect(source).not.toContain("cache/build/graph.json");}
 });
 
 test("the independent oracle receives the authored catalog and refuses configured absence",()=>{
@@ -70,7 +71,6 @@ test("the independent oracle receives the authored catalog and refuses configure
   expect(new Oracle(root,alternate).playgrounds.map(row=>row.variant)).toEqual(["alternate"]);
   writeFileSync(join(alternate,"🚀️playgrounds.json"),"{}");expect(()=>new Oracle(root,alternate)).toThrow();
   writeFileSync(join(alternate,"🚀️playgrounds.json"),"malformed");expect(()=>new Oracle(root,alternate)).toThrow();
-  console.log("[DEBUG] independent workspace oracle uses explicit alternate catalog; absentempty, configured missing/relative/nonarray/malformed refused");
 });
 // #endregion 🔖️Binary
 
@@ -480,5 +480,4 @@ test("the build graph publication and build flags have no backend-specific publi
   const project = (effect: Json) => ({ metadata: { semio: { dashboard: { parameters: [{ id: "cache", kind: "flag", ...effect }] } } } });
   expect(manifest(project({ buildFlags: ["--skip-cache"] }))).toBe(true);
   expect(manifest(project({ nxFlags: ["--skip-nx-cache"] }))).toBe(false);
-  console.log("[DEBUG] neutral graph fixture and buildFlags schema accepted; backend graph and obsolete effect rejected");
 });

@@ -1,5 +1,5 @@
 use super::*;
-use crate::editor::bim::gestures::session::{Mark, Preview};
+use crate::editor::bim::marks::{Mark, Preview};
 use crate::editor::bim::gestures::snap::{SnapHit, SnapKind};
 
 fn role_of(record: &DslValue) -> String {
@@ -19,7 +19,7 @@ async fn marks_become_overlay_records_mirrored_into_the_windows_space() {
 
 #[semio_framework_async_macros::async_test]
 async fn every_snap_kind_has_its_own_marker_and_free_has_none() {
-    let marker = |kind: SnapKind| records(&Preview::of(vec![Mark::snap(&SnapHit { point: [1.0, 1.0], kind, source: String::new() })]), 0.01).len();
+    let marker = |kind: SnapKind| records(&Preview::of(vec![crate::editor::bim::gestures::session::snap_mark(&SnapHit { point: [1.0, 1.0], kind, source: String::new() })]), 0.01).len();
     for kind in [SnapKind::Endpoint, SnapKind::Midpoint, SnapKind::Intersection, SnapKind::Grid, SnapKind::Edge, SnapKind::Orthogonal] {
         assert_eq!(marker(kind), 1, "{kind:?}");
     }

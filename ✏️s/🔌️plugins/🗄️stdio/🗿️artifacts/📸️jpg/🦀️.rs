@@ -11,218 +11,35 @@ extern crate semio_framework_value_derive as value_derive;
 
 pub use semio_s_artifact_stdio_contract::{apply_mutation, apply_mutation_checked, mutation_from_payload_json, mutation_inverse, mutation_payload_json, MutationRefusal};
 
-
-use {semio_framework_plugin::ArtifactKindSpec,semio_framework_artifact_reference::Dialect,semio_framework_plugin::MediaClass,semio_framework_plugin::MediaForm,semio_framework_plugin::MediaType,semio_framework_plugin::OsMediaCapability,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
-
 pub use schema::diff::JpgDiff;
 pub use schema::mutations::JpgMutation;
 pub use schema::snapshot::{JpgSnapshot,JpgImage};
 pub use schema::JpgArtifact;
 
-/// 🏷️ Document schema / DSL envelope id.
-pub const STDIO_JPG_DOCUMENT_SCHEMA: &str = "stdio.jpg";
+pub use semio_s_artifact_stdio_jpg_inferences::{STDIO_JPG_DOCUMENT_SCHEMA};
 
-/// 🧬️ Artifact schema descriptor id.
-pub const JPG_ARTIFACT_SCHEMA_ID: &str = "s.stdio.jpg";
+pub use semio_s_artifact_stdio_jpg_mutations::{JPG_ARTIFACT_SCHEMA_ID};
 
-/// 📜 Schema-owned package definition.
-pub const ARTIFACT_DEFINITION_SCHEMA: &str = include_str!("📜️artifact-definition.json");
+pub use semio_s_artifact_stdio_jpg_operations::{ARTIFACT_DEFINITION_SCHEMA};
 
-pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::PluginAssemblyError> {
-    let factories = native_codecs();
-    let executables = semio_s_artifact_stdio_contract::native_codec_executables(ARTIFACT_DEFINITION_SCHEMA, &factories)?;
-    semio_s_artifact_stdio_contract::definition_from_schema_with_executables(ARTIFACT_DEFINITION_SCHEMA, executables)
-}
+pub use semio_s_artifact_stdio_jpg_schema_2::{definition};
 
-pub fn formats() -> Result<Vec<semio_framework_plugin::io::FormatDescriptor>, semio_framework_plugin::ArtifactDefinitionError> {
-    semio_s_artifact_stdio_contract::format_descriptors(ARTIFACT_DEFINITION_SCHEMA)
-}
+pub use semio_s_artifact_stdio_jpg_operations::{formats};
 
-fn native_codec() -> store::os_store::serialization::ArtifactCodec {
-    let mut codec = store::bare_artifact_codec::<JpgSnapshot, JpgMutation>(STDIO_JPG_DOCUMENT_SCHEMA);
-    codec.extension = "jpg";
-    codec
-}
+pub use semio_s_artifact_stdio_jpg_mutations::{native_codec};
 
-pub fn native_codecs() -> Vec<semio_s_artifact_stdio_contract::NativeCodecFactory> {
-    vec![semio_s_artifact_stdio_contract::NativeCodecFactory { id: "stdio.native.jpg.v1", artifact: "jpg", kind: artifact_kind, codec: native_codec }]
-}
+pub use semio_s_artifact_stdio_jpg_mutations::{native_codecs};
 
-pub fn contribution() -> semio_s_artifact_stdio_contract::ArtifactContribution {
-    semio_s_artifact_stdio_contract::ArtifactContribution { definition_constraint: None, identity: "jpg", schema: ARTIFACT_DEFINITION_SCHEMA, definition, assembly, formats, native_codecs }
-}
+pub use semio_s_artifact_stdio_jpg_io_registry::{contribution};
 
-//#region 🔖️Dialect
-/// 🪪️ Surface coordinate(s) for this artifact — `artifact_kind` matches the schema descriptor
-/// id above verbatim (never guessed); `standard`/`subset` match this file's own on-disk
-/// `🏅️standards/🔖️.../🪆️subsets/✳️...` location. Lives at the artifact root (not under
-/// `editor`/`viewer`) so a viewer file can read it without ever importing through the
-/// sibling `editor` module.
-pub const JPG_ANY_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.jpg", standard: StandardId("jfif-1.01"), subset: SubsetId("*") };
-pub const JPG_BASELINE_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.jpg", standard: StandardId("jfif-1.01"), subset: SubsetId("baseline") };
-//#endregion 🔖️Dialect
+pub use semio_s_artifact_stdio_jpg_mutations::{JPG_ANY_DIALECT, JPG_BASELINE_DIALECT};
 
-//#region 🔖️ArtifactKind
-/// 🗂️ This artifact's `ArtifactKindSpec`.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn artifact_kind() -> ArtifactKindSpec {
-    ArtifactKindSpec {
-        id: "s.stdio.jpg".into(),
-        label: semio_framework_ui_locale::LocalizedLabel::native("Jpg", "Jpg"),
-        source_format: STDIO_JPG_DOCUMENT_SCHEMA.into(),
-        component_kind: "stdio".into(),
-        dimension: "data".into(),
-        media_capability: OsMediaCapability::MeshOnly,
-        media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
-        schema: STDIO_JPG_DOCUMENT_SCHEMA.into(),
-        export_formats: vec![],
-        import_formats: vec![],
-        export_stdio_kinds: vec![],
-        import_stdio_kinds: vec![],
-    }
-}
-//#endregion 🔖️ArtifactKind
+pub use semio_s_artifact_stdio_jpg_mutations::{artifact_kind};
 
-//#region 🔖️Declaration
-/// 🔖️ This artifact's declaration (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W6) —
-/// replaces the old side-effecting `crate::standards::v_jfif_1_01::subsets::document::io::register()`, previously called
-/// unconditionally from `🗄️stdio`'s plugin root. Mirrors `🗒️note`/`🔋️model`'s own `declaration()`
-/// exemplars: `.composers(...)` reaches `⚙️engine`'s OWN `io_registry` (the real `ComposerEntry`
-/// rows — 🧾️document + 🧱️baseline already folded into one list there) by its FULLY QUALIFIED path,
-/// never the bare `io_registry::entries()` shortcut that would silently rebind to this file's own
-/// shadowing `io_registry` module below (repo-wide "silent rebind" hazard this ticket tracks —
-/// that module returns `&[&ComposerEntry]`, a different type, and is left in place as orphaned
-/// dead code, matching `🔋️model`'s own precedent for its orphaned wrapper). The baseline subset's
-/// `SubsetValidator` (`🧱️baseline/🚪️io`'s own `JpgBaselineValidator`, previously registered via
-/// `⚙️engine::register()`'s trailing `subsets::baseline::io::register()` call) is re-derived here
-/// via `subset_validator_entry_of::<JpgBaselineValidator>()` rather than reused from that file's
-/// own private `validator_entry()` cache (not `pub`) — same erasure helper, fresh instance, same
-/// registry effect. `register_schema_specs()` (this engine's own, real, `#[cfg]`-unconditional
-/// `pub fn`) is deliberately dropped, not re-wired: its body is a genuine no-op (`{}`, see that
-/// fn's own doc comment — `JpgSnapshot`/`JpgDiff`/`JpgMutation` all fail `dsl`'s derive machinery
-/// on hand-rolled fields, so it never calls `dsl::registry::register_schema_spec` at all), so
-/// dropping the call changes zero runtime behaviour. `⚙️engine` itself is untouched — this only
-/// REFERENCES what it already exposes.
-/// 🧩️ Binds this executable root to its sole schema-owned definition.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn assembly() -> Result<semio_s_artifact_stdio_contract::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
-    semio_s_artifact_stdio_contract::runtime_assembly("jpg", definition()?, declaration)
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
-    let formats = formats()?;
-    semio_framework_plugin::ArtifactDeclaration::builder(definition)
-        .schema(standards::v_jfif_1_01::subsets::document::schema::jpg_artifact_schema_descriptor())
-        .formats(formats)
-        .inferences([standards::v_jfif_1_01::subsets::document::schema::inferences::jpg_artifact_inference_descriptor()])
-        .composers(standards::v_jfif_1_01::subsets::document::io::io_registry::entries())
-        .subset_validators(declared_subset_validators())
-        .languages(pilot_languages())
-        .document_codec_bare::<JpgSnapshot, JpgMutation>(STDIO_JPG_DOCUMENT_SCHEMA, JPG_ANY_DIALECT)
-        .document_codec_bare::<JpgSnapshot, JpgMutation>(STDIO_JPG_DOCUMENT_SCHEMA, JPG_BASELINE_DIALECT)
-        .try_build()
-}
-
-/// 🛡️ Re-derives the 🧱️baseline subset's `SubsetValidatorEntry` — see `declaration()`'s own doc for
-/// why this calls `subset_validator_entry_of` directly instead of reusing the private cache in
-/// `🧱️baseline/🚪️io`.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn declared_subset_validators() -> &'static [semio_framework_plugin::io::SubsetValidatorEntry] {
-    static ENTRIES: std::sync::OnceLock<Vec<semio_framework_plugin::io::SubsetValidatorEntry>> = std::sync::OnceLock::new();
-    ENTRIES.get_or_init(|| vec![semio_framework_plugin::io::subset_validator_entry_of::<standards::v_jfif_1_01::subsets::baseline::io::JpgBaselineValidator>()]).as_slice()
-}
-
-/// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — moved
-/// here verbatim from `⚙️engine::register_pilot_languages` (same 5-role Document/Ops/Diff/Pack/Spr
-/// shape every stdio artifact uses), leaked to a `&'static` slice since `dsl::passthrough_hooks`
-/// isn't `const fn`, mirroring the `🗒️note`/`🔋️model` exemplars' own helper of the same shape.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
-    static LANGUAGES: std::sync::OnceLock<Vec<semio_framework_dsl::LanguageSpec>> = std::sync::OnceLock::new();
-    LANGUAGES
-        .get_or_init(|| {
-            vec![
-                semio_framework_dsl::LanguageSpec {
-                    id: "stdio.jpg",
-                    extension: Some("jpg"),
-                    role: semio_framework_dsl::LanguageRole::Document,
-                    grammar: Some(standards::v_jfif_1_01::subsets::document::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(standards::v_jfif_1_01::subsets::document::io::text::snapshot::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(standards::v_jfif_1_01::subsets::document::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(standards::v_jfif_1_01::subsets::document::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
-                    hooks: semio_framework_dsl::passthrough_hooks("stdio.jpg"),
-                },
-                semio_framework_dsl::LanguageSpec {
-                    id: "stdio.jpg.op",
-                    extension: None,
-                    role: semio_framework_dsl::LanguageRole::Ops,
-                    grammar: Some(standards::v_jfif_1_01::subsets::document::io::text::mutations::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(standards::v_jfif_1_01::subsets::document::io::text::mutations::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(standards::v_jfif_1_01::subsets::document::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(standards::v_jfif_1_01::subsets::document::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
-                    hooks: semio_framework_dsl::passthrough_hooks("stdio.jpg.op"),
-                },
-                semio_framework_dsl::LanguageSpec {
-                    id: "stdio.jpg.diff",
-                    extension: None,
-                    role: semio_framework_dsl::LanguageRole::Diff,
-                    grammar: Some(standards::v_jfif_1_01::subsets::document::io::text::diff::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(standards::v_jfif_1_01::subsets::document::io::text::diff::COMPONENT_GRAMMAR_PATH),
-                    protocol: None,
-                    protocol_path: None,
-                    hooks: semio_framework_dsl::passthrough_hooks("stdio.jpg.diff"),
-                },
-                semio_framework_dsl::LanguageSpec {
-                    id: "stdio.jpg.pack",
-                    extension: None,
-                    role: semio_framework_dsl::LanguageRole::Pack,
-                    grammar: None,
-                    grammar_path: None,
-                    protocol: Some(standards::v_jfif_1_01::subsets::document::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(standards::v_jfif_1_01::subsets::document::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
-                    hooks: semio_framework_dsl::passthrough_hooks("stdio.jpg.pack"),
-                },
-                semio_framework_dsl::LanguageSpec {
-                    id: "stdio.jpg.spr",
-                    extension: None,
-                    role: semio_framework_dsl::LanguageRole::Spr,
-                    grammar: None,
-                    grammar_path: None,
-                    protocol: Some(standards::v_jfif_1_01::subsets::document::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(standards::v_jfif_1_01::subsets::document::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
-                    hooks: semio_framework_dsl::passthrough_hooks("stdio.jpg.spr"),
-                },
-            ]
-        })
-        .as_slice()
-}
-//#endregion 🔖️Declaration
+pub use semio_s_artifact_stdio_jpg_io_registry::{assembly, declaration, declared_subset_validators, pilot_languages};
 
 //#region 🚪️DerivedIoRegistry
-pub mod io_registry {
-    use crate::standards::v_jfif_1_01::subsets::document::io::io_registry as v_jfif_1_01;
-    use {semio_framework_plugin::io::register_composer_entries,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposedArtifact,semio_framework_plugin::io::ComposerEntry,semio_framework_artifact_reference::Dialect,semio_framework_plugin::io::ErasedComposeSource};
-    use std::sync::OnceLock;
-
-    static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
-
-    // 🚫️async: E1 pure table accessor consumed by OnceLock::get_or_init's sync closure — see R9
-    pub fn entries() -> &'static [&'static ComposerEntry] {
-        ENTRIES.get_or_init(|| v_jfif_1_01::entries().iter().collect()).as_slice()
-    }
-
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
-        let entry = entries().iter().find(|e| e.writes == target).ok_or_else(|| ComposeError { message: format!("JpgComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
-        ::semio_framework_async::poll::resolve_ready((entry.compose)(sources))
-    }
-
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn register() {
-        register_composer_entries(v_jfif_1_01::entries()).expect("static Stdio registration must be available and conflict-free");
-    }
-}
+pub use semio_s_artifact_stdio_jpg_io_registry::io_registry;
 //#endregion 🚪️DerivedIoRegistry
 
 #[path = "."]
@@ -242,102 +59,43 @@ pub mod standards {
             pub mod document {
                 #[path = "."]
                 pub mod schema {
-                    #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🦀️.rs"]
-                    mod component;
-                    pub use component::*;
-                    #[path = "."]
-                    pub mod snapshot {
-                        #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/📸️snapshot/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                    #[path = "."]
-                    pub mod inferences {
-                        #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/💡️inferences/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                        #[path = "."]
-                        pub mod dimensions {
-                            #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/💡️inferences/📐dimensions/🦀️.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                    }
-                    #[path = "."]
-                    pub mod diff {
-                        #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🔺️diff/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                    #[path = "."]
-                    pub mod mutations {
-                        #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/🦀️.rs"]
-                        mod top_level;
-                        pub use top_level::*;
-                        #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/🪪️change-jfif/🦀️.rs"]
-                        pub mod change_jfif_header;
-                        #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/📥️insert-other/🦀️.rs"]
-                        pub mod insert_other_segment;
-                        #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/🗑️remove-other/🦀️.rs"]
-                        pub mod remove_other_segment;
-                        #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/🔲️replace-pixels/🦀️.rs"]
-                        pub mod replace_pixels;
-                        #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/🖼️replace-image/🦀️.rs"]
-                        pub mod replace_image;
-                    }
-                    #[cfg(test)]
-                    #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧪️tests/🛡️mutation-regressions/🦀️.rs"]
-                    mod mutation_regressions;
-                    #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/⚙️operations/🦀️.rs"]
-                    pub mod operations;
+                    pub use semio_s_artifact_stdio_jpg_schema::standards::v_jfif_1_01::subsets::document::schema::*;
+
+                    pub use semio_s_artifact_stdio_jpg_inferences::standards::v_jfif_1_01::subsets::document::schema::snapshot;
+                    pub use semio_s_artifact_stdio_jpg_inferences::standards::v_jfif_1_01::subsets::document::schema::inferences;
+                    pub use semio_s_artifact_stdio_jpg_mutations::standards::v_jfif_1_01::subsets::document::schema::diff;
+                    pub use semio_s_artifact_stdio_jpg_mutations::standards::v_jfif_1_01::subsets::document::schema::mutations;
+
+                    pub use semio_s_artifact_stdio_jpg_operations::standards::v_jfif_1_01::subsets::document::schema::operations;
                 }
                 #[path = "."]
                 pub mod io {
-                    #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🚪️io/🦀️.rs"]
-                    mod component;
-                    pub use component::*;
+                    pub use semio_s_artifact_stdio_jpg_inferences::standards::v_jfif_1_01::subsets::document::io::*;
+
+                    pub use semio_s_artifact_stdio_jpg_schema_2::standards::v_jfif_1_01::subsets::document::io::facets;
                     #[path = "."]
-                    pub mod import {
+                    pub mod binary {
                         #[path = "."]
-                        pub mod deserializers {
-                            #[path = "."]
-                            pub mod artifacts {
-                                #[path = "."]
-                                pub mod binary {
-                                    #[path = "."]
-                                    pub mod v_raw {
-                                        #[path = "."]
-                                        pub mod any {
-                                            #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/💾️binary/🔖️raw/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
-                            }
+                        pub mod snapshot {
+                            pub use semio_s_artifact_stdio_jpg_inferences::standards::v_jfif_1_01::subsets::document::io::binary::snapshot::*;
+
+                            pub use semio_s_artifact_stdio_jpg_inferences::standards::v_jfif_1_01::subsets::document::io::binary::snapshot::decoded_components;
+                            pub use semio_s_artifact_stdio_jpg_inferences::standards::v_jfif_1_01::subsets::document::io::binary::snapshot::encode_options;
                         }
+                        pub use semio_s_artifact_stdio_jpg_mutations::standards::v_jfif_1_01::subsets::document::io::binary::mutations;
+                        pub use semio_s_artifact_stdio_jpg_mutations::standards::v_jfif_1_01::subsets::document::io::binary::diff;
+                        pub use semio_s_artifact_stdio_jpg_operations::standards::v_jfif_1_01::subsets::document::io::binary::inferences;
                     }
                     #[path = "."]
-                    pub mod export {
-                        #[path = "."]
-                        pub mod serializers {
-                            #[path = "."]
-                            pub mod artifacts {
-                                #[path = "."]
-                                pub mod binary {
-                                    #[path = "."]
-                                    pub mod v_raw {
-                                        #[path = "."]
-                                        pub mod any {
-                                            #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🚪️io/📤️export/🧵️serializers/🗿️artifacts/💾️binary/🔖️raw/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
-                            }
-                        }
+                    pub mod text {
+                        pub use semio_s_artifact_stdio_jpg_inferences::standards::v_jfif_1_01::subsets::document::io::text::snapshot;
+                        pub use semio_s_artifact_stdio_jpg_mutations::standards::v_jfif_1_01::subsets::document::io::text::mutations;
+                        pub use semio_s_artifact_stdio_jpg_mutations::standards::v_jfif_1_01::subsets::document::io::text::diff;
+                        pub use semio_s_artifact_stdio_jpg_operations::standards::v_jfif_1_01::subsets::document::io::text::inferences;
                     }
+                    pub use semio_s_artifact_stdio_jpg_inferences::standards::v_jfif_1_01::subsets::document::io::sqlite;
+                    pub use semio_s_artifact_stdio_jpg_schema_2::standards::v_jfif_1_01::subsets::document::io::import;
+                    pub use semio_s_artifact_stdio_jpg_schema_2::standards::v_jfif_1_01::subsets::document::io::export;
                 }
             }
             #[path = "."]
@@ -350,10 +108,8 @@ pub mod standards {
                 // `frame`/`sof_marker`/`arithmetic`/`dc_huffman_table_count`/
                 // `ac_huffman_table_count` fields as part of this subset landing --
                 // `⚙️engine::decode_jpg` now persists what it already computed transiently.
-                #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧱️baseline/🚪️io/🦀️.rs"]
-                pub mod io;
-                #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧱️baseline/🧬️schema/🦀️.rs"]
-                pub mod schema;
+                pub use semio_s_artifact_stdio_jpg_io_registry::standards::v_jfif_1_01::subsets::baseline::io;
+                pub use semio_s_artifact_stdio_jpg_schema_2::standards::v_jfif_1_01::subsets::baseline::schema;
             
 }
         }
@@ -364,86 +120,40 @@ pub mod schema {
     pub use super::standards::v_jfif_1_01::subsets::document::schema::*;
 }
 
-
-#[path = "."]
-pub mod examples {
-    #[path = "."]
-    pub mod demo {
-        #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/📚️examples/🎬️demo/🦀️.rs"]
-        mod component;
-        pub use component::*;
-    }
-}
+pub use semio_s_artifact_stdio_jpg_operations::examples;
 
 #[path = "."]
 pub mod editor {
     #[path = "."]
     pub mod jpg_any {
-        #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/✏️editor/🦀️.rs"]
-        mod component;
-        pub use component::*;
-        #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/✏️editor/🧭️edit-rules/🦀️.rs"]
-        pub mod edit_rules;
-        #[path = "."]
-        pub mod presence {
-            #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/✏️editor/👥️presence/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
-        #[path = "."]
-        pub mod config {
-            #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/✏️editor/🎚️config/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
+        pub use semio_s_artifact_stdio_jpg_schema_2::editor::jpg_any::*;
+
+        pub use semio_s_artifact_stdio_jpg_operations::editor::jpg_any::edit_rules;
+        pub use semio_s_artifact_stdio_jpg_operations::editor::jpg_any::presence;
+        pub use semio_s_artifact_stdio_jpg_operations::editor::jpg_any::config;
         #[path = "."]
         pub mod modes {
             #[path = "."]
             pub mod edit {
-                #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/✏️editor/🎭️modes/✏️edit/🦀️.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "."]
-                pub mod windows {
-                    #[path = "."]
-                    pub mod main {
-                        #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                }
+                pub use semio_s_artifact_stdio_jpg_schema_2::editor::jpg_any::modes::edit::*;
+
+                pub use semio_s_artifact_stdio_jpg_schema_2::editor::jpg_any::modes::edit::windows;
             }
         }
     }
     #[path = "."]
     pub mod jpg_baseline {
-        #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧱️baseline/✏️editor/🦀️.rs"]
-        mod component;
-        pub use component::*;
-        #[path = "."]
-        pub mod presence {
-            #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧱️baseline/✏️editor/👥️presence/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
-        #[path = "."]
-        pub mod config {
-            #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧱️baseline/✏️editor/🎚️config/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
+        pub use semio_s_artifact_stdio_jpg_io_registry::editor::jpg_baseline::*;
+
+        pub use semio_s_artifact_stdio_jpg_operations::editor::jpg_baseline::presence;
+        pub use semio_s_artifact_stdio_jpg_operations::editor::jpg_baseline::config;
         #[path = "."]
         pub mod modes {
             #[path = "."]
             pub mod edit {
-                #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧱️baseline/✏️editor/🎭️modes/✏️edit/🦀️.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "."]
-                pub mod windows {
-                    #[path = "."]
-                    pub mod main {
-                        #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧱️baseline/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                }
+                pub use semio_s_artifact_stdio_jpg_schema_2::editor::jpg_baseline::modes::edit::*;
+
+                pub use semio_s_artifact_stdio_jpg_schema_2::editor::jpg_baseline::modes::edit::windows;
             }
         }
     }
@@ -453,69 +163,33 @@ pub mod editor {
 pub mod viewer {
     #[path = "."]
     pub mod jpg_any {
-        #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/👁️viewer/🦀️.rs"]
-        mod component;
-        pub use component::*;
-        #[path = "."]
-        pub mod presence {
-            #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/👁️viewer/👥️presence/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
-        #[path = "."]
-        pub mod config {
-            #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/👁️viewer/🎚️config/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
+        pub use semio_s_artifact_stdio_jpg_schema_2::viewer::jpg_any::*;
+
+        pub use semio_s_artifact_stdio_jpg_operations::viewer::jpg_any::presence;
+        pub use semio_s_artifact_stdio_jpg_operations::viewer::jpg_any::config;
         #[path = "."]
         pub mod modes {
             #[path = "."]
             pub mod view {
-                #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/👁️viewer/🎭️modes/👁️view/🦀️.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "."]
-                pub mod windows {
-                    #[path = "."]
-                    pub mod main {
-                        #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                }
+                pub use semio_s_artifact_stdio_jpg_schema_2::viewer::jpg_any::modes::view::*;
+
+                pub use semio_s_artifact_stdio_jpg_schema_2::viewer::jpg_any::modes::view::windows;
             }
         }
     }
     #[path = "."]
     pub mod jpg_baseline {
-        #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧱️baseline/👁️viewer/🦀️.rs"]
-        mod component;
-        pub use component::*;
-        #[path = "."]
-        pub mod presence {
-            #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧱️baseline/👁️viewer/👥️presence/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
-        #[path = "."]
-        pub mod config {
-            #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧱️baseline/👁️viewer/🎚️config/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
+        pub use semio_s_artifact_stdio_jpg_schema_2::viewer::jpg_baseline::*;
+
+        pub use semio_s_artifact_stdio_jpg_operations::viewer::jpg_baseline::presence;
+        pub use semio_s_artifact_stdio_jpg_operations::viewer::jpg_baseline::config;
         #[path = "."]
         pub mod modes {
             #[path = "."]
             pub mod view {
-                #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧱️baseline/👁️viewer/🎭️modes/👁️view/🦀️.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "."]
-                pub mod windows {
-                    #[path = "."]
-                    pub mod main {
-                        #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧱️baseline/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                }
+                pub use semio_s_artifact_stdio_jpg_schema_2::viewer::jpg_baseline::modes::view::*;
+
+                pub use semio_s_artifact_stdio_jpg_schema_2::viewer::jpg_baseline::modes::view::windows;
             }
         }
     }
@@ -523,4 +197,11 @@ pub mod viewer {
 
 pub use crate::standards::v_jfif_1_01::subsets::baseline::io::{JpgBaselineBuilderConstruction, JpgBaselineAnalyzerAnalysis, JpgBaselineBuilderFacets, JpgBaselineBuilder, JpgBaselineAnalyzer, JpgBaselineComposer};
 
-pub use crate::standards::v_jfif_1_01::subsets::document::io::{JpgBuilderConstruction, JpgParts, JpgAnalyzerAnalysis, JpgBuilderFacets, JpgBuilder, JpgAnalyzer, JpgComposer};
+pub use crate::standards::v_jfif_1_01::subsets::document::io::facets::{JpgBuilderConstruction, JpgParts, JpgAnalyzerAnalysis, JpgBuilderFacets, JpgBuilder, JpgAnalyzer, JpgComposer};
+
+#[cfg(test)]
+#[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🚪️io/🪶️sqlite/📸️snapshot/🫴️receiving/🧪️tests/🦀️.rs"]
+mod hoisted_receiving_0;
+#[cfg(test)]
+#[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs"]
+mod hoisted_snapshot_1;

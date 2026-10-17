@@ -1,0 +1,23 @@
+# Actual Tools Partition Publication
+
+Root releases exactly one tools publication from the protected census42743 DATA, using the final frozen asset helper script SHA256 `c2a2f6256a4f5fe29007c316ca748e143f2b35cf5c3bd2e3231b911c3434e46a`. Actual current Source66684 passed41portable cases plus actual phase laws, strict66686 completed0, independent seven-path Low hold is clean. Separate timestamp and missing/foreign kernel-device semantic REDs remain preserved; no guard/cap widening was used.
+
+Exact command: `asset-publication/📜️script.ts --publish tools native-assets-protected-42743.json`, with Root/G and all18 authority/override variables absent. The helper creates a fresh actual setup-all Original with unchanged120-second maximum and actual phase, first admits current already-mounted leases under exact external SH, takes fresh target SH/current bounded FD snapshots and two owned kernel observations, rejects any descendant/substitution, releases target SH before canonical publisher EX, requires complete preservation/verification/settlement, then ordinary current reopen/recheck/close and leaseslast. Recorded census is identity/topology DATA; mutable historical timestamps do not authorize effects. No other partition or nested image is released.
+
+Any actual refusal, deadline, partial publication or ambiguous custody remains failure evidence with canonical pending/physical custody preserved. Source success is not runtime acceptance; actual speed is unproved. [Snapshot review](declared-native-asset-publication-current-snapshot-review.md), [independent helper review](asset-publication-helper-low-review.md).
+
+## Actual Failed Tools Attempt76892
+
+Root confirmed actualterminal1, PID71105. Exact stages accepted/observed only; the initial complete witness exhausted the actual Original resource loan deadline. No witnessed/detach/verified/settled stage was reached. The helper reports success:false and ownedCustodyClosed:false; pending may already have been durably prepared, so no no-effects claim is made. Tools remains unqualified/pending. Independent Low bound the320318-byte log SHA256 `f95b6d39966fd02acbfcf1d59b69c0efa44807ba8b516de9e9aa698ad1363445` and162-byte terminal receipt SHA256 `afdfa4c15fdb67612b2291f933a91d561f2beb5765c4f065985e9177f50ea711`. [Independent proof](native-tools-current-deadline-low-proof.md).
+
+Next execution priority is bounded synchronous witness I/O groups with genuine per-operation control/work checks and the existing full private observer around every no-await group. Allfour full streams, digest/framing, name/depth/path/FD/progress/work/Original limits remain mandatory. No timeout, cap, census or identity guard will be widened or skipped to manufacture acceptance. Schema/corpus/semanticRED, Source/strict/Low, then enhanced private actual proof precede any new tools recovery attempt.
+
+## Fresh Bounded IO Recovery Release
+
+Final W14/1430, P36/4377,2+6rootstrict, independentfive-fileSourcehold and currenthelperstrict passed. Enhancedactualprivate54187 completed0 throughverified/settled/preservation/ordinaryreopen/child+parentretirement with independentcleanlog/traceproof SHA256 `7228c13f4d4b6627b84c613c03e4cf10ec75f103b789a860cd7483d95289f5a6`. Root now releases one fresh exact Tools recovery through the same frozen assethelper/recordedidentity DATA, with freshprotected request/currentpublisherEX and unchanged120-second actualOriginal/phase/18-absent environment. Existingpending is recovered only canonically. Allfour complete streams, quotas/caps/guards/custody and ordinaryreopen/closure requirements remain. No otherpartition or nestedmapping is released. Actual speed/completion is unproved until terminal outcome.
+
+## Pre-Publisher Census Refusal and Fresh6534 Release
+
+Entry6253 completed1 in0.17seconds before anypublisherstage, ownedCustodyClosed:true, because recorded physicalmetadata changed. Sourceguard remained intact. Freshprotectedcensus6534 completed0 and allSHsettled; independent proof `native-assets-refreshed-low-proof.md` confirms onlynonstampdifference isTools foldernlink5→6/size160→192 afterpendingmetadata. AllsevenbackingIDs/sizes/allocation andreceiptSHAremainidentical; fourcanonicallydiscardedprivateimages account forkernel34→30,17nestedmappingsremainunadopted. Freshhelper--plan6534 completed0.
+
+Root releases one new Tools attempt using `native-assets-protected-6534.json`, samefrozenhelper/W231cb6Source/currentstrict/private54187+Lowproof, freshactual120-secondsetupallOriginal/phase/18-absent environment. No directoryidentityguard is relaxed; freshcurrentSH/twoKernelobservations/requestCAS and realpublisherEX remain mandatory. No otherasset or nestedmapping is released.

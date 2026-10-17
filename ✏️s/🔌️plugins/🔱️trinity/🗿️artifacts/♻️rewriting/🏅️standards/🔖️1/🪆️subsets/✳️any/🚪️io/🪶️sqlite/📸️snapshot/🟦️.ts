@@ -1,4 +1,4 @@
-import {JACK_SQLITE_SCHEMA,jackSnapshotToSqliteDatabase,jackSnapshotFromSqliteDatabase} from "../../../../../../../../🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🟦️.ts";
+import {JACK_SQLITE_SCHEMA,jackSnapshotToSqliteDatabase,jackSnapshotFromSqliteDatabase} from "@semio-tech/trinity-jack/standards/1/subsets/any/io/sqlite/snapshot";
 /** ♻️ Thirty authored Rewriting and Jack tables own structured rules, typed manifests and literal property trees. */
 import type {RewritingArtifact,PropertyValue,LayoutPoint,Pattern} from "../../../🧬️schema/🟦️.ts";
 import {comparePropertyKeys} from "@semio-tech/framework/graph/manifest/value";

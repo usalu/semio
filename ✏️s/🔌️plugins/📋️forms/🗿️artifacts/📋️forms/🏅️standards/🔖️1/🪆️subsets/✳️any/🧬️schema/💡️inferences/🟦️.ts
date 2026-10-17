@@ -30,6 +30,10 @@ type formsFormsInferenceGuardSizeBounds = { readonly minItems?: number; readonly
 
 export const formsFormsInferenceGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : formsFormsInferenceGuardReject(at, "value is not an object");
+export const formsFormsInferenceGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) formsFormsInferenceGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const formsFormsInferenceGuardArray = (value: unknown, at: string, bounds: formsFormsInferenceGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return formsFormsInferenceGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) formsFormsInferenceGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -60,17 +64,17 @@ export const formsFormsInferenceGuardConstant = <T extends string | number | boo
 //#endregion 🚪️Parsers
 
 export function parseFormsInference(value: unknown, at = "$"): FormsInference {
-  const row = formsFormsInferenceGuardObject(value, at);
+  const row = formsFormsInferenceGuardClosed(formsFormsInferenceGuardObject(value, at), at, ["topology"]);
   return {
     topology: parseFormsTopology(row["topology"], `${at}.topology`),
   };
 }
 
 export function parseFormsTopology(value: unknown, at = "$"): FormsTopology {
-  const row = formsFormsInferenceGuardObject(value, at);
+  const row = formsFormsInferenceGuardClosed(formsFormsInferenceGuardObject(value, at), at, ["topoOrder", "depth", "cycleFree", "nodeCount"]);
   return {
     topoOrder: formsFormsInferenceGuardArray(row["topoOrder"], `${at}.topoOrder`).map((item, index) => formsFormsInferenceGuardString(item, `${at}.topoOrder[${index}]`)),
-    depth: formsFormsInferenceGuardObject(row["depth"], `${at}.depth`),
+    depth: Object.fromEntries(Object.entries(formsFormsInferenceGuardObject(row["depth"], `${at}.depth`)).map(([key0, value0]) => [key0, formsFormsInferenceGuardInteger(value0, `${at}.depth.${key0}`)])),
     cycleFree: formsFormsInferenceGuardBoolean(row["cycleFree"], `${at}.cycleFree`),
     nodeCount: formsFormsInferenceGuardInteger(row["nodeCount"], `${at}.nodeCount`),
   };

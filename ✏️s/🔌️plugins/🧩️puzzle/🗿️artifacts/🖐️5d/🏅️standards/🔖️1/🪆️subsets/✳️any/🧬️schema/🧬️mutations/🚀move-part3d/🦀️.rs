@@ -1,6 +1,5 @@
 //! Puzzle5d mutation — `MovePart3d`: absolute reposition of a part's 3D-projection origin.
 use crate::standards::v1::subsets::any::schema::diff::Puzzle5dDiff;
-use crate::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation;
 use crate::Puzzle5dSnapshot;
 
 //#region 🔖️Mutation
@@ -17,13 +16,16 @@ pub struct MovePart3d {
     pub new_origin: [f64; 3],
 }
 
-impl protocol::MutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for MovePart3d {
+impl<Op> protocol::MutationKind<Puzzle5dSnapshot, Op> for MovePart3d
+where
+    Op: protocol::Mutation<Puzzle5dSnapshot, Diff = Puzzle5dDiff> + From<MovePart3d>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "move", entity: "part", kind: "move-part3d", record: "MovedPart3d" };
 
     fn diff(&self, base: &Puzzle5dSnapshot) -> protocol::MutationOutcome<Puzzle5dDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Puzzle5dSnapshot) -> Result<Vec<Puzzle5dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Puzzle5dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     
@@ -39,6 +41,9 @@ impl protocol::MutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for MovePart3d {
 //#endregion 🔖️Mutation
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn move_part_3d(id: String, new_origin: [f64; 3]) -> Puzzle5dMutation {
-    Puzzle5dMutation::MovePart3d(MovePart3d { id, new_origin })
+pub fn move_part_3d<Op>(id: String, new_origin: [f64; 3]) -> Op
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::move_part_3d::MovePart3d>,
+{
+    Op::from(MovePart3d { id, new_origin })
 }

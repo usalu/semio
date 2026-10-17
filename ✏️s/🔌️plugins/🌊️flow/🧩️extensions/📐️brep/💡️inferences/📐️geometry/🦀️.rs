@@ -136,8 +136,8 @@ pub const fn geometry_inference_service() -> ArtifactInferenceService {
     }, infer_geometry,geometry_inference_demands)
 }
 
-#[cfg(test)]
-pub(crate) static GEOMETRY_INFERENCE_CALLS: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
+#[cfg(feature = "testkit")]
+pub static GEOMETRY_INFERENCE_CALLS: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
 
 /// 🎯️ Shares each registered operator's owned fidelity contract with named inference results.
 pub(crate) fn geometry_operator_quality(registry: &neural_engine::Registry, operator: &str) -> String {
@@ -151,7 +151,7 @@ fn infer_geometry(request:&ArtifactInferenceExecutionRequest<'_>,context:&dyn st
  let context=context.downcast_ref::<GeometryInferenceContext>().ok_or_else(||ArtifactInferenceExecutionError::native(ValueError::literal(ValueRefusalKind::InvalidValue,"geometry inference requires its original execution owner"),true))?;
  if request.canonical_payload.len()as u64>request.budgets.allocation_bytes{return Err(ArtifactInferenceExecutionError::native(ValueError::literal(ValueRefusalKind::OwnershipLimit,"geometry source exceeds original allocation authority"),true))}
  let mut evaluation=context.evaluation();let mut owner=context.normal.lock().expect("original geometry cursor");if owner.is_none(){if cx.should_yield()||cx.retained_grant().maximum_items==0||cx.retained_grant().maximum_depth==0{return Ok(ArtifactInferenceExecutionStep{execution:None,retained_progress:Default::default(),terminal:false})}if (request.operation,request.generation)!=(cx.operation().0,cx.generation().0){return Err(ArtifactInferenceExecutionError::native(ValueError::literal(ValueRefusalKind::OwnershipLimit,"geometry inference requires its actual initiating context"),true))}cx.original_source_parent().map_err(|error|ArtifactInferenceExecutionError::original(error.into(),true))?;cx.consume_retained(geometry_item()).map_err(|error|ArtifactInferenceExecutionError::original(error.into(),true))?;cx.consume_fuel(1);*owner=Some(GeometryInferenceTurn::new(request));return Ok(ArtifactInferenceExecutionStep{execution:None,retained_progress:geometry_item(),terminal:false})}
- #[cfg(test)] GEOMETRY_INFERENCE_CALLS.fetch_add(1,std::sync::atomic::Ordering::SeqCst);
+ #[cfg(feature = "testkit")] GEOMETRY_INFERENCE_CALLS.fetch_add(1,std::sync::atomic::Ordering::SeqCst);
  if !owner.as_ref().unwrap().matches(request){return Err(ArtifactInferenceExecutionError::native(ValueError::literal(ValueRefusalKind::OwnershipLimit,"geometry registry admission retains another initiating source"),false))}
  if evaluation.registry().is_none()&&!owner.as_ref().unwrap().closing&&!request.cancelled&&!cx.is_cancelled(){let before=cx.retained_progress();match evaluation.admit_registry_on_original(cx){Ok(_)=>{},Err(original)=>{let owner=owner.as_mut().unwrap();owner.failure=Some(GeometryInferenceFailure{primary:original.into(),receipt_refusal:None});owner.begin_close();}}return Ok(ArtifactInferenceExecutionStep{execution:None,retained_progress:geometry_delta(before,cx.retained_progress()),terminal:false})}
  let result=owner.as_mut().unwrap().step(evaluation.registry(),request,cx)?;if result.terminal{assert!(owner.as_ref().unwrap().terminal_is_empty());*owner=None;}Ok(result)

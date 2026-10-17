@@ -9,5 +9,4 @@ fn actual_atomic_writer_missing_filename_retains_invalid_value_authority(){
  let refusal=write_atomic(std::path::Path::new(""),b"untouched", &context).unwrap_err();
  assert_eq!(refusal.refusal_kind(),Some(ValueRefusalKind::InvalidValue));
  assert!(matches!(refusal,PackError::Refusal(semio_framework_pack_error::PackRefusal::ValueRefusal(_))));
- eprintln!("[DEBUG] Pack atomic writer invalid path refused before file IO");
 }

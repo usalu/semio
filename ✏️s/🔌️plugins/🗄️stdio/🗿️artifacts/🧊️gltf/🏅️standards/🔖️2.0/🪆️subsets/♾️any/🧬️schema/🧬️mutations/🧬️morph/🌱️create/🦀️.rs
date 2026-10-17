@@ -37,11 +37,14 @@ pub fn plan(p: &GltfCreateMorphTargetPayload, base: &GltfSnapshot) -> Result<Glt
     Ok(GltfDiff { meshes: primitive_patch(p.mesh, p.primitive, GltfPrimitiveDiff { targets: Some(rows), ..Default::default() }), ..Default::default() })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn inverse(p: &GltfCreateMorphTargetPayload, base: &GltfSnapshot) -> Vec<super::GltfMutation> {
+pub fn inverse<Op>(p: &GltfCreateMorphTargetPayload, base: &GltfSnapshot) -> Vec<Op>
+where
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::remove_used_extension::RemoveUsedExtensionMutation>,
+{
     if validate(p, base).is_err() {
         return Vec::new();
     }
-    vec![super::delete_morph_target::mutation(super::delete_morph_target::GltfDeleteMorphTargetPayload { mesh: p.mesh, primitive: p.primitive, target: p.position })]
+    vec![crate::standards::v2_0::subsets::any::schema::mutations::delete_morph_target::mutation(crate::standards::v2_0::subsets::any::schema::mutations::delete_morph_target::GltfDeleteMorphTargetPayload { mesh: p.mesh, primitive: p.primitive, target: p.position })]
 }
 
 //#region 🧬️DirectMutation
@@ -54,11 +57,17 @@ pub enum CreateMorphTargetMutation {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn mutation(payload: GltfCreateMorphTargetPayload) -> super::GltfMutation {
-    super::GltfMutation::CreateMorphTarget(CreateMorphTargetMutation::Apply(payload))
+pub fn mutation<Op>(payload: GltfCreateMorphTargetPayload) -> Op
+where
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::create_morph_target::CreateMorphTargetMutation>,
+{
+    Op::from(CreateMorphTargetMutation::Apply(payload))
 }
 
-impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for CreateMorphTargetMutation {
+impl<Op> protocol::MutationKind<GltfSnapshot, Op> for CreateMorphTargetMutation
+where
+    Op: protocol::Mutation<GltfSnapshot, Diff = GltfDiff> + From<CreateMorphTargetMutation>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "morph-target", kind: "create-morph-target", record: "CreatedMorphTarget" };
 
     fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<GltfDiff> {
@@ -70,7 +79,7 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for CreateMorphTa
         }
     }
 
-    fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<super::GltfMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         match self {
             Self::Apply(payload) => Ok(inverse(payload, base)),
         }
@@ -87,7 +96,5 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for CreateMorphTa
 //#endregion 🧬️DirectMutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️t065/🦀️.rs"]
-mod case_t065;
+
 //#endregion 🧪️Tests

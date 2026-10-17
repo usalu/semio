@@ -3,7 +3,6 @@
 //! never `change` — the discriminator is whether the editor ever manipulates the value's interior
 //! piecewise, and it does here.
 
-use crate::schema::mutations::SemioBrepMutation;
 use crate::schema::snapshot::{BrepCurve, SemioBrepSnapshot};
 
 //#region 🔖️Payload
@@ -15,13 +14,16 @@ pub struct ReplaceCurve {
     pub new_curve: BrepCurve,
 }
 
-impl protocol::MutationKind<SemioBrepSnapshot, SemioBrepMutation> for ReplaceCurve {
+impl<Op> protocol::MutationKind<SemioBrepSnapshot, Op> for ReplaceCurve
+where
+    Op: protocol::Mutation<SemioBrepSnapshot, Diff = crate::schema::diff::SemioBrepDiff> + From<ReplaceCurve>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "curve", kind: "replace-curve", record: "ReplacedCurve" };
 
-    fn diff(&self, base: &SemioBrepSnapshot) -> protocol::MutationOutcome<<SemioBrepMutation as protocol::Mutation<SemioBrepSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioBrepSnapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<SemioBrepSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &SemioBrepSnapshot) -> Result<Vec<SemioBrepMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &SemioBrepSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

@@ -23,7 +23,7 @@ fn original_command_checkpoint_cursor_preserves_every_arc1_byte_and_zero_copy_me
    }
    assert_eq!(copied,cursor.written());if cut==usize::MAX{assert!(cursor.is_complete());assert_eq!(cursor.bytes(&target).unwrap(),expected);assert_eq!(copied,expected.len());}
    let before=cursor.written();let(step,heap)=observe_heap_allocations_on_this_thread(||cursor.close_step(RetainedCloneGrant{maximum_items:0,..grant}).unwrap());assert_eq!(step.progress(),Default::default());assert_eq!(cursor.written(),before);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
-   let(step,heap)=observe_heap_allocations_on_this_thread(||cursor.close_step(RetainedCloneGrant{maximum_copy_bytes:0,maximum_capacity_bytes:0,maximum_release_bytes:0,..grant}).unwrap());assert!(cursor.terminal_is_empty());assert_eq!(step.progress().copied_bytes,0);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));let(_,heap)=observe_heap_allocations_on_this_thread(||drop(cursor));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));eprintln!("[DEBUG] original ARC1 bytes={} cut={cut} turns={turns} copy={copied} metadata0 sameWork=true sameTarget=true terminalDrop0",expected.len());
+   let(step,heap)=observe_heap_allocations_on_this_thread(||cursor.close_step(RetainedCloneGrant{maximum_copy_bytes:0,maximum_capacity_bytes:0,maximum_release_bytes:0,..grant}).unwrap());assert!(cursor.terminal_is_empty());assert_eq!(step.progress().copied_bytes,0);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));let(_,heap)=observe_heap_allocations_on_this_thread(||drop(cursor));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
   }
  }
 }

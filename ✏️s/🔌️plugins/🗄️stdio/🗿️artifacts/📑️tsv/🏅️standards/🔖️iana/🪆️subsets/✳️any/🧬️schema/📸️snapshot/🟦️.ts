@@ -28,6 +28,10 @@ type stdioTsvIanaAnySnapshotGuardSizeBounds = { readonly minItems?: number; read
 
 export const stdioTsvIanaAnySnapshotGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : stdioTsvIanaAnySnapshotGuardReject(at, "value is not an object");
+export const stdioTsvIanaAnySnapshotGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) stdioTsvIanaAnySnapshotGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const stdioTsvIanaAnySnapshotGuardArray = (value: unknown, at: string, bounds: stdioTsvIanaAnySnapshotGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return stdioTsvIanaAnySnapshotGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) stdioTsvIanaAnySnapshotGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -58,10 +62,10 @@ export const stdioTsvIanaAnySnapshotGuardConstant = <T extends string | number |
 //#endregion 🚪️Parsers
 
 export function parseTsvSnapshot(value: unknown, at = "$"): TsvSnapshot {
-  const row = stdioTsvIanaAnySnapshotGuardObject(value, at);
+  const row = stdioTsvIanaAnySnapshotGuardClosed(stdioTsvIanaAnySnapshotGuardObject(value, at), at, ["schema", "records", "trailingNewline", "lineEnding"]);
   return {
     schema: stdioTsvIanaAnySnapshotGuardString(row["schema"], `${at}.schema`),
-    records: stdioTsvIanaAnySnapshotGuardArray(row["records"], `${at}.records`).map((item, index) => stdioTsvIanaAnySnapshotGuardArray(item, `${at}.records[${index}]`).map((item, index) => stdioTsvIanaAnySnapshotGuardString(item, `${at}.records[${index}][${index}]`))),
+    records: stdioTsvIanaAnySnapshotGuardArray(row["records"], `${at}.records`).map((item, index) => stdioTsvIanaAnySnapshotGuardArray(item, `${at}.records[${index}]`).map((item1, index1) => stdioTsvIanaAnySnapshotGuardString(item1, `${at}.records[${index}][${index1}]`))),
     trailingNewline: stdioTsvIanaAnySnapshotGuardBoolean(row["trailingNewline"], `${at}.trailingNewline`),
     lineEnding: stdioTsvIanaAnySnapshotGuardMember(row["lineEnding"], `${at}.lineEnding`, ["lf", "crlf"] as const),
   };

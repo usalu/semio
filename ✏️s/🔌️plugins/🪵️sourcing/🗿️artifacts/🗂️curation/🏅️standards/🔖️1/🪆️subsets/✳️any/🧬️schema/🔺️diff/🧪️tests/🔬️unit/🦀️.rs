@@ -1,5 +1,15 @@
+use crate::{CuratedItem, CurationSnapshot};
+use semio_framework_test_fixtures::fixture_text;
+#[allow(unused_imports)]
+use crate::ObjectKindExtra;
+#[allow(unused_imports)]
+use protocol::MutationDiff;
+#[allow(unused_imports)]
+use framework_schema::ArtifactSchema;
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_semio_kit::schema::snapshot::SemioKitSnapshot;
 
-use super::*;
+use crate::standards::v1::subsets::any::schema::diff::*;
 use protocol::DiffAlgebra;
 
 fn curated(delta: CurationCuratedDelta) -> CurationDiff {
@@ -11,7 +21,7 @@ fn item(id: &str, count: u32) -> CuratedItem {
 }
 
 fn fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🔺️diff/🧺️parent-lanes/🔣️.json")).expect("neutral parent lanes")
+    serde_json::from_str(fixture_text!("../../../../🧪️tests/🧫️fixtures/🔺️diff/🧺️parent-lanes/🔣️.json")).expect("neutral parent lanes")
 }
 
 fn state(base: &CurationSnapshot, rows: &serde_json::Value) -> CurationSnapshot {
@@ -34,7 +44,6 @@ fn parent_diff_preserves_child_identity_and_inverts_curated_lanes() {
     assert_eq!(protocol::apply_diff(&diff.inverse(&base), &applied).expect("inverse"), base);
     let native = semio_framework_pack_json::to_json_string(&applied.curated);
     assert_eq!(serde_json::from_str::<serde_json::Value>(&native).expect("independent JSON witness"), vector["final"]);
-    eprintln!("[DEBUG] Sourcing parent diff retained child identity and neutral curated rows={}", applied.curated.len());
 }
 
 #[test]
@@ -50,7 +59,6 @@ fn parent_diff_composition_matches_the_neutral_intermediate_state() {
     composed.absorb(curated(second));
     assert_eq!(protocol::apply_diff(&composed, &base).expect("composed parent delta"), last);
     assert!(composed.catalog.is_none() && composed.stock_extra.is_none());
-    eprintln!("[DEBUG] Sourcing parent diff composition matched independently admitted intermediate and final rows");
 }
 
 #[test]

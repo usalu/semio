@@ -1,6 +1,26 @@
 //! 🔎️ Native array item changes retain the neutral pointer and primitive control bucket.
 
-use super::*;
+use semio_framework::{ActionArgDef, ArgSchema};
+#[cfg(any(test, feature = "artifact-app-testing"))]
+use semio_framework_plugin_decl_app::ArtifactApp;
+#[cfg(any(test, feature = "artifact-app-testing"))]
+use semio_framework_plugin_decl_surface::{ArtifactEditor, ArtifactViewer};
+#[cfg(test)]
+use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use pack::snapshot::ArtifactPack;
+use store::{ArtifactStoreInitializationAuthority, MemberFactory, Mutation, SpaceMember};
+use semio_framework_value::DslValue;
+#[cfg(any(test, feature = "artifact-app-testing"))]
+use semio_framework_plugin_decl_emission::Emit;
+use std::future::Future;
+use semio_framework_ui_locale::LocalizedLabel;
+use protocol::{OpBinary, OpText};
+#[cfg(any(test, feature = "artifact-app-testing"))]
+use semio_framework_plugin_reactor_app::PluginApp;
+use semio_framework_plugin_window_config::WindowConfigOwner;
+use semio_framework_plugin_window_transient::window_transient::WindowTransientOwner;
+use crate::acceptance_change_buckets;
+use semio_framework_ui_contract::*;
 
 fn item_schema(shape: &str) -> ArgSchema {
     let label = || LocalizedLabel::native("Value", "Wert");
@@ -29,6 +49,5 @@ fn history_edit_acceptance_array_slots_retain_all_five_primitive_controls_and_ex
         assert_eq!(DslValue::Array(actual), *case.get("expected").unwrap(), "{}", case.get("id").and_then(DslValue::as_str).unwrap());
         let hidden = ActionArgDef { presentation: Some(semio_framework::ArgPresentation::Hidden), ..input };
         assert!(acceptance_change_buckets(&[hidden], before).iter().all(Vec::is_empty));
-        eprintln!("[DEBUG] generic history array {} retained exact primitive bucket/pointers and hidden-parent refusal", case.get("id").and_then(DslValue::as_str).unwrap());
     }
 }

@@ -2,7 +2,6 @@
 //! adjacency graph never keeps a dangling endpoint.
 
 use crate::diff::Wfc2dDiff;
-use crate::mutations::Wfc2dMutation;
 use crate::schema::snapshot::Wfc2dSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -17,17 +16,23 @@ pub struct DeleteSlot {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn delete_slot(id: String) -> Wfc2dMutation {
-    Wfc2dMutation::DeleteSlot(DeleteSlot { id })
+pub fn delete_slot<Op>(id: String) -> Op
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::delete_slot::DeleteSlot>,
+{
+    Op::from(DeleteSlot { id })
 }
 
-impl MutationKind<Wfc2dSnapshot, Wfc2dMutation> for DeleteSlot {
+impl<Op> MutationKind<Wfc2dSnapshot, Op> for DeleteSlot
+where
+    Op: protocol::Mutation<Wfc2dSnapshot, Diff = Wfc2dDiff> + From<DeleteSlot> + From<crate::standards::v1::subsets::any::schema::mutations::connect_slots::ConnectSlots> + From<crate::standards::v1::subsets::any::schema::mutations::create_slot::CreateSlot>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "slot", kind: "delete-slot", record: "DeletedSlot" };
 
     fn diff(&self, base: &Wfc2dSnapshot) -> protocol::MutationOutcome<Wfc2dDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Wfc2dSnapshot) -> Result<Vec<Wfc2dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Wfc2dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

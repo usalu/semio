@@ -31,6 +31,10 @@ type demonstratorPlaygroundInferenceGuardSizeBounds = { readonly minItems?: numb
 
 export const demonstratorPlaygroundInferenceGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : demonstratorPlaygroundInferenceGuardReject(at, "value is not an object");
+export const demonstratorPlaygroundInferenceGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) demonstratorPlaygroundInferenceGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const demonstratorPlaygroundInferenceGuardArray = (value: unknown, at: string, bounds: demonstratorPlaygroundInferenceGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return demonstratorPlaygroundInferenceGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) demonstratorPlaygroundInferenceGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -61,17 +65,17 @@ export const demonstratorPlaygroundInferenceGuardConstant = <T extends string | 
 //#endregion 🚪️Parsers
 
 export function parsePlaygroundInference(value: unknown, at = "$"): PlaygroundInference {
-  const row = demonstratorPlaygroundInferenceGuardObject(value, at);
+  const row = demonstratorPlaygroundInferenceGuardClosed(demonstratorPlaygroundInferenceGuardObject(value, at), at, ["topology"]);
   return {
     topology: parsePlaygroundTopology(row["topology"], `${at}.topology`),
   };
 }
 
 export function parsePlaygroundTopology(value: unknown, at = "$"): PlaygroundTopology {
-  const row = demonstratorPlaygroundInferenceGuardObject(value, at);
+  const row = demonstratorPlaygroundInferenceGuardClosed(demonstratorPlaygroundInferenceGuardObject(value, at), at, ["topoOrder", "depth", "cycleFree", "nodeCount"]);
   return {
     topoOrder: demonstratorPlaygroundInferenceGuardArray(row["topoOrder"], `${at}.topoOrder`).map((item, index) => demonstratorPlaygroundInferenceGuardString(item, `${at}.topoOrder[${index}]`)),
-    depth: Object.fromEntries(Object.entries(demonstratorPlaygroundInferenceGuardObject(row["depth"], `${at}.depth`)).map(([key, item]) => [key, demonstratorPlaygroundInferenceGuardInteger(item, `${at}.depth.${key}`)])),
+    depth: Object.fromEntries(Object.entries(demonstratorPlaygroundInferenceGuardObject(row["depth"], `${at}.depth`)).map(([key0, value0]) => [key0, demonstratorPlaygroundInferenceGuardInteger(value0, `${at}.depth.${key0}`)])),
     cycleFree: demonstratorPlaygroundInferenceGuardBoolean(row["cycleFree"], `${at}.cycleFree`),
     nodeCount: demonstratorPlaygroundInferenceGuardInteger(row["nodeCount"], `${at}.nodeCount`),
   };

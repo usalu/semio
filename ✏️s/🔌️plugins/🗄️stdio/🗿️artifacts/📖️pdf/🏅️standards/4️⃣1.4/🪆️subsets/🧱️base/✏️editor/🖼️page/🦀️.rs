@@ -94,7 +94,7 @@ pub fn text_edit_mutation(document: &PdfSnapshot, page: u32, item: u32, revision
     Ok(Some(PdfMutation::ReplacePageText(ReplacePageText { index, text: text.into() })))
 }
 
-fn index(args: Option<&DslValue>, key: &str) -> Result<usize, Fault> {
+pub fn index(args: Option<&DslValue>, key: &str) -> Result<usize, Fault> {
     usize::try_from(semio_s_artifact_stdio_contract::window_kit_required_index_argument(args, key)?).map_err(|_| refusal("Page index exceeds this platform"))
 }
 
@@ -137,6 +137,4 @@ pub fn document_layout(main: &str) -> semio_framework_plugin::WindowLayout {
     WindowLayout { root: WindowLayoutRoot::Axis(WindowLayoutAxisNode { kind: "row".into(), size: None, children: vec![stack(0.7, main), stack(0.3, semio_s_artifact_stdio_contract::editing::SNAPSHOT_DETAILS_WINDOW_KIND_ID)] }) }
 }
 
-#[cfg(test)]
-#[path = "\u{1f9ea}️tests/\u{1f52c}️unit/\u{1f980}️.rs"]
-mod tests;
+

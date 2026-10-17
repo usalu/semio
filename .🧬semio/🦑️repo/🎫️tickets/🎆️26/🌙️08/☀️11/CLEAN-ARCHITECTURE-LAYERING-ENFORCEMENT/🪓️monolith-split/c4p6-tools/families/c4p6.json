@@ -1,0 +1,9 @@
+{
+ "name": "c4p6",
+ "crates": [
+  "semio-s-artifact-puzzle-5d",
+  "semio-s-artifact-puzzle-3d-precompute-geometry",
+  "semio-s-artifact-puzzle-3d-precompute-brush"
+ ],
+ "note": "CENSUS4-PKG-6"
+}

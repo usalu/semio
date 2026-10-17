@@ -1,11 +1,12 @@
 //! 📏️ Original retained turns intersect every borrowed incoming native ceiling.
 use crate::{NativeDecodeControl,NativeEncodeControl,ValueRefusalKind};
+use semio_framework_test_fixtures::fixture_text;
 use std::panic::{catch_unwind,AssertUnwindSafe};
 macro_rules! maximum_law{
  ($name:ident,$control:ident)=>{
  #[test]
  fn $name(){
-  let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
+  let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../📏️maximum/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
   for row in fixture["cases"].as_array().unwrap(){
    let id=row["id"].as_str().unwrap();
    let mut events=Vec::new();
@@ -35,7 +36,6 @@ macro_rules! maximum_law{
    assert_eq!(native.maximum_bytes(),native.owned_bytes()+16,"{id} original retained identity survives the borrowed scope");
    drop(native);
    assert!(!events.is_empty());
-   println!("[DEBUG] native scope {} outcome={} owned={}",id,outcome,row["ownedBytes"]);
   }
  }
  };
@@ -48,7 +48,7 @@ macro_rules! detached_receiving_law{
  ($name:ident,$control:ident,$forwarded:path,$recipient:path)=>{
  #[test]
  fn $name(){
-  let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/🔌️detached/🔣️.json")).unwrap();
+  let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../🧪️tests/🧫️fixtures/🔌️detached/🔣️.json")).unwrap();
   let mut recipient=<$recipient>::new();let mut foreign=<$recipient>::new();let mut allocation_calls=Vec::new();let mut observe=|_|true;
   let mut allocate=|next|{allocation_calls.push(next);Ok(())};
   let mut native=$control::new_forwarded(fixture["maximumBytes"].as_u64().unwrap()as usize,&mut observe,&mut allocate);
@@ -62,7 +62,6 @@ macro_rules! detached_receiving_law{
   assert_eq!(native.owned_bytes(),fixture["finalOwnedBytes"].as_u64().unwrap()as usize);assert_eq!(native.maximum_bytes(),fixture["maximumBytes"].as_u64().unwrap()as usize);
   let receipt=match native.detach(){Ok(receipt)=>receipt,Err((error,_))=>panic!("resumed native detach: {error}")};
   assert_eq!(receipt.owned_bytes(),first.len()+second.len());assert_eq!(allocation_calls.len(),2);assert_eq!(allocation_calls[0].owned_bytes,0);assert_eq!(allocation_calls[1].owned_bytes,first.len());
-  println!("[DEBUG] actual detached {} sameRecipient=true wrongRecipientRefused=true first={} cumulative={} originalCeiling={} independentSerde=true",stringify!($control),first.len(),receipt.owned_bytes(),receipt.maximum_bytes());
  }
  };
 }

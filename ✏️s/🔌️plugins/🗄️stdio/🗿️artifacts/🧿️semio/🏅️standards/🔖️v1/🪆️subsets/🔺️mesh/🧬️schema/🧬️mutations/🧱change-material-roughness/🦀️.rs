@@ -1,6 +1,5 @@
 //! 🧱 `change-material-roughness` — sets a material's PBR roughness factor. See `change-material-metallic`'s sibling doc comment; the same decompose reasoning applies symmetrically.
 
-use crate::schema::mutations::SemioMeshMutation;
 use crate::schema::snapshot::SemioMeshSnapshot;
 
 //#region 🔖️Payload
@@ -12,13 +11,16 @@ pub struct ChangeMaterialRoughness {
     pub new_roughness: f32,
 }
 
-impl protocol::MutationKind<SemioMeshSnapshot, SemioMeshMutation> for ChangeMaterialRoughness {
+impl<Op> protocol::MutationKind<SemioMeshSnapshot, Op> for ChangeMaterialRoughness
+where
+    Op: protocol::Mutation<SemioMeshSnapshot, Diff = crate::schema::diff::SemioMeshDiff> + From<ChangeMaterialRoughness>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "material-roughness", kind: "change-material-roughness", record: "ChangedMaterialRoughness" };
 
-    fn diff(&self, base: &SemioMeshSnapshot) -> protocol::MutationOutcome<<SemioMeshMutation as protocol::Mutation<SemioMeshSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioMeshSnapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<SemioMeshSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &SemioMeshSnapshot) -> Result<Vec<SemioMeshMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &SemioMeshSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

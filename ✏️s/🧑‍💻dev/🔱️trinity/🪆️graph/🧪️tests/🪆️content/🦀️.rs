@@ -1,7 +1,15 @@
 use std::collections::BTreeSet;
 use super::{store,protocol};
-use jack::JackWorkingScene;
-use crate::jack::*;
+use super::jack;
+use jack::standards::v1::subsets::any::schema::composition::JackComposition;
+use jack::standards::v1::subsets::any::schema::graph::{Camera, Edge, EntityRef, GraphEffect, Node, Port, parse_port_key, port_key, port_node_id, port_port_id};
+use jack::standards::v1::subsets::any::schema::memory::Graph;
+use jack::standards::v1::subsets::any::schema::content::{JackContentChild, JackContentOwner, JackWorkingScene};
+use jack::standards::v1::subsets::any::schema::snapshot::{JackSnapshot, empty_trinity_graph_snapshot, jack_child_restore_projection};
+use jack::standards::v1::subsets::any::schema::manifest::Manifest;
+use semio_framework_graph_manifest::{PortDirection, PropertyBag, PropertyValue};
+use jack::standards::v1::subsets::any::schema::errors::TrinityRamError;
+use jack::standards::v1::subsets::any::schema::operations::{apply_graph_effects, validate_graph_effect};
 use crate::content::*;
 use crate::SemioJackComposition;
 use crate::jack::editor::jack::*;
@@ -27,9 +35,9 @@ async fn working_scene_belongs_to_the_exact_content_child() {
     let wire = semio_framework_pack_json::to_string(&semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&owned))).into_bytes();
     let reconstructed: JackContentChild = semio_framework_value::FromValue::from_value(semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse_bytes(&wire, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("Jack child wire roundtrip"))).expect("Jack child wire roundtrip");
     let observed = semio_framework_pack_json::json!({
-        "ownedHasScene": owned.local_owner::<jack::JackContentOwner>().is_some(),
+        "ownedHasScene": owned.local_owner::<jack::standards::v1::subsets::any::schema::content::JackContentOwner>().is_some(),
         "wireIdentityMatches": owned == reconstructed,
-        "wireHasScene": reconstructed.local_owner::<jack::JackContentOwner>().is_some(),
+        "wireHasScene": reconstructed.local_owner::<jack::standards::v1::subsets::any::schema::content::JackContentOwner>().is_some(),
     });
 
     assert_eq!(observed, SerdeJsonJackChildOwnerOracle::expected());
@@ -286,7 +294,7 @@ async fn port_key_helpers_handle_malformed_keys() {
 /// before a decoded document may replace the store.
 #[test]
 fn the_child_restore_projection_names_every_declared_child_slot() {
-    let snapshot = jack::empty_trinity_graph_snapshot::<SemioJackComposition>();
-    let projection = jack::jack_child_restore_projection(&snapshot).expect("the loaded-parent child projection");
-    assert_eq!(projection.len(), <jack::JackSnapshot as semio_framework_schema_composition::ArtifactCompositionFields>::child_slots().len());
+    let snapshot = jack::standards::v1::subsets::any::schema::snapshot::empty_trinity_graph_snapshot::<SemioJackComposition>();
+    let projection = jack::standards::v1::subsets::any::schema::snapshot::jack_child_restore_projection(&snapshot).expect("the loaded-parent child projection");
+    assert_eq!(projection.len(), <jack::standards::v1::subsets::any::schema::snapshot::JackSnapshot as semio_framework_schema_composition::ArtifactCompositionFields>::child_slots().len());
 }

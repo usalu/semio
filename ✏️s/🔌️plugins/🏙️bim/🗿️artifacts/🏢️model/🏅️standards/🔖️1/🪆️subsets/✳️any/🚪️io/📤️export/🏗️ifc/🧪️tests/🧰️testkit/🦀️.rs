@@ -1,7 +1,7 @@
 //! 🧰️ Shared helpers of the IFC export tests: the committed house model and readers over the generated Part-21 document.
 
 use super::{model_to_part21, Schema};
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use crate::standards::v1::subsets::any::schema::snapshot::{AreaMeasure, AreaScheme, Axis, Beam, Ceiling, CeilingType, Column, CurtainPanel, CurtainPanelOverride, Layer, LayerFunction, LocationLine, ModelSnapshot, Opening, OpeningKind, Phase, Point2, Profile, Ramp, Slab, Slope, TopConstraint, Vertex, Wall, WallSide, WallSweep, Zone};
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 use semio_s_artifact_stdio_contract::part21::{Part21Document, Part21Instance, Part21Value};
 use std::collections::BTreeMap;
@@ -143,4 +143,122 @@ pub fn location(document: &Part21Document, args: &[Part21Value]) -> Option<Vec<f
     let axis = document.resolve(&placement[1])?.entity("IFCAXIS2PLACEMENT3D")?;
     let point = document.resolve(&axis[0])?.entity("IFCCARTESIANPOINT")?;
     Some(point[0].as_list()?.iter().filter_map(Part21Value::as_real).collect())
+}
+
+/// 🏗️ The house with a leaning column, an arc beam, an inclined beam and a beam joined to two columns, on the storey of its first column.
+pub fn leaning() -> ModelSnapshot {
+    let mut model = house();
+    let template = model.columns.values().next().cloned().expect("a column");
+    let beam_type = model.beams.values().next().map(|beam| beam.beam_type.clone()).expect("a beam");
+    let storey = template.storey.clone();
+    let at = |x: f64, y: f64| Point2 { x, y };
+    model.columns.insert("c-lean".into(), Column { position: at(30.0, 30.0), rotation: 0.0, tilt: Some(Slope { direction: 0.5, angle: 0.2 }), ..template.clone() });
+    model.columns.insert("c-west".into(), Column { position: at(40.0, 30.0), tilt: None, ..template.clone() });
+    model.columns.insert("c-east".into(), Column { position: at(46.0, 30.0), tilt: None, ..template });
+    let beam = |axis: Axis, end_top_offset: Option<f64>| Beam { storey: storey.clone(), beam_type: beam_type.clone(), axis, top_offset: 0.0, end_top_offset, phase: crate::standards::v1::subsets::any::schema::snapshot::Phase::New, name: String::new() };
+    model.beams.insert("b-arc".into(), beam(Axis::Arc { start: at(30.0, 40.0), end: at(36.0, 40.0), bulge: 0.4 }, None));
+    model.beams.insert("b-incline".into(), beam(Axis::Line { start: at(30.0, 50.0), end: at(36.0, 50.0) }, Some(-0.8)));
+    model.beams.insert("b-joined".into(), beam(Axis::Line { start: at(40.0, 30.0), end: at(46.0, 30.0) }, None));
+    model
+}
+
+/// 🪟️ The house whose curtain wall has a door in its first cell and an open second cell.
+pub fn framed() -> ModelSnapshot {
+    let mut model = house();
+    let door_type = model.door_types.keys().next().cloned().expect("a door type");
+    model.curtain_panel_overrides.insert("ov-door".into(), CurtainPanelOverride { curtain: "cw-1".into(), u: 0, v: 0, panel: CurtainPanel::Door { door_type } });
+    model.curtain_panel_overrides.insert("ov-open".into(), CurtainPanelOverride { curtain: "cw-1".into(), u: 1, v: 0, panel: CurtainPanel::Empty });
+    model
+}
+
+/// 🏘️ The house with two zones, two area schemes and finished spaces: the living room in the day zone, the bedroom in the night zone.
+pub fn zoned() -> ModelSnapshot {
+    let mut model = house();
+    model.zones.insert("z-day".into(), Zone { name: "Day zone".into(), category: "Ventilation".into(), occupancy_density: 0.1 });
+    model.zones.insert("z-night".into(), Zone { name: "Night zone".into(), category: "Fire compartment".into(), occupancy_density: 0.05 });
+    model.zones.insert("z-empty".into(), Zone { name: "Empty zone".into(), category: "Tenant".into(), occupancy_density: 0.0 });
+    let living = model.spaces.get_mut("sp-1").expect("the living room");
+    (living.zone, living.floor_finish, living.wall_finish, living.ceiling_finish) = (Some("z-day".into()), Some("m-wood".into()), Some("m-brick".into()), Some("m-conc".into()));
+    let bedroom = model.spaces.get_mut("sp-2").expect("the bedroom");
+    (bedroom.zone, bedroom.floor_finish) = (Some("z-night".into()), Some("m-wood".into()));
+    model.area_schemes.insert("as-nsa".into(), AreaScheme { name: "Net use area".into(), measure: AreaMeasure::Net, usages: vec!["living".into(), "bedroom".into()], zones: Vec::new() });
+    model.area_schemes.insert("as-day".into(), AreaScheme { name: "Day zone area".into(), measure: AreaMeasure::Gross, usages: Vec::new(), zones: vec!["z-day".into()] });
+    model
+}
+
+pub fn vertex(x: f64, y: f64, bulge: f64) -> Vertex {
+    Vertex { point: Point2 { x, y }, bulge }
+}
+
+/// 🛝️ The house with a 10 m ramp on its first storey: 1.5 m landings at both ends, 0.5 m of rise.
+pub fn with_ramp(left: bool) -> ModelSnapshot {
+    let mut model = house();
+    let storey = model.storeys.iter().min_by_key(|(_, storey)| storey.level).map(|(id, _)| id.clone()).expect("a storey");
+    let material = model.materials.keys().next().cloned().expect("a material");
+    model.ramps.insert(
+        "rp-1".into(),
+        Ramp {
+            storey,
+            path: vec![vertex(0.0, -3.0, 0.0), vertex(10.0, -3.0, 0.0)],
+            width: 1.2,
+            landing_start: 1.5,
+            landing_end: 1.5,
+            landing_turn: 1.5,
+            max_slope: 1.0 / 12.0,
+            thickness: 0.2,
+            material,
+            base_offset: 0.0,
+            top: TopConstraint::Unconnected { height: 0.5 },
+            railing_left: left,
+            railing_right: false,
+            name: "Entrance Ramp".into(),
+        },
+    );
+    model
+}
+
+pub fn rectangle(x0: f64, y0: f64, x1: f64, y1: f64) -> Vec<Vertex> {
+    vec![vertex(x0, y0), vertex(x1, y0), vertex(x1, y1), vertex(x0, y1)]
+}
+
+/// 🧗️ The part of the house the import understands plus three walls on the ground storey: one under a level ceiling with a baseboard and a window with a reveal, one under a sloped ceiling (a brep) with a hand rail, one standing on a level slab.
+pub fn with_depth() -> ModelSnapshot {
+    let mut model = house();
+    model.roofs.clear();
+    model.stairs.clear();
+    model.railings.clear();
+    model.curtain_walls.clear();
+    model.slabs.remove("sl-balcony");
+    model.spaces.remove("sp-1");
+    let ground = model.storeys.iter().find(|(_, storey)| storey.level == 0).map(|(id, _)| id.clone()).expect("the ground storey");
+    let material = model.materials.keys().next().cloned().expect("a material");
+    let (wall_type, slab_type, window_type) = (model.wall_types.keys().next().cloned().expect("a wall type"), model.slab_types.keys().next().cloned().expect("a slab type"), model.window_types.keys().next().cloned().expect("a window type"));
+    model.ceiling_types.insert("ct-board".into(), CeilingType { name: "Board".into(), layers: vec![Layer { material: material.clone(), thickness: 0.0125, function: LayerFunction::Finish }] });
+    let ceiling = |boundary: Vec<Vertex>, slope: Option<Slope>, name: &str| Ceiling { storey: ground.clone(), ceiling_type: "ct-board".into(), boundary, holes: Vec::new(), offset: 0.2, slope, name: name.into() };
+    model.ceilings.insert("ce-flat".into(), ceiling(rectangle(100.0, 0.0, 108.0, 6.0), None, "Flat"));
+    model.ceilings.insert("ce-raked".into(), ceiling(rectangle(100.0, 10.0, 108.0, 16.0), Some(Slope { direction: 0.0, angle: 0.1 }), "Raked"));
+    model.slabs.insert("sl-foot".into(), Slab { storey: ground.clone(), slab_type, boundary: rectangle(100.0, 20.0, 108.0, 26.0), holes: Vec::new(), offset: 0.0, slope: None, phase: Phase::New, name: "Foot".into() });
+    let wall = |y: f64, top: TopConstraint, base_slab: Option<&str>| Wall {
+        storey: ground.clone(),
+        wall_type: wall_type.clone(),
+        axis: Axis::Line { start: Point2 { x: 100.0, y }, end: Point2 { x: 108.0, y } },
+        location: LocationLine::Center,
+        base_offset: if base_slab.is_some() { 0.05 } else { 0.0 },
+        top,
+        phase: Phase::New,
+        start_join: None,
+        end_join: None,
+        name: String::new(),
+        base_slab: base_slab.map(str::to_string),
+    };
+    model.walls.insert("w-ceil".into(), wall(3.0, TopConstraint::Ceiling { ceiling: "ce-flat".into(), offset: 0.05 }, None));
+    model.walls.insert("w-raked".into(), wall(13.0, TopConstraint::Ceiling { ceiling: "ce-raked".into(), offset: 0.0 }, None));
+    model.walls.insert("w-foot".into(), wall(23.0, TopConstraint::StoreyTop { offset: 0.0 }, Some("sl-foot")));
+    model.wall_sweeps.insert("ws-board".into(), WallSweep { host: "w-ceil".into(), side: WallSide::Left, profile: Profile::Rectangle { width: 0.02, depth: 0.1 }, height: 0.0, inset: 0.0, material: material.clone(), name: "Baseboard".into() });
+    model.wall_sweeps.insert("ws-rail".into(), WallSweep { host: "w-raked".into(), side: WallSide::Right, profile: Profile::Rectangle { width: 0.05, depth: 0.04 }, height: 0.9, inset: 0.01, material: material.clone(), name: String::new() });
+    model.openings.insert(
+        "o-rev".into(),
+        Opening { host: "w-ceil".into(), kind: OpeningKind::Window { window_type }, offset: 4.0, sill_override: None, width: None, height: None, flip_hand: false, flip_facing: false, name: String::new(), reveal_depth: Some(0.1), reveal_material: Some(material) },
+    );
+    model
 }

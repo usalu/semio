@@ -1,0 +1,46 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖥️Board2dHost/🟦️.tsx",
+ "importers": "auto",
+ "children": [
+  {
+   "dir": "🔬️board-parsing",
+   "doc": "/** 🔬️ Board2dHost parsing: the board camera, event row and drop payload types, the vitals, kind domain and hover helpers, the status json, the float32 decimal, the camera, catalogue drag, transform flag, brush size and granularity parsers, the hover and camera action args and the suggestion menu shapes. */",
+   "lines": [
+    [
+     44,
+     315
+    ]
+   ]
+  },
+  {
+   "dir": "📡️board-events",
+   "doc": "/** 📡️ Board2dHost events: the transient and flush-now event names, the gesture id and row camera, the event coalescing and the live mirror mutations collected from the board events. */",
+   "lines": [
+    [
+     323,
+     434
+    ]
+   ]
+  },
+  {
+   "dir": "📍️drop-and-camera",
+   "doc": "/** 📍️ Board2dHost drop and camera: the entity flag, the catalogue drop preview json and drop host registry, the screen and world conversion and the pinch camera. */",
+   "lines": [
+    [
+     438,
+     532
+    ]
+   ]
+  },
+  {
+   "dir": "🔄️session-sync",
+   "doc": "/** 🔄️ Board2dHost session sync: the application of events, highlights and snapshots to the board session and the peer registry with its gesture ownership, live mirror pushes and drop preview pushes. */",
+   "lines": [
+    [
+     536,
+     656
+    ]
+   ]
+  }
+ ]
+}

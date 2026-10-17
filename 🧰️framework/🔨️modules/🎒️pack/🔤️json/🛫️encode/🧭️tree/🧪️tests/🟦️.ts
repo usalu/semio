@@ -48,7 +48,6 @@ test("native canonical paged traversal retains original byte prefixes and closes
   expect(source).not.toContain("with_capacity");
   expect(source).toContain("canonical_escaped_byte");
   expect(source).not.toContain("let mut escape = [0; 6]");
-  console.log("[DEBUG] canonical original Unicode/NUL JSON byte prefixes and SQLite exact alias conservation at depths 0/1/80/257; tiny grants unchanged");
 });
 
 test("original CQT header transfer agrees with strict neutral authority and SQLite alias identity",()=>{

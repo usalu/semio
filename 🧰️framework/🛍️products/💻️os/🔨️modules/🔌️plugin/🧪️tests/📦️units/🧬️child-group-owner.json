@@ -1,0 +1,180 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "package",
+    "target",
+    "host",
+    "original",
+    "canonicalModuleSha256",
+    "oldActiveInstances",
+    "newUniqueObligations",
+    "oldLawAssertions",
+    "newLawAssertions",
+    "debugStatements",
+    "laws",
+    "remaining",
+    "closure",
+    "dependencies"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "package": {
+      "const": "semio-framework-plugin-child-group-wire-laws"
+    },
+    "target": {
+      "type": "string"
+    },
+    "host": {
+      "type": "string"
+    },
+    "original": {
+      "type": "string"
+    },
+    "canonicalModuleSha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "oldActiveInstances": {
+      "const": 32
+    },
+    "newUniqueObligations": {
+      "const": 16
+    },
+    "oldLawAssertions": {
+      "const": 872
+    },
+    "newLawAssertions": {
+      "const": 436
+    },
+    "debugStatements": {
+      "const": 19
+    },
+    "laws": {
+      "type": "array",
+      "minItems": 16,
+      "maxItems": 16,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "canonicalSha256",
+          "originalSha256",
+          "assertions",
+          "debugOnlyRemoved"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "canonicalSha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "originalSha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "assertions": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "debugOnlyRemoved": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "remaining": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path",
+          "sha256",
+          "functions"
+        ],
+        "properties": {
+          "path": {
+            "type": "string"
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "functions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "name",
+                "sha256"
+              ],
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "sha256": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "closure": {
+      "type": "array",
+      "minItems": 21,
+      "maxItems": 21,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path",
+          "bytes",
+          "nonblank",
+          "sha256"
+        ],
+        "properties": {
+          "path": {
+            "type": "string"
+          },
+          "bytes": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "nonblank": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          }
+        }
+      }
+    },
+    "dependencies": {
+      "type": "array",
+      "minItems": 14,
+      "maxItems": 14,
+      "uniqueItems": true,
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

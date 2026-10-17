@@ -34,3 +34,4 @@ semio-framework-value = { path = "../../../../../🌱️value/📦️packages/�
 semio-framework-async-macros = { path = "../../../../../⏳️async/✨️macros/📦️packages/🦀️rust" }
 semio-framework-trace = { path = "../../../../../⏱️trace/📦️packages/🦀️rust" }
 serde_json = { version = "1.0.140", features = ["float_roundtrip"] }
+semio-framework-pack-format = { path = "../../../📦️packages/🦀️rust", features = ["testkit"] }

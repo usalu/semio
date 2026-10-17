@@ -1,0 +1,13 @@
+{
+ "name": "sh7energy",
+ "crates": [
+  "semio-s-artifact-energy-model-schema"
+ ],
+ "base": {
+  "rev": "b84bf526c7b",
+  "crates": [
+   "semio-s-artifact-energy-model-schema"
+  ]
+ },
+ "note": "SPLIT-HARDENING-7: energy model schema descriptor concat"
+}

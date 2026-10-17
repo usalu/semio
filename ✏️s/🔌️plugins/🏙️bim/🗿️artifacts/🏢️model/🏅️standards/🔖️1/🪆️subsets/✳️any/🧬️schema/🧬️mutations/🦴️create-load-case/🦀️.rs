@@ -2,8 +2,8 @@
 
 //#region 🔖️Leaves
 #[path = "🦠️mutation/🦀️.rs"]
-mod mutation;
-pub use mutation::*;
+mod component;
+pub use component::*;
 #[path = "🔺️diff/🦀️.rs"]
 pub mod diff;
 #[path = "↩️inverse/🦀️.rs"]

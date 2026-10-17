@@ -119,9 +119,6 @@
       problems.push(`schemaFormats["${formatId}"].fieldCasing must be "snake" or "camel", got ${JSON.stringify(format.fieldCasing)}.`);
     }
   }
-  const normativeSchemaLeaf = schemaFormats["� ${JSON.stringify(format.fieldCasing)}.`);
-    }
-  }
   const normativeSchemaLeaf = schemaFormats["🔣️jsonschema"]?.leafFilename;
   for (const [facet, specName] of Object.entries(taxonomy.artifactSchemaSpecFilenames ?? {})) {
     if (!(facet === "🧬️schema" || artifactFacetPathIsDeclared(facet, taxonomy))) {

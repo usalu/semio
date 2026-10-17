@@ -2,7 +2,7 @@
  *
  * @see ../../📜️script.ts — the package script that registers the commands of this module
  */
-import { unsignedLebOracleV1 } from "../../../../../../🔨️modules/🎒️pack/📐️format/🧪️tests/🔮️oracles/🔢️leb/🟦️.ts";
+import { unsignedLebOracleV1 } from "@semio-tech/framework-pack-ts/format/testing/oracles/leb";
 import { scriptCompilerAdmissionControlV1 as exactCargoCallerControlV1 } from "@semio-tech/process/compiler-capacity";
 import { configuredExactCargoLawPolicyV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
 import assert from "node:assert/strict";
@@ -65,7 +65,6 @@ export class WalWriterAuthorityCheckScript extends BundleScript {
     assert(writerDeferredReleaseSource.includes("fn request_controller(") && writerDeferredReleaseSource.includes("fn notify_faults("));
     const missingWriter = writerDeferredWake.runtimeMarkers.writer.filter((marker: string) => !writerDeferredReleaseSource.includes(marker));
     assert.deepEqual(missingWriter, [], `missing writer runtime markers: ${missingWriter.join(", ")}`);
-    console.log(`[DEBUG] writer-deferred-wake-independent-oracle: behavior-oracles=retained cases=${writerDeferredWake.cases.length} capacities=64*32*1 runtime-markers=${writerDeferredWake.runtimeMarkers.writer.length}`);
     const remoteOwner = join(owner, "🧪️tests/🧫️fixtures/🌐️remote-guard");
     const remoteFixture = JSON.parse(readFileSync(join(remoteOwner, "🔣️.json"), "utf8"));
     

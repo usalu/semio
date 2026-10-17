@@ -1,4 +1,4 @@
-import { valueIntrinsicMediaFixture as intrinsicCorpus } from "../../../../🎒️pack/🧪️tests/🧫️fixtures/🟦️.ts";
+import { valueIntrinsicMediaFixture as intrinsicCorpus } from "@semio-tech/framework-pack-ts/testing/fixtures";
 import { test, expect } from "bun:test";
 import { Database } from "bun:sqlite";
 import Ajv from "ajv/dist/2020";

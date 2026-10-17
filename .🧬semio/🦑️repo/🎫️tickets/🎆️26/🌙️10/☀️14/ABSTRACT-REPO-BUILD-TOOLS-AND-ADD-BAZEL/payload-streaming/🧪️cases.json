@@ -1,0 +1,702 @@
+{
+  "version": 1,
+  "purpose": "prospective-payload-stream-model",
+  "cases": [
+    {
+      "id": "strict-empty",
+      "purpose": "strict-current-payload",
+      "authority": "actual-committed-allocation",
+      "scopeBytes": 8388608,
+      "allocationBytes": 4194304,
+      "files": [],
+      "style": "full",
+      "expected": {
+        "decision": "accept-model",
+        "logicalBytes": 0,
+        "readAttempts": 0,
+        "quanta": 0
+      }
+    },
+    {
+      "id": "strict-one-empty",
+      "purpose": "strict-current-payload",
+      "authority": "actual-committed-allocation",
+      "scopeBytes": 8388608,
+      "allocationBytes": 4194304,
+      "files": [
+        0
+      ],
+      "style": "full",
+      "expected": {
+        "decision": "accept-model",
+        "logicalBytes": 0,
+        "readAttempts": 1,
+        "quanta": 1
+      }
+    },
+    {
+      "id": "strict-sixty-four-empty",
+      "purpose": "strict-current-payload",
+      "authority": "actual-committed-allocation",
+      "scopeBytes": 8388608,
+      "allocationBytes": 4194304,
+      "files": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "style": "full",
+      "expected": {
+        "decision": "refuse-bound",
+        "logicalBytes": 0,
+        "readAttempts": 64,
+        "quanta": 2
+      }
+    },
+    {
+      "id": "strict-thirty-one-full",
+      "purpose": "strict-current-payload",
+      "authority": "actual-committed-allocation",
+      "scopeBytes": 8388608,
+      "allocationBytes": 4194304,
+      "files": [
+        2031616
+      ],
+      "style": "full",
+      "expected": {
+        "decision": "accept-model",
+        "logicalBytes": 2031616,
+        "readAttempts": 32,
+        "quanta": 1
+      }
+    },
+    {
+      "id": "strict-thirty-two-full",
+      "purpose": "strict-current-payload",
+      "authority": "actual-committed-allocation",
+      "scopeBytes": 8388608,
+      "allocationBytes": 4194304,
+      "files": [
+        2097152
+      ],
+      "style": "full",
+      "expected": {
+        "decision": "refuse-bound",
+        "logicalBytes": 2097152,
+        "readAttempts": 33,
+        "quanta": 2
+      }
+    },
+    {
+      "id": "strict-two-mebibyte-plus-one",
+      "purpose": "strict-current-payload",
+      "authority": "actual-committed-allocation",
+      "scopeBytes": 8388608,
+      "allocationBytes": 4194304,
+      "files": [
+        2097153
+      ],
+      "style": "full",
+      "expected": {
+        "decision": "refuse-bound",
+        "logicalBytes": 2097153,
+        "readAttempts": 34,
+        "quanta": 2
+      }
+    },
+    {
+      "id": "strict-two-sixteen-chunk-files",
+      "purpose": "strict-current-payload",
+      "authority": "actual-committed-allocation",
+      "scopeBytes": 8388608,
+      "allocationBytes": 4194304,
+      "files": [
+        1048576,
+        1048576
+      ],
+      "style": "full",
+      "expected": {
+        "decision": "refuse-bound",
+        "logicalBytes": 2097152,
+        "readAttempts": 34,
+        "quanta": 2
+      }
+    },
+    {
+      "id": "strict-one-byte-short-reads",
+      "purpose": "strict-current-payload",
+      "authority": "actual-committed-allocation",
+      "scopeBytes": 1024,
+      "allocationBytes": 1024,
+      "files": [
+        97,
+        31,
+        0
+      ],
+      "style": "one-byte",
+      "expected": {
+        "decision": "refuse-bound",
+        "logicalBytes": 128,
+        "readAttempts": 131,
+        "quanta": 5
+      }
+    },
+    {
+      "id": "strict-logical-overflow",
+      "purpose": "strict-current-payload",
+      "authority": "actual-committed-allocation",
+      "scopeBytes": 1024,
+      "allocationBytes": 100,
+      "files": [
+        101
+      ],
+      "style": "full",
+      "expected": {
+        "decision": "refuse-bound",
+        "logicalBytes": 101,
+        "readAttempts": 2,
+        "quanta": 1
+      }
+    },
+    {
+      "id": "strict-independent-absent-journal",
+      "purpose": "strict-current-payload",
+      "authority": "actual-independent-leaf",
+      "scopeBytes": 4194304,
+      "allocationBytes": null,
+      "files": [
+        2097152
+      ],
+      "style": "full",
+      "expected": {
+        "decision": "refuse-bound",
+        "logicalBytes": 2097152,
+        "readAttempts": 33,
+        "quanta": 2
+      }
+    },
+    {
+      "id": "strict-scope-smaller-than-allocation",
+      "purpose": "strict-current-payload",
+      "authority": "actual-committed-allocation",
+      "scopeBytes": 100,
+      "allocationBytes": 200,
+      "files": [
+        101
+      ],
+      "style": "full",
+      "expected": {
+        "decision": "refuse-bound",
+        "logicalBytes": 101,
+        "readAttempts": 2,
+        "quanta": 1
+      }
+    },
+    {
+      "id": "strict-allocation-smaller-than-scope",
+      "purpose": "strict-current-payload",
+      "authority": "actual-committed-allocation",
+      "scopeBytes": 200,
+      "allocationBytes": 100,
+      "files": [
+        101
+      ],
+      "style": "full",
+      "expected": {
+        "decision": "refuse-bound",
+        "logicalBytes": 101,
+        "readAttempts": 2,
+        "quanta": 1
+      }
+    },
+    {
+      "id": "strict-exact-byte-and-eof-bound",
+      "purpose": "strict-current-payload",
+      "authority": "actual-independent-leaf",
+      "scopeBytes": 64,
+      "allocationBytes": null,
+      "files": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "style": "one-byte",
+      "expected": {
+        "decision": "refuse-bound",
+        "logicalBytes": 64,
+        "readAttempts": 128,
+        "quanta": 4
+      }
+    },
+    {
+      "id": "stream-empty",
+      "purpose": "current-bounded-complete-payload-stream",
+      "authority": "actual-committed-allocation",
+      "scopeBytes": 8388608,
+      "allocationBytes": 4194304,
+      "files": [],
+      "style": "full",
+      "expected": {
+        "decision": "accept-model",
+        "logicalBytes": 0,
+        "readAttempts": 0,
+        "quanta": 0
+      }
+    },
+    {
+      "id": "stream-one-empty",
+      "purpose": "current-bounded-complete-payload-stream",
+      "authority": "actual-committed-allocation",
+      "scopeBytes": 8388608,
+      "allocationBytes": 4194304,
+      "files": [
+        0
+      ],
+      "style": "full",
+      "expected": {
+        "decision": "accept-model",
+        "logicalBytes": 0,
+        "readAttempts": 1,
+        "quanta": 1
+      }
+    },
+    {
+      "id": "stream-sixty-four-empty",
+      "purpose": "current-bounded-complete-payload-stream",
+      "authority": "actual-committed-allocation",
+      "scopeBytes": 8388608,
+      "allocationBytes": 4194304,
+      "files": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "style": "full",
+      "expected": {
+        "decision": "accept-model",
+        "logicalBytes": 0,
+        "readAttempts": 64,
+        "quanta": 2
+      }
+    },
+    {
+      "id": "stream-thirty-one-full",
+      "purpose": "current-bounded-complete-payload-stream",
+      "authority": "actual-committed-allocation",
+      "scopeBytes": 8388608,
+      "allocationBytes": 4194304,
+      "files": [
+        2031616
+      ],
+      "style": "full",
+      "expected": {
+        "decision": "accept-model",
+        "logicalBytes": 2031616,
+        "readAttempts": 32,
+        "quanta": 1
+      }
+    },
+    {
+      "id": "stream-thirty-two-full",
+      "purpose": "current-bounded-complete-payload-stream",
+      "authority": "actual-committed-allocation",
+      "scopeBytes": 8388608,
+      "allocationBytes": 4194304,
+      "files": [
+        2097152
+      ],
+      "style": "full",
+      "expected": {
+        "decision": "accept-model",
+        "logicalBytes": 2097152,
+        "readAttempts": 33,
+        "quanta": 2
+      }
+    },
+    {
+      "id": "stream-two-mebibyte-plus-one",
+      "purpose": "current-bounded-complete-payload-stream",
+      "authority": "actual-committed-allocation",
+      "scopeBytes": 8388608,
+      "allocationBytes": 4194304,
+      "files": [
+        2097153
+      ],
+      "style": "full",
+      "expected": {
+        "decision": "accept-model",
+        "logicalBytes": 2097153,
+        "readAttempts": 34,
+        "quanta": 2
+      }
+    },
+    {
+      "id": "stream-two-sixteen-chunk-files",
+      "purpose": "current-bounded-complete-payload-stream",
+      "authority": "actual-committed-allocation",
+      "scopeBytes": 8388608,
+      "allocationBytes": 4194304,
+      "files": [
+        1048576,
+        1048576
+      ],
+      "style": "full",
+      "expected": {
+        "decision": "accept-model",
+        "logicalBytes": 2097152,
+        "readAttempts": 34,
+        "quanta": 2
+      }
+    },
+    {
+      "id": "stream-one-byte-short-reads",
+      "purpose": "current-bounded-complete-payload-stream",
+      "authority": "actual-committed-allocation",
+      "scopeBytes": 1024,
+      "allocationBytes": 1024,
+      "files": [
+        97,
+        31,
+        0
+      ],
+      "style": "one-byte",
+      "expected": {
+        "decision": "accept-model",
+        "logicalBytes": 128,
+        "readAttempts": 131,
+        "quanta": 5
+      }
+    },
+    {
+      "id": "stream-logical-overflow",
+      "purpose": "current-bounded-complete-payload-stream",
+      "authority": "actual-committed-allocation",
+      "scopeBytes": 1024,
+      "allocationBytes": 100,
+      "files": [
+        101
+      ],
+      "style": "full",
+      "expected": {
+        "decision": "refuse-bound",
+        "logicalBytes": 101,
+        "readAttempts": 2,
+        "quanta": 1
+      }
+    },
+    {
+      "id": "stream-independent-absent-journal",
+      "purpose": "current-bounded-complete-payload-stream",
+      "authority": "actual-independent-leaf",
+      "scopeBytes": 4194304,
+      "allocationBytes": null,
+      "files": [
+        2097152
+      ],
+      "style": "full",
+      "expected": {
+        "decision": "accept-model",
+        "logicalBytes": 2097152,
+        "readAttempts": 33,
+        "quanta": 2
+      }
+    },
+    {
+      "id": "stream-scope-smaller-than-allocation",
+      "purpose": "current-bounded-complete-payload-stream",
+      "authority": "actual-committed-allocation",
+      "scopeBytes": 100,
+      "allocationBytes": 200,
+      "files": [
+        101
+      ],
+      "style": "full",
+      "expected": {
+        "decision": "refuse-bound",
+        "logicalBytes": 101,
+        "readAttempts": 2,
+        "quanta": 1
+      }
+    },
+    {
+      "id": "stream-allocation-smaller-than-scope",
+      "purpose": "current-bounded-complete-payload-stream",
+      "authority": "actual-committed-allocation",
+      "scopeBytes": 200,
+      "allocationBytes": 100,
+      "files": [
+        101
+      ],
+      "style": "full",
+      "expected": {
+        "decision": "refuse-bound",
+        "logicalBytes": 101,
+        "readAttempts": 2,
+        "quanta": 1
+      }
+    },
+    {
+      "id": "stream-exact-byte-and-eof-bound",
+      "purpose": "current-bounded-complete-payload-stream",
+      "authority": "actual-independent-leaf",
+      "scopeBytes": 64,
+      "allocationBytes": null,
+      "files": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "style": "one-byte",
+      "expected": {
+        "decision": "accept-model",
+        "logicalBytes": 64,
+        "readAttempts": 128,
+        "quanta": 4
+      }
+    }
+  ]
+}

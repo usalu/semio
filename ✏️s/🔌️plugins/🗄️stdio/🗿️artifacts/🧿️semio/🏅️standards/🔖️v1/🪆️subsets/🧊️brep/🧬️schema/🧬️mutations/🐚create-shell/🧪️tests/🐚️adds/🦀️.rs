@@ -12,21 +12,22 @@ use crate::schema::snapshot::SemioBrepSnapshot;
 use crate::io::text::snapshot::decode_semio_brep_snapshot_json;
 use pack::value::ToValue;
 use protocol::Mutation;
+use semio_framework_test_fixtures::fixture_text;
 
-const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🐚create-shell/🐚️adds/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🐚create-shell/🐚️adds/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🐚create-shell/🐚️adds/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🐚create-shell/🐚️adds/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🐚create-shell/🐚️adds/🎯️outcome/🔣️.json");
+static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🐚create-shell/🐚️adds/📸️snapshot/⬅️before/🔣️.json"));
+static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🐚create-shell/🐚️adds/📸️snapshot/➡️after/🔣️.json"));
+static MUTATION: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🐚create-shell/🐚️adds/🦠️mutation/🔣️.json"));
+static DIFF: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🐚create-shell/🐚️adds/🔺️diff/🔣️.json"));
+static OUTCOME: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🐚create-shell/🐚️adds/🎯️outcome/🔣️.json"));
 
 fn before() -> SemioBrepSnapshot {
-    decode_semio_brep_snapshot_json(BEFORE).expect("create-shell before snapshot decodes")
+    decode_semio_brep_snapshot_json((*BEFORE)).expect("create-shell before snapshot decodes")
 }
 fn expected_after() -> SemioBrepSnapshot {
-    decode_semio_brep_snapshot_json(AFTER).expect("create-shell after snapshot decodes")
+    decode_semio_brep_snapshot_json((*AFTER)).expect("create-shell after snapshot decodes")
 }
 fn mutation() -> SemioBrepMutation {
-    decode_semio_brep_mutation_json(MUTATION).expect("create-shell mutation decodes")
+    decode_semio_brep_mutation_json((*MUTATION)).expect("create-shell mutation decodes")
 }
 
 /// ▶️ A second shell appears over the same face, with the opposite sense.
@@ -60,21 +61,21 @@ async fn the_undo_delete_shell_removes_the_second_shell_again() {
 /// 🔣️ Snapshots and the payload are canonical — a shell member encodes as `{"face":…,"orientation":…}`, never as a bare pair.
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
-    for (label, text) in [("before", BEFORE), ("after", AFTER)] {
+    for (label, text) in [("before", (*BEFORE)), ("after", (*AFTER))] {
         let decoded = decode_semio_brep_snapshot_json(text).expect("snapshot decodes");
         let reencoded = semio_framework_pack_json::from_dsl_value(&decoded.to_value());
         let original = semio_framework_pack_json::parse(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot reparses");
         assert_eq!(reencoded, original, "create-shell/adds-a-second-shell-that-reuses-the-face-with-flipped-sense: committed {label} JSON is not canonical");
     }
     let reencoded = semio_framework_pack_json::from_dsl_value(&mutation().to_value());
-    let original = semio_framework_pack_json::parse(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("create-shell mutation reparses");
+    let original = semio_framework_pack_json::parse((*MUTATION), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("create-shell mutation reparses");
     assert_eq!(reencoded, original, "create-shell/adds-a-second-shell-that-reuses-the-face-with-flipped-sense: committed mutation JSON is not canonical");
 }
 
 /// 🎯️ Declared `applied`: the shell id is free, so the FATAL mutation.duplicate-id branch must not fire
 #[semio_framework_async_macros::async_test]
 async fn declared_outcome_holds_as_committed() {
-    let outcome = semio_framework_pack_json::parse(OUTCOME, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("outcome decodes");
+    let outcome = semio_framework_pack_json::parse((*OUTCOME), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("outcome decodes");
     assert_eq!(outcome.get("status").and_then(semio_framework_pack_json::Value::as_str), Some("applied"), "create-shell/adds-a-second-shell-that-reuses-the-face-with-flipped-sense: this case is declared applied");
     let produced = mutation().diff(&before());
     assert!(produced.messages().is_empty(), "creating a shell with a fresh id must raise no diagnostics");
@@ -86,7 +87,7 @@ async fn produces_committed_diff() {
     let base = before();
     let outcome = <SemioBrepMutation as Mutation<SemioBrepSnapshot>>::diff(&mutation(), &base);
     let produced = semio_framework_pack_json::from_dsl_value(&outcome.diff().to_value());
-    let committed = semio_framework_pack_json::parse(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
+    let committed = semio_framework_pack_json::parse((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
     assert_eq!(produced, committed, "create-shell/adds-a-second-shell-that-reuses-the-face-with-flipped-sense: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
 
@@ -94,21 +95,21 @@ async fn produces_committed_diff() {
 /// allowed to touch appears in it at all.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical_and_narrowly_scoped() {
-    let decoded = decode_semio_brep_diff_json(DIFF).expect("committed create-shell diff decodes");
+    let decoded = decode_semio_brep_diff_json((*DIFF)).expect("committed create-shell diff decodes");
 
     let shells = decoded.shells.as_ref().expect("create-shell must write the shells triple");
     assert_eq!(shells.added.len(), 1, "exactly one shell is added");
     assert!(shells.removed.is_empty() && shells.modified.is_empty(), "a create neither removes nor modifies");
     assert!(decoded.vertices.is_none() && decoded.edges.is_none() && decoded.loops.is_none() && decoded.faces.is_none() && decoded.solids.is_none(), "no other collection may appear in the diff");
     let reencoded = semio_framework_pack_json::from_dsl_value(&decoded.to_value());
-    let original = semio_framework_pack_json::parse(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff reparses");
+    let original = semio_framework_pack_json::parse((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff reparses");
     assert_eq!(reencoded, original, "create-shell/adds-a-second-shell-that-reuses-the-face-with-flipped-sense: committed diff JSON is not canonical");
 }
 
 /// 🩹 Applying the committed diff to `before` yields `after`.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded = decode_semio_brep_diff_json(DIFF).expect("committed create-shell diff decodes");
+    let decoded = decode_semio_brep_diff_json((*DIFF)).expect("committed create-shell diff decodes");
     let produced = protocol::apply_diff(&decoded, &before()).expect("committed create-shell diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "create-shell/adds-a-second-shell-that-reuses-the-face-with-flipped-sense: committed diff did not carry before to after");
 }

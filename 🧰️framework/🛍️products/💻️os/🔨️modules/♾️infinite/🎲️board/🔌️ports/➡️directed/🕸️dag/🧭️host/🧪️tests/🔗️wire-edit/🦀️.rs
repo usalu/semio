@@ -6,18 +6,15 @@ use semio_framework_os_infinite_board_dag_graph::entity_screen_json;
 use semio_framework_os_infinite_board_dag_host::{DagHost, derive_pointer_plan, minimap_widget_layout, screen_pointer_gesture_begins_at};
 use graph::HandleRole;
 use semio_framework_canvas::Point;
+use semio_framework_test_fixtures::fixture_text;
 use serde_json::Value;
 use ::{graph, semio_framework_canvas as canvas};
 use semio_framework_os_infinite_directed_presentation::*;
 
 /// 📖️ Reads one test input at run time (relative to the package manifest) so it does not count as an embedded compile input.
-fn read_static(path_from_manifest: &str) -> &'static str {
-    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(path_from_manifest);
-    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("test input {}: {error}", path.display())).into_boxed_str())
-}
 
 fn law() -> Value {
-    serde_json::from_str(read_static("../../../🧪️tests/🧫️fixtures/🔗️wire-edit/🔣️.json")).expect("wire edit fixture")
+    serde_json::from_str(fixture_text!("../../../🧪️tests/🧫️fixtures/🔗️wire-edit/🔣️.json")).expect("wire edit fixture")
 }
 
 fn ports(value: &Value, key: &str) -> Vec<IoPortSpec> {

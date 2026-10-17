@@ -33,7 +33,6 @@ test("Rust and native closure memo hits retain every receiving scope's source fa
   writeFileSync(join(root,row.manifest),row.mutation);
   const changed=await native();expect(changed.value).toEqual(row.nativeChanged);expect(await api.observationsHold(before.observations)).toBe(false);expect(await api.observationsHold(changed.observations)).toBe(true);
   const oracle=createRequire(import.meta.url)("smol-toml").parse(row.mutation);expect(oracle.dependencies.c.path).toBe("../"+row.nativeChanged.at(-1));
-  console.log("[DEBUG] Rust and native memo replay retained current complete source observations");
  }finally{rmSync(root,{recursive:true,force:true});}
 });
 
@@ -51,7 +50,6 @@ test("invocation memo replays complete current observations into every receiving
   const changed=await api.captureObservedSourceInputsV1(compute,undefined,false);counts.push(calls);
   expect(changed.value).toEqual(JSON.parse(row.after));expect(counts).toEqual(row.expectedCalls);
   expect(await api.observationsHold(first.observations)).toBe(false);expect(await api.observationsHold(changed.observations)).toBe(true);
-  console.log("[DEBUG] invocation memo recomputations "+JSON.stringify(counts));
  }finally{rmSync(root,{recursive:true,force:true});}
 });
 
@@ -64,7 +62,6 @@ test("project observations await asynchronous JSON computation before admission"
   const first=await api.captureObservedSourceInputsV1(compute,undefined,false),second=await api.captureObservedSourceInputsV1(compute,undefined,false);
   expect(first.value).toEqual(row.projectResult);expect(second.value).toEqual(row.projectResult);expect(second.observations).toEqual(first.observations);
   expect(api.projectInferenceCountsV1()[root]).toBe(1);
-  console.log("[DEBUG] asynchronous project image admitted after observed read");
  }finally{rmSync(root,{recursive:true,force:true});}
 });
 
@@ -102,7 +99,6 @@ for (const scenario of fixture.scenarios) test(`observed inference reuse: ${scen
   const second = await observeInference({ cachePath, key: ["law", scenario.id] }, compute);
   expect(computations).toBe(scenario.expected === "hit" ? 1 : 2);
   expect(second).toEqual(probe(root));
-  console.log(`[DEBUG] inference observation ${scenario.id}: ${scenario.expected} computations=${computations} observations=${header.observations.length}`);
   rmSync(root, { recursive: true, force: true });
 }, 20_000);
 
@@ -206,7 +202,7 @@ test("cancelled observation validation refuses before probing",async()=>{
 
 test("neutral changed bytes report the original stale fact without admitting a mixed image",async()=>{
  const root=workspace(),path=join(root,"a/one.txt"),changed:any[]=[];
- try{const captured=await captureObservedSourceInputsV1(()=>observedFs.readFileSync(path,"utf8")),rows=captured.observations.filter(row=>row.path===path);writeFileSync(path,fixture.races.after);const original=rows[0];if(!original||original.kind!=="file"||!("sha256" in original.fact))throw Error("Original physical Source fact required");expect(digest(readFileSync(path))).not.toBe(original.fact.sha256);expect(await observationsHold(rows,64,new Set(),new Set(),undefined,(row:any)=>changed.push(row))).toBe(false);expect(changed).toEqual(rows);console.log("[DEBUG] Changed source bytes retain the exact original stale fact for targeted refresh diagnostics");}finally{rmSync(root,{recursive:true,force:true});}
+ try{const captured=await captureObservedSourceInputsV1(()=>observedFs.readFileSync(path,"utf8")),rows=captured.observations.filter(row=>row.path===path);writeFileSync(path,fixture.races.after);const original=rows[0];if(!original||original.kind!=="file"||!("sha256" in original.fact))throw Error("Original physical Source fact required");expect(digest(readFileSync(path))).not.toBe(original.fact.sha256);expect(await observationsHold(rows,64,new Set(),new Set(),undefined,(row:any)=>changed.push(row))).toBe(false);expect(changed).toEqual(rows);}finally{rmSync(root,{recursive:true,force:true});}
 },20000);
 
 const {registerSourceAnalysisV1,observedSourceAnalysisV1,observedSourceAnalysisAsyncV1,sourceObservationStatsV1}=await import(new URL("../🟨️.mjs",import.meta.url).href) as typeof import("../🟨️.mjs");
@@ -215,7 +211,7 @@ const semanticParser=(path:string,bytes:Buffer)=>commandSourceImports(path,bytes
 
 for(const asynchronous of [false,true])test(`semantic source analysis admits body edits and refuses changed imports: ${asynchronous?"async":"sync"}`,async()=>{
  const root=workspace(),path=join(root,"source.ts"),provider=registerSourceAnalysisV1({id:fixture.semantic.provider.id,revision:fixture.semantic.provider.revision,analyze:semanticParser});writeFileSync(path,fixture.semantic.before);
- try{const captured=await captureObservedSourceInputsV1(()=>asynchronous?observedSourceAnalysisAsyncV1(provider,path):observedSourceAnalysisV1(provider,path)),rows=captured.observations.filter(row=>row.path===path),row=rows[0]!;if(row.kind!=="analysis")throw Error("Original registered parser observation required");expect(Object.isFrozen(provider)).toBe(true);expect(provider.id).toBe(fixture.semantic.provider.id);expect(captured.value).toEqual(ts.preProcessFile(fixture.semantic.before,true,true).importedFiles.map(item=>item.fileName));expect(captured.value).toEqual(fixture.semantic.expected);expect(rows.map(item=>item.kind)).toEqual(["analysis"]);expect(row.fact.resultSha256).toBe(digest(JSON.stringify(captured.value)));expect(validate({digest:"a".repeat(64),resultSha256:"b".repeat(64),observations:rows,authorityObservations:[]}),JSON.stringify(validate.errors)).toBe(true);writeFileSync(path,fixture.semantic.before);expect(await observationsHold(rows)).toBe(true);writeFileSync(path,fixture.semantic.bodyChanged);expect(await observationsHold(rows)).toBe(true);writeFileSync(path,fixture.semantic.importsChanged);expect(await observationsHold(rows)).toBe(false);expect(semanticParser(path,readFileSync(path))).toEqual(fixture.semantic.changedExpected);console.log("[DEBUG] semantic source analysis "+(asynchronous?"async":"sync")+" compiler oracle=true bodyChange=true importsChange=refused");}finally{rmSync(root,{recursive:true,force:true});}
+ try{const captured=await captureObservedSourceInputsV1(()=>asynchronous?observedSourceAnalysisAsyncV1(provider,path):observedSourceAnalysisV1(provider,path)),rows=captured.observations.filter(row=>row.path===path),row=rows[0]!;if(row.kind!=="analysis")throw Error("Original registered parser observation required");expect(Object.isFrozen(provider)).toBe(true);expect(provider.id).toBe(fixture.semantic.provider.id);expect(captured.value).toEqual(ts.preProcessFile(fixture.semantic.before,true,true).importedFiles.map(item=>item.fileName));expect(captured.value).toEqual(fixture.semantic.expected);expect(rows.map(item=>item.kind)).toEqual(["analysis"]);expect(row.fact.resultSha256).toBe(digest(JSON.stringify(captured.value)));expect(validate({digest:"a".repeat(64),resultSha256:"b".repeat(64),observations:rows,authorityObservations:[]}),JSON.stringify(validate.errors)).toBe(true);writeFileSync(path,fixture.semantic.before);expect(await observationsHold(rows)).toBe(true);writeFileSync(path,fixture.semantic.bodyChanged);expect(await observationsHold(rows)).toBe(true);writeFileSync(path,fixture.semantic.importsChanged);expect(await observationsHold(rows)).toBe(false);expect(semanticParser(path,readFileSync(path))).toEqual(fixture.semantic.changedExpected);}finally{rmSync(root,{recursive:true,force:true});}
 },20000);
 
 test("semantic source analysis keeps repeated equivalent results without hiding raw consumers",async()=>{
@@ -227,7 +223,7 @@ test("semantic source analysis cache hits retain nested consumed probes",async()
  const root=workspace(),path=join(root,"source.ts"),configuration=join(root,fixture.semantic.nested.path),missing=join(root,fixture.semantic.nested.missing),cachePath=join(root,"nested.json");let analyses=0;
  writeFileSync(path,fixture.semantic.before);writeFileSync(configuration,fixture.semantic.nested.before);Bun.sleepSync(2200);
  const provider=registerSourceAnalysisV1({id:fixture.semantic.provider.id+":nested",revision:fixture.semantic.provider.revision,analyze:(source:string,bytes:Buffer)=>{analyses++;observedFs.readFileSync(configuration,"utf8");observedFs.existsSync(missing);return semanticParser(source,bytes);}}),run=(key:string)=>observeInference({cachePath,key},()=>observedSourceAnalysisV1(provider,path));
- try{await run("one");const captured=await captureObservedSourceInputsV1(()=>run("two"));expect(analyses).toBe(1);expect(captured.value).toEqual(fixture.semantic.expected);expect(captured.observations.some(row=>row.kind==="file"&&row.path===configuration)).toBe(true);expect(captured.observations.some(row=>row.kind==="exists"&&row.path===missing&&row.fact===false)).toBe(true);const row=captured.observations.find(row=>row.kind==="analysis")!;expect(row.fact.nestedObservations).toHaveLength(2);expect(await observationsHold(captured.observations)).toBe(true);writeFileSync(configuration,fixture.semantic.nested.after);expect(await observationsHold(captured.observations)).toBe(false);await run("three");expect(analyses).toBe(2);console.log("[DEBUG] semantic source memo hit inherited raw nested probes without rerunning analyzer");}finally{rmSync(root,{recursive:true,force:true});}
+ try{await run("one");const captured=await captureObservedSourceInputsV1(()=>run("two"));expect(analyses).toBe(1);expect(captured.value).toEqual(fixture.semantic.expected);expect(captured.observations.some(row=>row.kind==="file"&&row.path===configuration)).toBe(true);expect(captured.observations.some(row=>row.kind==="exists"&&row.path===missing&&row.fact===false)).toBe(true);const row=captured.observations.find(row=>row.kind==="analysis")!;expect(row.fact.nestedObservations).toHaveLength(2);expect(await observationsHold(captured.observations)).toBe(true);writeFileSync(configuration,fixture.semantic.nested.after);expect(await observationsHold(captured.observations)).toBe(false);await run("three");expect(analyses).toBe(2);}finally{rmSync(root,{recursive:true,force:true});}
 },20000);
 
 test("semantic source analysis refuses unknown producers and ambiguous revision declarations",async()=>{
@@ -244,19 +240,19 @@ test("semantic source analysis replays current parsers and fails closed on parse
 test("semantic source replay cache bounds JSON images and isolates returned values",async()=>{
  const root=workspace(),path=join(root,"source.ts"),shared={imports:[...fixture.semantic.expected]};let small=0,large=0;writeFileSync(path,fixture.semantic.before);
  const provider=registerSourceAnalysisV1({id:fixture.semantic.provider.id+":isolation",revision:fixture.semantic.provider.revision,analyze:()=>{small++;return shared;}}),oversized=registerSourceAnalysisV1({id:fixture.semantic.provider.id+":oversized",revision:fixture.semantic.provider.revision,analyze:()=>{large++;return "x".repeat(fixture.semantic.oversizedCharacters);}});
- try{const first=observedSourceAnalysisV1(provider,path);if(typeof first!=="object"||first===null||!("imports" in first)||!Array.isArray(first.imports))throw Error("Original parser import image required");first.imports.push("./mutated.js");expect(observedSourceAnalysisV1(provider,path)).toEqual(shared);expect(small).toBe(1);for(let round=0;round<2;round++){const value=observedSourceAnalysisV1(oversized,path);if(typeof value!=="string")throw Error("Original parser string image required");expect(value.length).toBe(fixture.semantic.oversizedCharacters);}expect(large).toBe(2);expect(sourceObservationStatsV1().analysisBytes).toBeLessThanOrEqual(fixture.semantic.cacheMaximumBytes);console.log("[DEBUG] semantic replay memo JSON isolation=true oversized image uncached=true");}finally{rmSync(root,{recursive:true,force:true});}
+ try{const first=observedSourceAnalysisV1(provider,path);if(typeof first!=="object"||first===null||!("imports" in first)||!Array.isArray(first.imports))throw Error("Original parser import image required");first.imports.push("./mutated.js");expect(observedSourceAnalysisV1(provider,path)).toEqual(shared);expect(small).toBe(1);for(let round=0;round<2;round++){const value=observedSourceAnalysisV1(oversized,path);if(typeof value!=="string")throw Error("Original parser string image required");expect(value.length).toBe(fixture.semantic.oversizedCharacters);}expect(large).toBe(2);expect(sourceObservationStatsV1().analysisBytes).toBeLessThanOrEqual(fixture.semantic.cacheMaximumBytes);}finally{rmSync(root,{recursive:true,force:true});}
 },20000);
 
 test("semantic source same-stamp byte changes cannot bypass current parser admission",async()=>{
  const root=workspace(),path=join(root,"source.ts"),provider=registerSourceAnalysisV1({id:fixture.semantic.provider.id,revision:fixture.semantic.provider.revision,analyze:semanticParser});writeFileSync(path,fixture.semantic.before);
- try{const captured=await captureObservedSourceInputsV1(()=>observedSourceAnalysisV1(provider,path)),stamp=rawFs.statSync(path),original=rawFs.statSync;writeFileSync(path,fixture.semantic.importsChanged);const mocked=spyOn(rawFs,"statSync").mockImplementation(((file:any,...args:any[])=>String(file)===path?stamp:(original as any)(file,...args)) as typeof rawFs.statSync);try{expect(await observationsHold(captured.observations)).toBe(false);}finally{mocked.mockRestore();}console.log("[DEBUG] semantic analysis verifies current SHA before source stamp hints");}finally{rmSync(root,{recursive:true,force:true});}
+ try{const captured=await captureObservedSourceInputsV1(()=>observedSourceAnalysisV1(provider,path)),stamp=rawFs.statSync(path),original=rawFs.statSync;writeFileSync(path,fixture.semantic.importsChanged);const mocked=spyOn(rawFs,"statSync").mockImplementation(((file:any,...args:any[])=>String(file)===path?stamp:(original as any)(file,...args)) as typeof rawFs.statSync);try{expect(await observationsHold(captured.observations)).toBe(false);}finally{mocked.mockRestore();}}finally{rmSync(root,{recursive:true,force:true});}
 },20000);
 
 test("semantic parent validation shares each provider independently across project images",async()=>{
  const root=workspace(),path=join(root,"source.ts"),command=registerSourceAnalysisV1({id:fixture.semantic.provider.id+":parent-command",revision:fixture.semantic.provider.revision,analyze:semanticParser}),module=registerSourceAnalysisV1({id:fixture.semantic.provider.id+":parent-module",revision:fixture.semantic.provider.revision,analyze:(source:string,bytes:Buffer)=>({imports:semanticParser(source,bytes)})});writeFileSync(path,fixture.semantic.before);Bun.sleepSync(2200);
  const projects=Array.from({length:fixture.semantic.parentValidation.projects},(_,index)=>()=>observeProjectInferenceV1({cachePath:join(root,`project-${index}.json`),key:index,owner:root},()=>({command:observedSourceAnalysisV1(command,path),module:observedSourceAnalysisV1(module,path)})));
  try{for(const project of projects)await project();let reads=0;const original=rawFs.readFileSync,mocked=spyOn(rawFs,"readFileSync").mockImplementation(((file:any,...args:any[])=>{if(String(file)===path)reads++;return (original as any)(file,...args);}) as typeof rawFs.readFileSync);
-  try{const result=await observeInference({cachePath:join(root,"parent.json"),key:"provider-sharing"},async()=>{const values=[];for(const project of projects)values.push(await project());return {values,validationReads:reads};}),oracle=ts.preProcessFile(fixture.semantic.before,true,true).importedFiles.map(item=>item.fileName);expect(result.values).toEqual(Array.from({length:fixture.semantic.parentValidation.projects},()=>({command:oracle,module:{imports:oracle}})));expect(result.validationReads).toBe(fixture.semantic.parentValidation.expectedReads);console.log(`[DEBUG] independent provider parent validations=${result.validationReads} projects=${projects.length}`);}finally{mocked.mockRestore();}
+  try{const result=await observeInference({cachePath:join(root,"parent.json"),key:"provider-sharing"},async()=>{const values=[];for(const project of projects)values.push(await project());return {values,validationReads:reads};}),oracle=ts.preProcessFile(fixture.semantic.before,true,true).importedFiles.map(item=>item.fileName);expect(result.values).toEqual(Array.from({length:fixture.semantic.parentValidation.projects},()=>({command:oracle,module:{imports:oracle}})));expect(result.validationReads).toBe(fixture.semantic.parentValidation.expectedReads);}finally{mocked.mockRestore();}
  }finally{rmSync(root,{recursive:true,force:true});}
 },20000);
 
@@ -267,7 +263,7 @@ test("observed TOML receives literal astral paths and refuses surrogate escapes 
   expect(Boolean(independent),row.name).toBe(row.smolAccepted);expect(Boolean(builtin),row.name).toBe(row.accepted);expect(error===undefined,row.name).toBe(row.accepted);
   if(row.accepted){expect(independent.lib.path).toBe(row.path);expect(builtin.lib.path).toBe(row.path);expect(receipt.observations.some((fact:any)=>fact.kind==="file"&&fact.path===path)).toBe(true);expect(await api.observationsHold(receipt.observations)).toBe(true);}else{expect(error.message).toContain("Observed TOML parse refused");expect(admit(error.tomlObservation)).toBe(true);expect(error.tomlObservation.path).toBe(path);expect(error.tomlObservation.sha256).toBe(createHash("sha256").update(row.source).digest("hex"));expect(error.tomlObservation.bytes).toBe(Buffer.byteLength(row.source));expect(error.tomlObservation.sourceLine).toBe(row.source.split("\n")[error.tomlObservation.line]);expect(error.cause.message).toContain("0xD800 - 0xDFFF");}
  }
- console.log("[DEBUG] Observed TOML source path/digest retained; literal astral/scalar escape/literal slash-u agree; reserved surrogate refusals preserve exact source context while smol-toml permissiveness is recorded");}finally{rmSync(root,{recursive:true,force:true});}
+ }finally{rmSync(root,{recursive:true,force:true});}
 });
 
 test("semantic parser handles retain exact evaluated inference ownership",async()=>{
@@ -279,14 +275,14 @@ test("semantic parser handles retain exact evaluated inference ownership",async(
   const oracle=ts.preProcessFile(row.source,true,true).importedFiles.map(item=>item.fileName);expect(oracle).toEqual(row.expectedImports);
   const memo=new Map();let checkpoints=0;const checkpoint=async()=>{checkpoints++;await Promise.resolve();},run=(provider:any)=>api.captureObservedSourceInputsV1(()=>api.memoizedObservedAsyncComputationV1(memo,provider,async()=>{api.observedFs.readFileSync(owner);return api.observedSourceAnalysisV1(provider,path);},checkpoint),undefined,false);
   const first=await run(providers[0]),second=await run(providers[1]),again=await run(providers[0]);for(const [provider,value] of [[providers[0],first],[providers[1],second],[providers[0],again]]){expect(value.value).toEqual(oracle);expect(value.observations.some((fact:any)=>fact.kind==="file"&&fact.path===owner)).toBe(true);expect(value.observations.some((fact:any)=>fact.kind==="analysis"&&fact.path===path&&fact.fact.provider===provider.id)).toBe(true);expect(await api.observationsHold(value.observations)).toBe(true);}
-  expect(checkpoints).toBeGreaterThan(0);expect(again.observations).toEqual(first.observations);expect(()=>api.observedSourceAnalysisV1({...providers[0]},path)).toThrow("Current registered source analysis provider required");writeFileSync(owner,row.ownerAfter);expect(await api.observationsHold(first.observations)).toBe(false);expect(await api.observationsHold(second.observations)).toBe(false);console.log("[DEBUG] Portable evaluated parser ownership agrees with WebCrypto/TS, original memo checkpoints and complete Source denial");
+  expect(checkpoints).toBeGreaterThan(0);expect(again.observations).toEqual(first.observations);expect(()=>api.observedSourceAnalysisV1({...providers[0]},path)).toThrow("Current registered source analysis provider required");writeFileSync(owner,row.ownerAfter);expect(await api.observationsHold(first.observations)).toBe(false);expect(await api.observationsHold(second.observations)).toBe(false);
  }finally{rmSync(root,{recursive:true,force:true});}
 });
 
 test("semantic Source observation declaration roster matches actual runtime exports",async()=>{
  const row=JSON.parse(readFileSync(new URL("./🧫️fixtures/🔣️.json",import.meta.url),"utf8")).semantic.declarationExports,source=ts.createSourceFile("observation.d.mts",readFileSync(new URL("../🟨️.d.mts",import.meta.url),"utf8"),ts.ScriptTarget.Latest,true),declared:string[]=[];
  for(const statement of source.statements){if(!ts.canHaveModifiers(statement)||!ts.getModifiers(statement)?.some(modifier=>modifier.kind===ts.SyntaxKind.ExportKeyword))continue;if(ts.isFunctionDeclaration(statement)&&statement.name)declared.push(statement.name.text);if(ts.isVariableStatement(statement))for(const declaration of statement.declarationList.declarations)if(ts.isIdentifier(declaration.name))declared.push(declaration.name.text);}
- expect(declared.sort()).toEqual(row);expect(Object.keys(await import("../🟨️.mjs")).sort()).toEqual(row);console.log("[DEBUG] Independent TypeScript declaration parser and actual observer export roster agree with portable API corpus");
+ expect(declared.sort()).toEqual(row);expect(Object.keys(await import("../🟨️.mjs")).sort()).toEqual(row);
 });
 
 for(const row of JSON.parse(readFileSync(new URL("./🧫️fixtures/🔣️.json",import.meta.url),"utf8")).semantic.settlement.cases)test("semantic settlement retains original cancellation: "+row.id,async()=>{

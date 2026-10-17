@@ -1,0 +1,623 @@
+{
+  "version": 1,
+  "package": "semio-framework-plugin-child-group-wire-laws",
+  "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧩️child-operations/⚖️laws/🦀️.rs",
+  "host": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪝️mounts/👥️wp3-owners/🧪️test-hosts/🧵️retained-command/🦀️.rs",
+  "original": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs",
+  "canonicalModuleSha256": "fc7554616499e77cb41b7b3fed1cf4588954d061994d90193131dd3896cb0c0a",
+  "oldActiveInstances": 32,
+  "newUniqueObligations": 16,
+  "oldLawAssertions": 872,
+  "newLawAssertions": 436,
+  "debugStatements": 19,
+  "laws": [
+    {
+      "name": "child_complete_group_source_candidate_reader_retains_actual_partial8194_pages",
+      "canonicalSha256": "33523d1a92eaa4cfdfa17aa46497a0745537357ea3320d345674386f8805a2ee",
+      "originalSha256": "e043b652e4680765ff99bb0307bfd2da1a7a9b5658f1185439b3e09c7d42f53a",
+      "assertions": 15,
+      "debugOnlyRemoved": [
+        "eprintln!(\"held group span reader reconstructed all8194 exact octets into caller-retained real pages; cancellation retains{retained} partial octets; initial4096 rejects real next page; truncation retains both completed sources; all owners drain1/4096\");"
+      ]
+    },
+    {
+      "name": "child_complete_group_source_candidate_matches_independent_wire",
+      "canonicalSha256": "6161c0ae5f6357119270622d52dde2efb3347df134f24d3e40c7024c6ed88dd6",
+      "originalSha256": "0a7b4529c2f7725ee300f5b7d95eb416507b3b6f3602738f084b749292859be9",
+      "assertions": 11,
+      "debugOnlyRemoved": [
+        "eprintln!(\"held complete child group candidate equals independent JSON/TextEncoder/Ajv wire; actual paged input8194 and paged output drain1/4096; cancellation retains{retained} physical bytes; production ChildEmit remains held\");"
+      ]
+    },
+    {
+      "name": "child_complete_original_semantic_metadata8194_grant4096",
+      "canonicalSha256": "67aa5cf233981e53e0e3ee47bdbd36cdee755a74b046454e2bc69973d608c6bd",
+      "originalSha256": "27fd4622d6bdace85600cb0a81b38e22b67d43f315b477b010023f89d39f200b",
+      "assertions": 13,
+      "debugOnlyRemoved": []
+    },
+    {
+      "name": "child_complete_group_source_candidate_paged_semantic8194_metadata_and_labels",
+      "canonicalSha256": "0e01612bde24314fbb4920bd767177808f27170d403a3530bab5d1ca083da83d",
+      "originalSha256": "dde95ff6380d587ee4344e389aa2937d7b1706198ba391b0ffc048f6182fba36",
+      "assertions": 26,
+      "debugOnlyRemoved": [
+        "eprintln!(\"held paged semantic child metadata/locale family preserves all8 full8194 positive fields, actual partial cancellation and initial4096 recipient refusal; source, returned typed text and canonical scaffolds drain independently1/4096\");"
+      ]
+    },
+    {
+      "name": "child_complete_group_source_candidate_direct_producer_and_parent",
+      "canonicalSha256": "f122cd224beb416521d7e4b1387f3b66a89b8b88eaf5a9dc95245a6e39c862df",
+      "originalSha256": "837b821cd44e535994f3e01d3abe90202d65cf72403e8a8b4bd1d71972164615",
+      "assertions": 29,
+      "debugOnlyRemoved": [
+        "eprintln!(\"held direct child source receipt preserves exact8194 octets and independent original8194 owner/locale text under64k, admits both prefix pages before transfer, retains encoder/label/file/segment refusal and pending schema, real parent alone physically disposes1/4096\");"
+      ]
+    },
+    {
+      "name": "child_complete_group_source_candidate_repeated_prefix_preserves_accepted_owners",
+      "canonicalSha256": "5052e248eacfb8257dbb745a2fd9a306d42f992f45060240c9e4ddb8daf59fcd",
+      "originalSha256": "2cd00290ff73e4c0d652274c0a0f3ae0e5ddbb01e8076850396101e10290c05d",
+      "assertions": 28,
+      "debugOnlyRemoved": [
+        "eprintln!(\"repeated child source8194 accepted prefix preserves pointer, schema, both locale matrices and first source on second refusal; only committed scaffold returns before next producer; every actual allocation retires1/4096\");"
+      ]
+    },
+    {
+      "name": "child_complete_group_source_candidate_refuses_partial_last_locale_before_commit",
+      "canonicalSha256": "7a363825df9f7a2b66c8a3563a5c11c56af2bdc6b19f3645d8aedae4c82268f1",
+      "originalSha256": "09ab4273b4244df5fca7699184b2cf7f9bfa79caba62e1d089426d0961ff1e7d",
+      "assertions": 16,
+      "debugOnlyRemoved": [
+        "eprintln!(\"three complete locale cells and fourth partial256/8194 retain their real owners; commit refuses and original schema/prefix remain unchanged; all physical owners drain1/4096\");"
+      ]
+    },
+    {
+      "name": "child_complete_actual_authored_label_producer_preserves_all_axes_and_retained_source",
+      "canonicalSha256": "f1993f6a1e482474482d844fc8295c755fd879825402e533d2bedc418666f822",
+      "originalSha256": "e86ca8b2dbb0d0629938818e8ba1e63183e9635d0175befbc97764356b64246c",
+      "assertions": 23,
+      "debugOnlyRemoved": [
+        "eprintln!(\"actual authored SetLabel directly streams every locale/terminology at original64k with full8194 English/original8205 German; short native cells own zero heap; initial4096 preserves actual prefix+metadata; no label String producer or flattening adapter; typed input remains a separate lifetime\");"
+      ]
+    },
+    {
+      "name": "child_complete_actual_authored_label_receipt_joins_original8194_source_and_prefix",
+      "canonicalSha256": "e16cd0d69d45ce2d042dc07558fd81195b2583e78c9522eeab8f9a6957886c1c",
+      "originalSha256": "b64bd44ade15fe3c815574126d07cd9d500b26934aef471cedd59f5cfaa22d8c",
+      "assertions": 16,
+      "debugOnlyRemoved": [
+        "eprintln!(\"actual authored locale producer joins the retained original8194 wire success receipt; intrinsic labels and first schema commit atomically at original64k; real segment refusal preserves zero prefix and all partial owners until1/4096; neutral byte producer is not credited as actual typed OpBinary\");"
+      ]
+    },
+    {
+      "name": "child_complete_group_source_candidate_owned_publication_preserves_empty_original_and_parent",
+      "canonicalSha256": "dca1b72f2b5bce9a2c49445e74ef752ea31ace77a71d974fde266229e3eb9892",
+      "originalSha256": "f815839f91568b51cca5d6638295b183f4b2bed8c02b9d42025050a906ed9c1e",
+      "assertions": 45,
+      "debugOnlyRemoved": [
+        "eprintln!(\"owned publication binds original3 children to selected0,2 and exact16722 framing; original8194 source pointer and empty8194 semantic metadata survive; canceled selection retains all originals; real parent alone disposes every index/child/outer allocation1/4096\");"
+      ]
+    },
+    {
+      "name": "child_complete_group_source_candidate_accepted_ledger_retains_original_registry_sources",
+      "canonicalSha256": "dd13379e713570eac32ac8020a57db2671eb20c31d51f61171876292b444d9df",
+      "originalSha256": "62b747eeaf1d5106bb360d59ad88a8a039f43699f4cb6451f89ade0fe8fb0eb8",
+      "assertions": 67,
+      "debugOnlyRemoved": [
+        "eprintln!(\"registry source before outer commit cumulative admitted bytes={}\",control.owned_bytes());",
+        "eprintln!(\"registry full8194 source after commit cumulative={} retained={}\",control.owned_bytes(),owner.allocated_bytes());",
+        "eprintln!(\"actual ScrubLedger scalar clones preserve original8194 sources; accepted tick displacement retires only absent original; extraction precedes accepted-ledger reconcile; commit transfers pointer once, late commit stays idle, host abort revokes authority first; all original/registry/publication allocations independently drain1/4096\");"
+      ]
+    },
+    {
+      "name": "child_complete_actual_authored_operation_producer_joins_original_projection_and_retained_receipt",
+      "canonicalSha256": "1063903df81db41b62ef8a109caf75e21586452f15856dd3475b8f3ce15f0299",
+      "originalSha256": "fe5518a7a7515d7d13a42852cfc4b4f91cd28065dfadbfcf59641d67aed12851",
+      "assertions": 31,
+      "debugOnlyRemoved": [
+        "eprintln!(\"actual authored TestMutation direct projection emits exact8202 frame with full8194 payload into retained receipt and actual four locale cells; caller input pointer survives full-policy success/refusal; whole-file/depth/initial4096/interior256 cancellation retains actual source prefix and explicit1/4096 child closure; typed String and producer metadata/scaffold lifetime remain separate unqualified owners\");"
+      ]
+    },
+    {
+      "name": "child_complete_actual_authored_typed_source_event_observer_matches_system_backing",
+      "canonicalSha256": "eadf55e27a6ff8009237824b552d9a233c254dc7a3117f95bda061c05a587fb8",
+      "originalSha256": "b5e46858cab97d797c587b24800b40f8e4e80a3148f1bec0c3c8ba738158b77b",
+      "assertions": 12,
+      "debugOnlyRemoved": [
+        "eprintln!(\"actual system truncate releases0; realloc8194-to4096 records original8194 release+new4096 request; nested two4096 releases total8192 with largest4096\");"
+      ]
+    },
+    {
+      "name": "child_complete_actual_authored_typed_source_physical8194_grant4096",
+      "canonicalSha256": "4e5a72803e2679180b54a6ce153ea96327e0419acb3ce0d9c79873002197f54e",
+      "originalSha256": "781124cc725186d2160a729ab5c5b9de8cfc2c6f69f3a686985034e542d6a257",
+      "assertions": 36,
+      "debugOnlyRemoved": [
+        "eprintln!(\"actual typed String logical truncate copy=0 physicalRelease=0 originalBacking={backing}\");",
+        "eprintln!(\"actual typed String physical denied grant={bytes} retainedDemand={backing} released=0\");",
+        "eprintln!(\"actual typed String whole release grant={demand} physical={reported}; separate terminal frame funded={frame} physical={}\",scaffold.released_bytes);"
+      ]
+    },
+    {
+      "name": "child_complete_actual_authored_paged_source8194_frame8202_physical4096",
+      "canonicalSha256": "8b303bdd130ad23ebe51e71bf8b5fe8e3d539ab2720a4ed4ed514b33a0628b7a",
+      "originalSha256": "40ab6cec24d3d9efe4ee030c12cddc84de2e27a3e9c6b818312c86df86c6cea6",
+      "assertions": 45,
+      "debugOnlyRemoved": [
+        "eprintln!(\"actual authored SetLabel origin mode={mode} originalBacking={original} frame8202 fourLocaleCells cumulative={} metadata512 source/capsule/child physical1/4096; original String TestMutation and eight ChildEmit carriers unqualified\",control.owned_bytes());"
+      ]
+    },
+    {
+      "name": "child_complete_candidate_retirement_keeps_currencies_independent",
+      "canonicalSha256": "4f6bd8e967f8c48a603bb1b44607519ba9b0a43346f207a7a4f4b4133d358b2d",
+      "originalSha256": "4f95ea8eb5435a44a50432b4e012e7582436f8ea53e615142bf6671119ab89df",
+      "assertions": 23,
+      "debugOnlyRemoved": [
+        "eprintln!(\"original child candidate carrier={carrier} semantic8194 backing={backing} copied={copied} disposed={disposed}; independent1/4096 currencies observed; production ChildEmit carrier remains separate\");"
+      ]
+    }
+  ],
+  "remaining": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪝️mounts/👥️wp3-owners/🧪️test-hosts/🧵️retained-command/🦀️.rs",
+      "sha256": "da35ae7fd37f9af1501ad0b38416836d4f3dda5818dc7f5b96a529eb05290176",
+      "functions": [
+        {
+          "name": "test_retained_keyed_dispatch",
+          "sha256": "54c29030b280d04324122675d71838b41ca9f6dc6cd5ea5d3be29a0a6b201a6e"
+        },
+        {
+          "name": "test_typed_operation_slot_preadmission",
+          "sha256": "96dd3656e7a5b7e62231a671a0ea628d2366fe59ff4d0906a21a94237217e32c"
+        },
+        {
+          "name": "test_typed_operation_slot_retirement_under_storm",
+          "sha256": "d69b9214a3390fe6422b85f063c4b6202e4e4c1e7d1327e0d97ee8f80bbcf052"
+        },
+        {
+          "name": "test_typed_operation_slot_release_on_every_outcome",
+          "sha256": "446e213bb9f7f1e29ee622b83fc08576515dda723ddd894e83f67c22b3774a2e"
+        },
+        {
+          "name": "admit_fixture_typed_action",
+          "sha256": "15f37a2113ba79dc020f2da9dc9384bcdbbeccb00991db2b15370527cef9cf28"
+        },
+        {
+          "name": "drive_host_typed_continuations",
+          "sha256": "2062b19f863a6fe375b1bae73c99f505d8b8f4935adaea91936c0d8ec0a1beb2"
+        },
+        {
+          "name": "drive_host_call_with_deferred_acks",
+          "sha256": "d94e08d2006d5be94bdf7ef4c1262ce8dd01297b68293da0b5c11d464de332b0"
+        },
+        {
+          "name": "assert_landing_terminal_lane",
+          "sha256": "c1c25debf2cd883b619843c3e1e4ecd581f91da150d8e231098f6b4173ab691b"
+        },
+        {
+          "name": "test_typed_operation_never_parks_a_turn_that_reports_no_runnable_work",
+          "sha256": "5e1d2c6b83505a15ff4d1710257cffef733cd8d8bb20c7ca76cead280b0c76a4"
+        },
+        {
+          "name": "test_typed_operation_completes_under_a_status_only_host_call",
+          "sha256": "ed47a449f25aa39bfe00c444c9a733c2d007237c5146d0b44b03ae5f08cbdcea"
+        },
+        {
+          "name": "test_typed_operation_lands_its_edit_inside_the_admitting_call",
+          "sha256": "cde8fc444aafef086f3ba61fa45eee1462876e3a11a82832317907686bccc04f"
+        },
+        {
+          "name": "released_slot_census",
+          "sha256": "f215fb0ce8ba6de1dbfb1cf9d1a0c291a4c0e810fb229450ffd751e673f15269"
+        },
+        {
+          "name": "fixture_close_receipt",
+          "sha256": "3278cf5471e6b8680901becdf2fc95d726fa8d3224d1d75a71a691248be3fbb6"
+        },
+        {
+          "name": "close_fixture_app_to_terminal_emptiness",
+          "sha256": "1d9e482c3d17855e484196bb387447b9c65776655131125bb9f19d169a2fec78"
+        },
+        {
+          "name": "test_retained_cancellation_publication_boundaries",
+          "sha256": "cc9dcdb03e45d1e93e5dacc6794100ad05c364b60a705252fd2fbe3b8d02c080"
+        },
+        {
+          "name": "fixture_close_turn",
+          "sha256": "be0307a6ec1326d73767c6dfbc3965a7896003860dc1dc7b0af18f9fed23b673"
+        },
+        {
+          "name": "fixture_maintenance_turn",
+          "sha256": "fdb743c16583f85f02147119aeb1e2466c4958b92009c6fa1f9bc5542c2103be"
+        },
+        {
+          "name": "test_retained_latest_wins_slot_and_publication_fairness",
+          "sha256": "5b81b6a3f248ce2d1d0e53b03b96df0bdd9ad05808a0fbf8ae0cb6cf0804acbc"
+        },
+        {
+          "name": "test_retained_document_cancellation",
+          "sha256": "920031178f7d39d84effffeec0322807bec2c06b9c0d58c65f28866e87598e3d"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs",
+      "sha256": "b7b3dcdf106f98e5939480f9074a98c690b606d6ac78bd48a8a45e1ff056cdd3",
+      "functions": [
+        {
+          "name": "module_source",
+          "sha256": "d39e1df4e85d6ab04f847b350e8ac6cbe7e730533d352be63f04149e66021903"
+        },
+        {
+          "name": "instance_source",
+          "sha256": "3f6e7ef077c04fdcb6e344ee2886b181be9f0f09c24b05476644897f2f76db47"
+        },
+        {
+          "name": "decide",
+          "sha256": "bb2589ed331fa8b3240e4f3390763d1b08cfaecd80e26dacdeeb83ae4421ce87"
+        },
+        {
+          "name": "decide",
+          "sha256": "58b04d8d8a0bdd7b65e4399d83a64ca56adbcd66864e33ba2717b060b674e391"
+        },
+        {
+          "name": "new",
+          "sha256": "0a84297eb70117ef51340846651830473e3f54ecc15ff7e7e0d801ea84c87a63"
+        },
+        {
+          "name": "grant",
+          "sha256": "03dd44ad85da6927b6ebeae72cb552df96090f2484a0f86f7278fa8b2427c75c"
+        },
+        {
+          "name": "freshness",
+          "sha256": "f67b183a347058bbbe2691f55e133c46cf920ca8cd3b34a1fa1aafccbc134523"
+        },
+        {
+          "name": "admission",
+          "sha256": "c61741f8109070e8438eb50093440cd28e2eae0e63a7294b659b88d4d662275f"
+        },
+        {
+          "name": "publish",
+          "sha256": "b832697397d10fc65f36e0abbf598cfb9ebc2e3f8553d4b56d6460e88b68306c"
+        },
+        {
+          "name": "close_scalar",
+          "sha256": "fb327899511db15203ca2ecf2f7d78476c8f4a2ee687da1a7f1fac42f2f9c48f"
+        },
+        {
+          "name": "close_owner",
+          "sha256": "dd5f0e4ac23dacf90e509270adef62867311a6d5b14ee844b8bdcdf16e155ec8"
+        },
+        {
+          "name": "transition",
+          "sha256": "99747fb7ff6c7f570d99e74b7b3e8e31b7e29c11d4362519e8fffb3ed6e60b24"
+        },
+        {
+          "name": "preflight",
+          "sha256": "6323d5dd146c8c1e064215eea65ed26e6b822b50fde5be8086aa54323243ab80"
+        },
+        {
+          "name": "begin",
+          "sha256": "cdb2effaabee3082360393d816988c6fbfd6ffb19ddac9d878b1144914db0d7d"
+        },
+        {
+          "name": "advance",
+          "sha256": "2e762cf04a56362f9a23a58673553217ccd99d020f36648edcd4a51a4e848ebf"
+        },
+        {
+          "name": "checkpoint",
+          "sha256": "0b8da284c56fd05b299cd3d25d129d140ded243b5e796e870e02c957762b0f2b"
+        },
+        {
+          "name": "prepared",
+          "sha256": "ee0ff174439c245bc46eb51eca746079d06ba6e6cd9c170d3e7525536054350f"
+        },
+        {
+          "name": "take_prepared",
+          "sha256": "926be3fe7e7261d39fb4a516f77221c7fb5645ac2beaa7a2887166171c455b7c"
+        },
+        {
+          "name": "cancel",
+          "sha256": "8c4d77f75772e7a631b0db12b27ed10c9575e5f77ee905392eaf341604ca5145"
+        },
+        {
+          "name": "begin_close",
+          "sha256": "3fbc69b4d196ef662c66b335cd15a2a244ba989c783ed74eecd0831eb9f86e66"
+        },
+        {
+          "name": "close_step",
+          "sha256": "a614c779e1d4fbc5346cc35e9061759efbd47090d8254294c88ac99661a04f5c"
+        },
+        {
+          "name": "next_close_copy_byte_demand",
+          "sha256": "b255a62620325a69caed31b12ae1c7a1633dff8df929128c0d7f5d311743153b"
+        },
+        {
+          "name": "next_close_capacity_byte_demand",
+          "sha256": "33433e31594a61ccf1e68b4b6fba6b060072f6c7b02516f5c60a383ed1182916"
+        },
+        {
+          "name": "next_close_release_byte_demand",
+          "sha256": "be7a46280321d3e42126da680a5cc6c4baf3b9de871de563594cd7b6367c3b2c"
+        },
+        {
+          "name": "next_close_depth_demand",
+          "sha256": "ca1650d7652b5103ca9fb0460891a4de2ca6feb966466d4ad72571ddbdb2cbf0"
+        },
+        {
+          "name": "terminal_is_empty",
+          "sha256": "08b1f2912cbffea61deccca819be55e4390bc82c7d18faf6718e1a32d13ec26a"
+        },
+        {
+          "name": "close_step",
+          "sha256": "344380bca9e35d37abc9fdea474aa613b23e197c6866c550489c582758a65212"
+        },
+        {
+          "name": "terminal_is_empty",
+          "sha256": "5fa6a11e4be38e7b41d16271e78fb2d65af4c0d55edb4d665e2090fab5c76325"
+        },
+        {
+          "name": "next_copy_byte_demand",
+          "sha256": "b00ec11e43852e1b8f80bc2b79e8b15b4690c773f7d9af31a3fe9e9f747be5ce"
+        },
+        {
+          "name": "next_capacity_byte_demand",
+          "sha256": "bf7170ae0ed9f60f175724104f85ca8808ae898ff7c25db17ffda07fdbd95693"
+        },
+        {
+          "name": "next_release_byte_demand",
+          "sha256": "466ac879e4bc4b6774fab646018e087f14b94fe80fa9d2a76072f55f3f8d91eb"
+        },
+        {
+          "name": "next_depth_demand",
+          "sha256": "7148b601d59232d4ea0ac08435ddab1506906509d959e39ecaed04aa9cc2e222"
+        },
+        {
+          "name": "retirement_birth_bytes",
+          "sha256": "73dbb827b6c232e65db491e4ca5facb63284e2088a5e79bce7c5082cfacf7b9f"
+        },
+        {
+          "name": "retire",
+          "sha256": "0f14020b1bd066f03487784cfec6e18cabac7d867551b785e28fde2fbb8b9b5a"
+        },
+        {
+          "name": "close_mounted",
+          "sha256": "97f32fbe5ce35dc5b983f40c60a6c866b152b46a09534a69a809a152e5dfc1eb"
+        },
+        {
+          "name": "close_app",
+          "sha256": "5e1e8b0db7ba46229a1262cc3cc956e81ef621fc4d86b7ec4187ca9579fc4432"
+        },
+        {
+          "name": "advance_registry",
+          "sha256": "be3d26055ab15e7c40c688be130cf6bcce4199b3227dc5606feb5425bfa10a48"
+        },
+        {
+          "name": "retained_cancellation_publication_boundaries",
+          "sha256": "94aaac6402aecac56b3e452ca4beb5c00b29251e7f034e37a2adb58e107dab9b"
+        },
+        {
+          "name": "fixture_latest_wins_key",
+          "sha256": "9d60398b52f23aa8754fbec7df2775dd66948b04dd41e8aa5a87260cff3a9d7e"
+        },
+        {
+          "name": "latest_wins_owned_key_retains_zero_and_subexact_headers",
+          "sha256": "f6d1937aea50853e4211e10526da4708b2ec13cd0e9f560ecbb55b99e43218a2"
+        },
+        {
+          "name": "retained_document_cancellation",
+          "sha256": "6ee3068f34fb12919ba891270493cfc6c7a01454d09c09f350c5dd01e742eb4e"
+        },
+        {
+          "name": "retained_latest_wins_full_domain_exact_keys_match_serde_oracle_and_retire",
+          "sha256": "4455eb6eb893a97015915c627924d604e1c64e196b8ab9078508245c6e86f50c"
+        },
+        {
+          "name": "retained_latest_wins_producer_child_cannot_bypass_document_or_app_publication_claim",
+          "sha256": "0e79c1f6d7926ecb3df68b59c42e899063830f1276fe39204c304541f2d11a35"
+        },
+        {
+          "name": "retained_latest_wins_contended_finish_is_deferred_and_cannot_release_replacement",
+          "sha256": "8bfa4cd4291a6353972a7b677317dc82e43b182a8b6fcaefe643b279c88d1418"
+        },
+        {
+          "name": "retained_latest_wins_rebase_rebinds_exact_registered_cancellation_authority",
+          "sha256": "6c805d5c2eb6e8b40a0021f85410ff0aa0fafa18891d410b6b478f11768ec22d"
+        },
+        {
+          "name": "retained_latest_wins_full_registry_reclaims_completed_targets_before_admission",
+          "sha256": "54188c90b5b82f756683929952079714e262b58dafa646068c2ebbeffe349303"
+        },
+        {
+          "name": "retained_latest_wins_slot_and_publication_fairness",
+          "sha256": "e116750eb4abcc133d9ea144610b3e34b0a2e8b5dd6447ce05de06fed7571ba8"
+        },
+        {
+          "name": "language_neutral_empty_single_max_and_plus_one_match_the_test_only_oracle",
+          "sha256": "65d00db34eabaa34f55e806f16b85c05effd6a917fe8ec9c05268469b5cea4b5"
+        },
+        {
+          "name": "every_language_neutral_hostile_row_executes_the_owned_state_machine_and_serde_oracle",
+          "sha256": "d2fd3d0833e962db31a4e04a9e38ab4c7c38f340ea92986e98ccdb970dde80cb"
+        },
+        {
+          "name": "document_revision_change_between_ephemeral_preparation_turns_closes_without_publishing_the_lane_root",
+          "sha256": "ef47f47b2c41b5bfba5ce50249eae30a9e9f413dbda07b568f961993b5a77047"
+        },
+        {
+          "name": "private_child_genesis_wire_retains_exact_identity_and_indivisible_backing",
+          "sha256": "f5cc06e244426267098c38b5f331d1c9a1e8fee92ca16455fbbc032798f7c21a"
+        },
+        {
+          "name": "retained_child_wire_rejection_retires_nested_owners_under_the_production_grant",
+          "sha256": "32471fd30952067e29426be4a7978f219be933771f17a4e7704c76c5374336d3"
+        },
+        {
+          "name": "typed_child_publication_has_one_retained_async_group_owner_and_never_clone_publishes",
+          "sha256": "91ec4edaf8b5a20b56713b9c52a31d2d673a85068eec6778ac97328036e1b4d4"
+        },
+        {
+          "name": "full_operation_source_rejects_generic_reducers_and_old_monolithic_shells",
+          "sha256": "1af965936f55f61db69558e7813f545b25ff97c007d1d1f614e1d204da69a075"
+        },
+        {
+          "name": "fixture_contract_is_anchored_to_the_production_retained_factory_publisher_and_host_receivers",
+          "sha256": "748666ea8f9ce3fdfb530017d917e5ec5cca3761e8bdb1c0e998c91edd5b00eb"
+        },
+        {
+          "name": "language_neutral_renderer_page_and_exact_ack_have_bounded_stable_wire_fields",
+          "sha256": "7c9fcec21b3bb09234e515659945c8b8b1557b9e771876af885c17963c306015"
+        },
+        {
+          "name": "host_configuration_uses_one_bounded_event_sourced_lane_before_the_generic_gate",
+          "sha256": "c7da454b424fabc0a13d7303f0131bb5531d451826c44077081f01d53c43de77"
+        }
+      ]
+    }
+  ],
+  "closure": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧩️child-operations/🛫️encoder/🦀️.rs",
+      "bytes": 17427,
+      "nonblank": 110,
+      "sha256": "ee63c86799fd2e603e8c8f1c21efd9195ab9f19b361e32464b74bcdf358c1094"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧩️child-operations/🫙️owner/🦀️.rs",
+      "bytes": 37586,
+      "nonblank": 218,
+      "sha256": "e61aa4f14b551102a5be7315f7b48c5b1b0cbeafaf5419b4e5064606a0a2435e"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧩️child-operations/🧩️projection/🦀️.rs",
+      "bytes": 6212,
+      "nonblank": 82,
+      "sha256": "fd6ce68b85454859bf4d52db45ffe889fc350ce0c7cfef8b49b63049e96acc76"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧩️child-operations/📖️reader/🦀️.rs",
+      "bytes": 10332,
+      "nonblank": 103,
+      "sha256": "08f287164cf5d5f9541d83f088a6ce9f835a991845430bedbcd0e6fe7a68fb47"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧩️child-operations/📢️publication/🦀️.rs",
+      "bytes": 8049,
+      "nonblank": 46,
+      "sha256": "0ad0152fe7d8bf97c7fbfee6d4b81520c63349ca2109a99f66ea9d53db378b28"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧩️child-operations/🪪️registry/🦀️.rs",
+      "bytes": 7825,
+      "nonblank": 42,
+      "sha256": "9a15cfcc4ac32b5e5ea8684bed9ee936c351d8cd4a2e70763daf0d9845a2c911"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🖥️test-app-mutations/🦀️.rs",
+      "bytes": 2273,
+      "nonblank": 25,
+      "sha256": "31cbd7bf3b5f9f0feae3302f6a43e48ace14db1ed9649b565d4178622a18a22e"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🖥️test-app-mutations-config/🦀️.rs",
+      "bytes": 4341,
+      "nonblank": 89,
+      "sha256": "f3db0fd89e9db0a39c8fba058dd45b9eacadb1e0d723c9453eb034b9df7cbec7"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🖥️test-app-mutations-config/🧬️preparation/🦀️.rs",
+      "bytes": 12470,
+      "nonblank": 64,
+      "sha256": "8a7fc3789c26265e9d918d174b6a178457c7400f2559bf3bbe5aca973f8bc9f0"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🖥️test-app-mutations/🎚️config/🧬️mutations/🦀️.rs",
+      "bytes": 2781,
+      "nonblank": 47,
+      "sha256": "7854b120917ad5ac83b6c8a13eab1edd49cc7ebddb98ebfca65e5c59f231b139"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🖥️test-app-mutations/🎚️config/🧬️mutations/📝️change-test-config/🦀️.rs",
+      "bytes": 3589,
+      "nonblank": 66,
+      "sha256": "201d7aa2ae153a8caf62622bdc775925757db470d2c4a12312dda22760142e01"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🎚️test-app-config-selection-unit/🦀️.rs",
+      "bytes": 8048,
+      "nonblank": 93,
+      "sha256": "a1225f7406701dbd22e7b1f296734b3e673401cc656e86a56ea85ed414984c24"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🖥️test-app-mutations-document/🦀️.rs",
+      "bytes": 15006,
+      "nonblank": 223,
+      "sha256": "699308e58561571597b992b5123a974c22f354676240a7ac51a16c90bad4ffe0"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🖥️test-app-mutations/🧬️document/🧬️mutations/🦀️.rs",
+      "bytes": 3768,
+      "nonblank": 62,
+      "sha256": "ad3f9c1a79e9c4fa4108643fde94e5aa4206c9c3bf7ced6d976c9b1fbf850759"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🖥️test-app-mutations/🧬️document/🧬️mutations/📝️set-test-count/🦀️.rs",
+      "bytes": 1722,
+      "nonblank": 31,
+      "sha256": "20c22a136ac01239ef58fe24b9bb6a35b2c175a6f7d3f991452e93f47ef37ce4"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/📝️test-app-document-set-count-unit/🦀️.rs",
+      "bytes": 489,
+      "nonblank": 10,
+      "sha256": "7ba208b2e070e9b11f437df99b210dac152856c37c1946bffd2fe354598513e9"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🖥️test-app-mutations/🧬️document/🧬️mutations/🏷️set-label/🦀️.rs",
+      "bytes": 6461,
+      "nonblank": 73,
+      "sha256": "7176f0720fa70ca32fd3b686629c450c78a2c79bcf0d67c0c120a062aa33ee9a"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🏷️test-app-document-set-label-unit/🦀️.rs",
+      "bytes": 542,
+      "nonblank": 11,
+      "sha256": "24ab97d2e4d670305aa4e7ebbf57e4c4fcc9cbb6a42f6499fe9457a5021e6ab5"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🖥️test-app-mutations/🧬️document/🧬️mutations/🧒️set-slot-children/🦀️.rs",
+      "bytes": 2746,
+      "nonblank": 47,
+      "sha256": "a61392bc1b6b37b2ae15e1d0b138e2f4ba993bc2231a7559cf36fdbe70449203"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧒️test-app-document-set-slot-children-unit/🦀️.rs",
+      "bytes": 549,
+      "nonblank": 10,
+      "sha256": "a49d4ec7c31b9dbc3b7ef83b2858d747bb46b8158e57edcdc89e304ee92215f3"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️test-app-document-mutation-roster-unit/🦀️.rs",
+      "bytes": 1596,
+      "nonblank": 23,
+      "sha256": "9c09e20ab9eda8e9f58841e365087705b383d0715e0de7261a9d695f04b872a9"
+    }
+  ],
+  "dependencies": [
+    "semio-framework-artifact-reference",
+    "semio-framework-diagnostic",
+    "semio-framework-dsl-record",
+    "semio-framework-dsl-record-derive",
+    "semio-framework-os-kernel",
+    "semio-framework-pack-json",
+    "semio-framework-plugin-decl-emission",
+    "semio-framework-schema-composition",
+    "semio-framework-trace",
+    "semio-framework-ui-locale",
+    "semio-framework-value",
+    "semio-framework-value-derive",
+    "serde",
+    "serde_json"
+  ]
+}

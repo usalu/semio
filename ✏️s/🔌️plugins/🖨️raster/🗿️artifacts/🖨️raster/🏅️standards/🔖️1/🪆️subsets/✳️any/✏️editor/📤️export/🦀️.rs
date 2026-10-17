@@ -3,7 +3,7 @@ use semio_framework_job_publication::{RetainedJobPublication,JobPublicationKind}
 use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
 use semio_s_artifact_raster_raster_io::RasterStackPreparation;
 use crate::{RasterPlayApp, RasterCommand};
-use semio_framework::action_bus::RetainedToolWireInput;
+use semio_framework_action_bus::RetainedToolWireInput;
 use semio_framework_plugin::{ArtifactOwnedToolJobRequest,ArtifactToolCompletion,ArtifactDownloadOutput,EphemeralEmit};
 use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
 use semio_framework_pixels::{compositing::layers::RasterStackJob,png_encoding::PngEncodeJob};
@@ -16,9 +16,9 @@ use std::sync::Arc;
 pub const TOOL_ID:&str="export-media:image:out";
 pub const PAYLOAD_SCHEMA:&str="raster.raster.media-export.v1";
 const MEDIA_SCHEMA:&str="2d.image";
-const BASE64_INPUT_BYTES:usize=ArtifactOutputChunks::CHUNK_BYTES/4*3;
+pub const BASE64_INPUT_BYTES:usize=ArtifactOutputChunks::CHUNK_BYTES/4*3;
 
-fn base64_output_page(bytes:&[u8])->Result<Vec<u8>,String> {
+pub fn base64_output_page(bytes:&[u8])->Result<Vec<u8>,String> {
     if bytes.len()>BASE64_INPUT_BYTES {return Err("raster.export-page-limit".into());}
     const ALPHABET:&[u8;64]=b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
     let mut output=Vec::with_capacity(bytes.len().div_ceil(3)*4);
@@ -27,12 +27,12 @@ fn base64_output_page(bytes:&[u8])->Result<Vec<u8>,String> {
 }
 
 #[derive(Default)]
-struct ImageExportWork {
-    preparing:Option<RasterStackPreparation>,compositing:Option<RasterStackJob>,encoding:Option<PngEncodeJob>,encoded:Vec<u8>,cursor:usize,done:bool,closing:bool,
+pub struct ImageExportWork {
+    pub preparing:Option<RasterStackPreparation>,pub compositing:Option<RasterStackJob>,pub encoding:Option<PngEncodeJob>,pub encoded:Vec<u8>,pub cursor:usize,pub done:bool,pub closing:bool,
 }
 impl ImageExportWork {
-    fn stage(&self)->&'static str {if !self.encoded.is_empty(){"output"}else if self.encoding.is_some(){"encode"}else if self.compositing.is_some(){"composite"}else{"prepare"}}
-    fn advance(&mut self,document:&RasterSnapshot,grant:usize)->Result<Option<Vec<u8>>,String> {
+    pub fn stage(&self)->&'static str {if !self.encoded.is_empty(){"output"}else if self.encoding.is_some(){"encode"}else if self.compositing.is_some(){"composite"}else{"prepare"}}
+    pub fn advance(&mut self,document:&RasterSnapshot,grant:usize)->Result<Option<Vec<u8>>,String> {
         if self.closing||self.done {return Err("raster.export-inactive".into());}
         if grant==0 {return Ok(None);}
         if !self.encoded.is_empty() {
@@ -51,10 +51,10 @@ impl ImageExportWork {
         } else {self.preparing=Some(RasterStackPreparation::new(document)?);}
         Ok(None)
     }
-    fn terminal_is_empty(&self)->bool {self.preparing.is_none()&&self.compositing.is_none()&&self.encoding.is_none()&&self.encoded.is_empty()}
+    pub fn terminal_is_empty(&self)->bool {self.preparing.is_none()&&self.compositing.is_none()&&self.encoding.is_none()&&self.encoded.is_empty()}
 }
 
-fn progress_payload(stage:&str,completed:u64)->Vec<u8> {
+pub fn progress_payload(stage:&str,completed:u64)->Vec<u8> {
     let (en,de)=match stage {"prepare"=>("Preparing layers","Ebenen werden vorbereitet"),"composite"=>("Rendering layers","Ebenen werden gerendert"),"encode"=>("Encoding PNG","PNG wird kodiert"),_=>("Preparing download","Download wird vorbereitet")};
     format!(r#"{{"stage":"{stage}","en":"{en}","de":"{de}","completedUnits":{completed}}}"#).into_bytes()
 }
@@ -235,9 +235,6 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for RasterMediaExportJo
     const DOCUMENT_SCHEMA:&'static str=semio_s_artifact_raster_raster_model::RASTER_DOCUMENT_SCHEMA;
     const PUBLICATION_CONTRACTS:&'static [ArtifactToolPublicationContract]=&[ArtifactToolPublicationContract {tool_id:TOOL_ID,lanes:&[ArtifactToolPublicationLane::HostOnly]}];
 }
-#[cfg(test)]
-#[path="🧪️tests/🦀️.rs"]
-mod tests;
 
 /// 🧾️ The command runtime retains its snapshot and completion while this private output queue is built.
 pub fn build_download_job(request:ArtifactOwnedToolJobRequest<EditorApp<RasterPlayApp>>)->Result<Option<semio_framework::ToolOperationSpec>,Fault> {

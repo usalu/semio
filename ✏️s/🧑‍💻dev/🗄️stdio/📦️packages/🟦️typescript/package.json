@@ -65,7 +65,8 @@
     "@semio-tech/stdio-tsv": "workspace:*",
     "@semio-tech/stdio-html": "workspace:*",
     "@semio-tech/framework": "workspace:*",
-    "@semio-tech/schema-validator-ts": "workspace:*"
+    "@semio-tech/schema-validator-ts": "workspace:*",
+    "@semio-tech/stdio-inventory-ts": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.9.3",

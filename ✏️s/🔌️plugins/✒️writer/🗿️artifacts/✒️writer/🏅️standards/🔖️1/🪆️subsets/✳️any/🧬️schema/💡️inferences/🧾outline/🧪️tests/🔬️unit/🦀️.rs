@@ -1,4 +1,9 @@
-use super::*;
+use crate::WriterSnapshot;
+#[allow(unused_imports)]
+use crate::writer_text;
+#[allow(unused_imports)]
+use serde::{Deserialize, Serialize};
+use crate::standards::v1::subsets::any::schema::inferences::outline::*;
 
 fn snapshot_with_text(text: &str) -> WriterSnapshot {
     crate::writer_snapshot_with_text("writer.document", "outline-test", "plaintext", "writer://outline-test", text)

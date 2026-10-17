@@ -22,7 +22,6 @@ fn original_type_variants_retire_through_actual_controlled_ownership() {
             let (step,(a,r))=observe_retirement_allocations(||owner.step(grant).unwrap());let progress=step.progress();assert_eq!((progress.retained_capacity_bytes,progress.released_bytes),(a,r));assert!(progress.copied_items<=1);assert!(progress.copied_bytes<=copy);assert!(a<=grant.maximum_capacity_bytes);assert!(r<=grant.maximum_release_bytes);births+=a;released+=r;copied+=progress.copied_bytes;assert!(progress.copied_items!=0,"exact type owner grant blocked on turn {turn}");
         }
         assert!(owner.terminal_is_empty());assert_eq!(copied,0,"schema id text retires as native length metadata, copy0");assert_eq!(released,original_born-original_freed+births);
-        eprintln!("[DEBUG] Actual General type controlled owner copy={copy} work={copied} original={} scaffolds={births} physical={released}",original_born-original_freed);
     }}
 }
 

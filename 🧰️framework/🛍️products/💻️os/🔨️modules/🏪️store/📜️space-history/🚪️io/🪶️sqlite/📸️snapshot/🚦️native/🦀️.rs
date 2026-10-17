@@ -452,5 +452,4 @@ fn sqlite_snapshot_framework_space_history_native_codec_body_has_explicit_io_own
     let corpus:serde_json::Value=serde_json::from_str(include_str!("../🧪️tests/🧫️fixtures/🚪️ownership/🔣️.json")).unwrap();
     assert!(module_path!().contains(corpus["owner"].as_str().unwrap()));
     assert_eq!(corpus["schemaCodecMounts"],0);
-    println!("[DEBUG] Space-history native codec actual owner {}",module_path!());
 }

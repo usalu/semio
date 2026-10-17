@@ -1,11 +1,12 @@
 
 use super::*;
+use semio_framework_test_fixtures::{fixture_bytes, fixture_text};
 
 #[test]
 fn every_real_document_feature_row_is_observable_and_invertible() {
-    let base = include_bytes!("../../../../🧱️base/🖼️assets/🎓️bachelor-thesis/🎓️bachelor-thesis.pdf").to_vec();
-    let feature = include_str!("../../../🧪️tests/🖨️mutate-pdf-1-4-x/🥒️.feature");
-    let rows = semio_repo_test_host::law::feature_rows(feature);
+    let base = fixture_bytes!("../../../🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🖼️assets/🎓️bachelor-thesis/🎓️bachelor-thesis.pdf").to_vec();
+    let feature = fixture_text!("../../../🏅️standards/4️⃣1.4/🪆️subsets/🖨️x/🧪️tests/🖨️mutate-pdf-1-4-x/🥒️.feature").to_owned();
+    let rows = semio_repo_test_host::law::feature_rows(&feature);
     assert_eq!(rows.len(), KINDS.len());
     for (kind, params) in rows {
         assert!(KINDS.contains(&kind.as_str()));
@@ -25,8 +26,8 @@ fn language_neutral_direct_vectors_match_independent_lopdf() {
     use crate::standards::v1_4::subsets::base::{OraclePage, build_document, independent_pages};
     use semio_repo_test_host::parse_json;
     let vectors =
-        [include_str!("../../../🧪️tests/🧫️fixtures/🧬️mutations/📐️set-page-size/🔄️round-trips-the-concrete-inverse/🔣️.json"), include_str!("../../../🧪️tests/🧫️fixtures/🧬️mutations/📉️collapse-page-size/🔄️round-trips-the-concrete-inverse/🔣️.json")];
-    for text in vectors {
+        [fixture_text!("../../../🏅️standards/4️⃣1.4/🪆️subsets/🖨️x/🧪️tests/🧫️fixtures/🧬️mutations/📐️set-page-size/🔄️round-trips-the-concrete-inverse/🔣️.json").to_owned(), fixture_text!("../../../🏅️standards/4️⃣1.4/🪆️subsets/🖨️x/🧪️tests/🧫️fixtures/🧬️mutations/📉️collapse-page-size/🔄️round-trips-the-concrete-inverse/🔣️.json").to_owned()];
+    for text in &vectors {
         let fixture = parse_json(text).unwrap();
         let to_page = |p: &Json| OraclePage {
             width: match p.get("width").unwrap() {

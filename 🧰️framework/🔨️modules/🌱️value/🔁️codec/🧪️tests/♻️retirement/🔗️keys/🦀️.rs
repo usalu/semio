@@ -1,11 +1,12 @@
 //! 🔗️ Real borrowed-key scratch admission with full System request and release observation.
+use semio_framework_test_fixtures::fixture_text;
 use semio_framework_value::{DslValue,NativeDecodeControl,ValueRefusalKind};
 use std::collections::{HashMap,HashSet};
 use std::hash::Hasher;
 
 #[test]
 fn value_borrowed_key_index_full_requests_and_same_caller_are_admitted(){
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🛬️controlled/🔗️borrowed-keys.json")).unwrap();let contract=&fixture["indexAuthority"];
+ let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../../🔨️modules/🌱️value/🔁️codec/🧪️tests/🧫️fixtures/🛬️controlled/🔗️borrowed-keys.json")).unwrap();let contract=&fixture["indexAuthority"];
  let mut cases:Vec<(String,Vec<String>,bool)>=contract["cases"].as_array().unwrap().iter().map(|row|(row["id"].as_str().unwrap().into(),row["keys"].as_array().unwrap().iter().map(|key|key.as_str().unwrap().into()).collect(),row["unique"].as_bool().unwrap())).collect();
  let count=usize::try_from(contract["wide"]["count"].as_u64().unwrap()).unwrap();let prefix=contract["wide"]["prefix"].as_str().unwrap();let wide:Vec<String>=(0..count).map(|i|format!("{prefix}{i}")).collect();let mut slots=HashSet::new();let mask=count.checked_mul(2).unwrap().next_power_of_two()-1;let mut collisions=0;for key in &wide{let mut hash=std::collections::hash_map::DefaultHasher::new();hash.write(key.as_bytes());hash.write_u8(0xff);if !slots.insert(hash.finish()&(mask as u64)){collisions+=1;}}assert!(collisions>0,"the real wide UTF8 corpus must require slot collision resolution");
  let mut duplicate=wide.clone();duplicate.push(wide[usize::try_from(contract["wide"]["duplicateOrdinal"].as_u64().unwrap()).unwrap()].clone());cases.push(("wide".into(),wide,true));cases.push(("distantDuplicate".into(),duplicate,false));

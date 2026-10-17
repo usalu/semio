@@ -161,12 +161,13 @@ describe("framework renderer hosts", () => {
   });
 
   it("maps tiled-map interaction snapshots onto the current wasm sync ABI", () => {
-    expect(resolveMapInteractionSync('{"positions":["position-1"],"routes":[]}', '{"kind":"position","id":"position-2"}')).toEqual({
+    const mapLayers = [{ id: "positions", geometry: "point", granularity: "position" }, { id: "routes", geometry: "line", granularity: "route" }];
+    expect(resolveMapInteractionSync('{"positions":["position-1"],"routes":[]}', '{"kind":"position","id":"position-2"}', mapLayers)).toEqual({
       granularity: "position",
       selectedIdsJson: '["position-1"]',
       hoveredId: "position-2",
     });
-    expect(resolveMapInteractionSync('{"positions":[],"routes":["route-1"]}', '{"kind":"position","id":"position-2"}')).toEqual({
+    expect(resolveMapInteractionSync('{"positions":[],"routes":["route-1"]}', '{"kind":"position","id":"position-2"}', mapLayers)).toEqual({
       granularity: "route",
       selectedIdsJson: '["route-1"]',
     });

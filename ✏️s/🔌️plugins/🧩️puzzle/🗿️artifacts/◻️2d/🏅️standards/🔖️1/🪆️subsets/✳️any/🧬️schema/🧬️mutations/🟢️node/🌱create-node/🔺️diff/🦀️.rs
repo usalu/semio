@@ -2,7 +2,7 @@
 //! capture). No-op when the id already exists in `base`.
 use crate::standards::v1::subsets::any::schema::diff::{Puzzle2dDiff, Puzzle2dNodesDelta};
 use crate::Puzzle2dSnapshot;
-use crate::standards::v1::subsets::any::schema::puzzle2d_node_invariant;
+use crate::standards::v1::subsets::any::schema::records::puzzle2d_node_invariant;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::CreateNode, base: &Puzzle2dSnapshot) -> protocol::MutationOutcome<Puzzle2dDiff> {

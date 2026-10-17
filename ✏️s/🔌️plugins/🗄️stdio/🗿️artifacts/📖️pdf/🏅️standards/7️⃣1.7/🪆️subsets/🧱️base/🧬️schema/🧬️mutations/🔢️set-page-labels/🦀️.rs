@@ -1,6 +1,5 @@
 //! 🔢️ Authoritative PDF mutation payload, diff, inverse, and tests for `set-page-labels`.
 
-use super::PdfMutation;
 use crate::standards::v1_7::subsets::base::schema::diff::{self, PdfDiff};
 use crate::standards::v1_7::subsets::base::schema::snapshot::*;
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
@@ -14,7 +13,10 @@ pub struct SetPageLabels {
     pub labels: Vec<PdfPageLabelRange>,
 }
 
-impl MutationKind<PdfSnapshot, PdfMutation> for SetPageLabels {
+impl<Op> MutationKind<PdfSnapshot, Op> for SetPageLabels
+where
+    Op: protocol::Mutation<PdfSnapshot, Diff = PdfDiff> + From<SetPageLabels>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "page-labels", kind: "set-page-labels", record: "Set" };
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
@@ -22,10 +24,10 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetPageLabels {
         MutationOutcome::new(diff::diff_set_page_labels(base, &self.labels))
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
         let _ = base;
-        vec![PdfMutation::SetPageLabels(SetPageLabels { labels: base.page_labels.clone() })]
+        vec![Op::from(SetPageLabels { labels: base.page_labels.clone() })]
     
     })())
 }
@@ -42,8 +44,6 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetPageLabels {
 //#endregion 🔖️Mutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
 

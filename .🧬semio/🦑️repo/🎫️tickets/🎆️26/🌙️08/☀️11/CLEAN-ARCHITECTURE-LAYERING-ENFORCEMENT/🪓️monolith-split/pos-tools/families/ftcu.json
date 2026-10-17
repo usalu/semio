@@ -1,0 +1,14 @@
+{
+ "name": "ftcu",
+ "crates": [
+  "semio-framework-ui-host",
+  "semio-framework-ui-host-tests"
+ ],
+ "base": {
+  "rev": "1bae6115bc5",
+  "crates": [
+   "semio-framework-ui-host"
+  ]
+ },
+ "note": "FTC ui-host"
+}

@@ -21,7 +21,6 @@ fn portable_coordinate_matches_complete_original_production_descriptor_oracle() 
     let args = arguments(coordinate.artifact);
     let output = inventory_for_command(PRODUCED_BY, CONTRIBUTIONS, &args, &mut |_| Ok(())).unwrap();
     assert_eq!(serde_json::from_slice::<Value>(&output).unwrap(), expected);
-    println!("[DEBUG] child={} mutations={} bytes={}", coordinate.artifact, expected["mutations"].as_array().unwrap().len(), output.len());
 }
 
 #[test]
@@ -33,7 +32,6 @@ fn child_refuses_actual_sibling_and_retains_progress_cancellation() {
     let mut observe = |_| { callbacks += 1; Err(MutationInventoryError::Cancelled) };
     assert_eq!(inventory_for_command(PRODUCED_BY, CONTRIBUTIONS, &arguments(CONTRIBUTIONS[0].coordinate.artifact), &mut observe).unwrap_err(), MutationInventoryError::Cancelled);
     assert_eq!(callbacks, 1);
-    println!("[DEBUG] child={} refusedSibling={} cancellationCallbacks={}", CONTRIBUTIONS[0].coordinate.artifact, sibling, callbacks);
 }
 
 fn arguments(artifact: &str) -> Vec<String> {

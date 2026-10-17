@@ -2,8 +2,9 @@
 use semio_framework_plugin_host::{GuestRuntime,GuestRuntimes,WasmtimeRuntime,SharedEngineConfig,PackageRef,PackageId,PackageHash};
 use semio_framework_plugin_interpreter_runtime::OwnedRuntime;
 use semio_framework::kernel::Budget;
+use semio_framework_test_fixtures::repo_root;
 const MINTED_DOCUMENT_ID:&str="artifact-0123456789abcdef0123456789abcdef";
-fn repo_root()->std::path::PathBuf {std::path::Path::new(env!("CARGO_MANIFEST_DIR")).ancestors().find(|p|p.join("nx.json").is_file()).unwrap().to_path_buf()}
+fn repo_root()->std::path::PathBuf {repo_root!()}
 fn package_ref(package:&str,bytes:&[u8])->PackageRef {PackageRef {package:PackageId(package.into()),hash:PackageHash(*semio_framework_hash::hash(bytes).as_bytes())}}
 fn codec_budget()->Budget {Budget {fuel:4_000_000_000,deadline_ms:30_000,max_effects:0,max_patch_bytes:0,max_frames:0}}
 fn jit_budget()->Budget {Budget {deadline_ms:120_000,..codec_budget()}}

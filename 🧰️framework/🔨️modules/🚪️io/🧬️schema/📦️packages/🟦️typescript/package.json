@@ -1,0 +1,8 @@
+{
+  "name": "@semio-tech/framework-io-schema-ts",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./🟦️.ts"
+  }
+}

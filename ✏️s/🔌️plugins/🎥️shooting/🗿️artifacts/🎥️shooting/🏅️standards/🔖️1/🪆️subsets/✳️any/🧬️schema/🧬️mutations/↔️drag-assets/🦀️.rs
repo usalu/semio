@@ -1,7 +1,6 @@
 //! ↔️ Shooting mutation payload — `DragAssets`. The bulk relative-offset gesture over multiple assets (gumball drag). Relative `(dx, dy, dz)` offset applied to every asset in `asset_ids` — the taxonomy's plural bulk-drag gesture.
 
 use crate::diff::ShootingDiff;
-use crate::mutations::ShootingMutation;
 use crate::ShootingSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 
@@ -18,12 +17,15 @@ pub struct DragAssets {
     pub dz: f64,
 }
 
-impl MutationKind<ShootingSnapshot, ShootingMutation> for DragAssets {
+impl<Op> MutationKind<ShootingSnapshot, Op> for DragAssets
+where
+    Op: protocol::Mutation<ShootingSnapshot, Diff = ShootingDiff> + From<DragAssets>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "drag", entity: "assets", kind: "drag-assets", record: "DraggedAssets" };
     fn diff(&self, base: &ShootingSnapshot) -> protocol::MutationOutcome<ShootingDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &ShootingSnapshot) -> Result<Vec<ShootingMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &ShootingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

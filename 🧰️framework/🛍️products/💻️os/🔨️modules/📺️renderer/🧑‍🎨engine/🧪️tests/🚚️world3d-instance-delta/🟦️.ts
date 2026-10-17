@@ -10,7 +10,8 @@
  */
 import { describe, expect, it } from "vitest";
 import fixture from "../../🧱️elements/🌐️World3dHost/🧪️tests/🧫️fixtures/🚚️instance-delta.json" with { type: "json" };
-import { advanceWorldInstanceResidency, parseWorldInstanceDelta, type WorldInstanceRecord, type WorldInstanceResidencyV1 } from "../../🧱️elements/🌐️World3dHost/🟦️.tsx";
+import { advanceWorldInstanceResidency, parseWorldInstanceDelta, type WorldInstanceResidencyV1 } from "../../🧱️elements/🌐️World3dHost/🔗️instance-selection/🟦️.ts";
+import { type WorldInstanceRecord } from "../../🧱️elements/🌐️World3dHost/🔭️scene-schema/🟦️.ts";
 
 /** 🧾️ The retained set a case starts from, built the way a cold consumer builds it: straight off the
  * declared `instancesJson`, so the record objects the law checks identity on are the real ones. */

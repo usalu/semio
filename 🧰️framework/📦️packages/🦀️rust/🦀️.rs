@@ -1,4 +1,4 @@
-//! 🥅️ Render-independent framework facade: explicit re-exports of the carved producer crates under the module paths the framework always exposed (`kernel`, `manifest`, `ui`, `abi`, `action_bus`, `platform`, `interaction`, `source_projection`).
+//! 🥅️ Render-independent framework facade: explicit re-exports of the carved producer crates under the module paths the framework always exposed (`kernel`, `manifest`, `action_bus`, `interaction`, `onboarding`, `history_edit`, `io_schema`, `sqlite_snapshot`, `mesh_io`).
 
 pub mod kernel {
     pub use semio_framework_kernel::{ActionContext, ActionRequest, ActorInstanceCloseRequest, ActorInstanceLifecycleAck, ActorInstanceLifecycleReceipt, ActorInstanceLifetime, ActorInstanceOpenRequest, ActorUiPatchReceipt, ArtifactDiff, ArtifactMergeKind, BrokerHooks, CLIPBOARD_FRAGMENT_MAX_WIRE_BYTES, CLIPBOARD_METADATA_MAX_WIRE_BYTES, CLIPBOARD_PASTE_MAX_WIRE_BYTES, CLIPBOARD_TEXT_MAX_BYTES, COLD_PAIR_MAXIMUM_BYTES, COLD_PAIR_MAXIMUM_PAGES, COLD_PAIR_PAGE_MAXIMUM_BYTES, COMMAND_BATCH_MAXIMUM_ITEMS, COMMAND_MAXIMUM_BYTES, COMMAND_MAXIMUM_PAGES, COMMAND_PAGE_MAXIMUM_BYTES, ClipboardError, ClipboardFragment, ColdDocumentPairApplied, ColdDocumentPairCursor, ColdDocumentPairFrontier, ColdDocumentPairHeader, ColdDocumentPairPage, ColdPairIngressStatus, CommandBatch, CommandBatchDriver, CommandBatchProgress, CommandContext, CommandDriverRegistry, CommandEnvelope, CommandEnvelopeSet, CommandIngressStatus, CommandPageCursor, CommandPageSet, Diagnostic, Effect, Event, Fault, FaultCause, FaultCode, FaultFrom, FaultOrigin, FaultScope, FixedCommandPage, INVOCATION_RESULT_PACK_MAXIMUM_BYTES, InvocationResult, JobPlacement, MessageEndpoint, OriginalJobBudget, OriginalJobCallFailure, OriginalJobCancelReply, OriginalJobOutcome, OriginalJobOutputAckReply, OriginalJobOutputChunk, OriginalJobOutputReply, OriginalJobOutputState, OriginalJobSource, OriginalJobSourceCursor, OriginalJobStartReply, OriginalJobStepReply, OriginalJobTurnLoan, PagedCommand, PagedCommandReader, PasteAnchor, PastePlacement, PresenceHistoryEdit, PresenceHistoryEditStage, PresencePeer, PresenceToolRun, PresenceToolRunState, PresenceUi, PresenceViewKind, PresenceWindowView, RejectedCommandBuild, RejectedCommandBuildRegistry, RetainedTurnInput, RetainedTurnReceipt, Severity, TurnResult, UndoPolicy, WindowOutput, decode_presence_history_edit, decode_presence_peer, encode_presence_history_edit, encode_presence_peer, return_content, return_message, spawned_job_completed_event};
@@ -22,21 +22,17 @@ pub mod manifest {
     pub use semio_framework_manifest_view_model::{MAX_SURFACE_BODY_KEY_BYTES, MAX_SURFACE_VIEW_CONTEXT_BYTES, PUBLIC_INVOCATION_BODY_BYTES, PUBLIC_INVOCATION_DEPTH, PUBLIC_INVOCATION_ESCAPE_PAIR_WIRE_FACTOR, PUBLIC_INVOCATION_STRING_BYTES, TreeWindowRequest, UI_REFRESH_SECTION_BODY_KEYS, UI_REFRESH_SECTION_KEYS, UiRefreshSection, VIEW_CONTEXT_IDENTIFIER_CHARS, VIEW_CONTEXT_IDENTIFIER_FIELDS, VIEW_CONTEXT_LONG_STRING_CHARS, VIEW_CONTEXT_LONG_STRING_FIELDS, VIEW_CONTEXT_SESSION_IDENTITY_FIELDS, VIEW_CONTEXT_TRACE_CURSOR_ENTRIES, VIEW_CONTEXT_TRACE_CURSOR_FIELDS, VIEW_CONTEXT_TREE_WINDOWS, VIEW_CONTEXT_TREE_WINDOW_FIELDS, VIEW_CONTEXT_TREE_WINDOW_NUMERIC_FIELDS, VIEW_CONTEXT_UTILITY_ENTRIES, VIEW_CONTEXT_WINDOW_INSTANCES, ViewModel, ViewSessionIdentity, ViewWindowInstance, public_invocation_char_cost, public_invocation_string_pages};
 }
 
-pub use manifest as ui;
-pub use semio_framework_abi as abi;
 pub use semio_framework_action_bus as action_bus;
-pub use semio_framework_action_bus::platform;
 pub use semio_framework_interaction as interaction;
 
 //#region 🧩️ReservedFeatures
 pub use semio_framework_time_travel_actions as history_edit;
-pub use semio_framework_tool_run_actions as tool_run;
 pub use semio_framework_onboarding as onboarding;
 
 /// 🧩️ The framework features that reserve actions or dialogs on every hosting app, in injection order: the history-edit
 /// verbs join the app roster after the history lane, the tool run actions join every window kind after the interaction
 /// verbs. A host adds its own contributions (such as audience rules) after these.
-pub const FRAMEWORK_RESERVED_CONTRIBUTIONS: [manifest::ReservedContribution; 2] = [history_edit::RESERVED, tool_run::RESERVED];
+pub const FRAMEWORK_RESERVED_CONTRIBUTIONS: [manifest::ReservedContribution; 2] = [semio_framework_time_travel_actions::RESERVED, semio_framework_tool_run_actions::RESERVED];
 //#endregion 🧩️ReservedFeatures
 
 pub use ui_wgpu::wgpu::IconName;
@@ -67,7 +63,7 @@ pub use semio_framework_diagnostic::TextSpan;
 pub use semio_framework_mesh_engine::io as mesh_io;
 pub use semio_framework_mesh_engine::{mesh_box, mesh_cone, mesh_cylinder, mesh_from_indexed, mesh_from_indexed_with_face_groups, mesh_from_kind, mesh_ico_sphere, mesh_plane, mesh_torus, mesh_uv_sphere, MeshAttribute, MeshAttributeDomain, MeshAttributeSemantic, MeshAttributeInterpolation, MeshTexture, PolygonMeshSource, validate_polygon_mesh_attributes, validate_mesh_surface_assets, validate_mesh_attribute, MeshData, MeshCanonicalDecoder, MeshCanonicalIntakeSource};
 pub use semio_framework_artifact_reference::{ArtifactDialect, Dialect, StandardId, SubsetId};
-pub use platform::{PanelVisibility, Platform, PlatformSpec};
+pub use semio_framework_action_bus::platform::{PanelVisibility, Platform, PlatformSpec};
 pub use kernel::{
     decode_presence_peer,
     encode_presence_peer,

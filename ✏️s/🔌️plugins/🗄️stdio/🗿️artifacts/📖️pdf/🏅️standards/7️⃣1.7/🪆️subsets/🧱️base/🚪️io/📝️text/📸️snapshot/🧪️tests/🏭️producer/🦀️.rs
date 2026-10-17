@@ -1,9 +1,18 @@
 //! 🏭️ Independent scalar schema identity and both controlled allocation frontiers.
-use super::*;
+use semio_framework_test_fixtures::fixture_text;
+
+#[allow(unused_imports)]
+use crate::standards::v1_7::subsets::base::schema::snapshot::*;
+#[allow(unused_imports)]
+use semio_framework_value::{ValueError, ValueRefusalKind};
+#[allow(unused_imports)]
+use pack::value::{ToValue, FromValue, DslValue};
+use crate::standards::v1_7::subsets::base::io::text::snapshot::{field};
+use crate::standards::v1_7::subsets::base::io::text::snapshot::*;
 fn rows(spec:&semio_framework_dsl_record::RecordSpec)->serde_json::Value{serde_json::Value::Array(spec.fields.iter().map(|field|serde_json::json!({"id":field.id,"key":field.key,"shape":match field.shape{semio_framework_dsl_record::Shape::Text=>"Text",semio_framework_dsl_record::Shape::UInt=>"UInt",semio_framework_dsl_record::Shape::Bytes64=>"Bytes64",semio_framework_dsl_record::Shape::Bool=>"Bool",semio_framework_dsl_record::Shape::Value=>"Value",_=>panic!("scalar metadata shape")},"optional":field.optional})).collect())}
 #[test]
 fn sqlite_snapshot_scalar_schema_producer_matches_literal_fields_and_both_owned_frontiers(){
- let data:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🏭️producer/🔣️.json")).unwrap();let maximum=data["maximumBytes"].as_u64().unwrap()as usize;let tiny=data["tinyMaximumBytes"].as_u64().unwrap()as usize;let count=data["fields"].as_array().unwrap().len();let at=data["cancelAt"].as_u64().unwrap()as usize;
+ let data:serde_json::Value=serde_json::from_str(fixture_text!("../../../../🚪️io/📝️text/📸️snapshot/🧪️tests/🧫️fixtures/🏭️producer/🔣️.json")).unwrap();let maximum=data["maximumBytes"].as_u64().unwrap()as usize;let tiny=data["tinyMaximumBytes"].as_u64().unwrap()as usize;let count=data["fields"].as_array().unwrap().len();let at=data["cancelAt"].as_u64().unwrap()as usize;
  let expected=&data["fields"];assert_eq!(rows(&spec()),*expected);
  let exact=count*std::mem::size_of::<semio_framework_dsl_record::FieldSpec>()+expected.as_array().unwrap().iter().map(|field|field["key"].as_str().unwrap().len()).sum::<usize>();assert!(exact<=maximum);
  let mut accept=|_|true;let mut input=semio_framework_value::NativeDecodeControl::new(exact,&mut accept);input.begin_stage(5).unwrap();let decoded=spec_producer().decode(&mut input).unwrap();assert_eq!(rows(&decoded),*expected);assert_eq!(input.owned_bytes(),exact);input.step().unwrap();

@@ -29,6 +29,10 @@ type stdioIfc4AnyInferenceGuardSizeBounds = { readonly minItems?: number; readon
 
 export const stdioIfc4AnyInferenceGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : stdioIfc4AnyInferenceGuardReject(at, "value is not an object");
+export const stdioIfc4AnyInferenceGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) stdioIfc4AnyInferenceGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const stdioIfc4AnyInferenceGuardArray = (value: unknown, at: string, bounds: stdioIfc4AnyInferenceGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return stdioIfc4AnyInferenceGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) stdioIfc4AnyInferenceGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -59,17 +63,17 @@ export const stdioIfc4AnyInferenceGuardConstant = <T extends string | number | b
 //#endregion 🚪️Parsers
 
 export function parseIfcInference(value: unknown, at = "$"): IfcInference {
-  const row = stdioIfc4AnyInferenceGuardObject(value, at);
+  const row = stdioIfc4AnyInferenceGuardClosed(stdioIfc4AnyInferenceGuardObject(value, at), at, ["bounds"]);
   return {
     bounds: parseIfcBounds(row["bounds"], `${at}.bounds`),
   };
 }
 
 export function parseIfcBounds(value: unknown, at = "$"): IfcBounds {
-  const row = stdioIfc4AnyInferenceGuardObject(value, at);
+  const row = stdioIfc4AnyInferenceGuardClosed(stdioIfc4AnyInferenceGuardObject(value, at), at, ["min", "max", "pointCount"]);
   return {
-    min: stdioIfc4AnyInferenceGuardArray(row["min"], `${at}.min`, {"minItems": 3, "maxItems": 3}).map((item, index) => stdioIfc4AnyInferenceGuardNumber(item, `${at}.min[${index}]`)),
-    max: stdioIfc4AnyInferenceGuardArray(row["max"], `${at}.max`, {"minItems": 3, "maxItems": 3}).map((item, index) => stdioIfc4AnyInferenceGuardNumber(item, `${at}.max[${index}]`)),
+    min: ((items0) => [stdioIfc4AnyInferenceGuardNumber(items0[0], `${at}.min[0]`), stdioIfc4AnyInferenceGuardNumber(items0[1], `${at}.min[1]`), stdioIfc4AnyInferenceGuardNumber(items0[2], `${at}.min[2]`)])(stdioIfc4AnyInferenceGuardArray(row["min"], `${at}.min`, {"minItems": 3, "maxItems": 3})),
+    max: ((items0) => [stdioIfc4AnyInferenceGuardNumber(items0[0], `${at}.max[0]`), stdioIfc4AnyInferenceGuardNumber(items0[1], `${at}.max[1]`), stdioIfc4AnyInferenceGuardNumber(items0[2], `${at}.max[2]`)])(stdioIfc4AnyInferenceGuardArray(row["max"], `${at}.max`, {"minItems": 3, "maxItems": 3})),
     pointCount: stdioIfc4AnyInferenceGuardInteger(row["pointCount"], `${at}.pointCount`, {"minimum": 0}),
   };
 }

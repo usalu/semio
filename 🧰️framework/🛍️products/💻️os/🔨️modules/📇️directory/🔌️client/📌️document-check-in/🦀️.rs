@@ -4,7 +4,7 @@
 //! of the browser worker's Check In owner (`🏪️store/👷️worker/🟦️.ts` `driveDocumentCheckIn`): every
 //! answer is bounded before it is decoded, must be canonical, and must name the request it was asked for.
 
-use super::super::schema::document_check_in::{DocumentCheckInStatusV1, DocumentCheckInV1, DOCUMENT_CHECK_IN_MAX_BYTES};
+use super::super::{DocumentCheckInStatusV1, DocumentCheckInV1, DOCUMENT_CHECK_IN_MAX_BYTES};
 use super::{encode_url_component, DirectoryClient, DirectoryClientError, DirectoryTransport, HttpMethod};
 use semio_framework_async::OperationContext;
 

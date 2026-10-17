@@ -1,6 +1,14 @@
 //! 🧪️ Native topology lookup follows independent SQLite results without ownership copies.
 
-use super::*;
+use crate::Puzzle2dSnapshot;
+use semio_framework_value::paged::PagedUtf8;
+use semio_framework_value::retained_clone::RetainedCloneGrant;
+#[allow(unused_imports)]
+use semio_framework_value::{ValueError, ValueRefusalKind};
+#[allow(unused_imports)]
+use semio_framework_value::retained_clone::{RetainedCloneBinding, RetainedCloneProgress, RetainedCloneRef, RetainedCloneStep, paged::PagedUtf8BoundedOrdCursor, ordered_map::BoundedOrdCursor, ordered_map::BoundedOrdGrant, ordered_map::BoundedOrdStep};
+use crate::standards::v1::subsets::any::schema::lookup::*;
+use semio_framework_test_fixtures::fixture_text;
 fn close(cursor: &mut Puzzle2dLookupCursor) {
     cursor.begin_close();
     for _ in 0..32 {
@@ -23,7 +31,7 @@ fn close(cursor: &mut Puzzle2dLookupCursor) {
 
 #[test]
 fn history_edit_puzzle2d_native_lookup_follows_sqlite_first_match_and_exact_alias_closure() {
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/📸️snapshot/🔎️lookup/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(fixture_text!("../../../🧪️tests/🧫️fixtures/📸️snapshot/🔎️lookup/🔣️.json")).unwrap();
     let controls = &corpus["control"];
     let text = |value: &serde_json::Value| {
         let value = value.as_str().unwrap();
@@ -37,13 +45,13 @@ fn history_edit_puzzle2d_native_lookup_follows_sqlite_first_match_and_exact_alia
     for case in corpus["cases"].as_array().unwrap() {
         let scope = match case["scope"].as_str().unwrap() { "node" => Puzzle2dLookupScope::Node, "edge" => Puzzle2dLookupScope::Edge, "region" => Puzzle2dLookupScope::Region, "handle" => Puzzle2dLookupScope::Handle, _ => panic!("unknown authored lookup scope") };
         let mut snapshot = Puzzle2dSnapshot::default();
-        snapshot.nodes = case["nodes"].as_array().unwrap().iter().enumerate().map(|(index, id)| crate::standards::v1::subsets::any::schema::Puzzle2dNode { id: text(id), handles: case["handles"][index].as_array().unwrap().iter().map(|id| crate::standards::v1::subsets::any::schema::Puzzle2dHandle { id: text(id), ..Default::default() }).collect(), ..Default::default() }).collect();
-        snapshot.edges = case["edges"].as_array().unwrap().iter().map(|id| crate::standards::v1::subsets::any::schema::Puzzle2dEdge { id: text(id), ..Default::default() }).collect();
-        snapshot.target_regions = case["regions"].as_array().unwrap().iter().map(|id| crate::standards::v1::subsets::any::schema::Puzzle2dTargetRegion { id: text(id), ..Default::default() }).collect();
+        snapshot.nodes = case["nodes"].as_array().unwrap().iter().enumerate().map(|(index, id)| crate::standards::v1::subsets::any::schema::records::Puzzle2dNode { id: text(id), handles: case["handles"][index].as_array().unwrap().iter().map(|id| crate::standards::v1::subsets::any::schema::records::Puzzle2dHandle { id: text(id), ..Default::default() }).collect(), ..Default::default() }).collect();
+        snapshot.edges = case["edges"].as_array().unwrap().iter().map(|id| crate::standards::v1::subsets::any::schema::records::Puzzle2dEdge { id: text(id), ..Default::default() }).collect();
+        snapshot.target_regions = case["regions"].as_array().unwrap().iter().map(|id| crate::standards::v1::subsets::any::schema::records::Puzzle2dTargetRegion { id: text(id), ..Default::default() }).collect();
         let target = text(&case["target"]);
         let original = serde_json::to_value(&snapshot).unwrap();
-        let mut source = crate::test_source_custody::admit();
-        let mut query = crate::test_source_custody::admit();
+        let mut source = crate::standards::v1::subsets::any::schema::testkit::admit();
+        let mut query = crate::standards::v1::subsets::any::schema::testkit::admit();
         let mut cursor = Puzzle2dLookupCursor::new(scope);
         let (zero, allocation) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| cursor.advance(source.borrow(&snapshot), query.borrow(&target), RetainedCloneGrant::default()));
         assert_eq!(zero.unwrap(), Puzzle2dLookupStep::Pending(Default::default()));
@@ -80,8 +88,7 @@ fn history_edit_puzzle2d_native_lookup_follows_sqlite_first_match_and_exact_alia
             close(&mut cancelled);
             assert_eq!(cancelled.take(), None);
         }
-        crate::test_source_custody::close(&mut query);
-        crate::test_source_custody::close(&mut source);
+        crate::standards::v1::subsets::any::schema::testkit::close(&mut query);
+        crate::standards::v1::subsets::any::schema::testkit::close(&mut source);
     }
-    eprintln!("[DEBUG] Puzzle2d native lookup matched six authored SQLite topologies, zero-allocation UTF8 comparison, source swap and exact alias closure");
 }

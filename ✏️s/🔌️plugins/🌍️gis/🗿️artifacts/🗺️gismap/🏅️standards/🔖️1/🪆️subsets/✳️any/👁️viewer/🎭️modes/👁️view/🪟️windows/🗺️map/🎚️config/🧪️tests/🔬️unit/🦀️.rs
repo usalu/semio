@@ -1,4 +1,4 @@
-use super::*;
+use crate::viewer::gismap::modes::view::windows::map::config::*;
 use protocol::{Mutation, OpBinary, OpText};
 
 fn camera() -> GisMapViewerCamera {
@@ -59,6 +59,6 @@ fn the_window_config_round_trips_through_its_text_and_binary_codecs() {
 #[test]
 fn the_owner_binds_the_viewer_map_window_kind() {
     use semio_framework_plugin::WindowConfigOwner;
-    assert_eq!(<GisMapViewerWindowConfigOwner as WindowConfigOwner>::WINDOW_KIND_ID, super::super::WINDOW_KIND_ID);
+    assert_eq!(<GisMapViewerWindowConfigOwner as WindowConfigOwner>::WINDOW_KIND_ID, crate::viewer::gismap::modes::view::windows::map::WINDOW_KIND_ID);
     assert_eq!(<GisMapViewerWindowConfigOwner as WindowConfigOwner>::SCHEMA, "gis.mapviewerwindowcfg");
 }

@@ -227,7 +227,7 @@ describe("fleet command paths", () => {
       "🌎️hub/🚀️local-bootstrap/🔐️credential-issuance/🟦️.ts",
       "🌎️hub/🚀️local-bootstrap/🏃️execution/🟦️.ts",
       "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🚀️local-hub/🏃️execution/🟦️.ts",
-      "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️vite-plugins/🟦️.ts",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️vite-plugins/🔐️agent-credential-install/🟦️.ts",
     ];
     for (const owner of owners) {
       const source = readFileSync(join(repoRoot, owner), "utf8");

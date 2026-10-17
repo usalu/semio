@@ -5,5 +5,4 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.pro
 
 
 
-#[path = "📦️pack/🦀️.rs"]
-pub mod owned_pack;
+pub use semio_s_artifact_stdio_json_schema::standards::v_rfc8259::subsets::base::io::binary::snapshot::owned_pack;

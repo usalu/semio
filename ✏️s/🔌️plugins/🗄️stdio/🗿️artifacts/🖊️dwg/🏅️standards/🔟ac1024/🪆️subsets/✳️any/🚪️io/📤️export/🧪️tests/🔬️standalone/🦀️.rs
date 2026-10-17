@@ -1,3 +1,5 @@
+use semio_framework_test_fixtures::fixture_path;
+
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn r2010_object_inventory(sections: &[DwgRawSection]) -> Result<Vec<(u64, u16)>, String> {
@@ -31,7 +33,7 @@ fn r2010_object_inventory(sections: &[DwgRawSection]) -> Result<Vec<(u64, u16)>,
 /// 📂️ Reads one committed fixture by its path relative to this crate's manifest directory.
 #[cfg(test)]
 fn fixture(relative: &str) -> Vec<u8> {
-    std::fs::read(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative)).unwrap_or_else(|error| panic!("{relative}: {error}"))
+    std::fs::read(fixture_path!(relative)).unwrap_or_else(|error| panic!("{relative}: {error}"))
 }
 
 #[cfg(test)]

@@ -1,9 +1,13 @@
+use crate::editor::sourcing::terminology::SourcingLabels;
 
-use super::*;
+use crate::{CurationSnapshot, SortDirection};
+use crate::editor::sourcing::config::SourcingCurationConfig;
+use semio_framework_plugin::SurfaceKind;
+use crate::editor::sourcing::modes::edit::windows::curated::{SOURCING_CURATION_BODY_CURATED, curated_row_actions, curated_rows, definition, render};
 use crate::Filters;
 use crate::editor::sourcing::SourcingCurationCommand;
 use crate::editor::sourcing::commands::{curation_add, curation_remove, sort_table};
-use crate::editor::sourcing::unit_tests::context::{dispatch, new_app, render as render_body, row_ids, table_of};
+use crate::editor_unit_tests::context::{dispatch, new_app, render as render_body, row_ids, table_of};
 
 /// 🧫️ The demo stock with its two first kinds curated at different counts — the only fixture these
 /// tests need to see the curated table's ordering and its row actions.
@@ -39,14 +43,14 @@ async fn curated_columns_are_sortable_and_echo_the_active_sort() {
     let cfg = SourcingCurationConfig { filters: Filters { sort: Some(crate::TableSort { column_id: "count".into(), direction: crate::SortDirection::Desc }), ..Default::default() }, ..Default::default() };
     let node = render(&curated_document(), &cfg, labels()).expect("bounded curated table");
     let semio_framework_plugin::Component::Surface(props) = &node.component else { panic!("expected a table surface") };
-    let scene = crate::editor::sourcing::unit_tests::context::table_scene_of(&node).expect("complete retained table scene");
+    let scene = crate::editor_unit_tests::context::table_scene_of(&node).expect("complete retained table scene");
     let columns: serde_json::Value = serde_json::from_str(&scene.columns_json).unwrap();
     for index in 0..3 {
         assert_eq!(columns[index]["sortable"], true, "column {index} must be sortable");
     }
     assert_eq!(columns[3]["id"], "actions");
     assert!(scene.sort_json.expect("the active sort reaches the renderer").contains("count"));
-    assert_eq!(scene.row_drag_mime.as_deref(), Some(crate::editor::sourcing::SOURCING_DRAG_MIME));
+    assert_eq!(scene.row_drag_mime.as_deref(), Some(crate::editor::sourcing::base::SOURCING_DRAG_MIME));
     assert!(scene.drop_action_json.expect("drop action").contains("dropOnCurated"));
 }
 

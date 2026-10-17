@@ -8,7 +8,7 @@
 
 import { describe, expect, it } from "vitest";
 import corpus from "../🧫️fixtures/🧫️board-event-coalescing/🔣️.json" with { type: "json" };
-import { coalesceBoard2dEvents } from "../../🟦️.tsx";
+import { coalesceBoard2dEvents } from "../../📡️board-events/🟦️.ts";
 // #endregion 🔌️Adapters
 
 //#region 🧫️Corpus

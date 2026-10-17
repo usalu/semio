@@ -1,0 +1,15 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🧪️tests/🧩️extension/🟦️.ts",
+ "importers": [],
+ "childRoot": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🧪️tests",
+ "sideEffectImports": true,
+ "sharedLines": [[23,27]],
+ "children": [
+  {"dir": "🧰️extension-test-kit", "doc": "/** 🧰️ Shared constants and helpers of the extension-host suites: the expected commands, constraints and views, the workspace and fixture openers, the diagnostics wait, the definition entity scan and the code lens readers. */", "lines": [[31,275]]},
+  {"dir": "🔎️repo-diagnostics-suites", "doc": "/** 🔎️ The extension-host suites of kit validation, repo diagnostics and refresh diagnostics. */", "lines": [[375,544]]},
+  {"dir": "🌊️view-and-provider-suites", "doc": "/** 🌊️ The extension-host suites of the sidebar and sections views, the filter and monorepo tree providers and the data structures. */", "lines": [[549,1024]]},
+  {"dir": "🌈️cli-tree-helper-suites", "doc": "/** 🌈️ The extension-host suites of the CLI tree helpers: leading emoji, display labels, context values, breach kind documents and the CLI tree arguments. */", "lines": [[1027,1198]]},
+  {"dir": "📮️uri-and-event-suites", "doc": "/** 📮️ The extension-host suites of extended RepoEvent parsing, slugify, URI parsing and the navigation commands. */", "lines": [[1203,1636]]},
+  {"dir": "🏷️entity-and-codelens-suites", "doc": "/** 🏷️ The extension-host suites of the entity emoji registry, the entity ID regex matching and the CodeLens behavior. */", "lines": [[1641,1967]]}
+ ]
+}

@@ -1,12 +1,42 @@
 //! 🛠️ Laws of the puzzle 5d transform tool machine alone: a gesture record yields its parametric leaf (and a
 //! drop's fastenings) as ONE committed `ToolTransaction` under a deterministic ref, a board drag stays on the
 //! board, a gesture that moves nothing leaves zero trace.
+use semio_framework_pack_json::json;
+use crate::standards::v1::subsets::any::schema::mutations::{connect_grips, drag_selection_2d, drag_selection_3d, Puzzle5dMutation};
+use crate::Puzzle5dSnapshot;
+use semio_framework_tool_machine::GesturePhase;
+use semio_s_artifact_puzzle_3d_editor_transform::{Puzzle3dSelectionMotion, Puzzle3dSelectionRecord};
+use std::sync::Arc;
+#[allow(unused_imports)]
+use crate::editor::puzzle5d::config::Puzzle5dRuntime;
+#[allow(unused_imports)]
+use crate::editor::puzzle5d::terminology::Puzzle5dLabels;
+#[allow(unused_imports)]
+use crate::editor::puzzle5d::entities::{puzzle5d_action, puzzle5d_axis_index, puzzle5d_grip_full_id, quat_rotate_vector, PUZZLE5D_PLAY_CONTROLLER_ID};
+#[allow(unused_imports)]
+use semio_framework_pack_json::Value;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::mutations::{rotate_selection_3d, scale_selection_3d};
+#[allow(unused_imports)]
+use machine::Command;
+#[allow(unused_imports)]
+use semio_framework_ui_locale::LocalizedLabel;
+#[allow(unused_imports)]
+use semio_framework_plugin::UtilityDefinition;
+#[allow(unused_imports)]
+use semio_framework_plugin::WindowMeasure;
+#[allow(unused_imports)]
+use semio_framework_tool_machine::{GestureChart, ToolYield};
+#[allow(unused_imports)]
+use semio_s_artifact_puzzle_3d_editor_transform::puzzle3d_unique_targets;
+use crate::editor::puzzle5d::modes::edit::windows::world3d::utilities::transform::puzzle5d_relocate_record;
+use semio_framework_test_fixtures::fixture_text;
 
-use super::*;
+use crate::editor::puzzle5d::modes::edit::windows::world3d::utilities::transform::*;
 use crate::apply_puzzle5d_mutation;
 use semio_framework_tool_machine::{ToolMachineRunner, ToolStep};
 use crate::standards::v1::subsets::any::schema::mutations::PUZZLE5D_FLAT_TO_WORLD;
-use crate::{Puzzle5dGrip, Puzzle5dGrip3d, Puzzle5dPart, Puzzle5dPart2d, Puzzle5dPart3d, Puzzle5dTargetVolume};
+use crate::standards::v1::subsets::any::schema::document_records::{Puzzle5dGrip, Puzzle5dGrip3d, Puzzle5dPart, Puzzle5dPart2d, Puzzle5dPart3d, Puzzle5dTargetVolume};
 
 /// 🧱️ Two parts facing each other along x — `a` with grip `a:g` at +x, `b` with grip `b:g` at -x — a part `pin`
 /// whose board pin is locked, and one target volume.
@@ -120,7 +150,7 @@ fn a_paged_world_drop_scan_finds_exactly_what_the_one_call_scan_finds() {
     for (index, y) in [0.2, -0.3, 0.6, 2.0, 0.1].into_iter().enumerate() {
         base.parts.push(Puzzle5dPart { id: format!("n{index}"), part_3d: Puzzle5dPart3d { origin: [1.5, y, 0.0], ..Default::default() }, grips: vec![grip.clone()], ..Default::default() });
     }
-    base.fasteners.push(crate::Puzzle5dFastener { id: "held".into(), source: "n4:g".into(), target: "b:g".into(), fastener_kind: None, gap: 0.0, shift: 0.0, rise: 0.0, rotation: 0.0, turn: 0.0, tilt: 0.0, x: 0.0, y: 0.0 });
+    base.fasteners.push(crate::standards::v1::subsets::any::schema::document_records::Puzzle5dFastener { id: "held".into(), source: "n4:g".into(), target: "b:g".into(), fastener_kind: None, gap: 0.0, shift: 0.0, rise: 0.0, rotation: 0.0, turn: 0.0, tilt: 0.0, x: 0.0, y: 0.0 });
     let whole = puzzle5d_relocate_record(&base, "b", [2.5, 0.0, 0.0], 0.75).expect("b is in the scene");
     assert_eq!(whole.fastenings, ["a:g", "n0:g", "n1:g", "n2:g"].map(|target| ("b:g".to_string(), target.to_string())), "every free grip within the radius, in document order; `n4` is already fastened and `n3` is out of reach");
     for page in 1..=base.parts.len() + 1 {
@@ -139,7 +169,7 @@ fn a_paged_world_drop_scan_finds_exactly_what_the_one_call_scan_finds() {
 
 #[test]
 fn the_transform_chart_obeys_the_shared_phase_fixture() {
-    let fixture = semio_framework_pack_json::parse(include_str!("../../../../../../../../../🧪️tests/🧫️fixtures/🛠️transform-gesture/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("fixture");
+    let fixture = semio_framework_pack_json::parse(fixture_text!("../../../../../../../../../../🧪️tests/🧫️fixtures/🛠️transform-gesture/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("fixture");
     for case in fixture.get("cases").unwrap().as_array().unwrap() {
         let values = case.get("offset").unwrap().as_array().unwrap();
         let offset = [values[0].as_f64().unwrap(), values[1].as_f64().unwrap(), values[2].as_f64().unwrap()];

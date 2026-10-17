@@ -88,6 +88,5 @@ fn member_actual_snapshot_input_turns_preserve_original_grants_and_system_receip
         assert!(decoder.terminal_is_empty());
         let (_, heap) = observe_heap_allocations_on_this_thread(|| drop(decoder));
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
-        println!("[DEBUG] actual snapshot input copy={copy} originalBytes={bytes} born={born} retained source and pointer=true funded System receipts=true cancelBeforeTypedDecode=true terminalDrop0");
     }
 }

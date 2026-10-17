@@ -16,7 +16,7 @@ use super::*;
 use crate::standards::v1::subsets::any::schema::inferences::*;
 use crate::WriterSnapshot;
 use framework_schema::ArtifactSchema;
-use semio_s_artifact_trinity_jack::core::{example_graph, lint};
+use semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::language_service::{example_graph, lint};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.

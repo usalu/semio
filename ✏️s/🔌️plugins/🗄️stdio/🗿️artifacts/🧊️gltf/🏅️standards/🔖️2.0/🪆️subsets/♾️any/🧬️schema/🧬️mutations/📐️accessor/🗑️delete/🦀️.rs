@@ -28,31 +28,34 @@ pub fn plan(p: &GltfDeleteAccessorPayload, base: &GltfSnapshot) -> Result<GltfDi
     Ok(diff)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn inverse(p: &GltfDeleteAccessorPayload, base: &GltfSnapshot) -> Vec<super::GltfMutation> {
+pub fn inverse<Op>(p: &GltfDeleteAccessorPayload, base: &GltfSnapshot) -> Vec<Op>
+where
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::remove_used_extension::RemoveUsedExtensionMutation>,
+{
     if validate(p, base).is_err() {
         return Vec::new();
     }
-    let mut rows = vec![super::create_accessor::mutation(super::create_accessor::GltfCreateAccessorPayload { position: p.index, component_type: base.document.accessors[p.index].component_type, count: base.document.accessors[p.index].count, kind: base.document.accessors[p.index].kind, accessor: Some(Box::new(base.document.accessors[p.index].clone())) })];
+    let mut rows = vec![crate::standards::v2_0::subsets::any::schema::mutations::create_accessor::mutation(crate::standards::v2_0::subsets::any::schema::mutations::create_accessor::GltfCreateAccessorPayload { position: p.index, component_type: base.document.accessors[p.index].component_type, count: base.document.accessors[p.index].count, kind: base.document.accessors[p.index].kind, accessor: Some(Box::new(base.document.accessors[p.index].clone())) })];
     for (mesh, entry) in base.document.meshes.iter().enumerate() {
         for (primitive, item) in entry.primitives.iter().enumerate() {
             if item.indices == Some(p.index) {
-                rows.push(super::bind_primitive_indices::mutation(super::bind_primitive_indices::GltfBindPrimitiveIndicesPayload { mesh, primitive, accessor: p.index }));
+                rows.push(crate::standards::v2_0::subsets::any::schema::mutations::bind_primitive_indices::mutation(crate::standards::v2_0::subsets::any::schema::mutations::bind_primitive_indices::GltfBindPrimitiveIndicesPayload { mesh, primitive, accessor: p.index }));
             }
             let dropped: Vec<usize> = item.attributes.iter().enumerate().filter(|(_, (_, accessor))| *accessor == p.index).map(|(position, _)| position).collect();
             let kept = item.attributes.len() - dropped.len();
             for (offset, position) in dropped.iter().enumerate() {
-                rows.push(super::bind_primitive_attribute::mutation(super::bind_primitive_attribute::GltfBindPrimitiveAttributePayload { mesh, primitive, semantic: item.attributes[*position].0.clone(), accessor: p.index }));
+                rows.push(crate::standards::v2_0::subsets::any::schema::mutations::bind_primitive_attribute::mutation(crate::standards::v2_0::subsets::any::schema::mutations::bind_primitive_attribute::GltfBindPrimitiveAttributePayload { mesh, primitive, semantic: item.attributes[*position].0.clone(), accessor: p.index }));
                 if kept + offset != *position {
-                    rows.push(super::move_primitive_attribute::mutation(super::move_primitive_attribute::GltfMovePrimitiveAttributePayload { mesh, primitive, semantic: item.attributes[*position].0.clone(), position: *position }));
+                    rows.push(crate::standards::v2_0::subsets::any::schema::mutations::move_primitive_attribute::mutation(crate::standards::v2_0::subsets::any::schema::mutations::move_primitive_attribute::GltfMovePrimitiveAttributePayload { mesh, primitive, semantic: item.attributes[*position].0.clone(), position: *position }));
                 }
             }
             for (target, morph) in item.targets.iter().enumerate() {
                 let dropped: Vec<usize> = morph.0.iter().enumerate().filter(|(_, (_, accessor))| *accessor == p.index).map(|(position, _)| position).collect();
                 let kept = morph.0.len() - dropped.len();
                 for (offset, position) in dropped.iter().enumerate() {
-                    rows.push(super::bind_morph_target_attribute::mutation(super::bind_morph_target_attribute::GltfBindMorphTargetAttributePayload { mesh, primitive, target, semantic: morph.0[*position].0.clone(), accessor: p.index }));
+                    rows.push(crate::standards::v2_0::subsets::any::schema::mutations::bind_morph_target_attribute::mutation(crate::standards::v2_0::subsets::any::schema::mutations::bind_morph_target_attribute::GltfBindMorphTargetAttributePayload { mesh, primitive, target, semantic: morph.0[*position].0.clone(), accessor: p.index }));
                     if kept + offset != *position {
-                        rows.push(super::move_morph_target_attribute::mutation(super::move_morph_target_attribute::GltfMoveMorphTargetAttributePayload { mesh, primitive, target, semantic: morph.0[*position].0.clone(), position: *position }));
+                        rows.push(crate::standards::v2_0::subsets::any::schema::mutations::move_morph_target_attribute::mutation(crate::standards::v2_0::subsets::any::schema::mutations::move_morph_target_attribute::GltfMoveMorphTargetAttributePayload { mesh, primitive, target, semantic: morph.0[*position].0.clone(), position: *position }));
                     }
                 }
             }
@@ -72,11 +75,17 @@ pub enum DeleteAccessorMutation {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn mutation(payload: GltfDeleteAccessorPayload) -> super::GltfMutation {
-    super::GltfMutation::DeleteAccessor(DeleteAccessorMutation::Apply(payload))
+pub fn mutation<Op>(payload: GltfDeleteAccessorPayload) -> Op
+where
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::delete_accessor::DeleteAccessorMutation>,
+{
+    Op::from(DeleteAccessorMutation::Apply(payload))
 }
 
-impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for DeleteAccessorMutation {
+impl<Op> protocol::MutationKind<GltfSnapshot, Op> for DeleteAccessorMutation
+where
+    Op: protocol::Mutation<GltfSnapshot, Diff = GltfDiff> + From<DeleteAccessorMutation>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "accessor", kind: "delete-accessor", record: "DeletedAccessor" };
 
     fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<GltfDiff> {
@@ -88,7 +97,7 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for DeleteAccesso
         }
     }
 
-    fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<super::GltfMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         match self {
             Self::Apply(payload) => Ok(inverse(payload, base)),
         }
@@ -105,10 +114,6 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for DeleteAccesso
 //#endregion 🧬️DirectMutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️t055/🦀️.rs"]
-mod case_t055;
-#[cfg(test)]
-#[path = "🧪️tests/🔬️middle-row/🦀️.rs"]
-mod case_middle_row;
+
+
 //#endregion 🧪️Tests

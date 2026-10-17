@@ -1,7 +1,9 @@
 //! 🧪️ `Grid2dMutation` laws — the kind roster, the canonical-position helpers, the text/binary op
 //! round trip, and the cascade every collection mutation owes its own inverse.
 
-use super::*;
+use crate::schema::snapshot::Grid2dSnapshot;
+use protocol::Mutation;
+use crate::standards::v1::subsets::any::schema::mutations::*;
 use crate::schema::snapshot::{WfcAdjacencyRule2d, WfcCell2d, WfcDirection2d, WfcPinnedCell2d, WfcTile2d};
 
 fn tile(id: &str) -> WfcTile2d {
@@ -134,7 +136,7 @@ mod committed_tree {
     use super::KINDS;
 
     fn fixtures() -> std::path::PathBuf {
-        std::path::Path::new(concat!(env!("CARGO_MANIFEST_DIR"), "/../../")).join("🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🧬️mutations")
+        std::path::Path::new(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../..")).join("🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🧬️mutations")
     }
 
     #[test]

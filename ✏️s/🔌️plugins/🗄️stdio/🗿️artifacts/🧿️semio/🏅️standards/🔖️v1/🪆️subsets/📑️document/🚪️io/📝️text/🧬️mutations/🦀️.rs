@@ -12,15 +12,15 @@ use semio_s_artifact_stdio_semio_base::schema::triples::IndexedTripleDiff;
 use semio_s_artifact_stdio_semio_base::io::text::codec::split_top_level;
 use semio_s_artifact_stdio_semio_base::io::text::codec::strip_brackets;
 use crate::schema::diff::{BlocksDiff, DocBlockDiff, DocHeadingDiff, DocParagraphDiff, DocQuoteDiff, DocRunDiff, DocTableCellDiff, DocTableRowDiff, ListItemsDiff, RunsDiff, SemioDocumentDiff, TableCellsDiff, TableRowsDiff};
-use crate::io::text::diff::dec_run_style;
-use crate::io::text::diff::enc_run_style;
-use crate::io::text::diff::dec_u8;
-use crate::io::text::diff::enc_u8;
-use crate::io::text::diff::dec_image;
-use crate::io::text::diff::enc_image;
+use crate::io::text::snapshot::dec_run_style;
+use crate::io::text::snapshot::enc_run_style;
+use crate::io::text::snapshot::dec_u8;
+use crate::io::text::snapshot::enc_u8;
+use crate::io::text::snapshot::dec_image;
+use crate::io::text::snapshot::enc_image;
 use semio_s_artifact_stdio_semio_base::io::text::codec::dec_bool;
-use crate::io::text::diff::dec_style;
-use crate::io::text::diff::enc_style;
+use crate::io::text::snapshot::dec_style;
+use crate::io::text::snapshot::enc_style;
 use semio_s_artifact_stdio_semio_base::io::text::codec::enc_bool;
 use semio_s_artifact_stdio_semio_base::io::text::codec::decode_option;
 use semio_s_artifact_stdio_semio_base::io::text::codec::encode_option;
@@ -110,12 +110,12 @@ pub(crate) fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> R
 /// `pub(crate)` `enc_block`/`enc_style`/`enc_image` for the shared per-item shape.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn enc_block(b: &DocBlock) -> String {
-    crate::io::text::diff::enc_block(b)
+    crate::io::text::snapshot::enc_block(b)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn dec_block(s: &str) -> Result<DocBlock, String> {
-    crate::io::text::diff::dec_block(s)
+    crate::io::text::snapshot::dec_block(s)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

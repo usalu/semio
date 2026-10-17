@@ -22,7 +22,4 @@ export async function proveArtifactControlRefinementV1(original: import("../../.
     await expect(vite.serveVite({control,invocation:original,root,config:root+"/must-not-open",host:"127.0.0.1",port:0,signal:original.control.signal,mode,ready:()=>{throw Error("Forged control reached listener");}})).rejects.toThrow("Original resource control issuance");
     await expect(vite.serveViteCommandV1({runtimeChannels:[],control,invocation:original,root,config:root+"/must-not-open",host:"127.0.0.1",port:5000,signal:original.control.signal,mode,environment:{}})).rejects.toThrow("Original resource control issuance");
   }
-  console.log("[DEBUG] Actual Original rejects copied and absent controls at all three Vite entries before effects");
-  console.log("[DEBUG] Actual Original rejects all three foreign-intent Vite entries before any cache/config/listener effect");
-  console.log("[DEBUG] Actual private control ancestry preserves finite and custom-signal base constraints without reconstructing clocks or authority");
 }

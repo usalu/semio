@@ -6,15 +6,17 @@
 import { EventId, GuardId, NodeId, ROOT, init, macrostep, NullInspector, type Command, type GuardFn, type Machine, type MachineDefinition, type MachineSpec, type NodeDef, type Snapshot, type StatechartEvent, type TransitionDef } from "@semio-tech/framework/machine";
 import type { Vec3 } from "@semio-tech/framework/3d";
 import { emptyMeshTransfer, solidRef } from "@semio-tech/framework/3d";
-import { type EdgeRef, type FaceRef, type VertexRef, type WireRef } from "../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️.ts";
-import { initialContextForSpec, type InteractionSpec } from "../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🎰️interaction-spec/🟦️.ts";
-import { defaultModelDefinitionId } from "../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/📥️definition-catalog/🟦️.ts";
-import { Model } from "../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🧊️model/🟦️.ts";
-import { listSpatialInteractionsForModelDefinition } from "../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🧭️definition-ownership/🟦️.ts";
-import { type InteractionEvent } from "../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🪪️selection/🟦️.ts";
-import { isEmptyModelDiff, type SpatialKernel, type ModelDiff } from "../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️.ts";
-import { applyTransition, pureTsStateEngineProvider, type ActionRegistry, type StateEngine, type StateEngineProvider, type StateEngineSendResult } from "../🎬️actions/🟦️.ts";
-import { createInteractionRuntime, loadSpatialInteraction, type InteractionRuntime } from "../🗿️artifact/🟦️.ts";
+import { type EdgeRef, type FaceRef, type VertexRef, type WireRef } from "@semio-tech/s-spatial-kernel-ts/geometry";
+import { initialContextForSpec, type InteractionSpec } from "@semio-tech/s-spatial-kernel-ts/geometry/interaction-spec";
+import { defaultModelDefinitionId } from "@semio-tech/s-spatial-kernel-ts/geometry/definition-catalog";
+import { Model } from "@semio-tech/s-spatial-kernel-ts/geometry/model";
+import { listSpatialInteractionsForModelDefinition } from "@semio-tech/s-spatial-kernel-ts/geometry/definition-ownership";
+import { type InteractionEvent } from "@semio-tech/s-spatial-kernel-ts/geometry/selection";
+import { isEmptyModelDiff, type SpatialKernel, type ModelDiff } from "@semio-tech/s-spatial-kernel-ts/spatial";
+import { type ActionRegistry } from "../🎬️actions/🧬️action-contract/🟦️.ts";
+import { applyTransition, pureTsStateEngineProvider, type StateEngine, type StateEngineProvider, type StateEngineSendResult } from "../🎬️actions/🎰️interaction-state/🟦️.ts";
+import { loadSpatialInteraction } from "../🗿️artifact/📚️interaction-catalog/🟦️.ts";
+import { createInteractionRuntime, type InteractionRuntime } from "../🗿️artifact/🏃️interaction-runtime/🟦️.ts";
 // #endregion 🔌️Adapters
 
 // #region 🎭️AdvanceEvent
@@ -267,7 +269,7 @@ export class StatelyStateEngine implements StateEngine {
     this.rebuildMachine(state);
   }
 
-  async send(event: InteractionEvent, kernel?: SpatialKernel, model?: Model, actions?: ActionRegistry, preview?: import("../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️.ts").SpatialPreviewKernel, activeModelDefinitionId?: string | null): Promise<StateEngineSendResult> {
+  async send(event: InteractionEvent, kernel?: SpatialKernel, model?: Model, actions?: ActionRegistry, preview?: import("@semio-tech/s-spatial-kernel-ts/spatial").SpatialPreviewKernel, activeModelDefinitionId?: string | null): Promise<StateEngineSendResult> {
     if (!this.snapshot.matches(this.interactionState)) {
       this.rebuildMachine(this.interactionState);
     }
@@ -294,7 +296,7 @@ export const statelyStateEngineProvider: StateEngineProvider = {
 
 // #region 🧪️Tests
 const __spatialStatelyTestRuntime = import.meta.vitest ? await import("../🏃️runtime/🟦️.ts") : null;
-const __spatialStatelyTestKernel = import.meta.vitest ? await import("../../../../../../../../../../../🧑‍💻dev/📐️cad/🧪️tests/🔮️spatial-kernel/🧱️brepjs/🟦️.ts") : null;
+const __spatialStatelyTestKernel = import.meta.vitest ? await import("@semio-tech/cad-js/testing/spatial-kernel/brepjs") : null;
 
 /** 🎒️ The values this module hands its extracted suite `./🧪️tests/🧪️semio-tech-cad-js-stately/🟦️.ts`. */
 export type StatelyTestDependencies = {

@@ -11,6 +11,9 @@ import openPlanFixture from "../../../../../🧪️tests/🧫️fixtures/📇️
 import rendererSchema from "../../../🧬️schema/🔣️.json" with { type: "json" };
 import artifactOpeningFixture from "../../🧱️elements/🛠️ShellHelpers/🧪️tests/🧫️fixtures/🚪️open-artifact/🔣️.json";
 import { semioSchemaAjvV1 } from "../../../../../../../🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
+import { createFrameworkOsHostPortsV1 } from "../../../../🧑‍💻dev/🪝️host-ports/🟦️.ts";
+
+const documentAccess = createFrameworkOsHostPortsV1().documentAccess;
 
 const ownedExports = semioSchemaAjvV1({ strict: true, allErrors: true }).addSchema(rendererSchema);
 /** 🧬️ Compiles one named `$defs` export of the `os.renderer` schema module. */
@@ -64,11 +67,17 @@ describe("document opening scope", () => {
 });
 
 describe("shared document opening access", () => {
+  it("opens the viewer for every role when the host was given no access port", () => {
+    for (const row of openingScopeFixture.accessCases) {
+      expect(sharedDocumentOpeningRoleV1(row.events as unknown as readonly DirectoryEvent[], row.spaceId, row.userId, undefined) ?? "none", row.id).toBe(row.role === null ? "none" : "viewer");
+    }
+  });
+
   it("requests the surface the hub issues for the caller's space role, folded from the space's own events", () => {
     
     for (const row of openingScopeFixture.accessCases) {
       
-      expect(sharedDocumentOpeningRoleV1(row.events as unknown as readonly DirectoryEvent[], row.spaceId, row.userId), row.id).toBe(row.role);
+      expect(sharedDocumentOpeningRoleV1(row.events as unknown as readonly DirectoryEvent[], row.spaceId, row.userId, documentAccess), row.id).toBe(row.role);
     }
   });
 
@@ -93,7 +102,7 @@ describe("shared document opening access", () => {
         { seq: 1, spaceId: "space-o", recordedAtMs: 1, body: { kind: "space.created", spaceId: "space-o", name: "Oracle", spaceKind: "studio", visibility: "private", ownerUserId: "u-owner" } },
         { seq: 2, spaceId: "space-o", recordedAtMs: 2, body: { kind: "member.upserted", spaceId: "space-o", userId: "u-caller", role } },
       ] as unknown as readonly DirectoryEvent[];
-      expect(sharedDocumentOpeningRoleV1(events, "space-o", "u-caller"), role).toBe(hubIssuesEditor ? "editor" : "viewer");
+      expect(sharedDocumentOpeningRoleV1(events, "space-o", "u-caller", documentAccess), role).toBe(hubIssuesEditor ? "editor" : "viewer");
     }
   });
 });

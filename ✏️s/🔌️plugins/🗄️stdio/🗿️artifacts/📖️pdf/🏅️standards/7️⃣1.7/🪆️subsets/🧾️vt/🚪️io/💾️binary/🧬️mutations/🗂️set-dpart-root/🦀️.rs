@@ -1,6 +1,6 @@
 //! 🗂️ Direct binary codec for `set-dpart-root`.
 
-use crate::standards::v1_7::subsets::vt::schema::mutations::SetDpartRoot;
+use crate::standards::v1_7::subsets::vt::schema::mutations::set_dpart_root::SetDpartRoot;
 
 //#region 🔖️Identity
 pub const TAG: u8 = 14;
@@ -21,7 +21,5 @@ pub fn decode(bytes: &[u8]) -> Result<SetDpartRoot, String> {
 //#endregion 🔖️Codec
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

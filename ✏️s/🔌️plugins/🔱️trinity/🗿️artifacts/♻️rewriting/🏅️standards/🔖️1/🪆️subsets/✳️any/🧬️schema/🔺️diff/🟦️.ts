@@ -1,7 +1,7 @@
 /** 🔺️ Typed document replacement and shared map algebra preserve the complete rule domain. */
 import {parseMapDelta,type MapDelta} from "@semio-tech/framework/replication/mutation/map/schema";
 import {parseLayoutPoint,parsePropertyValue,type Lhs,type Rhs,type LayoutPoint,type PropertyValue} from "../🟦️.ts";
-import {parseJackDiff,type JackDiff} from "./../../../../../../../🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts";
+import {parseJackDiff,type JackDiff} from "@semio-tech/trinity-jack/standards/1/subsets/any/schema/diff";
 export type{MapDelta,LayoutPoint,PropertyValue,Lhs,Rhs,JackDiff};
 export type PatternPatch=Partial<{leftVar:string;leftKind:string;edgeVar:string|null;edgeKind:string|null;rightVar:string|null;rightKind:string|null}>;
 export interface LhsPatch{pattern?:PatternPatch;whereClause?:string|null}

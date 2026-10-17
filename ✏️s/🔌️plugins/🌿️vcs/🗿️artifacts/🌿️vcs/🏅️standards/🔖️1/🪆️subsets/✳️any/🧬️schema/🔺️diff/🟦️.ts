@@ -56,6 +56,10 @@ type vcsVcsDiffGuardSizeBounds = { readonly minItems?: number; readonly maxItems
 
 export const vcsVcsDiffGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : vcsVcsDiffGuardReject(at, "value is not an object");
+export const vcsVcsDiffGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) vcsVcsDiffGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const vcsVcsDiffGuardArray = (value: unknown, at: string, bounds: vcsVcsDiffGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return vcsVcsDiffGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) vcsVcsDiffGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -86,7 +90,7 @@ export const vcsVcsDiffGuardConstant = <T extends string | number | boolean>(val
 //#endregion 🚪️Parsers
 
 export function parseVcsDiff(value: unknown, at = "$"): VcsDiff {
-  const row = vcsVcsDiffGuardObject(value, at);
+  const row = vcsVcsDiffGuardClosed(vcsVcsDiffGuardObject(value, at), at, ["schema", "title", "counter", "notes", "status", "tags"]);
   return {
     schema: row["schema"] === undefined ? undefined : vcsVcsDiffGuardString(row["schema"], `${at}.schema`),
     title: row["title"] === undefined ? undefined : vcsVcsDiffGuardString(row["title"], `${at}.title`),
@@ -103,19 +107,35 @@ function vcsVcsDiffGuardCount(value: unknown, at: string): number {
 }
 
 export function parseVcsTagsDelta(value: unknown, at = "$"): VcsTagsDelta {
-  const row = vcsVcsDiffGuardObject(value, at);
+  const row = vcsVcsDiffGuardClosed(vcsVcsDiffGuardObject(value, at), at, ["removed", "inserted", "moved"]);
   return {
-    removed: vcsVcsDiffGuardArray(row["removed"], `${at}.removed`).map((item, index) => {
-      const entry = vcsVcsDiffGuardObject(item, `${at}.removed[${index}]`);
-      return { id: vcsVcsDiffGuardString(entry["id"], `${at}.removed[${index}].id`), index: vcsVcsDiffGuardCount(entry["index"], `${at}.removed[${index}].index`) };
-    }),
-    inserted: vcsVcsDiffGuardArray(row["inserted"], `${at}.inserted`).map((item, index) => {
-      const entry = vcsVcsDiffGuardObject(item, `${at}.inserted[${index}]`);
-      return { index: vcsVcsDiffGuardCount(entry["index"], `${at}.inserted[${index}].index`), row: vcsVcsDiffGuardString(entry["row"], `${at}.inserted[${index}].row`) };
-    }),
-    moved: vcsVcsDiffGuardArray(row["moved"], `${at}.moved`).map((item, index) => {
-      const entry = vcsVcsDiffGuardObject(item, `${at}.moved[${index}]`);
-      return { id: vcsVcsDiffGuardString(entry["id"], `${at}.moved[${index}].id`), from: vcsVcsDiffGuardCount(entry["from"], `${at}.moved[${index}].from`), to: vcsVcsDiffGuardCount(entry["to"], `${at}.moved[${index}].to`) };
-    }),
+    removed: vcsVcsDiffGuardArray(row["removed"], `${at}.removed`).map((item, index) => parseVcsTagRemoval(item, `${at}.removed[${index}]`)),
+    inserted: vcsVcsDiffGuardArray(row["inserted"], `${at}.inserted`).map((item, index) => parseVcsTagInsertion(item, `${at}.inserted[${index}]`)),
+    moved: vcsVcsDiffGuardArray(row["moved"], `${at}.moved`).map((item, index) => parseVcsTagRelocation(item, `${at}.moved[${index}]`)),
+  };
+}
+
+export function parseVcsTagInsertion(value: unknown, at = "$"): VcsTagInsertion {
+  const row = vcsVcsDiffGuardClosed(vcsVcsDiffGuardObject(value, at), at, ["index", "row"]);
+  return {
+    index: vcsVcsDiffGuardInteger(row["index"], `${at}.index`, {"minimum": 0, "maximum": 4294967295}),
+    row: vcsVcsDiffGuardString(row["row"], `${at}.row`),
+  };
+}
+
+export function parseVcsTagRelocation(value: unknown, at = "$"): VcsTagRelocation {
+  const row = vcsVcsDiffGuardClosed(vcsVcsDiffGuardObject(value, at), at, ["id", "from", "to"]);
+  return {
+    id: vcsVcsDiffGuardString(row["id"], `${at}.id`),
+    from: vcsVcsDiffGuardInteger(row["from"], `${at}.from`, {"minimum": 0, "maximum": 4294967295}),
+    to: vcsVcsDiffGuardInteger(row["to"], `${at}.to`, {"minimum": 0, "maximum": 4294967295}),
+  };
+}
+
+export function parseVcsTagRemoval(value: unknown, at = "$"): VcsTagRemoval {
+  const row = vcsVcsDiffGuardClosed(vcsVcsDiffGuardObject(value, at), at, ["id", "index"]);
+  return {
+    id: vcsVcsDiffGuardString(row["id"], `${at}.id`),
+    index: vcsVcsDiffGuardInteger(row["index"], `${at}.index`, {"minimum": 0, "maximum": 4294967295}),
   };
 }

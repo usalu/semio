@@ -8,6 +8,7 @@ import { directoryCommandRequestJson, parseDirectoryCommandReceiptV1, sealDirect
 import { buildBudgetMs } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, rmSync } from "node:fs";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 import { isAbsolute, join } from "node:path";
 import type { DirectoryCommand } from "@semio-tech/framework/directory/schema";
 import { runCmd } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
@@ -243,7 +244,7 @@ async function proveDirectorySpaceJourneyV1(repoRoot: string): Promise<Readonly<
     checks += 1;
   }
 
-  const schemaTwin = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🦀️.rs"), "utf8");
+  const schemaTwin = readModuleTreeSource(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🦀️.rs"));
   const constants: readonly (readonly [string, number])[] = [
     ["DIRECTORY_COMMAND_REQUEST_MAX_BYTES: usize = 8 * 1024", fixture.limits.commandRequestBytes],
     ["DIRECTORY_COMMAND_RECEIPT_MAX_BYTES: usize = 64 * 1024", fixture.limits.responseBytes],

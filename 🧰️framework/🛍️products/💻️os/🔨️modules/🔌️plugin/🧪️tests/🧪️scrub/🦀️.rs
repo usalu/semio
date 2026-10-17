@@ -3,36 +3,69 @@
 //! hands every displaced alias back for store retirement; every lane of a press rides ONE ledger step; operation tags are
 //! bounded and taken once.
 
-use super::*;
-use crate::test_app_mutation_fixture::{SetCount, SetLabel, TestMutation, TestSnapshot};
+use semio_framework_plugin_ownership::bounded_ownership::ARTIFACT_LIVE_OUTPUT_SLOTS;
+#[cfg(any(test, feature = "artifact-app-testing"))]
+use semio_framework::kernel::ActorId;
+use std::sync::Arc;
+use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_framework_plugin_decl_app::tool_contract::ArtifactOwnedToolJobFactory;
+use pack::snapshot::ArtifactPack;
+use semio_framework_plugin_decl_emission::Emit;
+use semio_framework::FaultFrom;
+use semio_framework_value_derive::{FromValue, ToValue};
+use semio_framework::kernel::HybridLogicalTimestamp;
+use store::{Mutation, MutationDiff};
+use protocol::{OpBinary, OpText};
+use semio_framework_plugin_reactor_app::PluginApp;
+use semio_framework_value::retirement::RetireOwned;
+use semio_framework_tool_machine::ScrubPhase;
+use semio_framework_plugin_decl_views::tool_run_contract::ToolRunRetargetableJob;
+#[cfg(any(test, feature = "artifact-app-testing"))]
+use serde_json::Value;
+use semio_framework_plugin_window_config::WindowConfigOwner;
+#[cfg(test)]
+use semio_framework_plugin_testing_laws::artifact_app_laws;
+use semio_framework_ui_contract::*;
+use semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::document::mutations::set_count::SetCount;
+use semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::document::mutations::set_label::SetLabel;
+use semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::document::mutations::TestMutation;
+use semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::document::TestSnapshot;
 use semio_framework_tool_machine::{ScrubInput, ToolAbortReason, ToolStep};
 
-type Runtime = ToolMachineRuntime<TestSnapshot, TestMutation, TestSnapshot, TestMutation>;
+#[doc(hidden)]
+pub type Runtime = ToolMachineRuntime<TestSnapshot, TestMutation, TestSnapshot, TestMutation>;
 type Leaf = PressLeaf<TestMutation, TestMutation>;
 
-fn committed(count: i32, label: &str) -> Arc<TestSnapshot> {
+#[doc(hidden)]
+pub fn committed(count: i32, label: &str) -> Arc<TestSnapshot> {
     Arc::new(TestSnapshot { count, label: label.into(), ..TestSnapshot::default() })
 }
 
-fn member(mutation: impl Into<TestMutation>) -> Leaf {
+#[doc(hidden)]
+pub fn member(mutation: impl Into<TestMutation>) -> Leaf {
     PressLeaf::Member(mutation.into())
 }
 
-fn config(mutation: impl Into<TestMutation>) -> Leaf {
+#[doc(hidden)]
+pub fn config(mutation: impl Into<TestMutation>) -> Leaf {
     PressLeaf::Config(mutation.into())
 }
 
-fn tick(runtime: &mut Runtime, window: &str, gesture: &str, leaves: Vec<Leaf>, clock: u64) -> ToolStep<Leaf> {
+#[doc(hidden)]
+pub fn tick(runtime: &mut Runtime, window: &str, gesture: &str, leaves: Vec<Leaf>, clock: u64) -> ToolStep<Leaf> {
     let clock = HybridLogicalTimestamp { actor: 0, physical_ms: clock, logical: 0 };
     runtime.presses.send(window, "s.test@1/*#editor#setCount", &ActorId("actor".into()), "r1", ScrubInput::Tick { gesture: gesture.into(), leaves }, clock).expect("a tick is never refused")
 }
 
-fn release(runtime: &mut Runtime, window: &str, gesture: &str, leaves: Vec<Leaf>) -> ToolStep<Leaf> {
+#[doc(hidden)]
+pub fn release(runtime: &mut Runtime, window: &str, gesture: &str, leaves: Vec<Leaf>) -> ToolStep<Leaf> {
     let clock = HybridLogicalTimestamp { actor: 0, physical_ms: 9_000, logical: 0 };
     runtime.presses.send(window, "s.test@1/*#editor#setCount", &ActorId("actor".into()), "r1", ScrubInput::Commit { gesture: gesture.into(), leaves }, clock).expect("a release is never refused")
 }
 
-fn lanes(leaves: Vec<Leaf>) -> (Vec<TestMutation>, Vec<TestMutation>) {
+#[doc(hidden)]
+pub fn lanes(leaves: Vec<Leaf>) -> (Vec<TestMutation>, Vec<TestMutation>) {
     let mut lanes = (Vec::new(), Vec::new());
     for leaf in leaves {
         match leaf {

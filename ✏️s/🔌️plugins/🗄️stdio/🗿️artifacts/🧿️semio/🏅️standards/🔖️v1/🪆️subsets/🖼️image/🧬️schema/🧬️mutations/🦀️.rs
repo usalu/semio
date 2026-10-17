@@ -32,28 +32,17 @@ use protocol::Mutation;
 
 //#region 🔖️Mutation
 //#region 🔖️Leaves
-#[path = "➕️insert-frame/🦀️.rs"]
-pub mod insert_frame;
-#[path = "🔀️move-frame/🦀️.rs"]
-pub mod move_frame;
-#[path = "🚫️remove-frame/🦀️.rs"]
-pub mod remove_frame;
-#[path = "🗑️remove-metadata-entry/🦀️.rs"]
-pub mod remove_metadata_entry;
-#[path = "🔢️set-bit-depth/🦀️.rs"]
-pub mod set_bit_depth;
-#[path = "🌈️set-colorspace/🦀️.rs"]
-pub mod set_colorspace;
-#[path = "📐️set-dimensions/🦀️.rs"]
-pub mod set_dimensions;
-#[path = "⏱️set-frame-delay/🦀️.rs"]
-pub mod set_frame_delay;
-#[path = "🖌️set-frame-pixels/🦀️.rs"]
-pub mod set_frame_pixels;
-#[path = "🎨️set-icc/🦀️.rs"]
-pub mod set_icc;
-#[path = "🏷️set-metadata-entry/🦀️.rs"]
-pub mod set_metadata_entry;
+pub use semio_s_artifact_stdio_semio_image_diff::schema::mutations::insert_frame;
+pub use semio_s_artifact_stdio_semio_image_mut_family::schema::mutations::move_frame;
+pub use semio_s_artifact_stdio_semio_image_diff::schema::mutations::remove_frame;
+pub use semio_s_artifact_stdio_semio_image_mut_family::schema::mutations::remove_metadata_entry;
+pub use semio_s_artifact_stdio_semio_image_mut_family::schema::mutations::set_bit_depth;
+pub use semio_s_artifact_stdio_semio_image_mut_family::schema::mutations::set_colorspace;
+pub use semio_s_artifact_stdio_semio_image_mut_family::schema::mutations::set_dimensions;
+pub use semio_s_artifact_stdio_semio_image_mut_family::schema::mutations::set_frame_delay;
+pub use semio_s_artifact_stdio_semio_image_mut_family::schema::mutations::set_frame_pixels;
+pub use semio_s_artifact_stdio_semio_image_mut_family::schema::mutations::set_icc;
+pub use semio_s_artifact_stdio_semio_image_mut_family::schema::mutations::set_metadata_entry;
 //#endregion 🔖️Leaves
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]
@@ -136,7 +125,7 @@ pub fn inverse_semio_image_mutation(mutation: &SemioImageMutation, base: &SemioI
 /// 🌱 Representative `SemioImageMutation` cases, one per variant — single source of truth for
 /// `ops_grammar_conformance_law`/`protocol_walk_law` in `🎹️composer/🦀️.rs` and this
 /// file's own `op_text_binary_roundtrip_law`.
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_mutation_cases() -> Vec<SemioImageMutation> {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9

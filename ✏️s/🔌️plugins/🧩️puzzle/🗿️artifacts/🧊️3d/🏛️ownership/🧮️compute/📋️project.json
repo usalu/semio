@@ -12,7 +12,7 @@
         "{projectRoot}/**/*",
         "{workspaceRoot}/🧰️framework/🔨️modules/◻️2d/🧮️compute/🧪️testing/📍️consumer/**/*",
         "{workspaceRoot}/🧰️framework/🔨️modules/◻️2d/🧮️compute/🧬️schema/📍️consumer/🔣️.json",
-        "{workspaceRoot}/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⏳️precompute/🦀️.rs",
+        "{workspaceRoot}/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⏳️precompute/🥽️brush-meshes/🦀️.rs",
         "{workspaceRoot}/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/📦️packages/🦀️rust/Cargo.toml"
       ],
       "options": {

@@ -13,7 +13,6 @@ test("the actual S consumer admits only its explicit owner publication",()=>{
  expect(supplied.rows.targets.map(row=>row.pluginId).sort()).toEqual(projection.entries.map(row=>row.pluginId).sort());
  expect(projection.entries.length).toBeGreaterThan(0);expect(projection.playgrounds.length).toBeGreaterThan(0);
  for(const row of projection.entries)expect(request.contributions.some(owner=>owner.packageRoots.some(root=>row.cratePath.startsWith(root+"/")))).toBe(true);
- console.log("[DEBUG] actual S catalog consumer",{targets:supplied.rows.targets.length,playgrounds:projection.playgrounds.length,hosts:supplied.rows.hosts.length});
 });
 test("the exact canonical publication routes survive both launch sources",()=>{
  const root=new URL("../../../../../",import.meta.url),seed=parseJsonc(readFileSync(new URL(".vscode/🧩️launch.seed.jsonc",root),"utf8")),launch=parseJsonc(readFileSync(new URL(".vscode/launch.json",root),"utf8"));
@@ -30,7 +29,6 @@ test("the actual Nx session producer binds S authority and explicit installed in
  expect(Object.keys(sessions).length).toBeGreaterThan(0);
  for(const target of Object.values(sessions) as {dependsOn:string[];options:{env:{SEMIO_PLUGIN_CATALOG:string}}}[]){expect(target.dependsOn).toEqual(["@semio-tech/s-dev-composition:generate"]);expect(target.options.env.SEMIO_PLUGIN_CATALOG).toBe(root.replace(/\/$/u,""));}
  expect(await cacheInternals.playgroundSessionTargets(manifests,"owner-deleted",[])).toEqual({});
- expect(cacheInternals.playgroundPreparationTargets(manifests,"owner-deleted","general",{},[])).toEqual({});
+ expect(await cacheInternals.playgroundPreparationTargets(manifests,"owner-deleted","general",{},[],{workspaceRoot:"owner-deleted"})).toEqual({});
  expect(cacheInternals.collectPlaygroundCatalog(manifests,"owner-deleted",[])).toEqual([]);
- console.log("[DEBUG] actual Nx session publication",{sessions:Object.keys(sessions).length,emptyProviders:0});
 });

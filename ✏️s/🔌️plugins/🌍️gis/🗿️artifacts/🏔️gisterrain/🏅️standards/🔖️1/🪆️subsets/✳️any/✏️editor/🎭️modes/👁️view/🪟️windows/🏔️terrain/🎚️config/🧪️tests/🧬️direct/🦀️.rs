@@ -1,6 +1,8 @@
 //! 🧪️ Shared native consumers of the schema-first GIS 3D configuration vectors.
 
-use super::{GisTerrainWindowConfig, GisTerrainWindowConfigDiff, GisTerrainWindowConfigMutation};
+use semio_framework_test_fixtures::fixture_text;
+use semio_framework_value_derive::{FromValue, ToValue};
+use crate::editor::gis3d::modes::view::windows::terrain::config::{GisTerrainWindowConfig, GisTerrainWindowConfigDiff, GisTerrainWindowConfigMutation};
 use protocol::{Mutation, MutationDiff, MutationKind, MutationLeaf, OpBinary, OpText};
 use serde_json::Value;
 use std::fmt::Debug;
@@ -8,7 +10,7 @@ use store::{pack::snapshot::ArtifactDsl, pack::snapshot::ArtifactPack};
 
 //#region 🧫️NeutralFixture
 fn vectors() -> Value {
-    serde_json::from_str(include_str!("../🧫️fixtures/🧬️direct/🔣️.json")).expect("domain neutral vectors")
+    serde_json::from_str(fixture_text!("../../../../../✏️editor/🎭️modes/👁️view/🪟️windows/🏔️terrain/🎚️config/🧪️tests/🧫️fixtures/🧬️direct/🔣️.json")).expect("domain neutral vectors")
 }
 
 fn decode<T: semio_framework_value::FromValue>(value: &Value) -> T {
@@ -39,7 +41,7 @@ fn strict_snapshot_and_aggregate_json_vectors() {
         let snapshot: GisTerrainWindowConfig = decode(value);
         assert_eq!(serde_json::from_str::<Value>(&semio_framework_pack_json::to_json_string(&snapshot)).expect("snapshot JSON"), *value);
     }
-    store::os_store::test_support::assert_wire_witness::<GisTerrainWindowConfigMutation>(include_str!("../🧫️fixtures/🧬️mutations/🎥️set-camera/🧾️wire-witness/🦠️mutation/🔣️.json"));
+    store::os_store::test_support::assert_wire_witness::<GisTerrainWindowConfigMutation>(fixture_text!("../../../../../✏️editor/🎭️modes/👁️view/🪟️windows/🏔️terrain/🎚️config/🧪️tests/🧫️fixtures/🧬️mutations/🎥️set-camera/🧾️wire-witness/🦠️mutation/🔣️.json"));
     for value in fixture["mutations"]["invalid"].as_array().expect("invalid operations") {
         assert!(semio_framework_pack_json::from_json_str::<GisTerrainWindowConfigMutation>(&value.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).is_err(), "accepted {value}");
     }
@@ -127,7 +129,7 @@ fn assert_operation_codecs(operation: &GisTerrainWindowConfigMutation, keyword: 
 }
 
 /// 🧬️ Executes a leaf's exact neutral cases through its intrinsic and aggregate contracts.
-pub(crate) fn assert_leaf_contract<T>(key: &str, authored_descriptor: &str)
+pub fn assert_leaf_contract<T>(key: &str, authored_descriptor: &str)
 where
     T: MutationKind<GisTerrainWindowConfig, GisTerrainWindowConfigMutation> + MutationLeaf + semio_framework_dsl_record::DslField + Into<GisTerrainWindowConfigMutation> + PartialEq + Debug,
 {

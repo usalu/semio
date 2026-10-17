@@ -3,7 +3,7 @@
 pub const OPCODE: &str = "set-font";
 pub const TEXT_OPCODE: &str = OPCODE;
 
-use crate::standards::v1_7::subsets::base::schema::mutations::SetFont;
+use crate::standards::v1_7::subsets::base::schema::mutations::set_font::SetFont;
 
 /// 🖨️ Prints this direct payload through its schema-derived JSON representation.
 pub fn print(payload: &SetFont) -> Result<String, String> {

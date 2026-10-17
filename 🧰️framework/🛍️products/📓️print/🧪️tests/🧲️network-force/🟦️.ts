@@ -4,9 +4,9 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import { forceCenter, forceCollide, forceLink, forceManyBody, forceSimulation, forceX, forceY } from "d3-force";
+import { forceCenter, forceCollide, forceLink, forceManyBody, forceSimulation, forceX, forceY, type SimulationLinkDatum, type SimulationNodeDatum } from "d3-force";
 import { defineTestAdapter, type AdapterContext } from "@semio-tech/framework/test/adapter";
-import { compileVizProbeDocument, probeProjection, roundProbeNumbers, type ProbeProjection, type VizProbeStatement } from "../../🔨️modules/🧪️viz-probe/🟦️.ts";
+import { compileVizProbeDocumentInContext, probeProjection, roundProbeNumbers, type ProbeProjection, type VizProbeStatement } from "../../🔨️modules/🧪️viz-probe/🟦️.ts";
 // #endregion 🔌️Adapters
 
 // #region 🧫️Vectors
@@ -14,6 +14,7 @@ const CASE = "network-force";
 const DECIMALS = 6;
 
 type Edge = Readonly<{ source: string; target: string }>;
+type ForceNode = SimulationNodeDatum & { id: string };
 
 /** ⚙️ What one scenario asks the simulation for; the feature's prose is the normative statement. */
 type Setup = Readonly<{
@@ -83,11 +84,11 @@ function grid(values: readonly number[]): number[] {
 function d3Positions(ctx: AdapterContext): number[] {
   const list = edges(ctx);
   const config = setup(ctx);
-  const nodes = nodeIds(list).map((id) => ({ id }));
+  const nodes: ForceNode[] = nodeIds(list).map((id) => ({ id }));
   const links = list.map((edge) => ({ source: edge.source, target: edge.target }));
-  const simulation = forceSimulation(nodes as never[]).stop();
+  const simulation = forceSimulation<ForceNode>(nodes).stop();
   for (const name of config.forces) {
-    if (name === "link") simulation.force("link", forceLink(links as never[]).id((node: never) => (node as { id: string }).id).distance(config.linkDistance));
+    if (name === "link") simulation.force("link", forceLink<ForceNode, SimulationLinkDatum<ForceNode>>(links).id((node) => node.id).distance(config.linkDistance));
     else if (name === "many-body") simulation.force("many-body", forceManyBody().theta(0).strength(config.charge));
     else if (name === "center") simulation.force("center", forceCenter());
     else if (name === "collide") simulation.force("collide", forceCollide(config.collideRadius).strength(config.collideStrength));
@@ -97,7 +98,7 @@ function d3Positions(ctx: AdapterContext): number[] {
   }
   if (config.iterations > 0) simulation.tick(config.iterations);
   const flat: number[] = [];
-  for (const node of nodes as unknown as { index: number; x: number; y: number }[]) flat.push(node.index + 1, node.x, node.y);
+  for (const node of nodes) flat.push(node.index! + 1, node.x!, node.y!);
   return flat;
 }
 // #endregion 🔮️Oracle
@@ -122,9 +123,8 @@ function statements(ctx: AdapterContext): VizProbeStatement[] {
 }
 
 async function subject(ctx: AdapterContext): Promise<{ projection: ProbeProjection }> {
-  const records = await compileVizProbeDocument(
-    { case: CASE, scenario: ctx.scenario.id, packages: ["semio-viz-network"], body: statements(ctx) },
-    { workDir: ctx.workDir },
+  const records = await compileVizProbeDocumentInContext(ctx,
+    { case: CASE, scenario: ctx.scenario.id, packages: ["semio-viz-network"], body: statements(ctx) }
   );
   return { projection: probeProjection(roundProbeNumbers(records, DECIMALS)) };
 }

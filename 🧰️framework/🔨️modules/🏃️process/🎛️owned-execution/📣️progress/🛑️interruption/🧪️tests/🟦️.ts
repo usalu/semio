@@ -30,7 +30,6 @@ for (const row of corpus.cases) test(row.id, async () => {
     expect(status, stderr).toBe(0);
     const observed = JSON.parse(stdout), expected = { terminal: row.terminal, publishedBeforeTerminal: row.publishedBeforeTerminal, childClosedBeforeTerminal: row.childClosedBeforeTerminal };
     expect({ terminal: observed.terminal, publishedBeforeTerminal: observed.publishedBeforeTerminal, childClosedBeforeTerminal: observed.childClosedBeforeTerminal }).toEqual(expected);
-    console.log("[DEBUG] " + JSON.stringify({ id: row.id, actual, oracle: observed, publications, childPid, elapsedMilliseconds, failure }));
     expect(childPid).toBeGreaterThan(0);
     expect(publications).toBe(1);
     expect(observed.publications).toBe(1);

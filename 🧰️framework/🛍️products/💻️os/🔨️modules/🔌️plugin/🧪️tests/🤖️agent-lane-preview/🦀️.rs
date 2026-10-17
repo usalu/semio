@@ -1,3 +1,4 @@
+use semio_framework_ui_contract::*;
 mod agent_lane_preview_tests {
     use super::*;
 
@@ -26,22 +27,22 @@ mod agent_lane_preview_tests {
     /// 🎭️ A job that reports its script, one entry per step, and repeats the last entry forever.
     struct ScriptedPreviewJob {
         script: Vec<ScriptedStep>,
-        cursor: usize,
-        closing: bool,
-        released: bool,
-        outcomes: crate::tool_contract::ReservedJobOutcomes,
-        pending: Option<(crate::tool_contract::ReservedOutcomeKind, Vec<u8>)>,
+        pub cursor: usize,
+        pub closing: bool,
+        pub released: bool,
+        pub outcomes: semio_framework_plugin_decl_app::tool_contract::ReservedJobOutcomes,
+        pub pending: Option<(semio_framework_plugin_decl_app::tool_contract::ReservedOutcomeKind, Vec<u8>)>,
     }
 
     impl ScriptedPreviewJob {
-        fn new(script: Vec<ScriptedStep>) -> Self {
-            Self { script, cursor: 0, closing: false, released: false, outcomes: crate::tool_contract::ReservedJobOutcomes::new(), pending: None }
+        pub fn new(script: Vec<ScriptedStep>) -> Self {
+            Self { script, cursor: 0, closing: false, released: false, outcomes: semio_framework_plugin_decl_app::tool_contract::ReservedJobOutcomes::new(), pending: None }
         }
     }
 
     impl semio_framework_job::InteractiveJob for ScriptedPreviewJob {
         fn step<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
-            use crate::tool_contract::ReservedOutcomeKind;
+            use semio_framework_plugin_decl_app::tool_contract::ReservedOutcomeKind;
             use semio_framework_job::JobOutcomeBorrow;
             if cx.is_cancelled() {
                 return JobOutcomeBorrow::admit_cancelled(cx).map_err(semio_framework_job::OriginalTurnFailure::from);
@@ -142,10 +143,10 @@ mod agent_lane_preview_tests {
                 operation: semio_framework_job::allocate_operation_id(),
                 generation: semio_framework_job::Generation(1),
                 cancel,
-                config: semio_framework_job_worker_authority::BatchDriveConfig { retained: crate::app_testing::artifact_app_laws::fixture_mounted_policy().maintenance, site: "agent_lane_preview_law", stage: semio_framework_job::InteractiveStage::InteractiveStep, fuel_per_step: 1_000, step_budget_us: 7_500 },
+                config: semio_framework_job_worker_authority::BatchDriveConfig { retained: semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy().maintenance, site: "agent_lane_preview_law", stage: semio_framework_job::InteractiveStage::InteractiveStep, fuel_per_step: 1_000, step_budget_us: 7_500 },
                 now_us: scripted_now_us,
             };
-            let verdict = drive_agent_lane_preview(job, params, crate::app_testing::artifact_app_laws::fixture_mounted_policy().close, name);
+            let verdict = drive_agent_lane_preview(job, params, semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy().close, name);
             let expected = &case["verdict"];
             match (expected["steps"].as_u64(), &expected["fault"]) {
                 (Some(steps), _) => assert_eq!(verdict.as_ref().map_err(|fault| fault.code.0.clone()), Ok(&steps), "{name}"),

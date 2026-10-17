@@ -160,5 +160,4 @@ fn neutral_contract_matches_independent_syn_and_json() {
             assert_eq!(budget.consumption().await.read_bytes,row["result"].as_u64().unwrap());
         }
     });
-    println!("[DEBUG] Original codec laws and exact neutral budget corpus match independent Syn/Serde");
 }

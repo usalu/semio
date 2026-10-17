@@ -1,10 +1,11 @@
-use super::*;
-use semio_s_artifact_raster_raster_mutations::binary::unit_tests::retirement::retire_raster_snapshot;
+use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
+use semio_s_artifact_raster_raster_diff::*;
+use semio_s_artifact_raster_raster_model::retire_raster_value_cold;
 use semio_s_artifact_raster_raster_model::RasterImageAsset;
 
 #[test]
 fn raster_asset_capacity_matches_the_json_oracle() {
-    let vectors: serde_json::Value = serde_json::from_str(include_str!("../../../../🚪️io/📝️text/🔺️diff/🧪️tests/🧫️fixtures/🔣️asset-capacity.json")).expect("neutral capacity vectors");
+    let vectors: serde_json::Value = serde_json::from_str(runtime_fixture_text("../../../../🚪️io/📝️text/🔺️diff/🧪️tests/🧫️fixtures/🔣️asset-capacity.json")).expect("neutral capacity vectors");
     assert_eq!(vectors["capacity"].as_u64(), Some(semio_s_artifact_raster_raster_model::RASTER_OWNED_MAP_CAPACITY as u64));
     for vector in vectors["cases"].as_array().expect("cases") {
         let count = usize::try_from(vector["count"].as_u64().expect("count")).expect("bounded count");
@@ -15,7 +16,7 @@ fn raster_asset_capacity_matches_the_json_oracle() {
         match protocol::apply_diff(&diff, &base) {
             Ok(snapshot) => {
                 let observed = snapshot.assets.keys().cloned().collect::<Vec<_>>();
-                retire_raster_snapshot(snapshot);
+                retire_raster_value_cold(snapshot);
                 assert_eq!(vector["accepted"], true, "oversized input must fail before creating an owner");
                 assert_eq!(observed, oracle.keys().cloned().collect::<Vec<_>>());
             }
@@ -29,4 +30,9 @@ fn raster_asset_capacity_matches_the_json_oracle() {
     }
     let unsupported = RasterImageAsset { mime: "application/octet-stream".into(), data: Vec::new() };
     assert!(semio_s_artifact_raster_raster_io::semio_image_snapshot_from_raster_asset(&unsupported).is_err());
+}
+
+fn runtime_fixture_text(relative: &str) -> &'static str {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative);
+    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display())).into_boxed_str())
 }

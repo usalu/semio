@@ -1,4 +1,6 @@
-use super::*;
+#[allow(unused_imports)]
+use std::collections::HashMap;
+use crate::editor::puzzle5d::precompute::geometry::*;
 
 /// 🎲️ Deterministic points (a 64-bit LCG) spread over a box a few cells wide, with duplicates.
 fn points(count: usize, span: f64, seed: u64) -> Vec<[f64; 3]> {

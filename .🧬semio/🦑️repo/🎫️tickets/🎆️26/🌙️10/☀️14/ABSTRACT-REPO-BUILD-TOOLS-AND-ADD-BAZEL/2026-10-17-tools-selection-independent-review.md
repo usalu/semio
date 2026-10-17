@@ -1,0 +1,7 @@
+# Tools Selected Plan Independent Review
+
+Seven final inputs match stable nofollow FD/name seven-field metadata, bytes and SHA256. Receipt: `🗑️generated/tools-selection-seven-independent-hold.json`. Current ADMIN116139 bytes/SHA256 f9e086716a4516b0b0e127a1a12605163a8835759689dd5a9eecd3cb9318ef5c matches the shared producer checkpoint.
+
+The request's optional selected identity set uses the existing closed/sorted intent reader. It must be a subset of the actual complete64hex roster before metadata qualification. All raw names/staging/root CAS, registryEX and every generationSH are retained; activation, witnesses and whole Core row still recheck. Only preselected metadata is read/authenticated; any chosen bad generation still fails the original guard. Active selected identities authenticate but do not become retirement candidates. Default omitted selection retains full qualification/refusal behavior. No catch-and-skip or installed validity for unselected payload is introduced.
+
+Root reports62768 natural0, strict five roots0 and nine laws/1265 assertions including selector/proxy/own-data, selected/unselected bad metadata, active/missing and helper/census wiring. Tests were not rerun here. No material blocker found in bounded Source review. Actual selected current plan and mutation still require fresh physical custody and terminal acceptance. No protected read or Native operation performed.

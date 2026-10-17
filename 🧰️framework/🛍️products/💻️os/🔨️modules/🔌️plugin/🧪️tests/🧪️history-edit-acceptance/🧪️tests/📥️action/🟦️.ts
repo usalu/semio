@@ -21,5 +21,4 @@ test("history action source remains pending until its original receiving turn ac
  }
  const source=readFileSync(resolve(import.meta.dir,"../../🦀️.rs"),"utf8"),body=source.slice(source.indexOf("async fn acceptance_verb"),source.indexOf("async fn acceptance_pump"));
  expect(body).toContain("handle_action(action,&mut args,&meta,&mut identity,cx)");expect(body).toContain("if let Some(result)=result");expect(body).toContain("OriginalFixtureCaller::maximum_turns()");expect(body).toContain("ControlledRetirement::new(args)");expect(body).toContain("close_original_retained_step(same");expect(body).toContain("original acceptance action remains pending");
- console.log("[DEBUG] historyActionOriginalOption=true deferredNeverPublishes=true SQLiteAjv=true paidInputClose=true");
 });

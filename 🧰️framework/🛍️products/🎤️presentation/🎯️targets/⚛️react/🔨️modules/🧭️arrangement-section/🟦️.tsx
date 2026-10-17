@@ -25,16 +25,10 @@ import {
 import Reveal from "reveal.js";
 import { centerRevealResolvedArrangement, isRevealMorphCompanionOnly, resolveRevealArrangement } from "../🔀️reveal-morph/🟦️.ts";
 import { buildInteractiveSlideLayout, PresentationInteractionContext, usePresentationInteractionState } from "../🧮️interaction-model/🟦️.ts";
-import {
-  InteractionLayer,
-  InteractiveDisposition,
-  InteractiveRowBand,
-  isRevealSlideBackgroundPointerTarget,
-  SlideDispositionRegistryProvider,
-  SlideInteractionReset,
-  usePresentationInteraction,
-  useSlideBackgroundInteraction
-} from "../🫳️interaction/🟦️.tsx";
+import { InteractionLayer, isRevealSlideBackgroundPointerTarget, SlideInteractionReset, useSlideBackgroundInteraction } from "../🫳️interaction/🟦️.tsx";
+import { usePresentationInteraction } from "../🫳️interaction/🎛️interaction-hook/🟦️.ts";
+import { SlideDispositionRegistryProvider } from "../🫳️interaction/🗂️disposition-registry/🟦️.tsx";
+import { InteractiveDisposition, InteractiveRowBand } from "../🫳️interaction/🧲️interactive-disposition/🟦️.tsx";
 
 //#region 🔖️ArrangementSection
 function resolveSceneClipSrc(sceneHash: string): string {

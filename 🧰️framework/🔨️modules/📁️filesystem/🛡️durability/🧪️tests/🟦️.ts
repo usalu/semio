@@ -15,7 +15,7 @@ test("neutral Go durability owns platform rename and sync and matches Python rep
  const binary=join(root,"dist/build/prototype/fixture"),environment={...process.env,GOWORK:"off",GOPROXY:"off",GOTOOLCHAIN:"local"};
  await buildGoArtifactsV1(["-o",binary,"."],{version:1,mode:"prototype",cwd:root,captureDirectory:join(root,"c"),leaseDirectory:process.env.SEMIO_TEST_ARTIFACT_DIR!,budgetMs:120000},{environment,control:fixtureAdmissionV1()});
  expect(spawnSync(binary,[root],{encoding:"utf8"}).status).toBe(0);const actual=readFileSync(join(root,fixture.destination),"utf8");
- const oracle=spawnSync(process.env.SEMIO_PYTHON??"python3",["-c","import os,sys;root=sys.argv[1];s=os.path.join(root,'oracle-pending');t=os.path.join(root,'oracle-committed');open(s,'w').write(sys.argv[2]);os.replace(s,t);print(open(t).read(),end='')",root,fixture.content],{encoding:"utf8"});expect(oracle.status).toBe(0);expect(actual).toBe(oracle.stdout);console.log(`[DEBUG] Neutral Go durability platform=${process.platform} replacement=${actual}; Python oracle agrees`);
+ const oracle=spawnSync(process.env.SEMIO_PYTHON??"python3",["-c","import os,sys;root=sys.argv[1];s=os.path.join(root,'oracle-pending');t=os.path.join(root,'oracle-committed');open(s,'w').write(sys.argv[2]);os.replace(s,t);print(open(t).read(),end='')",root,fixture.content],{encoding:"utf8"});expect(oracle.status).toBe(0);expect(actual).toBe(oracle.stdout);
 },120000);
 
 /** 🎛️ Owns this fixture compiler phase with its actual signal and fixed test deadline. */

@@ -33,32 +33,32 @@ import {
   reconcileActivePath,
   singleTreeLeaf
 } from "@semio-tech/ui-react";
-import { leftoverWorldSelectionOverlayV1 } from "../../🌐️World3dHost/🟦️.tsx";
+import { leftoverWorldSelectionOverlayV1 } from "../../🌐️World3dHost/🔗️instance-selection/🟦️.ts";
 import {
   DEFAULT_PANEL_WIDTH_PX,
   FRAMEWORK_CATEGORY_COMMAND_ID,
   FRAMEWORK_CATEGORY_DISPLAY_ID,
-  FRAMEWORK_CATEGORY_TOOL_ID,
-  categoryTabIcon,
-  flattenPanelTabLeaves,
-  shellLabelTextV1,
+  FRAMEWORK_CATEGORY_TOOL_ID
+} from "../../🛠️ShellHelpers/🔩️plumbing/🟦️.ts";
+import { categoryTabIcon, flattenPanelTabLeaves } from "../../🛠️ShellHelpers/🛣️route-and-chrome/🟦️.tsx";
+import { shellLabelTextV1 } from "../../🛠️ShellHelpers/🔩️plumbing/🆔️action-ids/🟦️.ts";
+import {
   programArmedToolRevealV1,
   reconcileToolTabSelection,
-  resolveUtilityNodes,
-  shellLabel,
-  shellTabIcon,
   toolIdFromPanelTabId,
-  utilityNodeTreeContainsId,
-  windowMeasureTreeContainsId,
   type ToolTabSelection
-} from "../../🛠️ShellHelpers/🟦️.tsx";
+} from "../../🛠️ShellHelpers/🎛️command-registry/🟦️.tsx";
+import { resolveUtilityNodes } from "../../🛠️ShellHelpers/🌳️tree-windows/🟦️.tsx";
+import { shellLabel, shellTabIcon } from "../../🛠️ShellHelpers/🏷️labels/🟦️.tsx";
+import { utilityNodeTreeContainsId } from "../../🛠️ShellHelpers/🪟️window-panes/🪛️utility-bar-options/🟦️.tsx";
+import { windowMeasureTreeContainsId } from "../../🛠️ShellHelpers/🪟️window-panes/🎚️window-measures/🟦️.tsx";
 // #endregion 🔌️Adapters
 import { toolRunPanelReveal } from "../../🛠️ShellHelpers/⏯️tool-run-panel/🟦️.ts";
 import { useTimeTravelRevealV1 } from "../../🛠️ShellHelpers/⏪️time-travel/🟦️.tsx";
-import { FRAMEWORK_SETTINGS_PANEL_ID } from "../../📌️ChromePanels/🟦️.tsx";
+import { FRAMEWORK_SETTINGS_PANEL_ID } from "../../📌️ChromePanels/🆔️panel-ids/🟦️.ts";
 import { leftoverInspectionRefreshScope, leftoverInspectionPanelHash } from "../../🔌️PluginRuntime/🟦️.tsx";
 import { shellAppFault, type ShellAppFrameV1 } from "@semio-tech/framework/mcp/channel";
-import type { ShellCommand } from "../../../../../🖥️shell/🟦️.ts";
+import type { ShellCommand } from "@semio-tech/framework/shell";
 import type { ShellCoreAfterCommandBar } from "../🔎️command-bar/🟦️.tsx";
 
 export type ShellCoreAfterDockAssembly = ShellCoreAfterCommandBar & ReturnType<typeof useDockAssembly>;

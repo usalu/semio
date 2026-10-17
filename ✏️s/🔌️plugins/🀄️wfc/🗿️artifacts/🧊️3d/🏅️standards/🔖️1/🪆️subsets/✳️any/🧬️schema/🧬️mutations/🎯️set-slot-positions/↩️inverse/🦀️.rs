@@ -1,10 +1,14 @@
 //! ↩️ Inverse for `SetSlotPositions` — ONE `set-slot-positions` putting every slot the row moves back at its BASE
 //! position; nothing when it moves nothing.
 
-use crate::mutations::{set_slot_positions, Wfc3dMutation, Wfc3dSlotPosition};
+use crate::standards::v1::subsets::any::schema::mutations::set_slot_positions::set_slot_positions;
+use crate::schema::mutations::set_slot_positions::Wfc3dSlotPosition;
 use crate::schema::snapshot::Wfc3dSnapshot;
 
-pub fn inverse(payload: &super::SetSlotPositions, base: &Wfc3dSnapshot) -> Result<Vec<Wfc3dMutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op>(payload: &super::SetSlotPositions, base: &Wfc3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError>
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::set_slot_positions::SetSlotPositions>,
+{
     Ok((|| {
     if !payload.holds_invariants() {
         return Vec::new();

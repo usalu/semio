@@ -344,9 +344,9 @@ fn inverse_entity_record(base: &CadEntityRecord, diff: &CadEntityRecordDiff) -> 
 //#region 🔖️Demo
 /// 🌱 Representative `SemioCadDiff` cases built declaratively (empty/no-op and an empty-but-present row triple per collection) — single source of truth for `diff_grammar_conformance_law`/`protocol_walk_law` in
 /// `🎹️composer/🦀️.rs`.
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn demo_diff_cases() -> Vec<SemioCadDiff> {
+pub fn demo_diff_cases() -> Vec<SemioCadDiff> {
     vec![SemioCadDiff::default(), SemioCadDiff { layers: Some(Default::default()), blocks: Some(Default::default()), entities: Some(Default::default()) }]
 }
 //#endregion 🔖️Demo

@@ -4,7 +4,7 @@
 use semio_framework_value::paged::PagedUtf8;
 
 use crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff;
-use {crate::standards::v1::subsets::any::schema::Puzzle2dHandle, crate::Puzzle2dSnapshot};
+use {crate::standards::v1::subsets::any::schema::records::Puzzle2dHandle, crate::Puzzle2dSnapshot};
 
 //#region 🔖️Mutation
 /// 🔌 `replace-node-handle` payload.

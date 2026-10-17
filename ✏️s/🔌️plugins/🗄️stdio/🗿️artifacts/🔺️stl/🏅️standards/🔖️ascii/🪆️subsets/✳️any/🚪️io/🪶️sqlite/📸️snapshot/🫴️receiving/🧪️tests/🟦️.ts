@@ -18,7 +18,6 @@ const database=(value:typeof input):SqliteDatabase=>({tables:value.tables.map(ta
 test("STL original relational input is independently schema-admitted without trial authority",()=>{
  const admit=new Ajv2020({strict:true}).addKeyword("x-sqlite").compile(relational);for(const specimen of [input,empty])expect(admit(specimen)).toBe(true);expect(admit({...input,bodyGrant:grants.body})).toBe(false);
  const admitGrant=semioSchemaAjvV1({strict:true}).compile(grantSchema);for(const grant of Object.values(grants))expect(admitGrant(grant)).toBe(true);
- console.log("[DEBUG] Original STL two genuine three-table inputs and three independent canonical original grants admitted; no trial policy enters semantic schema");
 });
 test("STL original schema/name, IEEE words, facet and fixed vertex ownership agree with independent SQLite",async()=>{
  for(const specimen of [input,empty]){const source=database(specimen),restored=await stlSnapshotFromSqliteDatabase(source),projected=await stlSnapshotToSqliteDatabase(restored);expect(await stlSnapshotFromSqliteDatabase(projected)).toEqual(restored);expect(restored.schema).toBe("literal/schema λ\0");expect(restored.solidName).toBe("Original 世界\0 name");expect(restored.triangles.length).toBe(specimen===input?2:0);
@@ -29,7 +28,6 @@ test("STL original schema/name, IEEE words, facet and fixed vertex ownership agr
   }finally{oracle.close();}
   await stlSnapshotValidateSqliteSubset(restored,{artifactKind:"s.stdio.stl",standard:"ascii",subset:"*"},source);
  }
- console.log("[DEBUG] Original STL literal UTF8/NUL, empty triangles, shuffled surrogate rows, signed zero/NaN payload and exact three ordered vertices independently match SQLite; Native custody separate");
 });
 test("STL original receiving mounts both directions and exact directional validators",()=>{
  const original=readFileSync(new URL("../../🦀️.rs",import.meta.url),"utf8");for(const hook of ["to_sqlite_database_receiving","from_sqlite_database_receiving","validate_sqlite_snapshot_subset_decoding","validate_sqlite_snapshot_subset_encoding"])expect(original).toContain("fn "+hook);
@@ -44,5 +42,4 @@ test("STL malformed original identities, relationships, ordinals and exact words
    refused||=(oracle.query("SELECT count(*) AS n FROM stl_facet WHERE normal_y_numeric_class='finite' AND normal_y IS NULL").get()as{n:bigint}).n!==0n;
   }catch{refused=true;}finally{oracle.close();}expect(refused,law.id).toBe(true);
  }
- console.log("[DEBUG] Original STL eleven malformed fixed vertex/count/ordinal/identity/IEEE inputs independently refused by SQLite ownership/query predicates and actual semantic reconstruction");
 });

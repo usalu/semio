@@ -1,0 +1,95 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:graph:inference-inventory-reuse:v1",
+  "definitions": {
+    "Policy": {
+      "const": {
+        "version": 1,
+        "maximumDepth": 64,
+        "maximumValues": 1048576,
+        "maximumMembers": 65536,
+        "maximumTextBytes": 67108864,
+        "maximumReferences": 65536,
+        "maximumInventoryBytes": 4294967296
+      }
+    },
+    "Value": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "string"
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Value"
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/Value"
+          }
+        }
+      ]
+    },
+    "References": {
+      "type": "array",
+      "maxItems": 65536,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^SEMIO_(?:SOURCE_CLOSURE|CARGO_LOCK)_[a-f0-9]{64}$"
+      }
+    },
+    "Case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "value",
+        "references"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "value": {
+          "$ref": "#/definitions/Value"
+        },
+        "references": {
+          "$ref": "#/definitions/References"
+        }
+      }
+    },
+    "Cohort": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "usedBytes",
+        "records",
+        "accepted"
+      ],
+      "properties": {
+        "usedBytes": {
+          "type": "integer"
+        },
+        "records": {
+          "type": "integer"
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

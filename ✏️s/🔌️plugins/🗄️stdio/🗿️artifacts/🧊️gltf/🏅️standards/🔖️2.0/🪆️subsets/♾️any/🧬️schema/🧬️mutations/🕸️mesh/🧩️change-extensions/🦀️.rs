@@ -47,7 +47,10 @@ pub fn plan(p: &GltfChangeMeshExtensionDataPayload, base: &GltfSnapshot) -> Resu
     Ok(GltfDiff { meshes: patch(p.mesh, GltfMeshDiff { extensions: (current != &requested(p)).then(|| requested(p)), ..Default::default() }), ..Default::default() })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn inverse(p: &GltfChangeMeshExtensionDataPayload, base: &GltfSnapshot) -> Vec<super::GltfMutation> {
+pub fn inverse<Op>(p: &GltfChangeMeshExtensionDataPayload, base: &GltfSnapshot) -> Vec<Op>
+where
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::remove_used_extension::RemoveUsedExtensionMutation>,
+{
     if validate(p, base).is_err() {
         return Vec::new();
     }
@@ -68,11 +71,17 @@ pub enum ChangeMeshExtensionDataMutation {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn mutation(payload: GltfChangeMeshExtensionDataPayload) -> super::GltfMutation {
-    super::GltfMutation::ChangeMeshExtensionData(ChangeMeshExtensionDataMutation::Apply(payload))
+pub fn mutation<Op>(payload: GltfChangeMeshExtensionDataPayload) -> Op
+where
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::change_mesh_extension_data::ChangeMeshExtensionDataMutation>,
+{
+    Op::from(ChangeMeshExtensionDataMutation::Apply(payload))
 }
 
-impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ChangeMeshExtensionDataMutation {
+impl<Op> protocol::MutationKind<GltfSnapshot, Op> for ChangeMeshExtensionDataMutation
+where
+    Op: protocol::Mutation<GltfSnapshot, Diff = GltfDiff> + From<ChangeMeshExtensionDataMutation>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "mesh-extension-data", kind: "change-mesh-extension-data", record: "ChangedMeshExtensionData" };
 
     fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<GltfDiff> {
@@ -84,7 +93,7 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ChangeMeshExt
         }
     }
 
-    fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<super::GltfMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         match self {
             Self::Apply(payload) => Ok(inverse(payload, base)),
         }
@@ -101,7 +110,5 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ChangeMeshExt
 //#endregion 🧬️DirectMutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔌️attaches-an-9e1e51/🦀️.rs"]
-mod case_attaches_an_9e1e51;
+
 //#endregion 🧪️Tests

@@ -31,7 +31,6 @@ test("prepared page release requires physical authority independently of payload
   expect(receipt.copiedBytes).toBeLessThanOrEqual(grant.copy);
   expect(receipt.releasedBytes).toBe(grant.release);
  }
- console.log(`[DEBUG] prepared page bytes=${original.byteLength} grants=${fixture.grants.length} originalOwner=unchanged copiedBytes=0 releaseIndependent=true`);
 });
 
 import rasterFixture from "../♻️raster-lease-close/🧫️fixtures/🔣️.json" with {type:"json"};
@@ -51,7 +50,6 @@ test("moved raster admission preserves separately admitted original backing",()=
    expect(Buffer.compare(pixels,Buffer.alloc(row.byteLength,row.fill))).toBe(0);
   }
  }
- console.log("[DEBUG] moved raster originalPointer=true callerCapacity=true logicalBytesIndependent=true refusalAllocation=0");
 });
 
 import Ajv from "ajv";
@@ -68,5 +66,4 @@ test("prepared outcome fixture admits paid loans with independent closed schema"
  expect(implementation.includes("StepOutcome")).toBe(false);
  expect(source.includes("fault_payload.close_step_granted(grant)")).toBe(true);
  expect(source.includes("JobOutcomeBorrow::admit_fault(cx, self.fault_payload.published()")).toBe(true);
- console.log("[DEBUG] prepared outcome closed Ajv/RFC6902 fixture; canonical native borrowed trait and original funded fault owner source");
 });

@@ -1,0 +1,36 @@
+{
+ "file": "/Users/ueli/Documents/semio/🎓️teaching/🏛️architecture/❓️quiz/🧪️tests/🐕️pet-walk/🟦️.ts",
+ "importers": [],
+ "children": [
+  {
+   "dir": "🧰️pet-kit",
+   "doc": "/** 🧰️ The shared kit of the pet specs: the ensemble as authored, the sizes, labels, timings and tolerances the specs agree on, the page instrumentation that watches the pets move, and the checks every spec reuses.\n *\n * @see ../🟦️.ts — the home screen and hand specs, which describe what these specs expect of the pets\n */",
+   "lines": [
+    [
+     40,
+     671
+    ]
+   ]
+  },
+  {
+   "dir": "🧭️cast-and-choices",
+   "doc": "/** 🧭️ The cast and the learner's choices in a real browser: the cast follows the learner, `still` and `off` and their return, reduced motion, forced colours and the footer switch of every screen.\n *\n * @see ../🟦️.ts — the pets in a real browser, as the second round made them\n */",
+   "lines": [
+    [
+     948,
+     1134
+    ]
+   ]
+  },
+  {
+   "dir": "🪜️mischief-ladder-and-phone",
+   "doc": "/** 🪜️ The mischief, the ladder and the phone in a real browser: a pet lifts a copy of a quiz task, a climber raises its ladder or a grappler shoots its rope, and a phone shows at most two small pets.\n *\n * @see ../🟦️.ts — the pets in a real browser, as the second round made them\n */",
+   "lines": [
+    [
+     1136,
+     1278
+    ]
+   ]
+  }
+ ]
+}

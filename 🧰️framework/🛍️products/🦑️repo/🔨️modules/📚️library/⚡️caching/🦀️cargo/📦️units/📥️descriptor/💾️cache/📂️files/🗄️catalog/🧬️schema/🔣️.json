@@ -1,0 +1,59 @@
+{
+ "$schema": "http://json-schema.org/draft-07/schema#",
+ "definitions": {
+  "Protocol": {
+   "const": {
+    "version": 2,
+    "applicationId": 1381319474,
+    "fileName": "catalog.sqlite",
+    "journalSuffix": "-journal",
+    "pageBytes": 4096,
+    "maximumPages": 4096,
+    "maximumStatements": 16,
+    "maximumJournalBytes": 17825792,
+    "progressEntries": 256,
+    "synchronous": 3
+   }
+  },
+  "Identity": {
+   "const": [
+    {
+     "type": "table",
+     "name": "descriptor_catalog",
+     "owner": "descriptor_catalog",
+     "sql": "CREATE TABLE descriptor_catalog (id INTEGER PRIMARY KEY CHECK (id = 1), version INTEGER NOT NULL CHECK (version = 2), retainedBytes INTEGER NOT NULL CHECK (typeof(retainedBytes) = 'integer' AND retainedBytes >= 0 AND retainedBytes <= 1073741824), retainedNodes INTEGER NOT NULL CHECK (typeof(retainedNodes) = 'integer' AND retainedNodes >= 0 AND retainedNodes <= 65536), nextOrdinal INTEGER NOT NULL CHECK (typeof(nextOrdinal) = 'integer' AND nextOrdinal >= 0 AND nextOrdinal <= 9007199254740991))"
+    },
+    {
+     "type": "table",
+     "name": "descriptor_node",
+     "owner": "descriptor_node",
+     "sql": "CREATE TABLE descriptor_node (ordinal INTEGER PRIMARY KEY CHECK (ordinal >= 0 AND ordinal < 9007199254740991), digest TEXT NOT NULL UNIQUE CHECK (length(digest) = 64 AND digest NOT GLOB '*[^a-f0-9]*'), bytes INTEGER NOT NULL CHECK (typeof(bytes) = 'integer' AND bytes >= 1 AND bytes <= 16777216))"
+    },
+    {
+     "type": "trigger",
+     "name": "descriptor_insert",
+     "owner": "descriptor_node",
+     "sql": "CREATE TRIGGER descriptor_insert AFTER INSERT ON descriptor_node BEGIN UPDATE descriptor_catalog SET retainedBytes = retainedBytes + NEW.bytes, retainedNodes = retainedNodes + 1, nextOrdinal = MAX(nextOrdinal, NEW.ordinal + 1) WHERE id = 1; END"
+    },
+    {
+     "type": "trigger",
+     "name": "descriptor_delete",
+     "owner": "descriptor_node",
+     "sql": "CREATE TRIGGER descriptor_delete AFTER DELETE ON descriptor_node BEGIN UPDATE descriptor_catalog SET retainedBytes = retainedBytes - OLD.bytes, retainedNodes = retainedNodes - 1 WHERE id = 1; END"
+    },
+    {
+     "type": "trigger",
+     "name": "descriptor_immutable",
+     "owner": "descriptor_node",
+     "sql": "CREATE TRIGGER descriptor_immutable BEFORE UPDATE ON descriptor_node BEGIN SELECT RAISE(ABORT, 'Immutable descriptor entry'); END"
+    },
+    {
+     "type": "index",
+     "name": "sqlite_autoindex_descriptor_node_1",
+     "owner": "descriptor_node",
+     "sql": null
+    }
+   ]
+  }
+ }
+}

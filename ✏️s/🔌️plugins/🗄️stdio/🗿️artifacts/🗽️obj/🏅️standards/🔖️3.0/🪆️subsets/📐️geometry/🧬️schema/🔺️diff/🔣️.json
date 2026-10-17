@@ -111,19 +111,22 @@
           "type": "array",
           "items": {
             "type": "integer"
-          }
+          },
+          "default": []
         },
         "modified": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/ObjVertexModified"
-          }
+          },
+          "default": []
         },
         "added": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/ObjVertexAdded"
-          }
+          },
+          "default": []
         }
       }
     },
@@ -185,19 +188,22 @@
           "type": "array",
           "items": {
             "type": "integer"
-          }
+          },
+          "default": []
         },
         "modified": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/ObjTexCoordModified"
-          }
+          },
+          "default": []
         },
         "added": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/ObjTexCoordAdded"
-          }
+          },
+          "default": []
         }
       }
     },
@@ -256,19 +262,22 @@
           "type": "array",
           "items": {
             "type": "integer"
-          }
+          },
+          "default": []
         },
         "modified": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/ObjNormalModified"
-          }
+          },
+          "default": []
         },
         "added": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/ObjNormalAdded"
-          }
+          },
+          "default": []
         }
       }
     },
@@ -324,19 +333,22 @@
           "type": "array",
           "items": {
             "type": "integer"
-          }
+          },
+          "default": []
         },
         "modified": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/ObjFaceModified"
-          }
+          },
+          "default": []
         },
         "added": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/ObjFaceAdded"
-          }
+          },
+          "default": []
         }
       }
     },
@@ -392,19 +404,22 @@
           "type": "array",
           "items": {
             "type": "string"
-          }
+          },
+          "default": []
         },
         "modified": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/ObjGroupModified"
-          }
+          },
+          "default": []
         },
         "added": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/ObjGroupAdded"
-          }
+          },
+          "default": []
         }
       }
     },
@@ -432,19 +447,22 @@
           "type": "array",
           "items": {
             "type": "string"
-          }
+          },
+          "default": []
         },
         "modified": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/ObjGroupModified"
-          }
+          },
+          "default": []
         },
         "added": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/ObjObjectAdded"
-          }
+          },
+          "default": []
         }
       }
     }

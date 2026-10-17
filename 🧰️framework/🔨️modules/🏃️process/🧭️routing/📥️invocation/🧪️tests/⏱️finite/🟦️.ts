@@ -36,16 +36,15 @@ test("actual finite parent admission refuses null before effect and preserves ex
   const signal = new AbortController(), progress: ScriptProgress[] = [], remainingMilliseconds = () => 512.5;
   const original = { policy: { version: 1 as const, owner: "original-fractional-finite-caller", maximumElapsedMilliseconds: 1000 }, control: { signal: signal.signal, remainingMilliseconds, publish: async (event: ScriptProgress) => { progress.push(event); }, yieldContinuation: () => new Promise<void>(done => setImmediate(done)) }, capabilities: { events: progress } };
   checkScriptInvocation(original); expect(original.control.remainingMilliseconds).toBe(remainingMilliseconds); expect(original.control.remainingMilliseconds()).toBe(512.5);
-  console.log("[DEBUG] Canonical actual finite-policy/null handoff refused before effect; exact policy/capability identities, explicit ordinary host and fractional incoming clock retained; independent Ajv/Node agree");
 }, 15000);
 
 test("prepared original policy validates every mutable value with independent Ajv and real compiler", () => {
   const fixture = corpus.preparedPolicy, oracle = new Ajv({ strict: true }).compile(policySchema), policy: Record<string, unknown> = { ...fixture.initial };
-  expect(readScriptPolicy(policy)).toBe(policy);
+  expect(Object.is(readScriptPolicy(policy), policy)).toBe(true);
   for (const row of fixture.mutations) {
     if ("remove" in row) delete policy[row.key]; else policy[row.key] = row.value;
     expect(oracle(policy)).toBe(row.accepted);
-    if (row.accepted) expect(readScriptPolicy(policy)).toBe(policy); else expect(() => readScriptPolicy(policy)).toThrow("Complete Script policy required");
+    if (row.accepted) expect(Object.is(readScriptPolicy(policy), policy)).toBe(true); else expect(() => readScriptPolicy(policy)).toThrow("Complete Script policy required");
   }
   let schemaReads = 0;
   const observed = new Proxy(policySchema, { get(target, key, receiver) { schemaReads++; return Reflect.get(target, key, receiver); }, ownKeys(target) { schemaReads++; return Reflect.ownKeys(target); } });

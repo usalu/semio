@@ -29,6 +29,10 @@ type stdioMp4IsobmffAnyInferenceGuardSizeBounds = { readonly minItems?: number; 
 
 export const stdioMp4IsobmffAnyInferenceGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : stdioMp4IsobmffAnyInferenceGuardReject(at, "value is not an object");
+export const stdioMp4IsobmffAnyInferenceGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) stdioMp4IsobmffAnyInferenceGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const stdioMp4IsobmffAnyInferenceGuardArray = (value: unknown, at: string, bounds: stdioMp4IsobmffAnyInferenceGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return stdioMp4IsobmffAnyInferenceGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) stdioMp4IsobmffAnyInferenceGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -59,14 +63,14 @@ export const stdioMp4IsobmffAnyInferenceGuardConstant = <T extends string | numb
 //#endregion 🚪️Parsers
 
 export function parseMp4Inference(value: unknown, at = "$"): Mp4Inference {
-  const row = stdioMp4IsobmffAnyInferenceGuardObject(value, at);
+  const row = stdioMp4IsobmffAnyInferenceGuardClosed(stdioMp4IsobmffAnyInferenceGuardObject(value, at), at, ["duration"]);
   return {
     duration: parseMp4Duration(row["duration"], `${at}.duration`),
   };
 }
 
 export function parseMp4Duration(value: unknown, at = "$"): Mp4Duration {
-  const row = stdioMp4IsobmffAnyInferenceGuardObject(value, at);
+  const row = stdioMp4IsobmffAnyInferenceGuardClosed(stdioMp4IsobmffAnyInferenceGuardObject(value, at), at, ["durationSeconds", "trackCount", "sampleCount"]);
   return {
     durationSeconds: stdioMp4IsobmffAnyInferenceGuardNumber(row["durationSeconds"], `${at}.durationSeconds`, {"minimum": 0}),
     trackCount: stdioMp4IsobmffAnyInferenceGuardInteger(row["trackCount"], `${at}.trackCount`, {"minimum": 0}),

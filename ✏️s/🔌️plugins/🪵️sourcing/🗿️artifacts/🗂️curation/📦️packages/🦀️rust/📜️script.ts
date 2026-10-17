@@ -29,4 +29,4 @@ if (segments[0] === "curation-document-contract") {
     throw new Error('Unknown owned verification '+segments.join(' '));
   }
 }
-await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-sourcing-curation", { commands: { verify: OwnedVerifyScript }, snapshotSqliteTests:["../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"] });
+await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-sourcing-curation", { packages: ["semio-s-artifact-sourcing-curation", "semio-s-artifact-sourcing-curation-domain", "semio-s-artifact-sourcing-curation-examples", "semio-s-artifact-sourcing-curation-inferences", "semio-s-artifact-sourcing-curation-operations", "semio-s-artifact-sourcing-curation-schema", "semio-s-artifact-sourcing-curation-tests"], commands: { verify: OwnedVerifyScript }, snapshotSqliteTests:["../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"] });

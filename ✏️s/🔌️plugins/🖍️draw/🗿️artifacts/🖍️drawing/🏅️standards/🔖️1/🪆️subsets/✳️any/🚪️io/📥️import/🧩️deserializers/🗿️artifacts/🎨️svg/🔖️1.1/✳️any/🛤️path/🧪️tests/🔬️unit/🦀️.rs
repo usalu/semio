@@ -9,5 +9,4 @@ fn editable_svg_paths_match_neutral_geometry() {
         if let Ok(commands)=commands {assert_eq!(actual,editable_svg_path_commands(&commands));}
         if row["after"].is_null() {assert!(actual.is_err(),"{}",row["name"]);} else {assert_eq!(actual.unwrap(),serde_json::from_value::<Vec<PathSegment>>(row["after"].clone()).unwrap(),"{}",row["name"]);}
     }
-    eprintln!("[DEBUG] native SVG decoded path commands and text grammar share exact neutral normalization");
 }

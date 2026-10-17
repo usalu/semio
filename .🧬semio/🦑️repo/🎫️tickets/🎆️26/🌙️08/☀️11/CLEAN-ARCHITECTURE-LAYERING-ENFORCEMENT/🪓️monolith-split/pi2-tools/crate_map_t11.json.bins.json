@@ -1,0 +1,95 @@
+{
+ "tests-01": [
+  "retained_command_test_hosts",
+  "runtime_instances_test_hosts",
+  "time_travel_turns_test_hosts"
+ ],
+ "tests-02": [
+  "child_test_hosts",
+  "publication_mounted_test_hosts",
+  "app_builder_tests_host",
+  "tool_run_test_hosts"
+ ],
+ "tests-03": [
+  "reactor_core_test_hosts",
+  "media_export_credit_tests_host",
+  "media_publication_tests_host",
+  "document_media_test_hosts"
+ ],
+ "tests-04": [
+  "plugin_runtime_plugin_builder_contract_support_1",
+  "reactor_turn_test_hosts",
+  "fixture_projection_retirement_tests"
+ ],
+ "tests-05": [
+  "tool_run_support_1",
+  "time_travel_support_1",
+  "extension_test_hosts",
+  "receipt_tests_host"
+ ],
+ "tests-06": [
+  "testing_laws_unit_3",
+  "natural_file_lifecycle_tests",
+  "tool_run_turns_test_hosts"
+ ],
+ "tests-07": [
+  "plugin_builder_contract_tests_1",
+  "reactor_surfaces_test_hosts",
+  "runtime_ops_test_hosts",
+  "bounded_initializer_laws"
+ ],
+ "tests-08": [
+  "plugin_builder_contract_tests_5",
+  "segmented_download_contract",
+  "testing_fixtures_test_hosts",
+  "app_commands_tests_host",
+  "job_tool_run_host_2",
+  "cooperative_pump_tests"
+ ],
+ "tests-09": [
+  "plugin_builder_contract_tests_2",
+  "builder_test_hosts"
+ ],
+ "tests-10": [
+  "plugin_builder_contract_tests_6",
+  "app_panel_kit_tests"
+ ],
+ "tests-11": [
+  "plugin_builder_contract_tests_7",
+  "job_test_hosts",
+  "instance_ladders_test_hosts"
+ ],
+ "tests-12": [
+  "job_tool_run_host_1",
+  "owned_media_error_tests_host",
+  "contributed_mutation_wire_tests_host"
+ ],
+ "tests-13": [
+  "plugin_builder_contract_tests_4",
+  "app_window_kits_tests"
+ ],
+ "tests-14": [
+  "testing_laws_unit_4",
+  "original_codec_binding_laws",
+  "reactor_tasks_test_hosts"
+ ],
+ "tests-15": [
+  "plugin_builder_contract_tests_3"
+ ],
+ "tests-16": [
+  "testing_laws_unit_2"
+ ],
+ "tests-17": [
+  "declarations_fixture_tests",
+  "declaration_fixture_mutations",
+  "artifact_admission_tests"
+ ],
+ "tests-18": [
+  "testing_laws_unit_1"
+ ],
+ "tests-19": [
+  "window_mutation_tests",
+  "window_config_tests",
+  "window_transient_tests"
+ ]
+}

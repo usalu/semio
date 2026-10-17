@@ -3,7 +3,7 @@
 
 use super::plane::P;
 use super::select;
-use super::session::{Preview, Shape, Style};
+use crate::editor::bim::marks::{Preview, Shape, Style};
 use crate::standards::v1::subsets::any::schema::{inferences::ModelInference, snapshot::ModelSnapshot};
 use crate::editor::bim::kit::{path, path_record, text_record, Paint, Rgba};
 use semio_framework_plugin::DslValue;
@@ -87,7 +87,7 @@ pub fn sheet_records(layout: Option<&crate::standards::v1::subsets::any::schema:
         Some(layout) if utility == crate::editor::bim::utilities::DEFAULT_UTILITY => super::viewports::handles(layout, selected),
         _ => Vec::new(),
     };
-    let mirrored = handles.into_iter().chain(preview.marks.iter().cloned()).map(|mark| super::session::Mark { points: mark.points.chunks_exact(2).flat_map(|pair| [pair[0], -pair[1]]).collect(), ..mark }).collect();
+    let mirrored = handles.into_iter().chain(preview.marks.iter().cloned()).map(|mark| crate::editor::bim::marks::Mark { points: mark.points.chunks_exact(2).flat_map(|pair| [pair[0], -pair[1]]).collect(), ..mark }).collect();
     records(&Preview::of(mirrored), per_pixel)
 }
 

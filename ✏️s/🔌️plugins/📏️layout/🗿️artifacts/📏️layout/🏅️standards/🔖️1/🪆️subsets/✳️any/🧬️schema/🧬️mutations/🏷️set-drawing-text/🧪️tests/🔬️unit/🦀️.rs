@@ -1,25 +1,27 @@
 use super::*;
+use semio_framework_io_ports::testkit::{bind, scene_content};
 use semio_s_artifact_layout_layout_mutations::LayoutMutation;
 use protocol::{Mutation, MutationDiff};
-use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
-use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
-use semio_s_artifact_stdio_semio_drawing::schema::snapshot::{DrawLayer, DrawNode, SemioDrawingSnapshot};
+use semio_framework_io_ports::VectorPoint2;
+use semio_framework_io_ports::VectorTransform;
+use semio_framework_io_ports::{VectorLayer, VectorNode, VectorScene};
 
 fn plan(text: &str) -> LayoutSnapshot {
-    let point = |x: f64, y: f64| SemioPoint2 { x, y };
-    let content = SemioDrawingSnapshot {
-        schema: "stdio.semio.drawing".into(),
+    bind(&semio_s_artifact_layout_layout_model::LAYOUT_BACKGROUND_DRAWING);
+    let point = |x: f64, y: f64| VectorPoint2 { x, y };
+    let content = VectorScene {
+        schema: "test.scene".into(),
         canvas: Default::default(),
         styles: Vec::new(),
-        layers: vec![DrawLayer {
+        layers: vec![VectorLayer {
             id: "imported".into(),
             name: "Imported".into(),
             visible: true,
-            root: DrawNode::Group { transform: SemioTransform::identity(), children: vec![DrawNode::Text { value: text.into(), at: point(0.0, 0.0), style: None }] },
+            root: VectorNode::Group { transform: VectorTransform::identity(), children: vec![VectorNode::Text { value: text.into(), at: point(0.0, 0.0), style: None }] },
         }],
     };
     let mut document = semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document();
-    document.background_drawing = Some(semio_s_artifact_layout_layout_model::background_drawing_child_handle("dwg", &content));
+    document.background_drawing = Some(semio_s_artifact_layout_layout_model::background_drawing_child_handle("dwg", &scene_content(&content)));
     document
 }
 
@@ -38,26 +40,27 @@ fn set_drawing_text_replaces_the_label_and_inverse_restores_it() {
 
 #[test]
 fn set_drawing_text_replaces_a_later_label_and_leaves_the_first() {
-    let point = |x: f64, y: f64| SemioPoint2 { x, y };
-    let content = SemioDrawingSnapshot {
-        schema: "stdio.semio.drawing".into(),
+    bind(&semio_s_artifact_layout_layout_model::LAYOUT_BACKGROUND_DRAWING);
+    let point = |x: f64, y: f64| VectorPoint2 { x, y };
+    let content = VectorScene {
+        schema: "test.scene".into(),
         canvas: Default::default(),
         styles: Vec::new(),
-        layers: vec![DrawLayer {
+        layers: vec![VectorLayer {
             id: "imported".into(),
             name: "Imported".into(),
             visible: true,
-            root: DrawNode::Group {
-                transform: SemioTransform::identity(),
+            root: VectorNode::Group {
+                transform: VectorTransform::identity(),
                 children: vec![
-                    DrawNode::Text { value: "Plan".into(), at: point(0.0, 0.0), style: None },
-                    DrawNode::Text { value: "Note".into(), at: point(1.0, 0.0), style: None },
+                    VectorNode::Text { value: "Plan".into(), at: point(0.0, 0.0), style: None },
+                    VectorNode::Text { value: "Note".into(), at: point(1.0, 0.0), style: None },
                 ],
             },
         }],
     };
     let mut base = semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document();
-    base.background_drawing = Some(semio_s_artifact_layout_layout_model::background_drawing_child_handle("dwg", &content));
+    base.background_drawing = Some(semio_s_artifact_layout_layout_model::background_drawing_child_handle("dwg", &scene_content(&content)));
     let mutation = LayoutMutation::SetDrawingText(SetDrawingText { index: 1, text: "Caption".into() });
     let next = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("rename");
     assert_eq!(drawing_labels(&next), vec!["Plan".to_string(), "Caption".to_string()]);

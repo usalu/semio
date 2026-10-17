@@ -3,7 +3,7 @@
 use super::*;
 
 impl FlowDomain for FlowDomainAdapter {
-    fn bind_session(&mut self, session: semio_framework::abi::AbiHandle) {
+    fn bind_session(&mut self, session: semio_framework_abi::AbiHandle) {
         self.vcs = Some(FlowRetainedVcs::new(semio_framework_artifact_flow_flow::artifact::FlowHostSnapshot::default(), session.generation(), 0, 0));
     }
 

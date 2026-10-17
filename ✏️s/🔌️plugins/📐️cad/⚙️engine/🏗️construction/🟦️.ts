@@ -1,7 +1,7 @@
 /** 🏗️ Geometric construction capabilities selected by CAD extension owners. */
 import type { Vec3 } from "@semio-tech/framework/3d";
-import { Model } from "../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🧊️model/🟦️.ts";
-import { applyModelDiff, type SpatialKernel } from "../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️.ts";
+import { Model } from "@semio-tech/s-spatial-kernel-ts/geometry/model";
+import { applyModelDiff, type SpatialKernel } from "@semio-tech/s-spatial-kernel-ts/spatial";
 
 function constructionPoint(value: unknown): Vec3 {
   if (!Array.isArray(value) || value.length !== 3 || !value.every((coordinate) => typeof coordinate === "number" && Number.isFinite(coordinate))) throw new Error("Construction point must contain three finite coordinates");

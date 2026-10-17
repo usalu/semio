@@ -4182,7 +4182,7 @@
       "https://semio.tech/framework/process/wasm-build/policy/v1": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🕸️wasm-build/🧬️schema/🔣️.json",
       "schema://framework.process.native-build/CargoTargetRecipeV1": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎯️recipe/🧬️schema/🔣️.json",
       "schema://framework.process.native-build/NativeBuildPlanV1": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/🧬️schema/🔣️.json",
-      "schema://framework.process/ResourceQueueTicketV1": "🧰️framework/🔨️modules/🏃️process/🔒️leases/🧬️schema/📜️ticket.json",
+      "schema://framework.process/ResourceLeaseAuthorityV1": "🧰️framework/🔨️modules/🏃️process/🔒️leases/🧬️schema/📜️ticket.json",
       "schema://repo.build/AdmissionV1": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎟️admission/🧬️schema/🔣️.json",
       "schema://repo.build/JobserverV1": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎰️jobserver/🧬️schema/🔣️.json",
       "schema://repo.build/StageCacheV1": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🗃️stage-cache/🧬️schema/🔣️.json",

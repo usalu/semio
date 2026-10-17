@@ -7,7 +7,7 @@ mod app_builder_tests {
     /// 🧭️ Executes neutral owner placements through the actual action disposition join and independent serde projection.
     #[semio_framework_async_macros::async_test]
     async fn shared_framework_action_descriptor_owner_laws_execute_production_join() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../🔨️modules/🧵️job/🧪️tests/🧫️fixtures/⚖️shared-framework-action-routes-law.json"))).expect("plain neutral descriptor laws");
+        let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../../🔨️modules/🧵️job/🧪️tests/🧫️fixtures/⚖️shared-framework-action-routes-law.json"))).expect("plain neutral descriptor laws");
         let base = App::builder(canonical_test_app_id("shared-actions").await, LocalizedLabel::data("Shared actions")).await.document(["semio", "shared-actions"]).mode("edit", LocalizedLabel::data("Edit"), "pencil").await.window_kind("main", LocalizedLabel::data("Main"), "shared.main", SurfaceKind::Canvas2d, IconName::AppWindow).await.default_layout(create_default_layout(&["main".into()], "row", None, None)).await.build_definition();
         let laws = fixture["descriptorLaws"].as_array().expect("descriptor laws");
         for law in laws {
@@ -33,7 +33,7 @@ mod app_builder_tests {
                     other => panic!("unknown owner kind {other}"),
                 }
             }
-            super::join_framework_shared_action_dispositions(&mut definition);
+            semio_framework_plugin_job::reserved_jobs::join_framework_shared_action_dispositions(&mut definition);
             let rows = match law["ownerKind"].as_str().expect("owner kind") {
                 "appAction" => serde_json::to_value(&definition.actions),
                 "windowAction" => serde_json::to_value(&definition.window_kinds.iter().next().expect("window owner").actions),
@@ -44,12 +44,12 @@ mod app_builder_tests {
             let expected = if law["expected"] == "migrated" { "migrated" } else { "unclassified" };
             for row in rows.as_array().expect("descriptor rows") { assert_eq!(row["semantics"]["execution"]["interactiveJob"], expected, "{} {}", law["id"], row["id"]); }
         }
-        eprintln!("[DEBUG] Actual shared action disposition join matches {} neutral owner laws", laws.len());
     }
 
     /// 🪪️ Contract §1 fixture — a canonical id built via `surface_app_id` from a fixture `Dialect`,
     /// not a hand-written pre-migration string. One shared helper rather than one dialect per test.
-    async fn canonical_test_app_id(slug: &str) -> String {
+    #[doc(hidden)]
+pub async fn canonical_test_app_id(slug: &str) -> String {
         surface_app_id(&ArtifactDialect { artifact_kind: format!("s.test.app-builder.{slug}"), standard: "1".into(), subset: "*".into() }, AppRole::Editor)
     }
 
@@ -479,7 +479,7 @@ mod app_builder_tests {
         assert_ne!(bound("escape").as_deref(), Some("toolRunDismiss"), "escape dismisses only with the run panel focused");
         let tool_run_tab = |definition: &AppDefinition| definition.panel_tabs.iter().find(|tab| matches!(&tab.kind, PanelTabKind::App(id) if id == semio_framework_ui_layout::layout::FRAMEWORK_PANEL_TAB_TOOL_RUN_ID)).map(|tab| (tab.group, tab.body_key.clone()));
         assert_eq!(tool_run_tab(&plain), None, "an app without a tool run gets no ToolRun panel tab");
-        assert_eq!(tool_run_tab(&interactive), Some((PanelGroup::Details, Some(crate::FRAMEWORK_TOOL_RUN_BODY_KEY.to_string()))), "an app declaring a tool run mounts the framework ToolRun panel as a details tab");
+        assert_eq!(tool_run_tab(&interactive), Some((PanelGroup::Details, Some(semio_framework_plugin_decl_views::tool_run_contract::FRAMEWORK_TOOL_RUN_BODY_KEY.to_string()))), "an app declaring a tool run mounts the framework ToolRun panel as a details tab");
     }
 
     #[semio_framework_async_macros::async_test]

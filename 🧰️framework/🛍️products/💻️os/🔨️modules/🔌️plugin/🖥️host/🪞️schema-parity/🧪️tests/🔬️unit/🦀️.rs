@@ -1,4 +1,6 @@
 mod tests {
+    use semio_framework_test_fixtures::fixture_path;
+
     use std::collections::{BTreeMap, BTreeSet};
     use std::fs;
     use std::path::PathBuf;
@@ -20,7 +22,7 @@ mod tests {
     }
 
     fn schema_path() -> PathBuf {
-        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../🧬️schema/📜️.wit")
+        fixture_path!("../../../🧬️schema/📜️.wit")
     }
 
     fn source() -> String {

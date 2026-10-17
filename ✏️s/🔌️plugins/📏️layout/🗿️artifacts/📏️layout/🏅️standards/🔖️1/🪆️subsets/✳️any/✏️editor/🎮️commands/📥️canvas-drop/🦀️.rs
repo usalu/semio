@@ -26,26 +26,12 @@ fn screen_to_world_for_surface(config: &LayoutWindowConfig, sx: f64, sy: f64, wi
 
 //#endregion 🔖️Shared
 
-//#region 🔖️CanvasPointerDown
-//#endregion 🔖️CanvasPointerDown
 
-//#region 🔖️CanvasPointerMove
-//#endregion 🔖️CanvasPointerMove
 
-//#region 🔖️CanvasPointerUp
-//#endregion 🔖️CanvasPointerUp
 
-//#region 🔖️CanvasDragOver
-//#endregion 🔖️CanvasDragOver
 
-//#region 🔖️CanvasDragLeave
-//#endregion 🔖️CanvasDragLeave
 
-//#region 🔖️SetCamera
-//#endregion 🔖️SetCamera
 
-//#region 🔖️CanvasDrop
-//#endregion 🔖️CanvasDrop
 
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword = "canvas-drop")]
@@ -124,8 +110,3 @@ pub fn handle(payload: &CanvasDrop, doc: &ArtifactView<'_, LayoutSnapshot>, cfg:
     }
 }
 
-//#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests

@@ -1,0 +1,21 @@
+{
+ "name": "frd-p2",
+ "crates": [
+  "semio-framework-test-fixtures",
+  "semio-s-artifact-cad-cad-config",
+  "semio-s-artifact-energy-model-export",
+  "semio-s-artifact-forms-forms-questions",
+  "semio-s-artifact-gis-gisterrain-terrain-descriptor",
+  "semio-s-artifact-norm-en1990-io",
+  "semio-s-artifact-norm-en1991-mutations",
+  "semio-s-artifact-norm-en1993-checks",
+  "semio-s-artifact-norm-en1993-mutations",
+  "semio-s-artifact-norm-en1996-schema",
+  "semio-s-artifact-shooting-shooting-mut-any-3",
+  "semio-s-artifact-wfc-3d-snapshot",
+  "semio-s-artifact-wfc-bitmap",
+  "semio-s-artifact-wfc-bitmap-mut-family-2",
+  "semio-s-artifact-wfc-grid2d-schema"
+ ],
+ "note": "FRD sample, no baseline"
+}

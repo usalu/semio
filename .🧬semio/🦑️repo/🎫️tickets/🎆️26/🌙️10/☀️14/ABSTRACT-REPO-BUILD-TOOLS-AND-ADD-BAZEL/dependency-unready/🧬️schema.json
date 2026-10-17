@@ -1,0 +1,113 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/repo/dependency-unready-design/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "cases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 64,
+      "items": {
+        "$ref": "#/$defs/Case"
+      }
+    }
+  },
+  "$defs": {
+    "Case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode",
+        "accepted",
+        "completedRetentions",
+        "transitionMayBeUnresolved"
+      ],
+      "properties": {
+        "mode": {
+          "enum": [
+            "absent",
+            "one-unready",
+            "two-unready",
+            "different-canonical-root-link",
+            "ordinary-source",
+            "missing-source",
+            "selected-root-alias",
+            "selected-member-alias",
+            "foreign-alias",
+            "relative-alias",
+            "dotsegment-alias",
+            "unknown-subpath-alias",
+            "ready-file",
+            "ready-directory",
+            "ready-link",
+            "ready-invalid",
+            "root-file",
+            "root-link",
+            "cross-device",
+            "root-drift",
+            "parent-drift",
+            "ready-race",
+            "capsule-collision",
+            "cancel-before",
+            "cancel-after-one",
+            "undefined-after-one",
+            "frozen-after-one",
+            "close-uncertain",
+            "foreign-after-retain",
+            "stage-failure",
+            "installer-failure",
+            "forged-control",
+            "wrong-root",
+            "wrong-input",
+            "wrong-funding",
+            "expired",
+            "unknown-j-role",
+            "malformed-capsule",
+            "windows"
+          ]
+        },
+        "accepted": {
+          "type": "boolean"
+        },
+        "completedRetentions": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2
+        },
+        "transitionMayBeUnresolved": {
+          "type": "boolean"
+        }
+      }
+    },
+    "Protocol": {
+      "const": {
+        "version": 1,
+        "purpose": "rebuild-current-unready-dependency-producer",
+        "retentionPurpose": "retain-current-unready-dependency-generation",
+        "readyName": "bindings.json",
+        "selection": "fresh-all-current-source-generations",
+        "currentDirectAliases": "must-not-reference-selected-root",
+        "unknownAlias": "refuse",
+        "anyReadyEntry": "refuse",
+        "oldPayload": "retain-opaque",
+        "newInputs": "canonical-absent-only",
+        "maximumIntentBytes": 4096,
+        "maximumRoots": 64,
+        "maximumInputFiles": 512,
+        "maximumInputBytes": 67108864,
+        "maximumNewPathUnits": 256,
+        "inactivityProved": false,
+        "hostWideAliasProof": false,
+        "wholeAllocationRetired": false
+      }
+    }
+  }
+}

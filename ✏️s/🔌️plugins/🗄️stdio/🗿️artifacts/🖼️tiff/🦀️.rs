@@ -13,21 +13,18 @@ pub use semio_s_artifact_stdio_contract::{apply_mutation, apply_mutation_checked
 
 pub(crate) use semio_s_artifact_stdio_contract::impl_serde_op_codec;
 
-use {semio_framework_plugin::ArtifactKindSpec,semio_framework_artifact_reference::Dialect,semio_framework_plugin::MediaClass,semio_framework_plugin::MediaForm,semio_framework_plugin::MediaType,semio_framework_plugin::OsMediaCapability,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+use {semio_framework_artifact_reference::Dialect, semio_framework_artifact_reference::StandardId, semio_framework_artifact_reference::SubsetId};
 
 pub use schema::diff::TiffDiff;
 pub use schema::mutations::TiffMutation;
 pub use schema::snapshot::TiffSnapshot;
 pub use schema::TiffArtifact;
 
-/// 🏷️ Document schema / DSL envelope id.
-pub const STDIO_TIFF_DOCUMENT_SCHEMA: &str = "stdio.tiff";
+pub use semio_s_artifact_stdio_tiff_snapshot::{STDIO_TIFF_DOCUMENT_SCHEMA};
 
-/// 🧬️ Artifact schema descriptor id.
-pub const TIFF_ARTIFACT_SCHEMA_ID: &str = "s.stdio.tiff";
+pub use semio_s_artifact_stdio_tiff_snapshot::{TIFF_ARTIFACT_SCHEMA_ID};
 
-/// 📜 Schema-owned package definition.
-pub const ARTIFACT_DEFINITION_SCHEMA: &str = include_str!("📜️artifact-definition.json");
+pub use semio_s_artifact_stdio_tiff_snapshot::{ARTIFACT_DEFINITION_SCHEMA};
 
 pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::PluginAssemblyError> {
     let factories = native_codecs();
@@ -35,9 +32,7 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
     semio_s_artifact_stdio_contract::definition_from_schema_with_executables(ARTIFACT_DEFINITION_SCHEMA, executables)
 }
 
-pub fn formats() -> Result<Vec<semio_framework_plugin::io::FormatDescriptor>, semio_framework_plugin::ArtifactDefinitionError> {
-    semio_s_artifact_stdio_contract::format_descriptors(ARTIFACT_DEFINITION_SCHEMA)
-}
+pub use semio_s_artifact_stdio_tiff_snapshot::{formats};
 
 fn native_codec() -> store::os_store::serialization::ArtifactCodec {
     let mut codec = store::bare_artifact_codec::<TiffSnapshot, TiffMutation>(STDIO_TIFF_DOCUMENT_SCHEMA);
@@ -54,36 +49,9 @@ pub fn contribution() -> semio_s_artifact_stdio_contract::ArtifactContribution {
     semio_s_artifact_stdio_contract::ArtifactContribution { definition_constraint: None, identity: "tiff", schema: ARTIFACT_DEFINITION_SCHEMA, definition, assembly, formats, native_codecs }
 }
 
-//#region 🔖️Dialect
-/// 🪪️ Surface coordinate(s) for this artifact — `artifact_kind` matches the schema descriptor
-/// id above verbatim (never guessed); `standard`/`subset` match this file's own on-disk
-/// `🏅️standards/🔖️.../🪆️subsets/✳️...` location. Lives at the artifact root (not under
-/// `editor`/`viewer`) so a viewer file can read it without ever importing through the
-/// sibling `editor` module.
-pub const TIFF_ANY_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.tiff", standard: StandardId("6.0"), subset: SubsetId("*") };
-pub const TIFF_BASELINE_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.tiff", standard: StandardId("6.0"), subset: SubsetId("baseline") };
-//#endregion 🔖️Dialect
+pub use semio_s_artifact_stdio_tiff_mutation_regressions::{TIFF_ANY_DIALECT, TIFF_BASELINE_DIALECT};
 
-//#region 🔖️ArtifactKind
-/// 🗂️ This artifact's `ArtifactKindSpec`.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn artifact_kind() -> ArtifactKindSpec {
-    ArtifactKindSpec {
-        id: "s.stdio.tiff".into(),
-        label: semio_framework_ui_locale::LocalizedLabel::native("Tiff", "Tiff"),
-        source_format: STDIO_TIFF_DOCUMENT_SCHEMA.into(),
-        component_kind: "stdio".into(),
-        dimension: "data".into(),
-        media_capability: OsMediaCapability::MeshOnly,
-        media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
-        schema: STDIO_TIFF_DOCUMENT_SCHEMA.into(),
-        export_formats: vec![],
-        import_formats: vec![],
-        export_stdio_kinds: vec![],
-        import_stdio_kinds: vec![],
-    }
-}
-//#endregion 🔖️ArtifactKind
+pub use semio_s_artifact_stdio_tiff_snapshot::{artifact_kind};
 
 //#region 🔖️Declaration
 /// 🔖️ This artifact's declaration (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W6) —
@@ -114,7 +82,7 @@ pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Re
         .schema(standards::v6_0::subsets::document::schema::tiff_artifact_schema_descriptor())
         .formats(formats)
         .inferences([standards::v6_0::subsets::document::schema::inferences::tiff_artifact_inference_descriptor()])
-        .composers(standards::v6_0::subsets::document::io::io_registry::entries())
+        .composers(standards::v6_0::subsets::baseline::io::io_registry::entries())
         .subset_validators(declared_subset_validators())
         .languages(pilot_languages())
         .document_codec_bare::<TiffSnapshot, TiffMutation>(STDIO_TIFF_DOCUMENT_SCHEMA, Dialect { artifact_kind: "s.stdio.tiff", standard: StandardId("6.0"), subset: SubsetId("*") })
@@ -198,29 +166,7 @@ fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
 //#endregion 🔖️Declaration
 
 //#region 🚪️DerivedIoRegistry
-pub mod io_registry {
-    use crate::standards::v6_0::subsets::document::io::io_registry as v6_0;
-    use {semio_framework_plugin::io::register_composer_entries,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposedArtifact,semio_framework_plugin::io::ComposerEntry,semio_framework_artifact_reference::Dialect,semio_framework_plugin::io::ErasedComposeSource};
-    use std::sync::OnceLock;
-
-    static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
-
-    // 🚫️async: E1 pure table accessor consumed by OnceLock::get_or_init's sync closure — see R9
-    pub fn entries() -> &'static [&'static ComposerEntry] {
-        ENTRIES.get_or_init(|| v6_0::entries().iter().collect()).as_slice()
-    }
-
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
-        let entry = entries().iter().find(|e| e.writes == target).ok_or_else(|| ComposeError { message: format!("TiffComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
-        ::semio_framework_async::poll::resolve_ready((entry.compose)(sources))
-    }
-
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn register() {
-        register_composer_entries(v6_0::entries()).expect("static Stdio registration must be available and conflict-free");
-    }
-}
+pub use semio_s_artifact_stdio_tiff_mutation_regressions::io_registry;
 //#endregion 🚪️DerivedIoRegistry
 
 #[path = "."]
@@ -237,115 +183,40 @@ pub mod standards {
                 // inline barrel so every existing `subsets::document::engine::*` path (reached
                 // from the `v6_0::engine`/root `engine::*` barrels above it) still resolves.
 
-                #[path = "."]
-                pub mod examples {
-                    #[path = "."]
-                    pub mod demo {
-                        #[path = "🏅️standards/🔖️6.0/🪆️subsets/🧾️document/📚️examples/🎬️demo/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                }
+                pub use semio_s_artifact_stdio_tiff_snapshot::standards::v6_0::subsets::document::examples;
                 #[path = "."]
                 pub mod schema {
-                    #[path = "🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧬️schema/🦀️.rs"]
-                    mod component;
-                    pub use component::*;
-                    #[path = "."]
-                    pub mod snapshot {
-                        #[path = "🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧬️schema/📸️snapshot/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                    #[path = "."]
-                    pub mod inferences {
-                        #[path = "🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧬️schema/💡️inferences/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                        #[path = "."]
-                        pub mod dimensions {
-                            #[path = "🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧬️schema/💡️inferences/📐dimensions/🦀️.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                    }
-                    #[path = "."]
-                    pub mod diff {
-                        #[path = "🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧬️schema/🔺️diff/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                    #[path = "."]
-                    pub mod mutations {
-                        #[path = "🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/🦀️.rs"]
-                        mod top_level;
-                        pub use top_level::*;
-                        #[path = "🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/🧮️replace-samples/🦀️.rs"]
-                        pub mod replace_samples;
-                        #[path = "🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/📥️insert-ifd/🦀️.rs"]
-                        pub mod insert_ifd;
-                        #[path = "🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/📤️remove-ifd/🦀️.rs"]
-                        pub mod remove_ifd;
-                        #[path = "🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/🗑️remove-tag/🦀️.rs"]
-                        pub mod remove_tag;
-                        #[path = "🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/🏷️replace-tag/🦀️.rs"]
-                        pub mod replace_tag;
-                        #[path = "🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/🎨️paint-region/🦀️.rs"]
-                        pub mod paint_region;
-                    }
-                    #[cfg(test)]
-                    #[path = "🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧪️tests/🛡️mutation-regressions/🦀️.rs"]
-                    mod mutation_regressions;
-                    #[path = "🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧬️schema/⚙️operations/🦀️.rs"]
-                    pub mod operations;
+                    pub use semio_s_artifact_stdio_tiff_schema::standards::v6_0::subsets::document::schema::*;
+
+                    pub use semio_s_artifact_stdio_tiff_snapshot::standards::v6_0::subsets::document::schema::snapshot;
+                    pub use semio_s_artifact_stdio_tiff_inferences::standards::v6_0::subsets::document::schema::inferences;
+                    pub use semio_s_artifact_stdio_tiff_schema::standards::v6_0::subsets::document::schema::diff;
+                    pub use semio_s_artifact_stdio_tiff_mutations::standards::v6_0::subsets::document::schema::mutations;
+
+                    pub use semio_s_artifact_stdio_tiff_snapshot::standards::v6_0::subsets::document::schema::operations;
                 }
                 #[path = "."]
                 pub mod io {
-                    #[path = "🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🚪️io/🦀️.rs"]
-                    mod component;
-                    pub use component::*;
+                    pub use semio_s_artifact_stdio_tiff_inferences::standards::v6_0::subsets::document::io::*;
+
+                    pub use semio_s_artifact_stdio_tiff_mutation_regressions::standards::v6_0::subsets::document::io::facets;
                     #[path = "."]
-                    pub mod import {
-                        #[path = "."]
-                        pub mod deserializers {
-                            #[path = "."]
-                            pub mod artifacts {
-                                #[path = "."]
-                                pub mod binary {
-                                    #[path = "."]
-                                    pub mod v_raw {
-                                        #[path = "."]
-                                        pub mod any {
-                                            #[path = "🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/💾️binary/🔖️raw/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
-                            }
-                        }
+                    pub mod binary {
+                        pub use semio_s_artifact_stdio_tiff_snapshot::standards::v6_0::subsets::document::io::binary::snapshot;
+                        pub use semio_s_artifact_stdio_tiff_mutations::standards::v6_0::subsets::document::io::binary::mutations;
+                        pub use semio_s_artifact_stdio_tiff_schema::standards::v6_0::subsets::document::io::binary::diff;
+                        pub use semio_s_artifact_stdio_tiff_snapshot::standards::v6_0::subsets::document::io::binary::inferences;
                     }
                     #[path = "."]
-                    pub mod export {
-                        #[path = "."]
-                        pub mod serializers {
-                            #[path = "."]
-                            pub mod artifacts {
-                                #[path = "."]
-                                pub mod binary {
-                                    #[path = "."]
-                                    pub mod v_raw {
-                                        #[path = "."]
-                                        pub mod any {
-                                            #[path = "🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🚪️io/📤️export/🧵️serializers/🗿️artifacts/💾️binary/🔖️raw/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
-                            }
-                        }
+                    pub mod text {
+                        pub use semio_s_artifact_stdio_tiff_snapshot::standards::v6_0::subsets::document::io::text::snapshot;
+                        pub use semio_s_artifact_stdio_tiff_mutations::standards::v6_0::subsets::document::io::text::mutations;
+                        pub use semio_s_artifact_stdio_tiff_schema::standards::v6_0::subsets::document::io::text::diff;
+                        pub use semio_s_artifact_stdio_tiff_snapshot::standards::v6_0::subsets::document::io::text::inferences;
                     }
+                    pub use semio_s_artifact_stdio_tiff_snapshot::standards::v6_0::subsets::document::io::sqlite;
+                    pub use semio_s_artifact_stdio_tiff_inferences::standards::v6_0::subsets::document::io::import;
+                    pub use semio_s_artifact_stdio_tiff_inferences::standards::v6_0::subsets::document::io::export;
                 }
             }
             #[path = "."]
@@ -354,10 +225,8 @@ pub mod standards {
                 // honestly-scope-limited case: `TiffSnapshot`(6.0) retains only a decoded
                 // `RasterImage{width,height,rgba}`, no IFD. Added in ticket
                 // 26/08/11/ARTIFACT-STANDARD-SUBSETS-REAL-VOCABULARIES W3.
-                #[path = "🏅️standards/🔖️6.0/🪆️subsets/🧱️baseline/🚪️io/🦀️.rs"]
-                pub mod io;
-                #[path = "🏅️standards/🔖️6.0/🪆️subsets/🧱️baseline/🧬️schema/🦀️.rs"]
-                pub mod schema;
+                pub use semio_s_artifact_stdio_tiff_mutation_regressions::standards::v6_0::subsets::baseline::io;
+                pub use semio_s_artifact_stdio_tiff_schema_2::standards::v6_0::subsets::baseline::schema;
             
 }
         }
@@ -369,80 +238,41 @@ pub mod schema {
     pub use super::standards::v6_0::subsets::document::schema::*;
 }
 
-
 pub use standards::v6_0::subsets::document::examples;
 
 #[path = "."]
 pub mod editor {
     #[path = "."]
     pub mod tiff_any {
-        #[path = "🏅️standards/🔖️6.0/🪆️subsets/🧾️document/✏️editor/🦀️.rs"]
-        mod component;
-        pub use component::*;
-        #[path = "🏅️standards/🔖️6.0/🪆️subsets/🧾️document/✏️editor/🧭️edit-rules/🦀️.rs"]
-        pub mod edit_rules;
-        #[path = "."]
-        pub mod presence {
-            #[path = "🏅️standards/🔖️6.0/🪆️subsets/🧾️document/✏️editor/👥️presence/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
-        #[path = "."]
-        pub mod config {
-            #[path = "🏅️standards/🔖️6.0/🪆️subsets/🧾️document/✏️editor/🎚️config/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
+        pub use semio_s_artifact_stdio_tiff_mutation_regressions::editor::tiff_any::*;
+
+        pub use semio_s_artifact_stdio_tiff_snapshot::editor::tiff_any::edit_rules;
+        pub use semio_s_artifact_stdio_tiff_snapshot::editor::tiff_any::presence;
+        pub use semio_s_artifact_stdio_tiff_snapshot::editor::tiff_any::config;
         #[path = "."]
         pub mod modes {
             #[path = "."]
             pub mod edit {
-                #[path = "🏅️standards/🔖️6.0/🪆️subsets/🧾️document/✏️editor/🎭️modes/✏️edit/🦀️.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "."]
-                pub mod windows {
-                    #[path = "."]
-                    pub mod main {
-                        #[path = "🏅️standards/🔖️6.0/🪆️subsets/🧾️document/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                }
+                pub use semio_s_artifact_stdio_tiff_inferences::editor::tiff_any::modes::edit::*;
+
+                pub use semio_s_artifact_stdio_tiff_inferences::editor::tiff_any::modes::edit::windows;
             }
         }
     }
     #[path = "."]
     pub mod tiff_baseline {
-        #[path = "🏅️standards/🔖️6.0/🪆️subsets/🧱️baseline/✏️editor/🦀️.rs"]
-        mod component;
-        pub use component::*;
-        #[path = "🏅️standards/🔖️6.0/🪆️subsets/🧱️baseline/✏️editor/🧭️edit-rules/🦀️.rs"]
-        pub mod edit_rules;
-        #[path = "."]
-        pub mod presence {
-            #[path = "🏅️standards/🔖️6.0/🪆️subsets/🧱️baseline/✏️editor/👥️presence/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
-        #[path = "."]
-        pub mod config {
-            #[path = "🏅️standards/🔖️6.0/🪆️subsets/🧱️baseline/✏️editor/🎚️config/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
+        pub use semio_s_artifact_stdio_tiff_mutation_regressions::editor::tiff_baseline::*;
+
+        pub use semio_s_artifact_stdio_tiff_snapshot::editor::tiff_baseline::edit_rules;
+        pub use semio_s_artifact_stdio_tiff_snapshot::editor::tiff_baseline::presence;
+        pub use semio_s_artifact_stdio_tiff_snapshot::editor::tiff_baseline::config;
         #[path = "."]
         pub mod modes {
             #[path = "."]
             pub mod edit {
-                #[path = "🏅️standards/🔖️6.0/🪆️subsets/🧱️baseline/✏️editor/🎭️modes/✏️edit/🦀️.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "."]
-                pub mod windows {
-                    #[path = "."]
-                    pub mod main {
-                        #[path = "🏅️standards/🔖️6.0/🪆️subsets/🧱️baseline/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                }
+                pub use semio_s_artifact_stdio_tiff_mutation_regressions::editor::tiff_baseline::modes::edit::*;
+
+                pub use semio_s_artifact_stdio_tiff_mutation_regressions::editor::tiff_baseline::modes::edit::windows;
             }
         }
     }
@@ -452,69 +282,33 @@ pub mod editor {
 pub mod viewer {
     #[path = "."]
     pub mod tiff_any {
-        #[path = "🏅️standards/🔖️6.0/🪆️subsets/🧾️document/👁️viewer/🦀️.rs"]
-        mod component;
-        pub use component::*;
-        #[path = "."]
-        pub mod presence {
-            #[path = "🏅️standards/🔖️6.0/🪆️subsets/🧾️document/👁️viewer/👥️presence/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
-        #[path = "."]
-        pub mod config {
-            #[path = "🏅️standards/🔖️6.0/🪆️subsets/🧾️document/👁️viewer/🎚️config/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
+        pub use semio_s_artifact_stdio_tiff_mutation_regressions::viewer::tiff_any::*;
+
+        pub use semio_s_artifact_stdio_tiff_snapshot::viewer::tiff_any::presence;
+        pub use semio_s_artifact_stdio_tiff_schema::viewer::tiff_any::config;
         #[path = "."]
         pub mod modes {
             #[path = "."]
             pub mod view {
-                #[path = "🏅️standards/🔖️6.0/🪆️subsets/🧾️document/👁️viewer/🎭️modes/👁️view/🦀️.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "."]
-                pub mod windows {
-                    #[path = "."]
-                    pub mod main {
-                        #[path = "🏅️standards/🔖️6.0/🪆️subsets/🧾️document/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                }
+                pub use semio_s_artifact_stdio_tiff_inferences::viewer::tiff_any::modes::view::*;
+
+                pub use semio_s_artifact_stdio_tiff_inferences::viewer::tiff_any::modes::view::windows;
             }
         }
     }
     #[path = "."]
     pub mod tiff_baseline {
-        #[path = "🏅️standards/🔖️6.0/🪆️subsets/🧱️baseline/👁️viewer/🦀️.rs"]
-        mod component;
-        pub use component::*;
-        #[path = "."]
-        pub mod presence {
-            #[path = "🏅️standards/🔖️6.0/🪆️subsets/🧱️baseline/👁️viewer/👥️presence/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
-        #[path = "."]
-        pub mod config {
-            #[path = "🏅️standards/🔖️6.0/🪆️subsets/🧱️baseline/👁️viewer/🎚️config/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
+        pub use semio_s_artifact_stdio_tiff_mutation_regressions::viewer::tiff_baseline::*;
+
+        pub use semio_s_artifact_stdio_tiff_schema::viewer::tiff_baseline::presence;
+        pub use semio_s_artifact_stdio_tiff_schema::viewer::tiff_baseline::config;
         #[path = "."]
         pub mod modes {
             #[path = "."]
             pub mod view {
-                #[path = "🏅️standards/🔖️6.0/🪆️subsets/🧱️baseline/👁️viewer/🎭️modes/👁️view/🦀️.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "."]
-                pub mod windows {
-                    #[path = "."]
-                    pub mod main {
-                        #[path = "🏅️standards/🔖️6.0/🪆️subsets/🧱️baseline/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                }
+                pub use semio_s_artifact_stdio_tiff_mutation_regressions::viewer::tiff_baseline::modes::view::*;
+
+                pub use semio_s_artifact_stdio_tiff_mutation_regressions::viewer::tiff_baseline::modes::view::windows;
             }
         }
     }
@@ -522,4 +316,8 @@ pub mod viewer {
 
 pub use crate::standards::v6_0::subsets::baseline::io::{TiffBaselineBuilderConstruction, TiffBaselineAnalyzerAnalysis, TiffBaselineBuilderFacets, TiffBaselineBuilder, TiffBaselineAnalyzer, TiffBaselineComposer};
 
-pub use crate::standards::v6_0::subsets::document::io::{TiffBuilderConstruction, TiffParts, TiffAnalyzerAnalysis, TiffBuilderFacets, TiffBuilder, TiffAnalyzer, TiffComposer};
+pub use crate::standards::v6_0::subsets::document::io::facets::{TiffBuilderConstruction, TiffParts, TiffAnalyzerAnalysis, TiffBuilderFacets, TiffBuilder, TiffAnalyzer, TiffComposer};
+
+#[cfg(test)]
+#[path = "🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs"]
+mod hoisted_snapshot_0;

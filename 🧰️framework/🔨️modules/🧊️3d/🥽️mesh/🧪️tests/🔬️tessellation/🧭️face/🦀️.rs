@@ -5,7 +5,7 @@ use super::*;
 fn original_mesh_tessellation_face_preparation_prices_exact_original_work(){
     use crate::test_support::observe_tessellation_system as observe;
     use semio_framework_value::{retained_clone::{RetainedCloneGrant,RetainedCloneProgress},retirement::controlled::ControlledRetirement};
-    let law:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🧩️tessellation/🎟️owners.json")).unwrap();
+    let law:serde_json::Value=crate::fixture_json("🧪️tests/🧫️fixtures/🧩️tessellation/🎟️owners.json");
     for close_copy in law["copyGrants"].as_array().unwrap().iter().map(|value|value.as_u64().unwrap()as usize){
         let(mut job,source)=observe(||{let mut job=MeshTessellationJob::new(super::tessellation_metadata_tests::authored_source(&law));while !job.buffer_reservation_complete(){let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:0,maximum_capacity_bytes:job.next_buffer_capacity_byte_demand(0).unwrap(),maximum_release_bytes:0,maximum_depth:job.next_buffer_depth_demand().unwrap()};job.reserve_buffer_step(grant).unwrap();}job});
         let original=job.mesh.vertices.as_ptr();let pointers=(job.hes.as_ptr(),job.points.as_ptr(),job.projected.as_ptr(),job.links.as_ptr());let mut turns=0;
@@ -17,6 +17,6 @@ fn original_mesh_tessellation_face_preparation_prices_exact_original_work(){
         }
         assert_eq!(job.normal.0,serde_json::from_value::<[f32;3]>(law["facePreparation"]["normal"].clone()).unwrap());assert_eq!(job.points.iter().map(|point|point.0).collect::<Vec<_>>(),serde_json::from_value::<Vec<[f32;3]>>(law["facePreparation"]["sourcePositions"].clone()).unwrap());assert!(job.output.as_ref().unwrap().positions.is_empty());
         let(mut owner,handoff)=observe(||ControlledRetirement::new(job).unwrap_or_else(|_|panic!("original face preparation closure unsupported")));assert_eq!(handoff,(0,0));let(mut born,mut freed,mut close_turns)=(source.0,source.1,0);while !owner.terminal_is_empty(){let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:close_copy,maximum_capacity_bytes:owner.next_capacity_byte_demand(close_copy).unwrap(),maximum_release_bytes:owner.next_release_byte_demand().unwrap(),maximum_depth:owner.next_depth_demand().unwrap()};let(step,heap)=observe(||owner.step(grant).unwrap());assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));assert!(step.progress().fits(grant));born+=heap.0;freed+=heap.1;close_turns+=1;assert!(close_turns<100000);}
-        assert_eq!(born,freed);let(_,heap)=observe(||drop(owner));assert_eq!(heap,(0,0));eprintln!("[DEBUG] Original Mesh face preparation turns={turns} quotedScalarWrites=true sameSource=true sameBacking=true physical={freed} closeCopy={close_copy} terminalDrop=0");
+        assert_eq!(born,freed);let(_,heap)=observe(||drop(owner));assert_eq!(heap,(0,0));
     }
 }

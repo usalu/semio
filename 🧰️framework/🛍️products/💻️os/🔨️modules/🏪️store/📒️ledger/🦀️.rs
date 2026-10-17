@@ -53,6 +53,13 @@ pub struct CursorRevisionRecord {
     pub(crate) prefix_digest: [u8; 32],
 }
 
+impl CursorRevisionRecord {
+    /// 🧾️ Seals one revision record from the digests the cursor chain already computed.
+    pub const fn new(ledger_key: Option<ArtifactHistoryKey>, id_digest: [u8; 32], edit_digest: [u8; 32], prefix_digest: [u8; 32]) -> Self {
+        Self { ledger_key, id_digest, edit_digest, prefix_digest }
+    }
+}
+
 #[derive(Clone)]
 pub struct CursorRevisionAccumulator {
     pub identity_digest: [u8; 32],
@@ -73,8 +80,28 @@ pub struct StackMirrorDirt {
 }
 
 impl StackMirrorDirt {
-    pub(crate) const CLEAN: Self = Self { applied: usize::MAX, redo: usize::MAX };
-    pub(crate) const ALL: Self = Self { applied: 0, redo: 0 };
+    pub const CLEAN: Self = Self { applied: usize::MAX, redo: usize::MAX };
+    pub const ALL: Self = Self { applied: 0, redo: 0 };
+
+    /// 🥇️ The first applied position whose id changed; `usize::MAX` when the applied mirror is clean.
+    pub const fn first_applied(self) -> usize {
+        self.applied
+    }
+
+    /// 🥈️ The first redo position whose id changed; `usize::MAX` when the redo mirror is clean.
+    pub const fn first_redo(self) -> usize {
+        self.redo
+    }
+
+    /// 🧲️ Marks the applied mirror dirty from `position` on, keeping an earlier dirty position.
+    pub fn dirty_applied_from(&mut self, position: usize) {
+        self.applied = self.applied.min(position);
+    }
+
+    /// 🪝️ Marks the redo mirror dirty from `position` on, keeping an earlier dirty position.
+    pub fn dirty_redo_from(&mut self, position: usize) {
+        self.redo = self.redo.min(position);
+    }
 }
 
 /// 🔗️ Running per-list digests of a coalesced edit's operations: what lets an amend extend its edit's revision identity by
@@ -113,7 +140,7 @@ impl EditDigestChains {
 }
 
 impl CursorRevisionAccumulator {
-    pub(crate) fn hash_record(domain: &[u8], parts: &[&[u8]]) -> [u8; 32] {
+    pub fn hash_record(domain: &[u8], parts: &[&[u8]]) -> [u8; 32] {
         let mut digest = semio_framework_hash::Sha256::new();
         digest.update(b"semio.artifact.cursor.v2");
         digest.update(&(domain.len() as u64).to_be_bytes());
@@ -125,7 +152,7 @@ impl CursorRevisionAccumulator {
         digest.finalize()
     }
 
-    pub(crate) fn new<P, Mutation>(envelope: &ArtifactEnvelope<P, Mutation>, initial_digest: [u8; 32]) -> Self {
+    pub fn new<P, Mutation>(envelope: &ArtifactEnvelope<P, Mutation>, initial_digest: [u8; 32]) -> Self {
         let identity_digest = Self::hash_record(b"initial", &[envelope.id.as_bytes(), envelope.schema.as_bytes(), &initial_digest]);
         Self { identity_digest, applied: semio_framework_os_vcs::HistoryPageStack::new(), redo: semio_framework_os_vcs::HistoryPageStack::new(), applied_tail_chains: None, mutation_positions: protocol::HistoryFoldIndex::new(), indexed_edits: protocol::HistoryFoldIndex::new(), unit_flags: protocol::HistoryFoldIndex::new() }
     }
@@ -188,7 +215,7 @@ impl CursorRevisionAccumulator {
     /// chains of the stack's tail edit between calls, so the amend case (same ids, tail grew) costs O(appended operations).
     /// 🔏️ `digest` of `edit` extended by the digest of the supersessions in effect for its operations: a revision names
     /// the effective forwards, not only the recorded ones.
-    pub(crate) fn effective_edit_digest<P, Mutation: self::Mutation<P>>(edit: &Edit<Mutation>, digest: [u8; 32], supersessions: &EffectiveSupersessions) -> [u8; 32] {
+    pub fn effective_edit_digest<P, Mutation: self::Mutation<P>>(edit: &Edit<Mutation>, digest: [u8; 32], supersessions: &EffectiveSupersessions) -> [u8; 32] {
         match edit_supersession_digest::<P, Mutation>(edit, supersessions) {
             Some(superseded) => Self::hash_record(b"edit-superseded", &[&digest, &superseded]),
             None => digest,
@@ -322,13 +349,91 @@ pub struct PendingCommandReport {
     pub(crate) outbound: Vec<semio_framework_os_spr::MutationEnvelope>,
 }
 
+impl PendingCommandReport {
+    /// 🫙️ Whether the report carries no receipt state and no unannounced event.
+    pub fn is_idle(&self) -> bool {
+        self.edit_ids.is_none() && self.messages.is_empty() && self.outbound.is_empty() && self.worst.is_none()
+    }
+
+    /// 🧺️ Whether the report still holds a value or a heap backing that needs one displaced-owner slot to retire.
+    pub fn holds_owner_slot(&self) -> bool {
+        self.edit_ids.as_ref().is_some_and(|ids| !ids.is_empty() || ids.capacity() != 0)
+            || !self.messages.is_empty()
+            || self.messages.capacity() != 0
+            || self.worst.is_some()
+            || !self.outbound.is_empty()
+            || self.outbound.capacity() != 0
+    }
+
+    /// 📮️ Whether an authored event still waits to be announced.
+    pub fn has_outbound(&self) -> bool {
+        !self.outbound.is_empty()
+    }
+
+    /// 🛰️ Queues authored events, in authoring order, for the one announcement the command ends with.
+    pub fn author_outbound(&mut self, envelopes: impl IntoIterator<Item = semio_framework_os_spr::MutationEnvelope>) {
+        self.outbound.extend(envelopes);
+    }
+
+    /// 📪️ Takes the queued events for announcement; the report keeps no backing.
+    pub fn take_outbound(&mut self) -> Vec<semio_framework_os_spr::MutationEnvelope> {
+        std::mem::take(&mut self.outbound)
+    }
+
+    /// 🔄️ Replaces the receipt messages and the worst level with a replay's.
+    pub fn record_replay(&mut self, messages: Vec<semio_framework_os_spr::EditMessages>, worst: Option<semio_framework_diagnostic::Severity>) {
+        self.messages = messages;
+        self.worst = worst;
+    }
+
+    /// ✍️ Appends one edit's messages to the receipt and raises the worst level by theirs.
+    pub fn record_edit_messages(&mut self, edit_id: String, messages: Vec<semio_framework_os_spr::MutationMessage>) {
+        self.worst = semio_framework_os_spr::worst_level(&messages).max(self.worst);
+        self.messages.push(semio_framework_os_spr::EditMessages { edit_id, messages });
+    }
+
+    /// 🏷️ Declares exactly which edits the command landed, overriding the tail-diff guess.
+    pub fn declare_edit_ids(&mut self, edit_ids: Vec<String>) {
+        self.edit_ids = Some(edit_ids);
+    }
+
+    /// 🔖️ Declares the landed edits only when nothing declared them yet.
+    pub fn declare_edit_ids_unless_declared(&mut self, edit_ids: impl FnOnce() -> Vec<String>) {
+        if self.edit_ids.is_none() {
+            self.edit_ids = Some(edit_ids());
+        }
+    }
+
+    /// 🧾️ Takes the receipt parts: the declared edit ids (`undeclared` answers when none were declared), the messages and the worst level.
+    pub fn take_receipt(&mut self, undeclared: impl FnOnce() -> Vec<String>) -> (Vec<String>, Vec<semio_framework_os_spr::EditMessages>, Option<semio_framework_diagnostic::Severity>) {
+        let edit_ids = self.edit_ids.take().unwrap_or_else(undeclared);
+        let (messages, worst) = self.take_messages_and_worst();
+        (edit_ids, messages, worst)
+    }
+
+    /// 🗒️ Takes the receipt messages and the worst level, leaving any declared edit ids in place.
+    pub fn take_messages_and_worst(&mut self) -> (Vec<semio_framework_os_spr::EditMessages>, Option<semio_framework_diagnostic::Severity>) {
+        (std::mem::take(&mut self.messages), self.worst.take())
+    }
+
+    /// 🧱️ The report's resident vector backings, for the Store's whole-backing release demands.
+    pub fn resident_backings(&self) -> (&Vec<semio_framework_os_spr::EditMessages>, &Vec<semio_framework_os_spr::MutationEnvelope>, Option<&Vec<String>>) {
+        (&self.messages, &self.outbound, self.edit_ids.as_ref())
+    }
+
+    /// 🪣️ The report's resident vector backings, for the Store's whole-backing release steps.
+    pub fn resident_backings_mut(&mut self) -> (&mut Vec<semio_framework_os_spr::EditMessages>, &mut Vec<semio_framework_os_spr::MutationEnvelope>, Option<&mut Vec<String>>) {
+        (&mut self.messages, &mut self.outbound, self.edit_ids.as_mut())
+    }
+}
+
 pub struct ArtifactStorePendingReportRetirement {
     pub report: std::mem::ManuallyDrop<Option<PendingCommandReport>>,
     pub active: std::mem::ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,
 }
 
 impl ArtifactStorePendingReportRetirement {
-    pub(crate) fn new(report: PendingCommandReport) -> Self { Self { report: std::mem::ManuallyDrop::new(Some(report)), active: std::mem::ManuallyDrop::new(None) } }
+    pub fn new(report: PendingCommandReport) -> Self { Self { report: std::mem::ManuallyDrop::new(Some(report)), active: std::mem::ManuallyDrop::new(None) } }
     pub fn demands(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> {
         use semio_framework_value::RetirementDemand;
         if let Some(active) = self.active.as_ref() { return artifact_retirement_box_demands(active, body); }
@@ -482,7 +587,7 @@ where
     Mutation: self::Mutation<P>,
 {
     /// 🌱️ Takes ownership of a fold's base projection.
-    pub(crate) fn new(projection: P) -> Self {
+    pub fn new(projection: P) -> Self {
         Self { projection: Some(projection), technology: PhantomData }
     }
 

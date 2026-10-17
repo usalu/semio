@@ -9,7 +9,7 @@ pub mod editor {
         pub mod engine {
             #[cfg(test)]
             #[path = "../../../🧪️tests/🔬️step-ceiling/🦀️.rs"]
-            pub(crate) mod step_ceiling;
+            pub mod step_ceiling;
             #[path = "../../🦀️.rs"]
             pub mod images;
         }

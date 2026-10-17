@@ -31,5 +31,4 @@ fn original_prepared_raster_refusal_preserves_unfunded_backings_and_exact_releas
  }
  assert!(owner.terminal_is_empty());assert_eq!(released,expected);
  let((),heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(owner));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
- eprintln!("[DEBUG] Original raster refusal admission0/unfunded0/whole paid release={released}/terminalDrop0");
 }

@@ -1,6 +1,6 @@
 //! 🗂️ `delete-selection` command.
 
-use {crate::editor::puzzle2d::snapshot::puzzle2d_clear_selection_write, crate::editor::puzzle2d::Puzzle2dActionCtx};
+use {crate::editor::puzzle2d::snapshot::puzzle2d_clear_selection_write, crate::editor::puzzle2d::interaction::Puzzle2dActionCtx};
 
 /// 🗑️ Records the removal of the selected nodes (`delete-node`), handles (`remove-node-handle`), edges
 /// (`disconnect-handles`) and target regions (`delete-target-region`) — each severing the edges hanging off it — and empties the

@@ -1,8 +1,8 @@
 //! 📐️ Direct rewriting mutation — `ChangeRuleLayoutPoint`: upserts one key on the `rule_layout` map (the
 //! rule-editor position of a pattern var/node).
 use crate::standards::v1::subsets::any::schema::diff::RewritingDiff;
-use crate::standards::v1::subsets::any::schema::mutations::RewriteRuleMutation;
-use crate::{LayoutPoint, RewritingSnapshot};
+use crate::standards::v1::subsets::any::schema::model::LayoutPoint;
+use crate::standards::v1::subsets::any::schema::snapshot::RewritingSnapshot;
 
 //#region 🔖️Mutation
 /// 📐️ `change-rule-layout-point` payload.
@@ -18,17 +18,23 @@ pub struct ChangeRuleLayoutPoint {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_rule_layout_point(key: String, new_point: LayoutPoint) -> RewriteRuleMutation {
-    RewriteRuleMutation::ChangeRuleLayoutPoint(ChangeRuleLayoutPoint { key, new_point })
+pub fn change_rule_layout_point<Op>(key: String, new_point: LayoutPoint) -> Op
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::change_rule_layout_point::ChangeRuleLayoutPoint>,
+{
+    Op::from(ChangeRuleLayoutPoint { key, new_point })
 }
 
-impl protocol::MutationKind<RewritingSnapshot, RewriteRuleMutation> for ChangeRuleLayoutPoint {
+impl<Op> protocol::MutationKind<RewritingSnapshot, Op> for ChangeRuleLayoutPoint
+where
+    Op: protocol::Mutation<RewritingSnapshot, Diff = RewritingDiff> + From<ChangeRuleLayoutPoint> + From<crate::standards::v1::subsets::any::schema::mutations::remove_rule_layout_point::RemoveRuleLayoutPoint>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "rule-layout-point", kind: "change-rule-layout-point", record: "ChangedRuleLayoutPoint" };
 
     fn diff(&self, base: &RewritingSnapshot) -> protocol::MutationOutcome<RewritingDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &RewritingSnapshot) -> Result<Vec<RewriteRuleMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &RewritingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

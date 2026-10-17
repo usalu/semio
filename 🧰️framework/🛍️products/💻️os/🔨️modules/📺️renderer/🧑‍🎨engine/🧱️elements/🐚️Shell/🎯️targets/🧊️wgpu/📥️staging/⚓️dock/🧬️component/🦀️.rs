@@ -40,7 +40,7 @@ pub struct ShellDockState {
     /// 🪟️ Effective incoming layout and ordered window IDs last accepted by the dock.
     pub dock_input_identity: Option<DockInputIdentity>,
     /// 🪟️ Host-owned tree windows of every body this shell paints — what crosses as `ViewModel.tree_windows`.
-    pub tree_windows: tree_windows::TreeWindowScheduler,
+    pub tree_windows: TreeWindowScheduler,
     /// 🧠️ Per body, what the observer learned from the guest's answers (`TreeWindowServedMemoryV1`).
     pub tree_window_served: HashMap<String, Vec<(String, ui_wgpu::wgpu::tree_window::TreeWindowServedMemory)>>,
     pub dock_canvas_bounds: Rect,

@@ -1,4 +1,7 @@
-use super::*;
+use graph_core::{Directed, GraphError, NodeId, Normal, Storage};
+use graph_manifest::{PropertyBag};
+use std::collections::BTreeSet;
+use crate::schema::operators_internals::*;
 use graph_core::Undirected;
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -14,7 +17,7 @@ fn und_edge(a: NodeId, b: NodeId) -> Storage<Normal, Undirected> {
 fn attrs_of(pairs: &[(&str, &str)]) -> PropertyBag {
     let mut bag = PropertyBag::new();
     for (k, v) in pairs {
-        bag.insert(k.to_string(), graph_core::PropertyValue::String(v.to_string()));
+        bag.insert(k.to_string(), graph_manifest::PropertyValue::String(v.to_string()));
     }
     bag
 }

@@ -81,9 +81,6 @@ pub use diff::ShootingPresenceDiff;
 mod mutations;
 pub use mutations::*;
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️contract-vectors/🦀️.rs"]
-mod contract_vectors;
 
-#[path = "🚪️io/🦀️.rs"]
-pub mod io;
+
+

@@ -16,5 +16,4 @@ test("blob identity has one small independent schema owner and exact neutral JSO
  for(const row of fixture.cases){if(row.json.includes("1844674407370955161"))continue;expect(accepts(JSON.parse(row.json)),row.json).toBe(row.accepted);}
  const source=readFileSync(join(root,"🦀️.rs"),"utf8");expect(source).toContain("artifact_retire_struct!(BlobRef");expect(source).not.toContain("semio_framework_os_kernel");expect(source).not.toContain("crate::{FromValue");
  const store=join(root,"../.."),storeSource=readFileSync(join(store,"🦀️.rs"),"utf8"),retirement=readFileSync(join(store,"♻️retirement/🦀️.rs"),"utf8"),child=readFileSync(join(store,"🪆️child/🦀️.rs"),"utf8");expect(storeSource).toContain("pub use semio_framework_os_store_blob_identity::BlobRef;");expect(storeSource).not.toContain("mod blob_reference_schema");expect(retirement).not.toContain("super::BlobRef");expect(child).not.toContain("blob_reference_schema");
- console.log("[DEBUG] Exact bounded blob identity owner agrees with independent Ajv/TOML; native corpus retains full u64 decimal cases");
 });

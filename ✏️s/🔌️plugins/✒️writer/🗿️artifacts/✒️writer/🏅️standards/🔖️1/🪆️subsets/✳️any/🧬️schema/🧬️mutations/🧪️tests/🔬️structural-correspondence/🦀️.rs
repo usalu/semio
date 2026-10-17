@@ -1,8 +1,14 @@
-use super::*;
+use crate::WriterSnapshot;
+use semio_framework_test_fixtures::fixture_path;
+#[allow(unused_imports)]
+use crate::WriterDiff;
+#[allow(unused_imports)]
+use serde::{Deserialize, Serialize};
+use crate::standards::v1::subsets::any::schema::mutations::*;
 
 #[test]
 fn direct_owners_descriptors_surfaces_and_catalog_correspond() {
-    let mutation_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations");
+    let mutation_root = fixture_path!("../../../🧬️mutations");
     let descriptor_kinds: Vec<_> = <WriterMutation as protocol::SemanticMutation<WriterSnapshot>>::kinds().iter().map(|descriptor| descriptor.kind).collect();
     // 🔮️ The language-neutral oracle catalog lives in the subset's `🔮️oracles/🔣️.json`, not in a
     // loose `🔣️oracle.json` beside the schema (fleet-brief stale-test bucket 9). The old path has

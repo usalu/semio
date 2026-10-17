@@ -7,7 +7,7 @@ import{compileAdapterVizProbeV1}from"./../📥️invocation/🟦️.ts";
 // #region 🔌️Adapters
 import { scaleLinear, scalePow } from "d3-scale";
 import { defineTestAdapter, type AdapterContext } from "@semio-tech/framework/test/adapter";
-import { compileVizProbeDocument, probeProjection, roundProbeNumbers, type ProbeProjection, type VizProbeStatement } from "../../🔨️modules/🧪️viz-probe/🟦️.ts";
+import { compileVizProbeDocumentInContext, probeProjection, roundProbeNumbers, type ProbeProjection, type VizProbeStatement } from "../../🔨️modules/🧪️viz-probe/🟦️.ts";
 // #endregion 🔌️Adapters
 
 // #region 🧫️Vectors
@@ -46,7 +46,7 @@ function affineStatements(ctx: AdapterContext): VizProbeStatement[] {
 }
 
 async function affineSubject(ctx: AdapterContext): Promise<{ projection: ProbeProjection }> {
-  const records = await compileVizProbeDocument({ case: CASE, scenario: ctx.scenario.id, packages: [], body: affineStatements(ctx) }, { workDir: ctx.workDir });
+  const records = await compileVizProbeDocumentInContext(ctx, { case: CASE, scenario: ctx.scenario.id, packages: [], body: affineStatements(ctx) });
   return { projection: probeProjection(roundProbeNumbers(records, DECIMALS)) };
 }
 

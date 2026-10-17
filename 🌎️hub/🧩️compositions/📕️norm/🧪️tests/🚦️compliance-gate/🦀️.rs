@@ -2,6 +2,8 @@
 
 #![allow(clippy::type_complexity)]
 
+use semio_framework_test_fixtures::fixture_path;
+
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
@@ -299,7 +301,7 @@ fn leaked_print_dsl<D: pack::snapshot::ArtifactDsl>(doc: &D) -> &'static str {
 
 /// 🛡️ Source-scan: reject fingerprint / score / epsilon-fold / len-as-quantity gaming in evaluate paths.
 fn scan_evaluate_gaming() -> Vec<String> {
-    let artifacts = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🗿️artifacts");
+    let artifacts = fixture_path!("../../../../../✏️s/🔌️plugins/📕️norm/🗿️artifacts");
     let mut files = Vec::new();
     walk_evaluate_rs(&artifacts, &mut files);
     let mut hits = Vec::new();

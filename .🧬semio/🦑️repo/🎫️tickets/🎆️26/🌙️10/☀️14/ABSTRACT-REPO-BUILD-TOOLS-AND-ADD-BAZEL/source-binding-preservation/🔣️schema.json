@@ -1,0 +1,129 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://json.schemas.assets.semio-tech.com/ticket/source-binding-preservation/plan.json",
+  "title": "Prospective Current Source Payload Preservation Contract",
+  "$defs": {
+    "Protocol": {
+      "const": {
+        "version": 1,
+        "purpose": "preserve-current-ordinary-dependency-source-leaf",
+        "authority": "data-only-no-filesystem-or-native-authority",
+        "sourceName": "node_modules",
+        "maximumEndpoints": 64,
+        "maximumPathUnits": 256,
+        "maximumOwners": 32,
+        "retainedSlotPrefix": ".p",
+        "retainedSlotDigestHex": 8,
+        "retainedSlotUnits": 10,
+        "payloadName": "p",
+        "intentName": "i",
+        "receiptName": "r",
+        "maximumIntentBytes": 4096,
+        "maximumReceiptBytes": 4096,
+        "allowedKinds": [
+          "file",
+          "directory"
+        ],
+        "sameFilesystem": true,
+        "overwrite": false,
+        "follow": false,
+        "copyPayload": false,
+        "deletePayload": false,
+        "adoptPayload": false,
+        "payloadClassification": "opaque-preserved-current-entry-not-qualified-dependency-content",
+        "slotAuthority": "actual-exclusive-create-plus-private-live-handle-not-name-or-marker",
+        "intentDurableBeforeSourceMove": true,
+        "unknownDisplaced": "retain-and-refuse-no-rollback",
+        "binding": {
+          "posix": "distinct-preserve-and-publish-atomic-exchange-no-unlink",
+          "windows": "separate-fresh-strict-missing-binding-controlled-gap-under-complete-global-reader-ex"
+        },
+        "windows": "nt-source-model-and-runtime-qualification-required",
+        "readerCoverage": "current-complete-global-reader-serialization-unproven"
+      }
+    },
+    "Case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "effect",
+        "accepted",
+        "outcome",
+        "deletePayload",
+        "adoptPayload"
+      ],
+      "properties": {
+        "effect": {
+          "enum": [
+            "directory",
+            "file",
+            "external-hardlink-file",
+            "dangling-entry-link",
+            "special-entry",
+            "copied-expectation",
+            "foreign-frame",
+            "expired-control",
+            "wrong-original",
+            "no-global-ex",
+            "unqualified-target",
+            "one-unprepared-scope",
+            "native-topology-intersection",
+            "state-role-intersection",
+            "path-257",
+            "retained-slot-collision",
+            "existing-marker-only",
+            "cross-device",
+            "ancestor-drift",
+            "leaf-precheck-drift",
+            "intent-create-failure",
+            "intent-flush-failure",
+            "parent-flush-before-move-failure",
+            "late-foreign-file",
+            "late-foreign-directory",
+            "foreign-slot-appeared",
+            "rename-unsupported",
+            "retained-id-mismatch",
+            "retained-content-metadata-drift",
+            "retained-roster-drift",
+            "rename-durability-failure",
+            "receipt-flush-failure",
+            "binding-raced-ordinary-file",
+            "binding-flush-failure",
+            "cancellation-after-retain",
+            "arbitrary-undefined-close-failure",
+            "frozen-primary-close-failure",
+            "shared-32-before-open",
+            "nt-sharing-refusal",
+            "nt-pending-rename",
+            "nt-private-id-drift",
+            "nt-reparse-root",
+            "nt-samevolume-held-rename",
+            "actual-unknown-endpoint"
+          ]
+        },
+        "accepted": {
+          "type": "boolean"
+        },
+        "outcome": {
+          "enum": [
+            "refused",
+            "unresolved",
+            "published"
+          ]
+        },
+        "deletePayload": {
+          "const": false
+        },
+        "adoptPayload": {
+          "const": false
+        }
+      }
+    }
+  },
+  "type": "array",
+  "minItems": 44,
+  "maxItems": 44,
+  "items": {
+    "$ref": "#/$defs/Case"
+  }
+}

@@ -4,13 +4,14 @@ use crate::{DirectoryCommandOutcomeV1, DirectoryCommandResultV1};
 use crate::schema::{DocumentOpenCheckpointV1, DocumentScope};
 use crate::io::binary::checkpoint_pair::CANONICAL_CHECKPOINT_PAIR_MEDIA_TYPE_V1;
 use semio_framework_async::{CancelToken, TraceId};
+use semio_framework_test_fixtures::fixture_text;
 use std::collections::VecDeque;
 use std::sync::atomic::{AtomicBool, AtomicU32, AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
 
 #[test]
 fn intrinsic_bytes_in_decoded_credentials_are_wiped_in_place() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🌱️value/🧬️bytes/🧪️tests/🧬️base64/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../../../../🔨️modules/🌱️value/🧬️bytes/🧪️tests/🧬️base64/🧫️fixtures/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap() {
         let bytes: Vec<u8> = serde_json::from_value(row["octets"].clone()).unwrap();
         let mut value = DslValue::Bytes(bytes.clone());
@@ -205,15 +206,7 @@ async fn directory_event_page_preserves_canonical_bytes_bounds_and_cancels_befor
     assert!(bootstrap.acknowledge(&forged_ack).is_err());
     assert_eq!(bootstrap.after(), 3);
     assert_eq!(bootstrap.acknowledge(&first_ack).expect("first Home ACK"), DirectoryBootstrapTransition::Fetch { after: 5 });
-    let second = CanonicalDirectoryEventPageV1 {
-        canonical_json: "{}".into(),
-        session_binding_sha256: page.session_binding_sha256.clone(),
-        authorization_generation: page.authorization_generation,
-        after_seq_exclusive: 5,
-        through_seq_inclusive: 8,
-        has_more: false,
-        receipt_sha256: "e".repeat(64),
-    };
+    let second = CanonicalDirectoryEventPageV1::from_header_parts("{}".into(), page.session_binding_sha256.clone(), page.authorization_generation, 5, 8, false, "e".repeat(64));
     let second_ack = bootstrap.present(second).expect("second pending page");
     assert_eq!(bootstrap.acknowledge(&second_ack).expect("final Home ACK"), DirectoryBootstrapTransition::Live { since: 8 });
     assert_eq!(bootstrap.wake(false), Some(8));
@@ -384,7 +377,7 @@ async fn push_grant(transport: &FakeTransport) {
 }
 
 async fn push_document_plan(transport: &FakeTransport, space_id: &str, document_id: &str, schema: &str, surface_id: &str) -> String {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/📇️directory/🧭️document-open-plan-v1.json")).expect("neutral plan fixture");
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/📇️directory/🧭️document-open-plan-v1.json")).expect("neutral plan fixture");
     let mut plan = fixture["validPlan"].clone();
     plan["expiresAtUnixMs"] = serde_json::json!(u64::try_from(wall_now_ms()).expect("wall clock") + 20_000);
     plan["scope"] = serde_json::json!({ "spaceId": space_id, "documentId": document_id });
@@ -400,7 +393,7 @@ async fn push_document_plan(transport: &FakeTransport, space_id: &str, document_
 /// serves, at the component length its receipt names and a pinned descriptor length. It is built through the one shared relation, so a test can only
 /// make admission fail by changing a real field.
 fn document_lease_fields(space_id: &str, document_id: &str, schema: &str, surface_id: &str) -> DocumentExecutionTargetLeaseFieldsV1 {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/📇️directory/🧭️document-open-plan-v1.json")).expect("neutral plan fixture");
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/📇️directory/🧭️document-open-plan-v1.json")).expect("neutral plan fixture");
     let mut plan = fixture["validPlan"].clone();
     plan["expiresAtUnixMs"] = serde_json::json!(u64::try_from(wall_now_ms()).expect("wall clock") + 20_000);
     plan["scope"] = serde_json::json!({ "spaceId": space_id, "documentId": document_id });
@@ -421,7 +414,7 @@ fn document_expectation(schema: &str, surface_id: Option<&str>) -> DocumentSocke
 #[test]
 fn execution_target_status_vocabulary_matches_the_corpus() {
     use crate::schema::{DocumentExecutionTargetLocaleV1, DocumentExecutionTargetStatusCodeV1};
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🔏️document-execution-target-lease-v1/🔣️.json")).expect("execution target lease corpus");
+    let corpus: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../🧪️tests/🧫️fixtures/🔏️document-execution-target-lease-v1/🔣️.json")).expect("execution target lease corpus");
     let status = corpus["expected"]["status"].as_object().expect("corpus status vocabulary");
     for (code, text) in status {
         let decoded: DocumentExecutionTargetStatusCodeV1 = semio_framework_pack_json::from_json_str(&format!("\"{code}\""), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_else(|_| panic!("the Rust twin lacks status {code}"));
@@ -439,7 +432,7 @@ fn execution_target_status_vocabulary_matches_the_corpus() {
 /// same relation the retained `DocumentSocketAuthorityV1` uses.
 #[test]
 fn execution_target_lease_compares_every_plan_and_verified_byte_field() {
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🔏️document-execution-target-lease-v1/🔣️.json")).expect("execution target lease corpus");
+    let corpus: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../🧪️tests/🧫️fixtures/🔏️document-execution-target-lease-v1/🔣️.json")).expect("execution target lease corpus");
     let decode_fields =
         |value: &serde_json::Value| -> Result<DocumentExecutionTargetLeaseFieldsV1, ()> { semio_framework_pack_json::from_json_str::<DocumentExecutionTargetLeaseFieldsV1>(&serde_json::to_string(value).expect("fields json"), semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|_| ()) };
     let manifest = decode_fields(&corpus["manifest"]).expect("corpus manifest");
@@ -705,7 +698,7 @@ async fn spaces_decodes_and_sends_bearer() {
 
 #[semio_framework_async_macros::async_test]
 async fn space_exposes_the_durable_document_descriptor() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/📇️directory/🪪️document-descriptor.json")).expect("descriptor fixture");
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/📇️directory/🪪️document-descriptor.json")).expect("descriptor fixture");
     let descriptor = fixture.get("valid").expect("valid descriptor").clone();
     let document: DocumentView = semio_framework_pack_json::from_json_str(&serde_json::json!({ "descriptor": descriptor, "headSeq": 7, "commitSeq": 6, "epoch": 2 }).to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("document view fixture");
     let space = MemberSpaceViewV1 {
@@ -765,7 +758,7 @@ async fn unauthorized_status_maps_to_unauthorized_error() {
 
 #[semio_framework_async_macros::async_test]
 async fn session_authority_client_preserves_canonical_binding_and_rejects_reordered_body() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🪪️session-authority-v1/🔣️.json")).expect("session authority fixture");
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../🧪️tests/🧫️fixtures/🪪️session-authority-v1/🔣️.json")).expect("session authority fixture");
     let canonical = fixture["raw"][0]["source"].as_str().expect("canonical");
     let reordered = fixture["raw"][1]["source"].as_str().expect("reordered");
     let transport = FakeTransport::default();
@@ -1040,8 +1033,8 @@ async fn cancellation_after_socket_open_closes_before_socket_hello() {
 /// are stored — and never anything off the lease; each case names the requests and steps it takes.
 #[semio_framework_async_macros::async_test]
 async fn execution_target_module_resolution_follows_the_serving_generation() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/📇️directory/🧩️execution-target-module-resolution-v1.json")).expect("resolution fixture");
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🔏️document-execution-target-lease-v1/🔣️.json")).expect("execution target lease corpus");
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/📇️directory/🧩️execution-target-module-resolution-v1.json")).expect("resolution fixture");
+    let corpus: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../🧪️tests/🧫️fixtures/🔏️document-execution-target-lease-v1/🔣️.json")).expect("execution target lease corpus");
     let hex_bytes = |text: &str| -> Vec<u8> { (0..text.len() / 2).map(|index| u8::from_str_radix(&text[index * 2..index * 2 + 2], 16).expect("hex")).collect() };
     let component = hex_bytes(corpus["componentHex"].as_str().expect("component hex"));
     let descriptor = hex_bytes(corpus["descriptorHex"].as_str().expect("descriptor hex"));
@@ -1163,7 +1156,7 @@ async fn execution_target_module_resolution_follows_the_serving_generation() {
 /// serves what the first one kept. The steps pause so every use lands on a distinct file time even on a coarse clock.
 #[test]
 fn the_execution_target_store_evicts_the_least_recently_used_component_and_serves_only_verified_bytes() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/📇️directory/🧩️execution-target-module-resolution-v1.json")).expect("resolution fixture");
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/📇️directory/🧩️execution-target-module-resolution-v1.json")).expect("resolution fixture");
     let eviction = &fixture["eviction"];
     let capacity = eviction["componentCapacityBytes"].as_u64().expect("capacity");
     let components: std::collections::BTreeMap<String, (Vec<u8>, DocumentExecutionTargetComponentV1)> = eviction["components"]
@@ -1210,7 +1203,7 @@ fn the_execution_target_store_evicts_the_least_recently_used_component_and_serve
 /// named, and a pair admitted only as the checkpoint the open was authorized for.
 #[semio_framework_async_macros::async_test]
 async fn the_canonical_pair_is_fetched_verified_and_admitted_as_the_authorized_checkpoint() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/📇️directory/🪢️canonical-checkpoint-pair-v1.json")).expect("canonical pair fixture");
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/📇️directory/🪢️canonical-checkpoint-pair-v1.json")).expect("canonical pair fixture");
     let capability = format!("session.v1.{}.{}", "a".repeat(32), "b".repeat(64));
     let hex = |value: &serde_json::Value| -> Vec<u8> {
         let text = value.as_str().unwrap();
@@ -1257,7 +1250,7 @@ async fn the_canonical_pair_is_fetched_verified_and_admitted_as_the_authorized_c
 /// 🛟️ A rebootstrap fetch reads the same route and admits the pair only as the control's checkpoint.
 #[semio_framework_async_macros::async_test]
 async fn a_rebootstrap_pair_is_admitted_only_as_the_controls_checkpoint() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/📇️directory/🪢️canonical-checkpoint-pair-v1.json")).expect("canonical pair fixture");
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/📇️directory/🪢️canonical-checkpoint-pair-v1.json")).expect("canonical pair fixture");
     let capability = format!("session.v1.{}.{}", "a".repeat(32), "b".repeat(64));
     for case in fixture["rebootstrapAdmissions"].as_array().unwrap() {
         let pair = fixture["pairs"].as_array().unwrap().iter().find(|pair| pair["id"] == case["pair"]).unwrap();
@@ -1286,7 +1279,7 @@ async fn a_rebootstrap_pair_is_admitted_only_as_the_controls_checkpoint() {
 /// TypeScript parser + ShellHost filter answer: a malformed row is dropped, never the listing; revoked or expired rows name no agent.
 #[test]
 fn live_agent_principals_answer_the_shared_delegation_list_vectors() {
-    let vectors = semio_framework_pack_json::parse(include_str!("../../../🤖️delegations/🧪️tests/🧫️fixtures/📋️agent-delegation-list.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the delegation vectors parse");
+    let vectors = semio_framework_pack_json::parse(fixture_text!("../../../../../🤖️delegations/🧪️tests/🧫️fixtures/📋️agent-delegation-list.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the delegation vectors parse");
     let cases = vectors.get("cases").and_then(semio_framework_pack_json::Value::as_array).expect("cases");
     assert!(!cases.is_empty());
     for case in cases {

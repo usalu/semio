@@ -1,0 +1,7 @@
+# Windows Observer Final Stream Review
+
+The final four held files match their producer SHA values under independent bounded nofollow FD/stamp reads. Receipt: `🗑️generated/directory-batch-windows-observer-low-independent.json`. Owner SHA: `b704b9fa6ee05ff561f3be5f03c532138b8302cdce6b2f914dcde3c7e44b2cc9`.
+
+Current actual stream parsing rejects negative StandardInfo allocation/EOF, mismatched stream EOF, negative stream allocation, extra streams, unknown statuses and malformed lengths. A regular file’s sole default-stream allocation must equal the same opened handle’s StandardInfo allocation. Sparse/resident allocation below logical EOF remains allowed; directory index allocation is not equated to a data stream. Directory end-of-file status requires Information0. This is coherence of observations, not physical cluster or quota proof.
+
+Owned wrappers check the actual phase/observer after successful descriptor closure outside descriptor custody. Thus post-close refusal prevents continuation without misclassifying a successfully closed handle as uncertain. The existing pending-operation drainage and quarantine boundaries remain. No new blocker found in these narrow deltas. Producer reports Source18486 actual0 (3laws9523 assertions) and strict43646 actual0 (two roots); this audit did not rerun them. Windows ABI, NTFS, privileges, ARM64 and actual platform behavior remain unqualified.

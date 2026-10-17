@@ -16,10 +16,13 @@ use super::*;
 use semio_framework_ui_declaration::ui::SurfaceKind;
 use ui_wgpu::wgpu::InputState;
 
-const GESTURE_LAW: &str = include_str!("../../../../🧪️tests/🧫️fixtures/🫳️node-graph-gestures/🔣️.json");
+#[allow(non_snake_case)]
+fn GESTURE_LAW() -> &'static str {
+    semio_framework_os_renderer_wgpu_test_support::repo_text("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🧫️fixtures/🫳️node-graph-gestures/🔣️.json")
+}
 
 fn law() -> Value {
-    serde_json::from_str(GESTURE_LAW).expect("the gesture oracle parses")
+    serde_json::from_str(GESTURE_LAW()).expect("the gesture oracle parses")
 }
 
 fn law_case(name: &str) -> Value {
@@ -74,15 +77,15 @@ fn drag_gesture(surface_id: &str, controller_id: &str, bounds: Rect, from: (f32,
     let mut input = InputState::<ActionDescriptor>::default();
     let mut actions = Vec::new();
     node_graph_pointer_down_into(surface_id, controller_id, bounds, from.0, from.1, 0, false, false, false, false, &mut input).expect("the press is admitted");
-    actions.extend(crate::collect_fixture_actions(&mut input));
+    actions.extend(semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input));
     for step in 1..=6 {
         let x = from.0 + (to.0 - from.0) * step as f32 / 6.0;
         let y = from.1 + (to.1 - from.1) * step as f32 / 6.0;
         node_graph_pointer_move_into(surface_id, controller_id, bounds, x, y, false, false, false, &mut input).expect("every intermediate move is admitted");
-        actions.extend(crate::collect_fixture_actions(&mut input));
+        actions.extend(semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input));
     }
     node_graph_pointer_up_into(surface_id, controller_id, bounds, to.0, to.1, false, false, false, &mut input).expect("the release is admitted");
-    actions.extend(crate::collect_fixture_actions(&mut input));
+    actions.extend(semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input));
     actions
 }
 
@@ -114,7 +117,7 @@ fn a_hover_that_changes_nothing_publishes_nothing_and_never_exhausts_the_action_
 
     let mut input = InputState::<ActionDescriptor>::default();
     node_graph_pointer_move_into(surface_id, &scene.controller_id, bounds, x, y, false, false, false, &mut input).expect("the first move is admitted");
-    let first = crate::collect_fixture_actions(&mut input);
+    let first = semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input);
     assert!(
         first.len() <= case["expectedFirstMoveActionsAtMost"].as_u64().expect("bound") as usize,
         "the first hover over a node publishes at most the three interaction actions, got {:?}",
@@ -123,7 +126,7 @@ fn a_hover_that_changes_nothing_publishes_nothing_and_never_exhausts_the_action_
 
     for turn in 0..repeats {
         node_graph_pointer_move_into(surface_id, &scene.controller_id, bounds, x, y, false, false, false, &mut input).unwrap_or_else(|fault| panic!("move {turn} of an unchanged hover must not fault, got {fault:?}"));
-        let published = crate::collect_fixture_actions(&mut input);
+        let published = semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input);
         assert!(published.is_empty(), "move {turn} changed nothing and must publish nothing, got {:?}", published.iter().map(|action| action.action.as_str()).collect::<Vec<_>>());
     }
     drop_engine_surface(surface_id);
@@ -150,7 +153,7 @@ fn a_dense_sweep_across_the_whole_surface_survives_an_action_queue_that_is_never
         }
     }
     assert_eq!(published, columns * rows, "every swept point was admitted");
-    assert!(crate::collect_fixture_actions(&mut input).len() < semio_framework_ui_action::ACTION_QUEUE_ITEM_CAPACITY, "a {columns}x{rows} sweep of an undrained queue stays inside {} items", semio_framework_ui_action::ACTION_QUEUE_ITEM_CAPACITY);
+    assert!(semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input).len() < semio_framework_ui_action::ACTION_QUEUE_ITEM_CAPACITY, "a {columns}x{rows} sweep of an undrained queue stays inside {} items", semio_framework_ui_action::ACTION_QUEUE_ITEM_CAPACITY);
     drop_engine_surface(surface_id);
 }
 
@@ -168,14 +171,14 @@ fn a_press_on_a_node_body_selects_that_node_and_a_released_drag_publishes_its_mo
 
     let mut input = InputState::<ActionDescriptor>::default();
     node_graph_pointer_down_into(surface_id, &scene.controller_id, bounds, body.0, body.1, 0, false, false, false, false, &mut input).expect("the press is admitted");
-    let pressed = crate::collect_fixture_actions(&mut input);
+    let pressed = semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input);
     let node_target_prefix = scene.node_graph.as_ref().and_then(|graph| graph.interaction_domain.as_ref()).map(|domain| domain.node_target_prefix.as_str()).expect("the physical Flow scene declares its node target domain");
     let expected_selection =
         serde_json::to_string(&select_case["expectedSelection"].as_array().expect("selection").iter().map(|id| json!({ "granularity": "node", "id": format!("{node_target_prefix}{}", id.as_str().expect("node id")) })).collect::<Vec<_>>())
             .expect("targets");
     assert_eq!(selection_targets(&pressed).as_deref(), Some(expected_selection.as_str()), "a press on {node_id}'s draggable body selects exactly that node");
     node_graph_pointer_up_into(surface_id, &scene.controller_id, bounds, body.0, body.1, false, false, false, &mut input).expect("the release is admitted");
-    let clicked = crate::collect_fixture_actions(&mut input);
+    let clicked = semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input);
     assert_eq!(edit_operations(&clicked), click_case["expectedEdits"].as_array().cloned().unwrap_or_default(), "a click that ended where it started is not a move");
 
     let before = entity_screen_rect(surface_id, "node", node_id);
@@ -308,7 +311,7 @@ fn a_minimap_press_publishes_the_camera_it_moved() {
     let mut input = InputState::<ActionDescriptor>::default();
     node_graph_pointer_down_into(surface_id, &scene.controller_id, bounds, x, y, 0, false, false, false, false, &mut input).expect("the minimap press is admitted");
     node_graph_pointer_up_into(surface_id, &scene.controller_id, bounds, x, y, false, false, false, &mut input).expect("the minimap release is admitted");
-    let actions = crate::collect_fixture_actions(&mut input);
+    let actions = semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input);
     let after = camera("after");
 
     assert_eq!(case["expectedCameraMoves"].as_bool(), Some(true), "the oracle declares this click navigates");
@@ -343,11 +346,11 @@ fn a_drag_that_crosses_a_port_keeps_the_bounded_path_and_still_publishes_its_mov
     let dx = case["gesture"]["dx"].as_f64().expect("dx") as f32;
     let dy = case["gesture"]["dy"].as_f64().expect("dy") as f32;
     node_graph_pointer_down_into(surface_id, &scene.controller_id, bounds, body.0, body.1, 0, false, false, false, false, &mut input).expect("the press is admitted");
-    actions.extend(crate::collect_fixture_actions(&mut input));
+    actions.extend(semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input));
     node_graph_pointer_move_into(surface_id, &scene.controller_id, bounds, across.0, across.1, false, false, false, &mut input).expect("the move across the connector is admitted");
-    actions.extend(crate::collect_fixture_actions(&mut input));
+    actions.extend(semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input));
     node_graph_pointer_up_into(surface_id, &scene.controller_id, bounds, body.0 + dx, body.1 + dy, false, false, false, &mut input).expect("the release is admitted");
-    actions.extend(crate::collect_fixture_actions(&mut input));
+    actions.extend(semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input));
 
     let moves: Vec<Value> = edit_operations(&actions).into_iter().filter(|operation| operation.get("operation").and_then(Value::as_str) == Some("move")).collect();
     assert_eq!(moves.len(), 1, "the drag survived crossing {channel} and published its move, got {:?}", edit_operations(&actions));

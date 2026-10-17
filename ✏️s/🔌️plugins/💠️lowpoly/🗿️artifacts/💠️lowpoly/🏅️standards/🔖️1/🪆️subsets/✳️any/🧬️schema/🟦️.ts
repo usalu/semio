@@ -1,5 +1,5 @@
 /** 🧬️ Lowpoly artifact schema — every field with its state class. */
-import { parseArtifactChild, type ArtifactChild } from "../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts";
+import { parseArtifactChild, type ArtifactChild } from "@semio-tech/framework-os/modules/store/child/schema";
 import { type Binary32 } from "@semio-tech/framework/value/ieee754";
 import { parseBinary32 } from "@semio-tech/framework/value/ieee754";
 import {parseLowpolyMeshState,type LowpolyMeshState}from"./🕸️mesh/🟦️.ts";
@@ -72,6 +72,10 @@ type lowpolyLowpolyArtifactGuardSizeBounds = { readonly minItems?: number; reado
 
 export const lowpolyLowpolyArtifactGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : lowpolyLowpolyArtifactGuardReject(at, "value is not an object");
+export const lowpolyLowpolyArtifactGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) lowpolyLowpolyArtifactGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const lowpolyLowpolyArtifactGuardArray = (value: unknown, at: string, bounds: lowpolyLowpolyArtifactGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return lowpolyLowpolyArtifactGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) lowpolyLowpolyArtifactGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -102,7 +106,7 @@ export const lowpolyLowpolyArtifactGuardConstant = <T extends string | number | 
 //#endregion 🚪️Parsers
 
 export function parseLowpolyArtifact(value: unknown, at = "$"): LowpolyArtifact {
-  const row = lowpolyLowpolyArtifactGuardObject(value, at);
+  const row = lowpolyLowpolyArtifactGuardClosed(lowpolyLowpolyArtifactGuardObject(value, at), at, ["schema", "objects"]);
   return {
     schema: lowpolyLowpolyArtifactGuardString(row["schema"], `${at}.schema`),
     objects: lowpolyLowpolyArtifactGuardArray(row["objects"], `${at}.objects`).map((item, index) => parseLowpolyObject(item, `${at}.objects[${index}]`)),
@@ -148,7 +152,7 @@ export function parseLowpolyPaintLayer(value: unknown, at = "$"): LowpolyPaintLa
 }
 
 export function parseLowpolySelection(value: unknown, at = "$"): LowpolySelection {
-  const row = lowpolyLowpolyArtifactGuardObject(value, at);
+  const row = lowpolyLowpolyArtifactGuardClosed(lowpolyLowpolyArtifactGuardObject(value, at), at, ["targets", "keys", "mode", "ids"]);
   return {
     targets: parseLowpolySelectionTargets(row["targets"], `${at}.targets`),
     keys: lowpolyLowpolyArtifactGuardArray(row["keys"], `${at}.keys`).map((item, index) => lowpolyLowpolyArtifactGuardString(item, `${at}.keys[${index}]`)),
@@ -158,7 +162,7 @@ export function parseLowpolySelection(value: unknown, at = "$"): LowpolySelectio
 }
 
 export function parseLowpolySelectionTargets(value: unknown, at = "$"): LowpolySelectionTargets {
-  const row = lowpolyLowpolyArtifactGuardObject(value, at);
+  const row = lowpolyLowpolyArtifactGuardClosed(lowpolyLowpolyArtifactGuardObject(value, at), at, ["mesh", "vertex", "edge", "face"]);
   return {
     mesh: lowpolyLowpolyArtifactGuardBoolean(row["mesh"], `${at}.mesh`),
     vertex: lowpolyLowpolyArtifactGuardBoolean(row["vertex"], `${at}.vertex`),

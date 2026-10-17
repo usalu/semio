@@ -28,15 +28,18 @@ pub fn plan(p: &GltfDeleteMaterialPayload, base: &GltfSnapshot) -> Result<GltfDi
     Ok(diff)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn inverse(p: &GltfDeleteMaterialPayload, base: &GltfSnapshot) -> Vec<super::GltfMutation> {
+pub fn inverse<Op>(p: &GltfDeleteMaterialPayload, base: &GltfSnapshot) -> Vec<Op>
+where
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::remove_used_extension::RemoveUsedExtensionMutation>,
+{
     if validate(p, base).is_err() {
         return Vec::new();
     }
-    let mut rows = vec![super::create_material::mutation(super::create_material::GltfCreateMaterialPayload { position: p.index, material: Some(Box::new(base.document.materials[p.index].clone())) })];
+    let mut rows = vec![crate::standards::v2_0::subsets::any::schema::mutations::create_material::mutation(crate::standards::v2_0::subsets::any::schema::mutations::create_material::GltfCreateMaterialPayload { position: p.index, material: Some(Box::new(base.document.materials[p.index].clone())) })];
     for (mesh, entry) in base.document.meshes.iter().enumerate() {
         for (primitive, item) in entry.primitives.iter().enumerate() {
             if item.material == Some(p.index) {
-                rows.push(super::bind_primitive_material::mutation(super::bind_primitive_material::GltfBindPrimitiveMaterialPayload { mesh, primitive, material: p.index }));
+                rows.push(crate::standards::v2_0::subsets::any::schema::mutations::bind_primitive_material::mutation(crate::standards::v2_0::subsets::any::schema::mutations::bind_primitive_material::GltfBindPrimitiveMaterialPayload { mesh, primitive, material: p.index }));
             }
         }
     }
@@ -54,11 +57,17 @@ pub enum DeleteMaterialMutation {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn mutation(payload: GltfDeleteMaterialPayload) -> super::GltfMutation {
-    super::GltfMutation::DeleteMaterial(DeleteMaterialMutation::Apply(payload))
+pub fn mutation<Op>(payload: GltfDeleteMaterialPayload) -> Op
+where
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::delete_material::DeleteMaterialMutation>,
+{
+    Op::from(DeleteMaterialMutation::Apply(payload))
 }
 
-impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for DeleteMaterialMutation {
+impl<Op> protocol::MutationKind<GltfSnapshot, Op> for DeleteMaterialMutation
+where
+    Op: protocol::Mutation<GltfSnapshot, Diff = GltfDiff> + From<DeleteMaterialMutation>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "material", kind: "delete-material", record: "DeletedMaterial" };
 
     fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<GltfDiff> {
@@ -70,7 +79,7 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for DeleteMateria
         }
     }
 
-    fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<super::GltfMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         match self {
             Self::Apply(payload) => Ok(inverse(payload, base)),
         }
@@ -87,10 +96,6 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for DeleteMateria
 //#endregion 🧬️DirectMutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️t051/🦀️.rs"]
-mod case_t051;
-#[cfg(test)]
-#[path = "🧪️tests/🔬️middle-row/🦀️.rs"]
-mod case_middle_row;
+
+
 //#endregion 🧪️Tests

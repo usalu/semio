@@ -19,7 +19,7 @@ pub struct SetTryValues {
     pub window_kind_id: String,
 }
 
-pub(crate) fn start_window(
+pub fn start_window(
     payload: &SetTryValues,
     operation: &semio_framework_plugin::AppOperationContext,
     transient: &FormsTryWindowTransient,

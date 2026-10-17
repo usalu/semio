@@ -30,6 +30,10 @@ type playbookPlaybookInferenceGuardSizeBounds = { readonly minItems?: number; re
 
 export const playbookPlaybookInferenceGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : playbookPlaybookInferenceGuardReject(at, "value is not an object");
+export const playbookPlaybookInferenceGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) playbookPlaybookInferenceGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const playbookPlaybookInferenceGuardArray = (value: unknown, at: string, bounds: playbookPlaybookInferenceGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return playbookPlaybookInferenceGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) playbookPlaybookInferenceGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -60,17 +64,17 @@ export const playbookPlaybookInferenceGuardConstant = <T extends string | number
 //#endregion 🚪️Parsers
 
 export function parsePlaybookInference(value: unknown, at = "$"): PlaybookInference {
-  const row = playbookPlaybookInferenceGuardObject(value, at);
+  const row = playbookPlaybookInferenceGuardClosed(playbookPlaybookInferenceGuardObject(value, at), at, ["topology"]);
   return {
     topology: parsePlaybookTopology(row["topology"], `${at}.topology`),
   };
 }
 
 export function parsePlaybookTopology(value: unknown, at = "$"): PlaybookTopology {
-  const row = playbookPlaybookInferenceGuardObject(value, at);
+  const row = playbookPlaybookInferenceGuardClosed(playbookPlaybookInferenceGuardObject(value, at), at, ["topoOrder", "depth", "cycleFree", "nodeCount"]);
   return {
     topoOrder: playbookPlaybookInferenceGuardArray(row["topoOrder"], `${at}.topoOrder`).map((item, index) => playbookPlaybookInferenceGuardString(item, `${at}.topoOrder[${index}]`)),
-    depth: playbookPlaybookInferenceGuardObject(row["depth"], `${at}.depth`),
+    depth: Object.fromEntries(Object.entries(playbookPlaybookInferenceGuardObject(row["depth"], `${at}.depth`)).map(([key0, value0]) => [key0, playbookPlaybookInferenceGuardInteger(value0, `${at}.depth.${key0}`)])),
     cycleFree: playbookPlaybookInferenceGuardBoolean(row["cycleFree"], `${at}.cycleFree`),
     nodeCount: playbookPlaybookInferenceGuardInteger(row["nodeCount"], `${at}.nodeCount`),
   };

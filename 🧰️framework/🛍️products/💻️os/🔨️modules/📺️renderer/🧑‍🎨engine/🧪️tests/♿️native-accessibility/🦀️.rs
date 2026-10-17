@@ -4,6 +4,7 @@
 //! state, action and the focus the way a screen reader would be told them.
 
 use super::*;
+use semio_framework_test_fixtures::fixture_path;
 
 fn fixture() -> serde_json::Value {
     serde_json::from_str(include_str!("../🧫️fixtures/♿️native-accessibility-tree/🔣️.json")).expect("native accessibility fixture")
@@ -194,7 +195,7 @@ fn only_the_bridge_module_names_accesskit() {
             }
         }
     }
-    let engine = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../..").canonicalize().expect("engine root");
+    let engine = fixture_path!("../../../..").canonicalize().expect("engine root");
     let mut sources = Vec::new();
     walk(&engine, &mut sources);
     let naming: Vec<String> = sources

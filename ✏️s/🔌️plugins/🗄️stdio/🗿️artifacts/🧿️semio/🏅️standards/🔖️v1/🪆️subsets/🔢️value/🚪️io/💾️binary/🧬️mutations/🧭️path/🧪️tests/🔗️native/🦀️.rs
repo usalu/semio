@@ -12,5 +12,4 @@ fn original_semio_mutation_frames_match_shared_value_paths(){
  }
  let template=SemioValueMutation::SetValue(SetValue{path:Vec::new(),value:SemioValue::Null}).encode_op().unwrap();
  for row in fixture["malformed"].as_array().unwrap(){let mut bytes=template[..2].to_vec();bytes.extend(row.as_array().unwrap().iter().map(|value|value.as_u64().unwrap()as u8));bytes.push(0);assert!(SemioValueMutation::decode_op(&bytes).is_err(),"{bytes:?}");}
- println!("[DEBUG] Original Semio public mutation codec round-trips four exact shared paths and refuses eight malformed children");
 }

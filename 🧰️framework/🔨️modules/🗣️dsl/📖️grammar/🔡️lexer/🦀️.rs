@@ -1,10 +1,12 @@
 //! 🔡️ The grammar-format pre-scan lexer: `?` and `|` here, every other run delegated to the shared dsl lexer.
 
-use crate::{lex as core_lex, Limits, TextError, TextSpan, TokenKind as CoreKind};
+use semio_framework_diagnostic::{Limits, TextError, TextSpan};
+use semio_framework_dsl_lexical::lexer::lex as core_lex;
+use semio_framework_dsl_token::TokenKind as CoreKind;
 
 //#region 🔖️Lexer
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(super) enum GKind {
+pub enum GKind {
     Ident,
     Int,
     Text,
@@ -25,10 +27,10 @@ pub(super) enum GKind {
 }
 
 #[derive(Clone, Debug, PartialEq)]
-pub(super) struct GToken {
-    pub(super) kind: GKind,
-    pub(super) text: String,
-    pub(super) span: TextSpan,
+pub struct GToken {
+    pub kind: GKind,
+    pub text: String,
+    pub span: TextSpan,
 }
 
 /// 🔬️ Pre-scans `?`/`|` (not in `dsl_core`'s alphabet) and delegates every other run of
@@ -43,7 +45,7 @@ fn span_at(text: &str, offset: usize, length: u32) -> TextSpan {
     TextSpan::with_length(line, column, length)
 }
 
-pub(super) fn lex(text: &str) -> Result<Vec<GToken>, TextError> {
+pub fn lex(text: &str) -> Result<Vec<GToken>, TextError> {
     let bytes = text.as_bytes();
     let mut tokens = Vec::new();
     let mut i = 0usize;

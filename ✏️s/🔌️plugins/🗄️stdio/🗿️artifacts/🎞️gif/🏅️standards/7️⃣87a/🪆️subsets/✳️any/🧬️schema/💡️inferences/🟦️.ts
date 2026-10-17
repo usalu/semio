@@ -31,6 +31,10 @@ type stdioGif87aAnyInferenceGuardSizeBounds = { readonly minItems?: number; read
 
 export const stdioGif87aAnyInferenceGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : stdioGif87aAnyInferenceGuardReject(at, "value is not an object");
+export const stdioGif87aAnyInferenceGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) stdioGif87aAnyInferenceGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const stdioGif87aAnyInferenceGuardArray = (value: unknown, at: string, bounds: stdioGif87aAnyInferenceGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return stdioGif87aAnyInferenceGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) stdioGif87aAnyInferenceGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -61,14 +65,14 @@ export const stdioGif87aAnyInferenceGuardConstant = <T extends string | number |
 //#endregion 🚪️Parsers
 
 export function parseGifInference(value: unknown, at = "$"): GifInference {
-  const row = stdioGif87aAnyInferenceGuardObject(value, at);
+  const row = stdioGif87aAnyInferenceGuardClosed(stdioGif87aAnyInferenceGuardObject(value, at), at, ["dimensions"]);
   return {
     dimensions: parseGifDimensions(row["dimensions"], `${at}.dimensions`),
   };
 }
 
 export function parseGifDimensions(value: unknown, at = "$"): GifDimensions {
-  const row = stdioGif87aAnyInferenceGuardObject(value, at);
+  const row = stdioGif87aAnyInferenceGuardClosed(stdioGif87aAnyInferenceGuardObject(value, at), at, ["width", "height", "bitDepth", "hasAlpha", "pixelCount"]);
   return {
     width: stdioGif87aAnyInferenceGuardInteger(row["width"], `${at}.width`, {"minimum": 0}),
     height: stdioGif87aAnyInferenceGuardInteger(row["height"], `${at}.height`, {"minimum": 0}),

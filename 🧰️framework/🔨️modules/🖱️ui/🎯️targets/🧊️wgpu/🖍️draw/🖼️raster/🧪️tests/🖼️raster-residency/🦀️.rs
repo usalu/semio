@@ -311,7 +311,6 @@ fn authored_mip_upload_bounds_each_slice_and_cancellation_retires_the_same_owner
             harness.close();
             assert_eq!(pool.gpu_resident_bytes(), 0);
         }
-        eprintln!("[DEBUG] authored mip upload revision={revision} slices={slices} residentBytes={} terminal={} ", pool.gpu_resident_bytes(), harness.table.get(&key).is_none());
     }
     assert!(semio_framework_async::block_on(harness.validation_error()).is_none());
 }

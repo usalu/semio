@@ -1,6 +1,5 @@
 //! ➕ Note mutation — `CreateBlock`: brings a new block into existence at an addressed position.
 
-use crate::schema::mutations::NoteMutation;
 use crate::{NoteDiff, NoteSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -20,17 +19,23 @@ pub struct CreateBlock {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn create_block(block: crate::NoteBlockNode, parent_id: Option<String>, index: Option<usize>) -> NoteMutation {
-    NoteMutation::CreateBlock(CreateBlock { block: Box::new(block), parent_id, index })
+pub fn create_block<Op>(block: crate::NoteBlockNode, parent_id: Option<String>, index: Option<usize>) -> Op
+where
+    Op: From<crate::standards::v1::subsets::block::schema::mutations::create_block::CreateBlock>,
+{
+    Op::from(CreateBlock { block: Box::new(block), parent_id, index })
 }
 
-impl MutationKind<NoteSnapshot, NoteMutation> for CreateBlock {
+impl<Op> MutationKind<NoteSnapshot, Op> for CreateBlock
+where
+    Op: protocol::Mutation<NoteSnapshot, Diff = NoteDiff> + From<CreateBlock> + From<crate::standards::v1::subsets::block::schema::mutations::delete_block::DeleteBlock>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "block", kind: "create-block", record: "CreatedBlock" };
 
     fn diff(&self, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &NoteSnapshot) -> Result<Vec<NoteMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &NoteSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

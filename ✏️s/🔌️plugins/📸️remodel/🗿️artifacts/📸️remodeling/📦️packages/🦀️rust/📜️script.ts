@@ -38,7 +38,6 @@ class OwnedVerifyScript extends BundleScript {
     if (segments.length === 1 && segments[0] === "snapshot-sqlite-native-syntax") {
       const owner=resolve(this.root,"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot");
       await runOwnedCommand("rustfmt",["--emit","stdout","--edition","2024",resolve(owner,"🦀️.rs"),resolve(owner,"📏️cells/🦀️.rs"),resolve(owner,"🧪️tests/🧬️owned/🦀️.rs")],this.repoRoot,"owned-sqlite-native-syntax",120_000);
-      console.log("[DEBUG] Remodeling three owning Native SQLite sources parsed without changing files");
       return;
     }
     if (segments[0] === "video-container-providers") {

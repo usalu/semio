@@ -4,6 +4,8 @@ cargo-features = ["trim-paths"]
 resolver = "2"
 members = [
     "🛂️proctor/📦️packages/🦀️rust",
+    "🛂️proctor/🔨️modules/🧠️domain/📦️packages/🦀️rust",
+    "🛂️proctor/🔨️modules/🧱️base/📦️packages/🦀️rust",
 ]
 exclude = [
     "**/🏅️standards/**",

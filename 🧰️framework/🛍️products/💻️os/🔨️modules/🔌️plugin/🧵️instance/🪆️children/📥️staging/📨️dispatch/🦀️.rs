@@ -1,8 +1,24 @@
 //! 🧴️ Staged slice of the `dispatch` band of the mounted artifact instance: its `instance-children` members (WP6 step S0 of the instance family).
 //!
 //! 📨️ Dispatch of the mounted artifact instance: test snapshot helpers, command log, history view, patch and refresh, preview, `dispatch_emit` and transaction groups.
-use super::*;
-use crate::tool_jobs::time_travel;
+use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use pack::snapshot::ArtifactPack;
+use semio_framework_artifact_reference::ArtifactRef;
+use crate::children_components::ChildComposition;
+use semio_framework_plugin_decl_views::child_view::{ChildContentView, MemberKeyRef};
+use semio_framework_plugin_instance_history::history_components::CommandHistory;
+use semio_framework_plugin_decl_views::history_view::CommandLogEntry;
+use semio_framework_plugin_decl_emission::Emit;
+use semio_framework::{Fault, FaultFrom};
+use std::future::Future;
+use std::collections::HashSet;
+use semio_framework_plugin_instance_stores::stores_components::InstanceStores;
+use store::{MemberFactory, Mutation, SpaceMember};
+use protocol::OpText;
+use semio_framework_plugin_reactor_app::PluginApp;
+use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
+use semio_framework_ui_contract::*;
 
 impl<M: SpaceMember + MemberFactory + 'static> ChildComposition<M> {
     /// 🧩️ Every live child's TAIL applied edit id, plus whether any child has an edit on
@@ -11,7 +27,7 @@ impl<M: SpaceMember + MemberFactory + 'static> ChildComposition<M> {
     /// parent store at all, so without this the shell disables its own undo control over a
     /// perfectly undoable ledger row. Empty and free for every leaf app: `entries()` yields
     /// nothing when the registry holds no child.
-    pub(crate) async fn child_history_tails(&self) -> (HashSet<String>, bool) {
+    pub async fn child_history_tails(&self) -> (HashSet<String>, bool) {
         let mut applied_tails = HashSet::new();
         let mut has_redo_tail = false;
         for entry in self.children.entries() {
@@ -34,7 +50,7 @@ impl<M: SpaceMember + MemberFactory + 'static> ChildComposition<M> {
     /// live child tail is the most recent still-applied group, and for `redo` the FIRST row naming
     /// a child redo-tail is the one a single `redo` reapplies. A child whose tail carries no group
     /// id is not a composite gesture and is never a target.
-    pub(crate) async fn child_group_history_target<A: ArtifactApp>(&self, history: &CommandHistory<A>, action: &str) -> Option<String> {
+    pub async fn child_group_history_target<A: ArtifactApp>(&self, history: &CommandHistory<A>, action: &str) -> Option<String> {
         if self.children.is_empty() {
             return None;
         }
@@ -73,7 +89,7 @@ impl<M: SpaceMember + MemberFactory + 'static> ChildComposition<M> {
     /// here). A free-standing method (not inlined into `dispatch_emit_group`) so it is directly
     /// unit-testable against a synthetic `created_children` list, independent of the `ChildEmit`
     /// wire path (which never emits a `ChildGenesis` itself today).
-    pub(crate) async fn absorb_created_children<A: ArtifactApp>(&mut self, stores: &mut InstanceStores<A>, created_children: Vec<(ArtifactRef, M)>) -> Result<(), Fault> {
+    pub async fn absorb_created_children<A: ArtifactApp>(&mut self, stores: &mut InstanceStores<A>, created_children: Vec<(ArtifactRef, M)>) -> Result<(), Fault> {
         for (target, mut member) in created_children {
             let publication_generation = self.admit_child_content_publication()?;
             let slot = self.composition.graph().await.slot_of(&target.artifact_id).await.ok_or_else(|| plugin_sdk_fault("created child has no exact target ownership slot"))?.to_owned();

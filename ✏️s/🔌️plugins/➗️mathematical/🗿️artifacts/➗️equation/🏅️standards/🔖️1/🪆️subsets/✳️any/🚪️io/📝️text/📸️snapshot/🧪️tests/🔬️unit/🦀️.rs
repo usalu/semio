@@ -1,3 +1,17 @@
+use crate::EquationGeometry;
+use crate::{EquationGraph, EquationSnapshot};
+#[allow(unused_imports)]
+use crate::{EquationEdge, EquationNode};
+#[allow(unused_imports)]
+use semio_framework_value::DslValue;
+#[allow(unused_imports)]
+use semio_framework_value::FromValue;
+#[allow(unused_imports)]
+use semio_framework_value::ToValue;
+#[allow(unused_imports)]
+use semio_framework_value::ValueError;
+#[allow(unused_imports)]
+use pack::snapshot::ArtifactDsl;
 use crate::standards::v1::subsets::any::io::text::snapshot::*;
 
 #[semio_framework_async_macros::async_test]
@@ -7,7 +21,7 @@ async fn math_projection_dsl_round_trips_default() {
 
 #[semio_framework_async_macros::async_test]
 async fn example_primary_text_round_trips() {
-    let text = include_str!("../../../../../🖼️assets/🎬️demo/🗣️.dsl.semio");
+    let text = runtime_fixture_text("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🖼️assets/🎬️demo/🗣️.dsl.semio");
     let parsed = parse_dsl(text).expect("parse example");
     store::os_store::test_support::assert_dsl_round_trip(&parsed);
 }
@@ -41,9 +55,14 @@ async fn the_parent_state_and_its_handles_survive_text() {
 /// 🎬️ The curated asset is the default document: its graph, point cloud, derived handles and exact expression.
 #[semio_framework_async_macros::async_test]
 async fn the_demo_asset_is_the_default_document() {
-    let parsed = parse_dsl(include_str!("../../../../../🖼️assets/🎬️demo/🗣️.dsl.semio")).expect("parse example");
+    let parsed = parse_dsl(runtime_fixture_text("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🖼️assets/🎬️demo/🗣️.dsl.semio")).expect("parse example");
     assert_eq!(parsed, EquationSnapshot::default());
 }
 /// 🧭️ Unknown root fields and foreign envelope identities are refused rather than ignored.
 #[semio_framework_async_macros::async_test]
 async fn unowned_scene_lines_and_foreign_identity_are_refused(){let printed=print_dsl(&EquationSnapshot::default());for line in["scene={}","board={}"]{assert!(parse_dsl(&format!("{printed}\n{line}")).is_err());}assert!(parse_dsl(&printed.replacen("mathematical.equation.dsl","stdio.json.dsl",1)).is_err());}
+
+fn runtime_fixture_text(relative: &str) -> &'static str {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative);
+    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display())).into_boxed_str())
+}

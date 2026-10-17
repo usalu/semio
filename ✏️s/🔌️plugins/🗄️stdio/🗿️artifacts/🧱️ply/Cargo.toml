@@ -5,6 +5,7 @@ resolver = "2"
 members = [
     "🏅️standards/🔖️1.0/🪆️subsets/✳️any/👁️viewer/🧪️tests/🔬️unit/📦️packages/🦀️rust",
     "🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧪️tests/🔬️unit/📦️packages/🦀️rust",
     "🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust",
     "🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
     "📦️packages/🦀️rust",

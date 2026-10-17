@@ -96,20 +96,16 @@ fn wires_canvas_transient_transfer(mutation: WiresCanvasTransientMutation) -> Wi
 }
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️contract-vectors/🦀️.rs"]
-mod contract_vectors;
+
 
 /// 🪟️ The concrete canvas owns its drag lifecycle independently of document/config streams.
 pub struct WiresCanvasTransientOwner;
 
 impl semio_framework_plugin::WindowTransientOwner for WiresCanvasTransientOwner {
-    const WINDOW_KIND_ID: &'static str = crate::editor::wires::WIRES_PLAY_WINDOW_CANVAS;
+    const WINDOW_KIND_ID: &'static str = crate::editor::wires::modes::edit::windows::canvas::WIRES_PLAY_WINDOW_CANVAS;
     type State = WiresCanvasTransient;
     type Mutation = WiresCanvasTransientMutation;
 

@@ -49,6 +49,18 @@ pub struct SpaceConditions {
     #[value(default, skip_serializing_if = "Option::is_none")] pub schedule: Option<String>,
 }
 
+impl SpaceConditions {
+    /// 🌡️ Whether the space is heated or cooled: it states a set point.
+    pub fn conditioned(&self) -> bool {
+        self.heating_setpoint.is_some() || self.cooling_setpoint.is_some()
+    }
+
+    /// 🌡️ Whether both spaces state the same set points.
+    pub fn same_climate(&self, other: &SpaceConditions) -> bool {
+        self.heating_setpoint == other.heating_setpoint && self.cooling_setpoint == other.cooling_setpoint
+    }
+}
+
 /// 📏️ A dimension: the distances between consecutive anchors measured along `angle`, drawn `offset` metres beside the first anchor. Its values and text are inferred from the current geometry of the anchors, never stored; an optional lock names the value it must keep.
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]

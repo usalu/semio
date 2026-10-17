@@ -141,7 +141,6 @@ pub async fn request(inference_schema: &str) -> WireArtifactInferenceRequest {
         let result:WireArtifactInferenceResult=semio_framework_pack_json::from_json_str(std::str::from_utf8(&bytes).unwrap(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         assert_eq!(result.retirement_progress,physical_receipt(&ArtifactInferenceExecutionRequest{operation:71,generation:3,cancelled:false,policy:&request.policy,budgets:&request.budgets,retained:request.retained,cancellation_id:&request.cancellation_id,previous_state:None,requested_cache_mode:request.requested_cache_mode.clone(),canonical_payload:&request.canonical_payload,dependencies:&request.dependencies},&mut cx).unwrap().retained_progress);
         assert_eq!(result.retained,request.retained);
-        println!("[DEBUG] original service cumulative physical receipt crosses wire unchanged after actual dispatch");
     }
 
     #[semio_framework_async_macros::async_test]
@@ -168,7 +167,6 @@ pub async fn request(inference_schema: &str) -> WireArtifactInferenceRequest {
             let bytes=wire_artifact_infer_from_cold(&registry,semio_framework_pack_json::to_json_string(&request).as_bytes(),71,3,&mut cx).unwrap();
             let result:WireArtifactInferenceResult=semio_framework_pack_json::from_json_str(std::str::from_utf8(&bytes).unwrap(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();assert_eq!(result.retained,wallet);assert_eq!(result.canonical_payload,Some(request.canonical_payload));
         }
-        println!("[DEBUG] original native inference service receives every independent incoming wallet unchanged");
     }
 
 }

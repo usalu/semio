@@ -23,22 +23,38 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
-semio-framework-os-renderer-wgpu-contracts = { path = "../../../🤝️contracts/📦️packages/🦀️rust" }
+semio-framework-os-renderer-wgpu-canvas2d-host = { path = "../../../🔄️canvas2d-host/📦️packages/🦀️rust" }
+semio-framework-os-renderer-wgpu-contracts = { path = "../../../🤝️contracts/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-os-renderer-wgpu-engine-board = { path = "../../../🎲️engine-board/📦️packages/🦀️rust" }
 semio-framework-os-renderer-wgpu-engine-registry = { path = "../../../🗺️engine-registry/📦️packages/🦀️rust" }
+semio-framework-os-renderer-wgpu-frame-actions = { path = "../../../🛎️frame-actions/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-os-renderer-wgpu-host-base = { path = "../../../🏛️host-base/📦️packages/🦀️rust" }
 semio-framework-os-renderer-wgpu-scene-canvas2d = { path = "../../../🎨️scene-canvas2d/📦️packages/🦀️rust" }
-semio-framework-os-renderer-wgpu-scene-ink = { path = "../../../✒️scene-ink/📦️packages/🦀️rust" }
-semio-framework-os-renderer-wgpu-scene-state = { path = "../../../🎭️scene-state/📦️packages/🦀️rust" }
+semio-framework-os-renderer-wgpu-scene-feeds = { path = "../../../📰️scene-feeds/📦️packages/🦀️rust" }
+semio-framework-os-renderer-wgpu-scene-ink = { path = "../../../✒️scene-ink/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-os-renderer-wgpu-scene-render = { path = "../../../🪞️scene-render/📦️packages/🦀️rust" }
+semio-framework-os-renderer-wgpu-scene-state = { path = "../../../🎭️scene-state/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-os-renderer-wgpu-scene-tables = { path = "../../../🧮️scene-tables/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-os-renderer-wgpu-ui-engine = { path = "../../../🖱️ui-engine/📦️packages/🦀️rust" }
+base64 = "0.22.1"
+image = { version = "0.25", default-features = false, features = ["png", "jpeg"] }
 infinite_canvas = { path = "../../../../../../../♾️infinite/📦️packages/🦀️rust", package = "semio-framework-os-infinite" }
 semio-framework = { path = "../../../../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
 semio-framework-canvas = { path = "../../../../../../../../../../🔨️modules/🖼️canvas/📦️packages/🦀️rust" }
 semio-framework-job = { workspace = true }
 semio-framework-os-renderer-camera = { path = "../../../../../🧱️elements/🎞️Scenes/⏱️camera/📦️packages/🦀️rust" }
 semio-framework-trace = { workspace = true }
+semio-framework-ui-action = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎬️action/📦️packages/🦀️rust" }
+semio-framework-ui-draw-contract = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🏷️types/📦️packages/🦀️rust" }
+semio-framework-ui-scene-plane = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🎬️scenes/🖼️plane/📦️packages/🦀️rust" }
+semio-framework-ui-scene-views = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🎬️scenes/📄️views/📦️packages/🦀️rust" }
+semio-framework-ui-text = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🔤️typography/📦️packages/🦀️rust" }
+semio-framework-ui-theme = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎨️styling/🎭️theme/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 serde_json = "1.0.140"
 ui_contract = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
 ui_render = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🖌️render/📦️packages/🦀️rust", package = "semio-framework-ui-render" }
+ui_wgpu = { path = "../../../../../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", features = ["wgpu-engine"], package = "semio-framework-ui" }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 semio-framework-async = { workspace = true, features = ["entrypoint"] }
@@ -49,3 +65,4 @@ web-sys = { version = "0.3.98", features = ["Window", "Document", "HtmlCanvasEle
 
 [dev-dependencies]
 semio-framework-job = { workspace = true, features = ["testkit"] }
+semio-framework-os-renderer-wgpu-scene-state = { path = "../../../🎭️scene-state/📦️packages/🦀️rust", features = ["testkit"] }

@@ -1,7 +1,7 @@
 //! 🧭️ Inferred option visibility and takeoff from authored membership and quantity parents.
 use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, ElementMembership};
 use super::super::quantities::{ElementQuantity, QuantityTotals, totals_of};
-use crate::standards::v1::subsets::any::schema::mutations::option_rules::{element_ids, host};
+use crate::standards::v1::subsets::any::schema::authored::option_rules::{element_ids, host};
 use std::collections::{BTreeMap, BTreeSet};
 
 pub const READS: &[&str] = &["option_groups", "design_options", "worksets", "element_options", "element_worksets", "walls", "curtain_walls", "columns", "beams", "slabs", "ceilings", "roofs", "openings", "stairs", "ramps", "railings", "spaces", "components", "mep_elements", "wall_sweeps"];

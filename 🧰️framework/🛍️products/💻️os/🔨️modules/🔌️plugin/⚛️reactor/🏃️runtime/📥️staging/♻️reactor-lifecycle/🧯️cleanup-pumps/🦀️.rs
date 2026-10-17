@@ -386,10 +386,12 @@ pub fn runtime_close_phase<PA: PluginApp>(state: &RuntimeCloseWorkerState<PA>, p
 pub(super) fn checked_runtime_close_generation(current: u64) -> Result<u64, Fault> {
     current.checked_add(1).ok_or_else(|| plugin_internal_fault("runtime close generation exhausted"))
 }
-#[cfg(test)]
+#[cfg(any(test, feature = "artifact-app-testing"))]
 std::thread_local! {
-    static RUNTIME_CLOSE_CONSTRUCTION_LIVE: Cell<Option<bool>> = const { Cell::new(None) };
-    static RUNTIME_CLOSE_CONSTRUCTION_FAIL: Cell<bool> = const { Cell::new(false) };
+    #[doc(hidden)]
+    pub static RUNTIME_CLOSE_CONSTRUCTION_LIVE: Cell<Option<bool>> = const { Cell::new(None) };
+    #[doc(hidden)]
+    pub static RUNTIME_CLOSE_CONSTRUCTION_FAIL: Cell<bool> = const { Cell::new(false) };
 }
 #[doc(hidden)]
 pub fn plugin_begin_instance_close<PA: PluginApp + 'static>(runtime: &PluginRuntime<PA>, instance_id: u32, expected: Option<&std::sync::Weak<RuntimeAppCell<PA>>>) -> Result<std::sync::Arc<RuntimeCloseWorkerState<PA>>, Fault> {

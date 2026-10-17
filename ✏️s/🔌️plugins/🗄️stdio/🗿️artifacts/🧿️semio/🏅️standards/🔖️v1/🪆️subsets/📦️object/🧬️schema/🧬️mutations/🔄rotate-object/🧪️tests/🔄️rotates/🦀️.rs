@@ -10,21 +10,22 @@ use crate::schema::diff::SemioObjectDiff;
 use crate::schema::mutations::SemioObjectMutation;
 use crate::schema::snapshot::SemioObjectSnapshot;
 use protocol::Mutation;
+use semio_framework_test_fixtures::fixture_text;
 
-const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔄rotate-object/🔄️rotates/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔄rotate-object/🔄️rotates/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔄rotate-object/🔄️rotates/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔄rotate-object/🔄️rotates/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔄rotate-object/🔄️rotates/🎯️outcome/🔣️.json");
+static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🔄rotate-object/🔄️rotates/📸️snapshot/⬅️before/🔣️.json"));
+static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🔄rotate-object/🔄️rotates/📸️snapshot/➡️after/🔣️.json"));
+static MUTATION: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🔄rotate-object/🔄️rotates/🦠️mutation/🔣️.json"));
+static DIFF: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🔄rotate-object/🔄️rotates/🔺️diff/🔣️.json"));
+static OUTCOME: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🔄rotate-object/🔄️rotates/🎯️outcome/🔣️.json"));
 
 fn before() -> SemioObjectSnapshot {
-    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("rotate-object before snapshot decodes")
+    semio_framework_pack_json::from_json_str((*BEFORE), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("rotate-object before snapshot decodes")
 }
 fn expected_after() -> SemioObjectSnapshot {
-    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("rotate-object after snapshot decodes")
+    semio_framework_pack_json::from_json_str((*AFTER), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("rotate-object after snapshot decodes")
 }
 fn rotate_object() -> SemioObjectMutation {
-    semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("rotate-object mutation decodes")
+    semio_framework_pack_json::from_json_str((*MUTATION), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("rotate-object mutation decodes")
 }
 
 /// ▶️ The identity rotation is replaced by the half turn; translation and scale are untouched.
@@ -58,21 +59,21 @@ async fn the_undo_rotate_object_restores_the_identity_rotation() {
 /// quaternion is a NAMED four-field struct, never a bare array.
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
-    for (label, text) in [("before", BEFORE), ("after", AFTER)] {
+    for (label, text) in [("before", (*BEFORE)), ("after", (*AFTER))] {
         let decoded: SemioObjectSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
         let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "rotate-object/rotates-the-object-a-half-turn-about-z: committed {label} JSON is not canonical");
     }
     let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&(rotate_object()))).expect("rotate-object mutation encodes");
-    let original: serde_json::Value = serde_json::from_str(MUTATION).expect("rotate-object mutation reparses");
+    let original: serde_json::Value = serde_json::from_str((*MUTATION)).expect("rotate-object mutation reparses");
     assert_eq!(reencoded, original, "rotate-object/rotates-the-object-a-half-turn-about-z: committed mutation JSON is not canonical");
 }
 
 /// 🎯️ Declared `applied`: the quaternion is finite and differs from the base rotation.
 #[semio_framework_async_macros::async_test]
 async fn declared_outcome_holds_with_neither_invariant_nor_no_op() {
-    let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
+    let outcome: serde_json::Value = serde_json::from_str((*OUTCOME)).expect("outcome decodes");
     assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("applied"), "rotate-object/rotates-the-object-a-half-turn-about-z: this case is declared applied");
     let produced = rotate_object().diff(&before());
     assert!(produced.messages().is_empty(), "a finite, genuinely-different rotation must raise no diagnostics");
@@ -84,7 +85,7 @@ async fn produces_committed_diff() {
     let base = before();
     let outcome = <SemioObjectMutation as Mutation<SemioObjectSnapshot>>::diff(&rotate_object(), &base);
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
-    let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
+    let committed: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff decodes");
     assert_eq!(produced, committed, "rotate-object/rotates-the-object-a-half-turn-about-z: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
 
@@ -92,19 +93,19 @@ async fn produces_committed_diff() {
 /// touches no child slot.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical_and_carries_the_whole_transform() {
-    let decoded: SemioObjectDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed rotate-object diff decodes");
+    let decoded: SemioObjectDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed rotate-object diff decodes");
     let transform = decoded.transform.as_ref().expect("rotate-object must write the transform slot");
     assert_eq!(transform.scale, before().transform.scale, "the diff carries the whole transform, so the untouched scale must be the base scale");
     assert!(decoded.brep.is_none() && decoded.mesh.is_none() && decoded.properties.is_none(), "rotate-object must leave all three child slots untouched");
     let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("diff re-encodes");
-    let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
+    let original: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff reparses");
     assert_eq!(reencoded, original, "rotate-object/rotates-the-object-a-half-turn-about-z: committed diff JSON is not canonical");
 }
 
 /// 🩹 Applying the committed diff to `before` yields `after`.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: SemioObjectDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed rotate-object diff decodes");
+    let decoded: SemioObjectDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed rotate-object diff decodes");
     let produced = protocol::apply_diff(&decoded, &before()).expect("committed rotate-object diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "rotate-object/rotates-the-object-a-half-turn-about-z: committed diff did not carry before to after");
 }

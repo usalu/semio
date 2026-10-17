@@ -10,10 +10,10 @@ export interface GraphOutputCatalog {
   readonly inputAreas: readonly string[];
   readonly policy: Readonly<{ excludedInputPaths: readonly string[]; genericEmojiIdentities: readonly string[] }>;
   readonly shared: Readonly<{ rustRegistry: string; typescriptIndex: string; typescriptTypes: string }>;
-  readonly manifests: readonly Readonly<{ id: string; rust: string; typescript: string }>[];
+  readonly manifests: readonly Readonly<{ id: string; rust: string; typescript: string; rustOwner?: string }>[];
 }
 
-/** 📇️Validates the exact language-neutral output authority and its bijection to admitted manifests. */
+/** 📇️Validates the exact language-neutral output authority and its bijection to admitted manifests. A manifest row may name `rustOwner`, the crate-qualified module that already mounts its generated Rust module in a lower crate; the registry then re-exports that module instead of mounting the generated file a second time. */
 export function parseGraphOutputCatalog(input: unknown, manifestIds: readonly string[]): GraphOutputCatalog {
   function record(value: unknown, required: readonly string[], optional: readonly string[] = []): Record<string, unknown> {
     if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error("graph output catalog requires records");
@@ -58,13 +58,16 @@ export function parseGraphOutputCatalog(input: unknown, manifestIds: readonly st
   if (!Array.isArray(root.manifests)) throw new Error("graph output manifests must be an array");
   const ids = new Set<string>();
   const manifests = root.manifests.map((value) => {
-    const row = record(value, ["id", "rust", "typescript"]);
+    const row = record(value, ["id", "rust", "typescript"], ["rustOwner"]);
     if (typeof row.id !== "string" || !/^[a-z][a-z0-9-]*$/u.test(row.id) || ids.has(row.id)) throw new Error("graph output manifest identity is invalid or duplicated");
     ids.add(row.id);
     const rust = path(row.rust, /^[^/.]+\/🦀️\.rs$/u);
     const typescript = path(row.typescript, /^[^/.]+\/🟦️\.ts$/u);
     if (dirname(rust) !== dirname(typescript)) throw new Error(`graph output language pair has different owners: ${row.id}`);
-    return Object.freeze({ id: row.id, rust, typescript });
+    if (row.rustOwner === undefined) return Object.freeze({ id: row.id, rust, typescript });
+    const moduleName = row.id.replace(/[^a-zA-Z0-9_]/gu, "_");
+    if (typeof row.rustOwner !== "string" || !/^[a-z_][a-z0-9_]*(?:::[a-z_][a-z0-9_]*)+$/u.test(row.rustOwner) || row.rustOwner.split("::").at(-1) !== moduleName) throw new Error(`graph output rust owner must be a crate-qualified module path ending in ${moduleName}: ${row.id}`);
+    return Object.freeze({ id: row.id, rust, typescript, rustOwner: row.rustOwner });
   });
   if (manifestIds.length !== ids.size || new Set(manifestIds).size !== manifestIds.length || manifestIds.some((id) => !ids.has(id))) throw new Error("graph output catalog and admitted manifest identities differ");
   const findings = pathEmojiStatuteFindings(entries, policy.genericEmojiIdentities);

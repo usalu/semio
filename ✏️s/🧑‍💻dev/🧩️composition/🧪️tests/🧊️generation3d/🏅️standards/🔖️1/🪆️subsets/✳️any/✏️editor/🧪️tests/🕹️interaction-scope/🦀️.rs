@@ -18,9 +18,10 @@ use super::*;
 use crate::editor_domain::editor_laws::serial_execution;
 use semio_framework::kernel::UiDirtyScope;
 use semio_framework_plugin::InteractionVerb;
+use semio_framework_test_fixtures::repo_text;
 
 //#region 🕹️Fixture
-const INTERACTION_SCOPE_FIXTURE_JSON: &str = include_str!("../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🕹️interaction-scope.json");
+fn interaction_scope_fixture_json() -> &'static str { repo_text!("✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🕹️interaction-scope.json") }
 
 #[derive(serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -54,7 +55,7 @@ struct InteractionScopeRow {
 }
 
 fn interaction_scope_fixture() -> InteractionScopeFixture {
-    let fixture: InteractionScopeFixture = serde_json::from_str(INTERACTION_SCOPE_FIXTURE_JSON).expect("interaction scope fixture");
+    let fixture: InteractionScopeFixture = serde_json::from_str(interaction_scope_fixture_json()).expect("interaction scope fixture");
     assert_eq!(fixture.format, "semio.generation3d.interaction-scope");
     assert_eq!(fixture.version, 1);
     fixture

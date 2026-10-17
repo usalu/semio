@@ -1,9 +1,12 @@
-use semio_s_artifact_trinity_jack::JackWorkingScene;
+use semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::content::JackWorkingScene;
 use super::*;
-use semio_s_artifact_trinity_jack::{Camera, JackSnapshot, Manifest, Node, Port, PortDirection, PropertyBag};
+use semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::graph::{Camera, Node, Port};
+use semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::snapshot::JackSnapshot;
+use semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::manifest::Manifest;
+use semio_framework_graph_manifest::{PortDirection, PropertyBag};
 
 fn mini_json() -> String {
-    let fixture = JackSnapshot::with_content::<crate::test_support::FixtureComposition>(JackSnapshot::SCHEMA.into(), "mini".into(), Some("nakagin".into()), Manifest::nakagin_default(), Camera::default(), JackWorkingScene { nodes: vec![Node {
+    let fixture = JackSnapshot::with_content::<semio_s_artifact_trinity_jack::test_support::FixtureComposition>(JackSnapshot::SCHEMA.into(), "mini".into(), Some("nakagin".into()), Manifest::nakagin_default(), Camera::default(), JackWorkingScene { nodes: vec![Node {
             id: "root".into(),
             kind: "Piece".into(),
             name: "core".into(),

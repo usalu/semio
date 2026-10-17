@@ -1,4 +1,4 @@
-use super::puzzle_themed_icon_lookup;
+use crate::editor::puzzle2d::engine::icons::puzzle_themed_icon_lookup;
 use crate::editor::puzzle2d::engine::canvas;
 
 #[test]

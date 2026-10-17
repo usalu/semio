@@ -1,4 +1,17 @@
-use super::*;
+use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfPage, PdfSnapshot};
+use semio_framework_value::{DslValue, ToValue};
+use semio_s_artifact_stdio_contract::editing::SnapshotEditEvent;
+#[allow(unused_imports)]
+use crate::standards::v1_7::subsets::base::schema::diff::PdfDiff;
+#[allow(unused_imports)]
+use crate::standards::v1_7::subsets::base::schema::snapshot::ObjRef;
+#[allow(unused_imports)]
+use semio_framework_value::FromValue;
+#[allow(unused_imports)]
+use semio_framework_plugin::{Fault, FaultCode, FaultOrigin};
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_contract::editing::{EditRules, EntityRule, InsertRule, RemoveRule, Selector};
+use crate::standards::v1_7::subsets::base::schema::mutations::*;
 use crate::standards::v1_7::subsets::base::io::mutation_bridge::apply_pdf_mutation;
 use crate::standards::v1_7::subsets::base::io::export::text_document;
 use crate::standards::v1_7::subsets::base::io::{binary::mutations as binary, text::mutations as text};

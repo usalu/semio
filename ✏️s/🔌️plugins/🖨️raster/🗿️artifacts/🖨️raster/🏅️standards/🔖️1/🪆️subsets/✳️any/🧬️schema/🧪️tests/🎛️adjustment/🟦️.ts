@@ -4,12 +4,13 @@ import {semioSchemaAjvV1} from "@semio-tech/framework/schema/oracles/validator";
 import schema from "../../🔺️diff/🔣️.json";
 import mutationSchema from "../../🧬️mutations/🎛️change-layer/🧬️schema/🔣️.json";
 import fixture from "../../🧬️mutations/🎛️change-layer/🧪️tests/🔣️.json";
-import {parseRasterLayerPatch} from "../../🔺️diff/🟦️.ts";
-const validate=semioSchemaAjvV1({allErrors:true}).compile(schema.$defs.RasterAdjustmentParameter);
+import {parseRasterLayerPatch,type RasterAdjustmentParameter} from "../../🔺️diff/🟦️.ts";
+const validate=semioSchemaAjvV1({allErrors:true}).compile<RasterAdjustmentParameter>(schema.$defs.RasterAdjustmentParameter);
 const validateMutation=semioSchemaAjvV1({allErrors:true}).compile(mutationSchema);
 for(const row of fixture.cases)test(`adjustment ${row.parameter} ${row.before} to ${row.after}`,()=>{
   const parameter={parameter:row.parameter,value:row.after};
   expect(validate(parameter)).toBe(true);
+  if(!validate(parameter))throw new Error("The fixture parameter violates its schema");
   expect(validateMutation({mutation:"changeLayerAdjustmentParameter",layerId:"tone",parameter:row.parameter,expected:row.before,value:row.after})).toBe(true);
   expect(validateMutation({layerId:"tone",parameter:row.parameter,expected:row.before,value:row.after})).toBe(false);
   expect(parseRasterLayerPatch({adjustmentParameters:[parameter]}).adjustmentParameters).toEqual([parameter]);
@@ -26,14 +27,16 @@ test("adjustment reset must be explicit",()=>{
 
 test("coalesced parameter patches reject duplicate and excess entries",()=>{
   const brightness={parameter:"brightness",value:0.2},contrast={parameter:"contrast",value:-0.3};
+  if(!validate(brightness)||!validate(contrast))throw new Error("The fixture parameters violate their schema");
   expect(parseRasterLayerPatch({adjustmentParameters:[brightness,contrast]}).adjustmentParameters).toEqual([brightness,contrast]);
   expect(()=>parseRasterLayerPatch({adjustmentParameters:[brightness,brightness]})).toThrow();
   expect(()=>parseRasterLayerPatch({adjustmentParameters:[brightness,contrast,brightness]})).toThrow();
 });
 
-const validateParameters=semioSchemaAjvV1({allErrors:true}).compile({$defs:schema.$defs,...schema.$defs.RasterLayerPatch.properties.adjustmentParameters});
+const validateParameters=semioSchemaAjvV1({allErrors:true}).compile<RasterAdjustmentParameter[]>({$defs:schema.$defs,...schema.$defs.RasterLayerPatch.properties.adjustmentParameters});
 for(const [index,row] of fixture.parameterPatches.entries())test(`parameter patch schema agreement ${index}`,()=>{
   expect(validateParameters(row.parameters)).toBe(row.valid);
-  if(row.valid)expect(parseRasterLayerPatch({adjustmentParameters:row.parameters}).adjustmentParameters).toEqual(row.parameters);
+  if(row.valid&&validateParameters(row.parameters))expect(parseRasterLayerPatch({adjustmentParameters:row.parameters}).adjustmentParameters).toEqual(row.parameters);
+  else if(row.valid)throw new Error("The valid fixture violates its schema");
   else expect(()=>parseRasterLayerPatch({adjustmentParameters:row.parameters})).toThrow();
 });

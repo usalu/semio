@@ -1,8 +1,8 @@
 /** 🗂️ Curation owns catalog references, sourcing geometry and curated quantities. */
 import { parseSchemaRecord } from "@semio-tech/framework/schema/record";
-import { parseArtifactChild, type ArtifactChild } from "../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts";
+import { parseArtifactChild, type ArtifactChild } from "@semio-tech/framework-os/modules/store/child/schema";
 import { requireArtifactDialect, type ArtifactDialect } from "@semio-tech/framework/schema/artifact-reference";
-export type { ArtifactChild } from "../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts";
+export type { ArtifactChild } from "@semio-tech/framework-os/modules/store/child/schema";
 
 export type GeometryRecipe =
   | { kind: "box"; width: number; height: number; depth: number }

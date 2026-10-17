@@ -1,0 +1,10 @@
+{
+  "name": "@semio-tech/framework-tool-machine-ts",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./🟦️.ts",
+    "./schema/node-graph-edit-rows": "./🧬️schema/🔣️node-graph-edit-rows/🟦️.ts",
+    "./testing/fixtures": "./🧪️testing/🧫️fixtures/🟦️.ts"
+  }
+}

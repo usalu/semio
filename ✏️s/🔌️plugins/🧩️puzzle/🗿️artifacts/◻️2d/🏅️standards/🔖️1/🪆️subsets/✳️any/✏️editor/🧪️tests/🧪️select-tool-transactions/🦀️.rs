@@ -6,10 +6,144 @@
 //! streamed laws drive a gesture across several dispatches of one window: its ticks live in the window's open
 //! transaction (previewed, never history) until one commit, and every host abort drops it with zero trace.
 
-use super::*;
+use crate::editor::puzzle2d::snapshot::{PUZZLE2D_GRANULARITY_NODE, PUZZLE2D_INTERACTION_DOMAIN};
+use crate::editor::puzzle2d::engine::board_host::drain_board_events_json;
+use crate::editor::puzzle2d::config::Puzzle2dConfig;
+use crate::editor::puzzle2d::engine::{BoardHost, Point};
+use crate::editor::puzzle2d::modes::edit::windows::overview::utilities::brush as brush_utility;
+use crate::editor::puzzle2d::modes::edit::windows::overview;
+use crate::editor::puzzle2d::window::{Puzzle2dWindowConfig, Puzzle2dWindowTransient};
+use crate::editor::puzzle2d::snapshot::Puzzle2dPlaySnapshot;
+use semio_framework_plugin::kernel::Effect;
+use semio_framework_plugin::InteractionTarget;
+use semio_framework_pack_json::{json, Value};
+use std::collections::BTreeSet;
+#[allow(unused_imports)]
+use crate::editor::puzzle2d::snapshot::{puzzle2d_scene_for, puzzle2d_scene_with, PUZZLE2D_GENERIC_TOOL_IDS, PUZZLE2D_RETAINED_TOOL_IDS, PUZZLE2D_ADD_NODE_DIALOG_ID, PUZZLE2D_BOARD_SNAPSHOT_SCHEMA, PUZZLE2D_GRANULARITY_EDGE, PUZZLE2D_GRANULARITY_HANDLE, PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID, PUZZLE2D_PLAY_EXAMPLE_NAKAGIN_ID, Puzzle2dInteractionSnapshot, Puzzle2dScene, puzzle2d_active_utility, puzzle2d_addresses_locked_entity, puzzle2d_entity_hidden, puzzle2d_entity_label, puzzle2d_interaction_definition, puzzle2d_node_kind_arg, puzzle2d_select_scope, puzzle2d_selected_node_ids, puzzle2d_selection_is_locked, puzzle2d_window_and_engagements_scope, puzzle2d_window_only_scope};
+#[allow(unused_imports)]
+use crate::editor::puzzle2d::recorder::{puzzle2d_copy_fragment_from, puzzle2d_cut_operations_from, puzzle2d_paste_operations_on};
+#[allow(unused_imports)]
+use crate::editor::puzzle2d::commands::set_active_example;
+#[allow(unused_imports)]
+use crate::editor::puzzle2d::config::Puzzle2dConfigMutation;
+#[allow(unused_imports)]
+use crate::editor::puzzle2d::modes::edit;
+#[allow(unused_imports)]
+use crate::editor::puzzle2d::modes::edit::tools::fill;
+#[allow(unused_imports)]
+use crate::editor::puzzle2d::precompute::fill as fill_run;
+#[allow(unused_imports)]
+use crate::editor::puzzle2d::modes::edit::windows::overview::utilities::{area_brush as area_brush_utility, select as select_utility};
+#[allow(unused_imports)]
+use crate::editor::puzzle2d::modes::edit::windows::{detail, selection};
+#[allow(unused_imports)]
+use crate::editor::puzzle2d::panels::{artifact, catalogue, inspection, settings};
+#[allow(unused_imports)]
+use crate::editor::puzzle2d::presence::{Puzzle2dPresence, Puzzle2dPresenceMutation};
+#[allow(unused_imports)]
+use crate::editor::puzzle2d::window;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
+#[allow(unused_imports)]
+use semio_framework::kernel::UiDirtyScope;
+#[allow(unused_imports)]
+use semio_framework_plugin::kernel::{ClipboardError, ClipboardFragment, PastePlacement};
+#[allow(unused_imports)]
+use semio_framework_plugin::ActionArgDef;
+#[allow(unused_imports)]
+use semio_framework_plugin::ActionArgOption;
+#[allow(unused_imports)]
+use semio_framework_plugin::ActionDefinition;
+#[allow(unused_imports)]
+use semio_framework_plugin::ActionKind;
+#[allow(unused_imports)]
+use semio_framework_plugin::ActionRef;
+#[allow(unused_imports)]
+use semio_framework_plugin::AppIo;
+#[allow(unused_imports)]
+use semio_framework_plugin::ArtifactEditor;
+#[allow(unused_imports)]
+use semio_framework_plugin::ArtifactPresentation;
+#[allow(unused_imports)]
+use semio_framework_plugin::ArtifactToolFactoryRegistry;
+#[allow(unused_imports)]
+use semio_framework_plugin::ArtifactToolPublicationContract;
+#[allow(unused_imports)]
+use semio_framework_plugin::ArtifactToolPublicationLane;
+#[allow(unused_imports)]
+use semio_framework_plugin::ArtifactView;
+#[allow(unused_imports)]
+use semio_framework_plugin::ConfigView;
+#[allow(unused_imports)]
+use semio_framework_artifact_reference::Dialect;
+#[allow(unused_imports)]
+use semio_framework_plugin::DialogDefinition;
+#[allow(unused_imports)]
+use semio_framework_plugin::DraftView;
+#[allow(unused_imports)]
+use semio_framework_plugin::Editor;
+#[allow(unused_imports)]
+use semio_framework_plugin::EditorApp;
+#[allow(unused_imports)]
+use semio_framework_plugin::Emit;
+#[allow(unused_imports)]
+use semio_framework_plugin::Fault;
+#[allow(unused_imports)]
+use semio_framework_plugin::HierarchyProvider;
+#[allow(unused_imports)]
+use semio_framework_plugin::InteractionRef;
+#[allow(unused_imports)]
+use semio_framework_plugin::InteractionVerb;
+#[allow(unused_imports)]
+use semio_framework_plugin::InteractiveJobClassification;
+#[allow(unused_imports)]
+use semio_framework_ui_locale::Label;
+#[allow(unused_imports)]
+use semio_framework_ui_locale::LocalizedLabel;
+#[allow(unused_imports)]
+use semio_framework_plugin::MediaClass;
+#[allow(unused_imports)]
+use semio_framework_plugin::MediaForm;
+#[allow(unused_imports)]
+use semio_framework_plugin::MediaPortDirection;
+#[allow(unused_imports)]
+use semio_framework_plugin::MediaPortSpec;
+#[allow(unused_imports)]
+use semio_framework_plugin::MediaType;
+#[allow(unused_imports)]
+use semio_framework_plugin::NoDraft;
+#[allow(unused_imports)]
+use semio_framework_plugin::NoDraftMutation;
+#[allow(unused_imports)]
+use semio_framework_plugin::PortMultiplicity;
+#[allow(unused_imports)]
+use semio_framework_plugin::ToolFactoryKey;
+#[allow(unused_imports)]
+use semio_framework_plugin::ToolJobFactory;
+#[allow(unused_imports)]
+use semio_framework_plugin::ToolJobFactoryError;
+#[allow(unused_imports)]
+use semio_framework_plugin::WindowEngagement;
+#[allow(unused_imports)]
+use semio_framework_plugin::WindowMeasure;
+#[allow(unused_imports)]
+use semio_framework_plugin::app::InteractionView;
+#[allow(unused_imports)]
+use std::collections::{HashMap, HashSet};
+#[allow(unused_imports)]
+use semio_framework_2d::compute::EngineHandles;
+#[allow(unused_imports)]
+use semio_framework_plugin::{ArtifactReservedToolInput, ArtifactReservedToolJob, ArtifactReservedToolJobRequest};
+#[allow(unused_imports)]
+use crate::editor::puzzle2d::kit::*;
+#[allow(unused_imports)]
+use crate::editor::puzzle2d::retained::*;
+#[allow(unused_imports)]
+use crate::editor::puzzle2d::session::*;
+use crate::editor::puzzle2d::*;
 use crate::editor::puzzle2d::engine::board_host::puzzle_board_host;
-use crate::editor::puzzle2d::engine::board_host::unit_tests::context::close_board_host;
-use crate::editor::puzzle2d::unit_tests::context::*;
+use crate::editor::puzzle2d::engine::board_host::testkit::close_board_host;
+use crate::editor::puzzle2d::testkit::*;
 use semio_framework::kernel::HistoryEntry;
 use semio_framework_plugin::InvocationResult;
 
@@ -25,7 +159,7 @@ fn painted_host(app: &Puzzle2dApp) -> BoardHost {
 }
 
 /// 🎨️ A board host painted from `snapshot` — the document a window paints, a time-travel preview included.
-pub(super) fn painted_host_of(snapshot: &Value) -> BoardHost {
+pub(crate) fn painted_host_of(snapshot: &Value) -> BoardHost {
     let mut host = puzzle_board_host();
     host.scene.set_size(800, 600, 1.0);
     assert!({let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(64*1024*1024,&mut accepted);semio_framework_os_infinite::board::io::text::snapshot_assembly::load_board_snapshot_json(&mut host.scene, &mut host.focus, &mut host.style, &mut host.outbox,&snapshot.to_string(),&mut control)}, "the engine paints the document");
@@ -36,27 +170,27 @@ pub(super) fn painted_host_of(snapshot: &Value) -> BoardHost {
 }
 
 /// 📬️ The rows a host dispatches after draining: every transient row dropped (live-preview frames, chrome, hover).
-pub(super) fn dispatched_rows(host: &mut BoardHost) -> Vec<Value> {
+pub(crate) fn dispatched_rows(host: &mut BoardHost) -> Vec<Value> {
     let rows: Vec<Value> = semio_framework_pack_json::from_json_str(&drain_board_events_json(host), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("drained rows parse");
     rows.into_iter().filter(|row| !matches!(row["name"].as_str(), Some("nodeMove" | "transformPreview" | "preselect" | "hover" | "brushPreview" | "linkCompatibleNodes" | "linkTargetRing"))).collect()
 }
 
-pub(super) fn press(host: &mut BoardHost, x: f64, y: f64) {
+pub(crate) fn press(host: &mut BoardHost, x: f64, y: f64) {
     let screen = host.scene.world_to_screen(Point::new(x, y));
     host.pointer_down_screen(screen.x, screen.y, 0, false, false);
 }
 
-pub(super) fn move_to(host: &mut BoardHost, x: f64, y: f64) {
+pub(crate) fn move_to(host: &mut BoardHost, x: f64, y: f64) {
     let screen = host.scene.world_to_screen(Point::new(x, y));
     host.pointer_move_screen(screen.x, screen.y, false, false, false);
 }
 
-pub(super) fn release(host: &mut BoardHost, x: f64, y: f64) {
+pub(crate) fn release(host: &mut BoardHost, x: f64, y: f64) {
     let screen = host.scene.world_to_screen(Point::new(x, y));
     host.pointer_up_screen(screen.x, screen.y, false, false, false);
 }
 
-pub(super) fn flush(app: &mut Puzzle2dApp, rows: &[Value]) -> InvocationResult {
+pub(crate) fn flush(app: &mut Puzzle2dApp, rows: &[Value]) -> InvocationResult {
     dispatch(app, "applyBoardEvents", Some(&json!({ "eventsJson": semio_framework_pack_json::to_json_string(rows) })), Some(crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID)).expect("applyBoardEvents")
 }
 
@@ -71,11 +205,11 @@ fn edit_rows(result: &InvocationResult) -> Vec<HistoryEntry> {
     result.history_patch.as_ref().map(|patch| patch.upserts.iter().filter(|entry| entry.applied && !entry.op_lines.is_empty()).cloned().collect()).unwrap_or_default()
 }
 
-pub(super) fn english(entry: &HistoryEntry) -> String {
+pub(crate) fn english(entry: &HistoryEntry) -> String {
     entry.label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En).to_string()
 }
 
-pub(super) fn german(entry: &HistoryEntry) -> String {
+pub(crate) fn german(entry: &HistoryEntry) -> String {
     entry.label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::De).to_string()
 }
 
@@ -103,7 +237,7 @@ fn one_board_drag_is_one_edit_one_row_and_one_transaction() {
     assert!(transaction.id.starts_with("tx-") && transaction.tool == "s.puzzle.puzzle2d@1/*#editor#select", "the select tool authored it: {transaction:?}");
     assert!(rows[0].op_lines.iter().any(|line| line.starts_with("drag-selection") && line.contains("left") && line.contains("80") && line.contains("40")), "the op is the parametric leaf: {:?}", rows[0].op_lines);
     assert_eq!(english(&rows[0]), "Drag 1 item by (80, 40)", "the row is labelled from the leaf");
-    let inspector = render_body(&mut app, inspection::PUZZLE2D_PLAY_BODY_PROPERTIES);
+    let inspector = render_body(&mut app, crate::editor::puzzle2d::config::PUZZLE2D_PLAY_BODY_PROPERTIES);
     assert!(inspector.contains("left"), "the gesture's selection landed in the same dispatch");
     close_board_host(host);
     close_app(&mut app);
@@ -434,7 +568,7 @@ fn a_selection_with_repeated_ids_drags_each_target_once() {
     let command = Puzzle2dCommand::from_action("translateSelection", Some(json!({ "dx": 5.0, "dy": 0.0 })), Some(crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID.to_string()));
     let selection = protocol::DomainSelection { granularity: PUZZLE2D_GRANULARITY_NODE.into(), ids: vec!["left".to_string(), "left".to_string(), "left".to_string()], anchor_id: None };
     let view = window_view(crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID, crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID);
-    let (emit, _) = puzzle2d_dispatch_emit(&command, &snapshot, &Puzzle2dConfig::default(), &Puzzle2dWindowConfig::default(), &Puzzle2dWindowTransient::default(), crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID, Some(&view), select_utility::UTILITY_ID, &selection, "seed-3", "rev-1", &semio_framework_plugin::app::GestureSlot::detached(), None).expect("emit");
+    let (emit, _) = puzzle2d_dispatch_emit(&command, &snapshot, &Puzzle2dConfig::default(), &Puzzle2dWindowConfig::default(), &Puzzle2dWindowTransient::default(), crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID, Some(&view), crate::editor::puzzle2d::config::PUZZLE2D_SELECT_UTILITY_ID, &selection, "seed-3", "rev-1", &semio_framework_plugin::app::GestureSlot::detached(), None).expect("emit");
     assert_eq!(emit.artifact_mutations, vec![crate::standards::v1::subsets::any::schema::mutations::drag_selection(["left".into()].into_iter().collect(), 5.0, 0.0)]);
     assert!(emit.transaction.is_some(), "one transaction");
 }
@@ -457,7 +591,7 @@ fn the_board_emit_carries_the_transaction_and_the_parametric_leaf() {
     .to_string();
     let command = Puzzle2dCommand::from_action("applyBoardEvents", Some(json!({ "eventsJson": events })), None);
     let view = window_view(crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID, crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID);
-    let emit_for = |seed: &str| puzzle2d_dispatch_emit(&command, &snapshot, &Puzzle2dConfig::default(), &Puzzle2dWindowConfig::default(), &Puzzle2dWindowTransient::default(), crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID, Some(&view), select_utility::UTILITY_ID, &protocol::DomainSelection::default(), seed, "rev-1", &semio_framework_plugin::app::GestureSlot::detached(), None).expect("emit").0;
+    let emit_for = |seed: &str| puzzle2d_dispatch_emit(&command, &snapshot, &Puzzle2dConfig::default(), &Puzzle2dWindowConfig::default(), &Puzzle2dWindowTransient::default(), crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID, Some(&view), crate::editor::puzzle2d::config::PUZZLE2D_SELECT_UTILITY_ID, &protocol::DomainSelection::default(), seed, "rev-1", &semio_framework_plugin::app::GestureSlot::detached(), None).expect("emit").0;
     let emit = emit_for("seed-7");
     let transaction = emit.transaction.clone().expect("the commit carries its transaction");
     assert!(transaction.id.starts_with("tx-") && transaction.tool == "s.puzzle.puzzle2d@1/*#editor#select", "{transaction:?}");

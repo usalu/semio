@@ -29,26 +29,19 @@ use crate::schema::snapshot::{CadBlock, CadEntity, CadEntityRecord, CadLayer, Se
 use protocol::{Mutation};
 
 //#region 🔖️Mutations
-#[path = "🧱add-block/🦀️.rs"]
-pub mod add_block;
-#[path = "🧩add-block-entity/🦀️.rs"]
-pub mod add_block_entity;
-#[path = "🔷add-entity/🦀️.rs"]
-pub mod add_entity;
-#[path = "🗂️add-layer/🦀️.rs"]
-pub mod add_layer;
-#[path = "🚫remove-block/🦀️.rs"]
-pub mod remove_block;
-#[path = "✂️remove-block-entity/🦀️.rs"]
-pub mod remove_block_entity;
-#[path = "🗑️remove-entity/🦀️.rs"]
-pub mod remove_entity;
-#[path = "🧹remove-layer/🦀️.rs"]
-pub mod remove_layer;
-#[path = "📍set-block-base-point/🦀️.rs"]
-pub mod set_block_base_point;
-#[path = "🔺set-block-entity-geometry/🦀️.rs"]
-pub mod set_block_entity_geometry;
+pub use semio_s_artifact_stdio_semio_cad_examples::schema::mutations::support;
+#[allow(unused_imports)]
+use support::{find_block, find_block_entity, find_entity, find_layer};
+pub use semio_s_artifact_stdio_semio_cad_mut_family::schema::mutations::add_block;
+pub use semio_s_artifact_stdio_semio_cad_mut_family::schema::mutations::add_block_entity;
+pub use semio_s_artifact_stdio_semio_cad_mut_family::schema::mutations::add_entity;
+pub use semio_s_artifact_stdio_semio_cad_mut_family::schema::mutations::add_layer;
+pub use semio_s_artifact_stdio_semio_cad_mut_family::schema::mutations::remove_block;
+pub use semio_s_artifact_stdio_semio_cad_mut_family::schema::mutations::remove_block_entity;
+pub use semio_s_artifact_stdio_semio_cad_mut_family::schema::mutations::remove_entity;
+pub use semio_s_artifact_stdio_semio_cad_mut_family::schema::mutations::remove_layer;
+pub use semio_s_artifact_stdio_semio_cad_examples::schema::mutations::set_block_base_point;
+pub use semio_s_artifact_stdio_semio_cad_mut_family::schema::mutations::set_block_entity_geometry;
 #[path = "🧷️set-block-entity-layer/🦀️.rs"]
 pub mod set_block_entity_layer;
 #[path = "📐set-entity-geometry/🦀️.rs"]
@@ -61,8 +54,6 @@ pub mod set_layer;
 /// document; `NoMutation` was dropped: `#[derive(dsl::Mutations)]` requires every variant to wrap
 /// exactly one leaf payload and a unit variant wraps none (same consequence tiff's baseline
 /// migration reached — see `🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧱️baseline/🧬️schema/🧬️mutations/🦀️.rs`).
-//#region 🔖️Leaves
-//#endregion 🔖️Leaves
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]
 #[canonical_json(owner = semio_framework_pack_json)]
@@ -135,50 +126,17 @@ pub fn inverse_semio_cad_mutation(mutation: &SemioCadMutation, base: &SemioCadSn
 
 
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn find_layer<'a>(base: &'a SemioCadSnapshot, name: &str) -> Option<&'a CadLayer> {
-    base.layers.iter().find(|l| l.name == name)
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn find_block<'a>(base: &'a SemioCadSnapshot, name: &str) -> Option<&'a CadBlock> {
-    base.blocks.iter().find(|b| b.name == name)
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn find_entity<'a>(base: &'a SemioCadSnapshot, handle: &str) -> Option<&'a CadEntityRecord> {
-    base.entities.iter().find(|e| e.handle == handle)
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn find_block_entity<'a>(base: &'a SemioCadSnapshot, block_name: &str, handle: &str) -> Option<&'a CadEntityRecord> {
-    find_block(base, block_name)?.entities.iter().find(|e| e.handle == handle)
-}
 //#endregion 🔖️MutationTrait
 
-//#region OpCodecs
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//#endregion OpCodecs
 
 //#region 🔖️Demo
 /// 🌱 Shared fixture + representative `SemioCadMutation` cases (one per variant, plus extra
 /// `SetEntityGeometry`/`SetBlockEntityGeometry` cases exercising several of the 9 `CadEntity`
 /// kinds) — single source of truth for this facet's own tests AND
 /// `ops_grammar_conformance_law`/`protocol_walk_law` in `🎹️composer/🦀️.rs`.
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn fixture() -> SemioCadSnapshot {
+pub fn fixture() -> SemioCadSnapshot {
     SemioCadSnapshot {
         schema: crate::schema::snapshot::STDIO_SEMIOCAD_DOCUMENT_SCHEMA.into(),
         layers: vec![CadLayer { name: "0".into(), color_index: 7, line_type: "CONTINUOUS".into(), visible: true }, CadLayer { name: "dim".into(), color_index: 7, line_type: "CONTINUOUS".into(), visible: true }],
@@ -191,9 +149,9 @@ fn fixture() -> SemioCadSnapshot {
     }
 }
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn demo_mutation_cases() -> Vec<SemioCadMutation> {
+pub fn demo_mutation_cases() -> Vec<SemioCadMutation> {
     let _base = fixture();
     vec![
         SemioCadMutation::AddLayer(add_layer::AddLayer { layer: CadLayer { name: "fresh".into(), color_index: 3, line_type: "CONTINUOUS".into(), visible: true }, at: None }),
@@ -225,9 +183,7 @@ pub(crate) fn demo_mutation_cases() -> Vec<SemioCadMutation> {
 //#endregion 🔖️Demo
 
 //#region 🔖️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🔖️Tests
 
 #[cfg(test)]

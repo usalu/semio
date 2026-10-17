@@ -89,10 +89,10 @@ fn dispatch_event_retained_capacity(event:&ui_render::DispatchEvent)->usize{
 }
 
 /// 🧾️ Carries a renderer-local receipt beside the unchanged domain action.
-struct FrameActionEnvelope {
-    descriptor: ActionDescriptor,
-    receipt: Option<ui_wgpu::wgpu::ActionQueueReceipt>,
-    cancelled: bool,
+pub struct FrameActionEnvelope {
+    pub descriptor: ActionDescriptor,
+    pub receipt: Option<ui_wgpu::wgpu::ActionQueueReceipt>,
+    pub cancelled: bool,
 }
 
 /// 🧾️ Routes a renderer-local completion to the exact owner that admitted it.

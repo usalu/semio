@@ -13,8 +13,8 @@ test("build mode admission agrees with the independent schema validator", () => 
   const oracle = new Ajv({ strict: true }).compile(schema);
   for (const row of fixture.modes) {
     expect(oracle(row.mode)).toBe(true);
-    expect(readBuildMode(row.mode)).toBe(row.mode);
-    expect(buildModePolicy(readBuildMode(row.mode))).toEqual(row.policy);
+    expect<typeof row.mode>(readBuildMode(row.mode)).toBe(row.mode);
+    expect<typeof row.policy>(buildModePolicy(readBuildMode(row.mode))).toEqual(row.policy);
   }
   for (const value of [...fixture.invalid, undefined]) {
     expect(oracle(value)).toBe(false);
@@ -75,5 +75,4 @@ test("current owned build vocabulary revisions preserve immutable semantic cache
     (revisions as string[][]).push(value);
   }
   expect(revisions[0]).toEqual(fixture.enumRevisions[0]);expect(revisions[1]).toEqual(fixture.enumRevisions[1]);
-  console.log("[DEBUG] Actual TypeScript-transpiled producer observes current owned schema-service revisions; independent Node JSON/Ajv agree; earlier immutable value retained");
 });

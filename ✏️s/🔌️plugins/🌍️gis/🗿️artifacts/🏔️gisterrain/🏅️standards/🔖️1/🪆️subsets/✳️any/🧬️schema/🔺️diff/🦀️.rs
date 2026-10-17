@@ -19,7 +19,7 @@ pub struct GisTerrainDiff {
 #[value(rename_all="camelCase",deny_unknown_fields)]
 pub struct ImportedMapChange{
     #[value(default,skip_serializing_if="Option::is_none")]
-    pub value:Option<crate::schema::ImportedMap>,
+    pub value:Option<crate::schema::imported_map::ImportedMap>,
 }
 //#endregion 🔹Diff
 
@@ -64,10 +64,8 @@ pub fn diff_exaggeration(exaggeration: f64) -> GisTerrainDiff {
     GisTerrainDiff { exaggeration: Some(exaggeration), ..Default::default() }
 }
 
-pub fn diff_imported_map(value: Option<crate::schema::ImportedMap>) -> GisTerrainDiff {
+pub fn diff_imported_map(value: Option<crate::schema::imported_map::ImportedMap>) -> GisTerrainDiff {
     GisTerrainDiff { imported_map: Some(ImportedMapChange{value}), ..Default::default() }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

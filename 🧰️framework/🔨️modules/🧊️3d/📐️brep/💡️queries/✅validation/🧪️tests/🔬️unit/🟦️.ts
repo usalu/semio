@@ -16,7 +16,6 @@ test("original same-parameter samples retain bounded scratch and independent cur
  expect(worst.deviation).toBeCloseTo(probe.maximumDeviation,12);expect(worst.s).toBe(probe.worstParameter);
  expect(samples.length).toBeLessThanOrEqual(law.maximumSamples);expect(law.unsupportedSources).toEqual(["NurbsSurface","NurbsCurve2","NurbsCurve3"]);
  const source=readFileSync(join(import.meta.dir,"../../🎟️loop/🦀️.rs"),"utf8");expect(source.includes("self.same_parameter_demands(body)")).toBe(true);
- console.log(`[DEBUG] independent Three original same-parameter samples=${samples.length} worst=${worst.deviation} scratchLimit=${law.maximumSamples}; spline source evaluator remains explicitly unfunded`);
 });
 
 test("cold validation neutral tetrahedron agrees with independent topology and volume", () => {
@@ -65,7 +64,6 @@ test("cold validation neutral tetrahedron agrees with independent topology and v
   expect(worst.s).toBe(probe.worstParameter);
   expect(samples - (fixture.budget.sameParameterBaseSamples + 1) + deviations.length).toBe(probe.totalBodySamples);
   geometry.dispose();
-  console.log(`[DEBUG] independent cold validation edges=${uses.size} faces=${indices.count / 3} volume=${volume} samples=${samples} maximumDeviation=${maximumDeviation} adaptiveSamples=${deviations.length} adaptiveDeviation=${worst.deviation} adaptiveWorst=${worst.s}`);
 });
 
 test("original retained validation planning separates reserve and entity currencies", () => {
@@ -98,7 +96,6 @@ test("original retained validation planning separates reserve and entity currenc
   expect(law.metadataCopyBytes).toBe(0);
   expect(law.deniedAxes).toEqual(["items", "copy", "capacity", "release", "depth"]);
   geometry.dispose();
-  console.log(`[DEBUG] independent retained validation planning edges=${edges.size} faces=${index.count / 3} reserveCopy=0 entityCopy=${law.entityCopyBytes}`);
 });
 
 
@@ -117,7 +114,7 @@ test("original retained validation loops keep original neighbor order and indepe
   expect(issues).toEqual([{entity:broken.entity,code:broken.code,message:broken.message}]);
   for(const body of fixture.retainedLoops.bodyBytes){let text="";for(const scalar of broken.message){if(body>0)text+=scalar;}expect(text).toBe(body===0?"":broken.message);}
   for(const count of fixture.retainedLoops.sourceTetrahedra)expect(loops.length*3*count).toBe(fixture.expected.faces*3*count);
-  geometry.dispose();console.log(`[DEBUG] independent original loop count=${loops.length} coedgeBytes=8 diagnostic=${issues[0].message}`);
+  geometry.dispose();
 });
 
 
@@ -133,5 +130,4 @@ test("original topology diagnostics retain complete UTF8 scalar boundaries",()=>
   expect(new TextDecoder("utf8",{fatal:true}).decode(bytes)).toBe(output);expect(output).toBe(row.message);
  }
  expect([...law.missingPcurve.message].some((scalar:string)=>new TextEncoder().encode(scalar).length===3)).toBe(true);
- console.log("[DEBUG] independent UTF8 original topology diagnostics preserve one/three-byte scalar atom and exact text");
 });

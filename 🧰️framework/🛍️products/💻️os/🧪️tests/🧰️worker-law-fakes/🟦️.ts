@@ -16,12 +16,12 @@ type DirectoryStreamMessage = import("@semio-tech/framework/directory/schema").D
 type DocumentExecutionTargetLeaseFieldsV1 = import("@semio-tech/framework/directory/schema").DocumentExecutionTargetLeaseFieldsV1;
 type DocumentOpenIntentV1 = import("@semio-tech/framework/directory/schema").DocumentOpenIntentV1;
 type DocumentOpenPlanV1 = import("@semio-tech/framework/directory/schema").DocumentOpenPlanV1;
-type MutationEnvelope = import("../../../../🔨️modules/📡️replication/🟦️.ts").MutationEnvelope;
+type MutationEnvelope = import("@semio-tech/framework-replication").MutationEnvelope;
 type PersistenceBinding = import("../../🟦️.ts").PersistenceBinding;
-type ServerFrame = import("../../../../🔨️modules/📡️replication/🟦️.ts").ServerFrame;
+type ServerFrame = import("@semio-tech/framework-replication").ServerFrame;
 type DocumentSocketGrantReceiptV1 = import("../../🟦️.ts").DocumentSocketGrantReceiptV1;
-type WireArtifactBootstrap = import("../../../../🔨️modules/📡️replication/🟦️.ts").WireArtifactBootstrap;
-type WireFrontierSummary = import("../../../../🔨️modules/📡️replication/🟦️.ts").WireFrontierSummary;
+type WireArtifactBootstrap = import("@semio-tech/framework-replication").WireArtifactBootstrap;
+type WireFrontierSummary = import("@semio-tech/framework-replication").WireFrontierSummary;
 
 export type ArtifactBootstrapFixture = Readonly<{
   artifact: Readonly<{ schema: string; packSchemaHash: string; requiredTailFrontier: Readonly<{ documentId: string; headEditOrdinal: number; headEditId: string; lastCommitSeq: number; chainHash: string }> }>;
@@ -66,6 +66,8 @@ export type ExecutionTargetHarness = {
 /** 🎫️ One well-formed session capability, exactly the shape `POST /auth/sessions` mints. */
 export const WORKER_LAW_CAPABILITY = `session.v1.${"c".repeat(32)}.${"4".repeat(64)}`;
 export const WORKER_LAW_CAPABILITY_TWO = `session.v1.${"d".repeat(32)}.${"5".repeat(64)}`;
+/** 🪪️ The retained-clone grant every test actor identity opens its document under. */
+export const WORKER_LAW_ACTOR_IDENTITY_GRANT: ArtifactActorConfig["actorIdentityGrant"] = { maximumItems: 1024, maximumCopyBytes: 65536, maximumCapacityBytes: 65536, maximumReleaseBytes: 65536, maximumDepth: 64 };
 export function sampleEnvelope(): MutationEnvelope {
   return {
     id: "edit-1",
@@ -94,6 +96,7 @@ export function fixtureConfig(fixture: ArtifactBootstrapFixture): ArtifactActorC
     bindings: [],
     actor: "actor-bootstrap-test",
     watchExternal: false,
+    actorIdentityGrant: WORKER_LAW_ACTOR_IDENTITY_GRANT,
   };
 }
 export function fixtureRequiredFrontier(fixture: ArtifactBootstrapFixture): WireFrontierSummary {
@@ -233,6 +236,7 @@ function create(vitest: Vitest, dependencies: BackboneWorkerTestDependencies, so
           inverse: { schema: envelope.inverse.inverseDiff.schemaId, payload: encodePackValue(envelope.inverse.inverseDiff.payload) },
           timestamp,
           transaction: null,
+          verb: null, line: null,
         }]),
       });
     }
@@ -334,7 +338,7 @@ function create(vitest: Vitest, dependencies: BackboneWorkerTestDependencies, so
       testSeams.documentSocketGrantTestIssue = null;
       testSeams.executionTargetStatusObserver = (status) => statuses.push(status);
       await acceptCurrentTestBrowserSessionAuthority("a".repeat(64));
-      openArtifact({ documentId: fixture.intent.scope.documentId, schema: fixture.plan.artifact.schema, bindings: [], actor: "caller-selected-actor" });
+      openArtifact({ documentId: fixture.intent.scope.documentId, schema: fixture.plan.artifact.schema, bindings: [], actor: "caller-selected-actor", actorIdentityGrant: WORKER_LAW_ACTOR_IDENTITY_GRANT });
       const state = artifactState(fixture.intent.scope.documentId)!;
       state.openClientInstanceId = fixture.intent.clientInstanceId;
       // 🪪️ The caller declares only which surface it wants: nothing forgeable is supplied, so the

@@ -4,7 +4,7 @@
 
 use crate::editor::bim::entities::property_value;
 use crate::editor::bim::kit::fault;
-use crate::editor::bim::BimDispatchCtx;
+use crate::editor::bim::dispatch_context::BimDispatchCtx;
 use crate::standards::v1::subsets::any::schema::mutations::set_property_template::SetPropertyTemplate;
 use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::{ModelSnapshot, PropertyDef, PropertyKind}, diff::patches::PropertyTemplatePatch};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};

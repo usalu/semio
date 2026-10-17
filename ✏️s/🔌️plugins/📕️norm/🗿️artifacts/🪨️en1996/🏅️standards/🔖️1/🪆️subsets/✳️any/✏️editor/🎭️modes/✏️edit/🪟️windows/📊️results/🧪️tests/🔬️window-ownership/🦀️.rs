@@ -1,4 +1,5 @@
 use crate::modes::edit::windows::results::*;
+use semio_framework_test_fixtures::fixture_text;
 use semio_s_plugin_norm_results_config::{addressed, ChangeSelectedCheckIndex, NormResultsWindowConfig, NormResultsWindowConfigMutation};
 use protocol::{Mutation, OpBinary, OpText};
 use store::{pack::snapshot::ArtifactDsl, pack::snapshot::ArtifactPack};
@@ -35,7 +36,7 @@ impl<A: semio_framework_plugin::PluginApp> Drop for ClosingFixtureApp<A> {
 
 #[test]
 fn norm_results_window_ownership_mutations_match_neutral_fixture_and_codecs() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../../../../../🪟️results/🎚️config/🧪️tests/🧫️fixtures/🔬️window-ownership/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../../../../🪟️results/🎚️config/🧪️tests/🧫️fixtures/🔬️window-ownership/🔣️.json")).unwrap();
     let base: NormResultsWindowConfig = semio_framework_pack_json::from_json_str(&fixture["baseConfig"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let mut windows = std::collections::BTreeMap::<String, NormResultsWindowConfig>::new();
     for row in fixture["windowInstances"].as_array().unwrap() {

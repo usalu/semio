@@ -1,6 +1,7 @@
 //#region 📝️Std1StrictSetValue
 //! 📝️ Replaces the Std1Strict fixture's value with an authored i32.
-use super::{Std1StrictDiff, Std1StrictMutation, Std1StrictSnapshot};
+use super::{Std1StrictDiff, Std1StrictSnapshot};
+use crate::declaration_fixture_mutations::std1_strict::Std1StrictMutation;
 use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 
@@ -29,7 +30,8 @@ impl protocol::MutationKind<Std1StrictSnapshot, Std1StrictMutation> for SetValue
     }
 }
 
+#[doc(hidden)]
 #[cfg(test)]
 #[path = "../../../../../../🧪️tests/🔒️standard-one-strict-set-value-unit/🦀️.rs"]
-mod tests;
+pub mod tests;
 //#endregion 📝️Std1StrictSetValue

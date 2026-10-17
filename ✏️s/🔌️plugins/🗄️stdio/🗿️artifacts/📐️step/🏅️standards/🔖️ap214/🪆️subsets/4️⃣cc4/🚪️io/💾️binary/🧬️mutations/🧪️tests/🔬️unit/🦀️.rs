@@ -27,6 +27,5 @@ fn class_native_committed_intents_have_canonical_codecs_and_exact_semantics() {
         let mut restored = applied;
         for inverse in mutation.inverse(&before).unwrap() { restored = protocol::apply_diff(inverse.diff(&restored).diff(), &restored).unwrap(); }
         assert_eq!(restored.to_value(), before.to_value());
-        eprintln!("[DEBUG] STEP CC4 {} retained real class wire, typed codec, full semantic change and exact inverse", mutation.kind());
     }
 }

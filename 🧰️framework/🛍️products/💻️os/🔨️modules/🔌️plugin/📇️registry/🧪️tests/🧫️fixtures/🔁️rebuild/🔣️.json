@@ -10,7 +10,7 @@
               "id": "inputs",
               "stage": "inputs",
               "command": [
-                "nx",
+                "repo",
                 "run",
                 "owner:inputs"
               ]
@@ -19,7 +19,7 @@
               "id": "describe",
               "stage": "descriptors",
               "command": [
-                "nx",
+                "repo",
                 "run",
                 "owner:describe"
               ]
@@ -28,7 +28,7 @@
               "id": "check",
               "stage": "registry",
               "command": [
-                "nx",
+                "repo",
                 "run",
                 "owner:check"
               ]
@@ -53,7 +53,7 @@
               "id": "inputs",
               "stage": "inputs",
               "command": [
-                "nx",
+                "repo",
                 "run",
                 "owner:inputs"
               ]
@@ -62,7 +62,7 @@
               "id": "describe",
               "stage": "descriptors",
               "command": [
-                "nx",
+                "repo",
                 "run",
                 "owner:describe"
               ]
@@ -71,7 +71,7 @@
               "id": "check",
               "stage": "registry",
               "command": [
-                "nx",
+                "repo",
                 "run",
                 "owner:check"
               ]
@@ -86,7 +86,7 @@
               "id": "guest",
               "stage": "guests",
               "command": [
-                "nx",
+                "repo",
                 "run",
                 "owner:guest"
               ]
@@ -101,7 +101,7 @@
               "id": "catalog",
               "stage": "catalog",
               "command": [
-                "nx",
+                "repo",
                 "run",
                 "owner:catalog"
               ]
@@ -128,7 +128,7 @@
               "id": "inputs",
               "stage": "inputs",
               "command": [
-                "nx",
+                "repo",
                 "run",
                 "owner:inputs"
               ]
@@ -137,7 +137,7 @@
               "id": "describe",
               "stage": "descriptors",
               "command": [
-                "nx",
+                "repo",
                 "run",
                 "owner:describe"
               ]
@@ -146,7 +146,7 @@
               "id": "check",
               "stage": "registry",
               "command": [
-                "nx",
+                "repo",
                 "run",
                 "owner:check"
               ]
@@ -161,7 +161,7 @@
               "id": "catalog",
               "stage": "catalog",
               "command": [
-                "nx",
+                "repo",
                 "run",
                 "owner:catalog"
               ]
@@ -187,7 +187,7 @@
               "id": "inputs",
               "stage": "inputs",
               "command": [
-                "nx",
+                "repo",
                 "run",
                 "owner:inputs"
               ]
@@ -196,7 +196,7 @@
               "id": "describe",
               "stage": "descriptors",
               "command": [
-                "nx",
+                "repo",
                 "run",
                 "owner:describe"
               ]
@@ -205,7 +205,7 @@
               "id": "check",
               "stage": "registry",
               "command": [
-                "nx",
+                "repo",
                 "run",
                 "owner:check"
               ]
@@ -220,7 +220,7 @@
               "id": "guest",
               "stage": "guests",
               "command": [
-                "nx",
+                "repo",
                 "run",
                 "owner:guest"
               ]

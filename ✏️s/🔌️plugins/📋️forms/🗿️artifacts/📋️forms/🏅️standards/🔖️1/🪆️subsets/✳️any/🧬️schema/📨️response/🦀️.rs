@@ -33,15 +33,15 @@ impl FormsResponse {
 
 /// ✅️ Validates all visible answers before atomically admitting an immutable response.
 pub fn prepare_response(
-    definition: &super::definition::FormsDefinition,
+    definition: &crate::schema::definition::FormsDefinition,
     values: &crate::playbook::PlaybookValues,
     id: String,
     submitted_at: u64,
     definition_version: String,
-) -> Result<FormsResponse, Vec<super::validation::FormsAnswerError>> {
-    let errors: Vec<_> = definition.steps.iter().flat_map(|step| super::step_errors(step, values)).collect();
+) -> Result<FormsResponse, Vec<crate::schema::validation::FormsAnswerError>> {
+    let errors: Vec<_> = definition.steps.iter().flat_map(|step| crate::schema::validation::step_errors(step, values)).collect();
     if !errors.is_empty() { return Err(errors); }
-    let answers = definition.steps.iter().flat_map(|step| super::visible_questions(step, values)).filter(|question| !matches!(question.kind.as_str(), "note" | "image")).map(|question| FormsAnswer {
+    let answers = definition.steps.iter().flat_map(|step| crate::playbook::visible_blocks(step, values)).filter(|question| !matches!(question.kind.as_str(), "note" | "image")).map(|question| FormsAnswer {
         question_id: question.id.clone(),
         label: question.label.clone(),
         kind: question.kind.clone(),
@@ -50,6 +50,4 @@ pub fn prepare_response(
     Ok(FormsResponse { id, submitted_at, definition_version, answers })
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️events/🦀️.rs"]
-mod tests;
+

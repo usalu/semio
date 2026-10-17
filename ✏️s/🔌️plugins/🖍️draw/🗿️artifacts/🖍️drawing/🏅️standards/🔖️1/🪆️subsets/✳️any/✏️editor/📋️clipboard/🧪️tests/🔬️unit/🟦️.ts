@@ -56,7 +56,6 @@ test("clipboard envelope admits a self-produced maximum body after exact JSON es
   const fragment={schema:"drawing.clipboard.v1",mediaType:{class:"twoD",form:"design"},dslText:text,sourceApp:"drawing.play",label:"1024 layers / Ebenen"},wire=JSON.stringify(fragment);expect(new TextEncoder().encode(wire).length).toBeLessThanOrEqual(CLIPBOARD_FRAGMENT_MAX_WIRE_BYTES);const input={fragment,anchor:"original",position:[0,0,0],parentId:"destination"};expect(new TextEncoder().encode(JSON.stringify(input)).length).toBeLessThanOrEqual(CLIPBOARD_PASTE_MAX_WIRE_BYTES);expect(JSON.parse(JSON.stringify(input)).fragment.dslText).toBe(text);
  }
  for(const text of ["😀","\\","\b","\u2028","\ud800"])expect(clipboardJsonStringBytes(text)).toBe(new TextEncoder().encode(JSON.stringify(text)).length);
- console.log("[DEBUG] Clipboard maximum self-produced body fits shared fragment and paste wire envelopes");
 });
 for(const sample of cases.placements)test(`clipboard world placement: ${sample.name}`,()=>{
  const source:ClipboardMatrix=[2,0,0,3,30,40],destination:ClipboardMatrix=[1.7,0.3,0.8,-0.5,-7,8];
@@ -86,7 +85,7 @@ test("clipboard schema rejects foreign versions and duplicate selection identiti
 });
 test("neutral image asset deltas and inverses agree with independent JSON Patch",()=>{
  const before=parseDrawingArtifact(assetBefore),after=parseDrawingArtifact(assetAfter),asset=after.assets.bitmap!;
- const delta=importImageAssetDiff(before,{assetId:"bitmap",asset});expect<unknown>(delta).toEqual(assetDiff.assets);
+ const delta=importImageAssetDiff(before,{assetId:"bitmap",asset});expect(Object.keys(delta.entries)).toEqual(Object.keys(assetDiff.assets.entries));expect<typeof assetDiff.assets.entries.bitmap>(delta.entries.bitmap!).toEqual(assetDiff.assets.entries.bitmap);
  const actual=foldImageAssetDelta(before,delta);expect(actual).toEqual(after);
  expect(jsonPatch.applyPatch(structuredClone(before),[{op:"add",path:"/assets/bitmap",value:asset}]).newDocument).toEqual(actual);
  const removal=removeImageAssetDiff(actual,{assetId:"bitmap"});expect(foldImageAssetDelta(actual,removal)).toEqual(before);

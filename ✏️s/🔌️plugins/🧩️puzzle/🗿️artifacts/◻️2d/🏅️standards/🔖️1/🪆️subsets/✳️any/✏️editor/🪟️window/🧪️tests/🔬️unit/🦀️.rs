@@ -1,4 +1,9 @@
-use super::*;
+#[allow(unused_imports)]
+use crate::editor::puzzle2d::config::Puzzle2dSuggestionMenu;
+#[allow(unused_imports)]
+use std::collections::BTreeMap;
+use crate::editor::puzzle2d::window::{puzzle2d_window_transient_preflight};
+use crate::editor::puzzle2d::window::*;
 
     fn retire_to_terminal_empty<T: semio_framework_value::retirement::RetireOwned + 'static>(owner: T) {
         let mut retirement = semio_framework_value::retirement::controlled::ControlledRetirement::new(owner).unwrap_or_else(|(error, _)| panic!("window retirement admission refused: {error:?}"));

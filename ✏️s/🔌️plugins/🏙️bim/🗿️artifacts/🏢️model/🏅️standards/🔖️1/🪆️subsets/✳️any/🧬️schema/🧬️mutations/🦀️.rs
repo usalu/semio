@@ -10,11 +10,17 @@ use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, snapshot::Mode
 #[path = "🧪️tests/🧰️kit/🦀️.rs"]
 pub mod kit;
 
+#[cfg(test)]
+#[path = "🧪️tests/🗂️fixture-cases/🦀️.rs"]
+mod fixture_cases;
+
 #[path = "🧵️elements/🦀️.rs"]
 pub mod elements;
 
 #[path = "🌊️cascade/🦀️.rs"]
 pub mod cascade;
+#[path = "🔙️cascade-restore/🦀️.rs"]
+pub mod cascade_restore;
 
 #[path = "🖍️annotating/🦀️.rs"]
 pub mod annotating;
@@ -31,8 +37,6 @@ pub mod placement;
 #[path = "🧲️wall-depth/🦀️.rs"]
 pub mod wall_depth;
 
-#[path = "🧭️option-rules/🦀️.rs"]
-pub mod option_rules;
 
 //#region 🔖️Operations
 /// 🧬️ Every variant wraps exactly one `protocol::MutationKind<ModelSnapshot, ModelMutation>` payload struct declared in the
@@ -640,12 +644,6 @@ pub mod create_grid_line;
 pub mod delete_grid_line;
 #[path = "🧭️set-grid-line/🦀️.rs"]
 pub mod set_grid_line;
-#[path = "."]
-pub mod wall_geometry {
-    #[path = "🦉️wall-geometry/🦀️.rs"]
-    mod component;
-    pub use component::*;
-}
 #[path = "〰️set-wall-axis/🦀️.rs"]
 pub mod set_wall_axis;
 #[path = "🔽️set-wall-base-offset/🦀️.rs"]
@@ -758,12 +756,6 @@ pub mod delete_schedule;
 pub mod set_element_storey;
 #[path = "🕰️set-element-phase/🦀️.rs"]
 pub mod set_element_phase;
-#[path = "."]
-pub mod modify {
-    #[path = "🧙️modify/🦀️.rs"]
-    mod component;
-    pub use component::*;
-}
 #[path = "🧷️set-wall-end-join/🦀️.rs"]
 pub mod set_wall_end_join;
 #[path = "👯️copy-elements/🦀️.rs"]

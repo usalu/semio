@@ -23,10 +23,12 @@ export async function testExtensionPackage(generated: string): Promise<void> {
     writeFileSync(join(root, `${index}.log`), result.stdout + result.stderr);
     assert.equal(result.status, 0, (result.stdout + result.stderr).slice(-2000)); archives.push(path);
   }
-  assert.equal(createHash("sha256").update(readFileSync(archives[0])).digest("hex"), createHash("sha256").update(readFileSync(archives[1])).digest("hex"));
+  const [firstArchive, secondArchive] = archives;
+  assert.ok(firstArchive && secondArchive, "Both authored VSIX archives must exist");
+  assert.equal(createHash("sha256").update(readFileSync(firstArchive)).digest("hex"), createHash("sha256").update(readFileSync(secondArchive)).digest("hex"));
   const zip = createRequire(require.resolve("@vscode/vsce/package.json"))("yauzl");
   const entries = await new Promise<{ name: string; time: number; date: number }[]>((accept, reject) => {
-    zip.open(archives[1], { lazyEntries: true }, (error: Error | null, reader: any) => {
+    zip.open(secondArchive, { lazyEntries: true }, (error: Error | null, reader: any) => {
       if (error) return reject(error);
       const rows: { name: string; time: number; date: number }[] = [];
       reader.on("error", reject); reader.on("end", () => accept(rows));

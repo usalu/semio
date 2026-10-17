@@ -5,7 +5,7 @@ import fixture from "../🧫️fixtures/🔣️.json" with {type:"json"};
 await receiveScriptProcessInvocation(process.env,async original=>{
  const control=scriptCompilerAdmissionControlV1(original,"test:unpaid-capacity-child",fixture.maximumAdmissionMilliseconds);
  let entered=false,parallelism:number|null=null,outcome="refused";
- try{const lease=await acquireCompilerCapacityLeaseV1({directory:process.argv[2]!,control,environment:process.env,requestedParallelism:fixture.requestedParallelism});try{entered=true;parallelism=lease.parallelism;outcome="granted";}finally{lease.release();}}
+ try{const lease=await acquireCompilerCapacityLeaseV1({directory:process.argv[2]!,control,environment:process.env,request:fixture.request as import("../../../🟦️.ts").CompilerCapacityRequestV1});try{entered=true;parallelism=lease.parallelism;outcome="granted";}finally{lease.release();}}
  catch{}
  process.stdout.write(JSON.stringify({version:1,entered,outcome,parallelism}));
 });

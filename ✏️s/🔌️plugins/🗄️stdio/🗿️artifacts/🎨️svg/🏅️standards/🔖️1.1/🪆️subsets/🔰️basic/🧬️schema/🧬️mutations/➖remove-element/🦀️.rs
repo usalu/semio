@@ -1,7 +1,20 @@
 //! ➖️ `remove-element` — authored as its own mutation leaf. It builds its own sparse diff and concrete
 //! inverse from its payload and reads of `base`.
 
-use super::*;
+#[allow(unused_imports)]
+use crate::schema::snapshot::NodePath;
+#[allow(unused_imports)]
+use crate::schema::diff::SvgDiff;
+#[allow(unused_imports)]
+use crate::schema::snapshot::SvgNode;
+#[allow(unused_imports)]
+use crate::SvgSnapshot;
+#[allow(unused_imports)]
+use crate::standards::v1_1::subsets::basic::schema::mutations::insert_basic_element;
+#[allow(unused_imports)]
+use crate::schema::snapshot::node_at;
+#[allow(unused_imports)]
+use crate::standards::v1_1::subsets::basic::schema::mutations::support::remove_child_diff;
 
 //#region 🔖️Payload
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree)]
@@ -12,18 +25,21 @@ pub struct RemoveElement {
     pub(crate) index: usize,
 }
 
-impl protocol::MutationKind<SvgSnapshot, SvgBasicMutation> for RemoveElement {
+impl<Op> protocol::MutationKind<SvgSnapshot, Op> for RemoveElement
+where
+    Op: protocol::Mutation<SvgSnapshot, Diff = SvgDiff> + From<RemoveElement> + From<crate::standards::v1_1::subsets::basic::schema::mutations::insert_basic_element::InsertBasicElement>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "element", kind: "remove-element", record: "RemoveElement" };
 
     fn diff(&self, _base: &SvgSnapshot) -> protocol::MutationOutcome<SvgDiff> {
         let Self { parent, index } = self;
         protocol::MutationOutcome::new(remove_child_diff(parent, *index))
     }
-    fn inverse(&self, base: &SvgSnapshot) -> Result<Vec<SvgBasicMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &SvgSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         let Self { parent, index } = self;
         Ok(match node_at(&base.doc, parent) {
             Ok(SvgNode::Element { children, .. }) => match children.get(*index) {
-                Some(node) => vec![SvgBasicMutation::InsertBasicElement(insert_basic_element::InsertBasicElement { parent: parent.clone(), index: *index, node: node.clone() })],
+                Some(node) => vec![Op::from(insert_basic_element::InsertBasicElement { parent: parent.clone(), index: *index, node: node.clone() })],
                 None => Vec::new(),
             },
             _ => Vec::new(),

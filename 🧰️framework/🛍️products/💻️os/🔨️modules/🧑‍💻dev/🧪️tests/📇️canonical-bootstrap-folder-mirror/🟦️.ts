@@ -14,18 +14,9 @@ import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/�
 
 import { decodeDocumentPackBytes, decodePackValue, DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES, DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES, encodeDocumentArchiveBytes, encodePackValue, packValueToExactJson } from "@semio-tech/framework-os";
 
-import {
-  CANONICAL_BOOTSTRAP_FOLDER_MIRROR_MAX_BYTES,
-  backboneDbHandleFor,
-  descriptorRouteDecision,
-  publishCanonicalBootstrapFolderMirror,
-  readBackbonePayload,
-  reserveCanonicalBootstrapFolderMirror,
-  retireCanonicalBootstrapFolderMirror,
-  stageCanonicalBootstrapFolderMirror,
-  writeBackbonePayload,
-  type CanonicalBootstrapFolderMirrorReserveV1,
-} from "../../🔌️vite-plugins/🟦️.ts";
+import { descriptorRouteDecision } from "../../🔌️vite-plugins/🟦️.ts";
+import { CANONICAL_BOOTSTRAP_FOLDER_MIRROR_MAX_BYTES, publishCanonicalBootstrapFolderMirror, reserveCanonicalBootstrapFolderMirror, retireCanonicalBootstrapFolderMirror, stageCanonicalBootstrapFolderMirror, type CanonicalBootstrapFolderMirrorReserveV1 } from "../../🔌️vite-plugins/📇️bootstrap-folder-mirror/🟦️.ts";
+import { backboneDbHandleFor, readBackbonePayload, writeBackbonePayload } from "../../🔌️vite-plugins/🗄️backbone-storage/🟦️.ts";
 
 const repoRoot = getWorkspaceRoot();
 
@@ -95,7 +86,7 @@ class CanonicalBootstrapFolderMirrorCheckScript extends BundleScript {
     if (!validateCanonicalPairSelection(canonicalPairCorpus.selection)) throw new Error(`canonical pair selection: ${JSON.stringify(validateCanonicalPairSelection.errors)}`);
     for (const { id, accepted, ...frontier } of canonicalPairCorpus.frontierCases)
       if (!validateCanonicalPairBaseline(frontier)) throw new Error(`canonical pair frontier ${id}: ${JSON.stringify(validateCanonicalPairBaseline.errors)}`);
-    const own = readFileSync(join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️vite-plugins/🟦️.ts"), "utf8");
+    const own = readFileSync(join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️vite-plugins/📇️bootstrap-folder-mirror/🟦️.ts"), "utf8");
     const worker = readFileSync(join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🟦️.ts"), "utf8");
     const markers = [
       "canonical_bootstrap_owner",

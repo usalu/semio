@@ -3,7 +3,7 @@
 pub const OPCODE: &str = "set-image";
 pub const TEXT_OPCODE: &str = OPCODE;
 
-use crate::standards::v1_7::subsets::base::schema::mutations::SetImage;
+use crate::standards::v1_7::subsets::base::schema::mutations::set_image::SetImage;
 
 /// 🖨️ Prints this direct payload through its schema-derived JSON representation.
 pub fn print(payload: &SetImage) -> Result<String, String> {

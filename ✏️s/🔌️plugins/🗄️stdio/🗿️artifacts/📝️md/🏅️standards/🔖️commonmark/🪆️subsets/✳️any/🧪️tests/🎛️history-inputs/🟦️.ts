@@ -29,6 +29,5 @@ test("Markdown committed inline and block intents match independent CommonMark d
   expect(ajv.compile(read(`🧬️schema/🧬️mutations/${row.leaf}/🧬️schema/🔣️.json`))(row.mutation)).toBe(true);expect(after).not.toEqual(before);
   const path=resolve(root,`🧪️tests/🧫️fixtures/🧬️history-edits/${row.id}/🦠️mutation/🔣️.json`);expect(existsSync(path)).toBe(true);
   expect(JSON.parse(readFileSync(path,"utf8"))).toEqual({mutation:row.mutation,before,after});
-  console.log("[DEBUG] Markdown committed native intent matches independent markdown-it",row.id);
  }
 });

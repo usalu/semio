@@ -1,13 +1,13 @@
 //#region 💾️ResidentAdmission
 import type { ActorInstanceLifetime } from "../../../../🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🟦️.ts";
-import { ShardClient, type ShardActorActivationLease } from "../../../../🎭️actor/📮️shard-client/🟦️.ts";
+import { ShardClient, type ShardActorActivationLease } from "@semio-tech/framework-actor/shard-client";
 import type { NumericIndexGrant } from "../../../../🌱️value/📦️packages/🟦️typescript/🗂️ordered/🔢️numeric/🟦️.ts";
 import { OwnedResidentLedger, OwnedResidentRetirement, OwnedResidentRecordDetachment, type OwnedResidentAdmission, type OwnedResidentRecord, type ResidentResources } from "@semio-tech/value-ts/resident";
 import type { RetainedUiWireStep } from "../📦️wire/🟦️.ts";
 import { OwnedUiInstance } from "../🏘️instance/🟦️.ts";
 import { OwnedUiOperationPayloadBuilder, type OwnedUiOperationInputCopied, type OwnedUiOperationInputCancelled } from "../🩹️operations/📥️wire/📃️pages/🟦️.ts";
 import { uiResidentMetadataEnvelope } from "./🪪️metadata/🟦️.ts";
-import { OwnedKernelReturnInputField, OwnedKernelReturnPayloadDetachment } from "../../../../🎠️kernel/📤️return/📦️content/📥️input/🟦️.ts";
+import { OwnedKernelReturnInputField, OwnedKernelReturnPayloadDetachment } from "@semio-tech/framework-kernel/return/content/input";
 
 export type OwnedUiResidentPoolAdmission = { readonly step: RetainedUiWireStep; readonly pool: OwnedUiResidentPool | null };
 export type OwnedUiResidentInstanceAdmission = { readonly step: RetainedUiWireStep; readonly scope: OwnedUiResidentInstance | null };

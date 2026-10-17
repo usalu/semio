@@ -42,7 +42,7 @@ pub fn definition() -> WindowKindDefinition {
 /// as a wireframe overlay (`MeshData::edge_positions`). An empty/unparseable document (no solids,
 /// or a `crate::schema::snapshot::body::body_from_snapshot` failure) yields an EMPTY mesh — never a fabricated placeholder.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn document_mesh_data(document: &SemioBrepSnapshot) -> MeshData {
+pub fn document_mesh_data(document: &SemioBrepSnapshot) -> MeshData {
     let Ok(body) = crate::schema::snapshot::body::body_from_snapshot(document) else { return MeshData::default() };
     let mesh = tessellate_document(&body, BREP_INFERENCE_DEFAULT_DEFLECTION);
     let face_groups: Vec<(u32, u32, u32)> = mesh.face_groups.iter().map(|group| (group.entity_id.parse().unwrap_or(0), group.start, group.count)).collect();

@@ -7,9 +7,9 @@ use super::*;
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct InsertTopic {
-    pub(crate) topic: BcfTopic,
+    pub topic: BcfTopic,
     #[value(default, skip_serializing_if = "Option::is_none")]
-    pub(crate) index: Option<usize>,
+    pub index: Option<usize>,
 }
 
 impl protocol::MutationKind<BcfSnapshot, BcfMutation> for InsertTopic {

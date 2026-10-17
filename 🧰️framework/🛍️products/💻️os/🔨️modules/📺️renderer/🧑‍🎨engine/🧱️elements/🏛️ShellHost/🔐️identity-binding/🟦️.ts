@@ -23,10 +23,11 @@ import { IDENTITY_CONFIG_SCHEMA } from "@semio-tech/framework/backbone/config-la
 import { type Identity, type IdentityConfigMutation, applyIdentityConfigMutation } from "@semio-tech/framework/config/mutations";
 import { type UiLocale } from "@semio-tech/ui-react";
 import { type AppSurfaceSessionFactory } from "../../🪪️WasmSessionLoader/🟦️.tsx";
-import { type FrameworkOsDefaults, type ResolvedShellLocks } from "../../🐚️Shell/🟦️.tsx";
+import { type FrameworkOsDefaults, type ResolvedShellLocks } from "../../🐚️Shell/🔒️boot-and-locks/🟦️.ts";
 import { SILENT_STREAM_MUX_ENDPOINT_V1, StreamMuxChannelV1, pageStreamMuxChannelV1, type StreamMuxEndpointV1 } from "@semio-tech/framework/io/stream-mux";
 import type { PluginCatalog } from "@semio-tech/framework";
 import { type InstalledServicePresentationV1 } from "../🪪️host-bootstrap/🟦️.tsx";
+import type { ShellHostPortsV1 } from "../🪝️host-ports/🟦️.ts";
 
 export function scopeRuntimeKey(message: { readonly documentId: string; readonly scope?: DocumentScope }): string | null {
   const scope = message.scope;
@@ -59,6 +60,7 @@ export interface FrameworkOsShellProps {
   readonly catalog: PluginCatalog;
   readonly backboneWorkerFactory?: () => Worker;
   readonly documentServices?: readonly InstalledServicePresentationV1[];
+  readonly hostPorts?: ShellHostPortsV1;
   readonly surfaceSessionFactories?: readonly AppSurfaceSessionFactory[];
   readonly pluginFilter?: string;
   readonly plugins: readonly PluginRegistryEntry[];

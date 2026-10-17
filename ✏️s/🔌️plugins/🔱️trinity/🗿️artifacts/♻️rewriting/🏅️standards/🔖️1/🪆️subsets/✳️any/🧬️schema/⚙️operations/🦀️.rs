@@ -1,7 +1,9 @@
 //! ⚙️ Rewriting mutation store, application, derivation, and behavior laws.
 
 use crate::standards::v1::subsets::any::schema::mutations::RewriteRuleMutation;
-use crate::{RewritingSnapshot, TrinityRewritingError, REWRITE_RULE_SCHEMA};
+use crate::standards::v1::subsets::any::schema::snapshot::RewritingSnapshot;
+use crate::standards::v1::subsets::any::schema::errors::TrinityRewritingError;
+use crate::standards::v1::subsets::any::schema::model::REWRITE_RULE_SCHEMA;
 use store::{os_store::document_materialize::create_document_envelope, os_store::store_schema::ArtifactCommand, os_store::store_schema::ArtifactEnvelope, ArtifactStore};
 
 //#region 🔖️Store
@@ -57,7 +59,13 @@ impl Drop for OwnedRewriteRuleStore {
 //#endregion 🔖️Store
 
 //#region 🔖️BatchHelpers
-pub use crate::apply_rewrite_rule_mutation;
+/// ▶️ Applies one mutation to a snapshot through the central applier (`protocol::apply_diff`): the step of the editor's node-graph fold and of the mutation tests.
+pub fn apply_rewrite_rule_mutation(snapshot: &mut RewritingSnapshot, mutation: &RewriteRuleMutation) -> protocol::MutationApplyResult<()> {
+    let outcome = protocol::Mutation::diff(mutation, snapshot);
+    let next = protocol::apply_diff(outcome.diff(), snapshot)?;
+    *snapshot = next;
+    Ok(())
+}
 
 pub fn inverse_rewrite_rule_mutation(snapshot: &RewritingSnapshot, mutation: &RewriteRuleMutation) -> Result<Vec<RewriteRuleMutation>, semio_framework_value::ValueError> {
     Ok({

@@ -1,9 +1,11 @@
-fn contract() -> serde_json::Value {
+#[doc(hidden)]
+pub fn contract() -> serde_json::Value {
     serde_json::from_str(include_str!("../../../🚪️io/🪪️bindings/🧪️tests/🧫️fixtures/🔣️.json")).expect("original codec binding contract")
 }
 
 fn flat(schema: &str) -> ArtifactDeclaration {
-    use crate::test_app_mutation_fixture::config::{TestConfig, TestConfigMutation};
+    use semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::config::TestConfig;
+    use semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::config::mutations::TestConfigMutation;
     let kind = "s.testkit.w1c-fixture";
     ArtifactDeclaration {
         kind: kind.to_string(), schemas: Vec::new(), inferences: Vec::new(), inference_services: Vec::new(), composers: Vec::new(), formats: Vec::new(), subset_validators: Vec::new(), languages: Vec::new(),
@@ -38,7 +40,6 @@ fn codec_binding_original_flat_capture_preserves_app_less_owned_and_hosted_rows(
     let (runtime, registry) = plan.into_runtime(ArtifactDefinitionRegistry::new()).expect("original binding preflight");
     assert_eq!(runtime.document_bindings(), registry.document_bindings);
     assert_eq!(registry.document_bindings.len(), registry.document_codecs.len());
-    eprintln!("[DEBUG] original Plugin flat bindings retained=2 nativeSqlRows=0 appLess=2");
 }
 
 #[test]
@@ -72,7 +73,6 @@ fn codec_binding_original_tree_capture_keeps_one_row_and_both_surface_apps_per_s
     let mut runtime = PluginRuntimeRegistry::empty();
     runtime.retain_document_bindings(rows.clone());
     assert_eq!(runtime.document_bindings(), rows);
-    eprintln!("[DEBUG] original Plugin tree bindings retained=3 surfaceApps=6 nativeSqlRows={}", rows.iter().filter(|row| row.sqlite_schema.is_some()).count());
 }
 
 #[semio_framework_async_macros::async_test]
@@ -97,5 +97,4 @@ async fn codec_binding_original_surface_specs_resolve_real_apps_before_flat_and_
     assert_eq!(plan.document_bindings[0].artifact_kind, None);
     assert_eq!(plan.document_bindings[0].apps, vec![expected.clone()]);
     assert!(plan.document_bindings[0].factory.is_none());
-    eprintln!("[DEBUG] original flat and foreign spec resolve actual surface app={expected}");
 }

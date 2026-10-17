@@ -1,6 +1,6 @@
 //! 🔺️ Sparse diff builder for `ChangeRuleLayoutPoint`.
 use crate::standards::v1::subsets::any::schema::diff::RewritingDiff;
-use crate::RewritingSnapshot;
+use crate::standards::v1::subsets::any::schema::snapshot::RewritingSnapshot;
 use replication::MapDelta;
 
 //#region 🔖️Diff

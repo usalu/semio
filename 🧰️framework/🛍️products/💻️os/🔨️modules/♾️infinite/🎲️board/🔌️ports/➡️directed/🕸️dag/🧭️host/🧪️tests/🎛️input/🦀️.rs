@@ -3,6 +3,7 @@
 use semio_framework_os_infinite_board_schema::{DagChannelRef, DagComputingProgress, DagInputFacts, DagNodeStatuses, DagSelectionDomains};
 use semio_framework_os_infinite_board_dag_model::DagInputDisplaced;
 use semio_framework_os_infinite_board_dag_host::{DagHost, DagHostRetirement, DagInputApplication};
+use semio_framework_test_fixtures::fixture_text;
 use semio_framework_value::{DslValue, NativeDecodeControl, ValueRefusalKind};
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneStep};
 use semio_framework_value::retirement::{admit_owned_retirement, owned_retirement_birth_bytes, RetireOwned};
@@ -11,12 +12,8 @@ use semio_framework_os_infinite_directed_presentation::*;
 use semio_framework_value::retirement::*;
 
 /// 📖️ Reads one test input at run time (relative to the package manifest) so it does not count as an embedded compile input.
-fn read_static(path_from_manifest: &str) -> &'static str {
-    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(path_from_manifest);
-    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("test input {}: {error}", path.display())).into_boxed_str())
-}
 
-fn fixture()->Value{serde_json::from_str(read_static("../../../🎛️input/🧪️tests/🧫️fixtures/🔣️.json")).unwrap()}
+fn fixture()->Value{serde_json::from_str(fixture_text!("../../../🎛️input/🧪️tests/🧫️fixtures/🔣️.json")).unwrap()}
 
 fn grant(fixture:&Value)->RetainedCloneGrant{serde_json::from_value(fixture["retainedGrant"].clone()).unwrap()}
 
@@ -54,7 +51,6 @@ fn actual_retained_host_preparation_preserves_original_state_until_atomic_exchan
   }
   releases+=retire(displaced,&fixture);releases+=retire(app,&fixture);close(host,&fixture);
  }
- println!("[DEBUG] original DagHost preparation families=4 singleUnitGrants={grants} independentBTreeSetSerde=true exactDisplacedReleased={releases} preExchangeNoMutation=true duplicateInputPortOrdinalsPreserved=true");
 }
 
 #[test]
@@ -65,5 +61,4 @@ fn actual_retained_host_preparation_refuses_every_observed_frontier_without_host
   for stop in 0..observations{let mut app=DagInputApplication::new(facts(family,&fixture));let mut seen=0;let mut observe=|_|{let proceed=seen!=stop;seen+=1;proceed};let mut control=NativeDecodeControl::new(fixture["ownershipBytes"].as_u64().unwrap()as usize,&mut observe);loop{let before=control.owned_bytes();match app.step(&host,1,&mut control,grant(&fixture)){Err(error)=>{assert_eq!(error.kind,semio_framework_value::ValueRefusalKind::Canceled);let receipt=app.normal_step_progress();assert!(receipt.fits(grant(&fixture)));assert_eq!(receipt.retained_capacity_bytes,control.owned_bytes()-before);if receipt.retained_capacity_bytes!=0{assert_eq!(receipt.copied_items,1);}break},Ok(false)=>{},Ok(true)=>panic!("observed frontier did not refuse")}}assert_eq!(host.graph.engine.selection,baseline);assert!(host.paint.node_eval_status.is_empty());assert!(host.paint.computing_stale.is_empty());retire(app,&fixture);frontiers+=1;}
   close(host,&fixture);
  }
- println!("[DEBUG] original DagHost preparation refusedFrontiers={frontiers} fourFamilies=true hostOwnerPreserved=true independentColdFacts=true controlledRetirement=true");
 }

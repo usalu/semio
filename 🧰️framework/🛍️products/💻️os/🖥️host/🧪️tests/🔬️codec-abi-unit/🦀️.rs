@@ -384,7 +384,18 @@ mod tests {
 
     #[test]
     fn public_interactive_route_has_no_batch_or_whole_input_capability() {
-        let source = include_str!("../../📡️codec-abi/🦀️.rs");
+        let source = [
+            include_str!("../../📡️codec-abi/🧬️operation-schema/🦀️.rs"),
+            include_str!("../../📡️codec-abi/📊️progress-records/🦀️.rs"),
+            include_str!("../../📡️codec-abi/🔤️utf8-cursor/🦀️.rs"),
+            include_str!("../../📡️codec-abi/🔎️filter-kinds-cursor/🦀️.rs"),
+            include_str!("../../📡️codec-abi/🪪️normalize-kind-cursor/🦀️.rs"),
+            include_str!("../../📡️codec-abi/🎟️codec-session/🦀️.rs"),
+            include_str!("../../📡️codec-abi/🛰️retained-service/🦀️.rs"),
+            include_str!("../../📡️codec-abi/🚪️direct-service/🦀️.rs"),
+            include_str!("../../📡️codec-abi/🦀️.rs"),
+        ]
+        .concat();
         let tests = source.find("//#region 🧪️Tests").unwrap();
         let production = &source[..tests];
         for forbidden in ["UiForbidden", "ArtifactPack", "ArtifactDsl", "decode_pack(", "parse_dsl(", "decode_workflow_fixture_pack", "parse_workflow_fixture_dsl"] {

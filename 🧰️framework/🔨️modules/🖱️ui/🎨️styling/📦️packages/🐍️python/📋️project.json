@@ -22,7 +22,7 @@
       },
       "cache": true,
       "outputs": [
-        "{projectRoot}/dist/build/{options.env.SEMIO_BUILD_MODE}"
+        "{workspaceRoot}/.cache/b/p/m/python/ui-styling/{options.env.SEMIO_BUILD_MODE}"
       ],
       "dependsOn": [
         "deps",
@@ -37,9 +37,6 @@
         },
         {
           "env": "SOURCE_DATE_EPOCH"
-        },
-        {
-          "runtime": "uv --version"
         },
         {
           "runtime": "node -p \"process.platform.concat(process.arch)\""

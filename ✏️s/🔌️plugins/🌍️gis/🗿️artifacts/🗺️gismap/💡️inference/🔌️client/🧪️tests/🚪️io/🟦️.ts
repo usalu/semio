@@ -12,5 +12,4 @@ test("GIS native declarations preserve the installed service protocol through ex
   expect(admitDocumentServiceWireDeclarationV1("gis",wire)).toEqual(typed);expect(encodeDocumentServiceWireDeclarationV1(typed)).toEqual(wire);
   expect(()=>admitDocumentServiceDeclarationV1("gis",wire)).toThrow();expect(()=>admitDocumentServiceWireDeclarationV1("gis",typed)).toThrow();
   for(const operation of wire.operations){const schema=JSON.parse(operation.inputSchema);expect(schema.$id.startsWith("gis:")).toBe(true);new Ajv({strict:true}).compile(schema);}
-  console.log("[DEBUG] GIS six-operation declarations roundtrip explicit IO and independent Ajv");
 });

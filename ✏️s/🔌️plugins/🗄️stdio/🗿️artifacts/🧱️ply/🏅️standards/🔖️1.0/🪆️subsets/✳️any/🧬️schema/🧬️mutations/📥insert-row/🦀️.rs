@@ -8,9 +8,9 @@ use super::*;
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 pub struct InsertRow {
-    pub(crate) element_name: String,
-    pub(crate) index: usize,
-    pub(crate) row: PlyRow,
+    pub element_name: String,
+    pub index: usize,
+    pub row: PlyRow,
 }
 
 impl protocol::MutationKind<PlySnapshot, PlyMutation> for InsertRow {

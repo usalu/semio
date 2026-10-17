@@ -1,8 +1,20 @@
+use crate::{editor::playground::commands::change_schema, editor::playground::commands::set_active_example};
+use crate::standards::v1::subsets::any::schema::empty_playground_snapshot;
+use crate::standards::v1::subsets::any::schema::mutations::PlaygroundMutation;
+use crate::PLAYGROUND_DIALECT;
+use semio_framework::{ToolExecutionContract, ToolFactoryKey};
+use semio_framework_pack_json::{parse, Value};
+use semio_framework_plugin::ArtifactEditor;
+use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::ConfigView;
+use semio_framework_plugin::Editor;
+use semio_framework_plugin::NoConfig;
+use crate::editor::playground::{PLAYGROUND_RETAINED_PAYLOAD_SCHEMA, PLAYGROUND_RETAINED_RAW_BYTES, PLAYGROUND_RETAINED_WORK_ITEMS, playground_retained_extent, PlaygroundCommandJobFactory};
 pub(crate) mod context {
     //! 🧪️ `context::assert_declared_actions_bridge_to_commands`'s signature is still
     //! `fn(manifest: fn() -> App)` (framework test context gap, `📓️w0-f-report.md` Gap 3) — `App { definition,
     //! examples }` shape kept alive here purely to satisfy that call.
-    use super::super::{create_playground_editor, PlaygroundEditor};
+    use crate::editor::playground::{create_playground_editor, PlaygroundEditor};
     use semio_framework_plugin::App;
 
     pub fn playground_editor_manifest_for_tests() -> App {
@@ -12,10 +24,10 @@ pub(crate) mod context {
     semio_framework_plugin::history_edit_acceptance_law!("demonstrator", PlaygroundEditor, playground_editor_manifest_for_tests, "../..");
 }
 
-use super::*;
+use crate::editor::playground::*;
 use semio_framework_plugin::{EditorApp, HistoryView};
 
-const RETAINED_LIMITS: &str = include_str!("../🧫️fixtures/🧫️retained-command-limits/🔣️.json");
+static RETAINED_LIMITS: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../🧪️tests/🧫️fixtures/🧫️retained-command-limits/🔣️.json"));
 
 #[test]
 fn create_playground_editor_builds_a_definition_for_the_editor_role() {
@@ -39,7 +51,7 @@ fn change_schema_factory_declares_the_exact_bounded_contract() {
 
 #[test]
 fn change_schema_admission_matches_the_language_neutral_limit_oracle() {
-    let fixture: Value = parse(RETAINED_LIMITS, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("retained command limits decode");
+    let fixture: Value = parse((*RETAINED_LIMITS), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("retained command limits decode");
     let maximum = fixture.get("maximumSchemaBytes").and_then(Value::as_u64).expect("maximumSchemaBytes") as usize;
     let additional = fixture.get("rejectedAdditionalBytes").and_then(Value::as_u64).expect("rejectedAdditionalBytes") as usize;
     let expected_items = fixture.get("expectedWorkItems").and_then(Value::as_u64).expect("expectedWorkItems") as usize;
@@ -101,4 +113,9 @@ fn set_active_example_loads_the_demo_schema() {
 #[semio_framework_async_macros::async_test]
 async fn the_editor_declares_the_artifact_kind_it_edits() {
     assert_eq!(create_playground_editor().artifact_kinds, vec![crate::artifact_kind()]);
+}
+
+fn runtime_fixture_text(relative: &str) -> &'static str {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative);
+    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display())).into_boxed_str())
 }

@@ -1,5 +1,5 @@
 /** 📚️ Catalogue kinds are inferred into the same figure as custom numerical layers. */
-import { vizParseColor } from "../../../../🧬️schema/💡️inferences/🎨theme/🟦️.ts";
+import { vizParseColor } from "@semio-tech/print-viz-inference/theme";
 import catalog from "../../../../🖼️assets/🔣️viz-catalog.json";
 import schema from "../../../../🧬️schema/🔣️.json";
 import { validateJsonSchemaSubset } from "@semio-tech/schema-validator-ts";

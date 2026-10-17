@@ -1,7 +1,7 @@
 //! 👥️ Real shared-ephemeral publication snapshot fixture.
 
-use pack::snapshot::{ArtifactDsl,ArtifactPack};
-use crate::store::{PackDecodeOptions,PackEncodeOptions,PackError,TextError,TextSpan};
+use pack::snapshot::{ArtifactDsl, ArtifactPack};
+use semio_framework_os_kernel::{PackDecodeOptions, PackEncodeOptions, PackError, TextError, TextSpan};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 #[derive(Clone, Debug, Default, PartialEq, serde::Serialize, ToValue, serde::Deserialize, FromValue, semio_framework_value::RetireOwned)]
@@ -66,14 +66,15 @@ impl protocol::MutationDiff<PublicationPresence> for PublicationPresenceDiff {
 
 #[path = "../../🧪️testing/📢️publication-fixtures/👥️presence/🧬️mutations/🦀️.rs"]
 pub mod mutations;
-pub use mutations::*;
+pub use crate::publication_fixture::presence::mutations::change_publication_presence::ChangePublicationPresence;
+pub use crate::publication_fixture::presence::mutations::{PublicationPresenceMutation, change_publication_presence};
 
-impl crate::store::ArtifactPresenceSnapshot for PublicationPresence {}
+impl semio_framework_os_kernel::ArtifactPresenceSnapshot for PublicationPresence {}
 
 #[cfg(test)]
 mod original_native_laws {
     use super::*;
-    use crate::store::ArtifactPresenceSnapshot;
+    use semio_framework_os_kernel::ArtifactPresenceSnapshot;
     #[test]
     fn scalar_presence_original_native_matches_independent_serde() {
         let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️native.json")).unwrap();
@@ -112,6 +113,5 @@ mod original_native_laws {
             assert!(PublicationPresence::decode_presence_native(bytes, &mut owner).is_err());
             assert!(serde_json::from_slice::<PublicationPresence>(bytes).is_err());
         }
-        eprintln!("[DEBUG] scalar presence generic JSON native agrees with independent Serde and neutral corpus");
     }
 }

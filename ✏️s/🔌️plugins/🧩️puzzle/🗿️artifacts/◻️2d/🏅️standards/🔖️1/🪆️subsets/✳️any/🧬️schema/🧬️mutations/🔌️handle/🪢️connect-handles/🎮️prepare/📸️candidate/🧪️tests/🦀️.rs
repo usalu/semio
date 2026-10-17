@@ -1,8 +1,26 @@
 //! 🧪️ Native connection candidates preserve all untouched records and exact granted cancellation.
 
-use super::*;
+use crate::standards::v1::subsets::any::schema::mutations::ConnectHandles;
+use crate::standards::v1::subsets::any::schema::snapshot::Puzzle2dSnapshot;
+use crate::standards::v1::subsets::any::schema::records::Puzzle2dEdge;
+use semio_framework_value::{ValueError, retirement::controlled::ControlledRetirement, retained_clone::RetainedCloneGrant, retained_clone::RetainedCloneProgress, retained_clone::RetainedCloneStep};
+use std::mem::size_of;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::preparation::native_preparation_child::Puzzle2dCloseAxis;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::preparation::connect_handles_preparation::{Puzzle2dConnectHandlesDisposition, Puzzle2dConnectHandlesPlan, Puzzle2dConnectHandlesPreparationCursor, Puzzle2dConnectHandlesPreparationStep};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::preparation::connect_handles_preparation::edge::Puzzle2dConnectEdgeCursor;
+#[allow(unused_imports)]
+use semio_framework_value::{ValueRefusalKind, list::PagedListEditCursor, retained_clone::RetainedCloneBinding, retained_clone::RetainedFieldCursor, retained_clone::RetainedCloneCursor, retained_clone::RetainedCloneRef};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::preparation::native_preparation_child::Puzzle2dPreparationChild;
+#[allow(unused_imports)]
+use std::{mem::ManuallyDrop, ops::Deref, ops::DerefMut};
+use crate::standards::v1::subsets::any::schema::preparation::connect_handles_preparation::candidate::*;
+use semio_framework_test_fixtures::fixture_text;
 use semio_framework_value::paged::PagedUtf8;
-use crate::test_source_custody;
+use crate::standards::v1::subsets::any::schema::testkit as test_source_custody;
 
 fn grant(turn: usize) -> RetainedCloneGrant { match turn % 3 { 0 => RetainedCloneGrant::one_capacity_turn(4096, 128), 1 => RetainedCloneGrant::one_payload_turn(4096, 128), _ => RetainedCloneGrant::one_release_turn(4096, 128) } }
 
@@ -38,15 +56,15 @@ fn retire(snapshot: Puzzle2dSnapshot) {
 #[test]
 fn history_edit_puzzle2d_native_connect_candidate_preserves_ordered_native_fields_and_granted_cancellation() {
     assert!(size_of::<Puzzle2dConnectHandlesCandidateCursor>() <= 4096);
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🪢️connect-handles/🎮️prepare/📸️candidate/🔣️.json")).unwrap();
-    let base: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🪢️connect-handles/🎮️prepare/🔣️.json")).unwrap();
-    let full: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🪢️connect-handles/🎮️prepare/📸️candidate/🔣️.json")).unwrap();
+    let base: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🪢️connect-handles/🎮️prepare/🔣️.json")).unwrap();
+    let full: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../../../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let text = |value: &serde_json::Value| { let value = value.as_str().unwrap();match value.strip_prefix("$large:") { Some(suffix) => PagedUtf8::<{usize::MAX}>::from(format!("{}{suffix}", base["control"]["largePrefix"].as_str().unwrap().repeat(base["control"]["largeRepeats"].as_u64().unwrap() as usize))), None => value.into() } };
     let mut count = 0;
     for case in corpus["cases"].as_array().unwrap() {
         let intent = base["cases"].as_array().unwrap().iter().find(|entry| entry["id"] == case["preparationCase"]).unwrap();
         let mut snapshot: Puzzle2dSnapshot = serde_json::from_value(full["snapshot"].clone()).unwrap();
-        snapshot.nodes = intent["nodes"].as_array().unwrap().iter().map(|wire| { let mut node: crate::standards::v1::subsets::any::schema::Puzzle2dNode = serde_json::from_value(wire.clone()).unwrap();for (index, handle) in wire["handles"].as_array().unwrap().iter().enumerate() { node.handles.get_mut(index).unwrap().id = text(&handle["id"]); }node.text = Some("untouched\0😀".into());node }).collect();
+        snapshot.nodes = intent["nodes"].as_array().unwrap().iter().map(|wire| { let mut node: crate::standards::v1::subsets::any::schema::records::Puzzle2dNode = serde_json::from_value(wire.clone()).unwrap();for (index, handle) in wire["handles"].as_array().unwrap().iter().enumerate() { node.handles.get_mut(index).unwrap().id = text(&handle["id"]); }node.text = Some("untouched\0😀".into());node }).collect();
         snapshot.edges = case["edges"].as_array().unwrap().iter().map(|id| Puzzle2dEdge { id: text(id), visible: Some(false), locked: Some(true), source_tip: Some("retained\0😀".into()), ..Default::default() }).collect();
         let mut wire = intent["mutation"].clone();
         for field in ["gap", "shift", "rise", "rotation", "turn", "tilt", "x", "y", "tolerance"] { if wire[field].is_string() { wire[field] = serde_json::json!(0); } }
@@ -62,7 +80,7 @@ fn history_edit_puzzle2d_native_connect_candidate_preserves_ordered_native_field
         let mut complete = false;
         for turn in 0..1_000_000 { let permit = grant(turn);if matches!(observed(permit, || cursor.advance(source.borrow(&snapshot), mutation.borrow(&payload), permit)), RetainedCloneStep::Complete(_)) { complete = true;break; } }
         assert!(complete);let result = cursor.take().unwrap();assert!(cursor.take().is_none());close(&mut cursor);
-        let warning = match result.plan.warning { super::super::Puzzle2dConnectHandlesWarning::None => "none", super::super::Puzzle2dConnectHandlesWarning::MissingHandle => "missing-handle", super::super::Puzzle2dConnectHandlesWarning::TooFar => "too-far" };assert_eq!(warning, intent["warning"].as_str().unwrap());
+        let warning = match result.plan.warning { crate::standards::v1::subsets::any::schema::preparation::connect_handles_preparation::Puzzle2dConnectHandlesWarning::None => "none", crate::standards::v1::subsets::any::schema::preparation::connect_handles_preparation::Puzzle2dConnectHandlesWarning::MissingHandle => "missing-handle", crate::standards::v1::subsets::any::schema::preparation::connect_handles_preparation::Puzzle2dConnectHandlesWarning::TooFar => "too-far" };assert_eq!(warning, intent["warning"].as_str().unwrap());
         let changed = intent["status"] == "changed";assert_eq!(result.snapshot.is_some(), changed);assert_eq!(serde_json::to_value(result.plan.position).unwrap(), if changed { serde_json::json!(payload.index.unwrap_or(snapshot.edges.len()).min(snapshot.edges.len())) } else { serde_json::Value::Null });
         let mut expected = original.clone();
         if changed { let edge = Puzzle2dEdge { id: payload.id.clone(), source: payload.source.clone(), target: payload.target.clone(), edge_kind: payload.edge_kind.clone(), gap: payload.gap, shift: payload.shift, rise: payload.rise, rotation: payload.rotation, turn: payload.turn, tilt: payload.tilt, x: payload.x, y: payload.y, source_tip: payload.source_tip.clone(), target_tip: payload.target_tip.clone(), visible: None, locked: None };expected["edges"].as_array_mut().unwrap().insert(result.plan.position.unwrap(), serde_json::to_value(edge).unwrap()); }
@@ -76,7 +94,6 @@ fn history_edit_puzzle2d_native_connect_candidate_preserves_ordered_native_field
         if case["name"] == "middle" { let mut cancelled = Puzzle2dConnectHandlesCandidateCursor::default();let mut placed = false;for turn in 0..1_000_000 { let inserting = cancelled.phase == 9;let permit = grant(turn);let step = observed(permit, || cancelled.advance(source.borrow(&snapshot), mutation.borrow(&payload), permit));assert!(!matches!(step, RetainedCloneStep::Complete(_)));if inserting && cancelled.pending.is_none() && cancelled.phase == 9 { placed = true;break; } }assert!(placed);close(&mut cancelled); }
         let mut fenced = Puzzle2dConnectHandlesCandidateCursor::default();fenced.advance(source.borrow(&snapshot), mutation.borrow(&payload), grant(1)).unwrap();let other = payload.clone();assert!(fenced.advance(source.borrow(&snapshot), mutation.borrow(&other), grant(1)).is_err());close(&mut fenced);
         let (_, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| drop(cursor));assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));test_source_custody::close(&mut source);test_source_custody::close(&mut mutation);count += 1;
-        eprintln!("[DEBUG] Puzzle2d ConnectHandles candidate {} preserves native ordered fields and untouched owners with zero constructor/terminal heap and exact three-lane clone/edge/insertion cancellation", case["name"].as_str().unwrap());
     }
     assert_eq!(count, 9);
 }

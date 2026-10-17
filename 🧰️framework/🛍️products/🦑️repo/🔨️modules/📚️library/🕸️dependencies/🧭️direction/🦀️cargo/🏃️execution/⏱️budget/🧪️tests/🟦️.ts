@@ -21,7 +21,6 @@ test("queued preparation leaves the complete aggregate native capture budget int
         try { budget.charge(step.milliseconds); } catch { refused=true;break; }
       }
       expect({remainingMs:budget.remainingMs,refused},row.id).toEqual(independent);
-      console.log("[DEBUG] Cargo capture budget "+JSON.stringify({id:row.id,remainingMs:budget.remainingMs,refused}));
     }
     for (const value of [...fixture.invalidBudgets,NaN,Infinity]) expect(()=>new CargoMetadataCaptureBudget(value)).toThrow();
     for (const value of [...fixture.invalidCaptures,NaN,Infinity]) expect(()=>new CargoMetadataCaptureBudget(30000).charge(value)).toThrow();

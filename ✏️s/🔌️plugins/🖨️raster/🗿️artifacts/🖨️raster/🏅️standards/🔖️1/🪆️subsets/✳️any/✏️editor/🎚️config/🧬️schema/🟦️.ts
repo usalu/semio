@@ -64,6 +64,10 @@ type rasterRasterConfigGuardSizeBounds = { readonly minItems?: number; readonly 
 
 export const rasterRasterConfigGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : rasterRasterConfigGuardReject(at, "value is not an object");
+export const rasterRasterConfigGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) rasterRasterConfigGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const rasterRasterConfigGuardArray = (value: unknown, at: string, bounds: rasterRasterConfigGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return rasterRasterConfigGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) rasterRasterConfigGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -112,7 +116,7 @@ export function parseRasterConfig(value: unknown, at = "$"): RasterConfig {
 }
 
 export function parseRasterCamera(value: unknown, at = "$"): RasterCamera {
-  const row = rasterRasterConfigGuardObject(value, at);
+  const row = rasterRasterConfigGuardClosed(rasterRasterConfigGuardObject(value, at), at, ["x", "y", "zoom"]);
   return {
     x: rasterRasterConfigGuardNumber(row["x"], `${at}.x`),
     y: rasterRasterConfigGuardNumber(row["y"], `${at}.y`),
@@ -121,9 +125,20 @@ export function parseRasterCamera(value: unknown, at = "$"): RasterCamera {
 }
 
 export function parseRasterConfigViewportSize(value: unknown, at = "$"): RasterConfigViewportSize {
-  const row = rasterRasterConfigGuardObject(value, at);
+  const row = rasterRasterConfigGuardClosed(rasterRasterConfigGuardObject(value, at), at, ["width", "height"]);
   return {
     width: rasterRasterConfigGuardNumber(row["width"], `${at}.width`),
     height: rasterRasterConfigGuardNumber(row["height"], `${at}.height`),
+  };
+}
+
+export function parseRasterPixelSelection(value: unknown, at = "$"): RasterPixelSelection {
+  const row = rasterRasterConfigGuardClosed(rasterRasterConfigGuardObject(value, at), at, ["layerId", "target", "width", "height", "spans"]);
+  return {
+    layerId: rasterRasterConfigGuardString(row["layerId"], `${at}.layerId`, {"minLength": 1, "maxLength": 256}),
+    target: rasterRasterConfigGuardMember(row["target"], `${at}.target`, ["pixels", "mask"] as const),
+    width: rasterRasterConfigGuardInteger(row["width"], `${at}.width`, {"minimum": 1, "maximum": 16384}),
+    height: rasterRasterConfigGuardInteger(row["height"], `${at}.height`, {"minimum": 1, "maximum": 16384}),
+    spans: rasterRasterConfigGuardArray(row["spans"], `${at}.spans`).map((item, index) => ((row1) => ({ start: rasterRasterConfigGuardInteger(row1["start"], `${at}.spans[${index}].start`, {"minimum": 0, "maximum": 16777215}), length: rasterRasterConfigGuardInteger(row1["length"], `${at}.spans[${index}].length`, {"minimum": 1, "maximum": 16777216}), coverage: rasterRasterConfigGuardInteger(row1["coverage"], `${at}.spans[${index}].coverage`, {"minimum": 0, "maximum": 255}) }))(rasterRasterConfigGuardClosed(rasterRasterConfigGuardObject(item, `${at}.spans[${index}]`), `${at}.spans[${index}]`, ["start", "length", "coverage"]))),
   };
 }

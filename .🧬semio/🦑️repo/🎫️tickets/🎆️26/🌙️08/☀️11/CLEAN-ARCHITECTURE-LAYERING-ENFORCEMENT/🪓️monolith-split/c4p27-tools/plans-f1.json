@@ -1,0 +1,59 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🟦️.tsx",
+ "fn": "World3dHost",
+ "propsType": "ComponentSceneHostProps",
+ "coreType": "WorldCore",
+ "region": "World3dHost",
+ "parentTail": 302,
+ "hooks": [
+  {
+   "dir": "🌍️scene-lanes",
+   "name": "useWorldSceneLanes",
+   "upto": 74,
+   "doc": "/** 🌍️ World3dHost scene lanes: the `node.world3d` scene and interaction domain, the shell selection mode, the window context, the parsed camera, instance, reference, annotation, scalar field and modelling lanes, the mesh residency and the interaction, lod, environment and frame lanes. */",
+   "docFn": "/** 🌍️ Reads every lane of the assembled `node.world3d` scene into memoised, identity-stable values. */"
+  },
+  {
+   "dir": "🧭️fit-and-presence",
+   "name": "useWorldFitAndPresence",
+   "upto": 173,
+   "doc": "/** 🧭️ World3dHost fit and presence: the auto-fit bounds and revision, the compute status and tool-run trace, the presence publishing, the drag, marquee and gumball state, the shared previews, the context menu state, the action dispatchers, the camera debounce and the reference and target volume handlers. */",
+   "docFn": "/** 🧭️ Holds the fit, presence, gesture and menu state and the action dispatchers of the world window. */"
+  },
+  {
+   "dir": "🏗️brush-mesh-and-menus",
+   "name": "useWorldBrushMeshAndMenus",
+   "upto": 204,
+   "doc": "/** 🏗️ World3dHost brush meshes and menus: the brush mesh queue and registration, the mesh re-upload, the frame and zoom handlers, the context menu dispatch and the suggestion rows and submenu search. */",
+   "docFn": "/** 🏗️ Runs the brush mesh queue and builds the world context menu and suggestion rows. */"
+  },
+  {
+   "dir": "👇️hover-and-placement",
+   "name": "useWorldHoverAndPlacement",
+   "upto": 234,
+   "doc": "/** 👇️ World3dHost hover and placement: the suggestions right-press route, the instance, vortex and component hover dispatch, the vortex arm, the connect drag, the voxel and brush placement and the world pick. */",
+   "docFn": "/** 👇️ Wires the hover dispatch, the connect drag and the placement and pick handlers. */"
+  },
+  {
+   "dir": "🔀️paint-and-projection",
+   "name": "useWorldPaintAndProjection",
+   "upto": 259,
+   "doc": "/** 🔀️ World3dHost paint and projection: the paint gesture, the camera change and navigate handlers, the projection window chrome and the projection content frame and fit. */",
+   "docFn": "/** 🔀️ Wires the paint gesture and the camera and projection handlers. */"
+  },
+  {
+   "dir": "🎛️marquee-and-gumball",
+   "name": "useWorldMarqueeAndGumball",
+   "upto": 285,
+   "doc": "/** 🎛️ World3dHost marquee and gumball: the marquee preview and its commit hold, the selection preview, the gumball gesture and handlers and the relocate drag. */",
+   "docFn": "/** 🎛️ Wires the marquee preview, the gumball gesture and the relocate drag. */"
+  },
+  {
+   "dir": "👆️pointer-and-drop",
+   "name": "useWorldPointerAndDrop",
+   "upto": 302,
+   "doc": "/** 👆️ World3dHost pointer and drop: the pointer down, move and up handlers, the marquee finalisation, the empty click, the catalogue drop and its effects. */",
+   "docFn": "/** 👆️ Wires the pointer handlers and the catalogue drag and drop. */"
+  }
+ ]
+}

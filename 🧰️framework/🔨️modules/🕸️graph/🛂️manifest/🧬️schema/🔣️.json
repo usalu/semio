@@ -144,6 +144,10 @@
               "typescript": {
                 "type": "string",
                 "pattern": "^[^/\\\\.]+/🟦️\\.ts$"
+              },
+              "rustOwner": {
+                "type": "string",
+                "pattern": "^[a-z_][a-z0-9_]*(?:::[a-z_][a-z0-9_]*)+$"
               }
             }
           }

@@ -1,4 +1,6 @@
-use super::*;
+#[allow(unused_imports)] use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
+#[allow(unused_imports)] use framework_schema::ArtifactSchema;
+#[allow(unused_imports)] use semio_s_artifact_draw_drawing_model::inferences::*;
 use protocol::Inference;
 
 #[semio_framework_async_macros::async_test]

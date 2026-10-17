@@ -18,6 +18,5 @@ test("JSON and I-JSON committed scalar and member intents match independent RFC6
   const payload=row.subset==="🧱️base"?(row.leaf==="🔢️set-scalar"?row.mutation.payload!.value:row.mutation.payload):row.mutation;const leafSchema=read(`${row.subset}/🧬️schema/🧬️mutations/${row.leaf}/🧬️schema/🔣️.json`);expect((ajv.getSchema(leafSchema.$id)??ajv.compile(leafSchema))(payload)).toBe(true);
   const document=Object.fromEntries(after.value.members.map(member=>[member.key,member.value.value]));expect(Object.keys(JSON.parse(JSON.stringify(document)))).toEqual(after.value.members.map(member=>member.key));
   const path=resolve(root,`${row.subset}/🧪️tests/🧫️fixtures/🧬️history-edits/${row.id}/🦠️mutation/🔣️.json`);expect(existsSync(path)).toBe(true);expect(JSON.parse(readFileSync(path,"utf8"))).toEqual({mutation:row.mutation,before,after});
-  console.log("[DEBUG] JSON committed native intent agrees with RFC6902 and ordered JSON",row.subset,row.id);
  }
 });

@@ -24,7 +24,7 @@ test("curves and full transforms independently agree with SVG fill pixels",async
  const render=async(d:string,rule:string,m:readonly number[])=>sharp(Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" width="128" height="96" viewBox="0 0 64 48"><path d="'+d+'" fill="red" fill-rule="'+rule+'" transform="matrix('+m.join(" ")+')"/></svg>')).ensureAlpha().raw().toBuffer();
  for(const row of rows.cases){const value=input(row),result=finish(value,4096),operands=await Promise.all(value.operands.map(o=>render(pathSegmentsToSvgD(o.segments as PathSegment[]),o.fillRule,o.transform))),actual=await render(pathSegmentsToSvgD(result),"nonzero",[1,0,0,1,0,0]);let count=0;
   for(let at=0;at<128*96;at++){const alphas=operands.map(p=>p[at*4+3]!);if(alphas.some(a=>a!==0&&a!==255))continue;const expected=alphas.slice(1).reduce((a,b)=>apply(value.operation,a,b===255),alphas[0]===255);expect(Math.abs(actual[at*4+3]!-(expected?255:0)),row.id+" pixel "+at).toBeLessThanOrEqual(5);count++;}expect(count).toBeGreaterThan(128*96/2);
- }console.log("[DEBUG] Authored curved and transformed boolean fills matched independent Sharp SVG pixels");
+ }
 });
 test("exact total work and resource caps admit the published result",()=>{
  const value=input(rows.cases[0]!);let last!:PathBooleanProgress;const result=finish(value,1,p=>last=p),b=last.boolean!;
@@ -67,6 +67,5 @@ test("path boolean retirement composes children and preserves only completed out
   for(const field of ["admitted","local","world","prepared","retained","output"])expect(state[field]).toHaveLength(0);
   for(const field of ["current","contour","flatten","boolean","flatRetirement","booleanRetirement","retainedOperand"])expect(state[field]).toBe(null);
   expect(state.input.operands).toHaveLength(0);expect(source).toEqual(before);if(published)expect(published).toEqual(finish(input(fixture),4096));
-  console.log(`[DEBUG] Path Boolean retirement ${row.phase}: ${work} cleanup steps; private before=${privateBefore}; grant=${grant}`);
  }
 });

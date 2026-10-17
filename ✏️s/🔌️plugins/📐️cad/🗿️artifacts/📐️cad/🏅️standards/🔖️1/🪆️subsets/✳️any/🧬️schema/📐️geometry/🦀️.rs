@@ -90,7 +90,7 @@ pub fn mesh_from_owned_brep(snapshot: &semio_s_artifact_stdio_semio_brep::schema
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase")]
-pub(crate) struct CadVertex {
+pub struct CadVertex {
     pub id: String,
     pub position: [f64; 3],
 }
@@ -105,7 +105,7 @@ pub(crate) struct CadVertex {
 /// (`📓️w2f-cad-spatial-editor-wgpu.md` §5.2).
 #[derive(Clone, Debug, Default, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase")]
-pub(crate) struct CadEdgeCurve {
+pub struct CadEdgeCurve {
     pub kind: String,
     /// ⭕️ `arc`/`circle` centre.
     #[value(default)]
@@ -139,7 +139,7 @@ pub(crate) struct CadEdgeCurve {
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase")]
-pub(crate) struct CadEdge {
+pub struct CadEdge {
     pub id: String,
     pub vertex_ids: Vec<String>,
     pub curve: CadEdgeCurve,
@@ -147,14 +147,14 @@ pub(crate) struct CadEdge {
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase")]
-pub(crate) struct CadWire {
+pub struct CadWire {
     pub id: String,
     pub edge_ids: Vec<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase")]
-pub(crate) struct CadPlaneSurface {
+pub struct CadPlaneSurface {
     pub kind: String,
     pub origin: [f64; 3],
     pub normal: [f64; 3],
@@ -162,7 +162,7 @@ pub(crate) struct CadPlaneSurface {
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase")]
-pub(crate) struct CadFace {
+pub struct CadFace {
     pub id: String,
     pub wire_ids: Vec<String>,
     pub surface: CadPlaneSurface,
@@ -170,14 +170,14 @@ pub(crate) struct CadFace {
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase")]
-pub(crate) struct CadShell {
+pub struct CadShell {
     pub id: String,
     pub face_ids: Vec<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase")]
-pub(crate) struct CadSolid {
+pub struct CadSolid {
     pub id: String,
     pub shell_ids: Vec<String>,
 }
@@ -327,7 +327,7 @@ fn face_boundary_points(face: &CadFace, wires: &HashMap<String, &CadWire>, edges
     face.wire_ids.iter().find_map(|wire_id| wires.get(wire_id)).map(|wire| wire_points(wire, edges, vertices)).unwrap_or_default()
 }
 
-pub(crate) fn import_geometry_handles(kernel: &mut Brep, geometry: &CadGeometry) -> HashMap<String, String> {
+pub fn import_geometry_handles(kernel: &mut Brep, geometry: &CadGeometry) -> HashMap<String, String> {
     let vertices = vertex_map(geometry);
     let edges = edge_map(geometry);
     let wires = wire_map(geometry);
@@ -397,7 +397,7 @@ pub(crate) fn import_geometry_handles(kernel: &mut Brep, geometry: &CadGeometry)
     handles
 }
 
-pub(crate) fn resolve_primitive_handle(primitives: &[CadPrimitiveSlot], handles: &HashMap<String, String>) -> Option<(String, String)> {
+pub fn resolve_primitive_handle(primitives: &[CadPrimitiveSlot], handles: &HashMap<String, String>) -> Option<(String, String)> {
     for primitive in primitives {
         if let Some(handle) = handles.get(&primitive.primitive_id) {
             return Some((handle.clone(), primitive.kind.clone()));
@@ -470,12 +470,12 @@ fn centroid_from_positions(positions: &[[f64; 3]]) -> Option<[f64; 3]> {
 }
 
 /// 🎯️ World-space centroid of the first primitive slot that resolves against authored geometry.
-pub(crate) fn centroid_from_host_snapshot_primitives(geometry: &CadGeometry, primitives: &[CadPrimitiveSlot]) -> Option<[f64; 3]> {
+pub fn centroid_from_host_snapshot_primitives(geometry: &CadGeometry, primitives: &[CadPrimitiveSlot]) -> Option<[f64; 3]> {
     primitives.iter().find_map(|primitive| centroid_from_positions(&primitive_vertex_positions(geometry, &primitive.primitive_id)))
 }
 
 /// 🧵️ Tessellates an object through a kernel handle when that handle is still resident.
-pub(crate) fn tessellate_object_mesh(kernel: &mut Brep, object: &CadObject, kind: &str) -> Option<MeshData> {
+pub fn tessellate_object_mesh(kernel: &mut Brep, object: &CadObject, kind: &str) -> Option<MeshData> {
     let handle_id = object.solid_handle.as_deref()?;
     if kernel.kind(&GeometryHandle(handle_id.into())).is_err() {
         return None;
@@ -484,7 +484,7 @@ pub(crate) fn tessellate_object_mesh(kernel: &mut Brep, object: &CadObject, kind
 }
 
 /// 🧵️ Re-imports fixture geometry and tessellates the object's primitive slots.
-pub(crate) fn tessellate_object_mesh_from_host_snapshot(kernel: &mut Brep, object: &CadObject, geometry: &CadGeometry) -> Option<MeshData> {
+pub fn tessellate_object_mesh_from_host_snapshot(kernel: &mut Brep, object: &CadObject, geometry: &CadGeometry) -> Option<MeshData> {
     if object.primitives.is_empty() {
         return None;
     }
@@ -647,7 +647,7 @@ fn primitives_from_json(entry: &DslValue) -> Vec<CadPrimitiveSlot> {
 /// 🏷️ The property set a cad object's authoring state rides in on its composed model element — label, visibility, lock,
 /// mesh URL, extent and authored primitive slots have no `SemioModelElement` field of their own, and the child is the
 /// pane's only source of truth (design §20.15), so the bridge is lossless both ways.
-pub(crate) const CAD_OBJECT_PSET: &str = "cad";
+pub const CAD_OBJECT_PSET: &str = "cad";
 /// 🧱️ One ordered primitive slot is a native logical property set.
 pub(crate) const CAD_PRIMITIVE_PSET: &str = "cad.primitive";
 
@@ -691,7 +691,7 @@ pub fn semio_model_snapshot_from_objects(objects: &[CadObject]) -> SemioModelSna
 /// an IFC import or another editor wrote) reads computed authoring state — its id's last segment as label, visible,
 /// unlocked, one solid slot per brep — never a fabricated echo. A placement a relative child leaf turned or scaled
 /// reads as set even when the object recorded none.
-pub(crate) fn cad_object_from_model_element(element: &SemioModelElement) -> CadObject {
+pub fn cad_object_from_model_element(element: &SemioModelElement) -> CadObject {
     use semio_s_artifact_stdio_semio_model::schema::snapshot::PsetValue;
     let typology = match &element.class {
         ElementClass::Other { name } => name.clone(),

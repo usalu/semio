@@ -1,0 +1,43 @@
+[package]
+workspace = "../../../../../../../../../../../.."
+name = "semio-s-artifact-stdio-gltf-mutations-mut-any-8"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Component crate of semio-s-artifact-stdio-gltf-mutations: mut-any"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "🦀️.rs"
+
+[dependencies]
+semio-framework-diagnostic = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-pack = { path = "../../../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
+semio-framework-pack-json = { workspace = true }
+semio-framework-schema-composition = { workspace = true }
+semio-framework-schema-state = { workspace = true }
+semio-framework-ui-locale = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-framework-value-derive = { workspace = true }
+semio-s-artifact-stdio-gltf-model = { workspace = true }
+semio-s-artifact-stdio-gltf-mutations-mut-any-2 = { path = "../../../../../../🖼️image/🌱️create/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-gltf-mutations-mut-any-4 = { path = "../../../../../../🧪️tests/🧪️fixture-corpus/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-gltf-mutations-mutations = { path = "../../../../../../🔤️primitive/🔗️bind/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+semio-framework = { workspace = true }
+semio-framework-async = { workspace = true }
+semio-framework-async-macros = { workspace = true }
+semio-framework-diagnostic = { workspace = true }
+semio-framework-dsl = { workspace = true }
+semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-framework-pack-json = { workspace = true }
+semio-framework-schema = { workspace = true }
+semio-s-artifact-stdio-gltf-model = { workspace = true, features = ["testing"] }
+serde_json = { workspace = true }

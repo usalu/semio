@@ -48,7 +48,6 @@ fn controlled_value_refusal_actual_kind_and_path_corpus() {
         assert_eq!(error.kind.as_str(), row["expected"]["kind"].as_str().unwrap());
         assert_eq!(error.to_string(), row["expected"]["display"].as_str().unwrap(), "{}", row["id"]);
     }
-    println!("[DEBUG] controlled Value refusal actual owners preserve eight kinds through dotted paths, including spoofed prose");
 }
 #[test]
 fn controlled_value_refusal_independent_ajv_sqlite_path_oracle() {

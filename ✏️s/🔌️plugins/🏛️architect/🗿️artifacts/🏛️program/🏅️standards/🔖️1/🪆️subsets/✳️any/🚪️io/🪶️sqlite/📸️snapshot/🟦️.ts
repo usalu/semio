@@ -1,5 +1,9 @@
 /** 🏛️ Literal Architect entities and relationships under the owned semantic schema. */
 import * as model from "../../../🧬️schema/🟦️.ts";
+import type { EntityHeader, ProgramMeta, ProjectDefinition, QuantitySpec, TaggedNote, TextField, TimestampMeta, TraceLink } from "../../../🧬️schema/🪪️entity-foundation/🟦️.ts";
+import type { AccessRule, Activity, Adjacency, FlowRequirement, Function, Process, ProgramElement, QuantityRequirement, Relationship, Stakeholder, UserProfile } from "../../../🧬️schema/🏗️program-structure/🟦️.ts";
+import type { AccessibilityRequirement, CommunicationRequirement, CostRequirement, DeliveryConstraint, EnvironmentalRequirement, Equipment, FlexibilityRequirement, GrowthPlan, HumanFactorRequirement, InformationRequirement, InfrastructureRequirement, OperationalRequirement, OrganizationalRequirement, PrivacyRequirement, RegulatoryRequirement, ResilienceRequirement, Resource, SafetyRequirement, ScheduleRequirement, SecurityRequirement, ServiceRequirement, SiteContext, StorageRequirement, SustainabilityRequirement, WayfindingRequirement } from "../../../🧬️schema/📋️requirements/🟦️.ts";
+import type { AnalysisRecord, ApprovalRecord, ArtifactRecord, Assumption, AuditEvent, BenchmarkRecord, ChangeRecord, CollaborationRecord, ComplianceRecord, Conflict, ConstraintRecord, Decision, Governance, Issue, KnowledgeRecord, MeetingRecord, OptionEvaluation, PerformanceCriterion, PriorityRecord, QualityRecord, ReportRecord, Requirement, Risk, Scenario, SearchFilter, StatusRecord, Survey, TemplateRecord, ValidationRecord, Workshop } from "../../../🧬️schema/🗃️decision-records/🟦️.ts";
 import { ArtifactSqliteProjection, artifactSqliteTables, artifactSqliteCheckpoint, type ArtifactSqliteOptions } from "@semio-tech/framework/io/sqlite-snapshot/artifact";
 import { type SqliteDatabase, type SqliteRow, type SqliteValue } from "@semio-tech/framework/io/sqlite-snapshot";
 import {binary64Value,type Binary64} from "@semio-tech/framework/value/ieee754";
@@ -14,11 +18,11 @@ const uint32=(value:number):Cells=>[BigInt(model.architectProgramArtifactGuardIn
 const uint64=(value:bigint):Cells=>{const word=model.architectProgramArtifactGuardUnsigned64(value,"unsigned64");return[word.toString(),BigInt.asIntN(64,word)]};
 function float(value:Binary64):Cells{const word=model.architectProgramArtifactGuardBinary64(value,"binary64").bits,query=binary64Value(value),kind=Number.isNaN(query)?"nan":query===Infinity?"positiveInfinity":query===-Infinity?"negativeInfinity":"finite";return[Number.isNaN(query)?null:query,BigInt.asIntN(64,word),kind]}
 const optional=<T>(value:T|null,width:number,encode:(value:T)=>Cells):Cells=>value===null?Array<null>(width).fill(null):encode(value);
-const textField=(value:model.TextField):Cells=>[...text(value.text),...optional(value.format??null,1,text)];
-const optionalTextField=(value:model.TextField|null):Cells=>value===null?[0n,null,null]:[1n,...textField(value)];
-const note=(value:model.TaggedNote):Cells=>[...text(value.tag),...text(value.text)];
+const textField=(value:TextField):Cells=>[...text(value.text),...optional(value.format??null,1,text)];
+const optionalTextField=(value:TextField|null):Cells=>value===null?[0n,null,null]:[1n,...textField(value)];
+const note=(value:TaggedNote):Cells=>[...text(value.tag),...text(value.text)];
 const symbol=<T extends string>(value:T,members:readonly T[]):Cells=>text(model.architectProgramArtifactGuardMember(value,"enum",members));
-const timestamp=(value:model.TimestampMeta):Cells=>[...text(value.created),...text(value.updated),...optional(value.createdBy??null,1,text),...optional(value.updatedBy??null,1,text)];
+const timestamp=(value:TimestampMeta):Cells=>[...text(value.created),...text(value.updated),...optional(value.createdBy??null,1,text),...optional(value.updatedBy??null,1,text)];
 class Cursor{
  private index:number;
  constructor(private readonly row:SqliteRow,index:number=1){this.index=index}
@@ -30,11 +34,11 @@ class Cursor{
  uint64():bigint{const decimal=this.text(),word=BigInt.asUintN(64,this.integer());return decimal===word.toString()?word:fail("unsigned64 decimal and word differ")}
  float():Binary64{const query=this.next(),word=BigInt.asUintN(64,this.integer()),kind=this.text(),value={bits:word},number=binary64Value(value),expected=Number.isNaN(number)?"nan":number===Infinity?"positiveInfinity":number===-Infinity?"negativeInfinity":"finite";if(kind!==expected)return fail("binary64 class differs");if(typeof query==="bigint"){if(!Number.isFinite(number)||!Number.isInteger(number)||BigInt(number)!==query)return fail("binary64 query INTEGER differs")}else if(typeof query==="number"){if(Number.isNaN(number)||query!==number)return fail("binary64 query REAL differs")}else if(query!==null||!Number.isNaN(number))return fail("binary64 query differs");return value}
  optional<T>(width:number,decode:()=>T):T|null{const end=this.index+width;if(end>this.row.values.length)return fail("optional scalar is absent");if(this.row.values.slice(this.index,end).every(value=>value===null)){this.index=end;return null}return decode()}
- textField():model.TextField{const value={text:this.text()},format=this.optional(1,()=>this.text());return format===null?value:{...value,format}}
- optionalTextField():model.TextField|null{if(this.boolean())return this.textField();if(this.next()!==null||this.next()!==null)return fail("absent text owns a payload");return null}
- note():model.TaggedNote{return{tag:this.text(),text:this.text()}}
+ textField():TextField{const value={text:this.text()},format=this.optional(1,()=>this.text());return format===null?value:{...value,format}}
+ optionalTextField():TextField|null{if(this.boolean())return this.textField();if(this.next()!==null||this.next()!==null)return fail("absent text owns a payload");return null}
+ note():TaggedNote{return{tag:this.text(),text:this.text()}}
  symbol<T extends string>(members:readonly T[]):T{return model.architectProgramArtifactGuardMember(this.text(),"enum",members)}
- timestamp():model.TimestampMeta{const created=this.text(),updated=this.text(),createdBy=this.optional(1,()=>this.text()),updatedBy=this.optional(1,()=>this.text());return{created,updated,...createdBy===null?{}:{createdBy},...updatedBy===null?{}:{updatedBy}}}
+ timestamp():TimestampMeta{const created=this.text(),updated=this.text(),createdBy=this.optional(1,()=>this.text()),updatedBy=this.optional(1,()=>this.text());return{created,updated,...createdBy===null?{}:{createdBy},...updatedBy===null?{}:{updatedBy}}}
  end():void{if(this.index!==this.row.values.length)fail("unused scalar columns")}
 }
 async function ordered<T>(p:ArtifactSqliteProjection,table:string,parent:bigint,values:readonly T[],encode:(value:T)=>Cells):Promise<void>{for(let ordinal=0;ordinal<values.length;ordinal++)await p.insert(table,[parent,BigInt(ordinal),...encode(values[ordinal]!)])}
@@ -50,13 +54,13 @@ class Reader{
  async singleton(table:string,width:number):Promise<SqliteRow>{const rows=this.rows(table);if(rows.length!==1||rows[0]!.rowid!==1n)fail("singleton shape differs");this.shape(rows[0]!,width);await this.use(rows[0]!);return rows[0]!}
  async body(table:string,parent:bigint,width:number,required=true):Promise<SqliteRow|null>{let index=this.bodies.get(table);if(index===undefined){const rows=this.rows(table);await this.control.admitSlots(rows.length,128);index=new Map();for(const row of rows){await this.control.step();this.shape(row,width);if(index.has(row.rowid))fail("body identity is repeated");index.set(row.rowid,row)}this.bodies.set(table,index)}const row=index.get(parent);if(!row){if(required)fail("typed body is absent");return null}this.shape(row,width);index.delete(parent);await this.use(row);return row}
  async list<T>(table:string,parent:bigint,width:number,decode:(cursor:Cursor)=>T):Promise<T[]>{let groups=this.groups.get(table);if(groups===undefined){const rows=this.rows(table);await this.control.admitSlots(rows.length,256);groups=new Map();for(const row of rows){await this.control.step();this.shape(row,width+3);const cursor=new Cursor(row),owner=cursor.integer(),ordinal=cursor.integer();if(ordinal<0n||ordinal>BigInt(Number.MAX_SAFE_INTEGER))fail("relationship ordinal exceeds domain");let group=groups.get(owner);if(!group){group=[];groups.set(owner,group)}const index=Number(ordinal);if(index>rows.length||group[index])fail("relationship ordinal differs");group[index]=row}this.groups.set(table,groups)}const rows=groups.get(parent)??[];groups.delete(parent);await this.control.admitSlots(rows.length,32);const result:T[]=[];for(let ordinal=0;ordinal<rows.length;ordinal++){const row=rows[ordinal];if(!row)fail("relationship ordinals are not dense");await this.use(row!);const cursor=new Cursor(row!,3);result.push(decode(cursor));cursor.end()}return result}
- async register<T>(name:string,restore:(reader:Reader,row:SqliteRow,header:model.EntityHeader)=>Promise<T>):Promise<T[]>{if(this.headers===undefined){const rows=this.rows("architect_entity_header");await this.control.admitSlots(rows.length,256);this.headers=new Map();for(const row of rows){await this.control.step();this.shape(row,17);const cursor=new Cursor(row),document=cursor.integer(),register=cursor.text(),ordinal=cursor.integer();if(document!==1n||ordinal<0n||ordinal>BigInt(rows.length))fail("header owner or ordinal differs");let group=this.headers.get(register);if(!group){group=[];this.headers.set(register,group)}if(group[Number(ordinal)])fail("header ordinal is repeated");group[Number(ordinal)]=row}}const rows=this.headers.get(name)??[];this.headers.delete(name);await this.control.admitSlots(rows.length,64);const result:T[]=[];for(const row of rows){if(!row)fail("register ordinals are not dense");await this.use(row);result.push(await restore(this,row,await this.header(row)))}return result}
- async header(row:SqliteRow):Promise<model.EntityHeader>{const c=new Cursor(row,4),id=c.text(),name=c.text(),description=c.optionalTextField(),status=c.symbol(LifecycleStatus),priority=c.symbol(Priority),ownerId=c.optional(1,()=>c.text()),authorityId=c.optional(1,()=>c.text()),timestamps=c.timestamp();c.end();return{id,name,...description===null?{}:{description},status,priority,ownership:{ownerId,authorityId,consultantIds:await this.list("architect_entity_consultant",row.rowid,1,c=>c.text()),participantIds:await this.list("architect_entity_participant",row.rowid,1,c=>c.text())},timestamps,tags:await this.list("architect_entity_tag",row.rowid,1,c=>c.text()),notes:await this.list("architect_entity_note",row.rowid,2,c=>c.note())}}
- async quantity(entity:bigint,slot:string,table:string):Promise<model.QuantitySpec>{const edge=await this.body(table,entity,2),link=new Cursor(edge!),row=await this.body("architect_quantity_spec",link.integer(),25),c=new Cursor(row!);link.end();if(c.integer()!==entity||c.text()!==slot)fail("quantity belongs to another entity or slot");const unit=c.text(),min=c.optional(3,()=>c.float()),max=c.optional(3,()=>c.float()),target=c.optional(3,()=>c.float()),current=c.optional(3,()=>c.float()),forecast=c.optional(3,()=>c.float()),peak=c.optional(3,()=>c.float()),average=c.optional(3,()=>c.float());c.end();return{unit,...min===null?{}:{min},...max===null?{}:{max},...target===null?{}:{target},...current===null?{}:{current},...forecast===null?{}:{forecast},...peak===null?{}:{peak},...average===null?{}:{average}}}
+ async register<T>(name:string,restore:(reader:Reader,row:SqliteRow,header:EntityHeader)=>Promise<T>):Promise<T[]>{if(this.headers===undefined){const rows=this.rows("architect_entity_header");await this.control.admitSlots(rows.length,256);this.headers=new Map();for(const row of rows){await this.control.step();this.shape(row,17);const cursor=new Cursor(row),document=cursor.integer(),register=cursor.text(),ordinal=cursor.integer();if(document!==1n||ordinal<0n||ordinal>BigInt(rows.length))fail("header owner or ordinal differs");let group=this.headers.get(register);if(!group){group=[];this.headers.set(register,group)}if(group[Number(ordinal)])fail("header ordinal is repeated");group[Number(ordinal)]=row}}const rows=this.headers.get(name)??[];this.headers.delete(name);await this.control.admitSlots(rows.length,64);const result:T[]=[];for(const row of rows){if(!row)fail("register ordinals are not dense");await this.use(row);result.push(await restore(this,row,await this.header(row)))}return result}
+ async header(row:SqliteRow):Promise<EntityHeader>{const c=new Cursor(row,4),id=c.text(),name=c.text(),description=c.optionalTextField(),status=c.symbol(LifecycleStatus),priority=c.symbol(Priority),ownerId=c.optional(1,()=>c.text()),authorityId=c.optional(1,()=>c.text()),timestamps=c.timestamp();c.end();return{id,name,...description===null?{}:{description},status,priority,ownership:{ownerId,authorityId,consultantIds:await this.list("architect_entity_consultant",row.rowid,1,c=>c.text()),participantIds:await this.list("architect_entity_participant",row.rowid,1,c=>c.text())},timestamps,tags:await this.list("architect_entity_tag",row.rowid,1,c=>c.text()),notes:await this.list("architect_entity_note",row.rowid,2,c=>c.note())}}
+ async quantity(entity:bigint,slot:string,table:string):Promise<QuantitySpec>{const edge=await this.body(table,entity,2),link=new Cursor(edge!),row=await this.body("architect_quantity_spec",link.integer(),25),c=new Cursor(row!);link.end();if(c.integer()!==entity||c.text()!==slot)fail("quantity belongs to another entity or slot");const unit=c.text(),min=c.optional(3,()=>c.float()),max=c.optional(3,()=>c.float()),target=c.optional(3,()=>c.float()),current=c.optional(3,()=>c.float()),forecast=c.optional(3,()=>c.float()),peak=c.optional(3,()=>c.float()),average=c.optional(3,()=>c.float());c.end();return{unit,...min===null?{}:{min},...max===null?{}:{max},...target===null?{}:{target},...current===null?{}:{current},...forecast===null?{}:{forecast},...peak===null?{}:{peak},...average===null?{}:{average}}}
  async finish():Promise<void>{for(const rows of this.tables.values())for(const row of rows){await this.control.step();if(!this.used.has(row))fail("contains unowned entities")}await this.control.checkpoint()}
 }
-async function header(p:ArtifactSqliteProjection,register:string,ordinal:number,v:model.EntityHeader):Promise<bigint>{const id=await p.insert("architect_entity_header",[1n,register,BigInt(ordinal),...text(v.id),...text(v.name),...optionalTextField(v.description??null),...symbol(v.status,LifecycleStatus),...symbol(v.priority,Priority),...optional(v.ownership.ownerId,1,text),...optional(v.ownership.authorityId,1,text),...timestamp(v.timestamps)]);await ordered(p,"architect_entity_consultant",id,v.ownership.consultantIds,text);await ordered(p,"architect_entity_participant",id,v.ownership.participantIds,text);await ordered(p,"architect_entity_tag",id,v.tags,text);await ordered(p,"architect_entity_note",id,v.notes,note);return id}
-async function quantity(p:ArtifactSqliteProjection,entity:bigint,slot:string,table:string,v:model.QuantitySpec):Promise<void>{const id=await p.insert("architect_quantity_spec",[entity,slot,...text(v.unit),...optional(v.min??null,3,float),...optional(v.max??null,3,float),...optional(v.target??null,3,float),...optional(v.current??null,3,float),...optional(v.forecast??null,3,float),...optional(v.peak??null,3,float),...optional(v.average??null,3,float)]);await p.insert(table,[id],entity)}
+async function header(p:ArtifactSqliteProjection,register:string,ordinal:number,v:EntityHeader):Promise<bigint>{const id=await p.insert("architect_entity_header",[1n,register,BigInt(ordinal),...text(v.id),...text(v.name),...optionalTextField(v.description??null),...symbol(v.status,LifecycleStatus),...symbol(v.priority,Priority),...optional(v.ownership.ownerId,1,text),...optional(v.ownership.authorityId,1,text),...timestamp(v.timestamps)]);await ordered(p,"architect_entity_consultant",id,v.ownership.consultantIds,text);await ordered(p,"architect_entity_participant",id,v.ownership.participantIds,text);await ordered(p,"architect_entity_tag",id,v.tags,text);await ordered(p,"architect_entity_note",id,v.notes,note);return id}
+async function quantity(p:ArtifactSqliteProjection,entity:bigint,slot:string,table:string,v:QuantitySpec):Promise<void>{const id=await p.insert("architect_quantity_spec",[entity,slot,...text(v.unit),...optional(v.min??null,3,float),...optional(v.max??null,3,float),...optional(v.target??null,3,float),...optional(v.current??null,3,float),...optional(v.forecast??null,3,float),...optional(v.peak??null,3,float),...optional(v.average??null,3,float)]);await p.insert(table,[id],entity)}
 const Priority=["mandatory","essential","preferred","optional","deferred","prohibited"] as const;
 const LifecycleStatus=["draft","proposed","underReview","validated","approved","rejected","deferred","superseded","archived","open","closed","atRisk","blocked","inProgress","complete"] as const;
 const InfluenceLevel=["low","medium","high","critical"] as const;
@@ -89,9 +93,9 @@ const AuditAction=["created","updated","deleted","reviewed","approved","rejected
 const CostBasis=["capital","operational","lifecycle","replacement","maintenance"] as const;
 const DeliveryPhase=["concept","schematic","designDevelopment","constructionDocuments","procurement","construction","commissioning","occupancy"] as const;
 const TraceKind=["objectiveToRequirement","stakeholderToRequirement","userToActivity","activityToFunction","functionToProgramElement","requirementToDecision","requirementToRisk","requirementToStandard","requirementToValidation","requirementToApproval","requirementToChange","equipmentToActivity","processToResource","constraintToImpact","scenarioToDecision","issueToAction","actionToOwner","decisionToOutcome","versionToChange","fullAuditTrail"] as const;
-const trace=(value:model.TraceLink):Cells=>[...text(value.id),...text(value.fromId),...text(value.toId),...symbol(value.kind,TraceKind),...optional(value.label??null,1,text)];
-function readTrace(c:Cursor):model.TraceLink{const id=c.text(),fromId=c.text(),toId=c.text(),kind=c.symbol(TraceKind),label=c.optional(1,()=>c.text());return{id,fromId,toId,kind,...label===null?{}:{label}}}
-async function projectApprovalRecord(p:ArtifactSqliteProjection,id:bigint,v:model.ApprovalRecord):Promise<void>{
+const trace=(value:TraceLink):Cells=>[...text(value.id),...text(value.fromId),...text(value.toId),...symbol(value.kind,TraceKind),...optional(value.label??null,1,text)];
+function readTrace(c:Cursor):TraceLink{const id=c.text(),fromId=c.text(),toId=c.text(),kind=c.symbol(TraceKind),label=c.optional(1,()=>c.text());return{id,fromId,toId,kind,...label===null?{}:{label}}}
+async function projectApprovalRecord(p:ArtifactSqliteProjection,id:bigint,v:ApprovalRecord):Promise<void>{
  await p.insert("architect_approval_record",[...text(v.approvalType),...text(v.subjectId),...optional(v.approvalDate,1,text),...symbol(v.approvalStatus,LifecycleStatus),...optional(v.expiryDate,1,text),...optional(v.relatedDecisionId,1,text),...optional(v.relatedChangeId,1,text),...optional(v.signatureMethod,1,text),...optionalTextField(v.rejectionReason),...optional(v.resubmissionDate,1,text),...optional(v.workflowStep,1,text),...optional(v.version,1,text),...optional(v.auditTrailRef,1,text)],id);
  await ordered(p,"architect_approval_approver",id,v.approverIds,text);
  await ordered(p,"architect_approval_condition",id,v.conditions,text);
@@ -100,7 +104,7 @@ async function projectApprovalRecord(p:ArtifactSqliteProjection,id:bigint,v:mode
  await ordered(p,"architect_approval_authority_basis",id,v.authorityBasis,text);
  await ordered(p,"architect_approval_notification",id,v.notificationList,text);
 }
-async function restoreApprovalRecord(r:Reader,hrow:SqliteRow,h:model.EntityHeader):Promise<model.ApprovalRecord>{
+async function restoreApprovalRecord(r:Reader,hrow:SqliteRow,h:EntityHeader):Promise<ApprovalRecord>{
  const row=await r.body("architect_approval_record",hrow.rowid,16),c=new Cursor(row!);
  const approvalType=c.text();
  const subjectId=c.text();
@@ -124,7 +128,7 @@ async function restoreApprovalRecord(r:Reader,hrow:SqliteRow,h:model.EntityHeade
  const notificationList=await r.list("architect_approval_notification",hrow.rowid,1,c=>c.text());
  return{...h,approvalType,subjectId,approvalDate,approvalStatus,expiryDate,relatedDecisionId,relatedChangeId,signatureMethod,rejectionReason,resubmissionDate,workflowStep,version,auditTrailRef,approverIds,conditions,delegationChain,evidenceRefs,authorityBasis,notificationList};
 }
-async function projectMeetingRecord(p:ArtifactSqliteProjection,id:bigint,v:model.MeetingRecord):Promise<void>{
+async function projectMeetingRecord(p:ArtifactSqliteProjection,id:bigint,v:MeetingRecord):Promise<void>{
  await p.insert("architect_meeting_record",[...text(v.meetingType),...optional(v.scheduledDate,1,text),...optional(v.duration,1,text),...optional(v.location,1,text),...optional(v.chairId,1,text),...optionalTextField(v.minutes),...optional(v.followUpDate,1,text),...optional(v.recordingRef,1,text),...boolean(v.quorumMet),...symbol(v.meetingStatus,LifecycleStatus),...optional(v.workshopId,1,text)],id);
  await ordered(p,"architect_meeting_attendee",id,v.attendeeIds,text);
  await ordered(p,"architect_meeting_agenda_item",id,v.agendaItems,text);
@@ -136,7 +140,7 @@ async function projectMeetingRecord(p:ArtifactSqliteProjection,id:bigint,v:model
  await ordered(p,"architect_meeting_issue",id,v.issueIds,text);
  await ordered(p,"architect_meeting_approval",id,v.approvalIds,text);
 }
-async function restoreMeetingRecord(r:Reader,hrow:SqliteRow,h:model.EntityHeader):Promise<model.MeetingRecord>{
+async function restoreMeetingRecord(r:Reader,hrow:SqliteRow,h:EntityHeader):Promise<MeetingRecord>{
  const row=await r.body("architect_meeting_record",hrow.rowid,14),c=new Cursor(row!);
  const meetingType=c.text();
  const scheduledDate=c.optional(1,()=>c.text());
@@ -161,7 +165,7 @@ async function restoreMeetingRecord(r:Reader,hrow:SqliteRow,h:model.EntityHeader
  const approvalIds=await r.list("architect_meeting_approval",hrow.rowid,1,c=>c.text());
  return{...h,meetingType,scheduledDate,duration,location,chairId,minutes,followUpDate,recordingRef,quorumMet,meetingStatus,workshopId,attendeeIds,agendaItems,actionItems,decisionsMade,artifactRefs,stakeholderIds,requirementIds,issueIds,approvalIds};
 }
-async function projectAssumption(p:ArtifactSqliteProjection,id:bigint,v:model.Assumption):Promise<void>{
+async function projectAssumption(p:ArtifactSqliteProjection,id:bigint,v:Assumption):Promise<void>{
  await p.insert("architect_assumption",[...textField(v.statement),...optionalTextField(v.basis),...optional(v.confidenceLevel,1,text),...optionalTextField(v.impactIfFalse),...symbol(v.validationStatus,ValidationStatus),...optional(v.validatedBy,1,text),...optional(v.validationDate,1,text),...optional(v.ownerId,1,text),...optional(v.reviewCycle,1,text),...optional(v.source,1,text),...optional(v.category,1,text),...optional(v.expirationDate,1,text)],id);
  await ordered(p,"architect_assumption_related_entity",id,v.relatedEntityIds,text);
  await ordered(p,"architect_assumption_dependency",id,v.dependencies,text);
@@ -171,7 +175,7 @@ async function projectAssumption(p:ArtifactSqliteProjection,id:bigint,v:model.As
  await ordered(p,"architect_assumption_status_note",id,v.statusNotes,note);
  await ordered(p,"architect_assumption_artifact_ref",id,v.artifactRefs,text);
 }
-async function restoreAssumption(r:Reader,hrow:SqliteRow,h:model.EntityHeader):Promise<model.Assumption>{
+async function restoreAssumption(r:Reader,hrow:SqliteRow,h:EntityHeader):Promise<Assumption>{
  const row=await r.body("architect_assumption",hrow.rowid,18),c=new Cursor(row!);
  const statement=c.textField();
  const basis=c.optionalTextField();
@@ -195,7 +199,7 @@ async function restoreAssumption(r:Reader,hrow:SqliteRow,h:model.EntityHeader):P
  const artifactRefs=await r.list("architect_assumption_artifact_ref",hrow.rowid,1,c=>c.text());
  return{...h,statement,basis,confidenceLevel,impactIfFalse,validationStatus,validatedBy,validationDate,ownerId,reviewCycle,source,category,expirationDate,relatedEntityIds,dependencies,mitigation,linkedRequirementIds,linkedRiskIds,statusNotes,artifactRefs};
 }
-async function projectConstraintRecord(p:ArtifactSqliteProjection,id:bigint,v:model.ConstraintRecord):Promise<void>{
+async function projectConstraintRecord(p:ArtifactSqliteProjection,id:bigint,v:ConstraintRecord):Promise<void>{
  await p.insert("architect_constraint_record",[...text(v.constraintType),...textField(v.summary),...symbol(v.severity,RiskLevel),...optional(v.source,1,text),...optional(v.ownerId,1,text),...optional(v.effectiveDate,1,text),...optional(v.expiryDate,1,text),...optional(v.waiverStatus,1,text),...optional(v.waiverApprover,1,text),...optionalTextField(v.impactAssessment),...optional(v.monitoringFrequency,1,text),...symbol(v.complianceStatus,ValidationStatus),...optional(v.escalationContactId,1,text)],id);
  await ordered(p,"architect_constraint_affected_entity",id,v.affectedEntityIds,text);
  await ordered(p,"architect_constraint_regulatory_basis",id,v.regulatoryBasis,text);
@@ -206,7 +210,7 @@ async function projectConstraintRecord(p:ArtifactSqliteProjection,id:bigint,v:mo
  await ordered(p,"architect_constraint_exception",id,v.exceptions,text);
  await ordered(p,"architect_constraint_trace",id,v.traceLinks,trace);
 }
-async function restoreConstraintRecord(r:Reader,hrow:SqliteRow,h:model.EntityHeader):Promise<model.ConstraintRecord>{
+async function restoreConstraintRecord(r:Reader,hrow:SqliteRow,h:EntityHeader):Promise<ConstraintRecord>{
  const row=await r.body("architect_constraint_record",hrow.rowid,17),c=new Cursor(row!);
  const constraintType=c.text();
  const summary=c.textField();
@@ -232,7 +236,7 @@ async function restoreConstraintRecord(r:Reader,hrow:SqliteRow,h:model.EntityHea
  const traceLinks=await r.list("architect_constraint_trace",hrow.rowid,5,c=>readTrace(c));
  return{...h,constraintType,summary,severity,source,ownerId,effectiveDate,expiryDate,waiverStatus,waiverApprover,impactAssessment,monitoringFrequency,complianceStatus,escalationContactId,affectedEntityIds,regulatoryBasis,mitigationOptions,resolutionPlan,relatedRequirementIds,relatedDecisionIds,exceptions,traceLinks};
 }
-async function projectComplianceRecord(p:ArtifactSqliteProjection,id:bigint,v:model.ComplianceRecord):Promise<void>{
+async function projectComplianceRecord(p:ArtifactSqliteProjection,id:bigint,v:ComplianceRecord):Promise<void>{
  await p.insert("architect_compliance_record",[...text(v.standardRef),...textField(v.obligation),...symbol(v.complianceStatus,ValidationStatus),...optional(v.auditorId,1,text),...optional(v.auditDate,1,text),...optional(v.nextReview,1,text),...optional(v.ownerId,1,text),...symbol(v.severity,RiskLevel),...optional(v.regulatoryBody,1,text),...optional(v.certificationTarget,1,text),...optional(v.waiverStatus,1,text),...optional(v.monitoringMethod,1,text),...optional(v.reportingFrequency,1,text)],id);
  await ordered(p,"architect_compliance_evidence_ref",id,v.evidenceRefs,text);
  await ordered(p,"architect_compliance_affected_entity",id,v.affectedEntityIds,text);
@@ -243,7 +247,7 @@ async function projectComplianceRecord(p:ArtifactSqliteProjection,id:bigint,v:mo
  await ordered(p,"architect_compliance_corrective_action",id,v.correctiveActions,text);
  await ordered(p,"architect_compliance_artifact_ref",id,v.artifactRefs,text);
 }
-async function restoreComplianceRecord(r:Reader,hrow:SqliteRow,h:model.EntityHeader):Promise<model.ComplianceRecord>{
+async function restoreComplianceRecord(r:Reader,hrow:SqliteRow,h:EntityHeader):Promise<ComplianceRecord>{
  const row=await r.body("architect_compliance_record",hrow.rowid,15),c=new Cursor(row!);
  const standardRef=c.text();
  const obligation=c.textField();
@@ -269,7 +273,7 @@ async function restoreComplianceRecord(r:Reader,hrow:SqliteRow,h:model.EntityHea
  const artifactRefs=await r.list("architect_compliance_artifact_ref",hrow.rowid,1,c=>c.text());
  return{...h,standardRef,obligation,complianceStatus,auditorId,auditDate,nextReview,ownerId,severity,regulatoryBody,certificationTarget,waiverStatus,monitoringMethod,reportingFrequency,evidenceRefs,affectedEntityIds,gapAnalysis,remediationPlan,relatedRequirementIds,penalties,correctiveActions,artifactRefs};
 }
-async function projectTemplateRecord(p:ArtifactSqliteProjection,id:bigint,v:model.TemplateRecord):Promise<void>{
+async function projectTemplateRecord(p:ArtifactSqliteProjection,id:bigint,v:TemplateRecord):Promise<void>{
  await p.insert("architect_template_record",[...text(v.templateType),...optional(v.sector,1,text),...optional(v.projectType,1,text),...text(v.version),...optional(v.contentRef,1,text),...optional(v.authorId,1,text),...symbol(v.approvalStatus,ValidationStatus),...uint64(v.usageCount),...optional(v.lastApplied,1,text),...optional(v.license,1,text),...optional(v.sourceOrganization,1,text)],id);
  await ordered(p,"architect_template_entity_kind",id,v.entityKinds,text);
  await ordered(p,"architect_template_default_field",id,v.defaultFields,text);
@@ -280,7 +284,7 @@ async function projectTemplateRecord(p:ArtifactSqliteProjection,id:bigint,v:mode
  await ordered(p,"architect_template_related_knowledge",id,v.relatedKnowledgeIds,text);
  await ordered(p,"architect_template_benchmark",id,v.benchmarkIds,text);
 }
-async function restoreTemplateRecord(r:Reader,hrow:SqliteRow,h:model.EntityHeader):Promise<model.TemplateRecord>{
+async function restoreTemplateRecord(r:Reader,hrow:SqliteRow,h:EntityHeader):Promise<TemplateRecord>{
  const row=await r.body("architect_template_record",hrow.rowid,13),c=new Cursor(row!);
  const templateType=c.text();
  const sector=c.optional(1,()=>c.text());
@@ -304,7 +308,7 @@ async function restoreTemplateRecord(r:Reader,hrow:SqliteRow,h:model.EntityHeade
  const benchmarkIds=await r.list("architect_template_benchmark",hrow.rowid,1,c=>c.text());
  return{...h,templateType,sector,projectType,version,contentRef,authorId,approvalStatus,usageCount,lastApplied,license,sourceOrganization,entityKinds,defaultFields,checklists,standards,applicability,customizationNotes,relatedKnowledgeIds,benchmarkIds};
 }
-async function projectKnowledgeRecord(p:ArtifactSqliteProjection,id:bigint,v:model.KnowledgeRecord):Promise<void>{
+async function projectKnowledgeRecord(p:ArtifactSqliteProjection,id:bigint,v:KnowledgeRecord):Promise<void>{
  await p.insert("architect_knowledge_record",[...text(v.topic),...text(v.category),...textField(v.summary),...textField(v.content),...optional(v.expertiseLevel,1,text),...symbol(v.validationStatus,ValidationStatus),...optional(v.lastReviewed,1,text),...uint64(v.usageCount)],id);
  await ordered(p,"architect_knowledge_source",id,v.sources,text);
  await ordered(p,"architect_knowledge_reference",id,v.references,text);
@@ -317,7 +321,7 @@ async function projectKnowledgeRecord(p:ArtifactSqliteProjection,id:bigint,v:mod
  await ordered(p,"architect_knowledge_attachment",id,v.attachments,text);
  await ordered(p,"architect_knowledge_citation",id,v.citations,text);
 }
-async function restoreKnowledgeRecord(r:Reader,hrow:SqliteRow,h:model.EntityHeader):Promise<model.KnowledgeRecord>{
+async function restoreKnowledgeRecord(r:Reader,hrow:SqliteRow,h:EntityHeader):Promise<KnowledgeRecord>{
  const row=await r.body("architect_knowledge_record",hrow.rowid,12),c=new Cursor(row!);
  const topic=c.text();
  const category=c.text();
@@ -340,14 +344,14 @@ async function restoreKnowledgeRecord(r:Reader,hrow:SqliteRow,h:model.EntityHead
  const citations=await r.list("architect_knowledge_citation",hrow.rowid,1,c=>c.text());
  return{...h,topic,category,summary,content,expertiseLevel,validationStatus,lastReviewed,usageCount,sources,references,lessonsLearned,bestPractices,applicableSectors,relatedEntityKinds,authorIds,keywords,attachments,citations};
 }
-async function projectBenchmarkRecord(p:ArtifactSqliteProjection,id:bigint,v:model.BenchmarkRecord):Promise<void>{
+async function projectBenchmarkRecord(p:ArtifactSqliteProjection,id:bigint,v:BenchmarkRecord):Promise<void>{
  await p.insert("architect_benchmark_record",[...text(v.benchmarkName),...text(v.sector),...text(v.metric),...float(v.value),...text(v.unit),...optional(v.sampleSize,1,uint32),...optional(v.source,1,text),...optional(v.collectionYear,1,uint32),...optional(v.geography,1,text),...optional(v.buildingType,1,text),...optional(v.confidence,1,text),...optional(v.methodology,1,text),...optional(v.license,1,text),...optional(v.knowledgeId,1,text),...optional(v.lastVerified,1,text)],id);
  await ordered(p,"architect_benchmark_applicable_element_kind",id,v.applicableElementKinds,text);
  await ordered(p,"architect_benchmark_related_requirement",id,v.relatedRequirementIds,text);
  await ordered(p,"architect_benchmark_comparison_note",id,v.comparisonNotes,text);
  await ordered(p,"architect_benchmark_limitation",id,v.limitations,text);
 }
-async function restoreBenchmarkRecord(r:Reader,hrow:SqliteRow,h:model.EntityHeader):Promise<model.BenchmarkRecord>{
+async function restoreBenchmarkRecord(r:Reader,hrow:SqliteRow,h:EntityHeader):Promise<BenchmarkRecord>{
  const row=await r.body("architect_benchmark_record",hrow.rowid,18),c=new Cursor(row!);
  const benchmarkName=c.text();
  const sector=c.text();
@@ -371,7 +375,7 @@ async function restoreBenchmarkRecord(r:Reader,hrow:SqliteRow,h:model.EntityHead
  const limitations=await r.list("architect_benchmark_limitation",hrow.rowid,1,c=>c.text());
  return{...h,benchmarkName,sector,metric,value,unit,sampleSize,source,collectionYear,geography,buildingType,confidence,methodology,license,knowledgeId,lastVerified,applicableElementKinds,relatedRequirementIds,comparisonNotes,limitations};
 }
-async function projectIssue(p:ArtifactSqliteProjection,id:bigint,v:model.Issue):Promise<void>{
+async function projectIssue(p:ArtifactSqliteProjection,id:bigint,v:Issue):Promise<void>{
  await p.insert("architect_issue",[...text(v.issueType),...textField(v.summary),...textField(v.issueDescription),...symbol(v.severity,IssueSeverity),...symbol(v.issuePriority,Priority),...optional(v.reporterId,1,text),...optional(v.assigneeId,1,text),...optionalTextField(v.rootCause),...optionalTextField(v.resolution),...optionalTextField(v.workaround),...optional(v.dueDate,1,text),...optional(v.resolvedDate,1,text),...optional(v.decisionId,1,text),...optional(v.escalationLevel,1,text)],id);
  await ordered(p,"architect_issue_affected_entity",id,v.affectedEntityIds,text);
  await ordered(p,"architect_issue_related_conflict",id,v.relatedConflictIds,text);
@@ -379,7 +383,7 @@ async function projectIssue(p:ArtifactSqliteProjection,id:bigint,v:model.Issue):
  await ordered(p,"architect_issue_comment",id,v.comments,note);
  await ordered(p,"architect_issue_attachment",id,v.attachments,text);
 }
-async function restoreIssue(r:Reader,hrow:SqliteRow,h:model.EntityHeader):Promise<model.Issue>{
+async function restoreIssue(r:Reader,hrow:SqliteRow,h:EntityHeader):Promise<Issue>{
  const row=await r.body("architect_issue",hrow.rowid,23),c=new Cursor(row!);
  const issueType=c.text();
  const summary=c.textField();
@@ -403,7 +407,7 @@ async function restoreIssue(r:Reader,hrow:SqliteRow,h:model.EntityHeader):Promis
  const attachments=await r.list("architect_issue_attachment",hrow.rowid,1,c=>c.text());
  return{...h,issueType,summary,issueDescription,severity,issuePriority,reporterId,assigneeId,rootCause,resolution,workaround,dueDate,resolvedDate,decisionId,escalationLevel,affectedEntityIds,relatedConflictIds,relatedRiskIds,comments,attachments};
 }
-async function projectStatusRecord(p:ArtifactSqliteProjection,id:bigint,v:model.StatusRecord):Promise<void>{
+async function projectStatusRecord(p:ArtifactSqliteProjection,id:bigint,v:StatusRecord):Promise<void>{
  await p.insert("architect_status_record",[...text(v.subjectId),...text(v.subjectKind),...symbol(v.recordStatus,LifecycleStatus),...optional(v.previousStatus,1,value=>symbol(value,LifecycleStatus)),...optional(v.changedBy,1,text),...optional(v.changedAt,1,text),...optionalTextField(v.reason),...optional(v.dueDate,1,text),...optional(v.progressPercent,3,float),...optional(v.health,1,text),...optional(v.escalationLevel,1,text),...optional(v.milestoneId,1,text),...optional(v.reportingPeriod,1,text)],id);
  await ordered(p,"architect_status_blocker",id,v.blockers,text);
  await ordered(p,"architect_status_next_action",id,v.nextActions,text);
@@ -411,7 +415,7 @@ async function projectStatusRecord(p:ArtifactSqliteProjection,id:bigint,v:model.
  await ordered(p,"architect_status_related_risk",id,v.relatedRiskIds,text);
  await ordered(p,"architect_status_note",id,v.statusNotes,note);
 }
-async function restoreStatusRecord(r:Reader,hrow:SqliteRow,h:model.EntityHeader):Promise<model.StatusRecord>{
+async function restoreStatusRecord(r:Reader,hrow:SqliteRow,h:EntityHeader):Promise<StatusRecord>{
  const row=await r.body("architect_status_record",hrow.rowid,18),c=new Cursor(row!);
  const subjectId=c.text();
  const subjectKind=c.text();
@@ -434,7 +438,7 @@ async function restoreStatusRecord(r:Reader,hrow:SqliteRow,h:model.EntityHeader)
  const statusNotes=await r.list("architect_status_note",hrow.rowid,2,c=>c.note());
  return{...h,subjectId,subjectKind,recordStatus,previousStatus,changedBy,changedAt,reason,dueDate,progressPercent,health,escalationLevel,milestoneId,reportingPeriod,blockers,nextActions,relatedIssueIds,relatedRiskIds,statusNotes};
 }
-async function projectWorkshop(p:ArtifactSqliteProjection,id:bigint,v:model.Workshop):Promise<void>{
+async function projectWorkshop(p:ArtifactSqliteProjection,id:bigint,v:Workshop):Promise<void>{
  await p.insert("architect_workshop",[...text(v.workshopType),...optional(v.facilitatorId,1,text),...optional(v.scheduledStart,1,text),...optional(v.scheduledEnd,1,text),...optional(v.location,1,text),...optional(v.recordingRef,1,text),...optional(v.budget,3,float),...symbol(v.workshopStatus,LifecycleStatus)],id);
  await ordered(p,"architect_workshop_objective",id,v.objectives,text);
  await ordered(p,"architect_workshop_agenda",id,v.agenda,text);
@@ -448,7 +452,7 @@ async function projectWorkshop(p:ArtifactSqliteProjection,id:bigint,v:model.Work
  await ordered(p,"architect_workshop_feedback",id,v.feedback,note);
  await ordered(p,"architect_workshop_survey",id,v.surveyIds,text);
 }
-async function restoreWorkshop(r:Reader,hrow:SqliteRow,h:model.EntityHeader):Promise<model.Workshop>{
+async function restoreWorkshop(r:Reader,hrow:SqliteRow,h:EntityHeader):Promise<Workshop>{
  const row=await r.body("architect_workshop",hrow.rowid,11),c=new Cursor(row!);
  const workshopType=c.text();
  const facilitatorId=c.optional(1,()=>c.text());
@@ -472,7 +476,7 @@ async function restoreWorkshop(r:Reader,hrow:SqliteRow,h:model.EntityHeader):Pro
  const surveyIds=await r.list("architect_workshop_survey",hrow.rowid,1,c=>c.text());
  return{...h,workshopType,facilitatorId,scheduledStart,scheduledEnd,location,recordingRef,budget,workshopStatus,objectives,agenda,participants,materials,methods,outputs,decisions,issues,followUpActions,feedback,surveyIds};
 }
-async function projectSurvey(p:ArtifactSqliteProjection,id:bigint,v:model.Survey):Promise<void>{
+async function projectSurvey(p:ArtifactSqliteProjection,id:bigint,v:Survey):Promise<void>{
  await p.insert("architect_survey",[...text(v.surveyType),...text(v.title),...optional(v.launchDate,1,text),...optional(v.closeDate,1,text),...uint32(v.responseCount),...optional(v.responseRate,3,float),...optional(v.confidentiality,1,text),...optional(v.analysisId,1,text),...optional(v.workshopId,1,text),...optional(v.ownerId,1,text),...symbol(v.surveyStatus,LifecycleStatus)],id);
  await ordered(p,"architect_survey_objective",id,v.objectives,text);
  await ordered(p,"architect_survey_question",id,v.questions,text);
@@ -483,7 +487,7 @@ async function projectSurvey(p:ArtifactSqliteProjection,id:bigint,v:model.Survey
  await ordered(p,"architect_survey_recommendation",id,v.recommendations,text);
  await ordered(p,"architect_survey_consent_process",id,v.consentProcess,text);
 }
-async function restoreSurvey(r:Reader,hrow:SqliteRow,h:model.EntityHeader):Promise<model.Survey>{
+async function restoreSurvey(r:Reader,hrow:SqliteRow,h:EntityHeader):Promise<Survey>{
  const row=await r.body("architect_survey",hrow.rowid,14),c=new Cursor(row!);
  const surveyType=c.text();
  const title=c.text();
@@ -507,7 +511,7 @@ async function restoreSurvey(r:Reader,hrow:SqliteRow,h:model.EntityHeader):Promi
  const consentProcess=await r.list("architect_survey_consent_process",hrow.rowid,1,c=>c.text());
  return{...h,surveyType,title,launchDate,closeDate,responseCount,responseRate,confidentiality,analysisId,workshopId,ownerId,surveyStatus,objectives,questions,targetAudience,distributionChannels,findings,themes,recommendations,consentProcess};
 }
-async function projectSearchFilter(p:ArtifactSqliteProjection,id:bigint,v:model.SearchFilter):Promise<void>{
+async function projectSearchFilter(p:ArtifactSqliteProjection,id:bigint,v:SearchFilter):Promise<void>{
  await p.insert("architect_search_filter",[...text(v.filterName),...optionalTextField(v.filterDescription),...optional(v.dateFrom,1,text),...optional(v.dateTo,1,text),...optional(v.sortField,1,text),...optional(v.sortDirection,1,text),...boolean(v.isPublic),...optional(v.createdBy,1,text),...optional(v.lastUsed,1,text),...uint64(v.useCount),...boolean(v.pinned)],id);
  await ordered(p,"architect_search_keyword",id,v.keywords,text);
  await ordered(p,"architect_search_category",id,v.categories,text);
@@ -518,7 +522,7 @@ async function projectSearchFilter(p:ArtifactSqliteProjection,id:bigint,v:model.
  await ordered(p,"architect_search_entity_kind",id,v.entityKinds,text);
  await ordered(p,"architect_search_tag_filter",id,v.tagFilters,text);
 }
-async function restoreSearchFilter(r:Reader,hrow:SqliteRow,h:model.EntityHeader):Promise<model.SearchFilter>{
+async function restoreSearchFilter(r:Reader,hrow:SqliteRow,h:EntityHeader):Promise<SearchFilter>{
  const row=await r.body("architect_search_filter",hrow.rowid,15),c=new Cursor(row!);
  const filterName=c.text();
  const filterDescription=c.optionalTextField();
@@ -542,7 +546,7 @@ async function restoreSearchFilter(r:Reader,hrow:SqliteRow,h:model.EntityHeader)
  const tagFilters=await r.list("architect_search_tag_filter",hrow.rowid,1,c=>c.text());
  return{...h,filterName,filterDescription,dateFrom,dateTo,sortField,sortDirection,isPublic,createdBy,lastUsed,useCount,pinned,keywords,categories,ownerIds,statuses,priorities,sources,entityKinds,tagFilters};
 }
-async function projectCollaborationRecord(p:ArtifactSqliteProjection,id:bigint,v:model.CollaborationRecord):Promise<void>{
+async function projectCollaborationRecord(p:ArtifactSqliteProjection,id:bigint,v:CollaborationRecord):Promise<void>{
  await p.insert("architect_collaboration_record",[...text(v.sessionType),...text(v.title),...optional(v.facilitatorId,1,text),...optional(v.startTime,1,text),...optional(v.endTime,1,text),...optional(v.location,1,text),...optional(v.recordingRef,1,text),...optional(v.followUpDate,1,text),...optional(v.workshopId,1,text),...optional(v.surveyId,1,text)],id);
  await ordered(p,"architect_collaboration_participant",id,v.participants,text);
  await ordered(p,"architect_collaboration_agenda",id,v.agenda,text);
@@ -553,7 +557,7 @@ async function projectCollaborationRecord(p:ArtifactSqliteProjection,id:bigint,v
  await ordered(p,"architect_collaboration_document",id,v.documentIds,text);
  await ordered(p,"architect_collaboration_feedback",id,v.feedback,note);
 }
-async function restoreCollaborationRecord(r:Reader,hrow:SqliteRow,h:model.EntityHeader):Promise<model.CollaborationRecord>{
+async function restoreCollaborationRecord(r:Reader,hrow:SqliteRow,h:EntityHeader):Promise<CollaborationRecord>{
  const row=await r.body("architect_collaboration_record",hrow.rowid,11),c=new Cursor(row!);
  const sessionType=c.text();
  const title=c.text();
@@ -576,7 +580,7 @@ async function restoreCollaborationRecord(r:Reader,hrow:SqliteRow,h:model.Entity
  const feedback=await r.list("architect_collaboration_feedback",hrow.rowid,2,c=>c.note());
  return{...h,sessionType,title,facilitatorId,startTime,endTime,location,recordingRef,followUpDate,workshopId,surveyId,participants,agenda,outcomes,actionItems,decisionIds,issueIds,documentIds,feedback};
 }
-async function projectAnalysisRecord(p:ArtifactSqliteProjection,id:bigint,v:model.AnalysisRecord):Promise<void>{
+async function projectAnalysisRecord(p:ArtifactSqliteProjection,id:bigint,v:AnalysisRecord):Promise<void>{
  await p.insert("architect_analysis_record",[...symbol(v.kind,AnalysisKind),...text(v.title),...textField(v.outputSummary),...optional(v.runBy,1,text),...optional(v.runAt,1,text),...optional(v.durationMs,2,uint64),...optional(v.toolVersion,1,text),...optional(v.scenarioId,1,text),...optional(v.reportId,1,text),...optional(v.confidence,1,text),...optional(v.rawResultRef,1,text)],id);
  await ordered(p,"architect_analysis_parameter",id,v.parameters,text);
  await ordered(p,"architect_analysis_input_entity",id,v.inputEntityIds,text);
@@ -586,7 +590,7 @@ async function projectAnalysisRecord(p:ArtifactSqliteProjection,id:bigint,v:mode
  await ordered(p,"architect_analysis_limitation",id,v.limitations,text);
  await ordered(p,"architect_analysis_recommendation",id,v.recommendations,text);
 }
-async function restoreAnalysisRecord(r:Reader,hrow:SqliteRow,h:model.EntityHeader):Promise<model.AnalysisRecord>{
+async function restoreAnalysisRecord(r:Reader,hrow:SqliteRow,h:EntityHeader):Promise<AnalysisRecord>{
  const row=await r.body("architect_analysis_record",hrow.rowid,14),c=new Cursor(row!);
  const kind=c.symbol(AnalysisKind);
  const title=c.text();
@@ -609,7 +613,7 @@ async function restoreAnalysisRecord(r:Reader,hrow:SqliteRow,h:model.EntityHeade
  const recommendations=await r.list("architect_analysis_recommendation",hrow.rowid,1,c=>c.text());
  return{...h,kind,title,outputSummary,runBy,runAt,durationMs,toolVersion,scenarioId,reportId,confidence,rawResultRef,parameters,inputEntityIds,findings,metrics,charts,limitations,recommendations};
 }
-async function projectReportRecord(p:ArtifactSqliteProjection,id:bigint,v:model.ReportRecord):Promise<void>{
+async function projectReportRecord(p:ArtifactSqliteProjection,id:bigint,v:ReportRecord):Promise<void>{
  await p.insert("architect_report_record",[...symbol(v.kind,ReportKind),...text(v.title),...optional(v.generatedAt,1,text),...optional(v.generatedBy,1,text),...optional(v.format,1,text),...optional(v.fileRef,1,text),...symbol(v.approvalStatus,ValidationStatus),...optional(v.approverId,1,text),...text(v.version),...optional(v.templateId,1,text),...optional(v.confidentiality,1,text),...optional(v.expiryDate,1,text)],id);
  await ordered(p,"architect_report_audience",id,v.audience,text);
  await ordered(p,"architect_report_section",id,v.sections,text);
@@ -618,7 +622,7 @@ async function projectReportRecord(p:ArtifactSqliteProjection,id:bigint,v:model.
  await ordered(p,"architect_report_parameter",id,v.parameters,text);
  await ordered(p,"architect_report_related_decision",id,v.relatedDecisionIds,text);
 }
-async function restoreReportRecord(r:Reader,hrow:SqliteRow,h:model.EntityHeader):Promise<model.ReportRecord>{
+async function restoreReportRecord(r:Reader,hrow:SqliteRow,h:EntityHeader):Promise<ReportRecord>{
  const row=await r.body("architect_report_record",hrow.rowid,13),c=new Cursor(row!);
  const kind=c.symbol(ReportKind);
  const title=c.text();
@@ -641,7 +645,7 @@ async function restoreReportRecord(r:Reader,hrow:SqliteRow,h:model.EntityHeader)
  const relatedDecisionIds=await r.list("architect_report_related_decision",hrow.rowid,1,c=>c.text());
  return{...h,kind,title,generatedAt,generatedBy,format,fileRef,approvalStatus,approverId,version,templateId,confidentiality,expiryDate,audience,sections,analysisIds,distributionList,parameters,relatedDecisionIds};
 }
-async function projectChangeRecord(p:ArtifactSqliteProjection,id:bigint,v:model.ChangeRecord):Promise<void>{
+async function projectChangeRecord(p:ArtifactSqliteProjection,id:bigint,v:ChangeRecord):Promise<void>{
  await p.insert("architect_change_record",[...text(v.changeType),...textField(v.summary),...textField(v.reason),...optional(v.requestedBy,1,text),...optional(v.approvedBy,1,text),...optional(v.changeDate,1,text),...optional(v.effectiveDate,1,text),...optional(v.beforeSnapshot,1,text),...optional(v.afterSnapshot,1,text),...optional(v.costImpact,3,float),...optional(v.scheduleImpact,1,text),...symbol(v.approvalStatus,ValidationStatus),...optional(v.versionFrom,1,text),...optional(v.versionTo,1,text)],id);
  await ordered(p,"architect_change_impacted_entity",id,v.impactedEntityIds,text);
  await ordered(p,"architect_change_risk_impact",id,v.riskImpact,text);
@@ -649,7 +653,7 @@ async function projectChangeRecord(p:ArtifactSqliteProjection,id:bigint,v:model.
  await ordered(p,"architect_change_communication_plan",id,v.communicationPlan,text);
  await ordered(p,"architect_change_audit_event",id,v.auditEventIds,text);
 }
-async function restoreChangeRecord(r:Reader,hrow:SqliteRow,h:model.EntityHeader):Promise<model.ChangeRecord>{
+async function restoreChangeRecord(r:Reader,hrow:SqliteRow,h:EntityHeader):Promise<ChangeRecord>{
  const row=await r.body("architect_change_record",hrow.rowid,19),c=new Cursor(row!);
  const changeType=c.text();
  const summary=c.textField();
@@ -673,12 +677,12 @@ async function restoreChangeRecord(r:Reader,hrow:SqliteRow,h:model.EntityHeader)
  const auditEventIds=await r.list("architect_change_audit_event",hrow.rowid,1,c=>c.text());
  return{...h,changeType,summary,reason,requestedBy,approvedBy,changeDate,effectiveDate,beforeSnapshot,afterSnapshot,costImpact,scheduleImpact,approvalStatus,versionFrom,versionTo,impactedEntityIds,riskImpact,rollbackPlan,communicationPlan,auditEventIds};
 }
-async function projectPerformanceCriterion(p:ArtifactSqliteProjection,id:bigint,v:model.PerformanceCriterion):Promise<void>{
+async function projectPerformanceCriterion(p:ArtifactSqliteProjection,id:bigint,v:PerformanceCriterion):Promise<void>{
  await p.insert("architect_performance_criterion",[...text(v.criterion),...text(v.metric),...optional(v.target,3,float),...optional(v.unit,1,text),...optional(v.minimum,3,float),...optional(v.maximum,3,float),...optional(v.measurementMethod,1,text),...optional(v.frequency,1,text),...optional(v.baseline,3,float),...optional(v.benchmarkRef,1,text),...optional(v.weight,3,float),...optional(v.dataSource,1,text),...optional(v.reportingCadence,1,text),...optional(v.ownerId,1,text),...optional(v.verificationPlan,1,text),...optional(v.penaltyThreshold,3,float),...optional(v.incentiveThreshold,3,float)],id);
  await ordered(p,"architect_performance_requirement",id,v.requirementIds,text);
  await ordered(p,"architect_performance_element",id,v.elementIds,text);
 }
-async function restorePerformanceCriterion(r:Reader,hrow:SqliteRow,h:model.EntityHeader):Promise<model.PerformanceCriterion>{
+async function restorePerformanceCriterion(r:Reader,hrow:SqliteRow,h:EntityHeader):Promise<PerformanceCriterion>{
  const row=await r.body("architect_performance_criterion",hrow.rowid,32),c=new Cursor(row!);
  const criterion=c.text();
  const metric=c.text();
@@ -702,7 +706,7 @@ async function restorePerformanceCriterion(r:Reader,hrow:SqliteRow,h:model.Entit
  const elementIds=await r.list("architect_performance_element",hrow.rowid,1,c=>c.text());
  return{...h,criterion,metric,target,unit,minimum,maximum,measurementMethod,frequency,baseline,benchmarkRef,weight,dataSource,reportingCadence,ownerId,verificationPlan,penaltyThreshold,incentiveThreshold,requirementIds,elementIds};
 }
-async function projectQualityRecord(p:ArtifactSqliteProjection,id:bigint,v:model.QualityRecord):Promise<void>{
+async function projectQualityRecord(p:ArtifactSqliteProjection,id:bigint,v:QualityRecord):Promise<void>{
  await p.insert("architect_quality_record",[...text(v.qualityTopic),...optional(v.standard,1,text),...optional(v.targetLevel,1,text),...optional(v.sampleRate,1,text),...optional(v.auditSchedule,1,text),...optional(v.ownerId,1,text)],id);
  await ordered(p,"architect_quality_inspection_point",id,v.inspectionPoints,text);
  await ordered(p,"architect_quality_acceptance_criterion",id,v.acceptanceCriteria,text);
@@ -718,7 +722,7 @@ async function projectQualityRecord(p:ArtifactSqliteProjection,id:bigint,v:model
  await ordered(p,"architect_quality_certification_target",id,v.certificationTargets,text);
  await ordered(p,"architect_quality_continuous_improvement",id,v.continuousImprovement,text);
 }
-async function restoreQualityRecord(r:Reader,hrow:SqliteRow,h:model.EntityHeader):Promise<model.QualityRecord>{
+async function restoreQualityRecord(r:Reader,hrow:SqliteRow,h:EntityHeader):Promise<QualityRecord>{
  const row=await r.body("architect_quality_record",hrow.rowid,7),c=new Cursor(row!);
  const qualityTopic=c.text();
  const standard=c.optional(1,()=>c.text());
@@ -742,7 +746,7 @@ async function restoreQualityRecord(r:Reader,hrow:SqliteRow,h:model.EntityHeader
  const continuousImprovement=await r.list("architect_quality_continuous_improvement",hrow.rowid,1,c=>c.text());
  return{...h,qualityTopic,standard,targetLevel,sampleRate,auditSchedule,ownerId,inspectionPoints,acceptanceCriteria,testingRequirements,defectCategories,correctiveActionProcess,elementIds,requirementIds,supplierRequirements,documentationRequirements,trainingRequirements,kpis,certificationTargets,continuousImprovement};
 }
-async function projectArtifactRecord(p:ArtifactSqliteProjection,id:bigint,v:model.ArtifactRecord):Promise<void>{
+async function projectArtifactRecord(p:ArtifactSqliteProjection,id:bigint,v:ArtifactRecord):Promise<void>{
  await p.insert("architect_artifact_record",[...text(v.documentType),...text(v.title),...text(v.version),...optional(v.fileRef,1,text),...optional(v.format,1,text),...optional(v.issueDate,1,text),...optional(v.revisionDate,1,text),...optional(v.classification,1,text),...optional(v.retentionPeriod,1,text),...optional(v.supersedes,1,text),...symbol(v.documentStatus,LifecycleStatus),...optional(v.checksum,1,text),...optional(v.sourceSystem,1,text)],id);
  await ordered(p,"architect_artifact_author",id,v.authorIds,text);
  await ordered(p,"architect_artifact_reviewer",id,v.reviewerIds,text);
@@ -751,7 +755,7 @@ async function projectArtifactRecord(p:ArtifactSqliteProjection,id:bigint,v:mode
  await ordered(p,"architect_artifact_related_entity",id,v.relatedEntityIds,text);
  await ordered(p,"architect_artifact_access_control",id,v.accessControls,text);
 }
-async function restoreArtifactRecord(r:Reader,hrow:SqliteRow,h:model.EntityHeader):Promise<model.ArtifactRecord>{
+async function restoreArtifactRecord(r:Reader,hrow:SqliteRow,h:EntityHeader):Promise<ArtifactRecord>{
  const row=await r.body("architect_artifact_record",hrow.rowid,14),c=new Cursor(row!);
  const documentType=c.text();
  const title=c.text();
@@ -775,7 +779,7 @@ async function restoreArtifactRecord(r:Reader,hrow:SqliteRow,h:model.EntityHeade
  const accessControls=await r.list("architect_artifact_access_control",hrow.rowid,1,c=>c.text());
  return{...h,documentType,title,version,fileRef,format,issueDate,revisionDate,classification,retentionPeriod,supersedes,documentStatus,checksum,sourceSystem,authorIds,reviewerIds,approverIds,distributionList,relatedEntityIds,accessControls};
 }
-async function projectValidationRecord(p:ArtifactSqliteProjection,id:bigint,v:model.ValidationRecord):Promise<void>{
+async function projectValidationRecord(p:ArtifactSqliteProjection,id:bigint,v:ValidationRecord):Promise<void>{
  await p.insert("architect_validation_record",[...text(v.subjectId),...text(v.subjectKind),...text(v.validationType),...optional(v.method,1,text),...symbol(v.result,ValidationStatus),...optional(v.validationDate,1,text),...optional(v.nextReviewDate,1,text),...optional(v.reportId,1,text),...optional(v.confidenceLevel,1,text)],id);
  await ordered(p,"architect_validation_criterion",id,v.criteria,text);
  await ordered(p,"architect_validation_evidence",id,v.evidence,text);
@@ -788,7 +792,7 @@ async function projectValidationRecord(p:ArtifactSqliteProjection,id:bigint,v:mo
  await ordered(p,"architect_validation_trace",id,v.traceLinks,trace);
  await ordered(p,"architect_validation_note",id,v.validationNotes,note);
 }
-async function restoreValidationRecord(r:Reader,hrow:SqliteRow,h:model.EntityHeader):Promise<model.ValidationRecord>{
+async function restoreValidationRecord(r:Reader,hrow:SqliteRow,h:EntityHeader):Promise<ValidationRecord>{
  const row=await r.body("architect_validation_record",hrow.rowid,10),c=new Cursor(row!);
  const subjectId=c.text();
  const subjectKind=c.text();
@@ -812,7 +816,7 @@ async function restoreValidationRecord(r:Reader,hrow:SqliteRow,h:model.EntityHea
  const validationNotes=await r.list("architect_validation_note",hrow.rowid,2,c=>c.note());
  return{...h,subjectId,subjectKind,validationType,method,result,validationDate,nextReviewDate,reportId,confidenceLevel,criteria,evidence,validatorIds,findings,nonConformities,correctiveActions,waivers,standards,traceLinks,validationNotes};
 }
-async function projectScenario(p:ArtifactSqliteProjection,id:bigint,v:model.Scenario):Promise<void>{
+async function projectScenario(p:ArtifactSqliteProjection,id:bigint,v:Scenario):Promise<void>{
  await p.insert("architect_scenario",[...text(v.code),...textField(v.hypothesis),...optional(v.growthPlanId,1,text),...optional(v.probability,3,float),...optionalTextField(v.impactSummary),...optional(v.costDelta,3,float),...optional(v.areaDelta,3,float),...optional(v.headcountDelta,3,float),...optional(v.scheduleDelta,1,text),...boolean(v.baseline),...boolean(v.preferred),...optional(v.ownerId,1,text)],id);
  await ordered(p,"architect_scenario_assumption",id,v.assumptions,text);
  await ordered(p,"architect_scenario_variable",id,v.variables,text);
@@ -822,7 +826,7 @@ async function projectScenario(p:ArtifactSqliteProjection,id:bigint,v:model.Scen
  await ordered(p,"architect_scenario_option",id,v.optionIds,text);
  await ordered(p,"architect_scenario_analysis",id,v.analysisIds,text);
 }
-async function restoreScenario(r:Reader,hrow:SqliteRow,h:model.EntityHeader):Promise<model.Scenario>{
+async function restoreScenario(r:Reader,hrow:SqliteRow,h:EntityHeader):Promise<Scenario>{
  const row=await r.body("architect_scenario",hrow.rowid,24),c=new Cursor(row!);
  const code=c.text();
  const hypothesis=c.textField();
@@ -846,7 +850,7 @@ async function restoreScenario(r:Reader,hrow:SqliteRow,h:model.EntityHeader):Pro
  const analysisIds=await r.list("architect_scenario_analysis",hrow.rowid,1,c=>c.text());
  return{...h,code,hypothesis,growthPlanId,probability,impactSummary,costDelta,areaDelta,headcountDelta,scheduleDelta,baseline,preferred,ownerId,assumptions,variables,elementIds,requirementIds,riskIds,optionIds,analysisIds};
 }
-async function projectOptionEvaluation(p:ArtifactSqliteProjection,id:bigint,v:model.OptionEvaluation):Promise<void>{
+async function projectOptionEvaluation(p:ArtifactSqliteProjection,id:bigint,v:OptionEvaluation):Promise<void>{
  await p.insert("architect_option_evaluation",[...text(v.optionName),...textField(v.optionDescription),...optional(v.scenarioId,1,text),...optional(v.weightedScore,3,float),...optional(v.costEstimate,3,float),...optional(v.scheduleEstimate,1,text),...optional(v.recommendation,1,text),...optional(v.decisionId,1,text),...symbol(v.evaluationStatus,ValidationStatus),...optional(v.evaluationDate,1,text)],id);
  await ordered(p,"architect_option_criterion",id,v.criteriaIds,text);
  await ordered(p,"architect_option_score",id,v.scores,float);
@@ -858,7 +862,7 @@ async function projectOptionEvaluation(p:ArtifactSqliteProjection,id:bigint,v:mo
  await ordered(p,"architect_option_stakeholder_feedback",id,v.stakeholderFeedback,note);
  await ordered(p,"architect_option_evaluator",id,v.evaluatorIds,text);
 }
-async function restoreOptionEvaluation(r:Reader,hrow:SqliteRow,h:model.EntityHeader):Promise<model.OptionEvaluation>{
+async function restoreOptionEvaluation(r:Reader,hrow:SqliteRow,h:EntityHeader):Promise<OptionEvaluation>{
  const row=await r.body("architect_option_evaluation",hrow.rowid,16),c=new Cursor(row!);
  const optionName=c.text();
  const optionDescription=c.textField();
@@ -882,7 +886,7 @@ async function restoreOptionEvaluation(r:Reader,hrow:SqliteRow,h:model.EntityHea
  const evaluatorIds=await r.list("architect_option_evaluator",hrow.rowid,1,c=>c.text());
  return{...h,optionName,optionDescription,scenarioId,weightedScore,costEstimate,scheduleEstimate,recommendation,decisionId,evaluationStatus,evaluationDate,criteriaIds,scores,riskSummary,benefits,drawbacks,assumptions,dependencies,stakeholderFeedback,evaluatorIds};
 }
-async function projectDecision(p:ArtifactSqliteProjection,id:bigint,v:model.Decision):Promise<void>{
+async function projectDecision(p:ArtifactSqliteProjection,id:bigint,v:Decision):Promise<void>{
  await p.insert("architect_decision",[...textField(v.decisionStatement),...textField(v.context),...optional(v.selectedOptionId,1,text),...textField(v.rationale),...optional(v.decisionDate,1,text),...optional(v.effectiveDate,1,text),...optional(v.costImpact,3,float),...optional(v.scheduleImpact,1,text),...symbol(v.approvalStatus,ValidationStatus),...optional(v.meetingRef,1,text)],id);
  await ordered(p,"architect_decision_option",id,v.optionsConsidered,text);
  await ordered(p,"architect_decision_maker",id,v.decisionMakerIds,text);
@@ -894,7 +898,7 @@ async function projectDecision(p:ArtifactSqliteProjection,id:bigint,v:model.Deci
  await ordered(p,"architect_decision_risk_impact",id,v.riskImpact,text);
  await ordered(p,"architect_decision_artifact_ref",id,v.artifactRefs,text);
 }
-async function restoreDecision(r:Reader,hrow:SqliteRow,h:model.EntityHeader):Promise<model.Decision>{
+async function restoreDecision(r:Reader,hrow:SqliteRow,h:EntityHeader):Promise<Decision>{
  const row=await r.body("architect_decision",hrow.rowid,16),c=new Cursor(row!);
  const decisionStatement=c.textField();
  const context=c.textField();
@@ -918,7 +922,7 @@ async function restoreDecision(r:Reader,hrow:SqliteRow,h:model.EntityHeader):Pro
  const artifactRefs=await r.list("architect_decision_artifact_ref",hrow.rowid,1,c=>c.text());
  return{...h,decisionStatement,context,selectedOptionId,rationale,decisionDate,effectiveDate,costImpact,scheduleImpact,approvalStatus,meetingRef,optionsConsidered,decisionMakerIds,consultedIds,informedIds,reversalConditions,impactedRequirementIds,impactedElementIds,riskImpact,artifactRefs};
 }
-async function projectPriorityRecord(p:ArtifactSqliteProjection,id:bigint,v:model.PriorityRecord):Promise<void>{
+async function projectPriorityRecord(p:ArtifactSqliteProjection,id:bigint,v:PriorityRecord):Promise<void>{
  await p.insert("architect_priority_record",[...text(v.subjectId),...text(v.subjectKind),...symbol(v.rankedPriority,Priority),...optional(v.rank,1,uint32),...optional(v.weight,3,float),...optionalTextField(v.rationale),...optional(v.decisionId,1,text),...optional(v.effectiveFrom,1,text),...optional(v.effectiveUntil,1,text),...optional(v.reviewCycle,1,text),...optional(v.scoringMethod,1,text),...optional(v.score,3,float),...optional(v.approvedBy,1,text),...optional(v.approvalDate,1,text)],id);
  await ordered(p,"architect_priority_stakeholder",id,v.stakeholderIds,text);
  await ordered(p,"architect_priority_dependency",id,v.dependencies,text);
@@ -926,7 +930,7 @@ async function projectPriorityRecord(p:ArtifactSqliteProjection,id:bigint,v:mode
  await ordered(p,"architect_priority_criterion",id,v.criteria,text);
  await ordered(p,"architect_priority_ranking_note",id,v.rankingNotes,note);
 }
-async function restorePriorityRecord(r:Reader,hrow:SqliteRow,h:model.EntityHeader):Promise<model.PriorityRecord>{
+async function restorePriorityRecord(r:Reader,hrow:SqliteRow,h:EntityHeader):Promise<PriorityRecord>{
  const row=await r.body("architect_priority_record",hrow.rowid,21),c=new Cursor(row!);
  const subjectId=c.text();
  const subjectKind=c.text();
@@ -950,7 +954,7 @@ async function restorePriorityRecord(r:Reader,hrow:SqliteRow,h:model.EntityHeade
  const rankingNotes=await r.list("architect_priority_ranking_note",hrow.rowid,2,c=>c.note());
  return{...h,subjectId,subjectKind,rankedPriority,rank,weight,rationale,decisionId,effectiveFrom,effectiveUntil,reviewCycle,scoringMethod,score,approvedBy,approvalDate,stakeholderIds,dependencies,conflicts,criteria,rankingNotes};
 }
-async function projectRisk(p:ArtifactSqliteProjection,id:bigint,v:model.Risk):Promise<void>{
+async function projectRisk(p:ArtifactSqliteProjection,id:bigint,v:Risk):Promise<void>{
  await p.insert("architect_risk",[...textField(v.riskStatement),...text(v.category),...symbol(v.probability,RiskLevel),...symbol(v.impact,RiskLevel),...optional(v.riskScore,3,float),...optional(v.ownerId,1,text),...optional(v.reviewDate,1,text),...optional(v.residualProbability,1,value=>symbol(value,RiskLevel)),...optional(v.residualImpact,1,value=>symbol(value,RiskLevel)),...optional(v.monitoringPlan,1,text)],id);
  await ordered(p,"architect_risk_cause",id,v.causes,text);
  await ordered(p,"architect_risk_effect",id,v.effects,text);
@@ -962,7 +966,7 @@ async function projectRisk(p:ArtifactSqliteProjection,id:bigint,v:model.Risk):Pr
  await ordered(p,"architect_risk_related_conflict",id,v.relatedConflictIds,text);
  await ordered(p,"architect_risk_escalation_path",id,v.escalationPath,text);
 }
-async function restoreRisk(r:Reader,hrow:SqliteRow,h:model.EntityHeader):Promise<model.Risk>{
+async function restoreRisk(r:Reader,hrow:SqliteRow,h:EntityHeader):Promise<Risk>{
  const row=await r.body("architect_risk",hrow.rowid,14),c=new Cursor(row!);
  const riskStatement=c.textField();
  const category=c.text();
@@ -986,7 +990,7 @@ async function restoreRisk(r:Reader,hrow:SqliteRow,h:model.EntityHeader):Promise
  const escalationPath=await r.list("architect_risk_escalation_path",hrow.rowid,1,c=>c.text());
  return{...h,riskStatement,category,probability,impact,riskScore,ownerId,reviewDate,residualProbability,residualImpact,monitoringPlan,causes,effects,affectedElementIds,affectedRequirementIds,mitigation,contingency,triggerIndicators,relatedConflictIds,escalationPath};
 }
-async function projectConflict(p:ArtifactSqliteProjection,id:bigint,v:model.Conflict):Promise<void>{
+async function projectConflict(p:ArtifactSqliteProjection,id:bigint,v:Conflict):Promise<void>{
  await p.insert("architect_conflict",[...symbol(v.kind,ConflictKind),...textField(v.summary),...text(v.entityAId),...text(v.entityBId),...symbol(v.severity,IssueSeverity),...optional(v.detectedBy,1,text),...optional(v.detectionDate,1,text),...optionalTextField(v.recommendedResolution),...optional(v.decisionId,1,text),...optional(v.costImpact,3,float),...optional(v.scheduleImpact,1,text),...symbol(v.resolutionStatus,ValidationStatus),...optional(v.ownerId,1,text),...optional(v.escalationLevel,1,text)],id);
  await ordered(p,"architect_conflict_trade_off_option",id,v.tradeOffOptions,text);
  await ordered(p,"architect_conflict_stakeholder",id,v.stakeholderIds,text);
@@ -994,7 +998,7 @@ async function projectConflict(p:ArtifactSqliteProjection,id:bigint,v:model.Conf
  await ordered(p,"architect_conflict_quality_impact",id,v.qualityImpact,text);
  await ordered(p,"architect_conflict_related_risk",id,v.relatedRiskIds,text);
 }
-async function restoreConflict(r:Reader,hrow:SqliteRow,h:model.EntityHeader):Promise<model.Conflict>{
+async function restoreConflict(r:Reader,hrow:SqliteRow,h:EntityHeader):Promise<Conflict>{
  const row=await r.body("architect_conflict",hrow.rowid,20),c=new Cursor(row!);
  const kind=c.symbol(ConflictKind);
  const summary=c.textField();
@@ -1018,7 +1022,7 @@ async function restoreConflict(r:Reader,hrow:SqliteRow,h:model.EntityHeader):Pro
  const relatedRiskIds=await r.list("architect_conflict_related_risk",hrow.rowid,1,c=>c.text());
  return{...h,kind,summary,entityAId,entityBId,severity,detectedBy,detectionDate,recommendedResolution,decisionId,costImpact,scheduleImpact,resolutionStatus,ownerId,escalationLevel,tradeOffOptions,stakeholderIds,requirementIds,qualityImpact,relatedRiskIds};
 }
-async function projectRequirement(p:ArtifactSqliteProjection,id:bigint,v:model.Requirement):Promise<void>{
+async function projectRequirement(p:ArtifactSqliteProjection,id:bigint,v:Requirement):Promise<void>{
  await p.insert("architect_requirement",[...text(v.code),...symbol(v.kind,RequirementKind),...textField(v.statement),...optionalTextField(v.rationale),...optional(v.source,1,text),...optional(v.parentRequirementId,1,text),...optional(v.verificationMethod,1,text),...symbol(v.validationStatus,ValidationStatus),...optional(v.costEstimate,3,float),...optional(v.scheduleConstraint,1,text),...optional(v.supersededBy,1,text)],id);
  await ordered(p,"architect_requirement_stakeholder",id,v.stakeholderIds,text);
  await ordered(p,"architect_requirement_element",id,v.elementIds,text);
@@ -1030,7 +1034,7 @@ async function projectRequirement(p:ArtifactSqliteProjection,id:bigint,v:model.R
  await ordered(p,"architect_requirement_regulatory_ref",id,v.regulatoryRefs,text);
  await ordered(p,"architect_requirement_trace",id,v.traceLinks,trace);
 }
-async function restoreRequirement(r:Reader,hrow:SqliteRow,h:model.EntityHeader):Promise<model.Requirement>{
+async function restoreRequirement(r:Reader,hrow:SqliteRow,h:EntityHeader):Promise<Requirement>{
  const row=await r.body("architect_requirement",hrow.rowid,17),c=new Cursor(row!);
  const code=c.text();
  const kind=c.symbol(RequirementKind);
@@ -1055,7 +1059,7 @@ async function restoreRequirement(r:Reader,hrow:SqliteRow,h:model.EntityHeader):
  const traceLinks=await r.list("architect_requirement_trace",hrow.rowid,5,c=>readTrace(c));
  return{...h,code,kind,statement,rationale,source,parentRequirementId,verificationMethod,validationStatus,costEstimate,scheduleConstraint,supersededBy,stakeholderIds,elementIds,functionIds,childRequirementIds,acceptanceCriteria,conflictIds,riskIds,regulatoryRefs,traceLinks};
 }
-async function projectDeliveryConstraint(p:ArtifactSqliteProjection,id:bigint,v:model.DeliveryConstraint):Promise<void>{
+async function projectDeliveryConstraint(p:ArtifactSqliteProjection,id:bigint,v:DeliveryConstraint):Promise<void>{
  await p.insert("architect_delivery_constraint",[...text(v.constraintType),...textField(v.constraintDetails),...symbol(v.phase,DeliveryPhase),...optional(v.hardDeadline,1,text),...optional(v.softDeadline,1,text),...optional(v.workHours,1,text),...optional(v.procurementLeadTime,1,text),...optional(v.ownerId,1,text),...symbol(v.constraintStatus,LifecycleStatus)],id);
  await ordered(p,"architect_delivery_impacted_element",id,v.impactedElementIds,text);
  await ordered(p,"architect_delivery_impacted_requirement",id,v.impactedRequirementIds,text);
@@ -1069,7 +1073,7 @@ async function projectDeliveryConstraint(p:ArtifactSqliteProjection,id:bigint,v:
  await ordered(p,"architect_delivery_mitigation_option",id,v.mitigationOptions,text);
  await ordered(p,"architect_delivery_risk",id,v.riskIds,text);
 }
-async function restoreDeliveryConstraint(r:Reader,hrow:SqliteRow,h:model.EntityHeader):Promise<model.DeliveryConstraint>{
+async function restoreDeliveryConstraint(r:Reader,hrow:SqliteRow,h:EntityHeader):Promise<DeliveryConstraint>{
  const row=await r.body("architect_delivery_constraint",hrow.rowid,11),c=new Cursor(row!);
  const constraintType=c.text();
  const constraintDetails=c.textField();
@@ -1094,7 +1098,7 @@ async function restoreDeliveryConstraint(r:Reader,hrow:SqliteRow,h:model.EntityH
  const riskIds=await r.list("architect_delivery_risk",hrow.rowid,1,c=>c.text());
  return{...h,constraintType,constraintDetails,phase,hardDeadline,softDeadline,workHours,procurementLeadTime,ownerId,constraintStatus,impactedElementIds,impactedRequirementIds,noiseRestrictions,accessRestrictions,siteLogistics,approvalGates,occupancyConstraints,weatherWindows,penaltyClauses,mitigationOptions,riskIds};
 }
-async function projectSustainabilityRequirement(p:ArtifactSqliteProjection,id:bigint,v:model.SustainabilityRequirement):Promise<void>{
+async function projectSustainabilityRequirement(p:ArtifactSqliteProjection,id:bigint,v:SustainabilityRequirement):Promise<void>{
  await p.insert("architect_sustainability_requirement",[...text(v.topic),...optional(v.target,1,text),...optional(v.metric,1,text),...optional(v.baseline,3,float),...optional(v.targetValue,3,float),...optional(v.unit,1,text),...optional(v.embodiedCarbon,3,float),...optional(v.operationalCarbon,3,float),...optional(v.verificationPlan,1,text),...optional(v.ownerId,1,text)],id);
  await ordered(p,"architect_sustainability_certification",id,v.certification,text);
  await ordered(p,"architect_sustainability_standard",id,v.standards,text);
@@ -1107,7 +1111,7 @@ async function projectSustainabilityRequirement(p:ArtifactSqliteProjection,id:bi
  await ordered(p,"architect_sustainability_biodiversity",id,v.biodiversity,text);
  await ordered(p,"architect_sustainability_reporting_requirement",id,v.reportingRequirements,text);
 }
-async function restoreSustainabilityRequirement(r:Reader,hrow:SqliteRow,h:model.EntityHeader):Promise<model.SustainabilityRequirement>{
+async function restoreSustainabilityRequirement(r:Reader,hrow:SqliteRow,h:EntityHeader):Promise<SustainabilityRequirement>{
  const row=await r.body("architect_sustainability_requirement",hrow.rowid,19),c=new Cursor(row!);
  const topic=c.text();
  const target=c.optional(1,()=>c.text());
@@ -1132,7 +1136,7 @@ async function restoreSustainabilityRequirement(r:Reader,hrow:SqliteRow,h:model.
  const reportingRequirements=await r.list("architect_sustainability_reporting_requirement",hrow.rowid,1,c=>c.text());
  return{...h,topic,target,metric,baseline,targetValue,unit,embodiedCarbon,operationalCarbon,verificationPlan,ownerId,certification,standards,elementIds,strategies,materialsPreferences,energyStrategy,waterStrategy,wasteStrategy,biodiversity,reportingRequirements};
 }
-async function projectResilienceRequirement(p:ArtifactSqliteProjection,id:bigint,v:model.ResilienceRequirement):Promise<void>{
+async function projectResilienceRequirement(p:ArtifactSqliteProjection,id:bigint,v:ResilienceRequirement):Promise<void>{
  await p.insert("architect_resilience_requirement",[...text(v.hazard),...symbol(v.riskLevel,RiskLevel),...optional(v.scenario,1,text),...optional(v.recoveryTime,1,text),...optional(v.recoveryPoint,1,text),...optional(v.ownerId,1,text),...optional(v.verificationPlan,1,text)],id);
  await ordered(p,"architect_resilience_redundancy",id,v.redundancy,text);
  await ordered(p,"architect_resilience_hardening_measure",id,v.hardeningMeasures,text);
@@ -1147,7 +1151,7 @@ async function projectResilienceRequirement(p:ArtifactSqliteProjection,id:bigint
  await ordered(p,"architect_resilience_insurance_implication",id,v.insuranceImplications,text);
  await ordered(p,"architect_resilience_climate_adaptation",id,v.climateAdaptation,text);
 }
-async function restoreResilienceRequirement(r:Reader,hrow:SqliteRow,h:model.EntityHeader):Promise<model.ResilienceRequirement>{
+async function restoreResilienceRequirement(r:Reader,hrow:SqliteRow,h:EntityHeader):Promise<ResilienceRequirement>{
  const row=await r.body("architect_resilience_requirement",hrow.rowid,8),c=new Cursor(row!);
  const hazard=c.text();
  const riskLevel=c.symbol(RiskLevel);
@@ -1171,7 +1175,7 @@ async function restoreResilienceRequirement(r:Reader,hrow:SqliteRow,h:model.Enti
  const climateAdaptation=await r.list("architect_resilience_climate_adaptation",hrow.rowid,1,c=>c.text());
  return{...h,hazard,riskLevel,scenario,recoveryTime,recoveryPoint,ownerId,verificationPlan,redundancy,hardeningMeasures,backupSystems,alternateSites,supplyChain,communicationPlan,drillRequirements,elementIds,infrastructureIds,standards,insuranceImplications,climateAdaptation};
 }
-async function projectCostRequirement(p:ArtifactSqliteProjection,id:bigint,v:model.CostRequirement):Promise<void>{
+async function projectCostRequirement(p:ArtifactSqliteProjection,id:bigint,v:CostRequirement):Promise<void>{
  await p.insert("architect_cost_requirement",[...text(v.costItem),...symbol(v.basis,CostBasis),...optional(v.amount,3,float),...text(v.currency),...optional(v.quantityBasis,1,text),...optional(v.unitCost,3,float),...optional(v.contingencyPercent,3,float),...optional(v.escalationRate,3,float),...optional(v.fundingSource,1,text),...optional(v.phase,1,value=>symbol(value,DeliveryPhase)),...optional(v.benchmarkRef,1,text),...symbol(v.approvalStatus,ValidationStatus),...optional(v.ownerId,1,text)],id);
  await ordered(p,"architect_cost_element",id,v.elementIds,text);
  await ordered(p,"architect_cost_requirement_ref",id,v.requirementIds,text);
@@ -1180,7 +1184,7 @@ async function projectCostRequirement(p:ArtifactSqliteProjection,id:bigint,v:mod
  await ordered(p,"architect_cost_assumption",id,v.assumptions,text);
  await ordered(p,"architect_cost_sensitivity_factor",id,v.sensitivityFactors,text);
 }
-async function restoreCostRequirement(r:Reader,hrow:SqliteRow,h:model.EntityHeader):Promise<model.CostRequirement>{
+async function restoreCostRequirement(r:Reader,hrow:SqliteRow,h:EntityHeader):Promise<CostRequirement>{
  const row=await r.body("architect_cost_requirement",hrow.rowid,22),c=new Cursor(row!);
  const costItem=c.text();
  const basis=c.symbol(CostBasis);
@@ -1204,7 +1208,7 @@ async function restoreCostRequirement(r:Reader,hrow:SqliteRow,h:model.EntityHead
  const sensitivityFactors=await r.list("architect_cost_sensitivity_factor",hrow.rowid,1,c=>c.text());
  return{...h,costItem,basis,amount,currency,quantityBasis,unitCost,contingencyPercent,escalationRate,fundingSource,phase,benchmarkRef,approvalStatus,ownerId,elementIds,requirementIds,cashFlowProfile,valueEngineeringNotes,assumptions,sensitivityFactors};
 }
-async function projectGrowthPlan(p:ArtifactSqliteProjection,id:bigint,v:model.GrowthPlan):Promise<void>{
+async function projectGrowthPlan(p:ArtifactSqliteProjection,id:bigint,v:GrowthPlan):Promise<void>{
  await p.insert("architect_growth_plan",[...uint32(v.horizonYears),...optional(v.growthRate,3,float),...optional(v.budgetEnvelope,3,float),...optional(v.ownerId,1,text)],id);
  await ordered(p,"architect_growth_phase",id,v.phases,text);
  await ordered(p,"architect_growth_trigger_event",id,v.triggerEvents,text);
@@ -1222,7 +1226,7 @@ async function projectGrowthPlan(p:ArtifactSqliteProjection,id:bigint,v:model.Gr
  await quantity(p,id,"headcount_growth","architect_growth_headcount",v.headcountGrowth);
  await quantity(p,id,"area_growth","architect_growth_area",v.areaGrowth);
 }
-async function restoreGrowthPlan(r:Reader,hrow:SqliteRow,h:model.EntityHeader):Promise<model.GrowthPlan>{
+async function restoreGrowthPlan(r:Reader,hrow:SqliteRow,h:EntityHeader):Promise<GrowthPlan>{
  const row=await r.body("architect_growth_plan",hrow.rowid,9),c=new Cursor(row!);
  const horizonYears=c.uint32();
  const growthRate=c.optional(3,()=>c.float());
@@ -1246,7 +1250,7 @@ async function restoreGrowthPlan(r:Reader,hrow:SqliteRow,h:model.EntityHeader):P
  const areaGrowth=await r.quantity(hrow.rowid,"area_growth","architect_growth_area");
  return{...h,horizonYears,growthRate,budgetEnvelope,ownerId,phases,triggerEvents,expansionElementIds,reserveAreas,infrastructureHeadroom,fundingSources,riskFactors,decisionPoints,scenarioIds,decommissionPlan,relocationStrategy,stakeholderImpact,regulatoryConsiderations,headcountGrowth,areaGrowth};
 }
-async function projectWayfindingRequirement(p:ArtifactSqliteProjection,id:bigint,v:model.WayfindingRequirement):Promise<void>{
+async function projectWayfindingRequirement(p:ArtifactSqliteProjection,id:bigint,v:WayfindingRequirement):Promise<void>{
  await p.insert("architect_wayfinding_requirement",[...boolean(v.tactileRequired),...boolean(v.audioRequired),...boolean(v.digitalWayfinding),...optional(v.maximumSignageDistanceM,3,float),...optional(v.maintenancePlan,1,text)],id);
  await ordered(p,"architect_wayfinding_user_profile",id,v.userProfileIds,text);
  await ordered(p,"architect_wayfinding_element",id,v.elementIds,text);
@@ -1263,7 +1267,7 @@ async function projectWayfindingRequirement(p:ArtifactSqliteProjection,id:bigint
  await ordered(p,"architect_wayfinding_staff_journey",id,v.staffJourney,text);
  await ordered(p,"architect_wayfinding_brand_integration",id,v.brandIntegration,text);
 }
-async function restoreWayfindingRequirement(r:Reader,hrow:SqliteRow,h:model.EntityHeader):Promise<model.WayfindingRequirement>{
+async function restoreWayfindingRequirement(r:Reader,hrow:SqliteRow,h:EntityHeader):Promise<WayfindingRequirement>{
  const row=await r.body("architect_wayfinding_requirement",hrow.rowid,8),c=new Cursor(row!);
  const tactileRequired=c.boolean();
  const audioRequired=c.boolean();
@@ -1287,7 +1291,7 @@ async function restoreWayfindingRequirement(r:Reader,hrow:SqliteRow,h:model.Enti
  const brandIntegration=await r.list("architect_wayfinding_brand_integration",hrow.rowid,1,c=>c.text());
  return{...h,tactileRequired,audioRequired,digitalWayfinding,maximumSignageDistanceM,maintenancePlan,userProfileIds,elementIds,destinationTypes,signageTypes,languages,landmarkStrategy,colorCoding,symbolStandards,decisionPoints,lightingRequirements,emergencyEgress,visitorJourney,staffJourney,brandIntegration};
 }
-async function projectScheduleRequirement(p:ArtifactSqliteProjection,id:bigint,v:model.ScheduleRequirement):Promise<void>{
+async function projectScheduleRequirement(p:ArtifactSqliteProjection,id:bigint,v:ScheduleRequirement):Promise<void>{
  await p.insert("architect_schedule_requirement",[...text(v.milestone),...symbol(v.phase,DeliveryPhase),...optional(v.startDate,1,text),...optional(v.endDate,1,text),...optional(v.duration,1,text),...boolean(v.critical),...optional(v.floatDays,1,uint32),...optional(v.phasingStrategy,1,text),...optional(v.commissioningWindow,1,text),...optional(v.contingencyDays,1,uint32),...optional(v.reportingCadence,1,text),...optional(v.ownerId,1,text)],id);
  await ordered(p,"architect_schedule_dependency",id,v.dependencies,text);
  await ordered(p,"architect_schedule_predecessor",id,v.predecessors,text);
@@ -1298,7 +1302,7 @@ async function projectScheduleRequirement(p:ArtifactSqliteProjection,id:bigint,v
  await ordered(p,"architect_schedule_stakeholder",id,v.stakeholderIds,text);
  await ordered(p,"architect_schedule_risk",id,v.riskIds,text);
 }
-async function restoreScheduleRequirement(r:Reader,hrow:SqliteRow,h:model.EntityHeader):Promise<model.ScheduleRequirement>{
+async function restoreScheduleRequirement(r:Reader,hrow:SqliteRow,h:EntityHeader):Promise<ScheduleRequirement>{
  const row=await r.body("architect_schedule_requirement",hrow.rowid,13),c=new Cursor(row!);
  const milestone=c.text();
  const phase=c.symbol(DeliveryPhase);
@@ -1323,7 +1327,7 @@ async function restoreScheduleRequirement(r:Reader,hrow:SqliteRow,h:model.Entity
  const riskIds=await r.list("architect_schedule_risk",hrow.rowid,1,c=>c.text());
  return{...h,milestone,phase,startDate,endDate,duration,critical,floatDays,phasingStrategy,commissioningWindow,contingencyDays,reportingCadence,ownerId,dependencies,predecessors,successors,resourceRequirements,occupancyImpact,decantRequirements,stakeholderIds,riskIds};
 }
-async function projectFlexibilityRequirement(p:ArtifactSqliteProjection,id:bigint,v:model.FlexibilityRequirement):Promise<void>{
+async function projectFlexibilityRequirement(p:ArtifactSqliteProjection,id:bigint,v:FlexibilityRequirement):Promise<void>{
  await p.insert("architect_flexibility_requirement",[...text(v.flexibilityType),...optional(v.modularityLevel,1,text),...optional(v.reconfigurationTime,1,text),...optional(v.costOfChange,3,float),...optional(v.technologyReadiness,1,text),...boolean(v.demountablePartitions),...boolean(v.raisedFloor),...boolean(v.overheadServices),...optional(v.ownerId,1,text)],id);
  await ordered(p,"architect_flexibility_element",id,v.elementIds,text);
  await ordered(p,"architect_flexibility_adaptation_scenario",id,v.adaptationScenarios,text);
@@ -1335,7 +1339,7 @@ async function projectFlexibilityRequirement(p:ArtifactSqliteProjection,id:bigin
  await ordered(p,"architect_flexibility_spare_capacity",id,v.infrastructureSpareCapacity,text);
  await ordered(p,"architect_flexibility_lease_implication",id,v.leaseImplications,text);
 }
-async function restoreFlexibilityRequirement(r:Reader,hrow:SqliteRow,h:model.EntityHeader):Promise<model.FlexibilityRequirement>{
+async function restoreFlexibilityRequirement(r:Reader,hrow:SqliteRow,h:EntityHeader):Promise<FlexibilityRequirement>{
  const row=await r.body("architect_flexibility_requirement",hrow.rowid,12),c=new Cursor(row!);
  const flexibilityType=c.text();
  const modularityLevel=c.optional(1,()=>c.text());
@@ -1358,7 +1362,7 @@ async function restoreFlexibilityRequirement(r:Reader,hrow:SqliteRow,h:model.Ent
  const leaseImplications=await r.list("architect_flexibility_lease_implication",hrow.rowid,1,c=>c.text());
  return{...h,flexibilityType,modularityLevel,reconfigurationTime,costOfChange,technologyReadiness,demountablePartitions,raisedFloor,overheadServices,ownerId,elementIds,adaptationScenarios,futureFunctionIds,expansionDirection,contractionScenario,multiUsePotential,furnitureStrategy,infrastructureSpareCapacity,leaseImplications};
 }
-async function projectInfrastructureRequirement(p:ArtifactSqliteProjection,id:bigint,v:model.InfrastructureRequirement):Promise<void>{
+async function projectInfrastructureRequirement(p:ArtifactSqliteProjection,id:bigint,v:InfrastructureRequirement):Promise<void>{
  await p.insert("architect_infrastructure_requirement",[...text(v.system),...text(v.category),...optional(v.redundancy,1,text),...optional(v.utilitySource,1,text),...boolean(v.standbyPower),...optional(v.peakDemand,3,float),...optional(v.diversityFactor,3,float),...optional(v.lifecycleCost,3,float),...optional(v.ownerId,1,text)],id);
  await ordered(p,"architect_infrastructure_distribution",id,v.distribution,text);
  await ordered(p,"architect_infrastructure_entry_point",id,v.entryPoints,text);
@@ -1371,7 +1375,7 @@ async function projectInfrastructureRequirement(p:ArtifactSqliteProjection,id:bi
  await ordered(p,"architect_infrastructure_commissioning",id,v.commissioning,text);
  await quantity(p,id,"capacity","architect_infrastructure_capacity",v.capacity);
 }
-async function restoreInfrastructureRequirement(r:Reader,hrow:SqliteRow,h:model.EntityHeader):Promise<model.InfrastructureRequirement>{
+async function restoreInfrastructureRequirement(r:Reader,hrow:SqliteRow,h:EntityHeader):Promise<InfrastructureRequirement>{
  const row=await r.body("architect_infrastructure_requirement",hrow.rowid,16),c=new Cursor(row!);
  const system=c.text();
  const category=c.text();
@@ -1395,7 +1399,7 @@ async function restoreInfrastructureRequirement(r:Reader,hrow:SqliteRow,h:model.
  const capacity=await r.quantity(hrow.rowid,"capacity","architect_infrastructure_capacity");
  return{...h,system,category,redundancy,utilitySource,standbyPower,peakDemand,diversityFactor,lifecycleCost,ownerId,distribution,entryPoints,monitoring,maintenanceAccess,standards,elementIds,futureExpansion,interfaceRequirements,commissioning,capacity};
 }
-async function projectInformationRequirement(p:ArtifactSqliteProjection,id:bigint,v:model.InformationRequirement):Promise<void>{
+async function projectInformationRequirement(p:ArtifactSqliteProjection,id:bigint,v:InformationRequirement):Promise<void>{
  await p.insert("architect_information_requirement",[...text(v.informationType),...optional(v.format,1,text),...optional(v.sourceSystem,1,text),...optional(v.updateFrequency,1,text),...optional(v.retentionPeriod,1,text),...optional(v.classification,1,text),...boolean(v.auditTrail),...optional(v.ownerId,1,text)],id);
  await ordered(p,"architect_information_destination_system",id,v.destinationSystems,text);
  await ordered(p,"architect_information_access_control",id,v.accessControls,text);
@@ -1409,7 +1413,7 @@ async function projectInformationRequirement(p:ArtifactSqliteProjection,id:bigin
  await ordered(p,"architect_information_stakeholder",id,v.stakeholderIds,text);
  await ordered(p,"architect_information_standard",id,v.standards,text);
 }
-async function restoreInformationRequirement(r:Reader,hrow:SqliteRow,h:model.EntityHeader):Promise<model.InformationRequirement>{
+async function restoreInformationRequirement(r:Reader,hrow:SqliteRow,h:EntityHeader):Promise<InformationRequirement>{
  const row=await r.body("architect_information_requirement",hrow.rowid,9),c=new Cursor(row!);
  const informationType=c.text();
  const format=c.optional(1,()=>c.text());
@@ -1433,7 +1437,7 @@ async function restoreInformationRequirement(r:Reader,hrow:SqliteRow,h:model.Ent
  const standards=await r.list("architect_information_standard",hrow.rowid,1,c=>c.text());
  return{...h,informationType,format,sourceSystem,updateFrequency,retentionPeriod,classification,auditTrail,ownerId,destinationSystems,accessControls,qualityCriteria,metadataRequirements,integrationPoints,backupRequirements,disasterRecovery,privacyControls,elementIds,stakeholderIds,standards};
 }
-async function projectCommunicationRequirement(p:ArtifactSqliteProjection,id:bigint,v:model.CommunicationRequirement):Promise<void>{
+async function projectCommunicationRequirement(p:ArtifactSqliteProjection,id:bigint,v:CommunicationRequirement):Promise<void>{
  await p.insert("architect_communication_requirement",[...text(v.channel),...optional(v.frequency,1,text),...boolean(v.emergencyUse),...boolean(v.twoWay),...optional(v.recordingPolicy,1,text),...boolean(v.feedbackLoop),...optional(v.ownerId,1,text)],id);
  await ordered(p,"architect_communication_audience",id,v.audienceIds,text);
  await ordered(p,"architect_communication_message_type",id,v.messageTypes,text);
@@ -1448,7 +1452,7 @@ async function projectCommunicationRequirement(p:ArtifactSqliteProjection,id:big
  await ordered(p,"architect_communication_standard",id,v.standards,text);
  await ordered(p,"architect_communication_template",id,v.templates,text);
 }
-async function restoreCommunicationRequirement(r:Reader,hrow:SqliteRow,h:model.EntityHeader):Promise<model.CommunicationRequirement>{
+async function restoreCommunicationRequirement(r:Reader,hrow:SqliteRow,h:EntityHeader):Promise<CommunicationRequirement>{
  const row=await r.body("architect_communication_requirement",hrow.rowid,8),c=new Cursor(row!);
  const channel=c.text();
  const frequency=c.optional(1,()=>c.text());
@@ -1472,7 +1476,7 @@ async function restoreCommunicationRequirement(r:Reader,hrow:SqliteRow,h:model.E
  const templates=await r.list("architect_communication_template",hrow.rowid,1,c=>c.text());
  return{...h,channel,frequency,emergencyUse,twoWay,recordingPolicy,feedbackLoop,ownerId,audienceIds,messageTypes,medium,language,accessibility,signageLocations,technology,escalationPath,privacyControls,elementIds,standards,templates};
 }
-async function projectSiteContext(p:ArtifactSqliteProjection,id:bigint,v:model.SiteContext):Promise<void>{
+async function projectSiteContext(p:ArtifactSqliteProjection,id:bigint,v:SiteContext):Promise<void>{
  await p.insert("architect_site_context",[...text(v.siteName),...optional(v.address,1,text),...optional(v.latitude,3,float),...optional(v.longitude,3,float),...optional(v.elevationM,3,float),...optional(v.climateZone,1,text),...optional(v.seismicZone,1,text),...optional(v.floodRisk,1,text),...optional(v.zoning,1,text),...optional(v.maxHeightM,3,float),...optional(v.maxCoverage,3,float)],id);
  await ordered(p,"architect_site_soil_condition",id,v.soilConditions,text);
  await ordered(p,"architect_site_utility",id,v.utilitiesAvailable,text);
@@ -1484,7 +1488,7 @@ async function projectSiteContext(p:ArtifactSqliteProjection,id:bigint,v:model.S
  await ordered(p,"architect_site_environmental_constraint",id,v.environmentalConstraints,text);
  await ordered(p,"architect_site_heritage_constraint",id,v.heritageConstraints,text);
 }
-async function restoreSiteContext(r:Reader,hrow:SqliteRow,h:model.EntityHeader):Promise<model.SiteContext>{
+async function restoreSiteContext(r:Reader,hrow:SqliteRow,h:EntityHeader):Promise<SiteContext>{
  const row=await r.body("architect_site_context",hrow.rowid,22),c=new Cursor(row!);
  const siteName=c.text();
  const address=c.optional(1,()=>c.text());
@@ -1509,7 +1513,7 @@ async function restoreSiteContext(r:Reader,hrow:SqliteRow,h:model.EntityHeader):
  const heritageConstraints=await r.list("architect_site_heritage_constraint",hrow.rowid,1,c=>c.text());
  return{...h,siteName,address,latitude,longitude,elevationM,climateZone,seismicZone,floodRisk,zoning,maxHeightM,maxCoverage,soilConditions,utilitiesAvailable,accessRoads,publicTransit,neighbors,views,noiseSources,environmentalConstraints,heritageConstraints};
 }
-async function projectOrganizationalRequirement(p:ArtifactSqliteProjection,id:bigint,v:model.OrganizationalRequirement):Promise<void>{
+async function projectOrganizationalRequirement(p:ArtifactSqliteProjection,id:bigint,v:OrganizationalRequirement):Promise<void>{
  await p.insert("architect_organizational_requirement",[...text(v.department),...optional(v.reportingLine,1,text),...optional(v.growthPlanId,1,text),...optional(v.collaborationModel,1,text),...optional(v.changeReadiness,1,text),...optional(v.ownerId,1,text)],id);
  await ordered(p,"architect_organization_work_pattern",id,v.workPatterns,text);
  await ordered(p,"architect_organization_hierarchy_level",id,v.hierarchyLevels,text);
@@ -1525,7 +1529,7 @@ async function projectOrganizationalRequirement(p:ArtifactSqliteProjection,id:bi
  await ordered(p,"architect_organization_diversity_goal",id,v.diversityGoals,text);
  await quantity(p,id,"headcount","architect_organization_headcount",v.headcount);
 }
-async function restoreOrganizationalRequirement(r:Reader,hrow:SqliteRow,h:model.EntityHeader):Promise<model.OrganizationalRequirement>{
+async function restoreOrganizationalRequirement(r:Reader,hrow:SqliteRow,h:EntityHeader):Promise<OrganizationalRequirement>{
  const row=await r.body("architect_organizational_requirement",hrow.rowid,7),c=new Cursor(row!);
  const department=c.text();
  const reportingLine=c.optional(1,()=>c.text());
@@ -1549,7 +1553,7 @@ async function restoreOrganizationalRequirement(r:Reader,hrow:SqliteRow,h:model.
  const headcount=await r.quantity(hrow.rowid,"headcount","architect_organization_headcount");
  return{...h,department,reportingLine,growthPlanId,collaborationModel,changeReadiness,ownerId,workPatterns,hierarchyLevels,decisionMaking,cultureNotes,unionConsiderations,trainingNeeds,elementIds,stakeholderIds,serviceRequirementIds,brandingRequirements,wellnessPlugins,diversityGoals,headcount};
 }
-async function projectServiceRequirement(p:ArtifactSqliteProjection,id:bigint,v:model.ServiceRequirement):Promise<void>{
+async function projectServiceRequirement(p:ArtifactSqliteProjection,id:bigint,v:ServiceRequirement):Promise<void>{
  await p.insert("architect_service_requirement",[...text(v.serviceName),...text(v.serviceType),...optional(v.provider,1,text),...optional(v.serviceLevel,1,text),...optional(v.operatingHours,1,text),...optional(v.responseTime,1,text),...optional(v.costModel,1,text),...optional(v.failureImpact,1,text)],id);
  await ordered(p,"architect_service_queue_management",id,v.queueManagement,text);
  await ordered(p,"architect_service_customer_profile",id,v.customerProfiles,text);
@@ -1563,7 +1567,7 @@ async function projectServiceRequirement(p:ArtifactSqliteProjection,id:bigint,v:
  await quantity(p,id,"capacity","architect_service_capacity",v.capacity);
  await quantity(p,id,"staffing","architect_service_staffing",v.staffing);
 }
-async function restoreServiceRequirement(r:Reader,hrow:SqliteRow,h:model.EntityHeader):Promise<model.ServiceRequirement>{
+async function restoreServiceRequirement(r:Reader,hrow:SqliteRow,h:EntityHeader):Promise<ServiceRequirement>{
  const row=await r.body("architect_service_requirement",hrow.rowid,9),c=new Cursor(row!);
  const serviceName=c.text();
  const serviceType=c.text();
@@ -1587,7 +1591,7 @@ async function restoreServiceRequirement(r:Reader,hrow:SqliteRow,h:model.EntityH
  const staffing=await r.quantity(hrow.rowid,"staffing","architect_service_staffing");
  return{...h,serviceName,serviceType,provider,serviceLevel,operatingHours,responseTime,costModel,failureImpact,queueManagement,customerProfiles,elementIds,equipmentIds,qualityMetrics,contractRefs,dependencies,backupService,feedbackChannels,capacity,staffing};
 }
-async function projectSafetyRequirement(p:ArtifactSqliteProjection,id:bigint,v:model.SafetyRequirement):Promise<void>{
+async function projectSafetyRequirement(p:ArtifactSqliteProjection,id:bigint,v:SafetyRequirement):Promise<void>{
  await p.insert("architect_safety_requirement",[...symbol(v.safetyDomain,SafetyDomain),...text(v.hazard),...symbol(v.riskLevel,RiskLevel),...optional(v.inspectionFrequency,1,text),...optional(v.residualRisk,1,text)],id);
  await ordered(p,"architect_safety_element",id,v.affectedElementIds,text);
  await ordered(p,"architect_safety_user",id,v.affectedUserIds,text);
@@ -1605,7 +1609,7 @@ async function projectSafetyRequirement(p:ArtifactSqliteProjection,id:bigint,v:m
  await ordered(p,"architect_safety_training_requirement",id,v.trainingRequirements,text);
  await ordered(p,"architect_safety_incident_reporting",id,v.incidentReporting,text);
 }
-async function restoreSafetyRequirement(r:Reader,hrow:SqliteRow,h:model.EntityHeader):Promise<model.SafetyRequirement>{
+async function restoreSafetyRequirement(r:Reader,hrow:SqliteRow,h:EntityHeader):Promise<SafetyRequirement>{
  const row=await r.body("architect_safety_requirement",hrow.rowid,6),c=new Cursor(row!);
  const safetyDomain=c.symbol(SafetyDomain);
  const hazard=c.text();
@@ -1630,7 +1634,7 @@ async function restoreSafetyRequirement(r:Reader,hrow:SqliteRow,h:model.EntityHe
  const incidentReporting=await r.list("architect_safety_incident_reporting",hrow.rowid,1,c=>c.text());
  return{...h,safetyDomain,hazard,riskLevel,inspectionFrequency,residualRisk,affectedElementIds,affectedUserIds,mitigationMeasures,ppeRequirements,emergencyProcedures,evacuationRequirements,fireProtection,structuralSafety,slipTripFall,chemicalSafety,electricalSafety,machinerySafety,standards,trainingRequirements,incidentReporting};
 }
-async function projectSecurityRequirement(p:ArtifactSqliteProjection,id:bigint,v:model.SecurityRequirement):Promise<void>{
+async function projectSecurityRequirement(p:ArtifactSqliteProjection,id:bigint,v:SecurityRequirement):Promise<void>{
  await p.insert("architect_security_requirement",[...symbol(v.controlKind,SecurityControlKind),...text(v.threat),...symbol(v.riskLevel,RiskLevel),...symbol(v.accessLevel,AccessLevel),...optional(v.drillFrequency,1,text),...optional(v.classifiedLevel,1,text)],id);
  await ordered(p,"architect_security_asset",id,v.assetIds,text);
  await ordered(p,"architect_security_zone",id,v.zoneIds,text);
@@ -1647,7 +1651,7 @@ async function projectSecurityRequirement(p:ArtifactSqliteProjection,id:bigint,v
  await ordered(p,"architect_security_redundancy",id,v.redundancy,text);
  await ordered(p,"architect_security_audit_requirement",id,v.auditRequirements,text);
 }
-async function restoreSecurityRequirement(r:Reader,hrow:SqliteRow,h:model.EntityHeader):Promise<model.SecurityRequirement>{
+async function restoreSecurityRequirement(r:Reader,hrow:SqliteRow,h:EntityHeader):Promise<SecurityRequirement>{
  const row=await r.body("architect_security_requirement",hrow.rowid,7),c=new Cursor(row!);
  const controlKind=c.symbol(SecurityControlKind);
  const threat=c.text();
@@ -1672,7 +1676,7 @@ async function restoreSecurityRequirement(r:Reader,hrow:SqliteRow,h:model.Entity
  const auditRequirements=await r.list("architect_security_audit_requirement",hrow.rowid,1,c=>c.text());
  return{...h,controlKind,threat,riskLevel,accessLevel,drillFrequency,classifiedLevel,assetIds,zoneIds,perimeterControls,surveillance,intrusionDetection,cybersecurity,screening,visitorManagement,keyManagement,standards,responseProcedures,liaisonContacts,redundancy,auditRequirements};
 }
-async function projectRegulatoryRequirement(p:ArtifactSqliteProjection,id:bigint,v:model.RegulatoryRequirement):Promise<void>{
+async function projectRegulatoryRequirement(p:ArtifactSqliteProjection,id:bigint,v:RegulatoryRequirement):Promise<void>{
  await p.insert("architect_regulatory_requirement",[...text(v.jurisdiction),...text(v.code),...optional(v.clause,1,text),...text(v.title),...textField(v.requirementText),...optional(v.complianceMethod,1,text),...optional(v.authority,1,text),...optional(v.effectiveDate,1,text),...optional(v.expiryDate,1,text),...symbol(v.verificationStatus,ValidationStatus),...optional(v.updateSource,1,text)],id);
  await ordered(p,"architect_regulatory_applicability",id,v.applicability,text);
  await ordered(p,"architect_regulatory_element",id,v.elementIds,text);
@@ -1683,7 +1687,7 @@ async function projectRegulatoryRequirement(p:ArtifactSqliteProjection,id:bigint
  await ordered(p,"architect_regulatory_interpretation_note",id,v.interpretationNotes,note);
  await ordered(p,"architect_regulatory_consultant_ref",id,v.consultantRefs,text);
 }
-async function restoreRegulatoryRequirement(r:Reader,hrow:SqliteRow,h:model.EntityHeader):Promise<model.RegulatoryRequirement>{
+async function restoreRegulatoryRequirement(r:Reader,hrow:SqliteRow,h:EntityHeader):Promise<RegulatoryRequirement>{
  const row=await r.body("architect_regulatory_requirement",hrow.rowid,13),c=new Cursor(row!);
  const jurisdiction=c.text();
  const code=c.text();
@@ -1707,7 +1711,7 @@ async function restoreRegulatoryRequirement(r:Reader,hrow:SqliteRow,h:model.Enti
  const consultantRefs=await r.list("architect_regulatory_consultant_ref",hrow.rowid,1,c=>c.text());
  return{...h,jurisdiction,code,clause,title,requirementText,complianceMethod,authority,effectiveDate,expiryDate,verificationStatus,updateSource,applicability,elementIds,evidenceRequired,penalties,exemptions,relatedRequirementIds,interpretationNotes,consultantRefs};
 }
-async function projectAccessibilityRequirement(p:ArtifactSqliteProjection,id:bigint,v:model.AccessibilityRequirement):Promise<void>{
+async function projectAccessibilityRequirement(p:ArtifactSqliteProjection,id:bigint,v:AccessibilityRequirement):Promise<void>{
  await p.insert("architect_accessibility_requirement",[...text(v.standard),...optional(v.level,1,text),...optional(v.clearWidthM,3,float),...optional(v.clearHeightM,3,float),...optional(v.turningCircleM,3,float),...optional(v.rampSlope,3,float),...boolean(v.liftRequired),...boolean(v.tactileGuidance),...boolean(v.hearingLoop),...boolean(v.visualContrast),...optional(v.controlsHeight,1,text),...optional(v.serviceAnimalPolicy,1,text),...boolean(v.companionSeating),...optional(v.verificationPlan,1,text),...optional(v.wcagConformance,1,text)],id);
  await ordered(p,"architect_accessibility_user_profile",id,v.userProfileIds,text);
  await ordered(p,"architect_accessibility_element",id,v.elementIds,text);
@@ -1717,7 +1721,7 @@ async function projectAccessibilityRequirement(p:ArtifactSqliteProjection,id:big
  await ordered(p,"architect_accessibility_exception",id,v.exceptions,text);
  await ordered(p,"architect_accessibility_universal_design_principle",id,v.universalDesignPrinciples,text);
 }
-async function restoreAccessibilityRequirement(r:Reader,hrow:SqliteRow,h:model.EntityHeader):Promise<model.AccessibilityRequirement>{
+async function restoreAccessibilityRequirement(r:Reader,hrow:SqliteRow,h:EntityHeader):Promise<AccessibilityRequirement>{
  const row=await r.body("architect_accessibility_requirement",hrow.rowid,24),c=new Cursor(row!);
  const standard=c.text();
  const level=c.optional(1,()=>c.text());
@@ -1744,7 +1748,7 @@ async function restoreAccessibilityRequirement(r:Reader,hrow:SqliteRow,h:model.E
  const universalDesignPrinciples=await r.list("architect_accessibility_universal_design_principle",hrow.rowid,1,c=>c.text());
  return{...h,standard,level,clearWidthM,clearHeightM,turningCircleM,rampSlope,liftRequired,tactileGuidance,hearingLoop,visualContrast,controlsHeight,serviceAnimalPolicy,companionSeating,verificationPlan,wcagConformance,userProfileIds,elementIds,routeIds,signageRequirements,emergencyEvacuation,exceptions,universalDesignPrinciples};
 }
-async function projectPrivacyRequirement(p:ArtifactSqliteProjection,id:bigint,v:model.PrivacyRequirement):Promise<void>{
+async function projectPrivacyRequirement(p:ArtifactSqliteProjection,id:bigint,v:PrivacyRequirement):Promise<void>{
  await p.insert("architect_privacy_requirement",[...symbol(v.privacyKind,PrivacyKind),...text(v.privacyType),...optional(v.level,1,text),...boolean(v.screeningRequired),...boolean(v.enclosureRequired),...optional(v.observationRisk,1,text),...optional(v.retentionPolicy,1,text),...optional(v.ownerId,1,text)],id);
  await ordered(p,"architect_privacy_subject",id,v.subjectIds,text);
  await ordered(p,"architect_privacy_element",id,v.elementIds,text);
@@ -1759,7 +1763,7 @@ async function projectPrivacyRequirement(p:ArtifactSqliteProjection,id:bigint,v:
  await ordered(p,"architect_privacy_monitoring_restriction",id,v.monitoringRestrictions,text);
  await ordered(p,"architect_privacy_breach_response",id,v.breachResponse,text);
 }
-async function restorePrivacyRequirement(r:Reader,hrow:SqliteRow,h:model.EntityHeader):Promise<model.PrivacyRequirement>{
+async function restorePrivacyRequirement(r:Reader,hrow:SqliteRow,h:EntityHeader):Promise<PrivacyRequirement>{
  const row=await r.body("architect_privacy_requirement",hrow.rowid,9),c=new Cursor(row!);
  const privacyKind=c.symbol(PrivacyKind);
  const privacyType=c.text();
@@ -1784,7 +1788,7 @@ async function restorePrivacyRequirement(r:Reader,hrow:SqliteRow,h:model.EntityH
  const breachResponse=await r.list("architect_privacy_breach_response",hrow.rowid,1,c=>c.text());
  return{...h,privacyKind,privacyType,level,screeningRequired,enclosureRequired,observationRisk,retentionPolicy,ownerId,subjectIds,elementIds,visualPrivacy,acousticPrivacy,dataPrivacy,accessRestrictions,regulatoryBasis,culturalConsiderations,technologyControls,signage,monitoringRestrictions,breachResponse};
 }
-async function projectEnvironmentalRequirement(p:ArtifactSqliteProjection,id:bigint,v:model.EnvironmentalRequirement):Promise<void>{
+async function projectEnvironmentalRequirement(p:ArtifactSqliteProjection,id:bigint,v:EnvironmentalRequirement):Promise<void>{
  await p.insert("architect_environmental_requirement",[...symbol(v.parameterKind,EnvironmentalParameter),...text(v.parameter),...optional(v.targetValue,3,float),...optional(v.unit,1,text),...optional(v.minValue,3,float),...optional(v.maxValue,3,float),...optional(v.comfortBand,1,text),...optional(v.measurementMethod,1,text),...optional(v.monitoringFrequency,1,text),...optional(v.occupancyBasis,1,text),...optional(v.ventilationStrategy,1,text),...optional(v.daylightTarget,1,text),...optional(v.acousticTarget,1,text),...optional(v.iaqTarget,1,text),...optional(v.verificationPlan,1,text)],id);
  await ordered(p,"architect_environmental_element",id,v.elementIds,text);
  await ordered(p,"architect_environmental_seasonal_variation",id,v.seasonalVariation,text);
@@ -1793,7 +1797,7 @@ async function projectEnvironmentalRequirement(p:ArtifactSqliteProjection,id:big
  await ordered(p,"architect_environmental_certification_target",id,v.certificationTargets,text);
  await ordered(p,"architect_environmental_outdoor_condition",id,v.outdoorConditions,text);
 }
-async function restoreEnvironmentalRequirement(r:Reader,hrow:SqliteRow,h:model.EntityHeader):Promise<model.EnvironmentalRequirement>{
+async function restoreEnvironmentalRequirement(r:Reader,hrow:SqliteRow,h:EntityHeader):Promise<EnvironmentalRequirement>{
  const row=await r.body("architect_environmental_requirement",hrow.rowid,22),c=new Cursor(row!);
  const parameterKind=c.symbol(EnvironmentalParameter);
  const parameter=c.text();
@@ -1819,7 +1823,7 @@ async function restoreEnvironmentalRequirement(r:Reader,hrow:SqliteRow,h:model.E
  const outdoorConditions=await r.list("architect_environmental_outdoor_condition",hrow.rowid,1,c=>c.text());
  return{...h,parameterKind,parameter,targetValue,unit,minValue,maxValue,comfortBand,measurementMethod,monitoringFrequency,occupancyBasis,ventilationStrategy,daylightTarget,acousticTarget,iaqTarget,verificationPlan,elementIds,seasonalVariation,energyImplications,standards,certificationTargets,outdoorConditions};
 }
-async function projectHumanFactorRequirement(p:ArtifactSqliteProjection,id:bigint,v:model.HumanFactorRequirement):Promise<void>{
+async function projectHumanFactorRequirement(p:ArtifactSqliteProjection,id:bigint,v:HumanFactorRequirement):Promise<void>{
  await p.insert("architect_human_factor_requirement",[...symbol(v.aspect,HumanFactorAspect),...text(v.factor),...optional(v.cognitiveLoad,1,text),...optional(v.reachEnvelope,1,text),...optional(v.verificationMethod,1,text)],id);
  await ordered(p,"architect_human_factor_user_profile",id,v.userProfileIds,text);
  await ordered(p,"architect_human_factor_activity",id,v.activityIds,text);
@@ -1838,7 +1842,7 @@ async function projectHumanFactorRequirement(p:ArtifactSqliteProjection,id:bigin
  await ordered(p,"architect_human_factor_research_basis",id,v.researchBasis,text);
  await ordered(p,"architect_human_factor_element",id,v.elementIds,text);
 }
-async function restoreHumanFactorRequirement(r:Reader,hrow:SqliteRow,h:model.EntityHeader):Promise<model.HumanFactorRequirement>{
+async function restoreHumanFactorRequirement(r:Reader,hrow:SqliteRow,h:EntityHeader):Promise<HumanFactorRequirement>{
  const row=await r.body("architect_human_factor_requirement",hrow.rowid,6),c=new Cursor(row!);
  const aspect=c.symbol(HumanFactorAspect);
  const factor=c.text();
@@ -1864,7 +1868,7 @@ async function restoreHumanFactorRequirement(r:Reader,hrow:SqliteRow,h:model.Ent
  const elementIds=await r.list("architect_human_factor_element",hrow.rowid,1,c=>c.text());
  return{...h,aspect,factor,cognitiveLoad,reachEnvelope,verificationMethod,userProfileIds,activityIds,ergonomicCriteria,visualDemands,auditoryDemands,postureRequirements,lightingForTasks,thermalComfort,privacyNeeds,socialInteraction,stressFactors,mitigationMeasures,trainingNeeds,standards,researchBasis,elementIds};
 }
-async function projectStorageRequirement(p:ArtifactSqliteProjection,id:bigint,v:model.StorageRequirement):Promise<void>{
+async function projectStorageRequirement(p:ArtifactSqliteProjection,id:bigint,v:StorageRequirement):Promise<void>{
  await p.insert("architect_storage_requirement",[...text(v.storedItem),...symbol(v.storageClass,StorageClass),...optional(v.volumeM3,3,float),...optional(v.weightKg,3,float),...optional(v.temperatureRange,1,text),...optional(v.humidityRange,1,text),...symbol(v.securityLevel,AccessLevel),...optional(v.hazardClass,1,text),...optional(v.retentionPeriod,1,text),...optional(v.accessFrequency,1,text),...optional(v.ventilation,1,text),...optional(v.organizationSystem,1,text),...optional(v.growthAllowance,3,float),...optional(v.ownerId,1,text)],id);
  await ordered(p,"architect_storage_element",id,v.elementIds,text);
  await ordered(p,"architect_storage_equipment",id,v.equipmentIds,text);
@@ -1873,7 +1877,7 @@ async function projectStorageRequirement(p:ArtifactSqliteProjection,id:bigint,v:
  await ordered(p,"architect_storage_regulatory_reference",id,v.regulatoryRefs,text);
  await quantity(p,id,"quantity","architect_storage_quantity",v.quantity);
 }
-async function restoreStorageRequirement(r:Reader,hrow:SqliteRow,h:model.EntityHeader):Promise<model.StorageRequirement>{
+async function restoreStorageRequirement(r:Reader,hrow:SqliteRow,h:EntityHeader):Promise<StorageRequirement>{
  const row=await r.body("architect_storage_requirement",hrow.rowid,21),c=new Cursor(row!);
  const storedItem=c.text();
  const storageClass=c.symbol(StorageClass);
@@ -1898,7 +1902,7 @@ async function restoreStorageRequirement(r:Reader,hrow:SqliteRow,h:model.EntityH
  const quantity=await r.quantity(hrow.rowid,"quantity","architect_storage_quantity");
  return{...h,storedItem,storageClass,volumeM3,weightKg,temperatureRange,humidityRange,securityLevel,hazardClass,retentionPeriod,accessFrequency,ventilation,organizationSystem,growthAllowance,ownerId,elementIds,equipmentIds,handlingEquipment,fireProtection,regulatoryRefs,quantity};
 }
-async function projectEquipment(p:ArtifactSqliteProjection,id:bigint,v:model.Equipment):Promise<void>{
+async function projectEquipment(p:ArtifactSqliteProjection,id:bigint,v:Equipment):Promise<void>{
  await p.insert("architect_equipment",[...text(v.code),...text(v.category),...optional(v.manufacturer,1,text),...optional(v.model,1,text),...optional(v.dimensions,1,text),...optional(v.weightKg,3,float),...optional(v.powerKw,3,float),...optional(v.ventilation,1,text),...optional(v.noiseLevelDb,3,float),...optional(v.clearance,1,text),...optional(v.mounting,1,text),...optional(v.lifecycleYears,1,uint32),...optional(v.replacementCost,3,float),...optional(v.supplier,1,text)],id);
  await ordered(p,"architect_equipment_utility_connection",id,v.utilityConnections,text);
  await ordered(p,"architect_equipment_element",id,v.elementIds,text);
@@ -1911,7 +1915,7 @@ async function projectEquipment(p:ArtifactSqliteProjection,id:bigint,v:model.Equ
  await ordered(p,"architect_equipment_spare_part",id,v.spareParts,text);
  await quantity(p,id,"quantity","architect_equipment_quantity",v.quantity);
 }
-async function restoreEquipment(r:Reader,hrow:SqliteRow,h:model.EntityHeader):Promise<model.Equipment>{
+async function restoreEquipment(r:Reader,hrow:SqliteRow,h:EntityHeader):Promise<Equipment>{
  const row=await r.body("architect_equipment",hrow.rowid,23),c=new Cursor(row!);
  const code=c.text();
  const category=c.text();
@@ -1940,7 +1944,7 @@ async function restoreEquipment(r:Reader,hrow:SqliteRow,h:model.EntityHeader):Pr
  const quantity=await r.quantity(hrow.rowid,"quantity","architect_equipment_quantity");
  return{...h,code,category,manufacturer,model,dimensions,weightKg,powerKw,ventilation,noiseLevelDb,clearance,mounting,lifecycleYears,replacementCost,supplier,utilityConnections,elementIds,activityIds,maintenanceAccess,standards,activityLinkIds,installationRequirements,commissioningNotes,spareParts,quantity};
 }
-async function projectResource(p:ArtifactSqliteProjection,id:bigint,v:model.Resource):Promise<void>{
+async function projectResource(p:ArtifactSqliteProjection,id:bigint,v:Resource):Promise<void>{
  await p.insert("architect_resource",[...text(v.code),...text(v.category),...text(v.resourceType),...optional(v.mobility,1,text),...optional(v.sharingModel,1,text),...optional(v.allocation,1,text),...optional(v.storageRequirementId,1,text),...optional(v.durability,1,text),...optional(v.replacementCycle,1,text),...optional(v.costPerUnit,3,float),...optional(v.supplier,1,text),...optional(v.furnitureClass,1,text),...optional(v.ergonomicsRating,1,text),...optional(v.sharingRatio,3,float)],id);
  await ordered(p,"architect_resource_element",id,v.elementIds,text);
  await ordered(p,"architect_resource_activity",id,v.activityIds,text);
@@ -1952,7 +1956,7 @@ async function projectResource(p:ArtifactSqliteProjection,id:bigint,v:model.Reso
  await ordered(p,"architect_resource_disposal_note",id,v.disposalNotes,text);
  await quantity(p,id,"quantity","architect_resource_quantity",v.quantity);
 }
-async function restoreResource(r:Reader,hrow:SqliteRow,h:model.EntityHeader):Promise<model.Resource>{
+async function restoreResource(r:Reader,hrow:SqliteRow,h:EntityHeader):Promise<Resource>{
  const row=await r.body("architect_resource",hrow.rowid,19),c=new Cursor(row!);
  const code=c.text();
  const category=c.text();
@@ -1980,14 +1984,14 @@ async function restoreResource(r:Reader,hrow:SqliteRow,h:model.EntityHeader):Pro
  const quantity=await r.quantity(hrow.rowid,"quantity","architect_resource_quantity");
  return{...h,code,category,resourceType,mobility,sharingModel,allocation,storageRequirementId,durability,replacementCycle,costPerUnit,supplier,furnitureClass,ergonomicsRating,sharingRatio,elementIds,activityIds,userProfileIds,cleaningRequirements,standards,ergonomicNotes,customization,disposalNotes,quantity};
 }
-async function projectFlowRequirement(p:ArtifactSqliteProjection,id:bigint,v:model.FlowRequirement):Promise<void>{
+async function projectFlowRequirement(p:ArtifactSqliteProjection,id:bigint,v:FlowRequirement):Promise<void>{
  await p.insert("architect_flow_requirement",[...text(v.fromElementId),...text(v.toElementId),...symbol(v.kind,FlowKind),...text(v.flowType),...symbol(v.direction,FlowDirection),...optional(v.peakRate,3,float),...optional(v.clearWidthM,3,float),...optional(v.clearHeightM,3,float),...symbol(v.accessLevel,AccessLevel),...optional(v.equipmentClearance,1,text),...boolean(v.signageRequired),...boolean(v.escortRequired),...boolean(v.emergencyRoute),...boolean(v.barrierFree),...boolean(v.monitoringRequired),...optional(v.processId,1,text),...optional(v.verificationMethod,1,text)],id);
  await ordered(p,"architect_flow_separation",id,v.separationRequirements,value=>symbol(value,SeparationKind));
  await ordered(p,"architect_flow_time_window",id,v.timeWindows,text);
  await ordered(p,"architect_flow_conflict",id,v.conflictIds,text);
  await quantity(p,id,"volume","architect_flow_volume",v.volume);
 }
-async function restoreFlowRequirement(r:Reader,hrow:SqliteRow,h:model.EntityHeader):Promise<model.FlowRequirement>{
+async function restoreFlowRequirement(r:Reader,hrow:SqliteRow,h:EntityHeader):Promise<FlowRequirement>{
  const row=await r.body("architect_flow_requirement",hrow.rowid,24),c=new Cursor(row!);
  const fromElementId=c.text();
  const toElementId=c.text();
@@ -2013,7 +2017,7 @@ async function restoreFlowRequirement(r:Reader,hrow:SqliteRow,h:model.EntityHead
  const volume=await r.quantity(hrow.rowid,"volume","architect_flow_volume");
  return{...h,fromElementId,toElementId,kind,flowType,direction,peakRate,clearWidthM,clearHeightM,accessLevel,equipmentClearance,signageRequired,escortRequired,emergencyRoute,barrierFree,monitoringRequired,processId,verificationMethod,separationRequirements,timeWindows,conflictIds,volume};
 }
-async function projectAccessRule(p:ArtifactSqliteProjection,id:bigint,v:model.AccessRule):Promise<void>{
+async function projectAccessRule(p:ArtifactSqliteProjection,id:bigint,v:AccessRule):Promise<void>{
  await p.insert("architect_access_rule",[...symbol(v.accessLevel,AccessLevel),...symbol(v.accessMode,AccessMode),...optional(v.escortPolicy,1,text),...optional(v.visitorPolicy,1,text),...boolean(v.emergencyOverride),...boolean(v.auditRequired),...boolean(v.badgeRequired),...boolean(v.biometricRequired),...optional(v.enforcementMethod,1,text),...optional(v.revocationPolicy,1,text),...boolean(v.trainingRequired),...optional(v.ownerId,1,text)],id);
  await ordered(p,"architect_access_subject",id,v.subjectIds,text);
  await ordered(p,"architect_access_resource",id,v.resourceIds,text);
@@ -2024,7 +2028,7 @@ async function projectAccessRule(p:ArtifactSqliteProjection,id:bigint,v:model.Ac
  await ordered(p,"architect_access_exception",id,v.exceptions,text);
  await ordered(p,"architect_access_regulatory_basis",id,v.regulatoryBasis,text);
 }
-async function restoreAccessRule(r:Reader,hrow:SqliteRow,h:model.EntityHeader):Promise<model.AccessRule>{
+async function restoreAccessRule(r:Reader,hrow:SqliteRow,h:EntityHeader):Promise<AccessRule>{
  const row=await r.body("architect_access_rule",hrow.rowid,13),c=new Cursor(row!);
  const accessLevel=c.symbol(AccessLevel);
  const accessMode=c.symbol(AccessMode);
@@ -2049,7 +2053,7 @@ async function restoreAccessRule(r:Reader,hrow:SqliteRow,h:model.EntityHeader):P
  const regulatoryBasis=await r.list("architect_access_regulatory_basis",hrow.rowid,1,c=>c.text());
  return{...h,accessLevel,accessMode,escortPolicy,visitorPolicy,emergencyOverride,auditRequired,badgeRequired,biometricRequired,enforcementMethod,revocationPolicy,trainingRequired,ownerId,subjectIds,resourceIds,authentication,authorization,timeRestrictions,zoneIds,exceptions,regulatoryBasis};
 }
-async function projectOperationalRequirement(p:ArtifactSqliteProjection,id:bigint,v:model.OperationalRequirement):Promise<void>{
+async function projectOperationalRequirement(p:ArtifactSqliteProjection,id:bigint,v:OperationalRequirement):Promise<void>{
  await p.insert("architect_operational_requirement",[...text(v.operation),...optional(v.serviceLevel,1,text),...optional(v.operatingHours,1,text),...optional(v.maintenanceInterval,1,text),...optional(v.cleaningRegime,1,text),...optional(v.turnaroundTime,1,text),...optional(v.redundancy,1,text),...optional(v.uptimeTarget,3,float),...optional(v.responseTime,1,text),...optional(v.ownerId,1,text),...optional(v.serviceCategory,1,text),...optional(v.shiftPattern,1,text),...optional(v.slaTarget,1,text),...optional(v.escalationContactId,1,text)],id);
  await ordered(p,"architect_operation_equipment",id,v.equipmentIds,text);
  await ordered(p,"architect_operation_element",id,v.elementIds,text);
@@ -2062,7 +2066,7 @@ async function projectOperationalRequirement(p:ArtifactSqliteProjection,id:bigin
  await ordered(p,"architect_operation_kpi_target",id,v.kpiTargets,text);
  await quantity(p,id,"staffing","architect_operation_staffing",v.staffing);
 }
-async function restoreOperationalRequirement(r:Reader,hrow:SqliteRow,h:model.EntityHeader):Promise<model.OperationalRequirement>{
+async function restoreOperationalRequirement(r:Reader,hrow:SqliteRow,h:EntityHeader):Promise<OperationalRequirement>{
  const row=await r.body("architect_operational_requirement",hrow.rowid,17),c=new Cursor(row!);
  const operation=c.text();
  const serviceLevel=c.optional(1,()=>c.text());
@@ -2091,12 +2095,12 @@ async function restoreOperationalRequirement(r:Reader,hrow:SqliteRow,h:model.Ent
  const staffing=await r.quantity(hrow.rowid,"staffing","architect_operation_staffing");
  return{...h,operation,serviceLevel,operatingHours,maintenanceInterval,cleaningRegime,turnaroundTime,redundancy,uptimeTarget,responseTime,ownerId,serviceCategory,shiftPattern,slaTarget,escalationContactId,equipmentIds,elementIds,processIds,utilities,wasteStreams,contingencyPlan,trainingRequirements,sopReferences,kpiTargets,staffing};
 }
-async function projectAdjacency(p:ArtifactSqliteProjection,id:bigint,v:model.Adjacency):Promise<void>{
+async function projectAdjacency(p:ArtifactSqliteProjection,id:bigint,v:Adjacency):Promise<void>{
  await p.insert("architect_adjacency",[...text(v.elementAId),...text(v.elementBId),...symbol(v.kind,AdjacencyKind),...symbol(v.connection,ConnectionKind),...float(v.weight),...optionalTextField(v.rationale),...optional(v.distanceMaxM,3,float),...optional(v.distanceMinM,3,float),...optional(v.levelConstraint,1,text),...optional(v.accessPath,1,text),...boolean(v.sharedWall),...boolean(v.sharedEntry),...boolean(v.trafficIsolation),...boolean(v.circulationOverlap),...boolean(v.normalized),...symbol(v.verificationStatus,ValidationStatus),...optional(v.sourceRelationshipId,1,text),...optional(v.internalExternalAccess,1,text)],id);
  await ordered(p,"architect_adjacency_separation",id,v.separations,value=>symbol(value,SeparationKind));
  await ordered(p,"architect_adjacency_conflict",id,v.conflictIds,text);
 }
-async function restoreAdjacency(r:Reader,hrow:SqliteRow,h:model.EntityHeader):Promise<model.Adjacency>{
+async function restoreAdjacency(r:Reader,hrow:SqliteRow,h:EntityHeader):Promise<Adjacency>{
  const row=await r.body("architect_adjacency",hrow.rowid,27),c=new Cursor(row!);
  const elementAId=c.text();
  const elementBId=c.text();
@@ -2121,7 +2125,7 @@ async function restoreAdjacency(r:Reader,hrow:SqliteRow,h:model.EntityHeader):Pr
  const conflictIds=await r.list("architect_adjacency_conflict",hrow.rowid,1,c=>c.text());
  return{...h,elementAId,elementBId,kind,connection,weight,rationale,distanceMaxM,distanceMinM,levelConstraint,accessPath,sharedWall,sharedEntry,trafficIsolation,circulationOverlap,normalized,verificationStatus,sourceRelationshipId,internalExternalAccess,separations,conflictIds};
 }
-async function projectProcess(p:ArtifactSqliteProjection,id:bigint,v:model.Process):Promise<void>{
+async function projectProcess(p:ArtifactSqliteProjection,id:bigint,v:Process):Promise<void>{
  await p.insert("architect_process",[...text(v.code),...text(v.category),...optional(v.trigger,1,text),...optional(v.duration,1,text),...optional(v.frequency,1,text),...boolean(v.criticalPath),...optional(v.automationLevel,1,text),...optional(v.ownerId,1,text),...optional(v.workflowType,1,text)],id);
  await ordered(p,"architect_process_input",id,v.inputs,text);
  await ordered(p,"architect_process_output",id,v.outputs,text);
@@ -2138,7 +2142,7 @@ async function projectProcess(p:ArtifactSqliteProjection,id:bigint,v:model.Proce
  await ordered(p,"architect_process_handoff_point",id,v.handoffPoints,text);
  await ordered(p,"architect_process_quality_gate",id,v.qualityGates,text);
 }
-async function restoreProcess(r:Reader,hrow:SqliteRow,h:model.EntityHeader):Promise<model.Process>{
+async function restoreProcess(r:Reader,hrow:SqliteRow,h:EntityHeader):Promise<Process>{
  const row=await r.body("architect_process",hrow.rowid,10),c=new Cursor(row!);
  const code=c.text();
  const category=c.text();
@@ -2166,7 +2170,7 @@ async function restoreProcess(r:Reader,hrow:SqliteRow,h:model.EntityHeader):Prom
  const qualityGates=await r.list("architect_process_quality_gate",hrow.rowid,1,c=>c.text());
  return{...h,code,category,trigger,duration,frequency,criticalPath,automationLevel,ownerId,workflowType,inputs,outputs,steps,actors,equipmentIds,elementIds,bottlenecks,dependencies,kpis,failureModes,improvementOpportunities,regulatoryRefs,handoffPoints,qualityGates};
 }
-async function projectQuantityRequirement(p:ArtifactSqliteProjection,id:bigint,v:model.QuantityRequirement):Promise<void>{
+async function projectQuantityRequirement(p:ArtifactSqliteProjection,id:bigint,v:QuantityRequirement):Promise<void>{
  await p.insert("architect_quantity_requirement",[...text(v.targetElementId),...text(v.metric),...optional(v.basis,1,text),...optional(v.calculationMethod,1,text),...optional(v.source,1,text),...optional(v.benchmarkRef,1,text),...optional(v.tolerancePercent,3,float),...optional(v.peakFactor,3,float),...optional(v.growthFactor,3,float),...optional(v.unitCost,3,float),...optional(v.currency,1,text),...optional(v.verificationMethod,1,text),...optional(v.schedulePhase,1,text),...optional(v.responsibleParty,1,text),...optional(v.lastVerified,1,text)],id);
  await ordered(p,"architect_quantity_requirement_related_requirement",id,v.relatedRequirementIds,text);
  await ordered(p,"architect_quantity_requirement_assumption",id,v.assumptions,text);
@@ -2174,7 +2178,7 @@ async function projectQuantityRequirement(p:ArtifactSqliteProjection,id:bigint,v
  await ordered(p,"architect_quantity_requirement_variance_note",id,v.varianceNotes,note);
  await quantity(p,id,"quantity","architect_quantity_requirement_quantity",v.quantity);
 }
-async function restoreQuantityRequirement(r:Reader,hrow:SqliteRow,h:model.EntityHeader):Promise<model.QuantityRequirement>{
+async function restoreQuantityRequirement(r:Reader,hrow:SqliteRow,h:EntityHeader):Promise<QuantityRequirement>{
  const row=await r.body("architect_quantity_requirement",hrow.rowid,24),c=new Cursor(row!);
  const targetElementId=c.text();
  const metric=c.text();
@@ -2199,7 +2203,7 @@ async function restoreQuantityRequirement(r:Reader,hrow:SqliteRow,h:model.Entity
  const quantity=await r.quantity(hrow.rowid,"quantity","architect_quantity_requirement_quantity");
  return{...h,targetElementId,metric,basis,calculationMethod,source,benchmarkRef,tolerancePercent,peakFactor,growthFactor,unitCost,currency,verificationMethod,schedulePhase,responsibleParty,lastVerified,relatedRequirementIds,assumptions,constraints,varianceNotes,quantity};
 }
-async function projectRelationship(p:ArtifactSqliteProjection,id:bigint,v:model.Relationship):Promise<void>{
+async function projectRelationship(p:ArtifactSqliteProjection,id:bigint,v:Relationship):Promise<void>{
  await p.insert("architect_relationship",[...text(v.sourceId),...text(v.targetId),...symbol(v.kind,RelationshipKind),...optional(v.strength,3,float),...boolean(v.directional),...optionalTextField(v.rationale),...symbol(v.relationshipPriority,Priority),...optional(v.validFrom,1,text),...optional(v.validUntil,1,text),...boolean(v.bidirectional),...optional(v.distanceConstraintM,3,float),...optional(v.capacityConstraint,1,text),...optional(v.reviewCycle,1,text),...optional(v.ownerId,1,text),...optionalTextField(v.proximityRequirement),...optionalTextField(v.compatibilityRequirement),...optionalTextField(v.incompatibilityRequirement)],id);
  await ordered(p,"architect_relationship_constraint",id,v.constraints,text);
  await ordered(p,"architect_relationship_condition",id,v.conditions,text);
@@ -2209,7 +2213,7 @@ async function projectRelationship(p:ArtifactSqliteProjection,id:bigint,v:model.
  await ordered(p,"architect_relationship_separation",id,v.separationRequirements,value=>symbol(value,SeparationKind));
  await ordered(p,"architect_relationship_trace",id,v.traceLinks,trace);
 }
-async function restoreRelationship(r:Reader,hrow:SqliteRow,h:model.EntityHeader):Promise<model.Relationship>{
+async function restoreRelationship(r:Reader,hrow:SqliteRow,h:EntityHeader):Promise<Relationship>{
  const row=await r.body("architect_relationship",hrow.rowid,30),c=new Cursor(row!);
  const sourceId=c.text();
  const targetId=c.text();
@@ -2238,7 +2242,7 @@ async function restoreRelationship(r:Reader,hrow:SqliteRow,h:model.EntityHeader)
  const traceLinks=await r.list("architect_relationship_trace",hrow.rowid,5,c=>readTrace(c));
  return{...h,sourceId,targetId,kind,strength,directional,rationale,relationshipPriority,validFrom,validUntil,bidirectional,distanceConstraintM,capacityConstraint,reviewCycle,ownerId,proximityRequirement,compatibilityRequirement,incompatibilityRequirement,constraints,conditions,evidence,conflictIds,regulatoryBasis,separationRequirements,traceLinks};
 }
-async function projectUserProfile(p:ArtifactSqliteProjection,id:bigint,v:model.UserProfile):Promise<void>{
+async function projectUserProfile(p:ArtifactSqliteProjection,id:bigint,v:UserProfile):Promise<void>{
  await p.insert("architect_user_profile",[...symbol(v.category,UserCategory),...optional(v.demographic,1,text),...optional(v.ageRange,1,text),...optional(v.occupation,1,text),...optional(v.roleTitle,1,text),...optional(v.department,1,text),...optional(v.usageFrequency,1,text),...optional(v.usageDuration,1,text),...optional(v.technologyProficiency,1,text),...optional(v.researchMethod,1,text),...optional(v.personaArchetype,1,text),...boolean(v.validated)],id);
  await ordered(p,"architect_user_ability",id,v.abilities,text);
  await ordered(p,"architect_user_disability",id,v.disabilities,text);
@@ -2253,7 +2257,7 @@ async function projectUserProfile(p:ArtifactSqliteProjection,id:bigint,v:model.U
  await ordered(p,"architect_user_activity",id,v.activityIds,text);
  await ordered(p,"architect_user_stakeholder",id,v.stakeholderIds,text);
 }
-async function restoreUserProfile(r:Reader,hrow:SqliteRow,h:model.EntityHeader):Promise<model.UserProfile>{
+async function restoreUserProfile(r:Reader,hrow:SqliteRow,h:EntityHeader):Promise<UserProfile>{
  const row=await r.body("architect_user_profile",hrow.rowid,13),c=new Cursor(row!);
  const category=c.symbol(UserCategory);
  const demographic=c.optional(1,()=>c.text());
@@ -2282,7 +2286,7 @@ async function restoreUserProfile(r:Reader,hrow:SqliteRow,h:model.EntityHeader):
  const stakeholderIds=await r.list("architect_user_stakeholder",hrow.rowid,1,c=>c.text());
  return{...h,category,demographic,ageRange,occupation,roleTitle,department,usageFrequency,usageDuration,technologyProficiency,researchMethod,personaArchetype,validated,abilities,disabilities,mobilityProfile,sensoryProfile,cognitiveProfile,behavioralPatterns,peakUsageTimes,preferences,painPoints,goals,activityIds,stakeholderIds};
 }
-async function projectActivity(p:ArtifactSqliteProjection,id:bigint,v:model.Activity):Promise<void>{
+async function projectActivity(p:ArtifactSqliteProjection,id:bigint,v:Activity):Promise<void>{
  await p.insert("architect_activity",[...text(v.code),...text(v.category),...optional(v.frequency,1,text),...optional(v.duration,1,text),...optional(v.intensity,1,text),...text(v.activityType),...optional(v.locationContext,1,text),...optional(v.temporalPattern,1,text),...optional(v.supervisionLevel,1,text)],id);
  await ordered(p,"architect_activity_equipment",id,v.equipmentIds,text);
  await ordered(p,"architect_activity_space_requirement",id,v.spaceRequirements,text);
@@ -2300,7 +2304,7 @@ async function projectActivity(p:ArtifactSqliteProjection,id:bigint,v:model.Acti
  await ordered(p,"architect_activity_performance_indicator",id,v.performanceIndicators,text);
  await quantity(p,id,"participants","architect_activity_participants",v.participants);
 }
-async function restoreActivity(r:Reader,hrow:SqliteRow,h:model.EntityHeader):Promise<model.Activity>{
+async function restoreActivity(r:Reader,hrow:SqliteRow,h:EntityHeader):Promise<Activity>{
  const row=await r.body("architect_activity",hrow.rowid,10),c=new Cursor(row!);
  const code=c.text();
  const category=c.text();
@@ -2329,7 +2333,7 @@ async function restoreActivity(r:Reader,hrow:SqliteRow,h:model.EntityHeader):Pro
  const participants=await r.quantity(hrow.rowid,"participants","architect_activity_participants");
  return{...h,code,category,frequency,duration,intensity,activityType,locationContext,temporalPattern,supervisionLevel,equipmentIds,spaceRequirements,environmentalNeeds,privacyNeeds,accessibilityNeeds,adjacentActivities,sequencing,peakPeriods,workflowSteps,inputs,outputs,userProfileIds,functionIds,performanceIndicators,participants};
 }
-async function projectFunction(p:ArtifactSqliteProjection,id:bigint,v:model.Function):Promise<void>{
+async function projectFunction(p:ArtifactSqliteProjection,id:bigint,v:Function):Promise<void>{
  await p.insert("architect_function",[...text(v.code),...symbol(v.kind,FunctionKind),...textField(v.purpose),...symbol(v.criticality,Priority),...optional(v.serviceLevel,1,text),...optional(v.operatingHours,1,text),...optional(v.ownerStakeholderId,1,text),...optional(v.hierarchyParentId,1,text)],id);
  await ordered(p,"architect_function_performance_target",id,v.performanceTargets,text);
  await ordered(p,"architect_function_equipment",id,v.equipmentIds,text);
@@ -2346,7 +2350,7 @@ async function projectFunction(p:ArtifactSqliteProjection,id:bigint,v:model.Func
  await ordered(p,"architect_function_conflict",id,v.conflictIds,text);
  await quantity(p,id,"staffing","architect_function_staffing",v.staffing);
 }
-async function restoreFunction(r:Reader,hrow:SqliteRow,h:model.EntityHeader):Promise<model.Function>{
+async function restoreFunction(r:Reader,hrow:SqliteRow,h:EntityHeader):Promise<Function>{
  const row=await r.body("architect_function",hrow.rowid,10),c=new Cursor(row!);
  const code=c.text();
  const kind=c.symbol(FunctionKind);
@@ -2373,7 +2377,7 @@ async function restoreFunction(r:Reader,hrow:SqliteRow,h:model.EntityHeader):Pro
  const staffing=await r.quantity(hrow.rowid,"staffing","architect_function_staffing");
  return{...h,code,kind,purpose,criticality,serviceLevel,operatingHours,ownerStakeholderId,hierarchyParentId,performanceTargets,equipmentIds,resourceIds,activityIds,elementIds,dependencies,interfaces,constraints,qualityCriteria,regulatoryRefs,futureChanges,successMetrics,conflictIds,staffing};
 }
-async function projectProgramElement(p:ArtifactSqliteProjection,id:bigint,v:model.ProgramElement):Promise<void>{
+async function projectProgramElement(p:ArtifactSqliteProjection,id:bigint,v:ProgramElement):Promise<void>{
  await p.insert("architect_program_element",[...text(v.code),...symbol(v.kind,ProgramElementKind),...optional(v.parentId,1,text),...optional(v.level,1,text),...optional(v.locationHint,1,text),...optional(v.orientation,1,text),...optional(v.daylightRequirement,1,text),...optional(v.acousticClass,1,text),...optional(v.securityZone,1,text),...optional(v.growthAllocation,1,text),...optional(v.circulationRole,1,text),...optional(v.visibilityLevel,1,text),...optional(v.environmentalZone,1,text)],id);
  await ordered(p,"architect_element_function",id,v.functionIds,text);
  await ordered(p,"architect_element_activity",id,v.activityIds,text);
@@ -2388,7 +2392,7 @@ async function projectProgramElement(p:ArtifactSqliteProjection,id:bigint,v:mode
  await quantity(p,id,"height","architect_element_height",v.height);
  await quantity(p,id,"occupancy","architect_element_occupancy",v.occupancy);
 }
-async function restoreProgramElement(r:Reader,hrow:SqliteRow,h:model.EntityHeader):Promise<model.ProgramElement>{
+async function restoreProgramElement(r:Reader,hrow:SqliteRow,h:EntityHeader):Promise<ProgramElement>{
  const row=await r.body("architect_program_element",hrow.rowid,14),c=new Cursor(row!);
  const code=c.text();
  const kind=c.symbol(ProgramElementKind);
@@ -2418,7 +2422,7 @@ async function restoreProgramElement(r:Reader,hrow:SqliteRow,h:model.EntityHeade
  const occupancy=await r.quantity(hrow.rowid,"occupancy","architect_element_occupancy");
  return{...h,code,kind,parentId,level,locationHint,orientation,daylightRequirement,acousticClass,securityZone,growthAllocation,circulationRole,visibilityLevel,environmentalZone,functionIds,activityIds,userProfileIds,adjacencyIds,quantityIds,requirementIds,flexibilityNotes,adjacencyPreferences,area,volume,height,occupancy};
 }
-async function projectStakeholder(p:ArtifactSqliteProjection,id:bigint,v:model.Stakeholder):Promise<void>{
+async function projectStakeholder(p:ArtifactSqliteProjection,id:bigint,v:Stakeholder):Promise<void>{
  await p.insert("architect_stakeholder",[...text(v.role),...text(v.organization),...optional(v.department,1,text),...optional(v.contactEmail,1,text),...optional(v.contactPhone,1,text),...symbol(v.influence,InfluenceLevel),...symbol(v.interest,InfluenceLevel),...symbol(v.engagement,EngagementLevel),...boolean(v.decisionAuthority),...optional(v.reportingFrequency,1,text),...optional(v.availability,1,text),...optional(v.representativeOf,1,text),...optional(v.delegatedTo,1,text),...optional(v.relationshipToClient,1,text),...text(v.stakeholderType),...optional(v.influenceStrategy,1,text)],id);
  await ordered(p,"architect_stakeholder_expectation",id,v.expectations,text);
  await ordered(p,"architect_stakeholder_concern",id,v.concerns,text);
@@ -2429,7 +2433,7 @@ async function projectStakeholder(p:ArtifactSqliteProjection,id:bigint,v:model.S
  await ordered(p,"architect_stakeholder_communication_channel",id,v.communicationChannels,text);
  await ordered(p,"architect_stakeholder_success_metric",id,v.successMetrics,text);
 }
-async function restoreStakeholder(r:Reader,hrow:SqliteRow,h:model.EntityHeader):Promise<model.Stakeholder>{
+async function restoreStakeholder(r:Reader,hrow:SqliteRow,h:EntityHeader):Promise<Stakeholder>{
  const row=await r.body("architect_stakeholder",hrow.rowid,17),c=new Cursor(row!);
  const role=c.text();
  const organization=c.text();
@@ -2458,13 +2462,13 @@ async function restoreStakeholder(r:Reader,hrow:SqliteRow,h:model.EntityHeader):
  const successMetrics=await r.list("architect_stakeholder_success_metric",hrow.rowid,1,c=>c.text());
  return{...h,role,organization,department,contactEmail,contactPhone,influence,interest,engagement,decisionAuthority,reportingFrequency,availability,representativeOf,delegatedTo,relationshipToClient,stakeholderType,influenceStrategy,expectations,concerns,requirementIds,communicationPreferences,involvementPhases,powerInterestNotes,communicationChannels,successMetrics};
 }
-async function projectProgramMeta(p:ArtifactSqliteProjection,v:model.ProgramMeta):Promise<void>{
+async function projectProgramMeta(p:ArtifactSqliteProjection,v:ProgramMeta):Promise<void>{
  await p.insert("architect_meta",[1n,...text(v.schema),...text(v.documentId),...text(v.title),...optional(v.subtitle,1,text),...textField(v.purpose),...text(v.industrySector),...text(v.projectType),...text(v.locale),...text(v.revision),...optional(v.sourceSystem,1,text),...optional(v.exportProfile,1,text),...timestamp(v.timestamps)],1n);
  await ordered(p,"architect_meta_term",1n,v.terminology,text);
  await ordered(p,"architect_meta_classification",1n,v.classification,text);
  await ordered(p,"architect_meta_author",1n,v.authorIds,text);
 }
-async function restoreProgramMeta(r:Reader):Promise<model.ProgramMeta>{
+async function restoreProgramMeta(r:Reader):Promise<ProgramMeta>{
  const row=await r.singleton("architect_meta",18),c=new Cursor(row!);if(c.integer()!==1n)fail("core document owner differs");
  const schema=c.text();
  const documentId=c.text();
@@ -2484,7 +2488,7 @@ async function restoreProgramMeta(r:Reader):Promise<model.ProgramMeta>{
  const authorIds=await r.list("architect_meta_author",1n,1,c=>c.text());
  return{schema,documentId,title,subtitle,purpose,industrySector,projectType,locale,revision,sourceSystem,exportProfile,timestamps,terminology,classification,authorIds};
 }
-async function projectProjectDefinition(p:ArtifactSqliteProjection,v:model.ProjectDefinition):Promise<void>{
+async function projectProjectDefinition(p:ArtifactSqliteProjection,v:ProjectDefinition):Promise<void>{
  await p.insert("architect_project",[1n,...text(v.id),...text(v.code),...text(v.clientName),...text(v.ownerOrganization),...textField(v.briefSummary),...textField(v.problemStatement),...textField(v.vision),...textField(v.mission),...textField(v.geographicContext),...textField(v.developmentContext),...textField(v.operationalContext),...text(v.fundingModel),...optional(v.ownership.ownerId,1,text),...optional(v.ownership.authorityId,1,text),...timestamp(v.timestamps)],1n);
  await ordered(p,"architect_project_objective",1n,v.objectives,text);
  await ordered(p,"architect_project_success_criterion",1n,v.successCriteria,text);
@@ -2502,7 +2506,7 @@ async function projectProjectDefinition(p:ArtifactSqliteProjection,v:model.Proje
  await ordered(p,"architect_project_consultant",1n,v.ownership.consultantIds,text);
  await ordered(p,"architect_project_participant",1n,v.ownership.participantIds,text);
 }
-async function restoreProjectDefinition(r:Reader):Promise<model.ProjectDefinition>{
+async function restoreProjectDefinition(r:Reader):Promise<ProjectDefinition>{
  const row=await r.singleton("architect_project",27),c=new Cursor(row!);if(c.integer()!==1n)fail("core document owner differs");
  const id=c.text();
  const code=c.text();
@@ -2537,7 +2541,7 @@ async function restoreProjectDefinition(r:Reader):Promise<model.ProjectDefinitio
  const participantIds=await r.list("architect_project_participant",1n,1,c=>c.text());
  return{id,code,clientName,ownerOrganization,briefSummary,problemStatement,vision,mission,geographicContext,developmentContext,operationalContext,fundingModel,timestamps,objectives,successCriteria,projectPriorities,completionCriteria,decisionCriteria,scopeInclusions,scopeExclusions,assumptions,constraintsSummary,dependencies,deliverables,phases,regulatoryContext,ownership:{ownerId,authorityId,consultantIds,participantIds}};
 }
-async function projectGovernance(p:ArtifactSqliteProjection,v:model.Governance):Promise<void>{
+async function projectGovernance(p:ArtifactSqliteProjection,v:Governance):Promise<void>{
  await p.insert("architect_governance",[1n,...text(v.id),...text(v.framework),...textField(v.qualityPolicy),...optional(v.riskAppetite,1,text),...optional(v.auditSchedule,1,text),...optional(v.ownerId,1,text),...optional(v.reviewCycle,1,text),...optional(v.policyOwnershipId,1,text),...optional(v.requirementOwnershipId,1,text),...optional(v.riskOwnershipId,1,text),...optional(v.reportingFrequency,1,text)],1n);
  await ordered(p,"architect_governance_role",1n,v.roles,text);
  await ordered(p,"architect_governance_responsibility",1n,v.responsibilities,text);
@@ -2556,7 +2560,7 @@ async function projectGovernance(p:ArtifactSqliteProjection,v:model.Governance):
  await ordered(p,"architect_governance_exception",1n,v.exceptionManagement,text);
  await ordered(p,"architect_governance_performance",1n,v.governancePerformance,text);
 }
-async function restoreGovernance(r:Reader):Promise<model.Governance>{
+async function restoreGovernance(r:Reader):Promise<Governance>{
  const row=await r.singleton("architect_governance",14),c=new Cursor(row!);if(c.integer()!==1n)fail("core document owner differs");
  const id=c.text();
  const framework=c.text();
@@ -2591,8 +2595,8 @@ async function restoreGovernance(r:Reader):Promise<model.Governance>{
 
 async function projectChild(p:ArtifactSqliteProjection,slot:string,value:model.ArtifactChild):Promise<void>{await p.insert("architect_child",[1n,slot,...text(value.childId),...text(value.target.artifactId),...text(value.target.dialect.artifactKind),...text(value.target.dialect.standard),...text(value.target.dialect.subset)])}
 async function restoreChild(r:Reader,slot:string):Promise<model.ArtifactChild>{let found:SqliteRow|undefined;for(const row of r.rows("architect_child")){await r.control.step();if(row.values.length!==8||row.rowid<=0n||row.values[0]!==row.rowid||row.values[1]!==1n)fail("child shape or owner differs");if(row.values[2]===slot){if(found)fail("child slot is repeated");found=row}}if(!found)return fail("required child slot is absent");await r.use(found);const c=new Cursor(found,3),childId=c.text(),artifactId=c.text(),artifactKind=c.text(),standard=c.text(),subset=c.text();c.end();return{childId,target:{artifactId,dialect:{artifactKind,standard,subset}}}}
-async function projectAuditEvent(p:ArtifactSqliteProjection,id:bigint,v:model.AuditEvent):Promise<void>{await p.insert("architect_audit_event",[...symbol(v.action,AuditAction),...optional(v.actorId,1,text),...text(v.subjectId),...text(v.subjectKind),...text(v.timestamp),...textField(v.details),...optional(v.beforeState,1,text),...optional(v.afterState,1,text),...optional(v.ipAddress,1,text),...optional(v.client,1,text),...optional(v.sessionId,1,text),...optional(v.changeRecordId,1,text),...boolean(v.success),...optional(v.errorMessage,1,text),...optional(v.correlationId,1,text),...optional(v.retentionUntil,1,text)],id);await ordered(p,"architect_audit_compliance_tag",id,v.complianceTags,text);if(v.traceLink!==null)await p.insert("architect_audit_trace",trace(v.traceLink),id)}
-async function restoreAuditEvent(r:Reader,hrow:SqliteRow,h:model.EntityHeader):Promise<model.AuditEvent>{const row=await r.body("architect_audit_event",hrow.rowid,18),c=new Cursor(row!),action=c.symbol(AuditAction),actorId=c.optional(1,()=>c.text()),subjectId=c.text(),subjectKind=c.text(),timestamp=c.text(),details=c.textField(),beforeState=c.optional(1,()=>c.text()),afterState=c.optional(1,()=>c.text()),ipAddress=c.optional(1,()=>c.text()),client=c.optional(1,()=>c.text()),sessionId=c.optional(1,()=>c.text()),changeRecordId=c.optional(1,()=>c.text()),success=c.boolean(),errorMessage=c.optional(1,()=>c.text()),correlationId=c.optional(1,()=>c.text()),retentionUntil=c.optional(1,()=>c.text());c.end();const complianceTags=await r.list("architect_audit_compliance_tag",hrow.rowid,1,c=>c.text()),traceRow=await r.body("architect_audit_trace",hrow.rowid,6,false),tc=traceRow?new Cursor(traceRow):null,traceLink=tc?readTrace(tc):null;tc?.end();return{...h,action,actorId,subjectId,subjectKind,timestamp,details,beforeState,afterState,ipAddress,client,sessionId,changeRecordId,success,errorMessage,correlationId,retentionUntil,complianceTags,traceLink}}
+async function projectAuditEvent(p:ArtifactSqliteProjection,id:bigint,v:AuditEvent):Promise<void>{await p.insert("architect_audit_event",[...symbol(v.action,AuditAction),...optional(v.actorId,1,text),...text(v.subjectId),...text(v.subjectKind),...text(v.timestamp),...textField(v.details),...optional(v.beforeState,1,text),...optional(v.afterState,1,text),...optional(v.ipAddress,1,text),...optional(v.client,1,text),...optional(v.sessionId,1,text),...optional(v.changeRecordId,1,text),...boolean(v.success),...optional(v.errorMessage,1,text),...optional(v.correlationId,1,text),...optional(v.retentionUntil,1,text)],id);await ordered(p,"architect_audit_compliance_tag",id,v.complianceTags,text);if(v.traceLink!==null)await p.insert("architect_audit_trace",trace(v.traceLink),id)}
+async function restoreAuditEvent(r:Reader,hrow:SqliteRow,h:EntityHeader):Promise<AuditEvent>{const row=await r.body("architect_audit_event",hrow.rowid,18),c=new Cursor(row!),action=c.symbol(AuditAction),actorId=c.optional(1,()=>c.text()),subjectId=c.text(),subjectKind=c.text(),timestamp=c.text(),details=c.textField(),beforeState=c.optional(1,()=>c.text()),afterState=c.optional(1,()=>c.text()),ipAddress=c.optional(1,()=>c.text()),client=c.optional(1,()=>c.text()),sessionId=c.optional(1,()=>c.text()),changeRecordId=c.optional(1,()=>c.text()),success=c.boolean(),errorMessage=c.optional(1,()=>c.text()),correlationId=c.optional(1,()=>c.text()),retentionUntil=c.optional(1,()=>c.text());c.end();const complianceTags=await r.list("architect_audit_compliance_tag",hrow.rowid,1,c=>c.text()),traceRow=await r.body("architect_audit_trace",hrow.rowid,6,false),tc=traceRow?new Cursor(traceRow):null,traceLink=tc?readTrace(tc):null;tc?.end();return{...h,action,actorId,subjectId,subjectKind,timestamp,details,beforeState,afterState,ipAddress,client,sessionId,changeRecordId,success,errorMessage,correlationId,retentionUntil,complianceTags,traceLink}}
 function count(value:number,extra:number,maximum:number):number{const result=value+extra;return Number.isSafeInteger(extra)&&extra>=0&&Number.isSafeInteger(result)&&result<=maximum?result:fail("semantic row limit")}
 async function forecast(s:model.ProgramArtifact,options:ArtifactSqliteOptions):Promise<number>{await artifactSqliteCheckpoint(options,"projectSnapshot",0,0);const maximum=options.maxRows??1000000;let total=count(0,6,maximum),visits=0;
  total=count(total,s.meta.terminology.length,maximum);

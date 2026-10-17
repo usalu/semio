@@ -3,7 +3,7 @@
 pub const OPCODE: &str = "set-outlines";
 pub const TEXT_OPCODE: &str = OPCODE;
 
-use crate::standards::v1_7::subsets::base::schema::mutations::SetOutlines;
+use crate::standards::v1_7::subsets::base::schema::mutations::set_outlines::SetOutlines;
 
 /// 🖨️ Prints this direct payload through its schema-derived JSON representation.
 pub fn print(payload: &SetOutlines) -> Result<String, String> {

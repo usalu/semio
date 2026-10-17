@@ -1,8 +1,9 @@
 //! 🔬️ Unit tests of the artifact snapshot reader: paid row index, projection and cancellation.
 use super::*;
+use semio_framework_test_fixtures::fixture_text;
 #[test]
 fn paid_row_index_neutral_explicit_signed_identity_preserves_sqlite_zero_and_negative_surrogates(){
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🗂️paid-row-index/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../../🧩️artifact/🧪️tests/🧫️fixtures/🗂️paid-row-index/🔣️.json")).unwrap();
     let mut db=neutral_paid_row_index_database();db.tables[0].rows=fixture["signedIdentity"]["rows"].as_array().unwrap().iter().map(|row|SqliteRow{rowid:row["id"].as_i64().unwrap(),values:vec![SqliteValue::Integer(row["id"].as_i64().unwrap()),SqliteValue::Integer(row["owner"].as_i64().unwrap()),SqliteValue::Integer(row["ordinal"].as_i64().unwrap()),SqliteValue::Text(row["literal"].as_str().unwrap().into()),row["parent"].as_i64().map(SqliteValue::Integer).unwrap_or(SqliteValue::Null)]}).collect();
     let mut callback=|_|true;let limits=super::super::SqliteDatabaseLimits::default();let mut control=SqliteSnapshotControl::new(&mut callback,limits);
     assert!(RowIndex::new(&mut RowIndexStorage::empty(),&db,"neutral_row",5,&[],&mut control,"positive row required").is_err());assert!(RowIndex::new_with_identity(&mut RowIndexStorage::empty(),&db,"neutral_row",5,&[],RowIdentity::Positive,&mut control,"positive row required").is_err());
@@ -11,11 +12,10 @@ fn paid_row_index_neutral_explicit_signed_identity_preserves_sqlite_zero_and_neg
     assert_eq!(rows.get(0,&mut control).unwrap().unwrap().text(3).unwrap(),"alpha");assert!(!rows.row(0).unwrap().is_null(4).unwrap());let mut parents=Vec::new();rows.parent_positions_into(&mut parents,4,&mut control,"dangling signed parent").unwrap();assert_eq!(parents,vec![(Some(1),0),(None,0),(Some(3),0),(None,0)]);RowIndex::cycles(&mut parents,&mut control,"cyclic signed parent").unwrap();
     assert_eq!(rows.take(0,&mut control).unwrap().unwrap().rowid,0);assert!(rows.take(0,&mut control).unwrap().is_none());assert_eq!(rows.remaining(),3);drop(rows);
     db.tables[0].rows[0].rowid=0;db.tables[0].rows[0].values[0]=SqliteValue::Integer(0);assert!(RowIndex::new_with_identity(&mut RowIndexStorage::empty(),&db,"neutral_row",5,&[],RowIdentity::Signed,&mut control,"duplicate signed row").is_err());
-    println!("[DEBUG] paid row index explicit signed identities=-7,-3,0,4 groups=2 zeroParent=present positive=refused");
 }
 
 fn neutral_paid_row_index_database()->SqliteDatabase{
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🗂️paid-row-index/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../../🧩️artifact/🧪️tests/🧫️fixtures/🗂️paid-row-index/🔣️.json")).unwrap();
     let rows=fixture["rows"].as_array().unwrap().iter().map(|row|SqliteRow{rowid:row["id"].as_i64().unwrap(),values:vec![SqliteValue::Integer(row["id"].as_i64().unwrap()),SqliteValue::Integer(row["owner"].as_i64().unwrap()),SqliteValue::Integer(row["ordinal"].as_i64().unwrap()),SqliteValue::Text(row["literal"].as_str().unwrap().into()),row["parent"].as_i64().map(SqliteValue::Integer).unwrap_or(SqliteValue::Null)]}).collect();
     SqliteDatabase{tables:vec![super::super::SqliteTable{name:fixture["table"].as_str().unwrap().into(),sql:fixture["schema"].as_str().unwrap().into(),rows}]}
 }
@@ -31,7 +31,7 @@ fn complete_neutral_paid_row_index(control:&mut SqliteSnapshotControl<'_>)->usiz
 }
 #[test]
 fn paid_row_index_neutral_complete_positions_groups_and_single_consumption(){
-    let mut callback=|_|true;let mut control=SqliteSnapshotControl::new(&mut callback,super::super::SqliteDatabaseLimits::default());assert_eq!(complete_neutral_paid_row_index(&mut control),4);assert!(control.allocation_remaining_bytes()<control.limits().max_allocation_bytes);println!("[DEBUG] paid row index neutral rows=4 grouped=4 consumed=4 parents=4");
+    let mut callback=|_|true;let mut control=SqliteSnapshotControl::new(&mut callback,super::super::SqliteDatabaseLimits::default());assert_eq!(complete_neutral_paid_row_index(&mut control),4);assert!(control.allocation_remaining_bytes()<control.limits().max_allocation_bytes);
 }
 #[test]
 fn paid_row_index_neutral_identity_ordinal_text_foreign_key_and_cycle_refusals(){
@@ -41,7 +41,6 @@ fn paid_row_index_neutral_identity_ordinal_text_foreign_key_and_cycle_refusals()
     let mut db=neutral_paid_row_index_database();db.tables[0].rows[0].values[3]=SqliteValue::Text("alpha".into());let mut control=SqliteSnapshotControl::new(&mut callback,limits);let mut storage=RowIndexStorage::empty();let rows=RowIndex::new(&mut storage,&db,"neutral_row",5,&[],&mut control,"invalid neutral row").unwrap();assert!(rows.unique_text(&mut Vec::new(),rows.indices(),3,&mut control,"duplicate neutral literal").is_err());
     let mut db=neutral_paid_row_index_database();db.tables[0].rows[0].values[4]=SqliteValue::Integer(999);let mut control=SqliteSnapshotControl::new(&mut callback,limits);let mut storage=RowIndexStorage::empty();let rows=RowIndex::new(&mut storage,&db,"neutral_row",5,&[],&mut control,"invalid neutral row").unwrap();assert!(rows.parent_positions_into(&mut Vec::new(),4,&mut control,"dangling neutral parent").is_err());
     let db=neutral_paid_row_index_database();let mut control=SqliteSnapshotControl::new(&mut callback,limits);let mut storage=RowIndexStorage::empty();let rows=RowIndex::new(&mut storage,&db,"neutral_row",5,&[],&mut control,"invalid neutral row").unwrap();assert!(rows.ordered_into(&mut Vec::new(),2,&mut control,"invalid neutral ordinal").is_err());let mut parents=Vec::new();rows.parent_positions_into(&mut parents,4,&mut control,"dangling neutral parent").unwrap();parents[1].0=Some(0);assert!(RowIndex::cycles(&mut parents,&mut control,"cyclic neutral parent").is_err());
-    println!("[DEBUG] paid row index neutral refusals identity=3 ordinal=2 text=1 foreign=1 cycle=1");
 }
 #[test]
 fn paid_row_index_neutral_exact_short_cumulative_and_cancellation_controls(){
@@ -50,7 +49,6 @@ fn paid_row_index_neutral_exact_short_cumulative_and_cancellation_controls(){
     let mut control=SqliteSnapshotControl::new(&mut callback,super::super::SqliteDatabaseLimits{max_allocation_bytes:4*(std::mem::size_of::<usize>()+1)-1,..limits});assert!(RowIndex::new(&mut RowIndexStorage::empty(),&db,"neutral_row",5,&[],&mut control,"invalid neutral row").is_err());
     let mut callback=|_|false;let mut control=SqliteSnapshotControl::new(&mut callback,limits);assert!(RowIndex::new(&mut RowIndexStorage::empty(),&db,"neutral_row",5,&[],&mut control,"invalid neutral row").is_err());assert_eq!(control.allocation_remaining_bytes(),limits.max_allocation_bytes);
     let mut reached=false;let mut callback=|event:super::super::SqliteSnapshotProgress|{if event.phase==SqliteSnapshotPhase::ReconstructSnapshot&&event.completed==1&&event.total==4{reached=true;false}else{true}};let mut control=SqliteSnapshotControl::new(&mut callback,limits);assert!(RowIndex::new(&mut RowIndexStorage::empty(),&db,"neutral_row",5,&[],&mut control,"invalid neutral row").is_err());let admitted=limits.max_allocation_bytes-control.allocation_remaining_bytes();drop(control);assert!(reached);assert_eq!(admitted,4*(std::mem::size_of::<usize>()+1));
-    println!("[DEBUG] paid row index neutral paid={paid} exact=0 constructorInterior={admitted}");
 }
 
 #[test]
@@ -70,7 +68,7 @@ fn native_encoding_bounds_reject_overflow_and_cancel_before_large_admission() {
 }
 #[test]
 fn native_file_forecast_separates_exact_semantic_cells_and_preserves_file_refusals(){
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/📏️file-bound/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../../🧩️artifact/🧪️tests/🧫️fixtures/📏️file-bound/🔣️.json")).unwrap();
     let limits=super::super::SqliteDatabaseLimits{max_value_bytes:fixture["maxSemanticBytes"].as_u64().unwrap()as usize,max_file_bytes:fixture["maxFileBytes"].as_u64().unwrap()as usize,..super::super::SqliteDatabaseLimits::default()};
     let mut accepted=|_|true;let mut control=SqliteSnapshotControl::new(&mut accepted,limits);let mut bound=NativeEncodingBound::file_only(&mut control).unwrap();
     for chunk in fixture["chunks"].as_array().unwrap(){bound.add(chunk.as_u64().unwrap()as usize).unwrap();}

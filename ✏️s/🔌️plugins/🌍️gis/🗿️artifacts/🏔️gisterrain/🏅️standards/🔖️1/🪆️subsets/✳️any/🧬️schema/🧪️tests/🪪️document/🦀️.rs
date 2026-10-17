@@ -1,11 +1,13 @@
 //! 🧪️ Terrain codecs preserve the exact durable child owner.
+use crate::gis_terrain_mesh_child_handle;
 use crate::{GisTerrainDiff, GisTerrainSnapshot};
 use crate::schema::GisTerrainArtifact;
+use semio_framework_test_fixtures::fixture_text;
 use store::{pack::snapshot::ArtifactDsl, pack::snapshot::ArtifactPack};
 
 #[test]
 fn terrain_document_contract_preserves_mesh_identity_through_conversion_and_codecs() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🔬️contract/🪪️document/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🔬️contract/🪪️document/🔣️.json")).unwrap();
     for row in fixture["diffCases"].as_array().unwrap() {
         let before: GisTerrainSnapshot = semio_framework_pack_json::from_json_str(&row["before"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         let diff: GisTerrainDiff = semio_framework_pack_json::from_json_str(&row["diff"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();

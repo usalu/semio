@@ -1,4 +1,4 @@
-use super::*;
+use crate::schema::snapshot::*;
 
 /// 🧪️ codec_retention_law: decode(encode(x)) == x through both the pack (binary) and dsl
 /// (text) envelopes, on a snapshot exercising every `AnimValue` variant and both `AnimTarget`

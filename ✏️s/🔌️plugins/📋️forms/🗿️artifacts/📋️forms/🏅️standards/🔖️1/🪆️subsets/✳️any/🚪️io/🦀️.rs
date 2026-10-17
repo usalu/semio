@@ -53,11 +53,17 @@ pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
 }
 //#endregion 🔖️IoDeclaration
 
-#[path = "💾️binary/🦀️.rs"]
-pub mod binary;
+pub mod binary {
+    pub use semio_s_artifact_forms_forms_schema::standards::v1::subsets::any::io::binary::*;
+    pub use semio_s_artifact_forms_forms_diff::standards::v1::subsets::any::io::binary::diff;
+    pub use semio_s_artifact_forms_forms_definition::standards::v1::subsets::any::io::binary::inferences;
+    pub use semio_s_artifact_forms_forms_mutations::standards::v1::subsets::any::io::binary::mutations;
+}
 
-#[path = "📝️text/🦀️.rs"]
-pub mod text;
+pub mod text {
+    pub use semio_s_artifact_forms_forms_tests_2::standards::v1::subsets::any::io::text::*;
+    pub use semio_s_artifact_forms_forms_diff::standards::v1::subsets::any::io::text::diff;
+    pub use semio_s_artifact_forms_forms_definition::standards::v1::subsets::any::io::text::inferences;
+}
 
-#[path = "🪶️sqlite/🦀️.rs"]
-pub mod sqlite;
+pub use semio_s_artifact_forms_forms_diff::standards::v1::subsets::any::io::sqlite;

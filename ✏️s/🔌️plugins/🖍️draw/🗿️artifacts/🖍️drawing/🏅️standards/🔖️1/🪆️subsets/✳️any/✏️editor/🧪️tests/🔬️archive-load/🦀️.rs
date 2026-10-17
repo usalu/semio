@@ -4,7 +4,7 @@
 //! stall or trap the instance (ticket 26/09/05/DRAW-PLUGIN-END-TO-END, after the sourcing recipe).
 
 use super::unit_tests::context::drawing_app;
-use crate::DrawingCommand;
+use semio_s_artifact_draw_drawing_editor::DrawingCommand;
 use semio_s_artifact_draw_drawing_editor_commands::set_active_example;
 use semio_framework_plugin::{artifact_app_laws as artifact_laws, PluginApp};
 

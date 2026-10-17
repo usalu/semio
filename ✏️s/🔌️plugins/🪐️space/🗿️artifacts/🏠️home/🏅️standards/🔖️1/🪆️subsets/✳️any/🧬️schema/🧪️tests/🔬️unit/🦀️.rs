@@ -1,5 +1,5 @@
 
-use super::*;
+use crate::standards::v1::subsets::any::schema::*;
 
 /// 🌱️ Relocated verbatim from `⚙️engine`'s own test module — the sibling
 /// `engine_apply_updates_catalog_generation` test is NOT carried forward: it exercised

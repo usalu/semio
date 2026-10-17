@@ -4,7 +4,7 @@ import {render} from "@testing-library/react";
 import {expect,it} from "vitest";
 import Ajv from "ajv";
 import {I18nextProvider} from "react-i18next";
-import { createShellI18nInstance, disposeShellI18nInstance } from "../../🎯️targets/⚛️react/🟦️.tsx";
+import { createShellI18nInstance, disposeShellI18nInstance } from "@semio-tech/ui-react/source";
 import { Engagement } from "../../🧱️elements/🎮️Engagement/🟦️.tsx";
 import rows from "../🧫️fixtures/📣️engagement-status/🔣️.json";
 
@@ -27,5 +27,4 @@ it("keeps changing engagement status in one polite atomic accessible region",()=
   }finally{view.unmount();disposeShellI18nInstance(instance);}
  }
  expect(transitions).toBe(6);
- process.stderr.write(`[DEBUG] Engagement status retained one polite atomic live DOM region across ${transitions} bilingual selection updates\n`);
 });

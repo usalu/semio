@@ -8,7 +8,7 @@ use super::{JackGraphWindowConfig, JackGraphWindowConfigDiff, JackGraphWindowCon
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetCamera {
     #[dsl(block)]
-    pub camera: Option<crate::Camera>,
+    pub camera: Option<crate::standards::v1::subsets::any::schema::graph::Camera>,
 }
 
 impl protocol::MutationKind<JackGraphWindowConfig, JackGraphWindowConfigMutation> for SetCamera {

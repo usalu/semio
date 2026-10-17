@@ -114,5 +114,4 @@ fn node_graph_lanes_pin_the_neutral_contract_and_restore_oversized_documents() {
     assert!(!restored.merge_lane("framework.scene.nodeGraph.nodes", "[truncated".into()));
     assert!(!restored.merge_lane("framework.scene.world3d.meshes", "[]".into()));
     assert_eq!(restored, scene);
-    println!("[DEBUG] node graph lane transport: nodes={count}, full={original_bytes}B, spine={spine_bytes}B, carriers={}", lanes.len());
 }

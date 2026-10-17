@@ -3,8 +3,7 @@
 pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio");
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
 
-#[path = "🫳️borrowed/🦀️.rs"]
-mod borrowed;
+
 
 #[allow(unused_imports)]
 mod mutations_codec {
@@ -56,7 +55,7 @@ use crate::schema::mutations::replace_surface;
 /// reposition (`move-vertex`).
 use crate::io::text::mutations::print_brep_mutation;
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn wire_tag(m: &SemioBrepMutation) -> u8 {
+pub fn wire_tag(m: &SemioBrepMutation) -> u8 {
     match m {
         SemioBrepMutation::CreateVertex(_) => TAG_CREATE_VERTEX,
         SemioBrepMutation::DeleteVertex(_) => TAG_DELETE_VERTEX,
@@ -77,7 +76,7 @@ pub(crate) fn wire_tag(m: &SemioBrepMutation) -> u8 {
 /// ✂️ Just the `key=value ...` argument tail of `print_brep_mutation` — the binary frame's `tag`
 /// byte already carries the keyword, so the text keyword itself is redundant in the binary payload.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn print_brep_mutation_args(m: &SemioBrepMutation) -> String {
+pub fn print_brep_mutation_args(m: &SemioBrepMutation) -> String {
     match print_brep_mutation(m).split_once(' ') {
         Some((_, rest)) => rest.to_string(),
         None => String::new(),

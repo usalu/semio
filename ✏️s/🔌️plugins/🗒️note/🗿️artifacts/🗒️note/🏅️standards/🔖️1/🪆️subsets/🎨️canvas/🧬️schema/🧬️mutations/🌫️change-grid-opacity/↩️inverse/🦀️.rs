@@ -1,12 +1,14 @@
 //! ↩️ Inverse for `ChangeGridOpacity`.
 use super::ChangeGridOpacity;
-use crate::schema::mutations::NoteMutation;
 use crate::NoteSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(_payload: &ChangeGridOpacity, base: &NoteSnapshot) -> Result<Vec<NoteMutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op>(_payload: &ChangeGridOpacity, base: &NoteSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError>
+where
+    Op: From<crate::standards::v1::subsets::canvas::schema::mutations::change_grid_opacity::ChangeGridOpacity>,
+{
     Ok((|| {
-    vec![NoteMutation::ChangeGridOpacity(ChangeGridOpacity { new_opacity: base.grid_opacity })]
+    vec![Op::from(ChangeGridOpacity { new_opacity: base.grid_opacity })]
 
     })())
 }

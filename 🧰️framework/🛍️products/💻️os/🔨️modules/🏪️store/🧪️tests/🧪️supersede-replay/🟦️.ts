@@ -35,7 +35,6 @@ test("retained clone alternating grants keep one combined native byte allowance"
     expect(source).toEqual(oracle);
     expect(oracle.capacity + oracle.payload + oracle.release).toBe(law.grant.combinedCapacityCopyAndReleaseMaximum);
   }
-  console.log("[DEBUG] retained clone capacity/payload/release alternating grants preserve one 4096-byte allowance");
 });
 
 /** 🧮️ One demo operation as the JSON Patch it writes and the messages it raises against `state`. */
@@ -53,7 +52,9 @@ function diff(operation: DemoOperation, state: Snapshot): { patch: Operation[]; 
 }
 
 /** ⏪️ Replays every recorded operation in applied order, each through its effective input, keeping and recording outcomes. */
-function replay(testCase: Case): Case["expected"] {
+/** 🔁️ The replayable part of a case: the committed expectation is what replay produces. */
+type Replayable = Omit<Case, "expected">;
+function replay(testCase: Replayable): Case["expected"] {
   let state: Snapshot = structuredClone(testCase.initial);
   const replacements = new Map(testCase.supersessions.map((supersession) => [`${supersession.edit}/${supersession.op}`, supersession.replacement]));
   const outcomes: Outcome[] = [];
@@ -153,7 +154,6 @@ test("📨️ copied diagnostic closure admits each actual backing release", () 
   const producer = readFileSync(new URL(`${base}🦀️.rs`, import.meta.url), "utf8");
   for (const axis of ["copy", "capacity", "release", "depth"]) expect(producer.includes(`pub fn next_close_${axis}_byte_demand`) || (axis === "depth" && producer.includes("pub fn next_close_depth_demand"))).toBe(true);
   expect(producer.includes("vec![output]")).toBe(false);
-  console.log("[DEBUG] diagnostic closure independent UTF-8 allocation ledger removes one exact backing after full grant");
 });
 
 test("🎮️ cooperative semantic preparation matches independent JSON Patch before refusal policy", () => {
@@ -162,7 +162,7 @@ test("🎮️ cooperative semantic preparation matches independent JSON Patch be
   expect(capacity <= BigInt(law.capacityRelease.bodyBytes)).toBe(law.capacityRelease.ordinaryGrantAccepted);
   expect(capacity <= capacity).toBe(law.capacityRelease.exactGrantAccepted);
   const inverse = Array.from({length:law.pagedInverse.rows}, (_, index) => index % 256);
-  const copiedInverse = applyPatch({}, [{op:"add",path:"/inverse",value:inverse}], true, false).newDocument.inverse;
+  const copiedInverse = applyPatch<{inverse?:unknown}>({}, [{op:"add",path:"/inverse",value:inverse}], true, false).newDocument.inverse;
   expect(copiedInverse).toEqual(inverse);
   expect(Math.ceil(inverse.length / law.pagedInverse.maximumTurnBytes)).toBeGreaterThanOrEqual(law.pagedInverse.minimumBackingReleases);
 
@@ -208,11 +208,11 @@ test("🕰️ bounded history reads stop at the selected mutation and replay the
   expect(new Uint8Array(law.physicalInversePageBytes).byteLength).toBe(4096);
   expect(law.physicalInversePageBytes).toBeLessThanOrEqual(law.closeGrant.maximumReleaseBytes);
   const prefix = { name: "preview", initial: law.initial, edits: law.edits.slice(0, law.target.edit + 1).map((edit: DemoOperation[], index: number) => index === law.target.edit ? edit.slice(0, law.target.op) : edit), supersessions: law.accepted };
-  const before = replay(prefix as Case).state;
+  const before = replay(prefix).state;
   expect(before.n).toBe(law.expected.before);
   expect(applyPatch(before, diff(law.replacement, before).patch, true, false).newDocument.n).toBe(law.expected.preview);
-  expect(replay({ ...prefix, edits: law.edits, supersessions: [...law.accepted, { ...law.target, replacement: law.replacement }] } as Case).state.n).toBe(law.expected.head);
-  const committed = replay({ ...prefix, edits: law.edits, supersessions: [] } as Case).state;
+  expect(replay({ ...prefix, edits: law.edits, supersessions: [...law.accepted, { ...law.target, replacement: law.replacement }] }).state.n).toBe(law.expected.head);
+  const committed = replay({ ...prefix, edits: law.edits, supersessions: [] }).state;
   for (const stop of law.cancelAfterSteps) {
     let retained = { head: committed.n, owners: law.edits.flat().slice(0, stop) };
     while (retained.owners.length) {

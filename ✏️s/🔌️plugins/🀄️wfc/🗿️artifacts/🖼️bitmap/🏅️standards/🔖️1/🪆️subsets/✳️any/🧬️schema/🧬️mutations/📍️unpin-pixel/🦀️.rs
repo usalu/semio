@@ -3,7 +3,6 @@
 //! selection instead of reporting it.
 
 use crate::diff::BitmapDiff;
-use crate::mutations::BitmapMutation;
 use crate::schema::snapshot::BitmapSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -19,17 +18,23 @@ pub struct UnpinPixel {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn unpin_pixel(x: u32, y: u32) -> BitmapMutation {
-    BitmapMutation::UnpinPixel(UnpinPixel { x, y })
+pub fn unpin_pixel<Op>(x: u32, y: u32) -> Op
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::unpin_pixel::UnpinPixel>,
+{
+    Op::from(UnpinPixel { x, y })
 }
 
-impl MutationKind<BitmapSnapshot, BitmapMutation> for UnpinPixel {
+impl<Op> MutationKind<BitmapSnapshot, Op> for UnpinPixel
+where
+    Op: protocol::Mutation<BitmapSnapshot, Diff = BitmapDiff> + From<UnpinPixel> + From<crate::standards::v1::subsets::any::schema::mutations::pin_pixel::PinPixel>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "clear", entity: "pixel-pin", kind: "unpin-pixel", record: "Cleared" };
 
     fn diff(&self, base: &BitmapSnapshot) -> protocol::MutationOutcome<BitmapDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &BitmapSnapshot) -> Result<Vec<BitmapMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &BitmapSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

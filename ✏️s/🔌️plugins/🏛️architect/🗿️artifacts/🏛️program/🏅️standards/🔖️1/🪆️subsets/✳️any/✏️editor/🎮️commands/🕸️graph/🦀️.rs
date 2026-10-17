@@ -4,7 +4,7 @@ pub mod node_graph_edit {
     use crate::editor::architect::catalog::{find_adjacency, new_adjacency};
     use crate::editor::architect::config::{ArchitectConfig, ArchitectConfigMutation};
     use crate::standards::v1::subsets::any::schema::mutations::ProgramMutation;
-    use crate::standards::v1::subsets::any::schema::registers::RegisterKey;
+    use crate::standards::v1::subsets::any::schema::registers::catalog::RegisterKey;
     use crate::standards::v1::subsets::any::schema::registers::AdjacencyKind;
     use crate::standards::v1::subsets::any::schema::mutations as leaves;
     use crate::standards::v1::subsets::any::schema::{kernel::EntityId, snapshot::ProgramSnapshot};
@@ -69,7 +69,7 @@ pub mod node_graph_edit {
                 _ => return Err(Fault::from("nodeGraphEdit operation is not supported by the program graph")),
             }
         }
-        Ok(Emit::tool_once(crate::editor::architect::ARCHITECT_APP_ID, "nodeGraphEdit", doc.operation_optional().map_or("", |operation| operation.authoring_seed.as_str()), emitted))
+        Ok(Emit::tool_once(crate::editor::architect::base::ARCHITECT_APP_ID, "nodeGraphEdit", doc.operation_optional().map_or("", |operation| operation.authoring_seed.as_str()), emitted))
     }
 
 }
@@ -94,6 +94,4 @@ pub mod node_graph_viewport {
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;
+

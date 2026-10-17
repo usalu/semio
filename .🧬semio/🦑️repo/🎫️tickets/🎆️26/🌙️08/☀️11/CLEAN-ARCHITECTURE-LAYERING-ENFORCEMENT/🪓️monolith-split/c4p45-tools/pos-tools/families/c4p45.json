@@ -1,0 +1,25 @@
+{
+ "name": "c4p45",
+ "crates": [
+  "semio-framework-pixels",
+  "semio-framework-graph-dsl",
+  "semio-framework-canvas-scene",
+  "semio-framework-deflate",
+  "semio-framework-dsl-record-derive",
+  "semio-framework-dsl-record",
+  "semio-framework-surface-paint"
+ ],
+ "base": {
+  "rev": "b84bf526c7b",
+  "crates": [
+   "semio-framework-pixels",
+   "semio-framework-graph-dsl",
+   "semio-framework-canvas-scene",
+   "semio-framework-deflate",
+   "semio-framework-dsl-record-derive",
+   "semio-framework-dsl-record",
+   "semio-framework-surface-paint"
+  ]
+ },
+ "note": "CENSUS4-PKG-45: framework modules pixels, graph dsl unit tests, canvas scene renderer, deflate, dsl record derive, dsl record schema and surface paint split into children"
+}

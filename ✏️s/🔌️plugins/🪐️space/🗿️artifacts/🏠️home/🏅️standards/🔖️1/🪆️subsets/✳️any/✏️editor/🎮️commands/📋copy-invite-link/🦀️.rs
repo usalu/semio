@@ -30,7 +30,4 @@ pub fn handle(payload: &CopyInviteLink, _doc: &ArtifactView<'_, SHomeSnapshot>, 
 //#endregion 🔖️Handle
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

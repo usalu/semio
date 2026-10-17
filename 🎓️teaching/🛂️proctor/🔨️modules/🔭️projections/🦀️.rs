@@ -58,9 +58,9 @@ use server::storage::{ProjectionStore, StorageError};
 use tokio::sync::Mutex;
 
 use crate::actors::{HANDLE, LEARNER};
-use crate::catalog::LoadedCatalog;
-use crate::crowd::CrowdTally;
-use crate::storage::{LoggedEvent, ProjectionWrite, SqliteAuthorityStore, SqliteProjectionStore};
+use teaching_proctor_base::catalog::LoadedCatalog;
+use teaching_proctor_base::crowd::CrowdTally;
+use teaching_proctor_base::storage::{LoggedEvent, ProjectionWrite, SqliteAuthorityStore, SqliteProjectionStore};
 
 /// 🚩️ The checkpoint every quiz read model advances together.
 pub const CHECKPOINT: &str = "quiz";
@@ -527,6 +527,11 @@ pub fn run_of(fact: &Event) -> Option<&String> {
 }
 //#endregion 🔖️Projector
 
+#[cfg(any(test, feature = "testkit"))]
+#[doc(hidden)]
+#[path = "🧰️fixtures/🦀️.rs"]
+pub mod fixtures;
+
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
-pub(crate) mod tests;
+mod tests;

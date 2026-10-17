@@ -1,6 +1,15 @@
 //! 🟢️ `insert-node` — authored as its own mutation leaf; its diff and inverse live in `🔺️diff` and `↩️inverse`.
 
-use super::*;
+#[allow(unused_imports)]
+use crate::schema::snapshot::FlowNode;
+#[allow(unused_imports)]
+use protocol::Mutation;
+#[allow(unused_imports)]
+use crate::schema::diff::SemioFlowDiff;
+#[allow(unused_imports)]
+use crate::schema::snapshot::SemioFlowSnapshot;
+#[allow(unused_imports)]
+use crate::schema::mutations::remove_node;
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
@@ -19,13 +28,16 @@ impl InsertNode {
     }
 }
 
-impl protocol::MutationKind<SemioFlowSnapshot, SemioFlowMutation> for InsertNode {
+impl<Op> protocol::MutationKind<SemioFlowSnapshot, Op> for InsertNode
+where
+    Op: protocol::Mutation<SemioFlowSnapshot, Diff = crate::schema::diff::SemioFlowDiff> + From<InsertNode> + From<crate::schema::mutations::remove_node::RemoveNode>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "node", kind: "insert-node", record: "InsertNode" };
 
-    fn diff(&self, base: &SemioFlowSnapshot) -> protocol::MutationOutcome<<SemioFlowMutation as Mutation<SemioFlowSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioFlowSnapshot) -> protocol::MutationOutcome<<Op as Mutation<SemioFlowSnapshot>>::Diff> {
         diff::diff(self, base)
     }
-    fn inverse(&self, base: &SemioFlowSnapshot) -> Result<Vec<SemioFlowMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &SemioFlowSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         inverse::inverse(self, base)?
     

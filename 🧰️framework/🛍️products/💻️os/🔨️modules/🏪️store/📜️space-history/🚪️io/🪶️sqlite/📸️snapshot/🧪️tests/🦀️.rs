@@ -123,7 +123,6 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     assert_eq!(live.envelope().dialect, expected_envelope_dialect);
     assert_eq!(*live.snapshot_ref(), source);
     semio_framework_os_store_test_support::close_plain_test_store(&mut live);
-    println!("[DEBUG] explicit SpaceHistory owner registration {case}: typed UnsupportedOwner before publication; complete state and exact SQLite metadata/route retained after publication");
 }
 #[test]
 fn sqlite_snapshot_framework_space_history_same_control_retained_materialization_budget_is_cumulative() {
@@ -247,7 +246,6 @@ fn sqlite_snapshot_framework_space_history_json_turns_preserve_original_ceiling_
             std::mem::forget(original_recipient);
         }
     }
-    println!("[DEBUG] SpaceHistory actual JSON turns: nativeBytes={owned} outputBytes={} original ceiling restored; cumulative and one-short checked; independent=Serde", text.len());
 }
 
 use semio_framework_io_sqlite_snapshot::*;
@@ -550,7 +548,6 @@ fn sqlite_snapshot_framework_space_history_native_input_retained_materialization
         drop(native_owner);close_native_history_recipient(&mut native);drop(native);assert!(!original_recipient.has_owner());
         drop(control);
         assert!(reached);
-        println!("[DEBUG] SpaceHistory {encoding:?} native ownership: admitted={owned}, row-refusal={refused_owned}, canceled={canceled_owned}; semantic and allocation ledgers agree");
     }
 }
 
@@ -693,7 +690,6 @@ fn sqlite_snapshot_framework_space_history_original_native_owner_cancels_and_kee
   let mut sql_progress=|_|true;let mut sql=SqliteSnapshotControl::new(&mut sql_progress,limits);let armed=std::cell::Cell::new(false);let mut reached=false;let mut observe=|event:semio_framework_value::native_encoding::NativeEncodeProgress|{if armed.get()&&(!interior||(event.completed>=minimum&&event.completed<event.total)){reached=true;false}else{true}};
   let mut native=semio_framework_value::NativeEncodeControl::new(1<<30,&mut observe);native.charge(7).unwrap();armed.set(true);
   let error=source.encode_sqlite_snapshot_native(encoding,&mut sql,&mut semio_framework_os_io::control::NativeSnapshotEncodeOwner::new(&mut native,history_caller_grant())).unwrap_err();assert_eq!(error.kind.as_str(),contract["cancellation"]["expectedKind"].as_str().unwrap());assert_eq!(native.maximum_bytes(),1<<30);assert_eq!(native.owned_bytes()-7,limits.max_allocation_bytes-sql.allocation_remaining_bytes());drop(native);drop(observe);assert!(reached);
-  println!("[DEBUG] SpaceHistory {encoding:?} original native owner interior={interior} canceled and retained complete cumulative receipt");
  }}
 }
 

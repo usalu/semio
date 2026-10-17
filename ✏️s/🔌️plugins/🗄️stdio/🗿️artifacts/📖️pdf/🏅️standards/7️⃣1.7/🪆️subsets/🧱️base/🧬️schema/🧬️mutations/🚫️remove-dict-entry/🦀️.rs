@@ -1,7 +1,6 @@
 //! 🚫️ Authoritative PDF mutation payload, diff, inverse, and tests for `remove-dict-entry`.
 
-use super::set_dict_entry::SetDictEntry;
-use super::PdfMutation;
+use crate::standards::v1_7::subsets::base::schema::mutations::set_dict_entry::SetDictEntry;
 use crate::standards::v1_7::subsets::base::schema::diff::{self, PdfDiff, PdfPathSegment};
 use crate::standards::v1_7::subsets::base::schema::snapshot::{ObjRef, PdfDictEntry, PdfObject, PdfSnapshot};
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
@@ -17,16 +16,19 @@ pub struct RemoveDictEntry {
     pub key: String,
 }
 
-impl MutationKind<PdfSnapshot, PdfMutation> for RemoveDictEntry {
+impl<Op> MutationKind<PdfSnapshot, Op> for RemoveDictEntry
+where
+    Op: protocol::Mutation<PdfSnapshot, Diff = PdfDiff> + From<RemoveDictEntry> + From<crate::standards::v1_7::subsets::base::schema::mutations::set_dict_entry::SetDictEntry>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "remove", entity: "dict-entry", kind: "remove-dict-entry", record: "Remove" };
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
         MutationOutcome::new(diff::graph_edit(diff::diff_remove_dict_entry(base, self.id, &self.path, &self.key)))
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
-        original_dict_value(base, self.id, &self.path, &self.key).map(|(position, value)| PdfMutation::SetDictEntry(SetDictEntry { id: self.id, path: self.path.clone(), key: self.key.clone(), value, index: Some(position) })).into_iter().collect()
+        original_dict_value(base, self.id, &self.path, &self.key).map(|(position, value)| Op::from(SetDictEntry { id: self.id, path: self.path.clone(), key: self.key.clone(), value, index: Some(position) })).into_iter().collect()
     
     })())
 }
@@ -62,8 +64,6 @@ fn original_dict_value(base: &PdfSnapshot, id: ObjRef, path: &[PdfPathSegment], 
 //#endregion 🔖️Mutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
 

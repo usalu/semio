@@ -143,14 +143,13 @@ test("portable composition state and three catalogs match independent Node", () 
       entries = result.entries;
       decisions.push({ actor: actorId, accepted: result.accepted });
     }
-    expect<unknown>({ decisions, entries }, row.id).toEqual(row.expected);
+    expect(row.expected, row.id).toEqual({ decisions, entries });
     expect(oracle.concurrentSchedules[index], row.id).toEqual({ id: row.id, ...row.expected });
   }
   expect(corpus.catalogContract.nativeProof).toBe("pending");
   expect(corpus.catalogContract.descriptorOwnedMirrorFollowsSingleReplacement).toBe(true);
   expect(corpus.catalogContract.externallyPublishedMirrorIsProtected).toBe(true);
   expect(corpus.catalogContract.equalExternalPublicationClaimsAuthority).toBe(true);
-  console.log("[DEBUG] schema neutrality: 8 child projections, 4 states, 19 typed public-lifecycle transactions, two atomic schedule contracts and separate-lock defect model match independent Node; native transaction proof pending");
 });
 
 test("actual composition source charges original Option and Vec traversal before children", () => {

@@ -8,7 +8,8 @@ for (const name of readdirSync(dir)) {
   const snap: Record<string, string> = JSON.parse(readFileSync(dir + "/" + name, "utf8"));
   for (const [f, before] of Object.entries(snap)) {
     if (before === null) continue;
-    const now = readFileSync(ROOT + f, "utf8");
+    let now: string;
+    try { now = readFileSync(ROOT + f, "utf8"); } catch { console.log("GONE", f.slice(-90)); continue; }
     if (f.endsWith("/package.json")) {
       manifests++;
       const a = JSON.parse(before), b = JSON.parse(now);

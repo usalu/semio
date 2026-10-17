@@ -3,6 +3,7 @@
 //! A mesh compute describes its work as a closure that runs inside the first step, so cloning the input mesh and building the kernel job are charged to the grant like every other unit. A machine advances in batches of [`BATCH`] kernel units per fuel, reports monotone progress, turns a kernel panic into a fault and drops its kernel job on cancel.
 #![allow(clippy::result_large_err)]
 
+use semio_framework_3d::mesh::{MeshModelingOps};
 use semio_s_artifact_procedural_3d_model::catalogue::{Kind, Quality};
 use semio_s_artifact_procedural_3d_geometry_compute::WidgetJob;
 use semio_s_artifact_procedural_3d_geometry_compute::WidgetStep;

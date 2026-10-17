@@ -65,7 +65,7 @@ class MediaAdoptionSourceScript extends BundleScript {
     });
   }
 }
-await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-layout-layout", { commands: { verify: OwnedVerifyScript, "test-media-adoption-source": MediaAdoptionSourceScript } });
+await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-layout-layout", { testPackages: ["semio-s-artifact-layout-layout", "semio-s-artifact-layout-layout-editor-commands-tests", "semio-s-artifact-layout-layout-mutations-content-tests-1", "semio-s-artifact-layout-layout-mutations-content-tests-2", "semio-s-artifact-layout-layout-mutations-frames-tests-1", "semio-s-artifact-layout-layout-mutations-frames-tests-2"], commands: { verify: OwnedVerifyScript, "test-media-adoption-source": MediaAdoptionSourceScript } });
 
 
 

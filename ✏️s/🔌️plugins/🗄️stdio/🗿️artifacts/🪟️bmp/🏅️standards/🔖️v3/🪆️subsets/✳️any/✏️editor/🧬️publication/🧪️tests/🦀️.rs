@@ -1,6 +1,7 @@
 //! 🧪️ Exact owned BMP publication uses neutral native sample cases and independent image-rs decoding.
 use crate::{BmpSnapshot, schema::mutations::BmpMutation, schema::mutations::ReplaceImage, schema::mutations::ReplaceSamples, schema::snapshot::BmpImage};
 use crate::{schema::snapshot::BmpPixels, schema::snapshot::BmpRegion};
+use semio_framework_test_fixtures::fixture_text;
 use semio_framework_value::{retained_clone::RetainedCloneGrant, retained_clone::RetainedCloneProgress, retained_clone::RetainedCloneStep};
 use store::snapshot_clone_preparation::RetainedCloneEditStep;
 use std::sync::Arc;
@@ -31,7 +32,7 @@ fn close(cursor:&mut BmpPublicationCursor){
 
 #[test]
 fn retained_bmp_publication_keeps_exact_components_indices_and_reserved_samples() {
-    let fixture:serde_json::Value=serde_json::from_str(runtime_fixture_text("../../../../🧪️tests/🧫️fixtures/🧬️owned-native-samples/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️owned-native-samples/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap() {
         let base=BmpSnapshot::from_value(semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse_bytes(row["snapshot"].to_string().as_bytes(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap())).unwrap();
         let paint=&row["paint"];let region=BmpRegion{x:paint["x"].as_u64().unwrap()as u32,y:paint["y"].as_u64().unwrap()as u32,width:paint["width"].as_u64().unwrap()as u32,height:paint["height"].as_u64().unwrap()as u32};let revision=crate::schema::operations::bmp_revision(&base);
@@ -47,7 +48,6 @@ fn retained_bmp_publication_keeps_exact_components_indices_and_reserved_samples(
         }
         if post.image.profile==crate::schema::snapshot::BmpProfile::DirectRgb32 {let bytes=crate::standards::v_v3::subsets::any::io::encode_bmp(&post).unwrap();let (width,height,visual)=semio_s_artifact_stdio_bmp_test_oracle::standards::v_v3::subsets::any::oracle_visual_rgba8(&bytes).unwrap();assert_eq!((width,height),(post.image.width,post.image.height));assert_eq!(visual,crate::schema::operations::bmp_rgba8_preview(&post).unwrap());}
         retire_owned_value(inverse);
-        eprintln!("[DEBUG] retained BMP publication case={} turns={turns} preciseSamples={}",row["name"],post.image.width*post.image.height);
     }
 }
 #[test]
@@ -60,7 +60,7 @@ fn retained_bmp_publication_cancellation_closes_partial_result_copy() {
 #[test]
 fn retained_bmp_publication_canonical_reader_preserves_neutral_owned_fields() {
     use semio_framework_value::FromValue;
-    let fixture:serde_json::Value=serde_json::from_str(runtime_fixture_text("../../../../🧪️tests/🧫️fixtures/🧬️owned-native-samples/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️owned-native-samples/🔣️.json")).unwrap();
     let grant=encoding_grant(1,17);
     for case in fixture["cases"].as_array().unwrap() {
         let snapshot=BmpSnapshot::from_value(semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse_bytes(case["snapshot"].to_string().as_bytes(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap())).unwrap();
@@ -73,14 +73,13 @@ fn retained_bmp_publication_canonical_reader_preserves_neutral_owned_fields() {
         let actual:serde_json::Value=serde_json::from_slice(&encoded).unwrap();assert_eq!(actual,expected);assert_eq!(actual,case["snapshot"]);
         reader.begin_close();retire_reader(&mut reader);
         assert!(reader.terminal_is_empty());assert_eq!(lifetime.strong_count(),0);assert!(lifetime.upgrade().is_none());
-        eprintln!("[DEBUG] retained bmp canonical neutral={} turns={turns} bytes={}",case["name"],encoded.len());
     }
 }
 
 #[test]
 fn retained_bmp_publication_canonical_diff_preserves_neutral_owned_fields() {
     use crate::schema::diff::BmpDiff;
-    let fixture:serde_json::Value=serde_json::from_str(runtime_fixture_text("../../../../🧪️tests/🧫️fixtures/🧬️owned-native-samples/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️owned-native-samples/🔣️.json")).unwrap();
     let grant=encoding_grant(1,17);
     for case in fixture["cases"].as_array().unwrap() {
         let snapshot=BmpSnapshot::from_value(semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse_bytes(case["snapshot"].to_string().as_bytes(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap())).unwrap();
@@ -93,7 +92,6 @@ fn retained_bmp_publication_canonical_diff_preserves_neutral_owned_fields() {
             let actual:serde_json::Value=serde_json::from_slice(&encoded).unwrap();assert_eq!(actual,expected);if actual.get("image").is_some(){assert_eq!(actual["image"],case["snapshot"]["image"]);}
             reader.begin_close();retire_reader(&mut reader);
             assert!(reader.terminal_is_empty());assert!(lifetime.upgrade().is_none());
-            eprintln!("[DEBUG] retained BMP diff neutral={} turns={turns} bytes={}",case["name"],encoded.len());
         }
     }
 }
@@ -101,7 +99,7 @@ fn retained_bmp_publication_canonical_diff_preserves_neutral_owned_fields() {
 #[test]
 fn retained_bmp_publication_replacement_and_inverse_use_bounded_typed_image_owners(){
     use protocol::Mutation;
-    let fixture:serde_json::Value=serde_json::from_str(runtime_fixture_text("../../../../🧪️tests/🧫️fixtures/🧬️owned-native-samples/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../../🧪️tests/🧫️fixtures/🧬️owned-native-samples/🔣️.json")).unwrap();
     let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:4096,maximum_depth:64,maximum_release_bytes:4096};
     for row in fixture["cases"].as_array().unwrap().iter().chain(fixture["replacementCases"].as_array().unwrap().iter()){
         let target=BmpSnapshot::from_value(semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse_bytes(row["snapshot"].to_string().as_bytes(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap())).unwrap();
@@ -121,11 +119,5 @@ fn retained_bmp_publication_replacement_and_inverse_use_bounded_typed_image_owne
         assert_eq!(post,target);let inverse=cursor.take_inverse().unwrap();assert_eq!(inverse.len(),1);
         let restored=protocol::apply_diff(inverse[0].diff(&post).diff(),&post).unwrap();assert_eq!(restored,base);close(&mut cursor);close_source(source);close_source(mutation);
         retire_owned_value(inverse);
-        eprintln!("[DEBUG] retained Bmp typed image replacement neutral={} turns={turns} inverseCapacityGranted=true nativeWordsExact=true",row["name"]);
     }
-}
-
-fn runtime_fixture_text(relative: &str) -> &'static str {
-    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative);
-    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display())).into_boxed_str())
 }

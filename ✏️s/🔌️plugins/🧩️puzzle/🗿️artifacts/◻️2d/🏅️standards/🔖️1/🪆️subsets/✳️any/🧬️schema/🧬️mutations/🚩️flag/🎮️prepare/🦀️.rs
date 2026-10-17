@@ -1,6 +1,6 @@
 //! ⚑️ Borrowed typed node and edge flag intents preserve authored optional state.
-use super::{ChangeNodeLocked,ChangeNodeVisible,ChangeEdgeLocked,ChangeEdgeVisible,ChangeNodeRoot,ChangeTargetRegionHidden,ChangeTargetRegionLocked,Puzzle2dMutation};
-use crate::{Puzzle2dSnapshot,standards::v1::subsets::any::schema::snapshot::lookup::{Puzzle2dLookupCursor,Puzzle2dLookupScope,Puzzle2dLookupStep}};
+use crate::standards::v1::subsets::any::schema::mutations::{ChangeNodeLocked,ChangeNodeVisible,ChangeEdgeLocked,ChangeEdgeVisible,ChangeNodeRoot,ChangeTargetRegionHidden,ChangeTargetRegionLocked,Puzzle2dMutation};
+use crate::{Puzzle2dSnapshot,standards::v1::subsets::any::schema::lookup::{Puzzle2dLookupCursor,Puzzle2dLookupScope,Puzzle2dLookupStep}};
 use semio_framework_value::{paged::PagedUtf8,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneBinding,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneRef,RetainedCloneStep}};
 
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
@@ -107,9 +107,7 @@ impl<T:Puzzle2dFlagIntent> Puzzle2dFlagPreparationCursor<T>{
  }
  pub fn terminal_is_empty(&self)->bool{self.closing&&self.output.is_none()&&self.lookup.terminal_is_empty()&&self.source.is_none()&&self.mutation.is_none()}
 }
-#[cfg(test)]
-#[path="🧪️tests/🦀️.rs"]
-mod tests;
+
 
 #[path="↩️inverse/🦀️.rs"]
 pub mod inverse;

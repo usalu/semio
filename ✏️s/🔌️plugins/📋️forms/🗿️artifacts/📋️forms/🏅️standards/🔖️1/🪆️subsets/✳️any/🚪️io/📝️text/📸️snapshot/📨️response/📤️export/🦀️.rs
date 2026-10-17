@@ -91,9 +91,7 @@ pub fn export_responses_csv(responses: &[FormsResponse]) -> String { collect(res
 /// 📦️ JSON retains response boundaries, including submissions with no answer fields.
 pub fn export_responses_json(responses: &[FormsResponse]) -> String { collect(responses, "json") }
 
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;
+
 
 
 /// 📋️ One response answer as logical cells before native CSV encoding.

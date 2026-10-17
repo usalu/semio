@@ -6,7 +6,11 @@ import Ajv2020 from "ajv/dist/2020";
 import { actionSemanticsForKind } from "@semio-tech/framework";
 import { Tree } from "@semio-tech/ui-react";
 import { cleanup, fireEvent, render } from "@semio-tech/ui-react/test";
-import { buildCommandCategoryTree, commandAddressKey, type ResolvedCommand } from "../../🧱️elements/🛠️ShellHelpers/🟦️.tsx";
+import {
+  buildCommandCategoryTree,
+  commandAddressKey,
+  type ResolvedCommand
+} from "../../🧱️elements/🛠️ShellHelpers/🎛️command-registry/🟦️.tsx";
 import fixture from "../../🧱️elements/🐚️Shell/🧪️tests/🧫️fixtures/🎛️command-panel/🔣️.json";
 
 beforeEach(() => { vi.stubGlobal("ResizeObserver", class { observe() {} unobserve() {} disconnect() {} }); });

@@ -65,7 +65,7 @@ struct DumpNodeState {
 #[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 struct DumpNode {
-    path: String,
+    pub path: String,
     pub kind: &'static str,
     pub rect: [f32; 4],
     pub text: Option<String>,
@@ -114,7 +114,7 @@ struct DumpAccessibilityWindow {
 #[serde(rename_all = "camelCase")]
 struct DumpAccessibility {
     pub window_id: Option<String>,
-    window_ids: Vec<String>,
+    pub window_ids: Vec<String>,
     pub windows: Vec<DumpAccessibilityWindow>,
 }
 

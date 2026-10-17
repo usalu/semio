@@ -1,0 +1,9 @@
+# FSEvents No-Log And Exclusions Research
+
+Official Apple primary documentation describes an empty .fseventsd/no_log marker as the per-volume way to disable event storage. It separately warns clients not to manipulate the private history database format. [Apple File System Event Security](https://developer.apple.com/library/archive/documentation/Darwin/Conceptual/FSEvents_ProgGuide/FileSystemEventSecurity/FileSystemEventSecurity.html). This makes no_log a legitimate hypothesis for unavailable history, not evidence that this Products image has that marker or a guarantee of a specific CopyUUID return on every OS. No marker was observed here.
+
+The installed primary SDK FSEvents.h lines1420–1435 describes SetExclusionPaths as filtering directories from an EventStream, at most eight. It does not state this disables the per-volume database/UUID or explains NULL. Stream exclusions must not be equated with the documented per-volume no_log policy. The nullable UUID contract still means historical events unavailable; read-only is only an example.
+
+No retrieved official contract says nesting a writable image inside another image necessarily disables history or that a directory/UUID file alone authenticates the running service. Actual device/mount/kernel relation and service states are required; do not infer nested placement as the cause from repeated NULL. A future genuine owner-bounded readonly diagnostic can list exact direct service names and nofollow facts, mode/uid/gid/size and selected bounded UUID-file SHA under actual unchanged guards; it must report authority:false, not parse private event history or create/remove no_log. Unknown names remain observations, not automatically allowed service payload.
+
+Retain original strict observer and all unavailable refusals. No source edit, stream registration, protected read or Native operation was performed. This is a causal hypothesis inventory, not service initialization or publication acceptance.

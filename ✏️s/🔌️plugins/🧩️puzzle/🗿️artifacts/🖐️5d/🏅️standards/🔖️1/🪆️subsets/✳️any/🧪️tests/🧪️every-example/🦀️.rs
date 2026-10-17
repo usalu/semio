@@ -3,7 +3,7 @@
 //! there and traps the guest (ticket `26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING`, S3-PUZZLE). Twins:
 //! `◻️2d/…/🧪️tests/🧪️every-example`, `🧊️3d/…/🧪️tests/🧪️every-example`.
 
-use super::examples;
+use crate::standards::v1::subsets::any::examples;
 use crate::standards::v1::subsets::any::io::text::snapshot::parse_dsl;
 use crate::Puzzle5dSnapshot;
 use semio_framework_plugin::ExampleSourceBody;

@@ -2,6 +2,7 @@
 //!
 //! Torus and uv sphere are generated as indexed polygon sources by the mesh engine and reconstructed by the kernel's polygon source job.
 #![allow(clippy::result_large_err)]
+use semio_framework_3d::mesh::{MeshModelingOps};
 extern crate self as semio_s_artifact_procedural_3d_mesh_primitive;
 
 use semio_s_artifact_procedural_3d_model::catalogue::Kind;

@@ -1,3 +1,3 @@
 /** 🖊️ SDK entry `@semio-tech/framework/pixels/coverage`: explicit public surface of the framework module that plugins build on. */
-export { CoverageJob } from "../../../../🔨️modules/🔲️pixels/🖊️coverage/🟦️.ts";
-export type { CoverageMask } from "../../../../🔨️modules/🔲️pixels/🖊️coverage/🟦️.ts";
+export { CoverageJob } from "@semio-tech/framework-pixels-ts/coverage";
+export type { CoverageMask } from "@semio-tech/framework-pixels-ts/coverage";

@@ -112,7 +112,7 @@ async fn codec_retention_law_bachelor_thesis_decode_encode_decode() {
 async fn lossless_structural_flow_law_bachelor_thesis_snapshot_mutation_diff_io_and_inverse() {
     let started=std::time::Instant::now();
     let mut previous=started;
-    let mut timing=|stage:&str|{eprintln!("[DEBUG] PDF structural stage={stage} elapsed_ms={} total_ms={}",previous.elapsed().as_millis(),started.elapsed().as_millis());previous=std::time::Instant::now();};
+    let mut timing=|stage:&str|{previous=std::time::Instant::now();};
     let original = decode_pdf(document_bytes()).expect("decode exact fixture");
     timing("fixture decode");
     assert_logical_cos_retained(&original);

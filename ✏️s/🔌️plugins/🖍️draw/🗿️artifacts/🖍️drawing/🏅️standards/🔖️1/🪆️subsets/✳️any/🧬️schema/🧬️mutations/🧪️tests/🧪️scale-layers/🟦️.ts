@@ -6,13 +6,14 @@ import mutation from "../../../../../🔀️transform/🧪️tests/🧫️fixtur
 import { parseScaleLayers } from "../../../../../🔀️transform/🧬️schema/🧬️mutations/📐️scale-layers/🦠️mutation/🟦️.ts";
 
 test("the schema and the parser admit exactly the same scaleLayers records", () => {
-  const validate = semioSchemaAjvV1({ allErrors: true }).compile(schema);
+  const validate = semioSchemaAjvV1({ allErrors: true }).compile<ReturnType<typeof parseScaleLayers> & { mutation: string }>(schema);
   expect(validate(mutation)).toBe(true);
   const { mutation: _tag, ...payload } = mutation;
   expect(parseScaleLayers(mutation)).toEqual(payload);
   for (const candidate of [{ ...mutation, targets: [] }, { ...mutation, scaleX: 0 }, { ...mutation, scaleY: 0 }, { ...mutation, scaleX: -1 }, { ...mutation, scaleY: "2" }, { ...mutation, extra: true }, { ...mutation, mutation: "dragLayers" }, { ...mutation, scaleX: 1, scaleY: 1 }] as unknown[]) {
-    const accepted = validate(candidate);
-    if (accepted) expect<unknown>(parseScaleLayers(candidate)).toEqual(Object.fromEntries(Object.entries(candidate as Record<string, unknown>).filter(([key]) => key !== "mutation")));
-    else expect(() => parseScaleLayers(candidate), JSON.stringify(candidate)).toThrow();
+    if (validate(candidate)) {
+      const { mutation: _tag, ...expected } = candidate;
+      expect(parseScaleLayers(candidate)).toEqual(expected);
+    } else expect(() => parseScaleLayers(candidate), JSON.stringify(candidate)).toThrow();
   }
 });

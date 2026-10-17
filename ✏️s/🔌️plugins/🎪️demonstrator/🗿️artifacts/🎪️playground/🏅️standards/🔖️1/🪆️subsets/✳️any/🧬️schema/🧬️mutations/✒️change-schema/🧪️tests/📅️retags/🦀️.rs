@@ -19,20 +19,20 @@ use crate::standards::v1::subsets::any::schema::diff::PlaygroundDiff;
 use crate::standards::v1::subsets::any::schema::mutations::PlaygroundMutation;
 use crate::standards::v1::subsets::any::schema::snapshot::PlaygroundSnapshot;
 
-const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✒️change-schema/📅️retags/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✒️change-schema/📅️retags/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✒️change-schema/📅️retags/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✒️change-schema/📅️retags/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✒️change-schema/📅️retags/🎯️outcome/🔣️.json");
+static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../../../🧪️tests/🧫️fixtures/🧬️mutations/✒️change-schema/📅️retags/📸️snapshot/⬅️before/🔣️.json"));
+static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../../../🧪️tests/🧫️fixtures/🧬️mutations/✒️change-schema/📅️retags/📸️snapshot/➡️after/🔣️.json"));
+static MUTATION: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../../../🧪️tests/🧫️fixtures/🧬️mutations/✒️change-schema/📅️retags/🦠️mutation/🔣️.json"));
+static DIFF: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../../../🧪️tests/🧫️fixtures/🧬️mutations/✒️change-schema/📅️retags/🔺️diff/🔣️.json"));
+static OUTCOME: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../../../🧪️tests/🧫️fixtures/🧬️mutations/✒️change-schema/📅️retags/🎯️outcome/🔣️.json"));
 
 fn before() -> PlaygroundSnapshot {
-    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before playground document decodes")
+    semio_framework_pack_json::from_json_str((*BEFORE), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before playground document decodes")
 }
 fn expected_after() -> PlaygroundSnapshot {
-    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after playground document decodes")
+    semio_framework_pack_json::from_json_str((*AFTER), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after playground document decodes")
 }
 fn mutation() -> PlaygroundMutation {
-    semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("change-schema mutation decodes")
+    semio_framework_pack_json::from_json_str((*MUTATION), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("change-schema mutation decodes")
 }
 fn built_outcome() -> protocol::MutationOutcome<PlaygroundDiff> {
     <PlaygroundMutation as protocol::Mutation<PlaygroundSnapshot>>::diff(&mutation(), &before())
@@ -66,14 +66,14 @@ fn retagging_back_restores_before() {
 /// this is where the `{"ChangeSchema": {"new_schema": ..}}` wire shape is pinned.
 #[test]
 fn committed_json_is_canonical() {
-    for (label, text) in [("before", BEFORE), ("after", AFTER)] {
+    for (label, text) in [("before", (*BEFORE)), ("after", (*AFTER))] {
         let decoded: PlaygroundSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("playground document decodes");
         let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("playground document encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("playground document reparses");
         assert_eq!(reencoded, original, "change-schema/retags-the-playground-document-schema: committed {label} playground JSON is not canonical");
     }
     let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&(mutation()))).expect("ChangeSchema payload encodes");
-    let original: serde_json::Value = serde_json::from_str(MUTATION).expect("ChangeSchema payload reparses");
+    let original: serde_json::Value = serde_json::from_str((*MUTATION)).expect("ChangeSchema payload reparses");
     assert_eq!(reencoded, original, "change-schema/retags-the-playground-document-schema: committed ChangeSchema JSON is not canonical");
 }
 
@@ -81,7 +81,7 @@ fn committed_json_is_canonical() {
 /// guard — does not fire and the declared `applied` outcome must be message-free.
 #[test]
 fn declared_outcome_holds() {
-    let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
+    let declared: serde_json::Value = serde_json::from_str((*OUTCOME)).expect("outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "change-schema/retags-the-playground-document-schema: this fixture declares an applied outcome");
     let produced = built_outcome();
     assert_eq!(produced.worst_level(), None, "change-schema/retags-the-playground-document-schema: a genuinely new tag must not raise mutation.no-op");
@@ -92,24 +92,24 @@ fn declared_outcome_holds() {
 #[test]
 fn produces_committed_diff() {
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(built_outcome().diff())).expect("produced change-schema diff encodes");
-    let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
+    let committed: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff decodes");
     assert_eq!(produced, committed, "change-schema/retags-the-playground-document-schema: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
 
 /// 🔣️ The committed diff decodes to `PlaygroundDiff` and re-encodes unchanged.
 #[test]
 fn committed_diff_is_canonical() {
-    let decoded: PlaygroundDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed change-schema diff decodes");
+    let decoded: PlaygroundDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed change-schema diff decodes");
     assert_eq!(decoded.schema.as_deref(), Some("playground.experiment"), "change-schema/retags-the-playground-document-schema: the committed diff must set the new tag");
     let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("committed diff re-encodes");
-    let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
+    let original: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff reparses");
     assert_eq!(reencoded, original, "change-schema/retags-the-playground-document-schema: committed diff JSON is not canonical");
 }
 
 /// 🩹 The committed diff alone carries the before-document to the after-document.
 #[test]
 fn committed_diff_applies_to_after() {
-    let decoded: PlaygroundDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed change-schema diff decodes");
+    let decoded: PlaygroundDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed change-schema diff decodes");
     let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-document");
     assert_eq!(produced, expected_after(), "change-schema/retags-the-playground-document-schema: committed diff did not carry before to after");
 }
@@ -118,4 +118,9 @@ fn committed_diff_applies_to_after() {
 #[semio_framework_async_macros::async_test]
 async fn inverse_diffs_sum_to_the_negative_diff() {
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation(), &before()).await;
+}
+
+fn runtime_fixture_text(relative: &str) -> &'static str {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative);
+    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display())).into_boxed_str())
 }

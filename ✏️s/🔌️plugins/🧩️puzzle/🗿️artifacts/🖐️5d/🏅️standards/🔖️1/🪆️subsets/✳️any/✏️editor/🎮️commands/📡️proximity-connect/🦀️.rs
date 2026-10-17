@@ -1,7 +1,8 @@
 //! 📡️ The proximity search `world-relocate` and the `proximityConnect` work share.
-
+use crate::editor::puzzle5d::view::engine_grip_kind;
 use crate::editor::puzzle5d::precompute::geometry::distance_squared;
-use crate::editor::puzzle5d::{engine_grip_kind, puzzle5d_grip_full_id, world_grip_position, Puzzle5dDocument, Puzzle5dGrip, Puzzle5dPart};
+
+use crate::editor::puzzle5d::entities::{puzzle5d_grip_full_id, world_grip_position, Puzzle5dDocument, Puzzle5dGrip, Puzzle5dPart};
 use std::collections::HashSet;
 
 /// 🧲️ One grip the proximity search found next to a part's first grip.
@@ -64,7 +65,5 @@ pub fn puzzle5d_proximity_peers(document: &Puzzle5dDocument, part_id: &str, radi
 }
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

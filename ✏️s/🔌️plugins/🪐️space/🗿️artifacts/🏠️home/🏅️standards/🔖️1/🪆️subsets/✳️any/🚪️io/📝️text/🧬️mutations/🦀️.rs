@@ -34,8 +34,7 @@ impl protocol::OpText for SHomeMutation {
 
 //#endregion 🔖️HandcraftedOpCodecs
 
-#[path = "🔢️change-catalog-generation/🦀️.rs"]
-pub mod change_catalog_generation;
+pub use semio_s_artifact_space_home_inferences::standards::v1::subsets::any::io::text::mutations::change_catalog_generation;
 
 #[allow(unused_imports)]
 mod mutations_codec {

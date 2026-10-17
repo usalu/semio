@@ -38,16 +38,72 @@ fn sqlite_snapshot_codec() -> Option<store::os_store::serialization::ArtifactSql
 }
 }
 
-#[allow(unused_imports)]
-mod diff_codec {
-use super::*;
-use crate::standards::v_r12::subsets::any::io::binary::diff::{dec_block_bin, dec_dxf_entities_bin, dec_header_var_bin, enc_block_bin, enc_dxf_entities_bin, enc_header_var_bin, read_str_lp, write_str_lp};
-use crate::standards::v_r12::subsets::any::schema::diff::*;
-use std::collections::{BTreeMap, BTreeSet, HashSet};
-use crate::schema::snapshot::{DxfBlock, DxfEntity, DxfHeaderVar, DxfLayer, DxfLinetype, DxfOtherTable, DxfStyle, DxfTables, DxfTag, DxfValue, DxfVertex};
-use crate::DxfSnapshot;
-use framework_schema::ArtifactSchema;
-use protocol::command::DiffAlgebra;
-use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
-use crate::standards::v_r12::subsets::any::io::binary::diff::{enc_other_table_bin, dec_other_table_bin, enc_dxf_tables_bin, dec_dxf_tables_bin};
+//#region 🧩️ArtifactItems
+pub mod artifact_items {
+/// 🏷️ Document schema / DSL envelope id.
+pub const STDIO_DXF_DOCUMENT_SCHEMA: &str = "stdio.dxf";
 }
+//#endregion 🧩️ArtifactItems
+
+//#region 🧩️ArtifactItems2
+pub mod artifact_items_2 {
+/// 🧬️ Artifact schema descriptor id.
+pub const DXF_ARTIFACT_SCHEMA_ID: &str = "s.stdio.dxf";
+}
+//#endregion 🧩️ArtifactItems2
+
+//#region 🧩️ArtifactItems3
+pub mod artifact_items_3 {
+/// 📜 Schema-owned package definition.
+pub const ARTIFACT_DEFINITION_SCHEMA: &str = include_str!("../../../../../../../📜️artifact-definition.json");
+}
+//#endregion 🧩️ArtifactItems3
+
+//#region 🧩️ArtifactItems4
+pub mod artifact_items_4 {
+use crate::{STDIO_DXF_DOCUMENT_SCHEMA};
+use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
+
+//#region 🔖️ArtifactKind
+/// 🗂️ This artifact's `ArtifactKindSpec`.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn artifact_kind() -> ArtifactKindSpec {
+    ArtifactKindSpec {
+        id: "s.stdio.dxf".into(),
+        label: semio_framework_ui_locale::LocalizedLabel::native("Dxf", "Dxf"),
+        source_format: STDIO_DXF_DOCUMENT_SCHEMA.into(),
+        component_kind: "stdio".into(),
+        dimension: "data".into(),
+        media_capability: OsMediaCapability::MeshOnly,
+        media_type: MediaType { class: MediaClass::Text, form: MediaForm::Document },
+        schema: STDIO_DXF_DOCUMENT_SCHEMA.into(),
+        export_formats: vec![],
+        import_formats: vec![],
+        export_stdio_kinds: vec![],
+        import_stdio_kinds: vec![],
+    }
+}
+//#endregion 🔖️ArtifactKind
+}
+//#endregion 🧩️ArtifactItems4
+
+//#region 🧩️ArtifactItems8
+pub mod artifact_items_8 {
+use crate::{ARTIFACT_DEFINITION_SCHEMA};
+
+pub fn formats() -> Result<Vec<semio_framework_plugin::io::FormatDescriptor>, semio_framework_plugin::ArtifactDefinitionError> {
+    semio_s_artifact_stdio_contract::format_descriptors(ARTIFACT_DEFINITION_SCHEMA)
+}
+}
+//#endregion 🧩️ArtifactItems8
+
+//#region 🧩️ArtifactItems13
+pub mod artifact_items_13 {
+#[cfg(any(test, feature = "testkit"))]
+pub(crate) use semio_framework_trace_memory_testing as test_allocation;
+
+#[cfg(any(test, feature = "testkit"))]
+#[global_allocator]
+pub static TEST_ALLOCATION_OBSERVER:test_allocation::RequestedAllocator=test_allocation::RequestedAllocator;
+}
+//#endregion 🧩️ArtifactItems13

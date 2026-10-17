@@ -31,6 +31,10 @@ type proceduralGeneration2dInferenceGuardSizeBounds = { readonly minItems?: numb
 
 export const proceduralGeneration2dInferenceGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : proceduralGeneration2dInferenceGuardReject(at, "value is not an object");
+export const proceduralGeneration2dInferenceGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) proceduralGeneration2dInferenceGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const proceduralGeneration2dInferenceGuardArray = (value: unknown, at: string, bounds: proceduralGeneration2dInferenceGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return proceduralGeneration2dInferenceGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) proceduralGeneration2dInferenceGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -61,14 +65,14 @@ export const proceduralGeneration2dInferenceGuardConstant = <T extends string | 
 //#endregion 🚪️Parsers
 
 export function parseGeneration2dInference(value: unknown, at = "$"): Generation2dInference {
-  const row = proceduralGeneration2dInferenceGuardObject(value, at);
+  const row = proceduralGeneration2dInferenceGuardClosed(proceduralGeneration2dInferenceGuardObject(value, at), at, ["topology"]);
   return {
     topology: parseGeneration2dTopology(row["topology"], `${at}.topology`),
   };
 }
 
 export function parseGeneration2dTopology(value: unknown, at = "$"): Generation2dTopology {
-  const row = proceduralGeneration2dInferenceGuardObject(value, at);
+  const row = proceduralGeneration2dInferenceGuardClosed(proceduralGeneration2dInferenceGuardObject(value, at), at, ["nodeCount", "edgeCount", "topoOrder", "depth", "cycleFree"]);
   return {
     nodeCount: proceduralGeneration2dInferenceGuardInteger(row["nodeCount"], `${at}.nodeCount`, {"minimum": 0}),
     edgeCount: proceduralGeneration2dInferenceGuardInteger(row["edgeCount"], `${at}.edgeCount`, {"minimum": 0}),

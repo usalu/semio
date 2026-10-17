@@ -3,7 +3,7 @@
 pub const TAG: u8 = dsl::protocol_record::tag_u8(include_str!("../📡️.protocol.semio"), "replace-page");
 pub const BINARY_TAG: u8 = TAG;
 
-use crate::standards::v1_7::subsets::base::schema::mutations::ReplacePage;
+use crate::standards::v1_7::subsets::base::schema::mutations::replace_page::ReplacePage;
 
 /// 📤️ Encodes this direct payload as canonical schema JSON bytes.
 pub fn encode(payload: &ReplacePage) -> Result<Vec<u8>, String> {

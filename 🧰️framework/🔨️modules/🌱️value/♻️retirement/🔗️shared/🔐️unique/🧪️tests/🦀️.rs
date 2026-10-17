@@ -1,8 +1,9 @@
 use super::*;
 use crate::allocation_testing::observe_retirement_allocations as observe;
+use semio_framework_test_fixtures::fixture_text;
 #[test]
 fn shared_unique_original_arc_retires_despite_weak_aliases_and_credits_actual_frame(){
- let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../🔗️shared/🔐️unique/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
  for row in fixture["cases"].as_array().unwrap(){for copy in fixture["copyGrants"].as_array().unwrap(){
   let value=row["value"].as_u64().unwrap();let (source,birth)=observe(||Arc::new(value));assert_eq!(birth,(arc_bytes::<u64>(),0));let pointer=Arc::as_ptr(&source);
   let mut weak:Vec<_>=(0..row["weakAliases"].as_u64().unwrap()).map(|_|Arc::downgrade(&source)).collect();
@@ -16,5 +17,4 @@ fn shared_unique_original_arc_retires_despite_weak_aliases_and_credits_actual_fr
   for _ in 0..64{if cursor.terminal_is_empty(){break;}let copy=grant.maximum_copy_bytes;let grant=RetainedCloneGrant{maximum_capacity_bytes:cursor.next_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:cursor.next_release_byte_demand().unwrap(),maximum_depth:cursor.next_depth_demand().unwrap(),..grant};let(step,heap)=observe(||cursor.step(grant).unwrap());let p=step.progress();assert!(p.fits(grant));assert_eq!(heap,(p.retained_capacity_bytes,p.released_bytes));births+=heap.0;released+=heap.1;}
   assert!(cursor.terminal_is_empty());assert_eq!(births,released);let(_,heap)=observe(||drop(cursor));assert_eq!(heap,(0,0));
  }}
- eprintln!("[DEBUG] shared unique Arc original never waits on Weak aliases: they stop upgrading and the frame frees with the last Weak");
 }

@@ -1,0 +1,872 @@
+[
+  {
+    "path": "Cargo.lock",
+    "beforeSha256": "0e5a21ec1ded35b427f7083d07c910e89446b016c5ba4caf8c64a44112a04ee0",
+    "thirdpartyPinsSha256": "7101a7edc89479bda219492f7a66890f976f5a09c65699e41567cc3cf5e35bbe"
+  },
+  {
+    "path": "✏️s/Cargo.lock",
+    "beforeSha256": "39f9fdb27a3bfcf28e9bca8a23c537d366891f3d113541801eff9d6ed1b061a9",
+    "thirdpartyPinsSha256": "58fc936ddb3cedba287212fa7572720f19f0aaa4d0382d4c46c8c9c75946aa8a"
+  },
+  {
+    "path": "✏️s/🔌️plugins/✒️writer/🏭️bridge/Cargo.lock",
+    "beforeSha256": "a94cc190218f511f1cfa36d3a5641a790de8bfe54da5bc7465964f157f5db164",
+    "thirdpartyPinsSha256": "79f7df78c36a823ebccde1d846a61f21f8463fb9b31d4b40144989b30974fcf9"
+  },
+  {
+    "path": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/Cargo.lock",
+    "beforeSha256": "7aa19bab77247c545abb6d2a5f1f75928653dd0c107d523a7d627894f0854600",
+    "thirdpartyPinsSha256": "05b35283ce0c577d7c2794c55f84a912cf71279cb138be842a6fe421a43ea9bc"
+  },
+  {
+    "path": "✏️s/🔌️plugins/➗️mathematical/🏭️bridge/Cargo.lock",
+    "beforeSha256": "0cfa41e928c6d496cb3b8181a3b48812f69f2f3b53c5e08fb03cd60c646ff8e9",
+    "thirdpartyPinsSha256": "9cfb4e184e6330e8ff2df7cb14cd9affe95d15717c0d764fdafec78c4a8e0c28"
+  },
+  {
+    "path": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/Cargo.lock",
+    "beforeSha256": "e133906ec284fd708c64106dbb855fcb5ccc8aba0bae6bc7fa1b15173dffc894",
+    "thirdpartyPinsSha256": "42a09a195c83b36eafdbd5254acdfd1a32bc6624291d6a92e95a82a8b1884f3e"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🀄️wfc/🏭️bridge/Cargo.lock",
+    "beforeSha256": "4819a076988eb77704883b6db79138c4b80a7ee5299f0ae6f39f899417d2d942",
+    "thirdpartyPinsSha256": "6029f7a187199629d9226114fe27aa9577012cefd8c338a5eea2daadb7e93e5c"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/Cargo.lock",
+    "beforeSha256": "dbd00fc24016c4a5a9a1ff1a88fff409f66b08a6e5583123cd533b9396bdf66b",
+    "thirdpartyPinsSha256": "9cd3fe2c5cf59d3ab0e77fd3b9e834d98051a249d8cc011f5a16c922babf2bbe"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/Cargo.lock",
+    "beforeSha256": "188a3417ab8054fdf710fa8704fd7d7eace696b4e20cc066011df83558a2b4c8",
+    "thirdpartyPinsSha256": "42a09a195c83b36eafdbd5254acdfd1a32bc6624291d6a92e95a82a8b1884f3e"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/Cargo.lock",
+    "beforeSha256": "10c1f37b7818deb1c8917850385910a3773afeab92894eecde3c03307c214da5",
+    "thirdpartyPinsSha256": "42a09a195c83b36eafdbd5254acdfd1a32bc6624291d6a92e95a82a8b1884f3e"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/Cargo.lock",
+    "beforeSha256": "7cd3d3ee5cf2f78846f7fba4990b4eafdf66710023623a0bc8f650728f5607dc",
+    "thirdpartyPinsSha256": "42a09a195c83b36eafdbd5254acdfd1a32bc6624291d6a92e95a82a8b1884f3e"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/Cargo.lock",
+    "beforeSha256": "b97ae56a1f9743d4149943f26f8705e805ec8b54b1aea85cd69973e9fc12090c",
+    "thirdpartyPinsSha256": "9cd3fe2c5cf59d3ab0e77fd3b9e834d98051a249d8cc011f5a16c922babf2bbe"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌀️procedural/🏭️bridge/Cargo.lock",
+    "beforeSha256": "7c40404e6e78de1b165e398922908b22b05ffd0723f499016ba44f039b82e8d1",
+    "thirdpartyPinsSha256": "6029f7a187199629d9226114fe27aa9577012cefd8c338a5eea2daadb7e93e5c"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/Cargo.lock",
+    "beforeSha256": "711159219717193a323f4eaaaad5318abdd6f65ec3c9d5ee90a44d674c20e821",
+    "thirdpartyPinsSha256": "c26dab899b23285178e9681d63eab21548db8802501a9db41501e43a67f82202"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/Cargo.lock",
+    "beforeSha256": "8166cb08ab8764cde0fa2e426ce6879cf18bde8031c29cced5deed6f5b99bc5d",
+    "thirdpartyPinsSha256": "4ca6c6f690efcf070a8d6938148317b94f03b7cca60f70e6e83b527651a5df66"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌀️procedural/🫀️foundation/Cargo.lock",
+    "beforeSha256": "e3764ce040900a6963753777f0848a08f1b4137a6cc5489ccea30989115f6166",
+    "thirdpartyPinsSha256": "f957813935c0888a19d32a5c5656deb33dd4593f68b61be002a35a6194ee9ec5"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌊️flow/🏭️bridge/Cargo.lock",
+    "beforeSha256": "e38dc40f96d519edeb9f562710b1b6f66e841294a99d2195f8540a870c97bc65",
+    "thirdpartyPinsSha256": "6029f7a187199629d9226114fe27aa9577012cefd8c338a5eea2daadb7e93e5c"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/Cargo.lock",
+    "beforeSha256": "b1128b475de62c81b371f3558ea7ab7be627b8f96e0afa1d98abbd44c6143b33",
+    "thirdpartyPinsSha256": "9cd3fe2c5cf59d3ab0e77fd3b9e834d98051a249d8cc011f5a16c922babf2bbe"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🏗️bim/Cargo.lock",
+    "beforeSha256": "5650e6640ae84da120390cfd77ced60cde5a82f7f1aed37e548f92a341866b38",
+    "thirdpartyPinsSha256": "9cd3fe2c5cf59d3ab0e77fd3b9e834d98051a249d8cc011f5a16c922babf2bbe"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📃️list/Cargo.lock",
+    "beforeSha256": "08e4ac824302b2742bc46ccfe2de5d93a35c8e5445aefbf22b4d93ea0da0ad18",
+    "thirdpartyPinsSha256": "9cd3fe2c5cf59d3ab0e77fd3b9e834d98051a249d8cc011f5a16c922babf2bbe"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/Cargo.lock",
+    "beforeSha256": "6b478a27bd440d625a6218613e74433099d94cbfa69dfe154eb260a48728f229",
+    "thirdpartyPinsSha256": "58fc936ddb3cedba287212fa7572720f19f0aaa4d0382d4c46c8c9c75946aa8a"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📖️dictionary/Cargo.lock",
+    "beforeSha256": "ea9bc665cacc3bce6582b06d64ca04c2c526ddd8f5a3213ec952499a9d0c2ca4",
+    "thirdpartyPinsSha256": "9cd3fe2c5cf59d3ab0e77fd3b9e834d98051a249d8cc011f5a16c922babf2bbe"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📝️text/Cargo.lock",
+    "beforeSha256": "54fd618bd8a941e2d08b03e457dcfbd64839358e169412ad25394fa2854bef30",
+    "thirdpartyPinsSha256": "9cd3fe2c5cf59d3ab0e77fd3b9e834d98051a249d8cc011f5a16c922babf2bbe"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🔤️primitive/Cargo.lock",
+    "beforeSha256": "572982dc84643aef410de51c1828dc30547aaa1e3e9ae1730ce59253a075de39",
+    "thirdpartyPinsSha256": "9cd3fe2c5cf59d3ab0e77fd3b9e834d98051a249d8cc011f5a16c922babf2bbe"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🖍️draw/Cargo.lock",
+    "beforeSha256": "38328a08b0f275b9fc83a2a26ce4cf79c0a439a32fe903e393b09206b257eab0",
+    "thirdpartyPinsSha256": "9cd3fe2c5cf59d3ab0e77fd3b9e834d98051a249d8cc011f5a16c922babf2bbe"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🧠️logic/Cargo.lock",
+    "beforeSha256": "eba829b04d7484a3abf5138571e4d1a50f8ffb2ab63780c13bd4fb21e0c45782",
+    "thirdpartyPinsSha256": "9cd3fe2c5cf59d3ab0e77fd3b9e834d98051a249d8cc011f5a16c922babf2bbe"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🧮️math/Cargo.lock",
+    "beforeSha256": "5aefe4256b8c1fa7a7c6b9afd02a4c0e94336c9bc479ce2f0ce15c6ead6a561e",
+    "thirdpartyPinsSha256": "9cd3fe2c5cf59d3ab0e77fd3b9e834d98051a249d8cc011f5a16c922babf2bbe"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌍️gis/🏭️bridge/Cargo.lock",
+    "beforeSha256": "abdaffb6b4c65a4db97002a01f886493e73f62ca3962eba17617b747593fe9fc",
+    "thirdpartyPinsSha256": "79f7df78c36a823ebccde1d846a61f21f8463fb9b31d4b40144989b30974fcf9"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/Cargo.lock",
+    "beforeSha256": "c57503e62ff46c2857b90707582603b39111f1798eba2990e4ab9e7444d1b492",
+    "thirdpartyPinsSha256": "a6bddbc3d87eeadf1ebc86e9a200f7bc146d9963709e3f95d82b213ffed2c3bc"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/Cargo.lock",
+    "beforeSha256": "03066e3388d45cf5d94d0b3ef5e9a8b7476051f8b2a97662d4cfa531322a17d4",
+    "thirdpartyPinsSha256": "b57526210d08beb1c5e4059074299ce5a0adf97af7aea23d7406cbeed2ef7093"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌿️vcs/🏭️bridge/Cargo.lock",
+    "beforeSha256": "4e37767e42758b21ef2d8e313f12f64b9db0c265e9c56baf2c2bc008b56f4170",
+    "thirdpartyPinsSha256": "9cfb4e184e6330e8ff2df7cb14cd9affe95d15717c0d764fdafec78c4a8e0c28"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/Cargo.lock",
+    "beforeSha256": "f84b980d56559d2d1d34d9d6ba421432f0abe5848d0bbfcde0118924719b79f8",
+    "thirdpartyPinsSha256": "47b9936651f2309c4279716789ccda18c925cd9f33fd941af7c9f37b4b111565"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🎞️animate/🏭️bridge/Cargo.lock",
+    "beforeSha256": "08a41051ebe291c76b86410c3de66cf7aaf8579025399e059b72c28a2a482618",
+    "thirdpartyPinsSha256": "4a966f9f36a54a0ab34b36f6c870e4b93a55c2741b280a8940669b3f8b888690"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/Cargo.lock",
+    "beforeSha256": "91c7a8d381886465fe8aee894ec823b6f92b2f449c530b139b7429ba3d317c0a",
+    "thirdpartyPinsSha256": "0e2593c982a0d4649fb893dc1740d82dcbb478ffc3b15ff5d49308f0050c5de8"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🎥️shooting/🏭️bridge/Cargo.lock",
+    "beforeSha256": "87adcf2def341c055ff37e2bd06ec0dadb44d4237081b7431b3fa91aa98e9b77",
+    "thirdpartyPinsSha256": "1fafebd938f5ee4b219402e1bf155b7e4903ea0d91c761d5a878296baaeb0dd6"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/Cargo.lock",
+    "beforeSha256": "1651d6bfefb6f11f4dca0d80a0e525be289f4f7345671cce3e6118b20512736b",
+    "thirdpartyPinsSha256": "db37f08e7cb53966bd39dcae74ba2d0a0bb36f474bf44dbe7adc4a10627feea7"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🎪️demonstrator/🏭️bridge/Cargo.lock",
+    "beforeSha256": "fb70232ace4f8c4f72502ebb3c65107d6db2181b0218b895bac45f4edcc922fa",
+    "thirdpartyPinsSha256": "9cfb4e184e6330e8ff2df7cb14cd9affe95d15717c0d764fdafec78c4a8e0c28"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/Cargo.lock",
+    "beforeSha256": "9c8803b4a5071054df46a40179c0a132523383f1f33c58e2b5a6781dd848272d",
+    "thirdpartyPinsSha256": "42a09a195c83b36eafdbd5254acdfd1a32bc6624291d6a92e95a82a8b1884f3e"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🎬️sequence/🏭️bridge/Cargo.lock",
+    "beforeSha256": "b1bc0f770313fba3d349436fd68665727c61d0b34a7b11036fd641705f0e41b7",
+    "thirdpartyPinsSha256": "6029f7a187199629d9226114fe27aa9577012cefd8c338a5eea2daadb7e93e5c"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/Cargo.lock",
+    "beforeSha256": "e25ae3c42e67347740ca7e811df4efbf2b1b8ee7152938dae776ae0715b9d7c0",
+    "thirdpartyPinsSha256": "62acc2de6e469c11cf8d0287592dbfbc448ecc49c5a171200106f7f4ebf2d25f"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏗️fem/Cargo.lock",
+    "beforeSha256": "be07a7c5175534165c275996f0475bcddc036a574f61f555842a97730ea6709f",
+    "thirdpartyPinsSha256": "803b146e9f28211439ac088bfcbaa97e4d0defd01a91f552507d3566169fe9fc"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏗️fem/🏭️bridge/Cargo.lock",
+    "beforeSha256": "090e76f804495e7cc9beffbc73253a49590a44ac35bb13c3c80232a869a991b4",
+    "thirdpartyPinsSha256": "9cfb4e184e6330e8ff2df7cb14cd9affe95d15717c0d764fdafec78c4a8e0c28"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/Cargo.lock",
+    "beforeSha256": "a35cc8815b03e739786d0d32d8f6968b740c48b65cf0a1733b124232281bcfb2",
+    "thirdpartyPinsSha256": "3afa075f3620b7b525ee508c319a9cc9ffaca7bbfd55c1ea33e822402283e62f"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/Cargo.lock",
+    "beforeSha256": "f535fbecb0cbf3c15df9581fc8fb7682c477e3475e5ae2950cbb654b15e1973a",
+    "thirdpartyPinsSha256": "3afa075f3620b7b525ee508c319a9cc9ffaca7bbfd55c1ea33e822402283e62f"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏙️bim/🏭️bridge/Cargo.lock",
+    "beforeSha256": "3088dd574dfa5738b1f649defebfe40bc065e0de6365dbb68b161e61d89a18eb",
+    "thirdpartyPinsSha256": "50bb9ea601ef7829a89210be4dd967890c6436ca535af06d5f485e5e0e0a8a82"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/Cargo.lock",
+    "beforeSha256": "32d6f9039a41db5125f88fc556b0f5a11027f9e97195d3dfcfff53192c538457",
+    "thirdpartyPinsSha256": "99b2042467a5faa62980abce2879df854fd8f7277a4703453b170b5d81d45afc"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🏭️bridge/Cargo.lock",
+    "beforeSha256": "a098dde6637f23a027b10aea702d1515895b9e26fb067911d9f8fb8fb537f191",
+    "thirdpartyPinsSha256": "9cfb4e184e6330e8ff2df7cb14cd9affe95d15717c0d764fdafec78c4a8e0c28"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/Cargo.lock",
+    "beforeSha256": "9c8a43a46c87992e07231125dc06e036d9b93f65323298a8ea76c26acc48d3a0",
+    "thirdpartyPinsSha256": "4f5af094d5865550e86cfb9b0e0ff6430f06f4aeb7cb2a7101183ea3d313cdf4"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏭️process/🏭️bridge/Cargo.lock",
+    "beforeSha256": "285e3211115b8d769fb2b805981b0789e58850311d943498c56b4a49ae24c31d",
+    "thirdpartyPinsSha256": "9cfb4e184e6330e8ff2df7cb14cd9affe95d15717c0d764fdafec78c4a8e0c28"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/Cargo.lock",
+    "beforeSha256": "2838d846fc113a909393714d7ad44e3be8cf23a99f821529b5775489978a3e80",
+    "thirdpartyPinsSha256": "2cdc8da46ca2255070f89f79ed5cec44f1c7f183b7e0782b71703a44b792a1c1"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏭️process/🧩️extensions/🔩️metal/Cargo.lock",
+    "beforeSha256": "46d79e33fb67174c183864a6d47c8d0d7c7a3946b6d540a8b3cf6e1c6ae855cd",
+    "thirdpartyPinsSha256": "42a09a195c83b36eafdbd5254acdfd1a32bc6624291d6a92e95a82a8b1884f3e"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏭️process/🧩️extensions/🤖️robotic/Cargo.lock",
+    "beforeSha256": "03b4f914a90f76c6d1aba9bc753729c007e157661aee72cadc0c9ddf9e9f767b",
+    "thirdpartyPinsSha256": "42a09a195c83b36eafdbd5254acdfd1a32bc6624291d6a92e95a82a8b1884f3e"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏭️process/🧩️extensions/🧱️concrete/Cargo.lock",
+    "beforeSha256": "6b69f7741313cfa087ef9c6deddf30658621a93467788810ae202ef9e71811b9",
+    "thirdpartyPinsSha256": "42a09a195c83b36eafdbd5254acdfd1a32bc6624291d6a92e95a82a8b1884f3e"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏭️process/🧩️extensions/🪵️wood/Cargo.lock",
+    "beforeSha256": "fa4af3fe61ff33dea8d26dee7929fd4cea3b6f98db69df33f5e58a805972c090",
+    "thirdpartyPinsSha256": "42a09a195c83b36eafdbd5254acdfd1a32bc6624291d6a92e95a82a8b1884f3e"
+  },
+  {
+    "path": "✏️s/🔌️plugins/💠️lowpoly/🏭️bridge/Cargo.lock",
+    "beforeSha256": "b6524fe7e64833e1ff0b144b308971af45c0c6cd218e4b8f822005245918f0e8",
+    "thirdpartyPinsSha256": "9cfb4e184e6330e8ff2df7cb14cd9affe95d15717c0d764fdafec78c4a8e0c28"
+  },
+  {
+    "path": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/Cargo.lock",
+    "beforeSha256": "c1bdadc40e0c61d891ca0433b769109f4989b2da7e8de7e261738c786c819d82",
+    "thirdpartyPinsSha256": "5df63214668e0000bb57106c203d7cf7abbc8a0d9019c363328f8c6a36249dbb"
+  },
+  {
+    "path": "✏️s/🔌️plugins/💡️reasoning/🏭️bridge/Cargo.lock",
+    "beforeSha256": "ef922bd9342b4450e34f24cadba954ef6dc5de27fda13451c31fab7ae1129b1c",
+    "thirdpartyPinsSha256": "6029f7a187199629d9226114fe27aa9577012cefd8c338a5eea2daadb7e93e5c"
+  },
+  {
+    "path": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/Cargo.lock",
+    "beforeSha256": "2c686c67c034d11c87b823acf72b92e47c89b131f360e9773783eb86bd738f84",
+    "thirdpartyPinsSha256": "44431e7739ce0bc0031fccc5c456a95abed977ccab33ada1d561e4012beec568"
+  },
+  {
+    "path": "✏️s/🔌️plugins/📋️forms/🏭️bridge/Cargo.lock",
+    "beforeSha256": "3a83188f2b255af3ae5330106a82bb1328df844aab52d85a0e483835df079e7d",
+    "thirdpartyPinsSha256": "6029f7a187199629d9226114fe27aa9577012cefd8c338a5eea2daadb7e93e5c"
+  },
+  {
+    "path": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/Cargo.lock",
+    "beforeSha256": "2e5256c514f905f473512eae19daf9e6c15d075f70418519feddba001befe460",
+    "thirdpartyPinsSha256": "6f13452ec20df58fa12a8ed2afbd71bc441b3e4955f30321f2ef2025c23c72bb"
+  },
+  {
+    "path": "✏️s/🔌️plugins/📏️layout/🏭️bridge/Cargo.lock",
+    "beforeSha256": "845ae1664721783ab7e14ab1899babe33faf8eaa428cef70a38b234cfda34b11",
+    "thirdpartyPinsSha256": "28b5891ce12bda92d0459a00650fc766127386832bbe6467bb4d34460a84bd71"
+  },
+  {
+    "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/Cargo.lock",
+    "beforeSha256": "e1b6bf2d729853bddd44d9ae3a01424e3464607a31994b8932d7ee1d5e0c7d79",
+    "thirdpartyPinsSha256": "62acc2de6e469c11cf8d0287592dbfbc448ecc49c5a171200106f7f4ebf2d25f"
+  },
+  {
+    "path": "✏️s/🔌️plugins/📐️cad/🏭️bridge/Cargo.lock",
+    "beforeSha256": "3434472ceed4b7b3c73e0bfebb93a97a52d63354433007eacc1f38c3f5f67d13",
+    "thirdpartyPinsSha256": "9cfb4e184e6330e8ff2df7cb14cd9affe95d15717c0d764fdafec78c4a8e0c28"
+  },
+  {
+    "path": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/Cargo.lock",
+    "beforeSha256": "544a7501f731808588d6c3e3a5b0d8c5fc902454dcef6d76babf5e96a9a6a0f9",
+    "thirdpartyPinsSha256": "42a09a195c83b36eafdbd5254acdfd1a32bc6624291d6a92e95a82a8b1884f3e"
+  },
+  {
+    "path": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏛️aec-building-structure/Cargo.lock",
+    "beforeSha256": "99ad05ceaecb49cd7120142dff80b632a6c5f00123bb2269e3c276844846e258",
+    "thirdpartyPinsSha256": "42a09a195c83b36eafdbd5254acdfd1a32bc6624291d6a92e95a82a8b1884f3e"
+  },
+  {
+    "path": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building/Cargo.lock",
+    "beforeSha256": "ea017c98bcb48dcd68cba838f48830d0d71700c0e95462b95fe96f4e842f29fe",
+    "thirdpartyPinsSha256": "42a09a195c83b36eafdbd5254acdfd1a32bc6624291d6a92e95a82a8b1884f3e"
+  },
+  {
+    "path": "✏️s/🔌️plugins/📐️cad/🧩️extensions/📐️spatial-shape/Cargo.lock",
+    "beforeSha256": "f3404b30d7f46c53102bb126898f8295ffadffb64943196df3b69bde89e945cf",
+    "thirdpartyPinsSha256": "42a09a195c83b36eafdbd5254acdfd1a32bc6624291d6a92e95a82a8b1884f3e"
+  },
+  {
+    "path": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/Cargo.lock",
+    "beforeSha256": "3e57f2ebffef179bf4fb6a71f7b9e94d93852ba4d91d7e7e8b9f8e18ba77d7ec",
+    "thirdpartyPinsSha256": "42a09a195c83b36eafdbd5254acdfd1a32bc6624291d6a92e95a82a8b1884f3e"
+  },
+  {
+    "path": "✏️s/🔌️plugins/📕️norm/Cargo.lock",
+    "beforeSha256": "29e5deec525827084ade08faae60b363c4e7b4c946c48ec48f2858d2d9d2209f",
+    "thirdpartyPinsSha256": "42a09a195c83b36eafdbd5254acdfd1a32bc6624291d6a92e95a82a8b1884f3e"
+  },
+  {
+    "path": "✏️s/🔌️plugins/📕️norm/🏭️bridge/Cargo.lock",
+    "beforeSha256": "cbfc7969cb758b45a19a6aa231dda20a2bf97c3a31aacfb47bf221352a33d73b",
+    "thirdpartyPinsSha256": "9cfb4e184e6330e8ff2df7cb14cd9affe95d15717c0d764fdafec78c4a8e0c28"
+  },
+  {
+    "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/Cargo.lock",
+    "beforeSha256": "df59e0fa0e1df1eb34b64bdb15c43a9677054033dc5b90b3a6c3b05bb9f3eb37",
+    "thirdpartyPinsSha256": "42a09a195c83b36eafdbd5254acdfd1a32bc6624291d6a92e95a82a8b1884f3e"
+  },
+  {
+    "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/Cargo.lock",
+    "beforeSha256": "8060fb98264f4f0d66931b10af950ca9aa08cd33a542764cdb1ab00718cc6a22",
+    "thirdpartyPinsSha256": "42a09a195c83b36eafdbd5254acdfd1a32bc6624291d6a92e95a82a8b1884f3e"
+  },
+  {
+    "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/Cargo.lock",
+    "beforeSha256": "e7e0c2f07e800aa7fc9e3d5841a8d121834605728fac1f46eb3816b529a49114",
+    "thirdpartyPinsSha256": "42a09a195c83b36eafdbd5254acdfd1a32bc6624291d6a92e95a82a8b1884f3e"
+  },
+  {
+    "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/Cargo.lock",
+    "beforeSha256": "7bedc508df35ca32d295aa46ad58e32aa42cd7dd7984abd6fc45536594b33a64",
+    "thirdpartyPinsSha256": "42a09a195c83b36eafdbd5254acdfd1a32bc6624291d6a92e95a82a8b1884f3e"
+  },
+  {
+    "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏋️en1991/Cargo.lock",
+    "beforeSha256": "2156387daeea4e5583c3c17c19f0d3924533ffcc67a1e6c1c47d269746f8fc17",
+    "thirdpartyPinsSha256": "42a09a195c83b36eafdbd5254acdfd1a32bc6624291d6a92e95a82a8b1884f3e"
+  },
+  {
+    "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/Cargo.lock",
+    "beforeSha256": "8266a6d66182cda5aad49bf59cb4584b97cc16af92d3bc1c787e2efecde255c8",
+    "thirdpartyPinsSha256": "42a09a195c83b36eafdbd5254acdfd1a32bc6624291d6a92e95a82a8b1884f3e"
+  },
+  {
+    "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/Cargo.lock",
+    "beforeSha256": "bd4883a10b051403747cd9575ddf05cd80409548d336ca7f6200300c5b668585",
+    "thirdpartyPinsSha256": "42a09a195c83b36eafdbd5254acdfd1a32bc6624291d6a92e95a82a8b1884f3e"
+  },
+  {
+    "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📇️iso16757/Cargo.lock",
+    "beforeSha256": "f25419c1ea7d9d84ffa156b0c5de67acc98de390c8c7259573fb24c409856bb6",
+    "thirdpartyPinsSha256": "42a09a195c83b36eafdbd5254acdfd1a32bc6624291d6a92e95a82a8b1884f3e"
+  },
+  {
+    "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🔩️en1993/Cargo.lock",
+    "beforeSha256": "cd252fe3c94d35b59214d9a1df63753039550719a49d29e78e5ff35d9f333e2a",
+    "thirdpartyPinsSha256": "42a09a195c83b36eafdbd5254acdfd1a32bc6624291d6a92e95a82a8b1884f3e"
+  },
+  {
+    "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994/Cargo.lock",
+    "beforeSha256": "aa5c3ecf6ae0a8fbe208d13c5c99b01981c53f7a2f8f57e5ee5b3d0d353c4702",
+    "thirdpartyPinsSha256": "42a09a195c83b36eafdbd5254acdfd1a32bc6624291d6a92e95a82a8b1884f3e"
+  },
+  {
+    "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧱️din4108/Cargo.lock",
+    "beforeSha256": "728bf0afe12c1a893ef4f8c0655d6706d39635b5ac3e98bdf312f5b3bdc40668",
+    "thirdpartyPinsSha256": "42a09a195c83b36eafdbd5254acdfd1a32bc6624291d6a92e95a82a8b1884f3e"
+  },
+  {
+    "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/Cargo.lock",
+    "beforeSha256": "250d8802f76530b8463e0bfb0021f97e6ca2f78e179d03d9e9188a5361f16ab8",
+    "thirdpartyPinsSha256": "42a09a195c83b36eafdbd5254acdfd1a32bc6624291d6a92e95a82a8b1884f3e"
+  },
+  {
+    "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995/Cargo.lock",
+    "beforeSha256": "ed0d9fe19851f0c31a87b3a5e35d212bc146910d3c8fd90de8edd5b1722fdf40",
+    "thirdpartyPinsSha256": "42a09a195c83b36eafdbd5254acdfd1a32bc6624291d6a92e95a82a8b1884f3e"
+  },
+  {
+    "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/Cargo.lock",
+    "beforeSha256": "1817647628cd10c39ba445ae8a4989ad72fb18490df4a07a33d55f34b21976eb",
+    "thirdpartyPinsSha256": "42a09a195c83b36eafdbd5254acdfd1a32bc6624291d6a92e95a82a8b1884f3e"
+  },
+  {
+    "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🫨️en1998/Cargo.lock",
+    "beforeSha256": "6216b9cef829f79686d1ca7d2aa3d8c979e2e40fb480c9a2a8116bea84ec0b0c",
+    "thirdpartyPinsSha256": "42a09a195c83b36eafdbd5254acdfd1a32bc6624291d6a92e95a82a8b1884f3e"
+  },
+  {
+    "path": "✏️s/🔌️plugins/📖️playbook/🏭️bridge/Cargo.lock",
+    "beforeSha256": "97c226aaf31661d7f166aa6a423f1fb1328ee4ee8f50c545f6fb82566253c25f",
+    "thirdpartyPinsSha256": "6029f7a187199629d9226114fe27aa9577012cefd8c338a5eea2daadb7e93e5c"
+  },
+  {
+    "path": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/Cargo.lock",
+    "beforeSha256": "ef7315d268efed26036b38c8b1db9a04e4ff37701b75fd5c7573507aaa79507d",
+    "thirdpartyPinsSha256": "7ac12b916dc1b439d1a0386f5119a6ed0b027881774ea93a478e2da1ca611d12"
+  },
+  {
+    "path": "✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/Cargo.lock",
+    "beforeSha256": "d772546ccef55a8ff8df6f3eb3d6b34520959ced628cfe63f022cbbf0ae2f902",
+    "thirdpartyPinsSha256": "9cd3fe2c5cf59d3ab0e77fd3b9e834d98051a249d8cc011f5a16c922babf2bbe"
+  },
+  {
+    "path": "✏️s/🔌️plugins/📜️imperative/🏭️bridge/Cargo.lock",
+    "beforeSha256": "0a8ccdafb263f5d3d4cca3d1e5c7bf6cb2fda8834dc1dc1eeadd62b8295367c1",
+    "thirdpartyPinsSha256": "9cfb4e184e6330e8ff2df7cb14cd9affe95d15717c0d764fdafec78c4a8e0c28"
+  },
+  {
+    "path": "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/Cargo.lock",
+    "beforeSha256": "e9457d1bf28e5706f3d89665839a7ad1e67a8600b4a37c072a22b4ec526f9f47",
+    "thirdpartyPinsSha256": "42a09a195c83b36eafdbd5254acdfd1a32bc6624291d6a92e95a82a8b1884f3e"
+  },
+  {
+    "path": "✏️s/🔌️plugins/📜️imperative/🧩️extensions/🎮️control/Cargo.lock",
+    "beforeSha256": "5477e5b9af7f8c3c711986eb34aedf36c8a781e69ab4ab9539a3621047bb0a07",
+    "thirdpartyPinsSha256": "42a09a195c83b36eafdbd5254acdfd1a32bc6624291d6a92e95a82a8b1884f3e"
+  },
+  {
+    "path": "✏️s/🔌️plugins/📜️imperative/🧩️extensions/📝️text/Cargo.lock",
+    "beforeSha256": "b6f467114b94cb5069820b366c98cde005b9c33d015c66301a55a8faf5b3466e",
+    "thirdpartyPinsSha256": "42a09a195c83b36eafdbd5254acdfd1a32bc6624291d6a92e95a82a8b1884f3e"
+  },
+  {
+    "path": "✏️s/🔌️plugins/📜️imperative/🧩️extensions/📣️effect/Cargo.lock",
+    "beforeSha256": "4b09f65787e6ff441c1bcc15ac7afb7e07f519338788c1dda890a9e09d9a9d79",
+    "thirdpartyPinsSha256": "42a09a195c83b36eafdbd5254acdfd1a32bc6624291d6a92e95a82a8b1884f3e"
+  },
+  {
+    "path": "✏️s/🔌️plugins/📜️imperative/🧩️extensions/🧠️logic/Cargo.lock",
+    "beforeSha256": "b36da0c261af4b42a91350804a842bfec5b412a0c90c72ccc9c8b37337a943f3",
+    "thirdpartyPinsSha256": "42a09a195c83b36eafdbd5254acdfd1a32bc6624291d6a92e95a82a8b1884f3e"
+  },
+  {
+    "path": "✏️s/🔌️plugins/📜️imperative/🧩️extensions/🧮️math/Cargo.lock",
+    "beforeSha256": "2ae63c70b7156d0973d9439f26c73bd28225470357dcbcc0c8e1f2587909a89f",
+    "thirdpartyPinsSha256": "42a09a195c83b36eafdbd5254acdfd1a32bc6624291d6a92e95a82a8b1884f3e"
+  },
+  {
+    "path": "✏️s/🔌️plugins/📸️remodel/🏭️bridge/Cargo.lock",
+    "beforeSha256": "eb89ca08599cd5edbd8b40e486fe254c56a360e5d30f16d5769804bf9bef2b95",
+    "thirdpartyPinsSha256": "9cfb4e184e6330e8ff2df7cb14cd9affe95d15717c0d764fdafec78c4a8e0c28"
+  },
+  {
+    "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/Cargo.lock",
+    "beforeSha256": "9bf32c6c21e014d75ecf030e82921f8bb150ab9ed4752b655f6d0e21a2ff153b",
+    "thirdpartyPinsSha256": "d9e739a5e36a61970236e9fd006f1321895e3e867e8e58717762fdbc585e03ec"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🔋️energy/Cargo.lock",
+    "beforeSha256": "66ee2086e53b8fbdc77af5888509288958c578cd9f569119738695c7cea03d43",
+    "thirdpartyPinsSha256": "803b146e9f28211439ac088bfcbaa97e4d0defd01a91f552507d3566169fe9fc"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🔋️energy/🏭️bridge/Cargo.lock",
+    "beforeSha256": "b078db2d65485c2e6a0b4c00f7db3b20e2af23bdd7930eba2c68d7c9071b9f98",
+    "thirdpartyPinsSha256": "9cfb4e184e6330e8ff2df7cb14cd9affe95d15717c0d764fdafec78c4a8e0c28"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/Cargo.lock",
+    "beforeSha256": "f4637377424949fa5c67cb488318d29407d2ae1a151c20879ceb0c136b473b9b",
+    "thirdpartyPinsSha256": "803b146e9f28211439ac088bfcbaa97e4d0defd01a91f552507d3566169fe9fc"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🔱️trinity/🏭️bridge/Cargo.lock",
+    "beforeSha256": "3f646b01ad8ec0f5f4bb3677ef1f733fbaa01500cce5d55453e3876a0c2d43d3",
+    "thirdpartyPinsSha256": "6029f7a187199629d9226114fe27aa9577012cefd8c338a5eea2daadb7e93e5c"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/Cargo.lock",
+    "beforeSha256": "3b36cc50fa7bd34b8421d051bd58d6d98a34d6727ad113bdc1f7c631b6927530",
+    "thirdpartyPinsSha256": "9cd3fe2c5cf59d3ab0e77fd3b9e834d98051a249d8cc011f5a16c922babf2bbe"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/Cargo.lock",
+    "beforeSha256": "c353a2732ee069cc4765eb6f243dba76ee4946e313128707928fb47a0dd9f9b1",
+    "thirdpartyPinsSha256": "5a36092f11b0d9e964ebd2376186eab99d3326e912d3ed1a51adf147f13b0fe4"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🕸️dag/🏭️bridge/Cargo.lock",
+    "beforeSha256": "fd6479909ddaf6c03845b9358a19e713d10252b80583a29621d17cc89ffd7d45",
+    "thirdpartyPinsSha256": "6029f7a187199629d9226114fe27aa9577012cefd8c338a5eea2daadb7e93e5c"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/Cargo.lock",
+    "beforeSha256": "cca09fe69e44b92a355a0f8dfe7f2fb948f69b1507976b8206ca564c7beae7a5",
+    "thirdpartyPinsSha256": "44431e7739ce0bc0031fccc5c456a95abed977ccab33ada1d561e4012beec568"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖍️draw/🏭️bridge/Cargo.lock",
+    "beforeSha256": "309d57e3be854f49c7ab92e891f57e8f28a307b9128a414f9022a4ffc36e55e8",
+    "thirdpartyPinsSha256": "9cfb4e184e6330e8ff2df7cb14cd9affe95d15717c0d764fdafec78c4a8e0c28"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/Cargo.lock",
+    "beforeSha256": "15ee09189e4aaaaeaf06865435805b7ac4fa8da229d0dff5aba7ba1a7a3f8634",
+    "thirdpartyPinsSha256": "7d04f0416bd7d0df84dd8343c8c014f7f7246da0dcbf4b8d7a7e0f5631c7bfee"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖨️raster/🏭️bridge/Cargo.lock",
+    "beforeSha256": "b36d24a439cddbec4a2a9ee7572d2a185ab673df2ec91e499669a2fc71d54ae9",
+    "thirdpartyPinsSha256": "1fafebd938f5ee4b219402e1bf155b7e4903ea0d91c761d5a878296baaeb0dd6"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/Cargo.lock",
+    "beforeSha256": "7844481745c47b0c5dbaae2a061175e3d7e4a5c62a751ac2172d4ff6fbe0ea76",
+    "thirdpartyPinsSha256": "d9e739a5e36a61970236e9fd006f1321895e3e867e8e58717762fdbc585e03ec"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/Cargo.lock",
+    "beforeSha256": "adfbeffb227f37e40698d0935386230b1c09d771e88e8466c441f6bdf5b7606c",
+    "thirdpartyPinsSha256": "12a557fc3ab2295fc7e9f9a3176eb08df2515dfd299b6654fa86ae50e7671341"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/Cargo.lock",
+    "beforeSha256": "d548374a7c7697e98fe223ac16d82bef2e1a56de14b6c5444b3af9a70b23fc6b",
+    "thirdpartyPinsSha256": "42a09a195c83b36eafdbd5254acdfd1a32bc6624291d6a92e95a82a8b1884f3e"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/Cargo.lock",
+    "beforeSha256": "0dffcaaea9f4955ce91c097ed8597f1149dca662085c786e395d580496219a40",
+    "thirdpartyPinsSha256": "6022c1cf6b204b3980370f090b77804763a405af5f9494e66f5ad6ce14c92807"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/Cargo.lock",
+    "beforeSha256": "d2c88c9e6da318e6e1fceadecc980db807f4e1be3dd8d21300d26df647316228",
+    "thirdpartyPinsSha256": "42a09a195c83b36eafdbd5254acdfd1a32bc6624291d6a92e95a82a8b1884f3e"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/Cargo.lock",
+    "beforeSha256": "06b1ee22a31b420f925fd9964c61d0ead96ee8e6c6fb8c437f3211916fff3df6",
+    "thirdpartyPinsSha256": "e1cabf06532cdf7a5755a1b48e66c331a04361306619ad800e32e43bc5451de3"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/Cargo.lock",
+    "beforeSha256": "7d2c80fc30888bf34cc15428e648d2d1e01b4e801265e2b13143f699cfd2da9c",
+    "thirdpartyPinsSha256": "42a09a195c83b36eafdbd5254acdfd1a32bc6624291d6a92e95a82a8b1884f3e"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/Cargo.lock",
+    "beforeSha256": "3532f56e1cd80b84814d824d7ac288ef00d4e4641e3e45ac16730ed185141736",
+    "thirdpartyPinsSha256": "e8d51fd3fd5377370a6bb3cda52e9f2ee7fbf13bf763d78c921d418ce388a3a3"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/Cargo.lock",
+    "beforeSha256": "ef3b8d6a920f5a7dd28420ef7f1c78eb96da2b85f90f125ef73b5cdcadfb33f1",
+    "thirdpartyPinsSha256": "dae2d8d5240efb4a4436150543894d30a75ddf81d0e3d4a4a236e67ab4606853"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/Cargo.lock",
+    "beforeSha256": "0fade451852eec3d962d55e639fda1ad0b78a9a9e48959a1e88fb1cb39d39999",
+    "thirdpartyPinsSha256": "80423ce040eee21ffd140084c19ec4a909b5f187d023498d7933f008243caa37"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/Cargo.lock",
+    "beforeSha256": "80cbd72cdd57b0f3716d0be875206d2a1fd115b2ac1e7dba8e07abf4668222ba",
+    "thirdpartyPinsSha256": "42a09a195c83b36eafdbd5254acdfd1a32bc6624291d6a92e95a82a8b1884f3e"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/Cargo.lock",
+    "beforeSha256": "15115e89d1f5a10d2bf274432f64b6614b55a6e493f75b85ac82b1ee065a81f0",
+    "thirdpartyPinsSha256": "42a09a195c83b36eafdbd5254acdfd1a32bc6624291d6a92e95a82a8b1884f3e"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/Cargo.lock",
+    "beforeSha256": "ef5ccb316d6aa6e04a9d1bd59bd02bb3fa840eb44018fee50240c6542c6b06ab",
+    "thirdpartyPinsSha256": "42a09a195c83b36eafdbd5254acdfd1a32bc6624291d6a92e95a82a8b1884f3e"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/Cargo.lock",
+    "beforeSha256": "dd651acdf995fb156343ca7e136b53c88c3dfe5d523f1ccdf2584536880afd4f",
+    "thirdpartyPinsSha256": "3afa075f3620b7b525ee508c319a9cc9ffaca7bbfd55c1ea33e822402283e62f"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/Cargo.lock",
+    "beforeSha256": "14b55e0a699ec45a0612861d7fc06361a55d694d31a018fa3f31cb875a5a4e34",
+    "thirdpartyPinsSha256": "42a09a195c83b36eafdbd5254acdfd1a32bc6624291d6a92e95a82a8b1884f3e"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/Cargo.lock",
+    "beforeSha256": "ee1232b8c9c2d4759ef83ff81eb038402fe83e3e2d1955063d70d1c8c94b0849",
+    "thirdpartyPinsSha256": "3afa075f3620b7b525ee508c319a9cc9ffaca7bbfd55c1ea33e822402283e62f"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/Cargo.lock",
+    "beforeSha256": "cbe43a617a75f5de013d78f35a6a91b02b5a0f863b08ea3f8a85241e51e5ea78",
+    "thirdpartyPinsSha256": "0795a10f2e193d871037c49b7d50f0b6fc86e4a24b5662a3b7981de183cc1386"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/Cargo.lock",
+    "beforeSha256": "12da09856d3aa9fc219919b1fe35ac55e47b8ac6d02c311d3916c81c66570c76",
+    "thirdpartyPinsSha256": "1bb7962cc8f08dfb08fba1274ee27bdde5471270dff6811cf917fb2767d62d00"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/Cargo.lock",
+    "beforeSha256": "f727740146defbbf57bb9eeb9ce46d0f4a5353c25e182c70b8474cd569576738",
+    "thirdpartyPinsSha256": "eb455a3922c942faf40ada360a15d21586af7cb7662af2eec08d2992bb150845"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/Cargo.lock",
+    "beforeSha256": "e83f123adde027633b969f561ec4e1b480868cb86a7a959008ca275b2c1081f2",
+    "thirdpartyPinsSha256": "46ecfaac30b9c0e778f1b172a99d8e69e9f6030fd7f55dd2575fa7c017678319"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/Cargo.lock",
+    "beforeSha256": "9d3bba13d059f749773d1c514e50a495525ad0a77089701049efb0408183e0da",
+    "thirdpartyPinsSha256": "2c0fe5994c5da65e7c66972722ef10e18b4929e67ad7bea54b852cd16f519266"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/Cargo.lock",
+    "beforeSha256": "a13cbea5a59af5c9475d922b0bfb1625fd3ea2ab114bc6b645d123e7ebd80d7b",
+    "thirdpartyPinsSha256": "41d66d5775a8424f8e78e121753c735095d15e523da12f0da24684e0f0afdd95"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/Cargo.lock",
+    "beforeSha256": "8c900c4e51f9de888c0d17e3f7cfc564c8e9c60ab99ffb4ce4608d8b661c1ce8",
+    "thirdpartyPinsSha256": "4988bcd2d526f60d717db274526fdb40b103616b6d36aeac2657f7d0a8a4e653"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/Cargo.lock",
+    "beforeSha256": "f9dfc96f97a7b7cc8ee3e116b55722d53c7151d60850d1bf1e431c70d9631361",
+    "thirdpartyPinsSha256": "a944b690e2e10bfb20a653ef4a7633143e5394294727abc90054667197efb044"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/Cargo.lock",
+    "beforeSha256": "99d92bb91ab8ecf140847ea47b3c800d83c57bca754d0f47b2814c042babd06e",
+    "thirdpartyPinsSha256": "eb455a3922c942faf40ada360a15d21586af7cb7662af2eec08d2992bb150845"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/Cargo.lock",
+    "beforeSha256": "ede52ced460f646a4a48e08442e2c90252a26f40203841d9c46a00d6917bd6e9",
+    "thirdpartyPinsSha256": "a944b690e2e10bfb20a653ef4a7633143e5394294727abc90054667197efb044"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/Cargo.lock",
+    "beforeSha256": "fae7a5267ed319da9a6b03e70a7c27d6b42ee5e202adf2cd1eb8992a1ff425f5",
+    "thirdpartyPinsSha256": "7ff381d6a5fe901708b83e86a3fc6eddc17248c2486a14f78dbb90b80079d536"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/Cargo.lock",
+    "beforeSha256": "6b15bd2c8efc06c136cf3ea0cb8ec133bac7f1fbb7b0af313c2b3a2cc0dee4f0",
+    "thirdpartyPinsSha256": "42a09a195c83b36eafdbd5254acdfd1a32bc6624291d6a92e95a82a8b1884f3e"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/Cargo.lock",
+    "beforeSha256": "a1fd128978f700ce672c73c0ede03f586abc79e668919ce7ecaaec75ff32a997",
+    "thirdpartyPinsSha256": "f8674e77ee64c5ebc8801fcf7c3b333cd338aa90f8f9acb86faf66c64f6e3a6d"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/Cargo.lock",
+    "beforeSha256": "a455820378ee27289171d04080116416b200df821591ff6682e908fd9f38ad46",
+    "thirdpartyPinsSha256": "42a09a195c83b36eafdbd5254acdfd1a32bc6624291d6a92e95a82a8b1884f3e"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/Cargo.lock",
+    "beforeSha256": "d77faee30c78f9779bf5fadda90e9fb0474081a8b0821e21019c7112f511b74e",
+    "thirdpartyPinsSha256": "06766f320f838a7ca12f2e98f4ed757aa96503ee6ba61bf092a3c47ea5d0cfec"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/Cargo.lock",
+    "beforeSha256": "6864c53fc9b698297d99101595938c06fe9d4046b7daf70a117b8a6a8f84b26c",
+    "thirdpartyPinsSha256": "9015defcb4a077cb8b8dc90677a9c14c39b8c4f6eff457f22150ff3b82564fa1"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/Cargo.lock",
+    "beforeSha256": "8b0c26d34cddf818927bf72383737c26bd5b6e42acf4094e2b54f5748a60c60d",
+    "thirdpartyPinsSha256": "42a09a195c83b36eafdbd5254acdfd1a32bc6624291d6a92e95a82a8b1884f3e"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/Cargo.lock",
+    "beforeSha256": "ea417d19a4ea7a0d80f025e891559a311e56f356c9195b57455d35121a819fd5",
+    "thirdpartyPinsSha256": "718164328a62fcebf5ef5783b5977392ded5437fb3a95eae4b22a9bde0423440"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧱️ply/Cargo.lock",
+    "beforeSha256": "a8d26ad823274ee200e429932854006d4eeff42723591f537eed1591cf8795be",
+    "thirdpartyPinsSha256": "42a09a195c83b36eafdbd5254acdfd1a32bc6624291d6a92e95a82a8b1884f3e"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/Cargo.lock",
+    "beforeSha256": "778983cb83de695afa5faa388d43239331d92769a1d075d872c8989cf5870a8a",
+    "thirdpartyPinsSha256": "c94623963e19a01cb83896e467c4a305504a3d26921d4b881203229ec4c20a75"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/Cargo.lock",
+    "beforeSha256": "9b3c6e2871ac5dc6fdb8a9b3b7aaa14f068a8cc8d8b5811d070b961fd3c849c4",
+    "thirdpartyPinsSha256": "e387fb2ff8f7fcc3145605aea31d415d112f146b5133afe714254884788d1c8f"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🏭️bridge/Cargo.lock",
+    "beforeSha256": "865f69dc0aec95e4eac70894b6f764fec4a8f48eb49796db7738c133a65e56b3",
+    "thirdpartyPinsSha256": "9cfb4e184e6330e8ff2df7cb14cd9affe95d15717c0d764fdafec78c4a8e0c28"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/Cargo.lock",
+    "beforeSha256": "aecbb03ddb612062054837d43ccf28e53037cc22d51eb1b1b0ce041e0da8177c",
+    "thirdpartyPinsSha256": "11119a0e5f211f033ba2dbf642a17c10a428ad8823711c8a8e54bde85aa76904"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗒️note/🏭️bridge/Cargo.lock",
+    "beforeSha256": "8b430364d6d708a41ff9d422f6eeab980003ea294639c7f5733e5eef5f3586d5",
+    "thirdpartyPinsSha256": "1fafebd938f5ee4b219402e1bf155b7e4903ea0d91c761d5a878296baaeb0dd6"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/Cargo.lock",
+    "beforeSha256": "d257fd9e51d2c45acf63e4339f8a491c2e60105f4531eff0ff98a9d12ddad799",
+    "thirdpartyPinsSha256": "e087c4ee9edb1224f721e6a08a28f0a2e80efc1fee6112e6de348815aa02872d"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🧩️puzzle/Cargo.lock",
+    "beforeSha256": "018536126d281c836785aecf3fb78495446448445f8469d1490c5678bc7b3974",
+    "thirdpartyPinsSha256": "803b146e9f28211439ac088bfcbaa97e4d0defd01a91f552507d3566169fe9fc"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🧩️puzzle/🏭️bridge/Cargo.lock",
+    "beforeSha256": "1e71e40e7c5d0936fa5fe352359c6573760e82f7e8098ca565164623e0c2a77a",
+    "thirdpartyPinsSha256": "074b20993b061bf95415b2cd62b74d53f7c03baa5a229f1eb9969f81ad4479cd"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/Cargo.lock",
+    "beforeSha256": "00b70d365c40368fcde9318c4d5c812490375e0037d80a57cbdecb145fc87daf",
+    "thirdpartyPinsSha256": "f533aefc7ef972c96298b9134c8cb921de7682050c2201f8b1258cf42454c4cd"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/Cargo.lock",
+    "beforeSha256": "96d66db53caba46ed52b6237032f92207a23664dbd5b5aed3789839929bd3a44",
+    "thirdpartyPinsSha256": "2c582d168413daefd7662471d74c25909cf4e6e307dce53879e736dee271379a"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/Cargo.lock",
+    "beforeSha256": "e889859fcbf4c700ac091c741eeef1356a6d5cfe34a48453b0fc84f81295ebee",
+    "thirdpartyPinsSha256": "f570e40eb96d9b951306488e5360afcc8d2df637e62e580efaaa00db2cf2dc32"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🧱️block/🏭️bridge/Cargo.lock",
+    "beforeSha256": "91e662f35283928b46dd079530e7ab729651cb15cb455e2ee350205f484fad16",
+    "thirdpartyPinsSha256": "9cfb4e184e6330e8ff2df7cb14cd9affe95d15717c0d764fdafec78c4a8e0c28"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/Cargo.lock",
+    "beforeSha256": "c287e3e272b65dec1e76841dd1bd5e8ee54b485717f13f006ade21335e691704",
+    "thirdpartyPinsSha256": "42a09a195c83b36eafdbd5254acdfd1a32bc6624291d6a92e95a82a8b1884f3e"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/Cargo.lock",
+    "beforeSha256": "3758c9444e264e38c71260711707d3d060f148685da66f9a6f0b423fe4367a11",
+    "thirdpartyPinsSha256": "42a09a195c83b36eafdbd5254acdfd1a32bc6624291d6a92e95a82a8b1884f3e"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/Cargo.lock",
+    "beforeSha256": "ecd959a0144a8966aca4c2707d9d5501f8ece060738dfa04eda859fcac0ebb7c",
+    "thirdpartyPinsSha256": "42a09a195c83b36eafdbd5254acdfd1a32bc6624291d6a92e95a82a8b1884f3e"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🪐️space/🏭️bridge/Cargo.lock",
+    "beforeSha256": "5b0f159a91ecaa35849b32f5b0acdecb9e94e369cb624cfc95f68677f68e3dd5",
+    "thirdpartyPinsSha256": "a5df7c83bba606e843ca7dafff729fae48cb46c86c4200873f1ef31c8df30700"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/Cargo.lock",
+    "beforeSha256": "101bbc3036042a45488d9266006735a1911f21f5d2acb4c3fbf630fed4992f69",
+    "thirdpartyPinsSha256": "d39a3a4b3f84ffb329049f71bcfad4e9e6215cbaeac5c8b8abb206be3e7c2042"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/Cargo.lock",
+    "beforeSha256": "7a6e2a9b53e616ddbea1df711c36ecfc034bb58bf43a2c1020ddd6460317d3b7",
+    "thirdpartyPinsSha256": "a367122416034649e13a7651f1a0459645cd32ada7a37f045b53fa8a9346efe4"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🪐️space/🫀️core/Cargo.lock",
+    "beforeSha256": "d0ba099eec7f6a601abd0880afd2ca7a13dc6c43ab4e8bd932c063830f7072a3",
+    "thirdpartyPinsSha256": "0f39d9873f154107bf60c872e2fd7c0783bf597337423a13db445b75c665966f"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🪵️sourcing/🏭️bridge/Cargo.lock",
+    "beforeSha256": "5edb5b3de7dc49c3285eb6b7f4c05a95a87f6437ddb3e9ee9c31b63aec91cee5",
+    "thirdpartyPinsSha256": "9cfb4e184e6330e8ff2df7cb14cd9affe95d15717c0d764fdafec78c4a8e0c28"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/Cargo.lock",
+    "beforeSha256": "93e3cf96cb4fd993590bd9782117a34228da5272f48c9ab30ddb7e97810a4760",
+    "thirdpartyPinsSha256": "42a09a195c83b36eafdbd5254acdfd1a32bc6624291d6a92e95a82a8b1884f3e"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🧱️slabs/Cargo.lock",
+    "beforeSha256": "dd80b352daa3ee84948d007dc1b83a355b0b9f2f107d28ae1b0f5ee8a7e7f15d",
+    "thirdpartyPinsSha256": "42a09a195c83b36eafdbd5254acdfd1a32bc6624291d6a92e95a82a8b1884f3e"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪟️windows/Cargo.lock",
+    "beforeSha256": "4880fe2bd4c8c1d4b12d80e78e7f5f5dc2a3670816a95545a31c0342e6a8ec94",
+    "thirdpartyPinsSha256": "42a09a195c83b36eafdbd5254acdfd1a32bc6624291d6a92e95a82a8b1884f3e"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪵️beams/Cargo.lock",
+    "beforeSha256": "fc4943943069b1d08793f4557e05a5719b3c5e2fb1d8e3fd81936f6330d96b86",
+    "thirdpartyPinsSha256": "42a09a195c83b36eafdbd5254acdfd1a32bc6624291d6a92e95a82a8b1884f3e"
+  },
+  {
+    "path": "✏️s/🧑‍💻dev/🌊️flow/Cargo.lock",
+    "beforeSha256": "3d1f124e07d43c09e5f44cad1004d5be812b997474b62d1cbb2eb55eb262baa0",
+    "thirdpartyPinsSha256": "9cd3fe2c5cf59d3ab0e77fd3b9e834d98051a249d8cc011f5a16c922babf2bbe"
+  },
+  {
+    "path": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/Cargo.lock",
+    "beforeSha256": "bd5d065ec3d76a63f7036a45f093479c652ff452701d4e1a3c9712915693c35e",
+    "thirdpartyPinsSha256": "fb78548e0714984038e7ec99bf4db03430c03509782de6ccfae29eb1d56ca141"
+  },
+  {
+    "path": "✏️s/🧑‍💻dev/💡️services/Cargo.lock",
+    "beforeSha256": "250f3596fda5ee142ca4d9cb3d064fe737d01c07cac47e4278748cfc63291c75",
+    "thirdpartyPinsSha256": "fb78548e0714984038e7ec99bf4db03430c03509782de6ccfae29eb1d56ca141"
+  },
+  {
+    "path": "✏️s/🧑‍💻dev/📐️cad/Cargo.lock",
+    "beforeSha256": "0f80a22840f888fa2551ad57c47aa6eea0069cd6ea5a58e7b41cdb4563f53e47",
+    "thirdpartyPinsSha256": "58fc936ddb3cedba287212fa7572720f19f0aaa4d0382d4c46c8c9c75946aa8a"
+  },
+  {
+    "path": "✏️s/🧑‍💻dev/🧩️composition/Cargo.lock",
+    "beforeSha256": "e279866654914bd6edea69c30da02851fe71bf5e6e3744a86c03b9c0ba2a2107",
+    "thirdpartyPinsSha256": "55f55f9949f4d6143c081a25871809d242fd472fb425d305007829102df92724"
+  },
+  {
+    "path": "✏️s/🧑‍💻dev/🧹️fixture-sweep/Cargo.lock",
+    "beforeSha256": "f2161d6a0b538ca1514e7c6bb906966305af49ee1c2ce16102f5e5a2854d6bc5",
+    "thirdpartyPinsSha256": "0746386bef1faa9dfce9559d050beca508b48ad376d582e793b7278a582e94f3"
+  },
+  {
+    "path": "🌎️hub/Cargo.lock",
+    "beforeSha256": "a909c377fddc336db5a7c1a68150a9f93ed2d41955a62b71bbcebf85ce18f613",
+    "thirdpartyPinsSha256": "321e0f829d01d15212bd034be69e4bf1e0631a18dbd08d071524f3ff6cf5cc3a"
+  }
+]

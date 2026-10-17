@@ -1,6 +1,6 @@
 //! 🧬️ Presentation presentation.presence mutation collection.
 
-use super::*;
+use crate::editor::animate::presence::*;
 #[path = "📸️replace-presence/🦀️.rs"]
 mod replace_presence;
 pub use replace_presence::ReplacePresence;

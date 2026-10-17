@@ -49,6 +49,3 @@ pub fn handle(payload: &MoveLayer, doc: &ArtifactView<'_, DrawingSnapshot>, _cfg
     Ok(Emit::mutations(vec![plan(doc.snapshot, payload)?]))
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;

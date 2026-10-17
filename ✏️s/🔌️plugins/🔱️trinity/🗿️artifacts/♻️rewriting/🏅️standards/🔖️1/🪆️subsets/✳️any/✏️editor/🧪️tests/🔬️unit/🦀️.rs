@@ -1,5 +1,131 @@
-use super::*;
-use crate::standards::v1::subsets::any::schema::Rhs;
+use crate::standards::v1::subsets::any::schema::mutations::RewriteRuleMutation;
+use crate::standards::v1::subsets::any::schema;
+use crate::standards::v1::subsets::any::schema::model::{LayoutPoint, REWRITE_RULE_SCHEMA, TRINITY_REWRITING_DIALECT};
+use crate::standards::v1::subsets::any::schema::snapshot::RewritingSnapshot;
+use semio_framework_graph_manifest::PropertyValue;
+use semio_s_artifact_trinity_jack_semio_content::SemioJackContentOwner;
+use semio_framework_plugin::ContextMenuRequest;
+use semio_framework_plugin::Emit;
+use semio_framework_plugin::Fault;
+use semio_framework_plugin::MediaPayload;
+use semio_framework_os_kernel::Viewport2d;
+use semio_framework_plugin::NoConfigMutation;
+use semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::snapshot::JackSnapshot;
+use store::pack::snapshot::ArtifactPack;
+use store::pack::snapshot::ArtifactDsl;
+use crate::editor::rewriting::modes::edit;
+#[allow(unused_imports)]
+use semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::content::JackWorkingScene;
+#[allow(unused_imports)]
+use crate::editor::rewriting::window_config;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::rule::ParameterKind;
+#[allow(unused_imports)]
+use semio_framework_graph_manifest::PropertyBag;
+#[allow(unused_imports)]
+use semio_framework_plugin::ActionArgDef;
+#[allow(unused_imports)]
+use semio_framework_plugin::ActionArgOption;
+#[allow(unused_imports)]
+use semio_framework_plugin::ActionKind;
+#[allow(unused_imports)]
+use semio_framework_plugin::AppActionRegistry;
+#[allow(unused_imports)]
+use semio_framework_plugin::ArtifactEditor;
+#[allow(unused_imports)]
+use semio_framework_plugin::ArtifactView;
+#[allow(unused_imports)]
+use semio_framework_plugin::ConfigView;
+#[allow(unused_imports)]
+use semio_framework_plugin::ContextMenuItemSpec;
+#[allow(unused_imports)]
+use semio_framework_artifact_reference::Dialect;
+#[allow(unused_imports)]
+use semio_framework_plugin::DomainTopology;
+#[allow(unused_imports)]
+use semio_framework_plugin::DraftView;
+#[allow(unused_imports)]
+use semio_framework_plugin::Editor;
+#[allow(unused_imports)]
+use semio_framework_plugin::GranularityDefinition;
+#[allow(unused_imports)]
+use semio_framework_plugin::HierarchyProvider;
+#[allow(unused_imports)]
+use semio_framework_plugin::HoverSpec;
+#[allow(unused_imports)]
+use semio_framework_plugin::InteractionDefinition;
+#[allow(unused_imports)]
+use semio_framework_plugin::InteractionRef;
+#[allow(unused_imports)]
+use semio_framework_plugin::InteractionTopology;
+#[allow(unused_imports)]
+use semio_framework_ui_locale::Label;
+#[allow(unused_imports)]
+use semio_framework_ui_locale::LocalizedLabel;
+#[allow(unused_imports)]
+use semio_framework_plugin::Media;
+#[allow(unused_imports)]
+use semio_framework_plugin::MediaClass;
+#[allow(unused_imports)]
+use semio_framework_plugin::MediaError;
+#[allow(unused_imports)]
+use semio_framework_plugin::MediaForm;
+#[allow(unused_imports)]
+use semio_framework_plugin::MediaType;
+#[allow(unused_imports)]
+use semio_framework_plugin::MergeMode;
+#[allow(unused_imports)]
+use semio_framework_plugin::NoDraft;
+#[allow(unused_imports)]
+use semio_framework_plugin::NoDraftMutation;
+#[allow(unused_imports)]
+use semio_framework_plugin::PanelGroup;
+#[allow(unused_imports)]
+use semio_framework_plugin::SelectionMethod;
+#[allow(unused_imports)]
+use semio_framework_plugin::SelectionMode;
+#[allow(unused_imports)]
+use semio_framework_plugin::SelectionSpec;
+#[allow(unused_imports)]
+use semio_framework_plugin::TopologyNode;
+#[allow(unused_imports)]
+use semio_framework_plugin::WindowMeasure;
+#[allow(unused_imports)]
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
+#[allow(unused_imports)]
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL;
+#[allow(unused_imports)]
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
+#[allow(unused_imports)]
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL;
+#[allow(unused_imports)]
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_ID;
+#[allow(unused_imports)]
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_LABEL;
+#[allow(unused_imports)]
+use semio_framework_plugin::NoConfig;
+#[allow(unused_imports)]
+use semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::graph::{Camera, Node};
+#[allow(unused_imports)]
+use semio_framework_plugin::app::InteractionView;
+#[allow(unused_imports)]
+use semio_framework_plugin::plugin_app_close_prelude::SurfaceKind as SemanticSurfaceKind;
+#[allow(unused_imports)]
+use std::collections::{BTreeMap, HashMap};
+#[allow(unused_imports)]
+use semio_framework_2d::compute::EngineHandles;
+#[allow(unused_imports)]
+use crate::editor::rewriting::document::*;
+#[allow(unused_imports)]
+use crate::editor::rewriting::ids::*;
+#[allow(unused_imports)]
+use crate::editor::rewriting::ui::*;
+#[allow(unused_imports)]
+use crate::editor::rewriting::retained_document_commands::*;
+use crate::editor::rewriting::*;
+use crate::standards::v1::subsets::any::schema::test_support::fixture_rule_state;
+use crate::editor::rewriting::retained_document_commands::REWRITING_DOCUMENT_TOOL_IDS;
+use crate::standards::v1::subsets::any::schema::rule::Rhs;
 use protocol::{OpBinary, OpText};
 use semio_framework_plugin::artifact_app_laws;
 use semio_framework_plugin::App;
@@ -71,9 +197,9 @@ async fn load_rule_fixture(app: &mut VcsArtifactApp<EditorApp<TrinityRewritingPl
     let reference = state.working_graph.content.target.clone();
     let owner = store::OwnerRef {
         parent: semio_framework_artifact_reference::ArtifactRef { artifact_id: PluginApp::document_identity(app).expect("runtime identity"), dialect: TRINITY_REWRITING_DIALECT.into() },
-        slot: crate::content::WORKING_CHILD_SLOT.into(), child_id: state.working_graph.content.child_id.clone(),
+        slot: crate::standards::v1::subsets::any::content::WORKING_CHILD_SLOT.into(), child_id: state.working_graph.content.child_id.clone(),
     };
-    let pack = crate::content::genesis_working_child_pack(&state, &owner.slot, &owner.child_id).unwrap().unwrap();
+    let pack = crate::standards::v1::subsets::any::content::genesis_working_child_pack(&state, &owner.slot, &owner.child_id).unwrap().unwrap();
     let envelope_pack = store::os_store::text_format::genesis_member_envelope_pack("stdio.semio", &reference, &owner, &pack).await.expect("owned child envelope");
     archive.members.push(protocol::OwnedDocumentMemberPackEntry {
         ordinal: 0,
@@ -95,7 +221,7 @@ async fn load_rule_fixture(app: &mut VcsArtifactApp<EditorApp<TrinityRewritingPl
 
 const REWRITING_TEST_INSTANCE: u32 = 1;
 
-pub(crate) struct RewritingTestApp(VcsArtifactApp<EditorApp<TrinityRewritingPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>);
+pub struct RewritingTestApp(VcsArtifactApp<EditorApp<TrinityRewritingPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>);
 
 impl std::ops::Deref for RewritingTestApp {
     type Target = VcsArtifactApp<EditorApp<TrinityRewritingPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>;
@@ -113,7 +239,7 @@ impl std::ops::DerefMut for RewritingTestApp {
 impl Drop for RewritingTestApp {
     fn drop(&mut self) {
         if !std::thread::panicking() {
-            artifact_app_laws::close_registered_fixture_app(&mut self.0, semio_s_artifact_trinity_jack::trinity_mounted_owner_policy());
+            artifact_app_laws::close_registered_fixture_app(&mut self.0, semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::content::trinity_mounted_owner_policy());
         }
     }
 }
@@ -287,7 +413,7 @@ async fn set_active_example_loads_the_registered_demo_document() {
     let receipt = settle(&mut app).await;
     let loads = receipt.effects.iter().filter(|effect| matches!(effect, semio_framework_plugin::Effect::LoadDocument { .. })).count();
     assert_eq!(loads, 1, "the registered example id produces exactly one LoadDocument effect");
-    let loaded = crate::editor::rewriting::commands::set_active_example_document(crate::examples::demo::ID).expect("the demo example resolves to a document");
+    let loaded = crate::editor::rewriting::commands::set_active_example::set_active_example_document(crate::examples::demo::ID).expect("the demo example resolves to a document");
     assert_eq!(loaded, pack::snapshot::ArtifactDsl::parse_dsl(crate::examples::demo::PRIMARY_TEXT).expect("the demo example's own dsl parses"), "the document the effect carries is the example the subset registers");
     assert_ne!(loaded, app.snapshot().unwrap(), "the effect is HOST-applied: a mounted app with no host keeps its own snapshot, which is what makes the effect the only guest-side witness");
 }
@@ -343,11 +469,11 @@ async fn set_lhs_json_undo_redo_round_trip() {
     let next_lhs = r#"{"pattern":{"leftVar":"x","leftKind":"Piece","edgeVar":"r","edgeKind":"Connection","rightVar":"y","rightKind":"Piece"}}"#;
     app.dispatch_typed(TrinityRewritingCommand::SetLhsJson { value: next_lhs.into() }, &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("set lhs");
     settle(&mut app).await;
-    assert_eq!(app.snapshot().unwrap().lhs, semio_framework_pack_json::from_json_str::<crate::standards::v1::subsets::any::schema::Lhs>(next_lhs, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("typed match input"));
+    assert_eq!(app.snapshot().unwrap().lhs, semio_framework_pack_json::from_json_str::<crate::standards::v1::subsets::any::schema::rule::Lhs>(next_lhs, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("typed match input"));
     history(&mut app, "undo").await;
     assert_eq!(app.snapshot().unwrap().lhs, original);
     history(&mut app, "redo").await;
-    assert_eq!(app.snapshot().unwrap().lhs, semio_framework_pack_json::from_json_str::<crate::standards::v1::subsets::any::schema::Lhs>(next_lhs, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("typed match input"));
+    assert_eq!(app.snapshot().unwrap().lhs, semio_framework_pack_json::from_json_str::<crate::standards::v1::subsets::any::schema::rule::Lhs>(next_lhs, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("typed match input"));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -375,7 +501,7 @@ async fn rewriting_io_declares_graph_in_and_graph_out_ports() {
 #[semio_framework_async_macros::async_test]
 async fn reset_document_ownership_rewriting_preserves_pack_with_an_edit_free_history() {
     use pack::snapshot::ArtifactPack;
-    let expected: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/♻️reset-document.json")).unwrap();
+    let expected: serde_json::Value = serde_json::from_str(runtime_fixture_text("../../🪆️subsets/✳️any/✏️editor/🧪️tests/🧫️fixtures/♻️reset-document.json")).unwrap();
     let source = fixture_rule_state();
     let before = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&source)).unwrap();
     let semio_framework_plugin::Effect::LoadDocument { pack, spr } = reset_document_effect(&source) else { panic!("reset must load a document"); };
@@ -393,14 +519,14 @@ async fn live_working(app: &RewritingTestApp) -> semio_s_artifact_stdio_semio_gr
     use semio_s_artifact_stdio_semio_graph::schema::snapshot::SemioGraphSnapshot;
     use store::{pack::snapshot::ArtifactPack, SpaceMember};
     let snapshot = app.snapshot().expect("rewriting parent projection");
-    let bytes = app.child_store(crate::content::WORKING_CHILD_SLOT, &snapshot.working_graph.content.child_id).await.expect("working child").document_pack_bytes().await.expect("working child pack");
+    let bytes = app.child_store(crate::standards::v1::subsets::any::content::WORKING_CHILD_SLOT, &snapshot.working_graph.content.child_id).await.expect("working child").document_pack_bytes().await.expect("working child pack");
     SemioGraphSnapshot::decode_pack(&bytes).expect("working child snapshot")
 }
 
 /// 🧩️ The parent projection composed with its live working child, as every reader sees the rule.
 async fn composed_state(app: &RewritingTestApp) -> RewritingSnapshot {
     let mut state = app.snapshot().expect("rewriting parent projection");
-    semio_s_artifact_trinity_jack::materialize_jack_snapshot(&mut state.working_graph.content, live_working(app).await);
+    semio_s_artifact_trinity_jack_semio_content::materialize_jack_snapshot(&mut state.working_graph.content, live_working(app).await);
     state
 }
 
@@ -475,11 +601,11 @@ async fn patch_nodes_refuses_what_it_cannot_apply() {
 #[semio_framework_async_macros::async_test]
 async fn add_rule_clause_refuses_what_it_cannot_add() {
     let state = fixture_rule_state();
-    let add = crate::editor::rewriting::commands::add_rule_clause_command;
+    let add = crate::editor::rewriting::commands::add_rule_clause_command::add_rule_clause_command;
     let code = |result: Result<Emit<RewriteRuleMutation, NoConfigMutation>, Fault>| result.err().expect("refused").code.0;
     assert_eq!(code(add(&state, "where")), "app.command.invalid-args", "the default rule already has a WHERE clause");
     assert_eq!(code(add(&state, "optional")), "app.command.invalid-args");
-    assert_eq!(code(crate::editor::rewriting::commands::set_lhs(&state, r#"{"pattern":{"leftVar":42,"leftKind":"Piece"}}"#)), "app.command.invalid-args", "the declared input rejects a nontext match variable");
+    assert_eq!(code(crate::editor::rewriting::commands::set_lhs::set_lhs(&state, r#"{"pattern":{"leftVar":42,"leftKind":"Piece"}}"#)), "app.command.invalid-args", "the declared input rejects a nontext match variable");
 }
 
 /// ⏪️ LAW: a rail `addRuleClause kind=create` is ONE undoable edit that rewrites only the RHS — undo restores the
@@ -488,7 +614,7 @@ async fn add_rule_clause_refuses_what_it_cannot_add() {
 async fn a_rail_add_rule_clause_rewrites_only_the_rhs_and_round_trips() {
     let mut app = new_app().await;
     let before = app.snapshot().expect("projection");
-    let emit = crate::editor::rewriting::commands::add_rule_clause_command(&before, "create").expect("create clause");
+    let emit = crate::editor::rewriting::commands::add_rule_clause_command::add_rule_clause_command(&before, "create").expect("create clause");
     assert!(!emit.artifact_mutations.is_empty() && emit.artifact_mutations.iter().all(|mutation| matches!(mutation, RewriteRuleMutation::EditRhs(_))), "only the RHS changes: {:?}", emit.artifact_mutations);
     let rail = semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({ "kind": "create" }));
     app.handle_action("addRuleClause", Some(&rail), &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("addRuleClause");
@@ -531,7 +657,7 @@ async fn the_node_graph_gesture_verb_is_kept_off_the_rail_and_the_transform_grou
 /// pairs with this editor and the viewer of its dialect — so a Trinity rewrite rule can be created and opened as a hub document.
 #[semio_framework_async_macros::async_test]
 async fn the_editor_declares_the_artifact_kind_it_edits() {
-    assert_eq!(create_rewriting_app().artifact_kinds, vec![crate::artifact_kind()]);
+    assert_eq!(create_rewriting_app().artifact_kinds, vec![crate::standards::v1::subsets::any::schema::model::artifact_kind()]);
 }
 
 //#region 🕹️NodeDragLaws
@@ -546,7 +672,7 @@ fn drag_row(gesture: &str, node_ids: &[&str], dx: f64, dy: f64) -> semio_framewo
 fn applied(state: &RewritingSnapshot, leaves: &[RewriteRuleMutation]) -> RewritingSnapshot {
     let mut next = state.clone();
     for leaf in leaves {
-        crate::apply_rewrite_rule_mutation(&mut next, leaf).expect("the leaf applies");
+        crate::standards::v1::subsets::any::schema::operations::apply_rewrite_rule_mutation(&mut next, leaf).expect("the leaf applies");
     }
     next
 }
@@ -588,12 +714,12 @@ fn a_rule_node_drag_moves_each_clause_from_where_it_sits_and_undoes_in_one_row()
     let mut state = fixture_rule_state();
     state.rule_layout.insert("lhs-where".into(), LayoutPoint { x: 300.0, y: 90.0 });
     let operations = semio_framework_pack_json::Value::Array(vec![drag_row("g-lhs", &["lhs-match", "lhs-where"], 30.0, 10.0)]).to_string();
-    let emit = crate::editor::rewriting::commands::node_graph_edit(&state, &semio_framework_plugin::app::ChildContentView::EMPTY, TRINITY_REWRITING_PLAY_SURFACE_LHS, &operations, "seed").expect("a rule-node drag");
+    let emit = crate::editor::rewriting::commands::node_graph_edit::node_graph_edit(&state, &semio_framework_plugin::app::ChildContentView::EMPTY, TRINITY_REWRITING_PLAY_SURFACE_LHS, &operations, "seed").expect("a rule-node drag");
     assert!(matches!(emit.artifact_mutations.as_slice(), [RewriteRuleMutation::DragRuleNodes(_)]), "{:?}", emit.artifact_mutations);
     let moved = applied(&state, &emit.artifact_mutations);
     assert_eq!(moved.rule_layout.get("lhs-match"), Some(&LayoutPoint { x: 30.0, y: 10.0 }), "the match moves from its default slot");
     assert_eq!(moved.rule_layout.get("lhs-where"), Some(&LayoutPoint { x: 330.0, y: 100.0 }), "the WHERE clause moves from its layout point");
-    let inverse = crate::inverse_rewrite_rule_mutation(&state, &emit.artifact_mutations[0]).expect("valid retained mutation inverse fixture");
+    let inverse = crate::standards::v1::subsets::any::schema::operations::inverse_rewrite_rule_mutation(&state, &emit.artifact_mutations[0]).expect("valid retained mutation inverse fixture");
     assert!(matches!(inverse.as_slice(), [RewriteRuleMutation::SetRuleLayoutPoints(undo)] if undo.cleared == vec!["lhs-match".to_string()] && undo.points.len() == 1), "one exact inverse row: {inverse:?}");
     assert_eq!(applied(&moved, &inverse), state);
 }
@@ -604,7 +730,7 @@ fn a_rule_node_drag_moves_each_clause_from_where_it_sits_and_undoes_in_one_row()
 /// `setSlider`/`insertPort` are refused (the graph has neither), and a rule side draws or cuts no wire alone.
 #[semio_framework_async_macros::async_test]
 async fn the_shared_node_graph_rows_map_to_intent_leaves() {
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../../../../🧰️framework/🔨️modules/🛠️tool-machine/🧪️tests/🧫️fixtures/🧫️node-graph-edit-rows/🔣️.json")).expect("node-graph-edit-rows fixture");
+    let corpus: serde_json::Value = serde_json::from_str(runtime_fixture_text("../../../../../../../../../🧰️framework/🔨️modules/🛠️tool-machine/🧪️tests/🧫️fixtures/🧫️node-graph-edit-rows/🔣️.json")).expect("node-graph-edit-rows fixture");
     let mut app = new_app().await;
     let row = |value: &serde_json::Value| semio_framework_pack_json::parse(&value.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("corpus row");
     for refused in corpus["refused"].as_array().expect("refused rows") {
@@ -693,7 +819,7 @@ async fn the_add_node_verb_is_one_relative_leaf_and_canonical_graphs_undo_relati
     let again = live_working(&app).await;
     let second = again.nodes.iter().find(|node| added.nodes.iter().all(|held| held.id != node.id)).expect("the second node");
     assert!(second.id != first.id && second.label == "Second", "{second:?}");
-    let nan = crate::editor::rewriting::commands::add_working_node_command(&fixture_rule_state(), &semio_framework_plugin::app::ChildContentView::EMPTY, None, None, f64::NAN, 0.0);
+    let nan = crate::editor::rewriting::commands::add_working_node_command::add_working_node_command(&fixture_rule_state(), &semio_framework_plugin::app::ChildContentView::EMPTY, None, None, f64::NAN, 0.0);
     assert!(nan.is_err_and(|fault| fault.code.0 == "app.command.invalid-args"), "a non-finite position is refused by name");
     history(&mut app, "undo").await;
     assert_eq!(live_working(&app).await, added, "one undo removes the second node");
@@ -751,9 +877,9 @@ mod full_child_frame_laws;
 
 #[test]
 fn fresh_runtime_rule_matches_the_empty_document_and_independent_json_oracle() {
-    let state = super::default_rule_state();
+    let state = crate::editor::rewriting::document::default_rule_state();
     assert_eq!(state, RewritingSnapshot::default());
-    let child = semio_s_artifact_trinity_jack::jack_content_for_handle(&state.working_graph.content).expect("empty child");
+    let child = semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::content::jack_content_for_handle(&state.working_graph.content).expect("empty child");
     assert!(child.snapshot().nodes.is_empty());
     assert!(child.snapshot().edges.is_empty());
     assert!(state.parameter_bindings.is_empty());
@@ -762,4 +888,9 @@ fn fresh_runtime_rule_matches_the_empty_document_and_independent_json_oracle() {
     let oracle: serde_json::Value = serde_json::from_str(&own_json).expect("independent document parser");
     assert_eq!(oracle["workingGraph"]["name"], "");
     assert_eq!(oracle["parameterBindings"], serde_json::json!({}));
+}
+
+fn runtime_fixture_text(relative: &str) -> &'static str {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative);
+    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display())).into_boxed_str())
 }

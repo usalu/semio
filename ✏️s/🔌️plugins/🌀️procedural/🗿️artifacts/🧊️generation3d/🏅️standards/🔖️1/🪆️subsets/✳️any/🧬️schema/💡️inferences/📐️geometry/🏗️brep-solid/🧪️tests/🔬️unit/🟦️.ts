@@ -15,6 +15,6 @@ test("every fixture case states a fault or at least one measure", () => {
   for (const { name, outputs, fault } of fixture.cases) expect(fault !== undefined || Object.keys((outputs?.shape ?? {}) as object).length > 1, name).toBe(true);
 });
 
-test("three recomputes the volume, area, face count and bounding box of every solid case (signed tetrahedra on ruled solids, LatheGeometry, Pappus integrals)", { timeout: 120000 }, () => {
+test("three recomputes the volume, area, face count and bounding box of every solid case (signed tetrahedra on ruled solids, LatheGeometry, Pappus integrals)", () => {
   expect(disagreements(fixture.cases, oracleCase, fixture.tolerance)).toEqual([]);
-});
+}, { timeout: 120000 });

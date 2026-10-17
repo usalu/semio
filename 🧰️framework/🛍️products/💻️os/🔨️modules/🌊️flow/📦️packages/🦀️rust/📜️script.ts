@@ -29,7 +29,6 @@ class FormSourceScript extends BundleScript {
   const validate=new Ajv({strict:true,allErrors:true}).compile(schema);assert.equal(validate(corpus),true,JSON.stringify(validate.errors));
   const bad=structuredClone(corpus);bad.widgets[0].value="3";assert.equal(validate(bad),false);
   const source=readFileSync(join(import.meta.dir,"../../🌿️vcs/🦀️.rs"),"utf8");assert.ok(source.includes("P:crate::forms::FlowFormProducer"));assert.ok(!source.includes("PlaybookBlock")&&!source.includes("PlaybookSpec"));
-  console.log("[DEBUG] original Flow form portable corpus admitted; invalid scalar refused; defining parent producer source linked; native actual factory remains a separate route");
  }
 }
 const router=new ScriptRouter(import.meta.dir).register("test-extension-registry",ExtensionRegistryScript).register("test-form-producer",FormProducerScript).register("test-form-source",FormSourceScript);

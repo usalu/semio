@@ -28,7 +28,7 @@ pub mod joins;
 #[path = "🧲️attach/🦀️.rs"]
 pub mod attach;
 
-use joins::{Band, JOIN_TOLERANCE};
+use crate::standards::v1::subsets::any::schema::inferences::wall_layout::joins::{Band, JOIN_TOLERANCE};
 
 //#region 🔖️Values
 /// 🔗️ Where on a wall a join sits: at its axis start, at its axis end, or along its interior.
@@ -276,14 +276,6 @@ pub fn band_dependency(snapshot: &ModelSnapshot, wall: &Wall) -> DslValue {
     ])
 }
 //#endregion 🔖️Geometry
-
-//#region 🔖️Projection
-/// 🧱️ The layout of every wall (the `WallLayout` nodes of the model graph).
-#[cfg(test)]
-pub fn compute_wall_layout(snapshot: &ModelSnapshot) -> BTreeMap<String, WallLayout> {
-    std::mem::take(&mut super::super::model_graph::infer_selected::<{ super::super::model_graph::kinds::LAYOUTS }>(snapshot).wall_layout)
-}
-//#endregion 🔖️Projection
 
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]

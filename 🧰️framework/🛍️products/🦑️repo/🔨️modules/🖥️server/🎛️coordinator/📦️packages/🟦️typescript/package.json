@@ -1,6 +1,9 @@
 {
   "name": "@semio-tech/repo-coordinator",
   "version": "1.0.0",
+  "exports": {
+    "./ports": "./🔌️ports/🟦️.ts"
+  },
   "$schema": "https://json.schemastore.org/package.json",
   "sourceRoot": "repo/server/coordinator",
   "projectType": "application",
@@ -25,6 +28,7 @@
     "@types/react-dom": "^19.1.6",
     "typescript": "^5.8.3",
     "vitest": "^4.0.17",
-    "@semio-tech/process": "workspace:*"
+    "@semio-tech/process": "workspace:*",
+    "@semio-tech/repo-test": "workspace:*"
   }
 }

@@ -23,6 +23,7 @@ path = "../../🦀️.rs"
 doctest = false
 
 [dependencies]
+semio-framework-job = { path = "../../../../🧵️job/📦️packages/🦀️rust" }
 semio-framework-os-kernel = { path = "../../../../../🛍️products/💻️os/📦️packages/🦀️rust", features = ["protocol-laws", "mutation-testing"] }
 semio-framework-plugin = { path = "../../../../../🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", features = ["artifact-app-testing"] }
 semio-framework-value = { path = "../../../../🌱️value/📦️packages/🦀️rust" }

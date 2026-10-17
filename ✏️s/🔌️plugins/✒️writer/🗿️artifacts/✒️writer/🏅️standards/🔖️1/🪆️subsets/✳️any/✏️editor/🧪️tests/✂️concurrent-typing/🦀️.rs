@@ -4,7 +4,7 @@
 //! fold of the same splices in the same order by the TS twin (`✂️text-splice/🟦️.ts`, fixture `concurrent`) is the oracle for
 //! the relocation itself; this law proves the store path (HLC merge, rewind to the fork point, replay = rebase) keeps it.
 use crate::editor::writer::commands::{set_text, text_splice};
-use crate::editor::writer::unit_tests::context::main_window_view;
+use crate::editor_unit_tests::context::main_window_view;
 use crate::editor::writer::{WriterCommand, WriterPlayApp};
 use crate::writer_text;
 use semio_framework_plugin::app::settle_framework_reserved_admission;

@@ -1,8 +1,9 @@
+use semio_framework_test_fixtures::fixture_text;
 use semio_framework_value::{DslValue,FromValue,ToValue};
 
 #[semio_framework_async_macros::async_test]
 async fn history_branch_provenance_follows_portable_required_wire_vectors() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🌿️branch-provenance/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../🔨️modules/🌿️vcs/🧪️tests/🧫️fixtures/🌿️branch-provenance/🔣️.json")).unwrap();
     for vector in fixture["vectors"].as_array().unwrap() {
         let decoded = crate::os_spr::Edit::<DslValue>::from_value(vector["edit"].clone().into());
         assert_eq!(decoded.is_ok(), vector["valid"].as_bool().unwrap(), "{}", vector["id"]);

@@ -66,8 +66,5 @@ pub fn compute_dag_topology<'a>(nodes: &'a [DagNodeSpec], edges: &'a [DagHostSna
 }
 //#endregion 🔖️Topology
 
-#[cfg(test)]
-//#region 🧪️Tests
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

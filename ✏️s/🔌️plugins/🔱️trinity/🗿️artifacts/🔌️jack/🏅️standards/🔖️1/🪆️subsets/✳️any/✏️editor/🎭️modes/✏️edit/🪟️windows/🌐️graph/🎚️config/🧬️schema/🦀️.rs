@@ -1,6 +1,6 @@
 //! 🪟️ Persisted-local configuration schema for one concrete Jack graph window.
 
-use crate::Camera;
+use crate::standards::v1::subsets::any::schema::graph::Camera;
 
 #[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase", default)]

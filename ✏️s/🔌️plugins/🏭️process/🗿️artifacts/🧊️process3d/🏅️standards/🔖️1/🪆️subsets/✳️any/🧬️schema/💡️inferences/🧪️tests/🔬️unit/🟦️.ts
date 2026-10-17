@@ -37,7 +37,6 @@ test("Timber replay has five independent Manifold volume witnesses", async () =>
     }
     expect(volumes.length).toBe(fixture.volumes.length);
     for (let index = 0; index < volumes.length; index++) expect(Math.abs(volumes[index]! - fixture.volumes[index]!)).toBeLessThan(fixture.volumeTolerance);
-    console.log(`[DEBUG] Process timber independent Manifold prefixes=${volumes.length} volumes=${JSON.stringify(volumes)}`);
   } finally {
     for (const owner of owners.reverse()) owner.delete();
   }

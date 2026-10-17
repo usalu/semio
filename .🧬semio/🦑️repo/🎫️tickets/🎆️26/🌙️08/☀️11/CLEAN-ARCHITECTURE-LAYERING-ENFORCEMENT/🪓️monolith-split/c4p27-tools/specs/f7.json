@@ -1,0 +1,49 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔗️HubConnection/🟦️.tsx",
+ "importers": [
+  "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🟦️.tsx",
+  "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔗️hub-projection/🟦️.ts",
+  "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🎓️HubFirstRun/🧪️tests/🧩️component/🟦️.tsx",
+  "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏘️SpaceBrowser/🟦️.tsx",
+  "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏘️SpaceBrowser/🧪️tests/🧩️component/🟦️.tsx",
+  "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🔒️identity-document-ports/🟦️.ts",
+  "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔐️HubSignIn/🟦️.tsx",
+  "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔐️HubSignIn/🧪️tests/🧩️component/🟦️.tsx",
+  "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🤖️AgentDelegations/🟦️.tsx",
+  "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🤖️AgentDelegations/🧪️tests/🧩️component/🟦️.tsx",
+  "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔗️HubConnection/🏛️workspace/🟦️.tsx",
+  "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔗️HubConnection/🟦️.tsx"
+ ],
+ "children": [
+  {
+   "dir": "🌐️ui-labels",
+   "doc": "/** 🌐️ HubConnection labels: every `os.hub.*` string the three hub elements render, English first and German second, registered as one translation bundle. */",
+   "lines": [
+    [
+     87,
+     391
+    ]
+   ]
+  },
+  {
+   "dir": "🔌️connection-contract",
+   "doc": "/** 🔌️ HubConnection contract: the authority recheck bound, the injected port, the delegation refusal, the credential, member, invitation and redemption rows, the connection value and the operation owner. */",
+   "lines": [
+    [
+     394,
+     552
+    ]
+   ]
+  },
+  {
+   "dir": "🛰️fetch-port",
+   "doc": "/** 🛰️ HubConnection fetch port: the member row parser, the capability cells and the `fetch`-backed port that every hub call enters through, plus the bootstrap connection it offers. */",
+   "lines": [
+    [
+     1178,
+     1349
+    ]
+   ]
+  }
+ ]
+}

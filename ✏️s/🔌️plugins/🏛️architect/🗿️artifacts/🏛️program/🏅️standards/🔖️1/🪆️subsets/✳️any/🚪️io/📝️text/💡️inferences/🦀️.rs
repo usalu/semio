@@ -30,7 +30,7 @@ use crate::standards::v1::subsets::any::schema::inferences::topology::compute_to
 /// `//#region 🔧️Behavior` instead, since they take `&mut ProgramSnapshot`.
 use crate::standards::v1::subsets::any::schema::kernel::{DiagnosticSeverity, EntityHeader, EntityId, LifecycleStatus, PluginError, Priority, ProgramDiagnostic};
 use crate::standards::v1::subsets::any::schema::registers::{AdjacencyKind, AnalysisKind, AuditEvent, RelationshipKind, ReportKind, RiskLevel, SearchFilter, SeparationKind, ValidationStatus};
-use crate::standards::v1::subsets::any::schema::ARCHITECT_PROGRAM_SCHEMA;
+use crate::standards::v1::subsets::any::schema::snapshot::ARCHITECT_PROGRAM_SCHEMA;
 use semio_s_artifact_stdio_csv as stdio_csv;
 use semio_s_artifact_stdio_tsv as stdio_tsv;
 use semio_s_artifact_stdio_tsv::standards::iana::subsets::any::schema::snapshot as stdio_tsv_engine;
@@ -64,7 +64,7 @@ use crate::standards::v1::subsets::any::schema::inferences::topology::compute_to
 /// `//#region 🔧️Behavior` instead, since they take `&mut ProgramSnapshot`.
 use crate::standards::v1::subsets::any::schema::kernel::{DiagnosticSeverity, EntityHeader, EntityId, LifecycleStatus, PluginError, Priority, ProgramDiagnostic};
 use crate::standards::v1::subsets::any::schema::registers::{AdjacencyKind, AnalysisKind, AuditEvent, RelationshipKind, ReportKind, RiskLevel, SearchFilter, SeparationKind, ValidationStatus};
-use crate::standards::v1::subsets::any::schema::ARCHITECT_PROGRAM_SCHEMA;
+use crate::standards::v1::subsets::any::schema::snapshot::ARCHITECT_PROGRAM_SCHEMA;
 use semio_s_artifact_stdio_csv as stdio_csv;
 use semio_s_artifact_stdio_tsv as stdio_tsv;
 use semio_s_artifact_stdio_tsv::standards::iana::subsets::any::schema::snapshot as stdio_tsv_engine;

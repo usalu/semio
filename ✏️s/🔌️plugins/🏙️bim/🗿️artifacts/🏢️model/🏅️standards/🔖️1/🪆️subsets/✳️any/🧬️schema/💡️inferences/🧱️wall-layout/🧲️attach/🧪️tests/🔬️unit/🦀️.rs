@@ -1,6 +1,6 @@
 use super::*;
 use super::testing::{close, gable_roof, model, rect, wall};
-use crate::standards::v1::subsets::any::schema::inferences::wall_layout::compute_wall_layout;
+use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_wall_layout;
 use serde_json::json;
 
 #[semio_framework_async_macros::async_test]

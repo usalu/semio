@@ -1,0 +1,84 @@
+//! 📐 `update-page-margins` — atomically sets a page's four margin fields together (a facet that's
+//! never meaningfully edited one field at a time — a margins dialog writes all four at once).
+
+
+use semio_s_artifact_layout_layout_diff::{LayoutPagesDelta, PagePatch};
+use crate::standards::v1::subsets::any::schema::diff::LayoutPagesModification;
+use semio_s_artifact_layout_layout_diff::LayoutDiff;
+use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
+use protocol::{MutationKind, SemanticDescriptor};
+use semio_framework_value_derive::{FromValue, ToValue};
+
+//#region 📐UpdatePageMargins
+#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[mutation_leaf(contract = ::protocol)]
+#[value(rename_all = "camelCase")]
+pub struct UpdatePageMargins {
+    pub id: String,
+    pub top: f64,
+    pub right: f64,
+    pub bottom: f64,
+    pub left: f64,
+}
+
+impl<Op> MutationKind<LayoutSnapshot, Op> for UpdatePageMargins where Op: protocol::Mutation<LayoutSnapshot, Diff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::update_page_margins::UpdatePageMargins> {
+    const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "update", entity: "page-margins", kind: "update-page-margins", record: "UpdatedPageMargins" };
+    fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
+        diff_update_page_margins(self, base)
+    }
+    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    Ok({
+        inverse_update_page_margins(self, base)?
+    
+    })
+}
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Update page \"{}\" margins", self.id), &format!("Ränder von Seite \"{}\" aktualisieren", self.id))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.id.clone()]
+    }
+}
+//#endregion 📐UpdatePageMargins
+
+//#region 📐UpdatePageMargins
+pub fn diff_update_page_margins(payload: &UpdatePageMargins, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
+    let Some(page) = base.pages.iter().find(|page| page.id == payload.id) else {
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Page \"{}\" does not exist.", payload.id), [payload.id.clone()]);
+    };
+    if page.margins.top == payload.top && page.margins.right == payload.right && page.margins.bottom == payload.bottom && page.margins.left == payload.left {
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Page \"{}\" already has those margins.", payload.id));
+    }
+    protocol::MutationOutcome::new(LayoutDiff {
+        pages: Some(LayoutPagesDelta {
+            modified: vec![LayoutPagesModification {
+                id: payload.id.clone(),
+                patch: PagePatch { margin_top: Some(payload.top), margin_right: Some(payload.right), margin_bottom: Some(payload.bottom), margin_left: Some(payload.left), ..Default::default() },
+            }],
+            ..Default::default()
+        }),
+        ..Default::default()
+    })
+}
+//#endregion 📐UpdatePageMargins
+
+//#region 📐UpdatePageMargins
+pub fn inverse_update_page_margins<Op: From<crate::update_page_margins::UpdatePageMargins>>(payload: &UpdatePageMargins, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    Ok((|| {
+    match base.pages.iter().find(|page| page.id == payload.id) {
+        Some(page) => vec![Op::from(UpdatePageMargins { id: payload.id.clone(), top: page.margins.top, right: page.margins.right, bottom: page.margins.bottom, left: page.margins.left })],
+        None => Vec::new(),
+    }
+
+    })())
+}
+//#endregion 📐UpdatePageMargins
+
+//#region 🪢️TaxonomyMounts
+#[cfg(test)]
+#[path = "🧪️tests/📐️sets/🦀️.rs"]
+mod tests_sets_asymmetric_margins_on_page_1;
+//#endregion 🪢️TaxonomyMounts

@@ -1,5 +1,5 @@
 //#region 📥️OwnedInputContract
-import { OwnedShardReturn, OwnedShardReturnPage, type ShardActorActivationLease } from "../../../../🎭️actor/📮️shard-client/🟦️.ts";
+import { OwnedShardReturn, OwnedShardReturnPage, type ShardActorActivationLease } from "@semio-tech/framework-actor/shard-client";
 import { actorInstanceLifetimeEquals, type ActorInstanceLifetime } from "../../../../🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🟦️.ts";
 import type { ActorUiPatchReceipt } from "../../../../🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🩹️patch/🟦️.ts";
 import type { OwnedUiInstance } from "../../../../🖱️ui/🧬️contract/🧵️retained/🏘️instance/🟦️.ts";

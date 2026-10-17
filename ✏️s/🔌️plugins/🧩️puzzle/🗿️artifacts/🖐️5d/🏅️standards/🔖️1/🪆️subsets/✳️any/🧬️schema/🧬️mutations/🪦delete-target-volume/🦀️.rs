@@ -1,6 +1,5 @@
 //! 🪦 Puzzle5d mutation — `DeleteTargetVolume`: removes an id-keyed target volume.
 use crate::standards::v1::subsets::any::schema::diff::Puzzle5dDiff;
-use crate::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation;
 use crate::Puzzle5dSnapshot;
 
 //#region 🔖️Mutation
@@ -17,17 +16,23 @@ pub struct DeleteTargetVolume {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn delete_target_volume(id: String) -> Puzzle5dMutation {
-    Puzzle5dMutation::DeleteTargetVolume(DeleteTargetVolume { id })
+pub fn delete_target_volume<Op>(id: String) -> Op
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::delete_target_volume::DeleteTargetVolume>,
+{
+    Op::from(DeleteTargetVolume { id })
 }
 
-impl protocol::MutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for DeleteTargetVolume {
+impl<Op> protocol::MutationKind<Puzzle5dSnapshot, Op> for DeleteTargetVolume
+where
+    Op: protocol::Mutation<Puzzle5dSnapshot, Diff = Puzzle5dDiff> + From<DeleteTargetVolume> + From<crate::standards::v1::subsets::any::schema::mutations::create_target_volume::CreateTargetVolume>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "target volume", kind: "delete-target-volume", record: "DeletedTargetVolume" };
 
     fn diff(&self, base: &Puzzle5dSnapshot) -> protocol::MutationOutcome<Puzzle5dDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Puzzle5dSnapshot) -> Result<Vec<Puzzle5dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Puzzle5dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

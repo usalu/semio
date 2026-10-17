@@ -11,8 +11,8 @@ use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔄️RotateFrame
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 pub struct RotateFrame {
@@ -80,8 +80,3 @@ pub fn inverse_rotate_frame<Op: From<crate::rotate_frame::RotateFrame>>(payload:
 }
 //#endregion 🔄️RotateFrame
 
-//#region 🪢️TaxonomyMounts
-#[cfg(test)]
-#[path = "🧪️tests/🌀️rotates/🦀️.rs"]
-mod tests_rotates_the_rect_frame;
-//#endregion 🪢️TaxonomyMounts

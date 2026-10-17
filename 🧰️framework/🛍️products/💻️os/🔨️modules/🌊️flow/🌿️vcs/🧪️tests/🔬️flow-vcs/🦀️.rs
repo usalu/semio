@@ -1982,7 +1982,7 @@ fn original_vcs_close_preserves_source_and_full_physical_receipt(){
    let(step,heap)=observe(||vcs.close_retired_step(grant).unwrap());let progress=step.progress();assert!(progress.fits(grant.retained));assert_eq!((heap.requested_bytes,heap.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));born+=heap.requested_bytes;released+=heap.released_bytes;
    stalled=if progress==RetainedCloneProgress::default(){stalled+1}else{0};assert!(stalled<64,"original VCS fixed positive copy stalled");
   }
-  assert_eq!(released,source_bytes+born);let(_,heap)=observe(||drop(vcs));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));eprintln!("[DEBUG] original VCS copy={copy} original={source_bytes} born={born} released={released} turns={turns} terminalDrop0");
+  assert_eq!(released,source_bytes+born);let(_,heap)=observe(||drop(vcs));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
  }
 }
 
@@ -2001,5 +2001,4 @@ fn original_vcs_close_admission_and_receipts_match_neutral_wallet(){
   let p=&row["progress"];let progress=RetainedCloneProgress{copied_items:p["copiedItems"].as_u64().unwrap()as usize,copied_bytes:p["copiedBytes"].as_u64().unwrap()as usize,retained_capacity_bytes:p["retainedCapacityBytes"].as_u64().unwrap()as usize,released_bytes:p["releasedBytes"].as_u64().unwrap()as usize};let step=if row["complete"].as_bool().unwrap(){RetainedCloneStep::Complete(progress)}else{RetainedCloneStep::Progress(progress)};
   let(result,heap)=observe(||semio_framework_value::retained_clone::admit_retained_clone_close(grant(&row["grant"]),step,row["terminal"].as_bool().unwrap(),"original VCS neutral receipt"));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(result.is_err(),row["refused"].as_bool().unwrap());match result{Ok(actual)=>assert_eq!(actual,step),Err(error)=>{assert_eq!(error.kind,semio_framework_value::ValueRefusalKind::InvariantViolated);assert_eq!(error.retained_progress(),progress);}}
  }
- eprintln!("[DEBUG] original VCS native admissionCases=8 receiptCases=8 pureBoundary=true exactReceipts=true");
 }

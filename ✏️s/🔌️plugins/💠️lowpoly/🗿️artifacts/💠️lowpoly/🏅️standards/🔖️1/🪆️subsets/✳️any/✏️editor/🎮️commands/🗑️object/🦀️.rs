@@ -4,6 +4,7 @@
 //! edges / the faces around the selected vertices of the active object (a mesh rebuild, the faces variant
 //! every polygon modeller ships). `duplicateObject` (⌘D) copies the active object beside itself.
 
+use semio_framework_3d::mesh::MeshModelingOps;
 use semio_s_artifact_lowpoly_lowpoly_config::{LowpolyConfig, LowpolyConfigMutation, SetActiveObjectEdit};
 use semio_s_artifact_lowpoly_lowpoly_view::{editor::lowpoly::session::mesh_edit, editor::lowpoly::session::LowpolyScratch};
 use semio_s_artifact_lowpoly_lowpoly_view::resolve_active_object_id;

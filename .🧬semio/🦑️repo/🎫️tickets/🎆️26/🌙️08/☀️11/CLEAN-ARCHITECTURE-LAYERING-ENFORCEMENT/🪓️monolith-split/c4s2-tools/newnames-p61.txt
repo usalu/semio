@@ -1,0 +1,9 @@
+⚙️wasm-engine
+✂️edit-diffs
+📦️exchange
+📨️worker-and-kernel
+🔗️wires-and-selection
+🧊️solid-topology-and-fixture
+🧩️opencascade-and-scratch
+🧪️tests
+🧱️entity-maps

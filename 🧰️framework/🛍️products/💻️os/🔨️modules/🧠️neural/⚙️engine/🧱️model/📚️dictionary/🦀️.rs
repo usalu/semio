@@ -19,7 +19,7 @@ use super::*;
 /// hand-written instead, over `Value: Serialize` (local to this crate, genuinely test-cfg'd here).
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct Dictionary {
-    pub(super) pairs: OrderedMap<Value>,
+    #[doc(hidden)] pub pairs: OrderedMap<Value>,
 }
 
 impl Dictionary {

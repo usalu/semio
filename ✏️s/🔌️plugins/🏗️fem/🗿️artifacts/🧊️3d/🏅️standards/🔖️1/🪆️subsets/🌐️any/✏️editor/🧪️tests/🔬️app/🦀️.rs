@@ -178,27 +178,3 @@ mod patch_load;
 mod patch_load_case;
 #[path = "../../🎮️commands/🩹️patch-material/🧪️tests/🔬️unit/🦀️.rs"]
 mod patch_material;
-#[path = "../../🎮️commands/🩹️patch-node/🧪️tests/🔬️unit/🦀️.rs"]
-mod patch_node;
-#[path = "../../🎮️commands/🩹️patch-section/🧪️tests/🔬️unit/🦀️.rs"]
-mod patch_section;
-#[path = "../../🎮️commands/🩹️patch-solid/🧪️tests/🔬️unit/🦀️.rs"]
-mod patch_solid;
-#[path = "../../🎮️commands/🩹️patch-support/🧪️tests/🔬️unit/🦀️.rs"]
-mod patch_support;
-#[path = "../../🎮️commands/🗂️remove-selection/🧪️tests/🔬️unit/🦀️.rs"]
-mod remove_selection;
-#[path = "../../🎮️commands/⏱️result-animation-tick/🧪️tests/🔬️unit/🦀️.rs"]
-mod result_animation_tick;
-#[path = "../../🎭️modes/✏️edit/🪟️windows/📊️results/🧪️tests/🔬️unit/🦀️.rs"]
-mod results_window;
-#[path = "../../🎮️commands/📚️set-active-example/🧪️tests/🔬️unit/🦀️.rs"]
-mod set_active_example;
-#[path = "../../🎮️commands/🧮️set-analysis-settings/🧪️tests/🔬️unit/🦀️.rs"]
-mod set_analysis_settings;
-#[path = "../../🎮️commands/🎥️set-camera/🧪️tests/🔬️unit/🦀️.rs"]
-mod set_camera;
-#[path = "../../🎮️commands/⏯️set-result-animation/🧪️tests/🔬️unit/🦀️.rs"]
-mod set_result_animation;
-#[path = "../../🎮️commands/👁️set-result-display/🧪️tests/🔬️unit/🦀️.rs"]
-mod set_result_display;

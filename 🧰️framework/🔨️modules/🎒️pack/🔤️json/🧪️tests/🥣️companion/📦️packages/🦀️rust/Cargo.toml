@@ -24,6 +24,7 @@ path = "../../🦀️.rs"
 
 [dependencies]
 semio-framework-pack-json = { path = "../../../../📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-test-fixtures = { path = "../../../../../../🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../🌱️value/📦️packages/🦀️rust" }
 
 [dev-dependencies]

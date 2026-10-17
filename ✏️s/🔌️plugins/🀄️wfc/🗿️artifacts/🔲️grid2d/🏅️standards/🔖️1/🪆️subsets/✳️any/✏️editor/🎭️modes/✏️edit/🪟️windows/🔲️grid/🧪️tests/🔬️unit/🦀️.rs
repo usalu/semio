@@ -1,7 +1,10 @@
 //! 🧪️ The grid pane renders a real, non-empty canvas for every bundled example, one cell layer per
 //! cell at the authored cell size, and inverts a pointer sample back onto exactly that cell.
 
-use super::*;
+use crate::editor::grid2d::window::effective_camera;
+use crate::schema::snapshot::Grid2dSnapshot;
+use semio_framework_plugin::SurfaceKind;
+use crate::editor::grid2d::modes::edit::windows::grid::*;
 use crate::editor::grid2d::window::Grid2dWindowConfig;
 use serde_json::Value;
 
@@ -36,7 +39,7 @@ fn this_pane_owns_both_spellings_of_its_surface() {
     assert!(owns_surface(SURFACE_ID));
     assert!(owns_surface(&format!("window:{WINDOW_KIND_ID}")));
     assert!(!owns_surface("window:wfc-grid2d-preview"));
-    assert!(!owns_surface(super::super::preview::SURFACE_ID));
+    assert!(!owns_surface(crate::editor::grid2d::modes::edit::windows::preview::SURFACE_ID));
 }
 
 #[test]

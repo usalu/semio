@@ -65,8 +65,10 @@ pub mod binary;
 #[path = "📝️text/🦀️.rs"]
 pub mod text;
 
-#[path = "🪶️sqlite/🦀️.rs"]
-pub mod sqlite;
+pub mod sqlite {
+    pub use semio_s_artifact_wfc_grid3d_schema::standards::v1::subsets::any::io::sqlite::*;
+    pub use semio_s_artifact_wfc_grid3d_snapshot::standards::v1::subsets::any::io::sqlite::snapshot;
+}
 
 pub mod derived_construction {
     use crate::{Grid3dDiff, Grid3dMutation, Grid3dSnapshot};

@@ -37,24 +37,25 @@ import {
   type WindowTemplateDropPayload
 } from "@semio-tech/ui-react";
 import { sharedDocumentRoleSwitchRefusedV1 } from "../🧭️opening/🟦️.ts";
-import { type ActiveSession } from "../../🐚️Shell/🟦️.tsx";
-import { registerPendingWorldProjection } from "../../🌐️World3dHost/🟦️.tsx";
+import { type ActiveSession } from "../../🐚️Shell/📦️program-sessions/🟦️.ts";
+import { registerPendingWorldProjection } from "../../🌐️World3dHost/🪟️window-view-store/🟦️.tsx";
 import {
   PRESENCE_HEARTBEAT_INTERVAL_MS,
   presenceLiveViewBeatDelayMsV1,
+  presenceEphemeralSnapshotWithinBoundV1,
+  presenceClientIdentity,
+  presenceEphemeralPeerFieldsV1
+} from "../../🛠️ShellHelpers/🔩️plumbing/👥️presence-identity/🟦️.ts";
+import {
   applyFrameworkLayoutSeed,
   captureCurrentFrameworkLayout,
-  presenceEphemeralSnapshotWithinBoundV1,
-  shellLabelTextV1,
-  presenceClientIdentity,
-  presenceEphemeralPeerFieldsV1,
-  resolveAppLabel,
-  resolveFrameworkLayoutSeed,
-  resolveManifestLabel,
-  syncShellLabelLocale
-} from "../../🛠️ShellHelpers/🟦️.tsx";
+  resolveFrameworkLayoutSeed
+} from "../../🛠️ShellHelpers/🛣️route-and-chrome/🟦️.tsx";
+import { shellLabelTextV1 } from "../../🛠️ShellHelpers/🔩️plumbing/🆔️action-ids/🟦️.ts";
+import { resolveAppLabel, resolveManifestLabel, syncShellLabelLocale } from "../../🛠️ShellHelpers/🏷️labels/🟦️.tsx";
 // #endregion 🔌️Adapters
-import { type DisplayHostApi, useNamedLayoutHost } from "../../📌️ChromePanels/🟦️.tsx";
+import { useNamedLayoutHost } from "../../📌️ChromePanels/🟦️.tsx";
+import { type DisplayHostApi } from "../../📌️ChromePanels/🖥️display-panel/🟦️.tsx";
 import { replayRefusalCodeV1, replayRefusalNoticeTextV1 } from "../📣️replay-refusal/🟦️.ts";
 import { seededActiveWindowId } from "../🎚️shell-model/🟦️.tsx";
 import { sessionIsSpaceIndex } from "../🧾️space-artifact-creation/🟦️.ts";

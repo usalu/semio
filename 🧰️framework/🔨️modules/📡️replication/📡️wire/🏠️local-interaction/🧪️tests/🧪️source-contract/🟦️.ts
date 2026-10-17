@@ -5,8 +5,8 @@ import { applyEdits, modify, parse } from "jsonc-parser";
 import { sumBy } from "lodash";
 import { strict as assert } from "node:assert";
 import { createHash } from "node:crypto";
-import{unsignedLebOracleV1}from"../../../../../🎒️pack/📐️format/🧪️tests/🔮️oracles/🔢️leb/🟦️.ts";
-import { valueOrderedRetirementSchemaUrl } from "../../../../../🌱️value/🧪️tests/🧫️fixtures/🟦️.ts";
+import{unsignedLebOracleV1}from"@semio-tech/framework-pack-ts/format/testing/oracles/leb";
+import { valueOrderedRetirementSchemaUrl } from "@semio-tech/value-ts/testing/fixtures";
 const leb=unsignedLebOracleV1();
 
 //#region 🧬️Contract
@@ -184,7 +184,6 @@ const validateOwnershipGrant=ownershipAjv.compile({$ref:ownershipSchema.$id+"#/$
 const validateOwnershipDemand=ownershipAjv.compile({$ref:ownershipSchema.$id+"#/$defs/Demand"});
 for(const copyBytes of rootFixture.grants){assert(validateOwnershipGrant({maximumItems:1,maximumCopyBytes:copyBytes,maximumCapacityBytes:0,maximumReleaseBytes:0,maximumDepth:1}));assert(validateOwnershipDemand({copyBytes,capacityBytes:0,releaseBytes:0,depth:1}));}
 assert(!validateOwnershipGrant({maximumItems:1,maximumBytes:1}));assert(!validateOwnershipDemand({copyBytes:1,capacityBytes:0,releaseBytes:-1,depth:1}));
-console.log("[DEBUG] local interaction variable ownership grants and demands independently validate with strict AJV; String corpus totals remain logical work");
 
 
 

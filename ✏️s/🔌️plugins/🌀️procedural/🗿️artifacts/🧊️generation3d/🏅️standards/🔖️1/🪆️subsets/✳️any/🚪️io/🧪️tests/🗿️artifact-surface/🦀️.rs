@@ -357,7 +357,6 @@ fn prepared_geometry_merge_preserves_surface_metadata_or_refuses_incompatible_do
         let error = mesh_bridge::merge_meshes(&parts).unwrap_err();
         assert!(error.to_string().contains("compatible channel declarations"));
     }
-    eprintln!("[DEBUG] generation3d surface merge cases=1 refusals=1 independentThreeFixture=true");
 }
 
 /// 📤️ Graph codecs require valid declared documents and finite caller-prepared geometry.
@@ -407,7 +406,6 @@ fn prepared_surface_channels_enter_the_editable_mesh_without_loss() {
         let mesh = semio_framework_plugin::MeshData::from_value(semio_framework_pack_json::to_dsl_value(&owned)).unwrap();
         assert!(mesh_bridge::import_mesh_data(&mesh).is_err(), "{}", row["id"]);
     }
-    eprintln!("[DEBUG] generation3d editable surface cases=2 refusals=4 serdeOracle=true");
 }
 
 fn assert_json_numbers_and_structure(actual: &serde_json::Value, expected: &serde_json::Value) {
@@ -460,7 +458,6 @@ fn polygon_surface_import_preserves_original_faces_and_corner_or_vertex_channels
         assert_json_numbers_and_structure(&actual, &row["polygon"]);
         assert_eq!(actual["faces"][0].as_array().unwrap().len(), 8);
     }
-    eprintln!("[DEBUG] generation3d polygon import cases=2 refusals=2 sharedThreeEarcutFixture=true");
 }
 
 /// 🎨️ Surface exports retain normals, UVs, color and owned material assignments.
@@ -492,7 +489,6 @@ fn prepared_surface_exports_keep_the_supported_channels() {
         let triangle = parry3d::shape::Triangle::new(positions[0], positions[1], positions[2]);
         assert_eq!(triangle.area(), 0.5, "independent Parry surface area");
     }
-    println!("[DEBUG] generation3d exported surface fixtures=2 independentParry=true");
 }
 
 /// 🎨️ Per-face shading expands shared vertices without losing indexed authored samples.
@@ -520,7 +516,6 @@ fn prepared_face_surface_channels_expand_with_independent_triangle_area() {
         }).sum();
         assert_eq!(area as f64, row["expanded"]["area"].as_f64().unwrap());
     }
-    println!("[DEBUG] generation3d face surface samples=6 indexedAliases=true independentParryAndThree=true");
 }
 
 /// 🧊️ Quantized authored channels retain normalized values and reject mismatched accessor domains.
@@ -551,7 +546,6 @@ fn gltf_surface_accessor_domains_match_the_independent_normalized_fixture() {
             assert!(import_leaves::gltf::v2_0::any::mesh_from_bytes(malformed.to_string().as_bytes()).is_err(), "{}", refusal["id"]);
         }
     }
-    println!("[DEBUG] generation3d normalized glTF surface cases=1 refusals=5 independentThree=true");
 }
 
 /// 🚧️ Excessive declared domains fail before decoded buffers or graph projections are allocated.
@@ -580,7 +574,6 @@ fn gltf_import_declared_domains_are_admitted_before_allocation() {
         let error=any::mesh_from_bytes(&bytes).err().unwrap_or_else(||panic!("{} exceeded admission without refusal",row["id"]));
         assert_eq!(error.kind,semio_framework_value::ValueRefusalKind::OwnershipLimit,"{}: {error}",row["id"]);
     }
-    println!("[DEBUG] glTF declared-domain refusals={} before primitive allocation independentGltfTransformAndThreeCounts=true",admission["refusals"].as_array().unwrap().len());
 }
 
 /// 🎨️ Authored UV sets, tangents and material sampling enter the same editable source.
@@ -612,7 +605,6 @@ fn gltf_authored_surface_metadata_enters_the_editable_constructor() {
             }
         }
     }
-    println!("[DEBUG] generation3d authored glTF channels=3 materialRoles=5 refusals=3 independentThreeAndGltfTransform=true");
 }
 
 /// 🧩️ Authored palettes and domains survive full and material-split editable glTF imports.
@@ -664,7 +656,6 @@ fn gltf_authored_attribute_palettes_restore_editable_source_domains() {
             match import::deserialize(&invalid){Err(_)=>{},Ok(document)=>{retire_document(document);panic!("{} must refuse malformed source provenance",refusal["id"]);}}
         }}
     }
-    println!("[DEBUG] glTF authored import domains=vertex,face,corner channels=10 cases=2 refusals={} fallbackNormals=true independentParryArea=true",metadata["refusals"].as_array().unwrap().len());
 }
 
 /// 🗣️ The format warning codes agree with the same neutral surface fixture as the portable twin.
@@ -691,7 +682,6 @@ fn prepared_surface_format_diagnostics_are_fixture_driven() {
         let actual = document_io::format_diagnostics(&meshes, row["format"].as_str().unwrap());
         assert_eq!(actual.iter().map(|diagnostic| diagnostic.code).collect::<Vec<_>>(), row["codes"].as_array().unwrap().iter().map(|code| code.as_str().unwrap()).collect::<Vec<_>>(), "{}", row["id"]);
     }
-    println!("[DEBUG] generation3d surface format diagnostics=12 independentSerde=true");
 }
 
 /// 🎨️ Partial authored materials use the owning PBR defaults instead of refusing valid surfaces.
@@ -710,7 +700,6 @@ fn prepared_surface_export_preserves_partial_materials_with_owning_defaults() {
         assert!((material.metallic as f64-row["expected"]["metallic"].as_f64().unwrap()).abs()<1e-7);
         assert!((material.roughness as f64-row["expected"]["roughness"].as_f64().unwrap()).abs()<1e-7);
     }
-    println!("[DEBUG] generation3d material defaults=2 independentGltfTransform=true");
 }
 
 /// 🔌️ A hidden source exports through its addressed output without gathering another preview.
@@ -731,7 +720,6 @@ fn prepared_surface_export_scope_uses_the_existing_graph_connections() {
     }
     for id in fixture["exportScope"]["refusals"].as_array().unwrap() { assert!(mesh_bridge::export_source_channels(&host, id.as_str()).is_err()); }
     host.retire_cold();
-    println!("[DEBUG] generation3d export scope fixtures=4 independentSerde=true");
 }
 
 /// 📄️ The real registry preserves imported graph documents and retires its rebuilt roots.
@@ -950,8 +938,6 @@ fn gltf_prepared_export_retains_rich_channels_and_role_sampling() {
         std::fs::write(directory.join("prepared-rich.gltf"), &bytes).unwrap();
         std::fs::write(directory.join("prepared-rich-edge.gltf"), any::serialize_prepared_meshes_bytes(std::slice::from_ref(&edge_uv_mesh)).unwrap()).unwrap();
     }
-    println!("[DEBUG] prepared glTF byte/control export: bytes={} cancellationBoundaries={boundaries} ownershipRefusal=true envelope=true", bytes.len());
-    println!("[DEBUG] prepared glTF export: vertices=6 uvSets=2 colorSets=2 tangent=true numericCustom=true images=1 roleSamplers=5");
 }
 
 #[test]
@@ -966,5 +952,4 @@ fn document_io_retained_envelope_resumes_bytes_cancels_and_retires_without_publi
     }}
     for stop in [0,1,2,32,87] {let mut envelope=document_io::Generation3dDocumentEnvelope::new(binary_row,binary.clone());let canceled=std::cell::Cell::new(false);let mut callback=|_|!canceled.get();let mut control=NativeEncodeControl::new(1000000,&mut callback);for _ in 0..stop {assert!(envelope.step(1,&mut control).unwrap().is_none());}canceled.set(true);let position=envelope.position();assert!(envelope.step(1,&mut control).is_err());assert_eq!(envelope.position(),position);retire(envelope);}
     for row in law["invalidUtf8"].as_array().unwrap() {let bytes=row.as_array().unwrap().iter().map(|v|v.as_u64().unwrap()as u8).collect();let mut envelope=document_io::Generation3dDocumentEnvelope::new(text_row,bytes);let mut accepted=|_|true;let mut control=NativeEncodeControl::new(1000000,&mut accepted);assert!(envelope.step(100,&mut control).is_err());retire(envelope);}
-    eprintln!("[DEBUG] retained document envelope budgets1/8/256; independent Buffer base64; zero-copy validated UTF8; cancel and malformed bytes suppress output");
 }

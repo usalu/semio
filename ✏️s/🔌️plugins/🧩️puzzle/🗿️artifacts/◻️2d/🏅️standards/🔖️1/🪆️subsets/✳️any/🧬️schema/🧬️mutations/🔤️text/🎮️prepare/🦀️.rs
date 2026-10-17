@@ -1,6 +1,6 @@
 //! 🔤️ Borrowed optional UTF8 intents compare original native owners before plan publication.
-use super::{ChangeNodeIcon,EditTargetRegionLabel};
-use crate::{Puzzle2dSnapshot,standards::v1::subsets::any::schema::snapshot::lookup::{Puzzle2dLookupCursor,Puzzle2dLookupScope,Puzzle2dLookupStep}};
+use crate::standards::v1::subsets::any::schema::mutations::{ChangeNodeIcon,EditTargetRegionLabel};
+use crate::{Puzzle2dSnapshot,standards::v1::subsets::any::schema::lookup::{Puzzle2dLookupCursor,Puzzle2dLookupScope,Puzzle2dLookupStep}};
 use semio_framework_value::{paged::PagedUtf8,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneBinding,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneRef,RetainedCloneStep,paged::PagedUtf8BoundedOrdCursor,ordered_map::{BoundedOrdCursor,BoundedOrdGrant,BoundedOrdStep}}};
 
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
@@ -75,9 +75,7 @@ impl<T:Puzzle2dTextIntent> Puzzle2dTextPreparationCursor<T>{
  pub fn terminal_is_empty(&self)->bool{self.closing&&self.output.is_none()&&self.comparison.terminal_is_empty()&&self.lookup.terminal_is_empty()&&self.source.is_none()&&self.mutation.is_none()}
 }
 
-#[cfg(test)]
-#[path="🧪️tests/🦀️.rs"]
-mod tests;
+
 
 #[path="📸️candidate/🦀️.rs"]
 pub mod candidate;

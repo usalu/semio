@@ -1,6 +1,35 @@
+use crate::editor::puzzle5d::config::Puzzle5dRuntime;
+use crate::editor::puzzle5d::entities::Puzzle5dDocument;
+use crate::editor::puzzle5d::view::Puzzle5dScene;
+use semio_framework_plugin::Board2dScene;
+use semio_framework_pack_json::{json, Value};
+#[allow(unused_imports)]
+use crate::editor::puzzle5d::config::Puzzle5dCamera2d;
+#[allow(unused_imports)]
+use crate::editor::puzzle5d::modes::edit;
+#[allow(unused_imports)]
+use crate::editor::puzzle5d::modes::edit::options as mode_options;
+#[allow(unused_imports)]
+use crate::editor::puzzle5d::modes::edit::windows::board2d::{options, utilities};
+#[allow(unused_imports)]
+use crate::editor::puzzle5d::modes::edit::windows::world3d;
+#[allow(unused_imports)]
+use crate::editor::puzzle5d::precompute::PUZZLE5D_PLANNER_TRACE_TWIN_BIT;
+#[allow(unused_imports)]
+use crate::editor::puzzle5d::terminology::{puzzle5d_localized, Puzzle5dLabels};
+#[allow(unused_imports)]
+use crate::editor::puzzle5d::entities::{puzzle5d_grip_full_id, target_volume_flat_rect, Puzzle5dPart, PUZZLE5D_BOARD_SNAPSHOT_SCHEMA, PUZZLE5D_DEFAULT_PART_RADIUS};
+#[allow(unused_imports)]
+use crate::editor::puzzle5d::view::puzzle5d_scene_mode;
+#[allow(unused_imports)]
+use semio_framework_plugin::{SurfaceKind, WindowEngagement, WindowEngagementSlot, WindowKindDefinition, WindowMeasure, WindowOptions};
+#[allow(unused_imports)]
+use semio_framework_ui_contract::BuiltNode;
+#[allow(unused_imports)]
+use semio_framework_os_infinite::BoardPlacementNaming;
 
-use super::*;
-use crate::editor::puzzle5d::unit_tests::context::*;
+use crate::editor::puzzle5d::modes::edit::windows::board2d::*;
+use crate::editor::puzzle5d::testkit::*;
 
 #[test]
 fn renders_the_board_scene() {
@@ -18,7 +47,7 @@ fn board_document() -> Puzzle5dDocument {
     <Puzzle5dDocument as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse(&projection.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("projection"))).expect("document")
 }
 
-fn board_scene_with(interaction: crate::editor::puzzle5d::Puzzle5dInteractionSnapshot, runtime: Puzzle5dRuntime) -> semio_framework_plugin::Board2dScene {
+fn board_scene_with(interaction: crate::editor::puzzle5d::view::Puzzle5dInteractionSnapshot, runtime: Puzzle5dRuntime) -> semio_framework_plugin::Board2dScene {
     puzzle5d_board_scene(&Puzzle5dScene { document: board_document(), runtime, active_utility: "select".into(), interaction })
 }
 
@@ -27,8 +56,8 @@ fn board_scene_with(interaction: crate::editor::puzzle5d::Puzzle5dInteractionSna
 /// other. The world half of this law lives in the sibling `🧊️3d` window's tests.
 #[test]
 fn board_paints_the_live_selection_hover_and_history_draft_references() {
-    let interaction = crate::editor::puzzle5d::Puzzle5dInteractionSnapshot {
-        granularity: crate::editor::puzzle5d::PUZZLE5D_GRANULARITY_PART.into(),
+    let interaction = crate::editor::puzzle5d::view::Puzzle5dInteractionSnapshot {
+        granularity: crate::editor::puzzle5d::entities::PUZZLE5D_GRANULARITY_PART.into(),
         selected: vec!["teil-ä".into()],
         hovered: vec!["teil-ä".into()],
         referenced: vec!["teil-ä".into(), "teil-b".into()],
@@ -37,7 +66,7 @@ fn board_paints_the_live_selection_hover_and_history_draft_references() {
     assert_eq!(scene.selection_json, "[\"teil-ä\"]");
     assert_eq!(scene.hovered_id.as_deref(), Some("teil-ä"));
     assert_eq!(scene.highlighted_ids_json, "[\"teil-ä\",\"teil-b\"]", "the board highlights what the open history draft references");
-    let idle = board_scene_with(crate::editor::puzzle5d::Puzzle5dInteractionSnapshot::default(), Puzzle5dRuntime::default());
+    let idle = board_scene_with(crate::editor::puzzle5d::view::Puzzle5dInteractionSnapshot::default(), Puzzle5dRuntime::default());
     assert_eq!(idle.selection_json, "[]");
     assert!(idle.hovered_id.is_none());
     assert_eq!(idle.highlighted_ids_json, "[]", "no draft, no highlight");
@@ -53,7 +82,7 @@ fn board_scene_carries_the_pane_grid_and_pick_filter() {
         selectable_kinds: crate::editor::puzzle5d::config::Puzzle5dSelectableKinds { parts: true, grips: false, fasteners: false },
         ..Puzzle5dRuntime::default()
     };
-    let scene = board_scene_with(crate::editor::puzzle5d::Puzzle5dInteractionSnapshot::default(), runtime);
+    let scene = board_scene_with(crate::editor::puzzle5d::view::Puzzle5dInteractionSnapshot::default(), runtime);
     assert!(!scene.grid_visible);
     assert!(!scene.grid_snap_enabled);
     assert_eq!(scene.grid_factor, 2.5);
@@ -65,9 +94,9 @@ fn board_scene_carries_the_pane_grid_and_pick_filter() {
 /// 🎚️ Law: every option group this pane owns is present and reflects the runtime it was built from.
 #[test]
 fn window_measures_expose_every_board_option_group() {
-    let labels = &crate::editor::puzzle5d::terminology::Puzzle5dLabels::NATIVE_EN;
+    let labels = crate::editor::puzzle5d::terminology::puzzle5d_native_en_labels();
     let runtime = Puzzle5dRuntime { grid_visible: false, grid_factor: 4.0, ..Puzzle5dRuntime::default() };
-    let envelope = Puzzle5dScene { document: board_document(), runtime, active_utility: "select".into(), interaction: crate::editor::puzzle5d::Puzzle5dInteractionSnapshot::default() };
+    let envelope = Puzzle5dScene { document: board_document(), runtime, active_utility: "select".into(), interaction: crate::editor::puzzle5d::view::Puzzle5dInteractionSnapshot::default() };
     let measures = window_measures(&envelope, labels);
     let ids = measure_ids(&measures);
     for expected in [
@@ -92,7 +121,7 @@ fn window_measures_expose_every_board_option_group() {
 /// shape — the grip as `handleId`, the submenu presentation, and pending until the search has published.
 #[test]
 fn the_board_publishes_the_open_grip_suggestion_menu() {
-    let labels = &crate::editor::puzzle5d::terminology::Puzzle5dLabels::NATIVE_EN;
+    let labels = crate::editor::puzzle5d::terminology::puzzle5d_native_en_labels();
     let closed = Puzzle5dScene { document: board_document(), runtime: Puzzle5dRuntime::default(), active_utility: "select".into(), interaction: Default::default() };
     assert_eq!(board_suggestion_menu_json(&closed, labels, None), None, "no menu, no record");
     let menu = crate::editor::puzzle5d::window::Puzzle5dSuggestionMenu { x: 3.0, y: 4.0, window_id: WINDOW_KIND_ID.into(), vortex_full_id: "teil-ä:g1".into(), submenu: true };
@@ -118,7 +147,7 @@ fn a_board_handle_hit_is_the_grips_menu() {
         selection: vec![semio_framework_plugin::ContextMenuSelectionGroup { domain: "node".into(), ids: vec!["teil-ä:g1".into()] }],
         text: None,
     };
-    let selection = crate::editor::puzzle5d::Puzzle5dContextSelection::from_surface(Some(&surface));
+    let selection = crate::editor::puzzle5d::interaction::Puzzle5dContextSelection::from_surface(Some(&surface));
     assert_eq!(selection.grip_ids, vec!["teil-ä:g1".to_string()]);
     assert!(selection.part_ids.is_empty(), "the handle under the pointer is the whole subject");
 }
@@ -128,6 +157,6 @@ fn a_board_handle_hit_is_the_grips_menu() {
 /// have always carried (`puzzle2d.brush.<serial>`), byte for byte.
 #[test]
 fn board_scene_publishes_the_plugin_placement_naming() {
-    let scene = board_scene_with(crate::editor::puzzle5d::Puzzle5dInteractionSnapshot::default(), Puzzle5dRuntime::default());
+    let scene = board_scene_with(crate::editor::puzzle5d::view::Puzzle5dInteractionSnapshot::default(), Puzzle5dRuntime::default());
     assert_eq!(scene.placement_naming.as_deref(), Some(r#"{"brushNodePrefix":"puzzle2d.brush.","brushEdgePrefix":"puzzle2d.brush.edge."}"#));
 }

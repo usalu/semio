@@ -1,0 +1,24 @@
+[package]
+workspace = "../../../../../../../../.."
+name = "semio-s-artifact-block-5d-editor-tests"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Companion test crate of semio-s-artifact-block-5d-editor: the small public-surface laws of the 5D block editor modules"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dev-dependencies]
+semio-framework-async-macros = { workspace = true }
+semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
+semio-framework-ui-locale = { workspace = true }
+semio-s-artifact-block-5d-editor = { workspace = true }
+serde_json = { workspace = true }

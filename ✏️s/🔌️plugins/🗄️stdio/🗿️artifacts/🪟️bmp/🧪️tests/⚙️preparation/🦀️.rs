@@ -66,7 +66,6 @@ fn publication_preparation_turns_are_bounded_by_pages_and_paged_paints_restore()
         }
         assert_eq!(restored, base);
         let pages = (width as usize * height as usize * sample_bytes).div_ceil(RETAINED_CLONE_BULK_PAGE_BYTES);
-        eprintln!("[DEBUG] bmp {width}x{height} paint {region:?}: {pages} pages edited in {} turns", law.turns);
         turns_by_size.push((pages, law.turns));
     }
     assert!(turns_by_size[2].1 < 20_000, "a 2,560-pixel paint seals its inverse a page per turn, not per pixel: {turns_by_size:?}");

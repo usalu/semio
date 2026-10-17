@@ -10,6 +10,8 @@
   },
   "bundleKind": "library",
   "devDependencies": {
+    "@semio-tech/framework-compiler-ts": "workspace:*",
+    "@semio-tech/framework-diagnostic-ts": "workspace:*",
     "@semio-tech/process": "workspace:*"
   }
 }

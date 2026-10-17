@@ -1,7 +1,7 @@
 //! 📄️ Note play app panel — the document tree: every block, with quick-add rows.
 
 use crate::editor::note::terminology::NotePlayLabels;
-use crate::editor::note::{ui_label, NOTE_INTERACTION_BLOCKS, NOTE_INTERACTION_GRANULARITY, NOTE_PLAY_CONTROLLER_ID};
+use crate::editor::note::support::{ui_label, NOTE_INTERACTION_BLOCKS, NOTE_INTERACTION_GRANULARITY, NOTE_PLAY_CONTROLLER_ID};
 use crate::schema::{block_icon, block_kind, block_name, block_tree_row_id, block_visible};
 use crate::{NoteBlockNode, NoteSnapshot};
 use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase};
@@ -94,7 +94,5 @@ pub fn render(document: &NoteSnapshot, labels: &NotePlayLabels, windows: &TreeWi
 //#endregion 🔖️Render
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

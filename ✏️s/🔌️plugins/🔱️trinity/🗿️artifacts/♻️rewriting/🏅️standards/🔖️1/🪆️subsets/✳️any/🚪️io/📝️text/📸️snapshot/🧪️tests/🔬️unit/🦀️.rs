@@ -1,10 +1,10 @@
 use crate::standards::v1::subsets::any::io::text::snapshot::*;
-use crate::LayoutPoint;
+use crate::standards::v1::subsets::any::schema::model::LayoutPoint;
 use ::store::os_store::test_support::{assert_dsl_pack_equivalence, assert_dsl_round_trip};
 use semio_framework_graph_manifest::PropertyValue;
 
 fn sample_rule_state() -> RewritingSnapshot {
-    let mut state = crate::editor::rewriting::fixture_rule_state();
+    let mut state = crate::standards::v1::subsets::any::schema::test_support::fixture_rule_state();
     state.working_graph.name = "x \"quoted\"\nline".into();
     state.parameter_bindings.insert("count".into(), PropertyValue::Number(3.0));
     state.rule_layout.insert("a".into(), LayoutPoint::from((10.5, -20.25)));

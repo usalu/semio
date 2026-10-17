@@ -58,7 +58,6 @@ fn original_widget_output_moves_once_on_same_caller_and_retires_all_fields() {
     }
     assert!(owner.terminal_is_empty());assert_eq!(input_heap.requested_bytes+born,released);
     let (_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(owner));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
-    println!("[DEBUG] Original Ready output ports=3 singleMove=true headerCopy=0 original={} born={born} released={released}",input_heap.requested_bytes);
     caller.retire(stock);
 }
 
@@ -82,6 +81,5 @@ fn original_widget_output_cancel_keeps_nested_payload_for_same_caller_retirement
     }
     assert!(owner.terminal_is_empty());assert_eq!(input_heap.requested_bytes+born,released);
     let (_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(owner));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
-    println!("[DEBUG] Original canceled Ready nestedListSelectionMeshShapeWire=true original={} born={born} released={released}",input_heap.requested_bytes);
     caller.retire(stock);
 }

@@ -9,7 +9,7 @@
 //! (`fleet-trinity-recipe`) excludes every path containing `🚪️io/` (a live peer packet,
 //! `io-async-signatures`, is mid-sweep rewriting it), so `io_declaration()` below builds the same
 //! `IoDeclaration` shape here instead of delegating to a sibling `io::io()`. `native` is real
-//! (`crate::pilot_languages()`'s already-real grammar/protocol pairs plus a real
+//! (`crate::standards::v1::subsets::any::registration::pilot_languages()`'s already-real grammar/protocol pairs plus a real
 //! `store::bare_artifact_codec::<RewritingSnapshot, RewriteRuleMutation>(...)`); `entries: &[]` — the
 //! foreign-format hops (txt/pdf/docx/md/json import+export) stay unregistered on the new
 //! `io_mechanism` channel pending that file's own migration. See
@@ -19,7 +19,8 @@ use crate::editor::rewriting as editor;
 use crate::standards::v1::subsets::any::schema;
 use crate::standards::v1::subsets::any::schema::mutations::RewriteRuleMutation;
 use crate::viewer::rewriting as viewer;
-use crate::{RewritingSnapshot, REWRITE_RULE_SCHEMA, TRINITY_REWRITING_DIALECT};
+use crate::standards::v1::subsets::any::schema::snapshot::RewritingSnapshot;
+use crate::standards::v1::subsets::any::schema::model::{REWRITE_RULE_SCHEMA, TRINITY_REWRITING_DIALECT};
 use semio_framework_plugin::app::declarations::{editor_surface, viewer_surface, IoDeclaration, LanguagePair, NativeCodecs, SchemaDeclaration, SubsetDeclaration};
 use semio_framework_plugin::ExampleSource;
 use std::sync::OnceLock;
@@ -37,8 +38,8 @@ fn inference_descriptors() -> &'static [::semio_framework_schema_registry::Artif
 /// 🚪️ See this file's own module doc for why this is not `io::io()`. `pilot_languages()` indices
 /// are fixed by that function's own literal `vec![document, op, diff, pack, spr]` order — the same
 /// role→slot mapping `🗒️note`'s `io()` uses for its own five-language array.
-fn io_declaration() -> IoDeclaration {
-    let langs = crate::pilot_languages();
+pub fn io_declaration() -> IoDeclaration {
+    let langs = crate::standards::v1::subsets::any::registration::pilot_languages();
     IoDeclaration {
         native: NativeCodecs {
             snapshot: LanguagePair { text: Some(&langs[0]), binary: Some(&langs[3]) },
@@ -52,7 +53,7 @@ fn io_declaration() -> IoDeclaration {
 }
 
 /// 🌳️ `standard "1" / subset "any"`'s complete declaration — the only subset this artifact has.
-pub fn subset<PA: crate::ArtifactApps>() -> SubsetDeclaration<PA> {
+pub fn subset<PA: crate::standards::v1::subsets::any::registration::ArtifactApps>() -> SubsetDeclaration<PA> {
     SubsetDeclaration {
         dialect: TRINITY_REWRITING_DIALECT,
         schema: SchemaDeclaration { descriptor: schema::rewriting_artifact_schema_descriptor(), inferences: inference_descriptors(), inference_services: Vec::new() },

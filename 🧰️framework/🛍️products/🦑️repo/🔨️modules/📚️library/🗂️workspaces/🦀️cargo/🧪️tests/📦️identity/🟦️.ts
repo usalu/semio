@@ -28,5 +28,5 @@ test("current physical workspace dependency identities match independent Cargo a
   const source=readFileSync(join(directory,row.path,"Cargo.toml"),"utf8"),physical=Bun.TOML.parse(source)as any;
   expect(physical).toEqual(TOML.parse(source));expect(physical.package.name,key).toBe(row.package??key);checked++;
  }
- expect(checked).toBeGreaterThan(0);console.log("[DEBUG] Actual Cargo neutral rename refusal and physical workspace identities agree with independent TOML for "+checked+" packages");
+ expect(checked).toBeGreaterThan(0);
 });

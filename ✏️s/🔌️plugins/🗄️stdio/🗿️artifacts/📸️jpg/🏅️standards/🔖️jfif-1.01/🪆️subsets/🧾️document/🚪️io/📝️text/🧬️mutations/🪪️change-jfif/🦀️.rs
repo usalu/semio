@@ -30,6 +30,4 @@ pub fn parse(line: &str) -> Result<JpgMutation, semio_framework_diagnostic::Text
     parse().map_err(|message| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,message,semio_framework_diagnostic::TextSpan::at(1,1)))
 }
 
-#[cfg(test)]
-#[path="🧪️tests/🎯️direct/🦀️.rs"]
-mod tests_direct_behavior;
+

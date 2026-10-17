@@ -3,7 +3,7 @@
 #![allow(clippy::result_large_err)]
 
 use crate::editor::animate::config::{PresentationConfig, PresentationConfigMutation};
-use crate::editor::animate::{interaction_select_effect, PresentationDispatchCtx};
+use crate::editor::animate::support::{interaction_select_effect, PresentationDispatchCtx};
 use crate::standards::v1::subsets::any::schema::mutations::PresentationMutation;
 use crate::{demo_presentation_snapshot, PresentationSnapshot};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
@@ -21,7 +21,7 @@ pub struct SetActiveExample {
 /// history) instead of an `artifact_mutations` entry.
 pub fn handle(payload: &SetActiveExample, _doc: &ArtifactView<'_, PresentationSnapshot>, _cfg: &ConfigView<'_, PresentationConfig>, _ctx: &mut PresentationDispatchCtx) -> Result<Emit<PresentationMutation, PresentationConfigMutation>, Fault> {
     if payload.example_id == "demo" || payload.example_id.is_empty() {
-        Ok(Emit { effects: vec![crate::editor::animate::reset_presentation_document_effect(&demo_presentation_snapshot()), interaction_select_effect(&[], "replace")], ..Default::default() })
+        Ok(Emit { effects: vec![crate::editor::animate::support::reset_presentation_document_effect(&demo_presentation_snapshot()), interaction_select_effect(&[], "replace")], ..Default::default() })
     } else {
         Ok(Emit::default())
     }

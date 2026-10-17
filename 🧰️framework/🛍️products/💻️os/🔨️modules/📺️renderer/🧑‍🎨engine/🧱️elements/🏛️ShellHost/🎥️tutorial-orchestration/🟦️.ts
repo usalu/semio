@@ -26,16 +26,16 @@ import {
   type TutorialSlice,
   validateTutorial
 } from "@semio-tech/ui-react";
-import { type ActiveSession } from "../../🐚️Shell/🟦️.tsx";
+import { type ActiveSession } from "../../🐚️Shell/📦️program-sessions/🟦️.ts";
 import {
   applyTutorialUiChangeToShell,
   applyTutorialUiSnapshotToShell,
   captureTutorialUiSnapshot,
-  downloadMediaExport,
-  resolveManifestLabel,
-  sessionWindowInstances,
   type TutorialUiBridgeContext
-} from "../../🛠️ShellHelpers/🟦️.tsx";
+} from "../../🛠️ShellHelpers/🧾️transfer-checkin-tutorial/🟦️.ts";
+import { downloadMediaExport } from "../../🛠️ShellHelpers/🔩️plumbing/📥️downloads-and-file-requests/🟦️.ts";
+import { resolveManifestLabel } from "../../🛠️ShellHelpers/🏷️labels/🟦️.tsx";
+import { sessionWindowInstances } from "../../🛠️ShellHelpers/🔄️ui-refresh/🟦️.ts";
 // #endregion 🔌️Adapters
 import { tutorialInteractionSelectionActions, TutorialRecorder } from "../🎬️tutorial-recorder/🟦️.tsx";
 import type { ShellCoreAfterShellActions } from "../🖱️shell-actions/🟦️.ts";

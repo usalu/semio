@@ -28,7 +28,10 @@ pub fn plan(p: &GltfReorderUsedExtensionsPayload, base: &GltfSnapshot) -> Result
     Ok(GltfDiff { extensions_used: Some(GltfStringsDelta::rows(Vec::new(), Vec::new(), moves_to_keys(&base.document.extensions_used, &p.order))), ..Default::default() })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn inverse(p: &GltfReorderUsedExtensionsPayload, base: &GltfSnapshot) -> Vec<super::GltfMutation> {
+pub fn inverse<Op>(p: &GltfReorderUsedExtensionsPayload, base: &GltfSnapshot) -> Vec<Op>
+where
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::remove_used_extension::RemoveUsedExtensionMutation>,
+{
     if validate(p, base).is_err() {
         return Vec::new();
     }
@@ -45,11 +48,17 @@ pub enum ReorderUsedExtensionsMutation {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn mutation(payload: GltfReorderUsedExtensionsPayload) -> super::GltfMutation {
-    super::GltfMutation::ReorderUsedExtensions(ReorderUsedExtensionsMutation::Apply(payload))
+pub fn mutation<Op>(payload: GltfReorderUsedExtensionsPayload) -> Op
+where
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::reorder_used_extensions::ReorderUsedExtensionsMutation>,
+{
+    Op::from(ReorderUsedExtensionsMutation::Apply(payload))
 }
 
-impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ReorderUsedExtensionsMutation {
+impl<Op> protocol::MutationKind<GltfSnapshot, Op> for ReorderUsedExtensionsMutation
+where
+    Op: protocol::Mutation<GltfSnapshot, Diff = GltfDiff> + From<ReorderUsedExtensionsMutation>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "reorder", entity: "used-extensions", kind: "reorder-used-extensions", record: "ReorderedUsedExtensions" };
 
     fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<GltfDiff> {
@@ -61,7 +70,7 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ReorderUsedEx
         }
     }
 
-    fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<super::GltfMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         match self {
             Self::Apply(payload) => Ok(inverse(payload, base)),
         }
@@ -78,7 +87,5 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ReorderUsedEx
 //#endregion 🧬️DirectMutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔌️flips-the-two-d1aa6d/🦀️.rs"]
-mod case_flips_the_two_d1aa6d;
+
 //#endregion 🧪️Tests

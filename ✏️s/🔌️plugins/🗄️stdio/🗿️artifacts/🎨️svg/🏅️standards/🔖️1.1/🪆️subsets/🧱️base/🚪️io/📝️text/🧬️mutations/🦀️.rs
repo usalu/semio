@@ -39,29 +39,20 @@ impl protocol::OpText for SvgMutation {
     }
 }
 
-#[path = "📥️insert-element/🦀️.rs"]
-pub mod insert_element;
 
-#[path = "🗑️remove-element/🦀️.rs"]
-pub mod remove_element;
 
-#[path = "🔤️set-element-name/🦀️.rs"]
-pub mod set_element_name;
 
-#[path = "📜️set-doctype/🦀️.rs"]
-pub mod set_doctype;
 
-#[path = "🖼️set-view-box/🦀️.rs"]
-pub mod set_view_box;
 
-#[path = "🔄️set-transform/🦀️.rs"]
-pub mod set_transform;
 
-#[path = "✍️set-text/🦀️.rs"]
-pub mod set_text;
 
-#[path = "🏷️set-attribute/🦀️.rs"]
-pub mod set_attribute;
 
-#[path = "📣️set-declaration/🦀️.rs"]
-pub mod set_declaration;
+
+
+
+
+
+
+
+
+

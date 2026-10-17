@@ -1,4 +1,3 @@
-use super::*;
 
 #[test]
 fn an_asset_the_host_delivered_on_open_is_readable_by_name() {

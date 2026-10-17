@@ -1,11 +1,8 @@
 //! ❓️ Shared question construction for form authoring commands.
 
-#[path = "🫥️visibility/🦀️.rs"]
-pub mod visibility;
-#[path = "📍️placement/🦀️.rs"]
-pub mod placement;
-#[path = "🧩️extensions/🦀️.rs"]
-pub mod extensions;
+pub use semio_s_artifact_forms_forms_diff::editor::forms::questions::visibility;
+pub use semio_s_artifact_forms_forms_tests_3::editor::forms::questions::placement;
+pub use semio_s_artifact_forms_forms_diff::editor::forms::questions::extensions;
 
 use crate::{FormQuestion, FormVectorField};
 use crate::standards::v1::subsets::any::io::text::snapshot::value_to_dsl;
@@ -66,9 +63,7 @@ pub fn patch_question(question: &FormQuestion, field: &str, value: &Value) -> Re
     Ok(next)
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️patches/🦀️.rs"]
-mod patch_tests;
+
 
 /// 🌱️ A blank question of the given `kind`/`id` — every field defaulted to `None`.
 pub fn question_shell(id: String, label: String, kind: String) -> FormQuestion {

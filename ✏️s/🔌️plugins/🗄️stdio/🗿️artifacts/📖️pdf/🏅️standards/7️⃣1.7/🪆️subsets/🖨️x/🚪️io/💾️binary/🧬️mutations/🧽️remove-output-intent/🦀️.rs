@@ -1,6 +1,6 @@
 //! 🧽️ Direct binary codec for `remove-output-intent`.
 
-use crate::standards::v1_7::subsets::x::schema::mutations::RemoveOutputIntent;
+use crate::standards::v1_7::subsets::x::schema::mutations::remove_output_intent::RemoveOutputIntent;
 
 //#region 🔖️Identity
 pub const TAG: u8 = 3;
@@ -21,7 +21,5 @@ pub fn decode(bytes: &[u8]) -> Result<RemoveOutputIntent, String> {
 //#endregion 🔖️Codec
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

@@ -1,13 +1,13 @@
 //! 📦️ Shooting play app commands — asset activation, bulk field patches, creation and GLB import.
 
 use crate::editor::shooting::config::{ShootingConfig, ShootingConfigMutation};
-use crate::editor::shooting::ShootingDispatchCtx;
+use crate::editor::shooting::ui_helpers_and_io::ShootingDispatchCtx;
 use crate::mutations::change_asset_url::ChangeAssetUrl;
 use crate::mutations::create_asset::CreateAsset;
 use crate::mutations::rename_asset::RenameAsset;
 use crate::mutations::set_active_asset::SetActiveAsset as SetActiveAssetMutation;
 use crate::standards::v1::subsets::any::schema::mutations::ShootingMutation;
-use crate::standards::v1::subsets::any::schema::next_shooting_id;
+use crate::next_shooting_id;
 use crate::{ShootingAsset, ShootingSnapshot};
 use semio_framework_pack_json::json;
 use semio_framework_pack_json::Value;
@@ -141,7 +141,5 @@ pub mod import_asset_request {
 //#endregion 🔖️ImportAssetRequest
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

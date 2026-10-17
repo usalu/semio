@@ -1,0 +1,68 @@
+{
+ "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📺️renderer/🧲️geometry-targets/🟦️.tsx",
+ "importers": "auto",
+ "children": [
+  {
+   "dir": "📐️preview-layout",
+   "doc": "/** 📐️ CAD renderer geometry targets: the box and sphere preview layouts, the vector and bounding box readers and the display preview transforms. */",
+   "lines": [
+    [
+     259,
+     261
+    ],
+    [
+     331,
+     444
+    ]
+   ]
+  },
+  {
+   "dir": "🎯️pick-model",
+   "doc": "/** 🎯️ CAD renderer geometry targets: the spatial pick kinds, targets and requests, the visibility and typology toggles and the scene visibility resolution. */",
+   "lines": [
+    [
+     448,
+     766
+    ]
+   ]
+  },
+  {
+   "dir": "🧬️geometry-index",
+   "doc": "/** 🧬️ CAD renderer geometry targets: the scene bounds, the geometry buckets and entity points and segments, the object and typology indexes and the creation and filtering of the spatial pick targets. */",
+   "lines": [
+    [
+     209,
+     248
+    ],
+    [
+     768,
+     1179
+    ]
+   ]
+  },
+  {
+   "dir": "🎨️pick-styling",
+   "doc": "/** 🎨️ CAD renderer geometry targets: the pick target styles and hover keys and the typology pattern material. */",
+   "lines": [
+    [
+     1183,
+     1333
+    ]
+   ]
+  },
+  {
+   "dir": "🧊️mesh-transfers",
+   "doc": "/** 🧊️ CAD renderer geometry targets: the tessellation worker hooks, the mesh transfers and the visible solid and face meshes of a model definition. */",
+   "lines": [
+    [
+     61,
+     207
+    ],
+    [
+     1341,
+     1537
+    ]
+   ]
+  }
+ ]
+}

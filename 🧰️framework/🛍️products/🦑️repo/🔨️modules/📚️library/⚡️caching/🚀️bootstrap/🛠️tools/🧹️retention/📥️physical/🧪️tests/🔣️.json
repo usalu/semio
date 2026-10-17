@@ -237,5 +237,2289 @@
       }
     ],
     "releaseDelayMilliseconds": 20
-  }
+  },
+  "selectedIntents": [
+    {
+      "name": "one",
+      "value": {
+        "version": 1,
+        "mode": "selected-generations",
+        "identities": [
+          "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        ]
+      },
+      "accepted": true
+    },
+    {
+      "name": "sorted",
+      "value": {
+        "version": 1,
+        "mode": "selected-generations",
+        "identities": [
+          "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        ]
+      },
+      "accepted": true
+    },
+    {
+      "name": "empty",
+      "value": {
+        "version": 1,
+        "mode": "selected-generations",
+        "identities": []
+      },
+      "accepted": false
+    },
+    {
+      "name": "duplicate",
+      "value": {
+        "version": 1,
+        "mode": "selected-generations",
+        "identities": [
+          "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        ]
+      },
+      "accepted": false
+    },
+    {
+      "name": "unsorted",
+      "value": {
+        "version": 1,
+        "mode": "selected-generations",
+        "identities": [
+          "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        ]
+      },
+      "accepted": false
+    },
+    {
+      "name": "foreign",
+      "value": {
+        "version": 1,
+        "mode": "selected-generations",
+        "identities": [
+          "rustup"
+        ]
+      },
+      "accepted": false
+    },
+    {
+      "name": "physical-minfree",
+      "value": {
+        "version": 1,
+        "mode": "selected-generations",
+        "identities": [
+          "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        ],
+        "minimumAvailableBytes": 2147483648
+      },
+      "accepted": false
+    },
+    {
+      "name": "too-many",
+      "value": {
+        "version": 1,
+        "mode": "selected-generations",
+        "identities": [
+          "0000000000000000000000000000000000000000000000000000000000000000",
+          "0000000000000000000000000000000000000000000000000000000000000001",
+          "0000000000000000000000000000000000000000000000000000000000000002",
+          "0000000000000000000000000000000000000000000000000000000000000003",
+          "0000000000000000000000000000000000000000000000000000000000000004",
+          "0000000000000000000000000000000000000000000000000000000000000005",
+          "0000000000000000000000000000000000000000000000000000000000000006",
+          "0000000000000000000000000000000000000000000000000000000000000007",
+          "0000000000000000000000000000000000000000000000000000000000000008",
+          "0000000000000000000000000000000000000000000000000000000000000009",
+          "000000000000000000000000000000000000000000000000000000000000000a",
+          "000000000000000000000000000000000000000000000000000000000000000b",
+          "000000000000000000000000000000000000000000000000000000000000000c",
+          "000000000000000000000000000000000000000000000000000000000000000d",
+          "000000000000000000000000000000000000000000000000000000000000000e",
+          "000000000000000000000000000000000000000000000000000000000000000f",
+          "0000000000000000000000000000000000000000000000000000000000000010",
+          "0000000000000000000000000000000000000000000000000000000000000011",
+          "0000000000000000000000000000000000000000000000000000000000000012",
+          "0000000000000000000000000000000000000000000000000000000000000013",
+          "0000000000000000000000000000000000000000000000000000000000000014",
+          "0000000000000000000000000000000000000000000000000000000000000015",
+          "0000000000000000000000000000000000000000000000000000000000000016",
+          "0000000000000000000000000000000000000000000000000000000000000017",
+          "0000000000000000000000000000000000000000000000000000000000000018",
+          "0000000000000000000000000000000000000000000000000000000000000019",
+          "000000000000000000000000000000000000000000000000000000000000001a",
+          "000000000000000000000000000000000000000000000000000000000000001b",
+          "000000000000000000000000000000000000000000000000000000000000001c",
+          "000000000000000000000000000000000000000000000000000000000000001d",
+          "000000000000000000000000000000000000000000000000000000000000001e",
+          "000000000000000000000000000000000000000000000000000000000000001f",
+          "0000000000000000000000000000000000000000000000000000000000000020",
+          "0000000000000000000000000000000000000000000000000000000000000021",
+          "0000000000000000000000000000000000000000000000000000000000000022",
+          "0000000000000000000000000000000000000000000000000000000000000023",
+          "0000000000000000000000000000000000000000000000000000000000000024",
+          "0000000000000000000000000000000000000000000000000000000000000025",
+          "0000000000000000000000000000000000000000000000000000000000000026",
+          "0000000000000000000000000000000000000000000000000000000000000027",
+          "0000000000000000000000000000000000000000000000000000000000000028",
+          "0000000000000000000000000000000000000000000000000000000000000029",
+          "000000000000000000000000000000000000000000000000000000000000002a",
+          "000000000000000000000000000000000000000000000000000000000000002b",
+          "000000000000000000000000000000000000000000000000000000000000002c",
+          "000000000000000000000000000000000000000000000000000000000000002d",
+          "000000000000000000000000000000000000000000000000000000000000002e",
+          "000000000000000000000000000000000000000000000000000000000000002f",
+          "0000000000000000000000000000000000000000000000000000000000000030",
+          "0000000000000000000000000000000000000000000000000000000000000031",
+          "0000000000000000000000000000000000000000000000000000000000000032",
+          "0000000000000000000000000000000000000000000000000000000000000033",
+          "0000000000000000000000000000000000000000000000000000000000000034",
+          "0000000000000000000000000000000000000000000000000000000000000035",
+          "0000000000000000000000000000000000000000000000000000000000000036",
+          "0000000000000000000000000000000000000000000000000000000000000037",
+          "0000000000000000000000000000000000000000000000000000000000000038",
+          "0000000000000000000000000000000000000000000000000000000000000039",
+          "000000000000000000000000000000000000000000000000000000000000003a",
+          "000000000000000000000000000000000000000000000000000000000000003b",
+          "000000000000000000000000000000000000000000000000000000000000003c",
+          "000000000000000000000000000000000000000000000000000000000000003d",
+          "000000000000000000000000000000000000000000000000000000000000003e",
+          "000000000000000000000000000000000000000000000000000000000000003f",
+          "0000000000000000000000000000000000000000000000000000000000000040"
+        ]
+      },
+      "accepted": false
+    }
+  ],
+  "readContexts": [
+    {
+      "name": "ordinary-projection",
+      "operation": "project",
+      "fault": "none",
+      "accepted": true,
+      "events": [
+        "custody"
+      ]
+    },
+    {
+      "name": "store-copy",
+      "operation": "project",
+      "fault": "copy-store",
+      "accepted": false,
+      "events": [
+        "custody"
+      ]
+    },
+    {
+      "name": "closed-projection",
+      "operation": "project",
+      "fault": "owner-closed",
+      "accepted": false,
+      "events": [
+        "custody"
+      ]
+    },
+    {
+      "name": "live-read-check",
+      "operation": "check",
+      "fault": "none",
+      "accepted": true,
+      "events": [
+        "custody",
+        "custody"
+      ]
+    },
+    {
+      "name": "closed-read-check",
+      "operation": "check",
+      "fault": "owner-closed",
+      "accepted": false,
+      "events": [
+        "custody",
+        "custody"
+      ]
+    },
+    {
+      "name": "foreign-control",
+      "operation": "check",
+      "fault": "wrong-control",
+      "accepted": false,
+      "events": [
+        "custody",
+        "custody"
+      ]
+    },
+    {
+      "name": "read-recheck",
+      "operation": "recheck",
+      "fault": "none",
+      "accepted": true,
+      "events": [
+        "custody",
+        "custody",
+        "read",
+        "custody"
+      ]
+    },
+    {
+      "name": "read-failure",
+      "operation": "recheck",
+      "fault": "read",
+      "accepted": false,
+      "events": [
+        "custody",
+        "custody",
+        "read"
+      ]
+    },
+    {
+      "name": "image-recheck",
+      "operation": "image",
+      "fault": "none",
+      "accepted": true,
+      "events": [
+        "custody",
+        "custody",
+        "image",
+        "custody"
+      ]
+    },
+    {
+      "name": "image-failure",
+      "operation": "image",
+      "fault": "image",
+      "accepted": false,
+      "events": [
+        "custody",
+        "custody",
+        "image"
+      ]
+    }
+  ],
+  "readCustodies": [
+    {
+      "name": "exact",
+      "registered": true,
+      "live": true,
+      "sameStore": true,
+      "sameReservation": true,
+      "workspace": true,
+      "id": true,
+      "root": true,
+      "accepted": true
+    },
+    {
+      "name": "registered",
+      "registered": false,
+      "live": true,
+      "sameStore": true,
+      "sameReservation": true,
+      "workspace": true,
+      "id": true,
+      "root": true,
+      "accepted": false
+    },
+    {
+      "name": "live",
+      "registered": true,
+      "live": false,
+      "sameStore": true,
+      "sameReservation": true,
+      "workspace": true,
+      "id": true,
+      "root": true,
+      "accepted": false
+    },
+    {
+      "name": "sameStore",
+      "registered": true,
+      "live": true,
+      "sameStore": false,
+      "sameReservation": true,
+      "workspace": true,
+      "id": true,
+      "root": true,
+      "accepted": false
+    },
+    {
+      "name": "sameReservation",
+      "registered": true,
+      "live": true,
+      "sameStore": true,
+      "sameReservation": false,
+      "workspace": true,
+      "id": true,
+      "root": true,
+      "accepted": false
+    },
+    {
+      "name": "workspace",
+      "registered": true,
+      "live": true,
+      "sameStore": true,
+      "sameReservation": true,
+      "workspace": false,
+      "id": true,
+      "root": true,
+      "accepted": false
+    },
+    {
+      "name": "id",
+      "registered": true,
+      "live": true,
+      "sameStore": true,
+      "sameReservation": true,
+      "workspace": true,
+      "id": false,
+      "root": true,
+      "accepted": false
+    },
+    {
+      "name": "root",
+      "registered": true,
+      "live": true,
+      "sameStore": true,
+      "sameReservation": true,
+      "workspace": true,
+      "id": true,
+      "root": false,
+      "accepted": false
+    }
+  ],
+  "binaryReads": [
+    {
+      "name": "none",
+      "fault": "none",
+      "accepted": true
+    },
+    {
+      "name": "bytes",
+      "fault": "bytes",
+      "accepted": false
+    },
+    {
+      "name": "inode",
+      "fault": "inode",
+      "accepted": false
+    },
+    {
+      "name": "receipt",
+      "fault": "receipt",
+      "accepted": false
+    },
+    {
+      "name": "symlink",
+      "fault": "symlink",
+      "accepted": false
+    }
+  ],
+  "copiedReads": [
+    {
+      "name": "none",
+      "fault": "none",
+      "accepted": true
+    },
+    {
+      "name": "unknown",
+      "fault": "unknown",
+      "accepted": false
+    },
+    {
+      "name": "hardlink",
+      "fault": "hardlink",
+      "accepted": false
+    },
+    {
+      "name": "mutated-after",
+      "fault": "mutated-after",
+      "accepted": false
+    },
+    {
+      "name": "foreign-context",
+      "fault": "foreign-context",
+      "accepted": false
+    },
+    {
+      "name": "copied-inventory",
+      "fault": "copied-inventory",
+      "accepted": false
+    }
+  ],
+  "fundedReads": [
+    {
+      "name": "none",
+      "fault": "none",
+      "accepted": true
+    },
+    {
+      "name": "reservation",
+      "fault": "reservation",
+      "accepted": false
+    },
+    {
+      "name": "port",
+      "fault": "port",
+      "accepted": false
+    },
+    {
+      "name": "backing",
+      "fault": "backing",
+      "accepted": false
+    },
+    {
+      "name": "root",
+      "fault": "root",
+      "accepted": false
+    },
+    {
+      "name": "phase",
+      "fault": "phase",
+      "accepted": false
+    },
+    {
+      "name": "closed",
+      "fault": "closed",
+      "accepted": false
+    }
+  ],
+  "treeReads": [
+    {
+      "name": "none",
+      "fault": "none",
+      "accepted": true
+    },
+    {
+      "name": "unknown-parent",
+      "fault": "unknown-parent",
+      "accepted": false
+    },
+    {
+      "name": "root-symlink",
+      "fault": "root-symlink",
+      "accepted": false
+    },
+    {
+      "name": "root-replacement",
+      "fault": "root-replacement",
+      "accepted": false
+    },
+    {
+      "name": "child-replacement",
+      "fault": "child-replacement",
+      "accepted": false
+    },
+    {
+      "name": "escaped",
+      "fault": "escaped",
+      "accepted": false
+    },
+    {
+      "name": "unawaited",
+      "fault": "unawaited",
+      "accepted": true
+    }
+  ],
+  "indexReads": [
+    {
+      "name": "none",
+      "fault": "none",
+      "accepted": true
+    },
+    {
+      "name": "bytes",
+      "fault": "bytes",
+      "accepted": false
+    },
+    {
+      "name": "extra",
+      "fault": "extra",
+      "accepted": true
+    },
+    {
+      "name": "writable",
+      "fault": "writable",
+      "accepted": false
+    },
+    {
+      "name": "symlink",
+      "fault": "symlink",
+      "accepted": false
+    },
+    {
+      "name": "raw-index",
+      "fault": "raw-index",
+      "accepted": false
+    },
+    {
+      "name": "identity",
+      "fault": "identity",
+      "accepted": false
+    },
+    {
+      "name": "sort",
+      "fault": "sort",
+      "accepted": false
+    }
+  ],
+  "derivativeReads": [
+    {
+      "name": "none",
+      "fault": "none",
+      "accepted": true,
+      "callback": true
+    },
+    {
+      "name": "identity",
+      "fault": "identity",
+      "accepted": false,
+      "callback": false
+    },
+    {
+      "name": "authorizer",
+      "fault": "authorizer",
+      "accepted": false,
+      "callback": false
+    },
+    {
+      "name": "source-index",
+      "fault": "source-index",
+      "accepted": false,
+      "callback": false
+    },
+    {
+      "name": "shared-inode",
+      "fault": "shared-inode",
+      "accepted": false,
+      "callback": false
+    },
+    {
+      "name": "namespace-extra",
+      "fault": "namespace-extra",
+      "accepted": false,
+      "callback": false
+    },
+    {
+      "name": "pristine-mutation",
+      "fault": "pristine-mutation",
+      "accepted": false,
+      "callback": true
+    },
+    {
+      "name": "body-undefined",
+      "fault": "body-undefined",
+      "accepted": false,
+      "callback": true
+    },
+    {
+      "name": "body-frozen",
+      "fault": "body-frozen",
+      "accepted": false,
+      "callback": true
+    },
+    {
+      "name": "escaped",
+      "fault": "escaped",
+      "accepted": false,
+      "callback": true
+    },
+    {
+      "name": "base-busy",
+      "fault": "base-busy",
+      "accepted": false,
+      "callback": false
+    }
+  ],
+  "readCloseFailures": [
+    {
+      "name": "value-none",
+      "body": "value",
+      "close": "none"
+    },
+    {
+      "name": "value-distinct",
+      "body": "value",
+      "close": "distinct"
+    },
+    {
+      "name": "undefined-none",
+      "body": "undefined",
+      "close": "none"
+    },
+    {
+      "name": "undefined-distinct",
+      "body": "undefined",
+      "close": "distinct"
+    },
+    {
+      "name": "undefined-same",
+      "body": "undefined",
+      "close": "same"
+    },
+    {
+      "name": "frozen-distinct",
+      "body": "frozen",
+      "close": "distinct"
+    },
+    {
+      "name": "frozen-same",
+      "body": "frozen",
+      "close": "same"
+    }
+  ],
+  "witnessReads": [
+    {
+      "name": "none",
+      "fault": "none",
+      "accepted": true
+    },
+    {
+      "name": "malformed",
+      "fault": "malformed",
+      "accepted": false
+    },
+    {
+      "name": "symlink",
+      "fault": "symlink",
+      "accepted": false
+    },
+    {
+      "name": "hardlink",
+      "fault": "hardlink",
+      "accepted": false
+    },
+    {
+      "name": "root",
+      "fault": "root",
+      "accepted": false
+    },
+    {
+      "name": "nonce",
+      "fault": "nonce",
+      "accepted": false
+    },
+    {
+      "name": "directory",
+      "fault": "directory",
+      "accepted": false
+    },
+    {
+      "name": "changed-after",
+      "fault": "changed-after",
+      "accepted": false
+    },
+    {
+      "name": "copied-context",
+      "fault": "copied-context",
+      "accepted": false
+    },
+    {
+      "name": "roster-added",
+      "fault": "roster-added",
+      "accepted": false
+    }
+  ],
+  "activationReads": [
+    {
+      "name": "none",
+      "target": "canonical",
+      "metadata": true,
+      "changed": false,
+      "copied": false,
+      "accepted": true
+    },
+    {
+      "name": "foreign",
+      "target": "foreign",
+      "metadata": true,
+      "changed": false,
+      "copied": false,
+      "accepted": false
+    },
+    {
+      "name": "malformed",
+      "target": "malformed",
+      "metadata": true,
+      "changed": false,
+      "copied": false,
+      "accepted": false
+    },
+    {
+      "name": "missing",
+      "target": "missing",
+      "metadata": true,
+      "changed": false,
+      "copied": false,
+      "accepted": false
+    },
+    {
+      "name": "metadata",
+      "target": "canonical",
+      "metadata": false,
+      "changed": false,
+      "copied": false,
+      "accepted": false
+    },
+    {
+      "name": "changed",
+      "target": "canonical",
+      "metadata": true,
+      "changed": true,
+      "copied": false,
+      "accepted": false
+    },
+    {
+      "name": "copied",
+      "target": "canonical",
+      "metadata": true,
+      "changed": false,
+      "copied": true,
+      "accepted": false
+    }
+  ],
+  "objectReads": [
+    {
+      "name": "none",
+      "fault": "none",
+      "accepted": true,
+      "released": true
+    },
+    {
+      "name": "shared",
+      "fault": "shared",
+      "accepted": true,
+      "released": false
+    },
+    {
+      "name": "receipt",
+      "fault": "receipt",
+      "accepted": false,
+      "released": false
+    },
+    {
+      "name": "bytes",
+      "fault": "bytes",
+      "accepted": false,
+      "released": false
+    },
+    {
+      "name": "symlink",
+      "fault": "symlink",
+      "accepted": false,
+      "released": false
+    },
+    {
+      "name": "changed-after",
+      "fault": "changed-after",
+      "accepted": false,
+      "released": false
+    },
+    {
+      "name": "copied-proof",
+      "fault": "copied-proof",
+      "accepted": false,
+      "released": false
+    },
+    {
+      "name": "foreign-context",
+      "fault": "foreign-context",
+      "accepted": false,
+      "released": false
+    }
+  ],
+  "selectedCommands": [
+    {
+      "name": "none",
+      "fault": "none",
+      "accepted": true
+    },
+    {
+      "name": "observe",
+      "fault": "observe",
+      "accepted": true
+    },
+    {
+      "name": "extra",
+      "fault": "extra",
+      "accepted": false
+    },
+    {
+      "name": "operation",
+      "fault": "operation",
+      "accepted": false
+    },
+    {
+      "name": "selection-mode",
+      "fault": "selection-mode",
+      "accepted": false
+    },
+    {
+      "name": "duplicate",
+      "fault": "duplicate",
+      "accepted": false
+    },
+    {
+      "name": "parent-purpose",
+      "fault": "parent-purpose",
+      "accepted": false
+    },
+    {
+      "name": "action",
+      "fault": "action",
+      "accepted": false
+    },
+    {
+      "name": "owner",
+      "fault": "owner",
+      "accepted": false
+    },
+    {
+      "name": "getter",
+      "fault": "getter",
+      "accepted": false
+    },
+    {
+      "name": "proxy",
+      "fault": "proxy",
+      "accepted": false
+    }
+  ],
+  "selectedCommandInput": {
+    "version": 1,
+    "operation": "retire",
+    "selection": {
+      "version": 1,
+      "mode": "selected-generations",
+      "identities": [
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      ]
+    },
+    "parent": {
+      "version": 1,
+      "purpose": "mounted-parent-maintenance",
+      "wait": false,
+      "receiptSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "directory": {
+        "dev": 1,
+        "ino": 2,
+        "mode": 16877
+      },
+      "backing": {
+        "dev": 1,
+        "ino": 3,
+        "size": 33554432,
+        "allocatedBytes": 33554432
+      },
+      "root": {
+        "dev": 1,
+        "ino": 4,
+        "mode": 16877
+      }
+    },
+    "artifact": {
+      "version": 1,
+      "purpose": "current-artifact-maintenance",
+      "action": "retain-allocation-payload",
+      "policy": {
+        "version": 1,
+        "root": "/source-model/tools",
+        "leaseDirectory": "/source-model/leases",
+        "capacityBytes": 33554432,
+        "maximumWorkspaceBytes": 33554432,
+        "maximumArtifactBytes": 33554432
+      },
+      "backing": {
+        "identity": "source-model",
+        "root": "/source-model/tools",
+        "maximumPhysicalBytes": 33554432
+      },
+      "journalSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "journalBytes": 512,
+      "allocation": {
+        "id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "owner": "repository:tooling-store",
+        "kind": "artifact-publication",
+        "bytes": 33554432,
+        "phase": "committed"
+      }
+    }
+  },
+  "selectedPhysical": [
+    {
+      "name": "none",
+      "fault": "none",
+      "completed": true
+    },
+    {
+      "name": "initial-unknown",
+      "fault": "initial-unknown",
+      "completed": false
+    },
+    {
+      "name": "late-unknown",
+      "fault": "late-unknown",
+      "completed": false
+    },
+    {
+      "name": "changed-file",
+      "fault": "changed-file",
+      "completed": false
+    },
+    {
+      "name": "copied-owner",
+      "fault": "copied-owner",
+      "completed": false
+    },
+    {
+      "name": "copied-control",
+      "fault": "copied-control",
+      "completed": false
+    },
+    {
+      "name": "row-drift",
+      "fault": "row-drift",
+      "completed": false
+    },
+    {
+      "name": "late-row-drift",
+      "fault": "late-row-drift",
+      "completed": false
+    },
+    {
+      "name": "cancelled",
+      "fault": "cancelled",
+      "completed": false
+    }
+  ],
+  "selectedOwners": [
+    {
+      "name": "observe",
+      "operation": "observe",
+      "fault": "none",
+      "completed": true
+    },
+    {
+      "name": "none",
+      "operation": "retire",
+      "fault": "none",
+      "completed": true
+    },
+    {
+      "name": "active",
+      "operation": "retire",
+      "fault": "active",
+      "completed": false
+    },
+    {
+      "name": "policy",
+      "operation": "retire",
+      "fault": "policy",
+      "completed": false
+    },
+    {
+      "name": "registry-busy",
+      "operation": "retire",
+      "fault": "registry-busy",
+      "completed": false
+    },
+    {
+      "name": "generation-busy",
+      "operation": "retire",
+      "fault": "generation-busy",
+      "completed": false
+    },
+    {
+      "name": "artifact",
+      "operation": "retire",
+      "fault": "artifact",
+      "completed": false
+    },
+    {
+      "name": "activation",
+      "operation": "retire",
+      "fault": "activation",
+      "completed": false
+    },
+    {
+      "name": "late-cas",
+      "operation": "retire",
+      "fault": "late-cas",
+      "completed": false
+    },
+    {
+      "name": "undefined-close",
+      "operation": "retire",
+      "fault": "undefined-close",
+      "completed": false
+    },
+    {
+      "name": "windows",
+      "operation": "retire",
+      "fault": "windows",
+      "completed": false
+    },
+    {
+      "name": "copied-original",
+      "operation": "retire",
+      "fault": "copied-original",
+      "completed": false
+    },
+    {
+      "name": "copied-control",
+      "operation": "retire",
+      "fault": "copied-control",
+      "completed": false
+    },
+    {
+      "name": "arity",
+      "operation": "retire",
+      "fault": "arity",
+      "completed": false
+    },
+    {
+      "name": "receipt",
+      "operation": "retire",
+      "fault": "receipt",
+      "completed": false
+    }
+  ],
+  "selectedInputs": [
+    {
+      "name": "none",
+      "fault": "none",
+      "accepted": true
+    },
+    {
+      "name": "hash",
+      "fault": "hash",
+      "accepted": false
+    },
+    {
+      "name": "symlink",
+      "fault": "symlink",
+      "accepted": false
+    },
+    {
+      "name": "oversize",
+      "fault": "oversize",
+      "accepted": false
+    },
+    {
+      "name": "changed",
+      "fault": "changed",
+      "accepted": false
+    },
+    {
+      "name": "foreign",
+      "fault": "foreign",
+      "accepted": false
+    },
+    {
+      "name": "command",
+      "fault": "command",
+      "accepted": false
+    },
+    {
+      "name": "utf8",
+      "fault": "utf8",
+      "accepted": false
+    }
+  ],
+  "selectedLaunches": [
+    {
+      "name": "observe",
+      "mode": "--selected-observe",
+      "fault": "none",
+      "accepted": true
+    },
+    {
+      "name": "retire",
+      "mode": "--selected-retire",
+      "fault": "none",
+      "accepted": true
+    },
+    {
+      "name": "unknown mode",
+      "mode": "--selected-observe",
+      "fault": "mode",
+      "accepted": false
+    },
+    {
+      "name": "extra argument",
+      "mode": "--selected-retire",
+      "fault": "count",
+      "accepted": false
+    },
+    {
+      "name": "bad digest",
+      "mode": "--selected-observe",
+      "fault": "sha",
+      "accepted": false
+    },
+    {
+      "name": "operation mismatch",
+      "mode": "--selected-retire",
+      "fault": "operation",
+      "accepted": false
+    },
+    {
+      "name": "fixed owner fails",
+      "mode": "--selected-retire",
+      "fault": "owner",
+      "accepted": false
+    },
+    {
+      "name": "input fails",
+      "mode": "--selected-observe",
+      "fault": "input",
+      "accepted": false
+    }
+  ],
+  "selectedScopes": [
+    {
+      "id": "success",
+      "primary": "none",
+      "old": false,
+      "abort": false,
+      "rescue": false
+    },
+    {
+      "id": "undefined",
+      "primary": "undefined",
+      "old": false,
+      "abort": true,
+      "rescue": false
+    },
+    {
+      "id": "frozen",
+      "primary": "frozen",
+      "old": false,
+      "abort": true,
+      "rescue": false
+    },
+    {
+      "id": "old",
+      "primary": "frozen",
+      "old": true,
+      "abort": true,
+      "rescue": true
+    }
+  ],
+  "selectedPlanRequests": [
+    {
+      "name": "none",
+      "fault": "none",
+      "accepted": true
+    },
+    {
+      "name": "extra",
+      "fault": "extra",
+      "accepted": false
+    },
+    {
+      "name": "purpose",
+      "fault": "purpose",
+      "accepted": false
+    },
+    {
+      "name": "parent",
+      "fault": "parent",
+      "accepted": false
+    },
+    {
+      "name": "getter",
+      "fault": "getter",
+      "accepted": false
+    },
+    {
+      "name": "proxy",
+      "fault": "proxy",
+      "accepted": false
+    }
+  ],
+  "selectedPlans": [
+    {
+      "name": "none",
+      "fault": "none",
+      "accepted": true
+    },
+    {
+      "name": "copied-original",
+      "fault": "copied-original",
+      "accepted": false
+    },
+    {
+      "name": "copied-control",
+      "fault": "copied-control",
+      "accepted": false
+    },
+    {
+      "name": "windows",
+      "fault": "windows",
+      "accepted": false
+    },
+    {
+      "name": "row",
+      "fault": "row",
+      "accepted": false
+    },
+    {
+      "name": "charge",
+      "fault": "charge",
+      "accepted": false
+    },
+    {
+      "name": "receipt",
+      "fault": "receipt",
+      "accepted": false
+    },
+    {
+      "name": "registry-busy",
+      "fault": "registry-busy",
+      "accepted": false
+    },
+    {
+      "name": "generation-busy",
+      "fault": "generation-busy",
+      "accepted": false
+    },
+    {
+      "name": "unknown-role",
+      "fault": "unknown-role",
+      "accepted": false
+    },
+    {
+      "name": "unknown-generation",
+      "fault": "unknown-generation",
+      "accepted": false
+    },
+    {
+      "name": "changed",
+      "fault": "changed",
+      "accepted": false
+    },
+    {
+      "name": "journal",
+      "fault": "journal",
+      "accepted": false
+    },
+    {
+      "name": "namespace",
+      "fault": "namespace",
+      "accepted": false
+    },
+    {
+      "name": "only current active generation",
+      "fault": "only-active",
+      "accepted": true
+    },
+    {
+      "name": "undefined primary plus infrastructure close",
+      "fault": "undefined-close",
+      "accepted": false
+    },
+    {
+      "name": "staging retained outside candidate selection",
+      "fault": "staging",
+      "accepted": true
+    },
+    {
+      "name": "same-name staging stamp drift refuses",
+      "fault": "staging-drift",
+      "accepted": false
+    },
+    {
+      "name": "selected",
+      "fault": "selected",
+      "accepted": true
+    },
+    {
+      "name": "selected-active",
+      "fault": "selected-active",
+      "accepted": true
+    },
+    {
+      "name": "selected-missing",
+      "fault": "selected-missing",
+      "accepted": false
+    },
+    {
+      "name": "selected-unqualified",
+      "fault": "selected-unqualified",
+      "accepted": false
+    },
+    {
+      "name": "selected-preserves-unqualified",
+      "fault": "selected-preserves-unqualified",
+      "accepted": true
+    }
+  ],
+  "selectedCensusInputs": [
+    {
+      "name": "none",
+      "fault": "none",
+      "accepted": true
+    },
+    {
+      "name": "entry",
+      "fault": "entry",
+      "accepted": false
+    },
+    {
+      "name": "duplicate",
+      "fault": "duplicate",
+      "accepted": false
+    },
+    {
+      "name": "missing",
+      "fault": "missing",
+      "accepted": false
+    },
+    {
+      "name": "unmounted",
+      "fault": "unmounted",
+      "accepted": false
+    },
+    {
+      "name": "declaration",
+      "fault": "declaration",
+      "accepted": false
+    },
+    {
+      "name": "directory",
+      "fault": "directory",
+      "accepted": false
+    },
+    {
+      "name": "unsafe-integer",
+      "fault": "unsafe-integer",
+      "accepted": false
+    },
+    {
+      "name": "receipt",
+      "fault": "receipt",
+      "accepted": false
+    },
+    {
+      "name": "identity-entry",
+      "fault": "identity-entry",
+      "accepted": true
+    },
+    {
+      "name": "identity-short",
+      "fault": "identity-short",
+      "accepted": false
+    },
+    {
+      "name": "identity-extra",
+      "fault": "identity-extra",
+      "accepted": false
+    },
+    {
+      "name": "identity-bad",
+      "fault": "identity-bad",
+      "accepted": false
+    }
+  ],
+  "selectedPlanLaunches": [
+    {
+      "name": "none",
+      "fault": "none",
+      "accepted": true
+    },
+    {
+      "name": "input",
+      "fault": "input",
+      "accepted": false
+    },
+    {
+      "name": "owner",
+      "fault": "owner",
+      "accepted": false
+    },
+    {
+      "name": "busy",
+      "fault": "busy",
+      "accepted": false
+    },
+    {
+      "name": "operation",
+      "fault": "operation",
+      "accepted": false
+    },
+    {
+      "name": "hash",
+      "fault": "hash",
+      "accepted": false
+    },
+    {
+      "name": "explicit selected identity stays DATA",
+      "fault": "identity",
+      "accepted": true
+    }
+  ],
+  "selectedPlanRoleDiagnostics": [
+    {
+      "mode": "unknown",
+      "delivery": "normal",
+      "accepted": true
+    },
+    {
+      "mode": "foreign-device",
+      "delivery": "normal",
+      "accepted": true
+    },
+    {
+      "mode": "link",
+      "delivery": "normal",
+      "accepted": true
+    },
+    {
+      "mode": "wrong-directory",
+      "delivery": "normal",
+      "accepted": true
+    },
+    {
+      "mode": "wrong-file",
+      "delivery": "normal",
+      "accepted": true
+    },
+    {
+      "mode": "multiple-links",
+      "delivery": "normal",
+      "accepted": true
+    },
+    {
+      "mode": "unqualified-service",
+      "delivery": "normal",
+      "accepted": true
+    },
+    {
+      "mode": "too-many",
+      "delivery": "normal",
+      "accepted": false
+    },
+    {
+      "mode": "long-name",
+      "delivery": "normal",
+      "accepted": false
+    },
+    {
+      "mode": "bad-stamp",
+      "delivery": "normal",
+      "accepted": false
+    },
+    {
+      "mode": "no-reasons",
+      "delivery": "normal",
+      "accepted": false
+    },
+    {
+      "mode": "unknown-reason",
+      "delivery": "normal",
+      "accepted": false
+    },
+    {
+      "mode": "missing-name",
+      "delivery": "normal",
+      "accepted": false
+    },
+    {
+      "mode": "duplicate-names",
+      "delivery": "normal",
+      "accepted": false
+    },
+    {
+      "mode": "long-root",
+      "delivery": "normal",
+      "accepted": false
+    },
+    {
+      "mode": "newline-name",
+      "delivery": "normal",
+      "accepted": true
+    },
+    {
+      "mode": "unknown",
+      "delivery": "undefined",
+      "accepted": true
+    },
+    {
+      "mode": "unknown",
+      "delivery": "frozen",
+      "accepted": true
+    }
+  ],
+  "selectedPlanRoleDiagnosticPredicate": "!directory&&!file||row.dev!==before.dev||row.isSymbolicLink()||directory&&!row.isDirectory()||file&&(!row.isFile()||row.nlink!==1n)||name===protocol.service&&!service",
+  "selectedPlanProducerRoles": [
+    {
+      "name": "bazel",
+      "fault": "none",
+      "accepted": true
+    },
+    {
+      "name": "bazel",
+      "fault": "file",
+      "accepted": false
+    },
+    {
+      "name": "bazel",
+      "fault": "link",
+      "accepted": false
+    },
+    {
+      "name": "bazel",
+      "fault": "foreign",
+      "accepted": false
+    },
+    {
+      "name": "binaryen",
+      "fault": "none",
+      "accepted": true
+    },
+    {
+      "name": "binaryen",
+      "fault": "file",
+      "accepted": false
+    },
+    {
+      "name": "binaryen",
+      "fault": "link",
+      "accepted": false
+    },
+    {
+      "name": "binaryen",
+      "fault": "foreign",
+      "accepted": false
+    },
+    {
+      "name": "dashboard-cli",
+      "fault": "none",
+      "accepted": true
+    },
+    {
+      "name": "dashboard-cli",
+      "fault": "file",
+      "accepted": false
+    },
+    {
+      "name": "dashboard-cli",
+      "fault": "link",
+      "accepted": false
+    },
+    {
+      "name": "dashboard-cli",
+      "fault": "foreign",
+      "accepted": false
+    },
+    {
+      "name": "downloads",
+      "fault": "none",
+      "accepted": true
+    },
+    {
+      "name": "downloads",
+      "fault": "file",
+      "accepted": false
+    },
+    {
+      "name": "downloads",
+      "fault": "link",
+      "accepted": false
+    },
+    {
+      "name": "downloads",
+      "fault": "foreign",
+      "accepted": false
+    },
+    {
+      "name": "rc",
+      "fault": "none",
+      "accepted": true
+    },
+    {
+      "name": "rc",
+      "fault": "file",
+      "accepted": false
+    },
+    {
+      "name": "rc",
+      "fault": "link",
+      "accepted": false
+    },
+    {
+      "name": "rc",
+      "fault": "foreign",
+      "accepted": false
+    },
+    {
+      "name": "rg",
+      "fault": "none",
+      "accepted": true
+    },
+    {
+      "name": "rg",
+      "fault": "file",
+      "accepted": false
+    },
+    {
+      "name": "rg",
+      "fault": "link",
+      "accepted": false
+    },
+    {
+      "name": "rg",
+      "fault": "foreign",
+      "accepted": false
+    },
+    {
+      "name": "state",
+      "fault": "none",
+      "accepted": false
+    }
+  ],
+  "selectedPlanGenerationDiagnostics": [
+    {
+      "mode": "unknown",
+      "delivery": "normal",
+      "accepted": true
+    },
+    {
+      "mode": "unknown",
+      "delivery": "undefined",
+      "accepted": true
+    },
+    {
+      "mode": "unknown",
+      "delivery": "frozen",
+      "accepted": true
+    },
+    {
+      "mode": "newline",
+      "delivery": "normal",
+      "accepted": true
+    },
+    {
+      "mode": "valid",
+      "delivery": "normal",
+      "accepted": false
+    },
+    {
+      "mode": "empty",
+      "delivery": "normal",
+      "accepted": false
+    },
+    {
+      "mode": "too-many",
+      "delivery": "normal",
+      "accepted": false
+    },
+    {
+      "mode": "long-name",
+      "delivery": "normal",
+      "accepted": false
+    },
+    {
+      "mode": "duplicate",
+      "delivery": "normal",
+      "accepted": false
+    },
+    {
+      "mode": "long-root",
+      "delivery": "normal",
+      "accepted": false
+    },
+    {
+      "mode": "empty-name",
+      "delivery": "normal",
+      "accepted": false
+    }
+  ],
+  "selectedPlanStaging": [
+    {
+      "name": ".stage-Abcd12",
+      "fault": "none",
+      "accepted": true
+    },
+    {
+      "name": ".stage-Abcd12",
+      "fault": "file",
+      "accepted": false
+    },
+    {
+      "name": ".stage-Abcd12",
+      "fault": "link",
+      "accepted": false
+    },
+    {
+      "name": ".stage-Abcd12",
+      "fault": "foreign",
+      "accepted": false
+    },
+    {
+      "name": ".stage-Abcd12",
+      "fault": "parent-link",
+      "accepted": false
+    },
+    {
+      "name": ".stage-Abcd12",
+      "fault": "parent-foreign",
+      "accepted": false
+    },
+    {
+      "name": ".stage-Abcd12",
+      "fault": "parent-drift",
+      "accepted": false
+    },
+    {
+      "name": ".stage-drv-a-Abcd12",
+      "fault": "none",
+      "accepted": true
+    },
+    {
+      "name": ".stage-drv-a-Abcd12",
+      "fault": "file",
+      "accepted": false
+    },
+    {
+      "name": ".stage-drv-a-Abcd12",
+      "fault": "link",
+      "accepted": false
+    },
+    {
+      "name": ".stage-drv-a-Abcd12",
+      "fault": "foreign",
+      "accepted": false
+    },
+    {
+      "name": ".stage-drv-a-Abcd12",
+      "fault": "parent-link",
+      "accepted": false
+    },
+    {
+      "name": ".stage-drv-a-Abcd12",
+      "fault": "parent-foreign",
+      "accepted": false
+    },
+    {
+      "name": ".stage-drv-a-Abcd12",
+      "fault": "parent-drift",
+      "accepted": false
+    },
+    {
+      "name": ".stage-drv-b-Abcd12",
+      "fault": "none",
+      "accepted": true
+    },
+    {
+      "name": ".stage-drv-b-Abcd12",
+      "fault": "file",
+      "accepted": false
+    },
+    {
+      "name": ".stage-drv-b-Abcd12",
+      "fault": "link",
+      "accepted": false
+    },
+    {
+      "name": ".stage-drv-b-Abcd12",
+      "fault": "foreign",
+      "accepted": false
+    },
+    {
+      "name": ".stage-drv-b-Abcd12",
+      "fault": "parent-link",
+      "accepted": false
+    },
+    {
+      "name": ".stage-drv-b-Abcd12",
+      "fault": "parent-foreign",
+      "accepted": false
+    },
+    {
+      "name": ".stage-drv-b-Abcd12",
+      "fault": "parent-drift",
+      "accepted": false
+    },
+    {
+      "name": ".stage-drv-drain-Abcd12",
+      "fault": "none",
+      "accepted": true
+    },
+    {
+      "name": ".stage-drv-drain-Abcd12",
+      "fault": "file",
+      "accepted": false
+    },
+    {
+      "name": ".stage-drv-drain-Abcd12",
+      "fault": "link",
+      "accepted": false
+    },
+    {
+      "name": ".stage-drv-drain-Abcd12",
+      "fault": "foreign",
+      "accepted": false
+    },
+    {
+      "name": ".stage-drv-drain-Abcd12",
+      "fault": "parent-link",
+      "accepted": false
+    },
+    {
+      "name": ".stage-drv-drain-Abcd12",
+      "fault": "parent-foreign",
+      "accepted": false
+    },
+    {
+      "name": ".stage-drv-drain-Abcd12",
+      "fault": "parent-drift",
+      "accepted": false
+    },
+    {
+      "name": ".stage-unknown",
+      "fault": "none",
+      "accepted": false
+    },
+    {
+      "name": ".stage-ABCDE",
+      "fault": "none",
+      "accepted": false
+    },
+    {
+      "name": ".stage-ABCDEFG",
+      "fault": "none",
+      "accepted": false
+    },
+    {
+      "name": ".stage-drv-x-Abcd12",
+      "fault": "none",
+      "accepted": false
+    },
+    {
+      "name": ".stage-Ab_d12",
+      "fault": "none",
+      "accepted": false
+    },
+    {
+      "name": "other",
+      "fault": "none",
+      "accepted": false
+    },
+    {
+      "name": ".stage-",
+      "fault": "none",
+      "accepted": false
+    }
+  ],
+  "generationAuthenticationDiagnostics": [
+    {
+      "mode": "install-identity",
+      "delivery": "normal",
+      "reported": true
+    },
+    {
+      "mode": "install-identity",
+      "delivery": "undefined",
+      "reported": true
+    },
+    {
+      "mode": "install-identity",
+      "delivery": "frozen",
+      "reported": true
+    },
+    {
+      "mode": "marker-version",
+      "delivery": "normal",
+      "reported": true
+    },
+    {
+      "mode": "marker-version",
+      "delivery": "undefined",
+      "reported": true
+    },
+    {
+      "mode": "marker-version",
+      "delivery": "frozen",
+      "reported": true
+    },
+    {
+      "mode": "marker-digest",
+      "delivery": "normal",
+      "reported": true
+    },
+    {
+      "mode": "marker-digest",
+      "delivery": "undefined",
+      "reported": true
+    },
+    {
+      "mode": "marker-digest",
+      "delivery": "frozen",
+      "reported": true
+    },
+    {
+      "mode": "authorizer-receipt",
+      "delivery": "normal",
+      "reported": true
+    },
+    {
+      "mode": "authorizer-receipt",
+      "delivery": "undefined",
+      "reported": true
+    },
+    {
+      "mode": "authorizer-receipt",
+      "delivery": "frozen",
+      "reported": true
+    },
+    {
+      "mode": "bad-identity",
+      "delivery": "normal",
+      "reported": false
+    },
+    {
+      "mode": "too-many-inputs",
+      "delivery": "normal",
+      "reported": false
+    },
+    {
+      "mode": "bad-input",
+      "delivery": "normal",
+      "reported": false
+    },
+    {
+      "mode": "duplicate-input",
+      "delivery": "normal",
+      "reported": false
+    },
+    {
+      "mode": "long-directory",
+      "delivery": "normal",
+      "reported": false
+    }
+  ],
+  "selectedPlanSelectors": [
+    {
+      "fault": "all",
+      "accepted": true
+    },
+    {
+      "fault": "one",
+      "accepted": true
+    },
+    {
+      "fault": "active",
+      "accepted": true
+    },
+    {
+      "fault": "missing",
+      "accepted": true
+    },
+    {
+      "fault": "null",
+      "accepted": false
+    },
+    {
+      "fault": "bad",
+      "accepted": false
+    },
+    {
+      "fault": "duplicate",
+      "accepted": false
+    },
+    {
+      "fault": "unsorted",
+      "accepted": false
+    },
+    {
+      "fault": "proxy",
+      "accepted": false
+    },
+    {
+      "fault": "getter",
+      "accepted": false
+    },
+    {
+      "fault": "array-proxy",
+      "accepted": false
+    },
+    {
+      "fault": "extra",
+      "accepted": false
+    },
+    {
+      "fault": "root-extra",
+      "accepted": false
+    },
+    {
+      "fault": "index-getter",
+      "accepted": false
+    }
+  ],
+  "authorizerReceiptFailures": [
+    {
+      "fault": "none",
+      "accepted": true,
+      "reason": null,
+      "reads": [
+        ".semio-authorizer-source.json",
+        "semio-authorizers.mjs"
+      ]
+    },
+    {
+      "fault": "receipt-schema",
+      "accepted": false,
+      "reason": "receipt-schema",
+      "reads": []
+    },
+    {
+      "fault": "source-read",
+      "accepted": false,
+      "reason": "source-read",
+      "reads": [
+        ".semio-authorizer-source.json"
+      ]
+    },
+    {
+      "fault": "source-json",
+      "accepted": false,
+      "reason": "source-json",
+      "reads": [
+        ".semio-authorizer-source.json"
+      ]
+    },
+    {
+      "fault": "source-digest",
+      "accepted": false,
+      "reason": "source-digest",
+      "reads": [
+        ".semio-authorizer-source.json"
+      ]
+    },
+    {
+      "fault": "source-manifest",
+      "accepted": false,
+      "reason": "source-manifest",
+      "reads": [
+        ".semio-authorizer-source.json"
+      ]
+    },
+    {
+      "fault": "manifest-entry",
+      "accepted": false,
+      "reason": "manifest-entry",
+      "reads": [
+        ".semio-authorizer-source.json"
+      ]
+    },
+    {
+      "fault": "manifest-order",
+      "accepted": false,
+      "reason": "manifest-order",
+      "reads": [
+        ".semio-authorizer-source.json"
+      ]
+    },
+    {
+      "fault": "manifest-duplicate",
+      "accepted": false,
+      "reason": "manifest-order",
+      "reads": [
+        ".semio-authorizer-source.json"
+      ]
+    },
+    {
+      "fault": "output-read",
+      "accepted": false,
+      "reason": "output-read",
+      "reads": [
+        ".semio-authorizer-source.json",
+        "semio-authorizers.mjs"
+      ]
+    },
+    {
+      "fault": "output-digest",
+      "accepted": false,
+      "reason": "output-digest",
+      "reads": [
+        ".semio-authorizer-source.json",
+        "semio-authorizers.mjs"
+      ]
+    }
+  ],
+  "bindingCaptures": [
+    {
+      "fault": "none",
+      "captured": true,
+      "rechecked": true
+    },
+    {
+      "fault": "invalid-current-metadata",
+      "captured": true,
+      "rechecked": true
+    },
+    {
+      "fault": "foreign-target",
+      "captured": false,
+      "rechecked": false
+    },
+    {
+      "fault": "link-directory",
+      "captured": false,
+      "rechecked": false
+    },
+    {
+      "fault": "source-parent-alias",
+      "captured": false,
+      "rechecked": false
+    },
+    {
+      "fault": "store-parent-alias",
+      "captured": false,
+      "rechecked": false
+    },
+    {
+      "fault": "generation-link",
+      "captured": false,
+      "rechecked": false
+    },
+    {
+      "fault": "generation-file",
+      "captured": false,
+      "rechecked": false
+    },
+    {
+      "fault": "leaf-change",
+      "captured": true,
+      "rechecked": false
+    },
+    {
+      "fault": "generation-change",
+      "captured": true,
+      "rechecked": false
+    },
+    {
+      "fault": "container-change",
+      "captured": true,
+      "rechecked": false
+    },
+    {
+      "fault": "clone",
+      "captured": true,
+      "rechecked": false
+    },
+    {
+      "fault": "context-clone",
+      "captured": true,
+      "rechecked": false
+    },
+    {
+      "fault": "foreign-control",
+      "captured": false,
+      "rechecked": false
+    }
+  ],
+  "retirementReceiptIntegrity": [
+    {
+      "fault": "complete",
+      "accepted": true
+    },
+    {
+      "fault": "opaque-missing-resolution",
+      "accepted": true
+    },
+    {
+      "fault": "opaque-invalid-json",
+      "accepted": true
+    },
+    {
+      "fault": "opaque-foreign-path",
+      "accepted": true
+    },
+    {
+      "fault": "source-drift",
+      "accepted": false
+    },
+    {
+      "fault": "output-drift",
+      "accepted": false
+    },
+    {
+      "fault": "receipt-extra",
+      "accepted": false
+    },
+    {
+      "fault": "receipt-output-name",
+      "accepted": false
+    },
+    {
+      "fault": "receipt-version",
+      "accepted": false
+    }
+  ],
+  "generationIntegrityReads": [
+    {
+      "fault": "opaque",
+      "captured": true,
+      "rechecked": true,
+      "strictAccepted": false
+    },
+    {
+      "fault": "valid",
+      "captured": true,
+      "rechecked": true,
+      "strictAccepted": true
+    },
+    {
+      "fault": "source-drift",
+      "captured": false,
+      "rechecked": false,
+      "strictAccepted": false
+    },
+    {
+      "fault": "output-drift",
+      "captured": false,
+      "rechecked": false,
+      "strictAccepted": false
+    },
+    {
+      "fault": "marker-drift",
+      "captured": false,
+      "rechecked": false,
+      "strictAccepted": false
+    },
+    {
+      "fault": "directory-drift",
+      "captured": false,
+      "rechecked": false,
+      "strictAccepted": false
+    },
+    {
+      "fault": "copy",
+      "captured": true,
+      "rechecked": false,
+      "strictAccepted": false
+    },
+    {
+      "fault": "context-copy",
+      "captured": true,
+      "rechecked": false,
+      "strictAccepted": false
+    },
+    {
+      "fault": "strict-substitution",
+      "captured": true,
+      "rechecked": false,
+      "strictAccepted": false
+    },
+    {
+      "fault": "changed-metadata",
+      "captured": true,
+      "rechecked": false,
+      "strictAccepted": false
+    }
+  ]
 }

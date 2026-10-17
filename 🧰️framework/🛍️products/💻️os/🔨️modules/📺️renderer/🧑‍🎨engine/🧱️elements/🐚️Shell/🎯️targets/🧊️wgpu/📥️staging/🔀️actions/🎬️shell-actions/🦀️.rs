@@ -346,12 +346,12 @@ impl<'ctx> ActionsCtx<'ctx> {
             }
             None => {
                 let Some(identity) = self.docs.sync_program_identity() else {
-                    let text = local_folders::local_folder_text(local_folders::LocalFolderText::Unidentified, "", self.prefs.active_locale());
-                    self.chrome.show_transient_notice(text, semio_framework::Severity::Warning, Some(local_folders::SYNC_DOCUMENT_UNIDENTIFIED_CODE));
+                    let text = local_folder_text(LocalFolderText::Unidentified, "", self.prefs.active_locale());
+                    self.chrome.show_transient_notice(text, semio_framework::Severity::Warning, Some(SYNC_DOCUMENT_UNIDENTIFIED_CODE));
                     return Ok(());
                 };
                 #[cfg(target_arch = "wasm32")]
-                if !SHELL_DOCUMENT_TRANSPORTS.folder && local_folders::is_host_route_uri(&uri) {
+                if !SHELL_DOCUMENT_TRANSPORTS.folder && is_host_route_uri(&uri) {
                     return self.as_window_actions().attach_host_route_backbone(uri, identity).await;
                 }
                 (identity.document_id, parse_persistence_binding(&uri)?, None)
@@ -563,7 +563,7 @@ impl<'ctx> ActionsCtx<'ctx> {
                     }
                     Ok(())
                 }
-                local_folders::FOLDER_RECONNECT_ACTION => {
+                FOLDER_RECONNECT_ACTION => {
                     self.history.ensure_local_folder_bindings();
                     let Some(offer) = self.docs.folder_reconnect_offer(&self.history, &self.sync) else { return Ok(()) };
                     if let Err(error) = self.reattach_local_folder(&offer).await {
@@ -571,7 +571,7 @@ impl<'ctx> ActionsCtx<'ctx> {
                     }
                     Ok(())
                 }
-                local_folders::FOLDER_FORGET_ACTION => {
+                FOLDER_FORGET_ACTION => {
                     self.history.ensure_local_folder_bindings();
                     if let Some(offer) = self.docs.folder_reconnect_offer(&self.history, &self.sync) {
                         self.history.forget_local_folder(&offer.document_id);

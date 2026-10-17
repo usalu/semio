@@ -1,4 +1,9 @@
-use super::*;
+use crate::SvgSnapshot;
+#[allow(unused_imports)]
+use framework_schema::ArtifactSchema;
+#[allow(unused_imports)]
+use crate::standards::v1_1::subsets::base::schema::inferences::dimensions::compute_svg_dimensions;
+use crate::standards::v1_1::subsets::base::schema::inferences::*;
 use protocol::Inference;
 
 #[semio_framework_async_macros::async_test]

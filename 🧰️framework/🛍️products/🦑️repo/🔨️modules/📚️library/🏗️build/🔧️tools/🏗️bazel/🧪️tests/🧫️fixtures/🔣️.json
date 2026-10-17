@@ -517,5 +517,32 @@
       "cleanupRefused": true,
       "checks": 0
     }
+  ],
+  "ownerCommandBudgets": [
+    {
+      "kind": "root0",
+      "effects": 2
+    },
+    {
+      "kind": "finite",
+      "effects": 2
+    },
+    {
+      "kind": "cancelled",
+      "effects": 0
+    },
+    {
+      "kind": "expired",
+      "effects": 0
+    },
+    {
+      "kind": "fractional",
+      "effects": 0
+    }
+  ],
+  "ownerCommandBudgetCallers": [
+    "captured-planner",
+    "launch",
+    "build"
   ]
 }

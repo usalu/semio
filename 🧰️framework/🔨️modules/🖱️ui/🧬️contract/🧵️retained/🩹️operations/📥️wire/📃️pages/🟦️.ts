@@ -4,8 +4,8 @@ import type { OwnedUiInstance } from "../../../🏘️instance/🟦️.ts";
 import type { NumericIndexGrant } from "../../../../../../🌱️value/📦️packages/🟦️typescript/🗂️ordered/🔢️numeric/🟦️.ts";
 import type { RetainedUiWireStep } from "../../../📦️wire/🟦️.ts";
 import type { ActorInstanceLifetime } from "../../../../../../🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🟦️.ts";
-import type { ShardActorActivationLease } from "../../../../../../🎭️actor/📮️shard-client/🟦️.ts";
-import { OwnedKernelReturnInputField, OwnedKernelReturnInputFragment, OwnedKernelReturnInputRelease } from "../../../../../../🎠️kernel/📤️return/📦️content/📥️input/🟦️.ts";
+import type { ShardActorActivationLease } from "@semio-tech/framework-actor/shard-client";
+import { OwnedKernelReturnInputField, OwnedKernelReturnInputFragment, OwnedKernelReturnInputRelease } from "@semio-tech/framework-kernel/return/content/input";
 
 const MINT = Object.freeze({});
 const NO_FAILURE = Object.freeze({});

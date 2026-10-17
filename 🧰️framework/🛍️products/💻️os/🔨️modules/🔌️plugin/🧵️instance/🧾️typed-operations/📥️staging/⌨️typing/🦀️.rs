@@ -1,8 +1,39 @@
 //! 🏉️ Staged `typing` members of the `instance-typed-ops` use cases, as methods of the borrowed bundle (WP7 of the instance family).
 //!
 //! ⌨️ Tool dispatch and typing commits: continuous-control arguments, typing runs and their publication.
-use super::*;
-use crate::tool_jobs::tool_machine::*;
+use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_framework_value::DslValue;
+use semio_framework_plugin_decl_emission::Emit;
+use semio_framework::Fault;
+use store::Mutation;
+use semio_framework_plugin_tool_run::tool_jobs_tool_machine::ScrubTag;
+use semio_framework_plugin_tool_run::tool_jobs_tool_machine::ToolDispatch;
+use semio_framework_plugin_tool_run::tool_jobs_tool_machine::ToolTag;
+use semio_framework_plugin_tool_run::tool_jobs_tool_machine::TypingTag;
+use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_framework_plugin_decl_app::tool_contract::ArtifactOwnedToolJobFactory;
+use pack::snapshot::ArtifactPack;
+use semio_framework::FaultFrom;
+use semio_framework_value_derive::FromValue;
+use store::MutationDiff;
+use protocol::OpBinary;
+use protocol::OpText;
+use semio_framework_plugin_reactor_app::PluginApp;
+use semio_framework_value::retirement::RetireOwned;
+use semio_framework_value_derive::ToValue;
+use semio_framework_plugin_decl_views::tool_run_contract::ToolRunRetargetableJob;
+use semio_framework_plugin_window_config::WindowConfigOwner;
+use semio_framework::{ActionKind, FaultCode, FaultOrigin};
+use semio_framework_plugin_decl_emission::ActionMeta;
+use std::future::Future;
+use semio_framework_plugin_instance_extension::InstanceExtension;
+use store::{MemberFactory, SpaceMember};
+use semio_framework_plugin_instance_jobs::jobs_components::ToolOperations;
+use crate::typed_bundle::TypedCtx;
+use semio_framework::kernel::UiDirtyScope;
+use semio_framework_plugin_instance_dispatch::dispatch_emit;
+use semio_framework_ui_contract::*;
+use semio_framework_plugin_tool_run::tool_jobs_tool_machine::*;
 use semio_framework_tool_machine::ScrubPhase;
 use semio_framework_tool_machine::ToolAbortReason;
 use semio_framework_tool_machine::ToolStep;
@@ -22,7 +53,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
     /// tagged. A continuous control (`gesture`, `commit`, `abort`): a host abort drops the window's press with zero trace and
     /// never reaches the app, a frozen press is dropped and refused, every other press runs the verb tagged. Windows that left
     /// the roster retire their presses and commit their runs first.
-    pub(crate) async fn admit_tool_dispatch(&mut self, action: &str, args: Option<&DslValue>, meta: &ActionMeta, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> ToolDispatch {
+    pub async fn admit_tool_dispatch(&mut self, action: &str, args: Option<&DslValue>, meta: &ActionMeta, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> ToolDispatch {
         let text = |key: &str| args.and_then(|args| args.get(key)).and_then(DslValue::as_str);
         let window = meta.view_state.as_ref().and_then(|view| view.window_id.clone()).unwrap_or_default();
         if let Some(phase) = TypingPhase::parse(text(TYPING_BUFFER_ARG), text(TYPING_COMMIT_ARG)) {
@@ -75,7 +106,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
     /// another verb (`otherVerb`) — so the verb, an undo or a history edit sees the typed text, and the history lists the run
     /// before the verb. A typing delivery of its own and a view verb (a caret report, a hover, a scroll) leave the runs open:
     /// a host ends its run on a caret jump with its own commit signal.
-    pub(crate) async fn commit_typing_before(&mut self, action: &str, args: Option<&DslValue>, meta: &ActionMeta, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<(), Fault> {
+    pub async fn commit_typing_before(&mut self, action: &str, args: Option<&DslValue>, meta: &ActionMeta, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<(), Fault> {
         if self.tool_machines.typing.is_empty() {
             return Ok(());
         }

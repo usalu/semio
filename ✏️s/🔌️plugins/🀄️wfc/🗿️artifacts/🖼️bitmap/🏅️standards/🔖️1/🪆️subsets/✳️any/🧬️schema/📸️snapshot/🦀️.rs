@@ -183,6 +183,22 @@ impl Default for BitmapSnapshot {
         }
     }
 }
+
+impl BitmapSnapshot {
+    /// 🧪️ The shared reference scene the mutation laws and tool laws of every crate start from: a 4 × 3 two-colour
+    /// checker, a 6 × 4 output, an `N = 2` model, no pins. Small enough to read in a diff, structured enough that the
+    /// overlapping model has real patterns to learn.
+    pub fn reference_scene() -> Self {
+        Self {
+            schema: WFC_BITMAP_DOCUMENT_SCHEMA.into(),
+            seed: 7,
+            input: BitmapInput { width: 4, height: 3, palette: vec![BitmapColor::opaque(0, 0, 0), BitmapColor::opaque(255, 255, 255)], pixels: ([0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0]).to_vec() },
+            output: BitmapOutputSpec { width: 6, height: 4, periodic: false },
+            model: BitmapOverlappingModel { pattern_size: 2, symmetry: 1, periodic_input: true, ground: None },
+            pinned: Vec::new(),
+        }
+    }
+}
 //#endregion 🔖️Snapshot
 
 //#region 🔖️Addressing

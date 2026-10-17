@@ -1,6 +1,7 @@
 //! ⏱️ Language-neutral deadline vectors and the actual driver entry boundary.
 
 use super::*;
+use semio_framework_test_fixtures::fixture_text;
 
 //#region 🧪️DriverProbe
 thread_local! { static CLOCK: std::cell::Cell<Option<Option<u64>>> = const { std::cell::Cell::new(None) }; }
@@ -45,7 +46,7 @@ impl InteractiveJob for CompletionProbe {
 fn microsecond_exact_callback_quarantine_retains_original_output_and_session_identity() {
     let _slots = super::worker_session_slots_shared();
     assert!(install_microsecond_clock(now).is_ok());
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../⏱️trace/⏱️clock/🧪️tests/🧫️fixtures/🧪️contention/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../⏱️trace/⏱️clock/🧪️tests/🧫️fixtures/🧪️contention/🔣️.json")).unwrap();
     let operation = allocate_operation_id();
     let generation = Generation(71);
     for law in fixture["verdicts"].as_array().unwrap().iter().filter(|law| !law["start"].is_null()) {

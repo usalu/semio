@@ -1,3 +1,4 @@
+use crate::WriterSnapshot;
 use crate::standards::v1::subsets::any::io::text::snapshot::*;
 use crate::schema;
 

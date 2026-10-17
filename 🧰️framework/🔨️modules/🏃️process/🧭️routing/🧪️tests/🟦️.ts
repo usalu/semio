@@ -27,20 +27,19 @@ test("immutable admitted policy data avoids schema replay while mutable and exec
   if(row.kind==="mutable"||row.kind==="accessor"){base.owner="";if(row.kind==="mutable")value.owner="";expect(oracle(value)).toBe(false);expect(()=>read(value)).toThrow("Complete Script policy required");}
  }
  for(const value of [Object.freeze({version:1,owner:"",maximumElapsedMilliseconds:15000}),Object.freeze({version:1,owner:"invalid-frozen",maximumElapsedMilliseconds:-1})]){let validations=0;const read=new Function("scriptPolicyContract","types",javascript+";return readScriptPolicy;")({validate(value:unknown){validations++;return contract.validate(value);}},types);expect(oracle(value)).toBe(false);expect(()=>read(value)).toThrow("Complete Script policy required");expect(()=>read(value)).toThrow("Complete Script policy required");expect(validations).toBe(2);}
- console.log("[DEBUG] Actual policy admission method agrees with independent Ajv; only exact immutable plain data avoids repeated schema work");
 });
 
 test("owned expected keysets avoid repeated sorting without caching current invocation checks",()=>{
  const value=fixtureInvocation("compiled-keyset-count"),invocation={...value,policy:Object.freeze({...value.policy})};checkScriptInvocation(invocation);
  const native=Array.prototype.sort;let sorts=0;const spy=spyOn(Array.prototype,"sort").mockImplementation(function(this:unknown[],...args:any[]){sorts++;return native.apply(this,args as any);});
  try{checkScriptInvocation(invocation);checkScriptInvocation(invocation);}finally{spy.mockRestore();}
- expect(sorts).toBe(0);console.log("[DEBUG] Actual current invocation and control checks retain enumeration without repeated expected/actual sorting");
+ expect(sorts).toBe(0);
 });
 
 test("compiled exact key plans use bounded direct membership without array callbacks",async()=>{
  const vm=await import("node:vm"),{default:fixture}=await import("../📥️invocation/🧪️tests/🧫️fixtures/🔑️keys.json"),{Database}=await import("bun:sqlite"),source=readFileSync(new URL("../../../🧬️schema/✅️validator/🟦️.ts",import.meta.url),"utf8"),tree=ts.createSourceFile("validator.ts",source,ts.ScriptTarget.Latest,true),node=tree.statements.find(value=>ts.isFunctionDeclaration(value)&&value.name?.text==="compileExactKeysV1");if(!node)throw Error("Actual exact key plan implementation required");const code=ts.transpileModule(node.getText(tree).replace("export function","function"),{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText,context=vm.createContext({});vm.runInContext(`const counts={enumerations:0,arrayCallbacks:0,arrayMembership:0,directMembership:0};const keys=Object.keys,some=Array.prototype.some,includes=Array.prototype.includes,has=Set.prototype.has;Object.keys=value=>{counts.enumerations++;return keys(value)};Array.prototype.some=function(...args){counts.arrayCallbacks++;return Reflect.apply(some,this,args)};Array.prototype.includes=function(...args){counts.arrayMembership++;return Reflect.apply(includes,this,args)};Set.prototype.has=function(...args){counts.directMembership++;return Reflect.apply(has,this,args)};${code};globalThis.compile=compileExactKeysV1;globalThis.counts=counts;`,context);
  const metadata=invocationSchema.definitions.ExpectedKeys.const,compile=context.compile as(keys:readonly string[])=>(value:object,name:string)=>void,invocation=compile(metadata.invocation),control=compile(metadata.control),db=new Database(":memory:");const api:typeof import("../📥️invocation/🏃️process/🟦️.ts")=await import("../📥️invocation/🏃️process/🟦️.ts");
- try{await api.withScriptProcessEnvelope(api.createScriptProcessEnvelope({version:1,owner:"exact-key-plan-work",maximumElapsedMilliseconds:5000},{fixture:"exact-key-plan-work"},Date.now()),async original=>{for(const key of Object.keys(fixture.work))if(key!=="iterations")context.counts[key]=0;for(let index=0;index<fixture.work.iterations;index++){api.requireIssuedScriptInvocationV1(original);invocation(original,"Script invocation");control(original.control,"Script control");}});const actual=JSON.parse(JSON.stringify(context.counts)),oracle=db.query("select (json_array_length(?1,'$.invocation')+json_array_length(?1,'$.control'))*?2 membership,2*?2 enumerations").get(JSON.stringify(metadata),fixture.work.iterations)as{membership:number;enumerations:number};expect(oracle).toEqual({membership:fixture.work.directMembership,enumerations:fixture.work.enumerations});expect(actual).toEqual({enumerations:fixture.work.enumerations,arrayCallbacks:fixture.work.arrayCallbacks,arrayMembership:fixture.work.arrayMembership,directMembership:fixture.work.directMembership});console.log("[DEBUG] Actual isolated key-plan method work "+JSON.stringify({actual,oracle,scope:"VM instrumentation is isolated from Original and test/schema prototypes"}));}finally{db.close();}
+ try{await api.withScriptProcessEnvelope(api.createScriptProcessEnvelope({version:1,owner:"exact-key-plan-work",maximumElapsedMilliseconds:5000},{fixture:"exact-key-plan-work"},Date.now()),async original=>{for(const key of Object.keys(fixture.work))if(key!=="iterations")context.counts[key]=0;for(let index=0;index<fixture.work.iterations;index++){api.requireIssuedScriptInvocationV1(original);invocation(original,"Script invocation");control(original.control,"Script control");}});const actual=JSON.parse(JSON.stringify(context.counts)),oracle=db.query("select (json_array_length(?1,'$.invocation')+json_array_length(?1,'$.control'))*?2 membership,2*?2 enumerations").get(JSON.stringify(metadata),fixture.work.iterations)as{membership:number;enumerations:number};expect(oracle).toEqual({membership:fixture.work.directMembership,enumerations:fixture.work.enumerations});expect(actual).toEqual({enumerations:fixture.work.enumerations,arrayCallbacks:fixture.work.arrayCallbacks,arrayMembership:fixture.work.arrayMembership,directMembership:fixture.work.directMembership});}finally{db.close();}
 });
 
 test("compiled exact key snapshots match SQLite and preserve current object observables",async()=>{
@@ -53,13 +52,11 @@ test("compiled exact key snapshots match SQLite and preserve current object obse
  let reads=0,traps=0;const target=Object.create({inherited:1});Object.defineProperty(target,"a",{enumerable:true,configurable:true,get(){reads++;return 1;}});Object.defineProperty(target,"hidden",{value:1,enumerable:false});target[Symbol("extra")]=1;const proxy=new Proxy(target,{ownKeys(value){traps++;return Reflect.ownKeys(value);}});
  compiled(proxy,"fixture");compiled(proxy,"fixture");expect(traps).toBe(2);expect(reads).toBe(0);Object.defineProperty(target,"a",{enumerable:false});expect(()=>compiled(proxy,"fixture")).toThrow("exactly a");expect(traps).toBe(3);expect(reads).toBe(0);
  let caught=false,reason:unknown;try{compiled(new Proxy({},{ownKeys(){throw undefined;}}),"fixture");}catch(error){caught=true;reason=error;}expect(caught).toBe(true);expect(reason).toBeUndefined();
- console.log("[DEBUG] Explicit owned expected snapshots match independent SQLite; generic mutable metadata and actual proxy/getter/symbol/nonenumerable/undefined failure semantics remain current");
 });
 
 test("owned expected keysets retain every current invocation value signal and deadline check",()=>{
  const controller=new AbortController(),reason=Object.freeze(Error("current Original cancelled"));let remaining:number|null=10,capabilities:any={},reads=0;const base=fixtureInvocation("keyset-current-values"),control={...base.control,signal:controller.signal,remainingMilliseconds:()=>{reads++;return remaining;}},value:any={policy:Object.freeze({...base.policy}),control,get capabilities(){return capabilities;}};
  checkScriptInvocation(value);expect(reads).toBe(1);remaining=0;expect(()=>checkScriptInvocation(value)).toThrow("deadline");expect(reads).toBe(2);remaining=10;capabilities=null;expect(()=>checkScriptInvocation(value)).toThrow("capabilities");expect(reads).toBe(2);capabilities={};control.publish=undefined as any;expect(()=>checkScriptInvocation(value)).toThrow("ports");control.publish=base.control.publish;value.extra=1;expect(()=>checkScriptInvocation(value)).toThrow("exactly");delete value.extra;controller.abort(reason);let error:unknown;try{checkScriptInvocation(value);}catch(caught){error=caught;}expect(error).toBe(reason);expect(reads).toBe(2);
- console.log("[DEBUG] Actual invocation key plans recheck changed values, callable ports, added own fields, deadline and exact current cancellation on every call");
 });
 
 /** 🧫️ Supplies each original routing case its real authored 15-second control and progress ledger. */
@@ -208,7 +205,7 @@ test("actual neutral constructors, dispatch and main receive the original finite
   const validate = new Ajv({ strict: true }).compile(invocationSchema);
   for (const row of invocationCorpus.cases) {
     expect(validate(row.value), row.id).toBe(row.accepted);
-    if (row.accepted) expect<unknown>(readScriptPolicy(row.value)).toBe(row.value);
+    if (row.accepted) expect<typeof row.value>(readScriptPolicy(row.value)).toBe(row.value);
     else expect(() => readScriptPolicy(row.value)).toThrow();
   }
   const controller = new AbortController(), started = performance.now(), events: unknown[] = [], traces: string[] = [];
@@ -246,7 +243,6 @@ test("actual neutral constructors, dispatch and main receive the original finite
   expect(events.length).toBeGreaterThan(0);
   controller.abort();
   await expect(router.run(["authority", "cancelled"], invocation)).rejects.toThrow();
-  console.log("[DEBUG] original neutral invocation signal/capability identity and finite caller deadline received");
 });
 
 test("missing incoming authority refuses before acquiring the selected command owner", async () => {
@@ -319,7 +315,6 @@ for (const row of (await import("../📥️invocation/🏃️process/🧪️test
   expect(oracle).toBe(row.accepted);
   if (row.accepted) { if (row.remaining === undefined) throw Error("Accepted neutral row requires original remaining authority"); const deadline=readScriptProcessEnvelope(row.value,row.now).deadlineEpochMilliseconds;if(deadline===null)throw Error("Original finite test row requires finite deadline");expect(deadline-row.now).toBe(row.remaining); }
   else expect(() => readScriptProcessEnvelope(row.value, row.now)).toThrow();
-  console.log(`[DEBUG] Original process envelope ${row.id} accepted=${oracle} remaining=${remaining}`);
 });
 
 test("owned child environment carries the caller's current original invocation", async () => {
@@ -370,7 +365,6 @@ test("original process child handoff preserves deadline and real ports", async (
   expect(process.listenerCount("SIGINT")).toBe(beforeInterrupt);
   expect(process.listenerCount("SIGTERM")).toBe(beforeTerminate);
   await expect(api.receiveScriptProcessInvocation({}, async () => true)).rejects.toThrow("Original parent");
-  console.log(`[DEBUG] Original process deadline preserved=${envelope.deadlineEpochMilliseconds} listener custody returned`);
 });
 
 test("original process deadline refuses late completion through actual AbortSignal", async () => {
@@ -382,7 +376,6 @@ test("original process deadline refuses late completion through actual AbortSign
     observed = original.control.signal.aborted;
   })).rejects.toThrow();
   expect(observed).toBe(true);
-  console.log("[DEBUG] Original process deadline cancelled actual signal and refused late terminal success");
 });
 
 test("the complete process envelope captures immutable original caller capabilities", async () => {
@@ -418,7 +411,7 @@ test("original ordinary no-deadline authority preserves cancellation and fractio
   const policyValidate = new Ajv({ strict: true }).compile(invocationSchema), envelopeValidate = new Ajv({ strict: true }).addSchema(invocationSchema).compile(wire);
   for (const row of rows.envelopes) {
     expect(envelopeValidate(row.value)).toBe(row.accepted);
-    if (row.accepted) {const admitted=api.readScriptProcessEnvelope(row.value,row.now);expect<unknown>(admitted).toEqual(row.value);expect(Object.is(admitted,row.value)).toBe(false);expect(Object.isFrozen(admitted)).toBe(true);}
+    if (row.accepted) {const admitted=api.readScriptProcessEnvelope(row.value,row.now);expect(admitted).toEqual<typeof row.value>(row.value);expect(Object.is(admitted,row.value)).toBe(false);expect(Object.isFrozen(admitted)).toBe(true);}
     else expect(() => api.readScriptProcessEnvelope(row.value, row.now)).toThrow();
   }
   const controller = new AbortController(), progress: ScriptProgress[] = [], capabilities = { owner: "zero-authority-original-caller", commands: [] as string[] };
@@ -452,7 +445,6 @@ test("original ordinary no-deadline authority preserves cancellation and fractio
     catch { outcomes.push({ accepted: false }); }
   }
   expect(outcomes).toEqual(rows.budgets.map(row => ({ accepted: row.accepted, ...("expected" in row ? { expected: row.expected } : {}) })));
-  console.log("[DEBUG] Original ordinary0/null actual load, main, constructor and SIGINT preserve no deadline; strict Ajv and Node preserve fractional remaining with original integer child ceilings");
 });
 
 test("unacknowledged derived cancellation refuses terminal success after accepted work settles",async()=>{const api=await import("../📥️invocation/🏃️process/🟦️.ts"),controller=new AbortController();await expect(api.withScriptProcessEnvelope(api.createScriptProcessEnvelope({version:1,owner:"fixture:signal-stop",maximumElapsedMilliseconds:1000},{fixture:"signal-stop"},Date.now()),original=>api.withScriptInvocationSignalV1(original,controller.signal,async()=>{controller.abort(Error("unacknowledged stop"));}))).rejects.toThrow("unacknowledged stop");});
@@ -461,5 +453,5 @@ test("derived signal stop requires an explicit private acknowledgement with inde
  const api=await import("../📥️invocation/🏃️process/🟦️.ts"),fixture=(await import("./🧫️fixtures/🛑️signal.json")).default,rows:boolean[]=[];
  for(const row of fixture.cases){let accepted=true;try{await api.withScriptProcessEnvelope(api.createScriptProcessEnvelope({version:1,owner:"fixture:signal-corpus",maximumElapsedMilliseconds:2000},{fixture:"signal-corpus"},Date.now()),original=>{const controller=new AbortController();return api.withScriptInvocationSignalV1(original,controller.signal,async alias=>{if(row.additionalAborted)controller.abort(Error("owned stop"));if(row.parentAborted)process.emit("SIGINT");if(row.acknowledged)api.acknowledgeScriptInvocationSignalStopV1(alias);});});}catch{accepted=false;}expect(accepted).toBe(row.accepted);rows.push(accepted);}
  const{captureOwnedCommandV1}=await import("../../🎛️owned-execution/🟦️.ts"),oracle="import sqlite3,json,sys;d=sqlite3.connect(':memory:');rows=json.loads(sys.argv[1]);print(json.dumps([bool(d.execute('SELECT NOT ? AND ((NOT ? AND NOT ?) OR (? AND ?))',(r['parentAborted'],r['additionalAborted'],r['acknowledged'],r['additionalAborted'],r['acknowledged'])).fetchone()[0]) for r in rows]))";
- await api.withScriptProcessEnvelope(api.createScriptProcessEnvelope({version:1,owner:"fixture:signal-oracle",maximumElapsedMilliseconds:5000},{fixture:"signal-oracle"},Date.now()),async original=>{const output=await captureOwnedCommandV1("python3",["-c",oracle,JSON.stringify(fixture.cases)],process.cwd(),{control:api.createIssuedResourceControlV1(original,"fixture:sqlite-signal",5000),output:{maximumBytes:4096,maximumLines:32}});expect(JSON.parse(output)).toEqual(rows);});console.log("[DEBUG] Actual private signal-stop disposition agrees with independent SQLite for five neutral cases");
+ await api.withScriptProcessEnvelope(api.createScriptProcessEnvelope({version:1,owner:"fixture:signal-oracle",maximumElapsedMilliseconds:5000},{fixture:"signal-oracle"},Date.now()),async original=>{const output=await captureOwnedCommandV1("python3",["-c",oracle,JSON.stringify(fixture.cases)],process.cwd(),{control:api.createIssuedResourceControlV1(original,"fixture:sqlite-signal",5000),output:{maximumBytes:4096,maximumLines:32}});expect(JSON.parse(output)).toEqual(rows);});
 });

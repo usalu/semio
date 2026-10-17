@@ -232,7 +232,6 @@ fn independent_sqlite_catalog_file(bytes: &[u8], native: &semio_framework::Artif
     assert_eq!(actual["metadata"], serde_json::json!([{"artifact_kind":native.artifact_kind,"standard":native.standard,"subset":native.subset,"schema_version":law["schemaVersion"],"native_encoding":encoding}]));
     let tables = actual["domainTables"].as_array().unwrap();
     assert!(tables.len() >= law["minimumDomainTables"].as_u64().unwrap() as usize, "{} must expose authored domain tables", coordinate(&native));
-    eprintln!("[DEBUG] Stdio catalog physical SQLite dialect={} native={} bytes={} domain_tables={} integrity=ok foreign_keys=0", coordinate(&native), encoding, bytes.len(), tables.len());
 }
 
 async fn assert_sqlite_snapshot_editor<E: ArtifactEditor>() {
@@ -261,14 +260,11 @@ async fn assert_sqlite_snapshot_editor<E: ArtifactEditor>() {
             if let (IoPayload::Binary(before),IoPayload::Binary(after))=(&payload,&restored){
                 let (before_envelope,before_body)=store::semio_format::unwrap_binary(before).unwrap();
                 let (after_envelope,after_body)=store::semio_format::unwrap_binary(after).unwrap();
-                eprintln!("[DEBUG] catalog native seam coordinate={} envelopes_equal={} original_body={} restored_body={} first={:?}",coordinate(&native),before_envelope==after_envelope,before_body.len(),after_body.len(),before_body.iter().zip(&after_body).position(|(left,right)|left!=right));
                 if let Some(spec)=E::Snapshot::record_spec(){
                     let original_record=pack::record::decode_document(&before_body,&spec,&pack::record::DecodeOptions::default()).unwrap().0;
                     let restored_record=pack::record::decode_document(&after_body,&spec,&pack::record::DecodeOptions::default()).unwrap().0;
-                    eprintln!("[DEBUG] catalog Record equal={} original={:?} restored={:?}",original_record==restored_record,original_record,restored_record);
                 }
                 let decoded=E::Snapshot::decode_pack(after).unwrap();
-                eprintln!("[DEBUG] catalog full typed owner equal={} coordinate={}",snapshot_json(&decoded)==original,coordinate(&native));
             }
         }
         assert_eq!(restored, payload);

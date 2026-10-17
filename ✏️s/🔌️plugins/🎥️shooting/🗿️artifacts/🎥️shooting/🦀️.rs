@@ -10,46 +10,17 @@ extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_schema as schema;
 extern crate semio_framework_value_derive as value_derive;
 
-#[cfg(test)] use semio_framework_dsl_record_derive::DslRecord;
-use protocol::{Identified, Patchable};
-use {semio_framework_plugin::ArtifactKindSpec,semio_framework_artifact_reference::Dialect,semio_framework_plugin::MediaClass,semio_framework_plugin::MediaForm,semio_framework_plugin::MediaType,semio_framework_plugin::OsMediaCapability,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
-
 pub use crate::standards::v1::subsets::any::schema::mutations::ShootingMutation;
 
 pub use crate::standards::v1::subsets::any::schema::diff::ShootingDiff;
 
-pub const SHOOTING_DOCUMENT_SCHEMA: &str = "shooting.shooting";
-pub use crate::standards::v1::subsets::any::schema::snapshot::ShootingSnapshot;
+// 🪪️ Declaration of the shooting artifact: the document schema and dialect, the artifact kind, the pilot languages and the definition. See [`super`].
 
-/// 🪪️ This artifact's dialect (ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §1
-/// canonical surface id grammar) — lives at the ARTIFACT level (not under `editor`/`viewer`) so a
-/// viewer file can read it without ever importing through the sibling editor module.
-/// `artifact_kind = "s.shooting.shooting"` matches the descriptor `definition()`'s own
-/// `"s.shooting.schema.artifact"` capability row already keys off; `standard`/`subset` match this
-/// file's own `🏅️standards/🔖️1/🪆️subsets/✳️any` location — i.e. the canonical surface id is
-/// `s.shooting.shooting@1/*#editor` / `s.shooting.shooting@1/*#viewer`.
-pub const SHOOTING_DIALECT: Dialect = Dialect { artifact_kind: "s.shooting.shooting", standard: StandardId("1"), subset: SubsetId::ANY };
+pub use semio_s_artifact_shooting_shooting_inferences::{SHOOTING_DOCUMENT_SCHEMA};
 
-//#region 🔖️ArtifactKind
-/// 🗂️ This artifact's `ArtifactKindSpec` — stitched into the app manifest by
-/// `crate::editor::shooting::create_shooting_app`'s `🔖️Manifest` region.
-pub fn artifact_kind() -> ArtifactKindSpec {
-    ArtifactKindSpec {
-        id: "2d.shooting".into(),
-        label: semio_framework_ui_locale::LocalizedLabel::native("2D Shooting", "2D-Aufnahme"),
-        source_format: "shooting.scene".into(),
-        component_kind: "shooting".into(),
-        dimension: "2d".into(),
-        media_capability: OsMediaCapability::MeshOnly,
-        media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Raster },
-        schema: SHOOTING_DOCUMENT_SCHEMA.into(),
-        export_formats: vec![],
-        import_formats: vec![],
-        export_stdio_kinds: vec!["stdio.json".into()],
-        import_stdio_kinds: vec!["stdio.json".into()],
-    }
-}
-//#endregion 🔖️ArtifactKind
+pub use semio_s_artifact_shooting_shooting_tests_dims_scene_sun_to_half::{SHOOTING_DIALECT};
+
+pub use semio_s_artifact_shooting_shooting_shooting::{artifact_kind};
 
 //#region 🔖️Declaration
 /// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built once
@@ -176,574 +147,29 @@ pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semi
 }
 //#endregion 🔖️Declaration
 
-//#region 🔖️Domain
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
-#[canonical_json(owner = semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-#[value(rename_all = "camelCase")]
-pub struct ShootingCamera {
-    #[cfg_attr(test, serde(default = "default_camera_position"))]
-    #[value(default = "default_camera_position")]
-    #[dsl(coord)]
-    pub position: [f64; 3],
-    #[cfg_attr(test, serde(default = "default_camera_target"))]
-    #[value(default = "default_camera_target")]
-    #[dsl(coord)]
-    pub target: [f64; 3],
-    #[cfg_attr(test, serde(default = "one_f64"))]
-    #[value(default = "one_f64")]
-    pub zoom: f64,
-    #[cfg_attr(test, serde(default = "default_fov"))]
-    #[value(default = "default_fov")]
-    #[dsl(angle = "deg")]
-    pub fov: f64,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
-    #[value(default, skip_serializing_if = "Option::is_none")]
-    #[dsl(dir)]
-    pub up: Option<[f64; 3]>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
-    #[value(default, skip_serializing_if = "Option::is_none")]
-    pub projection: Option<String>,
-}
+pub use crate::standards::v1::subsets::any::schema::snapshot::ShootingSnapshot;
 
-impl Default for ShootingCamera {
-    fn default() -> Self {
-        Self { position: default_camera_position(), target: default_camera_target(), zoom: 1.0, fov: default_fov(), up: None, projection: None }
-    }
-}
+// 🌍️ Scene records of the shooting artifact: the cameras, assets, shots, lighting records with their defaults and the camera math. See [`super`].
 
-pub fn default_camera_position() -> [f64; 3] {
-    [420.0, -420.0, 320.0]
-}
+pub use semio_s_artifact_shooting_shooting_inferences::{ShootingAmbient, ShootingAsset, ShootingCamera, ShootingMaterial, ShootingSavedCamera, ShootingSceneLighting, ShootingShadow, ShootingShot, ShootingSun, default_camera_position, default_camera_target, default_fov, default_glb_format, one_f64, quat_from_axis_angle, quat_mul, shooting_asset_scale};
 
-pub fn default_camera_target() -> [f64; 3] {
-    [0.0, 0.0, 40.0]
-}
+pub use semio_s_artifact_shooting_shooting_inferences::{empty_shooting_snapshot, shooting_resolve_shot_camera};
 
-pub fn default_fov() -> f64 {
-    50.0
-}
+pub use semio_s_artifact_shooting_shooting_inferences::{ShootingEmblemChild, shooting_base64_decode, shooting_base64_encode, shooting_emblem_bytes, shooting_emblem_bytes_from_image, shooting_emblem_child_handle, shooting_emblem_image, shooting_emblem_image_from_bytes, shooting_set_emblem_from_base64};
 
-fn one_f64() -> f64 {
-    1.0
-}
-
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
-#[canonical_json(owner = semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[dsl(keyword = "saved-camera")]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-#[value(rename_all = "camelCase")]
-pub struct ShootingSavedCamera {
-    #[dsl(defines = "saved-camera")]
-    pub id: String,
-    pub label: String,
-    #[dsl(block)]
-    pub camera: ShootingCamera,
-}
-
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
-#[canonical_json(owner = semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[dsl(keyword = "asset")]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-#[value(rename_all = "camelCase")]
-pub struct ShootingAsset {
-    pub id: String,
-    pub name: String,
-    pub url: String,
-    #[cfg_attr(test, serde(default = "default_glb_format"))]
-    #[value(default = "default_glb_format")]
-    pub format: String,
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
-    #[dsl(coord)]
-    pub origin: [f64; 3],
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
-    #[value(default, skip_serializing_if = "Option::is_none")]
-    pub orientation: Option<[f64; 4]>,
-    /// 🪄️ Uniform-vs-per-axis is a JSON-authoring shorthand only, not a persisted distinction —
-    /// callers wanting a uniform scale write `[s, s, s]` (see `shooting_asset_scale`, the sole
-    /// reader, which never distinguished the two shapes anyway).
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
-    #[value(default, skip_serializing_if = "Option::is_none")]
-    pub scale: Option<[f64; 3]>,
-}
-
-pub fn default_glb_format() -> String {
-    "glb".into()
-}
-
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
-#[canonical_json(owner = semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[dsl(keyword = "shot")]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-#[value(rename_all = "camelCase")]
-pub struct ShootingShot {
-    pub id: String,
-    pub label: String,
-    pub width: u32,
-    pub height: u32,
-    pub format: String,
-    pub shape: String,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
-    #[value(default, skip_serializing_if = "Option::is_none")]
-    pub background: Option<String>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
-    #[value(default, skip_serializing_if = "Option::is_none")]
-    #[dsl(refs = "saved-camera")]
-    pub camera_id: Option<String>,
-}
-
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
-#[value(rename_all = "camelCase", default)]
-pub struct ShootingSun {
-    pub enabled: bool,
-    #[dsl(angle = "deg")]
-    pub azimuth: f64,
-    #[dsl(angle = "deg")]
-    pub elevation: f64,
-    pub intensity: f64,
-    pub color: String,
-}
-
-impl Default for ShootingSun {
-    fn default() -> Self {
-        Self { enabled: false, azimuth: 45.0, elevation: 35.0, intensity: 2.4, color: "#ffffff".into() }
-    }
-}
-
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
-#[value(rename_all = "camelCase", default)]
-pub struct ShootingAmbient {
-    pub intensity: f64,
-    pub color: String,
-}
-
-impl Default for ShootingAmbient {
-    fn default() -> Self {
-        Self { intensity: 1.15, color: "#ffffff".into() }
-    }
-}
-
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
-#[value(rename_all = "camelCase", default)]
-pub struct ShootingShadow {
-    pub enabled: bool,
-    pub opacity: f64,
-    pub softness: f64,
-}
-
-impl Default for ShootingShadow {
-    fn default() -> Self {
-        Self { enabled: true, opacity: 0.35, softness: 1.0 }
-    }
-}
-
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
-#[value(rename_all = "camelCase", default)]
-pub struct ShootingMaterial {
-    pub color: String,
-    pub metalness: f64,
-    pub roughness: f64,
-    pub emissive: String,
-    pub emissive_intensity: f64,
-    pub stroke: String,
-}
-
-impl Default for ShootingMaterial {
-    fn default() -> Self {
-        Self { color: "#9aa0ab".into(), metalness: 0.0, roughness: 1.0, emissive: "#000000".into(), emissive_intensity: 0.0, stroke: "#000000".into() }
-    }
-}
-
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-#[value(rename_all = "camelCase")]
-pub struct ShootingSceneLighting {
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
-    pub background: String,
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
-    #[dsl(block)]
-    pub sun: ShootingSun,
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
-    #[dsl(block)]
-    pub ambient: ShootingAmbient,
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
-    #[dsl(block)]
-    pub shadow: ShootingShadow,
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
-    #[dsl(block)]
-    pub material: ShootingMaterial,
-}
-
-pub fn empty_shooting_snapshot() -> ShootingSnapshot {
-    ShootingSnapshot::default()
-}
-
-/// 🧮️ Resolves an asset's scale, defaulting an absent `scale` to identity `[1, 1, 1]`.
-pub fn shooting_asset_scale(asset: &ShootingAsset) -> [f64; 3] {
-    asset.scale.unwrap_or([1.0, 1.0, 1.0])
-}
-
-/// 🧭️ Quaternion (Hamilton product) multiply — `a * b`, both `[x, y, z, w]`. Shared by `op`'s
-/// `RotateAssets` diff/backwards math and any other consumer that needs to compose orientations.
-pub fn quat_mul(a: [f64; 4], b: [f64; 4]) -> [f64; 4] {
-    [a[3] * b[0] + a[0] * b[3] + a[1] * b[2] - a[2] * b[1], a[3] * b[1] - a[0] * b[2] + a[1] * b[3] + a[2] * b[0], a[3] * b[2] + a[0] * b[1] - a[1] * b[0] + a[2] * b[3], a[3] * b[3] - a[0] * b[0] - a[1] * b[1] - a[2] * b[2]]
-}
-
-pub fn quat_from_axis_angle(ax: f64, ay: f64, az: f64, angle: f64) -> [f64; 4] {
-    let len = (ax * ax + ay * ay + az * az).sqrt();
-    if len < 1e-8 {
-        return [0.0, 0.0, 0.0, 1.0];
-    }
-    let half = angle * 0.5;
-    let s = half.sin();
-    [ax / len * s, ay / len * s, az / len * s, half.cos()]
-}
-
-/// 🎯️ Resolves the effective camera for `shot`: the saved camera it references, or `fallback` — the
-/// app's session-only live camera (never a document field; see `ShootingConfig::camera` in the app's
-/// `🦀️config.rs`) when the shot has no saved camera of its own.
-pub fn shooting_resolve_shot_camera(snapshot: &ShootingSnapshot, shot: &ShootingShot, fallback: &ShootingCamera) -> ShootingCamera {
-    shot.camera_id.as_ref().and_then(|camera_id| snapshot.saved_cameras.iter().find(|entry| &entry.id == camera_id)).map_or_else(|| fallback.clone(), |entry| entry.camera.clone())
-}
-//#endregion 🔖️Domain
-
-//#region 🔖️Composition
-/// 🧩️ Composed `s.stdio.semio.image` child slot for the scene's emblem overlay (ticket
-/// `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`, `📓️design-full-plan.md` §4:
-/// `shooting→C:video,image,audio,table`). Of that four-subset menu, ONLY `image` maps onto real
-/// duplicated content in this plugin — the former `ShootingSceneLighting.emblem_base64:
-/// Option<String>` (a raw base64 PNG overlay) duplicated exactly what `s.stdio.semio.image` already
-/// generalizes.
-///
-/// `video`/`audio` are deliberately NOT composed: an exhaustive grep of every `.rs` file in this
-/// plugin for `video`/`Video`/`audio`/`Audio`/`recording`/`capture`/`footage`/`waveform`/`clip`/
-/// `take` returned zero hits. This "shooting" plugin is a 3D icon/product-render studio (assets,
-/// saved cameras, a shot list, scene lighting) — never a literal video/audio recorder — so there is
-/// no inline content of either shape to kill; composing empty stub children for them would invent
-/// vocabulary the plugin has no use for, which `📌️important.md`'s own "leave a facet empty rather
-/// than fabricate" precedent (for mutation triads) argues against by direct analogy. `📓️gismap`'s
-/// own `image` slot ("honestly always absent... the slot exists, real and typed, for the day a
-/// basemap capture lands, not as a stub") is the closest precedent for "compose only what's real."
-///
-/// `table` is NOT composed either, despite `assets`/`shots`/`savedCameras` being row-shaped
-/// collections: each already carries its own real, granular, non-duplicative collection diff
-/// (`ShootingAssetsDelta`/`ShootingShotsDelta`/`ShootingSavedCamerasDelta` — `added`/`removed`/
-/// `patched`/`reordered`, see `🔺️diff/🦀️.rs`), sparse-built directly from `(payload, base)`
-/// at every one of their mutation triads — exactly the shape `📌️important.md`'s own D2/Concern-B
-/// section asks the REST of the repo to move TOWARD, not away from. Flattening any of them into a
-/// single composed `SemioTableSnapshot` child would force a whole-handle-replace diff shape (the
-/// migration recipe §8's "always-present slot" convention), regressing real per-row add/remove/
-/// patch/reorder granularity into an all-or-nothing re-mint on every edit — a concrete technical
-/// reason to decline, per the recipe's own allowance ("unless you find a concrete technical reason
-/// they can't — document precisely if so, don't generalize from one blocked field to the whole
-/// plugin").
-use semio_s_artifact_stdio_semio_image::schema::snapshot::{SemioColorspace, SemioImageFrame, SemioImageMetadataEntry, SemioImageSnapshot, STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA};
-
-pub type ShootingEmblemChild = store::os_store::artifact_child::ArtifactChild<SemioImageSnapshot>;
-
-/// 🪪️ Mint a deterministic, content-addressed `s.stdio.semio.image` CHILD HANDLE from `content` —
-/// same `store::os_store::artifact_child::ArtifactChild::new`/`ArtifactDialect` shape as every other wave-4 exemplar
-/// (`process3d::brep_child_handle`, `gismap::gis_map_drawing_child_handle`). Two callers with
-/// byte-identical content mint the same handle.
-pub fn shooting_emblem_child_handle(content: &SemioImageSnapshot) -> ShootingEmblemChild {
-    let child_id = store::content_id("shooting-emblem", semio_framework_pack_json::to_json_string(content).as_bytes());
-    let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "image".into() };
-    let target = semio_framework_artifact_reference::ArtifactRef { artifact_id: "shooting-emblem".into(), dialect };
-    store::os_store::artifact_child::ArtifactChild::new(child_id, target)
-}
-
-/// 🌉️ WRITE direction, real (not a stub): wraps raw emblem bytes verbatim as a single opaque
-/// `SemioImageFrame`. HONEST BOUNDARY, not a shortcut: this plugin never decoded the emblem's PNG
-/// pixels before this migration either — `shooting_scene_to_semio_drawing` (`🧬️schema/🦀️component.rs`),
-/// the sole reader, passed the raw base64-decoded bytes straight into a `DrawNode::Image` for
-/// re-encoding, never inspecting a single channel value. Decoding real PNG pixel data into `image`'s
-/// normal decoded-RGBA8 convention is a new capability this migration does not add. Round-trips
-/// exactly (byte-identical) because encode/decode never interpret the bytes as pixels, only
-/// store+retrieve them verbatim; `width`/`height`/`bit_depth` are `0` (genuinely unknown pre-decode)
-/// and one metadata entry (`encoding=opaque-bytes`) records the honest boundary for any future reader.
-pub fn shooting_emblem_image_from_bytes(bytes: Vec<u8>) -> SemioImageSnapshot {
-    SemioImageSnapshot {
-        schema: STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA.into(),
-        width: 0,
-        height: 0,
-        colorspace: SemioColorspace::default(),
-        bit_depth: 0,
-        frames: vec![SemioImageFrame { delay_ms: 0, rgba8: bytes }],
-        icc: None,
-        metadata: vec![SemioImageMetadataEntry { key: "encoding".into(), value: "opaque-bytes".into() }],
-    }
-}
-
-/// 🌉️ READ direction, real: the exact inverse of `shooting_emblem_image_from_bytes` — the first
-/// (only) frame's verbatim bytes, or empty if the image carries no frame.
-pub fn shooting_emblem_bytes_from_image(image: &SemioImageSnapshot) -> Vec<u8> {
-    image.frames.first().map(|frame| frame.rgba8.clone()).unwrap_or_default()
-}
-
-/// 🔤️ Minimal, dependency-free base64 DECODE for the emblem's raw base64 payload — moved here from
-/// the schema module alongside the rest of the emblem's composition machinery (every leaf in this
-/// codebase hand-rolls this exact algorithm rather than pull in an external crate).
-pub fn shooting_base64_decode(data: &str) -> Option<Vec<u8>> {
-    fn val(c: u8) -> Option<u8> {
-        match c {
-            b'A'..=b'Z' => Some(c - b'A'),
-            b'a'..=b'z' => Some(c - b'a' + 26),
-            b'0'..=b'9' => Some(c - b'0' + 52),
-            b'+' => Some(62),
-            b'/' => Some(63),
-            _ => None,
-        }
-    }
-    let clean: Vec<u8> = data.bytes().filter(|&b| b != b'=' && !b.is_ascii_whitespace()).collect();
-    let mut out = Vec::with_capacity(clean.len() * 3 / 4);
-    for chunk in clean.chunks(4) {
-        let vals: Vec<u8> = chunk.iter().map(|&b| val(b)).collect::<Option<Vec<u8>>>()?;
-        let n = vals.len();
-        let combined = vals.iter().fold(0u32, |acc, &v| (acc << 6) | v as u32) << ((4 - n) * 6);
-        out.push((combined >> 16) as u8);
-        if n > 2 {
-            out.push((combined >> 8) as u8);
-        }
-        if n > 3 {
-            out.push(combined as u8);
-        }
-    }
-    Some(out)
-}
-
-/// 🔤️ The ENCODE direction — standard base64 with `=` padding, the exact inverse alphabet of
-/// `shooting_base64_decode`. New this migration (the pre-migration field only ever needed decode).
-pub fn shooting_base64_encode(bytes: &[u8]) -> String {
-    const ALPHABET: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-    let mut out = String::with_capacity(bytes.len().div_ceil(3) * 4);
-    for chunk in bytes.chunks(3) {
-        let b0 = chunk[0];
-        let b1 = *chunk.get(1).unwrap_or(&0);
-        let b2 = *chunk.get(2).unwrap_or(&0);
-        let n = (b0 as u32) << 16 | (b1 as u32) << 8 | b2 as u32;
-        out.push(ALPHABET[(n >> 18 & 0x3f) as usize] as char);
-        out.push(ALPHABET[(n >> 12 & 0x3f) as usize] as char);
-        out.push(if chunk.len() > 1 { ALPHABET[(n >> 6 & 0x3f) as usize] as char } else { '=' });
-        out.push(if chunk.len() > 2 { ALPHABET[(n & 0x3f) as usize] as char } else { '=' });
-    }
-    out
-}
-
-/// 🌉️ WRITE direction, real: decodes `base64` (the plugin's existing raw-base64-payload convention,
-/// never a `data:` URI prefix — matches the pre-migration `emblem_base64` field's own callers),
-/// mints a content-addressed handle, attaches the immutable content to that exact child owner, and
-/// sets `snapshot.emblem`. Independent snapshots cannot observe or replace one another's emblem.
-/// `None`/empty input clears the slot.
-pub fn shooting_set_emblem_from_base64(snapshot: &mut ShootingSnapshot, base64: Option<&str>) {
-    let bytes = base64.filter(|data| !data.is_empty()).and_then(shooting_base64_decode);
-    match bytes {
-        None => snapshot.emblem = None,
-        Some(bytes) => {
-            let content = shooting_emblem_image_from_bytes(bytes);
-            let handle = shooting_emblem_child_handle(&content).with_local_owner(std::sync::Arc::new(content));
-            snapshot.emblem = Some(handle);
-        }
-    }
-}
-
-/// 🌉️ READ direction: retains the materialization owned by this exact child handle; degrades to
-/// `None` when a wire-decoded handle has not yet been materialized by the host child resolver.
-pub fn shooting_emblem_image(snapshot: &ShootingSnapshot) -> Option<SemioImageSnapshot> {
-    let handle = snapshot.emblem.as_ref()?;
-    handle.local_owner::<SemioImageSnapshot>().map(|content| content.as_ref().clone())
-}
-
-/// 🌉️ `shooting_emblem_image` + `shooting_emblem_bytes_from_image` in one call — the accessor
-/// `shooting_scene_to_semio_drawing` (`🧬️schema/🦀️component.rs`) funnels through instead of the old
-/// direct `snapshot.scene.emblem_base64` field read.
-pub fn shooting_emblem_bytes(snapshot: &ShootingSnapshot) -> Option<Vec<u8>> {
-    shooting_emblem_image(snapshot).map(|image| shooting_emblem_bytes_from_image(&image))
-}
 //#endregion 🔖️Composition
 
-//#region 🔖️CollectionSupport
-impl Identified<String> for ShootingAsset {
-    fn id(&self) -> &String {
-        &self.id
-    }
-}
+// 🩹️ Sparse patches of the shooting artifact: the identified records, the assigned wrapper and the asset, shot, camera and scene patches. See [`super`].
 
-impl Identified<String> for ShootingShot {
-    fn id(&self) -> &String {
-        &self.id
-    }
-}
-
-impl Identified<String> for ShootingSavedCamera {
-    fn id(&self) -> &String {
-        &self.id
-    }
-}
-
-/// 🎯️ An explicitly assigned optional value: wraps the value so assigning `None` stays distinct from leaving the field untouched on the wire (a bare nested `Option` collapses both to `null`).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase")]
-pub struct ShootingAssigned<T> {
-    pub value: T,
-}
-
-impl<T> ShootingAssigned<T> {
-    /// 🏗️ Wraps the assigned value.
-    pub fn new(value: T) -> Self {
-        Self { value }
-    }
-}
-
-/// 🩹 Sparse asset field patch; `orientation`/`scale` are assignable so an absent optional value is restorable.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-#[value(rename_all = "camelCase", default)]
-pub struct ShootingAssetPatch {
-    pub name: Option<String>,
-    pub url: Option<String>,
-    pub format: Option<String>,
-    pub origin: Option<[f64; 3]>,
-    pub orientation: Option<ShootingAssigned<Option<[f64; 4]>>>,
-    pub scale: Option<ShootingAssigned<Option<[f64; 3]>>>,
-}
-
-impl Patchable<ShootingAssetPatch> for ShootingAsset {
-    fn apply_patch(&mut self, patch: &ShootingAssetPatch) {
-        if let Some(name) = &patch.name {
-            self.name = name.clone();
-        }
-        if let Some(url) = &patch.url {
-            self.url = url.clone();
-        }
-        if let Some(format) = &patch.format {
-            self.format = format.clone();
-        }
-        if let Some(origin) = patch.origin {
-            self.origin = origin;
-        }
-        if let Some(orientation) = &patch.orientation {
-            self.orientation = orientation.value;
-        }
-        if let Some(scale) = &patch.scale {
-            self.scale = scale.value;
-        }
-    }
-}
-
-/// 🩹 Sparse shot field patch.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-#[value(rename_all = "camelCase", default)]
-pub struct ShootingShotPatch {
-    pub label: Option<String>,
-    pub width: Option<u32>,
-    pub height: Option<u32>,
-    pub format: Option<String>,
-    pub shape: Option<String>,
-    pub background: Option<ShootingAssigned<Option<String>>>,
-    pub camera_id: Option<ShootingAssigned<Option<String>>>,
-}
-
-impl Patchable<ShootingShotPatch> for ShootingShot {
-    fn apply_patch(&mut self, patch: &ShootingShotPatch) {
-        if let Some(label) = &patch.label {
-            self.label = label.clone();
-        }
-        if let Some(width) = patch.width {
-            self.width = width;
-        }
-        if let Some(height) = patch.height {
-            self.height = height;
-        }
-        if let Some(format) = &patch.format {
-            self.format = format.clone();
-        }
-        if let Some(shape) = &patch.shape {
-            self.shape = shape.clone();
-        }
-        if let Some(background) = &patch.background {
-            self.background = background.value.clone();
-        }
-        if let Some(camera_id) = &patch.camera_id {
-            self.camera_id = camera_id.value.clone();
-        }
-    }
-}
-
-/// 🩹 Sparse saved-camera field patch.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-#[value(rename_all = "camelCase", default)]
-pub struct ShootingSavedCameraPatch {
-    pub label: Option<String>,
-    pub camera: Option<ShootingCamera>,
-}
-
-impl Patchable<ShootingSavedCameraPatch> for ShootingSavedCamera {
-    fn apply_patch(&mut self, patch: &ShootingSavedCameraPatch) {
-        if let Some(label) = &patch.label {
-            self.label = label.clone();
-        }
-        if let Some(camera) = &patch.camera {
-            self.camera = camera.clone();
-        }
-    }
-}
-
-/// 🩹 Sparse scene-lighting patch: one optional field per scene scalar, so a scene kind names only the value it owns.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-#[value(rename_all = "camelCase", default)]
-pub struct ShootingScenePatch {
-    pub background: Option<String>,
-    pub sun_enabled: Option<bool>,
-    pub sun_azimuth: Option<f64>,
-    pub sun_elevation: Option<f64>,
-    pub sun_intensity: Option<f64>,
-    pub sun_color: Option<String>,
-    pub ambient_intensity: Option<f64>,
-    pub ambient_color: Option<String>,
-    pub shadow_enabled: Option<bool>,
-    pub shadow_opacity: Option<f64>,
-    pub shadow_softness: Option<f64>,
-    pub material_color: Option<String>,
-    pub material_metalness: Option<f64>,
-    pub material_roughness: Option<f64>,
-    pub material_emissive: Option<String>,
-    pub material_emissive_intensity: Option<f64>,
-    pub material_stroke: Option<String>,
-}
-//#endregion 🔖️CollectionSupport
+pub use semio_s_artifact_shooting_shooting_schema::{ShootingAssetPatch, ShootingAssigned, ShootingSavedCameraPatch, ShootingScenePatch, ShootingShotPatch};
 
 //#region 🧪️Tests
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+pub use semio_s_artifact_shooting_shooting_inferences::{active_asset, active_shot, is_transparent_shooting_background, next_shooting_id};
 
 #[path = "."]
 pub mod standards {
@@ -755,479 +181,259 @@ pub mod standards {
             pub mod any {
                 #[path = "."]
                 pub mod schema {
-                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs"]
-                    mod component;
-                    pub use component::*;
-                    #[path = "."]
-                    pub mod inferences {
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                        #[path = "."]
-                        pub mod topology {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧭topology/🦀️.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                    }
-                    #[path = "."]
-                    pub mod snapshot {
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                    #[path = "."]
-                    pub mod diff {
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
+                    pub use semio_s_artifact_shooting_shooting_schema::standards::v1::subsets::any::schema::*;
+
+                    pub use semio_s_artifact_shooting_shooting_inferences::standards::v1::subsets::any::schema::inferences;
+                    pub use semio_s_artifact_shooting_shooting_inferences::standards::v1::subsets::any::schema::snapshot;
+                    pub use semio_s_artifact_shooting_shooting_schema::standards::v1::subsets::any::schema::diff;
                     #[path = "."]
                     pub mod mutations {
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
+                        pub use semio_s_artifact_shooting_shooting_mutations::standards::v1::subsets::any::schema::mutations::*;
 
                         #[path = "."]
                         pub mod create_asset {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️create-asset/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️create-asset/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️create-asset/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️create-asset/🧪️tests/➕️appends/🦀️.rs"]
-                            mod tests_appends_asset_detail;
+                            pub use semio_s_artifact_shooting_shooting_mut_family::standards::v1::subsets::any::schema::mutations::create_asset::*;
+                            pub use semio_s_artifact_shooting_shooting_mut_family::standards::v1::subsets::any::schema::mutations::create_asset::diff;
+                            pub use semio_s_artifact_shooting_shooting_mut_family::standards::v1::subsets::any::schema::mutations::create_asset::inverse;
+
                         }
                         #[path = "."]
                         pub mod delete_asset {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-asset/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-asset/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-asset/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-asset/🧪️tests/🗑️removes/🦀️.rs"]
-                            mod tests_removes_trailing_asset_prop;
+                            pub use semio_s_artifact_shooting_shooting_mut_family::standards::v1::subsets::any::schema::mutations::delete_asset::*;
+                            pub use semio_s_artifact_shooting_shooting_mut_family::standards::v1::subsets::any::schema::mutations::delete_asset::diff;
+                            pub use semio_s_artifact_shooting_shooting_mut_family::standards::v1::subsets::any::schema::mutations::delete_asset::inverse;
+
                         }
                         #[path = "."]
                         pub mod rename_asset {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️rename-asset/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️rename-asset/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️rename-asset/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️rename-asset/🧪️tests/🏷️renames/🦀️.rs"]
-                            mod tests_renames_asset_hero_to_lead;
+                            pub use semio_s_artifact_shooting_shooting_tests::standards::v1::subsets::any::schema::mutations::rename_asset::*;
+                            pub use semio_s_artifact_shooting_shooting_tests::standards::v1::subsets::any::schema::mutations::rename_asset::diff;
+                            pub use semio_s_artifact_shooting_shooting_tests::standards::v1::subsets::any::schema::mutations::rename_asset::inverse;
+
                         }
                         #[path = "."]
                         pub mod change_asset_url {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌐️change-asset-url/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌐️change-asset-url/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌐️change-asset-url/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌐️change-asset-url/🧪️tests/🌐️points/🦀️.rs"]
-                            mod tests_points_asset_prop_at_v2_mesh;
+                            pub use semio_s_artifact_shooting_shooting_mut_family::standards::v1::subsets::any::schema::mutations::change_asset_url::*;
+                            pub use semio_s_artifact_shooting_shooting_mut_family::standards::v1::subsets::any::schema::mutations::change_asset_url::diff;
+                            pub use semio_s_artifact_shooting_shooting_mut_family::standards::v1::subsets::any::schema::mutations::change_asset_url::inverse;
+
                         }
                         #[path = "."]
                         pub mod reorder_assets {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️reorder-assets/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️reorder-assets/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️reorder-assets/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️reorder-assets/🧪️tests/🔀️moves/🦀️.rs"]
-                            mod tests_moves_asset_hero_behind_asset_prop;
+                            pub use semio_s_artifact_shooting_shooting_mut_family::standards::v1::subsets::any::schema::mutations::reorder_assets::*;
+                            pub use semio_s_artifact_shooting_shooting_mut_family::standards::v1::subsets::any::schema::mutations::reorder_assets::diff;
+                            pub use semio_s_artifact_shooting_shooting_mut_family::standards::v1::subsets::any::schema::mutations::reorder_assets::inverse;
+
                         }
                         #[path = "."]
                         pub mod drag_assets {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↔️drag-assets/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↔️drag-assets/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↔️drag-assets/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↔️drag-assets/🧪️tests/🚚️offsets/🦀️.rs"]
-                            mod tests_offsets_both_assets_and_skips_a_ghost;
+                            pub use semio_s_artifact_shooting_shooting_mut_any::standards::v1::subsets::any::schema::mutations::drag_assets::*;
+                            pub use semio_s_artifact_shooting_shooting_mut_any::standards::v1::subsets::any::schema::mutations::drag_assets::diff;
+                            pub use semio_s_artifact_shooting_shooting_mut_any::standards::v1::subsets::any::schema::mutations::drag_assets::inverse;
+
                         }
                         #[path = "."]
                         pub mod rotate_assets {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️rotate-assets/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️rotate-assets/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️rotate-assets/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️rotate-assets/🧪️tests/🔄️spins/🦀️.rs"]
-                            mod tests_spins_asset_hero_about_z;
+                            pub use semio_s_artifact_shooting_shooting_mut_any::standards::v1::subsets::any::schema::mutations::rotate_assets::*;
+                            pub use semio_s_artifact_shooting_shooting_mut_any::standards::v1::subsets::any::schema::mutations::rotate_assets::diff;
+                            pub use semio_s_artifact_shooting_shooting_mut_any::standards::v1::subsets::any::schema::mutations::rotate_assets::inverse;
+
                         }
                         #[path = "."]
                         pub mod scale_assets {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↕️scale-assets/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↕️scale-assets/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↕️scale-assets/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↕️scale-assets/🧪️tests/📏️doubles/🦀️.rs"]
-                            mod tests_doubles_asset_hero_scale;
+                            pub use semio_s_artifact_shooting_shooting_mut_any::standards::v1::subsets::any::schema::mutations::scale_assets::*;
+                            pub use semio_s_artifact_shooting_shooting_mut_any::standards::v1::subsets::any::schema::mutations::scale_assets::diff;
+                            pub use semio_s_artifact_shooting_shooting_mut_any::standards::v1::subsets::any::schema::mutations::scale_assets::inverse;
+
                         }
                         #[path = "."]
                         pub mod create_shot {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📸️create-shot/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📸️create-shot/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📸️create-shot/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📸️create-shot/🧪️tests/📸️appends/🦀️.rs"]
-                            mod tests_appends_shot_macro;
+                            pub use semio_s_artifact_shooting_shooting_mut_any::standards::v1::subsets::any::schema::mutations::create_shot::*;
+                            pub use semio_s_artifact_shooting_shooting_mut_any::standards::v1::subsets::any::schema::mutations::create_shot::diff;
+                            pub use semio_s_artifact_shooting_shooting_mut_any::standards::v1::subsets::any::schema::mutations::create_shot::inverse;
+
                         }
                         #[path = "."]
                         pub mod delete_shot {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚮️delete-shot/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚮️delete-shot/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚮️delete-shot/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚮️delete-shot/🧪️tests/🚫️removes/🦀️.rs"]
-                            mod tests_removes_trailing_shot_close;
+                            pub use semio_s_artifact_shooting_shooting_mut_any::standards::v1::subsets::any::schema::mutations::delete_shot::*;
+                            pub use semio_s_artifact_shooting_shooting_mut_any::standards::v1::subsets::any::schema::mutations::delete_shot::diff;
+                            pub use semio_s_artifact_shooting_shooting_mut_any::standards::v1::subsets::any::schema::mutations::delete_shot::inverse;
+
                         }
                         #[path = "."]
                         pub mod rename_shot {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-shot/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-shot/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-shot/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-shot/🧪️tests/🔤️relabels/🦀️.rs"]
-                            mod tests_relabels_shot_close_to_detail;
+                            pub use semio_s_artifact_shooting_shooting_mut_any::standards::v1::subsets::any::schema::mutations::rename_shot::*;
+                            pub use semio_s_artifact_shooting_shooting_mut_any::standards::v1::subsets::any::schema::mutations::rename_shot::diff;
+                            pub use semio_s_artifact_shooting_shooting_mut_any::standards::v1::subsets::any::schema::mutations::rename_shot::inverse;
+
                         }
                         #[path = "."]
                         pub mod change_shot_width {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏️change-shot-width/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏️change-shot-width/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏️change-shot-width/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏️change-shot-width/🧪️tests/↔️widens/🦀️.rs"]
-                            mod tests_widens_shot_close_to_1024;
+                            pub use semio_s_artifact_shooting_shooting_mut_any::standards::v1::subsets::any::schema::mutations::change_shot_width::*;
+                            pub use semio_s_artifact_shooting_shooting_mut_any::standards::v1::subsets::any::schema::mutations::change_shot_width::diff;
+                            pub use semio_s_artifact_shooting_shooting_mut_any::standards::v1::subsets::any::schema::mutations::change_shot_width::inverse;
+
                         }
                         #[path = "."]
                         pub mod change_shot_height {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️change-shot-height/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️change-shot-height/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️change-shot-height/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️change-shot-height/🧪️tests/↕️heightens/🦀️.rs"]
-                            mod tests_heightens_shot_close_to_768;
+                            pub use semio_s_artifact_shooting_shooting_mut_any::standards::v1::subsets::any::schema::mutations::change_shot_height::*;
+                            pub use semio_s_artifact_shooting_shooting_mut_any::standards::v1::subsets::any::schema::mutations::change_shot_height::diff;
+                            pub use semio_s_artifact_shooting_shooting_mut_any::standards::v1::subsets::any::schema::mutations::change_shot_height::inverse;
+
                         }
                         #[path = "."]
                         pub mod change_shot_format {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️change-shot-format/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️change-shot-format/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️change-shot-format/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️change-shot-format/🧪️tests/🎨️switches/🦀️.rs"]
-                            mod tests_switches_shot_wide_to_svg;
+                            pub use semio_s_artifact_shooting_shooting_mut_any::standards::v1::subsets::any::schema::mutations::change_shot_format::*;
+                            pub use semio_s_artifact_shooting_shooting_mut_any::standards::v1::subsets::any::schema::mutations::change_shot_format::diff;
+                            pub use semio_s_artifact_shooting_shooting_mut_any::standards::v1::subsets::any::schema::mutations::change_shot_format::inverse;
+
                         }
                         #[path = "."]
                         pub mod change_shot_shape {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️change-shot-shape/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️change-shot-shape/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️change-shot-shape/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️change-shot-shape/🧪️tests/⭕️rounds/🦀️.rs"]
-                            mod tests_rounds_shot_wide_to_ellipse;
+                            pub use semio_s_artifact_shooting_shooting_mut_any_2::standards::v1::subsets::any::schema::mutations::change_shot_shape::*;
+                            pub use semio_s_artifact_shooting_shooting_mut_any_2::standards::v1::subsets::any::schema::mutations::change_shot_shape::diff;
+                            pub use semio_s_artifact_shooting_shooting_mut_any_2::standards::v1::subsets::any::schema::mutations::change_shot_shape::inverse;
+
                         }
                         #[path = "."]
                         pub mod reorder_shots {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔃️reorder-shots/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔃️reorder-shots/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔃️reorder-shots/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔃️reorder-shots/🧪️tests/⬆️moves/🦀️.rs"]
-                            mod tests_moves_shot_close_to_front;
+                            pub use semio_s_artifact_shooting_shooting_mut_any_2::standards::v1::subsets::any::schema::mutations::reorder_shots::*;
+                            pub use semio_s_artifact_shooting_shooting_mut_any_2::standards::v1::subsets::any::schema::mutations::reorder_shots::diff;
+                            pub use semio_s_artifact_shooting_shooting_mut_any_2::standards::v1::subsets::any::schema::mutations::reorder_shots::inverse;
+
                         }
                         #[path = "."]
                         pub mod replace_shot_camera {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📷️replace-shot-camera/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📷️replace-shot-camera/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📷️replace-shot-camera/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📷️replace-shot-camera/🧪️tests/📷️rewrites/🦀️.rs"]
-                            mod tests_rewrites_cam_wide_through_shot_wide;
+                            pub use semio_s_artifact_shooting_shooting_mut_any_2::standards::v1::subsets::any::schema::mutations::replace_shot_camera::*;
+                            pub use semio_s_artifact_shooting_shooting_mut_any_2::standards::v1::subsets::any::schema::mutations::replace_shot_camera::diff;
+                            pub use semio_s_artifact_shooting_shooting_mut_any_2::standards::v1::subsets::any::schema::mutations::replace_shot_camera::inverse;
+
                         }
                         #[path = "."]
                         pub mod create_saved_camera {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎥️create-saved-camera/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎥️create-saved-camera/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎥️create-saved-camera/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎥️create-saved-camera/🧪️tests/🎥️appends/🦀️.rs"]
-                            mod tests_appends_saved_camera_top;
+                            pub use semio_s_artifact_shooting_shooting_mut_any_2::standards::v1::subsets::any::schema::mutations::create_saved_camera::*;
+                            pub use semio_s_artifact_shooting_shooting_mut_any_2::standards::v1::subsets::any::schema::mutations::create_saved_camera::diff;
+                            pub use semio_s_artifact_shooting_shooting_mut_any_2::standards::v1::subsets::any::schema::mutations::create_saved_camera::inverse;
+
                         }
                         #[path = "."]
                         pub mod delete_saved_camera {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹️delete-saved-camera/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹️delete-saved-camera/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹️delete-saved-camera/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹️delete-saved-camera/🧪️tests/🚫️removes/🦀️.rs"]
-                            mod tests_removes_trailing_cam_close;
+                            pub use semio_s_artifact_shooting_shooting_mut_any_2::standards::v1::subsets::any::schema::mutations::delete_saved_camera::*;
+                            pub use semio_s_artifact_shooting_shooting_mut_any_2::standards::v1::subsets::any::schema::mutations::delete_saved_camera::diff;
+                            pub use semio_s_artifact_shooting_shooting_mut_any_2::standards::v1::subsets::any::schema::mutations::delete_saved_camera::inverse;
+
                         }
                         #[path = "."]
                         pub mod rename_saved_camera {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪪️rename-saved-camera/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪪️rename-saved-camera/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪪️rename-saved-camera/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪪️rename-saved-camera/🧪️tests/🔤️relabels/🦀️.rs"]
-                            mod tests_relabels_cam_close_to_tight;
+                            pub use semio_s_artifact_shooting_shooting_mut_any_2::standards::v1::subsets::any::schema::mutations::rename_saved_camera::*;
+                            pub use semio_s_artifact_shooting_shooting_mut_any_2::standards::v1::subsets::any::schema::mutations::rename_saved_camera::diff;
+                            pub use semio_s_artifact_shooting_shooting_mut_any_2::standards::v1::subsets::any::schema::mutations::rename_saved_camera::inverse;
+
                         }
                         #[path = "."]
                         pub mod replace_saved_camera_view {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎞️replace-saved/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎞️replace-saved/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎞️replace-saved/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎞️replace-saved/🧪️tests/📍️repositions/🦀️.rs"]
-                            mod tests_repositions_cam_close_view;
+                            pub use semio_s_artifact_shooting_shooting_mut_any_2::standards::v1::subsets::any::schema::mutations::replace_saved_camera_view::*;
+                            pub use semio_s_artifact_shooting_shooting_mut_any_2::standards::v1::subsets::any::schema::mutations::replace_saved_camera_view::diff;
+                            pub use semio_s_artifact_shooting_shooting_mut_any_2::standards::v1::subsets::any::schema::mutations::replace_saved_camera_view::inverse;
+
                         }
                         #[path = "."]
                         pub mod reorder_saved_cameras {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁️reorder-saved-cameras/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁️reorder-saved-cameras/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁️reorder-saved-cameras/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁️reorder-saved-cameras/🧪️tests/🔁️moves/🦀️.rs"]
-                            mod tests_moves_cam_close_to_front;
+                            pub use semio_s_artifact_shooting_shooting_mut_any_2::standards::v1::subsets::any::schema::mutations::reorder_saved_cameras::*;
+                            pub use semio_s_artifact_shooting_shooting_mut_any_2::standards::v1::subsets::any::schema::mutations::reorder_saved_cameras::diff;
+                            pub use semio_s_artifact_shooting_shooting_mut_any_2::standards::v1::subsets::any::schema::mutations::reorder_saved_cameras::inverse;
+
                         }
                         #[path = "."]
                         pub mod set_active_shot {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎯️set-active-shot/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎯️set-active-shot/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎯️set-active-shot/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎯️set-active-shot/🧪️tests/🎯️activates/🦀️.rs"]
-                            mod tests_activates_shot_close;
+                            pub use semio_s_artifact_shooting_shooting_mut_any_2::standards::v1::subsets::any::schema::mutations::set_active_shot::*;
+                            pub use semio_s_artifact_shooting_shooting_mut_any_2::standards::v1::subsets::any::schema::mutations::set_active_shot::diff;
+                            pub use semio_s_artifact_shooting_shooting_mut_any_2::standards::v1::subsets::any::schema::mutations::set_active_shot::inverse;
+
                         }
                         #[path = "."]
                         pub mod set_active_asset {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📌️set-active-asset/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📌️set-active-asset/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📌️set-active-asset/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📌️set-active-asset/🧪️tests/📌️activates/🦀️.rs"]
-                            mod tests_activates_asset_prop;
+                            pub use semio_s_artifact_shooting_shooting_set_active_asset::standards::v1::subsets::any::schema::mutations::set_active_asset::*;
+                            pub use semio_s_artifact_shooting_shooting_set_active_asset::standards::v1::subsets::any::schema::mutations::set_active_asset::diff;
+                            pub use semio_s_artifact_shooting_shooting_set_active_asset::standards::v1::subsets::any::schema::mutations::set_active_asset::inverse;
+
                         }
                         #[path = "."]
                         pub mod change_scene_sun_enabled {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/☀️change-scene-sun/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/☀️change-scene-sun/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/☀️change-scene-sun/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/☀️change-scene-sun/🧪️tests/☀️switches/🦀️.rs"]
-                            mod tests_switches_scene_sun_off;
+                            pub use semio_s_artifact_shooting_shooting_set_active_asset::standards::v1::subsets::any::schema::mutations::change_scene_sun_enabled::*;
+                            pub use semio_s_artifact_shooting_shooting_set_active_asset::standards::v1::subsets::any::schema::mutations::change_scene_sun_enabled::diff;
+                            pub use semio_s_artifact_shooting_shooting_set_active_asset::standards::v1::subsets::any::schema::mutations::change_scene_sun_enabled::inverse;
+
                         }
                         #[path = "."]
                         pub mod change_scene_sun_azimuth {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️change-scene-sun/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️change-scene-sun/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️change-scene-sun/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️change-scene-sun/🧪️tests/🧭️turns/🦀️.rs"]
-                            mod tests_turns_scene_sun_to_315_degrees;
+                            pub use semio_s_artifact_shooting_shooting_set_active_asset::standards::v1::subsets::any::schema::mutations::change_scene_sun_azimuth::*;
+                            pub use semio_s_artifact_shooting_shooting_set_active_asset::standards::v1::subsets::any::schema::mutations::change_scene_sun_azimuth::diff;
+                            pub use semio_s_artifact_shooting_shooting_set_active_asset::standards::v1::subsets::any::schema::mutations::change_scene_sun_azimuth::inverse;
+
                         }
                         #[path = "."]
                         pub mod change_scene_sun_elevation {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌅️change-scene-sun/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌅️change-scene-sun/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌅️change-scene-sun/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌅️change-scene-sun/🧪️tests/🌅️raises/🦀️.rs"]
-                            mod tests_raises_scene_sun_to_60_degrees;
+                            pub use semio_s_artifact_shooting_shooting_set_active_asset::standards::v1::subsets::any::schema::mutations::change_scene_sun_elevation::*;
+                            pub use semio_s_artifact_shooting_shooting_set_active_asset::standards::v1::subsets::any::schema::mutations::change_scene_sun_elevation::diff;
+                            pub use semio_s_artifact_shooting_shooting_set_active_asset::standards::v1::subsets::any::schema::mutations::change_scene_sun_elevation::inverse;
+
                         }
                         #[path = "."]
                         pub mod change_scene_sun_intensity {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💡️change-scene-sun/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💡️change-scene-sun/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💡️change-scene-sun/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💡️change-scene-sun/🧪️tests/💡️dims/🦀️.rs"]
-                            mod tests_dims_scene_sun_to_half;
+                            pub use semio_s_artifact_shooting_shooting_set_active_asset::standards::v1::subsets::any::schema::mutations::change_scene_sun_intensity::*;
+                            pub use semio_s_artifact_shooting_shooting_set_active_asset::standards::v1::subsets::any::schema::mutations::change_scene_sun_intensity::diff;
+                            pub use semio_s_artifact_shooting_shooting_set_active_asset::standards::v1::subsets::any::schema::mutations::change_scene_sun_intensity::inverse;
+
                         }
                         #[path = "."]
                         pub mod change_scene_ambient_intensity {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔅️change-scene-ambient/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔅️change-scene-ambient/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔅️change-scene-ambient/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔅️change-scene-ambient/🧪️tests/🔅️dims/🦀️.rs"]
-                            mod tests_dims_scene_ambient_to_quarter;
+                            pub use semio_s_artifact_shooting_shooting_set_active_asset::standards::v1::subsets::any::schema::mutations::change_scene_ambient_intensity::*;
+                            pub use semio_s_artifact_shooting_shooting_set_active_asset::standards::v1::subsets::any::schema::mutations::change_scene_ambient_intensity::diff;
+                            pub use semio_s_artifact_shooting_shooting_set_active_asset::standards::v1::subsets::any::schema::mutations::change_scene_ambient_intensity::inverse;
+
                         }
                         #[path = "."]
                         pub mod change_scene_shadow_enabled {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌑️change-scene-shadow/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌑️change-scene-shadow/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌑️change-scene-shadow/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌑️change-scene-shadow/🧪️tests/🌑️switches/🦀️.rs"]
-                            mod tests_switches_scene_shadows_off;
+                            pub use semio_s_artifact_shooting_shooting_set_active_asset::standards::v1::subsets::any::schema::mutations::change_scene_shadow_enabled::*;
+                            pub use semio_s_artifact_shooting_shooting_set_active_asset::standards::v1::subsets::any::schema::mutations::change_scene_shadow_enabled::diff;
+                            pub use semio_s_artifact_shooting_shooting_set_active_asset::standards::v1::subsets::any::schema::mutations::change_scene_shadow_enabled::inverse;
+
                         }
                         #[path = "."]
                         pub mod change_scene_material_roughness {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪨️change-scene/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪨️change-scene/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪨️change-scene/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪨️change-scene/🧪️tests/✨️polishes/🦀️.rs"]
-                            mod tests_polishes_scene_material_to_quarter;
+                            pub use semio_s_artifact_shooting_shooting_set_active_asset::standards::v1::subsets::any::schema::mutations::change_scene_material_roughness::*;
+                            pub use semio_s_artifact_shooting_shooting_set_active_asset::standards::v1::subsets::any::schema::mutations::change_scene_material_roughness::diff;
+                            pub use semio_s_artifact_shooting_shooting_set_active_asset::standards::v1::subsets::any::schema::mutations::change_scene_material_roughness::inverse;
+
                         }
                     }
                 }
                 #[path = "."]
                 pub mod io {
-                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs"]
-                    mod component;
-                    pub use component::*;
+                    pub use semio_s_artifact_shooting_shooting_tests_dims_scene_sun_to_half::standards::v1::subsets::any::io::*;
+pub mod binary {
+    pub use semio_s_artifact_shooting_shooting_tests_dims_scene_sun_to_half::standards::v1::subsets::any::io::binary::*;
+    pub use semio_s_artifact_shooting_shooting_schema::standards::v1::subsets::any::io::binary::diff;
+    pub use semio_s_artifact_shooting_shooting_inferences::standards::v1::subsets::any::io::binary::inferences;
+}
+pub mod sqlite {
+    pub use semio_s_artifact_shooting_shooting_mut_family::standards::v1::subsets::any::io::sqlite::*;
+    pub use semio_s_artifact_shooting_shooting_inferences::standards::v1::subsets::any::io::sqlite::snapshot;
+}
+pub mod text {
+    pub use semio_s_artifact_shooting_shooting_tests_dims_scene_sun_to_half::standards::v1::subsets::any::io::text::*;
+    pub use semio_s_artifact_shooting_shooting_inferences::standards::v1::subsets::any::io::text::inferences;
+}
+
                     #[path = "."]
                     pub mod import {
                         #[path = "."]
                         pub mod deserializers {
                             #[path = "."]
                             pub mod artifacts {
-                                #[path = "."]
-                                pub mod txt {
-                                    #[path = "."]
-                                    pub mod v_utf_8 {
-                                        #[path = "."]
-                                        pub mod any {
-                                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔤️txt/🔖️utf-8/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
-                                #[path = "."]
-                                pub mod json {
-                                    #[path = "."]
-                                    pub mod v_rfc8259 {
-                                        #[path = "."]
-                                        pub mod any {
-                                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
+                                pub use semio_s_artifact_shooting_shooting_inferences::standards::v1::subsets::any::io::import::deserializers::artifacts::txt;
+                                pub use semio_s_artifact_shooting_shooting_inferences::standards::v1::subsets::any::io::import::deserializers::artifacts::json;
                             }
                         }
                     }
@@ -1237,30 +443,8 @@ pub mod standards {
                         pub mod serializers {
                             #[path = "."]
                             pub mod artifacts {
-                                #[path = "."]
-                                pub mod txt {
-                                    #[path = "."]
-                                    pub mod v_utf_8 {
-                                        #[path = "."]
-                                        pub mod any {
-                                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🔤️txt/🔖️utf-8/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
-                                #[path = "."]
-                                pub mod json {
-                                    #[path = "."]
-                                    pub mod v_rfc8259 {
-                                        #[path = "."]
-                                        pub mod any {
-                                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
+                                pub use semio_s_artifact_shooting_shooting_inferences::standards::v1::subsets::any::io::export::serializers::artifacts::txt;
+                                pub use semio_s_artifact_shooting_shooting_inferences::standards::v1::subsets::any::io::export::serializers::artifacts::json;
                             }
                         }
                     }
@@ -1272,45 +456,24 @@ pub mod standards {
 
 // ---- Shims: keep pre-migration module paths resolving for external callers ----
 
-
-
-pub mod diff {
-    pub use crate::standards::v1::subsets::any::schema::diff::*;
-    pub mod schema {
-        pub use crate::standards::v1::subsets::any::schema::diff::*;
-    }
-
-}
+pub use semio_s_artifact_shooting_shooting_schema::diff;
 
 pub mod mutations {
     pub use crate::standards::v1::subsets::any::schema::mutations::*;
 }
-pub mod snapshot {
-    pub mod schema {
-        pub use crate::standards::v1::subsets::any::schema::snapshot::*;
-    }
-
-}
+pub use semio_s_artifact_shooting_shooting_inferences::snapshot;
 
 #[path = "."]
 pub mod examples {
     #[path = "."]
     pub mod demo {
-        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️.rs"]
-        mod component;
-        pub use component::*;
-        #[cfg(test)]
-        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🧩️example/🦀️.rs"]
-        mod tests;
+        pub use semio_s_artifact_shooting_shooting_mut_family::examples::demo::*;
+
     }
     #[path = "."]
     pub mod hexagonal_cut_concrete_forest_left {
-        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🌲️hexagonal-cut-concrete-forest-left/🦀️.rs"]
-        mod component;
-        pub use component::*;
-        #[cfg(test)]
-        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🌲️hexagonal-cut-concrete-forest-left/🧪️tests/🧩️example/🦀️.rs"]
-        mod tests;
+        pub use semio_s_artifact_shooting_shooting_mut_family::examples::hexagonal_cut_concrete_forest_left::*;
+
     }
 }
 
@@ -1318,105 +481,88 @@ pub mod examples {
 pub mod editor {
     #[path = "."]
     pub mod shooting {
-        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs"]
-        mod component;
-        pub use component::*;
+        pub use semio_s_artifact_shooting_shooting_shooting::editor::shooting::*;
+pub use semio_s_artifact_shooting_shooting_mut_family::editor::shooting::demo_session;
 
-        #[path = "."]
         pub mod config {
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️.rs"]
-            mod component;
-            pub use component::*;
-
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🦀️.rs"]
-            pub mod schema;
+    pub use semio_s_artifact_shooting_shooting_config::editor::shooting::config::*;
+    pub mod io {
+        pub use semio_s_artifact_shooting_shooting_mut_family::editor::shooting::config::io::*;
+        pub mod binary {
+            pub use semio_s_artifact_shooting_shooting_inferences::editor::shooting::config::io::binary::*;
+            pub use semio_s_artifact_shooting_shooting_config::editor::shooting::config::io::binary::mutations;
         }
+        pub mod text {
+            pub use semio_s_artifact_shooting_shooting_inferences::editor::shooting::config::io::text::*;
+            pub use semio_s_artifact_shooting_shooting_config::editor::shooting::config::io::text::mutations;
+        }
+    }
+}
 
-        #[path = "."]
         pub mod presence {
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🦀️.rs"]
-            mod component;
-            pub use component::*;
-
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema/🦀️.rs"]
-            pub mod schema;
+    pub use semio_s_artifact_shooting_shooting_config::editor::shooting::presence::*;
+    pub mod io {
+        pub use semio_s_artifact_shooting_shooting_mut_family::editor::shooting::presence::io::*;
+        pub mod binary {
+            pub use semio_s_artifact_shooting_shooting_inferences::editor::shooting::presence::io::binary::*;
+            pub use semio_s_artifact_shooting_shooting_config::editor::shooting::presence::io::binary::mutations;
         }
-        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗣️terminology/🦀️.rs"]
-        pub mod terminology;
-        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🦀️.rs"]
-        pub mod wasm;
+        pub mod text {
+            pub use semio_s_artifact_shooting_shooting_inferences::editor::shooting::presence::io::text::*;
+            pub use semio_s_artifact_shooting_shooting_config::editor::shooting::presence::io::text::mutations;
+        }
+    }
+}
+        pub use semio_s_artifact_shooting_shooting_mut_family::editor::shooting::terminology;
+        pub use semio_s_artifact_shooting_shooting_tests::editor::shooting::ui_helpers_and_io;
+        pub use semio_s_artifact_shooting_shooting_tests_dims_scene_sun_to_half::editor::shooting::wasm;
 
         #[path = "."]
         pub mod commands {
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📦️asset/🦀️.rs"]
-            pub mod asset;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎥️camera/🦀️.rs"]
-            pub mod camera;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖨️export/🦀️.rs"]
-            pub mod export;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📄️document/🦀️.rs"]
-            pub mod document;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧭️gumball/🦀️.rs"]
-            pub mod gumball;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/☀️scene/🦀️.rs"]
-            pub mod scene;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗂️selection/🦀️.rs"]
-            pub mod selection;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📷️shot/🦀️.rs"]
-            pub mod shot;
+            pub use semio_s_artifact_shooting_shooting_tests_dims_scene_sun_to_half::editor::shooting::commands::asset;
+            pub use semio_s_artifact_shooting_shooting_tests_dims_scene_sun_to_half::editor::shooting::commands::camera;
+            pub use semio_s_artifact_shooting_shooting_shooting::editor::shooting::commands::export;
+            pub use semio_s_artifact_shooting_shooting_tests_dims_scene_sun_to_half::editor::shooting::commands::document;
+            pub use semio_s_artifact_shooting_shooting_tests_dims_scene_sun_to_half::editor::shooting::commands::gumball;
+            pub use semio_s_artifact_shooting_shooting_tests_dims_scene_sun_to_half::editor::shooting::commands::scene;
+            pub use semio_s_artifact_shooting_shooting_tests_dims_scene_sun_to_half::editor::shooting::commands::selection;
+            pub use semio_s_artifact_shooting_shooting_tests_dims_scene_sun_to_half::editor::shooting::commands::shot;
         }
 
         #[path = "."]
         pub mod modes {
             #[path = "."]
             pub mod edit {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🦀️.rs"]
-                mod component;
-                pub use component::*;
+                pub use semio_s_artifact_shooting_shooting_mutations::editor::shooting::modes::edit::*;
 
                 #[path = "."]
                 pub mod windows {
                     #[path = "."]
                     pub mod scene {
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🎥️scene/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
+                        pub use semio_s_artifact_shooting_shooting_set_active_asset::editor::shooting::modes::edit::windows::scene::*;
 
                         #[path = "."]
                         pub mod options {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🎥️scene/☑️options/🌫️ambient/🦀️.rs"]
-                            pub mod ambient;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🎥️scene/☑️options/🎯️center-model/🦀️.rs"]
-                            pub mod center_model;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🎥️scene/☑️options/✨️roughness/🦀️.rs"]
-                            pub mod roughness;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🎥️scene/☑️options/🌑️shadow/🦀️.rs"]
-                            pub mod shadow;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🎥️scene/☑️options/🧭️sun-azimuth/🦀️.rs"]
-                            pub mod sun_azimuth;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🎥️scene/☑️options/📐️sun-elevation/🦀️.rs"]
-                            pub mod sun_elevation;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🎥️scene/☑️options/☀️sun-enabled/🦀️.rs"]
-                            pub mod sun_enabled;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🎥️scene/☑️options/💡️sun-intensity/🦀️.rs"]
-                            pub mod sun_intensity;
+                            pub use semio_s_artifact_shooting_shooting_tests::editor::shooting::modes::edit::windows::scene::options::ambient;
+                            pub use semio_s_artifact_shooting_shooting_tests::editor::shooting::modes::edit::windows::scene::options::center_model;
+                            pub use semio_s_artifact_shooting_shooting_tests::editor::shooting::modes::edit::windows::scene::options::roughness;
+                            pub use semio_s_artifact_shooting_shooting_tests::editor::shooting::modes::edit::windows::scene::options::shadow;
+                            pub use semio_s_artifact_shooting_shooting_tests::editor::shooting::modes::edit::windows::scene::options::sun_azimuth;
+                            pub use semio_s_artifact_shooting_shooting_tests::editor::shooting::modes::edit::windows::scene::options::sun_elevation;
+                            pub use semio_s_artifact_shooting_shooting_tests::editor::shooting::modes::edit::windows::scene::options::sun_enabled;
+                            pub use semio_s_artifact_shooting_shooting_tests::editor::shooting::modes::edit::windows::scene::options::sun_intensity;
                         }
                     }
 
                     #[path = "."]
                     pub mod icon {
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🖼️icon/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
+                        pub use semio_s_artifact_shooting_shooting_mutations::editor::shooting::modes::edit::windows::icon::*;
 
                         #[path = "."]
                         pub mod options {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🖼️icon/☑️options/🗂️format/🦀️.rs"]
-                            pub mod format;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🖼️icon/☑️options/🔷️shape/🦀️.rs"]
-                            pub mod shape;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🖼️icon/☑️options/📷️shot/🦀️.rs"]
-                            pub mod shot;
+                            pub use semio_s_artifact_shooting_shooting_tests::editor::shooting::modes::edit::windows::icon::options::format;
+                            pub use semio_s_artifact_shooting_shooting_tests::editor::shooting::modes::edit::windows::icon::options::shape;
+                            pub use semio_s_artifact_shooting_shooting_tests::editor::shooting::modes::edit::windows::icon::options::shot;
                         }
                     }
                 }
@@ -1425,12 +571,9 @@ pub mod editor {
 
         #[path = "."]
         pub mod panels {
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🛍️catalogue/🦀️.rs"]
-            pub mod catalogue;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🗿️artifact/🦀️.rs"]
-            pub mod document;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🦀️.rs"]
-            pub mod inspection;
+            pub use semio_s_artifact_shooting_shooting_tests::editor::shooting::panels::catalogue;
+            pub use semio_s_artifact_shooting_shooting_tests::editor::shooting::panels::document;
+            pub use semio_s_artifact_shooting_shooting_tests::editor::shooting::panels::inspection;
         }
     }
 }
@@ -1439,40 +582,25 @@ pub mod editor {
 pub mod viewer {
     #[path = "."]
     pub mod shooting {
-        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs"]
-        mod component;
-        pub use component::*;
-        #[path = "."]
-        pub mod presence {
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/👥️presence/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
-        #[path = "."]
-        pub mod config {
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎚️config/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
+        pub use semio_s_artifact_shooting_shooting_tests_dims_scene_sun_to_half::viewer::shooting::*;
+
+        pub use semio_s_artifact_shooting_shooting_mut_family::viewer::shooting::presence;
+        pub use semio_s_artifact_shooting_shooting_mut_family::viewer::shooting::config;
 
         #[path = "."]
         pub mod modes {
             #[path = "."]
             pub mod view {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🦀️.rs"]
-                mod component;
-                pub use component::*;
+                pub use semio_s_artifact_shooting_shooting_tests::viewer::shooting::modes::view::*;
 
-                #[path = "."]
-                pub mod windows {
-                    #[path = "."]
-                    pub mod scene {
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🎥️scene/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                }
+                pub use semio_s_artifact_shooting_shooting_tests::viewer::shooting::modes::view::windows;
             }
         }
     }
 }
 
 pub use crate::standards::v1::subsets::any::io::{ShootingBuilderConstruction, ShootingParts, ShootingAnalyzerAnalysis, ShootingBuilderFacets, ShootingBuilder, ShootingAnalyzer, ShootingComposer};
+
+#[cfg(test)]
+#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs"]
+mod hoisted_snapshot_0;

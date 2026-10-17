@@ -1,0 +1,7 @@
+# Tools File Admission Refusal
+
+Independent stable bounded nofollow FD/stamp reads bind complete log and terminal receipt in `🗑️generated/native-tools-file-refusal-low-independent.json`. Log 378318 bytes SHA `ecb5373bb81c72b11aa407902574693d8c635cb55fabdd9926b0fe803416d071`. Root separately confirms actual26346 exit1/PID7129. Exactly accepted/observed appear; no witnessed/detach/qualified/settled. Receipt successfalse/ownedCustodyClosedfalse remains honest pending/custody state.
+
+Actual error is Single-link volume-bound publication file required at held W41. That combined predicate refuses nlink!=1, negative size, or size greater than remaining aggregate logical-byte envelope. The log has no offending relative path, captured nlink, size, current accumulated bytes or selected predicate, so it does not establish a hardlink, corrupt negative size or excess-total cause. No mounted recursive walk or filesystem speculation is justified.
+
+Smallest bounded diagnostic is a closed frozen Error.cause attached at that exact predicate using only already captured relative name and before stat plus maximum/accumulated counters: version/path, nlink, size, remaining, reason enum. Validate/print own DATA cause in existing helper then rethrow identical primary. This adds no FS read, acceptance, traversal, cap increase or guard relaxation. Schema/corpus actual RED→GREEN and full Source/strict/Low precede a separately authorized attempt. Until then Tools remains refused, leases qualification independent.

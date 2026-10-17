@@ -36,14 +36,12 @@ fn retained_empty_initialization_catalog_releases_one_exact_native_page_without_
         let resident = [catalog.applied_edit_ids.capacity(), catalog.redo_edit_ids.capacity(), catalog.cursor_applied_edit_ids.capacity(), catalog.cursor_redo_edit_ids.capacity(), catalog.applied_revision.capacity(), catalog.redo_revision.capacity()];
         assert_eq!(resident, std::array::from_fn(|lane| if lane <= index { 0 } else { page_slots }));
         total_released += demand;
-        println!("[DEBUG] Empty initialization native catalog lane={lane} exact-demand={demand} zero/one-below retained, one native page released0birth");
     }
     assert!(catalog.terminal_is_empty());
     assert_eq!(catalog.next_release_byte_demand().unwrap(), 0);
     assert_eq!(catalog.close_step(Default::default()).unwrap(), RetainedCloneStep::Complete(Default::default()));
     let (_, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| drop(catalog));
     assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
-    println!("[DEBUG] Empty initialization native catalog terminal0heap, exact six-page release-total={total_released}; catalog birth cold/uncredited");
 }
 
 #[test]
@@ -88,6 +86,5 @@ fn retained_initialization_catalog_birth_denial_and_cancellation_preserve_every_
         assert_eq!(freed, born);
         let (_, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| drop(catalog));
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
-        println!("[DEBUG] Initialization catalog cancel-after={cancel_after} original admitted birth={born} paid release={freed} terminal0heap");
     }
 }

@@ -1,6 +1,6 @@
 {
   "carriers": [
-    { "id": "react", "fields": ["backboneWorkerFactory", "documentServices"] },
+    { "id": "react", "fields": ["backboneWorkerFactory", "documentServices", "hostPorts"] },
     { "id": "wgpu", "fields": ["rendererWasmUrl", "frameWorkerUrl", "suppressAutoIntroduction", "signal", "onProgress"] }
   ],
   "locales": [

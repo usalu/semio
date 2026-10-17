@@ -2,10 +2,15 @@
 //! cascaded away; each create lands at its own canonical sorted position, so the restored document
 //! is byte-identical to the base.
 
-use crate::mutations::{create_rule, create_tile, pin_cell, Grid2dMutation};
+use crate::standards::v1::subsets::any::schema::mutations::create_rule::create_rule;
+use crate::standards::v1::subsets::any::schema::mutations::create_tile::create_tile;
+use crate::standards::v1::subsets::any::schema::mutations::pin_cell::pin_cell;
 use crate::schema::snapshot::Grid2dSnapshot;
 
-pub fn inverse(payload: &super::DeleteTile, base: &Grid2dSnapshot) -> Result<Vec<Grid2dMutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op>(payload: &super::DeleteTile, base: &Grid2dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError>
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::create_rule::CreateRule> + From<crate::standards::v1::subsets::any::schema::mutations::create_tile::CreateTile> + From<crate::standards::v1::subsets::any::schema::mutations::pin_cell::PinCell>,
+{
     Ok((|| {
     let Some(tile) = base.tiles.iter().find(|tile| tile.id == payload.id) else {
         return Vec::new();

@@ -29,6 +29,10 @@ type energyModelInferenceGuardSizeBounds = { readonly minItems?: number; readonl
 
 export const energyModelInferenceGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : energyModelInferenceGuardReject(at, "value is not an object");
+export const energyModelInferenceGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) energyModelInferenceGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const energyModelInferenceGuardArray = (value: unknown, at: string, bounds: energyModelInferenceGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return energyModelInferenceGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) energyModelInferenceGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -59,14 +63,14 @@ export const energyModelInferenceGuardConstant = <T extends string | number | bo
 //#endregion 🚪️Parsers
 
 export function parseEnergyModelInference(value: unknown, at = "$"): EnergyModelInference {
-  const row = energyModelInferenceGuardObject(value, at);
+  const row = energyModelInferenceGuardClosed(energyModelInferenceGuardObject(value, at), at, ["entries"]);
   return {
     entries: parseEnergyModelEntries(row["entries"], `${at}.entries`),
   };
 }
 
 export function parseEnergyModelEntries(value: unknown, at = "$"): EnergyModelEntries {
-  const row = energyModelInferenceGuardObject(value, at);
+  const row = energyModelInferenceGuardClosed(energyModelInferenceGuardObject(value, at), at, ["entryCount", "byteSize", "contentDigest"]);
   return {
     entryCount: energyModelInferenceGuardInteger(row["entryCount"], `${at}.entryCount`),
     byteSize: energyModelInferenceGuardInteger(row["byteSize"], `${at}.byteSize`),

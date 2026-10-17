@@ -1,0 +1,15 @@
+{
+ "name": "c4p18vc",
+ "crates": [
+  "semio-s-artifact-vcs-vcs",
+  "semio-vcs-mutation-bridge"
+ ],
+ "base": {
+  "rev": "b84bf526c7b",
+  "crates": [
+   "semio-s-artifact-vcs-vcs",
+   "semio-vcs-mutation-bridge"
+  ]
+ },
+ "note": "CENSUS4-PKG-18 split family c4p18vc"
+}

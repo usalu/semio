@@ -34,7 +34,7 @@ fn verify(mut cursor:ProtocolConflictRetirement,held:usize,copy:usize,release:us
             let(result,heap)=observe_heap_allocations_on_this_thread(||cursor.close_step(below));assert!(result.is_err()||result.is_ok_and(|step|step.progress()==RetainedCloneProgress::default()));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
         }
         let(step,heap)=observe_heap_allocations_on_this_thread(||cursor.close_step(grant).unwrap());assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes),"turn{turn}");assert!(step.progress().fits(grant));returned+=heap.released_bytes;born+=heap.requested_bytes;
-        if step.progress()==RetainedCloneProgress::default(){stalled+=1;if stalled==64{eprintln!("[DEBUG] original Conflict stalled turn={turn} copy={} quoteCopy={} capacity={capacity} release={freed} depth={depth} actual={:?} admitted={born} physical={returned}",grant.maximum_copy_bytes,cursor.next_copy_byte_demand().unwrap(),step.progress());panic!("original Conflict fixed admitted copy stalled");}}else{stalled=0;}
+        if step.progress()==RetainedCloneProgress::default(){stalled+=1;if stalled==64{panic!("original Conflict fixed admitted copy stalled");}}else{stalled=0;}
         if matches!(step,RetainedCloneStep::Complete(_)){assert!(cursor.terminal_is_empty());break;}assert!(turn+1<maximum_turns,"original conflict exceeded source-extent turn bound: copy={body} capacity={capacity} release={freed} depth={depth} grant={grant:?} step={step:?} held={held} born={born} returned={returned}");
     }
     assert_eq!(returned,held+born);
@@ -45,13 +45,11 @@ fn verify(mut cursor:ProtocolConflictRetirement,held:usize,copy:usize,release:us
 fn conflict_ownership_retirement_preserves_and_releases_every_causal_optional_owner() {
     let law=fixture();
     for row in law["envelopes"].as_array().unwrap(){for copy in law["copyGrants"].as_array().unwrap(){for release in law["releaseGrants"].as_array().unwrap(){let(owner,source)=observe_heap_allocations_on_this_thread(||envelope(row));let held=source.requested_bytes-source.released_bytes;let original=owner.mutation_id.0.as_ptr();let(cursor,heap)=observe_heap_allocations_on_this_thread(||ProtocolConflictRetirement::causal_envelope(owner));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));let ProtocolOwner::Envelope(envelope)=&cursor.owner else{panic!("original envelope owner");};assert_eq!(envelope.original().unwrap().mutation_id.0.as_ptr(),original);verify(cursor,held,copy.as_u64().unwrap()as usize,release.as_u64().unwrap()as usize,law["maximumTurns"].as_u64().unwrap()as usize);}}}
-    println!("[DEBUG] native original causal envelope fulltyped identity/actor/observed/transaction/verb/line fields, targets/dependencies/payloads include original unused capacities; undergrants0effects, actualbirth/free exact, terminal Drop0heap");
 }
 #[test]
 fn conflict_ownership_retirement_preserves_all_quarantined_degraded_original_scaffolds() {
     let law=fixture();
     for row in law["conflicts"].as_array().unwrap(){for copy in law["copyGrants"].as_array().unwrap(){for release in law["releaseGrants"].as_array().unwrap(){let(owner,source)=observe_heap_allocations_on_this_thread(||conflict(row,&law));let held=source.requested_bytes-source.released_bytes;let original=owner.messages.as_ptr();let(cursor,heap)=observe_heap_allocations_on_this_thread(||ProtocolConflictRetirement::new(owner));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));let ProtocolOwner::Conflict(conflict)=&cursor.owner else{panic!("original conflict owner");};assert_eq!(conflict.original().unwrap().messages.as_ptr(),original);verify(cursor,held,copy.as_u64().unwrap()as usize,release.as_u64().unwrap()as usize,law["maximumTurns"].as_u64().unwrap()as usize);}}}
-    println!("[DEBUG] native quarantined/degraded/empty conflict branches retain original messages/envelopes/actors/identities and every old vector backing, independent copy/capacity/release/depth, terminal Drop0heap");
 }
 
 #[test]
@@ -69,6 +67,6 @@ fn conflict_ownership_retirement_preserves_original_shared_actor_unique_and_alia
   }
   assert!(cursor.terminal_is_empty());let((),heap)=observe_heap_allocations_on_this_thread(||drop(cursor));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,policy["terminalDropBytes"].as_u64().unwrap()as usize));
   if let Some(original)=lease.take(){assert_eq!(original.as_ptr(),pointer);assert_eq!(original.as_str(),text);let mut original=ControlledRetirement::new(original).unwrap_or_else(|(error,_)|panic!("actual original shared alias: {error}"));for _ in 0..policy["maximumTurns"].as_u64().unwrap(){if original.terminal_is_empty(){break;}let body=original.next_copy_byte_demand().unwrap().max(policy["copy"].as_u64().unwrap()as usize);let full=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:body,maximum_capacity_bytes:original.next_capacity_byte_demand(body).unwrap(),maximum_release_bytes:original.next_release_byte_demand().unwrap(),maximum_depth:original.next_depth_demand().unwrap()};let(step,heap)=observe_heap_allocations_on_this_thread(||original.step(full).unwrap());assert!(step.progress().fits(full));assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));born+=heap.requested_bytes;released+=heap.released_bytes;}assert!(original.terminal_is_empty());let((),heap)=observe_heap_allocations_on_this_thread(||drop(original));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));}
-  assert_eq!(released,held+born);eprintln!("[DEBUG] original conflict shared actor name={} aliases={aliases} turns={turns} sameUTF8pointer, independent Serde, five denials/exactHeap, born={born} released={released}, terminalDrop0",row["name"]);
+  assert_eq!(released,held+born);
  }}
 }

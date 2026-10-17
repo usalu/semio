@@ -2,7 +2,6 @@
 //! `ports` (an intrinsically ordered, anonymous collection nested one level inside `nodes` — mirrors
 //! `🔤️text`'s `add-mark` exactly).
 
-use crate::schema::mutations::SemioGraphMutation;
 use crate::schema::snapshot::{GraphNodeId, SemioGraphPort, SemioGraphSnapshot};
 
 //#region 🔖️Payload
@@ -15,13 +14,16 @@ pub struct AddNodePort {
     pub port: SemioGraphPort,
 }
 
-impl protocol::MutationKind<SemioGraphSnapshot, SemioGraphMutation> for AddNodePort {
+impl<Op> protocol::MutationKind<SemioGraphSnapshot, Op> for AddNodePort
+where
+    Op: protocol::Mutation<SemioGraphSnapshot, Diff = crate::schema::diff::SemioGraphDiff> + From<AddNodePort> + From<crate::schema::mutations::remove_node_port::RemoveNodePort>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "node-port", kind: "add-node-port", record: "AddedNodePort" };
 
-    fn diff(&self, base: &SemioGraphSnapshot) -> protocol::MutationOutcome<<SemioGraphMutation as protocol::Mutation<SemioGraphSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioGraphSnapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<SemioGraphSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &SemioGraphSnapshot) -> Result<Vec<SemioGraphMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &SemioGraphSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

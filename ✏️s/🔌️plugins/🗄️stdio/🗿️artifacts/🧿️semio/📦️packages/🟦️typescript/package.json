@@ -20,9 +20,18 @@
     ".": {
       "types": "./dist/🟦️.d.ts",
       "import": "./dist/🟦️.js"
-    }
+    },
+    "./source": "./📥️source/🟦️.ts",
+    "./standards/v1/subsets/drawing/io/sqlite/snapshot": "./🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🚪️io/🪶️sqlite/📸️snapshot/🟦️.ts",
+    "./standards/v1/subsets/drawing/io/text/snapshot/native-json": "./🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🚪️io/📝️text/📸️snapshot/🪪️native-json/🟦️.ts",
+    "./standards/v1/subsets/drawing/schema/snapshot": "./🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/📸️snapshot/🟦️.ts",
+    "./standards/v1/subsets/graph/io/sqlite/snapshot": "./🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🚪️io/🪶️sqlite/📸️snapshot/🟦️.ts",
+    "./standards/v1/subsets/graph/io/text/snapshot/json": "./🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🚪️io/📝️text/📸️snapshot/🔣️json/🟦️.ts",
+    "./standards/v1/subsets/image/schema/snapshot": "./🏅️standards/🔖️v1/🪆️subsets/🖼️image/🧬️schema/📸️snapshot/🟦️.ts"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@semio-tech/framework-os": "workspace:*"
+  },
   "license": "LGPL-3.0-or-later",
   "repository": {
     "type": "git",

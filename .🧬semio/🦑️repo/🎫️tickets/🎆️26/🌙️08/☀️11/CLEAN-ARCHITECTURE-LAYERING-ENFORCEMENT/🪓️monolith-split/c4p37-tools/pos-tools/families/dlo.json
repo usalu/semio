@@ -1,0 +1,14 @@
+{
+"name": "dlo",
+"crates": [
+"semio-framework-os-flow-contract",
+"semio-framework-artifact-flow-flow",
+"semio-framework-os-playbook-contract",
+"semio-framework-artifact-playbook-playbook",
+"semio-framework-artifact-flow-flow-model",
+"semio-framework-artifact-flow-flow-copy",
+"semio-framework-artifact-flow-flow-document"
+],
+"base": null,
+"note": "DIRECTION-LEFTOVERS facades, absolute"
+}

@@ -1,0 +1,21 @@
+{
+ "name": "c4p16b",
+ "crates": [
+  "semio-s-artifact-stdio-las-snapshot",
+  "semio-s-artifact-stdio-las-schema",
+  "semio-s-artifact-stdio-las-tests",
+  "semio-s-artifact-stdio-las-mutations",
+  "semio-s-artifact-stdio-las"
+ ],
+ "note": "CENSUS4-PKG-16 split family c4p16b",
+ "base": {
+  "rev": "b84bf526c7b",
+  "crates": [
+   "semio-s-artifact-stdio-las-snapshot",
+   "semio-s-artifact-stdio-las-schema",
+   "semio-s-artifact-stdio-las-tests",
+   "semio-s-artifact-stdio-las-mutations",
+   "semio-s-artifact-stdio-las"
+  ]
+ }
+}

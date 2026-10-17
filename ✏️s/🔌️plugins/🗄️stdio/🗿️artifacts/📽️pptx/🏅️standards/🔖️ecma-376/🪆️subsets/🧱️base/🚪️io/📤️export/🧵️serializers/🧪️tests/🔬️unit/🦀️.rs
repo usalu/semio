@@ -47,7 +47,6 @@ fn literal_xml_export_preserves_attributes_with_independent_zip_and_xml_readers(
             }
         }
         assert_eq!(values, vec![case["value"].as_str().unwrap()], "{}", case["id"]);
-        println!("[DEBUG] PPTX literal XML {} preserved through independent ZIP/XML readers", case["id"]);
     }
     let reopened = crate::standards::v_ecma_376::subsets::base::io::import::deserializers::decode_pptx(&bytes).unwrap();
     for case in fixture["cases"].as_array().unwrap() {
@@ -65,5 +64,4 @@ fn literal_xml_export_preserves_authored_content_order() {
     let archive = zip::ZipArchive::new(Cursor::new(&bytes)).unwrap();
     let actual: Vec<&str> = archive.file_names().filter(|name| expected.contains(name)).collect();
     assert_eq!(actual, expected);
-    println!("[DEBUG] PPTX ZIP members follow authored part order for custom paths");
 }

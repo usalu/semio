@@ -118,7 +118,7 @@ fn row_actions(labels: &SHomeLabels, row: &semio_s_space_core::HomeSpaceRow) -> 
 /// kit, so any number of spaces stays inside the window's node budget: the host streams the rows its
 /// viewport shows (ticket 26/09/18 U5 §6b — 9 author rows used to fault the whole window at
 /// `nodes 129 > 128`). A row's own activation (Enter on the focused row) opens the space.
-fn render_rows(rows: &[semio_s_space_core::HomeSpaceRow], table: &HomeTableLabels, actions: &SHomeLabels, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render_rows(rows: &[semio_s_space_core::HomeSpaceRow], table: &HomeTableLabels, actions: &SHomeLabels, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     if rows.is_empty() {
         return semio_framework_ui_contract::text(fixed_label(table.empty_message, "ui.table.empty-label")?)
             .try_id(S_HOME_EMPTY)
@@ -201,7 +201,7 @@ fn toolbar(actions: &SHomeLabels) -> semio_framework_plugin::UiAssemblyResult<se
 /// That is exactly what `s-home-main` did for every signed-out visitor: the empty-catalog message was
 /// `try_build()`-ed `#0` and the first spacer was positioned `#0` (ticket 26/09/18, S3 — measured live
 /// and pinned by `the_signed_out_window_body_survives_the_component_tree_producer`).
-fn render_rows_wrapped(rows: &[semio_s_space_core::HomeSpaceRow], table: &HomeTableLabels, actions: &SHomeLabels, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render_rows_wrapped(rows: &[semio_s_space_core::HomeSpaceRow], table: &HomeTableLabels, actions: &SHomeLabels, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let table_node = render_rows(rows, table, actions, windows)?;
     let mut children: semio_framework_plugin::UiFixedList<semio_framework_plugin::BuiltNode> = semio_framework_plugin::UiFixedList::default();
     for child in [window_content_dead_line_spacer(S_HOME_DEAD_LINE[0])?, window_content_dead_line_spacer(S_HOME_DEAD_LINE[1])?, toolbar(actions)?, table_node] {
@@ -241,7 +241,5 @@ pub fn render(cfg: &HomeConfig, directory: &HomeDirectoryProjection, view_state:
 //#endregion 🔖️Render
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

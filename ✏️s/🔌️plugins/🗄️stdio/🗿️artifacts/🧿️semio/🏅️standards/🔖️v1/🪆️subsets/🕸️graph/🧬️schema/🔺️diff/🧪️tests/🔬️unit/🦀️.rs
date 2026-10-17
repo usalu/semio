@@ -1,4 +1,5 @@
-use super::*;
+use crate::{schema::snapshot::SemioGraphNode, schema::snapshot::SemioGraphSnapshot};
+use crate::schema::diff::*;
 use semio_s_artifact_stdio_semio_base::schema::triples::IndexedTripleDiff;
 use crate::schema::snapshot::{GraphEdgeId, GraphNodeId, STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA};
 use protocol::{DiffBinary,DiffText};

@@ -1,5 +1,6 @@
 use super::*;
-use crate::standards::v1::subsets::any::schema::inferences::diagnostics::{compute_diagnostics, render, row_of, LOCALES};
+use crate::standards::v1::subsets::any::schema::inferences::diagnostics::{render, row_of, LOCALES};
+use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_diagnostics;
 use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 

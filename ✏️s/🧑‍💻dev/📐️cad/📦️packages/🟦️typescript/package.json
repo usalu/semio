@@ -12,7 +12,8 @@
     "fixture": "bun --cwd \"../../../../..\" repo run @semio-tech/cad-js:fixture"
   },
   "exports": {
-    ".": "./🟦️.ts"
+    ".": "./🟦️.ts",
+    "./testing/spatial-kernel/brepjs": "./🧪️testing/🔮️spatial-kernel/🧱️brepjs/🟦️.ts"
   },
   "dependencies": {
     "@semio-tech/framework-3d-js": "workspace:*",
@@ -21,7 +22,10 @@
     "@semio-tech/ui-styling": "workspace:*",
     "@semio-tech/infinite-world-r3f": "workspace:*",
     "@semio-tech/machine": "workspace:*",
-    "chevrotain": "^11.0.3"
+    "chevrotain": "^11.0.3",
+    "@semio-tech/s-spatial-kernel-ts": "workspace:*",
+    "@semio-tech/cad-engine-ts": "workspace:*",
+    "@semio-tech/s-spatial-kernel-semio-session-ts": "workspace:*"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.1.18",
@@ -35,7 +39,8 @@
     "vite": "^7.3.1",
     "vitest": "^4.0.17",
     "xstate": "^5.31.1",
-    "@semio-tech/process": "workspace:*"
+    "@semio-tech/process": "workspace:*",
+    "@semio-tech/cad-cad-ts": "workspace:*"
   },
   "author": {
     "name": "Ueli Saluz",

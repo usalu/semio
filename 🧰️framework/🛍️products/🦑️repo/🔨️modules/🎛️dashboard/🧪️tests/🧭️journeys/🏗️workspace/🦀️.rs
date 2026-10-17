@@ -3,9 +3,10 @@
 //!
 //! @see ../../../🧫️fixtures/🧭️journeys/🏗️workspace/📋️project.json
 
+use semio_framework_test_fixtures::{fixture_path, repo_root};
 use std::net::{TcpListener, TcpStream};
 use std::io::{Read, Write};
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::process::{Command, Output, Stdio};
 use std::time::Duration;
 
@@ -23,7 +24,7 @@ pub fn which(name: &str) -> PathBuf {
 /// 🧪 The explicitly selected test executable or the canonical installed dashboard.
 pub fn binary() -> PathBuf {
     if let Some(path) = std::env::var_os("SEMIO_TEST_CLI") { return PathBuf::from(path); }
-    let repository = Path::new(env!("CARGO_MANIFEST_DIR")).ancestors().find(|folder| folder.join("nx.json").is_file()).expect("the repository root").to_path_buf();
+    let repository = repo_root!();
     let record: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(repository.join(".🧬semio/🦑️repo/⚡️cache/🎛️dashboard/installed.json")).expect("install the dashboard through its owning Nx build")).unwrap();
     assert_eq!(record["version"], 2);
     let executable = repository.join(record["path"].as_str().unwrap());
@@ -46,7 +47,7 @@ pub struct Workspace {
 impl Workspace {
     /// 📂 Copies the fixture into a fresh directory outside the repository (a `.git` folder marks its root).
     pub fn new(name: &str) -> Self {
-        let source = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../🧫️fixtures/🧭️journeys/🏗️workspace");
+        let source = fixture_path!("../../../🧫️fixtures/🧭️journeys/🏗️workspace");
         let base = std::env::temp_dir().join(format!("semio-journeys-{}-{}", std::process::id(), name));
         let _ = std::fs::remove_dir_all(&base);
         let root = base.join("workspace");

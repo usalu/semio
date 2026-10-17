@@ -1,4 +1,4 @@
-import { hostContinuations } from "../../⏳️async/🪃️continuation/🟦️.ts";
+import { hostContinuations } from "@semio-tech/framework-async/continuation";
 import {textUtf8ByteLength} from "@semio-tech/value-ts/text";
 /** 🪶️ Dependency-free relational SQLite 3 physical engine. @see https://sqlite.org/fileformat.html */
 import { ValueError, type ValueRefusalKind } from "../../🌱️value/📦️packages/🟦️typescript/⚠️refusal/🟦️.ts";

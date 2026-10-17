@@ -78,13 +78,10 @@ pub fn addressed(view: &semio_framework_plugin::ViewModel, base: &FormsTryWindow
     Ok(FormsTryWindowConfigMutation::setting(base, &config).into_iter().map(|mutation| semio_framework_plugin::WindowConfigMutation::of::<FormsTryWindowConfigOwner>(id, mutation)).collect())
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️window/🦀️.rs"]
-mod tests;
+
 
 //#region 🪢️TaxonomyMounts
-#[path = "🧬️schema/🦀️.rs"]
-pub mod schema;
+
 //#endregion 🪢️TaxonomyMounts
 
 #[path="🚪️io/📝️text/🧬️mutations/🦀️.rs"]

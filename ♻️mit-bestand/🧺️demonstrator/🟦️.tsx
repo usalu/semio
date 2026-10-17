@@ -29,9 +29,10 @@ import {
   type LayeredPane,
 } from "@semio-tech/ui-react";
 import { createBrowserStoragePort, resolvePlaygroundBoot } from "@semio-tech/framework";
-import { composeSpecificOsCatalogV1 } from "../../✏️s/🧑‍💻dev/🧩️catalog/🟦️.ts";
+import { composeSpecificOsCatalogV1 } from "@semio-tech/s-dev-catalog-ts";
 import { FrameworkOsShell, resolveShellLocks, resolveShellDefaults } from "@semio-tech/framework-renderer-react";
 import { PUZZLE_BOARD_SESSION_FACTORIES } from "@semio-tech/puzzle-2d";
+import { createFrameworkOsHostPortsV1 } from "../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🪝️host-ports/🟦️.ts";
 import { DemonstratorCard } from "./⚛️demonstrator-card.tsx";
 import { aProjectOfLuhUdkFooterItem, fundedByZukunftBauFooterItem } from "./⚛️footer.tsx";
 import { DEMONSTRATOR_LOCALE, DEMONSTRATOR_PANES, ENTWERFEN_MIT_BESTAND_GENERAL_INTRODUCTION, ENTWERFEN_MIT_BESTAND_LOGO_SVG, demonstratorPaneBootVariants, type DemonstratorPaneSpec } from "./🪧️brand.ts";
@@ -40,6 +41,9 @@ import "./🎨️globals.css";
 // 🎪️ Page-owning (single React root, no `ShellScope` of its own) — plain browser storage is correct;
 // each pane's own `FrameworkOsShell` gets its own `ShellScope` (ephemeral brands → in-memory storage).
 const demonstratorStorage = createBrowserStoragePort();
+
+/** 🪝️ The one set of ports every pane's shell reads: the page's composition root binds them once. */
+const FRAMEWORK_OS_HOST_PORTS = createFrameworkOsHostPortsV1();
 
 bootstrapElementsSurfaceChromeDocument(readStoredUiChromeAppearance(demonstratorStorage));
 // 🇩🇪️ The whole demonstrator is German-locked (see 🪧️brand.ts) — resolve synchronously before the
@@ -116,6 +120,7 @@ function DemonstratorShell({ pane, opened }: { readonly pane: DemonstratorPaneSp
       pluginFilter={variants.runtime}
       plugins={runtimeBoot.plugins}
       surfaceSessionFactories={PUZZLE_BOARD_SESSION_FACTORIES}
+      hostPorts={FRAMEWORK_OS_HOST_PORTS}
       appId={manifestBoot.defaultAppId}
       locks={locks}
       defaults={defaults}

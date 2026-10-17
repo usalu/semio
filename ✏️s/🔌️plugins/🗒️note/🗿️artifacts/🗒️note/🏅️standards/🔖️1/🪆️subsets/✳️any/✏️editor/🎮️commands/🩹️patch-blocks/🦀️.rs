@@ -21,7 +21,7 @@ pub struct PatchBlocks {
 /// 🩹️ Routes each inspector field to its typed semantic mutation and batches multi-selection
 /// into one undo step. Missing ids, unknown fields, malformed values and absent blocks return
 /// their named command or mutation refusal.
-pub fn handle(payload: &PatchBlocks, doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, semio_framework_plugin::NoConfig>, _ctx: &mut crate::editor::note::NoteDispatchCtx) -> Result<Emit<NoteMutation, semio_framework_plugin::NoConfigMutation>, Fault> {
+pub fn handle(payload: &PatchBlocks, doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, semio_framework_plugin::NoConfig>, _ctx: &mut crate::editor::note::dispatch_ctx::NoteDispatchCtx) -> Result<Emit<NoteMutation, semio_framework_plugin::NoConfigMutation>, Fault> {
     let invalid = |detail: String| Fault::new(FaultOrigin::App, FaultCode::new("app.command.invalid-args"), detail);
     if payload.block_ids.is_empty() {
         return Err(invalid("patchBlocks needs at least one block id".into()));

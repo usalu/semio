@@ -1,8 +1,16 @@
 //! 🧪️ Native connection plans preserve original paged owners and exact borrowed closure.
 
-use super::*;
+use crate::standards::v1::subsets::any::schema::mutations::connect_handles::ConnectHandles;
+use crate::Puzzle2dSnapshot;
+use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::lookup::{Puzzle2dLookupCursor, Puzzle2dLookupLocation, Puzzle2dLookupScope, Puzzle2dLookupStep};
+#[allow(unused_imports)]
+use semio_framework_value::{ValueError, ValueRefusalKind, retained_clone::RetainedCloneBinding, retained_clone::RetainedCloneRef, retained_clone::RetainedCloneStep};
+use crate::standards::v1::subsets::any::schema::preparation::connect_handles_preparation::*;
+use semio_framework_test_fixtures::fixture_text;
 use semio_framework_value::paged::PagedUtf8;
-use crate::test_source_custody;
+use crate::standards::v1::subsets::any::schema::testkit as test_source_custody;
 
 fn close(cursor: &mut Puzzle2dConnectHandlesPreparationCursor) {
     cursor.begin_close();
@@ -22,14 +30,14 @@ fn close(cursor: &mut Puzzle2dConnectHandlesPreparationCursor) {
 fn history_edit_puzzle2d_borrowed_connect_preparation_preserves_finite_priority_and_exact_proximity() {
     assert!(std::mem::size_of::<Puzzle2dConnectHandlesPreparationCursor>() <= 4096);
     assert!(std::mem::size_of::<Puzzle2dConnectHandlesPlan>() <= 96);
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🪢️connect-handles/🎮️prepare/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🪢️connect-handles/🎮️prepare/🔣️.json")).unwrap();
     let controls = &corpus["control"];
     let text = |value: &serde_json::Value| { let value = value.as_str().unwrap(); match value.strip_prefix("$large:") { Some(suffix) => PagedUtf8::<{usize::MAX}>::from(format!("{}{suffix}", controls["largePrefix"].as_str().unwrap().repeat(controls["largeRepeats"].as_u64().unwrap() as usize))), None => value.into() } };
     let grant = RetainedCloneGrant::one_payload_turn(96,64);
     for case in corpus["cases"].as_array().unwrap() {
         let mut snapshot = Puzzle2dSnapshot::default();
-        snapshot.nodes = case["nodes"].as_array().unwrap().iter().map(|wire| { let mut node: crate::standards::v1::subsets::any::schema::Puzzle2dNode = serde_json::from_value(wire.clone()).unwrap(); for (index, handle) in wire["handles"].as_array().unwrap().iter().enumerate() { node.handles.get_mut(index).unwrap().id = text(&handle["id"]); } node }).collect();
-        snapshot.edges = case["edges"].as_array().unwrap().iter().map(|id| crate::standards::v1::subsets::any::schema::Puzzle2dEdge { id: text(id), ..Default::default() }).collect();
+        snapshot.nodes = case["nodes"].as_array().unwrap().iter().map(|wire| { let mut node: crate::standards::v1::subsets::any::schema::records::Puzzle2dNode = serde_json::from_value(wire.clone()).unwrap(); for (index, handle) in wire["handles"].as_array().unwrap().iter().enumerate() { node.handles.get_mut(index).unwrap().id = text(&handle["id"]); } node }).collect();
+        snapshot.edges = case["edges"].as_array().unwrap().iter().map(|id| crate::standards::v1::subsets::any::schema::records::Puzzle2dEdge { id: text(id), ..Default::default() }).collect();
         let mut wire = case["mutation"].clone();
         for field in ["gap", "shift", "rise", "rotation", "turn", "tilt", "x", "y", "tolerance"] { if wire[field].is_string() { wire[field] = serde_json::json!(0); } }
         let mut payload: ConnectHandles = serde_json::from_value(wire).unwrap();
@@ -75,6 +83,5 @@ fn history_edit_puzzle2d_borrowed_connect_preparation_preserves_finite_priority_
         let mut fenced = Puzzle2dConnectHandlesPreparationCursor::default(); fenced.advance(source.borrow(&snapshot), mutation.borrow(&payload), grant).unwrap();
         let swapped = snapshot.clone(); assert!(fenced.advance(source.borrow(&swapped), mutation.borrow(&payload), grant).is_err()); close(&mut fenced);
         test_source_custody::close(&mut source);test_source_custody::close(&mut mutation);
-        eprintln!("[DEBUG] Puzzle connect {} retained finite priority, first handle, proximity and original paged owners with zero heap birth/advance/alias closure", case["id"].as_str().unwrap());
     }
 }

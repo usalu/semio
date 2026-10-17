@@ -92,9 +92,9 @@ pub enum MemberOpenStep<M> {
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct MemberOpenFrame {
-    snapshot_start: usize,
+    pub snapshot_start: usize,
     snapshot_bytes: usize,
-    history_start: usize,
+    pub history_start: usize,
     history_bytes: usize,
 }
 

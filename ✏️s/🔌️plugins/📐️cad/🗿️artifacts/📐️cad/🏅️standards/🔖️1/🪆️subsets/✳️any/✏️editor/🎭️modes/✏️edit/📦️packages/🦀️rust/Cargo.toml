@@ -44,6 +44,7 @@ ui_wgpu = { workspace = true, features = ["wgpu"] }
 semio-framework-async-macros = { workspace = true }
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
+semio-framework-test-fixtures = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-s-artifact-cad-cad-commands = { workspace = true }
 semio-s-artifact-cad-cad-editor = { workspace = true }
 semio-s-artifact-stdio-semio = { workspace = true }

@@ -4,7 +4,7 @@ import { WORKSPACE_ROOT } from "../../../../../../../../../../../../../🧰️fr
 import { toolJobRustBlock } from "../../../../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/📋️inventory/🟦️.ts";
 import { toolJobImmutableOperationRootsExact, toolJobPeerCommitAuthorityExact, toolJobPeerInteractionRootsExact } from "../../../../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/🗄️artifact-store/🟦️.ts";
 import { frameworkSourcePath } from "@semio-tech/framework/test/source-text";
-import { readModuleTreeSource } from "../../../../../../../../../../../../../🧰️framework/🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 
 /** 🧱️ One retirement unit a CAD presence lane contributes, or `null` when the lane is absent. */
 type CadPresenceRetirementPart = { readonly unit: string; readonly repeat: number } | null;

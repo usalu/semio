@@ -1,0 +1,181 @@
+{
+ "crates": {
+  "session": {
+   "ident": "semio_s_artifact_raster_raster_editor_session",
+   "root": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧠️session/🦀️.rs"
+  },
+  "modes": {
+   "ident": "semio_s_artifact_raster_raster_editor_modes",
+   "root": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🦀️.rs"
+  },
+  "panels": {
+   "ident": "semio_s_artifact_raster_raster_editor_panels",
+   "root": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🦀️.rs"
+  },
+  "commands": {
+   "ident": "semio_s_artifact_raster_raster_editor_commands",
+   "root": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🦀️.rs"
+  },
+  "editor": {
+   "ident": "semio_s_artifact_raster_raster_editor",
+   "root": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs"
+  }
+ },
+ "companions": {
+  "editor_tests": {
+   "dir": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🥣️companion",
+   "doc": "Companion test crate of the raster editor crates: the laws that drive the whole editor app through its command channel, panels, modes and media export. The test files stay at their taxonomy nodes and are mounted here.",
+   "owners": [
+    "editor",
+    "commands",
+    "session"
+   ]
+  }
+ },
+ "keepCrate": [
+  "unit_tests",
+  "fill_tool_transactions",
+  "stroke_stream_transactions"
+ ],
+ "files": [
+  {
+   "file": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🖱️selection/🧪️tests/🦀️.rs",
+   "owner": "session",
+   "companion": "editor_tests",
+   "identOwner": "editor"
+  },
+  {
+   "file": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🌈️apply-filter/🧪️tests/🦀️.rs",
+   "owner": "commands",
+   "companion": "editor_tests",
+   "identOwner": "editor"
+  },
+  {
+   "file": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎬️set-active-example/🧪️tests/🔬️unit/🦀️.rs",
+   "owner": "commands",
+   "companion": "editor_tests",
+   "identOwner": "editor"
+  },
+  {
+   "file": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎭️mask-from-selection/🧪️tests/🦀️.rs",
+   "owner": "commands",
+   "companion": "editor_tests",
+   "identOwner": "editor"
+  },
+  {
+   "file": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📋️duplicate-layer/🧪️tests/🦀️.rs",
+   "owner": "commands",
+   "companion": "editor_tests",
+   "identOwner": "editor"
+  },
+  {
+   "file": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔄️transform-image/🧪️tests/🦀️.rs",
+   "owner": "commands",
+   "companion": "editor_tests",
+   "identOwner": "editor"
+  },
+  {
+   "file": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖌️paint-stroke/🧪️tests/🦀️.rs",
+   "owner": "commands",
+   "companion": "editor_tests",
+   "identOwner": "editor"
+  },
+  {
+   "file": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🥞️flatten-layers/🧪️tests/🦀️.rs",
+   "owner": "commands",
+   "companion": "editor_tests",
+   "identOwner": "editor"
+  },
+  {
+   "file": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🩹️patch-layer/🧪️tests/🦀️.rs",
+   "owner": "commands",
+   "companion": "editor_tests",
+   "identOwner": "editor"
+  },
+  {
+   "file": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🪣️fill-region/🧪️tests/🦀️.rs",
+   "owner": "commands",
+   "companion": "editor_tests",
+   "identOwner": "editor"
+  },
+  {
+   "file": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🫗️fill-selection/🧪️tests/🦀️.rs",
+   "owner": "commands",
+   "companion": "editor_tests",
+   "identOwner": "editor"
+  },
+  {
+   "file": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🫳️merge-down/🧪️tests/🦀️.rs",
+   "owner": "commands",
+   "companion": "editor_tests",
+   "identOwner": "editor"
+  },
+  {
+   "file": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🚚️move-layer/🧪️tests/🦀️.rs",
+   "owner": "commands",
+   "companion": "editor_tests",
+   "identOwner": "editor"
+  },
+  {
+   "file": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/💾️document/🧪️tests/🦀️.rs",
+   "owner": "editor",
+   "companion": "editor_tests",
+   "identOwner": "editor"
+  },
+  {
+   "file": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📤️export/🧪️tests/🦀️.rs",
+   "owner": "editor",
+   "companion": "editor_tests",
+   "identOwner": "editor"
+  },
+  {
+   "file": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs",
+   "owner": "editor",
+   "companion": "editor_tests",
+   "identOwner": "editor",
+   "mountName": "unit_tests"
+  },
+  {
+   "file": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🧪️fill-tool-transactions/🦀️.rs",
+   "owner": "editor",
+   "companion": "editor_tests",
+   "identOwner": "editor",
+   "mountName": "fill_tool_transactions"
+  },
+  {
+   "file": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🧪️stroke-stream-transactions/🦀️.rs",
+   "owner": "editor",
+   "companion": "editor_tests",
+   "identOwner": "editor",
+   "mountName": "stroke_stream_transactions"
+  },
+  {
+   "file": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🏔️mounted-boot-laws/🦀️.rs",
+   "owner": "editor",
+   "companion": "editor_tests",
+   "identOwner": "editor",
+   "rewriteOnly": true
+  },
+  {
+   "file": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/📥️envelope-and-scene-laws/🦀️.rs",
+   "owner": "editor",
+   "companion": "editor_tests",
+   "identOwner": "editor",
+   "rewriteOnly": true
+  },
+  {
+   "file": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🔁️wire-and-action-bridge-laws/🦀️.rs",
+   "owner": "editor",
+   "companion": "editor_tests",
+   "identOwner": "editor",
+   "rewriteOnly": true
+  },
+  {
+   "file": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🧭️layer-and-camera-laws/🦀️.rs",
+   "owner": "editor",
+   "companion": "editor_tests",
+   "identOwner": "editor",
+   "rewriteOnly": true
+  }
+ ]
+}

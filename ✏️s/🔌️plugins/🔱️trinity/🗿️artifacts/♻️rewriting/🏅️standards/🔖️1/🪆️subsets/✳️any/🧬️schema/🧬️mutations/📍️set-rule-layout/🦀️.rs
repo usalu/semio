@@ -2,8 +2,7 @@
 //! to its point, every `cleared` key removed (its node returns to its default slot). The exact one-row undo of a rule-node drag,
 //! and the one row a reorganize publishes.
 use crate::standards::v1::subsets::any::schema::diff::RewritingDiff;
-use crate::standards::v1::subsets::any::schema::mutations::RewriteRuleMutation;
-use crate::RewritingSnapshot;
+use crate::standards::v1::subsets::any::schema::snapshot::RewritingSnapshot;
 
 //#region 🔖️Mutation
 /// 📍️ One rule node at an explicit position.
@@ -29,8 +28,11 @@ pub struct SetRuleLayoutPoints {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn set_rule_layout_points(points: Vec<RuleLayoutPlacement>, cleared: Vec<String>) -> RewriteRuleMutation {
-    RewriteRuleMutation::SetRuleLayoutPoints(SetRuleLayoutPoints { points, cleared })
+pub fn set_rule_layout_points<Op>(points: Vec<RuleLayoutPlacement>, cleared: Vec<String>) -> Op
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::set_rule_layout_points::SetRuleLayoutPoints>,
+{
+    Op::from(SetRuleLayoutPoints { points, cleared })
 }
 
 impl SetRuleLayoutPoints {
@@ -41,13 +43,16 @@ impl SetRuleLayoutPoints {
     }
 }
 
-impl protocol::MutationKind<RewritingSnapshot, RewriteRuleMutation> for SetRuleLayoutPoints {
+impl<Op> protocol::MutationKind<RewritingSnapshot, Op> for SetRuleLayoutPoints
+where
+    Op: protocol::Mutation<RewritingSnapshot, Diff = RewritingDiff> + From<SetRuleLayoutPoints>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "rule-layout-points", kind: "set-rule-layout-points", record: "SetRuleLayoutPoints" };
 
     fn diff(&self, base: &RewritingSnapshot) -> protocol::MutationOutcome<RewritingDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &RewritingSnapshot) -> Result<Vec<RewriteRuleMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &RewritingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     
@@ -64,3 +69,5 @@ impl protocol::MutationKind<RewritingSnapshot, RewriteRuleMutation> for SetRuleL
     }
 }
 //#endregion 🔖️Mutation
+
+semio_framework_value::artifact_retire_struct!(RuleLayoutPlacement { key, x, y });

@@ -1,6 +1,17 @@
+use crate::schema::diff::SemioBrepDiff;
+use crate::schema::snapshot::SemioBrepSnapshot;
+use crate::schema::mutations::create_vertex;
+use crate::schema::mutations::delete_edge;
+use crate::schema::mutations::delete_face;
+use crate::schema::mutations::delete_shell;
+use crate::schema::mutations::delete_solid;
+use crate::schema::mutations::delete_vertex;
+use crate::schema::mutations::move_vertex;
+use crate::schema::mutations::replace_curve;
 use crate::io::text::mutations::decode_semio_brep_mutation_json;
-use super::*;
+use crate::schema::mutations::*;
 use protocol::{DiffBinary,DiffText, Mutation, OpText, SemanticMutation};
+use semio_framework_test_fixtures::{fixture_path, fixture_text};
 
 /// 🔧️ Sorts every collection by id, for comparisons that must not depend on display order. Position-exact restoration is
 /// asserted separately by `deletions_invert_at_every_position`.
@@ -133,7 +144,7 @@ async fn op_text_binary_roundtrip_law() {
 
 #[semio_framework_async_macros::async_test]
 async fn language_neutral_tolerance_contract_matches_rust_decoder() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/📏️tolerance/🔣️.json")).expect("tolerance cases decode");
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../🧪️tests/🧫️fixtures/📏️tolerance/🔣️.json")).expect("tolerance cases decode");
     for test_case in fixture["cases"].as_array().expect("tolerance cases are an array") {
         let accepted = decode_semio_brep_mutation_json(&test_case["mutation"].to_string()).is_ok();
         assert_eq!(accepted, test_case["accepted"].as_bool().expect("case declares acceptance"), "{}", test_case["id"].as_str().expect("case id is a string"));
@@ -146,7 +157,7 @@ async fn language_neutral_tolerance_contract_matches_rust_decoder() {
 
 #[semio_framework_async_macros::async_test]
 async fn language_neutral_delete_inverses_preserve_distinct_tolerances() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/📏️tolerance/🔣️.json")).expect("tolerance cases decode");
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../🧪️tests/🧫️fixtures/📏️tolerance/🔣️.json")).expect("tolerance cases decode");
     for test_case in fixture["inverseCases"].as_array().expect("inverse cases are an array") {
         let base = crate::io::text::snapshot::decode_semio_brep_snapshot_json(&test_case["before"].to_string()).expect("inverse base decodes");
         let mutation = decode_semio_brep_mutation_json(&test_case["mutation"].to_string()).expect("delete mutation decodes");
@@ -163,7 +174,7 @@ async fn language_neutral_delete_inverses_preserve_distinct_tolerances() {
 
 #[semio_framework_async_macros::async_test]
 async fn language_neutral_tolerance_codec_rejections_match_rust() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/📏️tolerance/🔣️.json")).expect("tolerance cases decode");
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../🧪️tests/🧫️fixtures/📏️tolerance/🔣️.json")).expect("tolerance cases decode");
     for test_case in fixture["diffCodecCases"].as_array().expect("diff codec cases are an array") {
         let accepted = match test_case["encoding"].as_str().expect("diff codec encoding is a string") {
             "text" => SemioBrepDiff::parse_diff(test_case["value"].as_str().expect("text diff case has a value")).is_ok(),
@@ -183,7 +194,7 @@ async fn language_neutral_tolerance_codec_rejections_match_rust() {
 
 #[semio_framework_async_macros::async_test]
 async fn flattened_transport_discriminants_enforce_create_required_fields() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/📏️tolerance/🔣️.json")).expect("tolerance cases decode");
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../🧪️tests/🧫️fixtures/📏️tolerance/🔣️.json")).expect("tolerance cases decode");
     for contract in fixture["transportRequiredFields"].as_array().expect("transport contracts are an array") {
         let schema = contract["schema"].as_str().expect("transport schema is a string");
         let discriminant = contract["discriminant"].as_str().expect("transport discriminant is a string");
@@ -224,7 +235,7 @@ async fn kinds_match_the_enum_and_the_catalog() {
     for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
         assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
     }
-    let manifest = &std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🔮️oracles/🔣️.json")).expect("the committed fixture is readable");
+    let manifest = &std::fs::read_to_string(fixture_path!("../../../🔮️oracles/🔣️.json")).expect("the committed fixture is readable");
     for kind in KINDS {
         assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
     }
@@ -252,4 +263,3 @@ async fn deletions_invert_at_every_position() {
     }
     assert!(base.vertices.len() >= 3, "the law needs a middle vertex");
 }
-

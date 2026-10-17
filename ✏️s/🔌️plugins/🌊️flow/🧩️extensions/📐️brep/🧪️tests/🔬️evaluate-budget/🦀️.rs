@@ -10,13 +10,14 @@
 
 use super::*;
 use neural_engine::Value;
+use semio_framework_test_fixtures::fixture_text;
 
 struct BudgetRegistry(flow_extension_sdk::ExtensionEvaluationResources);
 impl BudgetRegistry {fn new(session:&Session)->Self {Self(flow_extension_sdk::ExtensionEvaluationResources::new(module_registry(session)))}}
 impl std::ops::Deref for BudgetRegistry {type Target=neural_engine::SharedRegistry;fn deref(&self)->&Self::Target {self.0.registry()}}
 impl Drop for BudgetRegistry {fn drop(&mut self){use semio_framework_plugin::ExtensionResourceOwner;self.0.begin_close();while !self.0.terminal_is_empty(){self.0.close_step(4096,65536).unwrap();}}}
 
-const EVALUATE_BUDGET_FIXTURE_JSON: &str = include_str!("../../../../../🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/⏱️evaluate-budget.json");
+static EVALUATE_BUDGET_FIXTURE_JSON: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/⏱️evaluate-budget.json"));
 
 /// 📇️ The half of the shared fixture this side of the contract reads. Parsed through `pack::json`
 /// rather than a `serde` derive because this crate carries no `serde` dependency at all — the
@@ -28,7 +29,7 @@ struct SteppedOperator {
 }
 
 fn fixture() -> (String, SteppedOperator) {
-    let fixture = semio_framework_pack_json::parse(EVALUATE_BUDGET_FIXTURE_JSON, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("evaluate budget fixture");
+    let fixture = semio_framework_pack_json::parse((*EVALUATE_BUDGET_FIXTURE_JSON), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("evaluate budget fixture");
     assert_eq!(fixture.get("format").and_then(semio_framework_pack_json::Value::as_str), Some("semio.generation3d.evaluate-budget"));
     let capability = fixture.get("capability").and_then(semio_framework_pack_json::Value::as_str).expect("capability").to_string();
     let stepped = fixture.get("steppedOperator").expect("steppedOperator");

@@ -1,7 +1,7 @@
 //! 📐️ 📐️ Forms play app commands command — `add-vector-field`.
 
 use crate::editor::forms::config::{FormsConfig, FormsConfigMutation};
-use crate::schema::update_block_operations;
+use crate::mutations::update_block_operations;
 use crate::{op::FormMutation, FormVectorField, FormsSnapshot};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};

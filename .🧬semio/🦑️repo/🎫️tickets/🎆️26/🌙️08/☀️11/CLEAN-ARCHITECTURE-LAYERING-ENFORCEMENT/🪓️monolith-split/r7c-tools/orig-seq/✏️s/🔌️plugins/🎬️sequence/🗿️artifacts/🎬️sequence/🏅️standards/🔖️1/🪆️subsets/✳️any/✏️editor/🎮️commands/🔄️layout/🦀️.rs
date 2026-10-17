@@ -1,0 +1,64 @@
+//! 🔄️ Sequence play app commands — auto-layout (`reorganize`) and its flow-direction setting.
+
+use semio_framework_plugin::{NoConfig, NoConfigMutation};
+use crate::editor::sequence::modes::edit::windows::main::config::current;
+use crate::editor::sequence::{host_from_host_snapshot, sequence_edit_emit, sequence_host_snapshot_from_children, sequence_scene_edit};
+use crate::mutations::SequenceMutation;
+use crate::SequenceSnapshot;
+use semio_framework_os_infinite::board::schema::layout::{DagLayoutOptions,DagLayoutOrientation};
+#[cfg(test)] use infinite_board_port_directed_dag::{};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_framework_value_derive::{FromValue, ToValue};
+
+//#region 🔖️Orientation
+/// 🌳️ Converts the main window's persisted orientation into the DAG kernel's layout axis.
+pub fn orientation_from_config(value: &str) -> DagLayoutOrientation {
+    match value {
+        "topBottom" => DagLayoutOrientation::TopBottom,
+        _ => DagLayoutOrientation::LeftRight,
+    }
+}
+//#endregion 🔖️Orientation
+
+//#region 🔖️Reorganize
+pub mod reorganize {
+    use super::*;
+
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
+    #[dsl(keyword = "reorganize")]
+    pub struct Reorganize {}
+
+    pub fn handle(_payload: &Reorganize, doc: &ArtifactView<'_, SequenceSnapshot>, cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<SequenceMutation, NoConfigMutation>, Fault> {
+        let orientation = orientation_from_config(&current(cfg).orientation);
+        let live = sequence_host_snapshot_from_children(doc.snapshot, &doc.children)?;
+        let mut host = neural_engine::ColdOwner::new(host_from_host_snapshot(&live));
+        let _ = host.reorganize(&DagLayoutOptions { orientation, ..DagLayoutOptions::default() });
+        let positions: Vec<(String, f64, f64)> = host.snapshot.steps.iter().map(|step| (step.id.clone(), step.x, step.y)).collect();
+        let mut edit = sequence_scene_edit(doc)?;
+        edit.move_to(&positions);
+        Ok(sequence_edit_emit(doc, edit))
+    }
+}
+//#endregion 🔖️Reorganize
+
+//#region 🔖️SetOrientation
+pub mod set_orientation {
+    use super::*;
+
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
+    #[dsl(keyword = "set-orientation")]
+    pub struct SetOrientation {
+        pub value: String,
+    }
+
+    pub fn handle(_payload: &SetOrientation, _doc: &ArtifactView<'_, SequenceSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<SequenceMutation, NoConfigMutation>, Fault> {
+        Ok(Emit::default())
+    }
+}
+//#endregion 🔖️SetOrientation
+
+//#region 🧪️Tests
+#[cfg(test)]
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
+//#endregion 🧪️Tests

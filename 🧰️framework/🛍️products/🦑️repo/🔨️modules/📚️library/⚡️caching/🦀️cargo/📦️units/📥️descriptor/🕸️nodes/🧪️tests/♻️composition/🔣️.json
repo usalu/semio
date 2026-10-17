@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "iterations": 4097,
+  "ownedPlanWalks": 0,
+  "envelopeValidationsPerCapture": 1,
+  "modes": ["prototype", "release"],
+  "wireRefusals": ["digest", "context", "output", "unit", "extra", "accessor", "proxy"],
+  "schemaRefusals": ["sibling", "reference"],
+  "freshWireValidation": true,
+  "schemaAliasSnapshot": true
+}

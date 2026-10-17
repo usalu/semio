@@ -1,6 +1,6 @@
 //! 📨️ Diagnostic fragments borrow original optional-text intent owners verbatim.
 use super::{Puzzle2dTextDisposition, Puzzle2dTextIntent, Puzzle2dTextPlan};
-use crate::standards::v1::subsets::any::schema::snapshot::lookup::Puzzle2dLookupScope;
+use crate::standards::v1::subsets::any::schema::lookup::Puzzle2dLookupScope;
 use protocol::os_store::{ArtifactMessageFragment, ArtifactMessageSource};
 use semio_framework_diagnostic::Severity;
 use semio_framework_value::paged::Utf8Text;
@@ -35,6 +35,4 @@ impl<T: Puzzle2dTextIntent> ArtifactMessageSource for Puzzle2dTextDiagnosticSour
     fn target(&self, index: usize) -> Option<&dyn Utf8Text> { (index == 0).then_some(self.payload.identifier() as &dyn Utf8Text) }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;
+

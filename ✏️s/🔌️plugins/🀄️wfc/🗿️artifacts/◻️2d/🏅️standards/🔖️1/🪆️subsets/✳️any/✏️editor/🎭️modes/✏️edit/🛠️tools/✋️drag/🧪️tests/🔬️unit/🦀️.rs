@@ -3,7 +3,9 @@
 //! release that moves nothing leaves zero trace; two drags are two transactions; and a drag edited in history
 //! replays its downstream exactly like a fresh fold of the edited log.
 
-use super::*;
+use crate::{mutations::drag_slots, mutations::Wfc2dMutation};
+use semio_framework_tool_machine::{NodeDragEmit, NodeDragRecord};
+use crate::editor::wfc2d::modes::edit::tools::drag::*;
 use crate::editor::wfc2d::modes::edit::windows::graph::WFC_GRAPH_WINDOW;
 use crate::editor::wfc2d::{Wfc2dEditor, Wfc2dEditorCommand, WFC_2D_GRAPH_VIEW_SCALE};
 use crate::mutations::resize_slot;

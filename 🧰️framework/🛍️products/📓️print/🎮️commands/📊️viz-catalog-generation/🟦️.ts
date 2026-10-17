@@ -1,5 +1,5 @@
 import { BundleScript } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { generateVizArtifacts } from "../../🔨️modules/📊️visualization-gallery/🟦️.ts";
+import { generateVizArtifacts } from "../../🔨️modules/📊️visualization-gallery/🏭️artifact-generation/🟦️.ts";
 
 //#region 📊️VizCatalogGeneration
 /** 📊️ Emits the generated visualization catalogue packages and the per-section gallery documents. */

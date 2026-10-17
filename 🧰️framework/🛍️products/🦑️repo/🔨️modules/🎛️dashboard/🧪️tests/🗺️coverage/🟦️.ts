@@ -139,7 +139,7 @@ describe("the registry covers the whole monorepo", () => {
       const parameters = Object.fromEntries(required.map((parameter) => [parameter.id, parameter.values[0] ?? (parameter.kind === "flag" ? true : "1")]));
       const selection: Selection = { id, parameters, extraArgs: [] };
       const { run, launch } = await dryRun(selection);
-      if (++completed % 100 === 0 || completed === ids.length) console.log(`[DEBUG] coverage ${completed}/${ids.length}, ${Date.now() - started} ms, ${failures.length} differences, latest ${id}`);
+      if (++completed % 100 === 0 || completed === ids.length) {}
       if (!launch) { failures.push(`${id}: dry run exited ${run.code}: ${run.stderr.trim().slice(0, 300)}`); return; }
       const local: string[] = [];
       try { failures.push(...compare(id, oracle.resolve(selection), launch, local)); } catch (error) { failures.push(`${id}: oracle refused: ${(error as Error).message}`); }

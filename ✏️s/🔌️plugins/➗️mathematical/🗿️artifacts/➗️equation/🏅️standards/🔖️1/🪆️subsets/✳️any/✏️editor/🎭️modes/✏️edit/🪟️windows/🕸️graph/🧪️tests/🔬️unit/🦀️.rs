@@ -1,4 +1,9 @@
-use super::*;
+use crate::editor::equation::workflow_json;
+use crate::EquationGraph;
+use semio_framework_plugin::NodeGraphScene;
+use semio_framework_plugin::SurfaceKind;
+use config::EquationCamera;
+use crate::editor::equation::modes::edit::windows::graph::*;
 
 #[semio_framework_async_macros::async_test]
 async fn renders_node_graph_scene() {

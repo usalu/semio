@@ -19,6 +19,4 @@ test("Pack and Replication examples belong strictly to neutral tests",()=>{
  let includes=0;
  for(const path of native)for(const match of readFileSync(path,"utf8").matchAll(/include_(?:str|bytes)!\(\s*"([^"]*🧫️fixtures[^"]*)"/g)){const target=resolve(dirname(path),match[1]!);if(owners.includes(relative(modules,target).split(/[\\/]/)[0]!)){expect(oracle.has(target)).toBe(true);includes++;}}
  expect(includes).toBeGreaterThan(0);
- console.log(`[DEBUG] Node traversal and independent fast-glob agree on ${actual.length} Pack/Replication examples under neutral tests`);
- console.log(`[DEBUG] ${includes} native fixture includes resolve against the independent neutral example inventory`);
 });

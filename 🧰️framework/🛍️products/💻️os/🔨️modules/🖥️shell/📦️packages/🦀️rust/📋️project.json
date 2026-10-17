@@ -5,7 +5,7 @@
   "namedInputs": {
     "default": ["{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/**/*.rs", "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/🧬️schema/**/*", "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/🧪️tests/🧫️fixtures/**/*", "{projectRoot}/**/*"],
     "schemaModule": ["{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/🧬️schema/**/*", "{projectRoot}/Cargo.toml", "{projectRoot}/🦀️.rs", "{projectRoot}/📜️script.ts"],
-    "renderedMirror": ["{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/🤖️generated/**/*"]
+    "renderedMirror": ["{workspaceRoot}/🧰️framework/🔨️modules/🐚️shell/🤖️generated/**/*"]
   },
   "targets": {
     "check": {
@@ -32,7 +32,7 @@
         "command": "bun ./📜️script.ts typegen"
       },
       "inputs": ["schemaModule"],
-      "outputs": ["{projectRoot}/../../🤖️generated"]
+      "outputs": ["{workspaceRoot}/🧰️framework/🔨️modules/🐚️shell/🤖️generated"]
     },
     "schema-check": {
       "cache": false,

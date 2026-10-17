@@ -12,7 +12,7 @@ test("flatten command preserves visible appearance and placement",async()=>{
   const images=Object.fromEntries(Object.entries(fixture.images).map(([key,image])=>[key,{...image,pixels:Uint8Array.from(image.pixels)}]));
   const job=new RasterStackJob({layers:fixture.layers as RasterStackLayer[],images});
   while(!job.advance(1).done){}
-  const result=job.result();expect(result.origin).toEqual(fixture.expected.origin);
+  const result=job.result();expect([...result.origin]).toEqual(fixture.expected.origin);
   expect([...result.image.pixels]).toEqual(fixture.expected.pixels);
   const base=fixture.images.blue,top=fixture.images.red;
   const composite=await sharp(Uint8Array.from(base.pixels),{raw:{width:base.width,height:base.height,channels:4}}).composite([{input:Buffer.from(top.pixels),raw:{width:top.width,height:top.height,channels:4},left:0,top:0,blend:"over"}]).raw().toBuffer();

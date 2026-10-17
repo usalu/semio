@@ -25,7 +25,6 @@ fn native_socket_sqlite_snapshot_catalog_declarations_and_failed_assembly_are_ow
  let assembly=semio_framework_schema_registry::assembly::begin().unwrap();assert!(matches!(commit_artifact_assembly_registry_plan(&assembly,Plan{catalog_bindings:vec![invalid],document_codecs:vec![codec],document_bindings:vec![binding],..Default::default()}),Err(Error::Catalog(CatalogError::Invalid{..}))));drop(assembly);
  assert!(block_on(store::os_store::codec_registry::document_codec(&schema)).unwrap().is_none());assert_eq!(artifact_catalog_bindings().unwrap().into_iter().filter(|entry|entry.artifact.schema==row.artifact.schema).collect::<Vec<_>>(),before);
  assert_eq!(serde_json::from_str::<serde_json::Value>(&serde_json::to_string(&fixture).unwrap()).unwrap(),fixture);
- eprintln!("[DEBUG] Original catalog Native neutral rows=2 distinctWindows=true unlinkedRetained=true rejectedAssemblyPublishesNothing=true independentSerde=true");
 }
 #[test]
 fn native_socket_sqlite_snapshot_independent_native_identity_and_provider_admission() {
@@ -46,7 +45,6 @@ fn native_socket_sqlite_snapshot_independent_native_identity_and_provider_admiss
  assert!(block_on(store::os_store::codec_registry::preflight_document_codecs(&[wrong])).is_err());
  let mut other=absent.clone();other.native_identity=Identity::typed::<String>();
  assert!(block_on(store::os_store::codec_registry::preflight_document_codecs(&[absent,other])).is_err());
- eprintln!("[DEBUG] Socket genuine native identity survives absent SQL; wrong typed provider and same-schema owner collision refuse");
 }
 fn native_grant()->semio_framework_value::RetainedCloneGrant{serde_json::from_value(fixture()["callerGrant"].clone()).expect("original independent Socket caller grant")}
 
@@ -65,7 +63,6 @@ fn native_socket_sqlite_snapshot_actual_installed_binding_and_duplicate_prefligh
  let mut invalid=row.clone();invalid.apps=vec!["viewer".into(),"viewer".into()];assert!(matches!(preflight_artifact_codec_bindings(&[invalid],&[codec]),Err(Error::Invalid{..})));
  let mut different_schema=NativeSocketProbeSnapshot::native_snapshot_registration().unwrap().1;different_schema.schema.push_str("/refusal-specimen");assert!(store::io::io_mechanism::preflight_native_snapshots(&[store::io::io_mechanism::NativeSnapshotRegistration{dialect,codec:different_schema}]).is_err());
  assert_eq!(artifact_codec_bindings().unwrap(),rows);
- eprintln!("[DEBUG] original installed Socket binding exactOwner=true exactDialect=true appLess=true noGuessedFactory=true duplicatePreflight=true");
 }
 fn samples(f:&serde_json::Value)->Vec<(String,usize)>{let mut rows:Vec<_>=f["cases"].as_array().unwrap().iter().map(|row|(row["text"].as_str().unwrap().to_owned(),row["valueBytes"].as_u64().unwrap()as usize)).collect();rows.push((f["large"]["unit"].as_str().unwrap().repeat(f["large"]["repetitions"].as_u64().unwrap()as usize),f["large"]["valueBytes"].as_u64().unwrap()as usize));rows}
 fn payload(text:&str,encoding:SnapshotEncoding)->IoPayload{match encoding{SnapshotEncoding::Text=>IoPayload::Text(text.into()),SnapshotEncoding::Binary=>IoPayload::Binary(text.as_bytes().to_vec())}}
@@ -84,7 +81,6 @@ fn native_socket_sqlite_snapshot_original_raw_carriers_and_limits(){
   }
  }
  for bytes in f["invalidUtf8"].as_array().unwrap(){let input=IoPayload::Binary(bytes.as_array().unwrap().iter().map(|n|n.as_u64().unwrap()as u8).collect());let mut cb=|_|true;expected(decode(&input,&mut Control::new(&mut cb,Limits::default())).map(drop),Kind::InvalidValue);}
- eprintln!("[DEBUG] Socket original Native Text/Binary full semantic/control corpus");
 }
 
 #[test]
@@ -96,7 +92,6 @@ fn native_socket_sqlite_snapshot_original_native_ledgers_remain_cumulative(){
  let mut cb=|_|true;let mut native=NativeDecodeControl::new(length-1,&mut cb);expected(NativeSocketProbeSnapshot::decode_sqlite_snapshot_native(&input,&mut Control::new(&mut progress,Limits::default()),&mut native).map(drop),Kind::OwnershipLimit);
  let exact=Limits{max_allocation_bytes:length,..Default::default()};let mut c=Control::new(&mut progress,exact);assert_eq!(decode(&input,&mut c).unwrap().0,snapshot.0);assert_eq!(c.allocation_remaining_bytes(),0);expected(encode(&snapshot,SnapshotEncoding::Text,&mut c).map(drop),Kind::OwnershipLimit);let short=Limits{max_allocation_bytes:length-1,..Default::default()};expected(decode(&input,&mut Control::new(&mut progress,short)).map(drop),Kind::OwnershipLimit);expected(encode(&snapshot,SnapshotEncoding::Binary,&mut Control::new(&mut progress,short)).map(drop),Kind::OwnershipLimit);
  for encoding in[SnapshotEncoding::Text,SnapshotEncoding::Binary]{let mut c=Control::new(&mut progress,exact);assert_eq!(encode(&snapshot,encoding,&mut c).unwrap(),payload(&snapshot.0,encoding));assert_eq!(c.allocation_remaining_bytes(),0);}
- eprintln!("[DEBUG] Socket exact original cumulative native ledgers and positive one-short refusals");
 }
 
 #[test]
@@ -109,7 +104,6 @@ fn native_socket_sqlite_snapshot_direct_reconstruction_and_interior_cancellation
   let mut interior=false;let mut cb=|event:NativeDecodeProgress|{let stop=event.total==large.len()&&event.completed>0&&event.completed<event.total&&event.owned_bytes>0;interior|=stop;!stop};let mut native=NativeDecodeControl::new(Limits::default().max_allocation_bytes,&mut cb);let mut c=Control::new(&mut callback,Limits::default());expected(NativeSocketProbeSnapshot::decode_sqlite_snapshot_native(&payload(&large,encoding),&mut c,&mut native).map(drop),Kind::Canceled);assert!(interior);assert_eq!(native.owned_bytes(),large.len());assert_eq!(c.allocation_remaining_bytes(),Limits::default().max_allocation_bytes-large.len());
   let mut interior=false;let mut cb=|event:NativeEncodeProgress|{let stop=event.total==large.len()&&event.completed>0&&event.completed<event.total&&event.owned_bytes>0;interior|=stop;!stop};let mut native=NativeEncodeControl::new(Limits::default().max_allocation_bytes,&mut cb);let mut c=Control::new(&mut callback,Limits::default());expected(snapshot.encode_sqlite_snapshot_native(encoding,&mut c,&mut store::os_store::NativeSnapshotEncodeOwner::new(&mut native,native_grant())).map(drop),Kind::Canceled);assert!(interior);assert_eq!(native.owned_bytes(),large.len());assert_eq!(c.allocation_remaining_bytes(),Limits::default().max_allocation_bytes-large.len());
  }
- eprintln!("[DEBUG] Socket original malformed entities and four actual inside-field cancellation controls");
 }
 
 #[test]
@@ -125,7 +119,6 @@ fn native_socket_sqlite_snapshot_original_registered_typed_erased_io_and_indepen
    let mut decode_cb=|_|true;let mut encode_cb=|_|true;let mut decode=NativeDecodeControl::new(Limits::default().max_allocation_bytes,&mut decode_cb);let mut encode=NativeEncodeControl::new(Limits::default().max_allocation_bytes,&mut encode_cb);assert_eq!(block_on(io_run_with_snapshot_control(&import,IoPayload::Binary(edited),&mut IoRunControl::new(&mut decode,&mut encode,native_grant()),&mut Control::new(&mut cb,Limits::default()))).unwrap().value,payload(f["edit"].as_str().unwrap(),encoding));
   }
  }
- eprintln!("[DEBUG] Socket normal production registration, installed provider, public typed/erased Text/Binary SQLite and independent physical edits for every neutral case");
 }
 
 #[test]
@@ -146,6 +139,5 @@ fn native_socket_snapshot_encode_borrows_the_original_grant_and_native_receipt()
   assert_eq!(owner.native() as *const _,pointer);
   assert_eq!(owner.native().owned_bytes(),3+snapshot.0.len());
   assert_eq!(owner.native().maximum_bytes(),1024);
-  println!("[DEBUG] original Socket snapshot encode unchangedGrant=true sameNative=true cumulativeNativeOwned={}",owner.native().owned_bytes());
  }
 }

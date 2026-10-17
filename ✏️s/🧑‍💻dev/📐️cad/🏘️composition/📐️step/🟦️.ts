@@ -1,7 +1,7 @@
 /** 📐️ CAD development composition explicitly binds STEP geometry operations and browser publication. */
-import { SemioBrepKernel } from "../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🟦️.ts";
-import { SemioGeometrySession, requireBrowserGeometrySessionV1 } from "../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/🟦️.ts";
-import type { Model } from "../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🧊️model/🟦️.ts";
+import { SemioBrepKernel } from "@semio-tech/s-spatial-kernel-ts/semio";
+import { SemioGeometrySession, requireBrowserGeometrySessionV1 } from "@semio-tech/s-spatial-kernel-semio-session-ts";
+import type { Model } from "@semio-tech/s-spatial-kernel-ts/geometry/model";
 async function initializeBindings() {
   const bindings=await import("../../📦️packages/🦀️rust/🕸️bindings/cad_geometry.js");
   const source=new URL("../../📦️packages/🦀️rust/🕸️bindings/cad_geometry_bg.wasm",import.meta.url);

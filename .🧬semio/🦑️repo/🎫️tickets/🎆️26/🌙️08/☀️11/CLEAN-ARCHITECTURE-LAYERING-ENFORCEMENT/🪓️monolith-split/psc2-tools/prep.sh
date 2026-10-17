@@ -23,7 +23,9 @@ if owners == ["--all-ts"]:
             owners.append(c[1].replace("F/M/", "🧰️framework/🔨️modules/").replace("F/P/", "🧰️framework/🛍️products/"))
 cmd = ["bun", "psc2-tools/plan.ts", f"{G}/psc2-policy-{L}.json", f"{G}/psc2-scan-{L}.json", f"{G}/psc2-plan-{B}.json"]
 for o in owners: cmd += ["--owner", o]
-cmd += ["--exclude-target", "🧰️framework/🔨️modules/🖱️ui/"]
+cmd += ["--exclude-owner-target", "🧰️framework=🧰️framework/🔨️modules/🖱️ui/"]
+import os
+if os.environ.get("WITH_SKIPPED"): cmd += ["--with-skipped-importers"]
 r = subprocess.run(cmd, capture_output=True, text=True)
 print(r.stdout[-3000:], r.stderr[-500:])
 PY

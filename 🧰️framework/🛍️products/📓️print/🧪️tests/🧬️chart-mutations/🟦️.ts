@@ -10,7 +10,7 @@ import paintFixture from "../🧫️fixtures/🧬️chart-mutations/🎨️paint
 import { changeVizChartValue } from "../../🧬️schema/🧬️mutations/🟦️.ts";
 import { applyVizChartDiff, absorbVizChartDiff, inverseVizChartDiff, equalVizChartValue, type VizChartDiff } from "../../🧬️schema/🔀️diff/🟦️.ts";
 import {inferVizChart} from "../../🔨️modules/🏠️host/💡️inferences/🟦️.ts";
-import { validateVizChartSpecification } from "../../🧬️schema/💡️inferences/🟦️.ts";
+import { validateVizChartSpecification } from "@semio-tech/print-viz-inference";
 import type { VizChartSnapshot } from "../../🧬️schema/📸️snapshot/🟦️.ts";
 
 type Check = { readonly module: string; readonly name: string; readonly subject: () => unknown; readonly oracle: () => unknown; readonly tolerance?: number };

@@ -17,7 +17,6 @@ test("backbone retirement preserves original ordered owners and exact physical r
   expect(source).toContain("next_release_byte_demand");
   expect(source).toContain("shared_retirement_allocation_bytes");
   expect(source).not.toContain("truncate(");
-  console.log("[DEBUG] backbone ordered owners and indivisible original backing release agree with SQLite");
 });
 
 test("backbone constructor admits its exact native frame before moving the original queue", () => {
@@ -41,5 +40,4 @@ test("installed backbone admission retains empty allocated queues under the call
   } finally { database.close(); }
   const store = readFileSync(new URL("../../../🦀️.rs", import.meta.url), "utf8");
   for (const authority of ["fn close_take_backbone_retirement(&mut self, grant: RetainedCloneGrant)", "if self.member_inbox.capacity() != 0", "ArtifactStoreCursorDisposerPhase::Backbone => self.close_take_backbone_retirement(grant)", "ArtifactStoreCursorDisposerPhase::Backbone if store.member_inbox.capacity() == 0"]) expect(store.includes(authority)).toBe(true);
-  console.log("[DEBUG] installed backbone custody includes the original empty queue backing and forwards the caller's common grant");
 });

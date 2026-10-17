@@ -1,7 +1,7 @@
 //! 🔍️ Animate presentation app panel — the inspector: field editors for the selected tile(s).
 
 use crate::editor::animate::terminology::AnimatePresentationLabels;
-use crate::editor::animate::{ui_label, ui_node_list};
+use crate::editor::animate::support::{ui_label, ui_node_list};
 use crate::{PresentationSnapshot, PRESENTATION_DOCUMENT_SCHEMA};
 use semio_framework_plugin::tree_item_desc;
 use semio_framework_ui_locale::LocalizedLabel;
@@ -54,6 +54,4 @@ pub fn render(deck: &PresentationSnapshot, labels: &AnimatePresentationLabels) -
 mod tests;
 //#endregion 🧪️Tests
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️semantic-contract/🦀️.rs"]
-mod semantic_contract;
+

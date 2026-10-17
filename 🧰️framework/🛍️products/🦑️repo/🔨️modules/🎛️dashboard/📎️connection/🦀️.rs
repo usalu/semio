@@ -93,6 +93,8 @@ pub struct Connection {
     daemon_pid: u32,
     daemon_protocol: u32,
     daemon_build: String,
+    build_tool: Option<String>,
+    root: std::path::PathBuf,
 }
 
 /// 🌍 The environment of this process as a hello carries it; entries a task could not receive are left out.
@@ -132,6 +134,7 @@ impl Connection {
 
     /// 🪝️ Connects as the client named `name`, whose tasks start in `environment`.
     pub fn connect_with(root: &std::path::Path, name: &str, environment: Vec<(String, String)>) -> std::io::Result<Self> {
+        let build_tool = ipc::build_tool_environment(&environment).map(str::to_string);
         let mut stream = Stream::connect(root)?;
         let mut poller = Poller::new()?;
         let waker = poller.waker();
@@ -157,8 +160,14 @@ impl Connection {
                 std::thread::sleep(Duration::from_millis(10));
             }
         })?;
-        Ok(Self { notifier, outbound, waker, receiver, alive, daemon_pid, daemon_protocol: protocol, daemon_build: build_id })
+        Ok(Self { notifier, outbound, waker, receiver, alive, daemon_pid, daemon_protocol: protocol, daemon_build: build_id, build_tool, root: root.to_path_buf() })
     }
+
+    /// 📎️ Returns the selected tool from the immutable environment actually sent in this connection's hello.
+    pub fn build_tool(&self) -> Option<&str> { self.build_tool.as_deref() }
+
+    /// 🏠️ Returns the exact workspace this connection joined.
+    pub fn root(&self) -> &std::path::Path { &self.root }
 
     fn wake(notifier: &Mutex<Option<Notifier>>) {
         let call = notifier.lock().ok().and_then(|slot| slot.clone());

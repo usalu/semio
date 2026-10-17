@@ -14,7 +14,7 @@ import {
   type OwnedServerJob,
   type OwnedServerRequest,
   type OwnedServerResponse,
-} from "../../🎛️coordinator/🔌️ports/🟦️.ts";
+} from "@semio-tech/repo-coordinator/ports";
 // #endregion 🔌️Adapters
 
 // #region 🔖️db

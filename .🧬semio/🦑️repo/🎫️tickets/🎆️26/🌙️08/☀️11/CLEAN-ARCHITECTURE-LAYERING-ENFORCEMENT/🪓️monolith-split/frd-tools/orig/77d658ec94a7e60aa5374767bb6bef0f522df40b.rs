@@ -1,0 +1,55 @@
+//! ✏️ Path geometry changes roundtrip through the semantic mutation and inverse.
+use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
+use semio_s_artifact_draw_drawing_model::{DrawingLayerNode, PathSegment};
+
+#[test]
+fn canonical_geometry_scenario_matches_diff_apply_and_inverse() {
+    use protocol::Mutation;
+    let before: DrawingSnapshot = serde_json::from_str(runtime_fixture_text("../../../🧫️fixtures/🧬️mutations/✏️update-path-geometry/✏️reshape/📸️snapshot/⬅️before/🔣️.json")).unwrap();
+    let after: DrawingSnapshot = serde_json::from_str(runtime_fixture_text("../../../🧫️fixtures/🧬️mutations/✏️update-path-geometry/✏️reshape/📸️snapshot/➡️after/🔣️.json")).unwrap();
+    let mutation: semio_s_artifact_draw_drawing_mutations::DrawingMutation = serde_json::from_str(runtime_fixture_text("../../../🧫️fixtures/🧬️mutations/✏️update-path-geometry/✏️reshape/🦠️mutation/🔣️.json")).unwrap();
+    let expected: serde_json::Value = serde_json::from_str(runtime_fixture_text("../../../🧫️fixtures/🧬️mutations/✏️update-path-geometry/✏️reshape/🔺️diff/🔣️.json")).unwrap();
+    let result = mutation.diff(&before);
+    assert!(result.messages().is_empty());
+    assert_eq!(*result.diff(), serde_json::from_value::<semio_s_artifact_draw_drawing_diff::DrawingDiff>(expected).unwrap());
+    assert_eq!(protocol::apply_diff(result.diff(), &before).unwrap(), after);
+    let mut restored = after;
+    for undo in mutation.inverse(&before).expect("valid retained mutation inverse fixture") { semio_s_artifact_draw_drawing_mutations::text::apply_drawing_mutation(&mut restored, &undo).unwrap(); }
+    assert_eq!(restored, before);
+}
+
+#[test]
+fn path_geometry_mutation_roundtrip_fixture() {
+    use protocol::Mutation;
+    let fixture: serde_json::Value = serde_json::from_str(runtime_fixture_text("../../../🧫️fixtures/🧬️mutations/✏️update-path-geometry/🔣️.json")).unwrap();
+    let before: Vec<PathSegment> = serde_json::from_value(fixture["before"].clone()).unwrap();
+    let after: Vec<PathSegment> = serde_json::from_value(fixture["after"].clone()).unwrap();
+    let layer = semio_s_artifact_draw_drawing_model::create_drawing_path_layer(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Curve")).to_string().into()).expect("nonempty authored identity"), "Curve", before.into());
+    let id = semio_s_artifact_draw_drawing_model::layer_id(&layer).to_string();
+    let document = DrawingSnapshot { layers: vec![layer].into(), ..Default::default() };
+    let mutation = semio_s_artifact_draw_drawing_transform::update_path_geometry::mutation::update_path_geometry(id.into(), after.clone().into());
+    store::os_store::test_support::assert_op_line_round_trip(&mutation);
+    store::os_store::test_support::assert_op_text_binary_equivalence(&mutation);
+    let decoded: Vec<PathSegment> = semio_framework_pack_json::from_json_str(&fixture["after"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    assert_eq!(decoded, after);
+    let inverse = mutation.inverse(&document).expect("valid retained mutation inverse fixture");
+    let mut edited = document.clone();
+    semio_s_artifact_draw_drawing_mutations::text::apply_drawing_mutation(&mut edited, &mutation).unwrap();
+    let DrawingLayerNode::Path(path) = &edited.layers[0] else { panic!("Expected a path") };
+    assert_eq!(path.segments, after.into());
+    for mutation in inverse { semio_s_artifact_draw_drawing_mutations::text::apply_drawing_mutation(&mut edited, &mutation).unwrap(); }
+    assert_eq!(edited, document);
+}
+
+/// ⚖️ The concrete inverse's diffs sum to exactly the negative of the forward diff on the committed reshape scenario.
+#[semio_framework_async_macros::async_test]
+async fn inverse_sums_to_the_negative_diff() {
+    let before: DrawingSnapshot = serde_json::from_str(runtime_fixture_text("../../../🧫️fixtures/🧬️mutations/✏️update-path-geometry/✏️reshape/📸️snapshot/⬅️before/🔣️.json")).unwrap();
+    let mutation: semio_s_artifact_draw_drawing_mutations::DrawingMutation = serde_json::from_str(runtime_fixture_text("../../../🧫️fixtures/🧬️mutations/✏️update-path-geometry/✏️reshape/🦠️mutation/🔣️.json")).unwrap();
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &before).await;
+}
+
+fn runtime_fixture_text(relative: &str) -> &'static str {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative);
+    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display())).into_boxed_str())
+}

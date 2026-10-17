@@ -411,9 +411,9 @@ impl DiffAlgebra<JpgSnapshot> for JpgDiff {
     }
 }
 
-#[cfg(test)]
+/// 🧪️ Representative diffs used by the conformance laws of the io facets and by the diff codec tests.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn demo_diff_cases() -> Vec<JpgDiff> {
+pub fn demo_diff_cases() -> Vec<JpgDiff> {
     let segments = JpgOtherSegmentsDiff {
         removed: vec![1],
         modified: vec![JpgSegmentModified { index: 0, diff: JpgSegmentDiff { data: Some(vec![4, 5, 6]), ..Default::default() } }],
@@ -436,6 +436,80 @@ pub(crate) fn demo_diff_cases() -> Vec<JpgDiff> {
     ]
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️handcrafted-diff-codec/🦀️.rs"]
-mod handcrafted_diff_codec_tests;
+
+
+//#region 🧩️ArtifactItems2
+pub mod artifact_items_2 {
+/// 🧬️ Artifact schema descriptor id.
+pub const JPG_ARTIFACT_SCHEMA_ID: &str = "s.stdio.jpg";
+}
+//#endregion 🧩️ArtifactItems2
+
+//#region 🧩️ArtifactItems4
+pub mod artifact_items_4 {
+use crate::{STDIO_JPG_DOCUMENT_SCHEMA};
+use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
+
+//#region 🔖️ArtifactKind
+/// 🗂️ This artifact's `ArtifactKindSpec`.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn artifact_kind() -> ArtifactKindSpec {
+    ArtifactKindSpec {
+        id: "s.stdio.jpg".into(),
+        label: semio_framework_ui_locale::LocalizedLabel::native("Jpg", "Jpg"),
+        source_format: STDIO_JPG_DOCUMENT_SCHEMA.into(),
+        component_kind: "stdio".into(),
+        dimension: "data".into(),
+        media_capability: OsMediaCapability::MeshOnly,
+        media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
+        schema: STDIO_JPG_DOCUMENT_SCHEMA.into(),
+        export_formats: vec![],
+        import_formats: vec![],
+        export_stdio_kinds: vec![],
+        import_stdio_kinds: vec![],
+    }
+}
+//#endregion 🔖️ArtifactKind
+}
+//#endregion 🧩️ArtifactItems4
+
+//#region 🧩️ArtifactItems5
+pub mod artifact_items_5 {
+use crate::{STDIO_JPG_DOCUMENT_SCHEMA};
+pub use crate::schema::mutations::JpgMutation;
+pub use crate::schema::snapshot::JpgSnapshot;
+
+pub fn native_codec() -> store::os_store::serialization::ArtifactCodec {
+    let mut codec = store::bare_artifact_codec::<JpgSnapshot, JpgMutation>(STDIO_JPG_DOCUMENT_SCHEMA);
+    codec.extension = "jpg";
+    codec
+}
+}
+//#endregion 🧩️ArtifactItems5
+
+//#region 🧩️ArtifactItems6
+pub mod artifact_items_6 {
+use crate::{artifact_kind};
+use crate::{native_codec};
+
+pub fn native_codecs() -> Vec<semio_s_artifact_stdio_contract::NativeCodecFactory> {
+    vec![semio_s_artifact_stdio_contract::NativeCodecFactory { id: "stdio.native.jpg.v1", artifact: "jpg", kind: artifact_kind, codec: native_codec }]
+}
+}
+//#endregion 🧩️ArtifactItems6
+
+//#region 🧩️ArtifactItems9
+pub mod artifact_items_9 {
+use semio_framework_artifact_reference::{Dialect, StandardId, SubsetId};
+
+//#region 🔖️Dialect
+/// 🪪️ Surface coordinate(s) for this artifact — `artifact_kind` matches the schema descriptor
+/// id above verbatim (never guessed); `standard`/`subset` match this file's own on-disk
+/// `🏅️standards/🔖️.../🪆️subsets/✳️...` location. Lives at the artifact root (not under
+/// `editor`/`viewer`) so a viewer file can read it without ever importing through the
+/// sibling `editor` module.
+pub const JPG_ANY_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.jpg", standard: StandardId("jfif-1.01"), subset: SubsetId("*") };
+pub const JPG_BASELINE_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.jpg", standard: StandardId("jfif-1.01"), subset: SubsetId("baseline") };
+//#endregion 🔖️Dialect
+}
+//#endregion 🧩️ArtifactItems9

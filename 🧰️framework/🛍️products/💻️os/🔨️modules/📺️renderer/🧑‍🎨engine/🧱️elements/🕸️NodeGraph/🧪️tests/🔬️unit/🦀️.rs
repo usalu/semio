@@ -213,7 +213,6 @@ fn neutral_json_refusals_expose_only_the_defining_general_value_error() {
         assert!(!error.to_string().is_empty());
         assert!(std::error::Error::source(&error).unwrap().downcast_ref::<ValueError>().is_some());
     }
-    println!("[DEBUG] Six independent Serde JSON/viewport refusals expose the defining General ValueError through the Surface public error port");
 }
 
 #[test]

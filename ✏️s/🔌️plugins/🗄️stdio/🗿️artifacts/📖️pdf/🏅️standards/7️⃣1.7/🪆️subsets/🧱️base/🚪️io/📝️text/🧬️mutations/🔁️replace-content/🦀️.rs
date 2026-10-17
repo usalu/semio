@@ -3,7 +3,7 @@
 pub const OPCODE: &str = "replace-content";
 pub const TEXT_OPCODE: &str = OPCODE;
 
-use crate::standards::v1_7::subsets::base::schema::mutations::ReplaceContent;
+use crate::standards::v1_7::subsets::base::schema::mutations::replace_content::ReplaceContent;
 
 /// 🖨️ Prints this direct payload through its schema-derived JSON representation.
 pub fn print(payload: &ReplaceContent) -> Result<String, String> {

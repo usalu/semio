@@ -1,5 +1,30 @@
 import { rustAttributes, rustFindTopLevel, rustPathAttributes, rustStringValue, rustTokenPairs, rustTokenSegments, rustTokens, rustVisibility, type RustToken } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/🟦️.ts";
 
+/** 🧪️ Whether one attribute text is a `cfg(...)` that only holds under `cfg(test)`: `test` itself, an `all(...)` with such an argument, or an `any(...)` whose every argument is such. */
+export function cfgImpliesTest(attribute: string): boolean {
+  const match = /^cfg\s*\((.*)\)$/su.exec(attribute.trim());
+  return match !== null && predicateImpliesTest(match[1]!.trim());
+}
+
+function predicateImpliesTest(predicate: string): boolean {
+  if (/^test$/u.test(predicate)) return true;
+  const call = /^(all|any)\s*\((.*)\)$/su.exec(predicate);
+  if (!call) return false;
+  const args: string[] = [];
+  let depth = 0;
+  let start = 0;
+  const body = call[2]!;
+  for (let index = 0; index < body.length; index += 1) {
+    const char = body[index]!;
+    if (char === "(") depth += 1;
+    else if (char === ")") depth -= 1;
+    else if (char === "," && depth === 0) { args.push(body.slice(start, index).trim()); start = index + 1; }
+  }
+  args.push(body.slice(start).trim());
+  const real = args.filter(Boolean);
+  return call[1] === "all" ? real.some(predicateImpliesTest) : real.length > 0 && real.every(predicateImpliesTest);
+}
+
 /** 🌳️ One `mod` item of a Rust source file with exact character offsets. */
 export type RustModuleNode = {
   readonly name: string;
@@ -71,7 +96,7 @@ export function parseRustSourceTree(source: string): RustSourceTree {
         const afterName = cursor + 2;
         const paths = rustPathAttributes(tokens, pairs, attributes);
         const pathAttribute = paths.length ? paths[paths.length - 1]!.path : null;
-        const conditionalTest = attributeTexts.some((text) => /^cfg\s*\(\s*test\s*\)$/u.test(text));
+        const conditionalTest = attributeTexts.some(cfgImpliesTest);
         if (tokens[afterName]?.text === ";") {
           modules.push({ name, visibility: visibility.value, start: itemStart, declStart, end: tokens[afterName]!.end, attributeTexts, pathAttribute, conditionalTest, inline: false, bodyStart: tokens[afterName]!.end, bodyEnd: tokens[afterName]!.end, children: [], items: [] });
           index = afterName + 1;
@@ -219,8 +244,21 @@ export function identifierSet(source: string): Set<string> {
   return set;
 }
 
+/** 🔗️ Identifier texts that can name a module-level item: field accesses (`.name`), field, parameter or binding names (`name:`) and non-leading path segments (`a::name`, unless `a` is `crate`, `self` or `super`) never reference an item. */
+export function referencedItemNames(source: string): Set<string> {
+  const tokens = rustTokens(source);
+  const set = new Set<string>();
+  tokens.forEach((token, index) => {
+    if (token.kind !== "identifier") return;
+    if (tokens[index - 1]?.text === "." || tokens[index + 1]?.text === ":") return;
+    if (tokens[index - 1]?.text === "::" && !["crate", "self", "super"].includes(tokens[index - 2]?.text ?? "")) return;
+    set.add(token.text);
+  });
+  return set;
+}
 
-/** ✂️ Prunes a `use` statement to the given leaf names; nested groups are flattened to full paths below the first segment, and glob leaves are dropped. */
+
+/** ✂️ Prunes a `use` statement to the given leaf names; nested groups are flattened to full paths below their longest shared leading path (so a leading `super::super` run stays one prefix that path absolutising can resolve), and glob leaves are dropped. */
 export function prunedUse(statement: string, leaves: readonly string[]): string {
   const text = statement.replace(/\/\*[\s\S]*?\*\//gu, " ").replace(/\/\/[^\n]*/gu, " ").trim();
   const head = /^((?:pub(?:\([^)]*\))?\s+)?use\s+)/u.exec(text);
@@ -264,9 +302,14 @@ export function prunedUse(statement: string, leaves: readonly string[]): string 
   const binding = (entry: { segments: string[]; alias: string | null }): string => entry.alias ?? (entry.segments.at(-1) === "self" ? entry.segments.at(-2)! : entry.segments.at(-1)!);
   const kept = entries.filter((entry) => leaves.includes(binding(entry)));
   if (!kept.length) return "";
-  const render = (entry: { segments: string[]; alias: string | null }, from: number): string => `${(entry.segments.at(-1) === "self" ? entry.segments.slice(0, -1) : entry.segments).slice(from).join("::")}${entry.alias ? ` as ${entry.alias}` : ""}`;
+  const render = (entry: { segments: string[]; alias: string | null }, from: number): string => {
+    const isSelf = entry.segments.at(-1) === "self";
+    const path = (isSelf ? entry.segments.slice(0, -1) : entry.segments).slice(from).join("::");
+    return `${path || "self"}${entry.alias ? ` as ${entry.alias}` : ""}`;
+  };
   if (kept.length === 1) return `${head[1]}${render(kept[0]!, 0)};`;
-  const first = kept[0]!.segments[0]!;
-  if (kept.every((entry) => entry.segments[0] === first && entry.segments.length > 1)) return `${head[1]}${first}::{${kept.map((entry) => render(entry, 1)).join(", ")}};`;
+  let shared = 0;
+  while (kept.every((entry) => entry.segments.length > shared + 1 && entry.segments[shared] === kept[0]!.segments[shared])) shared += 1;
+  if (shared > 0) return `${head[1]}${kept[0]!.segments.slice(0, shared).join("::")}::{${kept.map((entry) => render(entry, shared)).join(", ")}};`;
   return `${head[1]}{${kept.map((entry) => render(entry, 0)).join(", ")}};`;
 }

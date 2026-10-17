@@ -1,9 +1,9 @@
 use super::*;
-use crate::actors::tests::{id, ADA, BOB, TENANT};
-use crate::catalog::tests::{fixture, fixture_path};
-use crate::projections::tests::{bus, play, submit};
-use crate::storage::tests::{scratch, Scratch};
-use crate::storage::{ErasedActor, Inspection};
+use teaching_proctor_domain::actors::fixtures::{id, ADA, BOB, TENANT};
+use teaching_proctor_base::catalog::fixtures::{fixture, fixture_path};
+use teaching_proctor_domain::projections::fixtures::{bus, play, submit};
+use teaching_proctor_base::storage::fixtures::{scratch, Scratch};
+use teaching_proctor_base::storage::{ErasedActor, Inspection};
 use quiz::{Challenge, Command};
 use server::contract::CommandOutcome;
 
@@ -273,13 +273,13 @@ async fn erase_removes_one_learner_from_a_stopped_proctor_and_frees_its_handle()
     assert!(!holds(NAME) && !holds(ADA), "the rebuilt read models do not know the learner");
     let catalog = Arc::new(fixture());
     let database = Database::open(&directory.0).expect("open");
-    let projections = crate::storage::SqliteProjectionStore::new(database.clone());
+    let projections = teaching_proctor_base::storage::SqliteProjectionStore::new(database.clone());
     {
         use server::storage::ProjectionStore;
-        assert_eq!(projections.get(crate::projections::LEARNERS, ADA).await, None);
-        assert_eq!(projections.get(crate::projections::HANDLES, "ada lovelace").await, None);
-        assert_eq!(projections.list(crate::projections::LEADERBOARD, "").await.iter().map(|(learner, _)| learner.clone()).collect::<Vec<_>>(), [BOB], "the scores of the erased learner are gone, the others stay");
-        assert_eq!(projections.get(crate::projections::META, crate::projections::LEARNER_COUNT_KEY).await, Some(b"2".to_vec()));
+        assert_eq!(projections.get(teaching_proctor_domain::projections::LEARNERS, ADA).await, None);
+        assert_eq!(projections.get(teaching_proctor_domain::projections::HANDLES, "ada lovelace").await, None);
+        assert_eq!(projections.list(teaching_proctor_domain::projections::LEADERBOARD, "").await.iter().map(|(learner, _)| learner.clone()).collect::<Vec<_>>(), [BOB], "the scores of the erased learner are gone, the others stay");
+        assert_eq!(projections.get(teaching_proctor_domain::projections::META, teaching_proctor_domain::projections::LEARNER_COUNT_KEY).await, Some(b"2".to_vec()));
     }
     let mut bus = bus(&database, &catalog).await;
     let claimed = submit(&mut bus, &Command::IdentifyLearner { id: id(0x50), learner: id(0xd), identity: Identity::Pseudonym { handle: NAME.into() } }, 900).await;
@@ -329,7 +329,7 @@ async fn cluttered(label: &str) -> Scratch {
     for (seed, learner, identity, millis) in registrations {
         assert!(matches!(submit(&mut bus, &Command::IdentifyLearner { id: id(seed), learner, identity }, millis).await, CommandOutcome::Accepted { .. }), "registration {seed:#x}");
     }
-    crate::projections::tests::answer(&mut bus, &catalog, &id(0xe0), &id(0x12), "power", Challenge::Medium, 200).await;
+    teaching_proctor_domain::projections::fixtures::answer(&mut bus, &catalog, &id(0xe0), &id(0x12), "power", Challenge::Medium, 200).await;
     directory
 }
 
@@ -387,8 +387,8 @@ async fn prune_removes_what_nobody_played_under_from_a_stopped_proctor_and_every
     let holds = |needle: &str| files(&directory.0).iter().any(|file| std::fs::read(directory.0.join(file)).expect("file").windows(needle.len()).any(|window| window == needle.as_bytes()));
     let registrations = || async {
         use server::storage::ProjectionStore;
-        let projections = crate::storage::SqliteProjectionStore::new(Database::open(&directory.0).expect("open"));
-        projections.get(crate::projections::META, crate::projections::LEARNER_COUNT_KEY).await.map(|count| String::from_utf8(count).expect("a number"))
+        let projections = teaching_proctor_base::storage::SqliteProjectionStore::new(Database::open(&directory.0).expect("open"));
+        projections.get(teaching_proctor_domain::projections::META, teaching_proctor_domain::projections::LEARNER_COUNT_KEY).await.map(|count| String::from_utf8(count).expect("a number"))
     };
     let before = Database::inspect(&directory.0.join(DATABASE_FILE)).expect("whole");
     assert_eq!(registrations().await.as_deref(), Some("12"), "four anonymous learners and eight handles count as registrations");
@@ -422,10 +422,10 @@ async fn prune_removes_what_nobody_played_under_from_a_stopped_proctor_and_every
     let database = Database::open(&directory.0).expect("open");
     {
         use server::storage::ProjectionStore;
-        let projections = crate::storage::SqliteProjectionStore::new(database.clone());
-        assert_eq!(projections.list(crate::projections::LEADERBOARD, "").await.iter().map(|(learner, _)| learner.clone()).collect::<Vec<_>>(), [ADA, BOB], "the standings of those who played are what they were");
-        assert_eq!(projections.list(crate::projections::HANDLES, "").await.iter().map(|(key, _)| key.clone()).collect::<Vec<_>>(), ["ada lovelace"]);
-        assert_eq!((projections.get(crate::projections::LEARNERS, &id(0xd1)).await, projections.get(crate::projections::LEARNERS, &id(0xe0)).await), (None, None));
+        let projections = teaching_proctor_base::storage::SqliteProjectionStore::new(database.clone());
+        assert_eq!(projections.list(teaching_proctor_domain::projections::LEADERBOARD, "").await.iter().map(|(learner, _)| learner.clone()).collect::<Vec<_>>(), [ADA, BOB], "the standings of those who played are what they were");
+        assert_eq!(projections.list(teaching_proctor_domain::projections::HANDLES, "").await.iter().map(|(key, _)| key.clone()).collect::<Vec<_>>(), ["ada lovelace"]);
+        assert_eq!((projections.get(teaching_proctor_domain::projections::LEARNERS, &id(0xd1)).await, projections.get(teaching_proctor_domain::projections::LEARNERS, &id(0xe0)).await), (None, None));
     }
     let mut bus = bus(&database, &catalog).await;
     let claimed = submit(&mut bus, &Command::IdentifyLearner { id: id(0x60), learner: id(0x61), identity: Identity::Name { handle: DORA.into() } }, 900).await;

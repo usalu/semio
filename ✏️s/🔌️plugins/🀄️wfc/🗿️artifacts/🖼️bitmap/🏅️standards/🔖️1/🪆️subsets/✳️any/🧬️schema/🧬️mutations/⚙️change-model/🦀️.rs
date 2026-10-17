@@ -3,7 +3,6 @@
 //! by nothing else, so the whole record moves as one lane.
 
 use crate::diff::BitmapDiff;
-use crate::mutations::BitmapMutation;
 use crate::schema::snapshot::BitmapSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -21,17 +20,23 @@ pub struct ChangeModel {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_model(pattern_size: u32, symmetry: u32, periodic_input: bool, ground: Option<u32>) -> BitmapMutation {
-    BitmapMutation::ChangeModel(ChangeModel { pattern_size, symmetry, periodic_input, ground })
+pub fn change_model<Op>(pattern_size: u32, symmetry: u32, periodic_input: bool, ground: Option<u32>) -> Op
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::change_model::ChangeModel>,
+{
+    Op::from(ChangeModel { pattern_size, symmetry, periodic_input, ground })
 }
 
-impl MutationKind<BitmapSnapshot, BitmapMutation> for ChangeModel {
+impl<Op> MutationKind<BitmapSnapshot, Op> for ChangeModel
+where
+    Op: protocol::Mutation<BitmapSnapshot, Diff = BitmapDiff> + From<ChangeModel>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "model", kind: "change-model", record: "ChangedModel" };
 
     fn diff(&self, base: &BitmapSnapshot) -> protocol::MutationOutcome<BitmapDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &BitmapSnapshot) -> Result<Vec<BitmapMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &BitmapSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

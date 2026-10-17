@@ -26,8 +26,5 @@ pub fn compute_curation_entries(snapshot: &CurationSnapshot) -> CurationEntries 
 }
 //#endregion 🔖️Entries
 
-#[cfg(test)]
-//#region 🧪️Tests
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

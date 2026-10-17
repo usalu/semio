@@ -86,14 +86,14 @@ app_commands! {
 //#endregion 🔖️HomeCommand
 
 //#region 🧵️RetainedCommands
-const HOME_RETAINED_TOOL_IDS: &[&str] = &[
+pub const HOME_RETAINED_TOOL_IDS: &[&str] = &[
     "applyDirectoryEventPage", "applyLocalCatalogDocument", "createStudio", "bindSpaceFile", "importSpace", "openSpace", "navigateVirtualFileSystemNode", "deleteVirtualFileSystemNode", "goHome", "createSpace", "deleteSpace", "renameSpace", "shareSpace", "manageSpace", "copyInviteLink", "promoteToHubSpace", "persistLocally", "presenceHeartbeat",
 ];
 const HOME_RETAINED_PAYLOAD_SCHEMA: &str = "space.home.tool-command.v1";
-const HOME_RETAINED_RAW_BYTES: usize = crate::editor::home::config::HOME_DIRECTORY_PAGE_BYTES;
-const HOME_RETAINED_SCALAR_BYTES: usize = semio_framework::PUBLIC_INVOCATION_STRING_BYTES;
-const HOME_RETAINED_WORK_ITEMS: usize = 1;
-const HOME_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
+pub const HOME_RETAINED_RAW_BYTES: usize = crate::editor::home::config::HOME_DIRECTORY_PAGE_BYTES;
+pub const HOME_RETAINED_SCALAR_BYTES: usize = semio_framework::PUBLIC_INVOCATION_STRING_BYTES;
+pub const HOME_RETAINED_WORK_ITEMS: usize = 1;
+pub const HOME_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
     // 🛣️ The typed-operation terminal refuses any emit whose store lane is absent from this contract ("typed-operation
     // emitted a store lane absent from its exact factory publication contract"), so every writing route names its lane
     // and only the pure-`Effect` relays are `HostOnly`. `applyDirectoryEventPage` folds one page into the TRANSIENT
@@ -124,7 +124,7 @@ const HOME_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = 
 /// directory page is a `HostOnly` machine payload whose only real bound is the retained wire budget
 /// [`HOME_RETAINED_RAW_BYTES`] — the hub pages it with `hasMore`, so a page is bounded by
 /// construction and capping it at 4 KiB would refuse ordinary pages of a dozen spaces.
-fn home_retained_extent(command: &HomeCommand, _snapshot: &SHomeSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
+pub fn home_retained_extent(command: &HomeCommand, _snapshot: &SHomeSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
     let (admitted, ceiling) = match command {
         HomeCommand::OpenSpace(payload) => (payload.space_id.len(), HOME_RETAINED_SCALAR_BYTES),
         HomeCommand::NavigateVirtualFileSystemNode(payload) => (payload.node_id.len(), HOME_RETAINED_SCALAR_BYTES),
@@ -207,9 +207,9 @@ impl ToolJobFactory for HomeRetainedCommandJobFactory {
         &mut self,
         _operation: semio_framework_job::Operation,
         payload: Self::Payload,
-        input: semio_framework::action_bus::RetainedToolWireInput,
-        checkpoint: Option<semio_framework::action_bus::RetainedToolWireInput>,
-    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework::action_bus::RetainedToolWireInput, Option<semio_framework::action_bus::RetainedToolWireInput>)> {
+        input: semio_framework_action_bus::RetainedToolWireInput,
+        checkpoint: Option<semio_framework_action_bus::RetainedToolWireInput>,
+    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework_action_bus::RetainedToolWireInput, Option<semio_framework_action_bus::RetainedToolWireInput>)> {
         if input.declared_bytes() > HOME_RETAINED_RAW_BYTES || checkpoint.as_ref().is_some_and(|value| value.declared_bytes() > semio_framework_plugin::retained_command::ARTIFACT_COMMAND_CHECKPOINT_MAXIMUM_BYTES) {
             return Err((ToolJobFactoryError::new("Space Home retained command rejects an oversized wire or checkpoint owner"), input, checkpoint));
         }
@@ -309,7 +309,7 @@ impl HomeCatalogWork {
     }
 
     /// 🪜️ One stage for `command` against `doc`: `validate` (reads only) or `commit` (the one catalog write).
-    fn advance(&mut self, command: &HomeCommand, doc: &ArtifactView<'_, SHomeSnapshot>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<HomeApp>>, Fault> {
+    pub fn advance(&mut self, command: &HomeCommand, doc: &ArtifactView<'_, SHomeSnapshot>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<HomeApp>>, Fault> {
         use semio_framework_plugin::retained_command::ArtifactCommandWorkStep;
         if self.committed {
             return Err(Fault::from("space-home-catalog-work-repeated"));
@@ -815,7 +815,81 @@ pub async fn create_home_app() -> semio_framework_plugin::AppDefinition {
 //#endregion 🔖️HomeManifest
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
+
+//#region 🧩️ArtifactItems2
+pub mod artifact_items_2 {
+//#region 🔖️Dialect
+/// 🪪️ Lives at the ARTIFACT level (not under `editor`/`viewer`) so a viewer file can read it without
+/// ever importing through `editor` — `artifact_kind` matches this subset's own
+/// `#[artifact_schema(id = "s.space.home")]`, `standard`/`subset` match this file's own
+/// `🏅️standards/🔖️1/🪆️subsets/✳️any` location. Canonical surface id: `s.space.home@1/*#editor` /
+/// `s.space.home@1/*#viewer` (contract §1 grammar).
+pub const HOME_DIALECT: semio_framework_plugin::app::Dialect = semio_framework_plugin::app::Dialect { artifact_kind: "s.space.home", standard: semio_framework_plugin::app::StandardId("1"), subset: semio_framework_plugin::app::SubsetId::ANY };
+//#endregion 🔖️Dialect
+}
+//#endregion 🧩️ArtifactItems2
+
+//#region 🧩️ArtifactItems4
+pub mod artifact_items_4 {
+//#region 🔖️Declaration
+/// 🔖️ This artifact's declaration (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE M1, relocated
+/// off `⚙️engine` to the artifact root — `declaration()` describes the artifact itself, not engine
+/// behaviour) — replaces the old side-effecting `register_artifact_schema()`/
+/// `register_artifact_inference()`/`register_io()` trio (each a lone-call wrapper around one global
+/// registry) plus the root's old `register_pilot_languages()` 5-language block, folded here into one
+/// declarative table. `kind` is `"s.home"`, matching `S_HOME_DOCUMENT_SCHEMA` above — three genuinely
+/// distinct namespaces, not two: NOT `space.shome` (the OS-level `ArtifactKindSpec.id`) and NOT
+/// `s.space.home` (`HOME_DIALECT.artifact_kind`, the schema-descriptor id, per this subset's own
+/// `#[artifact_schema(id = "s.space.home")]`) — see `ArtifactDeclaration::register_all`'s ownership
+/// check, which is enforced against the composer table's own dialects. The editor's and studio app's
+/// own config/presence schema (`editor::home::config::schema::app_schema_descriptor()`/
+/// `engine::space::config::schema::app_schema_descriptor()`) is supplied by `ArtifactEditor::app_schema()`/
+/// `ArtifactApp::app_schema()` overrides (ticket W1c) — `ArtifactDeclaration`
+/// deliberately has no field for app-scope schema (see that struct's own doc); it is registered by
+/// `.document_codec::<A>()` instead, keyed off `A` the same way this declaration is keyed off `kind`.
+/// 🧾️ Defines s.home's immutable runtime capability leaves.
+pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
+    use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
+
+    ArtifactDefinition::new(ArtifactIdentity::parse("s.space.home")?)
+        .capability(ArtifactCapability::new(ArtifactIdentity::parse("s.space.home.schema.artifact")?, ArtifactCapabilityKind::schema()).descriptor(b"s.space.home")?.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::schema(), "s.space.home")?)?)?
+        .capability(
+            ArtifactCapability::new(ArtifactIdentity::parse("s.space.home.inference.artifact")?, ArtifactCapabilityKind::inference())
+                .descriptor(b"s.space.home.inference")?
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::schema(), "s.space.home.inference")?)?,
+        )?
+        .capability(ArtifactCapability::new(ArtifactIdentity::parse("s.space.home.composer.native")?, ArtifactCapabilityKind::composer()).descriptor(b"s.space.home@1/*")?.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.space.home@1/*")?)?)?
+        .capability(
+            ArtifactCapability::new(ArtifactIdentity::parse("s.space.home.composer.zip")?, ArtifactCapabilityKind::composer())
+                .descriptor(b"s.stdio.zip@2.0/*")?
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.zip@2.0/*")?)?,
+        )?
+        .capability(
+            ArtifactCapability::new(ArtifactIdentity::parse("s.space.home.composer.json")?, ArtifactCapabilityKind::composer())
+                .descriptor(b"s.stdio.json@rfc8259/*")?
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.json@rfc8259/*")?)?,
+        )?
+        .capability(
+            ArtifactCapability::new(ArtifactIdentity::parse("s.space.home.codec.document")?, ArtifactCapabilityKind::codec())
+                .descriptor(b"s.home:shome")?
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::codec(), "s.home")?)?
+                .claim(ArtifactIdentityClaim::codec_extension("s.home", "shome")?)?,
+        )?
+        .capability(ArtifactCapability::new(ArtifactIdentity::parse("s.space.home.localization.en")?, ArtifactCapabilityKind::localization()).descriptor(b"Home")?.localization(ArtifactLocalization::new(ArtifactLocale::parse("en")?, "Home")?)?)?
+        .capability(ArtifactCapability::new(ArtifactIdentity::parse("s.space.home.localization.de")?, ArtifactCapabilityKind::localization()).descriptor(b"Startseite")?.localization(ArtifactLocalization::new(ArtifactLocale::parse("de")?, "Startseite")?)?)
+}
+
+/// 🔖️ Assembles s.home's typed runtime declaration.
+pub async fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+    semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
+        .schema(crate::standards::v1::subsets::any::schema::home_artifact_schema_descriptor())
+        .inferences([crate::standards::v1::subsets::any::schema::inferences::home_artifact_inference_descriptor()])
+        .composers(crate::standards::v1::subsets::any::io::io_registry::entries())
+        .document_codec::<semio_framework_plugin::EditorApp<crate::editor::home::HomeApp>>()
+        .try_build()
+}
+//#endregion 🔖️Declaration
+}
+//#endregion 🧩️ArtifactItems4

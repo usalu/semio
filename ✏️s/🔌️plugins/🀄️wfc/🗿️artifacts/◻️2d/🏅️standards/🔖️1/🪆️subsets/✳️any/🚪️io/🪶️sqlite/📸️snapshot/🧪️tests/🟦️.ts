@@ -20,10 +20,10 @@ test('wfc2d owned mutations, inverse and four authored example consumers',async(
 
 test("wfc2d authored duplicate and unresolved identities remain literal owned state",async()=>{for(const case_ of fixture.literalIdentityStates){const original=structuredClone(state()),source:Wfc2dSnapshot={...original,tiles:original.tiles.map(tile=>({...tile,id:case_.tileId})),slots:original.slots.map(slot=>({...slot,id:case_.slotId,pinnedTileId:case_.pinTileId})),rules:original.rules.map(rule=>({...rule,id:case_.ruleId,tileAId:case_.tileAId,tileBId:case_.tileBId})),edges:original.edges.map(edge=>({...edge,id:case_.edgeId,fromSlotId:case_.fromSlotId,toSlotId:case_.toSlotId}))};const db=Database.deserialize(await exportSqliteDatabase(await wfc2dSnapshotToSqliteDatabase(source)));try{expect(db.query("PRAGMA integrity_check").get()).toEqual({integrity_check:"ok"});expect(db.query("PRAGMA foreign_key_check").all()).toEqual([]);expect(db.query("SELECT authored_id,pinned_tile_id FROM wfc2d_slot ORDER BY ordinal").all()).toEqual(source.slots.map(()=>({authored_id:case_.slotId,pinned_tile_id:case_.pinTileId})));expect(db.query("SELECT authored_id,from_slot_id,to_slot_id FROM wfc2d_slot_edge ORDER BY ordinal").all()).toEqual(source.edges.map(()=>({authored_id:case_.edgeId,from_slot_id:case_.fromSlotId,to_slot_id:case_.toSlotId})));expect(await wfc2dSnapshotFromSqliteDatabase(await importSqliteDatabase(db.serialize()))).toEqual(source);}finally{db.close();}}});
 
-import{verifyBitmapSqlite}from"../../../../../../../../../../🪶️sqlite/🎨️bitmap/🧪️tests/🟦️.ts";
+import{verifyBitmapSqlite}from"@semio-tech/wfc-js/sqlite/bitmap/testing";
 test("wfc2d canonical per-pixel edits and complete intermediate literal states",async()=>{
  const bitmap=(source:ReturnType<typeof state>)=>{const media=source.tiles[1]!.media;if(typeof media==="string"||!("Bitmap"in media))throw Error("expected authored bitmap");return media.Bitmap;};
- await verifyBitmapSqlite("wfc2d",value=>{const source=state(),prior=bitmap(source);source.tiles[1]!.media={Bitmap:{width:value.width,height:value.height,palette:prior.palette,pixels:value.text}};return source;},bitmap,wfc2dSnapshotToSqliteDatabase,wfc2dSnapshotFromSqliteDatabase);
+ await verifyBitmapSqlite("wfc2d",value=>{const source=state(),prior=bitmap(source);return{...source,tiles:source.tiles.map((tile,index)=>index===1?{...tile,media:{Bitmap:{width:value.width,height:value.height,palette:prior.palette,pixels:value.text}}}:tile)};},bitmap,wfc2dSnapshotToSqliteDatabase,wfc2dSnapshotFromSqliteDatabase);
 });
 
 import AjvRaster from "ajv";

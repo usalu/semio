@@ -3,8 +3,7 @@
 #[allow(unused_imports)]
 mod mutations_codec {
 use super::*;
-use crate::editor::forms::config::component::mutations::*;
-use crate::editor::forms::config::component::*;
+use crate::editor::forms::config::*;
 
 impl protocol::OpText for FormsConfigMutation {
     fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
@@ -29,8 +28,7 @@ impl protocol::OpText for FormsConfigMutation {
 #[allow(unused_imports)]
 mod mutations_wire_codec {
 use super::*;
-use crate::editor::forms::config::component::mutations::*;
-use crate::editor::forms::config::component::*;
+use crate::editor::forms::config::*;
 
 /// 🌉️ The committed-vector report of this state lane for the language-neutral case adapter, which links only this
 /// crate: production dispatch (`Mutation::diff(..).apply_to`) and the mutation's own inverse over `FormsConfig`.

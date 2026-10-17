@@ -3,7 +3,7 @@ use super::DrawingPlayApp;
 use semio_framework_plugin::{ArtifactToolCompletionValue,ArtifactCompletionFault,ArtifactDownloadOutput,EditorApp,Emit,EphemeralEmit,NoConfigMutation,NoDraftMutation,VacantVec,VacantDeque,CompletionEffect};
 use semio_framework_value::{ValueError,ValueRefusalKind,ErasedSnapshotRetirement,retirement::{RetireOwned,RetirementCursor,RetirementStep,controlled::{ControlledRetirement,admit_typed_controlled_retirement}},retained_clone::{RetainedCloneGrant,RetainedCloneProgress}};
 use std::mem::ManuallyDrop;
-type App=EditorApp<DrawingPlayApp>;type Value=ArtifactToolCompletionValue<App>;type DrawingEmit=Emit<semio_s_artifact_draw_drawing_mutations::DrawingMutation,NoConfigMutation,NoDraftMutation>;
+pub type App=EditorApp<DrawingPlayApp>;pub type Value=ArtifactToolCompletionValue<App>;type DrawingEmit=Emit<semio_s_artifact_draw_drawing_mutations::DrawingMutation,NoConfigMutation,NoDraftMutation>;
 enum Source{Emit(DrawingEmit,EphemeralEmit<App>),Download(Option<ArtifactDownloadOutput>,EphemeralEmit<App>),Fault(Option<ArtifactCompletionFault>,EphemeralEmit<App>)}
 impl Source{fn ephemeral(&self)->&EphemeralEmit<App>{match self{Self::Emit(_,value)|Self::Download(_,value)|Self::Fault(_,value)=>value}}fn ephemeral_mut(&mut self)->&mut EphemeralEmit<App>{match self{Self::Emit(_,value)|Self::Download(_,value)|Self::Fault(_,value)=>value}}}
 pub struct DrawingCompletionPayload(pub Value);
@@ -48,7 +48,4 @@ impl RetirementCursor for Cursor{
 }
 impl Drop for Cursor{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"actual Draw completion payload reached Drop before all retained fields returned");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.original);}}}}
 
-#[cfg(test)]
-#[path="🧪️tests/🦀️.rs"]
-mod tests;
 

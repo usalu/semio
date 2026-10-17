@@ -3,7 +3,7 @@
 pub const TAG: u8 = dsl::protocol_record::tag_u8(include_str!("../📡️.protocol.semio"), "insert-annotation");
 pub const BINARY_TAG: u8 = TAG;
 
-use crate::standards::v1_7::subsets::base::schema::mutations::InsertAnnotation;
+use crate::standards::v1_7::subsets::base::schema::mutations::insert_annotation::InsertAnnotation;
 
 /// 📤️ Encodes this direct payload as canonical schema JSON bytes.
 pub fn encode(payload: &InsertAnnotation) -> Result<Vec<u8>, String> {

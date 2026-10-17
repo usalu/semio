@@ -28,7 +28,6 @@ fn original_session_constructor_pays_each_exact_birth_and_preserves_original_cal
   }
   assert!(cursor.terminal_is_empty());let mut capture=capture.unwrap();assert!(!capture.is_closed());capture_close(&mut capture,&mut caller,policy);let before=caller.cumulative_receipt();let(_,heap)=observe(||{drop(capture);drop(cursor)});assert_eq!(heap,(0,0));assert_eq!(caller.cumulative_receipt(),before);let(receipt,heap)=observe(||caller.retire(policy));assert_eq!(heap,(0,receipt));assert_eq!(receipt,root_born);assert_eq!(before.retained_capacity_bytes,born+root_born);assert_eq!(before.released_bytes,before.retained_capacity_bytes-root_born);
  }
- println!("[DEBUG] original Session six physical shells plus authority page exactly match actual allocator; item/capacity/depth and genuine zero-fuel/expired loans deny without effects; same op/gen/source/recipient/cancel through owned capture handoff and paid close; full conservation and Drop0")
 }
 
 #[test]
@@ -39,5 +38,4 @@ fn original_session_constructor_cancellation_closes_only_born_originals(){
    for loan in denied{let before=caller.cumulative_receipt();let fuel=caller.fuel_remaining();let(step,heap)=observe(||caller.turn(loan,|cx|cursor.close_step(cx)));assert_eq!(step.unwrap().progress(),Progress::default());assert_eq!(heap,(0,0));assert_eq!(caller.cumulative_receipt(),before);assert_eq!(caller.fuel_remaining(),fuel);assert_eq!(cursor.phase(),phase)}
    constructor_close(&mut cursor,&mut caller,policy);assert_eq!(cursor.phase(),phase);let before=caller.cumulative_receipt();let(_,heap)=observe(||drop(cursor));assert_eq!(heap,(0,0));let(receipt,heap)=observe(||caller.retire(policy));assert_eq!(heap,(0,receipt));assert_eq!(receipt,root_born);assert_eq!(before.released_bytes,before.retained_capacity_bytes-root_born);
   }}
- println!("[DEBUG] actual original cancellation at each0..9 construction stage under body1/3/64 closes only already-born owners without completing missing shells; exact System five-axis conservation and Drop0")
 }

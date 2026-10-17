@@ -1,8 +1,8 @@
 //! ♻️ ProgramSnapshot mutation — `replace-register-row` leaf: the generic replace over every id-keyed register, typed by the
 //! register catalog generated from the `x-semio-collection-catalog` of `📸️snapshot/🔣️.json`.
 
-use crate::standards::v1::subsets::any::schema::registers::RegisterRow;
-use crate::standards::v1::subsets::any::schema::{diff::ProgramDiff, mutations::ProgramMutation, snapshot::ProgramSnapshot};
+use crate::standards::v1::subsets::any::schema::registers::catalog::RegisterRow;
+use crate::standards::v1::subsets::any::schema::{diff::ProgramDiff, snapshot::ProgramSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 
 /// ♻️ Whole-value swap of one row's non-identity content, addressed by the register and id `row` carries.
@@ -16,12 +16,15 @@ pub struct ReplaceRegisterRow {
     pub row: RegisterRow,
 }
 
-impl MutationKind<ProgramSnapshot, ProgramMutation> for ReplaceRegisterRow {
+impl<Op> MutationKind<ProgramSnapshot, Op> for ReplaceRegisterRow
+where
+    Op: protocol::Mutation<ProgramSnapshot, Diff = ProgramDiff> + From<ReplaceRegisterRow>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "replace", entity: "register-row", kind: "replace-register-row", record: "ReplacedRegisterRow" };
     fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &ProgramSnapshot) -> Result<Vec<ProgramMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &ProgramSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {

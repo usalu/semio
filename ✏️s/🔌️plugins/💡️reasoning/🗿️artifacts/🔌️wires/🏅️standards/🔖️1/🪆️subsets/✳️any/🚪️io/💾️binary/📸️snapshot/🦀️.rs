@@ -13,18 +13,26 @@ impl pack::snapshot::ArtifactPack for WiresSnapshot{
 impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for WiresSnapshot {
 fn sqlite_snapshot_codec()->Option<store::os_store::serialization::ArtifactSqliteSnapshotCodec>{Some(<Self as store::os_store::ArtifactSqliteSnapshotOperations>::sqlite_codec())}
 }
-#[cfg(test)]
-#[path="🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 
 
 
 
 #[path="📦️pack/🦀️.rs"]
-pub(crate) mod pack;
+pub mod pack;
 
 /// 🫴️ Declares this owner’s actual controlled native record factories.
 impl pack::snapshot::ArtifactNativeSnapshot for WiresSnapshot {
  fn decode_native_snapshot(payload:pack::snapshot::NativeSnapshotInput<'_>,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,semio_framework_value::ValueError>{store::decode_native_snapshot_record(payload,<Self as pack::snapshot::ArtifactDsl>::envelope_id(),pack::record_spec_producer(),|record,native|{let maximum=native.maximum_bytes();pack::reconstruct_record_controlled(record,native,maximum,maximum)},control)}
  fn encode_native_snapshot(&self,encoding:pack::snapshot::NativeSnapshotEncoding,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<store::io_schema::IoPayload,semio_framework_value::ValueError>{store::encode_native_snapshot_record(encoding,<Self as pack::snapshot::ArtifactDsl>::envelope_id(),pack::record_spec_producer(),|native|{let maximum=native.maximum_bytes();pack::record_controlled_semantic(self,native,maximum,maximum)},control)}
 }
+
+//#region 🧩️ArtifactItems2
+pub mod artifact_items_2 {
+//#region 🔖️ContentChild
+/// 🕸️ Owned CHILD handle type for the composed `s.stdio.semio@v1/graph` board.
+pub type WiresContentChild = store::os_store::artifact_child::ArtifactChild<SemioGraphSnapshot>;
+pub use semio_s_artifact_stdio_semio_graph::schema::snapshot::{GraphEdgeId, GraphNodeId, SemioGraphEdge, SemioGraphNode, SemioGraphSnapshot, STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA};
+//#endregion 🔖️ContentChild
+}
+//#endregion 🧩️ArtifactItems2

@@ -326,23 +326,6 @@
       },
       "outputs": []
     },
-    "hub-edit-durability-check": {
-      "executor": "repo:script",
-      "cache": false,
-      "dependsOn": [
-        {
-          "projects": [
-            "@semio-tech/framework-os-mcp-rs"
-          ],
-          "target": "build"
-        }
-      ],
-      "options": {
-        "cwd": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts hub-edit-durability-check"
-      },
-      "outputs": []
-    },
     "agent-reply-check": {
       "executor": "repo:script",
       "cache": false,

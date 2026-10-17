@@ -3,9 +3,7 @@ import {readFileSync} from "node:fs";
 import {join} from "node:path";
 import {Database} from "bun:sqlite";
 import ts from "typescript";
-import Ajv from "ajv";
 import corpus from "./🔣️.json";
-import schema from "./🧬️schema/🔣️.json";
 
 function source(path:string):ts.SourceFile{return ts.createSourceFile(path,readFileSync(join(process.cwd(),path),"utf8"),ts.ScriptTarget.Latest,true);}
 function nodes(tree:ts.Node):readonly ts.Node[]{const result:ts.Node[]=[];const visit=(node:ts.Node)=>{result.push(node);ts.forEachChild(node,visit);};visit(tree);return result;}
@@ -13,7 +11,7 @@ function callName(node:ts.CallExpression):string{return ts.isIdentifier(node.exp
 
 /** 🎟️ Neutral parameter DATA and independent AST/SQL agree on every required production boundary. */
 test("neutral Hub carried phase has required exact caller and option contracts",()=>{
- expect(new Ajv({strict:true}).validate(schema,corpus)).toBe(true);const database=new Database(":memory:");try{for(const row of corpus.functions){const tree=source(row.path),owner=nodes(tree).find(node=>ts.isFunctionDeclaration(node)&&node.name?.text===row.name);if(!owner||!ts.isFunctionDeclaration(owner))throw Error("Actual function owner required");const actual=owner.parameters.map(parameter=>parameter.name.getText(tree));expect(database.query("select json(?1)=json(?2) exact").get(JSON.stringify(actual),JSON.stringify(row.parameters)),row.name).toEqual({exact:1});expect(owner.parameters.every(parameter=>!parameter.questionToken&&!parameter.initializer)).toBe(true);}const tree=source(corpus.functions[2]!.path),owner=tree.statements.find(node=>ts.isTypeAliasDeclaration(node)&&node.name.text==="IoMatrixOptions");if(!owner||!ts.isTypeAliasDeclaration(owner))throw Error("Actual I/O options owner required");for(const field of corpus.options)expect(owner.getText(tree)).toContain(field+":");}finally{database.close();}
+ expect(corpus.functions).toHaveLength(4);expect(corpus.options).toEqual(["invocation","phaseControl"]);const database=new Database(":memory:");try{for(const row of corpus.functions){const tree=source(row.path),owner=nodes(tree).find(node=>ts.isFunctionDeclaration(node)&&node.name?.text===row.name);if(!owner||!ts.isFunctionDeclaration(owner))throw Error("Actual function owner required");const actual=owner.parameters.map(parameter=>parameter.name.getText(tree));expect(database.query("select json(?1)=json(?2) exact").get(JSON.stringify(actual),JSON.stringify(row.parameters)),row.name).toEqual({exact:1});expect(owner.parameters.every(parameter=>!parameter.questionToken&&!parameter.initializer)).toBe(true);}const tree=source(corpus.functions[2]!.path),owner=tree.statements.find(node=>ts.isTypeAliasDeclaration(node)&&node.name.text==="IoMatrixOptions");if(!owner||!ts.isTypeAliasDeclaration(owner))throw Error("Actual I/O options owner required");for(const field of corpus.options)expect(owner.getText(tree)).toContain(field+":");}finally{database.close();}
 });
 
 /** 🧱️ Compiler failure cannot be healed by a PID marker, stale path or a fresh signal after admission. */

@@ -213,9 +213,9 @@ impl<'a> DocumentSceneJob<'a>{
 pub fn resolved_scene_input(plan:DocumentScenePlan,viewport:DocumentSceneViewport)->Result<RasterSceneInput,DocumentSceneError>{
  let mut nodes=Vec::new();for n in plan.nodes{let content=match n.content{DocumentSceneContent::Group{..}=>continue,DocumentSceneContent::Path{segments,fill_rule,fill,stroke}=>RasterSceneContent::Path{segments,fill_rule,fill,stroke},DocumentSceneContent::Image{asset,width,height}=>RasterSceneContent::Image{asset,width,height},_=>return Err(invalid(format!("Unresolved scene layer: {}",n.id)))};nodes.push(RasterSceneNode{id:n.id,groups:n.groups,transform:n.transform,opacity:n.opacity,blend_mode:n.blend_mode,visible:n.visible,content});}Ok(viewport.input(plan.assets,nodes))
 }
-#[cfg(test)]
-#[path="🧪️tests/🔬️unit/🦀️.rs"]
-pub mod tests;
+#[cfg(any(test, feature = "testkit"))]
+#[path="🧰️testkit/🦀️.rs"]
+pub mod testkit;
 #[derive(Clone,Debug)]
 pub struct DocumentSceneViewport{pub width:u32,pub height:u32,pub origin:[f64;2],pub tolerance:f64,pub max_pixels:usize,pub max_source_bytes:usize}
 impl DocumentSceneViewport{fn input(&self,assets:Vec<RasterSceneAsset>,nodes:Vec<RasterSceneNode>)->RasterSceneInput{RasterSceneInput{width:self.width,height:self.height,origin:self.origin,tolerance:self.tolerance,max_pixels:self.max_pixels,max_source_bytes:self.max_source_bytes,assets,nodes}}}

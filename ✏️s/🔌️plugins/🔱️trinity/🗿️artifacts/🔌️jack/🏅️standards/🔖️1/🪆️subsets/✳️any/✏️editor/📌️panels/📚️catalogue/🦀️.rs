@@ -35,7 +35,7 @@ fn graph_example_row(preset: &GraphExample) -> semio_framework_plugin::UiAssembl
     tree_item_with_action(
         format!("trinity-jack-catalogue.graph-example.{}", preset.id),
         crate::editor::jack::ui_label(preset.label)?,
-        Some(crate::editor::jack::commands::preset_query(preset.id).into()),
+        Some(crate::editor::jack::commands::set_active_example::preset_query(preset.id).into()),
         crate::editor::jack::jack_action("setActiveExample", Some(args))?,
     )
 }
@@ -45,7 +45,7 @@ fn example_row(example: &ExampleQuery) -> semio_framework_plugin::UiAssemblyResu
     tree_item_with_action(format!("trinity-jack-catalogue.example.{}", example.id), crate::editor::jack::ui_label(example.label)?, Some(example.query.into()), crate::editor::jack::jack_action("runQuery", Some(args))?)
 }
 
-pub(crate) fn render(labels: &TrinityJackLabels, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(labels: &TrinityJackLabels, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let kind_items = ui_node_list([
         tree_item("trinity-jack-catalogue.piece", crate::editor::jack::ui_label(labels.piece.as_str())?),
         tree_item("trinity-jack-catalogue.connection", crate::editor::jack::ui_label(labels.connection.as_str())?),

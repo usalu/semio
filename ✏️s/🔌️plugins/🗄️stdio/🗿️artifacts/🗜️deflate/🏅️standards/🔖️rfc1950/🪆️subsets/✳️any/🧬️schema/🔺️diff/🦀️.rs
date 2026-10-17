@@ -115,9 +115,9 @@ pub fn diff_set_payload(payload: Vec<u8>) -> DeflateDiff {
 //#region 🔖️DemoCases
 /// 🧪️ Representative `DeflateDiff` cases built declaratively: the empty diff, every field (incl. the `dict_id` tri-state both ways), and the
 /// payload and preset-dictionary builders.
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn demo_diff_cases() -> Vec<DeflateDiff> {
+pub fn demo_diff_cases() -> Vec<DeflateDiff> {
     vec![
         DeflateDiff::default(),
         DeflateDiff { compression_method: Some(9), window_bits: Some(6), compression_level_hint: Some(DeflateLevelHint::Maximum), dict_id: Some(Some(0xDEAD_BEEF)), payload: Some(b"demo-cases-b-different-longer-payload".to_vec()) },
@@ -129,37 +129,37 @@ pub(crate) fn demo_diff_cases() -> Vec<DeflateDiff> {
 //#endregion 🔖️DemoCases
 
 //#region 🔖️HandcraftedDiffCodec
-/// 🧪️ F6: **hand-rolled** `protocol::DiffCodec` for `DeflateDiff` — the derive path
-/// (`#[derive(dsl::DslDiff)]`) is NOT usable here: `dict_id: Option<Option<u32>>` is a tri-state
-/// field (`f6-recon-report.md` §3b — `dsl_derive::classify_field` peels exactly one `Option<..>`
-/// layer before binding, and there is no `impl<T: DslField> DslField for Option<T>` anywhere in
-/// the `dsl` crate, so the REMAINING `Option<u32>` after that one peel is structurally
-/// unbindable). Confirmed via real `cargo check`:
-/// ```text
-/// error[E0277]: the trait bound `std::option::Option<u32>: DslField` is not satisfied
-///    --> …/🔺️diff/🦀️.rs:37:17   (pub dict_id: Option<Option<u32>>)
-/// ```
-/// This is the SAME hand-rolled path `GifDiff` uses for its own tri-state fields (`gct`,
-/// `loop_count`, `GifFrameDiff`'s `lct`/`transparent_index`/`plain_text`) — the primitive set
-/// below (`hex_encode`/`hex_decode`/`split_top_level`/`strip_brackets`/`encode_option`/
-/// `decode_option`) is copied verbatim from that pilot's grammar template
-/// (`f6-recon-report.md` §5), since `DeflateDiff` needs no enum-tag or collection-triple
-/// machinery (no data-carrying enum, no keyed collection anywhere in this artifact).
-///
-/// **Grammar**: one space-separated `name=value` token per changed top-level field (a field
-/// absent from the line = unchanged). Bytes (`payload`) are lowercase hex — same local idiom
-/// `DeflateSnapshot`'s own `ArtifactDsl` impl above already uses, and the same reason `GifDiff`
-/// gives (no external base64 dep, no escaping needed at this grammar layer). `compression_level_hint`
-/// uses a single-letter tag (`f`/`a`/`d`/`m`, mirroring `GifDisposal`'s `enc_disposal` pattern).
-/// The tri-state `dict_id` and the plain-optional `payload` both use the uniform
-/// `[0]`=unchanged-inner-None / `[1,<T>]`=inner-Some(T) tag via `encode_option`/`decode_option`
-/// (note: `payload`'s own `Option<Vec<u8>>` is the DIFF's "field changed at all" wrapper, not a
-/// second tri-state — `DeflateSnapshot::payload` itself is a bare, never-nullable `Vec<u8>`, so
-/// `payload`'s token is only present when the field changed, and its value is always hex, never
-/// itself optional).
-///
-/// Worked example: `compression-method=9 window-bits=6 level=m dict-id=[1,3735928559] payload=` (empty
-/// payload prints as a zero-length hex string after `=`).
+// 🧪️ F6: **hand-rolled** `protocol::DiffCodec` for `DeflateDiff` — the derive path
+// (`#[derive(dsl::DslDiff)]`) is NOT usable here: `dict_id: Option<Option<u32>>` is a tri-state
+// field (`f6-recon-report.md` §3b — `dsl_derive::classify_field` peels exactly one `Option<..>`
+// layer before binding, and there is no `impl<T: DslField> DslField for Option<T>` anywhere in
+// the `dsl` crate, so the REMAINING `Option<u32>` after that one peel is structurally
+// unbindable). Confirmed via real `cargo check`:
+// ```text
+// error[E0277]: the trait bound `std::option::Option<u32>: DslField` is not satisfied
+//    --> …/🔺️diff/🦀️.rs:37:17   (pub dict_id: Option<Option<u32>>)
+// ```
+// This is the SAME hand-rolled path `GifDiff` uses for its own tri-state fields (`gct`,
+// `loop_count`, `GifFrameDiff`'s `lct`/`transparent_index`/`plain_text`) — the primitive set
+// below (`hex_encode`/`hex_decode`/`split_top_level`/`strip_brackets`/`encode_option`/
+// `decode_option`) is copied verbatim from that pilot's grammar template
+// (`f6-recon-report.md` §5), since `DeflateDiff` needs no enum-tag or collection-triple
+// machinery (no data-carrying enum, no keyed collection anywhere in this artifact).
+//
+// **Grammar**: one space-separated `name=value` token per changed top-level field (a field
+// absent from the line = unchanged). Bytes (`payload`) are lowercase hex — same local idiom
+// `DeflateSnapshot`'s own `ArtifactDsl` impl above already uses, and the same reason `GifDiff`
+// gives (no external base64 dep, no escaping needed at this grammar layer). `compression_level_hint`
+// uses a single-letter tag (`f`/`a`/`d`/`m`, mirroring `GifDisposal`'s `enc_disposal` pattern).
+// The tri-state `dict_id` and the plain-optional `payload` both use the uniform
+// `[0]`=unchanged-inner-None / `[1,<T>]`=inner-Some(T) tag via `encode_option`/`decode_option`
+// (note: `payload`'s own `Option<Vec<u8>>` is the DIFF's "field changed at all" wrapper, not a
+// second tri-state — `DeflateSnapshot::payload` itself is a bare, never-nullable `Vec<u8>`, so
+// `payload`'s token is only present when the field changed, and its value is always hex, never
+// itself optional).
+//
+// Worked example: `compression-method=9 window-bits=6 level=m dict-id=[1,3735928559] payload=` (empty
+// payload prints as a zero-length hex string after `=`).
 //#region 🔖️Primitives
 
 
@@ -186,7 +186,5 @@ pub(crate) fn demo_diff_cases() -> Vec<DeflateDiff> {
 //#endregion 🔖️HandcraftedDiffCodec
 
 //#region 🔖️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🔖️Tests

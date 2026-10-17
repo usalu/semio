@@ -1,5 +1,5 @@
 
-use super::*;
+use crate::standards::v1::subsets::any::schema::{Puzzle5dAttribute, Puzzle5dAuthor, Puzzle5dCatalogGripKind, Puzzle5dCatalogPartKind, Puzzle5dCompatSpecificity, Puzzle5dFastener, Puzzle5dGripTemplate, Puzzle5dKindCompatibility, Puzzle5dPart, Puzzle5dPartAnchor, Puzzle5dRepresentation};
 
 #[test]
 fn fastener_defaults_include_diagram_xy() {

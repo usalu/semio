@@ -925,5 +925,19 @@
     "mutated": "members/late",
     "maximumManifestBytes": 8388608,
     "maximumAggregateManifestBytes": 67108864
-  }
+  },
+  "physicalObservations": [
+    {"name":"repeat-state", "pathCapacity":1,"factCapacity":2,"steps":[{"operation":"state","path":"/a","value":["directory","1","2",16877]},{"operation":"state","path":"/a","value":["directory","1","2",16877]}],"accepted":true,"paths":1,"facts":1},
+    {"name":"one-path-two-facts", "pathCapacity":1,"factCapacity":2,"steps":[{"operation":"state","path":"/a","value":["directory","1","2",16877]},{"operation":"list","path":"/a","value":[]}],"accepted":true,"paths":1,"facts":2},
+    {"name":"global-first-fact-order", "pathCapacity":2,"factCapacity":4,"steps":[{"operation":"state","path":"/a","value":["directory","1","2",16877]},{"operation":"state","path":"/b","value":["directory","1","3",16877]},{"operation":"list","path":"/a","value":[]},{"operation":"list","path":"/b","value":[]}],"accepted":true,"paths":2,"facts":4},
+    {"name":"new-path-capacity", "pathCapacity":2,"factCapacity":4,"steps":[{"operation":"state","path":"/a","value":["directory","1","2",16877]},{"operation":"state","path":"/b","value":["directory","1","3",16877]},{"operation":"state","path":"/c","value":["directory","1","4",16877]}],"accepted":false,"paths":2,"facts":2},
+    {"name":"new-fact-at-path-capacity", "pathCapacity":2,"factCapacity":4,"steps":[{"operation":"state","path":"/a","value":["directory","1","2",16877]},{"operation":"state","path":"/b","value":["directory","1","3",16877]},{"operation":"list","path":"/a","value":[]}],"accepted":true,"paths":2,"facts":3},
+    {"name":"new-fact-capacity", "pathCapacity":2,"factCapacity":2,"steps":[{"operation":"state","path":"/a","value":["directory","1","2",16877]},{"operation":"state","path":"/b","value":["directory","1","3",16877]},{"operation":"list","path":"/a","value":[]}],"accepted":false,"paths":2,"facts":2},
+    {"name":"new-path-fact-capacity-rollback", "pathCapacity":2,"factCapacity":1,"steps":[{"operation":"state","path":"/a","value":["directory","1","2",16877]},{"operation":"state","path":"/b","value":["directory","1","3",16877]}],"accepted":false,"paths":1,"facts":1},
+    {"name":"state-drift", "pathCapacity":2,"factCapacity":4,"steps":[{"operation":"state","path":"/a","value":["directory","1","2",16877]},{"operation":"state","path":"/a","value":["directory","1","3",16877]}],"accepted":false,"paths":1,"facts":1},
+    {"name":"topology-drift", "pathCapacity":2,"factCapacity":4,"steps":[{"operation":"state","path":"/a","value":["directory","1","2",16877]},{"operation":"list","path":"/a","value":[{"name":"b","kind":"directory"}]},{"operation":"list","path":"/a","value":[{"name":"b","kind":"symlink"}]}],"accepted":false,"paths":1,"facts":2},
+    {"name":"missing-appeared", "pathCapacity":2,"factCapacity":4,"steps":[{"operation":"state","path":"/a","value":["missing"]},{"operation":"state","path":"/a","value":["directory","1","2",16877]}],"accepted":false,"paths":1,"facts":1},
+    {"name":"listing-requires-own-state", "pathCapacity":2,"factCapacity":4,"steps":[{"operation":"list","path":"/a","value":[]}],"accepted":false,"paths":0,"facts":0},
+    {"name":"listing-repeat-no-recharge", "pathCapacity":1,"factCapacity":2,"steps":[{"operation":"state","path":"/a","value":["directory","1","2",16877]},{"operation":"list","path":"/a","value":[]},{"operation":"list","path":"/a","value":[]}],"accepted":true,"paths":1,"facts":2}
+  ]
 }

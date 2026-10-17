@@ -18,9 +18,17 @@
     ".": {
       "types": "./dist/🟦️.d.ts",
       "import": "./dist/🟦️.js"
-    }
+    },
+    "./source": "./📥️source/🟦️.ts",
+    "./standards/1/subsets/any/io/sqlite/snapshot": "./🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🟦️.ts",
+    "./standards/1/subsets/any/schema/diff": "./🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts",
+    "./standards/1/subsets/any/schema/snapshot": "./🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🟦️.ts",
+    "./subsets/any/io/export/serializers/artifacts/json/rfc8259/any": "./🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🟦️.ts",
+    "./subsets/any/io/import/deserializers/artifacts/json/rfc8259/any": "./🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🟦️.ts"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@semio-tech/framework-os": "workspace:*"
+  },
   "license": "LGPL-3.0-or-later",
   "repository": {
     "type": "git",

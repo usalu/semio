@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /** 📦️ energy model Rust artifact package router. */
 import { runArtifactRustPackageMain } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts";
-import { runWeatherChecks } from "../../../../🧩️extensions/🌦️epw/🧪️tests/🔬️unit/🟦️.ts";
+import { runWeatherChecks } from "../../../../📦️packages/🟦️typescript/🧩️extensions/🌦️epw/🧪️testing/🔬️unit/🟦️.ts";
 
 /** 🧩️ Every crate of the energy model artifact family (its workspace members), checked and tested together. */
 const ENERGY_MODEL_PACKAGES = [

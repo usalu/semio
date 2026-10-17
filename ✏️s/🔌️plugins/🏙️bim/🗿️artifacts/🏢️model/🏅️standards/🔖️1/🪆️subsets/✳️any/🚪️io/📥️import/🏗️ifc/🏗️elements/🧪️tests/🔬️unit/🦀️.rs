@@ -21,7 +21,7 @@ fn unused_ids_count_up_from_the_base() {
 #[test]
 fn a_leaning_column_and_the_arc_inclined_and_joined_beams_come_back_exactly_from_their_records() {
     use crate::standards::v1::subsets::any::io::export::ifc::export_ifc2x3;
-    use crate::standards::v1::subsets::any::io::export::ifc::frame::tests::leaning;
+    use crate::standards::v1::subsets::any::io::export::ifc::testkit::leaning;
     use crate::standards::v1::subsets::any::io::import::ifc::import_ifc2x3;
     let model = leaning();
     let (bytes, _) = export_ifc2x3(&model).expect("the model exports");

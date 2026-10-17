@@ -2,8 +2,8 @@
 use semio_framework_value::paged::PagedUtf8;
 use semio_framework_value::FromValue;
 #[derive(Clone,Debug,PartialEq,semio_framework_value::ToValue,semio_framework_value::RetainedClone,semio_framework_value::RetireOwned)]
-#[cfg_attr(test,derive(serde::Serialize,serde::Deserialize))]
-#[cfg_attr(test,serde(try_from="DrawingIdentityWire"))]
+#[cfg_attr(any(test, feature = "testkit"),derive(serde::Serialize,serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"),serde(try_from="DrawingIdentityWire"))]
 pub struct DrawingIdentity {key:PagedUtf8<{usize::MAX}>}
 impl DrawingIdentity {
  pub fn admit(key:PagedUtf8<{usize::MAX}>)->Result<Self,semio_framework_value::ValueError>{if key.is_empty(){return Err(invalid());}Ok(Self{key})}
@@ -17,16 +17,16 @@ struct DrawingIdentityWire {key:PagedUtf8<{usize::MAX}>}
 #[cfg(test)]
 impl TryFrom<DrawingIdentityWire> for DrawingIdentity {type Error=semio_framework_value::ValueError;fn try_from(value:DrawingIdentityWire)->Result<Self,Self::Error>{Self::admit(value.key)}}
 #[derive(Clone,Copy,Debug,PartialEq,Eq,semio_framework_value::ToValue,semio_framework_value::FromValue)]
-#[cfg_attr(test,derive(serde::Serialize,serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"),derive(serde::Serialize,serde::Deserialize))]
 #[value(rename_all="camelCase")]
-#[cfg_attr(test,serde(rename_all="camelCase"))]
+#[cfg_attr(any(test, feature = "testkit"),serde(rename_all="camelCase"))]
 pub enum DrawingIdentityKind {Layer,Path,Group,Boolean,Trace,Shape,Text,Image,Svg,ImageAsset}
 #[derive(Clone,Debug,PartialEq,semio_framework_value::ToValue)]
-#[cfg_attr(test,derive(serde::Serialize,serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"),derive(serde::Serialize,serde::Deserialize))]
 pub struct DrawingIdentityCommitment {pub kind:DrawingIdentityKind,pub digest:[u8;32]}
 #[derive(Clone,Debug,PartialEq,semio_framework_value::ToValue,semio_framework_value::RetainedClone,semio_framework_value::RetireOwned,semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test,derive(serde::Serialize,serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"),derive(serde::Serialize,serde::Deserialize))]
 pub struct DrawingIdentityAssignment {pub source:PagedUtf8<{usize::MAX}>,pub target:PagedUtf8<{usize::MAX}>}
 
 fn invalid()->semio_framework_value::ValueError{semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"Drawing identity record differs from its closed domain contract")}

@@ -78,8 +78,8 @@ pub fn engagement(document: &NoteSnapshot, camera: &NoteCamera, engagement_input
             value: Some(engagement_input.to_string()),
             placeholder: Some("Block name".into()),
             disabled: None,
-            on_change: Some(crate::editor::note::note_action("engagementInput", None)),
-            on_submit: Some(crate::editor::note::note_action("engagementSubmit", None)),
+            on_change: Some(crate::editor::note::support::note_action("engagementInput", None)),
+            on_submit: Some(crate::editor::note::support::note_action("engagementSubmit", None)),
             on_repeat_last: None,
             on_abort: None,
         }),
@@ -103,10 +103,10 @@ pub fn render_canvas_scene(document: &NoteSnapshot, camera: &NoteCamera, active_
 
 pub fn render_with_interaction(document: &NoteSnapshot, camera: &NoteCamera, active_utility: &str, interaction: &InteractionView<'_>) -> UiAssemblyResult<BuiltNode> {
     let mut scene = InkCanvasScene::base(crate::note_canvas_document_json(document, camera), active_utility.into(), "composite".into(), true);
-    scene.interaction_domain = Some(InkCanvasInteractionDomain { id: crate::editor::note::NOTE_INTERACTION_BLOCKS.into(), granularity_id: "block".into() });
-    let selection: Vec<String> = interaction.selection(crate::editor::note::NOTE_INTERACTION_BLOCKS).ids.iter().filter_map(|id| crate::schema::block_id_from_tree_row_id(id)).collect();
+    scene.interaction_domain = Some(InkCanvasInteractionDomain { id: crate::editor::note::support::NOTE_INTERACTION_BLOCKS.into(), granularity_id: "block".into() });
+    let selection: Vec<String> = interaction.selection(crate::editor::note::support::NOTE_INTERACTION_BLOCKS).ids.iter().filter_map(|id| crate::schema::block_id_from_tree_row_id(id)).collect();
     scene.selection_json = serde_json::to_string(&selection).expect("note interaction selection is JSON-safe");
-    scene.hovered_id = interaction.hover(crate::editor::note::NOTE_INTERACTION_BLOCKS, "pointer").ids.first().and_then(|id| crate::schema::block_id_from_tree_row_id(id));
+    scene.hovered_id = interaction.hover(crate::editor::note::support::NOTE_INTERACTION_BLOCKS, "pointer").ids.first().and_then(|id| crate::schema::block_id_from_tree_row_id(id));
     semio_framework_plugin::scene_surface(NOTE_PLAY_SURFACE_COMPOSITE, semio_framework_ui_contract::SurfaceKind::InkCanvas, &scene)
 }
 
@@ -116,7 +116,5 @@ pub fn render(document: &NoteSnapshot, camera: &NoteCamera, active_utility: &str
 //#endregion 🔖️Render
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

@@ -1,10 +1,12 @@
 /** 📖 Procedural descriptors: contributions push, window-kind scoping, stable dom ids, undeclared actions and example switch. */
-import { historyPatchShouldApplyV1, historyRefreshNeededV1, undeclaredActionDiagnostic } from "../../🧱️elements/🛠️ShellHelpers/🟦️.tsx";
+import { historyPatchShouldApplyV1 } from "../../🧱️elements/🛠️ShellHelpers/🔩️plumbing/🟦️.ts";
+import { historyRefreshNeededV1 } from "../../🧱️elements/🛠️ShellHelpers/🔩️plumbing/🔀️example-switching/🟦️.ts";
+import { undeclaredActionDiagnostic } from "../../🧱️elements/🛠️ShellHelpers/🔩️plumbing/🆔️action-ids/🟦️.ts";
 import { FRAMEWORK_HISTORY_BODY_KEY } from "@semio-tech/framework";
 import { uiNodeDomId } from "../../🧱️elements/🗣️Interpreter/🪪️stable-dom-ids/🟦️.ts";
 import { describe, expect, it } from "vitest";
 import { applyUiRefreshResponseToCache, buildUiRefreshRequest, mergeRecordPreservingIdentity, type UiRefreshCache } from "../../🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx";
-import { mergeUiDirtyScopeV1, typedOperationCompletionRefreshV1 } from "../../🧱️elements/🛠️ShellHelpers/🟦️.tsx";
+import { mergeUiDirtyScopeV1, typedOperationCompletionRefreshV1 } from "../../🧱️elements/🛠️ShellHelpers/🔄️ui-refresh/🟦️.ts";
 import { readFileSync, existsSync } from "node:fs";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { appCommandTakesPageRun, appOwnsCommand } from "../../🧱️elements/🏛️ShellHost/🟦️.tsx";

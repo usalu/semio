@@ -13,7 +13,6 @@ fn native_openable_provider_consumes_exact_complete_stdio_factory_closure() {
     assert_eq!(bindings.len(), semio_hub_stdio_catalog::live_native_codec_factory_receipts().unwrap().len());
     assert!(bindings.iter().all(|binding| binding.codec().pack_schema_hash != [0; 32]), "every headless Stdio codec carries its structural pack schema identity");
     for(binding,receipt)in bindings.iter().zip(&expected){assert_eq!(binding.factory_id(),Some(receipt.factory_id.as_str()));assert_eq!(serde_json::to_value(binding.factory_id()).unwrap(),serde_json::to_value(Some(&receipt.factory_id)).unwrap());assert_eq!(binding.plugin_id(),receipt.plugin_id);assert_eq!(binding.package_id(),receipt.package_id);assert_eq!(binding.artifact_kind(),receipt.artifact_kind);assert_eq!(binding.codec().schema,receipt.schema);}
-    println!("[DEBUG] Original Stdio catalog binding factoryIds={} exactVerifiedReceipts=true independentSerde=true",bindings.len());
 }
 
 struct SelectionControl {

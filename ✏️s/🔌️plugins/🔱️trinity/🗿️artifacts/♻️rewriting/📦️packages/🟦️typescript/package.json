@@ -18,9 +18,12 @@
     ".": {
       "types": "./dist/🟦️.d.ts",
       "import": "./dist/🟦️.js"
-    }
+    },
+    "./source": "./📥️source/🟦️.ts"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@semio-tech/trinity-jack": "workspace:*"
+  },
   "license": "LGPL-3.0-or-later",
   "repository": {
     "type": "git",

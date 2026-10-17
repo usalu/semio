@@ -93,6 +93,22 @@
         "consumer",
         "sibling"
       ]
+    },
+    {
+      "name": "sealed-program",
+      "affected": [
+        "base",
+        "consumer",
+        "sibling"
+      ]
+    },
+    {
+      "name": "sealed-receipt",
+      "affected": [
+        "base",
+        "consumer",
+        "sibling"
+      ]
     }
   ]
 }

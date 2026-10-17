@@ -24,6 +24,7 @@ path = "../../🦀️.rs"
 [dependencies]
 
 [dev-dependencies]
+semio-framework-test-fixtures = { path = "../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-hub-artifact-authority = { workspace = true, features = ["testkit"] }
 semio-hub-artifact-creation = { workspace = true }
 semio-hub-directory = { workspace = true, features = ["testkit"] }
@@ -32,8 +33,8 @@ semio-hub-directory-dispatch = { workspace = true }
 semio-hub-directory-neo4j = { workspace = true, features = ["testkit"] }
 semio-hub-directory-neo4j-rows = { workspace = true }
 semio-hub-directory-postgres = { workspace = true, features = ["testkit"] }
-semio-hub-directory-service = { workspace = true }
-semio-hub-directory-sqlite = { workspace = true }
+semio-hub-directory-service = { workspace = true, features = ["testkit"] }
+semio-hub-directory-sqlite = { workspace = true, features = ["testkit"] }
 semio-hub-testing = { workspace = true }
 tokio = { version = "1", features = ["full", "test-util"] }
 directory = { path = "../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["durable-group-testing"] }

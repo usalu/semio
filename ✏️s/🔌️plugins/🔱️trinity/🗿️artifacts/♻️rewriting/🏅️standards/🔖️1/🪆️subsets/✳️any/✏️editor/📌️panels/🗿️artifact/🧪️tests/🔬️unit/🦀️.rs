@@ -1,7 +1,22 @@
-use super::*;
-use crate::editor::rewriting::TRINITY_REWRITING_PLAY_BODY_ARTIFACT;
+use crate::editor::rewriting::terminology::TrinityRewritingLabels;
+use crate::standards::v1::subsets::any::schema::snapshot::RewritingSnapshot;
+use semio_framework_plugin::NoConfig;
+use semio_framework_plugin::TreeWindows;
+#[allow(unused_imports)]
+use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase};
+#[allow(unused_imports)]
+use semio_framework_plugin::PanelTreeBuilder;
+#[allow(unused_imports)]
+use semio_framework_ui_contract as ui;
+use crate::editor::rewriting::panels::document::*;
+use crate::editor::rewriting::ids::TRINITY_REWRITING_PLAY_BODY_ARTIFACT;
 use semio_framework_plugin::{TreeWindowRequest, ViewModel, TREE_WINDOW_DEFAULT_ROWS};
-use semio_s_artifact_trinity_jack::{Camera, JackSnapshot, JackWorkingScene, Manifest, Node, PropertyBag};
+use semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::graph::{Camera, Node};
+use semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::snapshot::JackSnapshot;
+use semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::content::JackWorkingScene;
+use semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::manifest::Manifest;
+use semio_framework_graph_manifest::PropertyBag;
+use semio_s_artifact_trinity_jack_semio_content::SemioJackContent;
 
 //#region 🪟️WindowLaws
 /// 🪟️ A working-graph an order of magnitude past one viewport — the subject of every window law below.
@@ -9,7 +24,7 @@ fn oversized_state(nodes: usize) -> RewritingSnapshot {
     let nodes: Vec<Node> = (0..nodes)
         .map(|index| Node { id: format!("node-{index}"), kind: "Piece".into(), name: format!("Piece {index}"), x: index as f64, y: 0.0, width: 80.0, height: 40.0, properties: PropertyBag::new(), ports: Vec::new() })
         .collect();
-    let fixture = JackSnapshot::with_content(JackSnapshot::SCHEMA.into(), "oversized".into(), Some("nakagin".into()), Manifest::nakagin_default(), Camera::default(), JackWorkingScene { nodes, edges: Vec::new() }, None);
+    let fixture = JackSnapshot::with_content::<SemioJackContent>(JackSnapshot::SCHEMA.into(), "oversized".into(), Some("nakagin".into()), Manifest::nakagin_default(), Camera::default(), JackWorkingScene { nodes, edges: Vec::new() }, None);
     RewritingSnapshot { working_graph: fixture, ..Default::default() }
 }
 

@@ -40,7 +40,7 @@ fn actor(id: &str) -> DirectoryActor {
 
 #[tokio::test]
 async fn document_index_neutral_transactions_survive_projection_rebuild() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/📇️document-index-v1/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧪️tests/🧫️fixtures/📇️document-index-v1/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap() {
         let directory = SqliteDirectory::connect(":memory:").await.unwrap();
         let mut clock = HubClock::new();

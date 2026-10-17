@@ -19,6 +19,10 @@ type playbookPlaybookPresenceGuardSizeBounds = { readonly minItems?: number; rea
 
 export const playbookPlaybookPresenceGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : playbookPlaybookPresenceGuardReject(at, "value is not an object");
+export const playbookPlaybookPresenceGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) playbookPlaybookPresenceGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const playbookPlaybookPresenceGuardArray = (value: unknown, at: string, bounds: playbookPlaybookPresenceGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return playbookPlaybookPresenceGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) playbookPlaybookPresenceGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -49,5 +53,5 @@ export const playbookPlaybookPresenceGuardConstant = <T extends string | number 
 //#endregion 🚪️Parsers
 
 export function parsePlaybookPresence(value: unknown, at = "$"): PlaybookPresence {
-  return playbookPlaybookPresenceGuardObject(value, `${at}`);
+  return playbookPlaybookPresenceGuardClosed(playbookPlaybookPresenceGuardObject(value, `${at}`), `${at}`, []);
 }

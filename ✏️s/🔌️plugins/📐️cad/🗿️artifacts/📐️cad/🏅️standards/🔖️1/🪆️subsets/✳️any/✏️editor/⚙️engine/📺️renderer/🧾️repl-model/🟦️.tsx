@@ -32,42 +32,23 @@ import {
   type WorldReferenceProps,
   type WorldReferenceRelocatePayload
 } from "@semio-tech/infinite-world-r3f";
-import { type Vec3 } from "../../../../../../../../../../⚙️engine/📔️registry/🟦️.ts";
-import { type ModelEntityKind } from "../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️.ts";
-import { type InteractionSpec, type ResolvedInteractionEngagementControl } from "../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🎰️interaction-spec/🟦️.ts";
-import { defaultModelDefinitionId } from "../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/📥️definition-catalog/🟦️.ts";
-import { type TransformationSpec } from "../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🔄️transformation-spec/🟦️.ts";
-import { Model } from "../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🧊️model/🟦️.ts";
-import { type SpatialInteraction } from "../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🧭️definition-ownership/🟦️.ts";
-import { type InteractionEvent, type SelectionTarget } from "../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🪪️selection/🟦️.ts";
-import { type ModelDiff } from "../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️.ts";
-import { listKeyedInteractionTransitions, parseNumericCommandLine, type InteractionKeybindRow, type CadGumballConfig } from "../../🎬️actions/🟦️.ts";
-import {
-  DocumentHistory,
-  isInteractionSessionActive,
-  resolveSpatialInteractionKeyForModelDefinition,
-  type InteractionRuntime,
-  type InteractionSnapshot,
-  type ModelDocument
-} from "../../🗿️artifact/🟦️.ts";
-import {
-  type ArchivedBoxLayout,
-  buildGeometryTypologyIndex,
-  defaultSpatialPrimitiveToggles,
-  defaultSpatialTypologyTogglesForModelDefinition,
-  modelDefinitionTypologyIds,
-  type SpatialDragSelectionState,
-  type SpatialPickGeometry,
-  spatialPickKindsForActiveView,
-  type SpatialPickTarget,
-  type SpatialPickTargetKind,
-  type SpatialPrimitiveToggles,
-  type SpatialSelectionMethod,
-  type SpatialSelectionRequest,
-  spatialToggleCheckboxState,
-  type SpatialToggleGroupState,
-  type SpatialTypologyToggles
-} from "../🧲️geometry-targets/🟦️.tsx";
+import { type Vec3 } from "@semio-tech/cad-engine-ts/registry";
+import { type ModelEntityKind } from "@semio-tech/s-spatial-kernel-ts/geometry";
+import { type InteractionSpec, type ResolvedInteractionEngagementControl } from "@semio-tech/s-spatial-kernel-ts/geometry/interaction-spec";
+import { defaultModelDefinitionId } from "@semio-tech/s-spatial-kernel-ts/geometry/definition-catalog";
+import { type TransformationSpec } from "@semio-tech/s-spatial-kernel-ts/geometry/transformation-spec";
+import { Model } from "@semio-tech/s-spatial-kernel-ts/geometry/model";
+import { type SpatialInteraction } from "@semio-tech/s-spatial-kernel-ts/geometry/definition-ownership";
+import { type InteractionEvent, type SelectionTarget } from "@semio-tech/s-spatial-kernel-ts/geometry/selection";
+import { type ModelDiff } from "@semio-tech/s-spatial-kernel-ts/spatial";
+import { type CadGumballConfig } from "../../🎬️actions/🧲️selection-targets/🟦️.ts";
+import { listKeyedInteractionTransitions, parseNumericCommandLine, type InteractionKeybindRow } from "../../🎬️actions/🎰️interaction-state/🟦️.ts";
+import { DocumentHistory, type InteractionSnapshot, type ModelDocument } from "../../🗿️artifact/📨️interaction-model/🟦️.ts";
+import { resolveSpatialInteractionKeyForModelDefinition } from "../../🗿️artifact/📚️interaction-catalog/🟦️.ts";
+import { isInteractionSessionActive, type InteractionRuntime } from "../../🗿️artifact/🏃️interaction-runtime/🟦️.ts";
+import { type ArchivedBoxLayout } from "../🧲️geometry-targets/🟦️.tsx";
+import { defaultSpatialPrimitiveToggles, defaultSpatialTypologyTogglesForModelDefinition, modelDefinitionTypologyIds, type SpatialDragSelectionState, type SpatialPickGeometry, spatialPickKindsForActiveView, type SpatialPickTarget, type SpatialPickTargetKind, type SpatialPrimitiveToggles, type SpatialSelectionMethod, type SpatialSelectionRequest, spatialToggleCheckboxState, type SpatialToggleGroupState, type SpatialTypologyToggles } from "../🧲️geometry-targets/🎯️pick-model/🟦️.ts";
+import { buildGeometryTypologyIndex } from "../🧲️geometry-targets/🧬️geometry-index/🟦️.ts";
 import { type SpatialDisplayItemRenderer } from "../🖼️display/🟦️.tsx";
 import { type InteractionSpatialViewSlots, type InteractionSpatialViewTheme } from "../🔖️interaction/🟦️.tsx";
 import { mergeSelectionTargets, selectionTargetPickKind, spatialSelectionModeFromModifiers } from "../🎯️pick-layer/🟦️.tsx";

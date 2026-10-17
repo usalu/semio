@@ -7,7 +7,7 @@ const scalarFields=new Set(["x","y","width","height","rotation","fontSize","stro
 function bind(value:unknown,field=""):unknown{
  if(typeof value==="number"&&(scalarFields.has(field)||field==="points"||field==="color")){if(!Number.isFinite(value))throw Error("Note native JSON requires finite scalar");return binary64(value);}
  if(Array.isArray(value))return value.map(member=>bind(member,field));
- if(value!==null&&typeof value==="object")return Object.fromEntries(Object.entries(value).map(([key,member])=>[key,bind(member,key)]));
+ if(value!==null&&typeof value==="object")return Object.fromEntries(Object.entries(value).map(([key,member])=>[key,bind(member,scalarFields.has(field)&&key==="value"?field:key)]));
  return value;
 }
 /** 📥️ Bind native Note document numeric roles and validate the intrinsic document. */

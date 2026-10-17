@@ -1,7 +1,6 @@
 //! 🧹 Shooting mutation payload — `DeleteSavedCamera`. Removes a saved camera by id; inverse recreates it.
 
 use crate::diff::ShootingDiff;
-use crate::mutations::ShootingMutation;
 use crate::ShootingSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 
@@ -15,12 +14,15 @@ pub struct DeleteSavedCamera {
     pub id: String,
 }
 
-impl MutationKind<ShootingSnapshot, ShootingMutation> for DeleteSavedCamera {
+impl<Op> MutationKind<ShootingSnapshot, Op> for DeleteSavedCamera
+where
+    Op: protocol::Mutation<ShootingSnapshot, Diff = ShootingDiff> + From<DeleteSavedCamera> + From<crate::standards::v1::subsets::any::schema::mutations::create_saved_camera::CreateSavedCamera>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "saved-camera", kind: "delete-saved-camera", record: "DeletedSavedCamera" };
     fn diff(&self, base: &ShootingSnapshot) -> protocol::MutationOutcome<ShootingDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &ShootingSnapshot) -> Result<Vec<ShootingMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &ShootingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

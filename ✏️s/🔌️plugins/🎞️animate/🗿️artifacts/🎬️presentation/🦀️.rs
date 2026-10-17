@@ -13,307 +13,35 @@ extern crate semio_framework_os_kernel as vcs;
 extern crate semio_framework_schema as schema;
 extern crate semio_framework_value_derive as value_derive;
 
-use protocol::{Identified, Patchable};
-use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
-
 pub use crate::standards::v1::subsets::any::schema::mutations::PresentationMutation;
 
 pub use crate::standards::v1::subsets::any::schema::diff::PresentationDiff;
 
-pub const PRESENTATION_DOCUMENT_SCHEMA: &str = "animate.presentation";
+pub use semio_s_artifact_animate_presentation_inferences::{PRESENTATION_DOCUMENT_SCHEMA};
 pub use crate::snapshot::schema::{default_snapshot, demo_snapshot, PresentationSnapshot};
 
-/// 🪪️ Ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §1 — the one canonical
-/// `(artifact_kind, standard, subset)` coordinate shared by BOTH `✏️editor::animate::AnimatePresentationPlayApp`
-/// and `👁️viewer::animate::AnimatePresentationViewer`. Lives at the ARTIFACT level (not under either surface
-/// module) specifically so the viewer can read it without ever importing through the editor. Matches
-/// `definition()`'s own `s.presentation.schema.artifact` capability descriptor (`s.animate.presentation`) and this
-/// file's own `🏅️standards/🔖️1/🪆️subsets/✳️any` location — canonical surface id `s.animate.presentation@1/*#editor`
-/// / `s.animate.presentation@1/*#viewer`.
-pub const ANIMATE_DIALECT: semio_framework_artifact_reference::Dialect = semio_framework_artifact_reference::Dialect { artifact_kind: "s.animate.presentation", standard: semio_framework_artifact_reference::StandardId("1"), subset: semio_framework_artifact_reference::SubsetId::ANY };
+pub use semio_s_artifact_animate_presentation_mutations::{ANIMATE_DIALECT};
 
-//#region 🔖️Domain
-/// 📐️ Normalized `x,y,width,height` rect — always reached through a `#[dsl(block)]` field (see
-/// {@link FigureTileSource}/{@link FigureTileDraft}), so it declares no `#[dsl(keyword)]` of its own.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
-#[canonical_json(owner = semio_framework_pack_json)]
-#[value(rename_all = "camelCase")]
-pub struct FigureTileFrame {
-    pub x: f64,
-    pub y: f64,
-    pub width: f64,
-    pub height: f64,
-}
+pub use semio_s_artifact_animate_presentation_tile_grid::{FigureTileDraft, FigureTileFrame, FigureTileSource};
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
-#[canonical_json(owner = semio_framework_pack_json)]
-#[value(rename_all = "camelCase")]
-pub struct FigureTileSource {
-    pub src: String,
-    pub kind: String,
-    #[dsl(block)]
-    pub frame: FigureTileFrame,
-    #[value(skip_serializing_if = "Option::is_none")]
-    pub source_aspect: Option<f64>,
-    #[value(skip_serializing_if = "Option::is_none")]
-    pub pdf_page: Option<u32>,
-}
+pub use semio_s_artifact_animate_presentation_inferences::{DEMO_FIGURE_SRC};
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
-#[canonical_json(owner = semio_framework_pack_json)]
-#[value(rename_all = "camelCase")]
-pub struct FigureTileDraft {
-    pub id: String,
-    pub name: String,
-    #[dsl(block)]
-    pub crop: FigureTileFrame,
-}
-//#endregion 🔖️Domain
+pub use semio_s_artifact_animate_presentation_inferences::{DEMO_FIGURE_PIXEL_WIDTH};
+pub use semio_s_artifact_animate_presentation_inferences::{DEMO_FIGURE_PIXEL_HEIGHT};
 
-/// 🖼️ The transport URL of the shared demo figure and the crop of it the deck covers.
-///
-/// It names a REAL shipped asset: `🧰️framework/🔨️modules/🖼️assets/🖼️images/🏙️architecture/🏘️habitat-67.png`
-/// (2560 × 1707), which `semioAssetsVitePlugin` serves — and a release build copies — at
-/// `/🖼️assets/*` for every host that mounts this app (the `semio-tech play` grid, this plugin's own
-/// playground, and the CDN bundle alike). The previous `/🖼️bauteilbörse.png` existed nowhere in the
-/// repo, so every host answered the figure request with its SPA fallback (`200 text/html`) and the
-/// booted deck rendered fifteen blank tiles — see the law
-/// `the_demo_figure_source_names_a_shipped_asset`.
-pub const DEMO_FIGURE_SRC: &str = "/🖼️assets/🖼️images/🏙️architecture/🏘️habitat-67.png";
+pub use semio_s_artifact_animate_presentation_inferences::{default_figure_tile_source};
 
-/// 📐️ `DEMO_FIGURE_SRC`'s own pixel dimensions — the crop maths needs the physical aspect.
-pub const DEMO_FIGURE_PIXEL_WIDTH: f64 = 2560.0;
-pub const DEMO_FIGURE_PIXEL_HEIGHT: f64 = 1707.0;
+pub use semio_s_artifact_animate_presentation_tests::{default_presentation_snapshot};
 
-pub fn default_figure_tile_source() -> FigureTileSource {
-    FigureTileSource { src: DEMO_FIGURE_SRC.into(), kind: "figure".into(), frame: FigureTileFrame { x: 0.127, y: 0.1, width: 0.746, height: 0.75 }, source_aspect: Some(DEMO_FIGURE_PIXEL_WIDTH / DEMO_FIGURE_PIXEL_HEIGHT), pdf_page: None }
-}
+pub use semio_s_artifact_animate_presentation_host::{demo_presentation_snapshot};
 
-pub fn default_presentation_snapshot() -> PresentationSnapshot {
-    default_snapshot()
-}
+pub use semio_s_artifact_animate_presentation_inferences::{AnimationChild, PresentationChild, animation_child_handle, presentation_child_handle, presentation_snapshot_from_source_tiles, source_tiles_from_presentation_snapshot};
 
-/// 🎬️ The `demo` example document — see [`demo_snapshot`].
-pub fn demo_presentation_snapshot() -> PresentationSnapshot {
-    demo_snapshot()
-}
+pub use semio_s_artifact_animate_presentation_inferences::{PRESENTATION_CANVAS_FIT_EXTENT, PRESENTATION_CANVAS_SCALE, genesis_presentation_child_pack, presentation_canvas_camera, presentation_snapshot_with_tiles, presentation_working_scene};
 
-//#region 🔖️PresentationBridge
-/// 🕸️ Owned CHILD handle types for the composed `s.stdio.semio@v1/presentation`/`s.stdio.semio@v1/animation`
-/// documents — ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM (`animate→C:presentation,animation`):
-/// the shared source figure + its named tile crops now live in the composed `presentation` child's
-/// slide-deck structure instead of inline `source`/`tiles` fields on `PresentationSnapshot`. `animation`
-/// is composed too, per the design mapping's `animate→C:presentation,animation` line, but carries no
-/// content today — this artifact's persisted document has no time-based data at all (the Manim-class
-/// scene/keyframe engine under `✏️editor/⚙️engine` constructs its scenes in Rust code at
-/// render/export time, never from persisted document state — see `animation_child_handle`'s own doc
-/// comment for the honest gap this leaves).
-pub type PresentationChild = store::os_store::artifact_child::ArtifactChild<semio_s_artifact_stdio_semio_presentation::schema::snapshot::SemioPresentationSnapshot>;
-pub type AnimationChild = store::os_store::artifact_child::ArtifactChild<semio_s_artifact_stdio_semio_animation::schema::snapshot::SemioAnimationSnapshot>;
+pub use semio_s_artifact_animate_presentation_animate::{artifact_kind};
 
-/// 🌉 REAL bidirectional converter (forward half): `(source, tiles)` -> one composed
-/// `SemioPresentationSnapshot`. `source` becomes the deck's single `SlideMaster` (id `"source"`, one
-/// `Picture` shape spanning `source.frame`); each tile becomes its own `Slide` referencing that
-/// master's image, with the tile's own `crop` as its `Picture` shape's frame and the tile's `name`
-/// carried as the slide's own `notes` (the closest lossless slot presentation offers a per-slide
-/// display string). `source.kind` is reused verbatim as `SlidePictureImage.mime` — not a real MIME
-/// type, but presentation's `Picture` shape has no dedicated "kind" tag of its own, and reusing the
-/// nearest string slot losslessly beats inventing a MIME taxonomy that would only need an unmapping
-/// table right back. **Lossy**: `source.source_aspect`/`source.pdf_page` have no representable slot
-/// in `presentation`'s schema at all and are dropped by this forward conversion — every in-process
-/// mutation round-trip still preserves them exactly via the working-scene cache below (never routed
-/// through this lossy projection), so this only matters for a genuinely fresh reload with an empty
-/// cache, the same class of documented gap every `UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` exemplar
-/// (lowpoly/cad/writer) has left for its own composed slot.
-pub fn presentation_snapshot_from_source_tiles(source: &FigureTileSource, tiles: &[FigureTileDraft]) -> semio_s_artifact_stdio_semio_presentation::schema::snapshot::SemioPresentationSnapshot {
-    use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
-    use semio_s_artifact_stdio_semio_document::schema::snapshot::DocBlock;
-    use semio_s_artifact_stdio_semio_presentation::schema::snapshot::{SemioPresentationSnapshot, Slide, SlideFrame, SlideMaster, SlidePictureImage, SlideShape, STDIO_SEMIOPRESENTATION_DOCUMENT_SCHEMA};
-
-    const SOURCE_MASTER_ID: &str = "source";
-    let frame_of = |frame: &FigureTileFrame| SlideFrame { origin: SemioPoint2 { x: frame.x, y: frame.y }, width: frame.width, height: frame.height };
-    let image_of = || SlidePictureImage { asset_id: source.src.clone(), mime: source.kind.clone(), bytes: Vec::new() };
-
-    let master = SlideMaster { id: SOURCE_MASTER_ID.into(), shapes: vec![SlideShape::Picture { frame: frame_of(&source.frame), image: image_of() }] };
-    let slides = tiles.iter().map(|tile| Slide { id: tile.id.clone(), layout_id: None, shapes: vec![SlideShape::Picture { frame: frame_of(&tile.crop), image: image_of() }], notes: vec![DocBlock::paragraph(tile.name.clone())] }).collect();
-    SemioPresentationSnapshot { schema: STDIO_SEMIOPRESENTATION_DOCUMENT_SCHEMA.into(), masters: vec![master], layouts: Vec::new(), slides }
-}
-
-/// 🌉 Inverse of [`presentation_snapshot_from_source_tiles`] — reads the `"source"` master's first
-/// `Picture` shape back into a `FigureTileSource` (honestly `source_aspect: None`, `pdf_page: None` —
-/// see the forward converter's doc comment) and each `Slide`'s first `Picture` shape + its `notes`'s
-/// first paragraph text back into a `FigureTileDraft`. A master/slide with no `Picture` shape at all
-/// (never produced by the forward converter, but a composed child can in principle arrive from
-/// elsewhere) falls back to `default_figure_tile_source()`/an empty name rather than panicking.
-pub fn source_tiles_from_presentation_snapshot(snapshot: &semio_s_artifact_stdio_semio_presentation::schema::snapshot::SemioPresentationSnapshot) -> (FigureTileSource, Vec<FigureTileDraft>) {
-    use semio_s_artifact_stdio_semio_document::schema::snapshot::DocBlock;
-    use semio_s_artifact_stdio_semio_presentation::schema::snapshot::SlideShape;
-
-    fn frame_from(shapes: &[SlideShape]) -> Option<(FigureTileFrame, String, String)> {
-        shapes.iter().find_map(|shape| match shape {
-            SlideShape::Picture { frame, image } => Some((FigureTileFrame { x: frame.origin.x, y: frame.origin.y, width: frame.width, height: frame.height }, image.asset_id.clone(), image.mime.clone())),
-            _ => None,
-        })
-    }
-    fn text_from_notes(notes: &[DocBlock]) -> String {
-        notes
-            .iter()
-            .find_map(|block| match block {
-                DocBlock::Paragraph { runs, .. } => Some(runs.iter().map(|run| run.text.as_str()).collect::<String>()),
-                _ => None,
-            })
-            .unwrap_or_default()
-    }
-
-    let source = snapshot.masters.first().and_then(|master| frame_from(&master.shapes)).map_or_else(default_figure_tile_source, |(frame, src, kind)| FigureTileSource { src, kind, frame, source_aspect: None, pdf_page: None });
-
-    let tiles = snapshot
-        .slides
-        .iter()
-        .map(|slide| {
-            let crop = frame_from(&slide.shapes).map_or(FigureTileFrame { x: 0.0, y: 0.0, width: 1.0, height: 1.0 }, |(frame, ..)| frame);
-            FigureTileDraft { id: slide.id.clone(), name: text_from_notes(&slide.notes), crop }
-        })
-        .collect();
-    (source, tiles)
-}
-
-/// 🕸️ Deterministic content-addressed CHILD handle for the composed `presentation` deck — same
-/// `(child_id, target)` for identical `(source, tiles)`, a different pair once the content actually
-/// changes, mirroring lowpoly's `mesh_child_handle`/writer's `document_child_handle`.
-pub fn presentation_child_handle(source: &FigureTileSource, tiles: &[FigureTileDraft]) -> PresentationChild {
-    let content = presentation_snapshot_from_source_tiles(source, tiles);
-    let content_json = semio_framework_pack_json::to_json_string(&content);
-    let child_id = store::content_id("presentation", content_json.as_bytes());
-    let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "presentation".into() };
-    let target = semio_framework_artifact_reference::ArtifactRef { artifact_id: child_id.clone(), dialect };
-    store::os_store::artifact_child::ArtifactChild::new(child_id, target)
-}
-
-/// 🕸️ Deterministic content-addressed CHILD handle for the composed `animation` set. Always the SAME
-/// handle today (content is always the empty default `SemioAnimationSnapshot`) — honest reflection of
-/// the fact that nothing in this plugin yet produces per-tile keyframe/timeline data; composed per the
-/// design mapping's `animate→C:presentation,animation` line so the slot exists for a future wave (a
-/// natural extension: per-tile camera-pan/transition timing) without another schema migration.
-pub fn animation_child_handle() -> AnimationChild {
-    use semio_s_artifact_stdio_semio_animation::schema::snapshot::SemioAnimationSnapshot;
-    let content_json = semio_framework_pack_json::to_json_string(&SemioAnimationSnapshot::default());
-    let child_id = store::content_id("animation", content_json.as_bytes());
-    let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "animation".into() };
-    let target = semio_framework_artifact_reference::ArtifactRef { artifact_id: child_id.clone(), dialect };
-    store::os_store::artifact_child::ArtifactChild::new(child_id, target)
-}
-//#endregion 🔖️PresentationBridge
-
-//#region 🔖️WorkingScene
-// 🌱 The composed `presentation` child's live `(source, tiles)` content lives in the parent's own
-// PERSISTED `PresentationSnapshot::source`/`tiles` payload fields (see their doc comments), never in a
-// process-global cache: a cache is invisible to `ArtifactPack`, so every whole-document load through
-// the host's member-less archive door used to derive an EMPTY deck.
-
-/// 🔎 Reads the current document's live `(source, tiles)` — the single read call site every
-/// mutation/render/export/inference path in this plugin uses.
-pub fn presentation_working_scene(snapshot: &PresentationSnapshot) -> (FigureTileSource, Vec<FigureTileDraft>) {
-    (snapshot.source.clone(), snapshot.tiles.clone())
-}
-
-/// 🌐️ World units per normalized figure unit on every Presentation canvas (editor and viewer alike).
-pub const PRESENTATION_CANVAS_SCALE: f64 = 1000.0;
-
-/// 🎥️ The world extent a Presentation canvas frames at first paint: the narrowest window pane the
-/// play grid measures (469 px, see `🏛️architect`'s graph-fit law) less a margin, so the whole deck is in
-/// view in every host before anyone pans.
-pub const PRESENTATION_CANVAS_FIT_EXTENT: f64 = 420.0;
-
-/// 🎥️ The first-paint camera `(x, y, zoom)` of a Presentation canvas. A Canvas2d camera names the VIEW
-/// CENTRE (`Canvas2dHost`'s `worldToScreen`), so a fixed `(0, 0)` put the deck's top-left corner at the
-/// middle of the pane and clipped everything past it. This centres the union of the source frame and
-/// every tile crop and zooms it down to [`PRESENTATION_CANVAS_FIT_EXTENT`], never magnifying past 1:1.
-pub fn presentation_canvas_camera(snapshot: &PresentationSnapshot) -> (f64, f64, f64) {
-    let frames = std::iter::once(&snapshot.source.frame).chain(snapshot.tiles.iter().map(|tile| &tile.crop));
-    let (min_x, min_y, max_x, max_y) = frames.fold((f64::INFINITY, f64::INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY), |(min_x, min_y, max_x, max_y), frame| {
-        let (x, y) = (frame.x * PRESENTATION_CANVAS_SCALE, frame.y * PRESENTATION_CANVAS_SCALE);
-        (min_x.min(x), min_y.min(y), max_x.max(x + frame.width * PRESENTATION_CANVAS_SCALE), max_y.max(y + frame.height * PRESENTATION_CANVAS_SCALE))
-    });
-    let extent = (max_x - min_x).max(max_y - min_y);
-    let zoom = if extent > PRESENTATION_CANVAS_FIT_EXTENT { PRESENTATION_CANVAS_FIT_EXTENT / extent } else { 1.0 };
-    ((min_x + max_x) * 0.5, (min_y + max_y) * 0.5, zoom)
-}
-
-/// 🏗️ Builds a full `PresentationSnapshot` from literal `(source, tiles)` — the standard
-/// fixture/import constructor: it persists the payload AND mints the content-addressed `presentation`
-/// handle that payload derives, so the two can never drift apart.
-pub fn presentation_snapshot_with_tiles(source: &FigureTileSource, tiles: &[FigureTileDraft]) -> PresentationSnapshot {
-    PresentationSnapshot { schema: PRESENTATION_DOCUMENT_SCHEMA.into(), source: source.clone(), tiles: tiles.to_vec(), presentation: presentation_child_handle(source, tiles), animation: animation_child_handle() }
-}
-
-/// 🌱️ `ArtifactEditor`/`ArtifactViewer::genesis_child_pack` for the composed `presentation` deck
-/// (projected from the handle's working `(source, tiles)`) and the empty `animation` set. The react
-/// shell's `loadDocumentPair` sends `members: []`, so a whole-document load (`setActiveExample` →
-/// `Effect::LoadDocument`) derives both slots here; without it the archive closure completes
-/// `Incomplete` and the load is refused (`document-archive-replacement.closure-rejected`).
-pub fn genesis_presentation_child_pack(snapshot: &PresentationSnapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
-    use semio_s_artifact_stdio_semio_animation::schema::snapshot::SemioAnimationSnapshot;
-    use semio_s_artifact_stdio_semio_presentation::schema::snapshot::SemioPresentationSnapshot;
-    use pack::snapshot::ArtifactPack;
-    match slot {
-        "presentation" if child_id == snapshot.presentation.child_id => {
-            let (source, tiles) = presentation_working_scene(snapshot);
-            Some(<SemioPresentationSnapshot as ArtifactPack>::encode_pack(&presentation_snapshot_from_source_tiles(&source, &tiles)))
-        }
-        "animation" if child_id == snapshot.animation.child_id => Some(<SemioAnimationSnapshot as ArtifactPack>::encode_pack(&SemioAnimationSnapshot::default())),
-        _ => None,
-    }
-}
-//#endregion 🔖️WorkingScene
-
-//#region 🔖️ArtifactKind
-/// 🗂️ This artifact's `ArtifactKindSpec` — stitched into the app manifest by
-/// `crate::apps::presentation::create_animate_presentation_app`'s `🔖️Manifest` region.
-pub fn artifact_kind() -> ArtifactKindSpec {
-    ArtifactKindSpec {
-        id: PRESENTATION_DOCUMENT_SCHEMA.into(),
-        label: semio_framework_ui_locale::LocalizedLabel::native("Animate Presentation", "Animierte Präsentation"),
-        source_format: PRESENTATION_DOCUMENT_SCHEMA.into(),
-        component_kind: "panel".into(),
-        dimension: "2d".into(),
-        media_capability: OsMediaCapability::MeshOnly,
-        media_type: MediaType { class: MediaClass::Presentation, form: MediaForm::Deck },
-        schema: PRESENTATION_DOCUMENT_SCHEMA.into(),
-        export_formats: vec![],
-        import_formats: vec![],
-        export_stdio_kinds: vec!["stdio.json".into(), "stdio.pdf".into()],
-        import_stdio_kinds: vec!["stdio.json".into(), "stdio.pdf".into()],
-    }
-}
-//#endregion 🔖️ArtifactKind
-
-//#region 🔖️CollectionSupport
-impl Identified<String> for FigureTileDraft {
-    fn id(&self) -> &String {
-        &self.id
-    }
-}
-
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
-#[value(rename_all = "camelCase")]
-pub struct FigureTileDraftPatch {
-    pub name: Option<String>,
-    #[dsl(block)]
-    pub crop: Option<FigureTileFrame>,
-}
-
-impl Patchable<FigureTileDraftPatch> for FigureTileDraft {
-    fn apply_patch(&mut self, patch: &FigureTileDraftPatch) {
-        if let Some(name) = &patch.name {
-            self.name = name.clone();
-        }
-        if let Some(crop) = &patch.crop {
-            self.crop = crop.clone();
-        }
-    }
-}
-//#endregion 🔖️CollectionSupport
+pub use semio_s_artifact_animate_presentation_tile_grid::{FigureTileDraftPatch};
 
 //#region 🧪️Tests
 #[cfg(test)]
@@ -391,203 +119,108 @@ where
 pub mod standards {
     #[path = "."]
     pub mod v1 {
-        #[path = "🏅️standards/🔖️1/🦀️.rs"]
-        mod component;
-        pub use component::*;
+        pub use semio_s_artifact_animate_presentation_v1::standards::v1::*;
+
         #[path = "."]
         pub mod subsets {
             #[path = "."]
             pub mod any {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🦀️.rs"]
-                mod component;
-                pub use component::*;
+                pub use semio_s_artifact_animate_presentation_v1::standards::v1::subsets::any::*;
+
                 #[path = "."]
                 pub mod schema {
-                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs"]
-                    mod component;
-                    pub use component::*;
-                    #[path = "."]
-                    pub mod snapshot {
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                    #[path = "."]
-                    pub mod inferences {
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                        #[path = "."]
-                        pub mod topology {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧭topology/🦀️.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                    }
-                    #[path = "."]
-                    pub mod diff {
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
+                    pub use semio_s_artifact_animate_presentation_schema::standards::v1::subsets::any::schema::*;
+
+                    pub use semio_s_artifact_animate_presentation_tile_grid::standards::v1::subsets::any::schema::tile_grid;
+                    pub use semio_s_artifact_animate_presentation_inferences::standards::v1::subsets::any::schema::snapshot;
+                    pub use semio_s_artifact_animate_presentation_inferences::standards::v1::subsets::any::schema::inferences;
+                    pub use semio_s_artifact_animate_presentation_inferences::standards::v1::subsets::any::schema::diff;
                     #[path = "."]
                     pub mod mutations {
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
+                        pub use semio_s_artifact_animate_presentation_mutations::standards::v1::subsets::any::schema::mutations::*;
+
                         #[path = "."]
                         pub mod resize_source_frame {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔲resize-source-frame/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔲resize-source-frame/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔲resize-source-frame/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔲resize-source-frame/🧪️tests/🧪️no/🦀️.rs"]
-                            mod tests_no_ops_when_the_frame_is_already_identical;
+                            pub use semio_s_artifact_animate_presentation_mut_family::standards::v1::subsets::any::schema::mutations::resize_source_frame::*;
+                            pub use semio_s_artifact_animate_presentation_mut_family::standards::v1::subsets::any::schema::mutations::resize_source_frame::diff;
+                            pub use semio_s_artifact_animate_presentation_mut_family::standards::v1::subsets::any::schema::mutations::resize_source_frame::inverse;
+
                         }
                         #[path = "."]
                         pub mod replace_source {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️replace-source/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️replace-source/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️replace-source/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️replace-source/🧪️tests/🧪️no/🦀️.rs"]
-                            mod tests_no_ops_when_the_source_is_already_identical;
+                            pub use semio_s_artifact_animate_presentation_mut_family::standards::v1::subsets::any::schema::mutations::replace_source::*;
+                            pub use semio_s_artifact_animate_presentation_mut_family::standards::v1::subsets::any::schema::mutations::replace_source::diff;
+                            pub use semio_s_artifact_animate_presentation_mut_family::standards::v1::subsets::any::schema::mutations::replace_source::inverse;
+
                         }
                         #[path = "."]
                         pub mod create_tile {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🆕create-tile/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🆕create-tile/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🆕create-tile/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🆕create-tile/🧪️tests/🧪️rejects/🦀️.rs"]
-                            mod tests_rejects_a_duplicate_tile_id;
+                            pub use semio_s_artifact_animate_presentation_mut_family::standards::v1::subsets::any::schema::mutations::create_tile::*;
+                            pub use semio_s_artifact_animate_presentation_mut_family::standards::v1::subsets::any::schema::mutations::create_tile::diff;
+                            pub use semio_s_artifact_animate_presentation_mut_family::standards::v1::subsets::any::schema::mutations::create_tile::inverse;
+
                         }
                         #[path = "."]
                         pub mod delete_tile {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-tile/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-tile/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-tile/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-tile/🧪️tests/🧪️rejects/🦀️.rs"]
-                            mod tests_rejects_deleting_a_missing_tile;
+                            pub use semio_s_artifact_animate_presentation_mut_family::standards::v1::subsets::any::schema::mutations::delete_tile::*;
+                            pub use semio_s_artifact_animate_presentation_mut_family::standards::v1::subsets::any::schema::mutations::delete_tile::diff;
+                            pub use semio_s_artifact_animate_presentation_mut_family::standards::v1::subsets::any::schema::mutations::delete_tile::inverse;
+
                         }
                         #[path = "."]
                         pub mod delete_tiles {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹delete-tiles/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹delete-tiles/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹delete-tiles/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹delete-tiles/🧪️tests/🧪️rejects/🦀️.rs"]
-                            mod tests_rejects_when_every_addressed_tile_is_missing;
+                            pub use semio_s_artifact_animate_presentation_mut_family::standards::v1::subsets::any::schema::mutations::delete_tiles::*;
+                            pub use semio_s_artifact_animate_presentation_mut_family::standards::v1::subsets::any::schema::mutations::delete_tiles::diff;
+                            pub use semio_s_artifact_animate_presentation_mut_family::standards::v1::subsets::any::schema::mutations::delete_tiles::inverse;
+
                         }
                         #[path = "."]
                         pub mod rename_tile {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️rename-tile/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️rename-tile/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️rename-tile/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️rename-tile/🧪️tests/🧪️no/🦀️.rs"]
-                            mod tests_no_ops_when_the_tile_already_has_that_name;
+                            pub use semio_s_artifact_animate_presentation_mut_family::standards::v1::subsets::any::schema::mutations::rename_tile::*;
+                            pub use semio_s_artifact_animate_presentation_mut_family::standards::v1::subsets::any::schema::mutations::rename_tile::diff;
+                            pub use semio_s_artifact_animate_presentation_mut_family::standards::v1::subsets::any::schema::mutations::rename_tile::inverse;
+
                         }
                         #[path = "."]
                         pub mod resize_tile_crop {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️resize-tile-crop/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️resize-tile-crop/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️resize-tile-crop/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️resize-tile-crop/🧪️tests/🧪️rejects/🦀️.rs"]
-                            mod tests_rejects_a_zero_width_crop;
+                            pub use semio_s_artifact_animate_presentation_mut_family::standards::v1::subsets::any::schema::mutations::resize_tile_crop::*;
+                            pub use semio_s_artifact_animate_presentation_mut_family::standards::v1::subsets::any::schema::mutations::resize_tile_crop::diff;
+                            pub use semio_s_artifact_animate_presentation_mut_family::standards::v1::subsets::any::schema::mutations::resize_tile_crop::inverse;
+
                         }
                         #[path = "."]
                         pub mod reorder_tiles {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀reorder-tiles/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀reorder-tiles/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀reorder-tiles/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀reorder-tiles/🧪️tests/🧪️no/🦀️.rs"]
-                            mod tests_no_ops_when_the_tile_is_already_at_that_index;
+                            pub use semio_s_artifact_animate_presentation_mut_family::standards::v1::subsets::any::schema::mutations::reorder_tiles::*;
+                            pub use semio_s_artifact_animate_presentation_mut_family::standards::v1::subsets::any::schema::mutations::reorder_tiles::diff;
+                            pub use semio_s_artifact_animate_presentation_mut_family::standards::v1::subsets::any::schema::mutations::reorder_tiles::inverse;
+
                         }
                     }
                 }
                 #[path = "."]
                 pub mod io {
-                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs"]
-                    mod component;
-                    pub use component::*;
+                    pub use semio_s_artifact_animate_presentation_mutations::standards::v1::subsets::any::io::*;
+pub mod binary {
+    pub use semio_s_artifact_animate_presentation_tile_grid::standards::v1::subsets::any::io::binary::*;
+    pub use semio_s_artifact_animate_presentation_inferences::standards::v1::subsets::any::io::binary::diff;
+    pub use semio_s_artifact_animate_presentation_examples::standards::v1::subsets::any::io::binary::inferences;
+    pub use semio_s_artifact_animate_presentation_mutations::standards::v1::subsets::any::io::binary::mutations;
+    pub use semio_s_artifact_animate_presentation_inferences::standards::v1::subsets::any::io::binary::snapshot;
+}
+pub mod sqlite {
+    pub use semio_s_artifact_animate_presentation_examples::standards::v1::subsets::any::io::sqlite::*;
+    pub use semio_s_artifact_animate_presentation_inferences::standards::v1::subsets::any::io::sqlite::snapshot;
+}
+
                     #[path = "."]
                     pub mod import {
                         #[path = "."]
                         pub mod deserializers {
                             #[path = "."]
                             pub mod artifacts {
-                                #[path = "."]
-                                pub mod txt {
-                                    #[path = "."]
-                                    pub mod v_utf_8 {
-                                        #[path = "."]
-                                        pub mod any {
-                                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔤️txt/🔖️utf-8/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
-                                #[path = "."]
-                                pub mod pdf {
-                                    #[path = "."]
-                                    pub mod v1_4 {
-                                        #[path = "."]
-                                        pub mod any {
-                                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📖️pdf/🔖️1.4/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
-                                #[path = "."]
-                                pub mod json {
-                                    #[path = "."]
-                                    pub mod v_rfc8259 {
-                                        #[path = "."]
-                                        pub mod any {
-                                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
+                                pub use semio_s_artifact_animate_presentation_viewer::standards::v1::subsets::any::io::import::deserializers::artifacts::txt;
+                                pub use semio_s_artifact_animate_presentation_viewer::standards::v1::subsets::any::io::import::deserializers::artifacts::pdf;
+                                pub use semio_s_artifact_animate_presentation_viewer::standards::v1::subsets::any::io::import::deserializers::artifacts::json;
                             }
                         }
                     }
@@ -597,42 +230,9 @@ pub mod standards {
                         pub mod serializers {
                             #[path = "."]
                             pub mod artifacts {
-                                #[path = "."]
-                                pub mod txt {
-                                    #[path = "."]
-                                    pub mod v_utf_8 {
-                                        #[path = "."]
-                                        pub mod any {
-                                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🔤️txt/🔖️utf-8/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
-                                #[path = "."]
-                                pub mod pdf {
-                                    #[path = "."]
-                                    pub mod v1_4 {
-                                        #[path = "."]
-                                        pub mod any {
-                                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📖️pdf/🔖️1.4/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
-                                #[path = "."]
-                                pub mod json {
-                                    #[path = "."]
-                                    pub mod v_rfc8259 {
-                                        #[path = "."]
-                                        pub mod any {
-                                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
+                                pub use semio_s_artifact_animate_presentation_viewer::standards::v1::subsets::any::io::export::serializers::artifacts::txt;
+                                pub use semio_s_artifact_animate_presentation_viewer::standards::v1::subsets::any::io::export::serializers::artifacts::pdf;
+                                pub use semio_s_artifact_animate_presentation_tests::standards::v1::subsets::any::io::export::serializers::artifacts::json;
                             }
                         }
                     }
@@ -644,45 +244,17 @@ pub mod standards {
 
 // ---- Shims: keep pre-migration module paths resolving for external callers ----
 
-
-
-pub mod diff {
-    pub use crate::standards::v1::subsets::any::schema::diff::*;
-    pub mod schema {
-        pub use crate::standards::v1::subsets::any::schema::diff::*;
-    }
-
-
-
-}
-pub mod mutations {
-    pub use crate::standards::v1::subsets::any::schema::mutations::*;
-    pub mod schema {
-        pub use crate::standards::v1::subsets::any::schema::mutations::*;
-    }
-
-
-
-}
-pub mod snapshot {
-    pub use crate::standards::v1::subsets::any::schema::snapshot::*;
-    pub mod schema {
-        pub use crate::standards::v1::subsets::any::schema::snapshot::*;
-    }
-
-
-
-}
+pub use semio_s_artifact_animate_presentation_inferences::diff;
+pub use semio_s_artifact_animate_presentation_mutations::mutations;
+pub use semio_s_artifact_animate_presentation_inferences::snapshot;
 
 #[path = "."]
 pub mod examples {
     #[path = "."]
     pub mod demo {
-        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️.rs"]
-        mod component;
-        pub use component::*;
-        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🧩️example/🦀️.rs"]
-        mod tests;
+        pub use semio_s_artifact_animate_presentation_examples::examples::demo::*;
+
+        pub use semio_s_artifact_animate_presentation_tests::examples::demo::tests;
     }
 }
 
@@ -690,9 +262,8 @@ pub mod examples {
 pub mod editor {
     #[path = "."]
     pub mod animate {
-        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs"]
-        mod component;
-        pub use component::*;
+        pub use semio_s_artifact_animate_presentation_animate::editor::animate::*;
+pub use semio_s_artifact_animate_presentation_examples::editor::animate::demo_session;
 
         #[path = "."]
         pub mod engine {
@@ -701,113 +272,93 @@ pub mod editor {
             //! files) — a non-taxonomy, editor-only facet (ticket
             //! 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET packet recipe step 4: only editor-side
             //! files reference it, so it moved wholesale into `✏️editor/⚙️engine/`).
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🦀️.rs"]
-            mod component;
-            pub use component::*;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎞️animation/🦀️.rs"]
-            pub mod animation;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📷️camera/🦀️.rs"]
-            pub mod camera;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎛️config/🦀️.rs"]
-            pub mod config;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📐️geometry/🦀️.rs"]
-            pub mod geometry;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/⏱️rate/🦀️.rs"]
-            pub mod rate;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎬️scene/🦀️.rs"]
-            pub mod scene;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🔤️text/🦀️.rs"]
-            pub mod text;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎥️video/🦀️.rs"]
-            pub mod video;
+            pub use semio_s_artifact_animate_presentation_mutations::editor::animate::engine::*;
+
+            pub use semio_s_artifact_animate_presentation_animation::editor::animate::engine::animation;
+            pub use semio_s_artifact_animate_presentation_inferences::editor::animate::engine::camera;
+            pub use semio_s_artifact_animate_presentation_inferences::editor::animate::engine::config;
+            pub use semio_s_artifact_animate_presentation_examples::editor::animate::engine::geometry;
+            pub use semio_s_artifact_animate_presentation_examples::editor::animate::engine::rate;
+            pub use semio_s_artifact_animate_presentation_mut_family::editor::animate::engine::scene;
+            pub use semio_s_artifact_animate_presentation_examples::editor::animate::engine::text;
+            pub use semio_s_artifact_animate_presentation_video::editor::animate::engine::video;
         }
 
         #[path = "."]
         pub mod config {
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️.rs"]
-            mod component;
-            pub use component::*;
+            pub use semio_s_artifact_animate_presentation_tile_grid::editor::animate::config::*;
+pub mod io {
+    pub use semio_s_artifact_animate_presentation_examples::editor::animate::config::io::*;
+    pub mod binary {
+        pub use semio_s_artifact_animate_presentation_viewer::editor::animate::config::io::binary::*;
+        pub use semio_s_artifact_animate_presentation_tile_grid::editor::animate::config::io::binary::mutations;
+    }
+    pub mod text {
+        pub use semio_s_artifact_animate_presentation_viewer::editor::animate::config::io::text::*;
+        pub use semio_s_artifact_animate_presentation_tile_grid::editor::animate::config::io::text::mutations;
+    }
+}
 
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🦀️.rs"]
-            pub mod schema;
+            pub use semio_s_artifact_animate_presentation_viewer::editor::animate::config::schema;
         }
 
         #[path = "."]
         pub mod presence {
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🦀️.rs"]
-            mod component;
-            pub use component::*;
+            pub use semio_s_artifact_animate_presentation_viewer::editor::animate::presence::*;
+pub mod io {
+    pub use semio_s_artifact_animate_presentation_examples::editor::animate::presence::io::*;
+    pub mod binary {
+        pub use semio_s_artifact_animate_presentation_tile_grid::editor::animate::presence::io::binary::*;
+        pub use semio_s_artifact_animate_presentation_viewer::editor::animate::presence::io::binary::mutations;
+    }
+    pub mod text {
+        pub use semio_s_artifact_animate_presentation_tile_grid::editor::animate::presence::io::text::*;
+        pub use semio_s_artifact_animate_presentation_viewer::editor::animate::presence::io::text::mutations;
+    }
+}
 
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema/🦀️.rs"]
-            pub mod schema;
+            pub use semio_s_artifact_animate_presentation_viewer::editor::animate::presence::schema;
         }
-        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗣️terminology/🦀️.rs"]
-        pub mod terminology;
-        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🦀️.rs"]
-        pub mod wasm;
+        pub use semio_s_artifact_animate_presentation_animate::editor::animate::terminology;
+        pub use semio_s_artifact_animate_presentation_mutations::editor::animate::support;
+        pub use semio_s_artifact_animate_presentation_viewer::editor::animate::wasm;
 
         #[path = "."]
         pub mod commands {
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🀄️add-tile/🦀️.rs"]
-            pub mod add_tile;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/👇️canvas-pointer-down/🦀️.rs"]
-            pub mod canvas_pointer_down;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧹️clear-tiles/🦀️.rs"]
-            pub mod clear_tiles;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📋️copy-prompt/🦀️.rs"]
-            pub mod copy_prompt;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🚮️delete-selection/🦀️.rs"]
-            pub mod delete_selection;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗑️delete-tile/🦀️.rs"]
-            pub mod delete_tile;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/⌨️engagement-input/🦀️.rs"]
-            pub mod engagement_input;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📤️engagement-submit/🦀️.rs"]
-            pub mod engagement_submit;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎥️export-video-from-deck/🦀️.rs"]
-            pub mod export_video_from_deck;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/⏸️no-operation/🦀️.rs"]
-            pub mod no_operation;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/✂️patch-tile-crops/🦀️.rs"]
-            pub mod patch_tile_crops;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🏷️rename-tiles/🦀️.rs"]
-            pub mod rename_tiles;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/↩️reset-grid/🦀️.rs"]
-            pub mod reset_grid;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🌱️seed-grid/🦀️.rs"]
-            pub mod seed_grid;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎬️set-active-example/🦀️.rs"]
-            pub mod set_active_example;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖼️set-frame/🦀️.rs"]
-            pub mod set_frame;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📥️set-source/🦀️.rs"]
-            pub mod set_source;
+            pub use semio_s_artifact_animate_presentation_mutations::editor::animate::commands::add_tile;
+            pub use semio_s_artifact_animate_presentation_mutations::editor::animate::commands::canvas_pointer_down;
+            pub use semio_s_artifact_animate_presentation_mutations::editor::animate::commands::clear_tiles;
+            pub use semio_s_artifact_animate_presentation_schema::editor::animate::commands::copy_prompt;
+            pub use semio_s_artifact_animate_presentation_schema::editor::animate::commands::delete_selection;
+            pub use semio_s_artifact_animate_presentation_schema::editor::animate::commands::delete_tile;
+            pub use semio_s_artifact_animate_presentation_host::editor::animate::commands::engagement_input;
+            pub use semio_s_artifact_animate_presentation_host::editor::animate::commands::engagement_submit;
+            pub use semio_s_artifact_animate_presentation_host::editor::animate::commands::export_video_from_deck;
+            pub use semio_s_artifact_animate_presentation_host::editor::animate::commands::no_operation;
+            pub use semio_s_artifact_animate_presentation_host::editor::animate::commands::patch_tile_crops;
+            pub use semio_s_artifact_animate_presentation_host::editor::animate::commands::rename_tiles;
+            pub use semio_s_artifact_animate_presentation_host::editor::animate::commands::reset_grid;
+            pub use semio_s_artifact_animate_presentation_host::editor::animate::commands::seed_grid;
+            pub use semio_s_artifact_animate_presentation_host::editor::animate::commands::set_active_example;
+            pub use semio_s_artifact_animate_presentation_host::editor::animate::commands::set_frame;
+            pub use semio_s_artifact_animate_presentation_host::editor::animate::commands::set_source;
         }
 
         #[path = "."]
         pub mod modes {
             #[path = "."]
             pub mod main {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🖊️main/🦀️.rs"]
-                mod component;
-                pub use component::*;
+                pub use semio_s_artifact_animate_presentation_tests::editor::animate::modes::main::*;
 
-                #[path = "."]
-                pub mod windows {
-                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🖊️main/🪟️windows/🖼️tile-editor/🦀️.rs"]
-                    pub mod tile_editor;
-                }
+                pub use semio_s_artifact_animate_presentation_tests::editor::animate::modes::main::windows;
             }
         }
 
         #[path = "."]
         pub mod panels {
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🗿️artifact/🦀️.rs"]
-            pub mod artifact;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🛍️catalogue/🦀️.rs"]
-            pub mod catalogue;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🦀️.rs"]
-            pub mod inspection;
+            pub use semio_s_artifact_animate_presentation_animate::editor::animate::panels::artifact;
+            pub use semio_s_artifact_animate_presentation_animate::editor::animate::panels::catalogue;
+            pub use semio_s_artifact_animate_presentation_animate::editor::animate::panels::inspection;
         }
     }
 }
@@ -816,40 +367,28 @@ pub mod editor {
 pub mod viewer {
     #[path = "."]
     pub mod animate {
-        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs"]
-        mod component;
-        pub use component::*;
-        #[path = "."]
-        pub mod presence {
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/👥️presence/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
-        #[path = "."]
-        pub mod config {
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎚️config/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
+        pub use semio_s_artifact_animate_presentation_mutations::viewer::animate::*;
+
+        pub use semio_s_artifact_animate_presentation_viewer::viewer::animate::presence;
+        pub use semio_s_artifact_animate_presentation_viewer::viewer::animate::config;
 
         #[path = "."]
         pub mod modes {
             #[path = "."]
             pub mod view {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🦀️.rs"]
-                mod component;
-                pub use component::*;
+                pub use semio_s_artifact_animate_presentation_tests::viewer::animate::modes::view::*;
 
-                #[path = "."]
-                pub mod windows {
-                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🖼️tile-editor/🦀️.rs"]
-                    pub mod tile_editor;
-                }
+                pub use semio_s_artifact_animate_presentation_tests::viewer::animate::modes::view::windows;
             }
         }
     }
 }
 
-#[path = "."]
-pub mod host {
-#[path = "🔨️modules/🏠️host/🧰️owned/🦀️.rs"]
-pub mod owned;
-}
+pub use semio_s_artifact_animate_presentation_schema::host;
+
+#[cfg(test)]
+#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/📸️snapshot/🧪️tests/🔬️unit/🦀️.rs"]
+mod hoisted_tests_0;
+#[cfg(test)]
+#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs"]
+mod hoisted_snapshot_1;

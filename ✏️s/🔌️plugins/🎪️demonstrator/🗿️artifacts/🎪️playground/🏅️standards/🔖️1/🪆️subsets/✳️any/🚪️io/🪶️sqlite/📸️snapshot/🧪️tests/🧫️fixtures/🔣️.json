@@ -69,15 +69,10 @@
   "validDiffs": [
     {},
     {
-      "artifact": {
-        "schema": " authored 日本 "
-      }
+      "schema": " authored 日本 "
     },
     {
-      "schema": "",
-      "artifact": {
-        "schema": ""
-      }
+      "schema": ""
     }
   ],
   "invalidDiffs": [
@@ -85,15 +80,11 @@
       "artifact": {}
     },
     {
-      "artifact": {
-        "schema": 1
-      }
+      "schema": 1
     },
     {
-      "artifact": {
-        "schema": "x",
-        "extra": 1
-      }
+      "schema": "x",
+      "extra": 1
     },
     {
       "unknown": "x"

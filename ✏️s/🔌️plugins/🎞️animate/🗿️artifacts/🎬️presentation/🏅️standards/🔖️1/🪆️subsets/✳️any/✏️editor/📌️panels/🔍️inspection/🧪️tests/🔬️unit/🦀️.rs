@@ -1,4 +1,26 @@
-use super::*;
+use crate::PRESENTATION_DOCUMENT_SCHEMA;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_ID;
+#[allow(unused_imports)]
+use crate::editor::animate::terminology::AnimatePresentationLabels;
+#[allow(unused_imports)]
+use crate::{editor::animate::support::ui_label, editor::animate::support::ui_node_list};
+#[allow(unused_imports)]
+use crate::PresentationSnapshot;
+#[allow(unused_imports)]
+use semio_framework_plugin::tree_item_desc;
+#[allow(unused_imports)]
+use semio_framework_ui_locale::LocalizedLabel;
+#[allow(unused_imports)]
+use semio_framework_plugin::PanelGroup;
+#[allow(unused_imports)]
+use semio_framework_plugin::PanelTabDefinition;
+#[allow(unused_imports)]
+use semio_framework_plugin::PanelTabKind;
+#[allow(unused_imports)]
+use semio_framework_plugin::PanelTreeBuilder;
+#[allow(unused_imports)]
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_LABEL;
+use crate::editor::animate::panels::inspection::*;
 use crate::editor::animate::unit_tests::context::{presentation_app, render as render_body};
 
 #[semio_framework_async_macros::async_test]

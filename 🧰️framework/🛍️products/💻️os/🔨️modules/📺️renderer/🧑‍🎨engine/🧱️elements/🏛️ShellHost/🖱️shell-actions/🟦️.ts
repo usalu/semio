@@ -64,43 +64,44 @@ import {
   type InputRefusalReasonV1,
   type ShellInputActionV1
 } from "../🎯️input-ledger/🟦️.ts";
-import { type ActiveSession, resolveBootExampleId, type SyncCardKind } from "../../🐚️Shell/🟦️.tsx";
+import { type ActiveSession } from "../../🐚️Shell/📦️program-sessions/🟦️.ts";
+import { resolveBootExampleId } from "../../🐚️Shell/🔒️boot-and-locks/🟦️.ts";
+import { type SyncCardKind } from "../../🐚️Shell/👥️peer-interaction/🟦️.ts";
 import type { ViewModel } from "../../🔌️PluginRuntime/🧷️handle-contract/🟦️.ts";
-import { leftoverWorldSelectionOverlayV1, publishLeftoverWorldSelectionV1 } from "../../🌐️World3dHost/🟦️.tsx";
+import { leftoverWorldSelectionOverlayV1, publishLeftoverWorldSelectionV1 } from "../../🌐️World3dHost/🔗️instance-selection/🟦️.ts";
 import {
   NOTE_WORLD_NAVIGATION_ACTION_ID,
   TUTORIAL_RECORDING_EXCLUDED_ACTION_IDS,
+  buildNoteShellCommandAction,
+  type ShellLabelTextV1,
+  undeclaredActionDiagnostic
+} from "../../🛠️ShellHelpers/🔩️plumbing/🆔️action-ids/🟦️.ts";
+import {
   navbarExampleIdFromHistoryUpserts,
   rememberedExampleIdFromDispatchV1,
-  buildNoteShellCommandAction,
-  buildSpacePanelState,
+  frameworkOwnsExampleSwitch,
+  historyRefreshNeededV1
+} from "../../🛠️ShellHelpers/🔩️plumbing/🔀️example-switching/🟦️.ts";
+import { buildSpacePanelState, parsePanelState } from "../../🛠️ShellHelpers/📌️panel/🟦️.ts";
+import {
   flattenPanelTabLeaves,
-  introductionTargetsWindow,
   panelAnchorForGroup,
-  EMPTY_SHELL_HISTORY_PROJECTION_V1,
-  type ShellLabelTextV1,
   appFaultNoticeV1,
   historyFaultNoticeV1,
   historyInputDraftDispositionV1,
   historyOutputNoticeV1,
   historySilentRefusalOfFaultV1,
   historySilentRefusalOfOutputV1,
-  parsePanelState,
-  checkinSubmitMessageV1,
-  FRAMEWORK_CHECKIN_CONTROLLER_ID,
-  requestFileOpen,
-  frameworkLayoutDeclaredInstances,
-  pasteActionWithRetainedFragment,
-  undeclaredActionDiagnostic,
-  frameworkOwnsExampleSwitch,
-  historyRefreshNeededV1,
-  sessionWindowInstances,
-  shellLabel,
-  uiIntentToActionDescriptor,
-  viewerReadOnlyNoticeText,
-  abortExtensionRequestsForActor,
-  isDeclaredSurfaceCancelAction
-} from "../../🛠️ShellHelpers/🟦️.tsx";
+  frameworkLayoutDeclaredInstances
+} from "../../🛠️ShellHelpers/🛣️route-and-chrome/🟦️.tsx";
+import { introductionTargetsWindow, sessionWindowInstances } from "../../🛠️ShellHelpers/🔄️ui-refresh/🟦️.ts";
+import { EMPTY_SHELL_HISTORY_PROJECTION_V1 } from "../../🛠️ShellHelpers/🔩️plumbing/🟦️.ts";
+import { checkinSubmitMessageV1 } from "../../🛠️ShellHelpers/🧾️transfer-checkin-tutorial/🟦️.ts";
+import { FRAMEWORK_CHECKIN_CONTROLLER_ID, shellLabel, viewerReadOnlyNoticeText } from "../../🛠️ShellHelpers/🏷️labels/🟦️.tsx";
+import { requestFileOpen } from "../../🛠️ShellHelpers/🔩️plumbing/📥️downloads-and-file-requests/🟦️.ts";
+import { pasteActionWithRetainedFragment } from "../../🛠️ShellHelpers/🪟️window-panes/📋️clipboard-activation/🟦️.ts";
+import { uiIntentToActionDescriptor } from "../../🛠️ShellHelpers/🌳️tree-windows/🟦️.tsx";
+import { abortExtensionRequestsForActor, isDeclaredSurfaceCancelAction } from "../../🛠️ShellHelpers/🛑️extension-io/🟦️.ts";
 // #endregion 🔌️Adapters
 import { browserActorActionRefusalReasonV1 } from "@semio-tech/framework/browser-bundle/action-handoff/requests";
 import { BROWSER_ACTOR_ACTION_APP_CHANNEL_VERSION } from "@semio-tech/framework/browser-bundle/action-handoff";

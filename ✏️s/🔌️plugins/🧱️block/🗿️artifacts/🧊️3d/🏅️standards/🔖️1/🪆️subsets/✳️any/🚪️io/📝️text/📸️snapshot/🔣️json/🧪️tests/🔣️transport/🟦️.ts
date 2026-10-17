@@ -12,4 +12,4 @@ test("Block 3D physical JSON resolves words before canonical snapshot admission"
  expect(block3dSnapshotFromJsonText(JSON.stringify(json))).toEqual(owned);
  expect(oracle.compile({const:json})(JSON.parse(block3dSnapshotToJsonText(owned)))).toBe(true);
 });
-afterAll(()=>console.log("[DEBUG] Owned transport corpus completed: @semio-tech/block-3d"));
+afterAll(()=>{});

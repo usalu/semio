@@ -49,6 +49,9 @@
     "normOracleSources": [
       "{workspaceRoot}/✏️s/🔌️plugins/📕️norm/🔮️oracles/🔣️.json",
       "{workspaceRoot}/✏️s/🔌️plugins/📕️norm/🔮️oracles/🏃️execution/🐍️.py",
+      "{workspaceRoot}/✏️s/🔌️plugins/📕️norm/🔮️oracles/🏃️execution/📄️document/🐍️.py",
+      "{workspaceRoot}/✏️s/🔌️plugins/📕️norm/🔮️oracles/🏃️execution/📝️carrier/🐍️.py",
+      "{workspaceRoot}/✏️s/🔌️plugins/📕️norm/🔮️oracles/🏃️execution/🔧️verbs/🐍️.py",
       "{workspaceRoot}/✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/⚖️mutate-en1990-1/🐍️.py",
       "{workspaceRoot}/✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/⚡️mutate-din18599-1/🐍️.py",
       "{workspaceRoot}/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🌍️mutate-en1997-1/🐍️.py",

@@ -25,5 +25,4 @@ fn original_history_identity_native_ranges_and_prior_edit_keep_exact_receipts(){
   dictionary.cancel();for _ in 0..64{if dictionary.terminal_is_empty(){break}let(_,born,released)=observe(||dictionary.close_step(&source,grant).unwrap());let(received,progress)=dictionary.take_receipt().unwrap();assert_eq!(received,grant);assert_eq!((born,released),(progress.retained_capacity_bytes,progress.released_bytes));assert_eq!(progress.copied_bytes,0);dictionary_released+=released;}assert!(dictionary.terminal_is_empty());assert_eq!(dictionary_born,dictionary_released);
  }}
  let[mut prior]=prior;let original_id=Some(std::mem::take(&mut prior.id));assert_eq!(close_text(original_id,grant),prior_identity.2);
- eprintln!("[DEBUG] original History identity paged and contiguous raw/dictionary/UUID/prior tags retain actual sealed source and prior native payload addresses; only original funded pieces write bytes and actual physical births/releases balance after paid receiving and cancellation, metadata copy0 terminalDrop0");
 }

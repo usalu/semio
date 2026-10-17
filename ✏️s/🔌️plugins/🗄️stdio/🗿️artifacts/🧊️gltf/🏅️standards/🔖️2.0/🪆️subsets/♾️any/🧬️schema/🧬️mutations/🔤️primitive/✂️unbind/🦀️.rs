@@ -34,7 +34,10 @@ pub fn plan(p: &GltfUnbindPrimitiveAttributePayload, base: &GltfSnapshot) -> Res
     Ok(GltfDiff { meshes: primitive_patch(p.mesh, p.primitive, GltfPrimitiveDiff { attributes: Some(rows), ..Default::default() }), ..Default::default() })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn inverse(p: &GltfUnbindPrimitiveAttributePayload, base: &GltfSnapshot) -> Vec<super::GltfMutation> {
+pub fn inverse<Op>(p: &GltfUnbindPrimitiveAttributePayload, base: &GltfSnapshot) -> Vec<Op>
+where
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::remove_used_extension::RemoveUsedExtensionMutation>,
+{
     if validate(p, base).is_err() {
         return Vec::new();
     }
@@ -42,9 +45,9 @@ pub fn inverse(p: &GltfUnbindPrimitiveAttributePayload, base: &GltfSnapshot) -> 
         return Vec::new();
     };
     let accessor = base.document.meshes[p.mesh].primitives[p.primitive].attributes[index].1;
-    let mut rows = vec![super::bind_primitive_attribute::mutation(super::bind_primitive_attribute::GltfBindPrimitiveAttributePayload { mesh: p.mesh, primitive: p.primitive, semantic: p.semantic.clone(), accessor })];
+    let mut rows = vec![crate::standards::v2_0::subsets::any::schema::mutations::bind_primitive_attribute::mutation(crate::standards::v2_0::subsets::any::schema::mutations::bind_primitive_attribute::GltfBindPrimitiveAttributePayload { mesh: p.mesh, primitive: p.primitive, semantic: p.semantic.clone(), accessor })];
     if index + 1 != base.document.meshes[p.mesh].primitives[p.primitive].attributes.len() {
-        rows.push(super::move_primitive_attribute::mutation(super::move_primitive_attribute::GltfMovePrimitiveAttributePayload { mesh: p.mesh, primitive: p.primitive, semantic: p.semantic.clone(), position: index }));
+        rows.push(crate::standards::v2_0::subsets::any::schema::mutations::move_primitive_attribute::mutation(crate::standards::v2_0::subsets::any::schema::mutations::move_primitive_attribute::GltfMovePrimitiveAttributePayload { mesh: p.mesh, primitive: p.primitive, semantic: p.semantic.clone(), position: index }));
     }
     rows.reverse();
     rows
@@ -60,11 +63,17 @@ pub enum UnbindPrimitiveAttributeMutation {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn mutation(payload: GltfUnbindPrimitiveAttributePayload) -> super::GltfMutation {
-    super::GltfMutation::UnbindPrimitiveAttribute(UnbindPrimitiveAttributeMutation::Apply(payload))
+pub fn mutation<Op>(payload: GltfUnbindPrimitiveAttributePayload) -> Op
+where
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::unbind_primitive_attribute::UnbindPrimitiveAttributeMutation>,
+{
+    Op::from(UnbindPrimitiveAttributeMutation::Apply(payload))
 }
 
-impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for UnbindPrimitiveAttributeMutation {
+impl<Op> protocol::MutationKind<GltfSnapshot, Op> for UnbindPrimitiveAttributeMutation
+where
+    Op: protocol::Mutation<GltfSnapshot, Diff = GltfDiff> + From<UnbindPrimitiveAttributeMutation>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "unbind", entity: "primitive-attribute", kind: "unbind-primitive-attribute", record: "UnboundPrimitiveAttribute" };
 
     fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<GltfDiff> {
@@ -76,7 +85,7 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for UnbindPrimiti
         }
     }
 
-    fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<super::GltfMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         match self {
             Self::Apply(payload) => Ok(inverse(payload, base)),
         }
@@ -93,10 +102,6 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for UnbindPrimiti
 //#endregion 🧬️DirectMutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔗️unbinds/🦀️.rs"]
-mod case_unbinds_normal_d381d3;
-#[cfg(test)]
-#[path = "🧪️tests/🔬️middle-row/🦀️.rs"]
-mod case_middle_row;
+
+
 //#endregion 🧪️Tests

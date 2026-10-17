@@ -29,7 +29,6 @@ describe("actor-owned document backbone", () => {
     const validate = new Ajv({strict:true}).addSchema(rendererSchema).getSchema(`${rendererSchema.$id}#/$defs/ActorDocumentPortOwnerV1`)!;
     expect(validate(fixture.owner),JSON.stringify(validate.errors)).toBe(true);
     expect(validate({...fixture.owner,instanceId:0})).toBe(false);
-    console.error("[DEBUG] Canonical actor owner preserved with independent Ajv; three whole renderer trial selectors absent");
   });
   it("retains uncertain bind control authority but locally retires a verified refusal", async () => {
     for (const row of fixture.bindingRetirement) {

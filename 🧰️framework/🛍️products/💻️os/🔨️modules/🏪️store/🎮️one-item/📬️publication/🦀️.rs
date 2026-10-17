@@ -79,7 +79,7 @@ pub trait StoreMintWitness {}
 impl ArtifactStoreOneItemLiveAuthority {
     /// 🪙️ Mints the live authority of one Store publication. Every field is the Store's own operation, cursor, sequence,
     /// clock and actor state, so only the Store engine mints; a domain receives the minted authority, never its fields.
-    pub(crate) fn mint(
+    pub fn mint(
         operation: semio_framework_job::OperationId,
         generation: semio_framework_job::Generation,
         base_revision: [u8; 32],
@@ -367,7 +367,7 @@ impl<P, Mutation> ArtifactStoreOneItemPrepared<P, Mutation> {
     }
 }
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 impl ArtifactStoreOneItemLiveAuthority {
     /// 🧪️ Rebinds the identity strings a law varies, on an authority no publication shares yet.
     pub fn rebind_identity_for_law(&mut self, actor: semio_framework_value::SharedUtf8, group_id: String, stamped_edit_id: String, line: String) {
@@ -378,7 +378,7 @@ impl ArtifactStoreOneItemLiveAuthority {
     }
 }
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 impl<P, Mutation> ArtifactStoreOneItemPrepared<P, Mutation> {
     /// 🧪️ Tamper seam for seal laws: the sealed edit, its digest and the post snapshot the seal covers.
     pub fn sealed_parts_mut(&mut self) -> (&mut Box<Edit<Mutation>>, &mut [u8; 32], &mut Arc<P>) {
@@ -582,7 +582,7 @@ pub struct ArtifactStoreBatchSourceOf<P, Mutation, A: ArtifactStoreBatchItemAuth
 }
 
 impl<P, Mutation, A: ArtifactStoreBatchItemAuthority<P, Mutation>> ArtifactStoreBatchSourceOf<P, Mutation, A> {
-    pub(crate) fn new(authority: A, inputs: Vec<A::Input>, issuer: Option<member_owned_batch::SourceRetirementIssuer<A::Input>>, wire: Option<ArtifactOperationWire<Mutation>>) -> Self {
+    pub fn new(authority: A, inputs: Vec<A::Input>, issuer: Option<member_owned_batch::SourceRetirementIssuer<A::Input>>, wire: Option<ArtifactOperationWire<Mutation>>) -> Self {
         Self { authority: Some(authority), inputs: inputs.into(), census: 0, footprint: ArtifactStoreOneItemFootprint { work_items: 0, retained_bytes: 0 }, issuer, retirement: None, active_input: None, authority_close: Default::default(), wire, marker: PhantomData }
     }
 }

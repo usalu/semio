@@ -1,6 +1,6 @@
 //! ✉️ The explicit eighteen-way relational Semio union preserves each selected typed entity schema.
 #[path="🧮️semantic/🦀️.rs"]
-mod semantic;
+pub mod semantic;
 
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use semio_framework_value::{ValueError,ValueRefusalKind};
@@ -68,9 +68,6 @@ fn visit_rows(snapshot:&SemioSnapshot,out:&mut RowWriter<'_,'_>)->Result<(),Valu
  match &snapshot.subset{SemioSubsetSnapshot::Brep(value)=>semio_s_artifact_stdio_semio_brep::io::sqlite::snapshot::visit_rows(value,out),SemioSubsetSnapshot::Mesh(value)=>semio_s_artifact_stdio_semio_mesh::io::sqlite::snapshot::visit_rows(value,out),SemioSubsetSnapshot::Model(value)=>semio_s_artifact_stdio_semio_model::io::sqlite::snapshot::visit_rows(value,out),SemioSubsetSnapshot::Value(value)=>semio_s_artifact_stdio_semio_value_model::io::sqlite::snapshot::visit_rows(value,out),SemioSubsetSnapshot::Document(value)=>semio_s_artifact_stdio_semio_document::io::sqlite::snapshot::visit_rows(value,out),SemioSubsetSnapshot::Cad(value)=>semio_s_artifact_stdio_semio_cad::io::sqlite::snapshot::visit_rows(value,out),SemioSubsetSnapshot::Drawing(value)=>semio_s_artifact_stdio_semio_drawing::io::sqlite::snapshot::visit_rows(value,out),SemioSubsetSnapshot::Image(value)=>semio_s_artifact_stdio_semio_image::io::sqlite::snapshot::visit_rows(value,out),SemioSubsetSnapshot::Video(value)=>semio_s_artifact_stdio_semio_video_model::io::sqlite::snapshot::visit_rows(value,out),SemioSubsetSnapshot::Audio(value)=>semio_s_artifact_stdio_semio_audio_model::io::sqlite::snapshot::visit_rows(value,out),SemioSubsetSnapshot::Animation(value)=>semio_s_artifact_stdio_semio_animation::io::sqlite::snapshot::visit_rows(value,out),SemioSubsetSnapshot::Presentation(value)=>semio_s_artifact_stdio_semio_presentation::io::sqlite::snapshot::visit_rows(value,out),SemioSubsetSnapshot::Flow(value)=>semio_s_artifact_stdio_semio_flow::io::sqlite::snapshot::visit_rows(value,out),SemioSubsetSnapshot::Text(value)=>semio_s_artifact_stdio_semio_text_model::io::sqlite::snapshot::visit_rows(value,out),SemioSubsetSnapshot::Table(value)=>semio_s_artifact_stdio_semio_table_model::io::sqlite::snapshot::visit_rows(value,out),SemioSubsetSnapshot::Graph(value)=>semio_s_artifact_stdio_semio_graph::io::sqlite::snapshot::visit_rows(value,out),SemioSubsetSnapshot::Object(value)=>semio_s_artifact_stdio_semio_object::io::sqlite::snapshot::visit_rows(value,out),SemioSubsetSnapshot::Kit(value)=>semio_s_artifact_stdio_semio_kit::io::sqlite::snapshot::visit_rows(value,out)}
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;
 
 
 

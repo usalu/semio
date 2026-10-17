@@ -14,13 +14,13 @@ import {
   type OwnedBuildConfig,
   type OwnedBuildMiddleware,
   type OwnedBuildPlugin,
-} from "../../../🎯️targets/⚛️react/🛠️build-tooling/🟦️.ts";
-import { parseTileProxyAssetSpecV1, TILE_PROXY_TRANSPORT_LIMITS_V1, type TileProxyAssetSpecV1 } from "../../../../🖼️assets/🗺️tile-proxy/🟦️.ts";
-import type { AssetDeliveryDeclarationV1, AssetDeliveryModeV1, AssetDeliveryProviderV1 } from "../../../../🖼️assets/🔍️resolver/🧭️dispatch/🟦️.ts";
+} from "../../../🎯️targets/⚛️react/📦️packages/🟦️typescript/🛠️build-tooling/🟦️.ts";
+import { parseTileProxyAssetSpecV1, TILE_PROXY_TRANSPORT_LIMITS_V1, type TileProxyAssetSpecV1 } from "../../../../🖼️assets/📦️packages/🟦️typescript/🗺️tile-proxy/🟦️.ts";
+import type { AssetDeliveryDeclarationV1, AssetDeliveryModeV1, AssetDeliveryProviderV1 } from "../../../../🖼️assets/📦️packages/🟦️typescript/🔍️resolver/🧭️dispatch/🟦️.ts";
 import { validateJsonSchemaSubset } from "../../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import providerSchema from "./🧬️schema/🔣️.json" with { type: "json" };
-import { parseMeshDeliveryCatalog, type MeshDeliveryCatalog } from "../../../../🖼️assets/🥽️mesh/🟦️.ts";
-import { assetPathFromRequest, SEMIO_ASSET_DIRECTORY, SEMIO_ASSET_ROUTE } from "../../../../🖼️assets/🔍️resolver/🌐️delivery/🟦️.ts";
+import { parseMeshDeliveryCatalog, type MeshDeliveryCatalog } from "../../../../🖼️assets/📦️packages/🟦️typescript/🥽️mesh/🟦️.ts";
+import { assetPathFromRequest, SEMIO_ASSET_DIRECTORY, SEMIO_ASSET_ROUTE } from "../../../../🖼️assets/📦️packages/🟦️typescript/🔍️resolver/🌐️delivery/🟦️.ts";
 import faviconDelivery from "../../🌐️favicon/🔣️.json" with { type: "json" };
 
 // #endregion 🔌️Adapters
@@ -398,7 +398,7 @@ export const PLAYGROUND_PLAY_BOOT_VIEWPORT_SCRIPT = `(function(){var last="";fun
  * Reads the ONE durable document the OS shell actually writes — `localStorage["semio.os.config"]`,
  * whose `preferences["os.config.ui-preferences"]` holds the append-only UI-preference event log — and
  * REPLAYS it, because that lane is event-sourced (`commitUiPreferencesConfigMutation`,
- * `🧑‍🎨engine/🎚️UiPreferences/🟦️.ts`) and the last `setAppearance` is the only appearance there is.
+ * `🧑‍🎨engine/🧱️elements/🎚️UiPreferences/🟦️.ts`) and the last `setAppearance` is the only appearance there is.
  * It used to read `ui.chrome.appearance`, a key nothing has written since the shell moved to that
  * document: with appearance = dark, `<html>` got no `.dark` class and `<body>` stayed light until
  * React mounted, which is a guaranteed light flash on every reload of a dark session

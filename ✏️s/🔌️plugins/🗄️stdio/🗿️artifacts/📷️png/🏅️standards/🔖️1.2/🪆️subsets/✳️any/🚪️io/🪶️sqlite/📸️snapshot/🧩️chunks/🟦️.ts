@@ -1,5 +1,5 @@
 /** 🧩️ Native chunk fields and exact compression recipes preserve every byte occurrence. */
-import {CompressionSyntaxError,parseCompression,encodeCompression,type DeflateStream, type CompressionCheckpoint} from "../../../../../../../../../🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🚪️io/💾️binary/📸️snapshot/🗜️compression/🟦️.ts";
+import {CompressionSyntaxError,parseCompression,encodeCompression,type DeflateStream, type CompressionCheckpoint} from "@semio-tech/stdio-deflate/standards/rfc1950/subsets/any/io/binary/snapshot/compression";
 import {PngSyntaxError,validateHeader,parseScanlines,encodeScanlines,type PngHeader,type PngScanlines} from "../🌈️scanline/🟦️.ts";
 export interface PngText { readonly keyword:string; readonly value:string; readonly language:string; readonly translated:string; readonly compressed:number; readonly stream:DeflateStream|null }
 export interface PngChunk { readonly kind:string; readonly fields:readonly number[]; readonly octets:readonly number[]; readonly text:PngText|null }

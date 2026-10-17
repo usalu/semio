@@ -547,7 +547,7 @@ fn remodeling_test_meshes() -> &'static std::sync::Mutex<BTreeMap<String, MeshDa
     REMODELING_TEST_MESHES.get_or_init(|| std::sync::Mutex::new(BTreeMap::new()))
 }
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 pub fn mint_and_stash_mesh(mesh: MeshData) -> RemodelingMeshChild {
     let bytes = semio_framework_pack_json::to_json_string(&mesh).into_bytes();
     let child_id = mesh_digest_bytes([bytes.as_slice()]);
@@ -555,7 +555,7 @@ pub fn mint_and_stash_mesh(mesh: MeshData) -> RemodelingMeshChild {
     mesh_child_handle(child_id, "remodeling-mesh".into())
 }
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 pub fn remodeling_mesh_workspace(handle: &RemodelingMeshChild) -> Option<MeshData> {
     if handle.child_id == REMODELING_EMPTY_MESH_CHILD_ID {
         return Some(MeshData::default());

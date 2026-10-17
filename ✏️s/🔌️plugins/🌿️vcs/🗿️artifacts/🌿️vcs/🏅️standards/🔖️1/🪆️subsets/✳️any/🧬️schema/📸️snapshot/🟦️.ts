@@ -33,6 +33,10 @@ type vcsVcsSnapshotGuardSizeBounds = { readonly minItems?: number; readonly maxI
 
 export const vcsVcsSnapshotGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : vcsVcsSnapshotGuardReject(at, "value is not an object");
+export const vcsVcsSnapshotGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) vcsVcsSnapshotGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const vcsVcsSnapshotGuardArray = (value: unknown, at: string, bounds: vcsVcsSnapshotGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return vcsVcsSnapshotGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) vcsVcsSnapshotGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -63,7 +67,7 @@ export const vcsVcsSnapshotGuardConstant = <T extends string | number | boolean>
 //#endregion 🚪️Parsers
 
 export function parseVcsSnapshot(value: unknown, at = "$"): VcsSnapshot {
-  const row = vcsVcsSnapshotGuardObject(value, at);
+  const row = vcsVcsSnapshotGuardClosed(vcsVcsSnapshotGuardObject(value, at), at, ["schema", "title", "counter", "notes", "status", "tags"]);
   return {
     schema: vcsVcsSnapshotGuardString(row["schema"], `${at}.schema`),
     title: vcsVcsSnapshotGuardString(row["title"], `${at}.title`),

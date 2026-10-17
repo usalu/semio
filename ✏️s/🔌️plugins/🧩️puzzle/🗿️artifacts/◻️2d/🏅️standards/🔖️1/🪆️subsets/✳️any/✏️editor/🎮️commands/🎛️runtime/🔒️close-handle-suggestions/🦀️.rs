@@ -1,6 +1,6 @@
 //! 💡️ `close-handle-suggestions` command.
 
-use {crate::editor::puzzle2d::snapshot::puzzle2d_window_and_measures_scope, crate::editor::puzzle2d::Puzzle2dActionCtx};
+use {crate::editor::puzzle2d::snapshot::puzzle2d_window_and_measures_scope, crate::editor::puzzle2d::interaction::Puzzle2dActionCtx};
 
 /// 🔒️ Discards the popup and the brush slot behind it without placing anything — escape, an
 /// outside click, or the menu closing itself. The provisional preview dies with the slot.

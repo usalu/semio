@@ -69,24 +69,3 @@ fn the_bundled_example_records_every_declared_default_of_its_operators() {
     let unrecorded = unrecorded_example_defaults();
     assert!(unrecorded.is_empty(), "every operator of the bundled example records its declared defaults: {unrecorded:?}");
 }
-
-/// 🐛️ [DEBUG] Temporary: prints the bundled example with its operators' declared defaults recorded, for the one-time
-/// normalization of the example asset (ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING). Deleted once the asset holds it.
-#[test]
-fn debug_print_normalized_example() {
-    use semio_framework_artifact_flow_flow::neural::ColdRetire;
-    use semio_framework_artifact_flow_flow::{default_neuron_params_from_info, Widget};
-    installed();
-    let infos = semio_framework_os_flow::flow_neuron_kind_info_map();
-    let mut example = default_snapshot();
-    for widget in example.host_snapshot.widgets.iter_mut() {
-        if let Widget::Neuron { neuron_kind, params, .. } = widget {
-            let declared = default_neuron_params_from_info(infos.get(neuron_kind));
-            let recorded = declared.iter().filter(|(key, _)| params.get(key).is_none()).fold(params.clone(), |recorded, (key, value)| recorded.insert(key.clone(), value.clone()));
-            std::mem::replace(params, recorded).retire_cold();
-            declared.retire_cold();
-        }
-    }
-    eprintln!("[DEBUG] BEGIN demo\n{}\n[DEBUG] END demo", pack::snapshot::ArtifactDsl::print_dsl(&example));
-    example.retire_cold();
-}

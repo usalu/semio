@@ -1,0 +1,9 @@
+# Selected Dependencies Retirement Independent Review
+
+Seven refreshed final inputs match stable nofollow FD/name seven-field metadata, bytes and SHA256. Receipt: `🗑️generated/dependency-retirement-seven-independent-final-hold.json`. Prior whole ADMIN holds are historical.
+
+Actual fixed owner retains authentic declared parent/Core whole committed row/global bindingEX/ALL ownership and requires every current owner fully qualified before inactive or empty admission. Fresh selected full receipt/root/inventory/currentbindings/allrosters match requested snapshot; serialized DATA mints no authority. Private effect consumes actual reader payload and genuine relative capabilities, removes postorder/receiptlast, flushes directories and exact empty root/j delta, repeats current/row/binding/nonselected CAS and keeps whole charge. Windows mapped roots refuse before effects.
+
+Current schema-owned JSON seven-field order is shared by reader/kernel/issuer. The preliminary stale-colon warning was withdrawn after current-byte refresh. A concrete extra cross-directory2+2 alias Generated integration law now proves full-per-directory processing preserves valid peer path lineage; no kernel defect was reproduced. Partial receipt-last suffix/no-success/empty-current intent and barrier/close/cancel failures remain explicit.
+
+Interfaces reports final16434 natural0 strict four roots0/12 laws564 assertions with13 actual Generated effect cases, independent Ajv/SQLite and actual reader→kernel pairing; unchanged Root0 helper scope separately passed81366. Helper's multicase Source issuer ports are detachedDATA-only and not fake Core authority; its scope port is not a substitute for the separate genuine lifetime law. Tests were not rerun here. No material blocker remains in bounded Source review. Actual current0b06 eligibility, full positive Native owner/effect, producer/rebind and all platform durability remain unqualified. No protected read or Native operation performed.

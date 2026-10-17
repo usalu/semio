@@ -4,10 +4,10 @@
 import { terminateOwnedChildTree } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { createHash, randomBytes } from "node:crypto";
 import { type ChildProcess } from "node:child_process";
-import { decodeServerFrame, encodeClientFrame } from "../../../🧰️framework/🔨️modules/📡️replication/🟦️.ts";
-import { parseDocumentSocketGrantReceiptV1 } from "../../../🧰️framework/🛍️products/💻️os/🟦️.ts";
+import { decodeServerFrame, encodeClientFrame } from "@semio-tech/framework-replication";
+import { parseDocumentSocketGrantReceiptV1 } from "@semio-tech/framework-os";
 import { DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1, type ArtifactFrontier } from "@semio-tech/framework/directory/schema";
-import { parseDocumentOpenPlanV1, parseDocumentPlanSocketGrantIntentV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🔏️document-open/🟦️.ts";
+import { parseDocumentOpenPlanV1, parseDocumentPlanSocketGrantIntentV1 } from "@semio-tech/framework-os/modules/directory/schema/document-open";
 import { artifactFrontierIsGenesisForV1, artifactFrontierIsEditedForV1 } from "@semio-tech/framework/directory/schema";
 import { DIRECT_CHILD_BENIGN_ENV_KEY, DIRECT_CHILD_BENIGN_ENV_VALUE } from "../../🔐️auth/📤️credential-delivery/🟦️.ts";
 import { writeLocalFrame } from "../../🚀️local-bootstrap/📡️framing/🟦️.ts";

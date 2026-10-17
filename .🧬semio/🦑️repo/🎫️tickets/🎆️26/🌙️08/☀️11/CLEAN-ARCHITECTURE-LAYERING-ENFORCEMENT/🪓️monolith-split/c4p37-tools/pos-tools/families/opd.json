@@ -1,0 +1,33 @@
+{
+ "name": "opd",
+ "crates": [
+  "semio-framework-os-pack",
+  "semio-framework-pack-record-schema",
+  "semio-framework-pack-record",
+  "semio-framework-pack-record-encode",
+  "semio-framework-pack-record-retained",
+  "semio-framework-pack-record-preflight",
+  "semio-framework-pack",
+  "semio-framework-os-store-text-io",
+  "semio-framework-os-store-codec-factory",
+  "semio-framework-os-store-durable-group",
+  "semio-framework-os-store-durable-group-wire"
+ ],
+ "base": {
+  "rev": "1bae6115bc5",
+  "crates": [
+   "semio-framework-os-pack",
+   "semio-framework-pack-record-schema",
+   "semio-framework-pack-record",
+   "semio-framework-pack-record-encode",
+   "semio-framework-pack-record-retained",
+   "semio-framework-pack-record-preflight",
+   "semio-framework-pack",
+   "semio-framework-os-store-text-io",
+   "semio-framework-os-store-codec-factory",
+   "semio-framework-os-store-durable-group",
+   "semio-framework-os-store-durable-group-wire"
+  ]
+ },
+ "note": "OS-PACK-DEDUPE: os-pack vs pack-record-schema + consumers"
+}

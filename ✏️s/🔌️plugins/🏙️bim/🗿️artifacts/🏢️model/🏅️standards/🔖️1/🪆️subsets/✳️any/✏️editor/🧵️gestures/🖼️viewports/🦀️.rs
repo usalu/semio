@@ -8,7 +8,8 @@
 //! Both read the layout of the sheet (`sheet-layout`) for the windows and show the window they would write as a ghost with its position or scale.
 
 use super::plane::{dist, point2, P};
-use super::session::{Mark, Pointer, Preview, Step, Style, Surface, Tool, ToolContext, ToolEvent, PICK_PIXELS};
+use super::session::{Pointer, Step, Surface, Tool, ToolContext, ToolEvent, PICK_PIXELS};
+use crate::editor::bim::marks::{Mark, Preview, Style};
 use crate::editor::bim::entities::sheets::{next_view, scale_of};
 use crate::editor::bim::modes::edit::windows::sheet;
 use crate::standards::v1::subsets::any::schema::mutations::create_viewport::CreateViewport;

@@ -5,7 +5,7 @@ import { receiveScriptProcessInvocation } from "../../../../../🧰️framework/
 import { resolveTestLevel } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 /** 🪐️ `@semio-tech/space-plugin` router: `bun ./📜️script.ts test`. */
 import { join } from "node:path";
-import { readModuleTreeSource } from "../../../../../🧰️framework/🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
+import { readModuleTreeSource } from "../../../../../🧰️framework/🔨️modules/📚️compiler/📦️packages/🟦️typescript/📖️syntax/🌳️module-tree/🟦️.ts";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
@@ -474,7 +474,7 @@ function interactiveJobCatalogOracle(repoRoot: string): number {
   const plugin = join(repoRoot, "🌎️hub/🧩️compositions/🪐️space");
   const artifactPlugin = join(repoRoot, "✏️s/🔌️plugins/🪐️space");
   const surfaces = [
-    { appId: "s.space.studio@1/*#editor", owner: join(plugin, "⚙️engine/🪐️space"), source: join(plugin, "⚙️engine/🪐️space/🦀️.rs"), shape: "status" as const, factory: "SpaceCommandJobFactory" },
+    { appId: "s.space.studio@1/*#editor", owner: join(plugin, "⚙️engine/🪐️space"), source: join(plugin, "⚙️engine/🪐️space/🦀️.rs"), children: ["🧰️document-helpers", "🎯️space-command", "🏠️space-app", "📜️space-manifest"].map((child) => join(plugin, "⚙️engine/🪐️space", child, "🦀️.rs")), shape: "status" as const, factory: "SpaceCommandJobFactory" },
     { appId: "s.space.home@1/*#editor", owner: join(artifactPlugin, "🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor"), scope: join(artifactPlugin, "🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any"), export: "HomeRetainedCommandLimits", source: join(artifactPlugin, "🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs"), shape: "disposition" as const, factory: "HomeRetainedCommandJobFactory" },
     { appId: "s.space.space@1/*#editor", owner: join(artifactPlugin, "🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor"), scope: join(artifactPlugin, "🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any"), export: "SpaceIndexRetainedCommandLimits", source: join(artifactPlugin, "🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs"), shape: "status" as const, factory: "SpaceIndexRetainedCommandJobFactory" },
   ];
@@ -496,7 +496,7 @@ function interactiveJobCatalogOracle(repoRoot: string): number {
     assert.deepEqual([...migrated].sort(), [...new Set(migrated)].sort(), `${surface.appId} fixture repeats a migrated id`);
     for (const id of migrated) assert((lanes.get(id) ?? []).length > 0, `${surface.appId}:${id} is migrated with no publication lane`);
     checks += 1;
-    const source = readFileSync(surface.source, "utf8");
+    const source = [surface.source, ...(surface.children ?? [])].map((file) => readFileSync(file, "utf8")).join("\n");
     assert(source.includes(`factory_type: ${surface.factory},`), `${surface.appId} proof catalog declares no owned factory type`);
     assert(source.includes(`controller: "${surface.appId}",`), `${surface.appId} proof catalog controller is not its runtime surface id`);
     for (const id of migrated) {
@@ -541,11 +541,9 @@ class SnapshotOwnerCensusScript extends BundleScript {
       assert(Object.hasOwn(manifest.dependencies,owner.package));
       const db=new Database(":memory:");
       try{db.exec(readFileSync(join(this.repoRoot,owner.sqlPath),"utf8"));assert.deepEqual(db.query("SELECT name FROM sqlite_schema WHERE type='table' ORDER BY name").all(),owner.tables.map(name=>({name})));assert.deepEqual(db.query("PRAGMA integrity_check").all(),[{integrity_check:"ok"}]);assert.deepEqual(db.query("PRAGMA foreign_key_check").all(),[]);}finally{db.close();}
-      console.log("[DEBUG] independent Hub Space census owner "+owner.kind+" package="+owner.package+" authored_SQL_tables="+owner.tables.length);
     }
     if(segments[0]==="native"){
-      const receipts=await runRepositoryExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0), preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd:this.root, env:{...process.env,RUST_MIN_STACK:"268435456"}, groups:[{package:"semio-hub-space",target:{kind:"lib"},laws:["interactive_job_catalog_tests::sqlite_snapshot_composed_owner_census"]}], progress(event){console.log("[DEBUG] Hub Space census Native "+event.stage+" "+(event.law??""));} });
-      console.log("[DEBUG] Hub Space census Native receipts "+JSON.stringify(receipts));
+      const receipts=await runRepositoryExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0), preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd:this.root, env:{...process.env,RUST_MIN_STACK:"268435456"}, groups:[{package:"semio-hub-space",target:{kind:"lib"},laws:["interactive_job_catalog_tests::sqlite_snapshot_composed_owner_census"]}], progress(event){} });
     }
   }
 }

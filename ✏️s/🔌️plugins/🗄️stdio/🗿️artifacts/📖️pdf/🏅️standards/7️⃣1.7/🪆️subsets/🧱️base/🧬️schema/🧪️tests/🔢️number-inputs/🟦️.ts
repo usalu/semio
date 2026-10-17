@@ -14,8 +14,7 @@ test("PDF native binary64 intent controls admit canonical numeric transport",()=
   const schema=JSON.parse(readFileSync(resolve(root,"🧬️mutations",row.leaf,"🧬️schema/🔣️.json"),"utf8"));
   const ajv=new Ajv({strict:false});ajv.addSchema(valueSchema);const validate=ajv.compile(schema);
   expect(validate({...row.mutation,[row.field]:word})).toBe(true);expect(validate({...row.mutation,[row.field]:row.value})).toBe(true);
-  const inputs=mutationInputDefs(schema,id=>id===valueSchema.$id?valueSchema:undefined);const input=inputs.find(input=>input.id===`/${row.field}`);expect(input?.schema.kind).toBe(row.kind);
+  const inputs=mutationInputDefs(schema,id=>id===valueSchema.$id?valueSchema:undefined);const input=inputs.find(input=>input.id===`/${row.field}`);if(input===undefined)throw new Error(`No mutation input ${row.field}`);expect<typeof row.kind>(input.schema.kind).toBe(row.kind);
   if(row.kind==="vector")expect((input!.schema as any).dims).toBe(row.dimensions);
-  console.log("[DEBUG] PDF numeric intent preserves independent IEEE754 words and canonical input",row.leaf,row.field,expected);
  }
 });

@@ -1,10 +1,11 @@
 use super::*;
 use crate::editor_domain::editor_laws::context;
+use semio_framework_test_fixtures::repo_text;
 use semio_s_artifact_procedural_3d_editor::Generation3dCommand;
 use semio_framework_plugin::{ArtifactEditor, PluginApp};
 
 fn fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧩️add-widget/🧪️tests/🧫️fixtures/🔣️.json")).expect("creation fixture")
+    serde_json::from_str(repo_text!("✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧩️add-widget/🧪️tests/🧫️fixtures/🔣️.json")).expect("creation fixture")
 }
 
 fn payload(value: &serde_json::Value) -> AddWidget {
@@ -40,7 +41,6 @@ async fn catalogue_descriptors_survive_action_decode_and_retained_publication() 
             semio_framework_artifact_flow_flow::Widget::OutputAction { action, .. } => assert_eq!(action, value["action"].as_str().unwrap()),
             _ => {}
         }
-        eprintln!("[DEBUG] catalogue {} publication: {} -> {}", value, before, after.host_snapshot.widgets.len());
     }
 }
 
@@ -58,7 +58,6 @@ async fn rejected_creation_returns_a_fault_and_leaves_the_document_unchanged() {
             Err(fault) => fault,
             Ok(_) => semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut *app, 1).await.err().expect("creation must fail"),
         };
-        eprintln!("[DEBUG] catalogue refused creation: {} {}", fault.code.0, fault.message);
         assert_eq!(fault.code.0, fixture()["faultCode"].as_str().unwrap());
         assert_eq!(context::snapshot(&app), before);
     }
@@ -78,7 +77,6 @@ async fn repeated_automatic_additions_have_separated_rendered_rectangles() {
             for other in nodes.iter().filter(|other| other.id != node.id) {
                 assert!((node.x - other.x).abs() >= (node.width + other.width) / 2.0 + AUTOMATIC_GAP || (node.y - other.y).abs() >= (node.height + other.height) / 2.0 + AUTOMATIC_GAP, "{} overlaps {}", node.id, other.id);
             }
-            eprintln!("[DEBUG] catalogue automatic placement {} at ({}, {}) size ({}, {})", node.id, node.x, node.y, node.width, node.height);
         }
     });
 }

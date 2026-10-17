@@ -7,8 +7,8 @@ use super::*;
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct RemoveBlock {
-    pub(crate) path: Vec<MdPathStep>,
-    pub(crate) index: usize,
+    pub path: Vec<MdPathStep>,
+    pub index: usize,
 }
 
 impl protocol::MutationKind<MdSnapshot, MdMutation> for RemoveBlock {

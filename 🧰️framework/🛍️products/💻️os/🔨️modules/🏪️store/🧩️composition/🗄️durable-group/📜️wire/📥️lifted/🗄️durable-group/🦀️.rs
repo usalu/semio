@@ -107,6 +107,13 @@ pub struct DurableOwnedThreeMemberUnsignedV1 {
     value: DurableOwnedThreeMemberUnsignedMemberV1,
 }
 
+impl DurableOwnedThreeMemberUnsignedV1 {
+    /// 🖋️ Projects the three signed members of one decision onto the unsigned canonical wire shape.
+    pub fn new(schema: String, anchor: DurableOwnedGroupAnchorV1, parent: &DurableOwnedGroupMemberV1, drawing: &DurableOwnedGroupMemberV1, value: &DurableOwnedGroupMemberV1) -> Self {
+        Self { schema, anchor, parent: unsigned_member(parent), drawing: unsigned_member(drawing), value: unsigned_member(value) }
+    }
+}
+
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum DurableOwnedGroupDecisionError {
     InvalidSchema,
@@ -1000,7 +1007,7 @@ pub fn valid_reference(reference: &semio_framework_artifact_reference::ArtifactR
     valid_identity(&reference.artifact_id) && valid_identity(&reference.dialect.artifact_kind) && valid_identity(&reference.dialect.standard) && valid_identity(&reference.dialect.subset)
 }
 
-pub fn unsigned_member(member: &DurableOwnedGroupMemberV1) -> DurableOwnedThreeMemberUnsignedMemberV1 {
+fn unsigned_member(member: &DurableOwnedGroupMemberV1) -> DurableOwnedThreeMemberUnsignedMemberV1 {
     DurableOwnedThreeMemberUnsignedMemberV1 {
         role: member.role.clone(),
         reference: member.reference.clone(),

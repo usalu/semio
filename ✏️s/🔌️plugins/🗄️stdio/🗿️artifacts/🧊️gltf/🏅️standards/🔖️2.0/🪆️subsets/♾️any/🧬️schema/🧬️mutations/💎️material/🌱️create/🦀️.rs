@@ -33,11 +33,14 @@ pub fn plan(p: &GltfCreateMaterialPayload, base: &GltfSnapshot) -> Result<GltfDi
     Ok(diff)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn inverse(p: &GltfCreateMaterialPayload, base: &GltfSnapshot) -> Vec<super::GltfMutation> {
+pub fn inverse<Op>(p: &GltfCreateMaterialPayload, base: &GltfSnapshot) -> Vec<Op>
+where
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::remove_used_extension::RemoveUsedExtensionMutation>,
+{
     if validate(p, base).is_err() {
         return Vec::new();
     }
-    vec![super::delete_material::mutation(super::delete_material::GltfDeleteMaterialPayload { index: p.position })]
+    vec![crate::standards::v2_0::subsets::any::schema::mutations::delete_material::mutation(crate::standards::v2_0::subsets::any::schema::mutations::delete_material::GltfDeleteMaterialPayload { index: p.position })]
 }
 
 //#region 🧬️DirectMutation
@@ -50,11 +53,17 @@ pub enum CreateMaterialMutation {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn mutation(payload: GltfCreateMaterialPayload) -> super::GltfMutation {
-    super::GltfMutation::CreateMaterial(CreateMaterialMutation::Apply(payload))
+pub fn mutation<Op>(payload: GltfCreateMaterialPayload) -> Op
+where
+    Op: From<crate::standards::v2_0::subsets::any::schema::mutations::create_material::CreateMaterialMutation>,
+{
+    Op::from(CreateMaterialMutation::Apply(payload))
 }
 
-impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for CreateMaterialMutation {
+impl<Op> protocol::MutationKind<GltfSnapshot, Op> for CreateMaterialMutation
+where
+    Op: protocol::Mutation<GltfSnapshot, Diff = GltfDiff> + From<CreateMaterialMutation>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "material", kind: "create-material", record: "CreatedMaterial" };
 
     fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<GltfDiff> {
@@ -66,7 +75,7 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for CreateMateria
         }
     }
 
-    fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<super::GltfMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         match self {
             Self::Apply(payload) => Ok(inverse(payload, base)),
         }
@@ -83,7 +92,5 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for CreateMateria
 //#endregion 🧬️DirectMutation
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/💎️inserts-a-5ae67c/🦀️.rs"]
-mod case_inserts_a_5ae67c;
+
 //#endregion 🧪️Tests

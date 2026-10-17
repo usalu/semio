@@ -4,7 +4,7 @@
 //!
 //! 🔖 `IoFidelity::Lossy`: geometry survives feature for feature, feature ids and payloads beyond
 //! geometry do not.
-use crate::standards::v1::subsets::any::schema::gis_map_snapshot_to_world_drawing;
+use crate::standards::v1::subsets::any::schema::drawing_bridge::gis_map_snapshot_to_world_drawing;
 use crate::GisMapSnapshot;
 use {semio_s_artifact_stdio_semio_drawing_export::encode_drawing, semio_s_artifact_stdio_semio_drawing::io::SemioDrawingFormat};
 

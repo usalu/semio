@@ -14,7 +14,7 @@ export function createNextRebuildAdmissionV1(options: Readonly<{ directory: stri
     const group: Group = { participants: new Set(), admitted: false, controller: new AbortController(), granted, accept, refuse, end, operation: Promise.resolve() };
     group.operation = options.run(async original => {
       const control: CompilerAdmissionControl = { signal: AbortSignal.any([original.signal, group.controller.signal]), remainingMilliseconds: () => original.remainingMilliseconds(), publish: progress => original.publish(progress), yieldContinuation: () => original.yieldContinuation() };
-      const lease = await acquireCompilerCapacityLeaseV1({ directory: options.directory, control, environment: options.environment });
+      const lease = await acquireCompilerCapacityLeaseV1({request:{kind:"whole-host"}, directory: options.directory, control, environment: options.environment });
       try { group.admitted = true; group.accept(); await ended; }
       finally { lease.release(); }
     }).catch(group.refuse);

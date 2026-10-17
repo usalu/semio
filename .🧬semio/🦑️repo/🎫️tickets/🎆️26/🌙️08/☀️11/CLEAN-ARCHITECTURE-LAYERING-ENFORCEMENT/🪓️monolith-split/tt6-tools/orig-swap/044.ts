@@ -1,0 +1,229 @@
+import { expect, test } from "bun:test";
+import { createHash } from "node:crypto";
+import { existsSync, lstatSync, readFileSync } from "node:fs";
+import { join, resolve } from "node:path";
+import { findNodeAtLocation, getNodeValue, parseTree } from "jsonc-parser";
+import { frozenCoordinateEvidenceSeal, loadCatalogTaxonomy, validateFrozenCoordinateEvidenceContracts, semanticExactOwnedFileCatalog } from "../../🔍️discovery/🟦️.ts";
+import { canonicalJson } from "../../🧾️serialization/🔣️json/🟦️.ts";
+import { frozenCoordinateEvidenceCoordinates, taxonomyFixturePayloadPath } from "../../🧹️normalization/🟦️.ts";
+
+const vector = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🕰️historical-json-source-encoding/🔣️.json"), "utf8"));
+const historical = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🕰️historical-json-source-encoding/🧬️energy-source-coordinates/🔣️.json"), "utf8"));
+const sha = (value: string) => createHash("sha256").update(value).digest("hex");
+const libraryRoot = resolve(import.meta.dir, "../.."), root = resolve(libraryRoot, "../../../../..");
+type LedgerReseal = { seal: string; coordinates: "changed" | "unchanged"; coordinatesSha256: string; recordedBy: string; reason: string };
+type CatalogDeletion = { path: string; reason: string; revision: string; packageId: string; index: number; row: { destinationPath: string } };
+type CatalogConsumerDeletion = { path: string; reason: string; revision: string; index: number; row: { packageId: string; path: string } };
+type CatalogReseal = { seal: string; recordedBy: string; evidence: { revision: string; date: string }; reason: string; renames?: { from: string; to: string }[]; moves?: { from: string; to: string; revision: string }[]; deletions?: CatalogDeletion[]; consumerDeletions?: CatalogConsumerDeletion[] };
+const ledger = JSON.parse(readFileSync(join(libraryRoot, "🧪️tests/🧫️fixtures/🧫️frozen-seal-ledger/🔣️.json"), "utf8")) as { pinnedAt: string; pinnedFor: string; contracts: Record<string, { seal: string; coordinatesSha256?: string; reseals?: LedgerReseal[] }>; later: Record<string, { recordedBy: string; reason: string }>; catalogs: Record<string, { family: string; seal: string; sealedBy: string; reseals?: CatalogReseal[] }> };
+const archivedFixtureEnrollments = JSON.parse(readFileSync(join(libraryRoot, "🧪️tests/🧫️fixtures/🧭️fixture-placement/📜️enrollment.json"), "utf8")).records;
+
+/** 🧷️ The digest of the coordinates a live sealed document resolves: canonical JSON of `{pointer, kind, value}` in document order. */
+function sealedCoordinatesSha256(id: string, contract: Parameters<typeof frozenCoordinateEvidenceSeal>[0][string]): string {
+  const { retired: _retired, ...live } = contract;
+  return sha(canonicalJson(frozenCoordinateEvidenceCoordinates(live.path, readFileSync(join(root, live.path)), { [id]: live })!.map(({ pointer, kind, value }) => ({ pointer, kind, value }))));
+}
+
+test("historical escaped-source vectors bind one JSON string layer and an explicit root", () => {
+  for (const row of vector.cases.filter((row: any) => row.accepted)) {
+    const tree = parseTree(row.source)!;
+    expect(getNodeValue(tree)).toEqual(JSON.parse(row.source));
+    const node = findNodeAtLocation(tree, row.pointer.slice(1).split("/").map((part: string) => /^\d+$/.test(part) ? Number(part) : part))!;
+    expect(node.type).toBe("string");
+    const raw = row.source.slice(node.offset + 1, node.offset + node.length - 1);
+    expect(JSON.parse('"' + raw + '"')).toBe(node.value);
+    expect(raw).not.toBe(node.value);
+  }
+});
+
+for (const row of vector.cases) test("historical escaped-source authority: " + row.id, () => {
+  const contract = { path: "🧪️tests/🔣️history.json", sha256: sha(row.source), schemaVersion: null, ...(row.rootKind ? { rootKind: row.rootKind } : {}), coordinates: [{ pointer: row.pointer, kind: "source", representation: "json-escaped-source-path" }] };
+  const run = () => frozenCoordinateEvidenceCoordinates(contract.path, Buffer.from(row.source), { history: contract } as never);
+  if (!row.accepted) expect(run).toThrow(/frozen-coordinate-evidence-invalid/u);
+  else {
+    const node = findNodeAtLocation(parseTree(row.source)!, row.pointer.slice(1).split("/").map((part: string) => /^\d+$/.test(part) ? Number(part) : part))!;
+    expect(run()).toEqual([{ pointer: row.pointer, start: node.offset + 1, end: node.offset + node.length - 1, value: row.source.slice(node.offset + 1, node.offset + node.length - 1), kind: "source" }]);
+  }
+});
+
+test("escaped-source authority retains exact representation root digest and selector boundaries", () => {
+  const source = vector.cases[0].source, bytes = Buffer.from(source), path = "🧪️tests/🔣️history.json";
+  const contract = { path, sha256: sha(source), schemaVersion: null, rootKind: "array", coordinates: [{ pointer: "/0/path", kind: "source", representation: "json-escaped-source-path" }] };
+  const run = (value: any, input = bytes) => frozenCoordinateEvidenceCoordinates(value.path, input, { history: value });
+  expect(validateFrozenCoordinateEvidenceContracts({ history: contract })).toEqual([]);
+  expect(() => run(contract, Buffer.concat([bytes, Buffer.from("\n")]))).toThrow(/digest/u);
+  for (const alter of [
+    (value: any) => { value.rootKind = "object"; },
+    (value: any) => { value.rootKind = null; },
+    (value: any) => { value.schemaVersion = 1; },
+    (value: any) => { value.extra = true; },
+    (value: any) => { value.coordinates[0].kind = "destination"; },
+    (value: any) => { value.coordinates[0].representation = "json"; },
+    (value: any) => { value.coordinates[0].recordedRepositoryRoot = "/recorded"; },
+    (value: any) => { value.coordinates[0].pointer = "/00/path"; },
+    (value: any) => { value.coordinates.push({ ...value.coordinates[0], pointer: "/*/path" }); },
+    (value: any) => { delete value.coordinates[0].representation; },
+  ]) {
+    const changed = structuredClone(contract);
+    alter(changed);
+    expect(() => run(changed)).toThrow(/frozen-coordinate-evidence-invalid/u);
+  }
+  const invalid = Buffer.concat([bytes, Buffer.from([0xff])]);
+  expect(() => run({ ...contract, sha256: createHash("sha256").update(invalid).digest("hex") }, invalid)).toThrow(/UTF-8/u);
+  const object = '{"path":"tests/source.rs"}', plain = { path, sha256: sha(object), schemaVersion: null, coordinates: [{ pointer: "/path", kind: "source" as const }] };
+  const node = findNodeAtLocation(parseTree(object)!, ["path"])!;
+  expect(frozenCoordinateEvidenceCoordinates(path, Buffer.from(object), { history: plain })).toEqual([{ pointer: "/path", start: node.offset + 1, end: node.offset + node.length - 1, value: node.value, kind: "source" }]);
+  expect(() => run({ ...contract, sha256: sha(object) }, Buffer.from(object))).toThrow(/root/u);
+});
+
+test("the original frozen seal ledger remains independently parsed historical test data",()=>{const text=readFileSync(join(libraryRoot,"🧪️tests/🧫️fixtures/🧫️frozen-seal-ledger/🔣️.json"),"utf8");expect(getNodeValue(parseTree(text)!)).toEqual(ledger);expect(ledger.pinnedFor).toBe(historical.id);expect(ledger.contracts[historical.id]).toBeUndefined();for(const entry of Object.values(ledger.contracts))for(const row of entry.reseals??[]){expect(row.reason.length).toBeGreaterThan(0);expect(row.coordinatesSha256).toMatch(/^[0-9a-f]{64}$/u);}});
+
+test("one exact encoded historical source is registered without changing the previous JSON contracts", () => {
+  const contracts = loadCatalogTaxonomy().frozenCoordinateEvidenceContracts;
+  expect(frozenCoordinateEvidenceSeal(contracts)[historical.id]).toEqual(historical.contract);
+  expect(validateFrozenCoordinateEvidenceContracts(contracts)).toEqual([]);
+  const seal = frozenCoordinateEvidenceSeal(contracts);
+  for (const id of Object.keys(seal).filter((id) => id !== historical.id)) expect([id, id in ledger.contracts || id in ledger.later]).toEqual([id, true]);
+  for (const [id, entry] of Object.entries(ledger.contracts)) {
+    if (!(id in seal)) { expect(archivedFixtureEnrollments[id]).toBeDefined(); expect(taxonomyFixturePayloadPath(archivedFixtureEnrollments[id].path, loadCatalogTaxonomy())).toBe(true); continue; }
+    expect([id, id in seal]).toEqual([id, true]);
+    const recorded = entry.reseals?.at(-1)?.seal ?? entry.seal;
+    expect([id, sha(canonicalJson(seal[id]!))]).toEqual([id, recorded]);
+    let previous = entry.coordinatesSha256;
+    for (const reseal of entry.reseals ?? []) {
+      if (reseal.coordinates === "unchanged") expect([id, reseal.recordedBy, previous]).toEqual([id, reseal.recordedBy, reseal.coordinatesSha256]);
+      previous = reseal.coordinatesSha256;
+    }
+    if (entry.reseals && contracts[id]!.retired === undefined) expect([id, previous]).toEqual([id, sealedCoordinatesSha256(id, contracts[id]!)]);
+  }
+});
+
+test("actual production catalog bindings use current declared bytes; recorded unchanged catalog histories replay independently", () => {
+  const taxonomy = loadCatalogTaxonomy();
+  const pinned = [
+    ...Object.entries(taxonomy.semanticPackageProjectionContracts).map(([id, contract]) => [id, "semanticPackageProjectionContracts", contract.authorityCatalogPath, contract.authorityCatalogSha256] as const),
+    ...Object.entries(taxonomy.semanticOwnedFileProjectionContracts).flatMap(([id, contract]) => ("authorityCatalogPath" in contract ? [[id, "semanticOwnedFileProjectionContracts", contract.authorityCatalogPath, contract.authorityCatalogSha256] as const] : [])),
+  ];
+  expect(pinned.map(([id]) => id).sort()).toEqual(Object.keys(ledger.catalogs).sort());
+  const escape = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&");
+  for (const [id, family, path, digest] of pinned) {
+    const entry = ledger.catalogs[id]!;
+    expect(entry.family).toBe(family);
+    const current = readFileSync(join(root, path), "utf8");
+    expect(sha(current)).toBe(digest);
+    expect(getNodeValue(parseTree(current)!)).toEqual(JSON.parse(current));
+    if (id === "readme-license-owner-leaves-v1") { const policy = semanticExactOwnedFileCatalog(root, taxonomy)!; expect(policy).toEqual(JSON.parse(current)); expect(Object.hasOwn(policy, "cases")).toBe(false); continue; }
+    expect(entry.reseals?.at(-1)?.seal ?? entry.seal).toBe(digest);
+    let text = readFileSync(join(root, path), "utf8");
+    expect(sha(text)).toBe(digest);
+    for (const [index, reseal] of [...(entry.reseals ?? [])].entries().toArray().reverse()) {
+      expect([id, reseal.recordedBy, (reseal.renames?.length ?? 0) + (reseal.moves?.length ?? 0) + (reseal.deletions?.length ?? 0) + (reseal.consumerDeletions?.length ?? 0) > 0]).toEqual([id, reseal.recordedBy, true]);
+      if (reseal.deletions?.length || reseal.consumerDeletions?.length) {
+        const value = JSON.parse(text) as { packages: { id: string; mappings: unknown[] }[]; referenceConsumers: unknown[] };
+        expect([id, reseal.recordedBy, JSON.stringify(value, null, 2) + "\n" === text]).toEqual([id, reseal.recordedBy, true]);
+        for (const deletion of [...(reseal.deletions ?? [])].sort((left, right) => left.index - right.index)) {
+          expect([id, deletion.path, text.includes(JSON.stringify(deletion.path)), deletion.row.destinationPath]).toEqual([id, deletion.path, false, deletion.path]);
+          value.packages.find((row) => row.id === deletion.packageId)!.mappings.splice(deletion.index, 0, deletion.row);
+        }
+        for (const deletion of [...(reseal.consumerDeletions ?? [])].sort((left, right) => left.index - right.index)) {
+          expect([id, deletion.path, text.includes(JSON.stringify(deletion.path)), deletion.row.path, value.packages.some((row) => row.id === deletion.row.packageId)]).toEqual([id, deletion.path, false, deletion.path, true]);
+          value.referenceConsumers.splice(deletion.index, 0, deletion.row);
+        }
+        text = JSON.stringify(value, null, 2) + "\n";
+      }
+      for (const { from, to } of reseal.moves ?? []) {
+        expect([id, from, text.includes(JSON.stringify(from)), text.includes(JSON.stringify(to))]).toEqual([id, from, false, true]);
+        text = text.replaceAll(JSON.stringify(to), JSON.stringify(from));
+      }
+      for (const { from, to } of reseal.renames ?? []) {
+        expect([id, reseal.recordedBy, text.includes(from + "/")]).toEqual([id, reseal.recordedBy, false]);
+        text = text.replace(new RegExp(`${escape(to)}(?=/)`, "gu"), from);
+      }
+      expect([id, reseal.recordedBy, sha(text)]).toEqual([id, reseal.recordedBy, index === 0 ? entry.seal : entry.reseals![index - 1]!.seal]);
+    }
+  }
+});
+
+test("retirement is recorded evidence: every retired contract names its ticket and is genuinely gone", () => {
+  const contracts = loadCatalogTaxonomy().frozenCoordinateEvidenceContracts;
+  const rows = Object.entries(contracts);
+  expect(rows.length).toBeGreaterThan(0);
+  const retired = rows.filter(([, contract]) => contract.retired !== undefined);
+  expect(retired.length).toBeGreaterThan(0);
+  for (const [id, contract] of rows) {
+    const present = existsSync(join(root, contract.path));
+    expect([id, contract.retired === undefined]).toEqual([id, present]);
+    if (!contract.retired) continue;
+    expect(contract.retired.reason).toBe("ticket-close-generated-output-removed");
+    expect(contract.path.startsWith(`.🧬semio/🦑️repo/🎫️tickets/🎆️${contract.retired.ticket.slice(2, 4)}/🌙️${contract.retired.ticket.slice(5, 7)}/☀️${contract.retired.ticket.slice(8, 10)}/${contract.retired.ticket.slice(11)}/`)).toBe(true);
+  }
+});
+
+test("every live sealed document still matches its registered whole-document digest", () => {
+  const taxonomy = loadCatalogTaxonomy();
+  const sealed = [
+    ...Object.entries(taxonomy.frozenCoordinateEvidenceContracts).filter(([, contract]) => contract.retired === undefined).map(([id, contract]) => [id, contract.path, contract.sha256] as const),
+    ...Object.entries(taxonomy.frozenMarkdownCoordinateEvidenceContracts).map(([id, contract]) => [id, contract.path, contract.sha256] as const),
+    ...Object.entries(taxonomy.semanticPackageProjectionContracts).map(([id, contract]) => [id, contract.authorityCatalogPath, contract.authorityCatalogSha256] as const),
+    ...Object.entries(taxonomy.semanticOwnedFileProjectionContracts).flatMap(([id, contract]) => "authorityCatalogPath" in contract ? [[id, contract.authorityCatalogPath, contract.authorityCatalogSha256] as const] : []),
+  ];
+  expect(sealed.length).toBeGreaterThan(2);
+  for (const [id, path, digest] of sealed) expect([id, path, createHash("sha256").update(readFileSync(join(root, path))).digest("hex")]).toEqual([id, path, digest]);
+});
+
+test("a retirement record can never move the evidence seal", () => {
+  const contracts = loadCatalogTaxonomy().frozenCoordinateEvidenceContracts;
+  const sealed = sha(canonicalJson(frozenCoordinateEvidenceSeal(contracts)));
+  const rebranded = Object.fromEntries(Object.entries(contracts).map(([id, contract]) => [id, { ...contract, retired: { ticket: "2026/01/01/SEAL-PROBE", reason: "ticket-close-generated-output-removed" as const } }]));
+  expect(sha(canonicalJson(frozenCoordinateEvidenceSeal(rebranded)))).toBe(sealed);
+  const [firstId, firstContract] = Object.entries(contracts)[0]!;
+  const edited = { ...contracts, [firstId]: { ...firstContract, sha256: firstContract.sha256.replace(/^./u, (character) => (character === "0" ? "1" : "0")) } };
+  expect(sha(canonicalJson(frozenCoordinateEvidenceSeal(edited)))).not.toBe(sealed);
+});
+
+test("the genuine 164-entry snapshot preserves the exact escaped source span and physical bytes", () => {
+  let physical = root;
+  const parts = historical.contract.path.split("/");
+  expect(/^(?:compose|temp\/compose)(?:\/|$)/u.test(historical.contract.path)).toBe(false);
+  // 🪦️ This contract is RETIRED: the ticket that produced the snapshot deleted it at close, as
+  // AGENTS.md requires. The frozen evidence — digest, size, coordinate spans — is what this suite
+  // preserves, and it lives in the fixture beside this file; the physical bytes cannot be re-read and
+  // asserting them would only re-report the deletion the retirement already records. What is asserted
+  // instead is that the deletion is REAL, so "retired" can never be used to excuse a live document.
+  const retirement = loadCatalogTaxonomy().frozenCoordinateEvidenceContracts[historical.id]?.retired;
+  if (retirement) {
+    expect(existsSync(join(root, historical.contract.path))).toBe(false);
+    expect(retirement.reason).toBe("ticket-close-generated-output-removed");
+    expect(sha(canonicalJson(historical.contract))).toBe(sha(canonicalJson(frozenCoordinateEvidenceSeal(loadCatalogTaxonomy().frozenCoordinateEvidenceContracts)[historical.id]!)));
+    expect(historical.coordinate.end).toBeGreaterThan(historical.coordinate.start);
+    return;
+  }
+  for (const [index, part] of parts.entries()) {
+    expect(part !== "" && part !== "." && part !== "..").toBe(true);
+    physical = join(physical, part);
+    const stat = lstatSync(physical);
+    expect(stat.isSymbolicLink()).toBe(false);
+    expect(index === parts.length - 1 ? stat.isFile() : stat.isDirectory()).toBe(true);
+  }
+  const stat = lstatSync(physical), bytes = readFileSync(physical), source = bytes.toString("utf8"), tree = parseTree(source)!;
+  expect(createHash("sha256").update(bytes).digest("hex")).toBe(historical.contract.sha256);
+  expect(bytes.length).toBe(historical.size);
+  expect(stat.mode & 0o7777).toBe(historical.mode);
+  expect(JSON.parse(source)).toHaveLength(historical.rootEntries);
+  expect(getNodeValue(tree)).toEqual(JSON.parse(source));
+  const node = findNodeAtLocation(tree, [16, "fixtures", 0, "path"])!, raw = source.slice(node.offset + 1, node.offset + node.length - 1);
+  expect(node.type).toBe("string");
+  expect(JSON.parse('"' + raw + '"')).toBe(node.value);
+  expect({ start: node.offset + 1, end: node.offset + node.length - 1, rawSha256: sha(raw), valueSha256: sha(node.value), rawSize: Buffer.byteLength(raw), valueSize: Buffer.byteLength(node.value) }).toEqual(historical.coordinate);
+  expect(frozenCoordinateEvidenceCoordinates(historical.contract.path, bytes, { [historical.id]: historical.contract })).toEqual([{ pointer: historical.contract.coordinates[0].pointer, start: historical.coordinate.start, end: historical.coordinate.end, value: raw, kind: "source" }]);
+  expect(readFileSync(physical)).toEqual(bytes);
+  expect(lstatSync(physical).mode).toBe(stat.mode);
+});
+
+test("both historical source gates are mounted through Nx", () => {
+  const projectSource = readFileSync(join(libraryRoot, "📦️packages/🟦️typescript/📋️project.json"), "utf8"), project = JSON.parse(projectSource);
+  expect(getNodeValue(parseTree(projectSource)!)).toEqual(project);
+  for (const row of vector.execution) expect(project.targets["test-" + row.id]?.options.command).toBe("bun ./📜️script.ts test " + row.id);
+});
+
+test("historical whole ledger wrapper has no public schema authority",()=>{expect(existsSync(join(libraryRoot,"🧬️schema/🔣️frozen-seal-ledger/🔣️.json"))).toBe(false);});

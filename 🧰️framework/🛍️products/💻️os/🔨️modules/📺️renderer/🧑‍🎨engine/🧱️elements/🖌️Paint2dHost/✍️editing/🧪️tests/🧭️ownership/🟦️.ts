@@ -27,5 +27,4 @@ for (const row of fixture.cases) test(row.name, async () => {
     expect(calls[0]!.at(-1)).toBe(sourcePath);
     expect(calls[1]).toEqual(["test",testsPath,join(owner,"🧪️tests/🧭️ownership/🟦️.ts")]);
   } else expect(stdout).toBe("");
-  console.log(`[DEBUG] Paint2dHost task ${row.name}: ${row.admit?"admitted":"refused"}; filesystem oracle=${oracle}`);
 });

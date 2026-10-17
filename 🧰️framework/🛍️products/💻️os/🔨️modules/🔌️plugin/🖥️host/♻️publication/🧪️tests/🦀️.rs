@@ -20,6 +20,6 @@ fn original_host_publication_source_preserves_native_capacity_and_all_physical_r
    if owner.source.capacity()!=0{assert_eq!(owner.source.as_ptr(),pointer);assert_eq!(owner.source.capacity(),actual_capacity);}
    if matches!(step,RetainedCloneStep::Complete(_)){break;}assert!(progress.copied_items>0);assert!(turns<16);
   }
-  assert_eq!(total.released_bytes,actual_capacity);assert!(owner.terminal_is_empty());let(_,heap)=observe(||drop(owner));assert_eq!(heap,(0,0));println!("[DEBUG] actual Host publication original source length={length} capacity={actual_capacity} turns={turns} copied={} physical={} all denied0heap nativepointerstable terminalDrop0; writer/semanticJ unsupported",total.copied_bytes,total.released_bytes);
+  assert_eq!(total.released_bytes,actual_capacity);assert!(owner.terminal_is_empty());let(_,heap)=observe(||drop(owner));assert_eq!(heap,(0,0));
  }
 }

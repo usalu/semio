@@ -55,7 +55,7 @@ impl Serializer<ModelSnapshot> for ModelIntoGlb {
 }
 //#endregion 🔖️Serializer
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 #[path = "🧪️tests/🧰️testkit/🦀️.rs"]
 pub mod testkit;
 

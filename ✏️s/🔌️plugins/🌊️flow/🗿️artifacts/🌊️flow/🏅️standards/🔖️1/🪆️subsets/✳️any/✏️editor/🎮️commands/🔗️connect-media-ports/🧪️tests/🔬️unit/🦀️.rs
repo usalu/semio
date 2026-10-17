@@ -1,4 +1,21 @@
-use super::*;
+use crate::editor::flow::modes::edit::windows::main::config::FlowMainWindowConfig;
+use flow::FlowEvalSession;
+use semio_framework_test_fixtures::fixture_text;
+#[allow(unused_imports)]
+use semio_framework_plugin::NoConfig;
+#[allow(unused_imports)]
+use semio_framework_plugin::NoConfigMutation;
+#[allow(unused_imports)]
+use crate::editor::flow::edit_rules::ContentEdit;
+#[allow(unused_imports)]
+use crate::editor::flow::host::{flow_composed_content, flow_content_leaves_emit, host_from_snapshot};
+#[allow(unused_imports)]
+use crate::{FlowMutation, FlowSnapshot};
+#[allow(unused_imports)]
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+#[allow(unused_imports)]
+use semio_framework_value_derive::{FromValue, ToValue};
+use crate::editor::flow::commands::connect_media_ports::*;
 
 macro_rules! drain_children {
     ($emit:expr, $steps:expr, $body:expr) => {{
@@ -16,7 +33,7 @@ macro_rules! drain_children {
 fn connection_keeps_the_original_typed_owner_until_publication() {
     use semio_framework_plugin::app::ChildEmitPreparationStep;
     crate::editor::flow::unit_tests::context::install_first_party_light_flow_extensions_for_tests();
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/owned-connection/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../🎮️commands/🔗️connect-media-ports/🧪️tests/🧫️fixtures/owned-connection/🔣️.json")).unwrap();
     assert_eq!(fixture["seedSource"], "publishedDemo");
     let composed = crate::examples::demo::snapshot_from_text(crate::examples::demo::PRIMARY_TEXT).expect("published neutral seed has explicit layout");
     let config = FlowMainWindowConfig::default();
@@ -59,7 +76,6 @@ fn connection_keeps_the_original_typed_owner_until_publication() {
         }
     }
     session.retire_cold();
-    println!("[DEBUG] valid Flow connection published its retained original child source; incompatible port refused before any owner existed; serde_json wire-group census matched");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -67,7 +83,7 @@ async fn removal_routes_publish_original_typed_owners() {
     use crate::editor::flow::unit_tests::context::{composed_scene, dispatch, flow_app_with_registry, select_graph, settle};
     use crate::editor::flow::FlowCommand;
     use crate::editor::flow::commands::{delete_selection::DeleteSelection, disconnect::Disconnect, remove_widget::RemoveWidget};
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/owned-connection/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../🎮️commands/🔗️connect-media-ports/🧪️tests/🧫️fixtures/owned-connection/🔣️.json")).unwrap();
     for case in fixture["removals"].as_array().unwrap() {
         let mut app = flow_app_with_registry().await;
         let coordinate = app.snapshot().unwrap().content.child_id.clone();
@@ -96,6 +112,5 @@ async fn removal_routes_publish_original_typed_owners() {
         assert_eq!(oracle["widgets"].as_array().unwrap().len(), case["remainingWidgets"].as_u64().unwrap() as usize);
         assert_eq!(oracle["synapses"].as_array().unwrap().len(), case["remainingEdges"].as_u64().unwrap() as usize);
         assert_eq!(app.snapshot().unwrap().content.child_id, coordinate);
-        println!("[DEBUG] Flow {kind} published the original typed child owner; serde_json scene census matched widgets={} synapses={}", oracle["widgets"].as_array().unwrap().len(), oracle["synapses"].as_array().unwrap().len());
     }
 }

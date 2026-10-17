@@ -6,7 +6,7 @@
 
 use crate::editor::gis2d::maphost;
 use crate::editor::gis2d::modes::edit::windows::map::config::MapWindowConfig;
-use crate::editor::gis2d::gis2d_window_action;
+use crate::editor::gis2d::constants_and_io::gis2d_window_action;
 use crate::editor::gis2d::terminology::Gis2dPlayLabels;
 use crate::GisMapSnapshot;
 use semio_framework_plugin::ActionArgOption;
@@ -21,7 +21,7 @@ use serde_json::Value;
 pub const GIS2D_LOD_MODE_MEASURE_ID: &str = "gis2d-play-window.lod-mode";
 
 /// 🔭️ When LOD mode is automatic, the zoom-resolved band id for the config camera (same source as `MapHost::current_lod_json`).
-fn resolved_automatic_lod_id(document: &GisMapSnapshot, cfg: &MapWindowConfig) -> Option<String> {
+pub fn resolved_automatic_lod_id(document: &GisMapSnapshot, cfg: &MapWindowConfig) -> Option<String> {
     if cfg.lod_mode != MAP_LOD_MODE_AUTOMATIC {
         return None;
     }

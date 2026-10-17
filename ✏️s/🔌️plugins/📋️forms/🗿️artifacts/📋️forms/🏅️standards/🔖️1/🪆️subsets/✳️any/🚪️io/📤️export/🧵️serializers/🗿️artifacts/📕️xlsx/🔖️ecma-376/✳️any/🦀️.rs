@@ -32,6 +32,4 @@ impl Serializer<FormsSnapshot> for FormsIntoXlsx {
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

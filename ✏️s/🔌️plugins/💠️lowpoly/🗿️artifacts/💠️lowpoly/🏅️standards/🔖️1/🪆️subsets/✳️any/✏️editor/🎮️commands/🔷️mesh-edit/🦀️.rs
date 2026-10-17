@@ -6,6 +6,7 @@
 //! 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM's round-trip law fix) to build/re-sync the compute
 //! session, even though no handler here reads `ctx` directly itself.
 
+use semio_framework_3d::mesh::MeshModelingOps;
 use semio_s_artifact_lowpoly_lowpoly_config::{LowpolyConfig, LowpolyConfigMutation};
 use semio_s_artifact_lowpoly_lowpoly_view::{editor::lowpoly::session::map_kernel_err, editor::lowpoly::session::mesh_edit, editor::lowpoly::session::LowpolyScratch};
 use semio_s_artifact_lowpoly_lowpoly_view::{mirror_axis_from_param, utility_param_f32, utility_param_u32, utility_params_value};

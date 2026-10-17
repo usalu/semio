@@ -14,6 +14,4 @@ impl protocol::DiffText for EquationDiff {
     }
 }
 
-#[cfg(test)]
-#[path="🧪️tests/🦀️.rs"]
-mod tests;
+

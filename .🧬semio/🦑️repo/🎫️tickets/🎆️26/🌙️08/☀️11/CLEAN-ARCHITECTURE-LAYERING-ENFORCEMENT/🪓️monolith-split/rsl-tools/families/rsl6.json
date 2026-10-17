@@ -1,0 +1,47 @@
+{
+ "name": "rsl6",
+ "crates": [
+  "semio-s-artifact-stdio-semio-document",
+  "semio-s-artifact-stdio-semio-object",
+  "semio-s-artifact-stdio-semio-presentation",
+  "semio-s-artifact-stdio-semio-audio",
+  "semio-s-artifact-stdio-semio-value",
+  "semio-s-artifact-stdio-semio-text",
+  "semio-s-artifact-stdio-semio-graph",
+  "semio-s-artifact-stdio-semio-drawing",
+  "semio-s-artifact-stdio-semio-image",
+  "semio-s-artifact-stdio-semio-kit",
+  "semio-s-artifact-stdio-semio",
+  "semio-s-artifact-stdio-bmp-editor-2",
+  "semio-s-artifact-note-note",
+  "semio-s-plugin-puzzle-retained",
+  "semio-s-artifact-puzzle-2d",
+  "semio-s-artifact-puzzle-5d",
+  "semio-s-artifact-puzzle-3d-editor",
+  "semio-s-artifact-block-2d-editor"
+ ],
+ "base": {
+  "rev": "b84bf526c7ba",
+  "crates": [
+   "semio-s-artifact-stdio-semio-document",
+   "semio-s-artifact-stdio-semio-object",
+   "semio-s-artifact-stdio-semio-presentation",
+   "semio-s-artifact-stdio-semio-audio",
+   "semio-s-artifact-stdio-semio-value",
+   "semio-s-artifact-stdio-semio-text",
+   "semio-s-artifact-stdio-semio-graph",
+   "semio-s-artifact-stdio-semio-drawing",
+   "semio-s-artifact-stdio-semio-image",
+   "semio-s-artifact-stdio-semio-kit",
+   "semio-s-artifact-stdio-semio",
+   "semio-s-artifact-stdio-bmp-editor-2",
+   "semio-s-artifact-note-note",
+   "semio-s-plugin-puzzle-retained",
+   "semio-s-artifact-puzzle-2d",
+   "semio-s-artifact-puzzle-5d",
+   "semio-s-artifact-puzzle-3d-editor",
+   "semio-s-artifact-block-2d-editor"
+  ]
+ },
+ "note": "RUST-LEFTOVERS F-04(a): consumers re-pointed from facade alias paths"
+}

@@ -1,0 +1,61 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/📜️script.ts",
+ "importers": [],
+ "childRoot": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/🎛️commands",
+ "children": [
+  {
+   "dir": "🎞️media-persistence-and-retirement",
+   "doc": "/** 🎞️ The media projection, persistence contract and document retirement checks of the OS host router.\n *\n * @see ../../📜️script.ts — the package script that registers the commands of this module\n */",
+   "lines": [
+    [
+     19,
+     183
+    ]
+   ]
+  },
+  {
+   "dir": "🚪️member-open",
+   "doc": "/** 🚪️ The member open protocol check and the public member open handoff source and check of the OS host router.\n *\n * @see ../../📜️script.ts — the package script that registers the commands of this module\n */",
+   "lines": [
+    [
+     185,
+     251
+    ],
+    [
+     1032,
+     1119
+    ]
+   ]
+  },
+  {
+   "dir": "🪪️member-history-identity",
+   "doc": "/** 🪪️ The member history identity source, input and id checks of the OS host router.\n *\n * @see ../../📜️script.ts — the package script that registers the commands of this module\n */",
+   "lines": [
+    [
+     253,
+     504
+    ]
+   ]
+  },
+  {
+   "dir": "📚️member-history-dictionary",
+   "doc": "/** 📚️ The member history dictionary, record and foundation checks of the OS host router.\n *\n * @see ../../📜️script.ts — the package script that registers the commands of this module\n */",
+   "lines": [
+    [
+     506,
+     884
+    ]
+   ]
+  },
+  {
+   "dir": "🏭️member-factory-identity",
+   "doc": "/** 🏭️ The member factory identity check of the OS host router.\n *\n * @see ../../📜️script.ts — the package script that registers the commands of this module\n */",
+   "lines": [
+    [
+     886,
+     1030
+    ]
+   ]
+  }
+ ]
+}

@@ -1,4 +1,16 @@
-use super::*;
+use crate::editor::shooting::config::ShootingConfig;
+use crate::editor::shooting::ui_helpers_and_io::ShootingDispatchCtx;
+use crate::ShootingSnapshot;
+use semio_framework_plugin::{ArtifactView, ConfigView, Effect};
+#[allow(unused_imports)]
+use crate::editor::shooting::config::ShootingConfigMutation;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::mutations::ShootingMutation;
+#[allow(unused_imports)]
+use semio_framework_plugin::{Emit, Fault};
+#[allow(unused_imports)]
+use semio_framework_value_derive::{FromValue, ToValue};
+use crate::editor::shooting::commands::document::*;
 use crate::editor::shooting::unit_tests::context::{dispatch, shooting_app};
 use crate::editor::shooting::ShootingCommand;
 

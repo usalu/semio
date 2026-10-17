@@ -1,6 +1,5 @@
 //! 🔗 `set-primitive-material` — sets (or, given `None`, clears) a primitive's `material_id` reference — real address, one field.
 
-use crate::schema::mutations::SemioMeshMutation;
 use crate::schema::snapshot::SemioMeshSnapshot;
 
 //#region 🔖️Payload
@@ -13,13 +12,16 @@ pub struct SetPrimitiveMaterial {
     pub material_id: Option<String>,
 }
 
-impl protocol::MutationKind<SemioMeshSnapshot, SemioMeshMutation> for SetPrimitiveMaterial {
+impl<Op> protocol::MutationKind<SemioMeshSnapshot, Op> for SetPrimitiveMaterial
+where
+    Op: protocol::Mutation<SemioMeshSnapshot, Diff = crate::schema::diff::SemioMeshDiff> + From<SetPrimitiveMaterial>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "primitive", kind: "set-primitive-material", record: "SetPrimitiveMaterial" };
 
-    fn diff(&self, base: &SemioMeshSnapshot) -> protocol::MutationOutcome<<SemioMeshMutation as protocol::Mutation<SemioMeshSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioMeshSnapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<SemioMeshSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &SemioMeshSnapshot) -> Result<Vec<SemioMeshMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &SemioMeshSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

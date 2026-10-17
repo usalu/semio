@@ -8,21 +8,19 @@ use semio_framework_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
 use semio_framework_os_mcp_inference_hub::hub_wire::{HubInferenceEventPageV1, HubInferenceServiceV1, INFERENCE_JOB_EVENT_PAGE_MAX_ITEMS, InferenceExecutionSiteV1};
 use semio_framework_os_mcp_schema::schema::{compile_validator, validate};
 use semio_framework_os_mcp_wire::job_registry::JobRegistry;
+use semio_framework_test_fixtures::fixture_text;
 
 /// 🧪️ Reads a committed fixture from the package directory at run time instead of embedding it in the test binary.
-fn fixture_text(relative: &str) -> &'static str {
-    Box::leak(std::fs::read_to_string(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative)).expect(relative).into_boxed_str())
-}
 
 
 fn law() -> serde_json::Value {
-    serde_json::from_str(fixture_text("../../../💡️inference/🧪️tests/🧫️fixtures/💼️inference-service-law.json")).expect("inference service law fixture")
+    serde_json::from_str(fixture_text!("../../../💡️inference/🧪️tests/🧫️fixtures/💼️inference-service-law.json")).expect("inference service law fixture")
 }
 
 /// 🧬️ `name` rooted over exactly the component `$defs` it reaches, so a sibling definition's
 /// cross-document reference never has to resolve here.
 fn schema_def(name: &str) -> serde_json::Value {
-    let component: serde_json::Value = serde_json::from_str(fixture_text("../../../💡️inference/🧬️schema/🔣️.json")).expect("inference component schema");
+    let component: serde_json::Value = serde_json::from_str(fixture_text!("../../../💡️inference/🧬️schema/🔣️.json")).expect("inference component schema");
     let mut reached = std::collections::BTreeMap::new();
     let mut pending = vec![name.to_string()];
     while let Some(next) = pending.pop() {

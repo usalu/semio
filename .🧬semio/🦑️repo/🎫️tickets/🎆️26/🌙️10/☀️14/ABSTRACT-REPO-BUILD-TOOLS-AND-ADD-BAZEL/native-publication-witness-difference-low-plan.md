@@ -1,0 +1,19 @@
+# Publication Witness Difference Diagnostic
+
+Root reports private Mac16382 terminal1 after witnessed/detached/published/attached, with complete payload-or-journal witness mismatch. No verified/settled acceptance follows. The aggregate witnesses alone cannot identify a changed entry; the failed log is not evidence that any particular OS metadata entry changed. Preserve pending namespace and exact fixture.
+
+The smallest useful Source extension is a bounded diagnostic attached to the actual private publisher witness comparison, while retaining the genuine producer EX, accepted cleanup, exact backing/root observer and all ordinary pending guards. Do not open the pending image through ordinary SH or add a public arbitrary writer/observer bypass. A fresh diagnostic producer must authenticate actual current mapping and backing/receipt CAS before reading; a successful current census cannot retrospectively prove preservation across the failed earlier publication.
+
+Use the existing canonical paged traversal and record only bounded per-entry DATA: relative path, entry kind, metadata digest, content digest/size or symlink-target digest, with journals explicitly included. Preserve existing work/depth/path/name/chunk bounds. A fixed-size first-difference window or bounded chunked trace may compare the two actual in-operation streams; truncation must be reported and must not change the full witness result. Do not hold a whole-volume unbounded entry array or copy payload bytes into the ticket. Canonical trace framing must remain identical to the authoritative witness stream.
+
+For the already failed operation, no before-entry trace was retained, so an exact historical path-level diff may be unavailable. A new two-census diagnostic of the currently mounted image can establish present stability/instability only. To identify remount differences, a separately authorized fresh publisher attempt must retain bounded before/after trace DATA inside its actual EX lifetime. It may honestly fail again and retain pending; no metadata exclusion, purge/no_log action or receipt acceptance is implied.
+
+Cancellation/descriptor-close faults must keep the existing guard quarantine; trace-write failures are secondary to the exact publication mismatch and must not cause premature EX release. Diagnostic outputs should be published outside the image only after bounded collection and owned settlement; their absence is not cleanup evidence.
+
+## Prepared Independent Node Trace Review
+
+The emitted helper trace has bounded entries/depth/path/work/file bytes, 64KiB chunks and output cap; regular single-link files use nofollow FD and pre/post/named stamps, entries stay on the image device, and directory/root facts are rechecked. The awaited stage callback remains inside actual producer EX and writes trace DATA outside the image. No new blocker was found for diagnostic-only private execution. Trace is a separate census after the authoritative before-witness and before the authoritative after-witness; it cannot prove an exact authoritative frame delta. Directory opendir uses path lstat/recheck rather than a native nofollow directory-handle proof; trace remains diagnostic DATA, never publication authority.
+
+## Prepared Negative Worker Review
+
+The new negative worker receives the exact projected Original, issues only its OS-entry phase, triggers actual cancellation/frozen error at detached progress and exits honestly nonzero. Parent validates same wire/status/receipt, retains a healthy independent owner, then uses a fresh current publisher before ordinary reopening, Node SHA/raw journal checks and canonical child-before-parent retirement. One concrete cleanup gap was found: lstat(parent.image) occurred after parent acquisition but before protected try, so an inspection failure could skip parent.close. Sent Root exact boundary; fix and fresh strict are required before release. No negative physical attempt was executed by this audit.

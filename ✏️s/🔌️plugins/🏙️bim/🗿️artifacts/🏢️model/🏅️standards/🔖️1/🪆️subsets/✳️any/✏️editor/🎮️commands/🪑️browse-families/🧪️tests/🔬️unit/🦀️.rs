@@ -1,8 +1,8 @@
 use super::*;
-use crate::editor::bim::entities::components::tests::placed;
+use crate::editor::bim::fixture::placed;
 use crate::editor::bim::modes::edit::windows::plan;
-use crate::editor::bim::unit_tests::context::view;
-use crate::editor::bim::unit_tests::support::{ctx, run};
+use crate::editor::bim::fixture::context::view;
+use crate::editor::bim::fixture::support::{ctx, run};
 use semio_framework_ui_locale::Locale;
 
 fn selected(emit: &Emit<ModelMutation, NoConfigMutation>) -> String {

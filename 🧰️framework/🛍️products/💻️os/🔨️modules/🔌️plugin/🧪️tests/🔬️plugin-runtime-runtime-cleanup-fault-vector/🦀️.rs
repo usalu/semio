@@ -1,7 +1,8 @@
 mod runtime_cleanup_fault_vector_tests {
     use super::*;
 
-    const FIXTURE: &str = include_str!("../../🩺️runtime-fault-vectors.json");
+    #[doc(hidden)]
+pub const FIXTURE: &str = include_str!("../../🩺️runtime-fault-vectors.json");
 
     #[test]
     fn every_declared_variant_decodes_to_its_language_neutral_wire_vector() {

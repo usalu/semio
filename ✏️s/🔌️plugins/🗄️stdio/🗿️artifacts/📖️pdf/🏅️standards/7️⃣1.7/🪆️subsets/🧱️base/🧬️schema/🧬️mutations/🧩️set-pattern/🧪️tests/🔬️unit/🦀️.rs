@@ -1,6 +1,16 @@
+use protocol::MutationKind;
+use crate::standards::v1_7::subsets::base::schema::mutations::PdfMutation;
+use semio_framework_test_fixtures::fixture_bytes;
+#[allow(unused_imports)]
+use crate::standards::v1_7::subsets::base::schema::diff::{self, PdfDiff};
+#[allow(unused_imports)]
+use crate::standards::v1_7::subsets::base::schema::snapshot::*;
+#[allow(unused_imports)]
+use protocol::{MutationOutcome, SemanticDescriptor};
 use crate::standards::v1_7::subsets::base::io::mutation_bridge::apply_pdf_mutation;
-use super::*;
+use crate::standards::v1_7::subsets::base::schema::mutations::set_pattern::*;
 use crate::standards::v1_7::subsets::base::schema::conformance_support as support;
+use crate::standards::v1_7::subsets::base::schema::testkit;
 use crate::standards::v1_7::subsets::base::schema::snapshot::*;
 use protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law;
 use semio_framework_diagnostic::Severity;
@@ -60,7 +70,7 @@ fn an_empty_shading_id_names_nothing_and_applies() {
 
 #[semio_framework_async_macros::async_test]
 async fn inverse_diffs_sum_to_the_negative_diff() {
-    let (before, after) = support::snapshots(include_bytes!("../../../../../🧪️tests/🧫️fixtures/🧩️set-pattern/⬅️before.pdf"), include_bytes!("../../../../../🧪️tests/🧫️fixtures/🧩️set-pattern/➡️after.pdf"));
-    let before = crate::standards::v1_7::subsets::base::io::mutation_bridge::applied(&before, &PdfMutation::SetShading(crate::standards::v1_7::subsets::base::schema::mutations::SetShading { shading: support::added(&before.shadings, &after.shadings), index: None }));
-    assert_mutation_inverse_sum_law(&PdfMutation::SetPattern(SetPattern { pattern: support::added(&before.patterns, &after.patterns), index: None }), &before).await;
+    let (before, after) = testkit::snapshots(fixture_bytes!("../../../../../../../🧪️tests/🧫️fixtures/🧩️set-pattern/⬅️before.pdf"), fixture_bytes!("../../../../../../../🧪️tests/🧫️fixtures/🧩️set-pattern/➡️after.pdf"));
+    let before = crate::standards::v1_7::subsets::base::schema::testkit::applied(&before, &PdfMutation::SetShading(crate::standards::v1_7::subsets::base::schema::mutations::SetShading { shading: testkit::added(&before.shadings, &after.shadings), index: None }));
+    assert_mutation_inverse_sum_law(&PdfMutation::SetPattern(SetPattern { pattern: testkit::added(&before.patterns, &after.patterns), index: None }), &before).await;
 }

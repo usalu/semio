@@ -16,11 +16,9 @@ test("portable nested owner selectors are admitted by the independent resolver s
   const rules=policy.forbidden.filter(rule=>rule.name.startsWith(taxonomy.dependencyDirections.publicApi.rulePrefix));
   expect(rules).toHaveLength(fixture.owners.length);
   for(const rule of rules)for(const selector of [rule.from,rule.to])for(const value of [selector.path,selector.pathNot])for(const pattern of typeof value==="string"?[value]:value??[])expect(safeRegex(pattern),rule.name+": "+pattern).toBe(true);
-  console.log("[DEBUG] Nested source-owner selectors admitted by dependency-cruiser's independent safe-regex oracle",{owners:rules.length});
 });
 
 test("portable nested owner selectors preserve private ownership and exact public targets",()=>{
   const rule=policy.forbidden.find(rule=>rule.name===taxonomy.dependencyDirections.publicApi.rulePrefix+fixture.owners[0]!.name)!;
   for(const row of fixture.cases)expect(matches(rule.from.path,row.from)&&!matches(rule.from.pathNot,row.from)&&matches(rule.to.path,row.to)&&!matches(rule.to.pathNot,row.to),row.id).toBe(row.forbidden);
-  console.log("[DEBUG] Portable nearest-owner and declared-export boundaries",{cases:fixture.cases.length});
 });

@@ -258,5 +258,1733 @@
     "result": {
       "refusal": "Original Bun installation callback released"
     }
-  }
+  },
+  "producerRecipes": [
+    {
+      "mode": "sync",
+      "cache": "/funded/bun-cache",
+      "accepted": true,
+      "arguments": [
+        "install",
+        "--frozen-lockfile",
+        "--ignore-scripts",
+        "--linker=isolated",
+        "--backend=hardlink",
+        "--cache-dir",
+        "/funded/bun-cache"
+      ]
+    },
+    {
+      "mode": "lock",
+      "cache": "/funded/bun-cache",
+      "accepted": true,
+      "arguments": [
+        "install",
+        "--lockfile-only",
+        "--ignore-scripts",
+        "--linker=isolated",
+        "--backend=hardlink",
+        "--cache-dir",
+        "/funded/bun-cache"
+      ]
+    },
+    {
+      "mode": "other",
+      "cache": "/funded/bun-cache",
+      "accepted": false,
+      "arguments": null
+    },
+    {
+      "mode": "sync",
+      "cache": "relative",
+      "accepted": false,
+      "arguments": null
+    },
+    {
+      "mode": "sync",
+      "cache": "/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "accepted": false,
+      "arguments": null
+    },
+    {
+      "mode": "sync",
+      "cache": "/funded/../foreign",
+      "accepted": false,
+      "arguments": null
+    },
+    {
+      "mode": "sync",
+      "cache": "/funded/cache\u0000",
+      "accepted": false,
+      "arguments": null
+    }
+  ],
+  "producerInstalledReads": [
+    {
+      "mode": "valid",
+      "accepted": true
+    },
+    {
+      "mode": "copied-control",
+      "accepted": false
+    },
+    {
+      "mode": "copied-invocation",
+      "accepted": false
+    },
+    {
+      "mode": "cancelled",
+      "accepted": false
+    },
+    {
+      "mode": "outside-root",
+      "accepted": false
+    },
+    {
+      "mode": "generation",
+      "accepted": false
+    },
+    {
+      "mode": "closed",
+      "accepted": false
+    }
+  ],
+  "producerBindingLeaves": [
+    {
+      "mode": "missing",
+      "accepted": true
+    },
+    {
+      "mode": "link",
+      "accepted": true
+    },
+    {
+      "mode": "outside-target",
+      "accepted": true
+    },
+    {
+      "mode": "directory",
+      "accepted": false
+    },
+    {
+      "mode": "file",
+      "accepted": false
+    },
+    {
+      "mode": "changed-link",
+      "accepted": false
+    },
+    {
+      "mode": "copied-control",
+      "accepted": false
+    },
+    {
+      "mode": "cancelled",
+      "accepted": false
+    },
+    {
+      "mode": "duplicate-owner",
+      "accepted": false
+    },
+    {
+      "mode": "extra",
+      "accepted": false
+    }
+  ],
+  "producerPlanInput": {
+    "version": 1,
+    "purpose": "plan-current-dependency-producer",
+    "parent": {
+      "version": 1,
+      "purpose": "mounted-parent-maintenance",
+      "wait": false,
+      "receiptSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "directory": {
+        "dev": 1,
+        "ino": 2,
+        "mode": 16832
+      },
+      "backing": {
+        "dev": 1,
+        "ino": 3,
+        "size": 34603008,
+        "allocatedBytes": 34603008
+      },
+      "root": {
+        "dev": 2,
+        "ino": 4,
+        "mode": 16832
+      }
+    }
+  },
+  "producerPlanInputs": [
+    {
+      "mode": "valid",
+      "accepted": true
+    },
+    {
+      "mode": "copy",
+      "accepted": true
+    },
+    {
+      "mode": "extra",
+      "accepted": false
+    },
+    {
+      "mode": "purpose",
+      "accepted": false
+    },
+    {
+      "mode": "parent-purpose",
+      "accepted": false
+    },
+    {
+      "mode": "parent-extra",
+      "accepted": false
+    },
+    {
+      "mode": "getter",
+      "accepted": false
+    },
+    {
+      "mode": "proxy",
+      "accepted": false
+    },
+    {
+      "mode": "array",
+      "accepted": false
+    },
+    {
+      "mode": "arity",
+      "accepted": false
+    }
+  ],
+  "producerOwners": [
+    {
+      "mode": "valid",
+      "accepted": true
+    },
+    {
+      "mode": "active-link",
+      "accepted": true
+    },
+    {
+      "mode": "unqualified-link",
+      "accepted": true
+    },
+    {
+      "mode": "physical-directory",
+      "accepted": false
+    },
+    {
+      "mode": "absent-row",
+      "accepted": false
+    },
+    {
+      "mode": "foreign-row",
+      "accepted": false
+    },
+    {
+      "mode": "row-drift",
+      "accepted": false
+    },
+    {
+      "mode": "copied-original",
+      "accepted": false
+    },
+    {
+      "mode": "copied-control",
+      "accepted": false
+    },
+    {
+      "mode": "busy",
+      "accepted": false
+    },
+    {
+      "mode": "undefined",
+      "accepted": false
+    },
+    {
+      "mode": "frozen",
+      "accepted": false
+    },
+    {
+      "mode": "source-drift",
+      "accepted": false
+    },
+    {
+      "mode": "close-failure",
+      "accepted": false
+    }
+  ],
+  "producerEnvironments": [
+    {
+      "mode": "valid",
+      "accepted": true
+    },
+    {
+      "mode": "windows",
+      "accepted": true
+    },
+    {
+      "mode": "mixed-case",
+      "accepted": true
+    },
+    {
+      "mode": "undefined-value",
+      "accepted": true
+    },
+    {
+      "mode": "relative-root",
+      "accepted": false
+    },
+    {
+      "mode": "noncanonical-root",
+      "accepted": false
+    },
+    {
+      "mode": "long-root",
+      "accepted": false
+    },
+    {
+      "mode": "nul-root",
+      "accepted": false
+    },
+    {
+      "mode": "getter",
+      "accepted": false
+    },
+    {
+      "mode": "proxy",
+      "accepted": false
+    },
+    {
+      "mode": "array",
+      "accepted": false
+    },
+    {
+      "mode": "foreign-value",
+      "accepted": false
+    },
+    {
+      "mode": "nul-value",
+      "accepted": false
+    },
+    {
+      "mode": "many-entries",
+      "accepted": false
+    },
+    {
+      "mode": "large-value",
+      "accepted": false
+    },
+    {
+      "mode": "large-total",
+      "accepted": false
+    },
+    {
+      "mode": "arity",
+      "accepted": false
+    }
+  ],
+  "producerDirectoryRoles": [
+    {
+      "name": "bun-cache",
+      "kind": "directory",
+      "accepted": true
+    },
+    {
+      "name": "bun-cache",
+      "kind": "file",
+      "accepted": false
+    },
+    {
+      "name": "bun-cache",
+      "kind": "link",
+      "accepted": false
+    },
+    {
+      "name": "bun-global",
+      "kind": "directory",
+      "accepted": true
+    },
+    {
+      "name": "bun-global",
+      "kind": "file",
+      "accepted": false
+    },
+    {
+      "name": "bun-global",
+      "kind": "link",
+      "accepted": false
+    },
+    {
+      "name": "bun-bin",
+      "kind": "directory",
+      "accepted": true
+    },
+    {
+      "name": "bun-bin",
+      "kind": "file",
+      "accepted": false
+    },
+    {
+      "name": "bun-bin",
+      "kind": "link",
+      "accepted": false
+    },
+    {
+      "name": "tmp",
+      "kind": "directory",
+      "accepted": true
+    },
+    {
+      "name": "tmp",
+      "kind": "file",
+      "accepted": false
+    },
+    {
+      "name": "tmp",
+      "kind": "link",
+      "accepted": false
+    },
+    {
+      "name": "bun-home",
+      "kind": "directory",
+      "accepted": true
+    },
+    {
+      "name": "bun-home",
+      "kind": "file",
+      "accepted": false
+    },
+    {
+      "name": "bun-home",
+      "kind": "link",
+      "accepted": false
+    },
+    {
+      "name": "bun-config",
+      "kind": "directory",
+      "accepted": true
+    },
+    {
+      "name": "bun-config",
+      "kind": "file",
+      "accepted": false
+    },
+    {
+      "name": "bun-config",
+      "kind": "link",
+      "accepted": false
+    },
+    {
+      "name": "State",
+      "kind": "directory",
+      "accepted": false
+    },
+    {
+      "name": "State",
+      "kind": "file",
+      "accepted": false
+    },
+    {
+      "name": "State",
+      "kind": "link",
+      "accepted": false
+    }
+  ],
+  "producerStageCases": [
+    {
+      "mode": "valid",
+      "accepted": true
+    },
+    {
+      "mode": "windows",
+      "accepted": true
+    },
+    {
+      "mode": "members0",
+      "accepted": true
+    },
+    {
+      "mode": "reordered",
+      "accepted": true
+    },
+    {
+      "mode": "extra",
+      "accepted": false
+    },
+    {
+      "mode": "purpose",
+      "accepted": false
+    },
+    {
+      "mode": "relative-root",
+      "accepted": false
+    },
+    {
+      "mode": "root-bound",
+      "accepted": false
+    },
+    {
+      "mode": "scope-parent",
+      "accepted": false
+    },
+    {
+      "mode": "scope-duplicate",
+      "accepted": false
+    },
+    {
+      "mode": "generation",
+      "accepted": false
+    },
+    {
+      "mode": "prefix-collision",
+      "accepted": false
+    },
+    {
+      "mode": "missing-lock",
+      "accepted": false
+    },
+    {
+      "mode": "missing-package",
+      "accepted": false
+    },
+    {
+      "mode": "missing-member",
+      "accepted": false
+    },
+    {
+      "mode": "foreign-member",
+      "accepted": false
+    },
+    {
+      "mode": "unknown-role",
+      "accepted": false
+    },
+    {
+      "mode": "patch-gap",
+      "accepted": false
+    },
+    {
+      "mode": "member-extra",
+      "accepted": false
+    },
+    {
+      "mode": "traversal",
+      "accepted": false
+    },
+    {
+      "mode": "data-length",
+      "accepted": false
+    },
+    {
+      "mode": "hash",
+      "accepted": false
+    },
+    {
+      "mode": "directory-field",
+      "accepted": false
+    },
+    {
+      "mode": "getter",
+      "accepted": false
+    },
+    {
+      "mode": "proxy",
+      "accepted": false
+    },
+    {
+      "mode": "array",
+      "accepted": false
+    },
+    {
+      "mode": "arity",
+      "accepted": false
+    }
+  ],
+  "producerProbeCases": [
+    {
+      "mode": "valid",
+      "accepted": true,
+      "children": 2
+    },
+    {
+      "mode": "finite",
+      "accepted": true,
+      "children": 2
+    },
+    {
+      "mode": "child-failure",
+      "accepted": false,
+      "children": 1
+    },
+    {
+      "mode": "child-signal",
+      "accepted": false,
+      "children": 1
+    },
+    {
+      "mode": "source-before",
+      "accepted": false,
+      "children": 0
+    },
+    {
+      "mode": "source-after",
+      "accepted": false,
+      "children": 1
+    },
+    {
+      "mode": "funding-before",
+      "accepted": false,
+      "children": 0
+    },
+    {
+      "mode": "funding-after",
+      "accepted": false,
+      "children": 1
+    },
+    {
+      "mode": "selected-fresh",
+      "accepted": false,
+      "children": 0
+    },
+    {
+      "mode": "input-after",
+      "accepted": false,
+      "children": 1
+    },
+    {
+      "mode": "installed-path",
+      "accepted": false,
+      "children": 1
+    },
+    {
+      "mode": "environment-config",
+      "accepted": false,
+      "children": 0
+    },
+    {
+      "mode": "environment-symlink",
+      "accepted": false,
+      "children": 0
+    },
+    {
+      "mode": "role-symlink",
+      "accepted": false,
+      "children": 0
+    },
+    {
+      "mode": "cancelled",
+      "accepted": false,
+      "children": 0
+    },
+    {
+      "mode": "missing-parent",
+      "accepted": false,
+      "children": 0
+    },
+    {
+      "mode": "wrong-stage",
+      "accepted": false,
+      "children": 0
+    },
+    {
+      "mode": "scope-mismatch",
+      "accepted": false,
+      "children": 0
+    },
+    {
+      "mode": "environment-after",
+      "accepted": false,
+      "children": 1
+    }
+  ],
+  "producerProbeEntries": [
+    {
+      "args": [
+        "--producer-probe",
+        "native-assets-protected-1.json"
+      ],
+      "environment": {},
+      "accepted": true
+    },
+    {
+      "args": [
+        "--producer-probe-source"
+      ],
+      "environment": {},
+      "accepted": true
+    },
+    {
+      "args": [
+        "--producer-probe"
+      ],
+      "environment": {},
+      "accepted": false
+    },
+    {
+      "args": [
+        "--producer-probe",
+        "../native-assets-protected-1.json"
+      ],
+      "environment": {},
+      "accepted": false
+    },
+    {
+      "args": [
+        "--producer-probe",
+        "native-assets-protected-01.json"
+      ],
+      "environment": {},
+      "accepted": false
+    },
+    {
+      "args": [
+        "--producer-probe-source",
+        "extra"
+      ],
+      "environment": {},
+      "accepted": false
+    },
+    {
+      "args": [
+        "--producer-probe",
+        "native-assets-protected-1.json",
+        "extra"
+      ],
+      "environment": {},
+      "accepted": false
+    },
+    {
+      "args": [
+        "--producer-plan",
+        "native-assets-protected-1.json"
+      ],
+      "environment": {},
+      "accepted": false
+    },
+    {
+      "args": [
+        "--producer-probe-source"
+      ],
+      "environment": {
+        "SEMIO_SCRIPT_PROCESS_INVOCATION": "finite-original"
+      },
+      "accepted": false
+    }
+  ],
+  "producerLeafRefusals": [
+    {
+      "mode": "missing",
+      "diagnostic": false
+    },
+    {
+      "mode": "link",
+      "diagnostic": false
+    },
+    {
+      "mode": "directory",
+      "diagnostic": true
+    },
+    {
+      "mode": "file",
+      "diagnostic": true
+    }
+  ],
+  "producerLeafReports": [
+    {
+      "mode": "valid",
+      "reported": true
+    },
+    {
+      "mode": "extra",
+      "reported": false
+    },
+    {
+      "mode": "getter",
+      "reported": false
+    },
+    {
+      "mode": "proxy",
+      "reported": false
+    },
+    {
+      "mode": "error-proxy",
+      "reported": false
+    },
+    {
+      "mode": "cause-getter",
+      "reported": false
+    },
+    {
+      "mode": "array-proxy",
+      "reported": false
+    },
+    {
+      "mode": "array-getter",
+      "reported": false
+    },
+    {
+      "mode": "array-hole",
+      "reported": false
+    },
+    {
+      "mode": "symbol",
+      "reported": false
+    },
+    {
+      "mode": "foreign",
+      "reported": false
+    },
+    {
+      "mode": "kind",
+      "reported": false
+    },
+    {
+      "mode": "arity",
+      "reported": false
+    },
+    {
+      "mode": "path-bound",
+      "reported": false
+    },
+    {
+      "mode": "fact-bound",
+      "reported": false
+    },
+    {
+      "mode": "sink-failure",
+      "reported": false
+    },
+    {
+      "mode": "primitive-proxy",
+      "reported": false
+    }
+  ],
+  "producerOwnershipProgress": [
+    {
+      "mode": "normal",
+      "counts": [
+        1
+      ],
+      "accepted": true
+    },
+    {
+      "mode": "normal",
+      "counts": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36,
+        37,
+        38,
+        39,
+        40,
+        41,
+        42,
+        43,
+        44,
+        45,
+        46,
+        47,
+        48,
+        49,
+        50,
+        51,
+        52,
+        53,
+        54,
+        55,
+        56,
+        57,
+        58,
+        59,
+        60,
+        61,
+        62,
+        63
+      ],
+      "accepted": true
+    },
+    {
+      "mode": "normal",
+      "counts": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36,
+        37,
+        38,
+        39,
+        40,
+        41,
+        42,
+        43,
+        44,
+        45,
+        46,
+        47,
+        48,
+        49,
+        50,
+        51,
+        52,
+        53,
+        54,
+        55,
+        56,
+        57,
+        58,
+        59,
+        60,
+        61,
+        62,
+        63,
+        64
+      ],
+      "accepted": true
+    },
+    {
+      "mode": "normal",
+      "counts": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36,
+        37,
+        38,
+        39,
+        40,
+        41,
+        42,
+        43,
+        44,
+        45,
+        46,
+        47,
+        48,
+        49,
+        50,
+        51,
+        52,
+        53,
+        54,
+        55,
+        56,
+        57,
+        58,
+        59,
+        60,
+        61,
+        62,
+        63,
+        64,
+        65
+      ],
+      "accepted": true
+    },
+    {
+      "mode": "normal",
+      "counts": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36,
+        37,
+        38,
+        39,
+        40,
+        41,
+        42,
+        43,
+        44,
+        45,
+        46,
+        47,
+        48,
+        49,
+        50,
+        51,
+        52,
+        53,
+        54,
+        55,
+        56,
+        57,
+        58,
+        59,
+        60,
+        61,
+        62,
+        63,
+        64,
+        65,
+        66,
+        67,
+        68,
+        69,
+        70,
+        71,
+        72,
+        73,
+        74,
+        75,
+        76,
+        77,
+        78,
+        79,
+        80,
+        81,
+        82,
+        83,
+        84,
+        85,
+        86,
+        87,
+        88,
+        89,
+        90,
+        91,
+        92,
+        93,
+        94,
+        95,
+        96,
+        97,
+        98,
+        99,
+        100,
+        101,
+        102,
+        103,
+        104,
+        105,
+        106,
+        107,
+        108,
+        109,
+        110,
+        111,
+        112,
+        113,
+        114,
+        115,
+        116,
+        117,
+        118,
+        119,
+        120,
+        121,
+        122,
+        123,
+        124,
+        125,
+        126,
+        127,
+        128
+      ],
+      "accepted": true
+    },
+    {
+      "mode": "normal",
+      "counts": [
+        1,
+        65,
+        130
+      ],
+      "accepted": true
+    },
+    {
+      "mode": "cancel",
+      "counts": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36,
+        37,
+        38,
+        39,
+        40,
+        41,
+        42,
+        43,
+        44,
+        45,
+        46,
+        47,
+        48,
+        49,
+        50,
+        51,
+        52,
+        53,
+        54,
+        55,
+        56,
+        57,
+        58,
+        59,
+        60,
+        61,
+        62,
+        63,
+        64,
+        65
+      ],
+      "accepted": false
+    },
+    {
+      "mode": "undefined",
+      "counts": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36,
+        37,
+        38,
+        39,
+        40,
+        41,
+        42,
+        43,
+        44,
+        45,
+        46,
+        47,
+        48,
+        49,
+        50,
+        51,
+        52,
+        53,
+        54,
+        55,
+        56,
+        57,
+        58,
+        59,
+        60,
+        61,
+        62,
+        63,
+        64,
+        65
+      ],
+      "accepted": false
+    },
+    {
+      "mode": "frozen",
+      "counts": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36,
+        37,
+        38,
+        39,
+        40,
+        41,
+        42,
+        43,
+        44,
+        45,
+        46,
+        47,
+        48,
+        49,
+        50,
+        51,
+        52,
+        53,
+        54,
+        55,
+        56,
+        57,
+        58,
+        59,
+        60,
+        61,
+        62,
+        63,
+        64,
+        65
+      ],
+      "accepted": false
+    },
+    {
+      "mode": "repeat",
+      "counts": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36,
+        37,
+        38,
+        39,
+        40,
+        41,
+        42,
+        43,
+        44,
+        45,
+        46,
+        47,
+        48,
+        49,
+        50,
+        51,
+        52,
+        53,
+        54,
+        55,
+        56,
+        57,
+        58,
+        59,
+        60,
+        61,
+        62,
+        63,
+        64,
+        65
+      ],
+      "accepted": false
+    },
+    {
+      "mode": "invalid",
+      "counts": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36,
+        37,
+        38,
+        39,
+        40,
+        41,
+        42,
+        43,
+        44,
+        45,
+        46,
+        47,
+        48,
+        49,
+        50,
+        51,
+        52,
+        53,
+        54,
+        55,
+        56,
+        57,
+        58,
+        59,
+        60,
+        61,
+        62,
+        63,
+        64,
+        65
+      ],
+      "accepted": false
+    }
+  ],
+  "producerProbeEndpoints": [
+    {
+      "mode": "missing",
+      "accepted": true,
+      "strictAccepted": true
+    },
+    {
+      "mode": "link",
+      "accepted": true,
+      "strictAccepted": true
+    },
+    {
+      "mode": "broken-link",
+      "accepted": true,
+      "strictAccepted": true
+    },
+    {
+      "mode": "file",
+      "accepted": true,
+      "strictAccepted": false
+    },
+    {
+      "mode": "directory",
+      "accepted": true,
+      "strictAccepted": false
+    },
+    {
+      "mode": "hardlink-file",
+      "accepted": true,
+      "strictAccepted": false
+    },
+    {
+      "mode": "ancestor-link",
+      "accepted": false,
+      "strictAccepted": false
+    },
+    {
+      "mode": "endpoint-drift",
+      "accepted": false,
+      "strictAccepted": false
+    },
+    {
+      "mode": "parent-drift",
+      "accepted": false,
+      "strictAccepted": false
+    },
+    {
+      "mode": "link-drift",
+      "accepted": false,
+      "strictAccepted": false
+    },
+    {
+      "mode": "cancel",
+      "accepted": false,
+      "strictAccepted": false
+    },
+    {
+      "mode": "undefined",
+      "accepted": false,
+      "strictAccepted": false
+    },
+    {
+      "mode": "frozen",
+      "accepted": false,
+      "strictAccepted": false
+    }
+  ],
+  "producerConfigurations": [
+    {
+      "name": "missing",
+      "source": null,
+      "accepted": true
+    },
+    {
+      "name": "canonical",
+      "source": "[install]\nlinker = \"isolated\"\nglobalStore = false\npublicHoistPattern = []\nhoistPattern = []\n",
+      "accepted": true
+    },
+    {
+      "name": "other-fixed-settings",
+      "source": "[install]\nlinker = \"isolated\"\nglobalStore = false\npublicHoistPattern = []\nhoistPattern = []\n\n[run]\nshell = \"system\"\n",
+      "accepted": false
+    },
+    {
+      "name": "hoisted",
+      "source": "[install]\nlinker = \"hoisted\"\nglobalStore = false\npublicHoistPattern = []\nhoistPattern = []\n",
+      "accepted": false
+    },
+    {
+      "name": "global-store",
+      "source": "[install]\nlinker = \"isolated\"\nglobalStore = true\npublicHoistPattern = []\nhoistPattern = []\n",
+      "accepted": false
+    },
+    {
+      "name": "public-hoist",
+      "source": "[install]\nlinker = \"isolated\"\nglobalStore = false\npublicHoistPattern = [\"*\"]\nhoistPattern = []\n",
+      "accepted": false
+    },
+    {
+      "name": "hoist",
+      "source": "[install]\nlinker = \"isolated\"\nglobalStore = false\npublicHoistPattern = []\nhoistPattern = [\"*\"]\n",
+      "accepted": false
+    },
+    {
+      "name": "incomplete",
+      "source": "[install]\nlinker = \"isolated\"\n",
+      "accepted": false
+    },
+    {
+      "name": "malformed",
+      "source": "[install\n",
+      "accepted": false
+    },
+    {
+      "name": "duplicate-table",
+      "source": "[install]\nlinker = \"isolated\"\nglobalStore = false\npublicHoistPattern = []\nhoistPattern = []\n\n[install]\n",
+      "accepted": false
+    },
+    {
+      "name": "duplicate-key",
+      "source": "[install]\nlinker = \"isolated\"\nglobalStore = false\npublicHoistPattern = []\nhoistPattern = []\nlinker = \"isolated\"\n",
+      "accepted": false
+    },
+    {
+      "name": "crlf",
+      "source": "[install]\r\nlinker = \"isolated\"\r\nglobalStore = false\r\npublicHoistPattern = []\r\nhoistPattern = []\r\n",
+      "accepted": true
+    }
+  ],
+  "producerSourceRefusals": [
+    {
+      "mode": "duplicate",
+      "duplicate": true,
+      "observed": 1,
+      "maximum": 2
+    },
+    {
+      "mode": "capacity",
+      "duplicate": false,
+      "observed": 2,
+      "maximum": 2
+    },
+    {
+      "mode": "both",
+      "duplicate": true,
+      "observed": 2,
+      "maximum": 2
+    }
+  ],
+  "producerSourceReports": [
+    {
+      "mode": "valid",
+      "reported": true
+    },
+    {
+      "mode": "extra",
+      "reported": false
+    },
+    {
+      "mode": "getter",
+      "reported": false
+    },
+    {
+      "mode": "proxy",
+      "reported": false
+    },
+    {
+      "mode": "error-proxy",
+      "reported": false
+    },
+    {
+      "mode": "cause-getter",
+      "reported": false
+    },
+    {
+      "mode": "symbol",
+      "reported": false
+    },
+    {
+      "mode": "foreign",
+      "reported": false
+    },
+    {
+      "mode": "path-bound",
+      "reported": false
+    },
+    {
+      "mode": "primitive-proxy",
+      "reported": false
+    },
+    {
+      "mode": "bad-maximum",
+      "reported": false
+    },
+    {
+      "mode": "bad-count",
+      "reported": false
+    },
+    {
+      "mode": "false-refusal",
+      "reported": false
+    },
+    {
+      "mode": "sink-failure",
+      "reported": false
+    }
+  ]
 }

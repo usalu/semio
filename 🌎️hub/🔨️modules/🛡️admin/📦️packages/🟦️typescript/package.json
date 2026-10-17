@@ -14,7 +14,8 @@
   },
   "dependencies": {
     "@semio-tech/framework-os": "workspace:*",
-    "@semio-tech/ui-react": "workspace:*"
+    "@semio-tech/ui-react": "workspace:*",
+    "os-hub-ts": "workspace:*"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.1.18",

@@ -1,3 +1,4 @@
+import { parseMdBlock } from "./📸️snapshot/🟦️.ts";
 import type { MdBlock } from './📸️snapshot/🟦️.ts';
 
 /** 🧬️ Full `stdio.md` artifact state. */
@@ -57,6 +58,6 @@ export function parseMdArtifact(value: unknown, at = "$"): MdArtifact {
   const row = stdioMdCommonmarkAnyArtifactGuardObject(value, at);
   return {
     schema: stdioMdCommonmarkAnyArtifactGuardString(row["schema"], `${at}.schema`),
-    blocks: stdioMdCommonmarkAnyArtifactGuardArray(row["blocks"], `${at}.blocks`).map((item, index) => stdioMdCommonmarkAnyArtifactGuardObject(item, `${at}.blocks[${index}]`)),
+    blocks: stdioMdCommonmarkAnyArtifactGuardArray(row["blocks"], `${at}.blocks`).map((item, index) => parseMdBlock(item, `${at}.blocks[${index}]`)),
   };
 }

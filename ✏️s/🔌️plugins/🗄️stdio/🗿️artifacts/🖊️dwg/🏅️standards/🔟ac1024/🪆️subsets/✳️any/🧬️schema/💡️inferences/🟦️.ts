@@ -33,6 +33,10 @@ type stdioDwgAc1024AnyInferenceGuardSizeBounds = { readonly minItems?: number; r
 
 export const stdioDwgAc1024AnyInferenceGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : stdioDwgAc1024AnyInferenceGuardReject(at, "value is not an object");
+export const stdioDwgAc1024AnyInferenceGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) stdioDwgAc1024AnyInferenceGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const stdioDwgAc1024AnyInferenceGuardArray = (value: unknown, at: string, bounds: stdioDwgAc1024AnyInferenceGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return stdioDwgAc1024AnyInferenceGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) stdioDwgAc1024AnyInferenceGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -63,14 +67,14 @@ export const stdioDwgAc1024AnyInferenceGuardConstant = <T extends string | numbe
 //#endregion 🚪️Parsers
 
 export function parseDwgInference(value: unknown, at = "$"): DwgInference {
-  const row = stdioDwgAc1024AnyInferenceGuardObject(value, at);
+  const row = stdioDwgAc1024AnyInferenceGuardClosed(stdioDwgAc1024AnyInferenceGuardObject(value, at), at, ["structure"]);
   return {
     structure: parseDwgStructure(row["structure"], `${at}.structure`),
   };
 }
 
 export function parseDwgStructure(value: unknown, at = "$"): DwgStructure {
-  const row = stdioDwgAc1024AnyInferenceGuardObject(value, at);
+  const row = stdioDwgAc1024AnyInferenceGuardClosed(stdioDwgAc1024AnyInferenceGuardObject(value, at), at, ["layerCount", "entityCount", "geometryValueCount", "geometryIndexCount", "textCharacterCount", "codepage", "version"]);
   return {
     layerCount: stdioDwgAc1024AnyInferenceGuardInteger(row["layerCount"], `${at}.layerCount`, {"minimum": 0}),
     entityCount: stdioDwgAc1024AnyInferenceGuardInteger(row["entityCount"], `${at}.entityCount`, {"minimum": 0}),

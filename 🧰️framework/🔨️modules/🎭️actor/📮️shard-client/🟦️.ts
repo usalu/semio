@@ -24,7 +24,7 @@ import { SHARD_LIVENESS_POLICY } from "./🫀️liveness/🟦️.ts";
 import { hopTrace, hopTraceEpochNowMs, hopTraceEpochToTimeline } from "@semio-tech/framework/trace";
 import { GUEST_HOST_ANSWER_CEILING_BYTES } from "@semio-tech/framework/trace/memory";
 import { OwnedResidentLedger, OwnedResidentRecordDetachment, OwnedResidentRetirement, type OwnedResidentAdmission, type OwnedResidentRecord, type ResidentGrant, type ResidentStep } from "@semio-tech/value-ts/resident";
-import { OwnedKernelReturnContent } from "../../🎠️kernel/📤️return/📦️content/📥️input/🟦️.ts";
+import { OwnedKernelReturnContent } from "@semio-tech/framework-kernel/return/content/input";
 import { OwnedUiInstance, OwnedUiInstanceRetirement, OwnedUiPatchAcknowledgement, OwnedUiPatchInputAcceptance, OwnedUiPatchInputRetirement } from "../../🖱️ui/🧬️contract/🧵️retained/🏘️instance/🟦️.ts";
 import { OwnedUiResidentPool, OwnedUiResidentPoolRetirement } from "../../🖱️ui/🧬️contract/🧵️retained/💾️resident/🟦️.ts";
 import { uiResidentMetadataEnvelope } from "../../🖱️ui/🧬️contract/🧵️retained/💾️resident/🪪️metadata/🟦️.ts";
@@ -983,7 +983,7 @@ export interface ShardClientOptions {
    * message, a beat carried on a `result`, or the `Atomics` slot the watchdog reads. `phase` is the
    * worker's own await boundary (`module-fetch`, `module-ready`, `actor-ready`, `progress`).
    *
-   * The plugin-load deadline (`🛠️ShellHelpers/🟦️.tsx`'s `loadPluginModuleResilient`) subscribes to it:
+   * The plugin-load deadline (`🛠️ShellHelpers/🛣️route-and-chrome/🟦️.tsx`'s `loadPluginModuleResilient`) subscribes to it:
    * a shard that is beating THROUGH its `await import()` of a multi-hundred-MB component is the only
    * proof a concurrently starving load has that the pipeline is moving, and without it every pane
    * whose small descriptor request queued behind those module fetches died on an idle window it was

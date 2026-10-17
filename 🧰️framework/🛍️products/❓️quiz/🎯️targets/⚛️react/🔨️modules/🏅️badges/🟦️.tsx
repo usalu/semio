@@ -13,7 +13,8 @@ import { localized, type QuizLocale, type QuizText } from "../🌐️i18n/🟦�
 import { formatDate } from "../📏️quantity/🟦️.ts";
 import { CardAction, CardIcon, Glyph, PageFrame, QuizCard, cn, type PaneView } from "../🪟️chrome/🟦️.tsx";
 import { HOME_PAGES, type QuizState } from "../🧭️session/🧮️state/🟦️.ts";
-import { PRESENCE_ANCHORS, PanePeers } from "../👥️presence/🟦️.tsx";
+import { PanePeers } from "../👥️presence/🟦️.tsx";
+import { PRESENCE_ANCHORS } from "../👥️presence/👁️view/🟦️.ts";
 
 /** 🎗️ The award of `badge` the learner holds, if any. */
 export function awardOf(state: QuizState, badge: Slug): BadgeAward | undefined {

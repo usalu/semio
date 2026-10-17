@@ -29,6 +29,10 @@ type stdioSemioV1AudioInferenceGuardSizeBounds = { readonly minItems?: number; r
 
 export const stdioSemioV1AudioInferenceGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : stdioSemioV1AudioInferenceGuardReject(at, "value is not an object");
+export const stdioSemioV1AudioInferenceGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) stdioSemioV1AudioInferenceGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const stdioSemioV1AudioInferenceGuardArray = (value: unknown, at: string, bounds: stdioSemioV1AudioInferenceGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return stdioSemioV1AudioInferenceGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) stdioSemioV1AudioInferenceGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -59,14 +63,14 @@ export const stdioSemioV1AudioInferenceGuardConstant = <T extends string | numbe
 //#endregion 🚪️Parsers
 
 export function parseSemioAudioInference(value: unknown, at = "$"): SemioAudioInference {
-  const row = stdioSemioV1AudioInferenceGuardObject(value, at);
+  const row = stdioSemioV1AudioInferenceGuardClosed(stdioSemioV1AudioInferenceGuardObject(value, at), at, ["duration"]);
   return {
     duration: parseSemioAudioDuration(row["duration"], `${at}.duration`),
   };
 }
 
 export function parseSemioAudioDuration(value: unknown, at = "$"): SemioAudioDuration {
-  const row = stdioSemioV1AudioInferenceGuardObject(value, at);
+  const row = stdioSemioV1AudioInferenceGuardClosed(stdioSemioV1AudioInferenceGuardObject(value, at), at, ["durationSeconds", "sampleCount", "channelCount"]);
   return {
     durationSeconds: stdioSemioV1AudioInferenceGuardNumber(row["durationSeconds"], `${at}.durationSeconds`, {"minimum": 0}),
     sampleCount: stdioSemioV1AudioInferenceGuardInteger(row["sampleCount"], `${at}.sampleCount`, {"minimum": 0}),

@@ -4,8 +4,8 @@
 import { describe, expect, test } from "bun:test";
 import i18next from "i18next";
 import { semioSchemaAjvV1 } from "@semio-tech/schema-ts/oracles/validator";
-import { toolRunSchema } from "../../../⏯️tool-run/🧪️tests/🧫️fixtures/🟦️.ts";
-import { FRAMEWORK_FAULT_NOTICE_LABELS, faultNotice, HISTORY_NOTICE_LABELS } from "../../../🎠️kernel/🏷️notice-labels/🟦️.ts";
+import { toolRunSchema } from "@semio-tech/framework-tool-run-ts/testing/fixtures";
+import { FRAMEWORK_FAULT_NOTICE_LABELS, faultNotice, HISTORY_NOTICE_LABELS } from "@semio-tech/framework-kernel/notice-labels";
 import fixture from "../🧫️fixtures/🧫️fault-notices/🔣️.json";
 import { SHELL_LOCALES, SHELL_TERMINOLOGIES, faultNoticePlaceholders, fillFaultNotice, isFaultNoticeCode, validateFaultNotices, type FaultNoticeDefinition, type FaultNoticeError, type ShellLocale, type ShellTerminology } from "../../🟦️.ts";
 

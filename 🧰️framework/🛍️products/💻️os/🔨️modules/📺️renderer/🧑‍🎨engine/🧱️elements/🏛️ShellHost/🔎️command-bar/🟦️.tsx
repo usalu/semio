@@ -38,12 +38,11 @@ import {
   useShellKeydown
 } from "@semio-tech/ui-react";
 import { sharedDocumentRoleSwitchRefusedV1 } from "../🧭️opening/🟦️.ts";
-import { actionStageKey } from "../../🐚️Shell/🟦️.tsx";
+import { actionStageKey } from "../../🐚️Shell/🗃️state-shapes/🟦️.ts";
+import { FRAMEWORK_CATEGORY_COMMAND_ID, EMPTY_SHELL_HISTORY_PROJECTION_V1 } from "../../🛠️ShellHelpers/🔩️plumbing/🟦️.ts";
+import { buildActiveExampleAction, appOffersRegisteredExamples } from "../../🛠️ShellHelpers/🔩️plumbing/🔀️example-switching/🟦️.ts";
 import {
-  FRAMEWORK_CATEGORY_COMMAND_ID,
-  buildActiveExampleAction,
   buildCommandCategoryTabs,
-  OPEN_HUB_COMMAND_ID,
   buildToolTabs,
   commandAddressKey,
   commandCategories,
@@ -51,30 +50,35 @@ import {
   commandOwnerPluginId,
   detectCommandPlatform,
   dispatchOsCommand,
-  controlOwnsKeyboardEvent,
-  isMutationKindDefinition,
   isOsCommandAddress,
-  keyboardEventMatchesChord,
+  resolveCommands
+} from "../../🛠️ShellHelpers/🎛️command-registry/🟦️.tsx";
+import {
+  OPEN_HUB_COMMAND_ID,
   OPEN_TASK_MANAGER_COMMAND_ID,
-  EMPTY_SHELL_HISTORY_PROJECTION_V1,
-  manifestLabelTextV1,
-  appFaultNoticeV1,
-  historyFaultNoticeV1,
-  historySilentRefusalOfFaultV1,
   resolveAppLabel,
-  resolveCommands,
-  frameworkLayoutDeclaredInstances,
-  resolveKeybindingIntent,
   resolveManifestLabel,
-  appOffersRegisteredExamples,
-  sessionWindowInstances,
   shellLabel,
   surfaceRoleGroupText,
   appModeGroupText,
   viewerReadOnlyNoticeText
-} from "../../🛠️ShellHelpers/🟦️.tsx";
+} from "../../🛠️ShellHelpers/🏷️labels/🟦️.tsx";
+import {
+  controlOwnsKeyboardEvent,
+  keyboardEventMatchesChord,
+  resolveKeybindingIntent
+} from "../../🛠️ShellHelpers/🪟️window-panes/⌨️keyboard-chords/🟦️.ts";
+import { isMutationKindDefinition } from "../../🛠️ShellHelpers/🧾️transfer-checkin-tutorial/🟦️.ts";
+import { manifestLabelTextV1 } from "../../🛠️ShellHelpers/🔩️plumbing/🆔️action-ids/🟦️.ts";
+import {
+  appFaultNoticeV1,
+  historyFaultNoticeV1,
+  historySilentRefusalOfFaultV1,
+  frameworkLayoutDeclaredInstances
+} from "../../🛠️ShellHelpers/🛣️route-and-chrome/🟦️.tsx";
+import { sessionWindowInstances } from "../../🛠️ShellHelpers/🔄️ui-refresh/🟦️.ts";
 // #endregion 🔌️Adapters
-import { FRAMEWORK_TASK_MANAGER_PANEL_ID } from "../../📌️ChromePanels/🟦️.tsx";
+import { FRAMEWORK_TASK_MANAGER_PANEL_ID } from "../../📌️ChromePanels/🆔️panel-ids/🟦️.ts";
 import { replayRefusalNoticeTextV1 } from "../📣️replay-refusal/🟦️.ts";
 import { type ArtifactKindChoiceDraftDefinitionV1, artifactKindChoiceDraftRetirementsV1, SURFACE_ROLE_ICON_IDS } from "../🧾️space-artifact-creation/🟦️.ts";
 import type { ShellCoreAfterCheckInAndSync } from "../✅️check-in-sync/🟦️.tsx";

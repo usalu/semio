@@ -21,7 +21,8 @@ import {
   type SpaceMemberPresenceV1,
   type SpaceRowV1
 } from "@semio-tech/framework/directory/spaces";
-import { hubUiLabel, type HubInviteCapabilityV1, type HubRedemptionStateV1 } from "../🔗️HubConnection/🟦️.tsx";
+import { hubUiLabel } from "../🔗️HubConnection/🌐️ui-labels/🟦️.ts";
+import { type HubInviteCapabilityV1, type HubRedemptionStateV1 } from "../🔗️HubConnection/🔌️connection-contract/🟦️.ts";
 // #endregion 🔌️Adapters
 
 //#region 🔖️Types

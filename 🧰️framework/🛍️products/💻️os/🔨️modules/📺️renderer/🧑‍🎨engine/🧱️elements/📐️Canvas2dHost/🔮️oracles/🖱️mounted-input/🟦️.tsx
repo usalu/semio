@@ -50,7 +50,8 @@ vi.mock("@semio-tech/canvas-react-renderer", async (importOriginal) => {
   };
 });
 
-import { Canvas2dHost, wheelCameraAtScreen } from "../../🟦️.tsx";
+import { Canvas2dHost } from "../../🟦️.tsx";
+import { wheelCameraAtScreen } from "../../📷️camera-math/🟦️.ts";
 
 export const bounds = { x: 0, y: 0, left: 0, top: 0, right: fixture.surface.width, bottom: fixture.surface.height, width: fixture.surface.width, height: fixture.surface.height, toJSON: () => ({}) } as DOMRect;
 

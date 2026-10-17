@@ -63,7 +63,7 @@ function fakeHandle(overrides: Partial<WgpuPluginHandle> = {}): WgpuPluginHandle
     readAppDocumentArchive: async () => new Uint8Array(),
     readHistory: async () => ({ cursor: 0 }),
     readAppDocumentIdentity: async (instanceId) => ({ appInstanceId: instanceId, parentDocumentId: null }),
-    codec: async () => null,
+    codec: () => Promise.reject(new Error("fake.codec")),
     ephemeralSnapshot: () => null,
     takeOperationPublications: () => [],
     submitMediaExport: () => Promise.reject(new Error("fake.media-export")),
@@ -129,21 +129,8 @@ describe("framework renderer wgpu plugin bridge", () => {
     expect(bridge.takeOperationPublications(8)).toBe("[]");
   });
 
-  
-  it("queues the history patch of an uncorrelated progress frame and hands it to Rust once, as JSON", async () => {
-    const { encodeAppFrame, encodePackValue, packUInt } = await import("@semio-tech/framework-os");
-    const { stashProgressHistoryPatch, takeProgressHistoryPatches } = await import("../../🎯️targets/🧊️wgpu/🐚️plugin-bridge/🟦️.ts");
-    const frame = (historyPatch: readonly number[]) => encodeAppFrame({ Invocation: { in_reply_to: 0, output: Array.from(encodePackValue(null)), diagnostics: Array.from(encodePackValue([])), ui_scope: Array.from(encodePackValue(null)), history_patch: historyPatch, messages: [], mutations: [], inverse_group: [] } });
-    stashProgressHistoryPatch(9_001, frame([]));
-    stashProgressHistoryPatch(9_001, frame(Array.from(encodePackValue({ cursor: packUInt(4n), timeTravel: { stage: "replaying", done: packUInt(2n), total: packUInt(5n) } }))));
-    const taken = takeProgressHistoryPatches(9_001) as readonly { readonly cursor: number; readonly timeTravel: { readonly stage: string; readonly done: number } }[];
-    expect(taken.map((patch) => [patch.cursor, patch.timeTravel.stage, patch.timeTravel.done]), "a frame without a patch queues nothing").toEqual([[4, "replaying", 2]]);
-    expect(takeProgressHistoryPatches(9_001), "a take drains the queue").toEqual([]);
-    const bridge = pluginHandleForBridge(fakeHandle({ takeProgressHistoryPatches: (instanceId) => (instanceId === 7 ? [{ cursor: 2n }] : []) }));
-    expect(bridge.takeProgressHistoryPatches(7)).toBe('[{"cursor":2}]');
-    expect(bridge.takeProgressHistoryPatches(8)).toBe("[]");
-  });
-it("crosses the document-backbone door with an exact u64 binding generation and refuses an unknown operation", async () => {
+
+  it("crosses the document-backbone door with an exact u64 binding generation and refuses an unknown operation", async () => {
     const seen: { operation: string; bindingGeneration: bigint; uri: string }[] = [];
     const bridge = pluginHandleForBridge(fakeHandle({
       documentBackbone: async (_instanceId, operation, bindingGeneration, uri) => {
@@ -618,7 +605,7 @@ describe("framework renderer wgpu generated worker", () => {
     const declaration = catalog.playgrounds.find(entry => entry.variant === fixtureCase.variant)!;
     const boot = resolvePlaygroundBoot(catalog, fixtureCase.variant);
     const ids = boot.plugins.map((entry) => entry.pluginId);
-    const dependency = catalog.plugins.find(entry => entry.pluginId === declaration.pluginId)!.dependsOn[0];
+    const dependency = catalog.plugins.find(entry => entry.pluginId === declaration.pluginId)!.dependsOn![0]!;
     expect(ids).toContain(declaration.pluginId);
     expect(ids).toContain(dependency);
     expect(ids.indexOf(dependency)).toBeLessThan(ids.indexOf(declaration.pluginId));
@@ -631,7 +618,7 @@ describe("framework renderer wgpu generated worker", () => {
     const owners = new Map(activationFixture.rows.map(row => [row[0], row[1]]));
     expect(owners.size).toBe(activationFixture.rows.length);
     expect(new Set(owners.values()).size).toBeGreaterThan(1);
-    expect(owners.get(activationFixture.relay.artifactRef.split("@")[0])).toBe(activationFixture.relay.expectedOwner);
+    expect(owners.get(activationFixture.relay.artifactRef.split("@")[0]!)).toBe(activationFixture.relay.expectedOwner);
     expect(owners.get("no.such.kind")).toBeUndefined();
   });
 

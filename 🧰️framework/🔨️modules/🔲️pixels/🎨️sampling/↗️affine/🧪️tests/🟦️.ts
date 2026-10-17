@@ -32,21 +32,19 @@ test("actual affine owners survive interruptions and drain genuine coverage befo
    for(const key of ["source","coverage","coverageRetirement","coverageContour","mask","inverse"])expect(state[key]).toBeNull();
    for(const key of ["quad","scratchA","scratchB","sums"])expect(state[key].length).toBe(0);expect(state.output.pixels.length).toBe(0);for(const record of records)expect(record.job.terminalIsEmpty()).toBe(true);
    expect(v).toEqual(before);const image=retired.output??published;if(image){expect([...image.pixels]).toEqual(source.expected);const m=v.transform,shrinks=Math.hypot(m[0]!,m[1]!)<1||Math.hypot(m[2]!,m[3]!)<1;expect(delta(image.pixels,v.source.width*v.source.height===1||v.sampling==="area"||v.sampling==="auto"&&shrinks?areaOracle(v):canvasOracle(v))).toBeLessThanOrEqual(2);comparisons++;}
-   console.error(`[DEBUG] Actual affine retirement ${row.name}: grant=${grant} work=${work} terminal_empty=true children=${records.length}`);
   }finally{spy.mockRestore();}
  }
- console.error(`[DEBUG] Affine preserved output matched ${comparisons} independent polygon and canvas comparisons`);
 });
 test("normal affine sampling retains coverage ownership through sealed publication",()=>{
  const v=input(fixture[9]!.input),before=structuredClone(v),job=new AffineImageJob(v),state=job as any;let reached=false;
  for(let at=0;at<2000000;at++){const p=job.advance(1);expect(validateProgress(p)).toBe(true);if(p.phase==="coverageCleanup"){reached=true;break;}}expect(reached).toBe(true);const child=state.coverageRetirement,mask=state.mask;expect(child.terminalIsEmpty()).toBe(false);
- job.advance(1);expect(state.phase).toBe("sampling");expect(state.at).toBe(0);expect(state.mask).toBe(mask);while(!job.advance(4096).done){}expect(child.terminalIsEmpty()).toBe(false);expect([...job.result().pixels]).toEqual(fixture[9]!.expected);const retired=job.intoRetirement();while(!retired.job.advance(4096).done){}expect(child.terminalIsEmpty()).toBe(true);expect(v).toEqual(before);console.error("[DEBUG] Affine coverage backing survived completed publication and retired only during final close");
+ job.advance(1);expect(state.phase).toBe("sampling");expect(state.at).toBe(0);expect(state.mask).toBe(mask);while(!job.advance(4096).done){}expect(child.terminalIsEmpty()).toBe(false);expect([...job.result().pixels]).toEqual(fixture[9]!.expected);const retired=job.intoRetirement();while(!retired.job.advance(4096).done){}expect(child.terminalIsEmpty()).toBe(true);expect(v).toEqual(before);
 });
 test("async affine finally drains genuine parent after completion abort and callback failure",async()=>{
  const original=(AffineImageJob.prototype as any).intoRetirement;
  for(const mode of ["success","abort","callback"]){const v=input(fixture[13]!.input),before=structuredClone(v),controller=new AbortController();let adopted=0,work=0,closed:any=null;
   const spy=spyOn(AffineImageJob.prototype as any,"intoRetirement").mockImplementation(function(this:AffineImageJob){adopted++;const retired=original.call(this);closed=retired;const advance=retired.job.advance.bind(retired.job);retired.job.advance=(unit:number)=>{expect(unit).toBe(1);const p=advance(unit);expect(p.work-work).toBe(1);work=p.work;return p;};return retired;});
-  try{const pending=sampleAffineImage(v,{signal:controller.signal,workBudget:1,onProgress:p=>{if(p.done){if(mode==="abort")controller.abort();if(mode==="callback")throw Error("affine completion callback failed");}}});if(mode==="success"){const image=await pending;expect(image).toBe(closed.output);expect([...image.pixels]).toEqual(fixture[13]!.expected);}else{await expect(pending).rejects.toThrow(mode==="abort"?/cancel/:/completion callback failed/);expect(closed.output).toBeNull();}expect(adopted).toBe(1);expect(work).toBeGreaterThanOrEqual(11);expect(closed.job.terminalIsEmpty()).toBe(true);expect(v).toEqual(before);console.error(`[DEBUG] Actual async affine ${mode}: one adoption and ${work} one-unit retirement grants`);}finally{spy.mockRestore();}
+  try{const pending=sampleAffineImage(v,{signal:controller.signal,workBudget:1,onProgress:p=>{if(p.done){if(mode==="abort")controller.abort();if(mode==="callback")throw Error("affine completion callback failed");}}});if(mode==="success"){const image=await pending;expect(image).toBe(closed.output);expect([...image.pixels]).toEqual(fixture[13]!.expected);}else{await expect(pending).rejects.toThrow(mode==="abort"?/cancel/:/completion callback failed/);expect(closed.output).toBeNull();}expect(adopted).toBe(1);expect(work).toBeGreaterThanOrEqual(11);expect(closed.job.terminalIsEmpty()).toBe(true);expect(v).toEqual(before);}finally{spy.mockRestore();}
  }
 });
 function input(v:any):AffineImageInput{return {...v,source:{...v.source,pixels:new Uint8Array(v.source.pixels)}};}
@@ -64,7 +62,6 @@ test("area sampling agrees with independent transformed-cell intersections",()=>
   const v:AffineImageInput={source:{width:3,height:3,pixels:data},width:4,height:4,origin:[-.25,.5],transform:caseAt%2?[.6,.15,.25,.8,.25,.75]:[-.7,.2,.3,.5,3,.5],sampling:"area"};
   expect(delta(complete(v).pixels,areaOracle(v))).toBeLessThanOrEqual(1);
  }
- console.error("[DEBUG] 32 affine area samples matched independent polygon-clipping intersections");
 });
 test("affine sample lifecycle cancels candidates, rejects partial output and keeps failures sticky",()=>{
  const v=input(fixture[9]!.input);

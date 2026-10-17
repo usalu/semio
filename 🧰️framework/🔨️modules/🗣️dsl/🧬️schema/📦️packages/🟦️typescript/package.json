@@ -1,0 +1,8 @@
+{
+  "name": "@semio-tech/framework-dsl-record-ts",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./binding/ownership/testing": "./🪆️binding/🏛️ownership/🧪️testing/🟦️.ts"
+  }
+}
